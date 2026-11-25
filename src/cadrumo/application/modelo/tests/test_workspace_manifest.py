@@ -18,14 +18,14 @@ from ..workspace_manifest import (
     ModeloWorkspaceManifestCapture,
     ModeloWorkspaceManifestCaptureError,
     ModeloWorkspaceManifestCurrentCoordinate,
-    _manifest_digest,
-    _model_annotations,
-    _Node,
-    _walk_annotation,
+    Node,
     capture_modelo_workspace_manifest,
     capture_modelo_workspace_manifest_for_inspection,
     generate_modelo_workspace_field_manifest,
     generate_modelo_workspace_field_manifest_for_inspection,
+    manifest_digest,
+    model_annotations,
+    walk_annotation,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
 from ..workspace_producers import (
@@ -97,7 +97,7 @@ def _rebuild_manifest(
     return ModeloWorkspaceFieldManifestV1(
         traversal_roots=roots,
         entries=manifest_entries,
-        manifest_digest=_manifest_digest(roots, manifest_entries),
+        manifest_digest=manifest_digest(roots, manifest_entries),
     )
 
 
@@ -144,8 +144,8 @@ def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_un
 
 
 def test_workspace_manifest_walks_existing_tagged_union_and_collection_coordinates() -> None:
-    nodes: dict[str, _Node] = {}
-    _walk_annotation(
+    nodes: dict[str, Node] = {}
+    walk_annotation(
         annotation=ModeloWorkspaceSchemaReferenceV1,
         path="workspace_schema_reference",
         nodes=nodes,
@@ -189,8 +189,8 @@ def test_workspace_manifest_projects_only_representable_live_formula_operands() 
 
 
 def test_workspace_manifest_walks_nested_union_containers_and_aliases() -> None:
-    nodes: dict[str, _Node] = {}
-    _walk_annotation(
+    nodes: dict[str, Node] = {}
+    walk_annotation(
         annotation=_NestedTraversalAlias | tuple[_NestedTraversalModel, ...] | Literal["literal"] | int | None,
         path="synthetic",
         nodes=nodes,
@@ -208,15 +208,15 @@ def test_workspace_manifest_walks_nested_union_containers_and_aliases() -> None:
 
 def test_workspace_manifest_resolves_future_forward_references_with_public_typing_apis() -> None:
     """The walker receives real types while retaining ``Annotated`` metadata."""
-    resolved = _model_annotations(_ForwardReferenceRoot)
+    resolved = model_annotations(_ForwardReferenceRoot)
     assert resolved["child"] is _ForwardReferenceLeaf
 
-    annotated = _model_annotations(_AnnotatedForwardReferenceRoot)["child"]
+    annotated = model_annotations(_AnnotatedForwardReferenceRoot)["child"]
     assert get_args(annotated)[0] is _ForwardReferenceLeaf
     assert get_args(annotated)[1:] == ("workspace-contract",)
 
-    nodes: dict[str, _Node] = {}
-    _walk_annotation(
+    nodes: dict[str, Node] = {}
+    walk_annotation(
         annotation=_ForwardReferenceRoot,
         path="forward",
         nodes=nodes,
@@ -238,13 +238,13 @@ def test_workspace_manifest_uses_pydantic_field_annotations_for_local_models() -
 
     LocalRoot.model_rebuild(_types_namespace={"LocalLeaf": LocalLeaf})
 
-    assert _model_annotations(LocalRoot)["child"] is LocalLeaf
+    assert model_annotations(LocalRoot)["child"] is LocalLeaf
 
 
 def test_workspace_manifest_refuses_unresolved_forward_references() -> None:
     """An unresolved string cannot silently become a schema-type label."""
     with pytest.raises(ValueError, match=r"_UnresolvedForwardReference\.missing"):
-        _model_annotations(_UnresolvedForwardReference)
+        model_annotations(_UnresolvedForwardReference)
 
 
 def test_workspace_manifest_walks_live_dispatch_parameter_identity() -> None:

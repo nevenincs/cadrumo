@@ -4,7 +4,7 @@
 never diverge (a bearer token, a NIF, a credential) has exactly one declaration.
 Each consuming key-name predicate is required to compose from it — this module
 asserts the composition holds for the three production sites that declare one:
-:data:`cadrumo.core.logging.SCRUB_FIELD_PATTERNS`, the two frozensets in
+:data:`cadrumo.core.log_scrubbing.SCRUB_FIELD_PATTERNS`, the two frozensets in
 :mod:`cadrumo.application.live.remote_state_outcomes`, and the profile-overview
 mask vocabulary in :mod:`cadrumo.application.user_profile`. A future edit that
 drops the union (redeclaring one site's set as a bare literal again) reds this
@@ -22,12 +22,12 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.logging import SCRUB_FIELD_PATTERNS
+from ....core.log_scrubbing import SCRUB_FIELD_PATTERNS
 from ....core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...user_profile.overview import MASK_KEYWORDS
 from ..remote_state_outcomes import (
-    _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS,
-    _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS,
+    SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS,
+    SENSITIVE_FAILURE_CONTEXT_KEY_PARTS,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,12 +45,12 @@ def test_logging_scrub_patterns_compose_the_shared_base() -> None:
 
 def test_remote_state_exact_keys_compose_the_shared_base() -> None:
     """The diagnostic-context exact-key set must carry every shared base term."""
-    assert ALWAYS_REDACT_KEY_TERMS <= _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS
+    assert ALWAYS_REDACT_KEY_TERMS <= SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS
 
 
 def test_remote_state_key_parts_compose_the_shared_base() -> None:
     """The diagnostic-context substring-key set must carry every shared base term."""
-    assert ALWAYS_REDACT_KEY_TERMS <= _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS
+    assert ALWAYS_REDACT_KEY_TERMS <= SENSITIVE_FAILURE_CONTEXT_KEY_PARTS
 
 
 def test_remote_state_context_sets_keep_their_own_domain_specific_additions() -> None:
@@ -61,8 +61,8 @@ def test_remote_state_context_sets_keep_their_own_domain_specific_additions() ->
     ``num_soporte``, ...) that make this predicate narrower than the generic
     logging one in the first place.
     """
-    assert _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS - ALWAYS_REDACT_KEY_TERMS
-    assert _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS - ALWAYS_REDACT_KEY_TERMS
+    assert SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS - ALWAYS_REDACT_KEY_TERMS
+    assert SENSITIVE_FAILURE_CONTEXT_KEY_PARTS - ALWAYS_REDACT_KEY_TERMS
 
 
 def test_profile_overview_mask_keywords_compose_the_shared_base() -> None:

@@ -24,14 +24,13 @@ correctly and still matches no selector is exactly the failure worth catching.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
@@ -42,17 +41,11 @@ from ....domain.iva.components import (
 )
 from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
 from ....domain.iva.schema import InvoiceKind
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
-from ..iva_ledger import resolve_iva_ledger_binding_values
+from .invoice_screen_resolution_support import resolved_for
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for supplier/recipient binding projections."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BASE = Decimal("1000.00")
@@ -82,15 +75,13 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
         and row.applicability == IvaKindApplicability.from_registry("arises")
         and row.base == IvaComponentPresence.from_registry("required")
         and row.cuota == IvaComponentPresence.from_registry("zero_by_law")
-        for flow in (derive_flow_for_classification(category=category, invoice_direction=kind),)
-        if is_deducible_flow(flow)
+        for flow in (
+            derive_flow_for_classification(category=category, invoice_direction=kind, effective_date=_ON_DATE),
+        )
+        if is_deducible_flow(flow, effective_date=_ON_DATE)
     }
 
     assert not wrongly_deducible
-
-
-def _revision():
-    return published_snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
@@ -109,7 +100,7 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
             "invoice_number": "F-2024-0122",
             "issued_at": _DEVENGO.isoformat(),
             "counterparty_name": "Constructora Peninsular SL",
-            "counterparty_tax_id": "ESB12345674",
+            "counterparty_tax_id": "ESB00015016",
             "counterparty_country": "ES",
             "counterparty_identification_state": "es",
             "base_total": format(_BASE, "f"),
@@ -132,38 +123,9 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
     )
 
 
-def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
-    """Project the invoice's single line the way the screen does, then resolve."""
-    line = invoice.lines[0]
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    assert base_amount_eur is not None
-    assert iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
-        invoice=invoice,
-        line=line,
-        line_index=0,
-        devengo_date=_DEVENGO,
-        recargo_amount=Decimal("0"),
-        base_amount_eur=base_amount_eur,
-        iva_amount_eur=iva_amount_eur,
-        operation=operation,
-    )
-    if observation is None:
-        return {}
-    return {
-        str(k): v
-        for k, v in resolve_iva_ledger_binding_values(
-            _revision(),
-            (observation,),
-            operation=operation,
-        ).items()
-    }
-
-
 def test_the_supplier_side_base_reaches_casilla_122(authority_operation: PinnedAuthorityOperation) -> None:
     """The turnover arrives in the box AEAT names for it."""
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -184,7 +146,7 @@ def test_the_supplier_side_declares_a_base_and_no_cuota_anywhere(
     repercutes nothing, so every resolved value other than casilla 122 must be
     absent or zero.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -205,7 +167,7 @@ def test_the_recipient_side_does_not_reach_casilla_122(
     route both sides into 122 and double the declared volume across a pair of
     trading taxpayers.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.RECEIVED),
         operation=authority_operation,
     )
@@ -226,7 +188,7 @@ def test_a_domestic_exemption_does_not_reach_casilla_122(
     than on the declared category, this base would be reported as reverse-charge
     turnover the taxpayer never supplied under that regime.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_exempt"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -245,7 +207,7 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
     would show up as those tests failing for a reason that names this change
     nowhere.
     """
-    reverse_charge = _resolved_for(
+    reverse_charge = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -254,70 +216,65 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
     assert not bool(reverse_charge.get(_CASILLA_60)), "a domestic reverse charge is not an export"
 
 
-_CASILLA_120 = "modelo-303-casilla-120-no-sujetas-localizacion-base"
-
-
-def test_an_eu_b2b_service_base_reaches_casilla_120(
+def test_an_eu_b2b_service_base_reaches_casilla_59(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A service located where the EU recipient is established is volumen, not silence.
+    """A service located where the EU recipient is established is an intra-Community supply of services.
 
-    LIVA art. 69.Uno.1 puts the operation outside the Spanish hecho imponible,
-    so it is NO SUJETA rather than exempt and carries no cuota. It is still
-    turnover, and M303 names a box for it. Before this it reached nothing: the
-    line has no cuota, so rate-slot classification replaced the declared
-    category before any binding could select it -- the same upstream loss that
-    kept casilla 122 blank.
+    LIVA art. 69.Uno.1 puts the operation outside the Spanish hecho imponible and
+    Modelo 349 reports it with clave S. The box titled "Entregas intracomunitarias
+    de bienes y servicios" takes its base. The line has no cuota, so rate-slot
+    classification replaced the declared category before any binding could select
+    it -- the same upstream loss that kept casilla 122 blank.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
 
-    assert resolved.get(_CASILLA_120) == _BASE, (
-        f"the not-subject service base never reached casilla 120: {resolved.get(_CASILLA_120)!r}"
+    assert resolved.get(_CASILLA_59) == _BASE, (
+        f"the intra-Community service base never reached casilla 59: {resolved.get(_CASILLA_59)!r}"
     )
 
 
-def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
+def test_casillas_59_and_122_do_not_collect_each_other(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Casillas 120 and 122 declare different operations and must not cross.
+    """Casillas 59 and 122 declare different operations and must not cross.
 
     Run as a pair rather than as two separate positives: a selector keyed on
     "issued and no cuota" would fill BOTH boxes from either invoice and satisfy
     each single-box test on its own. Only the cross-check catches that, and
     crossing them doubles the declared volumen across the two lines.
     """
-    service = _resolved_for(
+    service = resolved_for(
         _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
-    reverse_charge = _resolved_for(
+    reverse_charge = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
 
-    assert service.get(_CASILLA_120) == _BASE
+    assert service.get(_CASILLA_59) == _BASE
     assert not bool(service.get(_CASILLA_122)), "a not-subject service is not a reverse charge"
     assert reverse_charge.get(_CASILLA_122) == _BASE
-    assert not bool(reverse_charge.get(_CASILLA_120)), "a reverse charge IS subject; it is not a localizacion case"
+    assert not bool(reverse_charge.get(_CASILLA_59)), "a domestic reverse charge is not an intra-community supply"
 
 
-def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
+def test_an_article_7_not_subject_operation_does_not_reach_casilla_59(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Discrimination control: not-subject BY NATURE is not not-subject BY LOCATION.
+    """Discrimination control: not-subject BY NATURE is not an intra-Community supply.
 
     LIVA art. 7 excludes operations such as the transmision of a going concern.
-    They carry no cuota and are issued, exactly like the art. 69 case, but the
-    box says "por reglas de localizacion" and art. 7 is not one of those rules.
-    Routing them here would report as located abroad an operation that was never
-    located anywhere else.
+    They carry no cuota and are issued, exactly like the art. 69 case, but they are
+    not supplied to a businessman in another Member State, so the box titled
+    "Entregas intracomunitarias de bienes y servicios" must not take them.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("operacion_no_sujeta"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
 
-    assert not bool(resolved.get(_CASILLA_120))
+    assert not bool(resolved.get(_CASILLA_59))

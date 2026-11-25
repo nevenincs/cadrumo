@@ -46,10 +46,11 @@ import pytest
 
 import dev.registry.edition_delta_drop_planning as edition_delta_drop_planning
 import dev.registry.edition_delta_row_delta_existing as edition_delta_row_delta_existing
+import dev.registry.edition_delta_row_delta_preserving as edition_delta_row_delta_preserving
 import dev.registry.edition_delta_row_delta_reconstruction as edition_delta_row_delta_reconstruction
 import dev.registry.edition_delta_row_delta_selection as edition_delta_row_delta_selection
 import dev.registry.edition_delta_source as edition_delta_source
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler import (
     casilla_identity,
     casilla_inheritance,
@@ -110,16 +111,16 @@ _HOMES: Final[Mapping[str, str]] = {
     "inherit_casillas": "dev/registry/compiler/casilla_inheritance.py",
     "without_lineage_claims": "dev/registry/compiler/casilla_inheritance.py",
     "_stated_rows_by_lineage": "dev/registry/compiler/casilla_inheritance.py",
-    "_apply_casilla_storage_delta": "dev/registry/compiler/casilla_storage_delta.py",
-    "_same_casilla_identity": "dev/registry/compiler/casilla_identity.py",
-    "_casillas_by_id": "dev/registry/compiler/casilla_identity.py",
+    "apply_casilla_storage_delta": "dev/registry/compiler/casilla_storage_delta.py",
+    "same_casilla_identity": "dev/registry/compiler/casilla_identity.py",
+    "casillas_by_id": "dev/registry/compiler/casilla_identity.py",
     "inherit_keyed_family": "dev/registry/compiler/keyed_family_inheritance.py",
-    "_raw_keyed_members": "dev/registry/compiler/keyed_family_inheritance.py",
-    "_restated_families": "dev/registry/compiler/keyed_family_inheritance.py",
+    "raw_keyed_members": "dev/registry/compiler/keyed_family_inheritance.py",
+    "restated_families": "dev/registry/compiler/keyed_family_inheritance.py",
     "selector_covers": "dev/registry/compiler/keyed_family_period_scope.py",
-    "_selector_periods_for_year": "dev/registry/compiler/keyed_family_period_scope.py",
-    "_apply_family_storage_delta": "dev/registry/compiler/keyed_family_storage_delta.py",
-    "_patch_family_table": "dev/registry/compiler/keyed_family_storage_delta.py",
+    "selector_periods_for_year": "dev/registry/compiler/keyed_family_period_scope.py",
+    "apply_family_storage_delta": "dev/registry/compiler/keyed_family_storage_delta.py",
+    "patch_family_table": "dev/registry/compiler/keyed_family_storage_delta.py",
     "patch_family_sequences": "dev/registry/compiler/keyed_family_storage_delta.py",
     "passthrough_toml_row": _SEMANTICS,
 }
@@ -409,6 +410,7 @@ def test_the_edition_migration_routes_its_simulation_through_the_canonical_modul
     runtime_modules = {
         "dev/registry/edition_delta_drop_planning.py": edition_delta_drop_planning,
         "dev/registry/edition_delta_row_delta_existing.py": edition_delta_row_delta_existing,
+        "dev/registry/edition_delta_row_delta_preserving.py": edition_delta_row_delta_preserving,
         "dev/registry/edition_delta_row_delta_reconstruction.py": edition_delta_row_delta_reconstruction,
         "dev/registry/edition_delta_row_delta_selection.py": edition_delta_row_delta_selection,
         "dev/registry/edition_delta_source.py": edition_delta_source,

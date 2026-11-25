@@ -17,7 +17,7 @@ aggregation path is introduced: the same registry snapshot and profile-binding
 resolver the calculate path uses are read, not re-derived.
 
 See Also:
-    :func:`~application.modelo._registry_helpers.required_input_casilla_ids_for_revision`
+    :func:`~application.modelo.registry_helpers.required_input_casilla_ids_for_revision`
         Sibling helper returning only the bare required/optional id tuples
         (used by amendment completeness checks); this module composes the
         richer operator-facing checklist over the same snapshot.
@@ -49,13 +49,14 @@ from ...domain.calculations.registry.profile_grounding import binding_profile_ke
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.user_profile.schema import ProfileDerivedSelectorDefinition, derived_selector_for_path
 from .binding_readiness import profile_resolvable_binding_ids
 
 # Sources whose calculate resolvers read bucket-local observation, register, or
 # invoice evidence rather than the general ledger, taxpayer profile, or a
 # prior-filing/relation carry.  ``live`` here means live application state: it
 # does not claim that ``modelo requires`` contacts an AEAT remote service.
-_LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -65,7 +66,9 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PRORRATA_REGULARIZACION,
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY,
         BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.RETENCION_SOPORTADA,
         BindingSourceKind.WITHHOLDING,
     },
 )
@@ -167,9 +170,10 @@ class _DataInventoryBuckets:
     profile_binding_ids: list[BindingId]
 
 
-def _profile_keys_for_bindings(
+def profile_keys_for_bindings(
     revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...],
 ) -> tuple[str, ...]:
     """Return the profile keys the given bindings consume, in order, de-duplicated.
 
@@ -179,6 +183,12 @@ def _profile_keys_for_bindings(
 
     A binding contributing no key is simply absent: nothing is invented for
     it, and its binding id remains available on the checklist.
+
+    A derived path is computed from other facts and refuses operator writes,
+    so it is replaced by the source facts it derives from: those are what the
+    operator can set.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     wanted = set(binding_ids)
     keys: list[str] = []
@@ -187,10 +197,12 @@ def _profile_keys_for_bindings(
         if binding.id not in wanted:
             continue
         for key in binding_profile_keys(binding):
-            if key in seen:
-                continue
-            seen.add(key)
-            keys.append(key)
+            derived = derived_selector_for_path(key, derived_selectors)
+            for settable in derived.derived_from if derived is not None else (key,):
+                if settable in seen:
+                    continue
+                seen.add(settable)
+                keys.append(settable)
     return tuple(keys)
 
 
@@ -246,7 +258,7 @@ def data_inventory_checklist(
     # row, so the revision is read with them.
     revision = operation.revision_with_export_layouts(modelo, selected.id)
     bindings_by_id = revision_bindings_by_id(revision)
-    buckets = _collect_inventory_buckets(revision, bindings_by_id)
+    buckets = collect_inventory_buckets(revision, bindings_by_id)
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()
     unresolved_profile_keys: tuple[str, ...] = ()
@@ -262,7 +274,11 @@ def data_inventory_checklist(
         unresolved_profile_bindings = tuple(
             binding_id for binding_id in buckets.profile_binding_ids if binding_id not in resolved
         )
-        unresolved_profile_keys = _profile_keys_for_bindings(revision, unresolved_profile_bindings)
+        unresolved_profile_keys = profile_keys_for_bindings(
+            revision,
+            unresolved_profile_bindings,
+            operation.profile_decode_context().schema.derived_selectors,
+        )
     elif bucket_id is not None:
         profile_checked = True
     else:
@@ -305,10 +321,14 @@ def _inventory_entry(
     )
 
 
-def _collect_inventory_buckets(
+def collect_inventory_buckets(
     revision: ModeloRevision,
     bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> _DataInventoryBuckets:
+    """Group the revision's bindings into data inventory buckets by requirement kind.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     buckets = _DataInventoryBuckets(
         required_manual=[],
         optional_manual=[],
@@ -355,7 +375,7 @@ def _append_binding_inventory_entry(
         buckets.previous_filing.append(entry)
     elif binding_source is BindingSourceKind.RELATION_PREFILL:
         buckets.relation_prefill.append(entry)
-    elif binding_source in _LIVE_OBSERVATION_SOURCE_KINDS:
+    elif binding_source in LIVE_OBSERVATION_SOURCE_KINDS:
         buckets.live_observation.append(entry)
     else:
         buckets.unbucketed_sources.append(entry)

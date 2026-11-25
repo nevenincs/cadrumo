@@ -11,11 +11,15 @@ from pydantic import ValidationError
 from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from cadrumo.application.modelo.verification_preconditions import (
     ModeloVerificationResult,
+    VerificationFindingPreconditionProjection,
     build_verification_precondition_failure,
     project_verification_findings,
 )
 from cadrumo.application.modelo.verification_projection import ModeloVerificationSnapshot
 from cadrumo.application.operations.registry import OperationSchemaBindingV1
+from cadrumo.application.operator_actions.served_actions import serve_precondition_verdict
+from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.domain.modelos.tests.filing_record_test_support import (
     build_iva_settlement_snapshot_for_test,
@@ -23,9 +27,9 @@ from cadrumo.domain.modelos.tests.filing_record_test_support import (
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 
-from .test_verification_preconditions import _blocked_report, _finding
+from .test_verification_preconditions import blocked_report, verification_preconditions_finding
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_filing_snapshot_preserves_settlement_amounts_evidence_and_time() -> None:
@@ -44,10 +48,10 @@ def test_filing_snapshot_preserves_settlement_amounts_evidence_and_time() -> Non
 
 
 def test_report_snapshot_preserves_decimal_string_integer_and_boolean_facts() -> None:
-    base = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    base = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
     facts = {"amount": Decimal("1.00"), "token": "1.00", "count": 1, "allowed": True}
     finding = ModeloVerificationFinding.model_validate(base.model_dump(mode="python") | {"message_facts": facts})
-    report = _blocked_report((finding,))
+    report = blocked_report((finding,))
     failure = build_verification_precondition_failure(
         calculation_revision_id=report.calculation_revision_id,
         work_unit_id="b" * 64,
@@ -62,11 +66,12 @@ def test_report_snapshot_preserves_decimal_string_integer_and_boolean_facts() ->
         published=True,
         finding_preconditions=project_verification_findings((finding,), failures_by_finding_id={id(finding): failure}),
     )
-    snapshot = ModeloVerificationSnapshot.from_verification(outcome)
+    with override_settings(cadrumo_output_language=OutputLanguage.EN.value):
+        snapshot = ModeloVerificationSnapshot.from_verification(outcome)
     binding = OperationSchemaBindingV1.bind(schema_id="test.verification", schema_version=1, model_type=type(snapshot))
     assert binding.identity.schema_id == "test.verification"
     restored = ModeloVerificationSnapshot.model_validate_json(snapshot.model_dump_json()).to_verification()
-    assert restored == outcome
+    assert restored == _served_in(outcome, OutputLanguage.EN)
     assert type(restored.report.findings[0].message_facts["count"]) is int
     assert type(restored.report.findings[0].message_facts["allowed"]) is bool
     assert type(restored.report.findings[0].message_facts["token"]) is str
@@ -76,3 +81,20 @@ def test_report_snapshot_preserves_decimal_string_integer_and_boolean_facts() ->
     tampered["report"]["findings"][0]["message_facts"].append(tampered["report"]["findings"][0]["message_facts"][0])
     with pytest.raises(ValidationError, match="duplicate"):
         ModeloVerificationSnapshot.model_validate_json(json.dumps(tampered))
+
+
+def _served_in(outcome: ModeloVerificationResult, language: OutputLanguage) -> ModeloVerificationResult:
+    """Return ``outcome`` with each precondition verdict as a snapshot serves it in ``language``."""
+    return outcome.model_copy(
+        update={"finding_preconditions": tuple(_served_item(item, language) for item in outcome.finding_preconditions)}
+    )
+
+
+def _served_item(
+    item: VerificationFindingPreconditionProjection, language: OutputLanguage
+) -> VerificationFindingPreconditionProjection:
+    failure = item.precondition_failure
+    if failure is None:
+        return item
+    served = failure.model_copy(update={"verdict": serve_precondition_verdict(failure.verdict, language)})
+    return item.model_copy(update={"precondition_failure": served})

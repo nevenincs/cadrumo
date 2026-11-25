@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -14,14 +15,14 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -37,7 +38,8 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import (
     ModeloFilingRecordListEntryProjection,
@@ -50,13 +52,15 @@ from ..filing_record_list_operation import (
     build_modelo_filing_record_list_registration,
 )
 from ..verification_repository_ports import VerificationRepositoryBundle
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _record(
@@ -64,7 +68,7 @@ def _record(
     profile_id: UUID = _PROFILE,
     actor: str = "synthetic filing operator",
     modelo: str = "303",
-    year: int = 2026,
+    year: int = _FILING_YEAR,
     period_code: str = "1T",
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE,
     confirmed: bool = False,
@@ -133,7 +137,12 @@ def _bundle(*records: ModeloRecord, repository_bucket_id: str | None = None) -> 
 
 
 def _setup(bundle: VerificationRepositoryBundle):
-    def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def factory(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is not None
         return bundle
@@ -170,13 +179,11 @@ def _access_context(
     admitted: OperationAccessRequest | None = None,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
         admitted_request=admitted,
     )
@@ -266,14 +273,14 @@ def test_capture_filters_exact_profile_and_does_not_truncate(monkeypatch: pytest
     superseded_303 = _record(actor="third", modelo="303", status=ModeloRecordStatus.SUPERSEDIDO)
     foreign = _record(profile_id=_OTHER_PROFILE, actor="foreign")
     request = ModeloFilingRecordListRequest(profile_id=_PROFILE, modelo="303")
-    projection = operation_module._capture(
+    projection = operation_module.capture(
         request,
         _bundle(current_100, current_303, superseded_303, foreign),
     )
     assert [row.filing_record_id for row in projection.records] == [current_303.filing_record_id]
     assert projection.record_count == 1
 
-    inclusive = operation_module._capture(
+    inclusive = operation_module.capture(
         ModeloFilingRecordListRequest(profile_id=_PROFILE, modelo="303", include_superseded=True),
         _bundle(current_100, superseded_303, current_303),
     )
@@ -282,7 +289,7 @@ def test_capture_filters_exact_profile_and_does_not_truncate(monkeypatch: pytest
 
     monkeypatch.setattr(operation_module, "MAX_MODELO_FILING_RECORD_LIST_ROWS", 1)
     with pytest.raises(ProfileAccessRefusedError) as oversized:
-        operation_module._capture(
+        operation_module.capture(
             ModeloFilingRecordListRequest(profile_id=_PROFILE, include_superseded=True),
             _bundle(current_303, current_100, superseded_303),
         )
@@ -295,22 +302,8 @@ def test_executor_stores_one_projection_and_reports_none() -> None:
     factory, definition, _registration, _registry = _setup(bundle)
     operation = cast(PinnedAuthorityOperation, object())
     request = _request()
-    phases: list[str] = []
-    effects: list[OperationEffect] = []
-    stored: list[BaseModel] = []
-
-    class Events:
-        async def phase(self, phase_code: str) -> None:
-            phases.append(phase_code)
-
-        async def effect(self, effect: OperationEffect) -> None:
-            effects.append(effect)
-
-    class Operands:
-        async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-            assert written_at.tzinfo is not None
-            stored.append(operand)
-            return "f" * 64
+    events = RecordingEvents()
+    operands = RecordingOperands("f" * 64)
 
     context = SimpleNamespace(
         authority_operation=operation,
@@ -318,19 +311,19 @@ def test_executor_stores_one_projection_and_reports_none() -> None:
             definition_id=MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
             subject_ref=request.subject_ref,
         ),
-        events=Events(),
-        operands=Operands(),
+        events=events,
+        operands=operands,
     )
 
     reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == "f" * 64
-    assert phases == [MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID]
-    assert effects == [OperationEffect.NONE]
-    assert len(stored) == 1
-    assert type(stored[0]) is ModeloFilingRecordListProjection
-    assert stored[0].profile_id == _PROFILE
-    assert stored[0].record_count == len(records)
+    assert events.phases == [MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID]
+    assert events.effects == [OperationEffect.NONE]
+    assert len(operands.stored) == 1
+    assert type(operands.stored[0]) is ModeloFilingRecordListProjection
+    assert operands.stored[0].profile_id == _PROFILE
+    assert operands.stored[0].record_count == len(records)
     assert factory is not None
 
 
@@ -338,7 +331,7 @@ def test_capture_refuses_a_foreign_repository_bucket() -> None:
     from .. import filing_record_list_operation as operation_module
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        operation_module._capture(
+        operation_module.capture(
             ModeloFilingRecordListRequest(profile_id=_PROFILE),
             _bundle(_record(), repository_bucket_id=str(_OTHER_PROFILE)),
         )

@@ -134,9 +134,7 @@ def test_every_projected_target_matches_its_authored_spec() -> None:
         assert spec.result_schema.target is not None
         assert spec.handler is not None
         assert spec.handler.target is not None
-        assert row.schema_owner == spec.result_schema.target.identity
         assert row.schema_name == spec.result_schema.target.qualname
-        assert row.handler_owner == spec.handler.target.identity
 
 
 def test_parameter_choice_projection_uses_the_supplied_graph_owner() -> None:

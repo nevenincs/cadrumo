@@ -12,13 +12,19 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.external_constants import OutputLanguage
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..work_create_operation import (
@@ -34,7 +40,7 @@ from ..work_create_operation import (
     project_modelo_work_create_result,
 )
 from ..work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .test_wizard_context_operation import _unit
+from .test_wizard_context_operation import wizard_context_operation_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -129,7 +135,7 @@ def test_request_schema_and_exact_period_access() -> None:
 
 
 def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> None:
-    unit = ModeloWorkMetadataSnapshot.from_work_unit(_unit())
+    unit = ModeloWorkMetadataSnapshot.from_work_unit(wizard_context_operation_unit())
     for reused, name_applied, effect in (
         (False, None, OperationEffect.UPDATED),
         (True, None, OperationEffect.NONE),
@@ -157,7 +163,12 @@ def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> 
     refusal = ModeloWorkCreateResult(
         profile_id=_PROFILE,
         period=_PERIOD,
-        outcome=ModeloWorkCreateRefusal(modelo="303", reason="taxpayer category excludes this form"),
+        outcome=ModeloWorkCreateRefusal(
+            modelo="303",
+            reason="taxpayer category excludes this form",
+            refusal_words="Modelo 303 does not apply: " + "taxpayer category excludes this form",
+            refusal_words_language=OutputLanguage.EN,
+        ),
     )
     projected = project_modelo_work_create_result(
         refusal, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE)
@@ -165,7 +176,7 @@ def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> 
     assert isinstance(projected, ModeloWorkCreateProjection) and projected.outcome == refusal.outcome
     with pytest.raises(ValueError):
         project_modelo_work_create_result(refusal, _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE))
-    source_unit = _unit()
+    source_unit = wizard_context_operation_unit()
     foreign_unit = ModeloWorkMetadataSnapshot.from_work_unit(
         source_unit.model_copy(
             update={

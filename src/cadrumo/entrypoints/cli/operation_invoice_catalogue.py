@@ -45,6 +45,11 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     InvoiceUpdateResult,
 )
+from ...application.invoices.document_attach_operation import (
+    INVOICE_DOCUMENT_ATTACH_OPERATION_DEFINITION_ID,
+    InvoiceDocumentAttachProjection,
+    InvoiceDocumentAttachRequest,
+)
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.schema import InvoiceKind
@@ -212,10 +217,43 @@ def update_invoice_catalogue(
     return completed, projection
 
 
+def attach_invoice_document(
+    ctx: typer.Context, *, invoice_id: str, source_path: str, source_directory: str
+) -> InvoiceDocumentAttachProjection:
+    """Store one document as a selected invoice's source through the invocation's profile client."""
+    client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
+    completed = run_registered_operation(
+        client,
+        InvoiceDocumentAttachRequest(
+            profile_id=client.profile_id,
+            invoice_id=invoice_id,
+            source_path=source_path,
+            source_directory=source_directory,
+        ),
+        definition_id=INVOICE_DOCUMENT_ATTACH_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=InvoiceDocumentAttachProjection,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+    )
+    projection = completed.projection
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.UPDATED
+        or completed.refusal_code is not None
+        or projection.profile_id != client.profile_id
+        or not projection.invoice_id.startswith(invoice_id.strip())
+    ):
+        raise invalid_completion_error(completed)
+    return projection
+
+
 __all__ = [
     "InvoiceCatalogueListRead",
     "InvoiceCatalogueViewRead",
     "add_invoice_catalogue",
+    "attach_invoice_document",
     "read_invoice_catalogue",
     "remove_invoice_catalogue",
     "update_invoice_catalogue",

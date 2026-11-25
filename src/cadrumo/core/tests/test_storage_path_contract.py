@@ -10,10 +10,7 @@ import pytest
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import (
     STORAGE_ROOT,
-    TEMPORARY_VARIABLES,
     ChildEnvironmentProfile,
-    StorageMode,
-    StorageModeEvidence,
     StorageRootRefusal,
     authority_root_setting_names,
     child_environment,
@@ -27,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_host_resolution_normalizes_missing_components_without_creating_them(tmp_path: Path) -> None:
     raw = tmp_path / "missing" / ".." / "selected"
-    result = storage_root_for({STORAGE_ROOT.variable: str(raw)}, StorageModeEvidence(StorageMode.INSTALLED, None))
+    result = storage_root_for({STORAGE_ROOT.variable: str(raw)})
     assert result == tmp_path / "selected"
     assert not result.exists() and not (tmp_path / "missing").exists()
 
@@ -59,28 +56,19 @@ def test_valid_authority_root_spelling_and_opaque_values_survive(
     assert not (tmp_path / "missing").exists()
 
 
-def test_temporary_home_uses_received_mapping_and_invalid_home_has_no_effects(
+def test_a_root_override_expands_the_received_home_and_an_invalid_home_has_no_effects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     home_name = "USERPROFILE" if os.name == "nt" else "HOME"
     monkeypatch.setenv(home_name, str(tmp_path / "ambient-home"))
     supplied = tmp_path / "supplied-home"
-    environment = child_environment(
-        ChildEnvironmentProfile.OPERATOR,
-        tmp_path / "root",
-        received={home_name: str(supplied), "CADRUMO_TEMP_DIR": "~/unused/../scratch"},
-    )
-    assert environment[TEMPORARY_VARIABLES[0]] == str(supplied / "scratch")
-    assert (supplied / "scratch").is_dir() and not (supplied / "unused").exists()
-    assert not (tmp_path / "ambient-home").exists()
-    root = tmp_path / "refused-root"
+    resolved = storage_root_for({STORAGE_ROOT.variable: "~/unused/../data", home_name: str(supplied)})
+    assert resolved == supplied / "data"
+    assert not supplied.exists() and not (tmp_path / "ambient-home").exists()
     with pytest.raises(CoreValidationError) as error:
-        child_environment(
-            ChildEnvironmentProfile.OPERATOR, root, received={home_name: "\udcff", "CADRUMO_TEMP_DIR": "~/scratch"}
-        )
+        storage_root_for({STORAGE_ROOT.variable: "~/data", home_name: "\udcff"})
     assert error.value.context is not None
     assert error.value.context["storage_root_refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
-    assert not root.exists()
 
 
 def test_member_expansion_refuses_named_users_and_relative_home(tmp_path: Path) -> None:

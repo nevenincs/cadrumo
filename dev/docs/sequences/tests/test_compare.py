@@ -23,6 +23,7 @@ from typing import cast
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
 from .. import compare
@@ -38,12 +39,12 @@ from ..golden_store import (
     SANDBOX_STORAGE_ROOT_PLACEHOLDER,
     SANDBOX_WORKDIR_PLACEHOLDER,
     SequenceGolden,
-    _repo_root,
     build_golden,
     golden_path,
     normalise_document_paths,
     normalise_text_output,
     read_golden,
+    repo_root,
     write_golden,
 )
 from ..parser import parse_sequence
@@ -322,7 +323,7 @@ class TestTextFrameComparison:
 class TestEnvelopePathNormalisation:
     """Value-anchored sandbox/checkout-path tokenisation inside JSON envelopes.
 
-    ``config check``'s ``preflight[...].detail`` strings carry the per-run
+    A diagnostic envelope's ``preflight[...].detail`` strings carry the per-run
     storage root and the machine's absolute corpus paths; the field-level
     ``mask_document`` never looks inside a string value, so without this
     normalisation the golden diverges every run and on every other checkout.
@@ -331,7 +332,7 @@ class TestEnvelopePathNormalisation:
     path, since no simple hermetic command is guaranteed to leak both roots.
     """
 
-    _REPO_ROOT: str = str(_repo_root())
+    _REPO_ROOT: str = str(repo_root())
 
     def _run(self, *, storage_root: str, workdir: str, status: str = "success") -> SequenceTranscript:
         detail = (
@@ -345,8 +346,8 @@ class TestEnvelopePathNormalisation:
         }
         execution = FrameExecution(
             kind=FrameKind.RESULT,
-            command_line="aeat --format json config check",
-            argv=("aeat", "--format", "json", "config", "check"),
+            command_line="aeat --format json config profile list",
+            argv=("aeat", "--format", "json", "config", "profile", "list"),
             exit_code=0,
             output=json.dumps(envelope),
             envelope=envelope,
@@ -355,7 +356,7 @@ class TestEnvelopePathNormalisation:
         return SequenceTranscript(
             sequence_id="path-norm-case",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=storage_root,
             workdir=workdir,
             frames=(execution,),
@@ -569,7 +570,7 @@ class TestExpectEvaluation:
         transcript = SequenceTranscript(
             sequence_id="compare-quoted-key",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox",
             workdir="/sandbox/workdir",
             frames=(execution,),
@@ -717,7 +718,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="exact-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
             workdir=workdir,
             frames=(frame,),
@@ -754,7 +755,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="raw-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox/storage",
             workdir="/sandbox/workdir",
             frames=(frame,),
@@ -803,7 +804,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="captured-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
             workdir=workdir,
             frames=(setup, result),
@@ -842,7 +843,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="pre-tokenized-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox/storage",
             workdir="/sandbox/workdir",
             frames=(frame,),

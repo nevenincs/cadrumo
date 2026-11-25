@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import (
     PersistedProfileSession,
@@ -19,40 +20,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import (
 )
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 
+from .human_keyring_support import HumanKeyring
+from .human_keyring_support import human_keyring as human_keyring
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-class _KeyringError(Exception):
-    """Controlled existing human keyring failure."""
-
-
-class _HumanKeyring:
-    """Exact service/account in-memory keyring for the real receipt writer."""
-
-    def __init__(self) -> None:
-        self.entries: dict[tuple[str, str], str] = {}
-        self.reads = 0
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        """Read one exact human account."""
-        self.reads += 1
-        return self.entries.get((service_name, username))
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        """Store one exact human account."""
-        self.entries[(service_name, username)] = password
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        """Remove one exact human account."""
-        self.entries.pop((service_name, username), None)
-
-
-@pytest.fixture
-def human_keyring(monkeypatch: pytest.MonkeyPatch) -> _HumanKeyring:
-    """Compose the real receipt crypto/filesystem with a controlled store."""
-    keyring = _HumanKeyring()
-    monkeypatch.setattr(receipt, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
-    return keyring
 
 
 def _mint_receipt(root: Path, profile_id: UUID, opened: datetime, dek: bytes) -> PersistedProfileSession:
@@ -94,7 +65,7 @@ def _resume_with_key(
 
 
 def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
-    tmp_path: Path, human_keyring: _HumanKeyring
+    tmp_path: Path, human_keyring: HumanKeyring
 ) -> None:
     profile_id = uuid4()
     other_id = uuid4()
@@ -106,8 +77,8 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
     other_path = receipt.profile_session_path(storage_root=tmp_path, profile_id=other_id)
     original = path.read_bytes()
     other_original = other_path.read_bytes()
-    account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
-    other_account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other_record.session_id}")
+    account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
+    other_account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other_record.session_id}")
     borrowed, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
     assert borrowed.resumed and borrowed.record is None and key is not None and len(key) == 32
     reads = human_keyring.reads
@@ -124,12 +95,12 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
     assert path.read_bytes() == original
     assert human_keyring.reads == reads
     assert recovered is not None
-    receipt._zeroise(recovered)
-    receipt._zeroise(key)
+    receipt.zeroise(recovered)
+    receipt.zeroise(key)
 
 
 def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survives(
-    tmp_path: Path, human_keyring: _HumanKeyring
+    tmp_path: Path, human_keyring: HumanKeyring
 ) -> None:
     profile_id = uuid4()
     opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
@@ -137,7 +108,7 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
     record = _mint_receipt(tmp_path, profile_id, opened, dek)
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     original = path.read_bytes()
-    account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
+    account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
     _, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
     assert key is not None
 
@@ -158,8 +129,8 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
     assert accepted.record == record and recovered == dek
     assert path.read_bytes() == original and account in human_keyring.entries
     assert recovered is not None
-    receipt._zeroise(recovered)
-    receipt._zeroise(key)
+    receipt.zeroise(recovered)
+    receipt.zeroise(key)
 
 
 @pytest.mark.parametrize(
@@ -174,7 +145,7 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
 )
 def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     tmp_path: Path,
-    human_keyring: _HumanKeyring,
+    human_keyring: HumanKeyring,
     case: str,
     reason: ProfileSessionRefusalReason,
     binding: receipt.ReceiptBindingRefusal | None,
@@ -183,7 +154,7 @@ def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
     record = _mint_receipt(tmp_path, profile_id, opened, bytes(range(32)))
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
-    account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
+    account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
     _, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
     assert key is not None
     instant = opened + timedelta(minutes=15 if case == "expired_idle" else 1)
@@ -205,4 +176,4 @@ def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     assert refused.refusal is reason and refused.binding is binding
     assert refused.deletion is receipt.ReceiptDeletion.DELETED
     assert not path.exists() and account not in human_keyring.entries
-    receipt._zeroise(key)
+    receipt.zeroise(key)

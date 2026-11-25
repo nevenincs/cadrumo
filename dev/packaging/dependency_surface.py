@@ -27,7 +27,7 @@ class DependencySurfaceSummary(TypedDict):
     registry_extras: list[str]
 
 
-def _summary() -> DependencySurfaceSummary:
+def dependency_surface_summary() -> DependencySurfaceSummary:
     """Build a dependency-surface summary from pyproject and the runtime registry."""
     repo_root = find_repo_root()
     surfaces = pyproject_surfaces(repo_root)
@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     uv = require_executable("uv")
     assert_optional_extra_registry_matches_pyproject(repo_root)
     validate_frozen_exports(repo_root, uv)
-    summary = _summary()
+    summary = dependency_surface_summary()
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
         return 0

@@ -8,33 +8,26 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
+from .modelo_registry_surface_support import (
+    FORBIDDEN_REMOTE_ACTIONS,
+    assert_authenticated_read_surface_is_read_only,
+    assert_declaration_pdf_profile_legal_refs,
+)
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-_WWW1_HOST = aeat_host("www1")
-_WWW6_HOST = aeat_host("www6")
 
 
 def _load_modelo_840():
-    return _committed_modelo("840")
+    return committed_modelo("840")
 
 
-_FORBIDDEN_REMOTE_ACTIONS = frozenset(
-    [
-        "server-side-save",
-        "signing",
-        "presentation",
-        "payment",
-        "amendment",
-        "cancellation",
-        "document-submission",
-        "declaration-submission",
-    ],
-)
+_REVISION_ID = str(open_ended_revision("840").id)
+
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "orden-hac-2572-2003:apartado-1",
@@ -46,7 +39,7 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 def test_committed_modelo_840_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_840()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2003-y-siguientes"}
+    assert set(modelo.revisions) == {_REVISION_ID}
 
 
 def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
@@ -56,7 +49,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     floor = catalogues.supported_filing_years.floor
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=floor - 1, period="0A")
-    for filing_year in (floor, 2024, 2026):
+    for filing_year in catalogues.supported_filing_years.years:
         # Modelo 840 is the IAE censal declaration: informative, filed on AEAT's
         # own surface, declaring no export layout, and graded `applicability`
         # accordingly. Building at the FILING default refuses on the missing
@@ -72,7 +65,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
             period="0A",
             grade=revision.effective_authority_grade,
         )
-        assert snapshot.revision.id == "2003-y-siguientes", filing_year
+        assert snapshot.revision.id == _REVISION_ID, filing_year
         assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
 
 
@@ -120,33 +113,23 @@ def test_committed_modelo_840_static_cross_reference_forbids_remote_writes() -> 
         decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+        assert FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 
 
 def test_committed_modelo_840_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_840()
-    for revision in modelo.revisions.values():
-        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
-        assert decision.requires_authentication is True
-        assert decision.requires_aeat_authorization is True
-        assert decision.synthetic_data_allowed is False
-        assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
-        assert set(decision.allowed_hosts) == {
-            _WWW1_HOST,
-            _WWW6_HOST,
-        }, revision.id
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+    assert_authenticated_read_surface_is_read_only(modelo)
 
 
-def test_committed_modelo_840_filing_schedule_is_ad_hoc() -> None:
+def test_committed_modelo_840_filing_schedule_is_event_triggered() -> None:
     modelo, _ = _load_modelo_840()
+    assert modelo.cadence == "event"
     for revision in modelo.revisions.values():
         assert revision.filing_schedules, revision.id
         for schedule in revision.filing_schedules:
             # IAE is event-driven (alta/variación/baja within 1 month per RD 243/1995)
-            # rather than a fixed annual plazo; cadence is ad_hoc with the standard 0A
-            # ejercicio reference.
-            assert schedule.period_kind == "ad_hoc"
+            # rather than a fixed annual plazo; the declaration names its 0A ejercicio.
+            assert schedule.period_kind == "event"
             assert schedule.periods == ("0A",)
 
 
@@ -172,15 +155,4 @@ def test_committed_modelo_840_construct_includes_revision_members() -> None:
 
 def test_committed_modelo_840_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_840()
-    for revision in modelo.revisions.values():
-        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
-        assert pdf_profiles, revision.id
-        for profile in pdf_profiles:
-            target_refs = frozenset(
-                legal_ref
-                for target in profile.target_casillas
-                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
-            )
-            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
-            assert set(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+    assert_declaration_pdf_profile_legal_refs(modelo, _DECLARATION_PROFILE_TARGET_LEGAL_REFS)

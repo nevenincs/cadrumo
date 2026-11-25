@@ -41,4 +41,4 @@ def allow_logging_reconfiguration() -> None:
     # The latch is the application's own private process state; the docs engine
     # is the sole host that legitimately re-points logging mid-process, and
     # clearing it here keeps that development-only need out of the product.
-    cadrumo_logging._configured = False
+    cadrumo_logging.configured = False

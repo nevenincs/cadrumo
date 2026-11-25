@@ -1,9 +1,9 @@
 """LLM-owned terminal refusal identities and fact-only verdict construction.
 
 The LLM package owns refusals about dispatch, model output, and the transient
-consent token.  These are deliberately distinct from provisioning's hardware
-and installed-dependency decisions: a full on-host slot, an omitted off-host
-model, and malformed model output are not memory-headroom predicates.  Each
+consent token.  These are deliberately distinct from the load-capacity
+and installed-dependency probes: an omitted off-host model and malformed
+model output are not memory-headroom predicates.  Each
 outcome is terminal because this package has no safe way to bind an executable
 CLI action from those observations.
 """
@@ -36,7 +36,6 @@ class LLMPreconditionCondition(StrEnum):
     EVIDENCE_TOKEN_BOUND = "llm.evidence." + "token_bound"
     EVIDENCE_TOKEN_EPHEMERAL = "llm.evidence." + "token_ephemeral"
     EVIDENCE_TRANSCRIPTION_NONEMPTY = "llm.evidence.transcription_nonempty"
-    LOCAL_INFERENCE_SLOT_AVAILABLE = "llm.local_inference.slot_available"
     PROMPT_DEFINITION_ID_VALID = "llm.prompt_definition.id_valid"
     REQUEST_PROMPT_NONEMPTY = "llm.request.prompt_nonempty"
     VISION_INPUT_SUPPORTED = "llm.vision.input_supported"

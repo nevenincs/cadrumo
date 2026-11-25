@@ -9,18 +9,20 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.facts.payloads import EventFactPayload
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
+from cadrumo.domain.deadlines.festivos import HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID, shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ._gate_support import (
+from .authored_edition_support import newest_authored_edition
+from .gate_support import (
     assert_deadline_window_for_filing_year,
     assert_edition_opens_at_filing_year,
     assert_sole_current_edition,
+    assert_source_refs_not_stale,
 )
-from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -101,19 +103,27 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
     # refusal a caller sees, and the reason underneath it, so a refusal raised
     # for some other reason still reds.
     with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
+        shift = shift_deadline(window.closes_on, modelo="345", operation=operation)
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (
             date(_CURRENT_EDITION + 1, 2, 2),
             True,
             "sabado",
         )
-        # The bundled holiday calendars stop at the exercise that closes the current
-        # edition's window; the following year has no publication to shift against.
-        unpublished_year = _CURRENT_EDITION + 2
+        # The first year after the newest authored holiday calendar publication has
+        # nothing to shift against.
+        publications = authority.catalogues.facts.facts[HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID].variants
+        unpublished_year = (
+            max(
+                variant.payload.event_date.year
+                for variant in publications
+                if isinstance(variant.payload, EventFactPayload)
+            )
+            + 1
+        )
         with pytest.raises(
             DeadlineValidationError, match=f"holiday calendar publication for {unpublished_year}"
         ) as refusal:
-            shift_deadline(date(unpublished_year, 1, 29), modelo="345", ccaa_code=None, operation=operation)
+            shift_deadline(date(unpublished_year, 1, 29), modelo="345", operation=operation)
     assert "no variant for the exact query context" in str(refusal.value.__cause__)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {f"aeat-dr-345-{_CURRENT_EDITION}"}
     # "export" joined the surfaces when the modelo's export layout was authored;
@@ -121,12 +131,7 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
     assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}
     assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-345-anual"}
 
-    stale_refs = {"enrolled-modelo-345-procedure", "enrolled-modelo-345-layout"}
-    observed_source_refs = set(modelo.source_refs) | set(revision.source_refs)
-    observed_source_refs.update(ref.workbook_source for ref in revision.workbook_parity_refs)
-    observed_source_refs.update(ref for casilla in revision.casillas for ref in casilla.source_refs)
-    observed_source_refs.update(ref for link in revision.application_links for ref in link.source_refs)
-    assert stale_refs.isdisjoint(observed_source_refs)
+    assert_source_refs_not_stale(modelo, revision, {"enrolled-modelo-345-procedure", "enrolled-modelo-345-layout"})
 
     verify_legal_catalogue(
         {ref: authority.catalogues.legal[ref] for ref in _M345_LEGAL_REFS},
@@ -136,7 +141,7 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
 
 
 def test_modelo_345_additional_data_subfields_follow_official_record_design() -> None:
-    revision = compiled_bundled_authority().modelo("345").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("345").revisions[str(_CURRENT_EDITION)]
     casillas = {str(casilla.id): casilla for casilla in revision.casillas}
 
     expected = (

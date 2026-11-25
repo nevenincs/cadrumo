@@ -27,11 +27,13 @@ from ..scenario import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_first_quarter_2022_input_iva_is_current_because_the_laptop_is_below_the_investment_floor() -> None:
+def test_first_quarter_of_the_first_year_input_iva_is_current_because_the_laptop_is_below_the_investment_floor() -> (
+    None
+):
     # Issued base 3000 x 21 % = 630.00. Received: material 150 + software 60 +
     # adviser 300 + rent 900 = 1410 x 21 % = 296.10, laptop 1500 x 21 % = 315.00,
     # exempt insurance 0.00.
-    quarter = m303_quarter(2022, "1T")
+    quarter = m303_quarter(YEARS[0], "1T")
 
     assert quarter.devengado == Decimal("630.00")
     assert quarter.deducible_current == Decimal("611.10")
@@ -39,15 +41,15 @@ def test_first_quarter_2022_input_iva_is_current_because_the_laptop_is_below_the
 
 
 def test_furniture_above_the_floor_is_the_only_investment_input_and_opens_a_compensation_chain() -> None:
-    # 2023 2T: issued 1000 x 21 % = 210.00; current 296.10 + training 2000 x 21 % = 420.00;
+    # Second year 2T: issued 1000 x 21 % = 210.00; current 296.10 + training 2000 x 21 % = 420.00;
     # furniture 3600 x 21 % = 756.00 investment. 1T 315.00 - 296.10 = 18.90;
     # 2T 210.00 - 1472.10 = -1262.10 carried; 3T 924.00 - 296.10 - 1262.10 = -634.20
     # carried; 4T 945.00 - 296.10 - 634.20 = 14.70.
-    second = m303_quarter(2023, "2T")
+    second = m303_quarter(YEARS[1], "2T")
 
     assert second.deducible_current == Decimal("716.10")
     assert second.deducible_investment == Decimal("756.00")
-    assert m303_results_with_compensation(2023) == (
+    assert m303_results_with_compensation(YEARS[1]) == (
         Decimal("18.90"),
         Decimal("0"),
         Decimal("0"),
@@ -56,23 +58,23 @@ def test_furniture_above_the_floor_is_the_only_investment_input_and_opens_a_comp
 
 
 def test_a_negative_quarter_leaves_its_excess_for_later_periods_until_absorbed() -> None:
-    # 2023: 2T 210.00 - 1472.10 = -1262.10 left; 3T 924.00 - 296.10 - 1262.10 = -634.20
+    # Second year: 2T 210.00 - 1472.10 = -1262.10 left; 3T 924.00 - 296.10 - 1262.10 = -634.20
     # left; 4T 945.00 - 296.10 - 634.20 = 14.70 a ingresar, so nothing is left.
-    assert m303_compensation_pending_after(2023, "1T") == Decimal("0")
-    assert m303_compensation_pending_after(2023, "2T") == Decimal("1262.10")
-    assert m303_compensation_pending_after(2023, "3T") == Decimal("634.20")
-    assert m303_compensation_pending_after(2023, "4T") == Decimal("0")
+    assert m303_compensation_pending_after(YEARS[1], "1T") == Decimal("0")
+    assert m303_compensation_pending_after(YEARS[1], "2T") == Decimal("1262.10")
+    assert m303_compensation_pending_after(YEARS[1], "3T") == Decimal("634.20")
+    assert m303_compensation_pending_after(YEARS[1], "4T") == Decimal("0")
 
 
 def test_a_fourth_quarter_a_ingresar_leaves_a_proven_zero_for_the_next_year() -> None:
-    # 2024 4T: issued 5600 x 21 % = 1176.00; received material 150 + software 60 +
+    # Third year 4T: issued 5600 x 21 % = 1176.00; received material 150 + software 60 +
     # adviser 300 + rent 900 = 1410 x 21 % = 296.10; 1176.00 - 296.10 = 879.90 a ingresar.
-    quarter = m303_quarter(2024, "4T")
+    quarter = m303_quarter(YEARS[2], "4T")
 
     assert quarter.devengado == Decimal("1176.00")
     assert quarter.deducible == Decimal("296.10")
     assert quarter.quarter_result == Decimal("879.90")
-    assert m303_compensation_pending_after(2024, "4T") == Decimal("0")
+    assert m303_compensation_pending_after(YEARS[2], "4T") == Decimal("0")
 
 
 def test_every_scenario_year_closes_its_fourth_quarter_without_a_cross_year_carry() -> None:
@@ -83,7 +85,7 @@ def test_every_scenario_year_closes_its_fourth_quarter_without_a_cross_year_carr
 def test_only_tangible_assets_above_the_floor_are_iva_investment_goods() -> None:
     investment = {asset.asset_id for asset in ASSETS if asset.is_iva_investment_good}
 
-    assert investment == {"furniture-2023"}
+    assert investment == {f"furniture-{YEARS[1]}"}
     assert all(
         asset.basis > IVA_INVESTMENT_GOOD_FLOOR and asset.kind == "material"
         for asset in ASSETS
@@ -92,19 +94,19 @@ def test_only_tangible_assets_above_the_floor_are_iva_investment_goods() -> None
 
 
 def test_quarterly_professional_withholding_is_fifteen_percent_of_one_adviser() -> None:
-    base, withholding, recipients = withholding_practised(2025, "3T", WithholdingDuty.PROFESSIONAL)
+    base, withholding, recipients = withholding_practised(YEARS[3], "3T", WithholdingDuty.PROFESSIONAL)
 
     assert (base, withholding, recipients) == (Decimal("300.00"), Decimal("45.00"), 1)
 
 
 def test_rent_withholding_is_nineteen_percent_every_quarter() -> None:
     for period in QUARTERS:
-        base, withholding, recipients = withholding_practised(2024, period, WithholdingDuty.URBAN_RENT)
+        base, withholding, recipients = withholding_practised(YEARS[2], period, WithholdingDuty.URBAN_RENT)
         assert (base, withholding, recipients) == (Decimal("900.00"), Decimal("171.00"), 1)
 
 
 def test_the_exempt_insurance_premium_carries_no_iva() -> None:
-    insurance = next(item for item in build_year(2022).received if item.key == "insurance-2022")
+    insurance = next(item for item in build_year(YEARS[0]).received if item.key == f"insurance-{YEARS[0]}")
 
     assert insurance.iva == Decimal("0")
     assert insurance.base == Decimal("480.00")

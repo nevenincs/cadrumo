@@ -22,12 +22,12 @@ import pytest
 from click.testing import Result
 
 from ....domain.transactions.models import derive_transaction_id
-from ....tests.cli_envelope import unwrap_cli_result as _json_result
+from ....tests.cli_envelope import unwrap_cli_result
 from ...tests.ledger_corpus_support import load_active_catalogue
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .profile_world_fixtures import recorded_fx_isolated_backend as _isolated_backend
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -60,7 +60,7 @@ def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
     transaction_id = payload["transaction_id"]
     assert isinstance(transaction_id, str) and len(transaction_id) == 64
     return transaction_id
@@ -78,7 +78,7 @@ def _active_repo() -> Any:
 def _list_rows() -> list[dict[str, Any]]:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return _json_result(listed)["rows"]
+    return unwrap_cli_result(listed)["rows"]
 
 
 def _update_description(transaction_id: str, new_description: str) -> str:
@@ -87,7 +87,7 @@ def _update_description(transaction_id: str, new_description: str) -> str:
         ["--format", "json", "app", "ledger", "update", transaction_id, "--description", new_description],
     )
     assert result.exit_code == 0, result.output
-    raw_transaction_id: object = _json_result(result).get("transaction_id")
+    raw_transaction_id: object = unwrap_cli_result(result).get("transaction_id")
     assert isinstance(raw_transaction_id, str), result.output
     return raw_transaction_id
 
@@ -122,13 +122,13 @@ def test_history_resolves_a_superseded_old_id() -> None:
 
     by_old = _invoke(["--format", "json", "app", "ledger", "history", old_id])
     assert by_old.exit_code == 0, by_old.output
-    old_payload = _json_result(by_old)
+    old_payload = unwrap_cli_result(by_old)
     # The old handle resolves to the current (heir) row.
     assert old_payload["transaction_id"] == new_id
 
     by_new = _invoke(["--format", "json", "app", "ledger", "history", new_id])
     assert by_new.exit_code == 0, by_new.output
-    new_payload = _json_result(by_new)
+    new_payload = unwrap_cli_result(by_new)
 
     # Both handles surface the same lineage chain: the pre-edit create event
     # (anchored on the old id) AND the post-edit update event (anchored on the
@@ -154,7 +154,7 @@ def test_view_resolves_a_superseded_old_id_to_the_current_row() -> None:
 
     by_old = _invoke(["--format", "json", "app", "ledger", "view", old_id])
     assert by_old.exit_code == 0, by_old.output
-    payload = _json_result(by_old)
+    payload = unwrap_cli_result(by_old)
     assert payload["transaction_id"] == new_id
     assert payload["transaction"]["description"] == "Material oficina (corregido)"
 
@@ -166,7 +166,7 @@ def test_track_resolves_a_superseded_old_id() -> None:
 
     by_old = _invoke(["--format", "json", "app", "ledger", "track", old_id])
     assert by_old.exit_code == 0, by_old.output
-    payload = _json_result(by_old)
+    payload = unwrap_cli_result(by_old)
     assert payload["transaction"]["transaction_id"] == new_id
 
 
@@ -180,11 +180,11 @@ def test_multi_edit_chain_resolves_the_oldest_handle() -> None:
     for handle in (id_0, id_1, id_2):
         view = _invoke(["--format", "json", "app", "ledger", "view", handle])
         assert view.exit_code == 0, f"{handle}: {view.output}"
-        assert _json_result(view)["transaction_id"] == id_2
+        assert unwrap_cli_result(view)["transaction_id"] == id_2
 
     history = _invoke(["--format", "json", "app", "ledger", "history", id_0])
     assert history.exit_code == 0, history.output
-    assert _json_result(history)["transaction_id"] == id_2
+    assert unwrap_cli_result(history)["transaction_id"] == id_2
 
 
 def test_current_id_still_resolves_unchanged() -> None:
@@ -238,12 +238,12 @@ def test_split_parent_id_still_resolves_after_split() -> None:
     # The parent handle still answers (it was never removed).
     parent_view = _invoke(["--format", "json", "app", "ledger", "view", parent])
     assert parent_view.exit_code == 0, parent_view.output
-    assert _json_result(parent_view)["transaction_id"] == parent
+    assert unwrap_cli_result(parent_view)["transaction_id"] == parent
 
     # The split siblings (parent -> children) surface when opted in.
     history = _invoke(["--format", "json", "app", "ledger", "history", parent, "--include-split-siblings"])
     assert history.exit_code == 0, history.output
-    events = _json_result(history)["events"]
+    events = unwrap_cli_result(history)["events"]
     assert any(e["event_type"] == "ledger.transaction.split" for e in events)
     # The child id is independently addressable.
     child_view = _invoke(["--format", "json", "app", "ledger", "view", child_a])
@@ -297,19 +297,19 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
         ],
     )
     assert merged.exit_code == 0, merged.output
-    merged_id = _json_result(merged)["merged_transaction_id"]
+    merged_id = unwrap_cli_result(merged)["merged_transaction_id"]
     assert merged_id not in {child_a, child_b, parent}
 
     # The archived child ids still resolve to their own (ARCHIVED) records.
     for child in (child_a, child_b):
         view = _invoke(["--format", "json", "app", "ledger", "view", child])
         assert view.exit_code == 0, f"{child}: {view.output}"
-        assert _json_result(view)["transaction_id"] == child
+        assert unwrap_cli_result(view)["transaction_id"] == child
 
     # The merge event chain is reachable from the parent handle.
     history = _invoke(["--format", "json", "app", "ledger", "history", parent])
     assert history.exit_code == 0, history.output
-    events = _json_result(history)["events"]
+    events = unwrap_cli_result(history)["events"]
     assert any(e["event_type"] == "ledger.transaction.merged" for e in events)
 
     # The fresh merged row's id is its own content hash (content-addressing

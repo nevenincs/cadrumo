@@ -1,14 +1,16 @@
-"""Which lane answers a tax model run, decided by the real resolver over the profile's settings."""
+"""Which lane and model answer a tax model run: the person's selected model, checked by capability, through the real resolver."""
 
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
@@ -19,49 +21,94 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
-from ...domain.catalog import parse_provider_catalog
+from ....adapters.served_catalog_models import ServedCatalogModels
+from ....local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, ServedLocalAi
+from ...domain.catalog import BackgroundOption, EffortLevel, parse_provider_catalog
+from ...domain.record import (
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+    ListedModel,
+    LocalEngine,
+    LocalModelListRecord,
+    LocalPlacement,
+    TaskModel,
+    new_settings_generation,
+)
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
-from ..model_runs import ModelRunService
-from ..ports import StoreRefusal, StoreRefusalCode
+from ..model_runs import ROLE_CAPABILITIES, ModelRunService
+from ..ports import LiveLaneBackground, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
-from .memory_store import MemoryProviderSettingsStore
+from .memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
+    HOSTED_TEXT_MODELS,
+    HOSTED_VISION_MODELS,
     KEY_LANE,
+    KEYLESS_LANE,
+    KEYLESS_TEXT_MODEL,
+    KEYLESS_VISION_MODEL,
     OTHER_KEY_LANE,
-    SIGN_IN_ONLY_LANE,
     ProvidedProviderCatalogSource,
+    StaticLiveModels,
+    engine_catalog,
+    live_model,
+    sleeping_engine_document,
     synthetic_document,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DEFAULT_MODELS = {KEY_LANE: "example-model-a", SIGN_IN_ONLY_LANE: "example-model-c", OTHER_KEY_LANE: "other-model"}
+_DEFAULT_MODELS = {KEY_LANE: "example-model-a", OTHER_KEY_LANE: "other-model"}
+"""Catalogue defaults on two hosted lanes, so a test can show the lookup never reads one."""
+
+_ADDED = "custom-model:test"
+"""A model the person added by name; no catalogue declares it."""
+
+_SPARE_LANE = "spare_api"
+"""A second keyless lane, after the first in catalogue order."""
+
+_HOSTED_TEXT = HOSTED_TEXT_MODELS[0]
+_HOSTED_VISION = HOSTED_VISION_MODELS[0]
 
 
-def _catalog_source() -> ProvidedProviderCatalogSource:
-    """The synthetic catalog, with a default model on three lanes, through the real parser."""
+def _catalog_source(**local: Any) -> ProvidedProviderCatalogSource:
+    """The synthetic catalog with hosted defaults, its keyless lane changed by ``local``, through the real parser.
+
+    ``spare`` adds a second keyless lane declaring the same models.
+    """
     document = json.loads(synthetic_document())
+    spare = local.pop("spare", False)
     for lane in document["providers"]:
         if lane["id"] in _DEFAULT_MODELS:
             lane["default_model"] = _DEFAULT_MODELS[lane["id"]]
+        if lane["id"] == KEYLESS_LANE:
+            lane.update(local)
+            if spare:
+                document["providers"].append(lane | {"id": _SPARE_LANE, "provider": "spare", "display_name": "Spare"})
     return ProvidedProviderCatalogSource(parse_provider_catalog(json.dumps(document)))
 
 
 class _RecordingGateway:
     def __init__(self) -> None:
         self.runs: list[tuple[ModelRunLane, ModelRunBody, int]] = []
-        self.accepts: tuple[ModelRunMediaKind, ...] | None = None
+        self.options: list[tuple[BackgroundOption, ...]] = []
+        self.efforts: list[EffortLevel | None] = []
 
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        del lane
-        return self.accepts
-
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
+    def run(
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
+    ) -> ModelRunOutput | ModelRunRefusal:
         self.runs.append((lane, body, deadline_seconds))
+        self.options.append(options)
+        self.efforts.append(effort)
         return ModelRunOutput(
             text="{}", provider_id=lane.provider_id, transport=lane.transport, model=lane.model, agent_version="t"
         )
@@ -69,20 +116,54 @@ class _RecordingGateway:
 
 def _harness(
     store: MemoryProviderSettingsStore,
+    model_list: MemoryLocalModelListStore,
+    live: StaticLiveModels | None = None,
+    source: ProvidedProviderCatalogSource | None = None,
 ) -> tuple[ModelRunService, ProviderSettingsService, _RecordingGateway]:
-    source = _catalog_source()
+    source = _catalog_source() if source is None else source
     gateway = _RecordingGateway()
-    resolver = ProviderCredentialResolver(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
+    resolver = ProviderCredentialResolver(store=store, catalog_source=source)
+    settings = ProviderSettingsService(selected_engine=lambda: LocalEngine.LLAMACPP, store=store, catalog_source=source)
+    runs = ModelRunService(
+        model_list=model_list,
+        resolver=resolver,
+        catalog_source=source,
+        live_models=StaticLiveModels() if live is None else live,
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=gateway,
     )
-    settings = ProviderSettingsService(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
+    return runs, settings, gateway
+
+
+def _store(
+    model_list: MemoryLocalModelListStore,
+    *added: tuple[str, str],
+    reading: tuple[str, str] | None,
+    tasks: tuple[TaskModel, ...] = (),
+) -> None:
+    """Store the models added to the local lists, the model the person selected to read with and task settings."""
+    record = LocalModelListRecord(
+        tasks=tasks,
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        engine=LocalEngine.OLLAMA,
+        placement=LocalPlacement.AUTO,
+        models=tuple(ListedModel(lane=lane, model=model) for lane, model in added),
+        reading=None if reading is None else ListedModel(lane=reading[0], model=reading[1]),
+        generation=new_settings_generation(),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
     )
-    return ModelRunService(resolver=resolver, catalog_source=source, gateway=gateway), settings, gateway
+    expected = model_list.stored.revision if model_list.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
+    assert model_list.write(record, expected_revision=expected) is None
+
+
+def _selected(lane: str, model: str, *added: tuple[str, str]) -> MemoryLocalModelListStore:
+    model_list = MemoryLocalModelListStore()
+    _store(model_list, *added, reading=(lane, model))
+    return model_list
 
 
 def _revision(settings: ProviderSettingsService, lane: str) -> str:
-    status = settings.status()
+    status = settings.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus)
     return next(entry.revision for entry in status.providers if entry.id == lane)
 
@@ -93,87 +174,314 @@ def _turn_off(settings: ProviderSettingsService, lane: str) -> None:
     )
 
 
-def _header(*, consent: ModelRunConsentBinding | None = None) -> ModelRunHeader:
-    return ModelRunHeader(role="text_extraction", deadline_seconds=30, consent=consent)
+def _store_key(settings: ProviderSettingsService, lane: str) -> None:
+    stored = settings.set_credential(
+        lane, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+    )
+    assert isinstance(stored, ProviderSettingsActionAccepted)
+
+
+def _header(
+    *,
+    role: str = "text_extraction",
+    consent: ModelRunConsentBinding | None = None,
+    task_kind: ModelRunTaskKind | None = None,
+) -> ModelRunHeader:
+    return ModelRunHeader(role=role, task_kind=task_kind, deadline_seconds=30, consent=consent)
+
+
+def _consent(provider_id: str, model: str = KEYLESS_TEXT_MODEL, *, transport: str = "api") -> ModelRunConsentBinding:
+    return ModelRunConsentBinding(
+        evidence_content_address="a" * 64, provider_id=provider_id, transport=transport, model=model
+    )
 
 
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
 
 
-def test_a_cli_lane_reached_by_its_own_sign_in_is_the_default_when_no_key_is_stored() -> None:
-    """Parity: the default selection is the first reachable lane in catalog order, CLI or API."""
-    runs, _, _ = _harness(MemoryProviderSettingsStore())
-
-    assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="cli", model="example-model-c"
+def _background(
+    media: tuple[ModelRunMediaKind, ...] | None,
+    *options: BackgroundOption,
+    model_efforts: dict[str, tuple[EffortLevel, ...]] | None = None,
+) -> LiveLaneBackground:
+    return LiveLaneBackground(
+        accepted_media=media, options=options, model_efforts={} if model_efforts is None else model_efforts
     )
 
 
-def test_an_earlier_lane_with_a_stored_key_wins() -> None:
-    store = MemoryProviderSettingsStore()
-    runs, settings, _ = _harness(store)
-    stored = settings.set_credential(
-        KEY_LANE, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+def _hosted(model: str) -> ModelRunLane:
+    """The lane a declared synthetic hosted model resolves to: off-host."""
+    return ModelRunLane(provider_id="example", transport="api", model=model, reads_off_host=True)
+
+
+def _declared(model: str, *, provider_id: str = "local") -> ModelRunLane:
+    """The lane a declared synthetic local model resolves to: on this computer."""
+    return ModelRunLane(provider_id=provider_id, transport="api", model=model, reads_off_host=False)
+
+
+def _installed(*models: tuple[str, bool | None, bool | None]) -> StaticLiveModels:
+    """A running agent whose local lane lists ``(model, vision, installed)`` entries."""
+    return StaticLiveModels(
+        {
+            ("local", "api"): tuple(
+                live_model(model, vision=vision, installed=installed) for model, vision, installed in models
+            )
+        }
     )
-    assert isinstance(stored, ProviderSettingsActionAccepted)
 
-    assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="api", model="example-model-a"
+
+_NO_SELECTION = ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+_LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+_NO_IMAGES = ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
+
+
+def test_every_role_has_a_capability_and_only_vision_transcription_reads_images() -> None:
+    assert set(ROLE_CAPABILITIES) == set(ModelRole)
+    assert {role for role, capability in ROLE_CAPABILITIES.items() if capability.value == "vision"} == {
+        ModelRole.VISION_TRANSCRIPTION
+    }
+
+
+def test_with_no_model_selected_every_role_refuses_and_no_recommended_model_stands_in() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), MemoryLocalModelListStore())
+    _store_key(settings, KEY_LANE)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _NO_SELECTION
+    assert runs.run(_header(), _BODY) == _NO_SELECTION
+    assert gateway.runs == []
+
+
+def test_a_list_with_added_models_but_no_selection_still_refuses() -> None:
+    model_list = MemoryLocalModelListStore()
+    _store(model_list, (KEYLESS_LANE, _ADDED), reading=None)
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _NO_SELECTION
+
+
+def test_a_selected_local_vision_model_serves_every_role() -> None:
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL))
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _declared(KEYLESS_VISION_MODEL)
+
+
+def test_a_selected_text_model_reads_text_and_refuses_images_in_plain_terms() -> None:
+    """No other model stands in: the recommended vision model on the same lane is not used."""
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
+
+    assert runs.lookup("vision_transcription") == _NO_IMAGES
+    for role in ("text_extraction", "column_role_mapping", "supply_nature_proposal"):
+        assert runs.lookup(role) == _declared(KEYLESS_TEXT_MODEL)
+    assert runs.run(_header(role="vision_transcription"), _BODY) == _NO_IMAGES
+    assert gateway.runs == []
+
+
+def test_a_selected_hosted_model_serves_with_a_stored_key_and_reads_off_host() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, _HOSTED_VISION))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("vision_transcription") == _hosted(_HOSTED_VISION)
+    assert runs.lookup("text_extraction") == _hosted(_HOSTED_VISION)
+
+
+def test_a_selected_hosted_model_whose_vision_is_unstated_refuses_images_only() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, _HOSTED_TEXT))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("vision_transcription") == _NO_IMAGES
+    assert runs.lookup("text_extraction") == _hosted(_HOSTED_TEXT)
+
+
+def test_a_selected_hosted_model_without_its_key_is_unavailable_and_no_other_lane_stands_in() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, _HOSTED_TEXT))
+    _store_key(settings, OTHER_KEY_LANE)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _LANE_UNAVAILABLE
+    assert runs.run(_header(), _BODY) == _LANE_UNAVAILABLE
+    assert gateway.runs == []
+
+
+def test_a_written_model_no_entry_lists_reads_text_with_no_facts_and_never_images() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, "written-model"))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("text_extraction") == _hosted("written-model")
+    assert runs.lookup("vision_transcription") == _NO_IMAGES
+
+
+def test_a_selected_local_model_of_unstated_install_state_resolves_for_the_agent_to_refuse_at_run_start() -> None:
+    live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, None))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
+
+    assert runs.lookup("vision_transcription") == _declared(KEYLESS_VISION_MODEL)
+
+
+def test_a_selected_local_model_the_server_says_it_lacks_gives_way_and_no_installed_vision_model_stands_in() -> None:
+    live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, False))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
+
+    assert runs.lookup("vision_transcription") == _NO_SELECTION
+    text = runs.lookup("text_extraction")
+    assert isinstance(text, ModelRunLane) and text.model == KEYLESS_TEXT_MODEL
+
+
+def test_a_selected_added_model_the_server_holds_reads_text_and_its_unstated_vision_refuses_images() -> None:
+    model_list = _selected(KEYLESS_LANE, _ADDED, (KEYLESS_LANE, _ADDED))
+    live = _installed((KEYLESS_VISION_MODEL, True, True), (_ADDED, None, True))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    text = runs.lookup("supply_nature_proposal")
+
+    assert isinstance(text, ModelRunLane)
+    assert text.model == _ADDED
+    assert runs.lookup("vision_transcription") == _NO_IMAGES
+
+
+def test_a_selected_added_model_marked_vision_reads_images() -> None:
+    model_list = _selected(KEYLESS_LANE, _ADDED, (KEYLESS_LANE, _ADDED))
+    live = _installed((_ADDED, True, True))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    lane = runs.lookup("vision_transcription")
+
+    assert isinstance(lane, ModelRunLane) and lane.model == _ADDED
+
+
+def test_a_local_model_taken_off_its_list_is_no_longer_selected() -> None:
+    """The server still holds it, but the person's list no longer offers it."""
+    live = _installed((_ADDED, True, True))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, _ADDED), live)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _NO_SELECTION
+
+
+def test_a_lane_whose_runs_take_no_image_cannot_read_images_with_a_vision_model() -> None:
+    source = _catalog_source(background={"runnable": True, "inputs": ["text"], "options": []})
+    model_list = _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL)
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, source=source)
+
+    assert runs.lookup("vision_transcription") == _NO_IMAGES
+    assert isinstance(runs.lookup("text_extraction"), ModelRunLane)
+
+
+def test_a_lane_that_runs_no_background_request_is_unavailable() -> None:
+    source = _catalog_source(background={"runnable": False, "inputs": [], "options": []})
+    model_list = _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, source=source)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _LANE_UNAVAILABLE
+
+
+def test_a_selected_lane_the_catalogue_no_longer_reports_is_unavailable() -> None:
+    document = json.loads(synthetic_document())
+    document["providers"] = [lane for lane in document["providers"] if lane["id"] != KEYLESS_LANE]
+    source = ProvidedProviderCatalogSource(parse_provider_catalog(json.dumps(document)))
+    model_list = _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), model_list, source=source)
+    _store_key(settings, KEY_LANE)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _LANE_UNAVAILABLE
+
+
+def test_a_selected_local_lane_turned_off_is_unavailable_and_another_local_lane_does_not_stand_in() -> None:
+    source = _catalog_source(spare=True)
+    runs, settings, _ = _harness(
+        MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), source=source
     )
 
+    assert runs.lookup("text_extraction") == _declared(KEYLESS_TEXT_MODEL)
+    _turn_off(settings, KEYLESS_LANE)
+    assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
 
-def test_a_lane_turned_off_is_never_chosen() -> None:
-    store = MemoryProviderSettingsStore()
-    runs, settings, _ = _harness(store)
-    _turn_off(settings, SIGN_IN_ONLY_LANE)
 
-    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+def test_a_role_outside_the_vocabulary_refuses_as_unknown_not_as_unserved() -> None:
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
 
-    stored = settings.set_credential(
-        OTHER_KEY_LANE, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
-    )
-    assert isinstance(stored, ProviderSettingsActionAccepted)
-    assert runs.lookup("text_extraction") == ModelRunLane(provider_id="other", transport="api", model="other-model")
+    assert runs.lookup("unknown_role") == ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
+    assert runs.run(_header(role="unknown_role"), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
+
+
+def test_an_unreadable_record_refuses_every_role_rather_than_reading_as_unselected() -> None:
+    model_list = MemoryLocalModelListStore()
+    model_list.unreadable = "c" * 64
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list)
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _LANE_UNAVAILABLE
 
 
 def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
-    store = MemoryProviderSettingsStore()
-    store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
-    runs, _, gateway = _harness(store)
+    model_list = MemoryLocalModelListStore()
+    model_list.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), model_list)
 
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
     assert gateway.runs == []
 
 
-def test_a_run_whose_consent_names_another_lane_is_refused_before_it_is_sent() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
-    consent = ModelRunConsentBinding(
-        evidence_content_address="a" * 64, provider_id="example", transport="api", model="example-model-a"
-    )
+def test_a_lane_the_catalogue_declares_on_host_runs_without_consent() -> None:
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
 
-    assert runs.run(_header(consent=consent), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    output = runs.run(_header(), _BODY)
+
+    assert isinstance(output, ModelRunOutput)
+    ((ran_on, body, deadline),) = gateway.runs
+    assert (ran_on.provider_id, ran_on.model, ran_on.reads_off_host) == ("local", KEYLESS_TEXT_MODEL, False)
+    assert (body, deadline) == (_BODY, 30)
+
+
+def test_consent_recorded_for_another_lane_does_not_carry_to_the_lane_the_role_resolves_to() -> None:
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
+
+    refused = runs.run(_header(consent=_consent("example", transport="cli")), _BODY)
+
+    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
     assert gateway.runs == []
 
 
-def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
-    consent = ModelRunConsentBinding(
-        evidence_content_address="a" * 64, provider_id="example", transport="cli", model="example-model-c"
+def test_a_local_lane_the_catalogue_declares_off_host_needs_consent_bound_to_it() -> None:
+    source = _catalog_source(reads_off_host=True)
+    model_list = _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), model_list, source=source)
+
+    lane = runs.lookup("text_extraction")
+    assert isinstance(lane, ModelRunLane) and lane.reads_off_host is True
+    assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert runs.run(_header(consent=_consent("local", KEYLESS_VISION_MODEL)), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.CONSENT_MISSING
     )
+    assert gateway.runs == []
 
-    output = runs.run(_header(consent=consent), _BODY)
+    consent = _consent("local")
+    assert isinstance(runs.run(_header(consent=consent), _BODY), ModelRunOutput)
+    ((ran_on, _, _),) = gateway.runs
+    assert consent.matches(ran_on)
 
-    assert isinstance(output, ModelRunOutput)
-    ((lane, body, deadline),) = gateway.runs
-    assert consent.matches(lane)
-    assert body == _BODY
-    assert deadline == 30
+
+def test_a_run_decided_on_host_is_refused_when_its_lane_now_reads_off_host() -> None:
+    """The tax side bound no consent because its lookup found an on-host lane; the catalogue then changed."""
+    model_list = _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    store = MemoryProviderSettingsStore()
+    runs, _, _ = _harness(store, model_list)
+    looked_up = runs.lookup("text_extraction")
+    assert isinstance(looked_up, ModelRunLane) and looked_up.reads_off_host is False
+    changed, _, gateway = _harness(store, model_list, source=_catalog_source(reads_off_host=True))
+
+    assert changed.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert gateway.runs == []
 
 
 def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is_never_sent() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
-    gateway.accepts = (ModelRunMediaKind.IMAGE,)
+    live = StaticLiveModels(backgrounds={("local", "api"): _background((ModelRunMediaKind.IMAGE,))})
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
     pdf = ModelRunAttachment(media_type="application/pdf", base64_data="JVBERi0=")
 
     lane = runs.lookup("text_extraction")
@@ -187,14 +495,277 @@ def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is
 def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> None:
     source = _catalog_source()
     store = MemoryProviderSettingsStore()
-    resolver = ProviderCredentialResolver(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
-    )
+    resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     gateway = HostedBackgroundRuns(
         endpoint=lambda: None, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )
-    runs = ModelRunService(resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(
+        model_list=_selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL),
+        resolver=resolver,
+        catalog_source=source,
+        live_models=StaticLiveModels(),
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=gateway,
+    )
 
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+
+
+def test_one_run_reads_its_media_and_its_options_from_one_live_catalogue_snapshot() -> None:
+    """The lookup a run repeats and the options it sends come from one snapshot; the next run takes its own."""
+    live = StaticLiveModels(
+        backgrounds={
+            ("local", "api"): _background(
+                (ModelRunMediaKind.IMAGE,), BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA
+            )
+        }
+    )
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
+    image = ModelRunAttachment(media_type="image/png", base64_data="iVBORw0=")
+    body = _BODY.model_copy(update={"attachments": (image,), "temperature": 0.0})
+
+    assert isinstance(runs.run(_header(), body), ModelRunOutput)
+    assert isinstance(runs.run(_header(), body), ModelRunOutput)
+
+    assert live.snapshots == 2
+    assert gateway.options == [(BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA)] * 2
+    assert gateway.runs[0][0].accepted_media == (ModelRunMediaKind.IMAGE,)
+
+
+def test_a_run_on_a_lane_the_live_catalogue_does_not_describe_sends_no_option() -> None:
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+
+    assert gateway.options == [()]
+    assert gateway.runs[0][0].accepted_media is None
+
+
+@pytest.mark.parametrize(
+    ("model_efforts", "honoured"),
+    [
+        pytest.param(
+            {KEYLESS_TEXT_MODEL: ("low", "high")},
+            (BackgroundOption.TEMPERATURE, BackgroundOption.EFFORT),
+            id="model-offers-levels",
+        ),
+        pytest.param({}, (BackgroundOption.TEMPERATURE,), id="model-states-no-level"),
+        pytest.param({KEYLESS_VISION_MODEL: ("high",)}, (BackgroundOption.TEMPERATURE,), id="another-model-offers"),
+    ],
+)
+def test_effort_is_honoured_only_where_the_lane_states_it_and_the_run_s_model_offers_a_level(
+    model_efforts: dict[str, tuple[str, ...]], honoured: tuple[BackgroundOption, ...]
+) -> None:
+    live = StaticLiveModels(
+        backgrounds={
+            ("local", "api"): _background(
+                None, BackgroundOption.TEMPERATURE, BackgroundOption.EFFORT, model_efforts=model_efforts
+            )
+        }
+    )
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+
+    assert gateway.options == [honoured]
+
+
+def test_a_tax_run_names_no_effort_even_where_the_lane_and_model_take_one() -> None:
+    live = StaticLiveModels(
+        backgrounds={
+            ("local", "api"): _background(
+                None, BackgroundOption.EFFORT, model_efforts={KEYLESS_TEXT_MODEL: ("low", "high")}
+            )
+        }
+    )
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+
+    assert gateway.options == [(BackgroundOption.EFFORT,)]
+    assert gateway.efforts == [None]
+
+
+def _tasked(
+    *tasks: TaskModel,
+    reading: tuple[str, str] = (KEYLESS_LANE, KEYLESS_TEXT_MODEL),
+    added: tuple[tuple[str, str], ...] = (),
+) -> MemoryLocalModelListStore:
+    """A list whose reading model is local, with ``tasks`` set per kind."""
+    model_list = MemoryLocalModelListStore()
+    _store(model_list, *added, reading=reading, tasks=tasks)
+    return model_list
+
+
+def _task(kind: ModelRunTaskKind, lane: str, model: str, effort: str | None = None) -> TaskModel:
+    return TaskModel(task_kind=kind.value, lane=lane, model=model, effort=effort)
+
+
+_CLASSIFY = ModelRunTaskKind.CLASSIFICATION
+_EXTRACT = ModelRunTaskKind.EXTRACTION
+
+
+def test_a_task_kind_with_a_setting_resolves_to_it_before_the_picked_reading_model() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _hosted(_HOSTED_TEXT)
+    assert isinstance(
+        runs.run(_header(task_kind=_CLASSIFY, consent=_consent("example", _HOSTED_TEXT)), _BODY), ModelRunOutput
+    )
+    assert gateway.runs[0][0] == _hosted(_HOSTED_TEXT)
+
+
+def test_a_task_kind_without_a_setting_and_a_run_naming_no_kind_use_the_picked_reading_model() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_EXTRACT) == _declared(KEYLESS_TEXT_MODEL)
+    assert runs.lookup("text_extraction") == _declared(KEYLESS_TEXT_MODEL)
+
+
+def test_a_task_setting_that_cannot_run_refuses_and_the_reading_model_never_stands_in() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, OTHER_KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _LANE_UNAVAILABLE
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == _LANE_UNAVAILABLE
+    assert gateway.runs == []
+
+
+def test_a_task_setting_on_a_lane_the_catalogue_no_longer_reports_is_unavailable() -> None:
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, "gone_api", "some-model")))
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _LANE_UNAVAILABLE
+
+
+def test_a_task_setting_keeps_the_capability_refusals_of_the_role() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_EXTRACT, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("vision_transcription", task_kind=_EXTRACT) == _NO_IMAGES
+    assert runs.lookup("text_extraction", task_kind=_EXTRACT) == _hosted(_HOSTED_TEXT)
+
+
+def test_a_task_setting_on_a_local_model_taken_off_its_list_refuses_as_no_selection() -> None:
+    live = _installed((_ADDED, False, True))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED)), live)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _NO_SELECTION
+
+
+def test_a_task_setting_on_a_local_model_the_server_lacks_refuses_as_not_installed() -> None:
+    live = _installed((_ADDED, False, False))
+    model_list = _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED), added=((KEYLESS_LANE, _ADDED),))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.MODEL_NOT_INSTALLED
+    )
+
+
+def test_a_task_setting_on_an_added_local_model_the_server_holds_runs_on_it() -> None:
+    live = _installed((_ADDED, False, True))
+    model_list = _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED), added=((KEYLESS_LANE, _ADDED),))
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
+    assert gateway.runs[0][0].model == _ADDED
+
+
+def test_consent_must_name_the_task_setting_s_off_host_lane_not_the_reading_model_s() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    refused = runs.run(_header(task_kind=_CLASSIFY, consent=_consent("local")), _BODY)
+    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert gateway.runs == []
+
+
+def _effort_live(*options: BackgroundOption, levels: tuple[str, ...]) -> StaticLiveModels:
+    return StaticLiveModels(
+        {("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),)},
+        backgrounds={("local", "api"): _background(None, *options, model_efforts={KEYLESS_TEXT_MODEL: levels})},
+    )
+
+
+def test_a_task_setting_s_effort_is_sent_where_the_lane_honours_effort_and_the_model_lists_the_level() -> None:
+    live = _effort_live(BackgroundOption.EFFORT, levels=("low", "high"))
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL, "high")), live
+    )
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
+    assert gateway.efforts == ["high"]
+    assert gateway.options == [(BackgroundOption.EFFORT,)]
+
+
+@pytest.mark.parametrize(
+    ("options", "levels"),
+    [
+        pytest.param((BackgroundOption.TEMPERATURE,), ("low", "high"), id="lane-does-not-honour-effort"),
+        pytest.param((BackgroundOption.EFFORT,), ("low",), id="model-does-not-list-the-level"),
+        pytest.param((BackgroundOption.EFFORT,), (), id="model-states-no-level"),
+    ],
+)
+def test_a_task_setting_s_effort_the_lane_does_not_offer_refuses_before_anything_is_sent(
+    options: tuple[BackgroundOption, ...], levels: tuple[str, ...]
+) -> None:
+    live = _effort_live(*options, levels=levels)
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL, "high")), live
+    )
+
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED
+    )
+    assert gateway.runs == []
+
+
+def test_a_task_setting_without_an_effort_names_none() -> None:
+    live = _effort_live(BackgroundOption.EFFORT, levels=("low", "high"))
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL)), live
+    )
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
+    assert gateway.efforts == [None]
+
+
+def test_a_sleeping_local_server_s_stored_model_stands_in_and_the_run_reaches_the_gateway() -> None:
+    """On a fresh profile the agent lists the sleeping server's models as not held; the manager's files hold one."""
+    source = ProvidedProviderCatalogSource(engine_catalog())
+    served = ServedLocalAi()
+    document = sleeping_engine_document(LocalEngine.LLAMACPP, KEYLESS_TEXT_MODEL, KEYLESS_VISION_MODEL)
+    gateway = _RecordingGateway()
+    runs = ModelRunService(
+        model_list=MemoryLocalModelListStore(),
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=ServedCatalogModels(served.over(lambda: document)),
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=gateway,
+    )
+
+    assert runs.run(_header(), _BODY) == _NO_SELECTION
+    assert gateway.runs == []
+
+    served.keep(
+        LocalAiFacts(
+            engine=LocalEngine.LLAMACPP,
+            server=LocalAiServer.DORMANT,
+            models=(
+                LocalAiModel(name=KEYLESS_TEXT_MODEL, stored=True),
+                LocalAiModel(name=KEYLESS_VISION_MODEL, stored=False),
+            ),
+        )
+    )
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+    # The agent's background record takes no attachment family, so the lane carries none.
+    reached = _declared(KEYLESS_TEXT_MODEL, provider_id="llamacpp").model_copy(update={"accepted_media": ()})
+    assert [lane for lane, _, _ in gateway.runs] == [reached]
+    assert runs.lookup("vision_transcription") == _NO_SELECTION

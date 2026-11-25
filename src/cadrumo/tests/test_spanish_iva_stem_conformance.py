@@ -26,9 +26,12 @@ _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     # A word printed on a foreign-language invoice, not a Cadrumo identifier.
     "application/ledger/invoice_label_vocabulary.py": frozenset({"vat"}),
+    # The tax-scheme code that EN 16931 e-invoices (UBL and CII) print for IVA.
+    "adapters/inbound/einvoice/tests/test_withheld_tax_reading.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
+    "adapters/inbound/einvoice/tests/test_withheld_tax_reading.py": frozenset({"VAT"}),
     # Label alternations matched against text printed on foreign-language invoices.
     "application/ledger/invoice_label_vocabulary.py": frozenset(
         {
@@ -43,7 +46,7 @@ _EXTERNAL_VAT_PROSE_VALUES = {
             "vat",
         },
     ),
-    "domain/calculations/registry/tests/test_registry_locales_parity.py": frozenset(
+    "domain/calculations/registry/tests/registry_locales_parity_scenarios.py": frozenset(
         {
             "Output VAT amount at the standard rate (21%)",
             "Total output VAT calculated at the standard 21% rate.",
@@ -53,12 +56,15 @@ _EXTERNAL_VAT_PROSE_VALUES = {
         {
             "(^|[._:/-])vat([._:/-]|$)",
             "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%",
+            "taxed at 13% vat rate instead of the current 9%",
             "reduced vat rate 13,5%",
+            "reduced vat rate 10%",
+            "basic vat rate (25,5%)",
         },
     ),
     # The rendered English operator label for the Modelo 349 operator identifier.
     "entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py": frozenset({"EU VAT number"}),
-    "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
+    "tests/fixtures/justificantes/generate_modelo_390_english.py": frozenset(
         {
             "Deductible VAT",
             "Deductible VAT from internal transactions of current goods and services",
@@ -67,6 +73,8 @@ _EXTERNAL_VAT_PROSE_VALUES = {
 }
 _EXTERNAL_VAT_PROSE_FRAGMENTS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"``VAT``"}),
+    # The scheme code a UBL invoice fixture prints inside its tax category.
+    "adapters/inbound/einvoice/tests/test_ubl_document_level_tax_total.py": frozenset({"<cbc:ID>VAT</cbc:ID>"}),
     # Labels printed on the foreign-language invoice fixtures the reader must parse.
     "application/ledger/tests/test_invoice_label_reader.py": frozenset({"VAT ID", "VAT 0%"}),
 }
@@ -141,6 +149,69 @@ class _StemScan(NamedTuple):
     used_external_fragments: frozenset[tuple[str, str]]
 
 
+def _path_and_identifier_findings(relative: str, tree: ast.AST) -> list[str]:
+    findings: list[str] = []
+    if _RETIRED_STEM.search(relative):
+        findings.append(relative)
+    if _DUPLICATED_IVA.search(relative):
+        findings.append(relative)
+    if relative.startswith("domain/iva/") and "/tests/" not in relative:
+        findings.extend(
+            f"{relative}:{node.lineno}:{node.name}"
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.lstrip("_").startswith("iva_")
+        )
+    findings.extend(f"{relative}:{line}:{name}" for line, name in _declared_names(tree) if _RETIRED_STEM.search(name))
+    return findings
+
+
+def _identity_token_findings(relative: str, tree: ast.AST) -> list[str]:
+    return [
+        f"{relative}:{node.lineno}:{node.value}"
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and _IDENTITY_TOKEN.fullmatch(node.value)
+        and (_RETIRED_STEM.search(node.value) or _DUPLICATED_IVA.search(node.value))
+        and not node.value.startswith(_EXTERNAL_SOURCE_PREFIXES)
+        and node.value not in _EXTERNAL_IDENTITY_TOKENS.get(relative, ())
+    ]
+
+
+def _duplicated_iva_prose_findings(relative: str, tree: ast.AST) -> list[str]:
+    return [
+        f"{relative}:{node.lineno}:{node.value}"
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and (_DUPLICATED_IVA.search(node.value) or _MIXED_IVA_ALIAS.search(node.value))
+        and not node.value.startswith(_EXTERNAL_SOURCE_PREFIXES)
+    ]
+
+
+def _english_vat_prose_findings(
+    relative: str,
+    tree: ast.AST,
+    used_external_values: set[tuple[str, str]],
+    used_external_fragments: set[tuple[str, str]],
+) -> list[str]:
+    findings: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str) or not _ENGLISH_VAT.search(node.value):
+            continue
+        value = node.value
+        if value in _EXTERNAL_VAT_PROSE_VALUES.get(relative, ()):
+            used_external_values.add((relative, value))
+            continue
+        for fragment in _EXTERNAL_VAT_PROSE_FRAGMENTS.get(relative, ()):
+            if fragment in value:
+                value = value.replace(fragment, "")
+                used_external_fragments.add((relative, fragment))
+        if _ENGLISH_VAT.search(value):
+            findings.append(f"{relative}:{node.lineno}:{node.value}")
+    return findings
+
+
 @pytest.fixture(scope="module")
 def stem_scan() -> _StemScan:
     """Parse the package once and run all three stem gates over each tree.
@@ -169,58 +240,10 @@ def stem_scan() -> _StemScan:
     for path in _source_files():
         relative = path.relative_to(_PACKAGE_ROOT).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-
-        if _RETIRED_STEM.search(relative):
-            path_and_identifier.append(relative)
-        if _DUPLICATED_IVA.search(relative):
-            path_and_identifier.append(relative)
-        if relative.startswith("domain/iva/") and "/tests/" not in relative:
-            path_and_identifier.extend(
-                f"{relative}:{node.lineno}:{node.name}"
-                for node in ast.walk(tree)
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and node.name.lstrip("_").startswith("iva_")
-            )
-        path_and_identifier.extend(
-            f"{relative}:{line}:{name}" for line, name in _declared_names(tree) if _RETIRED_STEM.search(name)
-        )
-
-        identity_tokens.extend(
-            f"{relative}:{node.lineno}:{node.value}"
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Constant)
-            and isinstance(node.value, str)
-            and _IDENTITY_TOKEN.fullmatch(node.value)
-            and (_RETIRED_STEM.search(node.value) or _DUPLICATED_IVA.search(node.value))
-            and not node.value.startswith(_EXTERNAL_SOURCE_PREFIXES)
-            and node.value not in _EXTERNAL_IDENTITY_TOKENS.get(relative, ())
-        )
-
-        prose.extend(
-            f"{relative}:{node.lineno}:{node.value}"
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Constant)
-            and isinstance(node.value, str)
-            and (_DUPLICATED_IVA.search(node.value) or _MIXED_IVA_ALIAS.search(node.value))
-            and not node.value.startswith(_EXTERNAL_SOURCE_PREFIXES)
-        )
-        for node in ast.walk(tree):
-            if (
-                not isinstance(node, ast.Constant)
-                or not isinstance(node.value, str)
-                or not _ENGLISH_VAT.search(node.value)
-            ):
-                continue
-            value = node.value
-            if value in _EXTERNAL_VAT_PROSE_VALUES.get(relative, ()):
-                used_external_values.add((relative, value))
-                continue
-            for fragment in _EXTERNAL_VAT_PROSE_FRAGMENTS.get(relative, ()):
-                if fragment in value:
-                    value = value.replace(fragment, "")
-                    used_external_fragments.add((relative, fragment))
-            if _ENGLISH_VAT.search(value):
-                prose.append(f"{relative}:{node.lineno}:{node.value}")
+        path_and_identifier.extend(_path_and_identifier_findings(relative, tree))
+        identity_tokens.extend(_identity_token_findings(relative, tree))
+        prose.extend(_duplicated_iva_prose_findings(relative, tree))
+        prose.extend(_english_vat_prose_findings(relative, tree, used_external_values, used_external_fragments))
 
     return _StemScan(
         path_and_identifier=tuple(path_and_identifier),

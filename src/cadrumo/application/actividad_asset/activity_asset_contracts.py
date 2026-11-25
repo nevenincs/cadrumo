@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import Annotated, Literal, Protocol, Self
+from typing import Annotated, Final, Literal, Protocol, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -23,15 +26,22 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
+from ...domain.renta.actividad_asset.lifecycle import AssetKind
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from ...domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
+from ..modelo.period_admission import ModeloPeriodAdmissionOutcome, admit_modelo_period
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_scalar import PublicDecimal
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
+from .activity_asset_read_models import ActivityAssetReasonFact, ServedWords
 from .operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
+    ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from .ports import ActivityAssetHistoryRepository
+from .ports import AcquisitionLedgerReader, ActivityAssetHistoryRepository
 
 ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.create"
 
@@ -45,15 +55,31 @@ ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID = "ledger.actividad-asset.claim"
 
 ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID = "ledger.actividad-asset.filing-handoff"
 
-ACTIVITY_ASSET_REFUSED_VALIDATION = "REFUSED_ACTIVIDAD_ASSET_VALIDATION"
+ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.describe"
 
-ACTIVITY_ASSET_REFUSED_UNSUPPORTED = "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED"
+ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.dispose"
 
-ACTIVITY_ASSET_REFUSED_INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE"
+ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.disposal-calculate"
 
-ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT"
+ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID = "ledger.actividad-asset.list"
 
-ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18 = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
+ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID = "ledger.actividad-asset.plan"
+
+ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.timeline"
+
+ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID = "ledger.actividad-asset.form-options"
+
+ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID = "ledger.actividad-asset.acquisition-candidates"
+
+ACTIVITY_ASSET_REFUSED_VALIDATION: Final = "REFUSED_ACTIVIDAD_ASSET_VALIDATION"
+
+ACTIVITY_ASSET_REFUSED_UNSUPPORTED: Final = "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED"
+
+ACTIVITY_ASSET_REFUSED_INCOMPLETE: Final = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE"
+
+ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT: Final = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT"
+
+ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18: Final = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
 
 ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
     {
@@ -67,10 +93,6 @@ ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
 
 ActivityAssetId = Annotated[str, Field(min_length=1, max_length=128)]
 
-ActivityAssetOperationName = Annotated[str, Field(min_length=1, max_length=256)]
-
-ActivityAssetTaxYear = Annotated[int, Field(ge=1900, le=9999)]
-
 ActivityAssetRefusalCode = Literal[
     "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
     "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
@@ -82,10 +104,12 @@ ActivityAssetRefusalCode = Literal[
 
 @dataclass(frozen=True, slots=True)
 class ActivityAssetOperationPorts:
-    """Canonical encrypted history and pinned-schema profile read ports."""
+    """Canonical encrypted history, ledger and pinned-schema profile read ports."""
 
     history_repository: ActivityAssetHistoryRepository
+    ledger: AcquisitionLedgerReader
     profile_path_values: ProfilePathValuesReadPort
+    claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
 
 
 class ActivityAssetOperationPortsFactory(Protocol):
@@ -117,7 +141,7 @@ class ActivityAssetAcceleratedDa18Facts(BaseModel):
 
     asset_id: ActivityAssetId
     method: Annotated[str, Field(min_length=1, max_length=64)]
-    tax_year: ActivityAssetTaxYear
+    tax_year: FourDigitYear
     legal_reference: Annotated[str, Field(min_length=1, max_length=128)]
 
     @classmethod
@@ -135,6 +159,10 @@ def require_da18_facts_match(code: str, facts: ActivityAssetAcceleratedDa18Facts
         raise ValueError("activity-asset DA 18 facts accompany exactly the DA 18 refusal")
 
 
+ActivityAssetRefusalReasonKey = Annotated[str, Field(pattern=r"^[a-z0-9_]+(?:\.[a-z0-9_]+)+$", max_length=256)]
+"""The catalogue key naming why, inside the broader refusal code."""
+
+
 class ActivityAssetRefusal(BaseModel):
     """Bounded public refusal detail without persisted exception prose."""
 
@@ -143,31 +171,41 @@ class ActivityAssetRefusal(BaseModel):
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdictSnapshot | None = None
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+    reason_key: ActivityAssetRefusalReasonKey | None = None
+    reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
+    refusal_words: ServedWords | None = None
+    """The finished sentence a frontend shows for the refusal; null only on one recorded before they were served."""
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _da18_facts_match_code(self) -> Self:
         require_da18_facts_match(self.code, self.accelerated_da18)
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
         return self
 
     def to_domain_error(self, *, context: Mapping[str, object]) -> ActividadAssetError:
         """Rebuild the domain refusal this detail was recorded from, carrying the settled receipt facts."""
         if self.accelerated_da18 is not None:
             return ActividadAssetAcceleratedDa18DepreciationError(
-                context={**self.accelerated_da18.model_dump(mode="python"), **context}
+                context={**self.accelerated_da18.model_dump(mode="python"), **context},
+                translated_message=self.reason_key,
             )
+        merged = {**{fact.key: fact.value for fact in self.reason_facts}, **context}
         if self.code == ACTIVITY_ASSET_REFUSED_INCOMPLETE:
             return ActividadAssetIncompleteError(
-                context=context,
+                context=merged,
+                translated_message=self.reason_key,
                 precondition_verdict=(
                     self.precondition_verdict.to_verdict() if self.precondition_verdict is not None else None
                 ),
             )
         if self.code == ACTIVITY_ASSET_REFUSED_UNSUPPORTED:
-            return ActividadAssetUnsupportedError(context=context)
+            return ActividadAssetUnsupportedError(context=merged, translated_message=self.reason_key)
         if self.code == ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT:
-            return ActividadAssetClaimConflictError(context=context)
-        return ActividadAssetValidationError(context=context)
+            return ActividadAssetClaimConflictError(context=merged, translated_message=self.reason_key)
+        return ActividadAssetValidationError(context=merged, translated_message=self.reason_key)
 
 
 class ActivityAssetCreateRequest(BaseModel):
@@ -177,6 +215,39 @@ class ActivityAssetCreateRequest(BaseModel):
 
     profile_id: UUID
     revision: ActivityAssetRevisionSnapshot
+    descriptor: ActivityAssetDescriptorFacts
+
+
+class ActivityAssetDescribeRequest(BaseModel):
+    """Append one element's descriptive facts, which change no calculation."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    descriptor: ActivityAssetDescriptorFacts
+
+
+class ActivityAssetDisposeRequest(BaseModel):
+    """Record one element's baja and supersede the claims it invalidates, as one change."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    disposal: ActivityAssetDisposalSnapshot
+
+
+class ActivityAssetDisposalCalculateRequest(BaseModel):
+    """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    disposal: ActivityAssetDisposalSnapshot | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the figures' findings are said in."""
 
 
 class ActivityAssetInspectRequest(BaseModel):
@@ -188,26 +259,72 @@ class ActivityAssetInspectRequest(BaseModel):
     asset_id: ActivityAssetId
 
 
+class ActivityAssetSupersedingClaim(BaseModel):
+    """A recorded claim the correction replaces; the backend works out the new figure."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    supersedes_claim_id: Hex64Str
+    requested_free_amount: PublicDecimal | None = None
+
+
 class ActivityAssetCorrectRequest(BaseModel):
-    """Append one correction to the current immutable asset revision."""
+    """Append one correction and the claims it replaces, as one atomic change."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    revision: ActivityAssetRevisionSnapshot
+    revision: ActivityAssetCorrectionRevisionSnapshot
+    superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = ()
 
 
 class ActivityAssetForecastRequest(BaseModel):
-    """Request a non-consuming charge forecast from pinned authority."""
+    """Request a non-consuming charge forecast from pinned authority.
+
+    The interval ends at ``covered_until``, the exclusive boundary the operations compute with,
+    or at ``covered_through``, the inclusive last day covered. Decoding converts the stated one
+    into the other once and keeps both, so either spelling yields the same request. Stating both
+    is accepted only when they name the same day.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     asset_id: ActivityAssetId
     covered_from: date
-    covered_until: date
+    covered_until: date | None = None
+    covered_through: date | None = None
     requested_free_amount: PublicDecimal | None = None
     supersedes_claim_id: Hex64Str | None = None
+
+    @model_validator(mode="after")
+    def _state_both_ends_of_the_interval(self) -> Self:
+        """Settle the end the request left out; an interval that cannot be settled is refused by ``exclusive_end``."""
+        until, through = self.covered_until, self.covered_through
+        if until is None and through is not None and through != date.max:
+            object.__setattr__(self, "covered_until", covered_until_after(through))
+        elif until is not None and through is None and until != date.min:
+            object.__setattr__(self, "covered_through", last_day_covered(until))
+        return self
+
+    def exclusive_end(self) -> date:
+        """Return the exclusive boundary of the interval, which decoding always settles."""
+        until, through = self.covered_until, self.covered_through
+        if until is None:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.forecast_interval_end_required"
+                if through is None
+                else "ledger.actividad_asset.errors.covered_through_has_no_boundary",
+            )
+        if until == date.min:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.covered_until_has_no_day_before"
+            )
+        if through != last_day_covered(until):
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.covered_through_not_day_before_until"
+            )
+        return until
 
 
 class ActivityAssetClaimRequest(BaseModel):
@@ -217,21 +334,92 @@ class ActivityAssetClaimRequest(BaseModel):
 
     profile_id: UUID
     forecast: ScheduledAmortizationChargeSnapshot
-    creating_operation: ActivityAssetOperationName
     supersedes_claim_id: Hex64Str | None = None
 
 
-class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
-    """Read the exact profile's existing M100 and M130 claim projections."""
+class ActivityAssetListRequest(CredentialFreeOperationRequest):
+    """Summarise the exact profile's register."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    tax_year: ActivityAssetTaxYear
-    m130_period: Annotated[str, Field(min_length=1, max_length=16)]
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the register's sentences are said in."""
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_canonical_period(self) -> Self:
-        Period.from_year_and_code(self.tax_year, self.m130_period)
-        return self
+
+class ActivityAssetPlanRequest(BaseModel):
+    """Work out one element's amortization plan."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the plan's reasons are said in."""
+
+
+class ActivityAssetTimelineRequest(BaseModel):
+    """List one element's ordered history."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+
+
+class ActivityAssetFormOptionsRequest(CredentialFreeOperationRequest):
+    """Read what the registry admits for an asset kind and tax year."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_kind: AssetKind
+    tax_year: FourDigitYear
+
+
+class ActivityAssetAcquisitionCandidatesRequest(CredentialFreeOperationRequest):
+    """List the ledger payments an element could name as its acquisition."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+
+
+class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
+    """Read the exact profile's M100 claim projections and M130 accruals."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    tax_year: FourDigitYear
+    m130_period: Annotated[str, Field(min_length=1, max_length=16)] | None = None
+    """The Modelo 130 period to project, or null to project the Modelo 100 boxes alone."""
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the boxes are named in."""
+
+    def requested_period(self, *, operation: PinnedAuthorityOperation) -> Period | None:
+        """Read the stated Modelo 130 period, refusing a code the Modelo 130 does not declare for the tax year.
+
+        The period is admitted by the one rule every frontend's period goes through, so a code the
+        terminal refuses for the Modelo 130 is refused here too.
+        """
+        if self.m130_period is None:
+            return None
+        modelo = form_for_role("renta.direct_instalment", authority=operation)
+        admission = admit_modelo_period(modelo, self.tax_year, self.m130_period, operation=operation)
+        if admission.period is not None:
+            return admission.period
+        if admission.outcome is ModeloPeriodAdmissionOutcome.NOT_DECLARED:
+            raise ActividadAssetValidationError(
+                context={"field": "m130_period", "tokens": ", ".join(admission.declared_tokens)},
+                translated_message="ledger.actividad_asset.errors.m130_period_not_declared",
+            )
+        if admission.refusal_locale_key is not None:
+            raise ActividadAssetValidationError(
+                context={"field": "m130_period", "modelo": modelo},
+                translated_message=admission.refusal_locale_key,
+            )
+        raise ActividadAssetValidationError(
+            context={"field": "m130_period"},
+            translated_message="ledger.actividad_asset.errors.m130_period_invalid",
+        )

@@ -8,7 +8,9 @@ from typing import Annotated, Final, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
+from .calculation_request_fields import ModeloCalculationOverride
 from .edit_apply_row_contracts import ModeloDetailRowWireV1
 
 
@@ -49,7 +51,11 @@ class ModeloWorkAmendOverride(BaseModel):
 #: An engineering bound on a journalled request, not a legal cardinality: no
 #: official record design caps the counterparties an M347 declares, so a limit
 #: near the override cap would refuse a lawful return from a busy gestoria.
-_MAX_AMENDMENT_DETAIL_ROWS: Final = 20_000
+_MAX_AMENDMENT_DETAIL_ROWS: Final = 32_768
+
+#: How many binding values one amendment may state; the same engineering bound
+#: as its casilla overrides, since each names one declared box source.
+_MAX_AMENDMENT_BINDING_OVERRIDES: Final = 512
 
 
 class ModeloWorkAmendRequest(BaseModel):
@@ -63,9 +69,9 @@ class ModeloWorkAmendRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     baseline: ModeloWorkAmendBaseline
-    amendment_kind: CalculationRevisionAmendmentKind
-    overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=500)]
-    reason: Annotated[str, Field(min_length=1, max_length=500)]
+    amendment_kind: FilingDeclarationKind
+    overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=512)]
+    reason: Annotated[str, Field(min_length=1, max_length=512)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None
 
     #: The rows this amendment declares, or ``None`` where it declares none.
@@ -95,6 +101,16 @@ class ModeloWorkAmendRequest(BaseModel):
         None
     )
 
+    #: Box-source values the corrected declaration states beside those the filing
+    #: recorded. A historical correction never reads today's profile or ledger,
+    #: so a binding the filing never recorded stays unresolved -- and a reached
+    #: formula refuses -- unless it is stated here. Each entry crosses as the
+    #: same raw token calculation accepts; the authority validates it against
+    #: the baseline's pinned revision with calculation's own binding rules.
+    binding_overrides: Annotated[
+        tuple[ModeloCalculationOverride, ...], Field(max_length=_MAX_AMENDMENT_BINDING_OVERRIDES)
+    ] = ()
+
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
     #: make the production registry per-actor. A person's session records it
@@ -105,4 +121,6 @@ class ModeloWorkAmendRequest(BaseModel):
     def _distinct_amendment_overrides(self) -> Self:
         if len({item.casilla_id for item in self.overrides}) != len(self.overrides):
             raise ValueError("amendment overrides must address distinct casillas")
+        if len({item.key for item in self.binding_overrides}) != len(self.binding_overrides):
+            raise ValueError("amendment binding overrides must address distinct bindings")
         return self

@@ -6,6 +6,33 @@ import json
 from pathlib import Path, PurePosixPath
 
 
+def _relative_output(relative: str) -> PurePosixPath:
+    member = PurePosixPath(relative)
+    if (
+        not member.parts
+        or member.is_absolute()
+        or ".." in member.parts
+        or "_deps" in {part.casefold() for part in member.parts}
+        or ":" in relative
+        or "\\" in relative
+    ):
+        raise ValueError(f"Invalid CMake output directory: {relative}")
+    return member
+
+
+def _output_path(build: Path, relative: str) -> Path:
+    member = _relative_output(relative)
+    target = build
+    for part in member.parts:
+        target /= part
+        if target.is_symlink() or target.is_junction():
+            raise ValueError(f"Linked CMake output directory: {target}")
+    target = target.resolve()
+    if target == build or not target.is_relative_to(build):
+        raise ValueError(f"CMake output directory escapes binary directory: {relative}")
+    return target
+
+
 def build_paths(build: Path) -> dict[str, Path]:
     """Validate every declared directory before returning any output paths."""
     build = build.resolve(strict=True)
@@ -14,23 +41,6 @@ def build_paths(build: Path) -> dict[str, Path]:
     for key, relative in document["paths"].items():
         if not isinstance(key, str) or not isinstance(relative, str):
             raise ValueError("CMake output names and directories must be strings")
-        member = PurePosixPath(relative)
-        if (
-            not member.parts
-            or member.is_absolute()
-            or ".." in member.parts
-            or "_deps" in {part.casefold() for part in member.parts}
-            or ":" in relative
-            or "\\" in relative
-        ):
-            raise ValueError(f"Invalid CMake output directory: {relative}")
-        target = build
-        for part in member.parts:
-            target /= part
-            if target.is_symlink() or target.is_junction():
-                raise ValueError(f"Linked CMake output directory: {target}")
-        target = target.resolve()
-        if target == build or not target.is_relative_to(build):
-            raise ValueError(f"CMake output directory escapes binary directory: {relative}")
+        target = _output_path(build, relative)
         paths[key] = target
     return paths

@@ -10,7 +10,6 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
@@ -37,7 +36,8 @@ from cadrumo_client.transport.frame_io import read_secret, write_document, write
 from ..application.automation_lifecycle_service import (
     AutomationLifecycleService,
 )
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 
 @dataclass(frozen=True)
@@ -78,8 +78,8 @@ class RuntimeLifecycleOwner:
         """Use the runtime's generation-first retirement after fresh recovery proof."""
         deletion, _ = self.host.revoke_human_sign_in(kind=SessionRetirementKind.REVOKED)
         return HumanSignInRevocationResult(
-            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
-            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
+            receipt_removed=deletion.receipt_removed,
+            keychain_removed=deletion.keychain_removed,
         )
 
     def set_profile_lock(self, *, generation: int, locked: bool) -> None:

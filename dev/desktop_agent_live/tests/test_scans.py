@@ -112,7 +112,7 @@ def test_a_file_that_cannot_be_read_is_not_clean(tmp_path: Path) -> None:
 
 def _sleepers(scope: object, *arguments: str) -> list[int]:
     """Start one waiting interpreter per argument in ``scope``; return their PIDs."""
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     assert isinstance(scope, WindowsProcessScope)
     environment = {name: value for name, value in os.environ.items() if name.upper() in {"SYSTEMROOT", "PATH"}}
@@ -135,7 +135,7 @@ def _record(table: dict[int, ProcessRecord], pid: int) -> ProcessRecord:
 
 @pytest.mark.windows_only
 def test_a_planted_key_on_a_command_line_names_only_the_process() -> None:
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     key = _planted()
     scope = WindowsProcessScope()
@@ -153,13 +153,16 @@ def test_a_planted_key_on_a_command_line_names_only_the_process() -> None:
 
 @pytest.mark.windows_only
 def test_a_started_process_left_running_is_a_survivor_until_it_ends() -> None:
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:
         (owned,) = _sleepers(scope, "--left-running")
+        # The venv launcher can create its interpreter between these snapshots.
+        # Only ask WMI for job members that already existed when its scan began.
+        started_pids = scope.active_process_ids()
         table = process_table()
-        started = {_record(table, pid) for pid in scope.active_process_ids()} | descendants(table, [os.getpid()])
+        started = {_record(table, pid) for pid in started_pids} | descendants(table, [os.getpid()])
         assert owned in {process.pid for process in started}
         assert owned in {process.pid for process in survivors(started, process_table())}
     finally:

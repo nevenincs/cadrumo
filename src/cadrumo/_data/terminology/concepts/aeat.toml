@@ -31,7 +31,7 @@ term_status = "admitted"
 
 [language.en]
 short_description = "The Spanish Tax Agency (Agencia Estatal de Administración Tributaria)."
-definition = "Agencia Estatal de Administracion Tributaria: the public body that manages and collects the main taxes of the Spanish State. The taxpayer files their returns with the AEAT; this application never files anything on their behalf."
+definition = "Agencia Estatal de Administración Tributaria: the public body that manages and collects the main taxes of the Spanish State. The taxpayer files their returns with the AEAT; this application never files anything on their behalf."
 
 [[language.en.term]]
 label = "AEAT"

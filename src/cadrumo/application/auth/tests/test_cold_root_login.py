@@ -7,16 +7,16 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 from ...live.tests.unopened_live_ports import unopened_browser_session_factory
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 from ..credentials import active_auth_projection_span
 from ..operator import login_operator_auth
 from ..operator_results import AuthConfigureNoActiveBucketError
-from ._operator_probe_fakes import fake_operator_probe_ports
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -39,7 +39,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
     cold_root = tmp_path / "cold-root"
 
     with override_settings(
-        cadrumo_local_storage_root=cold_root,
+        cadrumo_storage_root=cold_root,
         cadrumo_active_profile=None,
         cadrumo_certificate_path=certificate_path,
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),

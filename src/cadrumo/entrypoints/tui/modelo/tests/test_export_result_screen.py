@@ -22,38 +22,44 @@ from .....adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
 from .....application.modelo.calculation_report_export import ModeloCalculationReportResult
-from .....application.modelo.export import ModeloExportAccountReference, ModeloExportResult
+from .....application.modelo.export_contracts import ModeloExportAccountReference, ModeloExportResult
+from .....application.modelo.export_disclosure import ModeloExportDisclosedLimitation, ModeloExportDisclosure
+from .....application.modelo.export_operation import build_modelo_export_definition, build_modelo_export_registration
 from .....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
-from .....application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from .....application.modelo.finding_message_text import finding_message_text
+from .....application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....application.modelo.work_export_contracts import ModeloExportSettledResult
+from .....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
 from .....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from .....core.calculation_report_format import CalculationReportDocumentFormat
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....core.period import Period
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from .....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from .....domain.transactions.own_accounts import OwnAccountRole
-from ....adapter_composition import build_modelo_export_ports
+from ....adapter_composition_ports import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
+from ...tests.settling import settle
 from ..export_result import (
-    EXPORT_ARTEFACT_LOCALE_KEYS,
     EXPORT_COMPLETENESS_LOCALE_KEYS,
     EXPORT_EVIDENCE_STATUS_LOCALE_KEYS,
     EXPORT_RESULT_ROW_LOCALE_KEYS,
     EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS,
     SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS,
     ModeloExportResultScreen,
+    export_result_warnings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -94,6 +100,7 @@ def _filing_file_receipt(
     completeness_unverified: bool,
     software_identity_grade: AeatSoftwareIdentityGrade | None,
     domiciliation_cutoff_unverified: bool = False,
+    trabajo_deductions_not_computed: bool = False,
     selected_account: ModeloExportAccountReference | None = None,
 ) -> ModeloExportSettledResult:
     return ModeloExportSettledResult(
@@ -114,6 +121,7 @@ def _filing_file_receipt(
             software_identity_grade=software_identity_grade,
             completeness_unverified=completeness_unverified,
             domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
+            trabajo_deductions_not_computed=trabajo_deductions_not_computed,
             selected_account=selected_account,
         )
     )
@@ -166,7 +174,7 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result), closed.append)
-        await pilot.pause()
+        await settle(pilot)
 
         assert _table_values(app) == {
             "artefact": tr("tui.modelo.export.artefact.fichero_boe"),
@@ -185,13 +193,13 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
         assert tr("tui.modelo.export.result.warning.development_software_identity") not in warnings
 
         app.screen.query_one("#modelo-export-result-close", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
     assert closed == [None]
 
 
 @pytest.mark.asyncio
-async def test_an_unverified_cutoff_is_warned_and_the_account_is_named_by_role_and_id(tmp_path: Path) -> None:
+async def test_an_unverified_timeout_is_warned_and_the_account_is_named_by_role_and_id(tmp_path: Path) -> None:
     """A domiciliación with no declared cutoff is an advisory, and the account appears only by its opaque id."""
     result = _publicly_projected(
         _filing_file_receipt(
@@ -205,9 +213,105 @@ async def test_an_unverified_cutoff_is_warned_and_the_account_is_named_by_role_a
     app = App[None]()
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
         assert tr("tui.modelo.export.result.warning.cutoff_unverified") in _warnings(app)
         assert _table_values(app)["selected_account"] == "acc-01"
+
+
+@pytest.mark.asyncio
+async def test_uncomputed_work_income_deductions_are_warned_only_when_the_result_states_them(tmp_path: Path) -> None:
+    """The limitation is the backend's finding, shown when the receipt flags it and absent otherwise."""
+    limitation = tr("application.modelo.findings.trabajo_deduction_not_computed")
+    for flagged in (True, False):
+        result = _publicly_projected(
+            _filing_file_receipt(
+                tmp_path,
+                completeness_unverified=False,
+                software_identity_grade=None,
+                trabajo_deductions_not_computed=flagged,
+            )
+        )
+        app = App[None]()
+        async with app.run_test() as pilot:
+            await app.push_screen(ModeloExportResultScreen(result))
+            await settle(pilot)
+            assert (limitation in _warnings(app)) is flagged
+
+
+def test_the_limits_the_backend_served_are_warned_in_its_words_and_never_twice(tmp_path: Path) -> None:
+    """A disclosed limitation reads as the backend worded it; the flag's own warning yields to the same sentence."""
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
+        legal_refs=("ley-35-2006:art-19",),
+        disclosed_limitation=True,
+    )
+    words = finding_message_text(finding, OutputLanguage(output_language()))
+    receipt = _filing_file_receipt(
+        tmp_path, completeness_unverified=False, software_identity_grade=None, trabajo_deductions_not_computed=True
+    )
+    served = ModeloExportSettledResult(
+        fichero_boe=receipt.fichero_boe,
+        disclosure=ModeloExportDisclosure(
+            lead_words="Read these limits.",
+            limitations=(ModeloExportDisclosedLimitation(message_locale_key=finding.message_locale_key, words=words),),
+        ),
+    )
+
+    warnings = export_result_warnings(_publicly_projected(served))
+
+    assert words == tr(finding.message_locale_key)
+    assert [warning.message for warning in warnings].count(words) == 1
+
+
+def _two_served_limits() -> ModeloExportDisclosure:
+    return ModeloExportDisclosure(
+        lead_words="Synthetic lead: the file carries these limits as they are.",
+        limitations=(
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.first", casilla_id="01", words="Synthetic first limit."
+            ),
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.second", words="Synthetic second limit."
+            ),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_served_disclosure_is_shown_verbatim_lead_first_then_each_limit_in_served_order(tmp_path: Path) -> None:
+    """The lead sentence and every limit read as the backend worded them; the screen words and sorts none."""
+    receipt = _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    served = ModeloExportSettledResult(fichero_boe=receipt.fichero_boe, disclosure=_two_served_limits())
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(_publicly_projected(served)))
+        await settle(pilot)
+
+        shown = [str(item.content) for item in app.screen.query_one("#modelo-export-result-warnings").query(Static)]
+
+    lead = next(index for index, line in enumerate(shown) if "Synthetic lead: the file carries" in line)
+    assert shown[lead + 1].endswith("Synthetic first limit.")
+    assert shown[lead + 2].endswith("Synthetic second limit.")
+
+
+@pytest.mark.asyncio
+async def test_an_export_with_no_disclosure_shows_no_lead_and_no_limit(tmp_path: Path) -> None:
+    """A result that serves no disclosure states none; the ordinary warnings stay."""
+    result = _publicly_projected(
+        _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    )
+    assert result.disclosure is None
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(result))
+        await settle(pilot)
+
+        warnings = _warnings(app)
+
+    assert "Synthetic" not in warnings
+    assert tr("tui.modelo.export.result.warning.not_official") in warnings
 
 
 @pytest.mark.asyncio
@@ -226,7 +330,7 @@ async def test_a_development_identity_is_warned_and_a_verified_file_raises_no_co
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         values = _table_values(app)
         assert values["software_identity_grade"] == tr(
@@ -238,7 +342,7 @@ async def test_a_development_identity_is_warned_and_a_verified_file_raises_no_co
         assert tr("tui.modelo.export.result.warning.completeness_unverified") not in warnings
 
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert not isinstance(app.screen, ModeloExportResultScreen)
 
 
@@ -254,7 +358,7 @@ async def test_a_calculation_report_claims_no_completeness_and_names_the_filing_
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         values = _table_values(app)
         assert values["export_format"] == "csv"
@@ -279,7 +383,7 @@ async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_wh
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         assert _table_values(app) == {
             "artefact": tr("tui.modelo.export.artefact.calculation_report_pdf"),
@@ -307,7 +411,7 @@ async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_tabl
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(None))
-        await pilot.pause()
+        await settle(pilot)
 
         assert not app.screen.query("#modelo-export-result-table")
         warnings = [str(item.content) for item in app.screen.query_one("#modelo-export-result-warnings").query(Static)]
@@ -317,6 +421,7 @@ async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_tabl
             "tui.modelo.export.result.title"
         )
         await pilot.press("t")
+        await settle(pilot)
         assert not app.screen.query("#modelo-export-result-table")
 
 
@@ -336,20 +441,20 @@ async def test_export_identifiers_are_revealed_only_by_deliberate_technical_deta
         app = App[None]()
         async with app.run_test() as pilot:
             await app.push_screen(ModeloExportResultScreen(result))
-            await pilot.pause()
+            await settle(pilot)
             ordinary = _table_values(app)
             assert "calculation_revision_id" not in ordinary and "file_sha256" not in ordinary
             assert _REVISION_ID not in ordinary.values() and _FILE_SHA256 not in ordinary.values()
             assert ordinary["output_path"] == result.output_path
             assert ordinary["completeness"] == tr(EXPORT_COMPLETENESS_LOCALE_KEYS[result.completeness])
             await pilot.press("t")
-            await pilot.pause()
+            await settle(pilot)
             detailed = _table_values(app)
             assert detailed["calculation_revision_id"] == _REVISION_ID
             assert detailed["file_sha256"] == _FILE_SHA256
             assert {key: detailed[key] for key in ordinary} == ordinary
             app.screen.query_one("#modelo-export-result-technical", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert _table_values(app) == ordinary
 
 
@@ -389,6 +494,8 @@ def test_every_public_result_fact_has_a_row() -> None:
         "handoff_required",
         "fichero_boe",
         "calculation_report",
+        # The served limitation sentences are warnings, not rows.
+        "disclosure",
     }
 
     ordinary = set(EXPORT_RESULT_ROW_LOCALE_KEYS)

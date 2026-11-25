@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
@@ -73,9 +73,6 @@ class LiveNodeRegistrationMetadata:
 
     path: tuple[str, ...]
     kind: CommandNodeKind
-    loader_owner: str | None
-    handler_owner: str
-    source_sha256: str | None
     policy: CommandPolicyMetadata | None
 
 
@@ -117,7 +114,7 @@ def _json_type(parameter: ParameterSpec) -> JsonType:
 def _choices(parameter: ParameterSpec, resolver: TargetResolver) -> tuple[str, ...]:
     if parameter.value.choices:
         return parameter.value.choices
-    target = parameter.value.click_type or parameter.value.annotation
+    target = parameter.value.parser or parameter.value.annotation
     try:
         value = resolver(target)
     except (ImportError, AttributeError, InternalInvariantError):
@@ -127,7 +124,7 @@ def _choices(parameter: ParameterSpec, resolver: TargetResolver) -> tuple[str, .
     # The Enum branch above leaves a partially-narrowed `type[Unknown]` in the
     # negative arm; restate the plain object the remaining lookup runs against.
     resolved = cast("object", value)
-    # A click type's ``choices`` is whatever the type declares; only a real
+    # A parser's ``choices`` is whatever the parser declares; only a real
     # sequence of tokens is a choice set.
     declared: object = getattr(resolved, "choices", ())
     if not is_object_list_or_tuple(declared):
@@ -200,22 +197,14 @@ def command_registration_projection(
     return _command_registration_projection(output_language(), graph)
 
 
-def _handler_owner(spec: CommandSpec) -> str | None:
-    """Return the authored handler identity when a node has executable ownership."""
-    if spec.handler is None or spec.handler.target is None:
-        return None
-    return spec.handler.target.identity
-
-
 def _live_node_registration_metadata(
     node: CommandSpecNode,
     *,
     path: tuple[str, ...],
     policy: CommandPolicyMetadata,
-    owner: str | None,
 ) -> LiveNodeRegistrationMetadata:
     """Project one graph node into the live-node registration inventory."""
-    return LiveNodeRegistrationMetadata(path, node.spec.kind, None, owner or "<metadata>", None, policy)
+    return LiveNodeRegistrationMetadata(path, node.spec.kind, policy)
 
 
 def _target_command_registration_metadata(
@@ -224,7 +213,6 @@ def _target_command_registration_metadata(
     language: str,
     path: tuple[str, ...],
     policy: CommandPolicyMetadata,
-    owner: str | None,
     resolver: TargetResolver,
 ) -> CommandRegistrationMetadata | None:
     """Project a target result schema into :class:`CommandRegistrationMetadata`, if exposed."""
@@ -238,15 +226,11 @@ def _target_command_registration_metadata(
     return CommandRegistrationMetadata(
         schema.identity,
         schema.target.qualname,
-        schema.target.identity,
-        "",
         path,
         ((language, parameters),),
         ((language, tr(spec.help_key.value)),),
         spec.invocation.hidden,
         policy,
-        owner,
-        None,
         machine_secret_payload_metadata(spec),
         profile_authentication_posture(node),
     )
@@ -296,22 +280,13 @@ def _command_registration_projection(
     for node in graph.nodes():
         spec = node.spec
         path = _operator_path(node.path, root_segment=root_segment)
-        owner = _handler_owner(spec)
         policy = _policy(spec)
-        nodes.append(
-            _live_node_registration_metadata(
-                node,
-                path=path,
-                policy=policy,
-                owner=owner,
-            )
-        )
+        nodes.append(_live_node_registration_metadata(node, path=path, policy=policy))
         command = _target_command_registration_metadata(
             node,
             language=language,
             path=path,
             policy=policy,
-            owner=owner,
             resolver=graph.resolver,
         )
         if command is not None:
@@ -341,7 +316,6 @@ def command_registration_for_node(
         language=output_language(),
         path=_operator_path(node.path, root_segment=graph.root().token),
         policy=_policy(spec),
-        owner=_handler_owner(spec),
         resolver=graph.resolver,
     )
 
@@ -354,7 +328,7 @@ def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
 @cache
 def command_registration_policy(command: str) -> CommandExecutionPolicy:
     """Return the execution policy declared for ``command``."""
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
     from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)

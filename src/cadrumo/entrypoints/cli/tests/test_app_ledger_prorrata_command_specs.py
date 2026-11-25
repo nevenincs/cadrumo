@@ -10,12 +10,69 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.spec import CommandSpec
 
-from .._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
+from ..app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
+    (
+        "app_ledger_prorrata_declare_gross",
+        "declare-gross",
+        "cli.app.ledger.prorrata.declare_gross_help",
+        "profile-bound",
+        "prorrata_declare_gross",
+        "ProrrataDeclareGrossResult",
+        "ledger.prorrata.declare_gross",
+        (
+            (
+                "ejercicio",
+                ("--ejercicio",),
+                "builtins:int",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_ejercicio_help",
+                False,
+            ),
+            (
+                "period",
+                ("--period",),
+                "builtins:str",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_period_help",
+                False,
+            ),
+            (
+                "amount",
+                ("--amount",),
+                "builtins:str",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_amount_help",
+                False,
+            ),
+            (
+                "evidence",
+                ("--evidence",),
+                "builtins:str",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_evidence_help",
+                False,
+            ),
+            ("sector", ("--sector",), "builtins:str", "LITERAL", None, "cli.app.ledger.prorrata.sector_help", False),
+            (
+                "replace",
+                ("--replace",),
+                "builtins:bool",
+                "LITERAL",
+                False,
+                "cli.app.ledger.prorrata.gross_replace_help",
+                False,
+            ),
+        ),
+    ),
     (
         "app_ledger_prorrata_declare_sector",
         "declare-sector",
@@ -170,6 +227,36 @@ _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
         (),
     ),
     (
+        "app_ledger_prorrata_remove_gross",
+        "remove-gross",
+        "cli.app.ledger.prorrata.remove_gross_help",
+        "profile-bound",
+        "prorrata_remove_gross",
+        "ProrrataRemoveGrossResult",
+        "ledger.prorrata.remove_gross",
+        (
+            (
+                "ejercicio",
+                ("--ejercicio",),
+                "builtins:int",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_ejercicio_help",
+                False,
+            ),
+            (
+                "period",
+                ("--period",),
+                "builtins:str",
+                "REQUIRED",
+                None,
+                "cli.app.ledger.prorrata.gross_period_help",
+                False,
+            ),
+            ("sector", ("--sector",), "builtins:str", "LITERAL", None, "cli.app.ledger.prorrata.sector_help", False),
+        ),
+    ),
+    (
         "app_ledger_prorrata_revoke_especial",
         "revoke-especial",
         "cli.app.ledger.prorrata.revoke_especial_help",
@@ -245,6 +332,15 @@ _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
                 False,
             ),
             ("sector", ("--sector",), "builtins:str", "LITERAL", None, "cli.app.ledger.prorrata.sector_help", False),
+            (
+                "percentage",
+                ("--percentage",),
+                "builtins:str",
+                "LITERAL",
+                None,
+                "cli.app.ledger.prorrata.seed_percentage_help",
+                False,
+            ),
         ),
     ),
     (

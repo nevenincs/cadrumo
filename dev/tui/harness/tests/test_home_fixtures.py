@@ -4,21 +4,20 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
 
 import pytest
-import yaml
 from pydantic import ValidationError
 
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.tests.home_fixtures import (
     HOME_FIXTURE_SCENARIOS,
     HomeFixtureScenario,
     build_home_projection_fixture,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -66,27 +65,6 @@ def test_populated_declaration_identity_is_stable_across_fresh_builds() -> None:
     assert first_identity == second_identity
 
 
-def _home_reason_keys(locale: str) -> frozenset[str]:
-    """Every `tui.home.reason.*` key a locale actually declares.
-
-    Read from the catalogue file rather than through `tr()`, because `tr()`
-    HUMANISES a missing key into a plausible sentence: a resolution check
-    routed through it can never observe an absence, which is the only thing
-    this is trying to detect.
-    """
-    root = REPO_ROOT / "src" / "cadrumo" / "locales" / locale / "common.yml"
-    raw = yaml.safe_load(root.read_text(encoding="utf-8"))
-
-    def flatten(node: object, prefix: str = "") -> Iterator[str]:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                yield from flatten(value, f"{prefix}{key}.")
-        else:
-            yield prefix.rstrip(".")
-
-    return frozenset(flatten(raw))
-
-
 @pytest.mark.parametrize("scenario", (HomeFixtureScenario.READY, HomeFixtureScenario.BLOCKED))
 def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
     scenario: HomeFixtureScenario,
@@ -105,8 +83,8 @@ def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
 
     addressed = projection.actions[0]
     assert addressed.modelo == "303"
-    assert addressed.filing_year == 2026
-    assert addressed.period == Period.from_year_and_code(2026, "3T")
+    assert addressed.filing_year in filing_year_envelope().years
+    assert addressed.period == Period.from_year_and_code(addressed.filing_year, "3T")
     addressless = [
         item for item in projection.actions if (item.modelo, item.filing_year, item.period) == (None, None, None)
     ]
@@ -158,15 +136,12 @@ def test_ready_empty_and_blocked_projections_keep_distinct_typed_signals() -> No
     assert len({item.action.action.action_id for item in blocked.actions}) == 3
     assert len({item.reason_code for item in blocked.actions}) == 3
     assert len({item.work_unit_id for item in blocked.declarations}) == 3
-    # Every reason code must reach real copy. A code is a transport token that
-    # keys `tui.home.reason.<code>`, so pinning a literal name (this once
-    # required `fixture.blocked_dependency`) proves nothing about whether the
-    # operator sees a sentence or the degraded generic line -- and it broke the
-    # moment the fixtures moved onto codes that actually resolve.
-    catalogue = _home_reason_keys("es")
+    # Every reason code must reach served words. A code is a transport token the
+    # projection words, so pinning a literal name proves nothing about whether
+    # the operator sees a sentence or the degraded generic line.
     for item in blocked.actions:
-        assert f"tui.home.reason.{item.reason_code}" in catalogue, (
-            f"reason code {item.reason_code!r} has no copy, so Home degrades to its generic line"
+        assert item.reason_words is not None, (
+            f"reason code {item.reason_code!r} was served no words, so Home degrades to its generic line"
         )
     assert blocked.declarations[0].state is HomeDeclarationState.NEEDS_REVIEW
     assert blocked.ledger is not None and blocked.ledger.requiring_review == 3
@@ -221,7 +196,7 @@ def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
         serialized = build_home_projection_fixture(scenario).model_dump_json()
         assert all(pattern.search(serialized) is None for pattern in forbidden)
         assert set(re.findall(r"\b[0-9a-f]{64}\b", serialized)) <= allowed_ids
-    assert all(spanish_identifier.fullmatch(value) for value in ("12345678Z", "X2482300W", "B12345678"))
+    assert all(spanish_identifier.fullmatch(value) for value in ("12345678Z", "Y0001007D", "B12345678"))
 
 
 def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> None:

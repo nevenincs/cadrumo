@@ -4,7 +4,7 @@ casilla_source_refs = ["aeat-dr-115-2019-v13"]
 application_link_source_refs = ["aeat-dr-115-2019-v13"]
 authority_grade = "filing"
 valid_from = 2019-01-01
-period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+period_selector = { year_from = 2019, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 orden_aplicabilidad = ["orden-2000-11-20:apartado-primero"]
 source_refs = [
@@ -21,6 +21,18 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
+
+[revisions."2019-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo is a withholding agent's return: its withholding boxes state what the declarant practised on others and paid in, never a credit of the declarant's own, so there is no credit casilla for an entry to name. The perceptor credits that withholding on the perceptor's own return."""
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]
+
+[revisions."2019-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]
 
 [revisions."2019-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -54,4 +66,8 @@ source_refs = [
     "aeat-modelo-115-obligaciones-retenedor",
     "aeat-modelo-115-guia-censal",
 ]
-
+[revisions."2019-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 115 applies none. Casilla 03 reports the retenciones practised, bound from the ledger as the amount the retenedor withheld on each payment under RD 439/2007 art. 100, so the rate is spent before this modelo sees the figure; the one formula left subtracts casilla 04 from casilla 03. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-180-folleto-actividades"]

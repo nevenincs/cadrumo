@@ -604,7 +604,7 @@ semantic_role = "proveedor_pais"
 # Design operacion 2 proveedor pais ISO 3166-1.
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 
-# Modelo 360 casillas: the AD-HOC refund request's operator values. Every
+# Modelo 360 casillas: the refund request's operator values. Every
 # value is the operator's own datum; the modelo computes nothing, which is
 # why the formula family stays empty.
 
@@ -2037,4 +2037,8 @@ number = "1907-1911"
 section = ["prorrata"]
 data_type = "ratio"
 semantic_role = "prorrata_definitiva"
-legal_refs = ["orden-eha-789-2010:art-4"]
+# The design prints campo 112 as "Prorrata definitiva 2 decimales" in a 5-digit Num slot
+# (corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf.extracted.md:127),
+# room for 100,00; LIVA art. 104.Dos states the prorrata as a percentage, 100 times the fraction.
+legal_refs = ["orden-eha-789-2010:art-4", "ley-37-1992:art-104"]
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-360-2010"] }

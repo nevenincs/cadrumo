@@ -16,10 +16,10 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.toml import parse_toml
 from ..errors import CorpusSearchInputError
 from ..terminology import (
-    _project_concept,
-    _terminology_root,
     load_terminology_concepts,
+    project_concept,
     search_terminology,
+    terminology_root,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,7 +65,7 @@ def test_every_stored_token_in_the_tree_is_a_declared_member() -> None:
     # drift gate between the authored tree and the core-declared value set, so
     # it must see the raw token rather than an already-hydrated member.
     stored: set[str] = set()
-    for path in scan_directory(_terminology_root(), pattern="*.toml"):
+    for path in scan_directory(terminology_root(), pattern="*.toml"):
         payload = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
         concept = payload.get("concept")
         assert isinstance(concept, dict), path.name
@@ -78,7 +78,7 @@ def test_every_stored_token_in_the_tree_is_a_declared_member() -> None:
 
 def test_known_token_projects_to_the_matching_member() -> None:
     payload = parse_toml(_KNOWN_LIFECYCLE_FRAGMENT)
-    projected = _project_concept(payload, locale="es")
+    projected = project_concept(payload, locale="es")
     assert projected is not None
     assert projected.lifecycle is ConceptLifecycle.DEPRECATED
 
@@ -86,7 +86,7 @@ def test_known_token_projects_to_the_matching_member() -> None:
 def test_unknown_token_is_refused_with_the_accepted_set() -> None:
     payload = parse_toml(_UNKNOWN_LIFECYCLE_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
     context = excinfo.value.context
     assert context is not None
     assert context["lifecycle"] == "aprobado"

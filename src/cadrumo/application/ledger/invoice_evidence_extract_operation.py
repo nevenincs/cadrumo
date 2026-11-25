@@ -15,6 +15,7 @@ from ...core.config_support import LLMProvider
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
 )
 from ...core.time.clock import now
@@ -76,7 +77,7 @@ class LedgerEvidenceExtractRequest(BaseModel):
         if self.off_host_provider is None:
             if self.acknowledge_off_host:
                 raise ValueError("off-host acknowledgement requires an off-host provider")
-        elif self.off_host_provider is LLMProvider.LOCAL or not self.acknowledge_off_host or self.evidence_id is None:
+        elif not self.acknowledge_off_host or self.evidence_id is None:
             raise ValueError("off-host reading requires a stored evidence record and per-invocation acknowledgement")
         return self
 
@@ -167,7 +168,6 @@ def _extract_invoice_evidence_projection(
         evidence_id=payload.evidence_id,
         attachment_id=payload.attachment_id,
         settings=ports.settings,
-        off_host_provider=payload.off_host_provider,
         consent_token=consent_token,
         ports=ports.extraction_ports,
         operation=context.authority_operation,
@@ -247,6 +247,9 @@ def build_ledger_evidence_extract_definition(
         executor_type=LedgerEvidenceExtractExecutor,
         build=lambda: LedgerEvidenceExtractExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=False, off_host_optional=True),
+        # A reader refusal's verdict names the setup that lets the read run; a
+        # frontend in another process learns it only from the recorded detail.
+        public_error_detail=True,
     )
 
 
@@ -262,7 +265,7 @@ def _project_extract(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
         effects=frozenset({projection.consent_audit_effect}),
     )
     if (
-        projection.consent_audit_effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        projection.consent_audit_effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or (projection.profile_id != result.profile_id)
         or (projection.off_host_provider is None and projection.consent_audit_effect is not OperationEffect.NONE)
     ):

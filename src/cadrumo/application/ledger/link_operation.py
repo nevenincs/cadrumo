@@ -12,9 +12,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.errors.hierarchy import CoreValidationError
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -28,6 +30,11 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketActorLabel
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.errors import InvoiceLinkError
+from ..invoices.catalogue_selection import (
+    InvoiceLookupRefusalReason,
+    InvoiceLookupRefusedError,
+    select_catalogue_invoice_id,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -47,9 +54,13 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
-from .actions_common import build_manual_ledger_result, resolve_revision_guarded_transaction_repository
-from .actions_manual import ledger_transaction_result_payload, link_manual_transaction_invoice
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .actions_common import (
+    build_manual_ledger_result,
+    resolve_invoice_repository,
+    resolve_revision_guarded_transaction_repository,
+)
+from .actions_manual import link_manual_transaction_invoice
 from .commit_fence import (
     LedgerCommitAttemptTracker,
     RevisionGuardedTrackedLedgerTransactionRepository,
@@ -60,6 +71,7 @@ from .export_link_operation_ports import (
     settle_export_link_failure,
 )
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_LINK_OPERATION_DEFINITION_ID = "ledger.link"
@@ -76,6 +88,8 @@ class LedgerLinkRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -83,6 +97,7 @@ class LedgerLinkRequest(BaseModel):
     transaction_id: _Identifier
     invoice_id: _Identifier
     actor: Annotated[str, Field(max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerLinkProjection(BaseModel):
@@ -110,8 +125,19 @@ class LedgerLinkProjection(BaseModel):
         return self
 
 
+LedgerLinkRefusalReason = Literal[
+    "missing_invoice", "ambiguous_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"
+]
+_MAX_AMBIGUOUS_INVOICE_CANDIDATES = 64
+
+
 class LedgerLinkOperationResult(BaseModel):
-    """Complete mutation result or closed canonical refusal without invoice values."""
+    """Complete mutation result or closed canonical refusal without invoice values.
+
+    ``invoice_id`` is the selector the operator supplied for a refusal and the one
+    resolved invoice id for a completed link, so a prefix names its invoice in the
+    result exactly as it does in the linked projection.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -119,22 +145,43 @@ class LedgerLinkOperationResult(BaseModel):
     invoice_id: _Identifier
     outcome: Literal["linked", "refused"]
     projection: LedgerLinkProjection | None = None
-    reason: Literal["missing_invoice", "cross_bucket_invoice"] | None = None
+    reason: LedgerLinkRefusalReason | None = None
+    candidate_invoice_ids: Annotated[tuple[_Identifier, ...], Field(max_length=_MAX_AMBIGUOUS_INVOICE_CANDIDATES)] = ()
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> Self:
-        if self.outcome == "linked":
-            if (
-                self.reason is not None
-                or self.projection is None
-                or self.projection.profile_id != self.profile_id
-                or self.projection.invoice_id != self.invoice_id
-                or not self.projection.transaction_id.startswith(self.transaction_id.strip().lower())
-            ):
-                raise ValueError("ledger linkage outcome differs from its exact request")
-        elif self.reason is None or self.projection is not None:
-            raise ValueError("ledger linkage refusal is incomplete")
+        problem = _linked_result_problem(self) if self.outcome == "linked" else _refusal_result_problem(self)
+        if problem is not None:
+            raise ValueError(problem)
         return self
+
+
+def _linked_result_problem(result: LedgerLinkOperationResult) -> str | None:
+    """Why a linked result does not match its exact request, or ``None`` when it does."""
+    projection = result.projection
+    if (
+        result.reason is not None
+        or projection is None
+        or projection.profile_id != result.profile_id
+        or projection.invoice_id != result.invoice_id
+        or result.candidate_invoice_ids
+        or not projection.transaction_id.startswith(result.transaction_id.strip().lower())
+    ):
+        return "ledger linkage outcome differs from its exact request"
+    return None
+
+
+def _refusal_result_problem(result: LedgerLinkOperationResult) -> str | None:
+    """Why a refusal is incomplete or carries candidates it may not, or ``None`` when it is closed."""
+    if result.reason is None or result.projection is not None:
+        return "ledger linkage refusal is incomplete"
+    candidates = result.candidate_invoice_ids
+    if result.reason == "ambiguous_invoice":
+        if len(candidates) < 2 or len(set(candidates)) != len(candidates):
+            return "ambiguous invoice linkage requires distinct candidates"
+    elif candidates:
+        return "only an ambiguous invoice selector carries candidates"
+    return None
 
 
 class LedgerLinkExecutionResult(BaseModel):
@@ -180,21 +227,28 @@ class LedgerLinkExecutor:
                 context=context,
                 task_name=request.definition_id,
             )
+        except InvoiceLookupRefusedError as error:
+            if tracker.attempt_count or tracker.has_possible_write:
+                await settle_export_link_failure(tracker, context, incomplete=False)
+                raise
+            return await _publish_link_refusal(
+                request, payload, context, "ambiguous_invoice", candidate_invoice_ids=error.candidate_ids
+            )
         except InvoiceLinkError as error:
             reason = _invoice_link_refusal_reason(error, payload)
             if tracker.attempt_count or tracker.has_possible_write or reason is None:
-                await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+                await settle_export_link_failure(tracker, context, incomplete=False)
                 raise
             return await _publish_link_refusal(request, payload, context, reason)
         except BaseException:
-            await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+            await settle_export_link_failure(tracker, context, incomplete=False)
             raise
         if _link_result_requires_refusal(projection, tracker):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         result = LedgerLinkOperationResult(
             profile_id=payload.profile_id,
             transaction_id=payload.transaction_id,
-            invoice_id=payload.invoice_id,
+            invoice_id=projection.invoice_id,
             outcome="linked",
             projection=projection,
         )
@@ -223,7 +277,7 @@ class LedgerLinkExecutor:
             result = link_manual_transaction_invoice(
                 bucket_id=profile_id,
                 transaction_id=transaction_id,
-                invoice_id=payload.invoice_id,
+                invoice_id=_resolved_invoice_selector(payload.invoice_id, ports, profile_id),
                 actor=actor,
                 source_command="aeat app ledger link",
                 ports=replace(ports, transaction_repository=repository),
@@ -242,8 +296,26 @@ class LedgerLinkExecutor:
             actor=actor,
             bucket_event_ids=result.bucket_event_ids,
             review_status=canonical.review_status,
-            transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+            transaction=LedgerTransactionProjection.from_payload(
+                canonical.transaction, language=payload.output_language
+            ),
         )
+
+
+def _resolved_invoice_selector(selector: str, ports: LedgerActionPorts, bucket_id: str) -> str:
+    """Resolve an exact invoice id or unambiguous prefix through the catalogue selection rule.
+
+    An unknown selector is returned unchanged so the linkage writer states the
+    missing-invoice refusal against what the operator supplied; an ambiguous prefix
+    raises the lookup refusal carrying its candidates.
+    """
+    invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository).load()
+    try:
+        return select_catalogue_invoice_id(invoices.invoices.keys(), selector)
+    except InvoiceLookupRefusedError as refusal:
+        if refusal.reason is InvoiceLookupRefusalReason.AMBIGUOUS:
+            raise
+        return selector
 
 
 def _supplied_link_actor(actor: str | None) -> str:
@@ -253,10 +325,13 @@ def _supplied_link_actor(actor: str | None) -> str:
 def _invoice_link_refusal_reason(
     error: InvoiceLinkError,
     payload: LedgerLinkRequest,
-) -> Literal["missing_invoice", "cross_bucket_invoice"] | None:
+) -> LedgerLinkRefusalReason | None:
     facts = error.context
-    if facts is None or facts.get("invoice_id") != payload.invoice_id:
+    selected = None if facts is None else facts.get("invoice_id")
+    if facts is None or not isinstance(selected, str) or not selected.startswith(payload.invoice_id):
         return None
+    if facts.get("transaction_bucket_id") == str(payload.profile_id):
+        return "transaction_takes_no_invoice"
     if facts.get("command_bucket_id") == str(payload.profile_id) and "invoice_bucket_id" in facts:
         return "cross_bucket_invoice"
     if facts.get("bucket_id") == str(payload.profile_id):
@@ -268,7 +343,9 @@ async def _publish_link_refusal(
     request: OperationRequest[BaseModel],
     payload: LedgerLinkRequest,
     context: OperationExecutorContext,
-    reason: Literal["missing_invoice", "cross_bucket_invoice"],
+    reason: LedgerLinkRefusalReason,
+    *,
+    candidate_invoice_ids: tuple[str, ...] = (),
 ) -> OperationRefusalEvidence:
     result = LedgerLinkOperationResult(
         profile_id=payload.profile_id,
@@ -276,6 +353,7 @@ async def _publish_link_refusal(
         invoice_id=payload.invoice_id,
         outcome="refused",
         reason=reason,
+        candidate_invoice_ids=candidate_invoice_ids,
     )
     async with context.cancellation.irreversible_section():
         require_operation_profile(request, context, payload.profile_id)
@@ -370,7 +448,7 @@ def build_ledger_link_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         refusal_detail_codes=frozenset({LEDGER_LINK_VALIDATION_REFUSAL_CODE}),

@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 
 from ....application.user_profile.profile_operation_contracts import (
@@ -17,12 +18,13 @@ from ....application.user_profile.profile_operation_contracts import (
 )
 from ....application.user_profile.section_rows import validate_profile_repeatable_row_fields
 from ....core.external_constants import OutputLanguage
-from ..common import activate_subcommand_output_language, emit_envelope
+from ..common import emit_envelope
 from ..state_projection_support import authority_operation
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
-def _parse_values(tokens: list[str]) -> dict[str, str]:
+def parse_values(tokens: list[str]) -> dict[str, str]:
+    """Parse field=value tokens into a field-to-value mapping."""
     values: dict[str, str] = {}
     for token in tokens:
         field, separator, value = token.partition("=")
@@ -40,7 +42,8 @@ def _parse_values(tokens: list[str]) -> dict[str, str]:
     return values
 
 
-def _parse_row_key(row: str) -> str:
+def parse_row_key(row: str) -> str:
+    """Normalize a row selector to the base row (empty) or a canonical decimal index."""
     row_key = row.strip().lower()
     if row_key == "base":
         return ""
@@ -90,14 +93,14 @@ def profile_add_row(
 
     from cadrumo_client.commands.payloads import ConfigProfileAddRowResult
 
-    from ._profile_support import resolve_active_profile_pointer
+    from .profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    values = _parse_values(value)
+    values = parse_values(value)
     validate_profile_repeatable_row_fields(profile_decode_context.schema.section(section), values=values)
     profile_id = UUID(str(pointer.bucket_id))
     client = require_profile_client(ctx, expected_profile_id=profile_id)
@@ -151,15 +154,15 @@ def profile_edit_row(
 
     from cadrumo_client.commands.payloads import ConfigProfileRowChangeResult
 
-    from ._profile_support import resolve_active_profile_pointer
+    from .profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    row_key = _parse_row_key(row)
-    values = _parse_values(value or [])
+    row_key = parse_row_key(row)
+    values = parse_values(value or [])
     clears = tuple(clear or ())
     _require_distinct_clears(clears)
     validate_profile_repeatable_row_fields(
@@ -219,14 +222,14 @@ def profile_remove_row(
 
     from cadrumo_client.commands.payloads import ConfigProfileRowChangeResult
 
-    from ._profile_support import resolve_active_profile_pointer
+    from .profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    row_key = _parse_row_key(row)
+    row_key = parse_row_key(row)
     profile_id = UUID(str(pointer.bucket_id))
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     deadline = mutation_deadline()

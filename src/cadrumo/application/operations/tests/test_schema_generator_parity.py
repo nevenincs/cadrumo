@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from functools import wraps
-from typing import Annotated, ClassVar, Literal, override
+from typing import Annotated, Any, ClassVar, Literal, override
 
 import pytest
 from pydantic import BaseModel, Field, create_model
@@ -13,7 +13,7 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode
 from ....core.hashing import canonical_json_bytes
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_guards import is_str_keyed_dict
-from ..registry_schema_validation import _UnambiguousDefinitionsSchemaGenerator, strict_model_json_schema
+from ..registry_schema_validation import UnambiguousDefinitionsSchemaGenerator, strict_model_json_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,7 +89,7 @@ def test_default_definition_names_and_schema_bytes_are_preserved(
 ) -> None:
     expected = model_type.model_json_schema(mode=mode, ref_template=ref_template, by_alias=by_alias)
     actual = model_type.model_json_schema(
-        mode=mode, ref_template=ref_template, by_alias=by_alias, schema_generator=_UnambiguousDefinitionsSchemaGenerator
+        mode=mode, ref_template=ref_template, by_alias=by_alias, schema_generator=UnambiguousDefinitionsSchemaGenerator
     )
     assert actual == expected
     assert canonical_json_bytes(actual) == canonical_json_bytes(expected)
@@ -130,13 +130,13 @@ def test_decorated_schema_method_remains_authoritative() -> None:
         @wraps(BaseModel.model_json_schema)
         def model_json_schema(
             cls,
-            by_alias: bool = True,
+            by_alias: bool | None = None,
             ref_template: str = "#/$defs/{model}",
             schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
             mode: JsonSchemaMode = "validation",
             *,
             union_format: Literal["any_of", "primitive_type_array"] = "any_of",
-        ) -> dict[str, object]:
+        ) -> dict[str, Any]:
             assert schema_generator is GenerateJsonSchema
             cls.calls += 1
             schema = super().model_json_schema(

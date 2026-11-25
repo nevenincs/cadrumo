@@ -22,6 +22,7 @@ from typing import Any
 import pytest
 
 from cadrumo.core.toml import load_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..analysis.hand_authored_type_column import (
     Alignment,
@@ -53,6 +54,10 @@ _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
     "714/2024": (12, "data type 'integer' cannot be signed; only money can"),
     "714/2025": (12, "data type 'integer' cannot be signed; only money can"),
 }
+
+
+#: The revision whose live export layouts the planted fixtures below copy and perturb.
+_PLANTED_REVISION = str(open_ended_revision("490").id)
 
 
 @pytest.fixture(scope="module")
@@ -140,7 +145,7 @@ def _first_live_signed_field(export_layouts: Path) -> tuple[Path, str]:
 def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
     """Unsigning one aligned N field is caught as exactly that field, and nothing else."""
     authority = compiled_bundled_authority()
-    planted = _planted_revision(tmp_path, "490", "2021")
+    planted = _planted_revision(tmp_path, "490", _PLANTED_REVISION)
     layout, field_id = _first_live_signed_field(planted / "export_layouts")
     document = load_toml(layout)
     field = next(item for item in _layout_fields(document) if item["id"] == field_id)
@@ -149,9 +154,12 @@ def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
     layout.write_bytes(render_toml_bytes(layout.name, document))
 
     _clean_alignments, clean = revision_findings(
-        authority, modelo="490", revision="2021", revision_root=_planted_revision(tmp_path / "clean", "490", "2021")
+        authority,
+        modelo="490",
+        revision=_PLANTED_REVISION,
+        revision_root=_planted_revision(tmp_path / "clean", "490", _PLANTED_REVISION),
     )
-    _alignments, found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
+    _alignments, found = revision_findings(authority, modelo="490", revision=_PLANTED_REVISION, revision_root=planted)
 
     assert clean == ()
     assert [(item.field_id, item.blocked_reason) for item in found] == [(field_id, None)]
@@ -160,7 +168,7 @@ def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
 def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> None:
     """A record whose geometry matches no design sheet is reported, never compared as if it had."""
     authority = compiled_bundled_authority()
-    planted = _planted_revision(tmp_path, "490", "2021")
+    planted = _planted_revision(tmp_path, "490", _PLANTED_REVISION)
     layout = sorted((planted / "export_layouts").glob("*.toml"))[0]
     document = load_toml(layout)
     field = _layout_fields(document)[0]
@@ -168,7 +176,7 @@ def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> 
     field["offset"] = 999999
     layout.write_bytes(render_toml_bytes(layout.name, document))
 
-    alignments, _found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
+    alignments, _found = revision_findings(authority, modelo="490", revision=_PLANTED_REVISION, revision_root=planted)
 
     assert Alignment.UNMATCHED in {item.alignment for item in alignments}
 
@@ -176,7 +184,7 @@ def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> 
 def test_a_planted_schema_blocked_field_retains_its_reason(tmp_path: Path) -> None:
     """Migration of the live blocked inventory cannot silence the blocked detector."""
     authority = compiled_bundled_authority()
-    planted = _planted_revision(tmp_path, "490", "2021")
+    planted = _planted_revision(tmp_path, "490", _PLANTED_REVISION)
     layout, field_id = _first_live_signed_field(planted / "export_layouts")
     document = load_toml(layout)
     field = next(item for item in _layout_fields(document) if item["id"] == field_id)
@@ -186,7 +194,7 @@ def test_a_planted_schema_blocked_field_retains_its_reason(tmp_path: Path) -> No
     field["data_type"] = "integer"
     layout.write_bytes(render_toml_bytes(layout.name, document))
 
-    alignments, found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
+    alignments, found = revision_findings(authority, modelo="490", revision=_PLANTED_REVISION, revision_root=planted)
 
     assert alignments and all(item.alignment is Alignment.ALIGNED for item in alignments)
     assert [(item.field_id, item.blocked_reason) for item in found] == [

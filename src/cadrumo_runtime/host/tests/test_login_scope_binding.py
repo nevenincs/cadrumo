@@ -8,8 +8,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.login import LoginEvidence
@@ -17,13 +17,13 @@ from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-class _Login:
+class Login:
     """One active native login retained by the already admitted connection."""
 
     login_id = "scope-test-login"
@@ -84,7 +84,7 @@ def _login(profile_id: UUID, *, scope: AccessScope) -> ProfileLogin:
 def _admitted_connection(context: ConnectionContext, profile_id: UUID, scope: AccessScope) -> ProfileConnection:
     return ProfileConnection(
         context,
-        login=_Login(context.peer.os_owner_id),
+        login=Login(context.peer.os_owner_id),
         client_id=uuid4(),
         profile_id=profile_id,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,

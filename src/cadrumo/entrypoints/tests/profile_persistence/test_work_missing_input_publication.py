@@ -8,6 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.user_profile.tests.general_regime_facts import (
+    RENTA_UNMARRIED_TAXPAYER_FACTS,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -15,10 +21,12 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo import calculate_input
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
+from ....application.modelo.work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloWorkMissingInputError
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -30,42 +38,29 @@ from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "10000000-0000-4000-8000-000000000476"
-_YEAR = 2025
-_PERIOD = Period.from_year_and_code(_YEAR, "0A")
+PROFILE_ID = "10000000-0000-4000-8000-000000000476"
+YEAR = 2025
+_PERIOD = Period.from_year_and_code(YEAR, "0A")
 _CLOCK = datetime(2026, 5, 21, 10, tzinfo=UTC)
-_REQUIRED_MANUAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+REQUIRED_BINDING = "renta-base-liquidable-negativa-general-anterior"
 
 
-def _profile() -> None:
+def work_missing_input_publication_profile() -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
+        profile_id=PROFILE_ID,
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                # Modelo 123 is filed by whoever pays capital income subject to retención (RIRPF art. 108.1).
+                UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
+            )
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -79,8 +74,10 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id != "renta-profile-tax-residence-ccaa"
-        and (not omit_required or binding.id != _REQUIRED_MANUAL_BINDING)
+        and (not omit_required or binding.id != REQUIRED_BINDING)
         and binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind != "retencion_soportada"
     }
     return WorkCalculateInputBundle.build(
         casilla_inputs={},
@@ -94,7 +91,7 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
     )
 
 
-def _work_and_repositories(
+def work_and_repositories(
     operation: PinnedAuthorityOperation,
     *,
     modelo: str = "100",
@@ -105,7 +102,7 @@ def _work_and_repositories(
     revision_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
     unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
@@ -117,26 +114,26 @@ def _work_and_repositories(
     return unit, work_repo, revision_repo, event_repo
 
 
-def test_real_missing_manual_binding_stops_before_revision_publication(
+def test_real_missing_required_binding_stops_before_revision_publication(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _profile()
-        snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
-        required = next(binding for binding in snapshot.revision.bindings if binding.id == _REQUIRED_MANUAL_BINDING)
-        assert required.provider.kind == "manual_input"
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(operation)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID):
+        work_missing_input_publication_profile()
+        snapshot = operation.snapshot("100", filing_year=YEAR, period="0A")
+        required = next(binding for binding in snapshot.revision.bindings if binding.id == REQUIRED_BINDING)
+        assert required.provider.kind == "previous_filing"
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(operation)
         inputs = _inputs(snapshot, omit_required=True)
         with (
             calculation_ports_for_test(
-                bucket_id=_PROFILE_ID,
+                bucket_id=PROFILE_ID,
                 work_unit_repository=work_repo,
                 calculation_repository=revision_repo,
                 bucket_event_repository=event_repo,
             ) as ports,
             pytest.raises(ModeloWorkMissingInputError) as refused,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 unit.work_unit_id,
                 actor="operator",
                 casilla_inputs=inputs.casilla_inputs,
@@ -145,12 +142,17 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
                 ports=ports,
                 clock=_CLOCK,
             )
-        assert refused.value.binding_id == _REQUIRED_MANUAL_BINDING
-        assert refused.value.translated_message in {
+        assert refused.value.binding_id == REQUIRED_BINDING
+        # The binding is a carry the filer can state holds nothing, so the
+        # refusal is worded as that open statement; the engine's stays its cause.
+        assert isinstance(refused.value, ModeloPriorCarryAbsenceUnstatedError)
+        assert refused.value.open_carry_ids == (REQUIRED_BINDING,)
+        cause = refused.value.__cause__
+        assert isinstance(cause, RegistryValidationError)
+        assert cause.translated_message in {
             "errors.calc.binding_value_missing",
             "errors.calc.bound_casilla_binding_value_missing",
         }
-        assert isinstance(refused.value.__cause__, RegistryValidationError)
         assert revision_repo.load().revisions == {}
         stored_unit = work_repo.load().get(unit.work_unit_id)
         assert stored_unit is not None
@@ -160,11 +162,11 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
 def test_same_tag_after_publication_remains_generic_and_published(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _profile()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID):
+        work_missing_input_publication_profile()
         m123_period = Period.from_year_and_code(2025, "2T")
         m123_snapshot = operation.snapshot("123", filing_year=2025, period="2T")
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=m123_period, revision_id=m123_snapshot.revision.id
         )
         inputs = WorkCalculateInputBundle.build(
@@ -180,13 +182,13 @@ def test_same_tag_after_publication_remains_generic_and_published(
             raise RegistryValidationError(
                 "injected post-publication diagnostic failure",
                 translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": _REQUIRED_MANUAL_BINDING},
+                context={"binding_id": REQUIRED_BINDING},
             )
 
         monkeypatch.setattr(calculate_input, "modelo_202_modality_for_record", fail_modality)
         with (
             calculation_ports_for_test(
-                bucket_id=_PROFILE_ID,
+                bucket_id=PROFILE_ID,
                 work_unit_repository=work_repo,
                 calculation_repository=revision_repo,
                 bucket_event_repository=event_repo,

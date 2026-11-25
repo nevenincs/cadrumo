@@ -10,6 +10,19 @@ line_ending = "crlf"
 required = true
 
 [[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = "m303-2026.dp30301.f087"
+offset = 1036
+length = 521
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
 id = "m303-2026.dp30301.f088"
 offset = 1557
 length = 13

@@ -42,7 +42,7 @@ from ...domain.buckets.event import (
     BucketEventType,
     BucketObjectId,
 )
-from ._decimal_wire import NonNegativeDecimalWireText
+from .decimal_wire import NonNegativeDecimalWireText
 
 
 class WithholdingClaveBreakdownPayload(OutputSchema):

@@ -15,11 +15,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ....core.external_constants import OutputLanguage
+from ....core.operations import OperationFrontendProjection
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_action_ports import CalculationActionPortsFactory
 from ..metadata_projection import ModeloWorkMetadataSnapshot
@@ -35,49 +35,13 @@ from ..wizard_attempt_operation import (
 from ..work_calculation_contracts import ModeloWorkCalculateRequest
 from ..work_lifecycle_ports import WorkLifecyclePorts
 from ..work_wizard import ModeloWorkWizardStep
-from .test_wizard_context_operation import _unit, _WorkRepository
+from .test_wizard_context_operation import WorkRepository, wizard_context_operation_unit
+from .work_operation_support import GuardPhaseReachedError, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-
-
-class _GuardPhaseReachedError(Exception):
-    pass
-
-
-class _GuardEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-        raise _GuardPhaseReachedError(phase)
-
-
-def _executor_context(
-    request: OperationRequest[ModeloWorkWizardAttemptRequest],
-    *,
-    definition_id: str | None = None,
-    subject_ref: str | None = None,
-) -> tuple[OperationExecutorContext, _GuardEvents]:
-    events = _GuardEvents()
-    context = cast(
-        OperationExecutorContext,
-        cast(
-            object,
-            SimpleNamespace(
-                identity=OperationIdentity(
-                    operation_id="a" * 64,
-                    definition_id=definition_id if definition_id is not None else request.definition_id,
-                    subject_ref=subject_ref if subject_ref is not None else request.subject_ref,
-                ),
-                events=events,
-            ),
-        ),
-    )
-    return context, events
 
 
 def _executor() -> ModeloWorkWizardAttemptExecutor:
@@ -88,7 +52,7 @@ def _executor() -> ModeloWorkWizardAttemptExecutor:
 
 
 def _request(*, profile_id: UUID = _PROFILE, subject_ref: str | None = None) -> OperationRequest[BaseModel]:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     return OperationRequest[BaseModel](
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
@@ -103,7 +67,7 @@ def _request(*, profile_id: UUID = _PROFILE, subject_ref: str | None = None) -> 
 def _executor_request(
     *, profile_id: UUID = _PROFILE, subject_ref: str | None = None
 ) -> OperationRequest[ModeloWorkWizardAttemptRequest]:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     return OperationRequest[ModeloWorkWizardAttemptRequest](
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
@@ -115,7 +79,7 @@ def _executor_request(
     )
 
 
-def _registration(repository: _WorkRepository):
+def _registration(repository: WorkRepository):
     def work_factory() -> WorkLifecyclePorts:
         return cast(WorkLifecyclePorts, cast(object, SimpleNamespace(work_unit_repository=repository)))
 
@@ -154,7 +118,7 @@ def test_wizard_executor_profile_guard_preserves_work_unit_subject(
     unit_id = original.payload.calculation.work_unit_id
     request_subject = "another-work-unit" if failure == "wrong_unit" else unit_id
     request = original.model_copy(update={"subject_ref": request_subject})
-    context, events = _executor_context(
+    context, events = guarded_executor_context(
         request,
         definition_id="modelo.work.other" if failure == "identity_definition" else None,
         subject_ref="another-work-unit" if failure == "identity_subject" else None,
@@ -171,10 +135,10 @@ def test_wizard_executor_profile_guard_preserves_work_unit_subject(
 
 def test_wizard_executor_accepts_its_work_unit_subject_at_the_guard_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     request = _executor_request()
-    context, events = _executor_context(request)
+    context, events = guarded_executor_context(request)
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
-    with pytest.raises(_GuardPhaseReachedError) as reached:
+    with pytest.raises(GuardPhaseReachedError) as reached:
         asyncio.run(_executor().execute(request, context))
 
     assert str(reached.value) == MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID
@@ -182,7 +146,7 @@ def test_wizard_executor_accepts_its_work_unit_subject_at_the_guard_boundary(mon
 
 
 def test_request_and_needs_input_projection_are_strictly_profile_bound() -> None:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     request = _request()
     assert isinstance(request.payload, ModeloWorkWizardAttemptRequest)
     assert request.payload.calculation.work_unit_id == unit.work_unit_id
@@ -222,7 +186,7 @@ def test_request_and_needs_input_projection_are_strictly_profile_bound() -> None
 
 
 def test_exact_profile_rejected_before_work_catalogue_load() -> None:
-    repository = _WorkRepository(_unit())
+    repository = WorkRepository(wizard_context_operation_unit())
     registry, registration = _registration(repository)
     for request, profile_id in (
         (_request(profile_id=_OTHER_PROFILE), _PROFILE),
@@ -238,8 +202,8 @@ def test_exact_profile_rejected_before_work_catalogue_load() -> None:
 
 
 def test_submit_period_and_historical_observation_result_commit_use_admitted_period() -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     registry, registration = _registration(repository)
     request = _request()
     resolved = resolve_operation_access(registry=registry, request=request, context=_context(registration))

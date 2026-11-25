@@ -26,48 +26,30 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import maximum_supported_activity_retencion_rate
-from .._renta_income_evidence import income_withheld_amount as income_withheld_amount
-from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
+from ..renta_income_evidence import income_withheld_amount as income_withheld_amount
+from ..renta_income_ledger import aggregate_renta_income_ledger
+from ..renta_income_models import RentaIncomeObservation
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,
+    csv_income_raw,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-def _raw(provider_id: str, *, amount: Decimal, value_date: date) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=value_date,
-        value_date=value_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente SA",
-        description=f"income row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
 
 
 def _income_row(
@@ -79,11 +61,11 @@ def _income_row(
     iva_rate: str | None = None,
     iva_category: IvaCategory | None = None,
     irpf_category: str | None = "actividad_economica",
-    value_date: date = date(2024, 3, 15),
+    value_date: date = date(_YEAR, 3, 15),
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw(provider_id, amount=Decimal(cash), value_date=value_date),
+            "raw": csv_income_raw(provider_id, amount=Decimal(cash), value_date=value_date),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -94,7 +76,7 @@ def _income_row(
             "iva_category": iva_category,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -196,7 +178,7 @@ def test_inference_above_the_supported_rate_is_refused_not_capped() -> None:
 
 def test_the_refusal_boundary_is_the_registry_rate_not_a_local_literal() -> None:
     """A withholding exactly at the registry maximum is accepted, a cent more is not."""
-    rate = maximum_supported_activity_retencion_rate(effective_date=date(2024, 3, 15))
+    rate = maximum_supported_activity_retencion_rate(effective_date=date(_YEAR, 3, 15))
     base = Decimal("2000.00")
     at_bound = base * rate
 
@@ -264,7 +246,7 @@ def test_the_exempt_recovery_reaches_the_aggregated_observation() -> None:
     aggregation = aggregate_renta_income_ledger(
         catalogue,
         bucket_id="test",
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -288,7 +270,7 @@ def test_a_derived_marker_without_a_figure_is_refused() -> None:
                 "taxable_base_amount": Decimal("2000.00"),
                 "withheld_amount": Decimal("0"),
                 "withheld_derivation": LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
-                "filing_date": date(2024, 3, 15),
+                "filing_date": date(_YEAR, 3, 15),
                 "grounding": LedgerIncomeGrounding.SUBSTRATE_DECLARED,
             },
         )
@@ -305,7 +287,7 @@ def test_a_refusal_carrying_the_figure_it_refused_is_rejected() -> None:
                 "taxable_base_amount": Decimal("2000.00"),
                 "withheld_amount": Decimal("300.00"),
                 "withheld_derivation": LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE,
-                "filing_date": date(2024, 3, 15),
+                "filing_date": date(_YEAR, 3, 15),
                 "grounding": LedgerIncomeGrounding.SUBSTRATE_DECLARED,
             },
         )
@@ -340,7 +322,7 @@ def test_the_builder_never_emits_an_unmarked_withholding() -> None:
     aggregation = aggregate_renta_income_ledger(
         catalogue,
         bucket_id="test",
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,

@@ -29,9 +29,9 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-from ._strict_cli_fixture_support import seeded_runtime_backend
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import seed_profile
+from .strict_cli_fixture_support import seeded_runtime_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -28,6 +28,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ...operation_composition import compose_operation_dependencies
 from ..components.host import ScreenHostApp
 from ..profile.edit_screens import FieldEditScreen
+from .settling import settle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "synthetic-frontend-auth-passphrase"
@@ -58,11 +59,11 @@ async def test_sensitive_profile_input_hides_values_while_typing(profile_operati
     dialog = FieldEditScreen(field)
     host = ScreenHostApp(dialog)
     async with host.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         entry = dialog.query_one("#edit-input", Input)
         assert entry.password
         entry.value = "SYNTHETIC-CONTRAST-INPUT"
-        await pilot.pause()
+        await settle(pilot)
         assert entry.password
         assert "SYNTHETIC-CONTRAST-INPUT" not in host.export_screenshot()
 

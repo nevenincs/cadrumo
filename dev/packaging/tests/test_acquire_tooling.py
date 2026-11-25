@@ -360,29 +360,29 @@ def test_verify_homebrew_formula_digests_refuses_missing_resource(tmp_path: Path
 
 def test_pypi_parser_defaults_to_public_index() -> None:
     """The PyPI script defaults its index to the public PyPI simple endpoint."""
-    args = acquire_pypi._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
+    args = acquire_pypi.parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
     assert args.index_url == "https://pypi.org/simple"
     assert args.cohort_dir == Path("c")
 
 
 def test_github_release_parser_defaults_to_canonical_repo() -> None:
     """The GitHub release script defaults to the canonical repository slug."""
-    args = acquire_github_release._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
+    args = acquire_github_release.parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
     assert args.repo == "nevenincs/cadrumo"
 
 
 def test_homebrew_parser_defaults_to_public_tap() -> None:
     """The Homebrew script defaults to the public tap."""
-    args = acquire_homebrew._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
+    args = acquire_homebrew.parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
     assert args.tap == "nevenincs/tap"
 
 
 @pytest.mark.parametrize(
     "parser_factory",
     [
-        acquire_pypi._parser,
-        acquire_github_release._parser,
-        acquire_homebrew._parser,
+        acquire_pypi.parser,
+        acquire_github_release.parser,
+        acquire_homebrew.parser,
     ],
 )
 def test_parsers_require_cohort_and_evidence_dirs(

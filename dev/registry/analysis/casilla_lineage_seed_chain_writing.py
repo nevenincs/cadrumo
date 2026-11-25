@@ -8,8 +8,8 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .casilla_id_grammar import classify_casilla_id
-from .casilla_lineage_seed_chain_state import _ChainState
-from .casilla_lineage_seed_rules import _CONTINUIDAD_ID
+from .casilla_lineage_seed_chain_state import ChainState
+from .casilla_lineage_seed_rules import CONTINUIDAD_ID
 from .casilla_lineage_seed_types import LineagePlan
 
 type _Pair = tuple[str, str]
@@ -19,7 +19,7 @@ type _Row = tuple[str, str]
 class _PlannerContext(Protocol):
     """The narrow planner state needed while writing a continuation."""
 
-    state: _ChainState
+    state: ChainState
     plan: LineagePlan
 
     def _new_chain_id(self, previous: CasillaDefinition, successor: CasillaDefinition, pair: _Pair) -> str: ...
@@ -75,7 +75,7 @@ def _validated_chain(
     if prev_chain is not None and succ_chain is not None and prev_chain != succ_chain:
         return f"declared lineage disagrees: predecessor carries {prev_chain!r}, successor {succ_chain!r}"
     chain = prev_chain or succ_chain or planner._new_chain_id(previous, successor, pair)
-    if not _CONTINUIDAD_ID.match(chain):
+    if not CONTINUIDAD_ID.match(chain):
         return f"no valid continuidad_id derivable from {previous.id!r}"
     if previous.id in claimed:
         return f"predecessor {previous.id!r} is already continued by another row; lineage is one-to-one"

@@ -7,7 +7,7 @@ slashed literals inside a ``Path(...)`` call, and every offending site instead
 structurally cannot reach that class.
 
 This gate reaches it, because it matches the join rather than the literal.
-``settings.cadrumo_local_storage_root / _INDEX_SUBDIR`` is a ``BinOp`` whose
+``settings.cadrumo_storage_root / _INDEX_SUBDIR`` is a ``BinOp`` whose
 left operand is the attribute access, so the detector fires regardless of what
 is joined on -- a constant, a module-local name, a computed segment, or a
 chain. The same holds for ``joinpath``, ``glob``, ``rglob``, and ``iterdir``,
@@ -15,7 +15,7 @@ and through a ``Path(...)`` wrapper.
 
 Being AST-structural also dissolves the false-positive class a name census
 inherits, without an allowlist entry: ``core/auth_session_keys.py`` names
-``Settings.cadrumo_token_dir`` inside its module docstring precisely to record
+the token storage member inside its module docstring precisely to record
 that the key is deliberately independent of it. A docstring is an
 ``ast.Constant``; an attribute walk cannot see it, so the gate cannot produce
 that error at all.
@@ -78,18 +78,6 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
         # path on purpose.
         ("core/storage_taxonomy_locations.py", "storage_path"),
         ("core/storage_taxonomy_locations.py", "bucket_scoped_storage_path"),
-        # Settings derivation: turns each root-derived member's declared
-        # subpath into that field's default. It iterates the declaration
-        # directly rather than carrying a table of its own.
-        ("core/_config_validation.py", "resolve_output_dirs_under_storage_root"),
-        # Relative operator overrides are anchored by this validator helper.
-        ("core/_config_validation.py", "_beneath_storage_root"),
-        # The on-disk-name pin. It must build the expected location from its own
-        # oracle to measure the validator, and routing it through the accessor
-        # would make it assert that the accessor equals itself -- deleting the
-        # test's reason for existing while leaving it green. Joining the root is
-        # not debt here; it is the measurement.
-        ("core/tests/test_output_dir_state_root.py", "test_every_derived_output_dir_roots_under_storage_root"),
         # Independent override-validation oracle. This helper constructs a
         # never-written sentinel expectation to verify relative Path overrides
         # are anchored by Settings; using the resolver would test itself.
@@ -221,35 +209,35 @@ LOCATION_PRODUCING_SOURCES: Final[tuple[tuple[str, str], ...]] = tuple(
     [
         (
             "operator join onto a literal",
-            'def make():\n    return settings.cadrumo_local_storage_root / "scratch"\n',
+            'def make():\n    return settings.cadrumo_storage_root / "scratch"\n',
         ),
         (
             "operator join onto a module-local constant",
-            "def make():\n    return settings.cadrumo_local_storage_root / _INDEX_SUBDIR\n",
+            "def make():\n    return settings.cadrumo_storage_root / _INDEX_SUBDIR\n",
         ),
         (
             "chained join",
-            'def make():\n    return settings.cadrumo_local_storage_root / "a" / "b" / "c"\n',
+            'def make():\n    return settings.cadrumo_storage_root / "a" / "b" / "c"\n',
         ),
         (
             "joinpath spelling",
-            'def make():\n    return settings.cadrumo_local_storage_root.joinpath("scratch")\n',
+            'def make():\n    return settings.cadrumo_storage_root.joinpath("scratch")\n',
         ),
         (
             "glob beneath the root",
-            'def make():\n    return list(settings.cadrumo_local_storage_root.glob("*.db"))\n',
+            'def make():\n    return list(settings.cadrumo_storage_root.glob("*.db"))\n',
         ),
         (
             "wrapped in Path()",
-            'def make():\n    return Path(settings.cadrumo_local_storage_root) / "scratch"\n',
+            'def make():\n    return Path(settings.cadrumo_storage_root) / "scratch"\n',
         ),
         (
             "reached through self",
-            'def make(self):\n    return self.cadrumo_local_storage_root / "scratch"\n',
+            'def make(self):\n    return self.cadrumo_storage_root / "scratch"\n',
         ),
         (
             "reached through a call result",
-            'def make():\n    return load_settings().cadrumo_local_storage_root / "scratch"\n',
+            'def make():\n    return load_settings().cadrumo_storage_root / "scratch"\n',
         ),
     ]
 )
@@ -276,23 +264,23 @@ def test_the_detector_fires_on_each_location_producing_shape(label: str, source:
     [
         (
             "a docstring naming the field",
-            '"""This key is deliberately independent of cadrumo_local_storage_root."""\n',
+            '"""This key is deliberately independent of cadrumo_storage_root."""\n',
         ),
         (
             "a plain read passed to a walker",
-            "def measure():\n    return directory_byte_total(settings.cadrumo_local_storage_root)\n",
+            "def measure():\n    return directory_byte_total(settings.cadrumo_storage_root)\n",
         ),
         (
             "a plain read returned as the root",
-            "def show():\n    return settings.cadrumo_local_storage_root\n",
+            "def show():\n    return settings.cadrumo_storage_root\n",
         ),
         (
             "an override keyword, not an attribute load",
-            "def isolate(tmp):\n    return override_settings(cadrumo_local_storage_root=tmp)\n",
+            "def isolate(tmp):\n    return override_settings(cadrumo_storage_root=tmp)\n",
         ),
         (
             "a join onto a category, not the root",
-            'def make():\n    return settings.cadrumo_runs_dir / "trace.json"\n',
+            'def make():\n    return runs_directory() / "trace.json"\n',
         ),
         (
             "the accessor doing its job elsewhere",
@@ -321,7 +309,7 @@ def test_the_detector_follows_the_root_through_a_local_rebind() -> None:
     """
     source = (
         "def build(settings, bucket_id):\n"
-        "    root = settings.cadrumo_local_storage_root\n"
+        "    root = settings.cadrumo_storage_root\n"
         '    return root / "buckets" / bucket_id / "db"\n'
     )
     sites = _sites_in(source)
@@ -333,7 +321,7 @@ def test_the_detector_follows_a_rebind_into_a_closure() -> None:
     """A closure genuinely sees its host's names, so the binding reaches it."""
     source = (
         "def outer(settings):\n"
-        "    root = settings.cadrumo_local_storage_root\n"
+        "    root = settings.cadrumo_storage_root\n"
         "    def inner():\n"
         '        return root / "scratch"\n'
         "    return inner\n"
@@ -351,12 +339,12 @@ def test_the_detector_follows_a_rebind_into_a_closure() -> None:
         ),
         (
             "a local bound from a category, not the root",
-            'def build(settings):\n    root = settings.cadrumo_runs_dir\n    return root / "trace.json"\n',
+            'def build():\n    root = storage_path(StorageCategory.RUNS)\n    return root / "trace.json"\n',
         ),
         (
             "a same-named local in a sibling function",
             "def bind(settings):\n"
-            "    root = settings.cadrumo_local_storage_root\n"
+            "    root = settings.cadrumo_storage_root\n"
             "    return root\n"
             "\n"
             "def unrelated(tmp_path):\n"
@@ -365,7 +353,7 @@ def test_the_detector_follows_a_rebind_into_a_closure() -> None:
         ),
         (
             "a join on a name bound after it",
-            'def build(tmp_path, settings):\n    target = tmp_path / "a"\n    root = settings.cadrumo_local_storage_root\n    return target\n',
+            'def build(tmp_path, settings):\n    target = tmp_path / "a"\n    root = settings.cadrumo_storage_root\n    return target\n',
         ),
     ],
 )
@@ -385,10 +373,7 @@ def test_the_rebind_tracking_does_not_flag_an_unrelated_local(label: str, source
 def test_the_detector_attributes_a_site_to_its_innermost_function() -> None:
     """Declaration keys must name the function that actually joins."""
     source = (
-        "def outer():\n"
-        "    def inner():\n"
-        '        return settings.cadrumo_local_storage_root / "scratch"\n'
-        "    return inner\n"
+        'def outer():\n    def inner():\n        return settings.cadrumo_storage_root / "scratch"\n    return inner\n'
     )
     (site,) = _sites_in(source)
     assert site.function == "outer.inner"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass, replace
 from typing import Annotated, Literal, Self
 from uuid import UUID
@@ -14,6 +15,9 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FourDigitYear, is_four_digit_year
+from ...core.i18n.render import output_language
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -37,18 +41,29 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from .projection import (
-    ModeloCompareServiceResult,
     ModeloProjectServiceResult,
-    compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from .projection_compare import ModeloCompareServiceResult, compare_modelo_years
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
+from .projection_unresolved import (
+    ModeloProjectionUnresolvedBinding,
+    ModeloProjectionUnresolvedCasilla,
+)
+from .projection_words import (
+    binding_source_words,
+    m100_figure_words,
+    m130_figure_words,
+    unresolved_binding_words,
+    unresolved_casilla_reason_words,
+)
 
 MODELO_PROJECT_OPERATION_DEFINITION_ID = "modelo.project"
 MODELO_COMPARE_OPERATION_DEFINITION_ID = "modelo.compare"
 
 _Token = Annotated[str, Field(min_length=1, max_length=128)]
 _Value = Annotated[str, Field(min_length=1, max_length=16_384)]
+_Words = Annotated[str, Field(min_length=1, max_length=1_024)]
 _LOG = get_logger(__name__)
 
 
@@ -67,8 +82,10 @@ class ModeloProjectOperationRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    year: int = Field(ge=1900, le=9999)
-    ccaa: _Token
+    year: FourDigitYear
+    #: The region to project for. Left out, it is the region the exact profile's
+    #: tax residence states; a profile that states none is refused.
+    ccaa: _Token | None = None
     casilla_overrides: tuple[ProjectionOverride, ...] = ()
     binding_overrides: tuple[ProjectionOverride, ...] = ()
 
@@ -91,13 +108,24 @@ class ModeloCompareOperationRequest(CredentialFreeOperationRequest):
 
     @model_validator(mode="after")
     def _two_years(self) -> Self:
-        if len(self.years) != 2 or any(year < 1900 or year > 9999 for year in self.years):
+        if len(self.years) != 2 or not all(is_four_digit_year(year) for year in self.years):
             raise ValueError("comparison needs two filing years")
         return self
 
 
+class ProjectM130AccumulatedWords(BaseModel):
+    """The name of each cumulative quarterly-declaration figure, in the projection's ``words_language``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    ingresos: _Words
+    gastos: _Words
+    rendimiento_neto: _Words
+    pagos_fraccionados: _Words
+
+
 class ProjectM130AccumulatedProjection(BaseModel):
-    """All four canonical cumulative M130 summary values."""
+    """All four canonical cumulative M130 summary values, each with its name in words."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -105,20 +133,36 @@ class ProjectM130AccumulatedProjection(BaseModel):
     gastos: _Value
     rendimiento_neto: _Value
     pagos_fraccionados: _Value
+    words: ProjectM130AccumulatedWords
 
 
-class ProjectM100SummaryProjection(BaseModel):
-    """All seven canonical M100 summary values."""
+class ProjectM100SummaryWords(BaseModel):
+    """The name of each projected annual-return figure, in the projection's ``words_language``."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    base_liquidable_general_0505: _Value
-    pagos_fraccionados_0604: _Value
-    cuota_integra_estatal_0545: _Value
-    cuota_integra_autonomica_0546: _Value
-    cuota_liquida_estatal_0595: _Value
-    cuota_liquida_autonomica_0596: _Value
-    cuota_resultante_0597: _Value
+    base_liquidable_general: _Words
+    pagos_fraccionados: _Words
+    cuota_integra_estatal: _Words
+    cuota_integra_autonomica: _Words
+    cuota_liquida_estatal: _Words
+    cuota_liquida_autonomica: _Words
+    cuota_resultante: _Words
+
+
+class ProjectM100SummaryProjection(BaseModel):
+    """All seven canonical M100 summary values, each with its name in words."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    base_liquidable_general: _Value
+    pagos_fraccionados: _Value
+    cuota_integra_estatal: _Value
+    cuota_integra_autonomica: _Value
+    cuota_liquida_estatal: _Value
+    cuota_liquida_autonomica: _Value
+    cuota_resultante: _Value
+    words: ProjectM100SummaryWords
 
 
 class ProjectCasillaObservationProjection(BaseModel):
@@ -133,15 +177,103 @@ class ProjectCasillaObservationProjection(BaseModel):
     source_refs: tuple[_Token, ...]
 
 
-class ModeloProjectOperationProjection(BaseModel):
-    """The complete public projection, bound to its source profile."""
+class ProjectUnresolvedBindingProjection(BaseModel):
+    """One source-owned binding left without a value, named by its box and closed tokens.
+
+    ``words`` says why it has no value and what puts that right, and
+    ``source_words`` names its source in a few words (``None`` for a source kind
+    the product does not know); both are in the projection's ``words_language``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[1] = 1
+    binding_id: _Token
+    casilla_id: _Token | None
+    #: The number the form prints for that box; ``None`` for a working figure or when no box is named.
+    box: _Token | None = None
+    source_kind: _Token
+    reason: _Token
+    note: _Token | None
+    source_words: _Words | None
+    words: _Words
+
+    @classmethod
+    def from_service(cls, row: ModeloProjectionUnresolvedBinding, *, language: OutputLanguage) -> Self:
+        """Name one unresolved binding and the words that explain it in ``language``."""
+        return cls(
+            binding_id=row.binding_id,
+            casilla_id=row.casilla_id,
+            box=row.box,
+            source_kind=row.source_kind,
+            reason=row.reason,
+            note=str(row.note) if row.note is not None else None,
+            source_words=binding_source_words(row.source_kind, language=language),
+            words=unresolved_binding_words(row.fact, language=language),
+        )
+
+
+class ProjectUnresolvedCasillaProjection(BaseModel):
+    """One computed box with no value, and the grounding of the formula that would compute it.
+
+    ``reason_words`` says why it has no value, in the projection's ``words_language``.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    casilla_id: _Token
+    #: The number the form prints for the box; ``None`` for a working figure the form does not print.
+    box: _Token | None = None
+    reason: _Token
+    reason_words: _Words
+    formula_id: _Token
+    legal_refs: tuple[_Token, ...]
+    source_refs: tuple[_Token, ...]
+
+    @classmethod
+    def from_service(cls, row: ModeloProjectionUnresolvedCasilla, *, language: OutputLanguage) -> Self:
+        """Carry one unresolved box with the words for its reason in ``language``."""
+        return cls(
+            casilla_id=row.casilla_id,
+            box=row.box,
+            reason=row.reason,
+            reason_words=unresolved_casilla_reason_words(row.reason, language=language),
+            formula_id=row.formula_id,
+            legal_refs=tuple(row.legal_refs),
+            source_refs=tuple(row.source_refs),
+        )
+
+
+def require_unresolved_boxes_carry_no_value(
+    observed: Collection[str],
+    bindings: Iterable[ProjectUnresolvedBindingProjection],
+    casillas: Iterable[ProjectUnresolvedCasillaProjection],
+) -> None:
+    """Refuse a result in which a box with no value also carries one."""
+    unresolved = {row.casilla_id for row in casillas} | {
+        row.casilla_id for row in bindings if row.casilla_id is not None
+    }
+    if unresolved.intersection(observed):
+        raise ValueError("an unresolved projected box also carries a value")
+
+
+class ModeloProjectOperationProjection(BaseModel):
+    """The complete public projection, bound to its source profile.
+
+    A box in ``unresolved_casillas`` or bound by a binding in
+    ``unresolved_bindings`` has no value, and never appears in
+    ``casilla_observations``. The words of both lists, and the name of each
+    figure in ``m130_accumulated`` and ``m100_projection``, are in
+    ``words_language``, the language the worker's catalogue rendered them in.
+    ``ccaa`` is the region the projection was made for, whether the request
+    named it or the profile's tax residence did.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    result_version: Literal[3] = 3
     authority_generation: ContentDigest
     profile_id: UUID
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     ccaa: _Token
     quarters_filed: int = Field(ge=1, le=4)
     quarters_available: tuple[_Token, ...]
@@ -149,6 +281,9 @@ class ModeloProjectOperationProjection(BaseModel):
     m130_accumulated: ProjectM130AccumulatedProjection
     casilla_observations: tuple[ProjectCasillaObservationProjection, ...]
     m100_projection: ProjectM100SummaryProjection
+    unresolved_bindings: tuple[ProjectUnresolvedBindingProjection, ...]
+    unresolved_casillas: tuple[ProjectUnresolvedCasillaProjection, ...]
+    words_language: OutputLanguage
 
     @model_validator(mode="after")
     def _complete_quarters(self) -> Self:
@@ -158,11 +293,21 @@ class ModeloProjectOperationProjection(BaseModel):
             raise ValueError("projected quarter count or identities disagree")
         return self
 
+    @model_validator(mode="after")
+    def _unresolved_boxes_carry_no_value(self) -> Self:
+        require_unresolved_boxes_carry_no_value(
+            {row.casilla_id for row in self.casilla_observations},
+            self.unresolved_bindings,
+            self.unresolved_casillas,
+        )
+        return self
+
     @classmethod
     def from_service(
         cls, profile_id: UUID, result: ModeloProjectServiceResult, *, authority_generation: ContentDigest
     ) -> Self:
         """Carry all canonical values and per-casilla provenance without rounding."""
+        language = OutputLanguage(output_language())
         return cls(
             authority_generation=authority_generation,
             profile_id=profile_id,
@@ -176,6 +321,12 @@ class ModeloProjectOperationProjection(BaseModel):
                 gastos=_decimal(result.m130_accumulated.gastos),
                 rendimiento_neto=_decimal(result.m130_accumulated.rendimiento_neto),
                 pagos_fraccionados=_decimal(result.m130_accumulated.pagos_fraccionados),
+                words=ProjectM130AccumulatedWords(
+                    ingresos=m130_figure_words("ingresos", language=language),
+                    gastos=m130_figure_words("gastos", language=language),
+                    rendimiento_neto=m130_figure_words("rendimiento_neto", language=language),
+                    pagos_fraccionados=m130_figure_words("pagos_fraccionados", language=language),
+                ),
             ),
             casilla_observations=tuple(
                 ProjectCasillaObservationProjection(
@@ -188,14 +339,32 @@ class ModeloProjectOperationProjection(BaseModel):
                 for row in result.casilla_observations
             ),
             m100_projection=ProjectM100SummaryProjection(
-                base_liquidable_general_0505=_decimal(result.m100_projection.base_liquidable_general_0505),
-                pagos_fraccionados_0604=_decimal(result.m100_projection.pagos_fraccionados_0604),
-                cuota_integra_estatal_0545=_decimal(result.m100_projection.cuota_integra_estatal_0545),
-                cuota_integra_autonomica_0546=_decimal(result.m100_projection.cuota_integra_autonomica_0546),
-                cuota_liquida_estatal_0595=_decimal(result.m100_projection.cuota_liquida_estatal_0595),
-                cuota_liquida_autonomica_0596=_decimal(result.m100_projection.cuota_liquida_autonomica_0596),
-                cuota_resultante_0597=_decimal(result.m100_projection.cuota_resultante_0597),
+                base_liquidable_general=_decimal(result.m100_projection.base_liquidable_general),
+                pagos_fraccionados=_decimal(result.m100_projection.pagos_fraccionados),
+                cuota_integra_estatal=_decimal(result.m100_projection.cuota_integra_estatal),
+                cuota_integra_autonomica=_decimal(result.m100_projection.cuota_integra_autonomica),
+                cuota_liquida_estatal=_decimal(result.m100_projection.cuota_liquida_estatal),
+                cuota_liquida_autonomica=_decimal(result.m100_projection.cuota_liquida_autonomica),
+                cuota_resultante=_decimal(result.m100_projection.cuota_resultante),
+                words=ProjectM100SummaryWords(
+                    base_liquidable_general=m100_figure_words("base_liquidable_general", language=language),
+                    pagos_fraccionados=m100_figure_words("pagos_fraccionados", language=language),
+                    cuota_integra_estatal=m100_figure_words("cuota_integra_estatal", language=language),
+                    cuota_integra_autonomica=m100_figure_words("cuota_integra_autonomica", language=language),
+                    cuota_liquida_estatal=m100_figure_words("cuota_liquida_estatal", language=language),
+                    cuota_liquida_autonomica=m100_figure_words("cuota_liquida_autonomica", language=language),
+                    cuota_resultante=m100_figure_words("cuota_resultante", language=language),
+                ),
             ),
+            unresolved_bindings=tuple(
+                ProjectUnresolvedBindingProjection.from_service(row, language=language)
+                for row in result.unresolved_bindings
+            ),
+            unresolved_casillas=tuple(
+                ProjectUnresolvedCasillaProjection.from_service(row, language=language)
+                for row in result.unresolved_casillas
+            ),
+            words_language=language,
         )
 
 
@@ -234,8 +403,8 @@ class ModeloCompareOperationProjection(BaseModel):
     authority_generation: ContentDigest
     profile_id: UUID
     modelo: _Token
-    year_a: int = Field(ge=1900, le=9999)
-    year_b: int = Field(ge=1900, le=9999)
+    year_a: FourDigitYear
+    year_b: FourDigitYear
     year_a_revision_id: _Token
     year_b_revision_id: _Token
     year_a_is_draft: bool
@@ -290,7 +459,7 @@ def _decimal(value: object) -> str:
 
 
 def _compare_row(row: object) -> CompareDeltaRowProjection:
-    from .projection import ModeloCompareDeltaRow
+    from .projection_compare import ModeloCompareDeltaRow
 
     if not isinstance(row, ModeloCompareDeltaRow):
         raise TypeError("canonical comparison row has changed type")
@@ -337,7 +506,7 @@ def _bound_ports(
     return ports
 
 
-async def _prepare_and_maybe_commit(
+async def prepare_and_maybe_commit(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     migration: ProjectionMigrationPort,
@@ -384,14 +553,14 @@ class ModeloProjectExecutor:
         self, request: OperationRequest[ModeloProjectOperationRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        if not _valid_execution(
+        if not valid_execution(
             request, context, profile_id=payload.profile_id, definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=ports.calculation_repository,
                 migration=self._migration,
                 context=context,
@@ -430,14 +599,14 @@ class ModeloCompareExecutor:
         self, request: OperationRequest[ModeloCompareOperationRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        if not _valid_execution(
+        if not valid_execution(
             request, context, profile_id=payload.profile_id, definition_id=MODELO_COMPARE_OPERATION_DEFINITION_ID
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=ports.calculation_repository,
                 migration=self._migration,
                 context=context,
@@ -462,13 +631,14 @@ class ModeloCompareExecutor:
         return await await_cancellation_complete(run(), task_name="modelo-compare")
 
 
-def _valid_execution[Payload: BaseModel](
+def valid_execution[Payload: BaseModel](
     request: OperationRequest[Payload],
     context: OperationExecutorContext,
     *,
     profile_id: UUID,
     definition_id: str,
 ) -> bool:
+    """Return whether a request and context both address the given definition and profile."""
     subject = profile_operation_subject(str(profile_id))
     return (
         request.definition_id == definition_id
@@ -487,6 +657,7 @@ def _definition(
     executor_type: type[ModeloProjectExecutor] | type[ModeloCompareExecutor],
     factory: CalculationActionPortsFactory,
     migration: ProjectionMigrationPort,
+    public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -502,6 +673,7 @@ def _definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        public_error_detail=public_error_detail,
     )
 
 
@@ -516,6 +688,8 @@ def build_modelo_project_definition(
         executor_type=ModeloProjectExecutor,
         factory=factory,
         migration=migration,
+        # The desktop shows a refusal's served words, so the stored detail is released to it.
+        public_error_detail=True,
     )
 
 

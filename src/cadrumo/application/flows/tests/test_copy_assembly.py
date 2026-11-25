@@ -132,15 +132,15 @@ def _kind_with_no_resolvers() -> Iterator[CopyRefKind]:
     holds in the real registry, clear them, and restore on teardown. This
     is genuine registry-state setup, not a behaviour double.
     """
-    from ..copy import _SOURCE_RESOLVERS
+    from ..copy import SOURCE_RESOLVERS
 
     kind = CopyRefKind.TERMINOLOGY_CONCEPT
-    saved = _SOURCE_RESOLVERS.pop(kind, None)
+    saved = SOURCE_RESOLVERS.pop(kind, None)
     try:
         yield kind
     finally:
         if saved is not None:
-            _SOURCE_RESOLVERS[kind] = saved
+            SOURCE_RESOLVERS[kind] = saved
 
 
 def test_kind_without_a_registered_resolver_refuses(_kind_with_no_resolvers: CopyRefKind) -> None:

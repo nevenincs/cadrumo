@@ -29,7 +29,12 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -74,22 +79,45 @@ def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
         inputs={},
         date_context={"filing_period": date(_PRIOR_EDITION, 12, 31)},
         binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             **_m100_2024_deduccion_maternidad_bindings(),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline.
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            **M100_NO_MARITIME_WORKER_BINDINGS,
         },
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_PRIOR_EDITION,
         date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
@@ -109,6 +137,11 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # the production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories, so a directa scenario is 1.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-profile-declaration-type": Decimal("1"),
@@ -118,6 +151,18 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (reviewed-edition binding).
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
@@ -129,9 +174,16 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 LIRPF guarderia increment, inherited by every later edition;
+            # neutral zero in a scenario with no guarderia spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},

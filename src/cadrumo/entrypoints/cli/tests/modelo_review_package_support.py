@@ -23,11 +23,13 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
+from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -42,12 +44,14 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 
 def seed_exportable_modelo_revision(
     *,
     input_values_by_casilla_id: Mapping[CasillaId, str],
     modelo: str = "111",
-    filing_year: int = 2026,
+    filing_year: int = _FILING_YEAR,
     period: str = "1T",
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     operation: PinnedAuthorityOperation,
@@ -76,21 +80,13 @@ def seed_exportable_modelo_revision(
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-    )
-    work_units = WorkUnitCatalogueRepository()
-    work_units.save(upsert_work_unit(work_units.load(), work_unit))
-
     inputs = dict(input_values_by_casilla_id)
+    # A seeded revision stands in for a calculation of this target, so it carries
+    # the screen stamp that calculation persists.
+    screen_stamp = calculation_screen_stamp(
+        operation.snapshot(modelo, filing_year=filing_year, period=filing_period.registry_token),
+        operation=operation,
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=inputs,
@@ -98,6 +94,7 @@ def seed_exportable_modelo_revision(
         casilla_values={},
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -116,7 +113,24 @@ def seed_exportable_modelo_revision(
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
+    # A calculation makes its revision the work unit's current one; a work unit
+    # with no current calculation exports nothing.
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=filing_period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{period}",
+        created_at=now,
+        updated_at=now,
+        current_calculation_revision_id=calculation_revision_id,
+    )
+    work_units = WorkUnitCatalogueRepository()
+    work_units.save(upsert_work_unit(work_units.load(), work_unit))
     revisions = CalculationRevisionCatalogueRepository()
     revisions.save(upsert_calculation_revision(revisions.load(), revision))
     # Verification persists a granting report before it marks a revision verified,

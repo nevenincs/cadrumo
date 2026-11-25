@@ -4,16 +4,16 @@ Runtime journeys drive the REAL Cadrumo CLI in-process against a fresh
 real-crypto sandbox (genuine ``bucket-dek-v1`` bucket, encrypted SQLite,
 frozen clock, injected deterministic profile id). The worked chain is the Modelo 130 lifecycle: ``work
 create`` → ``work calculate`` (with real registry bindings) → ``work verify``,
-whose verify gate genuinely refuses without clean cross-period evidence, so the
+preceded by a profile edit declaring the normal direct-estimation modality. Its
+verify gate genuinely refuses without clean cross-period evidence, so the
 terminal ``@result`` frame exercises a real declared non-zero exit.
 
-Determinism observation (formalised by this anti-tautology gate): two
-executions of the chain in fresh sandboxes produced ZERO pre-mask differing
-JSON paths and byte-identical raw outputs — with the clock frozen and the
-profile id injected, the work-unit and calculation-revision ids are
-content-addressed and every timestamp is pinned, so the residual
-non-deterministic surface of this chain is empty (trivially within the central
-``GOLDEN_MASK_FIELDS``). The test pins that observation.
+Determinism contract: two executions of the chain in fresh sandboxes must
+produce ZERO pre-mask differing JSON paths and byte-identical raw outputs —
+with the clock frozen and the profile id injected, the work-unit and
+calculation-revision ids are content-addressed and every timestamp is pinned,
+so the residual non-deterministic surface of this chain is empty (trivially
+within the central ``GOLDEN_MASK_FIELDS``). The test pins that observation.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import shutil
 from collections.abc import Generator
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -31,7 +32,6 @@ from pydantic import JsonValue, SecretStr
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
@@ -39,6 +39,7 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
@@ -47,39 +48,59 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 
+from .. import sandbox as sequence_sandbox_module
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
+from ..persona_profile import SANDBOX_PERSONA_ID, pinned_persona, profile_option_arguments, sandbox_profile_facts
 from ..runner import (
-    SANDBOX_PROFILE_ID,
-    SANDBOX_REPLACEMENT_PROFILE_ID,
     SequenceTranscript,
     execute_page_sequences,
     execute_sequence,
-    sequence_sandbox,
 )
-from ..runtime_fixture import SANDBOX_INSTANT
+from ..sandbox import SANDBOX_PROFILE_ID, SANDBOX_REPLACEMENT_PROFILE_ID, sequence_sandbox
 from ..schema import CommandProgram, FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _FAKE_SESSION_ENV_NAME = "AEAT_FAKE_SESSION_TOKEN"
 
-#: A real create → calculate → verify chain over Modelo 130 2025 1T. The verify
-#: gate refuses (cross-period evidence is absent in a fresh sandbox), so the
-#: result frame declares the non-zero exit and asserts the refusal semantically.
-_CHAIN_BODY = "\n".join(
-    [
-        "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T",
-        "@capture work_unit_id result.work_unit_id",
-        "aeat --format json app modelo work calculate {work_unit_id}"
-        " --binding irpf.previous_year_economic_activity_net_income=13000"
-        " --binding modelo-130-resultados-negativos-anteriores=0",
-        "@capture calculation_revision_id result.calculation_revision_id",
-        "@result aeat --format json app modelo work verify {calculation_revision_id}",
-        "@expect result.granted_verificado_completo == false",
-        "@expect exit_code == 1",
-    ],
-)
+
+def _persona_tax_id() -> str:
+    """Return the tax ID the canonical sandbox persona states, read from its own catalogue facts."""
+    stated = [fact.value for fact in sandbox_profile_facts() if fact.path == "identity.tax_id"]
+    assert len(stated) == 1
+    assert isinstance(stated[0], str)
+    return stated[0]
+
+
+def _chain_body() -> str:
+    """Return the Modelo 130 chain for the year before the persona's activity began.
+
+    The sandbox profile is the canonical persona, whose activity began on the first
+    day of the horizon year. The chain files the previous year, so its profile edit
+    states an activity start two years back; the filing year and the prior-year
+    income binding then describe a taxpayer who was already active.
+    """
+    with pinned_persona(SANDBOX_PERSONA_ID) as (persona, envelope):
+        start = profile_option_arguments(persona, envelope, ("activity-start-date=horizon-2:01-01",))
+        filing_year = envelope.horizon - 1
+    return "\n".join(
+        [
+            "@setup aeat --format json config profile edit docs-sequence-sandbox"
+            f" --quiet --irpf-estimation-regime directa_normal {' '.join(start)}",
+            '@expect result.status == "updated"',
+            "@expect exit_code == 0",
+            f"aeat --format json app modelo work create --modelo 130 --year {filing_year} --period 1T",
+            "@capture work_unit_id result.work_unit_id",
+            "aeat --format json app modelo work calculate {work_unit_id}"
+            " --binding irpf.previous_year_economic_activity_net_income=13000"
+            " --binding modelo-130-resultados-negativos-anteriores=0",
+            "@capture calculation_revision_id result.calculation_revision_id",
+            "@result aeat --format json app modelo work verify {calculation_revision_id}",
+            "@expect result.granted_verificado_completo == false",
+            "@expect exit_code == 1",
+        ],
+    )
 
 
 def _envelope_result(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue]:
@@ -101,7 +122,7 @@ def _chain_sequence() -> ParsedSequence:
     return parse_sequence(
         sequence_id="runner-m130-chain",
         options={"verify": "Verify the calculation before exporting."},
-        body=_CHAIN_BODY,
+        body=_chain_body(),
     )
 
 
@@ -161,7 +182,7 @@ def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone
                 assert record.profile_id == SANDBOX_PROFILE_ID
                 assert record.setup_state is ProfileSetupState.COMPLETE
                 facts = {fact.path: fact.value for fact in record.facts}
-                assert facts["identity.tax_id"] == "12345678Z"
+                assert facts["identity.tax_id"] == _persona_tax_id()
                 assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
                 assert facts["iva.regime"] == "GENERAL"
                 records.append(record)
@@ -175,7 +196,7 @@ def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone
 
 
 def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tmp_path: Path) -> None:
-    """The installed opener reaches an encrypted worker with the fixture's clock."""
+    """The installed opener reaches an encrypted worker, which mints the login on the wall clock."""
     # An incorrect proof creates a canonical login-throttle record. Keep that
     # negative case in its own root: the positive scope has the same frozen
     # instant, and must not bypass or artificially expire that record.
@@ -200,11 +221,15 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
         )
         proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
         try:
+            before = datetime.now(UTC)
             admitted = client.login_password(proof)
+            after = datetime.now(UTC)
             assert admitted.status.profile_id == UUID(SANDBOX_PROFILE_ID)
             assert admitted.status.credential_authenticated
             assert admitted.human_login is not None
-            assert admitted.human_login.authenticated_at == SANDBOX_INSTANT
+            # Leases and logins are minted and judged on the wall clock, so a frozen document clock
+            # cannot mint one that is already expired; the login falls between the two reads.
+            assert before <= admitted.human_login.authenticated_at <= after
             assert not admitted.human_login.session_persisted
             assert not admitted.human_login.resumed
             assert proof == bytearray(len(proof))
@@ -218,7 +243,7 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
                 for item in view.items(ProfileViewPageKind.FACTS)
                 if isinstance(item, ProfileViewFactItem)
             }
-            assert facts["identity.tax_id"] == "12345678Z"
+            assert facts["identity.tax_id"] == _persona_tax_id()
             assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
         finally:
             client.close()
@@ -239,8 +264,9 @@ def test_sequence_profile_view_uses_fresh_runtime_proof_and_exact_profile(tmp_pa
     assert isinstance(facts, list)
     # Public CLI output applies canonical personal-identifier redaction. Derive
     # the expected fact from the known fixture, never from captured output.
-    expected_fact = redact_structured_for_cli_output({"path": "identity.tax_id", "value": "12345678Z"})
-    assert expected_fact["value"] != "12345678Z"
+    tax_id = _persona_tax_id()
+    expected_fact = redact_structured_for_cli_output({"path": "identity.tax_id", "value": tax_id})
+    assert expected_fact["value"] != tax_id
     assert expected_fact in facts
 
 
@@ -268,7 +294,7 @@ def test_sandbox_template_tracks_current_scoped_password_and_rejects_previous_pa
                 record = ProfileRecordStore(session=session, root=sandbox.storage_root).load().record
                 assert record.profile_id == SANDBOX_PROFILE_ID
                 assert record.setup_state is ProfileSetupState.COMPLETE
-                assert UserProfileFact(path="identity.tax_id", value="12345678Z") in record.facts
+                assert UserProfileFact(path="identity.tax_id", value=_persona_tax_id()) in record.facts
                 records.append(record)
                 envelope_digests.append(material.envelope.self_digest)
             finally:
@@ -297,18 +323,18 @@ def test_delete_preserves_the_authenticated_replacement_selection(
     """Real login changes selection before destruction of the original capsule."""
     from .. import runner as sequence_runner
 
-    invoke = sequence_runner._invoke_frame
+    invoke = sequence_runner.invoke_frame
     observations: list[bool] = []
 
     def observe_first_logout(args: tuple[str, ...], *, program: CommandProgram) -> Result:
         if program is CommandProgram.AEAT and args[-2:] == ("config", "logout"):
-            root = Path(load_settings().cadrumo_local_storage_root)
+            root = Path(load_settings().cadrumo_storage_root)
             assert read_pointer_selection(root).bucket_id == SANDBOX_PROFILE_ID
             assert profile_session_path(storage_root=root, profile_id=UUID(SANDBOX_PROFILE_ID)).is_file()
             observations.append(True)
         return invoke(args, program=program)
 
-    monkeypatch.setattr(sequence_runner, "_invoke_frame", observe_first_logout)
+    monkeypatch.setattr(sequence_runner, "invoke_frame", observe_first_logout)
     sequence = _result_sequence(
         "aeat --format json config logout\n"
         '@expect status == "success"\n'
@@ -335,45 +361,80 @@ def test_delete_preserves_the_authenticated_replacement_selection(
 
 
 @pytest.mark.parametrize("lifetime_change", ["root_changed", "template_removed"])
-def test_sandbox_template_respects_temporary_root_lifetime(tmp_path: Path, lifetime_change: str) -> None:
+def test_sandbox_template_respects_temporary_root_lifetime(
+    tmp_path: Path, lifetime_change: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Canonical provisioning owns both initial and replacement cached state."""
-    from .. import runner as sequence_runner
 
     authority_root = load_settings().cadrumo_authority_root
     first_root = tmp_path / "first-lifetime"
     second_root = tmp_path / "second-lifetime" if lifetime_change == "root_changed" else first_root
-    with derived_storage_settings(first_root), override_settings(cadrumo_authority_root=authority_root):
-        first = sequence_runner._sandbox_template()
+    temporary_root = [first_root]
+
+    def prepare_temp_root() -> Path:
+        temporary_root[0].mkdir(parents=True, exist_ok=True)
+        return temporary_root[0]
+
+    monkeypatch.setattr(sequence_sandbox_module, "scratch_base", prepare_temp_root)
+    with override_settings(cadrumo_authority_root=authority_root):
+        first = sequence_sandbox_module.sandbox_template()
         assert first.is_relative_to(first_root.resolve())
-        assert sequence_runner._sandbox_template() == first
+        assert sequence_sandbox_module.sandbox_template() == first
     if lifetime_change == "template_removed":
         assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
         shutil.rmtree(first)
-    with derived_storage_settings(second_root), override_settings(cadrumo_authority_root=authority_root):
-        second = sequence_runner._sandbox_template()
+    temporary_root[0] = second_root
+    with override_settings(cadrumo_authority_root=authority_root):
+        second = sequence_sandbox_module.sandbox_template()
         assert second != first
         assert second.is_relative_to(second_root.resolve())
         assert (second / "cadrumo-storage" / "buckets" / SANDBOX_PROFILE_ID).is_dir()
-        assert sequence_runner._sandbox_template() == second
+        assert sequence_sandbox_module.sandbox_template() == second
 
 
 @pytest.mark.parametrize("attempt_other_login", [False, True])
 @pytest.mark.usefixtures("profile_selection_storage")
-def test_logout_and_failed_login_do_not_admit_selected_profile_deletion(
-    tmp_path: Path, attempt_other_login: bool
+def test_logout_and_failed_login_preserve_deletion_preflight_and_require_unlocked_os_login(
+    tmp_path: Path, attempt_other_login: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Logout and an unknown login target leave both capsules and selection intact."""
+    """Sessionless deletion still requires confirmation and an unlocked OS login.
+
+    The deletion transaction clears selection itself, so a replacement profile
+    login is not a deletion prerequisite.
+    """
+    from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
+    from cadrumo_client.contracts.access_vocabulary import Availability
+
+    from .. import runner as sequence_runner
+    from ..runtime_fixture import SequenceLoginObservation
+
+    invoke = sequence_runner.invoke_frame
+    observe = SequenceLoginObservation.observe
+    locked = False
+
+    def observe_login(self: SequenceLoginObservation, *, credential_facilities: Availability) -> OsLoginContext:
+        observation = observe(self, credential_facilities=credential_facilities)
+        return observation.model_copy(update={"lock_state": OsLockState.LOCKED}) if locked else observation
+
+    def lock_after_preflight(args: tuple[str, ...], *, program: CommandProgram) -> Result:
+        nonlocal locked
+        result = invoke(args, program=program)
+        if args[-4:] == ("config", "profile", "delete", "docs-sequence-sandbox"):
+            assert result.exit_code == 0, result.output
+            locked = True
+        return result
+
+    monkeypatch.setattr(SequenceLoginObservation, "observe", observe_login)
+    monkeypatch.setattr(sequence_runner, "invoke_frame", lock_after_preflight)
     login = "aeat --format json config login missing-profile\n@expect exit_code == 2\n" if attempt_other_login else ""
     sequence = _result_sequence(
         "aeat --format json config logout\n"
-        '@expect status == "success"\n'
-        + login
-        + "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
+        '@expect status == "success"\n' + login + "aeat --format json config profile delete docs-sequence-sandbox\n"
+        "@expect result.deleted == false\n"
+        "@expect exit_code == 0\n"
+        "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
         '@expect error.code == "REFUSED_CLI_BOUNDARY"\n'
-        "@expect error.action.evidence[0].values.target_is_selected_profile == true\n"
-        '@expect error.action.action.action_id == "operator.profile.login"\n'
-        '@expect error.action.missing_argument_names[0] == "name"\n'
-        '@expect error.action.conditionality == "requires_arguments"\n'
+        '@expect error.context.reason == "needs_user"\n'
         "@expect exit_code == 2\n",
         sequence_id="profile-setup-delete",
     )
@@ -383,10 +444,9 @@ def test_logout_and_failed_login_do_not_admit_selected_profile_deletion(
     assert transcript.result_frame.envelope is not None
     error = transcript.result_frame.envelope["error"]
     assert isinstance(error, dict)
-    message = error["message"]
-    assert isinstance(message, str)
-    assert "aeat config login NAME" in message
-    assert "Logout preserves the selected profile" in message
+    assert locked
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["context"] == {"reason": "needs_user"}
     assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_PROFILE_ID
     assert (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).is_dir()
     assert (Path(transcript.storage_root) / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
@@ -415,7 +475,9 @@ def test_cumulative_profile_list_precedes_replacement_provisioning(tmp_path: Pat
     assert isinstance(profiles, list) and len(profiles) == 1
     assert _envelope_result(transcripts[1].result_frame.envelope)["deleted"] is True
     storage_root = Path(transcripts[1].storage_root)
-    assert read_pointer_selection(storage_root).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
+    # This recipe deletes the selected profile directly; the runtime clears
+    # its pointer instead of silently selecting the unrelated replacement.
+    assert read_pointer_selection(storage_root).bucket_id is None
     assert not (storage_root / "buckets" / SANDBOX_PROFILE_ID).exists()
     assert (storage_root / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
 
@@ -554,10 +616,31 @@ def chain_transcript(tmp_path_factory: pytest.TempPathFactory) -> SequenceTransc
 class TestHermeticChainExecution:
     def test_chain_executes_all_frames_in_order(self, chain_transcript: SequenceTranscript) -> None:
         kinds = [frame.kind for frame in chain_transcript.frames]
-        assert kinds == [FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
+        assert kinds == [FrameKind.SETUP, FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
         assert chain_transcript.profile_id == SANDBOX_PROFILE_ID
+        with pinned_persona(SANDBOX_PERSONA_ID) as (_, envelope):
+            horizon = envelope.horizon
+        assert chain_transcript.frames[0].argv == (
+            "aeat",
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "edit",
+            "docs-sequence-sandbox",
+            "--quiet",
+            "--irpf-estimation-regime",
+            "directa_normal",
+            "--activity-start-date",
+            f"{horizon - 2}-01-01",
+        )
         assert chain_transcript.frames[0].exit_code == 0
+        assert _envelope_result(chain_transcript.frames[0].envelope) == {
+            "profile_name": "docs-sequence-sandbox",
+            "status": "updated",
+        }
         assert chain_transcript.frames[1].exit_code == 0
+        assert chain_transcript.frames[2].exit_code == 0
 
     def test_every_json_frame_records_its_envelope(self, chain_transcript: SequenceTranscript) -> None:
         for frame in chain_transcript.frames:
@@ -566,7 +649,8 @@ class TestHermeticChainExecution:
             assert {"command", "status", "schema_version", "result", "notices"} <= set(frame.envelope)
 
     def test_captures_thread_real_ids_into_later_frames(self, chain_transcript: SequenceTranscript) -> None:
-        create, calculate, verify = chain_transcript.frames
+        setup, create, calculate, verify = chain_transcript.frames
+        assert setup.kind is FrameKind.SETUP
 
         work_unit_id = chain_transcript.captures["work_unit_id"]
         revision_id = chain_transcript.captures["calculation_revision_id"]
@@ -595,9 +679,9 @@ class TestHermeticChainExecution:
         assert result["granted_verificado_completo"] is False
 
 
-#: The chain sequence executes three frames per run; both transcripts are
+#: The chain sequence executes four frames per run; both transcripts are
 #: zipped and every determinism claim lives inside that zip.
-_MINIMUM_CHAIN_FRAMES = 3
+_MINIMUM_CHAIN_FRAMES = 4
 
 
 class TestSandboxIsolationAndDeterminism:
@@ -625,7 +709,7 @@ class TestSandboxIsolationAndDeterminism:
         # Pinning ``residual_paths == frozenset()`` is the strong claim the
         # comment below describes, but frozenset() is exactly what an empty
         # transcript yields, and ``set() <= GOLDEN_MASK_FIELDS`` is always true.
-        # Live: the chain executes three frames per run.
+        # The chain executes four frames per run, including its profile setup.
         assert len(chain_transcript.frames) >= _MINIMUM_CHAIN_FRAMES, (
             f"the first chain run produced {len(chain_transcript.frames)} frame(s); "
             "every determinism claim below is over the zipped pair and holds at zero"
@@ -639,8 +723,7 @@ class TestSandboxIsolationAndDeterminism:
             residual_paths |= differing_paths(first.envelope, second.envelope)
             residual_names |= differing_field_names(first.envelope, second.envelope)
             assert first.exit_code == second.exit_code
-            # The raw outputs are byte-identical for this chain (observed and
-            # pinned; this gate formalises the mask-honesty proof).
+            # The raw outputs are byte-identical for this chain.
             assert first.output == second.output
 
         assert residual_paths == frozenset(), sorted(residual_paths)
@@ -676,7 +759,7 @@ class TestSandboxEvictsBoundBucketSession:
 
             # Anti-vacuity: the fixture really bound a session, and for a bucket
             # that is NOT this sandbox's injected profile — exactly the binding
-            # that used to poison the next sandbox. Without this assertion the
+            # that would poison the next sandbox. Without this assertion the
             # post-teardown check below would pass on a run where nothing bound.
             bound = current_active_bucket_session()
             assert bound is not None
@@ -745,7 +828,7 @@ class TestLiveAeatRefusal:
 
     def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
         """The scan skips option VALUES: '--file pull-history.csv' is a local
-        file input, not a live verb (the reviewer-named false positive)."""
+        file input, not a live verb."""
         from ..runner import live_aeat_tokens
 
         benign = _result_sequence(
@@ -909,59 +992,39 @@ class TestAmbientEnvNeutralisation:
         survives, and everything is restored verbatim on exit."""
         import os
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         with (
-            scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
+            scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-00001506B"),
             scoped_env_var(_FAKE_SESSION_ENV_NAME, "fake-session-marker-do-not-leak"),
         ):
             observed: dict[str, str | None] = {}
             with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
                 observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
                 observed["aeat"] = os.environ.get(_FAKE_SESSION_ENV_NAME)
-                observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+                observed["pin"] = os.environ.get("CADRUMO_STORAGE_ROOT")
 
             # Inside the scope: operator vars gone, the isolation pin intact.
             assert observed["clave"] is None
             assert observed["aeat"] is None
             assert observed["pin"] is not None
             # Outside the sandbox scope but still under the export: restored verbatim.
-            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
+            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-00001506B"
             assert os.environ[_FAKE_SESSION_ENV_NAME] == "fake-session-marker-do-not-leak"
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
-        """A real browser probe cannot observe workstation installs.
-
-        This probed the subprocess LLM providers as well, and that whole
-        transport has since been deleted -- ``probe_subprocess_providers`` is a
-        named member of the retired set that
-        ``core/tests/test_cloud_transport_fully_deleted.py`` asserts stays
-        gone. The import outlived it, so this case could not be COLLECTED and
-        the pins below went unchecked on every run.
-
-        Only the deleted half is dropped. What the case exists to prove is that
-        the sandbox pins ``PATH`` and ``PLAYWRIGHT_BROWSERS_PATH`` beneath its
-        own workdir, and both pins are still asserted here against a probe that
-        really runs.
-        """
+        """A real browser launch cannot observe workstation installs."""
         import os
 
-        from cadrumo.application.provisioning_browser import probe_playwright_browser
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import sync_playwright
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
-            browser = probe_playwright_browser()
-
-            assert browser.available is False
-            # ``remediation`` carried the fix as executable text and was
-            # deliberately removed: ``DependencyStatus`` now closes an
-            # unavailable outcome through the typed ``precondition_verdict``
-            # instead, "without embedding presentation or executable text".
-            # Asserting the verdict is present is asserting the contract the
-            # model actually enforces, rather than a string it stopped holding.
-            assert browser.precondition_verdict is not None
+            with sync_playwright() as playwright, pytest.raises(PlaywrightError, match="Executable doesn't exist"):
+                playwright.chromium.launch(headless=True)
             # Both pins live BENEATH the sandbox workdir so the golden path
             # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
             assert os.environ["PATH"] == str(tmp_path / "scope" / "workdir" / ".external-tools")
@@ -977,10 +1040,8 @@ class TestAmbientEnvNeutralisation:
         ``config login`` custodies its session key through :mod:`keyring`, so on a
         vault-bearing workstation it reports ``session_persisted: true`` while a
         headless CI runner emits the ``session_not_persisted`` warning and a
-        ``warning`` spine status. That made four committed goldens encode the
-        CAPTURING MACHINE, flipping red whenever a differently-postured machine
-        ran the gate. Pinning absence is what makes them stable, so this probe
-        guards the pin from both sides.
+        ``warning`` spine status. Pinning absence keeps that output independent of
+        the capturing machine, so this probe guards the pin from both sides.
 
         BOTH resolution channels are asserted because both are load-bearing and
         they fail differently: the environment variable is what subprocess
@@ -996,7 +1057,7 @@ class TestAmbientEnvNeutralisation:
         import keyring
         import keyring.core
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         host_backend = keyring.core._keyring_backend
         with sequence_sandbox(sequence_id="credential-vault-probe", sandbox_root=tmp_path / "scope"):
@@ -1019,7 +1080,7 @@ class TestAmbientEnvNeutralisation:
         """A real sequence executes normally with fake operator env exported,
         and no frame's captured output carries the operator value — the
         end-to-end proof that docs builds never observe machine state."""
-        operator_marker = "fake-operator-dni-99999999R"
+        operator_marker = "fake-operator-dni-00001506B"
         with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", operator_marker):
             sequence = _result_sequence(
                 "aeat --format json config profile list\n"
@@ -1038,26 +1099,23 @@ class TestAmbientEnvNeutralisation:
         self,
         tmp_path: Path,
     ) -> None:
-        """The historical second operator-state channel — the project dotenv
-        (``env/.env``, once loaded by pydantic-settings via an ABSOLUTE path
-        independent of ``os.environ``) — no longer exists in production:
-        ``Settings.settings_customise_sources`` never returns a dotenv source,
-        regardless of ``model_config["env_file"]``. The one surviving route for
-        an ``env/.env``-declared value to reach a process is the repo-root
-        ``conftest.py`` bridge (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`),
-        which parses a real dotenv file and applies each pair to ``os.environ``
-        via ``setdefault`` before any test runs. This drives that REAL bridge
-        function against a synthetic dotenv file (anti-vacuity: the bridge is
-        proven to genuinely land the pair in ``os.environ``, not assumed), then
-        proves the bridged value — now indistinguishable from a genuinely
-        ambient ``CADRUMO_*`` variable — is scrubbed by the same
-        ``_neutralized_ambient_env`` seam :class:`TestAmbientEnvNeutralisation`'s
+        """The project dotenv (``env/.env``) is not a production operator-state channel:
+        ``Settings.settings_customise_sources`` never returns a dotenv source, regardless of
+        ``model_config["env_file"]``. The only route for an ``env/.env``-declared value to
+        reach a process is the repo-root ``conftest.py`` bridge
+        (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`), which parses a real
+        dotenv file and applies each pair to ``os.environ`` via ``setdefault`` before any test
+        runs. This drives that REAL bridge function against a synthetic dotenv file
+        (anti-vacuity: the bridge is proven to genuinely land the pair in ``os.environ``, not
+        assumed), then proves the bridged value — now indistinguishable from a genuinely
+        ambient ``CADRUMO_*`` variable — is scrubbed by the same ``_neutralized_ambient_env``
+        seam :class:`TestAmbientEnvNeutralisation`'s
         other probes exercise directly, end to end through a real sequence run."""
         import os
 
         from cadrumo.tests.env_loader import bridge_env_file_into_environ
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         operator_marker = "fake-operator-dni-77777777H"
         env_var_name = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
@@ -1104,3 +1162,12 @@ class TestAmbientEnvNeutralisation:
                 os.environ[env_var_name] = prior_value
             else:
                 os.environ.pop(env_var_name, None)
+
+
+def test_sequence_scratch_respects_declared_base(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    requested = tmp_path / "declared-sequence-scratch"
+    monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(requested))
+    with sequence_sandbox_module.owned_scratch_directory("seq-boundary-") as allocated:
+        assert allocated.parent == requested
+        assert allocated.is_dir()
+    assert not allocated.exists()

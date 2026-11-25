@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
+from .. import schema_verification
 from ..schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    ParsedVerificationPredicate,
+    VerificationPredicateOperator,
     parse_verification_predicate_expression,
+    parse_verification_predicate_expression_memo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,6 +30,12 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "at_most_one_positive": 'at_most_one_positive(["01", "02"])',
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "positive_application_le_present_stock": ('positive_application_le_present_stock(["DP200014:00547", "00670"])'),
+        "application_equals_present_maximum": (
+            'application_equals_present_maximum(["1389", "base-liq-neg-general-em1-aplicada-maxima"])'
+        ),
+        "application_order_immaterial": (
+            'application_order_immaterial(["ahorro-rcm-paso1-capacidad", "1272", "1274", "1277", "1280"])'
+        ),
         "advisory_when_positive": 'advisory_when_positive(["0527"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
         "equals": 'equals(["27", "iva.cuota-devengada-total"])',
@@ -33,6 +45,9 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
         "profile_flag_enabled": 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")',
         "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
+        "limited_subtractions_respect_floor": (
+            'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], ["00588"], ["00583"], ["00590"])'
+        ),
         "casilla_equals_implies_zero": 'casilla_equals_implies_zero(["01", "  ", "07"])',
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
@@ -62,3 +77,142 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         parsed = parse_verification_predicate_expression(probe)
         assert parsed is not None, f"schema parser did not recognise {operator_name!r}: {probe!r}"
         assert parsed.operator.value == operator_name
+
+
+def test_floor_subtraction_groups_keep_each_casilla_in_its_group() -> None:
+    """The five groups are read back in order, empty groups included."""
+    parsed = parse_verification_predicate_expression(
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588", "00585"], [], ["00590"])'
+    )
+    assert parsed is not None
+    assert parsed.casilla_ids == ("00619", "00582", "00588", "00585", "00590")
+    assert parsed.casilla_groups() == (("00619", "00582"), (), ("00588", "00585"), (), ("00590",))
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], ["00588"], ["00583"])',
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588"], [], [], [])',
+        'limited_subtractions_respect_floor(["00619"], ["02315"], ["00588"], [], [])',
+        'limited_subtractions_respect_floor(["00619", "00582", "00552"], [], ["00588"], [], [])',
+        'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], [], ["00583"], [])',
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588"], [], ["00588"])',
+        'limited_subtractions_respect_floor(["00619", "00582", "00588"])',
+        'limited_subtractions_respect_floor(["DP200014:00619", "DP200014:00582"], [], ["00588"], [], ["DP200014:00588"])',
+    ],
+    ids=[
+        "four-groups",
+        "six-groups",
+        "no-base",
+        "three-in-floor-group",
+        "no-limited",
+        "two-groups",
+        "flat-list",
+        "same-box-bare-and-qualified",
+    ],
+)
+def test_floor_subtraction_groups_refuse_a_shape_the_grammar_does_not_admit(expression: str) -> None:
+    """A wrong group count, floor group, empty limited group or doubly classified casilla does not parse."""
+    assert parse_verification_predicate_expression(expression) is None
+
+
+def test_repeated_parse_reuses_the_memoised_value_without_reparsing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A second parse of the same text is served without running the grammar again."""
+    expression = 'equals_sum(["27", "03", "06", "09"])'
+    parse_verification_predicate_expression_memo.cache_clear()
+    grammar_calls: list[str] = []
+    real_operator_name = schema_verification.verification_predicate_operator_name
+
+    def counting_operator_name(text: str) -> str | None:
+        grammar_calls.append(text)
+        return real_operator_name(text)
+
+    monkeypatch.setattr(schema_verification, "verification_predicate_operator_name", counting_operator_name)
+
+    first = parse_verification_predicate_expression(expression)
+    second = parse_verification_predicate_expression(expression)
+
+    assert grammar_calls == [expression]
+    assert first is second
+    assert first == ParsedVerificationPredicate(
+        operator=VerificationPredicateOperator.EQUALS_SUM,
+        arguments=("27", "03", "06", "09"),
+        casilla_ids=("27", "03", "06", "09"),
+    )
+
+
+def test_memoised_parse_value_cannot_be_mutated() -> None:
+    """The shared memo value is frozen, so no caller can alter another caller's parse."""
+    parsed = parse_verification_predicate_expression('implies_nonzero(["01", "07"])')
+    assert parsed is not None
+    assert isinstance(parsed.arguments, tuple)
+    assert isinstance(parsed.casilla_ids, tuple)
+    for field in dataclasses.fields(parsed):
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            setattr(parsed, field.name, "x")
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        "",
+        "not_a_predicate",
+        'unknown_operator(["01", "02"])',
+        'all_nonzero("01", "02")',
+        'advisory_when_ratio_ge(["01", "02"])',
+        'profile_field_required("only_field")',
+    ],
+)
+def test_malformed_expression_refuses_on_every_parse_and_never_enters_the_memo(
+    malformed: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed text is re-parsed and refused on every call, and the memo holds none of it."""
+    parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression('all_nonzero(["01", "02"])')
+    size_before = parse_verification_predicate_expression_memo.cache_info().currsize
+    grammar_calls: list[str] = []
+    real_operator_name = schema_verification.verification_predicate_operator_name
+
+    def counting_operator_name(text: str) -> str | None:
+        grammar_calls.append(text)
+        return real_operator_name(text)
+
+    monkeypatch.setattr(schema_verification, "verification_predicate_operator_name", counting_operator_name)
+
+    assert parse_verification_predicate_expression(malformed) is None
+    assert parse_verification_predicate_expression(malformed) is None
+    assert parse_verification_predicate_expression(malformed) is None
+
+    assert grammar_calls == [malformed, malformed, malformed]
+    assert parse_verification_predicate_expression_memo.cache_info().currsize == size_before
+
+
+def test_memo_holds_only_successful_parses() -> None:
+    """Every memoised value is a parsed predicate; refusals leave no entry behind."""
+    parse_verification_predicate_expression_memo.cache_clear()
+    valid = 'implies_nonzero(["01", "07"])'
+    parse_verification_predicate_expression('unknown_operator(["01", "02"])')
+    parse_verification_predicate_expression(valid)
+    parse_verification_predicate_expression('all_nonzero("01", "02")')
+    parse_verification_predicate_expression(valid)
+
+    info = parse_verification_predicate_expression_memo.cache_info()
+    assert info.currsize == 1
+    assert info.hits == 1
+    assert isinstance(parse_verification_predicate_expression_memo(valid), ParsedVerificationPredicate)
+
+
+def test_distinct_expression_text_is_parsed_independently() -> None:
+    """Whitespace-distinct and near-identical texts never borrow another text's parse."""
+    parse_verification_predicate_expression_memo.cache_clear()
+    valid = parse_verification_predicate_expression('all_nonzero(["01", "02"])')
+    padded = parse_verification_predicate_expression('  all_nonzero(["01", "02"])  ')
+    broken = parse_verification_predicate_expression('all_nonzero(["01", "02"]')
+
+    assert valid is not None
+    assert padded == valid
+    assert broken is None

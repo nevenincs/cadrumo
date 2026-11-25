@@ -30,12 +30,12 @@ from ....application.user_profile.censal_operation import (
     CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
 )
 from ....core.operations import OperationLifecycle
-from .operation_censal_exchange import _exchange
+from .operation_censal_exchange import exchange
 
 _OBSERVATION_PAGE_LIMIT = 1
 
 
-def _observe(
+def observe(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -43,6 +43,7 @@ def _observe(
     operation_id: OperationId,
     deadline: float,
 ) -> OperationObservationSuccessV1:
+    """Observe an operation through the client and return its successful observation."""
     request = OperationObserve(
         request_id=uuid4(),
         profile_id=profile_id,
@@ -53,7 +54,7 @@ def _observe(
             page_limit=_OBSERVATION_PAGE_LIMIT,
         ),
     )
-    reply = _exchange(client, session_id, request, deadline=deadline)
+    reply = exchange(client, session_id, request, deadline=deadline)
     if not isinstance(reply, OperationObserved):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     if isinstance(reply.observation, OperationObservationRefusalV1):
@@ -63,13 +64,14 @@ def _observe(
     return reply.observation
 
 
-def _validate_observation(
+def validate_observation(
     observed: OperationObservationSuccessV1,
     *,
     operation_id: OperationId,
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
 ) -> None:
+    """Validate an observation against its operation, subject and public definition contract."""
     projection = observed.projection
     if (
         projection.operation_id != operation_id
@@ -80,7 +82,23 @@ def _validate_observation(
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
-def _review_interaction(
+def _validate_review(
+    pending: OperationReviewAvailableInteractionV1,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    reference = pending.review_reference
+    if (
+        pending.operation_id != operation_id
+        or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
+        or reference.operation_id != operation_id
+        or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
+        or reference.definition_contract_digest != contract.definition_contract_digest
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+
+
+def review_interaction(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -90,19 +108,20 @@ def _review_interaction(
     contract: OperationPublicDefinitionContractV1,
     deadline: float,
 ) -> tuple[OperationObservationSuccessV1, OperationReviewAvailableInteractionV1 | None]:
+    """Answer the review interaction of a censal observation operation through the client."""
     with OperationChanges(client) as changes:
         while True:
             remaining_budget(deadline)
             if changes.armed:
                 changes.arm()
-            observed = _observe(
+            observed = observe(
                 client,
                 profile_id=profile_id,
                 session_id=session_id,
                 operation_id=operation_id,
                 deadline=deadline,
             )
-            _validate_observation(
+            validate_observation(
                 observed,
                 operation_id=operation_id,
                 subject_ref=subject_ref,
@@ -113,15 +132,7 @@ def _review_interaction(
                 return observed, None
             pending = projection.pending_interaction
             if isinstance(pending, OperationReviewAvailableInteractionV1):
-                reference = pending.review_reference
-                if (
-                    pending.operation_id != operation_id
-                    or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-                    or reference.operation_id != operation_id
-                    or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
-                    or reference.definition_contract_digest != contract.definition_contract_digest
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                _validate_review(pending, operation_id, contract)
                 return observed, pending
             if projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
                 raise RefusalError(RefusalCode.INVALID_FRAME)

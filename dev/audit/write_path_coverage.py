@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from dev.quality import write_path_coverage as _analysis
+from dev.quality import write_path_coverage
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -22,12 +22,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
     args = parser.parse_args(argv)
 
-    result = _analysis.run_write_path_scan()
-    print(_analysis.result_as_json(result) if args.json else _analysis.render_console_report(result))
+    result = write_path_coverage.run_write_path_scan()
+    print(
+        write_path_coverage.result_as_json(result) if args.json else write_path_coverage.render_console_report(result)
+    )
 
-    if result.outcome is _analysis.WritePathOutcome.ERROR:
+    if result.outcome is write_path_coverage.WritePathOutcome.ERROR:
         return 1
-    if result.outcome is _analysis.WritePathOutcome.FINDINGS:
+    if result.outcome is write_path_coverage.WritePathOutcome.FINDINGS:
         return 3
     return 0
 

@@ -8,7 +8,10 @@ the real extraction profile, and the encrypted snapshot repository.
 
 Three contracts are pinned here:
 
-- The happy path persists a snapshot the existing read verbs can retrieve.
+- The happy path persists a snapshot the existing read verbs can retrieve,
+  keeps the printed casillas no borrador-admitted binding owns as
+  comparison-only observations rather than binding values, and resolves a
+  re-import of the same PDF to the same snapshot.
 - The registry profile's ``min_coverage`` refuses a PDF that does not carry
   enough target casillas, and persists nothing when it does.
 - The operator's filesystem path never reaches the persisted snapshot; the
@@ -21,6 +24,7 @@ import hashlib
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -31,8 +35,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years, render_borrador_pdf
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -49,16 +52,21 @@ def _fixture_year() -> int:
 
 
 _FIXTURE_YEAR = _fixture_year()
+_PROFILE_NIF = "12345678Z"
 _FIXTURE_PDF = (
     bundled_path().resolve().parents[0] / "tests" / "fixtures" / "borrador" / f"modelo_100_{_FIXTURE_YEAR}.pdf"
 )
 
 # The borrador extraction profile declares these five target casillas at
 # min_coverage = 1, so every one of them must be read for the import to stand.
+# All five are computed casillas of the revision, so no binding admitted to the
+# borrador owns one: each is kept as a comparison-only observation and none is
+# stored as a binding value.
 _PROFILE_TARGET_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
 _NEW_TRANSLATION_KEYS = (
     "cli.app.live.borrador.import_coverage_absent",
+    "cli.app.live.borrador.import_casilla_owner_ambiguous",
     "cli.app.live.borrador.import_ejercicio_mismatch",
     "cli.app.live.borrador.import_file_help",
     "cli.app.live.borrador.import_help",
@@ -82,7 +90,9 @@ def _invoke(profile: NativeCliProfileFixture, *command: str, json_output: bool =
     return result
 
 
-def _import(profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _FIXTURE_YEAR) -> Result:
+def _import(
+    profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _FIXTURE_YEAR, json_output: bool = True
+) -> Result:
     return _invoke(
         profile,
         "app",
@@ -94,116 +104,170 @@ def _import(profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _
         str(pdf),
         "--filing-year",
         str(filing_year),
+        json_output=json_output,
     )
+
+
+def _assert_store_starts_empty(profile: NativeCliProfileFixture) -> None:
+    empty = unwrap_cli_result(_invoke(profile, "app", "live", "borrador", "100", "list"))
+    assert empty["rows"] == []
+    empty_latest = unwrap_cli_result(
+        _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
+    )
+    assert empty_latest["snapshot_id"] is None
+    assert empty_latest["state"] is None
+
+
+def _assert_first_import(profile: NativeCliProfileFixture) -> dict[str, Any]:
+    imported = _import(profile, _FIXTURE_PDF)
+    assert imported.exit_code == 0, imported.output
+    payload = unwrap_cli_result(imported)
+
+    # The envelope redacts the bucket id before transport; assert the
+    # redaction contract rather than the raw identifier.
+    assert payload["bucket_id"] == "<bucket-id>"
+    assert payload["filing_year"] == _FIXTURE_YEAR
+    assert payload["extraction_profile_id"] == "modelo-100-borrador-pdf"
+    assert Decimal(str(payload["extraction_coverage"])) == Decimal("1")
+    assert payload["artefact_kind"] == "BORRADOR"
+    assert payload["binding_count"] == 0
+    assert payload["blank_casillas"] == []
+    assert payload["observed_casillas"] == list(_PROFILE_TARGET_CASILLAS)
+    assert payload["unowned_casillas"] == []
+    assert (payload["state"], payload["outcome"]) == ("active", "captured")
+    digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
+    assert payload["source_pdf_sha256"] == digest
+    assert payload["source_url"] == f"file-import:sha256:{digest}"
+    assert "warnings" in payload and isinstance(payload["warnings"], list)
+    assert str(_FIXTURE_PDF) not in imported.output
+    return payload
+
+
+def _assert_reimport_resolves_to_the_stored_snapshot(profile: NativeCliProfileFixture, payload: dict[str, Any]) -> None:
+    """Importing the same PDF again names the snapshot already stored, whatever the instant."""
+    again = _import(profile, _FIXTURE_PDF)
+    assert again.exit_code == 0, again.output
+    again_payload = unwrap_cli_result(again)
+    assert again_payload["snapshot_id"] == payload["snapshot_id"]
+    assert again_payload["captured_at"] == payload["captured_at"]
+    assert (again_payload["state"], again_payload["outcome"]) == ("active", "already_active")
+    all_rows = unwrap_cli_result(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
+    assert [row["snapshot_id"] for row in all_rows] == [payload["snapshot_id"]]
+
+
+def _assert_replacement_supersedes(profile: NativeCliProfileFixture, snapshot_id: object, tmp_path: Path) -> object:
+    """A different document creates the next active capture and exercises the public lifecycle filters."""
+    printed = corpus_casilla_values(_FIXTURE_YEAR)
+    changed_pdf = tmp_path / "changed-borrador.pdf"
+    changed_pdf.write_bytes(
+        render_borrador_pdf(
+            year=_FIXTURE_YEAR,
+            casilla_values={casilla: amount + Decimal("1.00") for casilla, amount in printed.items()},
+            tax_id=_PROFILE_NIF,
+        )
+    )
+    replacement = _import(profile, changed_pdf)
+    assert replacement.exit_code == 0, replacement.output
+    replacement_payload = unwrap_cli_result(replacement)
+    replacement_id = replacement_payload["snapshot_id"]
+    assert replacement_id != snapshot_id
+
+    active_rows = unwrap_cli_result(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
+    assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
+    assert active_rows[0]["state"] == "active"
+
+    all_rows = unwrap_cli_result(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
+    assert {row["snapshot_id"] for row in all_rows} == {snapshot_id, replacement_id}
+    assert {row["snapshot_id"]: row["state"] for row in all_rows} == {
+        snapshot_id: "superseded",
+        replacement_id: "active",
+    }
+    superseded_rows = unwrap_cli_result(
+        _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "superseded"),
+    )["rows"]
+    assert [row["snapshot_id"] for row in superseded_rows] == [snapshot_id]
+    discarded_rows = unwrap_cli_result(
+        _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "discarded"),
+    )["rows"]
+    assert discarded_rows == []
+    return replacement_id
+
+
+def _assert_reimport_of_superseded_names_it(
+    profile: NativeCliProfileFixture, snapshot_id: object, replacement_id: object
+) -> None:
+    """Re-importing the superseded document says so and leaves the replacement active."""
+    again = _import(profile, _FIXTURE_PDF)
+    assert again.exit_code == 0, again.output
+    again_payload = unwrap_cli_result(again)
+    assert again_payload["snapshot_id"] == snapshot_id
+    assert (again_payload["state"], again_payload["outcome"]) == ("superseded", "resolved_superseded")
+    text = _import(profile, _FIXTURE_PDF, json_output=False)
+    assert text.exit_code == 0, text.output
+    assert "outcome\tresolved_superseded" in text.output
+    active_rows = unwrap_cli_result(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
+    assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
+
+
+def _assert_view_and_latest(
+    profile: NativeCliProfileFixture, payload: dict[str, Any], snapshot_id: object, replacement_id: object
+) -> None:
+    viewed = _invoke(profile, "app", "live", "borrador", "100", "view", str(snapshot_id)[:12])
+    assert viewed.exit_code == 0, viewed.output
+    view_payload = unwrap_cli_result(viewed)
+    binding_values = view_payload["binding_values"]
+    assert view_payload["source_url"] == payload["source_url"]
+    assert view_payload["state"] == "superseded"
+    assert str(_FIXTURE_PDF) not in str(view_payload)
+    # No printed casilla has an owning binding, so no value was stored, not even a zero.
+    assert binding_values == {}
+
+    latest = unwrap_cli_result(
+        _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
+    )
+    assert latest["snapshot_id"] == replacement_id
+    assert latest["state"] == "active"
+    text_view = _invoke(
+        profile,
+        "app",
+        "live",
+        "borrador",
+        "100",
+        "view",
+        str(replacement_id),
+        json_output=False,
+    )
+    assert text_view.exit_code == 0, text_view.output
+    assert "binding_count\t0" in text_view.output
+    assert "state\tactive" in text_view.output
+
+    refused = _invoke(profile, "app", "live", "borrador", "100", "view", "no-such-id")
+    assert refused.exit_code != 0
+    unknown_state = _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "old")
+    assert unknown_state.exit_code != 0
 
 
 def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> None:
     """A committed PDF crosses the worker and all snapshot readers see its encrypted capture."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-import", facts={})
+        profile.register(label="native-borrador-import", facts={"identity.tax_id": _PROFILE_NIF})
 
-        empty = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))
-        assert empty["rows"] == []
-        empty_latest = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
-        )
-        assert empty_latest["snapshot_id"] is None
-        assert empty_latest["state"] is None
-
-        imported = _import(profile, _FIXTURE_PDF)
-        assert imported.exit_code == 0, imported.output
-        payload = _json(imported)
-
+        _assert_store_starts_empty(profile)
+        payload = _assert_first_import(profile)
         snapshot_id = payload["snapshot_id"]
-        # The envelope redacts the bucket id before transport; assert the
-        # redaction contract rather than the raw identifier.
-        assert payload["bucket_id"] == "<bucket-id>"
-        assert payload["filing_year"] == _FIXTURE_YEAR
-        assert payload["extraction_profile_id"] == "modelo-100-borrador-pdf"
-        assert Decimal(str(payload["extraction_coverage"])) == Decimal("1")
-        assert payload["artefact_kind"] == "BORRADOR"
-        assert payload["binding_count"] == len(_PROFILE_TARGET_CASILLAS)
-        assert payload["blank_casillas"] == []
-        digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
-        assert payload["source_pdf_sha256"] == digest
-        assert payload["source_url"] == f"file-import:sha256:{digest}"
-        assert "warnings" in payload and isinstance(payload["warnings"], list)
-        assert str(_FIXTURE_PDF) not in imported.output
-
-        # A second worker import creates the next active capture and exercises
-        # the public lifecycle filters across both persisted encrypted rows.
-        replacement = _import(profile, _FIXTURE_PDF)
-        assert replacement.exit_code == 0, replacement.output
-        replacement_payload = _json(replacement)
-        replacement_id = replacement_payload["snapshot_id"]
-        assert replacement_id != snapshot_id
-
-        active_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
-        assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
-        assert active_rows[0]["state"] == "active"
-
-        all_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
-        assert {row["snapshot_id"] for row in all_rows} == {snapshot_id, replacement_id}
-        assert {row["snapshot_id"]: row["state"] for row in all_rows} == {
-            snapshot_id: "superseded",
-            replacement_id: "active",
-        }
-        superseded_rows = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "superseded"),
-        )["rows"]
-        assert [row["snapshot_id"] for row in superseded_rows] == [snapshot_id]
-        discarded_rows = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "discarded"),
-        )["rows"]
-        assert discarded_rows == []
-
-        viewed = _invoke(profile, "app", "live", "borrador", "100", "view", str(snapshot_id)[:12])
-        assert viewed.exit_code == 0, viewed.output
-        view_payload = _json(viewed)
-        binding_values = view_payload["binding_values"]
-        assert view_payload["source_url"] == payload["source_url"]
-        assert view_payload["state"] == "superseded"
-        assert str(_FIXTURE_PDF) not in str(view_payload)
-        assert sorted(binding_values) == [f"casilla.{casilla}" for casilla in _PROFILE_TARGET_CASILLAS]
-        # Values survive as the amounts printed on the PDF, not as zeros.
-        printed = corpus_casilla_values(_FIXTURE_YEAR)
-        assert {casilla: Decimal(binding_values[f"casilla.{casilla}"]) for casilla in _PROFILE_TARGET_CASILLAS} == {
-            casilla: printed[validated_casilla_id(casilla, surface="test.printed")]
-            for casilla in _PROFILE_TARGET_CASILLAS
-        }
-
-        latest = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
-        )
-        assert latest["snapshot_id"] == replacement_id
-        assert latest["state"] == "active"
-        text_view = _invoke(
-            profile,
-            "app",
-            "live",
-            "borrador",
-            "100",
-            "view",
-            str(replacement_id),
-            json_output=False,
-        )
-        assert text_view.exit_code == 0, text_view.output
-        assert "binding_count\t5" in text_view.output
-        assert "state\tactive" in text_view.output
-
-        refused = _invoke(profile, "app", "live", "borrador", "100", "view", "no-such-id")
-        assert refused.exit_code != 0
-        unknown_state = _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "old")
-        assert unknown_state.exit_code != 0
+        _assert_reimport_resolves_to_the_stored_snapshot(profile, payload)
+        replacement_id = _assert_replacement_supersedes(profile, snapshot_id, tmp_path)
+        _assert_reimport_of_superseded_names_it(profile, snapshot_id, replacement_id)
+        _assert_view_and_latest(profile, payload, snapshot_id, replacement_id)
 
 
 def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: Path) -> None:
     """The stored reference contains the PDF digest, never its input path."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-path", facts={})
+        profile.register(label="native-borrador-path", facts={"identity.tax_id": _PROFILE_NIF})
         imported = _import(profile, _FIXTURE_PDF)
         assert imported.exit_code == 0, imported.output
-        payload = _json(imported)
+        payload = unwrap_cli_result(imported)
 
         source_url = str(payload["source_url"])
         assert source_url == f"file-import:sha256:{payload['source_pdf_sha256']}"
@@ -219,7 +283,7 @@ def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: 
             "view",
             str(payload["snapshot_id"]),
         )
-        viewed = _json(viewed_result)
+        viewed = unwrap_cli_result(viewed_result)
         assert str(tmp_path) not in str(viewed)
         assert str(_FIXTURE_PDF) not in str(viewed)
         assert viewed["source_url"] == source_url
@@ -237,11 +301,15 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
     kept = tuple(validated_casilla_id(casilla, surface="test.below_minimum") for casilla in ("0505", "0545"))
     partial_pdf = tmp_path / "below-minimum.pdf"
     partial_pdf.write_bytes(
-        render_borrador_pdf(year=_FIXTURE_YEAR, casilla_values={casilla: printed[casilla] for casilla in kept})
+        render_borrador_pdf(
+            year=_FIXTURE_YEAR,
+            casilla_values={casilla: printed[casilla] for casilla in kept},
+            tax_id=_PROFILE_NIF,
+        )
     )
 
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-coverage", facts={})
+        profile.register(label="native-borrador-coverage", facts={"identity.tax_id": _PROFILE_NIF})
         refused = _import(profile, partial_pdf)
         assert refused.exit_code != 0, refused.output
         error = require_error_document(refused.output)["error"]
@@ -251,7 +319,7 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
 
         listed = _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all")
         assert listed.exit_code == 0, listed.output
-        assert _json(listed)["rows"] == [], "a refused import must not persist a partial snapshot"
+        assert unwrap_cli_result(listed)["rows"] == [], "a refused import must not persist a partial snapshot"
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)

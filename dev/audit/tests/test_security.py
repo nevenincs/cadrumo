@@ -1,8 +1,8 @@
-"""Security report shape and parsing over synthetic-free, real captured output.
+"""Security report shape and parsing over captured and boundary-case output.
 
 In-process checks only: the parser reads a real captured semgrep ``--json``
-payload (trimmed from an actual scoped run against ``src/cadrumo/core``, not
-synthesised), and the typed result/renderer are exercised directly. Split
+payload (trimmed from an actual scoped run against ``src/cadrumo/core``),
+boundary payloads, and the typed result/renderer directly. Split
 from the live-scan half so each module carries one execution lane -- the gate
 that actually runs semgrep over the tree lives in ``test_security_scan``.
 """
@@ -15,17 +15,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
+from dev.paths import REPO_ROOT, TEMP_ROOT
 
+from .. import security
 from ..security import (
-    _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
+    PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
     SecurityResult,
-    _semgrep_environment,
     classify_semgrep_output,
     render_console_report,
     semgrep_command,
+    semgrep_environment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -34,20 +35,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_scanner_state_uses_existing_controlled_directories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Native scanner overrides cannot redirect the managed scan outside storage."""
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
-    for variable in ("CADRUMO_TOOL_CONFIG_DIR", "CADRUMO_TOOL_CACHE_DIR", "CADRUMO_TOOL_STATE_DIR", "CADRUMO_TEMP_DIR"):
+    for variable in ("CADRUMO_TOOL_CONFIG_DIR", "CADRUMO_TOOL_CACHE_DIR", "CADRUMO_TOOL_STATE_DIR"):
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("SEMGREP_SETTINGS_FILE", str(tmp_path / "ambient-settings.yml"))
     monkeypatch.setenv("CADRUMO_TOOL_STATE_DIR", "scanner-state")
-    environment = _semgrep_environment()
+    environment = semgrep_environment()
     for variable in ("SEMGREP_SETTINGS_FILE", "SEMGREP_LOG_FILE", "SEMGREP_VERSION_CACHE_PATH"):
         path = Path(environment[variable])
         assert path.is_relative_to(tmp_path)
         assert path.parent.is_dir()
     assert Path(environment["SEMGREP_LOG_FILE"]) == tmp_path / "scanner-state" / "semgrep" / "semgrep.log"
     assert Path(environment["SEMGREP_SETTINGS_FILE"]) != tmp_path / "ambient-settings.yml"
-    assert Path(environment["TEMP"]).is_dir()
-    assert Path(environment["TEMP"]).resolve().is_relative_to(tmp_path.resolve())
+    temporary = Path(environment["TEMP"])
+    assert temporary.is_dir()
+    assert temporary.resolve().is_relative_to(TEMP_ROOT.resolve())
 
 
 # A real captured semgrep --json payload, trimmed from a scoped run against
@@ -118,7 +119,7 @@ def test_command_excludes_the_python36_python37_compatibility_rules() -> None:
     command = semgrep_command("uvx")
 
     excluded = {command[i + 1] for i, arg in enumerate(command) if arg == "--exclude-rule"}
-    assert excluded == set(_PYTHON_LEGACY_COMPATIBILITY_RULE_IDS)
+    assert excluded == set(PYTHON_LEGACY_COMPATIBILITY_RULE_IDS)
 
 
 def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None:
@@ -129,7 +130,7 @@ def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None
     requires_python = project["requires-python"]
     assert requires_python == ">=3.13"
     assert "<" not in requires_python
-    assert _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS
+    assert PYTHON_LEGACY_COMPATIBILITY_RULE_IDS
 
 
 def test_classify_reads_real_captured_findings() -> None:
@@ -219,6 +220,70 @@ def test_zero_findings_over_real_scanned_files_is_green() -> None:
     assert result.outcome is SecurityOutcome.OBSERVED_ZERO
     assert result.is_green is True
     assert result.files_scanned == 1
+
+
+@pytest.mark.parametrize("error_count", (1, 6))
+def test_zero_findings_with_parse_errors_has_incomplete_coverage(error_count: int) -> None:
+    errors = [{"path": f"src/unparsed{i}.py", "message": "Syntax error"} for i in range(error_count)]
+    raw = json.dumps({"results": [], "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+
+    result = classify_semgrep_output(raw)
+
+    assert result.outcome.value == "incomplete"
+    assert result.is_green is False
+    assert result.files_scanned == 1
+    assert result.findings == ()
+    assert result.parse_errors == tuple(f"src/unparsed{i}.py: Syntax error" for i in range(error_count))
+    assert result.raw_json == raw
+    assert "incomplete coverage" in result.headline()
+    assert all(error in render_console_report(result, full=True) for error in result.parse_errors)
+
+
+def test_observed_zero_rejects_parse_errors() -> None:
+    with pytest.raises(ValueError, match="observed_zero"):
+        SecurityResult.observed_zero(1, ("src/unparsed.py: Syntax error",), "{}")
+
+
+@pytest.mark.parametrize("files_scanned,parse_errors", ((0, ("Syntax error",)), (-1, ("Syntax error",)), (1, ())))
+def test_incomplete_requires_measured_files_and_parse_errors(files_scanned: int, parse_errors: tuple[str, ...]) -> None:
+    with pytest.raises(ValueError, match="incomplete"):
+        SecurityResult.incomplete(files_scanned, parse_errors, "{}")
+
+
+@pytest.mark.parametrize(
+    "result",
+    (
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO),
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO, files_scanned=-1),
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO, files_scanned=1, parse_errors=("Syntax error",)),
+        SecurityResult(
+            SecurityOutcome.OBSERVED_ZERO,
+            files_scanned=1,
+            findings=classify_semgrep_output(_CAPTURED_JSON).findings,
+        ),
+    ),
+)
+def test_direct_construction_cannot_earn_green_without_clean_evidence(result: SecurityResult) -> None:
+    assert result.is_green is False
+
+
+@pytest.mark.parametrize("state", ("clean", "incomplete", "findings", "unavailable"))
+def test_standalone_exit_distinguishes_available_data_from_unavailable(
+    state: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    errors = [{"path": "src/unparsed.py", "message": "Syntax error"}] if state == "incomplete" else []
+    raw = json.dumps({"results": [], "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+    result = classify_semgrep_output(_CAPTURED_JSON if state == "findings" else raw)
+    if state == "unavailable":
+        result = SecurityResult.unavailable("scanner missing")
+    monkeypatch.setattr(security, "run_security_scan", lambda _root: result)
+    monkeypatch.setattr("sys.argv", ["audit-code-security", "--json"])
+
+    assert security.main() == (7 if state == "unavailable" else 0)
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["files_scanned"] == result.files_scanned
+    assert payload["parse_errors"] == list(result.parse_errors)
+    assert payload["outcome"] == result.outcome.value
 
 
 def test_from_findings_rejects_an_empty_tuple() -> None:

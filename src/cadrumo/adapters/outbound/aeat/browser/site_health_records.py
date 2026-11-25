@@ -11,7 +11,7 @@ The closed state catalogue is an :class:`enum.StrEnum`. Collections are
 ``tuple[str, ...]`` so evidence remains immutable after classification.
 
 See Also:
-    :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+    :func:`adapters.outbound.aeat.browser.site_health_parsers.evaluate_response`
         Pure parser entry point that creates :class:`SiteHealthStatus` records
         from HTTP status, headers, and body text.
     :meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate`
@@ -42,6 +42,9 @@ from .....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .errors import BrowserValidationError
 
 _MAX_HTML_FRAGMENT_CHARS: Final = 4096
+_HTTP_STATUS_FIRST: Final = 100
+_HTTP_STATUS_TRANSPORT_FAILURE: Final = 599
+"""The status range RFC 9110 defines, with its last value reused as the transport-failure sentinel."""
 
 
 class _SiteHealthRecord(BaseModel):
@@ -79,7 +82,7 @@ class SiteHealthEvidence(_SiteHealthRecord):
     """
 
     url: AnyHttpUrl
-    http_status: int = Field(ge=100, le=599)
+    http_status: int = Field(ge=_HTTP_STATUS_FIRST, le=_HTTP_STATUS_TRANSPORT_FAILURE)
     html_fragment: str = Field(max_length=_MAX_HTML_FRAGMENT_CHARS)
     detected_markers: tuple[str, ...]
 

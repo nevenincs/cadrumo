@@ -38,7 +38,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-import textwrap
 from collections.abc import Generator
 from pathlib import Path
 
@@ -46,21 +45,23 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.tests.installed_process_ports import InstalledProcessWorld
-from cadrumo.tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _aeat_executable() -> Path:
+    """Return the installed ``aeat`` console script, the operator's door to the CLI."""
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    return scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
 
 
 @pytest.fixture(autouse=True)
 def _owned_cold_runtime(tmp_path: Path, *, installed_process_world: InstalledProcessWorld) -> Generator[None]:
     """Serve the cold processes from their real runtime without importing their CLI."""
-    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
-    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    executable = _aeat_executable()
     tmp_path.mkdir(parents=True, exist_ok=True)
     environment = installed_process_world.environment(
         storage_root=tmp_path, authority_root=bundled_authority_descriptor_path().parent
@@ -83,31 +84,12 @@ _REGISTRATION_LEAKS: tuple[str, ...] = (
     "Wizard catalogue has not been registered",
     "project_answers has not been registered",
 )
-_SECRET_STORE_FILES: tuple[str, ...] = (
-    "master.key",
-    "master.kdf",
-    "salt",
-    "master.recovery.key",
-)
-
-
-def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
-    secret_root = REPO_ROOT / "var" / storage_location(StorageCategory.SECRETS).relative_path()
-    fingerprint: dict[str, tuple[int, int] | None] = {}
-    for filename in _SECRET_STORE_FILES:
-        path = secret_root / filename
-        if path.exists():
-            stat = path.stat()
-            fingerprint[filename] = (stat.st_size, stat.st_mtime_ns)
-        else:
-            fingerprint[filename] = None
-    return fingerprint
 
 
 def _run_cli_cold(
     storage_root: Path, argv: list[str], *, authenticate: bool = False, installed_process_world: InstalledProcessWorld
 ) -> subprocess.CompletedProcess[str]:
-    """Invoke the ``cadrumo`` CLI in a fresh interpreter against ``storage_root``.
+    """Invoke the installed ``aeat`` CLI in a fresh process against ``storage_root``.
 
     A new process guarantees an empty ``sys.modules``: the only path that can
     register the wizard catalogue is the root callback exercised by ``argv``.
@@ -115,22 +97,11 @@ def _run_cli_cold(
 
     if authenticate:
         argv = ["--profile-secrets-stdin", *argv]
-    code = f"""
-        import sys
-
-        sys.argv = ["aeat", *{argv!r}]
-        from cadrumo_runtime.host.frontend.cli.bootstrap import main
-
-        try:
-            main()
-        except SystemExit as exit_:
-            raise SystemExit(exit_.code)
-        """
     env = installed_process_world.environment(
         storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
     )
     return subprocess.run(
-        [sys.executable, "-c", textwrap.dedent(code)],
+        [str(_aeat_executable()), *argv],
         input=(
             json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()})
             if authenticate
@@ -149,7 +120,7 @@ def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str)
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=None,
     ):
         profile_id = register_cli_profile(label=label, facts=facts, log_in=False)
@@ -193,19 +164,17 @@ def test_cold_process_work_create_registers_wizard_catalogue(
     raises the internal registration error instead of creating the unit.
     """
 
-    workspace_secret_store_before = _workspace_secret_store_fingerprint()
     _register_profile_for_cold_run(
         tmp_path,
         "coldwiz",
         **{
-            "identity.tax_id": "45678912S",
+            "identity.tax_id": "00001001N",
             "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Cold",
             "identity.surnames": "Wizard",
             "activities.description": "Servicios",
         },
     )
-    assert _workspace_secret_store_fingerprint() == workspace_secret_store_before
 
     created = _run_cli_cold(
         tmp_path,

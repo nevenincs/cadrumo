@@ -26,9 +26,9 @@ from .....adapters.persistence.storage.namespace_taxonomy import (
 from .....adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from .....core.classification.policies import SensitivityClass
 from ..mirror_push import (
-    _mirror_refusal_for_definition,
-    _preflight_mirror_namespaces,
-    _unmirrorable_namespace_reason,
+    mirror_refusal_for_definition,
+    preflight_mirror_namespaces,
+    unmirrorable_namespace_reason,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -99,7 +99,7 @@ class _ProviderNeverReached:
 
 def test_local_only_namespace_is_refused() -> None:
     """A namespace declaring ``LOCAL_ONLY`` must not be mirrored."""
-    refusal = _mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.LOCAL_ONLY))
+    refusal = mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.LOCAL_ONLY))
 
     assert refusal is not None
     assert StorageRemoteMirrorPolicy.LOCAL_ONLY.value in refusal
@@ -112,14 +112,14 @@ def test_ciphertext_namespace_is_permitted() -> None:
     respect except the declared policy, so a refusal can only be coming from
     the policy rather than from anything incidental to the fixture.
     """
-    refusal = _mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA))
+    refusal = mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA))
 
     assert refusal is None
 
 
 def test_test_only_namespace_is_refused() -> None:
     """``TEST_ONLY`` is withheld too, and the refusal names which policy withheld it."""
-    refusal = _mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.TEST_ONLY))
+    refusal = mirror_refusal_for_definition(_definition(StorageRemoteMirrorPolicy.TEST_ONLY))
 
     assert refusal is not None
     assert StorageRemoteMirrorPolicy.TEST_ONLY.value in refusal
@@ -131,7 +131,7 @@ def test_unregistered_namespace_is_refused_rather_than_waved_through() -> None:
     The rows most likely to carry an unregistered namespace are the newest,
     which is exactly the case a declared-disposition policy exists to cover.
     """
-    refusal = _unmirrorable_namespace_reason("namespace-that-is-not-registered")
+    refusal = unmirrorable_namespace_reason("namespace-that-is-not-registered")
 
     assert refusal is not None
     assert "unregistered" in refusal
@@ -145,7 +145,7 @@ def test_every_shipped_namespace_decision_follows_its_own_declaration() -> None:
     """
     mismatches: list[str] = []
     for definition in STORAGE_NAMESPACE_REGISTRY.namespaces:
-        refusal = _unmirrorable_namespace_reason(definition.namespace)
+        refusal = unmirrorable_namespace_reason(definition.namespace)
         mirrorable = definition.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
         if mirrorable and refusal is not None:
             mismatches.append(f"{definition.namespace}: mirrorable by declaration but refused ({refusal})")
@@ -166,7 +166,7 @@ def test_withheld_namespace_never_reaches_the_provider() -> None:
     withheld = _definition(StorageRemoteMirrorPolicy.LOCAL_ONLY).namespace
     provider: StorageProvider = _ProviderNeverReached()
 
-    outcome = _preflight_mirror_namespaces(provider=provider, planned_rows_by_namespace={withheld: []})
+    outcome = preflight_mirror_namespaces(provider=provider, planned_rows_by_namespace={withheld: []})
 
     assert outcome.blocked_namespaces == {withheld}
     assert outcome.manifests_by_namespace == {}

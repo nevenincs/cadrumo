@@ -46,8 +46,8 @@ from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
 )
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...application.operations.registry import OperationRegistry
+from ...core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.classification_origin import ClassificationOrigin, classification_facts
@@ -84,7 +84,7 @@ _BUSINESS = BusinessClassification.BUSINESS
 _PROPOSED_BY = "llm:local-text:synthetic"
 _TYPED = "typed by the caller"
 
-_Runtime = tuple[conformance._ExecutionDriver, OperationRegistry, UUID, SwitchableSessionHost]
+_Runtime = tuple[conformance.ExecutionDriver, OperationRegistry, UUID, SwitchableSessionHost]
 _Act = tuple[str, BaseModel]
 
 _FRONTENDS = pytest.mark.parametrize(

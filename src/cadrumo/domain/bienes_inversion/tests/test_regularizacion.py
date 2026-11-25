@@ -11,50 +11,19 @@ single-value tripwire. What these tests prove is the procedure.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.schema_base import ThresholdComparison
 from ..register import (
     BienInversionValidationError,
     RegularizacionDireccion,
     compute_regularizacion_anual,
 )
-from ..regularizacion_parameters import (
-    BienesInversionParameterProvenance,
-    BienesInversionRegularizacionParameters,
-)
 from ..vocabulary import BienInversionKind
+from .explicit_parameters import EXPLICIT_PARAMS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
-
-#: An explicit bundle, supplied rather than resolved: these are unit tests of the
-#: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the
-#: figures below are the ones the law states is a separate question, answered
-#: against the registry itself by the modelo 303 parameter gates. Supplying them
-#: here as inputs keeps a legal value out of this file's assertions.
-_PARAMS = BienesInversionRegularizacionParameters(
-    ventana_anos_mueble=4,
-    ventana_anos_inmueble=9,
-    divisor_mueble=Decimal("5"),
-    divisor_inmueble=Decimal("10"),
-    umbral_puntos=Decimal("10"),
-    umbral_comparison=ThresholdComparison.EXCLUSIVE,
-    provenance=BienesInversionParameterProvenance(
-        modelo_id="303",
-        revision_id="2025",
-        parameter_ids=(
-            "m303-bien-inversion-ventana-anos-mueble",
-            "m303-bien-inversion-ventana-anos-inmueble",
-            "m303-bien-inversion-divisor-mueble",
-            "m303-bien-inversion-divisor-inmueble",
-            "m303-bien-inversion-regularizacion-umbral-puntos",
-        ),
-        resolved_on=date(2025, 6, 1),
-    ),
-)
 
 
 def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
@@ -73,7 +42,7 @@ def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.from_registry("mueble"),
-        parameters=_PARAMS,
+        parameters=EXPLICIT_PARAMS,
     )
     assert result.aplica is True
     assert result.diferencia_puntos == Decimal("20")
@@ -92,7 +61,7 @@ def test_real_estate_good_uses_the_ten_divisor() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.from_registry("inmueble"),
-        parameters=_PARAMS,
+        parameters=EXPLICIT_PARAMS,
     )
     assert result.aplica is True
     assert result.divisor == Decimal("10")
@@ -111,7 +80,7 @@ def test_prorrata_rise_yields_deduccion_complementaria() -> None:
         prorrata_inicial_pct=Decimal("50"),
         prorrata_anio_pct=Decimal("75"),
         kind=BienInversionKind.from_registry("mueble"),
-        parameters=_PARAMS,
+        parameters=EXPLICIT_PARAMS,
     )
     assert result.aplica is True
     assert result.importe == Decimal("-630.00")
@@ -125,7 +94,7 @@ def test_exactly_ten_points_does_not_regularise() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.from_registry("mueble"),
-        parameters=_PARAMS,
+        parameters=EXPLICIT_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10")
     assert result.aplica is False
@@ -140,7 +109,7 @@ def test_just_over_ten_points_regularises() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("49.99"),
         kind=BienInversionKind.from_registry("mueble"),
-        parameters=_PARAMS,
+        parameters=EXPLICIT_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10.01")
     assert result.aplica is True
@@ -150,7 +119,7 @@ def test_non_positive_cuota_is_refused() -> None:
     """A non-positive cuota soportada is an instructive refusal, not a silent zero."""
     with pytest.raises(BienInversionValidationError, match="cuota_soportada"):
         compute_regularizacion_anual(
-            parameters=_PARAMS,
+            parameters=EXPLICIT_PARAMS,
             cuota_soportada=Decimal("0"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("50"),
@@ -162,7 +131,7 @@ def test_out_of_range_percentage_is_refused() -> None:
     """A percentage outside 0-100 is refused."""
     with pytest.raises(BienInversionValidationError, match="prorrata_anio_pct"):
         compute_regularizacion_anual(
-            parameters=_PARAMS,
+            parameters=EXPLICIT_PARAMS,
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("120"),

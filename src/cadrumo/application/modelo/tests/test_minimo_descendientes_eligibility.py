@@ -25,9 +25,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -41,7 +39,7 @@ from ....domain.contribuyente.family_fact_context import FamilyFactResolutionCon
 from ....domain.contribuyente.family_profile import RentaFamilyProfile
 from ....domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
-from ..profile_binding import (
+from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
     second_entitled_filer_indicated,
@@ -276,7 +274,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half(*, operation:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
@@ -294,7 +292,7 @@ def test_conjunta_return_is_not_prorated(*, operation: PinnedAuthorityOperation)
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "2",
     }
     _inject(facts, snapshot, operation=operation)
@@ -307,7 +305,7 @@ def test_unpartnered_individual_filer_takes_the_full_minimo(*, operation: Pinned
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
@@ -325,7 +323,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions(*, operation:
     full = _parameter(snapshot, "primer-hijo")
     base: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "1",
     }
 
@@ -345,13 +343,14 @@ def test_shared_custody_still_prorates_without_any_partner_signal(*, operation: 
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_second_filer_derivation_reads_a_spouse_record_when_status_is_absent() -> None:
     """A spouse record alone indicates a second entitled contribuyente."""
     assert second_entitled_filer_indicated({"renta_spouse.tax_id": "12345678Z"}) is True
@@ -379,7 +378,7 @@ def test_anualidades_flag_reads_sin_derecho_for_a_capped_descendant(year: int) -
     parameters, so this asserts the predicate is year-parameterised in fact and
     not only by construction.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(year)
         over_cap = _thresholds(snapshot).rentas_anuales_limite + Decimal("1")
         facts: dict[str, object] = {
@@ -400,7 +399,7 @@ def test_anualidades_flag_still_reads_con_derecho_for_an_eligible_shared_custody
     year ranges is not a pair: the anti-tautology guarantee would hold at 2024
     and be absent everywhere else, which is the shape that reads as covered.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(year)
         facts: dict[str, object] = {
             "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",

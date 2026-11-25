@@ -35,8 +35,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .._synonym_cli import app
-from .._synonym_mining import (
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+from ..synonym_cli import app
+from ..synonym_mining import (
     RatificationStatus,
     SynonymCandidateEntry,
     SynonymCandidateObservation,
@@ -148,18 +150,18 @@ def test_carry_forward_reattaches_a_decision_whose_row_the_miner_still_produces(
         competing_concept_id=target.competing_concept_id,
         status=RatificationStatus.REJECTED,
         review_reason="Rejected in review as a near-duplicate of an admitted term.",
-        reviewed_at=date(2026, 9, 7),
+        reviewed_at=date(filing_year_envelope().horizon, 9, 7),
     )
     prior = SynonymRatificationQueue(generated_by="test", entries=(decision,))
     carried = carry_forward_review_state(mine_synonym_candidates(_observations_from(queue)), prior)
     landed = {entry.candidate: entry for entry in carried.entries}
     assert landed[target.candidate].status is RatificationStatus.REJECTED
-    assert landed[target.candidate].reviewed_at == date(2026, 9, 7)
+    assert landed[target.candidate].reviewed_at == date(filing_year_envelope().horizon, 9, 7)
     assert not reviewed_decisions_dropped(carried, prior)
 
 
-def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp_path: Path) -> None:
-    """A refusal is atomic: the whole loss set is computed before any write."""
+def _staged_queue_and_observations(tmp_path: Path) -> tuple[SynonymRatificationQueue, Path, str, Path]:
+    """Write the committed queue and a matching observation file; return them with the queue's digest."""
     committed = _committed_queue()
     queue_path = tmp_path / "ratification" / "synonym-candidates.json"
     _write_queue(queue_path, committed)
@@ -167,6 +169,12 @@ def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp
 
     observations = tmp_path / "observations.json"
     observations.write_text(json.dumps(_observation_payload(committed)), encoding="utf-8", newline="")
+    return committed, queue_path, before, observations
+
+
+def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp_path: Path) -> None:
+    """A refusal is atomic: the whole loss set is computed before any write."""
+    committed, queue_path, before, observations = _staged_queue_and_observations(tmp_path)
 
     result = CliRunner().invoke(app, ["mine", str(observations), "--out", str(queue_path)])
 
@@ -182,13 +190,7 @@ def test_the_cli_refuses_the_losing_mine_and_leaves_the_queue_byte_identical(tmp
 
 def test_drop_reviewed_is_the_explicit_opt_in_that_retires_them(tmp_path: Path) -> None:
     """The bound is a refusal, not a prohibition: retiring a decision stays possible."""
-    committed = _committed_queue()
-    queue_path = tmp_path / "ratification" / "synonym-candidates.json"
-    _write_queue(queue_path, committed)
-    before = hashlib.sha256(queue_path.read_bytes()).hexdigest()
-
-    observations = tmp_path / "observations.json"
-    observations.write_text(json.dumps(_observation_payload(committed)), encoding="utf-8", newline="")
+    committed, queue_path, before, observations = _staged_queue_and_observations(tmp_path)
 
     result = CliRunner().invoke(app, ["mine", str(observations), "--out", str(queue_path), "--drop-reviewed"])
 

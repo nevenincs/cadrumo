@@ -21,8 +21,6 @@ if TYPE_CHECKING:
 class _RuntimeLoginApp(QuietApp[None]):
     """Accept exactly one screen-owned connection into the enclosing scope."""
 
-    DEFER_TERMINAL_READY = True
-
     def __init__(
         self,
         *,

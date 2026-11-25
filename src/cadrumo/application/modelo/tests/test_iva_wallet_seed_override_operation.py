@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -18,14 +18,17 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ...operations.registry import OperationPublicDefinitionRegistrationV1
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_override_operation import (
     MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
@@ -50,31 +53,22 @@ from ..iva_wallet_seed_operation import (
     resolve_modelo_iva_wallet_seed_access,
 )
 from ..iva_wallet_seed_ports import ModeloIvaWalletSeedPorts, ModeloIvaWalletSeedPortsFactory
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = PublicPeriod(filing_year=2024, code="4T")
+_PERIOD = PublicPeriod(filing_year=filing_year_envelope().horizon, code="4T")
 _AUTHORITY = object()
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -137,7 +131,7 @@ def _override_request(*, profile_id: UUID = _PROFILE) -> OperationRequest[Modelo
             period=_PERIOD,
             amount="1200.50",
             reason="operator asserts the prior balance",
-            evidence_locator="local:m303-2023-filed-return",
+            evidence_locator=f"local:m303-{_PERIOD.filing_year - 1}-filed-return",
         ),
     )
 
@@ -157,7 +151,7 @@ def _override_registration():
 def _executor_context(
     *,
     definition_id: str,
-    events: _Events,
+    events: RecordingEvents,
     operands: _Operands,
     authority: _Authority | object = _AUTHORITY,
 ) -> OperationExecutorContext:
@@ -170,7 +164,7 @@ def _executor_context(
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -180,14 +174,7 @@ def _executor_context(
 def _access_context(
     registration: OperationPublicDefinitionRegistrationV1, *, profile_id: UUID = _PROFILE
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.SUBMIT)
 
 
 def _seed_state(*, amount: Decimal = Decimal("1200.50")) -> object:
@@ -242,6 +229,8 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
         "amount",
         "provenance",
         "register_status",
+        "words_language",
+        "amount_words",
     }
     assert set(ModeloIvaWalletOverrideProjection.model_json_schema()["properties"]) == {
         "result_version",
@@ -253,6 +242,8 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
         "evidence_locator",
         "selected_authority",
         "divergence",
+        "words_language",
+        "amount_words",
     }
     with pytest.raises(ValidationError):
         ModeloIvaWalletSeedRequest(profile_id=_PROFILE, period=_PERIOD, amount="1e3")
@@ -271,7 +262,7 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
             taxpayer_nif="12345678Z",
             amount="1200.50",
             reason="operator asserts the prior balance",
-            evidence_locator="local:m303-2023-filed-return",
+            evidence_locator=f"local:m303-{_PERIOD.filing_year - 1}-filed-return",
             selected_authority="aeat_wallet",
             divergence="match",
         )
@@ -305,7 +296,7 @@ def test_access_is_exact_profile_period_scoped_and_requires_commit(
 
 
 def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkeypatch: pytest.MonkeyPatch) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     authority = _Authority()
     factory = _Factory()
@@ -333,7 +324,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     result_ref = asyncio.run(executor.execute(_seed_request(), context))
 
     assert result_ref == "result-reference"
-    assert authority.coordinates == [("303", 2024, "4T")]
+    assert authority.coordinates == [("303", _PERIOD.filing_year, "4T")]
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
@@ -354,12 +345,12 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_seed_result(report, receipt) == report.projection
 
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
 
     def ungrounded_seed(**_kwargs: object) -> object:
@@ -388,7 +379,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
 def test_seed_authority_refusal_precedes_commit_and_duplicate_is_effect_none(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     authority = _Authority(ValueError("unavailable published authority"))
     factory = _Factory()
@@ -417,7 +408,7 @@ def test_seed_authority_refusal_precedes_commit_and_duplicate_is_effect_none(
     assert events.effects == []
     assert factory.requested == []
 
-    events = _Events()
+    events = RecordingEvents()
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.seed_iva_compensation_period_for_bucket",
         lambda **_kwargs: (_ for _ in ()).throw(
@@ -444,7 +435,7 @@ def test_seed_authority_refusal_precedes_commit_and_duplicate_is_effect_none(
 def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     authority = _Authority()
     factory = _Factory()
@@ -473,7 +464,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     result_ref = asyncio.run(executor.execute(_override_request(), context))
 
     assert result_ref == "result-reference"
-    assert authority.coordinates == [("303", 2024, "4T")]
+    assert authority.coordinates == [("303", _PERIOD.filing_year, "4T")]
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
@@ -494,12 +485,12 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_override_result(report, receipt) == report.projection
 
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_override_operation.record_iva_compensation_override_for_bucket",

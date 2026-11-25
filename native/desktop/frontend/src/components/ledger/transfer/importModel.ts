@@ -1,0 +1,860 @@
+// How the Import dialog previews and applies. A bank statement is read once
+// per file in a dry run that writes nothing, and once more for each own
+// account where the person has any: the account a file's rows name binds
+// them the same way as choosing it, so a file whose rows come out the same
+// either way names that account. A statement also says which account it
+// names, by its mask: a registered one binds the file without any probe, and
+// one that is not registered can be registered by the import itself, from the
+// statement's own number, which the preview reads as one more dry run: rows
+// bound to an account are other rows than the same rows bound to none. The
+// apply then sends each file alone with the
+// account chosen for it and the digest its preview read, so a file that
+// changed since is refused rather than imported. An invoice book is read
+// once in a preview that gives each column a role, which the person can
+// change, and is imported with those roles and the digest it read; documents
+// are added in parts the host can carry. Nothing here keeps a value beyond
+// the dialog's memory, and no write is ever sent twice.
+
+import {
+  ledgerFailure,
+  type JsonObject,
+  type LedgerDefinitionId,
+  type LedgerPort,
+  type LedgerRequest,
+  type LedgerResult,
+  type PickedFile,
+} from "../../../shell/ledger";
+import type { PublicPeriod } from "../../../shell/ledgerInvoiceContract";
+import type {
+  LedgerImportFileRefusal,
+  LedgerImportResultProjection,
+  LedgerProviderID,
+} from "../../../shell/ledgerTransferContract";
+import type {
+  LedgerEvidenceBatchProjection,
+  OperationNextStepV1,
+} from "../../../shell/ledgerDocumentContract";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceImportContract";
+import type {
+  InvoiceKind,
+  LedgerTransactionProjection,
+} from "../../../shell/ledgerInvoiceContract";
+import { sameDecimal, periodFilters } from "../../../shell/ledgerGrammar";
+import { importBatchFilters } from "../../../shell/ledgerImports";
+import { readPeriodsHolding } from "../../../shell/ledgerPeriods";
+import { readPage } from "../../../shell/ledgerWindow";
+import {
+  pauseActionOf,
+  provisionActionOf,
+} from "../../../shell/provisioningRecovery";
+import type { Landing } from "../WritePause";
+
+export const IMPORT_KINDS = ["bank", "book", "documents"] as const;
+export type ImportKind = (typeof IMPORT_KINDS)[number];
+
+/** The most own accounts a preview reads each file against, all files
+ * together. Beyond it the person chooses every file's account. */
+export const ACCOUNT_PROBE_LIMIT = 48;
+/** The most documents one request adds; more are sent as further parts. */
+export const DOCUMENTS_PER_PART = 16;
+
+/** No own account: the rows stay unbound unless they name one. */
+export const NO_ACCOUNT = "none";
+/** The account the statement names is registered by the import. */
+export const REGISTER_ACCOUNT = "register";
+/** An own account's id, `NO_ACCOUNT` or `REGISTER_ACCOUNT`. */
+export type AccountKey = string;
+
+/** How the registered account is held when the import registers it. */
+const REGISTERED_HOLDING = "titular" as const;
+
+/** The account a statement names, by its mask alone, and whether the import
+ * can register it. */
+export type StatementAccount = { masked: string; registrable: boolean };
+
+/** An own account as a choice: its label and masked number. */
+export type OwnAccount = { id: string; label: string; masked: string };
+
+/** What one call answered. A write that did not settle where the page
+ * could see it is `unknown`: it may have been saved and is never sent
+ * again. */
+export type Attempt<Result> =
+  | { kind: "settled"; result: Result }
+  | {
+      kind: "refused";
+      reason: string | null;
+      /** The sentence the backend served for the refusal, in its language. */
+      words: string | null;
+      /** The setup action the refusal names, if any. */
+      setup: string | null;
+    }
+  | { kind: "failed"; code: string; reason: string | null };
+
+async function attempt<D extends LedgerDefinitionId>(
+  port: LedgerPort,
+  definition: D,
+  payload: LedgerRequest<D>,
+  write: boolean,
+): Promise<Attempt<LedgerResult<D>>> {
+  try {
+    const outcome = await port.submit(definition, payload);
+    if (outcome.kind === "settled")
+      return { kind: "settled", result: outcome.result };
+    if (outcome.kind === "refused")
+      return {
+        kind: "refused",
+        reason: outcome.reason,
+        words: outcome.detail?.refusal_words ?? null,
+        setup: provisionActionOf(outcome.detail),
+      };
+    // Still running or waiting where the page stopped looking.
+    return {
+      kind: "failed",
+      code: write ? "unknown" : "unavailable",
+      reason: null,
+    };
+  } catch (error) {
+    const failure = ledgerFailure(error);
+    return {
+      kind: "failed",
+      code: failure.code,
+      reason: failure.reason ?? null,
+    };
+  }
+}
+
+/** The registered own accounts, or null where they could not be read. */
+export async function readOwnAccounts(
+  port: LedgerPort,
+): Promise<OwnAccount[] | null> {
+  const read = await attempt(
+    port,
+    "ledger.own_account",
+    { action: "list" },
+    false,
+  );
+  if (read.kind !== "settled") return null;
+  const accounts = (read.result as JsonObject).accounts;
+  if (!Array.isArray(accounts)) return null;
+  return accounts.flatMap((account) => {
+    const found = account as JsonObject;
+    return typeof found.own_account_id === "string"
+      ? [
+          {
+            id: found.own_account_id,
+            label: typeof found.label === "string" ? found.label : "",
+            masked:
+              typeof found.masked_iban === "string" ? found.masked_iban : "",
+          },
+        ]
+      : [];
+  });
+}
+
+export type BankOptions = {
+  provider: LedgerProviderID;
+  period: PublicPeriod | null;
+  /** Reports gaps, duplicates and parser notes as well. */
+  verify: boolean;
+};
+
+/** One statement file as its preview read it. */
+export type BankFilePreview =
+  | {
+      kind: "read";
+      file: PickedFile;
+      /** The digest of the bytes the preview read; null where it read no
+       * rows, which leaves nothing to import. */
+      digest: string | null;
+      /** The dry run for each account read so far, and with no account. */
+      byAccount: Partial<Record<AccountKey, LedgerImportResultProjection>>;
+      /** Accounts whose choice the file's own rows refuse. */
+      mismatched: string[];
+      /** The account the file's rows name, where they name a registered
+       * one. */
+      detected: string | null;
+      /** Whether every registered account was read against it. */
+      probed: boolean;
+      /** The account the statement names, where it names one. */
+      statement: StatementAccount | null;
+    }
+  | {
+      kind: "refused";
+      file: PickedFile;
+      reason: LedgerImportFileRefusal["reason_code"];
+      /** The setup action the file's refusal names, if any. */
+      setup?: string | null;
+      /** The step the backend served for the refusal, if any. */
+      step?: OperationNextStepV1 | null;
+    }
+  | { kind: "failed"; file: PickedFile; code: string };
+
+/** The registration a preview and an apply send for `account`: the statement's own
+ * account, labelled by its mask, which the person can rename in Accounts. */
+const registrationOf = (
+  account: AccountKey,
+  statement: StatementAccount | null,
+) =>
+  account === REGISTER_ACCOUNT && statement
+    ? { label: statement.masked, holding: REGISTERED_HOLDING }
+    : null;
+
+const dryRun = (
+  file: PickedFile,
+  account: AccountKey,
+  options: BankOptions,
+  statement: StatementAccount | null = null,
+): LedgerRequest<"ledger.import"> => ({
+  files: [file.token],
+  provider: options.provider,
+  dry_run: true,
+  verify: options.verify,
+  period: options.period,
+  own_account_id: ownAccountOf(account),
+  register_statement_account: registrationOf(account, statement),
+});
+
+/** The own account a request names for a choice: none for no account and for
+ * the statement's own account, which the import registers. */
+const ownAccountOf = (account: AccountKey) =>
+  account === NO_ACCOUNT || account === REGISTER_ACCOUNT ? null : account;
+
+/** The movements a dry run would write or skip, as one sorted list. */
+const rowIds = (result: LedgerImportResultProjection) =>
+  [...result.imported_transaction_refs, ...result.skipped_transaction_refs]
+    .map((ref) => ref.transaction_id)
+    .sort()
+    .join(",");
+
+/** The file's own refusal, the setup action it names, the step the backend
+ * served for it, and its digest in one dry run's answer. */
+function readOf(result: LedgerImportResultProjection) {
+  const refused = result.refused_files[0] ?? null;
+  return {
+    refusal: refused?.reason_code ?? null,
+    setup: provisionActionOf(refused),
+    step: refused?.next_step ?? null,
+    digest: result.source_digests[0]?.sha256 ?? null,
+  };
+}
+
+/** Previews one statement file: with no account, then against each own
+ * account where `probe` allows. */
+export async function previewBankFile(
+  port: LedgerPort,
+  file: PickedFile,
+  options: BankOptions,
+  accounts: readonly OwnAccount[],
+  probe: boolean,
+): Promise<BankFilePreview> {
+  const base = await attempt(
+    port,
+    "ledger.import",
+    dryRun(file, NO_ACCOUNT, options),
+    false,
+  );
+  if (base.kind === "failed")
+    return { kind: "failed", file, code: base.reason ?? base.code };
+  if (base.kind === "refused")
+    return { kind: "failed", file, code: base.reason ?? "refused" };
+  const { refusal, setup, step, digest } = readOf(base.result);
+  if (refusal) return { kind: "refused", file, reason: refusal, setup, step };
+  const named =
+    base.result.statement_accounts.find((item) => item.file_index === 0) ??
+    null;
+  const preview: Extract<BankFilePreview, { kind: "read" }> = {
+    kind: "read",
+    file,
+    digest,
+    byAccount: { [NO_ACCOUNT]: base.result },
+    mismatched: [],
+    detected: null,
+    probed: false,
+    statement: named && {
+      masked: named.masked_iban,
+      registrable: named.registrable,
+    },
+  };
+  // The statement says which account it names: a registered one is the file's
+  // and refuses every other; one not registered can be registered, and
+  // every registered account is another's.
+  if (named?.own_account_id) {
+    preview.detected = named.own_account_id;
+    preview.mismatched = accounts
+      .map((account) => account.id)
+      .filter((id) => id !== named.own_account_id);
+    preview.probed = true;
+    return preview;
+  }
+  if (named?.registrable && preview.statement) {
+    // Registering binds the rows to the new account, so what it brings in
+    // is its own dry run, not the one read with no account.
+    const read = await previewForAccount(
+      port,
+      file,
+      options,
+      REGISTER_ACCOUNT,
+      preview.statement,
+    );
+    if (read.kind !== "read") return { kind: "failed", file, code: read.code };
+    if (read.refusal === "source_changed" || read.digest !== digest)
+      return { kind: "refused", file, reason: "source_changed" };
+    if (read.refusal)
+      return {
+        kind: "refused",
+        file,
+        reason: read.refusal,
+        setup: read.setup,
+        step: read.step,
+      };
+    preview.byAccount[REGISTER_ACCOUNT] = read.result;
+    preview.mismatched = accounts.map((account) => account.id);
+    preview.probed = true;
+    return preview;
+  }
+  if (!probe || accounts.length === 0) return preview;
+  for (const account of accounts) {
+    const read = await previewForAccount(port, file, options, account.id);
+    if (read.kind !== "read") return preview;
+    if (read.refusal === "own_account_mismatch") {
+      preview.mismatched.push(account.id);
+      continue;
+    }
+    // The bytes changed between two reads of the same preview.
+    if (read.refusal === "source_changed" || read.digest !== digest)
+      return { kind: "refused", file, reason: "source_changed" };
+    if (read.refusal)
+      return {
+        kind: "refused",
+        file,
+        reason: read.refusal,
+        setup: read.setup,
+        step: read.step,
+      };
+    preview.byAccount[account.id] = read.result;
+    if (
+      preview.detected === null &&
+      base.result.rows > 0 &&
+      rowIds(read.result) === rowIds(base.result)
+    )
+      preview.detected = account.id;
+  }
+  preview.probed = true;
+  return preview;
+}
+
+/** One dry run of `file` bound to `account`; registering the account
+ * `statement` names where `account` is `REGISTER_ACCOUNT`. */
+export async function previewForAccount(
+  port: LedgerPort,
+  file: PickedFile,
+  options: BankOptions,
+  account: AccountKey,
+  statement: StatementAccount | null = null,
+): Promise<
+  | {
+      kind: "read";
+      result: LedgerImportResultProjection;
+      refusal: LedgerImportFileRefusal["reason_code"] | null;
+      setup: string | null;
+      step: OperationNextStepV1 | null;
+      digest: string | null;
+    }
+  | { kind: "failed"; code: string }
+> {
+  const read = await attempt(
+    port,
+    "ledger.import",
+    dryRun(file, account, options, statement),
+    false,
+  );
+  if (read.kind !== "settled")
+    return {
+      kind: "failed",
+      code:
+        read.kind === "failed"
+          ? (read.reason ?? read.code)
+          : (read.reason ?? "refused"),
+    };
+  return { kind: "read", result: read.result, ...readOf(read.result) };
+}
+
+/** Whose the rows of a previewed file are, where the file or the register
+ * settles it, so the person is not asked. */
+export type AccountFact =
+  | { kind: "detected"; account: string }
+  /** The rows name an account that is not registered: only no account
+   * takes them. */
+  | { kind: "unregistered" }
+  /** The statement names an account that is not registered, which the
+   * import can register. */
+  | { kind: "register" }
+  | { kind: "no_accounts" }
+  | { kind: "choose" };
+export function accountFact(
+  preview: Extract<BankFilePreview, { kind: "read" }>,
+  accounts: readonly OwnAccount[],
+): AccountFact {
+  if (preview.detected) return { kind: "detected", account: preview.detected };
+  if (preview.statement?.registrable) return { kind: "register" };
+  if (accounts.length === 0) return { kind: "no_accounts" };
+  if (preview.probed && preview.mismatched.length === accounts.length)
+    return { kind: "unregistered" };
+  return { kind: "choose" };
+}
+
+/** The account a file imports with: the person's choice, else the one its
+ * rows name; the only one possible; or nothing yet, where the person must
+ * choose. */
+export function accountFor(
+  fact: AccountFact,
+  choice: AccountKey | undefined,
+): AccountKey | undefined {
+  if (fact.kind === "detected") return choice ?? fact.account;
+  if (fact.kind === "register") return choice ?? REGISTER_ACCOUNT;
+  if (fact.kind === "choose") return choice;
+  return NO_ACCOUNT;
+}
+
+/** One file's apply, in the order they were sent. */
+export type BankApplied =
+  | { kind: "imported"; file: PickedFile; result: LedgerImportResultProjection }
+  | {
+      kind: "refused";
+      file: PickedFile;
+      reason: LedgerImportFileRefusal["reason_code"] | string;
+      /** The setup action the file's refusal names, if any. */
+      setup?: string | null;
+      /** The step the backend served for the refusal, if any. */
+      step?: OperationNextStepV1 | null;
+    }
+  /** Its bytes are not those the preview read: preview it again. */
+  | { kind: "changed"; file: PickedFile }
+  /** Sent, and not seen to settle: it may have been imported. */
+  | { kind: "unknown"; file: PickedFile; code: string }
+  /** Left unsent after a write whose outcome is not known. */
+  | { kind: "not_sent"; file: PickedFile }
+  /** Every row of it is already in the ledger, so nothing was sent: the
+   * counts are its preview's. */
+  | {
+      kind: "skipped";
+      file: PickedFile;
+      result: LedgerImportResultProjection;
+    };
+
+/** Failures that stop the files after them: the outcome is not known, or
+ * no further write can be sent now. */
+const STOPPING = new Set([
+  "unknown",
+  "saved_unread",
+  "not_signed_in",
+  "unavailable",
+]);
+
+export type BankApplyFile = {
+  file: PickedFile;
+  account: AccountKey;
+  digest: string;
+  /** The account the file's statement names, where it names one. */
+  statement: StatementAccount | null;
+};
+
+/** Imports each file alone, exactly as previewed, one after another. */
+export async function applyBank(
+  port: LedgerPort,
+  files: readonly BankApplyFile[],
+  options: BankOptions,
+  progress: (done: number) => void,
+): Promise<BankApplied[]> {
+  const applied: BankApplied[] = [];
+  let stopped = false;
+  for (const { file, account, digest, statement } of files) {
+    if (stopped) {
+      applied.push({ kind: "not_sent", file });
+      continue;
+    }
+    const sent = await attempt(
+      port,
+      "ledger.import",
+      {
+        files: [file.token],
+        provider: options.provider,
+        dry_run: false,
+        verify: options.verify,
+        period: options.period,
+        own_account_id: ownAccountOf(account),
+        register_statement_account: registrationOf(account, statement),
+        expected_source_sha256: [digest],
+      },
+      true,
+    );
+    if (sent.kind === "settled") {
+      const refused = sent.result.refused_files[0];
+      const refusal = refused?.reason_code;
+      applied.push(
+        refusal === "source_changed"
+          ? { kind: "changed", file }
+          : refusal
+            ? {
+                kind: "refused",
+                file,
+                reason: refusal,
+                setup: provisionActionOf(refused),
+                step: refused?.next_step ?? null,
+              }
+            : { kind: "imported", file, result: sent.result },
+      );
+    } else if (sent.kind === "refused") {
+      applied.push({ kind: "refused", file, reason: sent.reason ?? "refused" });
+    } else if (sent.code === "unknown" || sent.code === "saved_unread") {
+      applied.push({ kind: "unknown", file, code: sent.code });
+      stopped = true;
+    } else {
+      applied.push({ kind: "refused", file, reason: sent.reason ?? sent.code });
+      stopped = STOPPING.has(sent.code);
+    }
+    progress(applied.length);
+  }
+  return applied;
+}
+
+/** One column of an invoice book as its preview read it. */
+export type BookColumn = NonNullable<
+  InvoiceImportProjection["columns"]
+>[number];
+/** The closed set of meanings a column can be given. */
+export type BookRole = BookColumn["role"];
+/** A meaning the importer takes, the importer field it feeds, and whether
+ * the book must supply it. */
+export type AssignableRole = NonNullable<
+  InvoiceImportProjection["assignable_roles"]
+>[number];
+
+/** The role that stands for a column that is not used: a member of the
+ * closed set the ledger serves, not a word the window made up. */
+export const UNUSED_ROLE: BookRole = "unmapped";
+
+/** What the person has done to a book's columns since its preview: the role
+ * each column holds now, and the columns whose role they set themselves. */
+export type BookReview = {
+  roles: Record<number, BookRole>;
+  chosen: ReadonlySet<number>;
+};
+
+/** An invoice book as its preview read it: which role each column came to
+ * hold, who settled it, and what the importer still lacks. */
+export type BookPreview =
+  | {
+      kind: "read";
+      file: PickedFile;
+      /** The digest of the bytes the preview read, which the import sends
+       * back so a changed file is refused. */
+      digest: string;
+      rows: number;
+      columns: BookColumn[];
+      assignable: AssignableRole[];
+      /** Whether the local AI could not be asked to propose roles, and the
+       * setup action its verdict names. */
+      readerUnavailable: boolean;
+      setup: string | null;
+    }
+  | {
+      kind: "refused";
+      file: PickedFile;
+      reason: string | null;
+      words: string | null;
+      setup: string | null;
+    }
+  | { kind: "failed"; file: PickedFile; code: string; reason: string | null };
+
+/** Reads an invoice book's columns, writing nothing: which role each holds,
+ * who settled it, and the roles the importer needs that no column supplies. */
+export async function previewBook(
+  port: LedgerPort,
+  file: PickedFile,
+  kind: InvoiceKind,
+  country: string | null,
+): Promise<BookPreview> {
+  const read = await attempt(
+    port,
+    "ledger.invoice.import",
+    {
+      kind,
+      source_path: file.token,
+      country,
+      preview: true,
+      column_roles: null,
+    },
+    false,
+  );
+  if (read.kind === "failed")
+    return { kind: "failed", file, code: read.code, reason: read.reason };
+  if (read.kind === "refused")
+    return {
+      kind: "refused",
+      file,
+      reason: read.reason,
+      words: read.words,
+      setup: read.setup,
+    };
+  const result = read.result;
+  const verdict = result.reader_unavailable_verdict ?? null;
+  return {
+    kind: "read",
+    file,
+    digest: result.source_sha256,
+    rows: result.row_count ?? result.rows,
+    columns: result.columns,
+    assignable: result.assignable_roles ?? [],
+    readerUnavailable: verdict !== null,
+    setup: provisionActionOf(verdict),
+  };
+}
+
+/** The review a fresh preview starts from: each column's served role. A
+ * role the importer has no slot for stands as "not used", as it is imported. */
+export function startingReview(preview: BookPreview): BookReview {
+  if (preview.kind !== "read") return { roles: {}, chosen: new Set() };
+  const takes = new Set(preview.assignable.map((role) => role.role));
+  return {
+    roles: Object.fromEntries(
+      preview.columns.map((column) => [
+        column.column_index,
+        takes.has(column.role) ? column.role : UNUSED_ROLE,
+      ]),
+    ),
+    chosen: new Set(),
+  };
+}
+
+/** `role` given to `column`. A role other than "not used" is held by one
+ * column only, so the column that held it lets it go. */
+export function assignRole(
+  review: BookReview,
+  column: number,
+  role: BookRole,
+): BookReview {
+  const roles = { ...review.roles, [column]: role };
+  const chosen = new Set(review.chosen).add(column);
+  if (role !== UNUSED_ROLE)
+    for (const [index, held] of Object.entries(roles))
+      if (held === role && Number(index) !== column) {
+        roles[Number(index)] = UNUSED_ROLE;
+        chosen.add(Number(index));
+      }
+  return { roles, chosen };
+}
+
+/** Who settled `column`'s role as the review stands: the person for a
+ * column they set, else whoever the preview said. */
+export const sourceOfColumn = (
+  column: BookColumn,
+  review: BookReview,
+): BookColumn["source"] =>
+  review.chosen.has(column.column_index) ? "operator" : column.source;
+
+/** The roles the importer requires that no column holds in `review`. */
+export const missingRoles = (
+  preview: Extract<BookPreview, { kind: "read" }>,
+  review: BookReview,
+): AssignableRole[] => {
+  const held = new Set(Object.values(review.roles));
+  return preview.assignable.filter(
+    (role) => role.required && !held.has(role.role),
+  );
+};
+
+/** Imports an invoice book exactly as previewed: every column with the role
+ * the review gave it, and the digest of the bytes the preview read. */
+export function applyBook(
+  port: LedgerPort,
+  preview: Extract<BookPreview, { kind: "read" }>,
+  review: BookReview,
+  kind: InvoiceKind,
+  country: string | null,
+): Promise<Attempt<InvoiceImportProjection>> {
+  return attempt(
+    port,
+    "ledger.invoice.import",
+    {
+      kind,
+      source_path: preview.file.token,
+      country,
+      preview: false,
+      source_sha256: preview.digest,
+      column_roles: preview.columns.map((column) => ({
+        column_index: column.column_index,
+        role: review.roles[column.column_index] ?? column.role,
+      })),
+    },
+    true,
+  );
+}
+
+/** What adding documents came to, over every part sent. */
+export type DocumentsApplied = {
+  items: LedgerEvidenceBatchProjection["run"]["items"];
+  unresolved: LedgerEvidenceBatchProjection["run"]["unresolved"];
+  /** The part that did not settle, if one did not, and why: `unknown` may
+   * have saved, `saved_unread` saved and its answer was not read. */
+  stopped: { code: string; files: PickedFile[] } | null;
+  /** Files of later parts, left unsent. */
+  notSent: PickedFile[];
+  /** A part whose reading paused, and the setup action its pause names, or
+   * null when setting nothing up would end it. */
+  paused: { action: string | null } | null;
+};
+
+/** Adds documents as evidence in parts, stopping at a part that does not
+ * settle. */
+export async function applyDocuments(
+  port: LedgerPort,
+  files: readonly PickedFile[],
+  direction: InvoiceKind,
+  progress: (done: number) => void,
+): Promise<DocumentsApplied> {
+  const done: DocumentsApplied = {
+    items: [],
+    unresolved: [],
+    stopped: null,
+    notSent: [],
+    paused: null,
+  };
+  for (let at = 0; at < files.length; at += DOCUMENTS_PER_PART) {
+    const part = files.slice(at, at + DOCUMENTS_PER_PART);
+    if (done.stopped) {
+      done.notSent.push(...part);
+      continue;
+    }
+    const sent = await attempt(
+      port,
+      "ledger.evidence.batch",
+      { sources: part.map((file) => file.token), direction },
+      true,
+    );
+    if (sent.kind === "settled") {
+      done.items.push(...sent.result.run.items);
+      done.unresolved.push(...sent.result.run.unresolved);
+      const pause = sent.result.run.inference_pause;
+      if (pause !== null)
+        done.paused = {
+          action: done.paused?.action ?? pauseActionOf(pause),
+        };
+    } else
+      done.stopped = {
+        code:
+          sent.kind === "refused"
+            ? (sent.reason ?? "refused")
+            : sent.code === "unknown" || sent.code === "saved_unread"
+              ? sent.code
+              : (sent.reason ?? sent.code),
+        files: part,
+      };
+    progress(Math.min(files.length, at + part.length));
+  }
+  return done;
+}
+
+/** The first and last day of the movements of `batches`, read from the
+ * ledger, or null where they could not be read. */
+export async function readBatchSpan(
+  port: LedgerPort,
+  batches: readonly string[],
+): Promise<{ from: string; to: string } | null> {
+  let from: string | null = null;
+  let to: string | null = null;
+  for (const batch of batches) {
+    for (const order of ["asc", "desc"] as const) {
+      const read = await readPage(port, {
+        filters: importBatchFilters(batch),
+        sort_by: "date",
+        sort_order: order,
+        offset: 0,
+        limit: 1,
+      });
+      if (read.kind !== "answer") return null;
+      const day = read.result.rows[0]?.transaction.date;
+      if (!day) continue;
+      if (from === null || day < from) from = day;
+      if (to === null || day > to) to = day;
+    }
+  }
+  return from && to ? { from, to } : null;
+}
+
+/** A likely duplicate as imported, and the movements already in the
+ * ledger on its day with its amount. */
+export type DuplicatePair = {
+  imported: LedgerTransactionProjection;
+  existing: LedgerTransactionProjection[];
+};
+
+/** Reads an imported likely duplicate. */
+export async function readImported(
+  port: LedgerPort,
+  id: string,
+): Promise<LedgerTransactionProjection | null> {
+  const read = await attempt(
+    port,
+    "ledger.view",
+    { transaction_prefix: id },
+    false,
+  );
+  return read.kind === "settled" ? read.result.transaction : null;
+}
+
+/**
+ * How an import of one file whose outcome was not seen landed, from the
+ * movements its preview said it would bring in. Their ids derive from the
+ * file's rows, so they are in the ledger only where that import wrote
+ * them, and one import writes them all or none: the first tells. Null
+ * where the ledger did not answer. A preview that named none brings
+ * nothing in, so sent again it is the same import.
+ */
+export async function importLanding(
+  port: LedgerPort,
+  imported: readonly string[],
+): Promise<Landing | null> {
+  const id = imported[0];
+  if (id === undefined) return "repeatable";
+  const read = await attempt(
+    port,
+    "ledger.view",
+    { transaction_prefix: id },
+    false,
+  );
+  if (read.kind === "refused") return "not_saved";
+  if (read.kind !== "settled") return null;
+  return read.result.transaction.transaction_id === id ? "saved" : "not_saved";
+}
+
+/** The movements already in the ledger that `imported` was flagged
+ * against: those on its day with its amount, other than itself. */
+export async function readExisting(
+  port: LedgerPort,
+  imported: LedgerTransactionProjection,
+): Promise<LedgerTransactionProjection[] | null> {
+  const month = (await readPeriodsHolding(imported.date))?.monthly;
+  if (!month) return null;
+  const found: LedgerTransactionProjection[] = [];
+  for (let offset = 0; ;) {
+    const read = await readPage(port, {
+      filters: periodFilters(month),
+      sort_by: "date",
+      sort_order: "asc",
+      offset,
+      limit: 250,
+    });
+    if (read.kind !== "answer") return null;
+    for (const row of read.result.rows)
+      if (
+        row.transaction.transaction_id !== imported.transaction_id &&
+        row.transaction.date === imported.date &&
+        sameDecimal(row.transaction.amount, imported.amount)
+      )
+        found.push(row.transaction);
+    offset += read.result.rows.length;
+    if (read.result.rows.length === 0 || offset >= read.result.total)
+      return found;
+  }
+}

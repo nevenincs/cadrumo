@@ -17,6 +17,7 @@ from typing import Annotated, Final
 import typer
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState, FormLayoutSeedSource
 
 from ..compiler.loader import load_registry_tree
@@ -145,12 +146,7 @@ def synchronise_selected_form_layout(
     if modelo is None or revision_id not in modelo.revisions:
         raise RegistryValidationError("selected form owner revision is absent")
     revision = modelo.revisions[revision_id]
-    if (
-        len(revision.form_layouts) != 1
-        or revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED
-        or revision.form_layouts[0].seed_source is FormLayoutSeedSource.AUTHORED
-    ):
-        raise RegistryValidationError("selected form owner requires one unreviewed generated layout")
+    _require_selected_generated_layout(revision)
     path = form_layout_fragment_path(registry_root / "modelos" / modelo_id / "revisions" / revision_id)
     if not path.is_file() or sha256(path.read_bytes()).hexdigest() != expected_old_sha256:
         raise RegistryValidationError("selected form owner old fragment changed")
@@ -165,6 +161,15 @@ def synchronise_selected_form_layout(
     if changed not in ([], [path.as_posix()]):
         raise RegistryValidationError("selected form owner changed an unexpected path")
     return bool(changed)
+
+
+def _require_selected_generated_layout(revision: ModeloRevision) -> None:
+    if (
+        len(revision.form_layouts) != 1
+        or revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED
+        or revision.form_layouts[0].seed_source is FormLayoutSeedSource.AUTHORED
+    ):
+        raise RegistryValidationError("selected form owner requires one unreviewed generated layout")
 
 
 @app.command()

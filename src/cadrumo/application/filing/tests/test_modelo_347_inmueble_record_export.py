@@ -20,6 +20,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -30,6 +32,7 @@ from ....domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ..draft_construction import build_draft
 from ..export import render_filing_layout
@@ -50,8 +53,10 @@ class _Edition:
     year: int
 
 
-_FILING_EDITION = _Edition("2025-y-siguientes", 2025)
-_HISTORICAL_FILING_EDITION = _Edition("2011-2024", 2024)
+_HISTORICAL_REVISION, _CURRENT_REVISION = authored_revisions("347")
+assert _HISTORICAL_REVISION.valid_to is not None
+_FILING_EDITION = _Edition(str(_CURRENT_REVISION.id), _CURRENT_REVISION.valid_from.year)
+_HISTORICAL_FILING_EDITION = _Edition(str(_HISTORICAL_REVISION.id), _HISTORICAL_REVISION.valid_to.year)
 
 
 def _observation(
@@ -74,6 +79,7 @@ def _observation(
         invoice_total_amount=Decimal("8000.00"),
         operation_clave=clave,
         party_legal_name=name,
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
         arrendamiento_local_negocio=lease,
         situacion_inmueble="1" if lease else None,
         referencia_catastral=referencia_catastral,
@@ -85,8 +91,8 @@ def _resolved_inputs(
 ) -> dict[str, ModeloInputValue]:
     revision = operation.revision_with_export_layouts("347", edition.revision)
     observations = (
-        _observation("inv-cliente", "B12345674", "CLIENTE NACIONAL SL", edition.year, "B"),
-        _observation("inv-proveedor", "A58818501", "PROVEEDOR NACIONAL SA", edition.year, "A"),
+        _observation("inv-cliente", "B00015016", "CLIENTE NACIONAL SL", edition.year, "B"),
+        _observation("inv-proveedor", "A00010074", "PROVEEDOR NACIONAL SA", edition.year, "A"),
         *leases,
     )
     effective_date = date(edition.year, 12, 31)
@@ -152,7 +158,7 @@ def test_a_filer_without_leases_files_no_inmueble_record(operation: PinnedAuthor
 def test_a_recorded_lease_files_one_inmueble_record(operation: PinnedAuthorityOperation) -> None:
     lease = _observation(
         "inv-arrendamiento",
-        "B87654323",
+        "B00015057",
         "ARRENDATARIO LOCAL SL",
         _FILING_EDITION.year,
         "B",
@@ -182,7 +188,7 @@ def test_the_historical_filing_edition_exports_without_inmueble_records(operatio
 def test_nonresident_province_and_country_survive_the_complete_export(
     operation: PinnedAuthorityOperation, edition: _Edition
 ) -> None:
-    foreign = _observation("inv-foreign", "B87654323", "NONRESIDENT PARTY", edition.year, "A").model_copy(
+    foreign = _observation("inv-foreign", "B00015057", "NONRESIDENT PARTY", edition.year, "A").model_copy(
         update={"country_code": "US"}
     )
     lines = _fichero_lines(operation, edition, _resolved_inputs(operation, edition, foreign))
@@ -197,7 +203,7 @@ def test_cash_accounting_and_reverse_charge_marks_survive_the_complete_export(
     operation: PinnedAuthorityOperation,
 ) -> None:
     edition = _FILING_EDITION
-    cash = _observation("inv-cash", "B87654323", "CASH ACCOUNTING PARTY", edition.year, "A").model_copy(
+    cash = _observation("inv-cash", "B00015057", "CASH ACCOUNTING PARTY", edition.year, "A").model_copy(
         update={"cash_accounting_operation": True, "annual_computation_basis": True}
     )
     reverse_charge = _observation("inv-reverse", "B11111112", "REVERSE CHARGE PARTY", edition.year, "A").model_copy(

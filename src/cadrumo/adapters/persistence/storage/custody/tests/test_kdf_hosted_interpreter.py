@@ -6,8 +6,7 @@ import sys
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody._kdf_process import worker_interpreter
-from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION
+from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION, isolated_interpreter_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -15,4 +14,4 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_a_hosted_kdf_child_runs_the_binary_interpreter_role_without_site(monkeypatch: pytest.MonkeyPatch) -> None:
     image = r"C:\Program Files\Cadrumo\cadrumo.exe"
     monkeypatch.setattr(sys, "_xoptions", {ROLE_IMAGE_OPTION: image}, raising=False)
-    assert worker_interpreter() == (image, "--role", "python", "-S")
+    assert isolated_interpreter_command() == (image, "--role", "python", "-S")

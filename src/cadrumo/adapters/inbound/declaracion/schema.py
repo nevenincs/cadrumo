@@ -24,9 +24,9 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.filing_year import FilingYear
+from ....core.filing_year import FilingYear, is_four_digit_year
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, PeriodError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf.extracted_casilla import ExtractedCasilla
@@ -49,9 +49,9 @@ class TemplateRevision(BaseModel):
             ``"explicit_override"`` for caller-supplied values.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     año: FilingYear
     revision: str = Field(min_length=1, max_length=32)
     detected_from: Literal["header", "footer", "filename", "explicit_override"] = "header"
@@ -76,7 +76,7 @@ class ExtractionWarning(BaseModel):
             ``"ocr"`` / ``"merged"``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId | None
     code: str = Field(min_length=1)
@@ -113,12 +113,12 @@ class InboundDeclaracionObservation(BaseModel):
         parsed_at: UTC timestamp at parse completion.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: str = Field(min_length=4, max_length=4)
+    modelo: str = Field(min_length=1, max_length=16)
+    ejercicio: str = Field(max_length=16)
     period: Period = Field()
-    tax_id: str = Field(min_length=4, max_length=32)
+    tax_id: str = Field(min_length=1, max_length=32)
     template_revision: TemplateRevision
     registry_snapshot_ref: RegistrySnapshotRef
     """Four-axis registry coordinate captured at parse time.
@@ -137,6 +137,14 @@ class InboundDeclaracionObservation(BaseModel):
     source_pdf_path: Path
     source_pdf_sha256: ContentDigest
     parsed_at: datetime
+
+    @field_validator("ejercicio")
+    @classmethod
+    @pydantic_validation_boundary
+    def _ejercicio_is_a_four_digit_year(cls, value: str) -> str:
+        if not (value.isascii() and value.isdigit() and is_four_digit_year(int(value))):
+            raise ValueError("ejercicio must be a four-digit year")
+        return value
 
     @field_validator("period", mode="before")
     @classmethod

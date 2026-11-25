@@ -7,21 +7,22 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from .signal_values import _is_json_object
+from .signal_values import is_json_object
 
-_REGISTRY_HEALTH_SIGNAL: Final[str] = "registry-health"
-
-
-_BINDING_SIGNAL: Final[str] = "binding-signal"
+REGISTRY_HEALTH_SIGNAL: Final[str] = "registry-health"
 
 
-class _RegistryHealthProcessor:
+BINDING_SIGNAL: Final[str] = "binding-signal"
+
+
+class RegistryHealthProcessor:
     """Reduce the registry collector's strict JSON to one persisted run envelope."""
 
     def __init__(self) -> None:
         self.lines: list[str] = []
 
     def consume(self, line: str) -> None:
+        """Collect one output line of the registry health run."""
         self.lines.append(line)
 
     def envelope(
@@ -34,6 +35,7 @@ class _RegistryHealthProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the registry health result envelope from the collected output."""
         payload = _registry_health_payload(self.lines)
         if payload is None:
             diagnostic = next(
@@ -90,7 +92,7 @@ def _registry_health_payload(lines: list[str]) -> dict[str, object] | None:
             candidate = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if _is_json_object(candidate):
+        if is_json_object(candidate):
             payload = candidate
             break
     return payload

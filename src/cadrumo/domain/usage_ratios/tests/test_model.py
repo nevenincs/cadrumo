@@ -19,6 +19,7 @@ from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
@@ -112,7 +113,7 @@ def test_with_ratio_returns_new_profile() -> None:
 def test_without_ratio_is_noop_on_unset() -> None:
     """Removing an unset category is a no-op."""
     profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
-    result = profile.without_ratio(SpendingCategory.from_registry("telefonia_movil"))
+    result = profile.without_ratio(SpendingCategory.from_registry("arrendamiento_vivienda_afecto"))
     assert result == profile
 
 
@@ -127,16 +128,16 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
     """``ELIGIBLE_USAGE_RATIO_CATEGORIES`` must track the registry verbatim.
 
     The eligibility set is derived from the pinned operation's
-    ``resolve_category_profiles(2025, operation=operation)`` projection. This test
+    ``resolve_category_profiles(horizon, operation=operation)`` projection. This test
     re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
     removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
-    usage-ratio feature accepts. The count pin (twelve) is a secondary
+    usage-ratio feature accepts. The count pin (eight) is a secondary
     guardrail that makes accidental additions visible in diffs.
     """
     derived_from_registry = frozenset(
         category
-        for category, profile in resolve_category_profiles(2025, operation=operation).items()
+        for category, profile in resolve_category_profiles(filing_year_envelope().horizon, operation=operation).items()
         if profile.proportionality.kind
         in {
             ProportionalityKind.from_registry(
@@ -160,46 +161,33 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
         }
     )
     assert derived_from_registry == ELIGIBLE_USAGE_RATIO_CATEGORIES
-    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
+    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 8
 
 
-def test_an_undeclared_usage_ratio_has_no_registry_fallback(operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.usefixtures("operation")
+def test_an_undeclared_usage_ratio_resolves_to_nothing() -> None:
     """Reference example of the deductibility-compute consumer pattern.
 
-    This test previously pinned the OPPOSITE pattern -- prefer the operator's
-    ratio and "fall back to the statutory ``default_ratio``" -- and called that
-    value statutory. It is not. LIRPF art. 30.2.5.b fixes the deductible share of
-    a suministro as the statutory 30 per cent applied to "la proporción existente
-    entre los metros cuadrados de la vivienda destinados a la actividad respecto a
-    su superficie total". The article supplies the first factor and nothing
-    supplies the second: it is a measurement of one dwelling, which is why the
-    sentence ends inviting proof of a different figure rather than naming a
-    fallback.
-
-    Five categories carried ``default_ratio = "0.30"`` in the same slot the
-    evaluator reads a STORED ratio from, and stored ratios are already effective,
-    so the fallback asserted an effective thirty per cent -- reachable only at a
-    raw afectación of 1.00, the whole dwelling as office. The correct pattern is
-    that an undeclared proportion resolves to nothing and the deduction is
+    LIRPF art. 30.2.5.b fixes the deductible share of a suministro as the
+    statutory 30 per cent applied to "la proporción existente entre los metros
+    cuadrados de la vivienda destinados a la actividad respecto a su superficie
+    total". The article supplies the first factor and nothing supplies the
+    second: it is a measurement of one dwelling, which is why the sentence ends
+    inviting proof of a different figure rather than naming a fallback. An
+    undeclared proportion therefore resolves to nothing and the deduction is
     ineligible until the operator declares one.
     """
     profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
 
-    def resolve_for_compute(category: SpendingCategory) -> Decimal | None:
-        user_value = resolve_user_ratio(profile, category)
-        if user_value is not None:
-            return user_value
-        return resolve_category_profiles(2025, operation=operation)[category].proportionality.default_ratio
-
-    assert resolve_for_compute(SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal("0.21")
-    assert resolve_for_compute(SpendingCategory.from_registry("suministros_home_office_agua")) is None
-    assert resolve_for_compute(SpendingCategory.from_registry("telefonia_movil")) is None
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal("0.21")
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_agua")) is None
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("arrendamiento_vivienda_afecto")) is None
 
 
 def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
     """Compute may look up any category; ineligible ones return ``None``
-    gracefully rather than raise — the caller then falls back to the
-    statutory default or non-``USAGE_RATIO`` semantics without special-casing.
+    gracefully rather than raise — the caller then applies non-``USAGE_RATIO``
+    semantics without special-casing.
     """
     profile = UsageRatioProfile()
     assert resolve_user_ratio(profile, SpendingCategory.from_registry("material_oficina")) is None
@@ -213,12 +201,12 @@ def test_saved_profile_has_canonical_key_order() -> None:
         ratios={
             SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21"),
             SpendingCategory.from_registry("suministros_home_office_agua"): Decimal("0.21"),
-            SpendingCategory.from_registry("telefonia_movil"): Decimal("0.6"),
+            SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.6"),
         },
     )
     reverse = UsageRatioProfile(
         ratios={
-            SpendingCategory.from_registry("telefonia_movil"): Decimal("0.6"),
+            SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.6"),
             SpendingCategory.from_registry("suministros_home_office_agua"): Decimal("0.21"),
             SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21"),
         },
@@ -229,36 +217,42 @@ def test_saved_profile_has_canonical_key_order() -> None:
     assert keys_in_payload == sorted(keys_in_payload, key=lambda c: c.value)
 
 
-def test_validate_usage_ratio_reference_accepts_configured_category_key() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")})
+def test_validate_usage_ratio_reference_accepts_configured_category_key(operation: PinnedAuthorityOperation) -> None:
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60")}
+    )
 
     reference = validate_usage_ratio_reference(
         profile,
-        category_id=SpendingCategory.from_registry("telefonia_movil").value,
-        usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+        category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+        usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+        year=filing_year_envelope().horizon,
+        operation=operation,
         business_pct=Decimal("0.60"),
     )
 
     assert isinstance(reference, UsageRatioReference)
-    assert reference.category == SpendingCategory.from_registry("telefonia_movil")
+    assert reference.category == SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     assert reference.ratio == Decimal("0.60")
 
 
-def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
+def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile()
 
     with pytest.raises(UsageRatioValidationError, match="concrete eligible spending category"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.from_registry("telefonia_movil").value,
+            category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id="home_office_area",
+            year=filing_year_envelope().horizon,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
+def test_validate_usage_ratio_reference_rejects_category_mismatch(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile(
         ratios={
-            SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60"),
+            SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60"),
             SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.30"),
         },
     )
@@ -266,41 +260,93 @@ def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
     with pytest.raises(UsageRatioValidationError, match="must match"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.from_registry("telefonia_movil").value,
+            category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id=SpendingCategory.from_registry("suministros_home_office_luz").value,
+            year=filing_year_envelope().horizon,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry() -> None:
+def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry(
+    operation: PinnedAuthorityOperation,
+) -> None:
     profile = UsageRatioProfile()
 
     with pytest.raises(UsageRatioValidationError, match="not configured"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.from_registry("telefonia_movil").value,
-            usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+            category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+            usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+            year=filing_year_envelope().horizon,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")})
+def test_validate_usage_ratio_reference_rejects_business_pct_drift(operation: PinnedAuthorityOperation) -> None:
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60")}
+    )
 
     with pytest.raises(UsageRatioValidationError, match="does not match"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.from_registry("telefonia_movil").value,
-            usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+            category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+            usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
+            year=filing_year_envelope().horizon,
+            operation=operation,
             business_pct=Decimal("0.50"),
         )
 
 
-def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_failure() -> None:
+def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_failure(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A missing authority scope must not read as "not a spending category"."""
     profile = UsageRatioProfile()
-    category = SpendingCategory.from_registry("telefonia_movil").value
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value
 
     with (
         outside_governed_fact_validation(),
         pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
     ):
-        validate_usage_ratio_reference(profile, category_id=category, usage_ratio_id=category)
+        validate_usage_ratio_reference(
+            profile,
+            category_id=category,
+            usage_ratio_id=category,
+            year=filing_year_envelope().horizon,
+            operation=operation,
+        )
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_a_home_office_row_carries_the_degree_of_use_its_irpf_ratio_is_derived_from(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> None:
+    """DISCRIMINATING. The row holds 0.40 of use; the profile holds 0.40 x 0.30 for IRPF.
+
+    The row share is what IVA deducts, so it carries no IRPF factor; the
+    reference still binds the two facts through the category's IRPF rule.
+    """
+    luz = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = UsageRatioProfile(ratios={luz: Decimal("0.120")})
+
+    reference = validate_usage_ratio_reference(
+        profile,
+        category_id=luz.value,
+        usage_ratio_id=luz.value,
+        business_pct=Decimal("0.40"),
+        year=year,
+        operation=operation,
+    )
+
+    assert reference.ratio == Decimal("0.120")
+    with pytest.raises(UsageRatioValidationError, match="does not match"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=luz.value,
+            usage_ratio_id=luz.value,
+            business_pct=Decimal("0.120"),
+            year=year,
+            operation=operation,
+        )

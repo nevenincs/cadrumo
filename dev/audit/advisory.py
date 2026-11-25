@@ -22,7 +22,7 @@ Two things this module adds that no existing `dev/audit` scanner has:
   machine-readable single shot), mirroring `dev.audit.report`'s own
   red/amber/green shape.
 * Disk output, every run, of the FULL uncapped result in a unique
-  date-partitioned directory below `.logs/audit-runs/`. That tree is transient
+  date-partitioned directory below `.tmp/logs/audit-runs/`. That tree is transient
   command output, reclaimed by the next clean and read back by nothing, so a
   finding that must outlive the run belongs in durable evidence. The files are: `summary.json`
   (machine-parseable), `summary.md` (the same content, human-readable, no
@@ -57,8 +57,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.paths import REPO_ROOT, UTF_8
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
@@ -142,9 +142,9 @@ def audit_security(repo_root: Path) -> AdvisoryDimension:
     """Classify the security dimension from the one semgrep runner.
 
     RED if any ERROR-severity finding -- semgrep's own worst severity tier.
-    AMBER on WARNING/INFO-only findings, or on an unavailable scan (never
+    AMBER on WARNING/INFO-only findings, incomplete coverage, or an unavailable scan (never
     GREEN: "could not measure" and "nothing to find" are different facts).
-    GREEN only on a scan that demonstrably inspected files and found nothing.
+    GREEN only on a scan that demonstrably inspected files without parse errors and found nothing.
 
     Carries the raw semgrep JSON payload on ``raw_payload`` for any run that
     demonstrably scanned files, so :func:`persist` can write it verbatim
@@ -171,7 +171,7 @@ def audit_security(repo_root: Path) -> AdvisoryDimension:
         return AdvisoryDimension(
             DimensionReport(name="security", status=Status.AMBER, headline=result.headline(), available=False),
         )
-    if result.outcome is SecurityOutcome.OBSERVED_ZERO:
+    if result.is_green:
         return AdvisoryDimension(
             DimensionReport(name="security", status=Status.GREEN, headline=result.headline(), details=details),
             raw_payload=result.raw_json,
@@ -221,7 +221,7 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     )
 
 
-def _overall(dimensions: tuple[AdvisoryDimension, ...]) -> Status:
+def advisory_overall(dimensions: tuple[AdvisoryDimension, ...]) -> Status:
     """Worst status across all dimensions (RED > AMBER > GREEN)."""
     statuses = {d.report.status for d in dimensions}
     for status in _STATUS_PRECEDENCE:
@@ -258,7 +258,7 @@ def render_text(dimensions: tuple[AdvisoryDimension, ...], overall: Status, *, f
 _LEADING_COUNT: Final = re.compile(r"^(\d+)")
 
 
-def _total_findings(dimension: AdvisoryDimension) -> int:
+def total_findings(dimension: AdvisoryDimension) -> int:
     """The best available true count for a dimension.
 
     Dimensions built in this module (dead code and security)
@@ -295,7 +295,7 @@ def to_json(
                 "headline": dimension.report.headline,
                 "available": dimension.report.available,
                 "count_by_severity": dimension.count_by_severity,
-                "total_findings": _total_findings(dimension),
+                "total_findings": total_findings(dimension),
                 "details": dimension.report.details,
                 "findings": list(dimension.findings),
             }
@@ -352,9 +352,9 @@ def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
 def main() -> int:
     """Run every advisory-audit dimension, print the dashboard, persist the full result.
 
-    ADVISORY: exits 0 when every dimension ran, whatever it found. `audit` is
-    advisory across this fleet except for the dependency audit, which gates --
-    see ``dev/EXIT-CODES.md``. Scanner findings are normalized to zero, while
+    ADVISORY: exits 0 when every dimension ran, whatever it found; the
+    dependency vulnerability scan is a gating ``check`` instead -- see
+    ``dev/EXIT-CODES.md``. Scanner findings are normalized to zero, while
     unavailable scanner data returns the shared advisory-broken status.
     """
     import argparse
@@ -366,7 +366,7 @@ def main() -> int:
 
     repo_root = REPO_ROOT
     dimensions = build_advisory_report(repo_root)
-    overall = _overall(dimensions)
+    overall = advisory_overall(dimensions)
 
     if args.json:
         print(json.dumps(to_json(dimensions, overall, datetime.now(tz=UTC).isoformat()), indent=2, ensure_ascii=False))

@@ -20,7 +20,7 @@ import pytest
 from ....application.operator_actions.catalogue import lookup_action
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
-from ..search import _ACTION_LOCALE_KEYS, workbench_action_label
+from ..search import ACTION_LOCALE_KEYS, workbench_action_label
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -28,7 +28,7 @@ _UNMAPPED_ID = "operator.nothing.maps.here"
 _RETIRED_IDS = ("operator.declaration.open", "operator.ledger.open", "operator.not_declared.open")
 
 
-@pytest.mark.parametrize("action_id", sorted(_ACTION_LOCALE_KEYS))
+@pytest.mark.parametrize("action_id", sorted(ACTION_LOCALE_KEYS))
 def test_every_named_action_is_one_the_catalogue_can_dispatch(action_id: str) -> None:
     """Copy for an id the catalogue lacks can never reach an operator.
 
@@ -74,7 +74,7 @@ def test_an_unnamed_action_reads_as_unknown_in_every_locale(locale: str) -> None
     strict_token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         unknown = workbench_action_label(_UNMAPPED_ID, locale=locale)
-        named = {workbench_action_label(action_id, locale=locale) for action_id in _ACTION_LOCALE_KEYS}
+        named = {workbench_action_label(action_id, locale=locale) for action_id in ACTION_LOCALE_KEYS}
     finally:
         I18N_STRICT_MISSING_KEYS.reset(strict_token)
 

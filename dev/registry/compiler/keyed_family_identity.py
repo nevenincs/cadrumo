@@ -6,21 +6,19 @@ from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
-    KeyedFamilySpec as _KeyedFamily,
-)
-from cadrumo.domain.calculations.registry.keyed_families import (
-    family_identity_value as _family_identity_value,
+    KeyedFamilySpec,
+    family_identity_value,
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from .casilla_identity import _same_casilla_identity
+from .casilla_identity import same_casilla_identity
 
 
-def _refuse_undeclared_repurpose(
+def refuse_undeclared_repurpose(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     identity: str,
     inherited: object,
     stated: object,
@@ -45,7 +43,7 @@ def _refuse_undeclared_repurpose(
         before = _field_at(inherited, path)
         after = _field_at(stated, path)
         unchanged = (
-            _same_casilla_identity(before, after, inherited_casillas_by_id, successor_casillas_by_id)
+            same_casilla_identity(before, after, inherited_casillas_by_id, successor_casillas_by_id)
             if path in family.casilla_identity_fields
             else before == after
         )
@@ -81,7 +79,7 @@ def _refuse_reinterpreted_formula_operands(
     if before != after:
         return
     for reference in expression_casilla_refs(before):
-        if not _same_casilla_identity(reference, reference, inherited_casillas_by_id, successor_casillas_by_id):
+        if not same_casilla_identity(reference, reference, inherited_casillas_by_id, successor_casillas_by_id):
             raise RegistryLoadError(
                 f"{context}: formulas {identity!r} inherits an unchanged expression whose casilla operand "
                 f"{reference!r} no longer identifies the predecessor's concept; state the successor's "
@@ -91,12 +89,12 @@ def _refuse_reinterpreted_formula_operands(
 
 def _field_at(member: object, path: str) -> object:
     """Return the value at a dotted ``path`` within ``member``, or ``None`` where it does not resolve."""
-    return _family_identity_value(member, path)
+    return family_identity_value(member, path)
 
 
-def _member_identity(member: object, family: _KeyedFamily) -> str | None:
+def member_identity(member: object, family: KeyedFamilySpec) -> str | None:
     """Return ``member``'s identity value for ``family``, or ``None`` when it states none."""
-    table = _as_toml_table(member)
+    table = as_toml_table(member)
     if table is None:
         return None
     identity = table.get(family.identity)

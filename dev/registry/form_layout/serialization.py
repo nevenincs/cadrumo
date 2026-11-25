@@ -92,6 +92,7 @@ def render_form_layout_toml(revision_id: str, layout: FormLayoutDefinition) -> s
     if not isinstance(document, dict):
         raise TypeError("form layout did not dump to a table")
     pages = document.pop("pages", [])
+    outline = document.pop("outline", [])
     prefix = f"revisions.{_key(revision_id)}.form_layouts"
     header = _AUTHORED_HEADER if layout.seed_source is FormLayoutSeedSource.AUTHORED else _HEADER
     out = [header, f"[[{prefix}]]"]
@@ -103,4 +104,7 @@ def render_form_layout_toml(revision_id: str, layout: FormLayoutDefinition) -> s
         for section in sections:
             out.extend(("", f"[[{prefix}.pages.sections]]"))
             out.extend(_lines(section, multiline=frozenset({"blocks"})))
+    for group in outline:
+        out.extend(("", f"[[{prefix}.outline]]"))
+        out.extend(_lines(group, multiline=frozenset({"sections"})))
     return "\n".join(out) + "\n"

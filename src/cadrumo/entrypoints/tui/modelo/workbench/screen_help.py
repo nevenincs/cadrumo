@@ -10,10 +10,9 @@ from rich.cells import cell_len
 from textual.widgets import Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
-    ModeloFormCasillaAddressV1,
-    ModeloFormField,
-)
+from .....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .....application.modelo.work_form_header import deadline_view
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.overview.calendar import holiday_coverage_statement
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
@@ -21,15 +20,12 @@ from ...components.cell_text import wrap_words
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, CasillaListNote
 from .grid import CasillaListRecords
-from .header import (
-    deadline_help,
-)
 from .issue_scale import blocks_marked
 from .legend import legend_panel, more_text, on_screen_text
 from .screen_constants import (
-    _CLOSE_LOCALE_KEY,
-    _GUTTERS,
-    _NO_BREAK_SPACE,
+    CLOSE_LOCALE_KEY,
+    GUTTERS,
+    NO_BREAK_SPACE,
 )
 from .screen_widgets import SymbolsPanel
 
@@ -98,12 +94,12 @@ class WorkbenchHelpMixin:
         lines = self._help_lines(entry, expanded)
         form = self.form
         if expanded and form is not None:
-            shifted = deadline_help(form, self._language, recorded=self.recorded)
-            if shifted is not None:
-                lines.append(shifted)
+            deadline = deadline_view(form, self._language, recorded=self.recorded)
+            if deadline is not None and deadline.help is not None:
+                lines.append(deadline.help)
             if not self.recorded and form.deadline is not None:
-                lines.append(holiday_coverage_statement(form.deadline.holiday_coverage, None))
-            lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
+                lines.append(holiday_coverage_statement(form.deadline.holiday_coverage))
+            lines.append(tr("workspace.modelo.help.keys", keys=self._all_keys_text()))
         band.update(blocks_marked("\n".join(self._band_lines(band, lines))))
 
     def _help_lines(self: ModeloWorkbenchScreen, entry: CasillaListEntry | None, expanded: bool) -> list[str]:
@@ -119,10 +115,10 @@ class WorkbenchHelpMixin:
     def _empty_help_text(self: ModeloWorkbenchScreen) -> str:
         items = self.query_one(CasillaList).items
         if any(isinstance(item, CasillaListRecords) for item in items):
-            return tr("tui.modelo.workbench.grid.records_read_only")
+            return tr("workspace.modelo.grid.records_read_only")
         if any(isinstance(item, CasillaListNote) and item.column_casilla_ids for item in items):
-            return tr("tui.modelo.workbench.grid.records_unknown")
-        return tr("tui.modelo.workbench.help.empty")
+            return tr("workspace.modelo.grid.records_unknown")
+        return tr("workspace.modelo.help.empty")
 
     def _band_lines(self: ModeloWorkbenchScreen, band: Static, lines: list[str]) -> list[str]:
         """The band's lines, a line holding a no-break space broken here so it never breaks there.
@@ -131,10 +127,10 @@ class WorkbenchHelpMixin:
         line that holds a no-break space and does not fit is broken only at
         the other spaces. Every other line is left to wrap as it would.
         """
-        width = band.content_region.width or max(self._width() - _GUTTERS, 1)
+        width = band.content_region.width or max(self._width() - GUTTERS, 1)
         shown: list[str] = []
         for line in lines:
-            if _NO_BREAK_SPACE in line and cell_len(line) > width:
+            if NO_BREAK_SPACE in line and cell_len(line) > width:
                 shown.extend(wrap_words(line, width))
             else:
                 shown.append(line)
@@ -159,7 +155,7 @@ class WorkbenchHelpMixin:
                 self.box_marks,
                 others=self.other_marks,
                 keys=self._all_keys_text(),
-                close=self._key_label("escape", _CLOSE_LOCALE_KEY),
+                close=self._key_label("escape", CLOSE_LOCALE_KEY),
             )
             self.query_one("#wb-legend-text", Static).update(text)
         self.set_class(panel_open, "-legend")

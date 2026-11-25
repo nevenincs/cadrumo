@@ -40,13 +40,15 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.travel_agency_mediation import require_travel_agency_mediation
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -57,10 +59,12 @@ from cadrumo.domain.invoices.enums import (
     operation_performed_role,
     resolve_iva_rate_token,
 )
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import TransactionKind, require_transaction_kind
 from cadrumo.domain.iva.oss import OssIossRegime, require_oss_ioss_regime
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -91,8 +95,8 @@ def _domestic_retention_invoice() -> Invoice:
     the strict-mode Decimal coercion these fields need).
     """
 
-    issued_at = date(2025, 4, 10)
-    operation_date = date(2025, 4, 8)
+    issued_at = date(FILING_YEAR, 4, 10)
+    operation_date = date(FILING_YEAR, 4, 8)
     with bundled_indexed_authority().operation() as operation:
         return Invoice.model_validate(
             {
@@ -105,7 +109,7 @@ def _domestic_retention_invoice() -> Invoice:
                 "operation_date": operation_date,
                 "operation_date_role": operation_performed_role(effective_date=operation_date),
                 "counterparty_name": "Consultora Ibérica SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
                 "base_total": Decimal("1000.00"),
@@ -151,7 +155,7 @@ def _domestic_retention_invoice() -> Invoice:
 def _oss_union_scheme_invoice() -> Invoice:
     """Cross-border ISSUED invoice populating the OSS union-scheme axis."""
 
-    issued_at = date(2025, 5, 12)
+    issued_at = date(FILING_YEAR, 5, 12)
     with bundled_indexed_authority().operation() as operation:
         return Invoice.model_validate(
             {
@@ -222,8 +226,11 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
 
     assert loaded == original
     assert len(loaded.invoices) == 2
+    _assert_domestic_retention_fields(next(v for v in loaded.values() if v.invoice_number == "F-2025-100"))
+    _assert_oss_union_scheme_fields(next(v for v in loaded.values() if v.invoice_number == "F-2025-200"))
 
-    domestic = next(v for v in loaded.values() if v.invoice_number == "F-2025-100")
+
+def _assert_domestic_retention_fields(domestic: Invoice) -> None:
     assert domestic.bucket_id == "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
     assert domestic.iva_category == IvaCategory("domestic_general")
     assert domestic.retention_rate == Decimal("0.15")
@@ -241,12 +248,13 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert domestic.invoice_class == InvoiceClass.from_registry("RECTIFICATIVA")
     assert domestic.series == "R"
     assert domestic.rectifies_invoice_number == "F-2025-099"
-    assert domestic.operation_date == date(2025, 4, 8)
+    assert domestic.operation_date == date(FILING_YEAR, 4, 8)
     assert domestic.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
     assert domestic.recargo_amount == Decimal("52.00")
     assert domestic.suplido_amount == Decimal("25.00")
 
-    oss = next(v for v in loaded.values() if v.invoice_number == "F-2025-200")
+
+def _assert_oss_union_scheme_fields(oss: Invoice) -> None:
     assert oss.iva_category == IvaCategory("intra_community_supply")
     assert oss.operation_type is IntracomOperationType.S
     assert oss.oss_ioss_regime == OssIossRegime("union_scheme")
@@ -255,6 +263,28 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert oss.counterparty_eu_member_state is not None
     assert len(oss.lines) == 1
     assert oss.lines[0].oss_rate_kind == IvaRateKind("general")
+
+
+def _delete_stored_invoice_field(profile: TestRuntimeProfile, invoice_id: str, field: str) -> object:
+    """Remove ``field`` from one invoice inside the stored envelope and return the removed value."""
+    record = profile.repository.load(
+        _INVOICE_NAMESPACE,
+        _INVOICE_OBJECT_KEY,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_INVOICE_CATALOGUE_VERSION,
+    )
+    assert record is not None
+    envelope = _json.loads(record.payload.decode("utf-8"))
+    removed = envelope["payload"]["invoices"][invoice_id].pop(field, None)
+    profile.repository.save(
+        namespace=_INVOICE_NAMESPACE,
+        object_key=_INVOICE_OBJECT_KEY,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=_json.dumps(envelope).encode("utf-8"),
+    )
+    return removed
 
 
 def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
@@ -280,30 +310,11 @@ def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         oss = _oss_union_scheme_invoice()
         catalogue = InvoiceCatalogue(invoices={oss.invoice_id: oss})
-        repo = InvoiceCatalogueRepository()
-        repo.save(catalogue)
+        InvoiceCatalogueRepository().save(catalogue)
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoices = envelope["payload"]["invoices"]
-        invoice_dict = invoices[oss.invoice_id]
-        assert invoice_dict.get("oss_transaction_kind") == "oss_union_services", (
+        removed = _delete_stored_invoice_field(profile, oss.invoice_id, "oss_transaction_kind")
+        assert removed == "oss_union_services", (
             "fixture must persist oss_transaction_kind for this proof to be meaningful"
-        )
-        del invoice_dict["oss_transaction_kind"]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
         )
 
         with pytest.raises(ValidationError, match="supplied together"):
@@ -319,8 +330,8 @@ def _simplificada_advance_payment_invoice() -> Invoice:
     ADVANCE_PAYMENT_RECEIVED`` (LIVA art. 75.Dos).
     """
 
-    issued_at = date(2025, 6, 20)
-    operation_date = date(2025, 6, 15)
+    issued_at = date(FILING_YEAR, 6, 20)
+    operation_date = date(FILING_YEAR, 6, 15)
     with bundled_indexed_authority().operation() as operation:
         return Invoice.model_validate(
             {
@@ -371,14 +382,14 @@ def test_simplificada_advance_payment_invoice_survives_encrypted_storage_roundtr
     assert restored == original
     assert restored.invoice_class == InvoiceClass.from_registry("SIMPLIFICADA")
     assert restored.counterparty_tax_id is None
-    assert restored.operation_date == date(2025, 6, 15)
+    assert restored.operation_date == date(FILING_YEAR, 6, 15)
     assert restored.operation_date_role == InvoiceOperationDateRole.from_registry("ADVANCE_PAYMENT_RECEIVED")
 
 
 def _foreign_currency_invoice() -> Invoice:
     """GBP invoice carrying the euro-conversion stamp resolved at ingest."""
 
-    issued_at = date(2025, 3, 14)
+    issued_at = date(FILING_YEAR, 3, 14)
     with bundled_indexed_authority().operation() as operation:
         return Invoice.model_validate(
             {
@@ -426,7 +437,7 @@ def test_foreign_currency_conversion_stamp_survives_encrypted_storage_roundtrip(
     restored = next(iter(loaded.values()))
     assert restored == original
     assert restored.fx_rate == Decimal("1") / Decimal("0.84183")
-    assert restored.fx_rate_date == date(2025, 3, 14)
+    assert restored.fx_rate_date == date(FILING_YEAR, 3, 14)
     assert restored.fx_rate_source == ECB_RATE_SOURCE_ID
     # 1000.00 GBP * (1 / 0.84183) = 1187.888... -> 1187.89 EUR
     assert restored.grand_total_eur == Decimal("1187.89")
@@ -458,27 +469,8 @@ def test_dropping_either_fx_provenance_field_surfaces_at_load(tmp_path: Path, dr
         invoice = _foreign_currency_invoice()
         InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
-        assert invoice_dict.get(dropped_field) is not None, (
-            f"fixture must persist {dropped_field} for this proof to be meaningful"
-        )
-        del invoice_dict[dropped_field]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
-        )
+        removed = _delete_stored_invoice_field(profile, invoice.invoice_id, dropped_field)
+        assert removed is not None, f"fixture must persist {dropped_field} for this proof to be meaningful"
 
         with pytest.raises(ValidationError, match="set together"):
             InvoiceCatalogueRepository().load()
@@ -487,7 +479,7 @@ def test_dropping_either_fx_provenance_field_surfaces_at_load(tmp_path: Path, dr
 def _record_lifecycle_stamped_invoice() -> Invoice:
     """Domestic invoice carrying both record-lifecycle timestamps non-default."""
 
-    issued_at = date(2025, 5, 2)
+    issued_at = date(FILING_YEAR, 5, 2)
     with bundled_indexed_authority().operation() as operation:
         return Invoice.model_validate(
             {
@@ -495,7 +487,7 @@ def _record_lifecycle_stamped_invoice() -> Invoice:
                 "invoice_number": "ES-2025-900",
                 "issued_at": issued_at,
                 "counterparty_name": "Cliente Historico SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("500.00"),
                 "iva_total": Decimal("105.00"),
@@ -517,8 +509,8 @@ def _record_lifecycle_stamped_invoice() -> Invoice:
                 # amended a month later. A fixture reusing issued_at for either
                 # would pass while the boundary confused the document date with the
                 # record date.
-                "created_at": datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC),
-                "updated_at": datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC),
+                "created_at": datetime(FILING_YEAR, 5, 5, 9, 30, 0, tzinfo=UTC),
+                "updated_at": datetime(FILING_YEAR, 6, 11, 16, 45, 30, tzinfo=UTC),
             },
         )
 
@@ -542,10 +534,10 @@ def test_record_lifecycle_timestamps_survive_encrypted_storage_roundtrip(
 
     restored = next(iter(loaded.values()))
     assert restored == original
-    assert restored.created_at == datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC)
-    assert restored.updated_at == datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC)
+    assert restored.created_at == datetime(FILING_YEAR, 5, 5, 9, 30, 0, tzinfo=UTC)
+    assert restored.updated_at == datetime(FILING_YEAR, 6, 11, 16, 45, 30, tzinfo=UTC)
     # The record dates are not the document date, and the boundary keeps them apart.
-    assert restored.issued_at == date(2025, 5, 2)
+    assert restored.issued_at == date(FILING_YEAR, 5, 2)
 
 
 def test_dropped_created_at_surfaces_as_inequality_at_load(tmp_path: Path) -> None:
@@ -566,27 +558,8 @@ def test_dropped_created_at_surfaces_as_inequality_at_load(tmp_path: Path) -> No
         invoice = _record_lifecycle_stamped_invoice()
         InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
 
-        record = profile.repository.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        assert record is not None
-        envelope = _json.loads(record.payload.decode("utf-8"))
-        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
-        assert invoice_dict.get("created_at") is not None, (
-            "fixture must persist created_at for this proof to be meaningful"
-        )
-        del invoice_dict["created_at"]
-        profile.repository.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=record.classification,
-            schema_version=record.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(envelope).encode("utf-8"),
-        )
+        removed = _delete_stored_invoice_field(profile, invoice.invoice_id, "created_at")
+        assert removed is not None, "fixture must persist created_at for this proof to be meaningful"
 
         restored = next(iter(InvoiceCatalogueRepository().load().values()))
 

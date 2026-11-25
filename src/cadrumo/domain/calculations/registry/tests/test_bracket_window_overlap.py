@@ -23,9 +23,12 @@ from pydantic import ValidationError
 
 from ..formula_runtime_ops import resolve_bracket
 from ..schema_formula import BracketEntry, ParameterDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Windows are laid out relative to the support floor: only their overlap structure matters.
+_Y = filing_year_envelope().floor
 _LEGAL_REF = "ley-35-2006:art-63"
 _SOURCE_REF = "aeat-renta-2024-manual-parte1"
 
@@ -60,9 +63,9 @@ def _parameter(brackets: tuple[BracketEntry, ...]) -> ParameterDefinition:
     )
 
 
-#: The audit's probe: identical numeric bounds, windows that share 2023.
-_WIDE = _bracket(lower="0", upper="100000", fixed="10", valid_from=date(2020, 1, 1), valid_to=date(2025, 12, 31))
-_NARROW = _bracket(lower="0", upper="100000", fixed="20", valid_from=date(2023, 1, 1), valid_to=date(2024, 12, 31))
+#: The audit's probe: identical numeric bounds, windows that share their middle years.
+_WIDE = _bracket(lower="0", upper="100000", fixed="10", valid_from=date(_Y, 1, 1), valid_to=date(_Y + 5, 12, 31))
+_NARROW = _bracket(lower="0", upper="100000", fixed="20", valid_from=date(_Y + 3, 1, 1), valid_to=date(_Y + 4, 12, 31))
 
 
 @pytest.mark.parametrize(
@@ -87,8 +90,8 @@ def test_consecutive_year_windows_reusing_the_same_tranche_stay_legal() -> None:
     """The shape the whole registry relies on: disjoint windows, same bounds."""
     parameter = _parameter(
         (
-            _bracket(lower="0", upper="12450", fixed="0", valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
-            _bracket(lower="0", upper="12450", fixed="5", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+            _bracket(lower="0", upper="12450", fixed="0", valid_from=date(_Y + 4, 1, 1), valid_to=date(_Y + 4, 12, 31)),
+            _bracket(lower="0", upper="12450", fixed="5", valid_from=date(_Y + 5, 1, 1), valid_to=date(_Y + 5, 12, 31)),
         ),
     )
 
@@ -99,8 +102,10 @@ def test_windows_that_share_a_date_but_not_a_tranche_stay_legal() -> None:
     """Overlap needs both axes: adjacent tranches in one window are fine."""
     parameter = _parameter(
         (
-            _bracket(lower="0", upper="12450", fixed="0", valid_from=date(2024, 1, 1), valid_to=date(2025, 12, 31)),
-            _bracket(lower="12450", upper="20200", fixed="5", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+            _bracket(lower="0", upper="12450", fixed="0", valid_from=date(_Y + 4, 1, 1), valid_to=date(_Y + 5, 12, 31)),
+            _bracket(
+                lower="12450", upper="20200", fixed="5", valid_from=date(_Y + 5, 1, 1), valid_to=date(_Y + 5, 12, 31)
+            ),
         ),
     )
 
@@ -116,15 +121,15 @@ def test_windows_touching_at_a_single_boundary_date_are_refused() -> None:
                     lower="0",
                     upper="12450",
                     fixed="0",
-                    valid_from=date(2024, 1, 1),
-                    valid_to=date(2025, 1, 1),
+                    valid_from=date(_Y + 4, 1, 1),
+                    valid_to=date(_Y + 5, 1, 1),
                 ),
                 _bracket(
                     lower="0",
                     upper="12450",
                     fixed="5",
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=date(_Y + 5, 1, 1),
+                    valid_to=date(_Y + 5, 12, 31),
                 ),
             ),
         )
@@ -135,13 +140,13 @@ def test_open_ended_windows_that_overlap_are_refused() -> None:
     with pytest.raises(ValidationError, match="overlapping validity windows"):
         _parameter(
             (
-                _bracket(lower="0", upper="12450", fixed="0", valid_from=date(2020, 1, 1), valid_to=None),
+                _bracket(lower="0", upper="12450", fixed="0", valid_from=date(_Y, 1, 1), valid_to=None),
                 _bracket(
                     lower="0",
                     upper="12450",
                     fixed="5",
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=date(_Y + 5, 1, 1),
+                    valid_to=date(_Y + 5, 12, 31),
                 ),
             ),
         )
@@ -155,17 +160,19 @@ def test_a_legal_bracket_table_still_resolves_its_expected_row() -> None:
     """
     parameter = _parameter(
         (
-            _bracket(lower="0", upper="12450", fixed="10", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+            _bracket(
+                lower="0", upper="12450", fixed="10", valid_from=date(_Y + 5, 1, 1), valid_to=date(_Y + 5, 12, 31)
+            ),
             _bracket(
                 lower="12450",
                 upper="20200",
                 fixed="99",
-                valid_from=date(2025, 1, 1),
-                valid_to=date(2025, 12, 31),
+                valid_from=date(_Y + 5, 1, 1),
+                valid_to=date(_Y + 5, 12, 31),
             ),
         ),
     )
 
-    resolved = resolve_bracket(parameter, Decimal("5000"), {"devengo_date": date(2025, 6, 1)})
+    resolved = resolve_bracket(parameter, Decimal("5000"), {"devengo_date": date(_Y + 5, 6, 1)})
 
     assert resolved == Decimal("10")

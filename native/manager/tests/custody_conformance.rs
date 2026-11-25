@@ -202,7 +202,7 @@ impl Drop for Root {
 
 fn marker(session: &str, set_at_ms: u64) -> QuitMarker {
     QuitMarker {
-        user: "S-1-5-21-1004336348-1177238915-682003330-1001".into(),
+        user: "S-1-5-21-111111111-222222222-333333333-1001".into(),
         session: session.into(),
         set_at_ms,
     }

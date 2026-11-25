@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..lane_verification_core import installed_product_env, venv_bin_dir
@@ -47,7 +47,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
             }
         )
         env = isolated_product_env(isolated)
-        assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == str(isolated)
+        assert env["CADRUMO_STORAGE_ROOT"] == str(isolated)
         assert env["CADRUMO_DATABASE_URL"] == f"sqlite:///{(isolated / 'cadrumo.db').as_posix()}"
         assert "CADRUMO_OUTPUT_LANGUAGE" not in env
         assert "CADRUMO_SECRET_PASSPHRASE" not in env
@@ -68,7 +68,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
                 "from cadrumo.core.config import load_settings",
                 "settings = load_settings()",
                 "expected = Path(sys.argv[1])",
-                "assert settings.cadrumo_local_storage_root == expected",
+                "assert settings.cadrumo_storage_root == expected",
                 'print("isolated-product-env-ok")',
             )
         )
@@ -85,7 +85,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
     host_env = {
         **os.environ,
         "LOCALAPPDATA": str(local_app_data),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(hostile_storage),
+        "CADRUMO_STORAGE_ROOT": str(hostile_storage),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(hostile_storage / 'host.db').as_posix()}",
         "CADRUMO_OUTPUT_LANGUAGE": "hostile-language",
         "CADRUMO_SECRET_PASSPHRASE": "hostile-passphrase",

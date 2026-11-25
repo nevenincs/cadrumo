@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     LoginEligibility,
     OsLockState,
@@ -26,6 +26,7 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
@@ -36,14 +37,15 @@ from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
 from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerDrained
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, lease, worker_profiles
-from ...adapters.windows_process import WindowsOwnedProcess
 from .. import profile_connection_admission
 from ..enrollment_offer import RuntimeEnrollmentOffer
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 
 pytestmark = [
     pytest.mark.integration,
@@ -315,7 +317,7 @@ def test_repeated_containment_failure_keeps_retiring_host_mapped(
 
         def refused_containment(*, deadline: float | None = None) -> None:
             del deadline
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
 
         monkeypatch.setattr(worker, "drain", refused_containment)
         monkeypatch.setattr(worker, "close", refused_containment)

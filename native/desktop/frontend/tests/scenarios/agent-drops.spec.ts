@@ -1,0 +1,247 @@
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { FIXTURE_ATTACHMENT_POLICY } from "../../src/dev/fixtures/agent";
+import { formatSize } from "../../src/shared/numbers";
+import type { AgentDropSignal } from "../../src/shell/agentSession";
+import {
+  agentColumn,
+  messageField,
+  openConversation,
+  scenarioOnly,
+} from "../support/agent";
+import { label } from "../support/strings";
+
+const open = async (page: Page, query = "") => {
+  await page.goto(
+    `/scenarios.html?scenario=signed-in&latency=0&bar=off${query}`,
+  );
+  await expect
+    .poll(() => page.evaluate(() => typeof window.__fixtureAgentDrop))
+    .toBe("function");
+};
+const calls = (page: Page) =>
+  page.evaluate(() => window.__scenarioHostCalls ?? []);
+const staged = (page: Page) =>
+  agentColumn(page)
+    .getByRole("region", { name: label("desktop.agent.attachments") })
+    .getByRole("listitem");
+const overlay = (page: Page) =>
+  agentColumn(page)
+    .getByRole("status")
+    .filter({ hasText: label("desktop.agent.drop_title") });
+
+async function signal(
+  page: Page,
+  kind: "over" | "dropped",
+  shift: boolean | null,
+  outside = false,
+) {
+  const box = await agentColumn(page).boundingBox();
+  if (!box) throw new Error("Agent column is not visible");
+  const position = {
+    x: outside ? box.x + box.width + 10 : box.x + box.width / 2,
+    y: box.y + box.height / 2,
+    count: 3,
+    shift,
+  };
+  const event: AgentDropSignal =
+    kind === "over"
+      ? { kind, ...position }
+      : { kind, ...position, drop_id: "native-drop" };
+  await page.evaluate((event) => window.__fixtureAgentDrop?.(event), event);
+}
+
+test.beforeEach(() =>
+  scenarioOnly("Native drop signals are supplied by the scenario host."),
+);
+
+test("dragging shows the design's overlay; Shift arms it and leaving clears it", async ({
+  page,
+}) => {
+  await open(page);
+  await signal(page, "over", false);
+  await expect(overlay(page)).toBeVisible();
+  await expect(overlay(page)).toContainText("PDF");
+  await expect(overlay(page)).toContainText("JPEG");
+  await expect(overlay(page)).not.toContainText(".PDF");
+  await expect(overlay(page)).not.toContainText("ZIP");
+  await expect(agentColumn(page).locator("[data-armed=true]")).toHaveCount(0);
+  await page.keyboard.down("Shift");
+  await expect(agentColumn(page).locator("[data-armed=true]")).toBeVisible();
+  await page.keyboard.up("Shift");
+  await expect(overlay(page)).toBeVisible();
+  await page.evaluate(() => window.__fixtureAgentDrop?.({ kind: "left" }));
+  await expect(overlay(page)).toHaveCount(0);
+  expect(
+    (await calls(page)).filter((call) => call.startsWith("agentAttach")),
+  ).toEqual([]);
+});
+
+test("unarmed drops and drops outside the panel never attach files", async ({
+  page,
+}) => {
+  await open(page);
+  await signal(page, "dropped", false);
+  await signal(page, "over", true, true);
+  await expect(agentColumn(page).locator("[data-armed=true]")).toHaveCount(0);
+  await signal(page, "dropped", true, true);
+  await expect(staged(page)).toHaveCount(0);
+  expect(
+    (await calls(page)).filter((call) => call.startsWith("agentAttach")),
+  ).toEqual([]);
+});
+
+test("a Shift-drop reserves a new conversation and stages uploads and their refusals", async ({
+  page,
+}) => {
+  await open(page);
+  await signal(page, "over", true);
+  await signal(page, "dropped", true);
+  await expect(staged(page)).toHaveCount(3);
+  await expect(staged(page).filter({ hasText: "copias.zip" })).toContainText(
+    label("desktop.agent.upload_format_refused"),
+  );
+  await expect(
+    staged(page).filter({ hasText: "escaneo-anual.pdf" }),
+  ).toContainText(label("desktop.agent.upload_quota_exceeded"));
+  // The files sit between the message and the row that holds Send.
+  const boxOf = async (target: Locator) => {
+    const box = await target.boundingBox();
+    if (!box) throw new Error("Composer part is not visible");
+    return box;
+  };
+  const files = await boxOf(
+    agentColumn(page).getByRole("region", {
+      name: label("desktop.agent.attachments"),
+    }),
+  );
+  const message = await boxOf(messageField(page));
+  const send = await boxOf(
+    agentColumn(page).getByRole("button", {
+      name: label("desktop.agent.send"),
+    }),
+  );
+  expect(files.y).toBeGreaterThanOrEqual(message.y + message.height - 1);
+  expect(files.y + files.height).toBeLessThanOrEqual(send.y + 1);
+  expect(
+    (await calls(page)).filter((call) => call === "agentStartConversation"),
+  ).toHaveLength(1);
+  expect(
+    (await calls(page)).filter((call) => call.startsWith("agentAttachDrop")),
+  ).toEqual([expect.stringMatching(/^agentAttachDrop r-\d+ native-drop$/)]);
+  await messageField(page).fill("@recibo");
+  await expect(page.getByRole("option")).toContainText("recibo-luz.pdf");
+});
+
+test("a fast dropped upload stays ready and is sent by reference in the selected conversation", async ({
+  page,
+}) => {
+  await open(page);
+  await openConversation(page, "IVA del tercer trimestre");
+  await page.evaluate(() => {
+    const session = window.__fixtureAgentSession;
+    const attach = session?.attach?.bind(session);
+    if (!session || !attach) throw new Error("Missing fixture attachment host");
+    session.attach = async (id, label, onEvent, dropId) => {
+      // A native upload can finish before the invoke result arrives.
+      const picked = await attach(id, label, onEvent, dropId);
+      onEvent({
+        kind: "stored",
+        id: picked[0]!.id,
+        document: {
+          name: "recibo-luz.pdf",
+          size_bytes: 120_000,
+          modified_at: "2026-10-26T00:00:00Z",
+          sha256: "a".repeat(64),
+          media_type: "application/pdf",
+        },
+      });
+      return picked;
+    };
+  });
+  await page.keyboard.down("Shift");
+  await signal(page, "dropped", null);
+  await page.keyboard.up("Shift");
+  await expect(staged(page)).toHaveCount(3);
+  for (const name of ["copias.zip", "escaneo-anual.pdf"])
+    await staged(page)
+      .getByRole("button", {
+        name: label("desktop.agent.remove_file", { name }),
+      })
+      .click();
+  await messageField(page).fill("Revisa el recibo");
+  await messageField(page).press("Enter");
+  await expect
+    .poll(async () =>
+      (await calls(page)).filter((call) => call.startsWith("agentSend ")),
+    )
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments recibo-luz.pdf"]);
+});
+
+test("history stops observing drops and ignores a late native event", async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() => {
+    const listener = window.__fixtureAgentDrop;
+    window.addEventListener("late-native-drop", () =>
+      listener?.({
+        kind: "dropped",
+        x: 150,
+        y: 300,
+        count: 1,
+        shift: true,
+        drop_id: "retired-drop",
+      }),
+    );
+  });
+  await agentColumn(page)
+    .getByRole("button", { name: label("desktop.agent.history") })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => typeof window.__fixtureAgentDrop))
+    .toBe("undefined");
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("late-native-drop")),
+  );
+  expect(
+    (await calls(page)).filter((call) => call.startsWith("agentAttach")),
+  ).toEqual([]);
+});
+
+test("a file too large says the largest the agent takes, and the summary counts only what is accepted", async ({
+  page,
+}) => {
+  const refused = {
+    name: "informe-anual.pdf",
+    size_bytes: FIXTURE_ATTACHMENT_POLICY.max_file_bytes + 1,
+    code: "agent_attachment_too_large",
+  };
+  await page.addInitScript((held) => {
+    window.__fixtureAttachRefusal = held;
+  }, refused);
+  await open(page, "&lang=es");
+  await signal(page, "over", true);
+  await signal(page, "dropped", true);
+  const well = agentColumn(page).getByRole("region", {
+    name: label("desktop.agent.attachments", {}, "es"),
+  });
+  const files = well.getByRole("listitem");
+  await expect(files).toHaveCount(3);
+  const limit = formatSize("es", FIXTURE_ATTACHMENT_POLICY.max_file_bytes);
+  await expect(files.filter({ hasText: refused.name })).toContainText(
+    label("desktop.agent.upload_too_large_limit", { limit }, "es"),
+  );
+  // The stored file is the one the next message carries: the file too large
+  // and the one the storage refuses once it is sent are told apart, and
+  // counted in neither the files nor their size.
+  await expect(well).toContainText(
+    label("desktop.agent.attachments_refused", { count: 2 }, "es"),
+  );
+  await expect(well).toContainText(
+    label(
+      "desktop.agent.files_summary",
+      { count: 1, size: formatSize("es", 120_000) },
+      "es",
+    ),
+  );
+});

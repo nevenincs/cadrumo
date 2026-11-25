@@ -2,8 +2,13 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+
+
+class PercentFact(Decimal):
+    """A rate stated as a fraction, carried in an error's context so a reader knows to show it as a percent."""
 
 
 class ActividadAssetError(CadrumoError):
@@ -16,6 +21,14 @@ class ActividadAssetValidationError(ActividadAssetError):
 
 class ActividadAssetUnsupportedError(ActividadAssetError):
     """Raised when a requested asset shape has no enrolled authority."""
+
+
+class ActividadAssetPeriodElapsedError(ActividadAssetUnsupportedError):
+    """Raised when an interval lies past the element's maximum amortization period.
+
+    The element counts as fully amortized from that day (V3655-16), so the
+    accrual and the plan read this as nothing left rather than as a failure.
+    """
 
 
 class ActividadAssetAcceleratedDa18DepreciationError(ActividadAssetUnsupportedError):
@@ -74,7 +87,9 @@ __all__ = [
     "ActividadAssetClaimConflictError",
     "ActividadAssetError",
     "ActividadAssetIncompleteError",
+    "ActividadAssetPeriodElapsedError",
     "ActividadAssetUnsupportedError",
     "ActividadAssetValidationError",
+    "PercentFact",
     "VehicleAffectationRecovery",
 ]

@@ -14,9 +14,12 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISION = str(filing_year_envelope().horizon)
+_OTHER_REVISION = str(filing_year_envelope().horizon - 1)
 _PACKED_NAME = "0001-declarations.toml"
 _MIN_DECLARED_ROWS = 5_000
 _MIN_MODELOS = 40
@@ -95,8 +98,8 @@ def test_every_casilla_section_is_packed_and_owned_by_its_edition() -> None:
     assert not scan.violations, "\n".join(scan.violations)
 
 
-def _write_fragment(root: Path, name: str, ids: tuple[str, ...], *, owner: str = "2024") -> Path:
-    directory = root / "modelos" / "999" / "revisions" / "2024" / "casillas"
+def _write_fragment(root: Path, name: str, ids: tuple[str, ...], *, owner: str = _REVISION) -> Path:
+    directory = root / "modelos" / "999" / "revisions" / _REVISION / "casillas"
     path = directory / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -134,11 +137,13 @@ def test_extra_fragment_is_scanned_and_duplicate_is_reported(tmp_path: Path) -> 
 
 
 def test_packed_fragment_cannot_claim_another_revision(tmp_path: Path) -> None:
-    _write_fragment(tmp_path, _PACKED_NAME, ("0001",), owner="2025")
+    _write_fragment(tmp_path, _PACKED_NAME, ("0001",), owner=_OTHER_REVISION)
     assert any("revision owner" in finding for finding in _naming_violations(tmp_path).violations)
 
 
-@pytest.mark.parametrize("body", ['[revisions."2024"]\ncasillas = 1', '[[revisions."2024".casillas]]\nnumber = "1"'])
+@pytest.mark.parametrize(
+    "body", [f'[revisions."{_REVISION}"]\ncasillas = 1', f'[[revisions."{_REVISION}".casillas]]\nnumber = "1"']
+)
 def test_invalid_declaration_shape_is_not_silently_ignored(tmp_path: Path, body: str) -> None:
     path = _write_fragment(tmp_path, _PACKED_NAME, ())
     path.write_text(body, encoding="utf-8")

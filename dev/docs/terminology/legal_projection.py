@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..legal_catalogue import load_legal_provisions
 from ..legal_reference import render_legal_reference

@@ -253,17 +253,17 @@ def _product_labels() -> dict[str, str]:
     from cadrumo.core.i18n.render import tr
 
     labels = {
-        "none": tr("tui.declarations.calendar.none"),
-        "receipt.verified": tr("tui.declarations.calendar.justificante.verified"),
-        "receipt.not_verified": tr("tui.declarations.calendar.justificante.not_verified"),
-        "receipt.unknown": tr("tui.declarations.calendar.justificante.unknown"),
-        "aeat.unknown": tr("tui.declarations.calendar.aeat.unknown"),
-        "local.unknown": tr("tui.declarations.calendar.local.unknown"),
+        "none": tr("workspace.declarations.calendar.none"),
+        "receipt.verified": tr("workspace.declarations.calendar.justificante.verified"),
+        "receipt.not_verified": tr("workspace.declarations.calendar.justificante.not_verified"),
+        "receipt.unknown": tr("workspace.declarations.calendar.justificante.unknown"),
+        "aeat.unknown": tr("workspace.declarations.calendar.aeat.unknown"),
+        "local.unknown": tr("workspace.declarations.calendar.local.unknown"),
     }
     for local in OverviewLocalFilingState:
-        labels[f"local.{local.value}"] = tr(f"tui.declarations.calendar.local.{local.value}")
+        labels[f"local.{local.value}"] = tr(f"workspace.declarations.calendar.local.{local.value}")
     for aeat in OverviewAeatSubmissionState:
-        labels[f"aeat.{aeat.value}"] = tr(f"tui.declarations.calendar.aeat.{aeat.value}")
+        labels[f"aeat.{aeat.value}"] = tr(f"workspace.declarations.calendar.aeat.{aeat.value}")
     return labels
 
 
@@ -416,7 +416,7 @@ def _require_empty_directory(path: Path, *, label: str) -> Path:
     return path.resolve()
 
 
-def _fresh_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
+def fresh_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
     """Read after the TUI using fresh secure stdin proof, independently of its connection."""
     return _cli_calendar(cli, window, authenticated=True), "stdin_secret"
 
@@ -431,7 +431,6 @@ def _cli_calendar(cli: InstalledCli, window: CalendarWindow, *, authenticated: b
         window.from_date.isoformat(),
         "--to",
         window.to_date.isoformat(),
-        "--allow-incomplete",
     )
     try:
         document = cli.run(arguments, command="overview.calendar", authenticated=authenticated)
@@ -605,7 +604,7 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
     # TUI -> CLI: the TUI writes local work; the CLI uses fresh stdin password proof to read it.
     t2c_path, t2c_cli, t2c_secret = store("tui_to_cli")
     t2c_tui = child(t2c_path, t2c_secret, "tui_to_cli", "create_then_inspect", write_row=tui_row)
-    t2c_rows, t2c_authentication = _fresh_cli_calendar(t2c_cli, window)
+    t2c_rows, t2c_authentication = fresh_cli_calendar(t2c_cli, window)
     tui_work = t2c_rows[tui_row].work_unit_id
     tui_to_cli = _scenario(
         "tui_to_cli",

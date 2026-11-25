@@ -28,7 +28,7 @@ _MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
 
 #: the formatting did not overflow, so the guard cannot drift from the format it guards.
 
-_FRAGMENT_PREFIX_DIGITS: Final[int] = 4
+FRAGMENT_PREFIX_DIGITS: Final[int] = 4
 
 
 def render_tree_files(
@@ -38,6 +38,10 @@ def render_tree_files(
 ) -> tuple[tuple[str, bytes], ...]:
     """Build the ordered metadata and reviewable record-fragment payloads."""
     layout_payload = layout.model_dump(mode="json", exclude_none=True)
+    # Rendered only when declared, as the loader-semantic projection does, so a
+    # layout without row targets keeps the bytes it was published with.
+    if not layout_payload.get("dictionary_row_targets"):
+        layout_payload.pop("dictionary_row_targets", None)
     records = tuple(layout_payload.pop("records"))
     metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
     metadata_bytes = render_toml_bytes("0000-export-layout.toml", metadata_payload)
@@ -56,7 +60,7 @@ def render_tree_files(
         record_parts = _render_record_parts(revision_id=revision_id, layout_id=layout.id, record=record)
         for fragment_bytes in record_parts:
             prefix += 1
-            relative_path = _record_relative_path(prefix, record_id)
+            relative_path = record_relative_path(prefix, record_id)
             if relative_path in planned_paths:
                 raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
             planned_paths.add(relative_path)
@@ -249,7 +253,7 @@ def _require_reviewable_fragment(relative_path: str, payload: bytes) -> None:
         )
 
 
-def _record_relative_path(prefix: int, record_id: object) -> str:
+def record_relative_path(prefix: int, record_id: object) -> str:
     """Return the fragment filename for one rendered record part.
 
     The administrative prefix carries the whole ordering, so the filename states no
@@ -260,11 +264,11 @@ def _record_relative_path(prefix: int, record_id: object) -> str:
     slug = _SLUG_RE.sub("-", raw_record_id.casefold()).strip("-")
     if not slug:
         raise RegistryValidationError(f"export record id {raw_record_id!r} cannot form a stable output slug")
-    rendered_prefix = f"{prefix:0{_FRAGMENT_PREFIX_DIGITS}d}"
-    if len(rendered_prefix) != _FRAGMENT_PREFIX_DIGITS:
+    rendered_prefix = f"{prefix:0{FRAGMENT_PREFIX_DIGITS}d}"
+    if len(rendered_prefix) != FRAGMENT_PREFIX_DIGITS:
         raise RegistryValidationError(
             f"generated export record {raw_record_id!r} needs fragment prefix {prefix}, which overflows the "
-            f"{_FRAGMENT_PREFIX_DIGITS}-digit prefix width; an overflowed prefix does not sort late, it stops "
+            f"{FRAGMENT_PREFIX_DIGITS}-digit prefix width; an overflowed prefix does not sort late, it stops "
             "being a readable fragment name",
         )
     return f"{rendered_prefix}-record-{slug}.toml"

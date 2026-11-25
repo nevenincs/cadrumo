@@ -6,8 +6,8 @@ the Spanish VAT (value-added tax) self-assessment (`autoliquidación`) used here
 to calculate standard quarterly VAT filings. Monthly VAT-liquidation profiles,
 such as those in the Registro de Devolución Mensual (REDEME) or large-company
 taxpayers, use monthly Modelo 303 periods. Voluntary enrolment in the
-Suministro Inmediato de Información (SII) alone remains quarterly. Its official title is "Modelo 303.
-Impuesto sobre el Valor Añadido. Autoliquidación."
+Suministro Inmediato de Información (SII) alone remains quarterly. Its official title is "<span lang="es">Modelo 303.
+Impuesto sobre el Valor Añadido. Autoliquidación.</span>"
 
 Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). `export` writes the filing layout, but its envelope header
@@ -58,7 +58,7 @@ Load-bearing details for building this state yourself:
   for no. Cadrumo never assumes the answer, and `work calculate` refuses
   without one of `--joint-return-elected` or `--no-joint-return-elected`.
 - Calculation charges 210.00 of VAT on the sale (`IVA repercutido`) and deducts
-  105.00 on the purchase (`IVA soportado`), so box 71 (Resultado final) is 105.00,
+  105.00 on the purchase (`IVA soportado`), so box 71 (<span lang="es">Resultado final</span>) is 105.00,
   the VAT due for the quarter. The deductible VAT counts at calculate time; the
   attached supporting document is what lets the entry be filed, not what changes
   the figure.
@@ -69,10 +69,10 @@ Load-bearing details for building this state yourself:
 - `verify` reports `completeness complete` and `granted true`, and `work file`
   records the filing in Cadrumo. `export` writes the file with the all-zero
   development software identity and says so in a warning notice.
-- Box 65 ("% atribuible a la Administración del Estado") resolves to 100
-  automatically for a común-territory profile, so box 66 and the headline box 71
-  (Resultado final) carry the full régimen-general result. Cadrumo supports
-  común-territory profiles only.
+- Box 65 ("% <span lang="es">atribuible a la Administración del Estado</span>") resolves to 100
+  automatically for a profile in <span lang="es">territorio común</span>, so box 66 and the headline box 71
+  (<span lang="es">Resultado final</span>) carry the full régimen-general result. Cadrumo supports
+  profiles in <span lang="es">territorio común</span> only.
 
 The rest of this guide explains each step and the checks around it.
 
@@ -113,7 +113,7 @@ In ordinary cases based on your records, calculation can combine:
 - Deductible VAT paid on purchases and expenses (`IVA soportado`) from classified
   supplier entries.
 - VAT categories, rates, directions, taxable bases, VAT amounts, business
-  percentage, currency/FX support, and intracommunity/reverse-charge treatment
+  percentage, currency/FX support, and intra-community/reverse-charge treatment
   recorded on your entries.
 - Profile facts, including VAT regime and profile-derived values that Cadrumo
   fills into the form.
@@ -128,7 +128,7 @@ boxes remain manual, taken from the profile, set by the tax rules, or sourced
 from prior filing history rather than transaction entries.
 
 Classification matters because the calculation does not guess whether an entry is
-business, personal, mixed-use, deductible, domestic, exempt, intracommunity, or
+business, personal, mixed-use, deductible, domestic, exempt, intra-community, or
 reverse-charge. Entries that are unclassified or missing required VAT fields can
 block calculation or leave values missing.
 
@@ -183,8 +183,8 @@ that fills the box that needs it.
 Calculation also checks your records for tax readiness for versions of the
 official form that total VAT from your records. The preflight can catch missing
 VAT facts, unclassified entries, non-declarable categories, unsupported
-currencies, and similar issues before a draft is trusted. Regimen simplificado
-is treated differently: those profiles provide the simplificado boxes manually
+currencies, and similar issues before a draft is trusted. The simplified VAT regime
+is handled differently: those profiles provide the simplified boxes manually
 instead of passing the ordinary VAT preflight on your records.
 
 Cadrumo does not silently choose a quarter from today's date. The declaration's

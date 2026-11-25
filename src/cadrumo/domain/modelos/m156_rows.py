@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.form_codes import require_form_fit, require_form_width
 
 
 class Modelo156MonthlyContribution(BaseModel):
@@ -32,10 +33,30 @@ class Modelo156AfiliadoRow(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     row_type: Literal["afiliado"] = "afiliado"
-    nif: str = Field(min_length=1, max_length=9)
-    nombre: str | None = Field(default=None, min_length=1, max_length=40)
-    numero_afiliacion: str = Field(pattern=r"^[0-9]{12}$")
-    cotizaciones: tuple[Modelo156MonthlyContribution, ...] = Field(min_length=12, max_length=12)
+    nif: str = Field(min_length=1, max_length=64)
+    nombre: str | None = Field(default=None, min_length=1, max_length=256)
+    numero_afiliacion: str = Field(pattern=r"^[0-9]+$", max_length=64)
+    cotizaciones: tuple[Modelo156MonthlyContribution, ...]
+
+    @field_validator("nif")
+    @classmethod
+    @pydantic_validation_boundary
+    def _nif_fits_the_design(cls, value: str) -> str:
+        require_form_fit(value, "m156.nif_max")
+        return value
+
+    @field_validator("nombre")
+    @classmethod
+    @pydantic_validation_boundary
+    def _nombre_fits_the_design(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "m156.nombre_max")
+
+    @field_validator("numero_afiliacion")
+    @classmethod
+    @pydantic_validation_boundary
+    def _numero_has_the_declared_width(cls, value: str) -> str:
+        require_form_width(value, "m156.numero_afiliacion_digits")
+        return value
 
     @field_validator("cotizaciones")
     @classmethod

@@ -1,7 +1,7 @@
 """E2E continuity: Modelo 210 IRNR cross-renta treaty-rate determinism.
 
 Modelo 210 (IRNR autoliquidación no residentes sin establecimiento permanente
-— RDLeg 5/2004 TRLIRNR) is filed ad-hoc by non-resident landlords and other
+— RDLeg 5/2004 TRLIRNR) is filed per accrual by non-resident landlords and other
 IRNR-obligated filers. Its primary engine (m210-irnr-full-engine contract §D2.2)
 resolves: rendimientos_integros → base_imponible (op=copy, TRLIRNR art. 24.1)
 → base_imponible (TRLIRNR art. 24.1 gross path or art. 24.6 UE/EEE expense

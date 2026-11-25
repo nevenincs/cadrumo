@@ -298,7 +298,7 @@ def test_auth_configure_keeps_payload_and_operator_text_lines(
 
     monkeypatch.setattr(
         auth_cli,
-        "_activate_subcommand_output_language",
+        "activate_subcommand_output_language",
         lambda passed_ctx, language: activated.append((passed_ctx, language)),
     )
     monkeypatch.setattr(

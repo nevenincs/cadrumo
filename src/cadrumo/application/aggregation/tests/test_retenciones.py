@@ -8,6 +8,13 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_row_values
+from ....domain.calculations.registry.tests.authored_editions import revision_covering
+from ....domain.calculations.registry.withholding_party_rows import DeclaredWithholdingParty
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import PartyNameRefusals
+from ....domain.filing.errors import FilingExportDeclaredPartyNameMissingError
 from ..retenciones import (
     Modelo180PropertyEvidence,
     Modelo180StructuredAddress,
@@ -21,7 +28,7 @@ from ..retenciones import (
     aggregate_retenciones_193,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
@@ -63,7 +70,7 @@ def _property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",
@@ -131,8 +138,8 @@ class TestObservationContract:
 
 
 class TestAggregate111:
-    def test_empty_observations_produces_zero_totals(self) -> None:
-        result = aggregate_retenciones_111((), period=_P_2025_Q1)
+    def test_empty_observations_produces_zero_totals(self, operation: PinnedAuthorityOperation) -> None:
+        result = aggregate_retenciones_111((), period=_P_2025_Q1, operation=operation)
         assert result.modelo == "111"
         assert result.period == _P_2025_Q1
         assert result.rollups == ()
@@ -140,7 +147,7 @@ class TestAggregate111:
         assert result.total_taxable_base == Decimal("0")
         assert result.total_retencion == Decimal("0")
 
-    def test_single_observation_creates_one_rollup(self) -> None:
+    def test_single_observation_creates_one_rollup(self, operation: PinnedAuthorityOperation) -> None:
         obs = _obs(
             nif="B12345678",
             name="Acme S.L.",
@@ -148,7 +155,7 @@ class TestAggregate111:
             base="1000.00",
             retencion="150.00",
         )
-        result = aggregate_retenciones_111((obs,), period=_P_2025_Q1)
+        result = aggregate_retenciones_111((obs,), period=_P_2025_Q1, operation=operation)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
@@ -160,7 +167,7 @@ class TestAggregate111:
         assert row.total_retencion == Decimal("150.00")
         assert result.total_perceptors == 1
 
-    def test_multiple_observations_same_perceptor_and_scheme_sum(self) -> None:
+    def test_multiple_observations_same_perceptor_and_scheme_sum(self, operation: PinnedAuthorityOperation) -> None:
         obs_a = _obs(
             nif="B1",
             scheme=RetencionScheme("rendimientos_trabajo"),
@@ -175,13 +182,13 @@ class TestAggregate111:
             retencion="105.00",
             source_id="tx-2",
         )
-        result = aggregate_retenciones_111((obs_a, obs_b), period=_P_2025_Q1)
+        result = aggregate_retenciones_111((obs_a, obs_b), period=_P_2025_Q1, operation=operation)
         assert len(result.rollups) == 1
         assert result.rollups[0].observations_count == 2
         assert result.rollups[0].total_taxable_base == Decimal("1200.00")
         assert result.rollups[0].total_retencion == Decimal("180.00")
 
-    def test_same_perceptor_different_schemes_yield_separate_rollups(self) -> None:
+    def test_same_perceptor_different_schemes_yield_separate_rollups(self, operation: PinnedAuthorityOperation) -> None:
         obs_work = _obs(
             nif="B1",
             scheme=RetencionScheme("rendimientos_trabajo"),
@@ -196,25 +203,25 @@ class TestAggregate111:
             retencion="105.00",
             source_id="tx-2",
         )
-        result = aggregate_retenciones_111((obs_work, obs_econ), period=_P_2025_Q1)
+        result = aggregate_retenciones_111((obs_work, obs_econ), period=_P_2025_Q1, operation=operation)
         assert len(result.rollups) == 2
         schemes = {row.scheme for row in result.rollups}
         assert schemes == {RetencionScheme("rendimientos_trabajo"), RetencionScheme("actividades_economicas")}
         # Same perceptor counted once
         assert result.total_perceptors == 1
 
-    def test_distinct_perceptors_count_separately(self) -> None:
+    def test_distinct_perceptors_count_separately(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
             _obs(nif="A2", scheme=RetencionScheme("rendimientos_trabajo"), base="200", retencion="30", source_id="t2"),
             _obs(nif="A3", scheme=RetencionScheme("rendimientos_trabajo"), base="300", retencion="45", source_id="t3"),
         )
-        result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_111(observations, period=_P_2025_Q1, operation=operation)
         assert result.total_perceptors == 3
         assert result.total_taxable_base == Decimal("600")
         assert result.total_retencion == Decimal("90")
 
-    def test_rollups_sort_deterministically_by_perceptor_then_scheme(self) -> None:
+    def test_rollups_sort_deterministically_by_perceptor_then_scheme(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="Z1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
             _obs(
@@ -222,22 +229,22 @@ class TestAggregate111:
             ),
             _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="300", retencion="45", source_id="t3"),
         )
-        result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_111(observations, period=_P_2025_Q1, operation=operation)
         keys = [(row.perceptor_nif, row.scheme.value) for row in result.rollups]
         assert keys == sorted(keys)
 
-    def test_aggregation_is_input_order_invariant(self) -> None:
+    def test_aggregation_is_input_order_invariant(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
             _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="200", retencion="30", source_id="t2"),
         )
-        forward = aggregate_retenciones_111(observations, period=_P_2025_Q1)
-        reverse = aggregate_retenciones_111(tuple(reversed(observations)), period=_P_2025_Q1)
+        forward = aggregate_retenciones_111(observations, period=_P_2025_Q1, operation=operation)
+        reverse = aggregate_retenciones_111(tuple(reversed(observations)), period=_P_2025_Q1, operation=operation)
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from .._grouping import filter_observations_for_modelo
         from ..errors import AggregationUnsupportedModeloError
+        from ..grouping import filter_observations_for_modelo
 
         with pytest.raises(AggregationUnsupportedModeloError):
             filter_observations_for_modelo(
@@ -250,32 +257,32 @@ class TestAggregate111:
 
 
 class TestAggregate123:
-    def test_123_aggregates_capital_income_schemes(self) -> None:
+    def test_123_aggregates_capital_income_schemes(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="B1", scheme=RetencionScheme("intereses"), base="500", retencion="95", source_id="c1"),
             _obs(nif="B1", scheme=RetencionScheme("dividendos"), base="1000", retencion="190", source_id="c2"),
             _obs(nif="B1", scheme=RetencionScheme("rendimientos_trabajo"), base="999", retencion="150", source_id="c3"),
         )
-        result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_123(observations, period=_P_2025_Q1, operation=operation)
         assert result.modelo == "123"
         # WORK_INCOME observation is filtered out (not in 123 catalogue)
         assert len(result.rollups) == 2
         schemes = {row.scheme for row in result.rollups}
         assert schemes == {RetencionScheme("intereses"), RetencionScheme("dividendos")}
 
-    def test_123_other_scheme_included(self) -> None:
+    def test_123_other_scheme_included(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(
                 nif="B1", scheme=RetencionScheme("otros_capital_mobiliario"), base="300", retencion="57", source_id="c1"
             ),
         )
-        result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_123(observations, period=_P_2025_Q1, operation=operation)
         assert len(result.rollups) == 1
         assert result.rollups[0].scheme == RetencionScheme("otros_capital_mobiliario")
 
 
 class TestAggregate180190193:
-    def test_180_widens_115_observations_to_annual_period(self) -> None:
+    def test_180_widens_115_observations_to_annual_period(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(
                 nif="L1",
@@ -294,7 +301,7 @@ class TestAggregate180190193:
                 property_detail=_property("office-b", "1234567VK4713S0002BB"),
             ),
         )
-        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
+        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL, operation=operation)
         assert result.modelo == "180"
         assert result.period == _P_2025_ANNUAL
         assert result.total_taxable_base == Decimal("4000")
@@ -303,7 +310,9 @@ class TestAggregate180190193:
         assert result.type2_record_count == 2
         assert {row.property_detail.property_key for row in result.type2_rows} == {"office-a", "office-b"}
 
-    def test_180_groups_repeated_property_allocations_and_refuses_missing_detail(self) -> None:
+    def test_180_groups_repeated_property_allocations_and_refuses_missing_detail(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
         detail = _property("office-a", "1234567VK4713S0001AA")
         observations = (
             _obs(
@@ -323,7 +332,7 @@ class TestAggregate180190193:
                 property_detail=detail,
             ),
         )
-        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
+        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL, operation=operation)
         assert result.type2_record_count == 1
         assert result.type2_rows[0].observations_count == 2
         assert result.type2_rows[0].taxable_base == Decimal("1200")
@@ -331,10 +340,12 @@ class TestAggregate180190193:
 
         with pytest.raises(ValueError, match="annual detail is incomplete"):
             aggregate_retenciones_180(
-                (observations[0].model_copy(update={"modelo_180_property": None}),), period=_P_2025_ANNUAL
+                (observations[0].model_copy(update={"modelo_180_property": None}),),
+                period=_P_2025_ANNUAL,
+                operation=operation,
             )
 
-    def test_190_widens_111_observations_to_annual_period(self) -> None:
+    def test_190_widens_111_observations_to_annual_period(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(
                 nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="1000", retencion="150", source_id="t1"
@@ -347,28 +358,28 @@ class TestAggregate180190193:
                 source_id="t2",
             ),
         )
-        result = aggregate_retenciones_190(observations, period=_P_2025_ANNUAL)
+        result = aggregate_retenciones_190(observations, period=_P_2025_ANNUAL, operation=operation)
         assert result.modelo == "190"
         assert result.total_perceptors == 2
 
-    def test_193_widens_123_observations_to_annual_period(self) -> None:
+    def test_193_widens_123_observations_to_annual_period(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="B1", scheme=RetencionScheme("dividendos"), base="800", retencion="152", source_id="c1"),
             _obs(nif="B2", scheme=RetencionScheme("intereses"), base="200", retencion="38", source_id="c2"),
         )
-        result = aggregate_retenciones_193(observations, period=_P_2025_ANNUAL)
+        result = aggregate_retenciones_193(observations, period=_P_2025_ANNUAL, operation=operation)
         assert result.modelo == "193"
         assert result.total_perceptors == 2
         assert result.total_retencion == Decimal("190")
 
 
 class TestAggregate115:
-    def test_115_filters_to_urban_rental_only(self) -> None:
+    def test_115_filters_to_urban_rental_only(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="800", retencion="152", source_id="r1"),
             _obs(nif="L1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="r2"),
         )
-        result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_115(observations, period=_P_2025_Q1, operation=operation)
         assert result.modelo == "115"
         assert len(result.rollups) == 1
         row = result.rollups[0]
@@ -376,21 +387,21 @@ class TestAggregate115:
         assert row.total_taxable_base == Decimal("800")
         assert row.total_retencion == Decimal("152")
 
-    def test_115_sums_per_landlord_nif(self) -> None:
+    def test_115_sums_per_landlord_nif(self, operation: PinnedAuthorityOperation) -> None:
         observations = (
             _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="500", retencion="95", source_id="r1"),
             _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="500", retencion="95", source_id="r2"),
             _obs(nif="L2", scheme=RetencionScheme("arrendamiento_urbano"), base="700", retencion="133", source_id="r3"),
         )
-        result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
+        result = aggregate_retenciones_115(observations, period=_P_2025_Q1, operation=operation)
         assert result.total_perceptors == 2
         l1 = next(row for row in result.rollups if row.perceptor_nif == "L1")
         assert l1.observations_count == 2
         assert l1.total_taxable_base == Decimal("1000")
         assert l1.total_retencion == Decimal("190")
 
-    def test_115_empty_input_returns_zero_totals(self) -> None:
-        result = aggregate_retenciones_115((), period=_P_2025_Q1)
+    def test_115_empty_input_returns_zero_totals(self, operation: PinnedAuthorityOperation) -> None:
+        result = aggregate_retenciones_115((), period=_P_2025_Q1, operation=operation)
         assert result.modelo == "115"
         assert result.rollups == ()
         assert result.total_perceptors == 0
@@ -440,7 +451,7 @@ class TestAggregationInvariants:
                 },
             )
 
-    def test_perceptor_count_must_match_distinct_nifs(self) -> None:
+    def test_perceptor_count_must_match_distinct_nifs(self, operation: PinnedAuthorityOperation) -> None:
         from pydantic import ValidationError
 
         row = aggregate_retenciones_111(
@@ -450,6 +461,7 @@ class TestAggregationInvariants:
                 ),
             ),
             period=_P_2025_Q1,
+            operation=operation,
         ).rollups[0]
         with pytest.raises(ValidationError, match="distinct perceptor"):
             RetencionesAggregation(
@@ -478,7 +490,7 @@ class TestAccruedDateAuthority:
         """
         with pytest.raises(ValidationError):
             _obs(
-                nif="11111111H",
+                nif="00001500M",
                 scheme=RetencionScheme("actividades_economicas"),
                 base="100",
                 retencion="15",
@@ -490,24 +502,26 @@ class TestAccruedDateAuthority:
         """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
         with pytest.raises(ValidationError):
             _obs(
-                nif="11111111H",
+                nif="00001500M",
                 scheme=RetencionScheme("actividades_economicas"),
                 base="100",
                 retencion="15",
                 accrued=malformed,
             )
 
-    def test_valid_accrued_date_is_admitted_and_aggregates(self) -> None:
+    def test_valid_accrued_date_is_admitted_and_aggregates(self, operation: PinnedAuthorityOperation) -> None:
         """The positive control: a real accrual date is admitted and rolls up."""
         observation = _obs(
-            nif="11111111H",
+            nif="00001500M",
             scheme=RetencionScheme("actividades_economicas"),
             base="100",
             retencion="15",
             accrued="2026-03-01",
         )
         assert observation.accrued_on == "2026-03-01"
-        aggregation = aggregate_retenciones_111((observation,), period=Period.from_year_and_code(2026, "1T"))
+        aggregation = aggregate_retenciones_111(
+            (observation,), period=Period.from_year_and_code(2026, "1T"), operation=operation
+        )
         assert aggregation.total_perceptors == 1
 
 
@@ -518,7 +532,7 @@ class TestModelo180ProvinceAndPostcodeShape:
     def _address(**overrides: str) -> Modelo180StructuredAddress:
         fields = {
             "province_code": "28",
-            "municipality_code": "079",
+            "municipality_code": "28079",
             "municipality": "Madrid",
             "locality": "Madrid",
             "postal_code": "28001",
@@ -531,7 +545,12 @@ class TestModelo180ProvinceAndPostcodeShape:
 
     @pytest.mark.parametrize("province", ["01", "09", "10", "49", "50", "52"])
     def test_every_boundary_province_is_admitted(self, province: str) -> None:
-        assert self._address(province_code=province, postal_code=f"{province}001").province_code == province
+        assert (
+            self._address(
+                province_code=province, municipality_code=f"{province}079", postal_code=f"{province}001"
+            ).province_code
+            == province
+        )
 
     @pytest.mark.parametrize("province", ["00", "53", "99", "٢٨", "2", "028"])
     def test_a_province_outside_the_table_is_refused(self, province: str) -> None:
@@ -549,3 +568,59 @@ class TestModelo180ProvinceAndPostcodeShape:
             Modelo180PropertyEvidence.model_validate(
                 {**_property("p1", "1234567AB1234C0001DE").model_dump(), "recipient_province_code": province}
             )
+
+
+class TestModelo180PerceptorName:
+    """The Modelo 180 perceptor record files the declared filing name, never the name the source printed."""
+
+    _NAME_BINDING = "modelo-180-perceptor-row-name"
+
+    def _aggregation(self, operation: PinnedAuthorityOperation, *, nif: str = "L1") -> RetencionesAggregation:
+        return aggregate_retenciones_180(
+            (
+                _obs(
+                    nif=nif,
+                    scheme=RetencionScheme("arrendamiento_urbano"),
+                    base="1900",
+                    retencion="361",
+                    source_id="r1",
+                    name="NOMBRE IMPRESO SL",
+                    property_detail=_property("office-a", "1234567VK4713S0001AA"),
+                ),
+            ),
+            period=_P_2025_ANNUAL,
+            operation=operation,
+        )
+
+    def _name_cells(
+        self,
+        operation: PinnedAuthorityOperation,
+        parties: tuple[DeclaredWithholdingParty, ...],
+        refusals: PartyNameRefusals | None = None,
+    ) -> dict[int, object]:
+        revision = operation.revision_with_export_layouts(
+            "180", str(revision_covering("180", _P_2025_ANNUAL.filing_year).id)
+        )
+        rows = resolve_retenciones_aggregation_binding_row_values(
+            revision, self._aggregation(operation), parties=parties, party_name_refusals=refusals
+        )
+        return {index: value for (binding, index), value in rows.items() if binding == self._NAME_BINDING}
+
+    def test_the_landlord_row_files_its_declared_razon_social(self, operation: PinnedAuthorityOperation) -> None:
+        entity = DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="INMUEBLES OLMO SL")
+        party = DeclaredWithholdingParty(
+            country_code="", party_tax_id="L1", party_handle="a1b2c3d4e5f6", party_filing_name=entity
+        )
+
+        assert self._name_cells(operation, (party,)) == {1: "INMUEBLES OLMO SL"}
+
+    def test_a_landlord_with_no_declared_name_is_refused_not_filed_under_the_printed_name(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
+        refusals = PartyNameRefusals(modelo="180")
+        party = DeclaredWithholdingParty(
+            country_code="", party_tax_id="L1", party_handle="a1b2c3d4e5f6", party_filing_name=None
+        )
+
+        assert self._name_cells(operation, (party,), refusals) == {}
+        assert [type(item) for item in refusals.refusals] == [FilingExportDeclaredPartyNameMissingError]

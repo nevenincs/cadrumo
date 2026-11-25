@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 7
+version = 16
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -16,8 +16,8 @@ remove_policy = "live_profile_tombstone_retain_snapshots"
 # `descendientes_minimos_aggregate_{filing_year}` cannot swallow the longer
 # `descendientes_minimos_aggregate_autonomico_{filing_year}` paths.
 #
-# `cotizaciones_ss_madre_2024` and `renta_rental.reduccion_art_23_2_tier_2024`
-# are deliberately absent: they are genuine operator input, not derived.
+# `cotizaciones_ss_madre_2024` is deliberately absent: it is genuine operator
+# input, not derived.
 
 [[derived_selectors]]
 pattern = "renta_family.descendientes_minimos_aggregate_{filing_year}"
@@ -34,6 +34,27 @@ description = "Parte autonomica del minimo por descendientes, resuelta contra la
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
 
 [[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate"
+derived_from = ["renta_family.ascendiente"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte estatal del minimo por ascendientes, calculada de los ascendientes declarados."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate_autonomico"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte autonomica del minimo por ascendientes, resuelta contra la CCAA de residencia."
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_madrid_cuidado_ascendientes_count"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Ascendientes por los que se aplica el minimo por ascendientes y que cumplen la edad o la discapacidad de la deduccion de la Comunidad de Madrid por cuidado de ascendientes, ponderados por la parte del minimo que corresponde al contribuyente."
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+
+[[derived_selectors]]
 pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
@@ -41,17 +62,31 @@ description = "Elegibilidad de la escala separada por anualidades por alimentos 
 legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
 
 [[derived_selectors]]
-pattern = "renta_family.incremento_guarderia_{filing_year}"
+pattern = "renta_family.incremento_guarderia"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente."
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
-pattern = "renta_family.deduccion_maternidad_{filing_year}"
+pattern = "renta_family.incremento_guarderia_cotizaciones"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente, además, por las cotizaciones de la madre tras su nacimiento (art. 81.2 LIRPF hasta la Ley 31/2022)."
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_maternidad"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Deduccion por maternidad, calculada por descendiente desde los meses declarados y su elegibilidad."
+legal_refs = ["ley-35-2006:art-81"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_maternidad_cotizaciones"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Deduccion por maternidad calculada por descendiente desde los meses declarados y limitada, ademas, por las cotizaciones de la madre tras su nacimiento (art. 81.1 LIRPF hasta la Ley 31/2022)."
 legal_refs = ["ley-35-2006:art-81"]
 
 [[derived_selectors]]
@@ -60,6 +95,41 @@ derived_from = ["tax_residence.jurisdiction_scope"]
 entry_surface = "aeat config profile edit --tax-residence-jurisdiction-scope SCOPE"
 description = "Porcentaje atribuible al Estado derivado exclusivamente del regimen territorial declarado."
 legal_refs = ["ley-12-2002:art-29"]
+
+[[derived_selectors]]
+pattern = "irpf.estimation_directa"
+derived_from = ["irpf.estimation_regime"]
+entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
+description = "Si el regimen de estimacion declarado es una estimacion directa (normal o simplificada); ausente mientras el regimen no esta declarado."
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+
+[[derived_selectors]]
+pattern = "irpf.estimation_directa_normal"
+derived_from = ["irpf.estimation_regime"]
+entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
+description = "Modalidad de la estimacion directa (casilla 0168 del Modelo 100): normal frente a simplificada; ausente fuera de la estimacion directa."
+legal_refs = ["ley-35-2006:art-30"]
+
+[[derived_selectors]]
+pattern = "irpf.estimation_directa_modalidad_clave"
+derived_from = ["irpf.estimation_regime", "taxpayer_type.irpf_income_categories"]
+entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
+description = "Clave de la modalidad de la estimacion directa que consigna la casilla 0168 del Modelo 100 (N normal, S simplificada); ausente fuera de la estimacion directa o sin rendimientos de actividades economicas."
+legal_refs = ["ley-35-2006:art-30"]
+
+[[derived_selectors]]
+pattern = "irpf.estimation_directa_actividad_tipo_clave"
+derived_from = ["activities.tipo_actividad", "irpf.estimation_regime", "taxpayer_type.irpf_income_categories"]
+entry_surface = "aeat config profile edit-row activities ROW --value tipo_actividad=CODE"
+description = "Clave del tipo de actividad que consigna la casilla 0166 del Modelo 100 (TACT): el tipo de actividad censal comun a las actividades declaradas; ausente fuera de la estimacion directa o sin rendimientos de actividades economicas."
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
+
+[[derived_selectors]]
+pattern = "irpf.activity_income_cash_criterion_elected"
+derived_from = ["irpf.activity_income_imputation_criterion", "irpf.estimation_regime"]
+entry_surface = "aeat config profile edit --irpf-activity-income-imputation-criterion CRITERION --irpf-activity-income-imputation-year YEAR"
+description = "Opcion por el criterio de cobros y pagos (casilla 0169 del Modelo 100) para el ejercicio, solo en estimacion directa; ausente si el criterio no esta declarado."
+legal_refs = ["rd-439-2007:art-7"]
 
 [[sections]]
 key = "identity"
@@ -81,6 +151,7 @@ key = "name"
 type = "string"
 required = false
 sensitivity = "identity"
+carried_by_filing_record = true
 description = "Declarant given name or display name."
 model_selectors = ["name", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
@@ -90,6 +161,7 @@ key = "surnames"
 type = "string"
 required = false
 sensitivity = "identity"
+carried_by_filing_record = true
 description = "Declarant surnames for person filings."
 model_selectors = ["surnames", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
@@ -99,6 +171,7 @@ key = "legal_name"
 type = "string"
 required = false
 sensitivity = "identity"
+carried_by_filing_record = true
 description = "Legal or company name for entity-style export headers."
 
 [[sections.fields]]
@@ -107,13 +180,6 @@ type = "email"
 required = false
 sensitivity = "identity"
 description = "Operator contact email used by configuration surfaces."
-
-[[sections.fields]]
-key = "notes"
-type = "string"
-required = false
-sensitivity = "identity"
-description = "Operator free-form notes attached to the profile."
 
 [[sections]]
 key = "preferences"
@@ -140,7 +206,7 @@ key = "llm_vision"
 type = "boolean"
 required = false
 sensitivity = "operational"
-description = "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read."
+description = "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent."
 
 [[sections.fields]]
 key = "google_export"
@@ -167,7 +233,7 @@ key = "provider"
 type = "enum"
 required = false
 sensitivity = "identity"
-description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
+description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and sign in with the profile NIF/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
 enum_values = ["certificate", "clave_movil", "clave_permanente"]
 
 [[sections.fields]]
@@ -178,38 +244,16 @@ sensitivity = "identity"
 description = "How Cl@ve Movil should ask for confirmation: show a QR code in a visible browser, or identify with DNI/NIE plus contraste and send a request to the Cl@ve app."
 enum_values = ["qr", "app_request"]
 
-# THE THREE FIELDS BELOW SPLIT ACROSS TWO SENSITIVITY CLASSES, and the split is
-# the point rather than an oversight. dni_nie NAMES the taxpayer; the contraste
-# pair PROVES possession of their physical document. Only the second is
-# authentication material, so only the second is secret.
-#
-# dni_nie carries the same identifier as identity.tax_id, which renders in the
-# clear one section above, so masking this copy concealed nothing an operator
-# reading that screen could not already see. It confers no capability on its
-# own either: reaching a session also needs the contraste plus a Cl@ve PIN or
-# app that is never stored here. The classes themselves say so - SECRET is
-# declared for long-lived authentication material while IDENTITY names the NIF
-# explicitly - and classing this field secret dropped nif-hash, the one
-# redaction rule that hashes a NIF, from the policy resolved for it.
-#
-# The agreement between dni_nie and identity.tax_id is enforced ONCE, at the
-# entry to a live session. No validator refuses the divergent write, so a
-# profile holding two different identifiers can be created and read back; it
-# simply cannot authenticate. Anything upstream of a session reads whichever
-# field it names and will not notice the disagreement.
+# Cl@ve signs in as the taxpayer this profile describes, so the identity it is
+# given is identity.tax_id and the section stores no copy of it (schema 16
+# retired auth.dni_nie). The contraste pair below PROVES possession of the
+# taxpayer's physical document; it is authentication material, so it is secret.
 #
 # Rationale belongs in comments like this one rather than in a description.
-# No surface renders a description as a row label any more -- the status page
+# No surface renders a description as a row label -- the status page
 # and the manager both read the locale catalogue -- but a description is still
 # the string the masking heuristic scans for an unclassified field, and it is
 # what a field renders when no catalogue carries its label yet.
-[[sections.fields]]
-key = "dni_nie"
-type = "string"
-required = false
-sensitivity = "identity"
-description = "DNI or NIE presented to Cl@ve. Holds the same identifier as identity.tax_id; live authentication refuses when the two diverge."
-
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
@@ -258,32 +302,59 @@ model_selectors = ["address.cadastral_reference"]
 legal_refs = ["rdleg-1-2004:art-6.3"]
 
 [[sections.fields]]
-key = "fiscal_address_is_habitual_vivienda"
-type = "boolean"
+key = "fiscal_address_province_code"
+type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5."
-model_selectors = ["address.is_habitual_vivienda"]
-legal_refs = ["ley-35-2006:da-23", "ley-35-2006:art-30"]
+description = "Codigo de provincia del domicilio fiscal, two digits from the AEAT provincia table (Modelo 840 Apartado I casilla [11], posiciones 213-214). Operator-entered or acquired with provenance; absent means unstated, never derived from the postcode."
+model_selectors = ["contact.fiscal_address_province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "fiscal_address_municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio del domicilio fiscal, five characters from the AEAT municipio table (Modelo 840 Apartado I casilla [10], posiciones 215-219). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["contact.fiscal_address_municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "fiscal_address_municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio del domicilio fiscal, at most thirty characters (Modelo 840 Apartado I, posiciones 220-249). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["contact.fiscal_address_municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
 
 [[sections.fields]]
 key = "contact_person_phone"
 type = "string"
+carried_by_filing_record = true
 required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Telefono de la persona con quien relacionarse, declared in the declarante header of every AEAT informativa. AEAT reserves nine numeric positions for it (Modelo 180/190/270/349 positions 59-67) and names the field 'PERSONA CON QUIEN RELACIONARSE'. This is the contact for the declaration, not necessarily the taxpayer."
 model_selectors = ["contact.contact_person_phone"]
+legal_refs = ["orden-hap-72-2013:art-1"]
 
 [[sections.fields]]
 key = "contact_person_name"
 type = "string"
+carried_by_filing_record = true
 required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Apellidos y nombre de la persona con quien relacionarse, the second subcampo of the informativa declarante header (Modelo 180/190/270/349 positions 68-107, forty alphanumeric positions). AEAT asks for 'el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden'."
 model_selectors = ["contact.contact_person_name"]
+legal_refs = ["orden-hap-72-2013:art-1"]
 
 [[sections]]
 key = "tax_residence"
@@ -297,7 +368,7 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100."
+description = "Residencia fiscal en territorio común (comunidad autónoma o ciudad autónoma) para el Modelo 100."
 enum_values = [
   "andalucia",
   "aragon",
@@ -314,6 +385,8 @@ enum_values = [
   "la_rioja",
   "madrid",
   "murcia",
+  "ceuta",
+  "melilla",
 ]
 model_selectors = ["TaxResidenceProfile.ccaa"]
 
@@ -386,26 +459,37 @@ model_selectors = ["censo.activity_end_date"]
 legal_refs = ["rd-1065-2007:art-11"]
 
 [[sections.fields]]
-key = "establecimiento_type"
-type = "enum"
+key = "aeat_delegacion_code"
+type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
-enum_values = ["propio", "arrendado", "cedido_gratuitamente"]
-model_selectors = ["censo.establecimiento_type"]
-legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-29", "ley-35-2006:art-30"]
+description = "Codigo de la Delegacion de la AEAT del sujeto pasivo, two digits from the AEAT table (Modelo 840 posiciones 11-12). Operator-entered or acquired with provenance; absent means unstated, never derived from the fiscal address."
+model_selectors = ["censo.aeat_delegacion_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
 
 [[sections.fields]]
-key = "elected_withholding_pct"
-type = "enum"
+key = "aeat_administracion_code"
+type = "string"
 required = false
-sensitivity = "financial"
+sensitivity = "identity"
 effective_dated = true
-description = "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
-enum_values = ["15", "7", "1"]
-model_selectors = ["censo.elected_withholding_pct"]
-legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95", "orden-hac-1425-2025:art-4"]
+description = "Codigo de la Administracion de la AEAT del sujeto pasivo, three digits from the AEAT table (Modelo 840 posiciones 13-15, the code part of '3 Cod + 20 Descrip'). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["censo.aeat_administracion_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "aeat_administracion_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre de la Administracion de la AEAT del sujeto pasivo, at most twenty characters (Modelo 840 posiciones 16-35, the description part of '3 Cod + 20 Descrip'). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["censo.aeat_administracion_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
 
 [[sections.fields]]
 key = "divergencia"
@@ -435,6 +519,7 @@ legal_refs = ["ley-35-2006:art-8", "ley-27-2014:art-7", "ley-35-2006:art-86", "l
 
 [[sections.fields]]
 key = "legal_entity_form"
+entity_types = ["legal_entity"]
 type = "enum"
 required = false
 sensitivity = "identity"
@@ -446,6 +531,7 @@ legal_refs = ["ley-27-2014:art-29", "ley-44-2015:art-1"]
 
 [[sections.fields]]
 key = "incn_prior_12_months"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -456,6 +542,7 @@ legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "new_entity_first_two_profit_periods"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -465,47 +552,167 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
-key = "ley_49_2002_special_regime_option_declared"
+key = "pago_fraccionado_art_40_3_elected"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_option_declared"]
-legal_refs = ["ley-49-2002:art-14"]
+description = "Opción del art. 40.3 LIS ejercida en la declaración censal: pago fraccionado sobre la base imponible de los 3, 9 u 11 primeros meses. true es la opción ejercida desde el período impositivo indicado en valid_from; false es una respuesta negativa o una renuncia. Sin valor no se ha preguntado y no se presume. Se lee el valor vigente al inicio del período impositivo de cada pago fraccionado y, por debajo del umbral del art. 40.3, decide si resulta ingreso."
+model_selectors = ["taxpayer.pago_fraccionado_art_40_3_elected"]
+legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
-key = "ley_49_2002_special_regime_option_date"
+key = "fecha_constitucion"
+entity_types = ["legal_entity"]
 type = "date"
 required = false
 sensitivity = "identity"
-effective_dated = true
-description = "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_option_date"]
-legal_refs = ["ley-49-2002:art-14"]
+effective_dated = false
+description = "Fecha de constitución de la entidad, como la consigna la declaración censal (Modelo 036, personas jurídicas o entidades, fecha de constitución [B9]). El primer período impositivo de la entidad empieza en ella, por lo que la fecha de inicio del período impositivo que consigna el devengo de la página 01 del Modelo 202 nunca es anterior. Sin valor la exportación del Modelo 202 se rechaza y pide indicarla."
+model_selectors = ["taxpayer.fecha_constitucion"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
-key = "ley_49_2002_special_regime_renunciation_declared"
+key = "cierre_ejercicio_dia"
+entity_types = ["legal_entity"]
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Día de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). El período impositivo es el ejercicio económico (art. 27.1 LIS); el pago fraccionado es a cuenta del período en curso el día anterior a su período de ingreso (art. 40 LIS), cuyo inicio consigna el devengo del Modelo 202. 31 con mes 12 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "31"
+model_selectors = ["taxpayer.cierre_ejercicio_dia"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "cierre_ejercicio_mes"
+entity_types = ["legal_entity"]
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Mes de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). Con cierre_ejercicio_dia fija el período impositivo en curso que consigna el devengo del Modelo 202; 12 con el día 31 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "12"
+model_selectors = ["taxpayer.cierre_ejercicio_mes"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "principal_cnae"
+entity_types = ["legal_entity"]
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Código C.N.A.E. de cuatro dígitos de la actividad principal que consigna la página 01 del Modelo 202 (diseño 2025 posición 118; diseños 2019 y 2023 posición 117), en la clasificación indicada en principal_cnae_classification. Cada ejercicio exige la clasificación que publica el registro (Nota 12 del diseño 2025), y un código no se convierte nunca de una clasificación a otra. Es declarado, nunca deducido de las actividades. Sin valor la exportación del Modelo 202 se rechaza y pide indicarlo."
+model_selectors = ["taxpayer.principal_cnae"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "principal_cnae_classification"
+entity_types = ["legal_entity"]
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Clasificación de actividades económicas en la que se declara principal_cnae, con el identificador que publica el registro (por ejemplo cnae-2009 o cnae-2025). La exportación del Modelo 202 usa el código solo si esta clasificación es la que el registro exige para el ejercicio del pago fraccionado (Nota 12 del diseño 2025); si no coincide o falta, se rechaza y nombra la clasificación exigida."
+model_selectors = ["taxpayer.principal_cnae_classification"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[sections.fields]]
+key = "regimen_ley_49_2002"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_declared"]
-legal_refs = ["ley-49-2002:art-14"]
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen fiscal de la Ley 49/2002, de 23 de diciembre (marca X o blanco; diseño 2025 posición 122, diseños 2019 y 2023 posición 121). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza: un blanco afirmaría que no aplica."
+model_selectors = ["taxpayer.regimen_ley_49_2002"]
+legal_refs = ["ley-49-2002:art-14", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
-key = "ley_49_2002_special_regime_renunciation_date"
-type = "date"
+key = "regimen_socimi"
+entity_types = ["legal_entity"]
+type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_date"]
-legal_refs = ["ley-49-2002:art-14"]
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen de la Ley 11/2009, de 26 de octubre, de las SOCIMI (marca X o blanco; diseño 2025 posición 123, diseños 2019 y 2023 posición 122). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_socimi"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "regimen_entidad_capital_riesgo"
+entity_types = ["legal_entity"]
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad de capital-riesgo que aplica el régimen fiscal especial del art. 50 LIS (marca X o blanco; diseño 2025 posición 124, diseños 2019 y 2023 posición 515). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_entidad_capital_riesgo"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "regimen_entidades_navieras_tonelaje"
+entity_types = ["legal_entity"]
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen de las entidades navieras en función del tonelaje (marca X o blanco; diseño 2025 posición 125, diseños 2019 y 2023 posición 123). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_entidades_navieras_tonelaje"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "erd_tipo_gravamen_especifico"
+entity_types = ["legal_entity"]
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que cumple los requisitos de los incentivos de empresa de reducida dimensión (art. 101 LIS) y aplica el tipo de gravamen específico previsto para estas entidades (marca X o blanco; diseño 2025 posición 126, diseños 2019 y 2023 posición 124, que lo refieren al art. 29.1 primer párrafo LIS). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.erd_tipo_gravamen_especifico"]
+legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "cooperativa_fiscalmente_protegida"
+entity_types = ["legal_entity"]
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, código \"1\" Cooperativa). true escribe la X, o el código 1 en los diseños 2019 y 2023; con false esos diseños escriben el código \"2\" solo si los tipos de gravamen que la ley fija a la entidad son varios, y si no el código \"0\" No consta. También selecciona el tipo protegido del art. 29 LIS que el Modelo 202 consigna. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.cooperativa_fiscalmente_protegida"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "marca_instrumental"
+entity_types = ["legal_entity"]
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Marca de la Nota 7 del diseño del Modelo 202 (2025 posición 129; 2019 y 2023 posición 133): true si la entidad aplica la RIC o la bonificación del art. 26 Ley 19/1994, el régimen ZEC o la bonificación de Ceuta y Melilla (art. 33 LIS), tiene rentas no integradas por el art. 17.2 LIS, está parcialmente exenta (cap. XIV tít. VII LIS) o aplica la bonificación del art. 34 LIS. false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.marca_instrumental"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -513,36 +720,6 @@ effective_dated = true
 description = "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %."
 model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
 legal_refs = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
-
-[[sections.fields]]
-key = "sal_socios_trabajadores_count"
-type = "integer"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion."
-model_selectors = ["taxpayer.sal_socios_trabajadores_count"]
-legal_refs = ["ley-44-2015:art-1", "ley-44-2015:art-2"]
-
-[[sections.fields]]
-key = "sal_reserva_especial_dotada"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01."
-model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
-legal_refs = ["ley-44-2015:art-14"]
-
-[[sections.fields]]
-key = "sal_capital_social"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social."
-model_selectors = ["taxpayer.sal_capital_social"]
-legal_refs = ["ley-44-2015:art-14"]
 
 [[sections.fields]]
 key = "irpf_income_categories"
@@ -580,6 +757,7 @@ legal_refs = ["ley-35-2006:art-9", "trlirnr-rdleg-5-2004:art-2"]
 [[sections.fields]]
 key = "country_of_fiscal_residence"
 type = "string"
+code_list = "countries"
 required = false
 sensitivity = "identity"
 effective_dated = true
@@ -612,24 +790,8 @@ model_selectors = ["taxpayer.representante_fiscal_nombre"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 
 [[sections]]
-key = "attribution_entity"
-title = "Attribution entity legal shape"
-sensitivity = "identity"
-effective_dated = true
-
-[[sections.fields]]
-key = "legal_form"
-type = "enum"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes."
-enum_values = ["sociedad_civil", "comunidad_bienes", "herencia_yacente", "other"]
-model_selectors = ["attribution_entity.legal_form"]
-legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-2"]
-
-[[sections]]
 key = "attribution_entity_socios"
+entity_types = ["attribution_entity"]
 title = "Attribution entity socios"
 sensitivity = "identity"
 effective_dated = true
@@ -691,38 +853,19 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 # Conditionally required, and conditionally FORBIDDEN. The record layout fills
 # positions 79-80 only for clave 2 and requires BLANCOS for claves 1 and 3, so
 # this field is not a country that happens to be optional -- it is a country the
-# form prohibits on two of its three claves. A default here wrote a value the
-# layout forbids on the majority case, which is why it is captured beside the
-# clave that governs it rather than alone.
+# form prohibits on two of its three claves. It is captured beside the clave
+# that governs it rather than alone: a default would write a value the layout
+# forbids on the majority case.
 [[sections.fields]]
 key = "country_of_residence"
 type = "string"
+code_list = "countries"
 required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS."
 model_selectors = ["attribution_entity_socios.country_of_residence"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
-
-# NOT required, deliberately. Modelo 184's socio record carries no per-member
-# legal role: its "clave tipo de partícipe" is residency (residente, no
-# residente sin establecimiento permanente, con establecimiento permanente),
-# and the socio/comunero/partícipe distinction sits at entity level in the
-# declaration, following from the entity's own type. Nothing in this tree reads
-# this field. Requiring it made every socio row carry an answer no form asks
-# for. The field is kept rather than retired because its legal grounding points
-# at an attribution treatment that has not been built; requiring it again needs
-# a consumer first.
-[[sections.fields]]
-key = "role"
-type = "enum"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Legal member role inside the attribution entity."
-enum_values = ["socio", "comunero", "participe"]
-model_selectors = ["attribution_entity_socios.role"]
-legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
 
 # The following fields widen the socio row to carry the (member, clave,
 # subclave) repetition axis the Modelo 184 socio record's own diseño
@@ -732,14 +875,13 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", 
 # the diseño attaches to that row. Grounded field-by-field against the
 # SOCIO record's own field text (diseño positions 76-229), never the
 # entidad record's lookalike clave-A subclave table at a different byte
-# range. Deliberately excluded from this scope: the clave-A reducción
-# (positions 109-119 when clave=A, subclave=02 -- its governing article is
-# unresolved pending a dedicated follow-up research pass), provisiones
-# deducibles y gastos de difícil justificación (positions 160-171 -- a
-# computed formula reading the entity's own tipo-2 régimen fact, not an
-# operator-declared value), and the clave-E eligibility test (a member's
-# own IS/IRNR-con-establecimiento classification, which this tree has no
-# representation of yet).
+# range. Deliberately excluded: the clave-A reducción (positions 109-119
+# when clave=A, subclave=02 -- its governing article is unresolved),
+# provisiones deducibles y gastos de difícil justificación (positions
+# 160-171 -- a computed formula reading the entity's own tipo-2 régimen
+# fact, not an operator-declared value), and the clave-E eligibility test
+# (a member's own IS/IRNR-con-establecimiento classification, which this
+# tree does not represent).
 [[sections.fields]]
 key = "clave"
 type = "enum"
@@ -890,7 +1032,7 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:a
 # (the same >2-year/irregular 30% reduction, capped at EUR 300,000/year,
 # for actividades económicas net yields). The clave-A branch of this same
 # physical field is deliberately NOT modelled here: its governing article
-# is unresolved (see the accepted row-shape ADR).
+# is unresolved.
 [[sections.fields]]
 key = "reduccion"
 type = "money"
@@ -899,7 +1041,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Importe de la reducción aplicable al rendimiento atribuido al socio, heredero, comunero o partícipe (posiciones 109-119 del registro de socio). Aplicable cuando clave = C (reducciones del artículo 23.2 y 23.3 de la Ley IRPF sobre rendimientos del capital inmobiliario) o clave = D (reducción del artículo 32.1 de la Ley IRPF sobre rendimientos de actividades económicas), y sólo para los miembros que sean contribuyentes por el Impuesto."
 model_selectors = ["attribution_entity_socios.reduccion"]
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"]
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-26", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"]
 
 # The clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
 [[sections.fields]]
@@ -981,6 +1123,639 @@ description = "Ejercicio (filing year) the attributed base is imputed to, so the
 model_selectors = ["attribution_received.filing_year"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
 
+# Modelo 200 page 002 and 002 bis: the administradores and the other relations of an
+# Impuesto sobre Sociedades declarant. One repeatable section per design row family; its
+# fields are the design's own fields for that family (DR200, records m200-page-002 and
+# m200-page-002b) and its row limit is the slot count of the export layout of the edition
+# in force, never a number of the profile. Which families a return must carry, and which a
+# stored fact rules out, is the registry's rule (fact m200-page-002-profile-rules).
+[[sections]]
+key = "m200_administrador"
+entity_types = ["legal_entity"]
+title = "Modelo 200 administradores"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del consejero, gestor, director, administrador general u otro cargo análogo de dirección, administración o control de la entidad (Modelo 200, página 2, apartado A)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "apellidos_nombre_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre, o razón social, del administrador (Modelo 200, página 2, apartado A)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "forma_juridica"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Columna F/J del apartado A: F si el administrador es persona física, J si es persona jurídica. Se consigna siempre."
+enum_values = ["F", "J"]
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "representante"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Columna RPTE. del apartado A: marca a la persona residente en España que representa al contribuyente del Impuesto sobre la Renta de No Residentes. Solo la consignan los contribuyentes del IRNR (casillas 00021 y 00046); para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "domicilio_fiscal"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Domicilio fiscal del representante en España del contribuyente del IRNR (apartado A). Solo lo consignan los contribuyentes del IRNR; para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Código de provincia, de dos dígitos, del domicilio fiscal del representante en España del contribuyente del IRNR (apartado A). Solo lo consignan los contribuyentes del IRNR; para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_participacion_socio"
+entity_types = ["legal_entity"]
+title = "Modelo 200 participaciones en la declarante"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la persona o entidad que a fin del período posee una participación directa en la declarante (Modelo 200, página 2, apartado B.2). Un socio extranjero sin NIF en España consigna el equivalente de su país precedido del código del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "representante"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Columna RPTE. del apartado B.2: indica que el NIF consignado es el del representante legal de un socio persona física menor de edad que carece de NIF propio."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "forma_juridica"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Columna F/J/Otra del apartado B.2: F persona física; J persona jurídica (NIF que empieza por A, B, C, D, F, J, P, Q, R o S); O en los demás casos (NIF que empieza por E, H, U, V, N o W)."
+enum_values = ["F", "J", "O"]
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "apellidos_nombre_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre, o razón social, del socio o partícipe de la declarante (apartado B.2)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia_pais"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Código provincia/país del socio (apartado B.2): los dos dígitos de la provincia para un residente o un no residente con establecimiento permanente en España, o el código de dos letras del país para un no residente sin él."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nominal"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor nominal de la participación del socio en la declarante a fin del período (apartado B.2)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "porcentaje_participacion"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de participación del socio en el capital de la declarante a fin del período, con dos decimales cuando no es entero (apartado B.2)."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_representante_legal"
+entity_types = ["legal_entity"]
+title = "Modelo 200 representantes legales"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "apellidos_y_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre del apoderado o representante legal de la entidad (Modelo 200, página 2 bis, apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del apoderado o representante legal de la entidad (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "fecha_poder"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha del poder notarial o de la escritura de apoderamiento del representante (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "notaria_otros"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Notaría donde se otorgó el apoderamiento; una sociedad civil que lo hizo constar en documento privado consigna la fecha de ese documento (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_secretario_consejo"
+entity_types = ["legal_entity"]
+title = "Modelo 200 secretario del consejo"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "apellidos_y_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre del Secretario del Consejo de Administración o de quien cumpla sus funciones en el órgano que lo sustituya (Modelo 200, página 2 bis, apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del Secretario del Consejo de Administración o de quien cumpla sus funciones (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_participacion_directa"
+entity_types = ["legal_entity"]
+title = "Modelo 200 participaciones de la declarante"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la entidad en la que la declarante participa directamente a fin del período en un 5 % o más del capital, o un 1 % si cotiza (Modelo 200, página 2, apartado B.1). Sin NIF español, el equivalente de su país precedido del código del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nombre_o_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razón social de la entidad participada (apartado B.1)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia_pais"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Código provincia/país de la entidad participada (apartado B.1): dos dígitos de provincia o el código de dos letras del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "porcentaje_participacion"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de participación de la declarante en la entidad participada, con dos decimales (apartado B.1)."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "valor_nominal_total"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor nominal total de la participación (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "valor_en_libros"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor en libros de la participación (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "ingresos_por_dividendos"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Ingresos por dividendos de la participación recibidos en el ejercicio declarado (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "correccion_valor_perdidas_ganancias"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Corrección de valor incluida en pérdidas y ganancias del período, con su signo (apartado B.1.3.a)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "reversion_perdidas_deterioro_valores"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Reversión de pérdidas por deterioro de valores (DT 16.ª LIS), con su signo (apartado B.1.3.b)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "eliminacion_deterioro_contable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Eliminación del deterioro contable incluido en pérdidas y ganancias (art. 13.2.b LIS) (apartado B.1.3.c)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "eliminacion_deterioro_valores_participacion"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Eliminación del deterioro de valores representativos de la participación en el capital o fondos propios (art. 15.k LIS) (apartado B.1.3.d)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "ajuste_valor_razonable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Ajuste por la disminución de valor originada por el criterio de valor razonable (art. 15.l LIS) (apartado B.1.3.e)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "efecto_correccion_valorativa_base_imponible"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Efecto de la corrección valorativa en la base imponible del ejercicio, con su signo (apartado B.1.3.f)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "saldo_correcciones_fiscales_pendientes"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Saldo de correcciones fiscales pendientes de incorporar a la base imponible a fin de ejercicio (apartado B.1.3.g)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "capital"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Capital de la entidad participada extranjera cuyo deterioro se determina por su patrimonio neto (apartado B.1.4)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "reservas_y_otras_partidas_fondos_propios"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Reservas y otras partidas de fondos propios de la entidad participada extranjera (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "otras_partidas_patrimonio_neto"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Otras partidas del patrimonio neto de la entidad participada extranjera, con su signo (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "resultado_ultimo_ejercicio"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Resultado del último ejercicio de la entidad participada extranjera, con su signo (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_entidad_menor_dependiente"
+entity_types = ["legal_entity"]
+title = "Modelo 200 entidades menores dependientes"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de cada entidad menor dependiente de la diócesis, provincia religiosa o entidad eclesiástica integrada en la declaración (Modelo 200, página 2 bis, apartado C)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nombre_o_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razón social de la entidad menor dependiente (apartado C)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_establecimiento_permanente"
+entity_types = ["legal_entity"]
+title = "Modelo 200 establecimientos permanentes en el extranjero"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "identificacion"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Identificación del establecimiento permanente que opera en el extranjero; admite un código que no siga el formato NIF (Modelo 200, página 2 bis, apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "pais_residencia_fiscal"
+type = "string"
+code_list = "countries"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "País de residencia fiscal del establecimiento permanente, código de dos letras (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "volumen_operaciones"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Volumen de operaciones del establecimiento permanente (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "beneficio_o_perdida"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Beneficio o pérdida que obtiene el establecimiento permanente en el período impositivo, con su signo (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "suma_ajustes_resultado_contable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Suma de ajustes al resultado contable desde el inicio de la actividad del establecimiento permanente, con su signo (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "suma_deducciones_di_internacional_anteriores"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Suma de deducciones por doble imposición internacional (art. 31 LIS) del establecimiento permanente acreditadas en períodos anteriores (apartado D)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_socio_sicav_disolucion"
+entity_types = ["legal_entity"]
+title = "Modelo 200 socio de SICAV en disolución"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif_sociedad_disuelta"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la SICAV disuelta con liquidación de la que la declarante es socio, en el régimen especial de la DT 41.ª LIS (Modelo 200, página 2 bis, apartado E)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif_iic_reinversion"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la SICAV o del fondo de inversión de carácter financiero en que se reinvierte la cuota de liquidación (apartado E)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+# Whether the entity has rows of each design-optional page 002 family. Unanswered is not
+# none: an empty family is never inferred, and an unanswered family keeps the export
+# refused. A stated no is the entity's answer that it has none; a stated yes needs rows.
+[[sections]]
+key = "m200_relaciones"
+entity_types = ["legal_entity"]
+title = "Modelo 200 relaciones declaradas"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "has_participacion_socio"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si alguna persona o entidad posee una participación directa en la declarante que se relaciona en el apartado B.2 del Modelo 200. Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_representante_legal"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad relaciona apoderados o representantes legales en el apartado G del Modelo 200. Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_secretario_consejo"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad tiene Secretario del Consejo de Administración, o quien cumpla sus funciones, que se relaciona en el apartado G del Modelo 200. Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_participacion_directa"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la declarante participa directamente a fin del período en otras entidades en la medida que relaciona el apartado B.1 del Modelo 200. Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_entidad_menor_dependiente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad eclesiástica integra en su declaración entidades menores dependientes (apartado C del Modelo 200). Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_establecimiento_permanente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad aporta información de establecimientos permanentes que operan en el extranjero (apartado D del Modelo 200). Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_socio_sicav_disolucion"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la declarante es socio de una SICAV en el régimen especial de disolución y liquidación de la DT 41.ª LIS (apartado E del Modelo 200). Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
 [[sections]]
 key = "vivienda_office"
 title = "Vivienda habitual office afectacion"
@@ -1023,14 +1798,6 @@ effective_dated = true
 description = "Censo activity description."
 
 [[sections.fields]]
-key = "cnae"
-type = "string"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "CNAE activity code where applicable."
-
-[[sections.fields]]
 key = "iae_epigraph"
 type = "string"
 required = false
@@ -1040,20 +1807,494 @@ description = "IAE section/group/epigraph where applicable."
 model_selectors = ["activities.iae_epigraph"]
 legal_refs = ["rdleg-1175-1990:art-unico"]
 
+[[sections.fields]]
+key = "tipo_actividad"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Censal tipo de actividad of the activity (Modelo 036 casillas 403 and 404): A01 to A05 for activities in the IAE (A03 resto empresariales, A04 artisticas y deportivas, A05 resto profesionales), B01 to B05 for agrarian and fishing activities outside it. Modelo 100 casilla 0166 states it. Operator-declared; absent means undeclared, never inferred from the IAE epigraph, which does not record its seccion."
+enum_values = ["A01", "A02", "A03", "A04", "A05", "B01", "B02", "B03", "B04", "B05"]
+model_selectors = ["activities.tipo_actividad"]
+legal_refs = ["orden-eha-1274-2007:art-1", "ley-35-2006:art-27"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26"]
+
+[[sections.fields]]
+key = "province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de provincia donde se ejerce la actividad, two digits from the AEAT provincia table (Modelo 840 Apartado IV casilla [40], posiciones 581-582). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio donde se ejerce la actividad, five characters from the AEAT municipio table (Modelo 840 Apartado IV casilla [38], posiciones 583-587). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio donde se ejerce la actividad, at most thirty characters (Modelo 840 Apartado IV, posiciones 588-617). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "cuota_provincial_province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Provincia of a provincial clase de cuota, two digits from the AEAT provincia table (Modelo 840 Apartado IV casilla [33] Provincial (provincia), posiciones 531-532); stated only for an activity taxed by cuota provincial. Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.cuota_provincial_province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "local_afecto_indirectamente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the activity has a local afecto indirectamente (Modelo 840 Apartado IV casilla [35], S o blanco); the local itself is an iae_local row with afectacion indirecta. Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.local_afecto_indirectamente"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "maquinas_recreativas_tipo_a"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de maquinas recreativas tipo A (Modelo 840 Apartado VI B, posiciones 573-579, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.maquinas_recreativas_tipo_a"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "maquinas_recreativas_tipo_b"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de maquinas recreativas tipo B (Modelo 840 Apartado VI B, posiciones 606-612, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.maquinas_recreativas_tipo_b"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "expositores_autoventa"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de expositores para autoventa (Modelo 840 Apartado VI B, posiciones 639-645, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.expositores_autoventa"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_local"
+title = "IAE premises"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "actividad"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "activities"
+minimum = "0"
+description = "Identificador de fila de la actividad a la que esta afecto el local: the position of its row in the activities section."
+model_selectors = ["iae_local.actividad"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "afectacion"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+enum_values = ["ejercicio", "indirecta"]
+description = "How the local serves the activity: ejercicio for a local where the activity is exercised (Modelo 840 Apartado VI C and Anexo Relacion de locales), indirecta for the local afecto indirectamente (Apartado V)."
+model_selectors = ["iae_local.afectacion"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "via_sg"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Siglas de la via publica del local (SG), two characters from the AEAT table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.via_sg"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "via_nombre"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre de la via publica del local, at most twenty-five characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.via_nombre"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "numero"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Numero de la via del local, at most five digits. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.numero"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "km"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Kilometro de la via del local, at most five characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.km"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "portal"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Portal (Pto.) del local, at most four characters; Apartado V only, the Anexo has no position for it. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.portal"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "escalera"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Escalera del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.escalera"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "piso"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Piso del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.piso"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "puerta"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Puerta del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.puerta"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "postcode"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo postal del local, five digits. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.postcode"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de provincia del local, two digits from the AEAT provincia table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio del local, five characters from the AEAT municipio table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio del local, at most thirty characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "telefono"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Telefono del local afecto indirectamente, nine digits (Modelo 840 Apartado V casilla [83]). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.telefono"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "uso_destino_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de uso o destino del local afecto indirectamente, two characters (Modelo 840 Apartado V casilla [68], 2 Cod + 50 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.uso_destino_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "uso_destino_description"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Descripcion del uso o destino del local afecto indirectamente (almacen, deposito, centro de direccion...), at most fifty characters (Modelo 840 Apartado V casilla [68]). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.uso_destino_description"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "superficie_total"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie total del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the rectificada and computable surfaces, never derived from them. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_total"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "superficie_rectificada"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie rectificada del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the total and computable surfaces. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_rectificada"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "superficie_computable"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie computable del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the total and rectificada surfaces. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_computable"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_local_superficie"
+title = "IAE premises surfaces"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "local"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "iae_local"
+minimum = "0"
+description = "Identificador de fila del local cuya superficie se declara: the position of its row in the iae_local section."
+model_selectors = ["iae_local_superficie.local"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "clase"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+enum_values = ["0.1", "0.2", "1.1", "1.2", "1.3", "2.0", "3.1", "3.2", "4.0", "5.0", "6.0"]
+description = "Clase de superficie of IAE Regla 14 as Modelo 840 Apartado VI C lists it: 0.1 sin reduccion, 0.2 hospedaje, 1.1 descubierta, 1.2 instalacion deportiva descubierta, 1.3 gradas descubiertas, 2.0 puesto temporada, 3.1 cubierta de instalacion deportiva y espectaculo, 3.2 gradas cubiertas, 4.0 ensenanza, 5.0 almacen, 6.0 aparcamiento cubierto. A local states each class once."
+model_selectors = ["iae_local_superficie.clase"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "total"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie total of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the rectificada or computable surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.total"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "rectificada"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie rectificada of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the total or computable surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.rectificada"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "computable"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie computable of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the total or rectificada surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.computable"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_elemento_tributario"
+title = "IAE tax elements"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "actividad"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "activities"
+minimum = "0"
+description = "Identificador de fila de la actividad del elemento tributario: the position of its row in the activities section."
+model_selectors = ["iae_elemento_tributario.actividad"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "linea"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+minimum = "1"
+maximum = "4"
+description = "Linea of Modelo 840 Apartado VI A (1 to 4; the design reserves lines 5 to 8) the element occupies; one element per line and activity."
+model_selectors = ["iae_elemento_tributario.linea"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "code"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo del elemento tributario del grupo o epigrafe, two characters (Modelo 840 Apartado VI A, 2 Cod + 30 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "description"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Descripcion del elemento tributario, at most thirty characters (Modelo 840 Apartado VI A, 2 Cod + 30 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.description"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "numero"
+type = "decimal"
+required = true
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999.99"
+description = "Numero de unidades del elemento tributario, at most seven integer digits and two decimals (Modelo 840 Apartado VI A, 7ent + 2dec). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.numero"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
 [[sections]]
 key = "irpf"
 title = "IRPF and withholding"
 sensitivity = "financial"
 effective_dated = true
-
-[[sections.fields]]
-key = "professional_income_withholding_ge_70pct"
-type = "boolean"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Whether professional income withholding reaches the 70 percent threshold."
-model_selectors = ["professional_income_withholding_ge_70pct"]
 
 [[sections.fields]]
 key = "art109_activity_income_withholding_ge_70pct"
@@ -1085,6 +2326,33 @@ legal_refs = [
 ]
 
 [[sections.fields]]
+key = "activity_income_imputation_criterion"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "The criterion placing economic-activity income and expenses in an ejercicio: devengo (RIRPF art. 7.1) or cobros_y_pagos (art. 7.2, kept at least three years). The election is stated in the return (Modelo 100 casillas 0169, 1443, 1487), not in Modelo 036 or 037. One dated value per ejercicio. Operator-declared; absent means undeclared and must not be read as either value."
+enum_values = ["devengo", "cobros_y_pagos"]
+model_selectors = ["irpf.activity_income_imputation_criterion"]
+legal_refs = [
+    "rd-439-2007:art-7",
+    "ley-35-2006:art-14",
+    "ley-27-2014:art-11",
+]
+
+[[sections.fields]]
+key = "codigo_comercio_accounting"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is obliged to keep, or voluntarily keeps, accounting under the Codigo de Comercio (RIRPF arts. 7.2.3 and 68.2), which closes the cobros_y_pagos election and ends one already made. Operator-declared; absent means undeclared and must not be read as either value."
+model_selectors = ["irpf.codigo_comercio_accounting"]
+legal_refs = [
+    "rd-439-2007:art-7",
+]
+
+[[sections.fields]]
 key = "activity_kind"
 type = "enum"
 required = false
@@ -1098,29 +2366,9 @@ legal_refs = [
     "rd-439-2007:art-95",
 ]
 
-# THE TWELVE objective_estimation_* FIELDS BELOW MIX TWO SCOPES WHILE LOOKING
-# UNIFORM. Do not reshape them as one group.
-#
-# The four prior_year_* fields are per-TAXPAYER: they carry the exclusion
+# The four prior_year_* fields below are per-TAXPAYER: they carry the exclusion
 # limits, which the law computes over the conjunto de actividades, so a single
 # flat value is correct for them.
-#
-# The eight modulos_* fields are per-ACTIVITY. Orden HFP/1359/2023
-# (Instrucciones, Rendimiento anual) defines the figure as the sum of the
-# rendimientos of each activity, each obtained by running the Fases procedure
-# for that activity, and the M036 diseño records several activities with their
-# own epígrafes. One flat set can therefore hold one activity's módulos, and a
-# taxpayer with two módulos activities cannot be represented here.
-#
-# That is a modelling gap rather than a live defect today, on this evidence: no
-# registry file references these paths or their model selectors, the M131
-# módulos casillas carry no binding and are operator input, and the only
-# production readers are the setup wizard. That was established by literal
-# search, which would not see a consumer that reaches profile facts generically
-# without naming a path — so read it as "no declared consumer found", not as a
-# proof that none exists. The precondition that keeps it harmless is recorded at
-# the M131 divergence-advisory predicate, which is where a change would make it
-# matter.
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_gross_income_eur"
@@ -1161,86 +2409,6 @@ effective_dated = true
 description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_iae_epigraph"
-type = "string"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131."
-model_selectors = ["irpf.objective_estimation_modulos_iae_epigraph"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_1_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema."
-model_selectors = ["irpf.objective_estimation_modulos_module_1_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_2_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva."
-model_selectors = ["irpf.objective_estimation_modulos_module_2_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_3_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot."
-model_selectors = ["irpf.objective_estimation_modulos_module_3_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_4_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient."
-model_selectors = ["irpf.objective_estimation_modulos_module_4_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_5_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_5_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_6_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_6_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_7_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_7_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
 
 [[sections.fields]]
 key = "special_regime"
@@ -1328,7 +2496,22 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the withholder is a colegio concertado, which Modelo 111 declares in its own header field."
 model_selectors = ["colegio_concertado"]
+# The design in force for every supported filing year is the 2019-y-siguientes
+# record design (source aeat-dr-111-2019-v18), whose field 44 at position 552,
+# length 1, An, reads: "Reservado. Administracion presentando declaracion de
+# Colegio Concertado (CC)", "X" o blanco. The mark first appeared in the
+# 2012-2015 design (aeat-dr-111-2012, position 732), which is kept cited as its
+# origin. It is about the payroll of a centro docente concertado's teaching
+# staff paid by the Administracion in pago delegado, so it concerns a declarant
+# who both runs a teaching activity and pays employees. Demanding it of every
+# Modelo 111 filer asked a self-employed consultant with no employees to settle
+# whether they are a colegio concertado before their 111 could exist.
 required_for_modelos = ["111"]
+required_for_modelos_when_payer_facts = ["pays_employees"]
+required_for_modelos_when_activity_iae_groups_fact = "rdleg-1175-1990:iae-grupos-ensenanza"
+required_for_modelos_when_activity_iae_epigraph_path = "activities.iae_epigraph"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-dr-111-2012"]
 
 [[sections.fields]]
 key = "pays_professionals_with_retencion"
@@ -1359,6 +2542,17 @@ effective_dated = true
 description = "Whether the taxpayer pays capital income with withholding."
 model_selectors = ["pays_capital_income_with_retencion"]
 schedule_predicates = ["pays_capital_income_with_retencion"]
+
+[[sections.fields]]
+key = "pays_non_resident_income_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays income subject to Impuesto sobre la Renta de no Residentes to non-residents without a permanent establishment and must withhold on it (TRLIRNR art. 31), which brings the Modelo 216 autoliquidaciones and the Modelo 296 annual summary. Separate from resident withholding (employees, professionals, rent): those are IRPF retenciones. Operator-declared; absent means undeclared."
+model_selectors = ["pays_non_resident_income_with_retencion"]
+schedule_predicates = ["pays_non_resident_income_with_retencion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-31"]
 
 [[sections.fields]]
 key = "modelo_111_no_retenciones_periods"
@@ -1559,6 +2753,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
+model_selectors = ["bienes_extranjero_above_threshold"]
 schedule_predicates = ["bienes_extranjero_above_threshold"]
 
 [[sections.fields]]
@@ -1570,6 +2765,17 @@ effective_dated = true
 description = "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold."
 model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
 schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
+
+[[sections.fields]]
+key = "patrimonio_declaration_threshold_met"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 714 eligibility: the Impuesto sobre el Patrimonio cuota, after deductions and bonificaciones, is payable, or otherwise the value of the taxpayer's assets and rights exceeds 2.000.000 euros (Ley 19/1991 art. 37). Operator-declared; absent means undeclared."
+model_selectors = ["patrimonio_declaration_threshold_met"]
+schedule_predicates = ["patrimonio_declaration_threshold_met"]
+legal_refs = ["ley-19-1991:art-37"]
 
 [[sections.fields]]
 key = "premio_loteria_gravamen_especial_sin_retencion"
@@ -1607,20 +2813,475 @@ model_selectors = ["declaration.type", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections]]
-key = "renta_rental"
-title = "Renta rental context"
-sensitivity = "financial"
-effective_dated = false
+key = "renta_inmueble"
+title = "Renta inmueble"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
 
 [[sections.fields]]
-key = "reduccion_art_23_2_tier_2024"
+key = "situacion"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de situacion del inmueble (casilla 0065): 1 con referencia catastral fuera del Pais Vasco y Navarra, 2 Pais Vasco, 3 Navarra, 4 en Espana sin referencia catastral, 5 en el extranjero."
+enum_values = ["1", "2", "3", "4", "5"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "referencia_catastral"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Referencia catastral del inmueble (casilla 0066); obligatoria con las situaciones 1, 2 y 3. Identifica el inmueble de un ejercicio al siguiente."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "naturaleza"
 type = "enum"
 required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Naturaleza del inmueble (casillas 0067 y 0068): urbana o rustica."
+enum_values = ["urbana", "rustica"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "direccion"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Direccion del inmueble (casilla 0069)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titularidad_regimen"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Regimen de titularidad del contribuyente sobre el inmueble: pleno dominio, nuda propiedad, usufructo, o pleno dominio y usufructo combinados. Ausente significa titularidad no declarada."
+enum_values = ["pleno_dominio", "nuda_propiedad", "usufructo", "pleno_dominio_y_usufructo"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titular"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Contribuyente titular del inmueble (casilla 0062): primer declarante, conyuge, hijo (con su ordinal) o comun a ambos conyuges."
+enum_values = ["primer_declarante", "conyuge", "hijo", "comun"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titular_hijo_ordinal"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Ordinal del hijo titular (Hijo 1, Hijo 2, etc.) cuando el titular es un hijo."
+minimum = "1"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "porcentaje_propiedad"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de propiedad del contribuyente (casilla 0063), con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "porcentaje_usufructo"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de usufructo del contribuyente (casilla 0064), con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "adquisicion_titulo"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Titulo de adquisicion del inmueble (casillas 0118 y 0119): onerosa o lucrativa."
+enum_values = ["onerosa", "lucrativa"]
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "fecha_adquisicion"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de adquisicion del inmueble (casilla 0120)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "fecha_transmision"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de transmision del inmueble cuando procede (casilla 0121)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "importe_adquisicion"
+type = "money"
+required = false
 sensitivity = "financial"
-description = "Modelo 100 de 2024, art. 23.2: porcentaje de reducción por alquiler de vivienda entre los tramos legales del 50, 60, 70 o 90 %. Sin este dato no puede calcularse la casilla 0150 únicamente a partir de la condición de elegibilidad."
-enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
-model_selectors = ["renta_rental.reduccion_art_23_2_tier_2024", "modelo_100"]
+effective_dated = true
+description = "Importe de adquisicion (casilla 0126); en una adquisicion lucrativa, el valor que corresponda al Impuesto sobre Sucesiones y Donaciones."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "gastos_tributos_adquisicion"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Gastos y tributos inherentes a la adquisicion satisfechos por el adquirente (casilla 0127)."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "valor_suelo"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Valor del suelo cuando la escritura de adquisicion lo declara; excluido de la base de amortizacion."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "mejoras"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Mejoras hechas antes de que el libro mayor cubra el inmueble, con fecha e importe: FECHA:IMPORTE separadas por punto y coma (por ejemplo 2020-05-01:1500.00)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "valores_catastrales"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Valores catastrales por ejercicio del IBI: ANO:TOTAL:CONSTRUCCION[:VIGOR] separados por punto y coma (casillas 0123 y 0124); VIGOR es el ano de entrada en vigor de la valoracion colectiva de caracter general que fijo esos valores, que decide el porcentaje de la renta imputada del art. 85 (casillas 0083 y 0084)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "usos"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Usos distintos del arrendamiento como intervalos fechados: TIPO:DESDE:HASTA separados por punto y coma, con TIPO vivienda_habitual, disposicion_propietario o actividad_economica; HASTA vacio indica que continua."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "inmueble_principal"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+references_section = "renta_inmueble"
+description = "Solo para un anejo (casillas 0074 y 0090): identificador de fila del inmueble principal con el que se arrienda, otra fila de esta misma seccion."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "importes_movimientos"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si los movimientos del libro mayor vinculados al inmueble recogen los importes del inmueble completo o solo la parte propia del contribuyente; se exige solo cuando el porcentaje de propiedad es inferior a 100."
+enum_values = ["inmueble_completo", "parte_propia"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "amortizacion_acumulada"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Amortizacion acumulada atestada hasta el inicio del primer ejercicio que la aplicacion calcula; se exige solo cuando el limite acumulado puede alcanzarse."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "amortizacion_acumulada_desde"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de inicio del primer ejercicio que la aplicacion calcula, a la que se refiere la amortizacion acumulada atestada."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "arrendado_desde"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha desde la que el inmueble esta arrendado por primera vez. Sin valor, el inicio del arrendamiento esta sin declarar: el primer contrato registrado no lo sustituye. No puede ser posterior al inicio de ningun contrato del inmueble."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "sin_arrendar"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Verdadero cuando el inmueble no se ha arrendado nunca todavia. Se guarda solo como verdadero; excluye una fecha de arrendamiento y todo contrato del inmueble."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections]]
+key = "renta_arrendamiento"
+title = "Renta arrendamiento"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "inmueble"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "renta_inmueble"
+description = "Identificador de fila del inmueble arrendado: el indice de su fila en la seccion de inmuebles."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_contrato"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha del contrato de arrendamiento (casilla 0093)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_inicio"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de inicio del arrendamiento."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_fin"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de fin del arrendamiento; ausente indica que continua."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "uso_vivienda"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El arrendamiento tiene por destino la vivienda del arrendatario, requisito de la reduccion del articulo 23.2."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "inquilinos"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Arrendatarios: NIF:FRANJA:EXTRANJERO separados por punto y coma, con FRANJA 18_35, otra o no_aplica y EXTRANJERO si o no (casillas 0091 a 0098 y filas siguientes)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "zona_tensionada"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El inmueble estaba en una zona de mercado residencial tensionado al firmar el contrato."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "primer_arrendamiento_vivienda"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Es el primer arrendamiento de la vivienda."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_entidad_tipo"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Tipo de arrendatario no persona fisica: administracion publica o entidad sin fines lucrativos."
+enum_values = ["administracion_publica", "entidad_sin_fines_lucro"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_entidad_finalidad"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Finalidad con que la entidad arrendataria destina la vivienda: vivienda asequible o social, u otra."
+enum_values = ["vivienda_asequible_o_social", "otra"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "rehabilitacion_fecha"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de finalizacion de la rehabilitacion de la vivienda, si la hubo."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "renta_inicial"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta inicial del contrato."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "renta_ultima_contrato_anterior"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Ultima renta actualizada del contrato anterior sobre la misma vivienda."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_pariente_art24"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El arrendatario es pariente dentro del grado del articulo 24 de la Ley 35/2006."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+
+[[sections.fields]]
+key = "incumple_lau_17_6"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El inmueble esta en zona tensionada y el contrato incumple el articulo 17.6 de la Ley de Arrendamientos Urbanos."
 legal_refs = ["ley-35-2006:art-23"]
+
+[[sections]]
+key = "inversiones_posicion"
+title = "Inversiones posicion"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "tipo"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Clase de posicion: cuenta corriente o de ahorro, deposito a plazo, o cuenta de valores negociables."
+enum_values = ["cuenta", "deposito", "valores_negociables"]
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "pagador_nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la entidad pagadora de los rendimientos; une la posicion con el registro de retenciones soportadas de ese pagador. Un pagador extranjero consigna su identificador fiscal."
+legal_refs = ["ley-35-2006:art-25", "rd-439-2007:art-108"]
+
+[[sections.fields]]
+key = "pagador_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razon social de la entidad pagadora."
+legal_refs = ["ley-35-2006:art-25", "rd-439-2007:art-108"]
+
+[[sections.fields]]
+key = "pais_origen"
+type = "string"
+code_list = "countries"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo ISO 3166-1 alfa-2 del Estado del que proceden los rendimientos: ES para Espana u otro Estado."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "porcentaje_titularidad"
+type = "decimal"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de titularidad del contribuyente sobre la posicion, mayor que 0 y hasta 100, con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "fecha_inicio"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha desde la que el contribuyente es titular de la posicion con ese porcentaje."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "fecha_fin"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha hasta la que el contribuyente es titular de la posicion con ese porcentaje; ausente indica que continua."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "identificador"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Identificador de la posicion para el operador: los ultimos digitos de la cuenta o la referencia de la cuenta de valores."
+legal_refs = ["ley-35-2006:art-25"]
 
 [[sections]]
 key = "renta_taxpayer"
@@ -1812,6 +3473,7 @@ legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 [[sections.fields]]
 key = "eu_eea_country"
 type = "string"
+code_list = "eu_eea_countries"
 required = false
 sensitivity = "identity"
 effective_dated = true
@@ -1837,6 +3499,16 @@ model_selectors = ["family.minor_children_in_unit", "modelo_100"]
 legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
+key = "convive_con_otro_progenitor"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do."
+model_selectors = ["family.convive_con_otro_progenitor", "modelo_100"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
+
+[[sections.fields]]
 key = "descendants_eu_eea_deduction"
 type = "boolean"
 required = false
@@ -1852,7 +3524,7 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento, fecha de fallecimiento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre y mes de alta posterior, gastos de guardería y NIF."
+description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento, fecha de fallecimiento, discapacidad, convivencia, custodia compartida, rentas anuales no exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre y mes de alta posterior, gastos de guardería, NIF y apellidos y nombre."
 model_selectors = [
   "DescendantInfo.birth_date",
   "DescendantInfo.relacion",
@@ -1870,7 +3542,9 @@ model_selectors = [
   "DescendantInfo.alta_posterior_nacimiento_mes",
   "DescendantInfo.gastos_guarderia_euros",
   "DescendantInfo.gastos_guarderia_mensuales",
+  "DescendantInfo.cotizaciones_ss_madre_euros",
   "DescendantInfo.nif",
+  "DescendantInfo.apellidos_nombre",
 ]
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1", "ley-35-2006:art-61", "ley-35-2006:art-61-norma-2", "ley-35-2006:art-61-norma-4"]
 
@@ -1890,6 +3564,7 @@ enum_values = [
   "separado_divorciado",
 ]
 model_selectors = ["family.situacion_familiar"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
 
 [[sections.fields]]
 key = "descendientes_count"
@@ -1900,6 +3575,24 @@ effective_dated = true
 description = "Count of descendants represented in Renta family facts."
 model_selectors = ["RentaFamilyProfile.descendientes_count", "modelo_100"]
 legal_refs = ["ley-35-2006:art-58"]
+
+[[sections.fields]]
+key = "ascendiente"
+type = "object"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Each ascendant for the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, date of death, descendants the ascendant lives with, cohabitation for half the period, annual income excluding exempt income, own return, disability grade, assistance or reduced mobility, and judicial incapacity, each as at the devengo or the date of death. The official disability code is derived from the grade and both circumstances, never stored."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "ascendientes_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of ascendants represented in Renta family facts."
+legal_refs = ["ley-35-2006:art-59"]
 
 [[sections.fields]]
 key = "madrid_nacimiento_adopcion_eligible_count"
@@ -1976,53 +3669,6 @@ model_selectors = [
 ]
 
 [[sections]]
-key = "properties"
-title = "Properties and rental"
-sensitivity = "financial"
-effective_dated = true
-repeatable = true
-
-[[sections.fields]]
-key = "cadastral_reference"
-type = "string"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Property cadastral reference."
-
-[[sections.fields]]
-key = "use_type"
-type = "enum"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Property use classification."
-enum_values = ["habitual", "rental", "mixed", "imputed_income", "other"]
-
-[[sections]]
-key = "usage_ratios"
-title = "Usage ratios and deductibility"
-sensitivity = "financial"
-effective_dated = true
-repeatable = true
-
-[[sections.fields]]
-key = "category_id"
-type = "string"
-required = true
-sensitivity = "financial"
-effective_dated = true
-description = "Category profile id the ratio applies to."
-
-[[sections.fields]]
-key = "business_ratio"
-type = "decimal"
-required = true
-sensitivity = "financial"
-effective_dated = true
-description = "Business-use ratio in the closed interval 0..1."
-
-[[sections]]
 key = "maritime_worker"
 title = "Maritime worker classification"
 sensitivity = "financial"
@@ -2036,6 +3682,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Clasificación como trabajador del mar. Puede dar acceso a la exención por trabajos en el extranjero del art. 7.p LIRPF, a la exención REBECA del 50 % o, cuando llegue a estar vigente, a la prevista en la disposición adicional 41. Si no se indica, se aplica el tratamiento ordinario del trabajo."
 enum_values = ["trabajador_del_mar"]
+model_selectors = ["maritime_worker.worker_class"]
 schedule_predicates = ["maritime_worker.worker_class"]
 legal_refs = [
   "ley-35-2006:art-7",
@@ -2127,6 +3774,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Whether the taxpayer is registered in RETMAR/RETM (Regimen Especial de la Seguridad Social de los Trabajadores del Mar). Since 2023 workers registered in this maritime special Social Security regime must file an IRPF declaration regardless of income level under LIRPF art. 96. This field drives a mandatory-filing profile completeness warning; it does not alter casilla values or formula paths."
+model_selectors = ["maritime_worker.retmar_registered"]
 schedule_predicates = ["maritime_worker.retmar_registered"]
 legal_refs = ["ley-35-2006:art-96"]
 

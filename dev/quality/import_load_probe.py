@@ -14,15 +14,15 @@ from pathlib import Path
 from typing import Final, cast
 
 from cadrumo.core.atomic_write import atomic_write_text
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.module_target_inventory import (
     assert_all_target_sets_current,
     compile_inventory,
     load_all_target_sets,
 )
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
+from dev.temporary_output import prepare_temp_root
 
 from .import_authority import read_authority
 from .import_check_models import Authority, AuthorityRead, RootPackage
@@ -127,9 +127,7 @@ def _load_in_authority_interpreter(
     environment = os.environ.copy()
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(str(root.source_root) for root in authority.roots))
     environment["PYTHONIOENCODING"] = UTF_8
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-import-load-worker-", dir=prepare_temporary_directory()
-    ) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-import-load-worker-", dir=prepare_temp_root()) as temporary:
         report_path = Path(temporary) / "report.json"
         completed = run_command(
             (
@@ -302,7 +300,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     read = read_authority(args.root, args.config)
-    if read.authority is not None and not read.findings and args.compile_targets:
+    if args.compile_targets:
+        if read.authority is None or read.findings:
+            print("; ".join(read.findings) or "authority is unavailable", file=sys.stderr)
+            return 7
         for output in write_load_target_inventory(read.authority):
             print(f"compiled import load targets: {output}")
         return 0

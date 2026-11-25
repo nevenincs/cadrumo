@@ -17,11 +17,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ._locale_chrome import docs_chrome
-from .casilla_display import _LEGAL_INSTRUMENT_NAMES, _humanise_token
+from .casilla_display import LEGAL_INSTRUMENT_NAMES, humanise_token
 from .compile_slots import escape
 from .legal_catalogue import load_legal_provisions
 from .legal_reference_routing import legal_reference_target
+from .locale_chrome import docs_chrome
 from .terminology.casilla_anchor import CASILLA_REFERENCE_DIR
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class _LegalLink:
+class LegalLink:
     """One catalogue provision projected for display on a casilla card."""
 
     #: Human reading of the whole provision ("Ley 37/1992, art. 92").
@@ -83,7 +83,7 @@ def _legal_numeral(tokens: list[str]) -> tuple[str | None, list[str]]:
     return None, tokens
 
 
-def _legal_provision_display(
+def legal_provision_display(
     legal_id: str,
     provision: LegalProvisionRecord,
     language: OutputLanguage,
@@ -113,7 +113,7 @@ def _legal_provision_display(
 
 
 @lru_cache(maxsize=8)
-def _legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, _LegalLink]:
+def casilla_legal_grounding_legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, LegalLink]:
     """Map every catalogue provision id to its display name and generated destination.
 
     The destination is the generated legal-reference page the sibling generator
@@ -121,7 +121,7 @@ def _legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, _LegalL
     grounding lands on the in-site provision entry rather than dumping a raw
     token or bouncing the reader straight out to BOE.
     """
-    links: dict[str, _LegalLink] = {}
+    links: dict[str, LegalLink] = {}
     for provision in load_legal_provisions(repo_root):
         target = legal_reference_target(
             provision.document_id,
@@ -131,8 +131,8 @@ def _legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, _LegalL
             corpus_ref=provision.corpus_ref,
             permalink=provision.permalink,
         )
-        instrument, within = _legal_provision_display(provision.legal_id, provision, language)
-        links[provision.legal_id] = _LegalLink(
+        instrument, within = legal_provision_display(provision.legal_id, provision, language)
+        links[provision.legal_id] = LegalLink(
             label=f"{instrument}, {within}" if within else instrument,
             instrument=instrument,
             provision=within,
@@ -148,7 +148,7 @@ def _relative_to_casilla_page(site_target: str) -> str:
     return f"{relative}#{fragment}" if fragment else relative
 
 
-def _legal_list(refs: tuple[str, ...], links: dict[str, _LegalLink], label: str) -> tuple[list[str], int]:
+def legal_list(refs: tuple[str, ...], links: dict[str, LegalLink], label: str) -> tuple[list[str], int]:
     """Render the legal basis grouped by instrument, returning lines and link count.
 
     Four refs into one norm used to print that norm's name four times, which is
@@ -195,7 +195,7 @@ def _legal_id_parts(legal_id: str) -> tuple[str | None, str, str, str]:
     numeral, remainder = _legal_numeral(tokens)
     remainder = [token for token in remainder if token.lower() not in _LEGAL_KIND_TOKENS]
     separator = "/" if (numeral is not None and numeral) else "-"
-    qualifier = separator.join(token.upper() if len(token) <= 4 else _humanise_token(token) for token in remainder)
+    qualifier = separator.join(token.upper() if len(token) <= 4 else humanise_token(token) for token in remainder)
 
     return numeral, qualifier, separator, provision_part
 
@@ -204,7 +204,7 @@ def _legal_instrument_display(
     legal_id: str, provision: LegalProvisionRecord, language: OutputLanguage
 ) -> tuple[str, str]:
     numeral, qualifier, separator, provision_part = _legal_id_parts(legal_id)
-    instrument = _LEGAL_INSTRUMENT_NAMES.get(provision.kind)
+    instrument = LEGAL_INSTRUMENT_NAMES.get(provision.kind)
     kind_display = (
         instrument if instrument is not None else docs_chrome(f"docs.casilla.legal_kind.{provision.kind}", language)
     )

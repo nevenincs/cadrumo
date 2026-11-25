@@ -12,7 +12,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Self, override
 
-from ...core.external_constants import CLASSIFIED_BY_AUTO
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_DERIVED_PREFIX, CLASSIFIED_BY_MANUAL
 from .enums import BusinessClassification
 
 if TYPE_CHECKING:
@@ -25,6 +25,8 @@ _MOVEMENT_FIELDS: Final = frozenset({"booked_date", "value_date", "amount", "cur
 
 CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "direction",
+    "operation_date",
+    "accrual_date",
     "source_jurisdiction",
     "business_classification",
     "business_pct",
@@ -32,6 +34,7 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "usage_ratio_id",
     "prorrata_reference",
     "iva_category",
+    "exemption_article",
     "iva_rate",
     "taxable_base",
     "iva_amount",
@@ -40,8 +43,14 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "m210_income_classification",
     "deduction_fact_kind",
     "investment_asset_id",
+    "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
+    "arrendamiento_ref",
+    "inmueble_ref",
+    "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
     "art_104_tres_exclusion",
     "input_classification",
     "prorrata_sector_id",
@@ -121,6 +130,29 @@ def resolved_classification_origin(transaction: Transaction) -> ClassificationOr
     return written_classification_origin(by_automation=False, classified_by=transaction.classified_by)
 
 
+def figures_derived(transaction: Transaction) -> bool:
+    """Return whether Cadrumo's derivation last wrote the row's base, rate and IVA.
+
+    The stamp is the row's last write, so a later write of any kind restamps it
+    and the answer reads false from then on, whatever the figures hold.
+    """
+    return transaction.classified_by.strip().startswith(CLASSIFIED_BY_DERIVED_PREFIX)
+
+
+def classification_decided_by(transaction: Transaction) -> str:
+    """Return the stamp of whoever decided the row's classification.
+
+    That is ``classified_by``, except for a derivation's stamp: a derivation
+    works figures out and decides nothing, so when the origin says the person
+    decided the row, the person's own stamp is served. A derivation stamp over
+    any other origin is served as stored, and an unprocessed row keeps its stamp.
+    """
+    stamp = transaction.classified_by
+    if figures_derived(transaction) and resolved_classification_origin(transaction) is ClassificationOrigin.PERSON:
+        return CLASSIFIED_BY_MANUAL
+    return stamp
+
+
 def with_classification_origin(
     replacement: Transaction,
     *,
@@ -157,7 +189,9 @@ def with_classification_origin(
 __all__ = [
     "CLASSIFICATION_DECISION_FIELDS",
     "ClassificationOrigin",
+    "classification_decided_by",
     "classification_facts",
+    "figures_derived",
     "resolved_classification_origin",
     "with_classification_origin",
     "written_classification_origin",

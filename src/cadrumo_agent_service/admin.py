@@ -15,8 +15,21 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
+from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from .host.credential_frame import wipe
+from .host.sign_in_refusal import new_log_ref
+from .local_ai_relay import LocalAiFacts
+from .providers.application.contracts import SignInMethod
 from .providers.application.ports import ProviderCatalogUnavailableError
+from .providers.application.served_catalog import catalog_nonconformance
+from .providers.domain.catalog import EffortLevel, TaskKindId
+from .providers.domain.record import LocalEngine, LocalPlacement
+
+_LOGGER = get_logger(__name__)
 
 ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
@@ -28,20 +41,40 @@ ADMIN_BUSY_ANSWERS = 16
 ADMIN_BUSY_READ_SECONDS = 1.0
 """How long a connection answered ``busy`` has to send its two frames."""
 
+_AGENT_IDENTIFIER_PATTERN = r"^[A-Za-z0-9_.-]{1,128}$"
+"""A run or permission request as the agent names it; never a path."""
+
 type AdminAction = Literal[
     "catalog",
     "status",
+    "provider_lanes",
     "set",
     "remove",
     "turn_on",
     "reset",
     "auth",
     "sign_in",
+    "sign_out",
     "start",
     "stop",
     "connect",
     "connect_status",
     "connect_cancel",
+    "connect_submit_code",
+    "local_models",
+    "local_model_add",
+    "local_model_remove",
+    "local_models_reset",
+    "reading_model_choose",
+    "task_model_choose",
+    "local_engine",
+    "local_engine_choose",
+    "attachment_card",
+    "attachment_release",
+    "attachment_grants",
+    "attachment_grant_revoke",
+    "attachment_conversation_forget",
+    "console_environment",
 ]
 
 
@@ -56,9 +89,20 @@ class AdminTarget(Protocol):
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
-        method: Literal["browser", "device"] | None = None,
+        method: SignInMethod | None = None,
         attempt_id: str | None = None,
+        model: str | None = None,
         secret: bytearray | None = None,
+        run_id: str | None = None,
+        permission_request_id: str | None = None,
+        scope: Literal["once", "session", "remember", "decline"] | None = None,
+        grant_id: str | None = None,
+        conversation_id: str | None = None,
+        engine: LocalEngine | None = None,
+        placement: LocalPlacement | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
+        local_ai: LocalAiFacts | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -75,9 +119,22 @@ class AdminRequest(BaseModel):
     expected_revision: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")] | None = None
     base_url: Annotated[str, Field(max_length=2048)] | None = None
     choice: Literal["direct_api", "provider_sign_in"] | None = None
-    method: Literal["browser", "device"] | None = None
+    method: SignInMethod | None = None
     attempt_id: UUID | None = None
+    model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
+    run_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    permission_request_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    scope: Literal["once", "session", "remember", "decline"] | None = None
+    grant_id: Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")] | None = None
+    conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
+    task_kind: TaskKindId | None = None
+    effort: EffortLevel | None = None
+    # The runtime manager's served facts of the selected local engine, which a
+    # catalogue read relays in place of the agent's probe of a sleeping server.
+    local_ai: LocalAiFacts | None = None
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytearray:
@@ -220,40 +277,61 @@ class AdminServer:
             _write_document(stream, {"kind": "refused", "code": "unauthenticated"})
             return
         request = AdminRequest.model_validate_json(_read_frame(stream, ADMIN_DOCUMENT_MAX_BYTES, deadline=deadline))
+        result = self._handle_request(stream, request, deadline)
+        _write_document(stream, {"version": 1, "request_id": str(request.request_id), "result": result})
+
+    def _handle_request(self, stream: socket.socket, request: AdminRequest, deadline: float) -> JsonValue:
         secret: bytearray | None = None
         result: JsonValue
         try:
-            if request.action == "set":
-                if request.secret_bytes is None:
-                    raise ValueError("missing_secret_length")
-                _write_document(stream, {"event": "secret_ready", "request_id": str(request.request_id)})
-                secret = _read_frame(stream, ADMIN_SECRET_MAX_BYTES, deadline=deadline)
-                if len(secret) != request.secret_bytes:
-                    raise ValueError("secret_length_mismatch")
-            elif request.secret_bytes is not None:
-                raise ValueError("unexpected_secret")
-            if self._stop.is_set() or time.monotonic() >= deadline:
-                raise ValueError("admin_request_expired")
-            result = self._service.admin(
-                request.action,
-                provider=request.provider,
-                expected_revision=request.expected_revision,
-                base_url=request.base_url,
-                choice=request.choice,
-                method=request.method,
-                attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
-                secret=secret,
-            )
+            secret = _read_request_secret(stream, request, deadline)
+            if secret is not None and len(secret) != request.secret_bytes:
+                raise ValueError("secret_length_mismatch")
+            result = self._dispatch_request(request, secret, deadline)
         except ProviderCatalogUnavailableError:
             result = {"kind": "refused", "code": "catalog_unavailable"}
         except (ValueError, UnicodeDecodeError):
             result = {"kind": "refused", "code": "invalid_request"}
-        except Exception:
-            result = {"kind": "refused", "code": "service_failed"}
+        except FrontendRefusedError as error:
+            # A lease the runtime keeps suspended returns by itself and nothing was done: ask again.
+            if error.reason == AccessDenialCode.CUSTODY_RECOVERING.value:
+                result = {"kind": "refused", "code": "busy"}
+            else:
+                result = _service_failed(request.action, error)
+        except Exception as error:
+            result = _service_failed(request.action, error)
         finally:
             if secret is not None:
                 wipe(secret)
-        _write_document(stream, {"version": 1, "request_id": str(request.request_id), "result": result})
+        return result
+
+    def _dispatch_request(self, request: AdminRequest, secret: bytearray | None, deadline: float) -> JsonValue:
+        if self._stop.is_set() or time.monotonic() >= deadline:
+            raise ValueError("admin_request_expired")
+        answer = self._service.admin(
+            request.action,
+            provider=request.provider,
+            expected_revision=request.expected_revision,
+            base_url=request.base_url,
+            choice=request.choice,
+            method=request.method,
+            attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
+            model=request.model,
+            secret=secret,
+            run_id=request.run_id,
+            permission_request_id=request.permission_request_id,
+            scope=request.scope,
+            grant_id=request.grant_id,
+            conversation_id=request.conversation_id,
+            engine=request.engine,
+            placement=request.placement,
+            task_kind=request.task_kind,
+            effort=request.effort,
+            local_ai=request.local_ai,
+        )
+        if request.action != "catalog":
+            return answer
+        return _conforming_catalog(answer)
 
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""
@@ -270,3 +348,46 @@ class AdminServer:
                 stream.close()
         self._thread.join(6)
         self._workers.shutdown(wait=True, cancel_futures=True)
+
+
+def _conforming_catalog(answer: JsonValue) -> JsonValue:
+    """``answer`` when it is a refusal or the served catalog the agent's pinned schema states, else a refusal.
+
+    A catalog that departs from the schema is never relayed: the departure is logged by place and rule,
+    and the frontend is told the catalog is unavailable, with the log line's reference.
+    """
+    if isinstance(answer, dict) and answer.get("kind") == "refused":
+        return answer
+    departure = catalog_nonconformance(answer)
+    if departure is None:
+        return answer
+    log_ref = new_log_ref()
+    _LOGGER.error("provider catalog departs from the pinned agent schema at=%s log_ref=%s", departure, log_ref)
+    return {"kind": "refused", "code": "catalog_unavailable", "log_ref": log_ref}
+
+
+def _service_failed(action: str, error: Exception) -> dict[str, JsonValue]:
+    """Refuse a request that failed unexpectedly, logging its cause under the reference the refusal carries."""
+    log_ref = new_log_ref()
+    _LOGGER.error(
+        "service admin request failed action=%s error=%s log_ref=%s",
+        action,
+        type(error).__name__,
+        log_ref,
+        exc_info=error,
+    )
+    return {"kind": "refused", "code": "service_failed", "log_ref": log_ref}
+
+
+def _read_request_secret(stream: socket.socket, request: AdminRequest, deadline: float) -> bytearray | None:
+    if request.action in {"set", "connect_submit_code"}:
+        if request.secret_bytes is None:
+            raise ValueError("missing_secret_length")
+        if request.action == "connect_submit_code" and request.secret_bytes > 2048:
+            raise ValueError("invalid_secret_length")
+        _write_document(stream, {"event": "secret_ready", "request_id": str(request.request_id)})
+        maximum = 2048 if request.action == "connect_submit_code" else ADMIN_SECRET_MAX_BYTES
+        return _read_frame(stream, maximum, deadline=deadline)
+    elif request.secret_bytes is not None:
+        raise ValueError("unexpected_secret")
+    return None

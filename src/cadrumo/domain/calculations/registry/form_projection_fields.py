@@ -4,18 +4,12 @@ from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .schema import ModeloRevision
-from .schema_exports import ExportFieldDefinition
+from .schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from .schema_form_layouts import FormRepeatingGroupBlock
 
 
-def resolve_form_projection_fields(
-    revision: ModeloRevision, block: FormRepeatingGroupBlock
-) -> tuple[ExportFieldDefinition, ...]:
-    """Resolve :class:`ModeloRevision` projections, refusing missing or ambiguous endpoints.
-
-    The form supplies labels and order. Its values retain the typed projection
-    references owned by the export declaration, including their slot identity.
-    """
+def _projection_record(revision: ModeloRevision, block: FormRepeatingGroupBlock) -> ExportRecordDefinition:
+    """Require one export record with the declared repeating-row semantics."""
     records = tuple(
         record
         for layout in derive_export_layouts_from_bindings(revision)
@@ -30,6 +24,18 @@ def resolve_form_projection_fields(
             raise RegistryValidationError("a single export record requires a projected form block bounded to one row")
     elif record.repeat != "projection_rows":
         raise RegistryValidationError("projected form columns require a projection_rows or single export record")
+    return record
+
+
+def resolve_form_projection_fields(
+    revision: ModeloRevision, block: FormRepeatingGroupBlock
+) -> tuple[ExportFieldDefinition, ...]:
+    """Resolve :class:`ModeloRevision` projections, refusing missing or ambiguous endpoints.
+
+    The form supplies labels and order. Its values retain the typed projection
+    references owned by the export declaration, including their slot identity.
+    """
+    record = _projection_record(revision, block)
     fields = {field.id: field for field in record.fields}
     selected: list[ExportFieldDefinition] = []
     for column in block.columns:

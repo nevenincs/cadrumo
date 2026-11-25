@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ..config_live_tests import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
+from ..config_live_tests import LIVE_READ_TEST_OPT_IN_ENV_VAR
 from .errors import (
     AeatLiveReadNotEnabledError,
     LiveSubmitForbiddenError,
@@ -86,7 +86,7 @@ class AeatAccessGate:
             raise AeatLiveReadNotEnabledError(
                 translated_message="errors.refused.refused_access_gate_live_read_not_enabled",
                 context={
-                    "env_var": _LIVE_READ_TEST_OPT_IN_ENV_VAR,
+                    "env_var": LIVE_READ_TEST_OPT_IN_ENV_VAR,
                     "required_value": "1",
                     "current_value": self.settings.cadrumo_live_tests_enabled,
                     "live_reads_enabled": False,

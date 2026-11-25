@@ -16,6 +16,7 @@ from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError
+from ......tests.log_records import delivered_records
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
@@ -24,8 +25,8 @@ from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject
-from ._auth_fixtures import CERTIFICATE_INPUT
-from ._authenticator_support import _build_bundle
+from .auth_fixtures import CERTIFICATE_INPUT
+from .authenticator_support import build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -48,10 +49,9 @@ def _certificate_session() -> AeatSession:
 
 def _settings(tmp_path: Path) -> Settings:
     return Settings(
-        cadrumo_certificate_path=_build_bundle(tmp_path),
+        cadrumo_certificate_path=build_bundle(tmp_path),
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
-        cadrumo_token_dir=tmp_path / ".tokens",
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_browser_close_timeout_ms=15_000,
     )
 
@@ -173,7 +173,9 @@ async def test_navigation_failure_redacts_redirect_payload_from_assertion_and_lo
     assert assertion.is_valid is False
     assert assertion.error_message in {"Error", "protected_resource_mismatch"}
     assert boundary.sensitive_token not in assertion.model_dump_json()
-    assert boundary.sensitive_token not in "\n".join(record.getMessage() for record in caplog.records)
+    logged = "\n".join(record.getMessage() for record in delivered_records(caplog))
+    assert "login probe navigation failed" in logged
+    assert boundary.sensitive_token not in logged
 
 
 @pytest.mark.asyncio
@@ -318,6 +320,9 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         settings = _settings(tmp_path)
         async with opened_http_boundary() as boundary:
+            # Readiness cannot expire before the provider's own navigation guard:
+            # Chromium may still be starting that navigation under load.
+            readiness_budget_s = settings.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             boundary.configure("blocking")
             authenticator = AeatAuthenticator(
                 settings,
@@ -332,7 +337,10 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
                 authenticate_task = asyncio.create_task(authenticator.authenticate())
                 try:
                     await wait_for_task_readiness(
-                        boundary.wait_until_blocked(), authenticate_task, after="blocked authentication proof"
+                        boundary.wait_until_blocked(timeout_seconds=readiness_budget_s),
+                        authenticate_task,
+                        after="blocked authentication proof",
+                        timeout_seconds=readiness_budget_s,
                     )
                     browser = authenticator._browser_session
                     assert isinstance(browser, DefaultBrowserSession)

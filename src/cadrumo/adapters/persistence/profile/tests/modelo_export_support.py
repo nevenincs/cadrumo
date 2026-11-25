@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -51,14 +52,14 @@ from .published_authority_support import published_authority_operation
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
-_M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INPUT_CASILLA")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-_M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULT_CASILLA")
-_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
+M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="M130_INPUT_CASILLA")
+M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="M130_RENDIMIENTO_NETO_CASILLA")
+M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="M130_RESULT_CASILLA")
+M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="M303_RESULT_CASILLA")
 _SPANISH_IBAN = "ES9121000418450200051332"
-_M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
+M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
-    surface="_M200_REFUND_RESULT_CASILLA",
+    surface="M200_REFUND_RESULT_CASILLA",
 )
 _SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 
@@ -68,7 +69,7 @@ def export_m303_filing_evidence(period: Period, *, operation: PinnedAuthorityOpe
     return general_m303_filing_evidence(period, reference="test:export:exonerado-not-applicable", operation=operation)
 
 
-def _casilla_id_from_payload(value: object) -> CasillaId:
+def casilla_id_from_payload(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="test casilla id")
 
 
@@ -134,6 +135,7 @@ def seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str]
         "identity.surnames": "Operator",
         "iva.m303_regime_composition": "general",
         "iva.redeme_enrolled": "false",
+        "censo.large_company": "false",
         "iva.cash_accounting_regime_enrolled": "false",
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
@@ -175,12 +177,16 @@ def seed_revision(
     binding_overrides = dict(binding_overrides or dict[BindingId, str]())
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
-    snapshot = published_authority_operation().snapshot(
+    operation = published_authority_operation()
+    snapshot = operation.snapshot(
         modelo,
         filing_year=filing_year,
         period=typed_period.registry_token,
     )
     revision_id = snapshot.revision.id
+    # A seeded revision stands in for a calculation of this snapshot, so it
+    # carries the screen stamp that calculation persists.
+    screen_stamp = calculation_screen_stamp(snapshot, operation=operation)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -188,6 +194,17 @@ def seed_revision(
         period=typed_period,
         revision_id=revision_id,
     )
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
+        screen_stamp=screen_stamp,
+    )
+    # A calculation makes its revision the work unit's current one; a work unit
+    # with no current calculation exports nothing.
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -198,17 +215,10 @@ def seed_revision(
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_SEEDED_REVISION_AT,
         updated_at=_SEEDED_REVISION_AT,
+        current_calculation_revision_id=calculation_revision_id,
     )
     WorkUnitCatalogueRepository().save(
         upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit),
-    )
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -236,9 +246,18 @@ def seed_revision(
         verified_at=_SEEDED_REVISION_AT if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    # Persisting a calculation points its work unit at the revision it saved;
+    # export, verification and filing read the work unit's current revision.
+    WorkUnitCatalogueRepository().save(
+        upsert_work_unit(
+            WorkUnitCatalogueRepository().load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id}),
+        ),
+    )
     return work_unit_id, calculation_revision_id
 
 

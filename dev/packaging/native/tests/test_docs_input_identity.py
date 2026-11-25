@@ -49,8 +49,8 @@ def test_docs_owner_keeps_reuse_inside_each_binary_directory(tmp_path: Path, mon
         destination.mkdir(parents=True, exist_ok=True)
         (destination / "index.html").write_text("compiled site", encoding="utf-8")
 
-    monkeypatch.setattr(docs_build, "_compile_roots", produce)
-    monkeypatch.setattr(docs_build, "_index_site", lambda *_args: None)
+    monkeypatch.setattr(docs_build, "compile_roots", produce)
+    monkeypatch.setattr(docs_build, "index_site", lambda *_args: None)
     for name in ("first", "second"):
         source = tmp_path / name
         build, inputs, authority = _checkout(source)

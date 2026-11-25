@@ -10,9 +10,10 @@ from uuid import UUID
 from pydantic import BaseModel, Field, RootModel, model_validator
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 
@@ -51,17 +52,20 @@ from .installation_requests import InstallationActRequest, InstallationReply, In
 from .model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetched, ModelRunFetchRequest
 from .operation_access import OperationReply, OperationRequest
 from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
-from .service_access import ServiceAdmission, ServiceConnect, ServiceConnected
+from .service_access import (
+    ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
+    ServiceConnect,
+    ServiceConnected,
+)
 from .sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .sign_in_outcomes import SignInRefusal
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
+from .view_stream import ViewAttachRequest, ViewConnect
 
 type HumanProofMethod = Literal["password", "receipt"]
 
-# One cold profile admission can launch and prepare an isolated worker, then
-# run its supervised password KDF, before its first reply; on a loaded host each
-# takes many seconds. The same budget covers human proof and protected
-# references, and uses the whole of the runtime's single-exchange maximum.
-PROFILE_ADMISSION_TIMEOUT_SECONDS = 120.0
 
 _SIGN_IN_FRONTENDS = frozenset(
     {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP}
@@ -76,6 +80,9 @@ class HumanProof:
     secret: bytearray = field(repr=False)
     originating_login_id: str
     persist_receipt: bool = False
+    timeout_deadline: float | None = None
+    attempt_id: UUID | None = None
+    cancellation: ProfileProofCancellation | None = field(default=None, repr=False)
 
 
 class ProfileLogin(BaseModel):
@@ -100,6 +107,28 @@ class ProfileLogin(BaseModel):
         if self.hand_over and (self.method != "receipt" or self.frontend not in _SIGN_IN_FRONTENDS):
             raise ValueError("a handover resumes a saved sign-in at a person's frontend")
         return self
+
+
+class ProfileLoginStatusQuery(BaseModel):
+    """Claim or cancel only this verified connection's exact pending login."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["profile_login_status", "profile_login_cancel"]
+    request_id: UUID
+    profile_id: UUID
+    login_request_id: UUID
+
+
+class ProfileLoginPending(BaseModel):
+    """The runtime owns this proof attempt; this handle grants no session."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_login_pending"] = "profile_login_pending"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    login_request_id: UUID
 
 
 class SessionRequest(BaseModel):
@@ -132,6 +161,7 @@ class Request(
     RootModel[
         Annotated[
             ProfileLogin
+            | ProfileLoginStatusQuery
             | ProfileDeletePrepare
             | ProfileDelete
             | PasswordResetPrepare
@@ -149,9 +179,12 @@ class Request(
             | InstallationActRequest
             | ServiceConnect
             | ServiceAdmission
+            | ServiceAdmissionStatusQuery
             | ExtensionRecordRequest
             | ModelRunFetchRequest
-            | ModelRunCompleteRequest,
+            | ModelRunCompleteRequest
+            | ViewAttachRequest
+            | ViewConnect,
             Field(discriminator="action"),
         ]
     ]
@@ -245,7 +278,7 @@ class ProfileStatusTransfer(BaseModel):
     request_id: UUID
     runtime_boot_id: UUID
     connection_id: UUID
-    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=1_048_576)]
     payload_digest: ContentDigest
 
 
@@ -280,6 +313,13 @@ class AccessRefusal(BaseModel):
     request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
     #: The unsettled operation that holds the subject of a ``subject_busy`` refusal.
     holder_operation_id: OperationId | None = None
+    #: Whole seconds left in the recovery window of a ``custody_recovering`` refusal.
+    recovery_remaining_seconds: int | None = Field(default=None, ge=0)
+    #: ``unknown`` when the worker was lost while it served a change this request
+    #: carried: the change may have taken effect, so repeating it is not safe.
+    effect: OperationEffect | None = None
+    #: The operation whose change has that unknown effect, when the request named one.
+    operation_id: OperationId | None = None
 
     @model_validator(mode="after")
     def _only_an_invalid_request_has_faults(self) -> AccessRefusal:
@@ -287,13 +327,26 @@ class AccessRefusal(BaseModel):
             raise ValueError("only an invalid request carries request faults")
         if self.holder_operation_id is not None and self.code is not AccessDenialCode.SUBJECT_BUSY:
             raise ValueError("only a busy subject names the operation that holds it")
+        if self.recovery_remaining_seconds is not None and self.code is not AccessDenialCode.CUSTODY_RECOVERING:
+            raise ValueError("only a session suspended for custody recovery carries a recovery window")
+        self._validate_unknown_effect()
         return self
+
+    def _validate_unknown_effect(self) -> None:
+        """Allow unknown change effects only for custody recovery and correlate their operation."""
+        if self.effect is not None and (
+            self.effect is not OperationEffect.UNKNOWN or self.code is not AccessDenialCode.CUSTODY_RECOVERING
+        ):
+            raise ValueError("only a change the lost worker was serving has an effect, and it is unknown")
+        if self.operation_id is not None and self.effect is None:
+            raise ValueError("only a change of unknown effect names its operation")
 
 
 class Reply(
     RootModel[
         Annotated[
             SecretReady
+            | ProfileLoginPending
             | ProfileDeletePrepared
             | ProfileDeleted
             | ProfileDeleteRefused
@@ -318,6 +371,7 @@ class Reply(
             | InstallationReply
             | InstallationReplyTransfer
             | ServiceConnected
+            | ServiceAdmissionPending
             | ExtensionRecordReply
             | ModelRunFetched
             | ModelRunCompleted

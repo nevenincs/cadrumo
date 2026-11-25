@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e17259f73457b2470c33aff2f62d239a5105b85eb6f8326ababa11915f728042'
+body_hash: 'sha256:4e1c0633b3b0e8748dbe7a940eb20a26850af3c5d13aa5ac84190ce43bcd6221'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]"
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
@@ -30,8 +30,8 @@ unmeasured one.
 
 ## Considerations
 
-- The ceiling is normative rather than a parenthetical: it carries its own heading in all
-  six bundled renta manuals, 2020 through 2025, as "Especialidad: aplicación del
+- The ceiling is normative rather than a parenthetical: it carries its own heading in every
+  bundled renta manual, as "Especialidad: aplicación del
   incremento hasta que el hijo comience el segundo ciclo de educación infantil".
 - AEAT declines to fix the month. Every statement in every year is subjunctive — "aquel
   en el que PUEDA comenzar", "PUEDA iniciar" — because when the cycle may begin depends

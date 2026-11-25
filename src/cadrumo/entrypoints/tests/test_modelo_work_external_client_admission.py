@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -56,26 +56,27 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .conformance_family_contract import ConformanceFamily
 from .conformance_maritime_preview_support import MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY
-from .conformance_review_package_exchange_support import _profile_recipient_keypair
+from .conformance_review_package_exchange_support import profile_recipient_keypair
 from .registered_executor_case_support import (
+    ExecutionDriver,
     OperationRuntimeCloseWitness,
-    _ExecutionDriver,
-    _resolve_result_projection,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
+    resolve_result_projection,
     seeded_conformance_operation_submission,
 )
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -96,13 +97,11 @@ def _context(
     operation: PinnedAuthorityOperation,
     action: AccessAction = AccessAction.SUBMIT,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return operation_access_context(
+        registry.lookup_public_contract(request.definition_id),
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registry.lookup_public_contract(request.definition_id),
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
     )
 
@@ -409,7 +408,7 @@ def test_a_modelo_write_stores_the_session_label_for_an_automation_and_the_suppl
 ) -> None:
     """Every event the real executor appends names the label of the session that admitted it."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(
             tmp_path / definition_id,
             cleanup=OperationRuntimeCloseWitness(),
@@ -438,7 +437,7 @@ def test_a_modelo_write_stores_the_session_label_for_an_automation_and_the_suppl
         assert {event.actor for event in appended} == {recorded_actor}
 
 
-def _settled(driver: _ExecutionDriver, definition_id: str, subject_ref: str, payload: BaseModel) -> tuple[str, int]:
+def _settled(driver: ExecutionDriver, definition_id: str, subject_ref: str, payload: BaseModel) -> tuple[str, int]:
     """Run one operation to its successful settlement and return its id and terminal revision."""
     submitted, observed = asyncio.run(driver.run(definition_id=definition_id, subject_ref=subject_ref, payload=payload))
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -468,7 +467,7 @@ def test_the_modelo_390_attestation_is_captured_under_the_session_label_for_an_a
 
         operation_id, terminal_revision = _settled(driver, definition_id, submission.subject_ref, payload)
 
-        result = _resolve_result_projection(
+        result = resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -504,7 +503,7 @@ def test_review_feedback_names_the_session_label_as_its_submitter_for_an_automat
         envelope = RecipientEncryptedPackage.model_validate_json(payload.output.read_text(encoding="utf-8"))
         feedback = decrypt_feedback_package_from_originator_envelope(
             envelope,
-            originator_private_key_hex=_profile_recipient_keypair(profile_id).private_key_hex,
+            originator_private_key_hex=profile_recipient_keypair(profile_id).private_key_hex,
             recipient_encryption=build_recipient_encryption_capability(bucket_id=str(profile_id)),
         )
         assert feedback.submitted_by == recorded_actor

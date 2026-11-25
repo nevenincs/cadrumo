@@ -57,6 +57,16 @@ class BindingAggregationOp(StrEnum):
             selected observations (e.g. Modelo 349 operator counts).
         PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
             that nets the prior positive declaration against the running total.
+        PRIOR_NEGATIVE_RESULTS_UNDEDUCTED: The negative results of earlier
+            pago-fraccionado quarters that no quarter has deducted yet: per quarter,
+            the unsigned negative part of the first source casilla (its result),
+            less the second source casilla (what it deducted).
+        PAGOS_FRACCIONADOS_INGRESADOS: The amount pago-fraccionado
+            autoliquidaciones actually paid, folded across their source periods.
+            Each period's effective filing contributes the result already paid
+            by earlier autoliquidaciones of that period (second source casilla)
+            plus the positive part of its own result (first source casilla); a
+            negative result is not paid but deducted from later periods.
     """
 
     SUM = "sum"
@@ -64,6 +74,8 @@ class BindingAggregationOp(StrEnum):
     COPY = "copy"
     COUNT_DISTINCT = "count_distinct"
     PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+    PRIOR_NEGATIVE_RESULTS_UNDEDUCTED = "prior_negative_results_undeducted"
+    PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
 class BindingAggregation(BaseModel):
@@ -107,17 +119,21 @@ class RelationAggregationOp(StrEnum):
 
     A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
     matched source filings: :attr:`COPY` carries a single source value through
-    unchanged (the default when a relation declares no aggregation), and
-    :attr:`SUM` adds the matched per-period source values (annual summaries). This
-    is a deliberately separate axis from :class:`BindingAggregationOp` (which
-    governs ``BindingDefinition`` folds and carries the binding-only ``rows``
-    / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
-    interchanged. The complete set declared across the registry relation tree is
-    ``copy`` and ``sum``.
+    unchanged (the default when a relation declares no aggregation),
+    :attr:`SUM` adds the matched per-period source values (annual summaries), and
+    :attr:`PAGOS_FRACCIONADOS_INGRESADOS` adds, per matched period, the result
+    already paid by earlier autoliquidaciones plus the positive part of the
+    period's own result. This is a deliberately separate axis from
+    :class:`BindingAggregationOp` (which governs ``BindingDefinition`` folds and
+    carries the binding-only ``rows`` / ``count_distinct`` /
+    ``prior_pagos_fraccionados`` / ``prior_negative_results_undeducted`` members); the two are not interchanged. The
+    complete set declared across the registry relation tree is ``copy``, ``sum``
+    and ``pagos_fraccionados_ingresados``.
     """
 
     COPY = "copy"
     SUM = "sum"
+    PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
 class AggregationCaptureKind(StrEnum):
@@ -274,6 +290,14 @@ class BindingSourceKind(StrEnum):
     # the validated distinct-NIF primitive (aggregate_retenciones_180.
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation.
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Withholding the taxpayer SUFFERED: one encrypted record per payer, income
+    # class and ejercicio, from a payer certificate or the operator's declaration.
+    # The perceptor's side, credited in the annual Renta. Deliberately distinct
+    # from RETENCIONES_AGGREGATION and WITHHOLDING, which hold withholding the
+    # taxpayer PRACTISED as a withholding agent; a shared kind would let a credit
+    # casilla claim tax withheld from someone else. Not a ledger kind and not a
+    # counterpart kind.
+    RETENCION_SOPORTADA = "retencion_soportada"
     # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
     # 303 compensation states and materialises AEAT boxes 97 / 662 together from
     # the FIFO carry projection. This is a registry-declared source because the
@@ -298,6 +322,27 @@ class BindingSourceKind(StrEnum):
     # distinct from the transaction-ledger aggregation family and from capital-
     # goods IVA regularisation.
     INVENTORY = "inventory"
+    # A baja's gain, loss or excess, from the activity-asset register, routed to the
+    # boxes each Modelo 100 revision gives them. The boxes hold other facts of the
+    # same kind too, so the filer's own entry stays admissible over the figure.
+    ACTIVITY_ASSET_DISPOSAL = "activity_asset_disposal"
+    # Interest and dividends from a saver's positions: the profile position
+    # records joined to the ledger rows linked to them and to each payer's
+    # suffered-withholding record. Gross is rebuilt from linked net cash plus the
+    # payer's withholding and checked against the payer's own gross. Deliberately
+    # not a ledger aggregation kind: the rows are read only through their position
+    # link, and the activity aggregations exclude every linked row.
+    CAPITAL_MOBILIARIO_POSITION = "capital_mobiliario_position"
+    # Contributions to social-welfare systems, from the taxpayer's contribution
+    # certificate records: each record's Modelo 345 clave and subclave reaches the
+    # Modelo 100 box the edition's placement rows give it. The boxes hold what the
+    # filer may also type, so the filer's own entry stays admissible beside the
+    # figure and a differing one is reported, never applied in silence.
+    PREVISION_SOCIAL_CONTRIBUTION = "prevision_social_contribution"
+    # One let property's ``Inmueble`` occurrence of Modelo 100: the property and
+    # lease rows of the profile joined with the ledger rows linked to them. Each
+    # column a revision declares fills its box on the property's own row.
+    RENTA_INMUEBLE = "renta_inmueble"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage
@@ -306,6 +351,11 @@ class BindingSourceKind(StrEnum):
     # Registry-declared live mesh source once the provisional-carry store and Q4
     # regularisation path are proven end to end.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
+    # One fact of one fixed activity row of the profile's prorrata register (LIVA
+    # arts. 101-104): the CNAE code, the volumes, the kind of prorrata and its
+    # definitive percentage that Modelo 390 apartado 12 prints per activity. The
+    # register is the rows' only owner; no operator input channel duplicates them.
+    PRORRATA_REGISTER_ACTIVITY = "prorrata_register_activity"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `BindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill
@@ -518,11 +568,7 @@ class BindingTypedEnumKind(StrEnum):
 
     - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
     - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
-    - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
-      Modelo 100 estimación-directa modality.
     - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
-    - ``RENTAL_REDUCTION_ART_23_2_TIER`` (``"RentalReductionArt232Tier"``) —
-      Modelo 100 reducción por arrendamiento de vivienda tier (LIRPF Art. 23.2).
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
     annotation token that was previously a bare ``str`` in
@@ -546,9 +592,7 @@ class BindingTypedEnumKind(StrEnum):
 
     CENSO_EVENT_KIND = "censo_event_kind"
     CCAA = "CCAA"
-    ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
     LEGAL_ENTITY_FORM = "LegalEntityForm"
-    RENTAL_REDUCTION_ART_23_2_TIER = "RentalReductionArt232Tier"
 
 
 class LedgerIncomeGrounding(StrEnum):
@@ -669,6 +713,33 @@ class LedgerWithholdingDerivation(StrEnum):
     below it, because a declared figure beats a derived one.
     """
 
+    ALLOCATED_ON_PART_PAYMENT = "allocated_on_part_payment"
+    """The linked invoice's retención, shared to this receipt by the part it settles.
+
+    Each payment is its own withholding event (RIRPF arts. 78.1 and 95.1), but
+    no source read fixes how a part payment splits between IVA and base, so the
+    pro rata share stays out of the credit and is reported until the payer states it.
+    """
+
+    PAID_AFTER_CUT_OFF = "paid_after_cut_off"
+    """The linked invoice's declared retención, imputed to a pago fraccionado's window but paid after it.
+
+    RIRPF art. 110.3.a counts the withholding that corresponds to the window's
+    income (DGT V3298-15), and it is practised only when the income is paid
+    (TEAC 00/03187/2011). The window's end is the cut-off that is always safe, so
+    a receipt dated after it keeps its figure for reporting and stays out of the
+    pago fraccionado; the annual return still credits it, whatever its payment date.
+    """
+
+    RENTAL_ACTIVITY_COMPONENT = "rental_activity_component"
+    """The linked invoice's declared retención on a row of an arrendador de inmuebles activity.
+
+    The annual return puts urban-rental withholding in its own credit whether or
+    not the rental is an activity, and leaves it out of the activity credit
+    (Manual práctico de Renta, retenciones e ingresos a cuenta). The row's figure is
+    kept for reporting and points to that rental credit's activity component.
+    """
+
     INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
     """Derived as invoice gross minus cash, with the cuota read from the row."""
 
@@ -690,6 +761,22 @@ class LedgerWithholdingDerivation(StrEnum):
     capping it at the bound would invent one at exactly the legal maximum. The
     figure is therefore zero and this marker says why.
     """
+
+
+class BindingValueOutcome(StrEnum):
+    """What a resolver states about the rows one binding's value rests on.
+
+    A zero from a window with nothing to sum and a zero from rows whose quantity
+    was left out are one ``Decimal("0")``. Only the resolver that read the rows
+    can tell them apart, so it states which case applies beside the value and no
+    consumer infers it from the amount.
+    """
+
+    PROVEN_ZERO = "proven_zero"
+    """The window held no row carrying the binding's quantity, so the value is zero."""
+
+    FROM_BEARING_ROWS = "from_bearing_rows"
+    """At least one row in the window carried the binding's quantity."""
 
 
 _RETENCION_SCHEME_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")

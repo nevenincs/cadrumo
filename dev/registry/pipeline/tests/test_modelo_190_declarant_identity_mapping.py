@@ -8,10 +8,13 @@ from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_MAPPINGS = Path("dev/registry/mappings/modelo_190")
+_EPOCHS = sorted(path.name for path in _MAPPINGS.iterdir() if path.is_dir())
 
-@pytest.mark.parametrize("epoch", ["2020", "2023", "2024", "2025"])
+
+@pytest.mark.parametrize("epoch", _EPOCHS)
 def test_both_record_types_bind_declarant_identity_to_the_taxpayer(epoch: str) -> None:
-    mapping = load_semantic_map(Path(f"dev/registry/mappings/modelo_190/{epoch}"))
+    mapping = load_semantic_map(_MAPPINGS / epoch)
     entries = {entry.export_field_id: entry for entry in mapping.entries}
     declarant = entries["modelo-190-decl-nif"]
     assert declarant.producer_key == "taxpayer.tax_id"

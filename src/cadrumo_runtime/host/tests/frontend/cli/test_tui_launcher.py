@@ -53,7 +53,7 @@ def test_the_launcher_propagates_the_child_exit_status(monkeypatch: pytest.Monke
         observed.append(command)
         return 17
 
-    monkeypatch.setattr("cadrumo_runtime.host.frontend.cli.tui_launcher._run_tui", run)
+    monkeypatch.setattr("cadrumo_runtime.host.frontend.cli.tui_launcher.run_tui", run)
 
     with pytest.raises(typer.Exit) as raised:
         launch_tui()

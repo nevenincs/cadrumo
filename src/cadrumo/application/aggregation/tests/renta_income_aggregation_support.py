@@ -13,19 +13,21 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
-from ....domain.transactions.models import (
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+
+_YEAR = newest_authored_editions("100", 2)[0]
 
 
 class _InvoiceCatalogueReader:
@@ -70,7 +72,7 @@ class _TransactionCatalogueReader:
         )
 
 
-def _catalogue_read_ports(
+def catalogue_read_ports(
     *,
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
@@ -82,22 +84,22 @@ def _catalogue_read_ports(
     )
 
 
-def _period(year: int, code: str) -> Period:
+def renta_income_aggregation_period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-_ANNUAL_2024 = _period(2024, "0A")
-_Q1_2024 = _period(2024, "1T")
-_Q2_2024 = _period(2024, "2T")
+ANNUAL_2024 = renta_income_aggregation_period(_YEAR, "0A")
+Q1_2024 = renta_income_aggregation_period(_YEAR, "1T")
+Q2_2024 = renta_income_aggregation_period(_YEAR, "2T")
 
 
 M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
-_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
-_M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
+M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 M130_MODELO: str = Modelo("130").value
-_M130_ACCEPT_ACTIVITY_MARKER: bool = True
+M130_ACCEPT_ACTIVITY_MARKER: bool = True
 
 
 @cache
@@ -145,14 +147,14 @@ def raw_transaction(
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
     )
 
 
-def _income_transaction(
+def income_transaction(
     provider_id: str,
     *,
     value_date: date,
@@ -182,13 +184,13 @@ def _income_transaction(
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
 
 
-def _actividad_transaction(
+def actividad_transaction(
     provider_id: str,
     *,
     value_date: date,
@@ -220,13 +222,13 @@ def _actividad_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
 
 
-def _actividad_transaction_with_source(
+def actividad_transaction_with_source(
     provider_id: str,
     *,
     value_date: date,
@@ -246,8 +248,30 @@ def _actividad_transaction_with_source(
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "source_jurisdiction": source_jurisdiction,
         },
+    )
+
+
+def csv_income_raw(provider_id: str, *, amount: Decimal, value_date: date) -> RawTransaction:
+    """One CSV-sourced income row booked and valued on ``value_date``, as the income derivation suites read it."""
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=value_date,
+        value_date=value_date,
+        amount=amount,
+        currency="EUR",
+        counterparty="Cliente SA",
+        description=f"income row {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": provider_id},
     )

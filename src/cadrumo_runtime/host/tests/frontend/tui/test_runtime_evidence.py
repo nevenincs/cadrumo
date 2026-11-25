@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -12,28 +14,59 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.evidence import MediaKind
 from cadrumo.application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
     LedgerEvidenceAddRequest,
+    build_ledger_evidence_add_definition,
+    build_ledger_evidence_add_registration,
 )
+from cadrumo.application.ledger.evidence_errors import (
+    EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
+    PurchaseInvoiceEvidenceReaderError,
+)
+from cadrumo.application.ledger.evidence_page_contracts import (
+    EVIDENCE_PAGE_MIN_WIDTH,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+    EvidencePageMediaType,
+    EvidenceStructuredFactV1,
+    EvidenceStructuredInvoiceV1,
+    EvidenceStructuredValueKind,
+    LedgerEvidencePagePorts,
+    LedgerEvidencePageProjection,
+    LedgerEvidencePageRequest,
+)
+from cadrumo.application.ledger.evidence_page_errors import LedgerEvidencePageNotFoundError
+from cadrumo.application.ledger.evidence_page_operation import (
+    build_ledger_evidence_page_definition,
+    build_ledger_evidence_page_registration,
+)
+from cadrumo.application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
     LedgerEvidenceRecordProjection,
+    build_ledger_evidence_list_definition,
+    build_ledger_evidence_list_registration,
 )
 from cadrumo.application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+    build_ledger_evidence_confirm_definition,
+    build_ledger_evidence_confirm_registration,
 )
 from cadrumo.application.ledger.invoice_evidence_extract_operation import (
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
+    build_ledger_evidence_extract_definition,
+    build_ledger_evidence_extract_registration,
 )
+from cadrumo.application.ledger.invoice_evidence_operation import InvoiceEvidenceOperationPortsFactory
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     DraftDiscrepancyProjectionV1,
     FieldAmbiguityCandidateProjectionV1,
@@ -45,16 +78,21 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     StructuredInvoiceClassProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -64,6 +102,7 @@ from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
 from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
+from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
@@ -84,7 +123,35 @@ _RESULT_VERSIONS = {
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID: 1,
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 3,
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID: 2,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID: 1,
 }
+
+
+def _contracts() -> dict[str, OperationPublicDefinitionContractV1]:
+    """The four evidence operations' public contracts, declared through their own builders."""
+    evidence = cast(LedgerEvidencePortsFactory, cast(object, lambda **_kwargs: None))
+    invoice_evidence = cast(InvoiceEvidenceOperationPortsFactory, cast(object, lambda **_kwargs: None))
+    add = build_ledger_evidence_add_definition(evidence)
+    listing = build_ledger_evidence_list_definition(evidence)
+    extract = build_ledger_evidence_extract_definition(invoice_evidence)
+    confirm = build_ledger_evidence_confirm_definition(invoice_evidence)
+    page = build_ledger_evidence_page_definition(cast(LedgerEvidencePagePorts, cast(object, None)))
+    definitions = (add, listing, extract, confirm, page)
+    registrations = (
+        build_ledger_evidence_add_registration(add),
+        build_ledger_evidence_list_registration(listing),
+        build_ledger_evidence_extract_registration(extract),
+        build_ledger_evidence_confirm_registration(confirm),
+        build_ledger_evidence_page_registration(page),
+    )
+    registry = OperationRegistry(
+        definitions=tuple(sorted(definitions, key=lambda item: item.definition_id)),
+        public_registrations=tuple(sorted(registrations, key=lambda item: item.contract.definition_id)),
+    )
+    return {item.definition_id: registry.lookup_public_contract(item.definition_id) for item in definitions}
+
+
+_CONTRACTS = _contracts()
 
 
 class _Client:
@@ -93,35 +160,46 @@ class _Client:
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
+        self.session_read_threads: list[int] = []
+        """The thread of each blocking session read: at composition, then around each operation."""
 
 
+@dataclass
 class _Controller:
+    """One submitted operation that succeeds with ``result``, or refuses when ``result`` is its recorded detail."""
+
     operation_id = _OPERATION_ID
+    request: BaseModel
+    definition_id: str
+    result: BaseModel
+    effect: OperationEffect
     # The client it was submitted through, as the real controller keeps it.
     client: _Client
+    # The observation bound the waiter narrows, as the real controller carries it.
+    deadline: float | None = None
+    started: bool = False
+    projection: SimpleNamespace = field(init=False)
 
-    def __init__(self, request: BaseModel, *, definition_id: str, result: BaseModel, effect: OperationEffect) -> None:
-        self.request = request
-        self.definition_id = definition_id
-        self.result = result
-        self.started = False
-        request_schema = OperationSchemaIdentityV1.from_model(
-            schema_id=f"{definition_id}.request",
-            schema_version=1,
-            model_type=type(request),
-        )
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return _CONTRACTS[self.definition_id]
+
+    def __post_init__(self) -> None:
+        refused = self.result.error_code if isinstance(self.result, OperationErrorDetailV1) else None
         self.projection = SimpleNamespace(
             operation_id=self.operation_id,
-            definition_id=definition_id,
+            definition_id=self.definition_id,
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-            definition_contract=SimpleNamespace(request_schema=request_schema),
+            definition_contract=self.definition_contract,
             lifecycle=OperationLifecycle.TERMINAL,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=effect,
-            refusal_ref=None,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED
+            if refused is None
+            else OperationTerminalCondition.REFUSED,
+            effect=self.effect,
+            refusal_ref=refused,
             failure_error_code=None,
             diagnostic_ref=None,
-            result_ref="e" * 64,
+            result_ref="e" * 64 if refused is None else None,
         )
 
     async def start(self) -> str:
@@ -144,6 +222,9 @@ class _Controller:
         assert not allow_refusal_detail
         assert type(self.result) is result_type
         return self.result
+
+    async def settled_error_detail(self, _projection: object) -> OperationErrorDetailV1 | None:
+        return self.result if isinstance(self.result, OperationErrorDetailV1) else None
 
 
 def _draft_projection() -> InvoiceDraftProjectionV1:
@@ -287,6 +368,7 @@ def _install_runtime(
         profile_label: str,
     ) -> object:
         assert profile_label == "Fixture profile"
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -301,8 +383,7 @@ def _install_runtime(
         definition_id, result, effect = results.pop(0)
         assert kwargs["definition_id"] == definition_id
         request = cast(BaseModel, kwargs["payload"])
-        controller = _Controller(request, definition_id=definition_id, result=result, effect=effect)
-        controller.client = client
+        controller = _Controller(request, definition_id, result, effect, client)
         submissions.append(kwargs)
         controllers.append(controller)
         return controller
@@ -343,9 +424,13 @@ async def test_runtime_evidence_add_preserves_caller_directory_and_source_proven
     )
     door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
     if substituted_source:
-        with pytest.raises(RefusalError) as refused:
+        # The receipt reported the file added, so a result naming another source leaves the outcome unknown.
+        with pytest.raises(OperationOutcomeUnknownError) as unknown:
             await door.add(source_path)
-        assert refused.value.reason is RefusalCode.INVALID_FRAME
+        assert unknown.value.operation_id == _OPERATION_ID
+        assert unknown.value.effect is OperationEffect.UPDATED
+        assert isinstance(unknown.value.reason, RefusalError)
+        assert unknown.value.reason.reason is RefusalCode.INVALID_FRAME
     else:
         row = await door.add(source_path)
         assert row.file_name == "record.pdf"
@@ -495,3 +580,246 @@ def test_runtime_evidence_maps_complete_list_to_unmeasured_safe_rows(monkeypatch
     assert rows[0].status is LedgerEvidenceRecordStatus.UNMEASURED
     assert rows[0].evidence_id == "f" * 16
     assert "private" not in repr(rows[0])
+
+
+def _confirmation() -> LedgerEvidenceConfirmationV1:
+    return LedgerEvidenceConfirmationV1(
+        evidence_id="f" * 16,
+        kind=InvoiceKind.RECEIVED,
+        country_code="ES",
+        counterparty_name="Proveedor Example SL",
+    )
+
+
+def _added_record() -> LedgerEvidenceAddProjection:
+    record = LedgerEvidenceRecordProjection.model_construct(
+        evidence_id="f" * 16,
+        bucket_id=str(_PROFILE_ID),
+        source_path="record.pdf",
+        source_sha256=_SOURCE_DIGEST,
+        attachment_id=_SOURCE_DIGEST,
+        media_kind=MediaKind.PDF,
+        supplier=None,
+        invoice_number=None,
+        created_at=datetime(2026, 3, 16, tzinfo=UTC),
+    )
+    return LedgerEvidenceAddProjection.model_construct(
+        profile_id=_PROFILE_ID, record=record, bucket_event_ids=("c" * 64,)
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_evidence_doors_read_their_session_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The session read is a blocking IPC exchange; extract, confirm and add never run it on the loop."""
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[
+            (LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, _extract_projection(), OperationEffect.NONE),
+            (LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID, _confirm_projection(), OperationEffect.UPDATED),
+            (LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID, _added_record(), OperationEffect.UPDATED),
+        ],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    assert client.session_read_threads, "composing the door reads the session once, before any loop runs"
+    loop_thread = threading.get_ident()
+
+    for call in (
+        lambda: door.extract("f" * 16),
+        lambda: door.confirm(_confirmation()),
+        lambda: door.add("record.pdf"),
+    ):
+        client.session_read_threads.clear()
+        await call()
+        assert client.session_read_threads, "a door reads its session around its operation"
+        assert loop_thread not in client.session_read_threads
+
+
+@pytest.mark.asyncio
+async def test_the_evidence_gate_catches_a_session_read_on_the_loop_thread(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Detector teeth: a binding check called directly on the loop thread is recorded there."""
+    client = _Client()
+    _install_runtime(monkeypatch, client=client, results=[])
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    client.session_read_threads.clear()
+
+    door._session.require_binding()
+
+    assert client.session_read_threads == [threading.get_ident()]
+
+
+@pytest.mark.asyncio
+async def test_a_confirmation_whose_result_disagrees_with_its_updated_receipt_is_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The receipt reported the invoice confirmed; a result for another source cannot unsay it."""
+    client = _Client()
+    mismatched = _confirm_projection().model_copy(update={"source_sha256": "9" * 64})
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[
+            (LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, _extract_projection(), OperationEffect.NONE),
+            (LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID, mismatched, OperationEffect.UPDATED),
+        ],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    await door.extract("f" * 16)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        await door.confirm(_confirmation())
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert isinstance(raised.value.reason, RefusalError)
+    assert raised.value.reason.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_an_extraction_whose_result_disagrees_with_a_receipt_that_saved_nothing_stays_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    other = _extract_projection().model_copy(update={"evidence_id": "e" * 16})
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, other, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RefusalError) as raised:
+        await door.extract("f" * 16)
+
+    assert not isinstance(raised.value, OperationOutcomeUnknownError)
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_naming_the_missing_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The recorded detail is the one the reader's refusal publishes, read back as another process reads it."""
+    verdict = model_not_installed_verdict(ModelRole.TEXT_EXTRACTION)
+    detail = build_operation_error_detail(
+        PurchaseInvoiceEvidenceReaderError(
+            translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY, precondition_verdict=verdict
+        )
+    )
+    assert detail is not None
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, detail, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RecordedRegisteredError) as raised:
+        await door.extract("f" * 16)
+
+    assert raised.value.recorded_code == detail.error_code
+    assert raised.value.translated_message == EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY
+    assert resolve_error_message(raised.value, locale="en") == (
+        "The automatic reader could not run, so nothing was read."
+    )
+    restored = nested_terminal_precondition_verdict(raised.value)
+    assert restored is not None
+    # Crossing the process boundary, the verdict carries the sentence served for a
+    # refusal with no way out; everything else is the verdict the reader raised.
+    assert restored.no_recovery_words is not None
+    assert restored.no_recovery_words
+    assert restored.no_recovery_words_language is not None
+    assert restored.model_copy(update={"no_recovery_words": None, "no_recovery_words_language": None}) == verdict
+
+
+def _structured_page(evidence_id: str = "f" * 16) -> LedgerEvidencePageProjection:
+    return LedgerEvidencePageProjection(
+        profile_id=_PROFILE_ID,
+        evidence_id=evidence_id,
+        attachment_id=_SOURCE_DIGEST,
+        media_type=EvidencePageMediaType.XML,
+        page=1,
+        page_count=1,
+        source_sha256=_SOURCE_DIGEST,
+        file_name="factura.xml",
+        structured_invoice=EvidenceStructuredInvoiceV1(
+            title_key="application.ledger.evidence.structured.title.xml_facturae",
+            facts=(
+                EvidenceStructuredFactV1(
+                    label_key="application.ledger.evidence.structured.fact.supplier_name",
+                    value_kind=EvidenceStructuredValueKind.TEXT,
+                    text="Proveedor Example SL",
+                ),
+            ),
+            lines=(),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_evidence_page_asks_the_smallest_drawing_of_the_exact_record_and_returns_the_served_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    served = _structured_page()
+    submissions, controllers = _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, served, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    page = await door.page("f" * 16)
+
+    assert page == served
+    assert submissions[0]["payload"] == LedgerEvidencePageRequest(
+        profile_id=_PROFILE_ID, evidence_id="f" * 16, page=1, max_width=EVIDENCE_PAGE_MIN_WIDTH
+    )
+    assert submissions[0]["definition_id"] == LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID
+    assert submissions[0]["subject_ref"] == profile_operation_subject(str(_PROFILE_ID))
+    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert controllers[0].started
+
+
+@pytest.mark.asyncio
+async def test_a_page_of_another_record_is_refused_not_shown(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, _structured_page("e" * 16), OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RefusalError) as raised:
+        await door.page("f" * 16)
+
+    assert not isinstance(raised.value, OperationOutcomeUnknownError)
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_a_refused_page_read_raises_the_recorded_refusal_in_its_own_words(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    detail = build_operation_error_detail(LedgerEvidencePageNotFoundError())
+    assert detail is not None
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, detail, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RecordedRegisteredError) as raised:
+        await door.page("f" * 16)
+
+    assert raised.value.recorded_code == detail.error_code
+    assert resolve_error_message(raised.value, locale="en") == resolve_error_message(
+        LedgerEvidencePageNotFoundError(), locale="en"
+    )

@@ -92,7 +92,7 @@ def _presentation_report(projection: FiledHistoryPublicResultV1) -> FiledHistory
 def read_filed_history_for_cli(
     ctx: typer.Context,
     *,
-    output_root: Path,
+    output_root: Path | None,
     limit: int | None,
     today: date,
 ) -> FiledHistoryRead:

@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT
 from dev.exit_codes import DRIFT, FINDINGS_CODES, FIX_STRICT_ENV, OK, TOOL_BROKEN, TOOL_MISSING
+from dev.paths import REPO_ROOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

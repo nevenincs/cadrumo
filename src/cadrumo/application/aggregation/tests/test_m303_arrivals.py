@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from datetime import date
 from decimal import Decimal
 
@@ -17,6 +18,7 @@ from ....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -116,7 +118,7 @@ def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_e
         resolve_m303_supplier_regime_arrival(period=_DESIGN_Q1, iva_aggregation=malformed_aggregation)
 
 
-def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
+def test_prorrata_transition_arrival_carries_option_register_evidence(operation: PinnedAuthorityOperation) -> None:
     option = ProrrataEspecialTransitionEvidence(
         kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
         evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-1t-prorrata-opcion",
@@ -131,6 +133,7 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
     arrival = resolve_m303_prorrata_transition_arrival(
         period=_DESIGN_Q4,
         prorrata_register=ProrrataRegister(entries=(entry,)),
+        operation=operation,
     )
 
     assert arrival.period == _DESIGN_Q4
@@ -139,7 +142,9 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
     assert arrival.register_evidence == (entry,)
 
 
-def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period() -> None:
+def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
     entry = ProrrataRegisterEntry(
         ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("especial"),
@@ -151,14 +156,18 @@ def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period
     )
     register = ProrrataRegister(entries=(entry,))
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q1, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q1, prorrata_register=register, operation=operation
+    )
 
     assert arrival.is_applicable is False
     assert arrival.transition is None
     assert arrival.register_evidence == ()
 
 
-def test_prorrata_transition_applicability_matches_the_official_design_note_6() -> None:
+def test_prorrata_transition_applicability_matches_the_official_design_note_6(
+    operation: PinnedAuthorityOperation,
+) -> None:
     source = bundled_path(
         "corpus",
         "aeat_official",
@@ -172,10 +181,19 @@ def test_prorrata_transition_applicability_matches_the_official_design_note_6() 
     assert "SI para el último periodo (12 y 4T)" in source
     assert "Blanco para periodos distintos del último (12 y 4T)" in source
     assert (
-        M303ProrrataTransitionArrival(
+        resolve_m303_prorrata_transition_arrival(
             period=_DESIGN_DECEMBER,
-            transition=None,
-            register_evidence=(),
+            prorrata_register=ProrrataRegister(
+                entries=(
+                    ProrrataRegisterEntry(
+                        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
+                        regime=ProrrataRegisterRegime.from_registry("general"),
+                        especial_transition=None,
+                        source_registry_snapshot_refs=(),
+                    ),
+                )
+            ),
+            operation=operation,
         ).is_applicable
         is True
     )
@@ -219,7 +237,9 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
         )
 
 
-def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_especial_state() -> None:
+def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_especial_state(
+    operation: PinnedAuthorityOperation,
+) -> None:
     register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
@@ -231,7 +251,9 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
         ),
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q4, prorrata_register=register, operation=operation
+    )
 
     assert arrival.is_applicable is True
     assert arrival.transition is None
@@ -253,7 +275,9 @@ def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state()
         ProrrataRegister(entries=(entry,))
 
 
-def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especial_state() -> None:
+def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especial_state(
+    operation: PinnedAuthorityOperation,
+) -> None:
     revocation_entry = ProrrataRegisterEntry(
         ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("general"),
@@ -275,14 +299,18 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
         ),
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q4, prorrata_register=register, operation=operation
+    )
 
     assert arrival.is_applicable is True
     assert arrival.transition == ProrrataEspecialTransitionKind.from_registry("revocacion")
     assert arrival.register_evidence == (revocation_entry,)
 
 
-def test_prorrata_transition_arrival_requires_complete_current_year_register_coverage() -> None:
+def test_prorrata_transition_arrival_requires_complete_current_year_register_coverage(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A final-period artifact never treats missing sector declarations as NO."""
     current = ProrrataRegisterEntry(
         ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
@@ -311,9 +339,14 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
     ):
-        resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
+        resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register, operation=operation)
 
-    assert resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q1, prorrata_register=register).transition is None
+    assert (
+        resolve_m303_prorrata_transition_arrival(
+            period=_DESIGN_Q1, prorrata_register=register, operation=operation
+        ).transition
+        is None
+    )
 
     complete_register = ProrrataRegister(
         entries=(
@@ -335,21 +368,28 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         sector_definitions=register.sector_definitions,
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=complete_register)
+    arrival = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q4, prorrata_register=complete_register, operation=operation
+    )
     assert arrival.transition is None
     assert arrival.register_evidence == ()
 
 
-def test_prorrata_transition_arrival_refuses_an_empty_final_period_register() -> None:
+def test_prorrata_transition_arrival_refuses_an_empty_final_period_register(
+    operation: PinnedAuthorityOperation,
+) -> None:
     with pytest.raises(
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
     ):
-        resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=ProrrataRegister())
+        resolve_m303_prorrata_transition_arrival(
+            period=_DESIGN_Q4, prorrata_register=ProrrataRegister(), operation=operation
+        )
 
 
 def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_remain_valid() -> None:
     assert M303SupplierRegimeArrival.model_fields["source_ledger_ids"].is_required()
+    assert M303ProrrataTransitionArrival.model_fields["is_applicable"].is_required()
     assert M303ProrrataTransitionArrival.model_fields["transition"].is_required()
     assert M303ProrrataTransitionArrival.model_fields["register_evidence"].is_required()
 
@@ -364,6 +404,7 @@ def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_re
     assert (
         M303ProrrataTransitionArrival(
             period=_DESIGN_Q1,
+            is_applicable=False,
             transition=None,
             register_evidence=(),
         ).transition
@@ -375,6 +416,65 @@ def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_re
             {"period": _DESIGN_Q1, "recipient_of_cash_accounting_operations": False},
         )
     with pytest.raises(ValidationError):
-        M303ProrrataTransitionArrival.model_validate({"period": _DESIGN_Q1, "register_evidence": ()})
+        M303ProrrataTransitionArrival.model_validate(
+            {"period": _DESIGN_Q1, "is_applicable": False, "register_evidence": ()}
+        )
     with pytest.raises(ValidationError):
-        M303ProrrataTransitionArrival.model_validate({"period": _DESIGN_Q1, "transition": None})
+        M303ProrrataTransitionArrival.model_validate({"period": _DESIGN_Q1, "is_applicable": False, "transition": None})
+
+
+def test_prorrata_transition_arrival_validation_never_reopens_the_default_authority(
+    operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Resolution, construction and applicability reads use only the caller's pin."""
+    import cadrumo.domain.calculations.registry.authority as authority_module
+
+    def _refuse_default_authority() -> None:
+        raise AssertionError("the default authority must not be reopened inside a pinned operation")
+
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority", _refuse_default_authority)
+
+    final = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q4,
+        prorrata_register=ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
+                    regime=ProrrataRegisterRegime.from_registry("general"),
+                    especial_transition=None,
+                    source_registry_snapshot_refs=(),
+                ),
+            )
+        ),
+        operation=operation,
+    )
+    blank = resolve_m303_prorrata_transition_arrival(
+        period=_DESIGN_Q1, prorrata_register=ProrrataRegister(), operation=operation
+    )
+
+    assert final.is_applicable is True
+    assert blank.is_applicable is False
+    assert M303ProrrataTransitionArrival.model_validate(final.model_dump()) == final
+
+
+def test_prorrata_transition_resolver_requires_the_callers_pinned_operation() -> None:
+    assert inspect.signature(resolve_m303_prorrata_transition_arrival).parameters["operation"].default is (
+        inspect.Parameter.empty
+    )
+
+
+def test_prorrata_transition_arrival_refuses_evidence_contradicting_its_stored_applicability() -> None:
+    with pytest.raises(ValidationError):
+        M303ProrrataTransitionArrival(
+            period=_DESIGN_Q1,
+            is_applicable=False,
+            transition=ProrrataEspecialTransitionKind.from_registry("opcion"),
+            register_evidence=(),
+        )
+    with pytest.raises(ValidationError):
+        M303ProrrataTransitionArrival(
+            period=_DESIGN_Q4,
+            is_applicable=True,
+            transition=ProrrataEspecialTransitionKind.from_registry("opcion"),
+            register_evidence=(),
+        )

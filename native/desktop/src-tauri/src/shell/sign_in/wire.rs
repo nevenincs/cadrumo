@@ -1,4 +1,5 @@
 use super::{failure, process::Output};
+use crate::agent::recovery::Reconnecting;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -38,8 +39,23 @@ pub struct SignInStatus {
     #[serde(rename = "runtimeAvailable")]
     pub runtime_available: bool,
     pub refusal: Option<Refusal>,
+    /// The window's own session waits for a fresh proof after the profile's
+    /// worker was lost. Absent while it does not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reconnecting: Option<Reconnecting>,
 }
 impl SignInStatus {
+    /// Keep runtime presence truthful while refusing to expose it as usable
+    /// person access before this desktop has restored its own session.
+    pub(super) fn require_person(&mut self, usable: bool, refused: Option<Refusal>) {
+        if self.state == Presence::Present && self.refusal.is_none() && !usable {
+            self.refusal = Some(refused.unwrap_or_else(|| Refusal {
+                code: "person_session_unavailable".into(),
+                retry_after_seconds: None,
+            }));
+        }
+    }
+
     pub fn runtime_ready(&self) -> bool {
         self.supported
             && self.runtime_available
@@ -54,6 +70,7 @@ impl SignInStatus {
             active_profile: None,
             runtime_available: false,
             refusal: None,
+            reconnecting: None,
         }
     }
 }
@@ -70,7 +87,7 @@ pub enum SignInResult {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Profile {
     pub name: String,
     pub active: bool,
@@ -78,7 +95,7 @@ pub struct Profile {
 
 /// The profiles on this computer as the product lists them. Only labels and
 /// the selection cross: the product keeps identities out of what it prints.
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ProfileList {
     pub profiles: Vec<Profile>,
     /// False when the product could not read its profiles coherently: its
@@ -119,13 +136,30 @@ pub struct SignOutResult {
     pub remaining_access: RemainingAccess,
 }
 
+impl SignOutResult {
+    /// What the runtime's own sign-out answer says remains.
+    pub(crate) fn remaining(
+        automation_enabled: Option<bool>,
+        automation_access_remains: Option<bool>,
+    ) -> Self {
+        Self {
+            remaining_access: RemainingAccess {
+                automation_enabled,
+                automation_access_remains,
+                automation_revoked: false,
+            },
+        }
+    }
+}
+
 #[derive(Deserialize)]
 struct Envelope {
     schema_version: String,
     /// Absent where the product refused before it knew its command.
     command: Option<String>,
     status: String,
-    active_profile: Option<String>,
+    #[serde(rename = "active_profile")]
+    _active_profile: Option<String>,
     result: Option<serde_json::Value>,
     error: Option<ErrorBody>,
 }
@@ -138,6 +172,7 @@ struct ErrorBody {
 pub enum Outcome {
     Success {
         result: serde_json::Value,
+        #[cfg(test)]
         active_profile: Option<String>,
     },
     Refused {
@@ -169,7 +204,8 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 result: envelope.result.ok_or_else(|| {
                     failure(ErrorCode::ReadFailed).with_reason("helper_success_without_result")
                 })?,
-                active_profile: envelope.active_profile,
+                #[cfg(test)]
+                active_profile: envelope._active_profile,
             })
         }
         "error" if (named || unnamed) && !output.success && envelope.result.is_none() => {
@@ -178,62 +214,76 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
             })?;
             let context = error.context.unwrap_or_default();
             let code = context.get("reason").cloned().unwrap_or(error.code);
-            // Only a code crosses IPC; translated error messages and arbitrary
-            // CLI context never reach shell logs or the documentation bridge.
-            if code.is_empty()
-                || code.len() > 160
-                || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+            // A registration refused for its password names a reason. One
+            // refused because the label is taken names none: its context
+            // is that label and nothing else.
+            let code = if code == "REFUSED_PROFILE_REGISTRATION"
+                && context.len() == 1
+                && context.contains_key("profile")
             {
-                return Err(failure(ErrorCode::ReadFailed).with_reason("helper_refusal_code_shape"));
-            }
-            // The runtime uses lower-case public reasons. Throttling carries
-            // authentication_required plus the typed sign-in provenance; do
-            // not infer it from an arbitrary message or a seconds field alone.
-            let code = match code.as_str() {
-                "credential_rejected" => "CREDENTIAL_REJECTED".into(),
-                "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED".into(),
-                // A registration refused for its password names a reason. One
-                // refused because the label is taken names none: its context
-                // is that label and nothing else.
-                "REFUSED_PROFILE_REGISTRATION"
-                    if context.len() == 1 && context.contains_key("profile") =>
-                {
-                    "profile_already_exists".into()
-                }
-                "authentication_required"
-                    if context.get("sign_in_reason").map(String::as_str) == Some("throttled") =>
-                {
-                    "THROTTLED".into()
-                }
-                _ => code,
-            };
-            let retry_after_seconds = if code == "THROTTLED" {
-                Some(
-                    context
-                        .get("seconds")
-                        .ok_or_else(|| {
-                            failure(ErrorCode::ReadFailed)
-                                .with_reason("helper_throttle_seconds_missing")
-                        })?
-                        .parse()
-                        .map_err(|error| {
-                            failure(ErrorCode::ReadFailed)
-                                .with_reason("helper_throttle_seconds_parse")
-                                .caused_by(error)
-                        })?,
-                )
+                "profile_already_exists".to_owned()
             } else {
-                None
+                code
             };
+            let seconds = context
+                .get("seconds")
+                .map(|seconds| {
+                    seconds.parse().map_err(|error| {
+                        failure(ErrorCode::ReadFailed)
+                            .with_reason("helper_throttle_seconds_parse")
+                            .caused_by(error)
+                    })
+                })
+                .transpose()?;
             Ok(Outcome::Refused {
-                refusal: Refusal {
-                    code,
-                    retry_after_seconds,
-                },
+                refusal: sign_in_refusal(
+                    &code,
+                    context.get("sign_in_reason").map(String::as_str),
+                    seconds,
+                )?,
             })
         }
         _ => Err(failure(ErrorCode::ReadFailed).with_reason("helper_status_unexpected")),
     }
+}
+
+/// The refusal the window shows for a sign-in the runtime refused, from the
+/// runtime's reason, its typed sign-in reason and any retry wait. The command
+/// line's answer and a person hold's refusal line both come through here.
+pub(crate) fn sign_in_refusal(
+    code: &str,
+    sign_in_reason: Option<&str>,
+    seconds: Option<u64>,
+) -> Result<Refusal> {
+    // Only a code crosses IPC; translated error messages and arbitrary
+    // CLI context never reach shell logs or the documentation bridge.
+    if code.is_empty()
+        || code.len() > 160
+        || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return Err(failure(ErrorCode::ReadFailed).with_reason("helper_refusal_code_shape"));
+    }
+    // The runtime uses lower-case public reasons. Throttling carries
+    // authentication_required plus the typed sign-in provenance; do
+    // not infer it from an arbitrary message or a seconds field alone.
+    let code = match code {
+        "credential_rejected" => "CREDENTIAL_REJECTED",
+        "runtime_timeout" => "RUNTIME_TIMEOUT",
+        "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED",
+        "authentication_required" if sign_in_reason == Some("throttled") => "THROTTLED",
+        _ => code,
+    };
+    let retry_after_seconds = if code == "THROTTLED" {
+        Some(seconds.ok_or_else(|| {
+            failure(ErrorCode::ReadFailed).with_reason("helper_throttle_seconds_missing")
+        })?)
+    } else {
+        None
+    };
+    Ok(Refusal {
+        code: code.to_owned(),
+        retry_after_seconds,
+    })
 }
 
 fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
@@ -259,6 +309,7 @@ fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
     Ok(envelope)
 }
 
+#[cfg(test)]
 pub fn login(outcome: Outcome) -> Result<SignInResult> {
     match outcome {
         Outcome::Refused { refusal, .. } => Ok(SignInResult::Refused { refusal }),
@@ -288,6 +339,7 @@ pub fn login(outcome: Outcome) -> Result<SignInResult> {
                         state: Presence::Present,
                         active_profile: Some(result.active_profile),
                         runtime_available: true,
+                        reconnecting: None,
                         refusal: None,
                     },
                 })
@@ -341,6 +393,22 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
     }
 }
 
+pub fn logout_recovery(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFailure> {
+    if let Outcome::Success { result, .. } = &outcome
+        && (result
+            .get("human_receipt_revoked")
+            .and_then(serde_json::Value::as_bool)
+            != Some(true)
+            || result
+                .get("receipt_removed")
+                .and_then(serde_json::Value::as_bool)
+                != Some(true))
+    {
+        return Err(failure(ErrorCode::ReadFailed).into());
+    }
+    logout(outcome)
+}
+
 pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFailure> {
     match decode("profile.list", output)? {
         Outcome::Refused { refusal, .. } => Err(CommandFailure::Refused(refusal)),
@@ -367,14 +435,8 @@ pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFail
                 serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
             let said: Notices = serde_json::from_slice(&output.stdout)
                 .map_err(|_| failure(ErrorCode::ReadFailed))?;
-            // A label is never empty, and at most one profile is selected.
-            if listing.profiles.iter().any(|row| row.name.is_empty())
-                || listing.profiles.iter().filter(|row| row.active).count() > 1
-            {
-                return Err(failure(ErrorCode::ReadFailed).into());
-            }
-            Ok(ProfileList {
-                profiles: listing
+            Ok(profile_list(
+                listing
                     .profiles
                     .into_iter()
                     .map(|row| Profile {
@@ -382,13 +444,24 @@ pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFail
                         active: row.active,
                     })
                     .collect(),
-                complete: !said
+                !said
                     .notices
                     .iter()
                     .any(|notice| notice.code == INCOHERENT_LISTING),
-            })
+            )?)
         }
     }
+}
+
+/// A listing the window may show, from the command line or the sign-in watch:
+/// a label is never empty, and at most one profile is selected.
+pub(crate) fn profile_list(profiles: Vec<Profile>, complete: bool) -> Result<ProfileList> {
+    if profiles.iter().any(|row| row.name.is_empty())
+        || profiles.iter().filter(|row| row.active).count() > 1
+    {
+        return Err(failure(ErrorCode::ReadFailed));
+    }
+    Ok(ProfileList { profiles, complete })
 }
 
 pub fn created(outcome: Outcome) -> Result<ProfileCreateResult> {
@@ -413,6 +486,54 @@ pub fn created(outcome: Outcome) -> Result<ProfileCreateResult> {
     }
 }
 
+/// What a password change came to, as far as the window may know it.
+#[derive(Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum PasswordChangeResult {
+    Changed,
+    Refused {
+        #[serde(flatten)]
+        refusal: Refusal,
+    },
+    /// The change was submitted and its outcome was not observed: the old
+    /// password may or may not still sign in.
+    Unknown,
+}
+
+pub fn password_changed(output: &Output) -> Result<PasswordChangeResult> {
+    if !output.success {
+        // A failure that names the submitted operation did not prove that
+        // nothing changed, unless it observed no effect.
+        let envelope = error_envelope(&output.stderr)?;
+        let submitted = envelope
+            .error
+            .as_ref()
+            .and_then(|error| error.context.as_ref())
+            .is_some_and(|context| {
+                context.contains_key("operation_id")
+                    && context.get("effect").map(String::as_str) != Some("none")
+            });
+        if submitted {
+            return Ok(PasswordChangeResult::Unknown);
+        }
+    }
+    match decode("passphrase.change", output)? {
+        Outcome::Refused { refusal } => Ok(PasswordChangeResult::Refused { refusal }),
+        Outcome::Success { result, .. } => {
+            #[derive(Deserialize)]
+            struct Changed {
+                changed: bool,
+            }
+            let result: Changed =
+                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
+            if !result.changed {
+                return Err(failure(ErrorCode::ReadFailed));
+            }
+            Ok(PasswordChangeResult::Changed)
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "wire_contract_tests.rs"]
 mod contract_tests;
@@ -421,6 +542,34 @@ mod contract_tests;
 mod tests {
     use super::*;
     use zeroize::Zeroizing;
+
+    #[test]
+    fn stored_presence_requires_this_windows_own_usable_person() {
+        let status = || SignInStatus {
+            supported: true,
+            state: Presence::Present,
+            active_profile: Some("Selected profile".into()),
+            runtime_available: true,
+            refusal: None,
+            reconnecting: None,
+        };
+        let mut blocked = status();
+        blocked.require_person(
+            false,
+            Some(Refusal {
+                code: "RECEIPT_EXPIRED".into(),
+                retry_after_seconds: None,
+            }),
+        );
+        assert_eq!(blocked.state, Presence::Present);
+        assert_eq!(blocked.active_profile.as_deref(), Some("Selected profile"));
+        assert!(!blocked.runtime_ready());
+        assert_eq!(blocked.refusal.unwrap().code, "RECEIPT_EXPIRED");
+        let mut restored = status();
+        restored.require_person(true, None);
+        assert!(restored.runtime_ready());
+        assert!(restored.refusal.is_none());
+    }
 
     fn output(success: bool, document: serde_json::Value) -> Output {
         let bytes = Zeroizing::new(serde_json::to_vec(&document).unwrap());

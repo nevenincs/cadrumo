@@ -26,6 +26,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
+from ....adapters.inbound.einvoice.shape import probe_document_shape
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -39,9 +40,9 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
+from ....application.ledger.manual_update import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ....application.ledger.models import (
     LedgerRemovalBlocker,
     ManualLedgerTransactionCommand,
@@ -54,6 +55,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
+from ....tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -69,7 +71,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 @pytest.fixture
 def pdf_file(tmp_path: Path) -> Path:
     path = tmp_path / "supplier-invoice.pdf"
-    path.write_bytes(b"%PDF-1.4 supplier invoice")
+    path.write_bytes(text_pdf_bytes(("synthetic supplier invoice",)))
     return path
 
 
@@ -109,6 +111,7 @@ def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
             evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
             attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
             bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            document_shape_probe=probe_document_shape,
         )
     )
     return service.add(bucket_id=profile.bucket_id, source_path=pdf_file).record.evidence_id
@@ -334,14 +337,15 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(
     assert notices[0].context["actionability"] == "finalized_revision_has_no_safe_recovery_action"
 
 
-def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
+def test_evidence_is_not_transaction_identity_and_only_the_current_field_set_hashes_it(
     profile: TestRuntimeProfile,
     pdf_file: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # The invariant the exemption rests on, pinned directly against the two
-    # canonical contracts. If a future change makes evidence part of the id or of
-    # the filing fingerprint, the exemption is no longer sound and this fails.
+    # The attach is admitted because evidence is no part of the row's identity,
+    # and no part of the tax facts the field sets before version 4 hash. The
+    # current field set does watch the deduction evidence, so a draft recalculates
+    # after an attach and an older anchor stays as quiet as it was.
     transaction_id = _deductible_expense_row(profile, idempotency_key="evidence-not-identity")
     before = _transactions(profile).load().get(transaction_id)
     assert before is not None
@@ -361,7 +365,8 @@ def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
     assert after.purchase_invoice_evidence_id is not None
 
     assert derive_transaction_id(after.raw) == derive_transaction_id(before.raw)
-    assert row_fingerprint(after) == row_fingerprint(before)
+    assert row_fingerprint(after, field_set_version=3) == row_fingerprint(before, field_set_version=3)
+    assert row_fingerprint(after) != row_fingerprint(before)
 
     # Anti-tautology: a genuine tax fact DOES move the fingerprint, so the
     # equality above is a real property of evidence rather than of the helper.

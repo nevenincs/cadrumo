@@ -15,18 +15,20 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind, ModeloRecordStatus
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_amendment_action_ports,
     build_calculation_action_ports,
     build_filing_action_ports,
@@ -34,18 +36,19 @@ from cadrumo.entrypoints.adapter_composition import (
 )
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
-    _IMPORT_EXPENSE_CASILLA,
-    _IMPORT_INCOME_CASILLA,
-    _PROFILE_ID,
-    _T1,
-    _T2,
-    _TAX_ID,
-    _drive_import_persists_filing,
-    _import_external_filing,
-    _persist_matching_justificante,
-    _Repos,
-    _seed_work_unit,
+    IMPORT_EXPENSE_CASILLA,
+    IMPORT_INCOME_CASILLA,
+    IMPORT_UNRECORDED_BINDINGS,
+    PROFILE_ID,
+    T1,
+    T2,
+    TAX_ID,
+    Repos,
+    drive_import_persists_filing,
+    import_external_filing,
+    persist_matching_justificante,
     repos,
+    seed_work_unit,
 )
 
 __all__ = ["repos"]
@@ -53,86 +56,104 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
-def test_import_filing_is_current_and_accepted(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+def test_import_filing_is_current_and_accepted(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = drive_import_persists_filing(repos, operation=operation)
     assert outcome.filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.filing.aeat_accepted is True
 
 
-def test_import_filing_carries_external_evidence_metadata(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
-) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+def test_import_filing_carries_external_evidence_metadata(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = drive_import_persists_filing(repos, operation=operation)
     evidence = outcome.filing.external_evidence
     assert evidence is not None
     assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert evidence.reference_id == "JUST2026303Q1OPERATOR1"
-    assert evidence.imported_at == _T1
+    assert evidence.imported_at == T1
 
 
-def test_import_filing_records_no_amendment_link(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+def test_import_filing_keeps_the_receipts_presentation_date_and_decides_its_posture(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The receipt's own presentation timestamp reaches the chain entry.
+
+    The register reference used to carry only identifiers, so an imported
+    filing could not say when AEAT recorded the presentation -- and therefore
+    could not say whether it was presented inside the plazo. ``filed_at`` is
+    the import clock and answers a different question.
+    """
+    outcome = drive_import_persists_filing(repos, operation=operation)
+    receipt = JustificanteRepository().load("JUST2026303Q1OPERATOR1")
+
+    assert receipt is not None
+    assert outcome.filing.aeat_register is not None
+    assert outcome.filing.aeat_register.presented_at == receipt.presented_at
+    assert outcome.filing.filing_timeliness is not None
+    assert outcome.filing.filing_timeliness is not FilingTimeliness.UNKNOWN
+
+
+def test_import_filing_records_no_amendment_link(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = drive_import_persists_filing(repos, operation=operation)
     assert outcome.filing.amends_filing_record_id is None
-    assert outcome.filing.filed_at == _T1
+    assert outcome.filing.filed_at == T1
 
 
 _IMPORTED_REVISION_CASILLAS = (
-    (_IMPORT_INCOME_CASILLA, Decimal("1500")),
-    (_IMPORT_EXPENSE_CASILLA, Decimal("300")),
+    (IMPORT_INCOME_CASILLA, Decimal("1500")),
+    (IMPORT_EXPENSE_CASILLA, Decimal("300")),
 )
 
 
-def test_import_persists_filed_calculation_revision(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+def test_import_persists_filed_calculation_revision(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=PROFILE_ID, operation=operation),
         )
     assert revision.state is CalculationRevisionState.PRESENTADO
     assert revision.amendment_identity is None  # import is not an amendment
 
 
 def test_import_persists_registry_grounded_casilla_observations(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=PROFILE_ID, operation=operation),
         )
     observations = {obs.casilla_id: obs for obs in revision.observations}
 
-    assert set(observations) == {_IMPORT_INCOME_CASILLA, _IMPORT_EXPENSE_CASILLA}
-    assert observations[_IMPORT_INCOME_CASILLA].value == Decimal("1500")
-    assert observations[_IMPORT_INCOME_CASILLA].formula_id is None
-    assert observations[_IMPORT_INCOME_CASILLA].operand_refs == ()
-    assert observations[_IMPORT_INCOME_CASILLA].operand_casilla_refs == ()
-    assert observations[_IMPORT_INCOME_CASILLA].legal_refs
-    assert observations[_IMPORT_INCOME_CASILLA].source_refs
-    assert observations[_IMPORT_EXPENSE_CASILLA].legal_refs
-    assert observations[_IMPORT_EXPENSE_CASILLA].source_refs
+    assert set(observations) == {IMPORT_INCOME_CASILLA, IMPORT_EXPENSE_CASILLA}
+    assert observations[IMPORT_INCOME_CASILLA].value == Decimal("1500")
+    assert observations[IMPORT_INCOME_CASILLA].formula_id is None
+    assert observations[IMPORT_INCOME_CASILLA].operand_refs == ()
+    assert observations[IMPORT_INCOME_CASILLA].operand_casilla_refs == ()
+    assert observations[IMPORT_INCOME_CASILLA].legal_refs
+    assert observations[IMPORT_INCOME_CASILLA].source_refs
+    assert observations[IMPORT_EXPENSE_CASILLA].legal_refs
+    assert observations[IMPORT_EXPENSE_CASILLA].source_refs
 
 
 @pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
 def test_import_persists_casilla_value(
-    repos: _Repos, casilla_id: CasillaId, expected: Decimal, *, operation: PinnedAuthorityOperation
+    repos: Repos, casilla_id: CasillaId, expected: Decimal, *, operation: PinnedAuthorityOperation
 ) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=PROFILE_ID, operation=operation),
         )
     assert revision.casilla_values[casilla_id] == expected
 
 
-def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+def test_import_work_unit_pointers_advance_to_new_filing(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(
         outcome.work_unit.work_unit_id,
@@ -143,9 +164,9 @@ def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, opera
 
 
 def test_import_emits_single_modelo_filing_reconciled_event(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -167,9 +188,9 @@ _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("payload_key", "expected"), _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS)
 def test_import_event_payload_records_field(
-    repos: _Repos, payload_key: str, expected: str, *, operation: PinnedAuthorityOperation
+    repos: Repos, payload_key: str, expected: str, *, operation: PinnedAuthorityOperation
 ) -> None:
-    outcome = _drive_import_persists_filing(repos, operation=operation)
+    outcome = drive_import_persists_filing(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -179,41 +200,41 @@ def test_import_event_payload_records_field(
 
 
 def test_import_of_a_declared_correction_amends_the_prior_filing(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A second import for the same (bucket, modelo, year, period), declared as
     a correction, supersedes and amends the prior confirmed filing. The
     reconciliation event names the prior entry it affected."""
 
     wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
-    _persist_matching_justificante(
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante(
         "JUSTFIRST01",
         work_unit,
-        captured_at=_T1,
+        captured_at=T1,
     )
-    first = _import_external_filing(
+    first = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500")},
         evidence_reference_id="JUSTFIRST01",
-        expected_tax_id=_TAX_ID,
-        clock=_T1,
+        expected_tax_id=TAX_ID,
+        clock=T1,
     )
 
-    _persist_matching_justificante(
+    persist_matching_justificante(
         "CSVSECOND01",
         work_unit,
-        captured_at=_T2,
+        captured_at=T2,
     )
-    second = _import_external_filing(
+    second = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1600")},
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
         evidence_reference_id="CSVSECOND01",
-        expected_tax_id=_TAX_ID,
-        clock=_T2,
+        expected_tax_id=TAX_ID,
+        clock=T2,
         declared_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
@@ -227,7 +248,7 @@ def test_import_of_a_declared_correction_amends_the_prior_filing(
     with bundled_indexed_authority().operation() as operation:
         refreshed_first_revision = get_calculation_revision(
             first.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=PROFILE_ID, operation=operation),
         )
     assert refreshed_first_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
 
@@ -250,56 +271,93 @@ def test_import_of_a_declared_correction_amends_the_prior_filing(
 
 
 def test_import_after_a_confirmed_filing_without_a_declared_kind_is_refused(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, _cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
-    _persist_matching_justificante("JUSTFIRST02", work_unit, captured_at=_T1)
-    _import_external_filing(
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante("JUSTFIRST02", work_unit, captured_at=T1)
+    import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500")},
         evidence_reference_id="JUSTFIRST02",
-        expected_tax_id=_TAX_ID,
-        clock=_T1,
+        expected_tax_id=TAX_ID,
+        clock=T1,
     )
     before = fr_repo.load()
 
     with pytest.raises(ExternalModeloImportError) as refusal:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
+            casilla_values={IMPORT_INCOME_CASILLA: Decimal("1600")},
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="CSVSECOND02",
-            clock=_T2,
+            clock=T2,
         )
 
     assert refusal.value.translated_message == "application.modelo.errors.external_import_unverifiable"
     assert fr_repo.load() == before
 
 
-def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_amending_a_figure_that_reaches_an_unrecorded_modality_refuses_and_names_it(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Box 01 feeds box 02 through the RIRPF art. 30.2.4a provision, which depends on the estimación directa modality.
+
+    An import records casilla values only, so the correction reaches a fact the filing never stated. A historical
+    correction does not read today's profile: the refusal is a catalogued one that names the missing fact.
+    """
+
+    wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante("JUSTBASELINE2", work_unit, captured_at=T1)
+    imported = import_external_filing(
+        repos,
+        work_unit,
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500"), IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        evidence_reference_id="JUSTBASELINE2",
+        expected_tax_id=TAX_ID,
+        clock=T1,
+    )
+
+    with bundled_indexed_authority().operation() as amend_operation, pytest.raises(RegistryValidationError) as raised:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=amend_operation),
+            from_filing_record_id=imported.filing_record_id,
+            overrides={IMPORT_INCOME_CASILLA: Decimal("1650")},
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+            reason="the modality was not stated",
+            actor="operator-A",
+            clock=T2,
+        )
+
+    assert raised.value.translated_message == "errors.calc.formula_recalculation_binding_unrecorded"
+    assert raised.value.context is not None
+    assert "modelo-130-estimacion-directa-modalidad" in str(raised.value.context["binding_ids"])
+
+
+def test_import_then_amend_unlocks_amendment_path(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path produces a baseline the amend path accepts.
     This is the canonical production flow for correcting an
     externally-filed return: import official evidence, then amend
     locally with the corrected casilla values."""
 
     wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
-    _persist_matching_justificante(
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante(
         "JUSTBASELINE1",
         work_unit,
-        captured_at=_T1,
+        captured_at=T1,
     )
 
-    imported = _import_external_filing(
+    imported = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500"), IMPORT_EXPENSE_CASILLA: Decimal("300")},
         evidence_reference_id="JUSTBASELINE1",
-        expected_tax_id=_TAX_ID,
-        clock=_T1,
+        expected_tax_id=TAX_ID,
+        clock=T1,
     )
     assert imported.external_evidence is not None
 
@@ -307,11 +365,12 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
         amended = amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             from_filing_record_id=imported.filing_record_id,
-            overrides={_IMPORT_INCOME_CASILLA: Decimal("1650")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            overrides={IMPORT_INCOME_CASILLA: Decimal("1650")},
+            binding_overrides=IMPORT_UNRECORDED_BINDINGS,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported revenue discovered in subsequent audit",
             actor="operator-A",
-            clock=_T2,
+            clock=T2,
         )
 
     assert amended.amends_filing_record_id == imported.filing_record_id

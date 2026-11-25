@@ -6,7 +6,7 @@ import {
   weekStartOf,
 } from "@/shell/calendarGrid";
 import { evaluatedDay } from "@/shell/calendar";
-import type { FilingCalendar } from "@/shell/views";
+import type { FilingCalendarServed } from "@/shell/calendarContract";
 import { CalendarMonth } from "./CalendarMonth";
 
 /**
@@ -29,7 +29,7 @@ export const CalendarMonths = memo(function CalendarMonths({
   asked,
   onAsked,
 }: {
-  calendar: FilingCalendar;
+  calendar: FilingCalendarServed;
   /** The chrome language: for names, and for the day a week begins on. */
   locale: string;
   /** The local day: the evaluated day is marked as today only where it is
@@ -51,6 +51,7 @@ export const CalendarMonths = memo(function CalendarMonths({
         calendar.events,
         evaluatedDay(calendar),
         weekStart,
+        calendar.attention_order,
       ),
     [calendar, weekStart],
   );

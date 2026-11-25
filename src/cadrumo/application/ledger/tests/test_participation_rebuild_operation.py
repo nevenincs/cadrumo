@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Iterable
-from contextlib import asynccontextmanager
+from collections.abc import Iterable
 from datetime import datetime
 from typing import cast
 from uuid import UUID, uuid4
@@ -14,13 +13,12 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
     OperationAccessPolicy,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from ....domain.modelos.protocols import (
@@ -36,11 +34,8 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..participation_rebuild_operation import (
     LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
@@ -49,6 +44,7 @@ from ..participation_rebuild_operation import (
     build_ledger_participation_rebuild_definition,
     build_ledger_participation_rebuild_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -86,24 +82,6 @@ class _MisboundIndexRepository:
         raise AssertionError("replace_all ran against a foreign profile bucket")
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
 class _Operands:
     async def put(self, value: BaseModel, *, written_at: datetime) -> str:
         del value, written_at
@@ -111,7 +89,7 @@ class _Operands:
 
 
 class _Context:
-    def __init__(self, operation: PinnedAuthorityOperation, events: _Events) -> None:
+    def __init__(self, operation: PinnedAuthorityOperation, events: RecordingEvents) -> None:
         self.identity = OperationIdentity(
             operation_id=uuid4().hex * 2,
             definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
@@ -119,7 +97,7 @@ class _Context:
         )
         self.authority_operation = operation
         self.events = events
-        self.cancellation = _Cancellation()
+        self.cancellation = IrreversibleSectionGrant()
         self.operands = _Operands()
 
 
@@ -157,13 +135,12 @@ def _access_context(
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     """Build trusted host facts for one registered access action."""
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=UUID("7cc00000-0000-4000-8000-0000000000cc"),
         action=action,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+        destination_id=UUID("7cc00000-0000-4000-8000-0000000000cc"),
     )
 
 
@@ -295,7 +272,7 @@ async def test_rebuild_refuses_foreign_index_bucket_before_source_reads_or_repla
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerParticipationRebuildRequest(profile_id=_PROFILE),
     )
-    events = _Events()
+    events = RecordingEvents()
     context = _Context(operation, events)
 
     with pytest.raises(ProfileAccessRefusedError) as error:

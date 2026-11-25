@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
@@ -22,22 +23,19 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 from ....core.casilla_id import validated_casilla_id
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import (
-    AeatConfirmationState,
-    FilingDeclarationKind,
-    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
-    derive_filing_record_id,
 )
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...calculations.observations_repository import (
     ObservationEnvelopePayload,
     ObservationLayers,
@@ -47,7 +45,8 @@ from ...calculations.observations_repository import (
 )
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ..filing_record_view_operation import (
@@ -60,57 +59,23 @@ from ..filing_record_view_operation import (
 )
 from ..historical_filing_projection import project_historical_filing_content
 from ..verification_repository_ports import VerificationRepositoryBundle
+from .filing_source_support import filing_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CALCULATION_REVISION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _RESULT_REFERENCE = "f" * 64
 _ACTOR = "gestoria source"
 
 
-def _source() -> tuple[WorkUnit, ModeloRecord]:
-    period = Period.from_year_and_code(2026, "1T")
-    unit_id = derive_work_unit_id(
-        bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+def source() -> tuple[WorkUnit, ModeloRecord]:
+    return filing_source(
+        profile_id=PROFILE, calculation_revision_id=_CALCULATION_REVISION_ID, filed_by=_ACTOR, now=_NOW
     )
-    filing_id = derive_filing_record_id(
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_by=_ACTOR,
-    )
-    unit = WorkUnit(
-        work_unit_id=unit_id,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="test-revision",
-        name="First-quarter return",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-        current_calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_calculation_revision_id=_CALCULATION_REVISION_ID,
-        current_filing_record_id=filing_id,
-    )
-    record = ModeloRecord(
-        filing_record_id=filing_id,
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        filed_at=_NOW,
-        filed_by=_ACTOR,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    )
-    return unit, record
 
 
 def _observation_layers() -> ObservationLayers:
@@ -119,7 +84,7 @@ def _observation_layers() -> ObservationLayers:
     def observation(amount: str) -> RegistryModeloObservation:
         return RegistryModeloObservation(
             modelo="303",
-            filing_year=2026,
+            filing_year=_FILING_YEAR,
             period="1T",
             observations=(
                 CasillaObservation(
@@ -139,7 +104,7 @@ def _observation_layers() -> ObservationLayers:
     official = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
         captured_at=_NOW,
-        stamped_revision_id="revision-2026",
+        stamped_revision_id=f"revision-{_FILING_YEAR}",
         observation=observation("10.25"),
         result_disposition=disposition,
         m303_compensation_basis=M303CompensationBasis.RESULTADO,
@@ -154,7 +119,7 @@ def _observation_layers() -> ObservationLayers:
     pending = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         captured_at=_NOW,
-        stamped_revision_id="revision-2026",
+        stamped_revision_id=f"revision-{_FILING_YEAR}",
         observation=observation("11.50"),
         override=override,
         result_disposition=disposition,
@@ -162,14 +127,14 @@ def _observation_layers() -> ObservationLayers:
     )
     return ObservationLayers(
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period="1T",
         official=official,
         pending_local=pending,
     )
 
 
-class _Repository:
+class Repository:
     def __init__(self, bucket_id: str, catalogue: BaseModel) -> None:
         self.bucket_id = bucket_id
         self._catalogue = catalogue
@@ -188,7 +153,7 @@ class _ObservationRepository:
         return self.layers
 
 
-def _bundle(
+def filing_record_view_operation_bundle(
     *,
     record: ModeloRecord | None = None,
     unit: WorkUnit | None = None,
@@ -196,8 +161,9 @@ def _bundle(
     work_bucket_id: str | None = None,
     observation_repository: _ObservationRepository | None = None,
     include_record: bool = True,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
 ) -> VerificationRepositoryBundle:
-    source_unit, source_record = _source()
+    source_unit, source_record = source()
     selected_unit = unit or source_unit
     selected_record = record or source_record
     return cast(
@@ -205,26 +171,32 @@ def _bundle(
         cast(
             object,
             SimpleNamespace(
-                filing=_Repository(
-                    filing_bucket_id or str(_PROFILE),
-                    ModeloRecordCatalogue(
+                filing=Repository(
+                    filing_bucket_id or str(PROFILE),
+                    filing_catalogue
+                    or ModeloRecordCatalogue(
                         records={selected_record.filing_record_id: selected_record} if include_record else {}
                     ),
                 ),
-                work_unit=_Repository(
-                    work_bucket_id or str(_PROFILE),
+                work_unit=Repository(
+                    work_bucket_id or str(PROFILE),
                     WorkUnitCatalogue(work_units={selected_unit.work_unit_id: selected_unit}),
                 ),
                 observation=observation_repository or _ObservationRepository(_observation_layers()),
-                calculation=_Repository(str(_PROFILE), CalculationRevisionCatalogue()),
+                calculation=Repository(str(PROFILE), CalculationRevisionCatalogue()),
             ),
         ),
     )
 
 
 def _registered(bundle: VerificationRepositoryBundle):
-    def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
-        assert profile_id == str(_PROFILE)
+    def factory(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
+        assert profile_id == str(PROFILE)
         assert operation is not None
         return bundle
 
@@ -234,7 +206,7 @@ def _registered(bundle: VerificationRepositoryBundle):
     return factory, definition, registration, registry
 
 
-def _request(record: ModeloRecord, *, profile_id: UUID = _PROFILE) -> OperationRequest[BaseModel]:
+def _request(record: ModeloRecord, *, profile_id: UUID = PROFILE) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -247,7 +219,7 @@ def _context(
     *,
     operation: PinnedAuthorityOperation | None,
     action: AccessAction = AccessAction.SUBMIT,
-    profile_id: UUID = _PROFILE,
+    profile_id: UUID = PROFILE,
     admitted: OperationAccessRequest | None = None,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
@@ -264,10 +236,10 @@ def _context(
 
 
 def test_view_projection_carries_both_layers_and_bounded_override_audit() -> None:
-    _unit, record = _source()
+    _unit, record = source()
     layers = ModeloFilingObservationLayersProjection.from_layers(_observation_layers())
     projection = ModeloFilingRecordViewProjection(
-        profile_id=_PROFILE,
+        profile_id=PROFILE,
         filing_record_id=record.filing_record_id,
         record=ModeloFilingRecordListEntryProjection.from_record(record),
         observation_layers=layers,
@@ -289,9 +261,9 @@ def test_view_projection_carries_both_layers_and_bounded_override_audit() -> Non
 
 
 def test_submission_scope_is_exact_and_result_disclosure_is_tax_values() -> None:
-    unit, record = _source()
+    unit, record = source()
     observation_repository = _ObservationRepository(_observation_layers())
-    bundle = _bundle(observation_repository=observation_repository)
+    bundle = filing_record_view_operation_bundle(observation_repository=observation_repository)
     _factory, definition, registration, registry = _registered(bundle)
     operation = cast(PinnedAuthorityOperation, object())
     request = _request(record)
@@ -324,8 +296,8 @@ def test_submission_scope_is_exact_and_result_disclosure_is_tax_values() -> None
 def test_the_view_is_admitted_alike_on_every_frontend_for_either_kind_of_session(
     frontend: OperationFrontendProjection,
 ) -> None:
-    unit, record = _source()
-    _factory, _definition, registration, registry = _registered(_bundle())
+    unit, record = source()
+    _factory, _definition, registration, registry = _registered(filing_record_view_operation_bundle())
     operation = cast(PinnedAuthorityOperation, object())
 
     admitted = resolve_operation_access(
@@ -342,8 +314,8 @@ def test_the_view_is_admitted_alike_on_every_frontend_for_either_kind_of_session
 
 
 def test_view_request_identity_refuses_before_missing_pin_and_shape() -> None:
-    _unit, record = _source()
-    _factory, _definition, registration, registry = _registered(_bundle())
+    _unit, record = source()
+    _factory, _definition, registration, registry = _registered(filing_record_view_operation_bundle())
     request = _request(record)
 
     with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
@@ -377,29 +349,15 @@ def test_view_request_identity_refuses_before_missing_pin_and_shape() -> None:
 
 
 def test_executor_reads_layers_once_on_worker_and_stores_one_typed_result() -> None:
-    _unit, record = _source()
+    _unit, record = source()
     observation_repository = _ObservationRepository(_observation_layers())
-    bundle = _bundle(observation_repository=observation_repository)
+    bundle = filing_record_view_operation_bundle(observation_repository=observation_repository)
     _factory, definition, _registration_value, _registry = _registered(bundle)
     operation = cast(PinnedAuthorityOperation, object())
     request = _request(record)
     owner_thread = threading.get_ident()
-    phases: list[str] = []
-    effects: list[OperationEffect] = []
-    stored: list[BaseModel] = []
-
-    class Events:
-        async def phase(self, phase_code: str) -> None:
-            phases.append(phase_code)
-
-        async def effect(self, effect: OperationEffect) -> None:
-            effects.append(effect)
-
-    class Operands:
-        async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-            assert written_at.tzinfo is not None
-            stored.append(operand)
-            return _RESULT_REFERENCE
+    events = RecordingEvents()
+    operands = RecordingOperands(_RESULT_REFERENCE)
 
     context = SimpleNamespace(
         authority_operation=operation,
@@ -407,26 +365,28 @@ def test_executor_reads_layers_once_on_worker_and_stores_one_typed_result() -> N
             definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
             subject_ref=request.subject_ref,
         ),
-        events=Events(),
-        operands=Operands(),
+        events=events,
+        operands=operands,
     )
 
     reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == _RESULT_REFERENCE
-    assert phases == [MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID]
-    assert effects == [OperationEffect.NONE]
+    assert events.phases == [MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID]
+    assert events.effects == [OperationEffect.NONE]
     assert len(observation_repository.calls) == 1
     assert observation_repository.calls[0][:3] == ("303", record.period, None)
     assert observation_repository.calls[0][3] != owner_thread
-    assert type(stored[0]) is ModeloFilingRecordViewProjection
-    assert stored[0].filing_record_id == record.filing_record_id
+    assert type(operands.stored[0]) is ModeloFilingRecordViewProjection
+    assert operands.stored[0].filing_record_id == record.filing_record_id
 
 
 def test_missing_receipt_and_cross_profile_catalogues_fail_closed() -> None:
-    _unit, record = _source()
+    _unit, record = source()
     operation = cast(PinnedAuthorityOperation, object())
-    _factory, _definition, registration, registry = _registered(_bundle(include_record=False))
+    _factory, _definition, registration, registry = _registered(
+        filing_record_view_operation_bundle(include_record=False)
+    )
 
     with pytest.raises(ProfileAccessRefusedError) as missing:
         resolve_operation_access(
@@ -436,7 +396,7 @@ def test_missing_receipt_and_cross_profile_catalogues_fail_closed() -> None:
         )
     assert missing.value.reason is AccessDenialCode.OPERATION_DENIED
 
-    foreign_bundle = _bundle(filing_bucket_id=str(_OTHER_PROFILE))
+    foreign_bundle = filing_record_view_operation_bundle(filing_bucket_id=str(_OTHER_PROFILE))
     _foreign_factory, _foreign_definition, foreign_registration, foreign_registry = _registered(foreign_bundle)
     with pytest.raises(ProfileAccessRefusedError) as foreign:
         resolve_operation_access(
@@ -450,13 +410,13 @@ def test_missing_receipt_and_cross_profile_catalogues_fail_closed() -> None:
 def test_projection_refuses_mismatched_coordinates_and_oversized_document(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _unit, record = _source()
+    _unit, record = source()
     layers = ModeloFilingObservationLayersProjection.from_layers(_observation_layers()).model_copy(
         update={"period": "2T"}
     )
     with pytest.raises(ValidationError):
         ModeloFilingRecordViewProjection(
-            profile_id=_PROFILE,
+            profile_id=PROFILE,
             filing_record_id=record.filing_record_id,
             record=ModeloFilingRecordListEntryProjection.from_record(record),
             observation_layers=layers,
@@ -465,14 +425,14 @@ def test_projection_refuses_mismatched_coordinates_and_oversized_document(
 
     from .. import filing_record_view_operation as operation_module
 
-    monkeypatch.setattr(operation_module, "_RESULT_DOCUMENT_MAX_BYTES", 1)
-    bundle = _bundle()
-    request = ModeloFilingRecordViewRequest(profile_id=_PROFILE, filing_record_id=record.filing_record_id)
+    monkeypatch.setattr(operation_module, "PROJECTION_RESULT_MAX_BYTES", 1)
+    bundle = filing_record_view_operation_bundle()
+    request = ModeloFilingRecordViewRequest(profile_id=PROFILE, filing_record_id=record.filing_record_id)
     with pytest.raises(ProfileAccessRefusedError) as oversized:
-        operation_module._capture(request, bundle)
+        operation_module.capture(request, bundle)
     assert oversized.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
 def test_request_rejects_malformed_filing_identity() -> None:
     with pytest.raises(ValidationError):
-        ModeloFilingRecordViewRequest(profile_id=_PROFILE, filing_record_id="bad-id")
+        ModeloFilingRecordViewRequest(profile_id=PROFILE, filing_record_id="bad-id")

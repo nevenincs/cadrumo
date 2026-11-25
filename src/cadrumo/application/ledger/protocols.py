@@ -8,18 +8,20 @@ depends only on these protocol types, not on concrete adapter classes.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
+from datetime import date
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
+from ..operator_actions.models import PreconditionVerdict
 
 
 @runtime_checkable
@@ -34,6 +36,11 @@ class ParsedLedgerRowProtocol(Protocol):
     @property
     def direction(self) -> TransactionDirection:
         """Return the authoritative flow direction for this row."""
+        ...
+
+    @property
+    def operation_date(self) -> date | None:
+        """Return the devengo date only when the source states exactly that."""
         ...
 
     @property
@@ -71,6 +78,11 @@ class ProviderValidationProtocol(Protocol):
         """Optional-extra facts when the provider cannot run locally."""
         ...
 
+    @property
+    def reader_unavailable_verdict(self) -> PreconditionVerdict | None:
+        """Why the model this provider reads with could not be asked, when it could not."""
+        ...
+
 
 @runtime_checkable
 class FinancialProviderProtocol(Protocol):
@@ -93,6 +105,16 @@ class FinancialProviderProtocol(Protocol):
     def validate_source(self, path: Path) -> ProviderValidationProtocol:
         """Validate ``path`` and return a structured validation result."""
         ...
+
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement as a whole names, as a canonical IBAN.
+
+        ``None`` when the format prints no account, prints several, carries it
+        per row, or the file no longer holds the bytes digested as
+        ``source_sha256``.
+        """
+        del path, source_sha256
+        return None
 
 
 class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryProtocol, Protocol):
@@ -161,7 +183,7 @@ class InvoiceCatalogueCoCommitWriterProtocol(InvoiceCatalogueRepositoryProtocol,
         """Build the invoice secure-object write without committing it.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 

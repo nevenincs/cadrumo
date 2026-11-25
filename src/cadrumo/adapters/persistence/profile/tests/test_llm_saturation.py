@@ -17,64 +17,33 @@ local child process. Covers the llm-ledger-classification contract:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import saturate_llm_classification
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
+from .....application.ledger.llm_classification_ports import LLMSaturatedSuggestion
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.iva.schema import IvaCategory
 from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 from .llm_saturation_support import (
-    _BUCKET,
-    _seed_unclassified,
+    BUCKET,
+    saturating_subprocess_classifier,
+    seed_unclassified,
 )
 from .llm_saturation_support import (
     repositories as repositories,
-)
-from .llm_saturation_support import (
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence saturation test reaches a reader port."""
-    raise AssertionError("the no-evidence saturation path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -87,23 +56,23 @@ def test_suggest_derives_substrate_from_selected_category(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
         # The gross is the transaction input the derived substrate must reconstitute;
         # asserting base + iva against this seeded input (not a recomputed literal) is
         # the real invariant, not a hand-summed expectation.
         gross = Decimal("121.00")
-        tx_id = _seed_unclassified(repository, amount=gross)
+        tx_id = seed_unclassified(repository, amount=gross)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
+            classifier=saturating_subprocess_classifier(
                 iva_category=IvaCategory("domestic_general"), operation=operation
             ),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -124,19 +93,17 @@ def test_suggest_zero_rated_category_derives_zero_iva(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
-        tx_id = _seed_unclassified(repository)
+        tx_id = seed_unclassified(repository)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
-                iva_category=IvaCategory("domestic_zero"), operation=operation
-            ),
+            classifier=saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero"), operation=operation),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -151,19 +118,19 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
-        tx_id = _seed_unclassified(repository)
+        tx_id = seed_unclassified(repository)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
+            classifier=saturating_subprocess_classifier(
                 iva_category=IvaCategory("intra_community_supply"), operation=operation
             ),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 

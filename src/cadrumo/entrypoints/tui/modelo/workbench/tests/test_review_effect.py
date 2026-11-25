@@ -12,22 +12,24 @@ import pytest
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
+from ......application.modelo.work_form_typing_effect import TYPING_EFFECTS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......core.period import Period
 from ....components.host import ScreenHostApp
-from ..review import REVIEW_EFFECTS, EditReviewScreen, ReviewDecision, change_line
+from ....tests.settling import settle
+from ..review import EditReviewScreen, ReviewDecision, change_line
 from ..session import StagedChange, WorkbenchEditSession
 from .workbench_fixture import status_line_of
 
@@ -103,8 +105,8 @@ def test_a_replaced_value_names_the_place_it_came_from() -> None:
 @pytest.mark.parametrize("language", _LANGUAGES, ids=[item.value for item in _LANGUAGES])
 def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
     imported_words = {"en": "imported", "es": "importado", "ca": "importat", "hu": "importált"}[language.value]
-    for effect in REVIEW_EFFECTS:
-        text = lookup_translation(f"tui.modelo.workbench.review.effect.{effect}", locale=language.value)
+    for effect in TYPING_EFFECTS:
+        text = lookup_translation(f"workspace.modelo.review.effect.{effect}", locale=language.value)
         assert text is not None and text, effect
         assert imported_words not in text, effect
 
@@ -112,7 +114,7 @@ def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
 async def _review_lines(screen: EditReviewScreen) -> list[str]:
     app: ScreenHostApp[ReviewDecision] = ScreenHostApp(screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         return [str(item.render()) for item in screen.query(Static) if item.id is not None]
 
 

@@ -22,12 +22,15 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
-from .....application.modelo.work_form_models import (
-    ModeloFormField,
+from .....application.modelo.work_form_field_vocabulary import (
+    FED_BY_A_SOURCE,
     ModeloFormOrigin,
     ModeloFormScalar,
-    ModeloWorkForm,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from .....application.modelo.work_form_service import ModeloFormValueChangeV1
 from .....core.external_constants import OutputLanguage
@@ -52,15 +55,12 @@ class ResultGroup(StrEnum):
 _CALCULATED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.CALCULATED, ModeloFormOrigin.CALCULATION_FAILED, ModeloFormOrigin.NOT_CALCULATED_YET}
 )
-_SOURCED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
 _COLUMN_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "why": "tui.modelo.workbench.result_diff.column.why",
-    "box": "tui.modelo.workbench.review.column.box",
-    "concept": "tui.modelo.workbench.review.column.concept",
-    "before": "tui.modelo.workbench.review.column.before",
-    "after": "tui.modelo.workbench.review.column.after",
+    "why": "workspace.modelo.result_diff.column.why",
+    "box": "workspace.modelo.review.column.box",
+    "concept": "workspace.modelo.review.column.concept",
+    "before": "workspace.modelo.review.column.before",
+    "after": "workspace.modelo.review.column.after",
 }
 
 
@@ -81,7 +81,7 @@ def _group(change: ModeloFormValueChangeV1, yours: frozenset[AddressKey]) -> Res
         return ResultGroup.YOURS
     if change.after_origin in _CALCULATED_ORIGINS:
         return ResultGroup.CALCULATED
-    if change.after_origin in _SOURCED_ORIGINS:
+    if change.after_origin in FED_BY_A_SOURCE:
         return ResultGroup.SOURCED
     return ResultGroup.OTHER
 
@@ -90,7 +90,7 @@ def _shown(
     field: ModeloFormField | None, value: ModeloFormScalar, origin: ModeloFormOrigin | None, language: OutputLanguage
 ) -> str:
     if field is None or origin is None:
-        return tr("tui.modelo.workbench.result_diff.not_shown")
+        return tr("workspace.modelo.result_diff.not_shown")
     return value_text(CasillaListEntry(field.model_copy(update={"value": value, "origin": origin})), language)
 
 
@@ -173,26 +173,26 @@ class WorkbenchResultScreen(ModalScreen[AddressKey | None]):
     def compose(self) -> ComposeResult:
         counts = {group: sum(1 for line in self._lines if line.group is group) for group in ResultGroup}
         summary = " · ".join(
-            tr(f"tui.modelo.workbench.result_diff.count.{group.value}", count=count)
+            tr(f"workspace.modelo.result_diff.count.{group.value}", count=count)
             for group, count in counts.items()
             if count
         )
         with Container(id="result-backdrop"), Vertical(id="result-panel"):
             yield localized(
                 Static(
-                    tr("tui.modelo.workbench.result_diff.title", count=len(self._lines)),
+                    tr("workspace.modelo.result_diff.title", count=len(self._lines)),
                     id="result-title",
                     markup=False,
                 ),
-                "tui.modelo.workbench.result_diff.title",
+                "workspace.modelo.result_diff.title",
                 count=len(self._lines),
             )
             yield Static(summary, id="result-summary", markup=False)
             yield ContentDataTable[str](id="result-table", cursor_type="row", zebra_stripes=True)
             with Horizontal(id="result-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.result_diff.close"), id="result-close", variant="primary"),
-                    "tui.modelo.workbench.result_diff.close",
+                    Button(tr("workspace.modelo.result_diff.close"), id="result-close", variant="primary"),
+                    "workspace.modelo.result_diff.close",
                 )
 
     def on_resize(self, event: events.Resize) -> None:
@@ -207,7 +207,7 @@ class WorkbenchResultScreen(ModalScreen[AddressKey | None]):
             table.add_column(tr(label_key), key=key)
         for index, line in enumerate(self._lines):
             table.add_row(
-                tr(f"tui.modelo.workbench.result_diff.group.{line.group.value}"),
+                tr(f"workspace.modelo.result_diff.group.{line.group.value}"),
                 line.box,
                 line.concept,
                 line.before,

@@ -135,7 +135,7 @@ def build_ledger_cli_scenario(year: int) -> LedgerCliScenario:
         fixture_id="issued-manual",
         kind="issued",
         counterparty_name="Synthetic customer SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00000281",
         counterparty_country="ES",
         invoice_number=f"LEDGER-ISS-{year}-001",
         invoice_date=date(year, 3, 15),

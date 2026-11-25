@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 from dev.docs.preprocess.normatives_html import build_outputs as build_html_outputs
 from dev.docs.preprocess.normatives_html import extract_html
 from dev.docs.preprocess.parts import part_stand_in_path
@@ -26,6 +25,7 @@ from dev.docs.preprocess.schema import PreprocessOutput
 from dev.docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX, sidecar_paths_for
 from dev.docs.preprocess.workbook import build_outputs as build_workbook_outputs
 from dev.docs.preprocess.workbook import extract_workbook
+from dev.paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _REPO_ROOT: Final[Path] = REPO_ROOT

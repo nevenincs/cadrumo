@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
+from ....tests.log_records import delivered_records
 from ..error_codes import render_error_json, render_error_text
 from ..failure_report import failure_chain, failure_trace_id, log_boundary_failure, root_cause_context
-from ..hierarchy import InternalInvariantError
+from ..hierarchy import CadrumoError, InternalInvariantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -67,7 +71,9 @@ def test_internal_envelope_shows_the_root_cause_and_the_logged_trace_id(caplog: 
     with caplog.at_level(logging.DEBUG):
         trace_id = log_boundary_failure(logging.getLogger("cadrumo.tests.failure_report"), "unit_boundary", error)
 
-    (record,) = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "unit_boundary"]
+    (record,) = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "unit_boundary"
+    ]
     assert record.levelno == logging.ERROR
     assert record.__dict__["trace_id"] == trace_id
     assert record.__dict__["error_type"] == "cadrumo.core.errors.hierarchy.InternalInvariantError"
@@ -105,6 +111,37 @@ def test_expected_refusal_envelopes_are_unchanged() -> None:
     document = json.loads(render_error_json(LockAcquisitionError(context={"reason": "held"})))["error"]
     assert document["trace_id"] is None
     assert document["context"] == {"reason": "held"}
+
+
+def test_an_identifier_shaped_private_reason_is_scrubbed_from_the_written_boundary_line() -> None:
+    # An identifier-shaped context reason enters the chain verbatim; the project
+    # logger's scrubbing filter is what keeps it out of the written line.
+    from ...diagnostic_log import DiagnosticFormatter
+    from ...logging import LOG_FILE_FORMAT, flush_logging, get_logger
+
+    logger = get_logger("cadrumo.tests.failure_report_sink")
+    stream = io.StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+    logger.addHandler(handler)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    try:
+        log_boundary_failure(
+            logger, "unit_boundary", CadrumoError("synthetic boundary failure", context={"reason": _PRIVATE})
+        )
+        # Delivery runs on the dispatch thread and reaches the handler only while it is attached.
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+
+    line = stream.getvalue()
+    assert "boundary failure at unit_boundary" in line
+    assert "chain: cadrumo.core.errors.hierarchy.CadrumoError[" in line
+    assert _PRIVATE not in line
 
 
 def _line_of(fragment: str) -> int:

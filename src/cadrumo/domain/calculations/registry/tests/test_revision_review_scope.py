@@ -14,10 +14,15 @@ from ..authority_component_codec import encode_authority_component
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PREDECESSOR = "2024"
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(_YEAR)
+_PREDECESSOR = "predecessor-edition"
+_OTHER_EDITION = "other-edition"
+_REVIEWED_AT = date(_YEAR, 9, 10)
 
 
 def _revision(
@@ -28,16 +33,16 @@ def _revision(
 ) -> ModeloRevision:
     reviewed = review_status is not RevisionReviewStatus.PENDING_REVIEW
     return ModeloRevision(
-        id="2025",
+        id=_REVISION_ID,
         localization_key="scope",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(year_from=2025, periods=("0A",)),
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual",),
         predecessor=predecessor,
         review_status=review_status,
         reviewed_by="automation:scope" if reviewed else None,
-        reviewed_at=date(2026, 9, 10) if reviewed else None,
+        reviewed_at=_REVIEWED_AT if reviewed else None,
         reviewed_against=reviewed_against,
     )
 
@@ -56,10 +61,10 @@ def test_automated_review_preserves_the_authored_stamp_in_authority_bytes() -> N
         reviewed_against=None,
     )
     assert revision.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
-    document = json.loads(encode_authority_component(ModeloRevisionComponentQuery("100", "2025"), revision))
+    document = json.loads(encode_authority_component(ModeloRevisionComponentQuery("100", _REVISION_ID), revision))
     assert document["payload"]["review_status"] == "agent_reviewed"
     assert document["payload"]["reviewed_by"] == "automation:scope"
-    assert document["payload"]["reviewed_at"] == "2026-09-10"
+    assert document["payload"]["reviewed_at"] == _REVIEWED_AT.isoformat()
 
 
 @pytest.mark.parametrize("token", ["automation_reviewed", "totally_reviewed"])
@@ -85,9 +90,9 @@ def test_a_comparison_may_name_a_revision_other_than_the_storage_predecessor() -
     revision = _revision(
         predecessor=_PREDECESSOR,
         review_status=RevisionReviewStatus.AUTOMATION_REVIEWED,
-        reviewed_against="2023",
+        reviewed_against=_OTHER_EDITION,
     )
-    assert revision.reviewed_against == "2023"
+    assert revision.reviewed_against == _OTHER_EDITION
 
 
 def test_a_scope_on_an_unreviewed_delta_edition_is_refused() -> None:

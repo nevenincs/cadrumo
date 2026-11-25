@@ -23,11 +23,11 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from functools import cache
 from typing import TYPE_CHECKING
 
-from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
-from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core.storage_environment import STORAGE_ROOT, storage_directory
+from ...core.cli_metadata import is_metadata_invocation
+from ...core.product_identity import PRODUCT_IDENTITY
+from ...core.storage_environment import STORAGE_ROOT
 from ...core.type_guards import is_object_collection, is_object_dict
-from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
+from .command_specs import COMMAND_GRAPH
 
 if TYPE_CHECKING:
     import typer
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from cadrumo_client.commands.compiler import InvocationDispatcher
     from cadrumo_client.commands.spec import CommandSpec
 
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
 
 # Importing this module costs the declarative command graph and nothing else.
 # Typer, the error boundary, the locale catalogues and every command module are
@@ -52,9 +52,9 @@ def cli_app(*, dispatcher: InvocationDispatcher | None = None) -> typer.Typer:
     from cadrumo_client.commands.compiler import build_command_app
     from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 
-    from ._terminal_errors import run_standalone_with_error_contract
     from .command_lifecycle import dispatch_cli_behavior
     from .errors import decorate_typer_app
+    from .terminal_errors import run_standalone_with_error_contract
 
     # UTF-8 streams before any echo: default Windows consoles expose cp1252,
     # on which the review queue's arrow and IVA citations' section sign crash
@@ -63,7 +63,7 @@ def cli_app(*, dispatcher: InvocationDispatcher | None = None) -> typer.Typer:
     configure_stdio_for_utf8()
     disable_rich_cli_rendering()
     app = build_command_app(
-        _COMMAND_GRAPH,
+        COMMAND_GRAPH,
         dispatcher=dispatcher or dispatch_cli_behavior,
         standalone_error_runner=run_standalone_with_error_contract,
     )
@@ -74,14 +74,14 @@ def cli_app(*, dispatcher: InvocationDispatcher | None = None) -> typer.Typer:
 def _declared_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
 ) -> CommandExecutionPolicy:
-    declared = _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path))
+    declared = COMMAND_GRAPH.resolve_path((PRODUCT_IDENTITY.cli_executable, *cli_path))
     return _execution_policy_from_spec(declared)
 
 
 def _execution_policy_from_spec(spec: CommandSpec) -> CommandExecutionPolicy:
     from cadrumo_client.contracts.command_ports import CommandCapabilityClass
 
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
 
     declared = spec.policy
     return CommandExecutionPolicy(
@@ -108,7 +108,7 @@ def main(*, app: typer.Typer | None = None) -> None:
     render their ``tr(...)``-bound help, so the flag genuinely localises help
     text (see :mod:`.language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
-    locale (see :func:`cadrumo.entrypoints.cli._framework_localisation.localise_help_section_headers`).
+    locale (see :func:`cadrumo.entrypoints.cli.framework_localisation.localise_help_section_headers`).
     """
     import sys
 
@@ -117,7 +117,7 @@ def main(*, app: typer.Typer | None = None) -> None:
     from cadrumo_client.commands.stdio import configure_stdio_for_utf8
     from cadrumo_client.logging import register_client_logging_namespace
 
-    from ._framework_localisation import localise_help_section_headers, localise_typer_parse_error_messages
+    from .framework_localisation import localise_help_section_headers, localise_typer_parse_error_messages
     from .language_argv import apply_language_argv_to_environment
 
     register_client_logging_namespace()
@@ -126,7 +126,7 @@ def main(*, app: typer.Typer | None = None) -> None:
     if arguments == ["--cadrumo-command-surface"]:
         _emit_command_surface_manifest()
         return
-    metadata_invocation = _is_metadata_invocation(arguments)
+    metadata_invocation = is_metadata_invocation(arguments)
     if apply_language_argv_to_environment(arguments) is not None:
         # load_settings() holds a process-wide Settings singleton cached by
         # the active-profile pointer, not by env var (core/config.py,
@@ -150,17 +150,17 @@ def main(*, app: typer.Typer | None = None) -> None:
     # having to read the runtime log. stderr keeps the stdout JSON envelope
     # pure; the code is non-secret operator guidance, not a credential.
     progress_sink = nullcontext()
-    with _pointer_repair_scope(arguments):
+    with _pointer_repair_scope(arguments), _diagnostic_routing_scope(arguments):
         if not metadata_invocation:
             try:
-                _admit_authority_at_startup()
+                admit_authority_at_startup()
             except typer.Exit as exit_request:
                 raise SystemExit(exit_request.exit_code) from None
             from ...core.operator_progress import operator_progress_sink
 
-            progress_sink = operator_progress_sink(_emit_operator_progress)
+            progress_sink = operator_progress_sink(emit_operator_progress)
         with _metadata_state_isolation(arguments), progress_sink:
-            (app if app is not None else cli_app())(prog_name=_PRODUCT_IDENTITY.cli_executable)
+            (app if app is not None else cli_app())(prog_name=PRODUCT_IDENTITY.cli_executable)
 
 
 def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
@@ -170,7 +170,7 @@ def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
     pointer, so without this the command a corrupt pointer's refusal recommends
     would be refused by that same corruption before it could parse.
     """
-    leaf = _COMMAND_GRAPH.resolve_invocation(arguments)
+    leaf = COMMAND_GRAPH.resolve_invocation(arguments)
     if leaf is None or not leaf.repairs_active_profile_pointer:
         return nullcontext()
     from ...core.bucket_pointer import corrupt_pointer_reads_as_unselected
@@ -178,7 +178,23 @@ def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
     return corrupt_pointer_reads_as_unselected()
 
 
-def _admit_authority_at_startup() -> None:
+def _diagnostic_routing_scope(arguments: list[str]) -> AbstractContextManager[None]:
+    """Keep the invocation's diagnostics in their file while stderr carries a JSON document.
+
+    A JSON invocation's stderr is the machine-readable error channel, so a
+    diagnostic logged at the stderr level during the run, such as a refused
+    runtime connection, must not precede the document a caller parses.
+    """
+    from ...core.click_context import argv_requests_json
+
+    if not argv_requests_json(arguments):
+        return nullcontext()
+    from ...core.logging import operator_document_output
+
+    return operator_document_output()
+
+
+def admit_authority_at_startup() -> None:
     """Admit the shipped authority through the typed CLI error boundary.
 
     Storage is not provisioned here: a command provisions it at dispatch, once
@@ -209,9 +225,9 @@ def _admit_authority_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, admit_authority_at_startup))
     except CadrumoError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, admit_authority_at_startup))
 
 
 @contextmanager
@@ -223,7 +239,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     database before those imports occur. Normal commands never enter this
     scope and continue to refuse a retired ``aeat`` state root in normal operation.
     """
-    if not _is_metadata_invocation(arguments):
+    if not is_metadata_invocation(arguments):
         yield
         return
 
@@ -235,17 +251,11 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     from pathlib import Path
     from tempfile import TemporaryDirectory
 
-    from ...core.errors.hierarchy import InternalInvariantError
+    from ...core.storage_environment import configured_storage_root
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
 
-    temporary_location = storage_location(StorageCategory.TEMPORARY_FILES)
-    if temporary_location.settings_field is None:
-        raise InternalInvariantError("temporary storage location must declare its environment setting")
-    temporary_base = storage_directory(
-        temporary_location.settings_field.upper(),
-        temporary_location.relative_path().as_posix(),
-    )
+    temporary_base = configured_storage_root() / storage_location(StorageCategory.TEMPORARY_FILES).relative_path()
     temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:
         root = Path(temporary_root)
@@ -262,15 +272,16 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
                     os.environ[key] = value
 
 
-async def _emit_operator_progress(progress: object) -> None:
+async def emit_operator_progress(progress: object) -> None:
     """Write an in-process operator progress banner to stderr, keeping stdout pure."""
     import typer
 
     from ...core.operator_progress import OperatorProgress
+    from ...core.terminal_encoding import encode_terminal_text
 
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")
-    typer.echo(progress.render(), err=True)
+    typer.echo(encode_terminal_text(progress.render()), err=True)
 
 
 def _jsonable_command_surface_value(value: object) -> object:
@@ -312,6 +323,7 @@ def _emit_command_surface_manifest() -> None:
 
     import typer
 
+    from ...core.terminal_encoding import encode_terminal_text
     from .command_schema import command_registration_projection, command_schema_refs, command_schema_type
     from .operator_surface_reconciliation import recorded_command_operation_join
     from .verb_input_schema import build_verb_input_schemas, is_exposable_command
@@ -337,7 +349,7 @@ def _emit_command_surface_manifest() -> None:
             "live_write": policy.live_write,
         }
         result_schemas[key] = command_schema_type(key).model_json_schema()
-        spec = _COMMAND_GRAPH.by_schema_identity().get(key)
+        spec = COMMAND_GRAPH.by_schema_identity().get(key)
         if spec is None:
             raise LookupError(f"unknown command schema identity: {key}")
         search_terms[key] = spec.search_terms
@@ -355,7 +367,7 @@ def _emit_command_surface_manifest() -> None:
         "search_terms": search_terms,
         "registration_projection": _jsonable_command_surface_value(command_registration_projection()),
     }
-    typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+    typer.echo(encode_terminal_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))))
 
 
 __all__ = [
@@ -368,7 +380,7 @@ def _command_surface_global_flags() -> tuple[str, ...]:
     """Enumerate every root option declaration in command-graph order."""
     return tuple(
         option
-        for parameter in _COMMAND_GRAPH.root().parameters
+        for parameter in COMMAND_GRAPH.root().parameters
         for option in getattr(parameter, "declarations", ())
         if isinstance(option, str) and option.startswith("-")
     )

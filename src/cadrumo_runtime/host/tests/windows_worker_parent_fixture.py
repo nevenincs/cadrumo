@@ -37,12 +37,12 @@ if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "host-browse
 
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.core.config import load_settings
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_runtime.host.worker import installed_profile_worker_composition, run
 else:
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.core.config import load_settings
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_runtime.host.worker import installed_profile_worker_composition, run
 
 
@@ -57,6 +57,11 @@ class _BlockingRelease:
         if not self.released:
             await asyncio.to_thread(self.release)
             self.released = True
+
+
+def _own_worker_id() -> str:
+    """The identity the runtime launched this worker under, read from its canonical arguments."""
+    return sys.argv[sys.argv.index("--worker-id") + 1]
 
 
 class _BrowserWork:
@@ -90,6 +95,10 @@ class _BrowserWork:
             return
         # The controller creates the barrier only after a real install/status ACK.
         admitted = json.loads((self.directory / "windows-worker-admitted.json").read_text(encoding="utf-8"))
+        if admitted["worker_id"] != _own_worker_id():
+            # The runtime starts a keyless replacement after it loses the admitted worker; only the
+            # admitted incarnation owns a browser.
+            return
         assert admitted["worker_pid"] == os.getpid() and admitted["buffer_wiped"] is True
         async with async_playwright() as playwright:
             executable = str(Path(playwright.chromium.executable_path).resolve(strict=True))
@@ -125,7 +134,7 @@ class _BrowserWork:
 @contextmanager
 def _admitted_worker_composition() -> Generator[None]:
     """Keep canonical private worker composition and own the admitted browser thread."""
-    root = Path(load_settings().cadrumo_local_storage_root)
+    root = Path(load_settings().cadrumo_storage_root)
     config = json.loads((root / "windows-browser-config.json").read_text(encoding="utf-8"))
     directory = Path(config["directory"])
     work = _BrowserWork(directory)
@@ -197,6 +206,7 @@ def _admitted_browser_owner(directory: Path) -> None:
                     {
                         "runtime_pid": os.getpid(),
                         "worker_pid": worker_pid,
+                        "worker_id": str(identity.worker_id),
                         "session_id": str(admitted.session_id),
                         "buffer_wiped": True,
                     }
@@ -255,7 +265,7 @@ def _host_browser_owner(directory: Path) -> None:
     import time
     from concurrent.futures import ThreadPoolExecutor
     from contextvars import copy_context
-    from uuid import uuid4
+    from uuid import UUID, uuid4
 
     import pytest
     import win32api
@@ -265,7 +275,7 @@ def _host_browser_owner(directory: Path) -> None:
 
     from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject
     from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo_client.contracts.contracts import ClientHello
@@ -278,6 +288,7 @@ def _host_browser_owner(directory: Path) -> None:
     from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
     from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
     from cadrumo_runtime.host.profile_host import RuntimeProfileHost
+    from cadrumo_runtime.host.session_owner import ProfileWorkerSessionOwner
     from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 
     directory.mkdir(parents=True, exist_ok=True)
@@ -327,15 +338,20 @@ def _host_browser_owner(directory: Path) -> None:
             runtime_owner.executor = pool
             original_poll = profiles.poll
             retirement_published = False
-            witnesses: list[tuple[RuntimeProfileHost, int]] = []
+            witnesses: list[tuple[RuntimeProfileHost, ProfileWorkerSessionOwner, UUID, int]] = []
 
             def observed_poll() -> None:
                 nonlocal retirement_published
                 original_poll()
                 if retirement_published or not witnesses:
                     return
-                original_host, worker_pid = witnesses[0]
-                if not original_host.owner.lost or profile_id in profiles._profiles:
+                original_host, lost_owner, lease_id, worker_pid = witnesses[0]
+                # A positive worker loss keeps the profile and suspends its leases under a replacement owner.
+                if (
+                    not lost_owner.lost
+                    or original_host.owner is lost_owner
+                    or lease_id not in original_host.authority._suspended
+                ):
                     return
                 active_serve = runtime_owner.running
                 assert active_serve is not None and not stop.is_set() and not active_serve.done()
@@ -345,8 +361,10 @@ def _host_browser_owner(directory: Path) -> None:
                         {
                             "runtime_pid": os.getpid(),
                             "worker_pid": worker_pid,
-                            "owner_lost": original_host.owner.lost,
-                            "profile_removed": profile_id not in profiles._profiles,
+                            "owner_lost": lost_owner.lost,
+                            "replacement_started": original_host.owner is not lost_owner,
+                            "lease_suspended": lease_id in original_host.authority._suspended,
+                            "profile_retained": profiles._profiles.get(profile_id) is original_host,
                             "server_running": not active_serve.done(),
                             "stop_requested": stop.is_set(),
                         }
@@ -402,12 +420,13 @@ def _host_browser_owner(directory: Path) -> None:
                 assert channel is not None
                 worker_pid = channel.peer.process_id
                 assert worker_pid is not None and worker_pid in worker._scope.active_process_ids()
-                witnesses.append((host, worker_pid))
+                witnesses.append((host, host.owner, session_id, worker_pid))
                 (directory / "windows-worker-admitted.json").write_text(
                     json.dumps(
                         {
                             "runtime_pid": os.getpid(),
                             "worker_pid": worker_pid,
+                            "worker_id": str(host.owner.identity.worker_id),
                             "session_id": str(session_id),
                             "buffer_wiped": True,
                         }

@@ -14,7 +14,11 @@ from ....application.user_profile.censal_preview_operation import (
     CensalPreviewOperationRequest,
     CensalPreviewOperationResult,
 )
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from .operation_censal_prepare import prepare_censal_review
 
 
@@ -40,7 +44,7 @@ def preview_censal_operation(ctx: typer.Context) -> CensalPreviewOperationResult
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or projection.profile_id != client.profile_id
     ):
         raise invalid_completion_error(completed)

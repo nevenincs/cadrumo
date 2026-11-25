@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Final, cast, override
+from typing import ClassVar, Final, cast, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
-from ....core.decimal.constants import ONE
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
@@ -21,7 +21,9 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
 from ..components.language import localized
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
+from .link_picker import LedgerHeldLinksDoorV1, LedgerLinkPickers, held_links
 from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -67,17 +69,10 @@ def _optional_decimal(field_name: str, raw: str) -> Decimal | None:
     return parsed
 
 
-def _validate_iva_rate(value: Decimal | None) -> Decimal | None:
-    """Apply the domain rate convention before the submitter is called."""
-    if value is not None and value > ONE:
-        raise TransactionValidationError(
-            f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
-        )
-    return value
-
-
 class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
     """Let an operator explicitly edit, confirm, or cancel one classification."""
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.CLASSIFICATION
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain an injected command-capable workspace controller."""
@@ -128,6 +123,12 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                     f"tui.ledger.classification.field.{field_name}",
                 )
                 yield Input(id=_input_id(field_name))
+            yield LedgerLinkPickers(
+                "ledger-classification",
+                self.controller.link_options_door,
+                held=self._held_links_door(),
+                id="ledger-classification-links",
+            )
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield localized(
@@ -143,6 +144,18 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.classification.cancel",
             )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+
+    def _held_links_door(self) -> LedgerHeldLinksDoorV1 | None:
+        """The read of the links the entry being classified holds, or ``None`` without the transaction door."""
+        doors = self.controller.record_doors
+        target = self.controller.classification_target
+        if doors is None or target is None:
+            return None
+
+        async def held() -> dict[str, str]:
+            return held_links(await doors.transaction(str(target)))
+
+        return held
 
     def on_mount(self) -> None:
         """Populate explicit authored choices without inferring a classification."""
@@ -175,10 +188,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Confirm through the injected door or cancel without mutation."""
-        if event.button.id == "ledger-classification-cancel" and self.flow_state in {
-            LedgerFlowState.EDITING,
-            LedgerFlowState.CONFIRMING,
-        }:
+        if event.button.id == "ledger-classification-cancel" and self.can_cancel_flow:
             self._cancel_flow()
             return
         if (
@@ -210,9 +220,12 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             raise InternalInvariantError("classification patch disappeared before submission")
         try:
             await self.controller.submit_classification(patch)
-        except Exception:
+        except Exception as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.classification.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.classification.failure"))
+            if isinstance(error, CadrumoError) and unknown_outcome_of(error) is not None:
+                # A lost session's own message names the operation too, and asks for a sign-in first.
+                self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(tr("tui.ledger.classification.success"))
@@ -243,7 +256,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
     def _decimal_patch_values(self, selected: BusinessClassification) -> dict[str, Decimal]:
         decimals: dict[str, Decimal | None] = {
             "taxable_base": _optional_decimal("taxable_base", self._field_value("taxable_base")),
-            "iva_rate": _validate_iva_rate(_optional_decimal("iva_rate", self._field_value("iva_rate"))),
+            "iva_rate": _optional_decimal("iva_rate", self._field_value("iva_rate")),
             "iva_amount": _optional_decimal("iva_amount", self._field_value("iva_amount")),
             "business_pct": _optional_decimal("business_pct", self._field_value("business_pct")),
         }
@@ -262,6 +275,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             value = self._optional_text(field_name)
             if value is not None:
                 values[field_name] = value
+        values.update(self.query_one("#ledger-classification-links", LedgerLinkPickers).chosen())
         return values
 
     @staticmethod
@@ -277,7 +291,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def _cancel_flow(self) -> None:
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self.selected_classification = None
         self._pending_patch = None

@@ -41,7 +41,7 @@ def _installed_server(tmp_path: Path, profile_id: UUID, *arguments: str) -> Stdi
         args=["--profile-id", str(profile_id), *arguments],
         cwd=tmp_path,
         env={
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
         },
@@ -52,6 +52,7 @@ _UNADMITTED: tuple[tuple[str, dict[str, object]], ...] = (
     _PROFILE_CALL,
     ("authority", {"query": "auth_providers"}),
     ("corpus_search", {"query": "iva"}),
+    ("views", {"query": "ledger"}),
     ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID, "limit": 3}),
     ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
 )

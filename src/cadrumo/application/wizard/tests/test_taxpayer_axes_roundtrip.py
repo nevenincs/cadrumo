@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -50,7 +50,7 @@ class TestSetupAnswersTaxpayerAxes:
 
     def test_legal_entity_form_accepts_a_recognised_form(self) -> None:
         answers = SetupAnswers(
-            tax_id="B12345674",
+            tax_id="B00015016",
             activity="Cooperative trading",
             entity_type=EntityType.from_registry("legal_entity"),
             legal_entity_form=LegalEntityForm.from_registry("cooperativa"),
@@ -154,6 +154,7 @@ class TestTaxpayerProfileProjection:
         assert profile.iva_regime == IVARegime("REAGP")
         iva = profile.iva
         assert iva is not None
+        assert iva.regime_composition is not None
         assert iva.regime_composition.value == "general"
         assert iva.cash_accounting_regime_enrolled is False
         assert iva.voluntary_sii_enrolled is False
@@ -168,8 +169,8 @@ class TestTaxpayerProfileProjection:
             {
                 "identity.tax_id": "12345678Z",
                 "activities.description": "Grupo IVA",
-                "cross_period.group_member_roster.322.2026.12": "B00000000, A00000000",
-                "iva_grupo.member_roster.2026.11": "C00000000;D00000000",
+                "cross_period.group_member_roster.322.2026.12": "B00010082, A00010009",
+                "iva_grupo.member_roster.2026.11": "C00010231;D00010249",
             },
             tax_id_default="00000000T",
         )
@@ -177,8 +178,8 @@ class TestTaxpayerProfileProjection:
         assert [item.source_modelo for item in profile.cross_period_group_member_rosters] == ["322", "322"]
         assert [item.filing_year for item in profile.cross_period_group_member_rosters] == [2026, 2026]
         assert [item.period.registry_token for item in profile.cross_period_group_member_rosters] == ["11", "12"]
-        assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00000000", "D00000000")
-        assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00000000", "B00000000")
+        assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00010231", "D00010249")
+        assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00010009", "B00010082")
 
     def test_objetiva_regime_projects_structured_axis(self) -> None:
         """The wizard projects objective estimation through the enum axis."""
@@ -192,27 +193,6 @@ class TestTaxpayerProfileProjection:
             tax_id_default="00000000T",
         )
         assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
-
-    def test_objetiva_regime_projects_modulos_annual_profile_facts(self) -> None:
-        """Annual módulos facts project from the real profile mapping."""
-
-        profile = taxpayer_profile_from_mapping(
-            {
-                "identity.tax_id": "12345678Z",
-                "activities.description": "Modulos activity",
-                "irpf.estimation_regime": "objetiva",
-                "irpf.objective_estimation_modulos_iae_epigraph": "972.1",
-                "irpf.objective_estimation_modulos_module_1_units": "2.50",
-                "irpf.objective_estimation_modulos_module_2_units": "85",
-                "irpf.objective_estimation_modulos_module_3_units": "12000.75",
-            },
-            tax_id_default="00000000T",
-        )
-        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
-        assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
-        assert str(profile.objective_estimation_modulos_module_1_units) == "2.50"
-        assert str(profile.objective_estimation_modulos_module_2_units) == "85"
-        assert str(profile.objective_estimation_modulos_module_3_units) == "12000.75"
 
     def test_undeclared_axes_project_to_safe_empty_defaults(self) -> None:
         """A profile with no taxpayer-axis facts projects to undeclared.
@@ -236,16 +216,14 @@ class TestTaxpayerProfileProjection:
 
 class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
     """The LIS Art. 29 new-entity-first-two-profit-periods state survives
-    the full wizard → persistence → reload → projection cycle as a
-    three-state value.
+    the wizard → persistence → reload cycle as a three-state value.
 
-    These tests exist because BLOCKER 1 demonstrated that a descriptor
-    default of ``"false"`` collapsed the three-state down to a binary
-    declared-False, silently corrupting every quiet-create legal entity
-    profile. The contract under test: a profile that has not declared
-    the fact projects to ``None`` (undeclared); a positively-declared
-    True projects to ``True``; a positively-declared False projects to
-    ``False``.
+    These tests exist because a descriptor default of ``"false"`` once
+    collapsed the three-state down to a binary declared-False, silently
+    corrupting every quiet-create legal entity profile. The contract under
+    test: a profile that has not declared the fact stores nothing for it; a
+    positively-declared True stores ``"true"``; a positively-declared False
+    stores ``"false"``.
     """
 
     def _legal_entity_answers(
@@ -254,7 +232,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         new_entity: bool | str = "",
     ) -> SetupAnswers:
         return SetupAnswers(
-            tax_id="B66012345",
+            tax_id="B00015032",
             activity="Software development",
             entity_type=EntityType.from_registry("legal_entity"),
             legal_entity_form=LegalEntityForm.from_registry("sl"),
@@ -289,53 +267,6 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.new_entity_first_two_profit_periods is False
 
-    def test_taxpayer_profile_projects_absent_fact_to_none(self) -> None:
-        """The downstream TaxpayerProfile projection treats an absent
-        fact as the undeclared three-state, not as declared-False.
-
-        This is the assertion that would have surfaced BLOCKER 1: the
-        scripted ``--quiet`` legal-entity create with no flag must
-        not materialise a ``"false"`` token in the canonical dict, and
-        the projection must read absent → ``None``.
-        """
-
-        profile = taxpayer_profile_from_mapping(
-            {
-                "identity.tax_id": "B66012345",
-                "activities.description": "Software development",
-                "taxpayer_type.entity_type": "legal_entity",
-                "taxpayer_type.legal_entity_form": "sl",
-            },
-            tax_id_default="00000000T",
-        )
-        assert profile.new_entity_first_two_profit_periods is None
-
-    def test_taxpayer_profile_projects_declared_true_to_true(self) -> None:
-        profile = taxpayer_profile_from_mapping(
-            {
-                "identity.tax_id": "B66012345",
-                "activities.description": "Software development",
-                "taxpayer_type.entity_type": "legal_entity",
-                "taxpayer_type.legal_entity_form": "sl",
-                "taxpayer_type.new_entity_first_two_profit_periods": "true",
-            },
-            tax_id_default="00000000T",
-        )
-        assert profile.new_entity_first_two_profit_periods is True
-
-    def test_taxpayer_profile_projects_declared_false_to_false(self) -> None:
-        profile = taxpayer_profile_from_mapping(
-            {
-                "identity.tax_id": "B66012345",
-                "activities.description": "Software development",
-                "taxpayer_type.entity_type": "legal_entity",
-                "taxpayer_type.legal_entity_form": "sl",
-                "taxpayer_type.new_entity_first_two_profit_periods": "false",
-            },
-            tax_id_default="00000000T",
-        )
-        assert profile.new_entity_first_two_profit_periods is False
-
     def test_full_wizard_runtime_quiet_path_preserves_undeclared(self, *, registry_setup_flow: WizardFlow) -> None:
         """End-to-end through the scripted flow-substrate walk with no
         positively-declared CONFIRM answer for the new-entity flag.
@@ -348,15 +279,15 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         the canonical dict must not carry the new-entity key at all,
         and the projection must reload at ``None``.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            from ..commands import _run_scripted_walk
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            from ..commands import run_scripted_walk
 
             # The scripted walk is driven by a sparse canonical dict; every
             # visible question falls back to its descriptor default (or
             # blank). The required-flag tax-id and activity must be seeded
             # explicitly — they are unconditionally required.
             canonical: dict[str, str] = {
-                "tax-id": "B66012345",
+                "tax-id": "B00015032",
                 "activity": "Software development",
                 "entity-type": "legal_entity",
                 "legal-entity-form": "sl",
@@ -367,8 +298,9 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
                 "iva-cash-accounting-regime-enrolled": "false",
                 "iva-voluntary-sii-enrolled": "false",
                 "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
+                "enrollment-large-company": "false",
             }
-            answers = _run_scripted_walk(
+            answers = run_scripted_walk(
                 registry_setup_flow,
                 canonical,
                 mode="create",
@@ -395,88 +327,4 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
                 persisted,
                 tax_id_default="00000000T",
             )
-            assert profile.new_entity_first_two_profit_periods is None
             assert profile.iva is None
-
-
-class TestLey49SpecialRegimeRoundTrip:
-    """The Ley 49/2002 Title II option axis survives wizard persistence."""
-
-    def _answers(
-        self,
-        *,
-        option_declared: bool | str = "",
-        option_date: str = "",
-        renunciation_declared: bool | str = "",
-        renunciation_date: str = "",
-    ) -> SetupAnswers:
-        return SetupAnswers(
-            tax_id="G66012345",
-            activity="Foundation activity",
-            entity_type=EntityType.from_registry("legal_entity"),
-            legal_entity_form=LegalEntityForm.from_registry("sin_fines_lucrativos"),
-            ley_49_2002_option_declared=option_declared,
-            ley_49_2002_option_date=option_date,
-            ley_49_2002_renunciation_declared=renunciation_declared,
-            ley_49_2002_renunciation_date=renunciation_date,
-        )
-
-    def test_declared_option_and_renunciation_round_trip_through_canonical_dict(
-        self, *, registry_setup_flow: WizardFlow
-    ) -> None:
-        answers = self._answers(
-            option_declared=True,
-            option_date="2024-02-03",
-            renunciation_declared=False,
-            renunciation_date="2026-05-11",
-        )
-        canonical = serialise_answers(registry_setup_flow, answers)
-
-        assert canonical["taxpayer_type.ley_49_2002_special_regime_option_declared"] == "true"
-        assert canonical["taxpayer_type.ley_49_2002_special_regime_option_date"] == "2024-02-03"
-        assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_declared"] == "false"
-        assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_date"] == "2026-05-11"
-
-        rebuilt = project_answers(registry_setup_flow, canonical)
-        assert isinstance(rebuilt, SetupAnswers)
-        assert rebuilt.ley_49_2002_option_declared is True
-        assert rebuilt.ley_49_2002_option_date == "2024-02-03"
-        assert rebuilt.ley_49_2002_renunciation_declared is False
-        assert rebuilt.ley_49_2002_renunciation_date == "2026-05-11"
-
-    def test_undeclared_ley_49_option_state_drops_from_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
-        answers = self._answers()
-        canonical = serialise_answers(registry_setup_flow, answers)
-
-        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared") == ""
-        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date") == ""
-        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared") == ""
-        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date") == ""
-
-        persisted = {key: value for key, value in canonical.items() if value and not key.startswith("iva.")}
-        profile = taxpayer_profile_from_mapping(persisted, tax_id_default="00000000T")
-        assert profile.ley_49_2002_special_regime_option_declared is None
-        assert profile.ley_49_2002_special_regime_option_date is None
-        assert profile.ley_49_2002_special_regime_renunciation_declared is None
-        assert profile.ley_49_2002_special_regime_renunciation_date is None
-        assert profile.iva is None
-
-    def test_taxpayer_profile_projects_declared_ley_49_option_facts(self) -> None:
-        profile = taxpayer_profile_from_mapping(
-            {
-                "identity.tax_id": "G66012345",
-                "activities.description": "Foundation activity",
-                "taxpayer_type.entity_type": "legal_entity",
-                "taxpayer_type.legal_entity_form": "sin_fines_lucrativos",
-                "taxpayer_type.ley_49_2002_special_regime_option_declared": "true",
-                "taxpayer_type.ley_49_2002_special_regime_option_date": "2024-02-03",
-                "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": "false",
-                "taxpayer_type.ley_49_2002_special_regime_renunciation_date": "2026-05-11",
-            },
-            tax_id_default="00000000T",
-        )
-
-        assert profile.ley_49_2002_special_regime_option_declared is True
-        assert str(profile.ley_49_2002_special_regime_option_date) == "2024-02-03"
-        assert profile.ley_49_2002_special_regime_renunciation_declared is False
-        assert str(profile.ley_49_2002_special_regime_renunciation_date) == "2026-05-11"

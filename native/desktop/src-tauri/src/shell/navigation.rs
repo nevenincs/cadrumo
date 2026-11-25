@@ -3,7 +3,8 @@
 //! A top-level navigation would replace the shell, settling every terminal
 //! session and handing the main webview, its initialization script and its
 //! IPC to whatever page loaded. Only the shell's own origins may load there.
-//! Navigation inside the documentation frame does not reach this policy.
+//! Navigation inside the documentation frame does not reach this policy; the
+//! pinned Wry macOS correction preserves that boundary for WKWebView as well.
 use tauri::Url;
 
 /// The origin of `url` in the form [`super::origins`] lists, or `None` for a

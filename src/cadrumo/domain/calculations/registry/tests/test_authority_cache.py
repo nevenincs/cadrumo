@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from sys import getsizeof
 from threading import Barrier, Lock, Thread
 
 import pytest
@@ -100,3 +101,60 @@ def test_cross_thread_dependency_cycle_fails_promptly_and_releases_both_loads() 
     assert all(not thread.is_alive() for thread in threads), "cross-thread cache cycle did not resolve promptly"
     assert all(isinstance(error, AuthorityCacheCycleError) for error in errors)
     assert cache.stats().in_flight == 0
+
+
+def test_a_composition_charges_its_parts_once_and_keeps_them_charged_after_their_own_eviction() -> None:
+    cache: AccountedAuthorityCache[str, object] = AccountedAuthorityCache(100)
+    part = ("part",)
+    builds = 0
+
+    def build() -> object:
+        nonlocal builds
+        builds += 1
+        return (cache.get_or_load("part", lambda: RetainedAuthorityValue(part, 0, (("part-token", 40),))),)
+
+    composed = cache.get_or_compose("composed", build)
+    own_weight = getsizeof(composed)
+    assert cache.stats().retained_weight == 40 + own_weight
+    assert cache.stats().entries == 2
+
+    cache.discard("part")
+    assert cache.stats().retained_weight == 40 + own_weight
+    assert cache.get_or_compose("composed", build) is composed
+    assert builds == 1
+
+    cache.discard("composed")
+    assert cache.stats().retained_weight == 0
+
+
+def test_a_composition_charges_exclusive_part_weight_but_not_what_its_parts_load_for_themselves() -> None:
+    cache: AccountedAuthorityCache[str, object] = AccountedAuthorityCache(1000)
+
+    def part_loader() -> RetainedAuthorityValue[object]:
+        cache.get_or_load("dependency", lambda: RetainedAuthorityValue("dependency", 0, (("dependency-token", 300),)))
+        return RetainedAuthorityValue("part", 7)
+
+    composed = cache.get_or_compose("composed", lambda: (cache.get_or_load("part", part_loader),))
+
+    assert cache.stats().retained_weight == 300 + 7 + 7 + getsizeof(composed)
+    cache.discard("part")
+    cache.discard("dependency")
+    assert cache.stats().retained_weight == 7 + getsizeof(composed)
+
+
+def test_a_composition_heavier_than_the_budget_is_returned_without_retention() -> None:
+    cache: AccountedAuthorityCache[str, object] = AccountedAuthorityCache(50)
+    builds = 0
+
+    def build() -> object:
+        nonlocal builds
+        builds += 1
+        return (cache.get_or_load("part", lambda: RetainedAuthorityValue("part", 0, (("part-token", 45),))),)
+
+    first = cache.get_or_compose("composed", build)
+    second = cache.get_or_compose("composed", build)
+
+    assert first == second
+    assert builds == 2
+    assert cache.stats().entries == 1
+    assert cache.stats().retained_weight == 45

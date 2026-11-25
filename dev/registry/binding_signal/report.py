@@ -18,7 +18,6 @@ _SUMMARY_FINDING_LIMIT = 25
 _CRITICAL_LIMITATION_CODES = frozenset(
     {
         "PROVIDER_REGISTRATION_IMPORT_FAILED",
-        "REGISTRY_LOADER_FAILED",
         "RUNTIME_RESOLVER_INVENTORY_IMPORT_FAILED",
         "CANONICAL_CONSUMER_PROJECTION_IMPORT_FAILED",
         "CONSUMER_CENSUS_UNAVAILABLE",
@@ -192,7 +191,6 @@ def _scope_payload(inputs: SignalInputs) -> dict[str, object]:
             "authority": "supported_filing_years",
             "floor": support.floor,
             "horizon": support.horizon,
-            "hard_ceiling": support.hard_ceiling,
         }
         if support is not None
         else None

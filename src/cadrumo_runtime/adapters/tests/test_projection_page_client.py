@@ -8,7 +8,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from functools import lru_cache
-from threading import Condition
 from types import SimpleNamespace
 from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
@@ -27,7 +26,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
@@ -44,8 +42,14 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewPageKind,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.core.period import Period
+from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -55,7 +59,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
     OperationAccessRequest,
 )
-from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_access import (
     OperationPage,
     OperationProjected,
@@ -67,7 +71,8 @@ from cadrumo_client.contracts.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
     ProjectionPageRequest,
-    project_document_page,
+    encode_projection_document,
+    project_encoded_page,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, document_frame, read_document, write_document
@@ -75,6 +80,7 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.frontend_profile_view_client import ProfileViewFrontend
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerProjectionPage
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationRequest, WorkerResponseScopeRequest
@@ -86,63 +92,6 @@ _SESSION_ID = UUID("b1270000-0000-4000-8000-000000000002")
 _OPERATION_ID = "a" * 64
 _DOCUMENT: dict[str, JsonValue] = {"message": "ñ" * (PROJECTION_PAGE_BYTES * 3 // 4), "changed": False}
 _NOW = datetime(2026, 9, 28, tzinfo=UTC)
-
-
-class MemoryChannel:
-    """Peer-identified byte channel with synchronized in-memory frames."""
-
-    def __init__(self) -> None:
-        self._condition = Condition()
-        self._data = bytearray()
-        self._closed = False
-        self._other: MemoryChannel | None = None
-        self.peer = Peer(os_owner_id="synthetic-owner", process_id=1)
-
-    def pair(self, other: MemoryChannel) -> None:
-        self._other = other
-        other._other = self
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        with self._condition:
-            while len(self._data) < count:
-                if self._closed or (self._other is not None and self._other._closed):
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
-                self._condition.wait(remaining)
-            result = bytes(self._data[:count])
-            del self._data[:count]
-            return result
-
-    def read_ready(self) -> bool:
-        with self._condition:
-            return bool(self._data) or self._closed or (self._other is not None and self._other._closed)
-
-    def wait_readable(self, *wakes: ChannelWake) -> bool:
-        while not self.read_ready():
-            if any(wake.is_set() for wake in wakes):
-                return False
-            time.sleep(0.01)
-        return True
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        other = self._other
-        if other is None or time.monotonic() >= deadline:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
-        with other._condition:
-            if self._closed or other._closed:
-                raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-            other._data.extend(payload)
-            other._condition.notify_all()
-
-    def close(self) -> None:
-        with self._condition:
-            self._closed = True
-            self._condition.notify_all()
-        if self._other is not None:
-            with self._other._condition:
-                self._other._condition.notify_all()
 
 
 def _result() -> OperationResultProjectionRequestV1:
@@ -212,7 +161,7 @@ def _page(request: OperationResultPage, *, boot_id: UUID, connection_id: UUID) -
         runtime_boot_id=boot_id,
         connection_id=connection_id,
         operation_id=request.result.operation_id,
-        page=project_document_page(_DOCUMENT, request.page),
+        page=project_encoded_page(encode_projection_document(_DOCUMENT), request.page),
     )
 
 
@@ -246,7 +195,7 @@ def test_frontend_refuses_one_page_with_wrong_binding(fault: str) -> None:
 @pytest.mark.parametrize(
     ("code", "expected_error"),
     (
-        (RefusalCode.DEADLINE_EXCEEDED, RefusalError),
+        (RefusalCode.TIMEOUT, RefusalError),
         (AccessDenialCode.PERIOD_DENIED, FrontendRefusedError),
     ),
 )
@@ -278,7 +227,10 @@ def test_frontend_reassembles_verified_multi_page_result() -> None:
     assert result == _DOCUMENT
     assert requests[0].page == ProjectionPageRequest()
     assert requests[1].page.offset == PROJECTION_PAGE_BYTES
-    assert requests[1].page.expected_digest == project_document_page(_DOCUMENT, ProjectionPageRequest()).document_digest
+    assert (
+        requests[1].page.expected_digest
+        == project_encoded_page(encode_projection_document(_DOCUMENT), ProjectionPageRequest()).document_digest
+    )
     assert len(canonical_json_bytes(result)) > PROJECTION_PAGE_BYTES
 
 
@@ -359,7 +311,7 @@ def test_frontend_does_not_request_first_result_page_after_absolute_deadline() -
     with pytest.raises(RefusalError) as raised:
         FrontendClient.read_result_document(client, _result(), deadline=time.monotonic() - 1)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert requests == []
 
 
@@ -375,8 +327,65 @@ def test_frontend_zero_timeout_keeps_deadline_refusal_without_requesting_a_page(
     with pytest.raises(RefusalError) as raised:
         FrontendClient.read_result_document(client, _result(), timeout=0)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert requests == []
+
+
+@pytest.mark.parametrize("page_timeout", [0.0, -1.0, float("nan"), float("inf")])
+def test_frontend_rejects_invalid_page_budget_before_request(page_timeout: float) -> None:
+    requests: list[object] = []
+
+    def read_page(*args: object, **kwargs: object) -> NoReturn:
+        requests.append((args, kwargs))
+        raise AssertionError("invalid page budget must not reach the runtime")
+
+    client = cast(FrontendClient, SimpleNamespace(read_result_page=read_page))
+    with pytest.raises(RefusalError) as refused:
+        FrontendClient.read_result_document(client, _result(), page_timeout=page_timeout)
+    assert refused.value.reason is RefusalCode.TIMEOUT
+    assert requests == []
+
+
+@pytest.mark.parametrize(
+    ("durations", "total_timeout", "expected_deadlines", "succeeds"),
+    [
+        ((20.0, 20.0, 20.0), 120.0, (130.0, 150.0, 170.0), True),
+        ((31.0,), 120.0, (130.0,), False),
+        ((20.0, 20.0, 20.0), 50.0, (130.0, 150.0, 150.0), False),
+    ],
+    ids=["total-exceeds-one-page-budget", "page-expires", "total-expires"],
+)
+def test_document_budget_is_distinct_from_each_page_budget(
+    monkeypatch: pytest.MonkeyPatch,
+    durations: tuple[float, ...],
+    total_timeout: float,
+    expected_deadlines: tuple[float, ...],
+    succeeds: bool,
+) -> None:
+    now = [100.0]
+    monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    document: dict[str, JsonValue] = {"message": "x" * (PROJECTION_PAGE_BYTES * 2)}
+    deadlines: list[float] = []
+
+    def read_page(
+        _result: OperationResultProjectionRequestV1, request: ProjectionPageRequest, *, deadline: float
+    ) -> ProjectionPage:
+        deadlines.append(deadline)
+        now[0] += durations[len(deadlines) - 1]
+        if now[0] >= deadline:
+            raise RefusalError(RefusalCode.TIMEOUT)
+        return project_encoded_page(encode_projection_document(document), request)
+
+    client = cast(FrontendClient, SimpleNamespace(read_result_page=read_page))
+    if succeeds:
+        assert (
+            FrontendClient.read_result_document(client, _result(), timeout=total_timeout, page_timeout=30) == document
+        )
+    else:
+        with pytest.raises(RefusalError) as refused:
+            FrontendClient.read_result_document(client, _result(), timeout=total_timeout, page_timeout=30)
+        assert refused.value.reason is RefusalCode.TIMEOUT
+    assert tuple(deadlines) == expected_deadlines
 
 
 @lru_cache(maxsize=1)
@@ -576,7 +585,7 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
 @pytest.mark.parametrize("release_kind", ["authorize", "response_scope"])
 def test_full_page_worker_and_runtime_envelopes_fit_real_frames(release_kind: str) -> None:
     """A full byte page leaves room for bounded authority metadata, not just bare base64."""
-    page = project_document_page(_DOCUMENT, ProjectionPageRequest())
+    page = project_encoded_page(encode_projection_document(_DOCUMENT), ProjectionPageRequest())
     assert len(page.decode()) == PROJECTION_PAGE_BYTES
     destination = uuid4()
     periods = frozenset(

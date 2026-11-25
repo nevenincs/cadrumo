@@ -10,6 +10,7 @@ from uuid import UUID
 from ...core.errors.hierarchy import CadrumoError
 from ...core.field_role import FieldRole
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..ledger.column_roles import ColumnRoleReaderUnavailable
 from .catalogue_creation_ports import CatalogueCreationPorts
 
 
@@ -19,7 +20,7 @@ class InvoiceIntakeCommitConflictError(CadrumoError):
 
 InvoiceIntakeCommit = Callable[[Callable[[], None]], None]
 InvoiceIntakeProviderAdmission = Callable[[], None]
-InvoiceIntakeColumnMapper = Callable[[Sequence[str]], Sequence[FieldRole] | None]
+InvoiceIntakeColumnMapper = Callable[[Sequence[str]], Sequence[FieldRole] | ColumnRoleReaderUnavailable | None]
 
 
 @dataclass(frozen=True, slots=True)

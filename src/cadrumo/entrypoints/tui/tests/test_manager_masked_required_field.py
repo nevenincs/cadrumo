@@ -29,29 +29,25 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input, Static
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import (
     MASKED_PLACEHOLDER,
     ProfileFieldView,
     ProfileOverview,
-    build_profile_overview,
 )
-from ....application.user_profile.registration import register_profile_with_credentials
-from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
-from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.edit_screens import FieldEditScreen
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .manager_subject_profile import (
+    manager_subject_overview,
+    manager_subject_stored_facts,
+    registered_manager_subject,
+    write_manager_subject_field,
+)
+from .settling import settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -71,27 +67,8 @@ _MASKED_VALUE = "SUPPORT-0042"
 _PLAIN_PATH = "identity.name"
 
 
-def _ensure_logged_in() -> None:
-    """Unlock the registered profile so the capsule will serve its record.
-
-    Registration closes its own session and the custody capsule is the sole
-    profile authority, so every read or write door below needs an authenticated
-    session. Logging in derives the same DEK the capsule was sealed under.
-    """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    authenticate_profile_for_invocation(
-        name=_LABEL,
-        passphrase_callback=lambda: _CREDENTIAL_INPUT,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-
-
 def _live_overview():
-    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _ensure_logged_in()
-        record = load_test_profile_record(require_active_bucket_id())
-        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+    return manager_subject_overview(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
 
 
 def _persist(
@@ -101,25 +78,18 @@ def _persist(
     expected_content_digest: str | None = None,
 ) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
-    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        _ensure_logged_in()
-        record = apply_manager_profile_field_mutation(
-            profile_id=require_active_bucket_id(),
-            path=path,
-            value=value,
-            expected_revision=expected_revision,
-            expected_content_digest=expected_content_digest,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+    return write_manager_subject_field(
+        label=_LABEL,
+        passphrase=_CREDENTIAL_INPUT,
+        path=path,
+        value=value,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+    )
 
 
 def _stored() -> dict[str, object | None]:
-    _ensure_logged_in()
-    reloaded = load_test_profile_record(require_active_bucket_id())
-    return {fact.path: fact.value for fact in reloaded.facts}
+    return manager_subject_stored_facts(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
 
 
 def _notice(app: ProfileManagerScreen) -> str:
@@ -146,7 +116,7 @@ def _view(*, required: bool, present: bool) -> ProfileFieldView:
 async def _save(app, pilot, field: ProfileFieldView, typed: str) -> None:
     """Drive one real edit: open the dialog, type, press save, let it settle."""
     app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
-    await pilot.pause()
+    await settle(pilot)
     assert app.app.screen.query_one("#edit-input", Input).value == "", (
         "a masked dialog must open empty, or this is not the gesture under test"
     )
@@ -194,22 +164,13 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
     subject -- it is the whole reason silence is acceptable here, so the
     two are worth reading together.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _save(app, pilot, _view(required=True, present=True), "")
             assert not _notice(app), f"keeping the value is not a refusal, but reported {_notice(app)!r}"
             pilot.app.exit(None)
@@ -227,32 +188,23 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
     it does not apply is worse still. Asserted over both states of the
     same field, so neither half can drift alone.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             pilot.app.push_screen(FieldEditScreen(_view(required=True, present=True)))
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query("#edit-masked-note"), (
                 "a box concealing a value must say that leaving it empty keeps the value"
             )
             app.app.screen.dismiss(None)
-            await pilot.pause()
+            await settle(pilot)
 
             pilot.app.push_screen(FieldEditScreen(_view(required=True, present=False)))
-            await pilot.pause()
+            await settle(pilot)
             assert not app.app.screen.query("#edit-masked-note"), (
                 "a box concealing nothing must not claim there is a value to keep"
             )
@@ -270,21 +222,12 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
     leave them with a field still counted as missing and no account of
     why saving it changed nothing.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _save(app, pilot, _view(required=True, present=False), "")
             assert str(app.app.screen.query_one("#edit-refusal", Static).content)
             pilot.app.exit(None)
@@ -295,20 +238,10 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
 @pytest.mark.asyncio
 async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must draw the same refusal."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _save(app, pilot, _view(required=True, present=False), "   ")
             assert str(app.app.screen.query_one("#edit-refusal", Static).content)
             pilot.app.exit(None)
@@ -324,20 +257,10 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
     save on a required masked field, which would make the field
     unfillable -- a worse failure than the one being fixed.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _save(app, pilot, _view(required=True, present=False), _MASKED_VALUE)
             pilot.app.exit(None)
 
@@ -358,20 +281,10 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
     is the point: a masked field holding nothing is not a special case,
     and the outcome is the one every empty optional field already had.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _save(app, pilot, _view(required=False, present=False), "")
             masked_notice = _notice(app)
             assert masked_notice, "the write door's successful empty save must be reported"
@@ -381,7 +294,7 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
                 f"{_PLAIN_PATH} must be an unmasked, optional, empty field for this comparison to mean anything"
             )
             pilot.app.push_screen(FieldEditScreen(plain), app._apply_edit_for(plain))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = ""
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -408,34 +321,25 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
     write door refuses one, so offering the button would promise an
     outcome the dialog then has to take back.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label=_LABEL, passphrase=_CREDENTIAL_INPUT):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             pilot.app.push_screen(FieldEditScreen(_view(required=True, present=True)))
-            await pilot.pause()
+            await settle(pilot)
             assert not app.app.screen.query("#btn-edit-clear"), (
                 "a required field's deletion is refused downstream, so no button may offer it"
             )
             app.app.screen.dismiss(None)
-            await pilot.pause()
+            await settle(pilot)
 
             # The same field made optional still offers it, so the
             # assertion above is about `required` rather than about a
             # button that never appears.
             pilot.app.push_screen(FieldEditScreen(_view(required=False, present=True)))
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query("#btn-edit-clear"), (
                 "an optional masked field holding a value must still be deletable"
             )

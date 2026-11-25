@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 COHORT_DIR: Final[str] = "build/packaging-smoke-cohort/python"
@@ -52,7 +52,7 @@ _WORKERS_ENV: Final[str] = "CADRUMO_PACKAGING_LANE_CONCURRENCY"
 # Explicit xdist worker count for the preflight pytest pass. Unset means the
 # local default (pyproject addopts' -n auto); CI legs MUST set it because
 # -n auto grabs every logical CPU of a machine shared by up to three jobs.
-_TEST_WORKERS_ENV: Final[str] = "CADRUMO_TEST_WORKERS"
+TEST_WORKERS_ENV: Final[str] = "CADRUMO_TEST_WORKERS"
 
 
 @dataclass(frozen=True)
@@ -116,7 +116,7 @@ class Lane:
         return self.form(self.reference_form)
 
 
-_LANES: Final[dict[str, Lane]] = {
+LANES: Final[dict[str, Lane]] = {
     "core": Lane(
         name="core",
         invariant="the exact-version wheel cohort installs and the installed CLI does grounded tax work",
@@ -146,25 +146,6 @@ _LANES: Final[dict[str, Lane]] = {
         invariant="the frozen lock materialises a working developer toolchain",
         forms=(Form("frozen-lock", "dev.packaging.smoke_dev", takes_cohort=False),),
     ),
-    # Standalone for the same reason as ``dev``, by a different axis: every core
-    # form asks whether the product WORKS once installed, and this one asks what
-    # it SAYS when a model-bearing surface is reached without the model-bearing
-    # dependencies. Folding it in as a core form would file a refusal proof under
-    # an installability invariant it does not test.
-    #
-    # It consumes the cohort (unlike ``dev``) because the absent state must be
-    # reached through the SHIPPED artifact: an extra whose requirements all
-    # arrive in the core closure anyway is nominal, and only the built wheel's
-    # own metadata can settle that. The lane is host-portable — two stdlib venvs
-    # and pip, no host package manager and no container — and the extra it
-    # installs and removes is small, so it belongs in every OS leg rather than
-    # in the Linux-only ``ci`` profile alone.
-    "inference-boundary": Lane(
-        name="inference-boundary",
-        invariant="the inference boundary refuses instructively without the llm extra, "
-        "and that refusal tracks what is installed rather than being a property of the build",
-        forms=(Form("wheel", "dev.packaging.smoke_absent_llm"),),
-    ),
 }
 
 # Profiles select executable units, so they name qualified ``lane/form``
@@ -177,7 +158,6 @@ PROFILES: Final[dict[str, tuple[str, ...]]] = {
         "core/extras",
         "core/joined-cohort",
         "browser/host",
-        "inference-boundary/wheel",
     ),
     "ci": (
         "dev/frozen-lock",
@@ -187,7 +167,6 @@ PROFILES: Final[dict[str, tuple[str, ...]]] = {
         "core/extras",
         "core/joined-cohort",
         "browser/host-with-deps",
-        "inference-boundary/wheel",
     ),
 }
 
@@ -271,7 +250,7 @@ class PytestPass:
 #: carry both schedulers. Together with the installed-oracle pass below they
 #: own every test in the directory, which is the invariant
 #: ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
-_PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
+PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
     PytestPass(
         label="preflight-tests",
         markers=f"(unit or integration) and not serial and {_PERF_HOLDOUT}",
@@ -298,7 +277,7 @@ _INSTALLED_ORACLES_PASS: Final[PytestPass] = PytestPass(
 )
 
 #: Every pytest invocation this driver runs, in campaign order.
-_PYTEST_PASSES: Final[tuple[PytestPass, ...]] = (*_PREFLIGHT_PASSES, _INSTALLED_ORACLES_PASS)
+_PYTEST_PASSES: Final[tuple[PytestPass, ...]] = (*PREFLIGHT_PASSES, _INSTALLED_ORACLES_PASS)
 
 
 def resolve_form(selector: str) -> tuple[Lane, Form]:
@@ -307,7 +286,7 @@ def resolve_form(selector: str) -> tuple[Lane, Form]:
     if not separator:
         raise KeyError(f"profile entry {selector!r} is not a qualified 'lane/form' selector")
     try:
-        lane = _LANES[lane_name]
+        lane = LANES[lane_name]
     except KeyError:
         raise KeyError(f"profile entry {selector!r} names unknown lane {lane_name!r}") from None
     return lane, lane.form(form_name)
@@ -396,9 +375,7 @@ def preflight_pass_failures(passes: Sequence[PytestPass], repo_root: Path, test_
     for pytest_pass in passes:
         modules = serial_pass_modules(pytest_pass, repo_root)
         if not modules:
-            failure = _attempt_step(
-                pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label
-            )
+            failure = attempt_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
             if failure is not None:
                 failures.append(failure)
             continue
@@ -457,7 +434,7 @@ def _step_returncode(argv: list[str], repo_root: Path, label: str) -> int:
     return subprocess.run(argv, cwd=repo_root, check=False).returncode
 
 
-def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:
+def attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:
     """Run one step and DESCRIBE its failure rather than raising on it.
 
     Split out so a caller can decide whether a failure ends the campaign or is
@@ -474,9 +451,9 @@ def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:
     return None
 
 
-def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
+def run_step(argv: list[str], repo_root: Path, label: str) -> None:
     """Run one serial pipeline step, echoing through to the console."""
-    failure = _attempt_step(argv, repo_root, label)
+    failure = attempt_step(argv, repo_root, label)
     if failure is not None:
         raise SystemExit(f"campaign step failed ({failure})")
 
@@ -501,7 +478,7 @@ def _worker_count(requested: int | None) -> int:
     return _DEFAULT_WORKERS
 
 
-def _test_worker_count(requested: int | None) -> int | None:
+def campaign_test_worker_count(requested: int | None) -> int | None:
     """Resolve the preflight pytest worker count: CLI flag, then env, else None.
 
     ``None`` keeps the local default (addopts ``-n auto``); a resolved value
@@ -510,13 +487,13 @@ def _test_worker_count(requested: int | None) -> int | None:
     """
     if requested is not None:
         return max(0, requested)
-    env_value = os.environ.get(_TEST_WORKERS_ENV)
+    env_value = os.environ.get(TEST_WORKERS_ENV)
     if env_value is not None:
         return max(0, int(env_value))
     return None
 
 
-def _adopt_cohort(source: Path, repo_root: Path) -> None:
+def adopt_cohort(source: Path, repo_root: Path) -> None:
     """Verify a prebuilt cohort and place it where every form reads it.
 
     Args:
@@ -524,7 +501,7 @@ def _adopt_cohort(source: Path, repo_root: Path) -> None:
         repo_root: The repository root the campaign runs from.
     """
     cohort = source.resolve(strict=True)
-    _run_step(
+    run_step(
         [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", str(cohort)],
         repo_root,
         "verify-cohort",
@@ -565,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=(
             "Explicit xdist worker count for the preflight pytest pass "
-            f"(default: {_TEST_WORKERS_ENV} env, else the local -n auto)."
+            f"(default: {TEST_WORKERS_ENV} env, else the local -n auto)."
         ),
     )
     parser.add_argument(
@@ -590,43 +567,43 @@ def main(argv: list[str] | None = None) -> int:
     workers = _worker_count(args.max_workers)
 
     if not args.skip_preflight:
-        _run_step([sys.executable, "-B", "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
+        run_step([sys.executable, "-B", "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
         # pytest mkdirs each pass's basetemp itself but does NOT create its
         # parents, so a clean checkout would die with an internal error here:
         # the campaign only creates `build/packaging-smoke/` later, for the lane
         # logs.
         preflight_basetemp_root(repo_root).mkdir(parents=True, exist_ok=True)
-        test_workers = _test_worker_count(args.test_workers)
+        test_workers = campaign_test_worker_count(args.test_workers)
         # Every preflight pass runs even after one fails, and the campaign
         # reports all of them together. The exit status is unchanged -- any
         # failure still ends the run -- but stopping at the first one hid
         # every later pass's outcome.
-        preflight_failures = preflight_pass_failures(_PREFLIGHT_PASSES, repo_root, test_workers)
+        preflight_failures = preflight_pass_failures(PREFLIGHT_PASSES, repo_root, test_workers)
         if preflight_failures:
             raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
 
     # Fail before any wheel or venv work if a source shipped-data file is
     # missing from the worktree (seconds).
-    _run_step([sys.executable, "-B", "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
+    run_step([sys.executable, "-B", "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
     if args.cohort_dir is None:
-        _run_step(
+        run_step(
             [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
             repo_root,
             "build-cohort",
         )
     else:
-        _adopt_cohort(args.cohort_dir, repo_root)
+        adopt_cohort(args.cohort_dir, repo_root)
 
     log_dir = repo_root / "build" / "packaging-smoke" / "lane-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     print(f"[campaign] profile={args.profile} forms={', '.join(selectors)} workers={workers}", flush=True)
     for lane_name in dict.fromkeys(selector.split("/", 1)[0] for selector in selectors):
-        print(f"[campaign]   lane {lane_name}: {_LANES[lane_name].invariant}", flush=True)
+        print(f"[campaign]   lane {lane_name}: {LANES[lane_name].invariant}", flush=True)
 
     _run_campaign_forms(selectors, workers, repo_root, log_dir)
 
-    _run_step(
+    run_step(
         pytest_pass_argv(_INSTALLED_ORACLES_PASS, repo_root, test_workers=None),
         repo_root,
         _INSTALLED_ORACLES_PASS.label,

@@ -17,16 +17,15 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.hashing import canonical_json_bytes
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import (
     OperationEffect,
     profile_operation_subject,
 )
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
@@ -36,20 +35,25 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
+    LEDGER_EVIDENCE_LABEL_MAX,
+    LEDGER_EVIDENCE_TEXT_MAX,
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceResult,
     PurchaseInvoiceEvidenceService,
+    admit_evidence_file,
     derive_keyed_purchase_invoice_evidence_id,
+    require_readable_evidence_file,
 )
 from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_ports import LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.evidence.add"
 LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
@@ -57,11 +61,11 @@ LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
 _MAX_RESULT_BYTES = 60 * 1024
 _PERSON_FRONTEND_ACTOR = "cli"
 """The audit label of evidence a person's frontend adds; an automation's is derived from its session."""
-_EvidenceText = Annotated[str, Field(max_length=16_384)]
+_EvidenceText = Annotated[str, Field(max_length=LEDGER_EVIDENCE_TEXT_MAX)]
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
-_EvidenceLabel = Annotated[str, Field(max_length=1_024)]
-_InvoiceDate = Annotated[str, Field(min_length=10, max_length=10)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_EvidenceLabel = Annotated[str, Field(max_length=LEDGER_EVIDENCE_LABEL_MAX)]
+_InvoiceDate = Annotated[str, Field(min_length=1, max_length=16)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _IdempotencyKey = Annotated[str, Field(max_length=256)]
 _EvidenceEventId = Annotated[str, Field(min_length=1, max_length=64)]
 _EvidenceEventIds = Annotated[tuple[_EvidenceEventId, ...], Field(max_length=1)]
@@ -74,7 +78,7 @@ class LedgerEvidenceAddRequest(BaseModel):
 
     profile_id: UUID
     source_path: _EvidencePath
-    source_directory: _EvidencePath
+    source_directory: _EvidencePath = Field(json_schema_extra=host_filled_schema())
     supplier: _EvidenceLabel | None = None
     invoice_number: _EvidenceLabel | None = None
     invoice_date: _InvoiceDate | None = None
@@ -182,6 +186,14 @@ class LedgerEvidenceAddExecutor:
             ports = self._ports_factory(bucket_id=bucket_id)
             evidence_repository = require_exact_evidence_ports(ports, bucket_id=bucket_id)
             candidate = _candidate_record(payload, bucket_id=bucket_id)
+            # Every refusal about the file itself lands here, before the UNKNOWN
+            # effect below: a missing file, an unsupported type, and bytes that
+            # match no readable document shape change nothing, so they are
+            # refusals and never an ambiguous write.
+            require_readable_evidence_file(
+                ports=ports,
+                admitted=admit_evidence_file(payload.source_path, Path(payload.source_directory)),
+            )
             service = PurchaseInvoiceEvidenceService(ports=ports)
             event_ids = ("f" * 64,)
             execution_result = _execution_result(payload.profile_id, candidate, event_ids)
@@ -203,7 +215,10 @@ class LedgerEvidenceAddExecutor:
             async with context.cancellation.irreversible_section():
                 # Attachment bytes and their manifest are durable secure-custody
                 # writes inside add(), before the catalogue+event batch. UNKNOWN
-                # is therefore required before entering the service.
+                # is therefore required before entering the service. The file was
+                # admitted and probed in the preflight; add() probes the bytes it
+                # stores again, so a file changed in between is still refused
+                # before custody is written.
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(
                     prepared.service.add,
@@ -364,8 +379,7 @@ def _require_record_identity(record: PurchaseInvoiceEvidence, *, bucket_id: str,
 
 
 def _check_result_size(result: BaseModel) -> None:
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES - 128)
 
 
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -399,7 +413,7 @@ def _build_definition(
         result_type=result_type,
         executor_type=LedgerEvidenceAddExecutor,
         build=lambda: LedgerEvidenceAddExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
     )
 
 
@@ -416,11 +430,12 @@ def resolve_ledger_evidence_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence add."""
-    if request.definition_id != LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceAddRequest,
+    )
 
 
 def build_ledger_evidence_add_registration(

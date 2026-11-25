@@ -90,6 +90,20 @@ type OperationModalInteractionStateV1[ReviewProjectionT: BaseModel] = (
 )
 
 
+async def _refresh_review_permissions[ReviewProjectionT: BaseModel](
+    current: OperationModalReviewInteractionV1[ReviewProjectionT],
+) -> OperationModalReviewInteractionV1[ReviewProjectionT]:
+    # Keep the original bearer binding, but never cache its permission.
+    # Inspection is non-consuming and rechecks expiry/current authority.
+    availability = await current.control.inspect()
+    permitted = (
+        availability.permitted_intents
+        if isinstance(availability, OperationResponseControlSuccessV1)
+        else frozenset[OperationResponseIntentValue]()
+    )
+    return replace(current, apply_enabled="apply" in permitted, reject_enabled="reject" in permitted)
+
+
 async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     controller: OperationControllerPort,
     projection: OperationPublicProjectionV1,
@@ -117,20 +131,8 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
             pass
         case _:
             assert_never(projection.pending_interaction)
-    if (
-        isinstance(current, OperationModalReviewInteractionV1)
-        and current.interaction.interaction_id == pending.interaction_id
-        and current.interaction.revision == pending.revision
-    ):
-        # Keep the original bearer binding, but never cache its permission.
-        # Inspection is non-consuming and rechecks expiry/current authority.
-        availability = await current.control.inspect()
-        permitted = (
-            availability.permitted_intents
-            if isinstance(availability, OperationResponseControlSuccessV1)
-            else frozenset[OperationResponseIntentValue]()
-        )
-        return replace(current, apply_enabled="apply" in permitted, reject_enabled="reject" in permitted)
+    if isinstance(current, OperationModalReviewInteractionV1) and current.interaction == pending:
+        return await _refresh_review_permissions(current)
     resolved: OperationReviewProjectionResultV1[ReviewProjectionT] = await controller.resolve_review(
         pending.review_reference,
         projection_type,

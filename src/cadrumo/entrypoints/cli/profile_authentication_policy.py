@@ -10,7 +10,7 @@ from cadrumo_client.commands.target import TargetResolver
 from cadrumo_client.contracts.command_ports import Capability, ProfileAuthenticationPosture
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ._bootstrap_exempt import is_bootstrap_exempt
+from .bootstrap_exempt import is_bootstrap_exempt
 
 
 def resolve_profile_secret_model(spec: ProfileSecretSpec, *, resolver: TargetResolver) -> type[MachineSecretPayload]:

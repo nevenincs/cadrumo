@@ -14,31 +14,39 @@ then the least urgent chips.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 from rich.cells import cell_len
-from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
+from ......application.modelo.work_form_declaration_facts import ModeloFormExport, ModeloFormResultDirection
+from ......application.modelo.work_form_field_vocabulary import ModeloFormOrigin
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_header import ModeloFormAttentionCount, ModeloFormDeadlineTone
+from ......application.modelo.work_form_header import deadline_view as form_deadline_view
+from ......application.modelo.work_form_header import file_view as form_file_view
+from ......application.modelo.work_form_header import result_view as form_result_view
+from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_wording import modelo_number, period_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.result_disposition import ResultDisposition
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..header import (
-    ChipLevel,
-    DeadlineTone,
+    AttentionChip,
+    StatusLine,
     attention_chips,
-    deadline_help,
-    deadline_view,
+    deadline_text,
+    file_text,
     fit_result_line,
-    result_view,
+    header_result,
     status_line,
 )
 from ..screen import ModeloWorkbenchScreen
-from ..wording import modelo_number, period_words
 from .declaration_states import recorded_as_filed, with_deadline, with_findings, with_result
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -50,16 +58,11 @@ _NBSP = "\u00a0"
 _OWN = "Cadrumo's calculation. AEAT has not seen it."
 
 
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 def _view(form: ModeloWorkForm, *, staged: int = 0, recorded: bool = False) -> tuple[str, tuple[str, ...]]:
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, _EN, staged=staged, recorded=recorded)
+        view = header_result(form, _EN, staged=staged, recorded=recorded)
     assert view is not None
-    return view.text, view.help
+    return view.text, view.served.help
 
 
 @pytest.mark.parametrize(
@@ -80,9 +83,7 @@ def test_a_known_direction_reads_as_its_word_and_the_magnitude(
     signed = [line for line in help_lines if "without its sign" in line]
     if value < 0:
         with override_settings(cadrumo_output_language="en"):
-            sign_help = tr(
-                "tui.modelo.workbench.header.result.sign_help", box="19", value=f"−{expected.split('  ')[1]}"
-            )
+            sign_help = tr("workspace.modelo.header.result.sign_help", box="19", value=f"−{expected.split('  ')[1]}")
         assert signed == [sign_help]
     else:
         assert not signed
@@ -99,7 +100,7 @@ def test_a_nil_return_and_a_negative_result_nothing_carries_read_as_words_alone(
     nil, _ = _view(with_result(synthetic_form(), ModeloFormResultDirection.NIL, Decimal("0")))
     negative, help_lines = _view(with_result(synthetic_form(), ModeloFormResultDirection.NEGATIVE, Decimal("-40")))
     with override_settings(cadrumo_output_language="en"):
-        words = tr("tui.modelo.workbench.header.result.negative")
+        words = tr("workspace.modelo.header.result.negative")
 
     assert nil == "Result zero  [19]"
     assert negative == f"{words}  [19]"
@@ -115,8 +116,8 @@ def test_a_negative_instalment_to_deduct_later_names_its_amount_and_the_signed_b
     )
     text, help_lines = _view(form)
     with override_settings(cadrumo_output_language="en"):
-        words = tr("tui.modelo.workbench.header.result.negative_carried", amount=f"100.00{_NBSP}€")
-        sign_help = tr("tui.modelo.workbench.header.result.sign_help", box="19", value=f"−100.00{_NBSP}€")
+        words = tr("workspace.modelo.header.result.negative_carried", amount=f"100.00{_NBSP}€")
+        sign_help = tr("workspace.modelo.header.result.sign_help", box="19", value=f"−100.00{_NBSP}€")
 
     assert text == f"{words}  [19]"
     assert "100.00" in words
@@ -152,20 +153,20 @@ def test_without_a_figure_the_result_says_so_and_a_failure_blocks() -> None:
 
     assert not_calculated == "Result: not calculated yet [c]"
     assert failed == "Result: could not be calculated [i]"
-    assert next(chip.level for chip in attention_chips(failed_form, recorded=False)) is ChipLevel.BLOCKS
+    assert next(chip.level for chip in attention_chips(failed_form, recorded=False)) is ModeloFormAttention.BLOCKS
 
 
 def test_an_informative_declaration_states_no_result() -> None:
     form = synthetic_form().model_copy(update={"result_addresses": ()})
 
     with override_settings(cadrumo_output_language="en"):
-        assert result_view(form, _EN, staged=0, recorded=False) is None
+        assert header_result(form, _EN, staged=0, recorded=False) is None
 
 
 def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
     with override_settings(cadrumo_output_language="en"):
-        staged = result_view(synthetic_form(), _EN, staged=2, recorded=False)
-        recorded = result_view(recorded_as_filed(synthetic_form()), _EN, staged=2, recorded=True)
+        staged = header_result(synthetic_form(), _EN, staged=2, recorded=False)
+        recorded = header_result(recorded_as_filed(synthetic_form()), _EN, staged=2, recorded=True)
 
     assert staged is not None and staged.stale == "◷ out of date: changes not applied yet: 2 [R]"
     assert recorded is not None and recorded.stale is None
@@ -174,17 +175,17 @@ def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
 @pytest.mark.parametrize(
     ("days", "text", "tone"),
     [
-        (21, "Deadline 29/04/2026 · days left: 21", DeadlineTone.NORMAL),
-        (7, "Deadline 15/04/2026 · days left: 7", DeadlineTone.SOON),
-        (4, "Deadline 12/04/2026 · days left: 4", DeadlineTone.SOON),
-        (3, "Deadline 11/04/2026 · days left: 3", DeadlineTone.URGENT),
-        (1, "Deadline 09/04/2026 · days left: 1", DeadlineTone.URGENT),
-        (0, "Deadline today, 08/04/2026", DeadlineTone.URGENT),
+        (21, "Deadline Apr 29, 2026 · days left: 21", ModeloFormDeadlineTone.NORMAL),
+        (7, "Deadline Apr 15, 2026 · days left: 7", ModeloFormDeadlineTone.SOON),
+        (4, "Deadline Apr 12, 2026 · days left: 4", ModeloFormDeadlineTone.SOON),
+        (3, "Deadline Apr 11, 2026 · days left: 3", ModeloFormDeadlineTone.URGENT),
+        (1, "Deadline Apr 9, 2026 · days left: 1", ModeloFormDeadlineTone.URGENT),
+        (0, "Deadline today, Apr 8, 2026", ModeloFormDeadlineTone.URGENT),
     ],
 )
-def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: DeadlineTone) -> None:
+def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: ModeloFormDeadlineTone) -> None:
     with override_settings(cadrumo_output_language="en"):
-        view = deadline_view(with_deadline(synthetic_form(), days_left=days), _EN, recorded=False)
+        view = form_deadline_view(with_deadline(synthetic_form(), days_left=days), _EN, recorded=False)
 
     assert view is not None
     assert (view.text, view.tone) == (text, tone)
@@ -194,19 +195,46 @@ def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone:
 def test_a_passed_a_missing_a_moved_and_a_recorded_deadline() -> None:
     form = synthetic_form()
     with override_settings(cadrumo_output_language="en"):
-        passed = deadline_view(with_deadline(form, days_late=3), _EN, recorded=False)
-        missing = deadline_view(form, _EN, recorded=False)
-        moved = deadline_help(with_deadline(form, days_left=10, shifted_by=2), _EN, recorded=False)
-        unmoved = deadline_help(with_deadline(form, days_left=10), _EN, recorded=False)
-        recorded = deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
+        passed = form_deadline_view(with_deadline(form, days_late=3), _EN, recorded=False)
+        missing = form_deadline_view(form, _EN, recorded=False)
+        moved = form_deadline_view(with_deadline(form, days_left=10, shifted_by=2), _EN, recorded=False)
+        unmoved = form_deadline_view(with_deadline(form, days_left=10), _EN, recorded=False)
+        recorded = form_deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
 
-    assert passed is not None and passed.text == "Deadline passed on 05/04/2026: filing now is late"
-    assert passed.tone is DeadlineTone.URGENT
-    assert missing is not None and missing.tone is DeadlineTone.MUTED
+    assert passed is not None and passed.text == "Deadline passed on Apr 5, 2026: filing now is late"
+    assert passed.tone is ModeloFormDeadlineTone.URGENT
+    assert missing is not None and missing.tone is ModeloFormDeadlineTone.MUTED
     assert missing.text == "No deadline on record for this period"
-    assert moved == "The usual deadline is 16/04/2026. It moves to 18/04/2026 because of a weekend or holiday."
-    assert unmoved is None
+    assert moved is not None
+    assert moved.help == "The usual deadline is Apr 16, 2026. It moves to Apr 18, 2026 because of a weekend or holiday."
+    assert unmoved is not None and unmoved.help is None
     assert recorded is None
+
+
+@pytest.mark.parametrize("current", [True, False])
+def test_the_header_renders_the_served_result_deadline_and_file_whole(current: bool) -> None:
+    form = with_deadline(synthetic_form(needs_input=False), days_left=10, shifted_by=2)
+    revision = form.calculation_revision_id
+    assert revision is not None
+    export = ModeloFormExport(
+        exported_at=datetime.now(UTC), calculation_revision_id=revision if current else "c" * 64, current=current
+    )
+    form = form.model_copy(update={"last_export": export})
+    undated = synthetic_form()
+    with override_settings(cadrumo_output_language="en"):
+        served_result = form_result_view(form, _EN, recorded=False)
+        served_deadline = form_deadline_view(form, _EN, recorded=False)
+        served_undated = form_deadline_view(undated, _EN, recorded=False)
+        served_file = form_file_view(form, _EN, recorded=False)
+        result = header_result(form, _EN, staged=0, recorded=False)
+        assert served_deadline is not None and served_undated is not None and served_file is not None
+        wide = deadline_text(form, _EN, served_deadline, width=200)
+        narrow = deadline_text(undated, _EN, served_undated, width=cell_len(served_undated.short_text))
+
+    assert result is not None and result.served == served_result
+    assert wide == served_deadline.text
+    assert served_undated.short_text != served_undated.text and narrow == served_undated.short_text
+    assert file_text(served_file) == (served_file.words if current else f"{served_file.words} [e]")
 
 
 def test_every_attention_level_with_something_in_it_has_a_chip_and_none_once_recorded() -> None:
@@ -227,7 +255,7 @@ def test_every_attention_level_with_something_in_it_has_a_chip_and_none_once_rec
 def test_a_narrow_line_keeps_the_result_and_what_blocks_taking_a_second_line_before_dropping_either() -> None:
     form = with_findings(synthetic_form(), blocking=("06",), worth_checking=("01",))
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, _EN, staged=3, recorded=False)
+        view = header_result(form, _EN, staged=3, recorded=False)
         chips = attention_chips(form, recorded=False)
         assert view is not None
         wide = fit_result_line(view, chips, 200)
@@ -242,7 +270,7 @@ def test_a_narrow_line_keeps_the_result_and_what_blocks_taking_a_second_line_bef
     assert wide.result.endswith("[19]") and len(wide.chips) == len(chips)
     assert narrow.stacked, "what blocks and what is missing do not fit beside the result, so they take a line"
     assert cell_len(narrow.result) <= 76 and narrow_marks <= 76
-    assert [chip.level for chip in narrow.chips][:2] == [ChipLevel.BLOCKS, ChipLevel.MISSING]
+    assert [chip.level for chip in narrow.chips][:2] == [ModeloFormAttention.BLOCKS, ModeloFormAttention.MISSING]
     assert tightest.stacked and cell_len(tightest.result) <= 10 and tightest.chips == ()
     assert whole == wide_text
 
@@ -269,11 +297,11 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             parts = _header(screen)
             deadline = screen.query_one("#wb-deadline", Static)
             soon = deadline.has_class("-soon")
@@ -286,7 +314,7 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
             app.exit(None)
 
     assert parts["#wb-result"].startswith(f"To pay  1,300.00{_NBSP}€")
-    assert parts["#wb-deadline"] == "Deadline 13/04/2026 · days left: 5"
+    assert parts["#wb-deadline"] == "Deadline Apr 13, 2026 · days left: 5"
     assert soon
     assert parts["#wb-stale"] == "◷ out of date: changes not applied yet: 1 [R]"
     assert dimmed
@@ -313,7 +341,7 @@ async def test_complete_identity_and_deadline_remain_painted(language: OutputLan
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 24)) as pilot:
             app.theme = "cadrumo-" + theme
-            await _settle(pilot)
+            await settle(pilot)
             header = screen.query_one("#wb-header", Static)
             deadline = screen.query_one("#wb-deadline", Static)
             painted = "\n".join(header.render_line(row).text for row in range(header.size.height))
@@ -356,11 +384,11 @@ async def test_a_choice_still_to_make_keeps_every_header_part_inside_the_screen(
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             placed = {
                 selector: (widget.region, str(widget.render()))
                 for selector in _HEADER_WIDGETS
@@ -383,12 +411,12 @@ async def test_the_header_is_refreshed_the_moment_a_change_is_staged() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             before = _header(screen)["#wb-stale"]
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"300,50", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             after = _header(screen)["#wb-stale"]
             app.exit(None)
 
@@ -419,7 +447,7 @@ async def test_the_result_carries_the_emphasis_and_the_title_bar_is_a_neutral_su
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             theme = app.theme_variables
             result = _colour(screen, "#wb-result")
             identity = _colour(screen, "#wb-identity", background=True)
@@ -445,11 +473,35 @@ def test_a_loss_carried_forward_keeps_its_words_whole_dropping_the_box_first(
         worth_checking=(None,),
     )
     with override_settings(cadrumo_output_language=language.value):
-        view = result_view(form, language, staged=0, recorded=False)
+        view = header_result(form, language, staged=0, recorded=False)
         assert view is not None
         line = fit_result_line(view, attention_chips(form, recorded=False), width)
         widest = cell_len(line.marks_text() if line.stacked else line.text())
 
     assert line.result in (view.text, view.short_text), "the words that say the loss carries forward are never cut"
-    assert ChipLevel.BLOCKS in [chip.level for chip in line.chips]
+    assert ModeloFormAttention.BLOCKS in [chip.level for chip in line.chips]
     assert cell_len(line.result) <= width and widest <= width
+
+
+def _counted(level: ModeloFormAttention, count: int, words: str) -> AttentionChip:
+    return AttentionChip(ModeloFormAttentionCount(level=level, count=count, words=words))
+
+
+def test_a_narrow_status_line_gives_up_chip_words_before_any_chip() -> None:
+    chips = (
+        _counted(ModeloFormAttention.BLOCKS, 1, "blocking: 1"),
+        _counted(ModeloFormAttention.CONFIRM, 1, "to confirm: 1"),
+        _counted(ModeloFormAttention.CHECK, 2, "to check: 2"),
+    )
+    line = StatusLine(None, chips)
+    full = cell_len(line.text())
+
+    fitted = line.fitted(full - 1)
+    briefest = line.fitted(cell_len("▲ 1   ◐ 1   ◆ 2"))
+
+    # The least urgent level keeps its glyph and count first; every level still reads.
+    assert fitted.text() == "▲ blocking: 1   ◐ to confirm: 1   ◆ 2"
+    assert briefest.text() == "▲ 1   ◐ 1   ◆ 2"
+    assert line.fitted(full).text() == line.text()
+    # Only a line too narrow even for the bare counts drops the least urgent level.
+    assert line.fitted(cell_len("▲ 1   ◐ 1")).text() == "▲ 1   ◐ 1"

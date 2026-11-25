@@ -9,7 +9,7 @@ record does not yet carry.
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from typing import TYPE_CHECKING, cast, overload, override
+from typing import TYPE_CHECKING, overload, override
 
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -18,16 +18,24 @@ from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
     build_profile_grounding_index,
 )
+from ...domain.calculations.registry.schedules import unresolved_schedule_deciding_fields
+from ...domain.deadlines.errors import ProfileError
 from ...domain.user_profile.errors import UserProfileNotFoundError
 from ...domain.user_profile.labels import profile_field_label
-from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileRecord, section_field_key
+from ..modelo.casilla_help import legal_ref_id_citation
 from .commands import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
 )
-from .completeness import conditional_profile_missing_required
-from .projections import record_to_path_values
+from .completeness import conditional_profile_missing_required, pinned_registry_scope
+from .modelo_scoped_conditions import (
+    ModeloScopedRequirementState,
+    field_is_conditionally_modelo_scoped,
+    modelo_scoped_requirement,
+)
+from .projections import projection_for_taxpayer, record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -64,7 +72,9 @@ class _DeferredProfileGrounding(Mapping[str, ProfileKeyGrounding]):
         # grounding into an apparently absent key. Only the loaded index owns
         # missing-key semantics; errors while obtaining it must propagate.
         # Lookup accepts arbitrary keys without widening the stored key type.
-        index = cast(Mapping[object, ProfileKeyGrounding], cast(object, self._loaded()))
+        index = self._loaded()
+        if not isinstance(key, str):
+            return default
         return index.get(key, default)
 
     @override
@@ -195,7 +205,8 @@ def format_profile_preflight_requirement(requirement: ProfilePreflightRequiremen
     citation when none is declared.
     """
     if requirement.legal_refs:
-        return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
+        citations = ", ".join(legal_ref_id_citation(ref) for ref in requirement.legal_refs)
+        return f"{requirement.label} ({citations})"
     return requirement.label
 
 
@@ -340,37 +351,24 @@ class ProfilePreflightService:
         grounding_index: Mapping[str, ProfileKeyGrounding] = (
             deferred_profile_grounding_index(operation) if operation is not None else dict[str, ProfileKeyGrounding]()
         )
-        missing: list[ProfilePreflightRequirement] = []
-        target = self._selector_prefix(modelo)
-        # Counts fields the per-operation axis SELECTED, not fields found missing.
-        # A modelo whose selected fields are all present is assessed and ready; a
-        # modelo that selected nothing was never assessed at all, and the two must
-        # not both surface as ``ready=True`` with an empty ``missing``.
-        per_operation_selected = 0
-        for section in self._schema.sections:
-            for field in section.fields:
-                # A field reaches this walk either because it is required of
-                # every profile AND its selectors name this modelo, or because
-                # it declares this modelo in ``required_for_modelos`` -- the
-                # modelo-scoped axis, which completeness and presentation
-                # deliberately ignore so a per-modelo fact is never demanded of
-                # a taxpayer with no such obligation.
-                required_here = field.required and self._selectors_match_modelo(field.model_selectors, target)
-                if not required_here and modelo.strip() not in {item.value for item in field.required_for_modelos}:
-                    continue
-                per_operation_selected += 1
-                candidate_path = f"{section.key}.{field.key}"
-                if self._has_value(values, candidate_path):
-                    continue
-                missing.append(
-                    build_profile_preflight_requirement(
-                        candidate_path,
-                        schema=self._schema,
-                        selector=field.model_selectors[0] if field.model_selectors else candidate_path,
-                        grounding_index=grounding_index,
-                    ),
-                )
+        missing, per_operation_selected = self._missing_selected_requirements(
+            record=record,
+            modelo=modelo,
+            period=period,
+            values=values,
+            grounding_index=grounding_index,
+        )
         missing.extend(self._missing_conditional_profile_requirements(values, missing, grounding_index))
+        if revision is not None:
+            missing.extend(
+                self._missing_schedule_deciding_requirements(
+                    record,
+                    revision=revision,
+                    period=period,
+                    existing=missing,
+                    grounding_index=grounding_index,
+                ),
+            )
         return ProfilePreflightReport(
             profile_id=record.profile_id,
             modelo=modelo,
@@ -381,6 +379,124 @@ class ProfilePreflightService:
             ready=not missing,
             per_operation_requirements_assessed=per_operation_selected > 0,
         )
+
+    def _missing_selected_requirements(
+        self,
+        *,
+        record: UserProfileRecord,
+        modelo: str,
+        period: Period,
+        values: dict[str, str],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> tuple[list[ProfilePreflightRequirement], int]:
+        """Walk the schema, returning the missing requirements and the selected-field count."""
+        missing: list[ProfilePreflightRequirement] = []
+        target = self._selector_prefix(modelo)
+        # Counts fields the per-operation axis SELECTED, not fields found missing.
+        # A modelo whose selected fields are all present is assessed and ready; a
+        # modelo that selected nothing was never assessed at all, and the two must
+        # not both surface as ``ready=True`` with an empty ``missing``.
+        per_operation_selected = 0
+        for section in self._schema.sections:
+            for field in section.fields:
+                selected, field_missing = self._field_requirements(
+                    section.key,
+                    field,
+                    record=record,
+                    modelo=modelo,
+                    target=target,
+                    period=period,
+                    values=values,
+                    grounding_index=grounding_index,
+                )
+                per_operation_selected += selected
+                missing.extend(field_missing)
+        return missing, per_operation_selected
+
+    def _field_requirements(
+        self,
+        section_key: str,
+        field: ProfileFieldDefinition,
+        *,
+        record: UserProfileRecord,
+        modelo: str,
+        target: str,
+        period: Period,
+        values: dict[str, str],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> tuple[bool, list[ProfilePreflightRequirement]]:
+        """Say whether the per-operation axis selected ``field``, and what it leaves missing."""
+        # A field reaches this walk either because it is required of
+        # every profile AND its selectors name this modelo, or because
+        # it declares this modelo in ``required_for_modelos`` -- the
+        # modelo-scoped axis, which completeness and presentation
+        # deliberately ignore so a per-modelo fact is never demanded of
+        # a taxpayer with no such obligation.
+        required_here = field.required and self._selectors_match_modelo(field.model_selectors, target)
+        modelo_scoped = modelo.strip() in {item.value for item in field.required_for_modelos}
+        if not required_here and not modelo_scoped:
+            return False, []
+        candidate_path = f"{section_key}.{field.key}"
+        if self._has_value(values, candidate_path):
+            return True, []
+        # A modelo-scoped field may gate its requirement on what the
+        # declarant does. An unanswered condition owes its own fact
+        # instead of this one, and a condition the profile positively
+        # denies owes nothing at all.
+        missing = [
+            build_profile_preflight_requirement(
+                path,
+                schema=self._schema,
+                selector=selector,
+                grounding_index=grounding_index,
+            )
+            for path, selector in self._requirement_addresses(
+                field,
+                candidate_path=candidate_path,
+                required_here=required_here,
+                modelo_scoped=modelo_scoped,
+                record=record,
+                values=values,
+                period=period,
+            )
+            if not self._has_value(values, path)
+        ]
+        return True, missing
+
+    def _requirement_addresses(
+        self,
+        field: ProfileFieldDefinition,
+        *,
+        candidate_path: str,
+        required_here: bool,
+        modelo_scoped: bool,
+        record: UserProfileRecord,
+        values: dict[str, str],
+        period: Period,
+    ) -> tuple[tuple[str, str], ...]:
+        """Return the (path, selector) rows this selected field actually demands.
+
+        A field required of every profile keeps its own address whatever a
+        modelo-scoped condition says: the condition narrows the modelo-scoped
+        axis, never the unconditional one. A conditionally modelo-scoped field
+        asks :mod:`.modelo_scoped_conditions` instead, which answers with this
+        field, with the unanswered condition's own fields, or with nothing.
+        """
+        own = ((candidate_path, field.model_selectors[0] if field.model_selectors else candidate_path),)
+        if required_here or not modelo_scoped or not field_is_conditionally_modelo_scoped(field):
+            return own
+        with pinned_registry_scope():
+            requirement = modelo_scoped_requirement(
+                field,
+                profile=projection_for_taxpayer(record, schema=self._schema, as_of=period.end_date),
+                schema=self._schema,
+                effective_date=period.end_date,
+            )
+        if requirement.state is ModeloScopedRequirementState.REQUIRED:
+            return own
+        if requirement.state is ModeloScopedRequirementState.DERIVED_ABSENT:
+            return ()
+        return tuple((path, self._selector_for_path(path)) for path in requirement.deferred_paths)
 
     @staticmethod
     def _selector_prefix(modelo: str) -> str:
@@ -413,6 +529,44 @@ class ProfilePreflightService:
                     f"{section_key}.{field_key}",
                     schema=self._schema,
                     selector=self._selector_for_path(path),
+                    grounding_index=grounding_index,
+                ),
+            )
+        return missing
+
+    def _missing_schedule_deciding_requirements(
+        self,
+        record: UserProfileRecord,
+        *,
+        revision: ModeloRevision,
+        period: Period,
+        existing: list[ProfilePreflightRequirement],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> list[ProfilePreflightRequirement]:
+        """Name the unanswered profile facts that decide which filing schedule covers ``period``.
+
+        A revision with filing schedules files a period only under the schedule the
+        taxpayer's own facts select (for Modelo 303, RIVA art. 71.3: monthly for a gran
+        empresa or a REDEME enrolee, quarterly otherwise). Until the deciding fact is
+        answered no schedule is selected, and the fact is required for this filing. A
+        profile the taxpayer projection still refuses is left to the requirements that
+        name what it lacks.
+        """
+        try:
+            taxpayer = projection_for_taxpayer(record, schema=self._schema)
+        except ProfileError:
+            return []
+        already_missing = {(item.section_key, item.field_key) for item in existing}
+        missing: list[ProfilePreflightRequirement] = []
+        for predicate in unresolved_schedule_deciding_fields(revision, taxpayer, period=period.registry_token):
+            path = self._schema.schedule_predicate_path(predicate)
+            if path is None or self._split_path(path) in already_missing:
+                continue
+            missing.append(
+                build_profile_preflight_requirement(
+                    path,
+                    schema=self._schema,
+                    selector=predicate,
                     grounding_index=grounding_index,
                 ),
             )

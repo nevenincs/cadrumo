@@ -9,10 +9,10 @@ from datetime import datetime
 from textual.message_pump import MessagePump
 from textual.timer import Timer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.errors.hierarchy import InternalInvariantError
-from cadrumo.core.time.clock import now
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -28,7 +28,7 @@ def _status_confirms_session(status: ProfileAccessStatus, profile_id: object, se
         and status.profile_id == profile_id
         and status.session_id == session_id
         and status.session_expires_at is not None
-        and status.session_expires_at > now()
+        and status.session_expires_at > wall_now()
         and status.denial is None
     )
 
@@ -81,7 +81,7 @@ class BoundSession:
         if self._watcher is None or expires_at is None:
             return
         owner, _check = self._watcher
-        delay = max(0.0, (expires_at - now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
+        delay = max(0.0, (expires_at - wall_now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
         self._expiry_timer = owner.set_timer(delay, self._expiry_due)
 
     def _expiry_due(self) -> None:
@@ -90,7 +90,7 @@ class BoundSession:
             return
         watcher[1]()
         expires_at = self.known_expires_at
-        if self._watcher is not None and expires_at is not None and expires_at > now():
+        if self._watcher is not None and expires_at is not None and expires_at > wall_now():
             # Woken before the deadline, or the runtime reported a later one.
             self._arm_expiry()
 
@@ -108,7 +108,7 @@ class BoundSession:
     def lifetime_ended(self) -> bool:
         """Whether the pinned identity is gone or the last reported expiry has passed, without asking the runtime."""
         expires_at = self.known_expires_at
-        return not self.identity_holds() or (expires_at is not None and expires_at <= now())
+        return not self.identity_holds() or (expires_at is not None and expires_at <= wall_now())
 
     async def confirm_with_runtime(self, *, task_name: str) -> bool:
         """Ask the runtime whether the pinned session is still authenticated, bound and unexpired.

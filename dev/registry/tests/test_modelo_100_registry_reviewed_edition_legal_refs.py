@@ -5,59 +5,65 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
 
-from ._modelo_100_registry_support import (
-    _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
-    _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
-    _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS,
-    _ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS,
-    _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS,
-    _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS,
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _BASE_LIQUIDABLE_ART_50_REF,
-    _BROAD_INCOME_CHAPTER_SPAN_REFS,
-    _CAPITAL_GAINS_2025_SECTION_COUNTS,
-    _CAPITAL_GAINS_SECTION_REFS,
-    _ECONOMIC_ACTIVITY_SECTION_REFS,
-    _FRACTIONAL_PAYMENT_AMOUNT_ARTICLE_REF,
-    _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _INMUEBLE_2025_CONTINUITY_REFS,
-    _MODELO_100_2025_FORM_ORDER_REF,
-    _NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS,
-    _NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS,
-    _NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS,
-    _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS,
-    _NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS,
-    _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS,
-    _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS,
-    _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS,
-    _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
+    ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
+    ANEXO_C_BASE_NEGATIVE_GENERAL_REFS,
+    ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS,
+    ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS,
+    AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS,
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    BASE_LIQUIDABLE_ART_50_REF,
+    BROAD_INCOME_CHAPTER_SPAN_REFS,
+    CAPITAL_GAINS_2025_SECTION_COUNTS,
+    CAPITAL_GAINS_SECTION_REFS,
+    ECONOMIC_ACTIVITY_SECTION_REFS,
+    FRACTIONAL_PAYMENT_AMOUNT_ARTICLE_REF,
+    FRACTIONAL_PAYMENT_ARTICLE_REF,
+    INMUEBLE_2025_CONTINUITY_REFS,
+    MODELO_100_2025_FORM_ORDER_REF,
+    NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS,
+    NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS,
+    NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS,
+    NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS,
+    NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS,
+    NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS,
+    OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS,
+    PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS,
+    PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
+    modelo_100_revision,
+    modelo_100_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The newest Modelo 100 edition the registry authors; the section counts and
 # reference sets asserted here are that edition's.
 _REVIEWED_EDITION = newest_authored_edition("100")
+_MADRID_CUIDADO_ASCENDIENTES_ROLE = "irpf_deduccion_madrid_cuidado_ascendientes"
+_MADRID_CUIDADO_ASCENDIENTES_REF = "madrid-dl-1-2010:art-7-bis"
 
 
 def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
-    expected_refs = {_AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
-    for section, expected_count in _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+    expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF}
+    cuidado_ascendientes_refs: list[set[str]] = []
+    for section, expected_count in AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
         # The nueva-empresa NIF box and the computed Madrid nacimiento/adopción
-        # deducción (casilla 1039) legitimately carry more than the art-77
-        # framework default: the latter is a computed regulatory value whose
-        # per-child cuantía and income limits MUST cite their binding provision
-        # (Madrid DL 1/2010 arts. 4 y 18.1) per aeat-calculation-grounding.
+        # (casilla 1039) and cuidado de ascendientes (casilla 1115) deducciones
+        # legitimately carry more than the art-77 framework default: each
+        # computed deducción is a regulatory value whose cuantía and limits MUST
+        # cite their binding provision (Madrid DL 1/2010 arts. 4 y 18.1 for 1039,
+        # art. 7 bis for 1115) per aeat-calculation-grounding.
         _art77_only_exempt_roles = frozenset(
             {
                 "irpf_deduccion_nueva_empresa_entidad_nif",
                 "irpf_deduccion_madrid_nacimiento_adopcion",
+                _MADRID_CUIDADO_ASCENDIENTES_ROLE,
             }
         )
         art77_only_casillas = [casilla for casilla in checked if casilla.semantic_role not in _art77_only_exempt_roles]
@@ -69,66 +75,72 @@ def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
             if set(casilla.legal_refs) != expected_refs
         }
         assert not offenders
+        cuidado_ascendientes_refs.extend(
+            {str(ref) for ref in casilla.legal_refs}
+            for casilla in checked
+            if casilla.semantic_role == _MADRID_CUIDADO_ASCENDIENTES_ROLE
+        )
+    assert cuidado_ascendientes_refs == [{AUTONOMIC_DEDUCTION_ART_77_REF, _MADRID_CUIDADO_ASCENDIENTES_REF}]
 
 
 def test_modelo_100_result_sections_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
-    for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS.items():
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+    for section, expected_count in NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in checked
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+            if FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
         }
         assert not offenders
 
 
 def test_modelo_100_input_sections_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
-    for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS.items():
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+    for section, expected_count in NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in checked
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+            if FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
         }
         assert not offenders
 
 
 def test_modelo_100_input_sections_do_not_cite_payments_on_account_article() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
-    for section, expected_count in _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS.items():
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+    for section, expected_count in NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in checked
-            if _PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
+            if PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
         }
         assert not offenders
 
 
 def test_modelo_100_payments_on_account_article_stays_on_payment_casillas_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     observed = {
         casilla.id: tuple(casilla.section[:2])
         for casilla in revision.casillas
-        if _PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
+        if PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
     }
 
-    assert observed == _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS
+    assert observed == PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", single_exercise_editions("100"))
 def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_amount_refs(
     filing_year: int,
 ) -> None:
-    revision = _modelo_100_revision(filing_year)
+    revision = modelo_100_revision(filing_year)
     casilla = next(
         casilla
         for casilla in revision.casillas
@@ -136,33 +148,33 @@ def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_am
     )
 
     expected_refs = {
-        _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
-        _FRACTIONAL_PAYMENT_ARTICLE_REF,
-        _FRACTIONAL_PAYMENT_AMOUNT_ARTICLE_REF,
+        PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
+        FRACTIONAL_PAYMENT_ARTICLE_REF,
+        FRACTIONAL_PAYMENT_AMOUNT_ARTICLE_REF,
     }
     assert expected_refs <= set(casilla.legal_refs)
 
 
 def test_modelo_100_gain_sections_use_capital_gains_refs_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
-    for section, expected_count in _CAPITAL_GAINS_2025_SECTION_COUNTS.items():
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+    for section, expected_count in CAPITAL_GAINS_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in checked
-            if set(casilla.legal_refs) != _CAPITAL_GAINS_SECTION_REFS
+            if set(casilla.legal_refs) != CAPITAL_GAINS_SECTION_REFS
         }
         assert not offenders
 
 
 def test_modelo_100_attribution_mode_flags_use_attribution_refs_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     offenders = {
         casilla_id: casillas[casilla_id].legal_refs
-        for casilla_id, expected_refs in _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS.items()
+        for casilla_id, expected_refs in ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS.items()
         if set(casillas[casilla_id].legal_refs) != expected_refs
     }
 
@@ -170,40 +182,42 @@ def test_modelo_100_attribution_mode_flags_use_attribution_refs_only() -> None:
 
 
 def test_modelo_100_casillas_do_not_retain_full_income_chapter_span() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     offenders = {
         casilla.id: casilla.legal_refs
         for casilla in revision.casillas
-        if _BROAD_INCOME_CHAPTER_SPAN_REFS.issubset(casilla.legal_refs)
+        if BROAD_INCOME_CHAPTER_SPAN_REFS.issubset(casilla.legal_refs)
     }
 
     assert not offenders
 
 
 def test_modelo_100_inmueble_continuity_uses_inmueble_refs_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     checked = [
         evolution
         for evolution in revision.casilla_continuidad_evolutions
-        if str(evolution.continuidad_id) in _INMUEBLE_2025_CONTINUITY_REFS
+        if str(evolution.continuidad_id) in INMUEBLE_2025_CONTINUITY_REFS
     ]
 
-    assert {str(evolution.continuidad_id) for evolution in checked} == set(_INMUEBLE_2025_CONTINUITY_REFS)
+    # A lineage whose legal references did not change between editions needs no evolution record.
+    assert {str(evolution.continuidad_id) for evolution in checked} <= set(INMUEBLE_2025_CONTINUITY_REFS)
     offenders = {
         evolution.id: evolution.legal_refs
         for evolution in checked
-        if set(evolution.legal_refs) != _INMUEBLE_2025_CONTINUITY_REFS[str(evolution.continuidad_id)]
+        if set(evolution.legal_refs) != INMUEBLE_2025_CONTINUITY_REFS[str(evolution.continuidad_id)]
     }
     assert not offenders
 
 
 def test_modelo_100_anexo_c_base_negative_general_uses_member_refs_only() -> None:
-    snapshot = _modelo_100_snapshot(_REVIEWED_EDITION)
+    snapshot = modelo_100_snapshot(_REVIEWED_EDITION)
     revision = snapshot.revision
-    construct = snapshot.constructs[_ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID]
+    construct = snapshot.constructs[ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
     bindings = {binding.id: binding for binding in revision.bindings}
+    dependencies = {dependency.id: dependency for dependency in revision.dependency_classifications}
     member_refs: set[str] = set()
 
     for casilla_id in construct.casilla_ids:
@@ -212,21 +226,23 @@ def test_modelo_100_anexo_c_base_negative_general_uses_member_refs_only() -> Non
         member_refs.update(formulas[formula_id].legal_refs)
     for binding_id in construct.bindings:
         member_refs.update(bindings[binding_id].legal_refs)
+    for dependency_id in construct.dependency_classifications:
+        member_refs.update(dependencies[dependency_id].legal_refs)
 
     # The previous_filing carry of the base liquidable general negativa is
     # grounded in Art. 50.3 LIRPF (4-year carry-forward of a negative base
     # liquidable general), not Art. 48 (within-year integración/compensación,
     # a distinct mechanism). The binding legal_refs carry art-50 accordingly.
-    assert set(bindings[_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID].legal_refs) == {
-        _BASE_LIQUIDABLE_ART_50_REF,
-        _MODELO_100_2025_FORM_ORDER_REF,
+    assert set(bindings[ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID].legal_refs) == {
+        BASE_LIQUIDABLE_ART_50_REF,
+        MODELO_100_2025_FORM_ORDER_REF,
     }
-    assert member_refs == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
-    assert set(construct.legal_refs) == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
+    assert member_refs == ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
+    assert set(construct.legal_refs) == ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
 
 
 def test_modelo_100_objective_estimation_sections_use_activity_refs_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     # The Fase 4a EO-agraria reducciones (casillas 1549, 1551, 1555, AJ)
     # legitimately cite their own binding provisions in addition to the
     # section's activity-chapter default: DA-1 Orden HAC/1347/2024
@@ -243,7 +259,7 @@ def test_modelo_100_objective_estimation_sections_use_activity_refs_only() -> No
     _eo_agraria_fase_4a_exempt_casilla_ids = frozenset(
         {"1549", "1551", "1555", "AJ", "eo-agraria-reduccion-irregularidad-base"}
     )
-    for section, expected_count in _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS.items():
+    for section, expected_count in OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
@@ -253,17 +269,17 @@ def test_modelo_100_objective_estimation_sections_use_activity_refs_only() -> No
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in activity_refs_casillas
-            if set(casilla.legal_refs) != _ECONOMIC_ACTIVITY_SECTION_REFS
+            if set(casilla.legal_refs) != ECONOMIC_ACTIVITY_SECTION_REFS
         }
         assert not offenders
 
 
 def test_modelo_100_artistic_activity_reductions_use_da60_refs_only() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     offenders = {
         casilla_id: casillas[casilla_id].legal_refs
-        for casilla_id, expected_refs in _ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS.items()
+        for casilla_id, expected_refs in ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS.items()
         if set(casillas[casilla_id].legal_refs) != expected_refs
     }
 
@@ -271,7 +287,7 @@ def test_modelo_100_artistic_activity_reductions_use_da60_refs_only() -> None:
 
 
 def test_modelo_100_non_payment_metadata_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
 
     bindings = {binding.id: binding for binding in revision.bindings}
     constructs = {construct.id: construct for construct in revision.constructs}
@@ -279,23 +295,23 @@ def test_modelo_100_non_payment_metadata_do_not_cite_fractional_payment_article(
 
     binding_offenders = {
         binding_id: bindings[binding_id].legal_refs
-        for binding_id in _NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in bindings[binding_id].legal_refs
+        for binding_id in NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS
+        if FRACTIONAL_PAYMENT_ARTICLE_REF in bindings[binding_id].legal_refs
     }
     construct_offenders = {
         construct_id: constructs[construct_id].legal_refs
-        for construct_id in _NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in constructs[construct_id].legal_refs
+        for construct_id in NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS
+        if FRACTIONAL_PAYMENT_ARTICLE_REF in constructs[construct_id].legal_refs
     }
     application_link_offenders = {
         link_id: application_links[link_id].legal_refs
-        for link_id in _NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in application_links[link_id].legal_refs
+        for link_id in NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS
+        if FRACTIONAL_PAYMENT_ARTICLE_REF in application_links[link_id].legal_refs
     }
     deadline_offenders = {
         deadline.id: deadline.legal_refs
         for deadline in revision.deadline_windows
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in deadline.legal_refs
+        if FRACTIONAL_PAYMENT_ARTICLE_REF in deadline.legal_refs
     }
     # The fractional-payment casilla itself must cite the payment articles, and
     # its continuity evolutions carry that casilla's own grounding.
@@ -308,7 +324,7 @@ def test_modelo_100_non_payment_metadata_do_not_cite_fractional_payment_article(
         evolution.id: evolution.legal_refs
         for evolution in revision.casilla_continuidad_evolutions
         if evolution.continuidad_id != fractional_payment_continuidad
-        and _FRACTIONAL_PAYMENT_ARTICLE_REF in evolution.legal_refs
+        and FRACTIONAL_PAYMENT_ARTICLE_REF in evolution.legal_refs
     }
 
     assert not binding_offenders

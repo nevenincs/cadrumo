@@ -23,6 +23,8 @@ from .remote_state_models import (
     LiveIvaReadSurface,
 )
 
+_MESSAGE_TEXT_LENGTH = 160
+
 
 def _string_object_mapping(value: object) -> dict[str, object] | None:
     if not isinstance(value, Mapping):
@@ -130,7 +132,7 @@ def auth_outcome(
     )
 
 
-def bounded_context_text(value: object, *, max_length: int = 160) -> str:
+def bounded_context_text(value: object, *, max_length: int = _MESSAGE_TEXT_LENGTH) -> str:
     """Return normalized diagnostic text bounded for persisted context payloads."""
     text = " ".join(str(value).replace("\xa0", " ").split())
     if len(text) <= max_length:
@@ -184,7 +186,7 @@ def _redacted_context_value(value: object, *, key: str) -> object | None:
 
 
 _DIAGNOSTIC_CONTEXT_REDACTION_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-_SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = ALWAYS_REDACT_KEY_TERMS | frozenset(
+SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
         "active_profile_id",
         "active_profile_ref",
@@ -201,7 +203,7 @@ _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = ALWAYS_REDACT_KEY_TERMS | frozenset(
         "storage_object_key",
     },
 )
-_SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = ALWAYS_REDACT_KEY_TERMS | frozenset(
+SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
         "bucket",
         "dni",
@@ -238,13 +240,13 @@ def _is_sensitive_failure_context_key(key: str) -> bool:
     normalised = normalise_redaction_key(key)
     if not normalised or normalised in _SAFE_FAILURE_CONTEXT_KEYS:
         return False
-    if normalised in _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS:
+    if normalised in SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS:
         return True
     parts = frozenset(part for part in normalised.split("_") if part)
     return any(
         part == sensitive or part.startswith(f"{sensitive}s")
         for part in parts
-        for sensitive in _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS
+        for sensitive in SENSITIVE_FAILURE_CONTEXT_KEY_PARTS
     )
 
 

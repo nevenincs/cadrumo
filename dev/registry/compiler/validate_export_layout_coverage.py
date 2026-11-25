@@ -131,6 +131,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopeDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.registry.compiler.record_design_layout_markers import is_record_terminator_caption
 from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     RecordDesignField,
@@ -148,6 +149,9 @@ from . import export_layout_required_positions as required_positions
 #: message is the entry point into it, and a refusal listing a thousand
 #: coordinates is one nobody reads.
 _ENUMERATED_PER_RECORD: Final = 8
+
+#: The byte width of each record line ending a design can number as positions.
+_LINE_ENDING_WIDTHS: Final = {"crlf": 2, "lf": 1}
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,10 +173,10 @@ def _layout_write_sets(
     written: set[int] = set()
     emitted: set[int] = set()
     for record in records:
-        written |= record_join._written_bytes(record.fields, data_only=True)
-        emitted |= record_join._written_bytes(record.fields, data_only=False)
+        written |= record_join.written_bytes(record.fields, data_only=True)
+        emitted |= record_join.written_bytes(record.fields, data_only=False)
     if envelope is not None:
-        envelope_bytes = record_join._envelope_written_bytes(envelope)
+        envelope_bytes = record_join.envelope_written_bytes(envelope)
         written |= envelope_bytes
         emitted |= envelope_bytes
     return written, emitted
@@ -181,11 +185,11 @@ def _layout_write_sets(
 def _uncounted_required_positions(
     sheet: RecordDesignSheet,
     counted: set[tuple[str, int, int]],
-) -> tuple[required_positions._RequiredPosition, ...]:
+) -> tuple[required_positions.RequiredPosition, ...]:
     """Return this sheet's required positions not counted by another edition."""
     return tuple(
         position
-        for position in required_positions._required_positions(sheet)
+        for position in required_positions.required_positions(sheet)
         if (sheet.name, position.offset, position.length) not in counted
     )
 
@@ -204,32 +208,24 @@ def _sheet_coverage_inputs(
     """Resolve the authoritative byte source and scope for one design sheet."""
     is_envelope_sheet = envelope is not None and sheet.name == envelope.record_identity
     if is_envelope_sheet:
-        written = record_join._envelope_written_bytes(envelope)
+        written = record_join.envelope_written_bytes(envelope)
         return _CoverageInputs((), written, written, f"filing envelope {sheet.name!r}")
 
     if sheet.auxiliary_envelope_header is not None or sheet.variable_envelope is not None:
-        joined_header = record_join._join_record(sheet, records, constants_by_binding, source=source)
+        joined_header = record_join.join_record(sheet, records, constants_by_binding, source=source)
         if joined_header is not None:
-            return _joined_variable_header_coverage_inputs(sheet, joined_header)
+            return joined_variable_header_coverage_inputs(sheet, joined_header)
         return _auxiliary_header_coverage_inputs(sheet, source, auxiliary_header)
 
-    joined = record_join._join_record(sheet, records, constants_by_binding, source=source)
+    joined = record_join.join_record(sheet, records, constants_by_binding, source=source)
     if joined is not None:
-        consulted = tuple(joined.fields)
-        return _CoverageInputs(
-            consulted,
-            record_join._written_bytes(consulted, data_only=True),
-            record_join._written_bytes(consulted, data_only=False),
-            f"authored record {joined.id!r} (record_type {joined.record_type!r})",
+        return _record_coverage_inputs(
+            sheet, joined, f"authored record {joined.id!r} (record_type {joined.record_type!r})"
         )
 
     if len(records) == 1:
-        consulted = tuple(records[0].fields)
-        return _CoverageInputs(
-            consulted,
-            record_join._written_bytes(consulted, data_only=True),
-            record_join._written_bytes(consulted, data_only=False),
-            f"sole authored record {records[0].id!r} (source identity unjoined)",
+        return _record_coverage_inputs(
+            sheet, records[0], f"sole authored record {records[0].id!r} (source identity unjoined)"
         )
 
     return _CoverageInputs(
@@ -243,7 +239,43 @@ def _sheet_coverage_inputs(
     )
 
 
-def _joined_variable_header_coverage_inputs(
+def _record_coverage_inputs(sheet: RecordDesignSheet, record: ExportRecordDefinition, scope: str) -> _CoverageInputs:
+    """Measure one authored record's bytes, its declared line ending included where the design numbers it."""
+    consulted = tuple(record.fields)
+    line_break = _numbered_line_break_bytes(sheet, record)
+    return _CoverageInputs(
+        consulted,
+        record_join.written_bytes(consulted, data_only=True) | line_break,
+        record_join.written_bytes(consulted, data_only=False) | line_break,
+        scope,
+    )
+
+
+def _numbered_line_break_bytes(sheet: RecordDesignSheet, record: ExportRecordDefinition) -> set[int]:
+    """Return the design's numbered closing line break when the record's line ending writes it.
+
+    Modelo 840 numbers "Salto de línea. Constante CRLF" as each page's last two
+    positions, and the generated record carries those bytes as its line ending
+    rather than as a field. Credited only for the design's own last row, captioned
+    as a line break, of the ending's exact width, directly after the last field, so
+    a layout that merely stops short of its design is still refused.
+    """
+    width = _LINE_ENDING_WIDTHS.get(str(record.line_ending), 0)
+    if not width or not sheet.fields or not record.fields:
+        return set()
+    row = sheet.fields[-1]
+    if not _closes_the_record(row, record, width):
+        return set()
+    return set(range(row.offset or 0, (row.offset or 0) + width))
+
+
+def _closes_the_record(row: RecordDesignField, record: ExportRecordDefinition, width: int) -> bool:
+    """Whether the design row is a line-break caption of ``width`` bytes right after the record's last field."""
+    fields_end = max((field.offset or 0) + (field.length or 0) for field in record.fields)
+    return row.length == width and row.offset == fields_end and is_record_terminator_caption(row.description or "")
+
+
+def joined_variable_header_coverage_inputs(
     sheet: RecordDesignSheet,
     record: ExportRecordDefinition,
 ) -> _CoverageInputs:
@@ -266,8 +298,8 @@ def _joined_variable_header_coverage_inputs(
         )
     return _CoverageInputs(
         fields,
-        record_join._written_bytes(fields, data_only=True),
-        record_join._written_bytes(fields, data_only=False),
+        record_join.written_bytes(fields, data_only=True),
+        record_join.written_bytes(fields, data_only=False),
         f"source-joined fixed header prefix {record.id!r}",
     )
 
@@ -337,10 +369,10 @@ def _variable_header_values_match(
     source_fields: tuple[RecordDesignField, ...],
 ) -> bool:
     for field, source_field in zip(fields, source_fields, strict=True):
-        constant = record_join._field_constant(source_field)
+        constant = record_join.field_constant(source_field)
         if constant is not None and (field.kind is not CasillaFieldKind.LITERAL or field.literal != constant):
             return False
-        if record_join._field_is_filler(source_field) and field.kind is not CasillaFieldKind.FILLER:
+        if record_join.field_is_filler(source_field) and field.kind is not CasillaFieldKind.FILLER:
             return False
     return True
 
@@ -452,19 +484,19 @@ def _auxiliary_header_matches_source(
 
 
 def _sheet_missing_positions(
-    required: Sequence[required_positions._RequiredPosition],
+    required: Sequence[required_positions.RequiredPosition],
     coverage: _CoverageInputs,
-) -> tuple[required_positions._RequiredPosition, ...]:
+) -> tuple[required_positions.RequiredPosition, ...]:
     """Find required positions whose bytes are not emitted by the resolved source."""
     return tuple(
-        position for position in required if not record_join._covers(position, coverage.written, coverage.emitted)
+        position for position in required if not record_join.covers(position, coverage.written, coverage.emitted)
     )
 
 
 def _missing_positions_line(
     sheet: RecordDesignSheet,
-    required: Sequence[required_positions._RequiredPosition],
-    missing: Sequence[required_positions._RequiredPosition],
+    required: Sequence[required_positions.RequiredPosition],
+    missing: Sequence[required_positions.RequiredPosition],
     scope: str,
 ) -> str:
     """Render the bounded diagnostic worklist for one sheet's missing positions."""
@@ -482,14 +514,14 @@ def _missing_positions_line(
 
 def _sheet_coverage_result(
     sheet: RecordDesignSheet,
-    required: Sequence[required_positions._RequiredPosition],
+    required: Sequence[required_positions.RequiredPosition],
     coverage: _CoverageInputs,
     *,
     source: SourceReference,
 ) -> tuple[int, int, list[str]]:
     """Return missing positions, unresolved joins and diagnostics for one sheet."""
     missing = _sheet_missing_positions(required, coverage)
-    intrusions = record_join._reserved_write_failures(sheet, coverage.consulted, source=source)
+    intrusions = record_join.reserved_write_failures(sheet, coverage.consulted, source=source)
     lines: list[str] = [f"design record {sheet.name!r}: {'; '.join(intrusions)}"] if intrusions else []
     if missing:
         lines.append(_missing_positions_line(sheet, required, missing, coverage.scope))
@@ -502,7 +534,7 @@ def _sheet_coverage_result(
     return len(missing) + len(intrusions), unresolved, lines
 
 
-def _missing_report(
+def missing_report(
     sheets: Sequence[tuple[RecordDesignSheet, SourceReference]],
     records: Sequence[ExportRecordDefinition],
     *,
@@ -527,7 +559,7 @@ def _missing_report(
     #: (389, 1) and (390, 5) rows 2025 introduces.
     counted: set[tuple[str, int, int]] = set()
     for sheet, source in sheets:
-        if not record_join._belongs_to_layout(sheet, records, constants_by_binding, source=source):
+        if not record_join.belongs_to_layout(sheet, records, constants_by_binding, source=source):
             continue
         required = _uncounted_required_positions(sheet, counted)
         counted.update((sheet.name, position.offset, position.length) for position in required)
@@ -549,14 +581,15 @@ def _missing_report(
     return required_total, missing_total, unresolved_total, lines
 
 
-def _layout_failure(
+def layout_failure(
     *,
     prefix: str,
     layout: ExportLayoutDefinition,
     source_refs: Mapping[str, SourceReference],
     constants_by_binding: Mapping[str, str] | None = None,
 ) -> str | None:
-    design_sources = record_join._design_sources(layout, source_refs)
+    """Build the failure message for an export layout that lacks coverage, if any."""
+    design_sources = record_join.design_sources(layout, source_refs)
     if not design_sources:
         return _missing_design_source_failure(prefix, layout)
     sheets = _read_layout_design_sheets(prefix, layout, design_sources)
@@ -585,11 +618,11 @@ def _read_layout_design_sheets(
 ) -> tuple[tuple[RecordDesignSheet, SourceReference], ...] | str:
     sheets: list[tuple[RecordDesignSheet, SourceReference]] = []
     for source in design_sources:
-        read = record_join._read_design_sheets(source)
+        read = record_join.read_design_sheets(source)
         if isinstance(read, str):
             return f"{prefix}: fixed-width export layout {layout.id!r} cannot be checked because {read}"
         try:
-            record_join._require_adjudicated_source_sheets(source, read)
+            record_join.require_adjudicated_source_sheets(source, read)
         except RegistryValidationError as exc:
             return f"{prefix}: fixed-width export layout {layout.id!r} cannot verify source-pinned coverage: {exc}"
         sheets.extend((sheet, source) for sheet in read)
@@ -603,7 +636,7 @@ def _layout_coverage_report(
     constants_by_binding: Mapping[str, str] | None,
 ) -> tuple[int, int, int, list[str]] | str:
     try:
-        return _missing_report(
+        return missing_report(
             sheets,
             layout.records,
             envelope=layout.filing_envelope,
@@ -681,11 +714,11 @@ def validate_export_layout_record_coverage(
         every position its official design requires.
     """
     failures: list[str] = []
-    constants_by_binding = record_join._design_constant_values(revision)
+    constants_by_binding = record_join.design_constant_values(revision)
     for layout in derive_export_layouts_from_bindings(revision):
         if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
             continue
-        failure = _layout_failure(
+        failure = layout_failure(
             prefix=prefix,
             layout=layout,
             source_refs=source_refs,

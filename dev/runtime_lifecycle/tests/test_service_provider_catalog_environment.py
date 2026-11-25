@@ -15,7 +15,6 @@ from typing import Final
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.adapters.agent_provider_catalog import AgentProviderCatalogSource
 from cadrumo_agent_service.providers.application.contracts import (
@@ -29,6 +28,7 @@ from cadrumo_agent_service.providers.application.contracts import (
 from cadrumo_agent_service.providers.application.service import ProviderSettingsService
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from cadrumo_agent_service.providers.domain.catalog import parse_provider_catalog
+from cadrumo_agent_service.providers.domain.record import LocalEngine
 from cadrumo_agent_service.providers.persistence.store import SecureProviderSettingsStore
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
@@ -69,12 +69,11 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert client.claim() is not None
         store = SecureProviderSettingsStore(client=client)
         settings = ProviderSettingsService(
+            selected_engine=lambda: LocalEngine.LLAMACPP,
             store=store,
             catalog_source=source,
-            environment={},
-            storage_mode=StorageMode.INSTALLED,
         )
-        status = settings.status()
+        status = settings.status(reads_pending=lambda _lanes: False)
         assert isinstance(status, ProviderSettingsStatus), status
         assert sorted(entry.id for entry in status.providers) == expected
         initial = next(entry for entry in status.providers if entry.id == KEY_LANE)
@@ -87,7 +86,7 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert accepted.entry.source is ProviderCredentialSource.PROFILE
         assert accepted.entry.readiness is ProviderReadiness.NOT_VERIFIED
         assert accepted.entry.revision != initial.revision
-        reread = settings.status()
+        reread = settings.status(reads_pending=lambda _lanes: False)
         assert isinstance(reread, ProviderSettingsStatus), reread
         assert next(entry for entry in reread.providers if entry.id == KEY_LANE) == accepted.entry
         stale = settings.set_credential(
@@ -114,10 +113,9 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
         assert isinstance(runtime.admit(client), ServiceConnected)
         assert client.claim() is not None
         status = ProviderSettingsService(
+            selected_engine=lambda: LocalEngine.LLAMACPP,
             store=SecureProviderSettingsStore(client=client),
             catalog_source=source,
-            environment={},
-            storage_mode=StorageMode.INSTALLED,
-        ).status()
+        ).status(reads_pending=lambda _lanes: False)
         assert isinstance(status, ProviderSettingsRefusal), status
         assert status.code is ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE

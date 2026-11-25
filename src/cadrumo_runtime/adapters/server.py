@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import time
 from concurrent.futures import Future, ThreadPoolExecutor, wait
+from datetime import datetime
 from threading import BoundedSemaphore, Event, RLock, Thread
 from typing import Protocol
 from uuid import UUID, uuid4
@@ -14,6 +15,7 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo_client.contracts.contracts import (
+    ACCEPT_REFUSALS_THAT_KEEP_LISTENING,
     ByteChannel,
     ChannelWake,
     RefusalCode,
@@ -27,7 +29,7 @@ from cadrumo_runtime.contracts.profile_host import ProfileDrainResult, ProfileHa
 
 from .server_connection_handling import RuntimeConnectionHandling
 
-_LOGGER = get_logger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class RuntimeListener(Protocol):
@@ -70,8 +72,13 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         profiles: ProfileHandler | None = None,
         boot_id: UUID | None = None,
         authority_generation: str | None = None,
+        fixed_clock_instant: datetime | None = None,
     ) -> None:
-        """Bind one endpoint and a fresh process boot, without claiming ownership yet."""
+        """Bind one endpoint and a fresh process boot, without claiming ownership yet.
+
+        ``fixed_clock_instant`` is the fixed clock this runtime admitted at its
+        start; every client reads it on the hello, absent on wall time.
+        """
         self.listener = listener
         self._listener_owner = TransportCleanup(listener)
         self.stop = stop
@@ -82,6 +89,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             storage_identity=listener.storage_identity,
             boot_id=boot_id or uuid4(),
             authority_generation=authority_generation,
+            fixed_clock_instant=fixed_clock_instant,
         )
         self.ready = Event()
         self._failed = Event()
@@ -122,7 +130,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         incomplete = Event()
         primary_error: BaseException | None = None
         try:
-            with startup_phase(_LOGGER, "listener_listen"):
+            with startup_phase(LOGGER, "listener_listen"):
                 self.listener.listen()
             workers = ThreadPoolExecutor(max_workers=32, thread_name_prefix="cadrumo-ipc")
             try:
@@ -132,7 +140,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 accept_error: BaseException | None = None
                 try:
                     diagnostic_event(
-                        _LOGGER,
+                        LOGGER,
                         "runtime_listener_ready",
                         fields={
                             "runtime_boot_id": str(self.identity.boot_id),
@@ -147,7 +155,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                     self.stop.set()
                     try:
                         diagnostic_event(
-                            _LOGGER,
+                            LOGGER,
                             "runtime_listener_drain_started",
                             fields={"drain_timeout_seconds": self.DRAIN_SECONDS},
                             primary_error=accept_error,
@@ -173,7 +181,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             if not incomplete.is_set():
                 self._release_listener(primary_error)
             diagnostic_event(
-                _LOGGER,
+                LOGGER,
                 "runtime_listener_stopped",
                 fields={
                     "cleanup_incomplete": incomplete.is_set(),
@@ -243,20 +251,9 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             if self.profiles is not None:
                 due, wakes = self.profiles.lifecycle_due_in(), (self._stopping, self.profiles.lifecycle_wake)
             self._parked_until = math.inf if due is None else time.monotonic() + due
-            try:
-                channel = self.listener.accept(timeout=due, wakes=wakes)
-            except RefusalError as error:
-                if self._accept_refusal_can_retry(error):
-                    continue
-                raise
-            except BaseException as error:
-                self._retain_channel_cleanup(error)
-                raise
-            finally:
-                # The wait's end is a turn: refresh the tick before leaving the park, so no
-                # sample in between reads the whole wait as age.
-                self._accept_tick = time.monotonic()
-                self._parked_until = None
+            channel = self._accept_one(due, wakes)
+            if channel is None:
+                continue
             channel_owner = self._channel_owner(channel)
             if self.stop.is_set() or not self._slots.acquire(blocking=False):
                 self._close_owned_channel(channel_owner)
@@ -265,6 +262,23 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             with self._channels_guard:
                 self._requests.add(future)
             future.add_done_callback(self._forget_request)
+
+    def _accept_one(self, due: float | None, wakes: tuple[ChannelWake, ...]) -> ByteChannel | None:
+        """Wait once, retaining failed cleanup and refreshing the watchdog tick."""
+        try:
+            return self.listener.accept(timeout=due, wakes=wakes)
+        except RefusalError as error:
+            if self._accept_refusal_can_retry(error):
+                return None
+            raise
+        except BaseException as error:
+            self._retain_channel_cleanup(error)
+            raise
+        finally:
+            # The wait's end is a turn: refresh the tick before leaving the park, so no
+            # sample in between reads the whole wait as age.
+            self._accept_tick = time.monotonic()
+            self._parked_until = None
 
     def _close_registered_connections(self, channels: tuple[TransportCleanup, ...], deadline: float) -> bool:
         """Attempt all retained channel owners and report incomplete cleanup honestly."""
@@ -283,11 +297,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             self._failed.set()
             self.stop.set()
             return False
-        return error.reason in {
-            RefusalCode.DEADLINE_EXCEEDED,
-            RefusalCode.PEER_UNTRUSTED,
-            RefusalCode.CONNECTION_CLOSED,
-        }
+        return error.reason in ACCEPT_REFUSALS_THAT_KEEP_LISTENING
 
     def _submit_connection_worker(self, workers: ThreadPoolExecutor, channel: ByteChannel) -> Future[None]:
         """Transfer a reserved slot to its worker or complete the original failure cleanup."""

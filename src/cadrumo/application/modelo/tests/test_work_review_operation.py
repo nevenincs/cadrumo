@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -16,28 +15,29 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
 from ..work_review_contracts import (
     MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
-    ModeloWorkReviewFact,
     ModeloWorkReviewProgressSnapshot,
     ModeloWorkReviewProjection,
     ModeloWorkReviewRequest,
     ModeloWorkReviewSnapshot,
 )
+from ..work_review_facts import ModeloWorkReviewFact
 from ..work_review_operation import (
     ModeloWorkReviewExecutor,
     build_modelo_work_review_definition,
     build_modelo_work_review_registration,
 )
+from .work_operation_support import GuardPhaseReachedError, first_quarter_unit, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,65 +46,11 @@ _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
 
-class _GuardPhaseReachedError(Exception):
-    pass
-
-
-class _GuardEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-        raise _GuardPhaseReachedError(phase)
-
-
 def _executor_request(unit: WorkUnit, *, subject_ref: str | None = None) -> OperationRequest[ModeloWorkReviewRequest]:
     return OperationRequest[ModeloWorkReviewRequest](
         definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref if subject_ref is not None else unit.work_unit_id,
         payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
-    )
-
-
-def _executor_context(
-    request: OperationRequest[ModeloWorkReviewRequest],
-    *,
-    definition_id: str | None = None,
-    subject_ref: str | None = None,
-) -> tuple[OperationExecutorContext, _GuardEvents]:
-    events = _GuardEvents()
-    context = cast(
-        OperationExecutorContext,
-        cast(
-            object,
-            SimpleNamespace(
-                identity=OperationIdentity(
-                    operation_id="a" * 64,
-                    definition_id=definition_id if definition_id is not None else request.definition_id,
-                    subject_ref=subject_ref if subject_ref is not None else request.subject_ref,
-                ),
-                events=events,
-            ),
-        ),
-    )
-    return context, events
-
-
-def _unit() -> WorkUnit:
-    instant = datetime(2026, 3, 10, tzinfo=UTC)
-    return WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
-        ),
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=_PERIOD,
-        revision_id="2026-y-siguientes",
-        name="First quarter",
-        created_at=instant,
-        updated_at=instant,
     )
 
 
@@ -131,10 +77,10 @@ def _snapshot(unit: WorkUnit) -> ModeloWorkReviewSnapshot:
 def test_work_review_executor_profile_guard_preserves_work_unit_subject(
     monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
-    unit = _unit()
+    unit = first_quarter_unit(_PROFILE)
     request_subject = "another-work-unit" if failure == "wrong_unit" else unit.work_unit_id
     request = _executor_request(unit, subject_ref=request_subject)
-    context, events = _executor_context(
+    context, events = guarded_executor_context(
         request,
         definition_id="modelo.work.other" if failure == "identity_definition" else None,
         subject_ref="another-work-unit" if failure == "identity_subject" else None,
@@ -153,13 +99,13 @@ def test_work_review_executor_profile_guard_preserves_work_unit_subject(
 def test_work_review_executor_accepts_its_work_unit_subject_at_the_guard_boundary(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    unit = _unit()
+    unit = first_quarter_unit(_PROFILE)
     request = _executor_request(unit)
-    context, events = _executor_context(request)
+    context, events = guarded_executor_context(request)
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     executor = ModeloWorkReviewExecutor(cast(ModeloHistoryPortsFactory, cast(object, lambda **_kwargs: None)))
 
-    with pytest.raises(_GuardPhaseReachedError) as reached:
+    with pytest.raises(GuardPhaseReachedError) as reached:
         asyncio.run(executor.execute(request, context))
 
     assert str(reached.value) == MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID
@@ -167,7 +113,7 @@ def test_work_review_executor_accepts_its_work_unit_subject_at_the_guard_boundar
 
 
 def test_compact_projection_round_trips_and_refuses_foreign_profile() -> None:
-    snapshot = _snapshot(_unit())
+    snapshot = _snapshot(first_quarter_unit(_PROFILE))
     projection = ModeloWorkReviewProjection(profile_id=_PROFILE, review=snapshot)
     assert ModeloWorkReviewProjection.model_validate_json(projection.model_dump_json()) == projection
     with pytest.raises(ValidationError):
@@ -190,15 +136,20 @@ def test_review_fact_rejects_ambiguous_encoded_values(kind: str, value: str) -> 
         ModeloWorkReviewFact.model_validate({"key": "sample", "kind": kind, "value": value})
 
 
-def test_review_period_is_admitted_once_and_sealed_for_result(authority_operation: PinnedAuthorityOperation) -> None:
-    unit = _unit()
-    loads: list[str] = []
+def _review_registry(
+    unit: WorkUnit,
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    loads: list[str] | None = None,
+) -> tuple[OperationRegistry, OperationPublicDefinitionRegistrationV1, OperationRequest[BaseModel]]:
+    """Register the work-review operation over a repository holding only ``unit``."""
 
     class Repository:
         bucket_id = str(_PROFILE)
 
         def load(self) -> WorkUnitCatalogue:
-            loads.append("load")
+            if loads is not None:
+                loads.append("load")
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
     def factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
@@ -225,6 +176,14 @@ def test_review_period_is_admitted_once_and_sealed_for_result(authority_operatio
         subject_ref=unit.work_unit_id,
         payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
     )
+    return registry, registration, request
+
+
+def test_review_period_is_admitted_once_and_sealed_for_result(authority_operation: PinnedAuthorityOperation) -> None:
+    unit = first_quarter_unit(_PROFILE)
+    loads: list[str] = []
+
+    registry, registration, request = _review_registry(unit, authority_operation, loads=loads)
 
     def context(
         *,
@@ -262,38 +221,9 @@ def test_review_period_is_admitted_once_and_sealed_for_result(authority_operatio
 def test_work_review_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    unit = _unit()
+    unit = first_quarter_unit(_PROFILE)
 
-    class Repository:
-        bucket_id = str(_PROFILE)
-
-        def load(self) -> WorkUnitCatalogue:
-            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
-
-    def factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
-        assert bucket_id == str(_PROFILE) and operation is authority_operation
-        return cast(
-            ModeloHistoryPorts,
-            cast(
-                object,
-                SimpleNamespace(
-                    work_unit_repository=Repository(),
-                    calculation_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                    verification_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                    filing_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-                ),
-            ),
-        )
-
-    typed_factory = cast(ModeloHistoryPortsFactory, factory)
-    definition = build_modelo_work_review_definition(typed_factory)
-    registration = build_modelo_work_review_registration(definition, typed_factory)
-    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    request = OperationRequest[BaseModel](
-        definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
-        subject_ref=unit.work_unit_id,
-        payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
-    )
+    registry, registration, request = _review_registry(unit, authority_operation)
 
     resolved = resolve_operation_access(
         registry=registry,

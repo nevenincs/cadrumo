@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { PaneHeaderFrame } from "@/components/ui/pane-header";
+import { useDockedPane } from "./docking/PaneChrome";
 
 export type PaneControl = {
   id: string;
@@ -41,26 +43,49 @@ export function SessionDot({ phase }: { phase: SessionPhase }) {
 
 /**
  * The slim header of a workspace area: its title, a session's state where it
- * has one, and its controls. Double-clicking the bar toggles maximize.
+ * has one, what the page it heads puts beside its title, and its controls.
+ * Double-clicking the bar, not a control in it, toggles maximize.
  */
 export function PaneHeader({
   title,
   status,
   controls,
   onToggleMaximize,
+  titleYields,
+  children,
 }: {
   title: string;
   status?: { phase: SessionPhase; note?: string };
+  /** The title is said only to assistive technology where the header is
+   * too narrow for it beside the page's own controls: for a page whose
+   * place the rail and its sections already show. */
+  titleYields?: boolean;
   controls: PaneControl[];
   onToggleMaximize: () => void;
+  /** The page's own controls, between the title and the pane's. They take
+   * the room between and give it up before the title is cut. */
+  children?: ReactNode;
 }) {
+  const docked = useDockedPane();
+  if (docked) {
+    return children ? (
+      <PaneHeaderFrame className="pane-head pane-tools">
+        {children}
+      </PaneHeaderFrame>
+    ) : null;
+  }
   return (
     <PaneHeaderFrame className="pane-head" onToggleMaximize={onToggleMaximize}>
       {status && <SessionDot phase={status.phase} />}
       {/* The note gives way first: the title is cut only once the note has
           gone. Cut, it still says all of itself to a pointer that rests on
           it. */}
-      <h2 className="pane-title min-w-0 truncate font-semibold text-foreground">
+      <h2
+        className={cn(
+          "pane-title min-w-0 truncate font-semibold text-foreground",
+          titleYields && "@max-4xl/head:sr-only",
+        )}
+      >
         {title}
       </h2>
       {status?.note && (
@@ -74,7 +99,7 @@ export function PaneHeader({
           {status.note}
         </span>
       )}
-      <span className="flex-1" />
+      {children ?? <span className="flex-1" />}
       {controls.map((control) => (
         <IconButton
           key={control.id}

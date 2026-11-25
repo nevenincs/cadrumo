@@ -39,7 +39,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,10 +52,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _EXPECTED_PAIRS = frozenset(
     {
         ("180", "115"),
-        ("190", "111"),
         ("193", "123"),
-        # IRNR's annual/periodic pair, the same shape 190/111 carries for IRPF:
-        # the registry titles them "IRNR resumen anual de retenciones e ingresos
+        # IRNR's annual/periodic pair: the registry titles them "IRNR resumen anual de retenciones e ingresos
         # a cuenta" and "IRNR retenciones e ingresos a cuenta", so the summary
         # reconciles against the periodic declarations it sums.
         ("296", "216"),
@@ -140,7 +138,7 @@ def _ledger_categories_by_semantic_role(revision: ModeloRevision) -> Mapping[str
 
 def _derive_pairs() -> dict[tuple[str, str], tuple[ModeloRevision, ModeloRevision]]:
     """Return every reconciliation pair with the two revisions to compare."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
     pairs: dict[tuple[str, str], tuple[ModeloRevision, ModeloRevision]] = {}
     for modelo in modelos:
@@ -180,7 +178,7 @@ def test_every_reconciliation_casilla_belongs_to_a_derived_pair() -> None:
     id suffix, so every such suffix must resolve to a pair the derivation already
     found -- otherwise there is a reconciliation the gate above cannot see.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     derived = _derive_pairs()
     orphans: list[str] = []
     checked = 0

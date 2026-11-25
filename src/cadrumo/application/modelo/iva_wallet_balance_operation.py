@@ -3,25 +3,27 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
-from ...core.filing_year import FilingYear
+from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.hashing import canonical_json_bytes
+from ...core.i18n.render import output_language
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.iva_compensation.balance import CompensationExpiryYear, IvaWalletBalanceReport
+from ...domain.iva_compensation.balance import IvaWalletBalanceReport
 from ..calculations.iva_wallet_balance import query_iva_wallet_balance
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import (
@@ -32,7 +34,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -41,11 +43,19 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import bind_iva_wallet_profile_ports
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
+from .value_presentation import money_words
 
 MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID = "modelo.iva-wallet.balance"
 _READ_PHASE = f"{MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID}.read"
 _MAX_RESULT_BYTES = 16 * 1024
 _BalanceAmount = Annotated[str, Field(min_length=1, max_length=128)]
+_WORDED_AMOUNTS: Final[tuple[str, ...]] = (
+    "total_balance",
+    "active_balance",
+    "expired_balance",
+    "unallocated_applied_amount",
+)
+"""The balance amounts also served in words."""
 
 
 class ModeloIvaWalletBalanceRequest(CredentialFreeOperationRequest):
@@ -69,8 +79,15 @@ class ModeloIvaWalletBalanceProjection(BaseModel):
     active_balance: _BalanceAmount
     expired_balance: _BalanceAmount
     lot_count: NonNegativeInt
-    next_expiry_year: CompensationExpiryYear | None = None
+    next_expiry_year: FourDigitYear | None = None
     unallocated_applied_amount: _BalanceAmount
+    #: The language the amounts are worded in.
+    words_language: OutputLanguage
+    #: Each amount written as a box writes money, in ``words_language``.
+    total_balance_words: _BalanceAmount
+    active_balance_words: _BalanceAmount
+    expired_balance_words: _BalanceAmount
+    unallocated_applied_amount_words: _BalanceAmount
 
     @field_validator("total_balance", "active_balance", "expired_balance", "unallocated_applied_amount")
     @classmethod
@@ -78,6 +95,13 @@ class ModeloIvaWalletBalanceProjection(BaseModel):
         if not is_non_negative_canonical_decimal(value):
             raise ValueError("wallet balance amounts must be non-negative canonical decimal text")
         return value
+
+    @model_validator(mode="after")
+    def _amount_words_say_the_amounts(self) -> ModeloIvaWalletBalanceProjection:
+        for name in _WORDED_AMOUNTS:
+            if getattr(self, f"{name}_words") != money_words(getattr(self, name), self.words_language):
+                raise ValueError(f"wallet balance {name}_words does not say {name}")
+        return self
 
     @classmethod
     def from_report(
@@ -90,7 +114,7 @@ class ModeloIvaWalletBalanceProjection(BaseModel):
         """Copy the established application report into the bounded public shape."""
         if report.as_of_year != expected_year:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        return cls(
+        return cls.worded(
             profile_id=profile_id,
             as_of_year=report.as_of_year,
             total_balance=str(report.total_balance),
@@ -99,6 +123,38 @@ class ModeloIvaWalletBalanceProjection(BaseModel):
             lot_count=report.lot_count,
             next_expiry_year=report.next_expiry_year,
             unallocated_applied_amount=str(report.unallocated_applied_amount),
+            language=OutputLanguage(output_language()),
+        )
+
+    @classmethod
+    def worded(
+        cls,
+        *,
+        profile_id: UUID,
+        as_of_year: int,
+        total_balance: str,
+        active_balance: str,
+        expired_balance: str,
+        lot_count: int,
+        next_expiry_year: int | None,
+        unallocated_applied_amount: str,
+        language: OutputLanguage,
+    ) -> ModeloIvaWalletBalanceProjection:
+        """The balance facts with each amount worded in ``language``."""
+        return cls(
+            profile_id=profile_id,
+            as_of_year=as_of_year,
+            total_balance=total_balance,
+            active_balance=active_balance,
+            expired_balance=expired_balance,
+            lot_count=lot_count,
+            next_expiry_year=next_expiry_year,
+            unallocated_applied_amount=unallocated_applied_amount,
+            words_language=language,
+            total_balance_words=money_words(total_balance, language),
+            active_balance_words=money_words(active_balance, language),
+            expired_balance_words=money_words(expired_balance, language),
+            unallocated_applied_amount_words=money_words(unallocated_applied_amount, language),
         )
 
 
@@ -221,17 +277,11 @@ def resolve_modelo_iva_wallet_balance_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require exact-profile access to the complete history through one year."""
-    payload = require_access_request_profile_payload(
-        request,
-        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
-        payload_type=ModeloIvaWalletBalanceRequest,
-        access_profile_id=context.profile_id,
-    )
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=payload.profile_id,
-        periods=frozenset(),
+        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+        request_type=ModeloIvaWalletBalanceRequest,
     )
 
 

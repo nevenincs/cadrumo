@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -19,28 +17,29 @@ from cadrumo.application.filing.draft_review import (
 )
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.application.filing.tests.filing_support import build_registry_filing_draft_from_decimals
+from cadrumo.application.filing.tests.review_runtime_storage_support import review_runtime_transaction
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.domain.transactions.enums import TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "cf394ec1-128f-4d57-b66d-2d57f35aaf35"
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
@@ -49,7 +48,7 @@ _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 _MODELO_130_CASILLA_INPUTS: dict[CasillaId, str] = {
     _M130_INGRESOS_CASILLA: "12500.00",
-    _M130_GASTOS_CASILLA: "3500.00",
+    _M130_GASTOS_PREVIOS_CASILLA: "3500.00",
     _M130_PAGOS_PREVIOS_CASILLA: "250.00",
     _M130_RETENCIONES_CASILLA: "100.00",
     _M130_AGRARIAN_VOLUME_CASILLA: "2000.00",
@@ -65,14 +64,14 @@ _MODELO_130_BINDING_INPUTS = {
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         schema_provider = build_runtime_schema_provider(
             modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
         )
         draft = _ready_modelo_130_draft(operation=_authority_operation_for_test)
 
         with (
-            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
+            override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
             pytest.raises(StorageValidationError) as refusal,
         ):
             compute_current_approval_basis(
@@ -89,7 +88,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         schema_provider = build_runtime_schema_provider(
             modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
         )
@@ -98,7 +97,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             ports = build_draft_review_ports(bucket_id=profile.bucket_id)
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-                TransactionCatalogue.from_transactions((_transaction("initial"),)),
+                TransactionCatalogue.from_transactions((review_runtime_transaction("initial"),)),
             )
             approved = approve_draft(
                 draft,
@@ -110,7 +109,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
             )
 
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-                TransactionCatalogue.from_transactions((_transaction("changed"),)),
+                TransactionCatalogue.from_transactions((review_runtime_transaction("changed"),)),
             )
             reasons = approval_stale_reasons(
                 approved,
@@ -130,29 +129,6 @@ def _ready_modelo_130_draft(*, operation: PinnedAuthorityOperation) -> ModeloDra
         operation=operation,
         casilla_decimals=_MODELO_130_CASILLA_INPUTS,
         binding_decimals=_MODELO_130_BINDING_INPUTS,
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.LISTO_PARA_PRESENTAR,
-    )
-
-
-def _transaction(label: str) -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id=f"tx-{label}",
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
-        amount=Decimal("121.00"),
-        currency="EUR",
-        counterparty="Proveedor SL",
-        description=f"filing review runtime storage {label}",
-        provenance=RawProvenance(
-            source_path=Path(f"/bank/{label}.csv"),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 5, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": f"filing review runtime storage {label}"},
-    )
-    return Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )

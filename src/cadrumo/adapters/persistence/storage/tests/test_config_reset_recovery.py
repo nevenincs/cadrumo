@@ -1,14 +1,6 @@
 """Fresh-process recovery proofs for every durable config-reset boundary.
 
-The ``"secrets"`` literal in the crash-subprocess settings preamble is
-deliberate, not injected: the profile the crash subprocess must unlock is
-created beforehand via ``_isolated_reset_root`` (from ``.test_config_reset``),
-which wraps ``isolated_profile_storage_root`` -- deriving
-``cadrumo_secret_store_dir`` from the real taxonomy accessor
-(``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
-"secrets"``). The subprocess must independently compute the same location to
-find the master key that setup already minted; renaming it breaks the
-handoff between the two processes.
+Parent and crash subprocess derive every storage member from the same root.
 """
 
 from __future__ import annotations
@@ -26,18 +18,16 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-from cadrumo.tests.storage_scope import storage_env_overrides
 
 from .test_config_reset import (
-    _OVERRIDE_REASON,
-    _PROFILE_A_ID,
-    _create_profile,
-    _isolated_reset_root,
-    _persist_filing,
+    OVERRIDE_REASON,
+    PROFILE_A_ID,
+    create_profile,
+    isolated_reset_root,
+    persist_filing,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -66,7 +56,7 @@ _BOUNDARIES = (
     "deleted",
 )
 
-_SETTINGS_PREAMBLE = dedent(
+SETTINGS_PREAMBLE = dedent(
     """
     from __future__ import annotations
 
@@ -79,9 +69,8 @@ _SETTINGS_PREAMBLE = dedent(
     root = Path(sys.argv[1])
     settings = Settings(
         _env_file=None,
-        cadrumo_local_storage_root=root,
+        cadrumo_storage_root=root,
         cadrumo_active_profile=None,
-        cadrumo_secret_store_dir=root.parent / "secrets",
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
     )
@@ -105,7 +94,7 @@ _SETTINGS_PREAMBLE = dedent(
     """,
 )
 
-_CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_CRASH_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     import os
 
@@ -139,15 +128,11 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     effect_return_by_boundary = {
         "auth_clearing_after_effect": ("operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
         "pointer_reconciling_after_effect": ("profile_pointer.py", "clear"),
-        # The module holding ProfileCapsuleLifecycle.delete was renamed from
-        # _lifecycle.py to lifecycle.py. This pin kept the old spelling, which
-        # then matched only the unrelated invoices/_lifecycle.py -- a module
-        # with no delete at all -- so the trace never fired and the boundary
-        # was never injected. A pin naming a file is a rename away from
-        # testing nothing, which is why the RuntimeError below exists.
-        # That collider has since been renamed again, to
-        # invoices/catalogue_lifecycle.py, so the name above no longer
-        # resolves; it is kept because it is what actually collided.
+        # A pin naming a file is a rename away from testing nothing: a stale
+        # spelling can match an unrelated module with no ``delete``, so the
+        # trace never fires and the boundary is never injected. The
+        # RuntimeError below refuses that silent no-op. The package-qualified
+        # path keeps the pin from matching another ``lifecycle.py``.
         "deleting_after_effect": ("user_profile/lifecycle.py", "delete"),
     }
 
@@ -199,7 +184,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """,
 )
 
-_RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_RESUME_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     from cadrumo.application.config_reset import resume_config_reset
 
@@ -219,7 +204,7 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
 )
 
 
-def _child_env(root: Path) -> dict[str, str]:
+def child_env(root: Path) -> dict[str, str]:
     from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 
     # The child deliberately starts without the parent's ambient product
@@ -231,10 +216,7 @@ def _child_env(root: Path) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(authority_root),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            # Anchored on the root's parent, so the secret substrate stays a
-            # sibling of the bucket tree rather than nesting inside it.
-            **storage_env_overrides(root.parent, StorageCategory.SECRETS),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
@@ -255,9 +237,9 @@ def _run_fresh_resume_allowing_failure(
     """
     return ensure_text_completed_process(
         run_audited_process(
-            [sys.executable, "-c", _RESUME_HARNESS, str(root), operation_id, _OVERRIDE_REASON],
+            [sys.executable, "-c", _RESUME_HARNESS, str(root), operation_id, OVERRIDE_REASON],
             cwd=Path.cwd(),
-            env=_child_env(root),
+            env=child_env(root),
             check=False,
             capture_output=True,
             text=True,
@@ -307,7 +289,7 @@ def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProces
         run_audited_process(
             [sys.executable, "-c", _CRASH_HARNESS, str(root), boundary],
             cwd=Path.cwd(),
-            env=_child_env(root),
+            env=child_env(root),
             check=False,
             capture_output=True,
             text=True,
@@ -330,10 +312,10 @@ def _run_fresh_resume(
                 _RESUME_HARNESS,
                 str(root),
                 operation_id,
-                _OVERRIDE_REASON,
+                OVERRIDE_REASON,
             ],
             cwd=Path.cwd(),
-            env=_child_env(root),
+            env=child_env(root),
             check=False,
             capture_output=True,
             text=True,
@@ -350,7 +332,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     tmp_path: Path,
     boundary: str,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
         from cadrumo.application.auth.operator import configure_operator_auth
         from cadrumo.application.config_reset_models import (
@@ -361,14 +343,14 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
         from cadrumo.core.bucket_pointer import read_pointer
 
-        with _isolated_reset_root(tmp_path) as root:
-            _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
-            with open_test_profile_session(_PROFILE_A_ID):
+        with isolated_reset_root(tmp_path) as root:
+            create_profile(PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+            with open_test_profile_session(PROFILE_A_ID):
                 configure_operator_auth(
                     "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
                 )
             if boundary == "snapshotted":
-                _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")
+                persist_filing(PROFILE_A_ID, filing_year=2025, seed="7")
             dispose_engine()
 
             crashed = _run_crashing_start(root, boundary)
@@ -386,7 +368,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
             if boundary == "pointer_reconciling_after_effect":
                 assert read_pointer(root).bucket_id is None
             if boundary == "deleting_after_effect":
-                assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+                assert _bucket_dir(root, PROFILE_A_ID).exists() is False
 
             resumed_process = _run_fresh_resume(root, interrupted.operation_id)
             resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
@@ -395,7 +377,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
             assert resumed.summary.target_count == 1
             assert resumed.summary.deleted_count == 1
             assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
-            assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+            assert _bucket_dir(root, PROFILE_A_ID).exists() is False
             assert read_pointer(root).bucket_id is None
             assert repository.load(interrupted.operation_id) == resumed
 
@@ -407,8 +389,8 @@ def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: P
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
     from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
         crashed = _run_crashing_start(root, "pointer_reconciling_after_effect")
         assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
         interrupted = ConfigResetJournalRepository().latest()
@@ -426,7 +408,7 @@ def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: P
             interrupted.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -443,8 +425,8 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
     from cadrumo.application.config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
         crashed = _run_crashing_start(root, "retention_approved")
         assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
 
@@ -453,15 +435,15 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
         assert interrupted is not None
         journal_path = repository.path_for(interrupted.operation_id)
         document = json.loads(journal_path.read_text(encoding="utf-8"))
-        document["targets"][0]["bucket_id"] = f" {_PROFILE_A_ID} "
+        document["targets"][0]["bucket_id"] = f" {PROFILE_A_ID} "
         journal_path.write_text(json.dumps(document), encoding="utf-8")
 
         resumed_process = _run_fresh_resume(root, interrupted.operation_id)
         resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
 
         assert resumed.status is ConfigResetOperationStatus.COMPLETE
-        assert resumed.targets[0].bucket_id == _PROFILE_A_ID
-        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+        assert resumed.targets[0].bucket_id == PROFILE_A_ID
+        assert _bucket_dir(root, PROFILE_A_ID).exists() is False
 
 
 def test_resume_refuses_malformed_journal_identity_before_target_lock(
@@ -471,8 +453,8 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
     from cadrumo.application.config_reset import ConfigResetError, resume_config_reset
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
         crashed = _run_crashing_start(root, "retention_approved")
         assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
 
@@ -494,7 +476,7 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
             )
 
         assert raised.value.context == {"operation_id": interrupted.operation_id, "journal_corrupt": True}
-        assert _bucket_dir(root, _PROFILE_A_ID).is_dir()
+        assert _bucket_dir(root, PROFILE_A_ID).is_dir()
 
 
 def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: Path) -> None:
@@ -517,8 +499,8 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
     from cadrumo.application.config_reset_models import ConfigResetOperation
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
         dispose_engine()
 
         crashed = _run_crashing_start(root, "deleting_after_effect")
@@ -529,7 +511,7 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
         assert interrupted is not None
         target = interrupted.targets[0]
         assert target.deletion_marker is not None
-        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+        assert _bucket_dir(root, PROFILE_A_ID).exists() is False
 
         def _rebuilt_with(marker_update: dict[str, str]) -> None:
             deletion_marker = target.deletion_marker

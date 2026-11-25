@@ -7,9 +7,9 @@ from typing import Any
 
 import pytest
 
-from ...application.modelo import operation_definitions as definitions_module
+from ...application.modelo import calculation_operation, edit_operation, export_operation, operation_definitions
 from ...application.operations.operation_definition import OperationDefinition
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -38,10 +38,13 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
 
 def _definitions() -> dict[str, OperationDefinition]:
     definitions: dict[str, OperationDefinition] = {}
-    for name in definitions_module.__all__:
-        if not name.startswith("build_") or not name.endswith("_definition"):
-            continue
-        factory = getattr(definitions_module, name)
+    factories = (
+        (name, factory)
+        for module in (operation_definitions, calculation_operation, edit_operation, export_operation)
+        for name, factory in inspect.getmembers(module, inspect.isfunction)
+        if factory.__module__ == module.__name__ and name.startswith("build_") and name.endswith("_definition")
+    )
+    for name, factory in factories:
         parameters = inspect.signature(factory).parameters
         missing = [parameter for parameter in parameters if parameter not in _FACTORY_ARGUMENTS]
         if missing:
@@ -61,7 +64,7 @@ def test_every_exported_definition_reaches_the_production_registry() -> None:
     not exist, except that it still has to be maintained.
     """
     exported = {definition.definition_id for definition in _definitions().values()}
-    composed = {definition.definition_id for definition in build_production_operation_registry().definitions}
+    composed = {definition.definition_id for definition in production_operation_registry().definitions}
 
     assert exported, "no enrolment is exported; this assertion would be vacuous"
     assert exported <= composed, f"exported but never composed: {sorted(exported - composed)}"

@@ -300,7 +300,7 @@ def _record_binding_shape_findings(
         signals.findings.append(
             finding(
                 "BINDING_DECLARATION_GENERATION_DIVERGENCE",
-                severity="error" if shape == "unclassified" else "warning",
+                severity="error",
                 actionability="actionable",
                 coordinate=where,
                 message=f"binding uses declaration shape {shape!r} instead of provider_union",

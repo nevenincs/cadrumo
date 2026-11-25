@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "IVA de grupo de entidades: modelo agregado mensual."
-definition = "Autoliquidacion mensual agregada del grupo de entidades de IVA, presentada por la entidad dominante con el resultado de todo el grupo."
+definition = "Autoliquidación mensual agregada del grupo de entidades de IVA, presentada por la entidad dominante con el resultado de todo el grupo."
 
 [language.es.source]
 citation = "Orden EHA/3434/2007."

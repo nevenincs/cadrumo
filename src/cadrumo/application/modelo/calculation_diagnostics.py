@@ -18,19 +18,19 @@ source mesh's no-silent-under-declaration diagnostics with checks whose evidence
 only exists after the revision has been calculated.
 
 See Also:
-    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`~application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
-    :func:`~application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+    :func:`~application.modelo.official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
     :mod:`~application.modelo.prior_payment_advisory`:
         Emits Modelo 130 prior-payment carry degradation advisories.
-    :func:`~application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+    :func:`~application.modelo.settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
         Emits structural settlement-completeness advisories for partially modelled revisions.
-    :func:`~application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
+    :func:`~application.modelo.bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
         Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
     :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
         Emits the Modelo 303 annual prorrata-general regularización proposed-casilla-44 advisory.
-    :func:`~application.modelo._m347_uninvoiced_expense_advisory.collect_m347_uninvoiced_expense_diagnostics`:
+    :func:`~application.modelo.m347_uninvoiced_expense_advisory.collect_m347_uninvoiced_expense_diagnostics`:
         Emits the Modelo 347 advisory for business expenses the ledger holds without an invoice.
 """
 
@@ -47,10 +47,11 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
-from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
-from ._m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
-from ._minimo_descendientes_advisory import (
+from .bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+from .m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
+from .minimo_descendientes_advisory_support import (
     collect_guarderia_madre_meses_undeclared_diagnostics,
     collect_guarderia_spend_shape_diagnostics,
     collect_minimo_descendientes_dependencia_diagnostics,
@@ -59,17 +60,109 @@ from ._minimo_descendientes_advisory import (
     collect_minimo_descendientes_rentas_undeclared_diagnostics,
     collect_minimo_descendientes_undeclared_diagnostics,
 )
-from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
-from ._rate_box_advisory import collect_rate_box_coverage_diagnostics
-from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
+from .official_box_advisory import collect_official_box_unpopulated_diagnostics
 from .prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )
 from .prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from .rate_box_advisory import collect_rate_box_coverage_diagnostics
+from .settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from .work_profile import ModeloWorkProfile
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]
+
+
+def _profile_advisories(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    modelo: str,
+    period_token: str,
+    filing_year: int,
+    bucket_id: str,
+    authority: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    minimo_descendientes_undeclared_diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    minimo_descendientes_prorrata_inferred_diagnostics = collect_minimo_descendientes_prorrata_inferred_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    minimo_descendientes_rentas_undeclared_diagnostics = collect_minimo_descendientes_rentas_undeclared_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    minimo_descendientes_entry_date_missing_diagnostics = collect_minimo_descendientes_entry_date_missing_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    minimo_descendientes_dependencia_diagnostics = collect_minimo_descendientes_dependencia_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    guarderia_spend_shape_diagnostics = collect_guarderia_spend_shape_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+    guarderia_madre_meses_undeclared_diagnostics = collect_guarderia_madre_meses_undeclared_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        period_token=period_token,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+        operation=authority,
+        profile=profile,
+    )
+
+    return (
+        minimo_descendientes_undeclared_diagnostics
+        + minimo_descendientes_prorrata_inferred_diagnostics
+        + minimo_descendientes_rentas_undeclared_diagnostics
+        + minimo_descendientes_entry_date_missing_diagnostics
+        + minimo_descendientes_dependencia_diagnostics
+        + guarderia_spend_shape_diagnostics
+        + guarderia_madre_meses_undeclared_diagnostics
+    )
 
 
 def collect_bucket_aggregation_advisory_diagnostics(
@@ -84,6 +177,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     operation: PinnedAuthorityOperation | None = None,
     profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -105,11 +199,12 @@ def collect_bucket_aggregation_advisory_diagnostics(
 
     The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
     advisory-only for the halving/blank-entry checks a prior interim module
-    raised: a computed engine (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`)
+    raised: a computed engine
+    (:func:`~application.modelo.profile_derived_facts.inject_derived_minimo_descendientes_facts`)
     that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
     halving — directly from the active profile, so those two checks are structurally
     unreachable and were retired. A new, narrower advisory
-    (:func:`~application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
+    (:func:`~application.modelo.minimo_descendientes_advisory_support.collect_minimo_descendientes_undeclared_diagnostics`)
     replaces them: because a genuinely childless profile and a profile that simply
     never declared its descendientes both resolve 0513 to the same zero, this
     collector flags the ambiguous case (0513 = 0 and no descendiente facts declared
@@ -137,6 +232,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement advisory and the
             Modelo 347 uninvoiced-expense advisory.
+        invoice_reader: The same bucket's invoice catalogue, the IVA source
+            the annual IVA settlement advisory aggregates with the ledger.
         operation: The caller's pinned authority for an in-progress calculation.
             Standalone diagnostic callers may omit it to lease one locally.
         profile: The bucket's profile when the calculation already loaded it;
@@ -151,82 +248,13 @@ def collect_bucket_aggregation_advisory_diagnostics(
         :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
-        :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`~application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
-        minimo_descendientes_undeclared_diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
-        minimo_descendientes_prorrata_inferred_diagnostics = collect_minimo_descendientes_prorrata_inferred_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
-        minimo_descendientes_rentas_undeclared_diagnostics = collect_minimo_descendientes_rentas_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
-        minimo_descendientes_entry_date_missing_diagnostics = (
-            collect_minimo_descendientes_entry_date_missing_diagnostics(
-                revision,
-                casilla_values,
-                modelo=modelo,
-                period_token=period_token,
-                filing_year=filing_year,
-                bucket_id=bucket_id,
-                operation=authority,
-                profile=profile,
-            )
-        )
-        minimo_descendientes_dependencia_diagnostics = collect_minimo_descendientes_dependencia_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
-        guarderia_spend_shape_diagnostics = collect_guarderia_spend_shape_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
-        guarderia_madre_meses_undeclared_diagnostics = collect_guarderia_madre_meses_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
+        profile_diagnostics = _profile_advisories(
+            revision, casilla_values, modelo, period_token, filing_year, bucket_id, authority, profile
         )
 
         return (
@@ -249,13 +277,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 operation=authority,
             )
             + collect_settlement_not_computed_diagnostics(revision)
-            + minimo_descendientes_undeclared_diagnostics
-            + minimo_descendientes_prorrata_inferred_diagnostics
-            + minimo_descendientes_rentas_undeclared_diagnostics
-            + minimo_descendientes_entry_date_missing_diagnostics
-            + minimo_descendientes_dependencia_diagnostics
-            + guarderia_spend_shape_diagnostics
-            + guarderia_madre_meses_undeclared_diagnostics
+            + profile_diagnostics
             + collect_bienes_inversion_regularizacion_diagnostics(
                 revision,
                 modelo=modelo,
@@ -272,9 +294,9 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 period_token=period_token,
                 filing_year=filing_year,
                 bucket_id=bucket_id,
-                observation_repository=observation_repository,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
+                invoice_reader=invoice_reader,
                 bienes_inversion_repository=bienes_inversion_repository,
                 operation=authority,
             )

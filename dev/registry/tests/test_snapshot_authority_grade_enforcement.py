@@ -10,14 +10,16 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODEL = "130"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 
@@ -121,8 +123,8 @@ def test_the_authority_facade_refuses_a_mutated_lower_grade_revision(
     authority = replace(
         registry_authority,
         modelos=tuple(mutated if modelo.id == _MODEL else modelo for modelo in registry_authority.modelos),
-        _modelos_by_id={**registry_authority._modelos_by_id, _MODEL: mutated},
-        _snapshots={},
+        modelos_by_id={**registry_authority.modelos_by_id, _MODEL: mutated},
+        snapshots={},
     )
 
     with pytest.raises(

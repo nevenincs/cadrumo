@@ -1,8 +1,8 @@
 """Strict immutable models for the invoice catalogue.
 
-Defines the pydantic v2 records that back :mod:`cadrumo.domain.invoices`:
-:class:`InvoiceLine`, :class:`Invoice`, and the keyed
-:class:`InvoiceCatalogue`. Every model is strict, frozen, and forbids
+Defines the line and invoice records used by
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
+Every model is strict, frozen, and forbids
 extra fields; identity-bearing fields on :class:`Invoice` are
 canonicalised in a ``model_validator`` and the stable
 :attr:`Invoice.invoice_id` is derived via :func:`derive_invoice_id`.
@@ -12,14 +12,20 @@ Counterparty identity validation is delegated to
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, override
+from typing import TYPE_CHECKING, Final, Self, final, override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ModelWrapValidatorHandler,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
@@ -30,16 +36,22 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money.rounding import CENT, round_to_cents
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.money.rounding import round_to_cents
+from ...core.period import Period
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.invoice_legal_classification import (
+    InvoiceLegalClassificationCatalogue,
+    resolve_invoice_legal_classification_catalogue,
+)
+from ..calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from ..calculations.registry.rectification_windows import resolve_rectification_period_windows
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
 from ..iva.classification import TransactionKind, resolve_transaction_kind_catalogue
@@ -47,23 +59,65 @@ from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
-from . import normalization as _normalization
-from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from . import normalization
 from .business_premises import BusinessPremisesLease, normalise_legacy_business_premises_lease
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
     IvaRate,
     PaymentStatus,
+    RectificationCause,
+    RectificationDirection,
+    RectificationFact,
+    RectificationMethod,
     advance_payment_received_role,
     default_invoice_class,
     invoice_class_rectificativa,
     invoice_class_simplificada,
     iva_rate_percentage,
+    iva_rate_slot_is_published,
     resolve_iva_rate_token,
 )
 from .errors import InvoiceValidationError
+from .figures import (
+    figure_refusal,
+    invoice_total_findings,
+    line_amount_finding,
+    line_iva_finding,
+    line_subtotal_finding,
+    nonnumeric_invoice_findings,
+    quantity_finding,
+    raise_first_figure_finding,
+    rate_refusal_finding,
+    rate_refusal_is_coverage_gap,
+    recargo_ceiling_finding,
+    recargo_sign_finding,
+    retention_findings,
+    suplido_finding,
+    total_sign_finding,
+)
+from .payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from .rectification_period import (
+    issuer_minoracion_regularisation_period_outside_window,
+    recipient_increase_period_outside_window,
+)
+from .rule_findings import (
+    InvoiceRuleFinding,
+    InvoiceRuleFindingCode,
+    RectificationElectionState,
+    advance_payment_collection_finding,
+    invoice_class_rule_findings,
+    invoice_rule_refusal,
+    lease_kind_finding,
+    operation_date_role_finding,
+    raise_first_rule_finding,
+    rectification_election_rule_findings,
+    rectification_fact_rule_findings,
+)
+from .validation_pass import answer_once, invoice_validation_pass
 
 if TYPE_CHECKING:
     pass
@@ -73,22 +127,65 @@ from .validators import (
     is_eu_member_state_code,
 )
 
-"""Rounding slack allowed between a declared retención amount and rate.
-
-The invoice-level totals are compared *exactly* because each is a sum of
-line figures that were themselves already rounded to the cent. A retención
-amount is not a sum: it is a rate applied to the base, so the recorded figure
-legitimately differs from the recomputed product in the last cent depending on
-where the issuer rounded. One cent is the same slack
-:data:`~core.money.rounding.CENT` grants the line-level ``subtotal * iva_rate``
-product, for the same reason.
-"""
-
 _SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID = "invoice-simplificada-counterparty-tax-id-applicability"
+
+
+@final
+class _AuthenticatedStoredRead:
+    """Validation context naming an invoice the secure store has just authenticated.
+
+    Only :class:`~cadrumo.domain.invoices.catalogue.StoredInvoiceCatalogue`, built by
+    :func:`~cadrumo.domain.invoices.catalogue.decode_authenticated_invoice_catalogue`, passes it. Under it the
+    stored ``invoice_id`` is not re-derived from the identity fields: the
+    store's authentication binds the whole catalogue to its namespace, key and
+    schema version, so the id is the one derived when this profile admitted
+    the invoice. Every other check, dated registry rules and totals included,
+    runs unchanged. It is a private instance compared by identity, so no
+    caller outside this module can name it, and pydantic hands a context only
+    to the validators of the one call it was passed to: a nested
+    ``model_validate`` inside a validator, and every write, import, edit and
+    intake construction, derive and check the id as before.
+    """
+
+    __slots__ = ()
+
+
+AUTHENTICATED_STORED_READ: Final = _AuthenticatedStoredRead()
+
+
+def _reads_authenticated_record(info: ValidationInfo) -> bool:
+    """Return whether this validation decodes a record the store authenticated."""
+    return info.context is AUTHENTICATED_STORED_READ
+
+
+@final
+class _InvoiceWriteAdmission:
+    """Validation context naming an invoice a write path is about to persist.
+
+    Passed only where an operator's facts become a stored invoice: the
+    catalogue's construction authority and its edit. Under it the rules that
+    were tightened after records could already be stored are asked as well.
+    Every other validation -- a catalogue decoded from the store on any read
+    or write path, a link update that changes no invoice fact -- hydrates a
+    record written under the earlier rule, so the operator can still open it,
+    and the edit that corrects it, rather than finding the catalogue locked.
+    Downstream consumers refuse such a record where its facts would be used.
+    """
+
+    __slots__ = ()
+
+
+INVOICE_WRITE_ADMISSION: Final = _InvoiceWriteAdmission()
+
+
+def _admits_written_record(info: ValidationInfo) -> bool:
+    """Return whether this validation admits facts a write path is about to persist."""
+    return info.context is INVOICE_WRITE_ADMISSION
 
 
 def _simplificada_mandatory_tax_id_categories(
     *,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[IvaCategory]:
     """Resolve the dated simplified-invoice applicability catalogue."""
@@ -101,7 +198,7 @@ def _simplificada_mandatory_tax_id_categories(
         MappingFactQuery(
             fact_id=_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
+            effective_date=effective_date,
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -113,12 +210,38 @@ def _simplificada_mandatory_tax_id_categories(
         raise RegistryValidationError("invoice applicability is missing mandatory_tax_id_categories") from exc
     try:
         return frozenset(
-            require_iva_category(token.strip(), authority=selected_authority)
+            require_iva_category(token.strip(), effective_date=effective_date, authority=selected_authority)
             for token in encoded.split(",")
             if token.strip()
         )
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
+
+
+def invoice_class_findings(
+    *,
+    invoice_class: InvoiceClass,
+    kind: InvoiceKind | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    category: IvaCategory | None,
+    tax_id_missing: bool,
+    effective_date: date,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the invoice-class axis under the authority in scope, as the invoice itself is refused."""
+    return invoice_class_rule_findings(
+        rectificativa=invoice_class == answer_once(invoice_class_rectificativa),
+        simplificada=invoice_class == answer_once(invoice_class_simplificada),
+        issued=None if kind is None else kind is InvoiceKind.ISSUED,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        intra_community_supply=category
+        == answer_once(require_iva_category, "intra_community_supply", effective_date=effective_date),
+        tax_id_missing=tax_id_missing,
+        category_mandates_tax_id=category
+        in answer_once(_simplificada_mandatory_tax_id_categories, effective_date=effective_date),
+        category_value=getattr(category, "value", ""),
+    )
 
 
 _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
@@ -172,7 +295,7 @@ def derive_invoice_id(
 class InvoiceLine(BaseModel):
     """Immutable line item on an invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     description: str = Field(min_length=1)
     quantity: Decimal
@@ -207,11 +330,11 @@ class InvoiceLine(BaseModel):
             if key in payload:
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
-            payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], today_madrid())
+            payload["iva_rate"] = answer_once(resolve_iva_rate_token, payload["iva_rate"], today_madrid())
         if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
             stripped = payload["oss_rate_kind"].strip()
             payload["oss_rate_kind"] = (
-                require_iva_rate_kind(stripped, effective_date=today_madrid()) if stripped else None
+                answer_once(require_iva_rate_kind, stripped, effective_date=today_madrid()) if stripped else None
             )
         return payload
 
@@ -222,7 +345,7 @@ class InvoiceLine(BaseModel):
         """Refuse an OSS/IOSS rate tier absent from the IVA facts catalogue."""
         if value is None:
             return None
-        return require_iva_rate_kind(value, effective_date=today_madrid())
+        return answer_once(require_iva_rate_kind, value, effective_date=today_madrid())
 
     @field_validator("description")
     @classmethod
@@ -248,24 +371,20 @@ class InvoiceLine(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_positive_quantity(cls, value: Decimal) -> Decimal:
-        if value <= Decimal("0"):
-            raise InvoiceValidationError("quantity must be strictly positive")
+        raise_first_figure_finding((quantity_finding(value),))
         return value
 
     @field_validator("unit_price", "subtotal", "iva_amount")
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("monetary value must be non-negative")
+        raise_first_figure_finding((line_amount_finding(value),))
         return value
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_arithmetic(self) -> Self:
-        expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
-        if abs(self.subtotal - expected_subtotal) > CENT:
-            raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
+        raise_first_figure_finding((line_subtotal_finding(self.quantity, self.unit_price, self.subtotal),))
         # IVA-rate arithmetic has an explicit devengo-date dependency.  A line
         # deliberately has no date of its own, so the enclosing Invoice checks
         # it once its operation/issue date is available rather than parsing a
@@ -276,7 +395,7 @@ class InvoiceLine(BaseModel):
 class Invoice(BaseModel):
     """Strict frozen record for one issued or received invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
@@ -375,6 +494,64 @@ class Invoice(BaseModel):
     recargo_amount: Decimal | None = None
     suplido_amount: Decimal | None = None
     rectifies_invoice_number: str | None = Field(default=None, min_length=1)
+    # The four facts a factura rectificativa states that no other invoice does,
+    # each operator supplied and none derived. RD 1619/2012 art. 15.5 permits
+    # two readings of the figures a rectificativa prints, so
+    # `rectification_method` is what says whether `base_total` and the lines
+    # ARE the modification or the figures as they stand AFTER it -- the same
+    # amounts mean two different modifications under the two methods.
+    # `rectification_cause` is the ground, which is what places the
+    # modification in a period: LIVA art. 89.Cinco and art. 114.Dos put three
+    # different periods on three different grounds, so the cause is never
+    # inferable from the class, the dates or an amount.
+    # `rectification_direction` carries the economic sense while the totals
+    # stay non-negative magnitudes, exactly as a ledger movement's direction
+    # does; the sign is applied where the modification is projected.
+    # `document_received_on` is when the RECIPIENT received the document, which
+    # art. 114.Dos makes the period for most received-side rectifications. It
+    # is a received-side fact only: an issued rectificativa states no reception.
+    #
+    # All four stay optional, and a rectificativa missing one is admitted here
+    # rather than refused. The document's facts arrive over time, and refusing
+    # the record would leave the person with nowhere to put the half they have;
+    # the declaration refuses instead, naming what is still absent.
+    rectification_method: RectificationMethod | None = None
+    rectification_cause: RectificationCause | None = None
+    rectification_direction: RectificationDirection | None = None
+    document_received_on: date | None = None
+    # The elections and the attestation the law leaves to the taxpayer, each
+    # operator supplied and none inferred. They live on the invoice and not on
+    # a Modelo work unit because each one belongs to ONE document: art. 89.Cinco
+    # hands the issuer of this rectificativa its choice, art. 114.Dos.1.º hands
+    # its recipient theirs, and RIVA art. 24 conditions this document's own
+    # remittance. The record that carries the method, the cause and the
+    # direction is therefore the record that carries the choice made on them,
+    # and this write boundary already validates all of them together.
+    #
+    # `issuer_increase_election` is art. 89.Cinco's increase choice, available
+    # only on an art. 80 ground or an error fundado de derecho.
+    # `issuer_minoracion_election` is its minoración choice, and
+    # `issuer_minoracion_regularisation_period` the period letter b)
+    # regularises in, inside the one-year window.
+    # `recipient_increase_period` is art. 114.Dos.1.º's elected period, from the
+    # reception period onwards and inside its own window.
+    # `art_80_tres_obligations_attested` is the operator's attestation of the
+    # RIVA art. 24 obligations, which the application cannot observe; it is
+    # tri-state because an absent attestation and a denied one are different
+    # answers, and both stop the modification for different reasons.
+    # `exercised_deduction_period` is the period the deduction was exercised
+    # in, which art. 114.Dos.2.º routes an art. 80.Tres minoración to and the
+    # catalogue cannot always supply from the original.
+    #
+    # All six stay optional for the reason the four facts above do: the person
+    # records the document as it reaches them, and the declaration refuses
+    # naming what is still absent.
+    issuer_increase_election: IssuerIncreaseElection | None = None
+    issuer_minoracion_election: IssuerMinoracionElection | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
@@ -388,7 +565,8 @@ class Invoice(BaseModel):
     fx_rate_source: str | None = Field(default=None, min_length=1)
     # The publication the rate was read from. It differs from `fx_rate_date` on
     # every weekend and holiday, when the rate in force is the last one published
-    # before the operation date. Absent on a stamp recorded before this was kept,
+    # before the operation date. Absent on a rate the operator declared, which
+    # no publication was read for, and on a stamp recorded before this was kept,
     # which is a known earlier shape rather than a defaulted value.
     fx_rate_observation_date: date | None = None
     # When this RECORD was entered and last amended, which is a different fact
@@ -559,33 +737,42 @@ class Invoice(BaseModel):
     @model_validator(mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _normalise_and_derive_invoice_id(cls, data: object) -> object:
-        """Canonicalise identity-bearing fields and derive ``invoice_id``."""
+    def _normalise_and_derive_invoice_id(cls, data: object, info: ValidationInfo) -> object:
+        """Canonicalise identity-bearing fields and derive ``invoice_id``.
+
+        An authenticated stored read keeps the stored id instead of deriving
+        it again; a record without one is refused as structurally incomplete.
+        """
         if isinstance(data, cls):
             return data
         if not isinstance(data, Mapping):
             return data
         payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
+        identify: Callable[[dict[str, object]], dict[str, object]] = (
+            normalization.default_absent_counterparty_tax_id
+            if _reads_authenticated_record(info)
+            else lambda payload: normalization.derive_invoice_id_when_complete(
+                payload,
+                derive_invoice_id=derive_invoice_id,
+            )
+        )
         # Typed explicitly: the tuple mixes named normalisers with two lambdas,
         # and without a declared element type the lambda parameters and the
         # loop variable all read as unknown.
         normalisers: tuple[Callable[[dict[str, object]], dict[str, object]], ...] = (
-            _normalization.normalise_invoice_dates,
+            normalization.normalise_invoice_dates,
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
             normalise_legacy_business_premises_lease,
-            _normalization.normalise_invoice_counterparty,
-            _normalization.normalise_invoice_currency,
-            _normalization.normalise_invoice_monetary_fields,
-            lambda payload: _normalization.derive_invoice_id_when_complete(
-                payload,
-                derive_invoice_id=derive_invoice_id,
-            ),
-            lambda payload: _normalization.normalise_invoice_collections(
+            normalization.normalise_invoice_counterparty,
+            normalization.normalise_invoice_currency,
+            normalization.normalise_invoice_monetary_fields,
+            identify,
+            lambda payload: normalization.normalise_invoice_collections(
                 payload,
                 normalise_linked_transaction_ids=_normalise_linked_transaction_ids,
             ),
-            _normalization.normalise_invoice_payment_id,
+            normalization.normalise_invoice_payment_id,
         )
         for normalise in normalisers:
             payload = normalise(payload)
@@ -595,8 +782,7 @@ class Invoice(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("invoice totals must be non-negative")
+        raise_first_figure_finding((total_sign_finding(value),))
         return value
 
     @field_validator("lines")
@@ -625,7 +811,7 @@ class Invoice(BaseModel):
         )
         stamp_present = any(stamp_flags)
         fx_rate = self.fx_rate if self.fx_rate is not None else Decimal("0")
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     (self.currency == DEFAULT_CURRENCY, stamp_present) == (True, True),
@@ -673,70 +859,52 @@ class Invoice(BaseModel):
         devengo_date = self.operation_date or self.issued_at
         for line in self.lines:
             try:
-                rate = iva_rate_percentage(line.iva_rate, devengo_date)
+                rate = answer_once(iva_rate_percentage, line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
-                raise InvoiceValidationError(
-                    f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
+                raise figure_refusal(
+                    rate_refusal_finding(
+                        line.iva_rate,
+                        devengo_date,
+                        coverage_gap=rate_refusal_is_coverage_gap(exc),
+                        cause=exc,
+                    )
                 ) from exc
             if line.oss_rate_kind is not None:
                 continue
-            if rate is None:
-                if line.iva_amount != Decimal("0"):
-                    raise InvoiceValidationError("iva_amount must be zero for nonnumeric IVA lines")
-                continue
-            expected_iva = (line.subtotal * rate).quantize(Decimal("0.0001"))
-            if abs(line.iva_amount - expected_iva) > CENT:
-                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
+            finding = line_iva_finding(line.subtotal, line.iva_amount, rate)
+            if finding is not None and not answer_once(iva_rate_slot_is_published, line.iva_rate, devengo_date):
+                # The rate is only the nearest edition, so a differing cuota is not shown wrong.
+                finding = rate_refusal_finding(line.iva_rate, devengo_date, coverage_gap=True)
+            raise_first_figure_finding((finding,))
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_totals_and_exempt_invariants(self) -> Self:
-        line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
-        line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
-        _normalization.require_equal(
-            self.base_total,
-            line_subtotal_sum,
-            "base_total must equal the exact sum of line subtotals",
-        )
-        _normalization.require_equal(
-            self.iva_total,
-            line_iva_sum,
-            "iva_total must equal the exact sum of line iva amounts",
-        )
-        recargo = self.recargo_amount or Decimal("0")
-        suplido = self.suplido_amount or Decimal("0")
-        _normalization.require_equal(
-            self.grand_total,
-            self.base_total + self.iva_total + recargo + suplido,
-            "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
+        raise_first_figure_finding(
+            invoice_total_findings(
+                base_total=self.base_total,
+                iva_total=self.iva_total,
+                grand_total=self.grand_total,
+                line_subtotals=[line.subtotal for line in self.lines],
+                line_iva_amounts=[line.iva_amount for line in self.lines],
+                recargo=self.recargo_amount,
+                suplido=self.suplido_amount,
+            )
         )
         devengo_date = self.operation_date or self.issued_at
-        all_non_numeric = all(iva_rate_percentage(line.iva_rate, devengo_date) is None for line in self.lines)
+        all_non_numeric = all(
+            answer_once(iva_rate_percentage, line.iva_rate, devengo_date) is None for line in self.lines
+        )
         if all_non_numeric:
-            # Checked before the grand-total equality below so the operator is
-            # told which component is impossible, rather than being handed a
-            # totals mismatch they would have to decompose themselves. The
-            # recargo rides on the cuota of a taxable supply (LIVA art. 161),
-            # so a supply bearing no cuota by law bears no recargo either. A
-            # suplido is unrelated to whether the underlying supply is taxable
-            # -- it is a disbursement made in the client's name (LIVA
-            # art. 78.Tres.3.º) -- so it stays permitted here.
-            _normalization.raise_first_invoice_violation(
-                (
-                    (
-                        self.iva_total != Decimal("0"),
-                        "iva_total must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        recargo != Decimal("0"),
-                        "recargo_amount must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        self.grand_total != self.base_total + suplido,
-                        "grand_total must equal base_total + suplido_amount when every line is nonnumeric",
-                    ),
-                ),
+            raise_first_figure_finding(
+                nonnumeric_invoice_findings(
+                    base_total=self.base_total,
+                    iva_total=self.iva_total,
+                    grand_total=self.grand_total,
+                    recargo=self.recargo_amount,
+                    suplido=self.suplido_amount,
+                )
             )
         return self
 
@@ -776,10 +944,7 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        _require_non_negative_retention_amount(self.retention_amount)
-        _validate_retention_rate_shape(self.retention_rate, self.retention_amount)
-        _require_retention_amount_within_base(self.retention_amount, self.base_total)
-        _validate_retention_rate_amount(self.retention_rate, self.retention_amount, self.base_total)
+        raise_first_figure_finding(retention_findings(self.retention_rate, self.retention_amount, self.base_total))
         return self
 
     @model_validator(mode="after")
@@ -816,14 +981,9 @@ class Invoice(BaseModel):
         published pairing when one cuota-bearing tier is identifiable; a
         multi-tier invoice remains unattributed rather than guessed.
         """
-        if self.recargo_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
-        if self.recargo_amount > self.iva_total:
-            raise InvoiceValidationError(
-                "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
-                "percentage than the IVA rate it accompanies (LIVA art. 161)",
-            )
+        raise_first_figure_finding(
+            (recargo_sign_finding(self.recargo_amount), recargo_ceiling_finding(self.recargo_amount, self.iva_total))
+        )
         return self
 
     @model_validator(mode="after")
@@ -849,9 +1009,7 @@ class Invoice(BaseModel):
         statement about a suplido"; an explicit zero is "one was considered
         and none arose".
         """
-        if self.suplido_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
+        raise_first_figure_finding((suplido_finding(self.suplido_amount),))
         return self
 
     @model_validator(mode="after")
@@ -900,56 +1058,192 @@ class Invoice(BaseModel):
         record nor any field on it can express; that axis is a declared,
         documented gap, not modelled here or anywhere on this class.
         """
-        category = self.iva_category
-        missing_tax_id = self.counterparty_tax_id is None
-        category_value = getattr(category, "value", "")
-        simplificada = invoice_class_simplificada()
-        rectificativa = invoice_class_rectificativa()
-        relief_case = (self.invoice_class, self.kind) == (simplificada, InvoiceKind.ISSUED)
-        _normalization.raise_first_invoice_violation(
-            (
-                (
-                    (self.invoice_class == rectificativa, not (self.series is not None and self.series))
-                    == (True, True),
-                    "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
-                ),
-                (
-                    (
-                        self.invoice_class == rectificativa,
-                        not (self.rectifies_invoice_number is not None and self.rectifies_invoice_number),
-                    )
-                    == (True, True),
-                    "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
-                ),
-                (
-                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None) == (True, True),
-                    "rectifies_invoice_number only applies to a factura rectificativa",
-                ),
-                (
-                    (self.invoice_class, category) == (simplificada, require_iva_category("intra_community_supply")),
-                    "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
-                    "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
-                ),
-                (
-                    (missing_tax_id, not relief_case) == (True, True),
-                    "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
-                    "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
-                ),
-                (
-                    (missing_tax_id, category in _simplificada_mandatory_tax_id_categories()) == (True, True),
-                    "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
-                ),
-            ),
+        raise_first_rule_finding(
+            invoice_class_findings(
+                invoice_class=self.invoice_class,
+                kind=self.kind,
+                series=self.series,
+                rectifies_invoice_number=self.rectifies_invoice_number,
+                category=self.iva_category,
+                tax_id_missing=self.counterparty_tax_id is None,
+                effective_date=self.issued_at,
+            )
         )
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _validate_rectification_fact_coherence(self, info: ValidationInfo) -> Self:
+        """Refuse rectification facts the document cannot be stating.
+
+        The four facts answer questions only a factura rectificativa raises --
+        which of RD 1619/2012 art. 15.5's two readings its figures carry, on
+        which LIVA art. 80 or art. 89 ground, in which direction, and when the
+        recipient received it -- so on any other class each one asserts a
+        correction the invoice's own class denies, exactly as a stray
+        ``rectifies_invoice_number`` does in
+        :meth:`_validate_invoice_class_consistency`.
+
+        ``document_received_on`` is narrower still. It records the RECIPIENT's
+        reception, which LIVA art. 114.Dos makes the period of most
+        received-side rectifications, and :attr:`kind` decides who the
+        recipient is: on a RECEIVED invoice it is the filer, on an ISSUED one
+        it is the counterparty, whose reception this record never observed. A
+        date on an issued rectificativa would therefore manufacture the one
+        fact art. 24.1 RIVA makes the issuer prove by remittance. And a
+        reception before :attr:`issued_at` is not a tight window, it is
+        impossible: the document cannot arrive before it exists.
+
+        A rectificativa that states NONE of the facts is admitted, which is
+        the point of recording them as four optional facts rather than one
+        required group. The person records the document as it reaches them and
+        completes it afterwards; the Modelo 303 declaration is what refuses,
+        naming each absent fact for the invoice's side
+        (:func:`~cadrumo.domain.invoices.rectification.missing_rectification_facts`).
+        Nothing is defaulted on the way.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`) for the
+        reason :meth:`_validate_m349_clave_agrees_with_the_iva_category`
+        states. No record stored before these fields existed can carry one, so
+        nothing is stranded today; the gate is what keeps a record written by a
+        path these rules later tighten openable by the edit that corrects it,
+        instead of locking the catalogue that holds it.
+        """
+        if not _admits_written_record(info):
+            return self
+        rectificativa = self.invoice_class == answer_once(invoice_class_rectificativa, effective_date=self.issued_at)
+        raise_first_rule_finding(
+            rectification_fact_rule_findings(
+                rectificativa=rectificativa,
+                issued=self.kind is InvoiceKind.ISSUED,
+                stated_facts=tuple(fact.value for fact in RectificationFact if getattr(self, fact.value) is not None),
+                issued_at=self.issued_at,
+                document_received_on=self.document_received_on,
+            )
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_rectification_election_coherence(self, info: ValidationInfo) -> Self:
+        """Refuse an election the law gives the other side or the other direction.
+
+        LIVA art. 89.Cinco hands the issuer two elections, art. 114.Dos.1.º
+        hands the recipient one, and each answers a question only one side and
+        one direction asks. An issuer's minoración route recorded on a received
+        invoice, or a recipient's elected period recorded against an aumento
+        the record calls a minoración, asserts a choice the law never offered.
+
+        It also refuses an elected period outside the window its own route
+        allows: art. 89.Cinco letter b) bounds the issuer's regularisation at
+        one year from the rectification, and art. 114.Dos.1.º bounds the
+        recipient's elected period at four years, or one where the ground sits
+        outside art. 80. Both durations are dated registry facts.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`) like the
+        rectification facts above and for the same reason: a record written
+        before a window moved stays openable by the edit that corrects it.
+        """
+        if not _admits_written_record(info) or not self._states_an_election():
+            return self
+        raise_first_rule_finding(
+            rectification_election_rule_findings(
+                issued=self.kind is InvoiceKind.ISSUED,
+                state=self._rectification_election_state(),
+            )
+        )
+        return self
+
+    def _states_an_election(self) -> bool:
+        """Whether the record carries any of the elections or the attestation."""
+        return any(
+            getattr(self, field_name) is not None
+            for field_name in (
+                "issuer_increase_election",
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+                "recipient_increase_period",
+                "art_80_tres_obligations_attested",
+                "exercised_deduction_period",
+            )
+        )
+
+    def _rectification_election_state(self) -> RectificationElectionState:
+        """Resolve the dated answers the election rules need, through fact 0141 and the window facts."""
+        catalogue = answer_once(
+            resolve_invoice_legal_classification_catalogue,
+            effective_date=self.issued_at,
+        )
+        minoracion = (
+            None if self.rectification_direction is None else self.rectification_direction == catalogue.minoracion_token
+        )
+        art_80_tres = (
+            None if self.rectification_cause is None else self.rectification_cause == catalogue.art_80_tres_cause_token
+        )
+        return RectificationElectionState(
+            stated_issuer_fields=self._stated_fields(
+                "issuer_increase_election",
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+            ),
+            stated_recipient_fields=self._stated_fields("recipient_increase_period", "exercised_deduction_period"),
+            stated_increase_fields=self._stated_fields("issuer_increase_election", "recipient_increase_period"),
+            stated_reduction_fields=self._stated_fields(
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+                "exercised_deduction_period",
+            ),
+            minoracion=minoracion,
+            art_80_tres=art_80_tres,
+            attestation_stated=self.art_80_tres_obligations_attested is not None,
+            minoracion_election_stated=self.issuer_minoracion_election is not None,
+            regularisation_period_stated=self.issuer_minoracion_regularisation_period is not None,
+            period_outside_window=self._elected_period_outside_window(catalogue),
+        )
+
+    def _stated_fields(self, *field_names: str) -> tuple[str, ...]:
+        """The named fields this record carries, in the order given."""
+        return tuple(field_name for field_name in field_names if getattr(self, field_name) is not None)
+
+    def _elected_period_outside_window(self, catalogue: InvoiceLegalClassificationCatalogue) -> str | None:
+        """The first elected period field whose own legal window excludes it, if any."""
+        windows = answer_once(resolve_rectification_period_windows, effective_date=self.issued_at)
+        regularisation = self.issuer_minoracion_regularisation_period
+        if regularisation is not None and issuer_minoracion_regularisation_period_outside_window(
+            issued_at=self.issued_at,
+            period=regularisation,
+            windows=windows,
+        ):
+            return "issuer_minoracion_regularisation_period"
+        elected = self.recipient_increase_period
+        if (
+            elected is not None
+            and self.rectification_cause is not None
+            and self.document_received_on is not None
+            and recipient_increase_period_outside_window(
+                cause=self.rectification_cause,
+                issued_at=self.issued_at,
+                document_received_on=self.document_received_on,
+                period=elected,
+                windows=windows,
+                catalogue=catalogue,
+            )
+        ):
+            return "recipient_increase_period"
+        return None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_business_premises_lease_kind(self) -> Self:
         """The lessor records a business-premises lease on an issued invoice."""
-        if self.business_premises_lease is not None and self.kind is not InvoiceKind.ISSUED:
-            raise InvoiceValidationError("a business-premises lease only applies to an issued invoice")
+        raise_first_rule_finding(
+            (
+                lease_kind_finding(
+                    lease_stated=self.business_premises_lease is not None,
+                    issued=self.kind is InvoiceKind.ISSUED,
+                ),
+            )
+        )
         return self
 
     @model_validator(mode="after")
@@ -983,20 +1277,102 @@ class Invoice(BaseModel):
         M349/export classification decides between; this guard only refuses the
         one identification the category can never legitimately name.
         """
-        if (
-            self.iva_category == require_iva_category("intra_community_supply")
-            and self.counterparty_identification_state == spanish_eu_member_state()
+        intra_community_supply = answer_once(
+            require_iva_category, "intra_community_supply", effective_date=self.issued_at
+        )
+        if self.iva_category == intra_community_supply and (
+            self.counterparty_identification_state == answer_once(spanish_eu_member_state)
         ):
-            raise InvoiceValidationError(
-                "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
-                "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
-                "change that",
+            raise invoice_rule_refusal(
+                InvoiceRuleFinding(
+                    InvoiceRuleFindingCode.INTRA_COMMUNITY_SPANISH_IDENTIFICATION,
+                    "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
+                    "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
+                    "change that",
+                    ("counterparty_tax_id", "iva_category"),
+                )
             )
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _validate_operation_date_consistency(self) -> Self:
+    def _validate_m349_clave_agrees_with_the_iva_category(self, info: ValidationInfo) -> Self:
+        """Refuse a Modelo 349 clave de operación that contradicts the IVA category.
+
+        The two fields are independent inputs that decide the same operation's
+        fate in two different declarations, and
+        :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave`
+        returns a stated clave verbatim, checking only that the letter is
+        reachable from the invoice's direction. So an invoice could carry
+        ``domestic_general`` -- settling cuota repercutida in Modelo 303 -- and
+        clave ``S``, which reports the same base to VIES as a prestación
+        intracomunitaria de servicios. RIVA art. 79 admits only the
+        intra-community operations to the declaración recapitulativa, so that
+        pair files one operation twice and incompatibly; one of the two
+        declarations is necessarily false.
+
+        The pairing is not restated here. The diseño de registro defines each
+        letter as a named operation (position 133, "CLAVE DE OPERACIÓN"), and
+        the registry carries that reading as fact 0084's
+        ``category_for_operation_type`` entries -- the same fact the derivation
+        in the other direction reads, so the two cannot disagree.
+
+        A clave the fact declares NO category for is not refused, which bounds
+        this rule to the five the fact maps. For ``R``, ``D`` and ``C`` that
+        silence is meaningful rather than missing: they report movements under
+        acuerdos de ventas de bienes en consigna -- a transferencia, a
+        devolución, and a sustitución del destinatario. LIVA art. 9 bis.Dos
+        places the entrega and its exemption at the later moment the acquirer
+        takes the power of disposal, so the movement these letters report is
+        not an entrega and has no IVA treatment to agree with.
+
+        For ``M`` and ``H`` the silence is a real gap rather than a boundary.
+        The diseño defines both as "Entregas intracomunitarias de bienes
+        posteriores a una importación exenta" (LIVA art. 27.12º, ``H`` by a
+        representante fiscal under art. 86.Tres), so each contradicts a
+        domestic category exactly as ``E`` does -- but declaring a category for
+        them changes what the clave-only derivation stores on a record, which is
+        a registry decision rather than one this validator may take. The
+        boundary is pinned by a test rather than left to be rediscovered.
+
+        An ABSENT category is likewise not refused. It is an unrecorded fact
+        rather than a contradiction, and the clave already supplies the
+        treatment through that same mapping.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`), which
+        covers both the creation and the edit path, for the reason the pagos
+        anticipados rule states: the two fields were independent before this
+        rule, so a contradicting pair may already be stored, and
+        :class:`~cadrumo.domain.invoices.catalogue.StoredInvoiceCatalogue`
+        validates each record as it is READ. Refusing on hydration would strand
+        exactly the records that need correcting -- the operator could not open
+        one to fix it. So such a record still hydrates, and
+        :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave`
+        refuses to DECLARE it, which keeps the incoherent filing from being
+        produced without making the record unreachable.
+        """
+        operation_type = self.operation_type
+        if operation_type is None or self.iva_category is None or not _admits_written_record(info):
+            return self
+        catalogue = resolve_iva_category_catalogue(effective_date=self.operation_date or self.issued_at)
+        declared = catalogue.category_for_operation_type(operation_type.value)
+        if declared is None or declared == self.iva_category:
+            return self
+        raise invoice_rule_refusal(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.M349_CLAVE_CATEGORY_MISMATCH,
+                f"modelo 349 clave de operación {operation_type.value!r} declares the operation as "
+                f"{declared.value!r}, which contradicts the stated iva_category "
+                f"{self.iva_category.value!r}; one operation cannot be declared domestically in "
+                f"Modelo 303 and intra-community in Modelo 349 (RIVA art. 79)",
+                ("operation_type", "iva_category"),
+                {"operation_type": operation_type.value, "clave_category": declared.value},
+            )
+        )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_operation_date_consistency(self, info: ValidationInfo) -> Self:
         """Enforce the LIVA art. 75 devengo-date axis art. 6.1.i lets an invoice state.
 
         ``operation_date`` and ``operation_date_role`` travel together: a date
@@ -1011,12 +1387,28 @@ class Invoice(BaseModel):
         "las entregas de bienes comprendidas en el artículo 25" from the
         pagos-anticipados rule, so that category always devengues under
         art. 75.Uno.8.º regardless of any advance received.
+
+        Write admission (:data:`INVOICE_WRITE_ADMISSION`) further requires
+        the price to be collected in full. The advance devengues only "por
+        los importes efectivamente percibidos", and one invoice carries one
+        devengo date, so a partly collected price would file the whole base
+        in the advance's period. A record stored before this rule still
+        hydrates, so the operator can open and correct it; aggregation
+        refuses to attribute it.
         """
-        if (self.operation_date is None) != (self.operation_date_role is None):
-            raise InvoiceValidationError("operation_date and operation_date_role must be set together")
-        advance_payment_role = advance_payment_received_role()
+        raise_first_rule_finding(
+            (
+                operation_date_role_finding(
+                    date_stated=self.operation_date is not None,
+                    role_stated=self.operation_date_role is not None,
+                ),
+            )
+        )
+        advance_payment_role = answer_once(advance_payment_received_role)
         if self.operation_date_role == advance_payment_role:
-            if self.iva_category == require_iva_category("intra_community_supply"):
+            if self.iva_category == answer_once(
+                require_iva_category, "intra_community_supply", effective_date=self.issued_at
+            ):
                 raise InvoiceValidationError(
                     "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
                     "(LIVA art. 75.Dos, párrafo segundo, excludes art. 25 entregas)",
@@ -1025,6 +1417,15 @@ class Invoice(BaseModel):
                 raise InvoiceValidationError(
                     f"operation_date_role {advance_payment_role.value} requires a collected payment_status "
                     "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
+                )
+            if _admits_written_record(info):
+                raise_first_rule_finding(
+                    (
+                        advance_payment_collection_finding(
+                            advance_role=True,
+                            fully_collected=self.payment_status is PaymentStatus.PAID,
+                        ),
+                    )
                 )
         return self
 
@@ -1035,12 +1436,16 @@ class Invoice(BaseModel):
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
         axis_flags = (self.oss_ioss_regime is None, self.oss_transaction_kind is None)
         if axis_flags != (False, False):
-            _normalization.raise_first_invoice_violation(
-                (
-                    (
-                        (axis_flags, has_oss_line_rate) == ((True, True), True),
+            if (axis_flags, has_oss_line_rate) == ((True, True), True):
+                raise invoice_rule_refusal(
+                    InvoiceRuleFinding(
+                        InvoiceRuleFindingCode.LINE_OSS_RATE_KIND_REFUSED,
                         "oss_rate_kind requires invoice-level OSS/IOSS axes",
-                    ),
+                        ("lines",),
+                    )
+                )
+            normalization.raise_first_invoice_violation(
+                (
                     (
                         axis_flags not in ((True, True), (False, False)),
                         "oss_ioss_regime and oss_transaction_kind must be supplied together",
@@ -1070,7 +1475,7 @@ class Invoice(BaseModel):
             regime = catalogue.require(self.oss_ioss_regime)
         except RegistryValidationError as exc:
             raise InvoiceValidationError("oss_ioss_regime must be declared by the facts registry") from exc
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     self.kind is not InvoiceKind.ISSUED,
@@ -1099,14 +1504,28 @@ class Invoice(BaseModel):
         registry-projected token without a per-call lowercase / membership
         check. It is anchored to the dated EU member-state fact 0131.
         """
-        if not is_eu_member_state_code(self.counterparty_country):
+        # The supply's own date selects the membership edition: the LIVA art. 75
+        # devengo when stated, else the issue date, as the OSS projection below does.
+        if not is_eu_member_state_code(
+            self.counterparty_country,
+            effective_date=self.operation_date or self.issued_at,
+        ):
             return None
         return require_eu_member_state(self.counterparty_country)
+
+    # Declared last on purpose: pydantic nests wrap and after validators in
+    # declaration order, so the last one encloses every other validator.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _validate_in_one_pass(cls, data: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        """Answer each registry question once while this invoice validates."""
+        with invoice_validation_pass():
+            return handler(data)
 
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
-    _normalization.raise_first_invoice_violation(
+    normalization.raise_first_invoice_violation(
         (
             (
                 isinstance(value, str | bytes),
@@ -1117,9 +1536,9 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        text = _normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
+        text = normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
         normalized = text.strip().lower()
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     not _is_hex_digest(normalized, length=64),
@@ -1133,137 +1552,3 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
-
-
-def _require_non_negative_retention_amount(amount: Decimal | None) -> None:
-    if amount is not None and amount < Decimal("0"):
-        raise InvoiceValidationError(
-            "retention_amount must be non-negative",
-            context={"fields": ("retention_amount",)},
-        )
-
-
-def _validate_retention_rate_shape(rate: Decimal | None, amount: Decimal | None) -> None:
-    if rate is not None:
-        if rate < Decimal("0") or rate > Decimal("1"):
-            raise InvoiceValidationError(
-                "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
-                context={"fields": ("retention_rate",)},
-            )
-        if amount is None:
-            raise InvoiceValidationError(
-                "retention_rate requires retention_amount; a rate alone declares no withheld figure",
-                context={"fields": ("retention_rate", "retention_amount")},
-            )
-
-
-def _require_retention_amount_within_base(amount: Decimal | None, base: Decimal) -> None:
-    if amount is not None and amount > base:
-        raise InvoiceValidationError(
-            "retention_amount must not exceed base_total; the retención base is the "
-            "base imponible (ingresos íntegros), not the IVA-inclusive total",
-            context={"fields": ("retention_amount", "base_total")},
-        )
-
-
-def _validate_retention_rate_amount(rate: Decimal | None, amount: Decimal | None, base: Decimal) -> None:
-    if rate is not None and amount is not None:
-        expected_retencion = (base * rate).quantize(Decimal("0.0001"))
-        if abs(amount - expected_retencion) > CENT:
-            raise InvoiceValidationError(
-                "retention_amount must equal base_total * retention_rate within 1 cent",
-                context={"fields": ("retention_rate", "retention_amount", "base_total")},
-            )
-
-
-class InvoiceCatalogue(BaseModel):
-    """Immutable invoice catalogue keyed by ``invoice_id``."""
-
-    model_config = _STRICT_FROZEN
-
-    invoices: Mapping[str, Invoice] = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _coerce_catalogue_input(cls, data: object) -> object:
-        """Accept a catalogue, its canonical payload, or an iterable of invoices.
-
-        A mapping arrives here as one of two things: the canonical serialized
-        payload, which carries its entries under ``invoices``, or the field
-        kwargs of a direct construction, which for a catalogue with no entries
-        is empty. A NON-EMPTY mapping with no ``invoices`` key is neither. It
-        is a catalogue serialized without its wrapper -- a shape nothing in
-        this codebase writes -- and it is refused rather than wrapped: wrapping
-        promotes an arbitrary mapping into a catalogue whose keys no writer
-        ever established to be invoice ids, and the resulting record is
-        indistinguishable afterwards from one that was written correctly.
-        """
-        if isinstance(data, cls):
-            return data
-        if isinstance(data, Mapping):
-            payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
-            if payload and "invoices" not in payload:
-                raise InvoiceValidationError(
-                    "invoice catalogue payload must carry its entries under the 'invoices' key; "
-                    f"got a bare mapping of {len(payload)} top-level entries",
-                )
-            return payload
-        if isinstance(data, Iterable) and not isinstance(data, str | bytes):
-            invoices: dict[str, Invoice] = {}
-            for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
-                invoice = item if isinstance(item, Invoice) else Invoice.model_validate(item)
-                if invoice.invoice_id in invoices:
-                    raise InvoiceValidationError(f"duplicate invoice_id: {invoice.invoice_id}")
-                invoices[invoice.invoice_id] = invoice
-            return {"invoices": invoices}
-        return data
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_mapping_keys(self) -> Self:
-        for key, invoice in self.invoices.items():
-            if key != invoice.invoice_id:
-                raise InvoiceValidationError(f"catalogue key {key!r} does not match invoice_id {invoice.invoice_id!r}")
-        return self
-
-    @field_validator("invoices")
-    @classmethod
-    def _freeze_invoices(cls, value: Mapping[str, Invoice]) -> Mapping[str, Invoice]:
-        return MappingProxyType(dict(value))
-
-    @field_serializer("invoices")
-    def _serialize_invoices(self, value: Mapping[str, Invoice]) -> dict[str, Invoice]:
-        return dict(value)
-
-    @override
-    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Invoice records, not BaseModel field-value tuples
-        """Iterate over catalogue invoices."""
-        return iter(self.invoices.values())
-
-    def __len__(self) -> int:
-        """Return the number of invoices in the catalogue."""
-        return len(self.invoices)
-
-    def __contains__(self, invoice_id: object) -> bool:
-        """Return whether the catalogue contains ``invoice_id``."""
-        if isinstance(invoice_id, Invoice):
-            return invoice_id.invoice_id in self.invoices
-        if isinstance(invoice_id, str):
-            return invoice_id in self.invoices
-        return False
-
-    def get(self, invoice_id: str) -> Invoice | None:
-        """Fetch one invoice by ID if present.
-
-        Args:
-            invoice_id: Stable invoice identifier.
-
-        Returns:
-            The matching :class:`Invoice`, or ``None`` when absent.
-        """
-        return self.invoices.get(invoice_id)
-
-    def values(self) -> Iterator[Invoice]:
-        """Iterate over catalogue :class:`Invoice` records."""
-        return iter(self.invoices.values())

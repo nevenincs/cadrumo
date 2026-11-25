@@ -34,16 +34,25 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.filing.schema import ModeloDraft
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.validate_export_field_placement import binding_export_spans, validate_export_record_field_placement
-from .._export_tree import render_complete_export_tree
+from ..export_tree import render_complete_export_tree
 from ..render_check import RevisionRenderInputs, revision_render_inputs
 from ..render_profile import validate_render_profile
-from ..render_profile_authority import _validate_signed_composite_source_agreement
+from ..render_profile_authority import validate_signed_composite_source_agreement
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+
+def _filing_year() -> int:
+    return filing_year_envelope().horizon
+
+
+def _revision_id() -> str:
+    return str(revision_covering("720", _filing_year()).id)
 
 
 @pytest.fixture(scope="module")
@@ -51,9 +60,9 @@ def inputs() -> RevisionRenderInputs:
     return revision_render_inputs(
         compiled_bundled_authority(),
         modelo="720",
-        revision="2013-y-siguientes",
+        revision=_revision_id(),
         source_ref="aeat-dr-720",
-        filing_year=2024,
+        filing_year=_filing_year(),
         period="0A",
         source_root=bundled_path(),
     )
@@ -61,7 +70,7 @@ def inputs() -> RevisionRenderInputs:
 
 def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
     authority = compiled_bundled_authority()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_filing_year(), "0A")
     with validating_governed_facts(authority):
         draft = build_draft(
             modelo="720",
@@ -69,12 +78,12 @@ def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
             profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="PERSONA PRUEBA"),
             inputs={
                 "modelo-720.type_1.telefono-contacto": "012345678",
-                "modelo-720.type_2.fecha-de-incorporacion": date(2024, 2, 29),
+                "modelo-720.type_2.fecha-de-incorporacion": date(_filing_year(), 2, 28),
                 "modelo-720.type_2.numero-de-valores": Decimal("12.34"),
                 "modelo-720.type_2.porcentaje-de-participacion": Decimal("25.50"),
             },
             schema_provider=schema_provider_from_authority(
-                authority, filing_year=2024, period=period, modelos=("720",)
+                authority, filing_year=_filing_year(), period=period, modelos=("720",)
             ),
         )
         producer = build_filing_producer_snapshot(
@@ -99,21 +108,7 @@ def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
     return draft, producer
 
 
-def test_complete_source_renders_two_500_position_records_with_exact_contact_and_decimal_values(
-    inputs: RevisionRenderInputs, tmp_path: Path
-) -> None:
-    rendered = render_complete_export_tree(
-        tmp_path / "export",
-        revision_id=inputs.revision_id,
-        joined=inputs.joined,
-        semantic_map=inputs.semantic_map,
-        transport_profile=inputs.transport_profile,
-        render_profile=inputs.render_profile,
-        render_profile_source_evidence=inputs.render_profile_source_evidence,
-    )
-    fields = {
-        (record.record_type, field.offset): field for record in rendered.layout.records for field in record.fields
-    }
+def _assert_record_headers_are_literal_draft_and_producer_fed(fields) -> None:
     for record_type, record_tag in (("type_1", "1"), ("type_2", "2")):
         for offset, literal in ((1, record_tag), (2, "720")):
             field = fields[record_type, offset]
@@ -130,6 +125,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
         assert taxpayer.binding is None
     assert fields["type_1", 18].producer_key is FilingProducerKey.TAXPAYER_FULL_NAME
     assert fields["type_1", 18].binding is None
+
+
+def _assert_contact_and_identifier_fields_render_exactly(fields) -> None:
     phone = fields["type_1", 59]
     name = fields["type_1", 68]
     assert (phone.length, name.length) == (9, 40)
@@ -140,6 +138,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
     for offset in (108, 123):
         identifier = fields["type_1", offset]
         assert render_fixed_width_export_field(identifier, "0000000000001") == "0000000000001"
+
+
+def _assert_quantity_percentage_and_date_fields_render_exactly(fields) -> None:
     quantity_whole = fields["type_2", 463]
     quantity_fraction = fields["type_2", 473]
     assert quantity_whole.binding == quantity_fraction.binding
@@ -148,7 +149,10 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
     assert render_fixed_width_export_field(fields["type_2", 476], Decimal("25.50")) == "02550"
     for offset in (415, 424):
         field = fields["type_2", offset]
-        assert render_fixed_width_export_field(field, date(2024, 2, 29)) == "20240229"
+        assert render_fixed_width_export_field(field, date(_filing_year(), 2, 28)) == f"{_filing_year()}0228"
+
+
+def _assert_each_record_renders_exactly_500_positions(rendered) -> None:
     draft, producer = _public_record_context()
     for record in rendered.layout.records:
         assert all(field.offset is not None and field.length is not None for field in record.fields)
@@ -175,10 +179,13 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
         )
         assert len(wire.encode(record.encoding)) == 500
         assert wire[:4] == {"type_1": "1720", "type_2": "2720"}[record.record_type]
-        assert wire[4:8] == "2024"
+        assert wire[4:8] == str(_filing_year())
         assert wire[8:17] == str(producer.taxpayer_tax_id)
         if record.record_type == "type_1":
             assert wire[17:57] == "PERSONA PRUEBA".ljust(40)
+
+
+def _assert_signed_amounts_round_trip(fields) -> None:
     for record_type, offset, whole in (
         ("type_1", 145, 15),
         ("type_1", 163, 15),
@@ -192,6 +199,29 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
             assert parse_fixed_width_export_field(field, wire) == value
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_complete_source_renders_two_500_position_records_with_exact_contact_and_decimal_values(
+    inputs: RevisionRenderInputs, tmp_path: Path
+) -> None:
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inputs.revision_id,
+        joined=inputs.joined,
+        semantic_map=inputs.semantic_map,
+        transport_profile=inputs.transport_profile,
+        render_profile=inputs.render_profile,
+        render_profile_source_evidence=inputs.render_profile_source_evidence,
+    )
+    fields = {
+        (record.record_type, field.offset): field for record in rendered.layout.records for field in record.fields
+    }
+    _assert_record_headers_are_literal_draft_and_producer_fed(fields)
+    _assert_contact_and_identifier_fields_render_exactly(fields)
+    _assert_quantity_percentage_and_date_fields_render_exactly(fields)
+    _assert_each_record_renders_exactly_500_positions(rendered)
+    _assert_signed_amounts_round_trip(fields)
+
+
 @pytest.mark.parametrize("row", (161, 196, 720, 785))
 def test_signed_amount_requires_complete_exact_source_prose_and_geometry(
     inputs: RevisionRenderInputs, row: int
@@ -199,7 +229,7 @@ def test_signed_amount_requires_complete_exact_source_prose_and_geometry(
     rule = next(rule for rule in inputs.render_profile.signed_composite_rules if rule.anchor.source_row == row)
     field = next(field.parser_field for field in inputs.joined.fields if field.parser_field.source_row == row)
     identity = inputs.render_profile.design_identity
-    _validate_signed_composite_source_agreement(rule, field, identity)
+    validate_signed_composite_source_agreement(rule, field, identity)
     assert "será un espacio" in (field.content or "")
     assert "sin coma decimal" in (field.content or "")
     for update in (
@@ -212,13 +242,11 @@ def test_signed_amount_requires_complete_exact_source_prose_and_geometry(
         {"record_identity": "other record"},
     ):
         with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-            _validate_signed_composite_source_agreement(rule, field.model_copy(update=update), identity)
+            validate_signed_composite_source_agreement(rule, field.model_copy(update=update), identity)
     with pytest.raises(RegistryValidationError, match="unreviewed or stale"):
-        _validate_signed_composite_source_agreement(
-            rule, field, identity.model_copy(update={"source_sha256": "0" * 64})
-        )
+        validate_signed_composite_source_agreement(rule, field, identity.model_copy(update={"source_sha256": "0" * 64}))
     with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-        _validate_signed_composite_source_agreement(
+        validate_signed_composite_source_agreement(
             rule.model_copy(update={"integer_digits": rule.integer_digits - 1}), field, identity
         )
 
@@ -235,7 +263,7 @@ def test_each_source_amount_and_numeric_anchor_requires_explicit_review(inputs: 
 
 
 def test_reviewed_binding_channels_preserve_source_units_and_distinct_contact_facts() -> None:
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions[_revision_id()]
     by_id = {str(binding.id): binding for binding in revision.bindings}
     assert "modelo-720.type_1.persona-con-quien-relacionarse" not in by_id
     for field in (
@@ -271,7 +299,7 @@ def test_quantity_parts_reconcile_only_as_the_complete_declared_decimal_span(
         render_profile=inputs.render_profile,
         render_profile_source_evidence=inputs.render_profile_source_evidence,
     )
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions[_revision_id()]
     spans = binding_export_spans(revision)
     record = next(record for record in rendered.layout.records if record.record_type == "type_2")
     whole = next(field for field in record.fields if field.offset == 463)

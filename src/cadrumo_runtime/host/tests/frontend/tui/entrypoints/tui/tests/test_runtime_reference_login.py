@@ -15,21 +15,20 @@ from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.transport.credentials import open_installed_credential_client
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -41,6 +40,7 @@ from .......frontend.tui.runtime_admission import runtime_login_session
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -49,28 +49,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows runtime workers and pipes"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-reference-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_path: Path) -> None:
@@ -95,7 +73,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-reference-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
@@ -126,34 +104,39 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             assert isinstance(screen, RuntimeLoginScreen)
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = RuntimeLoginMethod.API_REFERENCE
-            await pilot.pause()
+            await settle(pilot)
             credential = screen.query_one("#runtime-login-credential", Input)
             reference = screen.query_one("#runtime-login-reference", Input)
             assert credential.password and credential.value == "" and not credential.display
             assert reference.display
             reference.value = str(approved.credential_reference)
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
             assert reference.value == "" and credential.value == ""
 
         async def drive_restricted(pilot: Pilot[object]) -> None:
             app = pilot.app
             assert isinstance(app, RuntimeRestrictedSessionApp)
-            async with asyncio.timeout(15):
-                while str(profile_id) not in str(app.query_one("#restricted-profile", Static).render()):
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
+                "the restricted session to show the profile",
+                workers=False,
+            )
             assert not hasattr(app, "services")
-            await pilot.click("#restricted-close")
+            close = app.query_one("#restricted-close", Button)
+            close.scroll_visible(animate=False)
+            assert await click_when_laid_out(pilot, close)
 
         async def drive_refusals(pilot: Pilot[object]) -> None:
             screen = pilot.app.screen
             assert isinstance(screen, RuntimeLoginScreen)
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = RuntimeLoginMethod.API_REFERENCE
-            await pilot.pause()
+            await settle(pilot)
             reference = screen.query_one("#runtime-login-reference", Input)
             credential = screen.query_one("#runtime-login-credential", Input)
             reference.value = "not-a-uuid"
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
             assert reference.value == "" and credential.value == ""
             assert opened_references == [(profile_id, approved.credential_reference)]
             subject.client_native.unavailable = True
@@ -161,9 +144,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
                 reference.value = str(approved.credential_reference)
                 screen.action_submit()
                 assert reference.value == ""
-                async with asyncio.timeout(15):
-                    while screen._busy:
-                        await pilot.pause(0.05)
+                await settle_until(pilot, lambda: not screen._busy, "the reference login to finish", workers=False)
                 assert reference.value == "" and credential.value == ""
                 assert opened_references == [
                     (profile_id, approved.credential_reference),
@@ -178,7 +159,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             try:
                 assert server.ready.wait(3)
                 observer = FrontendClient(
-                    _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                    connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                 )
                 try:
                     observer.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)

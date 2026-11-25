@@ -15,7 +15,6 @@ class SupportScope:
 
     floor: int
     horizon: int
-    hard_ceiling: int | None
     below_floor: frozenset[tuple[str, str]]
 
 

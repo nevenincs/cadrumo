@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
-from ..export_verification import _mismatched_casilla_ids
+from ..export_verification import mismatched_casilla_ids
 from ..record_field_renderer import format_field, projection_field_value
 from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -179,7 +179,7 @@ def test_filing_writer_refuses_invalid_short_year_inputs(invalid: object) -> Non
 
 def test_verifier_projects_expected_values_by_record_and_field_identity() -> None:
     layout = _two_record_layout()
-    mismatched, checked = _mismatched_casilla_ids(
+    mismatched, checked = mismatched_casilla_ids(
         layout,
         draft=_draft(checkbox=True, year=2026),
         payload=b"126",
@@ -192,7 +192,7 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
 
 @pytest.mark.parametrize(("payload", "expected_mismatch"), [(b"026", "01"), (b"125", "02")])
 def test_verifier_detects_transformed_value_drift(payload: bytes, expected_mismatch: str) -> None:
-    mismatched, _ = _mismatched_casilla_ids(
+    mismatched, _ = mismatched_casilla_ids(
         _two_record_layout(),
         draft=_draft(checkbox=True, year=2026),
         payload=payload,

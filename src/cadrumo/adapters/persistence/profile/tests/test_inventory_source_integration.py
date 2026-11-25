@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from typing import Any
 
@@ -11,14 +12,18 @@ from sqlalchemy import select
 from .....application.aggregation.inventory import InventorySourceResolver
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.tests.test_inventory_source import inventory_ledger
+from .....application.aggregation.tests.withholding_filer_profile_support import (
+    published_work_profile_declaring_activities,
+)
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
+from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     TestRuntimeProfile,
     mutate_encrypted_secure_object_json,
@@ -38,13 +43,14 @@ def _revision() -> ModeloRevision:
     return published_authority_operation().snapshot("100", filing_year=2025, period="0A").revision
 
 
-def _context(revision: ModeloRevision) -> CalculationSourceContext:
+def _context(revision: ModeloRevision, *, activities: int) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
         revision=revision,
+        profile=published_work_profile_declaring_activities(activities),
     )
 
 
@@ -54,15 +60,15 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
 ) -> None:
     repository = InventoryLedgerRepository(objects=runtime_profile.repository)
     revision = _revision()
-    absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
     alpha = inventory_ledger("alpha", physical_closing=Decimal("250.00"))
     zeta = inventory_ledger("zeta")
     repository.save(InventoryLedgerDocument(ledgers=(zeta, alpha)))
-    complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
-    statement = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-        SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+    statement = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
     )
 
     def orphan_authority(document: dict[str, Any]) -> None:
@@ -76,7 +82,8 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
         row_statement=statement,
         mutate=orphan_authority,
     )
-    corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.inventory"):
+        corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
     assert absent.row_binding_values == {}
     assert absent.diagnostics[0].reason == "source_domain_not_ready"
@@ -89,6 +96,8 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
     assert complete.diagnostics[0].reason == "source_issue"
     assert corrupted.row_binding_values == {}
     assert corrupted.diagnostics[0].reason == "storage_degraded"
-    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {caplog.text}"
+    logged = delivered_text(caplog)
+    assert "inventory ledger load failed" in logged
+    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {logged}"
     for canary in ("alpha", "zeta", "250.00", "reviewer-secret", "inventory-secret-command", "a" * 64):
         assert canary not in rendered

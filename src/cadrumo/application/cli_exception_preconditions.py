@@ -10,11 +10,18 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
+from ..domain.modelos.errors import (
+    CalculationRevisionIntegrityError,
+    ModeloOperatorLayerIntegrityError,
+    ModeloValidationError,
+    PensionReduccionError,
+)
 from .operator_actions.models import PreconditionVerdict
 
 if TYPE_CHECKING:
@@ -24,8 +31,7 @@ if TYPE_CHECKING:
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Extract one registered terminal verdict from a single exception."""
     from ..core.errors.error_codes import get_registered_error_code
-    from ..core.errors.hierarchy import CadrumoError, CoreValidationError
-    from ..core.optional_extras import MissingOptionalExtraError
+    from ..core.errors.hierarchy import CadrumoError
 
     if not isinstance(current, CadrumoError):
         return None
@@ -37,18 +43,40 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     verdict = getattr(current, "terminal_precondition_verdict", None)
     if isinstance(verdict, PreconditionVerdict):
         return verdict
-    registry_verdict = _calculation_registry_verdict(current)
-    if registry_verdict is not None:
-        return registry_verdict
-    if isinstance(current, MissingOptionalExtraError):
-        return cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.OPTIONAL_EXTRA_IMPORTABLE,
-            facts={
-                "extra": current.extra.extra,
-                "import_name": current.extra.import_name,
-                "importable": False,
-            },
-        )
+    for resolve in (
+        _calculation_registry_verdict,
+        _operator_decision_verdict,
+        _modelo_record_verdict,
+        _terminal_integrity_verdict,
+        _external_constants_verdict,
+    ):
+        resolved = resolve(current)
+        if resolved is not None:
+            return resolved
+    return None
+
+
+def _terminal_integrity_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the terminal verdict of a stored record that failed its integrity check."""
+    # Imported here: the revision module pulls in the typed registry, which the
+    # runtime client reaches through this module's importers but never evaluates.
+    from ..domain.modelos.errors import LedgerFilingCoverageError
+
+    records = {**_TERMINAL_INTEGRITY_RECORDS, LedgerFilingCoverageError: _LEDGER_FILING_COVERAGE_RECORD}
+    for integrity_class, (precondition, record) in records.items():
+        if isinstance(current, integrity_class):
+            return cli_exception_no_recovery_verdict(
+                precondition,
+                facts={"record": record, "valid": False},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            )
+    return None
+
+
+def _external_constants_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the no-recovery verdict of an invalid bundled pre-303 constants section."""
+    from ..core.errors.hierarchy import CoreValidationError
+
     if (
         isinstance(current, CoreValidationError)
         and current.context is not None
@@ -59,6 +87,60 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
             facts={"section": "aeat.pre303", "valid": False},
         )
     return None
+
+
+def _operator_decision_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the operator-decision verdict of an input the filer stated that a domain rule refuses.
+
+    The filer stated the refused values in the request, and no catalogued action
+    takes them again, so the refusal asks for the filer's decision and names no
+    command.
+    """
+    from ..domain.modelos.row_models import (
+        Modelo184ShareSumError,
+        Modelo210AgrupacionRentaRowsError,
+        Modelo349CountryPrefixContextError,
+    )
+
+    records: dict[type[Exception], tuple[CliExceptionPrecondition, str]] = {
+        PensionReduccionError: (CliExceptionPrecondition.PENSION_REDUCCION_INPUTS_VALID, "pension_reduccion_inputs"),
+        Modelo210AgrupacionRentaRowsError: (
+            CliExceptionPrecondition.M210_AGRUPACION_ROWS_VALID,
+            "m210_agrupacion_rows",
+        ),
+        Modelo184ShareSumError: (CliExceptionPrecondition.M184_SHARE_SUM_VALID, "m184_member_shares"),
+        Modelo349CountryPrefixContextError: (
+            CliExceptionPrecondition.M349_COUNTRY_PREFIX_CONTEXT_VALID,
+            "m349_country_prefix",
+        ),
+    }
+    for refused_class, (precondition, record) in records.items():
+        if isinstance(current, refused_class):
+            return cli_exception_no_recovery_verdict(
+                precondition,
+                facts={"record": record, "valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
+    return None
+
+
+def _modelo_record_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the terminal verdict a Modelo validation states for a record Cadrumo built or stored.
+
+    A refusal raised from a cause that already carries its own verdict defers
+    to it: the cause names the condition that actually failed, and a second,
+    different verdict would make the outcome ambiguous.
+    """
+    if not isinstance(current, ModeloValidationError) or current.terminal_record is None:
+        return None
+    cause = current.__cause__
+    if cause is not None and nested_terminal_precondition_verdict(cause) is not None:
+        return None
+    return cli_exception_no_recovery_verdict(
+        CliExceptionPrecondition.STORED_DATA_VALID,
+        facts={"record": current.terminal_record.value, "valid": False},
+        outcome=NoRecoveryOutcome.TERMINAL,
+    )
 
 
 def _calculation_registry_verdict(current: CadrumoError) -> PreconditionVerdict | None:
@@ -99,7 +181,9 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
     follows only exception-bearing structural links: Pydantic contexts and
     Python causal chains.  Exactly one registered exception carrying a valid
     terminal verdict is admitted; zero or multiple candidates fail closed to
-    the generic validation outcome.
+    the generic validation outcome. A wrapper that carries the very verdict of
+    the error it wraps is one candidate, not two: the verdicts are equal, so
+    the outcome is not ambiguous.
     """
     pending: list[BaseException] = [error]
     seen: set[int] = set()
@@ -116,9 +200,10 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
             candidates[identity] = verdict
         pending.extend(_nested_exception_links(current))
 
-    if len(candidates) != 1:
+    distinct = {verdict.model_dump_json(): verdict for verdict in candidates.values()}
+    if len(distinct) != 1:
         return None
-    return next(iter(candidates.values()))
+    return next(iter(distinct.values()))
 
 
 def cli_exception_envelope_view(error: CadrumoError) -> CadrumoError:
@@ -172,6 +257,7 @@ class CliExceptionPrecondition(StrEnum):
     VALIDATION_BOUNDARY = "cli.validation.boundary_clean"
     UNEXPECTED_BOUNDARY = "cli.runtime.unexpected_absent"
     STORED_DATA_VALID = "cli.storage.persisted_data_valid"
+    EXPORT_DESIGN_CONSISTENT = "cli.export.design.consistent"
     COMMAND_GROUP_AVAILABLE = "cli.command_group.available"
     REFUSAL_RETRIED = "cli.refusal.completed"
     CONFIG_BOUNDARY = "cli.config.boundary_clean"
@@ -192,8 +278,21 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_TRANSACTION_ID_RESOLVES = "cli.ledger.transaction_id.resolves"
     LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
     LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
-    OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
+    PENSION_REDUCCION_INPUTS_VALID = "cli.modelo.pension_reduccion_inputs.valid"
+    M210_AGRUPACION_ROWS_VALID = "cli.modelo.m210_agrupacion_rows.valid"
+    M184_SHARE_SUM_VALID = "cli.modelo.m184_share_sum.valid"
+    M349_COUNTRY_PREFIX_CONTEXT_VALID = "cli.modelo.m349_country_prefix_context.valid"
+
+
+#: Integrity errors no filer action repairs, with the condition and record their terminal verdict names.
+_TERMINAL_INTEGRITY_RECORDS: Final[dict[type[Exception], tuple[CliExceptionPrecondition, str]]] = {
+    ModeloOperatorLayerIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_operator_layer"),
+    CalculationRevisionIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_revision"),
+    FilingExportIntegrityError: (CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT, "filing_export_design"),
+    FilingValidationError: (CliExceptionPrecondition.STORED_DATA_VALID, "filing_draft"),
+}
+_LEDGER_FILING_COVERAGE_RECORD: Final = (CliExceptionPrecondition.STORED_DATA_VALID, "ledger_filing_evidence")
 
 
 def cli_exception_no_recovery_verdict(

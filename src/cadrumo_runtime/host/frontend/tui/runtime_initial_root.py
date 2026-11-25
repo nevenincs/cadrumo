@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
-from cadrumo.entrypoints.tui.app import RootBindingV1, RootPresentationV1
 from cadrumo.entrypoints.tui.navigation import (
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
@@ -19,10 +18,11 @@ from cadrumo.entrypoints.tui.navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .profile.overview_client import read_profile_overview
+from .profile.overview_client import read_profile_overview, read_profile_status
 from .runtime_account_session import (
     read_runtime_account_session,
     runtime_account_activity_reporter,
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
     from cadrumo_client.transport.frontend_client import FrontendClient
 
-    from .runtime_access_management import RecoveryClientOpener
+    from .runtime_recovery_client import RecoveryClientOpener
     from .runtime_workbench import RuntimeWorkbenchRoot
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
@@ -91,7 +91,7 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
             self._client, profile_id=self._profile_id, session_id=self._session_id, profile_label=self._label
         )
 
-    def _workbench(self, initial_profile: ProfileOverview | None = None) -> RootBindingV1:
+    def _workbench(self) -> RootBindingV1:
         self._session()
         if self._workbench_binding is not None:
             return self._workbench_binding
@@ -113,29 +113,45 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
                 current_language = self._language
             if current_language != language:
                 workbench.set_output_language(current_language)
-                initial_profile = None
-            self._workbench_binding = workbench.load(initial_profile=initial_profile)
+            self._workbench_binding = workbench.load()
             return self._workbench_binding
 
-    def load(self) -> RootBindingV1:
-        """Select the initial destination from an authenticated profile view."""
+    def _initial_profile(self) -> tuple[ProfileOverview | None, HomeAccountSession]:
+        """Read and fence the initial status against the current output language."""
         with startup_phase(_LOGGER, "tui_initial_profile"):
             with self._language_guard:
                 language, epoch = self._language, self._language_epoch
             try:
-                overview = read_profile_overview(self._client, profile_label=self._label, output_language=language)
+                status = read_profile_status(self._client, output_language=language)
+                if status.profile_id != self._profile_id:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                overview = (
+                    None
+                    if status.setup_state is not ProfileSetupState.INCOMPLETE
+                    else read_profile_overview(self._client, profile_label=self._label, output_language=language)
+                )
             except (FrontendRefusedError, RefusalError):
                 self._session()
                 raise
             session = self._session()
-            if overview.profile_id != str(self._profile_id):
+            if overview is not None and overview.profile_id != str(self._profile_id):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             with self._language_guard:
                 if epoch != self._language_epoch:
                     raise RefusalError(RefusalCode.UNAVAILABLE)
-                self._latest_profile = overview
-        if overview.setup_state is not ProfileSetupState.INCOMPLETE:
-            return self._workbench(initial_profile=overview)
+                if overview is not None:
+                    self._latest_profile = overview
+        return overview, session
+
+    def load(self) -> RootBindingV1:
+        """Select the initial destination from the profile's authenticated status.
+
+        Only incomplete setup opens on the profile pane, so only it reads the
+        full overview before its first screen.
+        """
+        overview, session = self._initial_profile()
+        if overview is None:
+            return self._workbench()
 
         from .profile.manager_client import ProfileManagerClientComposition
         from .runtime_account import compose_runtime_account_factories
@@ -152,9 +168,10 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
                 language, latest = self._language, self._latest_profile
             if latest is None:
                 raise RefusalError(RefusalCode.UNAVAILABLE)
-            return ProfileManagerClientComposition(
+            screen = ProfileManagerClientComposition(
                 self._client, profile_label=self._label, output_language=language
             ).compose_from_overview(latest)
+            return screen
 
         def refresh_home() -> RootPresentationV1:
             binding = self._workbench()

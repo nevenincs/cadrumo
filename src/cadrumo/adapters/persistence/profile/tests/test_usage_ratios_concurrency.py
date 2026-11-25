@@ -31,7 +31,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.ratios import set_usage_ratio
+from cadrumo.application.ledger.ratios import apply_usage_ratio_override
 from cadrumo.core.config import override_settings
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -83,10 +83,11 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(
         def writer(category: SpendingCategory) -> None:
             try:
                 gate.wait()
-                set_usage_ratio(
+                apply_usage_ratio_override(
                     bucket_id=bucket_id,
                     category=category,
                     ratio=_RATIO,
+                    year=2025,
                     operation=authority_operation,
                 )
             except Exception as exc:  # surface any worker failure to the assertion

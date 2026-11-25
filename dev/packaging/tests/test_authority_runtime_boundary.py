@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.product_environment import clean_product_env
 
 from ..authority_staging import AUTHORITY_ROOT_ENV

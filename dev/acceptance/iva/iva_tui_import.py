@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
@@ -13,44 +14,42 @@ from dev.acceptance.income_tax.installed_tui_child import (
     wait_for_public_selector,
 )
 
-from .iva_tui_controls import _activate, _open_ledger, _visible_text
-from .iva_tui_scenario import _SyntheticIvaRow
+from .iva_tui_controls import activate, open_ledger, visible_text
+from .iva_tui_scenario import SyntheticIvaRow
 
 
-async def _import_statement(pilot: Any, *, statement: Path) -> None:
+async def import_statement(pilot: Any, *, statement: Path) -> None:
     """Persist the transient statement through visible import preview/confirm controls."""
     from textual.widgets import Button, Input, Select, Static
 
-    await _open_ledger(pilot)
+    await open_ledger(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="import")
     await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
     cast(Select[str], query_public_selector(pilot, "#ledger-import-kind", Select)).value = "bank_statement"
     cast(Select[str], query_public_selector(pilot, "#ledger-import-provider", Select)).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(statement)
-    await _activate(pilot, "#ledger-import-preview-button")
+    await activate(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
-    refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
+    refusal = visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
     confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
     if refusal or confirm.disabled:
         raise InstalledTuiChildError("installed Ledger import preview did not reach its visible confirmation state")
-    await _activate(pilot, "#ledger-import-confirm")
+    await activate(pilot, "#ledger-import-confirm")
     await pilot.app.workers.wait_for_complete()
-    refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
+    refusal = visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
     if refusal:
         raise InstalledTuiChildError("installed Ledger import exposed a persistence refusal")
-    await _activate(pilot, "#ledger-import-again")
+    await activate(pilot, "#ledger-import-again")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
-async def _resolve_imported_transaction_ids(
-    pilot: Any, synthetic_rows: tuple[_SyntheticIvaRow, ...]
-) -> tuple[str, str]:
+async def resolve_imported_transaction_ids(pilot: Any, synthetic_rows: tuple[SyntheticIvaRow, ...]) -> tuple[str, str]:
     """Resolve both opaque row identities from their unique visible synthetic labels."""
     from textual.widgets import DataTable
 
-    await _open_ledger(pilot)
+    await open_ledger(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
     await wait_for_public_selector(pilot, "#ledger-entries", polls=180)
     table = cast(DataTable[str], query_public_selector(pilot, "#ledger-entries", DataTable))
@@ -82,18 +81,19 @@ async def _resolve_imported_transaction_ids(
     return resolved[0], resolved[1]
 
 
-async def _classify_transaction(
+async def classify_transaction(
     pilot: Any,
     *,
     transaction_id: str,
-    scenario_row: _SyntheticIvaRow,
+    scenario_row: SyntheticIvaRow,
 ) -> None:
     """Submit one combined IVA classification through the public TUI form."""
     from textual.widgets import DataTable, Input, Static
+    from textual.worker import WorkerCancelled
 
     from cadrumo.core.i18n.render import tr
 
-    await _open_ledger(pilot)
+    await open_ledger(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
     await wait_for_public_selector(pilot, "#ledger-entries", polls=180)
     table = cast(DataTable[str], query_public_selector(pilot, "#ledger-entries", DataTable))
@@ -122,13 +122,21 @@ async def _classify_transaction(
         table_selector="#ledger-classifications",
         row_key="BUSINESS",
     )
-    await _activate(pilot, "#ledger-classification-confirm")
+    await activate(pilot, "#ledger-classification-confirm")
     await pilot.app.workers.wait_for_complete()
-    refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
-    terminal = _visible_text(query_public_selector(pilot, "#ledger-flow-status", Static))
+    refusal = visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
+    terminal = visible_text(query_public_selector(pilot, "#ledger-flow-status", Static))
     if refusal or terminal != tr("tui.ledger.classification.success"):
         raise InstalledTuiChildError(
             "installed combined IVA classification did not reach its succeeded public terminal"
         )
     await pilot.press("escape")
-    await pilot.app.workers.wait_for_complete()
+    # Settle this write's read before starting the existing public-control
+    # polling budget. Other application workers have independent lifetimes.
+    refresh_workers = [worker for worker in pilot.app.workers if worker.group == "ledger-refresh"]
+    if refresh_workers:
+        # Screen replacement can cancel its departing worker. Only the visible
+        # destination below can prove that the return completed.
+        with suppress(WorkerCancelled):
+            await pilot.app.workers.wait_for_complete(refresh_workers)
+    await wait_for_public_selector(pilot, "#ledger-quality", polls=180)

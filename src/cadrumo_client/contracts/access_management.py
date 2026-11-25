@@ -7,13 +7,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 
 from .automation_lifecycle import AutomationResumeReceipt
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 
 class AutomationDeny(BaseModel):
@@ -30,7 +31,7 @@ class AutomationDeny(BaseModel):
 
     @model_validator(mode="after")
     def _target(self) -> AutomationDeny:
-        if (self.kind in {AutomationDenialKind.KEY, AutomationDenialKind.GRANT}) != (self.target_id is not None):
+        if self.kind.targets_a_record != (self.target_id is not None):
             raise ValueError("denial target does not match action")
         return self
 
@@ -121,7 +122,7 @@ class SessionInventoryTransfer(_AccessManagementReplyIdentity):
     """Bounded complete inventory, correlated before receiving any scope chunks."""
 
     kind: Literal["session_inventory_transfer"] = "session_inventory_transfer"
-    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=1_048_576)]
     payload_digest: ContentDigest
 
 

@@ -14,6 +14,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.justificante.schema import Justificante
+from ....domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ...calculations.observations_repository import (
     ObservationEnvelopePayload,
@@ -40,7 +41,7 @@ from ..iva_remote_state_ports import IvaRemoteStatePort
 
 if TYPE_CHECKING:
     from ....core.config import Settings
-    from ....core.secure_object_write import SecureObjectWrite
+    from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
     from ....domain.calculations.registry.schema import ModeloRevision
     from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...auth.session_types import AeatSession
@@ -162,6 +163,7 @@ class _InMemoryCalculationRepository:
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Build one validated payload accepted by this test repository."""
         if captured_at is None:
@@ -173,6 +175,7 @@ class _InMemoryCalculationRepository:
             captured_at=captured_at,
             source_metadata=dict(source_metadata or {}),
             source_headers=source_headers,
+            filing_kind=filing_kind,
         )
         self.payloads.append(payload)
         return payload
@@ -320,9 +323,10 @@ class _InMemoryFilingRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Refuse atomic secure writes because this fake has no encrypted backend."""
-        del catalogue, extra_writes, expected_revision_id
+        del catalogue, extra_writes, expected_revision_id, assertions
         raise RuntimeError("test bundle does not provide secure filing writes")
 
 
@@ -355,7 +359,7 @@ class _InMemoryBucketEventRepository:
         raise RuntimeError("test bundle does not provide secure event writes")
 
 
-class _UnavailableIvaRemoteStatePort:
+class UnavailableIvaRemoteStatePort:
     """Keep the unrelated IVA wallet stage local and deterministically refused."""
 
     @property
@@ -537,7 +541,7 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
             filing_reconciliation=_UnavailableFilingReconciliation(),
         ),
         filed_data_port=UnavailableFiledDataCapturePort(),
-        iva_remote_state_port=_UnavailableIvaRemoteStatePort(),
+        iva_remote_state_port=UnavailableIvaRemoteStatePort(),
     )
 
 

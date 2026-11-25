@@ -30,11 +30,10 @@ from pydantic import NonNegativeInt, field_validator
 
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
-from ...domain.iva_compensation.balance import CompensationExpiryYear
 
 
 class IvaWalletBalanceResult(OutputSchema):
@@ -59,7 +58,7 @@ class IvaWalletBalanceResult(OutputSchema):
     active_balance: str
     expired_balance: str
     lot_count: NonNegativeInt
-    next_expiry_year: CompensationExpiryYear | None = None
+    next_expiry_year: FourDigitYear | None = None
     unallocated_applied_amount: str
 
     @field_validator("total_balance", "active_balance", "expired_balance", "unallocated_applied_amount")

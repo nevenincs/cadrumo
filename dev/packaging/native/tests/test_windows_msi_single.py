@@ -14,19 +14,22 @@ from defusedxml import ElementTree
 from ...command_execution import run_command
 from ..hashing import digest
 from ..identity import DistributionIdentity
-from ..windows_msi import _machine_service, _source, author
-from ..windows_msi_build import _retire, verify_database
+from ..windows_msi import author
+from ..windows_msi_build import retire
+from ..windows_msi_components import add_machine_service
 from ..windows_msi_database import verify_admission_order, verify_feature_ownership
 from ..windows_msi_identity import release_identity
 from ..windows_msi_single import source
-from .test_windows_msi import _prepared
+from ..windows_msi_source import msi_source
+from ..windows_msi_verify import verify_database
+from .test_windows_msi import prepared
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
 
 
 def _release_source(tmp_path: Path, *, owned: bool = False) -> bytes:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     author(build, identity, "cadrumo")
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
     stage = build / "installation/stage"
@@ -35,11 +38,11 @@ def _release_source(tmp_path: Path, *, owned: bool = False) -> bytes:
     marker = build / "installation/metadata/wix/native-installation.json"
     manifest = stage / prefix / "data/package-manifest.json"
     service = Element("Component")
-    _machine_service(service, value)
+    add_machine_service(service, value)
     partitions = []
     for role in ("version", "registration"):
         partitions.append(
-            _source(
+            msi_source(
                 stage,
                 {name: checksum for name, checksum in files.items() if name.startswith(prefix) == (role == "version")},
                 value,
@@ -97,13 +100,13 @@ def test_author_reuses_verified_source_but_refuses_changed_output_currency(
 ) -> None:
     from .. import windows_msi
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     generated = author(build, identity, "cadrumo")
 
     def unexpected_generation(*args: object, **kwargs: object) -> bytes:
         raise AssertionError("source regeneration requested")
 
-    monkeypatch.setattr(windows_msi, "_source", unexpected_generation)
+    monkeypatch.setattr(windows_msi, "msi_source", unexpected_generation)
     assert author(build, identity, "cadrumo") == generated
     generated["application.wxs"].write_bytes(b"changed generated source")
     with pytest.raises(AssertionError, match="regeneration"):
@@ -125,10 +128,10 @@ def test_retirement_removes_only_unchanged_recorded_outputs_after_complete_prefl
     if modified:
         second.write_bytes(b"changed after previous producer receipt")
         with pytest.raises(ValueError, match="refusing to remove"):
-            _retire(tmp_path, recorded, set(recorded))
+            retire(tmp_path, recorded, set(recorded))
         assert first.is_file() and second.is_file()
     else:
-        _retire(tmp_path, recorded, set(recorded))
+        retire(tmp_path, recorded, set(recorded))
         assert not first.exists() and not second.exists()
     assert current.read_bytes() == current.name.encode()
     assert foreign.read_bytes() == foreign.name.encode()

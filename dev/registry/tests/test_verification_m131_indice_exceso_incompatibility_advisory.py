@@ -42,7 +42,6 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
@@ -51,13 +50,13 @@ from cadrumo.application.modelo.verification_predicates import (
     evaluate_verification_predicates,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 
-from ..maintenance_support import load_modelo_path
+from .m131_incompatibility_advisory_support import (
+    assert_incompatibility_predicates_ship,
+    predicate_by_id,
+    taxpayer_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -92,40 +91,9 @@ _INDICE_EXCESO_CASES = (
 )
 
 
-def _profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
-
-
-@lru_cache
-def _m131_2025_revision() -> ModeloRevision:
-    modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "131"))
-    return modelo.revisions["2025"]
-
-
-def _predicate(predicate_id: str) -> VerificationPredicateDefinition:
-    revision = _m131_2025_revision()
-    return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
-
-
 def test_incompatibility_predicates_ship_on_the_modulos_orden_revision() -> None:
     """Both incompatibility predicates exist, are ADVISORY, and cite the Anexo II grounding."""
-    revision = _m131_2025_revision()
-    predicates_by_id = {p.predicate_id: p for p in revision.verification_predicates}
-
-    for predicate_id in _ALL_PREDICATE_IDS:
-        assert predicate_id in predicates_by_id, predicate_id
-        predicate = predicates_by_id[predicate_id]
-        assert predicate.finding_kind == "ADVISORY", predicate_id
-        assert "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades" in tuple(
-            str(r) for r in predicate.legal_refs
-        ), predicate_id
+    assert_incompatibility_predicates_ship(_ALL_PREDICATE_IDS)
 
 
 def test_advisory_fires_when_epigrafe_matches_and_indice_exceso_activated() -> None:
@@ -190,12 +158,12 @@ def test_emits_single_advisory_warning_finding_when_violated() -> None:
         _CASILLA_MINORADO: Decimal("40000.00"),
         _CASILLA_MODULOS: Decimal("40858.12"),
     }
-    predicate = _predicate(_AUTOTAXI_PREDICATE_ID)
+    predicate = predicate_by_id(_AUTOTAXI_PREDICATE_ID)
 
     findings = evaluate_verification_predicates(
         (predicate,),
         values,
-        _profile(),
+        taxpayer_profile(),
         text_values={_CASILLA_EPIGRAFE: "721.2"},
     )
 

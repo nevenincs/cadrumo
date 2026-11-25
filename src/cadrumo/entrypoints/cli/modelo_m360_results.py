@@ -32,8 +32,8 @@ class Modelo360SolicitudPayload(OutputSchema):
         return cls(
             filing_year=solicitud.filing_year,
             pais_destino=solicitud.pais_destino,
-            causa_presentacion=solicitud.causa_presentacion.value,
-            titular_en_calidad_de=solicitud.titular_en_calidad_de.value,
+            causa_presentacion=solicitud.causa_presentacion,
+            titular_en_calidad_de=solicitud.titular_en_calidad_de,
             has_representante=solicitud.has_representante,
             account_kind=solicitud.account_kind,
             own_account_id=solicitud.own_account_id,

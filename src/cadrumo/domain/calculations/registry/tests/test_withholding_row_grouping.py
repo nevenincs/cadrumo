@@ -22,8 +22,21 @@ from ..withholding_bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
+from .authored_editions import filing_year_envelope
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+
+def test_a_financial_asset_row_holds_its_clave_codigo_to_the_modelo_194_design() -> None:
+    # Modelo 194 position 79 lists three claves; only Modelo 193 position 79 adds the fourth.
+    row = _observation(source_id="asset-row", subclave="01", amount="0", withholding="0").model_dump()
+
+    assert WithholdingObservation.model_validate({**row, "clave_codigo": 4}).clave_codigo == 4
+    asset = {**row, "financial_asset_origin": "A"}
+    assert WithholdingObservation.model_validate({**asset, "clave_codigo": 3}).clave_codigo == 3
+    with pytest.raises(ValidationError, match="Modelo 194 record design"):
+        WithholdingObservation.model_validate({**asset, "clave_codigo": 4})
 
 
 def test_financial_asset_loss_preserves_signed_base_without_negative_withholding() -> None:
@@ -169,7 +182,7 @@ def test_financial_asset_values_do_not_silently_merge_different_transactions() -
         WithholdingObservation.model_validate(
             {**observation.model_dump(), "source_id": f"asset-{i}", "financial_asset_acquisition_value": Decimal(value)}
         )
-        for i, value in enumerate(("1000", "2000"))
+        for i, value in enumerate(("1000", "1500"))
     )
     with pytest.raises(RegistryValidationError, match="conflicting non-additive detail"):
         resolve_withholding_binding_row_values(revision, observations)
@@ -185,6 +198,7 @@ def test_financial_asset_classifications_reject_unknown_codes(field: str, value:
         WithholdingObservation.model_validate({**observation.model_dump(), field: value})
 
 
+_YEAR = filing_year_envelope().horizon
 _LEGAL_REFS = (
     "ley-35-2006:art-99",
     "orden-eha-3127-2009:art-1",
@@ -192,7 +206,7 @@ _LEGAL_REFS = (
 )
 
 
-@pytest.mark.parametrize("second_value", ["1000", "2000"])
+@pytest.mark.parametrize("second_value", ["1000", "1500"])
 def test_transaction_grouping_preserves_securities_operations_and_order(second_value: str) -> None:
     binding = _row_binding(
         "asset-value", "financial_asset_acquisition_value", BindingDataType.MONEY, "per_source_allocation"
@@ -281,10 +295,10 @@ def _scalar_binding(
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2025-y-siguientes",
-        localization_key="test.schema.revision.2025-y-siguientes.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(year_from=2025, periods=("0A",)),
+        id=f"{_YEAR}-y-siguientes",
+        localization_key=f"test.schema.revision.{_YEAR}-y-siguientes.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         bindings=bindings,
@@ -301,26 +315,16 @@ def _observation(
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="PERCEPTOR SINTETICO",
-        transaction_date=date(2025, 6, 1),
+        transaction_date=date(_YEAR, 6, 1),
         clave=RetencionClave.from_registry("G"),
         subclave=subclave,
         percibido_dinerario=Decimal(amount),
         retencion_practicada=Decimal(withholding),
         province_code=province_code,
         territorial_deduction_clave=0,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **zero_incapacity_and_foral_fields(),
     )
 
 
@@ -333,13 +337,13 @@ def test_m190_rows_group_active_payments_by_recipient_clave_and_subclave() -> No
         BindingAggregationOp.COUNT_DISTINCT,
     )
     base = _scalar_binding(
-        "modelo-190-111-trabajo-dinerario-importe-anual",
+        "percibido-sum",
         "percibido_sum",
         BindingDataType.MONEY,
         BindingAggregationOp.SUM,
     )
     retention = _scalar_binding(
-        "modelo-190-111-retenciones-anual",
+        "retencion-sum",
         "retencion_sum",
         BindingDataType.MONEY,
         BindingAggregationOp.SUM,
@@ -373,7 +377,7 @@ def test_m190_rows_group_active_payments_by_recipient_clave_and_subclave() -> No
         base.id: Decimal("600.00"),
         retention.id: Decimal("110.00"),
     }
-    assert row_values[(nif.id, 1)] == "11111111H"
+    assert row_values[(nif.id, 1)] == "00001500M"
     assert row_values[(clave.id, 1)] == "G"
     assert row_values[(subclave.id, 1)] == "01"
     assert row_values[(dinerario.id, 1)] == Decimal("500.00")
@@ -396,3 +400,31 @@ def test_m190_row_group_refuses_conflicting_non_additive_detail() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"conflicting non-additive detail.*province_code"):
         resolve_withholding_binding_row_values(revision, observations)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "admitted"),
+    [
+        ("territorial_deduction_clave", 2, True),
+        ("territorial_deduction_clave", 3, False),
+        ("descendants_under_3_total", 9, True),
+        ("descendants_under_3_total", 10, False),
+        ("descendants_rest_total", 99, True),
+        ("descendants_rest_total", 100, False),
+        ("clave_mercado", "D", True),
+        ("clave_mercado", "E", False),
+        ("financial_asset_origin", "E", True),
+        ("financial_asset_origin", "F", False),
+        ("financial_asset_related_entity", "", True),
+        ("financial_asset_related_entity", "V", True),
+        ("financial_asset_related_entity", "W", False),
+    ],
+)
+def test_the_observation_admits_only_what_the_record_design_declares(field: str, value: object, admitted: bool) -> None:
+    observation = _observation(source_id="coded", subclave="01", amount="0", withholding="0")
+    values = {**observation.model_dump(), field: value}
+    if admitted:
+        assert getattr(WithholdingObservation.model_validate(values), field) == value
+    else:
+        with pytest.raises(ValidationError, match="record design"):
+            WithholdingObservation.model_validate(values)

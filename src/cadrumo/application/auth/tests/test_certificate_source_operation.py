@@ -59,22 +59,26 @@ from cadrumo.application.auth.operator_results import (
     CertificateSourceMutationResult,
     CertificateSourcePayload,
 )
-from cadrumo.application.auth.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations import profile_guard
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
+from ...tests.operation_host_fakes import RecordingEvents
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -250,18 +254,6 @@ def test_only_source_mutations_require_a_commit_grant() -> None:
             assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
 class _Cancellation:
     def __init__(self) -> None:
         self.inside_irreversible_section = False
@@ -276,7 +268,7 @@ class _Cancellation:
 
 
 class _Operands:
-    def __init__(self, cancellation: _Cancellation, events: _Events) -> None:
+    def __init__(self, cancellation: _Cancellation, events: RecordingEvents) -> None:
         self.cancellation = cancellation
         self.events = events
         self.value: BaseModel | None = None
@@ -299,7 +291,7 @@ class _Context:
             subject_ref=profile_operation_subject(str(_PROFILE)),
         )
         self.authority_operation = authority_operation
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation, self.events)
 

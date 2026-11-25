@@ -30,39 +30,30 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    CAPTURED_AT as _CAPTURED_AT,
+    CAPTURED_AT,
+    M303_RESULTADO_CASILLA,
+    MODELO_130_FIXTURE_CSV,
+    MODELO_303_FIXTURE_CSV,
+    stored_130_justificante_observation,
+    stored_303_justificante_observation,
 )
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_130_FIXTURE_CSV as _MODELO_130_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_303_FIXTURE_CSV as _MODELO_303_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_130_justificante_observation as _stored_130_justificante_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_303_justificante_observation as _stored_303_justificante_observation,
-)
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.live.errors import LiveApplicationError
-from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
+from cadrumo.application.live.filed_capture_accumulator import FiledCaptureAccumulator
 from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
+from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import IMPORT_UNRECORDED_BINDINGS, T0
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -74,13 +65,13 @@ _EXPENSE = validated_casilla_id("02")
 @pytest.fixture
 def runtime_profile(tmp_path: Path, operation: PinnedAuthorityOperation) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=T0)
         yield profile
 
 
 def _complete_live_observation(tmp_path: Path, objects: SecureObjectRepository):
     store = FiledDeclaracionObservationStore(tmp_path / "filed", objects=objects)
-    observation = _stored_130_justificante_observation(store)
+    observation = stored_130_justificante_observation(store)
     return observation.model_copy(
         update={
             "casillas": (
@@ -152,7 +143,7 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
     accumulator = FiledCaptureAccumulator(operation=operation)
     accumulator.absorb(observation, ports=ports, bucket_id=_PROFILE_ID, output_root=tmp_path)
 
-    assert accumulator.justificante_csvs == [_MODELO_130_FIXTURE_CSV]
+    assert accumulator.justificante_csvs == [MODELO_130_FIXTURE_CSV]
     assert len(accumulator.filing_record_ids) == 1
     work_units = WorkUnitCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()
     assert len(work_units) == 1
@@ -169,13 +160,14 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
     assert filing is not None
     with calculation_ports_for_test(bucket_id=_PROFILE_ID) as _calculation_ports_100:
         revision = get_calculation_revision(filing.calculation_revision_id, ports=_calculation_ports_100)
-    assert filing.filed_at == _CAPTURED_AT
+    assert filing.filed_at == CAPTURED_AT
     assert revision.input_values_by_casilla_id == {_INCOME: " 001500.00 ", _EXPENSE: "300,0"}
     with calculation_ports_for_test(bucket_id=_PROFILE_ID) as _calculation_ports_110:
         amended = amend_modelo_revision(
             from_filing_record_id=filing.filing_record_id,
             overrides={_INCOME: Decimal("1600")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            binding_overrides=IMPORT_UNRECORDED_BINDINGS,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="live imported baseline correction",
             actor="operator",
             ports=build_amendment_action_ports(
@@ -192,12 +184,12 @@ def test_justificante_only_capture_remains_metadata_scaffold_without_work_unit(
     tmp_path: Path,
 ) -> None:
     store = FiledDeclaracionObservationStore(tmp_path / "filed", objects=runtime_profile.repository)
-    observation = _stored_130_justificante_observation(store)
+    observation = stored_130_justificante_observation(store)
     ports = _filed_capture_ports(runtime_profile=runtime_profile, operation=operation, tmp_path=tmp_path)
     accumulator = FiledCaptureAccumulator(operation=operation)
     accumulator.absorb(observation, ports=ports, bucket_id=_PROFILE_ID, output_root=tmp_path)
 
-    assert accumulator.justificante_csvs == [_MODELO_130_FIXTURE_CSV]
+    assert accumulator.justificante_csvs == [MODELO_130_FIXTURE_CSV]
     assert accumulator.filing_record_ids == []
     assert not WorkUnitCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()
     assert not CalculationRevisionCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()
@@ -229,11 +221,11 @@ def test_m303_live_capture_stays_on_observation_path_without_baseline(
     tmp_path: Path,
 ) -> None:
     store = FiledDeclaracionObservationStore(tmp_path / "filed", objects=runtime_profile.repository)
-    observation = _stored_303_justificante_observation(store).model_copy(
+    observation = stored_303_justificante_observation(store).model_copy(
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id=_M303_RESULTADO_CASILLA,
+                    casilla_id=M303_RESULTADO_CASILLA,
                     value="125.00",
                     value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
@@ -247,7 +239,7 @@ def test_m303_live_capture_stays_on_observation_path_without_baseline(
     accumulator = FiledCaptureAccumulator(operation=operation)
     accumulator.absorb(observation, ports=ports, bucket_id=_PROFILE_ID, output_root=tmp_path)
 
-    assert accumulator.justificante_csvs == [_MODELO_303_FIXTURE_CSV]
+    assert accumulator.justificante_csvs == [MODELO_303_FIXTURE_CSV]
     assert accumulator.observations_for_calculation == [observation]
     assert accumulator.filing_record_ids == []
     assert not WorkUnitCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()
@@ -280,7 +272,7 @@ def test_nonnumeric_live_capture_stays_on_observation_path_without_baseline(
     accumulator = FiledCaptureAccumulator(operation=operation)
     accumulator.absorb(observation, ports=ports, bucket_id=_PROFILE_ID, output_root=tmp_path)
 
-    assert accumulator.justificante_csvs == [_MODELO_130_FIXTURE_CSV]
+    assert accumulator.justificante_csvs == [MODELO_130_FIXTURE_CSV]
     assert accumulator.observations_for_calculation == [observation]
     assert accumulator.filing_record_ids == []
     assert not WorkUnitCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()

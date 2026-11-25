@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -12,12 +11,14 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ..revision_operation_access import compose_modelo_revision_access
 from ..revision_snapshot_operation import (
     MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
@@ -26,35 +27,19 @@ from ..revision_snapshot_operation import (
     build_modelo_work_revision_snapshot_registration,
 )
 from ..verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_operation_support import first_quarter_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 _REVISION_ID = "a" * 64
-
-
-def _unit() -> WorkUnit:
-    instant = datetime(2026, 3, 10, tzinfo=UTC)
-    return WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
-        ),
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=_PERIOD,
-        revision_id="2026-y-siguientes",
-        name="First quarter",
-        created_at=instant,
-        updated_at=instant,
-    )
 
 
 def test_revision_snapshot_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    unit = _unit()
+    unit = first_quarter_unit(_PROFILE)
 
     class Catalogue:
         def get(self, revision_id: str) -> SimpleNamespace | None:

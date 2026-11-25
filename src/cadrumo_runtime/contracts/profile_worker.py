@@ -20,15 +20,17 @@ from cadrumo.application.operations.models import (
     OperationIdentity,
     OperationReference,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
+from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
@@ -38,7 +40,7 @@ from cadrumo_client.contracts.submission_payload import (
     SubmissionPayloadChunk,
     SubmissionPayloadDescriptor,
 )
-from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity as _ProfileWorkerIdentity
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from .worker_authorization import WorkerAuthorityRequest
 
@@ -93,12 +95,44 @@ class ProfileWorkerControlRequest(BaseModel):
     action: Literal["status", "activity", "stop", "password", "receipt", "cancel_human", "prepare_api"]
     request_id: UUID
     originating_login_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
+    timeout_deadline: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None
+    proof_attempt_id: UUID | None = None
 
     @model_validator(mode="after")
     def _login_only_for_receipt(self) -> ProfileWorkerControlRequest:
         if (self.action == "receipt") != (self.originating_login_id is not None):
             raise ValueError("only a receipt proof request carries its originating login")
+        if self.timeout_deadline is not None and self.action not in {"password", "receipt"}:
+            raise ValueError("only a human proof carries its owner's timeout deadline")
+        if self.proof_attempt_id is not None and self.action not in {"password", "receipt"}:
+            raise ValueError("only a human proof carries an attempt identity")
         return self
+
+
+class ProfileWorkerProofControl(BaseModel):
+    """Exact proof lifecycle on the independently authenticated cancellation channel."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["register", "cancel", "finish"]
+    request_id: UUID
+    proof_attempt_id: UUID
+
+
+class ProfileWorkerProofAcknowledged(BaseModel):
+    """The exact worker observed one proof lifecycle command."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    proof_attempt_id: UUID
+
+
+class ProfileWorkerProofTransfer(BaseModel):
+    """Decide whether the following secret still belongs to an uncancelled proof."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    proof_attempt_id: UUID
+    cancelled: bool
 
 
 class ProfileWorkerHumanBindingRequest(BaseModel):
@@ -110,6 +144,7 @@ class ProfileWorkerHumanBindingRequest(BaseModel):
     candidate_id: UUID
     lease: AccessSession
     persist_receipt: bool = False
+    timeout_deadline: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None
 
 
 class ProfileWorkerHumanReceiptRequest(BaseModel):
@@ -125,6 +160,7 @@ class ProfileWorkerHumanReceiptRequest(BaseModel):
     session_id: UUID
     sign_in_lineage: UUID
     sign_in_generation: Annotated[int, Field(ge=1)]
+    timeout_deadline: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None
 
 
 class ProfileWorkerContractRequest(BaseModel):
@@ -209,7 +245,7 @@ class ProfileWorkerOperationRequest(BaseModel):
     """Internal lifecycle access to a previously session-bound invocation."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["operation_start"] = "operation_start"
+    action: Literal["operation_start", "operation_abandon"] = "operation_start"
     request_id: UUID
     session_id: UUID
     frontend: OperationFrontendProjection
@@ -319,7 +355,7 @@ class ProfileWorkerStatus(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["status"] = "status"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     sessions: tuple[UUID, ...]
     in_flight_operations: int | None = Field(default=None, ge=0)
@@ -330,7 +366,7 @@ class ProfileWorkerActivity(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["activity"] = "activity"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     in_flight_operations: int = Field(ge=0)
 
@@ -340,7 +376,7 @@ class ProfileWorkerDrained(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["drained"] = "drained"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     unresolved: tuple[OperationId, ...]
     recovery_required: tuple[OperationId, ...]
@@ -351,10 +387,18 @@ class ProfileWorkerSettlement(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_settlement"] = "operation_settlement"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     operation_identity: OperationIdentity
     settled: bool
+
+
+class ProfileWorkerReady(BaseModel):
+    """Key-free readiness after every authenticated dispatcher has been installed."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["worker_ready"] = "worker_ready"
+    identity: ProfileWorkerIdentity
 
 
 class ProfileWorkerHumanOutcome(BaseModel):
@@ -362,7 +406,7 @@ class ProfileWorkerHumanOutcome(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_candidate"] = "human_candidate"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     candidate_id: UUID
     login: ProfileLoginOutcome
@@ -377,7 +421,7 @@ class ProfileWorkerHumanBound(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_bound"] = "human_bound"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     session_id: UUID
     receipt: ProfileHumanLoginReceipt
@@ -395,9 +439,9 @@ class ProfileWorkerRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["refusal"] = "refusal"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
-    reason: AutomationCustodyCode | AccessDenialCode
+    reason: AutomationCustodyCode | AccessDenialCode | Literal[RefusalCode.TIMEOUT]
     sign_in: SignInRefusal | None = None
     request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
     #: The unsettled operation that holds the subject of a ``subject_busy`` refusal.
@@ -417,7 +461,7 @@ class ProfileWorkerOperationContract(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_contract"] = "operation_contract"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     contract: OperationPublicDefinitionContractV1
     request_json_schema: dict[str, JsonValue]
@@ -428,10 +472,22 @@ class ProfileWorkerSubmission(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_submission"] = "operation_submission"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     receipt: OperationSubmissionReceiptV1
     release: WorkerAuthorityRequest
+    newly_admitted: bool
+
+
+class ProfileWorkerAdmissionAbandoned(BaseModel):
+    """Parent-only cleanup acknowledgement, with no result or disclosure authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_admission_abandoned"] = "operation_admission_abandoned"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    operation_id: OperationId
+    settled: bool
 
 
 class ProfileWorkerUploadAccepted(BaseModel):
@@ -440,7 +496,7 @@ class ProfileWorkerUploadAccepted(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["operation_upload_accepted"] = "operation_upload_accepted"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     upload_id: UUID
 
@@ -450,7 +506,7 @@ class ProfileWorkerOperationReceipt(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_receipt"] = "operation_receipt"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     operation_id: OperationId
     release: WorkerAuthorityRequest
@@ -461,7 +517,7 @@ class ProfileWorkerObservation(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_observation"] = "operation_observation"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     observation: OperationObservationResultV1
     release: WorkerAuthorityRequest
@@ -472,7 +528,7 @@ class ProfileWorkerProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_projection"] = "operation_projection"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     document: dict[str, JsonValue]
     release: WorkerAuthorityRequest
@@ -483,7 +539,7 @@ class ProfileWorkerProjectionPage(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_projection_page"] = "operation_projection_page"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     page: ProjectionPage
     release: WorkerAuthorityRequest
@@ -494,7 +550,7 @@ class ProfileWorkerExtensionRecordReply(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["worker_extension_record_result"] = "worker_extension_record_result"
-    identity: _ProfileWorkerIdentity
+    identity: ProfileWorkerIdentity
     request_id: UUID
     result: ExtensionRecordReply
 
@@ -511,6 +567,7 @@ class ProfileWorkerReply(
             | ProfileWorkerRefusal
             | ProfileWorkerOperationContract
             | ProfileWorkerSubmission
+            | ProfileWorkerAdmissionAbandoned
             | ProfileWorkerUploadAccepted
             | ProfileWorkerOperationReceipt
             | ProfileWorkerObservation

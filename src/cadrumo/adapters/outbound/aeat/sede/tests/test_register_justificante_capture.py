@@ -11,12 +11,15 @@ import pytest
 from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..._playwright import BrowserContext, Page
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...playwright import BrowserContext, Page
 from .. import declarations as module
 from ..errors import SedeNavigationError
 from .declarations_register_test_support import offline_aeat_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.asyncio
@@ -24,17 +27,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 async def test_receipt_capture_rechecks_exact_register_row(monkeypatch: pytest.MonkeyPatch, change: str) -> None:
     selected = ExpedientesDeclaration(
         modelo="303",
-        ejercicio=2024,
-        period=Period.from_year_and_code(2024, "1T"),
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="202430300010001A",
         estado="ALTA",
-        presented_at=datetime(2024, 4, 20, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, tzinfo=UTC),
         justificante_link_text="Ver",
         justificante_cell_index=9,
     )
     current = selected
     if change == "quarter":
-        current = selected.model_copy(update={"period": Period.from_year_and_code(2024, "2T")})
+        current = selected.model_copy(update={"period": Period.from_year_and_code(_YEAR, "2T")})
     elif change == "receipt":
         current = selected.model_copy(update={"justificante_link_text": None})
     calls: list[dict[str, object]] = []
@@ -50,13 +53,13 @@ async def test_receipt_capture_rechecks_exact_register_row(monkeypatch: pytest.M
         return "artefact", b"receipt"
 
     page = SimpleNamespace(content=content)
-    monkeypatch.setattr(module, "_registry_snapshot_for_declaration", lambda *args, **kwargs: object())
-    monkeypatch.setattr(module, "_read_guard_policy_from_snapshot", lambda snapshot: module.READ_GUARD_POLICY)
-    monkeypatch.setattr(module, "_drive_search", search)
+    monkeypatch.setattr(module, "registry_snapshot_for_declaration", lambda *args, **kwargs: object())
+    monkeypatch.setattr(module, "read_guard_policy_from_snapshot", lambda snapshot: module.READ_GUARD_POLICY)
+    monkeypatch.setattr(module, "drive_search", search)
     monkeypatch.setattr(
-        module, "_register_rows_from_snapshot", lambda *args, **kwargs: () if change == "missing" else (current,)
+        module, "register_rows_from_snapshot", lambda *args, **kwargs: () if change == "missing" else (current,)
     )
-    monkeypatch.setattr(module, "_row_locator_for_expediente", lambda *args, **kwargs: "exact-row")
+    monkeypatch.setattr(module, "row_locator_for_expediente", lambda *args, **kwargs: "exact-row")
     monkeypatch.setattr(module, "capture_row_pdf_artefact", download)
     register = module.DeclaracionesRegisterSession(
         offline_aeat_session(),

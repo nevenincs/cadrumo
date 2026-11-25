@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import cast
@@ -17,26 +18,15 @@ from cadrumo.application.auth.operation_definitions import (
     build_auth_operation_registrations,
 )
 from cadrumo.application.auth.passphrase_operation_access import PROFILE_ROTATION_RESULT_SCHEMA_ID
-from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
-    OperationPublicProjectionV1,
-)
 from cadrumo.application.operations.frontend_requests import (
-    OperationObservationSuccessV1,
-    OperationPublicEventPageV1,
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -55,6 +45,7 @@ from ..frontend_client import FrontendClient
 from ..frontend_client_contracts import FrontendRefusedError
 from ..profile_mutations import ProfileMutationRunError
 from ..profile_password_rotation import run_profile_password_rotation
+from .refused_observation import refused_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -71,53 +62,6 @@ def _contract() -> OperationPublicDefinitionContractV1:
     assert registration.contract.result_schema is not None
     assert registration.contract.result_schema.schema_id == PROFILE_ROTATION_RESULT_SCHEMA_ID
     return registration.contract
-
-
-def _refused_observation(
-    *, contract: OperationPublicDefinitionContractV1, profile_id: UUID
-) -> OperationObservationSuccessV1:
-    instant = datetime.now(UTC)
-    operation_id = _OPERATION_ID
-    subject_ref = profile_operation_subject(str(profile_id))
-    contract_set = OperationPublicContractSetV1.build((contract,))
-    projection = OperationPublicProjectionV1(
-        operation_id=operation_id,
-        definition_id=contract.definition_id,
-        subject_ref=subject_ref,
-        revision=3,
-        anchor_cursor=3,
-        definition_contract=contract,
-        contract_set_digest=contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=OperationTerminalCondition.REFUSED,
-        effect=OperationEffect.NONE,
-        phase_code=None,
-        started_at=instant,
-        updated_at=instant,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None,
-        refusal_ref="refusal:rotation.denied",
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    event_page = OperationPublicEventPageV1(
-        operation_id=operation_id,
-        anchor_cursor=3,
-        requested_cursor=3,
-        status=OperationReplayStatus.CAUGHT_UP,
-        events=(),
-        next_cursor=3,
-        restart_cursor=None,
-    )
-    return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
 class _Client:
@@ -187,7 +131,12 @@ class _Client:
             )
         if isinstance(request, OperationObserve):
             if self._terminal_refusal:
-                observation = _refused_observation(contract=self._contract, profile_id=self.profile_id)
+                observation = refused_observation(
+                    contract=self._contract,
+                    operation_id=_OPERATION_ID,
+                    subject_ref=profile_operation_subject(str(self.profile_id)),
+                    refusal_ref="refusal:rotation.denied",
+                )
                 return OperationObserved(
                     request_id=request.request_id,
                     runtime_boot_id=uuid4(),
@@ -242,12 +191,16 @@ def _run(
     fresh_client: Callable[[], _Client],
     timeout: float = 60,
 ) -> None:
+    def open_fresh(remaining: float) -> FrontendClient:
+        assert 0 < remaining <= timeout
+        return cast(FrontendClient, fresh_client())
+
     run_profile_password_rotation(
         cast(FrontendClient, original),
         current_passphrase=proofs[0],
         new_passphrase=proofs[1],
         new_passphrase_confirmation=proofs[2],
-        fresh_client=lambda: cast(FrontendClient, fresh_client()),
+        fresh_client=open_fresh,
         timeout=timeout,
     )
 
@@ -344,6 +297,64 @@ def test_wrong_fresh_candidate_is_closed_without_receiving_replacement_proof(wro
     assert caught.value.reason == AccessDenialCode.PROFILE_MISMATCH.value
     assert candidate.login_calls == 0 and candidate.close_calls == 1
     assert original.close_calls == 0
+    _assert_wiped(proofs)
+
+
+def test_prolonged_retirement_backs_off_without_resubmitting(monkeypatch: pytest.MonkeyPatch) -> None:
+    original = _Client(profile_id=uuid4())
+    candidates = [
+        _Client(
+            profile_id=original.profile_id,
+            login_error=FrontendRefusedError(AutomationCustodyCode.CONFLICT.value),
+        )
+        for _ in range(7)
+    ]
+    candidates.append(
+        _Client(
+            profile_id=original.profile_id,
+            login_error=FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value),
+        )
+    )
+    pending = iter(candidates)
+    delays: list[float] = []
+    monkeypatch.setattr(time, "sleep", delays.append)
+    proofs = _proofs()
+    with pytest.raises(ProfileMutationRunError) as caught:
+        _run(original, proofs, fresh_client=lambda: next(pending))
+    assert caught.value.reason == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+    assert delays == [0.05, 0.1, 0.2, 0.4, 0.8, 1.0, 1.0]
+    assert all(client.close_calls == 1 for client in candidates)
+    assert original.submissions == original.secret_submissions == original.starts == 1
+    _assert_wiped(proofs)
+
+
+def test_fresh_open_receives_remaining_budget_and_cannot_admit_after_it_expires(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    instant = [100.0]
+    monkeypatch.setattr(time, "monotonic", lambda: instant[0])
+    original = _Client(profile_id=uuid4())
+    successor = _Client(profile_id=original.profile_id)
+    proofs = _proofs()
+    budgets: list[float] = []
+
+    def open_fresh(remaining: float) -> FrontendClient:
+        budgets.append(remaining)
+        instant[0] += remaining
+        return cast(FrontendClient, successor)
+
+    with pytest.raises(ProfileMutationRunError):
+        run_profile_password_rotation(
+            cast(FrontendClient, original),
+            current_passphrase=proofs[0],
+            new_passphrase=proofs[1],
+            new_passphrase_confirmation=proofs[2],
+            fresh_client=open_fresh,
+            timeout=3,
+        )
+    assert budgets == [3.0]
+    assert successor.login_calls == 0 and successor.close_calls == 1
+    assert original.submissions == original.secret_submissions == original.starts == 1
     _assert_wiped(proofs)
 
 

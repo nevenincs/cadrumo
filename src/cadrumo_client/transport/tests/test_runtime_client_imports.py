@@ -22,12 +22,25 @@ import importlib.abc, json, sys
 excluded = {
     'cadrumo.domain.calculations.registry.authority',
     'cadrumo.application.user_profile.view_operation',
+    'cadrumo.application.user_profile.profile_operation_contracts',
+    'cadrumo.application.workflow.profile_health',
+    'cadrumo.domain.deadlines.profiles',
+    'cadrumo.domain.user_profile.setup_answers',
+    'cadrumo.adapters.persistence.storage.custody.automation_client_credentials',
+    'cadrumo.adapters.persistence.storage.crypto.aead',
+    'cryptography',
 }
 class RefuseUnusedModels(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname in excluded:
             raise RuntimeError('unneeded_client_model_import')
         return None
+
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
 
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:

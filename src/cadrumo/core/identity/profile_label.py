@@ -39,7 +39,7 @@ def _reject_uuid_shaped_label(value: str) -> str:
 
 ProfileLabel = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=160),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
     AfterValidator(_reject_uuid_shaped_label),
 ]
 """Operator-chosen display name for one profile bucket."""

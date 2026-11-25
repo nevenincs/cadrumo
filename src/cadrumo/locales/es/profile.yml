@@ -28,7 +28,8 @@ profile:
       description: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
     capabilities:
       google_export: ¿Activar la exportación a Google Sheets?
-      llm_vision: ¿Activar la visión LLM local para leer facturas?
+      llm_vision: ¿Permitir leer documentos escaneados o en imagen con el modelo de
+        lectura de imágenes que elegiste?
     censo:
       activity_start_date: ¿Desde qué fecha tienes obligaciones de declaración / cuándo
         te diste de alta? (AAAA-MM-DD, opcional)
@@ -41,22 +42,15 @@ profile:
     identity:
       legal_name: Razón social de la entidad para cabeceras de exportación
       name: Nombre visible mostrado en revisiones locales
-      notes: Notas para tus propios registros (opcional)
       surnames: Apellidos o razón social para cabeceras de exportación
       tax_id: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
     irpf:
+      activity_income_imputation_criterion: ¿Qué criterio imputa los ingresos y gastos
+        de tu actividad a cada ejercicio?
       art109_activity_income_withholding_ge_70pct: Aplica la excepción Art. 109 por
         cobertura del 70% de ingresos de actividad
+      codigo_comercio_accounting: ¿Llevas contabilidad ajustada al Código de Comercio?
       estimation_regime: Régimen de estimación IRPF
-      objective_estimation_modulos_iae_epigraph: Epígrafe IAE para módulos de estimación
-        objetiva
-      objective_estimation_modulos_module_1_units: Unidades anuales del módulo 1
-      objective_estimation_modulos_module_2_units: Unidades anuales del módulo 2
-      objective_estimation_modulos_module_3_units: Unidades anuales del módulo 3
-      objective_estimation_modulos_module_4_units: Unidades anuales del módulo 4
-      objective_estimation_modulos_module_5_units: Unidades anuales del módulo 5
-      objective_estimation_modulos_module_6_units: Unidades anuales del módulo 6
-      objective_estimation_modulos_module_7_units: Unidades anuales del módulo 7
       special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
       special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
     iva:
@@ -81,6 +75,8 @@ profile:
         del Modelo 720
       monedas_virtuales_extranjero_above_threshold: Monedas virtuales en el extranjero
         superan el umbral del Modelo 721
+      patrimonio_declaration_threshold_met: 'Obligado a declarar el Impuesto sobre
+        el Patrimonio: cuota a ingresar o bienes y derechos de más de 2.000.000 euros'
       premio_loteria_gravamen_especial_sin_retencion: Premio de loterías o apuestas
         sujeto al gravamen especial obtenido sin retención ni ingreso a cuenta (Modelo
         136)
@@ -94,6 +90,8 @@ profile:
     preferences:
       output_language: Idioma de salida de la CLI para este perfil
     renta_family:
+      convive_con_otro_progenitor: 'Unidad monoparental: convive con el padre o la
+        madre de algún hijo de la unidad'
       descendants_eu_eea_deduction: Descendientes UE/EEE en la deducción por unidad
         familiar
       minor_children_in_unit: Hijos menores en la unidad familiar
@@ -120,31 +118,42 @@ profile:
     tax:
       id: Identificador fiscal (NIF/CIF/DNI/NIE)
     tax_residence:
-      ccaa: Comunidad autónoma de residencia fiscal
+      ccaa: Comunidad o ciudad autónoma de residencia fiscal
       jurisdiction_scope: ¿Qué territorio tributario se aplica a este Modelo 303?
     taxpayer_type:
+      cierre_ejercicio_dia: ¿Qué día del mes cierra el ejercicio de la entidad?
+      cierre_ejercicio_mes: ¿En qué mes cierra el ejercicio de la entidad?
+      cooperativa_fiscalmente_protegida: ¿La entidad es una cooperativa fiscalmente
+        protegida?
       country_of_fiscal_residence: País de residencia fiscal (código ISO 3166-1 alfa-2,
         p.ej. GB, DE, FR)
       declaration_roles: ¿La entidad declarante desempeña alguno de estos roles institucionales
         a efectos del Modelo 347 (operaciones con terceros)?
       entity_type: Tipo de entidad
+      erd_tipo_gravamen_especifico: ¿La entidad es de reducida dimensión y tributa
+        al tipo específico del art. 101 LIS?
+      fecha_constitucion: ¿Cuál es la fecha de constitución de la entidad?
       fiscal_residency: Categoría de residencia fiscal
       incn_prior_12_months: ¿Cuál fue su importe neto de la cifra de negocios en los
         últimos 12 meses? (en euros, opcional)
       irpf_income_categories: Categorías de renta IRPF
       legal_entity_form: Forma jurídica
-      ley_49_2002_special_regime_option_date: Fecha declarada de la opción por el
-        régimen especial de la Ley 49/2002
-      ley_49_2002_special_regime_option_declared: ¿La entidad ha presentado en el
-        modelo 036 la opción por el régimen fiscal especial del título II de la Ley
-        49/2002?
-      ley_49_2002_special_regime_renunciation_date: Fecha declarada de la renuncia
-        al régimen especial de la Ley 49/2002
-      ley_49_2002_special_regime_renunciation_declared: ¿La entidad ha presentado
-        en el modelo 036 la renuncia al régimen fiscal especial del título II de la
-        Ley 49/2002?
+      marca_instrumental: ¿Se aplica a la entidad la marca instrumental de la Nota
+        7 del diseño?
       new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
         de sus dos primeros periodos impositivos con beneficios?
+      pago_fraccionado_art_40_3_elected: ¿Ejerció la entidad en su declaración censal
+        la opción del artículo 40.3 de la LIS para el pago fraccionado?
+      principal_cnae: ¿Cuál es el código CNAE de cuatro dígitos de la actividad principal
+        de la entidad?
+      principal_cnae_classification: ¿En qué clasificación CNAE indicas el código
+        de tu actividad principal?
+      regimen_entidad_capital_riesgo: ¿La entidad es una entidad de capital riesgo
+        del art. 50 LIS?
+      regimen_entidades_navieras_tonelaje: ¿La entidad aplica el régimen de entidades
+        navieras en función del tonelaje?
+      regimen_ley_49_2002: ¿La entidad aplica el régimen de la Ley 49/2002?
+      regimen_socimi: ¿La entidad aplica el régimen SOCIMI (Ley 11/2009)?
       representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
         fuera UE/EEE)
       representante_fiscal_nombre: Nombre del representante fiscal en España
@@ -153,25 +162,46 @@ profile:
       modelo_111_no_retenciones_periods: Periodos Modelo 111 sin retenciones
       modelo_115_no_relevant_payment_periods: Periodos Modelo 115 sin pago relevante
       pays_capital_income_with_retencion: Paga rentas de capital con retención
+      pays_non_resident_income_with_retencion: Paga a no residentes sin establecimiento
+        permanente rentas sujetas a retención
       pays_professionals_with_retencion: Paga a profesionales con retención
       pays_rent_with_retencion: Paga alquiler de local con retención
   schema:
     field:
       activities:
-        cnae:
-          label: Código CNAE
+        cuota_provincial_province_code:
+          label: Provincia de la cuota provincial
         description:
           label: Descripción de la actividad
+        expositores_autoventa:
+          label: Expositores de autoventa
         iae_epigraph:
           label: Epígrafe IAE
-      attribution_entity:
-        legal_form:
+        local_afecto_indirectamente:
+          label: Tiene local afecto indirectamente
+        maquinas_recreativas_tipo_a:
+          label: Máquinas recreativas tipo A
+        maquinas_recreativas_tipo_b:
+          label: Máquinas recreativas tipo B
+        municipality_code:
+          label: Código del municipio de la actividad
+        municipality_name:
+          label: Municipio de la actividad
+        province_code:
+          label: Código de la provincia de la actividad
+        tipo_actividad:
           choices:
-            comunidad_bienes: Comunidad de bienes
-            herencia_yacente: Herencia yacente
-            other: Otra
-            sociedad_civil: Sociedad civil
-          label: Forma jurídica de la entidad en atribución
+            A01: Arrendadores de bienes inmuebles
+            A02: Ganadería independiente
+            A03: Resto de actividades empresariales no incluidas en otros apartados
+            A04: Actividades profesionales de carácter artístico o deportivo
+            A05: Resto de actividades profesionales
+            B01: Actividad agrícola
+            B02: Actividad ganadera dependiente
+            B03: Actividad forestal
+            B04: Producción de mejillón en batea
+            B05: Actividad pesquera, excepto la producción de mejillón en batea
+          label: Tipo de actividad (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imponible atribuida al socio
@@ -209,12 +239,6 @@ profile:
           label: Rendimiento neto minorado agrícola (estimación objetiva)
         rendimiento_neto_previo_eo:
           label: Rendimiento neto previo (estimación objetiva)
-        role:
-          choices:
-            comunero: Comunero
-            participe: Partícipe
-            socio: Socio
-          label: Papel del miembro
         share_pct:
           label: Porcentaje de participación
         situacion_inmueble:
@@ -235,8 +259,6 @@ profile:
       auth:
         clave_movil_route:
           label: Ruta de Cl@ve Móvil
-        dni_nie:
-          label: DNI o NIE para Cl@ve
         fecha_validez:
           label: Fecha de validez
         numero_soporte:
@@ -249,22 +271,20 @@ profile:
         google_export:
           label: Exportación a Google
         llm_vision:
-          label: Lectura de imágenes en local
+          label: Lectura de imágenes
       censo:
         activity_end_date:
           label: Fecha de baja de la actividad
         activity_start_date:
           label: Fecha de alta de la actividad
+        aeat_administracion_code:
+          label: Código de la Administración de la AEAT
+        aeat_administracion_name:
+          label: Administración de la AEAT
+        aeat_delegacion_code:
+          label: Código de la Delegación de la AEAT
         divergencia:
           label: Divergencias del cotejo censal
-        elected_withholding_pct:
-          label: Tipo de retención elegido
-        establecimiento_type:
-          choices:
-            arrendado: Arrendado
-            cedido_gratuitamente: Cedido gratuitamente
-            propio: Propio
-          label: Tipo de establecimiento
         large_company:
           label: Condición de gran empresa
         public_administration_budget_gt_6000000:
@@ -284,10 +304,80 @@ profile:
           label: Domicilio fiscal
         fiscal_address_cadastral_reference:
           label: Referencia catastral del domicilio fiscal
-        fiscal_address_is_habitual_vivienda:
-          label: El domicilio fiscal es la vivienda habitual
+        fiscal_address_municipality_code:
+          label: Código del municipio del domicilio fiscal
+        fiscal_address_municipality_name:
+          label: Municipio del domicilio fiscal
+        fiscal_address_province_code:
+          label: Código de la provincia del domicilio fiscal
         postcode:
           label: Código postal
+      iae_elemento_tributario:
+        actividad:
+          label: Actividad
+        code:
+          label: Código del elemento tributario
+        description:
+          label: Descripción del elemento tributario
+        linea:
+          label: Línea
+        numero:
+          label: Número
+      iae_local:
+        actividad:
+          label: Actividad
+        afectacion:
+          choices:
+            ejercicio: Donde se ejerce la actividad
+            indirecta: Afecto indirectamente a la actividad
+          label: Afectación del local
+        escalera:
+          label: Escalera
+        km:
+          label: Km
+        municipality_code:
+          label: Código del municipio
+        municipality_name:
+          label: Municipio
+        numero:
+          label: Número
+        piso:
+          label: Piso
+        portal:
+          label: Portal
+        postcode:
+          label: Código postal
+        province_code:
+          label: Código de la provincia
+        puerta:
+          label: Puerta
+        superficie_computable:
+          label: Superficie computable (m²)
+        superficie_rectificada:
+          label: Superficie rectificada (m²)
+        superficie_total:
+          label: Superficie total (m²)
+        telefono:
+          label: Teléfono
+        uso_destino_code:
+          label: Código de uso o destino
+        uso_destino_description:
+          label: Uso o destino
+        via_nombre:
+          label: Nombre de la vía pública
+        via_sg:
+          label: Tipo de vía
+      iae_local_superficie:
+        clase:
+          label: Clase de superficie (Regla 14)
+        computable:
+          label: Computable (m²)
+        local:
+          label: Local
+        rectificada:
+          label: Rectificada (m²)
+        total:
+          label: Total (m²)
       identity:
         email:
           label: Correo electrónico de contacto
@@ -295,21 +385,37 @@ profile:
           label: Razón social
         name:
           label: Nombre
-        notes:
-          label: Notas
         surnames:
           label: Apellidos
         tax_id:
-          help:
-            what: 'Tu número de identificación fiscal: el NIF de tu DNI, tu NIE si
-              eres extranjero, o el NIF de una entidad.'
-            where: En tu DNI o tarjeta de NIE, o en la tarjeta de NIF emitida por
-              la AEAT. También aparece en cualquier declaración anterior o carta de
-              la AEAT.
-            why: Todas las declaraciones se presentan con este número; es como te
-              identifica la AEAT.
           label: NIF/NIE/CIF de identificación
+      inversiones_posicion:
+        fecha_fin:
+          label: Titular hasta
+        fecha_inicio:
+          label: Titular desde
+        identificador:
+          label: Tu identificador de la posición
+        pagador_nif:
+          label: NIF del pagador
+        pagador_nombre:
+          label: Nombre del pagador
+        pais_origen:
+          label: Estado de origen de los rendimientos
+        porcentaje_titularidad:
+          label: Tu porcentaje de titularidad
+        tipo:
+          choices:
+            cuenta: Cuenta corriente o de ahorro
+            deposito: Depósito a plazo
+            valores_negociables: Cuenta de valores
+          label: Clase de posición
       irpf:
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: Cobros y pagos (art. 7.2 RIRPF)
+            devengo: Devengo
+          label: Criterio de imputación de ingresos y gastos
         activity_kind:
           choices:
             profesional: Actividad profesional
@@ -317,28 +423,14 @@ profile:
           label: Tipo de actividad
         art109_activity_income_withholding_ge_70pct:
           label: Cumple la excepción del 70 % del art. 109 RIRPF
+        codigo_comercio_accounting:
+          label: Llevas contabilidad ajustada al Código de Comercio
         estimation_regime:
           choices:
             directa_normal: Estimación directa normal
             directa_simplificada: Estimación directa simplificada
             objetiva: Estimación objetiva (módulos)
           label: Régimen de estimación
-        objective_estimation_modulos_iae_epigraph:
-          label: Epígrafe IAE (módulos)
-        objective_estimation_modulos_module_1_units:
-          label: Unidades del módulo 1
-        objective_estimation_modulos_module_2_units:
-          label: Unidades del módulo 2
-        objective_estimation_modulos_module_3_units:
-          label: Unidades del módulo 3
-        objective_estimation_modulos_module_4_units:
-          label: Unidades del módulo 4
-        objective_estimation_modulos_module_5_units:
-          label: Unidades del módulo 5
-        objective_estimation_modulos_module_6_units:
-          label: Unidades del módulo 6
-        objective_estimation_modulos_module_7_units:
-          label: Unidades del módulo 7
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Ingresos agrícolas, ganaderos y forestales del año anterior
         objective_estimation_prior_year_gross_income_eur:
@@ -355,8 +447,6 @@ profile:
           label: Rendimientos íntegros del trabajo
         plantilla_media:
           label: Plantilla media por año natural
-        professional_income_withholding_ge_70pct:
-          label: Retención profesional alcanza el 70 %
         special_regime:
           choices:
             general: Régimen general
@@ -368,12 +458,6 @@ profile:
         autoconsumo_promotor_base:
           label: Base imponible del autoconsumo (promotor)
         cash_accounting_regime_enrolled:
-          help:
-            what: Si optaste por el régimen especial del criterio de caja del IVA.
-            where: Se elige en el modelo 036 y figura en tus datos censales. Si no
-              optaste por él, la respuesta es No.
-            why: Con él, el IVA se devenga al cobrar o pagar las facturas y no al
-              emitirlas, lo que cambia las cifras de cada periodo.
           label: Inscripción en el criterio de caja
         does_intracomunitario:
           label: Operaciones intracomunitarias
@@ -382,13 +466,6 @@ profile:
         group_member_enrolled:
           label: Miembro de grupo de IVA (Modelo 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
-          help:
-            what: Si puedes deducir los pagos anticipados de IVA hechos al sacar hidrocarburos
-              de un régimen de depósito fiscal.
-            where: Solo afecta a empresas que sacan combustible de un depósito fiscal.
-              La mayoría de contribuyentes responde No.
-            why: Esos pagos anticipados se deducen en la declaración de IVA, así que
-              el derecho cambia el importe a ingresar.
           label: Derecho a deducir anticipos de depósitos de hidrocarburos
         intracommunity_operations_exceed_50000_eur:
           label: Operaciones intracomunitarias superiores a 50.000 EUR
@@ -397,24 +474,10 @@ profile:
             general: Solo régimen general
             mixed: Régimen general y simplificado
             simplified: Solo régimen simplificado
-          help:
-            what: 'Qué regímenes de IVA combina tu modelo 303: solo el general, solo
-              el simplificado o ambos.'
-            where: Se deduce del régimen de IVA de cada una de tus actividades en
-              tu declaración censal.
-            why: El modelo 303 tiene una parte distinta para cada régimen; esto decide
-              qué partes se rellenan.
           label: Composición de regímenes del Modelo 303
         oss_enrolled:
           label: Inscripción en OSS/IOSS
         redeme_enrolled:
-          help:
-            what: Si estás inscrito en el REDEME, el registro de devolución mensual
-              del IVA.
-            where: Se solicita en el modelo 036 y figura en tus datos censales. Si
-              nunca lo pediste, la respuesta es No.
-            why: La inscripción hace que tu declaración de IVA sea mensual en lugar
-              de trimestral y obliga al SII.
           label: Inscripción en REDEME
         regime:
           choices:
@@ -423,26 +486,131 @@ profile:
             REAGP: Régimen especial de la agricultura, ganadería y pesca (REAGP)
             RECARGO_EQUIVALENCIA: Recargo de equivalencia
             SIMPLIFICADO: Simplificado
-          help:
-            what: El régimen de IVA en el que está dada de alta tu actividad.
-            where: En tu declaración censal (modelo 036 o 037), o en tus datos censales
-              en la sede electrónica de la AEAT.
-            why: Decide qué declaraciones de IVA presentas y cómo se calcula el IVA
-              de tus ventas y compras.
           label: Régimen de IVA
         roi_enrolled:
           label: Inscripción en el ROI/VIES
         sii_enrolled:
           label: Inscripción en el SII
         voluntary_sii_enrolled:
-          help:
-            what: Si te adheriste voluntariamente al SII, el suministro inmediato
-              de tus libros registro de IVA a la AEAT.
-            where: La adhesión voluntaria se solicita en el modelo 036 y figura en
-              tus datos censales. Si nunca la pediste, la respuesta es No.
-            why: Quien está en el SII lleva sus libros de IVA en línea con la AEAT,
-              lo que cambia algunas obligaciones y plazos.
           label: Inscripción voluntaria en el SII
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Apellidos y nombre o razón social
+        codigo_provincia:
+          label: Código de provincia
+        domicilio_fiscal:
+          label: Domicilio fiscal del representante en España
+        forma_juridica:
+          label: F/J (persona física o jurídica)
+        nif:
+          label: NIF
+        representante:
+          label: Representante (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nombre o razón social
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Beneficio o pérdida
+        identificacion:
+          label: Identificación
+        pais_residencia_fiscal:
+          label: País de residencia fiscal
+        suma_ajustes_resultado_contable:
+          label: Suma de ajustes al resultado contable
+        suma_deducciones_di_internacional_anteriores:
+          label: Suma de deducciones por doble imposición internacional de períodos
+            anteriores
+        volumen_operaciones:
+          label: Volumen de operaciones
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Ajuste por valor razonable
+        capital:
+          label: Capital
+        codigo_provincia_pais:
+          label: Código provincia/país
+        correccion_valor_perdidas_ganancias:
+          label: Corrección de valor en pérdidas y ganancias
+        efecto_correccion_valorativa_base_imponible:
+          label: Efecto de la corrección valorativa en la base imponible
+        eliminacion_deterioro_contable:
+          label: Eliminación del deterioro contable
+        eliminacion_deterioro_valores_participacion:
+          label: Eliminación del deterioro de valores representativos de la participación
+        ingresos_por_dividendos:
+          label: Ingresos por dividendos
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nombre o razón social
+        otras_partidas_patrimonio_neto:
+          label: Otras partidas del patrimonio neto
+        porcentaje_participacion:
+          label: Porcentaje de participación
+        reservas_y_otras_partidas_fondos_propios:
+          label: Reservas y otras partidas de fondos propios
+        resultado_ultimo_ejercicio:
+          label: Resultado del último ejercicio
+        reversion_perdidas_deterioro_valores:
+          label: Reversión de pérdidas por deterioro de valores
+        saldo_correcciones_fiscales_pendientes:
+          label: Saldo de correcciones fiscales pendientes
+        valor_en_libros:
+          label: Valor en libros
+        valor_nominal_total:
+          label: Valor nominal total
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Apellidos y nombre o razón social
+        codigo_provincia_pais:
+          label: Código provincia/país
+        forma_juridica:
+          label: F/J/Otra (forma jurídica)
+        nif:
+          label: NIF
+        nominal:
+          label: Valor nominal
+        porcentaje_participacion:
+          label: Porcentaje de participación
+        representante:
+          label: Representante (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: ¿Integra tu entidad entidades menores dependientes?
+        has_establecimiento_permanente:
+          label: ¿Tiene tu entidad establecimientos permanentes en el extranjero?
+        has_participacion_directa:
+          label: ¿Participa tu entidad directamente en otras entidades?
+        has_participacion_socio:
+          label: ¿Tiene tu entidad socios o partícipes con participación directa?
+        has_representante_legal:
+          label: ¿Tiene tu entidad apoderados o representantes legales?
+        has_secretario_consejo:
+          label: ¿Tiene tu entidad Secretario del Consejo de Administración?
+        has_socio_sicav_disolucion:
+          label: ¿Es tu entidad socio de una SICAV disuelta?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Apellidos y nombre
+        fecha_poder:
+          label: Fecha del poder
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Notaría/otros
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Apellidos y nombre
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: NIF de la IIC de reinversión
+        nif_sociedad_disuelta:
+          label: NIF de la sociedad disuelta
       maritime_worker:
         annual_salary:
           label: Salario anual
@@ -484,6 +652,8 @@ profile:
           label: Umbral del Modelo 720 superado
         monedas_virtuales_extranjero_above_threshold:
           label: Umbral del Modelo 721 superado
+        patrimonio_declaration_threshold_met:
+          label: Obligación de declarar el Impuesto sobre el Patrimonio (Modelo 714)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Premio de lotería sin retención (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -494,17 +664,6 @@ profile:
       preferences:
         output_language:
           label: Idioma de salida
-      properties:
-        cadastral_reference:
-          label: Referencia catastral
-        use_type:
-          choices:
-            habitual: Vivienda habitual
-            imputed_income: Imputación de rentas (sin alquilar)
-            mixed: Uso mixto
-            other: Otra
-            rental: Arrendado
-          label: Uso del inmueble
       provenance:
         source:
           choices:
@@ -519,11 +678,54 @@ profile:
           label: Válido desde
         valid_to:
           label: Válido hasta
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Otra
+            vivienda_asequible_o_social: Vivienda asequible o social
+          label: Finalidad de la vivienda para la entidad
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Administración pública
+            entidad_sin_fines_lucro: Entidad sin fines lucrativos
+          label: Tipo de arrendatario que no es persona física
+        arrendatario_pariente_art24:
+          label: Arrendatario pariente (art. 24)
+        fecha_contrato:
+          label: Fecha del contrato
+        fecha_fin:
+          label: Fecha de fin
+        fecha_inicio:
+          label: Fecha de inicio
+        incumple_lau_17_6:
+          label: Incumple el art. 17.6 LAU (zona tensionada)
+        inmueble:
+          label: Inmueble arrendado (clave de fila)
+        inquilinos:
+          label: Arrendatarios
+        primer_arrendamiento_vivienda:
+          label: Primer arrendamiento de la vivienda
+        rehabilitacion_fecha:
+          label: Fecha de fin de la rehabilitación
+        renta_inicial:
+          label: Renta inicial
+        renta_ultima_contrato_anterior:
+          label: Última renta del contrato anterior
+        uso_vivienda:
+          label: Arrendamiento de vivienda
+        zona_tensionada:
+          label: Zona de mercado residencial tensionado
       renta_family:
         anualidades_alimentos_euros:
           label: Anualidades por alimentos a favor de los hijos por decisión judicial
         ascendants:
           label: Ascendientes
+        ascendiente:
+          label: Ascendiente
+        ascendientes_count:
+          label: Número de ascendientes
+        convive_con_otro_progenitor:
+          label: Convive con el padre o la madre de algún hijo del hogar
         cotizaciones_ss_madre_2024:
           label: Cotizaciones a la Seguridad Social de la madre (2024)
         descendants:
@@ -552,14 +754,80 @@ profile:
       renta_filing:
         declaration_type:
           label: Tipo de declaración
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: Reducción del 50 %
-            tier-60: Reducción del 60 %
-            tier-70: Reducción del 70 %
-            tier-90: Reducción del 90 %
-          label: Tramo de reducción por alquiler (art. 23.2)
+            lucrativa: Lucrativa
+            onerosa: Onerosa
+          label: Título de adquisición
+        amortizacion_acumulada:
+          label: Amortización acumulada atestada
+        amortizacion_acumulada_desde:
+          label: Fecha a la que se refiere la amortización acumulada
+        arrendado_desde:
+          label: Fecha desde la que el inmueble está arrendado
+        direccion:
+          label: Dirección del inmueble
+        fecha_adquisicion:
+          label: Fecha de adquisición
+        fecha_transmision:
+          label: Fecha de transmisión
+        gastos_tributos_adquisicion:
+          label: Gastos y tributos de adquisición
+        importe_adquisicion:
+          label: Importe de adquisición
+        importes_movimientos:
+          choices:
+            inmueble_completo: Importes del inmueble completo
+            parte_propia: Tu parte
+          label: Importes de los movimientos vinculados
+        inmueble_principal:
+          label: Inmueble principal (clave de fila)
+        mejoras:
+          label: Mejoras anteriores al libro mayor
+        naturaleza:
+          choices:
+            rustica: Rústica
+            urbana: Urbana
+          label: Naturaleza del inmueble
+        porcentaje_propiedad:
+          label: Porcentaje de propiedad
+        porcentaje_usufructo:
+          label: Porcentaje de usufructo
+        referencia_catastral:
+          label: Referencia catastral
+        sin_arrendar:
+          label: Inmueble que nunca se ha arrendado
+        situacion:
+          choices:
+            '1': Con referencia catastral, en territorio común
+            '2': Con referencia catastral, en el País Vasco
+            '3': Con referencia catastral, en Navarra
+            '4': En España, sin referencia catastral
+            '5': En el extranjero
+          label: Situación del inmueble
+        titular:
+          choices:
+            comun: Común a ambos cónyuges
+            conyuge: Cónyuge
+            hijo: Hijo
+            primer_declarante: Primer declarante
+          label: Titular del inmueble
+        titular_hijo_ordinal:
+          label: Ordinal del hijo titular
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Nuda propiedad
+            pleno_dominio: Pleno dominio
+            pleno_dominio_y_usufructo: Pleno dominio y usufructo
+            usufructo: Usufructo
+          label: Régimen de titularidad
+        usos:
+          label: Usos distintos del arrendamiento
+        valor_suelo:
+          label: Valor del suelo
+        valores_catastrales:
+          label: Valores catastrales por ejercicio del IBI
       renta_spouse:
         birth_date:
           label: Fecha de nacimiento del cónyuge
@@ -610,33 +878,33 @@ profile:
             andalucia: Andalucía
             aragon: Aragón
             asturias: Principado de Asturias
-            baleares: Illes Balears
+            baleares: Islas Baleares
             canarias: Canarias
             cantabria: Cantabria
             castilla_la_mancha: Castilla-La Mancha
             castilla_y_leon: Castilla y León
             cataluna: Cataluña
-            comunidad_valenciana: Comunitat Valenciana
+            ceuta: Ciudad de Ceuta
+            comunidad_valenciana: Comunidad Valenciana
             extremadura: Extremadura
             galicia: Galicia
             la_rioja: La Rioja
             madrid: Comunidad de Madrid
+            melilla: Ciudad de Melilla
             murcia: Región de Murcia
-          label: Comunidad autónoma de residencia
+          label: Comunidad o ciudad autónoma de residencia
         jurisdiction_scope:
           choices:
             common_regime: Territorio común
             foral_unsupported: Territorio foral (País Vasco o Navarra) - aún no admitido
-          help:
-            what: Si tus impuestos se rigen por el territorio común o por un territorio
-              foral (País Vasco o Navarra).
-            where: 'Se deduce de tu domicilio fiscal: un domicilio en Álava, Bizkaia,
-              Gipuzkoa o Navarra es foral; en el resto de España es territorio común.'
-            why: Decide qué administración tributaria y qué normas se aplican. Los
-              territorios forales presentan ante su propia Hacienda, algo que aún
-              no se admite.
           label: Régimen territorial
       taxpayer_type:
+        cierre_ejercicio_dia:
+          label: Día de cierre del ejercicio
+        cierre_ejercicio_mes:
+          label: Mes de cierre del ejercicio
+        cooperativa_fiscalmente_protegida:
+          label: Cooperativa fiscalmente protegida
         country_of_fiscal_residence:
           label: País de residencia fiscal
         declaration_roles:
@@ -647,6 +915,10 @@ profile:
             legal_entity: Persona jurídica (sociedad)
             natural_person: Persona física
           label: Tipo de contribuyente
+        erd_tipo_gravamen_especifico:
+          label: Entidad de reducida dimensión con tipo específico (art. 101 LIS)
+        fecha_constitucion:
+          label: Fecha de constitución
         fiscal_residency:
           choices:
             non_resident_irnr: No residente (IRNR)
@@ -667,33 +939,30 @@ profile:
             sll: Sociedad limitada laboral (S.L.L.)
             sociedad_civil_mercantil: Sociedad civil con objeto mercantil
           label: Forma jurídica
-        ley_49_2002_special_regime_option_date:
-          label: Fecha de opción por la Ley 49/2002
-        ley_49_2002_special_regime_option_declared:
-          label: Opción por el régimen de la Ley 49/2002
-        ley_49_2002_special_regime_renunciation_date:
-          label: Fecha de renuncia a la Ley 49/2002
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Renuncia al régimen de la Ley 49/2002
+        marca_instrumental:
+          label: Marca instrumental (Nota 7)
         new_entity_first_two_profit_periods:
           label: En uno de los dos primeros períodos con beneficio
+        pago_fraccionado_art_40_3_elected:
+          label: Opción del art. 40.3 LIS en el pago fraccionado
+        principal_cnae:
+          label: CNAE de la actividad principal
+        principal_cnae_classification:
+          label: Clasificación CNAE de la actividad principal
+        regimen_entidad_capital_riesgo:
+          label: Entidad de capital riesgo (art. 50 LIS)
+        regimen_entidades_navieras_tonelaje:
+          label: Régimen de entidades navieras en función del tonelaje
+        regimen_ley_49_2002:
+          label: Régimen de la Ley 49/2002
+        regimen_socimi:
+          label: Régimen SOCIMI (Ley 11/2009)
         representante_fiscal_nif:
           label: NIF del representante fiscal
         representante_fiscal_nombre:
           label: Nombre del representante fiscal
-        sal_capital_social:
-          label: Capital social
-        sal_reserva_especial_dotada:
-          label: Reserva especial ya dotada
-        sal_socios_trabajadores_count:
-          label: Número de socios trabajadores
         tributacion_estado_porcentaje:
           label: Porcentaje de tributación al Estado
-      usage_ratios:
-        business_ratio:
-          label: Ratio de uso empresarial
-        category_id:
-          label: Categoría
       vivienda_office:
         office_m2:
           label: Superficie destinada a oficina (m2)
@@ -710,6 +979,8 @@ profile:
           label: Períodos Modelo 115 sin pago relevante
         pays_capital_income_with_retencion:
           label: Paga rendimientos de capital con retención
+        pays_non_resident_income_with_retencion:
+          label: Paga rentas sujetas a retención a no residentes (Modelos 216 y 296)
         pays_professionals_with_retencion:
           label: Paga a profesionales con retención
         pays_rent_with_retencion:
@@ -718,10 +989,6 @@ profile:
       activities:
         summary: Las actividades económicas que realizas, una fila por actividad.
         title: Actividades económicas
-      attribution_entity:
-        summary: La forma jurídica de la entidad en atribución de rentas (comunidad
-          de bienes, sociedad civil) que gestionas.
-        title: Forma jurídica de la entidad en atribución
       attribution_entity_socios:
         summary: Los socios de esa entidad y la parte de la renta atribuida a cada
           uno.
@@ -735,7 +1002,7 @@ profile:
         title: Autenticación con la AEAT
       capabilities:
         summary: Qué servicios opcionales puede usar este perfil, como leer documentos
-          escaneados en este equipo.
+          escaneados o en imagen con un modelo que elijas.
         title: Capacidades del servicio
       censo:
         summary: Tu alta en el censo de la AEAT (modelo 036/037) y sus fechas.
@@ -743,15 +1010,67 @@ profile:
       contact:
         summary: Dónde puede contactarte la AEAT y tu domicilio fiscal.
         title: Contacto y domicilio fiscal
+      iae_elemento_tributario:
+        summary: Los elementos tributarios de cada actividad para el modelo 840, una
+          fila por línea.
+        title: Elementos tributarios del IAE
+      iae_local:
+        summary: 'Los locales de cada actividad, una fila por local: donde la ejerces
+          o los que usas indirectamente.'
+        title: Locales del IAE
+      iae_local_superficie:
+        summary: Las superficies de cada local por clase de la Regla 14, una fila
+          por clase.
+        title: Superficies del local (Regla 14)
       identity:
         summary: 'Tu nombre y NIF: para quién se preparan las declaraciones.'
         title: Identidad
+      inversiones_posicion:
+        summary: Tus cuentas bancarias, depósitos a plazo y cuentas de valores, una
+          fila por posición. Aquí van sus datos fijos; los importes salen del libro
+          mayor.
+        title: Posiciones de ahorro
       irpf:
         summary: Cómo se calcula tu IRPF y qué retenciones soportas.
         title: IRPF y retenciones
       iva:
         summary: Tu régimen de IVA y con qué frecuencia lo presentas.
         title: Perfil de IVA
+      m200_administrador:
+        summary: Las personas que administran, dirigen o controlan la entidad, una
+          fila por persona.
+        title: Administradores
+      m200_entidad_menor_dependiente:
+        summary: Las entidades menores dependientes que integras en tu declaración,
+          una fila por entidad.
+        title: Entidades menores dependientes
+      m200_establecimiento_permanente:
+        summary: Los establecimientos permanentes que operan en el extranjero, una
+          fila por establecimiento.
+        title: Establecimientos permanentes
+      m200_participacion_directa:
+        summary: Las entidades en las que participas directamente a fin del período,
+          una fila por entidad participada.
+        title: Participaciones directas
+      m200_participacion_socio:
+        summary: Las personas y entidades que poseen una participación directa en
+          tu entidad, una fila por socio.
+        title: Relación de socios o partícipes
+      m200_relaciones:
+        summary: Si tu entidad tiene filas en cada apartado opcional de la página
+          2 del Modelo 200.
+        title: Relaciones declaradas
+      m200_representante_legal:
+        summary: Los apoderados o representantes legales de la entidad, una fila por
+          persona.
+        title: Representante legal
+      m200_secretario_consejo:
+        summary: El Secretario del Consejo de Administración, o quien cumpla sus funciones.
+        title: Secretario del Consejo de Administración
+      m200_socio_sicav_disolucion:
+        summary: Las SICAV disueltas de las que eres socio y la institución en la
+          que reinviertes la cuota de liquidación.
+        title: Socios de SICAV disueltas
       maritime_worker:
         summary: 'Solo para trabajadores del mar: la clasificación que decide deducciones
           especiales.'
@@ -763,21 +1082,23 @@ profile:
         summary: Cómo se comunica contigo la aplicación, por ejemplo el idioma de
           cada pantalla.
         title: Preferencias del operador
-      properties:
-        summary: Inmuebles que posees o alquilas, una fila por inmueble.
-        title: Inmuebles y alquiler
       provenance:
         summary: De dónde proceden los datos del perfil y desde cuándo se aplican.
         title: Origen y vigencia
+      renta_arrendamiento:
+        summary: Los contratos de arrendamiento de tus inmuebles, una fila por contrato,
+          con los datos fijados al firmar.
+        title: Arrendamientos
       renta_family:
         summary: Hijos y otros familiares que pueden darte derecho a mínimos familiares.
         title: Familia (Renta)
       renta_filing:
         summary: Cómo presentas tu declaración anual de la Renta.
         title: Contexto de presentación (Renta)
-      renta_rental:
-        summary: Contexto de los alquileres en tu declaración anual.
-        title: Contexto de alquiler (Renta)
+      renta_inmueble:
+        summary: Los inmuebles que arriendas, una fila por inmueble. Aquí van sus
+          datos fijos; los importes salen del libro mayor.
+        title: Inmuebles arrendados
       renta_spouse:
         summary: Los datos de tu cónyuge, necesarios para la declaración conjunta.
         title: Cónyuge (Renta)
@@ -792,10 +1113,6 @@ profile:
       taxpayer_type:
         summary: Qué tipo de contribuyente eres y qué tipos de renta obtienes.
         title: Tipo de contribuyente y categorías de renta
-      usage_ratios:
-        summary: La parte de uso profesional de bienes compartidos, como un coche
-          o un teléfono.
-        title: Ratios de uso y deducibilidad
       vivienda_office:
         summary: Si usas parte de tu vivienda habitual como oficina para tu actividad.
         title: Afectación de la vivienda habitual como oficina
@@ -818,4 +1135,5 @@ profile:
       del modelo
     numeric_field_invalid: El campo numérico no es válido
     required_field_missing: Falta un campo obligatorio del perfil.
+    text_too_long: Texto demasiado largo
     unknown_field: Campo desconocido

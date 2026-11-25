@@ -21,7 +21,6 @@ import ast
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -35,6 +34,7 @@ from cadrumo.core.external_constants import (
     load_external_constants,
 )
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -51,6 +51,8 @@ from cadrumo.tests.inventory import (
     repo_relative,
 )
 from dev.quality.cyclic_gc import cyclic_gc_paused
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -387,7 +389,7 @@ def test_renta_web_open_template_has_year_placeholder() -> None:
     template = load_external_constants().aeat.oracles.renta_web_open_app_template
 
     assert "{year}" in template
-    formatted = template.format(year=2026)
+    formatted = template.format(year=FILING_YEAR)
     assert "EJER=2026" in formatted
 
 
@@ -534,7 +536,7 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
 
     allowed_files = {
         repo_relative(Path(__file__).resolve()),
-        "src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py",
+        "src/cadrumo/entrypoints/tests/runtime_attached_repositories_support.py",
         "src/cadrumo/tests/aeat_literal_fixtures.py",
         # The AEAT locator RECOGNISER: its regex and prefix tuple exist to match
         # external Sede URLs, so the host fragment is the pattern under test
@@ -592,20 +594,15 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_auth_clave_movil_lock_buffer_s": 90,
         "cadrumo_auth_certificate_lock_ttl_s": 180,
         "cadrumo_log_stderr_level": "ERROR",
-        "cadrumo_log_file_level": "DEBUG",
-        "cadrumo_log_root_level": "DEBUG",
+        "cadrumo_log_file_level": "INFO",
+        "cadrumo_log_root_level": "INFO",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
-        "cadrumo_llm_default_max_tokens": 1024,
-        "cadrumo_llm_default_temperature": 0.0,
     }
 
     for field_name, expected_value in expected_defaults.items():
         assert getattr(settings, field_name) == expected_value, field_name
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
-    ollama_url = urlsplit(settings.cadrumo_llm_ollama_chat_url)
-    assert ollama_url.scheme == "http"
-    assert ollama_url.hostname in {"localhost", "127.0.0.1"}
 
 
 def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:
@@ -644,6 +641,24 @@ def test_clave_movil_operator_wait_is_capped_at_two_minutes() -> None:
     """Cl@ve Móvil approval waits fail fast enough for production retry loops."""
 
     assert Settings().cadrumo_clave_movil_timeout_ms == 120_000
+    assert Settings(cadrumo_clave_movil_timeout_ms=120_000).cadrumo_clave_movil_timeout_ms == 120_000
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as refused:
         Settings(cadrumo_clave_movil_timeout_ms=120_001)
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("cadrumo_clave_movil_timeout_ms",)
+    assert violation["type"] == "less_than_equal"
+
+
+def test_clave_permanente_operator_wait_is_capped_at_two_minutes() -> None:
+    """A headless Cl@ve login has the same independent elapsed-time ceiling."""
+    assert Settings().cadrumo_clave_permanente_timeout_ms == 60_000
+    assert Settings(cadrumo_clave_permanente_timeout_ms=120_000).cadrumo_clave_permanente_timeout_ms == 120_000
+
+    with pytest.raises(ValidationError) as refused:
+        Settings(cadrumo_clave_permanente_timeout_ms=120_001)
+
+    (violation,) = refused.value.errors()
+    assert violation["loc"] == ("cadrumo_clave_permanente_timeout_ms",)
+    assert violation["type"] == "less_than_equal"

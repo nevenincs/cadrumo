@@ -25,7 +25,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ..draft_construction import _string_inputs_for_ids, filing_binding_values
+from ....domain.calculations.registry.tests.modelo_200_turnover import turnover_binding_values
+from ..draft_construction import filing_binding_values, string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -82,7 +83,7 @@ def test_enum_consumed_binding_ids_identifies_legal_entity_form() -> None:
 
 
 def test_string_inputs_for_ids_extracts_enum_binding() -> None:
-    """_string_inputs_for_ids must extract string enum values from ModeloInputs."""
+    """string_inputs_for_ids must extract string enum values from ModeloInputs."""
     from ....domain.filing.protocols import ModeloInputs
 
     inputs: ModeloInputs = {
@@ -92,7 +93,7 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
     }
     snap = _m200_snapshot()
     enum_ids = enum_consumed_binding_ids(snap.revision)
-    result = _string_inputs_for_ids(inputs, enum_ids)
+    result = string_inputs_for_ids(inputs, enum_ids)
 
     assert result == {"modelo-200-profile-legal-entity-form": "sl"}
 
@@ -139,7 +140,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            **turnover_binding_values(snap, Decimal("500000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             # Fresh-filer scenario: no prior-period BIN to compensate.
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
@@ -151,8 +152,12 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             "modelo-200-profile-legal-entity-form": "sl",
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
     )
 
@@ -189,7 +194,7 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            **turnover_binding_values(snap, Decimal("500000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
             # No prior-year unfulfilled credit-impairment balance (casilla 01494).
@@ -200,8 +205,12 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
             "modelo-200-profile-legal-entity-form": "sl",
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
     )
 

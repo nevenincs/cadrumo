@@ -80,7 +80,7 @@ _REPOSITORY_LAYERS = ("/adapters/persistence/profile/", "/adapters/persistence/s
 #: an edit above it does not silently retarget the entry.
 _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
-        "src/cadrumo/application/modelo/_edit_execution.py",
+        "src/cadrumo/application/modelo/edit_execution.py",
         "_capture_edit_receipt",
     ): "the receipt is CONSTRUCTED here, never read, so there is no revision to assert. Its id is a "
     "content hash over the operation, baseline, calculation revision and bucket event, so it is a "
@@ -91,14 +91,10 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save",
     ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",
     (
-        "src/cadrumo/application/modelo/verification_actions.py",
-        "_build_participation_writes",
+        "src/cadrumo/application/modelo/participation_writes.py",
+        "build_participation_writes",
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
-    "touching the same transaction; unclassified beyond that",
-    (
-        "src/cadrumo/application/modelo/revision_persistence.py",
-        "_build_filed_participation_writes",
-    ): "per-transaction participation rows, as above; unclassified beyond that",
+    "touching the same transaction (verify and file both build them here); unclassified beyond that",
     (
         "src/cadrumo/application/modelo/filed_revision_observation.py",
         "filed_revision_observation_writes",
@@ -117,7 +113,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_and_events",
-    ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
+    ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by commit_with_guarded_events",
     (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_invoices_and_events",

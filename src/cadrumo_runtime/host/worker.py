@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import sys
-import time
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass, field
 from importlib.metadata import version
@@ -19,36 +19,31 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.async_cleanup import AsyncCloseable, AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
-from cadrumo.core.logging import configure_logging, get_logger
+from cadrumo.core.errors.hierarchy import CoreValidationError
+from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.storage_environment import withheld_child_settings
+from cadrumo.core.time.fixed_clock import FixedClock, admit_fixed_clock_from_environment, fixed_clock_refusal
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
-from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 
-from ..adapters.native_peer import require_live_native_peer
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
-from ..adapters.worker_native_identity import worker_operation_namespace
+from ..adapters.worker_native_identity import worker_operation_namespace, worker_proof_namespace
 from ..adapters.worker_transport import WorkerChannel, worker_endpoint
-from . import worker_cleanup as _worker_cleanup
-from . import worker_service as _worker_service
+from . import worker_cleanup, worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
+from .warm_heap import WarmHeapFreeze
+from .worker_stall_watchdog import watch_event_loop
+from .worker_view_stream import WorkerViewStreams, require_native_parent
 
 _LOGGER = get_logger(__name__)
-
-
-def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:
-    """Check the socket's live kernel peer before admitting profile custody."""
-    if channel.peer.process_id != parent_pid:
-        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    if isinstance(channel, PosixChannel):
-        require_live_native_peer(channel)
 
 
 @contextmanager
@@ -64,11 +59,30 @@ class _WorkerRunResources:
 
     channel: WorkerChannel | None = None
     operation_channel: WorkerChannel | None = None
+    proof_channel: WorkerChannel | None = None
     custody: ProfileWorkerCustody | None = None
     channel_release: TransportCleanup | None = None
     operation_channel_release: TransportCleanup | None = None
+    proof_channel_release: TransportCleanup | None = None
     handshake_release: TransportCleanup | None = None
     endpoint_releases: list[AsyncCloseable] = field(default_factory=list)
+    timeout: TimeoutDeadline = field(default_factory=DEFAULT_TIMEOUT_POLICY.deadline)
+
+
+def admitted_worker_fixed_clock(storage_root: Path, environ: Mapping[str, str]) -> FixedClock | None:
+    """Repeat the runtime's fixed-clock checks at worker entry, refusing to start on any failure.
+
+    The worker trusts no relayed value: the slots must still name this
+    worker's pinned root, never the channel default, and agree with the root's
+    marker, exactly as its runtime admitted them.
+    """
+    try:
+        return admit_fixed_clock_from_environment(environ, pinned_root=storage_root)
+    except CoreValidationError as error:
+        refusal = fixed_clock_refusal(error)
+        if refusal is None:
+            raise
+        raise RefusalError(RefusalCode.ROOT_MISMATCH, check=refusal.value) from error
 
 
 def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
@@ -82,13 +96,13 @@ def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
 
 def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunResources) -> ProfileWorkerIdentity:
     endpoint = worker_endpoint(storage_root=options.storage_root, worker_namespace=options.worker_id)
-    resources.endpoint_releases.append(_worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(endpoint.close)))
-    channel = endpoint.connect()
+    resources.endpoint_releases.append(worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(endpoint.close)))
+    channel = endpoint.connect(timeout=resources.timeout.remaining_seconds())
     resources.channel = channel
     channel_release = TransportCleanup(channel)
     resources.channel_release = channel_release
-    _require_native_parent(channel, options.parent_pid)
-    deadline = time.monotonic() + 10
+    require_native_parent(channel, options.parent_pid)
+    deadline = resources.timeout.instant
     resources.handshake_release = channel_release
     connection = VerifiedConnection(
         channel,
@@ -110,23 +124,30 @@ def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunReso
 
 
 def _open_operation_channel(
-    options: argparse.Namespace, resources: _WorkerRunResources, identity: ProfileWorkerIdentity
+    options: argparse.Namespace, resources: _WorkerRunResources, identity: ProfileWorkerIdentity, *, proof: bool = False
 ) -> None:
     channel = cast(WorkerChannel, resources.channel)
     operation_endpoint = worker_endpoint(
-        storage_root=options.storage_root, worker_namespace=worker_operation_namespace(identity.worker_id)
+        storage_root=options.storage_root,
+        worker_namespace=(worker_proof_namespace if proof else worker_operation_namespace)(identity.worker_id),
     )
     resources.endpoint_releases.append(
-        _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(operation_endpoint.close))
+        worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(operation_endpoint.close))
     )
-    operation_channel = operation_endpoint.connect()
-    resources.operation_channel = operation_channel
+    operation_channel = operation_endpoint.connect(timeout=resources.timeout.remaining_seconds())
+    if proof:
+        resources.proof_channel = operation_channel
+    else:
+        resources.operation_channel = operation_channel
     operation_channel_release = TransportCleanup(operation_channel)
-    resources.operation_channel_release = operation_channel_release
+    if proof:
+        resources.proof_channel_release = operation_channel_release
+    else:
+        resources.operation_channel_release = operation_channel_release
     if operation_channel.peer != channel.peer:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    _require_native_parent(operation_channel, options.parent_pid)
-    deadline = time.monotonic() + 10
+    require_native_parent(operation_channel, options.parent_pid)
+    deadline = resources.timeout.instant
     resources.handshake_release = operation_channel_release
     verified = VerifiedConnection(
         operation_channel,
@@ -144,19 +165,34 @@ def _open_operation_channel(
     write_document(operation_channel, identity, deadline=deadline)
 
 
+async def serve_watched(
+    channel: WorkerChannel,
+    operation_channel: WorkerChannel,
+    proof_channel: WorkerChannel,
+    custody: ProfileWorkerCustody,
+    human: ProfileWorkerHumanLogin,
+    operations: ProfileWorkerOperationHost,
+) -> None:
+    """Serve private channels while a stalled loop leaves every thread's stack on disk."""
+    async with watch_event_loop():
+        await worker_service.serve(channel, operation_channel, proof_channel, custody, human, operations)
+
+
 def _serve_connected_worker(
     options: argparse.Namespace,
     resources: _WorkerRunResources,
     identity: ProfileWorkerIdentity,
     composition_factory: Callable[[], AbstractContextManager[None]] | None,
+    fixed_clock: FixedClock | None,
 ) -> None:
     channel = cast(WorkerChannel, resources.channel)
     operation_channel = cast(WorkerChannel, resources.operation_channel)
+    proof_channel = cast(WorkerChannel, resources.proof_channel)
     custody = cast(ProfileWorkerCustody, resources.custody)
     with ExitStack() as composition:
         composition.enter_context(
             override_settings(
-                cadrumo_local_storage_root=options.storage_root,
+                cadrumo_storage_root=options.storage_root,
                 cadrumo_active_profile=str(identity.binding.profile_id),
             )
         )
@@ -170,9 +206,17 @@ def _serve_connected_worker(
             authorization=WorkerAuthorizationClient(
                 identity=identity, root=options.storage_root, parent_pid=options.parent_pid
             ),
+            view_streams=WorkerViewStreams(
+                storage_root=options.storage_root,
+                identity=identity,
+                parent_pid=options.parent_pid,
+                product_version=options.expected_version,
+            ),
+            fixed_clock_instant=None if fixed_clock is None else fixed_clock.instant,
+            warm_heap=WarmHeapFreeze(),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
-        asyncio.run(_worker_service._serve(channel, operation_channel, custody, human, operations))
+        asyncio.run(serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
 
 
 def _run_worker(
@@ -182,15 +226,18 @@ def _run_worker(
 ) -> None:
     if options.expected_version != version("cadrumo"):
         raise RefusalError(RefusalCode.VERSION_MISMATCH)
+    # Before any channel opens: a worker given an unbound fixed clock never starts.
+    fixed_clock = admitted_worker_fixed_clock(options.storage_root, os.environ)
     identity = _open_control_channel(options, resources)
     _open_operation_channel(options, resources, identity)
-    _serve_connected_worker(options, resources, identity, composition_factory)
+    _open_operation_channel(options, resources, identity, proof=True)
+    _serve_connected_worker(options, resources, identity, composition_factory, fixed_clock)
 
 
 def _collect_worker_failures(primary_error: BaseException | None) -> tuple[BaseException, ...]:
     if primary_error is None:
         return ()
-    _worker_cleanup.retain_task_failures(primary_error, ())
+    worker_cleanup.retain_task_failures(primary_error, ())
     failures: tuple[BaseException, ...] = (primary_error,)
     task_failures = primary_error.__dict__.get("worker_task_errors")
     if isinstance(task_failures, tuple):
@@ -213,25 +260,31 @@ def _release_attempted_handshakes(resources: _WorkerRunResources, failures: tupl
             or displaced.resource is resources.operation_channel
         ):
             resources.operation_channel_release = None
+        if (
+            resources.proof_channel_release is resources.handshake_release
+            or displaced.resource is resources.proof_channel
+        ):
+            resources.proof_channel_release = None
 
 
 async def _close_worker_resources(resources: _WorkerRunResources, primary_error: BaseException | None) -> None:
     custody_release = None
     if resources.custody is not None:
         custody = resources.custody
-        custody_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(custody.close))
+        custody_release = worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(custody.close))
     try:
         await close_async_resources(
             custody_release,
             resources.channel_release,
             resources.operation_channel_release,
+            resources.proof_channel_release,
             *resources.endpoint_releases,
             task_name="profile-worker-exit-close",
             primary_error=primary_error,
         )
     finally:
         if primary_error is not None:
-            _worker_cleanup.retain_task_failures(primary_error, ())
+            worker_cleanup.retain_task_failures(primary_error, ())
 
 
 def _release_worker_resources(resources: _WorkerRunResources, primary_error: BaseException | None) -> None:
@@ -246,6 +299,8 @@ def run(
     composition_factory: Callable[[], AbstractContextManager[None]] | None = None,
 ) -> int:
     """Admit only an exact native runtime parent and a contained current-cohort worker."""
+    register_first_party_logger("cadrumo_runtime")
+    register_first_party_logger("cadrumo_client")
     with diagnostic_process("profile_worker"), diagnostic_scope():
         diagnostic_event(_LOGGER, "profile_worker_process_started", level=10)
         try:

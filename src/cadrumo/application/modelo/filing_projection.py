@@ -7,8 +7,11 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
+from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
@@ -22,10 +25,63 @@ from ...domain.modelos.filing_record import (
     IvaSettlementRefundState,
     IvaSettlementSnapshot,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordStatus,
 )
 from ...domain.modelos.filing_text import FilingNotes, ModeloActorLabel
 from ..operations.public_period import PublicPeriod
+from .declarations_workspace_contracts import DeclarationsWorkspaceFilingRefV1
+
+
+class ModeloRelatedFilingProjection(BaseModel):
+    """Exact navigation targets with independently worded filing and confirmation state."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: str
+    filing_year: FilingYear
+    period: str
+    member_nif: str | None
+    filed_at: datetime
+    declaration_kind: FilingDeclarationKind
+    confirmation: AeatConfirmationState
+    status: ModeloRecordStatus
+    origin: FilingOrigin
+    amends_filing_record_id: FilingRecordId | None
+    superseded_by_filing_record_id: FilingRecordId | None
+    kind_words: str
+    confirmation_words: str
+    status_words: str
+
+    @classmethod
+    def from_reference(cls, record: DeclarationsWorkspaceFilingRefV1, language: OutputLanguage) -> Self:
+        """Word an admitted catalogue reference without inferring a legal transition."""
+        return cls(
+            filing_record_id=record.filing_record_id,
+            work_unit_id=record.work_unit_id,
+            calculation_revision_id=record.calculation_revision_id,
+            modelo=str(record.modelo),
+            filing_year=record.filing_year,
+            period=record.period.registry_token,
+            member_nif=record.member_nif,
+            filed_at=record.filed_at,
+            declaration_kind=record.declaration_kind,
+            confirmation=record.confirmation,
+            status=record.local_status,
+            origin=record.origin,
+            amends_filing_record_id=record.amends_filing_record_id,
+            superseded_by_filing_record_id=record.superseded_by_filing_record_id,
+            kind_words=tr(
+                f"workspace.declarations.declaration_kind.{record.declaration_kind.value}", locale=language.value
+            ),
+            confirmation_words=tr(
+                f"workspace.declarations.confirmation.{record.confirmation.value}", locale=language.value
+            ),
+            status_words=tr(f"workspace.declarations.filing_state.{record.local_status.value}", locale=language.value),
+        )
 
 
 class ModeloRegisterSnapshot(BaseModel):
@@ -109,6 +165,7 @@ class ModeloFilingRecordSnapshot(BaseModel):
     origin: FilingOrigin
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
+    filing_timeliness: FilingTimeliness | None
     aeat_register: ModeloRegisterSnapshot | None
     status: ModeloRecordStatus
     superseded_at: datetime | None
@@ -148,3 +205,22 @@ class ModeloFilingRecordSnapshot(BaseModel):
     def _canonical_record(self) -> Self:
         self.to_record()
         return self
+
+
+def related_filing_projections(
+    catalogue: ModeloRecordCatalogue, record: ModeloRecord, language: OutputLanguage
+) -> tuple[ModeloRelatedFilingProjection, ...]:
+    """Every filing at the record's exact coordinate in the same profile, oldest first.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+    """
+    return tuple(
+        ModeloRelatedFilingProjection.from_reference(DeclarationsWorkspaceFilingRefV1.from_record(item), language)
+        for item in sorted(catalogue.records.values(), key=lambda item: (item.filed_at, item.filing_record_id))
+        if item.bucket_id == record.bucket_id
+        and item.modelo == record.modelo
+        and item.filing_year == record.filing_year
+        and item.period == record.period
+        and item.member_nif == record.member_nif
+    )

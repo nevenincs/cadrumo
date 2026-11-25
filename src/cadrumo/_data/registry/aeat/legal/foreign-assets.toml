@@ -30,7 +30,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Disposicion adicional decimoctava de la Ley General Tributaria: obligacion de informacion sobre bienes y derechos situados en el extranjero (origen del Modelo 720)."
+notes = "Disposición adicional decimoctava de la Ley General Tributaria: obligación de información sobre bienes y derechos situados en el extranjero (origen del Modelo 720)."
 required_text = [
     "bienes y derechos situados en el extranjero",
     "cuentas situadas en el extranjero",
@@ -50,7 +50,7 @@ effective_from = 2007-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Reglamento General de Gestion e Inspeccion (RGAT) art 42 bis: obligacion de informar sobre cuentas en entidades financieras situadas en el extranjero (Modelo 720, seccion de cuentas)."
+notes = "Reglamento General de Gestión e Inspección (RGAT) art 42 bis: obligación de informar sobre cuentas en entidades financieras situadas en el extranjero (Modelo 720, sección de cuentas)."
 required_text = [
     "Obligación de informar acerca de cuentas en entidades financieras situadas en el extranjero",
     "personas físicas y jurídicas residentes en territorio español",
@@ -76,7 +76,7 @@ effective_from = 2007-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "RGAT art 42 ter: obligacion de informar sobre valores, derechos, seguros y rentas depositados, gestionados u obtenidos en el extranjero (Modelo 720, seccion de valores)."
+notes = "RGAT art 42 ter: obligación de informar sobre valores, derechos, seguros y rentas depositados, gestionados u obtenidos en el extranjero (Modelo 720, sección de valores)."
 required_text = [
     "valores",
     "rentas",
@@ -104,7 +104,7 @@ effective_from = 2007-12-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "RGAT art 54 bis: obligacion de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, seccion de inmuebles)."
+notes = "RGAT art 54 bis: obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, sección de inmuebles)."
 required_text = [
     "Obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero",
     "extranjero",    # Apartado 6.d) (each transmission date and value as a separate `dato`),
@@ -128,7 +128,7 @@ effective_from = 2013-02-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Aprueba el modelo 720 'Declaracion informativa de bienes y derechos situados en el extranjero' y aprueba sus disenos fisicos y logicos."
+notes = "Aprueba el modelo 720 'Declaración informativa de bienes y derechos situados en el extranjero' y aprueba sus diseños físicos y lógicos."
 required_text = [
     "Aprobación del Modelo 720",
     "Declaración informativa de bienes y derechos situados en el extranjero",
@@ -148,7 +148,7 @@ effective_from = 2013-02-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Obligados a presentar el modelo 720: personas fisicas y juridicas residentes en territorio espanol con cuentas, valores, o inmuebles en el extranjero por encima de los umbrales de 50.000 EUR por categoria, asi como entidades en regimen de atribucion de rentas y otros sujetos previstos."
+notes = "Obligados a presentar el modelo 720: personas físicas y jurídicas residentes en territorio español con cuentas, valores, o inmuebles en el extranjero por encima de los umbrales de 50.000 EUR por categoría, así como entidades en régimen de atribución de rentas y otros sujetos previstos."
 required_text = [
     "Obligados a presentar el modelo 720",
     "personas físicas y jurídicas residentes en territorio español",
@@ -168,7 +168,7 @@ effective_from = 2013-02-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Plazo de presentacion del Modelo 720: entre el 1 de enero y el 31 de marzo del ano siguiente al ejercicio al que se refiera la informacion."
+notes = "Plazo de presentación del Modelo 720: entre el 1 de enero y el 31 de marzo del año siguiente al ejercicio al que se refiera la información."
 required_text = [
     "Plazo de presentación del modelo 720",
     "1 de enero y el 31 de marzo",
@@ -206,6 +206,23 @@ review_status = "pending_review"
 
 [sources."boe-modelo-720-2013-form"]
 evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"
+sha256 = "8eb8c09c311f98623db7edd1fe38d777f2f237ee1ca2fc5803f9011ed1d35eb4"
+bytes = 130509
+retrieved_at = 2026-05-06
+published_at = 2013-01-31
+applies_from = 2013-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954"
+review_status = "pending_review"
+
+# Anexo II of the approving Orden prints the type-1 "PERSONA CON QUIÉN
+# RELACIONARSE" instructions: 59-67 telephone and 68-107 surnames and name.
+# That text grounds what the two contact facts mean; boe-modelo-720-2013-form
+# and aeat-dr-720 remain the layout authority for the same positions.
+[sources."boe-modelo-720-2013-contact-guidance"]
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
@@ -19,7 +20,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -36,6 +36,7 @@ from ..status_operation import (
     build_ledger_status_definition,
     build_ledger_status_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,7 +48,13 @@ def _unexpected_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) ->
     raise AssertionError(f"access resolution attempted to compose ports for {bucket_id} with {operation!r}")
 
 
-def _unexpected_repositories(bucket_id: str, /, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+def _unexpected_repositories(
+    bucket_id: str,
+    /,
+    *,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> VerificationRepositoryBundle:
     raise AssertionError(f"access resolution attempted to compose repositories for {bucket_id} with {operation!r}")
 
 
@@ -71,14 +78,7 @@ def _request(*, profile_id: UUID = _PROFILE, period: PublicPeriod | None = None)
 def _access_context(
     registration: OperationPublicDefinitionRegistrationV1, *, profile_id: UUID = _PROFILE
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.RESULT)
 
 
 def test_status_registers_exact_strict_request_and_result_models() -> None:

@@ -13,11 +13,14 @@ import {
 } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import type { LogRecord, LogSourceStates } from "../ipc/contract";
+import { labelled } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
+import type { LogCounts } from "../shell/useHostLogs";
 import { fromPointer } from "../shell/pointer";
 import {
   DEFAULT_FILTERS,
@@ -31,10 +34,9 @@ import {
 import type { MenuAnchor } from "./ContextMenu";
 import { useStrings } from "../shell/strings";
 
-/** Where a record's menu opens, and whether a pointer asked for it. */
+/** Where a record's menu opens. */
 export type RecordMenuRequest = {
   at: MenuAnchor;
-  pointer: boolean;
   record: LogRecord;
   /** Every record the filters let through, not only the ones drawn. */
   visible: LogRecord[];
@@ -138,23 +140,33 @@ export const RecordList = memo(function RecordList({
   filters,
   defaultFilters = DEFAULT_FILTERS,
   setFilters,
+  onLevelChange,
   onMenu,
   onCopy,
   onExport,
   onReveal,
+  onRetry,
+  interrupted = false,
+  counts,
   shown,
 }: {
   /** null until the host's subscription answers. */
   records: LogRecord[] | null;
+  /** Errors and warnings since the log was first followed, which outlast
+   * the records the ring still holds. */
+  counts: LogCounts;
   sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
   defaultFilters?: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
+  onLevelChange: (minLevel: number) => void;
   onMenu: (request: RecordMenuRequest) => void;
   onCopy?: (text: string) => void;
   onExport?: (text: string) => void;
   onReveal?: () => void;
+  onRetry?: () => void;
+  interrupted?: boolean;
   shown: boolean;
 }) {
   const t = useStrings();
@@ -187,15 +199,6 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
-  const counts = useMemo(
-    () => ({
-      errors: all.filter(
-        (record) => record.level === "ERROR" || record.level === "CRITICAL",
-      ).length,
-      warnings: all.filter((record) => record.level === "WARNING").length,
-    }),
-    [all],
-  );
   const selected = useMemo(() => {
     const retained = new Set(all);
     return selectedRecords.filter((record) => retained.has(record));
@@ -461,7 +464,6 @@ export const RecordList = memo(function RecordList({
                 y: row.top,
                 height: row.height,
               },
-          pointer,
           record,
           visible: live.current.visible,
         });
@@ -637,6 +639,7 @@ export const RecordList = memo(function RecordList({
         filters={filters}
         defaultFilters={defaultFilters}
         setFilters={setFilters}
+        onLevelChange={onLevelChange}
         filterInput={filterInput}
         follow={follow}
         onFollow={() => {
@@ -673,7 +676,11 @@ export const RecordList = memo(function RecordList({
               {filters.logger}
             </span>
             <IconButton
-              label={`${t("desktop.logs.clear_logger")}: ${filters.logger}`}
+              label={labelled(
+                t,
+                t("desktop.logs.clear_logger"),
+                filters.logger,
+              )}
               onClick={() => {
                 setFilters({ ...filters, logger: null });
                 filterInput.current?.focus();
@@ -710,7 +717,28 @@ export const RecordList = memo(function RecordList({
           <AlertTitle className="font-normal">
             {t("desktop.host.unavailable")}
           </AlertTitle>
+          {onRetry && (
+            <Button size="xs" variant="outline" onClick={onRetry}>
+              {t("desktop.logs.reconnect")}
+            </Button>
+          )}
         </Alert>
+      )}
+      {interrupted && (
+        <Alert
+          className="mx-2.5 mt-2 w-auto"
+          tone="warning"
+          icon={<Icon name="alert" />}
+        >
+          <AlertTitle className="font-normal">
+            {t("desktop.logs.interrupted")}
+          </AlertTitle>
+        </Alert>
+      )}
+      {sourceStates === null && records !== null && (
+        <p role="status" className="mx-2.5 mt-2 text-sm text-muted-foreground">
+          {t("desktop.logs.loading")}
+        </p>
       )}
       {states.map(([source, state]) =>
         state.kind === "missing" ? (
@@ -722,7 +750,11 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {`${sourceLabel(source)}: ${t("desktop.logs.state_missing_detail")}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                t("desktop.logs.state_missing_detail"),
+              )}
             </AlertTitle>
           </Alert>
         ) : state.kind === "unreadable" ? (
@@ -734,9 +766,17 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {state.detail
-                ? `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}: ${state.detail}`
-                : `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                state.detail
+                  ? labelled(
+                      t,
+                      t("desktop.logs.state_unreadable"),
+                      state.detail,
+                    )
+                  : t("desktop.logs.state_unreadable"),
+              )}
             </AlertTitle>
           </Alert>
         ) : null,
@@ -751,7 +791,11 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {`${sourceLabel(source)}: ${t("desktop.logs.rejected", { count: state.rejected })}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                t("desktop.logs.rejected", { count: state.rejected }),
+              )}
             </AlertTitle>
           </Alert>
         ) : null,

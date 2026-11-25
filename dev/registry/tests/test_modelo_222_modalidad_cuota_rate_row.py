@@ -14,8 +14,9 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..conformance.registry_schema_support import committed_modelo
 

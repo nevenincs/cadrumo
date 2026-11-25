@@ -29,7 +29,6 @@ this module carries the concrete runtime wiring.
 from __future__ import annotations
 
 import asyncio
-import os
 from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
@@ -442,7 +441,7 @@ async def _start_playwright(settings: Settings | None = None) -> Playwright:
             ),
         ) from exc
     try:
-        from .....application.provisioning_browser import playwright_browsers_root
+        from .....application.browser_location import playwright_browsers_root
         from .....core.config import load_settings
         from .....core.storage_taxonomy import StorageCategory
         from .....core.storage_taxonomy_locations import storage_path
@@ -452,12 +451,13 @@ async def _start_playwright(settings: Settings | None = None) -> Playwright:
         temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=resolved_settings)
         browser_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(browser_root)
-        for variable in ("TEMP", "TMP", "TMPDIR"):
-            os.environ[variable] = str(temporary_root)
-        from playwright.async_api import async_playwright
+        from .driver_environment import DriverEnvironmentPlaywright
 
-        playwright_manager = async_playwright()
+        driver_environment = {
+            "PLAYWRIGHT_BROWSERS_PATH": str(browser_root),
+            **dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary_root)),
+        }
+        playwright_manager = DriverEnvironmentPlaywright(driver_environment)
         started: Playwright | None = None
 
         async def start_owned() -> None:

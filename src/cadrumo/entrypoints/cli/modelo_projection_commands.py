@@ -9,24 +9,24 @@ import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
-from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
+from ...application.modelo.projection_compare import ModeloCompareNeedTwoYearsError
 from ...application.modelo.projection_operation import (
     CompareDeltaRowProjection,
     ModeloCompareOperationProjection,
     ModeloCompareOperationRequest,
+    ModeloProjectOperationProjection,
     ModeloProjectOperationRequest,
     ProjectionOverride,
 )
 from ...core.i18n.render import tr
-from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
-from ._modelo_cli_support import (
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .modelo_cli_support import (
     bad_parameter_from_localized_context,
     parse_binding_override,
     parse_casilla_override,
 )
-from .common import active_bucket_id_or_refuse, emit_envelope
-from .modelo_results import (
+from .modelo_query_results import (
     CasillaObservationPayload,
     CompareSectionPayload,
     DeltaRowPayload,
@@ -34,6 +34,9 @@ from .modelo_results import (
     M130AccumulatedPayload,
     ModeloCompareResult,
     ModeloProjectResult,
+    UnresolvedBindingPayload,
+    UnresolvedCasillaPayload,
+    unresolved_findings_lines,
 )
 from .operation_modelo_projection import run_modelo_compare, run_modelo_project
 
@@ -65,17 +68,17 @@ def _delta_row_payload(row: CompareDeltaRowProjection) -> DeltaRowPayload:
         casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
-        year_a_value=_decimal_wire(Decimal(row.year_a_value)),
-        year_b_value=_decimal_wire(Decimal(row.year_b_value)),
-        delta=_decimal_wire(Decimal(row.delta)),
-        pct_change=_decimal_wire(Decimal(row.pct_change)) if row.pct_change is not None else None,
+        year_a_value=decimal_wire(Decimal(row.year_a_value)),
+        year_b_value=decimal_wire(Decimal(row.year_b_value)),
+        delta=decimal_wire(Decimal(row.delta)),
+        pct_change=decimal_wire(Decimal(row.pct_change)) if row.pct_change is not None else None,
         formula_id=row.formula_id,
         legal_refs=tuple(row.legal_refs),
         source_refs=tuple(row.source_refs),
     )
 
 
-def _decimal_wire(value: Decimal) -> str:
+def decimal_wire(value: Decimal) -> str:
     """Render a Decimal through the CLI's canonical JSON normalization authority."""
     rendered = jsonable_output_payload(value)
     if not isinstance(rendered, str):
@@ -83,7 +86,75 @@ def _decimal_wire(value: Decimal) -> str:
     return rendered
 
 
+def _project_result_payload(service_result: ModeloProjectOperationProjection) -> ModeloProjectResult:
+    """Map the settled annual projection onto the CLI result contract, keeping each box's provenance."""
+    return ModeloProjectResult(
+        year=service_result.year,
+        ccaa=service_result.ccaa,
+        quarters_filed=service_result.quarters_filed,
+        quarters_available=list(service_result.quarters_available),
+        is_extrapolated=service_result.is_extrapolated,
+        m130_accumulated=M130AccumulatedPayload(
+            ingresos=decimal_wire(Decimal(service_result.m130_accumulated.ingresos)),
+            gastos=decimal_wire(Decimal(service_result.m130_accumulated.gastos)),
+            rendimiento_neto=decimal_wire(Decimal(service_result.m130_accumulated.rendimiento_neto)),
+            pagos_fraccionados=decimal_wire(Decimal(service_result.m130_accumulated.pagos_fraccionados)),
+        ),
+        casilla_observations=[
+            CasillaObservationPayload(
+                casilla_id=entry.casilla_id,
+                value=decimal_wire(Decimal(entry.value)),
+                formula_id=entry.formula_id,
+                legal_refs=tuple(entry.legal_refs),
+                source_refs=tuple(entry.source_refs),
+            )
+            for entry in service_result.casilla_observations
+        ],
+        m100_projection=M100ProjectionPayload(
+            base_liquidable_general=decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general)),
+            pagos_fraccionados=decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados)),
+            cuota_integra_estatal=decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal)),
+            cuota_integra_autonomica=decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica)),
+            cuota_liquida_estatal=decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal)),
+            cuota_liquida_autonomica=decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica)),
+            cuota_resultante=decimal_wire(Decimal(service_result.m100_projection.cuota_resultante)),
+        ),
+        unresolved_bindings=[
+            UnresolvedBindingPayload.from_projection(row) for row in service_result.unresolved_bindings
+        ],
+        unresolved_casillas=[
+            UnresolvedCasillaPayload.from_projection(row) for row in service_result.unresolved_casillas
+        ],
+        words_language=service_result.words_language,
+    )
+
+
 __all__ = ["modelo_compare", "modelo_project"]
+
+
+def _project_lines(service_result: ModeloProjectOperationProjection) -> list[str]:
+    """Render the tab-separated text lines of an annual projection."""
+    extrapolation_note = (
+        f" (extrapolated from {service_result.quarters_filed}Q)" if service_result.is_extrapolated else ""
+    )
+    return [
+        "operation\tmodelo.project",
+        f"year\t{service_result.year}",
+        f"ccaa\t{service_result.ccaa}",
+        f"quarters_filed\t{service_result.quarters_filed}/4{extrapolation_note}",
+        f"m130_ingresos\t{service_result.m130_accumulated.ingresos}",
+        f"m130_gastos\t{service_result.m130_accumulated.gastos}",
+        f"m130_rendimiento_neto\t{service_result.m130_accumulated.rendimiento_neto}",
+        f"m130_pagos_fraccionados\t{service_result.m130_accumulated.pagos_fraccionados}",
+        "---",
+        f"m100_base_liquidable_general\t{service_result.m100_projection.base_liquidable_general}",
+        f"m100_cuota_integra_estatal\t{service_result.m100_projection.cuota_integra_estatal}",
+        f"m100_cuota_integra_autonomica\t{service_result.m100_projection.cuota_integra_autonomica}",
+        f"m100_cuota_liquida_estatal\t{service_result.m100_projection.cuota_liquida_estatal}",
+        f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica}",
+        f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante}",
+        *unresolved_findings_lines(service_result.unresolved_bindings, service_result.unresolved_casillas),
+    ]
 
 
 def modelo_project(
@@ -120,68 +191,8 @@ def modelo_project(
         context = dict(exc.context or {})
         context["year"] = year
         raise CliRefusedBoundaryError(tr(key, year=year), context=context) from exc
-    project_result = ModeloProjectResult(
-        year=service_result.year,
-        ccaa=service_result.ccaa,
-        quarters_filed=service_result.quarters_filed,
-        quarters_available=list(service_result.quarters_available),
-        is_extrapolated=service_result.is_extrapolated,
-        m130_accumulated=M130AccumulatedPayload(
-            ingresos=_decimal_wire(Decimal(service_result.m130_accumulated.ingresos)),
-            gastos=_decimal_wire(Decimal(service_result.m130_accumulated.gastos)),
-            rendimiento_neto=_decimal_wire(Decimal(service_result.m130_accumulated.rendimiento_neto)),
-            pagos_fraccionados=_decimal_wire(Decimal(service_result.m130_accumulated.pagos_fraccionados)),
-        ),
-        casilla_observations=[
-            CasillaObservationPayload(
-                casilla_id=entry.casilla_id,
-                value=_decimal_wire(Decimal(entry.value)),
-                formula_id=entry.formula_id,
-                legal_refs=tuple(entry.legal_refs),
-                source_refs=tuple(entry.source_refs),
-            )
-            for entry in service_result.casilla_observations
-        ],
-        m100_projection=M100ProjectionPayload(
-            base_liquidable_general_0505=_decimal_wire(
-                Decimal(service_result.m100_projection.base_liquidable_general_0505)
-            ),
-            pagos_fraccionados_0604=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados_0604)),
-            cuota_integra_estatal_0545=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_integra_estatal_0545)
-            ),
-            cuota_integra_autonomica_0546=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_integra_autonomica_0546)
-            ),
-            cuota_liquida_estatal_0595=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_liquida_estatal_0595)
-            ),
-            cuota_liquida_autonomica_0596=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_liquida_autonomica_0596)
-            ),
-            cuota_resultante_0597=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante_0597)),
-        ),
-    )
-    extrapolation_note = (
-        f" (extrapolated from {service_result.quarters_filed}Q)" if service_result.is_extrapolated else ""
-    )
-    lines = [
-        "operation\tmodelo.project",
-        f"year\t{service_result.year}",
-        f"ccaa\t{service_result.ccaa}",
-        f"quarters_filed\t{service_result.quarters_filed}/4{extrapolation_note}",
-        f"m130_ingresos\t{service_result.m130_accumulated.ingresos}",
-        f"m130_gastos\t{service_result.m130_accumulated.gastos}",
-        f"m130_rendimiento_neto\t{service_result.m130_accumulated.rendimiento_neto}",
-        f"m130_pagos_fraccionados\t{service_result.m130_accumulated.pagos_fraccionados}",
-        "---",
-        f"m100_base_liquidable_general\t{service_result.m100_projection.base_liquidable_general_0505}",
-        f"m100_cuota_integra_estatal\t{service_result.m100_projection.cuota_integra_estatal_0545}",
-        f"m100_cuota_integra_autonomica\t{service_result.m100_projection.cuota_integra_autonomica_0546}",
-        f"m100_cuota_liquida_estatal\t{service_result.m100_projection.cuota_liquida_estatal_0595}",
-        f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica_0596}",
-        f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante_0597}",
-    ]
+    project_result = _project_result_payload(service_result)
+    lines = _project_lines(service_result)
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
@@ -231,7 +242,7 @@ def _compare_lines(service_result: ModeloCompareOperationProjection) -> list[str
     return lines
 
 
-def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo("100").value) -> None:
+def modelo_compare(ctx: typer.Context, modelo: str, year: list[int] | None = None) -> None:
     """Emit :class:`ModeloCompareResult` with grounded delta rows.
 
     Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI

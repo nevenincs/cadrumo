@@ -21,23 +21,31 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import BindingState, DefaultKind, SchemaState
 
-from .._modelo_audit_command_specs import MODELO_ROOT_COMMAND_SPEC
-from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..modelo_audit_command_specs import MODELO_ROOT_COMMAND_SPEC
+from ..modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 from ..modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 EXPECTED_TOKENS = {
+    "accept-disagreement",
     "attest-m303-exonerado-390",
+    "attest-no-amount",
+    "attest-prior-carries",
+    "attest-prior-value",
+    "attest-work-income",
     "calculate",
     "create",
     "dependencies",
+    "disagreements",
     "discard",
     "file",
+    "form",
     "list",
     "observations",
+    "override",
     "rename",
     "report",
     "report-verify",
@@ -47,8 +55,10 @@ EXPECTED_TOKENS = {
     "run-details",
     "revision",
     "revisions",
+    "revoke-disagreement",
     "runs",
     "select",
+    "set-value",
     "status",
     "verify",
     "wizard",
@@ -236,7 +246,7 @@ def _semantic_annotation(annotation: object) -> object:
 
 
 def test_modelo_work_specs_are_the_exact_owned_leaf_set() -> None:
-    assert len(MODELO_WORK_COMMAND_SPECS) == 22
+    assert len(MODELO_WORK_COMMAND_SPECS) == 32
     assert {spec.token for spec in MODELO_WORK_COMMAND_SPECS} == EXPECTED_TOKENS
     assert {spec.parent_key for spec in MODELO_WORK_COMMAND_SPECS} == {"app_modelo_work"}
     assert {spec.key for spec in MODELO_WORK_COMMAND_SPECS} == {

@@ -39,11 +39,16 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ..modelo.work_selection import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
@@ -54,7 +59,7 @@ from ..operator_actions.models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import Transaction
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..ledger.evidence import PurchaseInvoiceEvidence
@@ -109,7 +114,7 @@ class DataPrepStep(BaseModel):
             step is finished.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     step_id: DataPrepStepId
     state: DataPrepStepState
@@ -131,7 +136,7 @@ class DataPrepWalkthrough(BaseModel):
             :attr:`~application.overview.data_prep.DataPrepStepState.DONE`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     filing_year: int
@@ -173,7 +178,7 @@ def build_data_prep_walkthrough(
             :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`
             for ``bucket_id``.
         invoice_catalogue: Loaded
-            :class:`~domain.invoices.models.InvoiceCatalogue` for ``bucket_id``.
+            :class:`~domain.invoices.catalogue.InvoiceCatalogue` for ``bucket_id``.
         evidence_records: Loaded purchase-invoice evidence rows
             (``tuple[PurchaseInvoiceEvidence, ...]``) for ``bucket_id``.
         preflight_report: Loaded
@@ -264,8 +269,7 @@ def _evidence_step(
     expense_rows = tuple(
         t
         for t in period_transactions
-        if t.direction is TransactionDirection.OUTGOING
-        and t.business_classification in (BusinessClassification.BUSINESS, BusinessClassification.MIXED)
+        if t.direction is TransactionDirection.OUTGOING and t.business_classification in BUSINESS_BEARING_STATES
     )
     if not expense_rows:
         return DataPrepStep(

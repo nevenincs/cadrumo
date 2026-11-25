@@ -13,9 +13,11 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
+import { Spinner } from "@/components/ui/spinner";
 import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { versionLine, type AboutState } from "../shell/about";
 import { terminalFontPx } from "../shell/metrics";
+import { useProvisioning } from "../shell/provisioning";
 import { useStrings } from "../shell/strings";
 
 /** A choice among a few short options: a labelled segmented control. */
@@ -52,15 +54,72 @@ function Choice<T extends string>({
   );
 }
 
-/** Window presentation settings and the shared output language; above them,
- * while Cadrumo is not fully set up, the one line that leads into setup. */
+/** What the window provisions, said once, and the way into the one panel
+ * that lists and sets up each component. Absent where this window offers no
+ * setup. */
+function ProvisioningSection() {
+  const t = useStrings();
+  const id = useId();
+  const store = useProvisioning();
+  if (!store.offered) return null;
+  const { control, snapshot } = store;
+  let status: ReactNode;
+  if (store.anyLive)
+    status = (
+      <>
+        <Spinner />
+        {t("desktop.setup.rail_busy")}
+      </>
+    );
+  else if (snapshot === null)
+    status =
+      control.read.kind === "loading" ? (
+        <>
+          <Spinner />
+          {t("desktop.setup.checking")}
+        </>
+      ) : (
+        t("desktop.setup.unavailable")
+      );
+  else
+    status = store.incomplete
+      ? t("desktop.setup.rail_incomplete")
+      : t("desktop.setup.outcome_completed");
+  return (
+    <section
+      data-settings-provisioning
+      className="grid gap-3"
+      aria-labelledby={id}
+    >
+      <h3 id={id} className="text-sm font-medium text-muted-foreground">
+        {t("desktop.setup.title")}
+      </h3>
+      <p
+        data-settings-provisioning-status
+        className="flex items-center gap-2 text-sm text-foreground"
+      >
+        {status}
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        className="justify-self-start"
+        onClick={() => store.open(null)}
+      >
+        {t("desktop.setup.open")}
+      </Button>
+    </section>
+  );
+}
+
+/** The provisioning section, then window presentation settings and the
+ * shared output language. */
 export function Settings({
   prefs,
   setPrefs,
   language,
   onReset,
   close,
-  advisory,
   about,
 }: {
   prefs: Prefs;
@@ -68,9 +127,6 @@ export function Settings({
   language: LanguageControl;
   onReset: () => void;
   close: () => void;
-  /** The setup advisory, first under the title; absent, or rendering
-   * nothing, when there is nothing to finish. */
-  advisory?: ReactNode;
   /** The installation's version row, which opens the About dialog; absent
    * where the host cannot say what is installed. */
   about?: { state: AboutState | null; onOpen: () => void };
@@ -121,7 +177,7 @@ export function Settings({
         }}
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
-        {advisory}
+        <ProvisioningSection />
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}

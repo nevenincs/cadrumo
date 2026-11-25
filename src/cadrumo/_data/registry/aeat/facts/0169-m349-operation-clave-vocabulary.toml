@@ -1,0 +1,37 @@
+# Modelo 349 claves de operación under the record design in force from 2020.
+[fact]
+fact_id = "m349-operation-clave-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m349-operation-clave-vocabulary:2020-01-01"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-37-1992:art-27",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
+    "aeat-modelo-349-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-349-2020-current"
+required_text = ["Modelo 349", "CLAVE DE OPERACIÓN"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = ["Modelo 349"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-procedure"
+required_text = ["Modelo 349"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.349.operation_claves", value = "E,M,H,A,T,S,I,R,D,C" },
+]

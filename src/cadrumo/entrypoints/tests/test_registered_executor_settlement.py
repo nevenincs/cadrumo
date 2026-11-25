@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -24,7 +25,7 @@ from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
 from ...application.modelo.amendment_action_ports import AmendmentActionPorts
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ...application.operations.frontend_projection import OperationNoPendingInteractionV1
 from ...application.operations.frontend_requests import OperationCancellationRequestV1, OperationCancellationSuccessV1
@@ -40,17 +41,17 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
-from ..adapter_composition import build_amendment_action_ports, build_filing_action_ports
+from ..adapter_composition_work_ports import build_amendment_action_ports, build_filing_action_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
 from .registered_executor_case_support import (
+    HeldClock,
     OperationRuntimeCloseWitness,
-    _HeldClock,
-    _resolve_result_projection,
     conformance_operation_runtime,
+    resolve_result_projection,
 )
-from .registered_executor_payload_support import _payload
-from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
+from .registered_executor_payload_support import registered_executor_payload
+from .registered_executor_scenario_constants import OPERATOR_SCOPE_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,7 +94,7 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
         assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observed.projection.effect is OperationEffect.NONE
-        track = _resolve_result_projection(
+        track = resolve_result_projection(
             driver,
             registry,
             definition_id="ledger.track",
@@ -117,6 +118,58 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
         )
 
 
+def _assert_amendment_failed_with_unknown_effect(observed):
+    assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert observed.projection.terminal_condition is OperationTerminalCondition.FAILED
+    assert observed.projection.effect is OperationEffect.UNKNOWN
+    assert observed.projection.result_ref is None
+    assert observed.projection.diagnostic_ref is not None
+
+
+def _assert_calculation_catalogue_after_race(
+    raced_catalogue, calculations_after, calculations_before, calculation_revision_id, raced_calculation_instants
+):
+    if raced_catalogue == "calculation":
+        concurrent_revision = calculations_after.get(calculation_revision_id)
+        assert concurrent_revision is not None
+        assert len(raced_calculation_instants) == 1
+        assert concurrent_revision.updated_at == raced_calculation_instants[0]
+        expected_revisions = dict(calculations_before.revisions)
+        expected_revisions[calculation_revision_id] = concurrent_revision
+        assert calculations_after.revisions == expected_revisions
+    else:
+        assert calculations_after.revisions == calculations_before.revisions
+
+
+def _assert_work_unit_catalogue_after_race(
+    raced_catalogue, work_units_after, work_units_before, work_unit_id, original_work_unit, concurrent_work_unit_name
+):
+    if raced_catalogue == "work_unit":
+        concurrent_unit = work_units_after.get(work_unit_id)
+        assert concurrent_unit is not None
+        assert concurrent_unit.name == concurrent_work_unit_name
+        assert concurrent_unit.updated_at > original_work_unit.updated_at
+        expected_work_units = dict(work_units_before.work_units)
+        expected_work_units[work_unit_id] = concurrent_unit
+        assert work_units_after.work_units == expected_work_units
+    else:
+        assert work_units_after.work_units == work_units_before.work_units
+
+
+def _assert_filing_catalogue_after_race(
+    raced_catalogue, records_after, records_before, filing_record_id, concurrent_filing_note
+):
+    if raced_catalogue == "filing":
+        concurrent_record = records_after.get(filing_record_id)
+        assert concurrent_record is not None
+        assert concurrent_record.notes == concurrent_filing_note
+        expected_records = dict(records_before.records)
+        expected_records[filing_record_id] = concurrent_record
+        assert records_after.records == expected_records
+    else:
+        assert records_after.records == records_before.records
+
+
 @pytest.mark.parametrize("raced_catalogue", ["filing", "work_unit", "calculation"])
 def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes(
     tmp_path: Path,
@@ -134,8 +187,13 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
     concurrent_filing_note = "concurrent filing catalogue update"
     concurrent_work_unit_name = "Concurrent work-unit update"
 
-    def amendment_ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> AmendmentActionPorts:
-        ports = build_amendment_action_ports(bucket_id=bucket_id, operation=operation)
+    def amendment_ports_factory(
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> AmendmentActionPorts:
+        ports = build_amendment_action_ports(bucket_id=bucket_id, operation=operation, mutation_writer=mutation_writer)
         if raced_catalogue == "filing":
             filing_repository = cast(ModeloRecordCatalogueRepository, ports.filing_repository)
             original_filing_load = filing_repository.load_revisioned
@@ -227,7 +285,7 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
         amendment_action_ports_factory=amendment_ports_factory,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("modelo.work.amend")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition,
             profile_id=profile_id,
             tmp_path=tmp_path / f"amendment-cas-{raced_catalogue}",
@@ -252,46 +310,31 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload)
         )
-        assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
-        assert observed.projection.terminal_condition is OperationTerminalCondition.FAILED
-        assert observed.projection.effect is OperationEffect.UNKNOWN
-        assert observed.projection.result_ref is None
-        assert observed.projection.diagnostic_ref is not None
+        _assert_amendment_failed_with_unknown_effect(observed)
         assert raced == [raced_catalogue]
 
         records_after = ModeloRecordCatalogueRepository().load()
         work_units_after = WorkUnitCatalogueRepository().load()
         calculations_after = CalculationRevisionCatalogueRepository().load()
         events_after = BucketEventHistoryRepository().load()
-        if raced_catalogue == "filing":
-            concurrent_record = records_after.get(filing_record_id)
-            assert concurrent_record is not None
-            assert concurrent_record.notes == concurrent_filing_note
-            expected_records = dict(records_before.records)
-            expected_records[filing_record_id] = concurrent_record
-            assert records_after.records == expected_records
-        else:
-            assert records_after.records == records_before.records
-        if raced_catalogue == "work_unit":
-            concurrent_unit = work_units_after.get(work_unit_id)
-            assert concurrent_unit is not None
-            assert concurrent_unit.name == concurrent_work_unit_name
-            assert concurrent_unit.updated_at > original_work_unit.updated_at
-            expected_work_units = dict(work_units_before.work_units)
-            expected_work_units[work_unit_id] = concurrent_unit
-            assert work_units_after.work_units == expected_work_units
-        else:
-            assert work_units_after.work_units == work_units_before.work_units
-        if raced_catalogue == "calculation":
-            concurrent_revision = calculations_after.get(calculation_revision_id)
-            assert concurrent_revision is not None
-            assert len(raced_calculation_instants) == 1
-            assert concurrent_revision.updated_at == raced_calculation_instants[0]
-            expected_revisions = dict(calculations_before.revisions)
-            expected_revisions[calculation_revision_id] = concurrent_revision
-            assert calculations_after.revisions == expected_revisions
-        else:
-            assert calculations_after.revisions == calculations_before.revisions
+        _assert_filing_catalogue_after_race(
+            raced_catalogue, records_after, records_before, filing_record_id, concurrent_filing_note
+        )
+        _assert_work_unit_catalogue_after_race(
+            raced_catalogue,
+            work_units_after,
+            work_units_before,
+            work_unit_id,
+            original_work_unit,
+            concurrent_work_unit_name,
+        )
+        _assert_calculation_catalogue_after_race(
+            raced_catalogue,
+            calculations_after,
+            calculations_before,
+            calculation_revision_id,
+            raced_calculation_instants,
+        )
         assert events_after.events == events_before.events
         assert not any(record.amends_filing_record_id is not None for record in records_after.records.values())
         assert submitted.receipt.operation_id == observed.projection.operation_id
@@ -350,7 +393,7 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
         before_irreversible_section=before_irreversible_section,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -394,7 +437,7 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
     on offer fixes that order on any host instead of racing a 50 ms budget.
     """
     cleanup = OperationRuntimeCloseWitness()
-    clock = _HeldClock()
+    clock = HeldClock()
     with conformance_operation_runtime(
         tmp_path / "censo-deadline",
         cleanup=cleanup,
@@ -402,7 +445,7 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
         clock=clock,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -453,7 +496,7 @@ def test_the_filing_authority_accepts_the_registered_operation_fixture(
                 revision_id,
                 approved_verification_report_id=report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=str(profile_id), operation=operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 workflow_profile=resolve_active_workflow_profile(operation),

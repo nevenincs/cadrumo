@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingColumn,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -20,6 +21,7 @@ from ...compiler.record_design import extract_record_design
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ROOT = Path("src/cadrumo/_data")
+_EDITION = str(open_ended_revision("156").id)
 _MONTHS = [
     "enero",
     "febrero",
@@ -37,7 +39,7 @@ _MONTHS = [
 
 
 def test_summary_uses_official_box_and_exact_export_context_without_wire_numbers() -> None:
-    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions["2003-y-siguientes"]
+    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions[_EDITION]
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     assert layout.seed_source.value == "authored"
@@ -99,7 +101,7 @@ def test_official_month_fields_require_separate_status_and_amount() -> None:
 
 
 def test_paper_address_and_signatory_fields_never_claim_electronic_slots() -> None:
-    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions["2003-y-siguientes"]
+    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions[_EDITION]
     paper = [c for c in revision.casillas if str(c.id).startswith(("domicilio-", "firma-"))]
     assert len(paper) == 11
     assert all(
@@ -119,7 +121,7 @@ def test_paper_address_and_signatory_fields_never_claim_electronic_slots() -> No
 
 
 def test_amendment_choices_share_exact_two_character_domain() -> None:
-    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions["2003-y-siguientes"]
+    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions[_EDITION]
     casilla = next(c for c in revision.casillas if c.id == "declaracion-complementaria-sustitutiva")
     assert casilla.constraints is not None and casilla.constraints.enum == ("C ", " S", "  ")
     for invalid in ("C", "S", "CS", "SC", "S ", " C", "XX", "c "):
@@ -140,7 +142,7 @@ def test_prior_receipt_rules_use_the_exact_amendment_values() -> None:
 
     from cadrumo.domain.calculations.registry.schema_verification import parse_verification_predicate_expression
 
-    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions["2003-y-siguientes"]
+    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions[_EDITION]
     predicates = revision.verification_predicates
     assert len(predicates) == 3
     assert all(p.finding_kind.value == "BLOCKING_RULE" for p in predicates)
@@ -176,7 +178,7 @@ def test_amendment_receipt_requirements_are_grounded_in_enrolled_record_design()
 
 def test_member_repeat_requires_an_actual_repeating_export_source() -> None:
     """Presentation alone cannot turn singleton casillas into member records."""
-    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions["2003-y-siguientes"]
+    revision = load_modelo_directory(_ROOT / "registry/aeat/modelos/156").revisions[_EDITION]
     revision = revision.model_copy(
         update={
             "export_layouts": tuple(

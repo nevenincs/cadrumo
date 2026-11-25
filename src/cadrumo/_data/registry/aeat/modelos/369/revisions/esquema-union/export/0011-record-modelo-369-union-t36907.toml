@@ -10,6 +10,82 @@ line_ending = "none"
 required = true
 
 [[revisions.esquema-union.export_layouts.records.fields]]
+id = "m369-union-07-1487-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-177"
+offset = 1487
+length = 15
+kind = "binding"
+binding = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-177"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = "m369-union-07-1502-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-178"
+offset = 1502
+length = 2
+kind = "binding"
+binding = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-178"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = "m369-union-07-1504-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-179"
+offset = 1504
+length = 5
+kind = "binding"
+binding = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-179"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+absent_fill = "spaces"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = "m369-union-07-1509-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-180"
+offset = 1509
+length = 1
+kind = "binding"
+binding = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-180"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = "m369-union-07-1510-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-181"
+offset = 1510
+length = 17
+kind = "binding"
+binding = "modelo-369-union-fichero.6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-181"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+absent_fill = "spaces"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-union.export_layouts.records.fields]]
 id = "m369-union-07-1527-6-entregas-de-bienes-expedidos-o-transportados-desde-otros-em-distinto-182"
 offset = 1527
 length = 17
@@ -22,6 +98,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -80,6 +157,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -110,6 +188,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -126,6 +205,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -184,6 +264,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -214,6 +295,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -230,6 +312,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 

@@ -30,7 +30,6 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
-from .actions_manual import update_manual_transaction_fields
 from .classify_patch import build_manual_classification_patch
 from .classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
@@ -49,11 +48,12 @@ from .classify_validation import (
     classify_validation_messages,
 )
 from .id_resolution import resolve_transaction_id
+from .manual_update import update_manual_transaction_fields
 from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 
 class LedgerClassifyExecutor:
@@ -111,6 +111,7 @@ class LedgerClassifyExecutor:
                     transaction=current,
                     bucket_event_ids=(),
                 ),
+                language=payload.output_language,
             )
             return ports, catalogue, transaction_id, patch
 
@@ -153,7 +154,9 @@ class LedgerClassifyExecutor:
                     # a known no-write effect.
                     await context.events.effect(OperationEffect.NONE)
                     return await refuse(exc)
-                projection = classification_result_from_action(payload.profile_id, result)
+                projection = classification_result_from_action(
+                    payload.profile_id, result, language=payload.output_language
+                )
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
@@ -189,11 +192,9 @@ def resolve_ledger_classify_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and COMMIT for single classify."""
-    if request.definition_id != LEDGER_CLASSIFY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerClassifyRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_CLASSIFY_OPERATION_DEFINITION_ID, request_type=LedgerClassifyRequest
+    )
 
 
 def build_ledger_classify_registration(

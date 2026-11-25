@@ -41,15 +41,16 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import prefixed_digest
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation.reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
+    IvaCompensationDecisionReason,
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
     IvaCompensationWalletObservationProtocol,
@@ -62,7 +63,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .binding_prefill import BindingPrefillReport as _BindingPrefillReport
+from .binding_prefill import BindingPrefillReport as BindingPrefillBindingPrefillReport
 
 if TYPE_CHECKING:
     from .binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
@@ -85,9 +86,9 @@ class IvaCompensationReconciliationReport(BaseModel):
 
 
 IvaCompensationReconciliationReport.model_rebuild(
-    _types_namespace={"BindingPrefillReport": _BindingPrefillReport},
+    _types_namespace={"BindingPrefillReport": BindingPrefillBindingPrefillReport},
 )
-del _BindingPrefillReport
+del BindingPrefillBindingPrefillReport
 
 
 class IvaWalletDecisionSourceResolver:
@@ -123,7 +124,7 @@ class IvaWalletDecisionSourceResolver:
                 not target this filing year and period, blocks the
                 calculation, or carries no selected amount.
         """
-        if context.modelo != Modelo("303").value or self._decision is None:
+        if context.modelo != form_for_role("iva.periodic") or self._decision is None:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -254,6 +255,7 @@ def reconcile_modelo_303_iva_compensation(
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     treat_absent_recurrence_as_first_period: bool = False,
     local_evidence_found_but_unusable: bool = False,
+    local_calculation_refusal: IvaCompensationDecisionReason | None = None,
     local_recurrence: LocalIvaCompensationRecurrence | None,
     prefill_report: BindingPrefillReport,
     persist: bool = True,
@@ -303,6 +305,9 @@ def reconcile_modelo_303_iva_compensation(
             be read. It changes no outcome, only what the no-authority decision
             says, so an operator is not told nothing exists while their own
             prior record sits in the store.
+        local_calculation_refusal: Why the credit of a calculated, unfiled
+            prior period cannot be carried, from the refund rules the caller
+            resolved, or ``None`` where it may be.
         local_recurrence: Required caller-resolved canonical recurrence, or
             explicit ``None`` when the caller found no admissible recurrence.
         prefill_report: Required report from the same recurrence resolution.
@@ -322,7 +327,7 @@ def reconcile_modelo_303_iva_compensation(
             Converts a persisted non-blocking decision into the Modelo 303
             ``iva_wallet_decision`` source value.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo("303").value:
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != form_for_role("iva.periodic"):
         raise IvaCompensationReconciliationInputError(
             translated_message="application.calculations.iva_wallet.errors.modelo_303_only",
             context={"modelo": str(getattr(snapshot.modelo, "id", snapshot.modelo))},
@@ -376,6 +381,7 @@ def reconcile_modelo_303_iva_compensation(
         max_wallet_age_days=max_wallet_age_days,
         is_first_iva_period=is_first_iva_period,
         local_evidence_found_but_unusable=local_evidence_found_but_unusable,
+        local_calculation_refusal=local_calculation_refusal,
     )
     if persist:
         decision_repo.save_decision(decision)

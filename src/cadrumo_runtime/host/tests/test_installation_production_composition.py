@@ -10,6 +10,7 @@ harness use.
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -19,8 +20,10 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.modelo.review_package import ReviewPackageIntegrityError
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.env_scope import derived_storage_settings
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -45,6 +48,7 @@ from cadrumo_client.transport.installation_client import open_installed_installa
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
+from .. import installation_profiles
 from ..installation_composition import InstallationActRegistry, production_installation_acts
 from ..installation_door import InstallationActExchange
 from .installation_registered_runtime import serving_installed_composition
@@ -62,6 +66,39 @@ def test_the_installed_registry_serves_every_act_of_the_table_and_nothing_else()
 
 
 @pytest.mark.unit
+def test_registration_does_not_load_the_services_of_unrequested_acts() -> None:
+    """A first listing registers every act without loading reset, repair or tax execution."""
+    script = """
+import json, sys
+from cadrumo_runtime.host.installation_composition import production_installation_acts
+from cadrumo_client.contracts.installation_requests import INSTALLATION_ACT_CONTRACTS
+registry = production_installation_acts()
+assert registry.served_acts == frozenset(INSTALLATION_ACT_CONTRACTS)
+print(json.dumps(sorted(sys.modules)))
+"""
+    completed = run_audited_process(
+        [sys.executable, "-I", "-B", "-c", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    modules = frozenset(json.loads(completed.stdout))
+    unrelated_services = {
+        "cadrumo.application.config_reset",
+        "cadrumo.application.diagnostics",
+        "cadrumo.application.storage_management.service",
+        "cadrumo.application.user_profile.registration",
+        "cadrumo.application.user_profile.capsule_restore",
+        "cadrumo.application.modelo.calculation_report_verification",
+        "cadrumo.application.modelo.review_package",
+        "cadrumo.entrypoints.adapter_composition",
+        "sqlalchemy",
+    }
+
+    assert unrelated_services.isdisjoint(modules), sorted(unrelated_services.intersection(modules))
+
+
+@pytest.mark.unit
 def test_the_census_detects_an_act_the_registry_does_not_serve() -> None:
     def serve(request: StorageCheckRequest, exchange: InstallationActExchange, /) -> StorageCheckReply:
         raise AssertionError("the census never calls a handler")
@@ -71,6 +108,19 @@ def test_the_census_detects_an_act_the_registry_does_not_serve() -> None:
 
     assert partial.served_acts == {InstallationAct.STORAGE_CHECK}
     assert partial.served_acts != frozenset(INSTALLATION_ACT_CONTRACTS)
+
+
+@pytest.mark.unit
+def test_the_installed_composition_refuses_a_family_that_leaves_its_acts_unserved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def register_nothing(registry: InstallationActRegistry) -> None:
+        del registry
+
+    monkeypatch.setattr(installation_profiles, "register_profile_acts", register_nothing)
+
+    with pytest.raises(InternalInvariantError):
+        production_installation_acts()
 
 
 @contextmanager

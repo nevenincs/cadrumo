@@ -18,13 +18,20 @@ from cadrumo.application.operations.composition import OperationSubmissionServic
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
 
-from .supervisor_test_support import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
-from .test_journal import _claim_lease, _lease, _snapshot
+from .supervisor_test_support import (
+    SUPERVISOR_NOW,
+    IdleExecutor,
+    SupervisorRequest,
+    operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+)
+from .test_journal import claim_lease, journal_lease, journal_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -35,7 +42,7 @@ _OWNER_MARKER = "provenance-owner-marker-never-in-journal"
 _DESTINATION_ID = UUID("59653ea3-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 
 
-def _request(*, value: str = "encrypted-operation-input") -> OperationRequest[SupervisorRequest]:
+def supervisor_request(*, value: str = "encrypted-operation-input") -> OperationRequest[SupervisorRequest]:
     return OperationRequest[SupervisorRequest](
         definition_id=_DEFINITION_ID,
         subject_ref="subject:admission-provenance",
@@ -89,9 +96,9 @@ def _provenance(
 
 
 def _services(root: Path, profile_objects):
-    journal, leases, operands = _repositories(storage_root=root, profile_objects=profile_objects)
-    supervisor = _supervisor(
-        registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+    journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile_objects)
+    supervisor = operation_supervisor(
+        registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -105,7 +112,7 @@ def test_provenance_survives_encrypted_round_trip_without_plaintext_or_replay_re
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, service = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         original = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
 
         first = asyncio.run(
@@ -152,7 +159,7 @@ def test_provenance_survives_encrypted_round_trip_without_plaintext_or_replay_re
 @pytest.mark.parametrize("damage", ["old_schema", "missing_request", "foreign_profile", "other_definition"])
 def test_admitted_request_is_required_and_bound_to_original_invocation(damage: str) -> None:
     profile_id = uuid4()
-    provenance = _provenance(_ORIGINAL_ID, _request(), profile_id=profile_id)
+    provenance = _provenance(_ORIGINAL_ID, supervisor_request(), profile_id=profile_id)
     payload = provenance.model_dump(mode="json")
     if damage == "old_schema":
         payload["schema_version"] = 1
@@ -172,12 +179,12 @@ def test_substituted_provenance_refuses_before_journal_creation(tmp_path: Path, 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, _ = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         provenance = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
         if substitution == "identity":
             provenance = _provenance(_RETRY_ID, request, profile_id=UUID(profile.bucket_id))
         else:
-            request = _request(value="altered-payload")
+            request = supervisor_request(value="altered-payload")
 
         with pytest.raises(ValueError, match="does not match stored invocation"):
             asyncio.run(supervisor.submit(request, operation_id=_ORIGINAL_ID, provenance=provenance))
@@ -191,7 +198,7 @@ def test_missing_or_corrupt_encrypted_provenance_refuses_stored_invocation(tmp_p
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable-state"
         journal, supervisor, _ = _services(root, profile.repository)
-        request = _request()
+        request = supervisor_request()
         provenance = _provenance(_ORIGINAL_ID, request, profile_id=UUID(profile.bucket_id))
         asyncio.run(supervisor.submit(request, operation_id=_ORIGINAL_ID, provenance=provenance))
         reference = asyncio.run(journal.load(_ORIGINAL_ID)).admission_provenance_reference
@@ -203,7 +210,7 @@ def test_missing_or_corrupt_encrypted_provenance_refuses_stored_invocation(tmp_p
                 object_key=reference,
                 classification=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
                 schema_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
-                written_at=_NOW,
+                written_at=SUPERVISOR_NOW,
                 payload=b'{"substituted":"encrypted-record"}',
             )
 
@@ -220,13 +227,15 @@ def test_journal_transition_cannot_remove_or_substitute_original_provenance_refe
 ) -> None:
     journal = OperationJournalRepository(storage_root=tmp_path)
     original_reference = "e" * 64
-    initial = _snapshot(revision=0, sequence=1).model_copy(
+    initial = journal_snapshot(revision=0, sequence=1).model_copy(
         update={"admission_provenance_reference": original_reference}
     )
-    _claim_lease(tmp_path, _lease())
-    asyncio.run(journal.create(initial, lease=_lease()))
-    altered = _snapshot(revision=1, sequence=2).model_copy(update={"admission_provenance_reference": replacement})
+    claim_lease(tmp_path, journal_lease())
+    asyncio.run(journal.create(initial, lease=journal_lease()))
+    altered = journal_snapshot(revision=1, sequence=2).model_copy(
+        update={"admission_provenance_reference": replacement}
+    )
 
     with pytest.raises(RepositoryError, match="provenance"):
-        asyncio.run(journal.commit(altered, expected_revision=0, lease=_lease()))
+        asyncio.run(journal.commit(altered, expected_revision=0, lease=journal_lease()))
     assert asyncio.run(journal.load(initial.operation_id)) == initial

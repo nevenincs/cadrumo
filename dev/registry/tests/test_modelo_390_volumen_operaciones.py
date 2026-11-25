@@ -9,7 +9,7 @@ What this module pins is threefold. That each casilla's declared official number
 is the number AEAT's own record design prints against that description, read
 from the bundled Diseno de Registros workbooks rather than restated here. That
 the population each box draws is the one the law puts in it -- and, for [103],
-that the box's own widened title is not authority to widen the selector. And
+that the box's own widened title admits the intra-Community services. And
 that neither box reaches the tax liquidation, while both feed the separate
 turnover subtotal printed on the form.
 
@@ -53,6 +53,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -83,6 +84,8 @@ _BOXES = (
     ("iva.anual.volumen.exportaciones-exentas", "104", "Exportaciones"),
 )
 
+# The newest exercise whose Modelo 390 edition is filing grade.
+_EXERCISE = filing_grade_exercises("390")[-1]
 _ENTREGAS_BASE = Decimal("18400.00")
 _EXPORT_THIRD_COUNTRY_BASE = Decimal("9250.00")
 _EXPORT_ASSIMILATED_BASE = Decimal("1375.00")
@@ -90,7 +93,7 @@ _SERVICE_SUPPLY_BASE = Decimal("6100.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=_EXERCISE, period="0A").revision
 
 
 def _official_fields(path: Path) -> tuple[tuple[str, str], ...]:
@@ -125,7 +128,7 @@ def _observation(
     """One exempt repercutido row: a zero-rated supply carrying base but no cuota."""
     return IvaLedgerObservation(
         ledger_id="ledger-m390-volumen",
-        transaction_date=date(2024, 5, 20),
+        transaction_date=date(_EXERCISE, 5, 20),
         category=category,
         exemption_article=None,
         rate_kind=IvaRateKind("zero"),
@@ -213,8 +216,8 @@ def test_no_other_concept_claims_these_numbers_in_any_design() -> None:
 
 
 def test_entregas_intracomunitarias_draws_the_exempt_supply_base() -> None:
-    """Box [103] resolves to the art. 25 entrega intracomunitaria base."""
-    assert _resolve()["modelo-390-volumen-entregas-intracomunitarias-base"] == _ENTREGAS_BASE
+    """Box [103] resolves to the art. 25 entrega intracomunitaria base plus the services supplied."""
+    assert _resolve()["modelo-390-volumen-entregas-intracomunitarias-base"] == _ENTREGAS_BASE + _SERVICE_SUPPLY_BASE
 
 
 def test_exportaciones_draws_both_zero_rated_export_members() -> None:
@@ -224,19 +227,17 @@ def test_exportaciones_draws_both_zero_rated_export_members() -> None:
     )
 
 
-def test_a_b2b_eu_service_supply_never_reaches_the_intracomunitarias_box() -> None:
-    """The widened box title is not authority to widen the selector.
+def test_a_b2b_eu_service_supply_reaches_the_intracomunitarias_box() -> None:
+    """The box is titled "Entregas intracomunitarias de bienes y servicios", so its services are in it.
 
-    The ejercicio-2021 design retitled [103] "Entregas intracomunitarias de
-    bienes y servicios", which reads as an invitation to admit a services
-    category. A plain B2B service supplied to an EU-established taxable person
-    is located outside the TAI by LIVA art. 69.Uno.1, so it is not subject in
-    Spain and belongs in the no-sujetas box. Admitting it here would over-declare
-    the exempt-supply figure by the service base.
+    A service supplied to a taxable person established in another Member State is
+    located there by LIVA art. 69.Uno.1 and reported in Modelo 349 with clave S;
+    the bundled instructions word the annual box as the art. 25 exempt supplies
+    plus the intra-Community supplies of services of the year, the same
+    population as the Modelo 303 casilla 59.
     """
     resolved = _resolve()
-    assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] == _ENTREGAS_BASE
-    assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] != (_ENTREGAS_BASE + _SERVICE_SUPPLY_BASE)
+    assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] == _ENTREGAS_BASE + _SERVICE_SUPPLY_BASE
 
 
 def test_volumen_disclosures_feed_only_the_turnover_subtotal() -> None:
@@ -268,7 +269,7 @@ def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
     taxpayer and the same year.
     """
     annual = {binding.id: binding for binding in _m390_revision().bindings}
-    quarterly_revision = compiled_bundled_authority().snapshot("303", filing_year=2024, period="4T").revision
+    quarterly_revision = compiled_bundled_authority().snapshot("303", filing_year=_EXERCISE, period="4T").revision
     quarterly = {binding.id: binding for binding in quarterly_revision.bindings}
     pairs = (
         ("modelo-390-volumen-entregas-intracomunitarias-base", "modelo-303-casilla-59-entregas-intracomunitarias-base"),

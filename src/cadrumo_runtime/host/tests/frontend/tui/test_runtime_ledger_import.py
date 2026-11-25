@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import threading
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
@@ -29,10 +31,15 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.application.operator_actions.models import PreconditionVerdict
+from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
+from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -66,14 +73,17 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
-    # The client it was submitted through, as the real controller keeps it.
-    client: _Client
+    observation: OperationObservationSuccessV1
+    result: LedgerImportResultProjection
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
 
-    def __init__(self, observation: OperationObservationSuccessV1, result: LedgerImportResultProjection) -> None:
-        self.observation = observation
-        self.result = result
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         return self.operation_id
@@ -246,6 +256,41 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
     assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.own_account_mismatch")]
 
 
+def _reader_verdict() -> PreconditionVerdict:
+    """The agent refuses the column mapper's role."""
+    return model_not_installed_verdict(ModelRole.COLUMN_ROLE_MAPPING)
+
+
+def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFileRefusal:
+    return LedgerImportFileRefusal(
+        file_name=name,
+        reason_code="reader_unavailable",
+        precondition_verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+    )
+
+
+def test_a_file_the_reader_refuses_is_worded_by_its_reason_code(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    client = _Client()
+    folder, _first, _second = _folder(tmp_path)
+    preview = _result(
+        dry_run=True,
+        imported=0,
+        valid_files=0,
+        refused=(
+            _reader_refused("april.csv", _reader_verdict()),
+            _reader_refused("may.csv", _reader_verdict()),
+        ),
+    )
+    _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
+    request = LedgerImportRequestV1(path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
+
+    outcome = asyncio.run(_door(client).preview(request))
+
+    assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.reader_unavailable")] * 2
+
+
 def test_apply_submits_exactly_the_previewed_files_with_their_digests(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -341,3 +386,40 @@ def test_invoice_books_and_unpreviewed_applies_are_refused_before_anything_is_su
     with pytest.raises(RefusalError):
         asyncio.run(door.apply(LedgerImportRequestV1(path=first, source_kind=LedgerImportSourceKind.BANK_STATEMENT)))
     assert submissions == []
+
+
+def test_preview_plans_its_files_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Planning lists the named folder on disk, a blocking read that never runs on the loop."""
+    from ....frontend.tui import runtime_ledger_import as door_module
+
+    client = _Client()
+    folder, first, second = _folder(tmp_path)
+    preview = _result(
+        dry_run=True,
+        imported=2,
+        valid_files=1,
+        digests=(LedgerImportSourceDigest(file_index=0, sha256="b" * 64),),
+        refused=(LedgerImportFileRefusal(file_name="may.csv", reason_code="own_account_mismatch"),),
+    )
+    submissions = _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
+    planning_threads: list[int] = []
+    plan = door_module.plan_ledger_import_sources
+
+    def recorded_plan(path: Path) -> tuple[Path, ...]:
+        planning_threads.append(threading.get_ident())
+        return plan(path)
+
+    monkeypatch.setattr(door_module, "plan_ledger_import_sources", recorded_plan)
+    request = LedgerImportRequestV1(
+        path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT, provider=LedgerProviderID.CSV
+    )
+
+    async def preview_on_the_loop() -> int:
+        await _door(client).preview(request)
+        return threading.get_ident()
+
+    loop_thread = asyncio.run(preview_on_the_loop())
+
+    assert planning_threads
+    assert loop_thread not in planning_threads
+    assert cast(LedgerImportRequest, submissions[0]["payload"]).files == (first.absolute(), second.absolute())

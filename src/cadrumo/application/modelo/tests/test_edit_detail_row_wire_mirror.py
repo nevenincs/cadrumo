@@ -23,6 +23,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
@@ -50,7 +51,8 @@ from ..edit_apply_row_contracts import (
 from ..edit_models import ModeloEditDetailRowIntentKind
 from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 
-_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_YEAR = filing_year_envelope().horizon
+_M210_EFFECTIVE_DATE = date(_YEAR, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -59,7 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
     """Build one M184 member row and the wire mirror carrying the same values."""
     mirror = Modelo184MemberRowWireV1(
-        nif="11111111H",
+        nif="00001500M",
         nombre="MIEMBRO UNO",
         pais="ES",
         porcentaje="33.33",
@@ -77,7 +79,7 @@ def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
         rendimiento_neto_minorado_agricola_eo="800.20",
     )
     row = Modelo184MemberRow(
-        nif="11111111H",
+        nif="00001500M",
         nombre="MIEMBRO UNO",
         pais="ES",
         porcentaje=Decimal("33.33"),
@@ -100,7 +102,7 @@ def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
 def _m232_pair() -> tuple[Modelo232VinculadaRowWireV1, Modelo232VinculadaRow]:
     """Build one M232 row whose three codes cross the wire unhydrated."""
     mirror = Modelo232VinculadaRowWireV1(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion="A",
@@ -109,7 +111,7 @@ def _m232_pair() -> tuple[Modelo232VinculadaRowWireV1, Modelo232VinculadaRow]:
         importe="98765.43",
     )
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion="A",
@@ -146,7 +148,7 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
         nif_comunitario="987654321",
         razon_social="RECTIFICADA SARL",
         clave_operacion="A",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         periodo="2T",
         base_rectificada="1500.00",
         base_anterior="1200.00",
@@ -156,7 +158,7 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
         nif_comunitario="987654321",
         razon_social="RECTIFICADA SARL",
         clave_operacion="A",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         periodo="2T",
         base_rectificada=Decimal("1500.00"),
         base_anterior=Decimal("1200.00"),
@@ -167,22 +169,22 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
 def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210AgrupacionRentaRow]:
     """Build one M210 agrupación row and its wire mirror."""
     mirror = Modelo210AgrupacionRentaRowWireV1(
-        source_id="alquiler-2025-01",
+        source_id=f"alquiler-{_YEAR}-01",
         tipo_renta_code="01",
         importe="7500.00",
         tipo_gravamen="0.19",
         pagador_mode=_SINGLE_PAYER,
-        pagador_id="11111111H",
+        pagador_id="00001500M",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",
     )
     row = Modelo210AgrupacionRentaRow(
-        source_id="alquiler-2025-01",
+        source_id=f"alquiler-{_YEAR}-01",
         tipo_renta_code="01",
         importe=Decimal("7500.00"),
         tipo_gravamen=Decimal("0.19"),
         pagador_mode=_SINGLE_PAYER,
-        pagador_id="11111111H",
+        pagador_id="00001500M",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",
     )
@@ -219,7 +221,7 @@ def _m156_pair() -> tuple[Modelo156AfiliadoRowWireV1, Modelo156AfiliadoRow]:
     return mirror, expected
 
 
-_PAIRS = {
+PAIRS = {
     "m156_afiliado": _m156_pair,
     "m184_miembro": _m184_pair,
     "m232_vinculada": _m232_pair,
@@ -229,10 +231,10 @@ _PAIRS = {
 }
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_each_detail_row_mirror_translates_to_an_identical_domain_row(kind: str) -> None:
     """Translation reproduces the domain row exactly, field for field."""
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     translated = mirror.to_row()
 
@@ -241,10 +243,10 @@ def test_each_detail_row_mirror_translates_to_an_identical_domain_row(kind: str)
     assert type(translated) is type(expected)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_domain_row_field_is_carried_by_its_mirror(kind: str) -> None:
     """No field is silently dropped: the mirror covers the row's whole shape."""
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     missing = set(type(expected).model_fields) - set(type(mirror).model_fields)
 
@@ -284,7 +286,7 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
 
     with pytest.raises(ValidationError) as direct:
         Modelo232VinculadaRow(
-            nif="B12345674",
+            nif="B00015016",
             nombre="VINCULADA SL",
             pais="ES",
             tipo_vinculacion=malformed,
@@ -294,7 +296,7 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
         )
 
     mirror = Modelo232VinculadaRowWireV1(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion=malformed,
@@ -327,10 +329,10 @@ def test_the_address_derives_the_exact_natural_key_the_domain_derives() -> None:
     assert address.to_address().natural_key == detail_row_natural_key(row)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_row_kind_addresses_itself_through_carried_components(kind: str) -> None:
     """Each kind's own identity fields reconstruct its domain address key."""
-    _, row = _PAIRS[kind]()
+    _, row = PAIRS[kind]()
     expected = detail_row_natural_key(row)
 
     address = ModeloEditApplyDetailRowAddressV1(
@@ -367,11 +369,11 @@ def test_a_component_carrying_the_separator_is_unambiguous_on_the_wire() -> None
     """
     with_separator = ModeloEditApplyDetailRowAddressV1(
         detail_row_kind="agrupacion_renta",
-        identity_components=("alquiler|2025",),
+        identity_components=(f"alquiler|{_YEAR}",),
     )
     as_two_parts = ModeloEditApplyDetailRowAddressV1(
         detail_row_kind="agrupacion_renta",
-        identity_components=("alquiler", "2025"),
+        identity_components=("alquiler", str(_YEAR)),
     )
 
     assert with_separator.identity_components != as_two_parts.identity_components

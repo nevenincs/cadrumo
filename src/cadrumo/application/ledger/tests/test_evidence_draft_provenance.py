@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....domain.iva.schema import InvoiceKind
@@ -35,6 +35,7 @@ from ..invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    FindingWords,
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
@@ -45,12 +46,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _TRANSCRIPTION_SHA = "b" * 64
 
 
-def _fully_populated_draft() -> InvoiceDraft:
+def fully_populated_draft() -> InvoiceDraft:
     """Return a draft with every defaultable field set to a non-default value."""
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Proveedor Ejemplo SL",
-        customer_tax_id="X1234567L",
+        customer_tax_id="X0001500M",
         customer_name="Cliente Ejemplo SL",
         # Off-default and DIFFERENT from each other: two parties sharing one
         # code would let a projection that carried only the supplier's satisfy
@@ -131,8 +132,8 @@ def _fully_populated_draft() -> InvoiceDraft:
                 grounding=FieldGroundingOutcome.AMBIGUOUS,
                 anchor="B-12345674",
                 candidates=(
-                    FieldAmbiguityCandidate(value="B12345674", anchor="B-12345674", note="issuer block"),
-                    FieldAmbiguityCandidate(value="X1234567L", anchor="X-1234567-L", note="footer block"),
+                    FieldAmbiguityCandidate(value="B00015016", anchor="B-12345674", note="issuer block"),
+                    FieldAmbiguityCandidate(value="X0001500M", anchor="X-1234567-L", note="footer block"),
                 ),
                 # Populated non-default so the projection gate exercises a real
                 # value rather than agreeing that two ``None``s match: a
@@ -156,7 +157,9 @@ def _fully_populated_draft() -> InvoiceDraft:
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
                 field="grand_total",
-                detail="base plus cuota plus recargo does not reach the printed total",
+                words=FindingWords.of(
+                    DraftFindingWording.TOTAL_NOT_CLOSED, total=Decimal("1232.00"), computed=Decimal("1262.00")
+                ),
                 expected=Decimal("1262.00"),
                 observed=Decimal("1232.00"),
             ),
@@ -178,7 +181,7 @@ def test_every_defaultable_field_is_populated_off_default() -> None:
     default and compare equal. This asserts the fixture actually differs from a
     bare draft on every field that has a default.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     bare = InvoiceDraft()
 
     defaulted = {name for name, info in InvoiceDraft.model_fields.items() if not info.is_required()}
@@ -190,7 +193,7 @@ def test_every_defaultable_field_is_populated_off_default() -> None:
 
 def test_populated_draft_survives_a_real_json_round_trip() -> None:
     """Strict equality across a genuine JSON-text cycle, not a dict comparison."""
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
 
     reloaded = InvoiceDraft.model_validate_json(draft.model_dump_json())
 
@@ -204,7 +207,7 @@ def test_a_dropped_field_is_surfaced_rather_than_re_defaulted() -> None:
     of a save-drops-field regression. The reload must not compare equal to the
     original -- if it did, every round trip in this module would be vacuous.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     payload = json.loads(draft.model_dump_json())
     del payload["retencion_amount"]
 
@@ -216,7 +219,7 @@ def test_a_dropped_field_is_surfaced_rather_than_re_defaulted() -> None:
 
 def test_an_unknown_serialized_field_is_refused_not_absorbed() -> None:
     """The draft is ``extra="forbid"``; a stray key raises rather than vanishing."""
-    payload = json.loads(_fully_populated_draft().model_dump_json())
+    payload = json.loads(fully_populated_draft().model_dump_json())
     payload["model_confidence"] = 0.93
 
     with pytest.raises(ValidationError, match="model_confidence"):
@@ -252,7 +255,7 @@ def test_an_ambiguous_field_must_record_competing_candidates() -> None:
             field="supplier_tax_id",
             origin=FieldOrigin.VISION,
             grounding=FieldGroundingOutcome.AMBIGUOUS,
-            candidates=(FieldAmbiguityCandidate(value="B12345674"),),
+            candidates=(FieldAmbiguityCandidate(value="B00015016"),),
         )
 
 
@@ -263,8 +266,8 @@ def test_candidates_under_a_decided_outcome_are_refused() -> None:
             origin=FieldOrigin.VISION,
             grounding=FieldGroundingOutcome.RECONCILED,
             candidates=(
-                FieldAmbiguityCandidate(value="B12345674"),
-                FieldAmbiguityCandidate(value="X1234567L"),
+                FieldAmbiguityCandidate(value="B00015016"),
+                FieldAmbiguityCandidate(value="X0001500M"),
             ),
         )
 

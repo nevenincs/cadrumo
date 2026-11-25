@@ -18,15 +18,14 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
+    profile_authority_contexts,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import build_profile_overview
-from ....application.user_profile.registration import register_profile_with_credentials
+from ....application.wizard.catalogue import build_setup_flow
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -35,6 +34,8 @@ from ..components.status import PinnedStatusBar
 from ..components.widgets import DisclosureGroup
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .manager_subject_profile import registered_manager_subject
+from .settling import settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -42,14 +43,14 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_CREDENTIAL_INPUT = "manager-screen-operator-secret"
+CREDENTIAL_INPUT = "manager-screen-operator-secret"
 _EDITED_PATH = "identity.name"
 
 
-def _live_overview(label: str = "Manager Subject"):
+def live_overview(label: str = "Manager Subject"):
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    with bundled_indexed_authority().operation() as operation:
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         # Registration closes its own session, so a freshly registered profile is
         # LOCKED and the capsule -- the sole profile authority -- will not yield its
         # record. Logging in with the passphrase derives the SAME DEK the capsule was
@@ -57,25 +58,32 @@ def _live_overview(label: str = "Manager Subject"):
         # capsule refuses it as a row addressed to another object key.
         authenticate_profile_for_invocation(
             name=label,
-            passphrase_callback=lambda: _CREDENTIAL_INPUT,
+            passphrase_callback=lambda: CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         record = load_test_profile_record(require_active_bucket_id())
-        return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(
+            record, label=label, schema=profile_authority_contexts()[1].schema, flow=build_setup_flow(operation)
+        )
 
 
-def _persist(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
+def persist(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    with bundled_indexed_authority().operation() as operation:
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         record = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        return build_profile_overview(record, label="Manager Subject", schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(
+            record,
+            label="Manager Subject",
+            schema=profile_authority_contexts()[1].schema,
+            flow=build_setup_flow(operation),
+        )
 
 
 def _notice(app: ProfileManagerScreen) -> str:
@@ -124,21 +132,12 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
     manager must show the full field set so the operator can see what is
     there to fill in.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _rows(app)
             assert len(rendered) == overview.total_count
             assert overview.total_count > overview.present_count, (
@@ -152,21 +151,12 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
     """Only an actionable schema gap earns durable space in the profile body."""
     from textual.css.query import NoMatches
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             requirements = str(app.query_one("#manager-requirements", Static).content)
             assert requirements == tr(
                 "cli.diagnostics.summary.profile_missing_fields",
@@ -177,7 +167,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
 
             app.overview = overview.model_copy(update={"missing_required": (), "missing_required_fields": ()})
             await app._render_profile_context()
-            await pilot.pause()
+            await settle(pilot)
             with pytest.raises(NoMatches):
                 app.query_one("#manager-requirements")
             pilot.app.exit(None)
@@ -188,17 +178,8 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
     """The manager consumes Notice in scrollable context, not permanent chrome."""
     from ....core.json_contract import Notice, NoticeSeverity
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        overview = _live_overview().model_copy(
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview().model_copy(
             update={
                 "notices": (
                     Notice(
@@ -210,13 +191,13 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
             },
         )
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
             assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
             await app._render_profile_context()
-            await pilot.pause()
+            await settle(pilot)
             assert len(app.query("#manager-notice-band")) == 1, (
                 "repainting profile context must replace the notice band before mounting its successor"
             )
@@ -239,23 +220,13 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     doing so; under load it reported a persisted value of ``None`` and read
     as a write-through defect rather than as an under-waited test.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -282,20 +253,10 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
     on the rendered values alone would not catch, since both paths
     ultimately show the right number.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
             tables = list(app.query(DataTable))
@@ -304,7 +265,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
 
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             # The write runs on a worker thread now, so the assertions wait
@@ -344,39 +305,30 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     rather than after — there is never anything to lose.
     """
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         release = threading.Event()
 
         def _gated(path: str, value: str, expected_revision: int, expected_content_digest: str):
             """The real write door, held open while the second edit is tried."""
             release.wait(timeout=30)
-            return _persist(path, value, expected_revision, expected_content_digest)
+            return persist(path, value, expected_revision, expected_content_digest)
 
-        app = ProfileManagerScreen(_live_overview(), persist=_gated)
+        app = ProfileManagerScreen(live_overview(), persist=_gated)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert app._pending_write is not None, "the first write must still be in flight to prove anything"
 
             settled = len(app.app.screen_stack)
             table = next(candidate for candidate in app.query(DataTable) if candidate.row_count)
             row_key = next(iter(table.rows))
             app.on_data_table_row_selected(DataTable.RowSelected(table, 0, row_key))
-            await pilot.pause()
+            await settle(pilot, workers=False)
 
             assert len(app.app.screen_stack) == settled, (
                 "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
@@ -417,20 +369,11 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         masked=True,
         required=False,
     )
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Masked Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Masked Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview("Masked Subject"), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             pilot.app.push_screen(FieldEditScreen(masked))
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-input", Input).value == ""
             pilot.app.exit(None)
 
@@ -452,24 +395,15 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
     def _persist_wordlessly(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
         raise RuntimeError
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        app = ProfileManagerScreen(_live_overview(), persist=_persist_wordlessly)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
 
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -486,19 +420,10 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
     """Empty is a valid action set, and shows nothing rather than an empty box."""
     from textual.css.query import NoMatches
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             with pytest.raises(NoMatches):
                 app.query_one("#manager-actions")
             pilot.app.exit(None)
@@ -526,39 +451,30 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
     """
     _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label="Manager Subject",
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-        _live_overview()
-        baseline = _live_overview()
-        written = _persist(
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        live_overview()
+        baseline = live_overview()
+        written = persist(
             _long_label_field_path,
             "12345.67",
             baseline.record_revision,
             baseline.content_digest,
         )
 
-        app = ProfileManagerScreen(written, persist=_persist)
-        async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
-            # The IRPF section sits well below the fold on an 80x24
-            # terminal; scroll the page (and, transitively, the section's
-            # own table) to the edited row so what is checked is "does the
-            # value column fit once the operator can see the row", not
-            # "is the row above or below the fold" -- a separate, already
-            # -covered question the vertical ContentScroll host answers.
+        app = ProfileManagerScreen(written, persist=persist)
+        # Eighty columns is the claim. The height only has to hold the whole
+        # IRPF table below the section header, which grows with every field the
+        # section declares, so "does the value column fit once the operator can
+        # see the row" is not answered by "is the row above or below the fold"
+        # -- a separate, already-covered question the vertical ContentScroll
+        # host answers.
+        async with ScreenHostApp(app).run_test(size=(80, 80)) as pilot:
+            await settle(pilot)
             app.query_one("#fold-irpf", DisclosureGroup).collapsed = False
-            await pilot.pause()
+            await settle(pilot)
             table = app._table_by_section["irpf"]
             table.scroll_visible(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             rendered = pilot.app.export_screenshot()
             assert "12345.67" in rendered, (
                 "the long IRPF field-name label pushed the value column out of the 80-column viewport"

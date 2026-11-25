@@ -33,10 +33,8 @@ from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportResult,
 )
 from cadrumo.application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
-from cadrumo.application.user_profile.custody_ports import (
-    ProfileCustodySecureObjectRepositoryPort,
-    profile_custody_secure_object_repository,
-)
+from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
+from cadrumo.application.user_profile.custody_record_ports import ProfileCustodySecureObjectRepositoryPort
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,

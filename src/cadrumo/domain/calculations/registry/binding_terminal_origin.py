@@ -69,6 +69,15 @@ class TerminalOriginClass(StrEnum):
     PERCEPTOR_OBSERVATION = "perceptor_observation"
     """A per-perceptor retención observation from its dedicated store."""
 
+    PAYER_CERTIFICATE = "payer_certificate"
+    """A payer's certificate of the withholding it practised on the taxpayer."""
+
+    AEAT_THIRD_PARTY_DATA = "aeat_third_party_data"
+    """A value AEAT prefilled from what third parties reported, such as the borrador.
+
+    It is informative: the taxpayer remains responsible for the figure.
+    """
+
     DETAIL_RECORD = "detail_record"
     """A row of an authored or pulled detail-record family."""
 

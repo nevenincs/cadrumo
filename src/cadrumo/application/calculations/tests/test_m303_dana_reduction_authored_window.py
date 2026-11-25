@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -11,7 +10,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -40,12 +39,6 @@ _DANA_FACT_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
 # into force in; the published provision names that exercise.
 _DANA_RELIEF_EXERCISE = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from.year
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _dana_query(effective_date: date) -> ScalarFactQuery:

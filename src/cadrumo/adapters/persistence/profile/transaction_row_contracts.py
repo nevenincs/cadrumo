@@ -2,20 +2,11 @@
 
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING
+from pydantic import BaseModel, ValidationError
+from pydantic_core import InitErrorDetails
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
-
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.time.utc import UtcInstant
-
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    pass
-
-
-_JSON_OBJECT = TypeAdapter(dict[str, object])
+from ....domain.transactions.models import Transaction
 
 
 class TransactionMembershipIndex(BaseModel):
@@ -35,47 +26,26 @@ class TransactionMembershipIndex(BaseModel):
     transaction_ids: tuple[str, ...] = ()
 
 
-class _PersistedTransactionTimestampWitness(BaseModel):
-    """Required lifecycle timestamps for one stored transaction row."""
-
-    created_at: UtcInstant = Field()
-    modified_at: UtcInstant = Field()
-
-    @classmethod
-    def validate_payload(cls, payload: object) -> None:
-        """Raise ``ValidationError`` when a persisted row lacks timestamp keys."""
-        cls.model_validate(payload)
+#: The lifecycle timestamps ``Transaction`` defaults, so a stored row must carry them itself.
+_PERSISTED_LIFECYCLE_TIMESTAMPS = ("created_at", "modified_at")
 
 
-def decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | None:
-    """Return the parsed envelope dict for one persisted row, or ``None`` if not JSON.
+def require_persisted_transaction_timestamps(transaction: Transaction) -> None:
+    """Refuse a decoded stored row that did not carry its mandatory D6 timestamps.
 
-    Centralises the single JSON decode of a stored row's plaintext bytes so
-    the D6 timestamp guard and the authoritative :class:`Envelope` validation
-    share one parse instead of each independently re-decoding the same bytes
-    (a real O(n) cost at ledger scale: see the P95 scale benchmark in
-    ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
+    ``Transaction`` defaults both lifecycle timestamps, so validating a row that
+    lost them would silently stamp it. The decoded record's set fields name
+    exactly the members the stored payload carried, so a defaulted timestamp is
+    visible without parsing the row a second time. Their UTC rule is the
+    model's own field check, which already ran during the decode.
+
+    Raises:
+        ValidationError: When the stored payload lacked ``created_at`` or
+            ``modified_at``.
     """
-    try:
-        decoded: object = json.loads(payload.decode(UTF_8_ENCODING))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return None
-    try:
-        return _JSON_OBJECT.validate_python(decoded)
-    except ValidationError:
-        return None
-
-
-def validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
-    """Reject a persisted per-transaction row missing the mandatory D6 timestamps.
-
-    Takes the already-JSON-decoded envelope dict (see
-    :func:`decode_persisted_transaction_row`) rather than re-parsing the raw
-    bytes, so this guard adds only a cheap pydantic pass over the small
-    ``{created_at, modified_at}`` sub-shape -- not a second full JSON decode
-    of the whole row.
-    """
-    transaction_payload = decoded.get("payload")
-    if not isinstance(transaction_payload, dict):
-        return
-    _PersistedTransactionTimestampWitness.validate_payload(_JSON_OBJECT.validate_python(transaction_payload))
+    missing = [name for name in _PERSISTED_LIFECYCLE_TIMESTAMPS if name not in transaction.model_fields_set]
+    if missing:
+        raise ValidationError.from_exception_data(
+            "Envelope[Transaction]",
+            [InitErrorDetails(type="missing", loc=("payload", name), input=None) for name in missing],
+        )

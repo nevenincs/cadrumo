@@ -1,6 +1,22 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-estimacion-directa-modalidad:
+          help: The direct estimation modality of your activity, normal or simplified,
+            taken from your profile. Under the simplified modality, box 02 adds the
+            provision for hard-to-justify expenses.
+          label: Direct estimation modality
+        modelo-130-resultados-negativos-anteriores:
+          help: The amount, without sign, of the negative results of your earlier
+            Form 130 returns for this year that you have not deducted before.
+          label: Negative results of this year's earlier quarters not yet deducted
+            · box 15
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: Box 13 reduces the payment only when this income was 12,000 euros
+            or less. Give the sum of these boxes of your return for the previous year.
+          label: Net income from economic activities in last year's income tax return
+            · Form 100, boxes 0224, 1479, 1553 and 1577
       construct:
         modelo-130-direct-estimation-instalment:
           field:
@@ -44,7 +60,9 @@ modelo:
               help: Total cumulative business income for the tax year.
               label: Income
             '02':
-              help: Total cumulative business expenses for the tax year.
+              help: Cumulative deductible expenses and amortization of the economic
+                activity. Under simplified direct estimation it also includes the
+                deductible provisions and hard-to-justify expenses.
               label: Expenses
             '03':
               help: Net yield from direct-estimation economic activities, calculated
@@ -112,9 +130,26 @@ modelo:
               help: Final Modelo 130 amount payable after all deductions and prior
                 self-assessments.
               label: Final result
+            gastos-deducibles-previos:
+              help: Deductible expenses and amortization from 1 January to the end
+                of the quarter, without the deductible provisions and hard-to-justify
+                expenses. Box 02 adds that provision to them.
+              label: Deductible expenses before the simplified-modality provision
+            provisiones-gastos-dificil-justificacion:
+              help: 'Simplified direct estimation only: the percentage set by article
+                30 of the IRPF Regulation on your cumulative income less your deductible
+                expenses, up to its annual limit. It is zero when that difference
+                is negative.'
+              label: Deductible provisions and hard-to-justify expenses
+            rendimiento-neto-reducible-art-32-1:
+              help: The part of the cumulative net income generated over more than
+                two years or notoriously irregular, imputed in a single period. Leave
+                it out if your activity regularly obtains such income. Box 03 is calculated
+                after reducing it by 30%, on at most 300,000 euros a year.
+              label: Net income qualifying for the art. 32.1 reduction
             saldo-negativo-fin-periodo:
-              help: Computed carry-forward seed when box 17 is negative, used as deductible
-                box 15 in a later quarter.
-              label: Negative balance transferable to later periods (max 0, -box 17)
+              help: Negative results of this return and earlier returns of the year
+                still to deduct in box 15 of a later quarter.
+              label: Negative balance transferable to later periods
           field:
             label: Order HAP/258/2015, tax years 2019 onwards

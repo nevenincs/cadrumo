@@ -16,15 +16,11 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._invoice_row_materialization import (
-    InvoiceGrouping,
-    build_invoice_rows,
-    normalise_m349_nif_export_rows,
-)
+from ...filing.declared_party_name import DeclaredPartyFilingName
+from ...filing.declared_party_name_filing import PartyNameRefusals
+from ...invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    M347_OPERATION_CLAVES,
-    M349_OPERATION_CLAVES,
     intracommunity_clave_validator,
     invariant_diagnostics,
     operation_clave_validator,
@@ -34,8 +30,16 @@ from .binding_selector_utils import (
     validate_rectification_fields,
 )
 from .errors import RegistryValidationError
+from .form_codes import form_for_role
 from .ids import BindingId
-from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets
+from .ine_provincia_catalogue import require_ine_provincia_code
+from .invoice_row_materialization import (
+    InvoiceGrouping,
+    build_invoice_rows,
+    normalise_m349_nif_export_rows,
+)
+from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
+from .party_name_rows import file_party_names
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -67,7 +71,7 @@ string for an enum-typed field, so the token is coerced at the boundary.
 _InvoiceRowField = Literal[
     "party_tax_id",
     "country_code",
-    "party_legal_name",
+    "party_filing_name",
     "clave",
     "base_imponible",
     "importe_total",
@@ -124,8 +128,8 @@ class InvoiceObservation(BaseModel):
     floor is not the taxable-base amount. ``intracommunity_clave`` follows the
     AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C) for M349.
     ``operation_clave`` carries M347's OWN, unrelated clave-de-operacion
-    vocabulary (A-G; see :func:`m347_operation_clave`) -- the two claves share
-    no values in common and a row must never mix them.
+    vocabulary (A-G; see :func:`m347_operation_clave`). The fields have separate
+    meanings even where their permitted letters overlap.
     ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
     classification alongside.
     """
@@ -140,13 +144,28 @@ class InvoiceObservation(BaseModel):
     base_amount: Decimal
     invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
-    intracommunity_clave: str | None = Field(default=None, max_length=2)
+    intracommunity_clave: str | None = Field(default=None, max_length=16)
     operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
     rectified_year: FilingYear | None = None
-    rectified_period: str | None = Field(default=None, max_length=8)
+    rectified_period: str | None = Field(default=None, max_length=16)
     rectified_base_previous: Decimal | None = None
-    party_legal_name: str | None = Field(default=None, max_length=200)
+    earlier_year_modification: bool = False
+    """The operation corrects one of an earlier year (RD 1065/2007 art. 35.2).
+
+    Modelo 347 keeps its amount in the total declared but not among the operations
+    art. 33.1 compares with the floor, which are those "durante el año natural".
+    """
+    party_legal_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
+    """The counterparty's name as the invoice prints it: display only, never filed."""
+    party_filing_name: DeclaredPartyFilingName | None = None
+    """The name the person declared this party is filed under, when they stated one.
+
+    A party-name slot files only this, composed by the slot's design rule; the
+    invoice's printed name never stands in for it.
+    """
+    party_handle: str | None = Field(default=None, min_length=1, max_length=64)
+    """A non-identifying handle of the party's stated-facts record, naming it in a refusal."""
     cash_accounting_operation: bool = False
     """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
 
@@ -175,13 +194,26 @@ class InvoiceObservation(BaseModel):
     """
     situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
     """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
-    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
+    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=32)
     """The leased premises' referencia catastral, when the lease records it."""
+    party_provincia_code: str | None = Field(default=None, min_length=1, max_length=16)
+    """The INE code of the province of a Spanish counterparty's domicilio fiscal, when the person stated it.
+
+    Modelo 347 declares it as the declarado's CÓDIGO PROVINCIA (pos. 77-78). No
+    invoice holds it as a fact, so it comes only from the counterparty's stated
+    facts and is never read out of an address.
+    """
+
+    @field_validator("party_provincia_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _is_a_catalogue_provincia(cls, value: str | None) -> str | None:
+        return require_ine_provincia_code(value)
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
     _operation_clave_valid = field_validator("operation_clave")(
-        operation_clave_validator(field_label="operation_clave", claves=M347_OPERATION_CLAVES),
+        operation_clave_validator(field_label="operation_clave"),
     )
 
     @field_validator("source_kind", mode="before")
@@ -251,25 +283,6 @@ class InvoiceProviderBase(BaseModel):
             if clave != clave.upper():
                 raise RegistryValidationError("invoice selector clave must be uppercase")
         return value
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _claves_within_grouping_vocabulary(self) -> InvoiceProviderBase:
-        """Check ``claves`` against the vocabulary its OWN grouping declares.
-
-        A field validator cannot see ``grouping`` (declared after ``claves``
-        in this model), so the closed-set membership check -- as opposed to
-        the shape checks above -- runs here, once both fields are available.
-        M347's ``contraparte_clave`` grouping and M349's two groupings share
-        the ``claves`` field but never its vocabulary; validating every
-        selector against M349's set alone would refuse every legitimate M347
-        binding.
-        """
-        claves_vocabulary = M347_OPERATION_CLAVES if self.grouping == "contraparte_clave" else M349_OPERATION_CLAVES
-        for clave in self.claves:
-            if clave not in claves_vocabulary:
-                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
-        return self
 
 
 # The five invoice-family providers share one selector grammar and differ only
@@ -408,10 +421,9 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # Row fields the InvoiceObservation model cannot supply at all. The
 # validator rejects bindings asking for these so the failure surfaces
 # at snapshot-build rather than as a silent missing column at runtime.
-# ``party_legal_name`` is NOT on this list: AEAT modelo-349 operator
-# rows require it, and a missing legal_name in an observation is a
-# real-data defect that must surface loudly at row-build time rather
-# than be filtered out by a binding-validation guard.
+# ``party_filing_name`` is NOT on this list: every row names its party, and a
+# party with no declared filing name leaves the slot without content for the
+# export to refuse, rather than being filtered out by a binding-validation guard.
 _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
 
 
@@ -742,10 +754,11 @@ def resolve_invoice_binding_values(
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
         observations: Invoice ledger lines to aggregate over.
-        effective_date: Filing-period date required when the revision contains
-            M347 declarante-summary threshold bindings; otherwise unused.
+        effective_date: Filing-period date used by governed operation claves
+            and M347 declarante-summary thresholds when those facts are present.
     """
     available = tuple(observations)
+    _validate_invoice_operation_claves(revision, available, effective_date=effective_date)
     m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(
         revision,
         available,
@@ -765,6 +778,7 @@ def resolve_invoice_binding_row_values(
     observations: Iterable[InvoiceObservation],
     *,
     effective_date: date | None = None,
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer invoice bindings into per-row indexed values.
 
@@ -780,10 +794,19 @@ def resolve_invoice_binding_row_values(
         revision: The :class:`ModeloRevision` whose row-producer bindings to resolve.
         observations: Typed :class:`InvoiceObservation` rows the row-producer
             bindings group, filter, and aggregate into indexed row values.
-        effective_date: Filing-period date required when a ``contraparte_clave``
-            row family needs the M347 declaration threshold; otherwise unused.
+        effective_date: Filing-period date used by governed operation claves and
+            the M347 declaration threshold when those facts are present.
+        party_name_refusals: Receives each party-name slot left without
+            content because its party has no declared filing name that the
+            slot's design rule composes within the slot's width.
+
+    A ``party_filing_name`` row cell holds the declared name composed by the
+    composition rule and width of the layout field that files the binding. A
+    party with no such name leaves the cell absent, never blank and never the
+    invoice's printed name.
     """
     available = tuple(observations)
+    _validate_invoice_operation_claves(revision, available, effective_date=effective_date)
     rows = resolve_invoice_family_row_values(
         revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
@@ -795,7 +818,91 @@ def resolve_invoice_binding_row_values(
             effective_date=_require_m347_effective_date(effective_date),
         ),
     )
-    return normalise_m349_nif_export_rows(rows)
+    composed = file_party_names(
+        revision,
+        rows,
+        available,
+        name_bindings=_party_name_bindings(revision),
+        refusals=party_name_refusals,
+    )
+    return normalise_m349_nif_export_rows(composed)
+
+
+def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the invoice bindings whose rows file a party's name."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source in INVOICE_BINDING_SOURCE_KINDS
+        and _validated_invoice_selector(binding).row_field == "party_filing_name"
+    )
+
+
+def _validate_invoice_operation_claves(
+    revision: ModeloRevision, observations: tuple[InvoiceObservation, ...], *, effective_date: date | None
+) -> None:
+    """Refuse undeclared input letters at the filing-period calculation boundary."""
+    checked: set[tuple[BindingSourceKind, str]] = set()
+    for binding in revision.bindings:
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
+            continue
+        for family in _binding_clave_families(binding):
+            if (binding.source, family[0]) in checked:
+                continue
+            checked.add((binding.source, family[0]))
+            _validate_observation_clave_family(
+                _observations_for_binding_source(observations, binding), *family, effective_date
+            )
+
+
+_THIRD_PARTY_OPERATIONS_ROLE = "third_party.annual_operations"
+_INTRACOMMUNITY_SUMMARY_ROLE = "iva.intracommunity_summary"
+
+
+def _binding_clave_families(
+    binding: BindingDefinition,
+) -> tuple[tuple[str, Literal["operation_clave", "intracommunity_clave"]], ...]:
+    """Identify each operation-clave channel consumed by a source or selector."""
+    selector = binding.provider
+    if not isinstance(selector, InvoiceProviderBase):
+        return ()
+    families: list[tuple[str, Literal["operation_clave", "intracommunity_clave"]]] = []
+    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION or selector.grouping == "contraparte_clave":
+        families.append((_THIRD_PARTY_OPERATIONS_ROLE, "operation_clave"))
+    if (
+        binding.source == BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
+        or selector.grouping in ("operator_clave", "operator_clave_period")
+        or (selector.claves and selector.grouping != "contraparte_clave")
+    ):
+        families.append((_INTRACOMMUNITY_SUMMARY_ROLE, "intracommunity_clave"))
+    return tuple(families)
+
+
+def _validate_observation_clave_family(
+    observations: tuple[InvoiceObservation, ...],
+    role: str,
+    field: Literal["operation_clave", "intracommunity_clave"],
+    effective_date: date | None,
+) -> None:
+    present = [
+        (
+            observation.invoice_id,
+            observation.operation_clave if field == "operation_clave" else observation.intracommunity_clave,
+        )
+        for observation in observations
+    ]
+    present = [(invoice_id, value) for invoice_id, value in present if value is not None]
+    if not present:
+        return
+    modelo = form_for_role(role)
+    if effective_date is None:
+        raise RegistryValidationError(f"{modelo} invoice operation claves require a filing-period date")
+    vocabulary = resolve_counterpart_operation_claves(modelo, effective_date=effective_date)
+    for invoice_id, value in present:
+        if value not in vocabulary:
+            raise RegistryValidationError(
+                f"invoice observation {invoice_id!r} has undeclared {modelo} operation clave {value!r}"
+            )
 
 
 def _observations_for_binding_source(
@@ -937,6 +1044,9 @@ def m347_declarable_set(
     The one place the row family, the declarante summary and the source
     resolver's advisories obtain the declarable set from, so every consumer
     reads the same per-(party, clave) totals the floor was compared against.
+    A correction of an earlier year adds nothing to the comparison: it enters the
+    amount declared (RD 1065/2007 art. 35.2), but the floor of art. 33.1 is about
+    the operations of this year.
 
     Args:
         observations: Invoice observations; those without an operation_clave
@@ -951,7 +1061,8 @@ def m347_declarable_set(
         if observation.operation_clave is None:
             continue
         key = (observation.party_tax_id, observation.operation_clave)
-        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
+        amount = Decimal("0") if observation.earlier_year_modification else _invoice_total_amount(observation)
+        clave_totals[key] = clave_totals.get(key, Decimal("0")) + amount
     return m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
 
 

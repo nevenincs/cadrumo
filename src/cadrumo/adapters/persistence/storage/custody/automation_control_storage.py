@@ -62,7 +62,11 @@ class AutomationControlStorage(AutomationNativeBinding):
     def _write_file(self, name: str, raw: bytes, *, once: bool = False) -> None:
         if len(raw) > MAX_CONTROL_BYTES:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
-        write_profile_custody_local_record(self.directory / name, raw, publish_once=once)
+        self.custody_witness.invalidate()
+        try:
+            write_profile_custody_local_record(self.directory / name, raw, publish_once=once)
+        finally:
+            self.custody_witness.invalidate()
 
     def _anchor(self) -> ProtectedControlAnchor | None:
         secret = self.secrets.read(CONTROL_NAMESPACE, self.account)

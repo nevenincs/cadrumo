@@ -9,75 +9,72 @@ is validated against the destination Member State's published IVA rate through
 :class:`~domain.calculations.registry.ledger_oss_bindings.OssIossLedgerObservation`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
-match the destination Member State's published rate for the chosen
-rate tier on the supply date. A persisted IVA amount that disagrees
-with the lookup is a data-quality blocker: the wrapper rejects it
-before the registry resolver sees it, so calculation revisions never
-land on inconsistent ledger facts.
+match a rate the destination Member State applies in the chosen tier on the
+supply date. A tier can hold more than one (France's reduced 5.5 and 10), and the
+cuota says which. A persisted IVA amount no rate explains is a data-quality
+blocker, rejected before the registry resolver sees it. On a date the rate table
+has no edition for, a figure matching the nearest edition is accepted with a
+warning, and a differing one is a coverage gap rather than a mismatch.
+
+A factura rectificativa is made when it is issued. Issued in the period of the invoice
+it names, it takes its lines off that invoice's row at that invoice's rate. Issued
+later, it is a row of DR369's corrections section on the return of the period it was
+issued in, naming the destination and the earlier period, because Orden HAC/610/2021
+art. 7.5 forbids modifying a filed return. The invoice record states magnitudes with no
+direction, so a rectificativa is always a reduction; a pre-classified candidate or a row
+the operator enters can raise a period as well.
 
 The :class:`OssIossLedgerSourceResolver` returns a
 :class:`~.source_mesh.CalculationSourceResolution` with resolved binding values,
 transaction provenance, and non-blocking diagnostics for empty live catalogues or
-declarable OSS observations that no ``ledger_oss_aggregation`` binding consumes.
+declarable OSS observations that no detail table of the revision can take.
 """
 
 from __future__ import annotations
 
-from collections import defaultdict
-from collections.abc import Iterable, Sequence
-from datetime import date
+from calendar import monthrange
+from collections.abc import Iterable, Mapping, Sequence
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import Annotated, ClassVar
+from typing import Annotated, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.hashing import content_hash_hex
+from ...core.aggregation import BindingSourceKind, InvoiceDevengoRank
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
-from ...core.period import Period
-from ...core.time.clock import today_madrid
+from ...core.period import Period, PeriodError, PeriodKind, quarter_code
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
+    OssLineEffect,
     resolve_ledger_oss_aggregation_binding_values,
-    unsupported_ledger_oss_observations,
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.invoices.enums import iva_rate_kind
-from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import TransactionKind, require_transaction_kind, resolve_transaction_kind_catalogue
-from ...domain.iva.lookup import lookup_rate
+from ...domain.invoices.models import Invoice
+from ...domain.iva.classification import TransactionKind, require_transaction_kind
+from ...domain.iva.errors import IvaRateNotFoundError
+from ...domain.iva.lookup import coexisting_tier_rates, lookup_published_rate, lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
-from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ..invoices.catalogue_reads_ports import (
-    BucketBoundCatalogueReader,
-    InvoiceCatalogueReadPersistenceError,
-    InvoiceCatalogueReadPorts,
-)
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind, IvaRateRecord
 from .errors import AggregationValidationError
 from .invoice_devengo import (
-    devengo_proxy_attribution_diagnostics,
-    invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
+from .oss_ioss_wire_geometry import ROW_SHAPES, record_row_slots, require_slot_coverage, require_wire_geometry
 from .source_mesh import (
     CalculationSourceContext,
-    CalculationSourceDiagnostic,
-    CalculationSourceProvenance,
-    CalculationSourceResolution,
 )
-from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 
 _LedgerId = Annotated[
     str,
@@ -112,6 +109,9 @@ class OssIossLedgerCandidate(BaseModel):
         base_amount: Taxable base in EUR. Must be non-negative.
         iva_amount: IVA amount in EUR persisted on the ledger. Must
             be non-negative.
+        effect: Whether the amounts add a supply or take a correction off one.
+        corrected_period: The earlier period the amounts adjust, or ``None`` for the
+            period being filed.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -125,36 +125,71 @@ class OssIossLedgerCandidate(BaseModel):
     transaction_kind: TransactionKind
     base_amount: Decimal = Field(ge=Decimal("0"))
     iva_amount: Decimal = Field(ge=Decimal("0"))
+    effect: OssLineEffect = OssLineEffect.SUPPLY
+    corrected_period: Period | None = None
 
 
-def _expected_iva_amount(
-    candidate: OssIossLedgerCandidate,
+def _cuota_at(base: Decimal, rate: IvaRateRecord) -> Decimal:
+    return round_to_cents(base * rate.pct / Decimal("100"))
+
+
+def _ordinary_rate(
+    member_state: EUMemberState, rate_kind: IvaRateKind, on_date: date, *, operation: PinnedAuthorityOperation
+) -> IvaRateRecord:
+    """Return the ordinary rate of the tier, refusing a tier the Member State never had."""
+    try:
+        return lookup_rate(member_state, rate_kind, on_date, operation=operation)
+    except IvaRateNotFoundError as exc:
+        # The table answers every date of a tier a state has, so this state never had the tier.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rate_tier_absent"),
+            context={
+                "destination_member_state": member_state.value,
+                "rate_kind": rate_kind.value,
+                "transaction_date": on_date.isoformat(),
+            },
+        ) from exc
+
+
+def _closest_rates(rates: Sequence[IvaRateRecord], base: Decimal, persisted: Decimal) -> list[IvaRateRecord]:
+    """Return the rates giving exactly the persisted cuota, else those within a cent of it."""
+    exact = [rate for rate in rates if _cuota_at(base, rate) == persisted]
+    return exact or [rate for rate in rates if abs(_cuota_at(base, rate) - persisted) <= CENT]
+
+
+def _applied_rate(
+    member_state: EUMemberState,
+    rate_kind: IvaRateKind,
+    on_date: date,
     *,
+    base: Decimal,
+    iva: Decimal,
     operation: PinnedAuthorityOperation,
-) -> Decimal:
-    """Return the IVA amount derived from the candidate's base and rate.
+) -> IvaRateRecord | None:
+    """Return the rate of the tier that explains the cuota, or ``None`` when none does.
 
-    Looks up the destination Member State's rate for the candidate's
-    rate tier on the supply date, multiplies by ``base_amount``, and
-    rounds to two decimal places — the precision at which ledger
-    amounts are persisted.
-
-    Args:
-        candidate: The substrate-classified ledger line whose base amount
-            and rate kind are used to derive the expected IVA amount.
-        operation: Generation-pinned authority operation used for the rate lookup.
-
-    Returns:
-        The expected IVA amount rounded to two decimal places.
+    A tier's rates are its ordinary one and those coexisting with it, and the cuota tells
+    them apart. The closest reading wins; two rates giving the same cuota leave the row's
+    percentage unknown, so that refuses, as does a tier the Member State never had.
+    A nil line says nothing and reads the ordinary rate.
     """
-    rate = lookup_rate(
-        candidate.destination_member_state,
-        candidate.rate_kind,
-        candidate.transaction_date,
-        operation=operation,
-    )
-    derived = candidate.base_amount * rate.pct / Decimal("100")
-    return round_to_cents(derived)
+    ordinary = _ordinary_rate(member_state, rate_kind, on_date, operation=operation)
+    persisted = round_to_cents(iva)
+    if base == Decimal("0") and persisted == Decimal("0"):
+        return ordinary
+    rates = (ordinary, *coexisting_tier_rates(member_state, rate_kind, on_date, operation=operation))
+    near = _closest_rates(rates, base, persisted)
+    if len(near) > 1:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rate_tier_ambiguous"),
+            context={
+                "destination_member_state": member_state.value,
+                "rate_kind": rate_kind.value,
+                "transaction_date": on_date.isoformat(),
+                "rates": ",".join(str(rate.pct) for rate in near),
+            },
+        )
+    return near[0] if near else None
 
 
 def validate_oss_ioss_observation(
@@ -164,11 +199,11 @@ def validate_oss_ioss_observation(
 ) -> OssIossLedgerObservation:
     """Validate ``candidate`` and return the registry-ready observation.
 
-    Looks up the destination Member State's rate at the supply date,
-    derives the expected IVA amount from ``base_amount`` and the
-    looked-up rate, and rejects the candidate if the persisted
-    ``iva_amount`` deviates from the derived value by more than
-    ``CENT``.
+    Looks up the destination Member State's rates at the supply date
+    and rejects the candidate if the persisted ``iva_amount`` deviates by
+    more than ``CENT`` from what every one of them derives from
+    ``base_amount``. On a date with no edition, a figure the nearest edition
+    explains passes and any other raises the coverage gap.
 
     Args:
         candidate: The substrate-classified ledger line to validate.
@@ -184,6 +219,7 @@ def validate_oss_ioss_observation(
         AggregationValidationError: When the persisted IVA amount
             disagrees with the destination MS rate by more than the
             one-cent tolerance.
+        IvaRateNotFoundError: When it differs from a rate the table only projects.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -206,14 +242,38 @@ def validate_oss_ioss_observation(
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
         )
-    expected = _expected_iva_amount(candidate, operation=operation)
-    persisted = round_to_cents(candidate.iva_amount)
     # Ledger amounts are rounded to two decimal places at persistence time, so a
     # difference of one cent or less is rounding noise rather than a data-quality
     # blocker. Larger gaps fail validation and the line is rejected before the
     # registry resolver aggregates it. The quantum is CENT because it is the same
     # cent the rounding produced, not a threshold this module chose.
-    if abs(persisted - expected) > CENT:
+    if (
+        _applied_rate(
+            candidate.destination_member_state,
+            candidate.rate_kind,
+            candidate.transaction_date,
+            base=candidate.base_amount,
+            iva=candidate.iva_amount,
+            operation=operation,
+        )
+        is None
+    ):
+        ordinary = lookup_rate(
+            candidate.destination_member_state,
+            candidate.rate_kind,
+            candidate.transaction_date,
+            operation=operation,
+        )
+        if not ordinary.published_on_date:
+            # Raises: the table cannot refute a figure on a rate it only projects.
+            lookup_published_rate(
+                candidate.destination_member_state,
+                candidate.rate_kind,
+                candidate.transaction_date,
+                operation=operation,
+            )
+        persisted = round_to_cents(candidate.iva_amount)
+        expected = _cuota_at(candidate.base_amount, ordinary)
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"),
             context={
@@ -236,7 +296,43 @@ def validate_oss_ioss_observation(
         transaction_kind=candidate.transaction_kind,
         base_amount=candidate.base_amount,
         iva_amount=candidate.iva_amount,
+        effect=candidate.effect,
+        corrected_period=candidate.corrected_period,
     )
+
+
+def _refuse_consignments_over_ceiling(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a consignment whose value is above its regime's published intrinsic-value ceiling.
+
+    One invoice is read as one consignment, the unit the law limits, so its lines
+    are summed; the line identifier carries the invoice as its leading segment.
+    The base includes any shipping the invoice charged in its lines, which can
+    refuse a consignment the law admits but never admits one it excludes.
+    """
+    consignments: dict[tuple[str, str], Decimal] = {}
+    dated: dict[tuple[str, str], date] = {}
+    for observation in observations:
+        key = (observation.regime, observation.ledger_id.split(":", 1)[0])
+        consignments[key] = consignments.get(key, Decimal("0")) + observation.base_amount
+        dated[key] = observation.transaction_date
+    for key, value in consignments.items():
+        regime, invoice_id = key
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=dated[key], authority=operation)
+        ceiling = catalogue.definition(regime).intrinsic_value_ceiling_eur
+        if ceiling is not None and value > Decimal(ceiling):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.consignment_exceeds_ceiling"),
+                context={
+                    "invoice_id": invoice_id,
+                    "regime": regime,
+                    "consignment_value_eur": str(value),
+                    "intrinsic_value_ceiling_eur": ceiling,
+                },
+            )
 
 
 def validate_oss_ioss_observations(
@@ -258,7 +354,9 @@ def validate_oss_ioss_observations(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return validate_oss_ioss_observations(candidates, operation=indexed_operation)
-    return tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    observations = tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    _refuse_consignments_over_ceiling(observations, operation=operation)
+    return observations
 
 
 def aggregate_oss_ioss_bindings(
@@ -294,48 +392,153 @@ def aggregate_oss_ioss_bindings(
         with bundled_indexed_authority().operation() as indexed_operation:
             return aggregate_oss_ioss_bindings(revision, candidates, operation=indexed_operation)
     observations = validate_oss_ioss_observations(candidates, operation=operation)
+    return resolve_ledger_oss_aggregation_binding_values(
+        revision, observations_at_row_level(observations, operation=operation)
+    )
+
+
+def row_level_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[OssIossLedgerObservation],
+) -> dict[BindingId, Decimal]:
+    """Resolve the ledger OSS aggregation bindings of ``revision`` from row-level observations.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
-def _exterior_detail_binding_values(
+def observations_at_row_level(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[OssIossLedgerObservation, ...]:
+    """Fold the lines of each state, rate and kind into the one figure the return declares.
+
+    LIVA arts. 163 noniesdecies, duovicies and septvicies ask for the total value and the
+    "cantidad global" per state of consumption and rate, and convert at one rate for the
+    period. No bundled source says at which level cents are taken, or states the cuota's
+    relation to its base, so the base is rounded on the row and the cuota is that base at the
+    row's rate: the only reading that keeps a declared cuota equal to its base times its rate.
+    """
+    grouped: dict[
+        tuple[str, EUMemberState, IvaRateKind, InvoiceKind, TransactionKind, Period | None, Decimal],
+        list[OssIossLedgerObservation],
+    ] = {}
+    for observation in observations:
+        applied = _applied_rate(
+            observation.destination_member_state,
+            observation.rate_kind,
+            observation.transaction_date,
+            base=observation.base_amount,
+            iva=observation.iva_amount,
+            operation=operation,
+        )
+        if applied is None:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"))
+        key = (
+            observation.regime,
+            observation.destination_member_state,
+            observation.rate_kind,
+            observation.invoice_direction,
+            observation.transaction_kind,
+            # A correction of an earlier period answers on that period's row, never this one's.
+            observation.corrected_period,
+            applied.pct,
+        )
+        grouped.setdefault(key, []).append(observation)
+    settled: list[OssIossLedgerObservation] = []
+    for key, members in grouped.items():
+        net = sum((member.signed_base_amount for member in members), Decimal("0"))
+        base = round_to_cents(abs(net))
+        corrected = any(member.effect is OssLineEffect.CORRECTION for member in members)
+        settled.append(
+            members[0].model_copy(
+                update={
+                    "base_amount": base,
+                    "iva_amount": round_to_cents(base * key[-1] / Decimal("100")),
+                    "effect": OssLineEffect.CORRECTION if net < 0 or (corrected and net == 0) else OssLineEffect.SUPPLY,
+                }
+            )
+        )
+    return tuple(settled)
+
+
+def detail_binding_values(
     revision: ModeloRevision,
     observations: Sequence[OssIossLedgerObservation],
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Project Exterior service rows from validated invoice observations.
+    """Project the rows of the revision's detail tables from validated observations.
 
-    The record-design bindings are generated from AEAT's positional workbook,
-    so discover their semantic field names from the revision instead of
-    duplicating generated binding ids here.  One row represents one
-    destination/rate tier; repeated invoice lines in that tier are summed.
+    Which table takes an observation is a dated declaration keyed by its
+    transaction kind, and the table's slots come from the revision's own wire
+    geometry, so every regime goes through this one path. One row is one
+    destination and applied rate; repeated lines at that rate are summed.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
-    if revision.id != "esquema-exterior":
-        return {}, {}
-    grouped = _group_exterior_service_observations(observations, operation=operation)
-    if not grouped:
-        return {}, {}
-    declarations = _exterior_projection_declarations(observations[0].transaction_date, operation=operation)
-    return _bind_exterior_detail_values(revision, grouped, declarations, operation=operation)
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
+    # Each line answers for its own placement first: a folded row cannot name the line a refusal is about.
+    _group_detail_observations(revision, observations, operation=operation)
+    at_row_level = observations_at_row_level(observations, operation=operation)
+    for record_id, all_rows in _group_detail_observations(revision, at_row_level, operation=operation).items():
+        slots = record_row_slots(revision, record_id)
+        grouped = _rows_left_by_corrections(all_rows)
+        if len(grouped) > len(slots):
+            # The design's continuation page has no slots here: the settlement
+            # formulas read these slots alone. Refuse rather than export a prefix.
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.detail_rows_exceed_page"),
+                context={"record": record_id, "rows": str(len(grouped)), "capacity": str(len(slots))},
+            )
+        for slot, (key, rows) in zip(slots, sorted(grouped.items(), key=lambda item: item[0]), strict=False):
+            _assign_detail_row(slot, key, rows, decimal_values, enum_values)
+    return decimal_values, enum_values
 
 
-_MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
-_EXTERIOR_DETAIL_RECORD = "modelo-369-exterior-t36901"
-_EXTERIOR_DETAIL_PREFIX = "3-prestaciones-de-servicios-"
-_EXTERIOR_DETAIL_COLUMNS = frozenset(
-    {"codigo-de-pais-em-de-consumo", "tipo-iva", "tipo-de-iva", "base-imponible", "cuota-iva"}
-)
+_MODELO_369_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
+_PROJECTED_ROW_COLUMNS = len(ROW_SHAPES[0])
+_CORRECTION_ROW_COLUMNS = len(ROW_SHAPES[2])
+_QUARTER_PERIOD_TYPE = "T"
+_MONTH_PERIOD_TYPE = "M"
 
 
-def _exterior_projection_declarations(
+def _rows_left_by_corrections(
+    rows: dict[_DetailRowKey, list[OssIossLedgerObservation]],
+) -> dict[_DetailRowKey, list[OssIossLedgerObservation]]:
+    """Drop a row its corrections cancel, and refuse one they take below nothing."""
+    left: dict[_DetailRowKey, list[OssIossLedgerObservation]] = {}
+    for key, observations in rows.items():
+        base = sum((item.signed_base_amount for item in observations), Decimal("0"))
+        cuota = sum((item.signed_iva_amount for item in observations), Decimal("0"))
+        if base < Decimal("0") or cuota < Decimal("0"):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.rectificativa_above_row"),
+                context={
+                    "destination_member_state": key.member_state.value,
+                    "rate": str(key.rate),
+                    "net_base": str(base),
+                    "net_cuota": str(cuota),
+                },
+            )
+        corrected = any(item.effect is OssLineEffect.CORRECTION for item in observations)
+        if not (corrected and base == Decimal("0") and cuota == Decimal("0")):
+            left[key] = observations
+    return left
+
+
+def _projection_declarations(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
-    """Resolve the dated Modelo 369 Exterior rate-code catalogue."""
+    """Resolve the dated Modelo 369 rate-code, country-code and section catalogue."""
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id=_MODELO_369_EXTERIOR_PROJECTION_FACT_ID,
+            fact_id=_MODELO_369_PROJECTION_FACT_ID,
             date_axis=DateAxis.TRANSACTION_DATE,
             effective_date=effective_date,
         ),
@@ -349,7 +552,7 @@ def _exterior_projection_declarations(
         for entry in resolved.payload.entries
         if isinstance(entry.key, str) and isinstance(entry.value, str)
     }
-    required = {"rate_code.general", "rate_code.reduced"}
+    required = {"rate_code.general", "rate_code.reduced", "detail_row.capacity"}
     missing = sorted(required - declarations.keys())
     if missing:
         raise AggregationValidationError(
@@ -359,337 +562,537 @@ def _exterior_projection_declarations(
     return declarations
 
 
-def _group_exterior_service_observations(
-    observations: Sequence[OssIossLedgerObservation],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
-    """Group Exterior service observations by destination and supported rate."""
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
-    effective_date = observations[0].transaction_date if observations else today_madrid()
-    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
-    external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
-    external_regime = resolve_oss_ioss_regime_catalogue(
-        effective_date=effective_date,
-        authority=operation,
-    ).regime_for_transaction_kind(next(iter(external_kinds)).value)
-    for observation in observations:
-        if observation.regime != external_regime:
-            continue
-        if observation.transaction_kind not in external_kinds:
-            continue
-        _validate_exterior_rate_kind(observation, operation=operation)
-        grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
-    return grouped
+class _DetailRowKey(NamedTuple):
+    """What makes two lines of one detail table one row of the return.
+
+    The percentage is part of the key because LIVA art. 90.Dos takes each
+    operation's rate at its own devengo and arts. 163 noniesdecies.Uno.c),
+    duovicies.Uno.c) and septvicies.c) require the tax per Member State
+    "desglosado por tipos impositivos". The rate tier alone cannot do this: a
+    Member State can change a tier's percentage inside a period. The wire codes
+    are dated declarations, so they are part of it too.
+    """
+
+    member_state: EUMemberState
+    rate_kind: IvaRateKind
+    rate: Decimal
+    country_code: str
+    rate_code: str
 
 
-def _validate_exterior_rate_kind(
-    observation: OssIossLedgerObservation,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse Exterior rate tiers that have no official positional code."""
-    declarations = _exterior_projection_declarations(observation.transaction_date, operation=operation)
-    if f"rate_code.{observation.rate_kind.value}" in declarations:
-        return
-    raise AggregationValidationError(
-        tr("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
-        context={
-            "ledger_id": observation.ledger_id,
-            "rate_kind": observation.rate_kind.value,
-        },
+def _revision_records(revision: ModeloRevision) -> frozenset[str]:
+    return frozenset(
+        binding.provider.record
+        for binding in revision.bindings
+        if isinstance(binding.provider, ManualInputProvider) and binding.provider.record is not None
     )
 
 
-def _exterior_detail_row_fields(
-    row: int,
-    country: EUMemberState,
-    rate_kind: IvaRateKind,
-    observations: Sequence[OssIossLedgerObservation],
-    declarations: dict[str, str],
+def _detail_record_for(
+    observation: OssIossLedgerObservation,
+    revision: ModeloRevision,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[dict[str, str], dict[str, Decimal]]:
-    """Build the workbook field values for one destination/rate row."""
-    rate = lookup_rate(
-        country,
-        rate_kind,
-        observations[0].transaction_date,
-        operation=operation,
-    ).pct
+) -> str | None:
+    """Return this revision's table for the observation, or ``None`` when it has none.
+
+    A kind no section declares is one this module cannot place: Union goods go to
+    T36905 or T36907 by the state of dispatch, which an invoice does not record.
+    A correction's table belongs to its regime, since it names no kind of operation.
+    """
+    declarations = _projection_declarations(observation.transaction_date, operation=operation)
+    record_id = (
+        declarations.get(f"section.{observation.transaction_kind.value}.record")
+        if observation.corrected_period is None
+        else declarations.get(f"correction_records.{observation.regime.value}")
+    )
+    return record_id if record_id in _revision_records(revision) else None
+
+
+def _wire_country_code(observation: OssIossLedgerObservation, declarations: Mapping[str, str]) -> str:
+    """Return the destination's wire code, refusing a state this kind of operation cannot be consumed in."""
+    member_state = observation.destination_member_state
+    excluded = declarations.get(f"section.{observation.transaction_kind.value}.excluded_consumption_states", "")
+    if member_state.value in excluded.split(","):
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_consumption_state_excluded"),
+            context={
+                "ledger_id": observation.ledger_id,
+                "destination_member_state": member_state.value,
+                "transaction_kind": observation.transaction_kind.value,
+            },
+        )
     # The design writes ISO-3166 alpha-2 codes with its own exceptions ("EL" for
     # Greece, "XI" for Northern Ireland), so the wire code is the dated
     # declaration's, never the member-state token itself.
-    country_code = declarations.get(f"country_code.{country.value}")
+    country_code = declarations.get(f"country_code.{member_state.value}")
     if country_code is None:
         raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.exterior_country_code_undeclared"),
-            context={"member_state": country.value},
+            tr("aggregation.oss_ioss.errors.detail_country_code_undeclared"),
+            context={"member_state": member_state.value},
         )
-    fields = {
-        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country_code,
-        f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
-    }
-    decimals = {
-        f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
-        f"3-prestaciones-de-servicios-base-imponible-{row}": sum(
-            (item.base_amount for item in observations),
-            Decimal("0"),
-        ),
-        f"3-prestaciones-de-servicios-cuota-iva-{row}": sum(
-            (item.iva_amount for item in observations),
-            Decimal("0"),
-        ),
-    }
-    return fields, decimals
+    return country_code
 
 
-def _bind_exterior_detail_values(
-    revision: ModeloRevision,
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
-    declarations: dict[str, str],
+def _detail_row_key(
+    observation: OssIossLedgerObservation,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Resolve generated revision selectors against Exterior row fields."""
-    decimal_values: dict[BindingId, Decimal] = {}
-    enum_values: dict[BindingId, str] = {}
-    for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        fields, decimals = _exterior_detail_row_fields(
-            row,
-            country,
-            rate_kind,
-            rows,
-            declarations,
-            operation=operation,
+) -> _DetailRowKey:
+    """Resolve an observation's row from the rate and wire codes on its own date."""
+    declarations = _projection_declarations(observation.transaction_date, operation=operation)
+    rate_code = declarations.get(f"rate_code.{observation.rate_kind.value}")
+    if rate_code is None:
+        # DR369 lets a row say only "R" or "S", and neither names this tier.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_rate_kind_unsupported"),
+            context={
+                "ledger_id": observation.ledger_id,
+                "rate_kind": observation.rate_kind.value,
+            },
         )
-        _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
-    return decimal_values, enum_values
+    member_state = observation.destination_member_state
+    country_code = _wire_country_code(observation, declarations)
+    applied = _applied_rate(
+        member_state,
+        observation.rate_kind,
+        observation.transaction_date,
+        base=observation.base_amount,
+        iva=observation.iva_amount,
+        operation=operation,
+    )
+    if applied is None:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"))
+    return _DetailRowKey(member_state, observation.rate_kind, applied.pct, country_code, rate_code)
 
 
-def _assign_exterior_detail_bindings(
+def _group_detail_observations(
     revision: ModeloRevision,
-    fields: dict[str, str],
-    decimals: dict[str, Decimal],
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, dict[_DetailRowKey, list[OssIossLedgerObservation]]]:
+    """Group the observations this revision can place, by table and then by row."""
+    grouped: dict[str, dict[_DetailRowKey, list[OssIossLedgerObservation]]] = {}
+    for observation in observations:
+        if observation.corrected_period is not None:
+            continue
+        record_id = _detail_record_for(observation, revision, operation=operation)
+        if record_id is not None:
+            rows = grouped.setdefault(record_id, {})
+            rows.setdefault(_detail_row_key(observation, operation=operation), []).append(observation)
+    return grouped
+
+
+def observations_without_detail_row(
+    revision: ModeloRevision,
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[OssIossLedgerObservation, ...]:
+    """Return declarable observations no table of this revision can take.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    return tuple(
+        observation
+        for observation in observations
+        if (observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0"))
+        and _detail_record_for(observation, revision, operation=operation) is None
+    )
+
+
+def _assign_detail_row(
+    slot: tuple[BindingId, ...],
+    key: _DetailRowKey,
+    rows: Sequence[OssIossLedgerObservation],
     decimal_values: dict[BindingId, Decimal],
     enum_values: dict[BindingId, str],
 ) -> None:
-    """Require lossless row coverage before copying generated selector values."""
-    targets: dict[str, BindingId] = {}
-    required = fields.keys() | decimals.keys()
-    for binding in revision.bindings:
-        provider = binding.provider
-        if not isinstance(provider, ManualInputProvider) or provider.record != _EXTERIOR_DETAIL_RECORD:
-            continue
-        field = provider.field
-        if field is None or field not in required:
-            continue
-        if field in targets:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        targets[field] = binding.id
-    # An overflowing row has no declared destinations. Refuse the whole
-    # projection instead of silently exporting only its representable prefix.
-    if targets.keys() != required:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    for field, binding_id in targets.items():
-        if field in fields:
-            enum_values[binding_id] = fields[field]
-        elif field in decimals:
-            decimal_values[binding_id] = decimals[field]
+    """Write one row into its slot, whose columns follow the design's line order."""
+    if len(slot) != _PROJECTED_ROW_COLUMNS:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    country_code, rate, rate_code, base, cuota = slot
+    enum_values[country_code] = key.country_code
+    enum_values[rate_code] = key.rate_code
+    decimal_values[rate] = key.rate
+    decimal_values[base] = sum((item.signed_base_amount for item in rows), Decimal("0"))
+    decimal_values[cuota] = sum((item.signed_iva_amount for item in rows), Decimal("0"))
 
 
-def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, ...], ...]:
-    """Admit all fixed service slots against the revision's actual wire fields.
+def refuse_rate_chosen_by_issue_date(
+    context: CalculationSourceContext,
+    projection: OssIossInvoiceProjection,
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a row whose rate would rest on an issue date standing in for the devengo.
 
-    The existing Exterior projection owns these five semantic columns. Row
-    capacity and exact bindings come from the pinned export record, not from
-    the number of observations or the populated prefix of the form.
+    Elsewhere that substitution stays advisory because it only risks the period.
+    Here it would also choose the percentage written on the row, so where the
+    period has more than one rate for the tier the record cannot answer art.
+    90.Dos. A period with one rate gives the same percentage on any of its days.
     """
-    records = [
-        record
-        for layout in revision.export_layouts
-        for record in layout.records
-        if record.id == _EXTERIOR_DETAIL_RECORD
-    ]
-    bindings = {binding.id: binding for binding in revision.bindings}
-    rows: dict[int, dict[str, BindingId]] = {}
-    seen: set[BindingId] = set()
-    if len(records) != 1 or len(bindings) != len(revision.bindings):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    for field in records[0].fields:
-        if field.binding is None:
-            continue
-        binding = bindings.get(field.binding)
-        if binding is None:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        provider = binding.provider
-        if not isinstance(provider, ManualInputProvider) or provider.field is None:
-            continue
-        if not provider.field.startswith(_EXTERIOR_DETAIL_PREFIX):
-            continue
-        column, _, coordinate = provider.field.removeprefix(_EXTERIOR_DETAIL_PREFIX).rpartition("-")
-        if (
-            provider.record != _EXTERIOR_DETAIL_RECORD
-            or provider.offset != field.offset
-            or provider.length != field.length
-            or column not in _EXTERIOR_DETAIL_COLUMNS
-            or not coordinate.isascii()
-            or not coordinate.isdecimal()
-            or coordinate.startswith("0")
-            or field.binding in seen
-        ):
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        row = rows.setdefault(int(coordinate), {})
-        if column in row:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        row[column] = field.binding
-        seen.add(field.binding)
-    declared = {
-        binding.id
-        for binding in revision.bindings
-        if isinstance(binding.provider, ManualInputProvider)
-        and binding.provider.record == _EXTERIOR_DETAIL_RECORD
-        and binding.provider.field is not None
-        and binding.provider.field.startswith(_EXTERIOR_DETAIL_PREFIX)
+    undated = {
+        invoice.invoice_id: invoice
+        for invoice in projection.contributing_invoices
+        if resolve_invoice_devengo(invoice).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
     }
-    if (
-        not rows
-        or sorted(rows) != list(range(1, len(rows) + 1))
-        or seen != declared
-        or any(row.keys() != _EXTERIOR_DETAIL_COLUMNS for row in rows.values())
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    return tuple(tuple(sorted(rows[index].values())) for index in sorted(rows))
+    if not undated:
+        return
+    span = projection_period(context.period)
+    for observation in observations:
+        # A correction row states no percentage, so no rate rests on its dates.
+        if observation.corrected_period is not None:
+            continue
+        invoice = undated.get(observation.ledger_id.split(":", 1)[0])
+        if invoice is None or _detail_record_for(observation, context.revision, operation=operation) is None:
+            continue
+        rates = tier_rates_within(
+            observation.destination_member_state,
+            observation.rate_kind,
+            span.start_date,
+            span.end_date,
+            operation=operation,
+        )
+        if len(rates) > 1:
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.rate_change_devengo_undeclared"),
+                context={
+                    "invoice_id": invoice.invoice_id,
+                    "invoice_number": invoice.invoice_number,
+                    "destination_member_state": observation.destination_member_state.value,
+                    "rate_kind": observation.rate_kind.value,
+                    "period": context.period.registry_token,
+                    "rates": ",".join(str(rate) for rate in rates),
+                },
+            )
 
 
-def _closed_exterior_record_rows(
+def _closable_records(
+    revision: ModeloRevision,
+    effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Return every detail table a complete read of this revision's invoices settles."""
+    declarations = _projection_declarations(effective_date, operation=operation)
+    records = _revision_records(revision)
+    return tuple(
+        record_id
+        for key, value in declarations.items()
+        if key.startswith("detail_records.")
+        for record_id in value.split(",")
+        if record_id in records
+    )
+
+
+def _correction_record(
+    revision: ModeloRevision,
+    effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Return the table of corrections this revision files, or ``None`` when it declares none."""
+    records = _revision_records(revision)
+    return next(
+        (
+            value
+            for key, value in _projection_declarations(effective_date, operation=operation).items()
+            if key.startswith("correction_records.") and value in records
+        ),
+        None,
+    )
+
+
+def _period_type(period: Period) -> str:
+    return _QUARTER_PERIOD_TYPE if period.quarter_ordinal is not None else _MONTH_PERIOD_TYPE
+
+
+def _wire_period(period: Period) -> str:
+    """DR369's "Periodo" of a correction: alphanumeric, 1 .. 4 or 1 .. 12, without the header's zero."""
+    return str(period.quarter_ordinal or period.start_date.month)
+
+
+def period_holding(day: date, filed: Period) -> Period:
+    """Return the period of the same length as ``filed`` that holds ``day``."""
+    return Period.containing(day, PeriodKind.QUARTERLY if filed.quarter_ordinal is not None else PeriodKind.MONTHLY)
+
+
+def _correction_limit(corrected: Period, years: int) -> date:
+    """Return the last day a correction of ``corrected`` can be filed.
+
+    Orden HAC/610/2021 art. 3 closes each return with the natural month after its
+    period, and art. 7.5 counts three years from there.
+    """
+    months = corrected.end_date.year * 12 + corrected.end_date.month + years * 12
+    year, month = months // 12, months % 12 + 1
+    return date(year, month, monthrange(year, month)[1])
+
+
+def _require_correctable(corrected: Period, filed: Period, *, years: int, context: dict[str, str]) -> None:
+    """Refuse a period the return cannot correct: not earlier than it, or beyond the limit.
+
+    The return can be filed from the day after its period, so the limit is met when
+    that day is inside it. Art. 7.5 sends an older correction straight to the state
+    of consumption, which is outside this return.
+    """
+    if corrected.end_date >= filed.start_date:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=context)
+    limit = _correction_limit(corrected, years)
+    if filed.end_date + timedelta(days=1) > limit:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.correction_beyond_limit"),
+            context={**context, "limit": limit.isoformat()},
+        )
+
+
+def _caller_correction_slots(
+    context: CalculationSourceContext,
+    slots: tuple[tuple[BindingId, ...], ...],
+    declarations: Mapping[str, str],
+    filed: Period,
+) -> frozenset[int]:
+    """Check each section row the operator entered, and return the slots they hold."""
+    numbers, texts = context.caller_binding_values, context.caller_enum_binding_values
+    held: set[int] = set()
+    country_codes = {value for key, value in declarations.items() if key.startswith("country_code.")}
+    for index, row in enumerate(slots):
+        given = [binding for binding in row if binding in numbers or binding in texts]
+        if not given:
+            continue
+        held.add(index)
+        details = {"row": str(index + 1)}
+        if not _correction_row_is_complete(context, row, len(given), country_codes, filed):
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details)
+        corrected = _entered_corrected_period(context, row, filed, details)
+        _require_correctable(corrected, filed, years=int(declarations["correction.limit_years"]), context=details)
+    return frozenset(held)
+
+
+def _correction_row_is_complete(
+    context: CalculationSourceContext,
+    row: tuple[BindingId, ...],
+    given: int,
+    country_codes: set[str],
+    filed: Period,
+) -> bool:
+    """Whether the operator entered every column of a corrections row, each in its column's form."""
+    numbers, texts = context.caller_binding_values, context.caller_enum_binding_values
+    country, year, period_type, period, cuota = row
+    return not (
+        given != _CORRECTION_ROW_COLUMNS
+        or texts.get(country) not in country_codes
+        or texts.get(period_type) != _period_type(filed)
+        or not str(texts.get(period, "")).isdecimal()
+        or year not in numbers
+        or cuota not in numbers
+    )
+
+
+def _entered_corrected_period(
+    context: CalculationSourceContext, row: tuple[BindingId, ...], filed: Period, details: dict[str, str]
+) -> Period:
+    """Return the period an entered corrections row corrects, refusing one that is no period."""
+    _, year, _, period, _ = row
+    number = int(context.caller_enum_binding_values[period])
+    try:
+        code = quarter_code(number).value if _period_type(filed) == _QUARTER_PERIOD_TYPE else f"{number:02d}"
+        return Period.from_year_and_code(int(context.caller_binding_values[year]), code)
+    except (PeriodError, ValueError) as exc:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details
+        ) from exc
+
+
+def correction_binding_values(
+    context: CalculationSourceContext,
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Project the rows of the revision's corrections table.
+
+    One row is one destination and corrected period, its cuota the net of what the
+    lines do to that period: below zero for a reduction, above it for an increase. A
+    net of nothing corrects nothing and takes no row. Slots the operator filled stay
+    the operator's, and the projected rows take the others.
+    """
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
+    filed = projection_period(context.period)
+    if not filed.has_date_span():
+        return decimal_values, enum_values
+    record_id = _correction_record(context.revision, filed.end_date, operation=operation)
+    if record_id is None:
+        return decimal_values, enum_values
+    declarations = _projection_declarations(filed.end_date, operation=operation)
+    slots = record_row_slots(context.revision, record_id)
+    held = _caller_correction_slots(context, slots, declarations, filed)
+    nets = _correction_nets(context, observations, record_id, declarations, filed, operation=operation)
+    rows = sorted(item for item in nets.items() if item[1] != Decimal("0"))
+    free = [slot for index, slot in enumerate(slots) if index not in held]
+    if len(rows) > len(free):
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_rows_exceed_page"),
+            context={"record": record_id, "rows": str(len(rows)), "capacity": str(len(free))},
+        )
+    for slot, ((country_code, year, period_type, period), cuota) in zip(free, rows, strict=False):
+        country, year_slot, period_type_slot, period_slot, cuota_slot = slot
+        enum_values[country] = country_code
+        decimal_values[year_slot] = Decimal(year)
+        enum_values[period_type_slot] = period_type
+        enum_values[period_slot] = period
+        decimal_values[cuota_slot] = cuota
+    return decimal_values, enum_values
+
+
+def _correction_nets(
+    context: CalculationSourceContext,
+    observations: Sequence[OssIossLedgerObservation],
+    record_id: str,
+    declarations: Mapping[str, str],
+    filed: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[tuple[str, int, str, str], Decimal]:
+    """Return the net cuota the lines do to each destination and corrected period, refusing a late one."""
+    nets: dict[tuple[str, int, str, str], Decimal] = {}
+    for observation in observations:
+        corrected = observation.corrected_period
+        if corrected is None or _detail_record_for(observation, context.revision, operation=operation) != record_id:
+            continue
+        _require_correctable(
+            corrected,
+            filed,
+            years=int(declarations["correction.limit_years"]),
+            context={"ledger_id": observation.ledger_id, "corrected_period": corrected.registry_token},
+        )
+        key = (
+            _wire_country_code(observation, declarations),
+            corrected.start_date.year,
+            _period_type(corrected),
+            _wire_period(corrected),
+        )
+        nets[key] = nets.get(key, Decimal("0")) + observation.signed_iva_amount
+    return nets
+
+
+def _can_close_detail_rows(
+    context: CalculationSourceContext, projection: OssIossInvoiceProjection, supplied_binding_ids: frozenset[BindingId]
+) -> bool:
+    return not (
+        context.work_unit_id is None
+        or projection.source_bucket_id != context.bucket_id
+        or projection.catalogue_fingerprint is None
+    )
+
+
+def _layout_hydrated_revision(
+    context: CalculationSourceContext, *, operation: PinnedAuthorityOperation
+) -> ModeloRevision:
+    """Return the context's revision carrying its export layouts."""
+    if context.revision.export_layouts:
+        return context.revision
+    # Membership verification also uses the authority's lightweight revision
+    # projection. Hydrate its wire geometry through the same pinned snapshot,
+    # while requiring the binding declarations we already resolved to agree. Calculation
+    # asks for the amount-computing rung; an edition without export layouts still reaches it.
+    revision = operation.snapshot(
+        context.modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    ).revision
+    if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return revision
+
+
+def closed_detail_record_rows(
     context: CalculationSourceContext,
     projection: OssIossInvoiceProjection,
     *,
     supplied_binding_ids: frozenset[BindingId],
     operation: PinnedAuthorityOperation,
 ) -> tuple[ClosedRecordRowSet, ...]:
-    """Close only this source's services table after a complete bound read."""
-    if (
-        context.revision.id != "esquema-exterior"
-        or context.work_unit_id is None
-        or projection.source_bucket_id != context.bucket_id
-        or projection.catalogue_fingerprint is None
-        or not projection.candidates
-        or not supplied_binding_ids
-    ):
-        return ()
-    revision = context.revision
-    if not revision.export_layouts:
-        # Membership verification also uses the authority's lightweight revision
-        # projection. Hydrate its wire geometry through the same pinned snapshot,
-        # while requiring the binding declarations we already resolved to agree.
-        revision = operation.snapshot(
-            context.modelo,
-            filing_year=context.filing_year,
-            period=context.period.registry_token,
-        ).revision
-        if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    slots = _exterior_record_slots(revision)
-    covered = frozenset(binding for row in slots for binding in row)
-    if not supplied_binding_ids.issubset(covered) or any(
-        bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    return (
-        ClosedRecordRowSet(
-            record_id=_EXTERIOR_DETAIL_RECORD,
-            bucket_id=context.bucket_id,
-            work_unit_id=context.work_unit_id,
-            registry_snapshot_ref=RegistrySnapshotRef(
-                modelo=context.modelo,
-                revision_id=context.revision.id,
-                modelo_year=context.filing_year,
-                period=context.period.registry_token,
-            ),
-            authority_generation=operation.pin().logical_generation,
-            source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-            # The actual profile-local singleton catalogue, not a synthesized
-            # aggregate pretending to be an independently persisted source.
-            source_ref="invoice_catalogue:catalogue",
-            source_fingerprint=projection.catalogue_fingerprint,
-            rows=tuple(
-                RecordRowMembership(
-                    row_index=index,
-                    binding_ids=row,
-                    occupied=bool(supplied_binding_ids.intersection(row)),
-                )
-                for index, row in enumerate(slots, start=1)
-            ),
-        ),
-    )
+    """Close this source's tables after a complete bound read placed every line.
 
-
-def _candidate_for_invoice_line(
-    invoice: Invoice,
-    line: InvoiceLine,
-    *,
-    line_index: int,
-    devengo_date: date,
-) -> OssIossLedgerCandidate | None:
-    """Project one invoice line into an OSS/IOSS candidate, or ``None`` when not applicable.
-
-    The regime / destination checks mean the line is not an OSS/IOSS
-    operation at all -- correctly silent, nothing to declare. A line that
-    passes both IS a real, declarable OSS/IOSS operation, so a missing
-    rate_kind or a missing euro conversion from that point on REFUSES rather
-    than silently drops it: by operator ruling ("aim for explicit red
-    signals... until schema and api converges"), a would-be-silently-dropped
-    declarable line is a hard stop, not an advisory beside a smaller-but-green
-    figure.
+    A Union table that takes goods or a foreign establishment closes empty here on
+    the same read: any goods line stops the closure at its caller, and no invoice
+    names an establishment other than the taxpayer's own.
     """
-    if invoice.oss_ioss_regime is None or invoice.oss_transaction_kind is None:
-        return None
-    destination = invoice.counterparty_eu_member_state
-    if destination is None:
-        return None
-    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate, devengo_date)
-    if rate_kind is None:
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
-            context={
-                "invoice_id": invoice.invoice_id,
-                "invoice_number": invoice.invoice_number,
-                "line_index": str(line_index),
-                "iva_rate": line.iva_rate.value,
-            },
-        )
-    # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
-    # destination Member State's own currency (PLN, SEK, DKK, HUF, CZK, RON,
-    # BGN...) is the ORDINARY case, not an edge case. line.subtotal /
-    # line.iva_amount are native to invoice.currency (InvoiceLine carries no
-    # currency of its own); base_amount/iva_amount on the candidate are
-    # documented as EUR, so this converts through the same fx_rate resolution
-    # the invoice-level totals already use (line_amount_eur) rather than the
-    # invoice-line's raw native fields.
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    if base_amount_eur is None or iva_amount_eur is None:
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
-            context={
-                "invoice_id": invoice.invoice_id,
-                "invoice_number": invoice.invoice_number,
-                "currency": invoice.currency,
-                "line_index": str(line_index),
-            },
-        )
-    return OssIossLedgerCandidate(
-        ledger_id=f"{invoice.invoice_id}:{line_index}",
-        transaction_date=devengo_date,
-        regime=invoice.oss_ioss_regime,
-        destination_member_state=destination,
-        rate_kind=rate_kind,
-        invoice_direction=invoice.kind,
-        transaction_kind=invoice.oss_transaction_kind,
-        base_amount=base_amount_eur,
-        iva_amount=iva_amount_eur,
+    if not _can_close_detail_rows(context, projection, supplied_binding_ids):
+        return ()
+    work_unit_id, fingerprint = context.work_unit_id, projection.catalogue_fingerprint
+    if work_unit_id is None or fingerprint is None:
+        return ()
+    revision = _layout_hydrated_revision(context, operation=operation)
+    effective_date = projection_period(context.period).end_date
+    capacity = int(_projection_declarations(effective_date, operation=operation)["detail_row.capacity"])
+    closed: list[ClosedRecordRowSet] = []
+    covered: set[BindingId] = set()
+    correction_record = _correction_record(revision, effective_date, operation=operation)
+    corrections = () if correction_record is None else (correction_record,)
+    # The operator's rows of the corrections table belong to the table's membership.
+    entered = frozenset(context.caller_binding_values) | frozenset(context.caller_enum_binding_values)
+    for record_id in (*_closable_records(revision, effective_date, operation=operation), *corrections):
+        slots = _validated_record_slots(revision, record_id, capacity)
+        occupying = supplied_binding_ids | entered if record_id in corrections else supplied_binding_ids
+        require_slot_coverage(slots, occupying)
+        covered.update(binding for row in slots for binding in row)
+        closed.append(_closed_row_set(context, record_id, slots, occupying, work_unit_id, fingerprint, operation))
+    if not supplied_binding_ids.issubset(covered):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return tuple(closed)
+
+
+def _validated_record_slots(
+    revision: ModeloRevision, record_id: str, capacity: int
+) -> tuple[tuple[BindingId, ...], ...]:
+    """Return the record's row slots once they are the page's size and agree with the wire geometry."""
+    slots = record_row_slots(revision, record_id)
+    if len(slots) != capacity:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    require_wire_geometry(revision, record_id, slots)
+    return slots
+
+
+def _closed_row_set(
+    context: CalculationSourceContext,
+    record_id: str,
+    slots: tuple[tuple[BindingId, ...], ...],
+    occupying: frozenset[BindingId],
+    work_unit_id: str,
+    fingerprint: ContentDigest,
+    operation: PinnedAuthorityOperation,
+) -> ClosedRecordRowSet:
+    """Close one record's table, marking the rows an occupying binding sits in."""
+    return ClosedRecordRowSet(
+        record_id=record_id,
+        bucket_id=context.bucket_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=context.modelo,
+            revision_id=context.revision.id,
+            modelo_year=context.filing_year,
+            period=context.period.registry_token,
+        ),
+        authority_generation=operation.pin().logical_generation,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        # The actual profile-local singleton catalogue, not a synthesized
+        # aggregate pretending to be an independently persisted source.
+        source_ref="invoice_catalogue:catalogue",
+        source_fingerprint=fingerprint,
+        rows=tuple(
+            RecordRowMembership(
+                row_index=index,
+                binding_ids=row,
+                occupied=bool(occupying.intersection(row)),
+            )
+            for index, row in enumerate(slots, start=1)
+        ),
     )
 
 
@@ -714,321 +1117,29 @@ class OssIossInvoiceProjection(BaseModel):
     catalogue_fingerprint: ContentDigest | None = Field(default=None, exclude=True, repr=False)
 
 
-def project_oss_ioss_invoices_from_repositories(
-    *,
-    period: Period,
-    ports: InvoiceCatalogueReadPorts,
-) -> OssIossInvoiceProjection:
-    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
-
-    Attribution is by the LIVA art. 75 devengo date through the shared
-    :func:`~application.aggregation.invoice_devengo.invoice_devengo_in_period` predicate, so an
-    operation performed in one quarter and invoiced in the next is declared in
-    the quarter it was performed, and every path that folds invoices into a
-    period answers that question the same way.
-
-    Args:
-        period: Filing period whose date span filters issued invoices.
-        ports: Required application-owned catalogue read capabilities for the
-            composed profile bucket.
-
-    Returns:
-        The candidates for the period beside the invoices they were projected
-        from.
-    """
-    projection_period = period
+def projection_period(period: Period) -> Period:
+    """Return the calendar period an Exterior token such as ``EXT-3T`` files."""
     if period.registry_token.startswith("EXT-"):
-        projection_period = Period.from_year_and_code(
+        return Period.from_year_and_code(
             period.filing_year,
             period.registry_token.removeprefix("EXT-"),
         )
-    if not projection_period.has_date_span():
-        return OssIossInvoiceProjection()
-    candidates: list[OssIossLedgerCandidate] = []
-    contributing: list[Invoice] = []
-    catalogue = ports.invoice_reader.load()
-    for invoice in catalogue:
-        if invoice.kind is not InvoiceKind.ISSUED:
-            continue
-        if not invoice_devengo_in_period(invoice, period=projection_period):
-            continue
-        devengo_date = resolve_invoice_devengo(invoice).devengo_date
-        projected = [
-            candidate
-            for index, line in enumerate(invoice.lines, start=1)
-            if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
-            is not None
-        ]
-        if projected:
-            candidates.extend(projected)
-            contributing.append(invoice)
-    source_bucket_id = (
-        ports.invoice_reader.bucket_id if isinstance(ports.invoice_reader, BucketBoundCatalogueReader) else None
-    )
-    return OssIossInvoiceProjection(
-        candidates=tuple(candidates),
-        contributing_invoices=tuple(contributing),
-        source_bucket_id=source_bucket_id,
-        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json"))
-        if (source_bucket_id is not None and source_bucket_id)
-        else None,
-    )
-
-
-def oss_ioss_candidates_from_repositories(
-    *,
-    period: Period,
-    ports: InvoiceCatalogueReadPorts,
-) -> tuple[OssIossLedgerCandidate, ...]:
-    """Return only the Modelo 369 candidates for the period.
-
-    The narrow accessor for callers that aggregate but emit no diagnostics.
-    Delegates to :func:`project_oss_ioss_invoices_from_repositories` rather
-    than repeating its selection, so the two cannot attribute a period
-    differently.
-
-    Args:
-        period: Filing period whose date span filters issued invoices.
-        ports: Required application-owned catalogue read capabilities for the
-            composed profile bucket.
-
-    Returns:
-        A tuple of :class:`OssIossLedgerCandidate` rows projected from issued
-        invoices devengando in the period.
-    """
-    return project_oss_ioss_invoices_from_repositories(
-        period=period,
-        ports=ports,
-    ).candidates
-
-
-def aggregate_oss_ioss_from_repositories(
-    revision: ModeloRevision,
-    *,
-    period: Period,
-    ports: InvoiceCatalogueReadPorts,
-    operation: PinnedAuthorityOperation | None = None,
-) -> dict[BindingId, Decimal]:
-    """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose OSS/IOSS bindings are resolved.
-        period: Filing period whose date span filters issued invoices.
-        ports: Required application-owned catalogue read capabilities for the
-            composed profile bucket.
-        operation: Existing generation-pinned authority operation. When omitted,
-            one indexed operation is opened at this composition boundary.
-    """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_oss_ioss_from_repositories(
-                revision,
-                period=period,
-                ports=ports,
-                operation=indexed_operation,
-            )
-    return aggregate_oss_ioss_bindings(
-        revision,
-        oss_ioss_candidates_from_repositories(period=period, ports=ports),
-        operation=operation,
-    )
-
-
-class OssIossLedgerSourceResolver:
-    """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
-
-    resolver_id: ClassVar[str] = "ledger_oss_aggregation"
-    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_OSS_AGGREGATION,)
-
-    def __init__(
-        self,
-        *,
-        ports: InvoiceCatalogueReadPorts,
-        candidates: Sequence[OssIossLedgerCandidate] | None = None,
-    ) -> None:
-        """Construct the resolver with a pre-classified ledger candidate sequence.
-
-        Args:
-            candidates: The substrate-classified ledger lines for the
-                current period. The resolver validates and aggregates
-                these on each :meth:`resolve` call.
-            ports: Required application-owned catalogue read capabilities used
-                to project OSS/IOSS-tagged invoices when ``candidates`` is not
-                supplied.
-        """
-        self._ports = ports
-        self._candidates = tuple(candidates) if candidates is not None else None
-
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Validate candidates and return the resolved OSS/IOSS binding values.
-
-        Validates every candidate through :func:`validate_oss_ioss_observation`
-        then delegates to the registry's
-        ``resolve_ledger_oss_aggregation_binding_values`` to aggregate the
-        matched lines per binding selector.
-
-        When the resolver is constructed with explicit ``candidates``, those
-        candidates are folded directly. When ``candidates`` is omitted, the live
-        operator path projects OSS/IOSS-tagged issued invoices from the
-        application catalogue read capability into candidates first. If no
-        candidate is available, the
-        resolver still CLAIMS ``ledger_oss_aggregation`` (so the binding
-        compiles and is not flagged as a novel source) but surfaces one
-        non-blocking ``oss_no_live_source`` advisory per declared OSS binding.
-        This keeps a Modelo 369 OSS cuota from resolving to a SILENT
-        claimed-zero when the catalogue carries no classifiable OSS invoices.
-
-        Args:
-            context: The :class:`CalculationSourceContext` carrying the
-                ``ModeloRevision`` whose ``ledger_oss_aggregation`` bindings
-                should be resolved.
-
-        Returns:
-            A :class:`CalculationSourceResolution` with resolved
-            binding values, source transaction ids, and per-observation
-            provenance records — or, when no candidates were supplied, an
-            empty resolution carrying one ``oss_no_live_source`` advisory per
-            declared OSS binding when no candidates can be projected.
-
-        Raises:
-            AggregationValidationError: When any candidate's persisted IVA
-                amount disagrees with the destination Member State rate by
-                more than one cent.
-        """
-        try:
-            with source_context_operation(context) as indexed_operation:
-                if (
-                    self._candidates is None
-                    and isinstance(self._ports.invoice_reader, BucketBoundCatalogueReader)
-                    and self._ports.invoice_reader.bucket_id is not None
-                    and self._ports.invoice_reader.bucket_id != context.bucket_id
-                ):
-                    raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_unadmitted"))
-                projection = (
-                    project_oss_ioss_invoices_from_repositories(
-                        period=context.period,
-                        ports=self._ports,
-                    )
-                    if self._candidates is None
-                    else OssIossInvoiceProjection(candidates=self._candidates)
-                )
-                candidates = projection.candidates
-                observations = validate_oss_ioss_observations(candidates, operation=indexed_operation)
-                exterior_values, exterior_enum_values = _exterior_detail_binding_values(
-                    context.revision,
-                    observations,
-                    operation=indexed_operation,
-                )
-                unrouted = unsupported_ledger_oss_observations(context.revision, observations)
-                closed_rows = (
-                    _closed_exterior_record_rows(
-                        context,
-                        projection,
-                        supplied_binding_ids=frozenset(exterior_values) | frozenset(exterior_enum_values),
-                        operation=indexed_operation,
-                    )
-                    if not unrouted
-                    else ()
-                )
-        except InvoiceCatalogueReadPersistenceError as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
-        if not candidates:
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                diagnostics=self._no_live_source_diagnostics(context),
-            )
-        # Fail-closed advisory parity with the IVA screen: a non-zero declarable
-        # OSS line whose classification tuple matches no ledger_oss_aggregation
-        # binding would otherwise be silently dropped (no-silent-under-declaration).
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values={
-                **resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
-                **exterior_values,
-            },
-            enum_binding_values=exterior_enum_values,
-            closed_record_row_sets=closed_rows,
-            source_transaction_ids=tuple(
-                sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
-            ),
-            diagnostics=devengo_proxy_attribution_diagnostics(
-                projection.contributing_invoices,
-                source_kind="ledger_oss_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_oss_aggregation",
-                    resolver_id=self.resolver_id,
-                    source_ref=f"transaction:{observation.ledger_id}",
-                    message=(
-                        f"declarable OSS observation {observation.ledger_id!r} "
-                        f"(regime={observation.regime.value!r}, "
-                        f"destination={observation.destination_member_state.value!r}, "
-                        f"rate_kind={observation.rate_kind.value!r}, "
-                        f"invoice_direction={observation.invoice_direction.value!r}, "
-                        f"transaction_kind={observation.transaction_kind.value!r}) is not consumed by any "
-                        f"ledger_oss_aggregation binding on revision {context.revision.id!r}; "
-                        "its base/cuota is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
-            ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                    contributor_source_kind="ledger_oss_aggregation",
-                    contributor_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"transaction:{observation.ledger_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                )
-                for observation in observations
-            ),
-        )
-
-    def _no_live_source_diagnostics(self, context: CalculationSourceContext) -> tuple[CalculationSourceDiagnostic, ...]:
-        """Return one ``oss_no_live_source`` advisory per OSS binding on the revision.
-
-        Surfaced only when the resolver was constructed with no candidates and
-        the revision actually declares ``ledger_oss_aggregation`` bindings, so
-        a modelo with no OSS bindings produces no spurious advisory.
-        """
-        return tuple(
-            CalculationSourceDiagnostic(
-                reason="oss_no_live_source",
-                source_kind="ledger_oss_aggregation",
-                resolver_id=self.resolver_id,
-                binding_id=binding.id,
-                message=(
-                    f"binding {binding.id!r} declares source 'ledger_oss_aggregation' but no "
-                    "OSS/IOSS-tagged issued invoice line was available for the filing period; "
-                    "the OSS cuota is NOT auto-computed from the invoice catalogue"
-                ),
-            )
-            for binding in context.revision.bindings
-            if str(binding.source) == "ledger_oss_aggregation"
-        )
+    return period
 
 
 __all__ = [
     "OssIossInvoiceProjection",
     "OssIossLedgerCandidate",
-    "OssIossLedgerSourceResolver",
     "aggregate_oss_ioss_bindings",
-    "aggregate_oss_ioss_from_repositories",
-    "oss_ioss_candidates_from_repositories",
-    "project_oss_ioss_invoices_from_repositories",
+    "closed_detail_record_rows",
+    "correction_binding_values",
+    "detail_binding_values",
+    "observations_at_row_level",
+    "observations_without_detail_row",
+    "period_holding",
+    "projection_period",
+    "refuse_rate_chosen_by_issue_date",
+    "row_level_binding_values",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
 ]

@@ -21,7 +21,8 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.temporal import RevisionSelectionMetadata, select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..analysis.m303_semantic_census import census_m303_semantic_map, resolve_semantic_home
 from ..compiler.loader import load_registry_tree
@@ -59,13 +60,24 @@ class _Epoch:
     expected_anchor_count: int
 
 
+def _epoch(revision: RevisionSelectionMetadata, anchor_count: int, period: str, suffix: str = "") -> _Epoch:
+    """One design epoch: the authored revision, a period it serves, and the anchors its source prints."""
+    year = revision.valid_from.year
+    return _Epoch(f"{year}{suffix}", year, period, str(revision.id), anchor_count)
+
+
+# Authored Modelo 303 revisions, oldest first: the printed anchor counts are pinned per edition by ordinal,
+# so a later edition appends without renumbering. The exercise that splits in two designs has a mapping
+# for each half.
+_AUTHORED = authored_revisions(_MODELO)
 _EPOCHS = (
-    _Epoch("2023", 2023, "4T", "2023", 406),
-    _Epoch("2024-early", 2024, "2T", "2024-hasta-08-y-2t", 406),
-    _Epoch("2024-late", 2024, "4T", "2024-desde-09-y-3t", 426),
-    _Epoch("2025", 2025, "4T", "2025", 429),
-    _Epoch("2026", 2026, "4T", "2026-y-siguientes", 430),
+    _epoch(_AUTHORED[1], 406, "4T"),
+    _epoch(_AUTHORED[2], 406, "2T", "-early"),
+    _epoch(_AUTHORED[3], 426, "4T", "-late"),
+    _epoch(_AUTHORED[4], 429, "4T"),
+    _epoch(_AUTHORED[6], 430, "4T"),
 )
+_ANCHORED_EPOCH = _EPOCHS[3].name
 _EPOCH_BY_NAME = {epoch.name: epoch for epoch in _EPOCHS}
 
 
@@ -244,7 +256,7 @@ def test_constants_and_reserves_keep_their_source_grounded_homes(epoch_name: str
 
 def test_two_110_anchor_coordinates_cannot_collapse_or_select_by_a_single_number() -> None:
     """The row-110 and ordinal-110 DP30302 facts are separate exact anchors."""
-    authorities = _authorities("2025")
+    authorities = _authorities(_ANCHORED_EPOCH)
     fields = _joined_fields(authorities)
     source_row_110 = next(
         field
@@ -274,7 +286,7 @@ def test_two_110_anchor_coordinates_cannot_collapse_or_select_by_a_single_number
 
 def test_a_reserved_anchor_mutation_is_detected_as_filler_misuse() -> None:
     """A non-filler home cannot silently replace an AEAT reserve."""
-    authorities = _authorities("2025")
+    authorities = _authorities(_ANCHORED_EPOCH)
     reserved = next(field for field in _joined_fields(authorities) if _is_reserved(field.parser_field))
     mutated = reserved.semantic_entry.model_copy(update={"kind": CasillaFieldKind.LITERAL, "literal": ""})
     mutated_field = reserved.model_copy(update={"semantic_entry": mutated})

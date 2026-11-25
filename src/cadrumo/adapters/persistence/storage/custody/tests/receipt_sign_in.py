@@ -132,6 +132,6 @@ def publish_sign_in_custody(root: Path, profile_id: UUID, *, custody_generation:
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=sha256(seed).digest()),
         data_files={"state/current.bin": b"synthetic encrypted payload"},
-        settings=Settings(cadrumo_local_storage_root=root),
+        settings=Settings(cadrumo_storage_root=root),
     )
     return committed_sign_in(root, profile_id)

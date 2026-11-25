@@ -1,21 +1,20 @@
 //! Storage-root resolution and child environments from the generated native contract.
 //!
-//! Mirrors the Python storage declaration: mode comes from package or checkout evidence,
-//! never the working directory; an absolute root override wins; the installed default is
-//! the declared platform user-data base joined with the build channel's directory.
+//! The root is the one root variable when it is set, which must be absolute, and otherwise
+//! the declared per-user platform data base joined with the build channel's directory. Every
+//! image resolves it the same way, whatever configuration built it: nothing is baked in at
+//! compile time and nothing is read from the working directory. Every other location is a
+//! declared path beneath the root.
 
 use crate::{
-    BUILD_CHANNEL, CHANNEL_SEPARATOR, CLEARED_NAMES, CLEARED_PREFIXES, DEVELOPMENT_DEFAULT,
-    DEVELOPMENT_RELATIVE_OVERRIDE, DEVELOPMENT_ROOT_PRECEDENCE, ENTRYPOINT_FILES,
+    BUILD_CHANNEL, CHANNEL_SEPARATOR, CLEARED_NAMES, CLEARED_PREFIXES, ENTRYPOINT_FILES,
     HOST_INHERITED_ENV, HOST_INHERITED_FIELDS, INHERITED_KIND_DIRECTORY_PATH, INSTALLED_DEFAULTS,
-    INSTALLED_RELATIVE_OVERRIDE, INSTALLED_ROOT_PRECEDENCE, InstalledDefault, MODE_CHECKOUT_MARKER,
-    MODE_PACKAGE_MANIFEST, MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX, NATIVE, PINNED_ENV,
-    PRODUCT_DIRECTORY, ROOT_REFUSAL_CHECKOUT_UNAVAILABLE, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
+    InstalledDefault, NAMESPACE_PREFIX, NATIVE, PACKAGE_MANIFEST, PACKAGE_ROOT_FROM_EXECUTABLE,
+    PINNED_ENV, PRODUCT_DIRECTORY, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
     ROOT_REFUSAL_HOME_UNAVAILABLE, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE,
     ROOT_REFUSAL_INVALID_PATH_INPUT, ROOT_REFUSAL_NON_ABSOLUTE_PIN,
     ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS, ROOT_VARIABLE, STABLE_CHANNEL,
-    STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS, STORAGE_UNICODE_REQUIRED,
-    TEMPORARY_CREATE_EXPLICIT, TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS, STORAGE_UNICODE_REQUIRED, TEMPORARY_MEMBER,
 };
 #[cfg(windows)]
 use std::os::windows::ffi::OsStringExt;
@@ -27,21 +26,40 @@ use std::{
 #[cfg(windows)]
 use std::{ffi::c_void, ptr};
 
-/// Whether an executable runs from an installed package or a source checkout.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode {
-    Development,
-    Installed,
+/// The package one executable belongs to; the working directory is never read.
+///
+/// Package evidence locates package files only. It never selects a storage root.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Package {
+    /// The package root the executable belongs to.
+    pub root: PathBuf,
+    /// Whether the package root holds the package manifest.
+    pub packaged: bool,
 }
 
-/// Package or checkout evidence for one executable; the working directory is never read.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Evidence {
-    pub mode: Mode,
-    /// The package root the executable belongs to.
-    pub package: PathBuf,
-    /// The source checkout in development mode.
-    pub checkout: Option<PathBuf>,
+impl Package {
+    /// Locate the package `exe` belongs to without requiring its manifest.
+    pub fn locate(exe: &Path) -> Result<Self, String> {
+        if !exe.is_absolute() {
+            return Err("Package location requires an absolute executable path".into());
+        }
+        let root = package_root(exe)?.join(relative_components(PACKAGE_ROOT_FROM_EXECUTABLE));
+        let packaged = root.join(relative_components(PACKAGE_MANIFEST)).is_file();
+        Ok(Self { root, packaged })
+    }
+
+    /// Locate the package `exe` belongs to and require its manifest.
+    pub fn installed(exe: &Path) -> Result<Self, String> {
+        let package = Self::locate(exe)?;
+        if !package.packaged {
+            return Err(format!(
+                "{} is not part of an installed CADRUMO package: {PACKAGE_MANIFEST} is \
+                 missing. Reinstall CADRUMO.",
+                exe.display()
+            ));
+        }
+        Ok(package)
+    }
 }
 
 /// A declared refusal: `code` is one of the contract's root refusals.
@@ -73,10 +91,8 @@ impl From<Refusal> for std::io::Error {
 /// What selected a resolved storage root.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RootSource {
-    /// An operator override; `variable` is the root variable that supplied it.
-    Override { variable: &'static str },
-    /// The checkout's development default.
-    CheckoutDefault,
+    /// The operator's absolute root variable.
+    Override,
     /// The per-user, per-channel installed default.
     InstalledDefault,
 }
@@ -138,42 +154,6 @@ pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
         package = package.parent().ok_or("Entrypoint has no package root")?;
     }
     Ok(package.to_path_buf())
-}
-
-/// Installed when the package root holds the package manifest; development when a
-/// checkout marker is an ancestor of the executable; otherwise refuse.
-pub fn detect_mode(exe: &Path) -> Result<Evidence, String> {
-    if !exe.is_absolute() {
-        return Err("Mode detection requires an absolute executable path".into());
-    }
-    let package = package_root(exe)?.join(relative_components(MODE_PACKAGE_ROOT_FROM_EXECUTABLE));
-    if package
-        .join(relative_components(MODE_PACKAGE_MANIFEST))
-        .is_file()
-    {
-        return Ok(Evidence {
-            mode: Mode::Installed,
-            package,
-            checkout: None,
-        });
-    }
-    let directory = exe.parent().ok_or("Executable has no parent")?;
-    if let Some(checkout) = directory
-        .ancestors()
-        .find(|ancestor| ancestor.join(MODE_CHECKOUT_MARKER).is_file())
-    {
-        return Ok(Evidence {
-            mode: Mode::Development,
-            package,
-            checkout: Some(checkout.to_path_buf()),
-        });
-    }
-    Err(format!(
-        "CADRUMO cannot tell whether {} is installed or a development build: \
-         {MODE_PACKAGE_MANIFEST} is not in the package and no ancestor directory holds \
-         {MODE_CHECKOUT_MARKER}. Reinstall CADRUMO or run it from a source checkout.",
-        exe.display()
-    ))
 }
 
 pub(crate) fn channel_directory(channel: &str) -> String {
@@ -305,83 +285,27 @@ fn expand_home(value: &str, lookup: &dyn Fn(&str) -> Option<OsString>) -> Result
     }
 }
 
-/// The contract's root algorithm on explicit inputs, mirroring the Python resolver.
+/// The contract's root algorithm on explicit inputs.
 ///
-/// `known_folder` replaces the environment base the Python resolver reads, because
-/// the native host asks the shell for `FOLDERID_LocalAppData` directly.
+/// `known_folder` replaces the environment base the command line reads, because the
+/// native host asks the shell for `FOLDERID_LocalAppData` directly.
 fn anchored_root(
-    mode: Mode,
     lookup: &dyn Fn(&str) -> Option<OsString>,
-    checkout: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let checkout_anchor = || {
-        let anchor = checkout.map(Path::to_path_buf).ok_or_else(|| {
-            refusal(
-                ROOT_REFUSAL_CHECKOUT_UNAVAILABLE,
-                "A development storage root needs the source checkout that anchors it.".into(),
-            )
-        })?;
-        checked_path_value("Checkout", anchor.as_os_str())?;
-        if !anchor.is_absolute() {
-            return Err(refusal(
-                ROOT_REFUSAL_NON_ABSOLUTE_PIN,
-                "The checkout anchor must be absolute".into(),
-            ));
-        }
-        Ok(anchor)
-    };
-    let precedence = match mode {
-        Mode::Development => DEVELOPMENT_ROOT_PRECEDENCE,
-        Mode::Installed => INSTALLED_ROOT_PRECEDENCE,
-    };
-    let mut selected = None;
-    for name in precedence {
-        if let Some(value) = nonblank(lookup, name)? {
-            selected = Some((*name, value));
-            break;
-        }
-    }
-    if let Some((variable, raw)) = selected {
-        let source = RootSource::Override { variable };
+    if let Some(raw) = nonblank(lookup, ROOT_VARIABLE)? {
         let candidate = expand_home(&raw, lookup)?;
         if candidate.is_absolute() {
             return Ok(ResolvedRoot {
                 root: candidate,
-                source,
+                source: RootSource::Override,
             });
         }
-        let rule = match mode {
-            Mode::Development => DEVELOPMENT_RELATIVE_OVERRIDE,
-            Mode::Installed => INSTALLED_RELATIVE_OVERRIDE,
-        };
-        if rule != "anchor_at_checkout" {
-            return Err(refusal(
-                ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED,
-                format!("{ROOT_VARIABLE} must be an absolute directory when CADRUMO is installed."),
-            ));
-        }
-        if candidate.has_root()
-            || candidate
-                .components()
-                .any(|part| matches!(part, Component::Prefix(_)))
-        {
-            return Err(refusal(
-                ROOT_REFUSAL_NON_ABSOLUTE_PIN,
-                "A relative override cannot replace its checkout anchor".into(),
-            ));
-        }
-        return Ok(ResolvedRoot {
-            root: checkout_anchor()?.join(candidate),
-            source,
-        });
-    }
-    if mode == Mode::Development {
-        return Ok(ResolvedRoot {
-            root: checkout_anchor()?.join(relative_components(DEVELOPMENT_DEFAULT)),
-            source: RootSource::CheckoutDefault,
-        });
+        return Err(refusal(
+            ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED,
+            format!("{ROOT_VARIABLE} must be an absolute directory."),
+        ));
     }
     #[cfg(unix)]
     let selected = {
@@ -426,13 +350,11 @@ fn anchored_root(
 }
 
 pub(crate) fn resolve_root(
-    mode: Mode,
     lookup: &dyn Fn(&str) -> Option<OsString>,
-    checkout: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let resolved = anchored_root(mode, lookup, checkout, known_folder, channel)?;
+    let resolved = anchored_root(lookup, known_folder, channel)?;
     Ok(ResolvedRoot {
         root: validated_absolute_path(&resolved.root)?,
         source: resolved.source,
@@ -443,13 +365,11 @@ pub(crate) fn resolve_root(
 /// Filesystem vectors exercise `resolve_root` with actual isolated fixtures.
 #[cfg(test)]
 pub(crate) fn resolve_root_vector(
-    mode: Mode,
     lookup: &dyn Fn(&str) -> Option<OsString>,
-    checkout: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let resolved = anchored_root(mode, lookup, checkout, known_folder, channel)?;
+    let resolved = anchored_root(lookup, known_folder, channel)?;
     absolute_path_input(&resolved.root)?;
     Ok(ResolvedRoot {
         root: normalized_absolute_components(&resolved.root),
@@ -509,90 +429,34 @@ pub(crate) fn local_app_data() -> Option<PathBuf> {
     folder
 }
 
-/// Resolve this process's storage root for `evidence` from its environment and the shell.
-///
-/// The runtime manager manages a root only when `source` is [`RootSource::InstalledDefault`].
-pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal> {
-    resolve_storage_root_with(evidence, &|name| env::var_os(name))
+/// Resolve this process's storage root from its environment and the shell.
+pub fn resolve_storage_root() -> Result<ResolvedRoot, Refusal> {
+    resolve_storage_root_with(&|name| env::var_os(name))
 }
 
 /// Resolve against a captured environment without mutating the current process.
 pub fn resolve_storage_root_with(
-    evidence: &Evidence,
     lookup: &dyn Fn(&str) -> Option<OsString>,
 ) -> Result<ResolvedRoot, Refusal> {
     #[cfg(windows)]
-    let known_folder = match evidence.mode {
-        Mode::Installed => local_app_data(),
-        Mode::Development => None,
+    let known_folder = if nonblank(lookup, ROOT_VARIABLE)?.is_some() {
+        None
+    } else {
+        local_app_data()
     };
     #[cfg(unix)]
     let known_folder: Option<PathBuf> = None;
-    resolve_root(
-        evidence.mode,
-        lookup,
-        evidence.checkout.as_deref(),
-        known_folder.as_deref(),
-        BUILD_CHANNEL,
-    )
+    resolve_root(lookup, known_folder.as_deref(), BUILD_CHANNEL)
 }
 
-/// A member `variable` may relocate: an override in `lookup` (absolute, `~`-relative or
-/// relative to `root`), else `default`, a slash-separated path beneath `root`. Also reports
-/// whether an override selected it.
-fn located_member(
-    root: &Path,
-    variable: &str,
-    default: &str,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<(PathBuf, bool), Refusal> {
-    let explicit = nonblank(lookup, variable)?;
-    let path = match &explicit {
-        Some(value) => expand_home(value, lookup)?,
-        None => relative_components(default),
-    };
-    if !path.is_absolute()
-        && (path.has_root()
-            || path
-                .components()
-                .any(|part| matches!(part, Component::Prefix(_))))
-    {
-        return Err(refusal(
-            ROOT_REFUSAL_NON_ABSOLUTE_PIN,
-            "A relative member cannot replace its root anchor".into(),
-        ));
-    }
-    let path = validated_absolute_path(&if path.is_absolute() {
-        path
-    } else {
-        root.join(path)
-    })?;
-    Ok((path, explicit.is_some()))
+/// A location beneath `root`: the slash-separated declared `relative` path, without creating it.
+pub fn member_path(root: &Path, relative: &str) -> Result<PathBuf, Refusal> {
+    validated_absolute_path(&root.join(relative_components(relative)))
 }
 
-/// The location of a member `variable` may relocate beneath `root`, without creating it.
-pub fn member_path(
-    root: &Path,
-    variable: &str,
-    default: &str,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Refusal> {
-    located_member(root, variable, default, lookup).map(|(path, _)| path)
-}
-
-/// The temporary-files member beneath `root`, honouring an operator override in `lookup`.
-pub(crate) fn temporary_path(
-    root: &Path,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Refusal> {
-    let (path, explicit) = located_member(root, TEMPORARY_ENV, TEMPORARY_DEFAULT, lookup)?;
-    if explicit && !TEMPORARY_CREATE_EXPLICIT && !path.is_dir() {
-        return Err(refusal(
-            ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
-            "An explicit member must already exist".into(),
-        ));
-    }
-    Ok(path)
+/// The temporary-files member beneath `root`.
+pub(crate) fn temporary_path(root: &Path) -> Result<PathBuf, Refusal> {
+    member_path(root, TEMPORARY_MEMBER)
 }
 
 /// Whether a strict child filter clears `name`: the declared host classes and every
@@ -619,6 +483,43 @@ pub fn strict_host_environment(
         .into_iter()
         .filter(|(name, _)| !cleared(&name.to_string_lossy()))
         .collect()
+}
+
+/// The strict host environment for a successor that must manage the root `ambient`
+/// selects. The root variable is carried when it selected the root, since the strict
+/// classes clear it; an installed default stays for the successor to resolve itself.
+pub fn successor_host_environment(
+    ambient: impl IntoIterator<Item = (OsString, OsString)>,
+) -> Result<Vec<(OsString, OsString)>, Refusal> {
+    let ambient: Vec<(OsString, OsString)> = ambient.into_iter().collect();
+    let resolved = resolve_storage_root_with(&|name| {
+        ambient
+            .iter()
+            .rev()
+            .find(|(key, _)| environment_name_matches(key, name))
+            .map(|(_, value)| value.clone())
+    })?;
+    let mut environment = strict_host_environment(ambient);
+    if resolved.source == RootSource::Override {
+        environment.push((
+            OsString::from(ROOT_VARIABLE),
+            resolved.root.into_os_string(),
+        ));
+    }
+    Ok(environment)
+}
+
+/// Create the selected storage root owner-only when it is absent, so that a first
+/// launch has a physical identity to scope its instance names by. An existing root
+/// is left as it is.
+pub fn create_storage_root(root: &Path) -> std::io::Result<()> {
+    match std::fs::symlink_metadata(root) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            crate::create_private_directory(&crate::normalize_absolute_path(root)?)
+        }
+        Err(error) => Err(error),
+        Ok(_) => Ok(()),
+    }
 }
 
 /// Whether `ambient` carries a host-inherited pin such as the authority root.
@@ -683,8 +584,7 @@ where
             validate_inherited_pin(field, value)?;
         }
     }
-    let lookup = |name: &str| lookup_os(name).map(std::ffi::OsStr::to_owned);
-    let temporary = temporary_path(&root, &lookup).map_err(std::io::Error::from)?;
+    let temporary = temporary_path(&root).map_err(std::io::Error::from)?;
     let temporary = crate::normalize_absolute_path(&temporary)?;
     crate::create_private_directory(&root)?;
     crate::create_private_directory(&temporary)?;
@@ -784,28 +684,12 @@ mod tests {
                     .find(|(key, _)| *key == name)
                     .map(|(_, value)| OsString::from(*value))
             };
-            let mode = match vector.mode {
-                "development" => Mode::Development,
-                "installed" => Mode::Installed,
-                other => panic!("undeclared mode {other}"),
-            };
-            let checkout = if vector.invalid_checkout {
-                Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
-            } else {
-                vector.checkout.map(PathBuf::from)
-            };
             let known_folder = if vector.invalid_known_folder {
                 Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
             } else {
                 vector.known_folder.map(PathBuf::from)
             };
-            let outcome = resolve_root_vector(
-                mode,
-                &lookup,
-                checkout.as_deref(),
-                known_folder.as_deref(),
-                vector.channel,
-            );
+            let outcome = resolve_root_vector(&lookup, known_folder.as_deref(), vector.channel);
             match (outcome, vector.expected_root, vector.refusal) {
                 (Ok(resolved), Some(expected), None) => assert!(
                     same_path(&resolved.root, expected),
@@ -828,34 +712,11 @@ mod tests {
     fn resolved_root_reports_whether_an_override_or_a_default_selected_it() {
         let base = Path::new(r"C:\Users\ada\AppData\Local");
         let none = |_: &str| None;
-        let installed =
-            resolve_root(Mode::Installed, &none, None, Some(base), STABLE_CHANNEL).unwrap();
+        let installed = resolve_root(&none, Some(base), STABLE_CHANNEL).unwrap();
         assert_eq!(installed.source, RootSource::InstalledDefault);
-        let checkout = Path::new(r"C:\src\checkout");
-        let development = resolve_root(
-            Mode::Development,
-            &none,
-            Some(checkout),
-            None,
-            STABLE_CHANNEL,
-        )
-        .unwrap();
-        assert_eq!(development.source, RootSource::CheckoutDefault);
         let overridden = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from(r"D:\data"));
-        let explicit = resolve_root(
-            Mode::Installed,
-            &overridden,
-            None,
-            Some(base),
-            STABLE_CHANNEL,
-        )
-        .unwrap();
-        assert_eq!(
-            explicit.source,
-            RootSource::Override {
-                variable: ROOT_VARIABLE
-            }
-        );
+        let explicit = resolve_root(&overridden, Some(base), STABLE_CHANNEL).unwrap();
+        assert_eq!(explicit.source, RootSource::Override);
         assert_eq!(explicit.root, PathBuf::from(r"D:\data"));
     }
 
@@ -867,50 +728,38 @@ mod tests {
             assert_eq!(folder, PathBuf::from(local));
         }
         let none = |_: &str| None;
-        let resolved =
-            resolve_root(Mode::Installed, &none, None, Some(&folder), BUILD_CHANNEL).unwrap();
+        let resolved = resolve_root(&none, Some(&folder), BUILD_CHANNEL).unwrap();
         assert_eq!(resolved.root, folder.join(channel_directory(BUILD_CHANNEL)));
     }
 
     #[test]
-    fn mode_comes_from_package_or_checkout_evidence_never_the_working_directory() {
+    fn package_evidence_comes_from_the_image_never_the_working_directory() {
         let installed = Scratch::new("installed");
-        let manifest = installed.0.join(relative_components(MODE_PACKAGE_MANIFEST));
+        let manifest = installed.0.join(relative_components(PACKAGE_MANIFEST));
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         fs::write(&manifest, b"{}").unwrap();
-        let checkout = Scratch::new("checkout");
-        fs::write(checkout.0.join(MODE_CHECKOUT_MARKER), b"[project]\n").unwrap();
         let unrelated = Scratch::new("unrelated");
-        // A checkout marker in the working directory must not make anything a development build.
-        fs::write(unrelated.0.join(MODE_CHECKOUT_MARKER), b"[project]\n").unwrap();
         let previous = env::current_dir().unwrap();
-        env::set_current_dir(&unrelated.0).unwrap();
+        env::set_current_dir(&installed.0).unwrap();
 
-        let packaged = detect_mode(&installed.0.join(EXECUTABLE));
+        let packaged = Package::installed(&installed.0.join(EXECUTABLE));
         let entrypoint = ENTRYPOINT_FILES[0];
-        let packaged_entrypoint = detect_mode(&installed.0.join(NATIVE).join(entrypoint));
-        let built = detect_mode(&checkout.0.join("build").join("bin").join(EXECUTABLE));
-        // Mode detection only probes for files, so an absent directory at the drive root
-        // stands outside every checkout even when the test runner's TEMP is inside one.
-        let drive: PathBuf = env::temp_dir().components().take(2).collect();
-        let orphan = drive.join(format!("cadrumo-platform-orphan-{}", std::process::id()));
-        assert!(!orphan.exists() && !drive.join(MODE_CHECKOUT_MARKER).exists());
-        let refused = detect_mode(&orphan.join(EXECUTABLE));
+        let packaged_entrypoint = Package::installed(&installed.0.join(NATIVE).join(entrypoint));
+        // The working directory holds a package manifest, but the image beside it does not.
+        let refused = Package::installed(&unrelated.0.join(EXECUTABLE));
+        let located = Package::locate(&unrelated.0.join(EXECUTABLE));
         env::set_current_dir(previous).unwrap();
 
         assert_eq!(
             packaged.unwrap(),
-            Evidence {
-                mode: Mode::Installed,
-                package: installed.0.clone(),
-                checkout: None,
+            Package {
+                root: installed.0.clone(),
+                packaged: true,
             }
         );
-        assert_eq!(packaged_entrypoint.unwrap().package, installed.0);
-        let development = built.unwrap();
-        assert_eq!(development.mode, Mode::Development);
-        assert_eq!(development.checkout.as_deref(), Some(checkout.0.as_path()));
-        assert!(refused.unwrap_err().contains(MODE_CHECKOUT_MARKER));
+        assert_eq!(packaged_entrypoint.unwrap().root, installed.0);
+        assert!(refused.unwrap_err().contains(PACKAGE_MANIFEST));
+        assert!(!located.unwrap().packaged);
     }
 
     fn ambient() -> Vec<(OsString, OsString)> {
@@ -918,7 +767,10 @@ mod tests {
             ("PATH", "ambient-path"),
             ("SYSTEMROOT", "ambient-system-root"),
             (ROOT_VARIABLE, r"C:\parent-root"),
-            (TEMPORARY_ENV, "worker-temp"),
+            (
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE,
+                "worker-temp",
+            ),
             ("PYTHONPATH", "must-not-cross"),
             ("XDG_CACHE_HOME", r"C:\former-cache"),
         ]
@@ -966,8 +818,14 @@ mod tests {
             1
         );
         // A received temporary override is a product setting: the declared member applies.
-        assert!(value(&environment, TEMPORARY_ENV).is_none());
-        let temporary = root.join(relative_components(TEMPORARY_DEFAULT));
+        assert!(
+            value(
+                &environment,
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE
+            )
+            .is_none()
+        );
+        let temporary = root.join(relative_components(TEMPORARY_MEMBER));
         assert_eq!(value(&environment, "TEMP").unwrap(), temporary.as_os_str());
         assert!(temporary.is_dir() && !root.join("worker-temp").exists());
     }
@@ -989,5 +847,79 @@ mod tests {
             .iter()
             .map(|name| (OsString::from(name), OsString::new()));
         assert!(!authority_override_present(blank));
+    }
+}
+
+#[cfg(test)]
+mod successor_tests {
+    use super::*;
+
+    fn named<'a>(environment: &'a [(OsString, OsString)], name: &str) -> Vec<&'a OsString> {
+        environment
+            .iter()
+            .filter(|(key, _)| environment_name_matches(key, name))
+            .map(|(_, value)| value)
+            .collect()
+    }
+
+    fn home() -> (OsString, OsString) {
+        let name = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
+        (
+            OsString::from(name),
+            env::var_os(name).unwrap_or_else(|| env::temp_dir().into_os_string()),
+        )
+    }
+
+    #[test]
+    fn a_successor_keeps_a_selected_root_and_resolves_the_default_itself() {
+        // Resolved, since a root reached through a link is refused.
+        let root = std::fs::canonicalize(env::temp_dir())
+            .unwrap()
+            .join("cadrumo-successor-root");
+        let selected = successor_host_environment([
+            home(),
+            (OsString::from(ROOT_VARIABLE), root.clone().into_os_string()),
+            (OsString::from("CADRUMO_UNDECLARED"), OsString::from("x")),
+        ])
+        .unwrap();
+        let carried = validated_absolute_path(&root).unwrap().into_os_string();
+        assert_eq!(named(&selected, ROOT_VARIABLE), [&carried]);
+        assert!(named(&selected, "CADRUMO_UNDECLARED").is_empty());
+        assert_eq!(named(&selected, home().0.to_str().unwrap()).len(), 1);
+
+        let default = successor_host_environment([home()]).unwrap();
+        assert!(named(&default, ROOT_VARIABLE).is_empty());
+        // A relative root selects nothing and refuses the successor.
+        assert!(
+            successor_host_environment([
+                home(),
+                (OsString::from(ROOT_VARIABLE), OsString::from("relative"))
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn an_absent_root_is_created_owner_only_and_an_existing_one_is_kept() {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::fs::canonicalize(env::temp_dir())
+            .unwrap()
+            .join(format!("cadrumo-root-{}-{nanos}", std::process::id()));
+        let root = base.join("storage");
+        create_storage_root(&root).unwrap();
+        assert!(root.is_dir());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&root).unwrap().permissions().mode();
+            assert_eq!(mode & 0o077, 0, "{mode:o}");
+        }
+        std::fs::write(root.join("kept"), b"").unwrap();
+        create_storage_root(&root).unwrap();
+        assert!(root.join("kept").exists());
+        std::fs::remove_dir_all(&base).unwrap();
     }
 }

@@ -1520,3 +1520,288 @@ to_revision = "2025-y-siguientes"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-27-2014:art-36-2"]
 source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT DP200016B: 2024 prints [00296] on the La Palma, La Gomera y El Hierro 2024 row; 2025 prints it on the
+# 2025(*) row and carries the 2024 cohort on boxes [01805], [01806] and [01847], so the 2024 row's box [00296] ends.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00296-2024-2025-y-siguientes-retired"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200016: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2046 (field 71) prints [00022] on this sheet;
+# aeat-dr-200-2025 prints no [00022] on DP200016.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00022-dp200016-2024-2025-retired"
+continuidad_id = "dp200016-00022"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200016: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2047 (field 72) prints [00023] on this sheet;
+# aeat-dr-200-2025 prints no [00023] on DP200016.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00023-dp200016-2024-2025-retired"
+continuidad_id = "dp200016-00023"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200016: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2050 (field 75) prints [00042] on this sheet;
+# aeat-dr-200-2025 prints no [00042] on DP200016.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00042-dp200016-2024-2025-retired"
+continuidad_id = "dp200016-00042"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200017: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2316 (field 6) prints [00061] on this sheet;
+# aeat-dr-200-2025 prints no [00061] on DP200017.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00061-dp200017-2024-2025-retired"
+continuidad_id = "dp200017-00061"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4115 (field 65) prints [00063] on this sheet;
+# aeat-dr-200-2025 prints no [00063] on DP200024.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00063-dp200024-2024-2025-retired"
+continuidad_id = "dp200024-00063"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4117 (field 67) prints [00065] on this sheet;
+# aeat-dr-200-2025 prints no [00065] on DP200024.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00065-dp200024-2024-2025-retired"
+continuidad_id = "dp200024-00065"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4121 (field 71) prints [00069] on this sheet;
+# aeat-dr-200-2025 prints no [00069] on DP200024.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00069-dp200024-2024-2025-retired"
+continuidad_id = "dp200024-00069"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200026B: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4601 (field 6) prints [00073] on this sheet;
+# aeat-dr-200-2025 prints no [00073] on DP200026B.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00073-dp200026b-2024-2025-retired"
+continuidad_id = "is-correccion-por-gravamen-temporal-energetico-art-1-ley-38-y-aumento-permanentes"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200026B: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4602 (field 7) prints [00074] on this sheet;
+# aeat-dr-200-2025 prints no [00074] on DP200026B.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00074-dp200026b-2024-2025-retired"
+continuidad_id = "is-amortizacion-acelerada-de-determinados-vehiculos-y-de-nuevas-aumento-permanentes"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:da-18"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200016B: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2213 (field 82) prints [00193] on this sheet;
+# aeat-dr-200-2025 prints no [00193] on DP200016B.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00193-dp200016b-2024-2025-retired"
+continuidad_id = "is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018C: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2817 (field 10) prints [00248] on this sheet;
+# aeat-dr-200-2025 prints no [00248] on DP200018C.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00248-dp200018c-2024-2025-retired"
+continuidad_id = "dp200018c-00248"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2537 (field 51) prints [00352] on this sheet;
+# aeat-dr-200-2025 prints no [00352] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00352-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividade-y-ix-centenario-de-la-reconquista-de-sig-deduccion-pendiente-generada"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2538 (field 52) prints [00353] on this sheet;
+# aeat-dr-200-2025 prints no [00353] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00353-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividade-y-ix-centenario-de-la-reconquista-de-sig-aplicado-en-esta-liquidacion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2539 (field 53) prints [00354] on this sheet;
+# aeat-dr-200-2025 prints no [00354] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00354-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-activi-y-ix-centenario-de-la-reconquista-de-pendiente-de-aplicacion-en-periodos-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2540 (field 54) prints [00425] on this sheet;
+# aeat-dr-200-2025 prints no [00425] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00425-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividade-y-50-aniversario-del-fallecimiento-de-cl-deduccion-pendiente-generada"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2542 (field 55) prints [00428] on this sheet;
+# aeat-dr-200-2025 prints no [00428] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00428-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividade-y-50-aniversario-del-fallecimiento-de-cl-aplicado-en-esta-liquidacion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2544 (field 56) prints [00429] on this sheet;
+# aeat-dr-200-2025 prints no [00429] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00429-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-activi-y-50-aniversario-del-fallecimiento-d-pendiente-de-aplicacion-en-periodos-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2546 (field 57) prints [00433] on this sheet;
+# aeat-dr-200-2025 prints no [00433] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00433-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividades-y-nuevas-metas-ii-nmii-deduccion-pendiente-generada"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2547 (field 58) prints [00434] on this sheet;
+# aeat-dr-200-2025 prints no [00434] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00434-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividades-y-nuevas-metas-ii-nmii-aplicado-en-esta-liquidacion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2548 (field 59) prints [00435] on this sheet;
+# aeat-dr-200-2025 prints no [00435] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00435-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividades-y-nuevas-metas-ii-nmii-pendiente-de-aplicacion-en-periodos-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200017: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2320 (field 10) prints [00478] on this sheet;
+# aeat-dr-200-2025 prints no [00478] on DP200017.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00478-dp200017-2024-2025-retired"
+continuidad_id = "dp200017-00478"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200017: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2317 (field 7) prints [00498] on this sheet;
+# aeat-dr-200-2025 prints no [00498] on DP200017.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00498-dp200017-2024-2025-retired"
+continuidad_id = "dp200017-00498"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2549 (field 60) prints [00522] on this sheet;
+# aeat-dr-200-2025 prints no [00522] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00522-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividades-y-programa-deporte-inclusivo-ii-di2-deduccion-pendiente-generada"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2550 (field 61) prints [00523] on this sheet;
+# aeat-dr-200-2025 prints no [00523] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00523-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-actividades-y-programa-deporte-inclusivo-ii-di2-aplicado-en-esta-liquidacion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200018: aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2551 (field 62) prints [00537] on this sheet;
+# aeat-dr-200-2025 prints no [00537] on DP200018.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00537-dp200018-2024-2025-retired"
+continuidad_id = "is-deducc-para-incentivar-determ-activi-y-programa-deporte-inclusivo-ii-di2-pendiente-de-aplicacion-en-periodos-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-529-2026:art-1"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]

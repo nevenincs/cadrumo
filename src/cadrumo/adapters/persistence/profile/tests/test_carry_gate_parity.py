@@ -36,14 +36,12 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -59,7 +57,7 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "9ab6fcf1-b639-4a5f-88ef-7a6e4e25b0eb"  # was 'revision-carry-gate-test'
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _MODELO = "303"
 _YEAR = 2025
 _SOURCE_PERIOD = "1T"
@@ -179,9 +177,9 @@ def _public_carry_outcomes(
             stamped_revision_id=canonical_stamp,
         )
         if stamped_revision_id != canonical_stamp:
-            statement = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-                SecureObjectRow.object_key
+            statement = select(secure_objects_table).where(
+                secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+                secure_objects_table.c.object_key
                 == observation_key(
                     _MODELO,
                     Period.from_year_and_code(_YEAR, _SOURCE_PERIOD),
@@ -229,7 +227,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(
     tmp_path: Path, case: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         if case == "matching":
             stamp = _law_revision_id()
             expected = False
@@ -254,7 +252,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(
 
 def test_shared_gate_refuses_unresolvable_source() -> None:
     """A source context the registry cannot resolve is refused, not carried."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             revision_carry_outcome(
                 RegistrySnapshotRef(

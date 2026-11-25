@@ -10,20 +10,25 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import bound_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.user_profile.language_resolver import mirror_profile_output_language_hint
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
+from .profile_cli_support import invoke_protected_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,6 +62,10 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "identity.name": "Lucia",
             "identity.surnames": "Navarro",
             "activities.description": "",
+            # Stated, not defaulted: an unstated large-company condition selects
+            # neither Modelo 303 cadence, so readiness would also ask for it and
+            # the activity description would no longer be the one gap.
+            "censo.large_company": "false",
         },
         log_in=False,
     )
@@ -88,7 +97,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
         ).revision.id,
     )
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         validate = invoke_protected_profile(profile_name, "validate", profile_name)
         assert validate.exit_code == 2, validate.output
         assert "readiness\tblocked" in validate.output
@@ -135,7 +144,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
             ],
         )  # fmt: skip
         assert readiness_json.exit_code == 2, readiness_json.output
-        readiness_payload = _payload(readiness_json.output)
+        readiness_payload = unwrap_schema_envelope(readiness_json.output)
         (readiness_missing_row,) = readiness_payload["missing"]
         assert readiness_missing_row["selector"] and readiness_missing_row["label"]
         assert readiness_missing_row["label"] != readiness_missing_row["selector"]
@@ -166,19 +175,41 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "renta_taxpayer.birth_date": "1952-02-12",
             "renta_taxpayer.marital_status": "3",
             "renta_family.situacion_familiar": "soltero",
+            # Stated, not defaulted: an unstated residence leaves the IRPF route,
+            # and with it Modelo 130 applicability, undecided. An unstated
+            # Art. 109 RIRPF coverage schedules no Modelo 130 quarter, and an
+            # unstated large-company condition selects neither Modelo 303
+            # cadence, so neither would reach the calendar as not applicable.
+            "taxpayer_type.fiscal_residency": "resident_irpf",
+            "irpf.art109_activity_income_withholding_ge_70pct": "false",
+            "censo.large_company": "false",
         },
         log_in=False,
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
+    # The newest authored Renta edition, a closed exercise the registry calculates at filing grade.
+    exercise = str(newest_authored_edition("100"))
+    # A retirement pension is work income (LIRPF art. 17.2.a), so its gross reaches box 0003 from the
+    # payer's certificate, never from a typed casilla.
+    with bound_test_profile_record(profile_id):
+        seed_payer_certificate(
+            operation=published_authority_operation(),
+            taxpayer_tax_id="12345678Z",
+            ejercicio=int(exercise),
+            payer_tax_id="B00010082",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=Decimal("2700"),
+            importe_integro_dinerario=Decimal("27000"),
+        )
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         validate = invoke_protected_profile("pere-landlord", "validate", "pere-landlord")
         assert validate.exit_code == 0, validate.output
         assert "readiness\tready" in validate.output
 
         status = invoke_protected_profile("pere-landlord", "status", json_output=True)
         assert status.exit_code == 0, status.output
-        status_payload = _payload(status.output)
+        status_payload = unwrap_schema_envelope(status.output)
         assert status_payload["configured"] is True
         assert status_payload["activity_present"] is False
 
@@ -193,19 +224,19 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
                 "app", "overview", "calendar",
                 "--from", "2026-01-01",
                 "--to", "2026-12-31",
-                "--show-suppressed", "--allow-incomplete",
+                "--show-suppressed",
             ],
         )  # fmt: skip
         assert calendar.exit_code == 0, calendar.output
         assert "100\t2025 0A" in calendar.output
-        assert "130" in calendar.output
-        assert "303" in calendar.output
+        assert "suppressed	130	2026 1T	verdict=not_applicable" in calendar.output
+        assert "suppressed	303	2026 1T	verdict=not_applicable" in calendar.output
 
         readiness = _invoke_profile_cli(
             "pere-landlord",
             [
                 "app", "modelo", "readiness",
-                "--modelo", "100", "--revision-id", "2025", "--year", "2025", "--period", "0A",
+                "--modelo", "100", "--revision-id", exercise, "--year", exercise, "--period", "0A",
             ],
         )  # fmt: skip
         assert readiness.exit_code == 2, readiness.output
@@ -215,8 +246,8 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "app", "modelo", "work", "create",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--name", "Pere renta 2025", "--by", "continuity-test",
+                "--modelo", "100", "--year", exercise, "--period", "0A",
+                "--name", f"Pere renta {exercise}", "--by", "continuity-test",
             ],
         )  # fmt: skip
         assert renta.exit_code == 0, renta.output
@@ -226,13 +257,24 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "--format", "json", "app", "modelo", "work", "calculate",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--casilla", "0003=27000", "--casilla", "0102=8400",
+                "--modelo", "100", "--year", exercise, "--period", "0A",
+                "--casilla", "0102=8400",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+                "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
             ],
         )  # fmt: skip
         assert calculated.exit_code == 0, calculated.output
-        calculation_payload = _payload(calculated.output)
+        calculation_payload = unwrap_schema_envelope(calculated.output)
         assert calculation_payload["calculation_revision_id"]
         assert Decimal(str(calculation_payload["casilla_values"]["0545"])) > Decimal("0")
         assert Decimal(str(calculation_payload["casilla_values"]["0546"])) > Decimal("0")
@@ -257,7 +299,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         facts={
             "preferences.output_language": "en",
             "taxpayer_type.entity_type": "attribution_entity",
-            "identity.tax_id": "E12345674",
+            "identity.tax_id": "E00015008",
             "identity.name": "Comunidad sin actividad",
             "activities.description": "",
         },
@@ -268,10 +310,10 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         status = invoke_protected_profile("comunidad-sin-actividad", "status", json_output=True)
         assert status.exit_code == 0, status.output
-        status_payload = _payload(status.output)
+        status_payload = unwrap_schema_envelope(status.output)
         assert status_payload["configured"] is False
         assert status_payload["activity_present"] is False
 
@@ -284,7 +326,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         assert "work_unit_id" not in work_create.output, work_create.output
 
 
-def test_economic_activity_m100_still_requires_the_direct_estimation_modality() -> None:
+def test_economic_activity_m100_derives_the_direct_estimation_modality_from_the_profile() -> None:
     """The non-business formula guard must not default a real activity's modality."""
     profile_id = register_cli_profile(
         label="autonomo-renta",
@@ -308,7 +350,7 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         work_create = _invoke_profile_cli(
             "autonomo-renta",
             ["app", "modelo", "work", "create", "--modelo", "100", "--year", "2025", "--period", "0A"],
@@ -320,10 +362,20 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
             [
                 "app", "modelo", "work", "calculate",
                 "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--casilla", "0003=27000",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+                "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+                "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
             ],
         )  # fmt: skip
-        # The registered missing-input calculation error is ERROR (exit 1).
-        assert calculated.exit_code == 1, calculated.output
-        assert "renta-modelo-100-estimacion-directa-es-normal" in calculated.output, calculated.output
+        # The profile states the regime, so the modality is derived and not asked for.
+        assert calculated.exit_code == 0, calculated.output
+        assert "renta-modelo-100-estimacion-directa-es-normal" not in calculated.output, calculated.output

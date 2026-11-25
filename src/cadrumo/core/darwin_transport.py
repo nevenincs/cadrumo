@@ -56,13 +56,20 @@ def _open_directory(path: Path) -> int:
 
 def _private_identity(descriptor: int) -> tuple[int, int]:
     metadata = os.fstat(descriptor)
-    if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != _owner_uid() or stat.S_IMODE(metadata.st_mode) != 0o700:
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or metadata.st_uid != _owner_uid()
+        or stat.S_IMODE(metadata.st_mode) != stat.S_IRWXU
+    ):
         raise PermissionError("Darwin transport directory must be owned by the current user with mode 0700")
     return metadata.st_dev, metadata.st_ino
 
 
-class _Namespace:
+class Namespace:
+    """A pinned Darwin per-user cache directory held by descriptor and identity."""
+
     def __init__(self, base: Path) -> None:
+        """Open the base directory by descriptor and pin its owner and mode identity."""
         self.base = base
         self.path = base / PRODUCT_IDENTITY.python_package
         self.base_fd = _open_directory(base)
@@ -86,6 +93,7 @@ class _Namespace:
             os.close(descriptor)
 
     def verify(self, *, create: bool) -> Path:
+        """Verify the pinned base directory and return the socket directory, optionally created."""
         if sys.platform == "win32":
             raise OSError("Native POSIX directory custody is unavailable on Windows")
         with self.lock:
@@ -116,14 +124,15 @@ class _Namespace:
 
 
 @cache
-def _namespace() -> _Namespace:
+def namespace() -> Namespace:
+    """Return the Darwin user cache namespace, refusing when it is not an absolute directory."""
     value = _user_cache_directory()
     if not (value is not None and value) or not Path(value).is_absolute():
         raise OSError("Darwin user cache query returned no absolute directory")
-    return _Namespace(Path(value).resolve(strict=True))
+    return Namespace(Path(value).resolve(strict=True))
 
 
 def darwin_socket_directory(*, create: bool = False) -> Path:
     """Resolve once, retain handles and refuse replacement; never use an ambient fallback."""
     with _RESOLUTION_LOCK:
-        return _namespace().verify(create=create)
+        return namespace().verify(create=create)

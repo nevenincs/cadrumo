@@ -28,12 +28,12 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.person_acts import ACCESS_ADMINISTRATION_OPERATIONS
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -291,7 +291,7 @@ async def test_aeat_setup_handoff_through_admitted_mcp_measures_calls_and_keeps_
                     projection = completion["document"]["projection"]
                     timings.append(time.perf_counter() - started)
                     assert projection["kind"] == "setup"
-                    assert projection["setup"]["url"] == f"cadrumo://profiles/{runtime.profile_id}/aeat-auth"
+                    assert projection["setup"]["url"] == "cadrumo://view/profile/aeat-access"
                     assert projection["sync_readiness"]["ready"] is False
                     assert any(item["field"] == "auth.provider" for item in projection["setup"]["missing"])
                 denied = await sdk.call_tool(
@@ -315,7 +315,7 @@ async def test_aeat_setup_handoff_through_admitted_mcp_measures_calls_and_keeps_
                 _, saved_readiness = await editor.save(
                     AuthProviderKind.CLAVE_MOVIL,
                     ClaveMovilRoute.APP_REQUEST,
-                    {"identity.tax_id": "X1234567L", "auth.dni_nie": "X1234567L", "auth.numero_soporte": "E12345678"},
+                    {"identity.tax_id": "X0001500M", "auth.numero_soporte": "E12345678"},
                     "",
                     None,
                 )

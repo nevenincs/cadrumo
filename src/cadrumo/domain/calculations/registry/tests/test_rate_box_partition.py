@@ -40,11 +40,13 @@ from ..rate_box_partition import (
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import filing_year_envelope
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
 _LEGAL = ("ley-37-1992:art-91",)
 _SOURCE = ("aeat-dr-390-2025",)
 
@@ -104,10 +106,10 @@ def _revision(
     casillas: tuple[CasillaDefinition, ...],
 ) -> ModeloRevision:
     return ModeloRevision(
-        id="2010-y-siguientes",
-        localization_key="test.schema.revision.2010-y-siguientes.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        id=f"{_YEAR}-y-siguientes",
+        localization_key=f"test.schema.revision.{_YEAR}-y-siguientes.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
         bindings=bindings,

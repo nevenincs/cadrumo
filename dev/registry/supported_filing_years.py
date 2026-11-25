@@ -12,8 +12,9 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import ModeloId
 from cadrumo.domain.calculations.registry.modelo_inception import DeclaredInception
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 

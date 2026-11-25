@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { ComponentProps, ReactNode } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
@@ -6,7 +7,8 @@ import {
   FIXTURE_SKILLS,
   MANY_FIXTURE_SKILLS,
 } from "@/dev/fixtures/agentSkills";
-import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { offeredSelection } from "../../shell/agentCatalog";
+import { agentOffer } from "../../shell/agentOffer";
 import { SOURCE_LOCALE, translator } from "../../shell/strings";
 import { Composer } from "./Composer";
 import type {
@@ -32,7 +34,12 @@ export const KEEP_DRAFT = () => false;
 // The specimen's providers and models are the scenario host's catalog, as
 // the column deduces its choices from it: every model in it is made up and
 // named as a fixture.
-const CHOICES = catalogChoices(translator(SOURCE_LOCALE), FIXTURE_CATALOG);
+const CHOICES = agentOffer(
+  translator(SOURCE_LOCALE),
+  FIXTURE_CATALOG,
+  null,
+  null,
+);
 
 export const PROVIDERS: ProviderOption[] = CHOICES.providers;
 
@@ -90,13 +97,12 @@ export const UPLOADING_FILES: StagedAttachment[] = [
   ...READY_FILES.slice(0, 1),
   {
     id: "u1",
-    name: "facturas-septiembre.zip",
-    extension: "zip",
+    name: "facturas-septiembre.pdf",
+    extension: "pdf",
     sizeBytes: 8_400_000,
-    kind: "archive",
+    kind: "document",
     state: "uploading",
     progress: 0.4,
-    memberCount: 23,
   },
   {
     id: "u2",
@@ -175,12 +181,28 @@ export const UploadsInProgress: Story = {
   },
 };
 
+// The menu follows the caret, so a draft that was given opens it the way a
+// person would: by putting the caret in the field, at the end of the draft.
+const opensMenu =
+  (atLeast: number): Story["play"] =>
+  async ({ canvasElement }) => {
+    const field = within(canvasElement).getByRole("textbox");
+    await userEvent.click(field);
+    await userEvent.keyboard("{End}");
+    await waitFor(() =>
+      expect(
+        document.querySelectorAll('[role="listbox"] [role="option"]').length,
+      ).toBeGreaterThanOrEqual(atLeast),
+    );
+  };
+
 const BUNDLED_SKILLS = () => Promise.resolve(FIXTURE_SKILLS);
 const HUNDREDS_OF_SKILLS = () => Promise.resolve(MANY_FIXTURE_SKILLS);
 
 export const SlashSkills: Story = {
   name: "Slash: skills and commands",
   args: { defaultDraft: "/", skills: BUNDLED_SKILLS, onSkillCommand: NOOP },
+  play: opensMenu(FIXTURE_SKILLS.length),
 };
 
 export const SlashFiltered: Story = {
@@ -190,11 +212,13 @@ export const SlashFiltered: Story = {
     skills: BUNDLED_SKILLS,
     onSkillCommand: NOOP,
   },
+  play: opensMenu(1),
 };
 
 export const SlashHundreds: Story = {
   name: "Slash: hundreds of skills scroll",
   args: { defaultDraft: "/", skills: HUNDREDS_OF_SKILLS },
+  play: opensMenu(MANY_FIXTURE_SKILLS.length),
 };
 
 export const SlashCommandArgument: Story = {
@@ -204,6 +228,7 @@ export const SlashCommandArgument: Story = {
     skills: BUNDLED_SKILLS,
     onSkillCommand: NOOP,
   },
+  play: opensMenu(1),
 };
 
 export const Running: Story = {

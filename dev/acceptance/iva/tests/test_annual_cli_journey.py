@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,10 +14,61 @@ from dev.packaging.installed_runtime import installed_cli_runtime
 from ..annual_cli_journey import (
     run_iva_annual_foundation_cli_journey,
     run_iva_annual_m390_cli_journey,
+    run_iva_annual_prorrata_settlement_cli_journey,
 )
-from .journey_year_support import newest_fully_authored_journey_year
+from ..annual_contracts import (
+    IvaAnnualFoundationCliJourneyReceipt,
+    IvaAnnualM390CliJourneyReceipt,
+    IvaAnnualProrrataSettlementCliJourneyReceipt,
+    IvaProrrataSettlementScenario,
+    IvaQuarterlyLocalFilingReceipt,
+)
+from ..annual_prorrata_settlement import PRORRATA_SETTLEMENT_COORDINATES
+from ..cli_journey import SanitizedCommandReceipt
+from .journey_year_support import newest_fully_authored_journey_year, supported_journey_years
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _assert_receipt_is_private_and_clean(
+    receipt: IvaAnnualFoundationCliJourneyReceipt
+    | IvaAnnualM390CliJourneyReceipt
+    | IvaAnnualProrrataSettlementCliJourneyReceipt,
+) -> None:
+    rendered = str(receipt.to_dict())
+    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
+    assert "profile_passphrase" not in rendered
+    assert "attachment:" not in rendered
+    assert all(command.returncode == 0 for command in receipt.commands)
+
+
+def _assert_local_pending_filing(filing: IvaQuarterlyLocalFilingReceipt) -> None:
+    assert filing.work_unit_id
+    assert filing.calculation_revision_id
+    assert filing.verification_report_id
+    assert filing.verification_status
+    assert filing.filing_record_id
+    assert filing.filing_origin == "local"
+    assert filing.filing_confirmation == "pendiente"
+    assert filing.filing_aeat_accepted is False
+    assert filing.filing_live_submission is False
+
+
+def _assert_m390_commands(commands: Sequence[SanitizedCommandReceipt]) -> None:
+    assert sum(command.argv[2:6] == ("app", "modelo", "work", "file") for command in commands) == 4
+    attestations = [
+        command for command in commands if command.argv[2:6] == ("app", "modelo", "work", "attest-m303-exonerado-390")
+    ]
+    assert len(attestations) == 1
+    assert attestations[0].argv[attestations[0].argv.index("--period") + 1] == "4T"
+    assert sum("--m303-exonerado-390-attachment-id" in command.argv for command in commands) == 1
+    assert sum("--no-joint-return-elected" in command.argv for command in commands) == 4
+    assert not any("--m303-filing-evidence" in command.argv for command in commands)
+    assert any(
+        command.argv[2:6] == ("app", "modelo", "work", "create") and "390" in command.argv and "0A" in command.argv
+        for command in commands
+    )
+    assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in commands)
 
 
 # Measured on a quiet host on 2026-09-23: 96 s wheel build and install, then 337 s of fresh-process
@@ -64,11 +116,7 @@ def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
     assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)
     assert not any("attest-m303-exonerado-390" in command.argv for command in receipt.commands)
     assert not any("--m303-exonerado-390-attachment-id" in command.argv for command in receipt.commands)
-    rendered = str(receipt.to_dict())
-    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
-    assert "profile_passphrase" not in rendered
-    assert "attachment:" not in rendered
-    assert all(command.returncode == 0 for command in receipt.commands)
+    _assert_receipt_is_private_and_clean(receipt)
 
 
 # Measured on a quiet host on 2026-09-23: 713 s of fresh-process authenticated CLI calls across four
@@ -105,15 +153,7 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
         Decimal("525.00"),
     )
     for filing in receipt.quarterly_filings:
-        assert filing.work_unit_id
-        assert filing.calculation_revision_id
-        assert filing.verification_report_id
-        assert filing.verification_status
-        assert filing.filing_record_id
-        assert filing.filing_origin == "local"
-        assert filing.filing_confirmation == "pendiente"
-        assert filing.filing_aeat_accepted is False
-        assert filing.filing_live_submission is False
+        _assert_local_pending_filing(filing)
     assert Decimal(receipt.annual_devengada) == Decimal("1470.00")
     assert Decimal(receipt.annual_deducible) == Decimal("105.00")
     assert Decimal(receipt.annual_resultado) == Decimal("1365.00")
@@ -125,24 +165,75 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
     assert receipt.source_identity
     assert receipt.package_identity.startswith("cadrumo==")
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
-    assert sum(command.argv[2:6] == ("app", "modelo", "work", "file") for command in receipt.commands) == 4
-    attestations = [
-        command
-        for command in receipt.commands
-        if command.argv[2:6] == ("app", "modelo", "work", "attest-m303-exonerado-390")
-    ]
-    assert len(attestations) == 1
-    assert attestations[0].argv[attestations[0].argv.index("--period") + 1] == "4T"
-    assert sum("--m303-exonerado-390-attachment-id" in command.argv for command in receipt.commands) == 1
-    assert sum("--no-joint-return-elected" in command.argv for command in receipt.commands) == 4
-    assert not any("--m303-filing-evidence" in command.argv for command in receipt.commands)
-    assert any(
-        command.argv[2:6] == ("app", "modelo", "work", "create") and "390" in command.argv and "0A" in command.argv
-        for command in receipt.commands
+    _assert_m390_commands(receipt.commands)
+    _assert_receipt_is_private_and_clean(receipt)
+
+
+def _run_settlement_journey(
+    tmp_path: Path, installed_wheel_aeat: Path, *, year: int, scenario: IvaProrrataSettlementScenario
+) -> IvaAnnualProrrataSettlementCliJourneyReceipt:
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    assert (authority_root / "authority.current.json").is_file(), authority_root
+    receipt = run_iva_annual_prorrata_settlement_cli_journey(
+        executable=installed_wheel_aeat,
+        authority_root=authority_root,
+        storage_root=tmp_path / "secure-store",
+        artifact_root=tmp_path / "private-source-artifacts",
+        year=year,
+        scenario=scenario,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
-    assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)
-    rendered = str(receipt.to_dict())
-    assert "synthetic-annual-foundation-purchase.pdf" not in rendered
-    assert "profile_passphrase" not in rendered
-    assert "attachment:" not in rendered
+    assert receipt.filing_year == year
+    assert receipt.scenario == scenario.value
     assert all(command.returncode == 0 for command in receipt.commands)
+    return receipt
+
+
+def test_installed_cli_exports_the_verified_last_quarter_before_filing_in_every_supported_year(
+    tmp_path: Path, installed_wheel_aeat: Path
+) -> None:
+    """The fourth quarter exports with the register as filing will leave it, and filing writes the exported figure."""
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    years = supported_journey_years(authority_root, PRORRATA_SETTLEMENT_COORDINATES)
+    assert years
+    for year in years:
+        receipt = _run_settlement_journey(
+            tmp_path / str(year), installed_wheel_aeat, year=year, scenario=IvaProrrataSettlementScenario.SETTLED
+        )
+
+        assert (receipt.exported_opcion, receipt.exported_revocacion) == ("2", "2")
+        assert Decimal(receipt.next_year_provisional_percentage) == Decimal(receipt.definitive_percentage)
+        assert receipt.filing_record_id
+        exports = [
+            index for index, command in enumerate(receipt.commands) if command.argv[2:5] == ("app", "modelo", "export")
+        ]
+        filings = [
+            index
+            for index, command in enumerate(receipt.commands)
+            if command.argv[2:6] == ("app", "modelo", "work", "file")
+        ]
+        assert len(exports) == 1
+        assert len(filings) == len(("1T", "2T", "3T", "4T"))
+        assert exports[0] < filings[-1]
+        _assert_receipt_is_private_and_clean(receipt)
+
+
+@pytest.mark.parametrize(
+    "scenario", (IvaProrrataSettlementScenario.UNDECLARED_SECTOR, IvaProrrataSettlementScenario.PRIOR_YEAR_ESPECIAL)
+)
+def test_installed_cli_refuses_a_last_quarter_whose_register_cannot_cover_the_year(
+    tmp_path: Path, installed_wheel_aeat: Path, scenario: IvaProrrataSettlementScenario
+) -> None:
+    """A declared sector with no entry, or an especial year with no declaration after it, stops the export."""
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    year = max(supported_journey_years(authority_root, PRORRATA_SETTLEMENT_COORDINATES))
+
+    receipt = _run_settlement_journey(tmp_path, installed_wheel_aeat, year=year, scenario=scenario)
+
+    assert receipt.refusal_code
+    assert not receipt.filing_record_id
+    assert not receipt.exported_opcion

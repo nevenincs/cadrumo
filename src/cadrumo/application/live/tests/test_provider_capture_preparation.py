@@ -306,7 +306,7 @@ async def test_an_output_root_that_leaves_its_allowed_place_is_refused_before_an
         "redirected_by_link": redirected,
     }
 
-    with override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_local_storage_root=storage):
+    with override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_storage_root=storage):
         for reason, output_root in refused.items():
             capabilities = _Capabilities()
             with pytest.raises(LiveApplicationInputError) as refusal:
@@ -334,7 +334,7 @@ async def test_an_output_root_really_inside_storage_or_named_outside_it_reaches_
         tmp_path / "a directory the operator named",
     )
 
-    with override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_local_storage_root=storage):
+    with override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_storage_root=storage):
         for output_root in admitted:
             capabilities = _Capabilities()
             # The context has nothing to read: reaching it is the proof the root was admitted.
@@ -350,7 +350,7 @@ def test_the_output_root_refusal_does_not_repeat_the_path(tmp_path: Path) -> Non
     storage, redirected = _storage_with_redirected_capture_root(tmp_path)
 
     with (
-        override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_local_storage_root=storage),
+        override_settings(cadrumo_active_profile=str(_PROFILE_ID), cadrumo_storage_root=storage),
         pytest.raises(LiveApplicationInputError) as refusal,
     ):
         require_capture_output_root(redirected)

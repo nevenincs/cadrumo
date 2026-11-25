@@ -13,7 +13,7 @@ from ..row_models import (
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
 )
-from ._row_model_support import _BaseRevisionIdKwargs
+from .row_model_support import BaseRevisionIdKwargs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -46,7 +46,7 @@ _REVISION_ROW_FACTORIES: tuple[tuple[str, _DetailRowFactory], ...] = (
 )
 
 
-def _revision_base(work_unit_id: str) -> _BaseRevisionIdKwargs:
+def _revision_base(work_unit_id: str) -> BaseRevisionIdKwargs:
     return {
         "work_unit_id": work_unit_id,
         "input_values_by_casilla_id": {},
@@ -128,3 +128,38 @@ class TestRevisionIdAcrossRowTypes:
             source_provenance=(),
         )
         assert id_forward == id_reversed
+
+
+def _operador(importe: Decimal) -> Modelo349OperadorRow:
+    return Modelo349OperadorRow(
+        codigo_pais="DE",
+        nif_comunitario="DE123456789",
+        razon_social="Deutschland GmbH",
+        clave_operacion="E",
+        importe=importe,
+    )
+
+
+def _id_of(row: Modelo349OperadorRow) -> str:
+    return derive_calculation_revision_id(
+        **_revision_base("e" * 64),
+        detail_rows=(row,),
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+
+
+class TestDetailRowAmountSpelling:
+    @pytest.mark.parametrize("zero", ["-0", "-0.00", "0.00", "0E+3", "-0E-2"])
+    def test_every_spelling_of_zero_derives_one_id(self, zero: str) -> None:
+        assert _id_of(_operador(Decimal(zero))) == _id_of(_operador(Decimal("0")))
+
+    def test_a_non_zero_amount_still_spells_as_the_stored_ids_were_derived(self) -> None:
+        from ..calculation_revision_identity import detail_row_amount_text
+
+        for amount in ("1000.00", "3000", "12.50", "0.0000001", "123456789.10", "-40.0", "7"):
+            assert detail_row_amount_text(Decimal(amount)) == str(Decimal(amount).normalize()), amount
+
+    def test_equal_non_zero_amounts_derive_one_id_and_unequal_ones_do_not(self) -> None:
+        assert _id_of(_operador(Decimal("1000"))) == _id_of(_operador(Decimal("1000.00")))
+        assert _id_of(_operador(Decimal("1000"))) != _id_of(_operador(Decimal("1000.01")))

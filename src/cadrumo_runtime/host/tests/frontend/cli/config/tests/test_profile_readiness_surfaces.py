@@ -91,7 +91,13 @@ def test_status_and_view_count_the_same_missing_required_fields() -> None:
     """
     view_result = profile_view_document()["result"]
     assert isinstance(view_result, dict)
-    missing_in_view = [issue for issue in view_result["issues"] if issue["code"] == "required_field_missing"]
+    # Schema-required and conditionally required gaps alike: ``status`` counts
+    # both, from the same completeness answer the view's validation reads.
+    missing_in_view = [
+        issue
+        for issue in view_result["issues"]
+        if issue["code"] in {"required_field_missing", "conditional_required_field_missing"}
+    ]
 
     status = profile_cli("status")
     evidence = json.loads(status.stdout)["result"]["precondition_action"]["evidence"]
@@ -119,8 +125,8 @@ def test_view_publishes_the_identity_its_spec_declares() -> None:
 @pytest.mark.usefixtures("native_cli_profile_view")
 def test_cli_edit_is_read_back_through_native_runtime_view() -> None:
     """The runtime view reflects a CLI mutation without borrowing local custody."""
-    edited = profile_cli("edit", "--quiet", "--notes", "Native readback")
+    edited = profile_cli("edit", "--quiet", "--legal-name", "Native readback")
     assert edited.exit_code == 0, edited.output
     result = profile_view_document()["result"]
     assert isinstance(result, dict)
-    assert any(fact["path"] == "identity.notes" and fact["value"] == "Native readback" for fact in result["facts"])
+    assert any(fact["path"] == "identity.legal_name" and fact["value"] == "Native readback" for fact in result["facts"])

@@ -35,7 +35,7 @@ through the abstract Protocol without naming ``renta``.
 from __future__ import annotations
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 
 
@@ -56,7 +56,7 @@ def check_first_slice_routing(
     ``filing_year`` selects nothing here.
     """
     del filing_year
-    if modelo_id != Modelo("100"):
+    if modelo_id != form_for_role("renta.annual"):
         return []
     missing = renta_first_slice_binding_targets - casilla_ids
     if not missing:

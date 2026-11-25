@@ -23,6 +23,7 @@ from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -35,6 +36,8 @@ from ..registry import category_profile_years, load_category_profiles, resolve_c
 from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_ENVELOPE = filing_year_envelope()
 
 #: The amounts AEAT prints in the Manual practico Renta for each ejercicio,
 #: with 2026 derived from Orden PJC/297/2026 by AEAT's own published method.
@@ -56,8 +59,8 @@ def _citation() -> CategoryCitation:
         url=parse_http_url("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"),
         quote=tr("Texto autoritativo de prueba."),
         legal_ref="ley-35-2006:art-30",
-        valid_from=date(2022, 1, 1),
-        valid_to=date(2026, 12, 31),
+        valid_from=date(_ENVELOPE.floor, 1, 1),
+        valid_to=date(_ENVELOPE.horizon, 12, 31),
     )
 
 
@@ -82,35 +85,35 @@ def _amount(value: str, year: int) -> StatutoryCapAmount:
 
 
 def test_a_scheduled_cap_answers_the_year_asked_for() -> None:
-    rule = _rule((_amount("14057.40", 2022), _amount("16672.66", 2025)))
+    rule = _rule((_amount("14057.40", _ENVELOPE.floor), _amount("16672.66", _ENVELOPE.horizon)))
 
-    assert rule.cap_amount_for_year(2022) == Decimal("14057.40")
-    assert rule.cap_amount_for_year(2025) == Decimal("16672.66")
+    assert rule.cap_amount_for_year(_ENVELOPE.floor) == Decimal("14057.40")
+    assert rule.cap_amount_for_year(_ENVELOPE.horizon) == Decimal("16672.66")
 
 
 def test_a_year_the_schedule_does_not_cover_yields_no_amount() -> None:
     """No nearest-year fallback: an ungrounded year has no cap, it does not borrow one."""
-    assert _rule((_amount("16672.66", 2025),)).cap_amount_for_year(2019) is None
+    assert _rule((_amount("16672.66", _ENVELOPE.horizon),)).cap_amount_for_year(_ENVELOPE.floor - 1) is None
 
 
 def test_a_law_fixed_cap_still_answers_without_a_schedule() -> None:
     """The 500 euro seguro limit is genuinely constant and must stay expressible."""
     rule = _rule((), statutory_cap_eur=Decimal("500"))
 
-    assert rule.cap_amount_for_year(2022) == Decimal("500")
-    assert rule.cap_amount_for_year(2026) == Decimal("500")
+    assert rule.cap_amount_for_year(_ENVELOPE.floor) == Decimal("500")
+    assert rule.cap_amount_for_year(_ENVELOPE.horizon) == Decimal("500")
 
 
 def test_a_cap_may_not_be_both_law_fixed_and_year_referenced() -> None:
     """DISCRIMINATING: two cap modes is the ambiguity the schedule exists to remove."""
     with pytest.raises(ValidationError, match="one cap mode"):
-        _rule((_amount("16672.66", 2025),), statutory_cap_eur=Decimal("15000"))
+        _rule((_amount("16672.66", _ENVELOPE.horizon),), statutory_cap_eur=Decimal("15000"))
 
 
 def test_two_different_amounts_for_one_year_are_refused() -> None:
     """Order-dependent answers are a contradiction, not a preference."""
-    with pytest.raises(ValidationError, match="two different amounts for 2025"):
-        _rule((_amount("16672.66", 2025), _amount("15000", 2025)))
+    with pytest.raises(ValidationError, match=f"two different amounts for {_ENVELOPE.horizon}"):
+        _rule((_amount("16672.66", _ENVELOPE.horizon), _amount("15000", _ENVELOPE.horizon)))
 
 
 def test_a_scheduled_cap_requires_the_period_it_applies_over() -> None:
@@ -118,7 +121,7 @@ def test_a_scheduled_cap_requires_the_period_it_applies_over() -> None:
         ProportionalityRule.model_validate(
             {
                 "kind": require_proportionality_kind("statutory_cap"),
-                "statutory_cap_schedule": (_amount("16672.66", 2025),),
+                "statutory_cap_schedule": (_amount("16672.66", _ENVELOPE.horizon),),
                 "citations": (_citation(),),
                 "notes": tr("Regla de prueba."),
             },
@@ -130,7 +133,7 @@ def test_a_schedule_is_refused_outside_a_statutory_cap_rule() -> None:
         ProportionalityRule.model_validate(
             {
                 "kind": require_proportionality_kind("full_deductible"),
-                "statutory_cap_schedule": (_amount("16672.66", 2025),),
+                "statutory_cap_schedule": (_amount("16672.66", _ENVELOPE.horizon),),
                 "citations": (_citation(),),
                 "notes": tr("Regla de prueba."),
             },

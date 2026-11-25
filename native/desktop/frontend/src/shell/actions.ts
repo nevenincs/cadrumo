@@ -2,35 +2,28 @@
 // shortcuts all derive from it, so a chord or a label is declared exactly once.
 
 import type { IconName } from "@/components/ui/icon";
-import type { BridgeChord } from "../ipc/contract";
-
-// User-agent client hints where the engine has them (WebView2); the older
-// platform string elsewhere (WebKit), which still reports macOS correctly.
-const platform =
-  typeof navigator === "undefined"
-    ? ""
-    : ((navigator as Navigator & { userAgentData?: { platform?: string } })
-        .userAgentData?.platform ?? navigator.platform);
-export const IS_MAC = /mac|iphone|ipad/i.test(platform);
+import {
+  chordMatches,
+  chordModifiers,
+  chordText,
+  type ChordKeys,
+} from "@/shared/chords";
+import type { BridgeChord } from "../ipc/docsBridge";
+import { elementOf, type NavigationRegister } from "./navigation/register";
+import { WINDOW_VIEWS } from "./navigation/windowViews";
+import type { Translate } from "./strings";
 
 /** Where a chord fires. "global": everywhere, focused terminals included.
- * "app": everywhere except a focused terminal, which keeps the key. "docs": the
- * documentation frame and shell chrome. "terminal": only a focused terminal. */
-export type ChordScope = "global" | "app" | "docs" | "terminal";
+ * "app": everywhere except a focused terminal or the browser page, which keep
+ * the key. "browser": everywhere except a focused terminal, the browser page
+ * included: a key a real browser keeps for its own chrome, which the page never
+ * receives. "docs": the documentation frame and shell chrome. "terminal": only
+ * a focused terminal. */
+export type ChordScope = "global" | "app" | "browser" | "docs" | "terminal";
 
-export type Chord = {
-  /** KeyboardEvent.code, the physical key, so every layout reaches it. */
-  code: string;
-  /** Display text for the key itself. */
-  key: string;
-  /** Platform primary modifier: Command on macOS, Control elsewhere. */
-  mod?: boolean;
-  /** The literal Control key on every platform. */
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  scope: ChordScope;
-};
+/** A window chord, by its physical key: the documentation bridge matches `code`,
+ * so a chord matched by what it types is a page's own, not the registry's. */
+export type Chord = Omit<ChordKeys, "typed"> & { scope: ChordScope };
 
 export type Action = {
   id: string;
@@ -38,9 +31,25 @@ export type Action = {
   group: string;
   icon: IconName;
   keywords?: string;
+  /** The register element it shows, which the palette also finds it by. */
+  view?: string;
+  /** Said after the label where the label alone is ambiguous: a section's
+   * page. */
+  context?: string;
+  /** The view's own name, where the label wraps it in "Show" or "Hide". */
+  name?: string;
   chords?: readonly Chord[];
+  /** The pointer buttons (`MouseEvent.button`) that run it as its chords
+   * do, where the area under the pointer admits its chords' scope. */
+  buttons?: readonly number[];
+  /** Whether its buttons run it, where that differs from `enabled`: a key
+   * the focused element keeps for itself leaves the pointer's buttons. */
+  buttonsEnabled?: () => boolean;
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */
   hidden?: boolean;
+  /** Listed in the palette only for a query that matches it: one of many
+   * alike, such as a way to each profile section. */
+  quiet?: boolean;
   enabled?: () => boolean;
   run: () => void;
   /** What choosing it by name does, where that differs from its chord: a
@@ -48,42 +57,10 @@ export type Action = {
   choose?: () => void;
 };
 
-export type FocusArea = "terminal" | "docs" | "chrome";
-
-type Modifiers = {
-  ctrlKey: boolean;
-  metaKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-};
-
-export function chordModifiers(chord: Chord): Modifiers {
-  return {
-    metaKey: IS_MAC && !!chord.mod,
-    ctrlKey: IS_MAC ? !!chord.ctrl : !!chord.mod || !!chord.ctrl,
-    shiftKey: !!chord.shift,
-    altKey: !!chord.alt,
-  };
-}
+export type FocusArea = "terminal" | "browser" | "docs" | "chrome";
 
 export function chordLabel(chord: Chord | undefined): string {
-  if (!chord) return "";
-  const m = chordModifiers(chord);
-  if (IS_MAC) {
-    return (
-      (m.ctrlKey ? "⌃" : "") +
-      (m.altKey ? "⌥" : "") +
-      (m.shiftKey ? "⇧" : "") +
-      (m.metaKey ? "⌘" : "") +
-      chord.key
-    );
-  }
-  const parts: string[] = [];
-  if (m.ctrlKey) parts.push("Ctrl");
-  if (m.altKey) parts.push("Alt");
-  if (m.shiftKey) parts.push("Shift");
-  parts.push(chord.key);
-  return parts.join("+");
+  return chord ? chordText(chord) : "";
 }
 
 export function primaryChord(action: Action | undefined): string {
@@ -92,20 +69,10 @@ export function primaryChord(action: Action | undefined): string {
 
 const ALLOWED: Record<FocusArea, readonly ChordScope[]> = {
   terminal: ["global", "terminal"],
-  docs: ["global", "app", "docs"],
-  chrome: ["global", "app", "docs"],
+  browser: ["global", "browser"],
+  docs: ["global", "app", "browser", "docs"],
+  chrome: ["global", "app", "browser", "docs"],
 };
-
-function matches(chord: Chord, event: KeyboardEvent): boolean {
-  const m = chordModifiers(chord);
-  return (
-    event.code === chord.code &&
-    event.ctrlKey === m.ctrlKey &&
-    event.metaKey === m.metaKey &&
-    event.shiftKey === m.shiftKey &&
-    event.altKey === m.altKey
-  );
-}
 
 export function findAction(
   actions: readonly Action[],
@@ -116,12 +83,39 @@ export function findAction(
   for (const action of actions) {
     for (const chord of action.chords ?? []) {
       if (!ALLOWED[focus].includes(chord.scope)) continue;
-      if (!matches(chord, event)) continue;
+      if (!chordMatches(chord, event)) continue;
       if (action.enabled && !action.enabled()) continue;
       return action;
     }
   }
   return null;
+}
+
+/** The action a pointer button runs over `area`: the first enabled one
+ * that declares the button with a chord whose scope the area admits. */
+export function findButtonAction(
+  actions: readonly Action[],
+  button: number,
+  area: FocusArea,
+): Action | null {
+  for (const action of actions) {
+    if (!action.buttons?.includes(button)) continue;
+    const admitted = (action.chords ?? []).some((chord) =>
+      ALLOWED[area].includes(chord.scope),
+    );
+    const enabled = action.buttonsEnabled ?? action.enabled;
+    if (!admitted || (enabled && !enabled())) continue;
+    return action;
+  }
+  return null;
+}
+
+/** Whether any action declares the pointer button, enabled or not. */
+export function claimsButton(
+  actions: readonly Action[],
+  button: number,
+): boolean {
+  return actions.some((action) => action.buttons?.includes(button));
 }
 
 /** The bridge `keymap` payload: every chord the docs frame must hand back. */
@@ -136,12 +130,97 @@ export function bridgeChords(actions: readonly Action[]): BridgeChord[] {
   return out;
 }
 
-/** Palette relevance: every query word must start or occur in the text. */
+/** How the window offers one register element in the palette. The label,
+ * keywords and the way it opens come from the register; this says only
+ * what the window adds. */
+export type ViewActionSpec = {
+  /** The action's id where it is older than the register; `view.{id}`
+   * otherwise. */
+  readonly id?: string;
+  readonly icon: IconName;
+  readonly group: string;
+  readonly chords?: readonly Chord[];
+  /** What its chord and its rail button do, where that is not opening it:
+   * a pane's toggles. Chosen by name, it opens. */
+  readonly run?: () => void;
+  readonly enabled?: () => boolean;
+  /** For a pane or the panel, whether it is on screen now: its entry then
+   * offers to hide it, with the same toggle its chord runs, and otherwise
+   * to show it. A page has none: its entry only opens it. */
+  readonly shown?: boolean;
+};
+
+/**
+ * The palette's view actions, one per register element the window's own
+ * table draws, in register order. A register element it has no entry for is
+ * not offered. `opensHere` says whether the window opens an element itself,
+ * not an ancestor, with the host ports now available; `open` opens it
+ * through the navigator. A pane or the panel names whether it is shown, and
+ * its entry then hides or shows it. A section without a chord of its own is quiet:
+ * it is listed only for a query that finds it.
+ */
+export function viewActions(
+  register: NavigationRegister,
+  t: Translate,
+  specs: Readonly<Record<string, ViewActionSpec>>,
+  opensHere: (id: string) => boolean,
+  open: (id: string) => void,
+): Action[] {
+  const actions: Action[] = [];
+  for (const element of register.elements) {
+    if (!Object.hasOwn(WINDOW_VIEWS, element.id)) continue;
+    const spec = Object.hasOwn(specs, element.id)
+      ? specs[element.id]
+      : undefined;
+    const opens = opensHere(element.id);
+    const parent =
+      element.parent === null ? undefined : elementOf(register, element.parent);
+    const show = () => open(element.id);
+    const name = t(element.label);
+    const action: Action = {
+      id: spec?.id ?? `view.${element.id}`,
+      view: element.id,
+      label:
+        spec?.shown === undefined
+          ? name
+          : t(
+              spec.shown
+                ? "desktop.palette.hide_view"
+                : "desktop.palette.show_view",
+              { view: name },
+            ),
+      ...(spec?.shown === undefined ? {} : { name }),
+      ...(parent ? { context: t(parent.label) } : {}),
+      group: spec?.group ?? "views",
+      icon: spec?.icon ?? "page",
+      keywords: t(element.keywords),
+      ...(spec?.chords ? { chords: spec.chords } : {}),
+      quiet: element.parent !== null && !spec?.chords?.length,
+      enabled: () => opens && (spec?.enabled?.() ?? true),
+      run: spec?.run ?? show,
+      choose: spec?.shown === true && spec.run ? spec.run : show,
+    };
+    actions.push(action);
+  }
+  return actions;
+}
+
+/** Palette relevance: every query word must start or occur in the text: the
+ * label, keywords, group, the section's page, where it opens, and the
+ * register id of the element it shows. */
 export function scoreAction(action: Action, query: string): number {
   const q = query.trim().toLowerCase();
   if (!q) return 1;
-  const haystack =
-    `${action.label} ${action.keywords ?? ""} ${action.group}`.toLowerCase();
+  const haystack = [
+    action.label,
+    action.keywords,
+    action.group,
+    action.context,
+    action.view,
+  ]
+    .filter((part) => part !== undefined)
+    .join(" ")
+    .toLowerCase();
   const words = haystack.split(/[^\p{L}\p{N}]+/u);
   let score = 0;
   for (const part of q.split(/\s+/)) {
@@ -149,5 +228,9 @@ export function scoreAction(action: Action, query: string): number {
     else if (haystack.includes(part)) score += 1;
     else return 0;
   }
-  return score;
+  // Of equal matches, the one named by what was typed comes first.
+  return action.label.toLowerCase().startsWith(q) ||
+    (action.name?.toLowerCase().startsWith(q) ?? false)
+    ? score + 1
+    : score;
 }

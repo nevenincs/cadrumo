@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 
 import pytest
 
@@ -13,25 +13,26 @@ from cadrumo.domain.calculations.registry.ids import ParameterId
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _modelo_revision(
+def _newest_revision(
     modelo_id: str,
-    revision_id: str,
     *,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ):
-    modelo, catalogues = _committed_modelo(modelo_id)
+    newest = authored_revisions(modelo_id)[-1]
+    modelo, catalogues = committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=newest.valid_from.year,
         period="0A",
-        revision_id=revision_id,
+        revision_id=str(newest.id),
         grade=grade,
     ).revision
 
@@ -39,7 +40,7 @@ def _modelo_revision(
 def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
     """Modelo 100 carries the IRPF bracket tables for a natural person."""
 
-    revision = _modelo_revision("100", "2025")
+    revision = _newest_revision("100")
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     expected = {
@@ -78,25 +79,28 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 
     dispatch_table = _first_ccaa_dispatch_table(autonomic_formula.expression)
     assert dispatch_table is not None and dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
+    # A scale a comunidad approved is grounded in LIRPF art. 74. A residence whose
+    # autonomic scale the law fixes instead -- the two ciudades autónomas, sent by
+    # disposición adicional trigésima segunda to the art. 65 table -- is grounded in
+    # that pair. Every dispatched parameter must carry one of the two groundings, so
+    # a scale with neither is still reported.
+    approved_by_a_comunidad = {"ley-35-2006:art-74"}
+    fixed_by_the_law = {"ley-35-2006:da-32", "ley-35-2006:art-65"}
     for ccaa, parameter_id in dispatch_table.items():
         parameter = parameters[parameter_id]
+        declared = set(parameter.legal_refs)
         assert parameter.data_type == "bracket_table", ccaa
-        assert "ley-35-2006:art-74" in parameter.legal_refs, ccaa
+        assert approved_by_a_comunidad <= declared or fixed_by_the_law <= declared, ccaa
         assert parameter.source_refs, ccaa
 
 
 def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
 
-    # The helper asks for filing year 2025, which the 2024/2025 split made a
-    # coordinate the 2024 revision no longer covers -- and a revision_id narrows
-    # the law-determined pick rather than selecting it, so naming the earlier
-    # era here refuses instead of quietly answering from the wrong year.
-    revision = _modelo_revision(
-        "200",
-        "2025-y-siguientes",
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
+    # A revision_id narrows the law-determined pick rather than selecting it, so
+    # the filing year must be one the named revision covers: the helper asks for
+    # the newest edition's own first exercise, never an earlier era's.
+    revision = _newest_revision("200", grade=RegistryAuthorityGrade.CALCULATION)
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     scalar_rates = {
@@ -132,46 +136,36 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
         formula for formula in revision.formulas if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
     )
     assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
-    general_form_dispatch = {
-        "sl": "is.modelo-200.tipo-gravamen-general",
-        "sa": "is.modelo-200.tipo-gravamen-general",
-        "sal": "is.modelo-200.tipo-gravamen-general",
-        "sll": "is.modelo-200.tipo-gravamen-general",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-general",
-        "other": "is.modelo-200.tipo-gravamen-general",
-        "cooperativa": "is.modelo-200.tipo-gravamen-cooperative-protected",
-        "sin_fines_lucrativos": "is.modelo-200.tipo-gravamen-non-profit-special-regime",
+    # The rate is chosen by the legal entity form, the new-entity flag and the
+    # INCN of the preceding período impositivo (LIS art. 29.1 and art. 101), in
+    # whatever lane order the edition's design
+    # sets; the per-lane rates are proved by evaluation in the cuota-integra lane
+    # tests. Here the formula must reach every LIS art. 29 rate and both INCN
+    # thresholds, read each axis, and keep sal and sll on the legal-entity axis.
+    nodes = tuple(_expression_nodes(dispatch_formula.expression))
+    reached = {str(node.parameter) for node in nodes if node.parameter is not None}
+    reached |= {
+        str(parameter)
+        for node in nodes
+        if node.dispatch_table is not None
+        for parameter in node.dispatch_table.values()
     }
-    micro_form_dispatch = {
-        **general_form_dispatch,
-        "sl": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sa": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sal": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sll": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-pyme-display",
-        "other": "is.modelo-200.tipo-gravamen-pyme-display",
-    }
-    erd_form_dispatch = {
-        **general_form_dispatch,
-        "sl": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sa": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sal": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sll": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-erd-art101",
-        "other": "is.modelo-200.tipo-gravamen-erd-art101",
-    }
+    assert scalar_rates | {"is.modelo-200.incn-umbral-microempresa", "is.modelo-200.incn-umbral-erd-art101"} <= reached
+    read = {str(node.binding) for node in nodes if node.binding is not None}
+    assert {
+        "modelo-200-profile-legal-entity-form",
+        "modelo-200-profile-new-entity-flag",
+        "modelo-200-incn-periodo-impositivo-anterior",
+    } <= read
+    form_binding = "modelo-200-profile-legal-entity-form"
+    compared = (node.args for node in nodes if any(str(argument.binding) == form_binding for argument in node.args))
+    forms = {str(argument.text_literal) for args in compared for argument in args if argument.text_literal is not None}
+    forms |= {key for node in nodes if node.dispatch_table is not None for key in node.dispatch_table}
+    assert {"sl", "sa", "sal", "sll", "cooperativa", "sociedad_civil_mercantil", "other"} <= forms
 
-    # The formula is a four-lane nested if_then_else:
-    # new-entity override -> micro-empresa -> ERD art.101 -> general sub-form.
-    # Each lane keeps sal/sll on the legal-entity axis.
-    new_entity_dispatch = dispatch_formula.expression.args[1].args[2].dispatch_table
-    micro_dispatch = dispatch_formula.expression.args[2].args[1].args[2].dispatch_table
-    erd_dispatch = dispatch_formula.expression.args[2].args[2].args[1].args[2].dispatch_table
-    general_dispatch = dispatch_formula.expression.args[2].args[2].args[2].args[2].dispatch_table
 
-    assert new_entity_dispatch == {
-        key: "is.modelo-200.tipo-gravamen-new-entity-first-2-years" for key in general_form_dispatch
-    }
-    assert micro_dispatch == micro_form_dispatch
-    assert erd_dispatch == erd_form_dispatch
-    assert general_dispatch == general_form_dispatch
+def _expression_nodes(expression: FormulaExpression) -> Iterator[FormulaExpression]:
+    """Every node of one formula expression, depth first."""
+    yield expression
+    for argument in expression.args:
+        yield from _expression_nodes(argument)

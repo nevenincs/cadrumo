@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_source
 from ..compiler.loader_cache import discover_modelo_sources
@@ -128,7 +129,11 @@ def test_a_split_date_reproduces_the_undivided_date(groups) -> None:
     assert split_dates, "no published layout declares a complete split date"
     failures = []
     for modelo_id, record_id, casilla_id, fields in split_dates:
-        for value in (date(2025, 3, 14), date(1999, 12, 31), date(2000, 1, 1)):
+        for value in (
+            date(filing_year_envelope().horizon, 3, 14),
+            date(1999, 12, 31),
+            date(filing_year_envelope().floor, 1, 1),
+        ):
             try:
                 rendered = "".join(render_fixed_width_export_field(field, value) for field in fields)
             except RegistryValidationError as exc:

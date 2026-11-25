@@ -15,6 +15,7 @@ import pytest
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..analysis.modelo_capability import capability_census, screen_authority
 from ..compiler.authority import compiled_bundled_authority
@@ -179,7 +180,7 @@ def test_a_filing_calculation_class_without_formulas_is_reported(authority: Vali
         item for item in screen_authority(authority, ("349",)) if item.kind == "claims_calculation_without_formulas"
     ]
 
-    assert [item.revision for item in findings] == ["2020-y-siguientes"]
+    assert [item.revision for item in findings] == [str(open_ended_revision("349").id)]
     assert "nothing computes" in findings[0].detail
 
 

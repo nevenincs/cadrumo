@@ -26,17 +26,22 @@ from ...application.operations.frontend_requests import (
     OperationPublicPhaseEventV1,
 )
 from ...application.operations.models import OperationRequest
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
-from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 from .registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 
@@ -71,7 +76,7 @@ OPERATION_REVIEW_DIGEST = "d" * 64
 
 
 def _definition_ids(*, resolved: bool) -> tuple[str, ...]:
-    registrations = build_production_operation_registry().public_registrations
+    registrations = production_operation_registry().public_registrations
     return tuple(
         sorted(
             registration.contract.definition_id
@@ -99,7 +104,13 @@ def _submission_context(
         profile_id=profile_id,
         destination_id=_DESTINATION,
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        # Subject validation must run on an admitted frontend. The Sede view
+        # needs the desktop window that displays and drives its browser stream.
+        frontend=(
+            OperationFrontendProjection.DESKTOP
+            if definition_id == "live.sede.view"
+            else OperationFrontendProjection.CLI
+        ),
         contract=registry.lookup_public_contract(definition_id),
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -135,7 +146,7 @@ def test_a_reviewed_decision_resolves_on_its_declared_subject_once_it_names_its_
     definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The review is the resolver's other precondition; with it met, the subject alone decides."""
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     definition = registry.lookup(definition_id)
     context = _submission_context(registry, definition_id, profile_id=_PROBE_PROFILE, operation=operation)
     fields = {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1)}
@@ -161,7 +172,7 @@ def test_the_real_access_resolver_admits_the_declared_subject_and_refuses_any_ot
 ) -> None:
     """A fresh submission resolves on the subject the declaration renders, and on no other."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             _driver,
             registry,
@@ -197,7 +208,7 @@ def test_the_real_executor_runs_on_the_declared_subject_and_stops_any_other_befo
 ) -> None:
     """Each of these executors checks the subject first, so a refused subject publishes no phase at all."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             driver,
             registry,

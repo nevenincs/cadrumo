@@ -11,17 +11,14 @@ recorder ``run-health`` reads, and the verb reports it back typed.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 
 import pytest
-from click.testing import Result
 
-from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
-from ...native_commands.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from .cli_runner import invoke_unbound_cli
+from .diagnostics_cli_support import invoke_diagnostics, seed_claude_and_codex_runs
 
 pytestmark = [
     pytest.mark.integration,
@@ -34,58 +31,13 @@ __all__ = ["diagnostics_native_profile"]
 _BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
 
-def _invoke(args: list[str], profile: NativeCliProfileFixture) -> Result:
-    if profile.label is None:
-        raise AssertionError("native diagnostics profile was not registered")
-    return invoke_diagnostics_cli(args, profile=profile, invoke_cli=invoke_unbound_cli)
-
-
-def _seed_runs() -> None:
-    """Write three real run-timing records: two claude (one failed), one codex."""
-    recorder = LLMRunRecorder()
-    recorder.record(
-        LLMRunRecord(
-            run_id="run-1",
-            caller="cadrumo.application.ledger.llm_classification",
-            provider="llm:claude:test-model",
-            model="test-model",
-            duration_ms=1200,
-            succeeded=True,
-            started_at=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
-        ),
-    )
-    recorder.record(
-        LLMRunRecord(
-            run_id="run-2",
-            caller="cadrumo.application.ledger.llm_classification",
-            provider="llm:claude:test-model",
-            model="test-model",
-            duration_ms=45000,
-            succeeded=False,
-            error_kind="LLMClassifierError",
-            started_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
-        ),
-    )
-    recorder.record(
-        LLMRunRecord(
-            run_id="run-3",
-            caller="cadrumo.application.ledger.llm_classification",
-            provider="llm:codex:test-model",
-            model="test-model",
-            duration_ms=800,
-            succeeded=True,
-            started_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
-        ),
-    )
-
-
 def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb lists the seeded run record typed, most-recent-first."""
-    _seed_runs()
+    seed_claude_and_codex_runs()
 
-    result = _invoke(["--format", "json", "app", "diagnostics", "runs"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "runs"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     assert payload["total_runs"] == 3
@@ -96,7 +48,7 @@ def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile:
 
 def test_runs_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run record the verb reports empty and surfaces a guidance notice."""
-    result = _invoke(["--format", "json", "app", "diagnostics", "runs"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "runs"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     payload = envelope["result"]
@@ -111,14 +63,14 @@ def test_runs_empty_is_instructive(diagnostics_native_profile: NativeCliProfileF
 
 def test_runs_provider_filter_scopes_the_listing(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--provider`` restricts the listing to one provider label."""
-    _seed_runs()
+    seed_claude_and_codex_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         ["--format", "json", "app", "diagnostics", "runs", "--provider", "llm:codex:test-model"],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert len(payload["runs"]) == 1
     assert payload["runs"][0]["provider"] == "llm:codex:test-model"
@@ -127,9 +79,9 @@ def test_runs_provider_filter_scopes_the_listing(diagnostics_native_profile: Nat
 
 def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--since``/``--until`` narrow the listing by date."""
-    _seed_runs()
+    seed_claude_and_codex_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         [
             "--format",
             "json",
@@ -137,14 +89,14 @@ def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliPr
             "diagnostics",
             "runs",
             "--since",
-            "2026-04-01",
+            "1980-04-01",
             "--until",
-            "2026-04-01",
+            "1980-04-01",
         ],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-1"
@@ -152,11 +104,13 @@ def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliPr
 
 def test_runs_limit_caps_the_most_recent_rows(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--limit`` caps the listing to the N most-recent rows."""
-    _seed_runs()
+    seed_claude_and_codex_runs()
 
-    result = _invoke(["--format", "json", "app", "diagnostics", "runs", "--limit", "2"], diagnostics_native_profile)
+    result = invoke_diagnostics(
+        ["--format", "json", "app", "diagnostics", "runs", "--limit", "2"], diagnostics_native_profile
+    )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert [row["run_id"] for row in payload["runs"]] == ["run-3", "run-2"]
     assert payload["total_runs"] == 2
@@ -164,8 +118,8 @@ def test_runs_limit_caps_the_most_recent_rows(diagnostics_native_profile: Native
 
 def test_runs_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
-    result = _invoke(
-        ["--format", "json", "app", "diagnostics", "runs", "--since", "01/04/2026"],
+    result = invoke_diagnostics(
+        ["--format", "json", "app", "diagnostics", "runs", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
@@ -174,5 +128,7 @@ def test_runs_rejects_malformed_date(diagnostics_native_profile: NativeCliProfil
 
 def test_runs_rejects_nonpositive_limit(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A ``--limit`` below 1 is refused by the option's own ``min`` bound."""
-    result = _invoke(["--format", "json", "app", "diagnostics", "runs", "--limit", "0"], diagnostics_native_profile)
+    result = invoke_diagnostics(
+        ["--format", "json", "app", "diagnostics", "runs", "--limit", "0"], diagnostics_native_profile
+    )
     assert result.exit_code != 0

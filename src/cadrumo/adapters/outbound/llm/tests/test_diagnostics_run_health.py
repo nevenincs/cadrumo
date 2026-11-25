@@ -28,8 +28,13 @@ from .....application.diagnostics_run_health import (
 from .....application.diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticAuthProbeResult
 from .....application.ledger.llm_diagnostics import LlmUsageCostProviderMetrics
 from .....core.directory_scan import scan_directory
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecordDiagnosticsAdapter, LLMRunRecorder
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -42,6 +47,11 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield p
 
 
+def _recorder(profile: TestRuntimeProfile) -> LLMRunRecorder:
+    """Record into the run-record store the isolated profile's storage root declares."""
+    return LLMRunRecorder(root_dir=storage_path(StorageCategory.LLM_RUN_RECORD, settings=profile.settings))
+
+
 def _seed(recorder: LLMRunRecorder) -> None:
     recorder.record(
         LLMRunRecord(
@@ -50,7 +60,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             provider="llm:claude:test-model",
             duration_ms=1000,
             succeeded=True,
-            started_at=datetime(2026, 4, 1, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 1, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -61,7 +71,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             duration_ms=9000,
             succeeded=False,
             error_kind="LLMClassifierError",
-            started_at=datetime(2026, 4, 2, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 2, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -71,7 +81,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             provider="llm:codex:test-model",
             duration_ms=500,
             succeeded=True,
-            started_at=datetime(2026, 4, 3, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 3, tzinfo=UTC),
         ),
     )
 
@@ -86,7 +96,7 @@ class _FakeAuthProbe(DiagnosticAuthProbePort):
 
 def test_build_run_health_report_folds_llm_runs_and_explicit_auth_probe(profile: TestRuntimeProfile) -> None:
     """Real LLM records fold per provider alongside an explicit auth port."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_run_health_report(
@@ -116,7 +126,7 @@ def test_build_run_health_report_folds_llm_runs_and_explicit_auth_probe(profile:
 
 def test_build_run_health_report_provider_filter_scopes_llm_section(profile: TestRuntimeProfile) -> None:
     """The ``provider`` filter restricts only the LLM run-timing section, never the auth probe."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_run_health_report(
@@ -135,12 +145,12 @@ def test_build_run_health_report_provider_filter_scopes_llm_section(profile: Tes
 
 def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRuntimeProfile) -> None:
     """``since``/``until`` narrow the LLM run-timing section by date."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_run_health_report(
-        since=date(2026, 4, 1),
-        until=date(2026, 4, 1),
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
         run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         auth_probe_port=_FakeAuthProbe(),
     )
@@ -152,7 +162,7 @@ def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRunt
 
 def test_build_run_health_report_empty_store_reports_no_run_data(profile: TestRuntimeProfile) -> None:
     """An empty run-record store reports ``has_run_data = False``, not an error."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
 
     report = build_run_health_report(
         run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
@@ -166,7 +176,7 @@ def test_build_run_health_report_empty_store_reports_no_run_data(profile: TestRu
 
 def test_list_recent_runs_orders_most_recent_first(profile: TestRuntimeProfile) -> None:
     """Individual run records project most-recent-first, reusing the shared recorder."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     rows = list_recent_runs(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
@@ -181,7 +191,7 @@ def test_list_recent_runs_orders_most_recent_first(profile: TestRuntimeProfile) 
 
 def test_list_recent_runs_limit_caps_the_most_recent_rows(profile: TestRuntimeProfile) -> None:
     """``limit`` caps the listing to the N most-recent rows, not an arbitrary slice."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     rows = list_recent_runs(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder), limit=2)
@@ -191,7 +201,7 @@ def test_list_recent_runs_limit_caps_the_most_recent_rows(profile: TestRuntimePr
 
 def test_list_recent_runs_provider_filter_scopes_the_listing(profile: TestRuntimeProfile) -> None:
     """``provider`` restricts the listing to one provider label."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     rows = list_recent_runs(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder), provider="llm:claude:test-model")
@@ -202,11 +212,13 @@ def test_list_recent_runs_provider_filter_scopes_the_listing(profile: TestRuntim
 
 def test_list_recent_runs_date_range_scopes_the_listing(profile: TestRuntimeProfile) -> None:
     """``since``/``until`` narrow the listing by date, mirroring the recorder's own bound."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     rows = list_recent_runs(
-        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder), since=date(2026, 4, 1), until=date(2026, 4, 1)
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
     )
 
     assert [row.run_id for row in rows] == ["a"]
@@ -214,7 +226,7 @@ def test_list_recent_runs_date_range_scopes_the_listing(profile: TestRuntimeProf
 
 def test_list_recent_runs_empty_store_returns_empty_tuple(profile: TestRuntimeProfile) -> None:
     """An empty run-record store returns an empty listing, not an error."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
 
     rows = list_recent_runs(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
 
@@ -237,14 +249,14 @@ def _seed_percentiles(recorder: LLMRunRecorder) -> None:
                 provider="llm:claude:test-model",
                 duration_ms=duration_ms,
                 succeeded=True,
-                started_at=datetime(2026, 5, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 5, index, tzinfo=UTC),
             ),
         )
 
 
 def test_build_latency_report_computes_nearest_rank_percentiles(profile: TestRuntimeProfile) -> None:
     """P50/P95/P99 match the documented nearest-rank method over ten known durations."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed_percentiles(recorder)
 
     report = build_latency_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
@@ -261,7 +273,7 @@ def test_build_latency_report_computes_nearest_rank_percentiles(profile: TestRun
 
 def test_build_latency_report_breaks_down_by_provider(profile: TestRuntimeProfile) -> None:
     """``by_provider`` carries a percentile row per distinct provider when unscoped."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_latency_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
@@ -275,7 +287,7 @@ def test_build_latency_report_breaks_down_by_provider(profile: TestRuntimeProfil
 
 def test_build_latency_report_provider_filter_omits_by_provider_breakdown(profile: TestRuntimeProfile) -> None:
     """Scoping to one ``provider`` leaves ``by_provider`` empty (it would duplicate ``overall``)."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_latency_report(
@@ -289,7 +301,7 @@ def test_build_latency_report_provider_filter_omits_by_provider_breakdown(profil
 
 def test_build_latency_report_empty_store_reports_no_run_data(profile: TestRuntimeProfile) -> None:
     """An empty run-record store reports ``has_run_data = False``, not an error."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
 
     report = build_latency_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
 
@@ -301,11 +313,13 @@ def test_build_latency_report_empty_store_reports_no_run_data(profile: TestRunti
 
 def test_build_latency_report_date_range_scopes_the_percentiles(profile: TestRuntimeProfile) -> None:
     """``since``/``until`` narrow the percentile computation by date."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_latency_report(
-        since=date(2026, 4, 1), until=date(2026, 4, 1), run_record_port=LLMRunRecordDiagnosticsAdapter(recorder)
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
     )
 
     assert report.overall.entries == 1
@@ -314,7 +328,7 @@ def test_build_latency_report_date_range_scopes_the_percentiles(profile: TestRun
 
 def test_build_error_breakdown_groups_by_provider_and_error_kind(profile: TestRuntimeProfile) -> None:
     """Failed runs are grouped by ``(provider, error_kind)`` with a count each."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_error_breakdown(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
@@ -331,7 +345,7 @@ def test_build_error_breakdown_groups_by_provider_and_error_kind(profile: TestRu
 
 def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimeProfile) -> None:
     """Rows sort by descending failure count, then provider, then error kind."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     # Two claude failures of kind A, one claude failure of kind B, one codex failure of kind A.
     for index, (provider, error_kind) in enumerate(
         (
@@ -350,7 +364,7 @@ def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimePro
                 duration_ms=100,
                 succeeded=False,
                 error_kind=error_kind,
-                started_at=datetime(2026, 5, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 5, index, tzinfo=UTC),
             ),
         )
 
@@ -366,7 +380,7 @@ def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimePro
 
 def test_build_error_breakdown_provider_filter_scopes_the_breakdown(profile: TestRuntimeProfile) -> None:
     """``provider`` restricts the breakdown to one provider's failures."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed(recorder)
 
     report = build_error_breakdown(
@@ -381,7 +395,7 @@ def test_build_error_breakdown_provider_filter_scopes_the_breakdown(profile: Tes
 
 def test_build_error_breakdown_empty_store_reports_no_failures(profile: TestRuntimeProfile) -> None:
     """An empty run-record store reports no failures, not an error."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
 
     report = build_error_breakdown(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
 
@@ -393,7 +407,7 @@ def test_build_error_breakdown_empty_store_reports_no_failures(profile: TestRunt
 
 def test_build_error_breakdown_succeeded_only_reports_no_failures(profile: TestRuntimeProfile) -> None:
     """A store with only succeeded runs reports zero failures with real recorded runs."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed_percentiles(recorder)
 
     report = build_error_breakdown(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
@@ -431,28 +445,35 @@ def _seed_usage(recorder: LLMRunRecorder) -> None:
                 duration_ms=duration_ms,
                 succeeded=succeeded,
                 error_kind=error_kind,
-                started_at=datetime(2026, 6, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 6, index, tzinfo=UTC),
             ),
         )
 
 
-def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRuntimeProfile) -> None:
-    """Real recorded runs fold per-provider, and per-model within each provider."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+def _seeded_usage_providers(
+    profile: TestRuntimeProfile,
+) -> tuple[LlmUsageReport, dict[str, LlmRunHealthProviderMetrics]]:
+    recorder = _recorder(profile)
     _seed_usage(recorder)
-
     report = build_llm_usage_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
+    return report, {row.provider: row for row in report.by_provider}
+
+
+def test_build_llm_usage_report_totals_across_providers(profile: TestRuntimeProfile) -> None:
+    """Real recorded runs fold into overall totals and one row per provider."""
+    report, providers = _seeded_usage_providers(profile)
 
     assert report.has_run_data is True
     assert report.total_runs == 6
     assert report.total_succeeded == 5
     assert report.total_failed == 1
     assert report.overall_success_rate == Decimal("0.8333")
-
-    providers = {row.provider: row for row in report.by_provider}
     assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
 
-    claude = providers["llm:claude:test-model"]
+
+def test_build_llm_usage_report_folds_a_provider_with_its_duration_bounds(profile: TestRuntimeProfile) -> None:
+    claude = _seeded_usage_providers(profile)[1]["llm:claude:test-model"]
+
     assert claude.runs == 4
     assert claude.succeeded == 3
     assert claude.failed == 1
@@ -460,6 +481,10 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
     assert claude.max_duration_ms == 400
     assert claude.total_duration_ms == 1000
     assert claude.success_rate == Decimal("0.7500")
+
+
+def test_build_llm_usage_report_folds_models_within_a_provider(profile: TestRuntimeProfile) -> None:
+    claude = _seeded_usage_providers(profile)[1]["llm:claude:test-model"]
 
     claude_models = {row.model: row for row in claude.models}
     assert set(claude_models) == {"model-a", "model-b"}
@@ -472,7 +497,10 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
     assert claude_models["model-b"].failed == 1
     assert claude_models["model-b"].success_rate == Decimal("0.5000")
 
-    codex = providers["llm:codex:test-model"]
+
+def test_build_llm_usage_report_folds_a_provider_with_a_single_model(profile: TestRuntimeProfile) -> None:
+    codex = _seeded_usage_providers(profile)[1]["llm:codex:test-model"]
+
     assert codex.runs == 2
     assert codex.succeeded == 2
     assert codex.failed == 0
@@ -483,7 +511,7 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
 
 def test_build_llm_usage_report_provider_filter_scopes_the_summary(profile: TestRuntimeProfile) -> None:
     """``provider`` restricts the summary to one provider's runs."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed_usage(recorder)
 
     report = build_llm_usage_report(
@@ -499,11 +527,13 @@ def test_build_llm_usage_report_provider_filter_scopes_the_summary(profile: Test
 
 def test_build_llm_usage_report_date_range_scopes_the_summary(profile: TestRuntimeProfile) -> None:
     """``since``/``until`` narrow the usage summary by date."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
     _seed_usage(recorder)
 
     report = build_llm_usage_report(
-        since=date(2026, 6, 1), until=date(2026, 6, 1), run_record_port=LLMRunRecordDiagnosticsAdapter(recorder)
+        since=date(_FILING_YEAR, 6, 1),
+        until=date(_FILING_YEAR, 6, 1),
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
     )
 
     assert report.total_runs == 1
@@ -514,7 +544,7 @@ def test_build_llm_usage_report_date_range_scopes_the_summary(profile: TestRunti
 
 def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRuntimeProfile) -> None:
     """An empty run-record store reports ``has_run_data = False``, not an error."""
-    recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+    recorder = _recorder(profile)
 
     report = build_llm_usage_report(run_record_port=LLMRunRecordDiagnosticsAdapter(recorder))
 
@@ -573,25 +603,25 @@ class TestReportWindowInvariant:
     @pytest.mark.parametrize("report", _REPORTS)
     def test_reversed_window_is_refused(self, report: type) -> None:
         with pytest.raises(ValidationError):
-            report(since=date(2026, 2, 1), until=date(2026, 1, 1))
+            report(since=date(_FILING_YEAR, 2, 1), until=date(_FILING_YEAR, 1, 1))
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_ordered_window_is_accepted(self, report: type) -> None:
-        built = report(since=date(2026, 1, 1), until=date(2026, 2, 1))
-        assert built.since == date(2026, 1, 1)
-        assert built.until == date(2026, 2, 1)
+        built = report(since=date(_FILING_YEAR, 1, 1), until=date(_FILING_YEAR, 2, 1))
+        assert built.since == date(_FILING_YEAR, 1, 1)
+        assert built.until == date(_FILING_YEAR, 2, 1)
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_single_day_window_is_accepted(self, report: type) -> None:
         """Equal bounds are a legitimate one-day query, not an empty interval."""
-        assert report(since=date(2026, 1, 1), until=date(2026, 1, 1)).until == date(2026, 1, 1)
+        assert report(since=date(_FILING_YEAR, 1, 1), until=date(_FILING_YEAR, 1, 1)).until == date(_FILING_YEAR, 1, 1)
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_open_and_absent_bounds_stay_permitted(self, report: type) -> None:
         """The invariant must not turn an optional bound into a required one."""
         assert report().since is None
-        assert report(since=date(2026, 1, 1)).until is None
-        assert report(until=date(2026, 2, 1)).since is None
+        assert report(since=date(_FILING_YEAR, 1, 1)).until is None
+        assert report(until=date(_FILING_YEAR, 2, 1)).since is None
 
 
 def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
@@ -600,26 +630,26 @@ def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
     _seed(recorder)
     with pytest.raises(ValidationError):
         build_run_health_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
             auth_probe_port=_FakeAuthProbe(),
         )
     with pytest.raises(ValidationError):
         build_latency_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )
     with pytest.raises(ValidationError):
         build_error_breakdown(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )
     with pytest.raises(ValidationError):
         build_llm_usage_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )

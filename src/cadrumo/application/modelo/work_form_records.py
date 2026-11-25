@@ -21,12 +21,17 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock, FormRepeatingRowSource
+from ...domain.calculations.registry.schema_form_layouts import (
+    FormRepeatingColumn,
+    FormRepeatingGroupBlock,
+    FormRepeatingRowSource,
+)
 from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from ...domain.filing.protocols import ModeloInputScalar
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .revision_replay_inputs import revision_detail_record_binding_inputs
-from .work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from .work_form_field_vocabulary import ModeloFormScalar
+from .work_form_models import ModeloFormRepeatingRow
 from .work_form_projection_records import saved_projection_form_records
 
 
@@ -217,6 +222,46 @@ def _rows_from_values(
     )
 
 
+def _has_projection_fields(block: FormRepeatingGroupBlock) -> bool:
+    return any(column.export_field_id is not None for column in block.columns)
+
+
+def _saved_row_column_records(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    block: FormRepeatingGroupBlock,
+) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
+    """Read a group whose columns each name the row binding they show.
+
+    Saved rows are known. A group with no saved rows is known-empty only when the
+    calculation persisted a source trace naming one of its boxes, which is the
+    source's positive statement that it enumerated the rows and found none (a
+    stated zero count, for instance). Without that trace the rows were never
+    supplied, so they stay unknown rather than read as none.
+    """
+    columns = _bound_row_columns(block)
+    if not columns:
+        return False, ()
+    data_types = {casilla.id: str(casilla.data_type) for casilla in snapshot.revision.casillas}
+    by_row: dict[int, dict[str, ModeloFormScalar]] = {}
+    for column in columns:
+        for index, raw in revision.row_binding_values.get(str(column.binding_id), {}).items():
+            target = str(column.casilla_id)
+            _put_row_value(by_row, int(index), target, _saved_value(raw, data_types.get(target, "text")))
+    if not by_row and not _source_enumerated(revision, columns):
+        return False, ()
+    return True, _rows_from_values(by_row, tuple(column.casilla_id for column in block.columns))
+
+
+def _source_enumerated(revision: CalculationRevision, columns: tuple[FormRepeatingColumn, ...]) -> bool:
+    boxes = {str(column.casilla_id) for column in columns}
+    return any(boxes.intersection(source.source_casilla_ids) for source in revision.source_provenance)
+
+
+def _bound_row_columns(block: FormRepeatingGroupBlock) -> tuple[FormRepeatingColumn, ...]:
+    return tuple(column for column in block.columns if column.binding_id is not None and column.casilla_id is not None)
+
+
 def saved_form_records(
     *,
     snapshot: RegistrySnapshot,
@@ -232,9 +277,11 @@ def saved_form_records(
     never renumbered. Detail-row bindings take the same precedence over saved
     row bindings as filing replay; a binding field reads its binding channel.
     """
-    if revision is None or block.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
+    if revision is None:
         return False, ()
-    if any(column.export_field_id is not None for column in block.columns):
+    if block.row_source is FormRepeatingRowSource.ROW_SET_BINDING:
+        return _saved_row_column_records(snapshot, revision, block)
+    if _has_projection_fields(block):
         return saved_projection_form_records(snapshot=snapshot, revision=revision, block=block)
     matched = _matching_record(snapshot, block)
     if matched is None:
@@ -244,6 +291,16 @@ def saved_form_records(
     visible_targets, _ = _target_columns(fields, column_casillas)
     if not visible_targets:
         return False, ()
+    return _project_saved_record_rows(snapshot, revision, record, fields, column_casillas)
+
+
+def _project_saved_record_rows(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    record: ExportRecordDefinition,
+    fields: tuple[tuple[ExportFieldDefinition, str | None], ...],
+    column_casillas: tuple[str | None, ...],
+) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
     # Sections may show only unknown fields of an otherwise saved record.
     # Discover rows across this exact record before projecting its visible
     # columns, so every section preserves the same recipient indices.

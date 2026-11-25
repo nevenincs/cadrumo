@@ -36,16 +36,14 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.tests.storage_scope import storage_overrides
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -72,7 +70,9 @@ _CHARGE_2025 = (_BASE * _MACHINERY_LINEAR_COEFFICIENT * _SERVICE_DAYS_2025 / _DA
 
 
 #: The annual declaration's own answers: the declarant, the estimación-directa
-#: modality, and the carried figures a first filing year has none of.
+#: modality, and the carried figures a first filing year has none of. The profile
+#: declares only economic-activity income, so the three suffered-withholding credit
+#: classes are proven zero by its categories and no payer record is owed.
 _M100_ANNUAL_ANSWERS = (
     "--casilla",
     "0001=declarante",
@@ -81,64 +81,61 @@ _M100_ANNUAL_ANSWERS = (
     "--casilla",
     "0166=A05",
     "--binding",
-    "renta-modelo-100-estimacion-directa-es-normal=1",
-    "--binding",
-    "renta-certificado-trabajo-retenciones=0",
-    "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+    "--binding",
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )
 
 #: No earlier Modelo 130 was filed, so the carried prior-payment figure is zero.
 _NO_PRIOR_PAGOS_FRACCIONADOS = ("--binding", "modelo-130-pagos-fraccionados-anteriores=0.00")
 
 
-def _prepare_cli_directories(tmp_path: Path) -> None:
-    for directory in storage_overrides(
-        tmp_path,
-        StorageCategory.SECRETS,
-        StorageCategory.TOKENS,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    ).values():
-        directory.mkdir(parents=True, exist_ok=True)
-
-
 def _seed_ready_profile(root: Path, profile_id: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Autonoma"),
-                UserProfileFact(path="identity.surnames", value="Sintetica"),
-                UserProfileFact(path="activities.description", value="taller mecanico sintetico"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(
-                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                    value=False,
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_taxpayer.sex", value="M"),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Autonoma"),
+                    UserProfileFact(path="identity.surnames", value="Sintetica"),
+                    UserProfileFact(path="activities.description", value="taller mecanico sintetico"),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                    UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                    UserProfileFact(path="withholding.colegio_concertado", value=False),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         root=root,
         label="register-owned acquisition",
@@ -170,7 +167,14 @@ def _result(arguments: list[str]) -> dict[str, Any]:
     return payload
 
 
-def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ-2025-0001") -> str:
+def _add_supplier_invoice_evidence(
+    tmp_path: Path,
+    *,
+    invoice_number: str = "MAQ-2025-0001",
+    taxable_base: Decimal = _BASE,
+    iva_amount: Decimal = _IVA,
+    paid_amount: Decimal = _PAID,
+) -> str:
     """Register the supplier invoice the input-IVA deduction rests on.
 
     LIVA art. 97 makes the invoice the deduction's justificante, and the ledger
@@ -183,9 +187,9 @@ def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ
             (
                 "Maquinaria Sintetica SL",
                 f"Factura {invoice_number}",
-                "Base imponible 1.000,00",
-                "IVA 21% 210,00",
-                "Total 1.210,00",
+                f"Base imponible {format(taxable_base, ',.2f').translate(str.maketrans('.,', ',.'))}",
+                f"IVA 21% {format(iva_amount, ',.2f').translate(str.maketrans('.,', ',.'))}",
+                f"Total {format(paid_amount, ',.2f').translate(str.maketrans('.,', ',.'))}",
             ),
         ),
     )
@@ -203,11 +207,11 @@ def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ
             "--invoice-date",
             _ACQUIRED_ON.isoformat(),
             "--taxable-base",
-            str(_BASE),
+            str(taxable_base),
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            str(_IVA),
+            str(iva_amount),
         ],
     )
     evidence_id = payload.get("evidence_id")
@@ -220,6 +224,9 @@ def _add_machine_purchase(
     *,
     category_id: str = "hardware_amortizable",
     description: str = "Compra de maquinaria",
+    taxable_base: Decimal = _BASE,
+    iva_amount: Decimal = _IVA,
+    paid_amount: Decimal = _PAID,
 ) -> str:
     """Record the bank payment of the machine, with its deductible input IVA."""
     payload = _result(
@@ -230,7 +237,7 @@ def _add_machine_purchase(
             "--date",
             _ACQUIRED_ON.isoformat(),
             "--amount",
-            str(_PAID),
+            str(paid_amount),
             "--direction",
             "OUTGOING",
             "--description",
@@ -238,11 +245,11 @@ def _add_machine_purchase(
             "--classification",
             "BUSINESS",
             "--taxable-base",
-            str(_BASE),
+            str(taxable_base),
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            str(_IVA),
+            str(iva_amount),
             "--iva-category",
             "domestic_general",
             "--deduction-kind",
@@ -275,6 +282,7 @@ def _register_machine(transaction_id: str) -> None:
             "basis": {
                 "stage": "business_allocated",
                 "basis_amount": str(_BASE),
+                "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "compra afecta al 100% a la actividad",
             },
             "in_service_date": _ACQUIRED_ON.isoformat(),
@@ -288,7 +296,7 @@ def _register_machine(transaction_id: str) -> None:
         },
         separators=(",", ":"),
     )
-    created = _result(["app", "ledger", "actividad-asset", "create", revision])
+    created = _result(["app", "ledger", "actividad-asset", "create", "--name", _ASSET_ID, revision])
     revisions = created.get("revisions")
     assert isinstance(revisions, list)
     assert revisions[0]["asset_id"] == _ASSET_ID
@@ -316,8 +324,6 @@ def _claim_2025_charge() -> Decimal:
             "actividad-asset",
             "claim",
             json.dumps(forecast, separators=(",", ":")),
-            "--creating-operation",
-            "cli.register-owned-acquisition.claim",
         ],
     )
     claim = claimed.get("claim")
@@ -355,7 +361,6 @@ def _calculated_casillas(*, modelo: str, period: str, options: tuple[str, ...] =
 
 def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(tmp_path: Path) -> None:
     """The supported route: ledger purchase plus register claim, with no collision."""
-    _prepare_cli_directories(tmp_path)
     with runtime_cli_profile(tmp_path=tmp_path, label="asset acquisition") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
         _seed_zero_iva_compensation()
@@ -375,44 +380,54 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
     assert Decimal(iva_q2["28"]) == _BASE
     assert Decimal(iva_q2["iva.soportado.interiores"]) == _IVA
 
-    # The 1.000,00 purchase is the amortizable base, so no quarter deducts it;
-    # the second quarter's cumulative gasto is nothing at all.
-    assert Decimal(renta_q2["02"]) == Decimal("0")
+    # The 1.000,00 purchase is the amortizable base, so no quarter deducts it.
+    # Modelo 130 accrues from the schedule: 5 April through 30 June is 26 + 31 + 30
+    # days, and 1,000.00 x 12% x 87/365 = 28.60.
+    assert Decimal(renta_q2["02"]) == Decimal("28.60")
     assert Decimal(renta_q4["02"]) == charge
     assert Decimal(annual["0208"]) == charge
     assert Decimal(_BASE) not in {Decimal(value) for value in annual.values()}
 
 
-def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Path) -> None:
-    """The collision the register exists to prevent is still a refusal, not a sum.
+def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Path) -> None:
+    """The collision the register exists to prevent is never a sum.
 
     The same store gains a second ledger row tagged with an amortization
-    category. The register already charges 2025 and owns the amortization
-    destinations exclusively, so declaring that row's amount as well would
-    deduct the year's depreciation twice. Both the quarterly and the annual
-    calculation refuse and name what to reclassify or reverse.
+    category, which no element owns. Declaring its amount as well would deduct
+    depreciation the register does not know about, so the row reaches no casilla
+    and the calculation carries a note to check, naming it and the remedy; it never
+    counts as missing or refuses the return.
     """
-    _prepare_cli_directories(tmp_path)
     with runtime_cli_profile(tmp_path=tmp_path, label="asset collision") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
         _claim_2025_charge()
+        competing_base, competing_iva, competing_paid = Decimal("250.00"), Decimal("52.50"), Decimal("302.50")
         _add_machine_purchase(
-            _add_supplier_invoice_evidence(tmp_path, invoice_number="MOB-2025-0002"),
+            _add_supplier_invoice_evidence(
+                tmp_path,
+                invoice_number="MOB-2025-0002",
+                taxable_base=competing_base,
+                iva_amount=competing_iva,
+                paid_amount=competing_paid,
+            ),
             category_id="mobiliario_amortizable",
             description="Amortizacion de mobiliario declarada en el libro",
+            taxable_base=competing_base,
+            iva_amount=competing_iva,
+            paid_amount=competing_paid,
         )
 
-        refused_quarter = invoke_cached_cli(
+        created = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "create"),
                 *("--modelo", "130", "--year", "2025", "--period", "4T"),
             ],
         )
-        assert refused_quarter.exit_code == 0, refused_quarter.output
-        work_unit_id = json.loads(refused_quarter.output)["result"]["work_unit_id"]
-        refused_quarter = invoke_cached_cli(
+        assert created.exit_code == 0, created.output
+        work_unit_id = json.loads(created.output)["result"]["work_unit_id"]
+        calculated = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "calculate"),
                 *("--modelo", "130", "--year", "2025", "--period", "4T"),
@@ -420,16 +435,20 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
                 *_NO_PRIOR_PAGOS_FRACCIONADOS,
             ],
         )
-
-        assert refused_quarter.exit_code != 0, refused_quarter.output
+        assert calculated.exit_code == 0, calculated.output
         status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
         assert status.exit_code == 0, status.output
         persisted = json.loads(status.output)["result"]
 
-    error = json.loads(refused_quarter.output)["error"]
-    assert error["code"] == "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT", refused_quarter.output
-    assert error["context"]["terminal_condition"] == "refused"
-    assert error["context"]["effect"] == "unknown"
-    assert error["context"]["operation_id"]
-    assert persisted["current_calculation_revision_id"] is None
+    envelope = json.loads(calculated.output)
+    # Only the register's 89.10 is deducted: the competing 250.00 is not added.
+    assert Decimal(envelope["result"]["casilla_values"]["02"]) == _CHARGE_2025
+    note = next(
+        notice["context"]
+        for notice in envelope["notices"]
+        if (notice.get("context") or {}).get("reason") == "ledger_amortization_row_unregistered"
+    )
+    assert note["level"] == "check"
+    assert note["remedy"]
+    assert persisted["current_calculation_revision_id"] == envelope["result"]["calculation_revision_id"]
     assert persisted["filed_calculation_revision_id"] is None

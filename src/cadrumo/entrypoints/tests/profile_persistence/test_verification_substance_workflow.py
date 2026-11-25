@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -18,11 +18,14 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.auth.operator_scope_ports import OperatorScopePorts
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -40,33 +43,33 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 from .verification_substance_support import (
-    _ABSENT_REGISTRY_CASILLA,
-    _CASILLA_01,
-    _CASILLA_02,
-    _CASILLA_03,
-    _CASILLA_05,
-    _CASILLA_06,
-    _CASILLA_08,
-    _CASILLA_09,
-    _CASILLA_10,
-    _CASILLA_12,
-    _CASILLA_14,
-    _CASILLA_15,
-    _CASILLA_16,
-    _CASILLA_18,
-    _T0,
-    _T1,
-    _T2,
-    _Repos,
-    _seed_ready_profile,
+    ABSENT_REGISTRY_CASILLA,
+    CASILLA_01,
+    CASILLA_02,
+    CASILLA_03,
+    CASILLA_05,
+    CASILLA_06,
+    CASILLA_08,
+    CASILLA_09,
+    CASILLA_12,
+    CASILLA_14,
+    CASILLA_15,
+    CASILLA_16,
+    CASILLA_18,
+    T0,
+    T1,
+    T2,
+    Repos,
+    seed_ready_profile,
     workflow_profile,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 # Modelo 180's perceptor base: a registry-required manual input with its own grounding.
 _M180_PERCEPTOR_BASE: CasillaId = validated_casilla_id("perc.base")
+_M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -82,13 +85,13 @@ def _calculate_modelo_revision(
 ) -> CalculationRevision:
     """Run calculation through the real encrypted application composition."""
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             casilla_inputs=casilla_inputs,
             binding_values=binding_values,
             clock=clock,
-        )
+        ).revision
 
 
 def _verify_modelo_revision(
@@ -132,12 +135,12 @@ def _data_inventory_checklist(
 
 
 @pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
+def repos(tmp_path: Path) -> Iterator[Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
         with bundled_indexed_authority().operation():
-            _seed_ready_profile(bucket_id=_PROFILE_ID)
+            seed_ready_profile(bucket_id=_PROFILE_ID)
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
@@ -145,24 +148,26 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, vr, bv
 
 
-def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repos) -> None:
+def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: Repos) -> None:
     """M130 casilla 02 (Gastos) is ledger-bound, so an absent manual value never blocks.
 
     Regression: casilla 02 used to be ``input_kind = manual``,
     so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA finding
-    until they hand-entered ``--casilla 02=0``. Casilla 02 is now bound to the
-    ``ledger_renta_gastos_pago_fraccionado_aggregation`` source: the gasto resolver
-    populates it from the ledger (0 when there are no expenses), so the
-    missing-required gate — which fires only for MANUAL required casillas — never
-    flags it. The required=true flag is retained but is inert for a bound casilla.
+    until they hand-entered ``--casilla 02=0``. Casilla 02 is now computed from the
+    expenses bound to the ``ledger_renta_gastos_pago_fraccionado_aggregation``
+    source, which the gasto resolver populates from the ledger (0 when there are
+    no expenses), so the missing-required gate — which fires only for MANUAL
+    required casillas — never flags it.
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
 
     snap = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
-    casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
+    casilla_02 = next((c for c in snap.revision.casillas if c.id == CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
-    assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
-    assert casilla_02.binding == "modelo-130-actividad-economica-gastos-cumulative"
+    assert str(casilla_02.input_kind) == "computed", "box 02 adds the simplified-modality provision to the expenses"
+    prior_expenses = next(c for c in snap.revision.casillas if c.id == _M130_GASTOS_PREVIOS)
+    assert str(prior_expenses.input_kind) == "bound", "the expenses box 02 adds to are ledger-bound"
+    assert prior_expenses.binding == "modelo-130-actividad-economica-gastos-cumulative"
 
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
@@ -173,17 +178,15 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
-            clock=_T0,
+            clock=T0,
         )
 
     # Casilla 02 is deliberately NOT supplied (no ledger gastos, no manual value).
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_05: Decimal("0"),
-        _CASILLA_06: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
-        _CASILLA_16: Decimal("0"),
-        _CASILLA_18: Decimal("0"),
+        CASILLA_05: Decimal("0"),
+        CASILLA_06: Decimal("0"),
+        CASILLA_16: Decimal("0"),
+        CASILLA_18: Decimal("0"),
     }
 
     revision = _calculate_modelo_revision(
@@ -193,28 +196,28 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        clock=_T1,
+        clock=T1,
     )
 
     report = _verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        clock=_T2,
+        clock=T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     # M4 resolved: casilla 02 is bound, so it is NOT a manual missing-required block.
-    assert _CASILLA_02 not in report.missing_required_casilla_ids
+    assert CASILLA_02 not in report.missing_required_casilla_ids
     casilla_02_missing = [
         f
         for f in report.findings
-        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == _CASILLA_02
+        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == CASILLA_02
     ]
     assert not casilla_02_missing, "bound casilla 02 must not produce a MISSING_REQUIRED_CASILLA finding"
 
 
-def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:
+def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: Repos) -> None:
     wu_repo, cr_repo, _vr_repo, bv_repo = repos
 
     with bundled_indexed_authority().operation() as operation:
@@ -226,23 +229,23 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
-            clock=_T0,
+            clock=T0,
         )
 
-    # Modest operator inputs so C14 stays small + positive.
-    # C01 (ingresos) is bound via ledger_renta_income_aggregation, but the
-    # ledger binding's smuggling guard only applies to previous_filing
-    # sources; supplying C01 directly is the supported manual-entry path
-    # mirrored by the M131 sibling test below.
+    # Modest activity income so C14 stays small + positive. C01 (ingresos) and
+    # C02 (gastos) are ledger-owned, so the income is a real ledger row.
+    seed_m130_income_transaction(
+        amount=Decimal("10000"),
+        filing_year=2026,
+        source_key="substance-c15-cap-income",
+        value_date=date(2026, 4, 5),
+        bucket_id=_PROFILE_ID,
+    )
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("10000"),
-        _CASILLA_02: Decimal("0"),
-        _CASILLA_05: Decimal("0"),
-        _CASILLA_06: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
-        _CASILLA_16: Decimal("0"),
-        _CASILLA_18: Decimal("0"),
+        CASILLA_05: Decimal("0"),
+        CASILLA_06: Decimal("0"),
+        CASILLA_16: Decimal("0"),
+        CASILLA_18: Decimal("0"),
     }
     # Carry-forward seed deliberately large — exceeds the computed C14.
     # previous_year_economic_activity_net_income > 12000 keeps the C13
@@ -255,13 +258,13 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             "irpf.previous_year_economic_activity_net_income": Decimal("20000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("99999"),
         },
-        clock=_T1,
+        clock=T1,
     )
-    invalid_c15 = revision.casilla_values[_CASILLA_14] + Decimal("1.00")
+    invalid_c15 = revision.casilla_values[CASILLA_14] + Decimal("1.00")
     invalid_values = dict(revision.casilla_values)
-    invalid_values[_CASILLA_15] = invalid_c15
+    invalid_values[CASILLA_15] = invalid_c15
     invalid_observations = tuple(
-        observation.model_copy(update={"value": invalid_c15}) if observation.casilla_id == _CASILLA_15 else observation
+        observation.model_copy(update={"value": invalid_c15}) if observation.casilla_id == CASILLA_15 else observation
         for observation in revision.observations
     )
     invalid_revision_id = derive_calculation_revision_id(
@@ -276,6 +279,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         detail_rows=revision.detail_rows,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=revision.screen_stamp,
     )
     invalid_revision = CalculationRevision(
         calculation_revision_id=invalid_revision_id,
@@ -295,6 +299,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         updated_at=revision.updated_at,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=revision.screen_stamp,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), invalid_revision))
 
@@ -302,7 +307,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         invalid_revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        clock=_T2,
+        clock=T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
@@ -320,19 +325,13 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     assert report.granted_verificado_completo is False
 
 
-def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos: _Repos) -> None:
-    """M131 cap-predicate end-to-end integration.
-
-    M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
-    via cap_le_when_positive(["11", "10"]). The companion test covers M130;
-    this test extends parallel coverage to M131. AEAT M131
-    instructions cite the same cap rule verbatim: "en ningún caso
-    podrá figurar en la casilla 11 un importe superior a la
-    cantidad positiva consignada en la casilla 10".
+def test_m131_c11_is_capped_at_the_positive_c10_whatever_the_carry(repos: Repos) -> None:
+    """AEAT M131 instructions: "en ningún caso podrá figurar en la casilla 11 un importe superior a la
+    cantidad positiva consignada en la casilla 10". The box computes that cap, so the predicate stays silent.
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
     with bundled_indexed_authority().operation():
-        _seed_ready_profile(bucket_id=_PROFILE_ID, irpf_estimation_regime="objetiva")
+        seed_ready_profile(bucket_id=_PROFILE_ID, irpf_estimation_regime="objetiva")
 
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
@@ -343,20 +342,19 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             revision_id="2026",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
-            clock=_T0,
+            clock=T0,
         )
 
-    # 04, 06, 07, 13 are computed casillas on the M131 2026 revision;
-    # only the operator-input (manual) casillas may appear in inputs.
+    # 04, 06, 07, 13 are computed casillas on the M131 2026 revision and 05 is
+    # source-owned; only the operator-input (manual) casillas may appear in inputs.
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("100"),
-        _CASILLA_02: Decimal("50"),
-        _CASILLA_03: Decimal("0"),
-        _CASILLA_05: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_09: Decimal("0"),
-        _CASILLA_12: Decimal("0"),
-        _CASILLA_14: Decimal("0"),
+        CASILLA_01: Decimal("100"),
+        CASILLA_02: Decimal("50"),
+        CASILLA_03: Decimal("0"),
+        CASILLA_08: Decimal("0"),
+        CASILLA_09: Decimal("0"),
+        CASILLA_12: Decimal("0"),
+        CASILLA_14: Decimal("0"),
     }
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -364,29 +362,25 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         binding_values={
             "modelo-131-resultados-negativos-anteriores": Decimal("99999"),
         },
-        clock=_T1,
+        clock=T1,
     )
 
     report = _verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        clock=_T2,
+        clock=T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
-    blocking = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
-    cap_findings = [
-        f
-        for f in blocking
-        if f.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
-        and dict(f.message_facts) == {"predicate_id": "modelo-131-2026-c11-cap-by-c10"}
-    ]
-    assert cap_findings, (
-        "M131 C11-cap-by-C10 predicate must fire when carry-forward exceeds positive C10; "
-        f"got blocking findings: {blocking}"
+    assert Decimal(revision.casilla_values[validated_casilla_id("11")]) == max(
+        Decimal("0"), Decimal(revision.casilla_values[validated_casilla_id("10")])
     )
-    assert report.granted_verificado_completo is False
+    assert not [
+        finding
+        for finding in report.findings
+        if dict(finding.message_facts) == {"predicate_id": "modelo-131-2026-c11-cap-by-c10"}
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -394,7 +388,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
 # ---------------------------------------------------------------------------
 
 
-def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None:
+def test_observation_tampering_is_detected_by_verify_path(repos: Repos) -> None:
     """Mutating a stored observation value between calculate and verify is caught.
 
     contract regression: the observation provenance cross-check added in contract
@@ -419,17 +413,13 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
-            clock=_T0,
+            clock=T0,
         )
 
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_02: Decimal("1000"),
-        _CASILLA_05: Decimal("0"),
-        _CASILLA_06: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
-        _CASILLA_16: Decimal("0"),
-        _CASILLA_18: Decimal("0"),
+        CASILLA_05: Decimal("0"),
+        CASILLA_16: Decimal("0"),
+        CASILLA_18: Decimal("0"),
     }
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -438,7 +428,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        clock=_T1,
+        clock=T1,
     )
 
     # Require at least one typed observation for the provenance cross-check
@@ -474,7 +464,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
             tampered_revision.calculation_revision_id,
             actor="operator-test",
             workflow_profile=workflow_profile(),
-            clock=_T2,
+            clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     assert refusal.value.context is not None
@@ -542,4 +532,4 @@ def test_required_manual_checklist_excludes_absent_registry_definition() -> None
         *checklist.live_observation,
         *checklist.unbucketed_sources,
     )
-    assert _ABSENT_REGISTRY_CASILLA not in {entry.casilla_id for entry in entries}
+    assert ABSENT_REGISTRY_CASILLA not in {entry.casilla_id for entry in entries}

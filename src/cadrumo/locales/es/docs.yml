@@ -1,10 +1,14 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Ganancia, pérdida o exceso de una baja del registro
+        de elementos de la actividad, sumado a la casilla que le da esta edición
       afiliado_cotizacion: desde el calendario de cuotas de afiliados que aportaste
       atribucion_member: desde los miembros en atribución de rentas
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
       borrador: desde los datos de la AEAT (el borrador)
+      capital_mobiliario_position: desde las filas del libro vinculadas a tus posiciones
+        de ahorro y los certificados de tus pagadores
       collectible_invoice: desde las facturas emitidas
       design_constant: desde una constante fijada por el diseño de registro de la
         AEAT
@@ -31,16 +35,23 @@ docs:
       manual_input: desde un valor que aportas tú
       payable_invoice: desde las facturas recibidas
       previous_filing: desde tu declaración anterior
+      prevision_social_contribution: desde las aportaciones que informan tus certificados
+        de aportaciones a sistemas de previsión social
       profile: desde tu perfil de contribuyente
+      prorrata_register_activity: desde las actividades de tu registro de prorrata
       prorrata_regularizacion: desde la regularización de prorrata
       purchase_invoice_evidence: desde los justificantes de tus facturas recibidas
       relation_prefill: desde el resultado de un modelo relacionado
+      renta_inmueble: desde tus inmuebles arrendados, sus contratos y los movimientos
+        del libro vinculados a ellos
+      retencion_soportada: desde las retenciones que informan los certificados de
+        tus pagadores
       retenciones_aggregation: desde las retenciones registradas
       withholding: desde las retenciones soportadas
       withholding296: desde las retenciones por perceptor del modelo 296
     cadence:
-      ad_hoc: Se presenta cuando ocurre el hecho
       annual: Se presenta anualmente
+      event: Se presenta cuando ocurre el hecho
       monthly: Se presenta mensualmente
       profile_based: Se presenta según tu perfil
       quarterly: Se presenta trimestralmente
@@ -211,9 +222,8 @@ docs:
       option_required: Opción, obligatoria.
     schemas:
       group_entries: '{count} entradas: {keys}'
-      summary: Las siguientes {count} rutas de comando tienen un ``OutputSchema``
-        registrado. Las superficies de retrollamada de grupo ({groups}) se listan
-        aparte.
+      summary: Las siguientes {count} rutas de comando tienen registrado un ``OutputSchema``.
+        Las interfaces de devolución de llamada de grupo ({groups}) se muestran aparte.
       title: Registro de esquemas de salida
       tooling_note: Esta página está pensada sobre todo para quienes crean herramientas.
         Si ejecuta los comandos a mano, las :doc:`páginas de familia <index>` suelen
@@ -358,25 +368,26 @@ docs:
       show_output: Mostrar la salida
   terminology:
     cli:
-      authority: Autoridad de la fuente cuando el campo es «source».
+      authority: Autoridad de la fuente cuando el campo es `source`.
       check: Informa de desviaciones sin escribir; devuelve un código distinto de
         cero si existen.
       concept_id: Identificador del concepto que se debe gestionar.
       domain: 'IATE: conjunto permitido de campos temáticos (repetible).'
       dry_run: Informa de lo que se incorporaría sin escribir.
       export_path: Ruta del archivo de exportación de la fuente descargado.
-      field_name: short_description | definition | scope_note | source | term.
-      field_value: Valor del campo (cita para «source»; etiqueta para «term»).
+      field_name: '`short_description` | `definition` | `scope_note` | `source` |
+        `term`.'
+      field_value: Valor del campo (cita para `source`; etiqueta para `term`).
       help: Mantenimiento del manual de terminología.
       language: Código de la sección lingüística.
       min_reliability: 'IATE: código mínimo de fiabilidad que se debe conservar (>=
         3).'
-      relation_kind: broader | related.
+      relation_kind: '`broader` | `related`.'
       relation_source: Identificador del concepto de origen de la relación.
       relation_target: Identificador del concepto de destino.
       remove_relation: Elimina la relación en lugar de añadirla.
       remove_term_label: Etiqueta exacta del término que se debe eliminar.
       replaced_by: Identificador del concepto sucesor (obligatorio).
       retire_concept: Identificador del concepto que se debe retirar.
-      seed_source: 'Fuente de nivel A: iate | ubterm (eurovoc una vez verificado).'
-      term_status: Estado del término cuando el campo es «term».
+      seed_source: 'Fuente de nivel A: `iate` | `ubterm` (`eurovoc` una vez verificado).'
+      term_status: Estado del término cuando el campo es `term`.

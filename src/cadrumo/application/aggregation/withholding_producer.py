@@ -26,6 +26,7 @@ from .retenciones import (
     RetencionObservation,
 )
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import modelo_for_income_kind
 from .withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -72,7 +73,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     source_revision_id: str = Field(min_length=1, max_length=128)
     allocation_id: str = Field(min_length=1, max_length=128)
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
@@ -82,7 +83,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     mode: WithholdingMutationMode = WithholdingMutationMode.APPEND
     idempotency_key: str = Field(min_length=1, max_length=128)
     baseline: WithholdingWindowBaseline | None = None
-    reason: str | None = Field(default=None, min_length=1, max_length=500)
+    reason: str | None = Field(default=None, min_length=1, max_length=512)
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_190_detail: WithholdingObservation | None = None
@@ -100,10 +101,11 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
         requires_modelo_190_detail = self.recognition_evidence.income_kind in {
             WithholdingIncomeKind.WORK,
             WithholdingIncomeKind.PROFESSIONAL,
+            WithholdingIncomeKind.PRIZE,
         }
         if requires_modelo_190_detail != (self.modelo_190_detail is not None):
             raise ValueError(
-                "work and professional income require Modelo 190 annual detail and other income forbids it"
+                "work, professional and prize income require Modelo 190 annual detail and other income forbids it"
             )
         is_capital = self.recognition_evidence.income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL
         if not is_capital and self.modelo_193_pending_payment is not None:
@@ -158,7 +160,7 @@ class WithholdingProducer:
             )
         if cadence.filing_year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("filer_cadence_year_mismatch")
-        modelo = _modelo_for(command.recognition_evidence.income_kind, command.scheme)
+        modelo = modelo_for(command.recognition_evidence.income_kind, command.scheme)
         recognition = derive_withholding_recognition(command.recognition_evidence, modelo=modelo)
         if recognition.recognized_on.year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("recognition_year_mismatch")
@@ -257,18 +259,17 @@ def _require_counterpart_source(source_kind: BindingSourceKind) -> None:
         raise WithholdingProducerError("unsupported_source_kind") from exc
 
 
-def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> str:
+def modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> str:
     """Return the one grounded periodic modelo for a supported evidence kind."""
     allowed: tuple[RetencionScheme, ...]
     if income_kind is WithholdingIncomeKind.WORK:
         allowed = (RetencionScheme("rendimientos_trabajo"), RetencionScheme("rendimientos_trabajo_administrador"))
-        modelo = "111"
     elif income_kind is WithholdingIncomeKind.PROFESSIONAL:
         allowed = (RetencionScheme("actividades_economicas"), RetencionScheme("actividades_profesionales"))
-        modelo = "111"
     elif income_kind is WithholdingIncomeKind.URBAN_RENT:
         allowed = (RetencionScheme("arrendamiento_urbano"),)
-        modelo = "115"
+    elif income_kind is WithholdingIncomeKind.PRIZE:
+        allowed = (RetencionScheme("premios"),)
     elif income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
         # The selected 2025 withholding-scheme catalogue is the scope here.
         # It deliberately does not make formalisation, IS, or IRNR branches
@@ -278,11 +279,13 @@ def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> 
             RetencionScheme("dividendos"),
             RetencionScheme("otros_capital_mobiliario"),
         )
-        modelo = "123"
     else:
         raise WithholdingProducerError("unsupported_income_projection")
     if scheme not in allowed:
         raise WithholdingProducerError("scheme_income_kind_mismatch")
+    modelo = modelo_for_income_kind(income_kind)
+    if modelo is None:
+        raise WithholdingProducerError("unsupported_income_projection")
     return modelo
 
 

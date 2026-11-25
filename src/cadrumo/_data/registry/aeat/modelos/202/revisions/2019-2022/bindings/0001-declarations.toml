@@ -26,3 +26,45 @@ source_refs = ["aeat-modelo-202-instructions-2018-2022"]
 [[revisions.2019-2022.bindings.source_citations]]
 source_ref = "aeat-modelo-202-instructions-2018-2022"
 required_text = ["importe neto de la cifra de negocios"]
+
+# Modelo 202 modalidad art. 40.2 LIS: base del pago fraccionado from the
+# prior period's cuota.
+#
+# Under LIS art. 40.2 the instalment base (casilla 01) is the cuota integra
+# of the last periodo impositivo whose declaration deadline had elapsed on the
+# first day of the instalment's payment month, "minorado en las deducciones y
+# bonificaciones asi como en las retenciones e ingresos a cuenta" of that same
+# periodo. Declared at this, the earliest edition, because the instrucciones
+# of every edition carry that wording: the 2018-2022 instrucciones PDF cited
+# below, and the 2023-2024 and current pages the later editions cite. The
+# cuota liquida (DP200014B:00592) is only net of the deductions and
+# bonificaciones, so this binding copies the prior Modelo 200 cuota del
+# ejercicio a ingresar o a devolver (DP200014B:00599), which is the cuota
+# liquida minus the retenciones e ingresos a cuenta (01766 and 01784).
+#
+# The temporal member declares all three target periods: 1P reaches two filing
+# years back, 2P and 3P one year back, because the prior-year Modelo 200 July
+# deadline falls between the April instalment and the October/December ones.
+# The offsets assume a periodo impositivo that coincides with the calendar
+# year.
+#
+# What can be incomplete is SOURCE COVERAGE, not the declaration: an anchor
+# that lands on a filing year with no Modelo 200 revision or no held return
+# resolves to no value, and the casilla stays unresolved with its diagnostic.
+#
+# The binding inherits the INCN modality gate (derive_modelo_202_modality,
+# driven by the modelo-202-incn-prior-12-months profile binding): for an
+# INCN > EUR 6M entity, modalidad 40.2 is not offered (only 40.3 clave 32), so
+# casilla 01 is not populated for a 40.3-mandatory filer.
+[[revisions.2019-2022.bindings]]
+id = "modelo-202-cuota-base-ejercicio-anterior"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "DP200014B:00599", temporal = { kind = "filing_year_offset_by_target_period", offsets = { "1P" = -2, "2P" = -1, "3P" = -1 }, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["1P", "2P", "3P"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]
+
+[[revisions.2019-2022.bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions-2018-2022"
+required_text = ["modalidad", "40.2", "minorado en las deducciones y bonificaciones", "retenciones e ingresos a cuenta"]

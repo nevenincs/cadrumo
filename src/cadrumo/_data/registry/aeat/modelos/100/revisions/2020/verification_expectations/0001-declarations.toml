@@ -63,8 +63,6 @@ reconcile_when_present_casilla_ids = [
     "0054",
     "0056",
     "0060",
-    "0149",
-    "0154",
     "0155",
     "0156",
     "0180",
@@ -121,6 +119,8 @@ reconcile_when_present_casilla_ids = [
     "0505",
     "0513",
     "0514",
+    "0515",
+    "0516",
     "0528",
     "0529",
     "0530",
@@ -156,7 +156,6 @@ reconcile_when_present_casilla_ids = [
     "0845",
     "0879",
     "1128",
-    "1224",
     "1257",
     "1270",
     "1283",
@@ -190,3 +189,49 @@ min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63-2015", "ley-35-2006:art-66-2015", "ley-35-2006:art-67", "ley-35-2006:art-68-2018", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76-2015", "ley-35-2006:art-77"]
 source_refs = ["aeat-renta-2020-manual-parte1", "lirpf-cuota-chain-authority"]
+
+# Saldos positivo (0429) and negativo (0430) of the capital mobiliario
+# integrated in the savings base, derived from 0041 under art. 49.1.a. A
+# filing prints them only when the taxpayer has that income, so they reconcile
+# when present and stay out of the coverage denominator.
+[[revisions."2020".verification_expectations]]
+id = "modelo-100-ahorro-capital-mobiliario-saldos-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0429", "0430"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+# Casilla 0564, the sum of the autonomic deductions of the comunidad of
+# residence that Ley 35/2006 art. 77 subtracts from the cuota integra
+# autonomica. The official dictionary prints it as the SUMADEDAUT row and each
+# comunidad's DEDAUTx row lists its operands; the Manual practico de Renta 2020
+# (p. 1265, Comunidad de Madrid) names "el importe de las deducciones
+# autonomicas, casilla [0564]". A filing prints it only when the
+# taxpayer claims an autonomic deduction, so it reconciles when present and
+# stays out of the coverage denominator (min_coverage = 0): a return without
+# autonomic deductions, or with one the engine does not compute, keeps its
+# verdict.
+[[revisions."2020".verification_expectations]]
+id = "modelo-100-deducciones-autonomicas-suma-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0564"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-renta-2020-manual-parte1", "aeat-dr-100-2020-dictionary"]

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-10-03'
-body_hash: 'sha256:507884c36463be8a4162e9f0527c4934faa4ed8164e900c4ed95a26e5108eeff'
+modified: '2026-10-22'
+body_hash: 'sha256:d8fb5d51d95a80081ec367070b23bbdb215911ff7c2a1b1669f44d18d692c632'
 related:
   - "[[2026-06-04-registry-period-code-union-research]]"
   - "[[2026-06-10-ledger-filter-period-research]]"
@@ -66,7 +66,7 @@ dozen dialects of it.
   carries the `raw` combined-string field (the conflation lives *inside* the
   object), and it only models the ledger span shapes (quarters / months /
   annual), not the pago-fraccionado instalment claves (`1P`-`4P`) or the
-  extended union members (`EXT-*` / `AD-HOC` / `EVENT-N`).
+  extended union members (`EXT-*` / `EVENT-N`).
 - `core/_period.py` already owns `StandardPeriodCode` (the canonical token
   `StrEnum`) and the registry-union validation helpers. The core layer is
   therefore the natural and already-established home for period authority; a

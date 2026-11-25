@@ -1,13 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The window's columns: the agent beside the rail, then the TUI and the
 // documentation. Each is shown and put away on its own, and with none of
 // them shown the main area says so.
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = (target: Page, scenario = "signed-in", query = "") =>
+  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off${query}`);
 
 const rail = (target: Page) =>
   target.getByRole("navigation", { name: label("desktop.rail.label") });
@@ -18,22 +19,22 @@ const railButton = (target: Page, key: string) =>
 const left = async (target: Page, selector: string) =>
   (await target.locator(selector).boundingBox())?.x ?? Number.NaN;
 
-// A column's own controls are in its header bar; the agent's bar is the
-// conversation's, so they are found within the column.
-const close = (target: Page, pane: string, key: string) =>
+// The docking tab strip owns each pane's layout controls.
+const close = (target: Page, pane: string) =>
   target
-    .locator(`.${pane}`)
-    .getByRole("button", { name: label(key) })
+    .locator(`[data-dock-header="${pane}"]`)
+    .getByRole("button", { name: label("desktop.dock.close"), exact: true })
     .click();
 
 test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Column tests arrange an explicit workspace beside the agent.
+    // Column tests arrange an explicit workspace beside the agent; the TUI
+    // in it is opened by each test, since no launch starts a terminal.
     localStorage.setItem(
       "cadrumo-shell-layout",
-      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+      JSON.stringify({ layout: { page: "docs" } }),
     );
     sessionStorage.setItem("layout-cleared", "1");
   });
@@ -44,7 +45,8 @@ test("an explicitly saved workspace opens beside the agent with documentation pu
 }) => {
   await open(target);
   await expect(target.locator(".pane-agent")).toBeVisible();
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await showTui(target);
   await expect(target.locator(".pane-docs")).toBeHidden();
   expect(await left(target, ".pane-agent")).toBeLessThan(
     await left(target, ".pane-tui"),
@@ -73,16 +75,17 @@ test("each column closes on its own, and with none left the main area offers the
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   const canvas = target.locator(".canvas");
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   await expect(canvas).toHaveCount(0);
-  await close(target, "pane-agent", "desktop.agent.hide");
+  await close(target, "agent");
   await expect(target.locator(".pane-agent")).toBeHidden();
-  await close(target, "pane-tui", "desktop.tui.hide");
+  await close(target, "tui");
   await expect(target.locator(".pane-tui")).toBeHidden();
   await expect(canvas).toHaveCount(0);
-  await close(target, "pane-docs", "desktop.docs.hide");
+  await close(target, "docs");
   await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(canvas).toBeVisible();
   await expect(canvas).toContainText(label("desktop.canvas.title"));
@@ -103,27 +106,28 @@ test("each column closes on its own, and with none left the main area offers the
   await expect(canvas).toHaveCount(0);
   await railButton(target, "desktop.rail.docs").click();
   await expect(canvas).toBeVisible();
-  // The agent alone beside the rail still leaves the main area empty.
+  // A single docked pane takes the workspace instead of leaving an empty column.
   await canvas
     .getByRole("button", { name: label("desktop.agent.show") })
     .click();
   await expect(target.locator(".pane-agent")).toBeVisible();
-  await expect(canvas).toBeVisible();
-  await expect(
-    canvas.getByRole("button", { name: label("desktop.agent.show") }),
-  ).toHaveCount(0);
+  await expect(canvas).toHaveCount(0);
+  const agent = await target.locator('[data-dock-pane="agent"]').boundingBox();
+  const workspace = await target.locator("[data-dock-workspace]").boundingBox();
+  expect(agent).toEqual(workspace);
 });
 
 test("a maximized column fills the window and its close restores the rest", async ({
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   await target
-    .locator(".pane-agent")
-    .getByRole("button", { name: label("desktop.pane.maximize_agent") })
+    .locator('[data-dock-header="agent"]')
+    .getByRole("button", { name: label("desktop.dock.expand"), exact: true })
     .click();
   await expect(target.locator(".pane-tui")).toBeHidden();
-  await close(target, "pane-agent", "desktop.agent.hide");
+  await close(target, "agent");
   await expect(target.locator(".pane-agent")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
 });
@@ -131,12 +135,15 @@ test("a maximized column fills the window and its close restores the rest", asyn
 test("a layout stored before the documentation could be put away opens in today's order", async ({
   page: target,
 }) => {
+  // An older shell stored the TUI's visibility and nothing of the
+  // documentation's; the TUI it stored comes back as stored.
   await seedLayout(target, {
     prefs: { order: "docs" },
     layout: { tuiShown: true },
   });
   await open(target);
   await expect(target.locator(".pane-docs")).toBeHidden();
+  await expect(target.locator(".pane-tui")).toBeVisible();
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   expect(await left(target, ".pane-tui")).toBeLessThan(
@@ -148,6 +155,7 @@ test("F6 goes through the columns in the order they are laid out", async ({
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   // The panel takes the keyboard as it opens; the walk starts after that.
@@ -176,9 +184,8 @@ test("the agent's splitter moves by the arrow keys within its bounds", async ({
   page: target,
 }) => {
   await open(target);
-  const handle = target.getByRole("separator", {
-    name: label("desktop.agent.resize"),
-  });
+  await showTui(target);
+  const handle = target.locator('[data-dock-divider=""]');
   const width = async () =>
     (await target.locator(".agent-column").boundingBox())?.width ?? 0;
   await handle.focus();
@@ -200,6 +207,7 @@ test("a window too narrow for the agent beside the rest shows it on its own", as
 }) => {
   await target.setViewportSize({ width: 520, height: 600 });
   await open(target);
+  await showTui(target);
   await expect(target.locator(".pane-agent")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
   await railButton(target, "desktop.rail.agent").click();
@@ -217,9 +225,8 @@ test("double-clicking the agent's bar maximizes and restores it, its buttons do 
   page: target,
 }) => {
   await open(target);
-  const title = target
-    .locator(".pane-agent")
-    .getByRole("heading", { name: label("desktop.agent.new_conversation") });
+  await showTui(target);
+  const title = target.locator("#tab-agent");
   await title.dblclick();
   await expect(target.locator(".pane-tui")).toBeHidden();
   await title.dblclick();
@@ -266,7 +273,7 @@ const agentButton = (target: Page, key: string) =>
 test("the agent's history lists the host's conversations and opens one", async ({
   page: target,
 }) => {
-  await open(target);
+  await open(target, "signed-in", "&documents=unavailable");
   await agentButton(target, "desktop.agent.history").click();
   const body = target.locator(".agent-body");
   await expect(body.getByText("IVA del tercer trimestre")).toBeVisible();
@@ -284,7 +291,7 @@ test("the agent's history lists the host's conversations and opens one", async (
   await expect(log).toContainText("¿Me preparas el 303?");
   await expect(log).toContainText("ledger_register_invoice");
   await expect(log).toContainText("He leído 42 apuntes del trimestre.");
-  // Its documents are Cadrumo's custody's, which serves none yet.
+  // The document service is unavailable in this scenario.
   await expect(agentButton(target, "desktop.agent.documents")).toHaveAttribute(
     "aria-disabled",
     "true",

@@ -78,7 +78,7 @@ def _observed_event(
     period: Period = _PERIOD,
     reference_id: str | None = None,
     submitted_at: datetime | None = None,
-    authenticated_identity: str | None = "X1234567L",
+    authenticated_identity: str | None = "X0001500M",
 ) -> OverviewCalendarEvent:
     return OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.FILING,
@@ -142,7 +142,7 @@ def test_local_records_cannot_establish_the_aeat_axis_without_an_aeat_read() -> 
     projection = build_calendar_evidence_projection(
         local=_local(records=(record,)),
         aeat=_aeat(HomeAvailability.NEVER_CAPTURED),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(projection.evidence) == 1
@@ -159,7 +159,7 @@ def test_aeat_records_do_not_establish_the_local_axis_when_local_is_available_em
     projection = build_calendar_evidence_projection(
         local=_local(),
         aeat=_aeat(records=(record,)),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(projection.evidence) == 1
@@ -201,12 +201,12 @@ def test_natural_address_join_is_deterministic_and_preserves_both_axes() -> None
     forward = build_calendar_evidence_projection(
         local=_local(records=records),
         aeat=_aeat(events=events),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
     reversed_sources = build_calendar_evidence_projection(
         local=_local(records=tuple(reversed(records))),
         aeat=_aeat(events=tuple(reversed(events))),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert reversed_sources.evidence == forward.evidence
@@ -240,9 +240,9 @@ def test_equal_strength_same_address_claims_have_a_deterministic_primary_referen
 @pytest.mark.parametrize(
     ("authenticated_identity", "expected_tax_id", "is_retained"),
     [
-        ("X1234567L", "X1234567L", True),
-        ("Y7654321G", "X1234567L", False),
-        (None, "X1234567L", False),
+        ("X0001500M", "X0001500M", True),
+        ("Y0001503E", "X0001500M", False),
+        (None, "X0001500M", False),
         (None, None, True),
     ],
 )

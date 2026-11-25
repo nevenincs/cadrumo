@@ -44,8 +44,8 @@ from ..identity.documents import (
 )
 from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
 from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
+from ..redaction.patterns import NIF_PATTERN
 from ..redaction.rules import (
-    NIF_PATTERN,
     default_rules_for_class,
     redact_for_cli_output,
     redact_for_log,
@@ -62,8 +62,8 @@ _DIGEST_RE = re.compile(r"sha256:([0-9a-f]{8})")
 #: A real Spanish company identity and its printed spellings, plus a real
 #: account. Used across the populations below so one corpus entry cannot drift
 #: from another.
-_IDENTITY = "ESB12345674"
-_SECOND_IDENTITY = "ESX1234567L"
+_IDENTITY = "ESB00015016"
+_SECOND_IDENTITY = "ESX0001500M"
 _ACCOUNT = "ES91 2100 0418 4502 0005 1332"
 
 #: An adversarial corpus spanning all four populations. Entries are short so the
@@ -71,7 +71,7 @@ _ACCOUNT = "ES91 2100 0418 4502 0005 1332"
 #: not depend on length.
 MIXED_POPULATION_CORPUS = [
     # prose with short neighbours
-    "counterparty ESB12345674 is declared",
+    "counterparty ESB00015016 is declared",
     "de SE556677889901 y DE811234567",
     "la B.1234567.4 en el registro",
     "es 12345678Z en",
@@ -197,7 +197,7 @@ def _recover_hashed_spans(source: str, digest: str) -> set[str]:
     }
 
 
-def _admitting_authority(span: str) -> str | None:
+def admitting_authority(span: str) -> str | None:
     """Name the authority that accepts ``span``, or ``None`` if none does."""
     normalised = normalise_nif_iva(span)
     candidates = [normalised]
@@ -243,7 +243,7 @@ def test_every_hashed_span_is_a_real_identity_or_account(source: str, funnel: Ca
     for digest in _DIGEST_RE.findall(redacted):
         spans = _recover_hashed_spans(source, digest)
         assert spans, f"digest {digest} in {redacted!r} matches no substring of {source!r}"
-        authorities = {span: _admitting_authority(span) for span in spans}
+        authorities = {span: admitting_authority(span) for span in spans}
         assert any(authorities.values()), (
             f"the funnel hashed {sorted(spans)!r} out of {source!r}, and no authority accepts any of them"
         )

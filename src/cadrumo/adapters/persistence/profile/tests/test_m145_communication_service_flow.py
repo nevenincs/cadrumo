@@ -35,18 +35,9 @@ from .....application.modelo.m145_communication_records import (
 from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
+from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def _field_values() -> dict[str, str]:
-    return {
-        "perceptor.nif": "12345678Z",
-        "perceptor.primer-apellido": "Garcia",
-        "perceptor.segundo-apellido": "Lopez",
-        "perceptor.nombre": "Ana",
-        "perceptor.anio-nacimiento": "1981",
-    }
 
 
 def test_m145_communication_service_flow_creates_validates_exports_delivers_and_completes(
@@ -56,7 +47,7 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
         created = create_m145_communication_record(
             M145CommunicationCreateCommand(
                 communication_year=2026,
-                field_values=_field_values(),
+                field_values=valid_field_values(),
                 note="Initial payer communication",
             ),
             bucket_id=runtime.bucket_id,

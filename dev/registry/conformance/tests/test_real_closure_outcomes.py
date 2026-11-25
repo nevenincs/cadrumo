@@ -10,13 +10,21 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.authority_state import register_authoring_authority, source_root_for
 from ..closure import load_registry_closure_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-_AS_OF = date(2026, 8, 24)
+_AS_OF = date(filing_year_envelope().horizon, 8, 24)
+_BELOW_GRADE_REVISION = str(open_ended_revision("036").id)
+_FILING_GRADE_REVISION = str(authored_revisions("100")[-1].id)
 
 
 @cache
@@ -26,9 +34,7 @@ def _canonical_report():
 
 def test_real_below_grade_row_is_complete_without_filing_export() -> None:
     report = _canonical_report()
-    row = next(
-        item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), "2025-02-03-y-siguientes")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), _BELOW_GRADE_REVISION))
     assert row.temporal_coverage.status == "validated"
     assert row.filing_export is not None
     assert (row.filing_export.outcome, row.filing_export.evidence, row.filing_export.refusal) == (
@@ -45,9 +51,11 @@ def test_real_below_grade_row_is_complete_without_filing_export() -> None:
 def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None:
     report = _canonical_report()
     below_grade = next(
-        item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), "2025-02-03-y-siguientes")
+        item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), _BELOW_GRADE_REVISION)
     )
-    filing_grade = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), "2025"))
+    filing_grade = next(
+        item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), _FILING_GRADE_REVISION)
+    )
     assert below_grade.filing_export is not None and filing_grade.filing_export is not None
     below_payload = _declared_row_fields(below_grade)
     below_payload["filing_export"] = filing_grade.filing_export.model_dump(mode="python")
@@ -64,7 +72,7 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
 def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo(Modelo("100"))
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_FILING_GRADE_REVISION]
     source_id = next(
         ref
         for layout in revision.export_layouts
@@ -75,13 +83,13 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
     catalogues = authority.catalogues.model_copy(
         update={"sources": {**authority.catalogues.sources, source_id: source.model_copy(update={"sha256": "0" * 64})}}
     )
-    mutated = replace(authority, catalogues=catalogues, _snapshots={})
+    mutated = replace(authority, catalogues=catalogues, snapshots={})
     # A replaced authority is a new object, and the evidence root is registered
     # per compilation result by identity, so the copy has to declare the root it
     # inherits or every layout-byte read refuses before the mutation is reached.
     register_authoring_authority(mutated, source_root=source_root_for(authority))
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), "2025"))
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), _FILING_GRADE_REVISION))
     assert row.filing_export is not None
     assert row.filing_export.refusal is not None
     assert (row.filing_export.outcome, row.filing_export.refusal.reason) == ("refused", "stale_evidence")
@@ -91,23 +99,32 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
 def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_cache() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo(Modelo("303"))
-    selected = modelo.revisions["2025"]
-    selector = selected.period_selector.model_copy(update={"years": (2026,), "year_from": None, "year_to": None})
+    successor = open_ended_revision("303")
+    successor_year = successor.valid_from.year
+    selected = modelo.revisions[str(revision_covering("303", successor_year - 1).id)]
+    selector = selected.period_selector.model_copy(
+        update={"years": (successor_year,), "year_from": None, "year_to": None}
+    )
     # The planted revision stands alone in its modelo, so selection has exactly
-    # one candidate for 2026 and answers with it rather than refusing the year
-    # as ambiguous. Its references to siblings go with them: a predecessor and a
-    # reviewed-against naming revisions this copy does not carry both dangle,
-    # and construction refuses for a reason this test is not about.
+    # one candidate for the successor's first year and answers with it rather than refusing the year
+    # as ambiguous. Its references to siblings go with them: a predecessor, a
+    # reviewed-against and continuity evolutions naming revisions this copy does
+    # not carry all dangle, and construction refuses for a reason this test is not about.
     divergent_revision = selected.model_copy(
-        update={"period_selector": selector, "reviewed_against": None, "predecessor": None}
+        update={
+            "period_selector": selector,
+            "reviewed_against": None,
+            "predecessor": None,
+            "casilla_continuidad_evolutions": (),
+        }
     )
     divergent_modelo = modelo.model_copy(update={"revisions": {divergent_revision.id: divergent_revision}})
     mutated = replace(
-        authority, _modelos_by_id={**authority._modelos_by_id, divergent_modelo.id: divergent_modelo}, _snapshots={}
+        authority, modelos_by_id={**authority.modelos_by_id, divergent_modelo.id: divergent_modelo}, snapshots={}
     )
     register_authoring_authority(mutated, source_root=source_root_for(authority))
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("303"), "2026-y-siguientes"))
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("303"), str(successor.id)))
     assert row.temporal_coverage.failure_code == "selected_revision_mismatch"
     assert row.filing_export is not None
     assert row.filing_export.refusal is not None

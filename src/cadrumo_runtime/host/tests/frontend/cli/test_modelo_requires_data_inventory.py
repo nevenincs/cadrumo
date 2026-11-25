@@ -14,7 +14,6 @@ of the classifier under test.
 
 from __future__ import annotations
 
-import json
 import sys
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -22,12 +21,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from .profile_cli_support import partial_taxpayer_invoker
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,44 +49,15 @@ _M202_PERIOD = "1P"
 _M390_MODELO = "390"
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
+# The Modelo 100 inventory closing increase, whose source family no checklist bucket owns.
+_M100_UNBUCKETED_BINDING = "renta-inventory-activity-closing-increase-0177"
+_M100_UNBUCKETED_SOURCE = "inventory"
 
 
 @pytest.fixture
 def invoke_requires(tmp_path: Path) -> Iterator[Callable[[list[str]], Result]]:
     """Serve the real registered inventory reader for a partial taxpayer profile."""
-    with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(
-            label="native-requires",
-            facts={
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.tax_id": "12345678Z",
-                "identity.name": "Operator",
-                "identity.surnames": "Example",
-                "activities.description": "design",
-                "censo.activity_start_date": "2024-01-01",
-                "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "tax_residence.ccaa": "cataluna",
-                "renta_filing.declaration_type": "1",
-                "renta_taxpayer.birth_date": "1980-03-15",
-                "renta_family.minor_children_in_unit": "false",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
-
-        def invoke(args: list[str]) -> Result:
-            assert profile.label is not None
-            close_active_bucket_session()
-            return invoke_cached_cli(
-                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
-                input=json.dumps({"profile_passphrase": profile.passphrase}),
-            )
-
+    with partial_taxpayer_invoker(tmp_path, label="native-requires") as invoke:
         yield invoke
 
 
@@ -129,13 +97,16 @@ def test_requires_classifies_real_m130_sources_with_bound_profile(
     assert result["filing_year"] == _M130_YEAR
     assert result["period"] == _M130_PERIOD
     sections = _numbers_by_section(result)
-    assert {"01", "02"} <= sections["ledger_derivable"]
+    # Casilla 02 is computed (expenses plus the simplified-modality provision), so the ledger
+    # feeds it through the support casilla for the expenses before that provision.
+    assert {"01", "gastos-deducibles-previos"} <= sections["ledger_derivable"]
+    assert "02" not in sections["ledger_derivable"]
     assert result["optional_manual"]
 
     # Ledger-derivable rows carry their binding provenance for the checklist.
     ledger_rows = {row["number"]: row["binding_source"] for row in result["ledger_derivable"]}
     assert ledger_rows["01"] == "ledger_renta_income_aggregation"
-    assert ledger_rows["02"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    assert ledger_rows["gastos-deducibles-previos"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
     assert {(row["number"], row["binding_source"]) for row in result["previous_filing"]} >= {
         ("05", "previous_filing"),
     }
@@ -173,7 +144,7 @@ def test_requires_lists_relation_prefill_rows_with_their_bindings(
 def test_requires_advises_on_unbucketed_sources(
     invoke_requires: Callable[[list[str]], Result],
 ) -> None:
-    """A manual-input binding has no checklist bucket, so it is named in an advisory rather than dropped."""
+    """A binding whose source has no checklist bucket is named in an advisory rather than dropped."""
     invocation = invoke_requires(
         [
             "--format",
@@ -191,14 +162,43 @@ def test_requires_advises_on_unbucketed_sources(
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
-    assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
+    assert (_M100_UNBUCKETED_BINDING, _M100_UNBUCKETED_SOURCE) in unbucketed_pairs
 
     notices = unwrap_envelope_notices(invocation.output)
     advisory = next(notice for notice in notices if notice["code"] == "modelo.requires.unbucketed_binding_source")
     assert advisory["severity"] == "warning"
     assert advisory["action"] is None
-    assert "manual_input" in advisory["context"]["source_kinds"]
-    assert "renta-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
+    assert _M100_UNBUCKETED_SOURCE in advisory["context"]["source_kinds"]
+    assert _M100_UNBUCKETED_BINDING in advisory["context"]["binding_ids"]
+
+
+def test_requires_lists_the_withholding_credits_as_payer_record_observations(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
+    """The Modelo 100 withholding credits read the taxpayer's payer records, so they are local observations."""
+    invocation = invoke_requires(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "requires",
+            _M100_MODELO,
+            "--year",
+            str(_M100_YEAR),
+            "--period",
+            _M100_PERIOD,
+        ],
+    )
+    assert invocation.exit_code == 0, invocation.output
+    result = unwrap_schema_envelope(invocation.output)
+    live_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["live_observation"]}
+    assert {
+        ("0596", "renta-retencion-soportada-trabajo", "retencion_soportada"),
+        ("0597", "renta-retencion-soportada-capital-mobiliario", "retencion_soportada"),
+        ("0603", "renta-retencion-soportada-ganancia-patrimonial", "retencion_soportada"),
+    } <= live_rows
+    assert not {row["number"] for row in result["unbucketed_sources"]} & {"0596", "0597", "0603"}
 
 
 def test_requires_buckets_local_register_resolvers_as_live_observations(
@@ -289,7 +289,8 @@ def test_requires_warns_about_unresolved_profile_coefficients(
     assert "renta-profile-marital-status" in unresolved
     assert "renta_taxpayer.marital_status" in result["unresolved_profile_keys"]
     assert "Marital status" in warning["message"]
-    assert "orden-hac-277-2026:art-3" in warning["message"]
+    # The order approving this exercise's form is cited in readable words, as the requirement renderer cites it.
+    assert "Orden HAC/277/2026, art.\u00a03" in warning["message"]
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 

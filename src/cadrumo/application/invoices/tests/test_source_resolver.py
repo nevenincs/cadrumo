@@ -21,11 +21,16 @@ from ....core.period import Period
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ....domain.invoices.business_premises import BusinessPremisesLease
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind, IvaCategory
+from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ...aggregation.source_mesh import (
     CalculationSourceContext,
@@ -33,10 +38,15 @@ from ...aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ...aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
+from ...modelo.bucket_unrouted_source_issues import unrouted_source_issues
+from ...modelo.calculation_note_gate import gate_refuses
+from ...modelo.calculation_notes import note_attention, note_record_verdict
+from ...modelo.printed_boxes import PrintedBoxes
+from ...modelo.work_form_findings import ModeloFormAttention
+from ...operator_actions.catalogue import lookup_action
+from ..source_observations import intracommunity_clave, invoice_sources_for_revision
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
-    _intracommunity_clave,
-    _invoice_sources_for_revision,
 )
 from ..source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
@@ -55,9 +65,29 @@ class _InMemoryCatalogueReader:
         return self._catalogue
 
 
+class _StatedFilingNames:
+    """Each counterparty declared under its printed name, as an entity."""
+
+    def __init__(self, catalogue: InvoiceCatalogue) -> None:
+        self._names = {
+            invoice.counterparty_tax_id: DeclaredPartyFilingName(
+                kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name
+            )
+            for invoice in catalogue.values()
+            if invoice.counterparty_tax_id is not None
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del country_code
+        return self._names.get(tax_identifier)
+
+
 def _resolver(catalogue: InvoiceCatalogue) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=_InMemoryCatalogueReader(catalogue)),
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(catalogue),
+            counterparty_filing_names=_StatedFilingNames(catalogue),
+        ),
     )
 
 
@@ -112,12 +142,12 @@ class TestInvoiceDirectionToSourceKind:
     """The application direction-to-settlement mapping is total."""
 
     def test_issued_maps_to_collectible(self) -> None:
-        from ..source_resolver import invoice_direction_to_source_kind
+        from ..source_observations import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.ISSUED) is BindingSourceKind.COLLECTIBLE_INVOICE
 
     def test_received_maps_to_payable(self) -> None:
-        from ..source_resolver import invoice_direction_to_source_kind
+        from ..source_observations import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BindingSourceKind.PAYABLE_INVOICE
 
@@ -144,7 +174,7 @@ def test_source_resolver_translates_reader_failure_to_diagnostic() -> None:
     resolution = resolver.resolve(context)
 
     # One diagnostic per invoice source the selected revision activates.
-    active_sources = _invoice_sources_for_revision(context)
+    active_sources = invoice_sources_for_revision(context)
     assert active_sources
     assert tuple(d.reason for d in resolution.diagnostics) == ("storage_degraded",) * len(set(active_sources))
 
@@ -296,8 +326,8 @@ def test_service_categories_resolve_directional_m349_claves_without_storage() ->
         category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
-    assert _intracommunity_clave(issued) == "S"
-    assert _intracommunity_clave(received) == "I"
+    assert intracommunity_clave(issued) == "S"
+    assert intracommunity_clave(received) == "I"
 
 
 def _domestic_invoice(
@@ -370,8 +400,8 @@ def test_m347_combined_provenance_preserves_both_invoice_directions() -> None:
             iva_total=Decimal("840"),
         )
         for kind, number, tax_id in (
-            (InvoiceKind.ISSUED, "347-ISSUED", "B87654323"),
-            (InvoiceKind.RECEIVED, "347-RECEIVED", "B12345674"),
+            (InvoiceKind.ISSUED, "347-ISSUED", "B00015057"),
+            (InvoiceKind.RECEIVED, "347-RECEIVED", "B00015016"),
         )
     )
     context = _m347_context(2025)
@@ -417,7 +447,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.RECEIVED,
         number="P-001",
         issued_at=date(2025, 2, 10),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -426,7 +456,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.RECEIVED,
         number="P-002",
         issued_at=date(2025, 8, 10),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -435,7 +465,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.ISSUED,
         number="V-001",
         issued_at=date(2025, 11, 20),
-        counterparty_tax_id="B87654323",
+        counterparty_tax_id="B00015057",
         counterparty_name="CLIENTE GRANDE SL",
         base_total=Decimal("6611.57"),
         iva_total=Decimal("1388.43"),
@@ -444,7 +474,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.RECEIVED,
         number="P-003",
         issued_at=date(2025, 5, 5),
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_name="PROVEEDOR PEQUENO SA",
         base_total=Decimal("826.45"),
         iva_total=Decimal("173.55"),
@@ -457,7 +487,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     rows = sorted(_rows_by_index(resolution.row_binding_values), key=lambda row: str(row["nif"]))
     assert rows == [
         {
-            "nif": "B12345674",
+            "nif": "B00015016",
             "nombre": "PROVEEDOR GRANDE SL",
             "clave": "A",
             "pais-codigo": "",
@@ -473,7 +503,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
             "arrendamiento-local-negocio": "",
         },
         {
-            "nif": "B87654323",
+            "nif": "B00015057",
             "nombre": "CLIENTE GRANDE SL",
             "clave": "B",
             "pais-codigo": "",
@@ -500,7 +530,7 @@ def test_m347_resolution_with_no_declarable_counterparty_returns_no_rows() -> No
         kind=InvoiceKind.RECEIVED,
         number="P-004",
         issued_at=date(2025, 5, 5),
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_name="PROVEEDOR PEQUENO SA",
         base_total=Decimal("826.45"),
         iva_total=Decimal("173.55"),
@@ -548,7 +578,7 @@ def _received(number: str, issued_at: date, *, kind: InvoiceKind = InvoiceKind.R
         kind=kind,
         number=number,
         issued_at=issued_at,
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -624,8 +654,8 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
     while its tenant gets no declarado record; the type 1 totals count and sum
     the inmueble rows.
     """
-    big = _lease("ALQ-1", "B12345674", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
-    small = _lease("ALQ-2", "B87654323", "1000.00", situacion_inmueble="3")
+    big = _lease("ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
+    small = _lease("ALQ-2", "B00015057", "1000.00", situacion_inmueble="3")
 
     resolution = _resolver(build_invoice_catalogue([big, small])).resolve(_m347_context(2025))
 
@@ -635,16 +665,16 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
             rows.setdefault(row_index, {})[binding_id.removeprefix("modelo-347-inmueble-row-")] = value
     assert [rows[index] for index in sorted(rows)] == [
         {
-            "arrendatario-nif": "B12345674",
-            "arrendatario-nombre": "INQUILINO B12345674",
+            "arrendatario-nif": "B00015016",
+            "arrendatario-nombre": "INQUILINO B00015016",
             "importe": big.grand_total,
             "situacion": "1",
             "referencia-catastral": "9872023VH5797S0001WX",
             "direccion": "",
         },
         {
-            "arrendatario-nif": "B87654323",
-            "arrendatario-nombre": "INQUILINO B87654323",
+            "arrendatario-nif": "B00015057",
+            "arrendatario-nombre": "INQUILINO B00015057",
             "importe": small.grand_total,
             "situacion": "3",
             "referencia-catastral": "",
@@ -660,13 +690,13 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
         for row in _rows_by_index(resolution.row_binding_values)
         if "nif" in row
     }
-    assert declarado_marks == {("B12345674", "X")}
+    assert declarado_marks == {("B00015016", "X")}
 
 
 def test_m347_names_the_inmueble_fields_a_recorded_lease_leaves_open() -> None:
     """A lease without situación, or with situación 1 or 2 but no referencia, is named; the dirección always is."""
-    without_situacion = _lease("ALQ-1", "B12345674", "4000.00")
-    without_referencia = _lease("ALQ-2", "B87654323", "4000.00", situacion_inmueble="2")
+    without_situacion = _lease("ALQ-1", "B00015016", "4000.00")
+    without_referencia = _lease("ALQ-2", "B00015057", "4000.00", situacion_inmueble="2")
 
     resolution = _resolver(build_invoice_catalogue([without_situacion, without_referencia])).resolve(
         _m347_context(2025),
@@ -682,7 +712,7 @@ def test_m347_names_the_inmueble_fields_a_recorded_lease_leaves_open() -> None:
 
 def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases() -> None:
     complete = _lease(
-        "ALQ-1", "B12345674", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+        "ALQ-1", "B00015016", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
     )
     ordinary = _received("P-NOV", date(2025, 11, 5))
 
@@ -701,9 +731,9 @@ def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases
     assert without_lease.binding_values["modelo-347-declarante-numero-inmuebles"] == Decimal("0")
 
 
-def test_m347_a_withheld_lease_is_declared_without_the_withholding_advisory() -> None:
-    """Art. 34.1.d settles that the landlord relates a lease, withheld or not, so only other withheld sales are named."""
-    lease = _lease("ALQ-1", "B12345674", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
+def test_m347_a_withheld_lease_stays_declared_because_art_34_1_d_has_the_landlord_relate_it() -> None:
+    """Art. 34.1.d has the landlord relate a lease, withheld or not, so the withholding does not exclude it."""
+    lease = _lease("ALQ-1", "B00015016", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
     withheld_lease = Invoice.model_validate(
         {**lease.model_dump(), "retention_rate": Decimal("0.19"), "retention_amount": Decimal("760.00")},
     )
@@ -712,3 +742,197 @@ def test_m347_a_withheld_lease_is_declared_without_the_withholding_advisory() ->
 
     assert "m347-exclusion:withheld-issued-invoice" not in _advisory_refs(resolution)
     assert resolution.binding_values["modelo-347-declarante-numero-inmuebles"] == Decimal("1")
+
+
+def _m349_first_quarter_context() -> CalculationSourceContext:
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    year = envelope.horizon
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "349")
+    return CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="349",
+        filing_year=year,
+        period=Period.from_year_and_code(year, "1T"),
+        revision=select_revision(modelo, filing_year=year, period="1T"),
+    )
+
+
+def _zero_iva_eu_invoice(
+    context: CalculationSourceContext,
+    operation_type: IntracomOperationType | None,
+    *,
+    country: str = "DE",
+    tax_id: str = "DE123456789",
+    iva_total: Decimal = Decimal("0"),
+) -> Invoice:
+    """An imported issued invoice stating neither a category nor an operation type; by default zero IVA to Germany."""
+    base = Decimal("1000.00")
+    issued_at = date(context.filing_year, 1, 15)
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=InvoiceKind.ISSUED,
+            invoice_number="DE-1",
+            issued_at=issued_at,
+            counterparty_tax_id=tax_id,
+            currency="EUR",
+            grand_total=base + iva_total,
+        ),
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="DE-1",
+        issued_at=issued_at,
+        counterparty_name="EU Counterparty GmbH",
+        counterparty_tax_id=tax_id,
+        counterparty_country=country,
+        base_total=base,
+        iva_total=iva_total,
+        grand_total=base + iva_total,
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Consulting",
+                quantity=Decimal("1"),
+                unit_price=base,
+                subtotal=base,
+                iva_rate=IvaRate.from_registry("EXEMPT" if iva_total == 0 else "RATE_21"),
+                iva_amount=iva_total,
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+        operation_type=operation_type,
+    )
+
+
+def test_m349_names_an_eu_invoice_without_an_operation_type_and_withholds_filing_on_it() -> None:
+    """Zero IVA to an EU party reads as E or S alike, so the gap is named and the declaration is not clean."""
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=None)
+
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+
+    (finding,) = (item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified")
+    assert finding.fact is not None
+    assert finding.fact.sentence is CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED
+    assert finding.fact.row_refs == (invoice.invoice_id,)
+    assert dict(finding.fact.values)["invoice"] == "DE-1"
+    assert resolution.detail_rows == ()
+    # The note withholds checking, exporting and recording, and persists with the calculation.
+    assert note_attention(finding.reason, box=None) is ModeloFormAttention.BLOCKS
+    assert gate_refuses(finding.reason, finding.binding_source)
+    (issue,) = unrouted_source_issues((finding,), PrintedBoxes(numbers={}))
+    assert issue.reason == "m349_operation_unclassified"
+    assert issue.fact == finding.fact
+
+
+def test_m349_note_opens_the_invoice_update_with_the_operation_type_left_to_the_filer() -> None:
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=None)
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+    (finding,) = (item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified")
+
+    verdict = note_record_verdict(finding.reason, finding.fact)
+
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.ledger.invoice.update.operation_type"
+    bound = {item.argument_name: item for item in verdict.argument_bindings}
+    assert bound["invoice_id"].value == invoice.invoice_id
+    assert verdict.missing_argument_names == ("operation_type",)
+
+
+def test_m349_declares_the_same_invoice_as_one_operator_once_its_operation_type_is_stated() -> None:
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=IntracomOperationType.S)
+
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+
+    assert not [item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified"]
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    (row,) = resolution.detail_rows
+    assert isinstance(row, Modelo349OperadorRow)
+    assert row.clave_operacion == "S"
+
+
+@pytest.mark.parametrize(
+    ("country", "tax_id", "iva_total"),
+    [("ES", "B00015016", Decimal("0")), ("DE", "DE123456789", Decimal("210.00"))],
+    ids=("domestic-party", "iva-charged"),
+)
+def test_m349_raises_no_unclassified_note_for_an_invoice_that_is_no_intra_community_operation(
+    country: str, tax_id: str, iva_total: Decimal
+) -> None:
+    context = _m349_first_quarter_context()
+    other = _zero_iva_eu_invoice(context, None, country=country, tax_id=tax_id, iva_total=iva_total)
+
+    resolution = _resolver(build_invoice_catalogue([other])).resolve(context)
+
+    assert not [item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified"]
+
+
+class _NoStatedFilingNames:
+    """A profile in which the person has stated no counterparty's filing name."""
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del tax_identifier, country_code
+
+
+def test_m347_party_without_a_declared_filing_name_files_no_name_and_is_named_with_its_door() -> None:
+    """The record design fills the arrendatario name from the person's declared name only.
+
+    With none stated, the printed invoice name never stands in: the name cell is
+    left without content and one note per party names it, with the invoice it
+    is recognised by, until the name is declared.
+    """
+    lease = _lease(
+        "ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+    )
+    catalogue = build_invoice_catalogue([lease])
+    resolver = InvoiceCatalogueSourceResolver(
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(catalogue),
+            counterparty_filing_names=_NoStatedFilingNames(),
+        ),
+    )
+
+    resolution = resolver.resolve(_m347_context(2025))
+
+    names = {key: value for key, value in resolution.row_binding_values.items() if str(key[0]).endswith("-nombre")}
+    assert names == {}
+    unresolved = [item for item in resolution.diagnostics if item.reason == "declared_party_name_unresolved"]
+    assert {item.fact.sentence for item in unresolved if item.fact is not None} == {
+        CalculationNoteSentence.DECLARED_PARTY_NAME_MISSING
+    }
+    assert {item.fact.row_refs for item in unresolved if item.fact is not None} == {(lease.invoice_id,)}
+    assert all(item.remedy is not None for item in unresolved)
+    assert all(lease.counterparty_name not in str(item.casilla_id) for item in unresolved)
+
+
+def test_an_unstated_party_name_note_opens_the_counterparty_filing_name_door() -> None:
+    """The note carries the catalogued door that states the name, binding nothing that identifies the party."""
+    lease = _lease(
+        "ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+    )
+    resolver = InvoiceCatalogueSourceResolver(
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(build_invoice_catalogue([lease])),
+            counterparty_filing_names=_NoStatedFilingNames(),
+        ),
+    )
+    (finding, *_others) = [
+        item
+        for item in resolver.resolve(_m347_context(2025)).diagnostics
+        if item.reason == "declared_party_name_unresolved"
+    ]
+
+    verdict = note_record_verdict(finding.reason, finding.fact)
+
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert lookup_action(verdict.action.action_id).action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert set(verdict.missing_argument_names) == {"tax_identifier", "country_code", "kind"}
+    assert "B00015016" not in verdict.model_dump_json()
+    assert finding.remedy is not None
+    assert "cadrumo" not in finding.remedy

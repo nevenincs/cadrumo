@@ -10,21 +10,23 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
-from ._registry_scenarios_support import (
-    _estimacion_objetiva_modulos_archetype_scenario,
-    _expected,
-    _final_settlement_scenario,
-    _inputs,
-    _minimo_familiar_descendientes_discapacidad_archetype_scenario,
-    _negative_simplified_base_scenario,
-    _normal_direct_estimation_payments_scenario,
-    _operand_casilla_refs,
-    _operand_refs,
-    _real_estate_capital_scenario,
-    _simplified_direct_estimation_cap_scenario,
-    _tributacion_conjunta_family_joint_archetype_scenario,
-)
+from .authored_editions import authored_revisions, newest_authored_edition, revision_covering
+from .modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import published_legal_reference
+from .registry_scenarios_support import (
+    estimacion_objetiva_modulos_archetype_scenario,
+    expected,
+    final_settlement_scenario,
+    inputs,
+    minimo_familiar_descendientes_discapacidad_archetype_scenario,
+    negative_simplified_base_scenario,
+    normal_direct_estimation_payments_scenario,
+    operand_casilla_refs,
+    real_estate_capital_scenario,
+    registry_scenarios_operand_refs,
+    simplified_direct_estimation_cap_scenario,
+    tributacion_conjunta_family_joint_archetype_scenario,
+)
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -35,10 +37,13 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_M100_EXERCISE = newest_authored_edition("100")
+_M100_REVISION = str(revision_covering("100", _M100_EXERCISE).id)
+
 
 @pytest.fixture(scope="module")
 def matching_registry_scenario_report() -> RegistryScenarioRunReport:
-    return run_registry_calculation_scenario(_simplified_direct_estimation_cap_scenario())
+    return run_registry_calculation_scenario(simplified_direct_estimation_cap_scenario())
 
 
 def test_registry_scenario_report_accepts_a_consistent_match(
@@ -69,14 +74,14 @@ def test_registry_scenario_report_rejects_a_status_that_contradicts_its_comparis
 def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payments() -> None:
     """Provenance gate for modelo 100 calculation wiring."""
     scenarios = (
-        _normal_direct_estimation_payments_scenario(),
-        _simplified_direct_estimation_cap_scenario(),
-        _negative_simplified_base_scenario(),
-        _real_estate_capital_scenario(),
-        _final_settlement_scenario(),
-        _estimacion_objetiva_modulos_archetype_scenario(),
-        _tributacion_conjunta_family_joint_archetype_scenario(),
-        _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
+        normal_direct_estimation_payments_scenario(),
+        simplified_direct_estimation_cap_scenario(),
+        negative_simplified_base_scenario(),
+        real_estate_capital_scenario(),
+        final_settlement_scenario(),
+        estimacion_objetiva_modulos_archetype_scenario(),
+        tributacion_conjunta_family_joint_archetype_scenario(),
+        minimo_familiar_descendientes_discapacidad_archetype_scenario(),
     )
     reports = [run_registry_calculation_scenario(scenario) for scenario in scenarios]
 
@@ -105,7 +110,7 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
 
 def test_modelo_100_scenario_rejects_undeclared_hand_typed_inventory_acquisition_cost() -> None:
     """Removing 0181's provenance declaration must reactivate the bound-input refusal."""
-    scenario = _normal_direct_estimation_payments_scenario()
+    scenario = normal_direct_estimation_payments_scenario()
     without_0181 = {
         casilla_id: reason for casilla_id, reason in scenario.hand_typed_bound_casillas.items() if casilla_id != "0181"
     }
@@ -119,14 +124,14 @@ def test_modelo_100_scenario_rejects_undeclared_hand_typed_inventory_acquisition
 
 
 def test_registry_scenario_reports_trace_contract_mismatches() -> None:
-    scenario = _simplified_direct_estimation_cap_scenario().model_copy(
+    scenario = simplified_direct_estimation_cap_scenario().model_copy(
         update={
             "expected_outputs": (
-                _expected(
+                expected(
                     "0222",
                     value=Decimal("2000.00"),
-                    operand_refs=_operand_refs("0180", "missing-operand"),
-                    operand_casilla_refs=_operand_casilla_refs("0180"),
+                    operand_refs=registry_scenarios_operand_refs("0180", "missing-operand"),
+                    operand_casilla_refs=operand_casilla_refs("0180"),
                 ),
             ),
         },
@@ -155,7 +160,7 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
         revision=str(exercise),
         filing_year=exercise,
         period="0A",
-        inputs=_inputs({"0171": Decimal("10000.00")}),
+        inputs=inputs({"0171": Decimal("10000.00")}),
         hand_typed_bound_casillas={
             validated_casilla_id("0171"): (
                 "isolates the difficult-justification rate applied to 0180; the ledger-income aggregation "
@@ -163,8 +168,26 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
             ),
         },
         binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
         },
         relation_values={
@@ -175,16 +198,16 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_context={"filing_period": date(exercise, 12, 31)},
         expected_outputs=(
-            _expected(
+            expected(
                 "0222",
                 value=Decimal("700.00"),
-                operand_refs=_operand_refs(
+                operand_refs=registry_scenarios_operand_refs(
                     "0180",
                     "0218",
                     "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
                     "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
-                operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
+                operand_casilla_refs=operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"),
                 source_refs=(f"aeat-renta-{exercise}-manual-parte1", "lirpf-cuota-chain-authority"),
             ),
@@ -197,14 +220,14 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
 
 
 def test_registry_scenario_reports_operand_casilla_ref_mismatches() -> None:
-    scenario = _simplified_direct_estimation_cap_scenario().model_copy(
+    scenario = simplified_direct_estimation_cap_scenario().model_copy(
         update={
             "expected_outputs": (
-                _expected(
+                expected(
                     "0222",
                     value=Decimal("2000.00"),
                     operand_refs=("0179",),
-                    operand_casilla_refs=_operand_casilla_refs("0179"),
+                    operand_casilla_refs=operand_casilla_refs("0179"),
                 ),
             ),
         },
@@ -220,10 +243,10 @@ def test_registry_scenario_reports_operand_casilla_ref_mismatches() -> None:
 
 
 def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
-    scenario = _simplified_direct_estimation_cap_scenario().model_copy(
+    scenario = simplified_direct_estimation_cap_scenario().model_copy(
         update={
             "expected_outputs": (
-                _expected(
+                expected(
                     "0222",
                     value=Decimal("2000.00"),
                     operand_refs=("0180",),
@@ -245,22 +268,22 @@ def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
 def test_registry_scenario_expected_output_requires_grounding() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
         output_dict = {
-            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "target_casilla_id": operand_casilla_refs("0222")[0],
             "value": Decimal("2000.00"),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
         }
         RegistryCalculationScenario(
             id="ungrounded-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="legal_refs"):
         output_dict = {
-            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "target_casilla_id": operand_casilla_refs("0222")[0],
             "value": Decimal("2000.00"),
             "legal_refs": ("",),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
@@ -268,15 +291,15 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
         RegistryCalculationScenario(
             id="blank-legal-ref-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="source_refs"):
         output_dict = {
-            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "target_casilla_id": operand_casilla_refs("0222")[0],
             "value": Decimal("2000.00"),
             "legal_refs": ("ley-35-2006:art-30",),
             "source_refs": (" ",),
@@ -284,15 +307,17 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
         RegistryCalculationScenario(
             id="blank-source-ref-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
 
 def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> None:
-    scenario = _simplified_direct_estimation_cap_scenario().model_copy(update={"revision": "2024"})
+    scenario = simplified_direct_estimation_cap_scenario().model_copy(
+        update={"revision": str(authored_revisions("100")[-2].id)}
+    )
 
-    with pytest.raises(RegistrySnapshotError, match="revision='2024'"):
+    with pytest.raises(RegistrySnapshotError, match=f"revision='{authored_revisions('100')[-2].id}'"):
         run_registry_calculation_scenario(scenario)

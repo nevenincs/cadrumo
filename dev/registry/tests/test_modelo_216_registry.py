@@ -1,10 +1,12 @@
 """Tests for the committed Modelo 216 IRNR retención registry foundation.
 
-Modelo 216 is the quarterly IRNR withholding autoliquidación (retenciones e
-ingresos a cuenta) approved by Orden EHA/3290/2008 (BOE-A-2008-18497), with the
-current form layout carried by Orden HAC/56/2024. The trimestral filing plazo is
-grounded in Orden EHA/3290/2008 art 4: the first twenty natural days of April,
-July, October and January for the immediately preceding natural quarter.
+Modelo 216 is the IRNR withholding autoliquidación (retenciones e ingresos a
+cuenta) approved by Orden EHA/3290/2008 (BOE-A-2008-18497), with the current
+form layout carried by Orden HAC/56/2024. Both filing plazos are grounded in
+Orden EHA/3290/2008 art 4: the first twenty natural days of April, July, October
+and January for the immediately preceding natural quarter, and the first twenty
+natural days of each month for the immediately preceding month when the
+retenedor is a gran empresa under RIVA art. 71.3 numbers 1 and 2.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -30,6 +32,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -37,13 +40,25 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    revision_last_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_shared_catalogues
+
+from .retencion_deadline_support import MONTHLY_PERIODS, RETENCION_PERIODS, expected_close, expected_cutoff
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,6 +71,13 @@ _RET_TOTAL: CasillaId = validated_casilla_id("13", surface="_RET_TOTAL")
 _ANTERIORES: CasillaId = validated_casilla_id("20", surface="_ANTERIORES")
 _RESULTADO: CasillaId = validated_casilla_id("21", surface="_RESULTADO")
 
+_HISTORICAL_REVISION = revision_covering("216", filing_year_envelope().floor)
+_CURRENT_REVISION = open_ended_revision("216")
+_HISTORICAL_REVISION_ID = str(_HISTORICAL_REVISION.id)
+_CURRENT_REVISION_ID = str(_CURRENT_REVISION.id)
+_HISTORICAL_YEARS = tuple(year for year in filing_year_envelope().years if year < _CURRENT_REVISION.valid_from.year)
+_CURRENT_YEARS = tuple(year for year in filing_year_envelope().years if year >= _CURRENT_REVISION.valid_from.year)
+
 _CURRENT_LIFECYCLE_LINK_IDS = (
     "modelo-216-snapshot-review",
     "modelo-216-snapshot-approval",
@@ -63,28 +85,29 @@ _CURRENT_LIFECYCLE_LINK_IDS = (
     "modelo-216-snapshot-workflow",
 )
 
-_EXPECTED_DEADLINES = {
-    (2022, "1T"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
-    (2022, "2T"): (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
-    (2022, "3T"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
-    (2022, "4T"): (date(2023, 1, 1), date(2023, 1, 20), date(2023, 1, 15)),
-    (2023, "1T"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
-    (2023, "2T"): (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
-    (2023, "3T"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
-    (2023, "4T"): (date(2024, 1, 1), date(2024, 1, 22), date(2024, 1, 17)),
-    (2024, "1T"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
-    (2024, "2T"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
-    (2024, "3T"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
-    (2024, "4T"): (date(2025, 1, 1), date(2025, 1, 20), date(2025, 1, 15)),
-    (2025, "1T"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
-    (2025, "2T"): (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
-    (2025, "3T"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
-    (2025, "4T"): (date(2026, 1, 1), date(2026, 1, 20), date(2026, 1, 15)),
-    (2026, "1T"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
-    (2026, "2T"): (date(2026, 7, 1), date(2026, 7, 20), date(2026, 7, 15)),
-    (2026, "3T"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
-    (2026, "4T"): (date(2027, 1, 1), date(2027, 1, 20), None),
-}
+
+def _expected_census(operation: PinnedAuthorityOperation) -> dict[tuple[int, str], tuple[date, date, date | None]]:
+    """Return (opens, closes, domiciled-payment cutoff) per supported exercise and period of Orden EHA/3290/2008 art. 4.
+
+    The trimestral plazo is paragraph one and the gran-empresa mensual one paragraph two. Each close is
+    the statutory twentieth day moved by the business-day shift the deadline resolver applies, and each
+    cutoff is the domiciliacion day the bundled Calendario del Contribuyente of the year it falls in
+    publishes; the December period and the fourth quarter of the horizon year close in a January no
+    bundled calendar covers, so they have no cutoff. Neither side is read from the window under test.
+    """
+    census: dict[tuple[int, str], tuple[date, date, date | None]] = {}
+    for filing_year in filing_year_envelope().years:
+        for period in RETENCION_PERIODS:
+            closes_on = expected_close(operation, "216", filing_year, period)
+            census[(filing_year, period)] = (
+                date(closes_on.year, closes_on.month, 1),
+                closes_on,
+                expected_cutoff(filing_year, period),
+            )
+    return census
+
+
+_EXPECTED_MONTHLY_PERIODS = frozenset(MONTHLY_PERIODS)
 
 
 def _load_modelo_216():
@@ -100,19 +123,24 @@ def test_modelo_216_validator_accepts_committed_definition() -> None:
 
 def test_modelo_216_formulas_owned_by_construct() -> None:
     modelo, _ = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
     owned = set().union(*(set(c.formulas) for c in revision.constructs))
     assert {"modelo-216-base-total", "modelo-216-retenciones-total", "modelo-216-resultado"} <= owned
 
 
 def test_modelo_216_deadline_provision_is_orden_eha_3290_2008_art_4() -> None:
-    """Every trimestral window cites the binding Orden EHA/3290/2008 art 4 plazo."""
+    """Every window of both cadences cites the binding Orden EHA/3290/2008 art 4 plazo.
+
+    The one article declares both: paragraph one the trimestral plazo and
+    paragraph two the mensual one for the gran-empresa retenedor.
+    """
     modelo, catalogues = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.deadline_windows, "216 must declare quarterly deadline windows"
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
+    assert revision.deadline_windows, "216 must declare deadline windows"
     for window in revision.deadline_windows:
-        assert window.period_kind == "quarterly"
+        assert window.period_kind in {"quarterly", "monthly"}
         assert "orden-eha-3290-2008:art-4" in window.legal_refs
+    assert {window.period_kind for window in revision.deadline_windows} == {"quarterly", "monthly"}
     # The plazo article resolves in the shared legal catalogue as legal authority,
     # cross-checked against the bundled BOE corpus at build.
     plazo = catalogues.legal["orden-eha-3290-2008:art-4"]
@@ -130,30 +158,32 @@ def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
         )
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-        if 2022 <= window.period.filing_year <= 2026
+        if window.period.filing_year in filing_year_envelope().years
     }
-    assert observed == _EXPECTED_DEADLINES
+    with bundled_indexed_authority().operation() as operation:
+        assert observed == _expected_census(operation)
 
 
 def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
     modelo, catalogues = _load_modelo_216()
     owned = [(revision, window) for revision in modelo.revisions.values() for window in revision.deadline_windows]
-    assert len(owned) == len(_EXPECTED_DEADLINES)
+    assert len(owned) == len(RETENCION_PERIODS) * len(filing_year_envelope().years)
 
     for revision, window in owned:
         filing_year = window.period.filing_year
         period = window.period.registry_token
         physical_calendar_year = window.closes_on.year
         calendar_ref = f"aeat-calendario-contribuyente-{physical_calendar_year}"
+        expected_kind = PeriodKind.MONTHLY if period in _EXPECTED_MONTHLY_PERIODS else PeriodKind.QUARTERLY
 
         assert window.id == f"modelo-216-{filing_year}-{period.lower()}"
         assert window.filing_year == filing_year
-        assert registry_period_kind(period) is PeriodKind.QUARTERLY
-        assert window.period.kind is PeriodKind.QUARTERLY
-        assert window.period_kind == "quarterly"
+        assert registry_period_kind(period) is expected_kind
+        assert window.period.kind is expected_kind
+        assert window.period_kind == expected_kind.value
         assert select_revision(modelo, filing_year=filing_year, period=period) is revision
 
-        if physical_calendar_year <= 2026:
+        if physical_calendar_year <= filing_year_envelope().horizon:
             assert calendar_ref in window.source_refs
             assert calendar_ref in revision.constructs[0].source_refs
             # A window closing after the edition's own validity -- a fourth
@@ -179,7 +209,8 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
     total rows.
     """
     modelo, catalogues = _load_modelo_216()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+    exercise = filing_year_envelope().horizon
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=exercise, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -189,7 +220,7 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
             _RET_ESPECIE: Decimal("95.00"),
             _ANTERIORES: Decimal("40.00"),
         },
-        date_context={"filing_period": date(2025, 3, 31)},
+        date_context={"filing_period": date(exercise, 3, 31)},
     )
     assert result.values[_BASE_TOTAL] == Decimal("1500.00")
     assert result.values[_RET_TOTAL] == Decimal("285.00")
@@ -243,26 +274,26 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     assert revision.effective_authority_grade is RegistryAuthorityGrade.CALCULATION
 
 
-@pytest.mark.parametrize("filing_year", (2024, 2025, 2026))
+@pytest.mark.parametrize("filing_year", _CURRENT_YEARS)
 def test_modelo_216_current_lifecycle_links_use_current_guidance(filing_year: int) -> None:
     """Current filing snapshots retain link semantics with applicable current instructions."""
     modelo, catalogues = _load_modelo_216()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
-    historical_links = {link.id: link for link in modelo.revisions["2020-2023"].application_links}
+    historical_links = {link.id: link for link in modelo.revisions[_HISTORICAL_REVISION_ID].application_links}
     current_links = {link.id: link for link in snapshot.revision.application_links}
 
-    assert snapshot.revision.id == "2024-y-siguientes"
+    assert snapshot.revision.id == _CURRENT_REVISION_ID
     for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
         current = current_links[link_id]
         historical = historical_links[link_id]
         assert current.source_refs == ("aeat-modelo-216-procedure",)
         assert current.model_dump(exclude={"source_refs"}) == historical.model_dump(exclude={"source_refs"})
     source = snapshot.sources["aeat-modelo-216-procedure"]
-    assert source.applies_from == date(2024, 1, 1)
+    assert source.applies_from == date(_CURRENT_REVISION.valid_from.year, 1, 1)
     assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
 
 
-@pytest.mark.parametrize("filing_year", (2022, 2023))
+@pytest.mark.parametrize("filing_year", _HISTORICAL_YEARS)
 def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing_year: int) -> None:
     """The pre-redesign calculation snapshot still owns its historical source and bounds."""
     modelo, catalogues = _load_modelo_216()
@@ -277,11 +308,11 @@ def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing
     historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
     links = {link.id: link for link in snapshot.revision.application_links}
 
-    assert snapshot.revision.id == "2020-2023"
+    assert snapshot.revision.id == _HISTORICAL_REVISION_ID
     for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
         assert links[link_id].source_refs == (historical_source,)
     source = snapshot.sources[historical_source]
-    assert source.applies_to == date(2023, 12, 31)
+    assert source.applies_to == date(revision_last_exercise("216", _HISTORICAL_REVISION_ID), 12, 31)
     assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
 
 
@@ -289,7 +320,7 @@ def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing
 def test_modelo_216_current_snapshot_refuses_historical_lifecycle_guidance(link_id: str) -> None:
     """Restoring each expired citation still fails at the real snapshot source-window guard."""
     modelo, catalogues = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
     historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
     changed_links = tuple(
         link.model_copy(update={"source_refs": (historical_source,)}) if link.id == link_id else link
@@ -299,4 +330,10 @@ def test_modelo_216_current_snapshot_refuses_historical_lifecycle_guidance(link_
     changed_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: changed_revision}})
 
     with pytest.raises(RegistryValidationError, match=historical_source):
-        build_snapshot(changed_modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+        build_snapshot(
+            changed_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year_envelope().horizon,
+            period="1T",
+        )

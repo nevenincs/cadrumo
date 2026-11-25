@@ -62,20 +62,17 @@ import re
 from collections.abc import Callable, Hashable, Mapping
 from functools import cache, lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast, overload
+from typing import TYPE_CHECKING, Final, cast, overload
 from urllib.parse import urlparse
 
-from ..hashing import sha256_hex as _sha256_hex
-from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
-from ..iban import iban_mod_97 as _iban_mod_97
-from ..iban import normalise_iban as _normalise_iban
+from ..hashing import sha256_hex
+from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..type_guards import is_object_dict, is_object_list, is_object_tuple
+from . import patterns
 from .tax_identity_admission import tax_identity_admission
 
 if TYPE_CHECKING:
-    from ..classification.policies import ClassificationPolicy as _ClassificationPolicy
-    from ..classification.policies import RedactionRule as _RedactionRule
-    from ..classification.policies import SensitivityClass as _SensitivityClass
+    from ..classification.policies import ClassificationPolicy, RedactionRule, SensitivityClass
 
 # The classification policies are pydantic records. Every process imports this
 # module through its logging filters before it has parsed a command, so the
@@ -95,6 +92,7 @@ ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
         "password",
         "pkcs12",
         "secret",
+        "statement_reference",
         "tax_id",
         "token",
     },
@@ -117,6 +115,10 @@ and a PKCS#12 blob — did not treat a key named ``password`` as sensitive at al
 That asymmetry is the exact failure the paragraph below describes, and it
 survived because nothing enumerated the third consumer.
 
+``statement_reference`` is the reference a bank statement printed for a
+movement. It is private banking data that lives only in the encrypted
+transaction payload, so no log line, error context or failure record names it.
+
 Each consuming predicate composes its own set as ``ALWAYS_REDACT_KEY_TERMS |
 {domain-specific-additions}`` — never redeclares an overlapping term
 independently. A term wrongly added here costs an extra scrubbed log line; a
@@ -124,291 +126,18 @@ term silently missing from one composing site can leak a NIF the other site
 already knew to redact.
 """
 
-# Separators a document prints INSIDE a tax identity. Admitted between body
-# characters and never at an edge, so a run is joined only where real characters
-# stand on both sides of the separator and the scan can never consume a leading
-# or trailing hyphen belonging to the surrounding text.
-#
-# **This widens the SCAN, not the RULE.** Both admission gates below already
-# normalise the span they are handed -- the core identity structural predicate
-# tolerates dashes, spaces, and dots, and the NIF-IVA arm calls
-# ``normalise_nif_iva`` before asking its admission gate -- so the
-# separator-bearing spelling was
-# never rejected by a rule. It simply never reached one, because a scan anchored
-# on unbroken word characters cannot produce a span containing a hyphen. The
-# tolerant half and the intolerant half were on opposite sides of the same
-# funnel.
-#
-# The alternative shape, matching a wider bare pattern, was rejected on the
-# evidence: ``SE-2026-000412`` survives today precisely BECAUSE the hyphen
-# breaks the token, so a pattern that simply admits more characters starts
-# eating ordinary hyphenated operator output. Normalising and then asking the
-# existing gate keeps the shape as weak evidence and the checksum or per-State
-# structure as the decision, which is the arrangement this module already
-# documents for the CIF and IBAN arms.
-#
-# **Punctuation only, and the exclusion of the space is measured rather than
-# cautious.** A space is what separates TOKENS in prose, so admitting it lets the
-# scan join a word to the number beside it. Running the four shipped locale
-# catalogues through the funnel with the space admitted produced two real
-# false positives on operator text: a Hungarian date range ``A 2020-2024``
-# normalised to ``A20202024``, which is a checksum-VALID CIF and was therefore
-# admitted by the gate, and ``6 000 000-t`` matched the personal-identity arm.
-# Neither survives once the space is out, because no punctuation joins those
-# tokens.
-_IDENTITY_SEPARATOR = r"[.\-]?"
-
-# The prefixed arm alone admits the space, and only because two things constrain
-# it that constrain no other arm: a match must begin with two letters naming a
-# real Member State, and the per-State structural format then has to accept the
-# whole normalised number. ``SE 556677889901`` -- the
-# printed rendering this row exists for -- is caught here; the same string
-# cannot be caught by the arms above, since its body carries no leading letter
-# for the CIF shape and no trailing one for the personal shape.
-#
-# Both constraints are GATE-time, and a gate cannot defend against a SCAN that
-# swallowed the identity before it ran. A space separates tokens in prose, so
-# this arm's scan joins the neighbouring word to the number -- ``ESB12345674 is``
-# in one direction, ``de SE556677889901`` in the other -- and the joined span
-# normalises to nothing any authority recognises, so the gate correctly refuses
-# it and the identity inside is never asked about. The space survives here only
-# because :func:`_gated_sub` now re-reads a refused span instead of spending it;
-# without that mechanism this separator MUST come out.
-_PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
-
-# NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
-# with optional leading X / Y / Z for foreigners.
-#
-# **The personal identity is TWO rules, split by whether the span is broken by
-# a separator, because the err-wide justification holds for one population and
-# was falsified for the other.**
-#
-# The unbroken arm below is matched on shape alone and hashes a lookalike
-# rather than risk missing a mistyped identity. That is bought by a specific
-# claim: a digit-led run this long rarely collides with ordinary text. The
-# claim is true of unbroken runs.
-#
-# Separators falsified it. This app's own canonical work-unit name is
-# ``<modelo>-<year>-<period>``, so ``390-2026-0A`` normalises to ``39020260A``
-# -- eight digits and a trailing letter, the personal-identity shape exactly.
-# Every modelo id and every period token, quarterly and annual alike, lands on
-# it, and an operator was handed ``modelo-sha256:44bc266f.boe`` where an export
-# filename should be: a path they cannot use. Measured over the recorded
-# sequence outputs, the separator-bearing population was more over-redaction
-# than redaction.
-#
-# So the separated arm asks the admission gate, whose control-character check
-# refuses every work-unit name and accepts every real printed identity, and a
-# rule that can refuse belongs behind :func:`_gated_sub` like the other gated
-# arms. Err-wide
-# is not weakened where its claim still holds; it is withdrawn only from the
-# population that disproved it.
-#
-# The separator after the optional X/Y/Z sits INSIDE the optional group, and
-# that placement is load-bearing rather than stylistic. Written outside it, the
-# group can match empty and the separator then stands at the START of the
-# pattern, so the scan consumes the space in front of the number: "for example
-# 12345678Z" was redacted to "for examplesha256:..." and the operator's sentence
-# lost a word boundary. Found by running the shipped locale catalogues through
-# the funnel, not by reading the regex.
-NIF_PATTERN = r"\b(?:[XYZxyz])?\d{7,8}[A-Za-z]\b"
-
-# The separator-bearing spelling, which a printed invoice and an OCR reading
-# both produce. It also matches the unbroken form, harmlessly: the ungated arm
-# above runs first and has already hashed anything of that shape, so what
-# actually reaches this rule is the broken spelling.
-_SEPARATED_NIF_PATTERN = (
-    rf"\b(?:[XYZxyz]{_IDENTITY_SEPARATOR})?\d(?:{_IDENTITY_SEPARATOR}\d){{6,7}}{_IDENTITY_SEPARATOR}[A-Za-z]\b"
-)
-
-# CIF — the tax identity of a legal entity: a kind letter, seven digits, and a
-# control character. Unlike the personal shapes above this one is LETTER-led,
-# which is the same shape as an ordinary document reference (an invoice
-# ``F1234567B``, a batch id), so it is paired with
-# ``SHA256_PREFIX_IF_IDENTITY``: the control character decides.
-# Widening the personal pattern's leading class instead would have admitted
-# every such reference.
-_CIF_PATTERN = (
-    rf"\b[A-HJNPQRSUVWa-hjnpqrsuvw]{_IDENTITY_SEPARATOR}"
-    rf"\d(?:{_IDENTITY_SEPARATOR}\d){{6}}{_IDENTITY_SEPARATOR}[0-9A-Ja-j]\b"
-)
-
-# NIF-IVA — the PREFIXED form of a tax identity, which the two rules above
-# cannot see. Both anchor on `\b`, and a country prefix is a word character, so
-# `ESB12345674` presents no boundary before the CIF body and the rule that
-# redacts the bare `B12345674` does not fire. That is not only the foreign case:
-# it is a SPANISH taxpayer's own identifier in the form this app's own
-# structured readers recover and its own parsers emit.
-#
-# Every Member State, not just the foreign ones, for the reason the IBAN arm
-# below states in the other direction: an ES-only arm protects the domestic
-# spelling and leaks the prefixed one, and both name the same taxpayer.
-#
-# Deliberately a WIDE scan admitted by a STRICT gate, following the IBAN arm
-# rather than the identity arms: two leading letters plus an alphanumeric run
-# collides with hashes, opaque ids and document references, so the shape cannot
-# be the evidence. `SHA256_PREFIX_IF_NIF_IVA` decides on the per-State
-# structure, and a prefix naming no State admits nothing at all.
-_NIF_IVA_PATTERN = (
-    rf"\b[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}"
-    rf"[0-9A-Za-z](?:{_PREFIXED_IDENTITY_SEPARATOR}[0-9A-Za-z]){{1,12}}\b"
-)
-
-#: The most letters any Member State's IVA body opens with; see the gate in
-#: ``_hash_if_nif_iva`` for why a longer leading run is refused.
-_NIF_IVA_BODY_MAX_LEADING_LETTERS = 2
-
-# IBAN — a bank account number is sensitive financial data, so it is hashed
-# out of operator-facing output by operator decision. That decision is BROADER
-# than this module's stated must-handle list, which names the tax-identity
-# shapes and does not mention bank accounts: this arm is a deliberate
-# extension, not an inference from that list. Do not narrow it back on the
-# grounds that the stated list omits it.
-#
-# Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core.iban``, which
-# stays the authority on what an IBAN looks like. Two country letters, two
-# check digits, then an 11-30 character BBAN.
-#
-# **The separators are the arm, not a widening of it.** An IBAN is essentially
-# always PRINTED in groups of four -- that is how it leaves a bank statement and
-# an invoice footer, which is exactly where this app reads one from -- so the
-# separator-free spelling the arm used to require is the one that does not
-# arrive. The gate does not move: the span is folded onto canonical form with
-# ``normalise_iban``, the same function the registry and refund-account
-# validators use, and the mod-97 checksum still decides. Admitting a space is
-# safe here only because :func:`_gated_sub` re-reads a span the checksum
-# refuses; a scan this wide would otherwise carry a neighbouring uppercase word
-# into the match and lose the account with it.
-#
-# Every country, not just ES: foreign accounts are declarable (Modelo 720
-# exists for assets held abroad) and refund accounts may be non-SEPA, so an
-# ES-only arm would protect the domestic case and leak the foreign one. The
-# breadth is safe because the mod-97 checksum, not the shape, admits the
-# match — a long alphanumeric run otherwise collides with hashes and opaque
-# ids, and a real 32-character hex digest in the bundled corpus is rejected
-# by the checksum exactly as intended.
-_IBAN_SEPARATOR = r"[ \-]?"
-_IBAN_PATTERN = rf"\b[A-Z]{{2}}{_IBAN_SEPARATOR}\d{_IBAN_SEPARATOR}\d(?:{_IBAN_SEPARATOR}[A-Z0-9]){{11,30}}\b"
-
-# Bearer / OAuth tokens commonly start with ``ey`` (JWT).
-_BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
-
-# Opaque (non-JWT) bearer tokens — Google's ya29 access tokens, generic
-# Authorization-header bearer values, and OAuth refresh-token shapes.
-# Matches the entire token (including the optional 'authorization:' /
-# 'bearer ' prefix) so consumers can redact a whole header line at once.
-_OPAQUE_BEARER_PATTERN = (
-    r"(?i)(?:authorization:\s*)?bearer\s+[A-Za-z0-9._~+/=\-]{20,}"
-    r"|ya29\.[A-Za-z0-9_\-]{40,}"
-)
-
-# Generic URL pattern. Drops everything except the host component.
-_URL_PATTERN = r"https?://[^\s\"'<>]+"
-
 CLI_PROFILE_ID_PLACEHOLDER = "<profile-id>"
 CLI_BUCKET_ID_PLACEHOLDER = "<bucket-id>"
 CLI_OBJECT_KEY_PLACEHOLDER = "<object-key>"
 
-_CLI_UUID_PATTERN = re.compile(
-    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b",
-)
-_CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
-    r"(?i)(?P<label>\b(?:"
-    r"active[_-]?profile(?:[_-]?id)?|"
-    r"bucket[_-]?profile[_-]?id|"
-    r"profile[_-]?bucket[_-]?id|"
-    r"profile[_-]?id|"
-    r"repository[_-]?profile[_-]?id|"
-    r"source[_-]?profile[_-]?id|"
-    r"target[_-]?profile[_-]?id|"
-    r"active[_-]?bucket[_-]?id|"
-    r"bucket[_-]?id|"
-    r"repository[_-]?bucket[_-]?id|"
-    r"storage[_-]?bucket[_-]?id|"
-    r"object[_-]?key|"
-    r"lookup[_-]?key|"
-    r"secure[_-]?object[_-]?key|"
-    r"storage[_-]?object[_-]?key"
-    r")\b)"
-    r"(?P<sep>\s*(?::|=|\t)\s*)"
-    r"(?P<value>[^\s,;]+)",
-)
-_CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
-    r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+",
-)
-# A tab-delimited column-header row is a list of bare field-name tokens, never a
-# ``label<TAB>value`` data pair. The identifier-assignment redactor treats the
-# ``<TAB>`` between two header cells as ``label<sep>value`` and rewrites the
-# *next column name* (e.g. ``modelo`` after ``bucket_id``) into a placeholder,
-# corrupting the header. A header is recognised as three or more cells where
-# every cell is a bare snake-case identifier word; any real id / date / numeric /
-# enum value (UUID, ``bucket-alpha``, ``2026``, ``FILED``) breaks the shape, and a
-# two-cell ``key<TAB>value`` data pair stays below the cell threshold and is still
-# redacted.
-_CLI_HEADER_CELL_PATTERN = re.compile(r"[a-z][a-z0-9_]*")
-_CLI_TABULAR_HEADER_MIN_CELLS = 3
-_CLI_PROFILE_ID_KEYS = frozenset(
-    {
-        "active_profile_id",
-        "bucket_profile_id",
-        "profile_bucket_id",
-        "profile_id",
-        "repository_profile_id",
-        "source_profile_id",
-        "target_profile_id",
-    },
-)
-_CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
-_CLI_PUBLIC_CONTROL_UUID_KEYS = frozenset(
-    {
-        "request_id",
-        "grant_id",
-        "key_id",
-        "credential_reference",
-        "session_id",
-        "parent_session_id",
-        "target_session_id",
-        "session_ids",
-        "reactivated_grants",
-    },
-)
-_CLI_BUCKET_ID_KEYS = frozenset(
-    {
-        "active_bucket_id",
-        "bucket_id",
-        "repository_bucket_id",
-        "storage_bucket_id",
-    },
-)
-_CLI_OBJECT_KEY_KEYS = frozenset(
-    {
-        "lookup_key",
-        "object_key",
-        "secure_object_key",
-        "storage_object_key",
-    },
-)
-
-
-#: The hashing strategies' placeholder shape, spelled once. The producers below
-#: and :func:`carries_redaction_placeholder` read the same three constants, so a
-#: consumer detecting a redacted value cannot drift from what redaction writes.
-_HASH_PLACEHOLDER_PREFIX = "sha256:"
-_FINGERPRINT_LABEL = "token:"
-_HASH_PLACEHOLDER_HEX_LENGTH = 8
-_HASH_PLACEHOLDER_RE = re.compile(
-    rf"\b{re.escape(_HASH_PLACEHOLDER_PREFIX)}[0-9a-f]{{{_HASH_PLACEHOLDER_HEX_LENGTH}}}\b",
-)
-
 
 def _sha256_prefix(value: str) -> str:
-    digest = _sha256_hex(value.encode("utf-8"))
-    return f"{_HASH_PLACEHOLDER_PREFIX}{digest[:_HASH_PLACEHOLDER_HEX_LENGTH]}"
+    digest = sha256_hex(value.encode("utf-8"))
+    return f"{patterns.HASH_PLACEHOLDER_PREFIX}{digest[: patterns.HASH_PLACEHOLDER_HEX_LENGTH]}"
 
 
 def _fingerprint(value: str) -> str:
-    return f"{_FINGERPRINT_LABEL}{_sha256_prefix(value)}"
+    return f"{patterns.FINGERPRINT_LABEL}{_sha256_prefix(value)}"
 
 
 def carries_redaction_placeholder(value: object) -> bool:
@@ -426,7 +155,7 @@ def carries_redaction_placeholder(value: object) -> bool:
     placeholder is not itself shaped like anything a rule matches.
     """
     if isinstance(value, str):
-        return _HASH_PLACEHOLDER_RE.search(value) is not None
+        return patterns.HASH_PLACEHOLDER_RE.search(value) is not None
     if is_object_dict(value):
         return any(
             carries_redaction_placeholder(key) or carries_redaction_placeholder(item) for key, item in value.items()
@@ -451,58 +180,57 @@ def _host_only(value: str) -> str:
 
 
 @cache
-def _default_rules() -> Mapping[str, _RedactionRule]:
+def _default_rules() -> Mapping[str, RedactionRule]:
     """Return the frozen registry of named redaction rules."""
-    from ..classification.policies import RedactionRule as _RedactionRule
-    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+    from ..classification.policies import RedactionRule, RedactionStrategy
 
     return MappingProxyType(
         {
-            "nif-hash": _RedactionRule(
+            "nif-hash": RedactionRule(
                 name="nif-hash",
-                pattern=NIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX,
+                pattern=patterns.NIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX,
             ),
-            "nif-separated-hash": _RedactionRule(
+            "nif-separated-hash": RedactionRule(
                 name="nif-separated-hash",
-                pattern=_SEPARATED_NIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+                pattern=patterns.SEPARATED_NIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
             ),
-            "cif-hash": _RedactionRule(
+            "cif-hash": RedactionRule(
                 name="cif-hash",
-                pattern=_CIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+                pattern=patterns.CIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
             ),
-            "nif-iva-hash": _RedactionRule(
+            "nif-iva-hash": RedactionRule(
                 name="nif-iva-hash",
-                pattern=_NIF_IVA_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
+                pattern=patterns.NIF_IVA_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
             ),
-            "iban-hash": _RedactionRule(
+            "iban-hash": RedactionRule(
                 name="iban-hash",
-                pattern=_IBAN_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
+                pattern=patterns.IBAN_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IBAN,
             ),
-            "url-host-only": _RedactionRule(
+            "url-host-only": RedactionRule(
                 name="url-host-only",
-                pattern=_URL_PATTERN,
-                strategy=_RedactionStrategy.HOST_ONLY,
+                pattern=patterns.URL_PATTERN,
+                strategy=RedactionStrategy.HOST_ONLY,
             ),
-            "token-fingerprint": _RedactionRule(
+            "token-fingerprint": RedactionRule(
                 name="token-fingerprint",
-                pattern=_BEARER_PATTERN,
-                strategy=_RedactionStrategy.FINGERPRINT,
+                pattern=patterns.BEARER_PATTERN,
+                strategy=RedactionStrategy.FINGERPRINT,
             ),
-            "bearer-token-fingerprint": _RedactionRule(
+            "bearer-token-fingerprint": RedactionRule(
                 name="bearer-token-fingerprint",
-                pattern=_OPAQUE_BEARER_PATTERN,
-                strategy=_RedactionStrategy.FINGERPRINT,
+                pattern=patterns.OPAQUE_BEARER_PATTERN,
+                strategy=RedactionStrategy.FINGERPRINT,
             ),
         },
     )
 
 
-def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
+def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 
     A name the registry cannot resolve is REFUSED, not skipped. Skipping
@@ -550,7 +278,7 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
 
 
 @cache
-def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
+def default_rules_for_class(sensitivity: SensitivityClass) -> tuple[RedactionRule, ...]:
     """Resolve the default rule set for a sensitivity class.
 
     Convenience wrapper that goes through
@@ -604,7 +332,7 @@ def _uuid_spans(value: str) -> tuple[tuple[int, int], ...]:
     the identity and IBAN arms exempt these spans; a URL or token that merely
     contains a UUID is still redacted whole by its own rule.
     """
-    return tuple(match.span() for match in _CLI_UUID_PATTERN.finditer(value))
+    return tuple(match.span() for match in patterns.CLI_UUID_PATTERN.finditer(value))
 
 
 def _outside_timestamps(
@@ -671,7 +399,7 @@ def _has_absorbed_nif_iva_word(groups: list[str], bare_prefix: bool) -> bool:
 def _nif_iva_word_group_is_absorbed(index: int, group: str, bare_prefix: bool) -> bool:
     if not group.isalpha():
         return False
-    in_key_position = index == 1 and bare_prefix and len(group) <= _NIF_IVA_BODY_MAX_LEADING_LETTERS
+    in_key_position = index == 1 and bare_prefix and len(group) <= patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS
     return not in_key_position
 
 
@@ -780,25 +508,26 @@ def _admits_spanish_identity(normalised: str, structurally_shaped: Callable[[obj
     return structurally_shaped(normalised)
 
 
-def _apply_one(rule: _RedactionRule, value: str) -> str:
-    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+def apply_one(rule: RedactionRule, value: str) -> str:
+    """Apply one redaction rule to a string while protecting timestamps and identifiers."""
+    from ..classification.policies import RedactionStrategy
 
     pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
-    if rule.strategy is _RedactionStrategy.ELLIPSIS:
+    if rule.strategy is RedactionStrategy.ELLIPSIS:
         return _pattern_sub(pattern, value, lambda match: "...", protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX:
         return _pattern_sub(pattern, value, lambda match: _sha256_prefix(match.group(0)), identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         return _apply_identity_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         return _apply_nif_iva_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_IBAN:
         return _apply_iban_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.HOST_ONLY:
+    if rule.strategy is RedactionStrategy.HOST_ONLY:
         return _pattern_sub(pattern, value, lambda match: _host_only(match.group(0)), protected)
-    if rule.strategy is _RedactionStrategy.FINGERPRINT:
+    if rule.strategy is RedactionStrategy.FINGERPRINT:
         return _pattern_sub(pattern, value, lambda match: _fingerprint(match.group(0)), protected)
     return value  # pragma: no cover - exhaustive enum
 
@@ -884,7 +613,7 @@ def _body_has_absorbed_word(body: str) -> bool:
     # Member-State IVA bodies open with at most two letters. More is a joined
     # ordinary word; the gated scan will re-read the inner token separately.
     leading_letters = len(body) - len(body.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-    return leading_letters >= _NIF_IVA_BODY_MAX_LEADING_LETTERS + 1
+    return leading_letters >= patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS + 1
 
 
 def _spanish_nif_iva_replacement(
@@ -918,13 +647,13 @@ def _apply_iban_rule(
 
 
 def _iban_replacement(span: str) -> str | None:
-    canonical = _normalise_iban(span)
-    if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
+    canonical = normalise_iban(span)
+    if IBAN_SHAPE_RE.match(canonical) and iban_mod_97(canonical) == 1:
         return _sha256_prefix(span)
     return None
 
 
-def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
+def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
     """Apply ``rules`` to a flat string in declared order.
 
     Args:
@@ -952,27 +681,27 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         # string for timestamp and UUID spans that nothing would consult.
         if _compiled_rule_pattern(rule.pattern).search(result) is None:
             continue
-        result = _apply_one(rule, result)
+        result = apply_one(rule, result)
     return result
 
 
 @overload
-def redact_structured(value: dict[str, str], *, rules: tuple[_RedactionRule, ...]) -> dict[str, str]: ...
+def redact_structured(value: dict[str, str], *, rules: tuple[RedactionRule, ...]) -> dict[str, str]: ...
 
 
 @overload
-def redact_structured(value: Mapping[str, object], *, rules: tuple[_RedactionRule, ...]) -> Mapping[str, object]: ...
+def redact_structured(value: Mapping[str, object], *, rules: tuple[RedactionRule, ...]) -> Mapping[str, object]: ...
 
 
 @overload
-def redact_structured(value: list[str], *, rules: tuple[_RedactionRule, ...]) -> list[str]: ...
+def redact_structured(value: list[str], *, rules: tuple[RedactionRule, ...]) -> list[str]: ...
 
 
 @overload
-def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object: ...
+def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object: ...
 
 
-def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
+def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
     """Recursively apply ``rules`` to every string **value** inside a structure.
 
     Walks dicts, lists, and tuples; redacts every string reached as a
@@ -1020,7 +749,7 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
     if isinstance(value, str):
         result_str = value
         for rule in rules:
-            result_str = _apply_one(rule, result_str)
+            result_str = apply_one(rule, result_str)
         return result_str
     if is_object_dict(value):
         redacted: dict[object, object] = {}
@@ -1037,7 +766,7 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
 
 #: Every run of characters a sensitivity-set key name cannot contain, collapsed
 #: to the single ``_`` those names separate their words with.
-_REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
+REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
 _REDACTION_KEY_CAMEL_BOUNDARY_RE = re.compile(r"([a-z0-9])([A-Z])")
 _REDACTION_KEY_ACRONYM_BOUNDARY_RE = re.compile(r"([A-Z])([A-Z][a-z])")
 
@@ -1078,7 +807,7 @@ def _normalise_text_redaction_key(key: str) -> str:
 def _normalise_redaction_key_text(key: str) -> str:
     acronym_split = _REDACTION_KEY_ACRONYM_BOUNDARY_RE.sub(r"\1_\2", key)
     camel_split = _REDACTION_KEY_CAMEL_BOUNDARY_RE.sub(r"\1_\2", acronym_split)
-    return _REDACTION_KEY_SEPARATOR_RE.sub("_", camel_split.casefold()).strip("_")
+    return REDACTION_KEY_SEPARATOR_RE.sub("_", camel_split.casefold()).strip("_")
 
 
 def is_sensitive_redaction_key(
@@ -1106,7 +835,7 @@ def is_sensitive_redaction_key(
 
 
 def _is_cli_profile_reference(value: object) -> bool:
-    return isinstance(value, str) and _CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
+    return isinstance(value, str) and patterns.CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
 
 
 def _cli_placeholder_for_key(
@@ -1122,13 +851,13 @@ def _cli_placeholder_for_key(
     # identifier surfaces; object keys (which can embed a NIF / period) and
     # every PII / token / URL pass stay redacted unconditionally.
     if not reveal_identifiers:
-        if normalised in _CLI_PROFILE_ID_KEYS:
+        if normalised in patterns.CLI_PROFILE_ID_KEYS:
             return CLI_PROFILE_ID_PLACEHOLDER
-        if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
+        if normalised in patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
             return CLI_PROFILE_ID_PLACEHOLDER
-        if normalised in _CLI_BUCKET_ID_KEYS:
+        if normalised in patterns.CLI_BUCKET_ID_KEYS:
             return CLI_BUCKET_ID_PLACEHOLDER
-    if normalised in _CLI_OBJECT_KEY_KEYS:
+    if normalised in patterns.CLI_OBJECT_KEY_KEYS:
         return CLI_OBJECT_KEY_PLACEHOLDER
     return None
 
@@ -1144,16 +873,16 @@ def _is_revealed_identifier_key(key: object | None, value: object) -> bool:
     if value is None or value == "":
         return False
     normalised = normalise_redaction_key(key)
-    if normalised in _CLI_PROFILE_ID_KEYS or normalised in _CLI_BUCKET_ID_KEYS:
+    if normalised in patterns.CLI_PROFILE_ID_KEYS or normalised in patterns.CLI_BUCKET_ID_KEYS:
         return True
-    return normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
+    return normalised in patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
 
 
 def _is_cli_tabular_header_line(text: str) -> bool:
     cells = text.split("\t")
-    if len(cells) < _CLI_TABULAR_HEADER_MIN_CELLS:
+    if len(cells) < patterns.CLI_TABULAR_HEADER_MIN_CELLS:
         return False
-    return all(_CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
+    return all(patterns.CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
 
 
 #: Path segments whose CHILD segment is a custody identity: the capsule
@@ -1196,7 +925,7 @@ def _path_segment_is_custody_identity(segments: list[str]) -> bool:
 
 def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
     """Apply ``replace`` only to UUID matches that identify a profile."""
-    return _CLI_UUID_PATTERN.sub(
+    return patterns.CLI_UUID_PATTERN.sub(
         lambda match: (
             replace(match) if _cli_uuid_is_custody_identity(text, match.start(), match.end()) else match.group(0)
         ),
@@ -1208,8 +937,14 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
 #: tokens, currencies, dates -- thousands of times per payload, and every rule
 #: here is a pure function of the text and the reveal flag. Longer strings are
 #: redacted afresh so a rendered report never sits in the cache.
-_CLI_STRING_CACHE_MAX_LENGTH = 512
-_CLI_GOOGLE_SHEET_URL = re.compile(r"https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{10,200})/edit")
+CLI_STRING_CACHE_MAX_LENGTH = 512
+_SHEET_ID_SHORTEST_CHARACTERS: Final = 10
+_SHEET_ID_LONGEST_CHARACTERS: Final = 200
+# An identifier outside this span is not one Google minted, so its URL keeps no success exemption.
+_CLI_GOOGLE_SHEET_URL = re.compile(
+    r"https://docs\.google\.com/spreadsheets/d/"
+    rf"([A-Za-z0-9_-]{{{_SHEET_ID_SHORTEST_CHARACTERS},{_SHEET_ID_LONGEST_CHARACTERS}}})/edit"
+)
 
 
 def _canonical_google_sheet_id(value: object) -> str | None:
@@ -1222,8 +957,8 @@ def _canonical_google_sheet_id(value: object) -> str | None:
 
 
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
-    if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
-        return _redact_cli_string_uncached(text, reveal_identifiers)
+    if len(text) > CLI_STRING_CACHE_MAX_LENGTH:
+        return redact_cli_string_uncached(text, reveal_identifiers)
     return _redact_cli_string_cached(text, reveal_identifiers, cast(Hashable, tax_identity_admission()))
 
 
@@ -1234,7 +969,7 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     The cache holds each input string in PLAINTEXT, next to its redaction, for
     the lifetime of the process: a tax identifier that was redacted on the way
     out stays readable in memory until it is evicted. The bound is 16,384
-    entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
+    entries of at most :data:`CLI_STRING_CACHE_MAX_LENGTH` characters each. A
     one-shot CLI process exits moments later; the TUI and external client hosts are
     long-lived and keep the entries for as long as they run.
 
@@ -1242,10 +977,11 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     identity gate must not be reused under another.
     """
     del admission
-    return _redact_cli_string_uncached(text, reveal_identifiers)
+    return redact_cli_string_uncached(text, reveal_identifiers)
 
 
-def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
+def redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
+    """Redact a CLI output string without the cache, exempting the spreadsheet URL line."""
     # This named success-output line is an artifact locator, not an OAuth URL.
     # Keep the exemption out of the generic log/error URL rule entirely.
     sheet_label = "spreadsheet_url\t"
@@ -1259,7 +995,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
         redacted = redact_for_log(text)
         if not reveal_identifiers:
             redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
-        return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+        return patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     # Under the reveal opt-out a revealed profile/bucket id is an opaque UUID
     # that must survive the downstream free-text passes verbatim — otherwise the
     # NIF pattern hashes a UUID hex segment (``1470176e`` reads as 7 digits + a
@@ -1280,7 +1016,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
             return f"{label}{sep}{sentinel}"
         return f"{label}{sep}{value}"
 
-    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
+    redacted = patterns.CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
 
     def _protect_revealed_uuid(match: re.Match[str]) -> str:
         sentinel = f"\x00{len(protected)}\x00"
@@ -1297,7 +1033,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
     else:
         redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
     redacted = redact_for_log(redacted)
-    redacted = _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    redacted = patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     for index, original in enumerate(protected):
         redacted = redacted.replace(f"\x00{index}\x00", original)
     return redacted
@@ -1375,7 +1111,7 @@ def _is_public_cli_reference(key: object | None, value: object) -> bool:
     # Control references let the operator carry out the next reviewed action.
     # Their exact field names and canonical UUID shape keep unrelated identity
     # values, invalid references, and free text in the normal redaction path.
-    return key in _CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
+    return key in patterns.CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
 
 
 def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:

@@ -19,7 +19,7 @@ If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get Cadrumo](../dow
 
 ## Register the server
 
-Register `cadrumo-mcp` as a stdio server in your MCP client. For a client that
+Register `cadrumo-mcp` as a `stdio` server in your MCP client. For a client that
 accepts a JSON server definition:
 
 ```json

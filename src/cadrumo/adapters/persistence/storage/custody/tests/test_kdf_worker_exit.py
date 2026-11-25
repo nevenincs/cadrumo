@@ -18,11 +18,11 @@ from argon2.low_level import Type, hash_secret_raw
 from ......core.config import Settings, override_settings
 from ......core.diagnostic_log import DiagnosticFormatter
 from ......core.logging import LOG_FILE_FORMAT
+from ......tests.log_records import delivered_records
 from ...crypto.aes_gcm import open_sealed, seal
-from .. import _kdf_process as process_boundary
-from .. import _kdf_worker_supervision as supervision
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_process, kdf_worker_supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -71,17 +71,17 @@ def wrapped_dek() -> ProfileCustodyWrappedDek:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Generator[Settings]:
-    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path) as settings:
         yield settings
 
 
 @pytest.fixture
 def configure_child_exit(monkeypatch: pytest.MonkeyPatch) -> Callable[[int, bool], None]:
     """Alter only the final exit of the actual contained, attested, cryptographic child."""
-    launch_process = process_boundary._launch_worker_process
+    launch_process = kdf_process.launch_worker_process
 
     def configure(exit_code: int, trailing_byte: bool = False) -> None:
-        source = "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        source = "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         if trailing_byte:
             source += (
                 "original_write = worker.write_kdf_frame\n"
@@ -98,16 +98,16 @@ def configure_child_exit(monkeypatch: pytest.MonkeyPatch) -> Callable[[int, bool
 
         def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
             entry = command.index("-m")
-            assert command[entry + 1] == "cadrumo.adapters.persistence.storage.custody._kdf_worker"
+            assert command[entry + 1] == "cadrumo.adapters.persistence.storage.custody.kdf_worker"
             return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
-        monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
+        monkeypatch.setattr(kdf_process, "launch_worker_process", launch)
 
     return configure
 
 
 def _operate(
-    worker: _SupervisedKdfWorker, operation: _Operation, wrapped_dek: ProfileCustodyWrappedDek
+    worker: SupervisedKdfWorker, operation: _Operation, wrapped_dek: ProfileCustodyWrappedDek
 ) -> float | bytes | ProfileCustodyWrappedDek | None:
     if operation == "calibrate":
         return worker.calibrate(_kdf())
@@ -119,8 +119,8 @@ def _operate(
 def _summary(caplog: pytest.LogCaptureFixture) -> dict[str, object]:
     records = [
         record
-        for record in caplog.records
-        if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
+        for record in delivered_records(caplog)
+        if record.name == kdf_worker_supervision.__name__ and record.msg == "kdf_worker_lifecycle"
     ]
     assert len(records) == 1
     rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(records[0])
@@ -139,8 +139,8 @@ def test_nonzero_exit_refuses_a_valid_real_cryptographic_response(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     configure_child_exit(7, False)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
     process: subprocess.Popen[bytes] | None = None
     with pytest.raises(ProfileCustodyRefusedError) as refused, worker:
         process = worker._process
@@ -162,8 +162,8 @@ def test_zero_exit_accepts_the_real_cryptographic_response(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     configure_child_exit(0, False)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    with _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings) as worker:
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    with SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings) as worker:
         process = worker._process
         result = _operate(worker, operation, wrapped_dek)
     assert process is not None and process.returncode == 0
@@ -193,7 +193,7 @@ def test_handled_failure_frame_with_zero_exit_remains_a_normal_refusal(
 ) -> None:
     # Preserve the unchanged -m entrypoint and actual exit status for handled refusals.
     launched: list[tuple[subprocess.Popen[bytes], float]] = []
-    launch_process = process_boundary._launch_worker_process
+    launch_process = kdf_process.launch_worker_process
 
     def observe_launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
         started = time.monotonic()
@@ -201,9 +201,9 @@ def test_handled_failure_frame_with_zero_exit_remains_a_normal_refusal(
         launched.append((process, time.monotonic() - started))
         return process
 
-    monkeypatch.setattr(process_boundary, "_launch_worker_process", observe_launch)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    monkeypatch.setattr(kdf_process, "launch_worker_process", observe_launch)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
     try:
         with worker:
             process = worker._process
@@ -240,11 +240,11 @@ def test_zero_exit_still_refuses_trailing_result_pipe_data(
     configure_child_exit: Callable[[int, bool], None], settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
     configure_child_exit(0, True)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     process: subprocess.Popen[bytes] | None = None
     with (
         pytest.raises(ProfileCustodyRefusedError) as refused,
-        _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings) as worker,
+        SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings) as worker,
     ):
         process = worker._process
         worker.calibrate(_kdf())
@@ -257,8 +257,8 @@ def test_zero_exit_still_refuses_trailing_result_pipe_data(
 def test_cached_exit_code_remains_observable_when_later_cleanup_fails(
     settings: Settings, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
     cleanup = worker._cleanup_neutral_directory
     primary = OSError("synthetic cleanup failure")
     process: subprocess.Popen[bytes] | None = None
@@ -280,10 +280,10 @@ def test_cached_exit_code_remains_observable_when_later_cleanup_fails(
 def test_missing_result_terminates_writer_before_closing_blocked_reader(
     monkeypatch: pytest.MonkeyPatch, settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
-    launch_process = process_boundary._launch_worker_process
+    launch_process = kdf_process.launch_worker_process
     source = (
         "import time\n"
-        "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         "original_write = worker.write_kdf_frame\n"
         "writes = 0\n"
         "def write(fd, value, *, kind):\n"
@@ -300,9 +300,9 @@ def test_missing_result_terminates_writer_before_closing_blocked_reader(
         entry = command.index("-m")
         return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
-    monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    monkeypatch.setattr(kdf_process, "launch_worker_process", launch)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
     process: subprocess.Popen[bytes] | None = None
     started: float | None = None
     with ExitStack() as cleanup:
@@ -311,7 +311,7 @@ def test_missing_result_terminates_writer_before_closing_blocked_reader(
             process, job = worker._process, worker._job
             assert process is not None
             cleanup.callback(process.wait, timeout=5)
-            cleanup.callback(process_boundary.terminate_process_tree, process, job)
+            cleanup.callback(kdf_process.terminate_process_tree, process, job)
             started = time.monotonic()
             worker._deadline = started + 0.1
             worker.calibrate(_kdf())
@@ -324,13 +324,40 @@ def test_missing_result_terminates_writer_before_closing_blocked_reader(
         assert cast(float, context["kdf_cleanup_elapsed_ms"]) < 5_000
 
 
+def test_calibration_result_at_its_bound_with_a_clean_child_exit_is_a_debug_sample_rejection(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A calibration frame landing on the sample bound rejects that grid point without an error record."""
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    require_exit = worker.require_clean_worker_exit
+
+    def require_exit_after_the_bound() -> None:
+        process = worker._process
+        assert process is not None
+        # The child answers and exits on its own; the sample budget ends in between.
+        assert process.wait(timeout=10) == 0
+        worker._deadline = time.monotonic()
+        require_exit()
+
+    monkeypatch.setattr(worker, "require_clean_worker_exit", require_exit_after_the_bound)
+    with pytest.raises(TimeoutError), worker:
+        worker.calibrate(_kdf())
+    records = [r for r in delivered_records(caplog) if r.msg == "kdf_worker_lifecycle"]
+    assert [r.levelno for r in records] == [logging.DEBUG]
+    context = _summary(caplog)
+    assert context["stage"] == "clean_exit" and context["error_type"] == "TimeoutError"
+    assert context["outcome"] == "sample_rejected" and context["exit_code"] == 0
+    assert context["cleanup_status"] == "completed"
+
+
 def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
     settings: Settings, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A result is not accepted while its contained producer remains alive."""
-    launch_process = process_boundary._launch_worker_process
+    launch_process = kdf_process.launch_worker_process
     source = (
-        "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         "import time\n"
         "worker.main()\n"
         "time.sleep(30)\n"
@@ -340,10 +367,10 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
         entry = command.index("-m")
         return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
-    monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
-    require_exit = worker._require_clean_worker_exit
+    monkeypatch.setattr(kdf_process, "launch_worker_process", launch)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    require_exit = worker.require_clean_worker_exit
     exit_started: float | None = None
 
     def require_exit_before_deadline() -> None:
@@ -354,7 +381,7 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
         worker._deadline = exit_started + 0.05
         require_exit()
 
-    monkeypatch.setattr(worker, "_require_clean_worker_exit", require_exit_before_deadline)
+    monkeypatch.setattr(worker, "require_clean_worker_exit", require_exit_before_deadline)
     process: subprocess.Popen[bytes] | None = None
     with ExitStack() as cleanup:
         cleanup.callback(worker._close, failed=True)
@@ -364,7 +391,7 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
             # Retain exact-child cleanup independently of the worker's fields.
             # LIFO callbacks terminate, reap, then finish supervisor cleanup.
             cleanup.callback(process.wait, timeout=5)
-            cleanup.callback(process_boundary.terminate_process_tree, process, job)
+            cleanup.callback(kdf_process.terminate_process_tree, process, job)
             worker.calibrate(_kdf())
         assert exit_started is not None and time.monotonic() - exit_started < 5
         assert process is not None and process.returncode is not None

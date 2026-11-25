@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.module_target_inventory import assert_all_target_sets_current, load_all_target_sets
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.quality import import_load_worker
 from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import read_modules
@@ -20,6 +20,36 @@ from dev.quality.import_load_probe import governed_load_targets, main
 from dev.quality.import_target_evaluation import TargetEvaluationContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_authority_reads_ordered_and_peer_layers_without_joining_names(tmp_path: Path) -> None:
+    """Newlines separate ordered layers; colons separate peers within a layer."""
+    package = tmp_path / "example"
+    package.mkdir()
+    for name in ("__init__", "upper", "peer", "lower"):
+        (package / f"{name}.py").write_text("", encoding="utf-8")
+    (tmp_path / ".importlinter").write_text(
+        "[importlinter]\nroot_packages = example\n"
+        "[importlinter:contract:example]\ntype = layers\ncontainers = example\n"
+        "layers =\n    upper : peer\n    lower : (optional)\nexhaustive = True\n",
+        encoding="utf-8",
+    )
+
+    read = read_authority(tmp_path)
+
+    assert read.authority is not None and not read.findings
+    assert read.authority.classifications == (("example", ("lower", "optional", "peer", "upper")),)
+
+
+def test_compile_command_reports_authority_failure_without_requiring_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A broken authority yields its operational failure instead of an argument error."""
+    assert main(["--root", str(tmp_path), "--compile-targets"]) == 7
+    captured = capsys.readouterr()
+    assert "[AUTHORITY_CONFIG] cannot read" in captured.err
+    assert "--report is required" not in captured.err
+    assert not (tmp_path / "dev/quality/metadata").exists()
 
 
 def test_compile_command_refreshes_worker_partitions_after_source_moves(

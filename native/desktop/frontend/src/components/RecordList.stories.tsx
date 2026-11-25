@@ -29,8 +29,19 @@ function View({ records, sourceStates, dropped, filters: initial }: Args) {
         records={records}
         sourceStates={sourceStates}
         dropped={dropped}
+        counts={{
+          errors: (records ?? []).filter(
+            (record) => record.level === "ERROR" || record.level === "CRITICAL",
+          ).length,
+          warnings: (records ?? []).filter(
+            (record) => record.level === "WARNING",
+          ).length,
+        }}
         filters={filters}
         setFilters={setFilters}
+        onLevelChange={(minLevel) =>
+          setFilters((current) => ({ ...current, minLevel }))
+        }
         onMenu={() => undefined}
         shown
       />
@@ -113,23 +124,26 @@ function WithMenu(args: Args) {
           {
             id: "copy",
             label: t("desktop.menu.copy_line"),
+            icon: "copy",
             enabled: true,
-            shortcut: "Ctrl+C",
           },
           {
             id: "visible",
             label: t("desktop.menu.copy_visible"),
+            icon: "copyAll",
             enabled: true,
           },
           { separator: true },
           {
             id: "level",
             label: t("desktop.menu.only_level", { level: "WARNING" }),
+            icon: "filter",
             enabled: true,
           },
           {
             id: "logger",
             label: t("desktop.menu.only_logger", { logger: "tui.app" }),
+            icon: "filter",
             enabled: false,
           },
         ]}

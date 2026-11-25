@@ -21,8 +21,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 
 from .acquire_common import AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
@@ -34,7 +34,7 @@ _UTF_8: Final[str] = UTF_8
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 
 
-def _resolve_uv(override: Path | None) -> Path:
+def resolve_uv(override: Path | None) -> Path:
     """Resolve the ``uv`` executable, refusing instructively when absent.
 
     An explicit override is resolved strictly, and a path that does not exist
@@ -85,7 +85,7 @@ def run_oracle_emit_cohort(
     """
     cohort = load_release_cohort(release_cohort_dir)
     python_cohort = load_python_cohort(release_cohort_dir / "python")
-    uv = _resolve_uv(uv_executable)
+    uv = resolve_uv(uv_executable)
     work = work_dir.resolve()
     work.mkdir(parents=True, exist_ok=True)
     venv = work / "venv"
@@ -139,7 +139,8 @@ def run_oracle_emit_cohort(
     )
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the oracle cohort emission."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-cohort-dir", required=True, type=Path, help="Full release-cohort directory.")
     parser.add_argument("--row-id", required=True, help="Distribution row this OS proves (e.g. python-linux-x86-64).")
@@ -153,7 +154,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Install the immutable cohort, run the installed oracles, and emit its row."""
-    args = _parser().parse_args(argv)
+    args = parser().parse_args(argv)
     path = run_oracle_emit_cohort(
         release_cohort_dir=args.release_cohort_dir,
         row_id=args.row_id,

@@ -24,7 +24,7 @@ from cadrumo.application.auth.operation_definitions import AuthConfigureOperatio
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.overview import ProfileOverview
-from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from cadrumo.core.auth_provider import PASSWORD_CREDENTIAL_PROVIDERS, AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
@@ -95,6 +95,17 @@ async def read_sync_readiness(client: FrontendClient) -> AuthSyncReadiness:
     return result.sync_readiness
 
 
+def _certificate_file(certificate_path: str) -> Path | None:
+    """The operator's certificate path, made absolute, or ``None`` when none was given; reads the filesystem."""
+    return Path(certificate_path).expanduser().resolve(strict=False) if certificate_path.strip() else None
+
+
+def unchanged_profile_field(current: ProfileOverview, path: str, value: str) -> bool:
+    """Skip only an identical unmasked displayed profile fact."""
+    stored = next((field for section in current.sections for field in section.fields if field.path == path), None)
+    return stored is not None and not stored.masked and stored.value == value
+
+
 class AeatAuthClient:
     """Bind editable profile facts and protected credentials to their originating session."""
 
@@ -155,57 +166,62 @@ class AeatAuthClient:
             # The editor's displayed revision is the CAS baseline. A concurrent
             # writer must produce a conflict, never an unnoticed merge.
             self._baseline = None
-            revision, digest = current.record_revision, current.content_digest
-            for path, value in fields.items():
-                if not value.strip():
-                    continue
-                stored = next(
-                    (field for section in current.sections for field in section.fields if field.path == path), None
+            revision, digest = await self._save_fields(current, fields)
+            expected_revision, expected_digest = revision, digest
+
+            def configure() -> None:
+                # Resolving the certificate path reads the filesystem, so it runs here, off the event loop.
+                configure_profile_authentication(
+                    self.client,
+                    AuthConfigureOperationRequest(
+                        provider=provider,
+                        clave_movil_route=route if provider is AuthProviderKind.CLAVE_MOVIL else None,
+                        certificate_path=_certificate_file(certificate_path),
+                        expected_profile_revision=expected_revision,
+                        expected_profile_digest=expected_digest,
+                    ),
                 )
-                if stored is not None and not stored.masked and stored.value == value:
-                    continue
-                try:
-                    saved = await asyncio.to_thread(self._persist, path, value, revision, digest)
-                    if saved.profile_id != self.client.profile_id or saved.record_revision < revision:
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
-                    revision, digest = saved.record_revision, saved.content_digest
-                except Exception as error:
-                    raise AeatAuthFieldSaveError(path) from error
-                self._pin()
-            await asyncio.to_thread(
-                configure_profile_authentication,
-                self.client,
-                AuthConfigureOperationRequest(
-                    provider=provider,
-                    clave_movil_route=route if provider is AuthProviderKind.CLAVE_MOVIL else None,
-                    certificate_path=Path(certificate_path).expanduser().resolve(strict=False)
-                    if certificate_path.strip()
-                    else None,
-                    expected_profile_revision=revision,
-                    expected_profile_digest=digest,
-                ),
-            )
+
+            await asyncio.to_thread(configure)
             self._pin()
-            if (
-                secret is not None
-                and len(secret) > 0
-                and provider in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}
-            ):
-                encoded = bytearray(json.dumps({"password": secret.decode("utf-8")}), "utf-8")
-                credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
-                try:
-                    result = await run_auth_operation(
-                        self.client,
-                        AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
-                        AuthCredentialSaveRequest(provider=credential_provider),
-                        AuthCredentialSaveResult,
-                        secret=encoded,
-                    )
-                    if result.provider != provider.value or not result.saved:
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
-                finally:
-                    encoded[:] = bytes(len(encoded))
+            await self._save_credential(provider, secret)
             return await self.snapshot()
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
+
+    async def _save_fields(self, current: ProfileOverview, fields: Mapping[str, str]) -> tuple[int, str]:
+        """Save changed facts serially under their fresh revision baselines."""
+        revision, digest = current.record_revision, current.content_digest
+        for path, value in fields.items():
+            if not value.strip():
+                continue
+            if unchanged_profile_field(current, path, value):
+                continue
+            try:
+                saved = await asyncio.to_thread(self._persist, path, value, revision, digest)
+                if saved.profile_id != self.client.profile_id or saved.record_revision < revision:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                revision, digest = saved.record_revision, saved.content_digest
+            except Exception as error:
+                raise AeatAuthFieldSaveError(path) from error
+            self._pin()
+        return revision, digest
+
+    async def _save_credential(self, provider: AuthProviderKind, secret: bytearray | None) -> None:
+        """Persist the selected credential and always wipe its encoded frame."""
+        if secret is not None and len(secret) > 0 and provider in PASSWORD_CREDENTIAL_PROVIDERS:
+            encoded = bytearray(json.dumps({"password": secret.decode("utf-8")}), "utf-8")
+            credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
+            try:
+                result = await run_auth_operation(
+                    self.client,
+                    AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+                    AuthCredentialSaveRequest(provider=credential_provider),
+                    AuthCredentialSaveResult,
+                    secret=encoded,
+                )
+                if result.provider != provider.value or not result.saved:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+            finally:
+                encoded[:] = bytes(len(encoded))

@@ -6,6 +6,8 @@ import json
 import socket
 import struct
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -13,16 +15,38 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue, TypeAdapter
 
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.admin import AdminAction, AdminServer
-from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
+from cadrumo_agent_service.local_ai_relay import LocalAiFacts
+from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
+    KEY_LANE,
+    KEYLESS_LANE,
+    synthetic_document,
+)
+from cadrumo_agent_service.providers.domain.record import LocalEngine, LocalPlacement
+from cadrumo_agent_service.providers.persistence.store import (
+    LOCAL_MODEL_LIST_CAPABILITY,
+    LOCAL_MODEL_LIST_KEY,
+    SecureProviderSettingsStore,
+)
 from cadrumo_agent_service.service import AgentService
 from cadrumo_client.contracts.service_access import ServiceConnected
+from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
-from .provider_catalog_support import provider_record_capability, stand_in_agent_image
+from ..service_admin_channel import service_admin
+from .provider_catalog_support import (
+    local_model_list_capability,
+    provider_record_capability,
+    stand_in_agent_image,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_COLD_STATUS_SECONDS = 60.0
+_EXCHANGE_SECONDS = 60.0
+"""How long one raw exchange waits for its answer: a store read through the runtime outlasts seconds under load."""
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
@@ -41,9 +65,20 @@ class _AdminRecorder:
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
-        method: Literal["browser", "device"] | None = None,
+        method: Literal["browser", "browser-code", "device"] | None = None,
         attempt_id: str | None = None,
+        model: str | None = None,
         secret: bytearray | None = None,
+        run_id: str | None = None,
+        permission_request_id: str | None = None,
+        scope: Literal["once", "session", "remember", "decline"] | None = None,
+        grant_id: str | None = None,
+        conversation_id: str | None = None,
+        engine: LocalEngine | None = None,
+        placement: LocalPlacement | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
+        local_ai: LocalAiFacts | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,
@@ -52,6 +87,7 @@ class _AdminRecorder:
             "choice": choice,
             "method": method,
             "attempt_id": attempt_id,
+            "model": model,
             "secret": secret,
         }
         self.calls.append((action, values))
@@ -76,8 +112,8 @@ def _exchange(
     port: int, bearer: bytes, request: dict[str, JsonValue], *, secret: bytes | None = None, unauthorized: bool = False
 ) -> dict[str, JsonValue]:
     encoded = json.dumps(request, separators=(",", ":")).encode("utf-8")
-    with socket.create_connection(("127.0.0.1", port), timeout=5) as stream:
-        stream.settimeout(5)
+    with socket.create_connection(("127.0.0.1", port), timeout=_EXCHANGE_SECONDS) as stream:
+        stream.settimeout(_EXCHANGE_SECONDS)
         _frame(stream, bearer)
         if not unauthorized:
             _frame(stream, encoded)
@@ -149,10 +185,11 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
             storage_root=runtime.root,
             gateway_bearer=gateway,
             emit=lambda _event: None,
+            local_engine_default=LocalEngine.OLLAMA,
         )
         server = AdminServer(service, bearer=admin)
         try:
-            for action in ("status", "set", "remove", "reset", "auth"):
+            for action in ("status", "provider_lanes", "set", "remove", "reset", "auth"):
                 for unauthorized in (b"wrong-admin-authority", bytes(gateway)):
                     assert _exchange(server.port, unauthorized, _provider_request(action), unauthorized=True) == {
                         "kind": "refused",
@@ -168,13 +205,20 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
 
             assert isinstance(runtime.admit(client), ServiceConnected)
             assert client.claim() is not None
-            status = _exchange(server.port, bytes(admin), _provider_request("status"))["result"]
-            assert isinstance(status, dict)
+            # A cold status read launches the agent program for its catalog, sign-in state and sign-in
+            # methods in turn and outlasts the service's read bound; the admin channel observes the
+            # same read again until it answers.
+            status = service_admin(admin, server.port, "status", within=_COLD_STATUS_SECONDS)
             initial = _provider_entry(status)
             available = initial["available"]
             assert isinstance(available, bool)
             assert initial["mode"] == "unset" and not available
             revision = _entry_revision(initial)
+            # The lanes read is a plain store read that runs no supplier check; an api lane is whole in it.
+            lanes = _exchange(server.port, bytes(admin), _request("provider_lanes"))["result"]
+            assert isinstance(lanes, dict) and set(lanes) == {"providers", "reads_pending"}
+            assert isinstance(lanes["reads_pending"], bool)
+            assert _provider_entry(lanes) == initial
             for action, expected_mode in (("set", "key"), ("auth", "key"), ("remove", "disabled"), ("reset", "unset")):
                 reply = _exchange(
                     server.port,
@@ -192,14 +236,159 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
                     stale = _exchange(server.port, bytes(admin), _provider_request("remove", revision))
                     assert stale["result"] == {"code": "revision_conflict"}
                 revision = _entry_revision(entry)
-                reread = _exchange(server.port, bytes(admin), _provider_request("status"))["result"]
-                assert isinstance(reread, dict)
+                reread = service_admin(admin, server.port, "status")
                 assert _provider_entry(reread) == entry
                 assert "synthetic-provider-secret" not in json.dumps(reread)
         finally:
             server.close()
             service.close()
             admin[:] = bytes(len(admin))
+
+
+def _list_request(action: str, revision: str, **fields: str) -> dict[str, JsonValue]:
+    request = _request(action)
+    request.update(expected_revision=revision, **fields)
+    return request
+
+
+def _model_list(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    result = answer["result"]
+    assert isinstance(result, dict) and result.get("unreadable") is False, result
+    return result
+
+
+@contextmanager
+def _admitted_admin_server(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Generator[tuple[InstalledServiceClient, AdminServer, bytearray]]:
+    """An admitted, claimed agent service behind its parent-authority admin server, torn down on exit."""
+    image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
+    admin = bytearray(b"synthetic-parent-admin-authority")
+    capabilities = (provider_record_capability(), local_model_list_capability())
+    with service_record_runtime(tmp_path, record_capabilities=capabilities) as runtime:
+        client = runtime.connect_service()
+        service = AgentService(
+            client=client,
+            storage_root=runtime.root,
+            gateway_bearer=bytearray(b"synthetic-gateway"),
+            emit=lambda _: None,
+            local_engine_default=LocalEngine.OLLAMA,
+        )
+        server = AdminServer(service, bearer=admin)
+        try:
+            assert isinstance(runtime.admit(client), ServiceConnected)
+            assert client.claim() is not None
+            yield client, server, admin
+        finally:
+            server.close()
+            service.close()
+            admin[:] = bytes(len(admin))
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
+@pytest.mark.usefixtures("authority_operation")
+def test_the_model_list_lives_in_its_own_capability_and_never_moves_the_provider_settings_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The agent tree is bound to the provider-settings generation, so a model list change must leave it as it is."""
+    with _admitted_admin_server(tmp_path, monkeypatch) as (client, server, admin):
+        provider_records = SecureProviderSettingsStore(client=client)
+
+        def provider_generation() -> str:
+            provider_records.invalidate_generations()
+            observed = provider_records.observe_generations()
+            assert observed is not None
+            return observed.provider_settings
+
+        before = provider_generation()
+        initial = _model_list(_exchange(server.port, bytes(admin), _request("local_models")))
+        assert initial["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+        added = _model_list(
+            _exchange(
+                server.port,
+                bytes(admin),
+                _list_request(
+                    "local_model_add",
+                    ABSENT_SECURE_OBJECT_REVISION_ID,
+                    provider=KEYLESS_LANE,
+                    model="custom-model:test",
+                ),
+            )
+        )
+        revision = added["revision"]
+        assert isinstance(revision, str) and revision != ABSENT_SECURE_OBJECT_REVISION_ID
+        assert added["models"] == [{"lane": KEYLESS_LANE, "model": "custom-model:test"}]
+        assert added["reading"] is None
+        assert _model_list(_exchange(server.port, bytes(admin), _request("local_models"))) == added
+        chosen = _model_list(
+            _exchange(
+                server.port,
+                bytes(admin),
+                _list_request("reading_model_choose", revision, provider=KEYLESS_LANE, model="custom-model:test"),
+            )
+        )
+        revision = chosen["revision"]
+        assert isinstance(revision, str) and revision != added["revision"]
+        assert chosen["reading"] == {"lane": KEYLESS_LANE, "model": "custom-model:test"}
+        assert chosen["models"] == added["models"]
+        assert provider_generation() == before
+
+        cleared = _model_list(_exchange(server.port, bytes(admin), _list_request("local_models_reset", revision)))
+        assert cleared["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+        assert provider_generation() == before
+
+        # The observation does see a provider-record change, so the equalities above are not vacuous.
+        stored = _exchange(
+            server.port,
+            bytes(admin),
+            _provider_request("set", ABSENT_SECURE_OBJECT_REVISION_ID),
+            secret=b"synthetic-provider-secret",
+        )
+        assert isinstance(stored["result"], dict) and "entry" in stored["result"], stored
+        assert provider_generation() != before
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
+@pytest.mark.usefixtures("authority_operation")
+def test_an_unreadable_model_list_record_reports_its_guard_and_a_guarded_reset_clears_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A record that does not validate is never read as an empty list, and its reset is always reachable."""
+    with _admitted_admin_server(tmp_path, monkeypatch) as (client, server, admin):
+        written = client.record_write(
+            LOCAL_MODEL_LIST_CAPABILITY,
+            LOCAL_MODEL_LIST_KEY,
+            payload=bytearray(b'{"schema_version":99}'),
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+        )
+        assert written.state == "written"
+        revision = written.revision
+        assert revision is not None
+
+        unreadable = _exchange(server.port, bytes(admin), _request("local_models"))["result"]
+        assert isinstance(unreadable, dict)
+        assert unreadable["unreadable"] is True and unreadable["models"] == []
+        assert unreadable["revision"] == revision
+        refused = _exchange(
+            server.port,
+            bytes(admin),
+            _list_request("local_model_add", revision, provider=KEYLESS_LANE, model="custom-model:test"),
+        )
+        assert refused["result"] == {"code": "unknown"}
+
+        reset = _model_list(_exchange(server.port, bytes(admin), _list_request("local_models_reset", revision)))
+        assert reset == {
+            "unreadable": False,
+            "models": [],
+            "reading": None,
+            "reading_source": "none",
+            "tasks": [],
+            "local_lanes": [KEYLESS_LANE],
+            "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+        }
 
 
 @pytest.mark.parametrize("action", ["status", "set", "remove", "reset", "auth"])

@@ -55,7 +55,7 @@ against an incomplete draft being filed by accident.
 
 A filed return is not corrected by recalculating the same period. If you find
 a mistake after filing at the agency, build a correction - a complementaria,
-sustitutiva, or rectificativa - from the filing record. That record must carry
+<span lang="es">sustitutiva</span>, or rectificativa - from the filing record. That record must carry
 imported proof from the agency, such as the justificante. Building the correction
 submits nothing: you file it at the portal yourself. The steps are
 in {ref}`Correct a declaration already recorded as filed <correct-an-already-filed-local-record>`.

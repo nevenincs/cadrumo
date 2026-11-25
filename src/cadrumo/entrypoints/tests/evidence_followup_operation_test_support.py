@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
 from pydantic import BaseModel
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
@@ -24,8 +27,7 @@ from ...application.ledger.evidence_followup_contracts import (
     CloudDerivedArtefactProjection,
     ConsentedDispatchProjection,
     ConsentWithdrawalSurveyProjection,
-    CountryVocabularyAdvisoryProjection,
-    CountryVocabularyWarningProjection,
+    EvidenceReviewNifIvaPrefixCountryProjection,
     EvidenceReviewQueueRowProjection,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
@@ -37,6 +39,10 @@ from ...application.ledger.evidence_followup_contracts import (
     LedgerEvidenceReviewListRequest,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
+)
+from ...application.ledger.evidence_review_advisories import (
+    CountryVocabularyAdvisoryProjection,
+    CountryVocabularyWarningProjection,
     PartyAttributionAdvisoryProjection,
     PartyAttributionWarningProjection,
 )
@@ -51,6 +57,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.ledger.party_attribution import party_attribution_advisory
 from ...application.ledger.review_advisories import review_advisory_kinds
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
@@ -58,9 +65,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ...domain.user_profile.values import UserProfileFact
-from ..adapter_composition import build_attachment_store
+from ..adapter_composition_ports import build_attachment_store
 from ..evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,14 +89,9 @@ def prepare_evidence_followup_conformance_case(
     """Create real encrypted evidence, draft, consent and attachment rows for one route."""
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),
+        persona_facts_beneath(
+            (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),),
+            without=("identity.",),
         ),
     )
     bucket_id = str(profile_id)
@@ -243,8 +247,12 @@ def prepare_evidence_followup_conformance_case(
         persisted_draft = stored.draft
         with validating_governed_facts(operation):
             legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-            party_advisory = party_attribution_advisory(persisted_draft, legends=legends, operation=operation)
-            country_advisory = country_vocabulary_advisory(persisted_draft, operation=operation)
+            party_advisory = party_attribution_advisory(
+                persisted_draft, legends=legends, operation=operation, effective_date=_ON_DATE
+            )
+            country_advisory = country_vocabulary_advisory(
+                persisted_draft, operation=operation, effective_date=_ON_DATE
+            )
         projected_party_advisory = (
             None
             if party_advisory is None
@@ -288,6 +296,12 @@ def prepare_evidence_followup_conformance_case(
             ),
             party_attribution_advisory=projected_party_advisory,
             country_vocabulary_advisory=projected_country_advisory,
+            # The fixture's seller identifies as ESB00015016, a number the ES
+            # prefix marks as Spanish-issued; the buyer's bare 12345678Z carries
+            # no prefix, so that side suggests nothing.
+            counterparty_nif_iva_prefix_country=EvidenceReviewNifIvaPrefixCountryProjection(supplier="ES"),
+            # The deployment has not opted in to off-host reads, so no profile on it may be asked.
+            off_host_read_offered=False,
         )
     else:
         raise ValueError(f"unsupported evidence follow-up operation: {definition_id}")

@@ -168,12 +168,7 @@ class DeadlineSecretBus:
         if sys.platform != "linux":
             raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
         (owner,) = secret_reply_body(self.call(BUS_PATH, BUS, "GetNameOwner", "s", (SERVICE,), destination=BUS), 1)
-        if (
-            not isinstance(owner, str)
-            or not owner.startswith(":")
-            or ((self.owner is not None and self.owner) and owner != self.owner)
-        ):
-            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        owner = _require_bus_owner(owner, self.owner)
         (uid,) = secret_reply_body(self.call(BUS_PATH, BUS, "GetConnectionUnixUser", "s", (owner,), destination=BUS), 1)
         if type(uid) is not int or uid != os.getuid():
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
@@ -184,6 +179,16 @@ class DeadlineSecretBus:
             raise invalid_secret_reply()
         _require_gnome_process_owner(pid, uid)
         self.owner = owner
+
+
+def _require_bus_owner(owner: object, previous: str | None) -> str:
+    if (
+        not isinstance(owner, str)
+        or not owner.startswith(":")
+        or ((previous is not None and previous) and owner != previous)
+    ):
+        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    return owner
 
 
 def _require_system_bus_parent(observed: os.stat_result) -> None:

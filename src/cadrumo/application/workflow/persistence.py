@@ -43,6 +43,8 @@ from ...core.config_support import StorageRouteKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.logging import get_logger
 from ...core.secure_object_write import SecureObjectWrite
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...domain.buckets.event import BucketEvent
 from .errors import WorkflowError
 from .events import (
@@ -315,7 +317,7 @@ class WorkflowStateRepository:
         Lets callers co-transactionally persist the workflow state and a
         sibling secure-object payload (typically an updated
         bucket-event-history catalogue) via a single
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         call.
         """
         return self._persistence.prepare_state_write(
@@ -472,7 +474,7 @@ class WorkflowRunRepository:
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
         run_id = validate_run_id(result.run_id)
-        marker_dir = runs_dir or Settings().cadrumo_workflow_runs_dir
+        marker_dir = runs_dir or storage_path(StorageCategory.WORKFLOW_RUNS, settings=Settings())
         self._persistence.save_run(self._objects, result)
         return marker_dir / run_id
 

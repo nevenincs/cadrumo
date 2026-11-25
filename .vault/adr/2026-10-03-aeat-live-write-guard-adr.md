@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-live-write-guard'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:38922e51d7351b3788e0ce4e66283644520e1c1309f4c1a026561ea11888edf1'
+body_hash: 'sha256:e99d81d7faf7b09d8143e39945009081815353c1cddaf01c6aaf7ec06b15a252'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr]]"
   - "[[2026-07-10-clave-permanente-idp-guard-host-adr]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-09-24-aeat-live-write-guard-plan]]"
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
+  - '[[2026-10-27-sede-browser-adr]]'
 ---
 
 # `aeat-live-write-guard` adr: `Browser-context request guard semantics` | (**status:** `accepted`)
@@ -114,3 +115,11 @@ The knockout for ruling 1 is the 2026-08-02 measurement: any matcher change lose
 - Cost: third-party or unexpected AEAT sub-resources not covered by the capture are refused after enablement. Each one needs a grounded declaration, and a refusal is visible, not silent.
 - Cost: Cl@ve Permanente login stays unavailable behind the context guard until it is grounded.
 - Reconsider if Playwright routing cannot observe a class of requests the readers issue (for example service-worker or WebSocket traffic). A guarantee stated for every request must then name what it does not see.
+
+## Amendment 2026-10-27: the human-driven Sede view is outside the guard's scope
+
+Accepted 2026-10-27 under `2026-10-27-sede-browser-adr`, on the user's choice of an in-app Sede browser streamed from the worker's Chromium ("implement 1)") and the user's ruling that it is free human use with no restriction or limit.
+
+- This record governs every request Cadrumo initiates: automated live flows, the logins Cadrumo drives (including assisted login steps run in the view) and agent tools. For those its rulings and S02 are unchanged.
+- The human-driven view context is outside the guard's scope, because Cadrumo issues no request there. Cadrumo never scripts the page, never evaluates script in it and issues no Playwright API request from it; only the person's forwarded input acts. No route or policy of this record is installed on that context.
+- `AeatAccessGate.require_live_write` still refuses every Cadrumo submission.

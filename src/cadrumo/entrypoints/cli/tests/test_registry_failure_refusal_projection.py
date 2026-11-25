@@ -10,7 +10,7 @@ from ....domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ..common import cli_policy_refusal_projection
-from ..errors import _project_cadrumo_error
+from ..errors import project_cadrumo_error
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -25,7 +25,7 @@ def test_shared_cli_boundary_projects_the_domain_facts_through_application_polic
         ),
     )
 
-    projected = _project_cadrumo_error(error, callback=lambda: None)
+    projected = project_cadrumo_error(error, callback=lambda: None)
     refusal = cli_policy_refusal_projection(projected)
 
     assert refusal is not None

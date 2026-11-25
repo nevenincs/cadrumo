@@ -16,6 +16,13 @@ from .workspace import (
 )
 
 
+def reconciliation_source_state(*, has_diffs: bool, has_advisories: bool) -> AeatSyncSourceState:
+    """Name the AEAT-side state a stored comparison leaves: a diff conflicts, an advisory leaves it incomplete."""
+    if has_diffs:
+        return AeatSyncSourceState.CONFLICT
+    return AeatSyncSourceState.INCOMPLETE if has_advisories else AeatSyncSourceState.PRESENT
+
+
 def reconciliation_rows(
     *,
     bucket_id: str,
@@ -27,24 +34,7 @@ def reconciliation_rows(
     These are historical verdicts at the displayed comparison instant, not a
     new comparison against whichever calculation revision happens to be current.
     """
-    latest: dict[tuple[str, str, str, str], ModeloReconciliationRecord] = {}
-    for record in records:
-        if record.bucket_id != bucket_id:
-            raise AeatSyncWorkspaceProjectionError("reconciliation belongs to another profile")
-        # Older records can omit the source. Their evidence cannot be proven
-        # identical, so retain each comparison rather than collapsing them.
-        key = (
-            record.work_unit_id,
-            record.source_kind.value,
-            record.source_ref or record.bucket_event_id,
-            record.calculation_revision_id or record.bucket_event_id,
-        )
-        previous = latest.get(key)
-        if previous is None or (record.reconciled_at, record.bucket_event_id) > (
-            previous.reconciled_at,
-            previous.bucket_event_id,
-        ):
-            latest[key] = record
+    latest = _latest_comparisons(records, bucket_id)
     return tuple(
         AeatSyncWorkspaceFactV1(
             bucket_id=bucket_id,
@@ -56,11 +46,9 @@ def reconciliation_rows(
                     record.registry_snapshot_ref.modelo_year, record.registry_snapshot_ref.period
                 ),
                 local_state=AeatSyncSourceState.PRESENT,
-                aeat_state=AeatSyncSourceState.CONFLICT
-                if record.diffs
-                else AeatSyncSourceState.INCOMPLETE
-                if record.advisories
-                else AeatSyncSourceState.PRESENT,
+                aeat_state=reconciliation_source_state(
+                    has_diffs=bool(record.diffs), has_advisories=bool(record.advisories)
+                ),
                 local_observed_at=record.reconciled_at,
                 aeat_observed_at=record.reconciled_at,
                 discrepancy_kind=AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE
@@ -85,3 +73,28 @@ def reconciliation_rows(
         )
         for key, record in sorted(latest.items())
     )
+
+
+def _latest_comparisons(
+    records: tuple[ModeloReconciliationRecord, ...],
+    bucket_id: str,
+) -> dict[tuple[str, str, str, str], ModeloReconciliationRecord]:
+    latest: dict[tuple[str, str, str, str], ModeloReconciliationRecord] = {}
+    for record in records:
+        if record.bucket_id != bucket_id:
+            raise AeatSyncWorkspaceProjectionError("reconciliation belongs to another profile")
+        # Older records can omit the source. Their evidence cannot be proven
+        # identical, so retain each comparison rather than collapsing them.
+        key = (
+            record.work_unit_id,
+            record.source_kind.value,
+            record.source_ref or record.bucket_event_id,
+            record.calculation_revision_id or record.bucket_event_id,
+        )
+        previous = latest.get(key)
+        if previous is None or (record.reconciled_at, record.bucket_event_id) > (
+            previous.reconciled_at,
+            previous.bucket_event_id,
+        ):
+            latest[key] = record
+    return latest

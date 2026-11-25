@@ -10,13 +10,15 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.ids import LegalRefId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_last_exercise
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .authored_edition_support import source_first_exercise, source_with_sha256
+from ..conformance.registry_schema_support import committed_modelo
+from .authored_edition_support import authored_revisions, revision_covering, source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -40,11 +42,25 @@ _EXTRACTION_PROFILE_TARGET_LEGAL_REFS: frozenset[LegalRefId] = frozenset(
 )
 _ORDEN_EHA_672_ART_1: LegalRefId = "orden-eha-672-2007:art-1"
 _ORDEN_EHA_672_ART_3: LegalRefId = "orden-eha-672-2007:art-3"
+# The three single-exercise editions that follow the 2019 base edition, oldest first, each
+# approved by its own annual Orden; the late-quarters branch of the newest has no Orden of its own.
+_M131_REVISIONS = authored_revisions("131")
+_M131_ORDER_REFS: tuple[LegalRefId, ...] = (
+    "orden-hfp-1359-2023:art-4",
+    "orden-hac-1347-2024:art-4",
+    "orden-hac-1425-2025:art-4",
+)
+_M131_SINGLE_EXERCISE_REVISIONS = _M131_REVISIONS[1 : 1 + len(_M131_ORDER_REFS)]
 _M131_REVISION_ORDER_REFS: dict[str, LegalRefId] = {
-    "2024": "orden-hfp-1359-2023:art-4",
-    "2025": "orden-hac-1347-2024:art-4",
-    "2026": "orden-hac-1425-2025:art-4",
+    str(revision.id): order_ref
+    for revision, order_ref in zip(_M131_SINGLE_EXERCISE_REVISIONS, _M131_ORDER_REFS, strict=True)
 }
+# The last exercise of the base edition, then each single-exercise edition's own.
+_M131_SNAPSHOT_YEARS = (
+    revision_last_exercise("131", str(_M131_REVISIONS[0].id)),
+    *(revision.valid_from.year for revision in _M131_SINGLE_EXERCISE_REVISIONS),
+)
+_M100_NEWEST_REVISIONS = authored_revisions("100")[-2:]
 _M131_LAYOUT_SOURCE = "boe-modelo-131-2007-form"
 _M131_PROCEDURE_SOURCE = "aeat-modelo-131-procedure"
 _M131_INSTRUCTIONS_SOURCE = "aeat-modelo-131-instructions"
@@ -82,7 +98,7 @@ def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
 
 @pytest.fixture(scope="module")
 def modelo_131_registry():
-    return _committed_modelo("131")
+    return committed_modelo("131")
 
 
 # The AEAT calendario del contribuyente that fixes the deadline days checked below,
@@ -99,7 +115,7 @@ def test_modelo_131_calendar_exercise_deadline_census_dates_sources_and_ownershi
 ) -> None:
     assert committed_supported_filing_years().admits_coordinate(_CALENDAR_EXERCISE)
     modelo, catalogues = modelo_131_registry
-    revision = modelo.revisions["2019-2023"]
+    revision = modelo.revisions[str(revision_covering("131", _CALENDAR_EXERCISE).id)]
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
     year = _CALENDAR_EXERCISE
     expected = {
@@ -138,14 +154,7 @@ def test_modelo_131_calendar_exercise_deadline_census_dates_sources_and_ownershi
         assert set(window.source_refs) == {"aeat-modelo-131-instructions", calendar_ref}
 
 
-def test_modelo_131_guidance_and_layout_sources_are_separated(
-    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
-) -> None:
-    modelo, catalogues = modelo_131_registry
-    procedure = catalogues.sources[_M131_PROCEDURE_SOURCE]
-    instructions = catalogues.sources[_M131_INSTRUCTIONS_SOURCE]
-    layout = catalogues.sources[_M131_LAYOUT_SOURCE]
-
+def _assert_m131_source_roles(modelo, procedure, instructions, layout) -> None:
     assert _M131_PROCEDURE_SOURCE in modelo.source_refs
     assert _M131_INSTRUCTIONS_SOURCE in modelo.source_refs
     assert _M131_LAYOUT_SOURCE in modelo.source_refs
@@ -161,42 +170,60 @@ def test_modelo_131_guidance_and_layout_sources_are_separated(
     assert layout.authority == "boe"
     assert layout.kind == "form_spec"
 
+
+def _assert_m131_revision_cites_only_the_sources_it_is_governed_by(
+    revision, catalogues, procedure, instructions
+) -> None:
+    assert _M131_LAYOUT_SOURCE in revision.source_refs
+    instruction_refs = {ref for ref in revision.source_refs if str(ref).startswith(_M131_INSTRUCTIONS_SOURCE)}
+    if _source_window_covers(instructions, revision):
+        assert instruction_refs
+        assert all(catalogues.sources[ref].kind == "instructions" for ref in instruction_refs)
+    else:
+        assert _M131_INSTRUCTIONS_SOURCE not in revision.source_refs
+    # The sede procedure ficha is required only of the revisions it actually
+    # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
+    # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing
+    # it would claim grounding from a page that documents a later campaign --
+    # which `_check_revision_scoped_source_windows` refuses at snapshot build.
+    # Requiring it unconditionally made this test demand the refusal.
+    if _source_window_covers(procedure, revision):
+        assert _M131_PROCEDURE_SOURCE in revision.source_refs
+    else:
+        assert _M131_PROCEDURE_SOURCE not in revision.source_refs
+
+
+def _assert_m131_citations_are_guidance(revision, catalogues) -> None:
+    for parameter in revision.parameters:
+        for citation in parameter.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for formula in revision.formulas:
+        for citation in formula.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for binding in revision.bindings:
+        for citation in binding.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
+def test_modelo_131_guidance_and_layout_sources_are_separated(
+    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
+) -> None:
+    modelo, catalogues = modelo_131_registry
+    procedure = catalogues.sources[_M131_PROCEDURE_SOURCE]
+    instructions = catalogues.sources[_M131_INSTRUCTIONS_SOURCE]
+    layout = catalogues.sources[_M131_LAYOUT_SOURCE]
+
+    _assert_m131_source_roles(modelo, procedure, instructions, layout)
     for revision in modelo.revisions.values():
-        assert _M131_LAYOUT_SOURCE in revision.source_refs
-        instruction_refs = {ref for ref in revision.source_refs if str(ref).startswith(_M131_INSTRUCTIONS_SOURCE)}
-        if _source_window_covers(instructions, revision):
-            assert instruction_refs
-            assert all(catalogues.sources[ref].kind == "instructions" for ref in instruction_refs)
-        else:
-            assert _M131_INSTRUCTIONS_SOURCE not in revision.source_refs
-        # The sede procedure ficha is required only of the revisions it actually
-        # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
-        # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing
-        # it would claim grounding from a page that documents a later campaign --
-        # which `_check_revision_scoped_source_windows` refuses at snapshot build.
-        # Requiring it unconditionally made this test demand the refusal.
-        if _source_window_covers(procedure, revision):
-            assert _M131_PROCEDURE_SOURCE in revision.source_refs
-        else:
-            assert _M131_PROCEDURE_SOURCE not in revision.source_refs
-        for parameter in revision.parameters:
-            for citation in parameter.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
-        for formula in revision.formulas:
-            for citation in formula.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
-        for binding in revision.bindings:
-            for citation in binding.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+        _assert_m131_revision_cites_only_the_sources_it_is_governed_by(revision, catalogues, procedure, instructions)
+        _assert_m131_citations_are_guidance(revision, catalogues)
 
 
 @pytest.mark.parametrize(
     ("filing_year", "required_surfaces"),
     [
-        (2023, _COMMON_SURFACES),
-        (2024, _COMMON_SURFACES),
-        (2025, _COMMON_SURFACES),
-        (2026, _COMMON_SURFACES | {"deadline"}),
+        (year, _COMMON_SURFACES | ({"deadline"} if year == _M131_SNAPSHOT_YEARS[-1] else set()))
+        for year in _M131_SNAPSHOT_YEARS
     ],
 )
 def test_modelo_131_validated_snapshot_owns_workflow_surfaces(
@@ -291,33 +318,34 @@ def test_modelo_131_current_workbook_parity_refs_carry_revision_order(
 
 
 def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
-    modelo_100, _ = _committed_modelo("100")
+    modelo_100, _ = committed_modelo("100")
 
-    revision_2024 = modelo_100.revisions["2024"]
-    binding_refs_2024 = _refs_by_id(revision_2024.bindings)
-    dependency_refs_2024 = _refs_by_id(revision_2024.dependency_classifications)
-    formula_refs_2024 = _refs_by_id(revision_2024.formulas)
-    construct_refs_2024 = _refs_by_id(revision_2024.constructs)
+    previous_metadata, newest_metadata = _M100_NEWEST_REVISIONS
+    previous_revision = modelo_100.revisions[str(previous_metadata.id)]
+    binding_refs_previous = _refs_by_id(previous_revision.bindings)
+    dependency_refs_previous = _refs_by_id(previous_revision.dependency_classifications)
+    formula_refs_previous = _refs_by_id(previous_revision.formulas)
+    construct_refs_previous = _refs_by_id(previous_revision.constructs)
 
     for refs in (
-        binding_refs_2024["renta-modelo-131-pagos-fraccionados"],
-        dependency_refs_2024["renta-dep-131"],
+        binding_refs_previous["renta-modelo-131-pagos-fraccionados"],
+        dependency_refs_previous["renta-dep-131"],
     ):
         assert _ORDEN_EHA_672_ART_3 in refs
         assert _ORDEN_EHA_672_ART_1 not in refs
     assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(
-        formula_refs_2024["renta-pagos-fraccionados-ingresados"]
+        formula_refs_previous["renta-pagos-fraccionados-ingresados"]
     )
-    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_2024["renta-dependent-modelos"])
+    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_previous["renta-dependent-modelos"])
 
-    revision_2025 = modelo_100.revisions["2025"]
-    binding_refs_2025 = _refs_by_id(revision_2025.bindings)
-    dependency_refs_2025 = _refs_by_id(revision_2025.dependency_classifications)
-    construct_refs_2025 = _refs_by_id(revision_2025.constructs)
+    newest_revision = modelo_100.revisions[str(newest_metadata.id)]
+    binding_refs_newest = _refs_by_id(newest_revision.bindings)
+    dependency_refs_newest = _refs_by_id(newest_revision.dependency_classifications)
+    construct_refs_newest = _refs_by_id(newest_revision.constructs)
 
     for refs in (
-        binding_refs_2025["renta-modelo-131-pagos-fraccionados"],
-        dependency_refs_2025["renta-dep-131"],
+        binding_refs_newest["renta-modelo-131-pagos-fraccionados"],
+        dependency_refs_newest["renta-dep-131"],
     ):
         assert _ORDEN_EHA_672_ART_3 in refs
         assert _ORDEN_EHA_672_ART_1 not in refs
@@ -326,4 +354,4 @@ def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
         "renta-payments-retentions",
         "renta-economic-activities",
     ):
-        assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_2025[construct_id])
+        assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_newest[construct_id])

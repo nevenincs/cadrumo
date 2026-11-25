@@ -11,10 +11,10 @@ import hashlib
 import json
 import re
 import subprocess
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from cadrumo.domain.calculations.registry.authority_store import (
     AUTHORITY_DESCRIPTOR_FILENAME,
@@ -58,22 +58,17 @@ class CommandEvidence:
     error_code: str | None = None
 
 
-def build_installed_cli_environment(
-    *, storage_root: Path, authority_root: Path, runtime_socket_dir: Path | None = None
-) -> dict[str, str]:
+def build_installed_cli_environment(*, storage_root: Path, authority_root: Path) -> dict[str, str]:
     """Build the allowlisted product environment for one isolated child process."""
     environment = clean_product_env()
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_AUTHORITY_ROOT": str(authority_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
         }
     )
-    if runtime_socket_dir is not None:
-        environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
-        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir)
     return environment
 
 
@@ -87,7 +82,6 @@ class InstalledCli:
         storage_root: Path,
         authority_root: Path,
         passphrase: str,
-        runtime_socket_dir: Path | None = None,
         cli_argument_prefix: tuple[str, ...] = (),
     ) -> None:
         """Bind the executable to one isolated store and authority tree."""
@@ -95,7 +89,6 @@ class InstalledCli:
         self.storage_root = storage_root.resolve()
         self.authority_root = authority_root.resolve(strict=True)
         self.passphrase = passphrase
-        self.runtime_socket_dir = runtime_socket_dir
         self._cli_argument_prefix = tuple(cli_argument_prefix)
         self.commands: list[CommandEvidence] = []
 
@@ -119,32 +112,7 @@ class InstalledCli:
         try:
             document = decode_cli_document(completed.stdout, completed.stderr)
         except json.JSONDecodeError as exc:
-            self.commands.append(
-                CommandEvidence(
-                    command=command_identity,
-                    returncode=completed.returncode,
-                    status="non_json_failure",
-                    notice_codes=(),
-                    error_code="acceptance.installed_cli.non_json_failure",
-                )
-            )
-            if allow_error:
-                return {
-                    "status": "error",
-                    "error": {
-                        "code": "acceptance.installed_cli.non_json_failure",
-                        "context": {
-                            "returncode": completed.returncode,
-                            "stderr_length": len(completed.stderr),
-                            "stderr_sha256": hashlib.sha256(completed.stderr.encode("utf-8")).hexdigest(),
-                        },
-                    },
-                }
-            raise InstalledCliError(
-                f"{command_identity}: no CLI JSON envelope",
-                diagnostic_code="acceptance.installed_cli.non_json_failure",
-                commands=tuple(self.commands),
-            ) from exc
+            return self._non_json_result(completed, command_identity, allow_error=allow_error, exc=exc)
         notices = document.get("notices", [])
         self.commands.append(
             CommandEvidence(
@@ -171,6 +139,45 @@ class InstalledCli:
                 commands=tuple(self.commands),
             )
         return document
+
+    def _non_json_result(
+        self,
+        completed: subprocess.CompletedProcess[str],
+        command_identity: str,
+        *,
+        allow_error: bool,
+        exc: json.JSONDecodeError,
+    ) -> dict[str, Any]:
+        """Record sanitized evidence and return or raise the non-JSON failure."""
+        self.commands.append(
+            CommandEvidence(
+                command=command_identity,
+                returncode=completed.returncode,
+                status="non_json_failure",
+                notice_codes=(),
+                error_code="acceptance.installed_cli.non_json_failure",
+            )
+        )
+        if allow_error:
+            return {
+                "status": "error",
+                "error": {
+                    "code": "acceptance.installed_cli.non_json_failure",
+                    "context": {
+                        "returncode": completed.returncode,
+                        "stderr_length": len(completed.stderr),
+                        "stderr_sha256": hashlib.sha256(completed.stderr.encode("utf-8")).hexdigest(),
+                    },
+                },
+            }
+        # The exit status and output sizes are what tell a crashed or replaced
+        # launcher from a command that refused without an envelope.
+        raise InstalledCliError(
+            f"{command_identity}: no CLI JSON envelope (exit {completed.returncode}, "
+            f"stdout {len(completed.stdout)} chars, stderr {len(completed.stderr)} chars)",
+            diagnostic_code="acceptance.installed_cli.non_json_failure",
+            commands=tuple(self.commands),
+        ) from exc
 
     def run_text(self, args: Sequence[str], *, authenticated: bool = True, command: str | None = None) -> str:
         """Run one command in its default text format and return its standard output."""
@@ -203,24 +210,23 @@ class InstalledCli:
             check=False,
             capture_output=True,
             cwd=self.storage_root,
-            env=build_installed_cli_environment(
-                storage_root=self.storage_root,
-                authority_root=self.authority_root,
-                runtime_socket_dir=self.runtime_socket_dir,
-            ),
+            env=build_installed_cli_environment(storage_root=self.storage_root, authority_root=self.authority_root),
             input=input_text if input_text is not None else "",
             text=True,
             timeout=180,
             encoding="utf-8",
         )
 
-    def create_profile(self, *, year: int) -> None:
-        """Create and complete the shared synthetic natural-person profile."""
+    def create_profile(self, *, year: int, extra_args: Sequence[str] = ()) -> None:
+        """Create and complete the shared synthetic natural-person profile.
+
+        ``extra_args`` are further profile options the scenario states, appended to the shared admission command.
+        """
         payload = json.dumps(
             {"passphrase": self.passphrase, "passphrase_confirmation": self.passphrase}, separators=(",", ":")
         )
         self.run(
-            profile_create_args(year),
+            (*profile_create_args(year), *extra_args),
             authenticated=False,
             stdin_payload=payload,
             command="config profile create",
@@ -281,6 +287,13 @@ def profile_create_args(year: int) -> tuple[str, ...]:
         "--no-iva-cash-accounting-regime-enrolled",
         "--no-iva-voluntary-sii-enrolled",
         "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        "--no-iva-roi-enrolled",
+        "--no-iva-oss-enrolled",
+        "--no-iva-sii-enrolled",
+        "--no-iva-group-member-enrolled",
+        "--no-iva-group-dominant-entity-enrolled",
+        "--no-iva-intracommunity-operations-exceed-50000-eur",
+        "--no-enrollment-large-company",
         "--no-has-employees",
         "--no-pays-professionals-with-retencion",
         "--no-pays-rent-with-retencion",
@@ -352,18 +365,24 @@ def typed_refusal(document: dict[str, Any]) -> str | None:
         return None
     context = error.get("context")
     reason = context.get("refusal") if isinstance(context, dict) else None
-    if (
-        reason is None
-        and error.get("code") == "REFUSED_LOCAL_RUNTIME"
-        and isinstance(context, dict)
-        and isinstance(context.get("reason"), str)
-        and context.get("reason") in {code.value for code in RefusalCode}
-    ):
-        return f"REFUSED/{context['reason']}"
+    local_runtime = _local_runtime_refusal(cast(dict[str, object], error), context, reason)
+    if local_runtime is not None:
+        return local_runtime
     if not isinstance(reason, str) or not _ENUM_TOKEN.fullmatch(reason):
         return None
     category = error.get("category")
     return f"{category}/{reason}" if isinstance(category, str) and _ENUM_TOKEN.fullmatch(category) else reason
+
+
+def _local_runtime_refusal(error: Mapping[str, object], context: object, reason: object) -> str | None:
+    """Retain only an allowlisted native runtime refusal reason."""
+    if reason is not None or error.get("code") != "REFUSED_LOCAL_RUNTIME" or not isinstance(context, dict):
+        return None
+    fields = cast(dict[str, object], context)
+    code = fields.get("reason")
+    if isinstance(code, str) and code in {item.value for item in RefusalCode}:
+        return f"REFUSED/{code}"
+    return None
 
 
 def _error_code(document: dict[str, Any]) -> str:

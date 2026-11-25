@@ -23,7 +23,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
@@ -45,7 +45,7 @@ _CREDENTIAL_INPUT = "record-authority-retires-with-session-operator-secret"
 
 def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path: Path) -> None:
     """One close, one state: no session means no authority and no facts."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
@@ -94,7 +94,7 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
     key is already zeroised. Serving a record authority on that basis hands the
     caller a decryptable-looking route over a session that cannot decrypt.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
@@ -141,7 +141,7 @@ def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path
     Without this, refusing unconditionally would satisfy the sibling test and
     lock every logged-in operator out of their own facts.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,

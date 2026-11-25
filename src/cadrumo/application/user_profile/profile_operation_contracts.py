@@ -4,22 +4,24 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import profile_operation_subject
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ..operations.models import OperationTerminalReceipt
+from .ascendant_rows import ProfileAscendantRow
 from .bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportResult,
 )
 from .descendant_rows import ProfileDescendantRow
+from .row_parts import ProfileRowPartInput
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 
@@ -28,6 +30,8 @@ PROFILE_PATCH_OPERATION_DEFINITION_ID = "user-profile.patch"
 PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID = "user-profile.plantilla-media"
 
 PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID = "user-profile.descendants"
+
+PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID = "user-profile.ascendants"
 
 PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"
 
@@ -61,6 +65,12 @@ PROFILE_DESCENDANTS_PHASES = (
     "user-profile.descendants.preflight",
     "user-profile.descendants.execute",
     "user-profile.descendants.settlement",
+)
+
+PROFILE_ASCENDANTS_PHASES = (
+    "user-profile.ascendants.preflight",
+    "user-profile.ascendants.execute",
+    "user-profile.ascendants.settlement",
 )
 
 PROFILE_REPEATABLE_ROW_MUTATION_PHASES = (
@@ -105,7 +115,7 @@ class ProfileFieldMutationOperationRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    path: str = Field(min_length=3, max_length=160)
+    path: str = Field(min_length=1, max_length=256)
     value: str
 
 
@@ -114,7 +124,7 @@ class ProfilePatchValue(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    question_id: str = Field(min_length=1, max_length=120)
+    question_id: str = Field(min_length=1, max_length=128)
     value: str = Field(max_length=4096, repr=False)
 
 
@@ -180,15 +190,61 @@ class ProfilePlantillaMediaOperationRequest(BaseModel):
     change: Annotated[ProfilePlantillaMediaSet | ProfilePlantillaMediaRemove, Field(discriminator="kind")]
 
 
+#: The canonical stored index of one household row, as the profile view serves it in ``row_index``.
+_HOUSEHOLD_ROW_INDEX_PATTERN = r"^(0|[1-9][0-9]{0,3})$"
+
+
+def _require_one_household_change(*changes: object) -> None:
+    if sum(change is not None for change in changes) != 1:
+        raise ValueError("a household change states the whole set, one row to add or one row to remove")
+
+
 class ProfileDescendantsOperationRequest(BaseModel):
-    """Replace a complete descendant family at an exact encrypted revision."""
+    """Replace a descendant family at an exact encrypted revision.
+
+    Exactly one of ``descendants`` (the whole family), ``add_row`` (the stored
+    family plus one row) and ``remove_row_index`` (the stored family without the
+    row the view served at that index) is stated.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    descendants: tuple[ProfileDescendantRow, ...] = Field(max_length=256, repr=False)
+    descendants: tuple[ProfileDescendantRow, ...] | None = Field(default=None, max_length=256, repr=False)
+    add_row: ProfileDescendantRow | None = Field(default=None, repr=False)
+    remove_row_index: str | None = Field(default=None, pattern=_HOUSEHOLD_ROW_INDEX_PATTERN)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_change(self) -> Self:
+        _require_one_household_change(self.descendants, self.add_row, self.remove_row_index)
+        return self
+
+
+class ProfileAscendantsOperationRequest(BaseModel):
+    """Replace the set of ascendants at an exact encrypted revision.
+
+    Exactly one of ``ascendants`` (the whole set), ``add_row`` (the stored set
+    plus one row) and ``remove_row_index`` (the stored set without the row the
+    view served at that index) is stated.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    expected_revision: int = Field(ge=1)
+    expected_content_digest: ContentDigest
+    ascendants: tuple[ProfileAscendantRow, ...] | None = Field(default=None, max_length=256, repr=False)
+    add_row: ProfileAscendantRow | None = Field(default=None, repr=False)
+    remove_row_index: str | None = Field(default=None, pattern=_HOUSEHOLD_ROW_INDEX_PATTERN)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_change(self) -> Self:
+        _require_one_household_change(self.ascendants, self.add_row, self.remove_row_index)
+        return self
 
 
 class ProfileRepeatableRowValue(BaseModel):
@@ -196,20 +252,52 @@ class ProfileRepeatableRowValue(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    field_key: str = Field(min_length=1, max_length=120)
+    field_key: str = Field(min_length=1, max_length=128)
     value: str
 
 
+class ProfileRepeatableRowPartsValue(BaseModel):
+    """The structured parts of one packed field, stated in place of its text value.
+
+    The parts are judged by the grammar of the text form and stored as its one canonical text.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    field_key: str = Field(min_length=1, max_length=128)
+    parts: tuple[ProfileRowPartInput, ...] = Field(max_length=256)
+
+
+def _require_distinct_part_fields(part_values: tuple[ProfileRepeatableRowPartsValue, ...]) -> None:
+    keys = tuple(item.field_key for item in part_values)
+    if len(set(keys)) != len(keys):
+        raise ValueError("repeatable-row operation parts must not repeat a field key")
+
+
+def _require_one_form_per_field(
+    values: tuple[ProfileRepeatableRowValue, ...], part_values: tuple[ProfileRepeatableRowPartsValue, ...]
+) -> None:
+    """Refuse a field stated both as text and as parts: the two forms are alternatives."""
+    both = {item.field_key for item in values} & {item.field_key for item in part_values}
+    if both:
+        raise ValueError("a packed field is stated as text or as parts, not both")
+
+
 class ProfileRepeatableRowMutationOperationRequest(BaseModel):
-    """One atomic new-row request for a schema-declared repeatable section."""
+    """One atomic new-row request for a schema-declared repeatable section.
+
+    A packed field (``usos``, ``valores_catastrales``, ``mejoras``, ``inquilinos``) is stated either
+    as its text in ``values`` or as ``part_values``; stating one field in both is refused.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    section_key: str = Field(min_length=1, max_length=120)
-    values: tuple[ProfileRepeatableRowValue, ...] = Field(min_length=1)
+    section_key: str = Field(min_length=1, max_length=128)
+    values: tuple[ProfileRepeatableRowValue, ...] = ()
+    part_values: tuple[ProfileRepeatableRowPartsValue, ...] = ()
 
     @field_validator("values")
     @classmethod
@@ -220,9 +308,16 @@ class ProfileRepeatableRowMutationOperationRequest(BaseModel):
         keys = tuple(item.field_key for item in value)
         if len(set(keys)) != len(keys):
             raise ValueError("repeatable-row operation values must not repeat a field key")
-        if not any(item.value.strip() for item in value):
-            raise ValueError("repeatable-row operation must include at least one non-blank value")
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_form_and_some_value(self) -> Self:
+        _require_distinct_part_fields(self.part_values)
+        _require_one_form_per_field(self.values, self.part_values)
+        if not self.part_values and not any(item.value.strip() for item in self.values):
+            raise ValueError("repeatable-row operation must include at least one non-blank value")
+        return self
 
 
 class ProfileRepeatableRowTargetOperationRequest(BaseModel):
@@ -233,8 +328,8 @@ class ProfileRepeatableRowTargetOperationRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
 
     @field_validator("row_key")
     @classmethod
@@ -246,10 +341,22 @@ class ProfileRepeatableRowTargetOperationRequest(BaseModel):
 
 
 class ProfileRepeatableRowUpdateOperationRequest(ProfileRepeatableRowTargetOperationRequest):
-    """Replace only named row fields and explicitly clear named fields."""
+    """Replace only named row fields and explicitly clear named fields.
+
+    A packed field is replaced either by its text in ``values`` or by ``part_values``; stating
+    one field in both is refused.
+    """
 
     values: tuple[ProfileRepeatableRowValue, ...] = ()
+    part_values: tuple[ProfileRepeatableRowPartsValue, ...] = ()
     clear_fields: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_form(self) -> Self:
+        _require_distinct_part_fields(self.part_values)
+        _require_one_form_per_field(self.values, self.part_values)
+        return self
 
     @field_validator("values")
     @classmethod
@@ -310,7 +417,7 @@ def project_profile_bundle_export_result(result: BaseModel, receipt: OperationTe
     """Release the canonical export receipt only for its settled profile subject."""
     if not isinstance(result, ProfileBundleExportResult):
         raise TypeError("unexpected profile bundle export result")
-    if receipt.identity.subject_ref != _profile_subject(result.profile_id):
+    if receipt.identity.subject_ref != profile_operation_subject(result.profile_id):
         raise ValueError("profile bundle export result does not match its settled subject")
     return ProfileBundleExportOperationProjection.model_validate(result.model_dump(mode="python"))
 
@@ -345,18 +452,25 @@ class ProfileDescendantsOperationResult(ProfileMutationOperationResult):
     changed: bool
 
 
+class ProfileAscendantsOperationResult(ProfileMutationOperationResult):
+    """Encrypted ascendant replacement witness without retained personal rows."""
+
+    total: NonNegativeInt
+    changed: bool
+
+
 class ProfileRepeatableRowMutationOperationResult(ProfileMutationOperationResult):
     """Safe row identity and revision witness for a completed row mutation."""
 
-    section_key: str = Field(min_length=1, max_length=120)
+    section_key: str = Field(min_length=1, max_length=128)
     row_index: NonNegativeInt
 
 
 class ProfileRepeatableRowChangeOperationResult(ProfileMutationOperationResult):
     """Safe durable witness for an existing row's update or removal."""
 
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
     changed: bool
 
 
@@ -394,18 +508,25 @@ class ProfileDescendantsOperationProjection(ProfileMutationOperationProjection):
     changed: bool
 
 
+class ProfileAscendantsOperationProjection(ProfileMutationOperationProjection):
+    """Settled ascendant count and change without personal rows or fingerprints."""
+
+    total: NonNegativeInt
+    changed: bool
+
+
 class ProfileRepeatableRowMutationOperationProjection(ProfileMutationOperationProjection):
     """Public location of the newly committed profile row."""
 
-    section_key: str = Field(min_length=1, max_length=120)
+    section_key: str = Field(min_length=1, max_length=128)
     row_index: NonNegativeInt
 
 
 class ProfileRepeatableRowChangeOperationProjection(ProfileMutationOperationProjection):
     """Public stable row identity and whether the record changed."""
 
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
     changed: bool
 
 
@@ -419,7 +540,7 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
     """Release only the declared profile witness after exact-subject validation."""
     if not isinstance(result, ProfileMutationOperationResult):
         raise TypeError("unexpected profile mutation result")
-    if receipt.identity.subject_ref != _profile_subject(str(result.profile_id)):
+    if receipt.identity.subject_ref != profile_operation_subject(str(result.profile_id)):
         raise ValueError("profile mutation result does not match its settled subject")
     if isinstance(result, ProfilePatchOperationResult):
         return ProfilePatchOperationProjection(
@@ -436,6 +557,13 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
         )
     if isinstance(result, ProfileDescendantsOperationResult):
         return ProfileDescendantsOperationProjection(
+            profile_id=result.profile_id,
+            record_revision=result.record_revision,
+            total=result.total,
+            changed=result.changed,
+        )
+    if isinstance(result, ProfileAscendantsOperationResult):
+        return ProfileAscendantsOperationProjection(
             profile_id=result.profile_id,
             record_revision=result.record_revision,
             total=result.total,

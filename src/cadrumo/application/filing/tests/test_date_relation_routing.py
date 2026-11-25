@@ -12,7 +12,7 @@ This made every ``work verify`` / ``work file`` replay of a draft that needed
 those inputs crash at ``BUILDING_DRAFT`` with either
 ``date_binding '...' has no supplied value`` (input absent) or
 ``input '...' must be a Decimal value`` (ISO date wrongly coerced through the
-Decimal channel). ``calculate_modelo_revision`` now persists the resolved
+Decimal channel). ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` now persists the resolved
 date-bindings on the revision's ``binding_overrides`` snapshot and relations on
 ``relation_overrides``; replay merges both into the flat input map, and
 ``build_draft`` routes them back onto their dedicated channels by registry
@@ -35,15 +35,16 @@ from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import (
-    _bound_casilla_binding_ids,
-    _date_binding_ids,
-    _date_inputs_for_ids,
-    _formula_binding_ids,
-    _relation_ids,
-    _string_inputs_for_ids,
     build_draft,
+    date_inputs_for_ids,
+    draft_construction_date_binding_ids,
+    draft_construction_relation_ids,
+    formula_binding_ids,
+    snapshot_bound_casilla_binding_ids,
+    string_inputs_for_ids,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
@@ -74,20 +75,20 @@ def test_date_binding_ids_identifies_m100_birth_date() -> None:
     ISO date through the Decimal channel and reds every M100 verify.
     """
     snap = _m100_snapshot()
-    assert _M100_BIRTH_DATE_BINDING in _date_binding_ids(snap)
+    assert _M100_BIRTH_DATE_BINDING in draft_construction_date_binding_ids(snap)
 
 
 def test_formula_binding_ids_traverses_nested_committed_m100_expression() -> None:
     """The filing replay path must retain the nested direct-estimation binding leaf."""
     snap = _m100_snapshot()
 
-    assert _M100_ESTIMACION_DIRECTA_NORMAL_BINDING in _formula_binding_ids(snap)
+    assert _M100_ESTIMACION_DIRECTA_NORMAL_BINDING in formula_binding_ids(snap)
 
 
 def test_relation_ids_identifies_m100_pago_fraccionado_relations() -> None:
     """The M130/M131 instalment relations must be discoverable for replay."""
     snap = _m100_snapshot()
-    relation_ids = _relation_ids(snap)
+    relation_ids = draft_construction_relation_ids(snap)
     for relation in _M100_RELATIONS:
         assert relation in relation_ids, relation
 
@@ -97,7 +98,7 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
     inputs = {
         _M100_BIRTH_DATE_BINDING: "1985-05-15",
     }
-    result = _date_inputs_for_ids(inputs, {_M100_BIRTH_DATE_BINDING})
+    result = date_inputs_for_ids(inputs, {_M100_BIRTH_DATE_BINDING})
     assert result == {_M100_BIRTH_DATE_BINDING: date(1985, 5, 15)}
 
 
@@ -106,7 +107,7 @@ def test_date_inputs_for_ids_rejects_non_iso_value() -> None:
     from ....domain.filing.errors import ModeloBuilderError
 
     with pytest.raises(ModeloBuilderError):
-        _date_inputs_for_ids({_M100_BIRTH_DATE_BINDING: "not-a-date"}, {_M100_BIRTH_DATE_BINDING})
+        date_inputs_for_ids({_M100_BIRTH_DATE_BINDING: "not-a-date"}, {_M100_BIRTH_DATE_BINDING})
 
 
 def test_birth_date_excluded_from_decimal_channel() -> None:
@@ -118,10 +119,10 @@ def test_birth_date_excluded_from_decimal_channel() -> None:
     crash cannot reappear.
     """
     snap = _m100_snapshot()
-    calculation_binding_ids = _formula_binding_ids(snap) | _bound_casilla_binding_ids(snap)
+    calculation_binding_ids = formula_binding_ids(snap) | snapshot_bound_casilla_binding_ids(snap)
     enum_binding_ids = enum_consumed_binding_ids(snap.revision)
-    date_binding_ids = _date_binding_ids(snap)
-    relation_ids = _relation_ids(snap)
+    date_binding_ids = draft_construction_date_binding_ids(snap)
+    relation_ids = draft_construction_relation_ids(snap)
     decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
 
     assert _M100_BIRTH_DATE_BINDING in date_binding_ids
@@ -137,15 +138,15 @@ def test_tax_residence_ccaa_excluded_from_decimal_channel() -> None:
     exclude it from the Decimal id-set before calling ``_decimal_inputs_for_ids``.
     """
     snap = _m100_snapshot()
-    calculation_binding_ids = _formula_binding_ids(snap) | _bound_casilla_binding_ids(snap)
+    calculation_binding_ids = formula_binding_ids(snap) | snapshot_bound_casilla_binding_ids(snap)
     enum_binding_ids = enum_consumed_binding_ids(snap.revision)
-    date_binding_ids = _date_binding_ids(snap)
-    relation_ids = _relation_ids(snap)
+    date_binding_ids = draft_construction_date_binding_ids(snap)
+    relation_ids = draft_construction_relation_ids(snap)
     decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
 
     assert _M100_TAX_RESIDENCE_CCAA_BINDING in enum_binding_ids
     assert _M100_TAX_RESIDENCE_CCAA_BINDING not in decimal_binding_ids
-    assert _string_inputs_for_ids(
+    assert string_inputs_for_ids(
         {_M100_TAX_RESIDENCE_CCAA_BINDING: "madrid"},
         enum_binding_ids,
     ) == {_M100_TAX_RESIDENCE_CCAA_BINDING: "madrid"}
@@ -163,10 +164,15 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
             _M100_BIRTH_DATE_BINDING: "1975-06-15",
             _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
+            "renta-profile-has-economic-activity": "1",
+            "renta-profile-income-family-excluded-capital-mobiliario": "0",
+            "renta-profile-income-family-excluded-capital-inmobiliario": "0",
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": "0",
+            "renta-profile-estimacion-directa": "1",
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": False,
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-profile-marriage-full-year": False,
             "renta-profile-deduccion-maternidad": Decimal("0"),
             "renta-profile-marriage-month-start": Decimal("0"),
@@ -177,9 +183,31 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             # Parte autonómica: non-Madrid profile mirrors the estatal zero.
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+            # No maritime work: the art. 7.p) and Ley 19/1994 art. 75 path is answered
+            # in the negative, with its numeric facts at zero.
+            "renta-maritime-path-rebeca": False,
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(modelos=("100",), filing_year=2024, period=period),
     )

@@ -17,6 +17,7 @@ equivalencia); RIRPF art. 95 (retención sobre ingresos íntegros).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -28,11 +29,17 @@ from pydantic import ValidationError
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
+from ..gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL
 from ..irpf_categories import ledger_irpf_category, normalize_irpf_category
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def needs_withholding_category() -> str:
+    """The refusal a substrate above the cash gets while no withholding category is declared."""
+    return re.escape(GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL)
 
 
 @pytest.fixture(autouse=True)
@@ -232,7 +239,7 @@ def test_rent_expense_paid_net_of_withholding_validates() -> None:
 
 def test_rent_expense_paid_net_requires_irpf_category() -> None:
     """Rent expense net-cash relaxation requires an explicit withholding axis."""
-    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
+    with pytest.raises(ValidationError, match=needs_withholding_category()) as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("1020.00")),
@@ -313,7 +320,7 @@ def test_activity_irpf_category_does_not_relax_non_professional_expense_gross() 
 
 def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
     """The net-cash relaxation requires an explicit IRPF category."""
-    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
+    with pytest.raises(ValidationError, match=needs_withholding_category()) as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("2120.00")),
@@ -331,7 +338,7 @@ def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
 
 def test_work_irpf_category_does_not_relax_professional_invoice_gross() -> None:
     """Salary/work tags must not unlock invoice-gross validation."""
-    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+    with pytest.raises(ValidationError, match=needs_withholding_category()):
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("2120.00")),
@@ -496,7 +503,7 @@ def test_employment_token_never_relaxes_the_invariant_in_any_spelling(spelling: 
     invoice substrate to preserve. Normalising the token must not turn an
     unrecognised spelling into an accepted one by any route.
     """
-    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+    with pytest.raises(ValidationError, match=needs_withholding_category()):
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("2120.00")),
@@ -603,7 +610,7 @@ def test_declared_recargo_missing_from_the_gross_is_refused() -> None:
     model that accepts only the second one does not merely fail to express the
     truth -- it selects for the falsehood.
     """
-    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+    with pytest.raises(ValidationError, match=needs_withholding_category()):
         Transaction.model_validate(
             {
                 "raw": _raw(amount=_RECARGO_GROSS_WITHOUT_SURCHARGE),

@@ -51,16 +51,16 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import Field, RootModel, StringConstraints
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo_client.commands.parameters import ArgumentSpec
 from cadrumo_client.commands.shared_contracts import DefaultKind
 from cadrumo_client.contracts.command_ports import (
     MachineSecretPayloadMetadata,
     ProfileAuthenticationContractMetadata,
 )
+from dev.temporary_output import prepare_temp_root
 
-from .cli_reference import _reference_subprocess_environment
+from .cli_reference import reference_subprocess_environment
 
 if TYPE_CHECKING:
     import click
@@ -109,7 +109,7 @@ class CliParam(_BaseModel):
     for an option, or a single positional metavar-style name for an argument.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     names: tuple[Annotated[str, StringConstraints(min_length=1)], ...] = Field(min_length=1)
     kind: ParamKind
@@ -129,7 +129,7 @@ class CliCommandNode(_BaseModel):
     includes invocation values, examples, or persisted credential facts.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     path: tuple[Annotated[str, StringConstraints(min_length=1)], ...] = Field(min_length=1)
     kind: Annotated[str, StringConstraints(pattern=r"^(group|leaf)$")]
@@ -305,12 +305,12 @@ def build_cli_tree_in_subprocess() -> CliTree:
         sys.stdout.write(serialise_cli_tree(_build_cli_tree_loaded()))
         """,
     )
-    with TemporaryDirectory(prefix="cadrumo-cli-tree-", dir=prepare_temporary_directory()) as storage_root:
+    with TemporaryDirectory(prefix="cadrumo-cli-tree-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
-            env=_reference_subprocess_environment(Path(storage_root)),
+            env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
-            text=True,
+            encoding=UTF_8_ENCODING,
             timeout=300,
             check=False,
         )

@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast, override
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.enums import TransactionDirection
@@ -27,7 +28,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -36,6 +36,9 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..transaction_projection import LedgerTransactionProjection
+from .recording_executor_context_support import RecordingEvents, RecordingOperands
+from .registration_access_context_support import registration_access_context
+from .transaction_projection_support import ledger_transaction_projection
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -72,57 +75,11 @@ def _access_context(
     *,
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.SUBMIT)
 
 
 def _transaction_projection(transaction_id: str = _CURRENT_TRANSACTION_ID) -> LedgerTransactionProjection:
-    return LedgerTransactionProjection.model_validate(
-        {
-            "transaction_id": transaction_id,
-            "date": "2026-04-15",
-            "booked_date": "2026-04-15",
-            "value_date": None,
-            "amount": "121.00",
-            "currency": "EUR",
-            "direction": "OUTFLOW",
-            "counterparty": "Client SL",
-            "description": "Invoice 1",
-            "business_classification": "MIXED",
-            "business_pct": "0.5",
-            "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
-            "iva_category": None,
-            "counterparty_country": None,
-            "counterparty_identification_state": None,
-            "irpf_category": None,
-            "m210_income_classification": None,
-            "usage_ratio_id": None,
-            "prorrata_reference": None,
-            "purchase_invoice_evidence_id": None,
-            "invoice_id": None,
-            "attachment_ids": (),
-            "notes": "",
-            "lifecycle_state": "ACTIVE",
-            "classified_by": "manual",
-            "classified_at": None,
-            "classification_reason": "",
-            "classification_confidence": None,
-            "source_jurisdiction": None,
-            "value_in_eur": None,
-            "fx_rate": None,
-            "created_at": "2026-04-15T09:30:00+00:00",
-            "modified_at": "2026-04-15T09:30:00+00:00",
-        }
-    )
+    return ledger_transaction_projection(transaction_id=transaction_id)
 
 
 def test_registered_allocate_request_is_secure_and_requires_commit() -> None:
@@ -230,25 +187,8 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
             finally:
                 in_commit = False
 
-    class Events:
-        def __init__(self) -> None:
-            self.effects: list[OperationEffect] = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
-
-    events = Events()
-    operands = Operands()
+    events = RecordingEvents()
+    operands = RecordingOperands()
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=operation.LEDGER_ALLOCATE_OPERATION_DEFINITION_ID,
@@ -260,7 +200,7 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
         operands=operands,
     )
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_operation_result", lambda _profile_id, _result: projection)
+    monkeypatch.setattr(operation, "operation_result", lambda _profile_id, _result, **_kwargs: projection)
 
     def update(**kwargs: object) -> SimpleNamespace:
         assert in_commit
@@ -300,3 +240,44 @@ def test_an_allocation_share_keeps_the_fraction_digits_it_has(share: str) -> Non
     request = operation.LedgerAllocateRequest(profile_id=_PROFILE, transaction_id="a" * 12, business_pct=share)
 
     assert request.business_pct == share
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_allocation_prorrata_reference_must_use_the_reference_grammar() -> None:
+    def submitted(reference: str) -> str:
+        return json.dumps(
+            {
+                "profile_id": str(_PROFILE),
+                "transaction_id": "a" * 12,
+                "business_pct": "0.5",
+                "prorrata_reference": reference,
+            },
+        )
+
+    accepted = operation.LedgerAllocateRequest.model_validate_json(submitted(" prorrata:2026:provisional:general "))
+    assert accepted.prorrata_reference == "prorrata:2026:provisional:general"
+    sectoral = operation.LedgerAllocateRequest.model_validate_json(
+        submitted("prorrata:2026:provisional:especial:sector-retail"),
+    )
+    assert sectoral.prorrata_reference == "prorrata:2026:provisional:especial:sector-retail"
+
+    for malformed in (
+        "telefonia_movil",
+        "prorrata:1999:provisional:general",
+        "prorrata:2026:usage_ratio_personal:general",
+        "prorrata:2026:provisional:general:sector with spaces",
+        "prorrata:2026:provisional:general:" + "s" * 128,
+    ):
+        with pytest.raises(ValidationError, match="prorrata"):
+            operation.LedgerAllocateRequest.model_validate_json(submitted(malformed))
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_allocation_prorrata_reference_is_bounded_before_it_is_parsed() -> None:
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        operation.LedgerAllocateRequest(
+            profile_id=_PROFILE,
+            transaction_id="a" * 12,
+            business_pct="0.5",
+            prorrata_reference="p" * 129,
+        )

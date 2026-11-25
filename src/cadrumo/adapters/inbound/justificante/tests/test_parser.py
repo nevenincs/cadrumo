@@ -22,6 +22,7 @@ from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 from .....core.aeat_csv import is_aeat_csv
 from .....core.directory_scan import scan_directory
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.errors import (
     JustificanteCsvNotFoundError,
     JustificanteError,
@@ -37,17 +38,27 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.inventory import FIXTURES_DIR as INVENTORY_FIXTURES_ROOT
+from .....tests.log_records import delivered_records
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
-from .._parsers.text_extraction import TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
+from ..parsers.text_extraction import TEXT_CACHE, extract_text
 from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
+_YEAR = filing_year_envelope().horizon
 
-FIXTURES_DIR = _FIXTURES_ROOT / "justificantes"
+FIXTURES_DIR = INVENTORY_FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")
+
+
+def _printed_ejercicio(pdf: Path) -> int:
+    """Read the ejercicio the fixture PDF prints, so expectations follow the specimen."""
+    text = extract_text(pdf, JustificanteParserBackend.PDFPLUMBER)
+    match = re.search(r"^Ejercicio: (\d{4})$", text, re.MULTILINE)
+    assert match is not None, pdf.name
+    return int(match.group(1))
 
 
 @pytest.fixture(scope="module")
@@ -75,12 +86,13 @@ class TestParseJustificante:
         record = parse_justificante(modelo_130_pdf)
         assert isinstance(record, Justificante)
         assert record.modelo == "130"
-        assert record.period == Period.from_year_and_code(2026, "1T")
-        assert record.ejercicio == "2026"
+        year = _printed_ejercicio(modelo_130_pdf)
+        assert record.period == Period.from_year_and_code(year, "1T")
+        assert record.ejercicio == str(year)
         assert record.tax_id == "00000000T"
         assert record.csv == "ABCD1234EFGH5678"
-        assert record.presentation_id == "13020260410ABCD1234EFGH5678"
-        assert record.presented_at == datetime(2026, 4, 10, 11, 23, 45)
+        assert record.presentation_id == f"130{year}0410ABCD1234EFGH5678"
+        assert record.presented_at == datetime(year, 4, 10, 11, 23, 45)
         assert record.total_a_ingresar == Decimal("1234.56")
         assert record.total_a_devolver is None
         assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
@@ -90,21 +102,23 @@ class TestParseJustificante:
     def test_modelo_303_devolver(self, modelo_303_pdf: Path) -> None:
         record = parse_justificante(modelo_303_pdf)
         assert record.modelo == "303"
-        assert record.period == Period.from_year_and_code(2026, "1T")
-        assert record.ejercicio == "2026"
+        year = _printed_ejercicio(modelo_303_pdf)
+        assert record.period == Period.from_year_and_code(year, "1T")
+        assert record.ejercicio == str(year)
         assert record.csv == "ZZZZ9999YYYY8888"
         assert record.total_a_ingresar is None
         assert record.total_a_devolver == Decimal("450.00")
-        assert record.presented_at == datetime(2026, 4, 11, 9, 5, 0)
+        assert record.presented_at == datetime(year, 4, 11, 9, 5, 0)
 
     def test_modelo_100_annual(self, modelo_100_pdf: Path) -> None:
         record = parse_justificante(modelo_100_pdf)
         assert record.modelo == "100"
-        assert record.period == Period.from_year_and_code(2025, "0A")
-        assert record.ejercicio == "2025"
+        year = _printed_ejercicio(modelo_100_pdf)
+        assert record.period == Period.from_year_and_code(year, "0A")
+        assert record.ejercicio == str(year)
         assert record.csv == "MNOP4321QRST8765"
         assert record.total_a_ingresar == Decimal("780.40")
-        assert record.presented_at == datetime(2026, 6, 20, 17, 45, 12)
+        assert record.presented_at == datetime(year + 1, 6, 20, 17, 45, 12)
 
     def test_all_fixtures_capture_sha256(
         self,
@@ -164,7 +178,7 @@ class TestParseJustificante:
         with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.justificante.parser"):
             parse_justificante(modelo_130_pdf)
 
-        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
         assert modelo_130_pdf.name not in rendered_logs
         assert str(modelo_130_pdf) not in rendered_logs
         assert "<input-pdf>" in rendered_logs
@@ -187,7 +201,7 @@ def _real_corpus_pdfs() -> list[Path]:
 
 # Spanish tax-identifier shape (NIF / NIE / CIF): an optional leading letter,
 # 7-8 digits, and a trailing control character. Distinguishes the sanitiser's
-# redacted tax-id replacement (Y0000001S / B00000001 / 00000000T) from the same
+# redacted tax-id replacement (Y0001006P / B00000001 / 00000000T) from the same
 # sidecar's redacted date (01-01-1900) and presentation-id (SANITIZED...) values.
 _SANITISED_TAX_ID_PATTERN = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
 
@@ -247,7 +261,7 @@ class TestRealCorpusParses:
         assert record.period == expected_period, f"period mismatch for {fixture}: got {record.period}"
         assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
         # The redacted identifier declared by the sidecar survives the round-trip.
-        # It is a NIE/NIF for a personal filer (Y0000001S) but a CIF for a
+        # It is a NIE/NIF for a personal filer (Y0001006P) but a CIF for a
         # sociedad's Impuesto sobre Sociedades modelo (e.g. Modelo 202 -> B00000001),
         # so the expectation is derived per-fixture from the authoritative
         # fixture-provenance sidecar rather than hardcoded to one shape.
@@ -307,11 +321,11 @@ def non_justificante_pdf_bytes() -> bytes:
         (
             "AGENCIA TRIBUTARIA",
             "Modelo: 130",
-            "Ejercicio: 2026",
+            f"Ejercicio: {_YEAR}",
             "Periodo: 1T",
             "NIF: 00000000T",
-            "Numero de justificante: 1302026",
-            "Fecha y hora de presentacion: 2026-04-10 11:00:00",
+            f"Numero de justificante: 130{_YEAR}",
+            f"Fecha y hora de presentacion: {_YEAR}-04-10 11:00:00",
             aeat_url("sede", JUSTIFICANTE_AYUDA_PATH_FIXTURE),
         )
     )
@@ -402,15 +416,15 @@ class TestJustificanteParseErrorStructuredAttributes:
 
     def test_missing_field_raised_by_require(self, tmp_path: Path) -> None:
         """_require() populates missing=(field,) on the raised error."""
-        from .._extract import _require
+        from ..extract import require
 
         with pytest.raises(JustificanteParseError) as exc_info:
-            _require(None, "modelo")
+            require(None, "modelo")
         assert exc_info.value.missing == ("modelo",)
 
     def test_empty_text_raises_missing_text(self, tmp_path: Path) -> None:
         """Empty text raises with missing=('text',)."""
-        from .._extract import extract_justificante
+        from ..extract import extract_justificante
 
         pdf = tmp_path / "empty.pdf"
         pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
@@ -433,10 +447,10 @@ class TestJustificanteModel:
         return Justificante(
             csv="ABCD1234EFGH5678",
             modelo="130",
-            ejercicio="2026",
-            period=Period.from_year_and_code(2026, "1T"),
+            ejercicio=str(_YEAR),
+            period=Period.from_year_and_code(_YEAR, "1T"),
             presentation_id=None,
-            presented_at=datetime(2026, 4, 10, 11, 23, 45),
+            presented_at=datetime(_YEAR, 4, 10, 11, 23, 45),
             tax_id="00000000T",
             total_a_ingresar=Decimal("10.00"),
             total_a_devolver=None,
@@ -445,7 +459,7 @@ class TestJustificanteModel:
             ),
             source_pdf_path=pdf,
             source_pdf_sha256=sha256 or hashlib.sha256(pdf.read_bytes()).hexdigest(),
-            parsed_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
+            parsed_at=datetime(_YEAR, 4, 12, 0, 0, 0, tzinfo=UTC),
         )
 
     def test_model_is_frozen(self, tmp_path: Path) -> None:

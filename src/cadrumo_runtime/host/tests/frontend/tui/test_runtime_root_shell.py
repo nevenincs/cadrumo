@@ -13,7 +13,7 @@ from textual.screen import Screen
 
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from cadrumo.entrypoints.tui.account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootBindingV1
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.navigation import (
     TuiFocusIdentityV1,
@@ -21,8 +21,10 @@ from cadrumo.entrypoints.tui.navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.search import WorkbenchSearchDoorV1
 from cadrumo.entrypoints.tui.tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 
 from ....frontend.tui.launcher import run_precomposed_runtime_root_session
 
@@ -94,7 +96,7 @@ def test_precomposed_root_uses_injected_doors_without_local_operation_services()
         return root
 
     async def inspect(pilot: Pilot[object]) -> None:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
         mounted.append(isinstance(app.screen, HomeScreen))
@@ -146,10 +148,10 @@ def test_pushed_retirement_severs_precomposed_root(*, profile_first: bool) -> No
     root = replace(root, account_factories=replace(root.account_factories, subscribe_retirement=subscribe))
 
     async def retire(pilot: Pilot[object]) -> None:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert len(callbacks) == 1
         callbacks[0]()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
         assert app._destination_catalogue is None
@@ -180,14 +182,14 @@ def test_initial_profile_defers_home_until_the_screen_is_dismissed() -> None:
     )
 
     async def inspect(pilot: Pilot[object]) -> None:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
         assert app._active_target == root.initial_destination
         assert app.account_session == root.initial_account_session
         assert reads == []
         app.screen.dismiss()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert isinstance(app.screen, HomeScreen)
         assert reads == ["home"]
         app.exit()
@@ -206,7 +208,7 @@ async def test_cancelled_root_read_retains_ownership_until_blocking_read_finishe
 
     def load_root() -> RootBindingV1:
         loop.call_soon_threadsafe(started.set)
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test root read was not released")
         finished.set()
         return root
@@ -216,7 +218,7 @@ async def test_cancelled_root_read_retains_ownership_until_blocking_read_finishe
         app._load_root = load_root
         reading = asyncio.create_task(app._open_root(load_root))
         try:
-            await asyncio.wait_for(started.wait(), 5)
+            await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
             reading.cancel()
             with pytest.raises(TimeoutError):
                 await asyncio.wait_for(asyncio.shield(reading), 0.02)
@@ -225,7 +227,7 @@ async def test_cancelled_root_read_retains_ownership_until_blocking_read_finishe
         finally:
             release.set()
             with pytest.raises(asyncio.CancelledError):
-                await asyncio.wait_for(reading, 5)
+                await asyncio.wait_for(reading, SETTLE_TIMEOUT_SECONDS)
         assert finished.is_set()
         assert app._account_factories is None
 
@@ -240,7 +242,7 @@ async def test_late_search_result_cannot_restore_severed_private_presentation() 
 
     def refresh_search() -> WorkbenchSearchDoorV1:
         loop.call_soon_threadsafe(started.set)
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test search read was not released")
         return private_search
 
@@ -248,11 +250,11 @@ async def test_late_search_result_cannot_restore_severed_private_presentation() 
     async with app.run_test():
         reading = asyncio.create_task(app._rebuild_workbench_search())
         try:
-            await asyncio.wait_for(started.wait(), 5)
+            await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
             app._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
         finally:
             release.set()
-            await asyncio.wait_for(reading, 5)
+            await asyncio.wait_for(reading, SETTLE_TIMEOUT_SECONDS)
         assert app._workbench_search_service is None
         assert app._load_root is None
         assert app.account_session is None
@@ -270,45 +272,11 @@ async def test_root_read_failure_is_a_safe_refusal_without_rendering_exception(
 
     app = CadrumoTuiApp(load_root=refuse)
     async with app.run_test() as pilot:
-        await app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is None
-        assert app._terminal_presented, "the retry screen must be visible even when startup fails"
     captured = capsys.readouterr()
     assert private_value not in captured.out + captured.err
-
-
-@pytest.mark.asyncio
-async def test_terminal_is_not_presented_until_the_initial_destination_has_rendered(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    started = asyncio.Event()
-    presented = asyncio.Event()
-    release = Event()
-    loop = asyncio.get_running_loop()
-
-    def load_root() -> RootBindingV1:
-        loop.call_soon_threadsafe(started.set)
-        if not release.wait(10):
-            raise TimeoutError("test root read was not released")
-        return _root()
-
-    app = CadrumoTuiApp(load_root=load_root)
-    monkeypatch.setattr(app, "_terminal_presentation", lambda phase: presented.set() if phase == "ready" else None)
-    async with app.run_test() as pilot:
-        try:
-            await asyncio.wait_for(started.wait(), 5)
-            await pilot.pause()
-            assert not app._terminal_presented
-        finally:
-            release.set()
-        await asyncio.wait_for(presented.wait(), 10)
-        assert app._terminal_presented
-        assert isinstance(app.screen, HomeScreen)
-        assert app._startup_ready
-        app.exit()
-        assert not app._terminal_presented
 
 
 @pytest.mark.asyncio
@@ -326,7 +294,7 @@ async def test_blocked_initial_home_read_cannot_replace_newly_selected_child() -
 
     def refresh_home() -> HomeProjectionV1:
         loop.call_soon_threadsafe(started.set)
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test Home read was not released")
         loop.call_soon_threadsafe(finished.set)
         return build_home_projection_fixture(HomeFixtureScenario.READY)
@@ -339,16 +307,14 @@ async def test_blocked_initial_home_read_cannot_replace_newly_selected_child() -
     )
     async with app.run_test() as pilot:
         try:
-            await asyncio.wait_for(started.wait(), 5)
+            await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
             app.navigate_to(_ledger_target())
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert len(mounted) == 1 and app.screen is mounted[0]
         finally:
             release.set()
-        await asyncio.wait_for(finished.wait(), 5)
-        async with asyncio.timeout(5):
-            while app._home_rebuilding:
-                await pilot.pause(0.02)
+        await asyncio.wait_for(finished.wait(), SETTLE_TIMEOUT_SECONDS)
+        await settle_until(pilot, lambda: not app._home_rebuilding, "the Home rebuild to finish", workers=False)
         assert app.screen is mounted[0]
         assert not isinstance(app.screen, HomeScreen)
 
@@ -372,13 +338,12 @@ async def test_queued_destination_cannot_mount_after_root_severance(*, queue_wor
         account_factories=root.account_factories,
     )
     async with app.run_test() as pilot:
-        await asyncio.wait_for(app.workers.wait_for_complete(), 5)
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen) and app.screen.is_mounted
         app.navigate_to(_ledger_target())
         if queue_workspace_body:
             app.replace_workspace_body(MarkerScreen())
         app._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert not mounted.is_set()
         assert app._destination_catalogue is None

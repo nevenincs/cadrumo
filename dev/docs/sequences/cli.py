@@ -1,17 +1,29 @@
 """``python -m dev.docs.sequences`` — the golden refresh and check CLI.
 
-Two modes over one engine:
+Three modes over one engine:
 
-- ``refresh [--page PAGE | --sequence ID]`` re-executes the addressed
-  sequences in fresh hermetic sandboxes and rewrites their committed golden
-  files. The author reviews the git diff — which IS the behaviour-change
+- ``refresh [--page PAGE ... | --sequence ID | --command CMD] [--jobs N]``
+  re-executes the addressed sequences in fresh hermetic sandboxes and rewrites
+  their committed golden files. Unscoped, or over several pages, it shards the
+  pages across ``--jobs`` child interpreters (heaviest first); the goldens do
+  not depend on the schedule. ``--command 'app ledger classify'`` addresses
+  every page that executes that command. The author reviews the git diff — which IS the behaviour-change
   review — and commits the goldens with the CLI change that legitimately
   moved them. This is the ONLY sanctioned way a golden changes.
-- ``check [--page PAGE | --sequence ID]`` re-executes the addressed sequences
-  and compares against the committed goldens, failing (exit 1) with every
+- ``check [--page PAGE | --sequence ID] [--execute-all] [--stamp STAMP]``
+  re-executes the addressed sequences whose inputs have no recorded clean
+  verdict (:mod:`dev.docs.sequences.verdict_cache`; ``--execute-all`` runs
+  them all) and compares against the committed goldens, failing (exit 1) with every
   divergence: the page, the sequence id, the frame index and argv, the
   post-mask differing paths or unified text diff, and the exact ``refresh``
-  invocation that updates the golden.
+  invocation that updates the golden. ``--stamp`` lets a build system skip
+  an unchanged corpus: a clean unscoped run writes the stamp and a depfile
+  naming every input the verdicts read.
+- ``seeds [--check]`` renders the generated frames of each persona-derived
+  seed recipe, and the sandbox persona's statement fixture, from the catalogue
+  personas they declare; ``--check`` fails on drift without writing
+  (:mod:`dev.docs.sequences.seed_generator`). The unscoped ``check`` mode
+  includes the same drift check.
 
 Every mode that executes a sequence first confirms the registry authority the
 runner reads is current, and exits 1 naming the republish command when it is
@@ -40,34 +52,60 @@ reported the same way, by both modes.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import time
+from pathlib import Path
 
 from .checks import (
-    _build_argument_parser,
-    _owning_page,
+    ADVISORY_PREFIX,
+    PROBLEM_PREFIX,
+    REFRESHED_PREFIX,
+    VerdictPolicy,
+    build_argument_parser,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
+    checks_owning_page,
+    default_docs_root,
+    discover_sequences,
+    pages_running_command,
+    refresh_pages,
     refresh_sequences,
 )
 from .errors import SequenceEngineError
 from .golden_store import (
     refresh_invocation,
 )
+from .seed_generator import check_seeds, write_seeds
+from .verdict_cache import published_sequence_verdicts, write_depfile
 
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
-    parser = _build_argument_parser()
+    parser = build_argument_parser()
     args = parser.parse_args(argv)
 
     if args.mode == "refresh":
         return _refresh_mode(args)
 
-    if args.coherence:
-        return _coherence_mode(args)
+    if args.mode == "seeds":
+        return _seeds_mode(args)
 
+    if args.coherence:
+        if args.stamp is not None or args.execute_all:
+            print("--coherence executes every page; it takes neither --stamp nor --execute-all", file=sys.stderr)
+            return 2
+        return _coherence_mode(args)
+    if args.stamp is not None and (args.page is not None or args.sequence is not None or args.timeout is not None):
+        print("--stamp records the unscoped in-process check; drop --page, --sequence and --timeout", file=sys.stderr)
+        return 2
+
+    started = time.time_ns()
+    if args.stamp is not None:
+        # A failing or interrupted run must leave no stamp a build could take for a pass.
+        args.stamp.unlink(missing_ok=True)
     try:
         if args.timeout is None:
             problems, advisories = check_sequences(
@@ -75,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
                 goldens_root=args.goldens_root,
                 page=args.page,
                 sequence_id=args.sequence,
+                verdicts=VerdictPolicy(reuse=not args.execute_all),
             )
         else:
             problems = check_sequences_in_subprocess(
@@ -83,8 +122,11 @@ def main(argv: list[str] | None = None) -> int:
                 page=args.page,
                 sequence_id=args.sequence,
                 timeout=args.timeout,
+                reuse_verdicts=not args.execute_all,
             )
             advisories = ()
+        if not problems and args.stamp is not None:
+            _write_stamp(args, started_ns=started)
     except SequenceEngineError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
@@ -105,29 +147,102 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _write_stamp(args: argparse.Namespace, *, started_ns: int) -> None:
+    """Write the clean-run stamp and its depfile from the inputs the verdict keys read.
+
+    The stamp is dated to the start of the run, so an input edited while the
+    run executed is newer than the stamp and the next build checks again.
+    """
+    stamp = Path(args.stamp)
+    docs_root = args.docs_root if args.docs_root is not None else default_docs_root()
+    discovered, _problems = discover_sequences(docs_root=docs_root)
+    verdicts = published_sequence_verdicts(docs_root=docs_root, goldens_root=args.goldens_root)
+    write_depfile(
+        stamp.with_name(f"{stamp.name}.d"),
+        target=stamp,
+        dependencies=verdicts.dependency_paths(discovered),
+    )
+    stamp.parent.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(f"{verdicts.corpus_key}\n", encoding="utf-8")
+    os.utime(stamp, ns=(started_ns, started_ns))
+
+
 def _refresh_mode(args: argparse.Namespace) -> int:
     """Refresh mode."""
     try:
-        written, problems, advisories = refresh_sequences(
-            docs_root=args.docs_root,
-            goldens_root=args.goldens_root,
-            page=args.page,
-            sequence_id=args.sequence,
-        )
+        outcome = _refresh_outcome(args)
     except SequenceEngineError as exc:
         print(f"problem: {exc}", file=sys.stderr)
         return 1
+    if outcome is None:
+        print(f"no executed frame runs {args.command!r}; nothing to refresh")
+        return 0
+    return _report_refresh(*outcome)
+
+
+def _refresh_outcome(
+    args: argparse.Namespace,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]] | None:
+    """Refresh the selected sequence or pages; ``None`` when ``--command`` selects no executed frame."""
+    if args.sequence is not None:
+        return refresh_sequences(
+            docs_root=args.docs_root,
+            goldens_root=args.goldens_root,
+            sequence_id=args.sequence,
+        )
+    pages = _refresh_pages(args.page, args.command, args.docs_root)
+    if pages is not None and not pages:
+        return None
+    return refresh_pages(
+        docs_root=args.docs_root,
+        goldens_root=args.goldens_root,
+        pages=pages,
+        jobs=args.jobs,
+        progress=lambda line: print(line, flush=True),
+    )
+
+
+def _report_refresh(written: tuple[Path, ...], problems: tuple[str, ...], advisories: tuple[str, ...]) -> int:
+    """Print the refreshed goldens, advisories and problems; nonzero when any problem remains."""
     for target in written:
-        print(f"refreshed: {target}")
+        print(f"{REFRESHED_PREFIX}{target}")
     for advisory in advisories:
-        print(f"advisory: {advisory}")
+        print(f"{ADVISORY_PREFIX}{advisory}")
     for problem in problems:
-        print(f"problem: {problem}", file=sys.stderr)
+        print(f"{PROBLEM_PREFIX}{problem}", file=sys.stderr)
     if not written and not problems:
         print("no enrolled cli-sequence directives matched; nothing to refresh")
     if written and not problems:
         print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
     return 1 if problems else 0
+
+
+def _refresh_pages(page: list[str] | None, command_path: str | None, docs_root: Path | None) -> list[str] | None:
+    """Resolve the refresh scope to pages: ``None`` for every page, else the named or command-selected ones."""
+    if command_path is None:
+        return page
+    command = tuple(command_path.split())
+    if not command:
+        raise SequenceEngineError("--command needs a command path such as 'app ledger classify'")
+    discovered, _problems = discover_sequences(docs_root=docs_root)
+    return list(pages_running_command(discovered, command))
+
+
+def _seeds_mode(args: argparse.Namespace) -> int:
+    """Render the persona-derived recipe frames, or with ``--check`` report drift without writing."""
+    if args.check:
+        problems = check_seeds(seeds_root=args.seeds_root)
+        for problem in problems:
+            print(f"FAIL: {problem}", file=sys.stderr)
+        if problems:
+            return 1
+        print("seed recipes: clean")
+        return 0
+    written = write_seeds(seeds_root=args.seeds_root)
+    for recipe in written:
+        print(f"regenerated: {recipe}")
+    print(f"{len(written)} seed recipe(s) rewritten" if written else "seed recipes: already current")
+    return 0
 
 
 def _coherence_mode(args: argparse.Namespace) -> int:
@@ -166,7 +281,7 @@ def _coherence_mode(args: argparse.Namespace) -> int:
 
 def _single_sequence_advisory(args: argparse.Namespace) -> None:
     """Single sequence advisory."""
-    owning_page = _owning_page(
+    owning_page = checks_owning_page(
         args.sequence,
         docs_root=args.docs_root,
     )

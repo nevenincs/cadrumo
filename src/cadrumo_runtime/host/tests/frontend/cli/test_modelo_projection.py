@@ -5,9 +5,9 @@ aggregates rendimiento neto and pagos fraccionados across all available
 quarters, and runs the Modelo 100 registry snapshot calculation.
 
 Test strategy (non-tautological):
-- Drive side: create 4 M130 work units for 2024, calculate each via the
+- Drive side: create 4 M130 work units for the filing year, calculate each via the
   CLI work-calculate surface, which persists CalculationRevision records.
-  Then invoke `aeat app modelo project --year 2024 --ccaa madrid` and
+  Then invoke `aeat app modelo project --year <filing year> --ccaa madrid` and
   capture the projected M100 casilla values from the JSON response.
 - Oracle side: call `calculate_registry_snapshot` directly with the same
   accumulated M130 output injected at casilla 0171 (ingresos de explotación,
@@ -47,10 +47,12 @@ Authority for M130 oracle inputs:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -60,15 +62,21 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -95,8 +103,9 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
         m130_snapshot,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000.00"),
-            # Casilla 02 (gastos) is no longer a manual input (it is bound/computed);
-            # it resolves to 0 here with no gastos source, so casilla 03 = 01.
+            # Casilla 02 (gastos) is a computed casilla: gastos-deducibles-previos plus the
+            # simplified-modality provision. With no gastos source and the normal modality
+            # it resolves to 0 here, so casilla 03 = 01.
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
@@ -112,6 +121,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
+        # The normal modality adds no art. 30.2.4a provision to casilla 02.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
     # The project verb builds casilla_observations from engine_result.entries.
@@ -170,15 +181,15 @@ _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
     surface="_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
 )
 _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0595",
+    "0570",
     surface="_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
 )
 _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0596",
+    "0571",
     surface="_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
 )
 _M100_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id(
-    "0597",
+    "0595",
     surface="_M100_CUOTA_RESULTANTE_CASILLA",
 )
 
@@ -211,8 +222,25 @@ _Q_RESULTADO = Decimal("2400.00")
 _ANNUAL_RENDIMIENTO_NETO = Decimal("48000.00")
 _TOTAL_PAGOS_FRACCIONADOS = Decimal("9600.00")  # Σ casilla 19 = 4 x 2.400
 
-_FILING_YEAR = 2024
+# The mapping that feeds the quarterly figures into the annual return names the newest authored edition.
+_FILING_YEAR = newest_authored_edition("100")
 _CCAA = "madrid"
+# The date, enum and boolean profile bindings the oracle supplies beside its decimal ones.
+_ORACLE_TYPED_PROFILE_BINDINGS = frozenset(
+    {
+        "renta-profile-taxpayer-birth-date",
+        "renta-profile-tax-residence-ccaa",
+        "renta-profile-family-minor-children-in-unit",
+        "renta-profile-marriage-full-year",
+        "renta-maritime-path-rebeca",
+        "renta-profile-has-economic-activity",
+        "renta-profile-income-family-excluded-capital-mobiliario",
+        "renta-profile-income-family-excluded-capital-inmobiliario",
+        "renta-profile-income-family-excluded-ganancias-patrimoniales",
+        "renta-profile-estimacion-directa",
+    }
+)
+_SUFFERED_WITHHOLDING_PREFIX = "renta-retencion-soportada-"
 
 # ---------------------------------------------------------------------------
 # Fixture
@@ -243,35 +271,28 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=profile_authority_contexts()[0],
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
-            UserProfileFact(path="identity.surnames", value="Regression Harness"),
-            UserProfileFact(path="identity.tax_id", value="87654321X"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="activities.description", value="consultoria fiscal"),
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories",
-                value="actividad_economica",
-            ),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value=_CCAA),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            # Declaration type (person vs entity) — required by binding validation
-            # in modelo-100 formulas.
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            # Birth date drives the M100 ``age_at_year_end`` operator used by
-            # the mínimo del contribuyente formula and any age-sensitive tramo.
-            # Use a deterministic 1980 value so the taxpayer is 44 in 2024
-            # (below the over-65 supplement threshold) — keeps the
-            # M130→M100 oracle stable across runs.
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
+                UserProfileFact(path="identity.surnames", value="Regression Harness"),
+                UserProfileFact(path="identity.tax_id", value="X0001502F"),
+                UserProfileFact(path="activities.description", value="consultoria fiscal"),
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="tax_residence.ccaa", value=_CCAA),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                # Declaration type (person vs entity) — required by binding validation
+                # in modelo-100 formulas.
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                # Birth date drives the M100 ``age_at_year_end`` operator used by
+                # the mínimo del contribuyente formula and any age-sensitive tramo.
+                # Use a deterministic 1980 value so the taxpayer is under the over-65 threshold in the filing year
+                # (below the over-65 supplement threshold) — keeps the
+                # M130→M100 oracle stable across runs.
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+            )
         ),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Modelo projection test profile")
@@ -284,6 +305,7 @@ def test_modelo_project_no_units_guides_natural_m130_creation(
 
     result = invoke_cached_cli(
         [
+            "--format", "json",
             "app", "modelo", "project",
             "--year", str(_FILING_YEAR),
             "--ccaa", _CCAA,
@@ -292,27 +314,32 @@ def test_modelo_project_no_units_guides_natural_m130_creation(
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    assert "work create" in result.output
-    assert "--modelo" in result.output
-    assert "130" in result.output
-    assert f"--year {_FILING_YEAR}" in result.output
-    assert "--period 1T" in result.output
-    assert "<work_unit_id>" not in result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "ERROR_MODELO_PROJECT_NO_M130_UNITS"
+    action = error["action"]
+    assert action["action"]["cli_path"] == ["aeat", "app", "modelo", "work", "create"]
+    assert action["missing_argument_names"] == []
+    assert {item["argument_name"]: item["value"] for item in action["argument_bindings"]} == {
+        "modelo": "130",
+        "period": "1T",
+        "year": _FILING_YEAR,
+    }
 
 
 def test_modelo_project_no_revisions_guides_natural_m130_calculation(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     _seed_autónomo_profile(runtime_profile)
-    create_modelo_work_unit_via_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
         filing_year=_FILING_YEAR,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(revision_covering("130", _FILING_YEAR).id),
     )
 
     result = invoke_cached_cli(
         [
+            "--format", "json",
             "app", "modelo", "project",
             "--year", str(_FILING_YEAR),
             "--ccaa", _CCAA,
@@ -321,10 +348,15 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    assert "work calculate --modelo 130" in result.output
-    assert f"--year {_FILING_YEAR}" in result.output
-    assert "--period 1T" in result.output
-    assert "<work_unit_id>" not in result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "ERROR_MODELO_PROJECT_NO_M130_REVISIONS"
+    action = error["action"]
+    assert action["action"]["cli_path"] == ["aeat", "app", "modelo", "work", "calculate"]
+    assert action["missing_argument_names"] == []
+    assert {item["argument_name"]: item["value"] for item in action["argument_bindings"]} == {
+        "work_unit_id": work_unit_id
+    }
+    assert action["evidence"][0]["values"]["year"] == _FILING_YEAR
 
 
 def test_modelo_project_uses_revision_declared_default_bindings(
@@ -388,7 +420,7 @@ def test_modelo_project_uses_revision_declared_default_bindings(
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
     assert "unknown registry binding ids" not in project_result.output
-    payload = _payload(project_result.output)
+    payload = unwrap_schema_envelope(project_result.output)
     assert payload["year"] == filing_year
     assert payload["quarters_available"] == ["1T"]
 
@@ -405,8 +437,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
 
     Drive side: seed one 12.000 cobro per quarter (so M130's year-to-date
     casilla 01 grows 12.000 → 24.000 → 36.000 → 48.000), create + calculate
-    4 M130 work units (1T-4T 2024) carrying the prior pagos fraccionados, then
-    invoke `project --year 2024 --ccaa madrid`.
+    4 M130 work units (1T-4T of the filing year) carrying the prior pagos fraccionados, then
+    invoke `project --year <filing year> --ccaa madrid`.
 
     Oracle side: call `calculate_registry_snapshot` directly with the annual
     inputs `0171 = 48.000,00 EUR` (the latest quarter's cumulative rendimiento
@@ -429,6 +461,17 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     Art. 99 BOE-A-2006-20764); cumulative inputs stated above.
     """
 
+    _calculate_four_quarters(runtime_profile)
+    _attest_no_withholding_on_every_class()
+    proj_payload = _project_and_assert_accumulated()
+    oracle_result = _calculate_m100_oracle()
+    _assert_projected_casillas(proj_payload, oracle_result)
+    _assert_projection_provenance(proj_payload, oracle_result)
+
+
+def _calculate_four_quarters(runtime_profile: TestRuntimeProfile) -> None:
+    """Seed one cobro per quarter and calculate the four cumulative M130 work units."""
+
     _seed_autónomo_profile(runtime_profile)
     quarter_dates = {
         "1T": date(_FILING_YEAR, 2, 15),
@@ -450,7 +493,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             modelo="130",
             filing_year=_FILING_YEAR,
             period=period,
-            revision="2019-y-siguientes",
+            revision=str(revision_covering("130", _FILING_YEAR).id),
         )
         calc_args = [
             "--format", "json",
@@ -466,7 +509,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             calc_args += ["--binding", f"modelo-130-pagos-fraccionados-anteriores={_PRIOR_PAGOS[period]}"]
         calc_result = invoke_cached_cli(calc_args)
         assert calc_result.exit_code == 0, f"M130 calculate failed for period {period}: {calc_result.output}"
-        quarter_payload = _payload(calc_result.output)
+        quarter_payload = unwrap_schema_envelope(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # casilla 03 is the cumulative (year-to-date) rendimiento neto.
         rendimiento_key = str(_M130_RENDIMIENTO_NETO_CASILLA)
@@ -482,6 +525,29 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"{quarter_payload['casilla_values'][resultado_key]!r}"
         )
 
+
+def _attest_no_withholding_on_every_class() -> None:
+    """Attest that no class of income suffered withholding."""
+
+    # -- Attest that no class of income suffered withholding ---------------
+    # A credit with no payer record and no attestation stays unresolved, and so does every box
+    # computed from it; the attestation is the operator's proven zero.
+    for income_class in RetencionSoportadaClase:
+        attested = invoke_cached_cli(
+            [
+                "--format", "json",
+                "app", "ledger", "retencion-soportada", "attest-absence",
+                "--ejercicio", str(_FILING_YEAR),
+                "--income-class", income_class.value,
+                "--note", "No payer withheld on this class of income.",
+            ],
+        )  # fmt: skip
+        assert attested.exit_code == 0, attested.output
+
+
+def _project_and_assert_accumulated() -> dict[str, Any]:
+    """Run the project verb and check the accumulated M130 totals."""
+
     # -- Run the projection verb -------------------------------------------
     project_result = invoke_cached_cli(
         [
@@ -493,7 +559,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     )  # fmt: skip
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
-    proj_payload = _payload(project_result.output)
+    proj_payload = unwrap_schema_envelope(project_result.output)
 
     assert proj_payload["quarters_filed"] == 4
     assert proj_payload["is_extrapolated"] is False
@@ -507,6 +573,12 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         f"Accumulated pagos fraccionados: expected {_TOTAL_PAGOS_FRACCIONADOS}, "
         f"got {proj_payload['m130_accumulated']['pagos_fraccionados']!r}"
     )
+
+    return proj_payload
+
+
+def _calculate_m100_oracle() -> RegistryCalculationResult:
+    """Calculate the M100 annual result directly from the registry engine."""
 
     # -- Oracle: direct M100 registry calculation --------------------------
     # This is the independent entry path that proves the projection verb
@@ -524,7 +596,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # structurally enforced: a divergent path would have to introduce a
     # second authority constructor, which the resources() module gates.
     m100_snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
-    # Casilla 0604 is computed in the 2024 revision (formula
+    # Casilla 0604 is computed in the filing-year revision (formula
     # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
     # relation channels). The oracle path supplies the same M130 total
     # through the relation map that the project verb threads. The
@@ -532,24 +604,21 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # by the ``age_at_year_end`` op used in mínimo del contribuyente; the
     # seeded profile fact `renta_taxpayer.birth_date = 1980-01-01` is the
     # source of truth, mirrored here on the oracle.
-    oracle_result = calculate_registry_snapshot(
-        m100_snapshot,
-        inputs={
-            _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: _ANNUAL_RENDIMIENTO_NETO,
-        },
-        date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
-        # Mirror the project verb's merged_bindings shape exactly. The verb
-        # composes ``verb_baseline_bindings`` (single-filer declaration-type,
-        # zero retenciones, zero minor-children-in-unit) with the
-        # profile-resolver projection of the seeded profile facts
-        # (marriage-* derived from no marriage_date = zeros,
-        # descendientes-guarderia / guarderia / cotizaciones-ss-madre =
-        # explicit zero defaults). The oracle must supply the same keys so
-        # the comparison exercises an identical engine input set.
-        binding_values={
+    # An edition declares only the profile defaults it uses: the oracle supplies the baseline
+    # keys the revision under test declares, as the verb does.
+    declared_bindings = {str(binding_id) for binding_id in revision_bindings_by_id(m100_snapshot.revision)}
+    oracle_binding_values = {
+        key: value
+        for key, value in {
+            **{
+                binding_id: Decimal("0")
+                for binding_id in declared_bindings
+                if binding_id.startswith(_SUFFERED_WITHHOLDING_PREFIX)
+            },
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             # Art. 81.1 follows the same derived-profile protocol: with no
             # declared descendants the resolved per-child fold is zero.
             "renta-profile-deduccion-maternidad": Decimal("0"),
@@ -568,12 +637,64 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+            # The verb reads no let property's rows, so its baseline states no net rental total.
+            **M100_NO_LET_PROPERTY_BINDINGS,
+        }.items()
+        if key in declared_bindings
+    }
+    # Every other profile-sourced binding is one the seeded profile never declares: the verb reports it
+    # unresolved, not zero, and the oracle does the same.
+    absent_profile_bindings = tuple(
+        binding.id
+        for binding in m100_snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PROFILE
+        and str(binding.id) not in {*oracle_binding_values, *_ORACLE_TYPED_PROFILE_BINDINGS}
+    )
+    oracle_result = calculate_registry_snapshot(
+        m100_snapshot,
+        inputs={
+            _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: _ANNUAL_RENDIMIENTO_NETO,
+            # A bound suffered-withholding box reads its attested zero through the input channel.
+            **resolve_available_bound_inputs_by_casilla_id(
+                m100_snapshot.revision,
+                {
+                    key: value
+                    for key, value in oracle_binding_values.items()
+                    if key.startswith(_SUFFERED_WITHHOLDING_PREFIX)
+                },
+            ),
         },
+        date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
+        # Mirror the project verb's merged_bindings shape exactly. The verb
+        # composes ``verb_baseline_bindings`` (single-filer declaration-type,
+        # zero retenciones, zero minor-children-in-unit) with the
+        # profile-resolver projection of the seeded profile facts
+        # (marriage-* derived from no marriage_date = zeros,
+        # descendientes-guarderia / guarderia =
+        # explicit zero defaults). The oracle must supply the same keys so
+        # the comparison exercises an identical engine input set.
+        binding_values=oracle_binding_values,
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": _CCAA,
         },
+        unresolved_binding_ids=absent_profile_bindings,
         relation_values={
             "renta-modelo-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
@@ -582,20 +703,38 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "renta-profile-taxpayer-birth-date": date(1980, 1, 1),
         },
         boolean_binding_values={
-            "renta-profile-family-minor-children-in-unit": False,
-            "renta-profile-marriage-full-year": False,
+            key: value
+            for key, value in {
+                "renta-profile-family-minor-children-in-unit": False,
+                "renta-profile-marriage-full-year": False,
+                "renta-maritime-path-rebeca": False,
+                # The seeded profile records the actividad_economica income category.
+                "renta-profile-has-economic-activity": True,
+                "renta-profile-income-family-excluded-capital-mobiliario": False,
+                "renta-profile-income-family-excluded-capital-inmobiliario": False,
+                "renta-profile-income-family-excluded-ganancias-patrimoniales": False,
+                # ...and its regime is a direct estimation.
+                "renta-profile-estimacion-directa": True,
+            }.items()
+            if key in declared_bindings
         },
     )
+
+    return oracle_result
+
+
+def _assert_projected_casillas(proj_payload: dict[str, Any], oracle_result: RegistryCalculationResult) -> None:
+    """Check each projected M100 casilla equals the direct registry calculation."""
 
     # Assert projected M100 casilla values equal oracle values.
     proj_m100 = proj_payload["m100_projection"]
 
     casilla_map: dict[CasillaId, str] = {
-        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: "cuota_integra_estatal_0545",
-        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: "cuota_integra_autonomica_0546",
-        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: "cuota_liquida_estatal_0595",
-        _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "cuota_liquida_autonomica_0596",
-        _M100_CUOTA_RESULTANTE_CASILLA: "cuota_resultante_0597",
+        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: "cuota_integra_estatal",
+        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: "cuota_integra_autonomica",
+        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: "cuota_liquida_estatal",
+        _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "cuota_liquida_autonomica",
+        _M100_CUOTA_RESULTANTE_CASILLA: "cuota_resultante",
     }
 
     for casilla_id, payload_key in casilla_map.items():
@@ -608,6 +747,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"rel-130-pagos-fraccionados={_TOTAL_PAGOS_FRACCIONADOS}; "
             f"ccaa={_CCAA!r}."
         )
+
+
+def _assert_projection_provenance(proj_payload: dict[str, Any], oracle_result: RegistryCalculationResult) -> None:
+    """Check the projection payload carries formula, legal and source provenance."""
 
     # -- Provenance: casilla_observations carries legal_refs / source_refs -----
     # The grounding rule requires every CLI JSON emit of a calculated casilla
@@ -639,7 +782,9 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     assert Decimal(maternidad["value"]) == oracle_result.values[_M100_DEDUCCION_MATERNIDAD_CASILLA]
     assert maternidad["formula_id"] == "renta-deduccion-maternidad-0611"
     assert maternidad["legal_refs"] == ["ley-35-2006:art-81"]
-    assert set(maternidad["source_refs"]) == {
-        "aeat-renta-2024-manual-parte1",
-        "aeat-dr-100-2024-dictionary",
-    }
+    # The edition's own manual and design dictionary ground the formula; the direct calculation
+    # of the same edition names them, so the pull path must carry exactly that provenance.
+    (oracle_maternidad,) = (
+        entry for entry in oracle_result.entries if entry.target_casilla_id == _M100_DEDUCCION_MATERNIDAD_CASILLA
+    )
+    assert set(maternidad["source_refs"]) == {str(ref) for ref in oracle_maternidad.source_refs}

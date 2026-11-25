@@ -8,6 +8,7 @@ import json
 import re
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -41,9 +42,9 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .._action_rendering import resolved_precondition_action_json_cell
-from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line
+from ..action_rendering import resolved_precondition_action_json_cell
 from ..common import resolve_cli_precondition_action
+from ..modelo_work_runs_cli import workflow_run_payload, workflow_run_tab_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -158,6 +159,71 @@ def _site_health_run() -> WorkflowResult:
     )
 
 
+def _run_row(run: WorkflowResult) -> dict[str, Any]:
+    """Project one run to its JSON payload row plus the flattened obligation and site-health fields."""
+    payload = workflow_run_payload(WorkflowRunSnapshot.from_run(run))
+    row = payload.model_dump(mode="json", exclude_none=False)
+    row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
+    health = payload.site_health_alert
+    row["site_health_state"] = health.status.state.value if health is not None else None
+    row["site_health_observed_at"] = health.status.observed_at.isoformat() if health is not None else None
+    row["site_health_http_status"] = health.status.http_status if health is not None else None
+    row["site_health_retry_after_seconds"] = health.status.retry_after_seconds if health is not None else None
+    row["site_health_detected_marker_count"] = health.status.detected_marker_count if health is not None else None
+    return row
+
+
+def _assert_action_row_is_the_draft_failure(action_row: dict[str, Any], language: str) -> None:
+    assert action_row["summary_locale_key"] == "application.workflow.steps.draft_build_failed"
+    assert action_row["summary_details"] == {
+        "kind": "workflow_failure",
+        "error_code": "workflow.draft.build_failure",
+    }
+    assert action_row["modelo"] == "130"
+    assert action_row["obligation_status"] == "UPCOMING"
+    assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
+    assert action_row["site_health_state"] is None
+    assert action_row["action"]["action"] == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+        "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
+    }
+    assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
+    assert action_row["action"]["action_words_language"] == language
+
+
+def _assert_health_row_is_the_maintenance_alert(health_row: dict[str, Any], language: str) -> None:
+    assert health_row["action"]["action"] is None
+    assert health_row["action"]["no_recovery_outcome"] == "operator_decision"
+    assert health_row["site_health_state"] == "mantenimiento"
+    assert health_row["site_health_observed_at"] == _T.isoformat()
+    assert health_row["site_health_http_status"] == 503
+    assert health_row["site_health_retry_after_seconds"] == 120
+    assert health_row["site_health_detected_marker_count"] == 2
+    assert health_row["action"]["no_recovery_words_language"] == language
+
+
+def _structural_digest(rows: dict[str, dict[str, Any]]) -> str:
+    """Digest the rows without their human text, which varies with the renderer language."""
+    structural_rows = []
+    for row in rows.values():
+        structural = dict(row)
+        structural.pop("summary")
+        # The served way-out words are human text in the renderer's language, like the summary.
+        structural["action"] = {
+            key: value for key, value in row["action"].items() if not key.endswith(("_words", "_words_language"))
+        }
+        structural_rows.append(structural)
+    return hashlib.sha256(
+        json.dumps(
+            sorted(structural_rows, key=lambda row: row["run_id"]),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8"),
+    ).hexdigest()
+
+
 def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope() -> None:
     """Four renderer locales share one terminal graph and vary only human summaries."""
     action_run = _actionable_run()
@@ -169,63 +235,15 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         rows = {}
         with override_settings(cadrumo_output_language=language):
             for run in (action_run, health_run):
-                snapshot = WorkflowRunSnapshot.from_run(run)
-                payload = _workflow_run_payload(snapshot)
-                row = payload.model_dump(mode="json", exclude_none=False)
-                row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
-                health = payload.site_health_alert
-                row["site_health_state"] = health.status.state.value if health is not None else None
-                row["site_health_observed_at"] = health.status.observed_at.isoformat() if health is not None else None
-                row["site_health_http_status"] = health.status.http_status if health is not None else None
-                row["site_health_retry_after_seconds"] = (
-                    health.status.retry_after_seconds if health is not None else None
-                )
-                row["site_health_detected_marker_count"] = (
-                    health.status.detected_marker_count if health is not None else None
-                )
+                row = _run_row(run)
                 rows[row["run_id"]] = row
         action_row = rows[action_run.run_id]
         health_row = rows[health_run.run_id]
         summaries_by_locale[language] = (action_row["summary"], health_row["summary"])
 
-        assert action_row["summary_locale_key"] == "application.workflow.steps.draft_build_failed"
-        assert action_row["summary_details"] == {
-            "kind": "workflow_failure",
-            "error_code": "workflow.draft.build_failure",
-        }
-        assert action_row["modelo"] == "130"
-        assert action_row["obligation_status"] == "UPCOMING"
-        assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
-        assert action_row["site_health_state"] is None
-        assert action_row["action"]["action"] == {
-            "action_id": "operator.modelo.work.calculate",
-            "target_command_key": "modelo.work.calculate",
-            "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
-        }
-        assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
-        assert health_row["action"]["action"] is None
-        assert health_row["action"]["no_recovery_outcome"] == "operator_decision"
-        assert health_row["site_health_state"] == "mantenimiento"
-        assert health_row["site_health_observed_at"] == _T.isoformat()
-        assert health_row["site_health_http_status"] == 503
-        assert health_row["site_health_retry_after_seconds"] == 120
-        assert health_row["site_health_detected_marker_count"] == 2
-
-        structural_rows = []
-        for row in rows.values():
-            structural = dict(row)
-            structural.pop("summary")
-            structural_rows.append(structural)
-        structural_digests.add(
-            hashlib.sha256(
-                json.dumps(
-                    sorted(structural_rows, key=lambda row: row["run_id"]),
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8"),
-            ).hexdigest(),
-        )
+        _assert_action_row_is_the_draft_failure(action_row, language)
+        _assert_health_row_is_the_maintenance_alert(health_row, language)
+        structural_digests.add(_structural_digest(rows))
 
     assert len(structural_digests) == 1
     assert all(
@@ -298,35 +316,79 @@ def test_workflow_action_projection_rejects_binding_provenance_outside_the_catal
 
 def test_workflow_run_text_projects_the_same_canonical_typed_action_dto() -> None:
     """The run table is a text view of the resolved action DTO, not a command rebuild."""
-    payload = _workflow_run_payload(WorkflowRunSnapshot.from_run(_actionable_run()))
+    payload = workflow_run_payload(WorkflowRunSnapshot.from_run(_actionable_run()))
 
     assert payload.action is not None
-    assert _workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(
+    assert workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(
         payload.action,
     )
 
 
-def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
-    """AST guard the complete workflow-run payload and renderer boundary."""
-    cli_root = Path(__file__).parents[1]
-    source_scopes = {
-        cli_root / "_modelo_work_runs_cli.py": {
-            "_render_workflow_step_summary",
-            "_workflow_run_payload",
-            "_workflow_run_summary_payload",
-            "_workflow_run_tab_line",
-            "work_run",
-            "work_run_details",
-            "work_runs",
-        },
-        cli_root / "modelo_aux_payloads.py": {
-            "WorkflowRunPayload",
-            "WorkflowRunSummaryPayload",
-            "WorkRunDetailsResult",
-            "WorkRunResult",
-            "WorkRunsResult",
-        },
-    }
+def _call_violations(name: str, node: ast.Call) -> list[str]:
+    violations: list[str] = []
+    if (
+        isinstance(node.func, ast.Name)
+        and node.func.id == "tr"
+        and any(keyword.arg == "default" for keyword in node.keywords)
+    ):
+        violations.append(f"{name}:{node.lineno}:tr(default=...)")
+    if (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and isinstance(node.func.value, ast.Attribute)
+        and node.func.value.attr == "details"
+    ):
+        violations.append(f"{name}:{node.lineno}:details.get")
+    if any(keyword.arg in {"next_action", "suggestion"} for keyword in node.keywords):
+        violations.append(f"{name}:{node.lineno}:legacy action keyword")
+    return violations
+
+
+def _compare_violations(name: str, node: ast.Compare) -> list[str]:
+    expression = ast.unparse(node)
+    if any(
+        marker in expression for marker in (".summary", ".summary_locale_key", ".action", ".message", "next_action")
+    ) and any(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in ast.walk(node)):
+        return [f"{name}:{node.lineno}:string recovery comparison"]
+    return []
+
+
+def _bool_or_violations(name: str, node: ast.BoolOp) -> list[str]:
+    prose_fallbacks = tuple(
+        item.value
+        for item in ast.walk(node)
+        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value != "-"
+    )
+    return [f"{name}:{node.lineno}:prose fallback"] if prose_fallbacks else []
+
+
+def _constant_violations(name: str, node: ast.Constant) -> list[str]:
+    assert isinstance(node.value, str)
+    violations: list[str] = []
+    if node.value == "next_action":
+        violations.append(f"{name}:{node.lineno}:next_action field")
+    if _RAW_COMMAND_PATTERN.search(node.value):
+        violations.append(f"{name}:{node.lineno}:raw CLI command")
+    return violations
+
+
+def _node_violations(name: str, node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Call):
+        return _call_violations(name, node)
+    if isinstance(node, ast.Subscript):
+        if isinstance(node.value, ast.Attribute) and node.value.attr == "details":
+            return [f"{name}:{node.lineno}:details subscript"]
+        return []
+    if isinstance(node, ast.Compare):
+        return _compare_violations(name, node)
+    if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+        return _bool_or_violations(name, node)
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return _constant_violations(name, node)
+    return []
+
+
+def _scope_violations(source_scopes: dict[Path, set[str]]) -> list[str]:
     violations: list[str] = []
     for path, names in source_scopes.items():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -336,51 +398,12 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
         assert {scope.name for scope in scopes} == names
         for scope in scopes:
             for node in ast.walk(scope):
-                if isinstance(node, ast.Call):
-                    if (
-                        isinstance(node.func, ast.Name)
-                        and node.func.id == "tr"
-                        and any(keyword.arg == "default" for keyword in node.keywords)
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:tr(default=...)")
-                    if (
-                        isinstance(node.func, ast.Attribute)
-                        and node.func.attr == "get"
-                        and isinstance(node.func.value, ast.Attribute)
-                        and node.func.value.attr == "details"
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:details.get")
-                    if any(keyword.arg in {"next_action", "suggestion"} for keyword in node.keywords):
-                        violations.append(f"{path.name}:{node.lineno}:legacy action keyword")
-                elif isinstance(node, ast.Subscript):
-                    if isinstance(node.value, ast.Attribute) and node.value.attr == "details":
-                        violations.append(f"{path.name}:{node.lineno}:details subscript")
-                elif isinstance(node, ast.Compare):
-                    expression = ast.unparse(node)
-                    if any(
-                        marker in expression
-                        for marker in (".summary", ".summary_locale_key", ".action", ".message", "next_action")
-                    ) and any(
-                        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in ast.walk(node)
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:string recovery comparison")
-                elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
-                    prose_fallbacks = tuple(
-                        item.value
-                        for item in ast.walk(node)
-                        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value != "-"
-                    )
-                    if prose_fallbacks:
-                        violations.append(f"{path.name}:{node.lineno}:prose fallback")
-                elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    if node.value == "next_action":
-                        violations.append(f"{path.name}:{node.lineno}:next_action field")
-                    if _RAW_COMMAND_PATTERN.search(node.value):
-                        violations.append(f"{path.name}:{node.lineno}:raw CLI command")
+                violations.extend(_node_violations(path.name, node))
+    return violations
 
-    assert violations == []
 
-    canonical_path = cli_root / "_action_rendering.py"
+def _assert_renderers_delegate_to_the_canonical_cell(cli_root: Path) -> None:
+    canonical_path = cli_root / "action_rendering.py"
     canonical_tree = ast.parse(canonical_path.read_text(encoding="utf-8"), filename=str(canonical_path))
     canonical_functions = tuple(node for node in canonical_tree.body if isinstance(node, ast.FunctionDef))
     assert [node.name for node in canonical_functions] == ["resolved_precondition_action_json_cell"]
@@ -390,8 +413,8 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
     )
 
     action_renderers = {
-        cli_root / "_modelo_work_runs_cli.py": "_workflow_run_tab_line",
-        cli_root / "_modelo_rendering.py": "verification_report_lines",
+        cli_root / "modelo_work_runs_cli.py": "workflow_run_tab_line",
+        cli_root / "modelo_rendering.py": "verification_report_lines",
     }
     retired_helpers = {"_workflow_run_action_text", "_verification_finding_action_text"}
     for path, renderer_name in action_renderers.items():
@@ -408,3 +431,28 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
             ast.dump(ast.Module(body=function.body, type_ignores=[]), include_attributes=False) != canonical_body
             for function in functions
         )
+
+
+def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
+    """AST guard the complete workflow-run payload and renderer boundary."""
+    cli_root = Path(__file__).parents[1]
+    source_scopes = {
+        cli_root / "modelo_work_runs_cli.py": {
+            "render_workflow_step_summary",
+            "workflow_run_payload",
+            "_workflow_run_summary_payload",
+            "workflow_run_tab_line",
+            "work_run",
+            "work_run_details",
+            "work_runs",
+        },
+        cli_root / "modelo_aux_payloads.py": {
+            "WorkflowRunPayload",
+            "WorkflowRunSummaryPayload",
+            "WorkRunDetailsResult",
+            "WorkRunResult",
+            "WorkRunsResult",
+        },
+    }
+    assert _scope_violations(source_scopes) == []
+    _assert_renderers_delegate_to_the_canonical_cell(cli_root)

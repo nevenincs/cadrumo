@@ -15,6 +15,8 @@ from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
+from .validation_memoization import ModeloIdentityMemo
+
 _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")
 
 __all__ = (
@@ -44,28 +46,39 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
     """
     findings: list[LabelArtifactFinding] = []
     for modelo in modelos:
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                try:
-                    label = casilla.label
-                except MissingTranslationError:
-                    # A custom registry root may be validated before its
-                    # shared catalogue is available. Missing-key completeness
-                    # is reported by catalogue coverage; there is no label
-                    # text here from which to derive an artifact finding.
-                    continue
-                for match in _UNRESOLVED_FORMAT_PLACEHOLDER.finditer(label):
-                    findings.append(
-                        LabelArtifactFinding(
-                            modelo_id=modelo.id,
-                            revision_id=revision.id,
-                            casilla_id=casilla.id,
-                            artifact="unresolved_format_placeholder",
-                            placeholder_token=match.group(0),
-                            label=label,
-                        ),
-                    )
+        findings.extend(_MODELO_LABEL_ARTIFACTS.get_or_compute(modelo, _modelo_label_artifact_findings))
     return tuple(findings)
+
+
+def _modelo_label_artifact_findings(modelo: ModeloDefinition) -> tuple[LabelArtifactFinding, ...]:
+    findings: list[LabelArtifactFinding] = []
+    for revision in modelo.revisions.values():
+        for casilla in revision.casillas:
+            try:
+                label = casilla.label
+            except MissingTranslationError:
+                # A custom registry root may be validated before its
+                # shared catalogue is available. Missing-key completeness
+                # is reported by catalogue coverage; there is no label
+                # text here from which to derive an artifact finding.
+                continue
+            for match in _UNRESOLVED_FORMAT_PLACEHOLDER.finditer(label):
+                findings.append(
+                    LabelArtifactFinding(
+                        modelo_id=modelo.id,
+                        revision_id=revision.id,
+                        casilla_id=casilla.id,
+                        artifact="unresolved_format_placeholder",
+                        placeholder_token=match.group(0),
+                        label=label,
+                    ),
+                )
+    return tuple(findings)
+
+
+# Findings depend on one modelo's labels only; an unchanged modelo object in a
+# later scope reuses them instead of resolving every label again.
+_MODELO_LABEL_ARTIFACTS: ModeloIdentityMemo[tuple[LabelArtifactFinding, ...]] = ModeloIdentityMemo()
 
 
 def validate_no_label_artifacts(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:

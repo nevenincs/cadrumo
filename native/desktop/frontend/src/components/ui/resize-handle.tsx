@@ -24,8 +24,10 @@ type ResizeHandleProps = Omit<
 /**
  * The line between two resizable areas, as a window splitter: a focusable
  * separator that reports its position, dragged with a mouse, a pen or a
- * finger and moved with the arrow keys. The line is a hairline; the area that
- * takes the pointer is wider, and wider still for a coarse pointer.
+ * finger and moved with the arrow keys. The line is a hairline in the
+ * divider colour, as any other line between two areas, and takes the focus
+ * colour only under the hand; the area that takes the pointer is wider, and
+ * wider still for a coarse pointer.
  *
  * While it drags it captures the pointer, so the drag continues over a frame
  * or a terminal, and it marks the document so nothing underneath selects text
@@ -71,7 +73,7 @@ function ResizeHandle({
       aria-valuenow={Math.round(value)}
       tabIndex={0}
       className={cn(
-        "relative z-(--layer-separator) shrink-0 touch-none bg-border-strong transition-colors",
+        "relative z-(--layer-separator) shrink-0 touch-none bg-border transition-colors",
         "hover:bg-ring focus-visible:bg-ring data-[dragging]:bg-ring",
         // The hairline is the visible line; this is what takes the pointer.
         "after:absolute after:content-['']",

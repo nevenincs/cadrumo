@@ -107,12 +107,12 @@ _RESULT_CASILLAS: tuple[CasillaId, ...] = tuple(_RECONCILIATION_BY_322_CASILLA)
 #: The two grupo members whose monthly 322s the entidad dominante aggregates.
 #: Distinct NIFs so the per-member storage keeps them separate (the resolver
 #: enumerates them; member identity is carried on the enrollment side).
-_MEMBER_NIFS = ("A00000000", "B00000001")
+_MEMBER_NIFS = ("A00010009", "B00000001")
 
 #: Per-member December IVA ledger detail (repercutido, soportado) for year N.
 #: Members differ so the cross-member sum is a non-trivial aggregate.
 _MEMBER_DEC_IVA: dict[str, tuple[Decimal, Decimal]] = {
-    "A00000000": (Decimal("210.00"), Decimal("80.00")),
+    "A00010009": (Decimal("210.00"), Decimal("80.00")),
     "B00000001": (Decimal("168.00"), Decimal("90.00")),
 }
 

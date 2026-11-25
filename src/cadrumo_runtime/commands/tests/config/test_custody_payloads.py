@@ -33,7 +33,6 @@ sys.path.insert(0, sys.argv[1])
 blocked = {
     'cadrumo_client.transport.installed_client',
     'cadrumo_client.transport.frontend_client',
-    'cadrumo.application.provisioning',
     'cadrumo.application.workflow.profile_health',
     'cadrumo.application.workflow.run_models',
     'cadrumo.domain.calculations.registry.authority',
@@ -51,6 +50,12 @@ class MissingExecutionDependencies(importlib.abc.MetaPathFinder):
         if fullname in blocked:
             raise ModuleNotFoundError('fixture: execution dependency unavailable', name=fullname)
 
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
+
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:
         raise AssertionError('unselected status attempted an active effect')
@@ -67,7 +72,7 @@ def expose_unexpected_failure(error, arguments, *, click_context=None):
 
 # This isolated child asserts a successful cold execution. Preserve the exact
 # exception on failure instead of reducing missing dependencies to an envelope.
-runtime_main._emit_error = expose_unexpected_failure
+runtime_main.emit_error = expose_unexpected_failure
 
 output = StringIO()
 with redirect_stdout(output):
@@ -84,7 +89,6 @@ assert blocked.isdisjoint(sys.modules), blocked.intersection(sys.modules)
     environment.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(authority),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

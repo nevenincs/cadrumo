@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.live.filed_data_ports import (
     FiledDataCapturePort,
@@ -41,21 +38,18 @@ from cadrumo.application.live.filed_read_operation import (
     build_filed_list_registration,
 )
 from cadrumo.application.live.session import SessionWriteReporter
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -64,12 +58,23 @@ from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import TaxpayerProfile
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from .supervised_operation_rig import (
+    ProcessResourceScope,
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    operation_access_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 _EXPEDIENTE_ID = "202510013522222A"
 
 
@@ -149,8 +154,8 @@ class _SyntheticFiledDataPort:
         self.register = _SyntheticRegister(trace)
         self._availability = _AvailabilityReport(
             items=(
-                _AvailabilityItem(modelo="100", ejercicios=(2025,)),
-                _AvailabilityItem(modelo="303", ejercicios=(2024, 2025)),
+                _AvailabilityItem(modelo="100", ejercicios=(_FILING_YEAR,)),
+                _AvailabilityItem(modelo="303", ejercicios=(_FILING_YEAR - 1, _FILING_YEAR)),
             )
         )
         self.register_authorities: list[PinnedAuthorityOperation | None] = []
@@ -192,35 +197,6 @@ class _Composition:
     filed_data_port: FiledDataCapturePort
 
 
-class _ResourceScope:
-    """Track worker-owned PROCESS activation and cleanup without launching AEAT."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.activation_entries = 0
-        self.close_calls = 0
-        self.closed = False
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_entries += 1
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     *,
     registry: OperationRegistry,
@@ -229,13 +205,10 @@ def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     profile_id: UUID,
     authority: PinnedAuthorityOperation,
 ) -> None:
-    context = OperationAccessContext(
+    context = operation_access_context(
+        registration.contract,
         profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=authority,
     )
     admitted = resolve_operation_access(
@@ -250,21 +223,84 @@ def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     # Reusing a saved provider session re-publishes it, a local write behind the COMMIT door.
     assert AccessAction.COMMIT in admitted.policy.actions
 
-    foreign_profile_id = uuid4()
-    assert foreign_profile_id != profile_id
-    foreign_request = request.model_copy(
-        update={
-            "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-            "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-        }
+    assert_foreign_profile_refused(registry=registry, request=request, context=context)
+
+
+def _assert_settled_without_effect(terminal: OperationPersistedSnapshot) -> None:
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.NONE
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.effect is OperationEffect.NONE
+
+
+def _assert_listed_register(projected: object, filed_port: _SyntheticFiledDataPort) -> None:
+    list_projected = projected
+    assert isinstance(list_projected, OperationResultProjectionSuccessV1)
+    assert isinstance(list_projected.projection, FiledListPublicResultV1)
+    listed = list_projected.projection
+    assert listed.modelo_filter is None
+    assert (listed.year_from, listed.year_to, listed.row_count) == (_FILING_YEAR, _FILING_YEAR, 1)
+    assert listed.failed_count == len(listed.failures)
+    assert listed.rows[0].model_dump() == {
+        "modelo": filed_port.register.walk_calls[0][0],
+        "year": _FILING_YEAR,
+        "period": "1T",
+        "expediente_id": _EXPEDIENTE_ID,
+        "status": "ALTA",
+        "presented_at": _NOW,
+        "has_submitted_file": True,
+        "has_declaration_copy": False,
+        "has_justificante": True,
+    }
+    assert set(listed.rows[0].model_dump()) == {
+        "modelo",
+        "year",
+        "period",
+        "expediente_id",
+        "status",
+        "presented_at",
+        "has_submitted_file",
+        "has_declaration_copy",
+        "has_justificante",
+    }
+    synthetic_failures = [failure for failure in listed.failures if failure.error_type == "RuntimeError"]
+    assert filed_port.register.failed_pair is not None
+    assert len(synthetic_failures) == 1
+    assert synthetic_failures[0].model_dump() == {
+        "modelo": filed_port.register.failed_pair[0],
+        "year": _FILING_YEAR,
+        "period": None,
+        "expediente_id": None,
+        "error_type": "RuntimeError",
+        "message": "synthetic register read failure",
+    }
+    assert all(
+        set(failure.model_dump()) == {"modelo", "year", "period", "expediente_id", "error_type", "message"}
+        for failure in listed.failures
     )
-    with pytest.raises(ProfileAccessRefusedError) as refusal:
-        resolve_operation_access(
-            registry=registry,
-            request=cast(OperationRequest[BaseModel], foreign_request),
-            context=context,
-        )
-    assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def _assert_discovered_pairs(projected: object) -> None:
+    discover_projected = projected
+    assert isinstance(discover_projected, OperationResultProjectionSuccessV1)
+    assert isinstance(discover_projected.projection, FiledDiscoverPublicResultV1)
+    discovered = discover_projected.projection
+    assert discovered.model_dump().keys() == {
+        "pairs",
+        "profile_year_span_determined",
+        "register_options_read",
+        "scoping_signal",
+    }
+    assert discovered.profile_year_span_determined is False
+    assert discovered.register_options_read is True
+    assert discovered.scoping_signal is RegisterScopingSignal.INCONCLUSIVE
+    assert tuple((pair.modelo, pair.ejercicio, pair.signals) for pair in discovered.pairs) == (
+        ("100", _FILING_YEAR, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+        ("303", _FILING_YEAR, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+        ("303", _FILING_YEAR - 1, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+    )
+    assert all(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY not in pair.signals for pair in discovered.pairs)
 
 
 def test_supervisor_records_filed_list_and_discover_for_exact_external_client_profile(tmp_path: Path) -> None:
@@ -272,7 +308,7 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
-        resources: list[_ResourceScope] = []
+        resources: list[ProcessResourceScope] = []
 
         def resource_is_active() -> bool:
             return any(resource.activation_depth == 1 for resource in resources)
@@ -299,9 +335,9 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
             return build
 
         def resource_factory(label: str) -> FiledHistoryBrowserResourcesFactory:
-            def build() -> _ResourceScope:
+            def build() -> ProcessResourceScope:
                 trace.append(f"{label}-resources")
-                resource = _ResourceScope()
+                resource = ProcessResourceScope()
                 resources.append(resource)
                 return resource
 
@@ -332,7 +368,7 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
         list_request = OperationRequest(
             definition_id=FILED_LIST_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
-            payload=FiledListRequest(profile_id=profile_id, modelo=None, year_from=2025, year_to=2025),
+            payload=FiledListRequest(profile_id=profile_id, modelo=None, year_from=_FILING_YEAR, year_to=_FILING_YEAR),
         )
         discover_request = OperationRequest(
             definition_id=FILED_DISCOVER_DEFINITION_ID,
@@ -357,117 +393,28 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
         for definition in (list_definition, discover_definition):
             assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
-        async def run(request, operation_id: str, result_type: type[BaseModel]):
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(request.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                result_type,
-            )
-            return terminal, projected
-
-        list_terminal, list_projected = asyncio.run(run(list_request, "3" * 64, FiledListPublicResultV1))
+        list_terminal, list_projected = asyncio.run(
+            settle_and_project(supervisor, result_service, registry, list_request, FiledListPublicResultV1)
+        )
         discover_terminal, discover_projected = asyncio.run(
-            run(discover_request, "4" * 64, FiledDiscoverPublicResultV1)
+            settle_and_project(
+                supervisor,
+                result_service,
+                registry,
+                discover_request,
+                FiledDiscoverPublicResultV1,
+                operation_id="4" * 64,
+            )
         )
 
-    assert list_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert list_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert list_terminal.effect is OperationEffect.NONE
-    assert list_terminal.terminal_receipt is not None
-    assert list_terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert isinstance(list_projected, OperationResultProjectionSuccessV1)
-    assert isinstance(list_projected.projection, FiledListPublicResultV1)
-    listed = list_projected.projection
-    assert listed.modelo_filter is None
-    assert (listed.year_from, listed.year_to, listed.row_count) == (2025, 2025, 1)
-    assert listed.failed_count == len(listed.failures)
-    assert listed.rows[0].model_dump() == {
-        "modelo": filed_port.register.walk_calls[0][0],
-        "year": 2025,
-        "period": "1T",
-        "expediente_id": _EXPEDIENTE_ID,
-        "status": "ALTA",
-        "presented_at": _NOW,
-        "has_submitted_file": True,
-        "has_declaration_copy": False,
-        "has_justificante": True,
-    }
-    assert set(listed.rows[0].model_dump()) == {
-        "modelo",
-        "year",
-        "period",
-        "expediente_id",
-        "status",
-        "presented_at",
-        "has_submitted_file",
-        "has_declaration_copy",
-        "has_justificante",
-    }
-    synthetic_failures = [failure for failure in listed.failures if failure.error_type == "RuntimeError"]
-    assert filed_port.register.failed_pair is not None
-    assert len(synthetic_failures) == 1
-    assert synthetic_failures[0].model_dump() == {
-        "modelo": filed_port.register.failed_pair[0],
-        "year": 2025,
-        "period": None,
-        "expediente_id": None,
-        "error_type": "RuntimeError",
-        "message": "synthetic register read failure",
-    }
-    assert all(
-        set(failure.model_dump()) == {"modelo", "year", "period", "expediente_id", "error_type", "message"}
-        for failure in listed.failures
-    )
-
-    assert discover_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert discover_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert discover_terminal.effect is OperationEffect.NONE
-    assert discover_terminal.terminal_receipt is not None
-    assert discover_terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert isinstance(discover_projected, OperationResultProjectionSuccessV1)
-    assert isinstance(discover_projected.projection, FiledDiscoverPublicResultV1)
-    discovered = discover_projected.projection
-    assert discovered.model_dump().keys() == {
-        "pairs",
-        "profile_year_span_determined",
-        "register_options_read",
-        "scoping_signal",
-    }
-    assert discovered.profile_year_span_determined is False
-    assert discovered.register_options_read is True
-    assert discovered.scoping_signal is RegisterScopingSignal.INCONCLUSIVE
-    assert tuple((pair.modelo, pair.ejercicio, pair.signals) for pair in discovered.pairs) == (
-        ("100", 2025, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
-        ("303", 2025, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
-        ("303", 2024, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
-    )
-    assert all(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY not in pair.signals for pair in discovered.pairs)
+    _assert_settled_without_effect(list_terminal)
+    _assert_listed_register(list_projected, filed_port)
+    _assert_settled_without_effect(discover_terminal)
+    _assert_discovered_pairs(discover_projected)
     assert profile_resolutions == [authority]
 
     assert list_preflights == [(profile_id, authority)]

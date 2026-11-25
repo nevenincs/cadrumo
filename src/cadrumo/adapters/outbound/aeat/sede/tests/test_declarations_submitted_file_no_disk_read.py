@@ -63,7 +63,7 @@ _TARGET_FUNCTION = "capture_submitted_file_artefact"
 def _module_path() -> Path:
     """Returns the guarded module's path, resolved relative to this file."""
     # .../sede/tests/test_declarations_submitted_file_no_disk_read.py -> .../sede/_declarations_fetch.py
-    return Path(__file__).resolve().parents[1] / "_declarations_fetch.py"
+    return Path(__file__).resolve().parents[1] / "declarations_fetch.py"
 
 
 def _module_tree() -> ast.Module:

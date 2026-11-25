@@ -20,6 +20,8 @@ from ....application.operations.frontend_requests import (
     OperationPublicEventV1,
     OperationPublicLogEventV1,
     OperationPublicNoticeEventV1,
+    OperationPublicPhaseEventV1,
+    OperationPublicProgressEventV1,
     OperationPublicTerminalEventV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
@@ -43,6 +45,11 @@ class OperationModalLogRowV1(BaseModel):
     code: OperationEventCode
     severity: OperationLogSeverity | None
     diagnostic_ref: OperationDiagnosticReference | None
+    phase_code: OperationEventCode | None = None
+    completed: int | None = None
+    total: int | None = None
+    unit_code: OperationEventCode | None = None
+    subject_code: OperationEventCode | None = None
     notice_code: OperationEventCode | None = None
     display_code: OperatorDisplayCode | None = None
 
@@ -130,15 +137,30 @@ _DIAGNOSTIC_CARRYING_EVENTS = (
 )
 
 
+def _progress_values(
+    progress: OperationPublicProgressEventV1 | None,
+) -> tuple[int | None, int | None, str | None, str | None]:
+    if progress is None:
+        return None, None, None, None
+    return progress.completed, progress.total, progress.unit_code, progress.subject_code
+
+
 def _project_row(event: OperationPublicEventV1) -> OperationModalLogRowV1:
     severity = event.severity if isinstance(event, OperationPublicLogEventV1) else None
     diagnostic_ref = event.diagnostic_ref if isinstance(event, _DIAGNOSTIC_CARRYING_EVENTS) else None
     notice = event if isinstance(event, OperationPublicNoticeEventV1) else None
+    progress = event if isinstance(event, OperationPublicProgressEventV1) else None
+    completed, total, unit_code, subject_code = _progress_values(progress)
     return OperationModalLogRowV1(
         sequence=event.sequence,
         timestamp=event.timestamp,
         kind=event.kind,
         code=event.code,
+        phase_code=event.phase_code if isinstance(event, OperationPublicPhaseEventV1) else None,
+        completed=completed,
+        total=total,
+        unit_code=unit_code,
+        subject_code=subject_code,
         severity=severity,
         diagnostic_ref=diagnostic_ref,
         notice_code=None if notice is None else notice.notice_code,

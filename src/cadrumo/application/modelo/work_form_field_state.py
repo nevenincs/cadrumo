@@ -20,7 +20,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .source_policy import SourceOverridePolicy, source_policy
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ABSENT_FROM_ADMISSION,
     ModeloFormBinding,
     ModeloFormEditability,
@@ -58,7 +58,11 @@ def summarize_bindings(row: ModeloWorkReviewCasilla) -> tuple[ModeloFormBinding,
 
 
 def casilla_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext, *, required: bool) -> ModeloFormOrigin:
-    """Classify where one casilla's value stands; first match wins."""
+    """Classify where one casilla's value stands; first match wins.
+
+    ``required`` says the box must be answered, either because verification
+    requires it or because the calculation refuses to run without it.
+    """
     if row.absent_by_design:
         return ModeloFormOrigin.NOT_APPLICABLE
     for classify in (_source_override_origin, _computed_origin, _declared_origin):
@@ -95,11 +99,12 @@ def _declared_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> 
     if kind in {InputKind.INFORMATIONAL, InputKind.PROJECTION_ONLY}:
         return ModeloFormOrigin.INFORMATIONAL
     if kind is InputKind.BOUND:
-        return (
-            ModeloFormOrigin.NOT_IMPORTED_YET
-            if row.realised_kind is ModeloValueKind.EMPTY
-            else ModeloFormOrigin.IMPORTED
-        )
+        if row.realised_kind is not ModeloValueKind.EMPTY:
+            return ModeloFormOrigin.IMPORTED
+        # A carry the calculation refuses to start without is not waiting on an import: it needs the filer.
+        if row.casilla_id in context.calculation_required.casilla_ids:
+            return ModeloFormOrigin.NEEDS_INPUT
+        return ModeloFormOrigin.NOT_IMPORTED_YET
     return None
 
 
@@ -109,10 +114,15 @@ def _operator_entry_origin(
     casilla_id = row.casilla_id
     if casilla_id in context.cleared:
         return ModeloFormOrigin.CLEARED
+    source_supplied = casilla_id in context.source_supplied
     if context.entered is not None and casilla_id in context.entered:
-        return ModeloFormOrigin.ENTERED
+        return ModeloFormOrigin.OVERRIDES_SOURCE if source_supplied else ModeloFormOrigin.ENTERED
     if row.realised_kind is ModeloValueKind.EMPTY:
         return ModeloFormOrigin.NEEDS_INPUT if required else ModeloFormOrigin.OPTIONAL_EMPTY
+    if source_supplied and context.entered is not None:
+        # A source resolver handed the calculation this value and the operator's own entries are known to omit
+        # the box, so it is derived from the filer's records, not assumed. An unknown record proves neither.
+        return ModeloFormOrigin.IMPORTED
     return held_value_origin(row.value, required=required)
 
 

@@ -39,13 +39,13 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Callable
@@ -69,7 +69,7 @@ class ModeloRecordCatalogueRepository:
     catalogue payload keeps member-scoped current/history lookups in the domain
     type. The write path (``to_secure_object_write`` / ``save`` / ``exists``)
     composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because this repository translates a classification or
     schema-version mismatch into :class:`ModeloRecordPersistenceError` via
@@ -331,6 +331,7 @@ class ModeloRecordCatalogueRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
@@ -344,9 +345,12 @@ class ModeloRecordCatalogueRepository:
                 this method already gave; the revision is what stops the batch
                 discarding a filing record another writer committed between the
                 read and this call.
+            assertions: Source revisions a co-emitted write unit requires,
+                checked inside the same transaction.
         """
-        self._objects.save_many(
+        self._objects.apply_batch(
             (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
+            assertions=assertions,
         )
 
 

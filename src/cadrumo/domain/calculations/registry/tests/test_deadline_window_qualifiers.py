@@ -11,6 +11,9 @@ from .....core.result_disposition import ResultDisposition
 from ..errors import RegistryValidationError
 from ..irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..schema_deadlines import DeadlineWindowDefinition
+from .authored_editions import filing_year_envelope
+
+YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -18,11 +21,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def _window(**updates: object) -> DeadlineWindowDefinition:
     payload: dict[str, object] = {
         "id": "dw-qualified",
-        "filing_year": 2025,
-        "period": "2025 0A",
+        "filing_year": YEAR,
+        "period": f"{YEAR} 0A",
         "period_kind": "annual",
-        "opens_on": date(2026, 1, 1),
-        "closes_on": date(2026, 1, 20),
+        "opens_on": date(YEAR, 1, 1),
+        "closes_on": date(YEAR, 1, 20),
         "legal_refs": ("legal.test",),
         "source_refs": ("source-test",),
     }
@@ -63,7 +66,7 @@ def test_deadline_window_rejects_lossy_conceptual_tipo_authoring(conceptual_key:
         _window(tipo_renta_scope=(conceptual_key,))
 
 
-@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01"), ("1",)])
+@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01")])
 def test_deadline_window_rejects_invalid_official_tipo_renta_scope(tipo_renta_scope: tuple[str, ...]) -> None:
     with pytest.raises((RegistryValidationError, ValidationError), match="tipo_renta_scope"):
         _window(tipo_renta_scope=tipo_renta_scope)

@@ -31,6 +31,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ..calculations.observations_repository import ObservationSourceKind
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -41,11 +42,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .justificante import JustificanteCaptureSnapshot, JustificanteCaptureSnapshotService
 from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
-from .live_operation_registration import (
-    build_live_operation_definition,
-    require_live_read_receipt,
-    resolve_whole_profile_read_access,
-)
+from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
 from .snapshot_base import SnapshotLifecycleState
 
 JUSTIFICANTE_LIST_DEFINITION_ID = "live.justificante.list"
@@ -317,8 +314,8 @@ def resolve_justificante_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for the local receipt inventory."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=JUSTIFICANTE_LIST_DEFINITION_ID, payload_type=JustificanteListRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=JUSTIFICANTE_LIST_DEFINITION_ID, request_type=JustificanteListRequest
     )
 
 
@@ -326,8 +323,8 @@ def resolve_justificante_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for one local receipt detail."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID, payload_type=JustificanteShowRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID, request_type=JustificanteShowRequest
     )
 
 

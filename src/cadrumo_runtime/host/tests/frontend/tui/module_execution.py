@@ -21,11 +21,10 @@ def _isolated_environment(root: Path) -> dict[str, str]:
     populated one opens login or resumes a session, and a store another
     process is writing reports itself as changing and exits. A start-up proof
     that depends on the machine it runs on proves nothing reliably, so the
-    process sees a fresh empty store and a fresh secret store every time.
+    process sees a fresh empty store, secret store included, every time.
     """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root / "storage")
-    environment["CADRUMO_SECRET_STORE_DIR"] = str(root / "secret-store")
+    environment["CADRUMO_STORAGE_ROOT"] = str(root / "storage")
     return environment
 
 

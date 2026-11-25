@@ -1,0 +1,249 @@
+[fact]
+fact_id = "form-row-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "form-row-codes:design"
+date_axis = "filing_period"
+legal_refs = ["ley-37-1992:art-164"]
+source_refs = ["aeat-dr-100-2025-xsd", "aeat-dr-100-2025-dictionary", "boe-modelo-037-historical-suppression", "aeat-dr-720", "aeat-dr-130-2019-v12", "aeat-dr-200-2025", "aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+# "En el caso de no residentes sin establecimiento permanente se consignara 99."
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["no residentes sin establecimiento permanente"]
+
+# The two activities the Orden's special corrector indices name, and the Lorca reduction:
+# "podran reducir en un 20 por ciento el importe de las cuotas devengadas".
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-1335-2021-iva-authority"
+required_text = ["Transporte por autotaxis", "Transporte de mercancías por carretera", "20 por ciento", "siempre que el total no exceda de 180"]
+
+# The Aux/Idioma pattern every Modelo 100 schema gives the declaration's language.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["(E|G|C|V){1}", "E5AI8"]
+
+# The surnames-and-name type of a Modelo 100 child or ascendant row (Hijo/APENOMDLG,
+# Ascendiente/APENOMDLG_ASC): "tipo_ApeNom", a string of at most 80 characters.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ['<xs:element name="APENOMDLG" type="tipo_ApeNom" minOccurs="1" maxOccurs="1"/>', '<xs:simpleType name="tipo_ApeNom">', '<xs:maxLength value="80"/>']
+
+# The disability key of a Modelo 100 ascendant row (Ascendiente/PCTMINASDLG, "Clave de
+# discapacidad"): 1 and 2 for a grade from 33 % to under 65 %, without and with
+# assistance of third persons or reduced mobility, 3 for 65 % or more, 4 for a judicial
+# incapacity. The design's own text stops before its first accent.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ['<xs:element name="PCTMINASDLG" type="tipo_Opciones1a4" minOccurs="0" maxOccurs="1">', '"1"=Discapacidad igual o superior al 33% e inferior al 65%, sin estar en el caso siguiente.', '"2"=Discapacidad igual o superior al 33% e inferior al 65%, si se acredita necesitar ayuda de terceras personas o movilidad reducida.', '"3"=Discapacidad en grado igual o superior al 65% (distinta de la indicada en el punto 4).', '"4"=Incapacitaci']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["PCTMINASDLG=[/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG][X][*93][Clave de discapacidad]"]
+
+# The Modelo 720 position-102 clave and the five letters its row lists.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-720"
+required_text = ["CLAVE TIPO DE BIEN O DERECHO", "“C”: Cuentas", "“V”: Valores", "“I”: Acciones", "“S”: Seguros", "“B”: Titularidad", "clave “ZXX”"]
+
+# The census form the Orden suppressed; no filing can belong to it, so it is not a role of a current form.
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-037-historical-suppression"
+required_text = ["037"]
+
+# Tipo de declaración: the union of the codes the designs of Modelos 303, 130 and 200 print.
+# These two designs are binary workbooks, read as bytes, so a citation stops before an accent.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-130-2019-v12"
+required_text = ["U (domiciliaci", "N (negativa) y B (resultado al deducir)"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-200-2025"
+required_text = ["R (Renuncia a la devoluci", "X (Devoluci", "transferencia al extranjero"]
+
+# Page 2 occurrences and pages, the Mesas rows, and the five prorrata rows. The row counts of
+# the three repeating 303 blocks are also pinned to each edition's own declarations by a test.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["Tipo de prorrata [503]", "\"G\", \"E\" o blanco", "C (solicitud de compensación) D (devolución)", "El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE", "Versión del Programa (Nota 1)", "NIF Empresa Desarrollo (Nota 1)"]
+
+# Tablas A, B and C of the Modelo 232 record design, its declaration's amendment marker
+# and its complementary page's indicator.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-232-2018"
+required_text = ["S, C o blanco", "Indicador de página complementaria", "C o blanco", "TABLA DE TIPOS DE VINCULACIÓN", "TABLA DE METODOS DE VALORACIÓN", "Clave 11: Otras operaciones"]
+
+# The affiliate record's name (positions 36-75) and membership number (positions 76-87).
+[[fact.variants.source_citations]]
+source_ref = "enrolled-modelo-156-layout"
+required_text = ["APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA", "NÚMERO DE AFILIACIÓN"]
+
+# The Modelo 222 group number (positions 92-98) and the dominant entity's country (136-137).
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-222-2025"
+required_text = ["Número de grupo", "Pais / territorio foral de la Entidad Dominante"]
+
+# The Modelo 353 group number (positions 109-118).
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-353-2026"
+required_text = ["Identificación. Nº Grupo"]
+
+# The Modelo 296 declarant record: telefono at positions 59-67, total perceptores at 136-144.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-296-2024"
+required_text = ["59-67 TELÉFONO", "136-144 Numérico NÚMERO TOTAL DE PERCEPTORES"]
+
+# Modelo 360 pagina 1, each field's start and length in the design's own table.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-360-2010"
+required_text = ["10 27 16 An", "13 69 125 An", "14 194 100 An", "15 294 15 An", "16 309 5 An", "17 314 50 An", "18 364 3 An", "19 367 5 Num", "26 390 40 An", "27 430 30 An", "28 460 5 Num", "30 495 2 An", "31 497 148 An", "32 645 30 An", "33 675 10 An", "34 685 30 An", "36 717 10 Num"]
+
+# The Modelo 347 premises record: referencia catastral at positions 116-140.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["116-140 Alfanumérico REFERENCIA CATASTRAL"]
+
+# The Modelo 303 envelope closer: 18 bytes "</T3030AAAAPP0000>", whose PP is the period's two characters.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>", "</T3030AAAAPP0000>"]
+
+# Signed amounts split across adjacent fields: Modelo 280 sign at 176 and integer part at 177-184,
+# Modelo 165 sign at 168 before a 13-digit integer part, Modelo 190 sign before 13 positions.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-280-2022"
+required_text = ["176. SIGNO", "177-184 Numérico ENTERO"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-165-2016-2022"
+required_text = ["168 SIGNO"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-190-2020"
+required_text = ["Campo numérico de 13 posiciones"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "m347.non_resident_provincia", value = "99" },
+  { key = "m232.tipo_vinculacion.codes", value = "A,B,C,D,E,F,G,H" },
+  { key = "m232.tipo_operacion.codes", value = "01,02,03,04,05,06,07,08,09,10,11" },
+  { key = "m232.metodo_valoracion.codes", value = "1A,1B,1C,1D,1E" },
+  { key = "aeat.receipt_digits", value = "13" },
+  { key = "cnae.digits", value = "4" },
+  { key = "m156.nif_max", value = "9" },
+  { key = "m156.nombre_max", value = "40" },
+  { key = "m156.numero_afiliacion_digits", value = "12" },
+  { key = "withholding.province_digits", value = "2" },
+  { key = "withholding.naturaleza_digits", value = "2" },
+  { key = "withholding.date_digits", value = "8" },
+  { key = "withholding.numero_orden_max", value = "9999999" },
+  { key = "m303.exonerado_390.codigo_actividad_max", value = "3" },
+  { key = "m303.exonerado_390.epigrafe_max", value = "4" },
+  { key = "ceded_autonomic.modelos", value = "600,620,650,660" },
+  { key = "m131.special_index_epigrafes", value = "721.2,722" },
+  { key = "m100.inventory.complete_acquisition_cost", value = "0181" },
+  { key = "m100.inventory.closing_minus_opening_positive", value = "0177" },
+  { key = "m100.inventory.opening_minus_closing_positive", value = "0182" },
+  { key = "m303.dp30302.early_epochs", value = "2022,2023,2024-hasta-08-y-2t,2024-desde-09-y-3t" },
+  { key = "m303.dp30302.late_epochs", value = "2025,2026-hasta-01-y-1t,2026-y-siguientes" },
+  { key = "m303.2022.lorca_reduction_percentage", value = "20" },
+  { key = "m210.payer_mode_reference_code", value = "35" },
+  { key = "m303.differentiated.row_slots", value = "2" },
+  { key = "m303.prorrata.activity_slots", value = "5" },
+  { key = "m303.exonerado_390.activity_slots", value = "6" },
+  { key = "m303.dp30302.activities_per_kind", value = "6" },
+  { key = "m303.dp30302.activities_per_record", value = "2" },
+  { key = "m303.dp30302.records", value = "3" },
+  { key = "m303.dp30302.sub_indices", value = "1,2,3,4" },
+  { key = "m303.dp30302.iae_whole_digits", value = "3" },
+  { key = "m303.dp30302.iae_fractional_digits", value = "1" },
+  { key = "m303.orden.modules_per_activity", value = "7" },
+  { key = "m303.orden.seasonal_bands", value = "3" },
+  { key = "m303.orden.seasonal_max_days", value = "180" },
+  { key = "m210.tipo_renta_digits", value = "2" },
+  { key = "m184.row.subclave_digits", value = "2" },
+  { key = "m184.row.provincia_digits", value = "2" },
+  { key = "perceptor.subclave_digits", value = "2" },
+  { key = "withholding.subclave_max", value = "4" },
+  { key = "withholding.codigo_emisor_max", value = "12" },
+  { key = "m180.address.municipality", value = "30" },
+  { key = "m180.address.locality", value = "30" },
+  { key = "m180.address.street_type", value = "5" },
+  { key = "m180.address.street_name", value = "50" },
+  { key = "m180.address.number_type", value = "3" },
+  { key = "m180.address.house_number", value = "5" },
+  { key = "m180.address.number_qualifier", value = "3" },
+  { key = "m180.address.block", value = "3" },
+  { key = "m180.address.portal", value = "3" },
+  { key = "m180.address.staircase", value = "3" },
+  { key = "m180.address.floor", value = "3" },
+  { key = "m180.address.door", value = "3" },
+  { key = "m180.address.complement", value = "40" },
+  { key = "m303.prorrata.cnae_digits", value = "3,4" },
+  { key = "m100.ascendant_cohabiting_descendants_max", value = "10" },
+  { key = "m100.household_person_name_max", value = "80" },
+  { key = "m100.ascendant_disability_key.grade_from_minimum", value = "1" },
+  { key = "m100.ascendant_disability_key.grade_from_minimum_with_assistance", value = "2" },
+  { key = "m100.ascendant_disability_key.grade_from_higher", value = "3" },
+  { key = "m100.ascendant_disability_key.incapacidad_judicial", value = "4" },
+  { key = "m222.numero_grupo_max", value = "7" },
+  { key = "m222.dominant_territory_max", value = "2" },
+  { key = "m353.numero_grupo_max", value = "10" },
+  { key = "aeat.aux.version_width", value = "4" },
+  { key = "aeat.aux.program_identifier_width", value = "4" },
+  { key = "aeat.aux.developer_tax_id_width", value = "9" },
+  { key = "aeat.aux.prefix_fields", value = "13" },
+  { key = "m303.dp30302.single_page_epochs", value = "2022" },
+  { key = "m303.orden.difficult_justification_legal_refs", value = "2" },
+  { key = "prorrata.catalogue.regimes_min", value = "3" },
+  { key = "prorrata.catalogue.apportioning_regimes", value = "2" },
+  { key = "prorrata.catalogue.transition_kinds", value = "2" },
+  { key = "prorrata.catalogue.provenances", value = "5" },
+  { key = "prorrata.catalogue.sector_letters", value = "4" },
+  { key = "m296.telefono_max", value = "9" },
+  { key = "m296.numero_total_perceptores_max", value = "9" },
+  { key = "m360.numero_registro_anterior_max", value = "16" },
+  { key = "m360.full_name_max", value = "125" },
+  { key = "m360.email_max", value = "100" },
+  { key = "m360.phone_max", value = "15" },
+  { key = "m360.address.street_type_max", value = "5" },
+  { key = "m360.address.street_name_max", value = "50" },
+  { key = "m360.address.number_type_max", value = "3" },
+  { key = "m360.address.number_qualifier_max", value = "3" },
+  { key = "m360.address.block_max", value = "3" },
+  { key = "m360.address.portal_max", value = "3" },
+  { key = "m360.address.staircase_max", value = "3" },
+  { key = "m360.address.floor_max", value = "3" },
+  { key = "m360.address.door_max", value = "3" },
+  { key = "m360.address.complement_max", value = "40" },
+  { key = "m360.address.locality_max", value = "30" },
+  { key = "m360.address.municipality_max", value = "30" },
+  { key = "m360.address.province_max", value = "2" },
+  { key = "m360.address.house_number_digits", value = "5" },
+  { key = "m360.address.postal_code_digits", value = "5" },
+  { key = "m360.po_box.number_digits", value = "10" },
+  { key = "m360.foreign_address.street_max", value = "148" },
+  { key = "m360.foreign_address.city_max", value = "30" },
+  { key = "m360.foreign_address.postal_code_max", value = "10" },
+  { key = "m360.foreign_address.region_max", value = "30" },
+  { key = "m360.account.holder_name_max", value = "25" },
+  { key = "m347.inmueble.referencia_catastral_max", value = "25" },
+  { key = "aeat.envelope.closer_extent", value = "18" },
+  { key = "export.signed_amount.component_lengths", value = "1.13.2,1.8.2" },
+  { key = "export.signed_magnitude.component_lengths", value = "1.13" },
+  { key = "aeat.envelope.period_extent", value = "2" },
+  { key = "aeat.amendment.sustitutiva_marker", value = "S" },
+  { key = "aeat.amendment.complementaria_marker", value = "C" },
+  { key = "aeat.page.continuation_marker", value = "C" },
+  { key = "aeat.declaracion.idioma_codes", value = "E,G,C,V" },
+  { key = "m720.asset_class_codes", value = "C,V,I,S,B" },
+  { key = "m720.issuer_country_marker", value = "Z" },
+  { key = "m100.eo_agraria.indice_corrector_slots", value = "8" },
+  { key = "census.superseded_form", value = "037" },
+  { key = "m303.prorrata.activity_row_types", value = "G,E" },
+  { key = "aeat.tipo_declaracion.codes", value = "C,D,G,I,N,V,U,X,B,R" },
+]

@@ -3,14 +3,22 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
+from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.hashing import sha256_file
+from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
+from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
+    FormContextFieldBlock,
     FormDesignSource,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -21,25 +29,70 @@ from ..record_design_labels import (
     read_record_design,
     record_design_sidecars,
 )
-from .generation_constants import _RECORD_MATCH_FLOOR
-from .generation_models import _Build, _Position
+from .generation_constants import RECORD_MATCH_FLOOR
+from .generation_models import Build, Position
 from .official_text import description_box, node_slug
 
 
 def _attach_export_field(
-    position: _Position,
+    position: Position,
     record: ExportRecordDefinition,
     export_field: ExportFieldDefinition,
     manual_bindings: Mapping[str, bool],
+    profile_contexts: Mapping[tuple[str, str], FormContextFieldBlock],
 ) -> None:
     position.records.setdefault(record.id, record)
     if export_field.casilla_id is not None:
         position.casilla_ids.append(export_field.casilla_id)
     elif export_field.binding is not None and manual_bindings.get(export_field.binding) is False:
         position.binding_ids.append(export_field.binding)
+    elif (context := profile_contexts.get((record.id, export_field.id))) is not None:
+        position.context_fields.append(context.model_copy(update={"official_heading": position.description}))
     elif export_field.literal is not None and position.literal is None:
         position.literal = export_field.literal
         position.literal_decimals = export_field.decimals
+
+
+def _profile_export_contexts(modelo_id: str, revision: ModeloRevision) -> dict[tuple[str, str], FormContextFieldBlock]:
+    """Address scalar profile fields through their exact export owners, without creating inputs."""
+    bindings = {binding.id: binding for binding in revision.bindings}
+    contexts: dict[tuple[str, str], FormContextFieldBlock] = {}
+    for layout in derive_export_layouts_from_bindings(revision):
+        if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
+            continue
+        for record, field, binding in _scalar_profile_fields(layout.records, bindings):
+            coordinate = (record.id, field.id)
+            if coordinate in contexts:
+                raise RegistryValidationError("profile context field has multiple export layout owners")
+            contexts[coordinate] = FormContextFieldBlock(
+                id="context",
+                export_layout_id=layout.id,
+                export_record_id=record.id,
+                export_field_id=field.id,
+                heading_key=binding_locale_key(modelo_id, binding.id, "label"),
+            )
+    return contexts
+
+
+def _scalar_profile_fields(
+    records: Sequence[ExportRecordDefinition], bindings: Mapping[str, BindingDefinition]
+) -> Iterator[tuple[ExportRecordDefinition, ExportFieldDefinition, BindingDefinition]]:
+    """Yield each field of a non-repeating record that a scalar profile binding alone supplies."""
+    for record in records:
+        if record.repeat is not None:
+            continue
+        for field in record.fields:
+            binding = None if field.binding is None else bindings.get(field.binding)
+            if field.casilla_id is None and binding is not None and _is_scalar_profile_binding(binding):
+                yield record, field, binding
+
+
+def _is_scalar_profile_binding(binding: BindingDefinition) -> bool:
+    return (
+        isinstance(binding.provider, ProfileProvider)
+        and binding.value.channel is not BindingValueChannel.ROW_SET
+        and not binding.provider.repeating
+    )
 
 
 def _match_records(
@@ -69,12 +122,12 @@ def _best_design_record(
     for design_record, rows in design.items():
         hits = sum(1 for offset, length in coordinates if offset in rows and rows[offset].length in (length, None))
         ratio = hits / len(coordinates)
-        if ratio >= _RECORD_MATCH_FLOOR and (best is None or ratio > best[0]):
+        if ratio >= RECORD_MATCH_FLOOR and (best is None or ratio > best[0]):
             best = (ratio, design_record)
     return None if best is None else best[1]
 
 
-def _design_rows(build: _Build, sources: Mapping[str, SourceReference]) -> dict[str, dict[int, RecordDesignRow]]:
+def _design_rows(build: Build, sources: Mapping[str, SourceReference]) -> dict[str, dict[int, RecordDesignRow]]:
     try:
         sidecars = record_design_sidecars(build.revision.source_refs, sources)
     except RecordDesignUnavailableError as error:
@@ -118,47 +171,50 @@ def _field_positions_by_design(
 
 
 def _append_design_positions(
-    build: _Build,
+    build: Build,
     design: Mapping[str, Mapping[int, RecordDesignRow]],
     fields_at: Mapping[tuple[str, int], Sequence[tuple[ExportRecordDefinition, ExportFieldDefinition]]],
     manual_bindings: Mapping[str, bool],
+    profile_contexts: Mapping[tuple[str, str], FormContextFieldBlock],
 ) -> None:
     for design_record, rows in design.items():
         page_key = node_slug(design_record)
         for offset, row in rows.items():
             label = row.label or None
-            position = _Position(
+            position = Position(
                 page_key=page_key,
                 page_ref=design_record,
                 description=label,
                 box=None if label is None else description_box(label),
             )
             for record, export_field in fields_at.get((design_record, offset), ()):
-                _attach_export_field(position, record, export_field, manual_bindings)
+                _attach_export_field(position, record, export_field, manual_bindings, profile_contexts)
             build.positions.append(position)
 
 
 def _append_unmatched_positions(
-    build: _Build,
+    build: Build,
     unmatched: Sequence[tuple[ExportRecordDefinition, ExportFieldDefinition]],
     manual_bindings: Mapping[str, bool],
+    profile_contexts: Mapping[tuple[str, str], FormContextFieldBlock],
 ) -> None:
     for record, export_field in unmatched:
-        position = _Position(page_key=node_slug(record.id), page_ref=record.id, description=None, box=None)
-        _attach_export_field(position, record, export_field, manual_bindings)
-        if position.casilla_ids or position.binding_ids:
+        position = Position(page_key=node_slug(record.id), page_ref=record.id, description=None, box=None)
+        _attach_export_field(position, record, export_field, manual_bindings, profile_contexts)
+        if position.casilla_ids or position.binding_ids or position.context_fields:
             build.positions.append(position)
 
 
-def _record_design_positions(
-    build: _Build,
+def record_design_positions(
+    build: Build,
     sources: Mapping[str, SourceReference],
     records: Sequence[ExportRecordDefinition],
     manual_bindings: Mapping[str, bool],
 ) -> None:
     """Lay out positions from the cited record design, joining export fields by record and offset."""
     design = _design_rows(build, sources)
+    profile_contexts = _profile_export_contexts(build.modelo_id, build.revision)
     matched = _match_records(records, design)
     fields_at, unmatched = _field_positions_by_design(records, design, matched)
-    _append_design_positions(build, design, fields_at, manual_bindings)
-    _append_unmatched_positions(build, unmatched, manual_bindings)
+    _append_design_positions(build, design, fields_at, manual_bindings, profile_contexts)
+    _append_unmatched_positions(build, unmatched, manual_bindings, profile_contexts)

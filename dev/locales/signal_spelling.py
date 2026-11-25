@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from itertools import combinations
 from pathlib import Path
+from typing import Final
 
-from ._spelling import SpellingToolError, load_dictionaries
 from .signal_contracts import SpellingInventory
 from .signal_discovery import signal_key_domain
 from .signal_spelling_enrollment import (
@@ -13,6 +14,35 @@ from .signal_spelling_enrollment import (
     enroll_spelling_locale,
     excluded_structural_inventory,
 )
+from .spelling import SpellingToolError, load_dictionaries
+
+# Exact lowercase search aliases: IBI is named in the ibi_* category labels,
+# and IRPF in _data/terminology/concepts/irpf.toml. These are accepted only on
+# bilingual search-keyword surfaces, never as general prose vocabulary.
+_SPANISH_SEARCH_ABBREVIATIONS: Final[frozenset[str]] = frozenset({"ibi", "irpf"})
+# Exact lowercase aliases in the three keyword families below. They name
+# TGSS, PC, ADSL, ITV, Cadrumo, URL, DEHú, REPL, BOE and TUI. The category
+# aliases reflect bank-statement terminology; palette/navigation aliases name
+# their actual services, link format and views. Search consumes lowercase
+# words, and dehu deliberately supports queries without DEHú's accent.
+# This is a closed alias inventory, not a rule accepting arbitrary acronyms,
+# name variants, accent loss, or these tokens in translated prose.
+_SEARCH_NAME_AND_INITIALISM_ALIASES: Final[frozenset[str]] = frozenset(
+    {"tgss", "pc", "adsl", "itv", "cadrumo", "url", "dehu", "repl", "boe", "tui"}
+)
+# RAE attests gestoría, subcontratación and butano:
+# https://dle.rae.es/gestor%C3%ADa
+# https://dle.rae.es/subcontrataci%C3%B3n
+# https://dle.rae.es/butano
+# These dictionary gaps are accepted only in their actual category search data.
+# _amortizable_keywords unions all four catalogues, and _words folds accents on
+# both aliases and input. Neither translated labels nor other keys inherit them.
+_CATEGORY_SEARCH_ALIAS_DICTIONARY_GAPS: Final[dict[str, frozenset[str]]] = {
+    "desktop.ledger.category_keywords.asesoria_contable": frozenset({"gestoria"}),
+    "desktop.ledger.category_keywords.asesoria_fiscal": frozenset({"gestoria"}),
+    "desktop.ledger.category_keywords.subcontratacion": frozenset({"subcontratacion"}),
+    "desktop.ledger.category_keywords.suministros_home_office_gas": frozenset({"butano"}),
+}
 
 
 def spellcheck_catalogues(
@@ -94,6 +124,8 @@ def spellcheck_catalogues(
             failure_inventory,
             [failure],
         )
+    _discard_known_search_keywords(unknown_by_cell, dictionaries.get("es"), dictionaries.get("en"))
+    unknown_words = _collect_unknown_words(unknown_by_cell)
     spelling = {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()}
     unknown_findings: list[dict[str, object]] = [
         {
@@ -138,3 +170,81 @@ def spellcheck_catalogues(
         spelling_inventory,
         unknown_findings,
     )
+
+
+def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
+    """Accept Spanish search terms with omitted diacritics in keyword fields."""
+    if word in _SPANISH_SEARCH_ABBREVIATIONS:
+        return True
+    lookup = getattr(dictionary, "lookup", None)
+    if not callable(lookup):
+        return False
+    if lookup(word):
+        return True
+    # Search keywords deliberately omit Spanish accents. Restore zero, one, or
+    # two diacritics and require an exact Spanish dictionary entry; unrelated
+    # misspellings therefore remain visible to the locale audit.
+    letters = tuple((index, char) for index, char in enumerate(word.casefold()) if char in "aeioun")
+    accent = {"a": "á", "e": "é", "i": "í", "o": "ó", "u": "ú", "n": "ñ"}
+    for count in (1, 2):
+        for selected in combinations(letters, count):
+            candidate = list(word.casefold())
+            for index, char in selected:
+                candidate[index] = accent[char]
+            if lookup("".join(candidate)):
+                return True
+    return False
+
+
+def is_search_keyword_surface(key: str) -> bool:
+    """Identify the three presentation families that declare search aliases."""
+    return (
+        key.startswith("desktop.ledger.category_keywords.")
+        or key.startswith("desktop.palette.keywords.")
+        or (key.startswith("navigation.view.") and key.endswith(".keywords"))
+    )
+
+
+def _is_known_search_keyword(word: str, spanish_dictionary: object | None, english_dictionary: object | None) -> bool:
+    """Check an alias against the exact inventory and its two dictionaries."""
+    english_lookup = getattr(english_dictionary, "lookup", None)
+    return (
+        word in _SEARCH_NAME_AND_INITIALISM_ALIASES
+        or (callable(english_lookup) and bool(english_lookup(word)))
+        or (spanish_dictionary is not None and _is_spanish_search_keyword(word, spanish_dictionary))
+    )
+
+
+def _discard_known_search_keywords(
+    unknown_by_cell: dict[tuple[str, str], set[str]],
+    spanish_dictionary: object | None,
+    english_dictionary: object | None,
+) -> None:
+    """Validate bilingual aliases on the three declared search-keyword surfaces.
+
+    Palette actions consume their own keywords and navigation-view keywords
+    through ``scoreAction``; ledger choices consume category keywords through
+    ``categoryKeywords``. These are searchable aliases, including English and
+    accentless Spanish, rather than the translated labels beside them.
+    """
+    english_lookup = getattr(english_dictionary, "lookup", None)
+    if spanish_dictionary is None and not callable(english_lookup):
+        return
+    for cell, words in tuple(unknown_by_cell.items()):
+        _locale, key = cell
+        if not is_search_keyword_surface(key):
+            continue
+        exact_aliases = _CATEGORY_SEARCH_ALIAS_DICTIONARY_GAPS.get(key, frozenset())
+        accepted = {
+            word
+            for word in words
+            if word in exact_aliases or _is_known_search_keyword(word, spanish_dictionary, english_dictionary)
+        }
+        words.difference_update(accepted)
+        if not words:
+            del unknown_by_cell[cell]
+
+
+def _collect_unknown_words(unknown_by_cell: dict[tuple[str, str], set[str]]) -> set[tuple[str, str]]:
+    """Collect remaining unknown words by locale for the audit inventory."""
+    return {(locale, word) for (locale, _key), words in unknown_by_cell.items() for word in words}

@@ -1,4 +1,5 @@
 import type { TerminalKind } from "./host";
+import { readDockLayout, type DockLayout } from "./docking";
 
 export type PanelTab = Exclude<TerminalKind, "tui"> | "logs";
 export type Maximized = "agent" | "docs" | "tui" | "panel" | null;
@@ -23,19 +24,82 @@ export type Prefs = {
 };
 
 export type ProfileView = {
-  section: string;
-  filter: "all" | "missing" | "required" | "saved";
-  expanded: string[];
+  /** Which details are listed. */
+  show: "all" | "unset" | "required" | "filled";
+  group: "section" | "status" | "none";
+  sort: "form" | "missing" | "alpha";
+  /** The groups the person closed; every other one is open. */
   collapsed: string[];
 };
 
+// What a shell from before the show filter stored as its filter.
+const LEGACY_FILTER = {
+  missing: "unset",
+  required: "required",
+  saved: "filled",
+} as const;
+const legacyShow = (filter: unknown): ProfileView["show"] =>
+  typeof filter === "string" && Object.hasOwn(LEGACY_FILTER, filter)
+    ? LEGACY_FILTER[filter as keyof typeof LEGACY_FILTER]
+    : "all";
+
+/** The Ledger page's sections: four tabs, and three under its setup menu. */
+export const LEDGER_SECTIONS = [
+  "movements",
+  "invoices",
+  "documents",
+  "assets",
+  "rules",
+  "registers",
+  "health",
+] as const;
+export type LedgerSection = (typeof LEDGER_SECTIONS)[number];
+
+/** How the Ledger page is laid out. Presentation only: names of columns,
+ * groupings and views the page defines, and sizes. Never a period, a value,
+ * a search or anything staged. */
+export type LedgerView = {
+  section: LedgerSection;
+  /** The movements grid's columns, by the ids the page gives them. */
+  columns: {
+    hidden: string[];
+    order: string[];
+    /** Widths in CSS pixels, by column id. */
+    widths: Record<string, number>;
+  };
+  density: "compact" | "comfortable";
+  /** The grouping key the page offers, or null for none. */
+  groupBy: string | null;
+  /** The saved view chosen, by the page's id for it. */
+  savedView: string | null;
+  inspectorOpen: boolean;
+  /** The inspector's width in CSS pixels; null keeps the token's. */
+  inspectorWidth: number | null;
+  /** The format the last export was written in, as the ledger served it; empty
+   * until one is chosen. */
+  exportFormat: string;
+};
+
 export type Layout = {
-  page: "docs" | "calendar" | "profile";
+  docking: DockLayout | null;
+  page:
+    | "docs"
+    | "home"
+    | "calendar"
+    | "profile"
+    | "ledger"
+    | "withholding"
+    | "reference"
+    | "operations"
+    | "declarations"
+    | "browser"
+    | "aeat-sync";
   maximized: Maximized;
   /** Null follows the host default until the person chooses a level. */
   logLevel: number | null;
   calendarView: "months" | "list";
   profileView: ProfileView;
+  ledgerView: LedgerView;
   /** The agent column, always beside the rail. */
   agentShown: boolean;
   /** The agent column's share of the window width. */
@@ -60,15 +124,26 @@ export const DEFAULT_PREFS: Prefs = {
 };
 
 export const DEFAULT_LAYOUT: Layout = {
+  docking: null,
   page: "profile",
   maximized: null,
   logLevel: null,
   calendarView: "months",
   profileView: {
-    section: "",
-    filter: "all",
-    expanded: ["identity", "contact"],
+    show: "all",
+    group: "section",
+    sort: "form",
     collapsed: [],
+  },
+  ledgerView: {
+    section: "movements",
+    columns: { hidden: [], order: [], widths: {} },
+    density: "compact",
+    groupBy: null,
+    savedView: null,
+    inspectorOpen: false,
+    inspectorWidth: null,
+    exportFormat: "",
   },
   agentShown: true,
   agentRatio: 0.24,
@@ -115,6 +190,57 @@ function identifiers(value: unknown, fallback: string[]): string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string")
     ? [...new Set(value)]
     : fallback;
+}
+
+// The shape of a name the Ledger page gives a column, grouping or view. Any
+// other stored text is dropped: what is kept here is never free text.
+const VIEW_ID = /^[a-z][a-z0-9_.:-]{0,63}$/;
+const VIEW_IDS_MAX = 64;
+const viewId = (value: unknown): string | null =>
+  typeof value === "string" && VIEW_ID.test(value) ? value : null;
+const viewIds = (value: unknown): string[] =>
+  Array.isArray(value) && value.length <= VIEW_IDS_MAX
+    ? [...new Set(value.map(viewId).filter((id) => id !== null))]
+    : [];
+const width = (value: unknown): number | null =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 16 &&
+  value <= 4096
+    ? Math.round(value)
+    : null;
+
+function ledgerViewOf(value: unknown): LedgerView {
+  const stored = object(value);
+  const columns = object(stored.columns);
+  const widths: Record<string, number> = {};
+  for (const [id, size] of Object.entries(object(columns.widths)).slice(
+    0,
+    VIEW_IDS_MAX,
+  )) {
+    const kept = width(size);
+    if (viewId(id) !== null && kept !== null) widths[id] = kept;
+  }
+  return {
+    section: pick(stored.section, LEDGER_SECTIONS, "movements"),
+    columns: {
+      hidden: viewIds(columns.hidden),
+      order: viewIds(columns.order),
+      widths,
+    },
+    density: pick(
+      stored.density,
+      ["compact", "comfortable"] as const,
+      "compact",
+    ),
+    groupBy: viewId(stored.groupBy),
+    savedView: viewId(stored.savedView),
+    inspectorOpen:
+      typeof stored.inspectorOpen === "boolean" ? stored.inspectorOpen : false,
+    inspectorWidth: width(stored.inspectorWidth),
+    exportFormat:
+      typeof stored.exportFormat === "string" ? stored.exportFormat : "",
+  };
 }
 
 // Every stored field is validated: browser storage is a convenience that may
@@ -177,9 +303,24 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       fontSize: pick(p.fontSize, TERMINAL_FONT_SIZES, DEFAULT_PREFS.fontSize),
     },
     layout: {
+      docking: readDockLayout(l.docking),
+      // The Browser page is saved with the rest but never restored: opening it
+      // starts a browser on the profile's session, which a launch must not do
+      // by itself.
       page: pick(
         l.page,
-        ["docs", "calendar", "profile"] as const,
+        [
+          "docs",
+          "home",
+          "calendar",
+          "profile",
+          "ledger",
+          "withholding",
+          "reference",
+          "operations",
+          "declarations",
+          "aeat-sync",
+        ] as const,
         l.page === undefined &&
           (typeof l.tuiShown === "boolean" || typeof l.docsShown === "boolean")
           ? "docs"
@@ -197,23 +338,27 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         DEFAULT_LAYOUT.calendarView,
       ),
       profileView: {
-        section: typeof profile.section === "string" ? profile.section : "",
-        filter: pick(
-          profile.filter,
-          ["all", "missing", "required", "saved"] as const,
-          "all",
+        show: pick(
+          profile.show,
+          ["all", "unset", "required", "filled"] as const,
+          legacyShow(profile.filter),
         ),
-        expanded: identifiers(
-          profile.expanded,
-          DEFAULT_LAYOUT.profileView.expanded,
+        group: pick(
+          profile.group,
+          ["section", "status", "none"] as const,
+          "section",
         ),
+        sort: pick(profile.sort, ["form", "missing", "alpha"] as const, "form"),
         collapsed: identifiers(profile.collapsed, []),
       },
+      ledgerView: ledgerViewOf(l.ledgerView),
       agentShown:
         typeof l.agentShown === "boolean"
           ? l.agentShown
           : DEFAULT_LAYOUT.agentShown,
       agentRatio: share(l.agentRatio, DEFAULT_LAYOUT.agentRatio, 0.1, 0.9),
+      // A TUI the person left shown is part of their saved arrangement; the
+      // account still withholds its session until a profile is signed in.
       tuiShown:
         typeof l.tuiShown === "boolean" ? l.tuiShown : DEFAULT_LAYOUT.tuiShown,
       docsShown:

@@ -109,7 +109,7 @@ def test_a_domestic_ticket_from_a_non_resident_issuer_does_not_trigger_case_3() 
 
 def test_an_ordinaria_is_not_evaluated_under_case_3() -> None:
     """Ordinaria/rectificativa already require the tax id unconditionally; this predicate is simplificada-only."""
-    invoice = _invoice(invoice_class=require_invoice_class("ORDINARIA"), counterparty_tax_id="B12345674")
+    invoice = _invoice(invoice_class=require_invoice_class("ORDINARIA"), counterparty_tax_id="B00015016")
     profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
@@ -117,7 +117,7 @@ def test_an_ordinaria_is_not_evaluated_under_case_3() -> None:
 
 def test_a_simplificada_that_already_carries_a_tax_id_has_nothing_further_to_ask() -> None:
     """A present tax id already satisfies the law; the predicate has nothing to add."""
-    invoice = _invoice(counterparty_tax_id="B12345674")
+    invoice = _invoice(counterparty_tax_id="B00015016")
     profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
@@ -133,7 +133,7 @@ def test_a_foreign_simplificada_does_not_trigger_case_3() -> None:
 
 def test_a_received_invoice_with_a_tax_id_does_not_trigger_case_3() -> None:
     """The reachable RECEIVED case: a present tax id already answers everything case 3.º could ask."""
-    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674")
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B00015016")
     profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
@@ -158,7 +158,7 @@ def test_the_kind_guard_holds_even_for_a_shape_invoice_itself_already_refuses() 
     isolation, independent of whether ``Invoice`` will always guarantee the
     combination cannot occur.
     """
-    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674").model_copy(
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B00015016").model_copy(
         update={"counterparty_tax_id": None},
     )
     profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))

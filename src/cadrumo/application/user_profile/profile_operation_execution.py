@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID
 
@@ -10,22 +12,27 @@ from pydantic import BaseModel, SecretStr
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.logging import get_logger
 from ...core.operations import (
     OperationEffect,
+    profile_operation_subject,
 )
-from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
+from ...domain.user_profile.errors import UserProfileValidationError
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
+from .ascendant_rows import replace_profile_ascendants
 from .bundle_export import export_profile_bundle
 from .bundle_export_contracts import (
     ProfileBundleExportRequest,
     ProfileBundleExportTransport,
 )
+from .capsule_record import ProfileRecordConflictError
 from .descendant_rows import replace_profile_descendants
 from .fact_write import apply_manager_profile_field_mutation
 from .plantilla_media_rows import PlantillaMediaWriteSurface, remove_plantilla_media_year, set_plantilla_media_year
 from .profile_operation_contracts import (
+    PROFILE_ASCENDANTS_PHASES,
     PROFILE_BUNDLE_EXPORT_PHASES,
     PROFILE_COMPLETE_SETUP_PHASES,
     PROFILE_DESCENDANTS_PHASES,
@@ -35,6 +42,8 @@ from .profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
     PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
     PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+    ProfileAscendantsOperationRequest,
+    ProfileAscendantsOperationResult,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationRequest,
     ProfileCompleteSetupOperationResult,
@@ -54,6 +63,7 @@ from .profile_operation_contracts import (
     ProfileRepeatableRowUpdateOperationRequest,
 )
 from .profile_record_repository import ProfileRecordRepository
+from .rental_records import RentalLedgerReferenceReader
 from .section_rows import (
     ProfileRepeatableRowChangeOutcome,
     add_profile_repeatable_section_row,
@@ -67,11 +77,34 @@ from .view_operation import (
 from .view_reader import read_profile_view_page
 
 __all__: list[str] = []
+_LOGGER = get_logger(__name__)
+
+
+@asynccontextmanager
+async def _profile_mutation_section(context: OperationExecutorContext) -> AsyncGenerator[None]:
+    """Keep a refused compare-and-swap distinct from an ambiguous write."""
+    async with context.cancellation.irreversible_section():
+        try:
+            yield
+        except ProfileRecordConflictError as error:
+            await context.events.effect(OperationEffect.NONE)
+            details = error.context or {}
+            _LOGGER.warning(
+                "profile edit conflict operation=%s definition=%s fields=%s "
+                "expected_revision=%s current_revision=%s digest_matches=%s",
+                context.identity.operation_id,
+                context.identity.definition_id,
+                details.get("field_paths", ()),
+                details.get("expected_revision"),
+                details.get("current_revision"),
+                details.get("digest_matches"),
+            )
+            raise
 
 
 def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
-    if request.subject_ref != _profile_subject(str(profile_id)):
+    if request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("user-profile operation subject does not match its exact profile")
     if require_active_bucket_id() != str(profile_id):
         raise ValueError("user-profile operation requires its profile to be active")
@@ -110,7 +143,7 @@ class ProfileFieldMutationOperationExecutor:
         await context.events.phase(PROFILE_FIELD_MUTATION_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_FIELD_MUTATION_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     apply_manager_profile_field_mutation,
@@ -153,7 +186,7 @@ class ProfilePatchOperationExecutor:
         flow = build_setup_flow(context.authority_operation)
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_PATCH_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     apply_profile_patch,
@@ -195,7 +228,7 @@ class ProfilePlantillaMediaOperationExecutor:
         await context.events.phase(PROFILE_PLANTILLA_MEDIA_PHASES[1])
 
         async def publish() -> str:
-            async with context.cancellation.irreversible_section():
+            async with _profile_mutation_section(context):
                 await context.events.effect(OperationEffect.UNKNOWN)
                 if isinstance(payload.change, ProfilePlantillaMediaSet):
                     mutation = await asyncio.to_thread(
@@ -245,23 +278,33 @@ class ProfileDescendantsOperationExecutor:
         request: OperationRequest[ProfileDescendantsOperationRequest],
         context: OperationExecutorContext,
     ) -> str:
-        """Publish count, canonical rows and orphan clears through one guarded CAS."""
+        """Publish count, canonical rows and orphan clears through one guarded CAS.
+
+        A family the declaration does not hold is refused before anything is written,
+        so that refusal settles with no effect.
+        """
         payload = request.payload
         _require_active_profile_subject(request, payload.profile_id)
         await context.events.phase(PROFILE_DESCENDANTS_PHASES[0])
         await context.events.phase(PROFILE_DESCENDANTS_PHASES[1])
 
         async def publish() -> str:
-            async with context.cancellation.irreversible_section():
+            async with _profile_mutation_section(context):
                 await context.events.effect(OperationEffect.UNKNOWN)
-                mutation = await asyncio.to_thread(
-                    replace_profile_descendants,
-                    profile_id=str(payload.profile_id),
-                    descendants=payload.descendants,
-                    expected_revision=payload.expected_revision,
-                    expected_content_digest=payload.expected_content_digest,
-                    operation=context.authority_operation,
-                )
+                try:
+                    mutation = await asyncio.to_thread(
+                        replace_profile_descendants,
+                        profile_id=str(payload.profile_id),
+                        descendants=payload.descendants,
+                        add_row=payload.add_row,
+                        remove_row_index=payload.remove_row_index,
+                        expected_revision=payload.expected_revision,
+                        expected_content_digest=payload.expected_content_digest,
+                        operation=context.authority_operation,
+                    )
+                except UserProfileValidationError:
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
                 result_ref = await _result_reference(
                     ProfileDescendantsOperationResult(
                         profile_id=payload.profile_id,
@@ -280,6 +323,59 @@ class ProfileDescendantsOperationExecutor:
         return result_ref
 
 
+class ProfileAscendantsOperationExecutor:
+    """Retain one atomic ascendant publication through cancellation and settlement."""
+
+    async def execute(
+        self,
+        request: OperationRequest[ProfileAscendantsOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        """Publish count, canonical rows and orphan clears through one guarded CAS.
+
+        A set the declaration does not hold is refused before anything is written,
+        so that refusal settles with no effect.
+        """
+        payload = request.payload
+        _require_active_profile_subject(request, payload.profile_id)
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[0])
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[1])
+
+        async def publish() -> str:
+            async with _profile_mutation_section(context):
+                await context.events.effect(OperationEffect.UNKNOWN)
+                try:
+                    mutation = await asyncio.to_thread(
+                        replace_profile_ascendants,
+                        profile_id=str(payload.profile_id),
+                        ascendants=payload.ascendants,
+                        add_row=payload.add_row,
+                        remove_row_index=payload.remove_row_index,
+                        expected_revision=payload.expected_revision,
+                        expected_content_digest=payload.expected_content_digest,
+                        operation=context.authority_operation,
+                    )
+                except UserProfileValidationError:
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
+                result_ref = await _result_reference(
+                    ProfileAscendantsOperationResult(
+                        profile_id=payload.profile_id,
+                        record_revision=mutation.record.record_revision,
+                        content_digest=mutation.record.content_digest,
+                        total=mutation.total,
+                        changed=mutation.changed,
+                    ),
+                    context,
+                )
+                await context.events.effect(OperationEffect.UPDATED if mutation.changed else OperationEffect.NONE)
+                return result_ref
+
+        result_ref = await await_cancellation_complete(publish(), task_name="profile-ascendants-publication")
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[2])
+        return result_ref
+
+
 class ProfileRepeatableRowMutationOperationExecutor:
     """Delegate one whole repeatable row to the shared schema and fact-write authorities."""
 
@@ -294,17 +390,19 @@ class ProfileRepeatableRowMutationOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     add_profile_repeatable_section_row,
                     profile_id=str(payload.profile_id),
                     section_key=payload.section_key,
                     values=values,
+                    parts={item.field_key: item.parts for item in payload.part_values},
                     expected_revision=payload.expected_revision,
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    authority=context.authority_operation,
                 ),
                 task_name="profile-repeatable-row-mutation",
             )
@@ -335,7 +433,7 @@ class ProfileRepeatableRowUpdateOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_UPDATE_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     update_profile_repeatable_section_row,
@@ -343,11 +441,13 @@ class ProfileRepeatableRowUpdateOperationExecutor:
                     section_key=payload.section_key,
                     row_key=payload.row_key,
                     values=values,
+                    parts={item.field_key: item.parts for item in payload.part_values},
                     clear_fields=payload.clear_fields,
                     expected_revision=payload.expected_revision,
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    authority=context.authority_operation,
                 ),
                 task_name="profile-repeatable-row-update",
             )
@@ -360,6 +460,10 @@ class ProfileRepeatableRowUpdateOperationExecutor:
 class ProfileRepeatableRowRemoveOperationExecutor:
     """Remove one exact row through the canonical schema/tombstone writer."""
 
+    def __init__(self, rental_ledger_references: RentalLedgerReferenceReader) -> None:
+        """Retain the read of the ledger references that keep a property or lease from being removed."""
+        self._rental_ledger_references = rental_ledger_references
+
     async def execute(
         self,
         request: OperationRequest[ProfileRepeatableRowRemoveOperationRequest],
@@ -370,7 +474,7 @@ class ProfileRepeatableRowRemoveOperationExecutor:
         await context.events.phase(PROFILE_REPEATABLE_ROW_REMOVE_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_REMOVE_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     remove_profile_repeatable_section_row,
@@ -381,6 +485,7 @@ class ProfileRepeatableRowRemoveOperationExecutor:
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    rental_ledger_references=self._rental_ledger_references,
                 ),
                 task_name="profile-repeatable-row-remove",
             )
@@ -403,7 +508,7 @@ class ProfileCompleteSetupOperationExecutor:
         await context.events.phase(PROFILE_COMPLETE_SETUP_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_COMPLETE_SETUP_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     lambda: ProfileRecordRepository.for_current_session(

@@ -27,6 +27,7 @@ from .declarations_workspace_contracts import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 
 def project_declarations_portfolio(
@@ -38,6 +39,7 @@ def project_declarations_portfolio(
     filing_records: ModeloRecordCatalogue,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...],
     zone_observations: tuple[DeclarationsWorkspaceZoneObservationV1, ...],
+    profile: UserProfileRecord | None,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None,
 ) -> DeclarationsWorkspaceProjectionV1:
     """Keep each row visible; invalid joins or registry coordinates refuse only that row.
@@ -45,6 +47,11 @@ def project_declarations_portfolio(
     The strict projector still admits every readable partition. A refused
     declaration carries only its natural address and an unreadable summary;
     its calculation, amount and filing history never become trusted facts.
+    ``profile`` narrows the new-declaration choices to the filing schedules
+    its facts select.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     empty = project_declarations_workspace(
         operation=operation,
@@ -60,10 +67,7 @@ def project_declarations_portfolio(
     filings: list[DeclarationsWorkspaceFilingRefV1] = []
     lifecycle: list[DeclarationsWorkspaceLifecycleRefV1] = []
     refused = False
-    declarations_observable = empty.zones[0].availability in {
-        DeclarationsWorkspaceAvailability.AVAILABLE,
-        DeclarationsWorkspaceAvailability.STALE,
-    }
+    declarations_observable = empty.zones[0].availability.is_observable
     for unit in work_units.values():
         try:
             part = _project_work_unit_partition(
@@ -118,7 +122,7 @@ def project_declarations_portfolio(
                 ),
             }
         )
-        if zone.availability in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
+        if zone.availability.is_observable
         else zone
         for zone in empty.zones
     )
@@ -129,7 +133,7 @@ def project_declarations_portfolio(
         calculation_revisions=tuple(revisions),
         filings=tuple(filings),
         lifecycle=tuple(lifecycle),
-        creation_targets=declaration_targets(operation),
+        creation_targets=declaration_targets(operation, profile=profile),
     )
 
 

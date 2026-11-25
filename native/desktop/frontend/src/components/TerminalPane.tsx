@@ -8,6 +8,7 @@ import {
   type TerminalKind,
   type TerminalSession,
 } from "../shell/host";
+import { sessionFailedText } from "../shell/sessionWords";
 import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
 import { terminalFont } from "../shell/terminalFont";
@@ -28,18 +29,17 @@ export type TerminalApi = {
   selectAll(): void;
   clear(): void;
   paste(text: string): void;
+  /** Closes the session, running or ended, then opens a new one of the
+   * same kind. */
+  restart(): void;
 };
 
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
-// ConPTY may pass OSC ahead of its buffered screen repaint. Keep the cover
-// until output has settled, then wait for xterm to render that buffer.
-const TUI_PAINT_SETTLE_MS = 100;
 
 type Props = {
   host: Host;
   kind: TerminalKind;
-  target?: import("../ipc/contract").TerminalTarget;
   shown: boolean;
   theme: ITheme;
   fontSize: number;
@@ -47,7 +47,6 @@ type Props = {
   isShellChord: (event: KeyboardEvent) => boolean;
   onStatus: (kind: TerminalKind, status: TerminalStatus) => void;
   onMenu: (event: MouseEvent, kind: TerminalKind) => void;
-  onAppearanceToggle: () => void;
   register: (kind: TerminalKind, api: TerminalApi) => void;
   /** Render as the bottom panel's tab panel for this kind. */
   tabPanel?: boolean;
@@ -56,7 +55,6 @@ type Props = {
 export function TerminalPane({
   host,
   kind,
-  target,
   shown,
   theme,
   fontSize,
@@ -64,23 +62,21 @@ export function TerminalPane({
   isShellChord,
   onStatus,
   onMenu,
-  onAppearanceToggle,
   register,
   tabPanel,
 }: Props) {
   const t = useStrings();
   const container = useRef<HTMLDivElement>(null);
   const terminal = useRef<{ term: Terminal; fit: FitAddon } | null>(null);
-  // Optional terminals acquire resources only when first opened. Once used,
-  // keep their buffer and session while hidden; the account gate owns TUI.
-  const [activated, setActivated] = useState(kind === "tui" || shown);
+  // Terminals acquire resources only when first opened. Once used, keep their
+  // buffer and session while hidden.
+  const [activated, setActivated] = useState(shown);
   if (shown && !activated) setActivated(true);
   // The session effect runs once per pane; everything else it reads is live.
   const live = useRef({
     isShellChord,
     onStatus,
     onMenu,
-    onAppearanceToggle,
     register,
     theme,
     fontSize,
@@ -91,7 +87,6 @@ export function TerminalPane({
     isShellChord,
     onStatus,
     onMenu,
-    onAppearanceToggle,
     register,
     theme,
     fontSize,
@@ -99,7 +94,6 @@ export function TerminalPane({
     shown,
   };
   const [unavailable, setUnavailable] = useState(false);
-  const [loading, setLoading] = useState(kind === "tui");
   const [fontFamily, setFontFamily] = useState<string | null>(null);
 
   useEffect(() => {
@@ -145,11 +139,15 @@ export function TerminalPane({
 
     let disposed = false;
     let session: TerminalSession | null = null;
+    // The session whose process has ended: the host keeps it until it is
+    // closed or replaced.
+    let ended: TerminalSession | null = null;
     let exited = false;
-    let ready = kind !== "tui";
-    let readyReceived = false;
-    let revealAfterRender = false;
-    let revealTimer = 0;
+    // Each open is one attempt; the events and the open of an earlier
+    // attempt are stale once a restart begins.
+    let attempt = 0;
+    let opening: Promise<void> = Promise.resolve();
+    let restarting = false;
     let mouseTracking = false;
     let queue = Promise.resolve();
     let openingInput: Uint8Array[] = [];
@@ -159,23 +157,7 @@ export function TerminalPane({
     };
     const status = (next: TerminalStatus) => {
       if (disposed) return;
-      if (next.phase === "exited" || next.phase === "failed") {
-        window.clearTimeout(revealTimer);
-        readyReceived = false;
-        revealAfterRender = false;
-        ready = true;
-        setLoading(false);
-      }
       live.current.onStatus(kind, next);
-    };
-    const settlePresentation = () => {
-      if (!readyReceived || ready || disposed || exited) return;
-      revealAfterRender = false;
-      window.clearTimeout(revealTimer);
-      revealTimer = window.setTimeout(() => {
-        revealAfterRender = true;
-        term.refresh(0, term.rows - 1);
-      }, TUI_PAINT_SETTLE_MS);
     };
 
     // Input is queued in order and never dropped: the host's write queue
@@ -200,63 +182,61 @@ export function TerminalPane({
     const start = () => {
       clearOpeningInput();
       exited = false;
-      ready = kind !== "tui";
-      readyReceived = false;
-      window.clearTimeout(revealTimer);
-      revealAfterRender = false;
-      setLoading(!ready);
+      ended = null;
+      const current = ++attempt;
       term.reset();
       status({ phase: "starting" });
-      host
-        .openTerminal(
-          target ?? kind,
-          { cols: term.cols, rows: term.rows },
-          (event) => {
-            if (disposed) return;
-            if (event.type === "data") {
-              // Acknowledge only what xterm has drawn: the host pauses the PTY
-              // instead of dropping output when the view falls behind.
-              term.write(event.bytes, () => {
-                event.drawn();
-                settlePresentation();
-              });
-            } else if (event.type === "started") {
-              // A spawned process may still be resuming sign-in or composing
-              // its first screen. Only the TUI's drawn readiness reveals it.
-              if (kind !== "tui") status({ phase: "running" });
-            } else if (event.type === "exited") {
-              clearOpeningInput();
-              session = null;
-              exited = true;
-              mouseTracking = false;
-              term.write(
-                `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
-              );
-              status({ phase: "exited", code: event.code });
-            } else {
-              clearOpeningInput();
-              session = null;
-              exited = true;
-              term.write(
-                `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
-              );
-              status({ phase: "failed", message: event.message });
-            }
-          },
-        )
-        .then((opened) => {
-          if (disposed || exited) {
+      let opened: TerminalSession | null = null;
+      opening = host
+        .openTerminal(kind, { cols: term.cols, rows: term.rows }, (event) => {
+          if (disposed || current !== attempt) return;
+          if (event.type === "data") {
+            // Acknowledge only what xterm has drawn: the host pauses the PTY
+            // instead of dropping output when the view falls behind.
+            term.write(event.bytes, event.drawn);
+          } else if (event.type === "started") {
+            status({ phase: "running" });
+          } else if (event.type === "exited") {
             clearOpeningInput();
-            void opened.close();
+            ended = session ?? opened;
+            session = null;
+            exited = true;
+            mouseTracking = false;
+            term.write(
+              `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
+            );
+            status({ phase: "exited", code: event.code });
+          } else {
+            clearOpeningInput();
+            ended = session ?? opened;
+            session = null;
+            exited = true;
+            term.write(
+              `\r\n${DIM}${sessionFailedText(live.current.t, event.message)}${RESET}\r\n`,
+            );
+            status({ phase: "failed", message: event.message });
+          }
+        })
+        .then(async (handle) => {
+          opened = handle;
+          if (disposed || current !== attempt) {
+            await handle.close().catch(() => undefined);
             return;
           }
-          session = opened;
+          if (exited) {
+            // Ended before the open answered: kept to be closed or replaced.
+            clearOpeningInput();
+            ended = handle;
+            return;
+          }
+          session = handle;
           const pending = openingInput;
           openingInput = [];
           for (const bytes of pending) send(bytes);
-          void opened.resize(term.cols, term.rows);
+          void handle.resize(term.cols, term.rows);
         })
         .catch((error: unknown) => {
+          if (disposed || current !== attempt) return;
           clearOpeningInput();
           if (error instanceof HostUnavailable) {
             setUnavailable(true);
@@ -268,8 +248,32 @@ export function TerminalPane({
         });
     };
 
+    // A restart closes first: the host refuses a second live session of a
+    // kind, so the new one opens only once the old one has settled.
+    const restart = () => {
+      if (disposed || restarting) return;
+      restarting = true;
+      const previous = session ?? ended;
+      const settling = opening;
+      attempt++;
+      session = null;
+      ended = null;
+      exited = true;
+      mouseTracking = false;
+      clearOpeningInput();
+      status({ phase: "starting" });
+      void settling
+        .then(() => previous?.close())
+        .catch(() => undefined)
+        .then(() => {
+          restarting = false;
+          if (!disposed) start();
+        });
+    };
+
     const encoder = new TextEncoder();
     const input = term.onData((data) => {
+      if (restarting) return;
       if (exited && data === "\r") start();
       else send(encoder.encode(data));
     });
@@ -293,35 +297,6 @@ export function TerminalPane({
         return false;
       },
     );
-    const appearance = term.parser.registerOscHandler(777, (data) => {
-      if (kind !== "tui") return false;
-      if (data === "cadrumo;appearance;toggle") {
-        live.current.onAppearanceToggle();
-        return true;
-      }
-      if (data === "cadrumo;presentation;loading") {
-        window.clearTimeout(revealTimer);
-        readyReceived = false;
-        revealAfterRender = false;
-        ready = false;
-        term.blur();
-        setLoading(true);
-        status({ phase: "starting" });
-        return true;
-      }
-      if (data === "cadrumo;presentation;ready") {
-        readyReceived = true;
-        return true;
-      }
-      return false;
-    });
-    const rendered = term.onRender(() => {
-      if (!revealAfterRender || disposed || exited) return;
-      revealAfterRender = false;
-      ready = true;
-      setLoading(false);
-      status({ phase: "running" });
-    });
     const resized = term.onResize(
       ({ cols, rows }) => void session?.resize(cols, rows),
     );
@@ -335,16 +310,14 @@ export function TerminalPane({
 
     live.current.register(kind, {
       focus: () => {
-        if (ready && live.current.shown && element.offsetParent !== null)
-          term.focus();
+        if (live.current.shown && element.offsetParent !== null) term.focus();
       },
       selection: () => term.getSelection(),
       hasSelection: () => term.hasSelection(),
       selectAll: () => term.selectAll(),
       clear: () => term.clear(),
-      paste: (text) => {
-        if (ready) term.paste(text);
-      },
+      paste: (text) => term.paste(text),
+      restart,
     });
 
     let frame = 0;
@@ -360,7 +333,6 @@ export function TerminalPane({
 
     return () => {
       disposed = true;
-      window.clearTimeout(revealTimer);
       observer.disconnect();
       cancelAnimationFrame(frame);
       element.removeEventListener("contextmenu", menu);
@@ -369,17 +341,16 @@ export function TerminalPane({
       binary.dispose();
       modes.dispose();
       modesOff.dispose();
-      appearance.dispose();
-      rendered.dispose();
       resized.dispose();
       // Close at once: closing stops any write still waiting on the host's
       // queue, so it cannot hold the session open.
       void session?.close().catch(() => undefined);
+      void ended?.close().catch(() => undefined);
       disposeRenderer();
       term.dispose();
       terminal.current = null;
     };
-  }, [host, kind, target, activated, fontFamily]);
+  }, [host, kind, activated, fontFamily]);
 
   useEffect(() => {
     if (terminal.current) terminal.current.term.options.theme = theme;
@@ -404,7 +375,6 @@ export function TerminalPane({
       style={{ background: theme.background }}
       aria-label={label}
       data-terminal={kind}
-      aria-busy={loading && !unavailable}
       // Named, so it needs a role: the TUI's frame is a group, a panel
       // terminal the tab panel of its tab.
       role={tabPanel ? "tabpanel" : "group"}
@@ -416,17 +386,9 @@ export function TerminalPane({
       <div
         className="terminal-host absolute inset-y-1.5 right-1 left-3"
         ref={container}
-        style={unavailable || loading ? { visibility: "hidden" } : undefined}
-        inert={unavailable || loading}
+        style={unavailable ? { visibility: "hidden" } : undefined}
+        inert={unavailable}
       />
-      {loading && !unavailable && (
-        <EmptyState
-          role="status"
-          className="absolute inset-0"
-          busy
-          description={t("desktop.startup.workspace")}
-        />
-      )}
       {unavailable && (
         <EmptyState
           role="status"

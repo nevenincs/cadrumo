@@ -19,20 +19,18 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import compose_legal_full_name, create_user_profile_record
 
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_export_binding import compose_legal_full_name, resolve_profile_export_values
+from ..profile_export_binding import resolve_profile_export_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -56,13 +54,13 @@ def _fact(path: str, value: object) -> UserProfileFact:
 
 def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
     """Build a real record so the production fact index actually reads it."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_BUCKET,
         setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -86,6 +84,7 @@ def _resolve(*facts: UserProfileFact, operation: PinnedAuthorityOperation) -> di
         resolve_profile_export_values(
             _export_bindings(),
             bucket_id=_BUCKET,
+            filing_year=2024,
             profile_record=_record(facts),
             schema=published_profile_schema(),
             operation=operation,
@@ -101,7 +100,7 @@ _DECLARANTE = (
 _SPOUSE = (
     _fact("renta_spouse.surnames", "PEREZ RUIZ"),
     _fact("renta_spouse.name", "JUAN"),
-    _fact("renta_spouse.tax_id", "87654321X"),
+    _fact("renta_spouse.tax_id", "X0001502F"),
 )
 
 
@@ -174,7 +173,7 @@ def test_a_conjunta_filing_writes_the_spouse_rows(*, operation: PinnedAuthorityO
     )
 
     assert values["DP_APENOM_C"] == "PEREZ RUIZ JUAN"
-    assert values["DPNIF_C"] == "87654321X"
+    assert values["DPNIF_C"] == "X0001502F"
     assert values["SEXO_C"] == "H"
 
 
@@ -211,7 +210,7 @@ def test_the_precondition_fact_is_never_used_as_the_value(*, operation: PinnedAu
     )
 
     assert "DPFNAC_C" not in values
-    assert values["DPNIF_C"] == "87654321X"
+    assert values["DPNIF_C"] == "X0001502F"
 
 
 def test_a_multi_part_name_is_composed_rather_than_truncated(*, operation: PinnedAuthorityOperation) -> None:

@@ -28,14 +28,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from mcp.types import LATEST_PROTOCOL_VERSION
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.product_environment import ambient_product_settings_removed, clean_product_env
 from dev.source_tree import repository_files, snapshot
 
-from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
-from ..google_oauth import build_client_json, stage_build_client
+from ..distribution_names import normalise_distribution_name
+from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json, stage_build_client
 from ..hashing import sha256_path
 from ..installed_runtime import run_installed_tax_oracle_with_runtime
 from ..installed_tax_oracle import (
@@ -52,8 +53,15 @@ from ..lane_verification_core import (
     venv_python_path,
 )
 from ..python_cohort import PythonCohort, build_python_cohort
+from ..runtime_wheelhouse_reader import extract_runtime_wheelhouse
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+
+# Every test that builds the cohort carries `external_tool`: the build acquires
+# the lock-selected runtime wheels, which the dependency set does not install
+# and the network guard refuses to fetch. `just test-installed-oracles` warms the
+# runtime wheel cache from the lock outside pytest, then runs exactly these tests.
 
 _REPO_ROOT = REPO_ROOT
 _AUTHORITY_CANDIDATE_ENV = "CADRUMO_AUTHORITY_CANDIDATE_DIR"
@@ -282,6 +290,7 @@ class InstalledCohort:
     venv: Path
     root_wheel: Path
     data_wheels: tuple[Path, Path, Path]
+    runtime_wheels: Path
     cli: Path
     mcp_server: Path
     cohort_dir: Path
@@ -327,6 +336,9 @@ def _fresh_installation(cohort: InstalledCohort, root: Path) -> DisposableInstal
             "install",
             "--disable-pip-version-check",
             "--no-cache-dir",
+            "--no-index",
+            "--find-links",
+            str(cohort.runtime_wheels),
             str(cohort.root_wheel.resolve()),
             *(str(wheel.resolve()) for wheel in cohort.data_wheels),
         ],
@@ -484,7 +496,6 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # shared checkout's canonical build outputs.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
     _stage_authority_candidate(clean_repo)
-    stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
     # Under the snapshot's OWN build/, not beside it. `build_python_cohort` refuses
     # an output that is not below `<repo_root>/build`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
@@ -493,13 +504,25 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # inconsistent and reported the module's other tests as bare internal
     # AssertionErrors naming nothing.
     cohort_dir = clean_repo / "build" / "python-cohort"
-    supplied = build_python_cohort(clean_repo, cohort_dir)
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the staged client and the cohort build receive a synthetic client directly.
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv(GOOGLE_OAUTH_ENV, client_document())
+        stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
+        supplied = build_python_cohort(clean_repo, cohort_dir)
     source_digest = supplied.source_digest
     root_wheel = supplied.root_wheel
     data_wheels = supplied.companion_wheels
     artifact_sha256 = dict(supplied.sha256)
 
-    venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
+    python_minor = f"{sys.version_info.major}.{sys.version_info.minor}"
+    # The runtime wheel cache names its entries by digest, which pip cannot
+    # resolve from, so the dependencies come from the wheelhouse this build
+    # sealed: the same lock-verified wheels under their wheel names. With no
+    # index, the install cannot reach one.
+    runtime_wheels = work_dir / "runtime-wheels"
+    extract_runtime_wheelhouse(supplied.runtime_wheelhouse, runtime_wheels, python_version=python_minor)
+    venv = create_pip_venv(work_dir, python_minor)
     run_checked(
         [
             str(venv_python_path(venv)),
@@ -508,6 +531,9 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             "install",
             "--disable-pip-version-check",
             "--no-cache-dir",
+            "--no-index",
+            "--find-links",
+            str(runtime_wheels),
             str(root_wheel.resolve()),
             *(str(wheel.resolve()) for wheel in data_wheels),
         ],
@@ -547,6 +573,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         venv=venv,
         root_wheel=root_wheel,
         data_wheels=data_wheels,
+        runtime_wheels=runtime_wheels,
         cli=cli,
         mcp_server=mcp_server,
         cohort_dir=cohort_dir,
@@ -599,6 +626,7 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     shutil.copy2(database, destination / database.name)
 
 
+@pytest.mark.external_tool
 def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: InstalledCohort) -> None:
     """Both commands and all mandatory distributions have one installed origin."""
     cohort = installed_cohort
@@ -618,7 +646,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-official=={version}",
         f"cadrumo-data-normatives=={version}",
     } <= requirements
-    assert metadata["console_scripts"]["aeat"] == "cadrumo_runtime.host.frontend.cli.bootstrap:main"
+    assert metadata["console_scripts"]["aeat"] == "cadrumo_runtime.host.frontend.cli.bootstrap:console_main"
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
     # and installing the root wheel is what puts `cadrumo_mcp` on disk.
@@ -667,6 +695,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     )
 
 
+@pytest.mark.external_tool
 def test_installed_runtime_imports_authority_without_authoring_sources(
     installed_cohort: InstalledCohort,
 ) -> None:
@@ -717,6 +746,7 @@ print(json.dumps({
     assert observed["profile_schema"] == "cadrumo.user_profile"
 
 
+@pytest.mark.external_tool
 def test_installed_consumers_use_pinned_profile_fact_model_and_evidence_components(
     installed_cohort: InstalledCohort,
 ) -> None:
@@ -743,6 +773,7 @@ def test_installed_consumers_use_pinned_profile_fact_model_and_evidence_componen
     assert observed["m303_export_money_fields"] > 0
 
 
+@pytest.mark.external_tool
 @pytest.mark.parametrize("damage", ["missing", "corrupt"])
 def test_installed_cli_refuses_an_unusable_authority_before_durable_work(
     installed_cohort: InstalledCohort,
@@ -820,6 +851,7 @@ def _operative_oracle_identity(evidence: Any) -> tuple[object, ...]:
     )
 
 
+@pytest.mark.external_tool
 def test_post_build_source_mutation_cannot_change_an_existing_installation(
     installed_cohort: InstalledCohort,
 ) -> None:
@@ -894,6 +926,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     assert sha256_path(installed_database) == installed_database_digest
 
 
+@pytest.mark.external_tool
 def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
     """The A-client launch capture spawns the real server and it exits 0 on stdin EOF.
 
@@ -992,7 +1025,7 @@ async def _drive_mcp_server(
             "id": 1,
             "method": "initialize",
             "params": {
-                "protocolVersion": "2025-06-18",
+                "protocolVersion": LATEST_PROTOCOL_VERSION,
                 "capabilities": {},
                 "clientInfo": {"name": "storage-root-regression", "version": "0"},
             },
@@ -1017,6 +1050,7 @@ async def _drive_mcp_server(
     return initialize, tools, stderr.decode("utf-8", errors="replace")
 
 
+@pytest.mark.external_tool
 def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort: InstalledCohort) -> None:
     """The installed server completes initialize/tools-list on a retired-state machine.
 
@@ -1064,7 +1098,7 @@ async def _call_dev_installed_mcp_authenticate(
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
     environment = clean_product_env()
-    environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
+    environment.update({"CADRUMO_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),
         args=["--profile-id", profile_id, "--credential-reference", credential_reference],
@@ -1120,8 +1154,8 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.installation import installation
     from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
     runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"
@@ -1158,7 +1192,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         runtime_environment = {
             key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
         }
-        runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+        runtime_environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
         process_scope.launch(
             executable=runtime_executable.resolve(strict=True),
             arguments=(

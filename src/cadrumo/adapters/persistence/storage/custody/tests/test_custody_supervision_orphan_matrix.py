@@ -52,7 +52,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
     profile_kdf_lease,
     profile_password_wrap_aad,
 )
-from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
+from cadrumo.adapters.persistence.storage.custody.kdf_worker_supervision import SupervisedKdfWorker
 
 root = Path(sys.argv[1])
 envelope = parse_profile_custody_envelope(Path(sys.argv[2]).read_bytes())
@@ -65,7 +65,7 @@ aad = profile_password_wrap_aad(
 )
 with (
     profile_kdf_lease(deadline=time.monotonic() + 30),
-    _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker,
+    SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker,
 ):
     print("supervising", worker._process.pid, flush=True)
     dek = worker.unwrap(
@@ -91,11 +91,13 @@ async def _kill_orphan_child(command: list[str], *, env: dict[str, str]) -> tupl
         assert child.stdout is not None
         line = (await asyncio.wait_for(child.stdout.readline(), timeout=30)).decode("utf-8", errors="replace").strip()
         child.kill()
-        return line, int(await asyncio.wait_for(child.wait(), timeout=5.0))
+        await asyncio.wait_for(child.communicate(), timeout=5.0)
+        assert child.returncode is not None
+        return line, child.returncode
     finally:
         if child.returncode is None:
             child.kill()
-            await child.wait()
+            await child.communicate()
 
 
 def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and_unlocks(
@@ -121,7 +123,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
     line, child_returncode = asyncio.run(
         _kill_orphan_child(
             [sys.executable, "-c", _ORPHAN_CHILD, str(tmp_path), str(envelope_path), _CREDENTIAL_INPUT],
-            env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
+            env={**os.environ, "CADRUMO_STORAGE_ROOT": str(tmp_path)},
         ),
     )
     assert line, "supervised child produced no readiness line"
@@ -143,7 +145,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
         envelope,
         _CREDENTIAL_INPUT,
         sentinel=sentinel,
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
         timeout_seconds=_RECOVERY_UNLOCK_DEADLINE_SECONDS,
     )
     assert unlock.dek == dek

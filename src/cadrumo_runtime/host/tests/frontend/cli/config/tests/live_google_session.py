@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from cadrumo_client.transport.frontend_client import FrontendClient
+    from cadrumo_client.transport.windows import WindowsEndpoint
 
 
 class _TuiAcceptanceEvidence(Protocol):
@@ -189,6 +190,54 @@ def _owned_runtime_job() -> Generator[int]:
         win32api.CloseHandle(job)
 
 
+def _wait_for_owned_runtime(
+    process: subprocess.Popen[bytes], endpoint: WindowsEndpoint, runtime_log: Path, log_offset: int
+) -> bool:
+    """Wait until the runtime this script started, not another developer's, answers the handshake."""
+    from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
+    from cadrumo_client.contracts.contracts import ClientHello
+    from cadrumo_client.transport.startup import LaunchDoor
+
+    readiness_deadline = time.monotonic() + 600
+    while time.monotonic() < readiness_deadline:
+        if process.poll() is not None:
+            return False
+        try:
+            connection = asyncio.run(
+                LaunchDoor(
+                    endpoint,
+                    expected=ClientHello(
+                        product_version="0.5.1",
+                        storage_identity=endpoint.storage_identity,
+                        authority_generation=published_authority_generation(),
+                    ),
+                ).open(timeout=2)
+            )
+        except Exception:
+            time.sleep(0.5)
+        else:
+            observed_boot = str(connection.hello.boot_id)
+            connection.close()
+            # Another developer may own this storage endpoint. A valid
+            # handshake alone does not make that runtime ours to use.
+            with runtime_log.open("rb") as owned_log:
+                owned_log.seek(log_offset)
+                records = owned_log.read().decode("utf-8").splitlines()
+            owned_boots = set()
+            for line in records:
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(record, dict) and record.get("type") == "ready":
+                    owned_boots.add(record.get("boot_id"))
+            if observed_boot not in owned_boots:
+                time.sleep(0.5)
+                continue
+            return True
+    return False
+
+
 def main() -> None:
     if sys.platform != "win32":
         raise RuntimeError("this live runner requires the Windows desktop")
@@ -200,10 +249,8 @@ def main() -> None:
     os.environ.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(workspace / ".authority"),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_SECRET_STORE_DIR": str(root / "secrets"),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
-            "CADRUMO_LOG_DIR": str(root / "logs"),
         }
     )
     os.environ.pop("CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE", None)
@@ -276,45 +323,7 @@ def main() -> None:
                 win32job.AssignProcessToJobObject(job, process_handle)
             finally:
                 win32api.CloseHandle(process_handle)
-            ready = False
-            readiness_deadline = time.monotonic() + 600
-            while time.monotonic() < readiness_deadline:
-                if process.poll() is not None:
-                    break
-                try:
-                    connection = asyncio.run(
-                        LaunchDoor(
-                            endpoint,
-                            expected=ClientHello(
-                                product_version="0.5.1",
-                                storage_identity=endpoint.storage_identity,
-                                authority_generation=published_authority_generation(),
-                            ),
-                        ).open(timeout=2)
-                    )
-                except Exception:
-                    time.sleep(0.5)
-                else:
-                    observed_boot = str(connection.hello.boot_id)
-                    connection.close()
-                    # Another developer may own this storage endpoint. A valid
-                    # handshake alone does not make that runtime ours to use.
-                    with (private / "runtime.log").open("rb") as owned_log:
-                        owned_log.seek(log_offset)
-                        records = owned_log.read().decode("utf-8").splitlines()
-                    owned_boots = set()
-                    for line in records:
-                        try:
-                            record = json.loads(line)
-                        except ValueError:
-                            continue
-                        if isinstance(record, dict) and record.get("type") == "ready":
-                            owned_boots.add(record.get("boot_id"))
-                    if observed_boot not in owned_boots:
-                        time.sleep(0.5)
-                        continue
-                    ready = True
-                    break
+            ready = _wait_for_owned_runtime(process, endpoint, private / "runtime.log", log_offset)
             print(json.dumps({"stage": "runtime", "ready": ready, "terminal": sys.stdin.isatty()}), flush=True)
             if not ready:
                 raise RuntimeError("runtime readiness failed")
@@ -322,8 +331,8 @@ def main() -> None:
                 import traceback
                 from uuid import UUID
 
-                from cadrumo.application.operations.registry import OperationFrontendProjection
                 from cadrumo.application.user_profile.login_session import resolve_login_target
+                from cadrumo.core.operations import OperationFrontendProjection
                 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
                 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -382,8 +391,8 @@ def main() -> None:
             if mode in {"tui-acceptance", "cancel-review-acceptance"}:
                 from uuid import UUID
 
-                from cadrumo.application.operations.registry import OperationFrontendProjection
                 from cadrumo.application.user_profile.login_session import resolve_login_target
+                from cadrumo.core.operations import OperationFrontendProjection
                 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
                 from cadrumo_client.transport.frontend_client import FrontendClient
 

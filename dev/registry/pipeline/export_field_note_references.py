@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from .export_field_derivation import _NOTE_NUMBER_RE, _TRAILING_NOTE_REFERENCE_RE
+from .export_field_derivation import NOTE_NUMBER_RE, TRAILING_NOTE_REFERENCE_RE
 
 
-def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]:
+def split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]:
     """Peel every trailing ``Nota N`` reference off official content.
 
     Returns the value-bearing stem and the referenced note numbers in source
@@ -16,9 +16,9 @@ def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]
     """
     stem = content
     notes: list[int] = []
-    while (match := _TRAILING_NOTE_REFERENCE_RE.search(stem)) is not None:
+    while (match := TRAILING_NOTE_REFERENCE_RE.search(stem)) is not None:
         reference = match.group(0)
-        number = _NOTE_NUMBER_RE.search(reference)
+        number = NOTE_NUMBER_RE.search(reference)
         if number is None:
             raise RegistryValidationError(
                 f"official content {content!r} matched a trailing note reference {reference!r} carrying no note number",

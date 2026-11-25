@@ -18,22 +18,25 @@ from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_input import EvidenceInput
 from .....application.ledger.evidence_input_ports import EvidenceInputPorts
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from .....application.ledger.invoice_confirmation import invoice_draft_review_sha256
 from .....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from .....application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
     StructuredInvoiceReadError,
+    SupplyNatureProposalResult,
     VisionImage,
 )
 from .....application.ledger.invoice_draft_records import InvoiceDraft
+from .....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from .....application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from .....core.config import Settings
-from .....core.config_support import LLMProvider
 from .....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from .....core.field_grounding import FieldGroundingOutcome
+from .....core.field_origin import FieldOrigin
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
-from .....domain.iva.supply_nature import SupplyNature
 from ..application_translation import translate_parsed_einvoice
 from ..parsers import parse_einvoice_document
 from ..xml import EInvoiceXmlParseError
@@ -76,7 +79,6 @@ def _unused_text_layer(data: bytes) -> tuple[str, ...]:
 def _unused_text_reader(
     _transcription: DocumentTranscription,
     _settings: Settings,
-    _provider: LLMProvider | None,
     _consent_token: EvidenceConsentProof | None,
     _authority_values: object,
 ) -> InvoiceDraft:
@@ -86,7 +88,8 @@ def _unused_text_reader(
 def _unused_supply_nature(
     _transcription: DocumentTranscription,
     _settings: Settings,
-) -> SupplyNature | None:
+    _consent_token: EvidenceConsentProof | None,
+) -> SupplyNatureProposalResult | None:
     raise AssertionError("supply-nature proposal is not part of this structured-record test")
 
 
@@ -94,7 +97,6 @@ def _unused_vision_reader(
     _images: tuple[VisionImage, ...],
     _prompt: str,
     _settings: Settings,
-    _provider: LLMProvider | None,
     _consent_token: EvidenceConsentProof | None,
 ) -> DocumentTranscription:
     raise AssertionError("vision reading is not part of this structured-record test")
@@ -172,8 +174,71 @@ def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_cu
 
     draft = _extract(evidence)
 
-    assert draft.supplier_tax_id == "45821337R"
-    assert draft.customer_tax_id == "A82645177"
+    assert draft.supplier_tax_id == "00001004S"
+    assert draft.customer_tax_id == "A00010017"
     assert draft.supplier_name == "Marta Iglesias Ferrer"
     assert draft.customer_name == "Talleres Berrocal, S.A."
     assert draft.invoice_series == "R-2026"
+
+
+def _structured_fixture_draft(name: str, shape: DocumentShape) -> InvoiceDraft:
+    return _extract(_evidence(name, mime_type="application/xml", document_shape=shape, evidence_id=f"ev-{name}"))
+
+
+def test_a_single_rate_structured_document_states_its_one_rate_on_the_draft() -> None:
+    """The invoice-level rate is the one rate the record's own breakdown states, anchored in the record."""
+    draft = _structured_fixture_draft("facturae_32_series_and_parties_invoice.xml", DocumentShape.XML_FACTURAE)
+
+    assert draft.iva_rate == Decimal("21.00")
+    assert [(entry.iva_rate, entry.taxable_base, entry.iva_amount) for entry in draft.iva_breakdown] == [
+        (Decimal("21.00"), Decimal("200.00"), Decimal("42.00"))
+    ]
+    envelope = next(row for row in draft.provenance if row.field == "iva_rate")
+    assert envelope.grounding is FieldGroundingOutcome.ANCHORED
+    assert envelope.origin is FieldOrigin.EXACT_STRUCTURED
+    assert "TaxRate" in (envelope.note or "")
+
+
+def test_a_zero_rate_structured_document_states_zero_rather_than_leaving_the_rate_open() -> None:
+    """A zero rate the record states is a stated rate; only an absent one leaves the scalar unset."""
+    draft = _structured_fixture_draft("en16931_ubl_reverse_charge_invoice.xml", DocumentShape.XML_UBL)
+
+    assert draft.iva_rate == Decimal("0.00")
+
+
+def test_a_two_rate_structured_document_leaves_the_scalar_unset_and_carries_every_rate() -> None:
+    """Two rates have no single rate: the breakdown carries both and nothing is chosen between them."""
+    draft = _structured_fixture_draft("en16931_ubl_two_rate_invoice.xml", DocumentShape.XML_UBL)
+
+    assert draft.iva_rate is None
+    assert all(row.field != "iva_rate" for row in draft.provenance)
+    assert [(entry.iva_rate, entry.taxable_base, entry.iva_amount) for entry in draft.iva_breakdown] == [
+        (Decimal("21.00"), Decimal("100.00"), Decimal("21.00")),
+        (Decimal("10.00"), Decimal("50.00"), Decimal("5.00")),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("name", "shape"),
+    (
+        ("facturae_32_series_and_parties_invoice.xml", DocumentShape.XML_FACTURAE),
+        ("facturae_32_recargo_invoice.xml", DocumentShape.XML_FACTURAE),
+        ("facturae_32_retencion_suplidos_invoice.xml", DocumentShape.XML_FACTURAE),
+        ("en16931_ubl_two_rate_invoice.xml", DocumentShape.XML_UBL),
+        ("en16931_cii_export_third_country_invoice.xml", DocumentShape.XML_CII),
+    ),
+)
+def test_reading_the_same_structured_bytes_twice_yields_the_same_review(name: str, shape: DocumentShape) -> None:
+    """Two reads of identical bytes agree on the served draft and on the digest a confirm is bound to.
+
+    The review digest is what a frontend re-reads and compares before it
+    confirms; a read that differed from the previous one over unchanged bytes
+    would present every such document as changed.
+    """
+    first = _structured_fixture_draft(name, shape)
+    second = _structured_fixture_draft(name, shape)
+
+    assert InvoiceDraftProjectionV1.from_draft(first).model_dump(mode="json") == InvoiceDraftProjectionV1.from_draft(
+        second
+    ).model_dump(mode="json")
+    assert invoice_draft_review_sha256(first) == invoice_draft_review_sha256(second)

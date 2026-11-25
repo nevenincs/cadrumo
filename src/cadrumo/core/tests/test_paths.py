@@ -15,24 +15,13 @@ from pathlib import Path
 import pytest
 
 from ..config_state_root import StateRootInputs, platform_user_data_root
-from ..errors.hierarchy import CoreValidationError
 from ..paths import (
-    WINDOWS_MAX_PATH,
     effective_storage_root,
     is_windows_long_path_error,
     resolve_project_path,
-    windows_long_paths_enabled,
-    windows_storage_root_long_path_margin,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-#: An arbitrary but realistic suffix budget for the margin arithmetic tests.
-#: ``core`` deliberately holds no opinion about the real value -- the layer
-#: that owns the on-disk grammar derives it and passes it in -- so these tests
-#: pin the arithmetic, not any particular storage layout.
-_SUFFIX = 155
-
 
 # ----------------------------------------------------------------- #
 # resolve_project_path — relative-path anchoring (no run-mode branch)  #
@@ -60,7 +49,7 @@ def test_a_relative_override_anchors_under_the_platform_user_data_root(tmp_path:
 
     This closes two defects in sequence. The first was anchoring every
     relative override at a naive repo-root walk, so an installed
-    distribution's relative ``CADRUMO_LOCAL_STORAGE_ROOT`` could resolve
+    distribution's relative ``CADRUMO_STORAGE_ROOT`` could resolve
     inside a virtualenv or an ephemeral package cache. The second was the
     fix's own shape: it branched on whether the process ran from a source
     checkout, which made a source-layout guess decide where operator data
@@ -135,20 +124,20 @@ def test_effective_storage_root_absolute_override_resolves_unchanged() -> None:
     from ..config import override_settings
 
     with override_settings() as settings:
-        absolute = settings.cadrumo_local_storage_root.parent / "explicit-override"
+        absolute = settings.cadrumo_storage_root.parent / "explicit-override"
         assert effective_storage_root(absolute) == absolute.resolve()
 
 
-def test_effective_storage_root_falls_back_to_the_settings_default_when_no_override_is_given() -> None:
-    """``root=None`` resolves ``Settings.cadrumo_local_storage_root``, not a fresh anchor."""
+def test_effective_storage_root_falls_back_to_the_settings_default_when_no_override_is_given(tmp_path: Path) -> None:
+    """``root=None`` resolves ``Settings.cadrumo_storage_root``, not a fresh anchor."""
     from ..config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=Path("configured-root")) as settings:
-        assert effective_storage_root() == settings.cadrumo_local_storage_root
-        assert effective_storage_root(None) == settings.cadrumo_local_storage_root
+    with override_settings(cadrumo_storage_root=tmp_path / "configured-root") as settings:
+        assert effective_storage_root() == settings.cadrumo_storage_root
+        assert effective_storage_root(None) == settings.cadrumo_storage_root
 
 
-def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloading() -> None:
+def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloading(tmp_path: Path) -> None:
     """A caller-supplied ``settings=`` is read directly rather than triggering ``load_settings()`` again.
 
     Every one of the six converged call sites in ``config_reset_repository.py``
@@ -159,10 +148,10 @@ def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloadi
     from ..config import override_settings
 
     with (
-        override_settings(cadrumo_local_storage_root=Path("caller-held-root")) as held_settings,
-        override_settings(cadrumo_local_storage_root=Path("ambient-root")),
+        override_settings(cadrumo_storage_root=tmp_path / "caller-held-root") as held_settings,
+        override_settings(cadrumo_storage_root=tmp_path / "ambient-root"),
     ):
-        assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_local_storage_root
+        assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_storage_root
 
 
 def test_effective_storage_root_override_wins_over_a_supplied_settings_object() -> None:
@@ -170,7 +159,7 @@ def test_effective_storage_root_override_wins_over_a_supplied_settings_object() 
     from ..config import override_settings
 
     with override_settings() as settings:
-        override_root = settings.cadrumo_local_storage_root.parent / "override-wins"
+        override_root = settings.cadrumo_storage_root.parent / "override-wins"
         assert effective_storage_root(override_root, settings=settings) == override_root.resolve()
 
 
@@ -205,57 +194,3 @@ def test_is_windows_long_path_error_rejects_non_long_path_errors() -> None:
     exc = OSError(0, "boom")
     setattr(exc, "winerror", 5)  # noqa: B010  # real ERROR_ACCESS_DENIED payload
     assert is_windows_long_path_error(exc) is False
-
-
-def test_windows_long_paths_enabled_returns_current_platform_contract() -> None:
-    """The registry probe returns a real bool on Windows and ``None`` off Windows."""
-    result = windows_long_paths_enabled()
-    if sys.platform == "win32":
-        assert isinstance(result, bool)
-    else:
-        assert result is None
-
-
-def test_windows_storage_root_long_path_margin_shrinks_with_deeper_roots(tmp_path: Path) -> None:
-    """A deeper, longer resolved root yields a strictly smaller margin than a shallow one."""
-    shallow = tmp_path / "s"
-    deep = tmp_path / ("segment-" + "x" * 60) / ("segment-" + "y" * 60)
-
-    shallow_margin = windows_storage_root_long_path_margin(shallow, object_path_suffix_length=_SUFFIX)
-    deep_margin = windows_storage_root_long_path_margin(deep, object_path_suffix_length=_SUFFIX)
-
-    assert deep_margin < shallow_margin
-
-
-def test_windows_storage_root_long_path_margin_matches_the_explicit_formula(tmp_path: Path) -> None:
-    """The margin is exactly MAX_PATH minus the resolved root length minus the supplied suffix."""
-    root = tmp_path / "storage"
-    expected = WINDOWS_MAX_PATH - len(str(root.resolve())) - _SUFFIX
-    assert windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX) == expected
-
-
-def test_windows_storage_root_long_path_margin_tracks_the_supplied_suffix(tmp_path: Path) -> None:
-    """A longer supplied suffix budget shrinks the margin one-for-one.
-
-    The suffix is an argument precisely so the owning layer can widen it when
-    its grammar grows; a margin that ignored the argument would silently keep
-    reporting the old, narrower ceiling.
-    """
-    root = tmp_path / "storage"
-    base = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX)
-    wider = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX + 54)
-    assert base - wider == 54
-
-
-@pytest.mark.parametrize("suffix_length", [0, -1])
-def test_windows_storage_root_long_path_margin_refuses_a_non_positive_suffix(
-    tmp_path: Path,
-    suffix_length: int,
-) -> None:
-    """A non-positive suffix budget is refused rather than silently inflating the margin.
-
-    Zero or negative would report headroom that no real layout leaves, which
-    is the failure mode this probe exists to prevent.
-    """
-    with pytest.raises(CoreValidationError):
-        windows_storage_root_long_path_margin(tmp_path, object_path_suffix_length=suffix_length)

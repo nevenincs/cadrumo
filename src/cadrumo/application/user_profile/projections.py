@@ -12,12 +12,17 @@ coercer so field-level coercion logic stays in one place.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from datetime import date
-from typing import TypeGuard
+from types import MappingProxyType
+from typing import Final, TypeGuard
 
 from pydantic import BaseModel
 
+from ...core.hashing import content_hash_hex
+from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -29,6 +34,11 @@ from ...domain.user_profile.values import (
     UserProfileFactValue,
     UserProfileRecord,
     UserProfileSnapshot,
+)
+from .profile_read_recorder import (
+    active_profile_read_recorder,
+    note_profile_projection_read,
+    recorded_profile_view,
 )
 
 _WINDOWLESS_SENTINEL = date.min
@@ -90,6 +100,15 @@ def _selector_index(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...
     return index
 
 
+def _selector_paths(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...]]:
+    """Map each declared ``model_selector`` alias to the stored paths it projects."""
+    paths: dict[str, list[str]] = {}
+    for path, selectors in _selector_index(schema).items():
+        for selector in selectors:
+            paths.setdefault(selector, []).append(path)
+    return {selector: tuple(owners) for selector, owners in paths.items()}
+
+
 def facts_to_values(
     facts: tuple[UserProfileFact, ...],
     *,
@@ -135,17 +154,11 @@ def record_to_values(
         as_of: Optional date the projection is effective at; ``None`` keeps
             every fact regardless of its window.
     """
-    return facts_to_values(record.facts, schema=_schema_for_record(record, schema), as_of=as_of)
-
-
-def snapshot_to_values(
-    snapshot: UserProfileSnapshot,
-    *,
-    schema: ProfileSchemaDefinition | None = None,
-    as_of: date | None = None,
-) -> dict[str, str]:
-    """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
-    return facts_to_values(snapshot.facts, schema=_schema_for_record(snapshot, schema), as_of=as_of)
+    resolved_schema = _schema_for_record(record, schema)
+    return recorded_profile_view(
+        facts_to_values(record.facts, schema=resolved_schema, as_of=as_of),
+        key_paths=_selector_paths(resolved_schema),
+    )
 
 
 def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact, ...]:
@@ -236,6 +249,15 @@ def record_to_path_values(
     :func:`validate_profile_values`, and CLI status surfaces consume.
     ``as_of`` keeps only the facts in force on that date.
     """
+    values = _path_values(record, as_of=as_of)
+    return recorded_profile_view(values) if isinstance(record, UserProfileRecord) else values
+
+
+def _path_values(
+    record: UserProfileRecord | UserProfileSnapshot | None,
+    *,
+    as_of: date | None = None,
+) -> dict[str, str]:
     if record is None:
         return {}
     return {
@@ -307,7 +329,7 @@ def record_to_effective_facts(
             value=None if fact.value is None else _render_fact_value(fact.value),
             source=fact.source,
         )
-    return effective
+    return recorded_profile_view(effective) if isinstance(record, UserProfileRecord) else effective
 
 
 def projection_for_taxpayer(
@@ -317,6 +339,7 @@ def projection_for_taxpayer(
     iva_regime_default: IVARegime | None = None,
     schema: ProfileSchemaDefinition | None = None,
     as_of: date | None = None,
+    withhold_unanswered_iva_block: bool = False,
 ) -> TaxpayerProfile:
     """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
 
@@ -329,6 +352,9 @@ def projection_for_taxpayer(
         as_of: Optional date the profile is projected as of, keeping only the
             facts whose effective window contains it. Only a record or a
             snapshot carries windows, so a pre-projected mapping refuses it.
+        withhold_unanswered_iva_block: For a read model only: leave a claimed
+            Modelo IVA block with unanswered required facts out of the
+            projection and name those facts, instead of refusing.
 
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
@@ -337,16 +363,119 @@ def projection_for_taxpayer(
         UserProfileValidationError: ``as_of`` was supplied with a
             pre-projected mapping, which no longer carries effective windows.
     """
+    mapping: Mapping[str, object]
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = _merged_taxpayer_values(facts, schema=_schema_for_record(facts, schema), as_of=as_of)
     elif as_of is not None:
         raise UserProfileValidationError("an as-of taxpayer projection requires the profile record or snapshot")
     else:
         mapping = {key: str(value) for key, value in facts.items() if value is not None}
-    return taxpayer_profile_from_mapping(
+    taxpayer = taxpayer_profile_from_mapping(
         mapping,
         tax_id_default=tax_id_default,
         iva_regime_default=iva_regime_default or default_iva_regime(),
+        withhold_unanswered_iva_block=withhold_unanswered_iva_block,
+    )
+    if isinstance(facts, UserProfileRecord) and active_profile_read_recorder() is not None:
+        # The projection reads every answer, so it is noted by what it produced:
+        # only an edit that changes the taxpayer it projects is a change.
+        note_profile_projection_read(
+            taxpayer_projection_read_selector(
+                as_of=as_of,
+                tax_id_default=tax_id_default,
+                iva_regime_default=iva_regime_default,
+                withhold_unanswered_iva_block=withhold_unanswered_iva_block,
+            ),
+            taxpayer_projection_fingerprint(taxpayer),
+        )
+    return taxpayer
+
+
+_TAXPAYER_PROJECTION: Final[str] = "taxpayer"
+
+
+def taxpayer_projection_read_selector(
+    *,
+    as_of: date | None,
+    tax_id_default: str,
+    iva_regime_default: IVARegime | None,
+    withhold_unanswered_iva_block: bool = False,
+) -> str:
+    """Name one taxpayer projection by every argument its result depends on besides the record."""
+    named: dict[str, object] = {
+        "projection": _TAXPAYER_PROJECTION,
+        "as_of": None if as_of is None else as_of.isoformat(),
+        "tax_id_default": tax_id_default,
+        "iva_regime_default": None if iva_regime_default is None else str(iva_regime_default),
+    }
+    # Only a withholding projection names the mode, so every refusing projection
+    # keeps the selector it was recorded under before the mode existed.
+    if withhold_unanswered_iva_block:
+        named["withhold_unanswered_iva_block"] = True
+    return json.dumps(named, sort_keys=True)
+
+
+def _is_set(value: object) -> TypeGuard[AbstractSet[object]]:
+    return isinstance(value, set | frozenset)
+
+
+def _is_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    return isinstance(value, Mapping)
+
+
+def _is_sequence(value: object) -> TypeGuard[list[object] | tuple[object, ...]]:
+    return isinstance(value, list | tuple)
+
+
+def _is_json_object(value: object) -> TypeGuard[dict[str, object]]:
+    # A JSON object's keys are always strings.
+    return isinstance(value, dict)
+
+
+def _stable(value: object) -> object:
+    if _is_set(value):
+        return sorted((_stable(member) for member in value), key=lambda member: json.dumps(member, sort_keys=True))
+    if _is_mapping(value):
+        return {str(key): _stable(member) for key, member in value.items()}
+    if _is_sequence(value):
+        return [_stable(member) for member in value]
+    if value is None or isinstance(value, bool | int | str):
+        return value
+    return str(getattr(value, "value", value))
+
+
+def taxpayer_projection_fingerprint(taxpayer: TaxpayerProfile) -> SnapshotId:
+    """Digest a projected taxpayer, its sets in a stable order.
+
+    Parameter types: ``taxpayer`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
+    return content_hash_hex(_stable(taxpayer.model_dump(mode="python")))
+
+
+def taxpayer_projection_read_fingerprint(
+    record: UserProfileRecord, selector: str, *, schema: ProfileSchemaDefinition
+) -> SnapshotId | None:
+    """Project the taxpayer ``selector`` names from ``record`` again, or ``None`` for another projection.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
+    loaded: object = json.loads(selector)
+    if not _is_json_object(loaded):
+        return None
+    named = loaded
+    if named.get("projection") != _TAXPAYER_PROJECTION:
+        return None
+    as_of = named.get("as_of")
+    iva_regime_default = named.get("iva_regime_default")
+    return taxpayer_projection_fingerprint(
+        projection_for_taxpayer(
+            record,
+            tax_id_default=str(named["tax_id_default"]),
+            iva_regime_default=None if iva_regime_default is None else IVARegime(str(iva_regime_default)),
+            schema=schema,
+            as_of=None if as_of is None else date.fromisoformat(str(as_of)),
+            withhold_unanswered_iva_block=named.get("withhold_unanswered_iva_block") is True,
+        )
     )
 
 
@@ -362,18 +491,16 @@ def _merged_taxpayer_values(
     most fields at their canonical schema path (which is also the key space
     the wizard's ``project_answers`` resolves questions against), but a
     field family is read at its declared ``model_selectors`` alias instead
-    (``address.cadastral_reference``, ``address.is_habitual_vivienda``, …).
+    (``address.cadastral_reference``, ``address.postcode``, …).
     Feeding only one key space silently blanks the other family, so the
     taxpayer projection carries both: the path projection first, with
     selector aliases layered alongside. The two key spaces are disjoint for
     aliased fields and identical for unaliased ones, so no key ever
     resolves to conflicting values.
     """
-    mapping = record_to_path_values(record, as_of=as_of)
-    if isinstance(record, UserProfileRecord):
-        selector_values = record_to_values(record, schema=schema, as_of=as_of)
-    else:
-        selector_values = snapshot_to_values(record, schema=schema, as_of=as_of)
+    mapping = _path_values(record, as_of=as_of)
+    resolved_schema = _schema_for_record(record, schema)
+    selector_values = facts_to_values(record.facts, schema=resolved_schema, as_of=as_of)
     for key, value in selector_values.items():
         mapping.setdefault(key, value)
     return mapping
@@ -409,7 +536,30 @@ def profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     return record_to_path_values(record)
 
 
+#: The schema path of the taxpayer's REDEME (Registro de devolución mensual)
+#: answer. Named once: every reader of the IVA refund election resolves the same
+#: path, so the form, the list and the export cannot read different facts.
+REDEME_ENROLMENT_FACT_PATH: Final[str] = "iva.redeme_enrolled"
+
+_BOOLEAN_FACT_TOKENS: Final[Mapping[str, bool]] = MappingProxyType({"true": True, "false": False})
+
+
+def declared_redeme_enrolment(path_values: Mapping[str, str] | None) -> bool | None:
+    """Read the taxpayer's REDEME answer from projected path values, or ``None`` while unstated.
+
+    ``None`` covers an absent profile, an absent answer and a stored token that
+    is neither canonical boolean: none of those is a stated "no", and reading
+    one as a no would rule the taxpayer out of a refund they are entitled to
+    (LIVA art. 115.Dos) without their ever having been asked.
+    """
+    if path_values is None:
+        return None
+    return _BOOLEAN_FACT_TOKENS.get(path_values.get(REDEME_ENROLMENT_FACT_PATH, ""))
+
+
 __all__ = [
+    "REDEME_ENROLMENT_FACT_PATH",
+    "declared_redeme_enrolment",
     "fact_value",
     "facts_to_values",
     "profile_fact_index",
@@ -418,7 +568,9 @@ __all__ = [
     "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",
-    "snapshot_to_values",
+    "taxpayer_projection_fingerprint",
+    "taxpayer_projection_read_fingerprint",
+    "taxpayer_projection_read_selector",
 ]
 
 
@@ -457,4 +609,4 @@ def profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[
         index[fact.path] = fact.value
         for selector in selector_index.get(fact.path, ()):
             index[selector] = fact.value
-    return index
+    return recorded_profile_view(index, key_paths=_selector_paths(schema))

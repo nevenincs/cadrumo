@@ -25,6 +25,7 @@ from ..bindings_previous_filing import previous_filing_binding_source_casilla_id
 from ..errors import RegistryValidationError
 from ..manual_input_selector import ManualInputProvider
 from ..schema import BindingDefinition
+from .profile_binding_fixture import tax_residence_profile_binding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -107,28 +108,7 @@ def test_a_plural_shape_binding_returns_every_declared_casilla_id() -> None:
 
 def test_a_non_previous_filing_binding_returns_empty() -> None:
     """A different source family's binding is never this accessor's business."""
-    profile = BindingDefinition.model_validate(
-        {
-            "id": "renta-profile-tax-residence-ccaa",
-            "provider": {
-                "kind": "profile",
-                "profile_model": "TaxResidenceProfile",
-                "field": "ccaa",
-                "xsd_attribute": "codigoCADeclaracion",
-                "dictionary_field": "ZCCAD",
-            },
-            "value": {
-                "data_type": "enum",
-                "channel": "enum",
-                "typed_enum": "CCAA",
-            },
-            "aggregation": {
-                "op": "copy",
-            },
-            "legal_refs": ("orden-hac-277-2026:art-3",),
-            "source_refs": ("aeat-dr-100-2025-dictionary",),
-        },
-    )
+    profile = tax_residence_profile_binding()
 
     assert previous_filing_binding_source_casilla_ids(profile) == ()
 

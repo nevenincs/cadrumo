@@ -17,7 +17,6 @@ profile persistence adapter seam with every defaultable field populated NON-defa
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -29,21 +28,22 @@ from ....core.field_origin import FieldOrigin
 from ..confirmation_gate import ConfirmationBlocker, FindingResolution
 from ..confirmation_record import (
     ConfirmationRecordDocument,
-    FieldAssertion,
     InvoiceConfirmationRecord,
     ResolvedFinding,
     build_confirmation_record,
     field_assertions,
     re_stamped_provenance,
 )
-from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from .confirmation_record_support import (
+    CONFIRMATION_BUCKET_ID,
+    CONFIRMATION_EVIDENCE_SHA,
+    CONFIRMATION_INVOICE_ID,
+    CONFIRMATION_TRANSCRIPTION_SHA,
+    populated_confirmation_record,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-_TRANSCRIPTION_SHA = "a" * 64
-_EVIDENCE_SHA = "b" * 64
-_INVOICE_ID = "c" * 64
 
 
 def _read_draft() -> InvoiceDraft:
@@ -55,7 +55,7 @@ def _read_draft() -> InvoiceDraft:
     that retains the origin from one that stamps a constant.
     """
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
         invoice_date="2024-11-15",
@@ -64,13 +64,13 @@ def _read_draft() -> InvoiceDraft:
         iva_amount=Decimal("21.00"),
         grand_total=Decimal("121.00"),
         currency="EUR",
-        transcription_sha256=_TRANSCRIPTION_SHA,
+        transcription_sha256=CONFIRMATION_TRANSCRIPTION_SHA,
         provenance=(
             FieldProvenance(
                 field="supplier_tax_id",
                 origin=FieldOrigin.EXACT_STRUCTURED,
                 grounding=FieldGroundingOutcome.RECONCILED,
-                anchor="ESB12345674",
+                anchor="ESB00015016",
                 note="control character checks out",
             ),
             # Deliberately ANCHORED and carrying an anchor. A fixture whose
@@ -100,16 +100,16 @@ def test_an_override_re_stamps_operator_while_the_record_keeps_the_prior_value()
 
     assertions = field_assertions(
         draft=draft,
-        overrides={"taxable_base": Decimal("150.00"), "supplier_tax_id": "ESX1234567L"},
+        overrides={"taxable_base": Decimal("150.00"), "supplier_tax_id": "ESX0001500M"},
     )
 
     by_field = {assertion.field: assertion for assertion in assertions}
     assert by_field["taxable_base"].prior_value == "100.00"
     assert by_field["taxable_base"].prior_origin is FieldOrigin.VISION
     assert by_field["taxable_base"].asserted_value == "150.00"
-    assert by_field["supplier_tax_id"].prior_value == "ESB12345674"
+    assert by_field["supplier_tax_id"].prior_value == "ESB00015016"
     assert by_field["supplier_tax_id"].prior_origin is FieldOrigin.EXACT_STRUCTURED
-    assert by_field["supplier_tax_id"].asserted_value == "ESX1234567L"
+    assert by_field["supplier_tax_id"].asserted_value == "ESX0001500M"
 
     confirmed = re_stamped_provenance(draft=draft, assertions=assertions)
     stamped = {envelope.field: envelope for envelope in confirmed}
@@ -146,7 +146,7 @@ def test_a_field_the_operator_left_alone_keeps_its_reading() -> None:
     stamped = {envelope.field: envelope for envelope in re_stamped_provenance(draft=draft, assertions=assertions)}
 
     assert stamped["supplier_tax_id"].origin is FieldOrigin.EXACT_STRUCTURED
-    assert stamped["supplier_tax_id"].anchor == "ESB12345674"
+    assert stamped["supplier_tax_id"].anchor == "ESB00015016"
 
 
 def test_silence_is_not_an_assertion() -> None:
@@ -158,61 +158,11 @@ def test_a_supplied_value_where_the_document_was_silent_records_no_prior_origin(
     """Supplying and correcting are different acts and the record distinguishes them."""
     draft = _read_draft().model_copy(update={"customer_tax_id": None})
 
-    assertions = field_assertions(draft=draft, overrides={"customer_tax_id": "ESX1234567L"})
+    assertions = field_assertions(draft=draft, overrides={"customer_tax_id": "ESX0001500M"})
 
     assert assertions[0].prior_value is None
     assert assertions[0].prior_origin is None
-    assert assertions[0].asserted_value == "ESX1234567L"
-
-
-def _populated_record() -> InvoiceConfirmationRecord:
-    """A record with EVERY defaultable field populated off its default.
-
-    ``evidence_sha256``, ``transcription_sha256``, ``assertions`` and
-    ``resolutions`` all default; a fixture leaving any of them defaulted would
-    roundtrip identically whether the store persisted it or dropped it.
-    """
-    blocker = ConfirmationBlocker(
-        blocker_id="0123456789abcdef",
-        reason=ConfirmationBlockReason.AMBIGUOUS_IDENTITY,
-        field="supplier_tax_id",
-        detail="two tax ids printed on the same document",
-        candidates=(
-            FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
-            FieldAmbiguityCandidate(value="ESX1234567L", anchor="ESX1234567L", note="footer block"),
-        ),
-    )
-    return InvoiceConfirmationRecord(
-        confirmation_id="fedcba9876543210",
-        bucket_id=_BUCKET_ID,
-        invoice_id=_INVOICE_ID,
-        evidence_reference="ev-structured-001",
-        evidence_sha256=_EVIDENCE_SHA,
-        transcription_sha256=_TRANSCRIPTION_SHA,
-        extractor="exact_structured",
-        confirmed_by="gestor@example.test",
-        confirmed_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
-        assertions=(
-            FieldAssertion(
-                field="taxable_base",
-                asserted_value="150.00",
-                prior_value="100.00",
-                prior_origin=FieldOrigin.VISION,
-                prior_grounding=FieldGroundingOutcome.ANCHORED,
-            ),
-        ),
-        resolutions=(
-            ResolvedFinding(
-                blocker=blocker,
-                resolution=FindingResolution(
-                    blocker_id="0123456789abcdef",
-                    action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                    value="ESX1234567L",
-                    note="matched against the paper invoice header",
-                ),
-            ),
-        ),
-    )
+    assert assertions[0].asserted_value == "ESX0001500M"
 
 
 def test_the_derived_id_is_clock_free() -> None:
@@ -232,10 +182,10 @@ def test_the_derived_id_is_clock_free() -> None:
         -- which none of them accept -- and verified nothing about the call.
         """
         return build_confirmation_record(
-            bucket_id=_BUCKET_ID,
-            invoice_id=_INVOICE_ID,
+            bucket_id=CONFIRMATION_BUCKET_ID,
+            invoice_id=CONFIRMATION_INVOICE_ID,
             evidence_reference="ev-structured-001",
-            evidence_sha256=_EVIDENCE_SHA,
+            evidence_sha256=CONFIRMATION_EVIDENCE_SHA,
             draft=draft,
             extractor="exact_structured",
             confirmed_by="gestor@example.test",
@@ -259,7 +209,7 @@ def test_deleting_a_persisted_field_makes_the_load_refuse() -> None:
     strict inequality --- the reload must not come back equal to what was saved,
     which is exactly what a silent re-default would produce.
     """
-    document = ConfirmationRecordDocument(bucket_id=_BUCKET_ID, records=(_populated_record(),))
+    document = ConfirmationRecordDocument(bucket_id=CONFIRMATION_BUCKET_ID, records=(populated_confirmation_record(),))
 
     # A JSON round-trip rather than `model_validate` on a dumped dict: the models
     # are strict, so a dict round trip is refused for presenting lists where

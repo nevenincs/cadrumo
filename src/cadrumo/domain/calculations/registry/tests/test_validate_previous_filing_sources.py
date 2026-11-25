@@ -23,12 +23,13 @@ from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
 )
 from ..relations import RegistryFoldRequirement
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _POSITIVE_PART_CASILLA: CasillaId = validated_casilla_id("07", surface="_POSITIVE_PART_CASILLA")
 _MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION_CASILLA")
 

@@ -19,8 +19,9 @@ from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
 from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..catalogue import InvoiceCatalogue
 from ..enums import IvaRate, PaymentStatus
-from ..models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..models import Invoice, InvoiceLine
 from ..service import suggest_reconciliations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,7 +42,7 @@ def _issued_invoice(*, retention_amount: Decimal | None) -> Invoice:
             "invoice_number": "F-2026-001",
             "issued_at": _ISSUED_ON,
             "counterparty_name": "Beta Logistica Mediterranea SL",
-            "counterparty_tax_id": "B92000025",
+            "counterparty_tax_id": "B00015073",
             "counterparty_country": "ES",
             "base_total": Decimal("1500.00"),
             "iva_total": Decimal("315.00"),

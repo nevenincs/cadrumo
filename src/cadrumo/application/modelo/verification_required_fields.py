@@ -7,11 +7,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
-from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.casilla_membership import (
     row_field_template_records_by_casilla,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
 )
@@ -21,10 +21,10 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.perceptor_clave_scope import (
-    PERCEPTOR_CLAVE_SCOPE_MODELO,
     PerceptorClaveScope,
+    governs_perceptor_records,
     resolve_perceptor_clave_scope,
     row_field_value_bindings,
     rows_missing_scoped_casilla,
@@ -54,7 +54,7 @@ def perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOper
     """
     from ...domain.calculations.registry.errors import RegistryValidationError
 
-    if str(work_unit.modelo) != PERCEPTOR_CLAVE_SCOPE_MODELO.value:
+    if not governs_perceptor_records(work_unit.modelo, authority=operation):
         return None
     try:
         return resolve_perceptor_clave_scope(period=work_unit.period, authority=operation)
@@ -148,7 +148,7 @@ def detail_row_template_casilla_is_satisfied(
     if not casilla.section:
         return False
     section = casilla.section[0]
-    if str(work_unit.modelo) != Modelo("349").value:
+    if str(work_unit.modelo) != form_for_role("iva.intracommunity_summary"):
         return casilla.id in row_field_template_records_by_casilla(revision)
     if section == "operador":
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
@@ -172,12 +172,16 @@ def missing_required_casilla_finding(
     if casilla_def is None:
         raise ModeloValidationError(
             f"missing-required finding for casilla {casilla_id!r} requires registry casilla definition provenance",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     legal_refs: tuple[str, ...] = tuple(casilla_def.legal_refs)
     source_refs: tuple[str, ...] = tuple(casilla_def.source_refs)
     if not legal_refs or not source_refs:
         raise ModeloValidationError(
             f"missing-required finding for casilla {casilla_id!r} requires legal_refs/source_refs provenance",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,

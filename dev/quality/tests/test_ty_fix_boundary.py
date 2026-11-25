@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import math
 import tempfile
-import time
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.exit_codes import OK
+from dev.paths import REPO_ROOT
 from dev.quality import fixes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -55,20 +55,29 @@ def test_unfixable_ty_diagnostic_remains_visible_but_does_not_fail_repair(capfd:
         assert '"wrong"' in target.read_text(encoding="utf-8")
 
 
-@pytest.mark.perf
-def test_complete_warm_repair_stays_inside_the_two_second_p95_budget() -> None:
-    """Keep the immediate-loop eligibility ceiling executable and explicit."""
+def test_a_warm_repair_spawns_one_run_of_each_tool_on_the_explicit_file_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bound the immediate loop by the work it does, which a loaded host's clock cannot inflate.
+
+    A warm repair of one file starts exactly the fixed tool sequence, once each, and
+    names that file and nothing else; a second process or a widened scope is the
+    regression the old wall-clock ceiling stood in for.
+    """
+    spawned: list[tuple[str, ...]] = []
+    real_run = fixes.subprocess.run
+
+    def recording_run(command: Sequence[str], **kwargs: Any) -> object:
+        spawned.append(tuple(command))
+        return real_run(command, **kwargs)
+
     with _isolated_tree() as raw_root:
         target = Path(raw_root) / "target.py"
         target.write_text('"""Detector fixture."""\n\nvalue: int = 1\n', encoding="utf-8")
         assert fixes.main([str(target)]) == OK  # warm tool and filesystem caches
+        repaired = target.read_text(encoding="utf-8")
 
-        durations: list[float] = []
-        for _ in range(8):
-            started = time.perf_counter()
-            assert fixes.main([str(target)]) == OK
-            durations.append(time.perf_counter() - started)
+        monkeypatch.setattr(fixes.subprocess, "run", recording_run)
+        assert fixes.main([str(target)]) == OK
 
-        p95 = sorted(durations)[math.ceil(0.95 * len(durations)) - 1]
-        print(f"warm explicit-path repair p95: {p95:.3f}s")
-        assert p95 <= 2.0, f"warm explicit-path repair p95 was {p95:.3f}s"
+        expected = [(*prefix, "--", str(target.resolve())) for _, prefix, _ in fixes.REPAIR_COMMANDS]
+        assert [(*command[:-1], str(Path(command[-1]).resolve())) for command in spawned] == expected
+        assert target.read_text(encoding="utf-8") == repaired

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, model_validator
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.errors.hierarchy import pydantic_validation_boundary
+from .....core.filing_year import FilingYear
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
 from ..authority import bundled_indexed_authority
@@ -120,7 +121,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     modelo: str = Field(min_length=1)
     revision: str = Field(min_length=1)
     filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str = Field(min_length=1)
     inputs: dict[CasillaId, Decimal] = Field(default_factory=dict)
     binding_values: dict[BindingId, Decimal] = Field(default_factory=dict)
@@ -128,6 +129,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     relation_values: dict[RelationId, Decimal] = Field(default_factory=dict)
     date_context: dict[str, date] = Field(default_factory=dict)
     date_binding_values: dict[BindingId, date] = Field(default_factory=dict)
+    boolean_binding_values: dict[BindingId, bool] = Field(default_factory=dict)
     expected_outputs: tuple[RegistryScenarioExpectedOutput, ...] = Field(min_length=1)
     notes: tuple[str, ...] = ()
     hand_typed_bound_casillas: dict[CasillaId, str] = Field(default_factory=dict)
@@ -294,7 +296,10 @@ def run_registry_calculation_scenario(
     # casilla). Without this the engine hard-fails on the unsupplied binding,
     # forcing every full-tree scenario to enumerate every profile binding.
     supplied_binding_ids = (
-        set(scenario.binding_values) | set(scenario.enum_binding_values) | set(scenario.date_binding_values)
+        set(scenario.binding_values)
+        | set(scenario.enum_binding_values)
+        | set(scenario.date_binding_values)
+        | set(scenario.boolean_binding_values)
     )
     profile_binding_ids = {
         binding.id for binding in snapshot.revision.bindings if binding.source == BindingSourceKind.PROFILE
@@ -313,6 +318,7 @@ def run_registry_calculation_scenario(
         enum_binding_values=scenario.enum_binding_values,
         relation_values=scenario.relation_values,
         date_binding_values=scenario.date_binding_values or None,
+        boolean_binding_values=scenario.boolean_binding_values or None,
         unresolved_binding_ids=unresolved_profile_binding_ids,
     )
     entries_by_target = {entry.target_casilla_id: entry for entry in calculation.entries}

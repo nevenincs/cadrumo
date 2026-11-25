@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-01'
-modified: '2026-07-03'
-body_hash: 'sha256:5f181ecf52c0eccb1571a6393f6035ad52917642b7558f8fe4abdd58f030bfbe'
+modified: '2026-11-04'
+body_hash: 'sha256:def1171799f4870cd39537946c39f422a18eebfcf22a78a9ac51d1e9009ecc30'
 related:
   - "[[2026-07-01-modelo-100-anualidades-separate-escala-research]]"
 ---
@@ -15,17 +15,17 @@ related:
 
 The Modelo 100 cuota-integra chain models the anualidades por alimentos a favor
 de los hijos satisfechas por decision judicial (casilla 0527) benefit partially
-and incorrectly across revisions 2020-2025, producing a confirmed silent
+and incorrectly across the authored revisions, producing a confirmed silent
 under-declaration (issue #532). LIRPF art. 64 (estatal) and art. 75 (autonomica)
 grant these amounts a SEPARATE-escala treatment: the progressive escala is applied
 separately to the anualidades and to the rest of the base liquidable general, the
 minimo personal y familiar is increased by 1.980 EUR before its escala is
 subtracted, and the result is floored at 0. The registry instead subtracts the
-anualidades from the base (0505 = max(0, 0500 - 0527) in 2024/2025) and applies a
+anualidades from the base (0505 = max(0, 0500 - 0527) in the editions that model the sub-chain) and applies a
 single escala -- it never re-applies the escala to the anualidades, omits the
-+1.980 increment, and applies no floor. In 2020-2023 the regime is not modelled at
++1.980 increment, and applies no floor. In the older editions the regime is not modelled at
 all (0505 is a manual input). An interim non-blocking ADVISORY
-(advisory_when_positive on 0527, commit 3aaf44f15) was landed on 2024/2025 as the
+(advisory_when_positive on 0527, commit 3aaf44f15) was landed on the editions that model the sub-chain as the
 no-silent-under-declaration safeguard; it does not correct any cuota. This ADR
 decides the full determination and the retirement of that interim advisory.
 
@@ -80,22 +80,22 @@ decides the full determination and the retirement of that interim advisory.
 - Depends on the state-scale wiring already landed (renta-cuota-integra-state-scale
   research, escala-estatal parameters) and the lookup_bracket_by_ccaa autonomic
   dispatch; both are stable and in production. No frontier or immature dependency.
-- The 2020-2023 revisions have no computed 0505 sub-chain; building it (0505 from
+- The older revisions have no computed 0505 sub-chain; building it (0505 from
   0500, then the escala targets) is a precondition for the conditional wiring in
-  those years and widens the per-revision change surface.
+  those editions and widens the per-revision change surface.
 - The new gating input must be a typed input with a real capture path (profile
   field or manual-input casilla); shipping a binding with no operator-reachable
   source would be a design-only shell (aeat-source-hygiene).
 - External numeric authority for the test is the AEAT Renta manual worked example /
   live oracle; the ordering property (shortcut < correct < no-benefit) is the
   non-tautological structural anchor. No hand-computed expected values.
-- 2020 is in the same defective family though issue #532 names 2021-2025; the plan
+- The oldest authored revision is in the same defective family though issue #532 names only the later ones; the plan
   must fold it in or explicitly defer it (plan-closure honesty).
 
 ## Implementation
 
 Model the art. 64/75 separate-escala regime as a conditional applied at the
-existing cuota-escala casillas, per revision 2020-2025.
+existing cuota-escala casillas, per authored revision.
 
 Regime predicate (a 1/0 value), reused by the state and autonomic branches:
 multiply( greater_than(0527, 0), less_than(0527, 0505), no_minimo_descendientes_flag ).
@@ -111,7 +111,7 @@ Autonomic branch mirrors with lookup_bracket_by_ccaa and the art. 74 escala, the
 autonomic minimo 0523 (which already carries the art. 56.3 adjustments), and the
 same +1.980 and floor at 0533.
 
-0505 reverts to (2024/2025) or is built as (2020-2023) the full base liquidable
+0505 reverts to (editions that model the sub-chain) or is built as (older editions) the full base liquidable
 general with NO anualidades subtraction (max(0, 0500)); the anualidades enter only
 through the separate-escala term inside the regime branch. All seven 0505 consumers
 continue to want the full base.
@@ -140,7 +140,7 @@ anualidades, anualidades >= base, and flag off (payer keeps minimo descendientes
 
 Advisory retirement: remove advisory_when_positive on 0527 from a revision only
 when that revision computes the full determination; the compute supersedes the
-mechanical follow-up that would have added the advisory to 2020-2023.
+mechanical follow-up that would have added the advisory to the older editions.
 
 ## Rationale
 
@@ -170,7 +170,7 @@ under-declaration and the reality of the benefit.
   with no anualidades reduction -- correct per art. 64, but a behaviour change from
   the current shortcut that always reduced the base. This must be communicated as
   the intended correction, not a regression.
-- Cost: the 2020-2023 revisions require building the 0505->0532 computed sub-chain
+- Cost: the older revisions require building the 0505->0532 computed sub-chain
   before the conditional can be wired, widening the change surface; the new gating
   input requires a real capture path in the profile/CLI surface.
 - Pitfall: the +1.980 minimo escala input (0521 + 1.980) may exceed 0505 in edge

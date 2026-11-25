@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..maritime_preview import _bool_from_raw
+from ..maritime_preview import bool_from_raw
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,7 +37,7 @@ _ENGLISH_YES: tuple[str, ...] = ("true", "1", "yes", "y", "TRUE", "Yes")
 @pytest.mark.parametrize("token", _SPANISH_YES)
 def test_a_spanish_yes_is_read_as_yes(token: str) -> None:
     """Parameterised per word so a failure names the spelling that broke."""
-    assert _bool_from_raw(token) is True, (
+    assert bool_from_raw(token) is True, (
         f"{token!r} means yes to a Spanish operator and was read as False on a fact that gates an exemption pathway"
     )
 
@@ -45,13 +45,13 @@ def test_a_spanish_yes_is_read_as_yes(token: str) -> None:
 @pytest.mark.parametrize("token", _SPANISH_NO)
 def test_a_spanish_no_is_read_as_no(token: str) -> None:
     """The negative half. A right answer for the wrong reason is still fragile."""
-    assert _bool_from_raw(token) is False
+    assert bool_from_raw(token) is False
 
 
 @pytest.mark.parametrize("token", _ENGLISH_YES)
 def test_the_english_forms_keep_working(token: str) -> None:
     """Widening the vocabulary must not drop what already worked."""
-    assert _bool_from_raw(token) is True
+    assert bool_from_raw(token) is True
 
 
 def test_an_absent_fact_is_false_rather_than_an_error() -> None:
@@ -62,8 +62,8 @@ def test_an_absent_fact_is_false_rather_than_an_error() -> None:
     ``False`` precisely so a partial profile resolves. Refusing an absent
     fact would turn "the taxpayer has not answered" into a crash.
     """
-    assert _bool_from_raw(None) is False
-    assert _bool_from_raw("") is False
+    assert bool_from_raw(None) is False
+    assert bool_from_raw("") is False
 
 
 def test_an_uninterpretable_word_does_not_become_a_yes() -> None:
@@ -74,5 +74,5 @@ def test_an_uninterpretable_word_does_not_become_a_yes() -> None:
     still fix it. What must never happen is the opposite: a word nobody can
     read silently claiming the taxpayer said yes to an exemption.
     """
-    assert _bool_from_raw("banana") is False
-    assert _bool_from_raw("quizás") is False
+    assert bool_from_raw("banana") is False
+    assert bool_from_raw("quizás") is False

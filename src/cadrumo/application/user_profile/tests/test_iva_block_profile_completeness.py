@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.deadlines.errors import ProfileError
 from ....domain.deadlines.profiles import (
@@ -26,6 +26,7 @@ from ....domain.deadlines.profiles import (
 )
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
+from ..profile_read_recorder import ProfileReadRecorder, RecordedProfileView
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -42,12 +43,12 @@ _SATISFIED_IVA_BLOCK: dict[str, str] = {
 
 def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
     """The reported symptom: a regime with no composition must not read as ready."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = validate_profile_values(
             {
                 "identity.tax_id": "12345678Z",
                 "activities.description": "consultoria",
-                "iva.regime": "GENERAL",
+                "iva.regime": "SIMPLIFICADO",
                 "tax_residence.ccaa": "madrid",
             },
             operation=_authority_operation_for_test,
@@ -58,9 +59,26 @@ def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
         assert "tax_residence.jurisdiction_scope" in result.missing_required
 
 
+def test_the_general_regime_settles_the_composition_but_not_the_rest_of_the_block() -> None:
+    """A general-regime filer files Modelo 303 under the general regime alone, so only the composition is settled."""
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        values = {
+            "identity.tax_id": "12345678Z",
+            "activities.description": "consultoria",
+            "iva.regime": "GENERAL",
+            "tax_residence.ccaa": "madrid",
+        }
+        result = validate_profile_values(values, operation=_authority_operation_for_test)
+
+        assert result.valid is False
+        assert "iva.m303_regime_composition" not in result.missing_required
+        assert "iva.m303_regime_composition" not in conditional_profile_missing_required(values)
+        assert "tax_residence.jurisdiction_scope" in result.missing_required
+
+
 def test_profile_with_no_iva_facts_is_never_asked_for_the_block() -> None:
     """A taxpayer with no IVA obligation declares none of the block-owned paths."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         values = {
             "identity.tax_id": "12345678Z",
             "taxpayer_type.entity_type": "natural_person",
@@ -82,7 +100,7 @@ def test_any_single_iva_fact_claims_the_block_including_a_declined_enrolment() -
     ``config profile set`` claimed the block for the resolver while every
     readiness surface stayed silent.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         values = {
             "identity.tax_id": "12345678Z",
             "taxpayer_type.entity_type": "natural_person",
@@ -105,8 +123,21 @@ def test_every_block_owned_path_claims_the_block_on_its_own() -> None:
         assert profile_claims_modelo_iva_block({path: "false"}) is True, path
 
 
+def test_iva_block_claim_reads_paths_in_a_stable_order() -> None:
+    """A claim against a tracked mapping records a repeatable profile read set."""
+    paths = sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS)
+    for index, path in enumerate(paths):
+        recorder = ProfileReadRecorder()
+        values = RecordedProfileView({path: "false"}, recorder=recorder, key_paths={})
+
+        assert profile_claims_modelo_iva_block(values) is True
+        assert [entry.selector for entry in recorder.entries(())] == paths[: index + 1]
+
+
 def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
     values = {
+        "taxpayer_type.entity_type": "natural_person",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
         "identity.tax_id": "12345678Z",
         "iva.regime": "GENERAL",
         "iva.m303_regime_composition": "general",
@@ -115,6 +146,7 @@ def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
         "iva.cash_accounting_regime_enrolled": "false",
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        "censo.large_company": "false",
     }
 
     assert conditional_profile_missing_required(values) == ()
@@ -138,7 +170,7 @@ def test_completeness_demands_exactly_what_the_resolver_refuses_without() -> Non
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
-    values: dict[str, str] = {"iva.regime": "GENERAL"}
+    values: dict[str, str] = {"iva.regime": "SIMPLIFICADO"}
 
     demanded: list[str] = []
     for _ in range(len(satisfy) + 1):
@@ -158,4 +190,4 @@ def test_completeness_demands_exactly_what_the_resolver_refuses_without() -> Non
         pytest.fail("resolver never resolved a fully satisfied IVA block")
 
     assert sorted(demanded) == sorted(MODELO_IVA_BLOCK_REQUIRED_PATHS)
-    assert sorted(modelo_iva_profile_required_paths({"iva.regime": "GENERAL"})) == sorted(demanded)
+    assert sorted(modelo_iva_profile_required_paths({"iva.regime": "SIMPLIFICADO"})) == sorted(demanded)

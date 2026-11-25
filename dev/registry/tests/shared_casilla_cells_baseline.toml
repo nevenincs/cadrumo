@@ -1,0 +1,2 @@
+# Bare casilla ids whose undeclared export cells span more than one record.
+# A shrink-only ratchet read by test_shared_casilla_cells_ratchet.py: delete an entry once it no longer occurs.

@@ -1,0 +1,322 @@
+"""Project modelo 200's repeated party, holding and establishment rows.
+
+Modelo 200's generated layout carries repeated projection-kind fields.
+``_projection_plan_for_layout`` built a plan for M303 alone, so every one of them raised
+"requires a snapshot-owned render context" and the Impuesto sobre Sociedades return could
+not export at all. It failed CLOSED -- refusing rather than emitting wrong bytes -- but it
+did not file, and nothing detected that.
+
+The design addresses a family's places as numbered slots inside one fixed page: every
+projection field names its kind, its slot and the row member it prints. A page is written
+once, with row ``i`` of each family in slot ``i``; the design does not repeat the page, so
+a family with more rows than its slots refuses rather than dropping the excess. A page
+none of whose families carries a row emits no occurrence, which is what AEAT expects of a
+page a filer has nothing to put on; whether that absence is admissible is the record's own
+``required`` flag, checked by the caller.
+
+These rows are operator-supplied through the typed producer snapshot, as are modelo 296's
+perceptor detail rows. No separate detail register feeds this projection; the builder
+reads the selected row families from the snapshot's typed profile.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from types import MappingProxyType
+
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.filing_projection_ref import FilingProjectionRef
+from ...core.type_guards import is_object_tuple
+from ...domain.calculations.registry.facts.payloads import MappingFactEntry
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
+from .producer_snapshot import FilingProducerSnapshot
+from .producer_snapshot_m200 import Modelo200ProfileFacts
+from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
+
+__all__ = [
+    "build_m200_filing_projection_plan",
+    "m200_projection_families",
+    "m200_projection_field_widths",
+    "m200_projection_slot_limits",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class _M200ProjectionCatalogue:
+    """Generic projection of the selected M200 row-family declarations."""
+
+    family_by_kind: Mapping[str, str]
+
+
+# Registry authority: selected M200 row-family declarations are consumed through the dated mapping fact.
+def _registry_m200_projection_catalogue(
+    effective_date: date,
+    *,
+    period: str | None = None,
+    authority: GovernedFactSource | None = None,
+) -> _M200ProjectionCatalogue:
+    """Resolve row-family routes from the selected registry authority."""
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise InternalInvariantError(
+            "Modelo 200 projection requires a generation-pinned authority operation",
+            precondition_verdict=internal_invariant_verdict("m200_projection.authority_pinned"),
+        )
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m200-projection-family-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("M200 projection declarations must resolve as a mapping fact")
+    prefix = "modelo.200.projection."
+    suffix = ".family"
+    family_by_kind: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        _add_m200_family_declaration(family_by_kind, entry, prefix=prefix, suffix=suffix)
+    if not family_by_kind:
+        raise ValueError("M200 projection mapping contains no row-family declarations")
+    return _M200ProjectionCatalogue(family_by_kind=family_by_kind)
+
+
+def m200_projection_families(effective_date: date, *, authority: GovernedFactSource) -> Mapping[str, str]:
+    """Return the typed row family each Modelo 200 projection kind fills, as the registry declares it."""
+    catalogue = _registry_m200_projection_catalogue(effective_date, authority=authority)
+    return MappingProxyType(dict(catalogue.family_by_kind))
+
+
+def m200_projection_slot_limits(layout: ExportLayoutDefinition) -> Mapping[str, int]:
+    """Return how many rows the slots of each projection kind hold in ``layout``.
+
+    The design numbers a family's places by slot; the highest slot any field of a kind
+    addresses is the most rows of that kind the layout can carry.
+    """
+    limits: dict[str, int] = {}
+    for record in layout.records:
+        for ref in _m200_projection_refs(record):
+            address = _m200_address(ref)
+            if address is not None:
+                limits[ref.projection_kind] = max(limits.get(ref.projection_kind, 0), address[0])
+    return MappingProxyType(limits)
+
+
+def m200_projection_field_widths(layout: ExportLayoutDefinition) -> Mapping[tuple[str, str], int]:
+    """Return the characters a text member of each projection kind can print in ``layout``.
+
+    Keyed by projection kind and row member. A member whose slots differ in width is
+    held to the narrowest, so a value that fits is one every slot can write.
+    """
+    widths: dict[tuple[str, str], int] = {}
+    for record in layout.records:
+        for field in record.fields:
+            ref = field.projection_ref
+            if ref is None or field.length is None or field.data_type is not CasillaDataType.TEXT:
+                continue
+            address = _m200_address(ref)
+            if address is None:
+                continue
+            key = (ref.projection_kind, address[1])
+            widths[key] = min(widths.get(key, field.length), field.length)
+    return MappingProxyType(widths)
+
+
+def _add_m200_family_declaration(
+    family_by_kind: dict[str, str],
+    entry: MappingFactEntry,
+    *,
+    prefix: str,
+    suffix: str,
+) -> None:
+    if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+        raise TypeError("M200 projection declarations must be string-to-string")
+    if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
+        return
+    kind = entry.key[len(prefix) : -len(suffix)]
+    if not kind.strip() or kind in family_by_kind:
+        raise ValueError(f"duplicate or empty M200 projection declaration key {entry.key!r}")
+    family_by_kind[kind] = entry.value.strip()
+
+
+def _m200_address(reference: FilingProjectionRef) -> tuple[int, str] | None:
+    """Return the fixed row address carried by a supported M200 reference."""
+    slot = getattr(reference, "slot", None)
+    field = getattr(reference, "field", None)
+    if not isinstance(slot, int) or slot < 1 or field is None:
+        return None
+    field_name = getattr(field, "value", field)
+    if not isinstance(field_name, str) or not field_name:
+        return None
+    return slot, field_name
+
+
+def _rows_for(profile: object, kind: str, *, catalogue: _M200ProjectionCatalogue) -> tuple[object, ...]:
+    """Return the rows a projection kind draws on, empty when the filing carries none.
+
+    An unroutable kind fails closed rather than resolving to no rows: a kind the
+    catalogue does not declare, or a family the typed profile does not carry, is
+    a registry or type defect, and answering it with an empty family would drop
+    the whole page from a filed return instead of reporting the defect.
+    """
+    if not isinstance(profile, Modelo200ProfileFacts):
+        return ()
+    family = catalogue.family_by_kind.get(kind)
+    if family is None:
+        raise InternalInvariantError(
+            f"Modelo 200 projection kind {kind!r} has no registry row-family declaration",
+            precondition_verdict=internal_invariant_verdict("m200_projection.kind_declared"),
+        )
+    rows: object = getattr(profile.projection_rows, family, None)
+    if not is_object_tuple(rows):
+        raise InternalInvariantError(
+            f"Modelo 200 projection row family {family!r} is not carried by the typed profile",
+            precondition_verdict=internal_invariant_verdict("m200_projection.family_carried"),
+        )
+    return rows
+
+
+def _m200_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProjectionRef, ...]:
+    return tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
+
+
+def _m200_record_depth(
+    profile: object,
+    refs: tuple[FilingProjectionRef, ...],
+    *,
+    catalogue: _M200ProjectionCatalogue,
+) -> int:
+    """Return how many occurrences of a slot-addressed page its families fill: one, or none.
+
+    A page the design requires is still written once when its families are empty;
+    the caller applies that floor.
+
+    Rows fill the page's numbered slots, not further pages, so a family with more rows
+    than the page has slots for it cannot be written and refuses.
+    """
+    slots_by_kind: dict[str, int] = {}
+    for ref in refs:
+        address = _m200_address(ref)
+        if address is not None:
+            slots_by_kind[ref.projection_kind] = max(slots_by_kind.get(ref.projection_kind, 0), address[0])
+    filled = False
+    for kind, slots in slots_by_kind.items():
+        rows = len(_rows_for(profile, kind, catalogue=catalogue))
+        if rows > slots:
+            raise InternalInvariantError(
+                f"Modelo 200 projection kind {kind!r} carries {rows} rows; its page has {slots} slots",
+                precondition_verdict=internal_invariant_verdict("m200_projection.rows_within_slots"),
+            )
+        filled = filled or rows > 0
+    return 1 if filled else 0
+
+
+def _m200_projection_values_for_occurrence(
+    *,
+    profile: object,
+    refs: tuple[FilingProjectionRef, ...],
+    record: ExportRecordDefinition,
+    occurrence: int,
+    catalogue: _M200ProjectionCatalogue,
+) -> list[FilingProjectionValue]:
+    values: list[FilingProjectionValue] = []
+    for ref in refs:
+        address = _m200_address(ref)
+        if address is None:
+            continue
+        slot, field_name = address
+        family_rows = _rows_for(profile, ref.projection_kind, catalogue=catalogue)
+        row = family_rows[slot - 1] if slot <= len(family_rows) else None
+        values.append(
+            FilingProjectionValue(
+                projection_ref=ref,
+                record_id=record.id,
+                occurrence=occurrence,
+                value=getattr(row, field_name, None) if row is not None else None,
+            ),
+        )
+    return values
+
+
+def _project_m200_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    profile: object,
+    record: ExportRecordDefinition,
+    catalogue: _M200ProjectionCatalogue,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    refs = _m200_projection_refs(record)
+    if not refs:
+        return (), ()
+    depth = _m200_record_depth(profile, refs, catalogue=catalogue)
+    if record.required:
+        # The design requires the page whether or not its families have rows; its other
+        # casillas still print, and slots without a row print blank.
+        depth = max(depth, 1)
+    contexts: list[FilingRecordRenderContext] = []
+    values: list[FilingProjectionValue] = []
+    for occurrence in range(1, depth + 1):
+        contexts.append(
+            FilingRecordRenderContext(
+                registry_snapshot=registry_snapshot,
+                layout=layout,
+                record=record,
+                occurrence=occurrence,
+            ),
+        )
+        values.extend(
+            _m200_projection_values_for_occurrence(
+                profile=profile,
+                refs=refs,
+                record=record,
+                occurrence=occurrence,
+                catalogue=catalogue,
+            ),
+        )
+    return tuple(contexts), tuple(values)
+
+
+def build_m200_filing_projection_plan(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    producer_snapshot: FilingProducerSnapshot,
+) -> FilingProjectionPlan:
+    """Project every modelo 200 repeated-row family from one selected snapshot and layout.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
+    profile = producer_snapshot.model_profile
+    filing_period = registry_snapshot.filing_period
+    effective_date = (
+        filing_period.end_date
+        if filing_period is not None and filing_period.has_date_span()
+        else date(registry_snapshot.filing_year, 12, 31)
+    )
+    catalogue = _registry_m200_projection_catalogue(
+        effective_date,
+        period=registry_snapshot.period,
+    )
+    contexts: list[FilingRecordRenderContext] = []
+    values: list[FilingProjectionValue] = []
+
+    for record in layout.records:
+        record_contexts, record_values = _project_m200_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            profile=profile,
+            record=record,
+            catalogue=catalogue,
+        )
+        contexts.extend(record_contexts)
+        values.extend(record_values)
+    return FilingProjectionPlan(contexts=tuple(contexts), values=tuple(values))

@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from ...core.external_constants import OutputLanguage
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.financial_operand_contract import (
@@ -23,14 +24,21 @@ from ..operations.financial_operand_contract import (
 from .edit_apply_contracts import ModeloEditApplySubmissionV1
 from .edit_models import ModeloEditSubmissionV1
 from .edit_operation_requests import ModeloEditApplyOperationRequestV2, ModeloEditPreflightRequestV2
+from .lifecycle_view_refusal_doors import unit_status_verdict
+from .refusal_door_verdicts import caller_defect_verdict, operator_choice_verdict
 
 
 class ModeloEditOperatorInputV2(BaseModel):
-    """Exact bounded human input encoding for all four canonical intent families."""
+    """Exact bounded human input encoding for all four canonical intent families.
+
+    ``output_language`` is the language the filer reads the edit's check in:
+    a preflight says its findings and any refusal in it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     input_version: Literal[2] = 2
     submission: ModeloEditApplySubmissionV1 = Field(repr=False)
+    output_language: OutputLanguage
 
 
 @dataclass(slots=True)
@@ -53,7 +61,10 @@ def prepare_modelo_edit_operand(
     operand: ModeloEditSubmissionV1 | None = None
     try:
         if definition_id not in {"modelo.edit.apply", "modelo.edit.preflight"}:
-            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
+            raise OperationFinancialOperandRefusedError(
+                OperationFinancialOperandRefusalCode.WRONG_MODEL,
+                precondition_verdict=caller_defect_verdict("financial_operand_definition"),
+            )
         # Verify JSON membership and finiteness before Pydantic hydrates input.
         # No re-encoding or content fingerprint is produced from financial values.
         checked = json.loads(
@@ -62,18 +73,31 @@ def prepare_modelo_edit_operand(
         del checked
         encoded = ModeloEditOperatorInputV2.model_validate_json(input_json)
         operand = encoded.submission.to_submission()
+        if definition_id == "modelo.edit.apply" and (operand.lexemes or operand.held):
+            # Entries as typed and held changes are a preflight's to read; an apply takes typed values only.
+            raise OperationFinancialOperandRefusedError(
+                OperationFinancialOperandRefusalCode.ENTRY_AS_TYPED,
+                precondition_verdict=operator_choice_verdict("financial_operand_entry_as_typed"),
+            )
         baseline = operand.baseline
         if baseline.bucket_id != str(profile_id) or baseline.work_unit_id != subject_ref:
-            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
-        request_type = (
-            ModeloEditApplyOperationRequestV2 if definition_id == "modelo.edit.apply" else ModeloEditPreflightRequestV2
-        )
-        return PreparedModeloEditOperand(
-            request=request_type(
+            raise OperationFinancialOperandRefusedError(
+                OperationFinancialOperandRefusalCode.WRONG_BASELINE,
+                precondition_verdict=unit_status_verdict("financial_operand_baseline", subject_ref),
+            )
+        request = (
+            ModeloEditApplyOperationRequestV2(
                 profile_id=profile_id, work_unit_id=baseline.work_unit_id, financial_baseline_ref=baseline.baseline_id
-            ),
-            operand=operand,
+            )
+            if definition_id == "modelo.edit.apply"
+            else ModeloEditPreflightRequestV2(
+                profile_id=profile_id,
+                work_unit_id=baseline.work_unit_id,
+                financial_baseline_ref=baseline.baseline_id,
+                output_language=encoded.output_language,
+            )
         )
+        return PreparedModeloEditOperand(request=request, operand=operand)
     finally:
         input_json = ""
         encoded = None

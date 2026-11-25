@@ -19,7 +19,7 @@ the Agencia Estatal de Administración Tributaria (AEAT) before you file.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Install the latest release with pip or uv. Record the installed version
+Install the latest release with `pip` or `uv`. Record the installed version
 before preparing any filing records.
 :::
 

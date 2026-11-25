@@ -2,14 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
+from ...core.i18n.render import tr
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.transactions.models import Transaction
+from ..aggregation.received_invoice_withholding import (
+    MovementWithholding,
+    received_invoice_movement_withholding,
+    states_received_retencion,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest
@@ -22,12 +33,88 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .actions_manual import ledger_transaction_payload
+from .actions_common import display_decimal
+from .entry_options_operation import ENTRY_OPTION_LABEL_PREFIX
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list
+from .manual_read import ledger_transaction_payload
 from .read_access import resolve_ledger_read_access
-from .read_ports import LedgerReadPortsFactory
+from .read_ports import LedgerReadPorts, LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status
-from .transaction_projection import LedgerTransactionProjection, LedgerTransactionReviewProjection
+from .transaction_projection import (
+    LedgerMovementWithholdingProjection,
+    LedgerTransactionProjection,
+    LedgerTransactionReviewProjection,
+    classification_reason_source,
+    classification_reason_words,
+)
+
+_CONCEPT_WORDS_PREFIX: Final = f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario."
+"""Where the words of a rental expense concept live; the entry options serve the same words."""
+
+
+def rental_expense_concept_words(concept: GastoCapitalInmobiliario | None, language: OutputLanguage) -> str | None:
+    """The words that name a row's rental expense concept in ``language``; ``None`` for a row without one."""
+    return None if concept is None else tr(f"{_CONCEPT_WORDS_PREFIX}{concept}", locale=language.value)
+
+
+def _withholding_projection(withholding: MovementWithholding) -> LedgerMovementWithholdingProjection:
+    return LedgerMovementWithholdingProjection(
+        invoice_id=withholding.invoice_id,
+        invoice_number=withholding.invoice_number,
+        modelo=withholding.modelo,
+        scheme=None if withholding.scheme is None else withholding.scheme.value,
+        retencion=None if withholding.retencion is None else display_decimal(withholding.retencion),
+        recognised_on=None if withholding.recognised_on is None else withholding.recognised_on.isoformat(),
+        held_back=None if withholding.held_back is None else withholding.held_back.value,
+    )
+
+
+def ledger_list_row(
+    transaction: Transaction,
+    *,
+    withholding: tuple[MovementWithholding, ...] = (),
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
+) -> LedgerTransactionReviewProjection:
+    """One listed row: the canonical payload plus the list's own facts, its reason's words said in ``language``.
+
+    ``withholding`` is what the invoices this movement pays leave on it, as the
+    declarations read it; empty when it pays none that states a retención.
+    """
+    source = classification_reason_source(transaction.classification_reason)
+    words = classification_reason_words(source, language)
+    concept_words = rental_expense_concept_words(transaction.gasto_capital_inmobiliario, language)
+    return LedgerTransactionReviewProjection(
+        transaction=LedgerTransactionProjection.from_payload(
+            ledger_transaction_payload(transaction), language=language
+        ),
+        review_status=ledger_transaction_review_status(transaction),
+        group_label=transaction.group_label,
+        own_account_id=transaction.own_account_id,
+        classification_reason_source=source,
+        classification_reason_words=words,
+        classification_reason_words_language=language if words else None,
+        withholding=tuple(_withholding_projection(item) for item in withholding),
+        gasto_capital_inmobiliario_words=concept_words,
+        gasto_capital_inmobiliario_words_language=None if concept_words is None else language,
+    )
+
+
+def listed_movement_withholding(
+    transactions: tuple[Transaction, ...], *, bucket_id: str, ports: LedgerReadPorts
+) -> Mapping[str, tuple[MovementWithholding, ...]]:
+    """Read, for the listed ``transactions``, the retención each carries through the declarations' own reading.
+
+    The whole movement catalogue is read only when some received invoice states
+    a retención, because an invoice's retención is shared among all its payments
+    and a payment outside the listed window changes each one's share.
+    """
+    invoices = ports.invoice_repository.load()
+    if not states_received_retencion(invoices, bucket_id=bucket_id):
+        return dict[str, tuple[MovementWithholding, ...]]()
+    listed = {transaction.transaction_id for transaction in transactions}
+    found = received_invoice_movement_withholding(invoices, ports.transaction_repository.load(), bucket_id=bucket_id)
+    return {transaction_id: rows for transaction_id, rows in found.items() if transaction_id in listed}
+
 
 LEDGER_LIST_OPERATION_DEFINITION_ID = "ledger.list"
 
@@ -46,6 +133,7 @@ class LedgerListRequest(BaseModel):
     sort_by: LedgerSortField | None = None
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC
     exclude_llm_rejected: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     def filter_spec(self) -> LedgerReviewFilterSpec:
         """Resolve scope and execution through the same canonical grammar."""
@@ -126,15 +214,16 @@ class LedgerListExecutor:
             )
             if page.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            withholding = listed_movement_withholding(
+                tuple(item.transaction for item in page.results), bucket_id=bucket_id, ports=ports
+            )
             return LedgerListProjection(
                 profile_id=payload.profile_id,
                 rows=tuple(
-                    LedgerTransactionReviewProjection(
-                        transaction=LedgerTransactionProjection.from_payload(
-                            ledger_transaction_payload(item.transaction)
-                        ),
-                        review_status=ledger_transaction_review_status(item.transaction),
-                        group_label=item.transaction.group_label,
+                    ledger_list_row(
+                        item.transaction,
+                        withholding=withholding.get(item.transaction.transaction_id, ()),
+                        language=payload.output_language,
                     )
                     for item in page.results
                 ),

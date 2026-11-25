@@ -39,7 +39,5 @@ entries = [
   { key = "tier.tier-90.description", value = "New lease in a tensioned residential-market zone with the rent cut below the previous contract." },
   { key = "tier.tier-90.legal_ref", value = "ley-35-2006:art-23" },
   { key = "tier.tier-90.parameter_id", value = "renta-rental-reduccion-rate-tier-90" },
-  { key = "binding.profile_key", value = "renta_rental.reduccion_art_23_2_tier_2024" },
-  { key = "binding.typed_enum", value = "RentalReductionArt232Tier" },
   { key = "missing_behavior", value = "fail_closed" },
 ]

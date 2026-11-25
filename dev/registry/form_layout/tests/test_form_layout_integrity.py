@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingRowSource,
     FormSectionDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory, load_registry_tree
@@ -49,6 +50,11 @@ def _revision(modelo: str, revision: str) -> ModeloRevision:
     return _modelos()[modelo].revisions[revision]
 
 
+def _current(modelo: str) -> ModeloRevision:
+    """The authored revision of ``modelo`` that has no end date."""
+    return _revision(modelo, str(open_ended_revision(modelo).id))
+
+
 def _with_layout(revision: ModeloRevision, layout: FormLayoutDefinition) -> ModeloRevision:
     return revision.model_copy(update={"form_layouts": (layout,)})
 
@@ -62,14 +68,14 @@ def _add_block(layout: FormLayoutDefinition, block: object) -> FormLayoutDefinit
 
 
 def test_the_committed_layout_describes_its_revision() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     assert len(revision.form_layouts) == 1
     assert form_layout_failures(revision) == ()
-    assert validate_form_layout_section(prefix="303 2025", revision=revision) == []
+    assert validate_form_layout_section(prefix=f"303 {revision.id}", revision=revision) == []
 
 
 def test_an_omitted_casilla_is_refused() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     dropped = layout.placements[0].casilla_id
     failures = form_layout_failures(
@@ -79,7 +85,7 @@ def test_an_omitted_casilla_is_refused() -> None:
 
 
 def test_an_invented_casilla_is_refused() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     invented = FormPlacementDefinition(casilla_id="not-a-casilla", kind=FormPlacementKind.WORKING_FIGURE)
     failures = form_layout_failures(
@@ -93,7 +99,7 @@ def test_an_invented_casilla_is_refused() -> None:
 
 
 def test_a_casilla_shown_twice_is_refused() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     on_form = next(item.casilla_id for item in layout.placements if item.kind is FormPlacementKind.ON_FORM)
     duplicated = _add_block(layout, FormFieldBlock(id="duplicate", casilla_id=on_form))
@@ -103,7 +109,7 @@ def test_a_casilla_shown_twice_is_refused() -> None:
 
 @pytest.mark.parametrize("fault", [None, "undeclared", "same-section"])
 def test_a_declared_alias_allows_one_repeat_at_its_exact_section(fault: str | None) -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     placement = next(item for item in layout.placements if item.kind is FormPlacementKind.ON_FORM)
     last_page = layout.pages[-1]
@@ -140,7 +146,7 @@ def test_a_declared_alias_allows_one_repeat_at_its_exact_section(fault: str | No
 
 
 def test_a_working_figure_shown_on_the_form_is_refused() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     working = next(item.casilla_id for item in layout.placements if item.kind is FormPlacementKind.WORKING_FIGURE)
     failures = form_layout_failures(
@@ -152,7 +158,7 @@ def test_a_working_figure_shown_on_the_form_is_refused() -> None:
 
 
 def test_a_stale_source_digest_is_refused() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     stale = revision.form_layouts[0].model_copy(update={"source_state_digest": "0" * 64})
     assert any("form layout is stale" in item for item in form_layout_failures(_with_layout(revision, stale)))
     renumbered = revision.model_copy(
@@ -162,7 +168,7 @@ def test_a_stale_source_digest_is_refused() -> None:
 
 
 def test_a_changed_literal_scale_requires_regenerating_its_form_companion() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     scaled = revision.model_copy(
         update={
             "export_layouts": tuple(
@@ -205,7 +211,7 @@ def test_a_changed_literal_scale_requires_regenerating_its_form_companion() -> N
 
 
 def test_a_repeating_group_over_a_scalar_binding_is_refused() -> None:
-    revision = _revision("232", "2018-y-siguientes")
+    revision = _current("232")
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     scalar = next(binding.id for binding in revision.bindings if binding.value.channel.value != "row_set")
@@ -222,7 +228,7 @@ def test_a_repeating_group_over_a_scalar_binding_is_refused() -> None:
 
 
 def test_a_binding_offered_as_an_input_must_be_manual() -> None:
-    revision = _revision("303", "2025")
+    revision = _current("303")
     layout = revision.form_layouts[0]
     derived = next(binding.id for binding in revision.bindings if str(binding.provider.kind) != "manual_input")
     failures = form_layout_failures(
@@ -232,7 +238,7 @@ def test_a_binding_offered_as_an_input_must_be_manual() -> None:
 
 
 def test_two_layouts_for_one_revision_are_refused() -> None:
-    revision = _revision("130", "2019-y-siguientes")
+    revision = _current("130")
     layout = revision.form_layouts[0]
     doubled = revision.model_copy(update={"form_layouts": (layout, layout)})
     assert form_layout_failures(doubled) == ("declares 2 form layouts; a revision has at most one",)
@@ -242,11 +248,12 @@ def test_a_malformed_grid_in_a_temporary_registry_copy_fails_to_load(tmp_path: P
     source = REGISTRY_ROOT / "modelos" / "111"
     copy = tmp_path / "111"
     shutil.copytree(source, copy)
-    fragment = form_layout_fragment_path(copy / "revisions" / "2019-y-siguientes")
+    revision_id = str(open_ended_revision("111").id)
+    fragment = form_layout_fragment_path(copy / "revisions" / revision_id)
     text = fragment.read_text(encoding="utf-8")
     narrowed = text.replace('cells = [{ kind = "casilla", casilla_id = "01" }, ', "cells = [", 1)
     assert narrowed != text
-    assert isinstance(load_modelo_directory(copy).revisions["2019-y-siguientes"].form_layouts[0], FormLayoutDefinition)
+    assert isinstance(load_modelo_directory(copy).revisions[revision_id].form_layouts[0], FormLayoutDefinition)
     fragment.write_text(narrowed, encoding="utf-8", newline="\n")
     with pytest.raises(RegistryError, match="has 2 cells for 3 columns"):
         load_modelo_directory(copy)

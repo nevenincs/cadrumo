@@ -43,8 +43,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.time.clock import now
+from ..calculations.registry.form_codes import form_for_role
 from ..submission.models import ModeloDraftStatus
 from .protocols import (
     CasillaCollection,
@@ -55,6 +55,7 @@ from .protocols import (
 from .schema import (
     ModeloDraft,
     ModeloValidationFinding,
+    ModeloValue,
     ModeloValueKind,
 )
 
@@ -235,16 +236,7 @@ class ModeloValidator:
             # absence remains an error in _validate_required and below.
             if value.kind is ModeloValueKind.EMPTY and not casilla.required:
                 continue
-            if not casilla.formula_input_casilla_ids:
-                if value.formula_trace_casilla_ids is not None and value.formula_trace_casilla_ids:
-                    out.append(self._divergence(value.casilla_id))
-                continue
-            if value.kind is not ModeloValueKind.COMPUTED:
-                out.append(self._divergence(value.casilla_id))
-                continue
-            if value.formula_trace_casilla_ids is None or set(value.formula_trace_casilla_ids) != set(
-                casilla.formula_input_casilla_ids,
-            ):
+            if _formula_trace_diverges(value, casilla):
                 out.append(self._divergence(value.casilla_id))
         return out
 
@@ -274,6 +266,17 @@ class ModeloValidator:
                 references_rules=(),
             ),
         ]
+
+
+def _formula_trace_diverges(value: ModeloValue, casilla: CasillaSchema) -> bool:
+    """Compare admitted values against the schema's exact formula input membership."""
+    if not casilla.formula_input_casilla_ids:
+        return value.formula_trace_casilla_ids is not None and bool(value.formula_trace_casilla_ids)
+    if value.kind is not ModeloValueKind.COMPUTED:
+        return True
+    return value.formula_trace_casilla_ids is None or set(value.formula_trace_casilla_ids) != set(
+        casilla.formula_input_casilla_ids,
+    )
 
 
 def _required_missing_finding(casilla: CasillaSchema) -> ModeloValidationFinding:
@@ -306,7 +309,7 @@ def _required_missing_finding(casilla: CasillaSchema) -> ModeloValidationFinding
 
 
 def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:
-    if draft.modelo != Modelo("349").value:
+    if draft.modelo != form_for_role("iva.intracommunity_summary"):
         return False
     binding_ids = _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA.get(casilla_id)
     if binding_ids is not None:

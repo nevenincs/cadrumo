@@ -14,10 +14,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Condition, RLock
+from types import TracebackType
 from typing import TYPE_CHECKING
 
 from cadrumo.core.hashing import content_hash_hex, sha256_file
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistrySnapshotError
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -41,6 +42,8 @@ class _CompilerSlot:
     lock: RLock = field(default_factory=RLock, repr=False)
     receipt: str | None = None
     authority: ValidatedRegistryAuthority | None = None
+    failure: RegistryError | None = None
+    failure_traceback: TracebackType | None = None
     generation: int = 0
 
 
@@ -82,7 +85,7 @@ class _CompilerBarrier:
                 self._condition.notify_all()
 
 
-_state_lock = RLock()
+state_lock = RLock()
 _barrier = _CompilerBarrier()
 _slots: dict[_AuthoringRootKey, _CompilerSlot] = {}
 #: Each compiler-owned authority's mutable evidence root, held beside a weak
@@ -95,7 +98,7 @@ _slots: dict[_AuthoringRootKey, _CompilerSlot] = {}
 #: address -- silently handing one compilation another's evidence root. The weak
 #: reference decides identity: a recycled address no longer matches, and the
 #: lookup refuses instead of answering wrongly.
-_authority_sources: dict[int, tuple[weakref.ref[ValidatedRegistryAuthority], Path]] = {}
+authority_sources: dict[int, tuple[weakref.ref[ValidatedRegistryAuthority], Path]] = {}
 _generation = 0
 
 
@@ -136,11 +139,11 @@ def source_evidence_receipt(fingerprints: tuple[tuple[str, int, int], ...]) -> s
     entries: list[dict[str, object]] = []
     for raw_path, size, mtime_ns in fingerprints:
         key = (raw_path, size, mtime_ns)
-        with _state_lock:
+        with state_lock:
             digest = _evidence_digests.get(key)
         if digest is None:
             digest = sha256_file(Path(raw_path))
-            with _state_lock:
+            with state_lock:
                 _evidence_digests[key] = digest
         entries.append({"path": raw_path, "size": size, "mtime_ns": mtime_ns, "sha256": digest})
     return content_hash_hex({"schema": "registry-authoring-source-receipt/v1", "entries": entries})
@@ -154,7 +157,14 @@ def cached_compilation(
     compiler_source_tree_digest: str,
     build: Callable[[], ValidatedRegistryAuthority],
 ) -> ValidatedRegistryAuthority:
-    """Compile once for an observed mutable-tree receipt, otherwise rebuild."""
+    """Compile once for an observed mutable-tree receipt, otherwise rebuild.
+
+    A registry refusal is a deterministic function of the same receipt, so it
+    is kept too: every later caller observing identical inputs receives that
+    refusal again instead of recompiling the whole registry to rediscover it.
+    Only :class:`RegistryError` is kept. Any other exception may be transient
+    and is never remembered, and a changed receipt always compiles afresh.
+    """
     global _generation
     receipt = content_hash_hex(
         {
@@ -165,16 +175,31 @@ def cached_compilation(
         }
     )
     with _barrier.read():
-        with _state_lock:
+        with state_lock:
             slot = _slots.setdefault(pair.key, _CompilerSlot())
         with slot.lock:
-            if slot.receipt == receipt and slot.authority is not None:
-                return slot.authority
-            authority = build()
-            with _state_lock:
+            if slot.receipt == receipt:
+                if slot.authority is not None:
+                    return slot.authority
+                if slot.failure is not None:
+                    # Restore the original traceback so repeated refusals do
+                    # not accumulate every earlier caller's frames.
+                    raise slot.failure.with_traceback(slot.failure_traceback)
+            try:
+                authority = build()
+            except RegistryError as failure:
+                with state_lock:
+                    slot.receipt = receipt
+                    slot.authority = None
+                    slot.failure = failure
+                    slot.failure_traceback = failure.__traceback__
+                raise
+            with state_lock:
                 _generation += 1
                 slot.receipt = receipt
                 slot.authority = authority
+                slot.failure = None
+                slot.failure_traceback = None
                 slot.generation = _generation
             return authority
 
@@ -182,17 +207,17 @@ def cached_compilation(
 def register_authoring_authority(authority: ValidatedRegistryAuthority, *, source_root: Path) -> None:
     """Associate a development compilation result with its mutable evidence root."""
     reference = weakref.ref(authority)
-    with _state_lock:
-        for key, (held, _root) in list(_authority_sources.items()):
+    with state_lock:
+        for key, (held, _root) in list(authority_sources.items()):
             if held() is None:
-                del _authority_sources[key]
-        _authority_sources[id(authority)] = (reference, source_root)
+                del authority_sources[key]
+        authority_sources[id(authority)] = (reference, source_root)
 
 
 def source_root_for(authority: ValidatedRegistryAuthority) -> Path:
     """Return the explicit source root owned by a development compilation result."""
-    with _state_lock:
-        entry = _authority_sources.get(id(authority))
+    with state_lock:
+        entry = authority_sources.get(id(authority))
     if entry is not None:
         held, source_root = entry
         if held() is authority:
@@ -204,15 +229,15 @@ def source_root_for(authority: ValidatedRegistryAuthority) -> Path:
 def compiler_reset() -> Generator[None]:
     """Exclusively invalidate every mutable compiler cache entry."""
     global _generation
-    with _barrier.reset(), _state_lock:
+    with _barrier.reset(), state_lock:
         _generation += 1
         _slots.clear()
-        _authority_sources.clear()
+        authority_sources.clear()
         _evidence_digests.clear()
         yield
 
 
 def compiler_generation() -> int:
     """Return the current development compiler generation."""
-    with _state_lock:
+    with state_lock:
         return _generation

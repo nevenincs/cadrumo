@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from .....application.operator_actions.models import ActionReference
-from ..action_guards import _REQUIRED_TARGETS, require_canonical_ledger_actions
+from ..action_guards import REQUIRED_TARGETS, require_canonical_ledger_actions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,13 +76,13 @@ def test_every_declared_slot_is_actually_enforced() -> None:
     The table drives the loop, so an entry added but never supplied to the
     function would look enforced and refuse nothing.
     """
-    enforced = {attribute for attribute, _command_key, _refusal in _REQUIRED_TARGETS}
+    enforced = {attribute for attribute, _command_key, _refusal in REQUIRED_TARGETS}
 
     assert enforced == {"review_action", "classify_action", "evidence_action", "link_action"}
 
 
 def test_each_slot_names_a_distinct_command() -> None:
     """Two slots sharing a command key would let one accept the other's action."""
-    command_keys = [command_key for _attribute, command_key, _refusal in _REQUIRED_TARGETS]
+    command_keys = [command_key for _attribute, command_key, _refusal in REQUIRED_TARGETS]
 
     assert len(command_keys) == len(set(command_keys))

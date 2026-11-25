@@ -48,18 +48,18 @@ def _status(result: Result) -> str:
 def test_an_incomplete_profile_accepts_one_field_at_a_time() -> None:
     """A profile is born incomplete and must be fillable one flag per command.
 
-    Reproduction: on a freshly created profile, ``edit --quiet --notes hola``
+    Reproduction: on a freshly created profile, ``edit --quiet --legal-name hola``
     and even ``edit --quiet --tax-id 12345678Z`` were refused, the first as an
     invalid ``--tax-id``. The patch path validated the whole answers model and
     the filing baseline, both of which judge a COMPLETE record, so the only
     edit that could succeed was one supplying every required field at once.
     ``complete-setup`` is what judges completeness, and it still must.
     """
-    assert _status(_edit("--notes", "hola")) == "updated"
+    assert _status(_edit("--legal-name", "hola")) == "updated"
     assert _status(_edit("--tax-id", "12345678Z")) == "updated"
 
     facts = profile_persisted_facts()
-    assert "identity.notes" in facts
+    assert "identity.legal_name" in facts
     assert "identity.tax_id" in facts
 
     assert profile_cli("complete-setup").exit_code != 0, "an incomplete record must still be refused promotion"
@@ -69,17 +69,17 @@ def test_an_incomplete_profile_accepts_one_field_at_a_time() -> None:
 def test_a_blank_optional_flag_clears_the_fact_and_records_one_change() -> None:
     """Naming a flag with an empty value is a request to clear that answer.
 
-    Reproduction: ``edit --quiet --notes ""`` reported ``updated``, left the
+    Reproduction: ``edit --quiet --legal-name ""`` reported ``updated``, left the
     stored value in place, and still appended a value-change event -- the CLI
     could set an optional fact but never unset one, and said otherwise.
     """
-    assert _status(_edit("--notes", "borrame")) == "updated"
-    assert "identity.notes" in profile_persisted_facts()
+    assert _status(_edit("--legal-name", "borrame")) == "updated"
+    assert "identity.legal_name" in profile_persisted_facts()
     before = profile_event_count(_VALUES_UPDATED)
 
-    assert _status(_edit("--notes", "")) == "updated"
+    assert _status(_edit("--legal-name", "")) == "updated"
 
-    assert "identity.notes" not in profile_persisted_facts()
+    assert "identity.legal_name" not in profile_persisted_facts()
     assert profile_event_count(_VALUES_UPDATED) == before + 1
 
 
@@ -123,6 +123,33 @@ def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
 
     assert refused.exit_code != 0
     assert "identity.tax_id" in profile_persisted_facts()
+
+
+def test_a_worker_refusal_reaches_the_envelope_with_the_condition_it_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A refusal the profile worker settles keeps its verdict in the CLI error envelope.
+
+    The command judges a patch locally before it submits, so the worker's own
+    judgement is reached here by setting that local preview aside, as a
+    command holding an older view of the profile would. Reproduction: the
+    worker recorded the stopping error with its verdict, but the command
+    rebuilt the refusal from the settled code alone, so the envelope named no
+    failed condition and no way forward.
+    """
+    assert _status(_edit(*COMPLETE_NATURAL_PERSON_FLAGS)) == "updated"
+    assert profile_cli("complete-setup").exit_code == 0
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.cli.config.operation_profile_patch.validate_profile_patch", lambda **_kwargs: ()
+    )
+
+    refused = _edit("--name", "")
+
+    assert refused.exit_code != 0, refused.output
+    assert "identity.name" in profile_persisted_facts()
+    error = json.loads(refused.stderr)["error"]
+    assert error["code"] == "REFUSED_WIZARD_MISSING_FLAG", error
+    assert error["context"]["terminal_condition"] == "refused", error
+    assert error["context"]["operation_id"], error
+    assert error["action"]["failed_condition_id"] == "wizard.filing_baseline.complete", error
 
 
 def test_a_blank_choice_flag_clears_the_language_preference_and_its_hint(tmp_path: Path) -> None:

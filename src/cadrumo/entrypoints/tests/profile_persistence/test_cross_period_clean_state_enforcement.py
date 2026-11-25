@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -21,11 +22,12 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import create_user_profile_record
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -49,16 +51,19 @@ from ....application.calculations.observations_repository import (
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.calculation_screen import calculation_screen_stamp
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -67,11 +72,6 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
     IrpfIncomeCategory,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
 )
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -90,6 +90,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
@@ -97,9 +98,12 @@ from ....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from ....domain.modelos.verification_repository import upsert_verification_report
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
-from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
+from .verification_substance_support import general_iva_workflow_profile
+from .work_income_support import UNSTATED_WORK_INCOME_AS_ZERO
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -135,37 +139,16 @@ _CROSS_PERIOD_353_ROSTER_PROFILE_ID = "35300000-0000-4000-8000-000000000354"
 _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
     ("390", "0A"): "39000000-0000-4000-8000-000000000004",
     ("180", "0A"): "18000000-0000-4000-8000-000000000180",
-    ("190", "0A"): "19000000-0000-4000-8000-000000000190",
     ("193", "0A"): "19300000-0000-4000-8000-000000000193",
     ("100", "0A"): "10000000-0000-4000-8000-000000000102",
     ("202", "2P"): "20200000-0000-4000-8000-000000000202",
-    ("200", "0A"): "20000000-0000-4000-8000-000000000200",
 }
-
-
-def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.from_registry("common_regime"),
-            regime_composition=M303RegimeComposition.from_registry("general"),
-            redeme_enrolled=False,
-            cash_accounting_regime_enrolled=False,
-            voluntary_sii_enrolled=False,
-            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        ),
-    )
 
 
 def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390") -> None:
     is_legal_entity = modelo in {"200", "202", "353"}
     facts = [
-        UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),
+        UserProfileFact(path="identity.tax_id", value="B00015016" if is_legal_entity else "X0001500M"),
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -178,6 +161,14 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
         UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        # The taxpayer pays an employee and rent with retencion, so the payer modelos 111, 115, 180 and 190 apply.
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+        # It also pays investment income with retencion, so Modelo 193 applies.
+        UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
+        # Stated, not defaulted: an unstated large-company condition selects
+        # neither Modelo 303 cadence.
+        UserProfileFact(path="censo.large_company", value=False),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]
@@ -188,6 +179,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
+                UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
             ),
         )
     else:
@@ -198,49 +190,54 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         )
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=tuple(facts),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Salaried"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="activities.description", value="salaried income"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Salaried"),
+                UserProfileFact(path="activities.description", value="salaried income"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            ),
+            without=("irpf.estimation_regime", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
+
+
+def _make_current_calculation(work_unit: WorkUnit, revision_id: str) -> None:
+    """Point the work unit at the revision, as persisting a calculation does."""
+    work_units = WorkUnitCatalogueRepository()
+    work_units.save(
+        upsert_work_unit(
+            work_units.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id, "updated_at": _CLOCK}),
+        )
+    )
 
 
 def _seed_verified_revision(
@@ -253,6 +250,7 @@ def _seed_verified_revision(
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+    screen_stamp = calculation_screen_stamp(snapshot, operation=published_authority_operation())
     binding_overrides = _verified_revision_binding_overrides(
         modelo=modelo,
         filing_year=filing_year,
@@ -288,6 +286,7 @@ def _seed_verified_revision(
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -313,9 +312,11 @@ def _seed_verified_revision(
         verified_by="operator-test",
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
+    _make_current_calculation(work_unit, revision_id)
     # These isolated filing-gate tests start from a synthetically verified
     # revision. Publish the matching prerequisite report explicitly; this
     # fixture does not assert that a verifier would grant this scenario.
@@ -381,6 +382,7 @@ def _seed_draft_revision(
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+    screen_stamp = calculation_screen_stamp(snapshot, operation=published_authority_operation())
     work_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
@@ -411,6 +413,7 @@ def _seed_draft_revision(
         casilla_values=resolved_casilla_values,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -429,9 +432,11 @@ def _seed_draft_revision(
         updated_at=_CLOCK,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
+    _make_current_calculation(work_unit, revision_id)
     return revision_id
 
 
@@ -457,10 +462,10 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(
                     output_path=tmp_path / "modelo-180.txt",
                     actor="operator-test",
                 ),
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 export_ports=modelo_export_ports_for_test(
                     bucket_id=profile.bucket_id,
-                    taxpayer_tax_id=workflow_profile().tax_id,
+                    taxpayer_tax_id=general_iva_workflow_profile().tax_id,
                 ),
                 operation=operation,
                 clock=_CLOCK,
@@ -492,7 +497,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             )
@@ -505,11 +510,9 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
     (
         ("390", 2025, "0A"),
         ("180", 2026, "0A"),
-        ("190", 2026, "0A"),
         ("193", 2026, "0A"),
         ("100", 2025, "0A"),
         ("202", 2026, "2P"),
-        ("200", 2026, "0A"),
     ),
 )
 def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
@@ -536,7 +539,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             )
@@ -562,8 +565,8 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
-                settings=ready_clave_settings("X1234567L"),
+                workflow_profile=general_iva_workflow_profile(),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -594,7 +597,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
             period="0A",
             operation=operation,
         )
-        salaried = workflow_profile().model_copy(
+        salaried = general_iva_workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.from_registry("natural_person"),
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
@@ -607,7 +610,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=salaried,
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -630,11 +633,22 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
 ) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
-    retenciones_trabajo_binding = "renta-certificado-trabajo-retenciones"
+    retenciones_trabajo_binding = "renta-retencion-soportada-trabajo"
     retenciones_trabajo_casilla = "0596"
     retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
         _seed_m100_profile_facts(profile.bucket_id, profile.repository)
+        # The employer's certificate; the profile declares only work income, so no other credit class is owed.
+        seed_payer_certificate(
+            operation=operation,
+            taxpayer_tax_id="X0001500M",
+            ejercicio=2025,
+            payer_tax_id="B00010082",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=retenciones_trabajo_amount,
+            importe_integro_dinerario=Decimal("32000.00"),
+            gastos_deducibles=Decimal("2100.00"),
+        )
         snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
             bucket_id=profile.bucket_id,
@@ -655,23 +669,31 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",
                 casilla_inputs={
-                    "0003": Decimal("32000.00"),
-                    "0013": Decimal("2100.00"),
                     "0014": Decimal("0"),
                     "0015": Decimal("0"),
                     "0016": Decimal("0"),
                 },
                 binding_values={
-                    "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                    retenciones_trabajo_binding: retenciones_trabajo_amount,
                     zero_binding: Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+                    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+                    **UNSTATED_WORK_INCOME_AS_ZERO,
                 },
                 clock=_CLOCK,
             ).revision
         assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
         assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
-        salaried = workflow_profile().model_copy(
+        salaried = general_iva_workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.from_registry("natural_person"),
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
@@ -684,7 +706,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=salaried,
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -846,7 +868,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                     evidence_reference_id=evidence_reference_id,
                     actor="aeat-import-test",
                     observation_repository=observations,
-                    expected_tax_id="X1234567L",
+                    expected_tax_id="X0001500M",
                     clock=_CLOCK,
                 )
             observations.save(
@@ -865,7 +887,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                         "aeat_register_status": "ALTA",
                         "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
                         "aeat_justificante_csv": evidence_reference_id,
-                        "authenticated_identity": "X1234567L",
+                        "authenticated_identity": "X0001500M",
                     },
                 )
             )
@@ -886,7 +908,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             ).record
@@ -923,7 +945,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -961,14 +983,14 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 cross_period_expected_member_sets=(
                     CrossPeriodExpectedMemberSet(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000001"),
+                        member_nifs=("A00010009", "B00000001"),
                     ),
                 ),
                 clock=_CLOCK,
@@ -1007,7 +1029,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -1033,14 +1055,14 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             period=_GROUP_PERIOD,
             operation=operation,
         )
-        filing_profile = workflow_profile().model_copy(
+        filing_profile = general_iva_workflow_profile().model_copy(
             update={
                 "cross_period_group_member_rosters": (
                     CrossPeriodGroupMemberRoster(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000000"),
+                        member_nifs=("A00010009", "B00010082"),
                     ),
                 ),
             },

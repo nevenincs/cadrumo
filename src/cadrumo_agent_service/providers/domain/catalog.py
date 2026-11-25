@@ -2,48 +2,96 @@
 
 Each entry is one lane the agent can run: one way into a provider identity,
 over its API or through its CLI. Cadrumo keeps no list of providers or lanes.
-Which exist, how each authenticates, its default gateway URL and the id the
-agent keys its credential by are the agent's own declarations, parsed here from
-the document the agent serves at run time. Every Cadrumo name for a lane is
-constructed from the ids the agent reports.
+Which exist, how each authenticates, its default gateway URL, whether it sends
+material off this computer, the id the agent keys its credential by, the models
+it declares with their stated facts, its recommended models and what a
+background run on it takes are the agent's own declarations, parsed here from
+the document the agent serves at run time. So are the kinds of background task
+a host keys a model setting by: Cadrumo keeps no list of them either. Every
+Cadrumo name for a lane is constructed from the ids the agent reports.
 """
 
 from __future__ import annotations
 
 import re
 from enum import StrEnum
+from itertools import pairwise
 from typing import Annotated, Final, Literal, Self
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
-from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    JsonValue,
+    NonNegativeInt,
+    PositiveInt,
+    StringConstraints,
+    ValidationError,
+    model_validator,
+)
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_LANE_ID_PATTERN,
+    MODEL_RUN_MODEL_ID_MAX_LENGTH,
+    MODEL_RUN_MODEL_ID_PATTERN,
+    MODEL_RUN_PROVIDER_ID_PATTERN,
+)
 
 BASE_URL_MAX_LENGTH: Final[int] = 2048
-MAX_CATALOG_LANES: Final[int] = 64
+DISPLAY_NAME_MAX_LENGTH: Final[int] = 256
+"""The longest lane display name: the agent serves the same name capped at 256 characters."""
+CLI_PROGRAM_MAX_LENGTH: Final[int] = 255
+"""The longest cli program name: one file name, which no common filesystem lets exceed 255 characters."""
+MAX_CATALOG_LANES: Final[int] = 128
 _BASE_URL_FORBIDDEN: Final[frozenset[str]] = frozenset("*?[%$")
+_LOOPBACK_HOSTS: Final[frozenset[str]] = frozenset({"127.0.0.1", "localhost", "::1"})
+_MAX_PORT: Final[int] = 65535
+RECOMMENDED_KEY_MAX_LENGTH: Final[int] = 64
+MODEL_ID_MAX_LENGTH: Final[int] = MODEL_RUN_MODEL_ID_MAX_LENGTH
+RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = MODEL_ID_MAX_LENGTH
 
-_PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
-_PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
+_LANE_ID: Final[re.Pattern[str]] = re.compile(MODEL_RUN_LANE_ID_PATTERN)
 
-ProviderId = Annotated[str, StringConstraints(pattern=_PROVIDER_ID_PATTERN)]
-"""A lane or provider identity id: a lowercase storage-safe slug."""
+ProviderId = Annotated[str, StringConstraints(pattern=MODEL_RUN_PROVIDER_ID_PATTERN)]
+"""A provider identity or agent credential id: a lowercase storage-safe slug of up to 64 characters."""
 
-CliProgram = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
-"""The executable name a cli lane runs."""
+LaneId = Annotated[str, StringConstraints(pattern=MODEL_RUN_LANE_ID_PATTERN)]
+"""A lane id: its provider id and transport joined by an underscore; also a stored record's key."""
 
-DEVELOPMENT_KEY_PREFIX: Final = "CADRUMO_LLM_"
-DEVELOPMENT_KEY_SUFFIX: Final = "_API_KEY"
+CliProgram = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=CLI_PROGRAM_MAX_LENGTH, pattern=r'^[^\x00-\x1f\x7f/\\:*?"<>|]+$'),
+]
+"""The executable name a cli lane resolves on the search path: one file name, without a path separator."""
 
+_MAX_ARTEFACT_NAME_LENGTH: Final[int] = 512
+_MAX_ARTEFACT_PART_LENGTH: Final[int] = 128
+_MAX_ARTEFACT_FILE_SIZE: Final[int] = 2**64 - 1
+_GGUF_SUFFIX: Final[str] = ".gguf"
+_ARTEFACT_SEGMENT_CHARACTERS: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+)
+_ARTEFACT_ALPHANUMERIC: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+_HOST_LABEL_CHARACTERS: Final[frozenset[str]] = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-")
 
-def development_key_variable(provider: str) -> str:
-    """Return the environment value a development checkout reads for ``provider``.
+MAX_TASK_KINDS: Final[int] = 64
+"""The most task kinds a catalogue may state: a bound on the document, not a count of the agent's vocabulary."""
+TASK_KIND_DESCRIPTION_MAX_LENGTH: Final[int] = 1024
+"""The longest task kind sentence: the agent serves the same sentence capped at 1024 characters."""
 
-    The name is constructed from the provider id the agent reports and never
-    enumerated: no setting field, declaration or table names a provider.
-    """
-    return f"{DEVELOPMENT_KEY_PREFIX}{provider.upper()}{DEVELOPMENT_KEY_SUFFIX}"
+EffortLevel = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
+"""One effort level as the agent spells it for a model on a lane; the agent owns the vocabulary."""
+
+TaskKindId = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+"""A task kind as the agent names it: a lowercase slug of up to 64 characters, from the agent's vocabulary."""
+
+LicenceDigest = Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
+"""The digest of a licence text the agent ships: ``sha256:`` and 64 lowercase hex digits."""
 
 
 class ProviderAuthKind(StrEnum):
@@ -52,11 +100,13 @@ class ProviderAuthKind(StrEnum):
     API_KEY = "api_key"
     API_KEY_WITH_BASE_URL = "api_key_with_base_url"
     PROVIDER_SIGN_IN_ONLY = "provider_sign_in_only"
+    NONE = "none"
+    """A keyless lane: it takes no stored credential and no provider sign-in, and reaches a server on this computer."""
 
     @property
     def accepts_direct_credential(self) -> bool:
         """Return whether a profile may store a credential for this kind."""
-        return self is not ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
+        return self in {ProviderAuthKind.API_KEY, ProviderAuthKind.API_KEY_WITH_BASE_URL}
 
     @property
     def accepts_provider_sign_in(self) -> bool:
@@ -86,6 +136,29 @@ class ProviderTransport(StrEnum):
     CLI = "cli"
 
 
+def _validate_url_spelling(value: str) -> None:
+    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
+        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
+    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
+        raise ValueError("base URL must be printable ASCII without whitespace")
+
+
+def _validate_gateway_components(parts: SplitResult) -> None:
+    if parts.username is not None or parts.password is not None:
+        raise ValueError("base URL must not embed credentials")
+    if parts.query or parts.fragment:
+        raise ValueError("base URL must not carry a query or fragment")
+
+
+def _validate_loopback_port(parts: SplitResult) -> None:
+    try:
+        port = parts.port
+    except ValueError:
+        raise ValueError("base URL port must be a number") from None
+    if parts.netloc.endswith(":") or (port is not None and not 0 < port <= _MAX_PORT):
+        raise ValueError("base URL port must be a number from 1 to 65535")
+
+
 def validate_https_base_url(value: str) -> str:
     """Return ``value`` when it is an acceptable provider gateway URL.
 
@@ -99,10 +172,7 @@ def validate_https_base_url(value: str) -> str:
     Raises:
         ValueError: When the URL is not an acceptable gateway URL.
     """
-    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
-        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
-    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
-        raise ValueError("base URL must be printable ASCII without whitespace")
+    _validate_url_spelling(value)
     if value.startswith("-") or any(character in _BASE_URL_FORBIDDEN for character in value):
         raise ValueError("base URL must not start with '-' or carry a shell or pattern character")
     parts = urlsplit(value)
@@ -110,28 +180,282 @@ def validate_https_base_url(value: str) -> str:
         raise ValueError("base URL must use https")
     if not (parts.hostname is not None and parts.hostname):
         raise ValueError("base URL must name a host")
-    if parts.username is not None or parts.password is not None:
-        raise ValueError("base URL must not embed credentials")
-    if parts.query or parts.fragment:
-        raise ValueError("base URL must not carry a query or fragment")
+    _validate_gateway_components(parts)
     return value
+
+
+def validate_loopback_http_base_url(value: str) -> str:
+    """Return ``value`` when it is an ``http`` origin on this computer.
+
+    A keyless lane reaches only a local server, so its endpoint is plain
+    ``http`` to the host ``127.0.0.1``, ``localhost`` or ``[::1]``, with any
+    port and no path beyond ``/``. Embedded credentials, a query and a fragment
+    are refused. The message never repeats the value.
+
+    Raises:
+        ValueError: When the URL is not a loopback ``http`` origin.
+    """
+    _validate_url_spelling(value)
+    # The brackets of ``[::1]`` are the one pattern character a loopback origin may carry.
+    if any(mark in value for mark in "?#@\\") or any(character in _BASE_URL_FORBIDDEN - {"["} for character in value):
+        raise ValueError("base URL must not carry credentials, a query, a fragment or a pattern character")
+    parts = urlsplit(value)
+    if parts.scheme != "http" or not value.startswith("http://"):
+        raise ValueError("a keyless lane's base URL must use http")
+    if parts.path not in {"", "/"}:
+        raise ValueError("a keyless lane's base URL must carry no path")
+    if parts.hostname not in _LOOPBACK_HOSTS:
+        raise ValueError("a keyless lane's base URL must name 127.0.0.1, localhost or [::1]")
+    _validate_loopback_port(parts)
+    return value
+
+
+class ModelLicence(BaseModel):
+    """The licence the agent states for one model, shown to the person and never judged by Cadrumo."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    spdx: str | None = Field(min_length=1, max_length=256)
+    """The SPDX identifier, when the licence has one."""
+    name: str = Field(min_length=1, max_length=256)
+    digest: LicenceDigest
+    """The digest of the licence text the agent serves for this model."""
+
+
+def _is_artefact_host(value: str) -> bool:
+    labels = value.split(".")
+    return (
+        len(value) <= 253
+        and len(labels) >= 2
+        and not labels[-1].isdigit()
+        and all(
+            0 < len(label) <= 63
+            and not label.startswith("-")
+            and not label.endswith("-")
+            and set(label) <= _HOST_LABEL_CHARACTERS
+            for label in labels
+        )
+    )
+
+
+def _is_artefact_segment(value: str, *, first: frozenset[str]) -> bool:
+    return (
+        0 < len(value) <= _MAX_ARTEFACT_PART_LENGTH and value[0] in first and set(value) <= _ARTEFACT_SEGMENT_CHARACTERS
+    )
+
+
+def _registry_name(value: str) -> str:
+    """Accept a registry name as the host reads one: ``[[host/]namespace/]model[:tag]``."""
+    path, tag = value, "latest"
+    head, separator, tail = value.rpartition(":")
+    if separator and "/" not in tail:
+        path, tag = head, tail
+    parts = path.split("/")
+    if len(parts) > 3:
+        raise ValueError("must be [[host/]namespace/]model[:tag]")
+    if len(parts) == 3 and not _is_artefact_host(parts[0]):
+        raise ValueError("a three-part name starts with a lowercase host name")
+    if not all(_is_artefact_segment(part, first=_ARTEFACT_ALPHANUMERIC) for part in parts[-2:]):
+        raise ValueError("a namespace and a model are plain names")
+    if not _is_artefact_segment(tag, first=_ARTEFACT_ALPHANUMERIC | {"_"}):
+        raise ValueError("a tag is a plain name")
+    return value
+
+
+class RegistryArtefact(BaseModel):
+    """A model the Ollama model registry serves under ``name``."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: Literal["registry"]
+    name: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=_MAX_ARTEFACT_NAME_LENGTH),
+        AfterValidator(_registry_name),
+    ]
+
+
+class ArtefactFile(BaseModel):
+    """One GGUF file of a Hugging Face repository, pinned by digest and size."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    file: str = Field(
+        min_length=len(_GGUF_SUFFIX) + 1,
+        max_length=_MAX_ARTEFACT_PART_LENGTH + len(_GGUF_SUFFIX),
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*\.gguf$",
+    )
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    size_bytes: int = Field(gt=0, le=_MAX_ARTEFACT_FILE_SIZE)
+
+
+class HuggingFaceArtefact(BaseModel):
+    """A GGUF model, and the projector it loads with, at one commit of a Hugging Face repository."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: Literal["huggingface"]
+    repository: str = Field(
+        min_length=3,
+        max_length=2 * _MAX_ARTEFACT_PART_LENGTH + 1,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$",
+    )
+    revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    model: ArtefactFile
+    projector: ArtefactFile | None = None
+    """Absent, never null, for a model without a projector; a present projector is never the model file."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _projector_is_another_file(self) -> Self:
+        projector = self.projector
+        if projector is not None and (projector.file == self.model.file or projector.sha256 == self.model.sha256):
+            raise ValueError("the projector is not the model file")
+        return self
+
+
+type EngineArtefact = Annotated[RegistryArtefact | HuggingFaceArtefact, Field(discriminator="source")]
+
+
+class ModelArtefacts(BaseModel):
+    """How each local engine obtains one model, as the agent declares it; the service only carries it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ollama: RegistryArtefact | None
+    llamacpp: EngineArtefact | None
+    llamacpp_default_context: int | None = Field(gt=0)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _states_something(self) -> Self:
+        if self.ollama is None and self.llamacpp is None:
+            raise ValueError("an artefact set names at least one engine's artefact")
+        if self.llamacpp is None and self.llamacpp_default_context is not None:
+            raise ValueError("a context size is declared with the llama.cpp artefact")
+        return self
+
+
+class CatalogModelFacts(BaseModel):
+    """One model a lane's catalogue lists and the facts the agent states for it.
+
+    These are the fields a role selection is checked against and a lane lookup
+    carries, whichever of the agent's catalogues lists the model. A fact the
+    agent does not state is ``None``; nothing is inferred in its place.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    id: str = Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)
+    """The model value a run names on its lane."""
+    vision: bool | None
+    """Whether the model reads images; ``None`` when the agent does not state it."""
+    size_bytes: NonNegativeInt | None
+    """The model's download size in bytes, when the agent states it; ``0`` is the agent's empty or unknown size."""
+    context_length: PositiveInt | None
+    """The model's context window in tokens, when the agent states it."""
+    licence: ModelLicence | None
+
+
+class LiveCatalogModel(CatalogModelFacts):
+    """One model the running agent's live catalogue lists, with whether the lane's local server holds it.
+
+    A declared entry has no such state; only the running agent can say what its server holds.
+    """
+
+    installed: bool | None
+    """``None`` where the live entry does not state it: unknown, never "not installed"."""
+
+
+class ProviderCatalogModel(CatalogModelFacts):
+    """One model a lane declares in the agent's declared catalogue, with its presentation fields."""
+
+    display_name: str = Field(min_length=1)
+    effort: dict[str, JsonValue]
+    """The agent's effort control for the model, carried as declared."""
+    artefacts: ModelArtefacts | None
+    """How each local engine obtains the model; ``None`` where the agent declares none."""
+
+
+class ModelCapability(StrEnum):
+    """A capability the catalogue recommends a lane's model for: the keys of an entry's ``recommended`` map.
+
+    ``VISION`` reads images as well as text; ``TEXT`` reads text. A
+    recommended key outside this vocabulary is carried as the agent states it
+    and recommends nothing Cadrumo reads.
+    """
+
+    VISION = "vision"
+    TEXT = "text"
+
+
+class BackgroundInput(StrEnum):
+    """An input family a background run on a lane may carry, in the agent's declared order."""
+
+    TEXT = "text"
+    IMAGE = "image"
+    PDF = "pdf"
+
+
+class BackgroundOption(StrEnum):
+    """A run option a background request on a lane may set, in the agent's declared order.
+
+    The reply options travel in the request's ``background`` member. ``EFFORT``
+    is the run's agent effort and travels in its ``agent`` member, as a
+    foreground run names it.
+    """
+
+    TEMPERATURE = "temperature"
+    CONTEXT_TOKENS = "context_tokens"
+    RESPONSE_SCHEMA = "response_schema"
+    EFFORT = "effort"
+
+
+class LaneBackground(BaseModel):
+    """What a background run on one lane takes, as the agent declares it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    runnable: bool
+    """Whether the lane runs background requests at all."""
+    inputs: tuple[BackgroundInput, ...]
+    options: tuple[BackgroundOption, ...]
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _declaration_is_coherent(self) -> Self:
+        if not _in_declared_order(self.inputs, tuple(BackgroundInput)):
+            raise ValueError("background inputs are unique and in declared order")
+        if not _in_declared_order(self.options, tuple(BackgroundOption)):
+            raise ValueError("background options are unique and in declared order")
+        if not self.runnable and self.inputs:
+            raise ValueError("a lane that runs no background request takes no input")
+        return self
+
+
+def _in_declared_order[T](values: tuple[T, ...], vocabulary: tuple[T, ...]) -> bool:
+    """Return whether ``values`` is a repetition-free subsequence of ``vocabulary``."""
+    positions = [vocabulary.index(value) for value in values]
+    return all(earlier < later for earlier, later in pairwise(positions))
 
 
 class ProviderCatalogEntry(BaseModel):
     """One lane the agent reports and a profile can manage a credential for."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    id: ProviderId
+    id: LaneId
     """The agent's lane id; commands address a lane by it and its record is keyed by it."""
     provider: ProviderId
     """The agent provider identity this lane reaches."""
     transport: ProviderTransport
-    display_name: str = Field(min_length=1, max_length=64)
+    display_name: str = Field(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)
     """The identity's product name, the same on every lane of that identity."""
     description: str
     auth_kind: ProviderAuthKind
     default_base_url: str | None
+    reads_off_host: bool
+    """Whether a run on this lane sends material off this computer; the agent's typed declaration, never inferred."""
     agent_credential_id: ProviderId | None
     """The id the agent's hosting frame keys this lane's credential by; absent when the lane takes none."""
     cli_programs: tuple[CliProgram, ...]
@@ -139,14 +463,17 @@ class ProviderCatalogEntry(BaseModel):
     icon: dict[str, JsonValue] | None = None
     platform: dict[str, JsonValue] = Field(default_factory=dict)
     default_model: str | None = None
-    models: tuple[dict[str, JsonValue], ...] = ()
+    models: tuple[ProviderCatalogModel, ...] = ()
     unread: tuple[dict[str, JsonValue], ...] = ()
-
-    @field_validator("default_base_url")
-    @classmethod
-    @pydantic_validation_boundary
-    def _default_base_url_is_https(cls, value: str | None) -> str | None:
-        return None if value is None else validate_https_base_url(value)
+    recommended: dict[
+        Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_KEY_MAX_LENGTH)],
+        Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_VALUE_MAX_LENGTH)],
+    ]
+    """The agent's recommended model id per capability; empty when it states none, never applied by Cadrumo."""
+    background: LaneBackground
+    """What a background run on this lane takes."""
+    logout: bool = False
+    """Whether the agent's ``auth logout --provider`` signs this lane's provider out; absent when it declares none."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -159,31 +486,65 @@ class ProviderCatalogEntry(BaseModel):
             raise ValueError("cli programs must not repeat")
         if (self.agent_credential_id is not None) != self.auth_kind.accepts_direct_credential:
             raise ValueError("a lane declares a credential id exactly when it takes a credential")
+        self._validate_endpoint()
+        self._validate_logout()
+        model_ids = [model.id for model in self.models]
+        if len(model_ids) != len(set(model_ids)):
+            raise ValueError("a lane's model ids must be unique")
+        if not set(self.recommended.values()) <= set(model_ids):
+            raise ValueError("a recommended entry names one of its lane's models")
         return self
+
+    def _validate_endpoint(self) -> None:
+        if self.auth_kind is ProviderAuthKind.NONE:
+            if self.default_base_url is None:
+                raise ValueError("a keyless lane declares its loopback base URL")
+            validate_loopback_http_base_url(self.default_base_url)
+        elif self.default_base_url is not None:
+            validate_https_base_url(self.default_base_url)
+
+    def _validate_logout(self) -> None:
+        if self.logout and not (self.transport is ProviderTransport.CLI and self.auth_kind.accepts_provider_sign_in):
+            raise ValueError("only a cli lane that takes its provider's sign-in declares a logout")
+
+    def model(self, model_id: str) -> ProviderCatalogModel | None:
+        """Return the model this lane declares under ``model_id``, or ``None`` when it declares none."""
+        return next((model for model in self.models if model.id == model_id), None)
 
     @property
     def consumers(self) -> tuple[ProviderConsumer, ...]:
         """Return the consumers of this lane: every reported lane serves the agent's assistant."""
         return (ProviderConsumer.ASSISTANT,)
 
-    @property
-    def development_variable(self) -> str:
-        """Return the environment value a development checkout reads for this lane's provider key."""
-        return development_key_variable(self.provider)
-
     def serves(self, consumer: ProviderConsumer) -> bool:
         """Return whether ``consumer`` may use this lane's credential."""
         return consumer in self.consumers
 
 
+class TaskKind(BaseModel):
+    """One kind of background task the agent names, and how it is shown to a person.
+
+    A host keys a lane, model and effort setting by the kind; a background
+    request itself names no kind.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    id: TaskKindId
+    display_name: str = Field(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)
+    description: str = Field(min_length=1, max_length=TASK_KIND_DESCRIPTION_MAX_LENGTH)
+
+
 class ProviderCatalog(BaseModel):
     """The validated lane catalog the agent reported."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[3]
+    schema_version: Literal[8]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
+    task_kinds: tuple[TaskKind, ...] = Field(max_length=MAX_TASK_KINDS)
+    """The kinds of background task, in the agent's served order."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -196,6 +557,9 @@ class ProviderCatalog(BaseModel):
         ]
         if len(credential_ids) != len(set(credential_ids)):
             raise ValueError("agent credential ids must be unique")
+        kinds = [kind.id for kind in self.task_kinds]
+        if len(kinds) != len(set(kinds)):
+            raise ValueError("task kind ids must be unique")
         names: dict[str, str] = {}
         for entry in self.providers:
             if names.setdefault(entry.provider, entry.display_name) != entry.display_name:
@@ -207,14 +571,9 @@ class ProviderCatalog(BaseModel):
         """Return every lane id in catalog order."""
         return tuple(entry.id for entry in self.providers)
 
-    @property
-    def credential_lane_ids(self) -> tuple[str, ...]:
-        """Return the lane ids whose credential the agent's hosting frame carries, in catalog order."""
-        return tuple(entry.id for entry in self.providers if entry.agent_credential_id is not None)
-
     def entry(self, provider_id: str) -> ProviderCatalogEntry | None:
         """Return the lane ``provider_id`` names, or ``None`` when the agent did not report it."""
-        if not _PROVIDER_ID.fullmatch(provider_id):
+        if not _LANE_ID.fullmatch(provider_id):
             return None
         return next((entry for entry in self.providers if entry.id == provider_id), None)
 
@@ -222,8 +581,8 @@ class ProviderCatalog(BaseModel):
 def parse_provider_catalog(text: str) -> ProviderCatalog:
     """Parse and strictly validate the document the agent serves.
 
-    Unknown fields, an unknown schema version, duplicate lanes and malformed
-    values are refused.
+    Unknown fields, an unknown schema version, duplicate lanes or task kinds
+    and malformed values are refused.
 
     Raises:
         CoreValidationError: When the document is not valid JSON or does not
@@ -244,17 +603,40 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 
 __all__ = [
     "BASE_URL_MAX_LENGTH",
-    "DEVELOPMENT_KEY_PREFIX",
-    "DEVELOPMENT_KEY_SUFFIX",
+    "CLI_PROGRAM_MAX_LENGTH",
+    "DISPLAY_NAME_MAX_LENGTH",
     "MAX_CATALOG_LANES",
+    "MAX_TASK_KINDS",
+    "MODEL_ID_MAX_LENGTH",
+    "RECOMMENDED_KEY_MAX_LENGTH",
+    "RECOMMENDED_VALUE_MAX_LENGTH",
+    "TASK_KIND_DESCRIPTION_MAX_LENGTH",
+    "ArtefactFile",
+    "BackgroundInput",
+    "BackgroundOption",
+    "CatalogModelFacts",
     "CliProgram",
+    "EffortLevel",
+    "EngineArtefact",
+    "HuggingFaceArtefact",
+    "LaneBackground",
+    "LaneId",
+    "LicenceDigest",
+    "LiveCatalogModel",
+    "ModelArtefacts",
+    "ModelCapability",
+    "ModelLicence",
     "ProviderAuthKind",
     "ProviderCatalog",
     "ProviderCatalogEntry",
+    "ProviderCatalogModel",
     "ProviderConsumer",
     "ProviderId",
     "ProviderTransport",
-    "development_key_variable",
+    "RegistryArtefact",
+    "TaskKind",
+    "TaskKindId",
     "parse_provider_catalog",
     "validate_https_base_url",
+    "validate_loopback_http_base_url",
 ]

@@ -21,29 +21,45 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
     renta_first_slice_binding_target_casillas,
 )
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ...categories.spending_category import SpendingCategory
-from ...categories.spending_category_catalogue import spending_category_tokens
-from .._first_slice_routing import (
+from ...categories.spending_category_catalogue import (
+    amortizable_spending_categories,
+    spending_category_tokens,
+)
+from ..actividad_asset.lifecycle import AssetKind
+from ..first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 # The routing check reads no dated authority, so any snapshot year serves.
 _FILING_YEAR = 2025
 
 
+def _routable_categories(
+    authority: GovernedFactSource,
+    coordinate: date,
+) -> tuple[SpendingCategory, ...]:
+    """Return the categories the first slice routes: the activity-asset register carries the amortizable ones."""
+    amortizable = frozenset(amortizable_spending_categories(effective_date=coordinate, authority=authority))
+    return tuple(
+        category
+        for category in spending_category_tokens(effective_date=coordinate, authority=authority)
+        if category not in amortizable
+    )
+
+
 def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, CasillaId]:
     return resolve_first_slice_expense_routing(
         category_type=SpendingCategory,
-        category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
-            effective_date=coordinate,
-            authority=selected_authority,
-        ),
+        category_tokens=_routable_categories,
         casilla_factory=validated_casilla_id,
         model_code="100",
         fact_id="modelo-100-first-slice-expense-routing-mapping",
@@ -75,7 +91,6 @@ def test_first_slice_target_casillas_is_closed_set(operation: PinnedAuthorityOpe
             "0202",
             "0203",
             "0206",
-            "0208",
             "0217",
         },
     )
@@ -93,9 +108,11 @@ def test_every_spending_category_routes_to_a_first_slice_casilla(operation: Pinn
     """
 
     routing = _first_slice_expense_routing(operation)
-    categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    categories = _routable_categories(operation, date(2025, 12, 31))
     unrouted = [category for category in categories if category not in routing]
     assert unrouted == []
+    amortizable = amortizable_spending_categories(effective_date=date(2025, 12, 31), authority=operation)
+    assert not set(routing) & set(amortizable)
 
 
 def test_first_slice_routing_targets_exist_in_modelo_100_registry(operation: PinnedAuthorityOperation) -> None:
@@ -164,7 +181,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
         check_first_slice_routing("100", representative_targets, representative_targets, filing_year=_FILING_YEAR) == []
     )
     # A revision with no first-slice bindings has an empty required set --
-    # reports nothing even with an empty casilla set (the 2020-2022 shape).
+    # reports nothing even with an empty casilla set.
     assert check_first_slice_routing("100", frozenset(), frozenset(), filing_year=_FILING_YEAR) == []
     # A non-100 modelo is outside the first slice -- no check.
     assert check_first_slice_routing("303", frozenset(), representative_targets, filing_year=_FILING_YEAR) == []
@@ -175,14 +192,10 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
 ) -> None:
     """The per-revision binding-target helper reflects real registry data.
 
-    Every edition inside the support envelope binds exactly the routing
-    casillas its own design declares: "Aportaciones a mutualidades
-    alternativas" shares the combined ``0186`` Seguridad Social casilla until
-    the design adds the dedicated ``0195`` box, so the edition before that box
-    exists binds one casilla fewer. Editions below the floor are stored history
-    and declare no ledger bindings. This is the property that makes the
-    universal ``first_slice_target_casillas`` codomain unsuitable as a
-    per-revision referential-integrity requirement.
+    Supported editions bind the declared category-routing casillas and the
+    asset-register-only casillas. Editions below the floor are stored history
+    and declare no ledger bindings. The set is revision-scoped because the
+    official design adds and removes casillas between years.
     """
 
     modelo_100 = full_published_modelo(operation, "100")
@@ -197,7 +210,9 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
             continue
         in_envelope += 1
         declared = frozenset(casilla.id for casilla in revision.casillas)
-        assert targets == routing & declared, revision.id
+        boxes = activity_asset_amortization_casillas(revision)
+        assert boxes == {AssetKind.MATERIAL: "0208", AssetKind.INTANGIBLE: "0227"}, revision.id
+        assert targets == (routing | frozenset(boxes.values())) & declared, revision.id
 
     assert in_envelope, "no Modelo 100 edition lies inside the support envelope"
 
@@ -206,12 +221,10 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: Pin
     """Every supported Modelo 100 revision's snapshot passes referential integrity.
 
     This is the real end-to-end proof for the fix: building a snapshot for a
-    revision that declares no first-slice ledger bindings (2022) must not
-    raise, even though casilla ``0195`` -- part of the universal routing
-    table's codomain -- does not exist on it. Building 2023-2025 must also
-    succeed. A regression back to checking the universal codomain against
-    every revision's own casilla set reproduces the exact defect this test
-    guards against.
+    revision must not raise when casilla ``0195`` -- part of the universal
+    routing table's codomain -- does not exist on it. Checking the universal
+    codomain against every revision's own casilla set reproduces the defect
+    this test guards against.
 
     The years come from the published support envelope; an authored revision
     below its floor is stored history and must be refused, not built.

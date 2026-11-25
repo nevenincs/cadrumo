@@ -22,19 +22,23 @@ from ..components.widgets import (
     SourceActionCard,
 )
 from .edit_screens import FieldEditScreen, RepeatableRowAddScreen, RepeatableRowRemoveScreen, field_help_text
+from .household import HouseholdScreen
 from .overview_contracts import (
-    _CONTINUE_BUTTON_ID,
-    _DOCUMENT_READER_CARD_ID,
-    _PLANTILLA_MEDIA_BUTTON_ID,
-    _REQUIRED_ONLY_ID,
-    _SEARCH_ID,
-    _SEARCH_SETTLE_SECONDS,
+    CONTINUE_BUTTON_ID,
+    HOUSEHOLD_BUTTON_ID,
+    PLANTILLA_MEDIA_BUTTON_ID,
+    RECORD_GROUPS_BUTTON_ID_PREFIX,
+    REQUIRED_ONLY_ID,
+    SEARCH_ID,
+    SEARCH_SETTLE_SECONDS,
 )
 from .plantilla_media import (
     PlantillaMediaRequest,
     PlantillaMediaScreen,
     PlantillaMediaSetRequest,
 )
+from .record_groups import RecordGroupDoor
+from .record_groups_panel import RecordGroupsScreen
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -65,11 +69,11 @@ class ProfileOverviewInteractionMixin:
     @staticmethod
     def _row_key_for_field(section: ProfileSectionView, field: ProfileFieldView) -> str:
         """Recover the stored row key from a schema-expanded fact path."""
-        parts = field.path.split(".")
-        if len(parts) == 2 and parts[0] == section.key:
-            return ""
-        if len(parts) == 3 and parts[0] == section.key:
-            return parts[1]
+        match field.path.split("."):
+            case [owner, _] if owner == section.key:
+                return ""
+            case [owner, row_key, _] if owner == section.key:
+                return row_key
         # A projected repeatable field must have one of these shapes.  Do not
         # guess from display position if a malformed projection reaches TUI.
         raise ValueError(f"cannot determine row identity from {field.path!r}")
@@ -183,6 +187,46 @@ class ProfileOverviewInteractionMixin:
             return
         self._run_row_write(f"{PLANTILLA_MEDIA_PATH}:{request.year}", lambda: remove_door(request.year))
 
+    def _open_household(self: ProfileManagerScreen) -> None:
+        """Open the household on the host's doors; the profile is read again after a change."""
+        port = self._household
+        if port is None:
+            return
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        self.app.push_screen(HouseholdScreen(port), self._household_closed)
+
+    def _open_record_groups(self: ProfileManagerScreen) -> None:
+        """Open the profile's record groups on the host's read; a door pressed there opens its field here."""
+        port = self._record_groups
+        if port is not None:
+            self.app.push_screen(RecordGroupsScreen(port), self._record_group_door_chosen)
+
+    def _record_group_door_chosen(self: ProfileManagerScreen, door: RecordGroupDoor | None) -> None:
+        """Open the editor of the field a served door opens on, as selecting that field in its table does.
+
+        The door names the row and the field; the page holds the field as the profile stores it, so the
+        value edited and the write door are the ones every other edit of that field uses.
+        """
+        if door is None:
+            return
+        action = door.action
+        field = None if action.field_key is None else self._field_by_key.get(f"{door.row_ref}.{action.field_key}")
+        if field is None:
+            self._refuse(tr("tui.profile.record_groups.door_unavailable"))
+            return
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        self._walking = False
+        self._open_field_editor(field)
+
+    async def _household_closed(self: ProfileManagerScreen, touched: bool | None) -> None:
+        """Read the profile again when a household change landed or may have landed."""
+        if touched is True:
+            await self.reload_profile()
+
     def on_data_table_row_highlighted(self: ProfileManagerScreen, event: Message) -> None:
         """Explain the field under the cursor of the table the operator is in.
 
@@ -257,20 +301,20 @@ class ProfileOverviewInteractionMixin:
 
     def action_focus_search(self: ProfileManagerScreen) -> None:
         """Move the cursor to the search box."""
-        self.query_one(f"#{_SEARCH_ID}", Input).focus()
+        self.query_one(f"#{SEARCH_ID}", Input).focus()
 
     def on_input_changed(self: ProfileManagerScreen, event: Input.Changed) -> None:
         """Filter the sections once typing in the search box pauses."""
-        if event.input.id != _SEARCH_ID:
+        if event.input.id != SEARCH_ID:
             return
         self._query = event.value
         if self._search_timer is not None:
             self._search_timer.stop()
-        self._search_timer = self.set_timer(_SEARCH_SETTLE_SECONDS, self._apply_filters)
+        self._search_timer = self.set_timer(SEARCH_SETTLE_SECONDS, self._apply_filters)
 
     def on_checkbox_changed(self: ProfileManagerScreen, event: Checkbox.Changed) -> None:
         """Show every field, or only the answers setup requires."""
-        if event.checkbox.id != _REQUIRED_ONLY_ID:
+        if event.checkbox.id != REQUIRED_ONLY_ID:
             return
         self._required_only = event.value
         self.run_worker(self._apply_filters(), group="profile-filter")
@@ -335,7 +379,7 @@ async def _handle_setup_button(screen: ProfileManagerScreen, button_id: str) -> 
     if button_id == "manager-complete-setup":
         screen.action_complete_setup()
         return True
-    if button_id == _CONTINUE_BUTTON_ID:
+    if button_id == CONTINUE_BUTTON_ID:
         await screen.action_continue_setup()
         return True
     if button_id == "onboarding-previous":
@@ -352,15 +396,21 @@ async def _handle_setup_button(screen: ProfileManagerScreen, button_id: str) -> 
 
 
 def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool:
-    """Route repeatable-row and plantilla-media controls."""
+    """Route repeatable-row, plantilla-media and household controls."""
     if button_id.startswith("manager-add-row-"):
         screen._open_add_row(button_id.removeprefix("manager-add-row-"))
         return True
     if button_id.startswith("manager-remove-row-"):
         screen._open_remove_selected_row(button_id.removeprefix("manager-remove-row-"))
         return True
-    if button_id == _PLANTILLA_MEDIA_BUTTON_ID:
+    if button_id == PLANTILLA_MEDIA_BUTTON_ID:
         screen._open_plantilla_media()
+        return True
+    if button_id == HOUSEHOLD_BUTTON_ID:
+        screen._open_household()
+        return True
+    if button_id.startswith(RECORD_GROUPS_BUTTON_ID_PREFIX):
+        screen._open_record_groups()
         return True
     return False
 
@@ -368,8 +418,6 @@ def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool
 async def _launch_source_button(screen: ProfileManagerScreen, event: Button.Pressed) -> None:
     """Launch only an identified source after preserving the edit-in-flight guard."""
     card = event.button.parent
-    if _open_document_reader_card(screen, card):
-        return
     launch_source = screen._launch_source
     if launch_source is None:
         return
@@ -382,15 +430,6 @@ async def _launch_source_button(screen: ProfileManagerScreen, event: Button.Pres
         screen._refuse(tr("flows.manager.edit.write_in_flight"))
         return
     await launch_source(source)
-
-
-def _open_document_reader_card(screen: ProfileManagerScreen, card: object | None) -> bool:
-    """Handle the document-reader action card if this is the pressed card."""
-    if not isinstance(card, SourceActionCard) or card.id != _DOCUMENT_READER_CARD_ID:
-        return False
-    if screen._open_document_reader is not None:
-        screen.app.push_screen(screen._open_document_reader())
-    return True
 
 
 def _selected_acquisition_source(card: object | None) -> ProfileAcquisitionSourceV1 | None:

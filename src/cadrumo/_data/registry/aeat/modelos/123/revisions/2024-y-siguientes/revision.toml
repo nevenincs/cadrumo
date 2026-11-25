@@ -6,7 +6,7 @@ casilla_source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 application_link_source_refs = ["aeat-dr-123-2024-v20"]
 authority_grade = "filing"
 valid_from = 2024-01-01
-period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
+period_selector = { year_from = 2024, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = [
@@ -24,6 +24,18 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2019-2023"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[revisions."2024-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo is a withholding agent's return: its withholding boxes state what the declarant practised on others and paid in, never a credit of the declarant's own, so there is no credit casilla for an entry to name. The perceptor credits that withholding on the perceptor's own return."""
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026", "aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "aeat-modelo-123-procedure", "boe-modelo-123-2024-form", "boe-modelo-123-2024-form-text"]
+
+[revisions."2024-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026", "aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "aeat-modelo-123-procedure", "boe-modelo-123-2024-form", "boe-modelo-123-2024-form-text"]
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -45,27 +57,6 @@ source_refs = [
     "boe-modelo-123-2024-form",
     "boe-modelo-123-2024-form-text",
 ]
-
-[revisions."2024-y-siguientes".family_dispositions.parameters]
-reason = """
-A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 123 applies none: every formula it declares is pure aggregation over already-withheld amounts, summing the per-block retencion casillas and subtracting the prior autoliquidacion. The retencion rate on rendimientos del capital mobiliario was applied by the retenedor at payment time and arrives here as a figure, so the rate is spent before this modelo sees it. Contrast modelo 115, \
-which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."""
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
-
-[revisions."2024-y-siguientes".family_dispositions.bindings]
-reason = """
-A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every input casilla of this revision is input_kind = manual, so none demands a binding. The retenciones sobre rendimientos del capital mobiliario this modelo declares are not aggregated from this application's ledger the way the modelo 115 arrendamiento figures are: the sibling retenciones_aggregation source scopes by RetencionScheme, and while that enum does carry capital members (intereses, \
-dividendos, otros_capital_mobiliario), binding them here is a modelling change to how this modelo sources its figures, not a fragment this family can assert on its own. Empty as this revision is currently modelled."""
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
-
-[revisions."2024-y-siguientes".family_dispositions.dependency_classifications]
-reason = """
-A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 123 derives from none. It reports the retenciones the retenedor itself practised on rendimientos del capital mobiliario in the period, from its own payment records rather than folded in from another return. The dependency runs the OTHER way: modelo 193 is the annual resumen that summarises the 123 filings of the year, so it is 193 that classifies a dependency on 123. Nothing upstream of 123 \
-exists to classify, so the family is inapplicable by this modelo's position in the chain."""
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 
 [[revisions."2024-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -211,7 +202,7 @@ sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
 [[revisions."2024-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2019-2023", id = "modelo-123-capital-withholding"}
-fields = {deadline_windows = ["modelo-123-2024-1t", "modelo-123-2024-2t", "modelo-123-2024-3t", "modelo-123-2024-4t", "modelo-123-2025-1t", "modelo-123-2025-2t", "modelo-123-2025-3t", "modelo-123-2025-4t", "modelo-123-2026-1t", "modelo-123-2026-2t", "modelo-123-2026-3t", "modelo-123-2026-4t"]}
+fields = {deadline_windows = ["modelo-123-2024-01", "modelo-123-2024-02", "modelo-123-2024-03", "modelo-123-2024-04", "modelo-123-2024-05", "modelo-123-2024-06", "modelo-123-2024-07", "modelo-123-2024-08", "modelo-123-2024-09", "modelo-123-2024-10", "modelo-123-2024-11", "modelo-123-2024-12", "modelo-123-2024-1t", "modelo-123-2024-2t", "modelo-123-2024-3t", "modelo-123-2024-4t", "modelo-123-2025-01", "modelo-123-2025-02", "modelo-123-2025-03", "modelo-123-2025-04", "modelo-123-2025-05", "modelo-123-2025-06", "modelo-123-2025-07", "modelo-123-2025-08", "modelo-123-2025-09", "modelo-123-2025-10", "modelo-123-2025-11", "modelo-123-2025-12", "modelo-123-2025-1t", "modelo-123-2025-2t", "modelo-123-2025-3t", "modelo-123-2025-4t", "modelo-123-2026-01", "modelo-123-2026-02", "modelo-123-2026-03", "modelo-123-2026-04", "modelo-123-2026-05", "modelo-123-2026-06", "modelo-123-2026-07", "modelo-123-2026-08", "modelo-123-2026-09", "modelo-123-2026-10", "modelo-123-2026-11", "modelo-123-2026-12", "modelo-123-2026-1t", "modelo-123-2026-2t", "modelo-123-2026-3t", "modelo-123-2026-4t"]}
 sequence_additions = {application_links = ["modelo-123-deadline"], casilla_ids = ["09", "10", "11", "12", "13", "14"], formulas = ["modelo-123-total-rentas", "modelo-123-total-base", "modelo-123-total-retenciones"], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026", "aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form", "boe-modelo-123-2024-form-text"]}
 sequence_removals = {source_refs = [0, 1, 3, 4]}
 sequence_order = {formulas = [2, 3, 4, 0, 1], legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
@@ -296,6 +287,11 @@ selector = {revision = "2019-2023", id = "implies-nonzero:base-declarada-cuando-
 fields = {expression = "implies_nonzero([\"03\", \"06\"])", predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas"}
 
 [[revisions."2024-y-siguientes".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "implies-nonzero:base-total-implica-retenciones-total"}
+fields = {expression = "implies_nonzero([\"06\", \"09\"])", predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"}
+
+[[revisions."2024-y-siguientes".family_overrides]]
 family = "workbook_parity_refs"
 selector = {revision = "2019-2023", id = "modelo-123-dr-xls"}
 fields = {fixture_id = "modelo-123-2024-record-design-layout", workbook_source = "aeat-dr-123-2024-v20"}
@@ -318,3 +314,19 @@ replacement_id = "aeat-dr-123-2024-v20"
 sequence_additions = {casillas = [{casilla_id = "01", number = "01"}, {casilla_id = "02", number = "02"}, {casilla_id = "04", number = "04"}, {casilla_id = "09", number = "09"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "13", number = "13"}, {casilla_id = "14", number = "14"}], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
 sequence_removals = {legal_refs = [3], source_refs = [0, 1, 2]}
 sequence_order = {casillas = [5, 6, 0, 7, 1, 2, 3, 4, 8, 9, 10, 11, 12], legal_refs = [0, 1, 2, 5, 3, 4]}
+
+# The monthly cadence is inherited with its era's sources replaced. The
+# 2019-2023 edition grounds modelo-123-mensual on the Calendario del
+# Contribuyente of its own two years, and neither reaches this edition: a
+# calendar that stopped applying on 2022-12-31 cannot defend a 2024 filing, and
+# the snapshot source-window check refuses the revision for citing it. The three
+# calendars named here are the ones this revision's own source_refs already
+# carry, and each names this modelo in the monthly population of its year --
+# "<mes> <ejercicio>. grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216,
+# 230". The quarterly schedule needs no override because it cites
+# aeat-modelo-123-procedure, which applies from 2020 with no end.
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2019-2023", id = "modelo-123-mensual"}
+sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = true, explanation = "Modelo 123 mensual para grandes empresas: el retenedor en las circunstancias de los numeros 1 y 2 del articulo 71.3 del Reglamento del IVA declara por el mes inmediato anterior.", legal_refs = ["rd-439-2007:art-108"], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]}], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}

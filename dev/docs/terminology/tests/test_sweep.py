@@ -26,18 +26,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...pagefind_inject import (
     SearchInjectionError,
     SearchRecordProjection,
     materialise_search_records,
 )
-from .._query_aliases import (
+from ..query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
     QueryAliasAuthority,
     QueryAliasEntry,
 )
-from .._wrangle import wrangle
 from ..resolution import (
     ChunkHit,
     GroundingSurface,
@@ -49,13 +49,14 @@ from ..search_record import SearchRecordKind
 from ..sweep_runner import (
     RagSearchClient,
     SweepQuery,
-    _mapping_from,
-    _match_structured_casilla_query,
     enumerate_query_vocabulary,
+    mapping_from,
+    match_structured_casilla_query,
     run_sweep,
 )
 from ..term_relevance_mapping import SweepResult, TermRelevanceMapping
 from ..unified_record import SearchRecord
+from ..wrangle import wrangle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -210,7 +211,7 @@ def test_run_sweep_uses_explicit_alias_authority_for_the_same_pipeline(
                 canonical_query="pro rata",
                 status="ratified",
                 review_reason="Independent spelling form reviewed for the English prorrata query surface.",
-                reviewed_at=date(2026, 8, 6),
+                reviewed_at=date(filing_year_envelope().horizon, 8, 6),
             ),
         ),
     )
@@ -385,7 +386,7 @@ def test_structured_casilla_matching_is_canonical_then_unique_display_metadata(
     _authoritative_search_records: tuple[SearchRecord, ...],
 ) -> None:
     """The production matcher accepts exact addresses and refuses ambiguity."""
-    canonical = _match_structured_casilla_query(
+    canonical = match_structured_casilla_query(
         "form 00200 field dp200014:00562",
         _authoritative_search_records,
     )
@@ -393,7 +394,7 @@ def test_structured_casilla_matching_is_canonical_then_unique_display_metadata(
     assert canonical.metadata.modelo == "200"
     assert canonical.metadata.casilla_id == "DP200014:00562"
 
-    fallback = _match_structured_casilla_query(
+    fallback = match_structured_casilla_query(
         "model 036 box 0110",
         _authoritative_search_records,
     )
@@ -404,8 +405,8 @@ def test_structured_casilla_matching_is_canonical_then_unique_display_metadata(
 
     # Modelo 200 reuses this display number across segments, so a bare number
     # is not an address. A non-existent number is the zero-match refusal.
-    assert _match_structured_casilla_query("modelo 200 box 00562", _authoritative_search_records) is None
-    assert _match_structured_casilla_query("modelo 303 casilla does-not-exist", _authoritative_search_records) is None
+    assert match_structured_casilla_query("modelo 200 box 00562", _authoritative_search_records) is None
+    assert match_structured_casilla_query("modelo 303 casilla does-not-exist", _authoritative_search_records) is None
 
 
 def test_structured_casilla_target_is_added_once_at_mapping_boundary(
@@ -419,7 +420,7 @@ def test_structured_casilla_target_is_added_once_at_mapping_boundary(
         concept_id="casilla",
         language=OutputLanguage.EN,
     )
-    mapping = _mapping_from(
+    mapping = mapping_from(
         query,
         wrangle(ResolutionResult(resolved=())),
         resolver=resolver,
@@ -449,7 +450,7 @@ def test_unmanifested_resolved_code_target_is_not_shipped(
     assert code_record.id.startswith("code:")
     assert code_record.id not in emitted_ids
 
-    mapping = _mapping_from(
+    mapping = mapping_from(
         SweepQuery(query="casilla", concept_id="casilla", language=OutputLanguage.ES),
         wrangle(resolution),
         resolver=resolver,
@@ -474,7 +475,7 @@ def test_emitted_legal_and_concept_targets_survive_projection_gate(
     assert legal_ids <= emitted_ids
     assert "concept:prorrata" in emitted_ids
 
-    mapping = _mapping_from(
+    mapping = mapping_from(
         SweepQuery(query=query, concept_id="prorrata", language=OutputLanguage.ES),
         wrangle(resolution, score_floor=0.5),
         resolver=resolver,

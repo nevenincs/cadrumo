@@ -1,0 +1,491 @@
+import { isDecidedClassification } from "../../../shell/ledgerContract";
+import {
+  useContext,
+  type ComponentProps,
+  type ReactNode,
+  type Ref,
+} from "react";
+import { DataGrid } from "@/components/ui/data-grid";
+import { DataGridRowCheckbox } from "@/components/ui/data-grid-selection";
+import {
+  type CellContext,
+  type CellDescription,
+  type DataGridHandle,
+  type EditorContext,
+  type GridColumn,
+} from "@/components/ui/dataGridTypes";
+import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "@/shell/compose";
+import { useStrings, type Translate } from "../../../shell/strings";
+import { draftedWidth } from "../editing/editingModel";
+import { GridRoomContext } from "../gridRoom";
+import {
+  AmountCell,
+  CountCell,
+  DirectionCell,
+  EuroCell,
+  MatchCell,
+  RetencionCell,
+  SelectShownBox,
+  StatusCell,
+  TextCell,
+} from "./MovementCells";
+import {
+  COLUMN_SPECS,
+  dateWidth,
+  needsInvoice,
+  statusWidth,
+  type ColumnId,
+  type ReadinessSets,
+} from "./movementsModel";
+import {
+  accountLabel,
+  categoryLabel,
+  classificationText,
+  classifiedByLabel,
+  ivaCategoryLabel,
+  irpfCategoryLabel,
+  lifecycleLabel,
+  reasonDetail,
+  statusLabel,
+  statusWord,
+} from "./movementWords";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { formatDay, formatTime } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type { RowJobState } from "../../../shell/backgroundTasks";
+import { rowJobWords } from "../../shell/backgroundTaskWords";
+
+/** What staged editing adds to the columns: each one's editor and why a
+ * cell takes none, what a cell draws while a change is staged on it, and
+ * what is said of a staged cell or row. */
+export type ColumnEditing = {
+  editor: (
+    column: ColumnId,
+  ) =>
+    | ((
+        row: LedgerTransactionReviewProjection,
+        context: EditorContext,
+      ) => ReactNode | null)
+    | undefined;
+  readOnlyReason: (
+    column: ColumnId,
+  ) =>
+    | ((row: LedgerTransactionReviewProjection) => string | undefined)
+    | undefined;
+  /** Draws a cell over its stored drawing, which `stored` gives. */
+  decorate: (
+    row: LedgerTransactionReviewProjection,
+    column: ColumnId,
+    stored: () => ReactNode,
+  ) => ReactNode;
+  /** Whether `decorate` draws something over the stored cell: a draft, a
+   * refused entry or a staged change. */
+  drawsOver: (
+    row: LedgerTransactionReviewProjection,
+    column: ColumnId,
+  ) => boolean;
+  describeCell: (key: string, column: string) => CellDescription | undefined;
+  describeRow: (key: string) => string | undefined;
+};
+
+export type ColumnContext = {
+  t: Translate;
+  locale: string;
+  density: "compact" | "comfortable";
+  /** The rem widths the person gave columns. */
+  widths: Readonly<Record<string, number>>;
+  readiness: ReadinessSets;
+  /** The column readiness marks, and the reason it marks it for. */
+  missing: { column: ColumnId; reason: string } | null;
+  /** Dates carry their year: the window spans more than one. */
+  withYear: boolean;
+  /** How many of the shown movements are selected. */
+  extent: "none" | "some" | "all";
+  onSelectShown: (how: "replace" | "add" | "remove") => void;
+  /** Sorting by this column waits for the whole window. */
+  sortable: (column: ColumnId) => boolean;
+  /** The register's own accounts, null while unread. */
+  accounts: readonly { id: string; label: string }[] | null;
+  /** Movements an import flagged as likely duplicates. */
+  duplicates?: ReadonlySet<string>;
+  /** Where a background classification job stands on each movement. */
+  jobRows?: ReadonlyMap<string, RowJobState>;
+  /** Some shown movement is not in euros: amounts keep a currency slot. */
+  currencySlot?: boolean;
+  /** How many kinds of mark the movements carry beside their status. */
+  statusMarks?: number;
+  /** New movements are being drafted: some columns widen for them. */
+  drafting?: boolean;
+  /** Staged editing, where the grid takes edits. */
+  editing?: ColumnEditing;
+};
+
+const id = (row: LedgerTransactionReviewProjection) =>
+  row.transaction.transaction_id;
+
+/** Whether readiness found `column` missing on `row`. */
+function isMissing(
+  context: Pick<ColumnContext, "missing" | "readiness">,
+  row: LedgerTransactionReviewProjection,
+  column: string,
+): boolean {
+  const missing = context.missing;
+  return (
+    missing !== null &&
+    missing.column === column &&
+    !!context.readiness.issues.get(id(row))?.includes(missing.reason)
+  );
+}
+
+function Missing({ t }: { t: Translate }) {
+  return (
+    <span data-missing="" className="inline-flex items-center gap-1">
+      <Icon name="alert" size="xs" className="text-warning" />
+      {t("desktop.ledger.missing")}
+    </span>
+  );
+}
+
+/** The grid's columns, in `order`: what each draws from the stored row
+ * and how it is laid out. Every cell shows the stored value; a cell
+ * readiness found missing says so in words. */
+function movementColumns(
+  order: readonly ColumnId[],
+  context: ColumnContext,
+): GridColumn<LedgerTransactionReviewProjection>[] {
+  const { t, locale } = context;
+  const missingOr =
+    (
+      column: ColumnId,
+      draw: (row: LedgerTransactionReviewProjection) => ReactNode,
+    ) =>
+    (row: LedgerTransactionReviewProjection) =>
+      isMissing(context, row, column) ? <Missing t={t} /> : draw(row);
+  // The columns whose stored cell can draw nothing, and when it does.
+  // `isMissing` columns draw words instead, so they are not empty.
+  const blank: Partial<
+    Record<ColumnId, (row: LedgerTransactionReviewProjection) => boolean>
+  > = {
+    description: (row) => !row.transaction.description,
+    counterparty: (row) => !row.transaction.counterparty,
+    eur: (row) => row.transaction.currency === "EUR",
+    category: (row) => !row.transaction.category_id,
+    iva_category: (row) => !row.transaction.iva_category,
+    taxable_base: (row) => row.transaction.taxable_base === null,
+    iva_rate: (row) => row.transaction.iva_rate === null,
+    iva_amount: (row) => row.transaction.iva_amount === null,
+    irpf_category: (row) => !row.transaction.irpf_category,
+    retencion: (row) => row.withholding.length === 0,
+    invoice: (row) => row.transaction.invoice_id === null && !needsInvoice(row),
+    documents: (row) =>
+      !row.transaction.purchase_invoice_evidence_id &&
+      row.transaction.attachment_ids.length === 0,
+    group_label: (row) => !row.group_label,
+    notes: (row) => !row.transaction.notes,
+  };
+  const draw: Record<
+    ColumnId,
+    (row: LedgerTransactionReviewProjection, cell?: CellContext) => ReactNode
+  > = {
+    select: (row) => (
+      <DataGridRowCheckbox
+        rowKey={id(row)}
+        label={t("desktop.ledger.select.row", {
+          description: row.transaction.description,
+        })}
+      />
+    ),
+    // Narrowed beside a tight grid, the status draws its glyph alone.
+    status: (row, cell) => (
+      <StatusCell
+        row={row}
+        issues={
+          context.readiness.checked
+            ? (context.readiness.issues.get(id(row))?.length ?? 0)
+            : null
+        }
+        wordy={context.density === "comfortable" && !cell?.narrowed}
+        duplicate={context.duplicates?.has(id(row)) ?? false}
+        job={context.jobRows?.get(id(row)) ?? null}
+      />
+    ),
+    date: missingOr("date", (row) => (
+      <span className="tabular-nums">
+        {formatDay(locale, row.transaction.date, {
+          withYear: context.withYear,
+        })}
+      </span>
+    )),
+    description: (row) => <TextCell text={row.transaction.description} />,
+    counterparty: missingOr("counterparty", (row) => (
+      <TextCell text={row.transaction.counterparty} />
+    )),
+    direction: (row) => <DirectionCell direction={row.transaction.direction} />,
+    amount: (row) => (
+      <AmountCell
+        amount={row.transaction.amount}
+        currency={row.transaction.currency}
+        locale={locale}
+        currencySlot={context.currencySlot ?? false}
+      />
+    ),
+    eur: missingOr("eur", (row) => <EuroCell row={row} locale={locale} />),
+    classification: missingOr("classification", (row) => {
+      const decided = isDecidedClassification(
+        row.transaction.business_classification,
+      );
+      return (
+        <TextCell
+          text={classificationText(t, locale, row.transaction)}
+          quiet={!decided}
+        />
+      );
+    }),
+    category: missingOr("category", (row) => {
+      const category = row.transaction.category_id;
+      return category ? <TextCell text={categoryLabel(t, category)} /> : null;
+    }),
+    iva_category: missingOr("iva_category", (row) => {
+      const category = row.transaction.iva_category;
+      return category ? (
+        <TextCell text={ivaCategoryLabel(t, category)} />
+      ) : null;
+    }),
+    taxable_base: missingOr("taxable_base", (row) =>
+      row.transaction.taxable_base === null ? null : (
+        <span className="tabular-nums">
+          {formatAmount(locale, row.transaction.taxable_base)}
+        </span>
+      ),
+    ),
+    iva_rate: missingOr("iva_rate", (row) =>
+      row.transaction.iva_rate === null ? null : (
+        <span className="tabular-nums">
+          {formatPercent(locale, row.transaction.iva_rate, {
+            unit: "fraction",
+          })}
+        </span>
+      ),
+    ),
+    iva_amount: missingOr("iva_amount", (row) =>
+      row.transaction.iva_amount === null ? null : (
+        <span className="tabular-nums">
+          {formatAmount(locale, row.transaction.iva_amount)}
+        </span>
+      ),
+    ),
+    irpf_category: (row) => {
+      const category = row.transaction.irpf_category;
+      return category ? (
+        <TextCell text={irpfCategoryLabel(t, category)} />
+      ) : null;
+    },
+    retencion: (row) => (
+      <RetencionCell entries={row.withholding} locale={locale} />
+    ),
+    invoice: (row) => (
+      <MatchCell
+        linked={row.transaction.invoice_id !== null}
+        waiting={needsInvoice(row)}
+      />
+    ),
+    documents: (row) => {
+      const count =
+        (row.transaction.purchase_invoice_evidence_id ? 1 : 0) +
+        row.transaction.attachment_ids.length;
+      return (
+        <CountCell
+          icon="attach"
+          count={count}
+          label={t("desktop.ledger.documents.count", { count })}
+        />
+      );
+    },
+    group_label: (row) => <TextCell text={row.group_label} />,
+    account: (row) => (
+      <TextCell
+        text={accountLabel(t, context.accounts, row.own_account_id)}
+        quiet={row.own_account_id === null}
+      />
+    ),
+    notes: (row) => <TextCell text={row.transaction.notes} quiet />,
+    lifecycle: (row) => (
+      <TextCell
+        text={lifecycleLabel(t, row.transaction.lifecycle_state)}
+        quiet={row.transaction.lifecycle_state === "ACTIVE"}
+      />
+    ),
+    classified_by: (row) => (
+      <TextCell
+        text={classifiedByLabel(t, row.transaction.classification_decided_by)}
+        quiet
+      />
+    ),
+    modified: (row) => (
+      <TextCell text={formatTime(locale, row.transaction.modified_at)} quiet />
+    ),
+  };
+  const editing = context.editing;
+  return order.map((column): GridColumn<LedgerTransactionReviewProjection> => {
+    const spec = COLUMN_SPECS[column];
+    const name = t(`desktop.ledger.column.${column}`);
+    const width = context.widths[column];
+    // A glyph column's header is its glyph; `label` carries the word. The
+    // status header's glyph names the column, not a status.
+    const glyph = (
+      <span title={name} className="inline-flex">
+        <Icon name={column === "invoice" ? "link" : "selectAll"} size="xs" />
+        <span className="sr-only">{name}</span>
+      </span>
+    );
+    const wordyStatus =
+      column === "status" && context.density === "comfortable";
+    const natural =
+      column === "status"
+        ? statusWidth(context.density, context.statusMarks)
+        : column === "date"
+          ? dateWidth(context.withYear)
+          : spec.width;
+    return {
+      id: column,
+      label: name,
+      header:
+        column === "select" ? (
+          <SelectShownBox
+            label={t("desktop.ledger.select.shown")}
+            extent={context.extent}
+            onSelect={context.onSelectShown}
+          />
+        ) : column === "invoice" || column === "status" ? (
+          wordyStatus ? (
+            name
+          ) : (
+            glyph
+          )
+        ) : (
+          name
+        ),
+      ...(wordyStatus
+        ? {
+            narrowWidth: statusWidth("compact", context.statusMarks),
+            narrowHeader: glyph,
+          }
+        : {}),
+      width:
+        width ?? (context.drafting ? draftedWidth(column, natural) : natural),
+      ...(spec.minWidth !== undefined ? { minWidth: spec.minWidth } : {}),
+      ...(spec.grow !== undefined && width === undefined
+        ? { grow: spec.grow }
+        : {}),
+      ...(spec.sticky ? { sticky: spec.sticky } : {}),
+      ...(spec.align ? { align: spec.align } : {}),
+      sortable: spec.sortable && context.sortable(column),
+      resizable: column !== "select",
+      ...(blank[column]
+        ? {
+            emptyName: (row: LedgerTransactionReviewProjection) =>
+              blank[column]!(row) &&
+              !isMissing(context, row, column) &&
+              !editing?.drawsOver(row, column)
+                ? t("desktop.ledger.cell_empty")
+                : undefined,
+          }
+        : {}),
+      cell: editing
+        ? (row, cell) =>
+            editing.decorate(row, column, () => draw[column](row, cell))
+        : draw[column],
+      ...(editing?.editor(column) ? { editor: editing.editor(column) } : {}),
+      ...(editing?.readOnlyReason(column)
+        ? { readOnlyReason: editing.readOnlyReason(column) }
+        : {}),
+    };
+  });
+}
+
+type GridProps = ComponentProps<
+  typeof DataGrid<LedgerTransactionReviewProjection>
+>;
+
+/**
+ * The movements grid: the period's stored movements, in groups where asked,
+ * with a hidden status for each row and what readiness found missing in a
+ * cell said with that cell. Editing reaches it through the columns'
+ * editors, which the caller adds.
+ */
+export function MovementsGrid({
+  gridRef,
+  order,
+  context,
+  byId,
+  ...props
+}: Omit<
+  GridProps,
+  "columns" | "describeRow" | "describeCell" | "positionLabel" | "ref"
+> & {
+  gridRef: Ref<DataGridHandle>;
+  order: readonly ColumnId[];
+  context: Omit<ColumnContext, "t">;
+  byId: ReadonlyMap<string, LedgerTransactionReviewProjection>;
+}) {
+  const t = useStrings();
+  const full = { ...context, t };
+  const columns = movementColumns(order, full);
+  const describeRow = (key: string) => {
+    const edited = context.editing?.describeRow(key);
+    const row = byId.get(key);
+    if (!row) return edited;
+    const reasons = context.readiness.issues.get(key) ?? [];
+    const counted = context.readiness.checked ? reasons.length : null;
+    const word = statusWord(row.review_status, counted);
+    const job = context.jobRows?.get(key);
+    return facts(t, [
+      statusLabel(t, word, counted),
+      reasons.length
+        ? t("desktop.ledger.describe.readiness", {
+            reasons: listed(
+              t,
+              reasons.map((reason) => reasonDetail(t, reason)),
+              "plain",
+            ),
+          })
+        : "",
+      row.transaction.lifecycle_state !== "ACTIVE"
+        ? lifecycleLabel(t, row.transaction.lifecycle_state)
+        : "",
+      context.readiness.noRate.has(key) ? t("desktop.ledger.no_rate") : "",
+      context.duplicates?.has(key)
+        ? t("desktop.ledger.import_issue.duplicate")
+        : "",
+      job ? rowJobWords(t, job) : "",
+      edited ?? "",
+    ]);
+  };
+  const { onLeast } = useContext(GridRoomContext);
+  const describeCell = (key: string, column: string) => {
+    const edited = context.editing?.describeCell(key, column);
+    if (edited) return edited;
+    const row = byId.get(key);
+    const missing = context.missing;
+    if (!row || !missing || !isMissing(context, row, column)) return undefined;
+    return {
+      text: t("desktop.ledger.describe.missing", {
+        reason: reasonDetail(t, missing.reason),
+      }),
+    };
+  };
+  return (
+    <DataGrid
+      ref={gridRef}
+      columns={columns}
+      onLeast={onLeast}
+      positionLabel={(row, count) =>
+        t("desktop.ledger.position", { row, count })
+      }
+      describeRow={describeRow}
+      describeCell={describeCell}
+      {...(props as Omit<GridProps, "columns" | "positionLabel">)}
+    />
+  );
+}

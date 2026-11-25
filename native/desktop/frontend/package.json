@@ -5,15 +5,38 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "check": "tsc --noEmit && eslint . && node --test dev/eslint/tests/*.test.mjs && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
+    "build": "node scripts/typecheck.mjs && vite build --configLoader runner",
+    "preview": "vite preview --configLoader runner",
+    "check": "node scripts/typecheck.mjs && eslint . && node scripts/ledger-contract.mjs --check && node scripts/profile-contract.mjs --check && node scripts/calendar-contract.mjs --check && node scripts/home-contract.mjs --check && node scripts/reference-contract.mjs --check && node scripts/operations-contract.mjs --check && node scripts/borrador-contract.mjs --check && node scripts/ledger-operation-contract.mjs --check && node scripts/provider-sign-in-contract.mjs --check && node scripts/provider-settings-contract.mjs --check && node scripts/agent-catalog-contract.mjs --check && node scripts/agent-gateway-contract.mjs --check && node scripts/local-models-contract.mjs --check && node scripts/agent-snapshot-contract.mjs --check && node scripts/background-tasks-contract.mjs --check && node scripts/modelo-fixtures.mjs --contract --check && node scripts/attachment-admin-contract.mjs --check && node --test dev/eslint/tests/*.test.mjs scripts/tests/*.test.mjs tests/live/*.unit.ts && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts ../tests --ignore-unknown",
     "test": "playwright test",
     "storybook": "node scripts/storybook.mjs dev",
     "storybook:build": "node scripts/storybook.mjs build",
     "shots": "node scripts/catalogue-shots.mjs",
     "benchmark": "node scripts/benchmark.mjs"
+  },
+  "overrides": {
+    "@wdio/config": {
+      "glob": "14.0.3"
+    },
+    "readdir-glob": {
+      "minimatch": "11.0.3"
+    },
+    "@joshwooding/vite-plugin-react-docgen-typescript": {
+      "glob": "14.0.3"
+    },
+    "@eslint/config-array": {
+      "minimatch": "11.0.3"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.3"
+    },
+    "eslint": {
+      "minimatch": "11.0.3"
+    },
+    "cmdk": {
+      "@radix-ui/react-dialog": "1.1.23"
+    }
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.1",
@@ -23,17 +46,19 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
+    "date-fns": "4.4.0",
     "lucide-react": "1.52.0",
     "radix-ui": "1.6.7",
     "react": "19.3.0",
+    "react-day-picker": "10.0.2",
     "react-dom": "19.3.0",
     "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
-    "@storybook/addon-a11y": "10.6.1",
-    "@storybook/react-vite": "10.6.1",
+    "@storybook/addon-a11y": "10.6.3",
+    "@storybook/react-vite": "10.6.3",
     "@tailwindcss/vite": "4.3.3",
     "@tauri-apps/cli": "2.12.1",
     "@types/node": "26.6.4",
@@ -45,11 +70,12 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "prettier": "3.9.9",
-    "storybook": "10.6.1",
+    "storybook": "10.6.3",
     "tailwindcss": "4.3.3",
     "tw-animate-css": "1.4.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
-    "vite": "8.3.2"
+    "vite": "8.3.5",
+    "webdriverio": "10.1.0"
   }
 }

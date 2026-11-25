@@ -23,6 +23,7 @@ export class DesktopInput {
       [
         "-NoProfile",
         "-NonInteractive",
+        "-STA",
         "-ExecutionPolicy",
         "Bypass",
         "-File",
@@ -102,6 +103,16 @@ export class DesktopInput {
 
   post(pid, message, hwnd) {
     return this.request("post", { pid, message, ...(hwnd && { hwnd }) });
+  }
+
+  async clipboardWrite(text) {
+    try {
+      if (typeof text !== "string") throw new Error();
+      const result = await this.request("clipboard-write", { text });
+      if (result?.matches !== true) throw new Error();
+    } catch {
+      throw new Error("Clipboard text write failed");
+    }
   }
 
   async processes(names) {

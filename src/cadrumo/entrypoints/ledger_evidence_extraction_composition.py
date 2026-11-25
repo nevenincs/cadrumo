@@ -15,22 +15,19 @@ from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_
 from ..adapters.outbound.llm.client import LLMClient
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
 from ..adapters.outbound.llm.errors import (
-    LLMBusyError,
+    LLMConfigError,
     LLMConsentError,
     LLMContentionError,
+    LLMError,
     LLMPdfRasterisationError,
     LLMProviderError,
 )
-from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
-from ..adapters.outbound.llm.evidence_draft_vision import (
-    VISION_TRANSCRIPTION_PROMPT_ID,
-    LocalVisionDocumentTranscriber,
-    transcribe_document_images,
-)
+from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
+from ..adapters.outbound.llm.evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, VisionDocumentTranscriber
 from ..adapters.outbound.llm.models import MultimodalImageInput
+from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal, SupplyNatureProposer
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.storage.attachment import AttachmentStore
@@ -55,7 +52,6 @@ from ..application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ..application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
-    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
@@ -66,11 +62,8 @@ from ..application.ledger.invoice_extraction_authority import InvoiceExtractionA
 from ..application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from ..core.config import Settings
-from ..core.config_support import LLMProvider
 from ..core.operator_action_enums import ActionEvidenceProvenance
-from ..core.optional_extras import MissingOptionalExtraError
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..domain.iva.supply_nature import SupplyNature
 
 
 def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
@@ -98,8 +91,8 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
-def _failed_condition_id(refusal: LLMContentionError | LLMBusyError) -> str | None:
-    """Return the precondition an admission refusal failed, as the application carries it."""
+def _failed_condition_id(refusal: LLMContentionError) -> str | None:
+    """Return the precondition a load refusal failed, as the application carries it."""
     verdict = refusal.terminal_precondition_verdict
     return None if verdict is None else str(verdict.failed_condition_id)
 
@@ -129,14 +122,12 @@ def invoice_draft_extraction_ports(
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
-        return _invoice_read_text(
+        return invoice_read_text(
             transcription,
             settings,
-            provider,
             consent_token,
             authority_values,
             consent_ledger=consent_ledger,
@@ -144,21 +135,21 @@ def invoice_draft_extraction_ports(
             before_read=before_read,
         )
 
-    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
-        return _invoice_propose_supply_nature(transcription, settings, before_read=before_read)
+    def propose_supply_nature(
+        transcription: DocumentTranscription, settings: Settings, consent_token: EvidenceConsentProof | None
+    ) -> SupplyNatureProposal | None:
+        return invoice_propose_supply_nature(transcription, settings, consent_token, before_read=before_read)
 
     def transcribe_vision(
         images: tuple[VisionImage, ...],
         source_content_sha256: str,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
-        return _invoice_transcribe_vision(
+        return invoice_transcribe_vision(
             images,
             source_content_sha256,
             settings,
-            provider,
             consent_token,
             consent_ledger=consent_ledger,
             before_read=before_read,
@@ -168,7 +159,7 @@ def invoice_draft_extraction_ports(
         resolve_evidence_input=resolve_evidence_input,
         evidence_input_ports=evidence_input_ports,
         text_layer_ports=evidence_text_layer_ports(),
-        parse_structured_invoice=_invoice_parse_structured_invoice,
+        parse_structured_invoice=read_structured_invoice_record,
         read_text=read_text,
         propose_supply_nature=propose_supply_nature,
         rasterise_pdf=_invoice_rasterise_pdf,
@@ -177,7 +168,7 @@ def invoice_draft_extraction_ports(
     )
 
 
-__all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports"]
+__all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports", "read_structured_invoice_record"]
 
 
 def _invoice_resolve_evidence_input(
@@ -207,7 +198,8 @@ def _invoice_resolve_evidence_input(
     return resolve_attachment_evidence_input(attachment_id, store=store, ports=evidence_input_ports)
 
 
-def _invoice_parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
+def read_structured_invoice_record(data: bytes) -> StructuredInvoiceRecord:
+    """Read a structured e-invoice's record, refusing one the e-invoice reader cannot read."""
     try:
         return translate_parsed_einvoice(parse_einvoice_document(data))
     except EInvoiceXmlParseError as exc:
@@ -222,10 +214,23 @@ def _invoice_require_llm_consent_token(consent_token: EvidenceConsentProof | Non
     return consent_token
 
 
-def _invoice_read_text(
+def _consent_ledger_client(
+    settings: Settings, consent_ledger: EvidenceConsentLedger | None, *, caller: str, prompt_id: str
+) -> LLMClient | None:
+    """Return a client recording consented dispatches in ``consent_ledger``; ``None`` keeps the reader's own."""
+    if consent_ledger is None:
+        return None
+    return LLMClient(settings=settings, caller=caller, prompt_id=prompt_id, consent_ledger=consent_ledger)
+
+
+def _reader_unavailable(exc: LLMConfigError) -> InvoiceDraftReaderUnavailableError:
+    """Carry a refused model run to the application with the refusal's own typed verdict."""
+    return InvoiceDraftReaderUnavailableError(exc, precondition_verdict=exc.terminal_precondition_verdict)
+
+
+def invoice_read_text(
     transcription: DocumentTranscription,
     settings: Settings,
-    provider: LLMProvider | None,
     consent_token: EvidenceConsentProof | None,
     authority_values: object,
     *,
@@ -233,6 +238,12 @@ def _invoice_read_text(
     operation: PinnedAuthorityOperation | None,
     before_read: Callable[[], None] | None,
 ) -> InvoiceDraft:
+    """Read invoice fields on the person's text-extraction selection, through the agent service.
+
+    A refused run -- no selection for the role, an unavailable lane, a model
+    that is not installed -- reaches the application with its typed verdict.
+    No other lane or model is tried.
+    """
     if before_read is not None:
         before_read()
     try:
@@ -241,45 +252,49 @@ def _invoice_read_text(
         from ..domain.calculations.registry.authority import bundled_indexed_authority
 
         with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
-            if provider is None:
-                return extract_invoice_fields_from_text(
-                    transcription,
-                    operation=pinned,
-                    authority_values=authority_values,
-                )
             return TextInvoiceFieldExtractor(
-                provider=provider,
                 operation=pinned,
                 settings=settings,
                 authority_values=authority_values,
                 consent_token=_invoice_require_llm_consent_token(consent_token),
-                client=(
-                    None
-                    if consent_ledger is None
-                    else LLMClient(
-                        settings=settings,
-                        caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
-                        prompt_id="ledger-invoice-text-extract",
-                        consent_ledger=consent_ledger,
-                    )
+                client=_consent_ledger_client(
+                    settings,
+                    consent_ledger,
+                    caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
+                    prompt_id="ledger-invoice-text-extract",
                 ),
             ).extract(transcription=transcription)
-    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+    except LLMConfigError as exc:
+        raise _reader_unavailable(exc) from exc
+    except (LLMProviderError, httpx.HTTPError) as exc:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
     except LLMContentionError as exc:
         raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
-    except LLMBusyError as exc:
-        raise InvoiceDraftReaderBusyRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
 
 
-def _invoice_propose_supply_nature(
-    transcription: DocumentTranscription, settings: Settings, *, before_read: Callable[[], None] | None
-) -> SupplyNature | None:
+def invoice_propose_supply_nature(
+    transcription: DocumentTranscription,
+    settings: Settings,
+    consent_token: EvidenceConsentProof | None,
+    *,
+    before_read: Callable[[], None] | None,
+) -> SupplyNatureProposal | None:
+    """Ask the proposer under the read's consent; ``None`` when it failed without a verdict.
+
+    The proposal is optional, so no failure refuses the read. A run the agent
+    service refused -- no selection for the role, an unavailable lane, an
+    off-host lane without consent -- answers with that typed verdict on the
+    proposal, so the caller can tell why no proposal was made. Any other model
+    error or transport failure leaves no proposal.
+    """
     if before_read is not None:
         before_read()
     try:
-        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
-    except Exception:
+        proposer = SupplyNatureProposer(
+            settings=settings, consent_token=_invoice_require_llm_consent_token(consent_token)
+        )
+        return proposer.propose(transcription.text.splitlines())
+    except (LLMError, httpx.HTTPError):
         return None
 
 
@@ -290,40 +305,39 @@ def _invoice_rasterise_pdf(data: bytes) -> tuple[str, ...]:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
 
 
-def _invoice_transcribe_vision(
+def invoice_transcribe_vision(
     images: tuple[VisionImage, ...],
     source_content_sha256: str,
     settings: Settings,
-    provider: LLMProvider | None,
     consent_token: EvidenceConsentProof | None,
     *,
     consent_ledger: EvidenceConsentLedger | None,
     before_read: Callable[[], None] | None,
 ) -> DocumentTranscription:
+    """Transcribe page images on the person's vision selection, through the agent service.
+
+    A refused run reaches the application with its typed verdict, as for a
+    text read.
+    """
     if before_read is not None:
         before_read()
     try:
         inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
-        if provider is None:
-            return transcribe_document_images(inputs, source_content_sha256=source_content_sha256, settings=settings)
-        return LocalVisionDocumentTranscriber(
-            provider=provider,
+        return VisionDocumentTranscriber(
             settings=settings,
             consent_token=_invoice_require_llm_consent_token(consent_token),
-            client=(
-                None
-                if consent_ledger is None
-                else LLMClient(
-                    settings=settings.model_copy(
-                        update={"cadrumo_llm_default_timeout_s": settings.cadrumo_llm_vision_read_timeout_s}
-                    ),
-                    caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
-                    prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
-                    consent_ledger=consent_ledger,
-                )
+            client=_consent_ledger_client(
+                settings.model_copy(
+                    update={"cadrumo_llm_default_timeout_s": settings.cadrumo_llm_vision_read_timeout_s}
+                ),
+                consent_ledger,
+                caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
+                prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
             ),
         ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
-    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+    except LLMConfigError as exc:
+        raise _reader_unavailable(exc) from exc
+    except (LLMProviderError, httpx.HTTPError) as exc:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
 
 

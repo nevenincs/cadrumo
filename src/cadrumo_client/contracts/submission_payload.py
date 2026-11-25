@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field
 
@@ -13,6 +13,8 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 SUBMISSION_PAYLOAD_CHUNK_BYTES = 16_384
 SUBMISSION_PAYLOAD_MAX_BYTES = 16_777_216
+MINIMUM_JSON_DOCUMENT_BYTES: Final = len(b"{}")
+"""The shortest JSON document a payload can carry: an empty object."""
 SUBMISSION_PAYLOAD_TIMEOUT_SECONDS = 30
 
 _MAX_ENCODED_CHUNK_CHARS = 4 * ((SUBMISSION_PAYLOAD_CHUNK_BYTES + 2) // 3)
@@ -23,7 +25,7 @@ class SubmissionPayloadDescriptor(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    byte_count: Annotated[int, Field(ge=2, le=SUBMISSION_PAYLOAD_MAX_BYTES)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=SUBMISSION_PAYLOAD_MAX_BYTES)]
     payload_digest: ContentDigest
 
 
@@ -32,7 +34,7 @@ class FinancialOperandInputDescriptor(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["financial_operand_input"] = "financial_operand_input"
-    byte_count: Annotated[int, Field(ge=2, le=SUBMISSION_PAYLOAD_MAX_BYTES)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=SUBMISSION_PAYLOAD_MAX_BYTES)]
 
 
 class SubmissionPayloadChunk(BaseModel):
@@ -41,7 +43,7 @@ class SubmissionPayloadChunk(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     offset: Annotated[int, Field(ge=0)]
-    encoded: Annotated[str, Field(min_length=4, max_length=_MAX_ENCODED_CHUNK_CHARS, repr=False)]
+    encoded: Annotated[str, Field(min_length=1, max_length=_MAX_ENCODED_CHUNK_CHARS, repr=False)]
 
     def decode(self) -> bytes:
         """Reject noncanonical base64, empty data and oversized chunks."""

@@ -27,7 +27,7 @@ from ..form_workbook import add_form_workbook
 from ..layout import plan_layout
 from ..records import TabName
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _with_bindings(snapshot, bindings, blocks):
@@ -69,6 +69,8 @@ def _manual(snapshot, data_type, *, casilla_id=None):
         provider["casilla_id"] = casilla_id
     else:
         provider.update(record="test-record", field=f"test-{data_type}", offset=1, length=20)
+        if data_type == "decimal":
+            provider["decimals"] = 3
     return BindingDefinition.model_validate(
         {
             "id": f"test-input-{data_type}",

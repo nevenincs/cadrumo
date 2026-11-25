@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 import pytest
 from textual.widgets import Button, Checkbox, Input, Select, SelectionList
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.operations import (
@@ -21,7 +21,9 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_registrations,
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -69,9 +71,9 @@ async def test_api_change_form_pins_target_and_protected_reference(kind: Enrollm
     app = ScreenHostApp(screen)
     target_grant, target_key, reference = uuid4(), uuid4(), uuid4()
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         cast("Select[EnrollmentKind]", screen.query_one("#automation-request-kind", Select)).value = kind
-        await pilot.pause()
+        await settle(pilot, workers=False)
         cast("SelectionList[str]", screen.query_one("#automation-request-operations", SelectionList)).select(
             "user-profile.view"
         )
@@ -123,7 +125,7 @@ async def test_form_uses_registered_tui_choices_and_server_destination_only() ->
     )
     app = ScreenHostApp(screen)
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         operation = "user-profile.view"
         contract = next(item for item in contracts.definitions if str(item.definition_id) == operation)
         assert operation in screen._operation_choices
@@ -179,7 +181,7 @@ async def test_form_refuses_unlisted_operation_and_never_opens_client() -> None:
     )
     app = ScreenHostApp(screen)
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
         ).isoformat()
@@ -282,7 +284,7 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
     )
     app = ScreenHostApp(screen)
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
         ).isoformat()
@@ -290,13 +292,11 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
             datetime.now(UTC) + timedelta(days=15)
         ).isoformat()
         screen.query_one("#automation-request-submit", Button).press()
-        async with asyncio.timeout(5):
-            while not enrollment.polling.is_set():
-                await pilot.pause(0.02)
+        await settle_until(pilot, enrollment.polling.is_set, "the enrollment to start polling", workers=False)
         assert screen._submitted is not None
         assert not client.closed
         app.exit()
-        await pilot.pause(0.05)
+        await settle(pilot, workers=False)
         assert not client.closed
         enrollment.release.set()
     outcome = screen._outcome
@@ -372,7 +372,7 @@ async def test_pending_delivery_allows_human_review_and_cancel_preserves_request
     )
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert screen.query_one("#automation-request-review", Button).disabled
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
@@ -382,26 +382,22 @@ async def test_pending_delivery_allows_human_review_and_cancel_preserves_request
         ).isoformat()
         screen.query_one("#automation-request-submit", Button).press()
         try:
-            async with asyncio.timeout(5):
-                while not enrollment.polling.is_set():
-                    await pilot.pause(0.02)
+            await settle_until(pilot, enrollment.polling.is_set, "the enrollment to start polling", workers=False)
             screen.query_one("#automation-request-review", Button).press()
-            await pilot.pause()
+            await settle(pilot, workers=False)
             review_screen = app.screen
             assert isinstance(review_screen, RuntimeAutomationInventoryScreen)
             assert review_screen._client is reviewer
             assert screen._busy and not requester.closed and not reviewer.closed
             review_screen.action_close()
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert app.screen is screen
             assert screen._busy and screen._outcome is None
             assert enrollment.submits == 1
             assert not screen.query_one("#automation-request-review", Button).disabled
         finally:
             enrollment.release.set()
-        async with asyncio.timeout(5):
-            while screen._busy:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: not screen._busy, "the requester to stop being busy", workers=False)
         assert not screen.query_one("#automation-request-close", Button).disabled
         assert screen._outcome is not None and screen._outcome.stage is EnrollmentStage.DECLINED
         app.exit()
@@ -426,11 +422,11 @@ async def test_review_bridge_refuses_retargeted_human_session() -> None:
     )
     app = ScreenHostApp(screen)
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._submitted = enrollment._receipt(EnrollmentStage.REQUESTED)
         reviewer._session_id = uuid4()
         screen._open_review()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert app.screen is screen
         assert screen._owned_client is None and not reviewer.closed
         app.exit()
@@ -497,11 +493,11 @@ async def test_failed_fresh_admission_keeps_request_uncertain_and_cleanup_retrya
         fresh_credential_client=fresh_opener,
     )
     async with ScreenHostApp(screen).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         cast(
             "Select[EnrollmentKind]", screen.query_one("#automation-request-kind", Select)
         ).value = EnrollmentKind.RENEW
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
         ).isoformat()
@@ -565,7 +561,7 @@ async def test_prepare_failure_cleanup_and_originating_owned_client_both_close_o
         open_client=open_client,
     )
     async with ScreenHostApp(screen).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
         ).isoformat()
@@ -642,11 +638,11 @@ async def test_returned_fresh_client_refusal_keeps_primary_and_retries_failed_cl
         fresh_credential_client=fresh_opener,
     )
     async with ScreenHostApp(screen).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         cast(
             "Select[EnrollmentKind]", screen.query_one("#automation-request-kind", Select)
         ).value = EnrollmentKind.RENEW
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#automation-request-expiry", Input).value = (
             datetime.now(UTC) + timedelta(days=30)
         ).isoformat()
@@ -695,7 +691,7 @@ async def test_unmount_caller_cancellation_drains_native_request_and_releases_ow
             open_client=open_client,
         )
         async with ScreenHostApp(screen).run_test() as pilot:
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#automation-request-expiry", Input).value = (
                 datetime.now(UTC) + timedelta(days=30)
             ).isoformat()

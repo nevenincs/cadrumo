@@ -21,48 +21,30 @@ from textual.widgets import DataTable, Static
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.i18n.render import tr
-from ...components.host import ScreenHostApp
+from ...tests.settling import settle
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_flows import _ClassificationDoor, _classify_action
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import (
+    ClassificationDoor,
+    WorkspaceHostApp,
+    ledger_classify_action,
+    ledger_context,
+    ledger_projection,
+    ledger_review_action,
+)
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
-    from textual.screen import Screen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _NAVIGATION_ROWS = tuple(LedgerWorkspaceArea)
 
 
-class _WorkspaceHostApp(ScreenHostApp[None]):
-    """A host that replaces a workspace body the way the production root does.
-
-    The deferral is the point.  Textual dispatches a screen's result callback
-    through whichever message pump was active when that screen was pushed, so
-    pushing a replacement from inside the outgoing screen's own handler
-    registers the return journey against a pump that is about to stop.  The
-    root defers the swap onto its own pump for exactly that reason, and a host
-    that pushed directly would pass this test while production stranded the
-    operator.  Mirroring the deferral keeps the proof honest.
-    """
-
-    def replace_workspace_body(self, screen: Screen[None], /) -> None:
-        """Defer the swap onto this host's pump, as the root shell does."""
-        self.call_next(self._replace_workspace_body, screen)
-
-    def _replace_workspace_body(self, screen: Screen[None]) -> None:
-        """Discard the outgoing body before mounting exactly one replacement."""
-        while len(self.screen_stack) > 1:
-            self.pop_screen()
-        self.push_screen(screen, self.exit)
-
-
-def _entries_screen(*, door: _ClassificationDoor) -> LedgerEntriesScreen:
+def _entries_screen(*, door: ClassificationDoor) -> LedgerEntriesScreen:
     """The entries body a newly-opened workspace shows, with no row chosen yet."""
     return LedgerEntriesScreen(
         LedgerWorkspaceController(
@@ -70,7 +52,7 @@ def _entries_screen(*, door: _ClassificationDoor) -> LedgerEntriesScreen:
             ledger_projection(),
             LedgerWorkspaceInjection(
                 review_action=ledger_review_action(),
-                classify_action=_classify_action(),
+                classify_action=ledger_classify_action(),
                 classification_submitter=door,
             ),
         )
@@ -83,27 +65,27 @@ async def _choose_area(pilot: Pilot[None], screen: LedgerEntriesScreen, area: Le
     navigation.focus()
     navigation.move_cursor(row=_NAVIGATION_ROWS.index(area))
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
 async def test_a_chosen_entry_survives_the_body_swap_into_classification() -> None:
     """Choosing a row then choosing classification reaches the real screen."""
-    door = _ClassificationDoor()
+    door = ClassificationDoor()
     screen = _entries_screen(door=door)
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         entries = screen.query_one("#ledger-entries", DataTable)
         entries.focus()
         entries.move_cursor(row=0)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         chosen = screen.controller.classification_target
         assert chosen == ledger_projection().entries[0].transaction_id
 
         await _choose_area(pilot, screen, LedgerWorkspaceArea.CLASSIFICATION)
-        await pilot.pause()
+        await settle(pilot)
         body = app.screen
         assert isinstance(body, LedgerClassificationScreen), (
             f"the chosen entry did not survive the body swap; the operator reached {type(body).__name__}"
@@ -114,14 +96,14 @@ async def test_a_chosen_entry_survives_the_body_swap_into_classification() -> No
 @pytest.mark.asyncio
 async def test_without_a_chosen_entry_classification_refuses_and_says_why() -> None:
     """The control: the same journey without the selection is refused."""
-    screen = _entries_screen(door=_ClassificationDoor())
-    app = _WorkspaceHostApp(screen)
+    screen = _entries_screen(door=ClassificationDoor())
+    app = WorkspaceHostApp(screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert screen.controller.classification_target is None
 
         await _choose_area(pilot, screen, LedgerWorkspaceArea.CLASSIFICATION)
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is screen, "an unreachable area must not replace the body"
         notice = str(screen.query_one("#ledger-refusal", Static).render())
         assert notice == tr("tui.ledger.refusal.selection_required")
@@ -130,7 +112,7 @@ async def test_without_a_chosen_entry_classification_refuses_and_says_why() -> N
 
 def test_the_refused_classification_body_names_the_missing_selection() -> None:
     """Resolving the area unchosen yields the refusal screen, not the task."""
-    screen = _entries_screen(door=_ClassificationDoor())
+    screen = _entries_screen(door=ClassificationDoor())
     controller = screen.controller
     refused = resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.CLASSIFICATION))
     assert isinstance(refused, LedgerUnavailableScreen)

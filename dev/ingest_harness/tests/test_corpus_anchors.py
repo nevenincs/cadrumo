@@ -20,10 +20,10 @@ import json
 
 import pytest
 
-from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT, normalise_whitespace
-from .._colocation_ceiling import CeilingOutcome, colocation_ceiling
-from .._key import EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, corpus_root, load_corpus_key
-from .._reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_with_key_context
+from ..caveats import SPANISH_OPTIMISM_BIAS_CAVEAT, normalise_whitespace
+from ..colocation_ceiling import CeilingOutcome, colocation_ceiling
+from ..key import EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, corpus_root, load_corpus_key
+from ..reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_with_key_context
 
 _MINIMUM_CORPUS_DOCUMENTS = 200
 """A floor the live corpus clears comfortably, sized to catch collapse not churn.

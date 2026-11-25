@@ -8,12 +8,14 @@ deferred until that task reaches a terminal state.
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from collections.abc import Awaitable
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from .errors.hierarchy import CoreError, InternalInvariantError
+
+if TYPE_CHECKING:
+    import asyncio
 
 
 class AsyncCloseable(Protocol):
@@ -121,6 +123,8 @@ async def await_cancellation_complete[T](
     cancellation is pending, that failure is retained on the cancellation as
     ``cleanup_error`` and the cancellation remains the primary exception.
     """
+    import asyncio
+
     cleanup_task = asyncio.ensure_future(awaitable)
     cleanup_task_boundary = _runtime_object(cleanup_task)
     if isinstance(cleanup_task_boundary, asyncio.Task):
@@ -231,6 +235,8 @@ async def close_async_resources(
     reaches a terminal state, and any owner-retaining cleanup error is attached
     to that primary exception instead of replacing it.
     """
+    import asyncio
+
     if close_attempts < 1:
         raise ValueError("close_attempts must be at least 1")
     active_error = sys.exception() if isinstance(primary_error, _AutoPrimaryException) else primary_error
@@ -255,6 +261,8 @@ def _attach_body_error_to_cancellation(
     active_error: BaseException | None,
 ) -> None:
     """Attach a still-unwinding non-cancellation body exception to a cancellation."""
+    import asyncio
+
     if active_error is not None and not isinstance(active_error, asyncio.CancelledError):
         cancellation.__dict__["body_error"] = active_error
         cancellation.add_note(
@@ -273,6 +281,8 @@ def _attach_cleanup_error_to_body(
     :class:`AsyncResourceCleanupError`) and should be suppressed, ``False``
     when there is no eligible body exception and the caller must re-raise.
     """
+    import asyncio
+
     if active_error is None or isinstance(active_error, asyncio.CancelledError):
         return False
     attach_async_cleanup_error(

@@ -42,9 +42,12 @@ Google, so it is shown here without being run:
 ```{cli-sequence} sheets-oauth
 ```
 
-Check the Google status and the folder created for the profile. These are
-local commands, so they run here. On a profile that has not signed in, the
-status shows `session_present` as false and no folder exists yet:
+Check the Google status and the folder created for the profile. These local
+commands run here. The documentation sandbox has no publisher Google sign-in
+configuration, so the status command reports Google sign-in as unavailable.
+Folder view still confirms that no Drive folder is configured. In an
+installation that includes Google sign-in, a profile that has not signed in
+reports `session_present` as false:
 
 ```{cli-sequence} sheets-folder
 :verify: Confirm that a profile which has not signed in has no Drive folder.
@@ -149,7 +152,7 @@ does none of that. After you update:
 1. Run `cadrumo-runtime config google login`. A sign-in from an earlier version is not
    reused; Cadrumo tells you to sign in again.
 2. Keep earlier workbooks for review. Cadrumo does not adopt historical
-   unreceipted workbooks or search Drive to repair them. Use `publish` to make a
+   workbooks without receipts or search Drive to repair them. Use `publish` to make a
    new review copy from a saved calculation revision.
 
 These are no longer available:

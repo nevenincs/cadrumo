@@ -16,7 +16,7 @@ from hatchling.builders.config import BuilderConfig
 from hatchling.builders.sdist import SdistBuilder
 from hatchling.builders.wheel import WheelBuilder
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .test_google_oauth_provisioning import client_document
 
@@ -117,10 +117,11 @@ def test_distributions_embed_selected_client_and_clean_staging(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target_name: str, prefix: str
 ) -> None:
     hook = _hook_module()
-    controlled = tmp_path / "controlled-temporary"
-    controlled.mkdir()
+    root = tmp_path / "controlled-root"
+    controlled = root / "tmp"
+    controlled.mkdir(parents=True)
     ambient = tmp_path / "ambient-not-created"
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(controlled))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
     monkeypatch.setattr(tempfile, "tempdir", str(ambient))
     _record_resolutions(hook, monkeypatch, tmp_path / "pair")
     instance = hook.CustomBuildHook(

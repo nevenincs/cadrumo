@@ -12,11 +12,15 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.capital_mobiliario_facts import require_concepto_capital_mobiliario
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ...domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
@@ -35,11 +39,26 @@ from .models import (
     BulkClassifyRow,
     ManualLedgerTransactionPatch,
 )
+from .recargo_regime import require_recargo_regime_for_purchase
 
 # The CSV columns that carry a value single classification also takes; the rest of the
 # columns are the row's identity, its classification and the usage ratio.
 _BULK_WIRE_COLUMNS = frozenset(
-    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category", "notes"}
+    {
+        "business_pct",
+        "category_id",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "iva_category",
+        "irpf_category",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
+        "notes",
+    }
 )
 
 
@@ -77,23 +96,80 @@ def _resolve_manual_field_value(
         return None
     if field_name == "business_classification":
         return BusinessClassification(value)
-    if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount"}:
-        parsed = try_parse_canonical_decimal(value, signed=False)
-        if parsed is None:
-            raise TransactionValidationError(f"ledger classify {field_name} must be canonical decimal text")
-        return parsed
+    if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount", "recargo_amount"}:
+        return _manual_decimal_value(field_name, value)
+    return _resolve_manual_authority_value(field_name, value, current=current, operation=operation)
+
+
+def _resolve_manual_authority_value(
+    field_name: str,
+    value: str,
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> object:
     if field_name == "category_id":
-        normalized = value.strip()
-        return require_spending_category(normalized, authority=operation).value if normalized else None
+        return _manual_spending_category(value, operation)
     if field_name == "irpf_category":
         return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
+    if field_name in _MANUAL_IVA_FIELDS:
+        return _resolve_manual_iva_value(field_name, value, current=current, operation=operation)
+    if field_name == "concepto_capital_mobiliario":
+        stated = value.strip()
+        return (
+            require_concepto_capital_mobiliario(stated, effective_date=current.raw.booked_date, authority=operation)
+            if stated
+            else None
+        )
+    return _resolve_rental_link_value(field_name, value, operation=operation)
+
+
+_MANUAL_IVA_FIELDS = frozenset(
+    {"iva_category", "exemption_article", "deduction_fact_kind", "iva_vehicle_use", "counterparty_identification_state"}
+)
+
+
+def _resolve_manual_iva_value(
+    field_name: str,
+    value: str,
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> object:
+    """Resolve an IVA classification field against the pinned authority's vocabulary."""
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
+    if field_name == "exemption_article":
+        # The row's own IVA date, as the stored row's admission reads the article.
+        effective_date = current.operation_date or current.raw.value_date or current.raw.booked_date
+        return require_iva_exemption_article(value, effective_date=effective_date, authority=operation)
     if field_name == "deduction_fact_kind":
         return require_iva_deduction_fact_kind(value, authority=operation)
-    if field_name == "counterparty_identification_state":
-        return require_eu_member_state(value, authority=operation)
-    return value
+    if field_name == "iva_vehicle_use":
+        return require_iva_vehicle_use(value)
+    return require_eu_member_state(value, authority=operation)
+
+
+def _resolve_rental_link_value(field_name: str, value: str, *, operation: PinnedAuthorityOperation) -> object:
+    """Resolve a rental link field: a reference is trimmed, the expense concept is the registry's; blank clears."""
+    stated = value.strip()
+    if not stated:
+        return None
+    if field_name == "gasto_capital_inmobiliario":
+        return require_gasto_capital_inmobiliario(stated, authority=operation)
+    return stated if field_name in {"arrendamiento_ref", "inmueble_ref", "posicion_ref"} else value
+
+
+def _manual_spending_category(value: str, operation: PinnedAuthorityOperation) -> str | None:
+    normalized = value.strip()
+    return require_spending_category(normalized, authority=operation).value if normalized else None
+
+
+def _manual_decimal_value(field_name: str, value: str) -> Decimal:
+    parsed = try_parse_canonical_decimal(value, signed=False)
+    if parsed is None:
+        raise TransactionValidationError(f"ledger classify {field_name} must be canonical decimal text")
+    return parsed
 
 
 def _resolve_m210_classification(
@@ -109,7 +185,8 @@ def _resolve_m210_classification(
     m210 = payload.m210
     gross_income_amount = decode_classification_decimal_option(m210.gross_income_amount, "gross_income_amount")
     applicable_rate = decode_classification_decimal_option(m210.applicable_rate, "applicable_rate")
-    snapshot = cast(
+    # Cast rationale: M210 resolution only reads load and bucket_id from the immutable held catalogue view.
+    snapshot = cast(  # nosemgrep: no-cast-in-domain-application
         TransactionCatalogueRepositoryProtocol,
         _LoadedCatalogueView(bucket_id=bucket_id, catalogue=catalogue),
     )
@@ -213,6 +290,16 @@ def build_manual_classification_patch(
     patch_values = resolve_classification_patch_values(
         payload.patch, payload.patch_fields, current=current, operation=operation
     )
+    if "recargo_amount" in patch_values:
+        # The resolver reads recargo_amount as a Decimal, or None when the patch blanks it.
+        recargo = patch_values["recargo_amount"]
+        require_recargo_regime_for_purchase(
+            bucket_id=bucket_id,
+            direction=current.direction,
+            recargo_amount=recargo if isinstance(recargo, Decimal) else None,
+            effective_date=current.raw.booked_date,
+            operation=operation,
+        )
     classification = _resolve_m210_classification(
         payload,
         bucket_id=bucket_id,

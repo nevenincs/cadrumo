@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
+from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -13,6 +14,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 from .export_fragment_provenance import (
+    ExportFragmentProvenanceManifest,
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
@@ -114,30 +116,7 @@ def _generated_export_tree_for_revision(
         raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
     filing_year, period = coordinates[0]
     if historical_static:
-        for filing_year, period in coordinates:
-            try:
-                source_ref, epoch = select_revision_record_design_source(
-                    authority,
-                    modelo=str(modelo.id),
-                    revision=str(revision.id),
-                    filing_year=filing_year,
-                    period=period,
-                    source_ref=None,
-                )
-            except RecordDesignFrameUnavailableError:
-                continue
-            break
-        else:
-            raise AssertionError(f"historical generated tree {modelo.id}/{revision.id} has no source-covered frame")
-        if (
-            source_ref != manifest.source_ref
-            or epoch != manifest.design_epoch
-            or authority.catalogues.sources[source_ref].sha256 != manifest.source_sha256
-        ):
-            raise AssertionError(
-                f"historical generated tree {modelo.id}/{revision.id} differs from its "
-                "uniquely selected official source"
-            )
+        filing_year, period = _historical_source_frame(authority, modelo, revision, manifest, coordinates)
     return GeneratedExportTree(
         modelo=str(modelo.id),
         revision=str(revision.id),
@@ -147,3 +126,36 @@ def _generated_export_tree_for_revision(
         period=period,
         historical_static=historical_static,
     )
+
+
+def _historical_source_frame(
+    authority: ValidatedRegistryAuthority,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    manifest: ExportFragmentProvenanceManifest,
+    coordinates: tuple[tuple[int, RegistrySelectorPeriodCode], ...],
+) -> tuple[int, RegistrySelectorPeriodCode]:
+    for filing_year, period in coordinates:
+        try:
+            source_ref, epoch = select_revision_record_design_source(
+                authority,
+                modelo=str(modelo.id),
+                revision=str(revision.id),
+                filing_year=filing_year,
+                period=period,
+                source_ref=None,
+            )
+        except RecordDesignFrameUnavailableError:
+            continue
+        break
+    else:
+        raise AssertionError(f"historical generated tree {modelo.id}/{revision.id} has no source-covered frame")
+    if (
+        source_ref != manifest.source_ref
+        or epoch != manifest.design_epoch
+        or authority.catalogues.sources[source_ref].sha256 != manifest.source_sha256
+    ):
+        raise AssertionError(
+            f"historical generated tree {modelo.id}/{revision.id} differs from its uniquely selected official source"
+        )
+    return filing_year, period

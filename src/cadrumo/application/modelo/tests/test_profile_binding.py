@@ -2,7 +2,7 @@
 
 A registry binding with ``source = "profile"`` carries a fact the
 operator already entered onto their user profile. These tests prove
-``calculate_modelo_revision`` resolves those facts into the engine's
+``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` resolves those facts into the engine's
 binding channels automatically, routing each through the channel the
 registry formula consumes (Decimal vs string enum), so the operator
 does not have to re-type profile data and the estimacion-directa
@@ -11,41 +11,31 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...aggregation.source_mesh import CalculationSourceResolution
-from ..profile_binding import (
-    ProfileBindingResolutionError,
-    resolve_profile_sourced_bindings,
-)
+from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-binding resolution test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
@@ -53,7 +43,7 @@ _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
-_SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
+_SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-incn-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
@@ -72,34 +62,23 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value=ccaa),
-            # M100 2025 added age_at_year_end date binding + declaration-type
-            # and derived marriage facts. Seed minimum values so M100 calculate
-            # resolves the profile-sourced bindings.
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+                # M100 2025 added age_at_year_end date binding + declaration-type
+                # and derived marriage facts. Seed minimum values so M100 calculate
+                # resolves the profile-sourced bindings.
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+            ),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -144,13 +123,13 @@ def test_profile_resolution_is_empty_when_no_profile_fact_is_set(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
     result = resolve_profile_sourced_bindings(
         _modelo_100_snapshot(),
@@ -199,16 +178,16 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel(
     must not leak into ``enum_binding_values``.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.37")),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.37")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     result = resolve_profile_sourced_bindings(
@@ -227,14 +206,14 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
     binding = BindingDefinition.model_validate(
         {
             "id": _SYNTHETIC_DECIMAL_PROFILE_BINDING,
-            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "usage_ratios.business_ratio"},
+            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "taxpayer_type.incn_prior_12_months"},
             "value": {"data_type": "money", "channel": "decimal"},
             "legal_refs": snapshot.revision.legal_refs,
             "source_refs": snapshot.revision.source_refs,
         },
     )
     formula = FormulaDefinition(
-        id="test-profile-business-ratio-decimal-formula",
+        id="test-profile-incn-decimal-formula",
         target_casilla_id=snapshot.revision.casillas[0].id,
         expression=FormulaExpression(binding=_SYNTHETIC_DECIMAL_PROFILE_BINDING),
         legal_refs=snapshot.revision.legal_refs,
@@ -289,7 +268,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 
 
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -298,7 +277,7 @@ def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -377,7 +356,7 @@ class TestBoolTypedProfileBinding:
         # Construct a snapshot whose CCAA binding (enum channel) is satisfied
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
-        bool_profile = _create_profile_record_for_test(
+        bool_profile = create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(
@@ -386,7 +365,7 @@ class TestBoolTypedProfileBinding:
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
         with pytest.raises(
             ProfileBindingResolutionError,
@@ -414,16 +393,16 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     without echoing the raw value, preserving redaction and localization.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="usage_ratios.business_ratio", value="not-a-decimal-secret"),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="not-a-decimal-secret"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     with pytest.raises(ProfileBindingResolutionError, match="decimal-compatible") as exc_info:

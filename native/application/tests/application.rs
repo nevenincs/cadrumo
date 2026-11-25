@@ -4,11 +4,15 @@ use cadrumo_application::{
     component::{Artifact, Cancellation, ComponentStore},
     error::Error,
     package::{PackageManifest, Readiness},
+    provisioning::{
+        connection::Network,
+        pins::ArchiveFormat,
+        transfer::{RetryPolicy, SystemPacing, Transfer},
+    },
     value::{RelativePath, Sha256Digest},
 };
-use sha2::{Digest, Sha256};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     ffi::OsString,
     fs,
     io::{Cursor, Read, Write},
@@ -38,12 +42,13 @@ fn artifact(bytes: &[u8], revision: &str) -> Artifact {
         id: "chromium".into(),
         revision: revision.into(),
         target: "fixture-target".into(),
-        sha256: Sha256Digest::new(format!("{:x}", Sha256::digest(bytes))).unwrap(),
+        sha256: Sha256Digest::of(bytes),
         archive_bytes: bytes.len() as u64,
         max_unpacked_bytes: 100_000,
         max_entries: 100,
         executable: RelativePath::new("chrome/browser").unwrap(),
         url: None,
+        format: ArchiveFormat::Zip,
     }
 }
 
@@ -100,7 +105,7 @@ fn manifest_inspection_detects_missing_corrupt_extra_and_incompatible_files() {
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256Digest::of(bytes).to_string()
 }
 
 /// Writes a package whose `docs/user` subtree is inventoried by its own hashed manifest.
@@ -762,8 +767,20 @@ fn https_transport_refuses_untrusted_scheme_without_effects() {
     let mut spec = artifact(&bytes, "1");
     spec.url = Some("http://localhost/component.zip".into());
     let store = ComponentStore::new(root.clone(), "fixture-target".into()).unwrap();
+    let network = Network::new(None);
+    let hosts = BTreeSet::new();
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut transfer = Transfer {
+        network: &network,
+        hosts: &hosts,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut |_| {},
+        cancellation: &cancellation,
+    };
     assert!(matches!(
-        store.download_and_activate(&spec, &Cancellation::default()),
+        store.download_and_activate(&spec, &mut transfer),
         Err(Error::Invalid(_))
     ));
     assert!(!root.exists());

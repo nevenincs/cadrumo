@@ -74,6 +74,17 @@ class GoogleReviewProjection(BaseModel):
     readable_by_authorized_users: Literal[True] = True
     reviewed_proposal_digest: ContentDigest
 
+    @property
+    def discloses_a_readable_calculation(self) -> bool:
+        """Whether a named, authorized-readable folder receives the calculation and at most the ledger."""
+        categories = set(self.payload_categories)
+        return (
+            bool(self.root_folder_id.strip())
+            and self.readable_by_authorized_users
+            and ReadablePayloadCategory.CALCULATION in categories
+            and categories <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
+        )
+
 
 class GoogleReviewResponse(BaseModel):
     """Human intent; only the runtime's consumed response grants authority."""

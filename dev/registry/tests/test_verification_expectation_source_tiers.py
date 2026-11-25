@@ -7,13 +7,11 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..conformance.registry_schema_support import (
-    committed_registry as _committed_registry,
+    committed_registry,
+    with_revision,
 )
 from ..conformance.registry_schema_support import (
-    revision as _revision,
-)
-from ..conformance.registry_schema_support import (
-    with_revision as _with_revision,
+    revision as revision_import,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -21,8 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def test_validator_rejects_verification_expectation_without_official_guidance_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = revision_import(modelo)
     expectation = revision.verification_expectations[0]
     mutated_expectation = expectation.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
     mutated_revision = revision.model_copy(
@@ -37,5 +35,5 @@ def test_validator_rejects_verification_expectation_without_official_guidance_so
         ),
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )

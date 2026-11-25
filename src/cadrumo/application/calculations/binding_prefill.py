@@ -47,7 +47,7 @@ from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -63,32 +63,21 @@ from ...domain.calculations.registry.bindings_previous_filing import (
     resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RevisionId,
 )
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
+from ...domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
@@ -96,10 +85,11 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from .errors import BindingPrefillTypeError
 from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
+from .per_grupo_member_keys import per_grupo_member_requirement_keys
+from .prior_filing_page_qualified_reads import page_qualified_prior_observation
 from .revision_carry_gate import revision_carry_outcome
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
@@ -128,7 +118,7 @@ def _revision_carry_outcome(
 class _GatheredObservation(BaseModel):
     """Registry observation plus the persisted source channel that produced it."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     observation: RegistryModeloObservation
     registry_snapshot_ref: RegistrySnapshotRef
@@ -215,7 +205,7 @@ class PrefilledBinding(BaseModel):
     that satisfied the registry previous-filing requirement.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     value: Decimal
@@ -252,7 +242,7 @@ class UnsatisfiedBinding(BaseModel):
     tax than is owed and looking entirely ordinary while it does so.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     source_modelo: str
@@ -272,7 +262,7 @@ class BindingPrefillReport(BaseModel):
     diagnostics channel.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
@@ -287,7 +277,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     and wallet reconciliation decision remain the only selectors.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     amount: Decimal
@@ -324,6 +314,7 @@ def _gather_grouped_member_observations(
         # R2 carry gate: divergent or unreconfirmable stamp -> skip.
         if _revision_carry_outcome(payload, operation=operation):
             continue
+        obs = page_qualified_prior_observation(payload, operation=operation).observation
         member_idx = seen_member.get(req_key, 0)
         seen_member[req_key] = member_idx + 1
         needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
@@ -347,7 +338,7 @@ def _gathered_from_payload(
     if _revision_carry_outcome(payload, operation=operation):
         return None
     return _gathered_observation(
-        payload.observation,
+        page_qualified_prior_observation(payload, operation=operation).observation,
         registry_snapshot_ref=payload.registry_snapshot_ref,
         source_kind=payload.source_kind,
     )
@@ -375,7 +366,7 @@ def _gather_single_key_observation(
         ),
         operation=operation,
     )
-    if requirement_modelo == Modelo("303").value:
+    if requirement_modelo == form_for_role("iva.periodic"):
         state = iva_history_repository.load_period(
             Period.from_year_and_code(requirement_filing_year, requirement_period),
         )
@@ -471,16 +462,16 @@ def observation_from_iva_compensation_history(
             return ()
         operand_refs: tuple[CasillaId, ...] = ()
         operand_values: tuple[Decimal, ...] = ()
-        if casilla_id == _M303_POSTERIOR_CASILLA and (
+        if casilla_id == M303_COMPENSATION_POSTERIOR_CASILLA and (
             state.prior_pending_amount is not None and state.applied_amount is not None
         ):
-            operand_refs = (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, _M303_COMPENSACION_APLICADA_CASILLA)
+            operand_refs = (M303_COMPENSATION_PENDING_PRIOR_CASILLA, M303_COMPENSATION_APLICADA_CASILLA)
             operand_values = (state.prior_pending_amount, state.applied_amount)
-        elif casilla_id == _M303_GENERADA_CASILLA and state.period_result_amount is not None:
-            operand_refs = (_M303_RESULTADO_CASILLA,)
+        elif casilla_id == M303_COMPENSATION_GENERADA_CASILLA and state.period_result_amount is not None:
+            operand_refs = (M303_COMPENSATION_RESULTADO_CASILLA,)
             operand_values = (state.period_result_amount,)
-        elif casilla_id == _M303_DISPONIBLE_CASILLA and state.pending_for_later_amount is not None:
-            operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+        elif casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA and state.pending_for_later_amount is not None:
+            operand_refs = (M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_GENERADA_CASILLA)
             operand_values = (state.pending_for_later_amount, state.generated_amount)
         return iva_compensation_history_observation(
             modelo_id=Modelo("303").value,
@@ -498,13 +489,13 @@ def observation_from_iva_compensation_history(
         filing_year=state.filing_year,
         period=state.period.registry_token,
         observations=(
-            *observed(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, state.prior_pending_amount),
-            *observed(_M303_COMPENSACION_APLICADA_CASILLA, state.applied_amount),
-            *observed(_M303_POSTERIOR_CASILLA, state.pending_for_later_amount),
-            *observed(_M303_RESULTADO_CASILLA, state.period_result_amount),
-            *observed(_M303_RESULTADO_FINAL_CASILLA, state.final_result_amount),
-            *observed(_M303_GENERADA_CASILLA, state.generated_amount),
-            *observed(_M303_DISPONIBLE_CASILLA, state.available_end_amount),
+            *observed(M303_COMPENSATION_PENDING_PRIOR_CASILLA, state.prior_pending_amount),
+            *observed(M303_COMPENSATION_APLICADA_CASILLA, state.applied_amount),
+            *observed(M303_COMPENSATION_POSTERIOR_CASILLA, state.pending_for_later_amount),
+            *observed(M303_COMPENSATION_RESULTADO_CASILLA, state.period_result_amount),
+            *observed(m303_resultado_final_casilla(revision), state.final_result_amount),
+            *observed(M303_COMPENSATION_GENERADA_CASILLA, state.generated_amount),
+            *observed(M303_COMPENSATION_AVAILABLE_CASILLA, state.available_end_amount),
         ),
     )
 
@@ -748,7 +739,7 @@ def _source_kind_for_binding(
     return _LOCAL_FILING_PROVENANCE
 
 
-def _prefilled_bindings(
+def prefilled_bindings(
     snapshot: RegistrySnapshot,
     resolved_map: Mapping[BindingId, Decimal],
     *,
@@ -763,6 +754,8 @@ def _prefilled_bindings(
     requirement the resolver already matched and falls back to the binding's own
     selector, so a binding resolved outside a requirement still names where its
     value came from.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     binding_index = revision_bindings_by_id(snapshot.revision)
     requirement_index = _requirements_by_binding(snapshot)
@@ -831,6 +824,7 @@ def resolve_bindings_from_local_store(
     captured_at: datetime | None = None,
     activity_start_date: date | None = None,
     excluded_binding_ids: frozenset[BindingId] | None = None,
+    answered_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
@@ -857,6 +851,9 @@ def resolve_bindings_from_local_store(
             and resolve to a neutral zero instead of requiring observed filings.
         excluded_binding_ids: Optional previous-filing binding ids to leave
             unresolved because another authority owns them.
+        answered_binding_ids: Previous-filing binding ids the caller already
+            supplies a value for; one an observed return cannot show is left
+            unresolved for that value instead of refused.
 
     Returns a :class:`BindingPrefillReport` carrying the resolved
     ``binding_values`` mapping (suitable for passing through
@@ -909,10 +906,11 @@ def resolve_bindings_from_local_store(
         period=snapshot.period,
         activity_start_date=activity_start_date,
         excluded_binding_ids=excluded_binding_ids,
+        answered_binding_ids=answered_binding_ids,
     )
 
     return BindingPrefillReport(
-        prefilled=_prefilled_bindings(
+        prefilled=prefilled_bindings(
             snapshot,
             resolved_map,
             observations=observations,
@@ -964,7 +962,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     ``None`` when no compensation binding is present) and the underlying
     :class:`BindingPrefillReport`.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo("303").value:
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != form_for_role("iva.periodic"):
         from ..modelo.action_errors import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError(

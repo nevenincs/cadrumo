@@ -142,6 +142,69 @@ pub fn workspace_browser_arguments() -> Option<String> {
     None
 }
 
+/// The data directory the workspace window's browser runs in, given the
+/// package's own one and the workspace's browser arguments; `None` leaves the
+/// workspace in Tauri's default directory.
+///
+/// WebView2 refuses a second browser on one data directory with other
+/// arguments than the browser already running there, so a workspace given
+/// its own DevTools port must have its own directory, as the product's has.
+/// Only the packaged test host started with the remote-debugging variable
+/// alone, which reaches every browser alike, shares the startup window's
+/// browser, in the startup window's directory: Tauri's default directory is
+/// one per identifier, which every concurrent test host would join.
+pub fn workspace_data_directory(
+    directory: std::path::PathBuf,
+    arguments: Option<&str>,
+) -> Option<std::path::PathBuf> {
+    workspace_directory(
+        Policy::of_this_build(),
+        directory,
+        arguments,
+        startup_data_directory(),
+    )
+}
+
+fn workspace_directory(
+    policy: Policy,
+    directory: std::path::PathBuf,
+    arguments: Option<&str>,
+    startup: Option<std::path::PathBuf>,
+) -> Option<std::path::PathBuf> {
+    if owns_data_directory(policy, arguments) {
+        Some(directory)
+    } else {
+        startup
+    }
+}
+
+fn owns_data_directory(policy: Policy, arguments: Option<&str>) -> bool {
+    !policy.remote_debugging || arguments.is_some()
+}
+
+/// The data directory the packaged test host's startup window runs its
+/// browser in: the `webview` directory of the storage root it was started on.
+///
+/// Its workspace window shares that browser, so without a directory of its
+/// own every concurrent test host would join one browser in the identifier's
+/// default directory, and the first host to exit would take every other
+/// host's pages with it. The product's startup window keeps Tauri's default.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+    test_host_startup_directory(std::env::var_os(cadrumo_platform::ROOT_VARIABLE))
+}
+
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+    None
+}
+
+#[cfg(any(test, feature = "webview2-remote-debugging"))]
+fn test_host_startup_directory(root: Option<OsString>) -> Option<std::path::PathBuf> {
+    let root = std::path::PathBuf::from(root.filter(|root| !root.is_empty())?);
+    root.is_absolute().then(|| root.join("webview"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,6 +261,63 @@ mod tests {
         for refused in ["", "0", "09222", "65536", "9222 --inspect", "-1", "port"] {
             assert_eq!(workspace_arguments(refused.into()), None, "{refused}");
         }
+    }
+
+    #[test]
+    fn a_workspace_with_its_own_arguments_has_its_own_data_directory() {
+        let directory = std::path::PathBuf::from(r"C:\root\webview");
+        let port = workspace_arguments("9222".into());
+        // The product keeps its own directory whatever it is given.
+        assert!(owns_data_directory(PACKAGED, None));
+        // The test host given a workspace port: a browser of its own, which
+        // WebView2 cannot share with the startup window's other arguments.
+        assert!(owns_data_directory(DEBUGGING, port.as_deref()));
+        // The test host given no workspace arguments shares the startup browser.
+        assert!(!owns_data_directory(DEBUGGING, None));
+        assert_eq!(
+            workspace_data_directory(directory.clone(), port.as_deref()),
+            Some(directory)
+        );
+    }
+
+    #[test]
+    fn a_test_host_workspace_shares_the_startup_browser_in_its_storage_root() {
+        let package = std::path::PathBuf::from(r"C:\package\webview");
+        let startup = std::path::PathBuf::from(r"C:\run\storage\webview");
+        assert_eq!(
+            workspace_directory(DEBUGGING, package.clone(), None, Some(startup.clone())),
+            Some(startup.clone())
+        );
+        let port = workspace_arguments("9222".into());
+        assert_eq!(
+            workspace_directory(
+                DEBUGGING,
+                package.clone(),
+                port.as_deref(),
+                Some(startup.clone())
+            ),
+            Some(package.clone())
+        );
+        assert_eq!(
+            workspace_directory(PACKAGED, package.clone(), None, Some(startup)),
+            Some(package)
+        );
+    }
+
+    #[test]
+    fn a_test_host_startup_browser_runs_in_its_own_storage_root() {
+        let root = std::path::PathBuf::from(r"C:\run\storage");
+        assert_eq!(
+            test_host_startup_directory(Some(root.clone().into_os_string())),
+            Some(root.join("webview"))
+        );
+        // Without an absolute storage root there is no directory of its own to name.
+        assert_eq!(test_host_startup_directory(None), None);
+        assert_eq!(test_host_startup_directory(Some(OsString::new())), None);
+        assert_eq!(
+            test_host_startup_directory(Some(OsString::from(r"relative\storage"))),
+            None
+        );
     }
 
     #[test]

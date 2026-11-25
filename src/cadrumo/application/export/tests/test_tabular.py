@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import re
 from collections.abc import Mapping
 from io import BytesIO, StringIO
 from operator import methodcaller
@@ -15,9 +16,135 @@ from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
 from ..errors import ExportFieldError, ExportFormatError
-from ..tabular import ExportSerializationFormat, serialize_tabular_rows
+from ..tabular import (
+    ExportSerializationFormat,
+    serialize_tabular_rows,
+    spreadsheet_literal,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_FORMULA_LOOKING_VALUES = (
+    '=HYPERLINK("http://attacker.example","x")',
+    "+1+1",
+    "-2+3",
+    "@SUM(A1:A2)",
+    "\t=1+1",
+    "\r=1+1",
+    "  =1+1",
+    "'=1+1",
+)
+
+# Independent expectations for the encoding, written out by hand rather than derived.
+_EXPECTED_LITERAL_ENCODINGS = (
+    ("", ""),
+    ("x", "x"),
+    ("a=b", "a=b"),
+    ("=1", "'=1"),
+    ("+1+1", "'+1+1"),
+    ("-2+3", "'-2+3"),
+    ("@SUM(A1:A2)", "'@SUM(A1:A2)"),
+    ("\t=1", "'\t=1"),
+    ("\r=1", "'\r=1"),
+    ("\n=1", "'\n=1"),
+    ("  =1+1", "'  =1+1"),
+    ("'=1", "''=1"),
+    ("''=1", "'''=1"),
+    ("'\t=1", "''\t=1"),
+    ("'", "'"),
+    ("''", "''"),
+    ("'x", "'x"),
+    ("-5", "-5"),
+    ("+3", "+3"),
+    ("-12.50", "-12.50"),
+    ("'-5", "'-5"),
+    ("-", "'-"),
+    ("- 5", "'- 5"),
+    ("-5.", "'-5."),
+    ("--5", "'--5"),
+    (" ", " "),
+    (" plain", " plain"),
+)
+
+
+def _decode_spreadsheet_literal(encoded: str) -> str:
+    """Test-local oracle: undo the single apostrophe that ``spreadsheet_literal`` may add.
+
+    The prefix was added exactly when the text after all leading apostrophes is not a
+    plain decimal and begins, ignoring leading whitespace, with a formula trigger.
+    """
+    core = encoded.lstrip("'")
+    if not encoded.startswith("'") or not core:
+        return encoded
+    if re.fullmatch(r"[+-]?\d+(?:\.\d+)?", core):
+        return encoded
+    first_visible = core.lstrip()[:1]
+    if core[0] in "=+-@\t\r" or (core != core.lstrip() and first_visible in tuple("=+-@\t\r")):
+        return encoded[1:]
+    return encoded
+
+
+@pytest.mark.parametrize("value", _FORMULA_LOOKING_VALUES)
+def test_csv_export_prefixes_formula_looking_values_with_a_literal_apostrophe(value: str) -> None:
+    result = serialize_tabular_rows(
+        ({"description": value},),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.CSV,
+    )
+
+    (parsed,) = tuple(csv.DictReader(StringIO(result.payload.decode(UTF_8_ENCODING))))
+    assert parsed["description"] == "'" + value
+    assert _decode_spreadsheet_literal(parsed["description"]) == value
+
+
+@pytest.mark.parametrize("value", ("", "Coffee", "-12.50", "+3", "42", "'quoted", "a=b", " plain"))
+def test_csv_export_leaves_inert_values_and_plain_decimals_unchanged(value: str) -> None:
+    result = serialize_tabular_rows(
+        ({"description": value},),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.CSV,
+    )
+
+    (parsed,) = tuple(csv.DictReader(StringIO(result.payload.decode(UTF_8_ENCODING))))
+    assert parsed["description"] == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    (*_FORMULA_LOOKING_VALUES, "", "x", "'", "''", "'x", "''=1", "-5", "'-5", " ", "'\t=1"),
+)
+def test_spreadsheet_literal_is_reversible(value: str) -> None:
+    assert _decode_spreadsheet_literal(spreadsheet_literal(value)) == value
+
+
+@pytest.mark.parametrize(("value", "expected"), _EXPECTED_LITERAL_ENCODINGS)
+def test_spreadsheet_literal_encodes_to_the_expected_text_and_decodes_back(value: str, expected: str) -> None:
+    encoded = spreadsheet_literal(value)
+
+    assert encoded == expected
+    assert _decode_spreadsheet_literal(encoded) == value
+
+
+def test_spreadsheet_literal_is_injective_across_the_edge_cases() -> None:
+    values = tuple(value for value, _ in _EXPECTED_LITERAL_ENCODINGS)
+    encodings = {spreadsheet_literal(value) for value in values}
+
+    assert len(encodings) == len(set(values))
+
+
+def test_xlsx_export_writes_formula_looking_values_as_string_cells() -> None:
+    result = serialize_tabular_rows(
+        tuple({"description": value} for value in _FORMULA_LOOKING_VALUES),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.XLSX,
+    )
+
+    workbook = load_workbook(BytesIO(result.payload))
+    worksheet = workbook.active
+    assert worksheet is not None
+    cells = [row[0] for row in worksheet.iter_rows(min_row=2)]
+    assert [cell.value for cell in cells] == list(_FORMULA_LOOKING_VALUES)
+    assert {cell.data_type for cell in cells} == {"s"}
 
 
 def test_serialize_tabular_rows_writes_stable_csv_payload() -> None:

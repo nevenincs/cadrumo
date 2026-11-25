@@ -16,10 +16,12 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.filing_selection_operation import (
     ModeloWorkFilingRecordProjection,
@@ -37,30 +39,23 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
-from ._modelo_cli_support import (
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
+from .common import no_active_profile_refusal
+from .modelo_cli_support import (
+    calculation_overrides,
+    parse_binding_override,
     parse_calculation_wire_row_spec,
+    parse_kv_spec,
     resolve_actor_option,
+    validate_casilla_key,
 )
-from ._modelo_cli_support import (
-    parse_kv_spec as _parse_kv_spec,
+from .modelo_rendering import (
+    filing_record_lines,
+    filing_record_payload,
+    verification_report_lines,
+    verification_report_payload,
 )
-from ._modelo_cli_support import (
-    validate_casilla_key as _validate_casilla_key,
-)
-from ._modelo_rendering import (
-    filing_record_lines as _filing_record_lines,
-)
-from ._modelo_rendering import (
-    filing_record_payload as _filing_record_payload,
-)
-from ._modelo_rendering import (
-    verification_report_lines as _verification_report_lines,
-)
-from ._modelo_rendering import (
-    verification_report_payload as _verification_report_payload,
-)
-from .common import activate_subcommand_output_language, no_active_profile_refusal
 from .operation_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit
 from .operation_modelo_taxation_comparison import compare_modelo_taxation
@@ -89,7 +84,9 @@ def work_compare_taxation(
 
     The registered operation records its receipt but persists no calculation revision.
     """
-    from .common import activate_subcommand_output_language, emit_envelope
+    from cadrumo_client.commands.output import activate_subcommand_output_language
+
+    from .common import emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 
@@ -116,9 +113,10 @@ def work_compare_taxation(
         delta_resultado=str(comparison.delta_resultado),
         recommendation=comparison.recommendation,
         recommendation_reason=comparison.recommendation_reason,
+        recommendation_reason_words=comparison.recommendation_reason_words,
         individual_branch_single_earner_only=comparison.individual_branch_single_earner_only,
     )
-    from ._modelo_rendering import advisory_notice
+    from .modelo_rendering import advisory_notice
 
     # Honesty caveat: the individual branch is faithful only for
     # a single-earner unidad familiar. Surface it on the typed notices channel so
@@ -144,7 +142,7 @@ def work_compare_taxation(
         tr(
             "cli.app.modelo.work.compare_taxation_recommendation_line",
             recommendation=comparison.recommendation.value,
-            reason=comparison.recommendation_reason,
+            reason=comparison.recommendation_reason_words,
         ),
     ]
     lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
@@ -240,13 +238,13 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
             raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value))
         return parsed
 
-    key, value = _parse_kv_spec(
+    key, value = parse_kv_spec(
         spec,
         flag="--set",
         key_label="CASILLA",
         value_label="DECIMAL",
         transform=_to_decimal,
-        key_validator=_validate_casilla_key,
+        key_validator=validate_casilla_key,
         strip_key=False,
     )
     return validated_casilla_id(key, surface="--set casilla"), value
@@ -255,7 +253,7 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
 def _missing_amendment_options(
     *,
     from_filing_record_id: str | None,
-    kind: CalculationRevisionAmendmentKind | None,
+    kind: str | None,
     reason: str | None,
     set_overrides: list[str] | None,
 ) -> tuple[str, ...]:
@@ -274,10 +272,10 @@ def _missing_amendment_options(
 def _required_amendment_inputs(
     *,
     from_filing_record_id: str | None,
-    kind: CalculationRevisionAmendmentKind | None,
+    kind: str | None,
     reason: str | None,
     set_overrides: list[str] | None,
-) -> tuple[str, CalculationRevisionAmendmentKind, str, tuple[str, ...]]:
+) -> tuple[str, FilingDeclarationKind, str, tuple[str, ...]]:
     """Return raw amendment CLI inputs or raise one combined option error."""
     missing = _missing_amendment_options(
         from_filing_record_id=from_filing_record_id,
@@ -292,10 +290,10 @@ def _required_amendment_inputs(
                 missing=", ".join(missing),
             ),
         )
-    return from_filing_record_id, kind, reason, tuple(set_overrides or ())
+    return from_filing_record_id, FilingDeclarationKind(kind), reason, tuple(set_overrides or ())
 
 
-def _resolve_amendment_detail_rows(
+def resolve_amendment_detail_rows(
     row_specs: tuple[str, ...],
     *,
     declared_none: bool,
@@ -324,6 +322,17 @@ def _resolve_amendment_detail_rows(
     return tuple(parse_calculation_wire_row_spec(spec) for spec in row_specs)
 
 
+def resolve_amendment_binding_overrides(binding_specs: tuple[str, ...]) -> tuple[ModeloCalculationOverride, ...]:
+    """Parse ``--binding`` with calculation's own grammar into the request's override tokens.
+
+    The key must be a well-formed binding id; whether the baseline's revision
+    declares it, and whether its value fits its channel, is the authority's
+    decision against the pinned revision. A repeated key keeps its last value,
+    as ``work calculate`` does.
+    """
+    return calculation_overrides(dict(parse_binding_override(spec) for spec in binding_specs))
+
+
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
     """Parse ``--set`` values into validated ``CasillaId`` decimal overrides."""
     overrides: dict[CasillaId, Decimal] = {}
@@ -338,13 +347,14 @@ def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId
 def work_amend(
     ctx: typer.Context,
     from_filing_record_id: str | None = None,
-    kind: CalculationRevisionAmendmentKind | None = None,
+    kind: str | None = None,
     reason: str | None = None,
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
     actor: str | None = None,
     set_overrides: list[str] | None = None,
     row: list[str] | None = None,
     no_detail_rows: bool = False,
+    binding: list[str] | None = None,
 ) -> None:
     """Record an amendment to the selected filing through worker custody.
 
@@ -353,8 +363,10 @@ def work_amend(
     run missing several flags reports every absent one in a single
     refusal instead of forcing the operator to rediscover them one
     invocation at a time. The command then parses the requested
-    :class:`CalculationRevisionAmendmentKind`, validates each override as a
-    ``CasillaId`` decimal, delegates to the profile-bound registered
+    :class:`FilingDeclarationKind`, validates each override as a
+    ``CasillaId`` decimal, parses each ``--binding`` with the calculation
+    grammar (the authority admits it against the pinned revision),
+    delegates to the profile-bound registered
     amendment operation, and emits a
     :class:`WorkAmendResult`.
 
@@ -369,7 +381,8 @@ def work_amend(
         set_overrides=set_overrides,
     )
     overrides = _parse_amendment_overrides(set_specs)
-    detail_rows = _resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
+    detail_rows = resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
+    binding_overrides = resolve_amendment_binding_overrides(tuple(binding or ()))
     target = resolve_active_bucket_id()
     if target is None:
         raise no_active_profile_refusal()
@@ -390,6 +403,7 @@ def work_amend(
         reason=reason,
         m303_rectificativa_motive=m303_rectificativa_motive,
         detail_rows=detail_rows,
+        binding_overrides=binding_overrides,
         actor=resolve_actor_option(actor),
     )
     amended = run_modelo_work_amendment(client, request, work_unit_id=selected.unit.work_unit_id).projection
@@ -404,7 +418,7 @@ def work_amend(
         {
             "amendment_kind": amended.amendment_kind.value,
             "m303_rectificativa_motive": amended.m303_rectificativa_motive,
-            **_filing_record_payload(record).model_dump(mode="python"),
+            **filing_record_payload(record).model_dump(mode="python"),
         },
     )
     motive = amended.m303_rectificativa_motive
@@ -414,7 +428,7 @@ def work_amend(
         f"amendment_kind\t{amended.amendment_kind.value}",
         f"m303_rectificativa_motive\t{motive_value}",
         f"amends_filing_record_id\t{amended.amended_from_filing_record_id}",
-        *_filing_record_lines(record),
+        *filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
@@ -433,7 +447,7 @@ def modelo_history(
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from .common import emit_envelope
-    from .modelo_results import ModeloHistoryResult, ModeloLifecycleEventPayload
+    from .modelo_query_results import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .operation_modelo_history import read_modelo_history
 
     matches = tuple(row.to_event() for row in read_modelo_history(ctx, modelo=modelo, year=year, period=period).events)
@@ -463,9 +477,9 @@ def modelo_history(
 
 
 __all__ = [
-    "_verification_report_lines",
-    "_verification_report_payload",
     "modelo_history",
+    "verification_report_lines",
+    "verification_report_payload",
     "work_amend",
     "work_compare_taxation",
     "work_history",

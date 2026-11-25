@@ -9,7 +9,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.tests.audited_process import run_audited_process
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..modelo_runtime_benchmark import copy_instrumented_worker
 

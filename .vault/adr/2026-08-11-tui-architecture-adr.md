@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-10-14'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e4077749003b78d840bdf83d1094f22abfbf056541f286cdc93e112d6991d0d'
+body_hash: 'sha256:0c899d0f931b148a0823082a3d837556cdca074d32af42ec642057ba4c6162c7'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -25,7 +25,6 @@ related:
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
 ---
-
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
 ## Canonical defining-module amendment
@@ -509,6 +508,7 @@ a runtime-only bearer against exact operation, interaction, revision, proposal,
 actor, and expiry. Apply/reject controls are available only when that service
 confirms the bearer and the projected interaction remains current. Observation
 after detach or from a fresh process cannot recreate response authority.
+
 `INPUT` and `CHOICE` project `unsupported` with a stable code while lifecycle,
 phase, progress, cancellation, and settlement remain observable.
 
@@ -1529,8 +1529,8 @@ action, outcome, or capability. The TUI likewise does not import or inspect the 
 root owns every journey after process start.
 
 CLI uses of `FullScreenDestination`, `FullScreenSessionRequest`, and
-`FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal unless a
-separately identified non-CLI peer needs it; delete the shared protocol if no such peer remains.
+`FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal; the TUI has
+no awareness of the desktop application, and no other peer shares it.
 The launch command contains only child-process construction and exit-status propagation; it must
 not recreate a route protocol or presentation-capability gate.
 

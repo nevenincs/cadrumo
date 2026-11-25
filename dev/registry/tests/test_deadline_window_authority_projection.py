@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_wi
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 
@@ -21,6 +22,7 @@ def _projection_identity(item: tuple[str, ModeloRevision, DeadlineWindowDefiniti
     return modelo_id, revision.id, window.id
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_fleet_deadline_projection_is_canonically_owned_exact_and_filter_invariant() -> None:
     """The authority projects every owned row once without masking corpus defects.
 
@@ -74,7 +76,7 @@ def test_fleet_deadline_projection_is_canonically_owned_exact_and_filter_invaria
 
 def test_fleet_projection_preserves_distinct_qualified_variants() -> None:
     authority = compiled_bundled_authority()
-    projected = authority.deadline_windows(2025, modelos=("210",))
+    projected = authority.deadline_windows(filing_year_envelope().horizon, modelos=("210",))
     by_base_coordinate = defaultdict(list)
     for modelo_id, revision, window in projected:
         by_base_coordinate[(modelo_id, window.period.filing_year, window.period.registry_token)].append(
@@ -129,8 +131,8 @@ def test_shared_iva_group_year_end_rule_stays_relationally_consistent_over_suppo
                 expected.opens_on,
                 expected.closes_on,
             ), f"modelo {modelo} diverges from the shared monthly IVA year-end rule for {filing_year}"
-        declared_cutoffs = [window.payment_cutoff_on for window in year_end.values() if window.payment_cutoff_on]
-        assert len(set(declared_cutoffs)) <= 1
+        declared_timeouts = [window.payment_cutoff_on for window in year_end.values() if window.payment_cutoff_on]
+        assert len(set(declared_timeouts)) <= 1
     assert compared_years > 0
 
 

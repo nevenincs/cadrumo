@@ -19,7 +19,7 @@ contract names:
    :func:`aggregate_iva_ledger_observations_from_repositories`, the
    partitioned period-scoped path covered by the latency decision.
 4. **Modelo calculate diagnostic** —
-   :func:`~cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+   :func:`~cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
    for a real M130 quarter, exercising the full registry engine over the
    ledger-backed income resolver.
 
@@ -86,10 +86,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
@@ -99,39 +100,42 @@ from cadrumo.application.aggregation.renta_ledger import (
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.logging import flush_logging
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import (
-    BusinessClassification,
     TransactionDirection,
-    TransactionLifecycleState,
 )
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
+from .ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "40404040-4040-4040-8040-404040404040"
-_TAX_ID = "40404040D"
 
 #: Period-scoped ledger operations complete under 3 CPU-seconds at
 #: 30k-transaction scale. Unfiltered full-catalogue reads and the annual renta
@@ -168,7 +172,7 @@ _P95_WEDGE_WALL_TO_CPU_RATIO = 4.0
 #: ``src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml``); the renta-ledger
 #: aggregation benchmark pins its category-profile lookup to this registered
 #: year regardless of the synthetic filing years it aggregates over.
-_CATEGORY_PROFILE_YEAR = 2025
+_CATEGORY_PROFILE_YEAR = FILING_YEAR
 
 #: Total synthetic transaction volume: 30k transactions over 10 filing years.
 #: This is the ledger's own scale axis (read / aggregation-filter benchmarks);
@@ -177,13 +181,13 @@ _CATEGORY_PROFILE_YEAR = 2025
 _TOTAL_TRANSACTIONS = 30_000
 _FILING_YEARS = 10
 _TRANSACTIONS_PER_YEAR = _TOTAL_TRANSACTIONS // _FILING_YEARS
-_FIRST_YEAR = 2021
-_LAST_YEAR = _FIRST_YEAR + _FILING_YEARS - 1  # 2030, inclusive
+_LAST_YEAR = FILING_YEAR
+_FIRST_YEAR = _LAST_YEAR - _FILING_YEARS + 1
 
 #: Filing year used by the M130 modelo-calculate diagnostic. The minoracion
 #: carry reads a prior-year M100 observation, so the diagnostic uses the latest
 #: filing year whose prior year is represented by the bundled M100 registry.
-_M130_DIAGNOSTIC_YEAR = 2026
+_M130_DIAGNOSTIC_YEAR = FILING_YEAR
 _M130_DIAGNOSTIC_YEARS = (_M130_DIAGNOSTIC_YEAR,)
 
 #: Repeat count for budgeted period-scoped operations; enough samples for a real P95.
@@ -194,7 +198,7 @@ _BUDGET_SAMPLE_COUNT = 20
 #: the integration runtime.
 _DIAGNOSTIC_SAMPLE_COUNT = 3
 
-_M130_REVISION = "2019-y-siguientes"
+_M130_REVISION = open_ended_revision("130").id
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("06", surface="bench M130 retenciones"): Decimal("0"),
     validated_casilla_id("08", surface="bench M130 agrarian volume"): Decimal("0"),
@@ -211,6 +215,9 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA = validated_casilla_id("1479", surface="be
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA = validated_casilla_id("1553", surface="bench M100 1553")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA = validated_casilla_id("1577", surface="bench M100 1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA = validated_casilla_id("1391", surface="bench M100 BIN")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_OLDER_REMAINDERS = tuple(
+    validated_casilla_id(box, surface="bench M100 BIN remainder") for box in ("1384", "1387", "1390")
+)
 _PRIOR_YEAR_NET_INCOME = Decimal("50000")
 _TRANSACTION_REPOSITORY_LOGGER = "cadrumo.adapters.persistence.profile.transactions"
 _PARTITION_LOG_MARKERS = (
@@ -255,33 +262,7 @@ def _synthetic_transaction(idx: int, *, booked: date) -> Transaction:
     construct at 30k-row scale.
     """
     direction = TransactionDirection.OUTGOING if idx % 3 else TransactionDirection.INCOMING
-    return Transaction.model_validate(
-        {
-            "raw": _raw(idx, booked=booked),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "purchase_invoice_evidence_id": None,
-            "category_id": "material_oficina",
-            "taxable_base": Decimal("100.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(booked.year, booked.month, booked.day, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
-def _dates_across_year(year: int, count: int) -> Iterator[date]:
-    """Yield ``count`` distinct booked dates spread evenly across ``year``."""
-    start = date(year, 1, 1)
-    span_days = (date(year, 12, 31) - start).days
-    for i in range(count):
-        offset_days = (i * span_days) // max(count - 1, 1)
-        yield start + timedelta(days=offset_days)
+    return classified_business_transaction(_raw(idx, booked=booked), direction=direction)
 
 
 def _seed_scale_ledger(objects: SecureObjectRepository) -> None:
@@ -296,7 +277,7 @@ def _seed_scale_ledger(objects: SecureObjectRepository) -> None:
     idx = 0
     transactions: list[Transaction] = []
     for year in range(_FIRST_YEAR, _FIRST_YEAR + _FILING_YEARS):
-        for booked in _dates_across_year(year, _TRANSACTIONS_PER_YEAR):
+        for booked in dates_across_year(year, _TRANSACTIONS_PER_YEAR):
             transactions.append(_synthetic_transaction(idx, booked=booked))
             idx += 1
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
@@ -327,6 +308,7 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
                     _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                     _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
                     _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_OLDER_REMAINDERS, Decimal("0")),
                 },
             ),
         )
@@ -343,51 +325,22 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
 def _seed_taxpayer_profile() -> None:
     """Seed the single-taxpayer profile ``create_work_unit``'s readiness gate requires.
 
-    Mirrors the proven working fixture from
-    ``application/modelo/tests/test_e2e_ledger_m130_quarters_to_m100_annual.py``.
-    ``activity_start_date`` (2020) predates every benchmarked filing year
-    (``_FIRST_YEAR`` 2021 onward).
+    The taxpayer is the shared ready profile; the benchmark adds only the
+    activity start date, which predates every benchmarked filing year.
     """
-    record = create_user_profile_record(
-        context=profile_creation_context_for_test(),
-        profile_id=_BUCKET_ID,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-            UserProfileFact(path="identity.name", value="Scale"),
-            UserProfileFact(path="identity.surnames", value="Bench Tester"),
-            UserProfileFact(path="activities.description", value="design services"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        ),
-        created_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
-        updated_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
+    at = datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=at)
+    upsert_test_profile_facts(
+        _BUCKET_ID,
+        (UserProfileFact(path="censo.activity_start_date", value=date(_FIRST_YEAR - 1, 1, 1)),),
     )
-    seed_test_profile_record(record)
-
-
-def _p95(samples: list[float]) -> float:
-    """Return the 95th percentile of ``samples`` (nearest-rank, no interpolation)."""
-    ordered = sorted(samples)
-    rank = max(0, min(len(ordered) - 1, round(0.95 * (len(ordered) - 1))))
-    return ordered[rank]
 
 
 def _save_benchmark_update(transaction: Transaction, sample_index: int) -> Transaction:
     """Return a same-id transaction update for write-path timing."""
     payload = transaction.model_dump(mode="python")
     payload["group_label"] = f"write-bench-{sample_index}"
-    payload["modified_at"] = datetime(2031, 1, 1, 12, 0, tzinfo=UTC) + timedelta(seconds=sample_index)
+    payload["modified_at"] = datetime(FILING_YEAR, 1, 1, 12, 0, tzinfo=UTC) + timedelta(seconds=sample_index)
     return Transaction.model_validate(payload)
 
 
@@ -464,10 +417,10 @@ def test_ledger_read_reports_full_catalogue_latency(scale_bucket: SecureObjectRe
         samples.append(time.perf_counter() - started)
         assert len(catalogue) == _TOTAL_TRANSACTIONS
 
-    p95 = _p95(samples)
+    latency_p95 = p95(samples)
     print(
         f"\n[bench] ledger_read_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
-        f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
+        f"p95={latency_p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
         "budget_scope=out_of_scope_full_catalogue_read",
     )
@@ -512,10 +465,10 @@ def test_annual_renta_aggregation_reports_full_scan_latency(
         # a real casilla-values mapping for the target period.
         assert isinstance(result.casilla_values, Mapping)
 
-    p95 = _p95(samples)
+    latency_p95 = p95(samples)
     print(
         f"\n[bench] annual_renta_aggregation_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
-        f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
+        f"p95={latency_p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
         "budget_scope=out_of_scope_pending_invoice_date_key",
     )
@@ -575,9 +528,9 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
     finally:
         repo.save(original_catalogue)
 
-    namespace_p95 = _p95(namespace_hash_samples)
-    serialise_hash_p95 = _p95(serialise_hash_samples)
-    save_p95 = _p95(save_samples)
+    namespace_p95 = p95(namespace_hash_samples)
+    serialise_hash_p95 = p95(serialise_hash_samples)
+    save_p95 = p95(save_samples)
     print(
         f"\n[bench] transaction_save_namespace_hash_scan: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"p95={namespace_p95:.3f}s mean={statistics.mean(namespace_hash_samples):.3f}s "
@@ -683,6 +636,7 @@ def quarterly_iva_samples(
                 bucket_id=_BUCKET_ID,
                 period=period,
                 transaction_repository=tx_repo,
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID),
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
                 investment_asset_register=BienesInversionIvaRegister(),
                 investment_asset_profile_id=_BUCKET_ID,
@@ -699,8 +653,11 @@ def quarterly_iva_samples(
             # Real accumulator output, not a mock stand-in.
             assert isinstance(partitioned_result.observations, tuple)
     finally:
+        # Records reach the collector asynchronously; take it off only once they have.
+        flushed = flush_logging(timeout=HANG_GUARD_SECONDS)
         logger.removeHandler(collector)
         logger.setLevel(previous_level)
+    assert flushed, "diagnostic dispatch did not drain before the partition records were read"
 
     return _QuarterlyIvaSamples(
         partitioned_wall=tuple(partitioned_wall),
@@ -731,9 +688,9 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     not the aggregation. Wall-clock is printed as an advisory alongside.
     """
     samples = quarterly_iva_samples
-    partitioned_cpu_p95 = _p95(list(samples.partitioned_cpu))
-    partitioned_wall_p95 = _p95(list(samples.partitioned_wall))
-    full_scan_cpu_p95 = _p95(list(samples.full_scan_cpu))
+    partitioned_cpu_p95 = p95(list(samples.partitioned_cpu))
+    partitioned_wall_p95 = p95(list(samples.partitioned_wall))
+    full_scan_cpu_p95 = p95(list(samples.full_scan_cpu))
     partition_read_count = len(samples.partition_messages)
     partition_in_window_rows = _partition_in_window_rows(samples.partition_messages)
 
@@ -745,7 +702,7 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     print(
         f"\n[bench] iva_quarterly_full_scan_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"cpu_p95={full_scan_cpu_p95:.3f}s cpu_mean={statistics.mean(samples.full_scan_cpu):.3f}s "
-        f"wall_p95={_p95(list(samples.full_scan_wall)):.3f}s (wall advisory) "
+        f"wall_p95={p95(list(samples.full_scan_wall)):.3f}s (wall advisory) "
         f"cpu_min={min(samples.full_scan_cpu):.3f}s cpu_max={max(samples.full_scan_cpu):.3f}s",
     )
     print(
@@ -757,7 +714,7 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
         f"wall_max={max(samples.partitioned_wall):.3f}s "
         f"(wall advisory<{_P95_WALL_ADVISORY_SECONDS:.1f}s, warned never asserted) "
         f"paired_cpu_p95_delta_vs_full_scan="
-        f"{(full_scan_cpu_p95 - _p95(list(samples.paired_partitioned_cpu))):.3f}s "
+        f"{(full_scan_cpu_p95 - p95(list(samples.paired_partitioned_cpu))):.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
     wall_advisory_message(
@@ -792,7 +749,7 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
     CPU-s ceiling.
     """
     samples = quarterly_iva_samples
-    full_scan_cpu_p95 = _p95(list(samples.full_scan_cpu))
+    full_scan_cpu_p95 = p95(list(samples.full_scan_cpu))
     assert full_scan_cpu_p95 > _P95_BUDGET_CPU_SECONDS, (
         f"the unpartitioned full scan measured {full_scan_cpu_p95:.3f} CPU-s P95, which does NOT "
         f"exceed the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget — the budget can no longer detect "
@@ -830,6 +787,8 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     quarters = ("1T", "2T", "3T", "4T")
     wall_samples: list[float] = []
     cpu_samples: list[float] = []
+    # Records from the setup above arrive here, so the clear below drops them.
+    delivered_records(caplog)
     caplog.clear()
     per_quarter: list[tuple[str, float, float]] = []
     with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
@@ -868,7 +827,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                     iva_compensation_history_repository=ports.iva_compensation_history_repository,
                 )
 
-    calculation_log_messages = tuple(record.getMessage() for record in caplog.records)
+    calculation_log_messages = tuple(record.getMessage() for record in delivered_records(caplog))
     full_catalogue_reads = tuple(
         message for message in calculation_log_messages if message.startswith("loaded transaction catalogue bucket_id=")
     )
@@ -889,7 +848,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     )
     cpu_worst = max(cpu_samples)
     wall_worst = max(wall_samples)
-    partition_messages = _partition_log_messages(caplog.records)
+    partition_messages = _partition_log_messages(delivered_records(caplog))
     partition_read_count = len(partition_messages)
     partition_in_window_rows = _partition_in_window_rows(partition_messages)
     assert partition_read_count >= len(cpu_samples)

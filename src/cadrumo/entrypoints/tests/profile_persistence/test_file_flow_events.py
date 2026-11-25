@@ -13,7 +13,9 @@ from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_sup
 )
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -22,20 +24,20 @@ from cadrumo.domain.modelos.calculation_repository import (
     CalculationRevisionPersistenceError,
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_EXPENSE_CASILLA,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     T3,
     T4,
     T5,
     Repos,
+    calculate_baseline_130_revision,
     file_revision,
     registry_required_manual_casillas,
+    seed_m130_activity,
     seed_modelo_193_work_unit,
     seed_work_unit,
     verify_revision,
@@ -55,14 +57,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     """The filing decision boundary cannot consume values under a drifted schema."""
     wu_repo, cr_repo, _filing_repo, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
@@ -102,7 +97,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
 
 
 def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
-    """calculate_modelo_revision appends a ``modelo.calculation.created``
+    """The bucket-aggregation calculation appends a ``modelo.calculation.created``
     event with the new revision id as object_id and the work unit's
     (modelo, year, period) carried in the payload."""
 
@@ -110,14 +105,15 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
     work_unit = seed_work_unit(wu_repo)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        seed_m130_activity(work_unit, income=Decimal("1000"))
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
-            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={},
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
 
     catalogue = bv_repo.load()
     events = [
@@ -147,14 +143,14 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -200,13 +196,13 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
             casilla_inputs=supplied,
             clock=T1,
-        )
+        ).revision
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -227,6 +223,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
             operation=operation,
         ).report
     assert report.granted_verificado_completo is False
+    assert omitted in report.missing_required_casilla_ids
 
     catalogue = bv_repo.load()
     refused = catalogue.for_bucket(
@@ -236,7 +233,9 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
     assert len(refused) == 1
     event = refused[0]
     assert event.event_type is BucketEventType.MODELO_VERIFICATION_REFUSED
-    assert event.payload["completeness_status"] == "incomplete"
+    # The bucket calculation also notes the absent per-perceptor withholding detail, which blocks
+    # beside the missing casilla, so the event carries the report's own status.
+    assert event.payload["completeness_status"] == report.completeness_status.value
     assert int(event.payload["missing_required_count"]) >= 1
     assert omitted not in event.payload  # omitted casilla id stays in the report, not the event payload
 
@@ -249,14 +248,14 @@ def test_file_emits_modelo_filed_event(repos: Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -307,14 +306,14 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
     work_unit = seed_work_unit(wu_repo)
 
     with bundled_indexed_authority().operation() as operation:
-        revision_one = calculate_modelo_revision(
+        revision_one = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     report_one = verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -341,18 +340,15 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
     )
 
     with bundled_indexed_authority().operation() as operation:
-        revision_two = calculate_modelo_revision(
+        revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
-            casilla_inputs={
-                **DEFAULT_130_BASELINE_INPUTS,
-                M130_INCOME_CASILLA: Decimal("1200"),
-                M130_EXPENSE_CASILLA: Decimal("100"),
-            },
-            binding_values=DEFAULT_130_BINDING_VALUES,
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             clock=T4,
-        )
+        ).revision
     report_two = verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,

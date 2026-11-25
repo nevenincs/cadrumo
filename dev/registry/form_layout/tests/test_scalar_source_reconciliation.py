@@ -8,12 +8,15 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
 from ..scalar_source_reconciliation import reconcile_scalar_export_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("390"))
 
 # Official page 5 record positions, independently paired to printed boxes.
 TARGETS = {
@@ -29,7 +32,7 @@ TARGETS = {
 }
 
 
-@pytest.fixture(scope="module", params=["2024", "2025"])
+@pytest.fixture(scope="module", params=_EDITIONS[3:5])
 def pair(request):
     source = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390"))
     before = source.revisions[request.param]
@@ -37,7 +40,7 @@ def pair(request):
     # revision. Borrow those authored definitions to reconstruct the old
     # export shape while keeping each tested revision's current casillas and
     # form draft as the receiving state.
-    legacy = source.revisions["2022"]
+    legacy = source.revisions[_EDITIONS[1]]
     old_bindings = {
         binding.provider.offset: binding.id
         for binding in legacy.bindings

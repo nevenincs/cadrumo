@@ -2,27 +2,39 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime
 from pathlib import Path
-from threading import Event, Lock, RLock, Thread, get_ident
+from threading import Condition, Event, Lock, RLock, get_ident
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
+from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOwner
 
 from ..adapters.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
 from ..application.session_authority_contracts import SessionAuthorityFacts
+from .human_proof_queue import HumanProofQueue
+from .worker_activity import observe_worker_activity
+
+_LOGGER = get_logger(__name__)
 
 
 class ProfileWorkerSessionOwner:
@@ -40,29 +52,34 @@ class ProfileWorkerSessionOwner:
         storage_root: Path,
         observe: Callable[[UUID], SessionAuthorityFacts],
         human_secret: Callable[[UUID], AbstractContextManager[HumanProof]],
-        guard: RLock,
+        guard: AbstractContextManager[object],
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
-        runtime_server_starter: Callable[[], int | None] | None = None,
+        wall_clock: Callable[[], datetime] = wall_now,
+        lost: Callable[[], None] | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
         """Share the profile denial guard with the existing authority and administration.
 
-        ``runtime_server_starter`` starts the model runtime's server from this
-        process for a worker, which is contained and so cannot keep one alive.
+        ``lost`` hears that a worker loss was established outside any request,
+        so the sessions it ends are swept without waiting for one.
+        ``fixed_clock`` is the runtime's admitted fixed clock, told to each worker it starts.
         """
         self.identity, self.root = identity, storage_root
+        self._lost_notice = lost
         self._observe, self._human_secret, self._guard = observe, human_secret, guard
         self._worker: ProfileWorkerProcess | None = None
         self._lost = False
+        self._worker_lost = False
+        self._drained = False
         self._authorization = authorization
         self._worker_script = worker_script
         self._wall_clock = wall_clock
-        self._runtime_server_starter = runtime_server_starter
+        self._fixed_clock = fixed_clock
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
-        self._activity_guard = Lock()
-        self._stopping = Event()
+        self._construction_changed = Condition(self._lifecycle_guard)
+        self._stopping = NativeWake()
         self._construction_done = Event()
         self._construction_done.set()
         self._construction_failure = False
@@ -71,13 +88,15 @@ class ProfileWorkerSessionOwner:
         self._api_thread: int | None = None
         self._api_connection: UUID | None = None
         self._api_deadline: float | None = None
-        self._human_guard = RLock()
+        self._human_queue = HumanProofQueue(self._stopping)
         self._prepared_human_worker: ProfileWorkerProcess | None = None
         self._human_thread: int | None = None
         self._human_connection: UUID | None = None
+        self._human_timeout_deadline: float | None = None
         self._persist_human_receipt = False
         self._human_receipts: dict[UUID, ProfileHumanLoginReceipt] = {}
         self._pending_human_receipts: dict[UUID, ProfileWorkerProcess] = {}
+        self._human_receipt_deadlines: dict[UUID, float] = {}
         self._human_sign_ins: dict[UUID, SignInGeneration] = {}
 
     @contextmanager
@@ -96,9 +115,9 @@ class ProfileWorkerSessionOwner:
             try:
                 worker.require_alive()
             except RefusalError as error:
-                if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is RefusalCode.TIMEOUT:
                     raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-                self.close()
+                self._contain_lost_worker()
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         facts = self._observe(connection_id)
         with self._lifecycle_guard:
@@ -117,6 +136,48 @@ class ProfileWorkerSessionOwner:
         """Whether this worker incarnation has irreversibly lost its authority."""
         return self._lost
 
+    @property
+    def worker_lost(self) -> bool:
+        """Whether the worker failed, exited or disconnected, as opposed to a drain the runtime began."""
+        return self._worker_lost and not self._drained
+
+    def _contain_lost_worker(self) -> None:
+        self._note_worker_lost()
+        self.close()
+
+    def _note_worker_lost(self) -> None:
+        # A failure after a drain began belongs to that drain, not to a worker loss.
+        with self._lifecycle_guard:
+            if not self._stopping.is_set():
+                self._worker_lost = True
+
+    def _worker_exited(self, worker: ProfileWorkerProcess) -> None:
+        """Contain this owner's current worker after it failed with nothing waiting on it, then call for a sweep."""
+        with self._lifecycle_guard:
+            if worker is not self._worker or self._stopping.is_set():
+                return
+        try:
+            self._contain_lost_worker()
+        except Exception as error:
+            # The worker stays retiring; settling the lost owner proves its containment later.
+            diagnostic_event(
+                _LOGGER, "profile_worker_loss_containment_pending", primary_error=error, level=logging.WARNING
+            )
+        if self._lost_notice is not None:
+            self._lost_notice()
+
+    def observe_exit(self) -> None:
+        """Establish the loss of a current worker that has exited, before a request borrows it."""
+        with self._lifecycle_guard:
+            worker = None if self._lost else self._worker
+        if worker is None:
+            return
+        try:
+            worker.require_alive()
+        except RefusalError as error:
+            if error.reason is not RefusalCode.TIMEOUT:
+                self._worker_exited(worker)
+
     def operation_worker(self) -> ProfileWorkerProcess:
         """Borrow an already admitted worker without holding the guard during callbacks."""
         with self._lifecycle_guard:
@@ -126,7 +187,9 @@ class ProfileWorkerSessionOwner:
         worker.require_alive()
         return worker
 
-    def extension_record(self, request, payload: bytearray | None = None):
+    def extension_record(
+        self, request: ProfileWorkerExtensionRecordRequest, payload: bytearray | None = None
+    ) -> tuple[ExtensionRecordReply, bytearray]:
         """Borrow admitted worker custody for an exact generic extension request."""
         return self.operation_worker().extension_record(request, payload)
 
@@ -142,32 +205,19 @@ class ProfileWorkerSessionOwner:
             self._lifecycle_guard.release()
         if worker is None:
             return 0
-        if time.monotonic() >= deadline or not self._activity_guard.acquire(blocking=False):
-            return None
-        finished = Event()
-        result: list[int | None] = [None]
-
-        def observe() -> None:
-            try:
-                # Preserve the worker's own control-exchange budget. A short
-                # heartbeat timeout must not kill a healthy busy worker. Only
-                # one observation may remain pending; its late answer is never
-                # reused as proof that a subsequent admission fence was idle.
-                result[0] = worker.activity().in_flight_operations
-            except (RefusalError, AutomationCustodyError):
-                pass
-            finally:
-                self._activity_guard.release()
-                finished.set()
-
-        Thread(target=observe, name="profile-worker-activity", daemon=True).start()
-        if not finished.wait(max(0.0, deadline - time.monotonic())):
-            return None
-        return result[0]
+        return observe_worker_activity(worker, deadline=deadline, worker_exited=self._worker_exited)
 
     @contextmanager
-    def _custody(self) -> Generator[ProfileWorkerProcess]:
-        constructing, worker = self._select_worker_for_custody()
+    def _custody(
+        self,
+        *,
+        await_construction: bool = False,
+        timeout: TimeoutDeadline | None = None,
+        cancellation: ProfileProofCancellation | None = None,
+    ) -> Generator[ProfileWorkerProcess]:
+        constructing, worker = self._select_worker_for_custody(
+            await_construction=await_construction, timeout=timeout, cancellation=cancellation
+        )
         candidate: ProfileWorkerProcess | None = None
         try:
             if constructing:
@@ -177,7 +227,9 @@ class ProfileWorkerSessionOwner:
                     authorization=self._authorization,
                     worker_script=self._worker_script,
                     wall_clock=self._wall_clock,
-                    runtime_server_starter=self._runtime_server_starter,
+                    exited=self._worker_exited,
+                    stopping=self._stopping,
+                    fixed_clock=self._fixed_clock,
                 )
                 with self._lifecycle_guard:
                     if self._stopping.is_set():
@@ -198,19 +250,43 @@ class ProfileWorkerSessionOwner:
             raise
         finally:
             if constructing:
-                self._construction_done.set()
+                with self._construction_changed:
+                    self._construction_done.set()
+                    self._construction_changed.notify_all()
 
-    def _select_worker_for_custody(self) -> tuple[bool, ProfileWorkerProcess | None]:
-        with self._lifecycle_guard:
-            if self._lost or self._stopping.is_set():
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            worker = self._worker
-            if worker is not None:
-                return False, worker
-            if not self._construction_done.is_set():
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            self._construction_done.clear()
-            return True, None
+    def _notify_construction_waiters(self) -> None:
+        with self._construction_changed:
+            self._construction_changed.notify_all()
+
+    def _select_worker_for_custody(
+        self,
+        *,
+        await_construction: bool,
+        timeout: TimeoutDeadline | None = None,
+        cancellation: ProfileProofCancellation | None = None,
+    ) -> tuple[bool, ProfileWorkerProcess | None]:
+        timeout = timeout or DEFAULT_TIMEOUT_POLICY.deadline()
+        cancellation = cancellation or ProfileProofCancellation()
+        with cancellation.watch(self._notify_construction_waiters), self._construction_changed:
+            while True:
+                try:
+                    cancellation.raise_if_cancelled()
+                except ProfileProofCancelledError:
+                    raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED) from None
+                remaining = timeout.remaining_seconds()
+                if self._lost or self._stopping.is_set():
+                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+                worker = self._worker
+                if worker is not None:
+                    return False, worker
+                if self._construction_done.is_set():
+                    self._construction_done.clear()
+                    return True, None
+                # A joining proof can leave without cancelling this shared,
+                # key-free constructor or changing another borrower's worker.
+                if not await_construction:
+                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+                self._construction_changed.wait(timeout=remaining)
 
     def _retain_failed_candidate(
         self,
@@ -226,7 +302,8 @@ class ProfileWorkerSessionOwner:
                     self._retiring.append(candidate)
             # The constructor has attempted immediate containment. Keep failed
             # releases and callbacks owned even after a wire refusal.
-            self.begin_drain()
+            self._note_worker_lost()
+            self._fence()
         if constructing and self._stopping.is_set() and candidate is None and worker is None:
             self._construction_failure = True
         return candidate
@@ -241,7 +318,7 @@ class ProfileWorkerSessionOwner:
             return
         with self._lifecycle_guard:
             undispatched_timeout = (
-                error.reason is RefusalCode.DEADLINE_EXCEEDED
+                error.reason is RefusalCode.TIMEOUT
                 and worker is not None
                 and worker is self._worker
                 and not worker.stopping
@@ -249,7 +326,12 @@ class ProfileWorkerSessionOwner:
         # A queue timeout leaves the exact healthy worker untouched; every
         # other failed dispatched exchange fences custody.
         if not undispatched_timeout:
-            self.close()
+            self._contain_lost_worker()
+
+    def prepare(self) -> None:
+        """Start this profile's worker before any sign-in, holding no key or lease, so the sign-in finds it ready."""
+        with self._custody():
+            pass
 
     @contextmanager
     def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
@@ -257,7 +339,9 @@ class ProfileWorkerSessionOwner:
         if not self._api_guard.acquire(blocking=False):
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         try:
-            with self._custody() as worker:
+            # Outside the fence a key may wait for a launch already under way, as a sign-in does:
+            # a replacement for a lost worker starts before the key that rebinds to it arrives.
+            with self._custody(await_construction=True) as worker:
                 # This is the existing 30-second preparation/install budget,
                 # captured after bounded native construction and never renewed.
                 deadline = time.monotonic() + 30
@@ -308,22 +392,36 @@ class ProfileWorkerSessionOwner:
         """Borrow a protected human proof channel and native originating-login identity."""
         # Serialize candidates without holding the profile denial fence while
         # the existing worker constructs, authenticates or releases proof.
-        with self._human_guard, self._human_secret(connection_id) as proof:
+        with self._human_secret(connection_id) as proof:
             try:
-                self._persist_human_receipt = proof.persist_receipt
-                with self._custody() as worker:
-                    self._prepared_human_worker = worker
-                    self._human_thread = get_ident()
-                    self._human_connection = connection_id
-                    with worker.authenticate_human(
-                        proof.secret, originating_login_id=proof.originating_login_id, method=proof.method
-                    ) as outcome:
-                        yield outcome, proof.originating_login_id
+                with self._human_queue.admit(proof):
+                    try:
+                        self._persist_human_receipt = proof.persist_receipt
+                        with self._custody(
+                            await_construction=True,
+                            timeout=None if proof.timeout_deadline is None else TimeoutDeadline(proof.timeout_deadline),
+                            cancellation=proof.cancellation,
+                        ) as worker:
+                            self._prepared_human_worker = worker
+                            self._human_thread = get_ident()
+                            self._human_connection = connection_id
+                            self._human_timeout_deadline = proof.timeout_deadline
+                            with worker.authenticate_human(
+                                proof.secret,
+                                originating_login_id=proof.originating_login_id,
+                                method=proof.method,
+                                timeout_deadline=proof.timeout_deadline,
+                                attempt_id=proof.attempt_id,
+                                cancellation=proof.cancellation,
+                            ) as outcome:
+                                yield outcome, proof.originating_login_id
+                    finally:
+                        self._prepared_human_worker = None
+                        self._human_thread = None
+                        self._human_connection = None
+                        self._human_timeout_deadline = None
+                        self._persist_human_receipt = False
             finally:
-                self._prepared_human_worker = None
-                self._human_thread = None
-                self._human_connection = None
-                self._persist_human_receipt = False
                 proof.secret[:] = bytes(len(proof.secret))
 
     def human_admission_deadline(self, connection_id: UUID) -> float:
@@ -350,6 +448,9 @@ class ProfileWorkerSessionOwner:
         self._human_receipts[session.session_id] = bound.receipt
         if bound.receipt_pending:
             self._pending_human_receipts[session.session_id] = worker
+            self._human_receipt_deadlines[session.session_id] = (
+                self._human_timeout_deadline or worker.human_admission_deadline
+            )
 
     def capture_human_sign_in(self, session_id: UUID) -> bool:
         """Capture, at publication, the sign-in generation a pending receipt will carry.
@@ -376,7 +477,8 @@ class ProfileWorkerSessionOwner:
         with self._lifecycle_guard:
             if worker is None or sign_in is None or self._lost or worker is not self._worker:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        self._human_receipts[session_id] = worker.mint_human_receipt(session_id, sign_in)
+        deadline = self._human_receipt_deadlines.pop(session_id, None)
+        self._human_receipts[session_id] = worker.mint_human_receipt(session_id, sign_in, deadline=deadline)
 
     def take_human_login_receipt(self, session_id: UUID) -> ProfileHumanLoginReceipt | None:
         """Consume the nonsecret acknowledgement after exact-session admission."""
@@ -390,6 +492,7 @@ class ProfileWorkerSessionOwner:
         """
         self._human_receipts.pop(session_id, None)
         self._pending_human_receipts.pop(session_id, None)
+        self._human_receipt_deadlines.pop(session_id, None)
         self._human_sign_ins.pop(session_id, None)
         if self._worker is None:
             return
@@ -416,6 +519,8 @@ class ProfileWorkerSessionOwner:
             if worker is not None:
                 self._retiring.append(worker)
             retiring = tuple(self._retiring)
+        self._human_queue.notify()
+        self._notify_construction_waiters()
         failures: list[Exception] = []
         for owned in retiring:
             try:
@@ -426,14 +531,25 @@ class ProfileWorkerSessionOwner:
             raise ExceptionGroup("worker containment failed", failures)
 
     def begin_drain(self) -> ProfileWorkerProcess | None:
-        """Fence construction and take the published worker without a profile guard."""
+        """Fence construction and take the published worker without a profile guard.
+
+        A drain ends this incarnation on purpose: an earlier failure no longer
+        counts as a worker loss.
+        """
+        with self._lifecycle_guard:
+            self._drained = True
+            return self._fence()
+
+    def _fence(self) -> ProfileWorkerProcess | None:
         with self._lifecycle_guard:
             self._stopping.set()
             self._lost = True
             worker, self._worker = self._worker, None
             if worker is not None:
                 self._retiring.append(worker)
-            return worker
+        self._human_queue.notify()
+        self._notify_construction_waiters()
+        return worker
 
     def wait_construction(self, *, deadline: float) -> bool:
         """Wait for a pre-fence launch to contain itself before owner release."""

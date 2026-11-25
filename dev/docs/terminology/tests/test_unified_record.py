@@ -99,6 +99,7 @@ def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
     assert re.fullmatch(r"casilla-record:[0-9a-f]{24}", record.id)
     assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert record.metadata.modelo == "303"
+    assert record.title == f"Modelo 303 · {records[0].descriptions[OutputLanguage.ES]}"  # type: ignore[attr-defined]
     assert record.metadata.casilla_id == records[0].casilla_id  # type: ignore[attr-defined]
     assert record.metadata.legal_refs  # provenance survived the funnel
     assert record.metadata.source_refs
@@ -117,7 +118,9 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
     assert record.id.startswith("casilla-record:")
     assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert "DP200014:00562" not in record.id
-    assert record.title == "Modelo 200 · casilla DP200014:00562"
+    expected_label = segmented.descriptions[OutputLanguage.ES]  # type: ignore[attr-defined]
+    assert record.title == f"Modelo 200 · {expected_label}"
+    assert "DP200014:00562" not in record.title
     # The target deep-links to the per-modelo casilla reference page and the
     # casilla's page-local anchor (the id-folding slug), never the retired
     # search-for-itself query string. Both come from the ONE slug authority the
@@ -296,8 +299,8 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     from ...terminology_handbook.enums import ConceptDomain
     from ..search_record import SearchRecordKind
     from ..unified_record import (
-        _KIND_TO_DISPLAY_CLASS,
-        _display_class_for,
+        KIND_TO_DISPLAY_CLASS,
+        display_class_for,
     )
 
     context_dependent = {SearchRecordKind.CONCEPT, SearchRecordKind.PAGE}
@@ -306,9 +309,9 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     # walk included: the exclusion below is from the AGREEMENT check, not from
     # the map, and nothing else in the tree pins the map against the enum, so
     # without this a context-dependent kind could lose its row unnoticed.
-    assert set(_KIND_TO_DISPLAY_CLASS) == set(SearchRecordKind), (
+    assert set(KIND_TO_DISPLAY_CLASS) == set(SearchRecordKind), (
         "the per-kind projection map and the live kind enum disagree on membership: "
-        f"{sorted(k.value for k in set(SearchRecordKind) ^ set(_KIND_TO_DISPLAY_CLASS))}"
+        f"{sorted(k.value for k in set(SearchRecordKind) ^ set(KIND_TO_DISPLAY_CLASS))}"
     )
 
     # The exclusion is EARNED here, not merely declared. A bare count floor
@@ -327,7 +330,7 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
         (None, "api/cadrumo.core.html"),
     )
     for kind in SearchRecordKind:
-        classes = {_display_class_for(kind, domain, target) for domain, target in contexts}
+        classes = {display_class_for(kind, domain, target) for domain, target in contexts}
         if kind in context_dependent:
             assert len(classes) > 1, (
                 f"{kind.value} is excluded from the agreement check as context-dependent, but it "
@@ -351,14 +354,14 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     for kind in SearchRecordKind:
         if kind in context_dependent:
             continue
-        assert kind in _KIND_TO_DISPLAY_CLASS, (
+        assert kind in KIND_TO_DISPLAY_CLASS, (
             f"{kind.value} is a live record kind with no row in the per-kind projection; "
-            f"records of this kind are stamped by {_display_class_for.__name__} on one path "
+            f"records of this kind are stamped by {display_class_for.__name__} on one path "
             "and by nothing at all on the other, which is the drift this gate exists to catch"
         )
-        projected = _KIND_TO_DISPLAY_CLASS[kind]
+        projected = KIND_TO_DISPLAY_CLASS[kind]
         checked += 1
-        derived = _display_class_for(kind, None, "guides/overview.html")
+        derived = display_class_for(kind, None, "guides/overview.html")
         assert derived is projected, (
             f"{kind.value} is derived as {derived.value} but the per-kind "
             f"projection stamps {projected.value}; the two ranking authorities have drifted"

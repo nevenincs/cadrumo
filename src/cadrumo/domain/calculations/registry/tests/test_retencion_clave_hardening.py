@@ -25,11 +25,13 @@ from pydantic import ValidationError
 from .....core.aggregation import RetencionClave
 from ..authority import PinnedAuthorityOperation
 from ..governed_fact_scope import validating_governed_facts
-from ..withholding_bindings import WithholdingObservation, _retencion_clave_declarations
+from ..retencion_clave_catalogue import retencion_clave_declarations
+from ..withholding_bindings import WithholdingObservation
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2024, 3, 15)
+_ON = date(filing_year_envelope().horizon, 3, 15)
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +41,7 @@ def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
 
 
 def _m190_dr_claves(operation: PinnedAuthorityOperation) -> frozenset[str]:
-    order = _retencion_clave_declarations(_ON, authority=operation)["clave_order"]
+    order = retencion_clave_declarations(_ON, authority=operation)["clave_order"]
     return frozenset(token.strip() for token in order.split(",") if token.strip())
 
 
@@ -47,8 +49,8 @@ def _observation(*, clave: RetencionClave | str, subclave: str = "") -> Withhold
     return WithholdingObservation.model_validate(
         {
             "source_id": "row-1",
-            "perceptor_tax_id": "11111111H",
-            "transaction_date": date(2024, 3, 15),
+            "perceptor_tax_id": "00001500M",
+            "transaction_date": _ON,
             "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
             "subclave": subclave,
             "percibido_dinerario": Decimal("1000"),

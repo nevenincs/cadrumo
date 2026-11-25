@@ -56,7 +56,7 @@ CORE_STRUCTS: dict[str, str] = {
     # Financial-input aggregates and their repositories
     "TransactionCatalogue": "cadrumo.domain.transactions.models",
     "TransactionCatalogueRepository": "cadrumo.adapters.persistence.profile.transactions",
-    "InvoiceCatalogue": "cadrumo.domain.invoices.models",
+    "InvoiceCatalogue": "cadrumo.domain.invoices.catalogue",
     # Profile, deadlines, and filing records
     "TaxpayerProfile": "cadrumo.domain.deadlines.models",
     "Schedule": "cadrumo.domain.deadlines.models",
@@ -385,7 +385,7 @@ def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
     "target",
     [
         "cadrumo_client.commands.errors.CliRefusedBoundaryError",
-        "cadrumo_runtime.commands._apoderado.apoderado_scopes_list",
+        "cadrumo_runtime.commands.apoderado.apoderado_scopes_list",
     ],
 )
 def test_qualified_sibling_definitions_are_scanned(target: str) -> None:

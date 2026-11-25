@@ -1,0 +1,128 @@
+"""Scenario bodies for test_modelo_303_registry_schedules, called by its authored-source and published-authority tests."""
+
+from __future__ import annotations
+
+import itertools
+from collections.abc import Callable
+
+from .....core.resources.bundled_data import bundled_path
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
+from .authored_editions import authored_revisions, open_ended_revision, supported_authored_exercises
+from .snapshot_support import build_snapshot
+
+
+def check_modelo_303_monthly_snapshot_resolves_for_each_period(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
+    """Each explicit current record-design revision resolves its monthly periods.
+
+    REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
+    revision selector still has to resolve those monthly periods directly
+    via select_revision so ``bindings list --period 01`` resolves without a
+    RegistrySnapshotError."""
+    modelo, catalogues = load_modelo_303()
+
+    for exercise, period in itertools.product(dict.fromkeys(supported_authored_exercises("303")), ("01", "06", "12")):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=exercise,
+            period=period,
+        )
+        governing = {
+            str(revision.id)
+            for revision in authored_revisions("303")
+            if revision.valid_from.year <= exercise
+            and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        }
+        assert snapshot.revision.id in governing, f"exercise {exercise} period {period}"
+        schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
+        assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
+
+
+def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
+    """The monthly schedule fires for monthly IVA-liquidation triggers only."""
+    from ....deadlines.models import (
+        IVARegime,
+        M303RegimeComposition,
+        M303TaxTerritory,
+        ModeloEnrollment,
+        ModeloIVAProfile,
+        TaxpayerProfile,
+    )
+    from ..schedules import applicable_filing_schedules
+
+    modelo, _catalogues = load_modelo_303()
+    revision = modelo.revisions[str(open_ended_revision("303").id)]
+
+    monthly_profiles = (
+        TaxpayerProfile(
+            tax_id="B00015016",
+            iva_regime=IVARegime("GENERAL"),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                regime_composition=M303RegimeComposition.from_registry("general"),
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                redeme_enrolled=True,
+            ),
+        ),
+        TaxpayerProfile(
+            tax_id="C00015008",
+            iva_regime=IVARegime("GENERAL"),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                regime_composition=M303RegimeComposition.from_registry("general"),
+                redeme_enrolled=False,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
+            enrollment=ModeloEnrollment(large_company=True),
+        ),
+    )
+    voluntary_sii_profile = TaxpayerProfile(
+        tax_id="A00015008",
+        iva_regime=IVARegime("GENERAL"),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=True,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            sii_enrolled=True,
+            redeme_enrolled=False,
+        ),
+        enrollment=ModeloEnrollment(large_company=False),
+    )
+    ordinary_quarterly_profile = TaxpayerProfile(
+        tax_id="D00015016",
+        iva_regime=IVARegime("GENERAL"),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            sii_enrolled=False,
+            redeme_enrolled=False,
+        ),
+        enrollment=ModeloEnrollment(large_company=False),
+    )
+
+    for profile in monthly_profiles:
+        monthly_schedules = applicable_filing_schedules(revision, profile)
+        monthly_ids = {s.id for s in monthly_schedules}
+        assert "modelo-303-mensual" in monthly_ids
+        assert "modelo-303-trimestral" not in monthly_ids
+
+    for profile in (voluntary_sii_profile, ordinary_quarterly_profile):
+        quarterly_schedules = applicable_filing_schedules(revision, profile)
+        quarterly_ids = {s.id for s in quarterly_schedules}
+        assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match non-monthly profile"
+        assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match non-monthly profile"

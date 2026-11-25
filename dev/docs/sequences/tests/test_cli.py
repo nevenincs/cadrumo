@@ -16,14 +16,15 @@ import pytest
 
 from ..checks import (
     COHERENCE_TIER_PREFIX,
-    _timeout_progress_diagnostic,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     discover_sequences,
     refresh_sequences,
+    timeout_progress_diagnostic,
 )
 from ..cli import main
+from ..persona_profile import SANDBOX_PERSONA_ID, pinned_persona
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -357,7 +358,11 @@ def _coherence_page(_second_expected_status: str) -> str:
 
 def _write_coherence_contracts(root: Path, page: str, second_expected_status: str) -> None:
     """Write the two private contracts used by one cumulative-page fixture."""
-    create = "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T"
+    # The sandbox profile is the canonical persona, whose activity began on the first day of the
+    # horizon year, so only a period of that year is a valid Modelo 130 obligation.
+    with pinned_persona(SANDBOX_PERSONA_ID) as (_, envelope):
+        filing_year = envelope.horizon
+    create = f"aeat --format json app modelo work create --modelo 130 --year {filing_year} --period 1T"
     _write_contract(
         root,
         page,
@@ -587,6 +592,6 @@ def test_timeout_diagnostic_rejects_malformed_child_receipts(
     journal = tmp_path / "last-frame.json"
     journal.write_text(json.dumps(invalid_record), encoding="utf-8")
 
-    diagnostic = _timeout_progress_diagnostic(journal, timeout=1.0)
+    diagnostic = timeout_progress_diagnostic(journal, timeout=1.0)
 
     assert "before the child recorded an executing frame" in diagnostic

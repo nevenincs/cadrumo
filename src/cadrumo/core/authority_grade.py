@@ -88,4 +88,36 @@ floor is one decision and a later change to it cannot land half-swept.
 """
 
 
-__all__ = ["UNDECLARED_REGISTRY_AUTHORITY_GRADE", "RegistryAuthorityGrade"]
+class BindingGradeCapReason(StrEnum):
+    """Why one registry binding's value reaches no further than calculation.
+
+    A revision's grade says how far the revision as a whole reaches. A binding
+    may rest on a reading the revision's grade does not cover, and the reason
+    names that reading so the cap is a grounded claim rather than a flag. The
+    vocabulary is closed: an author cannot cap a binding without choosing one of
+    these, and each member is worded by exactly one calculation note sentence.
+    """
+
+    IMPUTATION_PERIOD_UNGROUNDED = "imputation_period_ungrounded"
+    """The value's assignment to the declared period is not grounded.
+
+    A retención is imputed to the period of the income it was practised on, and
+    the source the value is read from keys each row by another date, so which
+    period the figure belongs to rests on a criterion the calculation cannot see.
+    """
+
+
+BINDING_GRADE_CAP_GRADES: frozenset[RegistryAuthorityGrade] = frozenset({RegistryAuthorityGrade.CALCULATION})
+"""The grades a binding cap may declare.
+
+``filing`` would restate the uncapped default, and ``applicability`` would
+declare a binding that cannot be calculated, which should not exist.
+"""
+
+
+__all__ = [
+    "BINDING_GRADE_CAP_GRADES",
+    "UNDECLARED_REGISTRY_AUTHORITY_GRADE",
+    "BindingGradeCapReason",
+    "RegistryAuthorityGrade",
+]

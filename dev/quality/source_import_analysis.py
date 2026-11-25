@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_module_name
+from dev.paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
 _UTF_8: Final[str] = UTF_8
@@ -222,7 +222,7 @@ def is_shipped_module(
     return True
 
 
-def _docstring_constant_ids(tree: ast.Module) -> set[int]:
+def docstring_constant_ids(tree: ast.Module) -> set[int]:
     """Return the node ids of every module, class, and function docstring.
 
     A docstring is documentation, never a runtime path read. Several shipped
@@ -247,7 +247,7 @@ def _docstring_constant_ids(tree: ast.Module) -> set[int]:
     return ids
 
 
-def _comment_lines(source: str) -> list[tuple[int, str]]:
+def comment_lines(source: str) -> list[tuple[int, str]]:
     """Return every ``(lineno, text)`` COMMENT line in ``source``."""
     lines: list[tuple[int, str]] = []
     try:
@@ -260,7 +260,7 @@ def _comment_lines(source: str) -> list[tuple[int, str]]:
     return lines
 
 
-def _prose_string_lines(tree: ast.Module) -> list[tuple[int, str]]:
+def prose_string_lines(tree: ast.Module) -> list[tuple[int, str]]:
     """Return ``(lineno, text)`` for every docstring and multi-line string line.
 
     Docstrings are prose by definition and are swept regardless of length --
@@ -269,7 +269,7 @@ def _prose_string_lines(tree: ast.Module) -> list[tuple[int, str]]:
     single-line non-docstring strings stay Family 6's jurisdiction, so no line
     is reported by two families.
     """
-    docstring_ids = _docstring_constant_ids(tree)
+    docstring_ids = docstring_constant_ids(tree)
     out: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Constant) and isinstance(node.value, str)):

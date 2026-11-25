@@ -10,7 +10,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 
 from __future__ import annotations
 
-from ...core.errors.hierarchy import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from .abort import WorkflowAbortReason
 
 
@@ -93,12 +93,12 @@ class ProfileLabelAmbiguousError(WorkflowError):
     """
 
 
-class WorkflowInputMismatchError(CoreValidationError):
+class WorkflowInputMismatchError(TerminalPreconditionErrorMixin[object], CoreValidationError):
     """Raised when a workflow input request does not match the expected contract.
 
     Used both by the engine's ``run_for_period`` gate (malformed
     ``resumed_from`` run id shape) and by
-    :class:`application.modelo.workflow_gate._RevisionInputsProvider`
+    :class:`application.modelo.workflow_gate.RevisionInputsProvider`
     (modelo code or period mismatch against the baked revision).  Any
     deviation signals a programming error or a stale work-unit reference
     and must be rejected before inputs reach the engine.

@@ -10,11 +10,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
 
 from ...compiler.authority import compiled_bundled_authority
-from .._export_tree import render_complete_export_tree
-from ..export_field_numeric_derivation import _numeric_derivation
+from ..export_field_numeric_derivation import numeric_derivation
 from ..export_field_numeric_source_pins import m714_checkbox_for, m714_numeric_values_for
+from ..export_tree import render_complete_export_tree
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 from ..render_profile import validate_render_profile
 
@@ -26,7 +27,7 @@ def authority():
     return compiled_bundled_authority()
 
 
-@pytest.mark.parametrize("year", range(2021, 2026))
+@pytest.mark.parametrize("year", single_exercise_editions("714"))
 def test_complete_official_design_renders_with_its_exact_numeric_profile(authority, year: int, tmp_path: Path) -> None:
     source_ref = f"aeat-dr-714-{year}"
     inputs = revision_render_inputs(
@@ -109,7 +110,7 @@ def test_complete_official_design_renders_with_its_exact_numeric_profile(authori
             assert m714_numeric_values_for(moved, identity) is None
     duplicate = source_rows["714-03 Patrimonio", 27]
     with pytest.raises(RegistryValidationError, match="ambiguous content"):
-        _numeric_derivation(duplicate, export_record_id="modelo-714-page-03")
+        numeric_derivation(duplicate, export_record_id="modelo-714-page-03")
     missing = inputs.render_profile.model_copy(update={"singleton_rules": inputs.render_profile.singleton_rules[:-1]})
     with pytest.raises(RegistryValidationError, match="cover exactly"):
         validate_render_profile(missing, inputs.joined, inputs.render_profile_source_evidence)

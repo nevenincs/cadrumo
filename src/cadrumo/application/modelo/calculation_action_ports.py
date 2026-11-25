@@ -10,6 +10,7 @@ repository or resolve an implicit global store when a caller forgets a port.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -24,13 +25,16 @@ from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
+from ..aggregation.prevision_social_contribution_repository import PrevisionSocialContributionRecordReader
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
+from ..aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..foreign_assets.ports import ForeignAssetRegisterRepositoryProtocol
@@ -40,6 +44,7 @@ from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..live.borrador_100 import Borrador100SnapshotRepository
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ..user_profile.profile_read_ports import ProfileReadPorts
+from .credit_resolution_repository import CreditResolutionReader
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
@@ -83,6 +88,7 @@ class CalculationActionPorts:
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     work_lifecycle_ports: WorkLifecyclePorts
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    verification_repository: VerificationReportCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     transaction_repository: CalculationTransactionRepositoryProtocol
     activity_asset_history_repository: ActivityAssetHistoryRepository
@@ -102,6 +108,9 @@ class CalculationActionPorts:
     iva_compensation_decision_repository: CalculationIvaWalletDecisionRepositoryProtocol
     borrador_snapshot_repository: Borrador100SnapshotRepository
     retencion_observation_ports: RetencionObservationPorts
+    retencion_soportada_ports: RetencionSoportadaPorts
+    prevision_social_contribution_repository: PrevisionSocialContributionRecordReader
+    credit_resolution_reader: CreditResolutionReader
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 
 
@@ -114,8 +123,14 @@ class CalculationActionPortsFactory(Protocol):
         bucket_id: str,
         operation: PinnedAuthorityOperation,
         profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
-        """Return the complete calculation bundle for ``bucket_id``."""
+        """Return the complete calculation bundle for ``bucket_id``.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so an operation can account
+        for its effect from the writes that really began.
+        """
         ...
 
 

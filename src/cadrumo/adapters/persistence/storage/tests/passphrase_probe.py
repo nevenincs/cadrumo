@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from .....application.user_profile.custody_ports import (
+from .....application.user_profile.custody_crypto_contracts import (
     ProfilePassphraseKdfParameters,
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
 from ..crypto.aead import EncryptedBlob, decrypt_record
 from ..master_key.master_key_derivation import derive_kek_with_params
-from ..profile_custody import _PersistenceProfileRecordCrypto
+from ..profile_custody import PersistenceProfileRecordCrypto
 
 
 def open_with_passphrase(
@@ -20,7 +20,7 @@ def open_with_passphrase(
     parameters: ProfilePassphraseKdfParameters,
     associated_data: bytes,
 ) -> bytes:
-    if not isinstance(self, _PersistenceProfileRecordCrypto):
+    if not isinstance(self, PersistenceProfileRecordCrypto):
         raise TypeError("fixture requires the persistence record crypto adapter")
     policy = self.passphrase_kdf_policy()
     if parameters.version != policy.version or not self.passphrase_kdf_window_accepts(

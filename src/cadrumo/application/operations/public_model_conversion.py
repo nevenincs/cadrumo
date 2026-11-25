@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum
-from typing import cast
 
 from pydantic import BaseModel
 
+from ...core.type_guards import is_object_tuple
 from .public_scalar import PublicDecimal
 
 
@@ -25,8 +25,8 @@ def public_value(value: object) -> object:
         return value.value
     if isinstance(value, BaseModel):
         return {name: public_value(getattr(value, name)) for name in type(value).model_fields}
-    if isinstance(value, tuple):
-        return tuple(public_value(item) for item in cast(tuple[object, ...], value))
+    if is_object_tuple(value):
+        return tuple(public_value(item) for item in value)
     return value
 
 
@@ -38,22 +38,18 @@ def domain_value(value: object) -> object:
         return value.value
     if isinstance(value, BaseModel):
         return {name: domain_value(getattr(value, name)) for name in type(value).model_fields}
-    if isinstance(value, tuple):
-        return tuple(domain_value(item) for item in cast(tuple[object, ...], value))
+    if is_object_tuple(value):
+        return tuple(domain_value(item) for item in value)
     return value
 
 
 def public_model_mapping(value: BaseModel) -> dict[str, object]:
     """Return one model's recursively converted public mapping."""
-    converted = public_value(value)
-    if not isinstance(converted, dict):
-        raise TypeError("public model conversion did not produce an object")
-    return cast(dict[str, object], converted)
+    return {name: public_value(getattr(value, name)) for name in type(value).model_fields}
 
 
 def domain_model_mapping(value: BaseModel) -> dict[str, object]:
     """Return one public model's recursively restored domain mapping."""
-    converted = domain_value(value)
-    if not isinstance(converted, dict):
+    if isinstance(value, PublicDecimal):
         raise TypeError("domain model conversion did not produce an object")
-    return cast(dict[str, object], converted)
+    return {name: domain_value(getattr(value, name)) for name in type(value).model_fields}

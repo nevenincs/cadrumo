@@ -7,8 +7,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,

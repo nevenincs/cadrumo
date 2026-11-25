@@ -9,7 +9,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.unit_proportion import is_unit_proportion
@@ -27,17 +28,25 @@ LedgerClassifyPatchField = Literal[
     "taxable_base",
     "iva_rate",
     "iva_amount",
+    "recargo_amount",
     "irpf_category",
     "m210_income_classification",
     "iva_category",
+    "exemption_article",
     "deduction_fact_kind",
     "investment_asset_id",
+    "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
+    "arrendamiento_ref",
+    "inmueble_ref",
+    "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
     "notes",
 ]
 
-_CLASSIFY_FIELDS = frozenset(
+CLASSIFY_FIELD_NAMES = frozenset(
     {
         "business_classification",
         "business_pct",
@@ -45,31 +54,47 @@ _CLASSIFY_FIELDS = frozenset(
         "taxable_base",
         "iva_rate",
         "iva_amount",
+        "recargo_amount",
         "irpf_category",
         "m210_income_classification",
         "iva_category",
+        "exemption_article",
         "deduction_fact_kind",
         "investment_asset_id",
+        "iva_vehicle_use",
         "counterparty_country",
         "counterparty_identification_state",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     },
 )
 
-_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=14)]
+CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"})
+"""Selected fields a classification can replace but never blank: the writer requires a value for each."""
 
-LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_ClassifyFields = Annotated[
+    tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=len(CLASSIFY_FIELD_NAMES))
+]
 
-LedgerClassifyShortText = Annotated[str, Field(max_length=128)]
+LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
+
+LEDGER_CLASSIFY_SHORT_TEXT_MAX = 128
+"""The longest category, rate-class or asset code a classification takes."""
+
+LedgerClassifyShortText = Annotated[str, Field(max_length=LEDGER_CLASSIFY_SHORT_TEXT_MAX)]
 
 LedgerClassifyLongText = Annotated[str, Field(max_length=4096)]
 
-LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 
 # Hand-typed euro amounts carry at most cent precision, so a thousands-grouped amount is
 # refused instead of being read as a fraction. A share or a rate is a fraction of one whose
 # scale the governed rates set (0.052, 0.0175), so it has no such cap and is bounded by range.
-_MAX_AMOUNT_FRACTION_DIGITS = 2
+_MAX_MONEY_FRACTION_DIGITS = 2
 
 
 class LedgerClassifyPatch(BaseModel):
@@ -83,12 +108,20 @@ class LedgerClassifyPatch(BaseModel):
     taxable_base: LedgerClassifyDecimalText | None = None
     iva_rate: LedgerClassifyDecimalText | None = None
     iva_amount: LedgerClassifyDecimalText | None = None
+    recargo_amount: LedgerClassifyDecimalText | None = None
     irpf_category: LedgerClassifyLongText | None = None
     iva_category: LedgerClassifyShortText | None = None
+    exemption_article: LedgerClassifyShortText | None = None
     deduction_fact_kind: LedgerClassifyShortText | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
+    iva_vehicle_use: LedgerClassifyShortText | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
-    counterparty_identification_state: Annotated[str, Field(max_length=2)] | None = None
+    counterparty_identification_state: CountryCodeAlpha2 | None = None
+    arrendamiento_ref: LedgerClassifyShortText | None = None
+    inmueble_ref: LedgerClassifyShortText | None = None
+    gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
+    posicion_ref: LedgerClassifyShortText | None = None
+    concepto_capital_mobiliario: LedgerClassifyShortText | None = None
     notes: LedgerClassifyLongText | None = None
 
     @field_validator("business_classification")
@@ -104,14 +137,14 @@ class LedgerClassifyPatch(BaseModel):
             raise ValueError("ledger classify cannot assign a pipeline-owned disposition")
         return classification.value
 
-    @field_validator("business_pct", "taxable_base", "iva_rate", "iva_amount")
+    @field_validator("business_pct", "taxable_base", "iva_rate", "iva_amount", "recargo_amount")
     @classmethod
     def _canonical_decimal_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
             return None
         is_fraction = info.field_name in {"business_pct", "iva_rate"}
         parsed = try_parse_canonical_decimal(
-            value, signed=False, max_fraction_digits=None if is_fraction else _MAX_AMOUNT_FRACTION_DIGITS
+            value, signed=False, max_fraction_digits=None if is_fraction else _MAX_MONEY_FRACTION_DIGITS
         )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"ledger classify {info.field_name} must use canonical decimal text")
@@ -161,7 +194,7 @@ class LedgerClassifyM210Options(BaseModel):
             return None
         is_rate = info.field_name == "applicable_rate"
         parsed = try_parse_canonical_decimal(
-            value, signed=False, max_fraction_digits=None if is_rate else _MAX_AMOUNT_FRACTION_DIGITS
+            value, signed=False, max_fraction_digits=None if is_rate else _MAX_MONEY_FRACTION_DIGITS
         )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"M210 {info.field_name} must use canonical decimal text")
@@ -179,7 +212,10 @@ class LedgerClassifyM210Options(BaseModel):
 
 
 class LedgerClassifyRequest(BaseModel):
-    """Exact-profile single-classify request; optional nulls use an explicit mask."""
+    """Exact-profile single-classify request; optional nulls use an explicit mask.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -190,6 +226,7 @@ class LedgerClassifyRequest(BaseModel):
     m210: LedgerClassifyM210Options | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     reaffirm: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("patch_fields")
     @classmethod
@@ -197,7 +234,7 @@ class LedgerClassifyRequest(BaseModel):
         cls,
         value: tuple[LedgerClassifyPatchField, ...],
     ) -> tuple[LedgerClassifyPatchField, ...]:
-        if len(set(value)) != len(value) or not set(value) <= _CLASSIFY_FIELDS:
+        if len(set(value)) != len(value) or not set(value) <= CLASSIFY_FIELD_NAMES:
             raise ValueError("ledger classify fields must be unique supported fields")
         if value != tuple(sorted(value)):
             raise ValueError("ledger classify fields must use canonical sorted order")
@@ -232,7 +269,7 @@ def require_primary_classification(patch: LedgerClassifyPatch, patch_fields: Col
 def _require_selected_patch_values(request: LedgerClassifyRequest) -> None:
     selected = set(request.patch_fields)
     patch_values = request.patch.model_dump()
-    unselected_fields = _CLASSIFY_FIELDS - {"m210_income_classification"} - selected
+    unselected_fields = CLASSIFY_FIELD_NAMES - {"m210_income_classification"} - selected
     if any(patch_values[name] is not None for name in unselected_fields):
         raise ValueError("ledger classify request contains an unselected patch value")
 

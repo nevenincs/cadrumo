@@ -155,8 +155,8 @@ def _no_op_rewrite_sidecar() -> tuple[bytes, dict[str, Any]]:
 
     from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-    from .._pipeline import sanitize_pdf
-    from .._records import IbanReplacement, NifReplacement, TokenMap
+    from ..pipeline import sanitize_pdf
+    from ..records import IbanReplacement, NifReplacement, TokenMap
 
     token_map = TokenMap(
         nif=(NifReplacement(real=SecretStr(_SPECIMEN_NIF), synthetic=_SPECIMEN_NIF, surface_label="taxpayer NIF"),),
@@ -213,6 +213,6 @@ def test_a_genuine_replacement_is_still_vouched_for() -> None:
 
 def test_a_row_without_a_real_digest_is_admitted_unchanged() -> None:
     """Most committed rows assert no digest, and must keep their standing."""
-    sidecar: dict[str, Any] = {"replacements_applied": [{"synthetic": "Y0000001S", "surface": "content_stream"}]}
+    sidecar: dict[str, Any] = {"replacements_applied": [{"synthetic": "Y0001006P", "surface": "content_stream"}]}
 
-    assert synthetic_pool_of(sidecar) == {"Y0000001S"}
+    assert synthetic_pool_of(sidecar) == {"Y0001006P"}

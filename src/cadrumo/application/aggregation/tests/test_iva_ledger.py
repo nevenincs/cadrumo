@@ -15,11 +15,12 @@ from ....core.period import Period
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.categories.spending_category_catalogue import require_spending_category
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
@@ -31,18 +32,19 @@ from ....domain.iva.schema import (
     IvaRateKind,
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue, validate_stored_transaction_json
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ...ledger.ratios import resolve_business_share_pct
 from ..errors import AggregationValidationError
 from ..iva_ledger import (
     IvaLedgerAggregation,
     IvaLedgerAggregationIssueReason,
 )
 from ..iva_ledger import (
-    aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
+    aggregate_iva_ledger_observations as iva_ledger_aggregate_iva_ledger_observations_with_authority,
 )
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -55,8 +57,8 @@ def aggregate_iva_ledger_observations(
     period: Period,
 ) -> IvaLedgerAggregation:
     """Exercise the public path with an explicit empty authority owned by this test profile."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        return _aggregate_iva_ledger_observations_with_authority(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        return iva_ledger_aggregate_iva_ledger_observations_with_authority(
             transactions,
             period=period,
             ledger_profile_id="test-profile",
@@ -130,8 +132,8 @@ def _modelo_303_iva_revision() -> ModeloRevision:
     )
 
 
-_Q2_2023 = _period(2023, "2T")
-_Q2_2026 = _period(2026, "2T")
+_Q2_2023 = renta_income_aggregation_period(2023, "2T")
+_Q2_2026 = renta_income_aggregation_period(2026, "2T")
 # Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
 # outside the rate table's coverage: no ES window of any tier reaches back past
 # it.
@@ -198,6 +200,7 @@ def _transaction(
     iva_category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
     art_104_tres_exclusion: Art104TresExclusion | None = None,
+    category_id: str | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -225,6 +228,7 @@ def _transaction(
             "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
+            "category_id": category_id,
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
@@ -264,10 +268,10 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(AggregationValidationError) as refusal,
     ):
-        _aggregate_iva_ledger_observations_with_authority(
+        iva_ledger_aggregate_iva_ledger_observations_with_authority(
             catalogue,
             period=_Q2_2026,
             ledger_profile_id="test-profile",
@@ -300,8 +304,8 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
         )
     )
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = _aggregate_iva_ledger_observations_with_authority(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        result = iva_ledger_aggregate_iva_ledger_observations_with_authority(
             TransactionCatalogue.from_transactions((transaction,)),
             period=_Q2_2026,
             ledger_profile_id="test-profile",
@@ -439,6 +443,7 @@ def test_mixed_business_transaction_applies_business_percentage_to_iva_and_keeps
     """
     transaction = _transaction(
         "row-mixed",
+        category_id="arrendamiento_local",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
         taxable_base=Decimal("200.00"),
@@ -485,6 +490,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
 def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_reference() -> None:
     transaction = _transaction(
         "row-mixed-prorrata",
+        category_id="arrendamiento_local",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
         taxable_base=Decimal("200.00"),
@@ -536,7 +542,13 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
 
 
 def test_personal_transaction_is_reported_without_iva_observation() -> None:
-    transaction = _transaction("row-personal", business_classification=BusinessClassification.PERSONAL)
+    transaction = _transaction(
+        "row-personal",
+        business_classification=BusinessClassification.PERSONAL,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
@@ -569,6 +581,24 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+def test_a_stored_row_holding_a_percentage_rate_is_refused_as_unsupported_not_read_as_2100_percent() -> None:
+    """A row stored before an IVA rate above one was refused loads, and no cuota is derived from it."""
+    good = _transaction("row-percentage-rate")
+    stored_payload = good.model_dump_json().replace('"iva_rate":"0.21"', '"iva_rate":"21"').encode()
+    assert b'"iva_rate":"21"' in stored_payload
+    stored = validate_stored_transaction_json(Transaction, stored_payload)
+    assert stored.iva_rate == Decimal("21")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((stored,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE]
+    assert result.issues[0].transaction_id == stored.transaction_id
 
 
 def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
@@ -758,9 +788,9 @@ def test_a_period_below_the_supported_floor_is_refused_before_any_row_is_read() 
     supported date no positive tier reaches, which the rate-coverage tripwire
     keeps unreachable today.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         below_floor = operation.supported_filing_years().floor - 1
-    period = _period(below_floor, "2T")
+    period = renta_income_aggregation_period(below_floor, "2T")
     transaction = _transaction(
         "row-pre-registry",
         booked_date=period.start_date,
@@ -919,7 +949,7 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((food,)),
-        period=_period(2024, "4T"),
+        period=renta_income_aggregation_period(2024, "4T"),
     )
 
     assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
@@ -946,8 +976,186 @@ def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((late,)),
-        period=_period(2025, "2T"),
+        period=renta_income_aggregation_period(2025, "2T"),
     )
 
     assert result.observations == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+# ---------------------------------------------------------------------------
+# The IVA share of a MIXED row is the category's IVA treatment of the degree of
+# use, never the IRPF home-office factor.
+# ---------------------------------------------------------------------------
+
+
+def _stamped_share(
+    category_id: str,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+    operator_supplied: Decimal | None = None,
+    censo_afectacion_ratio: Decimal | None = Decimal("0.40"),
+) -> Decimal | None:
+    """Return the share ledger add stamps on a row, through the real resolver."""
+    return resolve_business_share_pct(
+        operator_supplied=operator_supplied,
+        category=require_spending_category(category_id, effective_date=date(year, 12, 31), authority=operation),
+        censo_afectacion_ratio=censo_afectacion_ratio,
+        year=year,
+        operation=operation,
+    ).business_pct
+
+
+@pytest.mark.parametrize("year", [2022, 2026])
+def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """40 m2 of 100 m2, base 100.00, cuota 21.00: 40 per cent of the cuota is 8.40.
+
+    Worked by hand from the TEAC unified criterion of 19-07-2023 and the Manual
+    práctico IVA: the cuota is deductible in proportion to the use of the
+    dwelling in the activity, with no 30 per cent factor. The IRPF factor gave
+    0.40 x 0.30 x 21.00 = 2.52. 2022 is asserted too: LIVA art. 95 has not
+    changed since 1998, so the share does not start with the criterion.
+    """
+    share = _stamped_share("suministros_home_office_luz", year=year, operation=operation)
+    assert share == Decimal("0.40")
+    row = _transaction(
+        "home-office-luz",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=share,
+        category_id="suministros_home_office_luz",
+        booked_date=date(year, 4, 5),
+        value_date=date(year, 4, 5),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((row,)), period=renta_income_aggregation_period(year, "2T")
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("100.00")
+    assert result.observations[0].iva_amount == Decimal("8.40")
+
+
+def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuthorityOperation) -> None:
+    """A proved share replaces the floor-area proxy: 55 per cent of 21.00 is 11.55."""
+    share = _stamped_share(
+        "suministros_home_office_gas", year=2026, operation=operation, operator_supplied=Decimal("0.55")
+    )
+    assert share == Decimal("0.55")
+    row = _transaction(
+        "home-office-gas",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=share,
+        category_id="suministros_home_office_gas",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].iva_amount == Decimal("11.55")
+
+
+@pytest.mark.parametrize("category_id", ["suministros_home_office_internet", "telefonia_movil", "hardware_amortizable"])
+def test_a_business_only_row_deducts_its_whole_cuota_outside_the_vehicle_presumption(category_id: str) -> None:
+    row = _transaction("business-only", category_id=category_id)
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].iva_amount == Decimal("21.00")
+
+
+@pytest.mark.parametrize("year", [2022, 2026])
+def test_a_mixed_use_mobile_phone_deducts_no_iva(year: int) -> None:
+    """DISCRIMINATING. Simultaneous private use gives no deduction in any measure.
+
+    LIVA art. 95.Dos.2.º and the Manual práctico IVA. The row's 50 per cent
+    share would have deducted 10.50; the row is excluded instead, so neither
+    its base nor a zero cuota reaches the deductible boxes.
+    """
+    row = _transaction(
+        "mixed-phone",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+        category_id="telefonia_movil",
+        booked_date=date(year, 4, 5),
+        value_date=date(year, 4, 5),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((row,)), period=renta_income_aggregation_period(year, "2T")
+    )
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+    assert (
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+        is OperatorActionAxis.REVIEW_ADVISORY
+    )
+
+
+@pytest.mark.parametrize(
+    ("classification", "business_pct"),
+    [(BusinessClassification.MIXED, Decimal("0.80")), (BusinessClassification.BUSINESS, None)],
+    ids=["mixed", "business"],
+)
+def test_vehicle_fuel_deducts_iva_at_the_fifty_per_cent_presumption(
+    classification: BusinessClassification,
+    business_pct: Decimal | None,
+) -> None:
+    """DISCRIMINATING. LIVA art. 95.Tres.2.ª presumes a turismo 50 per cent affected; 95.Cuatro extends it to fuel.
+
+    A stated 80 per cent is no proof of a higher degree of use, and neither is
+    booking the vehicle in the activity (95.Tres.4.ª): 50 per cent of 21.00 is 10.50
+    for a MIXED row and for a BUSINESS row alike.
+    """
+    row = _transaction(
+        "vehicle-fuel",
+        business_classification=classification,
+        business_pct=business_pct,
+        category_id="vehiculo_combustible",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("100.00")
+    assert result.observations[0].iva_amount == Decimal("10.50")
+
+
+def test_mixed_use_equipment_below_the_bien_de_inversion_value_deducts_no_iva() -> None:
+    """A 100.00 computer accessory is no bien de inversión (LIVA art. 108.Dos.5.º), so 95.Dos.2.º denies it."""
+    row = _transaction(
+        "mixed-accessory",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.60"),
+        category_id="hardware_amortizable",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+
+
+def test_mixed_use_equipment_of_bien_de_inversion_value_deducts_iva_by_its_use() -> None:
+    """A 4,000.00 machine is a bien de inversión: 60 per cent of its 840.00 cuota is 504.00 (LIVA art. 95.Tres.1.ª)."""
+    row = _transaction(
+        "mixed-machine",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.60"),
+        category_id="hardware_amortizable",
+        amount=Decimal("4840.00"),
+        taxable_base=Decimal("4000.00"),
+        iva_amount=Decimal("840.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("4000.00")
+    assert result.observations[0].iva_amount == Decimal("504.00")

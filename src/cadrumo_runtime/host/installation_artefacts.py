@@ -13,25 +13,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.application.modelo.calculation_report_verification import (
-    CalculationSummaryVerification,
-    verify_calculation_summary,
-)
-from cadrumo.application.modelo.calculation_summary_pdf_ports import CalculationSummaryPdfUnreadableError
-from cadrumo.application.modelo.review_package import (
-    ReviewPackageIntegrityError,
-    ReviewPackageVerification,
-    verify_review_package,
-)
-from cadrumo.application.modelo.review_package_counter_sign import ReviewPackageCounterSigningError
-from cadrumo.application.modelo.review_package_signing import ReviewPackageSigningError
-from cadrumo.application.modelo.review_package_verification_files import (
-    verify_review_package_receipt_file,
-    verify_review_package_signature_file,
-)
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.core.hex import HEX_PATTERN_64
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.installation_requests import (
     ReportVerifyDocumentReply,
     ReportVerifyDocumentRequest,
@@ -44,6 +27,9 @@ from cadrumo_client.contracts.installation_requests import (
 )
 
 if TYPE_CHECKING:
+    from cadrumo.application.modelo.calculation_report_verification import CalculationSummaryVerification
+    from cadrumo.application.modelo.review_package import ReviewPackageVerification
+
     from .installation_composition import InstallationActRegistry
     from .installation_door import InstallationActExchange
 
@@ -103,6 +89,9 @@ def serve_review_package_verify(
     request: ReviewPackageVerifyRequest, exchange: InstallationActExchange
 ) -> ReviewPackageVerifyReply:
     """Check a package's checksum manifest and read its descriptor."""
+    from cadrumo.application.modelo.review_package import ReviewPackageIntegrityError, verify_review_package
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
     package = Path(request.package)
     try:
         with bundled_indexed_authority().operation() as operation:
@@ -119,6 +108,9 @@ def serve_review_package_verify_signature(
     request: ReviewPackageVerifySignatureRequest, exchange: InstallationActExchange
 ) -> ReviewPackageVerifySignatureReply:
     """Check a package's signature envelope against the key the caller trusts."""
+    from cadrumo.application.modelo.review_package_signing import ReviewPackageSigningError
+    from cadrumo.application.modelo.review_package_verification_files import verify_review_package_signature_file
+
     try:
         verdict = verify_review_package_signature_file(
             Path(request.package), Path(request.signature), public_key=request.public_key
@@ -139,6 +131,9 @@ def serve_review_package_verify_receipt(
     request: ReviewPackageVerifyReceiptRequest, exchange: InstallationActExchange
 ) -> ReviewPackageVerifyReceiptReply:
     """Check both signature layers of a counter-signed receipt."""
+    from cadrumo.application.modelo.review_package_counter_sign import ReviewPackageCounterSigningError
+    from cadrumo.application.modelo.review_package_verification_files import verify_review_package_receipt_file
+
     try:
         verdict = verify_review_package_receipt_file(
             Path(request.package),
@@ -166,6 +161,9 @@ def serve_report_verify_document(
 ) -> ReportVerifyDocumentReply:
     """Check a calculation summary by its own bytes, tracing it to no profile."""
     from cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
+    from cadrumo.application.modelo.calculation_report_verification import verify_calculation_summary
+    from cadrumo.application.modelo.calculation_summary_pdf_ports import CalculationSummaryPdfUnreadableError
+    from cadrumo.application.modelo.review_package_signing import ReviewPackageSigningError
 
     trusted_public_key_hex = None if request.trusted_key is None else request.trusted_key.strip().lower()
     if trusted_public_key_hex is not None and not re.fullmatch(HEX_PATTERN_64, trusted_public_key_hex):

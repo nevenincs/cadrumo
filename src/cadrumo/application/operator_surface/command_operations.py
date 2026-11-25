@@ -21,6 +21,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .errors import OperatorSurfaceContractError
 
+type _CommandPath = tuple[str, ...]
+type _CommandIndex = dict[_CommandPath, set[str]]
+
 _SURFACE = "command_operations"
 
 #: ``defer_build`` keeps these records out of the import cost every process
@@ -100,6 +103,39 @@ def join_command_operations(
             connection request names a command ``rows`` does not.
     """
     diagnostics: list[str] = []
+    by_command = _index_commands(rows, diagnostics)
+    by_operation = _index_operations(by_command, operations_without_command, diagnostics)
+    connection_requests_by_command, by_connection_request = _index_connection_requests(
+        connection_request_rows,
+        by_command,
+        diagnostics,
+    )
+    if diagnostics:
+        raise OperatorSurfaceContractError(_SURFACE, reason="; ".join(diagnostics))
+    return CommandOperationJoin(
+        commands=tuple(
+            CommandOperations(
+                cli_path=cli_path,
+                operation_ids=tuple(sorted(by_command[cli_path])),
+                connection_requests=tuple(sorted(connection_requests_by_command.get(cli_path, ()))),
+            )
+            for cli_path in sorted(by_command)
+        ),
+        operations=tuple(
+            OperationCommands(operation_id=operation_id, cli_paths=tuple(by_operation[operation_id]))
+            for operation_id in sorted(by_operation)
+        ),
+        connection_requests=tuple(
+            ConnectionRequestCommands(action=action, cli_paths=tuple(by_connection_request[action]))
+            for action in sorted(by_connection_request)
+        ),
+    )
+
+
+def _index_commands(
+    rows: Iterable[tuple[_CommandPath, str | None]],
+    diagnostics: list[str],
+) -> _CommandIndex:
     by_command: dict[tuple[str, ...], set[str]] = {}
     silent: set[tuple[str, ...]] = set()
     seen: set[tuple[tuple[str, ...], str | None]] = set()
@@ -124,6 +160,14 @@ def join_command_operations(
         if by_command[cli_path]
     )
 
+    return by_command
+
+
+def _index_operations(
+    by_command: _CommandIndex,
+    operations_without_command: Iterable[str],
+    diagnostics: list[str],
+) -> dict[str, list[_CommandPath]]:
     by_operation: dict[str, list[tuple[str, ...]]] = {}
     for cli_path in sorted(by_command):
         for operation_id in by_command[cli_path]:
@@ -139,6 +183,14 @@ def join_command_operations(
         else:
             by_operation[operation_id] = []
 
+    return by_operation
+
+
+def _index_connection_requests(
+    connection_request_rows: Iterable[tuple[_CommandPath, str]],
+    by_command: _CommandIndex,
+    diagnostics: list[str],
+) -> tuple[_CommandIndex, dict[str, list[_CommandPath]]]:
     connection_requests_by_command: dict[tuple[str, ...], set[str]] = {}
     seen_connection_requests: set[tuple[tuple[str, ...], str]] = set()
     for connection_request_row in connection_request_rows:
@@ -158,26 +210,7 @@ def join_command_operations(
         for action in connection_requests_by_command[cli_path]:
             by_connection_request.setdefault(action, []).append(cli_path)
 
-    if diagnostics:
-        raise OperatorSurfaceContractError(_SURFACE, reason="; ".join(diagnostics))
-    return CommandOperationJoin(
-        commands=tuple(
-            CommandOperations(
-                cli_path=cli_path,
-                operation_ids=tuple(sorted(by_command[cli_path])),
-                connection_requests=tuple(sorted(connection_requests_by_command.get(cli_path, ()))),
-            )
-            for cli_path in sorted(by_command)
-        ),
-        operations=tuple(
-            OperationCommands(operation_id=operation_id, cli_paths=tuple(by_operation[operation_id]))
-            for operation_id in sorted(by_operation)
-        ),
-        connection_requests=tuple(
-            ConnectionRequestCommands(action=action, cli_paths=tuple(by_connection_request[action]))
-            for action in sorted(by_connection_request)
-        ),
-    )
+    return connection_requests_by_command, by_connection_request
 
 
 __all__ = [

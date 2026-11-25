@@ -13,7 +13,7 @@ assembly boundary accidentally.
 
 Core types:
 :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
@@ -23,13 +23,15 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, NamedTuple, Protocol
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
 
+from ..core.diagnostic_log import DiagnosticValue, diagnostic_phase, diagnostic_scope
 from ..core.errors.hierarchy import InternalInvariantError
 from ..core.hashing import content_hash_hex
 from ..core.identifier_grammar import NamespacedId
@@ -43,8 +45,9 @@ from ..domain.buckets.event import (
     bucket_event_order_key,
 )
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ..domain.invoices.models import InvoiceCatalogue
+from ..domain.invoices.catalogue import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -64,23 +67,33 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
+from .aggregation.m232_related_party_repository import (
+    Modelo232RelatedPartyPersistenceError,
+    Modelo232RelatedPartyReader,
+)
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
 )
+from .modelo.calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
+from .modelo.credit_resolution import load_credit_resolutions
+from .modelo.credit_resolution_repository import CreditResolutionReader
 from .modelo.declaration_summary import declaration_summary
+from .modelo.declarations_list import DeclarationListInputs
 from .modelo.declarations_portfolio import project_declarations_portfolio
 from .modelo.declarations_workspace_contracts import (
     DeclarationResultCasillaReaderV1,
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionError,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
 )
 from .modelo.reconciliation_records import ModeloReconciliationRecord
+from .modelo.work_history_read import LIFECYCLE_KIND_BY_EVENT
 from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
@@ -90,16 +103,11 @@ from .overview.evidence import (
     AeatCalendarEvidenceSources,
     CalendarEvidenceProjection,
     CalendarEvidenceReadOutcome,
-    LocalCalendarEvidenceSources,
-    build_calendar_evidence_projection,
 )
-from .overview.home import (
-    HomeAccountSession,
-    HomeAvailability,
-    HomeZoneState,
-)
+from .overview.home import HomeAccountSession
 from .user_profile.censal_observation import CensalObservation
-from .user_profile.projections import record_to_path_values
+from .user_profile.censal_readback import CensalHistoryRead, CensalHistoryReader
+from .user_profile.projections import declared_redeme_enrolment, record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
     CalendarMemo,
@@ -107,6 +115,7 @@ from .workbench_generation_calendar import (
     WorkbenchCalendarInputs,
     declarations_observation,
     declared_tax_id,
+    project_calendar_aeat_filing_evidence,
     read_workbench_calendar_inputs,
     unbound_calendar_aeat_evidence,
 )
@@ -117,33 +126,58 @@ from .workbench_generation_contracts import (
 from .workbench_generation_home import build_workbench_generation_inputs
 
 _LOGGER = get_logger(__name__)
+_CAPTURE_PHASE_EVENT: Final = "workbench_capture_phase"
+_RELATED_PARTY_UNREADABLE: Final = "unreadable"
+"""The Modelo 232 revision when the store cannot state one; a revision marker never takes this form."""
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .aggregation.ledger_filing_snapshot import FiledRegisterReader
     from .ledger.action_ports import LedgerActionPorts
 
+_FILING_HISTORY_KINDS: Final[frozenset[DeclarationsLifecycleKind]] = frozenset(
+    {
+        DeclarationsLifecycleKind.CREATED,
+        DeclarationsLifecycleKind.RENAMED,
+        DeclarationsLifecycleKind.CALCULATED,
+        DeclarationsLifecycleKind.VERIFIED,
+        DeclarationsLifecycleKind.VERIFICATION_REFUSED,
+        DeclarationsLifecycleKind.FILED,
+        DeclarationsLifecycleKind.RECONCILED,
+        DeclarationsLifecycleKind.OBSERVATION_OVERRIDDEN,
+        DeclarationsLifecycleKind.OBSERVATION_OVERRIDE_CLEARED,
+    }
+)
 _LIFECYCLE_KIND_BY_EVENT: Final[Mapping[BucketEventType, DeclarationsLifecycleKind]] = {
-    BucketEventType.MODELO_WORK_UNIT_CREATED: DeclarationsLifecycleKind.CREATED,
-    BucketEventType.MODELO_WORK_UNIT_RENAMED: DeclarationsLifecycleKind.RENAMED,
-    BucketEventType.MODELO_CALCULATION_CREATED: DeclarationsLifecycleKind.CALCULATED,
-    BucketEventType.MODELO_VERIFICATION_PASSED: DeclarationsLifecycleKind.VERIFIED,
-    BucketEventType.MODELO_VERIFICATION_REFUSED: DeclarationsLifecycleKind.VERIFICATION_REFUSED,
-    BucketEventType.MODELO_FILED: DeclarationsLifecycleKind.FILED,
-    BucketEventType.MODELO_FILING_RECONCILED: DeclarationsLifecycleKind.RECONCILED,
-    BucketEventType.MODELO_OBSERVATION_OVERRIDDEN: DeclarationsLifecycleKind.OBSERVATION_OVERRIDDEN,
-    BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED: DeclarationsLifecycleKind.OBSERVATION_OVERRIDE_CLEARED,
+    event: kind for event, kind in LIFECYCLE_KIND_BY_EVENT.items() if kind in _FILING_HISTORY_KINDS
 }
 
 
-"""The bucket events the filing history reports, by the lifecycle meaning they carry.
+"""The bucket events the profile's filing history reports, by the lifecycle meaning each carries.
 
-Every other ``MODELO_*`` event is outside this history's closed vocabulary --
-exports, revision reconciliations, wallet corrections -- and is left to the
-per-modelo history view that renders raw events.
+The meaning of every event is the declaration history's; this history reports
+the meanings above, and leaves exports, corrections, discards and the events
+with no lifecycle meaning to each declaration's own history.
 """
+
+
+def _capture_phase(phase: str) -> AbstractContextManager[dict[str, DiagnosticValue]]:
+    """Record how long one step of a capture took, and what it counted."""
+    return diagnostic_phase(_LOGGER, _CAPTURE_PHASE_EVENT, phase)
+
+
+def _timed[ResultT](
+    phase: str, read: Callable[[], ResultT], *, count: Callable[[ResultT], int | None] | None = None
+) -> ResultT:
+    """Run one capture step inside its phase record, counting the items it produced when asked."""
+    with _capture_phase(phase) as measured:
+        result = read()
+        if count is not None:
+            measured["item_count"] = count(result)
+        return result
 
 
 def _lifecycle_work_unit_id(
@@ -239,6 +273,7 @@ def _read_declarations_workspace(
     observed_at: UtcInstant,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...] | None,
+    profile: UserProfileRecord,
 ) -> DeclarationsWorkspaceProjectionV1 | None:
     history_observation = (
         DeclarationsWorkspaceZoneObservationV1(
@@ -257,6 +292,7 @@ def _read_declarations_workspace(
             calculation_revisions=calculation_revisions,
             filing_records=filing_records,
             lifecycle_facts=() if lifecycle_facts is None else lifecycle_facts,
+            profile=profile,
             result_casilla_reader=result_casilla_reader,
             zone_observations=(
                 declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
@@ -284,6 +320,73 @@ def _invoice_catalogue_revision(
     return content_hash_hex(ledger_sources[1].model_dump(mode="json"))
 
 
+class _StoredCatalogues(NamedTuple):
+    """What the profile's stores held when a capture began, with the revision each stated."""
+
+    record: UserProfileRecord
+    work_units: WorkUnitCatalogue
+    work_units_revision: str
+    revisions: CalculationRevisionCatalogue
+    calculations_revision: str
+    filings: ModeloRecordCatalogue
+    filings_revision: str
+    verification: VerificationReportCatalogue | None
+    bucket_events: BucketEventHistoryCatalogue | None
+
+
+@dataclass(frozen=True, slots=True)
+class NotificationCustodyCount:
+    """How many notification documents a profile holds, with the stored rows that count was taken over.
+
+    ``stored_keys`` is listed before the documents are counted, so a document
+    stored in between shows as a changed key set when the count is checked.
+    """
+
+    count: int
+    stored_keys: tuple[str, ...]
+
+
+class NotificationCustodyCounter(Protocol):
+    """Count a profile's notification documents once, then answer that count again cheaply."""
+
+    def count(self) -> NotificationCustodyCount:
+        """List the stored rows, then count the documents they hold."""
+        ...
+
+    def recount(self, prior: NotificationCustodyCount) -> int:
+        """The count a full read would give now; ``prior``'s count when its rows are unchanged."""
+        ...
+
+
+class _AeatSyncSourceReads(NamedTuple):
+    """What a generation read for AEAT Sync alone, rechecked unchanged with the declaration sources."""
+
+    custody: NotificationCustodyCount | None
+    census: CensalHistoryRead | None
+
+    @property
+    def custody_count(self) -> int | None:
+        return None if self.custody is None else self.custody.count
+
+    @property
+    def census_observation(self) -> CensalObservation | None:
+        return None if self.census is None else self.census.observation
+
+
+class _DeclarationSources(NamedTuple):
+    """Captured declaration inputs retained through a surface's own currentness checks."""
+
+    observed_at: UtcInstant
+    catalogues: _StoredCatalogues
+    declarations: DeclarationsWorkspaceProjectionV1 | None
+    raw_values: dict[str, str]
+    ledger_revision: tuple[str, str] | None
+    ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None
+    aeat_projection: CalendarEvidenceProjection
+    calendar_inputs: WorkbenchCalendarInputs
+    related_party_revision: str
+
+
 @dataclass(frozen=True, slots=True)
 class SecureProfileWorkbenchGenerationReadDoorV1:
     """Read one generation from explicit secure profile repositories.
@@ -301,13 +404,24 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     clock: Callable[[], UtcInstant]
-    account_session_reader: Callable[[], HomeAccountSession]
+    account_session_reader: Callable[[], HomeAccountSession] | None = None
+    """The live account session Home shows; a declarations-list read is composed without one."""
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    related_party_records: Modelo232RelatedPartyReader | None = None
+    """The stated Modelo 232 operations the calendar's related-party obligation fact is derived from.
+
+    Unbound, that fact stays undeclared and Modelo 232 stays undecided, as in a read with no such store.
+    """
+    credit_resolution_reader: CreditResolutionReader | None = None
+    """The profile's accepted source disagreements, so a declaration's row counts a covered one as the gate does.
+
+    Unbound, no acceptance is honoured and every disagreement counts as a blocker, which is the stricter reading.
+    """
     reconciliation_reader: Callable[[], tuple[ModeloReconciliationRecord, ...]] | None = None
-    notification_custody_reader: Callable[[], int] | None = None
+    notification_custody_reader: NotificationCustodyCounter | None = None
     """Counts the notification documents this profile already holds locally.
 
     Unbound means this session did not read the store, which AEAT Sync reports
@@ -315,7 +429,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     zero the operator can act on.
     """
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None
-    census_observation_reader: Callable[[], CensalObservation | None] | None = None
+    census_observation_reader: CensalHistoryReader | None = None
     """Names the casilla that settles one modelo revision, or nothing.
 
     Injected rather than resolved in the door, which holds repositories and no
@@ -327,6 +441,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
+    filed_register_reader: Callable[[WorkUnitCatalogue], FiledRegisterReader] | None = None
+    """Compares sealed revisions with the asset register; unbound, that comparison reads as unavailable."""
     capture_memory: WorkbenchCaptureMemory | None = None
     calendar_aeat_reader: Callable[[], CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]] | None = None
     """The session's reusable capture work; every capture recomputes everything without one."""
@@ -340,15 +456,129 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Capture secure local facts once and build installed projections."""
-        self.account_session_reader()
+        with diagnostic_scope(), _capture_phase("generation_inputs"):
+            return self._capture_generation_inputs()
+
+    def _capture_generation_inputs(self) -> WorkbenchGenerationInputsV1:
+        account_session_reader = self.account_session_reader
+        if account_session_reader is None:
+            raise InternalInvariantError("a workbench generation needs the live account session")
+        _timed("account_session", account_session_reader)
+        capture = self._capture_declaration_sources()
+        aeat_sync_reads = _AeatSyncSourceReads(
+            custody=_timed("custody_count", self._load_custody_count),
+            census=_timed("census_observation", self._load_census_observation),
+        )
+        ledger_ports = self.ledger_action_ports
+        ledger = (
+            None
+            if ledger_ports is None
+            else _timed(
+                "ledger_workspace",
+                lambda: self._read_ledger(
+                    capture.catalogues.revisions.revisions,
+                    capture.catalogues.work_units,
+                    sources=capture.ledger_sources,
+                    ports=ledger_ports,
+                ),
+            )
+        )
+        modelo = _timed(
+            "modelo_workspaces",
+            lambda: self._read_modelo(capture.catalogues.work_units),
+            count=lambda projections: None if projections is None else len(projections),
+        )
+        aeat_sync, aeat_sync_refusal = _timed(
+            "aeat_sync_workspace",
+            lambda: self._read_aeat_sync(
+                declared_tax_id(capture.raw_values),
+                observed_at=capture.observed_at,
+                filings=tuple(capture.catalogues.filings.records.values()),
+                custody_count=aeat_sync_reads.custody_count,
+                censo_values=capture.raw_values,
+                census_observation=aeat_sync_reads.census_observation,
+                filed_evidence=capture.aeat_projection,
+            ),
+        )
+        account_session = _timed("account_session", account_session_reader)
+        if not self._capture_is_unchanged(
+            record=capture.catalogues.record,
+            work_units_revision=capture.catalogues.work_units_revision,
+            calculations_revision=capture.catalogues.calculations_revision,
+            filings_revision=capture.catalogues.filings_revision,
+            ledger_revision=capture.ledger_revision,
+            ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
+            verification=capture.catalogues.verification,
+            bucket_events=capture.catalogues.bucket_events,
+            aeat_sync_reads=aeat_sync_reads,
+        ):
+            raise InternalInvariantError("secure workbench generation changed during capture")
+        return _timed(
+            "generation_assembly",
+            lambda: build_workbench_generation_inputs(
+                observed_at=capture.observed_at,
+                account_session=account_session,
+                calendar_inputs=capture.calendar_inputs,
+                ledger=ledger,
+                declarations=capture.declarations,
+                aeat_sync=aeat_sync,
+                aeat_sync_refusal=aeat_sync_refusal,
+                modelo=modelo,
+                work_units=capture.catalogues.work_units,
+                verification=capture.catalogues.verification,
+            ),
+        )
+
+    def read_declaration_list_inputs(self) -> DeclarationListInputs:
+        """Capture only what the declarations list joins: the local declarations and the legal calendar.
+
+        It reads the same repositories, through the same projections, as a
+        generation does, and is checked unchanged across the capture the same
+        way, without the account session only Home needs. The notification
+        custody count and the census observation feed only AEAT Sync, so the
+        list neither reads nor rechecks them: the census is found by scanning
+        every operation the profile's journal holds.
+        """
+        with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
+            return self._capture_declaration_list_inputs()
+
+    def _capture_declaration_list_inputs(self) -> DeclarationListInputs:
+        capture = self._capture_declaration_sources()
+        if not self._capture_is_unchanged(
+            record=capture.catalogues.record,
+            work_units_revision=capture.catalogues.work_units_revision,
+            calculations_revision=capture.catalogues.calculations_revision,
+            filings_revision=capture.catalogues.filings_revision,
+            ledger_revision=capture.ledger_revision,
+            ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
+            verification=capture.catalogues.verification,
+            bucket_events=capture.catalogues.bucket_events,
+            aeat_sync_reads=None,
+        ):
+            raise InternalInvariantError("secure declarations list changed during capture")
+        return DeclarationListInputs(
+            workspace=capture.declarations, calendar=capture.calendar_inputs.declarations_calendar
+        )
+
+    def _capture_declaration_sources(self) -> _DeclarationSources:
+        """Read the ordered local declaration and calendar inputs once for either surface."""
         observed_at = self.clock()
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
-        record = self.profile_repository.load(self.profile_id)
-        work_units, work_units_revision = self.work_unit_repository.load_revisioned()
-        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
-        filings, filings_revision = self.filing_repository.load_revisioned()
-        verification = self._load_verification_reports()
-        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+        catalogues = self._load_stored_catalogues()
+        (
+            record,
+            work_units,
+            work_units_revision,
+            revisions,
+            _calculations_revision,
+            filings,
+            filings_revision,
+            verification,
+            bucket_events,
+        ) = catalogues
+        raw_values = record_to_path_values(record)
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -356,13 +586,17 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             bucket_events=bucket_events,
             observed_at=observed_at,
+            profile=record,
+            redeme=redeme_enrolment_state(declared_redeme_enrolment(raw_values)),
         )
-        raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
         # ledger-derived obligation signals the calendar decides on.
-        ledger_revision = self._ledger_revision()
+        ledger_revision = _timed("ledger_revision", self._ledger_revision)
         ledger_sources = self._load_ledger_sources()
-        aeat_evidence, aeat_projection = self._read_calendar_aeat_evidence(raw_values)
+        related_party_revision = _timed("related_party_revision", self._related_party_revision)
+        aeat_evidence, aeat_projection = _timed(
+            "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
+        )
         calendar_inputs = self._read_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -377,50 +611,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=filings_revision,
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
+            related_party_revision=related_party_revision,
         )
-        custody_count = self._load_custody_count()
-        census_observation = None if self.census_observation_reader is None else self.census_observation_reader()
-        ledger_ports = self.ledger_action_ports
-        ledger = (
-            None
-            if ledger_ports is None
-            else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
-        )
-        modelo = self._read_modelo(work_units)
-        aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
-            declared_tax_id(raw_values),
+        return _DeclarationSources(
             observed_at=observed_at,
-            filings=tuple(filings.records.values()),
-            custody_count=custody_count,
-            censo_values=raw_values,
-            census_observation=census_observation,
-            filed_evidence=aeat_projection,
-        )
-        account_session = self.account_session_reader()
-        if not self._capture_is_unchanged(
-            record=record,
-            work_units_revision=work_units_revision,
-            calculations_revision=calculations_revision,
-            filings_revision=filings_revision,
+            catalogues=catalogues,
+            declarations=declarations,
+            raw_values=raw_values,
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
-            verification=verification,
-            bucket_events=bucket_events,
-            custody_count=custody_count,
-            census_observation=census_observation,
-        ):
-            raise InternalInvariantError("secure workbench generation changed during capture")
-        return build_workbench_generation_inputs(
-            observed_at=observed_at,
-            account_session=account_session,
+            aeat_projection=aeat_projection,
             calendar_inputs=calendar_inputs,
-            ledger=ledger,
-            declarations=declarations,
-            aeat_sync=aeat_sync,
-            aeat_sync_refusal=aeat_sync_refusal,
-            modelo=modelo,
-            work_units=work_units,
-            verification=verification,
+            related_party_revision=related_party_revision,
         )
 
     def _read_declarations_projection(
@@ -432,50 +634,65 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: ModeloRecordCatalogue,
         bucket_events: BucketEventHistoryCatalogue | None,
         observed_at: UtcInstant,
+        profile: UserProfileRecord,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> DeclarationsWorkspaceProjectionV1 | None:
         lifecycle_facts = (
             None
             if bucket_events is None
-            else _declarations_lifecycle_facts(
-                bucket_events,
-                work_units=work_units,
-                revisions=revisions,
-                verification=verification,
-                filings=filings,
+            else _timed(
+                "lifecycle_facts",
+                lambda: _declarations_lifecycle_facts(
+                    bucket_events,
+                    work_units=work_units,
+                    revisions=revisions,
+                    verification=verification,
+                    filings=filings,
+                ),
+                count=len,
             )
         )
-        declarations = _read_declarations_workspace(
-            operation=self.operation,
-            bucket_id=self.profile_id,
-            work_units=work_units,
-            calculation_revisions=revisions,
-            filing_records=filings,
-            observed_at=observed_at,
-            result_casilla_reader=self.result_casilla_reader,
-            lifecycle_facts=lifecycle_facts,
+        declarations = _timed(
+            "declarations_portfolio",
+            lambda: _read_declarations_workspace(
+                operation=self.operation,
+                bucket_id=self.profile_id,
+                work_units=work_units,
+                calculation_revisions=revisions,
+                filing_records=filings,
+                observed_at=observed_at,
+                result_casilla_reader=self.result_casilla_reader,
+                lifecycle_facts=lifecycle_facts,
+                profile=profile,
+            ),
+            count=lambda workspace: None if workspace is None else len(workspace.declarations),
         )
         if declarations is None:
             return None
         current_ids = {unit.current_calculation_revision_id for unit in work_units.values()}
         current_revisions = {key: value for key, value in revisions.revisions.items() if key in current_ids}
-        return declarations.model_copy(
-            update={
-                "declarations": tuple(
-                    ref.model_copy(
-                        update={
-                            "summary": ref.summary
-                            or declaration_summary(
-                                ref,
-                                revisions=current_revisions,
-                                verification=verification,
-                                operation=self.operation,
-                            )
-                        }
+        with _capture_phase("declaration_summaries") as measured:
+            measured["item_count"] = len(declarations.declarations)
+            return declarations.model_copy(
+                update={
+                    "declarations": tuple(
+                        ref.model_copy(
+                            update={
+                                "summary": ref.summary
+                                or declaration_summary(
+                                    ref,
+                                    revisions=current_revisions,
+                                    verification=verification,
+                                    operation=self.operation,
+                                    resolutions=self._resolutions_of(ref),
+                                    redeme=redeme,
+                                )
+                            }
+                        )
+                        for ref in declarations.declarations
                     )
-                    for ref in declarations.declarations
-                )
-            }
-        )
+                }
+            )
 
     def _read_calendar_aeat_evidence(
         self, raw_values: Mapping[str, str]
@@ -490,13 +707,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             if self.calendar_aeat_reader is None or declared_tax_id(raw_values) is None
             else self.calendar_aeat_reader()
         )
-        aeat_projection = build_calendar_evidence_projection(
-            local=CalendarEvidenceReadOutcome(
-                state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
-                value=LocalCalendarEvidenceSources(),
-            ),
-            aeat=aeat_evidence,
-            expected_tax_id=declared_tax_id(raw_values),
+        aeat_projection = project_calendar_aeat_filing_evidence(
+            aeat_evidence, expected_tax_id=declared_tax_id(raw_values)
         )
         return aeat_evidence, aeat_projection
 
@@ -516,19 +728,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
     ) -> WorkbenchCalendarInputs:
-        return read_workbench_calendar_inputs(
-            record=record,
-            raw_values=raw_values,
-            as_of=as_of,
-            work_units=work_units,
-            filings=filings,
-            observed_at=observed_at,
-            operation=operation,
-            aeat_evidence=aeat_evidence,
-            invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
-            memo=CalendarMemo(
-                memory=self.capture_memory,
+        # Records whose revision cannot be stated are neither trusted nor remembered: the
+        # calendar is built without them, so Modelo 232 stays undecided, and nothing is reused.
+        records_readable = related_party_revision != _RELATED_PARTY_UNREADABLE
+        with _capture_phase("calendar_memo_key"):
+            memo = CalendarMemo(
+                memory=self.capture_memory if records_readable else None,
                 key=WorkbenchCalendarMemoKey(
                     profile_content_digest=record.content_digest,
                     work_units_revision=work_units_revision,
@@ -542,7 +749,23 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                         }
                     ),
                     invoice_catalogue_revision=_invoice_catalogue_revision(ledger_revision, ledger_sources),
+                    related_party_revision=related_party_revision,
                 ),
+            )
+        return _timed(
+            "calendar_inputs",
+            lambda: read_workbench_calendar_inputs(
+                record=record,
+                raw_values=raw_values,
+                as_of=as_of,
+                work_units=work_units,
+                filings=filings,
+                observed_at=observed_at,
+                operation=operation,
+                aeat_evidence=aeat_evidence,
+                invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
+                memo=memo,
+                related_party_records=self.related_party_records if records_readable else None,
             ),
         )
 
@@ -555,27 +778,127 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
-        custody_count: int | None,
-        census_observation: CensalObservation | None = None,
+        aeat_sync_reads: _AeatSyncSourceReads | None,
     ) -> bool:
-        final_record = self.profile_repository.load(self.profile_id)
-        _, final_work_units_revision = self.work_unit_repository.load_revisioned()
-        _, final_calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
-        _, final_filings_revision = self.filing_repository.load_revisioned()
+        """Re-read every source the capture used and say whether each still equals what it read.
+
+        ``aeat_sync_reads`` is what a generation read for AEAT Sync alone;
+        ``None`` for a capture that read neither of them. Neither is read whole
+        again: each reader answers what a full read would give now from the
+        rows or journal records that could have changed it.
+        """
+        with _capture_phase("recheck"):
+            final_record = _timed("recheck_profile_record", lambda: self.profile_repository.load(self.profile_id))
+            _, final_work_units_revision = _timed("recheck_work_units", self.work_unit_repository.load_revisioned)
+            _, final_calculations_revision = _timed(
+                "recheck_calculation_revisions",
+                lambda: self.calculation_repository.load_revisioned(operation=self.operation),
+            )
+            _, final_filings_revision = _timed("recheck_filings", self.filing_repository.load_revisioned)
+            return (
+                final_record.content_digest == record.content_digest
+                and final_work_units_revision == work_units_revision
+                and final_calculations_revision == calculations_revision
+                and final_filings_revision == filings_revision
+                and self._ledger_and_report_sources_are_unchanged(
+                    ledger_revision=ledger_revision,
+                    ledger_sources=ledger_sources,
+                    related_party_revision=related_party_revision,
+                    verification=verification,
+                    bucket_events=bucket_events,
+                )
+                and self._aeat_sync_reads_are_unchanged(aeat_sync_reads)
+            )
+
+    def _ledger_and_report_sources_are_unchanged(
+        self,
+        *,
+        ledger_revision: tuple[str, str] | None,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
+        verification: VerificationReportCatalogue | None,
+        bucket_events: BucketEventHistoryCatalogue | None,
+    ) -> bool:
+        """Say whether the ledger, related-party statements, verification reports and bucket events still match."""
         return (
-            final_record.content_digest == record.content_digest
-            and final_work_units_revision == work_units_revision
-            and final_calculations_revision == calculations_revision
-            and final_filings_revision == filings_revision
-            and self._ledger_is_unchanged(ledger_revision, ledger_sources)
-            and self._load_verification_reports() == verification
-            and (None if self.bucket_event_repository is None else self.bucket_event_repository.load()) == bucket_events
-            and self._load_custody_count() == custody_count
-            and (None if self.census_observation_reader is None else self.census_observation_reader())
-            == census_observation
+            _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
+            and _timed("recheck_related_party", self._related_party_revision) == related_party_revision
+            and _timed("recheck_verification_reports", self._load_verification_reports) == verification
+            and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
         )
+
+    def _aeat_sync_reads_are_unchanged(self, aeat_sync_reads: _AeatSyncSourceReads | None) -> bool:
+        """Say whether the custody count and census observation a generation read for AEAT Sync still match."""
+        return aeat_sync_reads is None or (
+            _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
+            == aeat_sync_reads.custody_count
+            and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
+            == aeat_sync_reads.census_observation
+        )
+
+    def _load_stored_catalogues(self) -> _StoredCatalogues:
+        """Read the profile record and every catalogue a capture joins, each as its own timed phase."""
+        record = _timed("profile_record", lambda: self.profile_repository.load(self.profile_id))
+        work_units, work_units_revision = _timed(
+            "work_units", self.work_unit_repository.load_revisioned, count=lambda loaded: len(loaded[0].work_units)
+        )
+        revisions, calculations_revision = _timed(
+            "calculation_revisions",
+            lambda: self.calculation_repository.load_revisioned(operation=self.operation),
+            count=lambda loaded: len(loaded[0].revisions),
+        )
+        filings, filings_revision = _timed(
+            "filings", self.filing_repository.load_revisioned, count=lambda loaded: len(loaded[0].records)
+        )
+        verification = _timed(
+            "verification_reports",
+            self._load_verification_reports,
+            count=lambda reports: None if reports is None else len(reports.reports),
+        )
+        bucket_events = _timed(
+            "bucket_events",
+            self._load_bucket_events,
+            count=lambda events: None if events is None else len(events.events),
+        )
+        return _StoredCatalogues(
+            record,
+            work_units,
+            work_units_revision,
+            revisions,
+            calculations_revision,
+            filings,
+            filings_revision,
+            verification,
+            bucket_events,
+        )
+
+    def _resolutions_of(self, declaration: DeclarationsWorkspaceDeclarationRefV1) -> SourceDisagreementResolutions:
+        """The acceptances of one declaration's disagreements; none honoured when no reader is bound or it fails."""
+        if self.credit_resolution_reader is None:
+            return NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+        return load_credit_resolutions(
+            self.credit_resolution_reader,
+            modelo=str(declaration.modelo),
+            filing_year=declaration.filing_year,
+            period=declaration.period.registry_token,
+        ).resolutions
+
+    def _load_bucket_events(self) -> BucketEventHistoryCatalogue | None:
+        """Read the bucket event log, or nothing when no host bound one."""
+        return None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+
+    def _load_census_observation(self) -> CensalHistoryRead | None:
+        """Read the stored census observation, or nothing when no host bound a reader."""
+        return None if self.census_observation_reader is None else self.census_observation_reader.read()
+
+    def _recheck_census(self, prior: CensalHistoryRead | None) -> CensalObservation | None:
+        """Answer the census again from ``prior``'s journal records and any created since."""
+        if self.census_observation_reader is None or prior is None:
+            return None
+        return self.census_observation_reader.recheck(prior)
 
     def _ledger_revision(self) -> tuple[str, str] | None:
         """State both ledger stores' revisions without decrypting them, when both can.
@@ -596,6 +919,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             return None
         return transaction_revision, invoice_revision
 
+    def _related_party_revision(self) -> str:
+        """Name the stated Modelo 232 records the calendar was derived from.
+
+        ``unbound`` when no store is bound; ``unreadable`` when the store cannot
+        state a revision, which leaves the Modelo 232 verdict unknown the way the
+        derivation does when it cannot read the statements.
+        """
+        if self.related_party_records is None:
+            return "unbound"
+        try:
+            return self.related_party_records.revision_marker(tuple(self.operation.supported_filing_years().years))
+        except Modelo232RelatedPartyPersistenceError:
+            return _RELATED_PARTY_UNREADABLE
+
     def _ledger_is_unchanged(
         self,
         revision: tuple[str, str] | None,
@@ -603,18 +940,24 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     ) -> bool:
         if revision is not None:
             return self._ledger_revision() == revision
-        return self._load_ledger_sources() == sources
+        return self._load_ledger_sources(phase_prefix="recheck_") == sources
 
-    def _load_custody_count(self) -> int | None:
+    def _load_custody_count(self) -> NotificationCustodyCount | None:
         """Count documents in local custody, or nothing when no reader is bound.
 
-        Read inside the capture window and re-read at its close like every
+        Read inside the capture window and rechecked at its close like every
         other source: a document landing mid-capture would otherwise let AEAT
         Sync publish a count that was never true at any single instant.
         """
         if self.notification_custody_reader is None:
             return None
-        return self.notification_custody_reader()
+        return self.notification_custody_reader.count()
+
+    def _recount_custody(self, prior: NotificationCustodyCount | None) -> int | None:
+        """The custody count a full read would give now, or nothing when no reader is bound."""
+        if self.notification_custody_reader is None or prior is None:
+            return None
+        return self.notification_custody_reader.recount(prior)
 
     def _load_verification_reports(self) -> VerificationReportCatalogue | None:
         """Read the verification catalogue, or nothing when no host bound one.
@@ -630,7 +973,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             operation=self.operation,
         )
 
-    def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
+    def _load_ledger_sources(self, *, phase_prefix: str = "") -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.
 
         Neither store exposes a revision handle the way the work-unit,
@@ -639,11 +982,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         reads. Bucket events are deliberately outside it -- they only supply
         review context and have no whole-catalogue read to compare.
         """
-        if self.ledger_action_ports is None:
+        ports = self.ledger_action_ports
+        if ports is None:
             return None
         return (
-            self.ledger_action_ports.transaction_repository.load(),
-            self.ledger_action_ports.invoice_repository.load(),
+            _timed(
+                f"{phase_prefix}ledger_transactions",
+                ports.transaction_repository.load,
+                count=lambda catalogue: len(catalogue.transactions),
+            ),
+            _timed(
+                f"{phase_prefix}ledger_invoices",
+                ports.invoice_repository.load,
+                count=lambda catalogue: len(catalogue.invoices),
+            ),
         )
 
     def _read_ledger(
@@ -659,11 +1011,13 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             return None
         from .ledger.workspace_reader import read_ledger_workspace_projection
 
+        register_reader = self.filed_register_reader
         return read_ledger_workspace_projection(
             bucket_id=self.profile_id,
             ports=ports,
             calculation_revisions=calculation_revisions,
             work_units=work_units,
+            register_reader=(lambda _revision: None) if register_reader is None else register_reader(work_units),
             transactions=sources[0],
             invoices=sources[1],
         )

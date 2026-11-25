@@ -9,6 +9,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
+from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from .errors import RegistryValidationError
@@ -22,6 +23,8 @@ from .runtime_catalogue_validation import (
     require_unique_country_names,
 )
 from .schema_base import RegistryModel
+
+_ALPHA2_PATTERN = f"^{COUNTRY_CODE_ALPHA2_PATTERN}$"
 
 
 class PublishedIvaCitation(RegistryModel):
@@ -112,7 +115,7 @@ class PublishedRecargoBand(RegistryModel):
 class CountryVocabularyRecord(RegistryModel):
     """One canonical country code and its accepted printed names."""
 
-    code: str = Field(pattern=r"^[A-Z]{2}$")
+    code: str = Field(pattern=_ALPHA2_PATTERN)
     alpha3: str = Field(pattern=r"^[A-Z]{3}$")
     names: tuple[str, ...] = Field(min_length=1)
     notes: str = ""
@@ -131,9 +134,9 @@ class SpanishPostalTerritory(RegistryModel):
 class TerritoryCarveOut(RegistryModel):
     """One special territory's explicit IVA disposition."""
 
-    code: str = Field(pattern=r"^[A-Z]{2}$")
+    code: str = Field(pattern=_ALPHA2_PATTERN)
     name: str = Field(min_length=1)
-    assimilated_to: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
+    assimilated_to: str | None = Field(default=None, pattern=_ALPHA2_PATTERN)
     scope: str | None = None
     establishes_nothing: bool = False
     legal_refs: tuple[str, ...] = Field(min_length=1)

@@ -9,11 +9,6 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from ...core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
-from ...domain.user_profile.values import UserProfileFact
-from ..user_profile.capsule_record import ProfileRecordConflictError
-from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import record_to_effective_facts, record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -42,6 +37,12 @@ def set_profile_auth_preference(
     A route the operator chose, or deliberately cleared, is left as it is; a
     cleared route resolves to the same default at sign-in.
     """
+    from ...domain.user_profile.values import UserProfileFact
+    from ..user_profile.capsule_record import ProfileRecordConflictError
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_effective_facts
+
     repository = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=profile_decode_context)
     current = repository.load(profile_id)
     if (expected_revision is None) != (expected_content_digest is None):
@@ -76,6 +77,11 @@ def clear_profile_auth_preference(
     profile_decode_context: ProfileDecodeContext,
 ) -> bool:
     """Clear only intent owned by the providers the auth reset actually targets."""
+    from ...domain.user_profile.values import UserProfileFact
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
+
     repository = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=profile_decode_context)
     current = repository.load(profile_id)
     if record_to_path_values(current).get("auth.provider") not in providers:

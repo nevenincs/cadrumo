@@ -15,7 +15,7 @@ authorities, fails here. This is the adapter-owned complement to the
 ports-inversion boundary.
 
 See Also:
-    ``dev.registry.compiler._validate_extraction_profiles.validate_dotted_callable``
+    ``dev.registry.compiler.validate_extraction_profiles.validate_dotted_callable``
         Domain-side structural validator that deliberately avoids importing
         adapter parser modules.
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
@@ -23,7 +23,7 @@ See Also:
         shipped extraction profiles.
     :func:`~adapters.inbound.borrador.parser.parse_borrador`
         Borrador parser entrypoint allowed as a sanctioned parser authority.
-    :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
+    :mod:`~domain.calculations.registry.tests.test_registry_schema_extraction_links`
         Domain-layer regression proving only dotted-callable shape is checked.
 """
 

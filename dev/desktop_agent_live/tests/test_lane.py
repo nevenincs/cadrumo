@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 
+import psutil
 import pytest
 
+from ..desktop_processes import classify_desktops, person_environment
 from ..lane import (
     LANE_ATTACHMENTS,
-    classify_desktops,
     created_during,
-    lane_problems,
-    person_environment,
-    ready_lanes,
-    sign_in_failures,
+    listening_addresses,
     write_lane_attachments,
 )
+from ..lane_diagnostics import lane_problems, ready_lanes, sign_in_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -133,14 +133,14 @@ def test_only_a_test_desktop_whose_lane_is_gone_may_be_stopped(tmp_path: Path) -
 def test_the_desktop_runs_on_the_persons_root_with_the_accounts_credential_store(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CADRUMO_SECRET_STORE_DIR", str(tmp_path / "elsewhere"))
+    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "ca")
     monkeypatch.setenv("CADRUMO_LLM_ANTHROPIC_API_KEY", "not-for-the-desktop")
     monkeypatch.setenv("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--remote-debugging-port=1")
     environment = person_environment(tmp_path / "root", tmp_path / "package")
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "root")
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "root")
     assert environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] == str(tmp_path / "package")
     assert not {
-        "CADRUMO_SECRET_STORE_DIR",
+        "CADRUMO_OUTPUT_LANGUAGE",
         "CADRUMO_LLM_ANTHROPIC_API_KEY",
         "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
     } & set(environment)
@@ -177,3 +177,45 @@ def test_a_failed_sign_in_the_desktop_recorded_is_named_by_its_code() -> None:
         (41, "child_failed (wrong_password)"),
     ]
     assert sign_in_failures(unrelated) == []
+
+
+class _Address(NamedTuple):
+    ip: str
+    port: int
+
+
+class _Socket(NamedTuple):
+    """The fields of a psutil connection row the guard reads."""
+
+    laddr: _Address
+    raddr: _Address | tuple[()]
+    status: str
+
+
+def _socket(ip: str, port: int, status: str, remote: tuple[str, int] | None = None) -> _Socket:
+    return _Socket(_Address(ip, port), _Address(*remote) if remote else (), status)
+
+
+def test_the_devtools_listener_is_found_whatever_state_the_table_reports() -> None:
+    # WebView2 reports its DevTools server socket with no TCP state at all.
+    table = [
+        _socket("127.0.0.1", 9222, psutil.CONN_NONE),
+        _socket("127.0.0.1", 50000, psutil.CONN_ESTABLISHED, ("127.0.0.1", 9222)),
+        _socket("127.0.0.1", 9222, psutil.CONN_TIME_WAIT, ("127.0.0.1", 50001)),
+        _socket("127.0.0.1", 9223, psutil.CONN_LISTEN),
+    ]
+    assert listening_addresses(table, 9222) == {"127.0.0.1"}
+
+
+def test_a_devtools_binding_beyond_loopback_stays_visible_to_the_guard() -> None:
+    table = [
+        _socket("127.0.0.1", 9222, psutil.CONN_NONE),
+        _socket("192.0.2.10", 9222, psutil.CONN_LISTEN),
+        _socket("::", 9222, psutil.CONN_NONE),
+    ]
+    assert listening_addresses(table, 9222) == {"127.0.0.1", "192.0.2.10", "::"}
+
+
+def test_no_server_socket_on_the_port_leaves_nothing_to_admit() -> None:
+    table = [_socket("127.0.0.1", 9222, psutil.CONN_ESTABLISHED, ("127.0.0.1", 50000))]
+    assert listening_addresses(table, 9222) == set()

@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
+from cadrumo.application.modelo.casilla_help import legal_ref_id_citation
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     MODELO_OPERATOR_PROFILE_LABEL,
@@ -20,11 +23,11 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
 )
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .modelo_profile_seed import seed_profile, seed_test_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
@@ -56,6 +59,117 @@ def _remove_representante_fields_from_operator_profile() -> None:
         )
 
 
+_UNANSWERED_IVA_QUESTION = "iva.redeme_enrolled"
+
+
+def _drop_operator_profile_fact(path: str) -> None:
+    """Leave one answered question unanswered, as a profile saved before it was asked does."""
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        load_test_profile_record,
+        replace_test_profile_record,
+    )
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
+    pointer = read_profile_bucket(MODELO_OPERATOR_PROFILE_LABEL)
+    assert pointer is not None
+    with open_test_profile_session(pointer.bucket_id):
+        record = load_test_profile_record(pointer.bucket_id)
+        assert any(fact.path == path for fact in record.facts)
+        replace_test_profile_record(
+            record.model_copy(update={"facts": tuple(fact for fact in record.facts if fact.path != path)}),
+        )
+
+
+def _invoke_m303_work_create() -> Any:
+    with bundled_indexed_authority().operation() as operation:
+        filing_year = operation.supported_filing_years().horizon
+    return invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "303",
+            "--year", str(filing_year),
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+
+def test_work_create_refuses_unanswered_iva_question_with_its_profile_field_door(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An IVA yes/no question left unanswered is a readiness refusal naming that question, not a failure."""
+    create_modelo_operator_profile()
+    _drop_operator_profile_fact(_UNANSWERED_IVA_QUESTION)
+
+    with caplog.at_level("ERROR"):
+        result = _invoke_m303_work_create()
+
+    assert result.exit_code != 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    error = payload["error"]
+    assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS", result.output
+    assert error["category"] == "REFUSED"
+    assert error["context"]["effect"] == "none"
+    assert "REDEME" in error["message"]
+    assert "ERROR_DEADLINES_PROFILE" not in result.output
+    assert "Traceback" not in result.output
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
+
+
+def test_readiness_reports_unanswered_iva_question_as_a_missing_profile_field(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Readiness lists the unanswered question as the gap and claims no applicability verdict."""
+    create_modelo_operator_profile()
+    _drop_operator_profile_fact(_UNANSWERED_IVA_QUESTION)
+    with bundled_indexed_authority().operation() as operation:
+        filing_year = operation.supported_filing_years().horizon
+    revision_id = str(published_snapshot("303", filing_year=filing_year, period="1T").revision.id)
+
+    with caplog.at_level("ERROR"):
+        readiness = invoke_modelo_scenario_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "readiness",
+                "--modelo", "303",
+                "--revision-id", revision_id,
+                "--year", str(filing_year),
+                "--period", "1T",
+            ],
+        )  # fmt: skip
+
+    assert readiness.exit_code == 2, readiness.output
+    payload = unwrap_schema_envelope(readiness.output)
+    assert payload["ready"] is False
+    assert payload["profile_ready"] is False
+    assert payload["profile_refusal"] == ""
+    section_key, field_key = _UNANSWERED_IVA_QUESTION.split(".")
+    (row,) = [entry for entry in payload["missing"] if entry["selector"] == _UNANSWERED_IVA_QUESTION]
+    assert (row["section_key"], row["field_key"]) == (section_key, field_key)
+    assert row["label"] and row["label"] != row["selector"]
+    assert "ERROR_DEADLINES_PROFILE" not in readiness.output
+    assert "Traceback" not in readiness.output
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+
+def test_work_create_with_every_iva_question_answered_creates_the_work() -> None:
+    """ANTI-VACUITY: the same profile with the question answered is not refused."""
+    create_modelo_operator_profile()
+
+    result = _invoke_m303_work_create()
+
+    assert result.exit_code == 0, result.output
+    assert unwrap_schema_envelope(result.output)["status"] == "created"
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
+
+
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     seed_test_profile(
         label=MODELO_OPERATOR_PROFILE_LABEL,
@@ -72,7 +186,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
     status = invoke_modelo_scenario_cli(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
-    status_payload = _payload(status.output)
+    status_payload = unwrap_schema_envelope(status.output)
     assert status_payload["configured"] is False
     assert status_payload["activity_present"] is False
 
@@ -97,13 +211,11 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
-def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
-    """Fact-complete is not operator-declared complete on either surface."""
-    seed_test_profile(label="issue-113-incomplete", complete=False)
-
+def _assert_incomplete_readiness_json() -> dict[str, Any]:
+    """The JSON readiness refuses with one typed notice that names the completion door."""
     readiness = invoke_modelo_scenario_cli(
         [
             "--format", "json",
@@ -115,7 +227,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
         ],
     )  # fmt: skip
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["ready"] is False
     assert "declared complete" in readiness_payload["profile_refusal"]
@@ -135,7 +247,10 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert profile_action["action"]["target_command_key"] == "config.profile.complete_setup"
     assert profile_action["action"]["cli_path"] == ["aeat", "config", "profile", "complete-setup"]
     assert profile_notices[0]["message"] == readiness_payload["profile_refusal"]
+    return profile_action
 
+
+def _assert_text_readiness_and_create_refuse_alike(profile_action: dict[str, Any]) -> None:
     readiness_text = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "readiness",
@@ -167,6 +282,8 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert error["action"]["action"]["action_id"] == "operator.profile.complete_setup"
     assert error["action"]["action"]["cli_path"] == ["aeat", "config", "profile", "complete-setup"]
 
+
+def _assert_completing_setup_clears_the_profile_refusal() -> None:
     completed = invoke_modelo_scenario_cli(["--format", "json", "config", "profile", "complete-setup"])
     assert completed.exit_code == 0, completed.output
 
@@ -181,9 +298,18 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
         ],
     )  # fmt: skip
     assert after.exit_code == 2, after.output
-    assert _payload(after.output)["profile_ready"] is True
-    assert _payload(after.output)["profile_refusal"] == ""
+    assert unwrap_schema_envelope(after.output)["profile_ready"] is True
+    assert unwrap_schema_envelope(after.output)["profile_refusal"] == ""
     assert all(notice["code"] != "modelo.readiness.profile_refusal" for notice in json.loads(after.output)["notices"])
+
+
+def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
+    """Fact-complete is not operator-declared complete on either surface."""
+    seed_test_profile(label="issue-113-incomplete", complete=False)
+
+    profile_action = _assert_incomplete_readiness_json()
+    _assert_text_readiness_and_create_refuse_alike(profile_action)
+    _assert_completing_setup_clears_the_profile_refusal()
 
 
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
@@ -211,7 +337,7 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None:
@@ -237,7 +363,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() -> None:
@@ -262,13 +388,15 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
     message = payload["error"]["message"]
     assert "Fiscal representative NIF" in message
     assert "Fiscal representative name" in message
-    assert "trlirnr-rdleg-5-2004:art-10" in message
+    # The provision is cited in readable words, never as the registry's legal-reference token.
+    assert legal_ref_id_citation("trlirnr-rdleg-5-2004:art-10") in message
+    assert "trlirnr-rdleg-5-2004:art-10" not in message
     assert "REFUSED_CLI_VALIDATION_BOUNDARY" not in result.output
     assert "Traceback" not in result.output
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile() -> None:
@@ -278,7 +406,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "identity.tax_id": "X1234567L",
+            "identity.tax_id": "X0001500M",
             "identity.name": "Non Resident",
             "identity.surnames": "Readiness",
             "activities.description": "design",
@@ -314,7 +442,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> None:
@@ -339,7 +467,7 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
     )  # fmt: skip
 
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["registry_ready"] is True
     assert readiness_payload["profile_ready"] is True
     assert readiness_payload["profile_refusal"] == ""
@@ -359,13 +487,13 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
     )  # fmt: skip
 
     assert create.exit_code == 0, create.output
-    create_payload = _payload(create.output)
+    create_payload = unwrap_schema_envelope(create.output)
     assert create_payload["status"] == "created"
     assert create_payload["modelo"] == "349"
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:
@@ -383,7 +511,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
     )  # fmt: skip
 
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["ready"] is False
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["profile_refusal"]
@@ -421,14 +549,14 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
     )  # fmt: skip
 
     assert bypass.exit_code == 0, bypass.output
-    bypass_payload = _payload(bypass.output)
+    bypass_payload = unwrap_schema_envelope(bypass.output)
     assert bypass_payload["status"] == "created"
     assert bypass_payload["modelo"] == "200"
     assert bypass_payload["applicability_guard_bypassed"] is True
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
@@ -450,7 +578,7 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
-    assert f"Modelo {Modelo('130').value} 2026 2T is before" in message
+    assert f"Modelo {Modelo('130').value} 2T 2026 is before" in message
     assert "pre-activity period" in message
     assert "2026-07-15" in message
     assert "2026-06-30" in message
@@ -458,4 +586,4 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0

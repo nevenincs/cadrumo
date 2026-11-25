@@ -26,11 +26,11 @@ handoff with the ADVISORY predicate
 ``domain/calculations/registry/tests/test_modelo_200_registry.py::
 test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates``.
 
-The scenario runs at ejercicio 2025 (revision ``2025-y-siguientes``), which
-inherits that predicate from its 2024 storage baseline and declares filing
-authority. Verify evaluates registry predicates only against a filing-grade
-snapshot; the 2024 revision declares calculation authority, so a 2024 draft
-stops at the authority-grade refusal and never reaches the predicate.
+The scenario runs at the newest authored Modelo 200 edition, which inherits
+that predicate from its storage baseline. An edition below filing grade is
+refused for filing, but verify still evaluates its advisory predicates, and
+only those, against the snapshot of the grade it reaches; the advisory then
+sits beside the authority-grade refusal and carries that grade.
 
 This module dispatches the REAL CLI (``modelo work create`` -> ``calculate`` ->
 ``verify``) and proves the real dispatched response surfaces that ADVISORY finding -
@@ -43,17 +43,16 @@ registry engine plus the real CLI envelope serializer produced.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts,
-    seed_test_profile_record,
-)
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
@@ -64,14 +63,14 @@ from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-from .._models import UnderDeclarationScenario
-from .._runner import check_under_declaration_scenario
+from ..models import UnderDeclarationScenario
+from ..runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition("200")
 _PERIOD = "0A"
-_REVISION = "2025-y-siguientes"
+_REVISION = revision_covering("200", _FILING_YEAR).id
 # legal_refs on the "modelo-200-resultado-antes-impuesto-determinado-cuando-
 # resultado-contable-positivo" ADVISORY predicate (verification_predicates.toml).
 _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
@@ -101,45 +100,24 @@ def runtime_profile(
         yield profile
 
 
-def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
-    """Seed a resident sociedad (SL) legal-entity profile into the active bucket.
+_LEGAL_ENTITY_PERSONA_ID = "sociedad-limitada"
 
-    Written directly (mirrors ``test_modelo_calculation_through_real_cli.py``'s
-    ``_seed_legal_entity_profile``) to bypass ``config profile create``, which
-    would re-provision the already-present bucket manifest. No ledger rows are
+
+def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
+    """Seed the sociedad-limitada persona's profile into the active bucket.
+
+    Written directly to bypass ``config profile create``, which would
+    re-provision the already-present bucket manifest. No ledger rows are
     seeded, so the M200 "refuses ledger-backed zero results without accounting-
     result input" guard
     (``application/modelo/tests/test_modelo_200_accounting_input_guard.py``)
     does not fire - this scenario reproduces the free-standing-manual-input
     under-declaration, not the ledger-aggregation one.
     """
-    record = create_user_profile_record(
-        context=profile_authority_contexts()[0],
-        profile_id=runtime_profile.bucket_id,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Under Declaration Operator"),
-            UserProfileFact(path="identity.legal_name", value="Under Declaration Operator SL"),
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000.00"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
-            UserProfileFact(path="activities.description", value="software consultancy"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-        ),
-    )
-    seed_test_profile_record(
-        record,
+    seed_persona_profile(
+        _LEGAL_ENTITY_PERSONA_ID,
+        bucket_id=runtime_profile.bucket_id,
+        at=datetime.now(UTC),
         root=runtime_profile.storage_root,
         label="Under-declaration golden-eval test profile",
     )
@@ -167,8 +145,12 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     binding, so it is not passed as ``--binding``: the calculate path refuses a
     truth value on the Decimal channel, and the profile resolver reads it from
     the seeded ``taxpayer_type.new_entity_first_two_profit_periods = False``.
+    The art. 29.1 rate reads the preceding período impositivo's INCN, a prior
+    return the profile does not hold, so the operator states it; the persona's
+    preceding period ran twelve months, so it is the profile's twelve-month INCN.
     """
     _seed_legal_entity_profile(runtime_profile)
+    stated = {fact.path: fact.value for fact in persona_profile_facts(_LEGAL_ENTITY_PERSONA_ID)}
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
         filing_year=_FILING_YEAR,
@@ -180,14 +162,17 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "00500=140000.00",
-            "--binding", "modelo-200-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            "--casilla", "DP200012:00500=140000.00",
+            "--binding", f"modelo-200-profile-legal-entity-form={stated['taxpayer_type.legal_entity_form']}",
+            "--binding", f"modelo-200-profile-incn-prior-12-months={stated['taxpayer_type.incn_prior_12_months']}",
+            "--binding", f"modelo-200-incn-periodo-impositivo-anterior={stated['taxpayer_type.incn_prior_12_months']}",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

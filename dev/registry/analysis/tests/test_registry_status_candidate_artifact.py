@@ -21,10 +21,10 @@ def artifact_axes(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
         selected.append(descriptor)
         return "current", None, None
 
-    monkeypatch.setattr(registry_status, "_collect_registry_validity", lambda *_args: (None, True))
-    monkeypatch.setattr(registry_status, "_collect_oracle_status", lambda *_args: True)
-    monkeypatch.setattr(registry_status, "_collect_target_axis", lambda *_args: (False, Counter(), ()))
-    monkeypatch.setattr(registry_status, "_collect_authority_currency", currency)
+    monkeypatch.setattr(registry_status, "collect_registry_validity", lambda *_args: (None, True))
+    monkeypatch.setattr(registry_status, "collect_oracle_status", lambda *_args: True)
+    monkeypatch.setattr(registry_status, "collect_target_axis", lambda *_args: (False, Counter(), ()))
+    monkeypatch.setattr(registry_status, "collect_authority_currency", currency)
     return selected
 
 

@@ -23,7 +23,6 @@ import sys
 import pytest
 
 from cadrumo.core.pid_liveness import pid_is_alive
-from cadrumo.core.pid_liveness import pid_is_alive as _canonical_pid_is_alive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -67,7 +66,7 @@ def test_bucket_lockfile_and_acquisition_lock_share_one_probe() -> None:
     from cadrumo.application.auth import acquisition_lock as acquisition_lock
 
     assert not hasattr(lockfile, "_pid_is_alive")
+    assert not hasattr(acquisition_lock, "pid_is_running_windows")
     assert not hasattr(acquisition_lock, "_pid_is_running_windows")
     assert lockfile.pid_is_alive is pid_is_alive
     assert acquisition_lock.pid_is_alive is pid_is_alive
-    assert pid_is_alive is _canonical_pid_is_alive

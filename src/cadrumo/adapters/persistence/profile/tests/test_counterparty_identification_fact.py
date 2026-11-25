@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
-_CIF = "B12345674"
+_CIF = "B00015016"
 
 
 def _confirm(repository: CounterpartyEstablishmentRepositoryProtocol) -> ConfirmedCounterpartyFacts:

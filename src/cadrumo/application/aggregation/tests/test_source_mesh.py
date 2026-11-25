@@ -17,6 +17,7 @@ from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
+from ....tests.log_records import delivered_records
 from ...persistence_errors import PersistenceDegradationError
 from ..errors import AggregationValidationError
 from ..source_mesh import (
@@ -27,7 +28,9 @@ from ..source_mesh import (
     SourceMeshError,
     out_of_window_summary_source_diagnostic,
 )
+from ..source_precedence import PRECEDENCE_OVERLAY_ORDER
 from ..source_resolution_operations import (
+    PrecedenceTier,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
     merge_source_resolutions_by_precedence,
@@ -35,6 +38,18 @@ from ..source_resolution_operations import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _merge_by_precedence(resolutions: Sequence[CalculationSourceResolution]) -> CalculationSourceResolution:
+    """Lay ``resolutions`` down as the highest tiers of the declared overlay order, lowest first."""
+    roles = PRECEDENCE_OVERLAY_ORDER[len(PRECEDENCE_OVERLAY_ORDER) - len(resolutions) :]
+    return merge_source_resolutions_by_precedence(
+        tuple(
+            PrecedenceTier(role=role, resolution=resolution, source_family=role.value)
+            for role, resolution in zip(roles, resolutions, strict=True)
+        )
+    ).resolution
+
 
 _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id(
     "iva.repercutido.general",
@@ -933,7 +948,7 @@ def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> No
     assert context["second_resolver"] == "manual-bridge"
 
 
-@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+@pytest.mark.parametrize("merge", [merge_source_resolutions, _merge_by_precedence])
 def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(
     merge: Callable[[Sequence[CalculationSourceResolution]], CalculationSourceResolution],
 ) -> None:
@@ -1028,7 +1043,7 @@ def test_precedence_merge_cannot_strip_an_existing_row_source_identity() -> None
     )
 
     with pytest.raises(AggregationValidationError, match="duplicate_row_binding_owner"):
-        merge_source_resolutions_by_precedence((source, caller))
+        _merge_by_precedence((source, caller))
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:
@@ -1162,4 +1177,7 @@ def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
     assert resolution.diagnostics[0].reason == "storage_degraded"
     assert resolution.diagnostics[0].source_kind == "ledger_iva_aggregation"
     assert resolution.diagnostics[0].message
-    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
+    assert any(
+        "source mesh resolver storage degradation" in record.message
+        for record in delivered_records(caplog, "cadrumo.application.aggregation.source_resolution_operations")
+    )

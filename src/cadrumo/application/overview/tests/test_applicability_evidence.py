@@ -11,36 +11,42 @@ adquisiciones de bienes y servicios".
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.tests.log_records import delivered_records
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.applicability import (
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import (
     ApplicabilityProvenance,
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
     ModeloApplicability,
-    derive_modelo_applicability,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
@@ -145,7 +151,7 @@ def _derive(
 
 
 # 2.483,53 + 21 % = 3.005,07; 2.483,52 + 21 % = 3.005,06; 1.652,89 + 21 % = 2.000,00.
-def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B87654323") -> Invoice:
+def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B00015057") -> Invoice:
     return _invoice(kind=InvoiceKind.ISSUED, number=number, tax_id=tax_id, base=base, iva=iva)
 
 
@@ -164,7 +170,7 @@ def test_entregas_and_adquisiciones_are_judged_apart(operation: PinnedAuthorityO
     purchase = _invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-1",
-        tax_id="B87654323",
+        tax_id="B00015057",
         base="1652.89",
         iva="347.11",
     )
@@ -187,7 +193,7 @@ def test_a_withheld_operation_makes_a_zero_count_unknown(operation: PinnedAuthor
     foreign = _invoice(
         kind=InvoiceKind.ISSUED,
         number="V-USD",
-        tax_id="B12345674",
+        tax_id="B00015016",
         base="100.00",
         iva="21.00",
         currency="USD",
@@ -214,17 +220,25 @@ def _iva_outside_sii() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        roi_enrolled=False,
+        oss_enrolled=False,
+        sii_enrolled=False,
+        group_member_enrolled=False,
+        group_dominant_entity_enrolled=False,
+        intracommunity_operations_exceed_50000_eur=False,
     )
 
 
 def _autonomo(*, threshold: bool | None, collector: bool = False, sii: bool = False) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         iva=_iva_outside_sii().model_copy(update={"voluntary_sii_enrolled": sii}),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
         third_party_transactions_above_347_threshold=threshold,
         declaration_roles=(
             frozenset({require_third_party_declaration_role("third_party_fee_collector")}) if collector else frozenset()
@@ -243,7 +257,7 @@ def _verdict(
     return derive_modelo_applicability(
         profile,
         "347",
-        today=_AFTER_YEAR_END,
+        reference_date=date(_AFTER_YEAR_END.year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger,
     )
@@ -455,19 +469,8 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
     assert has_disagreement is (threshold is False)
 
 
-_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
 )
 
 
@@ -507,3 +510,32 @@ def test_calendar_reads_the_threshold_answer_for_each_filing_year(operation: Pin
 
     assert _m347_years(undated.entries) == {2024, 2025}
     assert _m347_years(per_year.entries) == {2025}
+
+
+def test_the_ledger_derivation_of_a_filing_year_records_its_phase_once_per_year(
+    caplog: pytest.LogCaptureFixture, operation: PinnedAuthorityOperation
+) -> None:
+    """The seconds the ledger signals take inside a calendar build are attributed to their own phase."""
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=_BUCKET_ID,
+        facts=_AUTONOMO_FACTS,
+        setup_state=ProfileSetupState.COMPLETE,
+    )
+    evidence = bind_filing_year_applicability_evidence(
+        record=record,
+        schema=operation.profile_decode_context().schema,
+        bucket_id=_BUCKET_ID,
+        invoice_source_ports=_ports(),
+        operation=operation,
+        today=_AFTER_YEAR_END,
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        derived = evidence.ledger_payer_facts_for_year(_FILING_YEAR)
+        evidence.ledger_payer_facts_for_year(_FILING_YEAR)
+    (phase,) = [entry for entry in delivered_records(caplog) if entry.getMessage() == "overview_applicability_phase"]
+
+    assert phase.__dict__["phase"] == "ledger_payer_facts"
+    assert phase.__dict__["item_count"] == len(derived) > 0
+    assert isinstance(phase.__dict__["elapsed_seconds"], float)

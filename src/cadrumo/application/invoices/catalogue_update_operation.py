@@ -15,12 +15,15 @@ from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
+from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.first_write_effect import FirstWriteEffectAnnouncement
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -31,7 +34,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import CatalogueInvoicePatch, update_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 
 INVOICE_UPDATE_OPERATION_DEFINITION_ID = "ledger.invoice.update"
 
@@ -42,7 +45,7 @@ class InvoiceUpdateValues(BaseModel):
     """Wire-safe correction values; selection is carried by the patch field mask."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    counterparty_name: str | None = None
+    counterparty_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     counterparty_country: str | None = None
     notes: str | None = None
     payment_status: PaymentStatus | None = None
@@ -54,7 +57,34 @@ class InvoiceUpdateValues(BaseModel):
     series: str | None = None
     invoice_class: str | None = Field(default=None, min_length=1)
     rectifies_invoice_number: str | None = None
+    #: The rectification facts, as the stable tokens the registry declares and
+    #: the lifecycle patch projects; a received-side reception date beside them.
+    rectification_method: str | None = Field(default=None, min_length=1)
+    rectification_cause: str | None = Field(default=None, min_length=1)
+    rectification_direction: str | None = Field(default=None, min_length=1)
+    document_received_on: date | None = None
+    #: The recorded elections and the art. 80.Tres attestation. Each elected
+    #: period crosses the wire as the canonical ``"YYYY <code>"`` display form
+    #: of :class:`~cadrumo.core.period.Period`, the way every other typed value
+    #: here travels in its wire-safe shape.
+    issuer_increase_election: str | None = Field(default=None, min_length=1)
+    issuer_minoracion_election: str | None = Field(default=None, min_length=1)
+    issuer_minoracion_regularisation_period: str | None = Field(default=None, min_length=1)
+    recipient_increase_period: str | None = Field(default=None, min_length=1)
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: str | None = Field(default=None, min_length=1)
     payment_id: str | None = None
+    declared_fx_rate: PublicDecimal | None = None
+
+
+#: The correction fields that cross the wire as explicit decimals.
+_DECIMAL_FIELDS = ("retention_rate", "retention_amount", "declared_fx_rate")
+#: The correction fields that cross the wire as a period's display form.
+_PERIOD_FIELDS = (
+    "issuer_minoracion_regularisation_period",
+    "recipient_increase_period",
+    "exercised_deduction_period",
+)
 
 
 class InvoiceUpdatePatch(BaseModel):
@@ -76,21 +106,27 @@ class InvoiceUpdatePatch(BaseModel):
     def from_patch(cls, patch: CatalogueInvoicePatch) -> InvoiceUpdatePatch:
         """Capture the caller's intentional fields before transport expands defaults."""
         values = patch.model_dump(exclude_unset=True)
-        for name in ("retention_rate", "retention_amount"):
+        for name in _DECIMAL_FIELDS:
             value = values.get(name)
             if value is not None:
                 values[name] = PublicDecimal(decimal=str(value))
+        for name in _PERIOD_FIELDS:
+            period = getattr(patch, name)
+            if period is not None:
+                values[name] = str(period)
         return cls(values=InvoiceUpdateValues.model_validate(values), fields=frozenset(patch.model_fields_set))
 
     def to_patch(self) -> CatalogueInvoicePatch:
         """Restore canonical lifecycle omission semantics after transport."""
         values = self.values.model_dump(include=set(self.fields))
-        for name, value in (
-            ("retention_rate", self.values.retention_rate),
-            ("retention_amount", self.values.retention_amount),
-        ):
+        for name in _DECIMAL_FIELDS:
+            value = getattr(self.values, name)
             if name in self.fields and value is not None:
                 values[name] = Decimal(value.decimal)
+        for name in _PERIOD_FIELDS:
+            displayed = getattr(self.values, name)
+            if name in self.fields and displayed is not None:
+                values[name] = Period.from_string(displayed)
         return CatalogueInvoicePatch.model_validate(values)
 
 
@@ -146,8 +182,10 @@ class InvoiceUpdateExecutor:
         await context.events.phase(INVOICE_UPDATE_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+
         def update() -> InvoiceUpdateResult:
-            ports = self._factory(bucket_id=profile)
+            ports = self._factory(bucket_id=profile, mutation_writer=writes.write)
             updated = update_catalogue_invoice(
                 bucket_id=profile,
                 invoice_id=payload.invoice_id,
@@ -158,15 +196,18 @@ class InvoiceUpdateExecutor:
             return InvoiceUpdateResult(
                 profile_id=payload.profile_id,
                 invoice_id=payload.invoice_id,
-                invoice=CatalogueInvoiceSnapshot.from_invoice(updated.invoice),
+                invoice=CatalogueInvoiceSnapshot.from_invoice(
+                    updated.invoice, documents=InvoiceDocumentIndex.read(ports.documents)
+                ),
                 bucket_event_ids=updated.bucket_event_ids,
             )
 
         async def commit() -> str:
             async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A correction refused before the first write leaves the effect
+                # at none; the first write journals that records may change.
                 result = await asyncio.to_thread(update)
-                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.effect(OperationEffect.UPDATED if writes.began else OperationEffect.NONE)
                 return await context.operands.put(result, written_at=now())
 
         return await await_cancellation_complete(commit(), task_name="invoice-update-publication")
@@ -191,6 +232,7 @@ def build_invoice_update_definition(
         executor_type=InvoiceUpdateExecutor,
         build=lambda: InvoiceUpdateExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        public_error_detail=True,
     )
 
 
@@ -198,12 +240,9 @@ def resolve_invoice_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile ledger rights and a fresh commit fence."""
-    if request.definition_id != INVOICE_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved)
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=INVOICE_UPDATE_OPERATION_DEFINITION_ID, request_type=InvoiceUpdateRequest
+    )
 
 
 def build_invoice_update_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

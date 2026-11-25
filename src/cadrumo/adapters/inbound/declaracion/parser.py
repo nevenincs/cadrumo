@@ -43,7 +43,6 @@ from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_extraction import (
-    BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
@@ -51,11 +50,12 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..pdf.extracted_casilla import ExtractedCasilla
 from ..pdf.label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL
 from ..pdf.source_provenance import sha256_file, source_pdf_reference_path
-from ._detect import detect_template_revision, detect_template_revision_from_pages
-from ._parsers.pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
+from .bbox_extraction import find_bbox_casilla_hits
+from .detect import detect_template_revision, detect_template_revision_from_pages
 from .errors import DeclaracionParseError, TemplateNotDetectedError
+from .parsers.pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 from .schema import InboundDeclaracionObservation, TemplateRevision
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
@@ -66,25 +66,17 @@ from .schema import InboundDeclaracionObservation, TemplateRevision
 # within this adapter module.  This alias is correct-by-containment: it
 # documents the caller's expectations without over-constraining the library
 # boundary.
-_PdfWord = dict[str, Any]
+PdfWord = dict[str, Any]
 
 _logger = get_logger(__name__)
 
 
-def _pdf_word_text(word: _PdfWord) -> str:
+def _pdf_word_text(word: PdfWord) -> str:
     """Return the textual value required from a pdfplumber word."""
     value = word.get("text")
     if not isinstance(value, str):
         raise DeclaracionParseError("pdf word is missing textual content")
     return value
-
-
-def _pdf_word_float(word: _PdfWord, key: str) -> float:
-    """Return a numeric pdfplumber word coordinate as a concrete float."""
-    value = word.get(key)
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return float(value)
-    raise DeclaracionParseError(f"pdf word field {key!r} is not numeric")
 
 
 # AEAT tax-id shape: a natural-person NIF/NIE or a legal-entity CIF. Held here
@@ -288,9 +280,9 @@ def _parse_declaracion_pages(
         operation=operation,
     )
     _validate_snapshot_matches_template(snapshot, template)
-    profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
-    tax_id = _extract_tax_id(text)
-    values = _extract_profile_values(
+    profile = select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
+    tax_id = extract_tax_id(text)
+    values = extract_profile_values(
         pages,
         profile,
         revision=snapshot.revision,
@@ -340,7 +332,7 @@ def _filing_period_for_observation(filing_year: int, registry_selector: str) -> 
     """Resolve the parser's registry selector to the stored filing period.
 
     An administrative censo selector names a registration event, not a period a
-    filing occupies, so it is stored as ``AD-HOC``. Membership is asked of
+    filing occupies, so it is stored under the annual ``0A`` period of its year. Membership is asked of
     :func:`~cadrumo.core.period.is_administrative_period_token` rather than a local set:
     a hand-copied set here already drifted two members behind the authority, and
     the drift was invisible because the two it lacked belong to a modelo that
@@ -352,9 +344,9 @@ def _filing_period_for_observation(filing_year: int, registry_selector: str) -> 
     rest of the vocabulary is ASCII, so the fold is a no-op there.
     """
     normalized = fold_diacritics(registry_selector).strip().upper()
-    if is_administrative_period_token(normalized):
-        return Period.from_year_and_code(filing_year, "AD-HOC")
-    return Period.from_year_and_code(filing_year, "0A" if normalized == str(filing_year) else normalized)
+    if is_administrative_period_token(normalized) or normalized == str(filing_year):
+        return Period.from_year_and_code(filing_year, "0A")
+    return Period.from_year_and_code(filing_year, normalized)
 
 
 def _resolve_template(
@@ -439,7 +431,7 @@ def _template_from_missing_detection(
     if not (modelo_override is not None and modelo_override) or not (año_override is not None and año_override):
         raise TemplateNotDetectedError(
             translated_message="adapters.inbound.declaracion.errors.template_not_detected",
-            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            context={"path": INPUT_PDF_SOURCE_LABEL},
         )
     return TemplateRevision(
         modelo=modelo_override,
@@ -499,7 +491,8 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
     return period.upper()
 
 
-def _extract_tax_id(text: str) -> str:
+def extract_tax_id(text: str) -> str:
+    """Extract a validated tax ID from text, whether it follows or precedes its label."""
     match = _TAX_ID_RE.search(text)
     if match is not None:
         return _validated_tax_id(re.sub(r"\s+", "", match.group("tax_id").strip().rstrip(".")))
@@ -599,7 +592,7 @@ def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: Te
         )
 
 
-def _select_extraction_profile(
+def select_extraction_profile(
     snapshot: RegistrySnapshot,
     *,
     extraction_profile_id: str | None,
@@ -610,13 +603,15 @@ def _select_extraction_profile(
     the snapshot. Otherwise the snapshot must expose exactly one matching
     profile, preserving the generic parser shape: registry data
     selects per-modelo extraction behavior, not Python extractor classes.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     profiles = tuple(
         profile
         for profile in snapshot.extraction_profiles.values()
         if profile.surface == "declaracion_pdf" and "declaration_pdf" in profile.accepted_artefact_kinds
     )
-    if extraction_profile_id is not None and extraction_profile_id:
+    if bool(extraction_profile_id):
         for profile in profiles:
             if profile.id == extraction_profile_id:
                 return profile
@@ -637,7 +632,7 @@ def _select_extraction_profile(
 
 
 @dataclass(frozen=True, slots=True)
-class _TargetClassification:
+class TargetClassification:
     """One target's extraction outcome: a value, or a single failure category.
 
     Exactly one field is populated. ``value`` carries the extracted casilla on
@@ -685,17 +680,17 @@ def _is_own_box_number_of_blank_box(raw: str, printed_number: str | None) -> boo
     return token == printed_number.strip()
 
 
-def _classify_target(
+def classify_target(
     target: ExtractionTargetDefinition,
     *,
     pages: tuple[str, ...],
-    pages_words: tuple[list[_PdfWord], ...] | None,
+    pages_words: tuple[list[PdfWord], ...] | None,
     numeric_anchors: dict[CasillaId, str],
     printed_box_numbers: dict[CasillaId, str] | None = None,
-) -> _TargetClassification:
+) -> TargetClassification:
     """Resolve one target's hits into a value or a failure category.
 
-    Mirrors the per-target arm of :func:`_extract_profile_values`: bbox targets
+    Mirrors the per-target arm of :func:`extract_profile_values`: bbox targets
     without word data are ``missing``; no hits is ``missing``; multiple hits is
     ``ambiguous``; an unparseable amount is ``malformed``; otherwise the captured
     value is returned as an :class:`ExtractedCasilla`.
@@ -710,9 +705,9 @@ def _classify_target(
         printed_number=printed_number,
     )
     if hits is None or not hits:
-        return _TargetClassification(missing=casilla_id)
+        return TargetClassification(missing=casilla_id)
     if len(hits) > 1:
-        return _TargetClassification(ambiguous=casilla_id)
+        return TargetClassification(ambiguous=casilla_id)
     page_number, raw_value = hits[0]
     if target.value_kind != "amount":
         # "text" and "enum" value kinds: store the raw captured token as-is.
@@ -723,7 +718,7 @@ def _classify_target(
         # absent, not corrupt, so it is reported missing (coverage decides
         # whether that is tolerable) rather than malformed (which raises hard).
         if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(raw_value, printed_number):
-            return _TargetClassification(missing=casilla_id)
+            return TargetClassification(missing=casilla_id)
         # Only the `casilla` strategy's regex embeds SPANISH_AMOUNT_GROUP and so
         # guarantees the ``,NN`` tail that makes a printed Spanish amount
         # unambiguous. `bbox_anchored` takes the raw PDF word text and
@@ -733,11 +728,11 @@ def _classify_target(
         # two-way reading rather than guess; the box is reported malformed, which
         # is what an unreadable printed value is.
         if european_thousands_reading_is_ambiguous(raw_value.strip()):
-            return _TargetClassification(malformed=casilla_id)
+            return TargetClassification(malformed=casilla_id)
         parsed = parse_spanish_decimal(raw_value)
         if parsed is None:
-            return _TargetClassification(malformed=casilla_id)
-    return _TargetClassification(
+            return TargetClassification(malformed=casilla_id)
+    return TargetClassification(
         value=ExtractedCasilla(
             casilla_id=casilla_id,
             printed_value=parsed,
@@ -752,7 +747,7 @@ def _target_hits(
     target: ExtractionTargetDefinition,
     *,
     pages: tuple[str, ...],
-    pages_words: tuple[list[_PdfWord], ...] | None,
+    pages_words: tuple[list[PdfWord], ...] | None,
     numeric_anchors: dict[CasillaId, str],
     printed_number: str | None,
 ) -> list[tuple[int, str]] | None:
@@ -765,23 +760,23 @@ def _target_hits(
     if target.match_strategy == "bbox_anchored":
         if pages_words is None:
             return None
-        return _find_bbox_casilla_hits(pages_words, target)
+        return find_bbox_casilla_hits(pages_words, target)
     if target.match_strategy == "named_label" and target.value_kind == "amount" and pages_words is not None:
         return _find_named_label_word_hits(pages_words, target, printed_number=printed_number)
     return _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
 
 
-_LINE_Y_TOLERANCE: float = 3.0
+_LINE_Y_TOLERANCE_POINTS: float = 3.0
 """Maximum vertical distance (points) between words treated as one printed line."""
 
 
-def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
+def _words_by_line(words: list[PdfWord]) -> list[list[PdfWord]]:
     """Group one page's words into printed lines, each sorted left to right."""
-    lines: list[tuple[float, list[_PdfWord]]] = []
+    lines: list[tuple[float, list[PdfWord]]] = []
     for word in sorted(words, key=lambda w: (float(w["top"]), float(w["x0"]))):
         top = float(word["top"])
         for line_top, line in lines:
-            if abs(line_top - top) <= _LINE_Y_TOLERANCE:
+            if abs(line_top - top) <= _LINE_Y_TOLERANCE_POINTS:
                 line.append(word)
                 break
         else:
@@ -790,7 +785,7 @@ def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
 
 
 def _find_named_label_word_hits(
-    pages_words: tuple[list[_PdfWord], ...],
+    pages_words: tuple[list[PdfWord], ...],
     target: ExtractionTargetDefinition,
     *,
     printed_number: str | None,
@@ -837,7 +832,7 @@ def _find_named_label_word_hits(
     return hits
 
 
-def _named_label_line_value(line: list[_PdfWord], *, printed_number: str | None) -> str:
+def _named_label_line_value(line: list[PdfWord], *, printed_number: str | None) -> str:
     """Pick the value word from one matched ``named_label`` line.
 
     The value is the line's last word, as on the text path. When that word is
@@ -881,7 +876,7 @@ def _raise_extraction_failed(
     )
 
 
-def _extract_profile_values(
+def extract_profile_values(
     pages: tuple[str, ...],
     profile: ExtractionProfileDefinition,
     *,
@@ -896,6 +891,8 @@ def _extract_profile_values(
     prefers in-memory ``pdf_bytes`` for privacy, falls back to a real source file
     when only a path is available, and reports malformed or ambiguous targets as
     hard parse failures.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     # Load word-position data lazily, for the two strategies that need it:
     # bbox_anchored resolves entirely in word space, and named_label amount
@@ -903,12 +900,12 @@ def _extract_profile_values(
     # a separate token. Prefer in-memory bytes so decrypted declaration PDFs never
     # touch disk; fall back to a real source file only when bytes are not
     # supplied. A profile with neither kind of target never pays for the pass.
-    pages_words = _load_pages_words(profile, source_pdf_path=source_pdf_path, pdf_bytes=pdf_bytes)
-    numeric_anchors = _numeric_casilla_anchors(profile, revision)
-    printed_box_numbers = _printed_box_numbers(profile, revision)
+    pages_words = load_pages_words(profile, source_pdf_path=source_pdf_path, pdf_bytes=pdf_bytes)
+    numeric_anchors = numeric_casilla_anchors(profile, revision)
+    printed_box_numbers = parser_printed_box_numbers(profile, revision)
 
-    outcomes = _partition_target_outcomes(
-        _classify_target(
+    outcomes = partition_target_outcomes(
+        classify_target(
             target,
             pages=pages,
             pages_words=pages_words,
@@ -934,12 +931,12 @@ def _extract_profile_values(
     return tuple(outcomes.values)
 
 
-def _load_pages_words(
+def load_pages_words(
     profile: ExtractionProfileDefinition,
     *,
     source_pdf_path: Path | None,
     pdf_bytes: bytes | None,
-) -> tuple[list[_PdfWord], ...] | None:
+) -> tuple[list[PdfWord], ...] | None:
     """Load word-position data, but only for a profile whose targets need it.
 
     ``bbox_anchored`` resolves entirely in word space, and ``named_label``
@@ -959,7 +956,7 @@ def _load_pages_words(
     if pdf_bytes is not None:
         return _extract_pages_words_from_bytes(pdf_bytes)
     if source_pdf_path is not None and source_pdf_path.is_file():
-        return _extract_pages_words(source_pdf_path)
+        return extract_pages_words(source_pdf_path)
     return None
 
 
@@ -973,7 +970,7 @@ class _ExtractionOutcomes:
     ambiguous: list[CasillaId]
 
 
-def _partition_target_outcomes(classifications: Iterable[_TargetClassification]) -> _ExtractionOutcomes:
+def partition_target_outcomes(classifications: Iterable[TargetClassification]) -> _ExtractionOutcomes:
     """Sort each target's classification into its report bucket."""
     outcomes = _ExtractionOutcomes(values=[], missing=[], malformed=[], ambiguous=[])
     for outcome in classifications:
@@ -988,7 +985,7 @@ def _partition_target_outcomes(classifications: Iterable[_TargetClassification])
     return outcomes
 
 
-def _numeric_casilla_anchors(
+def numeric_casilla_anchors(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
@@ -1007,11 +1004,13 @@ def _numeric_casilla_anchors(
     same accident that hid the defect in the blank-box guard, and it would end the
     moment a semantically-named casilla is given this strategy.
 
-    Unlike :func:`_printed_box_numbers` this refuses rather than degrading. A
+    Unlike :func:`parser_printed_box_numbers` this refuses rather than degrading. A
     missing printed number leaves the guard without a safety net, which is
     tolerable; here it means the target cannot be addressed at all, which is a
     registry-integrity error of the same kind as a target naming a casilla that
     does not exist.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     revision_casillas_by_id = casillas_by_id(revision)
     anchors: dict[CasillaId, str] = {}
@@ -1038,14 +1037,14 @@ def _numeric_casilla_anchors(
     return anchors
 
 
-def _printed_box_numbers(
+def parser_printed_box_numbers(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
     """Map ``named_label`` target ids to their printed box number, where one exists.
 
     Feeds :func:`_is_own_box_number_of_blank_box`, which needs to recognise the
-    token a BLANK box leaves behind. Unlike :func:`_numeric_casilla_anchors` this
+    token a BLANK box leaves behind. Unlike :func:`numeric_casilla_anchors` this
     is lenient: a target whose printed number the registry does not record simply
     has no box number to compare against, and is left unguarded rather than
     refused.
@@ -1072,6 +1071,8 @@ def _printed_box_numbers(
     one fabricated value for a different one, so the remaining unguarded targets
     are recorded as an evidence gap to be closed by populating ``form_number``,
     not papered over here.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     revision_casillas_by_id = casillas_by_id(revision)
     numbers: dict[CasillaId, str] = {}
@@ -1089,7 +1090,7 @@ def _printed_box_numbers(
     return numbers
 
 
-def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
+def extract_pages_words(pdf_path: Path) -> tuple[list[PdfWord], ...]:
     """Extract per-page word-position dicts from ``pdf_path`` using pdfplumber.
 
     Returns a tuple with one list of word dicts per page in source order.
@@ -1110,10 +1111,10 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
         return ()
 
 
-def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], ...]:
+def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[PdfWord], ...]:
     """Extract per-page word-position dicts from in-memory PDF bytes.
 
-    Mirrors :func:`_extract_pages_words` but opens an in-memory
+    Mirrors :func:`extract_pages_words` but opens an in-memory
     :class:`~io.BytesIO` stream so decrypted declaration bytes never have to be
     written to a plaintext scratch file to satisfy ``pdfplumber.open``.
     """
@@ -1129,212 +1130,6 @@ def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], .
             exc_info=True,
         )
         return ()
-
-
-def _find_bbox_casilla_hits(
-    pages_words: tuple[list[_PdfWord], ...],
-    target: ExtractionTargetDefinition,
-) -> list[tuple[int, str]]:
-    """Find the value word for a ``bbox_anchored`` target using word positions.
-
-    Algorithm:
-    1. Scan each page's word list for words matching ``bbox_anchor.box_number_pattern``.
-    2. For each anchor-word match, locate the value word using ``value_offset``:
-       - ``"right_of_number"``: closest word to the right on the same y-row
-         (same ``top`` within ``_BBOX_Y_TOLERANCE`` points, x0 greater than
-         the anchor word's x1).
-    3. If ``column_anchor`` is set, pre-compute the x-range of the column header
-       and constrain the anchor-word search to that x-range.
-
-    Returns a list of ``(1-based page number, raw value text)`` tuples.
-    Ambiguous matches (multiple anchors on a page) are returned as multiple
-    entries so the caller can detect and report them as ``ambiguous``.
-    """
-    anchor_spec = _require_bbox_anchor(target)
-    box_re = re.compile(anchor_spec.box_number_pattern)
-
-    hits: list[tuple[int, str]] = []
-
-    for page_index, words in enumerate(pages_words, start=1):
-        hits.extend(_find_bbox_page_hits(page_index, words, box_re=box_re, anchor_spec=anchor_spec))
-
-    return hits
-
-
-_BBOX_Y_TOLERANCE: float = 3.0
-"""Maximum vertical distance (points) between anchor and value words on the same row."""
-
-_BBOX_X_GAP_TOLERANCE: float = 150.0
-"""Maximum horizontal distance (points) to the right for ``right_of_number`` search."""
-
-
-def _require_bbox_anchor(target: ExtractionTargetDefinition) -> BboxAnchorSpec:
-    """Require a bbox target to carry the spatial anchor its strategy names."""
-    anchor_spec = target.bbox_anchor
-    if anchor_spec is None:
-        raise DeclaracionParseError(
-            f"extraction target {target.casilla_id!r} takes the bbox-anchored path without a bbox anchor",
-        )
-    return anchor_spec
-
-
-def _find_bbox_page_hits(
-    page_index: int,
-    words: list[_PdfWord],
-    *,
-    box_re: re.Pattern[str],
-    anchor_spec: BboxAnchorSpec,
-) -> list[tuple[int, str]]:
-    """Resolve every matching bbox anchor on one page into value words."""
-    if not words:
-        return []
-    col_x_min, col_x_max = _bbox_column_bounds(words, anchor_spec)
-    anchor_words = _bbox_anchor_words(words, box_re, anchor_spec, col_x_min=col_x_min, col_x_max=col_x_max)
-    hits: list[tuple[int, str]] = []
-    for anchor_word in anchor_words:
-        value_word = _resolve_value_word(
-            words,
-            anchor_word,
-            anchor_spec.value_offset,
-            value_x_max=anchor_spec.value_x_max,
-        )
-        if value_word is not None:
-            hits.append((page_index, value_word["text"]))
-    return hits
-
-
-def _bbox_column_bounds(words: list[_PdfWord], anchor_spec: BboxAnchorSpec) -> tuple[float | None, float | None]:
-    """Return the optional column constraint for one page's bbox anchors."""
-    if anchor_spec.column_anchor is not None and anchor_spec.column_anchor:
-        return _find_column_x_range(words, anchor_spec.column_anchor)
-    return None, None
-
-
-def _bbox_anchor_words(
-    words: list[_PdfWord],
-    box_re: re.Pattern[str],
-    anchor_spec: BboxAnchorSpec,
-    *,
-    col_x_min: float | None,
-    col_x_max: float | None,
-) -> list[_PdfWord]:
-    """Select box-number words inside the target's configured spatial bounds."""
-    return [
-        word
-        for word in words
-        if box_re.fullmatch(word["text"])
-        and (anchor_spec.anchor_x_min is None or word["x0"] >= anchor_spec.anchor_x_min)
-        and (anchor_spec.anchor_x_max is None or word["x0"] <= anchor_spec.anchor_x_max)
-        and (col_x_min is None or col_x_max is None or col_x_min <= word["x0"] <= col_x_max)
-    ]
-
-
-def _resolve_value_word(
-    words: list[_PdfWord],
-    anchor_word: _PdfWord,
-    value_offset: str,
-    *,
-    value_x_max: float | None = None,
-) -> _PdfWord | None:
-    """Return the value word relative to ``anchor_word`` according to ``value_offset``.
-
-    Args:
-        words: All words on the page.
-        anchor_word: The located box-number word.
-        value_offset: Directional hint — one of ``"right_of_number"``,
-            ``"left_of_number"``, or ``"above_number"``.
-        value_x_max: When set, restricts ``"right_of_number"`` candidates to
-            words whose ``x0`` is at most this value.  Useful in multi-column
-            layouts where an empty cell would otherwise match the next column's
-            box number.
-
-    Returns:
-        The matched value word, or ``None`` if no candidate satisfies the offset
-        and proximity constraints.
-    """
-    if value_offset == "right_of_number":
-        return _resolve_right_value_word(words, anchor_word, value_x_max=value_x_max)
-
-    if value_offset == "left_of_number":
-        return _resolve_left_value_word(words, anchor_word)
-
-    if value_offset == "above_number":
-        return _resolve_above_value_word(words, anchor_word)
-
-    return None  # pragma: no cover — exhaustive via Literal type
-
-
-def _resolve_right_value_word(
-    words: list[_PdfWord],
-    anchor_word: _PdfWord,
-    *,
-    value_x_max: float | None,
-) -> _PdfWord | None:
-    """Choose the closest same-row word to the right of a box number."""
-    anchor_top = anchor_word["top"]
-    anchor_x1 = anchor_word["x1"]
-    candidates = [
-        word
-        for word in words
-        if abs(word["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
-        and word["x0"] > anchor_x1
-        and (word["x0"] - anchor_x1) <= _BBOX_X_GAP_TOLERANCE
-        and (value_x_max is None or word["x0"] <= value_x_max)
-    ]
-    if not candidates:
-        return None
-    return min(candidates, key=lambda word: word["x0"])
-
-
-def _resolve_left_value_word(words: list[_PdfWord], anchor_word: _PdfWord) -> _PdfWord | None:
-    """Choose the closest same-row word to the left of a box number."""
-    anchor_top = anchor_word["top"]
-    anchor_x0 = anchor_word["x0"]
-    candidates = [
-        word
-        for word in words
-        if abs(word["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
-        and word["x1"] < anchor_x0
-        and (anchor_x0 - word["x1"]) <= _BBOX_X_GAP_TOLERANCE
-    ]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda word: word["x1"])
-
-
-def _resolve_above_value_word(words: list[_PdfWord], anchor_word: _PdfWord) -> _PdfWord | None:
-    """Choose the nearest vertically preceding word within the anchor column."""
-    anchor_top = anchor_word["top"]
-    anchor_x0 = anchor_word["x0"]
-    anchor_x1 = anchor_word["x1"]
-    candidates = [
-        word
-        for word in words
-        if word["bottom"] < anchor_top
-        and word["x0"] >= anchor_x0 - _BBOX_Y_TOLERANCE
-        and word["x1"] <= anchor_x1 + _BBOX_Y_TOLERANCE
-    ]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda word: word["bottom"])
-
-
-def _find_column_x_range(
-    words: list[_PdfWord],
-    column_anchor: str,
-) -> tuple[float, float]:
-    """Return (x_min, x_max) for the column identified by ``column_anchor`` text.
-
-    Finds all words whose text matches ``column_anchor`` (case-insensitive)
-    and returns the bounding x-range of those header words.  When no match
-    is found, returns ``(0.0, float("inf"))`` (no constraint).
-    """
-    matches = [w for w in words if w["text"].lower() == column_anchor.lower()]
-    if not matches:
-        return (0.0, float("inf"))
-    x_min = min(_pdf_word_float(w, "x0") for w in matches)
-    x_max = max(_pdf_word_float(w, "x1") for w in matches)
-    return (x_min, x_max)
 
 
 def _find_casilla_hits(
@@ -1355,7 +1150,7 @@ def _find_casilla_hits(
       :data:`TEXT_VALUE_GROUP`.
 
     Returns a list of ``(1-based page number, captured raw value)`` tuples.
-    ``"bbox_anchored"`` targets must use :func:`_find_bbox_casilla_hits` instead.
+    ``"bbox_anchored"`` targets must use :func:`find_bbox_casilla_hits` instead.
     """
     if target.match_strategy == "numeric_casilla":
         anchor = numeric_anchors.get(target.casilla_id)

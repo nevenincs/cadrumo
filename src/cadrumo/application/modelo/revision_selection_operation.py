@@ -23,12 +23,14 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecord
 from ...domain.modelos.verification_report import VerificationReport
+from ...domain.modelos.verification_repository import revision_granting_reports
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..operations.access_resolution import (
@@ -48,20 +50,20 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import VerificationOutcomeIncompleteError
+from .lifecycle_view_refusal_doors import unit_verify_verdict
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .selectors import (
     ModeloCalculationRevisionDefault,
+    ModeloCalculationRevisionSelection,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorError,
     ModeloCalculationRevisionSelectorNotFoundError,
     resolve_modelo_calculation_revision_pick,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_address_errors import ModeloWorkAddressNotFoundError, ModeloWorkPeriodTokenError, ModeloWorkSelectorError
 from .work_addressing import (
     ModeloWorkAddress,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
-    ModeloWorkSelectorError,
     calculation_revision_work_unit_target_error,
     resolve_modelo_work_unit_for_operator_target,
 )
@@ -204,17 +206,20 @@ def _confirmed_external_revision_record(
     )
 
 
-def _filed_external_without_report(
+def revision_selection_operation_filed_external_without_report(
     revision: CalculationRevision,
     unit: WorkUnit,
     bundle: VerificationRepositoryBundle,
     *,
     profile_id: UUID,
 ) -> bool:
-    """Recognize a co-committed AEAT import by its exact filing receipt."""
+    """Recognize a co-committed AEAT import by its exact filing receipt.
+
+    ``revision`` is a :class:`CalculationRevision`.
+    """
     if (
         revision.amendment_identity is not None
-        or revision.state not in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        or revision.state not in FILED_REVISION_STATES
         or revision.verified_at is None
         or revision.filed_at is None
         or revision.filed_by is None
@@ -233,7 +238,7 @@ def _filed_external_without_report(
 def _filed_amendment_without_grant(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
     return (
         revision.amendment_identity is not None
-        and revision.state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        and revision.state in FILED_REVISION_STATES
         and revision.verified_at is not None
         and not granting
     )
@@ -241,7 +246,7 @@ def _filed_amendment_without_grant(revision: CalculationRevision, granting: tupl
 
 def _verification_left_incomplete(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
     """Recognize a verification that saved its grant and stopped before locking the revision."""
-    return len(granting) == 1 and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
+    return bool(granting) and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
 
 
 def _require_selected_revision_grant_evidence(
@@ -258,7 +263,7 @@ def _require_selected_revision_grant_evidence(
     filed_external_without_report = (
         not granting
         and not filed_amendment_without_report
-        and _filed_external_without_report(revision, unit, bundle, profile_id=profile_id)
+        and revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=profile_id)
     )
     if len(granting) > 1 or (
         (revision.verified_at is not None) != bool(granting)
@@ -268,12 +273,13 @@ def _require_selected_revision_grant_evidence(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
-def _capture(
-    payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
-) -> ModeloWorkRevisionProjection:
-    unit, calculations = _unit_and_catalogue(payload, bundle, operation=operation.authority_operation)
-    if calculations is None:
-        calculations = bundle.calculation.load(operation=operation.authority_operation)
+def _pick_revision(
+    payload: ModeloWorkRevisionRequest,
+    unit: WorkUnit,
+    calculations: CalculationRevisionCatalogue,
+    bundle: VerificationRepositoryBundle,
+    operation: OperationExecutorContext,
+) -> ModeloCalculationRevisionSelection:
     selected_id = payload.calculation_revision_id
     if selected_id is not None and selected_id == unit.work_unit_id and calculations.get(selected_id) is None:
         selected_id = None
@@ -302,7 +308,20 @@ def _capture(
         )
         if recovery is error:
             raise
-        raise recovery from error
+    else:
+        return selection
+    # Raised outside the handler, so the selector refusal it replaces does not
+    # stand beside it in the chain and leave the CLI boundary two verdicts.
+    raise recovery
+
+
+def _capture(
+    payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
+) -> ModeloWorkRevisionProjection:
+    unit, calculations = _unit_and_catalogue(payload, bundle, operation=operation.authority_operation)
+    if calculations is None:
+        calculations = bundle.calculation.load(operation=operation.authority_operation)
+    selection = _pick_revision(payload, unit, calculations, bundle, operation)
     revision = selection.revision
     if payload.default_for in {"verify", "file"}:
         require_revision_parent_active(
@@ -314,10 +333,12 @@ def _capture(
         )
     if bundle.verification.bucket_id != str(payload.profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    reports = require_verification_report_coordinates_current(
-        bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
-    ).for_calculation_revision(revision.calculation_revision_id)
-    granting = tuple(report for report in reports if report.granted_verificado_completo)
+    granting = revision_granting_reports(
+        require_verification_report_coordinates_current(
+            bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
+        ),
+        revision,
+    )
     if _verification_left_incomplete(revision, granting):
         # The revision is the caller's own and its outcome is not known to have
         # completed, so this is not an access denial. Verification settles it by
@@ -326,6 +347,7 @@ def _capture(
             raise VerificationOutcomeIncompleteError(
                 translated_message="errors.error.error_modelo_verification_outcome_incomplete",
                 context={"calculation_revision_id": revision.calculation_revision_id},
+                precondition_verdict=unit_verify_verdict("verification_outcome", unit.work_unit_id),
             )
         granting = ()
     _require_selected_revision_grant_evidence(revision, unit, bundle, payload.profile_id, granting)

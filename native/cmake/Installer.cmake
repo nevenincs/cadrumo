@@ -1,6 +1,8 @@
 # Installer-only DLL: never included in application images or immutable runtime payloads.
 include_guard(GLOBAL)
 if(NOT WIN32)
+  # Nothing builds the crate here, but its manifest and lockfile still follow the policy.
+  cadrumo_rust_quality(installer MANIFEST "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml")
   return()
 endif()
 set(installer_manifest "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml")
@@ -14,6 +16,10 @@ set(CADRUMO_MSI_ADAPTER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo_installer.dll")
 set(CADRUMO_MSI_RUNNER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo-msi-maintenance.exe")
+# Source-owned Windows tests consume these existing CMake-selected outputs.
+# Keep Cargo triples/profile/layout details here, out of recipes and CI.
+file(GENERATE OUTPUT "${CADRUMO_PATH_GENERATED}/installer-test-inputs-$<CONFIG>.json"
+  CONTENT "{\"schema_version\":1,\"configuration\":\"$<CONFIG>\",\"adapter\":\"${CADRUMO_MSI_ADAPTER}\",\"runner\":\"${CADRUMO_MSI_RUNNER}\"}\n")
 # The version resources of the DLL and the runner name the product and this build.
 cadrumo_cargo_command(installer_cargo --build-identity installer
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}" --env "CADRUMO_ID_NAME=${CADRUMO_ID_NAME}")
@@ -44,4 +50,7 @@ if(BUILD_TESTING)
       --target-dir "${CADRUMO_INSTALLER_TARGET_DIR}"
       --target "${CADRUMO_PIN_rust_target}" --profile "${installer_profile}")
   set_tests_properties(installer.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
+  cadrumo_rust_quality(installer MANIFEST "${installer_manifest}"
+    CLIPPY_CARGO installer_cargo CLIPPY_ARGS --target-dir "${CADRUMO_INSTALLER_TARGET_DIR}"
+      --profile "${installer_profile}")
 endif()

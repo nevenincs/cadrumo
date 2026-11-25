@@ -8,30 +8,37 @@ then exercise the installed reader and the actual terminal widget in every local
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
+from ......adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ......adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ......adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ......application.modelo.calculation_actions import (
+from ......application.ledger.counterparty_establishment import record_counterparty_filing_name
+from ......application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.value_presentation import format_casilla_value
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
+from ......application.modelo.work_form_wording import does_not_apply_words
+from ......application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
+from ......domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ......domain.invoices.models import Invoice
 from ......domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
@@ -39,6 +46,8 @@ from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_INVOICES,
     intra_community_invoice,
 )
+from ......domain.modelos.work_unit import WorkUnit
+from ......domain.user_profile.values import UserProfileFact
 from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from .....tests.profile_persistence.verification_repository_support import (
@@ -48,6 +57,7 @@ from .....tests.profile_persistence.verification_repository_support import (
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..factory import InstalledModeloWorkbench
@@ -56,14 +66,32 @@ from ..issue_projection import issue_lines
 from ..issues import WorkbenchIssuesScreen
 from ..page_items import page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
-from ..wording import does_not_apply_text
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
 
-@pytest.fixture
-def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
-    with seeded_operator_work(tmp_path, modelo="349") as work:
+def _state_filing_names(bucket_id: str, invoices: tuple[Invoice, ...]) -> None:
+    """Declare each counterparty's filing name as the operator would: a record files only a stated name."""
+    repository = CounterpartyEstablishmentRepository(
+        bucket_id=bucket_id, objects=secure_object_repository_for_bucket(bucket_id)
+    )
+    for invoice in invoices:
+        assert invoice.counterparty_tax_id is not None
+        record_counterparty_filing_name(
+            bucket_id=bucket_id,
+            tax_identifier=invoice.counterparty_tax_id,
+            country_code=invoice.counterparty_country,
+            filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name),
+            asserted_by="operator:test",
+            repository=repository,
+        )
+
+
+@contextmanager
+def _seeded_m349(tmp_path: Path) -> Generator[SeededOperatorWork]:
+    with seeded_operator_work(
+        tmp_path, modelo="349", extra_facts=(UserProfileFact(path="iva.does_intracomunitario", value=True),)
+    ) as work:
         invoices = tuple(
             intra_community_invoice(
                 bucket_id=work.work_unit.bucket_id,
@@ -76,6 +104,7 @@ def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
             for number, country, tax_id, issued_at, base_total in M349_INVOICES
         )
         work.ports.invoice_repository.save(build_invoice_catalogue(invoices))
+        _state_filing_names(work.work_unit.bucket_id, invoices)
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id, ports=work.ports, clock=SEEDED_AT
         )
@@ -88,6 +117,50 @@ def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
         yield work
 
 
+@pytest.fixture
+def m349_work(tmp_path: Path) -> Generator[SeededOperatorWork]:
+    """A declaration the test may rewrite."""
+    with _seeded_m349(tmp_path) as work:
+        yield work
+
+
+@pytest.fixture(scope="module")
+def shared_m349_work(tmp_path_factory: pytest.TempPathFactory) -> Generator[SeededOperatorWork]:
+    """One seeded declaration for the checks that only read it; seeding encrypted storage dominates their cost."""
+    with _seeded_m349(tmp_path_factory.mktemp("m349-read")) as work:
+        yield work
+
+
+@pytest.fixture(scope="module")
+def known_empty_m349(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Iterator[tuple[SeededOperatorWork, BucketAggregationCalculationResult]]:
+    """A declaration recalculated over an empty invoice catalogue and verified, read by the layout cases."""
+    with _seeded_m349(tmp_path_factory.mktemp("m349-empty")) as work:
+        unit = work.work_unit
+        work.ports.invoice_repository.save(build_invoice_catalogue(()))
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            unit.work_unit_id, ports=work.ports, clock=SEEDED_AT
+        )
+        assert isinstance(result, BucketAggregationCalculationResult)
+        assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
+        report = verify_modelo_revision_with_preconditions(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator:test",
+            workflow_profile=TaxpayerProfile(
+                tax_id="12345678Z", iva_regime=IVARegime("GENERAL"), does_intracomunitario=True
+            ),
+            settings=ready_clave_settings("12345678Z"),
+            operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
+            operation=work.operation,
+            clock=SEEDED_AT,
+        ).report
+        assert any(finding.casilla_id == "op.codigo-pais" for finding in report.findings)
+        yield work, result
+
+
 def _installed(work: SeededOperatorWork) -> InstalledModeloWorkbench:
     # Read-only acceptance never submits an operation; the production source and
     # door still perform their normal admission and load paths.
@@ -97,9 +170,10 @@ def _installed(work: SeededOperatorWork) -> InstalledModeloWorkbench:
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 @pytest.mark.unit
 def test_real_encrypted_calculation_rows_reach_the_installed_form(
-    m349_work: SeededOperatorWork,
+    shared_m349_work: SeededOperatorWork,
     language: OutputLanguage,
 ) -> None:
+    m349_work = shared_m349_work
     unit, calculated = m349_work.work_unit, m349_work.require_head()
     stored = (
         CalculationRevisionCatalogueRepository(bucket_id=unit.bucket_id).load().get(calculated.calculation_revision_id)
@@ -147,7 +221,7 @@ def test_explicit_empty_and_omitted_legacy_detail_channels_survive_real_encrypte
     ]
     assert blocks and all(block.rows_known and not block.rows for block in blocks)
 
-    write = repository.to_secure_object_write(catalogue)
+    write = repository.to_secure_object_write_unit(catalogue).writes[0]
     payload = json.loads(write.payload)
     del payload["payload"]["revisions"][head.calculation_revision_id]["detail_rows"]
     secure_object_repository_for_bucket(unit.bucket_id).save_many(
@@ -167,46 +241,121 @@ def test_explicit_empty_and_omitted_legacy_detail_channels_survive_real_encrypte
     assert blocks and all(not block.rows_known and not block.rows for block in blocks)
 
 
+def _assert_read_only_records_chrome(screen: ModeloWorkbenchScreen) -> None:
+    visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+    assert {"enter", "s"}.isdisjoint(visible)
+    assert {"up", "question_mark", "escape"} <= visible
+    next_line = str(screen.query_one("#wb-next", Static).render())
+    named = next_line.rpartition("[")[2].removesuffix("]").lower()
+    assert named and named in visible
+
+
+def _assert_populated_records_wording(screen: ModeloWorkbenchScreen, unit: WorkUnit) -> None:
+    heading = str(screen.query_one("#wb-page", Static).render())
+    help_text = str(screen.query_one("#wb-help", Static).render())
+    assert tr("workspace.modelo.filter.empty") not in heading
+    assert tr("workspace.modelo.filter.empty_next", page="") not in heading
+    assert does_not_apply_words(unit.period) not in heading
+    assert tr("workspace.modelo.help.empty") not in help_text
+    assert tr("workspace.modelo.grid.records_read_only") in help_text
+
+
+async def _page_through_records(listing: CasillaList, pilot: Pilot[None]) -> str:
+    """Page to the end of the listing and return every drawn line, in scroll order."""
+    drawn: dict[int, str] = {}
+    for _ in range(listing.virtual_size.height + 1):
+        for y in range(listing.size.height):
+            drawn[int(listing.scroll_y) + y] = listing.render_line(y).text
+        if listing.scroll_y == listing.max_scroll_y:
+            break
+        before_scroll = listing.scroll_y
+        await pilot.press("pagedown")
+        await settle(pilot)
+        assert listing.scroll_y > before_scroll
+    assert listing.scroll_y == listing.max_scroll_y
+    rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
+    return rendered_rows
+
+
+async def _scroll_back_and_activate_without_editing(
+    screen: ModeloWorkbenchScreen, listing: CasillaList, pilot: Pilot[None]
+) -> None:
+    end_scroll = listing.scroll_y
+    await pilot.press("pageup")
+    await settle(pilot)
+    assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
+    await pilot.press("home")
+    await settle(pilot)
+    assert listing.scroll_y == 0
+    assert listing.focus_address(("casilla", "op.base-imponible"))
+    assert listing.highlighted is None
+    await pilot.press("enter")
+    await settle(pilot)
+    assert pilot.app.screen is screen
+    await pilot.press("end")
+    await settle(pilot)
+    assert listing.scroll_y == listing.max_scroll_y
+
+
+async def _return_from_column_finding(
+    screen: ModeloWorkbenchScreen,
+    app: ScreenHostApp[None],
+    listing: CasillaList,
+    pilot: Pilot[None],
+    key: tuple[str, str],
+    target: int,
+) -> None:
+    # A real persisted check's column finding must return here from a different page.
+    assert screen.form is not None
+    lines = issue_lines(screen.form)
+    line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
+    await pilot.press("]", "i")
+    await settle(pilot)
+    assert isinstance(app.screen, WorkbenchIssuesScreen)
+    options = app.screen.query_one(OptionList)
+    option_index = options.get_option_index(f"issue-{line_index}")
+    await pilot.press("home")
+    for _ in range(options.option_count):
+        if options.highlighted == option_index:
+            break
+        await pilot.press("down")
+    assert options.highlighted == option_index
+    await pilot.press("enter")
+    await settle(pilot)
+    assert app.screen is screen and app.focused is listing
+    assert screen._page_index == target and listing.highlighted is None
+    assert listing.focus_address(key)
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 @pytest.mark.parametrize("size", ((80, 24), (120, 40)))
 @pytest.mark.parametrize("appearance", ("dark", "light"))
 async def test_installed_saved_records_are_read_only_visible_content_in_each_terminal_layout(
-    m349_work: SeededOperatorWork,
+    shared_m349_work: SeededOperatorWork,
     language: OutputLanguage,
     size: tuple[int, int],
     appearance: str,
 ) -> None:
+    m349_work = shared_m349_work
     unit, calculated = m349_work.work_unit, m349_work.require_head()
     with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(_installed(m349_work))
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             install_cadrumo_themes(app, appearance=appearance)
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("]")
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             records = [item for item in listing.items if isinstance(item, CasillaListRecords)]
             assert len(records) == 1 and len(records[0].rows) == 3
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
-            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
-            assert {"enter", "s"}.isdisjoint(visible)
-            assert {"up", "question_mark", "escape"} <= visible
-            next_line = str(screen.query_one("#wb-next", Static).render())
-            named = next_line.rpartition("[")[2].removesuffix("]").lower()
-            assert named and named in visible
+            _assert_read_only_records_chrome(screen)
             assert screen._empty_listing_note() is None
-            heading = str(screen.query_one("#wb-page", Static).render())
-            help_text = str(screen.query_one("#wb-help", Static).render())
-            assert tr("tui.modelo.workbench.filter.empty") not in heading
-            assert tr("tui.modelo.workbench.filter.empty_next", page="") not in heading
-            assert does_not_apply_text(unit.period) not in heading
-            assert tr("tui.modelo.workbench.help.empty") not in help_text
-            assert tr("tui.modelo.workbench.grid.records_read_only") in help_text
+            _assert_populated_records_wording(screen, unit)
             assert all(
                 widget.region.right <= size[0] and widget.region.bottom <= size[1]
                 for widget in (listing, screen.query_one("#wb-page", Static))
@@ -215,23 +364,12 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             assert not listing.show_horizontal_scrollbar
             assert app.focused is listing
             await pilot.press("home", "down")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == min(1, listing.max_scroll_y)
             await pilot.press("up")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == 0
-            drawn: dict[int, str] = {}
-            for _ in range(listing.virtual_size.height + 1):
-                for y in range(listing.size.height):
-                    drawn[int(listing.scroll_y) + y] = listing.render_line(y).text
-                if listing.scroll_y == listing.max_scroll_y:
-                    break
-                before_scroll = listing.scroll_y
-                await pilot.press("pagedown")
-                await pilot.pause()
-                assert listing.scroll_y > before_scroll
-            assert listing.scroll_y == listing.max_scroll_y
-            rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
+            rendered_rows = await _page_through_records(listing, pilot)
             assert "EU Customer GmbH" in " ".join(rendered_rows.split())
             for identifier in ("123456789", "12345678901"):
                 assert identifier in rendered_rows
@@ -240,21 +378,7 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             for *_, amount in M349_INVOICES:
                 shown = format_casilla_value(amount, data_type="money", language=language)
                 assert " ".join(shown.split()) in " ".join(rendered_rows.split())
-            end_scroll = listing.scroll_y
-            await pilot.press("pageup")
-            await pilot.pause()
-            assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
-            await pilot.press("home")
-            await pilot.pause()
-            assert listing.scroll_y == 0
-            assert listing.focus_address(("casilla", "op.base-imponible"))
-            assert listing.highlighted is None
-            await pilot.press("enter")
-            await pilot.pause()
-            assert app.screen is screen
-            await pilot.press("end")
-            await pilot.pause()
-            assert listing.scroll_y == listing.max_scroll_y
+            await _scroll_back_and_activate_without_editing(screen, listing, pilot)
             assert screen.form is not None and screen.form.calculation_revision_id == calculated.calculation_revision_id
 
 
@@ -264,97 +388,55 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
 @pytest.mark.parametrize("size", ((80, 24), (120, 40)))
 @pytest.mark.parametrize("appearance", ("dark", "light"))
 async def test_installed_known_empty_records_keep_source_guidance_and_column_finding_navigation(
-    m349_work: SeededOperatorWork,
+    known_empty_m349: tuple[SeededOperatorWork, BucketAggregationCalculationResult],
     language: OutputLanguage,
     size: tuple[int, int],
     appearance: str,
 ) -> None:
+    m349_work, result = known_empty_m349
     unit = m349_work.work_unit
-    m349_work.ports.invoice_repository.save(build_invoice_catalogue(()))
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        unit.work_unit_id, ports=m349_work.ports, clock=SEEDED_AT
-    )
-    assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
-    report = verify_modelo_revision_with_preconditions(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator:test",
-        workflow_profile=TaxpayerProfile(
-            tax_id="12345678Z", iva_regime=IVARegime("GENERAL"), does_intracomunitario=True
-        ),
-        settings=ready_clave_settings("12345678Z"),
-        operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
-        operation=m349_work.operation,
-        clock=SEEDED_AT,
-    ).report
     column = "op.codigo-pais"
     key = ("casilla", column)
-    assert any(finding.casilla_id == column for finding in report.findings)
     with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(_installed(m349_work))
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             install_cadrumo_themes(app, appearance=appearance)
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.form is not None
             pages = workbench_pages(screen.form)
             target = page_of(pages, key)
             assert target is not None
             for _ in range((target - screen._page_index) % len(pages)):
                 await pilot.press("]")
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             records = [item for item in listing.items if isinstance(item, CasillaListRecords)]
             assert len(records) == 1 and not records[0].rows and column in records[0].column_casilla_ids
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
-            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
-            assert {"enter", "s"}.isdisjoint(visible)
-            assert {"up", "question_mark", "escape"} <= visible
-            next_line = str(screen.query_one("#wb-next", Static).render())
-            named = next_line.rpartition("[")[2].removesuffix("]").lower()
-            assert named and named in visible
-            count_text = tr("tui.modelo.workbench.repeating", count=0)
+            _assert_read_only_records_chrome(screen)
+            count_text = tr("workspace.modelo.repeating", count=0)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
             for selector in ("#wb-page", "#wb-crumb"):
                 heading = str(screen.query_one(selector, Static).render())
-                assert tr("tui.modelo.workbench.filter.empty") not in heading
-                assert tr("tui.modelo.workbench.filter.empty_next", page="") not in heading
-                assert does_not_apply_text(unit.period) not in heading
+                assert tr("workspace.modelo.filter.empty") not in heading
+                assert tr("workspace.modelo.filter.empty_next", page="") not in heading
+                assert does_not_apply_words(unit.period) not in heading
             help_text = str(screen.query_one("#wb-help", Static).render())
-            assert tr("tui.modelo.workbench.grid.records_read_only") in help_text
-            assert tr("tui.modelo.workbench.help.empty") not in help_text
-            assert tr("tui.modelo.workbench.grid.records_unknown") not in help_text
+            assert tr("workspace.modelo.grid.records_read_only") in help_text
+            assert tr("workspace.modelo.help.empty") not in help_text
+            assert tr("workspace.modelo.grid.records_unknown") not in help_text
             assert app.focused is listing
             assert listing.focus_address(key) and listing.highlighted is None
             assert not listing.show_horizontal_scrollbar
             assert listing.region.right <= size[0] and listing.region.bottom <= size[1]
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen
 
-            # A real persisted check's column finding must return here from a different page.
-            lines = issue_lines(screen.form)
-            line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
-            await pilot.press("]", "i")
-            await pilot.pause()
-            assert isinstance(app.screen, WorkbenchIssuesScreen)
-            options = app.screen.query_one(OptionList)
-            option_index = options.get_option_index(f"issue-{line_index}")
-            await pilot.press("home")
-            for _ in range(options.option_count):
-                if options.highlighted == option_index:
-                    break
-                await pilot.press("down")
-            assert options.highlighted == option_index
-            await pilot.press("enter")
-            await pilot.pause()
-            assert app.screen is screen and app.focused is listing
-            assert screen._page_index == target and listing.highlighted is None
-            assert listing.focus_address(key)
+            await _return_from_column_finding(screen, app, listing, pilot, key, target)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
             assert screen.form.calculation_revision_id == result.revision.calculation_revision_id

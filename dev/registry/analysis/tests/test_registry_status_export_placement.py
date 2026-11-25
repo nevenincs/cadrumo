@@ -14,24 +14,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...compiler.loader import load_modelo_directory
 from ...conformance.stamp import bundled_registry_root
+from ...tests.modelo_296_perceptor_support import modelo_296_with_second_field_length
 from ..registry_status import (
     EXPORT_PLACEMENT_POPULATION,
     ExportPlacementCensus,
     RegistryStatus,
-    _payload,
-    _render_export_placement,
     export_placement_census,
+    registry_status_payload,
+    render_export_placement,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REVISION = "2024-2025"
-_PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
 
 
 def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
@@ -45,7 +42,6 @@ def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
         authority_recorded_digest=None,
         authority_candidate_digest=None,
         loadable=True,
-        unreferenced_bindings=(),
         informational_bindings=(),
         details=(),
         export_placement=export_placement,
@@ -54,19 +50,11 @@ def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
 
 def _modelo_296(tmp_path: Path, *, second_field_length: int | None = None) -> ModeloDefinition:
     """Load a copy of the shipped Modelo 296 tree, optionally re-declaring one field."""
-    modelo_dir = tmp_path / "296"
-    shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
-    if second_field_length is not None:
-        record = modelo_dir / _PERCEPTOR_RECORD
-        document = load_toml(record)
-        export_layouts = document["revisions"][_REVISION]["export_layouts"]
-        perceptor = next(
-            item for layout in export_layouts for item in layout["records"] if item["id"] == "m296-perceptor"
-        )
-        second_field = next(field for field in perceptor["fields"] if field["id"] == "m296-2024.perceptor.f002")
-        assert (second_field["offset"], second_field["length"]) == (2, 3)
-        second_field["length"] = second_field_length
-        record.write_text(render_toml(document), encoding="utf-8", newline="\n")
+    if second_field_length is None:
+        modelo_dir = tmp_path / "296"
+        shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
+    else:
+        modelo_dir = modelo_296_with_second_field_length(tmp_path, length=second_field_length)
     return load_modelo_directory(modelo_dir)
 
 
@@ -94,7 +82,7 @@ def test_a_planted_overlap_fails_the_lane(tmp_path: Path) -> None:
     census = export_placement_census((_modelo_296(tmp_path / "planted", second_field_length=5),))
 
     assert census.overlaps == 1
-    lanes = _payload(_status(export_placement=census), blocking=False)["lanes"]
+    lanes = registry_status_payload(_status(export_placement=census), blocking=False)["lanes"]
     assert isinstance(lanes, dict)
     assert lanes["export_placement_coverage"] == "failed"
 
@@ -128,7 +116,7 @@ def test_the_shipped_carrier_walks_records_and_finds_neither_defect(tmp_path: Pa
 
 def test_the_payload_carries_the_findings_with_their_denominators() -> None:
     """Counts alone cannot be read: zero findings over zero records is not health."""
-    payload = _payload(
+    payload = registry_status_payload(
         _status(export_placement=ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639)),
         blocking=False,
     )
@@ -145,7 +133,9 @@ def test_the_payload_carries_the_findings_with_their_denominators() -> None:
 
 def test_a_gap_only_census_is_partial_and_does_not_fail_the_report() -> None:
     """The lane mirrors the compiler's posture: a gap is advisory, not a failure."""
-    payload = _payload(_status(export_placement=ExportPlacementCensus(gaps=115, records=415)), blocking=False)
+    payload = registry_status_payload(
+        _status(export_placement=ExportPlacementCensus(gaps=115, records=415)), blocking=False
+    )
 
     lanes = payload["lanes"]
     assert isinstance(lanes, dict)
@@ -158,7 +148,7 @@ def test_a_gap_only_census_is_partial_and_does_not_fail_the_report() -> None:
 
 def test_a_status_assembled_without_a_census_reports_walking_nothing() -> None:
     """The default census must not read as a clean sweep of the whole corpus."""
-    payload = _payload(_status(export_placement=ExportPlacementCensus()), blocking=False)
+    payload = registry_status_payload(_status(export_placement=ExportPlacementCensus()), blocking=False)
 
     assert payload["export_placement"] == {
         "population": EXPORT_PLACEMENT_POPULATION,
@@ -178,7 +168,7 @@ def test_the_rendered_line_names_the_population_it_counted(capsys: pytest.Captur
     numbers without saying which population they belong to is how a reader
     concludes the registry lost a few hundred records.
     """
-    _render_export_placement(ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639))
+    render_export_placement(ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639))
 
     rendered = capsys.readouterr().out.strip()
     assert rendered.startswith(f"export_placement({EXPORT_PLACEMENT_POPULATION}): ")

@@ -10,7 +10,7 @@ those differences against it.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from functools import cache
@@ -19,14 +19,11 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id_map
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import (
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
@@ -37,6 +34,14 @@ from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _DESIGN = "aeat-dr-222-2019-2022"
 _INSTRUCTIONS = "aeat-modelo-222-instructions-2019-2022"
@@ -125,7 +130,7 @@ def test_every_formula_cites_the_instructions_of_its_own_era() -> None:
         assert {str(citation.source_ref) for citation in formula.source_citations} == {_INSTRUCTIONS}, formula.id
 
 
-def _calculate(year: int, values: Mapping[str, str]) -> dict[str, Decimal]:
+def _calculate(year: int, values: Mapping[str, str | Decimal]) -> dict[str, Decimal]:
     """Run the real engine over the year's snapshot with every unnamed manual box at zero."""
     snapshot = compiled_bundled_authority().snapshot(
         "222", filing_year=year, period="1P", grade=RegistryAuthorityGrade.CALCULATION
@@ -157,14 +162,14 @@ def _calculate(year: int, values: Mapping[str, str]) -> dict[str, Decimal]:
         (0, {}, {"16": "90000", "19": "90000", "23": "60000", "25": "14400", "26": "18900", "32": "17900"}),
         (
             1,
-            {"59": "5000", "60": "2000"},
+            {"59": Decimal("5000"), "60": Decimal("2000")},
             {"16": "93000", "19": "93000", "23": "63000", "25": "15120", "26": "19620", "32": "18620"},
         ),
     ],
     ids=["2019-2022 design", "2023-2024 design"],
 )
 def test_several_rates_group_splits_the_same_base_the_single_rate_lane_uses(
-    following: int, extra: Mapping[str, str], expected: Mapping[str, str]
+    following: int, extra: Mapping[str, str | Decimal], expected: Mapping[str, str]
 ) -> None:
     computed = _calculate(
         _year() + following,

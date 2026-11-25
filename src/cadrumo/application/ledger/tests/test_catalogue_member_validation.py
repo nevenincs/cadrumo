@@ -20,7 +20,7 @@ from ....domain.transactions.errors import TransactionNotFoundError, Transaction
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_common import remove_transaction, replace_transaction, upsert_transaction
-from ..actions_export import _ledger_export_row
+from ..actions_export import ledger_export_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -70,11 +70,9 @@ def test_export_row_preserves_linked_invoice_identity() -> None:
     transaction = _transaction("export-linked")
     linked = Transaction.model_validate({**transaction.model_dump(), "invoice_id": "a" * 64})
 
+    assert ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=transaction).invoice_id == ""
     assert (
-        _ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=transaction).invoice_id == ""
-    )
-    assert (
-        _ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=linked).invoice_id == "a" * 64
+        ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=linked).invoice_id == "a" * 64
     )
 
 

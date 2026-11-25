@@ -1,6 +1,8 @@
 # Procedural articles of Ley 58/2003 (Ley General Tributaria) that
 # govern what makes a Modelo declaration legally filed.
 #
+# - art-7.2: supletory general administrative law, through which the
+#   Ley 39/2015 inhabil-day extension reaches an autoliquidacion close.
 # - art-119: tax declaration regime (any document presented to AEAT
 #   that acknowledges a tax-relevant fact). Frames the locked
 #   semantics of ModeloRecord persistence.
@@ -10,6 +12,24 @@
 # - art-122: complementarias / sustitutivas (amending self-assessments).
 #   Grounds amend_modelo_revision behaviour and the ModeloRecord
 #   SUPERSEDED state transition.
+
+[legal."ley-58-2003:art-7.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a7"
+document_id = "BOE-A-2003-23186"
+article = "7.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a7"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-58-2003.html#a7; operator to re-stamp"
+notes = "LGT art. 7.2: general administrative law applies supletoriamente to tax matters. With Ley 39/2015 DA 1.2 it carries the art. 30.5 inhábil-day extension to an autoliquidación filing close, since the LGT has no general rule of its own for it."
+required_text = [
+    "Tendrán carácter supletorio las disposiciones generales del derecho administrativo y los preceptos del derecho común.",
+]
 
 [legal."ley-58-2003:art-94"]
 evidence_tier = "legal_authority"
@@ -24,7 +44,7 @@ effective_from = 2004-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-10
 reviewed_by = "agent"
-notes = """LGT art 94: autoridades sometidas al deber de informar y colaborar. Extiende la obligacion informativa del art 93 a las autoridades y entidades del sector publico - organos del Estado, comunidades autonomas y entidades locales, organismos autonomos y entidades publicas empresariales, camaras y colegios profesionales, mutualidades de prevision social, entidades gestoras de la Seguridad Social y en general quienes ejerzan funciones publicas - y a los partidos politicos, sindicatos y asociaciones empresariales. Es la base sustantiva del papel declarante 'entidad integrada en una Administracion publica' del Modelo 347 (clave E), que el esquema de perfil declara en declaration_roles junto al art 93 y al rd-1065-2007 art 31."""
+notes = "LGT art 94: autoridades sometidas al deber de informar y colaborar. Extiende la obligación informativa del art 93 a las autoridades y entidades del sector publico - órganos del Estado, comunidades autónomas y entidades locales, organismos autónomos y entidades publicas empresariales, cámaras y colegios profesionales, mutualidades de prevision social, entidades gestoras de la Seguridad Social y en general quienes ejerzan funciones publicas - y a los partidos politicos, sindicatos y asociaciones empresariales. Es la base sustantiva del papel declarante 'entidad integrada en una Administración publica' del Modelo 347 (clave E), que el esquema de perfil declara en declaration_roles junto al art 93 y al rd-1065-2007 art 31."
 required_text = [
     "Autoridades sometidas al deber de informar y colaborar",
     "trascendencia tributaria",
@@ -44,14 +64,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a \
-AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y \
-justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades \
-de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las \
-declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de \
-retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
-M720 (bienes en el extranjero), M193 (capital mobiliario)."""
+notes = "LGT art 93: obligaciones de información. Base sustantiva de toda obligación informativa frente a AEAT - personas físicas y jurídicas obligadas a proporcionar datos, informes, antecedentes y justificantes con trascendencia tributaria. Enumera obligados específicos (retenedores, sociedades de cobro de honorarios profesionales, entidades bancarias y de mediación). Base sustantiva de las declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resúmenes anuales de retenciones), M184 (atribución de rentas), M232 (vinculadas y paraísos), M349 (intracomunitarias), M720 (bienes en el extranjero), M193 (capital mobiliario)."
 required_text = [
     "Obligaciones de información",
     "trascendencia tributaria",
@@ -91,7 +104,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Declaracion tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
+notes = "Declaración tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
 required_text = [
     "todo documento presentado ante la Administración tributaria",
     "La presentación de una declaración no implica aceptación o reconocimiento",
@@ -111,13 +124,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = """\
-Autoliquidaciones: declarations in which the obligado tributario performs the calificacion \
-+ cuantificacion necessary to determine the deuda tributaria and either pays, claims a \
-refund, or claims compensation. AEAT may verify and comprobar. Where the obligado \
-considers the autoliquidacion has harmed their legitimate interests they may instar la \
-rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
-procedure of apartado 4 applies where the tax-specific regulation so establishes."""
+notes = "Autoliquidaciones: declarations in which the obligado tributario performs the calificación + cuantificación necessary to determine the deuda tributaria and either pays, claims a refund, or claims compensation. AEAT may verify and comprobar. Where the obligado considers the autoliquidación has harmed their legitimate interests they may instar la rectificación per the apartado 3 procedure; otherwise the autoliquidación rectificativa procedure of apartado 4 applies where the tax-specific regulation so establishes."
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",
     "operaciones de calificación y cuantificación necesarias",
@@ -141,9 +148,9 @@ reviewed_by = "operator"
 notes = """\
 Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed \
 within the original presentation window or extemporaneously while the right to determine \
-the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields \
+the deuda has not prescribed. Complementarias are used when the new autoliquidación yields \
 a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 \
-rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) \
+rectificación procedures apply. Loss-of-incentive scenarios (failed deduction conditions) \
 are reported as a complementaria for the period of the breach with intereses de demora."""
 required_text = [
     "Los obligados tributarios podrán presentar autoliquidaciones complementarias",

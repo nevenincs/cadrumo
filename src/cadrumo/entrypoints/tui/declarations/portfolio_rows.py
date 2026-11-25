@@ -1,16 +1,18 @@
-"""Pure search, ordering and creation choices over the joined filing portfolio."""
+"""Pure search and ordering over the joined filing portfolio."""
 
 from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
 
-from ....application.modelo.declaration_targets import DeclarationTarget
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
-from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    declaration_list_state_order_key,
+)
+from ....application.modelo.work_form_wording import modelo_title, period_words
 from ....core.external_constants import OutputLanguage
 from ....core.text_fold import fold_for_matching
-from ..modelo.workbench.wording import modelo_title, period_words
 
 
 def _sort_portfolio_rows(rows: list[DeclarationListRow], sort: str) -> None:
@@ -18,7 +20,7 @@ def _sort_portfolio_rows(rows: list[DeclarationListRow], sort: str) -> None:
     if sort == "result":
         rows.sort(key=result_sort_key)
     elif sort == "state":
-        rows.sort(key=lambda row: (row.state, row.modelo, row.deadline or date.max))
+        rows.sort(key=declaration_list_state_order_key)
     elif sort == "modelo":
         rows.sort(key=lambda row: (row.modelo, row.deadline or date.max))
     else:
@@ -48,7 +50,7 @@ def visible_portfolio_rows(
 ) -> list[DeclarationListRow]:
     """Apply Unicode AND search and the selected stable ordering."""
     terms = fold_for_matching(query).split()
-    rows = []
+    rows: list[DeclarationListRow] = []
     for row in portfolio:
         if not matches_filter(row, selected_filter, year):
             continue
@@ -64,34 +66,3 @@ def result_sort_key(row: DeclarationListRow) -> tuple[bool, Decimal, str]:
     summary = None if row.declaration is None else row.declaration.summary
     value = None if summary is None or summary.result is None else summary.result.value
     return (value is None, value if value is not None else Decimal(0), row.modelo)
-
-
-def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
-    """Prefer the first due row only when it carries a filing period."""
-    due = sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
-    return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
-
-
-def creation_targets(
-    rows: tuple[DeclarationListRow, ...], admitted: tuple[DeclarationTarget, ...]
-) -> tuple[DeclarationTarget, ...]:
-    """Keep admitted choices, falling back to joined not-started addresses."""
-    return admitted or tuple(
-        DeclarationTarget(row.modelo, row.period)
-        for row in rows
-        if row.period is not None and row.state == "not_started"
-    )
-
-
-def existing_declaration(
-    rows: tuple[DeclarationListRow, ...], target: DeclarationTarget
-) -> DeclarationsWorkspaceDeclarationRefV1 | None:
-    """Find an existing declaration at exactly the chosen filing address."""
-    return next(
-        (
-            row.declaration
-            for row in rows
-            if row.declaration is not None and row.modelo == target.modelo and row.period == target.period
-        ),
-        None,
-    )

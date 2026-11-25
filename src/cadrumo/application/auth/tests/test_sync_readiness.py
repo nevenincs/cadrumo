@@ -11,11 +11,11 @@ from pydantic import SecretStr, ValidationError
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ...auth_credentials import ActiveCertificateCredentials
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 from ..auth_read_contracts import AuthReadProjection, AuthReadResult
 from ..credentials import ActiveAuthProjectionSnapshot
 from ..operator_probe_ports import CertificateHealthBand, CertificateHealthObservation, ClaveIdentityObservation
 from ..sync_readiness import AuthSyncReadiness, project_auth_sync_readiness
-from ._operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,16 +62,34 @@ def test_fresh_profile_requires_method_and_tax_identity() -> None:
 def test_qr_does_not_require_app_contrast(route: str, ready: bool) -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "12345678Z", "auth.clave_movil_route": route},
+        {"identity.tax_id": "12345678Z", "auth.clave_movil_route": route},
     )
     assert result.ready is ready
     assert ("auth.fecha_validez" in {item.field for item in result.requirements}) is (route == "app_request")
 
 
+@pytest.mark.parametrize("provider", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
+def test_recorded_tax_id_is_the_clave_identity(provider: AuthProviderKind) -> None:
+    result = _read(
+        provider,
+        {"identity.tax_id": "12345678Z", "auth.clave_movil_route": "qr"},
+        password=SecretStr("private-password"),
+    )
+    assert result.ready
+    assert "auth.dni_nie" not in {item.field for item in result.requirements}
+
+
+@pytest.mark.parametrize("provider", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
+def test_missing_identity_is_asked_once_as_the_tax_id(provider: AuthProviderKind) -> None:
+    result = _read(provider, {"auth.clave_movil_route": "qr"}, password=SecretStr("private-password"))
+    assert not result.ready
+    assert [item.field for item in result.requirements if not item.satisfied] == ["identity.tax_id"]
+
+
 def test_nie_requires_support_instead_of_date() -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,
-        {"identity.tax_id": "X1234567L", "auth.dni_nie": "X1234567L", "auth.numero_soporte": "E12345678"},
+        {"identity.tax_id": "X0001500M", "auth.numero_soporte": "E12345678"},
         nie=True,
     )
     assert result.ready
@@ -79,20 +97,11 @@ def test_nie_requires_support_instead_of_date() -> None:
     assert "auth.fecha_validez" not in {item.field for item in result.requirements}
 
 
-def test_identity_mismatch_blocks_even_with_contrast() -> None:
-    result = _read(
-        AuthProviderKind.CLAVE_MOVIL,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "00000001R", "auth.fecha_validez": "2030-01-01"},
-    )
-    assert not result.ready
-    assert any(item.field == "auth.identity_alignment" and not item.satisfied for item in result.requirements)
-
-
 @pytest.mark.parametrize("password,ready", [(None, False), (SecretStr("private-password"), True)])
 def test_permanente_needs_saved_password_and_never_releases_it(password: SecretStr | None, ready: bool) -> None:
     result = _read(
         AuthProviderKind.CLAVE_PERMANENTE,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "12345678Z"},
+        {"identity.tax_id": "12345678Z"},
         password=password,
     )
     assert result.ready is ready

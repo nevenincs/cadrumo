@@ -9,12 +9,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run
   --build "${CMAKE_BINARY_DIR}"
-  --env "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
   --env "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
   --env "CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/cache"
   --env "CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/test-logs"
   --env "CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_USER_DOCS_WORK}/scratch"
-  --env "CADRUMO_TEMP_DIR=${CADRUMO_PATH_USER_DOCS_WORK}/temporary"
   --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 set(docs_target_args)
@@ -27,22 +25,25 @@ if(NOT CADRUMO_DOCS_SHARED_CACHE)
   list(APPEND docs_build_args --no-shared-cache)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/PackageInputs.cmake")
-cadrumo_source_inputs(user_docs_source_inputs "${CADRUMO_SOURCE_ROOT}")
-file(GLOB_RECURSE user_docs_inputs CONFIGURE_DEPENDS
-  "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*"
-  "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
-list(APPEND user_docs_inputs ${user_docs_source_inputs})
-list(FILTER user_docs_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/docs/_build/|/dev/docs/(.*/)?tests/")
-# Documentation scenarios import source test-support modules and their helpers.
-# Retain that tree so fixture changes invalidate the compiled site too.
-list(FILTER user_docs_inputs EXCLUDE REGEX "/\\.aeat-generated-export-transaction-|/\\.generated-export-(backup|stage)-")
-foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/cache_root.py
+# The source, docs and dev/docs trees are enumerated when the documentation action runs,
+# never at configure time: a new file there must not re-run configure. They are written
+# as tree lines (see action_cache.enrolled_input_paths) and never reach DEPENDS.
+# Documentation scenarios import source test-support modules and their helpers, so the
+# docs policy retains the source tests tree and fixture changes invalidate the compiled
+# site too.
+set(user_docs_trees)
+foreach(tree_directory src docs dev/docs)
+  list(APPEND user_docs_trees "tree\tdocs\t${CADRUMO_SOURCE_ROOT}\t${tree_directory}")
+endforeach()
+file(GLOB user_docs_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
+foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/paths.py dev/source_tree.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
+    dev/packaging/native/docs_scan.py dev/packaging/native/docs_errors.py
     dev/packaging/native/docs_input_identity.py dev/packaging/native/build_directory.py
     dev/packaging/native/package_inventory.py dev/packaging/native/build_paths.py dev/packaging/native/hashing.py
     dev/packaging/native/layout.py dev/packaging/native/identity.py dev/packaging/native/action_cache.py
-    dev/packaging/native/cmake_build.py dev/packaging/runtime_wheelhouse_contract.py)
+    dev/packaging/native/cmake_build.py dev/packaging/native/cargo_command.py dev/packaging/runtime_wheelhouse_contract.py)
   list(APPEND user_docs_inputs "${CADRUMO_SOURCE_ROOT}/${name}")
 endforeach()
 # The cli-sequence gate executes against the published authority the build selects.
@@ -51,7 +52,8 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
 list(APPEND user_docs_inputs "${CMAKE_BINARY_DIR}/build-paths.json")
 list(REMOVE_DUPLICATES user_docs_inputs)
 list(JOIN user_docs_inputs "\n" input_lines)
-file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/inputs-user-docs.txt" CONTENT "${input_lines}\n")
+list(JOIN user_docs_trees "\n" tree_lines)
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/inputs-user-docs.txt" CONTENT "${input_lines}\n${tree_lines}\n")
 cadrumo_build_step(docs_comment user_docs_build GROUP documentation
   SUMMARY "compile the user documentation site in every declared language"
   OUTPUTS "${CADRUMO_PATH_USER_DOCS_BUILD}")
@@ -62,12 +64,20 @@ add_custom_target(user_docs_build
   BYPRODUCTS "${CADRUMO_PATH_USER_DOCS_BUILD}/ready"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${docs_comment}" USES_TERMINAL VERBATIM)
 add_dependencies(user_docs_build registry_authority)
+# A clean check writes the stamp and a depfile naming every input its per-sequence
+# verdict keys read, so an unchanged corpus is skipped here; when an input moved, the
+# check re-executes only the sequences whose recorded verdicts no longer match.
+set(user_docs_verify_stamp "${CADRUMO_PATH_USER_DOCS_WORK}/sequences-verified.stamp")
 cadrumo_build_step(docs_comment user_docs_verify GROUP verification
-  SUMMARY "check every documented CLI sequence against the selected authority")
-add_custom_target(user_docs_verify
-  COMMAND ${docs_helper} dev.docs.sequences check
+  SUMMARY "check every documented CLI sequence against the selected authority"
+  OUTPUTS "${user_docs_verify_stamp}")
+add_custom_command(OUTPUT "${user_docs_verify_stamp}"
+  COMMAND ${docs_helper} dev.docs.sequences check --stamp "${user_docs_verify_stamp}"
+  DEPFILE "${user_docs_verify_stamp}.d"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${docs_comment}" USES_TERMINAL VERBATIM)
+add_custom_target(user_docs_verify DEPENDS "${user_docs_verify_stamp}")
 add_dependencies(user_docs_verify registry_authority)
+cadrumo_register_clean(TARGET user_docs_verify PATHS "${user_docs_verify_stamp}" "${user_docs_verify_stamp}.d")
 cadrumo_build_step(docs_comment user_docs_driver_test GROUP verification
   SUMMARY "test the documentation build driver")
 add_custom_target(user_docs_driver_test
@@ -135,7 +145,10 @@ cadrumo_cached_command(docs_stage_command user_docs_stage SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/docs/language_roots.py" "${CADRUMO_SOURCE_ROOT}/dev/docs/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/hashing.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cargo_command.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_scan.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_errors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
@@ -149,6 +162,8 @@ add_custom_target(user_docs_stage
     ${docs_target_args}
   DEPENDS user_docs_build "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_scan.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_errors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"

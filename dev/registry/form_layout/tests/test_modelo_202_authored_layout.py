@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormCellKind, FormContextFieldBlock, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -14,7 +15,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_202_additional_details_resolve_declared_regime_facts() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/202")).revisions["2025-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/202")).revisions[
+        str(open_ended_revision("202").id)
+    ]
     sections = revision.form_layouts[0].pages[0].sections
     details = next(section for section in sections if section.id == "datos-adicionales")
     assert [section.id for section in sections][:3] == ["identificacion", "devengo", "datos-adicionales"]
@@ -37,8 +40,9 @@ def test_202_additional_details_resolve_declared_regime_facts() -> None:
     ]
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024"])
-def test_202_historical_pages_keep_two_rates_and_b1_on_first_page(revision_id: str) -> None:
+@pytest.mark.parametrize("position", [0, 1])
+def test_202_historical_pages_keep_two_rates_and_b1_on_first_page(position: int) -> None:
+    revision_id = str(authored_revisions("202")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/202")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
@@ -58,12 +62,12 @@ def test_202_historical_pages_keep_two_rates_and_b1_on_first_page(revision_id: s
         for block in details.blocks
         if isinstance(block, FormContextFieldBlock)
     }
-    assert len(details.blocks) == (7 if revision_id == "2019-2022" else 8)
+    assert len(details.blocks) == (7 if position == 0 else 8)
     assert "m202.regimen.entidad_capital_riesgo" in keys
     assert "m202.cooperativa_o_multiples_tipos" not in keys
     assert "m202.cooperativa_fiscalmente_protegida" not in keys
     assert "m202.multiples_tipos_impositivos" not in keys
-    assert ("m202.cifra_negocios_periodo_anterior_bajo_umbral" in keys) is (revision_id == "2023-2024")
+    assert ("m202.cifra_negocios_periodo_anterior_bajo_umbral" in keys) is (position == 1)
     small_enterprise = next(b for b in details.blocks if b.id == "reducida-dimension")
     assert isinstance(small_enterprise, FormContextFieldBlock)
     assert (
@@ -72,7 +76,9 @@ def test_202_historical_pages_keep_two_rates_and_b1_on_first_page(revision_id: s
 
 
 def test_202_current_grid_matches_the_printed_rate_and_correction_boxes() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/202")).revisions["2025-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/202")).revisions[
+        str(open_ended_revision("202").id)
+    ]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.placements) == len(revision.casillas) == 61

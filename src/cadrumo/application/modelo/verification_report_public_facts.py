@@ -26,6 +26,8 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
+    DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -43,7 +45,7 @@ from .verification_report_scalar_facts import ModeloVerificationFactProjection, 
 
 _FindingLocaleKey = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=NAMESPACED_ID_PATTERN),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=256, pattern=NAMESPACED_ID_PATTERN),
 ]
 
 
@@ -101,6 +103,8 @@ class ModeloVerificationFindingProjection(BaseModel):
         tuple[LegalRefId, ...], Field(min_length=1, max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)
     ]
     source_refs: Annotated[tuple[SourceRefId, ...], Field(max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)] = ()
+    disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @model_validator(mode="after")
     def _unique_refs(self) -> Self:
@@ -134,6 +138,8 @@ class ModeloVerificationFindingProjection(BaseModel):
             ),
             legal_refs=finding.legal_refs,
             source_refs=finding.source_refs,
+            disclosed_limitation=finding.disclosed_limitation,
+            below_filing_grade=finding.below_filing_grade,
         )
 
     def to_finding(self) -> ModeloVerificationFinding:
@@ -148,6 +154,8 @@ class ModeloVerificationFindingProjection(BaseModel):
                 "message_facts": {fact.key: fact.typed_value() for fact in self.message_facts},
                 "legal_refs": self.legal_refs,
                 "source_refs": self.source_refs,
+                "disclosed_limitation": self.disclosed_limitation,
+                "below_filing_grade": self.below_filing_grade,
             }
         )
 

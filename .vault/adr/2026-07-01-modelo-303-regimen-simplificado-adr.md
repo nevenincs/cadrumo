@@ -5,15 +5,15 @@ tags:
 date: '2026-07-01'
 related:
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-modified: '2026-08-28'
-body_hash: 'sha256:6aba295285d5e88a85bd35c193ebdafc1164b11ca44da433029770413bd09380'
+modified: '2026-11-04'
+body_hash: 'sha256:7f70038619357f237979a076971e96e8ddb72441ffa67ba316a3551d427644ca'
 ---
 # `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `accepted`)
 
 ## Problem Statement
 
 Modelo 303 now has a first, registry-computed regimen-simplificado reference path for tabled
-2025 IAE activities. Support casillas capture an epigrafe and up to three modulo quantities;
+IAE activities. Support casillas capture an epigrafe and up to three modulo quantities;
 `m303_resolve_modulos_iva_cuota_devengada` and
 `m303_resolve_modulos_iva_cuota_minima_pct` consume the annual coefficient tables; and
 `modulos-iva-cuota-derivada` applies the difficult-justification forfait and minimum floor. A
@@ -55,7 +55,7 @@ last-mile authority without creating a second calculation path.
   #517). Both index by the same IAE activity taxonomy (already present as `legal/iae.toml`) and
   both consume taxpayer-declared modulo quantities (personal empleado, superficie, potencia
   electrica, mesas, etc.). M303 already captures the first three slots in internal support
-  casillas and enrolls the 2025 tabled coefficient slice. The two engines differ in the
+  casillas and enrolls the first tabled coefficient slice. The two engines differ in the
   per-activity coefficient table and the
   output (rendimiento vs cuota IVA), but the activity taxonomy, the annual-Orden dataset shape,
   and the declared-quantity capture are one foundation. The #516 owner comment already names the
@@ -101,7 +101,7 @@ last-mile authority without creating a second calculation path.
 
 ## Constraints
 
-- **Partial authority must not masquerade as complete authority.** The 2025 first-slice tables and
+- **Partial authority must not masquerade as complete authority.** The first-slice tables and
   three declared-unit support casillas are live. Casilla 48 must stay manual until the activity
   catalogue, relevant module slots, indices and real cuotas-soportadas inputs needed for the
   official result are complete and registry-grounded.
@@ -111,7 +111,7 @@ last-mile authority without creating a second calculation path.
   replaces and removes the formula path in the same change.
 
 - **Per-year parameter authority is distinct from law-selected M303 design epochs.** M131 is
-  already authored per-year (`2024`, `2025`, `2026`) because modulos change annually; the M303
+  already authored with one edition per annual Orden because modulos change annually; the M303
   simplificado engine inherits the same parameter cadence, so the resolver must select the Orden
   dataset by filing year. M303 independently selects one of the five explicit modern design
   bindings (`2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, or
@@ -177,7 +177,7 @@ already owns this calculation; either parallel path would violate
 
 ## Amendment (2026-08-11): S59 annual Orden authority
 
-S59 supersedes this record's partial-catalogue and missing-corpus premises, but not its separate casilla-48 calculation-completeness constraint. The canonical registry now compiles the complete Annex II IVA annual-quota taxonomy independently for 2023, 2024, 2025, and 2026 from each year's hash-pinned BOE HTML: exactly 49 activity tables and 141 module rows per year. `ActividadOrdenAnualId` is the duplicate-safe activity identity; raw IAE, activity kind, table ordinal, and caller-supplied Orden tuples are not selectors.
+S59 supersedes this record's partial-catalogue and missing-corpus premises, but not its separate casilla-48 calculation-completeness constraint. The canonical registry now compiles the complete Annex II IVA annual-quota taxonomy independently for each authored annual Orden edition from its hash-pinned BOE HTML: exactly 49 activity tables and 141 module rows per edition. `ActividadOrdenAnualId` is the duplicate-safe activity identity; raw IAE, activity kind, table ordinal, and caller-supplied Orden tuples are not selectors.
 
 One production-neutral DOM parser supplies immutable table IR to both the registry compiler and the documentation preprocessor. The preprocessor deterministically regenerates the canonical `.extracted.json` and `.extracted.md` sidecar pairs with semantic Annex II anchors. Generated table-scoped legal references enter the ordinary legal catalogue and retain their normative source identity and digest; hash anchors, ordinal anchors, hand-authored table maps, incomplete sidecars, and parallel runtime authority are forbidden. The manifest and preprocessing check gates refuse stale hashes, extractor-version drift, missing or extra tables, duplicate or ambiguous anchors, cross-year contamination, malformed or truncated sources, unconsumed authority files, and divergence in either member of a sidecar pair.
 

@@ -16,9 +16,11 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.schema import IvaCategory
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_HORIZON_ANNUAL = Period.from_year_and_code(filing_year_envelope().horizon, "0A")
 _FABRICATED_PCT = Decimal("37.25")
 _FABRICATED_RETENCION_PCT = Decimal("41.75")
 
@@ -26,7 +28,7 @@ _FABRICATED_RETENCION_PCT = Decimal("41.75")
 def _fabricated_values() -> InvoiceExtractionAuthorityValues:
     """Return values that share no figure with the real registry."""
     return InvoiceExtractionAuthorityValues(
-        period=_ANNUAL_2026,
+        period=_HORIZON_ANNUAL,
         iva_rate_pcts=(_FABRICATED_PCT,),
         retencion_rate_pcts=(_FABRICATED_RETENCION_PCT,),
         no_printed_tax_categories=(IvaCategory("domestic_exempt"),),
@@ -46,7 +48,7 @@ class TestTheRendererCannotReachAroundItsArgument:
             resolve_invoice_extraction_authority_values,
         )
 
-        real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
+        real = resolve_invoice_extraction_authority_values(period=_HORIZON_ANNUAL, operation=operation)
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
 
         assert "37.25" in rendered.text
@@ -64,7 +66,7 @@ class TestTheRendererCannotReachAroundItsArgument:
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
 
         assert rendered.iva_rate_pcts == (_FABRICATED_PCT,)
-        assert rendered.period == _ANNUAL_2026
+        assert rendered.period == _HORIZON_ANNUAL
 
 
 class TestTheReaderEntryPointUsesTheAuthority:

@@ -12,8 +12,7 @@ the manifest is the integrity gate, not the secrecy gate). Per-record
 fields are validated against path-traversal at construction.
 
 There is no human CLI for corpus verification. Consumers import manifest and
-bundle operations directly from this defining module. The same API owns
-manifest regeneration after an intentional corpus update.
+bundle operations directly from this defining module.
 
 This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded
@@ -26,26 +25,21 @@ from __future__ import annotations
 
 import io
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..directory_scan import scan_directory
 from ..errors.hierarchy import (
-    CoreValidationError as _CoreValidationError,
+    CoreValidationError,
+    pydantic_validation_boundary,
 )
-from ..errors.hierarchy import (
-    pydantic_validation_boundary as _pydantic_validation_boundary,
-)
-from ..hashing import canonical_json_bytes as _canonical_json_bytes
-from ..hashing import hash_file as _hash_file
-from ..hashing import sha256_hex as _sha256_hex
+from ..hashing import canonical_json_bytes, sha256_hex
 from ..hex import Hex64Str
-from ..logging import get_logger as _get_logger
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..time.clock import now as _clock_now
+from ..logging import get_logger
+from ..models import STRICT_FROZEN_CONFIG
+from ..time.clock import now
 from ..time.utc import validate_utc_aware
 from .errors import (
     CorpusBundleError,
@@ -53,16 +47,13 @@ from .errors import (
     CorpusManifestTamperError,
 )
 
-_logger = _get_logger(__name__)
+_logger = get_logger(__name__)
 
 _BUNDLE_MANIFEST_MEMBER = "corpus.manifest.json"
 """Canonical archive-member name for a bundle's embedded manifest."""
 
 _MANIFEST_VERSION = 1
 """Wire-format version of the on-disk manifest schema."""
-
-_MANIFEST_FILENAME = "corpus.manifest.json"
-"""Canonical filename for the manifest sidecar inside each corpus root."""
 
 
 class CorpusEntry(BaseModel):
@@ -76,7 +67,7 @@ class CorpusEntry(BaseModel):
             is permitted).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     relative_path: str = Field(min_length=1, max_length=4096)
     sha256: Hex64Str
@@ -84,7 +75,7 @@ class CorpusEntry(BaseModel):
 
     @field_validator("relative_path")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
             raise CorpusManifestError(
@@ -134,7 +125,7 @@ class CorpusManifest(BaseModel):
         manifest_sha256: Self-attesting digest. Re-computed on load.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest_version: int = Field(default=_MANIFEST_VERSION, ge=1)
     corpus_root_name: str = Field(min_length=1, max_length=64)
@@ -144,11 +135,11 @@ class CorpusManifest(BaseModel):
 
     @field_validator("generated_at")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _require_aware(cls, value: datetime) -> datetime:
         try:
             return validate_utc_aware(value)
-        except _CoreValidationError as exc:
+        except CoreValidationError as exc:
             raise CorpusManifestError(
                 translated_message="errors.integrity.integrity_storage_corpus_manifest",
                 context={
@@ -159,49 +150,20 @@ class CorpusManifest(BaseModel):
             ) from exc
 
 
-class _ManifestPayloadValidationError(_CoreValidationError):
+class ManifestPayloadValidationError(CoreValidationError):
     """Base error for an invalid raw manifest payload before I/O translation."""
 
 
-class _MalformedManifestPayloadError(_ManifestPayloadValidationError):
+class MalformedManifestPayloadError(ManifestPayloadValidationError):
     """Raw payload cannot be parsed into the manifest schema."""
 
 
-class _UnsupportedManifestVersionError(_ManifestPayloadValidationError):
+class UnsupportedManifestVersionError(ManifestPayloadValidationError):
     """Raw payload declares a version this consumer cannot admit."""
 
 
-class _TamperedManifestPayloadError(_ManifestPayloadValidationError):
+class TamperedManifestPayloadError(ManifestPayloadValidationError):
     """Raw payload's recorded self-digest differs from its canonical body."""
-
-
-def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
-    """Yield every regular file under ``corpus_root`` excluding the manifest.
-
-    Hidden files / dirs (leading ``.``) are skipped — they are typically
-    git internals or editor cruft that should not be tracked. The
-    manifest sidecar at the root is excluded so the manifest does not
-    cover itself recursively.
-
-    Symlinks are skipped: a hostile actor with corpus-tree write access
-    could plant a symlink pointing to a file outside the corpus and
-    cause the manifest to attest to content the corpus does not own.
-    The substrate's classification policy maps the corpus class to
-    integrity-tracked-only, but the manifest must reflect the literal
-    on-disk corpus contents — symlinks defeat that contract.
-    """
-    for path in scan_directory(corpus_root, recursive=True):
-        # ``is_symlink()`` is checked first because ``is_file()`` follows
-        # the symlink target on most filesystems and would mask the link.
-        if path.is_symlink():
-            continue
-        if not path.is_file():
-            continue
-        if any(part.startswith(".") for part in path.relative_to(corpus_root).parts):
-            continue
-        if path.name == _MANIFEST_FILENAME and path.parent == corpus_root:
-            continue
-        yield path
 
 
 def _canonical_manifest_body(
@@ -233,7 +195,7 @@ def _canonical_manifest_body(
             for entry in entries
         ],
     }
-    return _canonical_json_bytes(payload)
+    return canonical_json_bytes(payload)
 
 
 def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
@@ -247,74 +209,38 @@ def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
     try:
         manifest = CorpusManifest.model_validate_json(raw)
     except (ValueError, ValidationError) as exc:
-        raise _MalformedManifestPayloadError(str(exc)) from exc
+        raise MalformedManifestPayloadError(str(exc)) from exc
     if manifest.manifest_version > _MANIFEST_VERSION:
-        raise _UnsupportedManifestVersionError(str(manifest.manifest_version))
+        raise UnsupportedManifestVersionError(str(manifest.manifest_version))
     body = _canonical_manifest_body(
         manifest_version=manifest.manifest_version,
         corpus_root_name=manifest.corpus_root_name,
         generated_at=manifest.generated_at,
         entries=manifest.entries,
     )
-    if manifest.manifest_sha256 != _sha256_hex(body):
-        raise _TamperedManifestPayloadError()
+    if manifest.manifest_sha256 != sha256_hex(body):
+        raise TamperedManifestPayloadError()
     return manifest
 
 
-def build_corpus_manifest(
-    corpus_root: Path,
+def _self_signed_manifest(
+    raw_entries: list[CorpusEntry],
     *,
     corpus_root_name: str,
-    generated_at: datetime | None = None,
+    generated_at: datetime,
 ) -> CorpusManifest:
-    """Walk ``corpus_root`` and build a freshly self-signed manifest.
-
-    Args:
-        corpus_root: The corpus directory to walk.
-        corpus_root_name: Stable identifier for this corpus (logged in
-            the manifest body so an operator can grep for it).
-        generated_at: Optional override for the timestamp. When ``None``
-            the canonical clock :func:`core.time.clock.now` is consulted, so
-            the deterministic-output seam (:func:`core.time.clock.frozen_clock`)
-            pins it under replay; an explicit value still overrides.
-
-    Returns:
-        A :class:`CorpusManifest` covering every regular file under
-        ``corpus_root``.
-
-    Raises:
-        FileNotFoundError: If ``corpus_root`` does not exist.
-        NotADirectoryError: If ``corpus_root`` is not a directory.
-    """
-    if not corpus_root.exists():
-        raise FileNotFoundError(corpus_root)
-    if not corpus_root.is_dir():
-        raise NotADirectoryError(corpus_root)
-    if generated_at is None:
-        generated_at = _clock_now()
-    raw_entries: list[CorpusEntry] = []
-    for path in _iter_corpus_files(corpus_root):
-        sha256_hex, length = _hash_file(path)
-        relative = PurePosixPath(*path.relative_to(corpus_root).parts).as_posix()
-        raw_entries.append(
-            CorpusEntry(
-                relative_path=relative,
-                sha256=sha256_hex,
-                content_length=length,
-            ),
-        )
+    """Sort ``raw_entries`` and sign them into a self-attesting manifest."""
     raw_entries.sort(key=lambda entry: entry.relative_path)
     entries = tuple(raw_entries)
-    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(entries), corpus_root)
     body = _canonical_manifest_body(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
         generated_at=generated_at,
         entries=entries,
     )
-    manifest_sha256 = _sha256_hex(body)
+    manifest_sha256 = sha256_hex(body)
     _logger.debug(
-        "build_corpus_manifest: built manifest for %r with %d entries (sha256=%s)",
+        "_self_signed_manifest: built manifest for %r with %d entries (sha256=%s)",
         corpus_root_name,
         len(entries),
         manifest_sha256[:12],
@@ -339,7 +265,7 @@ class CorpusBundleVerification(BaseModel):
     manifest record.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: CorpusManifest
     missing: tuple[str, ...] = Field(default=())
@@ -353,53 +279,71 @@ class CorpusBundleVerification(BaseModel):
 
 
 def build_corpus_bundle(
-    corpus_root: Path,
+    members: Mapping[str, bytes],
     *,
     corpus_root_name: str,
     output_path: Path,
     generated_at: datetime | None = None,
 ) -> CorpusManifest:
-    """Pack ``corpus_root`` into a checksummed zip bundle at ``output_path``.
+    """Pack in-memory ``members`` into a checksummed zip bundle at ``output_path``.
 
-    Walks ``corpus_root`` with the same file-selection rules as
-    :func:`build_corpus_manifest` (hidden files and the manifest
-    sidecar itself are excluded), builds the manifest, then writes a
-    new zip archive containing the manifest under
-    :data:`_BUNDLE_MANIFEST_MEMBER` plus every corpus file under its
-    POSIX-relative path. The archive is assembled fully in memory, then
-    persisted through :func:`~cadrumo.core.atomic_write.atomic_write_bytes`
-    (standard tier: tempfile sibling, fsync, :func:`os.replace`,
-    best-effort parent-directory fsync), so a failure mid-write never
-    leaves a partial bundle at ``output_path``.
+    Builds the manifest over ``members`` (keyed by POSIX-relative archive
+    path, validated like every :class:`CorpusEntry`), then writes a new zip
+    archive containing the manifest under :data:`_BUNDLE_MANIFEST_MEMBER`
+    plus every member. Members are taken as bytes rather than read from a
+    staging directory so a bundle of sensitive members never materialises
+    them as files a hard process stop could strand. The archive is assembled
+    fully in memory, then persisted through
+    :func:`~cadrumo.core.atomic_write.atomic_write_bytes` (standard tier:
+    tempfile sibling, fsync, :func:`os.replace`, best-effort
+    parent-directory fsync), so a failure mid-write never leaves a partial
+    bundle at ``output_path``.
 
     Args:
-        corpus_root: The corpus directory to bundle.
+        members: Archive path to member bytes.
         corpus_root_name: Stable identifier recorded in the manifest
-            (mirrors :func:`build_corpus_manifest`).
+            (``"manuals"``, ``"legal"``, etc.).
         output_path: Destination ``.zip`` path. Parent directories are
             created as needed; an existing file at this path is
             overwritten.
-        generated_at: Optional override for the manifest timestamp;
-            see :func:`build_corpus_manifest`.
+        generated_at: Optional override for the manifest timestamp. When
+            ``None`` the canonical clock :func:`core.time.clock.now` is
+            consulted, so the deterministic-output seam
+            (:func:`core.time.clock.frozen_clock`) pins it under replay.
 
     Returns:
         The :class:`CorpusManifest` embedded in the written bundle.
 
     Raises:
-        FileNotFoundError: If ``corpus_root`` does not exist.
-        NotADirectoryError: If ``corpus_root`` is not a directory.
+        CorpusManifestError: If a member path is unsafe or collides with
+            the embedded manifest member.
     """
-    manifest = build_corpus_manifest(
-        corpus_root,
+    if _BUNDLE_MANIFEST_MEMBER in members:
+        raise CorpusManifestError(
+            translated_message="errors.integrity.integrity_storage_corpus_manifest",
+            context={"relative_path": _BUNDLE_MANIFEST_MEMBER, "reserved_member": True},
+        )
+    raw_entries: list[CorpusEntry] = []
+    for relative_path, content in members.items():
+        try:
+            entry = CorpusEntry(relative_path=relative_path, sha256=sha256_hex(content), content_length=len(content))
+        except ValidationError as exc:
+            raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": relative_path, "member_path_valid": False},
+            ) from exc
+        raw_entries.append(entry)
+    manifest = _self_signed_manifest(
+        raw_entries,
         corpus_root_name=corpus_root_name,
-        generated_at=generated_at,
+        generated_at=now() if generated_at is None else generated_at,
     )
     resolved_output = output_path.resolve()
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
         for entry in manifest.entries:
-            archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
+            archive.writestr(entry.relative_path, members[entry.relative_path])
     # Deferred import: core.atomic_write imports core.logging, whose runtime
     # configuration depends on settings. Keep it local to avoid widening this
     # module's eager import surface during settings bootstrap.
@@ -474,7 +418,7 @@ def _verify_open_corpus_bundle(archive: zipfile.ZipFile) -> CorpusBundleVerifica
     for relative in sorted(archived_files & set(expected)):
         recorded = expected[relative]
         actual_bytes = archive.read(relative)
-        actual_sha256 = _sha256_hex(actual_bytes)
+        actual_sha256 = sha256_hex(actual_bytes)
         if actual_sha256 != recorded.sha256 or len(actual_bytes) != recorded.content_length:
             mismatched.append(relative)
     return CorpusBundleVerification(
@@ -489,12 +433,12 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
     raw = archive.read(_BUNDLE_MANIFEST_MEMBER)
     try:
         return _validate_raw_manifest_payload(raw)
-    except _MalformedManifestPayloadError as exc:
+    except MalformedManifestPayloadError as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
             context={"embedded_manifest_structurally_valid": False, "validation_error_type": type(exc).__name__},
         ) from exc
-    except _UnsupportedManifestVersionError as exc:
+    except UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
             context={
@@ -502,7 +446,7 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
                 "supported_version": str(_MANIFEST_VERSION),
             },
         ) from exc
-    except _TamperedManifestPayloadError as exc:
+    except TamperedManifestPayloadError as exc:
         raise CorpusManifestTamperError(
             translated_message="errors.integrity.integrity_storage_corpus_manifest_tamper",
             context={

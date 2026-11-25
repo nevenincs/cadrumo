@@ -23,7 +23,7 @@ from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant, parse_iso_datetime, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from .enums import AttachmentKind, AttachmentSource
@@ -131,7 +131,7 @@ class Attachment(BaseModel):
         notes: Free-form trimmed notes; the empty string is allowed.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     attachment_id: Hex64Str
     kind: AttachmentKind

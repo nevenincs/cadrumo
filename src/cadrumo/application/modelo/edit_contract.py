@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, model_validator
 
@@ -37,6 +37,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.schema_identity import OperationSchemaIdentityV1
+
+MAX_REPEATED_ROW_VALUES: Final = 256
+"""How many scalar values one repeated row may carry across an operation payload; a capacity, not a form limit."""
 
 
 class EditModel(BaseModel):
@@ -76,6 +79,11 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     advances or confirms only the work-unit pointer and emits no fresh
     ``MODELO_CALCULATION_CREATED`` event to reference. It is always present
     when the commit created the revision.
+
+    ``calculation_revision_id`` is ``None`` when the edit withdrew the work
+    unit's calculation: the withdrawal of a carry statement that leaves the
+    calculation refused returns the work unit to no current calculation, and
+    the withdrawn revision stays stored.
     """
 
     receipt_id: ModeloEditMutationResultReceiptId
@@ -83,7 +91,7 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     mutation_family: ModeloEditMutationFamily
     baseline_id: ModeloEditBaselineId
     work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
+    calculation_revision_id: CalculationRevisionId | None
     bucket_event_id: Hex64Str | None
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     committed_at: datetime
@@ -129,6 +137,7 @@ class ModeloEditCompatibilityTupleV1(EditModel):
 
 
 __all__ = [
+    "MAX_REPEATED_ROW_VALUES",
     "ModeloEditCompatibilityTupleV1",
     "ModeloEditExecutionEffect",
     "ModeloEditMutationFamily",

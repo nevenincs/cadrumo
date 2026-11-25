@@ -24,6 +24,7 @@ def _declarations() -> dict[str, str]:
         "tax_id.leaders.nie": format_.nie_leaders,
         "tax_id.leaders.cif": format_.cif_leaders,
         "tax_id.check.nif_letters": format_.nif_letters,
+        "tax_id.check.nif_modulus": str(format_.nif_check_modulus),
         "tax_id.check.cif_digit_only_kinds": format_.cif_digit_only_kinds,
         "tax_id.check.cif_letter_only_kinds": format_.cif_letter_only_kinds,
         "tax_id.check.cif_letter_table": format_.cif_letter_table,

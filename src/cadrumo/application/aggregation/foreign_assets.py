@@ -22,6 +22,7 @@ only the four canonical source-kind values ``ledger_transaction``,
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -77,9 +78,10 @@ from ..foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
     foreign_asset_declaration_thresholds,
     foreign_asset_declaration_thresholds_for_revision,
+    modelo_720_declaration_date,
 )
 from ..foreign_assets.valuation import value_modelo_720_rows
-from ._grouping import assert_rollup_totals_match, group_observations
+from .grouping import assert_rollup_totals_match, group_observations
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -87,7 +89,7 @@ from .source_mesh import (
     CalculationSourceResolution,
 )
 
-_CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.LEDGER_TRANSACTION,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -111,8 +113,8 @@ def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
             raise ValueError(f"foreign asset source_kind {value!r} is not a BindingSourceKind") from exc
     else:
         raise ValueError("foreign asset source_kind must be a BindingSourceKind or source-kind string")
-    if source_kind not in _CANONICAL_SOURCE_KINDS:
-        allowed = ", ".join(kind.value for kind in _CANONICAL_SOURCE_KINDS)
+    if source_kind not in CANONICAL_SOURCE_KINDS:
+        allowed = ", ".join(kind.value for kind in CANONICAL_SOURCE_KINDS)
         raise ValueError(
             f"unsupported source_kind {source_kind.value!r}; use one of {allowed}",
         )
@@ -150,12 +152,12 @@ class ForeignAssetIngestObservation(BaseModel):
     asset_class: ForeignAssetClass
     asset_external_id: str = Field(min_length=1, max_length=128)
     country: CountryCodeAlpha2
-    issuer_or_institution: str = Field(default="", max_length=200)
+    issuer_or_institution: str = Field(default="", max_length=256)
     valuation_amount: Decimal = Field(ge=Decimal("0"))
     currency_code: IsoCurrencyCode
     valuation_event: M720ValuationEvent
-    valuation_event_date: IsoDateString | None = Field(default=None, min_length=10, max_length=10)
-    acquisition_date: IsoDateString = Field(min_length=10, max_length=10)
+    valuation_event_date: IsoDateString | None = None
+    acquisition_date: IsoDateString
 
     @property
     def held_at_year_end(self) -> bool:
@@ -291,7 +293,9 @@ def declarable_asset_classes_720(
             filing_year=aggregation.period.filing_year,
             operation=operation,
         )
-    catalogue = resolve_foreign_asset_obligation_catalogue()
+    catalogue = resolve_foreign_asset_obligation_catalogue(
+        effective_date=modelo_720_declaration_date(aggregation.period.filing_year),
+    )
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     asset_classes_by_group: dict[ForeignAssetObligationGroup, set[ForeignAssetClass]] = {}
     for rollup in aggregation.rollups:
@@ -372,7 +376,7 @@ def _valued_ingest_observations(
 ) -> tuple[tuple[ForeignAssetIngestObservation, Modelo720ValuedRow], ...]:
     ingested = tuple(observations)
     valued = value_modelo_720_rows(
-        (_registry_observation_from_foreign_asset(observation) for observation in ingested),
+        (registry_observation_from_foreign_asset(observation) for observation in ingested),
         filing_year=period.filing_year,
         rate_provider=rate_provider,
     )
@@ -417,7 +421,7 @@ class ForeignAssetsAggregationSourceResolver:
         if not _foreign_asset_source_for_revision(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        ledger_rows = tuple(_registry_observation_from_foreign_asset(observation) for observation in self._observations)
+        ledger_rows = tuple(registry_observation_from_foreign_asset(observation) for observation in self._observations)
         _refuse_ledger_worksheet_collision(ledger_rows, self._row_observations)
         valued = value_modelo_720_rows(
             (*ledger_rows, *self._row_observations),
@@ -432,13 +436,22 @@ class ForeignAssetsAggregationSourceResolver:
         register = self._register_loader()
         filing_year = context.period.filing_year
         refuse_held_declared_assets_without_lot(valued, register, filing_year=filing_year)
-        declarable, declarable_groups = _declarable_valued_rows(valued, thresholds=thresholds)
+        declarable, declarable_groups = _declarable_valued_rows(
+            valued,
+            thresholds=thresholds,
+            effective_date=context.period.end_date,
+        )
         records = join_modelo_720_records(declarable, register, filing_year=filing_year)
         declared_source_ids = {row.observation.source_id for row in declarable}
         return _row_resolution(
             context,
             records,
-            diagnostics=_declaration_advisories(register, valued, declarable_groups),
+            diagnostics=_declaration_advisories(
+                register,
+                valued,
+                declarable_groups,
+                effective_date=context.period.end_date,
+            ),
             worksheet_source_ids={row.source_id for row in self._row_observations},
             # One transaction may evidence several lots; it is one contributor.
             source_transaction_ids=tuple(
@@ -473,8 +486,8 @@ def _refuse_ledger_worksheet_collision(
         )
 
 
-def _obligation_group_by_code() -> dict[M720AssetClassCode, ForeignAssetObligationGroup]:
-    catalogue = resolve_foreign_asset_obligation_catalogue()
+def _obligation_group_by_code(*, effective_date: date) -> dict[M720AssetClassCode, ForeignAssetObligationGroup]:
+    catalogue = resolve_foreign_asset_obligation_catalogue(effective_date=effective_date)
     return {
         code: catalogue.group_for_asset_class(asset_class)
         for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
@@ -485,10 +498,11 @@ def _declarable_valued_rows(
     valued: Iterable[Modelo720ValuedRow],
     *,
     thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold],
+    effective_date: date,
 ) -> tuple[tuple[Modelo720ValuedRow, ...], frozenset[ForeignAssetObligationGroup]]:
     """Keep the lots whose obligation block exceeds its declaration floor in euros, and name those blocks."""
     rows = tuple(valued)
-    group_by_code = _obligation_group_by_code()
+    group_by_code = _obligation_group_by_code(effective_date=effective_date)
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     for row in rows:
         group = group_by_code[row.observation.asset_class_code]
@@ -507,13 +521,15 @@ def _declaration_advisories(
     register: ForeignAssetRegister,
     valued: tuple[Modelo720ValuedRow, ...],
     declarable_groups: frozenset[ForeignAssetObligationGroup],
+    *,
+    effective_date: date,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Report each declared asset whose valued lots fall in a block under its declaration floor.
 
     Such a declaration forms no type 2 record and is not exported; it stays
     visible rather than vanishing from the declaration.
     """
-    group_by_code = _obligation_group_by_code()
+    group_by_code = _obligation_group_by_code(effective_date=effective_date)
     declared = {declaration.asset_ref for declaration in register.declarations}
     below_floor = sorted(
         {
@@ -538,9 +554,10 @@ def _declaration_advisories(
     )
 
 
-def _registry_observation_from_foreign_asset(
+def registry_observation_from_foreign_asset(
     observation: ForeignAssetIngestObservation,
 ) -> Modelo720RowObservation:
+    """Convert a foreign asset ingest observation into a modelo 720 row observation."""
     # Already admitted by the same authority at observation construction; this
     # is the string -> date lift the registry row shape needs, not a second gate.
     acquisition_date = require_iso8601_date(observation.acquisition_date)

@@ -17,17 +17,23 @@ The same export shaping also answers the calculation for a bound TEXT casilla:
 a declarant-identity casilla reads its profile fact through
 :func:`resolve_profile_text_casilla_inputs`, so the value the calculation holds
 for it is the value the filed record addresses.
+
+The profile facts are read from the :class:`UserProfileRecord`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
+
+from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -38,49 +44,56 @@ from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevi
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.deadlines.errors import ProfileError
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
-from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.schema import (
+    ProfileDerivedSelectorDefinition,
+    ProfileSchemaDefinition,
+    derived_selector_for_path,
+)
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..filing.export_producer_m303 import M303ProfileLexicals, m303_profile_lexicals
+from ..filing.identity_contact_producer import identity_contact_producer_values
+from ..filing.producer_profile_facts import (
+    IDENTITY_LEGAL_NAME_PATH,
+    IDENTITY_NAME_PATH,
+    IDENTITY_SURNAMES_PATH,
+    IDENTITY_TAX_ID_PATH,
+)
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, projection_for_taxpayer, record_to_path_values
+from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
+from .profile_derived_facts import (
+    inject_derived_activity_tipo_clave_fact,
+    inject_derived_cash_election_fact,
+    inject_derived_estimation_modality_fact,
+)
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
-#: Stored profile fact paths the export identity is read from. Named here
-#: rather than inline so the three that must agree stay visibly together.
-_IDENTITY_TAX_ID_KEY = "identity.tax_id"
-_IDENTITY_NAME_KEY = "identity.name"
-_IDENTITY_SURNAMES_KEY = "identity.surnames"
-_IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
+#: Stored profile fact paths the export reads besides the identity ones, which
+#: live beside the producer-fact door that names them.
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
 
-#: The stored profile facts each taxpayer-identity producer fact is shaped from
-#: by ``_taxpayer_identity_facts``. An export refusing a blank required identity
-#: field names these, because the operator declares a profile fact and never
-#: sees the producer key the layout reads.
-_TAXPAYER_IDENTITY_PROFILE_FACTS: Mapping[FilingProducerKey, tuple[str, ...]] = {
-    FilingProducerKey.TAXPAYER_TAX_ID: (_IDENTITY_TAX_ID_KEY,),
-    FilingProducerKey.TAXPAYER_LEGAL_NAME: (_IDENTITY_LEGAL_NAME_KEY,),
-    FilingProducerKey.TAXPAYER_GIVEN_NAME: (_IDENTITY_NAME_KEY,),
-    FilingProducerKey.TAXPAYER_SURNAMES: (_IDENTITY_SURNAMES_KEY,),
-    FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: (_IDENTITY_SURNAMES_KEY, _IDENTITY_LEGAL_NAME_KEY),
+#: The stored profile fact to correct when a bounded producer field overruns.
+_IDENTITY_TEXT_PROFILE_FACTS: Mapping[str, str] = {
+    "legal_name": IDENTITY_LEGAL_NAME_PATH,
+    "given_name": IDENTITY_NAME_PATH,
+    "surnames": IDENTITY_SURNAMES_PATH,
+    "full_name": IDENTITY_SURNAMES_PATH,
 }
-
-
-def taxpayer_identity_profile_facts(producer_key: str) -> tuple[str, ...]:
-    """Return the profile facts a taxpayer-identity producer value is read from, or ``()``."""
-    try:
-        return _TAXPAYER_IDENTITY_PROFILE_FACTS.get(FilingProducerKey(producer_key), ())
-    except ValueError:
-        return ()
+_CONTACT_TEXT_PROFILE_FACTS: Mapping[str, str] = {
+    "phone": _CONTACT_PERSON_PHONE_KEY,
+    "full_name": _CONTACT_PERSON_NAME_KEY,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,6 +139,24 @@ def _profile_text_casilla_bindings(
 
 def _first_profile_text_value(declared: tuple[UserProfileFactValue, ...]) -> str | None:
     return next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
+
+
+def profile_text_fact_index(
+    record: object,
+    schema: ProfileSchemaDefinition,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, UserProfileFactValue]:
+    """Return the fact index a bound text casilla reads, with its engine-derived claves.
+
+    Casilla 0168's modality clave is derived from the declared estimation regime and
+    casilla 0166's tipo de actividad clave from the activities' censal tipo under it,
+    so the text channel reads the derived values and never ones stored at the paths.
+    """
+    fact_index = profile_fact_index(record, schema)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    inject_derived_activity_tipo_clave_fact(fact_index)
+    return fact_index
 
 
 def resolve_profile_text_casilla_inputs(
@@ -220,6 +251,7 @@ def profile_text_casilla_gap_diagnostics(
     fact_index: Mapping[str, UserProfileFactValue],
     *,
     supplied_casilla_ids: Collection[CasillaId],
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on each required profile-bound text casilla the profile leaves empty.
 
@@ -227,12 +259,15 @@ def profile_text_casilla_gap_diagnostics(
     which profile fact would fill it. A casilla the calculation holds a value
     for through any other channel -- the operator's own text, or a bound value
     -- is not a gap, because that value is what the calculation files for it.
+    A binding that reads an engine-derived path names the facts that path is
+    derived from, because those are what the operator can declare.
 
     Args:
         revision: The calculated :class:`ModeloRevision`.
         fact_index: The declarant's profile fact index.
         supplied_casilla_ids: Casillas the calculated revision holds an input
             value for, whichever channel supplied it.
+        derived_selectors: The profile schema's engine-derived paths.
 
     Returns:
         One ``unresolved_binding`` advisory per empty required casilla, carrying
@@ -246,7 +281,7 @@ def profile_text_casilla_gap_diagnostics(
             continue
         casilla = casillas[gap.casilla_id]
         binding = bindings[gap.binding_id]
-        fields = ", ".join(gap.profile_fields)
+        fields = ", ".join(_settable_profile_fields(gap.profile_fields, derived_selectors))
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="unresolved_binding",
@@ -268,16 +303,16 @@ def profile_text_casilla_gap_diagnostics(
     return tuple(diagnostics)
 
 
-def compose_legal_full_name(*, surnames: str, name: str) -> str:
-    """Compose a Spanish legal full name from its ordered parts.
-
-    AEAT writes an individual's name surnames-first, and a blank part must not
-    leave a doubled separator behind. This is the single home for that join:
-    the export header path and the dictionary-field resolver below both write
-    the operator's name onto the same declaration, so two separate joins could
-    disagree on one artefact.
-    """
-    return " ".join(part for part in (surnames.strip(), name.strip()) if part)
+def _settable_profile_fields(
+    fields: tuple[str, ...],
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...],
+) -> tuple[str, ...]:
+    """Replace each engine-derived path by the profile facts it is derived from."""
+    settable: list[str] = []
+    for field in fields:
+        derived = derived_selector_for_path(field, derived_selectors)
+        settable.extend(derived.derived_from if derived is not None else (field,))
+    return tuple(dict.fromkeys(settable))
 
 
 def _profile_export_binding_applies(
@@ -349,6 +384,7 @@ def resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     schema: ProfileSchemaDefinition | None = None,
@@ -366,18 +402,11 @@ def resolve_profile_export_values(
     decides a row's rendering from the Python type it receives, so pre-rendering
     to ``str`` here would destroy the distinction it needs.
 
-    Deliberately does NOT call ``_load_profile_facts``, and deliberately takes
-    no :class:`RegistrySnapshot`. That loader adds the engine-derived facts
-    (marriage months, guardería aggregates, mínimo descendientes, anualidades
-    eligibility, state attribution) on top of the stored index. Measured
-    against the real Modelo 100 2024 revision, ZERO of the 32 selectors named
-    by export-addressed bindings is a derived path -- every one is a stored
-    fact (identity, spouse, taxpayer, tax residence, declaration type). The
-    derived injectors therefore cannot change a single value this function
-    reads, so requiring a snapshot would be threading an input that provably
-    does not affect the answer. Re-measure before assuming otherwise; if a
-    future revision does declare an export binding on a derived path, route
-    this through the same loader rather than reproducing any part of it.
+    Deliberately does NOT call ``_load_profile_facts``: its family and state
+    attribution facts feed formulas, and no export-addressed binding names them.
+    The one derived path an export binding does name is the cash election, which
+    states one ejercicio and so needs ``filing_year``; it is injected through the
+    same function the loader uses, so the two cannot disagree.
 
     A ``repeating`` binding is skipped. Those name array paths
     (``RentaFamilyProfile.ascendants.*`` / ``.descendants.*``) that nothing in
@@ -393,6 +422,7 @@ def resolve_profile_export_values(
         bindings: The revision's export-addressed profile bindings, as
             projected onto the schema subview by ``profile_export_bindings``.
         bucket_id: Active profile bucket whose persisted facts are read.
+        filing_year: Ejercicio whose election the derived cash-criterion fact states.
         operation: Authority operation supplying the profile read and schema.
         profile_record: Pre-loaded profile record; loaded from the bucket when
             omitted.
@@ -408,6 +438,7 @@ def resolve_profile_export_values(
     return _resolve_profile_export_values(
         bindings,
         bucket_id=bucket_id,
+        filing_year=filing_year,
         operation=operation,
         profile_record=profile_record,
         schema=schema,
@@ -447,7 +478,7 @@ def resolve_export_identity(
         the export path's own refusal states that far better than a half-built
         identity would.
     """
-    record = _load_profile_record(
+    record = load_export_profile_record(
         bucket_id=bucket_id,
         operation=operation,
         profile_record=profile_record,
@@ -455,10 +486,10 @@ def resolve_export_identity(
     if record is None:
         return None
     resolved_schema = operation.profile_schema() if schema is None else schema
-    return _identity_from_profile_facts(profile_fact_index(record, resolved_schema))
+    return identity_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
 
 
-def _load_profile_record(
+def load_export_profile_record(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
@@ -504,7 +535,7 @@ def resolve_declaration_contact(
         unfilled alphanumeric header field to blancos, so a profile that
         declares no contact still produces a legal filing.
     """
-    record = _load_profile_record(
+    record = load_export_profile_record(
         bucket_id=bucket_id,
         operation=operation,
         profile_record=profile_record,
@@ -512,33 +543,117 @@ def resolve_declaration_contact(
     if record is None:
         return DeclarationContactFacts()
     resolved_schema = operation.profile_schema() if schema is None else schema
+    return _declaration_contact_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
+
+
+def resolve_profile_path_values(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    as_of: date,
+) -> Mapping[str, str]:
+    """Read the active profile's facts in force on ``as_of``, keyed by canonical ``section.field`` path.
+
+    An absent profile answers nothing, so every fact reads as unstated and the
+    caller's own refusal names what to state.
+    """
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=None)
+    stated: Mapping[str, str] = (
+        record_to_path_values(record, as_of=as_of) if isinstance(record, UserProfileRecord) else dict[str, str]()
+    )
+    return stated
+
+
+def resolve_profile_identity_producer_values(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[FilingProducerKey, str | None]:
+    """Read current taxpayer/contact context using the export's canonical shaping.
+
+    Unlike export admission, this read needs neither a complete presenter nor
+    filing elections: a partial profile still answers each fact it declares.
+    It supplies no representative, payment selection or historical evidence.
+    """
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    if record is None:
+        return {}
+    resolved_schema = operation.profile_schema() if schema is None else schema
     facts = profile_fact_index(record, resolved_schema)
+    return identity_contact_producer_values(
+        taxpayer_tax_id=str(facts.get(IDENTITY_TAX_ID_PATH) or "").strip() or None,
+        identity=_taxpayer_identity_from_profile_facts(facts, schema=resolved_schema),
+        contact=_declaration_contact_from_profile_facts(facts, schema=resolved_schema),
+    )
+
+
+def resolve_m303_profile_lexicals(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    period: Period | None,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> M303ProfileLexicals:
+    """Read the declared Modelo 303 enrolment facts through the export's own lexical projection.
+
+    A profile that is absent, or whose IVA block is unclaimed or incomplete,
+    answers nothing: every lexical stays ``None`` and is never read as a no.
+    Export admission is what refuses such a profile and names the missing path.
+    """
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    if not isinstance(record, UserProfileRecord):
+        return M303ProfileLexicals()
+    resolved_schema = operation.profile_schema() if schema is None else schema
+    try:
+        profile = projection_for_taxpayer(record, schema=resolved_schema)
+    except (ProfileError, UserProfileError):
+        return M303ProfileLexicals()
+    return m303_profile_lexicals(profile.iva, period)
+
+
+def _declaration_contact_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> DeclarationContactFacts:
+    """Shape only the declaration's contact fields, preserving absent components."""
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
-    return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
+    return _built_within_profile_text_bounds(
+        lambda: DeclarationContactFacts(phone=phone or None, full_name=full_name or None),
+        _CONTACT_TEXT_PROFILE_FACTS,
+        schema=schema,
+    )
 
 
-def _identity_from_profile_facts(
+def identity_from_profile_facts(
     facts: Mapping[str, UserProfileFactValue],
+    *,
+    schema: ProfileSchemaDefinition,
 ) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
     """Build the explicit presenter/taxpayer pair from indexed profile facts."""
-    tax_id = str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip()
+    tax_id = str(facts.get(IDENTITY_TAX_ID_PATH) or "").strip()
     if not tax_id:
         return None
 
-    name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
-    surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
-    legal_name = str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip()
-    entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
-    identity = _taxpayer_identity_facts(
-        name=name,
-        surnames=surnames,
-        legal_name=legal_name,
-        entity_type=entity_type,
-    )
+    identity = _taxpayer_identity_from_profile_facts(facts, schema=schema)
     if identity.full_name is None:
         return None
     return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
+
+
+def _taxpayer_identity_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> TaxpayerIdentityFacts:
+    """Shape each declared name component using the export identity rules."""
+    return _taxpayer_identity_facts(
+        name=str(facts.get(IDENTITY_NAME_PATH) or "").strip(),
+        surnames=str(facts.get(IDENTITY_SURNAMES_PATH) or "").strip(),
+        legal_name=str(facts.get(IDENTITY_LEGAL_NAME_PATH) or "").strip(),
+        entity_type=str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold(),
+        schema=schema,
+    )
 
 
 def _taxpayer_identity_facts(
@@ -547,23 +662,69 @@ def _taxpayer_identity_facts(
     surnames: str,
     legal_name: str,
     entity_type: str,
+    schema: ProfileSchemaDefinition,
 ) -> TaxpayerIdentityFacts:
     """Shape natural-person and entity names into the producer's four facts."""
-    if entity_type == entity_type_natural_person_token().value:
-        full_name = compose_legal_full_name(surnames=surnames, name=name)
+
+    def shape() -> TaxpayerIdentityFacts:
+        if entity_type == entity_type_natural_person_token().value:
+            full_name = compose_legal_full_name(surnames=surnames, name=name)
+            return TaxpayerIdentityFacts(
+                legal_name=None,
+                given_name=name or None,
+                surnames=surnames or None,
+                full_name=full_name or None,
+            )
+        registered = legal_name or compose_legal_full_name(surnames=surnames, name=name)
         return TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name=name or None,
-            surnames=surnames or None,
-            full_name=full_name or None,
+            legal_name=registered or None,
+            given_name=None,
+            surnames=None,
+            full_name=registered or None,
         )
-    registered = legal_name or compose_legal_full_name(surnames=surnames, name=name)
-    return TaxpayerIdentityFacts(
-        legal_name=registered or None,
-        given_name=None,
-        surnames=None,
-        full_name=registered or None,
-    )
+
+    return _built_within_profile_text_bounds(shape, _IDENTITY_TEXT_PROFILE_FACTS, schema=schema)
+
+
+def _built_within_profile_text_bounds[Built](
+    build: Callable[[], Built],
+    profile_facts: Mapping[str, str],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> Built:
+    """Report a stored text that overruns a producer's bound as the profile fact to correct.
+
+    A profile written before its field declared a bound, or a composed name each of
+    whose parts fits, reaches the producer here. The operator declares the profile
+    fact and never sees the producer record, so the refusal names the fact.
+
+    The refusal is raised once the handler has closed, so the validation error,
+    which holds the stored text, is neither its cause nor its context.
+    """
+    try:
+        return build()
+    except ValidationError as exc:
+        refusal = _overlong_profile_text_refusal(exc, profile_facts, schema=schema)
+        if refusal is None:
+            raise
+    raise refusal
+
+
+def _overlong_profile_text_refusal(
+    exc: ValidationError,
+    profile_facts: Mapping[str, str],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> UserProfileError | None:
+    for error in exc.errors(include_input=False, include_url=False):
+        context = error.get("ctx")
+        if error["type"] == "string_too_long" and context is not None:
+            return profile_text_too_long_error(
+                profile_facts[str(error["loc"][0])],
+                limit=context["max_length"],
+                schema=schema,
+            )
+    return None
 
 
 def _profile_export_values_from_facts(
@@ -589,6 +750,7 @@ def _resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
     profile_record: object | None,
     schema: ProfileSchemaDefinition | None,
@@ -612,5 +774,8 @@ def _resolve_profile_export_values(
             return {}
     resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
+    inject_derived_cash_election_fact(fact_index, record, filing_year, operation=operation)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    inject_derived_activity_tipo_clave_fact(fact_index)
 
     return _profile_export_values_from_facts(bindings, fact_index)

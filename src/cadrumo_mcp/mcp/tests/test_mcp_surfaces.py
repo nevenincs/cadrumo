@@ -77,6 +77,27 @@ def test_the_read_only_local_surface_declares_and_lists_exactly_the_local_reads(
         assert surface.admits(definition_id), definition_id
 
 
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        "ledger.split.check",
+        "ledger.invoice.duplicate",
+        "ledger.invoice.match",
+        "ledger.invoice.preview",
+        "ledger.staged.check",
+        "ledger.rule.trial",
+    ],
+)
+def test_the_ledger_checks_and_previews_are_local_reads_on_every_surface(definition_id: str) -> None:
+    """These reads change no record and contact no host, so both surfaces project them."""
+    facts = operation_access_facts(definition_id)
+
+    assert not facts.changes_records
+    assert not facts.reaches_network
+    assert MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL].admits(definition_id)
+    assert MCP_SURFACES[McpSurfaceName.FULL].admits(definition_id)
+
+
 def test_the_read_only_local_surface_admits_no_recorded_write_and_no_recorded_network_reach() -> None:
     surface = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
     barred = [facts for facts in OPERATION_ACCESS_FACTS if facts.changes_records or facts.reaches_network]

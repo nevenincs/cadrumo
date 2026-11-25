@@ -21,28 +21,30 @@ import pytest
 from rich.cells import cell_len
 from rich.console import Console
 from textual.content import Content
-from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_header import attention_counts
+from ......application.modelo.work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormIssue,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
     section_fields,
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import output_language
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -51,13 +53,12 @@ from ......domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
-from ..header import ChipLevel, attention_chips, status_line
+from ..header import attention_chips, status_line
 from ..issue_projection import issue_lines
 from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
-    IssueLevel,
-    level_counts,
     levels_marked,
     title_text,
     unentered_boxes,
@@ -70,18 +71,21 @@ from ..sources import BoxNumbers
 from ..vocabulary import BLOCKS_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, status_line_of, synthetic_form
+from .workbench_fixture import (
+    FakeActions,
+    FakeReader,
+    form_field,
+    served_load,
+    status_line_of,
+    synthetic_form,
+    with_pages,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _MESSAGE_KEY = "application.modelo.findings.oss_evidence_missing"
 _EXPLANATION_KEY = "application.modelo.findings.cross_period_modelo_not_applicable.message"
 _LEGAL_REF = "ley-37-1992:art-99"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _finding(
@@ -153,6 +157,8 @@ def _counts(total: int) -> ModeloFormCounts:
         default_to_confirm=total,
         not_applicable=0,
         blocked=0,
+        needs_you=total,
+        could_not_calculate=0,
     )
 
 
@@ -172,6 +178,7 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
                 official_heading=None,
                 blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
                 counts=_counts(size),
+                applies=True,
             )
         )
     page = ModeloFormPage(
@@ -183,14 +190,24 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
         sections=tuple(sections),
         counts=_counts(sum(section_sizes)),
     )
-    return synthetic_form(needs_input=False).model_copy(
-        update={"pages": (page,), "working_figures": (), "result_addresses": (), "counts": _counts(sum(section_sizes))}
+    return with_pages(
+        synthetic_form(needs_input=False),
+        (page,),
+        working_figures=(),
+        result_addresses=(),
+        counts=_counts(sum(section_sizes)),
     )
 
 
 def _list_text(screen: WorkbenchIssuesScreen) -> str:
     options = screen.query_one("#issues-list", OptionList)
     return "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
+
+
+def _served_title(form: ModeloWorkForm) -> str:
+    """The issue list's title as the screen builds it, from the counts the form serves."""
+    counts = attention_counts(form, OutputLanguage(output_language()), recorded=False)
+    return title_text({count.level: count.count for count in counts})
 
 
 def _words(text: str) -> str:
@@ -200,13 +217,13 @@ def _words(text: str) -> str:
 def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(_checked())
-        assumed = unentered_boxes(_checked(), IssueLevel.CONFIRM)
-        title = title_text(level_counts(lines, unentered_levels(_checked())))
+        assumed = unentered_boxes(_checked(), ModeloFormAttention.CONFIRM)
+        title = _served_title(_recounted(_checked()))
 
     assert [(line.level, line.box, line.where) for line in lines] == [
-        (IssueLevel.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
-        (IssueLevel.CHECK, "·", "Whole declaration"),
-        (IssueLevel.CHECK, "71", "[71]"),
+        (ModeloFormAttention.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
+        (ModeloFormAttention.CHECK, "·", "Whole declaration"),
+        (ModeloFormAttention.CHECK, "71", "[71]"),
     ]
     # The missing document is the finding's message, so the form names one step for it whatever its kind.
     assert [line.action for line in lines] == ["What to do: Attach the document to the entry in your records."] * 3
@@ -225,18 +242,21 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
     form = _checked(assumed=False).model_copy(update={"issues": (_explanation(),)})
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines))
+        title = _served_title(form)
 
-    assert [line.level for line in lines] == [IssueLevel.INFO]
+    assert [line.level for line in lines] == [ModeloFormAttention.INFO]
     assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
     assert lines[0].message == "2 modelos were not used, because they do not apply to you."
-    assert title == "Issues to look at   i 1"
+    # The served counts leave information out: nothing there is asked of the filer.
+    assert title == "Issues to look at"
 
 
 def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_the_title() -> None:
     with override_settings(cadrumo_output_language="en"):
-        blocked = verdict_text(_checked())
-        passed = verdict_text(_checked().model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE}))
+        checked = _checked().model_copy(update={"language": OutputLanguage.EN})
+        blocked = verdict_text(served_load(checked).journey.verdict)
+        passed_form = checked.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE})
+        passed = verdict_text(served_load(passed_form).journey.verdict)
 
     assert blocked == "The check found something that blocks filing."
     assert passed == "The check passed."
@@ -244,24 +264,29 @@ def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_th
 
 @pytest.mark.asyncio
 async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_facts_behind_t() -> None:
-    form = _checked().model_copy(update={"issues": (*_checked().issues, _explanation())})
+    # The reader serves the declaration in the language the workbench asks for, its verdict included.
+    form = _checked().model_copy(update={"issues": (*_checked().issues, _explanation()), "language": OutputLanguage.EN})
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 100)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             title = str(issues.query_one("#issues-title", Static).render())
             verdict = str(issues.query_one("#issues-verdict", Static).render())
             before = _list_text(issues)
             await pilot.press("t")
-            await _settle(pilot)
+            await settle(pilot)
             technical = _list_text(issues)
-            await pilot.press("t", "end", "t")
-            await _settle(pilot)
+            await pilot.press("t")
+            await settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("t")
+            await settle(pilot)
             explained = _list_text(issues)
             app.exit(None)
 
@@ -272,7 +297,7 @@ async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_fac
         "◆ Worth checking (2)",
         "i For your information (1)",
     ]
-    assert title == "Issues to look at   ▲ 1   ◐ 1   ◆ 2   i 1"
+    assert title == "Issues to look at   ▲ 1   ◆ 2"
     assert verdict == "The check found something that blocks filing."
     message = "This declaration includes one-stop-shop (OSS) activity, but no supporting documents for it are saved."
     assert _words(before).count(message) == 3
@@ -289,20 +314,28 @@ async def test_enter_goes_to_a_box_opens_a_detail_or_says_the_box_is_not_on_the_
         screen = ModeloWorkbenchScreen(FakeReader(form=_checked()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 100)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
-            await pilot.press("end", "up", "enter")
-            await _settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("up")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             opened = _list_text(issues)
             still_open = app.screen is issues
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             not_on_form = _list_text(issues)
-            await pilot.press("home", "enter")
-            await _settle(pilot)
+            await pilot.press("home")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -321,11 +354,13 @@ async def test_enter_on_the_assumed_values_goes_to_the_first_of_their_boxes() ->
         screen = ModeloWorkbenchScreen(FakeReader(form=_checked()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -360,9 +395,9 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(60, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = [
@@ -380,18 +415,20 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
 async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter_opens_one() -> None:
     form = _assumed_boxes(12, 15)
     with override_settings(cadrumo_output_language="en"):
-        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
+        assumed = unentered_boxes(form, ModeloFormAttention.CONFIRM)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = _list_text(issues)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -415,17 +452,17 @@ async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter
 async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_counts_nothing_to_do() -> None:
     form = recorded_as_filed(_checked())
     with override_settings(cadrumo_output_language="en"):
-        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
-        screen = WorkbenchIssuesScreen(form)
+        assumed = unentered_boxes(form, ModeloFormAttention.CONFIRM)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             title = str(screen.query_one("#issues-title", Static).render())
             listed = _list_text(screen)
             app.exit(None)
 
     assert assumed is None
-    assert title == "Issues to look at   ◆ 2"
+    assert title == "Issues to look at"
     assert "◐" not in listed
     assert "Assumed, please confirm" not in listed
     assert "▲ Blocks filing" in listed
@@ -438,7 +475,7 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
     )
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines, unentered_levels(form)))
+        title = _served_title(form)
 
     assert lines == ()
     assert unentered_levels(form) == ()
@@ -449,10 +486,10 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
 async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_strong() -> None:
     status = "To pay 1,300.00 € · file by 20 Apr 2026"
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(_checked(), status_line=status_line_of(status))
+        screen = WorkbenchIssuesScreen(served_load(_checked()), status_line=status_line_of(status))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel = screen.query_one("#issues-panel")
             first = panel.children[0]
             shown = str(first.render()) if isinstance(first, Static) else ""
@@ -460,10 +497,10 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
             verdict = screen.query_one("#issues-verdict", Static)
             title_style, verdict_style = title.rich_style, verdict.rich_style
             app.exit(None)
-        plain = WorkbenchIssuesScreen(_checked())
+        plain = WorkbenchIssuesScreen(served_load(_checked()))
         plain_app = ScreenHostApp(plain)
         async with plain_app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             without = [child.id for child in plain.query_one("#issues-panel").children]
             plain_app.exit(None)
 
@@ -500,7 +537,7 @@ def _recounted(form: ModeloWorkForm) -> ModeloWorkForm:
     return recounted.model_copy(update={"counts": counted(recounted.fields(), form.counts)})
 
 
-def _chips(form: ModeloWorkForm) -> dict[ChipLevel, int]:
+def _chips(form: ModeloWorkForm) -> dict[ModeloFormAttention, int]:
     return {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
 
 
@@ -508,26 +545,28 @@ def _chips(form: ModeloWorkForm) -> dict[ChipLevel, int]:
 async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level() -> None:
     form = _recounted(synthetic_form(needs_input=True))
     with override_settings(cadrumo_output_language="en"):
-        missing = unentered_boxes(form, IssueLevel.MISSING)
-        title = title_text(level_counts(issue_lines(form), unentered_levels(form)))
+        missing = unentered_boxes(form, ModeloFormAttention.MISSING)
+        title = _served_title(form)
         chips = _chips(form)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = _list_text(issues)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
 
     assert missing is not None
     assert missing.boxes == ("06",)
-    assert chips == {ChipLevel.MISSING: 1}
+    assert chips == {ModeloFormAttention.MISSING: 1}
     assert title == "Issues to look at   ! 1"
     assert "! Needs your input (1)" in listed
     assert "[06]" in listed
@@ -556,8 +595,8 @@ def test_boxes_on_a_page_that_does_not_apply_are_neither_listed_nor_counted() ->
         chips_applying, chips_not_applying = _chips(both), _chips(set_aside)
 
     # The instrument sees both boxes while their page applies, so their absence below is the page's doing.
-    assert applying == {IssueLevel.MISSING: ("06",), IssueLevel.CONFIRM: ("19",)}
-    assert chips_applying == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
+    assert applying == {ModeloFormAttention.MISSING: ("06",), ModeloFormAttention.CONFIRM: ("19",)}
+    assert chips_applying == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 1}
     assert not_applying == ()
     assert chips_not_applying == {}
 
@@ -570,10 +609,10 @@ async def test_on_the_smallest_terminal_the_status_keeps_one_line_the_list_opens
     with override_settings(cadrumo_output_language="en"):
         status = status_line(form, OutputLanguage.EN, staged=0, recorded=False)
         assert status is not None and len(status.chips) >= 2
-        screen = WorkbenchIssuesScreen(form, status_line=status)
+        screen = WorkbenchIssuesScreen(served_load(form), status_line=status)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             bar = screen.query_one("#issues-status", Static)
             bar_height, bar_text = bar.region.height, str(bar.render())
             listed = screen.query_one("#issues-list", OptionList)
@@ -638,16 +677,16 @@ async def test_a_stale_calculation_names_c_beside_what_to_do_and_c_calculates_ag
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             listed = _list_text(app.screen) if isinstance(app.screen, WorkbenchIssuesScreen) else ""
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             app.exit(None)
 
     stale_line = next(line for line in lines if line.recalculates)
-    info_line = next(line for line in lines if line.level is IssueLevel.INFO)
+    info_line = next(line for line in lines if line.level is ModeloFormAttention.INFO)
     assert f"{stale_line.action} [c]" in listed
     assert info_line.action not in listed, "nothing to do is not said for what is only for information"
     assert actions.requested == ["calculate"]

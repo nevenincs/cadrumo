@@ -44,8 +44,9 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.commands import errors as _client_commands_errors
-from cadrumo_client.commands.errors import CliUnexpectedBoundaryError as _CliUnexpectedBoundaryError
+from cadrumo_client.commands import errors
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+from cadrumo_client.commands.output import SERVED_PRECONDITION_FIELDS, served_action_lines
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
@@ -62,11 +63,12 @@ from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
+from ...core.terminal_encoding import encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
 
-_BOUNDARY_SUSPENDED: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_suspended", default=False)
+BOUNDARY_SUSPENDED: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_suspended", default=False)
 #: Dotted identifier of the command whose callback is currently executing,
 #: set by :func:`command_error_boundary` at entry so the error spine's
 #: ``command`` field can name the failing command (byte-identical to the
@@ -189,8 +191,7 @@ class CliCommandGroupUnavailableError(CadrumoError):
     Degrading that case to an unavailable-command placeholder would turn a hard
     dependency failure into an invisible capability loss — the whole subtree
     would answer every invocation with a plausible refusal while naming no
-    cause. This refusal names the module, the group it broke, and the
-    reinstall remedy instead.
+    cause. This refusal names the module and the group it broke instead.
 
     Attributes:
         group: The command-group name whose subtree failed to load.
@@ -247,7 +248,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
         Wrapped callback with the original signature preserved.
     """
     existing = _WRAPPED_CALLBACKS.get(id(callback))
-    if existing is not None and _is_memoised_wrapper(existing):
+    if existing is not None and is_memoised_wrapper(existing):
         # Safe: _WRAPPED_CALLBACKS stores only the _wrapped closure produced
         # by THIS function from a callback[P, R] argument. The memo key is
         # id(callback), which uniquely identifies the object at this call site.
@@ -264,17 +265,13 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
-            return callback(*args, **kwargs)
-        except Exception as error:
-            # Typer/Click control flow (Exit, Abort, BadParameter) propagates
-            # untouched so the framework can render it; the under-test override
-            # re-raises the original so tests can assert on the typed exception.
-            # Everything else routes through the ordered specificity dispatch.
-            if _is_click_control_flow(error):
-                raise
-            if _BOUNDARY_SUSPENDED.get():
-                raise
-            emit_error_and_exit(_project_boundary_error(error, callback))
+            try:
+                return callback(*args, **kwargs)
+            except Exception as error:
+                # Typer/Click control flow and the under-test override propagate untouched.
+                if _is_click_control_flow(error) or BOUNDARY_SUSPENDED.get():
+                    raise
+                emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
             _ACTIVE_COMMAND_ID.reset(token)
 
@@ -313,28 +310,35 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
     failure it falls back to the underlying byte buffer with
     ``errors="replace"``, and finally to an ASCII-safe replacement string.
 
+    The text is redacted and then terminal-encoded, so a refusal quoting an
+    imported value cannot carry live control sequences; newline and tab survive
+    as deliberate separators, and JSON documents remain valid.
+
     Args:
         text: Text payload to emit.
         stream: Optional target stream to write to instead of
             :data:`~sys.stderr`. Primarily useful in tests.
     """
+    _write_stderr_encoded(encode_terminal_text(redact_for_cli_output(text)), stream=stream)
+
+
+def _write_stderr_encoded(safe_text: str, *, stream: io.TextIOBase | None) -> None:
     target = sys.stderr if stream is None else stream
-    redacted_text = redact_for_cli_output(text)
     if _supports_reconfigure(target):
         with contextlib.suppress(Exception):
             target.reconfigure(encoding="utf-8", errors="replace")
     try:
-        target.write(redacted_text)
+        target.write(safe_text)
         target.flush()
         return
     except UnicodeEncodeError:
         buffer = getattr(target, "buffer", None)
         if buffer is not None:
-            buffer.write(redacted_text.encode("utf-8", errors="replace"))
+            buffer.write(safe_text.encode("utf-8", errors="replace"))
             with contextlib.suppress(Exception):
                 buffer.flush()
             return
-        target.write(redacted_text.encode("ascii", errors="replace").decode("ascii"))
+        target.write(safe_text.encode("ascii", errors="replace").decode("ascii"))
         target.flush()
 
 
@@ -454,12 +458,18 @@ def _render_precondition_action_text(
     :class:`ResolvedPreconditionAction` schema names, not independently authored
     recovery labels, and nested values use deterministic JSON so condition
     evidence and binding provenance cannot be flattened into ambiguous prose.
+    The ordered alternative actions add one line after the primary action's
+    lines, only when the verdict offers any. Served words and target
+    operations add their lines only when served, and each offered action's
+    served words come first, in offered order.
+
     """
     lines = [text.rstrip("\n")]
     if command is not None:
         lines.append(f"  command: {command}")
+    lines.extend(f"  {line}" for line in served_action_lines(action))
     action_document = action.model_dump(mode="json")
-    for field_name in (
+    field_names = (
         "failed_condition_id",
         "evidence",
         "action",
@@ -467,7 +477,11 @@ def _render_precondition_action_text(
         "missing_argument_names",
         "conditionality",
         "no_recovery_outcome",
-    ):
+    )
+    if action.alternative_actions:
+        field_names = (*field_names, "alternative_actions")
+    field_names = (*field_names, *(name for name in SERVED_PRECONDITION_FIELDS if name in action_document))
+    for field_name in field_names:
         value = json.dumps(
             action_document[field_name],
             ensure_ascii=False,
@@ -476,6 +490,17 @@ def _render_precondition_action_text(
         )
         lines.append(f"  action.{field_name}: {value}")
     return "\n".join(lines) + "\n"
+
+
+def _error_remedy_context(error: BaseException) -> dict[str, str] | None:
+    reason = getattr(error, "reason", None)
+    if reason is None and isinstance(error, CadrumoError):
+        reason = (error.context or {}).get("reason")
+    if reason is None and isinstance(error, errors.CliRefusedBoundaryError) and error.args:
+        reason = error.args[0]
+    remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
+    remedy_context = {"remedy": remedy} if remedy is not None else None
+    return remedy_context
 
 
 def render_error_payload(
@@ -489,7 +514,7 @@ def render_error_payload(
 
     The single renderer both terminal funnels use — the command boundary's
     :func:`emit_error_and_exit` and the process boundary's
-    :func:`_terminal_errors._emit_crash` — so the two cannot drift on which
+    :func:`terminal_errors.emit_crash` — so the two cannot drift on which
     spine fields an error document carries. In JSON mode the sandbox
     :class:`Notice` rides the ``notices`` channel; in text mode the same notice
     renders through
@@ -509,13 +534,7 @@ def render_error_payload(
     authentication_notices = resolve_notice_actions(
         (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()),
     )
-    reason = getattr(error, "reason", None)
-    if reason is None and isinstance(error, CadrumoError):
-        reason = (error.context or {}).get("reason")
-    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
-        reason = error.args[0]
-    remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
-    remedy_context = {"remedy": remedy} if remedy is not None else None
+    remedy_context = _error_remedy_context(error)
     if as_json:
         return render_error_json(
             error,
@@ -529,7 +548,7 @@ def render_error_payload(
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:
-        from .common import notice_lines
+        from ...application.operator_output.text_transport import notice_lines
 
         text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
@@ -595,12 +614,12 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ._tty import NonTtyRefusedError
     from .config.errors import ConfigBoundaryError
+    from .tty import NonTtyRefusedError
 
     if isinstance(error, CliValidationBoundaryError):
         condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
-    elif isinstance(error, _CliUnexpectedBoundaryError):
+    elif isinstance(error, CliUnexpectedBoundaryError):
         condition = CliExceptionPrecondition.UNEXPECTED_BOUNDARY
     elif isinstance(error, CliStoredDataValidationBoundaryError):
         condition = CliExceptionPrecondition.STORED_DATA_VALID
@@ -610,7 +629,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         condition = CliExceptionPrecondition.CONFIG_BOUNDARY
     elif isinstance(error, NonTtyRefusedError):
         condition = CliExceptionPrecondition.STDIN_INTERACTIVE
-    elif isinstance(error, _client_commands_errors.CliRefusedBoundaryError):
+    elif isinstance(error, errors.CliRefusedBoundaryError):
         condition = CliExceptionPrecondition.REFUSAL_RETRIED
     else:
         return None
@@ -652,7 +671,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
         if projection.requested_leaf is not None:
             command = projection.requested_leaf.subject_leaf_key
 
-    _client_commands_errors.log_cli_boundary_failure("cli_command", error)
+    errors.log_cli_boundary_failure("cli_command", error)
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,
@@ -715,7 +734,7 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
     return callback.__class__.__name__
 
 
-def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
+def is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
     """Narrow ``obj`` to a callable produced by the command error boundary.
 
     The callable must have been produced by
@@ -739,7 +758,7 @@ def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     return hasattr(stream, "reconfigure")
 
 
-def _unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
+def unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
     """Return the typed :class:`CadrumoError` wrapped inside ``error``, if any.
 
     A library boundary (notably SQLAlchemy) can catch an
@@ -853,12 +872,12 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
     from .common import attach_cli_policy_verdict
 
     return attach_cli_policy_verdict(
-        _client_commands_errors.CliRefusedBoundaryError(str(error)),
+        errors.CliRefusedBoundaryError(str(error)),
         verdict=former_product_state_verdict(FormerProductDetectionScope.STARTUP),
     )
 
 
-def _project_cadrumo_error(error: CadrumoError, callback: Callable[..., object]) -> CadrumoError:
+def project_cadrumo_error(error: CadrumoError, callback: Callable[..., object]) -> CadrumoError:
     """Forward a typed error, attaching boundary-owned terminal policy when proven."""
     from ...application.cli_exception_preconditions import (
         cli_exception_envelope_view,
@@ -904,6 +923,10 @@ _STORAGE_SESSION_NO_ACTIONS: Final[Mapping[str, tuple[CliExceptionPrecondition, 
         CliExceptionPrecondition.BUCKET_SESSION_FRESH,
         {"active_session_fresh": False, "session_expired": True},
     ),
+    "REFUSED_STORAGE_RUNTIME_SESSION_UNAVAILABLE": (
+        CliExceptionPrecondition.ACTIVE_BUCKET_SESSION_AVAILABLE,
+        {"active_bucket_session_available": False},
+    ),
     "REFUSED_STORAGE_BUCKET_NO_ACTIVE": (
         CliExceptionPrecondition.ACTIVE_BUCKET_SELECTED,
         {"active_bucket_selected": False},
@@ -933,6 +956,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     if code in {
         "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
         "REFUSED_STORAGE_SESSION_EXPIRED",
+        "REFUSED_STORAGE_RUNTIME_SESSION_UNAVAILABLE",
     }:
         profile_name = active_profile_label_for_error(error)
         if profile_name is not None:
@@ -940,9 +964,13 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
             from ...core.profile_session import ProfileSessionRefusalReason
 
             reason = (
-                ProfileSessionRefusalReason.ABSENT
-                if code == "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION"
-                else ProfileSessionRefusalReason.EXPIRED_IDLE
+                ProfileSessionRefusalReason.EXPIRED_IDLE
+                if code == "REFUSED_STORAGE_SESSION_EXPIRED"
+                or (
+                    isinstance(error.context, Mapping)
+                    and error.context.get("readiness_code") in {"session_sealed", "session_expired"}
+                )
+                else ProfileSessionRefusalReason.ABSENT
             )
             return profile_session_failure_verdict(reason, profile_name=profile_name)
 
@@ -956,7 +984,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     )
 
 
-def _project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
+def project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
     """Log only validation structure, then wrap the input-time failure.
 
     The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
@@ -995,8 +1023,8 @@ def _project_validation_error(error: ValidationError, callback: Callable[..., ob
 _ERROR_PROJECTIONS: tuple[_BoundaryProjectionRow, ...] = (
     _TypedProjection(StoredProfileDriftError, _project_stored_data_drift),
     _TypedProjection(FormerProductStateError, _project_former_product_state),
-    _TypedProjection(CadrumoError, _project_cadrumo_error),
-    _TypedProjection(ValidationError, _project_validation_error),
+    _TypedProjection(CadrumoError, project_cadrumo_error),
+    _TypedProjection(ValidationError, project_validation_error),
 )
 
 
@@ -1012,16 +1040,16 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     where ``aeat config repair logs`` later echoes it back at the operator as if
     it were a live crash.
     """
-    wrapped = _unwrap_cadrumo_error(error)
+    wrapped = unwrap_cadrumo_error(error)
     if wrapped is not None:
-        return _project_cadrumo_error(wrapped, callback)
+        return project_cadrumo_error(wrapped, callback)
     # Exception messages and traceback locals may contain private input.
     _log.debug(
         "command_error_boundary: unexpected exception in %s type=%s",
         getattr(callback, "__name__", type(callback).__name__),
         type(error).__name__,
     )
-    return _CliUnexpectedBoundaryError(error)
+    return CliUnexpectedBoundaryError(error)
 
 
 def _project_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1045,8 +1073,8 @@ def project_cli_boundary_error(error: Exception, callback: Callable[..., object]
         projected = row.apply(error, callback)
         if projected is not None:
             return projected
-    wrapped = _unwrap_cadrumo_error(error)
-    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else _CliUnexpectedBoundaryError(error)
+    wrapped = unwrap_cadrumo_error(error)
+    return project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
 
 
 __all__ = [

@@ -21,7 +21,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.enrollment_access import (
@@ -55,7 +55,8 @@ from ..application.enrollment_recipient import (
 from .enrollment_offer import RuntimeEnrollmentOffer, RuntimeEnrollmentRequestOwner
 
 if TYPE_CHECKING:
-    from .profile_host import ProfileConnection, RuntimeProfileHost
+    from .profile_connection import ProfileConnection
+    from .profile_host import RuntimeProfileHost
 
 
 class RuntimeEnrollmentConnections:
@@ -119,7 +120,7 @@ class RuntimeEnrollmentConnections:
                     connection_id=context.connection_id, session_id=request.session_id
                 )
             )
-            instant = now()
+            instant = wall_now()
             expires = instant + ACCESS_LEASE_MAXIMUM
             if source is not None:
                 expires = min(expires, source.expires_at)

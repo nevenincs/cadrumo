@@ -2,15 +2,14 @@
 
 Defines the :class:`LLMClassifier` and :class:`LLMSplitProposer` protocols and
 the allow-list-guarded response parsing every classifier answer passes through.
-Concrete transports live outside this module: the on-host readers in the gated
-inference package, and a subprocess harness on the test side. The subprocess
-CLI implementations that once lived here were the off-host route, and they were
-deleted with it.
+Concrete transports live outside this module: the readers in the LLM adapter
+package, which send each request to the lane the agent service derives, and a
+subprocess harness on the test side.
 
 This module keeps the part that is a SAFETY contract rather than a transport --
 the prompt spec and the parse that confine a model to selecting
 ``classification`` / ``category`` / ``iva_category`` and never emitting a
-regulated number. That belongs in the domain, not behind an optional install.
+regulated number. That belongs in the domain, not in the outbound adapter.
 
 The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
@@ -39,9 +38,9 @@ hallucinating model cannot corrupt the catalogue.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Iterable
-from dataclasses import dataclass, field
+import json
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
@@ -49,17 +48,16 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.render import tr as _tr
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.i18n.render import tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import SpendingCategory
 from ..categories.spending_category_catalogue import spending_category_tokens
 from ..iva.schema import IvaCategory
-from .enums import BusinessClassification
+from .enums import BusinessClassification, TransactionDirection
 from .errors import LLMClassifierError, TransactionValidationError
-from .model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from .models import Transaction
 
 if TYPE_CHECKING:
@@ -70,10 +68,16 @@ _REASON_MAX_LENGTH = 2048
 # ── response model ────────────────────────────────────────────────
 
 
+_NOTES_PREVIEW = 120
+_PAYLOAD_PREVIEW = 100
+_ERROR_PREVIEW = 200
+_OUTPUT_PREVIEW = 400
+
+
 class LLMClassificationResponse(BaseModel):
     """One LLM-emitted classification result for a transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     classification: BusinessClassification
     confidence: Decimal
@@ -133,7 +137,7 @@ class LLMSplitChild(BaseModel):
     (``llm-selects-system-derives-tax-numbers``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     proportion: Decimal
     category: SpendingCategory | None = None
@@ -159,7 +163,7 @@ class LLMSplitResponse(BaseModel):
     one-way split. Two or more children is a genuine split recommendation.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     children: tuple[LLMSplitChild, ...]
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
@@ -213,9 +217,9 @@ class LLMClassifier(Protocol):
 
         Args:
             transaction: The transaction to classify.
-            evidence_text: Optional on-host-extracted attached-evidence text to
-                inject into the prompt. Gating of whether evidence may reach a given
-                (on-host vs cloud) classifier is the caller's responsibility.
+            evidence_text: Optional attached-evidence text extracted on this
+                computer, to inject into the prompt. Gating of whether evidence may
+                reach the selected lane is the caller's responsibility.
 
         Returns:
             A :class:`LLMClassificationResponse` with the classification result.
@@ -284,6 +288,15 @@ _DEFAULT_CLASSIFICATION_HINTS: dict[BusinessClassification, str] = {
 }
 
 
+# The bank amount is a magnitude, so the prompt states which way the money
+# moved; without it an incoming transfer reads exactly like a payment.
+_DIRECTION_HINTS: dict[TransactionDirection, str] = {
+    TransactionDirection.INCOMING: "INCOMING, money received into the autónomo's account",
+    TransactionDirection.OUTGOING: "OUTGOING, money paid out of the autónomo's account",
+    TransactionDirection.INTERNAL_TRANSFER: "INTERNAL_TRANSFER, money moved between the autónomo's own accounts",
+}
+
+
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
     """Return the default allowed-classifications tuple used by the prompt.
 
@@ -331,6 +344,19 @@ class PromptSpec:
         """
         return frozenset(choice.value for choice in self.iva_categories)
 
+    def for_direction(self, direction: TransactionDirection) -> PromptSpec:
+        """Return this spec scoped to a row moving money in ``direction``.
+
+        Every :class:`SpendingCategory` names an expense, so only an outgoing
+        row may carry one. Scoping the spec, rather than the prompt alone,
+        keeps the rendered choices and the parser's allow-list the same: a
+        category proposed for an incoming row or an internal transfer is
+        refused as unexpected.
+        """
+        if direction is TransactionDirection.OUTGOING:
+            return self
+        return replace(self, categories=())
+
     def render(
         self,
         transaction: Transaction,
@@ -348,7 +374,7 @@ class PromptSpec:
                 the classification/category/iva_category and must never copy a euro
                 figure from it (the regulated numbers stay registry-derived).
             evidence_image_present: Set when the evidence is attached as an image
-                (the on-host vision-read path) instead of inlined text; the prompt
+                (the vision-read path) instead of inlined text; the prompt
                 then points the model at the attached image.
         """
         return _render_prompt(
@@ -395,7 +421,7 @@ def prompt_spec_with_every_spending_category(
         registered :class:`cadrumo.domain.categories.spending_category.SpendingCategory`.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        CategoryChoice(value=value, hint=category_hint(value, year=year, operation=operation))
         for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
@@ -404,7 +430,11 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-def default_iva_category_choices(*, operation: PinnedAuthorityOperation) -> tuple[IvaCategoryChoice, ...]:
+def default_iva_category_choices(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCategoryChoice, ...]:
     """Return the grounded IVA-category choices for the saturation prompt.
 
     The allow-list and concise hints are projected from the dated IVA category
@@ -417,10 +447,11 @@ def default_iva_category_choices(*, operation: PinnedAuthorityOperation) -> tupl
         authored order.
 
     Args:
+        effective_date: The date whose IVA category catalogue the allow-list projects.
         operation: The generation-pinned authority operation used to resolve the
             IVA category catalogue.
     """
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=operation)
     return tuple(
         IvaCategoryChoice(value=definition.token, hint=catalogue.hint(definition.token))
         for definition in catalogue.definitions
@@ -456,17 +487,17 @@ def prompt_spec_with_saturation_fields(
         IVA-category allow-lists.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        CategoryChoice(value=value, hint=category_hint(value, year=year, operation=operation))
         for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
-        iva_categories=default_iva_category_choices(operation=operation),
+        iva_categories=default_iva_category_choices(effective_date=date(year, 12, 31), operation=operation),
     )
 
 
-def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAuthorityOperation) -> str:
+def category_hint(value: SpendingCategory, *, year: int, operation: PinnedAuthorityOperation) -> str:
     """Return the best available hint string for a SpendingCategory in ``year``.
 
     Resolves the display label and ``notes`` translation keys to Spanish at
@@ -488,10 +519,10 @@ def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAutho
     # Pinned to Spanish regardless of operator locale: the classifier reasons
     # over Spanish AEAT invoices, so authoritative AEAT terminology must reach
     # the prompt even when the operator has selected en/ca/hu.
-    spanish_label = _tr(profile.display_label, locale="es")
+    spanish_label = tr(profile.display_label, locale="es")
     rule = profile.proportionality
-    notes = _tr(rule.notes, locale="es") if rule.notes else ""
-    notes_preview = notes.strip().splitlines()[0][:120] if notes else ""
+    notes = tr(rule.notes, locale="es") if rule.notes else ""
+    notes_preview = notes.strip().splitlines()[0][:_NOTES_PREVIEW] if notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
         segments.append(notes_preview)
@@ -525,10 +556,10 @@ def _evidence_section(evidence_text: str) -> list[str]:
 def _vision_evidence_section() -> list[str]:
     """Render the attached-image evidence instruction (selection-only; never emit numbers).
 
-    Used when the evidence is a scanned or image invoice read on-host by a local
-    vision model: the document is attached as an image rather than inlined as
-    text, so the prompt points the model at the attached image instead of
-    embedding extracted text.
+    Used when the evidence is a scanned or image invoice read by a vision model:
+    the document is attached as an image rather than inlined as text, so the
+    prompt points the model at the attached image instead of embedding extracted
+    text.
     """
     return [
         "An invoice or receipt image is attached to this message. Read it carefully; "
@@ -641,7 +672,7 @@ def _render_prompt(
 
     When ``evidence_text`` is given it is inlined for the model to read. When
     ``evidence_image_present`` is set (and no text), the prompt instead points the
-    model at an attached invoice image (the on-host vision-read path).
+    model at an attached invoice image (the vision-read path).
     """
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
@@ -656,6 +687,7 @@ def _render_prompt(
         "Transaction:",
         f"  Date: {effective_date.isoformat()}",
         f"  Amount: {raw.amount} {raw.currency}",
+        f"  Direction: {_DIRECTION_HINTS[transaction.direction]}",
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
@@ -678,7 +710,27 @@ def _render_prompt(
 
 # ── response parsing ──────────────────────────────────────────────
 
-_JSON_OBJECT_RE = re.compile(r"\{[^{}]*\}")
+_JSON_DECODER = json.JSONDecoder()
+
+
+def _json_object_candidates(text: str) -> Iterator[str]:
+    """Yield every complete JSON object in ``text`` as its source substring, by opening brace.
+
+    The stdlib decoder knows where an object ends, so a brace inside a string
+    (a reason such as ``"cuota {marzo}"``) never cuts a candidate short, and an
+    object nested in another is still tried after its enclosing one. The
+    substring rather than the decoded object is yielded, so validation runs in
+    pydantic's JSON mode.
+    """
+    index = text.find("{")
+    while index >= 0:
+        try:
+            _, end = _JSON_DECODER.raw_decode(text, index)
+        except ValueError:
+            pass
+        else:
+            yield text[index:end]
+        index = text.find("{", index + 1)
 
 
 def _classification_failure(
@@ -688,7 +740,7 @@ def _classification_failure(
 ) -> str | None:
     """Return the allow-list failure for the classification field, if any."""
     if response.classification not in allowed_classifications:
-        return f"disallowed classification {response.classification.value!r} (payload {payload[:100]!r})"
+        return f"disallowed classification {response.classification.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -701,9 +753,9 @@ def _category_failure(
     if response.category is None:
         return None
     if not allowed_categories:
-        return f"unexpected category {response.category.value!r} (payload {payload[:100]!r})"
+        return f"unexpected category {response.category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     if response.category not in allowed_categories:
-        return f"disallowed category {response.category.value!r} (payload {payload[:100]!r})"
+        return f"disallowed category {response.category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -716,9 +768,9 @@ def _iva_category_failure(
     if response.iva_category is None:
         return None
     if not allowed_iva_categories:
-        return f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+        return f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     if response.iva_category not in allowed_iva_categories:
-        return f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+        return f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -751,7 +803,7 @@ def _parse_classification_candidate(
     try:
         response = LLMClassificationResponse.model_validate_json(payload)
     except ValueError as exc:
-        return f"schema: {str(exc)[:160]} (payload {payload[:100]!r})"
+        return f"schema: {str(exc)[:_ERROR_PREVIEW]} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     failure = _classification_response_failure(
         response,
         payload,
@@ -795,9 +847,8 @@ def parse_response(
     failures: list[str] = []
     any_candidate_seen = False
 
-    for match in _JSON_OBJECT_RE.finditer(stdout):
+    for payload in _json_object_candidates(stdout):
         any_candidate_seen = True
-        payload = match.group(0)
         candidate = _parse_classification_candidate(
             payload,
             allowed_classifications=allowed_classifications,
@@ -809,7 +860,7 @@ def parse_response(
         failures.append(candidate)
 
     if not any_candidate_seen:
-        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
+        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:_OUTPUT_PREVIEW]!r}")
     raise LLMClassifierError(
         f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3]),
     )
@@ -827,7 +878,7 @@ def build_split_prompt(
     The model reads the attached invoice and proposes per-child *proportions* plus
     selections; it must never emit a euro amount (the application derives the
     amounts from the parent gross and the tax substrate from the registry). The
-    invoice is supplied as inlined text (``evidence_text``) or, on the on-host
+    invoice is supplied as inlined text (``evidence_text``) or, on the
     vision-read path, as an attached image (``evidence_image_present``).
     """
     resolved_spec = spec or default_prompt_spec()
@@ -839,6 +890,7 @@ def build_split_prompt(
         "Transaction:",
         f"  Date: {effective_date}",
         f"  Amount: {raw.amount} {raw.currency}",
+        f"  Direction: {_DIRECTION_HINTS[transaction.direction]}",
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
@@ -891,9 +943,9 @@ def _advance_json_structure_state(char: str, depth: int) -> tuple[int, bool, boo
 def _extract_json_object(text: str) -> str | None:
     """Return the first balanced top-level JSON object substring, or ``None``.
 
-    Unlike the flat :data:`_JSON_OBJECT_RE`, this walks brace depth (ignoring
-    braces inside strings) so a nested object -- such as a split proposal whose
-    ``children`` is an array of objects -- is captured whole.
+    This walks brace depth (ignoring braces inside strings) so a nested object
+    -- such as a split proposal whose ``children`` is an array of objects -- is
+    captured whole.
     """
     start = text.find("{")
     if start < 0:
@@ -932,7 +984,7 @@ def _parse_split_payload(payload: str) -> LLMSplitResponse:
     try:
         return LLMSplitResponse.model_validate_json(payload)
     except ValueError as exc:
-        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:_ERROR_PREVIEW]}") from exc
 
 
 def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
@@ -959,7 +1011,7 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
     allowed_iva_categories = resolved_spec.allowed_iva_categories()
     payload = _extract_json_object(stdout)
     if payload is None:
-        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
+        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:_OUTPUT_PREVIEW]!r}")
     response = _parse_split_payload(payload)
     for child in response.children:
         failure = _split_child_failure(child, allowed_categories, allowed_iva_categories)
@@ -969,15 +1021,12 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
 
 
 __all__ = [
-    "MINIMUM_CLASSIFICATION_TIER",
     "CategoryChoice",
     "ClassificationChoice",
     "IvaCategoryChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
-    "ModelProfile",
-    "ModelTier",
     "PromptSpec",
     "default_classification_choices",
     "default_iva_category_choices",

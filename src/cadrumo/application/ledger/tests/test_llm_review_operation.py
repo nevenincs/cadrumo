@@ -19,9 +19,9 @@ from ....core.config import Settings
 from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationInteractionKind,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_origin import ClassificationOrigin
@@ -35,7 +35,8 @@ from ...operations.interactions import OperationInteractionRequest
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
-from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
+from ...operations.registry import OperationRegistry, operation_public_schema_reference
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
@@ -56,6 +57,7 @@ from ..llm_review_contracts import (
     LedgerLlmReviewRequest,
     LedgerLlmSuggestion,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject,
 )
 from ..llm_review_execution import LedgerLlmOperationPorts, LedgerLlmReviewExecutor, ledger_llm_review_schemas
 from ..llm_review_operand import LedgerLlmReviewedOperand
@@ -118,7 +120,7 @@ def _identity(payload: LedgerLlmReviewRequest) -> OperationIdentity:
     return OperationIdentity(
         operation_id="a" * 64,
         definition_id=ledger_llm_review_definition_id(payload),
-        subject_ref=profile_operation_subject(str(payload.profile_id)),
+        subject_ref=ledger_llm_review_subject(payload),
     )
 
 
@@ -147,18 +149,6 @@ def _suggestion(baseline: Transaction, mode: _Mode, *, children: int = 2) -> Led
         confidence=Decimal("0.9000"),
     )
     return LLMSaturatedSuggestion.model_validate(basic.model_dump()) if mode == "saturated" else basic
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Operands:
@@ -204,7 +194,7 @@ class _Repository:
 class _Case:
     def __init__(self, authority: PinnedAuthorityOperation, mode: _Mode = "classification") -> None:
         self.baseline = _baseline()
-        self.payload = _payload(mode, self.baseline.transaction_id[:12])
+        self.payload = _payload(mode, self.baseline.transaction_id)
         self.identity = _identity(self.payload)
         self.request = OperationRequest[LedgerLlmReviewRequest](
             definition_id=self.identity.definition_id,
@@ -228,13 +218,16 @@ class _Case:
         )
         self.ports = LedgerLlmOperationPorts(
             ledger=self.ledger,
-            llm=cast(LLMClassificationPorts, object()),
+            llm=cast(LLMClassificationPorts, SimpleNamespace()),
             settings=cast(Settings, object()),
         )
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.operands = _Operands()
         self.interactions = _Interactions(self.operands)
         self.in_commit = False
+
+        async def refuse_acknowledgement() -> None:
+            raise AssertionError("no cancellation is waiting in this case")
 
         @asynccontextmanager
         async def irreversible_section():
@@ -253,7 +246,11 @@ class _Case:
                 events=self.events,
                 operands=self.operands,
                 interactions=self.interactions,
-                cancellation=SimpleNamespace(irreversible_section=irreversible_section),
+                cancellation=SimpleNamespace(
+                    cancellation_requested=False,
+                    acknowledge_cancellation=refuse_acknowledgement,
+                    irreversible_section=irreversible_section,
+                ),
             ),
         )
 
@@ -289,7 +286,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
     def unused_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerLlmOperationPorts:
         raise AssertionError("registration must not acquire providers")
 
-    payload = _payload(mode, "b" * 12)
+    payload = _payload(mode, "b" * 64)
     definition = operation.build_ledger_llm_review_definition(ledger_llm_review_definition_id(payload), unused_factory)
     registration = operation.build_ledger_llm_review_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -310,7 +307,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
             registry=registry,
             request=OperationRequest[BaseModel](
                 definition_id=definition.definition_id,
-                subject_ref=profile_operation_subject(str(_PROFILE)),
+                subject_ref=ledger_llm_review_subject(payload),
                 payload=payload,
             ),
             context=context,
@@ -318,12 +315,13 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
         assert action in resolved.policy.actions and not resolved.policy.transaction_authority_required
 
 
-def test_request_normalizes_supported_prefix_and_preserves_rejection_origin() -> None:
-    request = _payload("classification", "  ABCDEF123456  ")
-    assert request.transaction_id == "abcdef123456"
+def test_request_admits_only_the_canonical_id_and_preserves_rejection_origin() -> None:
+    with pytest.raises(ValidationError, match="transaction_id"):
+        _payload("classification", "abcdef123456")
+    assert _payload("classification", "a" * 64).transaction_id == "a" * 64
     rejected = LedgerLlmReviewRequest(
         profile_id=_PROFILE,
-        transaction_id="b" * 12,
+        transaction_id="b" * 64,
         mode="auto_split",
         origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
     )
@@ -331,7 +329,7 @@ def test_request_normalizes_supported_prefix_and_preserves_rejection_origin() ->
     with pytest.raises(ValidationError, match="mode and invocation origin"):
         LedgerLlmReviewRequest(
             profile_id=_PROFILE,
-            transaction_id="b" * 12,
+            transaction_id="b" * 64,
             mode="split",
             origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
         )
@@ -381,7 +379,7 @@ async def test_acquisition_uses_exact_captured_row_and_review_projector_binds_in
         response_schema_ref=operation_public_schema_reference(response.identity),
         continuation_digest=cast(str, published["continuation_digest"]),
     )
-    projection = operation._review_projector(operand, interaction)
+    projection = operation.review_projector(operand, interaction)
     assert isinstance(projection, LedgerLlmReviewProjection)
     assert projection.reviewed_proposal_digest == sha256_hex(serialize_operation_operand(operand))
     if mode in {"classification", "saturated"}:
@@ -390,7 +388,7 @@ async def test_acquisition_uses_exact_captured_row_and_review_projector_binds_in
         assert projection.suggestion.parent_amount == "121.00"
         assert projection.suggestion.children[0].amount == "60.50"
     with pytest.raises(ValueError, match="another invocation"):
-        operation._review_projector(
+        operation.review_projector(
             operand,
             interaction.model_copy(
                 update={
@@ -470,14 +468,14 @@ async def test_resume_preserves_exact_baseline_and_distinguishes_prewrite_from_p
             settled_at=datetime(2026, 4, 15, tzinfo=UTC),
             result_ref=reference,
         )
-        assert operation._result_projector(execution, receipt) == execution.result
+        assert operation.result_projector(execution, receipt) == execution.result
         for changed in (
             {"effect": OperationEffect.NONE},
             {"result_ref": "f" * 64},
             {"identity": case.identity.model_copy(update={"operation_id": "f" * 64})},
         ):
             with pytest.raises(ValueError, match="terminal receipt"):
-                operation._result_projector(execution, receipt.model_copy(update=changed))
+                operation.result_projector(execution, receipt.model_copy(update=changed))
     else:
         error_type = (
             LedgerPersistenceConflictError
@@ -780,7 +778,7 @@ async def test_terminal_preview_captures_exact_proposal_without_pending_review_o
         settled_at=datetime(2026, 4, 15, tzinfo=UTC),
         result_ref=reference,
     )
-    assert operation._result_projector(execution, receipt) == execution.result
+    assert operation.result_projector(execution, receipt) == execution.result
     for changed in (
         {"effect": OperationEffect.UPDATED},
         {"result_ref": "f" * 64},
@@ -788,7 +786,7 @@ async def test_terminal_preview_captures_exact_proposal_without_pending_review_o
         {"condition": OperationTerminalCondition.REFUSED},
     ):
         with pytest.raises(ValueError, match="terminal receipt"):
-            operation._result_projector(execution, receipt.model_copy(update=changed))
+            operation.result_projector(execution, receipt.model_copy(update=changed))
 
 
 @pytest.mark.parametrize(
@@ -858,7 +856,7 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
         continuation_digest="d" * 64,
     )
     with pytest.raises(ValueError, match="invalid ledger reviewed operand"):
-        operation._review_projector(operand, interaction)
+        operation.review_projector(operand, interaction)
 
     def forbidden_writer(*args: object, **kwargs: object) -> BaseModel:
         raise AssertionError("terminal preview cannot authorize a resumed mutation")
@@ -869,18 +867,15 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
     assert not case.events.effects and case.operands.published is None
 
 
-_THIS_MACHINE = "http://127.0.0.1:11434/api/chat"
-_ANOTHER_MACHINE = "http://reader.example.invalid:11434/api/chat"
 _FIRST_PHASE = "ledger.llm.acquire"
 
 
-def _reader_endpoint(case: _Case, endpoint: str) -> None:
-    """Point the on-host reader's setting at ``endpoint``; the other ports stay as the case built them."""
-    case.ports = LedgerLlmOperationPorts(
-        ledger=case.ledger,
-        llm=case.ports.llm,
-        settings=Settings.model_construct(cadrumo_llm_ollama_chat_url=endpoint),
-    )
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+def test_a_request_cannot_name_a_vision_model(mode: _Mode) -> None:
+    """The model a role reads with is the person's selection, so the request has no field to carry another."""
+    values = _payload(mode, "a" * 64).model_dump() | {"vision_model": "synthetic-vision:2"}
+    with pytest.raises(ValidationError, match="vision_model"):
+        LedgerLlmReviewRequest.model_validate(values)
 
 
 def _model_calls(monkeypatch: pytest.MonkeyPatch, case: _Case, mode: _Mode) -> list[dict[str, object]]:
@@ -946,21 +941,18 @@ def _executor_on(case: _Case, frontend: OperationFrontendProjection | None) -> L
 @_EVERY_FRONTEND
 @pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
 @pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
-@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
 async def test_a_review_asks_the_configured_reader_once_whichever_frontend_submits_it(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection | None,
     mode: _Mode,
     preview: bool,
-    endpoint: str,
 ) -> None:
-    """The row the person worked on, the reader's address and the mode decide nothing by frontend."""
+    """The row the person worked on and the mode decide nothing by frontend."""
     case = _Case(authority_operation, mode)
     case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
     case.request = case.request.model_copy(update={"payload": case.payload})
     _worked_on_by_the_person(case)
-    _reader_endpoint(case, endpoint)
     calls = _model_calls(monkeypatch, case, mode)
 
     await _executor_on(case, frontend).execute(case.request, case.context)
@@ -1001,7 +993,6 @@ async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submi
     """The writer is reached with the same decision and the same reviewed row, after no further read."""
     case = _Case(authority_operation, mode)
     _worked_on_by_the_person(case)
-    _reader_endpoint(case, _ANOTHER_MACHINE)
     checkpoint = case.checkpoint(case.operand(mode, children=children), action)
     loads_before = case.repository.loads
     written: list[tuple[object, object]] = []
@@ -1048,7 +1039,7 @@ async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submi
 def test_an_applied_share_keeps_its_fraction_digits_and_stays_within_zero_to_one(share: str, accepted: bool) -> None:
     values = {
         "profile_id": _PROFILE,
-        "transaction_id": "a" * 12,
+        "transaction_id": "a" * 64,
         "mode": "classification",
         "origin": _ORIGINS["classification"],
         "business_pct": share,

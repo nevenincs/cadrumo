@@ -71,7 +71,6 @@ _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("07")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 
 @pytest.fixture
@@ -119,14 +118,14 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
 def _prior_m130(period: str, *, casilla_07: Decimal, casilla_16: Decimal | None) -> RegistryModeloObservation:
     """Build a prior-quarter M130 observation carrying casilla 07 and (optionally) 16.
 
-    The casilla-15 carry binding also reads ``saldo-negativo-fin-periodo`` from
-    every prior quarter, so each fixture row carries a zeroed saldo (a positive
-    prior result) to keep that sibling binding resolvable. ``casilla_16 = None``
+    The casilla-15 carry binding also reads casilla 19 from every prior quarter,
+    so each fixture row carries a zero result to keep that sibling binding
+    resolvable. ``casilla_16 = None``
     omits the casilla-16 entry entirely (the not-captured shape).
     """
     casilla_values = {
         _M130_PAGO_FRACCIONADO_CASILLA: casilla_07,
-        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+        validated_casilla_id("19"): Decimal("0"),
     }
     if casilla_16 is not None:
         casilla_values[_M130_HOME_DEDUCTION_CASILLA] = casilla_16

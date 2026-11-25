@@ -2,11 +2,11 @@
 
 The ladder, its four rungs, the identification and establishment split, the
 country vocabulary, the alpha-3 correspondence and the Spanish postal derivation
-were each built and each gated. None of them was called from a live path. This
-module is the call: it takes the document an operator is confirming and the
-direction they settled it under, resolves BOTH parties' territories through the
-authorities that own them, and hands the answers to the criteria assembly in the
-one channel that carries who established what.
+are reached from here. This module is the call: it takes the document an
+operator is confirming and the direction they settled it under, resolves BOTH
+parties' territories through the authorities that own them, and hands the
+answers to the criteria assembly in the one channel that carries who
+established what.
 
 **Two parties, two authorities, and they are not interchangeable.** The filer's
 own territory is a profile fact -- system-authoritative, declared once, and
@@ -33,14 +33,14 @@ counterparties inside a territory their operations are not subject to. What an
 exhausted ladder produces instead is a review item naming the counterparty, so
 the question reaches a person.
 
-**The review items are surfaced, not yet refused, and that is a stated
-interim.** The fourth amendment's design is one question per new counterparty
-whose paper is non-decisive, deduped by an operator answer persisted at
-counterparty level. The persisting verb has no operator-facing surface yet, so
-refusing here would make every domestic invoice permanently unconfirmable rather
-than asking once -- a refusal nobody can answer is not a review gate. The items
-are therefore carried onto the confirmation result, where the review surface
-reads them, and the refusal follows the answer channel rather than preceding it.
+**The review items are surfaced, not refused.** The design asks one question per
+new counterparty whose paper is non-decisive, deduped by an operator answer
+persisted at counterparty level. The persisting verb has no operator-facing
+surface, so refusing here would make every domestic invoice permanently
+unconfirmable rather than asking once -- a refusal nobody can answer is not a
+review gate. The items are therefore carried onto the confirmation result, where
+the review surface reads them, and the refusal follows the answer channel rather
+than preceding it.
 
 See Also:
     :func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`
@@ -68,6 +68,7 @@ from pydantic import BaseModel
 
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.draft_discrepancy import DraftFindingWording
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
@@ -78,14 +79,17 @@ from ...domain.iva.supply_nature import (
     SupplyNature,
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
+    registry_citation_catalogue,
     supply_nature_implied_by_category,
 )
 from .classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,
     DeclaredFacts,
-    IvaCategoryResolution,
     assemble_classification_criteria,
+)
+from .classification_category_resolution import (
+    IvaCategoryResolution,
     declared_category_from_document_record,
     resolve_ingestion_iva_category,
 )
@@ -94,6 +98,7 @@ from .confirmation_gate import ConfirmationBlocker, blocker_id
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
 from .filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+from .invoice_draft_records import FindingWords
 
 if TYPE_CHECKING:
     from datetime import date
@@ -148,7 +153,7 @@ class ConfirmedEstablishment(BaseModel):
         return self.counterparty.established
 
 
-def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
+def _review_item(*, field: str | None, detail: str = "", words: FindingWords | None = None) -> ConfirmationBlocker:
     """Return one establishment question in the review gate's own shape.
 
     Built with the gate's own id derivation rather than a second one, so an
@@ -157,16 +162,18 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
     """
     reason = ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
     return ConfirmationBlocker(
-        blocker_id=blocker_id(reason=reason, field=field, detail=detail),
+        blocker_id=blocker_id(reason=reason, field=field, detail=detail, words=words),
         reason=reason,
         field=field,
         detail=detail,
+        words=words,
     )
 
 
-def _filer_scope(
+def confirm_establishment_filer_scope(
     profile_record: UserProfileRecord | None,
     *,
+    effective_date: date | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, ConfirmationBlocker | None]:
     """Resolve the filer's own territory, or surface why it could not be.
@@ -175,17 +182,24 @@ def _filer_scope(
     incomplete profile is a setup gap. Its typed refusal propagates unchanged so
     the shared boundary retains the failed condition, evidence, and closed
     outcome rather than recasting a profile precondition as document-review text.
+
+    ``profile_record`` is a :class:`UserProfileRecord`.
     """
     if profile_record is None:
         return None, _review_item(
             field=FILER_POSTCODE_FACT_PATH,
-            detail=(
-                "no taxpayer profile was resolvable, so the filer's own IVA territory could not be "
-                f"established; it is a profile fact ({FILER_POSTCODE_FACT_PATH}) and is never read "
-                "off an invoice"
-            ),
+            words=FindingWords.of(DraftFindingWording.FILER_PROFILE_UNRESOLVABLE, fact=FILER_POSTCODE_FACT_PATH),
         )
-    return resolve_filer_territorial_scope(profile_record=profile_record, operation=operation), None
+    if effective_date is None:
+        # The territorial vocabulary is read on the operation's date; the missing
+        # date is the gap the classification asks for.
+        return None, None
+    return (
+        resolve_filer_territorial_scope(
+            profile_record=profile_record, effective_date=effective_date, operation=operation
+        ),
+        None,
+    )
 
 
 def _counterparty_review_items(
@@ -210,16 +224,12 @@ def _counterparty_review_items(
         return (_review_item(field=field, detail=f"{naming}: {counterparty.registration_conflict.detail}"),)
     if counterparty.established:
         return ()
-    return (
-        _review_item(
-            field=field,
-            detail=(
-                f"{naming}: this document establishes no IVA territory for the counterparty. The "
-                "country and postal evidence settled nothing and no confirmed fact is on record, so "
-                "the territory is unknown rather than the mainland"
-            ),
-        ),
+    words = (
+        FindingWords.of(DraftFindingWording.UNIDENTIFIED_COUNTERPARTY_TERRITORY_UNKNOWN)
+        if tax_identifier is None
+        else FindingWords.of(DraftFindingWording.COUNTERPARTY_TERRITORY_UNKNOWN, tax_id=tax_identifier)
     )
+    return (_review_item(field=field, words=words),)
 
 
 def _resolved_supply_nature(
@@ -227,15 +237,26 @@ def _resolved_supply_nature(
     supply_nature: SupplyNature | None,
     printed_citation: str | None,
     stated_category: DeclaredFact[IvaCategory] | None,
+    transaction_date: date | None,
 ) -> DeclaredFact[SupplyNature] | None:
-    """Resolve supply nature by operator, citation, then category authority."""
+    """Resolve supply nature by operator, citation, then category authority.
+
+    The citation catalogue is read on the transaction's date. With no date the
+    document and category routes establish nothing: the missing date is already
+    a recorded input of the classification, so the nature stays unresolved
+    rather than being read on the date the program runs.
+    """
     if supply_nature is not None:
         return DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
-    derivation = derive_supply_nature_from_citation(printed_citation=printed_citation)
+    if transaction_date is None:
+        return None
+    catalogue = registry_citation_catalogue(effective_date=transaction_date)
+    derivation = derive_supply_nature_from_citation(printed_citation=printed_citation, catalogue=catalogue)
     if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
         return DeclaredFact(value=derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
     category_derivation = supply_nature_implied_by_category(
         None if stated_category is None else stated_category.value,
+        catalogue=catalogue,
     )
     if category_derivation.outcome is not SupplyNatureDerivationOutcome.DERIVED:
         return None
@@ -244,12 +265,13 @@ def _resolved_supply_nature(
     return DeclaredFact(value=category_derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
 
 
-def _declared_facts(
+def declared_facts(
     *,
     kind: InvoiceKind,
     counterparty: CounterpartyEstablishment,
     filer_scope: IvaTerritorialScope | None,
     stated_category: DeclaredFact[IvaCategory] | None,
+    transaction_date: date | None,
     supply_nature: SupplyNature | None = None,
     printed_citation: str | None = None,
 ) -> DeclaredFacts:
@@ -279,6 +301,7 @@ def _declared_facts(
         supply_nature=supply_nature,
         printed_citation=printed_citation,
         stated_category=stated_category,
+        transaction_date=transaction_date,
     )
     if kind is InvoiceKind.RECEIVED:
         return DeclaredFacts(
@@ -346,10 +369,7 @@ def resolve_confirmed_establishment(
     """Resolve both parties' territories for one confirm, and classify the operation.
 
     The confirm path's single call into the establishment and classification
-    apparatus. Everything it reaches -- the ladder, the profile authority, the
-    declared-facts channel, the criteria assembly and the rule table behind it
-    -- had no production caller before this function, so this is the whole of
-    what makes them reachable.
+    apparatus.
 
     Args:
         bucket_id: Active profile bucket, for the ladder's confirmed-fact rung.
@@ -376,7 +396,7 @@ def resolve_confirmed_establishment(
         supply_nature: The operator's own statement of whether the supply is
             goods or services, when they have made one. It is demanded only on
             the branches where the law forks on it -- cross-border and reverse
-            charge -- and the ADR sanctions exactly two sources for the axis: a
+            charge -- and only two sources are admitted for the axis: a
             printed statutory citation, which decides by law, and this
             assertion. It enters stamped as an OPERATOR assertion so the
             classifier's inputs stay facts about who established them; a
@@ -406,27 +426,17 @@ def resolve_confirmed_establishment(
     )
 
     state = workflow_state_repository().load()
-    filer_scope, filer_item = _filer_scope(state.active_profile_record(), operation=operation)
+    transaction_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
+    filer_scope, filer_item = confirm_establishment_filer_scope(
+        state.active_profile_record(), effective_date=transaction_date, operation=operation
+    )
     try:
         profile = load_active_taxpayer_profile(state, schema=operation.profile_schema())
     except WizardStatusError:
         profile = None
 
-    declared = _declared_facts(
-        kind=kind,
-        counterparty=counterparty,
-        filer_scope=filer_scope,
-        # Read through the classification authority, never minted beside the
-        # document reader: what a tax-category token means about the operation
-        # is a classification question, and a reader answering it was a second
-        # authority working from weaker evidence than the rule table.
-        stated_category=declared_category_from_document_record(draft.iva_category, operation=operation),
-        supply_nature=supply_nature,
-        # The mention the reader already recovers, handed to the citation axis.
-        # Both readers carry it -- the structured path reads it exactly from the
-        # record, the model path transcribes it -- so wiring it here reaches
-        # every lane rather than the one it was written for.
-        printed_citation=draft.regime_legend,
+    declared = _confirmed_declared_facts(
+        operation, draft, kind, counterparty, filer_scope, supply_nature, transaction_date
     )
     assembly = assemble_classification_criteria(
         operation=operation,
@@ -435,7 +445,7 @@ def resolve_confirmed_establishment(
         # with no override is an ordinary outcome of reading a page, so it
         # arrives as ``None`` and the assembly reports it as a missing input
         # beside the others rather than aborting the confirm.
-        transaction_date=invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date),
+        transaction_date=transaction_date,
         direction=kind,
         inputs=collect_classifier_inputs(draft, profile=profile),
         declared=declared,
@@ -462,10 +472,8 @@ def resolve_confirmed_establishment(
         # it, and the sparing is unreachable from the other field. The resolved
         # field is populated only where the vocabulary PLACED the token, so it
         # is empty for exactly the codes this exemption exists for: reading it
-        # handed the classifier `None` for `TH` and `THA` alike, which is the
-        # same answer a document with no address block gives, and the guard
-        # refused every legitimate Thai export while its own tests -- which
-        # supply the status directly -- stayed green. The record token also
+        # would give the classifier `None` for `TH` and `THA` alike, the same
+        # answer a document with no address block gives. The record token also
         # carries the alpha-3 spelling Facturae states, which the printed-value
         # status axis declines to judge at all.
         counterparty_country_status=record_country_code_status(side.stated_country_token, operation=operation),
@@ -486,4 +494,38 @@ def resolve_confirmed_establishment(
         assembly=assembly,
         category=category,
         review_items=items,
+    )
+
+
+def _confirmed_declared_facts(
+    operation: PinnedAuthorityOperation,
+    draft: InvoiceDraft,
+    kind: InvoiceKind,
+    counterparty: CounterpartyEstablishment,
+    filer_scope: IvaTerritorialScope | None,
+    supply_nature: SupplyNature | None,
+    transaction_date: date | None,
+) -> DeclaredFacts:
+    return declared_facts(
+        kind=kind,
+        transaction_date=transaction_date,
+        counterparty=counterparty,
+        filer_scope=filer_scope,
+        # Read through the classification authority, never minted beside the
+        # document reader: what a tax-category token means about the operation
+        # is a classification question, and a reader answering it was a second
+        # authority working from weaker evidence than the rule table.
+        stated_category=(
+            None
+            if transaction_date is None
+            else declared_category_from_document_record(
+                draft.iva_category, effective_date=transaction_date, operation=operation
+            )
+        ),
+        supply_nature=supply_nature,
+        # The mention the reader already recovers, handed to the citation axis.
+        # Both readers carry it -- the structured path reads it exactly from the
+        # record, the model path transcribes it -- so wiring it here reaches
+        # every lane.
+        printed_citation=draft.regime_legend,
     )

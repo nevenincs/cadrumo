@@ -24,7 +24,7 @@ import keyring
 import pytest
 from keyring.errors import KeyringError, PasswordDeleteError
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -34,11 +34,12 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import login_session
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.attendance import (
@@ -55,6 +56,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     SessionRequest,
     SessionsLocked,
@@ -105,6 +108,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         context: ConnectionContext,
         channel: ByteChannel,
         request: ProfileLogin
+        | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
         | SignInStatusRequest
@@ -114,6 +118,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         | AttendanceDecide,
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
@@ -150,9 +155,9 @@ class StoredSignInRuntime:
     def connect(self) -> VerifiedConnection:
         """Open one verified connection; the runtime learns its frontend at login."""
         connection = VerifiedConnection(
-            self.endpoint.connect(timeout=3),
+            self.endpoint.connect(timeout=HANG_GUARD_SECONDS),
             expected=ClientHello(product_version=version("cadrumo"), storage_identity=self.endpoint.storage_identity),
-            deadline=time.monotonic() + 3,
+            deadline=time.monotonic() + HANG_GUARD_SECONDS,
         )
         self.connections.append(connection)
         return connection
@@ -210,12 +215,15 @@ class StoredSignInRuntime:
         }
         if target_session_id is not None:
             document["target_session_id"] = target_session_id
-        return connection.session(SessionRequest.model_validate(document), deadline=time.monotonic() + 10)
+        return connection.session(
+            SessionRequest.model_validate(document), deadline=time.monotonic() + HANG_GUARD_SECONDS
+        )
 
     def sign_in(self, connection: VerifiedConnection) -> SignInStatus:
         """Read the stored sign-in's presence and deadlines as the runtime reports them."""
         reply = connection.sign_in_status(
-            SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id), deadline=time.monotonic() + 5
+            SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id),
+            deadline=time.monotonic() + HANG_GUARD_SECONDS,
         )
         assert isinstance(reply, SignInStatusReply), reply
         return reply.status
@@ -231,7 +239,7 @@ class StoredSignInRuntime:
         _, decode = profile_authority_contexts()
         with pytest.MonkeyPatch.context() as patched:
             # The login session module stamps the sign-in with its clock.
-            patched.setattr(login_session, "_now", lambda: self.clock() - age)
+            patched.setattr(login_session, "wall_now", lambda: self.clock() - age)
             with authenticate_profile_candidate(
                 bucket_id=self.profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
             ) as candidate:
@@ -274,7 +282,9 @@ def stored_sign_in_runtime(
     # The backend's priority was fixed when collection imported it, before the
     # selection above, so the sign-in writer's usability probe would refuse it.
     # Hand the writer the same selected store directly.
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
     try:
         with administration_subject(
             tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
@@ -303,13 +313,13 @@ def stored_sign_in_runtime(
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
-                    assert server.ready.wait(3)
+                    assert server.ready.wait(HANG_GUARD_SECONDS)
                     yield runtime
                 finally:
                     for connection in runtime.connections:
                         connection.close()
                     stop.set()
-                    running.result(timeout=15)
+                    running.result(timeout=HANG_GUARD_SECONDS)
                     endpoint.close()
     finally:
         keyring.set_keyring(prior_keyring)

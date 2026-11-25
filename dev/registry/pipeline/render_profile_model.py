@@ -8,18 +8,19 @@ from typing import Literal
 
 from pydantic import model_validator
 
-from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, _StrictModel
+from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, StrictModel
 from .render_profile_rules import (
+    AlphanumericTextRule,
     LiteralNumericRule,
     SignedMonetaryCompositeRule,
     SingletonNumericRule,
     TelematicTransportChoiceRule,
     Width17MembershipRule,
 )
-from .render_profile_validation import _duplicates
+from .render_profile_validation import render_profile_validation_duplicates
 
 
-class RenderProfile(_StrictModel):
+class RenderProfile(StrictModel):
     """Deterministically compiled complete profile for one official design."""
 
     schema_version: Literal[1]
@@ -28,6 +29,8 @@ class RenderProfile(_StrictModel):
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
+    #: At most one: the design states its text rule once for every record.
+    alphanumeric_text_rule: AlphanumericTextRule | None = None
     literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
     telematic_transport_choice_rules: tuple[TelematicTransportChoiceRule, ...] = ()
     empty_rule_assertion: Literal["canonical_eligibility_empty"] | None = None
@@ -81,7 +84,7 @@ class RenderProfile(_StrictModel):
 
     @model_validator(mode="after")
     def _require_unique_fragment_ids(self) -> RenderProfile:
-        duplicate_ids = _duplicates(self.fragment_ids)
+        duplicate_ids = render_profile_validation_duplicates(self.fragment_ids)
         if duplicate_ids:
             raise ValueError(f"render profile contains duplicate fragment ids: {duplicate_ids!r}")
         return self

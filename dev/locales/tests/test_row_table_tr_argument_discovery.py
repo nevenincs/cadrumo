@@ -26,12 +26,12 @@ from pathlib import Path
 
 import pytest
 
-from .._ast_scanner import scan_source_text
+from ..ast_scanner import scan_source_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FRAMEWORK_MODULE = (
-    Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "entrypoints" / "cli" / "_framework_localisation.py"
+    Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "entrypoints" / "cli" / "framework_localisation.py"
 )
 _TABLE_ROUTED_KEYS = frozenset(
     {

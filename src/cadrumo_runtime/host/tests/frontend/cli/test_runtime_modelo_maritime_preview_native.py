@@ -12,7 +12,8 @@ from click.testing import Result
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
-from cadrumo.entrypoints.cli.modelo_results import WorkPreviewMaritimeExemptionResult
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.entrypoints.cli.modelo_query_results import WorkPreviewMaritimeExemptionResult
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -44,6 +45,8 @@ def _invoke(profile: NativeCliProfileFixture, *arguments: str, text: bool = Fals
                 "modelo",
                 "work",
                 "preview-maritime-exemption",
+                "--year",
+                str(filing_year_envelope().horizon),
                 *arguments,
             ),
             input=json.dumps({"profile_passphrase": profile.passphrase}),

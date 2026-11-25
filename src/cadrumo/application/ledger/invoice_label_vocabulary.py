@@ -19,19 +19,20 @@ CURRENCY_SYMBOLS: Mapping[str, str] = {"€": "EUR"}
 
 
 MONTHS: Mapping[str, int] = {
-    **dict.fromkeys(("enero", "gener", "january", "jan"), 1),
-    **dict.fromkeys(("febrero", "febrer", "february", "feb"), 2),
-    **dict.fromkeys(("marzo", "marc", "march", "mar"), 3),
-    **dict.fromkeys(("abril", "april", "apr"), 4),
-    **dict.fromkeys(("mayo", "maig", "may"), 5),
-    **dict.fromkeys(("junio", "juny", "june", "jun"), 6),
-    **dict.fromkeys(("julio", "juliol", "july", "jul"), 7),
-    **dict.fromkeys(("agosto", "agost", "august", "aug"), 8),
-    **dict.fromkeys(("septiembre", "setiembre", "setembre", "september", "sep", "sept"), 9),
-    **dict.fromkeys(("octubre", "october", "oct"), 10),
+    **dict.fromkeys(("enero", "ene", "gener", "gen", "january", "jan", "januar"), 1),
+    **dict.fromkeys(("febrero", "febrer", "febr", "february", "feb", "februar"), 2),
+    **dict.fromkeys(("marzo", "marc", "march", "mar", "marz", "mrz"), 3),
+    **dict.fromkeys(("abril", "abr", "april", "apr"), 4),
+    **dict.fromkeys(("mayo", "maig", "may", "mai"), 5),
+    **dict.fromkeys(("junio", "juny", "june", "jun", "juni"), 6),
+    **dict.fromkeys(("julio", "juliol", "july", "jul", "juli"), 7),
+    **dict.fromkeys(("agosto", "ago", "agost", "ag", "august", "aug"), 8),
+    **dict.fromkeys(("septiembre", "setiembre", "setembre", "set", "september", "sep", "sept"), 9),
+    **dict.fromkeys(("octubre", "october", "oct", "oktober", "okt"), 10),
     **dict.fromkeys(("noviembre", "novembre", "november", "nov"), 11),
-    **dict.fromkeys(("diciembre", "desembre", "december", "dec"), 12),
+    **dict.fromkeys(("diciembre", "dic", "desembre", "des", "december", "dec", "dezember", "dez"), 12),
 }
+"""Month names and abbreviations, casefolded and without diacritics, in Spanish, Catalan, English and German."""
 
 
 SUPPLIER_HEADING = (

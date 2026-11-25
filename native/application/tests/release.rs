@@ -7,11 +7,10 @@ use cadrumo_application::{
     value::{RelativePath, Sha256Digest},
 };
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
 fn digest(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256Digest::of(bytes).to_string()
 }
 
 fn fixture(root: &Path, mutate: impl FnOnce(&mut Value)) -> (RelativePath, ReleaseExpectation) {

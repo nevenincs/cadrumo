@@ -32,7 +32,7 @@ from .tree_publication_contracts import (
 )
 
 
-def _require_link_free_regular_members_allow_empty(path: Path, *, subject: str) -> None:
+def require_link_free_regular_members_allow_empty(path: Path, *, subject: str) -> None:
     """Admit an empty or partially deleted directory tree without following links."""
     if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a non-linked directory: {path}")
@@ -43,7 +43,7 @@ def _require_link_free_regular_members_allow_empty(path: Path, *, subject: str) 
             raise RegistryValidationError(f"{subject} contains a non-regular member: {member}")
 
 
-def _verify_generated_export_companion(
+def verify_generated_export_companion(
     export_root: Path,
     *,
     expected_manifest_sha256: str,
@@ -60,7 +60,7 @@ def _verify_generated_export_companion(
 
 def verify_generated_export_package(export_root: Path) -> ExportFragmentProvenanceManifest:
     """Return the package manifest after proving its files are exactly the attested outputs."""
-    _require_complete_regular_tree(export_root, subject="generated export package")
+    require_complete_regular_tree(export_root, subject="generated export package")
     manifest_path = export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if is_link_like(manifest_path) or not manifest_path.is_file():
         raise RegistryValidationError(
@@ -85,12 +85,13 @@ def verify_generated_export_package(export_root: Path) -> ExportFragmentProvenan
     return manifest
 
 
-def _verify_post_cutover_target(
+def verify_post_cutover_target(
     target_export_root: Path,
     *,
     expected_manifest_sha256: str,
     expected_manifest: ExportFragmentProvenanceManifest,
 ) -> None:
+    """Check the published export tree against the validated candidate manifest digest."""
     if (
         export_provenance_file_sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
         != expected_manifest_sha256
@@ -115,7 +116,7 @@ def _verify_post_cutover_target(
         )
 
 
-def _verify_recovery_package_against_current_authorities(
+def verify_recovery_package_against_current_authorities(
     export_root: Path,
     *,
     context: GeneratedExportTreePublicationContext,
@@ -126,6 +127,7 @@ def _verify_recovery_package_against_current_authorities(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
+    """Verify a recovered export package against the current registry authorities."""
     package_manifest = verify_generated_export_package(export_root)
     loaded = load_modelo_directory(modelo_root)
     revision_id = str(context.validation.target.revision_id)
@@ -196,10 +198,10 @@ def stage_verified_candidate_package(
         ):
             raise RegistryValidationError("same-volume staged export does not match the validated candidate")
     except OSError as exc:
-        _delete_verified_staged_candidate_if_present(staging)
+        delete_verified_staged_candidate_if_present(staging)
         raise RegistryValidationError(f"cannot stage generated export package beside target: {exc}") from exc
     except RegistryValidationError:
-        _delete_verified_staged_candidate_if_present(staging)
+        delete_verified_staged_candidate_if_present(staging)
         raise
     return staging
 
@@ -212,9 +214,10 @@ def _copy_and_fsync_regular_file(source: Path, destination: Path) -> None:
         os.fsync(output_stream.fileno())
 
 
-def _delete_verified_staged_candidate_if_present(staging: Path) -> None:
+def delete_verified_staged_candidate_if_present(staging: Path) -> None:
+    """Delete a verified staged export directory when present and confirm nothing remains."""
     if staging.exists():
-        _require_complete_regular_tree(staging, subject="generated export staging directory")
+        require_complete_regular_tree(staging, subject="generated export staging directory")
         try:
             shutil.rmtree(staging)
         except OSError as exc:
@@ -223,7 +226,8 @@ def _delete_verified_staged_candidate_if_present(staging: Path) -> None:
             raise RegistryValidationError(f"generated export staging residue remains: {staging}")
 
 
-def _require_complete_regular_tree(path: Path, *, subject: str) -> None:
+def require_complete_regular_tree(path: Path, *, subject: str) -> None:
+    """Refuse a directory tree that is linked, empty or holds non-regular members."""
     if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a non-linked directory: {path}")
     children = scan_directory(path)
@@ -233,6 +237,6 @@ def _require_complete_regular_tree(path: Path, *, subject: str) -> None:
         if is_link_like(child):
             raise RegistryValidationError(f"{subject} contains a symbolic link or junction: {child}")
         if child.is_dir():
-            _require_complete_regular_tree(child, subject=subject)
+            require_complete_regular_tree(child, subject=subject)
         elif not child.is_file():
             raise RegistryValidationError(f"{subject} contains a non-regular member: {child}")

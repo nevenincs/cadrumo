@@ -7,16 +7,44 @@ from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.transactions.models import TransactionCatalogue
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
     from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 
 
 @dataclass(frozen=True)
 class LedgerReadPorts:
-    """Read composition without invoice, calculation or evidence hydration."""
+    """Read composition without calculation or evidence hydration.
+
+    The invoice catalogue is read only to say which listed movements pay an
+    invoice that states a retención.
+    """
 
     operation: PinnedAuthorityOperation
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol
+    invoice_repository: InvoiceCatalogueReader
+
+
+class FullyValidatedTransactionCatalogueReader(Protocol):
+    """Read one profile's whole transaction catalogue with every admission check re-run.
+
+    An ordinary catalogue read trusts the secure store's binding for each row's
+    id; this read re-derives it too, so a stored row that no longer satisfies
+    admission is refused rather than read.
+    """
+
+    @property
+    def bucket_id(self) -> str:
+        """Return the profile bucket the reader is bound to."""
+        ...
+
+    def load_fully_validated(self) -> TransactionCatalogue:
+        """Return the catalogue after validating every row in full.
+
+        Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+        """
+        ...
 
 
 class LedgerReadPortsFactory(Protocol):

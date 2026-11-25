@@ -9,5 +9,5 @@ from .seed_profile import ProfileSeedStage
 from .seed_withholding import WithholdingSeedStage
 
 
-class _Seeder(ProfileSeedStage, LedgerSeedStage, WithholdingSeedStage, CarrySeedStage, ModeloSeedStage):
+class Seeder(ProfileSeedStage, LedgerSeedStage, WithholdingSeedStage, CarrySeedStage, ModeloSeedStage):
     """Combine the ordered public seed stages over one resumable receipt."""

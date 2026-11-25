@@ -27,33 +27,46 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..authority import PinnedAuthorityOperation
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
-    deducible_deduction_kind_overlaps,
-    invoice_ledger_screen_binding_ids,
+    ledger_iva_selector_vocabulary_failures,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ..ledger_iva_screen_bindings import deducible_deduction_kind_overlaps, invoice_ledger_screen_binding_ids
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
+from .authored_editions import authored_revisions, filing_grade_exercises, filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
-# Every filing coordinate the published registry answers for 303 and 390 across
-# the supported span, including both 2024 editions of 303.
-_M303_COORDINATES = (
-    (2022, "2T"),
-    (2023, "2T"),
-    (2024, "2T"),
-    (2024, "4T"),
-    (2025, "2T"),
-    (2026, "2T"),
-)
-_M390_YEARS = (2022, 2023, 2024, 2025)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(authored_revisions("303")[-1].id)
+
+
+def _quarterly_coordinates(modelo_id: str) -> tuple[tuple[int, str], ...]:
+    """Return one quarterly coordinate per authored design of every supported exercise.
+
+    An exercise a modelo splits between two designs yields one coordinate for each
+    design, so both of them are held to the same contract.
+    """
+    return tuple(
+        (year, quarterly[0])
+        for year in filing_year_envelope().years
+        for revision in authored_revisions(modelo_id)
+        if revision.valid_from.year <= year <= (revision.valid_to.year if revision.valid_to else year)
+        if (quarterly := [p for p in revision.period_selector.periods_for_year(year) if p.endswith("T")])
+    )
+
+
+# Every filing coordinate the published registry answers for 303 and 390 across the supported span.
+_M303_COORDINATES = _quarterly_coordinates("303")
+_M390_YEARS = filing_grade_exercises("390")
 
 
 def _soportado_selector(**axes: object) -> dict[str, object]:
@@ -77,18 +90,18 @@ def _binding(binding_id: str, kinds: tuple[str, ...] | None) -> BindingDefinitio
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("ley-37-1992:art-92",),
-        source_refs=("aeat-dr-303-2025",),
+        source_refs=(f"aeat-dr-303-{_YEAR}",),
     )
 
 
 def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2025",
-        localization_key="test.schema.revision.2025.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(year_from=2025, periods=("1T",)),
+        id=_REVISION_ID,
+        localization_key=f"test.schema.revision.{_REVISION_ID}.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("1T",)),
         legal_refs=("ley-37-1992:art-92",),
-        source_refs=("aeat-dr-303-2025",),
+        source_refs=(f"aeat-dr-303-{_YEAR}",),
         bindings=bindings,
     )
 
@@ -96,7 +109,7 @@ def _revision(*bindings: BindingDefinition) -> ModeloRevision:
 def _purchase(ledger_id: str, *, kind: str, cuota: str, asset_id: str | None = None) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
-        transaction_date=date(2025, 2, 10),
+        transaction_date=date(_YEAR, 2, 10),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -146,15 +159,31 @@ def test_a_repeated_deduction_kind_is_refused() -> None:
         )
 
 
-def test_a_deduction_kind_on_a_flow_that_bears_no_deduction_is_refused() -> None:
-    """Only a deducible row carries a kind, so the axis on an output flow could never match."""
-    with pytest.raises(ValidationError, match="requires a deducible flow_direction"):
-        LedgerIvaProvider.model_validate(
-            _soportado_selector(
-                flow_direction=IvaFlowDirection.from_registry("repercutido"),
-                deduction_fact_kinds=("domestic_investment",),
-            ),
-        )
+def test_a_deduction_kind_on_a_flow_that_bears_no_deduction_is_refused(operation: PinnedAuthorityOperation) -> None:
+    """Only a deducible row carries a kind, so the axis on an output flow could never match.
+
+    Deducibility is a dated fact, so the refusal is the revision-level vocabulary
+    check's, read on the date the declaring revision takes effect.
+    """
+    selector = LedgerIvaProvider.model_validate(
+        _soportado_selector(
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
+            deduction_fact_kinds=("domestic_investment",),
+        ),
+    )
+
+    failures = ledger_iva_selector_vocabulary_failures(selector, effective_date=date(_YEAR, 6, 15), authority=operation)
+
+    assert any("requires a deducible flow_direction" in failure for failure in failures)
+
+
+def test_a_deduction_kind_on_a_deducible_flow_is_admitted(operation: PinnedAuthorityOperation) -> None:
+    """CONTROL: the refusal above is the flow, not the axis."""
+    selector = LedgerIvaProvider.model_validate(_soportado_selector(deduction_fact_kinds=("domestic_investment",)))
+
+    assert (
+        ledger_iva_selector_vocabulary_failures(selector, effective_date=date(_YEAR, 6, 15), authority=operation) == ()
+    )
 
 
 @pytest.mark.parametrize(("filing_year", "period"), _M303_COORDINATES)

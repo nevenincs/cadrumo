@@ -165,6 +165,61 @@
     "schema_version": "2",
     "status": "success"
   },
+  "passphrase-change": {
+    "active_profile": "Test profile",
+    "command": "config.passphrase.change",
+    "notices": [],
+    "result": {
+      "changed": true,
+      "dek_epoch_preserved": true,
+      "password_generation": 2,
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "recovery_enrollment_retained": true
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "passphrase-change-rejected": {
+    "active_profile": "Test profile",
+    "command": "config.passphrase.change",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": {
+        "reason": "credential_rejected",
+        "sign_in_reason": "credential_rejected"
+      },
+      "message": "credential_rejected",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "passphrase-change-unknown": {
+    "active_profile": "Test profile",
+    "command": "config.passphrase.change",
+    "error": {
+      "action": null,
+      "category": "ERROR",
+      "code": "ERROR_PROFILE_MUTATION_RUN",
+      "context": {
+        "effect": "unknown",
+        "operation_id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "reason": "connection_closed"
+      },
+      "message": "connection_closed",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
   "profile-create": {
     "active_profile": "Test profile",
     "command": "config.profile.create",

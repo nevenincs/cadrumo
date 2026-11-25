@@ -13,8 +13,9 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....core.period import Period
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
@@ -84,7 +85,7 @@ def _invoice() -> Invoice:
             "invoice_number": "SENSITIVE-INVOICE-NUMBER-CANARY",
             "issued_at": date(2026, 8, 1),
             "counterparty_name": "SENSITIVE-COUNTERPARTY-CANARY",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100"),
             "iva_total": Decimal("21"),
@@ -460,10 +461,10 @@ def test_workspace_module_has_no_adapter_entrypoint_or_io_imports() -> None:
 
 def test_a_fully_reviewed_ledger_leaves_nothing_to_review() -> None:
     """The review list still names every row, but only pending rows are work."""
-    from ..workspace import _project_workspace_areas
+    from ..workspace import project_workspace_areas
 
     def review_area(*, pending: int) -> tuple[LedgerWorkspaceStatus, int]:
-        areas = _project_workspace_areas(
+        areas = project_workspace_areas(
             entries=(),
             review_ids=("a" * 64, "b" * 64),
             pending=pending,
@@ -482,13 +483,13 @@ def test_a_fully_reviewed_ledger_leaves_nothing_to_review() -> None:
 
 def test_import_area_reports_the_last_batch_it_measured() -> None:
     """A profile that never imported is empty; an unread history stays unmeasured."""
-    from ..workspace import LedgerWorkspaceProjectionError, _import_status
+    from ..workspace import LedgerWorkspaceProjectionError, import_status
 
-    assert _import_status(None) is LedgerWorkspaceStatus.UNMEASURED
-    assert _import_status(0) is LedgerWorkspaceStatus.EMPTY
-    assert _import_status(22) is LedgerWorkspaceStatus.READY
+    assert import_status(None) is LedgerWorkspaceStatus.UNMEASURED
+    assert import_status(0) is LedgerWorkspaceStatus.EMPTY
+    assert import_status(22) is LedgerWorkspaceStatus.READY
     with pytest.raises(LedgerWorkspaceProjectionError):
-        _import_status(-1)
+        import_status(-1)
 
 
 def test_evidence_area_reports_its_measured_review_queue() -> None:
@@ -498,10 +499,10 @@ def test_evidence_area_reports_its_measured_review_queue() -> None:
     between "nobody looked" and "looked and found nothing" is what decides
     whether the operator sees the zone at all.
     """
-    from ..workspace import LedgerWorkspaceProjectionError, _evidence_status
+    from ..workspace import LedgerWorkspaceProjectionError, evidence_status
 
-    assert _evidence_status(None) is LedgerWorkspaceStatus.UNMEASURED
-    assert _evidence_status(0) is LedgerWorkspaceStatus.EMPTY
-    assert _evidence_status(2) is LedgerWorkspaceStatus.NEEDS_ATTENTION
+    assert evidence_status(None) is LedgerWorkspaceStatus.UNMEASURED
+    assert evidence_status(0) is LedgerWorkspaceStatus.EMPTY
+    assert evidence_status(2) is LedgerWorkspaceStatus.NEEDS_ATTENTION
     with pytest.raises(LedgerWorkspaceProjectionError):
-        _evidence_status(-1)
+        evidence_status(-1)

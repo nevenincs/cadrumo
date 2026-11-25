@@ -26,13 +26,13 @@ from click.testing import Result
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.diagnostics_repair_documents import RepairActionDocument, RepairCheckDocument
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.logging import default_log_file_path
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
@@ -94,7 +94,7 @@ _CLI = OperationFrontendProjection.CLI
 _LABEL = "repair-acts"
 _PROFILE = UUID("95959595-9595-4595-8595-959595959595")
 _CORRUPT_POINTER = b"not = valid = toml"
-_LOG_LINES = tuple(f"2026-04-02T09:30:{index:02d}Z synthetic repair log line {index}" for index in range(30))
+_LOG_LINES = tuple(f"1980-04-02T09:30:{index:02d}Z synthetic repair log line {index}" for index in range(30))
 _DOOR_COORDINATES = frozenset({"request_id", "runtime_boot_id", "connection_id", "kind"})
 
 

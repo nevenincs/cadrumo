@@ -29,9 +29,9 @@ def test_the_source_denominator_is_nonempty_and_reproducible() -> None:
 def test_production_edit_operations_pin_the_same_complete_typed_batch() -> None:
     """Apply and preflight consume the same canonical model without persisting its values."""
     from ...application.modelo.edit_models import ModeloEditSubmissionV1
-    from ..operation_composition import build_production_operation_registry
+    from .production_operation_registry import production_operation_registry
 
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     declarations = [
         definition.transient_financial_operand
         for definition in registry.definitions
@@ -58,9 +58,9 @@ def test_exactly_one_production_definition_owns_the_edit_contract_apply_authorit
     """
     import inspect
 
-    from ..operation_composition import build_production_operation_registry
+    from .production_operation_registry import production_operation_registry
 
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     owners = [
         definition.definition_id
         for definition in registry.definitions

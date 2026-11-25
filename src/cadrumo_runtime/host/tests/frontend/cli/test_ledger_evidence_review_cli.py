@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator, Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -40,8 +41,11 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -52,10 +56,10 @@ _GROUNDED_REFERENCE = "ev-grounded-001"
 
 def _clean_draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Acme Suministros SL",
         invoice_number="2026-0142",
-        invoice_date="2026-03-10",
+        invoice_date=date(_YEAR, 3, 10).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -87,8 +91,8 @@ def _blocked_draft() -> InvoiceDraft:
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.AMBIGUOUS,
                     candidates=(
-                        FieldAmbiguityCandidate(value="ESB12345674", note="header block"),
-                        FieldAmbiguityCandidate(value="ESX1234567L", note="footer block"),
+                        FieldAmbiguityCandidate(value="ESB00015016", note="header block"),
+                        FieldAmbiguityCandidate(value="ESX0001500M", note="footer block"),
                     ),
                 ),
             ),
@@ -183,7 +187,7 @@ def grounded_queue(tmp_path: Path) -> Iterator[None]:
 
 
 def _json_result(args: list[str]) -> dict[str, object]:
-    result = _invoke(["--format", "json", *args])
+    result = invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert isinstance(payload, dict), result.output
@@ -291,7 +295,7 @@ def test_review_view_of_a_clean_draft_reports_no_blockers(seeded_queue: None) ->
 
 def test_review_view_of_an_unknown_reference_refuses(seeded_queue: None) -> None:
     """A reference with no pending draft refuses rather than showing an empty document."""
-    result = _invoke(["app", "ledger", "evidence", "review", "view", "ev-does-not-exist"])
+    result = invoke(["app", "ledger", "evidence", "review", "view", "ev-does-not-exist"])
 
     assert result.exit_code != 0, result.output
 
@@ -337,7 +341,7 @@ def test_the_confirm_verb_offers_no_bulk_resolution_flag() -> None:
     text: the operator's escape hatch would be a CLI OPTION, and a source scan
     would also match a comment or a docstring that merely mentions one.
     """
-    result = _invoke(["app", "ledger", "evidence", "confirm", "--help"])
+    result = invoke(["app", "ledger", "evidence", "confirm", "--help"])
 
     assert result.exit_code == 0, result.output
     rendered = result.output.replace("\n", " ")

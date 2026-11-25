@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from .financial_contracts import ProfileFactEntry
-from .financial_navigation import _activate_button, wait_for_refreshed_home
+from .financial_navigation import activate_button, wait_for_refreshed_home
 from .installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -56,16 +56,16 @@ def required_profile_facts(scenario: IncomeTaxScenario) -> tuple[ProfileFactEntr
     )
 
 
-async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None:
+async def configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None:
     """Set the required income facts through Profile Manager row-key edits."""
     from textual.widgets import Input
 
     await pilot.press("f4")
     await wait_for_public_selector(pilot, "#manager-status", polls=180)
-    await _activate_button(pilot, "#manager-add-row-activities")
+    await activate_button(pilot, "#manager-add-row-activities")
     await wait_for_public_selector(pilot, "#row-input-0")
     query_public_selector(pilot, "#row-input-0", Input).value = "income-tax acceptance activity"
-    await _activate_button(pilot, "#btn-row-save")
+    await activate_button(pilot, "#btn-row-save")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status", polls=180)
     for fact in required_profile_facts(scenario):

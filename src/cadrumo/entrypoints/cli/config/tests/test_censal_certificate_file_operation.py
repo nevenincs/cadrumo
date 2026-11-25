@@ -24,7 +24,7 @@ from cadrumo.adapters.persistence.operations.tests.profile_operation_supervisor 
 )
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.censal_certificate_operation import (
     CENSAL_CERTIFICATE_OPERATION_DEFINITION_ID,
     CensalCertificateOperationProjection,
@@ -38,7 +38,12 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.domain.censo.certificado import (
     ActividadLocalCertificada,
     CertificadoCensalParseError,

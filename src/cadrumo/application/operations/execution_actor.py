@@ -13,10 +13,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
+from ...core.operations import OperationFrontendProjection
 from ..user_profile.access_contracts import SessionKind
 from .models import OperationIdentity
 from .person_acts import is_persons_frontend
-from .registry import OperationFrontendProjection
 
 if TYPE_CHECKING:
     from .owner import OperationExecutorContext

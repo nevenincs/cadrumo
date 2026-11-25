@@ -31,7 +31,7 @@ conversion seam grounds every foreign-currency row's normalisation.
 from __future__ import annotations
 
 import json
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
@@ -52,9 +52,9 @@ from cadrumo.application.aggregation.tests.renta_income_aggregation_support impo
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
-from cadrumo.core.period import Period
+from cadrumo.core.period import Period, PeriodKind
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -71,7 +71,23 @@ pytestmark = [
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _CENT = Decimal("0.01")
-_CLASSIFIED_AT = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+
+
+def _corpus_dates() -> tuple[date, ...]:
+    """Return every booked and value date the corpus files print, read through the real provider."""
+    manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
+    provider = CsvProvider()
+    return tuple(
+        day
+        for account in manifest["accounts"]
+        for parsed in provider.ingest(_CORPUS / account["file"])
+        for day in (parsed.raw.booked_date, parsed.raw.value_date or parsed.raw.booked_date)
+    )
+
+
+# The corpus period is whatever its files print; nothing here restates it.
+_CORPUS_DATES = _corpus_dates()
+_CLASSIFIED_AT = datetime.combine(max(_CORPUS_DATES) + timedelta(days=1), time(12, 0), tzinfo=UTC)
 
 # Corpus FX oracle, in the ECB's own EUR-base direction. The quotes are chosen so
 # their inverses -- the CCY->EUR multipliers the provider returns -- are exactly
@@ -84,8 +100,8 @@ _CLASSIFIED_AT = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 # resolution is covered by the provider's own suite. The quote is declared on
 # every day of the period rather than on one day, because the provider bounds its
 # working-day fallback to a short window and must never reach back a year.
-_CORPUS_FX_START = date(2024, 12, 1)
-_CORPUS_FX_END = date(2026, 8, 1)
+_CORPUS_FX_START = min(_CORPUS_DATES) - timedelta(days=31)
+_CORPUS_FX_END = max(_CORPUS_DATES) + timedelta(days=31)
 _CORPUS_FLAT_QUOTES = {
     "GBP": Decimal("0.8474576271186440677966101695"),
     "USD": Decimal("1.086956521739130434782608696"),
@@ -214,17 +230,15 @@ def built() -> _CorpusRows:
     Each row building through the strict pydantic model is itself a fidelity
     assertion (invalid field combinations would raise here).
     """
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         return _build_transactions()
 
 
-_QUARTERLY_TEST_PERIODS = (
-    Period.from_year_and_code(2025, "1T"),
-    Period.from_year_and_code(2025, "2T"),
-    Period.from_year_and_code(2025, "3T"),
-    Period.from_year_and_code(2025, "4T"),
-    Period.from_year_and_code(2026, "1T"),
-    Period.from_year_and_code(2026, "2T"),
+_QUARTERLY_TEST_PERIODS = tuple(
+    sorted(
+        {Period.containing(day, PeriodKind.QUARTERLY) for day in _CORPUS_DATES},
+        key=lambda period: period.start_date,
+    )
 )
 
 
@@ -247,7 +261,7 @@ def _catalogue(built: _CorpusRows) -> TransactionCatalogue:
 
 def test_iva_pipeline_gates_transfers_personal_and_nondeclarable(built: _CorpusRows) -> None:
     """No gated row may ever surface as an IVA observation, any period."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         gated_ids = {tx.transaction_id for tx, rule, _ in built if not rule.get("iva_declarable", False)}
         catalogue = _catalogue(built)
         emitted: set[str] = set()
@@ -267,7 +281,7 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable(built: _CorpusR
 
 def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> None:
     """Every emitted observation matches the oracle's category and flow."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         by_id = {tx.transaction_id: rule for tx, rule, _ in built}
         catalogue = _catalogue(built)
         seen = 0
@@ -301,7 +315,7 @@ def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> 
 
 def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence(built: _CorpusRows) -> None:
     """Legacy corpus input categories remain blocked until their evidence oracle is extended."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         catalogue = _catalogue(built)
         categories: set[IvaCategory] = set()
         refusal_count = 0
@@ -335,7 +349,7 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _Corpus
     excluded_ids = {tx.transaction_id for tx, rule, _ in built if "excluded_m130" in rule.get("feeds", [])}
     assert excluded_ids, "corpus must contain salary/rent/interest income"
     emitted: set[str] = set()
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         catalogue = _catalogue(built)
         for period in _QUARTERLY_TEST_PERIODS:
             result = aggregate_renta_income_ledger(
@@ -354,7 +368,7 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _Corpus
 
 def test_recargo_equivalencia_is_not_deductible_input_iva(built: _CorpusRows) -> None:
     """The RE anomaly row must never surface as deductible soportado IVA."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         re_ids = {
             tx.transaction_id
             for tx, rule, _ in built

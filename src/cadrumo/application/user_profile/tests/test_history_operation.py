@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -13,15 +13,13 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    AccessScope,
-    AuthorityState,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -38,19 +36,9 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ..access_contracts import (
-    AccessEvaluationContext,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
-    ProfileAccessState,
-    SessionKind,
-    SessionState,
+from ...operations.registry import OperationRegistry
+from ...tests.access_authority_support import (
+    disclosure_decision_without_category,
 )
 from ..access_errors import ProfileAccessRefusedError
 from ..history_contracts import ProfileHistoryExecutionResult, ProfileHistoryProjection, ProfileHistoryRequest
@@ -62,7 +50,6 @@ from ..history_operation import (
     build_profile_history_registration,
     resolve_profile_history_access,
 )
-from ..operation_access_policy import evaluate_operation_access
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -284,114 +271,13 @@ def test_history_result_requires_complete_profile_and_tax_disclosure_consent(
             authority_operation=_PIN,
         ),
     )
-    permissions = frozenset(
-        DisclosurePermission(
-            destination_id=destination,
-            projection_id=schema.schema_id,
-            category=category,
-        )
-        for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-    )
-    complete = AccessScope(
-        operations=frozenset({PROFILE_HISTORY_OPERATION_DEFINITION_ID}),
-        actions=frozenset({AccessAction.RESULT}),
-        disclosures=permissions,
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    granted = AccessScope(
-        operations=complete.operations,
-        actions=complete.actions,
-        disclosures=frozenset(permission for permission in permissions if permission.category is not missing),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    instant = datetime(2026, 10, 1, 12, tzinfo=UTC)
-    binding = ProfileAccessBinding(
+    decision = disclosure_decision_without_category(
+        resolved,
+        registry,
         profile_id=_PROFILE,
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
-    )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=uuid4(),
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=granted,
-        valid_from=instant - timedelta(days=1),
-        expires_at=instant + timedelta(days=1),
-        unattended=True,
-        allow_os_lock=False,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
-        client_id=grant.client_id,
-        kind=SessionKind.API_KEY,
-        state=SessionState.ACTIVE,
-        scope=granted,
-        grant_id=grant.grant_id,
-        grant_generation=grant.generation,
-        key_id=key.key_id,
-        key_generation=key.generation,
-        issued_at=instant,
-        expires_at=instant + timedelta(minutes=2),
-        issued_monotonic=100.0,
-    )
-    decision = evaluate_operation_access(
-        request=resolved.request,
-        policy=resolved.policy,
-        registry=registry,
-        session=session,
-        ancestors=(),
-        grant=grant,
-        key=key,
-        profile=ProfileAccessState(
-            binding=binding,
-            lock_generation=0,
-            globally_locked=False,
-            automation_enabled=True,
-            scope=complete,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-        ),
-        context=AccessEvaluationContext(
-            now=instant,
-            monotonic_now=100.0,
-            clock_rollback_detected=False,
-            runtime_boot_id=session.runtime_boot_id,
-            connection_id=session.connection_id,
-            authenticated_client_id=grant.client_id,
-            login_contexts=(
-                OsLoginContext(
-                    login_id="synthetic-login",
-                    os_owner_id=binding.os_owner_id,
-                    active=True,
-                    lock_state=OsLockState.UNLOCKED,
-                    unattended=LoginEligibility.ELIGIBLE,
-                    credential_facilities=Availability.AVAILABLE,
-                ),
-            ),
-            private_work_available=True,
-        ),
+        destination_id=destination,
+        result_schema_id=schema.schema_id,
+        missing=missing,
     )
     if missing is None:
         assert isinstance(decision, AccessAllowed)

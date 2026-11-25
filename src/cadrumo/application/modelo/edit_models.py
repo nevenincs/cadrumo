@@ -18,49 +18,45 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.field_absence import absent_when_none
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.filing.schema import ModeloScalar
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import ModeloDetailRow
 from ..operations.models import OperationId
 from ..operator_actions.models import ActionReference
 from .edit_contract import (
+    MAX_REPEATED_ROW_VALUES,
     EditModel,
+    ModeloEditCompatibilityTupleV1,
+    ModeloEditExecutionEffect,
+    ModeloEditMutationFamily,
+    ModeloEditMutationResultReceiptV1,
 )
-from .edit_contract import (
-    ModeloEditCompatibilityTupleV1 as _ModeloEditCompatibilityTupleV1,
-)
-from .edit_contract import (
-    ModeloEditExecutionEffect as _ModeloEditExecutionEffect,
-)
-from .edit_contract import (
-    ModeloEditMutationFamily as _ModeloEditMutationFamily,
-)
-from .edit_contract import (
-    ModeloEditMutationResultReceiptV1 as _ModeloEditMutationResultReceiptV1,
-)
+from .edit_downstream_models import ModeloEditDownstreamRefusalV1
 from .edit_value_grammar import ModeloEditValueGrammarV1
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
-MAX_MODELO_EDIT_SURFACE_ENTRIES = 4096
-"""Bound the edit surface above the published 2025 Modelo 100's 2,320 entries."""
+MAX_MODELO_EDIT_SURFACE_ENTRIES = 8192
+"""Bound the edit surface above the largest published one: Modelo 200 2025's 5,522 entries."""
 _MAX_MESSAGE_ARGUMENTS = 16
 _MAX_EVIDENCE_REFERENCES = 64
-_MAX_ROW_VALUES = 200
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
@@ -130,15 +126,25 @@ class ModeloEditDetailRowIntentKind(StrEnum):
 
 
 class ModeloEditBindingIntentKind(StrEnum):
-    """The two distinct binding-override edit intents; address absence means UNCHANGED.
+    """The distinct binding-override edit intents; address absence means UNCHANGED.
 
-    Both act on the ``BindingId``-keyed binding overrides of the revision's
+    Each acts on the ``BindingId``-keyed binding overrides of the revision's
     operator layer: ``SET_OVERRIDE_VALUE`` replaces the operator's override and
     ``REMOVE_OVERRIDE`` withdraws it, so the binding's source tiers win again.
+    ``ATTEST_NO_AMOUNT`` records the operator's statement that a carry from an
+    earlier filing holds no amount: an override of zero the operator layer marks
+    attested, kept apart from a zero typed. Either other intent withdraws it.
+    ``ATTEST_PRIOR_VALUE`` records the operator's statement of a carry's value
+    where no supported earlier filing can supply it, because the earlier
+    filing's year lies outside the support envelope: the value stays the
+    override and the operator layer names the earlier filing it stands in
+    for. Any other intent on the binding withdraws it.
     """
 
     SET_OVERRIDE_VALUE = "set_override_value"
     REMOVE_OVERRIDE = "remove_override"
+    ATTEST_NO_AMOUNT = "attest_no_amount"
+    ATTEST_PRIOR_VALUE = "attest_prior_value"
 
 
 class ModeloEditNonWritableReason(StrEnum):
@@ -151,6 +157,10 @@ class ModeloEditNonWritableReason(StrEnum):
     deterministic source owns, whose override would make the declaration stop
     reflecting the records it adds up; ``OVERRIDE_POLICY_UNDECIDED`` is a
     binding whose source kind has no grounded override policy yet.
+    ``NOT_READ_BY_CALCULATION`` is a binding the calculation does not read for
+    this declaration's period, so an override of it would change nothing the
+    declaration shows. A binding a repeating group fills row by row is
+    ``ROW_FIELD_TEMPLATE`` as well: it stands for a column of lines.
     """
 
     COMPUTED_BY_FORMULA = "computed_by_formula"
@@ -160,6 +170,7 @@ class ModeloEditNonWritableReason(StrEnum):
     VALUE_CHANNEL_UNAVAILABLE = "value_channel_unavailable"
     SOURCE_LOCKED = "source_locked"
     OVERRIDE_POLICY_UNDECIDED = "override_policy_undecided"
+    NOT_READ_BY_CALCULATION = "not_read_by_calculation"
 
 
 class ModeloEditFindingSeverity(StrEnum):
@@ -210,10 +221,27 @@ class ModeloEditBindingAddressV1(EditModel):
     ``BindingId``, never ``CasillaId`` -- most overridable bindings (a
     fichero-BOE record-field ``manual_input`` binding, most notably) have no
     casilla at all to address through.
+
+    ``row_identity`` names the row of a repeating group a statement of a carry
+    speaks of, for a binding whose registry family is stated row by row; every
+    other intent leaves it absent, and an absent one is left out of the dump.
     """
 
     kind: Literal["binding"] = "binding"
     binding_id: BindingId
+    row_identity: str | None = Field(default=None, min_length=1, max_length=256, exclude_if=absent_when_none)
+
+
+class ModeloEditCorrectionAddressV1(EditModel):
+    """A casilla's corrected value on a declaration recorded as filed, read for its amendment.
+
+    Only an entry typed for a correction is addressed this way, and only a
+    preflight reads it: a correction is never an edit intent, so no apply or
+    surface entry takes this address.
+    """
+
+    kind: Literal["correction"] = "correction"
+    casilla_id: CasillaId
 
 
 class ModeloEditExistingRowAddressV1(EditModel):
@@ -288,7 +316,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
     data_type: CasillaDataTypeValue
-    allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
+    allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=16)]
     grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
@@ -314,7 +342,7 @@ class ModeloEditWritableRowGroupSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_row_group"] = "writable_row_group"
     binding_id: BindingId
-    allowed_intents: Annotated[tuple[ModeloEditRowIntentKind, ...], Field(min_length=1, max_length=4)]
+    allowed_intents: Annotated[tuple[ModeloEditRowIntentKind, ...], Field(min_length=1, max_length=16)]
     reorderable: bool
     max_rows: Annotated[int, Field(ge=1)] | None = None
 
@@ -354,7 +382,7 @@ class ModeloEditWritableBindingOverrideSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_binding_override"] = "writable_binding_override"
     binding_id: BindingId
-    allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=2)]
+    allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=16)]
     grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
@@ -388,7 +416,7 @@ class ModeloEditWritableDetailRowSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_detail_row"] = "writable_detail_row"
     detail_row_kind: _BoundedCode
-    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=3)]
+    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=16)]
 
     @field_validator("allowed_intents")
     @classmethod
@@ -438,9 +466,8 @@ class ModeloEditSchemaIdentityV1(EditModel):
     commit. The Workspace type's ``field_manifest_digest`` digests a
     structurally unrelated concept -- the field-CLASSIFICATION manifest,
     a deterministic walk over the public registry TYPE denominator for
-    display rendering. Reusing one field name for both silently made two
-    genuinely different values compare unequal under one name; see the
-    edit-contract ADR amendment this type was added by.
+    display rendering. Sharing one field name would make two genuinely
+    different values compare unequal under one name.
     """
 
     schema_id: _BoundedCode
@@ -472,7 +499,7 @@ class ModeloEditBaselineV1(EditModel):
     """
 
     edit_contract_version: Literal[1] = 1
-    compatibility: _ModeloEditCompatibilityTupleV1
+    compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: FilingYear
@@ -488,7 +515,7 @@ class ModeloEditBaselineV1(EditModel):
         tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=MAX_MODELO_EDIT_SURFACE_ENTRIES)
     ]
     permitted_surface_digest: ContentDigest
-    mutation_family: _ModeloEditMutationFamily
+    mutation_family: ModeloEditMutationFamily
     issued_at: datetime
     expires_at: datetime
     baseline_id: ModeloEditBaselineId
@@ -531,10 +558,10 @@ class ModeloEditNormalisation(StrEnum):
 
 
 type ModeloEditValueAddressV1 = Annotated[
-    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1,
+    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1 | ModeloEditCorrectionAddressV1,
     Field(discriminator="kind"),
 ]
-"""An address that takes one typed value: a casilla or a binding override."""
+"""An address that takes one typed value: a casilla, a binding override, or a filed casilla's correction."""
 
 
 class ModeloEditParsedValueV1(EditModel):
@@ -548,7 +575,7 @@ class ModeloEditParsedValueV1(EditModel):
     outcome: Literal["parsed"] = "parsed"
     address: ModeloEditValueAddressV1
     value: ModeloScalar
-    normalisations: Annotated[tuple[ModeloEditNormalisation, ...], Field(max_length=4)] = ()
+    normalisations: Annotated[tuple[ModeloEditNormalisation, ...], Field(max_length=16)] = ()
 
 
 class ModeloEditParseReason(StrEnum):
@@ -628,7 +655,7 @@ class ModeloEditStaleBaselineRefusalV1(EditModel):
     kind: Literal["stale_edit_baseline"] = "stale_edit_baseline"
     edit_contract_version: Literal[1] = 1
     baseline_id: ModeloEditBaselineId
-    mismatching_coordinates: Annotated[tuple[_BoundedCode, ...], Field(min_length=1, max_length=8)]
+    mismatching_coordinates: Annotated[tuple[_BoundedCode, ...], Field(min_length=1, max_length=16)]
     responsible_owner: _BoundedCode
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None
@@ -641,8 +668,18 @@ class ModeloEditStaleBaselineRefusalV1(EditModel):
         return value
 
 
+def _is_absent(value: object) -> bool:
+    """Whether an optional member is missing, so the serialized record leaves it out."""
+    return value is None
+
+
 class ModeloEditDomainRefusalV1(EditModel):
-    """Typed post-admission refusal without a partial projection or raw exception."""
+    """Typed post-admission refusal without a partial projection or raw exception.
+
+    ``downstream`` is set only when the edit's values were admitted and a later
+    stage, such as the recalculation, refused under its own registered code;
+    a refusal of the value itself never carries it.
+    """
 
     kind: Literal["domain"] = "domain"
     edit_contract_version: Literal[1] = 1
@@ -653,12 +690,26 @@ class ModeloEditDomainRefusalV1(EditModel):
     responsible_owner: _BoundedCode
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None
+    downstream: ModeloEditDownstreamRefusalV1 | None = Field(default=None, exclude_if=_is_absent)
 
     @model_validator(mode="after")
     def _reject_untyped_stale_baseline(self) -> ModeloEditDomainRefusalV1:
         if self.code is ModeloEditRefusalCode.STALE_EDIT_BASELINE:
             raise ValueError("a stale edit baseline requires the typed compare-and-swap refusal")
         return self
+
+
+class ModeloEditCarryWithdrawalBlock(StrEnum):
+    """The fact a refused withdrawal of a calculation-refusing carry statement names.
+
+    Withdrawing such a statement returns the work unit to no current
+    calculation; these are the two cases where it cannot.
+    """
+
+    #: The declaration is recorded as filed; only an amendment corrects it.
+    FILED = "carry_withdrawal_filed"
+    #: The head holds other values of the filer's, which withdrawing would discard.
+    KEEPS_ENTRIES = "carry_withdrawal_keeps_entries"
 
 
 class ModeloEditUnsupportedIntentReason(StrEnum):
@@ -779,8 +830,11 @@ class ModeloBindingEditIntentV1(EditModel):
     """One binding-override edit intent; zero and false remain distinct from UNCHANGED.
 
     Addresses ``CalculationRevision.binding_overrides`` directly by
-    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE``: withdrawing
-    an override is expressed by absence of a value, not a typed zero.
+    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE`` or
+    ``ATTEST_NO_AMOUNT``: withdrawing an override, and stating that a carry
+    holds no amount, are expressed by absence of a value, not a typed zero.
+    ``SET_OVERRIDE_VALUE`` and ``ATTEST_PRIOR_VALUE`` require one, so a blank
+    statement of a figure is refused here.
     """
 
     address: ModeloEditBindingAddressV1
@@ -789,10 +843,14 @@ class ModeloBindingEditIntentV1(EditModel):
 
     @model_validator(mode="after")
     def _require_value_only_for_set_override(self) -> ModeloBindingEditIntentV1:
-        if self.kind is ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is None:
-            raise ValueError("SET_OVERRIDE_VALUE binding intent requires a typed value")
-        if self.kind is not ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is not None:
-            raise ValueError("only SET_OVERRIDE_VALUE may carry a binding intent value")
+        carries_value = self.kind in {
+            ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+            ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        }
+        if carries_value and self.value is None:
+            raise ValueError(f"{self.kind.name} binding intent requires a typed value")
+        if not carries_value and self.value is not None:
+            raise ValueError("only SET_OVERRIDE_VALUE and ATTEST_PRIOR_VALUE may carry a binding intent value")
         return self
 
 
@@ -845,7 +903,7 @@ class ModeloRowEditIntentV1(EditModel):
 
     address: ModeloEditRowAddressV1
     kind: ModeloEditRowIntentKind
-    row: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_ROW_VALUES)] | None = None
+    row: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=MAX_REPEATED_ROW_VALUES)] | None = None
     move_to_index: Annotated[int, Field(ge=1)] | None = None
 
     @model_validator(mode="after")
@@ -889,13 +947,18 @@ class ModeloDetailRowEditIntentV1(EditModel):
 def _intent_address_key(
     address: ModeloEditScalarAddressV1
     | ModeloEditBindingAddressV1
+    | ModeloEditCorrectionAddressV1
     | ModeloEditRowAddressV1
     | ModeloEditDetailRowAddressV1,
 ) -> tuple[str, str]:
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
+        if address.row_identity is not None:
+            return ("binding_row", f"{address.binding_id}:{address.row_identity}")
         return ("binding_override", address.binding_id)
+    if isinstance(address, ModeloEditCorrectionAddressV1):
+        return ("correction", address.casilla_id)
     if isinstance(address, ModeloEditDetailRowAddressV1):
         return ("detail_row", f"{address.detail_row_kind}:{address.natural_key}")
     if isinstance(address, ModeloEditExistingRowAddressV1):
@@ -903,20 +966,72 @@ def _intent_address_key(
     return ("new_row", f"{address.binding_id}:{address.client_correlation_id}")
 
 
+MAX_EDIT_LEXEME_LENGTH: Final[int] = 512
+"""The longest entry the parser reads; an editor stops the filer typing past it."""
+
+
+class ModeloEditParseRequestV1(EditModel):
+    """One typed lexeme for one address, in the locale the operator typed it in.
+
+    The lexeme is transient: it is excluded from every dump and from ``repr``,
+    so it can never reach a log, a notice or a persisted record.
+    """
+
+    address: ModeloEditValueAddressV1
+    entry_locale: OutputLanguage
+    lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
+
+
+class ModeloEditHeldKind(StrEnum):
+    """The kind of change a frontend holds on a box."""
+
+    SET = "set"
+    CLEAR = "clear"
+    RESTORE = "restore"
+    #: The filer's own entry or clear taken out of a box no source feeds.
+    REMOVE = "remove"
+
+
+type ModeloEditHeldAddressV1 = Annotated[
+    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1,
+    Field(discriminator="kind"),
+]
+"""The edit address a held change is submitted to."""
+
+
+class ModeloEditHeldChangeV1(EditModel):
+    """One change a frontend holds since it read the form, for a preflight to say what became of it.
+
+    ``held_state`` is the box's state digest when the change was staged. It
+    is derived from the box's value, so it travels only inside the transient
+    submission, in process memory, and never reaches a request, a journal or a
+    result; the preflight answers with what became of the change alone.
+    """
+
+    address: ModeloEditHeldAddressV1
+    kind: ModeloEditHeldKind
+    held_state: Annotated[str, Field(min_length=64, max_length=64, repr=False)]
+
+
 class ModeloEditSubmissionV1(EditModel):
     """One baseline plus its complete normalized ordered intent set.
 
-    Carries no frontend state. Duplicate or contradictory address intents
-    refuse before execution.
+    Duplicate or contradictory address intents refuse before execution.
+    ``lexemes`` are entries as the filer typed them, which only a preflight
+    reads, through the address's own grammar; ``held`` are the changes the
+    frontend holds, which only a preflight judges again against the box as it
+    stands. An apply refuses a submission carrying either.
     """
 
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditBaselineV1
-    mutation_family: _ModeloEditMutationFamily
+    mutation_family: ModeloEditMutationFamily
     scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     detail_row_intents: Annotated[tuple[ModeloDetailRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    held: Annotated[tuple[ModeloEditHeldChangeV1, ...], Field(max_length=_MAX_INTENTS)] = ()
 
     @model_validator(mode="after")
     def _require_consistent_submission(self) -> ModeloEditSubmissionV1:
@@ -930,28 +1045,56 @@ class ModeloEditSubmissionV1(EditModel):
             raise ValueError(
                 "edit submission must not address the same casilla, binding, row, or detail row more than once"
             )
+        typed = [_intent_address_key(lexeme.address) for lexeme in self.lexemes]
+        if len(set(typed)) != len(typed):
+            raise ValueError("edit submission must not carry two entries for one address")
         return self
 
 
 class ModeloEditApplyRequestV1(EditModel):
-    """The guarded apply request only the enrolled operation executor may invoke."""
+    """The guarded apply request only the enrolled operation executor may invoke.
+
+    Only typed values are applied: a submission carrying entries as the filer
+    typed them is a preflight's, and is refused here.
+    """
 
     edit_contract_version: Literal[1] = 1
     operation_id: OperationId
     submission: ModeloEditSubmissionV1
 
+    @model_validator(mode="after")
+    def _apply_only_typed_values(self) -> ModeloEditApplyRequestV1:
+        if self.submission.lexemes or self.submission.held:
+            raise ValueError("an applied edit carries typed values only, never entries as typed or held changes")
+        return self
+
+
+class ModeloEditReusedSealedRevisionV1(EditModel):
+    """The checked or filed calculation an applied edit reproduced exactly, left as it stands.
+
+    A calculation is content addressed, so an edit whose values equal a sealed
+    revision's yields that revision rather than a new draft. The sealed revision
+    is never reopened or rewritten, and the declaration's current calculation is
+    left where it was, which ``current_calculation_revision_id`` names.
+    """
+
+    calculation_revision_id: CalculationRevisionId
+    state: CalculationRevisionState
+    current_calculation_revision_id: CalculationRevisionId | None
+
 
 class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
-    effect: Literal[_ModeloEditExecutionEffect.UPDATED] = _ModeloEditExecutionEffect.UPDATED
-    receipt: _ModeloEditMutationResultReceiptV1
+    effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
+    receipt: ModeloEditMutationResultReceiptV1
+    reused_sealed_revision: ModeloEditReusedSealedRevisionV1 | None = None
 
 
 class ModeloEditExecutionNoEffectV1(EditModel):
     """The failed compare-and-swap arm; writes nothing and names the refusal."""
 
-    effect: Literal[_ModeloEditExecutionEffect.NONE] = _ModeloEditExecutionEffect.NONE
+    effect: Literal[ModeloEditExecutionEffect.NONE] = ModeloEditExecutionEffect.NONE
     refusal: ModeloEditRefusalV1
 
 
@@ -962,6 +1105,7 @@ type ModeloEditExecutionResultV1 = Annotated[
 
 
 __all__ = [
+    "MAX_EDIT_LEXEME_LENGTH",
     "ModeloBindingEditIntentV1",
     "ModeloDetailRowEditIntentV1",
     "ModeloEditAddressV1",
@@ -971,7 +1115,9 @@ __all__ = [
     "ModeloEditBaselineV1",
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
+    "ModeloEditCarryWithdrawalBlock",
     "ModeloEditCompatibilityRefusalV1",
+    "ModeloEditCorrectionAddressV1",
     "ModeloEditDetailRowAddressV1",
     "ModeloEditDetailRowIntentKind",
     "ModeloEditDomainRefusalV1",
@@ -981,6 +1127,9 @@ __all__ = [
     "ModeloEditExistingRowAddressV1",
     "ModeloEditFindingSeverity",
     "ModeloEditFindingV1",
+    "ModeloEditHeldAddressV1",
+    "ModeloEditHeldChangeV1",
+    "ModeloEditHeldKind",
     "ModeloEditNewRowCorrelationV1",
     "ModeloEditNonWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditNonWritableReason",
@@ -989,6 +1138,7 @@ __all__ = [
     "ModeloEditNormalisation",
     "ModeloEditParseReason",
     "ModeloEditParseRefusalV1",
+    "ModeloEditParseRequestV1",
     "ModeloEditParseResultV1",
     "ModeloEditParsedValueV1",
     "ModeloEditPermittedSurfaceEntryV1",
@@ -997,6 +1147,7 @@ __all__ = [
     "ModeloEditRefusalCode",
     "ModeloEditRefusalV1",
     "ModeloEditRefusedV1",
+    "ModeloEditReusedSealedRevisionV1",
     "ModeloEditRowAddressV1",
     "ModeloEditRowIntentKind",
     "ModeloEditScalarAddressV1",

@@ -14,12 +14,13 @@ import json
 import re
 import secrets
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from cadrumo.core.type_guards import is_object_dict, is_object_list
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     installed_product_evidence,
@@ -32,15 +33,15 @@ from dev.acceptance.income_tax.installed_tui_child import (
 from dev.acceptance.income_tax.tui_contracts import TuiJourneyError
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_annual_export_validation import _validate_annual_export
+from .cli_annual_export_validation import validate_annual_export
 from .cli_contracts import RetencionesInstalledCliError
-from .cli_export_validation import _validate_export
-from .cli_layout_selection import _selected_annual_layouts
-from .cli_preflight import _fresh_directory
+from .cli_export_validation import validate_export
+from .cli_layout_selection import selected_annual_layouts
+from .cli_preflight import fresh_directory
 from .installed_tui_controls import assert_capture_unavailable, assert_recorded_reopen, run_work_lifecycle
 from .installed_tui_runtime import installed_foreground_runtime
 from .installed_tui_seed import WithholdingWork, seed_withholding_work
-from .scenario import SUPPORTED_YEAR, build_installed_annual_cli_slices
+from .scenario import SUPPORTED_YEAR, InstalledAnnualCliSlice, build_installed_annual_cli_slices
 
 _SCHEMA = "retenciones-installed-runtime-tui-continuation-v1"
 _MODULE = "dev.acceptance.retenciones.installed_tui_withholding"
@@ -84,7 +85,7 @@ _SAFE_WITHHOLDING_CONTROL_REASONS = frozenset(
     }
 )
 _SAFE_WITHHOLDING_CONTROL_FUNCTIONS = frozenset(
-    {"_home", "open_withholding_work", "assert_capture_unavailable", "run_work_lifecycle", "assert_recorded_reopen"}
+    {"home", "open_withholding_work", "assert_capture_unavailable", "run_work_lifecycle", "assert_recorded_reopen"}
 )
 
 
@@ -97,7 +98,7 @@ class WithholdingTuiError(InstalledTuiChildError):
         self.stage = stage
 
 
-def _safe_tui_failure_reason(error: Exception) -> str:
+def safe_tui_failure_reason(error: Exception) -> str:
     """Project known driver messages without copying notices or findings."""
     message = str(error)
     if isinstance(error, InstalledTuiChildError) and message in _SAFE_WITHHOLDING_CONTROL_REASONS:
@@ -116,7 +117,7 @@ def _safe_tui_failure_reason(error: Exception) -> str:
     return "installed withholding public control failed"
 
 
-def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTuiError:
+def pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTuiError:
     """Capture only driver function identity while the public screen is mounted."""
     traceback = error.__traceback__
     while traceback is not None:
@@ -128,7 +129,7 @@ def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTu
         ):
             stage = f"{stage.split('.')[0]}.{function}"
         traceback = traceback.tb_next
-    reason = _safe_tui_failure_reason(error)
+    reason = safe_tui_failure_reason(error)
     return WithholdingTuiError(
         f"installed withholding {stage} failed: {reason}",
         stage=stage,
@@ -136,7 +137,7 @@ def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTu
     )
 
 
-def _child_process_failure(*, phase: str, receipt: Path) -> WithholdingTuiError:
+def child_process_failure(*, phase: str, receipt: Path) -> WithholdingTuiError:
     """Carry the sanitized child reason into the parent continuation receipt."""
     reason = reportable_child_failure_reason(receipt) or "installed child recorded no reportable failure reason"
     return WithholdingTuiError(f"installed withholding {phase} child failed: {reason}", stage=f"{phase}.child")
@@ -151,6 +152,66 @@ def _write_receipt(path: Path, document: dict[str, Any]) -> None:
     path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _child_binding_differs(
+    document: Mapping[str, object], phase: str, manifest_sha256: str, authority_generation: str
+) -> bool:
+    """Check the receipt is bound to this exact requested continuation."""
+    return (
+        document.get("schema_version") != _SCHEMA
+        or document.get("status") != "proven"
+        or document.get("phase") != phase
+        or document.get("manifest_sha256") != manifest_sha256
+        or document.get("authority_generation") != authority_generation
+    )
+
+
+def _child_product_differs(document: Mapping[str, object]) -> bool:
+    """Require installed product identity and truthful local-only capture evidence."""
+    return (
+        document.get("product_origin") != "site-packages"
+        or not _valid_sha256(document.get("product_init_sha256"))
+        or document.get("withholding_capture") != "unavailable_and_withheld_from_populated_palette"
+        or document.get("live_submission") is not False
+        or document.get("aeat_acceptance_claimed") is not False
+    )
+
+
+def _valid_sha256(value: object) -> bool:
+    """Admit only a complete lowercase SHA-256 identity."""
+    return isinstance(value, str) and _SHA256.fullmatch(value) is not None
+
+
+def _positive_size(value: object) -> bool:
+    """Keep the existing integer and positive-size admission rule."""
+    return isinstance(value, int) and value > 0
+
+
+def _validate_work_artifact(artifact: object) -> None:
+    """Require a nonempty exported artifact with its durable digest identity."""
+    if (
+        not is_object_dict(artifact)
+        or not _positive_size(artifact.get("size"))
+        or not _valid_sha256(artifact.get("sha256"))
+    ):
+        raise InstalledTuiChildError("installed withholding child has no durable artifact identity")
+
+
+def _validate_work_phase(evidence: Mapping[object, object], phase: str) -> None:
+    """Require every lifecycle terminal or a truthful recorded reopen."""
+    if phase == "lifecycle":
+        operations = evidence.get("operations")
+        if (
+            not is_object_list(operations)
+            or tuple(operation for operation in operations if operation != "modelo.edit.apply") != _REQUIRED_OPERATIONS
+        ):
+            raise InstalledTuiChildError("installed withholding child skipped a required lifecycle terminal")
+    elif phase == "reopen":
+        if evidence.get("recorded_reopen") is not True:
+            raise InstalledTuiChildError("installed withholding child did not reopen a recorded declaration")
+    else:
+        raise InstalledTuiChildError("installed withholding child phase is unknown")
+
+
 def validate_child_receipt(
     document: dict[str, Any],
     *,
@@ -160,59 +221,34 @@ def validate_child_receipt(
     authority_generation: str,
 ) -> None:
     """Refuse success when a child skipped admission, a target, or a lifecycle stage."""
-    if (
-        document.get("schema_version") != _SCHEMA
-        or document.get("status") != "proven"
-        or document.get("phase") != phase
-        or document.get("manifest_sha256") != manifest_sha256
-        or document.get("authority_generation") != authority_generation
-        or document.get("product_origin") != "site-packages"
-        or not isinstance(document.get("product_init_sha256"), str)
-        or _SHA256.fullmatch(document["product_init_sha256"]) is None
-        or document.get("withholding_capture") != "unavailable_and_withheld_from_populated_palette"
-        or document.get("live_submission") is not False
-        or document.get("aeat_acceptance_claimed") is not False
+    if _child_binding_differs(document, phase, manifest_sha256, authority_generation) or _child_product_differs(
+        document
     ):
         raise InstalledTuiChildError("installed withholding child did not prove its requested admitted continuation")
     observed = document.get("works")
     if not isinstance(observed, list) or len(observed) != len(targets):
         raise InstalledTuiChildError("installed withholding child skipped a required work unit")
     for target, evidence in zip(targets, observed, strict=True):
-        if not isinstance(evidence, dict) or evidence.get("target") != asdict(target):
+        if not is_object_dict(evidence) or evidence.get("target") != asdict(target):
             raise InstalledTuiChildError("installed withholding child reported another work coordinate")
         if evidence.get("independent_export_matches") is not True:
             raise InstalledTuiChildError("installed withholding child did not validate its real export bytes")
-        artifact = evidence.get("artifact")
-        if (
-            not isinstance(artifact, dict)
-            or not isinstance(artifact.get("size"), int)
-            or artifact["size"] <= 0
-            or not isinstance(artifact.get("sha256"), str)
-            or _SHA256.fullmatch(artifact["sha256"]) is None
-        ):
-            raise InstalledTuiChildError("installed withholding child has no durable artifact identity")
-        if phase == "lifecycle":
-            operations = evidence.get("operations")
-            if (
-                not isinstance(operations, list)
-                or tuple(operation for operation in operations if operation != "modelo.edit.apply")
-                != _REQUIRED_OPERATIONS
-            ):
-                raise InstalledTuiChildError("installed withholding child skipped a required lifecycle terminal")
-        elif phase == "reopen":
-            if evidence.get("recorded_reopen") is not True:
-                raise InstalledTuiChildError("installed withholding child did not reopen a recorded declaration")
-        else:
-            raise InstalledTuiChildError("installed withholding child phase is unknown")
+        _validate_work_artifact(evidence.get("artifact"))
+        _validate_work_phase(evidence, phase)
+
+
+def _annual_export_scenario(target: WithholdingWork) -> InstalledAnnualCliSlice:
+    """Select the independently authored scenario for this exact annual slice."""
+    return next(
+        slice_ for slice_ in build_installed_annual_cli_slices(target.year) if slice_.slice_id == target.annual_slice_id
+    )
 
 
 def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> dict[str, Any]:
     """Check exported bytes against independent existing withholding scenario oracles."""
     from cadrumo.domain.calculations.registry.export import resolve_export_layout
 
-    annual = next(
-        slice_ for slice_ in build_installed_annual_cli_slices(target.year) if slice_.slice_id == target.annual_slice_id
-    )
+    annual = _annual_export_scenario(target)
     if target.modelo == annual.modelo:
         if target.period != annual.period or target.revision != annual.revision:
             raise InstalledTuiChildError("installed annual withholding work has unexpected natural coordinates")
@@ -229,7 +265,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
     layout = resolve_export_layout(snapshot, layout_id).layout
     payload = path.read_bytes()
     if expected_source is None:
-        _validate_annual_export(
+        validate_annual_export(
             layout=layout,
             payload=payload,
             expected_header=annual.expected_header_fields,
@@ -237,7 +273,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
             stage="tui_annual_export_oracle",
         )
     else:
-        _validate_export(
+        validate_export(
             layout=layout,
             payload=payload,
             expected=tuple((key, Decimal(value)) for key, value in expected_source.expected_casillas),
@@ -246,7 +282,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
     return {"name": path.name, "size": len(payload), "sha256": hashlib.sha256(payload).hexdigest()}
 
 
-def _run_child(args: argparse.Namespace) -> dict[str, Any]:
+def run_child(args: argparse.Namespace) -> dict[str, Any]:
     """Admit through the production launcher and drive only rendered public controls."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -288,7 +324,7 @@ def _run_child(args: argparse.Namespace) -> dict[str, Any]:
                     works.append(evidence)
                 pilot.app.exit()
             except (TuiJourneyError, InstalledTuiChildError) as error:
-                raise _pilot_failure(error, pilot=pilot, stage=stage) from error
+                raise pilot_failure(error, pilot=pilot, stage=stage) from error
 
         run_admitted_installed_launcher(passphrase=credential, drive_after_home=drive, admission_polls=900)
     if not capture_checked or len(works) != len(targets):
@@ -315,27 +351,25 @@ def _run_child(args: argparse.Namespace) -> dict[str, Any]:
     return receipt
 
 
-def _run_parent(args: argparse.Namespace) -> dict[str, Any]:
+def run_parent(args: argparse.Namespace) -> dict[str, Any]:
     """Seed in public child CLI processes, then launch separate lifecycle and reopen TUIs."""
     if args.cli is None or args.python is None or args.storage_root is None or args.authority_root is None:
         raise ValueError("parent continuation requires installed CLI/Python, fresh storage and published authority")
     installed_product_evidence(workspace_root=args.workspace_root)
-    storage = _fresh_directory(args.storage_root, label="withholding TUI continuation storage")
-    outputs = _fresh_directory(args.output_dir, label="withholding TUI continuation outputs")
+    storage = fresh_directory(args.storage_root, label="withholding TUI continuation storage")
+    outputs = fresh_directory(args.output_dir, label="withholding TUI continuation outputs")
     slices = build_installed_annual_cli_slices(args.year)
-    generation, _ = _selected_annual_layouts(authority_root=args.authority_root, slices=slices, year=args.year)
+    generation, _ = selected_annual_layouts(authority_root=args.authority_root, slices=slices, year=args.year)
     cli = InstalledCli(
         args.cli,
         storage_root=storage,
         authority_root=args.authority_root,
         passphrase=secrets.token_urlsafe(32),
-        runtime_socket_dir=storage / "r",
     )
     with installed_foreground_runtime(
         cli_executable=args.cli,
         storage_root=storage,
         authority_root=args.authority_root,
-        runtime_socket_dir=storage / "r",
     ) as runtime_evidence:
         try:
             targets = seed_withholding_work(cli, year=args.year)
@@ -347,50 +381,9 @@ def _run_parent(args: argparse.Namespace) -> dict[str, Any]:
         _write_receipt(
             manifest_path, {"authority_generation": generation, "works": [asdict(target) for target in targets]}
         )
-        children = []
-        artifact_identities = None
-        for phase in ("lifecycle", "reopen"):
-            child_receipt = outputs / f"{phase}-receipt.json"
-            process = run_installed_tui_child_process(
-                python_executable=args.python,
-                workspace_root=args.workspace_root,
-                child_module=_MODULE,
-                child_args=(
-                    "--workspace-root",
-                    str(args.workspace_root),
-                    "--child-phase",
-                    phase,
-                    "--manifest",
-                    str(manifest_path),
-                    "--output-dir",
-                    str(outputs),
-                    "--receipt",
-                    str(child_receipt),
-                ),
-                storage_root=storage,
-                authority_root=args.authority_root,
-                runtime_socket_dir=cli.runtime_socket_dir,
-                receipt_path=child_receipt,
-                passphrase=cli.passphrase,
-                timeout_seconds=args.timeout_seconds,
-            )
-            if process.returncode != 0 or process.receipt_status != "proven":
-                raise _child_process_failure(phase=phase, receipt=child_receipt)
-            document = json.loads(child_receipt.read_text(encoding="utf-8"))
-            validate_child_receipt(
-                document,
-                phase=phase,
-                targets=targets,
-                manifest_sha256=_digest(manifest_path),
-                authority_generation=generation,
-            )
-            observed_artifacts = [work["artifact"] for work in document["works"]]
-            if artifact_identities is not None and observed_artifacts != artifact_identities:
-                raise InstalledTuiChildError(
-                    "installed withholding fresh reopen changed the validated export artifacts"
-                )
-            artifact_identities = observed_artifacts
-            children.append(process.to_dict())
+        children, artifact_identities = _run_withholding_children(
+            args, outputs, storage, cli, targets, generation, manifest_path
+        )
         return {
             "schema_version": _SCHEMA,
             "status": "proven",
@@ -406,6 +399,91 @@ def _run_parent(args: argparse.Namespace) -> dict[str, Any]:
             "live_submission": False,
             "aeat_acceptance_claimed": False,
         }
+
+
+def _run_withholding_children(
+    args: argparse.Namespace,
+    outputs: Path,
+    storage: Path,
+    cli: InstalledCli,
+    targets: tuple[WithholdingWork, ...],
+    generation: str,
+    manifest_path: Path,
+) -> tuple[list[dict[str, object]], Sequence[object] | None]:
+    """Compare lifecycle and fresh-reopen children against the same immutable artifact identities."""
+    children = []
+    artifact_identities = None
+    for phase in ("lifecycle", "reopen"):
+        child_receipt = outputs / f"{phase}-receipt.json"
+        process = run_installed_tui_child_process(
+            python_executable=args.python,
+            workspace_root=args.workspace_root,
+            child_module=_MODULE,
+            child_args=(
+                "--workspace-root",
+                str(args.workspace_root),
+                "--child-phase",
+                phase,
+                "--manifest",
+                str(manifest_path),
+                "--output-dir",
+                str(outputs),
+                "--receipt",
+                str(child_receipt),
+            ),
+            storage_root=storage,
+            authority_root=args.authority_root,
+            receipt_path=child_receipt,
+            passphrase=cli.passphrase,
+            timeout_seconds=args.timeout_seconds,
+        )
+        if process.returncode != 0 or process.receipt_status != "proven":
+            raise child_process_failure(phase=phase, receipt=child_receipt)
+        document = json.loads(child_receipt.read_text(encoding="utf-8"))
+        validate_child_receipt(
+            document,
+            phase=phase,
+            targets=targets,
+            manifest_sha256=_digest(manifest_path),
+            authority_generation=generation,
+        )
+        observed_artifacts = [work["artifact"] for work in document["works"]]
+        if artifact_identities is not None and observed_artifacts != artifact_identities:
+            raise InstalledTuiChildError("installed withholding fresh reopen changed the validated export artifacts")
+        artifact_identities = observed_artifacts
+        children.append(process.to_dict())
+    return children, artifact_identities
+
+
+def _write_continuation_failure(args: argparse.Namespace, error: Exception) -> None:
+    """Write only the existing sanitized failure projection for this continuation."""
+    failure: dict[str, object] = {}
+    if isinstance(error, InstalledTuiChildError):
+        write_installed_tui_failure_receipt(path=args.receipt, schema_version=_SCHEMA, error=error)
+        failure.update(json.loads(args.receipt.read_text(encoding="utf-8")))
+    if isinstance(error, WithholdingTuiError):
+        failure["stage"] = error.stage
+    _write_receipt(
+        args.receipt,
+        {
+            "schema_version": _SCHEMA,
+            "status": "failed",
+            "phase": args.child_phase or "parent",
+            "diagnostic_code": type(error).__name__,
+            **failure,
+            **(
+                {
+                    "stage": error.stage,
+                    "diagnostic_code": error.diagnostic_code,
+                    "cli_commands": [asdict(command) for command in error.commands],
+                }
+                if isinstance(error, RetencionesInstalledCliError)
+                else {}
+            ),
+            "live_submission": False,
+            "aeat_acceptance_claimed": False,
+        },
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -428,35 +506,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.child_phase and args.manifest is None:
             raise ValueError("withholding child requires its public work manifest")
-        receipt = _run_child(args) if args.child_phase else _run_parent(args)
+        receipt = run_child(args) if args.child_phase else run_parent(args)
     except Exception as error:
-        failure: dict[str, Any] = {}
-        if isinstance(error, InstalledTuiChildError):
-            write_installed_tui_failure_receipt(path=args.receipt, schema_version=_SCHEMA, error=error)
-            failure = json.loads(args.receipt.read_text(encoding="utf-8"))
-        if isinstance(error, WithholdingTuiError):
-            failure["stage"] = error.stage
-        _write_receipt(
-            args.receipt,
-            {
-                "schema_version": _SCHEMA,
-                "status": "failed",
-                "phase": args.child_phase or "parent",
-                "diagnostic_code": type(error).__name__,
-                **failure,
-                **(
-                    {
-                        "stage": error.stage,
-                        "diagnostic_code": error.diagnostic_code,
-                        "cli_commands": [asdict(command) for command in error.commands],
-                    }
-                    if isinstance(error, RetencionesInstalledCliError)
-                    else {}
-                ),
-                "live_submission": False,
-                "aeat_acceptance_claimed": False,
-            },
-        )
+        _write_continuation_failure(args, error)
         return 2
     _write_receipt(args.receipt, receipt)
     return 0

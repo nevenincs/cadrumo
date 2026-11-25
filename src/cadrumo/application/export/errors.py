@@ -9,10 +9,10 @@ invariant failures through the typed error registry.
 
 from __future__ import annotations
 
-from ...core.errors.hierarchy import CoreError, CoreValidationError
+from ...core.errors.hierarchy import CoreError, CoreValidationError, TerminalPreconditionErrorMixin
 
 
-class ExportFormatError(CoreError):
+class ExportFormatError(TerminalPreconditionErrorMixin[object], CoreError):
     """Raised when an unsupported export serialization format is requested.
 
     The tabular export pipeline is closed over the declared

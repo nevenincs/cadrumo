@@ -5,14 +5,15 @@ Resolves deferral DFR-M210-INMOBILIARIA-E2E (feature ``modelo-verify-nonzero-gua
 ``modelo-210-2025-inmobiliaria-implica-base-imponible`` ADVISORY predicate against
 hand-constructed ``casilla_values`` / ``text_values`` dicts fed directly to
 ``evaluate_verification_predicates``. This module proves the same advisory fires
-through the REAL operator pipeline instead: :func:`calculate_modelo_revision` (real
+through the REAL operator pipeline instead:
+:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` (real
 registry formula engine, real persistence) followed by :func:`verify_modelo_revision_with_preconditions`
 (real Layer-2 predicate evaluation reading the PERSISTED
 ``CalculationRevision.input_values_by_casilla_id`` as ``text_values`` — see
 ``_verification_actions.py`` around the ``target.input_values_by_casilla_id`` comment).
 
 Text-casilla input flow under test: ``text_casilla_inputs={"tipo_renta":
-"inmobiliaria"}`` passed to :func:`calculate_modelo_revision` merges into
+"inmobiliaria"}`` passed to :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` merges into
 ``CalculationRevision.input_values_by_casilla_id`` (see
 ``_calculation_actions.py``, ``{**replay_payloads.input_values_by_casilla_id,
 **resolved_text_inputs}``), which the verify path's Layer-2 predicate gate then reads
@@ -62,7 +63,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -73,18 +74,20 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -93,8 +96,7 @@ from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -144,11 +146,13 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
     (not this stored bucket profile) is what the representante-fiscal and
     inmobiliaria advisory predicates actually evaluate against.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="activities.description", value="Spanish-source rent"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -157,10 +161,11 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="censo.large_company", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -173,7 +178,7 @@ def _irnr_gbworkflow_profile() -> TaxpayerProfile:
     under test.
     """
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="GB",
@@ -199,7 +204,7 @@ def _calculate_and_verify_m210_inmobiliaria(
 ) -> tuple[CalculationRevision, VerificationReport]:
     """Run the REAL M210 calculate-then-verify pipeline with ``tipo_renta="inmobiliaria"``.
 
-    Drives :func:`calculate_modelo_revision` directly (mirroring
+    Drives :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` directly (mirroring
     ``test_declaration_period_binding.py``) with a ``text_casilla_inputs`` entry
     for ``tipo_renta``, exercising the real registry formula engine rather than
     hand-constructed ``casilla_values``, then :func:`verify_modelo_revision_with_preconditions` over
@@ -230,7 +235,7 @@ def _calculate_and_verify_m210_inmobiliaria(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_230:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={
@@ -242,7 +247,7 @@ def _calculate_and_verify_m210_inmobiliaria(
                 filing_period_date=date(_FILING_YEAR, 12, 31),
                 ports=_calculation_ports_230,
                 clock=_CLOCK,
-            )
+            ).revision
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
         observation_repository = CalculationObservationRepository()
         with bundled_indexed_authority().operation() as operation:

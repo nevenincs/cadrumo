@@ -16,11 +16,12 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.secure_object_write import SecureObjectWrite
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.errors import InvoiceLinkError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.invoices.service import link_transaction
+from ...domain.invoices.models import Invoice
+from ...domain.invoices.service import link_transaction, unlink_transaction
 from ...domain.transactions.models import TransactionCatalogue
-from ...domain.transactions.service import link_invoice
+from ...domain.transactions.service import link_invoice, unlink_invoice
 from ..ledger.actions_common import resolve_revision_guarded_transaction_repository
 from ..ledger.protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
@@ -77,6 +78,39 @@ def link_invoice_transaction_catalogues(
         invoices=updated_invoices,
         transactions=updated_transactions,
     )
+
+
+def unlink_invoice_transaction_catalogues(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+    *,
+    invoice_id: str,
+    transaction_id: str,
+) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
+    """Remove the link between one invoice and one transaction on both sides.
+
+    The invoice drops the transaction from its ``linked_transaction_ids`` and the
+    transaction's ``invoice_id`` is cleared when it names this invoice; a side
+    that does not cite the other is left as it is, so a one-sided link is
+    removed too. The caller persists both catalogues in one unit of work.
+
+    Args:
+        invoices: The :class:`InvoiceCatalogue` holding the invoice side of the link.
+        transactions: The :class:`TransactionCatalogue` holding the movement side.
+        invoice_id: The invoice to unlink.
+        transaction_id: The movement to unlink.
+
+    Returns the updated ``(invoices, transactions)`` catalogues.
+    """
+    canonical_transaction_id = _canonical_transaction_id(transactions, transaction_id)
+    updated_invoices = unlink_transaction(invoices, invoice_id, canonical_transaction_id)
+    transaction = transactions.get(canonical_transaction_id)
+    updated_transactions = (
+        unlink_invoice(transactions, canonical_transaction_id)
+        if transaction is not None and transaction.invoice_id == invoice_id
+        else transactions
+    )
+    return updated_invoices, updated_transactions
 
 
 def link_invoice_transaction_repositories(

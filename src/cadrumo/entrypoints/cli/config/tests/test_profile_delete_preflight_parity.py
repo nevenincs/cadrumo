@@ -12,14 +12,14 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.bucket_maintenance.deletion_preflight import (
     ProfileDeletionPreflight,
     ProfileDeletionRefusal,
     assess_named_profile_deletion,
 )
-from cadrumo.entrypoints.cli.config.profile_delete_commands import _result_and_lines
+from cadrumo.entrypoints.cli.config.profile_delete_commands import result_and_lines
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider
 from cadrumo.tests.command_line_rendering import (
     as_the_command_line_renders,
@@ -27,7 +27,7 @@ from cadrumo.tests.command_line_rendering import (
     command_result,
 )
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,9 +47,9 @@ _FACTS = {
 
 
 @pytest.fixture(autouse=True)
-def _runtime_delete_owner(_isolated_cli_backend: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
-    _isolated_cli_backend.mkdir(parents=True, exist_ok=True)
-    with cli_world_provider.profile_server(_isolated_cli_backend):
+def _runtime_delete_owner(isolated_cli_backend: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
+    isolated_cli_backend.mkdir(parents=True, exist_ok=True)
+    with cli_world_provider.profile_server(isolated_cli_backend):
         yield
 
 
@@ -61,8 +61,8 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     # Registration selects the profile it creates, so the second one leaves the first deletable.
-    register_cli_profile(label="doomed", facts={**_FACTS, "identity.tax_id": "00000001R"}, log_in=False)
-    register_cli_profile(label="survivor", facts={**_FACTS, "identity.tax_id": "00000002W"}, log_in=False)
+    register_cli_profile(label="doomed", facts={**_FACTS, "identity.tax_id": "00001005Q"}, log_in=False)
+    register_cli_profile(label="survivor", facts={**_FACTS, "identity.tax_id": "00001000B"}, log_in=False)
 
     offered = _preflight("doomed")
     printed = command_result("config", "profile", "delete", "doomed", invoke_cli=run_cadrumo_cli)
@@ -75,7 +75,7 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
     assert offered.assessment is not None and offered.label == "doomed"
     assert offered.assessment.bucket_id == offered.profile_id
     assert offered.assessment.fingerprint is not None and offered.assessment.fingerprint.file_count >= 1
-    result, _lines, _notices = _result_and_lines(offered.assessment, label=offered.label, completed_at=None)
+    result, _lines, _notices = result_and_lines(offered.assessment, label=offered.label, completed_at=None)
     assert printed == as_the_command_line_renders(result)
     assert printed["deleted"] is False
 
@@ -91,7 +91,7 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
 
 @pytest.mark.parametrize("changed", ["identity", "content", "missing-digest", "unchanged"])
 def test_reviewed_delete_is_bound_to_identity_and_content(run_cadrumo_cli: Callable[..., Result], changed: str) -> None:
-    register_cli_profile(label="reviewed", facts={**_FACTS, "identity.tax_id": "00000001R"}, log_in=False)
+    register_cli_profile(label="reviewed", facts={**_FACTS, "identity.tax_id": "00001005Q"}, log_in=False)
     observed = _preflight("reviewed")
     assert observed.assessment is not None and observed.assessment.fingerprint is not None
     identity = str(uuid4()) if changed == "identity" else str(observed.profile_id)

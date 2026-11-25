@@ -36,19 +36,20 @@ from typing import Final
 from rich.cells import cell_len
 from rich.text import Text
 
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
-    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
     section_fields,
 )
 from .....core.i18n.render import tr
@@ -71,6 +72,10 @@ _CAMEL_JOIN: Final[re.Pattern[str]] = re.compile(r"[a-z][A-Z]")
 _LONGEST_PLAIN_WORD: Final[int] = 11
 _DIMMED: Final[str] = "dim"
 _MIN_ROOM: Final[int] = 4
+_CHECKED_ATTENTIONS: Final[frozenset[ModeloFormAttention]] = frozenset(
+    {ModeloFormAttention.CHECK, ModeloFormAttention.LIMITATION}
+)
+"""The levels whose findings a page counts as warnings on their box; a limitation still reads as one here."""
 
 
 def looks_like_identifier(text: str) -> bool:
@@ -116,11 +121,11 @@ def section_title(section: ModeloFormSection, *, page_number: int, part_number: 
 
 def _section_location_title(boxes: list[str], *, page_number: int, part_number: int) -> ModeloFormText:
     if len(boxes) == 1:
-        text = tr("tui.modelo.workbench.section.box", box=boxes[0])
+        text = tr("workspace.modelo.section.box", box=boxes[0])
     elif boxes and all(box.isascii() and box.isdecimal() for box in boxes):
-        text = tr("tui.modelo.workbench.section.boxes", first=min(boxes, key=int), last=max(boxes, key=int))
+        text = tr("workspace.modelo.section.boxes", first=min(boxes, key=int), last=max(boxes, key=int))
     else:
-        text = tr("tui.modelo.workbench.section.part", page=page_number, part=part_number)
+        text = tr("workspace.modelo.section.part", page=page_number, part=part_number)
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
@@ -129,7 +134,7 @@ def page_title(heading: ModeloFormText, *, page_number: int) -> ModeloFormText:
     if readable_text(heading) is not None:
         return heading
     return ModeloFormText(
-        text=tr("tui.modelo.workbench.page_number", page=page_number), disclosure=ModeloFormTextDisclosure.LOCALIZED
+        text=tr("workspace.modelo.page_number", page=page_number), disclosure=ModeloFormTextDisclosure.LOCALIZED
     )
 
 
@@ -182,58 +187,15 @@ def presented_form(form: ModeloWorkForm, *, recorded: bool = False) -> ModeloWor
     if recorded:
         update["working_figures"] = tuple(_settled(field) for field in form.working_figures)
         update["unplaced"] = tuple(item.model_copy(update={"field": _settled(item.field)}) for item in form.unplaced)
+        update["answers"] = tuple(_settled(field) for field in form.answers)
     return form.model_copy(update=update)
-
-
-def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
-    """The official pages the read model states do not apply to this filing, by id."""
-    return frozenset(page.id for page in form.pages if page.applies is False)
-
-
-def applicable_fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
-    """Every field the filer may be asked about: all but those on pages the read model states do not apply.
-
-    It is the population :func:`to_do_counts` counts over, so a list of what
-    is missing or assumed names exactly the boxes the header counts.
-    """
-    set_aside = inapplicable_pages(form)
-    kept = [
-        field
-        for page in form.pages
-        if page.id not in set_aside
-        for section in page.sections
-        for field in section_fields(section)
-    ]
-    kept.extend(form.working_figures)
-    kept.extend(item.field for item in form.unplaced)
-    return tuple(kept)
-
-
-def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
-    """The form's counts without what the pages that do not apply hold as missing or assumed.
-
-    Those pages ask nothing of the filer, so their boxes are never to do; every
-    other count, blockers included, stays as the read model states it.
-    """
-    set_aside = [page.counts for page in form.pages if page.applies is False]
-    if not set_aside:
-        return form.counts
-    counts = form.counts
-    return counts.model_copy(
-        update={
-            "needs_input": max(counts.needs_input - sum(item.needs_input for item in set_aside), 0),
-            "default_to_confirm": max(
-                counts.default_to_confirm - sum(item.default_to_confirm for item in set_aside), 0
-            ),
-        }
-    )
 
 
 def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
     """How many of the last check's warnings name each box."""
     counts: dict[str, int] = {}
     for issue in form.issues:
-        if issue.attention is ModeloFormAttention.CHECK and issue.box is not None:
+        if issue.attention in _CHECKED_ATTENTIONS and issue.box is not None:
             counts[issue.box] = counts.get(issue.box, 0) + 1
     return counts
 
@@ -399,12 +361,11 @@ def navigator_rows(
     checked: Mapping[str, int],
     width: int,
     show_attention: bool,
-    inapplicable: frozenset[str] = frozenset(),
     not_applying: str = "",
 ) -> tuple[NavigatorRow, ...]:
     """Lay the pages and their sections out as navigator lines, closed pages without their sections.
 
-    A page in ``inapplicable`` is dimmed and says ``not_applying`` in place of
+    A page the form serves as not applying is dimmed and says ``not_applying`` in place of
     its counts; it counts nothing as to do and starts closed. Without
     ``show_attention``, as on a declaration recorded as filed, no page counts
     anything, so none opens for something to do.
@@ -418,7 +379,6 @@ def navigator_rows(
             state=state,
             checked=checked,
             show_attention=show_attention,
-            inapplicable=inapplicable,
         )
         rows.append(
             _page_row(
@@ -448,9 +408,8 @@ def _navigator_page_state(
     state: NavigatorState,
     checked: Mapping[str, int],
     show_attention: bool,
-    inapplicable: frozenset[str],
 ) -> tuple[bool, AttentionCounts, bool]:
-    applies = page.id not in inapplicable
+    applies = page.applies
     # Nothing counts on an inapplicable page or when attention is hidden for a filed declaration.
     counts = page_counts(page, checked) if applies and show_attention else AttentionCounts()
     expanded = (
@@ -557,7 +516,7 @@ def breadcrumb(
     ``not_applying`` is said, dimmed, in place of the counts of a page that does not apply this period.
     """
     page = pages[current]
-    parts = [tr("tui.modelo.workbench.page_position", current=current + 1, total=len(pages)), page.heading.text]
+    parts = [tr("workspace.modelo.page_position", current=current + 1, total=len(pages)), page.heading.text]
     if section is not None:
         parts.append(section.heading.text)
     line = Text(" · ".join(parts))
@@ -573,11 +532,9 @@ def breadcrumb(
 __all__ = [
     "NavigatorRow",
     "NavigatorState",
-    "applicable_fields",
     "breadcrumb",
     "checked_boxes",
     "heading_groups",
-    "inapplicable_pages",
     "looks_like_identifier",
     "navigator_rows",
     "page_counts",
@@ -586,5 +543,4 @@ __all__ = [
     "readable_text",
     "section_of",
     "section_title",
-    "to_do_counts",
 ]

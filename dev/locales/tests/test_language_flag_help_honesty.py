@@ -51,12 +51,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),
-            "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
-            "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-            "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-            "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
         },
     )
     if language is not None:
@@ -83,7 +78,6 @@ _CREATE_HELP_ES = "Crea un perfil protegido por una contraseña."
 _CALENDAR_HELP_HU = "A határidő-naptár megjelenítése az aktív profilhoz"
 _CALENDAR_FROM_HELP_HU = "A naptárablak kezdő dátuma"
 _CALENDAR_TO_HELP_HU = "A naptárablak záró dátuma"
-_CALENDAR_ALLOW_INCOMPLETE_HELP_HU = "A naptár megjelenítése akkor is"
 _CALENDAR_SHOW_SUPPRESSED_HELP_HU = "Elnyomott bejegyzések megjelenítése"
 _CALENDAR_ALL_PROFILES_HELP_HU = "Az összes regisztrált profil naptárát"
 _CALENDAR_FROM_HELP_EN = "Inclusive start date for the calendar window"
@@ -168,7 +162,6 @@ def test_hungarian_overview_calendar_help_localises_custom_options_together(tmp_
         _CALENDAR_HELP_HU,
         _CALENDAR_FROM_HELP_HU,
         _CALENDAR_TO_HELP_HU,
-        _CALENDAR_ALLOW_INCOMPLETE_HELP_HU,
         _CALENDAR_SHOW_SUPPRESSED_HELP_HU,
         _CALENDAR_ALL_PROFILES_HELP_HU,
     ):

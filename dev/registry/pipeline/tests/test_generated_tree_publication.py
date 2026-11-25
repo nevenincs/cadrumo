@@ -7,7 +7,6 @@ import inspect
 import os
 from pathlib import Path
 from shutil import rmtree
-from typing import Literal
 
 import pytest
 import rtoml
@@ -15,29 +14,22 @@ from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from ...form_layout.serialization import FORM_LAYOUT_FRAGMENT
-from .._form_layout_companion import prepare_generated_form_layout_companion
-from .._tree_publication import publish_validated_generated_export_tree
-from .._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    validate_generated_export_tree,
-)
 from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from ..export_fragment_provenance import (
-    ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
 from ..export_tree_models import RenderedExportTree
+from ..form_layout_companion import prepare_generated_form_layout_companion
 from ..joined_record_design import JoinedRecordDesign
 from ..render_check import RevisionRenderInputs
-from ..render_profile_evidence import RenderProfileSourceEvidence
-from ..render_profile_model import RenderProfile
 from ..semantic_map import SemanticMap
+from ..tree_publication import publish_validated_generated_export_tree
 from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
 from ..tree_publication_contracts import (
     GeneratedExportPublicationJournal,
@@ -54,13 +46,21 @@ from ..tree_publication_journal import (
 )
 from ..tree_publication_recovery import recover_interrupted_publication
 from ..tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
-from ._generated_tree_test_support import (
+from ..tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    validate_generated_export_tree,
+)
+from .generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_render_profile,
     write_isolated_generated_authority_tree,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: An authored edition of the isolated tree's modelo other than the tree's own.
+_OTHER_REVISION = str(revision_covering(ISOLATED_TREE.modelo, ISOLATED_TREE.filing_year - 1).id)
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -245,38 +245,11 @@ def _bundle_transaction_siblings(context: GeneratedExportTreePublicationContext)
     )
 
 
-def test_new_sidecars_retain_old_lock_and_refuse_a_legacy_journal(tmp_path: Path) -> None:
-    """The relocated transaction namespace preserves legacy sidecars and refuses old journals."""
-    target_root = tmp_path / "registry" / "aeat"
-    target_root.mkdir(parents=True)
-    paths = GeneratedExportTransactionPaths(target_root.resolve(), ISOLATED_TREE.modelo, ISOLATED_TREE.revision)
-
-    assert not recover_interrupted_supersession_bundle(
-        target_root=target_root,
-        modelo=ISOLATED_TREE.modelo,
-        revision=ISOLATED_TREE.revision,
-    )
-    legacy_lock_sidecar = paths.legacy_lock_identity.with_name(f"{paths.legacy_lock_identity.name}.lock")
-    assert legacy_lock_sidecar.exists()
-    assert not paths.legacy_journal.exists()
-    assert not paths.journal.exists()
-
-    paths.legacy_journal.write_bytes(b"{}\n")
-    with pytest.raises(RegistryValidationError, match="requires recovery at its original location"):
-        recover_interrupted_supersession_bundle(
-            target_root=target_root,
-            modelo=ISOLATED_TREE.modelo,
-            revision=ISOLATED_TREE.revision,
-        )
-    assert paths.legacy_journal.read_bytes() == b"{}\n"
-    assert not paths.journal.exists()
-
-
 @pytest.mark.parametrize(
     ("modelo", "revision"),
     (
-        ("../184", "2025"),
-        ("C:\\184", "2025"),
+        ("../184", ISOLATED_TREE.revision),
+        ("C:\\184", ISOLATED_TREE.revision),
         ("184", "../escape"),
         ("184", r"..\escape"),
         ("184", ".."),
@@ -305,7 +278,7 @@ def test_supersession_recovery_rejects_unsafe_ids_before_filesystem_access(
 @pytest.mark.parametrize(
     ("modelo", "revision_id"),
     (
-        ("../184", "2025"),
+        ("../184", ISOLATED_TREE.revision),
         ("184", "../escape"),
         ("184", r"..\escape"),
         ("184", ".."),
@@ -336,7 +309,7 @@ def test_publication_journal_persists_only_root_relative_entry_names(field: str,
         "schema_version": 2,
         "state": "intent",
         "modelo": "184",
-        "revision_id": "2025",
+        "revision_id": ISOLATED_TREE.revision,
         "candidate_export": "candidate",
         "backup_export": "backup",
         "candidate_manifest_sha256": "a" * 64,
@@ -409,170 +382,6 @@ def _stage_interrupted_verified_candidate(
         journal,
     )
     return backup_export_root
-
-
-def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationContext:
-    target_root = tmp_path / "publication-root" / "registry" / "aeat"
-    target_export_root = target_root / "modelos" / "200" / "revisions" / "2025" / "export"
-    target_export_root.parent.mkdir(parents=True)
-    return GeneratedExportTreePublicationContext(
-        # This legacy-orphan recovery path never reads past `.target.modelo`
-        # and `.target.revision_id` (the journal comparison at the top of
-        # `recover_interrupted_publication`), so a real, minimally-populated
-        # validation context stands in rather than a duck-typed one -- the
-        # other fields (`registry_root`, `source_root`, `filing_year`,
-        # `period`) are never inspected on this path.
-        validation=GeneratedExportTreeValidationContext(
-            registry_root=tmp_path / "unused-registry-root",
-            source_root=tmp_path / "unused-source-root",
-            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
-            filing_year=2025,
-            period="anual",
-        ),
-        temporary_root=tmp_path / "temporary-root",
-        target_root=target_root,
-        target_export_root=target_export_root,
-        expected_target_state=GeneratedExportTreeTargetStateReceipt(manifest_sha256=None, output_files=()),
-    )
-
-
-#: The legacy-orphan recovery path retires or refuses a journal before ever
-#: reading a joined design, semantic map, rendered tree, or render profile
-#: (see `recover_interrupted_publication`, which only inspects
-#: `context.validation.target`). These stand in as real instances of the
-#: exact required types, built through pydantic's unvalidated-construction
-#: API rather than duck-typed placeholders, since no field on any of them is
-#: ever read along this path.
-_UNREACHED_JOINED = JoinedRecordDesign.model_construct()
-_UNREACHED_SEMANTIC_MAP = SemanticMap.model_construct()
-_UNREACHED_RENDERED = RenderedExportTree.model_construct()
-_UNREACHED_RENDER_PROFILE = RenderProfile.model_construct()
-_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE = RenderProfileSourceEvidence.model_construct()
-
-
-def _legacy_orphan_journal(
-    context: GeneratedExportTreePublicationContext,
-    *,
-    candidate_export: Path,
-    backup_export: Path,
-    state: Literal["intent", "backup_staged", "candidate_live", "committed"] = "intent",
-) -> Path:
-    journal = GeneratedExportPublicationJournal(
-        schema_version=2,
-        state=state,
-        modelo="200",
-        revision_id="2025",
-        candidate_export=candidate_export.name,
-        backup_export=backup_export.name,
-        candidate_manifest_sha256="a" * 64,
-    )
-    path = GeneratedExportTransactionPaths.for_context(context).journal
-    write_generated_export_publication_journal(path, journal)
-    return path
-
-
-def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
-    context = _legacy_orphan_context(tmp_path)
-    candidate_export = context.target_root / "former-system-temporary"
-    backup_export = GeneratedExportTransactionPaths(
-        target_root=context.target_root, modelo="200", revision_id="2025"
-    ).new_backup_sibling()
-    journal_path = _legacy_orphan_journal(
-        context,
-        candidate_export=candidate_export,
-        backup_export=backup_export,
-    )
-
-    # Both preconditions are observed first: the journal exists to be retired,
-    # and the target export root is absent so recovery cannot be seen creating it.
-    assert journal_path.exists(), journal_path
-    assert not context.target_export_root.exists(), context.target_export_root
-
-    assert not recover_interrupted_publication(
-        context=context,
-        target_export_root=context.target_export_root,
-        journal_path=journal_path,
-        joined=_UNREACHED_JOINED,
-        semantic_map=_UNREACHED_SEMANTIC_MAP,
-        rendered=_UNREACHED_RENDERED,
-        render_profile=_UNREACHED_RENDER_PROFILE,
-        render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
-    )
-    assert not journal_path.exists(), "the completed legacy orphan journal was not retired"
-    assert not context.target_export_root.exists(), (
-        "recovery materialised a target export root that was absent before the call"
-    )
-
-
-#: The refusal each orphan shape must produce: a legacy candidate that is not a
-#: staging sibling is refused before the shape-specific comparisons. A backup
-#: outside the root cannot be written at all; see the journal entry test.
-_ORPHAN_REFUSAL = {
-    "candidate-survives": "candidate is not a target-revision staging sibling",
-    "backup-survives": "candidate is not a target-revision staging sibling",
-    "target-survives": "candidate is not a target-revision staging sibling",
-    "non-intent": "candidate is not a target-revision staging sibling",
-}
-
-#: The cases whose names promise a directory outlives the refusal.
-_SURVIVOR_BY_CASE = frozenset({"candidate-survives", "backup-survives", "target-survives"})
-
-
-@pytest.mark.parametrize(
-    ("case", "state"),
-    (
-        ("candidate-survives", "intent"),
-        ("backup-survives", "intent"),
-        ("target-survives", "intent"),
-        ("non-intent", "backup_staged"),
-    ),
-)
-def test_recovery_refuses_unsafe_legacy_orphan_shapes(
-    tmp_path,
-    case: str,
-    state: Literal["intent", "backup_staged", "candidate_live", "committed"],
-) -> None:
-    context = _legacy_orphan_context(tmp_path)
-    candidate_export = context.target_root / "former-system-temporary"
-    backup_export = GeneratedExportTransactionPaths(
-        target_root=context.target_root, modelo="200", revision_id="2025"
-    ).new_backup_sibling()
-    if case == "candidate-survives":
-        candidate_export.mkdir()
-    elif case == "backup-survives":
-        backup_export.mkdir()
-    elif case == "target-survives":
-        context.target_export_root.mkdir()
-    elif case != "non-intent":
-        raise AssertionError(f"unexpected legacy orphan case: {case}")
-    journal_path = _legacy_orphan_journal(
-        context,
-        candidate_export=candidate_export,
-        backup_export=backup_export,
-        state=state,
-    )
-
-    # Each case pins its refusal: the legacy candidate is not a staging sibling.
-    with pytest.raises(RegistryValidationError, match=_ORPHAN_REFUSAL[case]):
-        recover_interrupted_publication(
-            context=context,
-            target_export_root=context.target_export_root,
-            journal_path=journal_path,
-            joined=_UNREACHED_JOINED,
-            semantic_map=_UNREACHED_SEMANTIC_MAP,
-            rendered=_UNREACHED_RENDERED,
-            render_profile=_UNREACHED_RENDER_PROFILE,
-            render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
-        )
-    assert journal_path.exists()
-    # A case named for a surviving directory also asserts the refusal left it in place.
-    if case in _SURVIVOR_BY_CASE:
-        survivor = {
-            "candidate-survives": candidate_export,
-            "backup-survives": backup_export,
-            "target-survives": context.target_export_root,
-        }[case]
-        assert survivor.is_dir(), f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
 
 
 def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Path) -> None:
@@ -794,7 +603,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
     )
     target_revision_root = context.target_export_root.parent
     paths = GeneratedExportTransactionPaths.for_context(context)
-    original_cleanup = publication_module._delete_opaque_transaction_tree_allow_partial
+    original_cleanup = publication_module.delete_opaque_transaction_tree_allow_partial
     interrupted_backups: list[Path] = []
 
     def remove_one_member_then_fail(
@@ -813,7 +622,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
 
     monkeypatch.setattr(
         publication_module,
-        "_delete_opaque_transaction_tree_allow_partial",
+        "delete_opaque_transaction_tree_allow_partial",
         remove_one_member_then_fail,
     )
     with pytest.raises(RegistryValidationError, match="injected committed cleanup failure"):
@@ -826,7 +635,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
     committed_revision = _tree_bytes(target_revision_root)
     assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
 
-    monkeypatch.setattr(publication_module, "_delete_opaque_transaction_tree_allow_partial", original_cleanup)
+    monkeypatch.setattr(publication_module, "delete_opaque_transaction_tree_allow_partial", original_cleanup)
     assert recover_interrupted_supersession_bundle(
         target_root=context.target_root,
         modelo=ISOLATED_TREE.modelo,
@@ -928,7 +737,7 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
         manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
         manifest_path.write_bytes(
             export_fragment_provenance_manifest_json_bytes(
-                manifest.model_copy(update={"revision_id": "2026"}),
+                manifest.model_copy(update={"revision_id": _OTHER_REVISION}),
             ),
         )
     elif defect == "generated-file":
@@ -1028,6 +837,50 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
     assert recovered.validated is None
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
+    assert not backup_export_root.exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
+
+
+def _recover(
+    context: GeneratedExportTreePublicationContext,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    rendered: RenderedExportTree,
+) -> bool:
+    render_profile, render_evidence = isolated_render_profile()
+    return recover_interrupted_publication(
+        context=context,
+        target_export_root=context.target_export_root,
+        journal_path=GeneratedExportTransactionPaths.for_context(context).journal,
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_evidence,
+    )
+
+
+def test_recovery_without_a_journal_reports_no_candidate_and_leaves_the_export(tmp_path: Path) -> None:
+    context, joined, semantic_map, rendered, _ = _publication_inputs(tmp_path, existing_export=True)
+    before = _tree_bytes(context.target_export_root)
+
+    assert _recover(context, joined, semantic_map, rendered) is False
+    assert _tree_bytes(context.target_export_root) == before
+    assert not _rollback_siblings(context.target_export_root)
+
+
+def test_recovery_installs_a_journaled_verified_candidate_and_retires_its_backup(tmp_path: Path) -> None:
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        existing_export=True,
+    )
+    _validate(context.validation, joined, semantic_map, rendered)
+    expected_export = _tree_bytes(candidate_export_root)
+    backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
+    assert not context.target_export_root.exists()
+
+    assert _recover(context, joined, semantic_map, rendered) is True
+    assert _tree_bytes(context.target_export_root) == expected_export
     assert not backup_export_root.exists()
     assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 

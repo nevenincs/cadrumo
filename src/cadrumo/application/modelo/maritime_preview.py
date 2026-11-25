@@ -29,11 +29,11 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from ...core.parsing.utils import parse_bool
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
@@ -146,7 +146,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
         return raw.strip() if (raw is not None and raw) else None
 
     def _bool(path: str) -> bool:
-        return _bool_from_raw(fact_value(record, path))
+        return bool_from_raw(fact_value(record, path))
 
     return MaritimeWorkerFacts(
         worker_class=_raw("maritime_worker.worker_class"),
@@ -159,7 +159,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
     )
 
 
-def _bool_from_raw(raw: str | None) -> bool:
+def bool_from_raw(raw: str | None) -> bool:
     """Read a stored boolean fact, defaulting an absent or unreadable one to ``False``.
 
     Resolves through the one canonical vocabulary rather than a set spelled out
@@ -183,6 +183,7 @@ def preview_maritime_exemption_for_active_profile(
     qualifying_days: int | None,
     gross_navigation_income: Decimal | None,
     operation: PinnedAuthorityOperation | None = None,
+    filing_year: int | None = None,
 ) -> ModeloMaritimeExemptionPreview:
     """Resolve the active profile maritime exemption preview.
 
@@ -206,6 +207,9 @@ def preview_maritime_exemption_for_active_profile(
         gross_navigation_income: Optional gross navigation income in EUR for
             REBECA.
         operation: Optional caller-held generation-pinned registry operation.
+        filing_year: The tax year asked about, which fixes its days, cap and fraction.
+            The exemption refuses a trabajador del mar profile without it, never
+            falling back to the run date.
 
     Returns:
         :class:`ModeloMaritimeExemptionPreview` carrying original facts,
@@ -224,9 +228,10 @@ def preview_maritime_exemption_for_active_profile(
                 qualifying_days=qualifying_days,
                 gross_navigation_income=gross_navigation_income,
                 operation=indexed_operation,
+                filing_year=filing_year,
             )
     facts = maritime_facts_from_active_profile()
-    resolved_on = today_madrid()
+    resolved_on = None if filing_year is None else date(filing_year, 12, 31)
     try:
         result = resolve_maritime_exemption(
             facts=facts,

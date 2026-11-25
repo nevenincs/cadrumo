@@ -1,0 +1,25 @@
+[fact]
+fact_id = "modelo-202-instalment-payment-months"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-202-instalment-payment-months:design"
+date_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["mes de abril", "mes de octubre", "mes de diciembre"]
+
+# The month of each pago fraccionado: "en los primeros 20 dias naturales de los meses de
+# abril, octubre y diciembre" (LIS art. 40.1).
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "1P", value = "4" },
+  { key = "2P", value = "10" },
+  { key = "3P", value = "12" },
+]

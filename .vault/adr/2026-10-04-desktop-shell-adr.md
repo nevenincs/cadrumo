@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-21'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0ee4fd6258a7214a7277ae8d3a4c8f20eee138bc6ba8ad37fa795d5d31809d3'
+body_hash: 'sha256:960934e2b335b1a17e4c97a13b3e3e3c2c8fa9606deb1579f6d35c4c7b53395c'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -17,6 +17,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-15-language-sync-reference]]'
+  - '[[2026-10-27-sede-browser-adr]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
@@ -75,7 +76,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Origins are computed at runtime: http or https per the platform's scheme setting, the custom-scheme form on Linux, and the dev server URL in development.
 - The frontend bundle contains no location, path, origin or environment variable name. Every runtime value comes from `desktop_environment`. The only build-time inputs are the dev-server host and ports from the canonical definition.
 - PTY bytes never enter diagnostics, host logs or the log view. The log view shows host events and Python log records only.
-- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused. The shell acts on a bridge `open-external` only while `navigator.userActivation.isActive`, and under a rate limit.
+- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. A well-formed `cadrumo://view/{id}` link opens that view in the window (amendment of 2026-10-24) and never reaches the browser. Every other scheme is refused. The shell acts on a bridge `open-external` only while `navigator.userActivation.isActive`, and under a rate limit.
 - The shell never captures F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape or plain keys while a terminal has focus.
 - The log view keeps "available", "missing" and "unreadable" sources distinct from an empty list. It only reads the log and never truncates, rotates or deletes it.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
@@ -92,7 +93,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
   - A second GUI launch hands its activation to the open window and exits 0.
   - A newer version launched while an older window is open hands activation to that window, and the user finishes the switch by closing the old window.
   - The headless CLI passthrough is exempt.
-- The shell hosts the application sign-in view of `2026-10-04-application-sign-in-adr`. It submits only through its dedicated host command to the canonical CLI login, and holds no session, receipt or credential. The runtime's profile worker still launches the Cl@ve browser, and approval prompts still belong to the TUI.
+- The shell hosts the application sign-in view of `2026-10-04-application-sign-in-adr`. It submits only through its dedicated host command, which signs the selected profile in through the window's person hold child and another profile through the canonical CLI login; the shell process holds no session, receipt or credential. The runtime's profile worker still launches the Cl@ve browser, and approval prompts still belong to the TUI.
 - The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
 - No shell or host copy says that work completes after a terminal closes or the window closes.
 - The host adds no storage-root, log-directory or other Settings variable to its child processes beyond the pinned set `2026-10-04-canonical-environment-adr` declares. The host, every terminal kind and the CLI passthrough resolve the same root whatever their working directory, and a regression test in a relocated packaged layout proves it (desktop-shell plan S02).
@@ -101,6 +102,8 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - This record replaces these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration, which moves to the runtime manager. That record's author reconciles the wording.
 
 Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
+
+Amendment (2026-11-15, under `2026-11-15-desktop-shell-console-environment-adr`, accepted by the operator 2026-11-15 16:59): the `console` kind adds the agent service's console environment for the signed-in profile over the pinned environment, and starts in that environment's working directory when one is given; otherwise it keeps this workspace. The `python` and `tui` kinds are unchanged. The added values name per-profile provider homes, the harness workspace and the tool server registration; they carry no credential, session, receipt or key. Authentication still uses native peer verification and the profile receipt flow, and none of these values grants authority.
 
 ### 2026-10-09 authorized scoped installation command
 
@@ -231,11 +234,6 @@ shell to documentation:
   - `desktop_environment`: output language and documentation origin and languages
   - `open_external`, Rust-only through the opener
   - `shell_clipboard_read` and `shell_clipboard_write` for text
-  - `shell_context_menu {items, x?, y?}`, which returns `{chosen: id | null}`:
-    - Synchronous: the native popup blocks until it closes, and a main-thread sentinel resolves a dismissal as null.
-    - Pointer-opened menus omit x and y, so the menu opens at the cursor.
-    - The keyboard menu key passes a logical position in shell CSS pixels: the iframe rect, plus its border, plus the relayed client coordinates, with no device-pixel scaling.
-    - Item ids are namespaced by the host.
   - window state, Rust-only, with no JavaScript command
   - WebView2 browser accelerator keys and default context menus are disabled.
 - Browser-mode tests of the shell use a stand-in documentation origin.
@@ -244,7 +242,7 @@ shell to documentation:
 
 | Chord | Action | Scope |
 |---|---|---|
-| Mod+K | Open or close the palette | Not in a terminal |
+| Mod+K | Open or close the palette | Not in a terminal; reaches the shell from the browser page too (amendment 2026-11-20 in `2026-10-27-sede-browser-adr`) |
 | Mod+Shift+K | Open or close the palette | Everywhere |
 | Mod+Shift+T | Show or hide the TUI | Everywhere |
 | Ctrl+` (physical Backquote) | Show or hide the bottom panel | Everywhere |
@@ -258,7 +256,7 @@ shell to documentation:
 | Escape | Close the palette, a menu or settings | That surface |
 | Enter after exit | Start the session again | Exited terminal |
 
-**Context menus.** The shell describes each menu and its localized labels. A token-checked host command shows it natively and returns the chosen item, or null when the menu is dismissed. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
+**Context menus.** The shell draws every context menu itself, in the Cadrumo theme, the same in the desktop application and the browser display; the host shows no native menu. Each item carries its localized label, its icon and, where an action of the registry has a chord, that chord, shown in the platform's notation. A pointer-opened menu opens at the pointer; the keyboard menu key opens it at the focused element, and for the documentation at the iframe rect plus its border plus the relayed client coordinates. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
 
 | Target | Items |
 |---|---|
@@ -272,14 +270,6 @@ shell to documentation:
 - Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
 - Settings and presentation choices go in shell localStorage: pane visibility, active page, maximized pane, split ratios, panel visibility and tab, documentation zoom, calendar face, profile section/filter/disclosures and the chosen minimum log level. A fresh layout shows Profile and the agent where available; the TUI is closed until requested. Existing explicit saved pane choices are retained. See the 2026-10-21 amendment.
 - Every read is guarded, so the layout falls back to defaults.
-
-### Embedded terminal appearance amendment (2026-10-07)
-
-Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo_runtime/host/frontend/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
-
-The dedicated desktop TUI uses native ANSI color roles backed by desktop-owned light/dark Cadrumo palettes. Its launch identifies the terminal through TERM_PROGRAM=cadrumo; this is terminal capability metadata, alongside TERM and COLORTERM, not a product Settings variable. Standalone TUI appearances are unchanged. Desktop preference changes recolor existing terminal cells without input, restart, polling, or runtime IPC. The TUI pane follows desktop appearance; the console and Python panes retain their explicit always-dark override. The TUI's own appearance action emits only OSC 777;cadrumo;appearance;toggle, which the dedicated TUI pane may interpret as a frontend preference toggle; console/Python panes cannot invoke it. The payload carries no application state, and goes through ordinary PTY output, never diagnostics. No arbitrary commands or values are admitted by this presentation request.
-
-ANSI roles retain background, surface, panel, foreground, muted text, primary, accent, status and border distinctions. Native ANSI rendering has fewer shade levels than the standalone RGB themes; verify actual widgets and contrast in both appearances. Reconsider this mechanism if future UI needs require additional color roles or a bidirectional presentation protocol.
 
 ## Rationale
 
@@ -327,21 +317,15 @@ Authorized by the user's request for one sidebar toggle instead of Console, Pyth
 
 Amended 2026-10-16 under `2026-10-16-idle-churn-adr`: the shell no longer polls `sign-in-status`. It learns sign-in changes from one long-lived `cadrumo-runtime session watch` child, which re-reads only on a runtime cue, a pointer change or a status deadline. The sign-in view, language and agent hosts share that one observation. The shell process itself still holds no runtime connection, session, receipt or credential.
 
-### Amendment 2026-10-18: component setup
+### Component setup in the window's own engine
 
-Amended 2026-10-19 by the setup-experience amendment below; the paragraph that follows is the prior wording.
+The desktop host links the Rust component engine of `2026-10-24-rust-component-provisioning-adr` in process, and that engine is the desktop's only component-setup path. The host's `desktop_setup_*` commands, with their refusal codes, read setup status, start setup for exactly one item, approve or reject its plan, cancel, and remove; the window needs no runtime connection and no signed-in profile for them. The frontend names items and choices only, never a command, path or host. The host keeps what only the window knows: which check and setup it started, how far it read their events, the plan it approved and whether Resume may skip a second dialog. It pushes a typed `DesktopSetup` snapshot on a Tauri channel, with `runs`, at most one per item. The snapshot carries closed codes and locale-neutral facts, and the window words every item name, state, failure, action, note, retry notice, plan part and licence notice from the `desktop.setup` catalogue subtree in four languages. The shell holds no session, receipt, credential, token or DEK, and stores no setup state beyond the per-launch dismissal of the first-run panel.
 
-Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The exceptions to "The shell holds no runtime connection and no runtime authority" gain one: while a profile is signed in, the host may read setup status and may start setup, answer its plan review, cancel it, and start Google sign-in, each through a closed, token-checked action of the held person bridge. The bridge pushes a cue when an observed setup operation changes, and the host re-reads it before pushing a typed snapshot to the shell. The frontend names items and choices only, never a command, path or host. Setup acts keep their registered-operation validation, and Google sign-in stays the runtime's authentication act. Noted 2026-10-18 under the owner's runtime-boundary ruling recorded in `2026-10-18-dependency-provisioning-unified-setup-adr`: the bridge carries these acts through its generic registered-operation relay and a generic authentication act, names no setup item, wording or definition, and the host keeps the window's own setup state; the host's commands stay closed. Noted again 2026-10-18 under the same ruling: the generic authentication act is removed, and Google sign-in is the product's registered `config.google.login` operation, which the host submits over the same relay and whose consent review it answers on the person's click. The shell still holds no session, receipt, credential, token or DEK, and stores no setup state beyond the per-launch dismissal of the first-run dialog. For setup only, this also amends "Shell settings are frontend preferences only. They never write product Settings or reach the backend": Settings gains a Components section whose buttons reach the backend through these actions, and the palette gains the setup actions of that record. Before this amendment, setup had no desktop surface and the exceptions named sign-in, profiles, manager start, named read-only views and language only.
+For setup only, this amends "Shell settings are frontend preferences only. They never write product Settings or reach the backend": Settings carries one provisioning section with one status label and one button that opens the provisioning panel, and the palette gains per-element setup, check, retry and cancel actions (`2026-10-18-dependency-provisioning-unified-setup-adr` D10).
 
-### Amendment 2026-10-19: setup experience and the Google account
+### Google account in Settings
 
-Basis: operator review 2026-10-19, recorded with its full commitments in `2026-10-18-dependency-provisioning-unified-setup-adr` (operator-review amendment). For this record:
-
-- Setup covers software only: the browser and the local AI, which the window shows as one item. Google sign-in is not setup. The host's setup commands keep their shape; Google sign-in is carried by `desktop_google_sign_in` and sign-out by `desktop_google_sign_out`, both closed, token-checked commands over the same held person bridge's generic relay, submitting the product's `config.google.login` and `config.google.logout`. The host also reads the profile's stored sign-in through `config.google.status` and pushes it in the same snapshot, beside the setup rows and never among them. `desktop_setup_google_sign_in` is removed.
-- Settings no longer embeds a Components section. While setup is unfinished or running it shows one top-level line that opens the setup flow, and nothing once setup is complete. Settings gains its own "Google account" row with the profile's signed-in state and one Sign in or Sign out button. Both are the only setup and account elements Settings carries; the exception to "Shell settings are frontend preferences only" covers exactly these two.
-- The palette's setup group offers Set up components, Check components, Set up the browser, Set up the local AI, Retry setup and Cancel setup. The account group gains "Authenticate with Google". No setup action names Google.
-- The setup dialog leads with one summary and one primary action, keeps per-component detail in a closed "Details" disclosure, and shows one overall progress bar while setup runs. Every row states its state once, by the product's sentence.
-- Unchanged: the shell holds no session, receipt, credential, token or DEK, and stores no setup or account state beyond the per-launch dismissal of the first-run dialog. Where Google tokens are stored is not the shell's concern and is unchanged.
+Google sign-in is not setup. It is carried by `desktop_google_sign_in` and sign-out by `desktop_google_sign_out`, both closed, token-checked commands over the held person bridge's generic relay, submitting the product's `config.google.login` and `config.google.logout`. The host also reads the profile's stored sign-in through `config.google.status` and pushes it in its own snapshot field, beside the setup rows and never among them. Settings carries its own "Google account" row with the profile's signed-in state and one Sign in or Sign out button, and the palette's account group offers "Authenticate with Google". The shell stores no account state; where Google tokens are stored is not the shell's concern.
 
 ### Amendment 2026-10-21: saved views and single pane headings
 
@@ -349,10 +333,154 @@ Authorized by the user's design-polish request to remove repeated page titles, k
 
 This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.
 
-### Amendment 2026-10-21: cover embedded TUI startup until presentation is ready
+Amended 2026-10-22 under `2026-10-04-application-sign-in-adr` as amended that day: the sign-in host command signs the selected profile in through the window's person hold child instead of the canonical CLI login, which remains for a sign-in naming another profile.
 
-Authorized by the user's request to hide the TUI startup sequence behind a loading view until ready. The existing terminal presentation seam also admits OSC 777;cadrumo;presentation;loading and OSC 777;cadrumo;presentation;ready, only in the dedicated TUI pane. These carry no profile, credential or authentication state and cannot admit a session. Process-start alone does not reveal the TUI. The canonical shared loading view covers receipt resumption, Textual app handoffs and initial workbench composition; the producer announces a rendered actionable screen. Automatic successful resumption does not announce its transient login form. A prompt needing input or a recoverable startup refusal is actionable and must be revealed. Terminal exit or failure must also remove the cover.
+### Amendment 2026-10-23: profile page actions, inline Censo and password change
 
-The frontend keeps parsing and acknowledging output while covered, including ConPTY cursor replies, and keeps terminal dimensions available. On Windows, OSC can precede buffered screen text: the frontend waits for a short output-quiescence interval and an xterm repaint before revealing readiness, restarting that wait for each output batch. This is a presentation settling guard, not a transport ordering guarantee or an authentication signal. No maximum startup timeout guesses readiness. Reconsider the settling guard if native traces show a repaint delayed beyond the guard; do not bypass runtime admission or add a second terminal launch.
+Accepted by the user on 2026-10-23, who approved the profile page mockup with its change-password action and asked for it to be implemented. This refines the 2026-10-21 saved-views amendment for the profile page and adds one host exception.
 
-Evidence: `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`, `src/cadrumo_runtime/host/frontend/tui/secret/runtime_login_form.py`, `src/cadrumo/entrypoints/tui/app.py`, `src/cadrumo/entrypoints/tui/components/quiet_app.py`, `native/desktop/frontend/src/components/TerminalPane.tsx`, and the real-PTY presentation test in `native/desktop/src-tauri/src/terminal/tests.rs`. The native Windows test observed an OSC marker emitted after screen text arriving before that text.
+- **Profile actions.** The profile page's actions are entries of the one action registry, so the palette, the page's actions button and its context menu offer the same list. Field actions (edit, copy, clear, about) follow the focused detail. The context menu and the actions button open through the shell's menu path.
+- **Saved profile view.** The layout store keeps the profile's show filter (all, unset, required, filled), grouping (section, status, none), sort (form order, missing first, alphabetical) and collapsed sections. It no longer keeps a selected section. The section selector is a section index while the page is full screen and wide enough, and a sections menu otherwise. A stored filter from before this amendment is read as the equivalent show filter.
+- **Censo.** Synchronization is a band of the profile page, not a dialog. It uses the existing `profile_censo_*` commands unchanged. The incoming values of a review are shown on the details they would change, and the review is still answered as a whole, apply or reject, with its digest. The band shows the census's last capture time served by `live.sync.status`.
+- **Password change.** The host gains `profile_password_change`, a closed, token-checked command. It runs the canonical runtime CLI `config passphrase change --secrets-stdin` for the active profile. The current password, the new password and its confirmation travel in the command's raw body and the helper's standard input only. They are wiped on drop, and never appear in arguments, logs, diagnostics or the window's storage. The command line first proves the current password, then rotates the password without replacing the profile's data key. The window receives only a success or a refusal code. Nothing is retried, and an unconfirmed outcome is shown as unconfirmed. The shell still holds no session, receipt, credential, token or DEK.
+
+Evidence: `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`, `native/desktop/frontend/src/shell/layout.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/sign_in/password.rs`, and `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.
+
+### Amendment 2026-10-24: the window's own person session
+
+Accepted under the user's instruction of 2026-10-24 to implement native desktop sign-in, recorded with its commitments in `2026-10-04-application-sign-in-adr` (amendment of 2026-10-24). The sentences "signs the selected profile in through the window's person hold child" and "the shell process holds no session, receipt or credential" are kept as accepted history. The host now holds the person's runtime session for the selected profile on its own verified connection, and resumes a stored sign-in by reading the receipt proof the runtime minted. It holds it only while the window runs, never caches or forwards it to a terminal or TUI process, and still holds no DEK or password beyond the zeroized submission buffer. Every exception that named "the held person bridge" now names that session. The sign-in watch already ran on a native connection with no child since 2026-10-22, which also ends the `cadrumo-runtime session watch` child named in the 2026-10-16 note above.
+
+### Amendment 2026-10-24: one navigation register for window links
+
+Accepted by the user on 2026-10-24 ("all lgtm") after review of the link format and of where the register lives. `cadrumo://` is an internal register: only the window, its agent replies and its palette use it. The scheme is not registered with the operating system, the single-instance activation carries no link, and a launch argument is never read as a link.
+
+- **Grammar.** `cadrumo://view/{id}`, optionally followed by a query of the element's declared parameters, and nothing else. `{id}` has one to four segments, each matching `[a-z0-9]+(-[a-z0-9]+)*` and joined by `/`, for example `ledger/invoices`. A link is at most 512 characters, lowercase, with no fragment, credential, percent-encoding, repeated or undeclared query key. `view` is the navigation namespace. Other authorities on the scheme, such as the corpus citation keys, never resolve as a view. A link carries no profile: the window shows only the active profile, and a link grants nothing.
+- **Register.** The vocabulary is declared once, as data, in `src/cadrumo_client/contracts/navigation.toml` with its validating loader `navigation.py`, shipped in the wheel. It is neutral: each element has an id, which is also its link path, a parent, one label locale key used by the palette, and keywords. Retired ids are append-only and never reused. The register does not declare how the window implements an element. The window keeps its own id-to-layout table, and a coverage test fails unless the table covers exactly the ids the register declares. The desktop reads one generated projection, `navigation.json`, produced in the generator loop of `native/desktop/CMakeLists.txt` and served to the window as `virtual:desktop-navigation` and to the host through `build.rs`. The hand-written vocabularies in `cadrumoLink.ts`, `ipc/contract.ts` and `shell/presentation.rs` are removed.
+- **Parameters.** Refined by the user on 2026-10-24: a link can point at a row, so the agent can report the link to an invoice or a movement it added. An element declares its own link parameters in the register, as a parameter name and a value kind, because which verbs make sense depends on the page; the set is to be revisited as pages ask for more. The first are `select` on `ledger/invoices` (an invoice) and on `ledger/movements` (a transaction), for example `cadrumo://view/ledger/movements?select={transaction id}`. A value is an opaque canonical record id of a declared kind with an exact grammar, never a natural key such as an invoice number, a tax id or an amount, because links reach agent replies and the clipboard. Parameters only show, select and focus; none edits, fills a form, submits or confirms. Each key appears at most once, in any order, and the formatter writes declared parameters in sorted order. The window honours a link only if it implements the element and every parameter given; otherwise resolution continues as stated and drops a parameter only with a notice that says so. A selected row is revealed, scrolled into view, selected and focused. A row hidden by the person's own filter, grouping or collapsed section is announced with an action to show it, and the saved view is not changed silently. A record that is not found leaves the page open with a notice that does not say whether it exists anywhere else. MCP results that name exactly one record of a selectable kind carry its link, formatted by the same client function.
+- **Resolution.** The window opens the element. Otherwise the nearest ancestor opens, with a notice. Otherwise the link is refused with a toast. No link is silent.
+- **Verbs.** A link shows and focuses its element and is idempotent. It never toggles anything away, edits, submits, confirms or answers a prompt. The palette may also toggle panes and panels.
+- **Search.** The palette's view actions derive from the register, so a label, chord or id is declared once. The palette matches the localized label, keywords and id. A pasted `cadrumo:` link is one entry that opens it, or a refusal that says why. A copy-link action copies the current view's link.
+- **Link producers.** Links are spelled through one client function that formats `cadrumo://view/{id}`: the operation-to-page table (`src/cadrumo/application/operations/operation_pages.py`, mapping to register ids), the AEAT setup handoff and the MCP `page.url`. The MCP service publishes the register as deterministic, searchable data: ids, parents, labels and keywords. This is operation-adjacent orientation, not persona, rule or skill text.
+- **Unsaved and in-flight work.** Every navigation from a link, the palette, the rail, a page, sign-out, a profile switch or the window's close passes one guard register. The window works out which mounted owners the navigation would unmount: leaving a page unmounts that page, while showing a pane, panel or TUI page unmounts nothing. Each guard reports one state:
+  - `clean` lets the navigation through;
+  - `dirty` (staged or drafted values) asks once whether to discard or stay;
+  - `busy` (an effect in flight whose outcome the owner must show) refuses with a toast and offers no override, because unmounting would lose a possibly `UNKNOWN` outcome;
+  - `modal` (an open dialog or credential form anywhere in the window) stands down every navigation except the window's close with a toast and keeps the form, as the TUI does.
+
+  A navigation that unmounts nothing is never asked about. One navigation waits for an answer at a time; another request in that time shows a toast and does nothing. The window's close keeps its 2026-10-24 titlebar behavior, which the guard can never turn against the person: an open dialog never holds a close, a dirty or busy owner is asked about rather than refused, a close that arrives while a question is waiting is left unanswered, and a second close always closes. Reconciled 2026-10-24 after the plan-close review found the first wording let a dialog hold the close; before that this sentence read: "The window's close keeps its 2026-10-24 titlebar behavior: a busy owner is asked about rather than refused, and a second close still closes."
+- **Focus.** After a navigation applies, the element's focus target takes keyboard focus when the element signals that it is mounted, not after a delay.
+
+Rejected: a register outside the repository shared with cadrumo-agent (two release trains for vocabulary only this repository implements; the agent reads the register as Cadrumo's MCP service publishes it instead); a repo-level declaration such as `native/application-environment.toml` (the MCP service reads the register at runtime without a native package, so it would need a generated module checked into `src`); a typed Python module as owner (it puts the shell's page state under a Python package); registering each surface's internal targets in the register (a lower component would define the application's page state); `<window>` or the surface as the first path segment (the same element would have two identities); a profile segment (it only produced a refusal and grants nothing); OS protocol registration and single-instance forwarding; a URL router; and keeping hidden pages mounted to avoid prompts.
+
+Evidence: the register `src/cadrumo_client/contracts/navigation.toml` with its loader `navigation.py`, the shared cases `src/cadrumo_client/contracts/tests/navigation_vectors.json` and the shipped-id baseline `navigation_shipped_views.json`; the projection `dev/packaging/native/desktop_navigation.py` in `native/desktop/CMakeLists.txt`; the window core `native/desktop/frontend/src/shell/navigation/` (`links.ts`, `resolve.ts`, `windowViews.ts`, `guards.ts`, `focus.ts`, `reveal.ts`, `useNavigator.ts`), `components/NavigationPrompt.tsx`, `components/ledger/RowReveal.tsx`, the modal layer of `components/ui` dialogs, and the palette in `shell/actions.ts` and `App.tsx`; and the scenarios `navigation-register.spec.ts`, `agent-page-links.spec.ts`, `navigation-guards.spec.ts`, `window-close.spec.ts` and `palette.spec.ts` under `native/desktop/frontend/tests/scenarios/`. The plan-close review and its fixes are in `2026-10-24-desktop-navigation-register-audit`.
+
+### Amendment 2026-10-26: the shell draws every menu in the Cadrumo theme
+
+Accepted by the user on 2026-10-26, who ruled that context menus are folded into the Cadrumo theme and drawn by Cadrumo everywhere, with icons and shortcut display. Native menus drawn by the operating system could not take the theme, icons or the shell's shortcut notation, so the desktop and browser menus looked different.
+
+- **One drawing.** Every context menu and dropdown menu uses the shell's menu primitive in `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`, with the theme's surfaces, borders, radii, focus treatment and spacing. No menu carries its own styling.
+- **Icons and shortcuts.** An item may carry an icon from the shell's icon set and a chord. A chord is shown in the platform's notation, Ctrl on Windows and ⌘ on macOS, from the same declaration that binds it, so a shown shortcut is the one that works. A menu never shows a shortcut no chord binds.
+- **No native path.** The host's `shell_context_menu` command and its native popup are removed with their tests; WebView2's default context menus stay disabled.
+
+Evidence: `native/desktop/frontend/src/components/ContextMenu.tsx`, `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`, `native/desktop/frontend/src/shell/actions.ts` and `native/desktop/frontend/src/shared/chords.ts`.
+
+### Amendment 2026-10-27: AEAT access is edited in the window
+
+Accepted by the user on 2026-10-27, who asked that every user-profile field be edited directly in the window and that none fall back to the TUI. Every user-profile field is edited on the window's profile page. Authentication facts (`auth.dni_nie`, `auth.numero_soporte`, `auth.fecha_validez`) use `user-profile.field-mutation` under the page's revision and digest like any field; secret-class facts are write-only inputs, never prefilled. The method, Cl@ve Móvil route and certificate file use `auth.provider.configure` with the page's revision and digest. The certificate file is chosen in the native dialog and reaches the window only as a token and a file name. A certificate passphrase or Cl@ve permanente password travels in a closed, token-checked command's raw body. It is wrapped once as the `auth.credential.save` secret and sent only on the runtime's secret frame after `secret_ready`, then wiped on drop. It never appears in arguments, logs, diagnostics, operation payloads or window storage, and nothing is retried after an unconfirmed outcome. The register element `profile/aeat-access` is a `gui` and `tui` element and opens the window's AEAT access editor in preference. The shell still holds no session beyond its own person session, and no receipt, DEK or stored credential.
+
+### Amendment 2026-10-27: the window holds no domain data or domain logic
+
+Accepted by the user on 2026-10-27, who ruled that the frontend is not to contain its own data or logic and may only remap and reuse values from the backend that the CLI and TUI can all use.
+
+- **Served, not copied.** Tax, ledger, invoice, IVA, IRPF, Modelo and profile vocabularies, rate tables, category lists and families, classification and eligibility rules, field routes, identity rules, validation limits, grammar for amounts, percentages and periods, and every tax computation come from a backend operation or a generated projection of a backend owner. The window never declares them, and a parity test that guards a hand-kept copy is not a substitute; the copy is removed with its test.
+- **Remap only.** The window may map served codes to its own layout, icons and localized wording from the generated catalogue, order and group served rows for display, and check that an input is well formed enough to submit. Every decision with a tax or ledger consequence is the backend's, and the window shows the backend's answer, refusal or preview.
+- **One owner for all frontends.** A value the window needs is served through the same operation or contract the CLI and TUI use. Where none exists yet, the backend gains it before the window drops its copy; the window does not keep a copy while waiting.
+
+Evidence: the inventory in `2026-10-27-profile-field-remap-plan` (Steps S07 to S10), including `native/desktop/frontend/src/shell/ledgerVocabulary.ts`, `native/desktop/frontend/src/shell/ledgerCommands.ts`, `native/desktop/frontend/src/shell/ledgerPlan.ts`, `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts` and `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
+
+### Amendment 2026-11-03: tax wording is served, not remapped
+
+Accepted by the operator on 2026-11-03, who ruled that the frontend never hardcodes tax facts or wording and that the CLI, TUI and desktop derive from the backend. This narrows the "Remap only" bullet above: the window may map served codes to its own layout and icons, but no longer to localized wording with tax meaning. Words, facts, flags and capabilities are served on each operation's records; generic chrome with no tax meaning stays in the generated catalogue. The commitments, field naming and deletion protocol are in `2026-11-03-backend-served-surface-adr`.
+
+### Amendment 2026-10-31: dates and numbers follow the language
+
+Accepted by the user on 2026-10-31.
+
+Dates and numbers shown or entered in the window follow the language the frontend controller holds: `preferences.output_language` when signed in, the transient choice when signed out. No format or entry reading takes the browser or operating-system locale; the one read of the browser language is the startup page's first guess for its own wording until the host reports the language, and that page builds no `Intl` formatter (`native/desktop/frontend/src/startup.ts:8`, `:38`). The page language is set from the window's locale (`native/desktop/frontend/src/App.tsx:829`). Values on the wire stay canonical, whatever the language. A language change reformats held values and never reinterprets text not yet read.
+
+### Amendment 2026-10-31: the window reads number marks
+
+Accepted by the user on 2026-10-31.
+
+This amends the 2026-10-27 ruling that the window holds no domain logic, for number marks and for the one file named below.
+
+- **Presentation.** Reading the language's decimal and grouping marks into canonical decimal text is presentation, and the window does it in one function, `readLocaleDecimal` (`native/desktop/frontend/src/shared/numbers.ts:251`), which the editors reach through `decimalReading` (`native/desktop/frontend/src/components/editors/numberReading.ts:19`). Text that can be read two ways is refused, as the backend refuses it. Grammar for amounts and percentages, in the ruling, means the limits below and not the marks.
+- **Limits stay served.** Decimals, zero, sign, bounds, unit and every rule with a tax or ledger consequence come from the backend.
+- **Parity.** One table of lexeme, language and outcome, `native/desktop/frontend/tests/shared/locale-decimal-readings.json`, holds both readers. The window's reader is held to every row by `native/desktop/frontend/tests/shared/numbers.spec.ts:248`, and the backend's `read_edit_number_lexeme` (`src/cadrumo/application/modelo/edit_number_parsing.py:90`) by `src/cadrumo/application/modelo/tests/test_edit_number_table.py`. The table is a checked-in file; no generator produces its expected column. For this reader only, this replaces "a parity test that guards a hand-kept copy is not a substitute".
+- **Modelo stays lexeme.** Modelo entry sends the raw lexeme and its language to `modelo.edit.preflight` (`native/desktop/frontend/src/components/modelo/form/session.ts:254`, `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx:164`). The window does not read it (`2026-08-24-modelo-edit-contract-adr`).
+- **`native/desktop/frontend/src/shell/ledgerGrammar.ts`.** Its amount rules (`:137-143`), percent limits and refusals (`:211`, `:220-264`), year bounds (`:352-353`) and period codes (`:354-381`) are copies under the ruling and move to served grammar. For this file only, and until `2026-10-27-profile-field-remap-plan` Step S10 lands, this replaces "the window does not keep a copy while waiting". That Step names `native/desktop/frontend/src/components/ledger/setup/setupModel.ts` and does not yet name this file. Exact decimal helpers and well-formedness checks stay.
+- **Held in the window, not authorized here.** Two checks beyond well-formedness remain in the window, and this amendment names them without carving them out. The first is IBAN mod-97, `ibanProblem` (`native/desktop/frontend/src/shared/iban.ts:10`), used by `native/desktop/frontend/src/components/editors/fieldCheck.ts:71` and by the setup page's accounts pane. The second is the two-way-decimal check, `isTwoWayDecimal` (`native/desktop/frontend/src/shared/numbers.ts:193`), which `ledgerGrammar.ts` applies locale-blind (`:163`, `:198`, `:256`), and `heldDecimal` (`native/desktop/frontend/src/shared/numbers.ts:278`), which spells a decimal the reader has settled with a trailing zero so that refusal does not fire. Each is a copy under the ruling and needs a ruling or a move to a served rule.
+
+### Amendment 2026-10-27: the in-app Sede browser
+
+Accepted by the user on 2026-10-27, who chose an in-app browser that streams Cadrumo's own Chromium page into a panel ("implement 1)"). The commitments are in `2026-10-27-sede-browser-adr`. For this record:
+
+- **Nothing remote loads in the webview** still holds. The Browser page draws images, received as bytes, on a canvas. The webview fetches no remote resource, and the CSP is unchanged. The page shows the remote page's origin and path, never its query, and has no URL entry.
+- **Rail and palette.** The rail gains a Browser item that opens the Browser page. A click on the AEAT item opens the Browser page at the Sede, and its context menu offers "Open in external browser", the existing `link.aeat` action through `open_external`. The palette offers both actions, and the Browser toolbar offers "Open in external browser" for the current page. The register gains a `gui` element for the page.
+- **Host.** The host gains closed, token-checked commands to open, close, give input to, navigate, resize and credit a view, answer a page dialog, answer a download or file chooser, and open the current page externally. A download opens the native save dialog and its bytes go only to the path the person picks; a file chooser opens the native open dialog and the chosen file goes to the page. Neither enters Cadrumo custody unless the person imports it. For "Open in external browser" the window sends no URL; the host opens the view's current URL, which it holds and never forwards to the window, through `open_external`. Beside its person session, the host opens one view connection per open view, attached with the single-use token of `2026-10-04-application-sign-in-adr` (amendment 2026-10-27), and relays it on one Tauri `Channel` delivered to the top document only. Frames, titles, URLs and input never enter host logs, diagnostics, the log view, window storage or the documentation frame.
+- **Keys.** While the canvas has focus it receives keys as a terminal does, and the shell reserves only its everywhere chords. Amended 2026-11-20 in `2026-10-27-sede-browser-adr`: Mod+K, a key a browser keeps for its chrome, also reaches the shell.
+- **Lifetime.** Leaving the page keeps the view running without frames. Closing the page or the window, or retiring the window's person session, ends it; it has no other time limit. The navigation guard reports the page `busy` only while the view publishes its session.
+- The shell still holds no session beyond its own person session, and no receipt, cookie, storage state, credential or DEK.
+
+### Amendment 2026-10-29: the AEAT sync page
+
+Accepted by the owner on 2026-10-29 with `2026-10-29-desktop-aeat-sync-adr`.
+
+- **AEAT sync run family.** The `aeat-sync` page brings AEAT data into the profile through the host's `aeat_sync_*` commands, which submit only the closed list of read captures in `2026-10-29-desktop-aeat-sync-adr`, a Rust constant checked by test against the contract manifest. The run is held by the host for the signed-in profile, survives page navigation and is discarded on sign-out, profile change and window close. The window receives closed states, outcomes and served wording only. Nothing is submitted to AEAT.
+- **Census entries.** The one Censo flow (the `profile_censo_*` commands and the profile page's band) is reachable from a global command palette action on every page, the profile page, the Modelo page and the AEAT sync page's census area. Each entry opens the same flow; none duplicates it.
+
+## Amendment 2026-10-31 - one window per storage root
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S12`. The root-cause analysis of the macOS start failures found that a launch on one storage root exited silently because it handed activation to a window open on another root (failure mode F2). Implemented in commit a91d83dd6a.
+
+What changed:
+
+- The single-instance lock key is the channel family scoped to the storage root the launch's environment selects: `<family>.root.<storage identity>`, where the storage identity is the 64-digit hex digest of the root's physical identity that already names the runtime serving that root. The launch resolves the root, and creates it owner-only when it is absent, before it claims. The grammar and its shared vectors are declared once in `src/cadrumo/core/connection_transport.py`, projected into the native contract, and consumed through `native/application/src/instance_scope.rs` by `native/desktop/src-tauri/src/shell/single_instance/mod.rs`. Every platform's lock and activation names (Windows objects, Linux runtime-directory files, macOS transient-transport files) take the scoped key in place of the family.
+- Two paths to one directory give one key, so launches on one root still hand off to its open window across versions and install paths. A launch on another root takes a lock of its own and opens its own window. Stable and preview stay separate through the family.
+- The window that holds a root's lock supervises that root's runtime through the manager session lock scoped to the same root (`2026-10-04-runtime-manager-architecture-adr`, amendment of the same date).
+
+Superseded sentences:
+
+- Constraints: "The lock is per user, keyed by identity family and channel." now reads: "The lock is per user and storage root, keyed by identity family, channel and the root's storage identity."
+- Constraints: "A second GUI launch hands its activation to the open window and exits 0." and "A newer version launched while an older window is open hands activation to that window" now apply to a window open on the same storage root.
+
+Unchanged: the headless CLI passthrough never takes the lock; the other-session report, activation protocol, patience and foreign-object refusal are as before. Outside this amendment: durable recording of pre-log admission outcomes and the close-time relaunch wait (plan Step `S13`), and isolating tests from the real per-user transport directory (plan Step `S16`).
+
+## Amendment 2026-10-31 - a quit settles the changes it submitted
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S14`. The root-cause analysis of the macOS start failures (failure mode F5) found that a quit during a profile creation killed the helper running it with no record of what happened. It also found that every orderly quit logged `session_unavailable` as a failure.
+
+What changed:
+
+- **One close for every ending.** A quit, a window close and a termination signal (a logout, a system shutdown or a stop sent to the process) all end the window through the same close. On POSIX hosts the window takes `SIGTERM` from its default disposition before its run loop starts, and answers it by asking the application to exit.
+- **Settle window.** The close first stops admitting changes: the profile host refuses further relayed operations, and the helper lane refuses further mutations. Reads go on. The changes already submitted then share one settle window to report before any client ends. It is `OPERATION_SETTLE_BOUND` in `native/application/src/shutdown.rs`, equal to the runtime's drain bound, so a quit never gives submitted work less time than a runtime stop does. A change that reports in time ends with its own outcome. One still running is ended with its client, and the runtime's journal records what happened to it (`2026-10-04-runtime-manager-architecture-supervisor-contract-adr`, amendment of the same date).
+- **Relaunch patience.** The relaunch patience is now the settle window plus the supervisor close bound plus the runtime drain bound.
+- **Expected outcomes are not failures.** A closing window's own refusals carry the reason `host_closing` (`cadrumo_application::shutdown::is_host_closing`). They are not recorded as failures and are logged at information level. A helper that the close refused or ended has the timing outcome `interrupted`. A change that the close ended is logged at warning level, because its effect is unknown to the window.
+- **Next launch.** When the close ended changes before they reported, the window appends a payload-free record naming each change by its closed command identity to `cadrumo-close-outcomes.jsonl` in the root's log directory. The next window on that root asks once (`previous_close`) and says that the outcome of the change is unknown and should be checked before it is repeated. It then marks the record reported. A settled close writes nothing. The runtime journal stays the authority on each change's outcome; the record only remembers that the person was not told.
+
+Unchanged: admitted work is owned by the runtime and survives the client disconnecting. The window holds no journal of its own and never infers an outcome from a timeout.
+
+## Amendment 2026-11-02: dockable single-instance panels
+
+Accepted under the user's explicit CADRUMO-WINDOWMANAGER implementation request. Fixed main/agent/bottom placement becomes a default. Panels support tab groups, directional splits, swaps, expansion and floating presentation. Each existing panel has one mounted owner; moves never duplicate terminals, documentation or private work. Console, Python and Logs are individually dockable. Existing page navigation and unsaved-work guards remain authoritative.
+
+A versioned presentation tree validates identities, active tabs, ratios and floating geometry. Legacy preferences seed its default; no private data is stored. Fullscreen is transient and restores the prior arrangement. F11 is globally reserved; Escape exits fullscreen only when no nearer modal owns dismissal. Floating within the main window adds no host authority; additional native windows require a refinement of the main-window-only boundary. No new dependencies are introduced. This supersedes fixed placement only; localization, theme, profile gating and session lifetime remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.
+
+## Amendment 2026-11-20: typed background-task cues
+
+Basis: the operator authorised this amendment by demand on 2026-11-20, relayed by PRIME in the LEDGER-CLASSIFY brief. The decision is recorded in `2026-11-20-ledger-classify-queue-adr`, constraint 7. The status of this record is unchanged.
+
+- When a background job's backend record changes, the host sends the window a typed cue `{family, profile_id, job_id?, revision}` on one subscribed background-task channel.
+- `family` is a closed vocabulary, starting with `ledger_classification`. `revision` is the opaque revision the backend serves. The cue carries no private fact and grants nothing.
+- The window re-reads through the typed read operation, gated on revision. It also re-reads on subscribe and on window focus. No periodic polling is added.
+- The shell shows a background-task indicator. The window still holds no domain data: the indicator renders what the read returns.

@@ -39,6 +39,10 @@ modelo:
           gasto-importe-anual:
             label: Költségek összege
           gastos-total-declarante:
+            help: A bevallott költségkapcsolati rekordok költségösszegeinek (195–207.
+              pozíció) összege. Ha A BEVALLÓ JELLEGE mezőbe „S”-t írsz, nullákat adj
+              meg, és ne szerepeltess költségrekordot (Orden HAC/56/2024, 1. típusú
+              rekord, 220–234. pozíció).
             label: Levonható költségek (35/2006 törvény 26.1.a cikk)
           payee-base-retenciones-193:
             label: A levonások és adóelőlegek alapja

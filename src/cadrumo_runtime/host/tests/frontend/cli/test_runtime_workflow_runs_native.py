@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.workflow.persistence import load_run, save_run
 from cadrumo.application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -29,7 +28,7 @@ from cadrumo.application.workflow.run_read_operation import (
     WorkflowRunReadRequest,
 )
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import ObligationStatus
@@ -52,6 +51,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
@@ -71,20 +71,7 @@ _MISSING_ID = "b" * 16
 
 
 def _facts() -> dict[str, str]:
-    return {
-        "taxpayer_type.entity_type": "natural_person",
-        "identity.name": "Native",
-        "identity.surnames": "Workflow",
-        "activities.description": "consulting",
-        "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    }
+    return native_general_iva_facts()
 
 
 def _run(run_id: str, *, period: Period | None) -> WorkflowResult:

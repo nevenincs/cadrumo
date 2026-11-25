@@ -26,17 +26,20 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
 _FILED_HISTORY_OBSERVATION: Final = "filed_history_observation"
+LOCAL_CALCULATION_SOURCE_KIND: Final = "local_calculation"
+"""The source kind of a prior Modelo 303 the taxpayer calculated here and has not filed."""
 _REGISTRY_DERIVED_AUTHORITY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
-    {_FILED_HISTORY_OBSERVATION, "local_recurrence"}
+    {_FILED_HISTORY_OBSERVATION, "local_recurrence", LOCAL_CALCULATION_SOURCE_KIND}
 )
 _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
     {
@@ -51,12 +54,14 @@ type IvaCompensationAuthority = Literal[
     "taxpayer_override",
     "filed_history",
     "local_recurrence",
+    "local_calculation",
     "missing",
 ]
 type IvaCompensationAuthorityKind = Literal[
     "aeat_wallet",
     "local_recurrence",
     "filed_history_observation",
+    "local_calculation",
     "taxpayer_override",
 ]
 type IvaCompensationDivergence = Literal[
@@ -71,6 +76,7 @@ type IvaCompensationDivergence = Literal[
     "first_period_zero",
     "filed_history_zero",
     "local_recurrence_zero",
+    "local_calculation_only",
     "missing",
 ]
 
@@ -94,12 +100,30 @@ class IvaCompensationDecisionReason(StrEnum):
     AEAT_WALLET_VALIDATED = "aeat_wallet_validated"
     AEAT_WALLET_UNCROSSCHECKED = "aeat_wallet_uncrosschecked"
     CALLER_ZERO_MATCHES_LOCAL_AUTHORITY = "caller_zero_matches_local_authority"
+    LOCAL_CALCULATION_CALCULATION_GRADE = "local_calculation_calculation_grade"
+    LOCAL_CALCULATION_REFUND_UNDECIDED = "local_calculation_refund_undecided"
+    LOCAL_CALCULATION_REDEME_UNSTATED = "local_calculation_redeme_unstated"
+
+
+LOCAL_CALCULATION_REFUSALS: Final[frozenset[IvaCompensationDecisionReason]] = frozenset(
+    {
+        IvaCompensationDecisionReason.LOCAL_CALCULATION_REFUND_UNDECIDED,
+        IvaCompensationDecisionReason.LOCAL_CALCULATION_REDEME_UNSTATED,
+    }
+)
+"""Why a calculated, unfiled prior credit cannot be carried: the law leaves its refund open.
+
+LIVA art. 115 lets the year's last period, and every period of a REDEME
+filer, choose a refund instead of compensation; an unfiled calculation has
+made no choice, so its credit is not carried. An unstated REDEME inscription
+leaves the same question unanswered.
+"""
 
 
 class IvaCompensationOverride(BaseModel):
     """Explicit taxpayer override for Modelo 303 prior compensation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal = Field(ge=Decimal("0"))
     operator_explanation: str = Field(min_length=1, max_length=1024)
@@ -110,13 +134,13 @@ class IvaCompensationOverride(BaseModel):
 class IvaCompensationAuthoritySource(BaseModel):
     """One evidence source considered by an IVA compensation decision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: IvaCompensationAuthorityKind
     amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_locator: str = Field(min_length=1, max_length=1024)
     captured_at: UtcInstant | None = None
-    source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    source_modelo: str | None = Field(default=None, min_length=1, max_length=16)
     source_filing_year: FilingYear | None = None
     source_periods: tuple[Period, ...] = ()
     registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
@@ -144,7 +168,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
     safely drive the binding or whether review is required.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     target_year: FilingYear
@@ -233,7 +257,7 @@ def _validate_reconciliation_target(decision: IvaCompensationReconciliationDecis
         raise ValueError("target_period.filing_year must match target_year")
     target_ref = decision.target_registry_snapshot_ref
     if (
-        target_ref.modelo != "303"
+        target_ref.modelo != form_for_role("iva.periodic")
         or target_ref.modelo_year != decision.target_year
         or target_ref.period != decision.target_period.registry_token
     ):
@@ -401,8 +425,14 @@ def reconcile_iva_compensation_wallet(
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     is_first_iva_period: bool = False,
     local_evidence_found_but_unusable: bool = False,
+    local_calculation_refusal: IvaCompensationDecisionReason | None = None,
 ) -> IvaCompensationReconciliationDecision:
     """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``.
+
+    ``local_calculation_refusal`` is the caller's answer, from the refund rules
+    it resolved, to why a credit of a calculated, unfiled prior period cannot be
+    carried; it is one of :data:`LOCAL_CALCULATION_REFUSALS` and only read when
+    the recurrence source is such a calculation.
 
     ``local_evidence_found_but_unusable`` is a caller-asserted fact, in the same
     shape as ``is_first_iva_period``: the caller knows whether it FOUND a prior
@@ -418,6 +448,8 @@ def reconcile_iva_compensation_wallet(
             target_year=target_year,
             target_period=target_period,
         )
+    if local_calculation_refusal is not None and local_calculation_refusal not in LOCAL_CALCULATION_REFUSALS:
+        raise ValueError(f"{local_calculation_refusal.value!r} is no local-calculation refusal")
     local_recurrence_source = _resolve_local_recurrence_source(
         local_recurrence_amount=local_recurrence_amount,
         local_recurrence_source=local_recurrence_source,
@@ -443,6 +475,7 @@ def reconcile_iva_compensation_wallet(
         is_first_iva_period=is_first_iva_period,
         local_recurrence_source=local_recurrence_source,
         local_evidence_found_but_unusable=local_evidence_found_but_unusable,
+        local_calculation_refusal=local_calculation_refusal,
     )
 
 
@@ -511,6 +544,7 @@ def _reconcile_context(
     is_first_iva_period: bool,
     local_recurrence_source: IvaCompensationAuthoritySource | None,
     local_evidence_found_but_unusable: bool,
+    local_calculation_refusal: IvaCompensationDecisionReason | None,
 ) -> IvaCompensationReconciliationDecision:
     if ctx.override is not None:
         return _override_reconciliation_decision(ctx)
@@ -519,6 +553,9 @@ def _reconcile_context(
         first_period_decision = _first_period_zero_decision(ctx)
         if first_period_decision is not None:
             return first_period_decision
+
+    if ctx.wallet_amount is None and _is_local_calculation_source(local_recurrence_source):
+        return _local_calculation_decision(ctx, refusal=local_calculation_refusal)
 
     if ctx.wallet_amount is None:
         return _missing_wallet_decision(
@@ -710,6 +747,35 @@ def _missing_wallet_decision(
     )
 
 
+def _local_calculation_decision(
+    ctx: _ReconciliationContext,
+    *,
+    refusal: IvaCompensationDecisionReason | None,
+) -> IvaCompensationReconciliationDecision:
+    """Carry a calculated, unfiled prior period's credit at calculation grade, or refuse it with ``refusal``.
+
+    The amount is the taxpayer's own calculation, neither AEAT's wallet nor a
+    filed declaration, so verification, filing and export refuse it until one
+    of those exists; ``local_calculation_only`` names that state.
+    """
+    amount = ctx.local_recurrence_amount
+    if amount is None:
+        raise ValueError("a local-calculation decision requires the amount the prior calculation carries")
+    return _decision(
+        ctx,
+        selected_authority="local_calculation",
+        selected_amount=amount,
+        wallet_amount=None,
+        local_recurrence_amount=amount,
+        override_amount=None,
+        divergence="local_calculation_only",
+        blocked=refusal is not None,
+        stale_wallet=False,
+        reason_identity=refusal or IvaCompensationDecisionReason.LOCAL_CALCULATION_CALCULATION_GRADE,
+        wallet_captured_at=None,
+    )
+
+
 def _stale_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconciliationDecision:
     if ctx.wallet_amount is None:
         raise ValueError("a stale-wallet decision requires the wallet amount whose capture went stale")
@@ -833,6 +899,10 @@ def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> b
     return source is not None and source.source_kind == _FILED_HISTORY_OBSERVATION
 
 
+def _is_local_calculation_source(source: IvaCompensationAuthoritySource | None) -> bool:
+    return source is not None and source.source_kind == LOCAL_CALCULATION_SOURCE_KIND
+
+
 def local_recurrence_authority_source(
     recurrence: LocalIvaCompensationRecurrenceProtocol | None,
 ) -> IvaCompensationAuthoritySource | None:
@@ -849,7 +919,11 @@ def local_recurrence_authority_source(
         getattr(recurrence, "source_locator", None) or f"binding:{binding_id}",
     )
     source_kind: IvaCompensationAuthorityKind = (
-        _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
+        _FILED_HISTORY_OBSERVATION
+        if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS
+        else LOCAL_CALCULATION_SOURCE_KIND
+        if recurrence.source_kind == LOCAL_CALCULATION_SOURCE_KIND
+        else "local_recurrence"
     )
     return IvaCompensationAuthoritySource(
         source_kind=source_kind,
@@ -906,6 +980,8 @@ def is_wallet_stale(
 
 __all__ = [
     "DEFAULT_MAX_WALLET_AGE_DAYS",
+    "LOCAL_CALCULATION_REFUSALS",
+    "LOCAL_CALCULATION_SOURCE_KIND",
     "IvaCompensationAuthority",
     "IvaCompensationAuthorityKind",
     "IvaCompensationAuthoritySource",

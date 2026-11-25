@@ -13,12 +13,17 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from datetime import date
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_profile_backend_fixture
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,7 +46,7 @@ def _add_row() -> str:
             "ledger",
             "add",
             "--date",
-            "2026-03-01",
+            date(_YEAR, 3, 1).isoformat(),
             "--amount",
             "49.99",
             "--direction",

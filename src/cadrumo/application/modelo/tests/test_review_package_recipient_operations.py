@@ -17,13 +17,18 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import review_package_recipient_operations as operation
 from ..review_package_recipient_registry import (
@@ -40,7 +45,7 @@ from ..review_package_recipient_registry_ports import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 4, 10, 9, 0, tzinfo=UTC)
 
 
 class _Registry:
@@ -119,7 +124,7 @@ def _record(recipient_id: str, *, key: str | None = None, label: str = "Accounta
 def _factories(
     registry: _Registry,
 ) -> tuple[
-    operation._RecipientPorts,
+    operation.RecipientPorts,
     list[tuple[str, object]],
 ]:
     ports = RecipientFingerprintRegistryPorts(
@@ -136,7 +141,7 @@ def _factories(
         return cast(BucketEventHistoryRepositoryProtocol, object())
 
     return (
-        operation._RecipientPorts(
+        operation.RecipientPorts(
             registry_factory=registry_factory,
             event_repository_factory=cast(BucketEventHistoryRepositoryFactory, event_factory),
         ),
@@ -228,7 +233,7 @@ async def test_add_commits_registry_and_audit_then_releases_complete_row(monkeyp
         OperationEffect.UPDATED,
     ]
     assert audit_calls[0][0] == "registered"
-    assert isinstance(recorder.operand, operation._RecipientAddExecutionResult)
+    assert isinstance(recorder.operand, operation.RecipientAddExecutionResult)
     assert recorder.operand.result.recipient.public_key_hex == key
     assert recorder.operand.result.recipient.fingerprint_sha256 == registry.register.records[0].fingerprint_sha256
 
@@ -337,7 +342,7 @@ async def test_list_is_complete_sorted_and_discloses_the_full_registered_record(
     assert returned == "a" * 64
     assert registry.saves == 0
     assert recorder.effects == [OperationEffect.NONE]
-    assert isinstance(recorder.operand, operation._RecipientListExecutionResult)
+    assert isinstance(recorder.operand, operation.RecipientListExecutionResult)
     projection = recorder.operand.result
     assert projection.count == 2
     assert [row.recipient_id for row in projection.recipients] == ["alpha", "zulu"]
@@ -435,7 +440,7 @@ def test_result_projector_requires_successful_exact_effect_receipt() -> None:
         profile_id=_PROFILE,
         recipient=operation.ReviewPackageRecipientProjection.from_record(row),
     )
-    private = operation._RecipientAddExecutionResult(profile_id=_PROFILE, result=projection)
+    private = operation.RecipientAddExecutionResult(profile_id=_PROFILE, result=projection)
     identity = OperationIdentity(
         operation_id="a" * 64,
         definition_id=operation.REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID,

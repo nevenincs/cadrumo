@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import override
 from uuid import UUID, uuid4
 
@@ -15,7 +16,8 @@ from cadrumo.application.modelo.revision_selection_operation import (
 )
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.cli.operation_modelo_verification import read_modelo_work_revision
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
@@ -33,7 +35,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _contract() -> OperationPublicDefinitionContractV1:
     def unavailable_repositories(
-        _profile_id: str, *, operation: PinnedAuthorityOperation
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> VerificationRepositoryBundle:
         raise AssertionError("public contract construction must not open profile repositories")
 

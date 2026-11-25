@@ -31,18 +31,21 @@ from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.profile_session import ProfileSessionRefusalReason
-from ...core.time.clock import now as _now
+from ...core.time.clock import wall_now
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
 from .custody_ports import (
-    ProfileCustodyPasswordMaterialPort,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
+    profile_custody_password_replacement_pending,
     profile_is_keyring_unavailable,
     refuse_profile_login_without_password_channel,
+    resolve_profile_custody_password_replacement,
     unlock_profile_custody_password,
 )
+from .custody_record_ports import ProfileCustodyPasswordMaterialPort
+from .custody_repository import profile_custody_transaction_lock
 from .language_resolver import refresh_active_profile_output_language
 from .login_session_port import (
     ProfileBucketSessionPort,
@@ -59,6 +62,7 @@ from .profile_record_repository import (
     bind_active_profile_record_session,
     close_active_profile_record_session,
 )
+from .proof_cancellation import ProfileProofCancellation
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -121,6 +125,8 @@ class ProfileLoginCandidate:
 
     outcome: ProfileLoginOutcome
     session: ProfileBucketSessionPort = field(repr=False)
+    proven_envelope_digest: str | None = None
+    """Self-digest of the password envelope a password proof opened; ``None`` for a resumed receipt."""
     _publish_receipt: (
         Callable[[str, ProfileAccessBinding, ProfileSignInGenerationPort, Callable[[bytearray], None] | None], bool]
         | None
@@ -169,7 +175,7 @@ def _bucket_session_windows() -> tuple[int, int]:
     )
 
 
-def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
+def revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
     """Delete receipt bytes and keychain material for journalled custody removal.
 
     The custody transaction fences the durable human generation first. This
@@ -219,7 +225,7 @@ def remove_profile_session_acceleration_for_custody_delete(
     path = _profile_login_sessions().acceleration_receipt_path(storage_root=storage_root, profile_id=UUID(bucket_id))
     was_present = os.path.lexists(path)
     close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
-    _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+    revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
     _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
     if os.path.lexists(path):
         raise UserProfileError(
@@ -261,11 +267,12 @@ def publish_created_profile_session(
         dek: The unlocked data-encryption key the create span established.
             Copied into the session's own buffer; the caller keeps ownership
             of the bytes it passed.
-        now: UTC evaluation instant; the canonical clock when omitted.
+        now: UTC evaluation instant; the wall clock when omitted, so a
+            frozen document clock never dates the session's deadlines.
         profile_decode_context: Decode context of the pinned authority
             operation the registration ran under.
     """
-    instant = _now() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     idle_minutes, absolute_minutes = _bucket_session_windows()
     absolute_deadline = instant + timedelta(minutes=absolute_minutes)
@@ -366,6 +373,8 @@ def authenticate_profile_candidate(
     passphrase_callback: Callable[[], str],
     profile_decode_context: ProfileDecodeContext,
     now: datetime | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> Generator[ProfileLoginCandidate]:
     """Prove an exact profile without replacing another connection's live custody.
 
@@ -373,7 +382,9 @@ def authenticate_profile_candidate(
     No active pointer, process binding, acceleration receipt or human session is
     published here. Only the runtime authority can promote the borrowed result.
     """
-    instant = _now() if now is None else now
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(str(bucket_id))
     if target.bucket_id != str(bucket_id):
@@ -384,6 +395,8 @@ def authenticate_profile_candidate(
         now=instant,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
+        timeout_deadline=timeout_deadline,
+        cancellation=cancellation,
     )
     try:
         yield ProfileLoginCandidate(
@@ -398,6 +411,7 @@ def authenticate_profile_candidate(
                 closed_previous_bucket_id=None,
             ),
             session=candidate.session,
+            proven_envelope_digest=candidate.material.envelope.self_digest,
             _publish_receipt=lambda login_id, binding, sign_in, retain_sealing_key: _persist_candidate_receipt(
                 candidate,
                 storage_root=storage_root,
@@ -413,7 +427,7 @@ def authenticate_profile_candidate(
 
 def _require_live_receipt_candidate(session: ProfileBucketSessionPort) -> None:
     """Refuse retired or expired proof, including time spent acquiring custody."""
-    instant = _now()
+    instant = wall_now()
     if session.sealed or instant < session.opened_at:
         raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
     if instant >= session.absolute_deadline:
@@ -472,7 +486,7 @@ def authenticate_profile_for_invocation(
     It closes a displaced local session because this process holds one profile's
     custody at a time. The returned outcome is always process-scoped.
     """
-    instant = _now() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(name)
     candidate = _authenticate_unthrottled_candidate(
@@ -511,6 +525,8 @@ def _authenticate_unthrottled_candidate(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> _CandidateProfileLogin:
     """Refuse a throttled profile, prove the password, then clear its failure count.
 
@@ -519,12 +535,15 @@ def _authenticate_unthrottled_candidate(
     evaluation = _profile_login_sessions().evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
     if evaluation.throttled:
         raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+    _settle_password_replacement(UUID(bucket_id), storage_root=storage_root)
     candidate = _authenticate_candidate_or_record_failure(
         bucket_id=bucket_id,
         storage_root=storage_root,
         now=now,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
+        timeout_deadline=timeout_deadline,
+        cancellation=cancellation,
     )
     try:
         _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
@@ -532,6 +551,20 @@ def _authenticate_unthrottled_candidate(
         candidate.close()
         raise
     return candidate
+
+
+def _settle_password_replacement(profile_id: UUID, *, storage_root: Path) -> None:
+    """Settle a password replacement a crash left in flight, before the envelope is read.
+
+    The probe takes no lock, so an ordinary sign-in never waits on the custody
+    lock. An intent found by it is settled under that lock; one that appears
+    after the probe belongs to a replacement still running, which fences
+    human sign-in itself.
+    """
+    if not profile_custody_password_replacement_pending(profile_id, root=storage_root):
+        return
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        resolve_profile_custody_password_replacement(profile_id, root=storage_root)
 
 
 def _resolve_login_password(callback: Callable[[], str] | None) -> str:
@@ -551,12 +584,20 @@ def _authenticate_candidate_or_record_failure(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     password = _resolve_login_password(passphrase_callback)
     try:
-        unlocked = unlock_profile_custody_password(material, password=password)
+        unlocked = unlock_profile_custody_password(
+            material, password=password, timeout_deadline=timeout_deadline, cancellation=cancellation
+        )
     except BaseException as exc:
         refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
         if refusal is not None:

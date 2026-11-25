@@ -25,6 +25,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     ordered_disclosures,
     summarize_disclosures,
 )
+from cadrumo_client.contracts.enrollment_proposal import GrantLabel
 from cadrumo_client.contracts.session_policy import evaluate_session_authority
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -56,6 +57,7 @@ class PublicAutomationGrant(BaseModel):
     expires_at: UtcInstant
     unattended: bool
     allow_os_lock: bool
+    label: GrantLabel | None = None
 
 
 class PublicApiKey(BaseModel):
@@ -101,6 +103,7 @@ def project_automation_grant(grant: AutomationGrant) -> PublicAutomationGrant:
         expires_at=grant.expires_at,
         unattended=grant.unattended,
         allow_os_lock=grant.allow_os_lock,
+        label=grant.label,
     )
 
 

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import runpy
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -14,7 +16,8 @@ from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFami
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
-from dev._paths import REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from dev.paths import REPO_ROOT
 
 from ..analysis.facts_catalogue_quality import (
     FactQualityKind,
@@ -29,6 +32,8 @@ from ..conformance.loader_directory_mode_support import write_minimal_shared_cat
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _provider(provider_id: str, directory: str) -> FactProviderRegistration:
@@ -81,7 +86,7 @@ def _variant(
 
 def test_clean_facts_provider_catalogue_has_no_findings() -> None:
     provider = _provider("authored", "facts")
-    fact = _fact("iva-rate", _variant("ordinary", date(2025, 1, 1)))
+    fact = _fact("iva-rate", _variant("ordinary", date(_YEAR, 1, 1)))
 
     assert facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",)) == ()
 
@@ -90,16 +95,16 @@ def test_complete_legal_only_and_source_only_provenance_lanes_are_accepted() -> 
     provider = _provider("authored", "facts")
     legal_only = _fact(
         "legal-only",
-        _variant("legal", date(2025, 1, 1), source_refs=(), citation_refs=()),
+        _variant("legal", date(_YEAR, 1, 1), source_refs=(), citation_refs=()),
     )
     source_only_variant = (
-        _fact("source-only", _variant("source", date(2025, 1, 1)))
+        _fact("source-only", _variant("source", date(_YEAR, 1, 1)))
         .variants[0]
         .model_copy(
             update={"legal_refs": ()},
         )
     )
-    source_only = _fact("source-only", _variant("source", date(2025, 1, 1))).model_copy(
+    source_only = _fact("source-only", _variant("source", date(_YEAR, 1, 1))).model_copy(
         update={"variants": (source_only_variant,)},
     )
 
@@ -115,7 +120,7 @@ def test_complete_legal_only_and_source_only_provenance_lanes_are_accepted() -> 
 
 def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
     provider = _provider("authored", "facts")
-    base = _fact("broken", _variant("broken", date(2025, 1, 1)))
+    base = _fact("broken", _variant("broken", date(_YEAR, 1, 1)))
     variant = base.variants[0]
     neither = base.model_copy(
         update={
@@ -124,7 +129,7 @@ def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
     )
     partial = _fact(
         "partial",
-        _variant("partial", date(2025, 1, 1), source_refs=("aeat-source",), citation_refs=()),
+        _variant("partial", date(_YEAR, 1, 1), source_refs=("aeat-source",), citation_refs=()),
     )
     mismatched = base.model_copy(
         update={
@@ -156,8 +161,8 @@ def test_provider_ownership_and_compilation_identity_bite() -> None:
 def test_fact_and_variant_identity_are_global_across_providers() -> None:
     first = _provider("first", "facts/a")
     second = _provider("second", "facts/b")
-    left = _fact("same-fact", _variant("same-variant", date(2025, 1, 1)))
-    right = _fact("same-fact", _variant("same-variant", date(2026, 1, 1)))
+    left = _fact("same-fact", _variant("same-variant", date(_YEAR, 1, 1)))
+    right = _fact("same-fact", _variant("same-variant", date(_YEAR + 1, 1, 1)))
 
     findings = facts_catalogue_findings((first, second), {"first": (left,), "second": (right,)}, ("facts/a", "facts/b"))
 
@@ -171,13 +176,13 @@ def test_overlapping_same_coordinate_requires_explicit_acyclic_precedence() -> N
     provider = _provider("authored", "facts")
     ambiguous = _unvalidated_fact(
         "iva-rate",
-        _variant("ordinary", date(2025, 1, 1)),
-        _variant("override", date(2025, 6, 1), date(2025, 6, 30)),
+        _variant("ordinary", date(_YEAR, 1, 1)),
+        _variant("override", date(_YEAR, 6, 1), date(_YEAR, 6, 30)),
     )
     ordered = _fact(
         "iva-rate",
-        _variant("ordinary", date(2025, 1, 1)),
-        _variant("override", date(2025, 6, 1), date(2025, 6, 30), precedence_over=("ordinary",)),
+        _variant("ordinary", date(_YEAR, 1, 1)),
+        _variant("override", date(_YEAR, 6, 1), date(_YEAR, 6, 30), precedence_over=("ordinary",)),
     )
 
     assert {item.kind for item in facts_catalogue_findings((provider,), {"authored": (ambiguous,)}, ("facts",))} == {
@@ -186,12 +191,80 @@ def test_overlapping_same_coordinate_requires_explicit_acyclic_precedence() -> N
     assert facts_catalogue_findings((provider,), {"authored": (ordered,)}, ("facts",)) == ()
 
 
+def _filing_variant(
+    variant_id: str,
+    period_selector: dict[str, object],
+    *,
+    precedence_over: tuple[str, ...] = (),
+) -> dict[str, object]:
+    variant = _variant(variant_id, date(_YEAR, 1, 1), precedence_over=precedence_over)
+    return {**variant, "date_axis": "filing_period", "period_selector": period_selector}
+
+
+def test_variants_no_filing_period_selects_together_need_no_precedence() -> None:
+    """Quarterly and monthly clauses of one modelo share a window but never one query."""
+    provider = _provider("authored", "facts")
+    fact = _fact(
+        "filing-window",
+        _filing_variant("quarterly", {"year_from": _YEAR, "periods": ("1T", "2T", "3T")}),
+        _filing_variant("fourth-quarter", {"year_from": _YEAR, "periods": ("4T",)}),
+        _filing_variant(
+            "monthly",
+            {"year_from": _YEAR, "periods": ("01", "02"), "period_overrides": ({"year": _YEAR, "periods": ("02",)},)},
+        ),
+        _filing_variant("january-transition", {"years": (_YEAR,), "periods": ("01",)}),
+    )
+
+    assert facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",)) == ()
+
+
+def test_variants_one_filing_period_selects_together_still_need_precedence() -> None:
+    provider = _provider("authored", "facts")
+    shared_quarter = _unvalidated_fact(
+        "filing-window",
+        _filing_variant("general", {"year_from": _YEAR, "periods": ("1T", "2T")}),
+        _filing_variant("second-quarter", {"year_from": _YEAR, "periods": ("2T",)}),
+    )
+    # The override removes 01 only in the first year; every later year serves it again.
+    later_year = _unvalidated_fact(
+        "filing-window",
+        _filing_variant(
+            "monthly",
+            {"year_from": _YEAR, "periods": ("01", "02"), "period_overrides": ({"year": _YEAR, "periods": ("02",)},)},
+        ),
+        _filing_variant("january", {"year_from": _YEAR, "periods": ("01",)}),
+    )
+
+    for fact in (shared_quarter, later_year):
+        assert {item.kind for item in facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",))} == {
+            FactQualityKind.TEMPORAL_AMBIGUITY
+        }
+
+
+def test_precedence_between_period_disjoint_variants_is_rejected() -> None:
+    provider = _provider("authored", "facts")
+    fact = _unvalidated_fact(
+        "filing-window",
+        _filing_variant("quarterly", {"year_from": _YEAR, "periods": ("1T",)}, precedence_over=("monthly",)),
+        _filing_variant("monthly", {"year_from": _YEAR, "periods": ("01",)}),
+    )
+
+    findings = facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",))
+
+    assert {finding.kind for finding in findings} == {FactQualityKind.INVALID_PRECEDENCE}
+
+
+def test_the_live_registry_resolves_every_variant_without_findings() -> None:
+    """The bundled registry, period-selected deadline clauses included, passes the whole gate."""
+    assert live_facts_catalogue_findings(REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat") == ()
+
+
 def test_cycles_and_precedence_between_disjoint_windows_are_rejected() -> None:
     provider = _provider("authored", "facts")
     fact = _unvalidated_fact(
         "iva-rate",
-        _variant("old", date(2024, 1, 1), date(2024, 12, 31), precedence_over=("new",)),
-        _variant("new", date(2025, 1, 1), precedence_over=("old",)),
+        _variant("old", date(_YEAR - 1, 1, 1), date(_YEAR - 1, 12, 31), precedence_over=("new",)),
+        _variant("new", date(_YEAR, 1, 1), precedence_over=("old",)),
     )
 
     findings = facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",))
@@ -203,7 +276,7 @@ def test_every_declared_source_requires_a_citation() -> None:
     provider = _provider("authored", "facts")
     fact = _fact(
         "iva-rate",
-        _variant("ordinary", date(2025, 1, 1), source_refs=("aeat-source", "aeat-uncited")),
+        _variant("ordinary", date(_YEAR, 1, 1), source_refs=("aeat-source", "aeat-uncited")),
     )
 
     findings = facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",))
@@ -212,10 +285,10 @@ def test_every_declared_source_requires_a_citation() -> None:
 
 
 def test_applicable_resolved_fact_without_provenance_is_rejected() -> None:
-    fact = _fact("iva-rate", _variant("ordinary", date(2025, 1, 1)))
+    fact = _fact("iva-rate", _variant("ordinary", date(_YEAR, 1, 1)))
     resolved = resolve_governed_fact(
         GovernedFactCatalogue(facts={fact.fact_id: fact}),
-        ScalarFactQuery(fact_id=fact.fact_id, date_axis="transaction_date", effective_date=date(2025, 1, 1)),
+        ScalarFactQuery(fact_id=fact.fact_id, date_axis="transaction_date", effective_date=date(_YEAR, 1, 1)),
         authority_digest="a" * 64,
         support=committed_supported_filing_years(),
     ).model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()})
@@ -285,14 +358,14 @@ def _declare_supported_years(registry_root: Path) -> None:
     """Give a temporary registry the shared catalogues every live gate resolves against."""
     legal = registry_root / "legal"
     legal.mkdir(parents=True, exist_ok=True)
-    write_minimal_shared_catalogues(legal, floor=2025, horizon=2025)
+    write_minimal_shared_catalogues(legal, floor=_YEAR, horizon=_YEAR)
 
 
 def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    projected = _fact("modelo-projection", _variant("projected", date(2025, 1, 1)))
+    projected = _fact("modelo-projection", _variant("projected", date(_YEAR, 1, 1)))
     provider = FactProviderRegistration(
         provider_id="projection-provider",
         owned_directories=(),
@@ -337,7 +410,7 @@ def test_live_gate_compiles_every_registered_provider_and_uses_its_directory_den
 
     def compile_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
         calls.append(registry_root)
-        return (_fact("iva-rate", _variant("ordinary", date(2025, 1, 1))),)
+        return (_fact("iva-rate", _variant("ordinary", date(_YEAR, 1, 1))),)
 
     provider = FactProviderRegistration(
         provider_id="live-provider",
@@ -375,3 +448,35 @@ def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
         lambda _root: findings,
     )
     assert main(["--registry-root", str(tmp_path)]) == 1
+
+
+def test_the_module_entry_point_runs_the_gate_to_its_verdict(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``python -m`` executes the module top to bottom, so every helper must exist before the guard calls main."""
+
+    def broken_compile(registry_root: Path) -> tuple[GovernedFact, ...]:
+        raise ValueError("broken catalogue")
+
+    provider = FactProviderRegistration(
+        provider_id="broken-provider",
+        owned_directories=("facts",),
+        compile=broken_compile,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+    _declare_supported_years(tmp_path)
+    monkeypatch.setattr("dev.registry.compiler.fact_providers.FACT_PROVIDER_REGISTRATIONS", (provider,))
+    monkeypatch.setattr(sys, "argv", ["facts_catalogue_quality", "--registry-root", str(tmp_path)])
+
+    with pytest.raises(SystemExit) as exited:
+        runpy.run_module("dev.registry.analysis.facts_catalogue_quality", run_name="__main__")
+
+    assert exited.value.code == 1
+    assert capsys.readouterr().out.splitlines() == [
+        "invalid_provider provider=broken-provider fact= variant= detail=compile failed: ValueError: broken catalogue",
+        "invalid_provider provider=broken-provider fact= variant= "
+        "detail=registered provider has no compiled facts result",
+    ]

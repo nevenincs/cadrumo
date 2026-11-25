@@ -15,12 +15,15 @@ from pydantic import ValidationError
 
 from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import NoRecoveryOutcome
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import LLMValidationError
 from ..models import LLMRequest, LLMResponse, PromptDefinition
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 30, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 30, 0, tzinfo=UTC)
 
 
 def test_llm_request_round_trip() -> None:

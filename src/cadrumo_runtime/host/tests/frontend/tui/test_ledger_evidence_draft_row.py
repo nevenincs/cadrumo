@@ -34,17 +34,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _EVIDENCE_ID = "8747cbf318cf0adb"
 
-_BUSY = LabelReadingFallback(
-    cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+_DEGRADED = LabelReadingFallback(
+    cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
     unread_fields=("supplier_name",),
-    reader_error_type="LLMBusyError",
-    failed_condition_id="llm.local_inference.slot_available",
+    reader_error_type="LLMContentionError",
+    failed_condition_id="llm.agent.model_run_completed",
 )
 
 
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B92000082",
+        supplier_tax_id="B00015081",
         invoice_number="T-0042-2026",
         invoice_date="2026-02-14",
         taxable_base=Decimal("60.00"),
@@ -68,9 +68,9 @@ def _projection(fallback: LabelReadingFallback | None) -> LedgerEvidenceExtractP
 
 
 def test_the_draft_row_carries_the_degraded_reading_to_the_screen() -> None:
-    row = RuntimeEvidenceTuiDoorV1._draft(_projection(_BUSY), evidence_id=_EVIDENCE_ID)
+    row = RuntimeEvidenceTuiDoorV1._draft(_projection(_DEGRADED), evidence_id=_EVIDENCE_ID)
 
-    assert row.label_reading_fallback == _BUSY
+    assert row.label_reading_fallback == _DEGRADED
     with override_settings(cadrumo_output_language="en"):
         assert "supplier_name" in draft_lines(row)[-1]
 

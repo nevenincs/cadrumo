@@ -7,8 +7,8 @@ related:
   - "[[2026-06-30-agent-harness-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
 superseded_by: '2026-07-02-agent-harness-refoundation-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:08bda602d7df1d1fd7bde06dcf32e64fb4ca408b2b02704971601a53001dfd7c'
+modified: '2026-10-29'
+body_hash: 'sha256:737c0b7a9a4f1daf0c116ee50c9f5369e252dd788a788c14b8d3ec4b29661369'
 ---
 # `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `superseded`)
 
@@ -71,7 +71,7 @@ not collide with it, and must not be authored as hand-edited files inside a
 sync-regenerated provider directory. Third, the accepted product-packaging model ships a
 self-contained wheel: reviewed product data lives under `src/aeat/_data` and
 resolves through `importlib.resources`, optional integrations are capability-
-gated extras that lazily import and degrade with an install hint, and
+gated extras that lazily import and degrade with a typed refusal naming the extra, and
 credentials/model-weights/runtime caches never ship.
 
 **The persona testimonial harness is the negative inverse, not a template.** The

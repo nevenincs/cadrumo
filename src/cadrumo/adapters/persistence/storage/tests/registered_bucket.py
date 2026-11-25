@@ -81,7 +81,7 @@ def publish_registration_capsule(root: Path, bucket_id: str) -> None:
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=CAPSULE_DEK),
         data_files={},
-        settings=Settings(cadrumo_local_storage_root=root),
+        settings=Settings(cadrumo_storage_root=root),
     )
 
 

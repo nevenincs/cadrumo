@@ -24,13 +24,19 @@ from ...core.time.clock import now
 
 if TYPE_CHECKING:
     from ...core.secure_object_write import SecureObjectWrite
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ...domain.buckets.event import (
+    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -38,6 +44,7 @@ from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
+from ...domain.transactions.withheld_figures import withheld_figures, withheld_figures_event_entries
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence
@@ -149,6 +156,19 @@ def require_actor(value: str, *, operation: str) -> str:
     if not trimmed:
         raise TransactionValidationError(f"{operation} actor must not be blank")
     return trimmed
+
+
+def require_recordable_reason(value: str, *, operation: str) -> None:
+    """Refuse a reason its bucket event could not record, before anything is loaded or written.
+
+    A request may be wider than the event: left to the event's own bound, the refusal
+    comes while the commit is under way, after a preview said the same reason was fine.
+    """
+    if len(value.strip()) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+        raise TransactionValidationError(
+            f"{operation} reason is longer than the {BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH} characters an event takes",
+            context={"reason_length": str(len(value.strip()))},
+        )
 
 
 def require_source_command(value: str, *, operation: str) -> str:
@@ -385,10 +405,6 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
       provider identity, effective value date, amount, and narrative only, so an
       evidence-only edit re-derives the SAME id. A finalized revision's
       ``source_transaction_ids`` citation therefore keeps resolving.
-    * The ledger filing snapshot's fingerprint field set (the canonical
-      "tax facts" of a row) reads neither evidence field, so ``row_fingerprint``
-      and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
-      :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
     * A finalized revision's casilla values and bundled ledger evidence are frozen
       persisted snapshots; this write touches the transaction catalogue alone.
 
@@ -403,10 +419,11 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     takes the row's base and cuota from the invoice and counts an incoming row
     as a refund, which is why the link is one of
     :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
-    The fingerprint does not read it, so a sealed revision does not turn stale
-    by itself. The attach is admitted anyway, and the caller reports the cited
-    revisions as stale so the operator recalculates, rather than silently
-    accepting the write. A supplementary attachment feeds no calculation.
+    From fingerprint field-set version 5 the link is hashed, so a revision sealed
+    under that version reads as stale after the attach, which is true. The attach
+    is admitted anyway, and the caller reports the cited revisions as stale so the
+    operator recalculates, rather than silently accepting the write. A
+    supplementary attachment feeds no calculation and stays unhashed.
     """
     differing = set(ledger_values_differing_from_stored(command, current))
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
@@ -422,8 +439,8 @@ def ledger_values_differing_from_stored(
     to a stored ``500.00``. So this can show that a command is a changed write,
     and cannot show that the row it would store is the row that is stored.
     """
-    command_fields = _command_idempotency_fields(command)
-    current_fields = _transaction_idempotency_fields(current)
+    command_fields = command_idempotency_fields(command)
+    current_fields = transaction_idempotency_fields(current)
     return tuple(
         sorted(
             name for name, value in command_fields.items() if name != "classified_by" and current_fields[name] != value
@@ -475,7 +492,7 @@ def verify_evidence_references(
     *,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
-    attachment_store: _AttachmentStoreProtocol | None,
+    attachment_store: AttachmentStoreProtocol | None,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
@@ -489,8 +506,8 @@ def verify_evidence_references(
 
 
 def resolve_attachment_store(
-    attachment_store: _AttachmentStoreProtocol | None,
-) -> _AttachmentStoreProtocol:
+    attachment_store: AttachmentStoreProtocol | None,
+) -> AttachmentStoreProtocol:
     """Require the attachment store selected by the outer composition root."""
     return require_repository(attachment_store, reason="the ledger attachment verification path")
 
@@ -558,7 +575,7 @@ def _verify_attachment_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
-    attachment_store: _AttachmentStoreProtocol | None,
+    attachment_store: AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
     store = resolve_attachment_store(attachment_store)
@@ -576,7 +593,7 @@ def _verify_single_attachment(
     *,
     command: ManualLedgerTransactionCommand,
     transaction_id: str,
-    store: _AttachmentStoreProtocol,
+    store: AttachmentStoreProtocol,
 ) -> None:
     try:
         attachment = store.load_manifest(attachment_id)
@@ -606,6 +623,7 @@ def verify_usage_ratio_reference(
     command: ManualLedgerTransactionCommand,
     *,
     usage_ratio_profile: UsageRatioProfile | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     if command.usage_ratio_id is None:
         return
@@ -616,6 +634,8 @@ def verify_usage_ratio_reference(
             category_id=command.category_id,
             usage_ratio_id=command.usage_ratio_id,
             business_pct=command.business_pct,
+            year=command.booked_date.year,
+            operation=operation,
         )
     except UsageRatioValidationError as exc:
         raise TransactionValidationError(
@@ -725,7 +745,7 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     from here is therefore not merely uncompared — an edit touching ONLY that
     field is rejected and the operator's correction is dropped.
 
-    It must stay key-for-key with :func:`_transaction_idempotency_fields`, minus
+    It must stay key-for-key with :func:`transaction_idempotency_fields`, minus
     ``classified_by`` alone. That exclusion is deliberate: ``classified_by`` is
     provenance a write stamps, not a value the operator set, so comparing it
     would make every re-classification look like a change and defeat the guard.
@@ -741,6 +761,8 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     return (
         raw.booked_date,
         raw.value_date,
+        transaction.operation_date,
+        transaction.accrual_date,
         raw.amount,
         raw.currency,
         raw.counterparty,
@@ -754,8 +776,15 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.iva_rate,
         transaction.iva_amount,
         transaction.iva_category,
+        transaction.exemption_article,
         transaction.deduction_fact_kind,
         transaction.investment_asset_id,
+        transaction.iva_vehicle_use,
+        transaction.arrendamiento_ref,
+        transaction.inmueble_ref,
+        transaction.gasto_capital_inmobiliario,
+        transaction.posicion_ref,
+        transaction.concepto_capital_mobiliario,
         transaction.recargo_amount,
         transaction.counterparty_country,
         transaction.counterparty_identification_state,
@@ -808,13 +837,13 @@ def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
     return command.classified_by_override or CLASSIFIED_BY_MANUAL
 
 
-def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
+def command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
     """Project every persisted field of ``command`` into a name-keyed mapping.
 
     The full-field idempotency contract (``aeat-cli-contract``)
     requires the no-op match to compare EVERY persisted field. Keeping the field set as one
     ordered mapping makes a new model field omitted here a single greppable site, paired with
-    :func:`_transaction_idempotency_fields` key-for-key.
+    :func:`transaction_idempotency_fields` key-for-key.
 
     The mapping is the single source for both consumers:
     :func:`_command_idempotency_projection` folds it to the positional tuple the
@@ -842,6 +871,8 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
     return {
         "booked_date": command.booked_date,
         "value_date": command.value_date,
+        "operation_date": command.operation_date,
+        "accrual_date": command.accrual_date,
         "amount": command.amount,
         "currency": command.currency,
         "counterparty": command.counterparty,
@@ -854,8 +885,15 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "iva_rate": command.iva_rate,
         "iva_amount": command.iva_amount,
         "iva_category": command.iva_category,
+        "exemption_article": command.exemption_article,
         "deduction_fact_kind": command.deduction_fact_kind,
         "investment_asset_id": command.investment_asset_id,
+        "iva_vehicle_use": command.iva_vehicle_use,
+        "arrendamiento_ref": command.arrendamiento_ref,
+        "inmueble_ref": command.inmueble_ref,
+        "gasto_capital_inmobiliario": command.gasto_capital_inmobiliario,
+        "posicion_ref": command.posicion_ref,
+        "concepto_capital_mobiliario": command.concepto_capital_mobiliario,
         "recargo_amount": command.recargo_amount,
         "source_jurisdiction": command.source_jurisdiction,
         "counterparty_country": command.counterparty_country,
@@ -878,16 +916,16 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
 
 
 def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
-    """Fold :func:`_command_idempotency_fields` into the positional idempotency tuple."""
-    return tuple(_command_idempotency_fields(command).values())
+    """Fold :func:`command_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(command_idempotency_fields(command).values())
 
 
-def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
+def transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
     """Project the stored transaction's persisted fields, aligned with the command mapping.
 
     The banking-boundary fields read from ``current.raw``; the classification and
     provenance fields read from the transaction directly — key-for-key with
-    :func:`_command_idempotency_fields`. The ``classified_by`` entry holds the stored
+    :func:`command_idempotency_fields`. The ``classified_by`` entry holds the stored
     stamp, compared against the value a write of the command would persist
     (:func:`_persisted_classified_by`).
     """
@@ -895,6 +933,8 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
     return {
         "booked_date": raw.booked_date,
         "value_date": raw.value_date,
+        "operation_date": current.operation_date,
+        "accrual_date": current.accrual_date,
         "amount": raw.amount,
         "currency": raw.currency,
         "counterparty": raw.counterparty,
@@ -907,8 +947,15 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "iva_rate": current.iva_rate,
         "iva_amount": current.iva_amount,
         "iva_category": current.iva_category,
+        "exemption_article": current.exemption_article,
         "deduction_fact_kind": current.deduction_fact_kind,
         "investment_asset_id": current.investment_asset_id,
+        "iva_vehicle_use": current.iva_vehicle_use,
+        "arrendamiento_ref": current.arrendamiento_ref,
+        "inmueble_ref": current.inmueble_ref,
+        "gasto_capital_inmobiliario": current.gasto_capital_inmobiliario,
+        "posicion_ref": current.posicion_ref,
+        "concepto_capital_mobiliario": current.concepto_capital_mobiliario,
         "recargo_amount": current.recargo_amount,
         "source_jurisdiction": current.source_jurisdiction,
         "counterparty_country": current.counterparty_country,
@@ -930,8 +977,8 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
 
 
 def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
-    """Fold :func:`_transaction_idempotency_fields` into the positional idempotency tuple."""
-    return tuple(_transaction_idempotency_fields(current).values())
+    """Fold :func:`transaction_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(transaction_idempotency_fields(current).values())
 
 
 def command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
@@ -942,6 +989,16 @@ def command_matches_current(command: ManualLedgerTransactionCommand, current: Tr
     raising a mutation-required error.
     """
     return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
+
+
+def withheld_figures_event_payload(current: Transaction) -> dict[str, str]:
+    """Return the event entries that record the business figures a write of ``current`` stops storing.
+
+    A personal row stored before such rows were refused business figures is
+    read without them, so its next write persists their absence; the event of
+    that write names each one with its prior value.
+    """
+    return withheld_figures_event_entries(withheld_figures(current))
 
 
 def build_ledger_bucket_event(
@@ -972,7 +1029,7 @@ def build_ledger_bucket_event(
     )
 
 
-def _commit_with_guarded_events(
+def commit_with_guarded_events(
     *,
     # rationale: calls to_secure_object_write(), an adapter-only escape
     # hatch absent from BucketEventHistoryRepositoryProtocol.
@@ -1044,7 +1101,7 @@ def save_transaction_catalogue_and_events(
     if expected_current is not None:
         if replacement is None:
             raise ValueError("baseline-guarded transaction write requires its replacement")
-        _commit_with_guarded_events(
+        commit_with_guarded_events(
             event_repository=event_repository,
             events=events,
             commit=lambda event_write: transaction_repository.replace_if_current_with_secure_object_writes(
@@ -1057,7 +1114,7 @@ def save_transaction_catalogue_and_events(
     if expected_catalogue_revision is not None:
         if not isinstance(transaction_repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
             raise InternalInvariantError("revision-guarded transaction co-commit capability is unavailable")
-        _commit_with_guarded_events(
+        commit_with_guarded_events(
             event_repository=event_repository,
             events=events,
             commit=lambda event_write: transaction_repository.save_if_revision_with_secure_object_writes(
@@ -1067,7 +1124,7 @@ def save_transaction_catalogue_and_events(
             ),
         )
         return
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=event_repository,
         events=events,
         commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
@@ -1088,7 +1145,7 @@ def save_transaction_catalogue_invoices_and_events(
     invoice_catalogue: InvoiceCatalogue,
     events: tuple[BucketEvent, ...],
 ) -> None:
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=event_repository,
         events=events,
         commit=lambda event_write: transaction_repository.save_with_secure_object_writes(

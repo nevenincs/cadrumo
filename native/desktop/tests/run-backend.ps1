@@ -72,24 +72,35 @@ function Resolve-BuildMember([string]$Member) {
 }
 $generated = Resolve-BuildMember $paths.generated
 $testing = Resolve-BuildMember $paths.desktop_testing
-foreach ($name in @('contract.json','contract.rs','identity.json')) {
+foreach ($name in @('contract.json','contract.rs','identity.json','rust-environment.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $generated $name))) { throw "Missing generated $name; configure/generate native metadata first." }
+}
+$resolvedRustEnvironment = Join-Path (Join-Path $generated 'Debug') 'rust-environment.json'
+if (-not (Test-Path -LiteralPath $resolvedRustEnvironment)) {
+    throw 'Missing configuration-resolved Debug Rust environment; configure the enrolled repository build first.'
 }
 if ($Mode -eq 'Clippy' -and $Filter) { throw 'Clippy does not accept a test filter.' }
 if ($Mode -eq 'Package' -and -not $PackageRoot) { throw 'Package mode requires an existing assembled PackageRoot.' }
 if ($PackageRoot) { $PackageRoot = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath }
 $saved = @{}
-function Set-TestEnvironment([string]$Name, [string]$Value) {
+function Set-TestEnvironment([string]$Name, $Value) {
     if (-not $saved.ContainsKey($Name)) { $saved[$Name] = [Environment]::GetEnvironmentVariable($Name, 'Process') }
-    [Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+    if ($null -eq $Value) {
+        Remove-Item -LiteralPath "Env:$Name" -ErrorAction SilentlyContinue
+    } else {
+        [Environment]::SetEnvironmentVariable($Name, [string]$Value, 'Process')
+    }
 }
 Push-Location -LiteralPath $repository
 try {
-    $rootVariable = & $DevPython -B -c 'from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)'
-    if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot resolve the canonical storage-root variable.' }
-    $allowlist = & $DevPython -B -c 'import json, sys; print("\n".join(json.load(open(sys.argv[1], encoding="utf-8"))["application_environment"]["location_names"]))' (Join-Path $generated 'contract.json')
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot read the generated storage environment allow-list.' }
-    foreach ($name in $allowlist) { Set-TestEnvironment $name $null }
+    $rustEnvironment = Get-Content -LiteralPath $resolvedRustEnvironment -Raw | ConvertFrom-Json
+    foreach ($entry in $rustEnvironment.environment.PSObject.Properties) {
+        if ([string]$entry.Value -like '*$<*') { throw 'The Debug Rust environment contains an unresolved generator expression; reconfigure the enrolled build.' }
+        Set-TestEnvironment $entry.Name ([string]$entry.Value)
+    }
+    Set-TestEnvironment 'CARGO_BUILD_TARGET' $null
+    $rootVariable = & $DevPython -B -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["root"]["variable"])' (Join-Path $generated 'contract.json')
+    if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot read the storage-root variable from the generated contract.' }
     $runRoot = Join-Path $testing ('backend-runs\' + [Guid]::NewGuid().ToString('N'))
     $storage = Join-Path $runRoot 'storage'
     $temporary = Join-Path $runRoot 'temporary'
@@ -98,8 +109,6 @@ try {
     New-Item -ItemType Directory -Path $storage -Force | Out-Null
     New-Item -ItemType Directory -Path $temporary -Force | Out-Null
     Set-TestEnvironment $rootVariable.Trim() $storage
-    Set-TestEnvironment 'CADRUMO_STORAGE_ROOT' $storage
-    Set-TestEnvironment 'CADRUMO_LOCAL_STORAGE_ROOT' $storage
     Set-TestEnvironment 'TEMP' $temporary
     Set-TestEnvironment 'TMP' $temporary
     Set-TestEnvironment 'TMPDIR' $temporary
@@ -110,6 +119,14 @@ try {
     if ($RustBin) { Set-TestEnvironment 'CADRUMO_DESKTOP_RUST_BIN' $RustBin }
     & $DevPython -B (Join-Path $repository 'native\desktop\src-tauri\src\shell\sign_in\cli_contract_fixtures.py') --check
     if ($LASTEXITCODE -ne 0) { throw 'CLI contract fixtures differ from the current canonical producers.' }
+    $providerStatusFixture = Join-Path $testing 'provider-status-contract.json'
+    & $DevPython -B -c 'import runpy, sys; runpy.run_path(sys.argv.pop(1), run_name="__main__")' (Join-Path $repository 'native\desktop\src-tauri\src\shell\provider_settings\status_contract_fixture.py') --build-dir $buildRoot --output $providerStatusFixture
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot generate the canonical provider status fixture.' }
+    Set-TestEnvironment 'CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE' $providerStatusFixture
+    $calendarReadFixture = Join-Path $testing 'calendar-read-contract.json'
+    & $DevPython -B -c 'import runpy, sys; runpy.run_path(sys.argv.pop(1), run_name="__main__")' (Join-Path $repository 'native\desktop\src-tauri\src\shell\user_profile\calendar_read_fixture.py') --build-dir $buildRoot --output $calendarReadFixture
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot generate the canonical calendar read fixture.' }
+    Set-TestEnvironment 'CADRUMO_CALENDAR_READ_CONTRACT_FIXTURE' $calendarReadFixture
     $action = @{ Unit='test-unit'; Package='test-package'; Clippy='clippy-backend' }[$Mode]
     $arguments = @((Join-Path $repository 'native\desktop\scripts\tauri.mjs'), $action)
     if ($Filter) { $arguments += $Filter }
@@ -117,7 +134,7 @@ try {
     & node @arguments
     $testExit = $LASTEXITCODE
 } finally {
-    foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name], 'Process') }
+    foreach ($name in $saved.Keys) { Set-TestEnvironment $name $saved[$name] }
     Pop-Location
 }
 exit $testExit

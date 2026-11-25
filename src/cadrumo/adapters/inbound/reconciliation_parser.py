@@ -71,7 +71,7 @@ class InboundReconciliationEvidenceParser(ReconciliationEvidenceParserPort):
         modelo: str,
         filing_year: int,
         period: str,
-        registry_snapshot: RegistrySnapshot,
+        registry_snapshot: RegistrySnapshot | None,
     ) -> ReconciliationDeclaracionObservation:
         from .declaracion.parser import parse_declaracion_bytes
 

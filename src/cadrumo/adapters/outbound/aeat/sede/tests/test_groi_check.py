@@ -28,16 +28,16 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .._adapter_utils import extract_marker_verdict
+from ..adapter_utils import extract_marker_verdict
 from ..errors import SedeNavigationError
 from ..groi_check import (
-    _POSITIVE_MARKERS,
     DEFAULT_GROI_TIMEOUT_MS,
+    GROI_CHECK_POSITIVE_MARKERS,
     READ_GUARD_POLICY,
     GroiNifVerdict,
     GroiResult,
-    _assert_query_browser_action,
     assert_groi_read_landing,
+    assert_query_browser_action,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -58,15 +58,15 @@ def test_default_timeout_is_thirty_seconds() -> None:
 
 
 def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:
-    _assert_query_browser_action("open-groi-form")
-    _assert_query_browser_action("check-nif-A28015865")
+    assert_query_browser_action("open-groi-form")
+    assert_query_browser_action("check-nif-A00015016")
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
-        _assert_query_browser_action("new-unreviewed-groi-action")
+        assert_query_browser_action("new-unreviewed-groi-action")
 
 
 def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
     observation = GroiNifVerdict(
-        nif="A28015865",
+        nif="A00015016",
         verdict="valid",
         raw_evidence_locator=Settings.external_constants().aeat.oracles.groi_check,
     )
@@ -76,7 +76,7 @@ def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
 
 def test_observation_model_rejects_unknown_verdict() -> None:
     with pytest.raises(ValidationError, match=r"verdict|Input should be"):
-        GroiNifVerdict.model_validate({"nif": "A28015865", "verdict": "registered"})
+        GroiNifVerdict.model_validate({"nif": "A00015016", "verdict": "registered"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
@@ -85,7 +85,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 
 
 def test_observation_model_is_frozen() -> None:
-    observation = GroiNifVerdict(nif="A28015865", verdict="valid")
+    observation = GroiNifVerdict(nif="A00015016", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         observation.nif = "B12345678"
 
@@ -96,28 +96,28 @@ def test_result_model_defaults_to_empty_observations() -> None:
 
 # ---------------------------------------------------------------------------
 # Verdict parser fixtures derived from live AEAT response samples captured
-# 2026-05-07 (.tmp/nif_iva_capture/groi_response_A28015865.html and
+# 2026-05-07 (.tmp/nif_iva_capture/groi_response_A00015016.html and
 # groi_response_B00000001.html). The marker text is what AEAT produced live;
 # the parser is the unit under test, the response text is the authority.
 # ---------------------------------------------------------------------------
 
 
 def test_verdict_parser_recognises_valid_response_for_registered_operator() -> None:
-    """Real AEAT response for A28015865 (Telefónica, ROI-registered)."""
+    """Real AEAT response for A00015016 (Telefónica, ROI-registered)."""
 
     body_text = (
         "La Agencia Tributaria certifica que: "
         "A FECHA 07-05-2026 13:10:51 CONSTA UN OPERADOR INTRACOMUNITARIO EN ESPAÑA "
-        "CON EL NÚMERO DE IVA ESA28015865"
+        "CON EL NÚMERO DE IVA ESA00015016"
     )
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "valid"
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "valid"
 
 
 def test_verdict_parser_recognises_invalid_response_for_malformed_input() -> None:
     """Real AEAT response for B00000001 (syntactically invalid Spanish NIF)."""
 
     body_text = "Consulta Operadores IVA intracomunitarios españoles El campo Nif no es un NIF válido. (Ir a error)"
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "invalid"
 
 
 def test_verdict_parser_recognises_no_consta_response() -> None:
@@ -132,24 +132,24 @@ def test_verdict_parser_recognises_no_consta_response() -> None:
     """
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO CON EL NÚMERO DE IVA ESB99999999"
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "invalid"
 
 
 def test_verdict_parser_returns_unknown_for_empty_body() -> None:
-    assert extract_marker_verdict("", positive_markers=_POSITIVE_MARKERS) == "unknown"
+    assert extract_marker_verdict("", positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "unknown"
 
 
 def test_verdict_parser_returns_unknown_for_unrecognised_content() -> None:
     """Body without any verdict marker yields 'unknown' rather than guessing."""
 
-    assert extract_marker_verdict("Página de ayuda", positive_markers=_POSITIVE_MARKERS) == "unknown"
+    assert extract_marker_verdict("Página de ayuda", positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "unknown"
 
 
 def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
     """``no consta`` must NOT collapse to ``valid`` because of a generic ``operador`` token."""
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO con esos datos"
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "invalid"
 
 
 # ---------------------------------------------------------------------------
@@ -213,7 +213,7 @@ def test_groi_response_samples_parse_to_expected_verdict(expected_verdict: str, 
     """Verbatim live-AEAT responses parse to the verdict their filename declares."""
 
     body_text = Path(fixture_path).read_text(encoding="utf-8")
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == expected_verdict
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == expected_verdict
 
 
 def test_groi_response_samples_carry_provenance_entries() -> None:

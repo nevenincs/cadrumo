@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from typing import Final
 
@@ -17,26 +17,37 @@ from ...domain.calculations.registry.schema_form_layouts import FormPageConditio
 from .calculation_report import CalculationReportRowRole
 from .caller_context import caller_context_of
 from .work_form_counts import count_work_form_fields
-from .work_form_field_projection import project_casilla_field
+from .work_form_credits import withholding_credits, withholding_credits_heading
+from .work_form_declaration_facts import (
+    ModeloFormAeatData,
+    ModeloFormFiling,
+    ModeloFormResult,
+    year_projection,
+)
+from .work_form_facts import (
+    ModeloFormFieldFacts,
+    ModeloFormFieldFactsLike,
+    ModeloFormPageFacts,
+    ModeloWorkFormSummary,
+)
+from .work_form_field_projection import casilla_facts, casilla_label, project_casilla_field
 from .work_form_field_state import casilla_field_role
+from .work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormEditability,
+)
 from .work_form_localization import localized_heading
 from .work_form_models import (
-    ModeloFormAeatData,
-    ModeloFormCasillaAddressV1,
-    ModeloFormDeadline,
-    ModeloFormEditability,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormFiling,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormPage,
-    ModeloFormResult,
     ModeloFormSection,
     ModeloWorkForm,
+    revised_field,
 )
-from .work_form_notes import project_calculation_notes, project_verification_issues
+from .work_form_outline import form_outline
 from .work_form_result import settlement_result
 
 _INSPECTION_PAGE_ID: Final[str] = "inspection"
@@ -51,10 +62,16 @@ def result_casilla_ids(context: WorkFormContext) -> tuple[CasillaId, ...]:
     )
 
 
-def project_settlement_result(context: WorkFormContext, fields: Iterable[ModeloFormField]) -> ModeloFormResult | None:
+def project_settlement_result(
+    context: WorkFormContext, fields: Iterable[ModeloFormFieldFactsLike]
+) -> ModeloFormResult | None:
     """The settlement box, printed where the form shows it."""
     result = settlement_result(
-        str(context.review.modelo), context.snapshot.revision, context.rows, context.review.period
+        str(context.review.modelo),
+        context.snapshot.revision,
+        context.rows,
+        context.review.period,
+        redeme=context.redeme,
     )
     if result is None:
         return None
@@ -87,34 +104,59 @@ def project_filing_summary(context: WorkFormContext) -> ModeloFormFiling | None:
     return ModeloFormFiling(recorded_at=None if context.revision is None else context.revision.filed_at)
 
 
-def _box_order(field: ModeloFormField) -> tuple[int, int, str]:
-    box = field.box
-    label = field.label.text
+def inspection_facts(context: WorkFormContext) -> tuple[ModeloFormPageFacts, ...]:
+    """Classify every casilla of the revision on one page, in official box order, when no usable layout exists."""
+    keyed: list[tuple[tuple[int, int, str], ModeloFormFieldFacts]] = []
+    for casilla_id in context.rows:
+        facts = casilla_facts(casilla_id, context, None)
+        label = casilla_label(context.casillas[casilla_id], context).text
+        keyed.append((_box_order(facts.box, label), facts))
+    fields = tuple(facts for _, facts in sorted(keyed, key=lambda item: item[0]))
+    return (
+        ModeloFormPageFacts(
+            id=_INSPECTION_PAGE_ID,
+            applies=True,
+            counts=count_work_form_fields(fields, filed=context.filed),
+            fields=fields,
+        ),
+    )
+
+
+def _box_order(box: str | None, label: str) -> tuple[int, int, str]:
     return (0, int(box), label) if box is not None else (1, 0, label)
 
 
+def inspection_presenter(context: WorkFormContext) -> Callable[[ModeloFormFieldFacts], ModeloFormField]:
+    """Present a classified casilla read-only, as a form with no usable layout shows every box."""
+
+    def present(facts: ModeloFormFieldFacts) -> ModeloFormField:
+        return revised_field(
+            project_casilla_field(facts, context, None),
+            editability=ModeloFormEditability.INFORMATIONAL,
+            not_writable_reason=None,
+        )
+
+    return present
+
+
 def build_inspection_only_form(
+    summary: ModeloWorkFormSummary,
     context: WorkFormContext,
     snapshot: RegistrySnapshot,
     reason: ModeloFormInspectionReason,
     *,
-    deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
-    notes: tuple[tuple[tuple[str, str | None], ...], bool],
 ) -> ModeloWorkForm:
     """Show every casilla read-only in official box order when no usable layout exists.
 
+    The boxes, their order and every filing fact are the summary's
+    (:func:`inspection_facts`); this adds each box's words and the one page.
+
     Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
-    fields = sorted(
-        (
-            project_casilla_field(casilla_id, context, None).model_copy(
-                update={"editability": ModeloFormEditability.INFORMATIONAL, "not_writable_reason": None}
-            )
-            for casilla_id in context.rows
-        ),
-        key=_box_order,
-    )
+    present = inspection_presenter(context)
+    (page_facts,) = summary.pages
+    fields = [present(facts) for facts in page_facts.fields]
     blocks = tuple(ModeloFormFieldBlock(id=f"field-{index}", field=field) for index, field in enumerate(fields))
     heading = localized_heading(_INSPECTION_HEADING_LOCALE_KEY, None, _INSPECTION_PAGE_ID, context.language)
     section = ModeloFormSection(
@@ -122,7 +164,8 @@ def build_inspection_only_form(
         heading=heading,
         official_heading=None,
         blocks=blocks,
-        counts=count_work_form_fields(fields, filed=context.filed),
+        counts=page_facts.counts,
+        applies=True,
     )
     page = ModeloFormPage(
         id=_INSPECTION_PAGE_ID,
@@ -131,32 +174,41 @@ def build_inspection_only_form(
         condition=FormPageCondition.ALWAYS,
         applies=True,
         sections=(section,),
-        counts=count_work_form_fields(fields, filed=context.filed),
+        counts=page_facts.counts,
     )
     review = context.review
     return ModeloWorkForm(
-        modelo=review.modelo,
-        filing_year=review.filing_year,
-        period=review.period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id=review.work_unit_id,
-        calculation_revision_id=review.calculation_revision_id,
-        language=context.language,
+        modelo=summary.modelo,
+        filing_year=summary.filing_year,
+        period=summary.period,
+        registry_revision_id=summary.registry_revision_id,
+        year_projection=year_projection(
+            snapshot, modelo=str(review.modelo), period=review.period.registry_token, language=context.language
+        ),
+        work_unit_id=summary.work_unit_id,
+        calculation_revision_id=summary.calculation_revision_id,
+        language=summary.language,
         layout_provenance=ModeloFormLayoutProvenance.INSPECTION_ONLY,
         inspection_reason=reason,
         pages=(page,),
-        result_addresses=result_casilla_ids(context),
-        counts=count_work_form_fields(fields, filed=context.filed),
+        outline=form_outline((), (page,), context.language, filed=context.filed),
+        result_addresses=summary.result_addresses,
+        withholding_credits=withholding_credits(tuple(fields), snapshot.revision),
+        withholding_credits_heading=withholding_credits_heading(tuple(fields), context.language),
+        counts=summary.counts,
         progress=review.progress,
         operator_entries_known=context.entered is not None,
         edit_admitted=False,
-        verification=review.verification_outcome,
-        issues=project_verification_issues(review, fields),
-        calculation_notes=project_calculation_notes(context, notes[0], fields),
-        calculation_notes_held=notes[1],
-        result=project_settlement_result(context, fields),
-        deadline=deadline,
+        verification=summary.verification,
+        issues=summary.issues,
+        calculation_notes=summary.calculation_notes,
+        calculation_notes_held=summary.calculation_notes_held,
+        result=summary.result,
+        deadline=summary.deadline,
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
-        filing=project_filing_summary(context),
-        edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
+        verification_out_of_date=summary.verification_out_of_date,
+        calculation_sources_arrived=summary.calculation_sources_arrived,
+        filing=summary.filing,
+        last_export=summary.last_export,
+        edit_closure=summary.edit_closure,
     )

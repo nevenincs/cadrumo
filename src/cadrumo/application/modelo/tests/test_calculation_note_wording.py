@@ -1,0 +1,321 @@
+"""Every note sentence reads as words a person can act on, and a rename reaches them without moving a revision.
+
+An id, a hash or a raw token in a sentence is a defect a person cannot do anything
+with, so the whole family is rendered with facts of the shape the calculation
+stores, in every language. Which facts a sentence takes comes from the catalogue's
+own placeholders, so a sentence added to the family is covered without a new row.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from string import Formatter
+from typing import cast
+
+import pytest
+
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from ....core.i18n.render import lookup_translation
+from ....core.retencion_soportada import RetencionSoportadaClase
+from ....domain.calculations.registry.actividad_asset_disposal_bindings import activity_asset_disposal_route_casillas
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
+)
+from ....domain.calculations.registry.ledger_renta_income_bindings import renta_income_target_casilla
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementRole,
+)
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from ...actividad_asset.history import ActivityAssetHistory
+from ...actividad_asset.ports import ActivityAssetHistoryRepository
+from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
+from ..calculation_notes import fact_locale_key, note_fact_text, read_element_names, read_recorded_notes
+from ..disagreement_words import sources_facts, value_facts
+from ..printed_boxes import snapshot_printed_boxes
+from ..work_form_issue_lines import form_issue_lines
+from .test_work_form_gate_agreement import checked_form, work_form_gate_agreement_revision, work_unit
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None, "the published authority declares no support envelope"
+_YEAR = _SUPPORT.horizon
+_M100_YEAR = filing_grade_exercises("100")[-1]
+
+_ASSET = "asset-" + "7f3a9c" * 6
+_ROW = "e" * 64
+_VALUES = {
+    "start": date(_YEAR, 1, 1).isoformat(),
+    "end": date(_YEAR, 12, 31).isoformat(),
+    "date": date(_YEAR, 6, 30).isoformat(),
+    "row_date": date(_YEAR, 3, 14).isoformat(),
+    "period_end": date(_YEAR, 3, 31).isoformat(),
+    "amount": "1200.00",
+    "cost": "1500.00",
+    "paid": "1400.00",
+    "price": "1500.00",
+    "base": "1400.00",
+    "remainder": "100.00",
+    "effect": "297.53",
+    "transmission_value": "12000.00",
+    "net_value": "11702.47",
+    "row_amount": "1452.00",
+    "box": "0208",
+    "party": "Cloud Ejemplo SL (B00015016)",
+    "modelo": "100",
+    "year": str(_YEAR - 1),
+    "count": "2",
+    "group": "renta_family.descendiente",
+    "field": "irpf.estimation_regime",
+    "stated": "3",
+    "recorded": "1",
+    "omitting": "1",
+    "leaf": "nif",
+    "width": "40",
+    "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
+    "compared_amount": "1199.99",
+    "cross_check": "retencion_soportada",
+    "accepted": value_facts(DisagreementDecimalValue.of(Decimal("1200.00"))),
+    "sources": sources_facts(
+        (
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.VALUE_SOURCE,
+                source_family="binding",
+                value=DisagreementDecimalValue.of(Decimal("1200.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CROSS_CHECK,
+                source_family="borrador",
+                value=DisagreementDecimalValue.of(Decimal("1199.99")),
+            ),
+        )
+    ),
+    "reason": "The payer states the lower amount in its own copy.",
+    "parties": "B00015016, B00015057",
+    "invoice": "F-2025/0042",
+    "counterparty": "Asesoría Ejemplo SL",
+    "record": "2",
+    "payer": "Banco Ejemplo SA",
+    "country": "FR",
+}
+_RAW = re.compile(
+    r"[0-9a-f]{12,}"  # a hash or the tail of one
+    r"|asset-|transaction:"  # a reference's own spelling
+    r"|\b[a-z]+_[a-z_]+\b"  # a stored token
+    r"|\{[a-z_]+\}"  # a placeholder left unfilled
+    r"|\b[1-4]T\b|\b0A\b"  # a period's code
+    r"|\d{4}-\d{2}-\d{2}"  # a date as stored rather than as the language writes it
+)
+
+
+def _placeholders(sentence: CalculationNoteSentence, language: str) -> set[str]:
+    text = lookup_translation(fact_locale_key(sentence), locale=language)
+    assert text is not None
+    return {field for _, field, _, _ in Formatter().parse(text) if field is not None}
+
+
+def _fact(sentence: CalculationNoteSentence, language: str) -> CalculationNoteFact:
+    named = _placeholders(sentence, language)
+    return CalculationNoteFact.of(
+        sentence,
+        elements=(_ASSET,) if named & {"element", "elements"} else (),
+        rows=(_ROW,) if "row_date" in named else (),
+        **{name: value for name, value in _VALUES.items() if name in named},
+    )
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+@pytest.mark.parametrize("sentence", tuple(CalculationNoteSentence))
+@pytest.mark.parametrize("names", [((_ASSET, "Office laptop"),), ()], ids=["named", "unnamed"])
+def test_no_sentence_shows_an_id_a_hash_or_a_raw_token(
+    sentence: CalculationNoteSentence, language: str, names: tuple[tuple[str, str], ...]
+) -> None:
+    text = note_fact_text(_fact(sentence, language), element_names=names, locale=language)
+
+    assert _RAW.search(text) is None, text
+    if names and _placeholders(sentence, language) & {"element", "elements"}:
+        assert "Office laptop" in text
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+@pytest.mark.parametrize("income_class", tuple(RetencionSoportadaClase))
+def test_every_income_class_a_sentence_names_reads_in_words(
+    income_class: RetencionSoportadaClase, language: str
+) -> None:
+    fact = CalculationNoteFact.of(
+        CalculationNoteSentence.RETENCION_SOPORTADA_EVIDENCE_REQUIRED, income_class=income_class.value
+    )
+
+    text = note_fact_text(fact, locale=language)
+
+    assert _RAW.search(text) is None, text
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+def test_every_income_class_is_worded_apart_from_its_stored_token(language: str) -> None:
+    words = {}
+    for income_class in RetencionSoportadaClase:
+        fact = CalculationNoteFact.of(
+            CalculationNoteSentence.RETENCION_SOPORTADA_EVIDENCE_REQUIRED, income_class=income_class.value
+        )
+        text = note_fact_text(fact, locale=language)
+        assert _RAW.search(text) is None, text
+        words[income_class] = text
+    assert len(set(words.values())) == len(words)
+
+
+def test_a_name_with_a_stored_look_still_reads_only_as_itself() -> None:
+    fact = CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, elements=(_ASSET,))
+
+    assert _ASSET not in note_fact_text(fact, locale="en")
+    assert "An asset with no name" in note_fact_text(fact, locale="en")
+
+
+@pytest.mark.parametrize("stored", ["element", "elements"])
+def test_a_stored_value_named_like_the_elements_placeholder_does_not_replace_the_elements(stored: str) -> None:
+    fact = CalculationNoteFact(
+        sentence=CalculationNoteSentence.ACCRUAL_UNAVAILABLE,
+        values=((stored, _ASSET),),
+        element_refs=(_ASSET,),
+    )
+
+    text = note_fact_text(fact, element_names=((_ASSET, "Office laptop"),), locale="en")
+
+    assert "Office laptop" in text
+    assert _ASSET not in text
+
+
+def test_the_sentence_writes_dates_and_amounts_as_the_language_does() -> None:
+    fact = CalculationNoteFact.of(
+        CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX,
+        elements=(_ASSET,),
+        date=date(_YEAR, 6, 30).isoformat(),
+        amount="1200.00",
+        box="1654",
+    )
+
+    assert f"30 jun {_YEAR}" in note_fact_text(fact, locale="es")
+    assert "1.200,00" in note_fact_text(fact, locale="es")
+
+
+def _described(name: str) -> ActivityAssetHistory:
+    return ActivityAssetHistory(revisions=(register_asset("furniture", transaction_id="c" * 64),)).describe(
+        "furniture",
+        ActivityAssetDescriptorFacts(name=name),
+        recorded_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+    )
+
+
+def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sentence_shows_the_new_name(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Both calculations rest on one register but for a name, so the revision and its drift inputs are equal."""
+    before, after = _described("Old desk"), _described("Standing desk")
+
+    first, second = resolve_m100(before), resolve_m100(after)
+
+    assert [item.fact for item in first.diagnostics] == [item.fact for item in second.diagnostics]
+    assert first.provenance == second.provenance
+    unit = work_unit(operation)
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
+
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
+    revision_before = work_form_gate_agreement_revision(
+        operation, unit, *unrouted_source_issues(first.diagnostics, boxes)
+    )
+    revision_after = work_form_gate_agreement_revision(
+        operation, unit, *unrouted_source_issues(second.diagnostics, boxes)
+    )
+    assert revision_before.calculation_revision_id == revision_after.calculation_revision_id
+
+    (gap,) = [
+        issue.fact
+        for issue in revision_after.source_issues
+        if issue.reason == "activity_asset_claim_gap" and issue.fact is not None
+    ]
+    names = tuple((item.asset_id, item.facts.name) for item in after.descriptors)
+    assert "Standing desk" in note_fact_text(gap, element_names=names, locale="en")
+    assert "Old desk" not in note_fact_text(gap, element_names=names, locale="en")
+
+
+def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: PinnedAuthorityOperation) -> None:
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
+
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
+    diagnostics = resolve_m100(_described("Standing desk")).diagnostics
+    revision = work_form_gate_agreement_revision(
+        operation, work_unit(operation), *unrouted_source_issues(diagnostics, boxes)
+    )
+
+    form = checked_form(operation, revision)
+    note = next(note for note in form.calculation_notes if note.reason == "activity_asset_claim_gap")
+    named = form.model_copy(
+        update={
+            "calculation_notes": tuple(
+                item.model_copy(update={"element_names": (("furniture", "Standing desk"),)}) if item is note else item
+                for item in form.calculation_notes
+            )
+        }
+    )
+
+    assert any("Standing desk" in line.message for line in form_issue_lines(named, OutputLanguage.EN))
+    assert any("An asset with no name" in line.message for line in form_issue_lines(form, OutputLanguage.EN))
+
+
+def test_a_recorded_note_arrives_in_words_for_a_reader_that_only_draws_it(operation: PinnedAuthorityOperation) -> None:
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
+
+    class _Register:
+        def load(self) -> ActivityAssetHistory:
+            return _described("Standing desk")
+
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
+    issues = unrouted_source_issues(resolve_m100(_described("Standing desk")).diagnostics, boxes)
+
+    named = read_recorded_notes(issues, cast(ActivityAssetHistoryRepository, _Register()))
+    unnamed = read_recorded_notes(issues, None)
+
+    gap = next(note for note in named if note.reason == "activity_asset_claim_gap")
+    assert "Standing desk" in gap.message
+    assert gap.message == note_fact_text(gap.fact, element_names=gap.element_names)
+    assert all(note.message and note.detail and "{" not in note.message + note.detail for note in named)
+    assert all("Standing desk" not in note.message for note in unnamed)
+    assert {note.reason for note in unnamed} == {note.reason for note in named}
+
+
+def test_a_register_that_is_not_there_leaves_the_plain_phrase() -> None:
+    assert read_element_names(None) == {}
+
+
+@pytest.mark.parametrize("year", _SUPPORT.years)
+def test_every_box_a_note_names_is_the_number_the_form_prints(year: int, operation: PinnedAuthorityOperation) -> None:
+    annual = operation.reading_snapshot("100", filing_year=year, period="0A")
+    instalment = operation.reading_snapshot("130", filing_year=year, period="1T")
+    annual_boxes = snapshot_printed_boxes(operation, annual)
+    instalment_boxes = snapshot_printed_boxes(operation, instalment)
+
+    named = {
+        *activity_asset_amortization_casillas(annual.revision).values(),
+        *activity_asset_disposal_route_casillas(annual.revision).values(),
+    }
+    assert named
+    assert {box: annual_boxes.number(box) for box in named} == {box: box for box in named}
+    income_box = renta_income_target_casilla(instalment.revision, modelo="130")
+    assert instalment_boxes.number(income_box) == income_box

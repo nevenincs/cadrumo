@@ -13,11 +13,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ccaa import CCAA
 from ..errors import ForalRegimeError
 from ..tax_residence import ResidenceChange, TaxResidenceProfile, parse_tax_region
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+EXERCISE = filing_year_envelope().horizon
 
 
 def test_tax_residence_profile_is_strict_frozen() -> None:
@@ -29,7 +32,7 @@ def test_tax_residence_profile_is_strict_frozen() -> None:
 
 
 def test_tax_residence_profile_round_trips_json_schema_version() -> None:
-    residence = TaxResidenceProfile(ccaa=CCAA.CATALUNA, tax_residence_since=date(2025, 1, 1))
+    residence = TaxResidenceProfile(ccaa=CCAA.CATALUNA, tax_residence_since=date(EXERCISE + 1, 1, 1))
     reparsed = TaxResidenceProfile.model_validate_json(residence.model_dump_json())
     assert reparsed == residence
     assert reparsed.schema_version == "1"
@@ -44,7 +47,7 @@ def test_residence_change_validates_closed_ccaa() -> None:
     change = ResidenceChange(
         from_ccaa=None,
         to_ccaa=CCAA.ANDALUCIA,
-        effective_from=date(2025, 1, 1),
+        effective_from=date(EXERCISE + 1, 1, 1),
         reason="move",
     )
     assert change.to_ccaa == CCAA.ANDALUCIA

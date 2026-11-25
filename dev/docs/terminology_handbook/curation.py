@@ -24,7 +24,6 @@ from pathlib import Path
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._serialize import serialise_concept
 from .enums import TermStatus
 from .errors import TerminologyValidationError
 from .loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
@@ -34,6 +33,7 @@ from .schema import (
     LanguageSource,
     TermSection,
 )
+from .serialize import serialise_concept
 from .validators import default_handbook_validators
 
 __all__ = [

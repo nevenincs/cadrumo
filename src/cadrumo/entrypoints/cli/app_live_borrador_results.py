@@ -10,7 +10,11 @@ from pydantic import (
     model_validator,
 )
 
-from ...application.live.borrador_100 import BorradorSourceUrl
+from ...application.live.borrador_100 import (
+    Borrador100CaptureOutcomeValue,
+    Borrador100SnapshotRefusalReasonValue,
+    BorradorSourceUrl,
+)
 from ...application.live.snapshot_base import SnapshotLifecycleStateValue
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -18,7 +22,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import BindingId
-from ._app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp
+from .app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp
 
 
 class Borrador100SnapshotSummaryPayload(OutputSchema):
@@ -51,17 +55,49 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
         return canonical_borrador_utc_timestamp(value)
 
 
+class Borrador100RefusedSnapshotPayload(OutputSchema):
+    """One stored snapshot the pinned authority refuses, named with its reason and no values.
+
+    A refused snapshot is reported beside the readable ones rather than dropped,
+    so a listing or latest read that holds only refused snapshots is not empty.
+    """
+
+    snapshot_id: SnapshotId
+    filing_year: FilingYear
+    period: str
+    captured_at: str
+    state: SnapshotLifecycleStateValue
+    reason: Borrador100SnapshotRefusalReasonValue
+
+    @field_validator("period")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_period(cls, value: str) -> str:
+        return canonical_borrador_period(value)
+
+    @field_validator("captured_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_captured_at(cls, value: str) -> str:
+        return canonical_borrador_utc_timestamp(value)
+
+
 class Borrador100ListResult(OutputSchema):
     """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
 
     ``rows`` contains :class:`Borrador100SnapshotSummaryPayload` projections of
     :class:`Borrador100Snapshot` records returned by
-    :class:`Borrador100SnapshotService`.
+    :class:`Borrador100SnapshotService`. ``refused`` names each selected
+    snapshot the pinned authority refuses; ``count`` counts ``rows`` only.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which cannot be read or named.
     """
 
     bucket_id: BucketId
     count: NonNegativeInt
     rows: list[Borrador100SnapshotSummaryPayload]
+    refused: list[Borrador100RefusedSnapshotPayload] = []
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -99,6 +135,13 @@ class Borrador100ImportResult(Borrador100SnapshotSummaryPayload):
     ``blank_casillas`` and ``warnings`` keep absence distinguishable from zero:
     a target casilla the extractor located but found blank is listed there and
     contributes no binding value, rather than being persisted as ``0``.
+    ``observed_casillas`` lists printed casillas kept only for comparison with
+    the local calculation, never as a calculation input. ``unowned_casillas``
+    lists printed casillas the pinned revision does not declare; their values
+    were read but not stored.
+    ``outcome`` says whether the document was stored or resolved to a snapshot
+    already stored for it, such as a superseded one, in which case the active
+    snapshot is unchanged.
     """
 
     bucket_id: BucketId
@@ -107,7 +150,10 @@ class Borrador100ImportResult(Borrador100SnapshotSummaryPayload):
     artefact_kind: str
     source_pdf_sha256: str
     blank_casillas: list[str] = []
+    observed_casillas: list[str] = []
+    unowned_casillas: list[str] = []
     warnings: list[str] = []
+    outcome: Borrador100CaptureOutcomeValue
 
 
 class Borrador100LatestResult(OutputSchema):
@@ -118,6 +164,10 @@ class Borrador100LatestResult(OutputSchema):
     that case every snapshot-derived field, including the
     :class:`SnapshotLifecycleState` value, is also ``None`` to keep the payload
     shape stable while still identifying the queried ``filing_year``.
+    ``refused`` names each active snapshot of the year the pinned authority
+    refuses, so a year holding only refused snapshots is not reported as empty.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which are neither readable nor named.
     """
 
     bucket_id: BucketId
@@ -128,6 +178,8 @@ class Borrador100LatestResult(OutputSchema):
     source_url: BorradorSourceUrl | None = None
     binding_count: NonNegativeInt | None = None
     state: Literal["active"] | None = None
+    refused: list[Borrador100RefusedSnapshotPayload] = []
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @field_validator("period")
     @classmethod
@@ -157,6 +209,7 @@ class Borrador100LatestResult(OutputSchema):
 __all__ = [
     "Borrador100LatestResult",
     "Borrador100ListResult",
+    "Borrador100RefusedSnapshotPayload",
     "Borrador100SnapshotSummaryPayload",
     "Borrador100ViewResult",
 ]

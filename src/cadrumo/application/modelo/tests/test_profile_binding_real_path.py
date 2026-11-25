@@ -29,48 +29,48 @@ Design notes
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
+    published_supported_filing_years,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.schema import derived_selector_for_path
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
 from ...user_profile.projections import profile_fact_index
-from ..profile_binding import (
+from ..autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
+from ..calculation_notes import note_fact_text
+from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
+from ..profile_derived_facts import (
+    declared_profile_selectors,
+    family_fact_context,
+    inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
-    inject_derived_autonomic_deduccion_facts,
+    inject_derived_cash_election_fact,
+    inject_derived_estimation_modality_fact,
     inject_derived_marriage_facts,
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
-    resolve_profile_binding_value,
-    resolve_profile_sourced_bindings,
 )
+from ..profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-binding path test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000477"
@@ -112,7 +112,7 @@ def _full_m100_profile() -> UserProfileRecord:
     Dates arrive as Python ``date`` objects; booleans as ``bool``;
     strings as ``str``; Decimals as ``Decimal``.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -159,10 +159,23 @@ def _full_m100_profile() -> UserProfileRecord:
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             # 0024 renta-profile-family-minor-children-in-unit
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            # renta-profile-family-situacion-familiar (Art. 82 modality, calculation only)
+            UserProfileFact(path="renta_family.situacion_familiar", value="casado"),
+            # renta-profile-family-convive-otro-progenitor (Art. 84.2.4º, calculation only)
+            UserProfileFact(path="renta_family.convive_con_otro_progenitor", value=False),
+            # 0168 renta-modelo-100-estimacion-directa-modalidad-clave (derived from the regime, for a filer
+            # with economic-activity income)
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            # 0166 renta-modelo-100-estimacion-directa-actividad-tipo-clave (derived from the activity's
+            # censal tipo de actividad under the direct-estimation regime)
+            UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
+            UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
+            # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
+            *cash_criterion_facts(_YEAR),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -237,7 +250,11 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     - The Art. 81.1 maternidad binding (casilla 0611): its fact is derived only by
       the calculate-path maternity injector, which this manual-injection pin does
       not run; its resolution is covered by test_maternidad_alta_posterior_resolution
-      and test_maternidad_cotizaciones_ceiling.
+      and test_maternidad_cotizaciones_limit.
+    - The guarderia increment binding (casilla 0613): its fact is derived only by the
+      calculate-path guarderia injector; test_incremento_guarderia_injection covers it.
+    - The cash election binding (casilla 0169): its fact is derived per ejercicio by
+      the calculate path; test_e2e_imputation_calculate_to_export covers it.
     """
     schema = published_profile_schema()
     record = _full_m100_profile()
@@ -246,17 +263,42 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     # profile facts but are injected at binding-resolution time.  The full-population
     # fixture supplies renta_taxpayer.marriage_date so injection populates them here.
     inject_derived_marriage_facts(fact_index, _YEAR)
-    # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
-    # base) are likewise injected at resolution time, defaulting to 0.
-    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR, operation=authority_operation)
-    # The Art. 64/75 anualidades separate-escala flag is derived the same way.
     snapshot = _modelo_100_snapshot()
+    # The enrolled autonomic deducciones' counts (and the unidad-familiar base term)
+    # are likewise injected at resolution time by the shared dispatch.
+    inject_autonomic_deduccion_facts(
+        fact_index,
+        snapshot,
+        schema=schema,
+        context=family_fact_context(snapshot, operation=authority_operation),
+        bucket_id=_BUCKET_ID,
+    )
+    # The Art. 64/75 anualidades separate-escala flag is derived the same way.
     inject_ordinary_work_maritime_facts(fact_index)
     inject_derived_anualidades_eligibility_facts(fact_index, snapshot, operation=authority_operation)
     inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
+    inject_derived_minimo_ascendientes_facts(
+        fact_index,
+        snapshot,
+        declared_profile_selectors(snapshot.revision),
+        context=family_fact_context(snapshot, operation=authority_operation),
+        bucket_id=_BUCKET_ID,
+    )
+    # Casilla 0169's election is stated only for a direct-estimation taxpayer whose
+    # dated criterion is declared for the ejercicio; the fixture declares it.
+    inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)
+    # Casilla 0168's modality follows the same declared regime.
+    inject_derived_estimation_modality_fact(fact_index, operation=authority_operation)
+    # Casilla 0166's tipo de actividad clave follows the regime and the activity's censal tipo.
+    inject_derived_activity_tipo_clave_fact(fact_index)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
-    absent = {"renta-profile-taxpayer-death-date", "renta-profile-deduccion-maternidad"}
+    absent = {
+        "renta-profile-taxpayer-death-date",
+        "renta-profile-deduccion-maternidad",
+        "renta-profile-incremento-guarderia",
+        "renta-profile-activity-cash-criterion-0169",
+    }
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
@@ -283,7 +325,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
 ) -> None:
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -296,7 +338,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -331,7 +373,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
     assert dictionary_field == "ECIVIL"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -344,7 +386,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -367,7 +409,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved(
 ) -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -380,7 +422,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -501,33 +543,178 @@ def test_ccaa_binding_selector_yields_model_selector_string() -> None:
     assert selectors == ["TaxResidenceProfile.ccaa"], f"expected ['TaxResidenceProfile.ccaa'], got {selectors!r}"
 
 
-def test_repeating_collection_selectors_yield_known_alias() -> None:
-    """Every ``profile_model`` + ``collection`` + ``repeating`` binding yields a known schema alias.
+def test_repeating_selectors_yield_declared_profile_paths() -> None:
+    """Every ``repeating`` binding yields selectors the profile schema declares.
 
-    The family descendant and ascendant bindings (0025-0035) use the
-    ``profile_model = RentaFamilyProfile, collection = <name>, field = <f>``
-    selector form with ``repeating = True``. :func:`profile_binding_selectors`
-    yields ``RentaFamilyProfile.<collection>.<field>`` for each. That alias
-    must appear in the schema's ``model_selectors`` for the matching field.
+    The family descendant and ascendant bindings read one leaf of a stored row
+    object (``rows = { object_path, leaf, count_path }``).
+    :func:`profile_binding_selectors` yields the object and count paths, which
+    must be declared schema field paths; a ``profile_model`` collection binding
+    must yield an alias one of the schema's fields declares in ``model_selectors``.
     """
     schema = published_profile_schema()
-    all_aliases: set[str] = {
+    declared: set[str] = set(schema.field_paths) | {
         alias for section in schema.sections for field in section.fields for alias in field.model_selectors
     }
 
-    profile_bindings = _profile_bindings()
-    for binding in profile_bindings:
-        selector = binding.provider
-        assert isinstance(selector, ProfileProvider), binding.id
-        if not selector.repeating:
-            continue
+    providers = [(binding.id, binding.provider) for binding in _profile_bindings()]
+    assert all(isinstance(provider, ProfileProvider) for _, provider in providers)
+    repeating = [(binding_id, provider) for binding_id, provider in providers if provider.repeating]
+    assert repeating
+    for binding_id, selector in repeating:
         selectors = list(profile_binding_selectors(selector))
         assert selectors, (
-            f"binding {binding.id!r} has repeating=True but profile_binding_selectors "
+            f"binding {binding_id!r} has repeating=True but profile_binding_selectors "
             f"yielded nothing; selector={selector!r}"
         )
         for sel in selectors:
-            assert sel in all_aliases, (
-                f"binding {binding.id!r}: selector {sel!r} not found in any field's "
-                f"model_selectors in the profile schema"
-            )
+            assert sel in declared, f"binding {binding_id!r}: selector {sel!r} is not declared by the profile schema"
+
+
+_M130_MODALITY_BINDING = "modelo-130-estimacion-directa-modalidad"
+
+
+def _m130_record(*facts: UserProfileFact) -> UserProfileRecord:
+    return create_user_profile_record(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=leased_profile_create_context(),
+    )
+
+
+def test_an_unrecorded_m130_modality_is_reported_unresolved_with_its_profile_path(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Box 02's provision compares the modality as text, so its absence is an answerable gap, not a crash."""
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(),
+        operation=authority_operation,
+    )
+
+    assert _M130_MODALITY_BINDING not in resolved.enum_binding_values
+    assert _M130_MODALITY_BINDING in resolved.unresolved_binding_ids
+    (diagnostic,) = (item for item in resolved.diagnostics if item.binding_id == _M130_MODALITY_BINDING)
+    assert diagnostic.reason == "unresolved_binding"
+    assert diagnostic.message is not None
+    assert "irpf.estimation_regime" in diagnostic.message
+    # The provision is a working figure; box 02 is the printed box it leaves open.
+    assert diagnostic.casilla_id == "02"
+    assert diagnostic.fact is not None
+    assert diagnostic.fact.sentence is CalculationNoteSentence.PROFILE_FACT_UNRECORDED
+
+
+@pytest.mark.parametrize(
+    ("locale", "words"),
+    [
+        ("es", "Para calcular la casilla 02, registra en tu perfil: Régimen de estimación."),
+        ("en", "To calculate box 02, record in your profile: Estimation regime."),
+        ("ca", "Per calcular la casella 02, registra al teu perfil: Règim d'estimació."),
+        ("hu", "A(z) 02 mező kiszámításához rögzítsd a profilodban: Becslési rendszer."),
+    ],
+)
+def test_the_unrecorded_m130_modality_note_names_the_profile_field_in_every_language(
+    authority_operation: PinnedAuthorityOperation, locale: str, words: str
+) -> None:
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(),
+        operation=authority_operation,
+    )
+    (diagnostic,) = (item for item in resolved.diagnostics if item.binding_id == _M130_MODALITY_BINDING)
+    assert diagnostic.fact is not None
+
+    assert note_fact_text(diagnostic.fact, locale=locale) == words
+
+
+@pytest.mark.parametrize("modality", ["directa_normal", "directa_simplificada"])
+def test_a_recorded_m130_modality_reaches_the_text_channel(
+    authority_operation: PinnedAuthorityOperation, modality: str
+) -> None:
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(UserProfileFact(path="irpf.estimation_regime", value=modality)),
+        operation=authority_operation,
+    )
+
+    assert resolved.enum_binding_values[_M130_MODALITY_BINDING] == modality
+    assert _M130_MODALITY_BINDING not in resolved.unresolved_binding_ids
+    assert not any(item.binding_id == _M130_MODALITY_BINDING for item in resolved.diagnostics)
+
+
+_M100_MODALITY_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+_M100_DIRECT_BINDING = "renta-profile-estimacion-directa"
+
+
+def _m100_supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    years: list[int] = []
+    for year in sorted(support.years):
+        try:
+            published_snapshot("100", filing_year=year, period=_PERIOD)
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        years.append(year)
+    return tuple(years)
+
+
+@pytest.mark.parametrize(("regime", "is_normal"), [("directa_normal", True), ("directa_simplificada", False)])
+def test_casilla_0168_follows_the_declared_direct_estimation_modality_in_every_supported_year(
+    authority_operation: PinnedAuthorityOperation, regime: str, is_normal: bool
+) -> None:
+    """The modality box is answered by the profile's regime, so calculating never asks for it."""
+    years = _m100_supported_years()
+    assert years
+    for year in years:
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(UserProfileFact(path="irpf.estimation_regime", value=regime)),
+            operation=authority_operation,
+        )
+
+        assert resolved.boolean_binding_values[_M100_MODALITY_BINDING] is is_normal, year
+        assert resolved.boolean_binding_values[_M100_DIRECT_BINDING] is True, year
+        assert _M100_MODALITY_BINDING not in resolved.unresolved_binding_ids, year
+
+
+@pytest.mark.parametrize("facts", [(), (UserProfileFact(path="irpf.estimation_regime", value="objetiva"),)])
+def test_casilla_0168_stays_unresolved_when_the_regime_is_not_direct_estimation(
+    authority_operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...]
+) -> None:
+    """An undeclared or objective regime states no direct-estimation modality on the taxpayer's behalf."""
+    for year in _m100_supported_years():
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(*facts),
+            operation=authority_operation,
+        )
+
+        assert _M100_MODALITY_BINDING not in resolved.boolean_binding_values, year
+
+
+@pytest.mark.parametrize(
+    ("facts", "stated"),
+    [((UserProfileFact(path="irpf.estimation_regime", value="objetiva"),), False), ((), None)],
+)
+def test_the_direct_estimation_block_is_read_only_under_a_declared_direct_regime_in_every_supported_year(
+    authority_operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...], stated: bool | None
+) -> None:
+    """An objetiva filer states no direct-estimation block, and an undeclared regime states nothing."""
+    for year in _m100_supported_years():
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(*facts),
+            operation=authority_operation,
+        )
+
+        assert resolved.boolean_binding_values.get(_M100_DIRECT_BINDING) is stated, year

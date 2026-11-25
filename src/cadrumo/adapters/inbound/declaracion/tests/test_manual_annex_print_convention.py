@@ -44,7 +44,7 @@ from pathlib import Path
 import pdfplumber
 import pytest
 
-from .test_manual_annex_provenance import _annex_pdfs
+from .test_manual_annex_provenance import annex_pdfs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 #: a negative amount sits outside the match and does not affect the zero test.
 _MONEY: re.Pattern[str] = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}")
 
-_PDFS = _annex_pdfs()
+_PDFS = annex_pdfs()
 _IDS = [f"{p.parent.name}-{p.stem}" for p in _PDFS]
 
 

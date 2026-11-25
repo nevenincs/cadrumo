@@ -1,13 +1,15 @@
-"""Capture payroll and movable-capital withholding anchored to the ledger payment.
+"""Capture payroll, prize and movable-capital withholding anchored to the ledger payment.
 
-Two resident-IRPF income kinds have no invoice behind them: the work income an
+Three resident-IRPF income kinds have no invoice behind them: the work income an
 employer pays (LIRPF art. 99; RIRPF art. 76), settled through Modelo 111 with
-its Modelo 190 annual summary, and the ordinary movable-capital income a payer
-satisfies (interest, dividends and other capital income), settled through
-Modelo 123 with its Modelo 193 annual summary. For both, the evidence this
-producer accepts is the ledger transaction that paid the recipient: its booked
-date is the dated payment event, and the transaction is the source whose
-identity and revision the allocation carries.
+its Modelo 190 annual summary; the cash prize of a game, contest, raffle or
+random draw a payer hands over (RIRPF art. 75.2.c), settled through the same
+two forms; and the ordinary movable-capital income a payer satisfies
+(interest, dividends and other capital income), settled through Modelo 123
+with its Modelo 193 annual summary. For each, the evidence this producer
+accepts is the ledger transaction that paid the recipient: its booked date is
+the dated payment event, and the transaction is the source whose identity and
+revision the allocation carries.
 
 A bank movement cannot state the terms behind it. The gross income, the IRPF
 withheld and the recipient's tax status are legal facts of the relationship,
@@ -15,10 +17,11 @@ so the caller declares them and this module checks them against what the
 ledger proves: an outgoing, euro-denominated payment whose paid magnitude
 equals the declared net settlement.
 
-The two kinds differ only where the recognition rule differs. Work income is
-recognised when paid, so the payment alone dates it. Ordinary movable-capital
-income is recognised when it becomes exigible, or when paid if payment comes
-first (RIRPF art. 94.1), so the request must also carry the exigibility event;
+The kinds differ only where the recognition rule differs. Work income and
+prizes are recognised when paid (RIRPF art. 78.1), so the payment alone dates
+them. Ordinary movable-capital income is recognised when it becomes exigible,
+or when paid if payment comes first (RIRPF art. 94.1), so the request must
+also carry the exigibility event;
 :mod:`~.withholding_recognition` derives the earlier date. A capital payment
 booked in a later year than the income was recognised means the income was
 still unpaid at the close of that year. The only such case the shared producer
@@ -36,6 +39,24 @@ recognition rule does not define a net-to-gross relationship for capital
 income, so capital keeps the same upper bound rather than an equality this
 module cannot ground.
 
+A prize is captured only from a movement the ledger classifies as a paid
+prize, and only where the registry says it bears retención: a base above the
+exclusion threshold of RIRPF art. 75.3.f) and a retención equal to the
+registry rate on that base (RIRPF art. 99.1). A prize at or below the threshold
+bears no retención, and a retención at another rate is not one this module can
+place, so both refuse rather than reach Modelo 111.
+
+The declaration reads the other way round too. A movement the person classified
+as a paid prize is the record that a prize was handed over, so a window whose
+captured evidence holds nothing for it is missing a retención rather than
+proving the quarter paid no prize:
+:func:`uncaptured_prize_payments` reports each such movement for the window it
+belongs to. It reports only a payment whose paid magnitude proves the prize's
+base exceeded the registry exclusion threshold, because a prize at or below
+that threshold bears no retención (RIRPF art. 75.3.f) and reaches no Modelo 111
+casilla; the paid magnitude bounds the base from below, since the net is never
+more than the base less the retención.
+
 Capturing capital evidence stores it in the Modelo 123 window only. It does
 not make that window calculable: the Modelo 123 "Número de rentas" count has
 no official definition, and the calculation path refuses a window that holds
@@ -52,6 +73,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Self
@@ -64,11 +87,17 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
-from .retenciones import Modelo193PendingPaymentEvidence
+from ...domain.transactions.irpf_categories import has_prize_irpf_category
+from ...domain.transactions.retencion_facts import load_premios_retencion_terms
+from ..operator_actions.preconditions import no_action_precondition_verdict
+from .retencion_rate_advisory import conforms_to_fixed_rate
+from .retenciones import Modelo193PendingPaymentEvidence, RetencionObservation
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import LEDGER_PAID_INCOME_KINDS, modelo_for_income_kind
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -88,23 +117,33 @@ from .withholding_recognition import (
 )
 
 if TYPE_CHECKING:
+    from ...core.period import Period
     from ...domain.transactions.models import Transaction, TransactionCatalogue
-
-# The periodic modelo each ledger-paid income kind settles through. The shared
-# producer re-derives it from the scheme at capture and refuses a disagreement.
-_PERIODIC_MODELO: dict[WithholdingIncomeKind, str] = {
-    WithholdingIncomeKind.WORK: "111",
-    WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL: "123",
-}
+    from ..operator_actions.models import PreconditionVerdict
 
 
 class LedgerPaymentWithholdingEvidenceError(CadrumoError):
-    """Payload-free refusal while making a ledger payment capture-ready."""
+    """Payload-free refusal while making a ledger payment capture-ready.
+
+    No catalogued action restates the payment's evidence, so every refusal is
+    the operator's decision: the request is made again with evidence the ledger
+    payment admits.
+    """
 
     def __init__(self, refusal_code: str) -> None:
         """Build a refusal that carries only its stable reason token."""
         super().__init__(f"ledger payment withholding evidence refused: {refusal_code}")
         self.refusal_code = refusal_code
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the operator's decision on the refused payment evidence."""
+        return no_action_precondition_verdict(
+            condition_id="ledger.payment_withholding.evidence.admitted",
+            facts={"refusal": self.refusal_code, "admitted": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
 
 
 class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
@@ -113,14 +152,14 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
     The ledger supplies the payment date, currency, paid magnitude and source
     identity. This request holds only what a payment cannot establish: the
     income terms, the recipient's tax status and the income-kind evidence.
-    Work income carries the Modelo 190 annual detail that names the
+    Work income and prizes carry the Modelo 190 annual detail that names the
     perceptor. Ordinary movable-capital income names the perceptor directly,
     carries its exigibility event, and may carry the Modelo 193
     pending-payment evidence. It deliberately has no payment-date,
     recognition-date or period field.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     income_kind: WithholdingIncomeKind = WithholdingIncomeKind.WORK
@@ -139,17 +178,19 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
     supersedes_generation_id: str | None = None
     modelo_190_detail: WithholdingObservation | None = None
     perceptor_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
-    perceptor_name: str | None = Field(default=None, max_length=200)
+    perceptor_name: str | None = Field(default=None, max_length=256)
     exigibility_event_id: str | None = Field(default=None, min_length=1, max_length=128)
     exigibility_occurred_on: date | None = None
     modelo_193_pending_payment: Modelo193PendingPaymentEvidence | None = None
 
     @field_validator("income_kind")
     @classmethod
-    def _only_ledger_paid_income(cls, value: WithholdingIncomeKind) -> WithholdingIncomeKind:
+    def only_ledger_paid_income(cls, value: WithholdingIncomeKind) -> WithholdingIncomeKind:
         """Keep other income kinds on the producers whose evidence proves them."""
-        if value not in _PERIODIC_MODELO:
-            raise ValueError("ledger payment withholding capture accepts work or ordinary movable capital income only")
+        if value not in LEDGER_PAID_INCOME_KINDS:
+            raise ValueError(
+                "ledger payment withholding capture accepts prize, work or ordinary movable capital income only"
+            )
         return value
 
     @model_validator(mode="after")
@@ -159,6 +200,9 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
             raise ValueError("exigibility evidence requires both event id and date")
         if self.income_kind is WithholdingIncomeKind.WORK:
             _validate_work_income_evidence(self)
+            return self
+        if self.income_kind is WithholdingIncomeKind.PRIZE:
+            _validate_prize_income_evidence(self)
             return self
         _validate_capital_income_evidence(self)
         return self
@@ -171,6 +215,17 @@ def _validate_work_income_evidence(request: LedgerPaymentWithholdingEvidenceRequ
         raise ValueError("work income takes its perceptor from the Modelo 190 annual detail")
     if request.exigibility_event_id is not None:
         raise ValueError("work income is recognised when paid and takes no exigibility evidence")
+    if request.modelo_193_pending_payment is not None:
+        raise ValueError("only ordinary movable capital can carry Modelo 193 pending-payment evidence")
+
+
+def _validate_prize_income_evidence(request: LedgerPaymentWithholdingEvidenceRequest) -> None:
+    if request.modelo_190_detail is None:
+        raise ValueError("prize income requires Modelo 190 annual detail")
+    if request.perceptor_nif is not None or request.perceptor_name is not None:
+        raise ValueError("prize income takes its perceptor from the Modelo 190 annual detail")
+    if request.exigibility_event_id is not None:
+        raise ValueError("prize income is recognised when paid and takes no exigibility evidence")
     if request.modelo_193_pending_payment is not None:
         raise ValueError("only ordinary movable capital can carry Modelo 193 pending-payment evidence")
 
@@ -189,7 +244,7 @@ def _validate_capital_income_evidence(request: LedgerPaymentWithholdingEvidenceR
 class LedgerPaymentWithholdingCapture(BaseModel):
     """Canonical ledger-derived producer command and its consistent read revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     command: WithholdingEvidenceCaptureCommand
     scope: WithholdingWindowScope
@@ -216,7 +271,7 @@ def build_ledger_payment_withholding_capture(
     applicable_year: int,
     cadence: WithholdingFilerCadence,
 ) -> LedgerPaymentWithholdingCapture:
-    """Derive one work or capital producer command from the paying ledger transaction.
+    """Derive one work, prize or capital producer command from the paying ledger transaction.
 
     This is the sole ledger-payment-to-withholding translation. Every payment,
     amount, recipient and timing check runs before a command exists, so a
@@ -226,7 +281,10 @@ def build_ledger_payment_withholding_capture(
     recognition quarter it does not assign is refused.
     """
     _validate_ledger_payment_capture(transaction, request, applicable_year=applicable_year, cadence=cadence)
-    modelo = _PERIODIC_MODELO[request.income_kind]
+    # The shared producer re-derives the modelo from the scheme at capture and refuses a disagreement.
+    modelo = modelo_for_income_kind(request.income_kind)
+    if modelo is None:
+        raise LedgerPaymentWithholdingEvidenceError("unsupported_income_projection")
     payment_on = transaction.raw.booked_date
     evidence = _recognition_evidence(request, applicable_year=applicable_year, payment_on=payment_on)
     recognized_on = _recognized_payment_date(
@@ -265,6 +323,8 @@ def _validate_ledger_payment_capture(
     _validate_payment_identity_and_state(transaction, request, applicable_year=applicable_year, cadence=cadence)
     _validate_payment_currency_and_amounts(transaction, request)
     _validate_recipient_residence(request)
+    if request.income_kind is WithholdingIncomeKind.PRIZE:
+        _validate_prize_payment(transaction, request)
 
 
 def _validate_payment_identity_and_state(
@@ -307,6 +367,17 @@ def _validate_recipient_residence(request: LedgerPaymentWithholdingEvidenceReque
         raise LedgerPaymentWithholdingEvidenceError("recipient_residence_unknown")
 
 
+def _validate_prize_payment(transaction: Transaction, request: LedgerPaymentWithholdingEvidenceRequest) -> None:
+    """Admit a prize only where the ledger names it and the registry says it bears this retención."""
+    if not has_prize_irpf_category(transaction.irpf_category, direction=transaction.direction):
+        raise LedgerPaymentWithholdingEvidenceError("transaction_not_classified_as_prize")
+    terms = load_premios_retencion_terms(effective_date=transaction.raw.booked_date)
+    if request.gross_base <= terms.exclusion_threshold_eur:
+        raise LedgerPaymentWithholdingEvidenceError("prize_base_within_withholding_exclusion")
+    if not conforms_to_fixed_rate(request.gross_base, request.withholding_amount, terms.rate):
+        raise LedgerPaymentWithholdingEvidenceError("prize_retencion_rate_nonconforming")
+
+
 def _recognition_evidence(
     request: LedgerPaymentWithholdingEvidenceRequest, *, applicable_year: int, payment_on: date
 ) -> WithholdingRecognitionEvidence:
@@ -337,7 +408,7 @@ def _recognized_payment_date(
     if recognized_on.year != applicable_year:
         raise LedgerPaymentWithholdingEvidenceError(
             "payment_outside_applicable_year"
-            if request.income_kind is WithholdingIncomeKind.WORK
+            if request.income_kind in {WithholdingIncomeKind.WORK, WithholdingIncomeKind.PRIZE}
             else "recognition_outside_applicable_year"
         )
     if payment_on.year > recognized_on.year and request.modelo_193_pending_payment is None:
@@ -431,10 +502,93 @@ def _perceptor(request: LedgerPaymentWithholdingEvidenceRequest) -> tuple[str, s
     return request.perceptor_nif, request.perceptor_name
 
 
+@dataclass(frozen=True, slots=True)
+class UncapturedPrizePayment:
+    """One paid prize the ledger records and no captured allocation declares.
+
+    ``paid_on`` is the movement's booked date, which is the date the capture
+    path takes as the payment and recognition date, and ``net_paid`` the
+    magnitude the ledger proves was handed over.
+    """
+
+    transaction_id: str
+    paid_on: date
+    net_paid: Decimal
+
+
+def captured_ledger_transaction_ids(observations: Iterable[RetencionObservation]) -> frozenset[str]:
+    """Return the ledger movements the per-perceptor store already holds an allocation of."""
+    return frozenset(
+        observation.source_object_id
+        for observation in observations
+        if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
+    )
+
+
+def uncaptured_prize_payments(
+    transactions: TransactionCatalogue,
+    *,
+    modelo: str,
+    period: Period,
+    captured_transaction_ids: frozenset[str] = frozenset(),
+) -> tuple[UncapturedPrizePayment, ...]:
+    """Return ``period``'s paid prizes that bear retención and no stored allocation declares.
+
+    Nothing is returned for a modelo other than the one a prize settles through,
+    for a movement the ledger does not classify as a paid prize, or for a
+    payment too small to prove the prize's base exceeded the registry exclusion
+    threshold. Order is by movement identity, so two equal windows report the
+    same findings in the same order.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+    :class:`~cadrumo.core.period.Period`.
+    """
+    if modelo != modelo_for_income_kind(WithholdingIncomeKind.PRIZE):
+        return ()
+    return tuple(
+        sorted(
+            (
+                UncapturedPrizePayment(
+                    transaction_id=transaction.transaction_id,
+                    paid_on=transaction.raw.booked_date,
+                    net_paid=transaction.raw.amount,
+                )
+                for transaction in transactions
+                if transaction.transaction_id not in captured_transaction_ids
+                and _is_withheld_prize_payment(transaction, period=period)
+            ),
+            key=lambda payment: payment.transaction_id,
+        )
+    )
+
+
+def _is_withheld_prize_payment(transaction: Transaction, *, period: Period) -> bool:
+    """Whether one movement is a prize paid in ``period`` whose base bears retención."""
+    paid_on = transaction.raw.booked_date
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return False
+    if transaction.direction is not TransactionDirection.OUTGOING:
+        return False
+    if not (period.start_date <= paid_on <= period.end_date):
+        return False
+    if transaction.raw.currency != DEFAULT_CURRENCY:
+        return False
+    if not has_prize_irpf_category(transaction.irpf_category, direction=transaction.direction):
+        return False
+    terms = load_premios_retencion_terms(effective_date=paid_on)
+    # The net is at most the base less the retención, so this bounds the base from below.
+    least_base = transaction.raw.amount / (Decimal("1") - terms.rate)
+    return least_base > terms.exclusion_threshold_eur
+
+
 __all__ = [
     "LedgerPaymentWithholdingCapture",
     "LedgerPaymentWithholdingEvidenceError",
     "LedgerPaymentWithholdingEvidenceRequest",
+    "UncapturedPrizePayment",
     "build_ledger_payment_withholding_capture",
+    "captured_ledger_transaction_ids",
     "resolve_ledger_payment_transaction",
+    "uncaptured_prize_payments",
 ]

@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionArgumentSource
 
 
@@ -30,11 +30,11 @@ class ActionArgumentBindingSpecification(BaseModel):
     nor a resolution status.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=128)
     source: ActionArgumentSource
-    source_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     source_evidence_id: NamespacedId | None = None
 
     @model_validator(mode="after")
@@ -52,10 +52,10 @@ class ActionArgumentBindingSpecification(BaseModel):
 class ActionCatalogueEntry(BaseModel):
     """One stable next action projected to a canonical command-schema key."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     action_id: NamespacedId
-    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     argument_specifications: tuple[ActionArgumentBindingSpecification, ...] = ()
     materialisable_without_arguments: bool = False
     """Whether the live target executes with none of the declared arguments bound.
@@ -122,7 +122,7 @@ class ActionCatalogueEntry(BaseModel):
 class ActionCatalogue(BaseModel):
     """Immutable deterministic action-id registry with fail-closed lookup."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: tuple[ActionCatalogueEntry, ...] = Field(min_length=1)
 
@@ -219,6 +219,68 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento",
+            target_command_key="config.profile.arrendamiento.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.add",
+            target_command_key="config.profile.arrendamiento.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.edit",
+            target_command_key="config.profile.arrendamiento.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.remove",
+            target_command_key="config.profile.arrendamiento.remove",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.ascendiente",
+            target_command_key="config.profile.ascendiente.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.ascendiente.edit",
+            target_command_key="config.profile.ascendiente.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="index",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="index",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="ascendiente",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="ascendiente",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.descendiente",
             target_command_key="config.profile.descendiente.list",
         ),
@@ -304,12 +366,55 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             materialisable_without_arguments=True,
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.inmueble.add",
+            target_command_key="config.profile.inmueble.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.inmueble.edit",
+            target_command_key="config.profile.inmueble.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.list",
             target_command_key="config.profile.list",
         ),
         ActionCatalogueEntry(
             action_id="operator.profile.status",
             target_command_key="config.profile.status",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.account.add",
+            target_command_key="ledger.account.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="holding",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="holding",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="label",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="label",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.link",
@@ -328,12 +433,76 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.invoice.update.operation_type",
+            target_command_key="ledger.invoice.update",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="invoice_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="operation_type",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="operation_type",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.counterparty.filing_name",
+            target_command_key="ledger.counterparty.filing_name",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="tax_identifier",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="tax_identifier",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="country_code",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="country_code",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.classify",
             target_command_key="ledger.classify",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.classify.movement",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.classify.irpf_category",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="irpf_category",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="irpf_category",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.review",
@@ -347,6 +516,63 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="revision_json",
                     source=ActionArgumentSource.REQUEST_CONTEXT,
                     source_key="revision_json",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.prorrata.list",
+            target_command_key="ledger.prorrata.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.prorrata.seed",
+            target_command_key="ledger.prorrata.seed",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="ejercicio",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="ejercicio",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.amend_wizard",
+            target_command_key="modelo.work.amend_wizard",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.inventory.movement.claim",
+            target_command_key="ledger.inventory.movement.claim",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="actividad_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="actividad_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="correction_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="correction_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="ledger_row",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="ledger_row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="movement_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="movement_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
                 ),
             ),
         ),
@@ -388,6 +614,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.filing_record.import",
+            target_command_key="modelo.filing_record.import",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_reference_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_reference_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.filing_record.list",
             target_command_key="modelo.filing_record.list",
             argument_specifications=(
@@ -424,6 +671,79 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.seed",
+            target_command_key="modelo.iva_wallet.seed",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.override",
+            target_command_key="modelo.iva_wallet.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_locator",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_locator",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="reason",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="reason",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.amend",
+            target_command_key="modelo.work.amend",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="from_filing_record_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_record_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="reason",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="reason",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.file",
             target_command_key="modelo.work.file",
             argument_specifications=(
@@ -452,22 +772,6 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.live.notifications.list",
             target_command_key="app.live.notifications.list",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.browser",
-            target_command_key="config.provision.browser",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.local_ai",
-            target_command_key="config.provision.pull",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.setup",
-            target_command_key="config.provision.setup",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.status",
-            target_command_key="config.provision.status",
         ),
         ActionCatalogueEntry(
             action_id="operator.storage.init",
@@ -547,6 +851,35 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.export",
+            target_command_key="modelo.export",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="modelo",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="output",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="output",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="period_code",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="filing_year",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.calculate",
             target_command_key="modelo.work.calculate",
             argument_specifications=(
@@ -560,6 +893,143 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.calculate_joint_return",
+            target_command_key="modelo.work.calculate",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="joint_return_elected",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="joint_return_elected",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_prior_carries",
+            target_command_key="modelo.work.attest_prior_carries",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_work_income",
+            target_command_key="modelo.work.attest_work_income",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.override",
+            target_command_key="modelo.work.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="binding_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="binding_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.set_value",
+            target_command_key="modelo.work.set_value",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="casilla_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="casilla_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_prior_value",
+            target_command_key="modelo.work.attest_prior_value",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="binding_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="binding_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_m303_exonerado_390",
+            target_command_key="modelo.work.attest_m303_exonerado_390",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="observed_at",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="observed_at",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
                 ),
             ),
         ),

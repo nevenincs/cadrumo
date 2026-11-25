@@ -9,7 +9,7 @@ from cadrumo_client.commands.execution_policies import (
     PROFILE_READ,
     state_free_group_spec,
 )
-from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION
 from cadrumo_client.commands.parameters import ArgumentSpec
 from cadrumo_client.commands.secret_contracts import (
     MachineSecretFieldSpec,
@@ -27,7 +27,7 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
-from cadrumo_client.commands.spec_schema import config_payload_schema as _schema
+from cadrumo_client.commands.spec_schema import config_payload_schema
 from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
     ProfileAuthenticationPosture,
@@ -48,11 +48,11 @@ RUNTIME_CUSTODY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
             *_MACHINE_SECRET_OPTIONS,
-            _OUTPUT_LANGUAGE,
+            OUTPUT_LANGUAGE_OPTION,
         ),
         policy=ENCRYPTED_DESTRUCTIVE,
         handler=LazyBinding.available(DeferredTarget(".passphrase", "passphrase_change", __package__)),
-        result_schema=_schema("ConfigPassphraseChangeResult", "config.passphrase.change"),
+        result_schema=config_payload_schema("ConfigPassphraseChangeResult", "config.passphrase.change"),
         machine_secret=MachineSecretSpec(
             (
                 MachineSecretVariantSpec(
@@ -88,11 +88,11 @@ RUNTIME_CUSTODY_COMMAND_SPECS = (
                 help_key=TranslationKey("cli.config.passphrase.reset_name_help"),
             ),
             *_MACHINE_SECRET_OPTIONS,
-            _OUTPUT_LANGUAGE,
+            OUTPUT_LANGUAGE_OPTION,
         ),
         policy=BOOTSTRAP_DESTRUCTIVE,
         handler=LazyBinding.available(DeferredTarget(".passphrase", "passphrase_reset", __package__)),
-        result_schema=_schema("ConfigPassphraseResetResult", "config.passphrase.reset"),
+        result_schema=config_payload_schema("ConfigPassphraseResetResult", "config.passphrase.reset"),
         machine_secret=MachineSecretSpec(
             (
                 MachineSecretVariantSpec(
@@ -120,7 +120,7 @@ RUNTIME_CUSTODY_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.activity.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_OUTPUT_LANGUAGE,),
+        parameters=(OUTPUT_LANGUAGE_OPTION,),
         policy=BOOTSTRAP_WRITE,
         handler=LazyBinding.available(DeferredTarget(".activity", "config_activity", __package__)),
         result_schema=ResultSchemaSpec(
@@ -138,7 +138,7 @@ RUNTIME_CUSTODY_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.sign_in_status.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_OUTPUT_LANGUAGE,),
+        parameters=(OUTPUT_LANGUAGE_OPTION,),
         policy=PROFILE_READ,
         handler=LazyBinding.available(DeferredTarget(".sign_in_status", "config_sign_in_status", __package__)),
         result_schema=ResultSchemaSpec(

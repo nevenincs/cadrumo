@@ -11,19 +11,42 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from datetime import date
 from functools import cache
 from itertools import pairwise
 from pathlib import PurePosixPath
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.text_fold import normalise_corpus_text
 from ..authority import bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
+from ..errors import RegistrySnapshotError
 from ..schema import ModeloRevision
-from ..schema_references import SourceReference
-from ..temporal import RevisionSelectionMetadata
+from ..schema_references import SourceReference, TemporalProjectionDirection
+from ..schema_surfaces import CasillaEvolutionKind
+from ..snapshot_globals import SupportedFilingYearsCatalogue
+from ..temporal import RevisionSelectionMetadata, revision_temporal_resolution
+
+
+@cache
+def filing_year_envelope() -> SupportedFilingYearsCatalogue:
+    """Return the published support envelope: its ``floor``, ``horizon`` and supported ``years``.
+
+    A test that needs "a supported year", "the year below the floor" or "the
+    year past the horizon" writes it from these bounds, so it follows the one
+    support declaration when the horizon moves.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years()
+
+
+def latest_period_end() -> date:
+    """Return the last day of the newest supported filing year, the period a test decides applicability for."""
+    return date(filing_year_envelope().horizon, 12, 31)
 
 
 def authored_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata, ...]:
@@ -43,6 +66,144 @@ def newest_authored_editions(modelo_id: str, count: int) -> tuple[int, ...]:
 def newest_authored_edition(modelo_id: str) -> int:
     """Return the first exercise of the newest authored revision of one modelo."""
     return newest_authored_editions(modelo_id, 1)[0]
+
+
+def projected_exercise(modelo_id: str) -> int:
+    """Return the first exercise past the newest authored revision, which the registry projects from it."""
+    newest = authored_revisions(modelo_id)[-1]
+    if newest.valid_to is None:
+        raise LookupError(f"modelo {modelo_id}: the newest authored revision is open-ended, so nothing is projected")
+    return newest.valid_to.year + 1
+
+
+def supported_authored_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return every exercise from the support floor up that an authored revision of one modelo governs.
+
+    The floor comes from the registry's one support declaration, so the span moves
+    with it rather than with a hand-written year. A year no edition authors is not
+    among them: the registry carries the nearest edition across it, which reaches
+    calculation grade at most.
+    """
+    floor = filing_year_envelope().floor
+    return tuple(
+        year
+        for revision in authored_revisions(modelo_id)
+        for year in range(
+            max(revision.valid_from.year, floor),
+            (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year) + 1,
+        )
+    )
+
+
+def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
+    """Return every authored exercise from the support floor up, then the first projected one."""
+    return (*supported_authored_exercises(modelo_id), projected_exercise(modelo_id))
+
+
+def filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return the supported authored exercises whose governing revision reaches filing grade.
+
+    An edition authored at applicability grade only is left out: a snapshot asked
+    for filing grade over it is refused, so a test that needs a calculable
+    filing-grade edition iterates these instead of every authored exercise.
+    """
+    filing = {
+        str(revision.id)
+        for revision in authored_revisions_where(
+            modelo_id, lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+        )
+    }
+    return tuple(
+        exercise
+        for exercise in supported_authored_exercises(modelo_id)
+        if str(revision_covering(modelo_id, exercise).id) in filing
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class EditionBelowFilingGrade:
+    """One exercise of the support envelope whose own authored edition the authority serves below filing grade."""
+
+    modelo: str
+    filing_year: int
+    period: str
+    revision_id: str
+    grade: RegistryAuthorityGrade
+
+
+def authored_editions_below_filing_grade(period: str) -> tuple[EditionBelowFilingGrade, ...]:
+    """Return every exercise of the envelope whose edition, authored for that year, is below filing grade, newest first.
+
+    Editions rise to filing grade as their evidence lands, so a test that needs
+    one held below it reads the modelo and year here rather than naming them.
+    A projected year is left out: it is refused as projected, not under its
+    edition's own declared grade. Within a year, modelos come in identifier
+    order. The tuple is empty when every authored edition reaches filing grade.
+    """
+    found: list[EditionBelowFilingGrade] = []
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for year in sorted(support.years, reverse=True):
+            for modelo in sorted(operation.modelo_ids()):
+                try:
+                    revision = operation.revision_for_context(modelo, filing_year=year, period=period)
+                except RegistrySnapshotError:
+                    # The modelo serves no declaration for this period of the year.
+                    continue
+                resolution = revision_temporal_resolution(revision, filing_year=year, period=period, support=support)
+                if resolution.projection_direction is not TemporalProjectionDirection.AUTHORED:
+                    continue
+                grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period)
+                if grade is not RegistryAuthorityGrade.FILING:
+                    found.append(
+                        EditionBelowFilingGrade(
+                            modelo=modelo, filing_year=year, period=period, revision_id=str(revision.id), grade=grade
+                        )
+                    )
+    return tuple(found)
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationGradeEdition:
+    """One supported exercise whose only authored edition declares calculation grade, with its first period."""
+
+    modelo: str
+    revision_id: str
+    filing_year: int
+    period: str
+
+
+def first_calculation_grade_edition() -> CalculationGradeEdition | None:
+    """Return the first authored calculation-grade edition inside the support envelope, or ``None``.
+
+    Editions rise to filing grade as their evidence lands, so a test that needs a
+    filing-grade demand the registry really refuses reads its subject here rather
+    than naming a modelo. Modelos come in identifier order and revisions oldest
+    first. The exercise is one no other edition of the modelo also covers, so a
+    snapshot asked for that year and period cannot select a mid-year successor.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        years = sorted(operation.supported_filing_years().years)
+        for modelo in sorted(operation.modelo_ids()):
+            revisions = sorted(operation.modelo_directory(modelo).revisions, key=lambda item: item.valid_from)
+            for metadata in revisions:
+                grade = operation.revision(modelo, str(metadata.id)).authority_grade
+                if grade is not RegistryAuthorityGrade.CALCULATION:
+                    continue
+                for year in years:
+                    covering = [
+                        revision
+                        for revision in revisions
+                        if revision.valid_from.year <= year
+                        and (revision.valid_to is None or year <= revision.valid_to.year)
+                    ]
+                    if [str(revision.id) for revision in covering] != [str(metadata.id)]:
+                        continue
+                    if periods := metadata.period_selector.periods_for_year(year):
+                        return CalculationGradeEdition(
+                            modelo=modelo, revision_id=str(metadata.id), filing_year=year, period=periods[0]
+                        )
+    return None
 
 
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:
@@ -214,6 +375,33 @@ def revision_covering(modelo_id: str, exercise: int) -> RevisionSelectionMetadat
     return revision
 
 
+def revision_selected_for(modelo_id: str, exercise: int, period: str) -> ModeloRevision:
+    """Return the revision the product selects to calculate ``period`` of ``exercise``.
+
+    Unlike ``revision_covering`` this also answers for an exercise no edition authors,
+    where the registry carries the nearest authored edition across it at calculation
+    grade, because it asks the same resolver the product does.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return operation.revision_for_context(modelo_id, filing_year=exercise, period=period)
+
+
+def revision_serving_period(modelo_id: str, exercise: int, period: str) -> RevisionSelectionMetadata:
+    """Return the one authored revision that serves ``period`` of ``exercise``.
+
+    An exercise one design does not cover whole is split between revisions at a
+    period boundary; ``revision_covering`` is ambiguous there and this is not.
+    """
+    (revision,) = (
+        revision
+        for revision in authored_revisions(modelo_id)
+        if revision.valid_from.year <= exercise
+        and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        and period in revision.period_selector.periods_for_year(exercise)
+    )
+    return revision
+
+
 def revision_before_first_declaring(modelo_id: str, casilla_id: str) -> RevisionSelectionMetadata:
     """Return the authored revision right before the first one that declares ``casilla_id``."""
     revisions = authored_revisions(modelo_id)
@@ -226,3 +414,28 @@ def revision_before_first_declaring(modelo_id: str, casilla_id: str) -> Revision
     if first == 0:
         raise LookupError(f"modelo {modelo_id}: casilla {casilla_id} is declared by the oldest revision")
     return revisions[first - 1]
+
+
+def revision_before_casilla_meaning(modelo_id: str, casilla_id: str) -> RevisionSelectionMetadata:
+    """Return the authored revision right before the one from which ``casilla_id`` holds its present meaning.
+
+    A box a later design repurposes keeps its number while the value it holds
+    changes meaning, so its present meaning starts at the target of its latest
+    repurposed evolution; any other box holds it from its first declaring revision.
+    """
+    revisions = authored_revisions(modelo_id)
+    with bundled_indexed_authority().operation() as operation:
+        loaded = [operation.revision(modelo_id, str(metadata.id)) for metadata in revisions]
+    start = next(index for index, revision in enumerate(loaded) if casilla_id in {c.id for c in revision.casillas})
+    lineages = {
+        casilla.continuidad_id for revision in loaded for casilla in revision.casillas if casilla.id == casilla_id
+    }
+    for index, revision in enumerate(loaded):
+        if any(
+            evolution.evolution_kind is CasillaEvolutionKind.REPURPOSED and evolution.continuidad_id in lineages
+            for evolution in revision.casilla_continuidad_evolutions
+        ):
+            start = max(start, index)
+    if start == 0:
+        raise LookupError(f"modelo {modelo_id}: casilla {casilla_id} holds its meaning from the oldest revision")
+    return revisions[start - 1]

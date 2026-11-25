@@ -48,7 +48,7 @@ from cadrumo.tests.fixtures.provenance import (
     sidecar_provenance,
 )
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -71,7 +71,7 @@ def _all_fixture_pdfs(modelo_id: str) -> tuple[Path, ...]:
 def _verified_declaracion_pdf_profiles() -> list[tuple[str, str, str, str | None]]:
     """Return (modelo_id, revision_id, profile_id, verification_source) for
     every declaracion_pdf profile with corpus_round_trip_verified=true."""
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     rows: list[tuple[str, str, str, str | None]] = []
     for modelo in modelos:
         for rev_id, rev in modelo.revisions.items():

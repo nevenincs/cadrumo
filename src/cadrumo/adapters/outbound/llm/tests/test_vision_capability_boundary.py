@@ -28,14 +28,13 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....core.config_support import LLMProvider
 from .....core.image_media_type import ImageMediaType
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..client import LLMClient
 from ..errors import LLMConfigError
 from ..models import LLMRequest, MultimodalImageInput
 from ..providers.agent import AgentAdapter
-from ..providers.local import LocalAdapter
-from .model_run_support import IMAGE_LANE, TEXT_ONLY_LANE, serving_agent
+from .model_run_support import IMAGE_LANE, ON_HOST_LANE, TEXT_ONLY_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -54,12 +53,7 @@ def _png_image() -> MultimodalImageInput:
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     """Settings whose LLM stores stay inside ``tmp_path``."""
-    return EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    return EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
@@ -104,7 +98,7 @@ class TestALaneThatTakesNoImagesRefusesThem:
     def test_the_agents_own_admission_refusal_reaches_the_consumer_as_the_same_code(self, tmp_path: Path) -> None:
         """A lane whose catalog says nothing is asked; the agent decides at admission."""
         with (
-            serving_agent(run_refusal=ModelRunRefusalCode.INPUT_NOT_SUPPORTED) as service,
+            serving_agent(lane=ON_HOST_LANE, run_refusal=ModelRunRefusalCode.INPUT_NOT_SUPPORTED) as service,
             pytest.raises(LLMConfigError) as caught,
         ):
             asyncio.run(_client(_settings(tmp_path)).complete(_vision_request()))
@@ -128,13 +122,12 @@ class TestALaneThatTakesNoImagesRefusesThem:
 class TestDeclaredImageCapability:
     """Capability is data on the adapter class, not per-adapter memory."""
 
-    def test_both_adapters_forward_images(self) -> None:
-        """The local adapter sends images itself; the agent adapter hands them to the lane.
+    def test_the_agent_adapter_forwards_images(self) -> None:
+        """The agent adapter hands images to the lane.
 
         Whether a given lane accepts them is the catalog's answer, checked at the
         client's dispatch point, so the agent adapter declares that it carries them.
         """
-        assert LocalAdapter.supports_images is True
         assert AgentAdapter.supports_images is True
 
 

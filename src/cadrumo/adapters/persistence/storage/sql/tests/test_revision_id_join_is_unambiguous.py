@@ -24,6 +24,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ... import secure_object_namespaces as namespaces_module
+from ... import secure_object_probe_namespaces as probe_namespaces_module
 from ..secure_object_crypto import derive_revision_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -34,12 +35,13 @@ _SAFE_NAMESPACE = re.compile(r"[a-z0-9._-]+")
 
 def _declared_namespace_values() -> tuple[str, ...]:
     values: list[str] = []
-    for name, value in vars(namespaces_module).items():
-        if not name.isupper():
-            continue
-        candidate = value if isinstance(value, str) else getattr(value, "namespace", None)
-        if isinstance(candidate, str):
-            values.append(candidate)
+    for module in (namespaces_module, probe_namespaces_module):
+        for name, value in vars(module).items():
+            if not name.isupper():
+                continue
+            candidate = value if isinstance(value, str) else getattr(value, "namespace", None)
+            if isinstance(candidate, str):
+                values.append(candidate)
     return tuple(sorted(set(values)))
 
 

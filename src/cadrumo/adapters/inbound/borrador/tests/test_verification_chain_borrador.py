@@ -65,7 +65,12 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .....domain.calculations.registry.tests.modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -147,12 +152,42 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
             for binding, value in M100_NO_DESCENDANT_MATERNIDAD_BINDINGS.items()
             if binding in declared_bindings
         },
+        # The art. 81.2 guarderia increment and the 2022 edition's cotizaciones-limited
+        # art. 81 deduction, neutral zero for a scenario with no descendants.
+        **{
+            binding: Decimal("0")
+            for binding in ("renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad-cotizaciones")
+            if binding in declared_bindings
+        },
+        # The Madrid deducción por cuidado de ascendientes (DL 1/2010 art. 7 bis) of an
+        # edition that computes casilla 1115, neutral zero for a filer with no ascendants.
+        **{
+            binding: Decimal("0")
+            for binding in ("renta-profile-deduccion-madrid-cuidado-ascendientes-count",)
+            if binding in declared_bindings
+        },
+        # The art. 7.p) and art. 75 Ley 19/1994 operands of a filer with no maritime work.
+        **{
+            binding: value
+            for binding, value in M100_NO_MARITIME_WORKER_BINDINGS.items()
+            if binding in declared_bindings
+        },
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero for a childless profile.
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica: non-Madrid corpus fixture mirrors the estatal zero.
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendants: the Art. 59/61 LIRPF mínimo por ascendientes is zero
+        # for both halves (casillas 0515 and 0516).
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         # Individual declaration by a filer with no minor children and no
         # negative general base carried in from earlier ejercicios.
         "renta-profile-declaration-type": Decimal("1"),
@@ -163,6 +198,28 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+    }
+
+
+def _boolean_binding_values_for_year(year: int) -> dict[str, bool]:
+    """Return the boolean-channel binding values: the REBECA path flag of a filer with no maritime work."""
+    declared_bindings = {binding.id for binding in _registry_snapshot_m100(year).revision.bindings}
+    return {
+        binding: value
+        for binding, value in M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS.items()
+        if binding in declared_bindings
     }
 
 
@@ -245,11 +302,14 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     extraction_profile = _borrador_extraction_profile(snapshot)
 
     # Parse the borrador PDF.
+    support = published_supported_filing_years()
+    assert support is not None
     try:
         borrador = parse_borrador(
             pdf_path,
             artefact_kind_override=ArtefactKind.BORRADOR,
-            año_override=year,
+            filing_year=year,
+            supported_filing_years=support,
             extraction_profile=extraction_profile,
             parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )
@@ -287,6 +347,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             date_context={"filing_period": date(year, 6, 30)},
             binding_values=_binding_values_for_year(year),
             enum_binding_values=_enum_binding_values_for_year(year),
+            boolean_binding_values=_boolean_binding_values_for_year(year),
             relation_values=_relation_values_for_year(year),
             date_binding_values={"renta-profile-taxpayer-birth-date": _TAXPAYER_BIRTH_DATE},
         )

@@ -104,7 +104,7 @@ test("automatic startup failure stays actionable without internal codes through 
   expect(await calls(page, "profiles")).toBe(0);
 });
 
-test("leaving startup cancels its timer and status polling", async ({
+test("leaving startup releases observations without later status polling", async ({
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=runtime-starting&latency=0");
@@ -123,26 +123,23 @@ test("leaving startup cancels its timer and status polling", async ({
   ).toHaveCount(0);
 });
 
-for (const scenario of ["manager-still-down", "runtime-startup-stalled"]) {
-  test(`${scenario} exits skeleton loading at the startup deadline`, async ({
-    page,
-  }) => {
-    await page.goto(`/scenarios.html?scenario=${scenario}&latency=0`);
-    await expect(ghost(page).first()).toBeVisible();
-    await page.clock.runFor(91_000);
-    await expect(ghost(page)).toHaveCount(0);
-    await expect(
-      page.locator(".sign-in").getByRole("button", {
-        name: label("desktop.signin.start_services"),
-        exact: true,
-      }),
-    ).toBeVisible();
-    await expect(
-      page.getByLabel(label("desktop.signin.password"), { exact: true }),
-    ).toHaveCount(0);
-    expect(await calls(page, "startManager")).toBe(0);
-  });
-}
+test("a pending first status waits beyond the old timeout until its owner completes", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=runtime-startup-stalled&latency=0");
+  await expect(ghost(page).first()).toBeVisible();
+  const reads = await calls(page, "signInStatus");
+  await page.clock.runFor(121_000);
+  await expect(ghost(page).first()).toBeVisible();
+  expect(await calls(page, "signInStatus")).toBe(reads);
+  expect(await calls(page, "startManager")).toBe(0);
+  expect(await calls(page, "signIn")).toBe(0);
+  await page.evaluate(() => window.__scenarioLoginRead!.complete());
+  await expect(ghost(page)).toHaveCount(0);
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+});
 
 test("reduced motion disables skeleton animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -152,21 +149,49 @@ test("reduced motion disables skeleton animation", async ({ page }) => {
   await expect(shapes).toHaveCSS("animation-name", "none");
 });
 
-test("a timed-out initial read does not prevent a bounded retry", async ({
+test("only the owner's timeout outcome ends a stalled first read", async ({
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=runtime-startup-stalled&latency=0");
   await page.clock.runFor(91_000);
-  const retry = page.locator(".sign-in").getByRole("button", {
-    name: label("desktop.signin.start_services"),
-    exact: true,
-  });
-  await retry.click();
-  await page.clock.runFor(10);
-  expect(await calls(page, "startManager")).toBe(1);
-  expect(await calls(page, "signInStatus")).toBe(2);
-  await page.clock.runFor(91_000);
-  await expect(retry).toBeVisible();
+  await expect(ghost(page).first()).toBeVisible();
+  await page.evaluate(() => window.__scenarioLoginRead!.timeout());
   await expect(ghost(page)).toHaveCount(0);
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.timeout"),
+  );
+  expect(await calls(page, "startManager")).toBe(0);
+  expect(await calls(page, "signInStatus")).toBe(1);
   expect(await calls(page, "signIn")).toBe(0);
+});
+
+test("a stylesheet that never arrives is named instead of mounting the page unstyled", async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.pathname.endsWith(".css"),
+    (route) => route.abort("failed"),
+  );
+  await page.goto("/scenarios.html?scenario=signed-out&latency=0");
+  await expect(page.getByRole("alert")).toContainText(
+    /Stylesheet did not load: .*\.css/,
+  );
+  await expect(page.locator(".scenario-bar")).toHaveCount(0);
+});
+
+test("a stylesheet arriving after the entry script still mounts the page", async ({
+  page,
+}) => {
+  const entry = page.waitForResponse((response) =>
+    /\/assets\/scenarios-[^/]*\.js$/.test(response.url()),
+  );
+  await page.route(
+    (url) => url.pathname.endsWith(".css"),
+    async (route) => {
+      await (await entry).finished();
+      await route.continue();
+    },
+  );
+  await page.goto("/scenarios.html?scenario=signed-out&latency=0");
+  await expect(page.locator(".scenario-bar")).toBeVisible();
 });

@@ -11,16 +11,18 @@ from cadrumo.application.modelo.verification_predicates import evaluate_verifica
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 
 from ..maintenance_support import load_modelo_path
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 _CASILLA_18: CasillaId = validated_casilla_id("18", surface="test M202 B1 resultado previo")
 _CASILLA_26: CasillaId = validated_casilla_id("26", surface="test M202 B2 resultado previo")
-_M202_XOR_REVISION_IDS = ("2019-2022", "2023-2024", "2025-y-siguientes")
+_M202_XOR_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("202"))
 _M202_SINGLE_LANE_CASES: tuple[tuple[str, dict[CasillaId, Decimal]], ...] = (
     ("b1-only", {_CASILLA_18: Decimal("1200"), _CASILLA_26: Decimal("0")}),
     ("b2-only", {_CASILLA_18: Decimal("0"), _CASILLA_26: Decimal("800")}),
@@ -64,7 +66,7 @@ def test_modelo_202_b1_b2_resultado_previo_both_positive_is_blocking() -> None:
 def test_modelo_202_b1_b2_resultado_previo_single_lane_passes() -> None:
     """B1-only and B2-only filings remain valid; the gate only targets both-positive overstatement."""
 
-    predicate = _m202_xor_predicate("2025-y-siguientes")
+    predicate = _m202_xor_predicate(str(open_ended_revision("202").id))
 
     for case_label, casilla_values in _M202_SINGLE_LANE_CASES:
         assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], case_label

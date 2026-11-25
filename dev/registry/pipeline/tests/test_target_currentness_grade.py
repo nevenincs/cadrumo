@@ -20,12 +20,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from ...compiler.authority import compiled_bundled_authority
 from ..cli import (
     GeneratedTreeInvocation,
-    TargetCurrentnessState,
     at_edition_grade,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
     target_currentness,
 )
+from ..target_currentness_fact import TargetCurrentnessState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

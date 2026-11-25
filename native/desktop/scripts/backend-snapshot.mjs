@@ -24,11 +24,13 @@ const PATH_CRATES = [
   "manager",
   "launch_guard",
   "interpreter_host",
+  "vendor/wry",
 ];
 // The interpreter host crate compiles these C host sources into the Cadrumo binary.
 const INTERPRETER_SOURCES = [
   "interpreter/windows/host.manifest",
   "interpreter/windows/host.c",
+  "interpreter/posix/host.c",
   "interpreter/launch_guard.h",
   "interpreter/launch_profile.h",
 ];

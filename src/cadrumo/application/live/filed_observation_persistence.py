@@ -35,8 +35,15 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
+from ...core.time.clock import madrid_wall_clock_to_utc
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
+from ...domain.modelos.filing_kind_evidence import (
+    ObservedFilingKind,
+    observed_filing_kind_from_capture,
+    register_tipo_solicitud_reading,
+)
 from ...domain.modelos.filing_record import (
     AeatRegisterRef,
     ExternalEvidenceKind,
@@ -163,11 +170,12 @@ def persist_filed_calculation_observation(
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
         source_headers=observation.headers,
+        filing_kind=filed_observation_filing_kind(observation),
         # Canonical ingress: official evidence must recover its one typed
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
     )
-    if observation.modelo == Modelo("303"):
+    if observation.modelo == form_for_role("iva.periodic"):
         source_artefact_sha256 = next(
             (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
             None,
@@ -386,7 +394,7 @@ def _register_casillas(
     """
     if (
         not observation.casillas
-        or observation.modelo == Modelo("303")
+        or observation.modelo == form_for_role("iva.periodic")
         or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas)
     ):
         return None, None
@@ -427,7 +435,10 @@ def _register_entry(
     source_lexicals: dict[CasillaId, str] | None,
 ) -> AeatRegisterEntry:
     tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip() or None
-    presented_at = observation.presented_at if observation.presented_at.tzinfo is not None else None
+    # An offset-free reading is a peninsular wall clock, not an absent date:
+    # discarding it left the chain entry unable to say when AEAT recorded the
+    # presentation, and so unable to say whether it was inside the plazo.
+    presented_at = madrid_wall_clock_to_utc(observation.presented_at)
     return AeatRegisterEntry(
         bucket_id=bucket_id,
         modelo=observation.modelo,
@@ -456,7 +467,7 @@ def persistiva_compensation_history_observations_strict(
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
     for observation in observations:
-        if observation.modelo != Modelo("303"):
+        if observation.modelo != form_for_role("iva.periodic"):
             raise LiveApplicationInputError(
                 translated_message="live.errors.iva_history_modelo_303_only",
                 context={"modelo": observation.modelo},
@@ -508,7 +519,7 @@ def latest_declarations_by_period(
 
 def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> tuple[int, str]:
     """Use IVA filing order for Modelo 303 and historic numeric order elsewhere."""
-    if modelo == Modelo("303").value:
+    if modelo == form_for_role("iva.periodic"):
         return iva_compensation_period_sort_key(period)
     if period.is_quarterly:
         quarter_ordinal = period.quarter_ordinal
@@ -639,6 +650,23 @@ def _is_active_filed_observation(observation: FiledObservationProtocol) -> bool:
 
 def _filed_observation_rank(observation: FiledObservationProtocol) -> tuple[bool, datetime, str]:
     return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
+
+
+def filed_observation_filing_kind(observation: FiledObservationProtocol) -> ObservedFilingKind:
+    """Derive the filing kind of one captured AEAT declaration.
+
+    Only the submitted file's declaration marker admits a kind. The register's
+    request type is kept as a reading when it names one correction kind, and a
+    disagreement between the two makes the kind unknown. A capture without the
+    marker -- a declaration-PDF fallback or a register-only row -- is unknown.
+    """
+    return observed_filing_kind_from_capture(
+        observation.filing_kind_marker,
+        register_reading=register_tipo_solicitud_reading(
+            observation.metadata.get("tipo_solicitud"),
+            source_locator=f"aeat-register:{observation.expediente_id}:tipo_solicitud",
+        ),
+    )
 
 
 def filed_observation_source_metadata(

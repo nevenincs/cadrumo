@@ -18,7 +18,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.errors.hierarchy import pydantic_validation_boundary
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
@@ -27,10 +27,10 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity.profile import canonical_profile_bucket_id
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ._kdf_records import canonical_dek_epoch
+from .....core.models import STRICT_FROZEN_CONFIG
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
+from .kdf_records import canonical_dek_epoch
 from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from .records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
@@ -50,7 +50,7 @@ PROFILE_CUSTODY_RECOVERY_FILENAME: Final = "recovery.v1.json"
 class ProfileCustodyRecoveryAad(BaseModel):
     """Closed recovery wrapper AAD descriptor carried by durable records."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     product: Literal["cadrumo"]
@@ -67,7 +67,7 @@ _RECOVERY_AAD = ProfileCustodyRecoveryAad(
 
 
 class _RecoveryPayload(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     profile_id: UUID
@@ -234,7 +234,7 @@ def parse_profile_custody_recovery_envelope(value: bytes) -> ProfileCustodyRecov
             f"profile recovery envelope exceeds {PROFILE_CUSTODY_RECOVERY_MAX_BYTES}-byte canonical limit",
         )
     try:
-        text = value.decode(_UTF_8_ENCODING, errors="strict")
+        text = value.decode(UTF_8_ENCODING, errors="strict")
         parsed = json.loads(
             text,
             object_pairs_hook=reject_duplicate_json_members,

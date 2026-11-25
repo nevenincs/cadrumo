@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
-from cadrumo_client.commands._parameter_validation import (
+from cadrumo_client.commands.parameter_validation import (
     require_coherent_transport,
     require_identifier,
     require_token,

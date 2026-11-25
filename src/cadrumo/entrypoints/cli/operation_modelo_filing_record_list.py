@@ -23,7 +23,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
-from ._filing_chain_payloads import AeatRegisterRefPayload
+from .filing_chain_payloads import AeatRegisterRefPayload
 from .modelo_results import ExternalEvidencePayload, ModeloRecordPayload
 
 

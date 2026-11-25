@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 
@@ -14,34 +16,94 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.live.errors import LiveApplicationInputError
+from cadrumo.application.live.filed_observation_ports import FiledFilingReconciliationPort
 from cadrumo.application.live.justificante import register_capture_as_filing_evidence
 from cadrumo.application.live.justificante_ports import JustificanteRegistrationPorts
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
+from cadrumo.application.modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.core.time.clock import MADRID_TZ, madrid_wall_clock_to_utc
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.schema_base import SettlementDirection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.justificante.schema import Justificante
+from cadrumo.domain.modelos.filing_record import AeatConfirmationState, ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.cli.tests.profile_persistence._justificante_reconcile_support import (
+from cadrumo.entrypoints.cli.tests.profile_persistence.justificante_reconcile_support import (
+    _M111_EXPEDIENTE_ID,
+    MODELO_111_RECEIPT_FIXTURE,
     MODELO_130_FIXTURE,
-    _active_bucket_id,
-    _persist_capture,
-    _seed_unverified_filing,
-    _seed_work_unit,
+    active_bucket_id,
+    persist_capture,
+    seed_unverified_filing,
+    seed_work_unit,
 )
+from cadrumo.tests.fixtures.justificantes.generate_base import FIXTURES, MODELO_111_2026_Q1_TOTAL_A_INGRESAR
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
 __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+# The receipt fixtures are printed for one exercise; every coordinate that must
+# agree with the printed receipt is read from the fixture catalogue.
+_FIXTURE_YEAR = int(next(fixture.ejercicio for fixture in FIXTURES if fixture.filename == MODELO_130_FIXTURE.name))
+# An exercise the receipt does not print: the first supported one.
+_OTHER_YEAR = filing_year_envelope().floor
+assert _OTHER_YEAR != _FIXTURE_YEAR
+
+
+@dataclass(frozen=True, slots=True)
+class _RecordingReconciliation:
+    """Observe the register entry the real reconciliation is handed, and delegate."""
+
+    inner: FiledFilingReconciliationPort
+    observed: list[AeatRegisterEntry]
+
+    def reconcile(
+        self,
+        entry: AeatRegisterEntry,
+        *,
+        actor: str,
+        clock: datetime,
+        authority_operation: PinnedAuthorityOperation | None = None,
+    ) -> FilingReconciliationResult:
+        """Record the entry, then let the real reconciliation decide."""
+        self.observed.append(entry)
+        return self.inner.reconcile(entry, actor=actor, clock=clock, authority_operation=authority_operation)
+
+
+def _reconciliation_total_target(receipt: Justificante) -> str:
+    """Return the casilla the receipt's ``ingresar`` total reconciles against.
+
+    Read from the modelo's own snapshot: the expectation that declares the
+    reconciliation total owns which casilla it is, and naming one here would
+    put a registry fact in a test.
+    """
+    snapshot = published_authority_operation().snapshot(
+        receipt.modelo,
+        filing_year=receipt.period.filing_year,
+        period=receipt.period.registry_token,
+    )
+    targets = {
+        str(kind): casilla_id
+        for expectation in snapshot.revision.verification_expectations
+        for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items()
+    }
+    target = targets.get(SettlementDirection.INGRESAR.value)
+    assert target is not None, f"Modelo {receipt.modelo} declares no ingresar reconciliation total casilla"
+    return str(target)
 
 
 def _registration_ports() -> JustificanteRegistrationPorts:
@@ -64,12 +126,12 @@ def _registration_ports() -> JustificanteRegistrationPorts:
     )
 
 
-def _current_filing(*, filing_year: int = 2026, period: str = "1T"):
+def _current_filing(*, filing_year: int = _FIXTURE_YEAR, period: str = "1T"):
     return (
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=filing_year,
             period=Period.from_year_and_code(filing_year, period),
@@ -84,12 +146,12 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
     cannot be compared with the local figures. The receipt is registered, the
     pending filing stays unconfirmed, and the reconciliation is recorded.
     """
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -107,7 +169,7 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
     events = (
         BucketEventHistoryRepository()
         .load()
-        .for_bucket(_active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
+        .for_bucket(active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
     assert [
         (event.payload["outcome"], event.payload["notice_count"], event.payload["notice_codes_sha256"])
@@ -119,23 +181,23 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
 
 def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -> None:
     """An incomparable repeated receipt preserves prior evidence and registers metadata."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    existing = _seed_unverified_filing(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    existing = seed_unverified_filing(
         work_unit_id=work_unit_id,
         modelo="130",
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
         aeat_accepted=True,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="ABCD1234EFGH5678",
-            imported_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
+            imported_at=datetime(_FIXTURE_YEAR, 4, 18, 9, 30, tzinfo=UTC),
         ),
     )
-    snapshot = _persist_capture(
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -155,7 +217,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
     assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert stamped.external_evidence.reference_id == "ABCD1234EFGH5678"
     assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id()
     events = (
         BucketEventHistoryRepository()
         .load()
@@ -166,23 +228,23 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
 
 def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
     """Direct live capture must not replace a different official evidence reference."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(
         work_unit_id=work_unit_id,
         modelo="130",
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
         aeat_accepted=True,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="DIFFERENTCSV12345",
-            imported_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
+            imported_at=datetime(_FIXTURE_YEAR, 4, 18, 9, 30, tzinfo=UTC),
         ),
     )
-    snapshot = _persist_capture(
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -197,10 +259,10 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -211,12 +273,12 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
 
 def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None:
     """Snapshot metadata cannot replace the CSV parsed from the official receipt bytes."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     ).model_copy(update={"csv": "DIFFERENTCSV12345"})
 
@@ -232,10 +294,10 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -251,12 +313,12 @@ def test_a_capture_whose_expediente_is_not_the_receipt_presentation_id_reaches_r
     mismatch. The capture reaches the reconciliation, which records the
     expediente it was given.
     """
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    captured = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    captured = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
     snapshot = captured.model_copy(update={"expediente_id": "13020260410DIFFERENTIDENT"})
@@ -274,19 +336,54 @@ def test_a_capture_whose_expediente_is_not_the_receipt_presentation_id_reaches_r
     events = (
         BucketEventHistoryRepository()
         .load()
-        .for_bucket(_active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
+        .for_bucket(active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
     assert [event.payload["aeat_expediente_id"] for event in events] == ["13020260410DIFFERENTIDENT"]
 
 
+def test_the_capture_entry_carries_the_receipts_own_presentation_instant() -> None:
+    """The register entry says when AEAT stamped the receipt.
+
+    The entry used to carry identifiers only, so a chain entry built from a
+    live capture could not say when the declaration was presented, and so could
+    not say whether it was presented inside the plazo. The receipt prints that
+    timestamp without an offset, as peninsular official time.
+    """
+    receipt = parse_justificante_bytes(MODELO_130_FIXTURE.read_bytes())
+    assert receipt.presented_at.tzinfo is None, "the receipt still prints an offset-free wall clock"
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
+        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        modelo=Modelo("130").value,
+        filing_year=_FIXTURE_YEAR,
+        period="1T",
+    )
+    observed: list[AeatRegisterEntry] = []
+    ports = _registration_ports()
+    recording = replace(ports, filing_reconciliation=_RecordingReconciliation(ports.filing_reconciliation, observed))
+
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_unconfirmed",
+    ):
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=recording)
+
+    assert len(observed) == 1
+    presented_at = observed[0].register.presented_at
+    assert presented_at is not None
+    assert presented_at == madrid_wall_clock_to_utc(receipt.presented_at)
+    assert presented_at.astimezone(MADRID_TZ).replace(tzinfo=None) == receipt.presented_at
+
+
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another modelo."""
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="303", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="303", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="303", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo="303",
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -301,10 +398,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -314,12 +411,12 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
 
 def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
     """Only the current ACTIVE live capture may become filing evidence."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    active_snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    active_snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
     superseded_snapshot = active_snapshot.model_copy(
@@ -343,10 +440,10 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -356,12 +453,12 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another year."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2025, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2025, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_OTHER_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_OTHER_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2025,
+        filing_year=_OTHER_YEAR,
         period="1T",
     )
 
@@ -376,10 +473,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_OTHER_YEAR,
+            period=Period.from_year_and_code(_OTHER_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -389,12 +486,12 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another period."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="2T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="2T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="2T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="2T",
     )
 
@@ -409,10 +506,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "2T"),
         )
     )
     assert filing is not None
@@ -425,12 +522,12 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
     set_active_test_profile_facts(
         (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -445,10 +542,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FIXTURE_YEAR,
+            period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
         )
     )
     assert filing is not None
@@ -458,11 +555,11 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
 
 def test_stamp_refuses_when_no_current_filing_exists() -> None:
     """Stamping refuses when the captured period has no filing record yet."""
-    _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=2026,
+        filing_year=_FIXTURE_YEAR,
         period="1T",
     )
 
@@ -471,3 +568,55 @@ def test_stamp_refuses_when_no_current_filing_exists() -> None:
         match=r"application\.live\.justificante\.errors\.filing_record_missing",
     ):
         register_capture_as_filing_evidence(snapshot=snapshot, ports=_registration_ports())
+
+
+def test_a_reconciling_capture_confirms_the_chain_and_keeps_the_presentation_instant() -> None:
+    """A receipt whose total reconciles confirms the filing and dates it.
+
+    Every other case in this module ends in a refusal, so nothing here used to
+    exercise a COMMITTED AEAT-origin chain entry: the register reference built
+    on confirmation was asserted only at the reconciliation seam. This case
+    completes it. Modelo 111 is the bundled family whose snapshot declares a
+    reconciliation total casilla, so it is the one receipt a confirmation can
+    reconcile against; the revision is seeded with the same casilla 30 value the
+    receipt prints, read from the fixture rather than repeated here.
+
+    The confirmed entry carries the receipt's own presentation instant, read on
+    the Spanish civil clock the receipt prints it in.
+    """
+    receipt = parse_justificante_bytes(MODELO_111_RECEIPT_FIXTURE.read_bytes())
+    printed_total = receipt.total_a_ingresar
+    assert printed_total is not None, "the 111 receipt fixture prints a total a ingresar"
+    assert printed_total == Decimal(MODELO_111_2026_Q1_TOTAL_A_INGRESAR)
+    target = _reconciliation_total_target(receipt)
+
+    work_unit_id = seed_work_unit(modelo="111", filing_year=_FIXTURE_YEAR, period="1T")
+    pending = seed_unverified_filing(
+        work_unit_id=work_unit_id,
+        modelo="111",
+        filing_year=_FIXTURE_YEAR,
+        period="1T",
+        casilla_values={target: printed_total},
+    )
+    snapshot = persist_capture(
+        pdf_bytes=MODELO_111_RECEIPT_FIXTURE.read_bytes(),
+        modelo=Modelo("111").value,
+        filing_year=_FIXTURE_YEAR,
+        period="1T",
+        expediente_id=_M111_EXPEDIENTE_ID,
+        csv=receipt.csv,
+    )
+
+    confirmed = register_capture_as_filing_evidence(snapshot=snapshot, ports=_registration_ports())
+
+    assert confirmed.filing_record_id == pending.filing_record_id
+    assert confirmed.confirmation is AeatConfirmationState.CONFIRMADA
+    assert confirmed.aeat_accepted is True
+    assert confirmed.external_evidence is not None
+    assert confirmed.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
+    assert confirmed.aeat_register is not None
+    assert confirmed.aeat_register.csv == receipt.csv
+    presented_at = confirmed.aeat_register.presented_at
+    assert presented_at is not None
+    assert presented_at == madrid_wall_clock_to_utc(receipt.presented_at)
+    assert presented_at.astimezone(MADRID_TZ).replace(tzinfo=None) == receipt.presented_at

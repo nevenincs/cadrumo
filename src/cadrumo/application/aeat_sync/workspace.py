@@ -6,23 +6,38 @@ import hashlib
 import hmac
 import re
 import secrets
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import Annotated, Any, Final, NotRequired, Self, TypedDict, Unpack, override
+from types import MappingProxyType
+from typing import (
+    Annotated,
+    Final,
+    Generic,
+    NotRequired,
+    Self,
+    TypeAliasType,
+    TypedDict,
+    TypeVar,
+    Unpack,
+    override,
+)
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...domain.modelos.codes import ModeloCode
+from ..live.borrador_100 import Borrador100SnapshotRefusalReason
 from ..modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..modelo.reconciliation_records import ModeloReconciliationDiff
 from ..operations.models import OperationDefinitionId
@@ -40,14 +55,18 @@ _NOTIFICATION_SELECTION_PATTERN: Final[str] = (
     rf"^{re.escape(_NOTIFICATION_SELECTION_PREFIX)}{HEX_PATTERN_64.removeprefix('^').removesuffix('$')}$"
 )
 
-type AeatSyncNotificationSelectionKey = Annotated[
-    str,
-    StringConstraints(
-        min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
-        max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
-        pattern=_NOTIFICATION_SELECTION_PATTERN,
-    ),
-]
+# Keep a named runtime alias while Semgrep cannot parse this PEP 695 declaration.
+AeatSyncNotificationSelectionKey = TypeAliasType(  # noqa: UP040
+    "AeatSyncNotificationSelectionKey",
+    Annotated[
+        str,
+        StringConstraints(
+            min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+            max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+            pattern=_NOTIFICATION_SELECTION_PATTERN,
+        ),
+    ],
+)
 """Opaque, bounded identity for one projected notification row.
 
 The admission coordinate remains on :class:`AeatSyncWorkspaceFactV1` only.
@@ -479,15 +498,18 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
         return self
 
     @override
-    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
+    def model_copy(self, *, update: Mapping[str, object] | None = None, deep: bool = False) -> Self:
         """Keep state/action closure intact across mutation-test copies."""
         if update is None:
             return super().model_copy(deep=deep)
         return type(self).model_validate({**self.model_dump(), **update})
 
 
+RowT = TypeVar("RowT", bound=BaseModel)
+
+
 @dataclass(frozen=True, slots=True)
-class AeatSyncWorkspaceFactV1[RowT: BaseModel]:
+class AeatSyncWorkspaceFactV1(Generic[RowT]):  # noqa: UP046 -- Semgrep cannot parse the PEP 695 form.
     """Admission-only scope/private identity projected away from ``row``."""
 
     bucket_id: BucketId
@@ -531,11 +553,309 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
         return self
 
 
+AEAT_SYNC_STATUS_CONTRACT_VERSION: Final[int] = 1
+
+
+class AeatSyncStatusArea(StrEnum):
+    """The areas the AEAT sync page brings and judges, in the order a run brings them.
+
+    Borrador 100 comes last because it is brought by importing a downloaded PDF
+    and is never part of a run over everything.
+    """
+
+    CENSUS = "census"
+    IDENTITY_CHECKS = "identity_checks"
+    NOTIFICATIONS = "notifications"
+    IVA_WALLET = "iva_wallet"
+    FILED_DECLARATIONS = "filed_declarations"
+    BORRADOR_100 = "borrador_100"
+
+
+class AeatSyncAreaState(StrEnum):
+    """What a stored capture establishes about one area right now.
+
+    The four stay distinct: an area never brought has no capture, a current one
+    has a capture inside its horizon, a possibly stale one has a capture older
+    than its horizon, and an unavailable one could not be read at all.
+    """
+
+    NEVER_BROUGHT = "never_brought"
+    CURRENT = "current"
+    POSSIBLY_STALE = "possibly_stale"
+    UNAVAILABLE = "unavailable"
+
+
+_MODELO_ID_LENGTH: Final = 3
+_MODELO_ID_SHAPE: Final = r"^[0-9]{3}$"
+_PERIOD_TOKEN_MAX_LENGTH: Final = 8
+
+_RARELY_CHANGING_AREA_FRESHNESS_DAYS: Final = 90
+_NOTIFICATIONS_FRESHNESS_DAYS: Final = 7
+_IVA_WALLET_FRESHNESS_DAYS: Final = 30
+
+AEAT_SYNC_STALENESS_HORIZONS: Final[Mapping[AeatSyncStatusArea, timedelta | None]] = MappingProxyType(
+    {
+        AeatSyncStatusArea.CENSUS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
+        AeatSyncStatusArea.IDENTITY_CHECKS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
+        AeatSyncStatusArea.NOTIFICATIONS: timedelta(days=_NOTIFICATIONS_FRESHNESS_DAYS),
+        AeatSyncStatusArea.IVA_WALLET: timedelta(days=_IVA_WALLET_FRESHNESS_DAYS),
+        AeatSyncStatusArea.FILED_DECLARATIONS: timedelta(days=_RARELY_CHANGING_AREA_FRESHNESS_DAYS),
+        # An imported Borrador 100 PDF is a document the person chose to bring;
+        # no ruling gives it an age after which it may be out of date.
+        AeatSyncStatusArea.BORRADOR_100: None,
+    }
+)
+"""How old a successful capture may be before its area is possibly stale.
+
+An area is possibly stale once its last successful capture is STRICTLY older than
+its horizon; a capture exactly at the horizon is still current. ``None`` means
+no ruling gives the area an age limit, so it is never judged stale.
+"""
+
+
+class AeatSyncFiledPeriodCountsV1(BaseModel):
+    """How the filed periods this profile holds compare with the stored AEAT register.
+
+    The four counts partition every period either side knows: ``matched`` is
+    filed locally and shown by the AEAT register, ``aeat_only`` is shown by the
+    register with no local filing, ``local_only`` is filed locally and absent
+    from the register capture, and ``differing`` is shown by the register with
+    evidence that conflicts or raises a concern and so cannot be matched.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    matched: NonNegativeInt
+    aeat_only: NonNegativeInt
+    local_only: NonNegativeInt
+    differing: NonNegativeInt
+
+
+class AeatSyncFiledMatch(StrEnum):
+    """How one declaration the AEAT register shows stands against this profile's records."""
+
+    MATCHED = "matched"
+    AEAT_ONLY = "aeat_only"
+    LOCAL_ONLY = "local_only"
+    DIFFERING = "differing"
+
+
+class AeatSyncFiledLocalRecord(StrEnum):
+    """What this profile itself holds for one declaration.
+
+    A draft is an open work unit with no filing record; marked filed is a local
+    filing record. Neither says anything about the AEAT.
+    """
+
+    NONE = "none"
+    DRAFT = "draft"
+    MARKED_FILED = "marked_filed"
+
+
+class AeatSyncFiledDifference(StrEnum):
+    """What the stored captures establish as differing for one declaration.
+
+    ``STATUS`` means the register shows the declaration inactive, of unknown
+    state, or with conflicting submissions, so it cannot be matched.
+    """
+
+    STATUS = "status"
+
+
+class AeatSyncFiledRowV1(BaseModel):
+    """One declaration either side knows, with its three facts kept apart.
+
+    The local record, what the AEAT register showed and whether a receipt was
+    verified are separate: a matching record is never a confirmed receipt.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    modelo: Annotated[
+        str, StringConstraints(min_length=_MODELO_ID_LENGTH, max_length=_MODELO_ID_LENGTH, pattern=_MODELO_ID_SHAPE)
+    ]
+    filing_year: FilingYear
+    period: Annotated[str, StringConstraints(min_length=1, max_length=_PERIOD_TOKEN_MAX_LENGTH)] | None
+    """The registry period token, or nothing for an annual declaration."""
+    match: AeatSyncFiledMatch
+    local_record: AeatSyncFiledLocalRecord
+    local_record_at: datetime | None = None
+    """When the draft was last changed or the record was marked filed."""
+    aeat_shown_at: datetime | None = None
+    """When the register capture that showed the declaration was made."""
+    receipt_confirmed: bool = False
+    differences: tuple[AeatSyncFiledDifference, ...] = ()
+
+    @field_validator("local_record_at", "aeat_shown_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _coherent(self) -> Self:
+        if (self.local_record is AeatSyncFiledLocalRecord.NONE) != (self.local_record_at is None):
+            raise ValueError("only a held local record carries its date")
+        shown = self.aeat_shown_at is not None
+        self._validate_match_group(shown=shown)
+        if (self.match is AeatSyncFiledMatch.DIFFERING) != bool(self.differences):
+            raise ValueError("only a differing declaration names what differs")
+        if self.receipt_confirmed and not shown:
+            raise ValueError("a confirmed receipt requires an AEAT observation")
+        if self.receipt_confirmed and self.match is AeatSyncFiledMatch.DIFFERING:
+            raise ValueError("a differing declaration cannot carry a confirmed receipt")
+        return self
+
+    def _validate_match_group(self, *, shown: bool) -> None:
+        """Check the match claim against the independently held records."""
+        filed = self.local_record is AeatSyncFiledLocalRecord.MARKED_FILED
+        expected = {
+            AeatSyncFiledMatch.MATCHED: shown and filed,
+            AeatSyncFiledMatch.AEAT_ONLY: shown and not filed,
+            AeatSyncFiledMatch.LOCAL_ONLY: filed and not shown,
+            AeatSyncFiledMatch.DIFFERING: shown,
+        }[self.match]
+        if not expected:
+            raise ValueError("match group contradicts the local record and the AEAT observation")
+
+
+class AeatSyncRefusedSnapshotV1(BaseModel):
+    """One stored capture of an area that the pinned authority refuses to read.
+
+    It is named with its reason rather than dropped, so a refused capture never
+    reads as one that was never brought.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    snapshot_id: SnapshotId
+    reason: Borrador100SnapshotRefusalReason
+
+
+class AeatSyncAreaStatusV1(BaseModel):
+    """One area's state, last successful capture and last attempt.
+
+    ``refused_snapshots`` names each stored Borrador 100 capture the pinned
+    authority refuses. The area still reports its readable captures; with none
+    it is unavailable rather than never brought.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    area: AeatSyncStatusArea
+    state: AeatSyncAreaState
+    last_brought_at: datetime | None = None
+    """The UTC instant of the last successful capture, or nothing when none is known."""
+    stale_after_days: NonNegativeInt | None = None
+    """The horizon in whole days, or nothing when the area is never judged stale."""
+    last_attempt_at: datetime | None = None
+    last_attempt_succeeded: bool | None = None
+    """Only areas whose runs leave a sync-run record carry an attempt."""
+    refusal: NamespacedId | None = None
+    unread_notification_count: NonNegativeInt | None = None
+    filed_periods: AeatSyncFiledPeriodCountsV1 | None = None
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None
+    """Each declaration the counts count, served with them and only with them."""
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
+    """Stored Borrador 100 rows written under an older storage schema; they cannot be read or named."""
+
+    @field_validator("last_brought_at", "last_attempt_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _coherent(self) -> Self:
+        brought = self.state in {AeatSyncAreaState.CURRENT, AeatSyncAreaState.POSSIBLY_STALE}
+        if brought != (self.last_brought_at is not None):
+            raise ValueError("only a brought area carries its capture time")
+        if (self.state is AeatSyncAreaState.UNAVAILABLE) != (self.refusal is not None):
+            raise ValueError("only an unavailable area carries a refusal")
+        if (self.last_attempt_at is None) != (self.last_attempt_succeeded is None):
+            raise ValueError("an attempt carries both its time and its outcome")
+        if self.state is AeatSyncAreaState.POSSIBLY_STALE and self.stale_after_days is None:
+            raise ValueError("a possibly stale area requires its horizon")
+        self._validate_counts(brought=brought)
+        self._validate_refused_snapshots()
+        self._validate_outdated_snapshots()
+        return self
+
+    def _validate_refused_snapshots(self) -> None:
+        """Require refused captures to belong to a store that was read, in snapshot-id order."""
+        if not self.refused_snapshots:
+            return
+        if self.area is not AeatSyncStatusArea.BORRADOR_100:
+            raise ValueError("only Borrador 100 names refused captures")
+        if self.state is AeatSyncAreaState.NEVER_BROUGHT:
+            raise ValueError("an area with a refused capture was brought")
+        ids = tuple(item.snapshot_id for item in self.refused_snapshots)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("refused captures must be sorted and unique")
+
+    def _validate_outdated_snapshots(self) -> None:
+        """Require outdated stored rows to belong to a Borrador 100 store that holds them."""
+        if not self.outdated_stored_snapshots:
+            return
+        if self.area is not AeatSyncStatusArea.BORRADOR_100:
+            raise ValueError("only Borrador 100 counts outdated stored snapshots")
+        if self.state is AeatSyncAreaState.NEVER_BROUGHT:
+            raise ValueError("an area with an outdated stored snapshot was brought")
+
+    def _validate_counts(self, *, brought: bool) -> None:
+        """Require counts to belong to a captured area of the matching kind."""
+        if not brought and (self.unread_notification_count is not None or self.filed_periods is not None):
+            raise ValueError("counts require a brought area")
+        if self.unread_notification_count is not None and self.area is not AeatSyncStatusArea.NOTIFICATIONS:
+            raise ValueError("only notifications carry an unread count")
+        if self.filed_periods is not None and self.area is not AeatSyncStatusArea.FILED_DECLARATIONS:
+            raise ValueError("only filed declarations carry period counts")
+        self._validate_filed_counts()
+
+    def _validate_filed_counts(self) -> None:
+        """Require filed rows and their group sizes to travel together."""
+        if (self.filed_rows is None) != (self.filed_periods is None):
+            raise ValueError("filed rows are served with their counts")
+        if self.filed_rows is not None and self.filed_periods is not None:
+            groups = Counter(row.match for row in self.filed_rows)
+            counts = self.filed_periods
+            if (counts.matched, counts.aeat_only, counts.local_only, counts.differing) != (
+                groups[AeatSyncFiledMatch.MATCHED],
+                groups[AeatSyncFiledMatch.AEAT_ONLY],
+                groups[AeatSyncFiledMatch.LOCAL_ONLY],
+                groups[AeatSyncFiledMatch.DIFFERING],
+            ):
+                raise ValueError("filed period counts must be the rows' group sizes")
+
+
+class AeatSyncStatusV1(BaseModel):
+    """Per-area AEAT sync standing, read from stored captures only."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    contract_version: int = AEAT_SYNC_STATUS_CONTRACT_VERSION
+    observed_at: datetime
+    areas: tuple[AeatSyncAreaStatusV1, ...]
+    filed_declaration_years: tuple[FilingYear, ...]
+    iva_wallet_years: tuple[FilingYear, ...]
+
+    @field_validator("observed_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _observed_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _every_area_once(self) -> Self:
+        if tuple(item.area for item in self.areas) != tuple(AeatSyncStatusArea):
+            raise ValueError("areas must cover the closed catalogue in order")
+        return self
+
+
 def aeat_sync_workspace_sources(zone: AeatSyncWorkspaceZone) -> tuple[AeatSyncWorkspaceSource, ...]:
     """Return the canonical independent sources required by one zone."""
-    from . import _workspace_projection
+    from . import workspace_projection
 
-    return _workspace_projection.aeat_sync_workspace_sources(zone)
+    return workspace_projection.aeat_sync_workspace_sources(zone)
 
 
 _NOTIFICATION_SELECTION_NAMESPACE: Final[str] = "aeat_sync.notification.selection.v1"
@@ -639,6 +959,6 @@ def project_aeat_sync_workspace(
     **arguments: Unpack[_AeatSyncWorkspaceProjectionArguments],
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project already-loaded, scoped facts through the single projection owner."""
-    from ._workspace_projection import project_aeat_sync_workspace as project
+    from .workspace_projection import project_aeat_sync_workspace as project
 
     return project(**arguments)

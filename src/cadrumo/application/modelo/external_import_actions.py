@@ -14,7 +14,7 @@ The imported record is the production baseline consumed by the amendment path.
 It is intentionally distinct from a locally calculated and filed return:
 ``external_evidence`` marks that the values came from official AEAT evidence,
 while
-:func:`~cadrumo.application.modelo._calculation_helpers.external_filing_observations`
+:func:`~cadrumo.application.modelo.calculation_helpers.external_filing_observations`
 keeps the imported casilla values on the same registry-grounded
 :class:`CasillaObservation` contract as local
 calculation revisions.
@@ -30,7 +30,7 @@ See Also:
         Receipt metadata store required by justificante-PDF and live-capture evidence
         kinds. CSV/XLSX register imports bind the source reference directly to
         the target work-unit coordinates instead of masquerading as a receipt.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_import_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
     :class:`ExternalEvidence`:
@@ -50,20 +50,22 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -100,17 +102,15 @@ from ..calculations.observations_repository import (
 )
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 from ..workflow.active_profile import require_active_profile_bucket_id
-from ._calculation_helpers import external_filing_observations as _external_filing_observations
-from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
-from .action_errors import ExternalModeloImportError
+from .calculation_helpers import external_filing_observations
 from .calculation_repository import calculation_revision_catalogue_repository
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import external_import_refusal
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
-from .work_addressing import (
-    ModeloWorkRevisionConflictError,
-    ModeloWorkVisibleTargetAmbiguousError,
-    law_selected_revision_for_work_target,
-)
+from .registry_helpers import reject_unknown_import_casillas
+from .work_address_errors import ModeloWorkRevisionConflictError, ModeloWorkVisibleTargetAmbiguousError
+from .work_addressing import law_selected_revision_for_work_target
 from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
@@ -185,15 +185,26 @@ def _select_active_external_import_work_unit(
     )
 
 
+def _source_action_arguments(source: ExternalFilingBaselineSource) -> dict[str, str]:
+    """Return the import arguments a source already states, so the refusal asks only for the rest."""
+    return {
+        "evidence_kind": source.evidence_kind.value,
+        "evidence_reference_id": source.evidence_reference_id,
+    }
+
+
 def _validate_external_source_shape(source: ExternalFilingBaselineSource) -> None:
     """Reject source metadata that cannot identify a filing target or values."""
     if source.period.filing_year != source.filing_year:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_CONSISTENCY,
             translated_message="application.modelo.errors.external_import_source_period_mismatch",
         )
     if not source.casilla_lexicals:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_VALUES,
             translated_message="application.modelo.errors.external_filing_no_casilla_values",
+            action_arguments=_source_action_arguments(source),
         )
 
 
@@ -207,9 +218,11 @@ def _parse_external_source_values(
         casilla_id = validated_casilla_id(raw_casilla_id, surface="external filing source")
         lexical = raw_lexical.strip()
         if not lexical:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_VALUES,
                 translated_message="application.modelo.errors.external_import_source_lexical_blank",
                 context={"casilla_id": casilla_id},
+                action_arguments=_source_action_arguments(source),
             )
         try:
             decimal_value = Decimal(
@@ -219,9 +232,11 @@ def _parse_external_source_values(
                 ),
             )
         except (InvalidOperation, ValueError) as exc:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_VALUES,
                 translated_message="application.modelo.errors.external_import_source_lexical_non_numeric",
                 context={"casilla_id": casilla_id},
+                action_arguments=_source_action_arguments(source),
             ) from exc
         lexical_values[casilla_id] = raw_lexical
         decimal_values[casilla_id] = decimal_value
@@ -246,7 +261,8 @@ def _validate_external_source_registry_values(
     }
     missing_required = required_numeric_ids.difference(canonical_values)
     if missing_required:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_VALUES,
             translated_message="application.modelo.errors.external_import_source_incomplete",
             context={"missing_casilla_ids": ",".join(sorted(missing_required))},
         )
@@ -266,11 +282,13 @@ def _select_external_source_work_unit(
             bucket_id=bucket_id,
         )
     except ModeloWorkVisibleTargetAmbiguousError as exc:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.WORK_UNIT,
             translated_message="application.modelo.errors.external_import_source_work_unit_ambiguous",
         ) from exc
     except ModeloWorkRevisionConflictError as exc:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.WORK_UNIT,
             translated_message="application.modelo.errors.external_import_source_revision_mismatch",
         ) from exc
 
@@ -344,7 +362,7 @@ def external_filing_source_casillas(
     """
     _validate_external_source_shape(source)
     lexical_values, decimal_values = _parse_external_source_values(source)
-    snapshot, canonical_values = _reject_unknown_import_casillas(
+    snapshot, canonical_values = reject_unknown_import_casillas(
         modelo=source.modelo,
         filing_year=source.filing_year,
         period=source.period,
@@ -374,7 +392,7 @@ def _load_external_import_target[CasillaKey](
         repository_bucket_id=work_unit_repository.bucket_id,
         use=ActiveWorkUnitUse.IMPORT,
     )
-    snapshot, canonical_values = _reject_unknown_import_casillas(
+    snapshot, canonical_values = reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -395,7 +413,8 @@ def _validated_source_lexicals[CasillaKey](
         for raw_id, value in source_lexicals.items()
     }
     if canonical_lexicals.keys() != canonical_values.keys():
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_CONSISTENCY,
             translated_message="application.modelo.errors.external_import_source_casilla_mismatch",
         )
     validated: dict[CasillaId, str] = {}
@@ -409,12 +428,14 @@ def _validated_source_lexicals[CasillaKey](
                 ),
             )
         except (InvalidOperation, ValueError) as exc:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_CONSISTENCY,
                 translated_message="application.modelo.errors.external_import_source_lexical_non_numeric",
                 context={"casilla_id": casilla_id},
             ) from exc
         if not lexical or parsed != canonical_values[casilla_id]:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_CONSISTENCY,
                 translated_message="application.modelo.errors.external_import_source_lexical_value_mismatch",
                 context={"casilla_id": casilla_id},
             )
@@ -432,8 +453,9 @@ def _validate_external_import_evidence_requirements(
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> None:
     """Enforce filing-instance and receipt-bound evidence requirements."""
-    if work_unit.modelo == Modelo("303").value and filing_instance_evidence is None:
-        raise ExternalModeloImportError(
+    if work_unit.modelo == form_for_role("iva.periodic") and filing_instance_evidence is None:
+        raise external_import_refusal(
+            FilingImportRefusalCause.FILING_INSTANCE_EVIDENCE,
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
             context={"work_unit_id": work_unit.work_unit_id},
         )
@@ -463,7 +485,7 @@ def _prepare_external_import_values[CasillaKey](
         source_lexicals=source_lexical_values_by_casilla_id,
     )
     outputs = dict(canonical_values)
-    observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
+    observations = external_filing_observations(casilla_values=outputs, snapshot=snapshot)
     return input_values_by_casilla_id, outputs, observations
 
 
@@ -495,7 +517,8 @@ def _prepare_external_import_revision(
     )
     revisions, revisions_revision_id = repository.load_revisioned(operation=operation)
     if revision_id in revisions:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.REVISION_DUPLICATE,
             translated_message="application.modelo.errors.external_import_duplicate_revision",
             context={"calculation_revision_id": revision_id},
         )
@@ -636,11 +659,18 @@ def _external_import_reconciliation_ports(
 
 
 def _external_import_register_reference(receipt: Justificante | None, cleaned_reference: str) -> AeatRegisterRef:
-    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt."""
+    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt.
+
+    A receipt carries the presentation timestamp AEAT stamped on it, as a
+    peninsular wall clock, so the reference keeps that instant: it is what says
+    whether the declaration was presented inside its plazo. A bare CSV-register
+    reference carries no presentation date, and none is invented for it.
+    """
     return AeatRegisterRef(
         expediente_id=None if receipt is not None else cleaned_reference,
         csv=receipt.csv if receipt is not None else None,
         justificante_number=receipt.presentation_id if receipt is not None else None,
+        presented_at=madrid_wall_clock_to_utc(receipt.presented_at) if receipt is not None else None,
     )
 
 
@@ -654,7 +684,8 @@ def _reconciled_external_import_result(
 
     record = fr_repo.load().get(result.filing_record_id) if result.filing_record_id is not None else None
     if result.outcome is FilingReconciliationOutcome.UNVERIFIABLE or record is None:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.RECONCILIATION,
             translated_message="application.modelo.errors.external_import_unverifiable",
             context={
                 "work_unit_id": work_unit.work_unit_id,
@@ -789,7 +820,7 @@ def import_external_filing_evidence[CasillaKey](
         ports=ports,
         operation=operation,
         actor=actor,
-        clock=clock or _utc_now(),
+        clock=clock or now(),
     )
     return _reconciled_external_import_result(fr_repo, result, work_unit)
 
@@ -863,6 +894,27 @@ def prepare_external_filing_revision[CasillaKey](
     )
 
 
+def _observed_filing_timeliness(
+    *,
+    work_unit: WorkUnit,
+    aeat_register: AeatRegisterRef | None,
+    declaration_kind: FilingDeclarationKind,
+    operation: PinnedAuthorityOperation,
+) -> FilingTimeliness:
+    """Judge the AEAT-observed presentation date against the period's filing window."""
+    presented_at = aeat_register.presented_at if aeat_register is not None else None
+    if presented_at is None:
+        return FilingTimeliness.UNKNOWN
+    return decide_filing_timeliness(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=presented_at,
+        operation=operation,
+        declaration_kind=declaration_kind,
+    )
+
+
 def build_external_filing_record(
     *,
     filing_record_id: str,
@@ -875,9 +927,18 @@ def build_external_filing_record(
     declaration_kind: FilingDeclarationKind,
     member_nif: str | None = None,
     amends_filing_record_id: str | None = None,
+    operation: PinnedAuthorityOperation,
     aeat_register: AeatRegisterRef | None = None,
 ) -> ModeloRecord:
-    """Build the in-force, AEAT-origin chain entry for externally presented content."""
+    """Build the in-force, AEAT-origin chain entry for externally presented content.
+
+    The plazo posture is decided from the AEAT-observed presentation date the
+    register carries, never from ``filed_at``: ``filed_at`` is when this import
+    ran, so judging on it would call every reconstruction of an old filing late.
+    Without an observed presentation date the posture stays unknown -- an import
+    that cannot say when the declaration was presented cannot say whether it was
+    presented in time.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=work_unit.work_unit_id,
@@ -893,6 +954,12 @@ def build_external_filing_record(
         origin=FilingOrigin.AEAT,
         confirmation=AeatConfirmationState.CONFIRMADA,
         declaration_kind=declaration_kind,
+        filing_timeliness=_observed_filing_timeliness(
+            work_unit=work_unit,
+            aeat_register=aeat_register,
+            declaration_kind=declaration_kind,
+            operation=operation,
+        ),
         aeat_register=aeat_register,
         amends_filing_record_id=amends_filing_record_id,
         status=ModeloRecordStatus.VIGENTE,
@@ -909,13 +976,16 @@ def _validated_external_reference[CasillaKey](
     evidence_reference_id: str,
 ) -> str:
     """Return a stripped evidence reference after basic import-shape checks."""
-    if not casilla_values:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_filing_no_casilla_values",
-        )
     cleaned_reference = evidence_reference_id.strip()
+    if not casilla_values:
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_VALUES,
+            translated_message="application.modelo.errors.external_filing_no_casilla_values",
+            action_arguments={"evidence_reference_id": cleaned_reference} if cleaned_reference else None,
+        )
     if not cleaned_reference:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.EVIDENCE_REFERENCE,
             translated_message="application.modelo.errors.external_filing_evidence_reference_blank",
         )
     return cleaned_reference
@@ -942,7 +1012,8 @@ def require_bound_justificante_artifact(
         return
     cleaned_expected_tax_id = (expected_tax_id or "").strip()
     if not cleaned_expected_tax_id:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.TAXPAYER_TAX_ID,
             translated_message="application.modelo.errors.external_import_tax_id_missing",
             context={
                 "evidence_reference_id": evidence_reference_id,
@@ -951,7 +1022,8 @@ def require_bound_justificante_artifact(
         )
     justificante = justificante_repository.load(evidence_reference_id)
     if justificante is None:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.JUSTIFICANTE_ARTIFACT,
             translated_message="application.modelo.errors.external_import_justificante_missing",
             context={
                 "evidence_reference_id": evidence_reference_id,
@@ -965,7 +1037,8 @@ def require_bound_justificante_artifact(
         period=period,
         expected_tax_id=cleaned_expected_tax_id,
     ):
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.JUSTIFICANTE_TARGET,
             translated_message="application.modelo.errors.external_import_justificante_mismatch",
             context={
                 "evidence_reference_id": evidence_reference_id,
@@ -973,6 +1046,7 @@ def require_bound_justificante_artifact(
                 "filing_year": str(filing_year),
                 "period": period.registry_token,
             },
+            action_arguments={"evidence_kind": evidence_kind.value, "evidence_reference_id": evidence_reference_id},
         )
 
 

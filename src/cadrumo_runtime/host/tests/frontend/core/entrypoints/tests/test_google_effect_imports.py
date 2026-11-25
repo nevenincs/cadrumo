@@ -71,6 +71,12 @@ class MissingExportDependencies(importlib.abc.MetaPathFinder):
         } or fullname == 'googleapiclient' or fullname.startswith('googleapiclient.'):
             raise ModuleNotFoundError('fixture: export implementation unavailable', name=fullname)
 
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
+
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:
         raise AssertionError('import-only test attempted an active effect')
@@ -81,8 +87,8 @@ import cadrumo_runtime.host.bootstrap
 
 for name in (
     'cadrumo.adapters.outbound.google.calc_sheets_apply',
-    'cadrumo.adapters.outbound.google._calc_sheets_apply_values',
-    'cadrumo.adapters.outbound.google._calc_sheets_apply_formatting',
+    'cadrumo.adapters.outbound.google.calc_sheets_apply_values',
+    'cadrumo.adapters.outbound.google.calc_sheets_apply_formatting',
     'cadrumo.adapters.outbound.google.managed_artifacts',
 ):
     assert name not in sys.modules, name
@@ -116,7 +122,6 @@ assert not Path(sys.argv[2]).exists()
     environment = {key: value for key, value in os.environ.items() if key.upper() in allowed}
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

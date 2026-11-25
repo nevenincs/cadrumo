@@ -240,7 +240,7 @@ def ground_draft_against_transcription(
     if taxpayer_tax_id is not None:
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=_identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
+            candidates=identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
             taxpayer_tax_id=taxpayer_tax_id,
             origin=_reading_origin(envelopes),
             operation=operation,
@@ -300,7 +300,7 @@ def _suggested_kind_envelope(derivation: InvoiceKindDerivation) -> FieldProvenan
     )
 
 
-def _identity_candidates(
+def identity_candidates(
     *,
     draft: InvoiceDraft,
     envelopes: tuple[FieldProvenance, ...],
@@ -344,20 +344,36 @@ def _identity_candidates(
         value = getattr(draft, field, None)
         if not isinstance(value, str) or not value.strip():
             continue
+        anchor = anchors.get(field)
         claimed = role_evidence.get(field)
+        # A heading can only say whose identifier a printed token is. With no
+        # printed token (the anchor was never offered, or the check refused it)
+        # the heading is attached to nothing, and admitting it would let the
+        # value stand as its own anchor.
         candidates.append(
             IdentityCandidate(
                 value=value,
-                anchor=anchors.get(field),
-                role_evidence=(
-                    claimed
-                    if (claimed is not None and claimed)
-                    and printed_excerpt_occurs(claimed, transcription=transcription)
-                    else ""
-                ),
+                anchor=anchor,
+                role_evidence=_printed_role_evidence(anchor, claimed, transcription=transcription),
             ),
         )
     return tuple(candidates)
+
+
+def _printed_role_evidence(
+    anchor: str | None,
+    claimed: str | None,
+    *,
+    transcription: DocumentTranscription,
+) -> str:
+    """Return the claimed role evidence only when its anchor and excerpt are both printed."""
+    if anchor is None or not anchor.strip():
+        return ""
+    if claimed is None or not claimed:
+        return ""
+    if printed_excerpt_occurs(claimed, transcription=transcription):
+        return claimed
+    return ""
 
 
 def _reading_origin(envelopes: tuple[FieldProvenance, ...]) -> FieldOrigin:

@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
 from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
@@ -24,16 +25,18 @@ from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_project
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ..identifiers import canonical_decimal_string as _canonical_decimal
+from ..identifiers import canonical_decimal_string
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
 from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
-from .errors import ModeloValidationError
+from .calculation_screen_stamp import SCREEN_STAMP_IDENTITY_KEY
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
 if TYPE_CHECKING:
-    from .calculation_revision import CalculationRevisionIdentityInputs, CalculationSourceIssue, CalculationSourceRef
+    from .calculation_revision import CalculationRevisionIdentityInputs
     from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity
+    from .calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
@@ -44,21 +47,73 @@ def _validated_casilla_id(value: object, *, surface: str) -> CasillaId:
     try:
         return validated_casilla_id(value, surface=surface)
     except ValueError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical casilla.id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical casilla.id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
 
 
 def _validated_binding_id(value: object, *, surface: str) -> BindingId:
     try:
         return _BINDING_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical binding id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical binding id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
 
 
 def _validated_relation_id(value: object, *, surface: str) -> RelationId:
     try:
         return _RELATION_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical relation id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
+
+
+def detail_row_amount_text(value: Decimal) -> str:
+    """Spell one detail-row amount for the identity payload.
+
+    Non-zero amounts keep ``str(value.normalize())``, scientific notation included,
+    because stored revision ids were derived from exactly that spelling and
+    :func:`~cadrumo.domain.identifiers.canonical_decimal_string` would respell
+    them. Every zero, a negative one included, collapses to ``"0"`` so two
+    amounts that are equal never derive different ids.
+    """
+    return "0" if value.is_zero() else str(value.normalize())
+
+
+def _detail_row_payload(row: ModeloDetailRow) -> dict[str, object]:
+    d: dict[str, object] = {}
+    if isinstance(row, Modelo156AfiliadoRow):
+        d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
+        for month in row.cotizaciones:
+            d[f"month_{month.month:02d}_status"] = month.status
+            d[f"month_{month.month:02d}_amount"] = (
+                None if month.amount is None else detail_row_amount_text(month.amount)
+            )
+        return dict(sorted(d.items()))
+    for field_name, field_value in row.model_dump().items():
+        if isinstance(field_value, Decimal):
+            d[field_name] = detail_row_amount_text(field_value)
+        else:
+            d[field_name] = str(field_value)
+    return dict(sorted(d.items()))
+
+
+def _detail_row_identity_key(row: ModeloDetailRow) -> str:
+    if isinstance(row, Modelo156AfiliadoRow):
+        return f"{row.nif}|{row.numero_afiliacion}"
+    if isinstance(row, Modelo210AgrupacionRentaRow):
+        return row.source_id
+    if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
+        return row.nif_comunitario
+    return row.nif
 
 
 def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:
@@ -77,53 +132,48 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     ModeloEditDetailRowIntentKind` for why ``MOVE_ROW`` has no addressable
     effect for this row family.
     """
-
-    def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
-        d: dict[str, object] = {}
-        if isinstance(row, Modelo156AfiliadoRow):
-            d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
-            for month in row.cotizaciones:
-                d[f"month_{month.month:02d}_status"] = month.status
-                d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
-            return dict(sorted(d.items()))
-        for field_name, field_value in row.model_dump().items():
-            if isinstance(field_value, Decimal):
-                d[field_name] = str(field_value.normalize())
-            else:
-                d[field_name] = str(field_value)
-        return dict(sorted(d.items()))
-
-    def _row_identity_key(row: ModeloDetailRow) -> str:
-        if isinstance(row, Modelo156AfiliadoRow):
-            return f"{row.nif}|{row.numero_afiliacion}"
-        if isinstance(row, Modelo210AgrupacionRentaRow):
-            return row.source_id
-        if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
-            return row.nif_comunitario
-        return row.nif
-
-    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _row_identity_key(r)))]
+    return [_detail_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _detail_row_identity_key(r)))]
 
 
 def _validated_row_binding_index(value: object, *, surface: str) -> str:
     if isinstance(value, bool):
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if isinstance(value, int):
         index = value
     elif isinstance(value, str):
         try:
             index = int(value)
         except ValueError as exc:
-            raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}") from exc
+            raise ModeloValidationError(
+                f"{surface} contains non-positive row index {value!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            ) from exc
     else:
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if index < 1:
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return str(index)
 
 
 def _duplicate_row_binding_index(row_index: str, *, surface: str, binding_id: BindingId) -> ModeloValidationError:
-    return ModeloValidationError(f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}")
+    return ModeloValidationError(
+        f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        record=ModeloValidatedRecord.CALCULATION_REVISION,
+    )
 
 
 def canonical_row_binding_values(
@@ -136,7 +186,11 @@ def canonical_row_binding_values(
     for raw_binding_id, raw_rows in row_binding_values.items():
         binding_id = _validated_binding_id(raw_binding_id, surface=surface)
         if not isinstance(raw_rows, Mapping):
-            raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
+            raise ModeloValidationError(
+                f"{surface} for binding {binding_id!r} must be a row-index mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
         rows = index_unique_row_coordinates(
             (
@@ -175,7 +229,7 @@ def canonical_row_source_identities(
 def canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
     """Return row casilla values as canonically sorted, JSON-shaped rows."""
     return [
-        {"casilla_id": casilla_id, "row_index": row_index, "value": _canonical_decimal(amount)}
+        {"casilla_id": casilla_id, "row_index": row_index, "value": canonical_decimal_string(amount)}
         for (casilla_id, row_index), amount in sorted(value.items())
     ]
 
@@ -270,6 +324,8 @@ def _m210_revision_id_payload(
         if code not in m210_tipo_renta_code_projection():
             raise ModeloValidationError(
                 f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         parts["m210_official_tipo_renta_code"] = code
     if m210_gross_income_source_mode is not None:
@@ -299,12 +355,14 @@ def _borrador_revision_id_payload(
     return parts
 
 
-def _source_issues_revision_id_payload(
+def source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
-    # A box is appended only when an issue names one, so every issue stored
-    # before issues could name a box keeps the identity it was stored under.
+    # A box, a fact, a stated outcome and a disagreement are appended only when an issue carries
+    # one, so every issue stored before issues could carry them keeps the
+    # identity it was stored under. The outcome and the disagreement are tagged,
+    # so neither can read as a part of the fact before it.
     canonical_source_issues = tuple(
         sorted(
             (
@@ -314,6 +372,9 @@ def _source_issues_revision_id_payload(
                 issue.resolver_id or "",
                 issue.message,
                 *(() if issue.casilla_id is None else (issue.casilla_id,)),
+                *(() if issue.fact is None else issue.fact.identity()),
+                *(() if issue.value_outcome is None else (f"value_outcome={issue.value_outcome.value}",)),
+                *(() if issue.disagreement is None else (f"disagreement={issue.disagreement.finding_key}",)),
             )
             for issue in source_issues
         )
@@ -520,7 +581,7 @@ def derive_calculation_revision_id_from_identity_inputs(
         _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
     payload.update(_detail_rows_revision_id_payload(detail_rows))
-    payload.update(_source_issues_revision_id_payload(source_issues))
+    payload.update(source_issues_revision_id_payload(source_issues))
     payload.update(_source_provenance_revision_id_payload(source_provenance))
     payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
     payload.update(
@@ -531,6 +592,9 @@ def derive_calculation_revision_id_from_identity_inputs(
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     payload.update(_operator_layer_revision_id_payload(operator_layer))
+    screen_stamp = identity_inputs["screen_stamp"]
+    if screen_stamp is not None:
+        payload[SCREEN_STAMP_IDENTITY_KEY] = screen_stamp.identity_payload()
     rendering = identity_inputs["rendering_snapshot"]
     if rendering is not None:
         payload["rendering_snapshot"] = {
@@ -559,7 +623,7 @@ def outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) -
     """
     return dict(
         sorted(
-            (_validated_casilla_id(k, surface="casilla_values"), _canonical_decimal(v))
+            (_validated_casilla_id(k, surface="casilla_values"), canonical_decimal_string(v))
             for k, v in casilla_values.items()
         ),
     )

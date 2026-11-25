@@ -40,11 +40,13 @@ from .declare_command import (
     persist_bien_inversion_record,
 )
 from .ports import BienesInversionIvaRegisterRepositoryFactory
+from .refusal_words import served_refusal_words
 from .registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_DUPLICATE_REFUSAL_CODE,
     BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
+    BienesInversionRefusalReason,
 )
 from .registered_execution_result import BienesInversionOperationExecutionResult
 from .registered_requests import (
@@ -62,6 +64,24 @@ def _missing_disposal_part(error: BienInversionDisposalIncompleteError) -> Liter
     if error.missing == "regime":
         return "regime"
     raise InternalInvariantError("capital-goods disposal refusal named an unsupported missing field")
+
+
+def _refusal(
+    code: Literal["REFUSED_PROFILE_BIENES_INVERSION_VALIDATION"],
+    reason: BienesInversionRefusalReason,
+    *,
+    missing: Literal["year", "regime"] | None = None,
+    identifier: str | None = None,
+) -> BienesInversionRefusalProjection:
+    words, language = served_refusal_words(reason, error_code=code, missing=missing, identifier=identifier)
+    return BienesInversionRefusalProjection(
+        code=code,
+        reason=reason,
+        missing=missing,
+        identifier=identifier,
+        refusal_words=words,
+        refusal_words_language=language,
+    )
 
 
 class BienesInversionOperationExecutor:
@@ -161,9 +181,9 @@ class BienesInversionOperationExecutor:
             return await self._store_refusal(
                 context,
                 profile_id=profile_id,
-                refusal=BienesInversionRefusalProjection(
-                    code=BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
-                    reason="disposal_incomplete",
+                refusal=_refusal(
+                    BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
+                    "disposal_incomplete",
                     missing=_missing_disposal_part(exc),
                 ),
             )
@@ -171,10 +191,7 @@ class BienesInversionOperationExecutor:
             return await self._store_refusal(
                 context,
                 profile_id=profile_id,
-                refusal=BienesInversionRefusalProjection(
-                    code=BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
-                    reason="validation",
-                ),
+                refusal=_refusal(BIENES_INVERSION_VALIDATION_REFUSAL_CODE, "validation"),
             )
 
     def _build_declaration(
@@ -229,9 +246,9 @@ class BienesInversionOperationExecutor:
                     return await self._persist_refusal(
                         context,
                         profile_id=profile_id,
-                        refusal=BienesInversionRefusalProjection(
-                            code=BIENES_INVERSION_DUPLICATE_REFUSAL_CODE,
-                            reason="duplicate_identifier",
+                        refusal=_refusal(
+                            BIENES_INVERSION_DUPLICATE_REFUSAL_CODE,
+                            "duplicate_identifier",
                             identifier=command.identifier,
                         ),
                     )

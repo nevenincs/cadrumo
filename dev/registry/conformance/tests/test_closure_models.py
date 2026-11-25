@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from ..closure_models import (
@@ -18,6 +19,8 @@ from ..closure_models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_REVISION = str(filing_year_envelope().horizon)
 
 
 def _evidence() -> RegistryClosureEvidence:
@@ -48,7 +51,7 @@ def _refusal(
 def test_satisfied_limb_carries_validated_revision_identity_and_evidence() -> None:
     limb = RegistryClosureLimb(
         modelo="303",
-        revision="2025",
+        revision=_REVISION,
         name="temporal_coverage",
         outcome="satisfied",
         evidence=(_evidence(),),
@@ -56,7 +59,7 @@ def test_satisfied_limb_carries_validated_revision_identity_and_evidence() -> No
 
     assert (limb.modelo, limb.revision, limb.name, limb.outcome) == (
         "303",
-        "2025",
+        _REVISION,
         "temporal_coverage",
         "satisfied",
     )
@@ -67,7 +70,7 @@ def test_satisfied_limb_refuses_missing_evidence_or_a_refusal() -> None:
     with pytest.raises(ValidationError, match="requires evidence"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="temporal_coverage",
             outcome="satisfied",
         )
@@ -75,7 +78,7 @@ def test_satisfied_limb_refuses_missing_evidence_or_a_refusal() -> None:
     with pytest.raises(ValidationError, match="cannot carry a refusal"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="temporal_coverage",
             outcome="satisfied",
             evidence=(_evidence(),),
@@ -87,7 +90,7 @@ def test_refused_limb_requires_accountable_disposition_for_the_same_limb() -> No
     with pytest.raises(ValidationError, match="requires an actionable refusal"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="filing_export",
             outcome="refused",
         )
@@ -95,7 +98,7 @@ def test_refused_limb_requires_accountable_disposition_for_the_same_limb() -> No
     with pytest.raises(ValidationError, match="must name the owning limb"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="filing_export",
             outcome="refused",
             refusal=_refusal(limb="temporal_coverage"),
@@ -106,7 +109,7 @@ def test_unmeasured_limb_cannot_disguise_a_refusal_as_a_measurement_gap() -> Non
     with pytest.raises(ValidationError, match="requires the unmeasured refusal reason"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="temporal_coverage",
             outcome="unmeasured",
             refusal=_refusal(limb="temporal_coverage", reason="missing_evidence"),
@@ -115,7 +118,7 @@ def test_unmeasured_limb_cannot_disguise_a_refusal_as_a_measurement_gap() -> Non
     with pytest.raises(ValidationError, match="cannot use the unmeasured refusal reason"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="temporal_coverage",
             outcome="refused",
             refusal=_refusal(limb="temporal_coverage", reason="unmeasured"),
@@ -126,7 +129,7 @@ def test_not_applicable_is_a_filing_only_non_capability_state() -> None:
     """The conditional filing limb cannot become evidence or leak to another authority."""
     limb = RegistryClosureLimb(
         modelo="036",
-        revision="2025-02-03-y-siguientes",
+        revision=str(open_ended_revision("036").id),
         name="filing_export",
         outcome="not_applicable",
     )
@@ -180,7 +183,7 @@ def test_active_closure_refusal_cannot_claim_a_resolved_owner_disposition(
     with pytest.raises(ValidationError, match="cannot carry a resolved owner disposition"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="temporal_coverage",
             outcome=outcome,
             refusal=refusal,
@@ -200,7 +203,7 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
     with pytest.raises(ValidationError, match="unique"):
         RegistryClosureLimb(
             modelo="303",
-            revision="2025",
+            revision=_REVISION,
             name="filing_export",
             outcome="satisfied",
             evidence=(evidence, evidence),

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.requirement import Requirement
+from ..keys_validation import validate_profile_values
 from ..profile_key import ProfileKey
 from ..profile_keys import optional_profile_keys, profile_key, profile_keys
 
@@ -15,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_catalogue_is_non_empty_and_unique() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entries = profile_keys(operation=_authority_operation_for_test)
         assert len(entries) >= 1
         keys = [entry.key for entry in entries]
@@ -23,7 +24,7 @@ def test_catalogue_is_non_empty_and_unique() -> None:
 
 
 def test_required_and_optional_partition_covers_catalogue() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         required = tuple(
             entry
             for entry in profile_keys(operation=_authority_operation_for_test)
@@ -38,7 +39,7 @@ def test_required_and_optional_partition_covers_catalogue() -> None:
 
 
 def test_catalogue_lookup_returns_canonical_record() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entry = profile_key("identity.tax_id", operation=_authority_operation_for_test)
         assert isinstance(entry, ProfileKey)
         assert entry.key == "identity.tax_id"
@@ -48,14 +49,14 @@ def test_catalogue_lookup_returns_canonical_record() -> None:
 
 def test_catalogue_lookup_raises_keyerror_for_unknown_key() -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(KeyError, match=r"unknown profile key"),
     ):
         profile_key("not.a.profile.key", operation=_authority_operation_for_test)
 
 
 def test_every_entry_carries_authoritative_profile_description() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for entry in profile_keys(operation=_authority_operation_for_test):
             assert entry.description.strip(), f"{entry.key}: missing description"
 
@@ -99,24 +100,34 @@ def test_profile_key_conditional_requirement_fields_must_be_paired() -> None:
         )
 
 
-def test_spouse_tax_id_is_conditionally_required_for_joint_taxation() -> None:
-    """A joint declaration is invalid without the spouse NIF.
+def test_spouse_tax_id_is_required_only_for_the_married_joint_unit() -> None:
+    """A joint return of the married unit owes the spouse NIF; a single-parent one has no spouse.
 
-    ``renta_spouse.tax_id`` is the one spouse key the application genuinely
-    requires when ``taxation_type == "2"``. The conditional requirement
-    compiles to the ``required_when_*`` pair so ``validate_profile_values``
-    promotes the key to required only while a joint declaration is declared.
+    Art. 82.1 LIRPF: the first unit is the spouses, the second a single parent
+    with the children. The catalogue entry is optional; the completeness rules
+    promote it while the joint return may be the married unit's, which includes
+    an unstated situation.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entry = profile_key("renta_spouse.tax_id", operation=_authority_operation_for_test)
         assert entry.requirement is Requirement.OPTIONAL
-        assert entry.required_when_key == "renta_filing.declaration_type"
-        assert entry.required_when_value == "2"
+        assert entry.required_when_key is None
+
+        def owed(values: dict[str, str]) -> bool:
+            return (
+                "renta_spouse.tax_id"
+                in validate_profile_values(values, operation=_authority_operation_for_test).missing_required
+            )
+
+        assert owed({"renta_filing.declaration_type": "2", "renta_family.situacion_familiar": "casado"})
+        assert owed({"renta_filing.declaration_type": "2"})
+        assert not owed({"renta_filing.declaration_type": "2", "renta_family.situacion_familiar": "soltero"})
+        assert not owed({"renta_filing.declaration_type": "1", "renta_family.situacion_familiar": "casado"})
 
 
 def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
     """The remaining spouse identity keys are optional even for joint filing."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for key in (
             "renta_spouse.name",
             "renta_spouse.surnames",
@@ -130,7 +141,7 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
 
 
 def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         expected = {
             "renta_taxpayer.disability_grade",
             "renta_taxpayer.death_date",

@@ -7,8 +7,8 @@ related:
   - "[[2026-07-11-cross-domain-continuity-research]]"
 supersedes:
   - '2026-06-03-iva-exemption-article-adr'
-modified: '2026-09-27'
-body_hash: 'sha256:9b1e63764a97ee4b0fcb43c7c832c62fe345a58cac698debb41bf2c6f0f2c287'
+modified: '2026-11-04'
+body_hash: 'sha256:bc580449fa3520686aafd10af55b30b4fdfc8cc3f5a356a117a0db9b738b09ac'
 ---
 # `article-20-uno-26-correction` adr: `Remove the Article 20.Uno.26 deductible casilla-61 route` | (**status:** `accepted`)
 
@@ -23,8 +23,8 @@ revision, and no production classifier or binding requires this exception.
 
 Article 20.Uno.26 is a domestic exempt operation. Article 94 does not grant it a
 deduction right, and Article 104 therefore puts its volume in the prorrata
-denominator rather than its numerator. Historical casilla 61 was removed in
-2021 and did not serve this Article 20 exemption. Retaining the exception risks
+denominator rather than its numerator. Historical casilla 61 was removed from
+the Modelo 303 design and did not serve this Article 20 exemption. Retaining the exception risks
 overstating recoverable IVA and inventing a form surface that the registry does
 not declare.
 
@@ -91,7 +91,7 @@ propagation coverage that protects the remaining discriminator members.
 ## Rationale
 
 The related research reconciles the consolidated IVA law, current AEAT Modelo
-303 instructions, the 2021 removal history, registry revisions, and the live
+303 instructions, the box removal history, registry revisions, and the live
 prorrata route. All sources agree that the present exception is unsafe; none
 supports a replacement form box. Removing a dormant, false exception is more
 honest than preserving a compatibility-shaped taxonomy that can overstate a

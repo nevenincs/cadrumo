@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
 from ...core.iban import mask_iban
@@ -33,17 +34,14 @@ from ...domain.deadlines.models import RefundAccount
 from ...domain.modelos.errors import ModeloError
 from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
 from ..filing.producer_snapshot_m360 import (
-    M360CausaPresentacion,
-    M360TitularEnCalidadDe,
     Modelo360AccountChoice,
     Modelo360OwnAccountChoice,
-    Modelo360ProfileFacts,
     Modelo360RepresentanteAccountChoice,
     Modelo360SolicitudEntry,
     Modelo360SolicitudRegister,
 )
 from ..ledger.own_account_ports import OwnAccountRepositoryFactory
-from ..ledger.read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.fenced_result import publish_fenced_result
@@ -53,11 +51,15 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .declaration_refusal_failures import declaration_refusal_failure
+from .declaration_refusal_profiles import DeclarationRefusalCause
+from .m360_solicitud_input import Modelo360ProfileInput
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
-#: The Modelo 360 revision addresses one solicitud per filing year through its single period.
-MODELO_360_SOLICITUD_PERIOD_CODE: Final = "AD-HOC"
+#: The Modelo 360 revision addresses one solicitud per filing year through its annual period.
+MODELO_360_SOLICITUD_PERIOD_CODE: Final = "0A"
 
 Modelo360SolicitudAction = Literal["declare", "list", "remove"]
 
@@ -65,7 +67,21 @@ _READ_ACTIONS: Final = frozenset({"list"})
 
 
 class Modelo360SolicitudRefusedError(ModeloError):
-    """Raised when a solicitud cannot be declared or removed as asked."""
+    """Raised when a solicitud cannot be declared or removed as asked.
+
+    Each refusal carries the door of its cause: every one is the operator's to
+    decide, since no catalogued action declares, changes or removes a solicitud.
+    """
+
+
+def _refusal(
+    cause: DeclarationRefusalCause, *, translated_message: str, context: dict[str, object] | None = None
+) -> Modelo360SolicitudRefusedError:
+    return Modelo360SolicitudRefusedError(
+        translated_message=translated_message,
+        context=context,
+        precondition_verdict=declaration_refusal_failure(cause).verdict,
+    )
 
 
 class Modelo360SolicitudRepositoryProtocol(Protocol):
@@ -99,10 +115,10 @@ class Modelo360RepresentanteAccountInput(BaseModel):
 
     iban: str = Field(min_length=1, max_length=64)
     swift_bic: str = Field(min_length=1, max_length=16)
-    bank_name: str = Field(default="", max_length=70)
-    bank_address: str = Field(default="", max_length=35)
-    bank_city: str = Field(default="", max_length=30)
-    bank_country_code: str = Field(default="", max_length=2)
+    bank_name: str = Field(default="", max_length=128)
+    bank_address: str = Field(default="", max_length=64)
+    bank_city: str = Field(default="", max_length=32)
+    bank_country_code: str = Field(default="", max_length=16)
 
 
 class Modelo360SolicitudRequest(BaseModel):
@@ -118,7 +134,7 @@ class Modelo360SolicitudRequest(BaseModel):
     profile_id: UUID
     action: Modelo360SolicitudAction
     filing_year: FilingYear | None = None
-    facts: Modelo360ProfileFacts | None = None
+    facts: Modelo360ProfileInput | None = None
     own_account_id: OwnAccountId | None = None
     representante_account: Modelo360RepresentanteAccountInput | None = None
 
@@ -139,9 +155,9 @@ class Modelo360SolicitudProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     filing_year: FilingYear
-    pais_destino: str = Field(min_length=2, max_length=2)
-    causa_presentacion: M360CausaPresentacion
-    titular_en_calidad_de: M360TitularEnCalidadDe
+    pais_destino: CountryCodeAlpha2
+    causa_presentacion: str = Field(min_length=1)
+    titular_en_calidad_de: str = Field(min_length=1)
     has_representante: bool
     account_kind: Literal["own_account", "representante"] | None = None
     own_account_id: OwnAccountId | None = None
@@ -160,8 +176,8 @@ class Modelo360SolicitudProjection(BaseModel):
         return cls(
             filing_year=entry.period.filing_year,
             pais_destino=entry.facts.solicitud.pais_destino,
-            causa_presentacion=entry.facts.solicitud.causa_presentacion,
-            titular_en_calidad_de=entry.facts.cuenta.titular_en_calidad_de,
+            causa_presentacion=entry.facts.solicitud.causa_presentacion.code,
+            titular_en_calidad_de=entry.facts.cuenta.titular_en_calidad_de.code,
             has_representante=entry.facts.representante is not None,
             account_kind=None if account is None else account.kind,
             own_account_id=own_account_id,
@@ -192,17 +208,20 @@ def _require_admissible_own_account(account: Modelo360AccountChoice, register: O
         return
     held = next((item for item in register.accounts if item.own_account_id == account.own_account_id), None)
     if held is None:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_REGISTERED,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_unknown",
             context={"own_account_id": account.own_account_id},
         )
     if held.closed_on is not None:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_OPEN,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_closed",
             context={"own_account_id": account.own_account_id},
         )
     if not held.swift_bic:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_BIC,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_bic_missing",
             context={"own_account_id": account.own_account_id},
         )
@@ -217,7 +236,8 @@ def _account_choice(payload: Modelo360SolicitudRequest) -> Modelo360AccountChoic
         return Modelo360RepresentanteAccountChoice(account=RefundAccount.model_validate(entered.model_dump()))
     except pydantic.ValidationError:
         # Input is hidden from these messages, so they never carry account material.
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_VALID,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_invalid",
         ) from None
 
@@ -225,7 +245,10 @@ def _account_choice(payload: Modelo360SolicitudRequest) -> Modelo360AccountChoic
 def _required[T](value: T | None, name: str) -> T:
     # The request validator already demanded the field for this action.
     if value is None:
-        raise InternalInvariantError(f"modelo 360 solicitud request reached its action without {name}")
+        raise InternalInvariantError(
+            f"modelo 360 solicitud request reached its action without {name}",
+            precondition_verdict=internal_invariant_verdict("m360_solicitud.request_field_present"),
+        )
     return value
 
 
@@ -257,7 +280,8 @@ def apply_solicitud_request(
     period = solicitud_period(_required(payload.filing_year, "filing_year"))
     if payload.action == "remove":
         if before.entry_for(period) is None:
-            raise Modelo360SolicitudRefusedError(
+            raise _refusal(
+                DeclarationRefusalCause.SOLICITUD_DECLARED,
                 translated_message="errors.refused.refused_modelo_360_solicitud_undeclared",
                 context={"filing_year": period.filing_year},
             )
@@ -266,9 +290,16 @@ def apply_solicitud_request(
     account = _account_choice(payload)
     _require_admissible_own_account(account, own_accounts())
     try:
-        entry = Modelo360SolicitudEntry(period=period, facts=_required(payload.facts, "facts"), account=account)
+        facts = _required(payload.facts, "facts").to_facts()
     except pydantic.ValidationError:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_FACTS, translated_message="errors.refused.refused_modelo_360_solicitud"
+        ) from None
+    try:
+        entry = Modelo360SolicitudEntry(period=period, facts=facts, account=account)
+    except pydantic.ValidationError:
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_HOLDER,
             translated_message="errors.refused.refused_modelo_360_solicitud_holder_mismatch",
         ) from None
     after = repository.declare(entry)
@@ -358,13 +389,13 @@ def resolve_modelo_360_solicitud_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile scope, and COMMIT for a declaration or removal."""
-    if request.definition_id != MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        Modelo360SolicitudRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
+        request_type=Modelo360SolicitudRequest,
+        commits=lambda payload: payload.action not in _READ_ACTIONS,
+    )
 
 
 def build_modelo_360_solicitud_registration(

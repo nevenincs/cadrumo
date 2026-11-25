@@ -1,0 +1,43 @@
+[fact]
+fact_id = "cnae-classification-by-ejercicio"
+family = "mapping"
+
+# The classification the C.N.A.E. de la actividad principal of a Modelo 202 is
+# consigned in, by the ejercicio of the pago fraccionado. Nota 12 of the 2025
+# design: "Ejercicio 2025: CNAE-2009", "Ejercicio 2026 y ss: CNAE-2025". The
+# designs before 2025 print the C.N.A.E. without naming a classification; the
+# only one then in force was CNAE-2009, whose own name dates it, so the first
+# variant opens with it. The Real Decreto approving CNAE-2009 is not in the
+# corpus, which is why that opening date cites only the design.
+[[fact.variants]]
+variant_id = "cnae-classification-by-ejercicio:2009-01-01"
+date_axis = "filing_period"
+valid_from = 2009-01-01
+valid_to = 2025-12-31
+source_refs = ["aeat-dr-202-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-202-2025"
+required_text = ["Nota 12", "Ejercicio 2025: CNAE-2009"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [{ key = "required", value = "cnae-2009" }]
+
+[[fact.variants]]
+variant_id = "cnae-classification-by-ejercicio:2026-01-01"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+source_refs = ["aeat-dr-202-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-202-2025"
+required_text = ["Nota 12", "Ejercicio 2026 y ss: CNAE-2025"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [{ key = "required", value = "cnae-2025" }]

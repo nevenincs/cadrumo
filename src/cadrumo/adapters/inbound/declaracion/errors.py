@@ -37,7 +37,7 @@ class TemplateNotDetectedError(DeclaracionParseError):
     """Raised when the PDF's template revision cannot be auto-detected.
 
     Emitted by
-    :func:`~adapters.inbound.declaracion._detect.detect_template_revision`
+    :func:`~adapters.inbound.declaracion.detect.detect_template_revision`
     when neither the header nor the footer of the PDF carries enough signal to
     pin a ``(modelo, año, revision)`` triple. Callers may recover by passing
     explicit ``modelo`` / ``año`` overrides to

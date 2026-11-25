@@ -16,13 +16,13 @@ from dev.packaging.python_cohort import digest_install_target
 from dev.product_environment import clean_product_env
 
 from .runtime_probe_contracts import (
-    _SHA256_RE,
+    SHA256_RE,
     CommandEvidence,
     CompatibilityProbeError,
     ProbeMode,
     PythonRuntimeDependencyStatus,
 )
-from .runtime_probe_environment import _binary_environment
+from .runtime_probe_environment import binary_environment
 
 _OBSERVED_RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(
     r"^3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?(?:[._-]?(?:a|b|rc|dev)[0-9]+)?$"
@@ -52,7 +52,7 @@ def _wheel_record_identity(
     expected_size = record.get("size")
     if (
         not isinstance(expected_digest, str)
-        or _SHA256_RE.fullmatch(expected_digest) is None
+        or SHA256_RE.fullmatch(expected_digest) is None
         or not isinstance(expected_size, int)
         or expected_size < 0
     ):
@@ -91,7 +91,7 @@ def _bind_sealed_install_arguments(
                 f"sealed runtime wheelhouse extraction is not a directory: {wheelhouse}",
                 category="cohort-invalid",
             )
-        targets += _binary_wheel_targets(
+        targets += binary_wheel_targets(
             wheelhouse,
             wheelhouse_manifest,
             platform_target=wheelhouse_platform,
@@ -110,7 +110,7 @@ def _bind_sealed_install_arguments(
     return targets
 
 
-def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
+def runtime_probe_installation_wheelhouse_platform(runtime: Mapping[str, str]) -> str:
     """Map the selected interpreter identity to one sealed wheelhouse target."""
     operating_system = runtime.get("platform")
     machine = runtime.get("machine", "").lower().replace("-", "_")
@@ -129,7 +129,7 @@ def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
     )
 
 
-def _runtime_minor(runtime: Mapping[str, str]) -> str:
+def runtime_minor(runtime: Mapping[str, str]) -> str:
     """Return the observed interpreter's canonical ``3.N`` wheelhouse key."""
     observed = runtime.get("python", "")
     match = _OBSERVED_RUNTIME_VERSION_RE.fullmatch(observed)
@@ -141,12 +141,12 @@ def _runtime_minor(runtime: Mapping[str, str]) -> str:
     return f"3.{int(match.group('minor'))}"
 
 
-def _select_runtime_wheelhouse(
+def select_runtime_wheelhouse(
     manifest: Mapping[str, Any],
     runtime: Mapping[str, str],
 ) -> tuple[str, Mapping[str, Any]]:
     """Select the ready wheelhouse entry matching the observed CPython minor."""
-    python_minor = _runtime_minor(runtime)
+    python_minor = runtime_minor(runtime)
     runtimes = manifest.get("runtimes")
     entry = runtimes.get(python_minor) if isinstance(runtimes, Mapping) else None
     if not isinstance(entry, Mapping):
@@ -178,7 +178,7 @@ def _select_runtime_wheelhouse(
     return python_minor, entry
 
 
-def _binary_wheel_targets(
+def binary_wheel_targets(
     wheelhouse_dir: Path,
     manifest: Mapping[str, Any],
     *,
@@ -212,7 +212,9 @@ def _binary_wheel_targets(
     return tuple(targets)
 
 
-def _venv(uv: str, *, repo_root: Path, work_dir: Path, selector: str) -> tuple[Path, list[CommandEvidence]]:
+def runtime_probe_installation_venv(
+    uv: str, *, repo_root: Path, work_dir: Path, selector: str
+) -> tuple[Path, list[CommandEvidence]]:
     """Create one fresh target-runtime virtualenv and retain the command result."""
     environment = clean_product_env()
     for name in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
@@ -228,7 +230,7 @@ def _venv(uv: str, *, repo_root: Path, work_dir: Path, selector: str) -> tuple[P
     return venv, [command]
 
 
-def _install(
+def install(
     uv: str,
     *,
     repo_root: Path,
@@ -256,7 +258,7 @@ def _install(
         argv, wheelhouse_dir, wheelhouse_manifest, wheelhouse_platform, work_dir, mode, targets
     )
     argv.extend(targets)
-    environment = _binary_environment() if mode is ProbeMode.BINARY else clean_product_env()
+    environment = binary_environment() if mode is ProbeMode.BINARY else clean_product_env()
     result = run_command(tuple(argv), cwd=repo_root, environment=environment)
     command = [CommandEvidence.from_result(result)]
     if result.returncode != 0:

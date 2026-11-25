@@ -6,8 +6,10 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, Protocol
+from typing import Any, Final, Protocol, cast
 from uuid import UUID, uuid4
+
+from pydantic import JsonValue
 
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
@@ -18,6 +20,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.operation_pages import operation_destination
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
@@ -35,6 +38,7 @@ from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from cadrumo_client.contracts.navigation import view_link
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
@@ -60,7 +64,9 @@ from .protocol_contract import (
     refusal_code,
     sign_in_remedy,
 )
+from .record_links import record_link
 from .result_request import (
+    published_recovery_actions,
     resolve_result_request,
     stopped_operation_code,
     stopped_operation_detail,
@@ -70,7 +76,7 @@ from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status
 from .surfaces import McpSurface
 
 #: One tool call's budget: its exchanges may wait as long as the runtime's single-exchange maximum.
-_TIMEOUT = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+TIMEOUT = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 
 
 class _AdmittedConnection(Protocol):
@@ -108,7 +114,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
         raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     if name == "status":
         return _admitted_status(client, admission, connection.surface, args)
-    deadline = time.monotonic() + _TIMEOUT
+    deadline = time.monotonic() + TIMEOUT
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
@@ -206,34 +212,56 @@ def _operator_input_json_schema() -> dict[str, object]:
     place. Imported on use so that serving the other tools loads none of it.
     """
     from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
-    from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
+    from cadrumo.application.operations.registry_schema_validation import strict_model_input_json_schema
 
-    return strict_model_json_schema(ModeloEditOperatorInputV2)
+    return strict_model_input_json_schema(ModeloEditOperatorInputV2)
 
 
 def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+    response = _submit(client, binding, args, deadline)
+    page = operation_destination(args["definition_id"])
+    # A refused call changed nothing; a submitted or unresolved one may have, so the person can look.
+    if page is not None and response["outcome"] in {"submitted", "unresolved"}:
+        response["page"] = {"destination": page, "url": view_link(page)}
+    return response
+
+
+def _person_act_refusal(contract: OperationPublicDefinitionContractV1) -> dict[str, Any]:
+    """Explain the person-owned act and retain its declared recovery action."""
+    refused: dict[str, Any] = {
+        "outcome": "refused",
+        "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
+        "remedy": PERSON_ACT_REMEDY,
+    }
+    if contract.action_reference is not None:
+        refused["recovery_action_id"] = contract.action_reference.action_id
+    return refused
+
+
+def _submit_runtime(
+    client: FrontendClient, submission: OperationSubmit | OperationFinancialInput, deadline: float
+) -> OperationSubmitted:
+    """Require the runtime's submitted receipt before any start or observation."""
+    reply = client.operation(submission, deadline=deadline)
+    if not isinstance(reply, OperationSubmitted):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return reply
+
+
+def _submit(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
     if operation_is_persons_act(contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
         # A credential or access act is the person's own; nothing is submitted.
-        refused: dict[str, Any] = {
-            "outcome": "refused",
-            "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
-            "remedy": PERSON_ACT_REMEDY,
-        }
-        if contract.action_reference is not None:
-            refused["recovery_action_id"] = contract.action_reference.action_id
-        return refused
+        return _person_act_refusal(contract)
     try:
         submission = _submission(client, contract, args)
     except _ContractRefusedError as refused:
         # Nothing was submitted, and the wording quotes only the public contract.
         return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
     try:
-        reply = client.operation(submission, deadline=deadline)
-        if not isinstance(reply, OperationSubmitted):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+        reply = _submit_runtime(client, submission, deadline)
     except FrontendRefusedError as refused:
         if refused.request_faults:
             # The validators' own reasons, as the runtime returned them and the command line shows them.
@@ -254,9 +282,16 @@ def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], de
     except RefusalError as error:
         return _unresolved_submission(error, submission.request_id, definition_id)
     except TimeoutError:
-        return _unresolved_submission(RefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
+        return _unresolved_submission(RefusalCode.TIMEOUT.value, submission.request_id, definition_id)
     except OSError:
         return _unresolved_submission(RefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
+    return _submitted_response(client, binding, args, reply, deadline)
+
+
+def _submitted_response(
+    client: FrontendClient, binding: _Binding, args: dict[str, Any], reply: OperationSubmitted, deadline: float
+) -> dict[str, Any]:
+    """Retain the receipt while optionally starting and briefly observing the operation."""
     response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
     if args.get("start", True):
         response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
@@ -337,6 +372,13 @@ def _named_field_faults(
         or not isinstance(properties, dict)
     ):
         return []
+    return _payload_field_faults(schema, properties, cast(dict[object, object], payload))
+
+
+def _payload_field_faults(
+    schema: dict[str, JsonValue], properties: dict[str, JsonValue], payload: dict[object, object]
+) -> list[dict[str, Any]]:
+    """Name missing and extra fields using only the described request schema."""
     required = schema.get("required")
     missing = [name for name in required if name not in payload] if isinstance(required, list) else []
     closed = schema.get("additionalProperties") is False
@@ -480,13 +522,20 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
     document = client.read_result_document(request, deadline=deadline)
     reply: dict[str, Any] = {"outcome": "reply", "document": document}
+    if (record := record_link(request.result_schema.schema_id, document)) is not None:
+        reply["record"] = record
     if (code := stopped_operation_code(document)) is not None:
         reply["code"] = code
     detail = stopped_operation_detail(client, request, document, deadline)
+    stopped_action: str | None = None
     if detail is not None:
         reply["error_detail"] = detail
-        if (action := stopped_operation_recovery_action(detail)) is not None:
-            reply["recovery_action_id"] = action
+        stopped_action = stopped_operation_recovery_action(detail)
+    actions = (stopped_action,) if stopped_action is not None else published_recovery_actions(document)
+    if actions and stopped_action is not None:
+        reply["recovery_action_id"] = actions[0]
+    elif actions:
+        reply["recovery_action_ids"] = list(dict.fromkeys(actions))
     return reply
 
 

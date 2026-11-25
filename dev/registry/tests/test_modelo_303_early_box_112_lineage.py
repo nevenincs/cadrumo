@@ -11,14 +11,17 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision_lineage_origin import role_exempt_occurrences
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EARLY_REVISION = "2026-hasta-01-y-1t"
-_LATER_REVISION = "2026-y-siguientes"
+# The exercise whose first months are served by their own design: its early and later revisions.
+_EARLY_METADATA, _LATER_METADATA = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_EARLY_REVISION = str(_EARLY_METADATA.id)
+_LATER_REVISION = str(_LATER_METADATA.id)
 _CASILLA_ID = "112"
 
 

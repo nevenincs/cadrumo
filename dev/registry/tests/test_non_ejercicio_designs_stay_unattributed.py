@@ -28,18 +28,36 @@ from pathlib import Path
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
-from ._revision_span_design_support import _design_coverage_years, _design_sources
+from .registry_schema_support import committed_registry_tree
+from .revision_span_design_support import design_coverage_years, design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Designs whose coverage AEAT states on an axis that is not an ejercicio, with
-#: the axis each one uses. Sourced from the relayout module's own reasoning.
+#: the axis each one uses, named by modelo and by the ordinal the bundled corpus
+#: gives the file within that modelo's design directory. Sourced from the
+#: relayout module's own reasoning.
+_NON_EJERCICIO_AXIS_BY_ORDINAL = {
+    ("036", "01"): "in-force date",
+    ("036", "02"): "in-force date",
+    ("210", "01"): "devengo span",
+    ("210", "02"): "devengo span",
+}
+
+#: The ordinal of Modelo 036's superseded provisional draft.
+_PROVISIONAL_DESIGN = ("036", "02")
+
+
+def _bundled_design_name(modelo_id: str, ordinal: str) -> str | None:
+    """Return the bundled design file with this ordinal, or ``None`` when no file carries it."""
+    prefix = f"{ordinal}-{modelo_id}-"
+    return next((path.name for path in design_sources(modelo_id) if path.name.startswith(prefix)), None)
+
+
 _NON_EJERCICIO_AXIS = {
-    "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx": "in-force date",
-    "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx": "in-force date",
-    "01-210-devengos-a-partir-de-2026.xlsx": "devengo span",
-    "02-210-devengos-entre-01-06-2022-y-01-01-2026.xls": "devengo span",
+    name: axis
+    for (modelo_id, ordinal), axis in _NON_EJERCICIO_AXIS_BY_ORDINAL.items()
+    if (name := _bundled_design_name(modelo_id, ordinal)) is not None
 }
 
 
@@ -55,17 +73,15 @@ def _registered_designs(catalogues) -> dict[str, str]:
 def _paths_by_name() -> dict[str, Path]:
     found: dict[str, Path] = {}
     for modelo_id in ("036", "210"):
-        for path in _design_sources(modelo_id):
+        for path in design_sources(modelo_id):
             found[path.name] = path
     return found
 
 
 def test_every_design_this_module_names_is_still_bundled() -> None:
     """A renamed or removed file must fail here rather than silently empty the module."""
-    present = set(_paths_by_name())
-
-    missing = sorted(set(_NON_EJERCICIO_AXIS) - present)
-    assert not missing, f"these designs are no longer bundled under the names this module knows: {missing}"
+    unfound = sorted(key for key in _NON_EJERCICIO_AXIS_BY_ORDINAL if _bundled_design_name(*key) is None)
+    assert not unfound, f"these designs are no longer bundled under the ordinals this module knows: {unfound}"
 
 
 @pytest.mark.parametrize("name", sorted(_NON_EJERCICIO_AXIS))
@@ -73,7 +89,7 @@ def test_no_ejercicio_has_been_back_filled(name: str) -> None:
     """The guard proper: the ledger must not have been shortened by inventing years."""
     path = _paths_by_name()[name]
 
-    years = _design_coverage_years(path)
+    years = design_coverage_years(path)
 
     assert years == (), (
         f"{name} is scoped by {_NON_EJERCICIO_AXIS[name]}, not by ejercicio, yet it now claims "
@@ -97,7 +113,7 @@ def test_a_registered_design_states_its_coverage_on_its_own_axis() -> None:
     Each half is asserted in its own direction, so neither reading can be
     reached by leaving a field blank.
     """
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     registered = _registered_designs(catalogues)
 
     selectable = 0
@@ -139,7 +155,7 @@ def test_only_the_provisional_design_is_pinned_rather_than_selectable() -> None:
     Pinned as an equality so the set cannot grow silently: a second design
     demoted out of selection would be a new gap wearing this one's explanation.
     """
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     registered = _registered_designs(catalogues)
 
     assert not set(_NON_EJERCICIO_AXIS) - set(registered), (
@@ -152,15 +168,13 @@ def test_only_the_provisional_design_is_pinned_rather_than_selectable() -> None:
         if name in _NON_EJERCICIO_AXIS and catalogues.sources[source_id].applies_from is None
     }
 
-    assert pinned == {
-        "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx",
-    }, sorted(pinned)
+    assert pinned == {_bundled_design_name(*_PROVISIONAL_DESIGN)}, sorted(pinned)
 
 
 def test_the_bundled_corpus_still_attributes_the_ordinary_designs() -> None:
     """Non-vacuity: attribution works generally, so the empty results above are meaningful."""
     attributed = [
-        path.name for modelo_id in ("303", "347") for path in _design_sources(modelo_id) if _design_coverage_years(path)
+        path.name for modelo_id in ("303", "347") for path in design_sources(modelo_id) if design_coverage_years(path)
     ]
 
     assert attributed, "no design in the sample modelos attributes to any year; attribution has broken"

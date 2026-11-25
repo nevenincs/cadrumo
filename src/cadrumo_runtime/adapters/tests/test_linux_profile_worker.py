@@ -15,13 +15,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo_client.contracts.access_vocabulary import AccessScope, DisclosureCategory, DisclosurePermission
 
 from ..profile_worker import ProfileWorkerProcess
 from .profile_worker_support import changed, lease, worker_profiles
-from .test_profile_worker import _AllowWorkerOperations
+from .test_profile_worker import AllowWorkerOperations
 
 pytestmark = [
     pytest.mark.integration,
@@ -59,7 +58,7 @@ def test_linux_profile_worker_admits_exact_profile_and_releases_registered_read(
                 allow_delegation=False,
             ),
         )
-        worker = ProfileWorkerProcess(identity, storage_root=root, authorization=_AllowWorkerOperations())
+        worker = ProfileWorkerProcess(identity, storage_root=root, authorization=AllowWorkerOperations())
         try:
             secret = bytearray(key)
             worker.install(admitted, secret)

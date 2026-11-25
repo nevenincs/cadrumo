@@ -16,80 +16,22 @@ alike) must call to get it.
 from __future__ import annotations
 
 import json
-from base64 import b64encode
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
+from cadrumo.adapters.persistence.storage.tests.committed_profile import create_committed_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_output.emit import emit_operator_json_success
 from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
-from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from cadrumo.application.operator_output.text_transport import with_sandbox_banner
 from cadrumo.application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import NoticeSeverity
-from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SANDBOX_CODE = "config.profile.sandbox.active_indicator"
-_DEK = bytes(range(32))
-
-
-def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None:
-    """Create and select the real committed capsule that owns the label projection."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    profile_id = UUID(bucket_id)
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(b"k" * 16).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(b"n" * 12).decode("ascii"),
-            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=b64encode(b"t" * 16).decode("ascii"),
-        ),
-    )
-    session = ProfileRecordSession.from_envelope(
-        envelope=envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
-    )
-    lifecycle = ProfileCapsuleLifecycle(root=root)
-    try:
-        lifecycle.create(
-            label=label,
-            profile_id=profile_id,
-            password_envelope=envelope,
-            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
-            data_files={},
-            initial_record=_create_profile_record_for_test(
-                profile_id=bucket_id, setup_state=ProfileSetupState.INCOMPLETE, context=_profile_create_context_for_test
-            ),
-            record_session=session,
-        )
-        lifecycle.select(label)
-    finally:
-        session.close()
 
 
 def test_sandbox_notice_absent_when_no_active_bucket(tmp_path: Path) -> None:
@@ -102,7 +44,7 @@ def test_sandbox_notice_absent_for_a_real_non_sandbox_profile(tmp_path: Path) ->
     """A real profile bucket (ordinary label) never gets annotated."""
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
+        create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
         with override_settings(cadrumo_active_profile=bucket_id):
             assert sandbox_notice_for_active_bucket() is None
 
@@ -111,7 +53,7 @@ def test_sandbox_notice_present_for_an_active_sandbox_bucket(tmp_path: Path) -> 
     """A sandbox-labelled active bucket surfaces the persistent info notice."""
     bucket_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:bakeoff")
+        create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:bakeoff")
         with override_settings(cadrumo_active_profile=bucket_id):
             notice = sandbox_notice_for_active_bucket()
 
@@ -126,7 +68,7 @@ def test_sandbox_banner_line_is_a_tab_delimited_sandbox_prefixed_line(tmp_path: 
     """The text-mode banner shares the exact notice message, tab-prefixed with SANDBOX."""
     bucket_id = "8f2c1a9e-4b3d-4c5e-9f6a-7b8c9d0e1f2a"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:banner-probe")
+        create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:banner-probe")
         with override_settings(cadrumo_active_profile=bucket_id):
             notice = sandbox_notice_for_active_bucket()
 
@@ -155,7 +97,7 @@ def test_emit_operator_json_success_prepends_sandbox_notice_when_active(
     result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
+        create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
                 "config.profile.create",
@@ -182,7 +124,7 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
+        create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
                 "config.profile.create",
@@ -194,3 +136,26 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     document = json.loads(capsys.readouterr().out)
     codes = [notice["code"] for notice in document["notices"]]
     assert codes == ["probe.caller_notice"]
+
+
+_TRANSPORT_BUCKET_ID = "8f2c1a9e-4b3d-4c5e-9f6a-7b8c9d0e1f2a"
+
+
+def test_banner_is_prepended_for_an_active_sandbox(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        create_committed_profile(storage_root, bucket_id=_TRANSPORT_BUCKET_ID, label="sandbox:transport")
+        with override_settings(cadrumo_active_profile=_TRANSPORT_BUCKET_ID):
+            rendered = with_sandbox_banner(("row-1", "row-2"))
+
+    assert rendered[1:] == ("row-1", "row-2")
+    assert rendered[0].startswith("SANDBOX\t")
+    assert "sandbox:transport" in rendered[0]
+
+
+def test_lines_are_unchanged_for_a_real_profile_and_for_no_profile(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        with override_settings(cadrumo_active_profile=None):
+            assert with_sandbox_banner(["row"]) == ("row",)
+        create_committed_profile(storage_root, bucket_id=_TRANSPORT_BUCKET_ID, label="real-profile")
+        with override_settings(cadrumo_active_profile=_TRANSPORT_BUCKET_ID):
+            assert with_sandbox_banner(["row"]) == ("row",)

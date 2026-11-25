@@ -1,12 +1,12 @@
 """Backend readiness preflight for bucket-scoped ledger transactions.
 
-:func:`preflight_ledger_tax_readiness` loads a
+:func:`preflight_ledger_tax_readiness` reads the period's rows of a
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue` via
 :class:`~cadrumo.domain.transactions.protocols.TransactionCatalogueRepositoryProtocol` from the
-active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
-in-memory analysis. The report is consumed by modelo readiness projection and
-ledger read surfaces; it is not a calculation engine and never mutates the
-catalogue it inspects.
+active bucket, or takes a catalogue the caller already holds, and delegates to
+:func:`preflight_transaction_catalogue` for pure in-memory analysis. The report
+is consumed by modelo readiness projection and ledger read surfaces; it is not a
+calculation engine and never mutates the catalogue it inspects.
 
 See Also:
     :func:`~cadrumo.application.state_projection.build_operator_state_projection`
@@ -25,7 +25,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
@@ -37,7 +37,7 @@ from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
@@ -48,6 +48,9 @@ from ...domain.categories.spending_category import (
     home_office_categories,
 )
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.invoices.rectification_modification import RectificationModification
+from ...domain.transactions.classification_effects import takes_expense_category
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -59,21 +62,30 @@ from ...domain.transactions.irpf_categories import has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
-from ..aggregation.iva_ledger import (
+from ..aggregation.invoice_iva_source import (
+    InvoiceIvaFinding,
+    PeriodInvoiceIvaSide,
+    TransactionCatalogueByIdReader,
+    period_invoice_iva_findings,
+    period_invoice_iva_side,
+)
+from ..aggregation.iva_ledger import IvaLedgerAggregationIssueReason
+from ..aggregation.iva_ledger_classification import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_DEDUCTION_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
-    IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
     validate_iva_ledger_deduction_classification,
 )
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ..user_profile.censo_sync import raw_afectacion_ratio_for_record
 from .transaction_repository import transaction_catalogue_repository
 from .usage_ratio_repository import UsageRatioProfileLoader, usage_ratio_profile_with_censo_guard
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.invoices.models import Invoice
     from ...domain.user_profile.values import UserProfileRecord
 
 
@@ -128,22 +140,54 @@ class LedgerPreflightIssueReason(StrEnum):
     # so an asesor sees real anomalies without first classifying every row.
     ANOMALY_NON_DECLARABLE_IVA_CATEGORY = "anomaly_non_declarable_iva_category"
     ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA = "anomaly_non_declarable_recargo_equivalencia"
+    # The invoice side of the period, as calculation reads it. Each value
+    # equals its :class:`InvoiceIvaFindingReason`, so the ledger reports
+    # exactly what calculation would refuse.
+    INVOICE_DEDUCTION_FAMILY_UNRESOLVED = "invoice_deduction_family_unresolved"
+    INVOICE_CATEGORY_CONTRADICTED = "invoice_category_contradicted"
+    MOVEMENT_INVOICE_DOUBLE_COUNT = "movement_invoice_double_count"
+    INVOICE_CASH_ACCOUNTING_REGIME_UNMODELLED = "invoice_cash_accounting_regime_unmodelled"
+    LINKED_MOVEMENT_CONTRADICTS_INVOICE = "linked_movement_contradicts_invoice"
+    INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
+    INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
+    INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
+    INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT = "invoice_rectificativa_period_needs_fact"
+    INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE = "invoice_rectificativa_deduction_row_undeclarable"
+    INVOICE_RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE = "invoice_rectificativa_issued_row_undeclarable"
+    INVOICE_USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId | Literal["__period__"]
     reason: LedgerPreflightIssueReason
     detail: IssueDetail
+    #: Stable untranslated field names the issue says the record is missing, in
+    #: the order the owning finding reported them. Empty on every reason that
+    #: names no specific absent fact. It is what lets a served sentence list
+    #: the fields the person opens, rather than the detail prose above being
+    #: the only place they appear.
+    missing_facts: tuple[str, ...] = ()
+    #: The signed modification a factura rectificativa makes, as the document's
+    #: own method reads it (RD 1619/2012 art. 15.5). Carried so a hold on a
+    #: complete rectificativa shows the person the figures rather than only the
+    #: fact that it is held. ``None`` on every other reason, and on a
+    #: rectificativa whose record supports no modification at all. The sign is
+    #: the modification's; the invoice keeps its non-negative magnitudes.
+    derived_modification_base: Decimal | None = None
+    derived_modification_cuota: Decimal | None = None
+    #: The recargo de equivalencia the same modification carries, ``None`` when
+    #: neither the document nor the invoice it replaces states one.
+    derived_modification_recargo: Decimal | None = None
 
 
 class LedgerPreflightReport(BaseModel):
     """Readiness report for ledger facts consumed by modelo calculation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     period: Period
@@ -172,11 +216,13 @@ def preflight_ledger_tax_readiness(
     bucket_id: str,
     period: Period,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    invoice_reader: InvoiceCatalogueReader,
     operation: PinnedAuthorityOperation,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     raw_afectacion_ratio: Decimal | None = None,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerPreflightReport:
-    """Load a bucket-local catalogue and report modelo-readiness gaps.
+    """Read a bucket-local catalogue and report modelo-readiness gaps.
 
     Args:
         bucket_id: Bucket whose ledger catalogue is being checked.
@@ -184,12 +230,19 @@ def preflight_ledger_tax_readiness(
             the readiness window.
         usage_ratio_profile_loader: Required application-owned read capability
             for resolving declared usage-ratio profiles.
+        invoice_reader: The same bucket's invoice catalogue. The invoice is the
+            IVA source, so readiness reads it exactly as calculation does.
         operation: Generation-pinned authority for governed ratio and IVA vocabulary.
         transaction_repository: Optional transaction-catalogue port used to
             load the bucket-local catalogue; the outward-composed repository
             is resolved when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,
             used only to surface proportionality mismatches.
+        catalogue: The bucket's rows as a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
+            when the caller already holds them,
+            either the whole catalogue or any superset of the period's rows;
+            otherwise the period's rows are read through
+            :func:`load_period_preflight_catalogue`.
 
     Returns:
         A :class:`LedgerPreflightReport` describing blocking or advisory ledger
@@ -205,13 +258,17 @@ def preflight_ledger_tax_readiness(
             "transaction repository bucket_id does not match the ledger preflight bucket",
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
+    transactions = catalogue if catalogue is not None else load_period_preflight_catalogue(repository, period)
     censo_ratio_mismatch_detail = None
     missing_home_office_afectacion_detail = None
+    invoices = tuple(invoice_reader.load())
+    # The profile is decrypted at most once and handed to every check that reads it.
+    profile_record = (
+        _bucket_profile_record(bucket_id, operation=operation)
+        if invoices or _catalogue_uses_home_office_usage_ratio(period=period, transactions=transactions)
+        else None
+    )
     if _catalogue_uses_home_office_usage_ratio(period=period, transactions=transactions):
-        # Both home-office checks read the dwelling m2; the profile is decrypted
-        # once here and handed to each, not once per check.
-        profile_record = _bucket_profile_record(bucket_id, operation=operation)
         if raw_afectacion_ratio is None and profile_record is not None:
             raw_afectacion_ratio = raw_afectacion_ratio_for_record(profile_record)
         censo_ratio_mismatch_detail = _censo_ratio_mismatch_detail(
@@ -231,10 +288,36 @@ def preflight_ledger_tax_readiness(
         bucket_id=bucket_id,
         period=period,
         transactions=transactions,
+        invoices=invoices,
+        movement_reader=repository,
+        cash_accounting_enrolled=_cash_accounting_enrolled(profile_record, period=period),
         operation=operation,
         censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
         missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
     )
+
+
+def load_period_preflight_catalogue(
+    repository: TransactionCatalogueRepositoryProtocol,
+    period: Period,
+) -> TransactionCatalogue:
+    """Read only the stored rows a preflight of ``period`` can inspect.
+
+    The preflight keys every row on its ledger filing date (value date, else
+    booked date), which is the date the plaintext routing index records. The
+    period's date partition therefore holds every row the preflight can check,
+    without decrypting the rest of the bucket. The partition runs its own
+    completeness gate and falls back to a full scan when the index is stale
+    or partial, so the report can be slower but never short of a row.
+
+    The in-window half is a superset chosen by each row's eligible date span;
+    :func:`preflight_transaction_catalogue` still narrows it to the filing
+    date. A period without a date span reads the whole catalogue, as before,
+    and the preflight reports it as unsupported.
+    """
+    if not period.has_date_span():
+        return repository.load()
+    return repository.partition_by_date_range(period.start_date, period.end_date).in_window
 
 
 def preflight_transaction_catalogue(
@@ -242,16 +325,28 @@ def preflight_transaction_catalogue(
     bucket_id: str,
     period: Period,
     transactions: TransactionCatalogue,
+    invoices: Sequence[Invoice],
+    movement_reader: TransactionCatalogueByIdReader,
+    cash_accounting_enrolled: bool,
     operation: PinnedAuthorityOperation,
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue.
 
+    The invoice side is read through the same shared check calculation runs:
+    a movement an invoice names is that invoice's payment, so its own IVA
+    facts are not required, and what blocks the invoice side is reported here
+    so the ledger never calls a period ready that calculation then refuses.
+
     Args:
         bucket_id: Stable bucket identifier for the ledger being checked.
         period: Filing period as a typed :class:`Period` instance.
         transactions: The :class:`TransactionCatalogue` to inspect for missing facts.
+        invoices: The bucket's invoices.
+        movement_reader: Reads by id the movements an in-period invoice names
+            outside ``transactions``.
+        cash_accounting_enrolled: Whether the profile declares the criterio de caja.
         operation: Generation-pinned authority for governed IVA and category facts.
         censo_ratio_mismatch_detail: Optional censo mismatch detail previously
             resolved from the secure ratio profile. When supplied, active
@@ -271,30 +366,214 @@ def preflight_transaction_catalogue(
             checked_transaction_count=0,
             issues=(_unsupported_period_issue(resolved_period),),
         )
+    invoice_side = period_invoice_iva_side(
+        invoices,
+        bucket_id=bucket_id,
+        period=resolved_period,
+        window=transactions,
+        repository=movement_reader,
+        operation=operation,
+    )
     issues: list[LedgerPreflightIssue] = []
     checked = 0
-    for transaction in _sorted_transactions(transactions):
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        operation_date = transaction.raw.value_date or transaction.raw.booked_date
-        if not resolved_period.contains(operation_date):
-            continue
+    for transaction in _period_transactions(period=resolved_period, transactions=transactions):
         checked += 1
         issues.extend(
-            _issues_for_transaction(
+            issues_for_transaction(
                 transaction,
                 period=resolved_period,
                 operation=operation,
                 censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
                 missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
+                paid_by_invoice=transaction.transaction_id in invoice_side.payments.paid_transaction_ids,
             ),
         )
+    issues.extend(invoice_side_preflight_issues(invoice_side, cash_accounting_enrolled=cash_accounting_enrolled))
     return LedgerPreflightReport(
         bucket_id=bucket_id,
         period=resolved_period,
         checked_transaction_count=checked,
         issues=tuple(issues),
     )
+
+
+class HeldTransactionCatalogue:
+    """Serve by-id reads from a catalogue the caller already decrypted whole."""
+
+    def __init__(self, catalogue: TransactionCatalogue) -> None:
+        """Hold ``catalogue``; every by-id read is answered from it."""
+        self._catalogue = catalogue
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        """Return the held movements among ``transaction_ids``."""
+        return TransactionCatalogue.from_transactions(
+            transaction
+            for transaction_id in transaction_ids
+            if (transaction := self._catalogue.get(transaction_id)) is not None
+        )
+
+
+def _cash_accounting_enrolled(record: UserProfileRecord | None, *, period: Period) -> bool:
+    from ..aggregation.invoice_iva_source import cash_accounting_enrolled
+
+    as_of = period.end_date if period.has_date_span() else None
+    return as_of is not None and cash_accounting_enrolled(record, as_of=as_of)
+
+
+_INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        LedgerPreflightIssueReason.INVOICE_DEDUCTION_FAMILY_UNRESOLVED.value: (
+            "received invoice {number} has no deduction family the evidence grounds: classify the movement "
+            "that pays it, for example as a current expense or a bien de inversión"
+        ),
+        LedgerPreflightIssueReason.INVOICE_CATEGORY_CONTRADICTED.value: (
+            "invoice {number} declares an IVA category its counterparty country cannot bear; correct either"
+        ),
+        LedgerPreflightIssueReason.MOVEMENT_INVOICE_DOUBLE_COUNT.value: (
+            "this movement carries its own IVA figures and pairs with invoice {number}, which already declares "
+            "the operation; link the two or dismiss the pair"
+        ),
+        LedgerPreflightIssueReason.INVOICE_CASH_ACCOUNTING_REGIME_UNMODELLED.value: (
+            "the profile declares the régimen especial del criterio de caja, whose accrual follows payment; "
+            "invoices carry no payment schedule to place their IVA"
+        ),
+        LedgerPreflightIssueReason.LINKED_MOVEMENT_CONTRADICTS_INVOICE.value: (
+            "the movements paying invoice {number} state a base or cuota that differs from the invoice"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECARGO_SPLIT_UNRESOLVED.value: (
+            "issued invoice {number} records one recargo de equivalencia over several IVA rates that differs "
+            "from the sum of each rate's art. 161 recargo; correct the recargo on the invoice"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECARGO_NOT_DECLARABLE.value: (
+            "issued invoice {number} records a recargo de equivalencia that is not its base times the "
+            "art. 161 rate for its IVA rate and date; correct the invoice or issue a rectificativa"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED.value: (
+            "invoice {number} is a factura rectificativa whose record states no modification: RD 1619/2012 "
+            "art. 15.5 reads its figures through the method it records, and a substitution also needs the one "
+            "invoice it replaces{refusal}{missing}"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT.value: (
+            "invoice {number} is a factura rectificativa whose modification is {derived}; the period it belongs "
+            "to comes from its side, its cause and the election LIVA art. 89.Cinco and art. 114.Dos give, and "
+            "the record does not state it yet{refusal}{missing}"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE.value: (
+            "invoice {number} is a received factura rectificativa this period declares, whose modification is "
+            "{derived}, and casillas 40 and 41 cannot hold it: the invoice it corrects resolves to no single "
+            "record of the catalogue, or a row carries a base with no deducible cuota"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE.value: (
+            "invoice {number} is an issued factura rectificativa this period declares, whose modification is "
+            "{derived}, and casillas 14 and 15 cannot hold it: a row carries a rate no tier of that date holds, "
+            "or the modification moves a recargo de equivalencia, which casillas 25 and 26 hold"
+        ),
+        LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
+            "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "
+            "the margin de beneficio (art. 137), which is not computed; enter the margin base and its cuota in "
+            "the Modelo 303 devengado casillas for its rate"
+        ),
+    }
+)
+
+
+def _invoice_issue(
+    reason: LedgerPreflightIssueReason,
+    *,
+    invoice: Invoice | None,
+    transaction_id: str | None,
+    missing_facts: tuple[str, ...] = (),
+    rectification_refusal: str | None = None,
+    modification: RectificationModification | None = None,
+) -> LedgerPreflightIssue:
+    """Key an invoice-side issue on the movement the person can open, else on the period."""
+    anchor = transaction_id
+    if anchor is None and invoice is not None and invoice.linked_transaction_ids:
+        anchor = sorted(invoice.linked_transaction_ids)[0]
+    return LedgerPreflightIssue(
+        transaction_id=anchor if anchor is not None else "__period__",
+        reason=reason,
+        detail=_INVOICE_FINDING_DETAIL[reason.value].format(
+            number=repr(invoice.invoice_number) if invoice is not None else "",
+            missing=("" if not missing_facts else f"; the invoice does not state {', '.join(missing_facts)}"),
+            refusal="" if rectification_refusal is None else f"; {rectification_refusal}",
+            derived=_derived_modification_words(modification),
+        ),
+        missing_facts=missing_facts,
+        derived_modification_base=None if modification is None else modification.base,
+        derived_modification_cuota=None if modification is None else modification.cuota,
+        derived_modification_recargo=None if modification is None else modification.recargo,
+    )
+
+
+def _derived_modification_words(modification: RectificationModification | None) -> str:
+    """The signed figures a derived modification carries, for the diagnostic sentence.
+
+    The person's own sentence is served translated from the typed amounts on
+    the issue; this is the untranslated diagnostic beside it.
+    """
+    if modification is None:
+        return ""
+    recargo = "" if modification.recargo is None else f" and a recargo of {modification.recargo:f}"
+    return f"a base of {modification.base:f} and a cuota of {modification.cuota:f}{recargo} {modification.currency}"
+
+
+def _missing_facts_of(finding: InvoiceIvaFinding) -> tuple[str, ...]:
+    """The fields one invoice finding says the record does not state.
+
+    A rectificativa can be held for two different absences: the facts its side
+    needs before any modification is derived, and the election its side and
+    cause need before any period holds it. Both are invoice fields the person
+    opens, so both reach the served sentence through one channel.
+    """
+    if finding.missing_rectification_facts:
+        return tuple(fact.value for fact in finding.missing_rectification_facts)
+    if finding.rectification_period_need is not None:
+        return (finding.rectification_period_need.value,)
+    return ()
+
+
+def _rectification_refusal_of(finding: InvoiceIvaFinding) -> str | None:
+    """The stable refusal token one rectificativa finding carries, when any."""
+    if finding.rectification_refusal is not None:
+        return finding.rectification_refusal.value
+    if finding.rectification_period_refusal is not None:
+        return finding.rectification_period_refusal.value
+    return None
+
+
+def invoice_side_preflight_issues(
+    invoice_side: PeriodInvoiceIvaSide,
+    *,
+    cash_accounting_enrolled: bool,
+) -> tuple[LedgerPreflightIssue, ...]:
+    """Project the shared invoice-side findings into ledger readiness issues."""
+    by_id = {invoice.invoice_id: invoice for invoice in invoice_side.payments.source_invoices}
+    findings: tuple[InvoiceIvaFinding, ...] = period_invoice_iva_findings(
+        invoice_side.source.findings,
+        invoice_ids=invoice_side.source.screen.invoice_ids,
+        cash_accounting_enrolled=cash_accounting_enrolled,
+    )
+    issues = [
+        _invoice_issue(
+            LedgerPreflightIssueReason(finding.reason.value),
+            invoice=by_id.get(finding.invoice_id) if finding.invoice_id is not None else None,
+            transaction_id=finding.transaction_id,
+            missing_facts=_missing_facts_of(finding),
+            rectification_refusal=_rectification_refusal_of(finding),
+            modification=finding.rectification_modification,
+        )
+        for finding in findings
+    ]
+    issues.extend(
+        _invoice_issue(
+            LedgerPreflightIssueReason.LINKED_MOVEMENT_CONTRADICTS_INVOICE,
+            invoice=invoice,
+            transaction_id=None,
+        )
+        for invoice in invoice_side.contradicted
+    )
+    return tuple(issues)
 
 
 def _unsupported_period_issue(period: Period) -> LedgerPreflightIssue:
@@ -308,26 +587,28 @@ def _unsupported_period_issue(period: Period) -> LedgerPreflightIssue:
     )
 
 
-def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
+def _period_transactions(*, period: Period, transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
+    """Return the active rows filed in ``period``, ordered by filing date then id.
+
+    Filtering before sorting orders only the period's rows instead of the
+    whole bucket. The key is unique per row, so the order is the one a sort of
+    every row followed by the same filter would give.
+    """
+    if not period.has_date_span():
+        return ()
     return tuple(
         sorted(
-            transactions.values(),
+            (
+                transaction
+                for transaction in transactions.values()
+                if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+                and period.contains(transaction.raw.value_date or transaction.raw.booked_date)
+            ),
             key=lambda transaction: (
                 transaction.raw.value_date or transaction.raw.booked_date,
                 transaction.transaction_id,
             ),
-        ),
-    )
-
-
-def _period_transactions(*, period: Period, transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
-    if not period.has_date_span():
-        return ()
-    return tuple(
-        transaction
-        for transaction in _sorted_transactions(transactions)
-        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and period.contains(transaction.raw.value_date or transaction.raw.booked_date)
+        )
     )
 
 
@@ -451,21 +732,11 @@ def _catalogue_uses_home_office_usage_ratio(*, period: Period, transactions: Tra
 
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
-    """Return whether the transaction feeds the deductible-expense pipeline.
-
-    ``category_id`` is a :class:`SpendingCategory` foreign key — a
-    deductible-expense taxonomy. The only modelo binding that consumes
-    it is the Renta first-slice expense aggregation, which only admits
-    OUTGOING transactions (expenses) and INCOMING transactions that
-    carry a purchase-invoice evidence id (expense refunds). Pure income
-    (INCOMING with no purchase-invoice evidence) is classified solely
-    by direction and never reads a spending category, so it must not
-    be flagged as ``missing_category``.
-    """
-    if transaction.direction is TransactionDirection.OUTGOING:
-        return True
-    return (
-        transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
+    # A rental expense is routed to its casilla by its property and expense concept, never by a category.
+    if transaction.inmueble_ref is not None and transaction.gasto_capital_inmobiliario is not None:
+        return False
+    return takes_expense_category(
+        transaction.direction, has_purchase_evidence=transaction.purchase_invoice_evidence_id is not None
     )
 
 
@@ -493,20 +764,21 @@ def _missing_business_classification_issue(transaction: Transaction) -> LedgerPr
 
 def _non_declarable_iva_issue(transaction: Transaction) -> LedgerPreflightIssue | None:
     iva_category = transaction.iva_category
+    effective_date = transaction_operation_date(transaction)
     if iva_category is not None:
-        if iva_category == require_iva_category("unknown"):
+        if iva_category == require_iva_category("unknown", effective_date=effective_date):
             return _preflight_issue(
                 transaction,
                 LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
                 "iva_category 'unknown' is not declarable; classify the row or query the source",
             )
-        if iva_category == require_iva_category("erroneous_invoice"):
+        if iva_category == require_iva_category("erroneous_invoice", effective_date=effective_date):
             return _preflight_issue(
                 transaction,
                 LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
                 "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
             )
-    if iva_category == require_iva_category("recargo_equivalencia"):
+    if iva_category == require_iva_category("recargo_equivalencia", effective_date=effective_date):
         return _preflight_issue(
             transaction,
             LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
@@ -617,8 +889,8 @@ def _iva_preflight_issues(
     issues = [
         _preflight_issue(
             transaction,
-            _preflight_reason_for_iva_issue(reason),
-            _preflight_detail_for_iva_issue(reason),
+            preflight_reason_for_iva_issue(reason),
+            preflight_detail_for_iva_issue(reason),
         )
         for reason in iva_ledger_missing_fact_reasons(transaction)
     ]
@@ -627,7 +899,7 @@ def _iva_preflight_issues(
         issues.append(
             _preflight_issue(
                 transaction,
-                _preflight_reason_for_iva_issue(d5_issue.reason),
+                preflight_reason_for_iva_issue(d5_issue.reason),
                 d5_issue.detail,
             ),
         )
@@ -640,21 +912,27 @@ def _iva_preflight_issues(
         issues.append(
             _preflight_issue(
                 transaction,
-                _preflight_reason_for_iva_issue(deduction_issue.reason),
+                preflight_reason_for_iva_issue(deduction_issue.reason),
                 deduction_issue.detail,
             ),
         )
     return tuple(issues)
 
 
-def _issues_for_transaction(
+def issues_for_transaction(
     transaction: Transaction,
     *,
     period: Period,
     operation: PinnedAuthorityOperation,
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
+    paid_by_invoice: bool = False,
 ) -> tuple[LedgerPreflightIssue, ...]:
+    """Return the preflight issues found on one transaction for a period.
+
+    A movement an invoice names is that invoice's payment: the invoice carries
+    the IVA, so the movement's own IVA facts and their currency are not asked for.
+    """
     if transaction.direction not in {
         TransactionDirection.INCOMING,
         TransactionDirection.OUTGOING,
@@ -667,13 +945,14 @@ def _issues_for_transaction(
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return ()
 
-    anomaly_issue = _non_declarable_iva_issue(transaction)
-    if anomaly_issue is not None:
-        return (anomaly_issue,)
+    if not paid_by_invoice:
+        anomaly_issue = _non_declarable_iva_issue(transaction)
+        if anomaly_issue is not None:
+            return (anomaly_issue,)
 
-    currency_issues = _currency_preflight_issues(transaction)
-    if currency_issues:
-        return currency_issues
+        currency_issues = _currency_preflight_issues(transaction)
+        if currency_issues:
+            return currency_issues
 
     issues = list(_ordinary_preflight_issues(transaction))
     issues.extend(
@@ -683,7 +962,8 @@ def _issues_for_transaction(
             missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
         ),
     )
-    issues.extend(_iva_preflight_issues(transaction, period=period, operation=operation))
+    if not paid_by_invoice:
+        issues.extend(_iva_preflight_issues(transaction, period=period, operation=operation))
     return tuple(issues)
 
 
@@ -730,16 +1010,16 @@ def _transaction_is_trabajo_income(
 #: The preflight counterpart of every aggregation reason that reaches preflight.
 #:
 #: Preflight consumes exactly three aggregation screens --
-#: :func:`~cadrumo.application.aggregation.iva_ledger.iva_ledger_missing_fact_reasons`,
-#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_counterparty_category`
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.iva_ledger_missing_fact_reasons`,
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.validate_iva_ledger_counterparty_category`
 #: and
-#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_deduction_classification`
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.validate_iva_ledger_deduction_classification`
 #: -- so this mapping's domain is their union, not the whole enum. The lookup is
 #: a bare subscript and therefore total by construction: an arriving reason that
 #: is absent here raises rather than resolving to a wrong operator message.
 #: What keeps that safe is the partition below, gated so a new enum member
 #: cannot ship without being classified into one side or the other.
-_PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, LedgerPreflightIssueReason]] = {
+PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, LedgerPreflightIssueReason]] = {
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
     IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
@@ -767,7 +1047,7 @@ _PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, L
 #: deduction-admissibility gates already compose their own localised detail,
 #: which preflight carries through verbatim rather than re-authoring. Only the
 #: missing-fact screen arrives here with no sentence of its own.
-_PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
+PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
     IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
@@ -799,6 +1079,12 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
         "upstream candidate filter; preflight screens business classification itself"
     ),
     IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION: "upstream candidate filter, not a readiness gap",
+    IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE: (
+        "classification-path category rule: the law grants no deduction for mixed use, not a readiness gap"
+    ),
+    IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT: (
+        "classification-path category rule; preflight screens the missing category itself"
+    ),
     IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: "upstream candidate filter; preflight is already period-scoped",
     IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE: (
         "projection-path rate-tier lookup; preflight does not classify rates against the tier table"
@@ -808,6 +1094,18 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     ),
     IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: (
         "projection-path arithmetic contradiction screen between rate and cuota"
+    ),
+    IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: (
+        "projection-path arithmetic contradiction screen between base, rate and cuota"
+    ),
+    IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
+    ),
+    IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
+    ),
+    IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
     ),
     IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
         "projection-path screen reading the Axis-A component table for the declared category"
@@ -829,6 +1127,13 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: (
         "projection-path regime screen requiring the bucket's cash-accounting treatment"
     ),
+    IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE: (
+        "classification-path check of stored registry values against the calculation's pinned authority; "
+        "preflight reads no pinned calculation authority to judge them against"
+    ),
+    IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT: (
+        "classification-path re-check of the criterio-de-caja coupling the settlement split reads"
+    ),
 }
 
 
@@ -841,6 +1146,8 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
         IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
         IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION: OperatorActionAxis.REVIEW_ADVISORY,
+        IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE: OperatorActionAxis.REVIEW_ADVISORY,
+        IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: OperatorActionAxis.REVIEW_ADVISORY,
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: OperatorActionAxis.IMPORT_LEDGER_DATA,
@@ -850,6 +1157,12 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
             OperatorActionAxis.RESOLVE_REVISION_MISMATCH
         ),
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
+        IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
+        IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED: OperatorActionAxis.REVIEW_ADVISORY,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
             OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
         ),
@@ -870,6 +1183,10 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
             OperatorActionAxis.RESOLVE_IDENTITY
         ),
         IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
+        IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
         IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
             OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE
         ),
@@ -924,43 +1241,45 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 _reaching_preflight = (
     IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS | IVA_LEDGER_DEDUCTION_GATE_REASONS
 )
-_classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
+_classified = set(PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
 
 if _classified != set(IvaLedgerAggregationIssueReason):
     _unclassified = ", ".join(sorted(r.value for r in set(IvaLedgerAggregationIssueReason) - _classified))
     _stale = ", ".join(sorted(str(r) for r in _classified - set(IvaLedgerAggregationIssueReason)))
     raise InternalInvariantError(
         "every IvaLedgerAggregationIssueReason must be classified for the ledger preflight: map it in "
-        "_PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
+        "PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
         f"_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT; unclassified: {_unclassified or 'none'}; "
         f"stale: {_stale or 'none'}",
     )
 
-if _both := set(_PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
+if _both := set(PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
     raise InternalInvariantError(
         "an IvaLedgerAggregationIssueReason cannot be both mapped into preflight and declared unable to "
         f"reach it; on both sides: {', '.join(sorted(r.value for r in _both))}",
     )
 
-if _unmapped := _reaching_preflight - set(_PREFLIGHT_REASON_BY_IVA_ISSUE):
+if _unmapped := _reaching_preflight - set(PREFLIGHT_REASON_BY_IVA_ISSUE):
     raise InternalInvariantError(
         "a preflight-facing screen emits an IvaLedgerAggregationIssueReason with no preflight counterpart; "
         f"unmapped: {', '.join(sorted(r.value for r in _unmapped))}",
     )
 
-if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(_PREFLIGHT_DETAIL_BY_IVA_ISSUE):
+if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(PREFLIGHT_DETAIL_BY_IVA_ISSUE):
     raise InternalInvariantError(
         "a missing-fact reason reaches preflight with no detail sentence; "
         f"missing: {', '.join(sorted(r.value for r in _detailless))}",
     )
 
 
-def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
-    return _PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
+def preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
+    """Map an IVA aggregation issue reason to its ledger preflight reason."""
+    return PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
 
 
-def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
-    return _PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
+def preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
+    """Return the preflight detail text for an IVA aggregation issue reason."""
+    return PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
 
 
 __all__ = [
@@ -968,6 +1287,7 @@ __all__ = [
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",
+    "load_period_preflight_catalogue",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
 ]

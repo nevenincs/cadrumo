@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -21,14 +20,19 @@ from ..operations.financial_operand_contract import (
 )
 from .edit_models import ModeloEditBaselineV1, ModeloEditSubmissionV1
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from .lifecycle_view_refusal_doors import unit_status_verdict
 
 
 def _baseline(operand: BaseModel) -> BaseModel:
-    return cast(ModeloEditSubmissionV1, operand).baseline
+    if not isinstance(operand, ModeloEditSubmissionV1):
+        raise TypeError("modelo edit operand must be a complete submission")
+    return operand.baseline
 
 
 def _reference(baseline: BaseModel) -> str:
-    return cast(ModeloEditBaselineV1, baseline).baseline_id
+    if not isinstance(baseline, ModeloEditBaselineV1):
+        raise TypeError("modelo edit baseline has an incompatible type")
+    return baseline.baseline_id
 
 
 def modelo_edit_financial_operand(
@@ -53,7 +57,12 @@ def modelo_edit_financial_operand(
         if committed is None:
             return None
         if committed.work_unit_id != requirement.identity.subject_ref:
-            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+            raise OperationFinancialOperandRefusedError(
+                OperationFinancialOperandRefusalCode.WRONG_BASELINE,
+                precondition_verdict=unit_status_verdict(
+                    "financial_operand_baseline", requirement.identity.subject_ref
+                ),
+            )
         return OperationFinancialOperandEffectReceiptV1(
             identity=requirement.identity,
             handoff_id=requirement.handoff_id,

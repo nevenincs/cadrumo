@@ -357,9 +357,11 @@ def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str
 def _refused(output: str) -> dict[str, str]:
     """Map each node id listed inside the refusal section to its rendered fixture names.
 
-    Only indented lines between the section banner and the next separator are
-    read, so progress lines, tracebacks and paths elsewhere in the output
-    cannot satisfy or break an assertion.
+    Only indented lines naming unresolved fixtures, between the section banner
+    and the next separator, are read, so progress lines, tracebacks and paths
+    elsewhere in the output cannot satisfy or break an assertion. A quiet run
+    prints no closing separator, which leaves stderr's indented warning source
+    lines inside that span.
     """
     lines = output.splitlines()
     start = next((index for index, line in enumerate(lines) if _BANNER in line), None)
@@ -369,7 +371,7 @@ def _refused(output: str) -> dict[str, str]:
     for line in lines[start + 1 :]:
         if line.startswith("="):
             break
-        if not line.startswith("  "):
+        if not line.startswith("  ") or _RENDERED_NAMES_PREFIX not in line:
             continue
         nodeid, _, rest = line.strip().partition(" (")
         refused[nodeid] = rest.rpartition(_RENDERED_NAMES_PREFIX)[2]

@@ -29,7 +29,7 @@ predecessor's and the successor's merge dropped it - the claim then reads as
 law while the edition before it declares the opposite.
 
 See Also:
-    :func:`dev.registry.compiler._validate_application_links.validate_application_link_closure`
+    :func:`dev.registry.compiler.validate_application_links.validate_application_link_closure`
         The per-revision closure rules whose pairs this module carries across an edge.
 """
 
@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
-from ._validate_application_links import APPLICATION_LINK_SURFACE_RULES
+from .validate_application_links import APPLICATION_LINK_SURFACE_RULES
 
 __all__ = ["inherited_family_pairing_failures"]
 

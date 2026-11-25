@@ -3,7 +3,7 @@
 //! Every Cadrumo-managed process is the `cadrumo` image, so Windows shows the whole tree
 //! under one application. No argument is the desktop; `--role NAME` selects another role
 //! before any window or webview exists. A role name grants nothing by itself: admission
-//! still proves how a peer was started.
+//! still proves how a peer was started. Every role runs inside the linked interpreter host.
 
 use std::ffi::OsStr;
 
@@ -60,6 +60,7 @@ impl Role {
         }
     }
 
+    /// What the role runs inside the linked interpreter host.
     pub fn hosted(self) -> HostedImage {
         match self {
             Role::Runtime => HostedImage {
@@ -143,7 +144,17 @@ mod tests {
             select(&arguments(&["--role"])).unwrap().unwrap_err(),
             RoleRefusal::Missing
         );
-        for name in ["", "Runtime", "desktop", "Python", "interpreter", "runtime "] {
+        for name in [
+            "",
+            "Runtime",
+            "desktop",
+            "Python",
+            "components",
+            "Components",
+            "component",
+            "interpreter",
+            "runtime ",
+        ] {
             assert_eq!(
                 select(&arguments(&["--role", name])).unwrap().unwrap_err(),
                 RoleRefusal::Unknown,
@@ -155,17 +166,24 @@ mod tests {
     #[test]
     fn every_role_hosts_a_declared_launch_image() {
         for role in Role::ALL {
-            let hosted = role.hosted();
-            assert!(!hosted.image.is_empty());
             assert_eq!(role.arguments()[1], role.name());
             assert_eq!(select(role.arguments()).unwrap().unwrap().0, role);
+            let hosted = role.hosted();
+            assert!(!hosted.image.is_empty());
             if let Some(entrypoint) = hosted.entrypoint {
                 assert!(!entrypoint.is_empty());
                 assert_eq!(Role::hosting(entrypoint), Some(role));
             }
         }
         assert_eq!(Role::Python.hosted().entrypoint, None);
-        for entrypoint in ["cadrumo-agent-service", "cadrumo-mcp", "python", "", "AEAT"] {
+        for entrypoint in [
+            "cadrumo-agent-service",
+            "cadrumo-mcp",
+            "python",
+            "components",
+            "",
+            "AEAT",
+        ] {
             assert_eq!(Role::hosting(entrypoint), None, "{entrypoint:?}");
         }
     }

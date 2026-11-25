@@ -9,10 +9,12 @@ coherent bundle for each profile bucket.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -23,7 +25,9 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
@@ -32,6 +36,7 @@ from ..calculations.observations_repository import (
 )
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..workflow.run_models import WorkflowResult
+from .credit_resolution_repository import CreditResolutionRepository
 
 if TYPE_CHECKING:
     from ..aggregation.ledger_membership import LedgerMembershipPorts
@@ -72,14 +77,32 @@ class VerificationRepositoryBundle:
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
     retencion_observation_ports: RetencionObservationPorts
+    percepcion_observation_ports: PercepcionObservationPorts
     ledger_membership_ports: LedgerMembershipPorts
+    credit_resolution: CreditResolutionRepository
+    #: The prorrata register, read for which ejercicio prints a prorrata apartado.
+    prorrata_register: ProrrataRegisterRepositoryProtocol
+    #: The stored documents, read for which invoices hold their factura.
+    attachment: AttachmentStoreProtocol
 
 
 class VerificationRepositoryBundleFactory(Protocol):
     """Compose one bucket's repositories under the caller's pinned authority."""
 
-    def __call__(self, bucket_id: str, /, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
-        """Return the complete repository set for the named profile bucket."""
+    def __call__(
+        self,
+        bucket_id: str,
+        /,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
+        """Return the complete repository set for the named profile bucket.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so an operation can account
+        for its effect from the writes that really began.
+        """
         ...
 
 

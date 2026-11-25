@@ -19,6 +19,7 @@ from ....application.invoices.catalogue_creation_ports import (
     CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRateProviderPort,
 )
+from ....application.invoices.catalogue_reads_ports import InvoiceDocumentManifestReader
 from ....application.ledger import invoice_confirmation as confirmation
 from ....application.ledger.confirm_establishment import ConfirmedEstablishment
 from ....application.ledger.establishment_ladder import CounterpartyEstablishment
@@ -35,15 +36,16 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "20202020-2020-4202-8202-202020202020"
 _ATTACHMENT = "a" * 64
-_COUNTERPARTY = "B12345674"
+_COUNTERPARTY = "B00015016"
 
 
 class _InvoiceRepository:
@@ -82,8 +84,8 @@ def _invoice(invoice_number: str, *, operation: PinnedAuthorityOperation) -> Inv
     )
 
 
-def _preparation(draft: InvoiceDraft) -> confirmation._InvoiceConfirmationPreparation:
-    return confirmation._InvoiceConfirmationPreparation(
+def _preparation(draft: InvoiceDraft) -> confirmation.InvoiceConfirmationPreparation:
+    return confirmation.InvoiceConfirmationPreparation(
         settings=cast(Settings, object()),
         draft=draft,
         blockers=(),
@@ -111,12 +113,12 @@ def _persist_with_existing_invoice(
     )
     monkeypatch.setattr(
         confirmation,
-        "_record_confirmed_summary_on_evidence",
+        "record_confirmed_summary_on_evidence",
         lambda **_kwargs: calls.append("summary"),
     )
     monkeypatch.setattr(
         confirmation,
-        "_written_confirmation_record",
+        "written_confirmation_record",
         lambda **_kwargs: calls.append("audit") or record,
     )
     confirmation.InvoiceConfirmationResult.model_rebuild(
@@ -127,9 +129,10 @@ def _persist_with_existing_invoice(
         event_repository=cast(CatalogueInvoiceEventRepositoryPort, object()),
         audit_commit=cast(CatalogueInvoiceAuditCommitPort, object()),
         rate_provider=cast(CatalogueInvoiceRateProviderPort, object()),
+        documents=cast(InvoiceDocumentManifestReader, object()),
     )
 
-    return confirmation._persist_confirmed_invoice(
+    return confirmation.persist_confirmed_invoice(
         candidate=candidate,
         preparation=_preparation(InvoiceDraft(invoice_number=candidate.invoice_number)),
         bucket_id=_BUCKET,
@@ -179,15 +182,16 @@ def test_same_document_with_a_different_invoice_number_refuses_before_any_write(
         event_repository=cast(CatalogueInvoiceEventRepositoryPort, object()),
         audit_commit=cast(CatalogueInvoiceAuditCommitPort, object()),
         rate_provider=cast(CatalogueInvoiceRateProviderPort, object()),
+        documents=cast(InvoiceDocumentManifestReader, object()),
     )
     monkeypatch.setattr(confirmation, "link_attachment_invoice", lambda *_args, **_kwargs: writes.append("link"))
     monkeypatch.setattr(
-        confirmation, "_record_confirmed_summary_on_evidence", lambda **_kwargs: writes.append("summary")
+        confirmation, "record_confirmed_summary_on_evidence", lambda **_kwargs: writes.append("summary")
     )
-    monkeypatch.setattr(confirmation, "_written_confirmation_record", lambda **_kwargs: writes.append("record"))
+    monkeypatch.setattr(confirmation, "written_confirmation_record", lambda **_kwargs: writes.append("record"))
 
     with pytest.raises(InvoiceValidationError, match="invoice_number"):
-        confirmation._persist_confirmed_invoice(
+        confirmation.persist_confirmed_invoice(
             candidate=candidate,
             preparation=_preparation(InvoiceDraft(invoice_number=candidate.invoice_number)),
             bucket_id=_BUCKET,
@@ -243,7 +247,7 @@ def test_confirmation_boundary_refuses_a_reader_or_operator_self_counterparty(
     )
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
-        confirmation._build_confirmed_invoice_candidate(
+        confirmation.build_confirmed_invoice_candidate(
             bucket_id=_BUCKET,
             kind=InvoiceKind.RECEIVED,
             counterparty_country="ES",

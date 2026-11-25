@@ -41,10 +41,10 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_supported_filing_years,
 )
 from ....domain.user_profile.values import UserProfileFact
-from ..cross_period_clean_state import _non_filer_modelos
+from ..cross_period_clean_state import cross_period_clean_state_non_filer_modelos
 from ..relation_prefill import (
-    _economic_activity_conditional_source_modelos,
-    _not_applicable_source_modelos_for_bucket,
+    economic_activity_conditional_source_modelos,
+    not_applicable_source_modelos_for_bucket,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -113,7 +113,7 @@ class TestCandidateSetIsRegistryGrounded:
             if classification.conditional_on_economic_activity
         )
 
-        assert _economic_activity_conditional_source_modelos(snapshot) == declared, (
+        assert economic_activity_conditional_source_modelos(snapshot) == declared, (
             f"Modelo 100 {filing_year}: the candidate set must be read off the revision's "
             "dependency_classifications, so a revision that changes which sources are "
             "conditional on economic activity changes the set without a code edit"
@@ -133,7 +133,7 @@ class TestCandidateSetIsRegistryGrounded:
             for classification in snapshot.revision.dependency_classifications
             if not classification.taxpayer_files_source
         )
-        candidates = _economic_activity_conditional_source_modelos(snapshot)
+        candidates = economic_activity_conditional_source_modelos(snapshot)
 
         assert not (candidates & payer_filed), (
             f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are filed by "
@@ -169,7 +169,7 @@ class TestCandidateSetIsRegistryGrounded:
             if not payer_filed:
                 continue
             subjects += 1
-            suppressed = _not_applicable_source_modelos_for_bucket(
+            suppressed = not_applicable_source_modelos_for_bucket(
                 snapshot,
                 _PROFILE_ID,
                 profile_path_values_reader=no_economic_activity,
@@ -183,7 +183,7 @@ class TestCandidateSetIsRegistryGrounded:
                 f"Modelo 100 {filing_year}: payer-filed sources {sorted(suppressed & payer_filed)} were "
                 "folded in as zero, stripping the taxpayer's retención credit"
             )
-            assert payer_filed <= _non_filer_modelos(
+            assert payer_filed <= cross_period_clean_state_non_filer_modelos(
                 snapshot,
                 taxpayer_files_economic_activity=False,
                 not_applicable_source_modelos=suppressed,
@@ -209,11 +209,11 @@ class TestVerdictWithinTheCandidateSet:
         )
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
+        assert not_applicable_source_modelos_for_bucket(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_reader,
-        ) == _economic_activity_conditional_source_modelos(snapshot), (
+        ) == economic_activity_conditional_source_modelos(snapshot), (
             "a filer with no actividad económica owes neither pago-fraccionado modelo"
         )
 
@@ -229,7 +229,7 @@ class TestVerdictWithinTheCandidateSet:
         )
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
+        assert not_applicable_source_modelos_for_bucket(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_reader,
@@ -249,7 +249,7 @@ class TestVerdictWithinTheCandidateSet:
         )
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
+        assert not_applicable_source_modelos_for_bucket(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_reader,
@@ -267,7 +267,7 @@ class TestFailClosed:
         snapshot = _m100_snapshot(2024)
 
         assert (
-            _not_applicable_source_modelos_for_bucket(
+            not_applicable_source_modelos_for_bucket(
                 snapshot,
                 bucket_id,
                 profile_path_values_reader=_ProfilePathValuesFake(None),
@@ -285,7 +285,7 @@ class TestFailClosed:
         snapshot = _m100_snapshot(2024)
 
         assert (
-            _not_applicable_source_modelos_for_bucket(
+            not_applicable_source_modelos_for_bucket(
                 snapshot,
                 bucket_id,
                 profile_path_values_reader=profile_reader,
@@ -308,7 +308,7 @@ class TestFailClosed:
         snapshot = _m100_snapshot(2024)
 
         assert (
-            _not_applicable_source_modelos_for_bucket(
+            not_applicable_source_modelos_for_bucket(
                 snapshot,
                 bucket_id,
                 profile_path_values_reader=profile_reader,
@@ -334,12 +334,12 @@ class TestFailClosed:
             ),
         )
         snapshot = published_snapshot(Modelo("303").value, filing_year=2024, period="1T")
-        assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
+        assert economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
             "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
         )
 
         assert (
-            _not_applicable_source_modelos_for_bucket(
+            not_applicable_source_modelos_for_bucket(
                 snapshot,
                 bucket_id,
                 profile_path_values_reader=profile_reader,

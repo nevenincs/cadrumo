@@ -15,11 +15,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.operations.models import OperationDefinitionId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationPublicSchemaId
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 
 
@@ -97,13 +97,20 @@ class AccessScope(BaseModel):
     allow_changes_records: bool = True
     allow_network: bool = True
 
-    def permits(self, operation: str) -> bool:
-        """Whether this exact operation is explicitly permitted."""
-        return operation in self.operations
 
-    def discloses(self, permission: DisclosurePermission) -> bool:
-        """Whether this scope consents to one explicit permission, listed or by its category."""
-        return permission in self.disclosures or any(item.covers(permission) for item in self.disclosure_categories)
+class GrantUse(StrEnum):
+    """What a grant's key is for, read from what its scope releases and to whom."""
+
+    AGENT = "agent"
+    """Its scope releases results to a destination, so a client presenting the key reads values back."""
+    OTHER = "other"
+    """Its scope releases nothing to a destination."""
+
+
+def grant_use(scope: AccessScope) -> GrantUse:
+    """Classify a grant by its scope alone, so every projection of the grant agrees."""
+    releases = bool(scope.disclosures or scope.disclosure_categories)
+    return GrantUse.AGENT if releases else GrantUse.OTHER
 
 
 DISCLOSURE_PAGE_ENTRIES = 100

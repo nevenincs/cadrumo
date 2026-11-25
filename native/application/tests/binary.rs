@@ -3,7 +3,6 @@ use cadrumo_application::{
     error::Error,
     value::Sha256Digest,
 };
-use sha2::{Digest, Sha256};
 
 #[test]
 fn rejects_oversized_package_images_before_header_admission() {
@@ -35,11 +34,7 @@ fn rejects_oversized_package_images_before_header_admission() {
 #[test]
 fn running_native_executable_matches_host_and_rejects_wrong_cpu_format_and_digest() {
     let path = std::env::current_exe().unwrap();
-    let digest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(std::fs::read(&path).unwrap())
-    ))
-    .unwrap();
+    let digest = Sha256Digest::of(std::fs::read(&path).unwrap());
     let host = BinaryExpectation::host().unwrap();
     binary::verify(&path, &digest, host).unwrap();
     let wrong_cpu = BinaryExpectation {
@@ -79,7 +74,7 @@ fn refuses_nonbinary_even_with_matching_digest() {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
     }
-    let digest = Sha256Digest::new(format!("{:x}", Sha256::digest(b"text"))).unwrap();
+    let digest = Sha256Digest::of(b"text");
     let result = binary::verify(&path, &digest, BinaryExpectation::host().unwrap());
     assert!(matches!(result, Err(Error::Incompatible(_))), "{result:?}");
 }

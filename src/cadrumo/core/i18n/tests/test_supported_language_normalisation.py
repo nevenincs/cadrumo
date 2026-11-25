@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ...external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ..render import _normalised_supported_language, normalise_supported_language
+from ..render import normalise_supported_language, normalised_supported_language
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -39,22 +39,22 @@ def test_an_unrecognised_or_non_string_value_is_none_rather_than_a_crash(value: 
 
 def test_a_repeated_spelling_is_coerced_once() -> None:
     """The memo answers the second call without re-entering the coercion."""
-    _normalised_supported_language.cache_clear()
-    before = _normalised_supported_language.cache_info()
+    normalised_supported_language.cache_clear()
+    before = normalised_supported_language.cache_info()
     assert before.hits == 0
 
     normalise_supported_language("es")
     normalise_supported_language("es")
     normalise_supported_language("es")
 
-    after = _normalised_supported_language.cache_info()
+    after = normalised_supported_language.cache_info()
     assert after.misses == 1, "one distinct spelling must reach the coercion exactly once"
     assert after.hits == 2
 
 
 def test_distinct_spellings_are_cached_apart() -> None:
     """Two spellings of the same language are separate entries with equal answers."""
-    _normalised_supported_language.cache_clear()
+    normalised_supported_language.cache_clear()
 
     assert normalise_supported_language("es") == normalise_supported_language("ES") == "es"
-    assert _normalised_supported_language.cache_info().misses == 2
+    assert normalised_supported_language.cache_info().misses == 2

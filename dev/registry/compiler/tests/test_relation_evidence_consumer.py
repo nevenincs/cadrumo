@@ -22,9 +22,10 @@ import pytest
 
 from cadrumo.domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
 from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriods
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..loader import load_modelo_directory
-from ..validate_bindings import unreferenced_binding_advisories
+from ..validate_bindings import unreferenced_binding_failures
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -32,10 +33,11 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[4] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-_REVISION = "2025-y-siguientes"
+_REVISION = str(open_ended_revision("193").id)
+_PRIOR_REVISION = str(authored_revisions("193")[-2].id)
 _EVIDENCE_BINDINGS = ("modelo-193-123-base-anual", "modelo-193-123-retenciones-anual")
 _BASE_OVERRIDE = (
-    'selector = {revision = "2024", id = "modelo-193-123-base-anual"}\n'
+    f'selector = {{revision = "{_PRIOR_REVISION}", id = "modelo-193-123-base-anual"}}\n'
     "# A reconciliation cross-check against the quarterly modelo 123, no longer the\n"
     "# source of decl.base-total.\n"
     'fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}\n'
@@ -59,8 +61,8 @@ def _evidence_kinds(revision: ModeloRevision, binding_id: str) -> list[BindingCo
     ]
 
 
-def _advised(revision: ModeloRevision) -> str:
-    return "\n".join(unreferenced_binding_advisories(prefix="modelo 193", revision=revision))
+def _unreferenced(revision: ModeloRevision) -> str:
+    return "\n".join(unreferenced_binding_failures(prefix="modelo 193", revision=revision))
 
 
 def test_the_annual_cross_check_relations_are_counted_as_evidence_consumers(tmp_path: Path) -> None:
@@ -70,7 +72,7 @@ def test_the_annual_cross_check_relations_are_counted_as_evidence_consumers(tmp_
     for binding_id in _EVIDENCE_BINDINGS:
         evidence = [ref for ref in consumers[binding_id] if ref.kind is BindingConsumerKind.RELATION_EVIDENCE]
         assert [ref.owner for ref in evidence] == ["modelo-193-dep-123"], consumers[binding_id]
-        assert binding_id not in _advised(revision)
+        assert binding_id not in _unreferenced(revision)
 
 
 def test_a_relation_that_enters_the_arithmetic_is_not_evidence(tmp_path: Path) -> None:
@@ -83,7 +85,7 @@ def test_a_relation_that_enters_the_arithmetic_is_not_evidence(tmp_path: Path) -
     )
 
     assert _evidence_kinds(revision, "modelo-193-123-base-anual") == []
-    assert "modelo-193-123-base-anual" in _advised(revision)
+    assert "modelo-193-123-base-anual" in _unreferenced(revision)
     assert _evidence_kinds(revision, "modelo-193-123-retenciones-anual") == [BindingConsumerKind.RELATION_EVIDENCE]
 
 
@@ -103,4 +105,4 @@ def test_evidence_no_declared_period_selects_is_never_read(tmp_path: Path) -> No
     )
 
     assert _evidence_kinds(unread, "modelo-193-123-base-anual") == []
-    assert "modelo-193-123-base-anual" in _advised(unread)
+    assert "modelo-193-123-base-anual" in _unreferenced(unread)

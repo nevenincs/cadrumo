@@ -102,7 +102,7 @@ def config_reset_start(
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from cadrumo_client.contracts.installation_requests import ResetStartReply, ResetStartRequest
 
-    from ....application.operations.registry import OperationFrontendProjection
+    from ....core.operations import OperationFrontendProjection
     from ..operation_installation import run_installation_act
 
     projection = run_installation_act(
@@ -152,7 +152,7 @@ def config_reset_resume(
     from cadrumo_client.contracts.installation_requests import ResetResumeReply, ResetResumeRequest
 
     from ....application.config_reset import ConfigResetRequestRefusedError, latest_incomplete_config_reset_id
-    from ....application.operations.registry import OperationFrontendProjection
+    from ....core.operations import OperationFrontendProjection
     from ..operation_installation import run_installation_act
 
     resolved_operation_id = operation_id

@@ -7,9 +7,9 @@ related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 superseded_by: '2026-08-10-aeat-export-fragment-generator-authority-adr'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:b5d5f0bed44800627d3352180d55c2e1ff38f3dd21863c2779949129e7d43699'
+body_hash: 'sha256:663a17e39884e014b63119e5b4d336ba456684f01c4da9d3f84991a236f2268f'
 ---
 # `aeat-design-relayout-boundary` adr: `the export fragment tree is generated from the bundled diseno, never transcribed` | (**status:** `superseded`)
 
@@ -235,8 +235,8 @@ wrong.
 ## Consequences
 
 - Every remaining split Wave depends on this mechanism, so it is sequenced before
-  Modelo 390 and Modelo 303. Modelo 200's 2024 revision is held behind it and that
-  filing year refuses in the meantime, which is the authorising record's stated
+  Modelo 390 and Modelo 303. Modelo 200's earlier-design revision is held behind it and its
+  filing years refuse in the meantime, which is the authorising record's stated
   posture for a year that cannot be served correctly.
 - **This record's promise of one authority instead of nine transcriptions holds
   for COORDINATES ONLY, and not for the casilla mapping.** The mapping is an

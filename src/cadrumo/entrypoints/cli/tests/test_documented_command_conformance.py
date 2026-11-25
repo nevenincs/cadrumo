@@ -120,7 +120,7 @@ _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 # A line is an ``aeat`` invocation when the ``aeat`` executable token appears as
 # a bare token (start of line or after shell punctuation), not as a substring
 # (``aeat-config``) — ``aeat`` is the one human CLI executable the docs cite.
-_AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
+AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 
 # cli-sequence directives whose payload is FREE PROSE, not an invocation. A
 # reason sentence may legitimately name the product ("No aeat verb creates an
@@ -197,7 +197,7 @@ def _is_value_placeholder(tok: str) -> bool:
     return not tok.startswith("-")
 
 
-def _parse_command_line(line: str) -> CitedCommand | None:
+def parse_command_line(line: str) -> CitedCommand | None:
     """Decompose one ``aeat ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
@@ -221,7 +221,7 @@ def _parse_command_line(line: str) -> CitedCommand | None:
     # A cli-sequence frame's ``@setup`` / ``@result`` sigil precedes the ``aeat``
     # token and is dropped here by anchoring on ``aeat``, so a frame line
     # validates like any other cited invocation.
-    m = _AEAT_TOKEN_RE.search(cleaned)
+    m = AEAT_TOKEN_RE.search(cleaned)
     if m is None:
         return None
     after = cleaned[m.end() :].strip()
@@ -320,7 +320,7 @@ def _shlex_split(text: str) -> list[str]:
     return tokens
 
 
-def _cited_commands(text: str) -> list[CitedCommand]:
+def cited_commands(text: str) -> list[CitedCommand]:
     spans = [m.group(1) for m in _INLINE_CODE_RE.finditer(text)]
     spans += [m.group(1) for m in _FENCE_RE.finditer(text)]
     out: list[CitedCommand] = []
@@ -329,9 +329,9 @@ def _cited_commands(text: str) -> list[CitedCommand]:
         # Join shell line continuations within a fenced block before splitting.
         joined = span.replace("\\\n", " ")
         for line in joined.splitlines():
-            if _AEAT_TOKEN_RE.search(line) is None:
+            if AEAT_TOKEN_RE.search(line) is None:
                 continue
-            parsed = _parse_command_line(line)
+            parsed = parse_command_line(line)
             if parsed is None:
                 continue
             key = (parsed.verb_tokens, parsed.cited_options, parsed.has_positional_token)
@@ -346,8 +346,8 @@ def _surface_commands(path: Path) -> list[CitedCommand]:
     """Extract invocations from one reader doc or private sequence contract."""
     text = path.read_text(encoding="utf-8")
     if path.suffix == ".seq":
-        return _cited_commands(f"```\n{text}\n```")
-    return _cited_commands(text)
+        return cited_commands(f"```\n{text}\n```")
+    return cited_commands(text)
 
 
 # ---------------------------------------------------------------------------
@@ -436,7 +436,7 @@ def _aeat_plain_fences(text: str) -> list[int]:
         if lang and lang not in _PLAIN_SHELL_FENCE_LANGS:
             continue  # a non-shell code/data fence
         body = match.group(2)
-        if any(_AEAT_TOKEN_RE.search(line) and _parse_command_line(line) is not None for line in body.splitlines()):
+        if any(AEAT_TOKEN_RE.search(line) and parse_command_line(line) is not None for line in body.splitlines()):
             offending.append(text[: match.start()].count("\n") + 1)
     return offending
 
@@ -467,7 +467,7 @@ def _inline_command_complexity(span: str) -> int | None:
     ``aeat config auth configure --file``) is 1, and a real command
     (``aeat app modelo export --modelo 130 --output ./x.boe``) is 2 or more.
     """
-    cited = _parse_command_line(span)
+    cited = parse_command_line(span)
     if cited is None:
         return None
     resolved = resolve_path(cited.verb_tokens)
@@ -567,7 +567,7 @@ def _inline_aeat_command_spans(text: str) -> list[str]:
         joined = " ".join(line.strip() for line in paragraph.split("\n"))
         for match in _INLINE_CODE_RE.finditer(joined):
             span = match.group(1)
-            if _AEAT_TOKEN_RE.search(span) is None:
+            if AEAT_TOKEN_RE.search(span) is None:
                 continue
             complexity = _inline_command_complexity(span)
             if complexity is not None and complexity >= 2:
@@ -697,7 +697,7 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     assert hasattr(quickfile.command, "list_commands")
     assert "--modelo" in value_consuming_option_names(quickfile.command)
 
-    option_value = _parse_command_line("aeat app quickfile --modelo 130")
+    option_value = parse_command_line("aeat app quickfile --modelo 130")
     assert option_value is not None
     assert option_value.tokens == ("app", "quickfile", "--modelo", "130")
     assert not validate_cited_command(option_value), (
@@ -706,7 +706,7 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
 
     # A fabricated, genuinely non-existent subcommand under the same live group
     # (with no option consuming it) must still be refused.
-    dead = _parse_command_line("aeat app quickfile totally-fake-subcommand")
+    dead = parse_command_line("aeat app quickfile totally-fake-subcommand")
     assert dead is not None
     flagged = validate_cited_command(dead)
     assert flagged, "a genuinely dead subcommand under a live group must be refused"
@@ -773,7 +773,7 @@ def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
     frame line is extracted and conforms to the live CLI; the ``@capture`` /
     ``@expect`` annotation lines (no ``aeat`` token) are not scanned as commands.
     """
-    cited = _cited_commands(_CLI_SEQUENCE_BODY_FIXTURE)
+    cited = cited_commands(_CLI_SEQUENCE_BODY_FIXTURE)
     # The four aeat frame lines are extracted; the @capture/@expect annotation
     # lines (no aeat token) are not scanned as commands.
     assert len(cited) == 4
@@ -829,7 +829,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     # A non-enrolled page's plain fence keeps the base checks (a wrong option flags).
     assert not _page_is_enrolled(_NON_ENROLLED_BAD_OPTION_FIXTURE)
     non_enrolled_violations = [
-        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in validate_cited_command(c)
+        v for c in cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in validate_cited_command(c)
     ]
     assert any("--bogus-option" in v for v in non_enrolled_violations), (
         "a non-enrolled page must keep the verb-path and option-name checks on its plain fence"
@@ -837,7 +837,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
 
     # A correct non-enrolled plain fence passes cleanly.
     assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
-    assert [v for c in _cited_commands(_NON_ENROLLED_FIXTURE) for v in validate_cited_command(c)] == [], (
+    assert [v for c in cited_commands(_NON_ENROLLED_FIXTURE) for v in validate_cited_command(c)] == [], (
         "a non-enrolled page whose plain-fence command is correct passes the base checks"
     )
 
@@ -846,13 +846,13 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     # non-enrolled page (its directive frame lines conform too, so the only
     # violation is the deliberate wrong option in the plain fence).
     assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
-    assert [v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in validate_cited_command(c)] == [], (
+    assert [v for c in cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in validate_cited_command(c)] == [], (
         "an enrolled page's correct plain fence and its directive frame lines all pass the base checks"
     )
 
     assert _page_is_enrolled(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE)
     enrolled_violations = [
-        v for c in _cited_commands(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE) for v in validate_cited_command(c)
+        v for c in cited_commands(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE) for v in validate_cited_command(c)
     ]
     assert any("--bogus-option" in v for v in enrolled_violations), (
         "an enrolled page's plain executable fence must still receive the base checks — "
@@ -1045,13 +1045,13 @@ def test_a_blocked_reason_naming_the_product_is_not_parsed_as_a_command() -> Non
     command that does not exist.
     """
     reason = "@blocked unconverted No aeat verb creates an evidence bundle, so no id exists to address."
-    assert _parse_command_line(reason) is None
+    assert parse_command_line(reason) is None
 
     for directive in ("@capture work_unit_id result.work_unit_id", '@expect result.status == "ok"'):
-        assert _parse_command_line(directive) is None
+        assert parse_command_line(directive) is None
 
     # The skip is scoped to prose directives: a real frame still parses, so the
     # fix cannot hide an invocation that should have been checked.
-    frame = _parse_command_line("@setup aeat app modelo work create --modelo 303")
+    frame = parse_command_line("@setup aeat app modelo work create --modelo 303")
     assert frame is not None
     assert frame.verb_tokens[:3] == ("app", "modelo", "work")

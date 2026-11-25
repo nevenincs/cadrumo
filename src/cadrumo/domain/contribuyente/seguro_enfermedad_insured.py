@@ -249,7 +249,8 @@ def seguro_enfermedad_insured_counts_from_facts(
         # The spouse limb is declared "included_when_marital_status_is_casado": a
         # pareja de hecho is not the article's conyuge, and a married filer may
         # have declared no other spouse fact.
-        has_spouse=str(fact_index.get("renta_taxpayer.marital_status", "")).strip() == RentaMaritalStatus.CASADO.value,
+        has_spouse=str(fact_index.get("renta_taxpayer.marital_status", "")).strip()
+        == RentaMaritalStatus.form_codes(authority=selected_authority)[RentaMaritalStatus.CASADO],
         authority=selected_authority,
     )
 

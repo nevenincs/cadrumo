@@ -87,7 +87,7 @@ class IvaArt69DosServiceCatalogue:
 
 def resolve_iva_exemption_article_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticleCatalogue:
     """Resolve the dated IVA exemption-article vocabulary from governed facts."""
@@ -117,7 +117,7 @@ def resolve_iva_exemption_article_catalogue(
 
 def resolve_iva_art69_dos_service_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaArt69DosServiceCatalogue:
     """Resolve the dated Art. 69.Dos service vocabulary from governed facts."""
@@ -148,7 +148,7 @@ def resolve_iva_art69_dos_service_catalogue(
 def require_iva_exemption_article(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticle:
     """Validate one value against the dated IVA exemption-article vocabulary."""

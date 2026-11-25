@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+ValueError: lost header
+2026-11-04T18:40:57.063Z [INFO] cadrumo_runtime.host.worker_stall_watchdog: profile_worker_stall_watchdog_armed | {"diagnostic_id":"3c4d3d7b90ba481884c350e609347fb3","dump_file":"profile-worker-stall-25076.txt","outcome":"armed","process_id":25076,"process_role":"profile_worker","task_id":1693432979264,"task_name":"Task-1","thread_id":34672,"thread_name":"MainThread","timeout_seconds":10.0}
+2026-11-04T18:41:04.079Z [INFO] cadrumo_runtime.host.operation_host: worker operation composition total_seconds=0.077 (includes cold imports) | {"diagnostic_id":"3c4d3d7b90ba481884c350e609347fb3","process_id":25076,"process_role":"profile_worker","thread_id":46688,"thread_name":"asyncio_1"}

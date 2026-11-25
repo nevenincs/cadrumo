@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:0616b869e1f30749d1987b28a91fb8e4c5f46a668c84cf39cb274d64c12ce96a'
+body_hash: 'sha256:a574647753fdeaac4848182727b2b2332e17395cdf69b076abe20bef22e44f3a'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
   - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
@@ -19,8 +19,8 @@ claim filing years on both sides of an AEAT record-design re-layout: Modelo 303'
 `2009-y-siguientes` and `2023-y-siguientes`, and Modelo 390's single
 `2010-y-siguientes`. Every such revision writes at least one of its claimed
 years at the wrong byte offsets. This is live: `2023-y-siguientes` already
-covers Q1/Q2 2026, both of which have closed as of this record's date, with
-Modelo 303's 2026 AEAT design measured and bundled
+covers the current year's closed quarters, with Modelo 303's current AEAT
+design measured and bundled
 (`2026-08-07-aeat-design-relayout-boundary-research`). Two independent
 box-offset and page-length instruments measured the full boundary set; their
 UNION is 4 boundaries inside `2009-y-siguientes`, 2 inside
@@ -74,23 +74,24 @@ edit itself.
   work unit can target is whether a registry revision's `period_selector`
   declares that year. So today, before any split, the app already permits
   creating or amending a work unit for any year Modelo 390's `2010-y-siguientes`
-  claims, all the way back to 2010, and the reachable window this record's
+  claims, all the way back to its declared start, and the reachable window this record's
   posture depends on is exactly as wide as prescripción makes it — not
   "recent", which decays silently and in the dangerous direction as time
   passes while the legal window does not.
 - Applying that definition changes which boundaries are "historical" as of
   this record's date (2026-08-07), and the count must be recomputed at
   implementation time rather than copied from here. On a rough four-year
-  reckoning, Modelo 390's `2022→2023` and `2023→2024` boundaries sit inside
-  the open window today (2022 and 2023 both remain amendable), and Modelo
-  303's `2021→2022` boundary is at least borderline (2022 remains open even
-  where 2021 has just closed) — narrower framings that called every boundary
-  short of 2024→2025/2025→2026 "historical, no active filers" understate the
-  scope. The oldest boundaries (Modelo 303 back to 2014, Modelo 390's
-  2017→2018) are safely outside the window on any reading.
+  reckoning, Modelo 390's two boundaries nearest the open edge sit inside
+  the open window today (the years on both sides of each remain amendable),
+  and Modelo 303's boundary at the edge is at least borderline (the year
+  after the boundary remains open even where the year before it has just
+  closed) — narrower framings that called every boundary short of the two
+  most recent "historical, no active filers" understate the scope. The
+  oldest boundaries of both modelos are safely outside the window on any
+  reading.
 - The two measurement instruments are NOT interchangeable and neither
   subsumes the other: on Modelo 303 they disagree — the page-length signal
-  finds two boundaries (2014→2015, 2024→2025) the box-offset diff misses
+  finds two boundaries the box-offset diff misses
   entirely — while on Modelo 390 they agree exactly. A boundary list built
   from only one signal understates Modelo 303's true scope; the union is the
   only correct set (`2026-08-07-aeat-design-relayout-boundary-research`, "the
@@ -103,17 +104,17 @@ edit itself.
 - **Split every revision at every named boundary (the union of both
   instruments), oldest to newest, uniformly.** Pro: total correctness, no
   filing year left mismodelled. Con: authors 14 revisions where 3 exist today
-  — 6 full Modelo 390 revisions (back to 2017) and 8 Modelo 303 revisions
-  (back to 2014) — for filing years with no active filers, pure sunk
+  — 6 full Modelo 390 revisions and 8 Modelo 303 revisions, back to each
+  modelo's oldest boundary — for filing years with no active filers, pure sunk
   authoring cost with no user ever exercising the correct path, and
   legal-grounding work (`legal_refs`, `source_refs`, `corpus_ref`) for each.
 - **Split only at boundaries inside each modelo's currently-reachable filing
   window — defined by prescripción, computed at implementation time, never by
-  "recent" — and refuse export for filing years before the earliest split.**
+  "recent" — and withhold export and filing grade for filing years before the earliest split.**
   Rejected as the general rule but adopted as the DEFAULT posture (see
   Rationale) — bounds authoring cost to years an amendment could still
-  legitimately be filed for, and a refusal is the correct answer for a year
-  this registry was never asked to support, per
+  legitimately be filed for, and refusing export is the correct answer for a year
+  this registry holds no edition of its own for, per
   `revision-resolution-is-law-determined` (a refusal naming the unmodelled
   year is a valid resolution outcome, an incorrect export is not).
 - **Leave the revisions unsplit and downgrade the gate's assertions to
@@ -164,19 +165,20 @@ Per the "Considered options" ruling: split fully within each modelo's
 currently-reachable filing window, where "reachable" means still inside its
 prescripción period (four years from the voluntary filing deadline, LGT
 art. 66-67) as of the implementation date — recomputed then, not read off
-this record's date of 2026-08-07. Confirmed empirically
+this record's date. Confirmed empirically
 (`the former source file::create_work_unit`) that
 the app imposes no narrower gate of its own: the registry revision's own
 `period_selector` is the only thing standing between an operator and a work
 unit for an arbitrary old year, so the split boundary IS the enforcement
 point, not a formality layered on top of an existing restriction. For filing
 years strictly older than the earliest split boundary, add a revision with
-`valid_from` at that boundary and no earlier sibling — `select_revision` then
-finds no matching revision for the older year and the existing "no revision
-covers this triple" refusal path fires, naming the unmodelled year. This is a
-refusal, not a crash: the mechanism already exists in the resolver and needs
-no new code, only the registry no longer claiming a year it cannot correctly
-serve.
+`valid_from` at that boundary and no earlier sibling. A supported year without
+its own edition is then calculated from the nearest edition at calculation
+grade, and export and filing grade wait for that year's own edition, so the
+existing "no revision covers this triple" refusal names the unmodelled year at
+the export step. This is a refusal, not a crash: the mechanism already exists
+in the resolver and needs no new code, only the registry no longer claiming a
+year it cannot correctly serve.
 
 For Modelo 200: **this record's original ruling of no implementation action is
 REFUTED by measurement and no longer governs.** It read: "no implementation
@@ -184,7 +186,7 @@ action. Its current two-design span is offset-identical, and the same generic
 gate already covers its forward risk." The offset-identical premise is false.
 
 Measured on 2026-08-08 against the bundled designs: **1140 of 3194 shared boxes
-relocate across Modelo 200's 2024/2025 boundary, with 246 boxes added and 145
+relocate across Modelo 200's re-layout boundary, with 246 boxes added and 145
 removed**, alongside a record decomposition changing from 75 records to 77. The
 span is one of the largest re-layouts in the bundled corpus, not an
 offset-identical pair.
@@ -202,7 +204,7 @@ Modelo 200 therefore requires the same split as Modelo 303 and Modelo 390: one
 revision per design, each with its own export fragment tree and its own declared
 `source_refs`. That work is not left to a future author — it is carried by Steps
 `S42` and `S43` of `2026-08-08-aeat-design-relayout-boundary-plan`, which author
-the 2024 and 2025-onward revisions respectively, by `S44` which retires the
+the earlier-design and later-design revisions respectively, by `S44` which retires the
 spanning revision, and by `S45` and `S46` which land and byte-prove it. This
 amendment rules on code and is not self-executing; those rows are its
 implementation and they are open.
@@ -226,12 +228,12 @@ historically: bound at the prescripción-defined reachable window rather than
 author 11 additional historical revisions across both modelos for years no
 amendment could still legally reach — this is a narrower, later-computed
 window than "recent", not the same claim restated. The measured live harm
-(Modelo 303 2024→2025 and 2025→2026, Modelo 390's proved `export_draft`
+(Modelo 303's two most recent boundaries, Modelo 390's proved `export_draft`
 mis-write) sits inside that window regardless of exactly where its edge
 falls, so the sunk cost of modelling boundaries entirely outside the window
-(Modelo 303 back to 2014, Modelo 390's 2017→2018) buys no correctness a real
-filer will ever reach — while boundaries near the four-year edge (Modelo 390
-2022→2023, Modelo 303 2021→2022) must be checked against the prescripción
+(the oldest boundaries of Modelo 303 and Modelo 390) buys no correctness a real
+filer will ever reach — while boundaries near the four-year edge in each
+modelo must be checked against the prescripción
 computation, not assumed closed. Third, Modelo 123 already demonstrates the
 target shape is buildable in this registry today, at the cost the split
 requires, with no new resolver or schema work — the correct pattern is copy,
@@ -268,8 +270,8 @@ not invention.
   authored measurement instruments that were cross-checked against each
   other, not merely run in parallel. The useful comparison between two
   independent instruments is not whether they agree — two instruments that
-  agreed on Modelo 303 would have told nobody about the 2014→2015 and
-  2024→2025 boundaries — it is whether they FAIL the same way. Both
+  agreed on Modelo 303 would have told nobody about the two boundaries only
+  the page-length signal finds — it is whether they FAIL the same way. Both
   instruments here independently violated the same AEAT box-numbering
   convention (a field's own number is the last bracket in its description
   row, not the first) and did so in different directions — one mis-keyed a

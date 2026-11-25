@@ -17,16 +17,22 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import m036_lifecycle as lifecycle_module
 from .. import m036_operation as module
@@ -40,6 +46,7 @@ from ..m036_operation_ports import M036OperationPorts
 from .m036_operation_support import INSTANT, PROFILE_ID, Subject, policy_decision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+_YEAR = filing_year_envelope().horizon
 _NOTE = "synthetic human filing note"
 _RECEIPT = "synthetic-human-receipt"
 
@@ -55,7 +62,7 @@ def _record_request(
         payload=module.M036RecordRequest(
             profile_id=PROFILE_ID,
             event_kind=kind,
-            declared_on=date(2026, 6, day),
+            declared_on=date(_YEAR, 6, day),
             sede_justificante=_RECEIPT,
             note=_NOTE,
         ),
@@ -250,7 +257,7 @@ async def test_empty_list_and_list_order_are_canonical_without_sorting_again(sub
         bucket_id=str(PROFILE_ID),
         profile_id=str(PROFILE_ID),
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 4),
+        declared_on=date(_YEAR, 6, 4),
         recorded_at=INSTANT,
     )
     second = first.model_copy(update={"declaration_id": "a" * 64, "note": ""})
@@ -276,7 +283,7 @@ async def test_lookup_codes_remain_distinguishable_and_prefix_ambiguity_is_not_g
         bucket_id=str(PROFILE_ID),
         profile_id=str(PROFILE_ID),
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 4),
+        declared_on=date(_YEAR, 6, 4),
         recorded_at=INSTANT,
     )
     subject.repository.seed(first)

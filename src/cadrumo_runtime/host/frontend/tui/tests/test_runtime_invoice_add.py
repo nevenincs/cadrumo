@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
@@ -32,19 +33,16 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -65,17 +63,20 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+from cadrumo.entrypoints.tui.operations.outcome import SessionExpiredOutcomeUnknownError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
-from ..runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
+from ..runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, request_from_entry
 
 pytestmark = pytest.mark.hex_entrypoint
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 9, 29, tzinfo=UTC)
+_NOW = datetime(1980, 9, 29, tzinfo=UTC)
+_INVOICE_DATE = date(filing_year_envelope().horizon, 3, 16)
+_OPERATION_DATE = date(filing_year_envelope().horizon, 3, 15)
 
 
 class _Client:
@@ -86,23 +87,23 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass(kw_only=True)
 class _Controller:
-    operation_id = _OPERATION_ID
+    """A dataclass like the controller it stands in for, whose deadline the await narrows through ``replace``."""
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: InvoiceAddResult,
-        client: _Client,
-        expire_after_result: bool = False,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.client = client
-        self.expire_after_result = expire_after_result
-        self.started = False
-        self.result_reads: list[tuple[type[BaseModel], int, bool]] = []
+    observation: OperationObservationSuccessV1
+    result: InvoiceAddResult
+    client: _Client
+    expire_after_result: bool = False
+    started: bool = False
+    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
+    operation_id: str = _OPERATION_ID
+    deadline: float | None = None
+
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        """The contract the submission was admitted under: the one its projection carries."""
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         self.started = True
@@ -135,7 +136,7 @@ def _entry() -> LedgerInvoiceEntryV1:
         counterparty_nif="B12345678",
         country_code="ES",
         invoice_number="TUI-007",
-        invoice_date=date(2026, 3, 16),
+        invoice_date=_INVOICE_DATE,
         taxable_base=None,
         iva_rate=None,
         lines=(
@@ -151,7 +152,7 @@ def _entry() -> LedgerInvoiceEntryV1:
             ),
         ),
         operation_type=IntracomOperationType.A,
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         recargo_amount=Decimal("0.77"),
         rectifies_invoice_number="TUI-006",
         iva_category=IvaCategory("general"),
@@ -170,7 +171,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         bucket_id=str(_PROFILE_ID),
         kind=InvoiceKind.RECEIVED,
         invoice_number="TUI-007",
-        issued_at=date(2026, 3, 16),
+        issued_at=_INVOICE_DATE,
         counterparty_name="Proveedor Example SL",
         counterparty_tax_id="B12345678",
         counterparty_country="ES",
@@ -200,18 +201,31 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
                 oss_rate_kind="standard",
             ),
         ),
-        invoice_class="rectificativa",
+        invoice_class="RECTIFICATIVA",
         series="SER-1",
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         operation_date_role=None,
         iva_category="general",
         rectifies_invoice_number="TUI-006",
+        rectification_method=None,
+        rectification_cause=None,
+        rectification_direction=None,
+        document_received_on=None,
+        issuer_increase_election=None,
+        issuer_minoracion_election=None,
+        issuer_minoracion_regularisation_period=None,
+        recipient_increase_period=None,
+        art_80_tres_obligations_attested=None,
+        exercised_deduction_period=None,
         fx_rate=None,
         fx_rate_date=None,
         fx_rate_source=None,
         base_total_eur=None,
         iva_total_eur=None,
         grand_total_eur=None,
+        referencia_catastral=None,
+        settlement_amount=PublicDecimal(decimal="106.00"),
+        documents=(),
     )
 
 
@@ -367,17 +381,17 @@ async def test_invoice_add_tui_door_preserves_the_complete_entry_and_worker_tota
         counterparty_tax_id="B12345678",
         counterparty_country="ES",
         invoice_number="TUI-007",
-        issued_at=date(2026, 3, 16),
+        issued_at=_INVOICE_DATE,
         taxable_base=None,
         iva_rate=None,
         currency="USD",
         notes="typed note",
         iva_category="general",
         operation_type=IntracomOperationType.A,
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         retention_rate=PublicDecimal(decimal="15.0"),
         retention_amount=PublicDecimal(decimal="15.00"),
-        invoice_class="rectificativa",
+        invoice_class="RECTIFICATIVA",
         series="SER-1",
         rectifies_invoice_number="TUI-006",
         recargo_amount=PublicDecimal(decimal="0.77"),
@@ -433,11 +447,12 @@ async def test_invoice_add_tui_door_preserves_receipt_for_a_duplicate_refusal(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_invoice_add_tui_door_clears_disclosure_if_session_expires_after_settlement(
+async def test_invoice_add_tui_door_withholds_the_invoice_as_unknown_if_session_expires_after_settlement(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """An updated receipt whose result was never correlated is an unknown outcome, not a disclosed invoice."""
     client = _Client()
-    submissions, _controller, _status_checks = _install_runtime(
+    submissions, controller, _status_checks = _install_runtime(
         monkeypatch,
         client=client,
         result=_created_result(),
@@ -445,15 +460,16 @@ async def test_invoice_add_tui_door_clears_disclosure_if_session_expires_after_s
     )
     door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
-    with pytest.raises(AccountSessionExpiredError) as raised:
+    with pytest.raises(SessionExpiredOutcomeUnknownError) as raised:
         await door(_entry())
 
     assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert len(controller.result_reads) == 1
+    assert raised.value.outcome.operation_id == _OPERATION_ID
+    assert raised.value.outcome.effect is OperationEffect.UPDATED
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
-        "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
         "effect": OperationEffect.UPDATED.value,
-        "refusal_code": None,
     }
 
 
@@ -509,7 +525,7 @@ async def test_invoice_entry_clears_private_form_when_the_add_door_reports_expir
             "counterparty_name": "Private counterparty",
             "counterparty_nif": "B12345678",
             "invoice_number": "PRIVATE-007",
-            "invoice_date": "2026-03-16",
+            "invoice_date": _INVOICE_DATE.isoformat(),
             "taxable_base": "100.00",
             "iva_rate": "21",
             "notes": "private note",
@@ -543,11 +559,9 @@ def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
         },
     )
 
-    request = _request_from_entry(_PROFILE_ID, entry)
+    request = request_from_entry(_PROFILE_ID, entry)
 
-    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease.from_domain(
-        BusinessPremisesLease(
-            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
-            referencia_catastral="9872023VH5797S0001WX",
-        )
+    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease(
+        situacion_inmueble="1",
+        referencia_catastral="9872023VH5797S0001WX",
     )

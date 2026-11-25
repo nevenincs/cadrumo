@@ -22,7 +22,7 @@ See Also:
         DTO.
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Storage adapter that consumes these prepared writes.
-    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+    :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         Unit-of-work API that persists one or more prepared writes atomically.
 """
 
@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 
 from .classification.policies import SensitivityClass
 from .hex import Hex64Str
-from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG
 
 DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
 ABSENT_SECURE_OBJECT_REVISION_ID = "0" * 64
@@ -61,7 +61,7 @@ class SecureObjectWrite(BaseModel):
             Direct write boundary carrying the same UTC-aware contract.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: str = Field(min_length=1)
@@ -74,8 +74,42 @@ class SecureObjectWrite(BaseModel):
     expected_revision_id: Hex64Str | None = None
 
 
+class SecureObjectRevisionAssertion(BaseModel):
+    """Read-only source revision required by a derived-data write transaction.
+
+    The storage batch checks each assertion inside the transaction that commits
+    its writes, so the batch commits only while the asserted row still holds
+    exactly this revision, or is still absent when ``expected_revision_id`` is
+    :data:`ABSENT_SECURE_OBJECT_REVISION_ID`. The asserted row is never written.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    namespace: str = Field(min_length=1)
+    object_key: str = Field(min_length=1)
+    expected_revision_id: Hex64Str
+
+
+class SecureObjectWriteUnit(BaseModel):
+    """Writes and source assertions that one repository needs committed in a single batch.
+
+    A repository whose record is stored across several rows returns this
+    instead of a single :class:`SecureObjectWrite`. A caller composing it into
+    another repository's batch carries every write and every assertion into
+    that same transaction; committing the writes without the assertions would
+    let the record commit while a row it depends on is missing.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    writes: tuple[SecureObjectWrite, ...] = Field(min_length=1)
+    assertions: tuple[SecureObjectRevisionAssertion, ...] = ()
+
+
 __all__ = [
     "ABSENT_SECURE_OBJECT_REVISION_ID",
     "DEFAULT_WRITE_PROVENANCE",
+    "SecureObjectRevisionAssertion",
     "SecureObjectWrite",
+    "SecureObjectWriteUnit",
 ]

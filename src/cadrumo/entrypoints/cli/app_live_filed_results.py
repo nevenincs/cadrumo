@@ -11,7 +11,7 @@ from ...application.live.remote_state_models import FiledCapturePairOutcome
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
-from ._filing_chain_payloads import FilingReconciliationPayload
+from .filing_chain_payloads import FilingReconciliationPayload
 
 
 class FiledListingRowPayload(OutputSchema):

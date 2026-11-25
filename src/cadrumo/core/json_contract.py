@@ -56,10 +56,12 @@ from .operator_action_enums import ActionArgumentStatus
 from .output_rendering import jsonable_output_payload
 from .precondition_action_invariants import (
     PreconditionActionIdentity,
+    PreconditionAlternativeAction,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
 from .redaction.rules import redact_structured_for_cli_output
+from .terminal_encoding import encode_terminal_text
 
 _log = get_logger(__name__)
 
@@ -160,7 +162,7 @@ class ResolvedActionReference(PreconditionActionIdentity):
     the action ID nor discovers the live command surface.
     """
 
-    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     cli_path: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
     arguments: Mapping[str, str] | None = Field(default=None, exclude_if=lambda value: value is None)
 
@@ -197,8 +199,14 @@ class ResolvedActionArgument(ActionArgumentResolution):
     model_config = _STRICT_FROZEN_CONFIG
 
 
+class ResolvedAlternativeAction(PreconditionAlternativeAction[ResolvedActionReference, ResolvedActionArgument]):
+    """One further resolved recovery action, offered after the primary one, that clears the same condition."""
+
+
 class ResolvedPreconditionAction(
-    PreconditionOutcomeInvariant[ActionConditionEvidence, ResolvedActionReference, ResolvedActionArgument],
+    PreconditionOutcomeInvariant[
+        ActionConditionEvidence, ResolvedActionReference, ResolvedActionArgument, ResolvedAlternativeAction
+    ],
 ):
     """A resolved precondition verdict projected for a machine consumer.
 
@@ -493,7 +501,7 @@ def _write_json_document(
         sort_keys=sort_keys,
         default=str,
     )
-    target.write(f"{document}\n")
+    target.write(f"{encode_terminal_text(document)}\n")
     target.flush()
 
 
@@ -637,6 +645,7 @@ __all__ = [
     "OutputSchemaError",
     "ResolvedActionArgument",
     "ResolvedActionReference",
+    "ResolvedAlternativeAction",
     "ResolvedNoticeAction",
     "ResolvedPreconditionAction",
     "SchemaEnvelope",

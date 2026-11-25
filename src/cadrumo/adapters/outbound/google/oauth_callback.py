@@ -7,8 +7,9 @@ import socket
 import sys
 import time
 import webbrowser
-from collections.abc import Callable
-from urllib.parse import parse_qs, urlsplit
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from urllib.parse import SplitResult, parse_qs, urlsplit
 
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.google_auth import GoogleAuthLoopbackBindError, GoogleAuthValidationError
@@ -37,8 +38,20 @@ def _remaining(deadline: float) -> float:
     return remaining
 
 
-def validate_callback(request: bytes, *, authority: str, state: str) -> str:
-    """Accept one unambiguous GET response for the exact redirect and state."""
+@dataclass(frozen=True, slots=True, repr=False)
+class _CallbackRequest:
+    """One parsed response kept local until redirect and state correlation succeed."""
+
+    method: str
+    target: str
+    version: str
+    hosts: list[str]
+    parsed: SplitResult
+    query: dict[str, list[str]]
+
+
+def _parse_callback(request: bytes) -> _CallbackRequest:
+    """Decode the bounded HTTP request and preserve strict query/header parsing."""
     try:
         lines = request.decode("ascii").split("\r\n")
         method, target, version = lines[0].split(" ")
@@ -50,18 +63,38 @@ def validate_callback(request: bytes, *, authority: str, state: str) -> str:
         query = parse_qs(parsed.query, keep_blank_values=True, strict_parsing=True, max_num_fields=32)
     except (ValueError, UnicodeError):
         raise OAuthCallbackRefusedError("Malformed OAuth callback") from None
+    return _CallbackRequest(method, target, version, hosts, parsed, query)
+
+
+def _expected_redirect_path(parsed: SplitResult) -> bool:
+    """Admit only the relative redirect root without scheme, authority or fragment."""
+    return not (parsed.scheme or parsed.netloc or parsed.path != "/" or parsed.fragment)
+
+
+def _unambiguous_callback_fields(target: str, query: Mapping[str, list[str]]) -> bool:
+    """Reject control/space characters and every repeated query field."""
+    return not any(ord(character) <= 32 or ord(character) == 127 for character in target) and all(
+        len(values) == 1 for values in query.values()
+    )
+
+
+def _require_callback_target(callback: _CallbackRequest, authority: str) -> None:
+    """Require the exact GET redirect authority and a single value for every field."""
     if (
-        method != "GET"
-        or version not in {"HTTP/1.0", "HTTP/1.1"}
-        or hosts != [authority]
-        or parsed.scheme
-        or parsed.netloc
-        or parsed.path != "/"
-        or parsed.fragment
-        or any(ord(character) <= 32 or ord(character) == 127 for character in target)
-        or any(len(values) != 1 for values in query.values())
+        callback.method != "GET"
+        or callback.version not in {"HTTP/1.0", "HTTP/1.1"}
+        or callback.hosts != [authority]
+        or not _expected_redirect_path(callback.parsed)
+        or not _unambiguous_callback_fields(callback.target, callback.query)
     ):
         raise OAuthCallbackRefusedError("Unexpected OAuth callback target")
+
+
+def validate_callback(request: bytes, *, authority: str, state: str) -> str:
+    """Accept one unambiguous GET response for the exact redirect and state."""
+    callback = _parse_callback(request)
+    _require_callback_target(callback, authority)
+    query = callback.query
     received_state = query.get("state", [""])[0]
     if not received_state or not secrets.compare_digest(received_state.encode(), state.encode()):
         raise OAuthCallbackRefusedError("OAuth callback state mismatch")
@@ -82,7 +115,7 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
     One monotonic deadline covers accept and every read, including slow partial
     headers. Socket ownership ends before the caller exchanges the code.
     """
-    _require_browser_desktop()
+    require_browser_desktop()
     deadline = time.monotonic() + timeout_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
@@ -116,7 +149,7 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
             return code
 
 
-def _require_browser_desktop() -> None:
+def require_browser_desktop() -> None:
     """Never start the default browser/profile from Windows Session 0 or an unverified desktop."""
     if sys.platform != "win32":
         return

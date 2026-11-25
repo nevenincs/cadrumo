@@ -46,8 +46,9 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -63,10 +64,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import holds_role_in_scope
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ...domain.modelos.filing_kind_evidence import ObservedFilingKind, filing_kind_or_unknown
 from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from .errors import (
     ObservationCasillaReferenceError,
@@ -264,6 +267,17 @@ class ObservationEnvelopePayload(BaseModel):
             "registry revision."
         ),
     )
+    authority_generation: Hex64Str | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Logical generation of the published authority whose declarations this "
+            "envelope's casilla ids were validated against when it was written. "
+            "Absent on rows stored before the stamp existed, which were written "
+            "under an earlier generation; left out of a dump while absent, so such "
+            "a row serializes exactly as it was stored."
+        ),
+    )
     source_metadata: dict[str, str] = Field(
         default_factory=dict,
         description=(
@@ -323,6 +337,20 @@ class ObservationEnvelopePayload(BaseModel):
         default=None,
         description="Audit of the operator override this local envelope records, when it is one.",
     )
+    filing_kind: ObservedFilingKind | None = Field(
+        default=None,
+        description=(
+            "Typed original or correction kind of the observed declaration with the "
+            "basis that admitted it and every unadmitted reading. Envelope evidence, "
+            "never a casilla. Absent on rows stored before the kind was captured; "
+            "read it through observed_filing_kind, which treats absence as unknown."
+        ),
+    )
+
+    @property
+    def observed_filing_kind(self) -> ObservedFilingKind:
+        """Return the observed filing kind, reading an absent projection as unknown."""
+        return filing_kind_or_unknown(self.filing_kind)
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -348,7 +376,7 @@ class ObservationEnvelopePayload(BaseModel):
     @pydantic_validation_boundary
     def _require_canonical_m303_shape(self, info: ValidationInfo) -> ObservationEnvelopePayload:
         """Reject persisted M303 envelopes that predate canonical carry ingress."""
-        if self.observation.modelo != "303":
+        if not holds_role_in_scope(self.observation.modelo, "iva.periodic"):
             return self
         ingress_candidate = False
         if is_object_mapping(info.context):
@@ -480,10 +508,10 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
     """
     _validate_repository_component(modelo, context="modelo")
     _validate_repository_component(period_token, context="period")
-    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= filing_year <= FOUR_DIGIT_YEAR_LAST:
         raise ObservationKeyError(
             translated_message="application.calculations.observations.errors.filing_year_out_of_range",
-            context={"filing_year": filing_year, "minimum": FILING_YEAR_MIN, "maximum": FILING_YEAR_MAX},
+            context={"filing_year": filing_year, "minimum": FOUR_DIGIT_YEAR_FIRST, "maximum": FOUR_DIGIT_YEAR_LAST},
         )
     return f"{modelo}:{filing_year}:{period_token}"
 
@@ -566,10 +594,10 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
             context={"field": "taxpayer_nif"},
         )
     _validate_repository_component(target_period_token, context="target_period")
-    if not FILING_YEAR_MIN <= target_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= target_year <= FOUR_DIGIT_YEAR_LAST:
         raise ObservationKeyError(
             translated_message="application.calculations.observations.errors.iva_wallet_target_year_out_of_range",
-            context={"target_year": target_year, "minimum": FILING_YEAR_MIN, "maximum": FILING_YEAR_MAX},
+            context={"target_year": target_year, "minimum": FOUR_DIGIT_YEAR_FIRST, "maximum": FOUR_DIGIT_YEAR_LAST},
         )
     digest = sha256_hex(
         "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),
@@ -704,6 +732,7 @@ class CalculationObservationRepositoryProtocol(Protocol):
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Validate and normalize one observation before persistence."""
         ...

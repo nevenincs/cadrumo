@@ -16,23 +16,22 @@ from cadrumo_client.contracts.contracts import RefusalCode
 
 from ....application.live.filed_single_capture_operation import (
     FILED_SINGLE_CAPTURE_DEFINITION_ID,
-    FiledCaptureNoticeV1,
     FiledReconciliationNoticeV1,
-    FiledReconciliationV1,
     FiledSingleCapturePublicResultV1,
     FiledSingleCaptureRequest,
 )
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from .. import app_live_commands as handler
 from .. import operation_filed_single as bridge
 from .. import operation_profile_operation as profile_operation
-from .._filing_chain_payloads import filing_reconciliation_notices
-from .._profile_authentication_gate import _uses_profile_connection
 from ..app_live_filed_results import FiledCaptureResult
 from ..command_specs import COMMAND_GRAPH
+from ..filing_chain_payloads import filing_reconciliation_notices
+from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
+from .filed_capture_projection_support import confirmed_reconciliation, incomplete_receipt_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -51,43 +50,17 @@ def _projection() -> FiledSingleCapturePublicResultV1:
         observation_paths=("encrypted-observation",),
         observation_ids=("encrypted-observation",),
         artefact_refs=("sha256:1234",),
-        justificante_metadata_count=1,
-        justificante_csvs=("csv-1",),
-        filing_evidence_stamped_count=1,
-        filing_record_ids=("record-1",),
-        filing_evidence_conflict_count=0,
-        filing_evidence_conflict_record_ids=(),
+        justificante_metadata_count=2,
+        justificante_csvs=("csv-1", "csv-2"),
+        filing_evidence_stamped_count=2,
+        filing_record_ids=("record-1", "record-2"),
+        filing_evidence_conflict_count=1,
+        filing_evidence_conflict_record_ids=("record-3",),
         casilla_count=2,
-        calculation_observation_count=1,
-        calculation_observation_keys=("observation-1",),
-        evidence_notices=(
-            FiledCaptureNoticeV1(
-                severity=NoticeSeverity.WARNING,
-                code="live.filed.capture_test",
-                message="Receipt metadata was incomplete",
-                context=(("reason", "unavailable"),),
-            ),
-        ),
-        reconciliations=(
-            FiledReconciliationV1(
-                outcome=FilingReconciliationOutcome.CONFIRMED.value,
-                bucket_id=str(_PROFILE),
-                modelo="303",
-                filing_year=2025,
-                period="1T",
-                member_nif="X1234567A",
-                filing_record_id="record-1",
-                affected_filing_record_ids=("record-2",),
-                differing_casilla_ids=("casilla.a",),
-                evidence_basis="casillas",
-                notices=(
-                    FiledReconciliationNoticeV1(
-                        code="receipt_totals_only",
-                        context=(("reason", "receipt"),),
-                    ),
-                ),
-            ),
-        ),
+        calculation_observation_count=2,
+        calculation_observation_keys=("observation-1", "observation-2"),
+        evidence_notices=(incomplete_receipt_notice(),),
+        reconciliations=(confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=2025, period="1T"),),
     )
 
 
@@ -190,7 +163,7 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
     envelopes: list[dict[str, object]] = []
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler._emit_single_filed_pull(
+    handler.emit_single_filed_pull(
         cast(typer.Context, cast(object, None)),
         modelo="303",
         year=2025,
@@ -205,9 +178,55 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
     assert envelope["command"] == "app.live.filed.pull"
     result = envelope["result"]
     assert isinstance(result, FiledCaptureResult)
+    assert result.model_dump(mode="json") == {
+        "mode": "single",
+        "output_root": "filed",
+        "modelo": "303",
+        "year": 2025,
+        "modelos": [],
+        "pair_outcomes": [],
+        "year_from": None,
+        "year_to": None,
+        "captured_count": 1,
+        "reached_count": 1,
+        "failed_count": 0,
+        "dry_run": False,
+        "sync_run_ref": None,
+        "observation_paths": ["encrypted-observation"],
+        "artefact_refs": ["sha256:1234"],
+        "justificante_metadata_count": 2,
+        "justificante_csvs": ["csv-1", "csv-2"],
+        "filing_evidence_stamped_count": 2,
+        "filing_record_ids": ["record-1", "record-2"],
+        "filing_evidence_conflict_count": 1,
+        "filing_evidence_conflict_record_ids": ["record-3"],
+        "casilla_count": 2,
+        "calculation_observation_count": 2,
+        "calculation_observation_keys": ["observation-1", "observation-2"],
+        "reconciliations": [
+            {
+                "outcome": "confirmed",
+                "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
+                "modelo": "303",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "1T"},
+                "member_nif": "X1234567A",
+                "filing_record_id": "record-1",
+                "affected_filing_record_ids": ["record-2", "record-3"],
+                "differing_casilla_ids": ["casilla.a", "casilla.b"],
+                "evidence_basis": "casillas",
+                "notices": [{"code": "receipt_totals_only", "context": {"reason": "receipt"}}],
+            }
+        ],
+        "failures": [],
+    }
     assert result.captured_count == 1
     assert result.reconciliations[0].outcome is FilingReconciliationOutcome.CONFIRMED
     notices = cast("tuple[Notice, ...]", envelope["notices"])
+    assert [notice.code for notice in notices] == [
+        "live.filed.capture_test",
+        "modelo.filing_chain.receipt_totals_only",
+    ]
     assert any(notice.code == "live.filed.capture_test" for notice in notices)
     assert any(notice.code == "modelo.filing_chain.receipt_totals_only" for notice in notices)
 
@@ -230,19 +249,19 @@ def test_filing_instance_evidence_notice_renders_after_capture(monkeypatch: pyte
 def test_profile_runtime_admission_covers_single_and_bulk_modes() -> None:
     spec = COMMAND_GRAPH.node("app_live_filed_pull").spec
 
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": 2025, "year_from": None, "year_to": None},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": 2025, "year_from": 2024, "year_to": 2025},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303", "390"], "year": 2025, "year_from": None, "year_to": None},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": None, "year_from": None, "year_to": None},
     )

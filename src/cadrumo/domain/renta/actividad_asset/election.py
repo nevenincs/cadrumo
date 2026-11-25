@@ -11,17 +11,24 @@ authority.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Self
+from functools import cached_property
+from types import MappingProxyType
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from .errors import ActividadAssetValidationError
+from .fact_leaves import Amount, ClassKey, Share
+from .identity_cache import CachedIdentityModel
 
 ElectionReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Operator reference to an election or approval act an asset relies on."""
@@ -91,11 +98,27 @@ class AcquiredCondition(StrEnum):
     USED = "used"
 
 
+ACQUIRED_CONDITION_FACTS: Final[Mapping[AcquiredCondition, tuple[str, ...]]] = MappingProxyType(
+    {
+        AcquiredCondition.NEW: (),
+        AcquiredCondition.USED: ("building_construction_date", "used_original_price"),
+    },
+)
+"""The facts an element states only under the condition it was acquired in; under no other may it state them."""
+
+
 class DigitOrder(StrEnum):
     """Sum-of-digits numbering order admitted by RIS art. 6.1.a."""
 
     DESCENDING = "descending"
     ASCENDING = "ascending"
+
+
+class OriginalPriceDetermination(StrEnum):
+    """How the originating price of a used element is established (RIS art. 4.3.b-c)."""
+
+    KNOWN = "known"
+    EXPERT_VALUATION = "expert_valuation"
 
 
 class PlanApprovalKind(StrEnum):
@@ -129,9 +152,15 @@ def require_free_depreciation_facts(
     """
     if method is AmortizationMethod.LOW_VALUE_FREE:
         if any(value is None for value in facts):
-            raise ValueError(f"free-depreciation {subject} requires election and annual-cap provenance")
+            raise ActividadAssetValidationError(
+                context={"subject": subject},
+                translated_message="ledger.actividad_asset.errors.free_depreciation_requires_provenance",
+            )
     elif any(value is not None for value in facts):
-        raise ValueError(f"only a low-value {subject} carries free-depreciation election facts")
+        raise ActividadAssetValidationError(
+            context={"subject": subject},
+            translated_message="ledger.actividad_asset.errors.free_depreciation_only_low_value",
+        )
 
 
 class PlanAnnualAmount(BaseModel):
@@ -140,7 +169,7 @@ class PlanAnnualAmount(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     tax_year: FilingYear
-    amount: Decimal
+    amount: Amount
 
     @field_validator("amount")
     @classmethod
@@ -160,14 +189,24 @@ class ApprovedAmortizationPlan(BaseModel):
     annual_amounts: tuple[PlanAnnualAmount, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_distribution(self) -> Self:
         if self.resolved_on < self.submitted_on:
-            raise ValueError("plan resolution cannot precede its submission")
+            raise ActividadAssetValidationError(
+                context={"field": "resolved_on"},
+                translated_message="ledger.actividad_asset.errors.plan_resolution_precedes_submission",
+            )
         years = [item.tax_year for item in self.annual_amounts]
         if len(set(years)) != len(years):
-            raise ValueError("plan distribution declares a tax year more than once")
+            raise ActividadAssetValidationError(
+                context={"field": "annual_amounts"},
+                translated_message="ledger.actividad_asset.errors.plan_year_repeated",
+            )
         if years != sorted(years):
-            raise ValueError("plan distribution must list tax years in ascending order")
+            raise ActividadAssetValidationError(
+                context={"field": "annual_amounts"},
+                translated_message="ledger.actividad_asset.errors.plan_years_not_ascending",
+            )
         return self
 
     def amount_for(self, tax_year: int) -> Decimal | None:
@@ -196,12 +235,47 @@ class SmallEnterpriseEvidence(BaseModel):
 
     evidence_reference: EvidenceReference
     made_available_on: date
-    prior_period_net_turnover: Decimal
+    prior_period_net_turnover: Amount
 
     @field_validator("prior_period_net_turnover")
     @classmethod
     def _require_cents_turnover(cls, value: Decimal) -> Decimal:
         return require_euro_cents(value, allow_zero=True)
+
+
+class UsedAssetOriginalPrice(BaseModel):
+    """The originating price an element acquired used takes as the base of the maximum coefficient.
+
+    RIS art. 4.3.b lets a taxpayer who knows the original acquisition price or
+    production cost apply the maximum linear coefficient to it.  Art. 4.3.c
+    lets one who does not know it determine it by expert valuation and then
+    proceed as in letter b, so a valuation must name the report it rests on.
+    The price is the depreciable price of the whole element, land excluded.
+    The resolver applies the allocation share the asset's basis states, which
+    is one where that basis is already allocated, so the price of an
+    already-allocated basis is entered already allocated.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    determination: OriginalPriceDetermination
+    original_price: Amount
+    evidence_reference: EvidenceReference | None = None
+
+    @field_validator("original_price")
+    @classmethod
+    def _require_positive_cents(cls, value: Decimal) -> Decimal:
+        return require_euro_cents(value, allow_zero=False, label="original_price")
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_valuation_evidence(self) -> Self:
+        if self.determination is OriginalPriceDetermination.EXPERT_VALUATION and self.evidence_reference is None:
+            raise ActividadAssetValidationError(
+                context={"field": "evidence_reference"},
+                translated_message="ledger.actividad_asset.errors.original_price_expert_requires_evidence",
+            )
+        return self
 
 
 class LowValueElection(BaseModel):
@@ -211,12 +285,6 @@ class LowValueElection(BaseModel):
 
     election_reference: ElectionReference
     new_material_evidence_reference: EvidenceReference
-    unit_acquisition_value: Decimal
-
-    @field_validator("unit_acquisition_value")
-    @classmethod
-    def _require_positive_cents(cls, value: Decimal) -> Decimal:
-        return require_euro_cents(value, allow_zero=False)
 
 
 class ChargingInfrastructureEvidence(BaseModel):
@@ -257,6 +325,9 @@ class RenewableDocumentationKind(StrEnum):
     """Letter d): the after-works energy-efficiency certificate of climate or hot-water systems."""
 
 
+_HOURS_PER_DAY = 24
+_SUM_OF_DIGITS_PERIOD_YEARS_LIMIT = 100
+
 _ELECTRICITY_DOCUMENTS = frozenset(
     {
         RenewableDocumentationKind.OPERATING_AUTHORISATION,
@@ -287,16 +358,67 @@ class RenewableSelfConsumptionEvidence(BaseModel):
     required_by_building_code: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_documentation(self) -> Self:
         electricity = self.purpose is RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION
         if electricity != (self.documentation_kind in _ELECTRICITY_DOCUMENTS):
-            raise ValueError(
-                f"{self.documentation_kind.value} does not evidence a {self.purpose.value} installation (LIS DA 17a.6)",
+            raise ActividadAssetValidationError(
+                context={"field": "documentation_kind", "purpose": self.purpose.value},
+                translated_message="ledger.actividad_asset.errors.renewable_documentation_mismatch",
             )
         return self
 
 
-class ActivityAssetAmortizationElection(BaseModel):
+ELECTION_FACT_ADMISSION: Final[Mapping[str, frozenset[AmortizationMethod]]] = MappingProxyType(
+    {
+        "linear_coefficient": frozenset({AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE}),
+        "shift_hours_per_day": frozenset({AmortizationMethod.LINEAR}),
+        "used_original_price": frozenset({AmortizationMethod.LINEAR}),
+        "small_enterprise": frozenset(
+            {
+                AmortizationMethod.LINEAR,
+                AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
+                AmortizationMethod.GOODWILL,
+                AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+            },
+        ),
+        "sum_of_digits_period_years": frozenset({AmortizationMethod.SUM_OF_DIGITS}),
+        "digit_order": frozenset({AmortizationMethod.SUM_OF_DIGITS}),
+        "approved_plan": frozenset({AmortizationMethod.APPROVED_PLAN}),
+        "useful_life": frozenset({AmortizationMethod.INTANGIBLE_USEFUL_LIFE}),
+        "low_value": frozenset({AmortizationMethod.LOW_VALUE_FREE}),
+        "research_development_evidence_reference": frozenset(
+            {AmortizationMethod.RESEARCH_DEVELOPMENT_FREE, AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING},
+        ),
+        "charging_infrastructure": frozenset({AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE}),
+        "renewable_self_consumption": frozenset({AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE}),
+    }
+)
+"""The methods that consume each optional fact of an election; no other method may carry it."""
+
+ELECTION_REQUIRED_FACTS: Final[Mapping[AmortizationMethod, tuple[str, ...]]] = MappingProxyType(
+    {
+        AmortizationMethod.LINEAR: ("authority_class_key",),
+        AmortizationMethod.CONSTANT_PERCENTAGE: ("authority_class_key",),
+        AmortizationMethod.SUM_OF_DIGITS: ("authority_class_key", "sum_of_digits_period_years", "digit_order"),
+        AmortizationMethod.APPROVED_PLAN: ("approved_plan",),
+        AmortizationMethod.INTANGIBLE_USEFUL_LIFE: ("useful_life",),
+        AmortizationMethod.LOW_VALUE_FREE: ("low_value",),
+        AmortizationMethod.RESEARCH_DEVELOPMENT_FREE: ("research_development_evidence_reference",),
+        AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: (
+            "authority_class_key",
+            "research_development_evidence_reference",
+        ),
+        AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: ("charging_infrastructure",),
+        AmortizationMethod.ELECTRIC_VEHICLE_FREE: ("authority_class_key",),
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: ("authority_class_key", "small_enterprise"),
+        AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: ("authority_class_key", "renewable_self_consumption"),
+    }
+)
+"""The facts an election of each method must state; a method not listed needs none."""
+
+
+class ActivityAssetAmortizationElection(CachedIdentityModel):
     """Regime, table class, method and the facts the chosen method requires.
 
     The structural validator admits each optional fact only for the methods
@@ -307,10 +429,10 @@ class ActivityAssetAmortizationElection(BaseModel):
 
     regime: DirectEstimationRegime
     method: AmortizationMethod
-    authority_class_key: str | None = Field(default=None, min_length=1, max_length=64)
-    linear_coefficient: Decimal | None = None
+    authority_class_key: ClassKey | None = Field(default=None, min_length=1, max_length=64)
+    linear_coefficient: Share | None = None
     shift_hours_per_day: Decimal | None = None
-    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
+    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=_SUM_OF_DIGITS_PERIOD_YEARS_LIMIT)
     digit_order: DigitOrder | None = None
     approved_plan: ApprovedAmortizationPlan | None = None
     useful_life: DefiniteUsefulLife | None = None
@@ -319,6 +441,39 @@ class ActivityAssetAmortizationElection(BaseModel):
     research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
+    used_original_price: UsedAssetOriginalPrice | None = None
+
+    def stated_references(self) -> tuple[str, ...]:
+        """Every evidence, approval and election reference this election states."""
+        charging = self.charging_infrastructure
+        renewable = self.renewable_self_consumption
+        used = self.used_original_price
+        return tuple(
+            reference
+            for reference in (
+                *self._method_evidence_references(),
+                self.research_development_evidence_reference,
+                charging.technical_documentation_reference if charging is not None else None,
+                charging.installation_certificate_reference if charging is not None else None,
+                renewable.documentation_reference if renewable is not None else None,
+                used.evidence_reference if used is not None else None,
+            )
+            if reference is not None
+        )
+
+    def _method_evidence_references(self) -> tuple[str | None, ...]:
+        """Collect the evidence and elections for plan, useful life and enterprise methods."""
+        plan = self.approved_plan
+        useful_life = self.useful_life
+        small = self.small_enterprise
+        low_value = self.low_value
+        return (
+            plan.approval_reference if plan is not None else None,
+            useful_life.evidence_reference if useful_life is not None else None,
+            small.evidence_reference if small is not None else None,
+            low_value.election_reference if low_value is not None else None,
+            low_value.new_material_evidence_reference if low_value is not None else None,
+        )
 
     @field_validator("linear_coefficient")
     @classmethod
@@ -330,102 +485,46 @@ class ActivityAssetAmortizationElection(BaseModel):
     @field_validator("shift_hours_per_day")
     @classmethod
     def _require_multi_shift_hours(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (not value.is_finite() or not Decimal("0") < value <= Decimal("24")):
+        if value is not None and (not value.is_finite() or not Decimal("0") < value <= _HOURS_PER_DAY):
             raise ValueError("shift_hours_per_day must be a finite Decimal in (0, 24]")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_method_shape(self) -> Self:
-        method = self.method
-        self._admit(
-            "linear_coefficient",
-            self.linear_coefficient,
-            {AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE},
-        )
-        self._admit("shift_hours_per_day", self.shift_hours_per_day, {AmortizationMethod.LINEAR})
-        self._admit(
-            "small_enterprise",
-            self.small_enterprise,
-            {
-                AmortizationMethod.LINEAR,
-                AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
-                AmortizationMethod.GOODWILL,
-                AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
-            },
-        )
-        self._admit(
-            "sum_of_digits_period_years",
-            self.sum_of_digits_period_years,
-            {AmortizationMethod.SUM_OF_DIGITS},
-        )
-        self._admit("digit_order", self.digit_order, {AmortizationMethod.SUM_OF_DIGITS})
-        self._admit("approved_plan", self.approved_plan, {AmortizationMethod.APPROVED_PLAN})
-        self._admit("useful_life", self.useful_life, {AmortizationMethod.INTANGIBLE_USEFUL_LIFE})
-        self._admit("low_value", self.low_value, {AmortizationMethod.LOW_VALUE_FREE})
-        self._admit(
-            "research_development_evidence_reference",
-            self.research_development_evidence_reference,
-            {AmortizationMethod.RESEARCH_DEVELOPMENT_FREE, AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING},
-        )
-        self._admit(
-            "charging_infrastructure",
-            self.charging_infrastructure,
-            {AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE},
-        )
-        self._admit(
-            "renewable_self_consumption",
-            self.renewable_self_consumption,
-            {AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE},
-        )
-        required: dict[AmortizationMethod, tuple[tuple[str, object], ...]] = {
-            AmortizationMethod.LINEAR: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.CONSTANT_PERCENTAGE: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.SUM_OF_DIGITS: (
-                ("authority_class_key", self.authority_class_key),
-                ("sum_of_digits_period_years", self.sum_of_digits_period_years),
-                ("digit_order", self.digit_order),
-            ),
-            AmortizationMethod.APPROVED_PLAN: (("approved_plan", self.approved_plan),),
-            AmortizationMethod.INTANGIBLE_USEFUL_LIFE: (("useful_life", self.useful_life),),
-            AmortizationMethod.LOW_VALUE_FREE: (("low_value", self.low_value),),
-            AmortizationMethod.RESEARCH_DEVELOPMENT_FREE: (
-                ("research_development_evidence_reference", self.research_development_evidence_reference),
-            ),
-            AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: (
-                ("authority_class_key", self.authority_class_key),
-                ("research_development_evidence_reference", self.research_development_evidence_reference),
-            ),
-            AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: (
-                ("charging_infrastructure", self.charging_infrastructure),
-            ),
-            AmortizationMethod.ELECTRIC_VEHICLE_FREE: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: (
-                ("authority_class_key", self.authority_class_key),
-                ("small_enterprise", self.small_enterprise),
-            ),
-            AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: (
-                ("authority_class_key", self.authority_class_key),
-                ("renewable_self_consumption", self.renewable_self_consumption),
-            ),
-        }
-        for field_name, value in required.get(method, ()):
-            if value is None:
-                raise ValueError(f"{method.value} election requires {field_name}")
+        for field_name, methods in ELECTION_FACT_ADMISSION.items():
+            self._admit(field_name, getattr(self, field_name), methods)
+        for field_name in ELECTION_REQUIRED_FACTS.get(self.method, ()):
+            if getattr(self, field_name) is None:
+                raise ActividadAssetValidationError(
+                    context={"method": self.method.value, "field": field_name},
+                    translated_message="ledger.actividad_asset.errors.election_requires_fact",
+                )
         if self.shift_hours_per_day is not None and self.small_enterprise is not None:
-            raise ValueError("multi-shift and reduced-size acceleration cannot be combined in one election")
+            raise ActividadAssetValidationError(
+                context={"field": "shift_hours_per_day"},
+                translated_message="ledger.actividad_asset.errors.election_multi_shift_with_small_enterprise",
+            )
         return self
 
-    def _admit(self, field_name: str, value: object, methods: set[AmortizationMethod]) -> None:
+    def _admit(self, field_name: str, value: object, methods: frozenset[AmortizationMethod]) -> None:
         if value is not None and self.method not in methods:
-            raise ValueError(f"{field_name} is not a fact of the {self.method.value} method")
+            raise ActividadAssetValidationError(
+                context={"method": self.method.value, "field": field_name},
+                translated_message="ledger.actividad_asset.errors.election_fact_not_of_method",
+            )
 
-    @property
+    @cached_property
     def fingerprint(self) -> str:
         """Return the stable identity used to judge a change of method."""
-        return content_hash_hex(self.model_dump(mode="json"))
+        absent_facts: set[str] = {"used_original_price"} if self.used_original_price is None else set()
+        return content_hash_hex(self.model_dump(mode="json", exclude=absent_facts))
 
 
 __all__ = [
+    "ACQUIRED_CONDITION_FACTS",
+    "ELECTION_FACT_ADMISSION",
+    "ELECTION_REQUIRED_FACTS",
     "FREE_AMOUNT_METHODS",
     "WORKFORCE_CONDITIONED_METHODS",
     "AcquiredCondition",
@@ -439,10 +538,12 @@ __all__ = [
     "ElectionReference",
     "EvidenceReference",
     "LowValueElection",
+    "OriginalPriceDetermination",
     "PlanAnnualAmount",
     "PlanApprovalKind",
     "RenewableDocumentationKind",
     "RenewableInstallationPurpose",
     "RenewableSelfConsumptionEvidence",
     "SmallEnterpriseEvidence",
+    "UsedAssetOriginalPrice",
 ]

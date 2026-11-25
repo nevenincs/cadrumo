@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
-modified: '2026-10-03'
-body_hash: 'sha256:da6060f1fe58b763b6294138f08646039cb4dfaf680848e3ec05dc9d85dffab4'
+modified: '2026-11-04'
+body_hash: 'sha256:a513068334403004d6adc936799843d6ebb32ffdb8c1c21fbc6adb991ce6f886'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
@@ -127,18 +127,18 @@ After `c45: Decimal` (line ~1648), add:
 # 2026-06-02-m303-parser-engine-totals-impedance-adr.
 # Single-rate filer pattern: all base/cuota on the 21% general bracket;
 # other repercutido/soportado brackets set to zero.
-repercutido_general_base: Decimal      # iva.repercutido.general.base
-repercutido_general_cuota: Decimal     # iva.repercutido.general.cuota (= c27)
-repercutido_reducido_base: Decimal     # iva.repercutido.reducido.base (= 0)
-repercutido_reducido_cuota: Decimal    # iva.repercutido.reducido.cuota (= 0)
-repercutido_super_reducido_base: Decimal   # = 0
+repercutido_general_base: Decimal  # iva.repercutido.general.base
+repercutido_general_cuota: Decimal  # iva.repercutido.general.cuota (= c27)
+repercutido_reducido_base: Decimal  # iva.repercutido.reducido.base (= 0)
+repercutido_reducido_cuota: Decimal  # iva.repercutido.reducido.cuota (= 0)
+repercutido_super_reducido_base: Decimal  # = 0
 repercutido_super_reducido_cuota: Decimal  # = 0
-autorepercutido_intra_base: Decimal    # iva.autorepercutido.intracomunitaria.base (= 0)
-autorepercutido_intra_cuota: Decimal   # = 0
-autoconsumo_promotor_base: Decimal     # iva.autoconsumo.promotor.base (= 0)
-autoconsumo_promotor_cuota: Decimal    # = 0
-soportado_interiores_base: Decimal     # iva.soportado.interiores.base
-soportado_interiores_cuota: Decimal    # iva.soportado.interiores.cuota (= c29)
+autorepercutido_intra_base: Decimal  # iva.autorepercutido.intracomunitaria.base (= 0)
+autorepercutido_intra_cuota: Decimal  # = 0
+autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (= 0)
+autoconsumo_promotor_cuota: Decimal  # = 0
+soportado_interiores_base: Decimal  # iva.soportado.interiores.base
+soportado_interiores_cuota: Decimal  # iva.soportado.interiores.cuota (= c29)
 ```
 
 ### 2. `_compute_m303_primitives` helper
@@ -182,22 +182,24 @@ via `**_compute_m303_primitives(c27, c29)`. Worked example for the first
 fixture (lines ~1702-1716):
 
 ```python
-_Modelo303CorpusFixture(
-    filename="303/2021-2T.pdf",
-    ejercicio="2021",
-    periodo="2T",
-    tax_id="Y0000001S",
-    new_template=False,
-    c27=Decimal("12000.00"),
-    c29=Decimal("7800.00"),
-    c45=Decimal("7800.00"),
-    c46=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[0],
-    c64=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[1],
-    c66=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[2],
-    c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[3],
-    c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
-    **_compute_m303_primitives(Decimal("12000.00"), Decimal("7800.00")),
-),
+(
+    _Modelo303CorpusFixture(
+        filename="303/2021-2T.pdf",
+        ejercicio="2021",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("12000.00"),
+        c29=Decimal("7800.00"),
+        c45=Decimal("7800.00"),
+        c46=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[0],
+        c64=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[1],
+        c66=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[2],
+        c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[3],
+        c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
+        **_compute_m303_primitives(Decimal("12000.00"), Decimal("7800.00")),
+    ),
+)
 ```
 
 This propagation is mechanical across all 15 fixtures.
@@ -360,12 +362,12 @@ The correct encoding is **6 cuota-only primitive fields** (5 in the
 2009-y-siguientes legacy revision; see Finding 3):
 
 ```python
-repercutido_general: Decimal           # iva.repercutido.general
-repercutido_reducido: Decimal          # iva.repercutido.reducido
-repercutido_super_reducido: Decimal    # iva.repercutido.super-reducido
-autorepercutido_intra: Decimal         # iva.autorepercutido.intracomunitaria
-autoconsumo_promotor_base: Decimal     # iva.autoconsumo.promotor.base (2023+ only)
-soportado_interiores: Decimal          # iva.soportado.interiores
+repercutido_general: Decimal  # iva.repercutido.general
+repercutido_reducido: Decimal  # iva.repercutido.reducido
+repercutido_super_reducido: Decimal  # iva.repercutido.super-reducido
+autorepercutido_intra: Decimal  # iva.autorepercutido.intracomunitaria
+autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (editions whose design declares it)
+soportado_interiores: Decimal  # iva.soportado.interiores
 ```
 
 The base values per-rate were a useful authoring intuition (operator
@@ -404,7 +406,7 @@ Per ADR §"Decision: single-rate filer pattern", the engine recomputed
 totals must equal the fixture's existing `c27` and `c29` for every
 fixture. Under the corrected encoding:
 
-- **devengada-total** = `repercutido.general + repercutido.reducido + repercutido.super-reducido + autorepercutido.intracomunitaria` (+ `autoconsumo.promotor.cuota` in 2023+). Setting `repercutido.general = c27` and the other repercutido + autorepercutido leaves to zero (and autoconsumo.promotor.base = 0, so its computed cuota = 0) yields engine c27 = fixture c27. ✓
+- **devengada-total** = `repercutido.general + repercutido.reducido + repercutido.super-reducido + autorepercutido.intracomunitaria` (+ `autoconsumo.promotor.cuota` in editions that declare it). Setting `repercutido.general = c27` and the other repercutido + autorepercutido leaves to zero (and autoconsumo.promotor.base = 0, so its computed cuota = 0) yields engine c27 = fixture c27. ✓
 - **deducible-total** = `soportado.interiores + autorepercutido.intracomunitaria`. Setting `soportado.interiores = c29` and `autorepercutido.intracomunitaria = 0` yields engine c45 derived as c29; existing fixtures already set fixture c45 = c29, so the chain holds. ✓
 
 The original ADR's c46/c64/c66/c69/c71 closure preservation is
@@ -418,7 +420,7 @@ implementable against the actual registry. Rather than land a
 half-fix that invents `.base`/`.cuota` casillas or routes through
 a `computed` leaf, this coder is stopping and surfacing the
 findings per the team-lead's escalation gate. The corrected encoding
-is straightforward (6 cuota-only fields for 2023+, 5 for legacy), and
+is straightforward (6 cuota-only fields on editions that declare the promotor autoconsumo, 5 for legacy), and
 the extraction-profile patch becomes correspondingly smaller; a fresh
 coder pickup with this Findings section + the corrected primitive
 list can land in one atomic commit per the original commit-shape

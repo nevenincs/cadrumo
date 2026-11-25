@@ -16,7 +16,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Modelo\t130\nTitle\tIRPF instalment payment, direct assessment\nOfficial name\tPersonal Income Tax. Business activities under direct assessment. Instalment payment.\nTax domain\tirpf\nCadence\tquarterly\nRevision\t2019-y-siguientes\nRevision ids\t2019-y-siguientes\nPeriods\t1T, 2T, 3T, 4T\nCasillas\t20\nBox sources\t6\nFormulas\t12\n"
+      "text": "Modelo\t130\nTitle\tIRPF instalment payment, direct assessment\nOfficial name\tPersonal Income Tax. Business activities under direct assessment. Instalment payment.\nTax domain\tirpf\nCadence\tquarterly\nRevision\t2019-y-siguientes\nRevision ids\t2019-y-siguientes\nPeriods\t1T, 2T, 3T, 4T\nCasillas\t23\nBox sources\t9\nFormulas\t14\n"
     },
     {
       "argv": [
@@ -34,7 +34,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "casilla_id\tnumber\tinput\trequired\tlabel\n01\t01\tbound\tfalse\tIncome\n02\t02\tbound\ttrue\tExpenses\n03\t03\tcomputed\tfalse\tNet yield\n04\t04\tcomputed\tfalse\tFractional payment amount\n05\t05\tbound\tfalse\tPrior fractional payments\n06\t06\tmanual\tfalse\tWithholdings and payments on account\n07\t07\tcomputed\tfalse\tPartial result of Section I\n08\t08\tmanual\tfalse\tQuarterly income volume\n09\t09\tcomputed\tfalse\tFractional payment amount\n10\t10\tmanual\tfalse\tWithholdings and payments on account\n11\t11\tcomputed\tfalse\tPartial result of Section II\n12\t12\tcomputed\tfalse\tSum of partial results\n13\t13\tcomputed\tfalse\tReduction for net yields\n14\t14\tcomputed\tfalse\tNet amount after reduction\n15\t15\tcomputed\tfalse\tNegative results from previous quarters\n16\t16\tmanual\tfalse\tDeduction for investment in main residence\n17\t17\tcomputed\tfalse\tDifference\n18\t18\tmanual\tfalse\tAmount payable from previous self-assessments\n19\t19\tcomputed\tfalse\tFinal result\nsaldo-negativo-fin-periodo\tsaldo-negativo-fin-periodo\tcomputed\tfalse\tNegative balance transferable to later periods (max 0, -box 17)\n"
+      "text": "casilla_id\tnumber\tinput\trequired\tlabel\n01\t01\tbound\tfalse\tIncome\n02\t02\tcomputed\ttrue\tExpenses\ngastos-deducibles-previos\tgastos-deducibles-previos\tbound\tfalse\tDeductible expenses before the simplified-modality provision\nprovisiones-gastos-dificil-justificacion\tprovisiones-gastos-dificil-justificacion\tcomputed\tfalse\tDeductible provisions and hard-to-justify expenses\nrendimiento-neto-reducible-art-32-1\trendimiento-neto-reducible-art-32-1\tmanual\tfalse\tNet income qualifying for the art. 32.1 reduction\n03\t03\tcomputed\tfalse\tNet yield\n04\t04\tcomputed\tfalse\tFractional payment amount\n05\t05\tbound\tfalse\tPrior fractional payments\n06\t06\tmanual\tfalse\tWithholdings and payments on account\n07\t07\tcomputed\tfalse\tPartial result of Section I\n08\t08\tbound\tfalse\tQuarterly income volume\n09\t09\tcomputed\tfalse\tFractional payment amount\n10\t10\tbound\tfalse\tWithholdings and payments on account\n11\t11\tcomputed\tfalse\tPartial result of Section II\n12\t12\tcomputed\tfalse\tSum of partial results\n13\t13\tcomputed\tfalse\tReduction for net yields\n14\t14\tcomputed\tfalse\tNet amount after reduction\n15\t15\tcomputed\tfalse\tNegative results from previous quarters\n16\t16\tmanual\tfalse\tDeduction for investment in main residence\n17\t17\tcomputed\tfalse\tDifference\n18\t18\tmanual\tfalse\tAmount payable from previous self-assessments\n19\t19\tcomputed\tfalse\tFinal result\nsaldo-negativo-fin-periodo\tsaldo-negativo-fin-periodo\tcomputed\tfalse\tNegative balance transferable to later periods\n"
     },
     {
       "argv": [
@@ -79,7 +79,7 @@
           "code": "130",
           "filing_period": null,
           "filing_year": null,
-          "formula_count": 12,
+          "formula_count": 14,
           "operation": "modelo.formulas",
           "period": "1T",
           "revision": "2019-y-siguientes",
@@ -88,22 +88,22 @@
               "expression": {
                 "args": [
                   {
-                    "args": [],
-                    "binding": null,
-                    "casilla_id": null,
-                    "date_binding": null,
-                    "dispatch_table": null,
-                    "literal": "0",
-                    "op": null,
-                    "parameter": null,
-                    "text_literal": null
-                  },
-                  {
                     "args": [
                       {
                         "args": [],
+                        "binding": "modelo-130-resultados-negativos-anteriores",
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [],
                         "binding": null,
-                        "casilla_id": "17",
+                        "casilla_id": "15",
                         "date_binding": null,
                         "dispatch_table": null,
                         "literal": null,
@@ -117,7 +117,53 @@
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
-                    "op": "negate",
+                    "op": "subtract",
+                    "parameter": null,
+                    "text_literal": null
+                  },
+                  {
+                    "args": [
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": "0",
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "19",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null,
+                            "text_literal": null
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "negate",
+                        "parameter": null,
+                        "text_literal": null
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "max",
                     "parameter": null,
                     "text_literal": null
                   }
@@ -127,14 +173,17 @@
                 "date_binding": null,
                 "dispatch_table": null,
                 "literal": null,
-                "op": "max",
+                "op": "add",
                 "parameter": null,
                 "text_literal": null
               },
               "formula_id": "modelo-130-saldo-negativo-fin-periodo",
-              "input_bindings": [],
+              "input_bindings": [
+                "modelo-130-resultados-negativos-anteriores"
+              ],
               "input_casilla_ids": [
-                "17"
+                "15",
+                "19"
               ],
               "input_parameters": [],
               "input_relations": [],
@@ -154,24 +203,93 @@
               "expression": {
                 "args": [
                   {
-                    "args": [],
+                    "args": [
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": "01",
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": "02",
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": null
+                      }
+                    ],
                     "binding": null,
-                    "casilla_id": "01",
+                    "casilla_id": null,
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
-                    "op": null,
+                    "op": "subtract",
                     "parameter": null,
                     "text_literal": null
                   },
                   {
-                    "args": [],
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "rendimiento-neto-reducible-art-32-1",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null,
+                            "text_literal": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": "irpf.art-32-1-reduction-ceiling",
+                            "text_literal": null
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "min",
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": "irpf.art-32-1-reduction-rate",
+                        "text_literal": null
+                      }
+                    ],
                     "binding": null,
-                    "casilla_id": "02",
+                    "casilla_id": null,
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
-                    "op": null,
+                    "op": "percent",
                     "parameter": null,
                     "text_literal": null
                   }
@@ -189,15 +307,20 @@
               "input_bindings": [],
               "input_casilla_ids": [
                 "01",
-                "02"
+                "02",
+                "rendimiento-neto-reducible-art-32-1"
               ],
-              "input_parameters": [],
+              "input_parameters": [
+                "irpf.art-32-1-reduction-ceiling",
+                "irpf.art-32-1-reduction-rate"
+              ],
               "input_relations": [],
               "legal_refs": [
                 "rd-439-2007:art-110",
                 "orden-eha-672-2007:art-1",
                 "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-32-2015"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -1078,6 +1201,246 @@
                 "aeat-modelo-130-instructions"
               ],
               "target_casilla_id": "13"
+            },
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [
+                      {
+                        "args": [],
+                        "binding": "modelo-130-estimacion-directa-modalidad",
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": null,
+                        "text_literal": "directa_simplificada"
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "text_equal",
+                    "parameter": null,
+                    "text_literal": null
+                  },
+                  {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "args": [
+                              {
+                                "args": [
+                                  {
+                                    "args": [],
+                                    "binding": null,
+                                    "casilla_id": "01",
+                                    "date_binding": null,
+                                    "dispatch_table": null,
+                                    "literal": null,
+                                    "op": null,
+                                    "parameter": null,
+                                    "text_literal": null
+                                  },
+                                  {
+                                    "args": [],
+                                    "binding": null,
+                                    "casilla_id": "gastos-deducibles-previos",
+                                    "date_binding": null,
+                                    "dispatch_table": null,
+                                    "literal": null,
+                                    "op": null,
+                                    "parameter": null,
+                                    "text_literal": null
+                                  }
+                                ],
+                                "binding": null,
+                                "casilla_id": null,
+                                "date_binding": null,
+                                "dispatch_table": null,
+                                "literal": null,
+                                "op": "subtract",
+                                "parameter": null,
+                                "text_literal": null
+                              },
+                              {
+                                "args": [],
+                                "binding": null,
+                                "casilla_id": null,
+                                "date_binding": null,
+                                "dispatch_table": null,
+                                "literal": null,
+                                "op": null,
+                                "parameter": "irpf.art-30-2-provision-rate",
+                                "text_literal": null
+                              }
+                            ],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": "percent",
+                            "parameter": null,
+                            "text_literal": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": "0",
+                            "op": null,
+                            "parameter": null,
+                            "text_literal": null
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "max",
+                        "parameter": null,
+                        "text_literal": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": null,
+                        "parameter": "irpf.art-30-2-provision-annual-cap",
+                        "text_literal": null
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "min",
+                    "parameter": null,
+                    "text_literal": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": "0",
+                    "op": null,
+                    "parameter": null,
+                    "text_literal": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "if_then_else",
+                "parameter": null,
+                "text_literal": null
+              },
+              "formula_id": "modelo-130-provisiones-gastos-dificil-justificacion",
+              "input_bindings": [
+                "modelo-130-estimacion-directa-modalidad"
+              ],
+              "input_casilla_ids": [
+                "01",
+                "gastos-deducibles-previos"
+              ],
+              "input_parameters": [
+                "irpf.art-30-2-provision-rate",
+                "irpf.art-30-2-provision-annual-cap"
+              ],
+              "input_relations": [],
+              "legal_refs": [
+                "rd-439-2007:art-30",
+                "ley-35-2006:art-30",
+                "ley-35-2006:da-56",
+                "rd-439-2007:art-110"
+              ],
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "target_casilla_id": "provisiones-gastos-dificil-justificacion"
+            },
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "gastos-deducibles-previos",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "text_literal": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "provisiones-gastos-dificil-justificacion",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "text_literal": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null,
+                "text_literal": null
+              },
+              "formula_id": "modelo-130-gastos",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "gastos-deducibles-previos",
+                "provisiones-gastos-dificil-justificacion"
+              ],
+              "input_parameters": [],
+              "input_relations": [],
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "rd-439-2007:art-30"
+              ],
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "target_casilla_id": "02"
             }
           ]
         },

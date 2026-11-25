@@ -4,7 +4,10 @@ The worker serves its channels before any of this composition exists. The
 production registry, its handlers and the pinned tax authority are imported
 and built the first time an operation needs them, never to admit a worker or a
 sign-in, so the modules below stay off the worker's startup path and every
-heavier dependency is imported inside the method that first uses it.
+heavier dependency is imported inside the method that first uses it. Once a
+person is admitted, the worker walks its profile grounding index in the
+background under the same lease; the sign-in has already been answered and no
+read waits for that walk unless it is already under way.
 
 Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
@@ -12,28 +15,24 @@ Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
-from contextlib import AbstractContextManager, ExitStack, asynccontextmanager, contextmanager
-from datetime import timedelta
-from math import isfinite
+import logging
+from collections.abc import AsyncGenerator
+from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
+from datetime import datetime, timedelta
+from importlib import import_module
 from threading import RLock
 from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
+from pydantic import BaseModel, JsonValue
 
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.application.operations.drain import OperationDrainResult
-from cadrumo.application.operations.errors import OperationSubjectBusyError, OperationUnsettledError
+from cadrumo.application.operations.errors import OperationSubjectBusyError
 from cadrumo.application.operations.frontend_requests import (
-    OperationCancellationRequestV1,
-    OperationDetachRequestV1,
     OperationObservationRequestV1,
     OperationObservationResultV1,
-    OperationResponseApplyRequestV1,
-    OperationResponseControlRequestV1,
-    OperationResponseRejectRequestV1,
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
@@ -49,108 +48,136 @@ from cadrumo.application.operations.secret_submission import OperationSecretRequ
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
-from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationDurability, OperationEffect, OperationLifecycle
-from cadrumo.core.request_faults import registered_error_fault, request_faults
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
-from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.contracts.operation_access import (
+    OperationManagementRequest,
+)
+from cadrumo_client.contracts.projection_pages import (
+    ProjectionPage,
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 
+from .operation_input_admission import submit_financial_input, submit_payload
 from .operation_progress_reporter import OperationProgressReporter
+from .operation_projection_documents import PagedDelivery, projection_document, projection_target
+from .operation_review_management import manage_operation
+from .operation_settlement import settle_lapsed_operations, settlement, verify_inventory
+from .worker_request_activity import grounding_deferred, restart_quiet_window
 
 if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
     from cadrumo.application.operations.composition import OperationComposedServices, OperationSubmission
     from cadrumo.application.operations.execution_actor import OperationExecutionCaller
     from cadrumo.application.operations.registry import (
-        OperationFrontendProjection,
         OperationPublicDefinitionContractV1,
         OperationPublicDefinitionDescriptionV1,
         OperationRegistry,
     )
-    from cadrumo.application.operations.supervisor import OperationSupervisor
     from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
     from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+    from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
     from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from cadrumo.domain.deadlines.models import TaxpayerProfile
+    from cadrumo_client.contracts.view_stream import ViewStreamSink, ViewStreamSinks
     from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
     from ..adapters.worker_authorization_client import WorkerAuthorizationClient
     from .automation_execution import WorkerAutomationAdministration
     from .operation_authority import ProfileWorkerOperationAuthority
+    from .warm_heap import WarmHeapFreeze
 
-_PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
-#: How often, at most, a used profile looks for operations whose owner lapsed.
-_LAPSE_CHECK_SECONDS = 30.0
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
 
-@contextmanager
-def _refusing_what_its_readers_refuse() -> Generator[None]:
-    """Answer whatever refuses a caller's document while it is read as an invalid request that says why.
-
-    Every frontend is told what the validator said, as the command line shows
-    it. A validator can also refuse with a registered error the model does not
-    wrap: that is the same refusal, with the error's code and message, and it
-    must not end the worker that every session of the profile shares.
-    """
-    try:
-        yield
-    except ValidationError as refused:
-        faults = request_faults(refused)
-        raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
-    except (AutomationCustodyError, ProfileAccessRefusedError):
-        raise
-    except CadrumoError as refused:
-        faults = (registered_error_fault(refused),)
-        raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
-    except (ValueError, TypeError, RecursionError):
-        raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+# What the first composition imports: its own entry points, the persistence and
+# supervisor modules it binds, and the profile operations a session reads first.
+_COMPOSITION_MODULES = (
+    "cadrumo.entrypoints.operation_composition",
+    "cadrumo.adapters.persistence.operations.durability_router",
+    "cadrumo.adapters.persistence.operations.journal",
+    "cadrumo.adapters.persistence.operations.lease",
+    "cadrumo.adapters.persistence.operations.secure_references",
+    "cadrumo.adapters.persistence.operations.typed_financial_operand_custody",
+    "cadrumo.application.operations.composition",
+    "cadrumo.application.user_profile.operations",
+)
 
 
 class ProfileWorkerOperationHost:
     """Own the existing services and publication lease, never a second dispatcher."""
 
-    def __init__(self, custody: ProfileWorkerCustody, *, authorization: WorkerAuthorizationClient) -> None:
-        """Defer publication and backend loading until a governed capability needs it."""
+    def __init__(
+        self,
+        custody: ProfileWorkerCustody,
+        *,
+        authorization: WorkerAuthorizationClient,
+        view_streams: ViewStreamSinks | None = None,
+        fixed_clock_instant: datetime | None = None,
+        warm_heap: WarmHeapFreeze | None = None,
+    ) -> None:
+        """Defer publication and backend loading until a governed capability needs it.
+
+        ``view_streams`` opens the worker's view channel for a running Sede view;
+        without it the view refuses every run. ``fixed_clock_instant`` is the
+        fixed clock this worker admitted at its entry; its supervisor runs each
+        registered operation's application work at that instant. ``warm_heap``
+        is the process's freeze of its warm heap, held from each completed
+        grounding walk until the session ends; without it nothing is frozen.
+        """
         self.custody = custody
+        self._warm_heap = warm_heap
+        self._fixed_clock_instant = fixed_clock_instant
+        self._view_streams = view_streams
         self._lifetime = ExitStack()
         self._authority: PinnedAuthorityOperation | None = None
-        self._services: OperationComposedServices | None = None
+        self.services: OperationComposedServices | None = None
+        # What this worker's reads keep for one session; the composed services close it when a session ends.
+        self._capture_memory: WorkbenchCaptureMemoryOwner | None = None
         self._client = authorization
         # Committed operations reach the runtime as a cue to their observers.
         self._record_effects: set[OperationId] = set()
         self._record_effects_guard = RLock()
         self._progress = OperationProgressReporter(self._report_progress)
-        self._execution: ProfileWorkerOperationAuthority | None = None
-        self._closed = False
+        self.execution: ProfileWorkerOperationAuthority | None = None
+        self.closed = False
         self._drain_result: OperationDrainResult | None = None
         self._output_tasks: dict[asyncio.Task[object], OperationId] = {}
-        self._submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
-        self._inventory_lock = asyncio.Lock()
-        self._inventory_verified = False
+        self._paged_delivery: PagedDelivery | None = None
+        self.submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
+        self.inventory_lock = asyncio.Lock()
+        self.inventory_verified = False
         # Every operation that may still be unsettled: the journal's unsettled
         # records at first use, and each admission since.
-        self._unsettled: set[OperationId] = set()
-        self._lapse_lock = asyncio.Lock()
-        self._lapse_checked_at: float | None = None
+        self.unsettled: set[OperationId] = set()
+        self.lapse_lock = asyncio.Lock()
+        self.lapse_checked_at: float | None = None
         # One composition and one authority lease, whichever thread asks first:
         # a worker thread serving an operation or the service loop.
         self._composition_lock = RLock()
+        # The idle import of the composition graph. A sign-in never waits for
+        # it; a composition does, so the two never import the graph at once.
+        self._imports_lock = RLock()
+        # The background profile grounding walk a person's admission starts.
+        self._grounding_warmup: asyncio.Task[None] | None = None
 
-    def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def _report_progress(self, operation_ids: tuple[OperationId, ...], settled: tuple[OperationId, ...]) -> None:
         with self._record_effects_guard:
             affected = self._record_effects.intersection(operation_ids)
-        self._client.operations_advanced(operation_ids, records_changed=bool(affected))
+        self._client.operations_advanced(operation_ids, records_changed=bool(affected), settled=settled)
         with self._record_effects_guard:
             self._record_effects.difference_update(affected)
 
@@ -159,60 +186,64 @@ class ProfileWorkerOperationHost:
         if snapshot.lifecycle is OperationLifecycle.TERMINAL and snapshot.effect is not OperationEffect.NONE:
             with self._record_effects_guard:
                 self._record_effects.add(snapshot.operation_id)
-        self._progress.committed(snapshot.operation_id)
+        self._progress.committed(snapshot.operation_id, settled=snapshot.lifecycle is OperationLifecycle.TERMINAL)
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         from .operation_authority import ProfileWorkerOperationAuthority
 
-        self._execution = ProfileWorkerOperationAuthority(
-            custody=self.custody, client=self._client, registry=registry, authority_operation=self._pinned()
+        self.execution = ProfileWorkerOperationAuthority(
+            custody=self.custody, client=self._client, registry=registry, authority_operation=self.pinned()
         )
-        return self._execution
+        return self.execution
 
-    def _governed(self) -> AbstractContextManager[None]:
+    def governed(self) -> AbstractContextManager[None]:
         """Scope governed facts to this worker's one pinned authority generation."""
         from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
-        return validating_governed_facts(self._pinned())
+        return validating_governed_facts(self.pinned())
 
-    def _composed(self) -> OperationComposedServices:
-        if self._closed:
+    def composed(self) -> OperationComposedServices:
+        """Return the lazily composed services while the worker is open."""
+        if self.closed:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        services = self._services
+        services = self.services
         if services is not None:
             return services
-        with self._composition_lock:
-            if self._closed:
+        with self._imports_lock, self._composition_lock:
+            if self.closed:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            if self._services is None:
+            if self.services is None:
                 started = monotonic()
-                self._services = self._compose()
+                self.services = self._compose()
                 _log.info(
                     "worker operation composition total_seconds=%.3f (includes cold imports)", monotonic() - started
                 )
-            return self._services
+            return self.services
 
     def _await_composition(self) -> None:
         with self._composition_lock:
             return
 
-    async def _composed_off_loop(self) -> OperationComposedServices:
+    async def composed_off_loop(self) -> OperationComposedServices:
         """Join or start the one composition without holding the service loop.
 
         The first operation after a person's sign-in composes the registry; the
         loop keeps serving sign-ins and status on the other channel meanwhile.
         """
-        if self._services is not None:
-            return self._composed()
-        return await asyncio.to_thread(self._composed)
+        if self.services is not None:
+            return self.composed()
+        return await asyncio.to_thread(self.composed)
 
     def _compose(self) -> OperationComposedServices:
-        from cadrumo.application.local_reader_provisioning import RuntimeServerOwnerStart
+        from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
         from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 
-        with startup_phase(_log, "worker_operation_compose"), self._governed():
+        # A form refresh after an export defers to the requests this worker serves, as the grounding warm-up does.
+        capture_memory = WorkbenchCaptureMemoryOwner(deferred=grounding_deferred)
+        self._capture_memory = capture_memory
+        with startup_phase(_log, "worker_operation_compose"), self.governed():
             return compose_operation_dependencies(
-                authority_operation=self._pinned(),
+                authority_operation=self.pinned(),
                 operation_owner_id=self.custody.identity.operation_owner_id,
                 execution_authority_factory=self._bind_execution,
                 automation_inventory_reader=self._automation_inventory,
@@ -221,13 +252,91 @@ class ProfileWorkerOperationHost:
                 profile_rotation_finalizer=self._finalize_password_rotation,
                 modelo_profile_resolver=self._modelo_profile,
                 execution_caller_reader=self._execution_caller,
-                runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
+                sede_view_stream_opener=None if self._view_streams is None else self._open_sede_view,
                 journal_committed=self._journal_committed,
+                capture_memory=capture_memory,
+                fixed_clock_instant=self._fixed_clock_instant,
             )
+
+    def warm_imports(self) -> None:
+        """Import the composition's module graph while the worker waits for its first operation.
+
+        A watched profile's worker starts before its password is typed and
+        reaches readiness without this graph. Loading it now, key-free, keeps
+        it off the first operation. A composition that starts meanwhile waits
+        for these imports instead of racing them; a sign-in does not.
+        """
+        with self._imports_lock:
+            if self.closed or self.services is not None:
+                return
+            with startup_phase(_log, "worker_operation_imports"):
+                for module in _COMPOSITION_MODULES:
+                    import_module(module)
+
+    def start_profile_grounding_warmup(self) -> None:
+        """Start walking this generation's profile grounding index off the loop, once.
+
+        The first calendar or readiness read after a sign-in otherwise walks
+        every published revision itself. Starting the walk as soon as a person
+        is admitted lets that read usually find the index cached. A read never
+        waits for a walk that has not begun: it joins one already under way or
+        walks itself, and a failed walk leaves it to walk on demand.
+        """
+        running = self._grounding_warmup
+        # A later admission walks again only to freeze its warm heap; the cached index returns at once.
+        if self.closed or (running is not None and (self._warm_heap is None or not running.done())):
+            return
+        # The first view usually follows the sign-in reply at once: give it the quiet window first.
+        restart_quiet_window()
+        self._grounding_warmup = asyncio.create_task(
+            asyncio.to_thread(self._warm_profile_grounding, None if self._warm_heap is None else self._warm_heap.epoch),
+            name="profile-grounding-warmup",
+        )
+
+    def _warm_profile_grounding(self, freeze_epoch: int | None) -> None:
+        """Walk the grounding index under this worker's own pinned lease and governed facts.
+
+        ``freeze_epoch`` is the warm heap's epoch at the admission that started
+        the walk; the heap is frozen afterwards only if no session ended since.
+        """
+        if self.closed:
+            return
+        from cadrumo.domain.calculations.registry.profile_grounding import warm_profile_grounding_index
+
+        started = monotonic()
+        try:
+            with self.governed():
+                computed = warm_profile_grounding_index(
+                    self.pinned(), abandoned=lambda: self.closed, deferred=grounding_deferred
+                )
+        except Exception as error:
+            # Only the error's type and frame identity are recorded; the read
+            # that next needs the index walks it again and reports any failure.
+            diagnostic_event(_log, "profile_grounding_warmup_failed", fields=diagnostic_error_fields(error))
+            return
+        # A host closing meanwhile joins this walk before it releases the freeze.
+        if self._warm_heap is not None and freeze_epoch is not None:
+            self._warm_heap.freeze(freeze_epoch)
+        diagnostic_event(
+            _log,
+            "profile_grounding_warmup_finished",
+            fields={
+                "computed": computed,
+                "elapsed_seconds": round(monotonic() - started, 3),
+                "heap_frozen": self._warm_heap is not None and self._warm_heap.frozen,
+            },
+            level=logging.INFO,
+        )
+
+    async def _join_profile_grounding_warmup(self) -> None:
+        """Wait for a walk under way, which stops at its next revision once the host is closed."""
+        warmup = self._grounding_warmup
+        if warmup is not None:
+            await await_cancellation_complete(asyncio.shield(warmup), task_name="profile-grounding-warmup-join")
 
     def in_flight_operation_count(self) -> int:
         """Read the owning supervisor without creating services or touching custody."""
-        services = self._services
+        services = self.services
         return 0 if services is None else services.submission.supervisor.in_flight_operation_count()
 
     def prepare(self) -> None:
@@ -238,19 +347,21 @@ class ProfileWorkerOperationHost:
         session asks for does, off the service loop.
         """
         with startup_phase(_log, "worker_operation_prepare"):
-            self._composed()
+            self.composed()
 
     def _execution_caller(self, identity: OperationIdentity) -> OperationExecutionCaller:
         """Answer from this worker's own admission binding, never from caller-supplied facts."""
-        if self._execution is None or self._closed:
+        if self.execution is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return self._execution.execution_caller(identity)
+        return self.execution.execution_caller(identity)
 
-    async def _start_runtime_server(self, identity: OperationIdentity) -> int | None:
-        """Ask the runtime that owns this worker to start the model runtime's server for one invocation."""
-        if self._execution is None or self._closed:
+    def _open_sede_view(self, identity: OperationIdentity) -> ViewStreamSink:
+        """Open the view stream bound to the desktop session that admitted this exact view."""
+        streams = self._view_streams
+        if streams is None or self.execution is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return await self._execution.start_runtime_server(identity)
+        session_id = self.execution.sede_view_session(identity)
+        return streams.open_view(operation_id=identity.operation_id, session_id=session_id)
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""
@@ -270,9 +381,9 @@ class ProfileWorkerOperationHost:
         self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome
     ) -> None:
         """Retire original custody after encrypted result persistence in COMMIT."""
-        if self._execution is None or self._closed:
+        if self.execution is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        self._execution.retire_password_successor(identity, outcome)
+        await self.execution.retire_password_successor(identity, outcome)
 
     async def _workbench_generation(
         self, identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
@@ -282,8 +393,8 @@ class ProfileWorkerOperationHost:
         from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
         from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
-        execution, services = self._execution, self._services
-        if execution is None or services is None or self._closed:
+        execution, services = self.execution, self.services
+        if execution is None or services is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
         def account_session() -> HomeAccountSession:
@@ -296,13 +407,18 @@ class ProfileWorkerOperationHost:
                 posture=HomeSessionPosture.ACTIVE, profile_label=profile.label, expires_at=lease.expires_at
             )
 
+        capture_memory = self._capture_memory
+
         def capture() -> WorkbenchGenerationV1:
             with override_settings(cadrumo_output_language=payload.output_language.value):
                 provider = compose_secure_workbench_generation_provider(
                     profile_id=str(payload.profile_id),
-                    operation=self._pinned(),
+                    operation=self.pinned(),
                     operation_contracts=services.public_contracts,
                     account_session_reader=account_session,
+                    census_memory=None
+                    if capture_memory is None
+                    else capture_memory.for_profile(str(payload.profile_id)).census,
                 )
                 result = provider()
                 account_session()
@@ -316,19 +432,20 @@ class ProfileWorkerOperationHost:
     def _automation_administration(
         self, identity: OperationIdentity, profile_id: UUID
     ) -> WorkerAutomationAdministration:
-        if self._execution is None or self._closed:
+        if self.execution is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         from .automation_execution import WorkerAutomationAdministration
 
-        return WorkerAutomationAdministration(self._execution, identity, profile_id)
+        return WorkerAutomationAdministration(self.execution, identity, profile_id)
 
     async def _automation_inventory(self, identity: OperationIdentity, profile_id: UUID) -> AutomationInventory:
         """Use the canonical operation identity, never caller-supplied authority facts."""
-        if self._execution is None or self._closed:
+        if self.execution is None or self.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return await self._execution.automation_inventory(identity, profile_id)
+        return await self.execution.automation_inventory(identity, profile_id)
 
-    def _pinned(self) -> PinnedAuthorityOperation:
+    def pinned(self) -> PinnedAuthorityOperation:
+        """Return this worker’s pinned authority lease."""
         authority = self._authority
         if authority is not None:
             return authority
@@ -341,9 +458,9 @@ class ProfileWorkerOperationHost:
 
     def profile_decode_context(self) -> ProfileDecodeContext:
         """Use the same publication for password candidates and hosted operations."""
-        return self._pinned().profile_decode_context()
+        return self.pinned().profile_decode_context()
 
-    async def _require_current_inventory(self) -> None:
+    async def require_current_inventory(self) -> None:
         """Refuse unreadable startup state before any hosted private operation.
 
         Inventory only checks the current journal format and notes which records
@@ -355,35 +472,7 @@ class ProfileWorkerOperationHost:
         await self._settle_lapsed_operations()
 
     async def _verify_inventory(self) -> None:
-        async with self._inventory_lock:
-            if self._inventory_verified:
-                return
-            services = await self._composed_off_loop()
-            from cadrumo.application.operations.persistence.journal import OperationRecoveryInventoryDisposition
-
-            after = None
-            refused = False
-            unsettled: set[OperationId] = set()
-            try:
-                while True:
-                    page = await services.recovery_inventory(after=after, limit=128)
-                    refused |= any(
-                        entry.disposition is OperationRecoveryInventoryDisposition.REFUSED for entry in page.entries
-                    )
-                    unsettled.update(
-                        entry.operation_id
-                        for entry in page.entries
-                        if entry.disposition is OperationRecoveryInventoryDisposition.NONTERMINAL
-                    )
-                    if not page.has_more:
-                        break
-                    after = page.next_cursor
-            except (RepositoryError, ValueError):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
-            if refused or self._closed:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            self._unsettled.update(unsettled)
-            self._inventory_verified = True
+        await verify_inventory(self)
 
     def _track_unsettled(self, operation_id: OperationId, definition_id: str) -> None:
         """Note an admission whose owner the lapse sweep may one day have to settle.
@@ -392,9 +481,9 @@ class ProfileWorkerOperationHost:
         once memory forgets it the durable journal the sweep would read never
         held it, so settling it would only take the journal lock and fail.
         """
-        registry = self._composed().submission.supervisor.registry
+        registry = self.composed().submission.supervisor.registry
         if registry.lookup_public_contract(definition_id).durability is not OperationDurability.EPHEMERAL:
-            self._unsettled.add(operation_id)
+            self.unsettled.add(operation_id)
 
     def release_delivered_result(self, operation_id: OperationId) -> None:
         """Forget an ephemeral operation once its whole result has been written to its reader.
@@ -402,48 +491,43 @@ class ProfileWorkerOperationHost:
         Its result is decrypted profile data in plain memory; a reader that
         needs it again reads the profile again, which has no effect.
         """
-        services = self._services
+        delivery = self._paged_delivery
+        if delivery is not None and delivery.operation_id == operation_id:
+            self._paged_delivery = None
+        services = self.services
         if services is not None:
             services.release_ephemeral_result(operation_id)
+            # A result is read only from a terminal settlement, which has no review left to answer; the
+            # bearer reserved at submission is dead weight unless an operation ended without being reviewed.
+            services.discard_review_actor(operation_id)
 
     def forget_settled_ephemeral(self) -> None:
         """Forget pending private projections: the worker outlives its last session, its reads do not."""
-        services = self._services
+        self._paged_delivery = None
+        services = self.services
         if services is not None:
             services.forget_settled_ephemeral()
 
-    async def _settle_lapsed_operations(self) -> None:
-        """Settle every operation whose owner stopped renewing its lease and whose grace has passed.
+    def end_session_reads(self) -> None:
+        """Drop what reads kept for reuse: a session that locked, signed out or lapsed ends that reuse.
 
-        Its owner is gone, and its submitter has had a whole lease to continue
-        it, so nothing else would ever settle it. Checked at most every
-        :data:`_LAPSE_CHECK_SECONDS` as the profile is used; a failure is logged
-        with the operation and never refuses the caller's own request.
+        The composed services also drop it when they drain, so a closed host keeps none.
         """
-        now = monotonic()
-        checked_at = self._lapse_checked_at
-        if self._lapse_lock.locked() or (checked_at is not None and now - checked_at < _LAPSE_CHECK_SECONDS):
-            return
-        async with self._lapse_lock:
-            self._lapse_checked_at = now
-            supervisor = self._composed().submission.supervisor
-            for operation_id in sorted(self._unsettled):
-                try:
-                    settled = await supervisor.settle_lapsed(operation_id, grace=supervisor.lease_duration)
-                except (RepositoryError, ValueError) as error:
-                    _log.warning(
-                        "lapsed operation left unsettled operation=%s error=%s", operation_id, type(error).__name__
-                    )
-                    continue
-                if settled is not None and settled.lifecycle is OperationLifecycle.TERMINAL:
-                    self._unsettled.discard(operation_id)
+        if self._warm_heap is not None:
+            self._warm_heap.release()
+        services = self.services
+        if services is not None:
+            services.end_session_reads()
+
+    async def _settle_lapsed_operations(self) -> None:
+        await settle_lapsed_operations(self)
 
     def contract(self, session_id: UUID, definition_id: str) -> OperationPublicDefinitionContractV1:
         """Resolve an allowed definition from the real production service inventory."""
         lease = self.custody.require(session_id)
         if definition_id not in lease.scope.operations:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        for definition in self._composed().public_contracts.definitions:
+        for definition in self.composed().public_contracts.definitions:
             if definition.definition_id == definition_id:
                 self.custody.require(session_id)
                 return definition
@@ -452,7 +536,7 @@ class ProfileWorkerOperationHost:
     def describe(self, session_id: UUID, definition_id: str) -> OperationPublicDefinitionDescriptionV1:
         """Bind discovery to the same live custody and exact registered request model."""
         self.contract(session_id, definition_id)
-        description = self._composed().observation.registry.describe_public_definition(definition_id)
+        description = self.composed().observation.registry.describe_public_definition(definition_id)
         self.custody.require(session_id)
         return description
 
@@ -460,16 +544,16 @@ class ProfileWorkerOperationHost:
         self, *, session_id: UUID, frontend: OperationFrontendProjection, request: OperationRequest[BaseModel]
     ) -> OperationSubmission:
         """Admit a fresh invocation through the canonical supervisor and live authority."""
-        self.custody.require(session_id)
-        await self._require_current_inventory()
-        services = self._composed()
-        execution = self._execution
+        await self.custody.require_off_loop(session_id)
+        await self.require_current_inventory()
+        services = self.composed()
+        execution = self.execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        from .operation_authority import WorkerOperationBinding
+        from .worker_operation_binding import WorkerOperationBinding
 
         operation_id = new_operation_id()
-        execution.bind(operation_id, WorkerOperationBinding(session_id, frontend, request))
+        await execution.bind(operation_id, WorkerOperationBinding(session_id, frontend, request))
 
         async def admit() -> OperationSubmission:
             # Guard and canonical admission execute in the same retained task.
@@ -484,10 +568,10 @@ class ProfileWorkerOperationHost:
                         request,
                         actor_ref=f"session:{session_id}",
                         operation_id=operation_id,
-                        provenance=execution.capture_provenance(identity),
+                        provenance=await execution.capture_provenance(identity),
                     )
                     if submitted.receipt.operation_id == operation_id:
-                        self._submissions[operation_id] = session_id, submitted
+                        self.submissions[operation_id] = session_id, submitted
                         self._track_unsettled(operation_id, request.definition_id)
                     else:
                         # Replay does not revive the original response bearer.
@@ -515,61 +599,17 @@ class ProfileWorkerOperationHost:
 
     async def start(self, operation_id: OperationId, session_id: UUID) -> OperationId:
         """Start only an invocation already bound by this worker's admission door."""
-        self._require_owner(operation_id, session_id)
-        await self._require_current_inventory()
+        await self._require_owner(operation_id, session_id)
+        await self.require_current_inventory()
         try:
-            with self._governed():
-                return await self._composed().submission.start(operation_id)
+            with self.governed():
+                return await self.composed().submission.start(operation_id)
         except (RepositoryError, ValueError):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
 
     async def settlement(self, identity: OperationIdentity, *, timeout: float) -> bool:
-        """Wait for an original rotation's terminal journal without old-key disclosure.
-
-        Timeout cancels only this waiter. The canonical supervisor shields its
-        settlement task, which remains owned until it terminates or is drained.
-        A terminal failure is settled too; this acknowledgment claims no
-        successful domain effect or available private result.
-        """
-        supervisor = self._settlement_supervisor(identity, timeout)
-        return await self._await_settlement(supervisor, identity, timeout)
-
-    def _settlement_supervisor(self, identity: OperationIdentity, timeout: float) -> OperationSupervisor:
-        from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
-
-        original = self._submissions.get(identity.operation_id)
-        services = self._services
-        if (
-            self._closed
-            or services is None
-            or original is None
-            or original[1].receipt.operation_id != identity.operation_id
-            or identity.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
-            or not isfinite(timeout)
-            or not 0 < timeout <= 5
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        return services.submission.supervisor
-
-    async def _await_settlement(
-        self, supervisor: OperationSupervisor, identity: OperationIdentity, timeout: float
-    ) -> bool:
-        wait = asyncio.timeout(timeout)
-        try:
-            async with wait:
-                observed = await supervisor.inspect(identity.operation_id)
-                if observed.identity != identity:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                terminal = await supervisor.settled(identity.operation_id)
-                if terminal.identity != identity or terminal.lifecycle is not OperationLifecycle.TERMINAL:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                return True
-        except TimeoutError:
-            if wait.expired():
-                return False
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
-        except (RepositoryError, OperationUnsettledError, KeyError, ValueError):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
+        """Wait for the admitted rotation's terminal journal."""
+        return await settlement(self, identity, timeout=timeout)
 
     @asynccontextmanager
     async def operation_secret(
@@ -583,8 +623,8 @@ class ProfileWorkerOperationHost:
         """Authorize only the original submitter's exact one-use secret requirement."""
         try:
             operation_id = requirement.identity.operation_id
-            self._require_owner(operation_id, session_id)
-            original = self._submissions.get(operation_id)
+            await self._require_owner(operation_id, session_id)
+            original = self.submissions.get(operation_id)
             if (
                 original is None
                 or original[0] != session_id
@@ -595,10 +635,10 @@ class ProfileWorkerOperationHost:
             async with self.release(session_id, operation_id, frontend, AccessAction.SUBMIT) as authorization:
                 try:
                     if secret is None:
-                        await self._composed().submission.require_secret_ready(requirement)
+                        await self.composed().submission.require_secret_ready(requirement)
                     else:
                         await await_cancellation_complete(
-                            self._composed().submission.submit_secret(requirement, secret),
+                            self.composed().submission.submit_secret(requirement, secret),
                             task_name="profile-operation-secret",
                         )
                 except (RepositoryError, ValueError):
@@ -612,21 +652,21 @@ class ProfileWorkerOperationHost:
         self, operation_id: OperationId, session_id: UUID, *, frontend: OperationFrontendProjection
     ) -> OperationId:
         """Reauthorize stored intent and let its existing owner reconcile before entry."""
-        self.custody.require(session_id)
-        await self._require_current_inventory()
-        services = self._composed()
-        invocation = await self._stored_invocation(operation_id, require_idle=True)
-        execution = self._execution
+        await self.custody.require_off_loop(session_id)
+        await self.require_current_inventory()
+        services = self.composed()
+        invocation = await self.stored_invocation(operation_id, require_idle=True)
+        execution = self.execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        from .operation_authority import WorkerOperationBinding
+        from .worker_operation_binding import WorkerOperationBinding
 
         binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
         async with execution.guard_binding(invocation.identity, AccessAction.RESUME, binding):
-            execution.bind_reentry(operation_id, binding)
+            await execution.bind_reentry(operation_id, binding)
         try:
             # START/RESUME at actual entry and COMMIT each acquire fresh guards.
-            with self._governed():
+            with self.governed():
                 return await services.submission.continue_operation(operation_id)
         except (RepositoryError, ValueError):
             execution.discard(operation_id)
@@ -639,7 +679,7 @@ class ProfileWorkerOperationHost:
         """Lend a canonical projection only while its native disclosure guard is held."""
         async with self.release(session_id, request.operation_id, frontend, AccessAction.OBSERVE) as authorization:
             observed = await await_cancellation_complete(
-                self._composed().observation.observe(request), task_name="profile-operation-observation"
+                self.composed().observation.observe(request), task_name="profile-operation-observation"
             )
             yield observed, authorization
 
@@ -648,22 +688,36 @@ class ProfileWorkerOperationHost:
         self, session_id: UUID, operation_id: OperationId, frontend: OperationFrontendProjection, action: AccessAction
     ) -> AsyncGenerator[WorkerAuthorityRequest]:
         """Bind each internal projection to policy the runtime must recheck on final output."""
-        self.custody.require(session_id)
-        await self._require_current_inventory()
-        self._composed()
-        execution = self._execution
+        async with self._release_invocation(session_id, operation_id, frontend, action) as (authorization, _invocation):
+            yield authorization
+
+    @asynccontextmanager
+    async def _release_invocation(
+        self,
+        session_id: UUID,
+        operation_id: OperationId,
+        frontend: OperationFrontendProjection,
+        action: AccessAction,
+        *,
+        retained: OperationStoredInvocation | None = None,
+    ) -> AsyncGenerator[tuple[WorkerAuthorityRequest, OperationStoredInvocation]]:
+        """Hold the release guard over ``retained``, or over the invocation read afresh."""
+        await self.custody.require_off_loop(session_id)
+        await self.require_current_inventory()
+        self.composed()
+        execution = self.execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         task = asyncio.current_task()
         if task is None or task in self._output_tasks:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         self._output_tasks[task] = operation_id
-        from cadrumo.application.workbench_generation_operation import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+        from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 
-        from .operation_authority import WorkerOperationBinding
+        from .worker_operation_binding import WorkerOperationBinding
 
         try:
-            invocation = await self._stored_invocation(operation_id)
+            invocation = retained if retained is not None else await self.stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
                 # The full-owner workbench projection is released only to the
@@ -673,8 +727,8 @@ class ProfileWorkerOperationHost:
                     action in _PRIVATE_RESULT_RELEASE_ACTIONS
                     and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
                 ):
-                    execution.require_owner(operation_id, session_id)
-                yield authorization
+                    await execution.require_owner(operation_id, session_id)
+                yield authorization, invocation
         finally:
             self._output_tasks.pop(task, None)
 
@@ -699,10 +753,27 @@ class ProfileWorkerOperationHost:
                 await self._settle_undelivered_admission(operation_id, session_id, refusal)
             raise
 
+    async def abandon_submission(self, operation_id: OperationId, session_id: UUID) -> bool:
+        """Settle a parent's withheld receipt without reviving its former authority.
+
+        Cleanup is restricted to this session's original admission before any
+        executor entry. Running or settled operations keep their own course.
+        """
+        original = self.submissions.get(operation_id)
+        if original is None or original[0] != session_id:
+            return False
+        snapshot = await self.composed().submission.supervisor.inspect(operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+            return False
+        await self._settle_undelivered_admission(
+            operation_id, session_id, ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        )
+        return operation_id not in self.submissions
+
     async def _settle_undelivered_admission(
         self, operation_id: OperationId, session_id: UUID, refusal: ProfileAccessRefusedError | AutomationCustodyError
     ) -> None:
-        original = self._submissions.get(operation_id)
+        original = self.submissions.get(operation_id)
         if original is None or original[0] != session_id:
             # A replayed receipt names an earlier admission, which keeps its own course.
             return
@@ -712,20 +783,25 @@ class ProfileWorkerOperationHost:
             else ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
         )
         try:
-            await self._composed().submission.supervisor.settle_refused_start(operation_id, reason)
+            services = self.composed()
+            await services.submission.supervisor.settle_refused_start(operation_id, reason)
         except (RepositoryError, ValueError):
             _log.warning("undelivered admission left unsettled operation=%s", operation_id)
             return
-        self._submissions.pop(operation_id, None)
-        if self._execution is not None:
-            self._execution.discard(operation_id)
+        services.discard_review_actor(operation_id)
+        if original[1].response_capability is not None:
+            original[1].response_capability.close()
+        self.submissions.pop(operation_id, None)
+        if self.execution is not None:
+            self.execution.discard(operation_id)
 
-    async def _stored_invocation(
+    async def stored_invocation(
         self, operation_id: OperationId, *, require_idle: bool = False
     ) -> OperationStoredInvocation:
+        """Read an invocation through the governed operation store."""
         try:
-            with self._governed():
-                return await self._composed().submission.stored_invocation(operation_id, require_idle=require_idle)
+            with self.governed():
+                return await self.composed().submission.stored_invocation(operation_id, require_idle=require_idle)
         except (RepositoryError, KeyError, ValueError):
             # Unknown, damaged, foreign-profile and stale-contract records have
             # the same safe refusal. Their contents never become a projection.
@@ -738,37 +814,81 @@ class ProfileWorkerOperationHost:
         request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
         *,
         frontend: OperationFrontendProjection,
-        page: ProjectionPageRequest | None = None,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Serialize only the canonical registered public projection under consent."""
-        is_result = isinstance(request, OperationResultProjectionRequestV1)
-        operation_id = request.operation_id if is_result else request.reference.operation_id
-        action = AccessAction.RESULT if is_result else AccessAction.REVIEW
+        operation_id, action = projection_target(request)
         async with self.release(session_id, operation_id, frontend, action) as authorization:
-            services = self._composed()
-            if isinstance(request, OperationResultProjectionRequestV1):
-                result = await await_cancellation_complete(
-                    services.result.resolve(
-                        request,
-                        BaseModel,
-                        snapshot_scope=(session_id, frontend) if page is not None else None,
-                        continue_snapshot=page is not None and page.offset > 0,
-                    ),
-                    task_name="profile-operation-result",
-                )
-            else:
-                result = await await_cancellation_complete(
-                    services.review.resolve(request, BaseModel), task_name="profile-operation-review"
-                )
-            # Polymorphic canonical projections retain their validated fields;
-            # serializing as the BaseModel parameter would discard them.
-            document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
-            yield document, authorization
+            result = await self._resolve_projection(request, session_id, frontend, page=None)
+            yield projection_document(result, paged=False), authorization
 
-    def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
-        if self._execution is None:
+    @asynccontextmanager
+    async def project_page(
+        self,
+        session_id: UUID,
+        request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
+        *,
+        frontend: OperationFrontendProjection,
+        page: ProjectionPageRequest,
+    ) -> AsyncGenerator[tuple[ProjectionPage, WorkerAuthorityRequest]]:
+        """Release one page, reusing only what the same delivery already resolved.
+
+        Every page takes the disclosure guard and rechecks the settled result; a
+        later page spares the invocation read and the whole-document encoding.
+        """
+        operation_id, action = projection_target(request)
+        held = self._paged_delivery
+        continued = (
+            held
+            if page.offset > 0
+            and held is not None
+            and held.operation_id == operation_id
+            and held.session_id == session_id
+            and held.frontend is frontend
+            else None
+        )
+        async with self._release_invocation(
+            session_id,
+            operation_id,
+            frontend,
+            action,
+            retained=None if continued is None else continued.invocation,
+        ) as (authorization, invocation):
+            result = await self._resolve_projection(request, session_id, frontend, page=page)
+            if continued is not None and continued.result is result:
+                document = continued.document
+            else:
+                document = encode_projection_document(projection_document(result, paged=True))
+                self._paged_delivery = PagedDelivery(operation_id, session_id, frontend, invocation, result, document)
+            yield project_encoded_page(document, page), authorization
+
+    async def _resolve_projection(
+        self,
+        request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
+        session_id: UUID,
+        frontend: OperationFrontendProjection,
+        *,
+        page: ProjectionPageRequest | None,
+    ) -> BaseModel:
+        """Resolve the registered public model; a polymorphic one keeps its validated fields when dumped."""
+        services = self.composed()
+        if isinstance(request, OperationResultProjectionRequestV1):
+            return await await_cancellation_complete(
+                services.result.resolve(
+                    request,
+                    BaseModel,
+                    snapshot_scope=(session_id, frontend) if page is not None else None,
+                    continue_snapshot=page is not None and page.offset > 0,
+                ),
+                task_name="profile-operation-result",
+            )
+        return await await_cancellation_complete(
+            services.review.resolve(request, BaseModel), task_name="profile-operation-review"
+        )
+
+    async def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
+        if self.execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self._execution.require_owner(operation_id, session_id)
+        await self.execution.require_owner(operation_id, session_id)
 
     @asynccontextmanager
     async def manage(
@@ -778,41 +898,9 @@ class ProfileWorkerOperationHost:
         *,
         frontend: OperationFrontendProjection,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
-        """Use canonical controls without recovering an earlier session's response proof."""
-        submission = self._submissions.get(request.operation_id)
-        if isinstance(request, OperationResponseControlRequestV1) and (
-            request.actor_ref != f"session:{session_id}"
-            or submission is None
-            or submission[0] != session_id
-            or submission[1].response_capability is None
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-
-        async def control() -> BaseModel:
-            services = self._composed()
-            if isinstance(request, OperationCancellationRequestV1):
-                return await services.cancellation.request(request)
-            if isinstance(request, OperationDetachRequestV1):
-                return await services.detach.detach(request)
-            # The exact original capability stays local. A new session,
-            # idempotent receipt or reattached operation cannot obtain it.
-            if submission is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-            if isinstance(request, OperationResponseApplyRequestV1):
-                response = await services.response(request, submission[1].response_capability)
-                return await response.apply(request)
-            if isinstance(request, OperationResponseRejectRequestV1):
-                response = await services.response(request, submission[1].response_capability)
-                return await response.reject(request)
-            response = await services.inspect_response(request, submission[1].response_capability)
-            return await response.inspect(request)
-
-        async with self.release(
-            session_id, request.operation_id, frontend, operation_management_action(request)
-        ) as authorization:
-            result = await await_cancellation_complete(control(), task_name="profile-operation-control")
-            document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
-            yield document, authorization
+        """Manage an operation under its response and release authority."""
+        async with manage_operation(self, session_id, request, frontend=frontend) as result:
+            yield result
 
     async def submit_financial_input(
         self,
@@ -823,53 +911,15 @@ class ProfileWorkerOperationHost:
         subject_ref: str,
         input_json: str,
     ) -> OperationSubmission:
-        """Convert volatile human input before binding or journaling the safe request."""
-        from cadrumo.application.modelo.edit_operator_input import prepare_modelo_edit_operand
-        from cadrumo.application.operations.financial_operand_contract import OperationFinancialOperandRefusedError
-
-        await self._composed_off_loop()
-        contract = self.contract(session_id, definition_id)
-        if contract.transient_financial_operand is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        # A fault of the operand is a validator's message and never the operand itself.
-        with _refusing_what_its_readers_refuse(), self._governed():
-            prepared = prepare_modelo_edit_operand(
-                definition_id=definition_id,
-                profile_id=self.custody.identity.binding.profile_id,
-                subject_ref=subject_ref,
-                input_json=input_json,
-            )
-        input_json = ""
-
-        async def transfer() -> OperationSubmission:
-            try:
-                submitted = await self.submit(
-                    session_id=session_id,
-                    frontend=frontend,
-                    request=OperationRequest(
-                        definition_id=definition_id,
-                        subject_ref=subject_ref,
-                        payload=prepared.request,
-                        idempotency_key=None,
-                    ),
-                )
-                operand = prepared.operand
-                if operand is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                supervisor = self._composed().submission.supervisor
-                try:
-                    await supervisor.bind_typed_financial_operand(submitted.receipt.operation_id, operand)
-                except OperationFinancialOperandRefusedError as refused:
-                    await supervisor.refuse_unstarted_financial_input(submitted.receipt.operation_id)
-                    faults = (registered_error_fault(refused),)
-                    raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
-                finally:
-                    del operand
-                return submitted
-            finally:
-                prepared.release()
-
-        return await await_cancellation_complete(transfer(), task_name="profile-financial-operand-admission")
+        """Admit transient financial input through its registered contract."""
+        return await submit_financial_input(
+            self,
+            session_id=session_id,
+            frontend=frontend,
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            input_json=input_json,
+        )
 
     async def submit_payload(
         self,
@@ -881,39 +931,36 @@ class ProfileWorkerOperationHost:
         payload_json: str,
         idempotency_key: str | None = None,
     ) -> OperationSubmission:
-        """Decode through the exact registered model after exact-profile custody."""
-        await self._composed_off_loop()
-        self.contract(session_id, definition_id)
-        if self._execution is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        with _refusing_what_its_readers_refuse(), self._governed():
-            payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
-        return await self.submit(
+        """Admit a decoded registered operation payload."""
+        return await submit_payload(
+            self,
             session_id=session_id,
             frontend=frontend,
-            request=OperationRequest(
-                definition_id=definition_id,
-                subject_ref=subject_ref,
-                payload=payload,
-                idempotency_key=idempotency_key,
-            ),
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            payload_json=payload_json,
+            idempotency_key=idempotency_key,
         )
 
     async def close(self) -> OperationDrainResult:
         """Bound canonical drain; retain publication while native containment is required."""
         if self._drain_result is not None:
             return self._drain_result
-        self._closed = True
+        self.closed = True
         # A composition an operation already started finishes, off the loop, and
         # is drained like any other; none can start once the host is closed.
         await await_cancellation_complete(
             asyncio.to_thread(self._await_composition), task_name="profile-operation-compose-join"
         )
+        # The walk reads through the lifetime lease, so it ends before that lease can close.
+        await self._join_profile_grounding_warmup()
+        if self._warm_heap is not None:
+            self._warm_heap.release()
         result = (
             await await_cancellation_complete(
-                self._services.drain(timedelta(seconds=5)), task_name="profile-operation-drain"
+                self.services.drain(timedelta(seconds=5)), task_name="profile-operation-drain"
             )
-            if self._services is not None
+            if self.services is not None
             else OperationDrainResult(unresolved=(), recovery_required=())
         )
         if self._output_tasks:

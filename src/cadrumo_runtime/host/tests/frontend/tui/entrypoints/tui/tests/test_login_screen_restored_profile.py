@@ -26,11 +26,10 @@ from textual.widgets import Button, Input
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.capsule_restore import (
     read_profile_capsule_source,
     restore_profile_capsule_with_password,
@@ -39,7 +38,10 @@ from cadrumo.application.user_profile.login_interaction import profile_login_cho
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -92,7 +94,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
         # Registration validates facts against registry authority, so it runs under a real lease.
         with bundled_indexed_authority().operation():
-            profile_create_context, profile_decode_context = _profile_contexts_for_test()
+            profile_create_context, profile_decode_context = profile_authority_contexts()
             outcome = register_profile_with_credentials(
                 label="Restore-born",
                 passphrase=_CREDENTIAL_INPUT,
@@ -111,7 +113,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
 
     root = tmp_path / "tui-root"
     assert (root / "buckets" / restored.profile_id).is_dir()
-    with override_settings(cadrumo_local_storage_root=str(root), cadrumo_output_language="en"):
+    with override_settings(cadrumo_storage_root=str(root), cadrumo_output_language="en"):
         choices = list(profile_login_choices())
         assert any(choice.profile_id == restored.profile_id for choice in choices)
         reset_test_profile_session()
@@ -165,18 +167,20 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
                         )
                         app = _RestoredLoginApp(screen)
                         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-                            await pilot.pause()
+                            await settle(pilot, workers=False)
                             submit = screen.query_one("#runtime-login-submit", Button)
-                            async with asyncio.timeout(30):
-                                while submit.disabled:
-                                    await pilot.pause(0.05)
+                            await settle_until(
+                                pilot,
+                                lambda: not submit.disabled,
+                                "the sign-in submit control to enable",
+                                workers=False,
+                            )
                             credential = screen.query_one("#runtime-login-credential", Input)
                             assert credential.password
                             credential.value = _CREDENTIAL_INPUT
                             submit.scroll_visible(animate=False)
-                            await pilot.pause()
-                            assert await pilot.click("#runtime-login-submit")
-                            async with asyncio.timeout(30):
+                            assert await click_when_laid_out(pilot, submit)
+                            async with asyncio.timeout(SETTLE_TIMEOUT_SECONDS):
                                 await app.handoff_received.wait()
                             # The preselected profile first attempts receipt
                             # admission, then opens a fresh password connection.

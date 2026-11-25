@@ -38,8 +38,8 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConflictError
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import (
@@ -56,17 +56,13 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.tests.persona_identities import identity_catalogue
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "13a00000-0000-4000-8000-0000000000a1"
-_TAX_ID = "X1234567L"
+_TAX_ID = identity_catalogue().role("fontanero.titular").value
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _STALE_REVISION_ID = "0" * 64
@@ -77,25 +73,6 @@ _EVIDENCE_REFERENCE = "JUST2026130Q1ATOMIC"
 
 _INCOME_CASILLA: CasillaId = validated_casilla_id("01", surface="test casilla id")
 _EXPENSE_CASILLA: CasillaId = validated_casilla_id("02", surface="test casilla id")
-
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,16 +91,7 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
     """Yield real catalogue repositories over one encrypted SQLite database."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_PROFILE_ID,
-                facts=_READY_PROFILE_FACTS,
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0)
         yield _Fixture(
             engine=profile.repository.engine,
             work_units=WorkUnitCatalogueRepository(objects=objects),
@@ -277,14 +245,16 @@ def test_event_write_failure_rolls_back_every_import_catalogue(
         expected_revision_id=_STALE_REVISION_ID,
     )
 
+    revisions_unit = fixture.calculations.to_secure_object_write_unit(baseline_revisions)
     with pytest.raises(SecureObjectRevisionConflictError):
         fixture.filings.save_with_secure_object_writes(
             baseline_filings,
             (
-                fixture.calculations.to_secure_object_write(baseline_revisions),
+                *revisions_unit.writes,
                 fixture.work_units.to_secure_object_write(baseline_work_units),
                 conflicting_event_write,
             ),
+            assertions=revisions_unit.assertions,
         )
 
     assert fixture.calculations.load() == baseline_revisions

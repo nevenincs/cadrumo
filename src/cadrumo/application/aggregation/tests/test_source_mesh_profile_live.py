@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -11,19 +10,17 @@ from functools import cache
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
     published_supported_filing_years,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import (
@@ -40,13 +37,6 @@ from ..source_profile import ProfileSourceResolver
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation through direct and source-mesh profile resolution."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
-
-
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _EXTERNAL = Settings.external_constants()
@@ -59,16 +49,25 @@ _CCAA_BINDING = "renta-profile-tax-residence-ccaa"
 # LIRPF, with the autonomico half carrying a CCAA-conditional Madrid override),
 # Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
 # minimo separate-escala eligibility flag (Art. 64/75 LIRPF), and the maternity
-# deduction (Art. 81.1 LIRPF, casilla 0611), zero without children under three.
+# deduction (Art. 81.1 LIRPF, casilla 0611) and its guarderia increment (Art. 81.2,
+# casilla 0613), zero without children under three; and the minimo por ascendientes
+# estatal + autonomico (Art. 59/61 LIRPF, casillas 0515 and 0516), zero without ascendants.
 _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
     {
         "renta-profile-minimo-descendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
+        "renta-profile-minimo-ascendientes-estatal",
+        "renta-profile-minimo-ascendientes-autonomico",
         "renta-profile-has-economic-activity",
+        "renta-profile-income-family-excluded-capital-mobiliario",
+        "renta-profile-income-family-excluded-capital-inmobiliario",
+        "renta-profile-income-family-excluded-ganancias-patrimoniales",
         "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-deduccion-maternidad",
+        "renta-profile-incremento-guarderia",
         "renta-maritime-path-rebeca",
         "renta-maritime-gross-navigation-income",
         "renta-maritime-annual-salary",
@@ -88,7 +87,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -97,13 +96,13 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def _registered_modelo_profile() -> UserProfileRecord:
     """Supply one calculation-relevant fact for every registered modelo profile surface."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -114,14 +113,12 @@ def _registered_modelo_profile() -> UserProfileRecord:
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            UserProfileFact(path="taxpayer_type.sal_reserva_especial_dotada", value=Decimal("0")),
-            UserProfileFact(path="taxpayer_type.sal_capital_social", value=Decimal("5000")),
             UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
             UserProfileFact(path="iva.autoconsumo_promotor_base", value=Decimal("123")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -284,7 +281,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
             filing_year=filing_year,
-            period=Period.from_year_and_code(filing_year, "AD-HOC" if modelo == "036" else period),
+            period=Period.from_year_and_code(filing_year, "0A" if modelo == "036" else period),
             revision=snapshot.revision,
         ),
     )

@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
@@ -38,6 +38,7 @@ from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from . import registered_executor_case_support as conformance
+from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -143,7 +144,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
 
     monkeypatch.setattr(WorkflowStateRepository, "save", guarded_workflow_save)
 
-    _profile_create_context, profile_decode_context = _profile_contexts_for_test()
+    _profile_create_context, profile_decode_context = profile_authority_contexts()
     with conformance.conformance_operation_runtime(
         tmp_path / "censal-file-import",
         cleanup=conformance.OperationRuntimeCloseWitness(),
@@ -169,25 +170,9 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
             record_before = repository.load(profile_id)
             history_before = ProfileRecordStore(session=repository.session).history()
 
-        other_profile_id = uuid4()
-        with override_settings(cadrumo_active_profile=str(other_profile_id)):
-            refused_submission, refused_observation = asyncio.run(
-                driver.run(
-                    definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
-                    subject_ref=subject_ref,
-                    payload=request,
-                )
-            )
-        refused_snapshot = asyncio.run(
-            driver.services.submission.supervisor.inspect(refused_submission.receipt.operation_id)
+        assert_refused_for_foreign_active_profile(
+            driver, definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID, subject_ref=subject_ref, payload=request
         )
-        refused_receipt = refused_snapshot.terminal_receipt
-        assert refused_receipt is not None
-        assert refused_receipt.identity.subject_ref == subject_ref
-        assert refused_receipt.condition is OperationTerminalCondition.REFUSED
-        assert refused_receipt.effect is OperationEffect.NONE
-        assert refused_receipt.result_ref is None
-        assert refused_observation.projection.terminal_condition is OperationTerminalCondition.REFUSED
         assert witness.events == []
 
         with override_settings(cadrumo_active_profile=str(profile_id)):
@@ -214,7 +199,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
         assert observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observation.projection.effect is OperationEffect.UPDATED
 
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,

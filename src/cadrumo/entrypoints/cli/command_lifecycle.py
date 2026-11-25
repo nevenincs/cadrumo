@@ -23,6 +23,7 @@ def dispatch_cli_behavior(
     behavior: Callable[[], object],
     *,
     load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
+    bind_optional_profile: Callable[[typer.Context], None] | None = None,
 ) -> object:
     """Apply AEAT profile admission, governed scope, provisioning and cleanup."""
     context_parameter = spec.invocation.context_parameter
@@ -33,28 +34,21 @@ def dispatch_cli_behavior(
         from cadrumo.application.user_profile.profile_summary import summary_inventory_snapshot
         from cadrumo_client.commands.secure_input import clear_staged_machine_secret_payloads
 
-        from ._profile_authentication_gate import preflight_parsed_leaf
+        from .profile_authentication_gate import preflight_parsed_leaf
 
         try:
-            context = bound.arguments.get(context_parameter)
-            find_root = getattr(context, "find_root", None)
-            if context is None or not callable(find_root):
-                raise TypeError("command invocation context has an invalid type")
-            root = find_root()
-            ensure_object = getattr(root, "ensure_object", None)
-            if not callable(ensure_object) or not isinstance(ensure_object(dict), dict):
-                raise TypeError("command root context has an invalid type")
-            invocation_context = cast(typer.Context, context)
+            invocation_context = _invocation_context(bound, context_parameter)
             listing_scope = (
                 summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
             )
-            with _governed_fact_scope(spec, invocation_context), listing_scope:
+            with governed_fact_scope(spec, invocation_context), listing_scope:
                 preflight_parsed_leaf(
                     invocation_context,
                     graph=graph,
                     spec=spec,
                     arguments=bound.arguments,
                     load_connection_activator=load_connection_activator,
+                    bind_optional_profile=bind_optional_profile,
                 )
                 return behavior()
         except Exception as error:
@@ -80,7 +74,19 @@ def dispatch_cli_behavior(
         raise
 
 
-def _governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:
+def _invocation_context(bound: BoundArguments, context_parameter: str) -> typer.Context:
+    context = bound.arguments.get(context_parameter)
+    find_root = getattr(context, "find_root", None)
+    if context is None or not callable(find_root):
+        raise TypeError("command invocation context has an invalid type")
+    root = find_root()
+    ensure_object = getattr(root, "ensure_object", None)
+    if not callable(ensure_object) or not isinstance(ensure_object(dict), dict):
+        raise TypeError("command root context has an invalid type")
+    return cast(typer.Context, context)
+
+
+def governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:
     """Open the pinned authority scope for a governed AEAT command behavior."""
     if not runs_in_governed_fact_scope(spec):
         return nullcontext()

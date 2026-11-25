@@ -36,7 +36,7 @@ from .manifest import (
 from .precondition_action import resolve_precondition_action
 
 if TYPE_CHECKING:
-    from ...core.json_contract import ResolvedPreconditionAction
+    from ...core.json_contract import ResolvedActionReference, ResolvedPreconditionAction
     from ..operator_actions.models import PreconditionVerdict
 
 __all__ = [
@@ -82,9 +82,7 @@ class ActionTarget:
             or input_schema is None
             or policy is None
             or exposure is None
-            or leaf.mounted_family is None
-            or leaf.exclusions
-            or leaf.live_leaf.alias_cli_paths
+            or _leaf_has_unrecorded_shape(leaf)
             or not exposure.exposed
             or not policy.should_expose_externally
             or policy.classification not in {_PROFILE_BOUND_WRITE, _NON_PROFILE_BOUND}
@@ -98,6 +96,10 @@ class ActionTarget:
             profile_bound_write=policy.classification == _PROFILE_BOUND_WRITE,
             program=leaf.live_leaf.program,
         )
+
+
+def _leaf_has_unrecorded_shape(leaf: ReconciledOperatorLeaf) -> bool:
+    return leaf.mounted_family is None or bool(leaf.exclusions) or bool(leaf.live_leaf.alias_cli_paths)
 
 
 ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
@@ -156,6 +158,43 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("config.profile.create", ("config", "profile", "create"), "ConfigProfileCreateResult"),
     ActionTarget(
+        "config.profile.arrendamiento.add",
+        ("config", "profile", "arrendamiento", "add"),
+        "ConfigProfileArrendamientoAddResult",
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.arrendamiento.edit",
+        ("config", "profile", "arrendamiento", "edit"),
+        "ConfigProfileArrendamientoEditResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.arrendamiento.list",
+        ("config", "profile", "arrendamiento", "list"),
+        "ConfigProfileArrendamientoListResult",
+    ),
+    ActionTarget(
+        "config.profile.arrendamiento.remove",
+        ("config", "profile", "arrendamiento", "remove"),
+        "ConfigProfileArrendamientoRemoveResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.ascendiente.edit",
+        ("config", "profile", "ascendiente", "edit"),
+        "ConfigProfileAscendienteEditResult",
+        required_inputs=("index",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.ascendiente.list",
+        ("config", "profile", "ascendiente", "list"),
+        "ConfigProfileAscendienteListResult",
+    ),
+    ActionTarget(
         "config.profile.descendiente.list",
         ("config", "profile", "descendiente", "list"),
         "ConfigProfileDescendienteListResult",
@@ -163,17 +202,33 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget(
         "config.profile.edit", ("config", "profile", "edit"), "ConfigProfileEditResult", profile_bound_write=True
     ),
+    ActionTarget(
+        "config.profile.inmueble.add",
+        ("config", "profile", "inmueble", "add"),
+        "ConfigProfileInmuebleAddResult",
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.inmueble.edit",
+        ("config", "profile", "inmueble", "edit"),
+        "ConfigProfileInmuebleEditResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
+    ),
     ActionTarget("config.profile.list", ("config", "profile", "list"), "ConfigListResult"),
     ActionTarget("config.profile.status", ("config", "profile", "status"), "ConfigStatusResult"),
-    ActionTarget("config.provision.browser", ("config", "provision", "browser"), "ProvisionBrowserResult"),
-    ActionTarget("config.provision.pull", ("config", "provision", "pull"), "ProvisionPullResult"),
-    ActionTarget("config.provision.setup", ("config", "provision", "setup"), "ProvisionSetupResult"),
-    ActionTarget("config.provision.status", ("config", "provision", "status"), "ProvisionStatusResult"),
     ActionTarget("config.repair", ("config", "repair"), "ConfigRepairResult"),
     ActionTarget("config.repair.profile", ("config", "repair", "profile"), "RepairProfileResult"),
     ActionTarget("config.repair.quarantine", ("config", "repair", "quarantine"), "RepairQuarantineResult"),
     ActionTarget("config.repair.reset_progress", ("config", "repair", "reset-progress"), "RepairResetProgressResult"),
     ActionTarget("config.storage.init", ("config", "storage", "init"), "ConfigStorageInitResult"),
+    ActionTarget(
+        "ledger.account.add",
+        ("app", "ledger", "account", "add"),
+        "OwnAccountChangeResult",
+        required_inputs=("label", "holding"),
+        profile_bound_write=True,
+    ),
     ActionTarget(
         "ledger.actividad_asset.correct",
         ("app", "ledger", "actividad-asset", "correct"),
@@ -183,7 +238,36 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.classify", ("app", "ledger", "classify"), "LedgerClassifyResult", profile_bound_write=True),
     ActionTarget(
+        "ledger.counterparty.filing_name",
+        ("app", "ledger", "counterparty", "filing-name"),
+        "CounterpartyFilingNameResult",
+        required_inputs=("tax_identifier", "kind"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "ledger.inventory.movement.claim",
+        ("app", "ledger", "inventory", "movement", "claim"),
+        "InventoryLedgerChangeResult",
+        required_inputs=("actividad_id", "year", "correction_id", "movement_id", "ledger_row"),
+        profile_bound_write=True,
+    ),
+    ActionTarget("ledger.prorrata.list", ("app", "ledger", "prorrata", "list"), "ProrrataListResult"),
+    ActionTarget(
+        "ledger.prorrata.seed",
+        ("app", "ledger", "prorrata", "seed"),
+        "ProrrataSeedResult",
+        required_inputs=("ejercicio",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
+    ),
+    ActionTarget(
+        "ledger.invoice.update",
+        ("app", "ledger", "invoice", "update"),
+        "CatalogueInvoiceUpdatePayload",
+        required_inputs=("invoice_id",),
+        profile_bound_write=True,
     ),
     ActionTarget(
         "ledger.link",
@@ -199,11 +283,68 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("modelo.bindings.list", ("app", "modelo", "bindings", "list"), "ModeloBindingsListResult"),
     ActionTarget("modelo.casillas", ("app", "modelo", "casillas"), "ModeloCasillasResult", required_inputs=("modelo",)),
     ActionTarget("modelo.describe", ("app", "modelo", "describe"), "ModeloDescribeResult", required_inputs=("modelo",)),
+    ActionTarget("modelo.export", ("app", "modelo", "export"), "ModeloExportPayload", profile_bound_write=True),
+    ActionTarget(
+        "modelo.filing_record.import",
+        ("app", "modelo", "filing-record", "import"),
+        "FilingRecordImportResult",
+        required_inputs=("work_unit_id", "evidence_kind", "evidence_reference_id"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.filing_record.list", ("app", "modelo", "filing-record", "list"), "ModeloRecordListResult"),
+    ActionTarget(
+        "modelo.iva_wallet.seed",
+        ("app", "modelo", "iva-wallet", "seed"),
+        "IvaWalletSeedResult",
+        required_inputs=("filing_year", "period", "amount"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.iva_wallet.override",
+        ("app", "modelo", "iva-wallet", "override"),
+        "IvaWalletOverrideResult",
+        required_inputs=("filing_year", "period", "amount", "reason", "evidence_locator"),
+        profile_bound_write=True,
+    ),
     ActionTarget(
         "modelo.verification_report.list",
         ("app", "modelo", "verification-report", "list"),
         "VerificationReportListResult",
+    ),
+    ActionTarget("modelo.work.amend", ("app", "modelo", "work", "amend"), "WorkAmendResult", profile_bound_write=True),
+    ActionTarget(
+        "modelo.work.amend_wizard",
+        ("app", "modelo", "work", "amend-wizard"),
+        "WorkAmendWizardResult",
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.attest_m303_exonerado_390",
+        ("app", "modelo", "work", "attest-m303-exonerado-390"),
+        "M303Exonerado390AttestationResult",
+        required_inputs=("year", "period", "observed_at"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.attest_prior_carries",
+        ("app", "modelo", "work", "attest-prior-carries"),
+        "WorkAttestPriorCarriesResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.attest_work_income",
+        ("app", "modelo", "work", "attest-work-income"),
+        "WorkAttestWorkIncomeResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.attest_prior_value",
+        ("app", "modelo", "work", "attest-prior-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
     ),
     ActionTarget(
         "modelo.work.calculate", ("app", "modelo", "work", "calculate"), "WorkCalculateResult", profile_bound_write=True
@@ -217,6 +358,20 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("modelo.work.file", ("app", "modelo", "work", "file"), "WorkFileResult", profile_bound_write=True),
     ActionTarget("modelo.work.list", ("app", "modelo", "work", "list"), "WorkListResult"),
+    ActionTarget(
+        "modelo.work.override",
+        ("app", "modelo", "work", "override"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.set_value",
+        ("app", "modelo", "work", "set-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "casilla_id", "value"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
     ActionTarget("modelo.work.status", ("app", "modelo", "work", "status"), "WorkStatusResult"),
     ActionTarget(
@@ -228,6 +383,22 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("overview.status", ("app", "overview", "status"), "OverviewStatusResult"),
 )
 """One record for each command a catalogue action targets, ordered by command key."""
+
+
+def _resolved_target_path(
+    target: ActionTarget,
+    canonical_cli_path: tuple[str, ...] | None,
+    command_key: str,
+) -> tuple[str, ...]:
+    if canonical_cli_path is None:
+        resolved_path = target.cli_path
+    else:
+        if not canonical_cli_path or canonical_cli_path[0] != target.program.executable_name:
+            raise ValueError(f"command graph executable contradicts recorded action target: {command_key}")
+        resolved_path = canonical_cli_path[1:]
+    if not resolved_path or resolved_path[-len(target.cli_path) :] != target.cli_path:
+        raise ValueError(f"command graph path contradicts recorded action target: {command_key}")
+    return resolved_path
 
 
 def recorded_action_target_reconciliation(
@@ -244,14 +415,7 @@ def recorded_action_target_reconciliation(
     target = next((item for item in ACTION_TARGETS if item.command_key == command_key), None)
     if target is None:
         raise LookupError(f"unknown command schema identity: {command_key}")
-    if canonical_cli_path is None:
-        resolved_path = target.cli_path
-    else:
-        if not canonical_cli_path or canonical_cli_path[0] != target.program.executable_name:
-            raise ValueError(f"command graph executable contradicts recorded action target: {command_key}")
-        resolved_path = canonical_cli_path[1:]
-    if not resolved_path or resolved_path[-len(target.cli_path) :] != target.cli_path:
-        raise ValueError(f"command graph path contradicts recorded action target: {command_key}")
+    resolved_path = _resolved_target_path(target, canonical_cli_path, command_key)
     return reconcile_operator_surface_inventory(
         live_leaves=(
             LiveLeafInventoryRow(
@@ -317,10 +481,18 @@ def resolve_recorded_precondition_action(
         resolved_paths[command_key] = (target.program.executable_name, *target.cli_path) if path is None else path
         return recorded_action_target_reconciliation(command_key, canonical_cli_path=path)
 
+    def with_path(action: ResolvedActionReference) -> ResolvedActionReference:
+        action_path = resolved_paths.get(action.target_command_key)
+        return action if action_path is None else action.model_copy(update={"cli_path": action_path})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=reconcile)
     if resolved.action is None:
         return resolved
-    action_path = resolved_paths.get(resolved.action.target_command_key)
-    if action_path is None:
-        return resolved
-    return resolved.model_copy(update={"action": resolved.action.model_copy(update={"cli_path": action_path})})
+    return resolved.model_copy(
+        update={
+            "action": with_path(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_path(item.action)}) for item in resolved.alternative_actions
+            ),
+        }
+    )

@@ -77,8 +77,8 @@ class _ModuloOrdenAnualLike(Protocol):
 
 def validate_orden_module_identities(modulos: tuple[_ModuloOrdenAnualLike, ...]) -> None:
     """Refuse an Orden activity whose modules are missing, misordered or non-positive."""
-    if not 1 <= len(modulos) <= 7:
-        raise IvaValidationError("an Orden activity must declare one through seven modules")
+    if not modulos:
+        raise IvaValidationError("an Orden activity must declare at least one module")
     if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):
         raise IvaValidationError("an Orden activity module identities must be complete and ordered")
     if any(module.coefficient <= 0 for module in modulos):
@@ -146,10 +146,21 @@ class IvaLedgerObservationRole(StrEnum):
     :attr:`SETTLEMENT`.  That keeps normal IVA bindings on one role while
     reserving :attr:`OPERATION_INFORMATIONAL` for Modelo 303 boxes 62, 63, 74,
     and 75.
+
+    :attr:`RECTIFICATION_MODIFICATION` is the repercutido side of a factura
+    rectificativa: the signed modification of bases and cuotas the Modelo 303
+    instructions put in casillas 14 and 15, and in 25 and 26 where the
+    operation bore recargo de equivalencia. It is a role rather than a
+    deduction family because an issued modification is devengado and carries no
+    deduction at all, so fact 0085, which answers in deduction kinds and
+    evidence authorities, has nothing to say about it. Keeping it off
+    :attr:`SETTLEMENT` is what stops the modification reaching the ordinary
+    rate boxes [01]/[03] beside the operations it corrects.
     """
 
     OPERATION_INFORMATIONAL = "operation_informational"
     SETTLEMENT = "settlement"
+    RECTIFICATION_MODIFICATION = "rectification_modification"
 
 
 class IvaCashAccountingPaymentEvidence(BaseModel):
@@ -271,10 +282,10 @@ def require_eu_member_state(
 ) -> EUMemberState:
     """Project one EU member-state token through fact 0131."""
     from ..calculations.registry.eu_member_state_catalogue import (
-        require_eu_member_state as _require_eu_member_state,
+        require_eu_member_state,
     )
 
-    return _require_eu_member_state(
+    return require_eu_member_state(
         value,
         effective_date=effective_date,
         authority=authority,
@@ -284,10 +295,10 @@ def require_eu_member_state(
 def require_registry_declared_eu_member_state(value: object, *, effective_date: date) -> EUMemberState:
     """Project a member-state token from the facts currently under validation."""
     from ..calculations.registry.eu_member_state_catalogue import (
-        require_registry_declared_eu_member_state as _require_registry_declared_eu_member_state,
+        require_registry_declared_eu_member_state,
     )
 
-    return _require_registry_declared_eu_member_state(value, effective_date=effective_date)
+    return require_registry_declared_eu_member_state(value, effective_date=effective_date)
 
 
 def spanish_eu_member_state(
@@ -320,7 +331,7 @@ class IvaRateKind(str):
 
 
 def default_iva_cash_accounting_treatment(
-    on_date: date | None = None,
+    on_date: date,
     *,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
@@ -334,35 +345,54 @@ def default_iva_cash_accounting_treatment(
 
 def is_iva_cash_accounting_none(
     treatment: IvaCashAccountingTreatment,
-    on_date: date | None = None,
+    on_date: date,
     *,
     authority: GovernedFactSource | None = None,
 ) -> bool:
-    """Return whether a treatment is the registry-declared ordinary token."""
-    return treatment == default_iva_cash_accounting_treatment(on_date, authority=authority)
+    """Return whether a treatment is the registry-declared ordinary token.
 
+    A treatment the vocabulary does not declare is refused rather than answered
+    ``False``: answering would read an unknown token as criterio de caja and move
+    the row's devengo onto its collections.
 
-def is_iva_cash_accounting_supplier_regime(
-    treatment: IvaCashAccountingTreatment,
-    on_date: date | None = None,
-    *,
-    authority: GovernedFactSource | None = None,
-) -> bool:
-    """Return whether a treatment is the registry-declared supplier token."""
+    Raises:
+        RegistryValidationError: When the selected vocabulary does not declare
+            ``treatment``.
+    """
     from ..calculations.registry.iva_cash_accounting_vocabulary import (
         resolve_iva_cash_accounting_catalogue,
     )
 
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
-    return treatment == catalogue.supplier_regime_token
+    return catalogue.require(treatment) == catalogue.none_token
 
 
-_RegistryLegalRef = Annotated[
+def is_iva_cash_accounting_supplier_regime(
+    treatment: IvaCashAccountingTreatment,
+    on_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> bool:
+    """Return whether a treatment is the registry-declared supplier token.
+
+    Raises:
+        RegistryValidationError: When the selected vocabulary does not declare
+            ``treatment``.
+    """
+    from ..calculations.registry.iva_cash_accounting_vocabulary import (
+        resolve_iva_cash_accounting_catalogue,
+    )
+
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
+    return catalogue.require(treatment) == catalogue.supplier_regime_token
+
+
+RegistryLegalRef = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
@@ -374,7 +404,7 @@ _RegistrySourceRef = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=160,
+        max_length=256,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
@@ -451,13 +481,21 @@ class IvaRateRecord(_IvaStrictFrozen):
         default=None,
         description="Last date the rate applies, or ``None`` for open-ended.",
     )
-    legal_refs: tuple[_RegistryLegalRef, ...] = Field(
+    legal_refs: tuple[RegistryLegalRef, ...] = Field(
         default=(),
         description="Binding registry legal-reference identities backing this numerical rate.",
     )
     source_refs: tuple[_RegistrySourceRef, ...] = Field(
         default=(),
         description="Registry source-reference identities backing this rate.",
+    )
+    published_on_date: bool = Field(
+        default=True,
+        description="False when the rate was read from the nearest edition: it prices, it proves nothing.",
+    )
+    projected_from_date: date | None = Field(
+        default=None,
+        description="The edition edge a projected read came from, when the read was projected.",
     )
     supersedes_tier_default: bool = Field(
         default=False,
@@ -525,7 +563,7 @@ class IvaCitation(_IvaStrictFrozen):
     nobody typed and nothing could check.
     """
 
-    legal_reference: _RegistryLegalRef = Field(
+    legal_reference: RegistryLegalRef = Field(
         description="Article-qualified id resolved through the registry legal catalogue.",
     )
     quoted_text: str = Field(

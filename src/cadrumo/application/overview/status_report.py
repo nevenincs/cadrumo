@@ -13,12 +13,12 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
-from ...core.decimal.coercion import coerce_decimal_strict as _coerce_decimal_strict
-from ...core.logging import get_logger as _get_logger
-from ...core.modelo import Modelo as _Modelo
+from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
-from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
-from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
+from ...domain.deadlines.fact_context import DeadlineFactResolutionContext
+from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation
 from .calendar_models import (
     OverviewStatusReport,
 )
@@ -28,11 +28,11 @@ if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_probe_ports import OperatorProbePorts
     from ..auth.operator_scope_ports import OperatorScopePorts
-    from ..state_projection import OperatorStateProjection
+    from ..state_projection_models import OperatorStateProjection
     from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
 
-_log = _get_logger(__name__)
+_log = get_logger(__name__)
 _MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
 
 
@@ -85,7 +85,7 @@ def build_filing_obligation_advisories(
         if v is None or str(v).strip() == "":
             return None
         try:
-            return _coerce_decimal_strict(v)
+            return coerce_decimal_strict(v)
         except (InvalidOperation, ValueError) as exc:
             _log.debug(
                 "overview filing obligation advisory ignored invalid decimal profile value",
@@ -107,12 +107,12 @@ def build_filing_obligation_advisories(
     # Authority composition is application work.  The domain evaluator only
     # accepts this explicit context and never reads bundled facts itself.
     coordinate = date(filing_year, 12, 31)
-    facts = _DeadlineFactResolutionContext(
+    facts = DeadlineFactResolutionContext(
         authority=operation,
         filing_period=coordinate,
         submission_date=coordinate,
     )
-    if _evaluate_multiple_pagadores_obligation(
+    if evaluate_multiple_pagadores_obligation(
         pagadores_count,
         secondary_income,
         total_work_income,
@@ -143,7 +143,7 @@ def build_unsupported_work_create_modelos(
         .lower()
     )
     if fiscal_residency_requires_country(fiscal_residency):
-        return (_Modelo("210").value,)
+        return (Modelo("210").value,)
     return ()
 
 
@@ -155,7 +155,7 @@ def overview_status_report_from_projection(
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
-    the one :class:`application.state_projection.OperatorStateProjection`;
+    the one :class:`application.state_projection_models.OperatorStateProjection`;
     it is not a second state-assembly path. Both the declaration-draft
     :class:`domain.filing.schema.ModeloDraft` count and the
     :class:`~WorkUnitCatalogue` count are carried

@@ -16,14 +16,26 @@
  * the parent window and its origin is that origin. Opened any other way, the
  * script does nothing.
  *
- * Page to window: ready {url, title, lang, theme, features},
- * location {url, title}, theme {theme}, shortcut {id}, open-external {url},
+ * Page to window: ready {url, title, lang, theme, features, entry, traversed},
+ * location {url, title, entry, traversed}, theme {theme}, shortcut {id}, open-external {url},
  * context-menu {x, y, selection, link: {href, external} | null, pointer},
+ * search-progress {id} while the accepted request is active, then
  * search-results {id, results: [{kind, title, url, excerpt, ranges, crumb}]}.
  * Window to page: keymap {chords: [{id, code, ctrlKey, shiftKey, altKey,
  * metaKey}]}, command {name: back | forward | open-search | home} and
  * command {name: navigate, url}, zoom {factor: 0.5 to 2.0},
  * search {id, query, limit}, appearance {theme: auto | light | dark}.
+ *
+ * entry is the place of the page's history entry in the frame's own history,
+ * counted from 0 for the first page the frame showed; traversed is true when
+ * the page came back to an entry it already had (a Back, a Forward or a
+ * reload), and false for a new entry, which drops every entry that lay ahead.
+ * The window cannot read the frame's history across origins, so this is how
+ * it knows whether Back and Forward can move the page, whoever moved it. The
+ * place is kept in the entry's own history.state and, for the next page the
+ * frame opens, in the frame's window.name, which a new frame starts empty. A
+ * page script that replaces the entry's state (Sphinx does on every page
+ * load) keeps the place, and one that pushes a new entry reports it.
  *
  * `features` in ready lists exactly the later additions this page can serve:
  * "search" when cadrumo-docs.js has exposed its search, "navigate", "home"
@@ -68,6 +80,7 @@
 
   var CHANNEL = "cadrumo-desktop";
   var VERSION = 1;
+  var SEARCH_PROGRESS_MS = 2000;
   var MAX_SELECTION = 65536;
   var MAX_CHORDS = 64;
   var MAX_CHORD_ID = 64;
@@ -85,6 +98,8 @@
    * and Furo's own page-header brand, which every Furo page carries. */
   var LANGUAGE_ROOT_LINK = "a.cadrumo-header-brand[href], .header-center > a[href]";
   var LOG_PREFIX = "cadrumo-desktop-bridge: ";
+  var ENTRY_STATE = "cadrumoEntry";
+  var ENTRY_NAME = "cadrumo-docs-entry:";
 
   if (window.parent === window) return;
   if (window.parent !== window.top) {
@@ -358,6 +373,13 @@
     if (searchCount >= MAX_SEARCHES_IN_FLIGHT) return refuse("too many searches in flight");
     searchesInFlight[id] = true;
     searchCount += 1;
+    // A cold Pagefind load and its sequential ranking passes can exceed the
+    // shell's silence deadline. Report that this accepted request is still
+    // alive without changing the one final search-results answer.
+    post("search-progress", { id: id });
+    var heartbeat = window.setInterval(function () {
+      post("search-progress", { id: id });
+    }, SEARCH_PROGRESS_MS);
     Promise.resolve()
       .then(function () {
         return search(words);
@@ -373,7 +395,13 @@
       .then(function (results) {
         delete searchesInFlight[id];
         searchCount -= 1;
+        window.clearInterval(heartbeat);
         post("search-results", { id: id, results: results });
+      }, function () {
+        delete searchesInFlight[id];
+        searchCount -= 1;
+        window.clearInterval(heartbeat);
+        post("search-results", { id: id, results: [] });
       });
   }
 
@@ -522,19 +550,80 @@
     true
   );
 
+  /* A state with the entry's place added, without changing the caller's own. */
+  function withPlace(state, place) {
+    var next = {};
+    if (state && typeof state === "object") {
+      for (var key in state) {
+        if (Object.prototype.hasOwnProperty.call(state, key)) next[key] = state[key];
+      }
+    }
+    next[ENTRY_STATE] = place;
+    return next;
+  }
+
+  /* The place this document's script last read or stamped. */
+  var currentPlace = null;
+  var nativeReplaceState = window.history.replaceState;
+  var nativePushState = window.history.pushState;
+  function replaceKeepingPlace(state, title, url) {
+    var kept = currentPlace === null ? state : withPlace(state, currentPlace.entry);
+    return nativeReplaceState.call(window.history, kept, title, url);
+  }
+  window.history.replaceState = replaceKeepingPlace;
+  window.history.pushState = function (state, title, url) {
+    var place = currentPlace === null ? 0 : currentPlace.entry + 1;
+    var result = nativePushState.call(window.history, withPlace(state, place), title, url);
+    window.name = ENTRY_NAME + place;
+    currentPlace = { entry: place, traversed: false };
+    reportLocation(currentPlace);
+    return result;
+  };
+
+  /* The place of the current history entry. An entry this bridge already
+   * stamped is one the frame came back to; any other is new, one past the
+   * entry the frame was on, and is stamped now so a later return knows it. */
+  function placeEntry() {
+    var state = window.history.state;
+    var stamped = state && typeof state === "object" ? state[ENTRY_STATE] : undefined;
+    var place;
+    var traversed = typeof stamped === "number" && stamped >= 0 && Math.floor(stamped) === stamped;
+    if (traversed) {
+      place = stamped;
+    } else {
+      var name = typeof window.name === "string" ? window.name : "";
+      var before = name.indexOf(ENTRY_NAME) === 0 ? Number(name.slice(ENTRY_NAME.length)) : NaN;
+      place = before >= 0 && Math.floor(before) === before ? before + 1 : 0;
+      nativeReplaceState.call(window.history, withPlace(state, place), "");
+    }
+    window.name = ENTRY_NAME + place;
+    currentPlace = { entry: place, traversed: traversed };
+    return currentPlace;
+  }
+
+  /* Read now, before any page script replaces the state on load. */
+  placeEntry();
+
   /* One fragment navigation can fire both popstate and hashchange; the shell
-   * hears about each address once. */
+   * hears about each address once. A page restored from the back-forward
+   * cache runs no script again, so its return is reported as well. */
   var lastUrl = window.location.href;
 
-  function reportLocation() {
+  function reportLocation(known) {
     var url = window.location.href;
     if (url === lastUrl) return;
     lastUrl = url;
-    post("location", { url: url, title: document.title });
+    var place = known && typeof known.entry === "number" ? known : placeEntry();
+    post("location", { url: url, title: document.title, entry: place.entry, traversed: place.traversed });
   }
 
   window.addEventListener("hashchange", reportLocation);
   window.addEventListener("popstate", reportLocation);
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    lastUrl = null;
+    reportLocation();
+  });
 
   function features() {
     var list = [];
@@ -549,12 +638,15 @@
   function announce() {
     lastUrl = window.location.href;
     lastTheme = currentTheme();
+    var place = currentPlace;
     post("ready", {
       url: window.location.href,
       title: document.title,
       lang: document.documentElement.lang || "",
       theme: lastTheme,
       features: features(),
+      entry: place.entry,
+      traversed: place.traversed,
     });
     new MutationObserver(function () {
       reportTheme(false);

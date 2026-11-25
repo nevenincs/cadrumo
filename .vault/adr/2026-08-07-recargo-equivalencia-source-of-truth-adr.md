@@ -1,16 +1,16 @@
 ---
 tags:
-  - '#adr'
-  - '#recargo-equivalencia-source-of-truth'
+  - "#adr"
+  - "#recargo-equivalencia-source-of-truth"
 date: '2026-08-07'
-modified: '2026-08-08'
-body_schema: 'body-v1'
-body_hash: 'sha256:6f6c43786823dc7167b385c65e179a73a3c839f67c7d8337b9f430a77591811a'
 related:
   - "[[2026-08-07-recargo-equivalencia-source-of-truth-research]]"
+superseded_by: '2026-11-11-recargo-equivalencia-source-of-truth-derived-cuota-adr'
+modified: '2026-11-11'
+body_schema: 'body-v1'
+body_hash: 'sha256:6d8905c8b07b96b110354ec4b819e9d7e62e1c5612274f1e67e8c64a5699d904'
 ---
-
-# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `accepted`)
+# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `superseded`)
 
 ## Problem Statement
 
@@ -22,7 +22,7 @@ no consumer. Neither arrangement was decided; both are what happened.
 A decision is needed now because two pieces of work are waiting on it and one of them is
 a live defect. The Modelo 303 recargo block carries a cuota under the wrong rung, and the
 repair for it will either derive a rate or reference one. Separately, the transitional
-recargo rates published for 2023 and 2024 are now grounded in bundled corpus, so the
+recargo rates published for the transition are now grounded in bundled corpus, so the
 question of whether they belong in the table has become answerable where it was
 previously deferred as ungrounded. Extending the table before choosing would author data
 that nothing reads, into a structure that cannot hold it, under a citation that looks
@@ -73,7 +73,7 @@ invoice.
 
 The rate table cannot be extended in its present shape under any option this record may
 choose. Its lookup is keyed on the IVA tier with no date, and the research establishes
-that one tier carries two recargo rates simultaneously inside the 2023 to 2024 window.
+that one tier carries two recargo rates simultaneously inside the transitional window.
 Re-keying the lookup on the applied rate and the operation date is a precondition of the
 table being used at all, not a consequence of choosing derivation. This binds even if
 this record is rejected outright.

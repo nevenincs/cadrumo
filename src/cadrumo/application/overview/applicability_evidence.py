@@ -13,7 +13,8 @@ inputs vary by year:
   declared-record count answers it; that filing's own resolver computes the
   count, so the signal is built from the same invoice observations and the
   same threshold function the declaration itself is built from, never from a
-  second reader.
+  second reader. A fact no ledger holds is declared instead as answered by
+  the records the taxpayer states, and is derived from those statements.
 
 The composition root binds both to its stores once per read; the builders only
 ask for the years they evaluate, and each year is derived at most once.
@@ -26,15 +27,28 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
+from ...core.diagnostic_log import diagnostic_phase
+from ...core.logging import get_logger
 from ...core.period import Period
-from ...domain.calculations.registry.applicability import LedgerPayerFactDerivation
-from ...domain.calculations.registry.applicability_payer_facts import resolve_payer_fact_catalogue
+from ...domain.calculations.registry.applicability_models import (
+    NO_RECORDS_DERIVATION_NOTES,
+    LedgerPayerFactDerivation,
+)
+from ...domain.calculations.registry.applicability_payer_facts import (
+    PayerFactLedgerSource,
+    PayerFactProjection,
+    PayerFactRecordsSource,
+    resolve_payer_fact_catalogue,
+)
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.deadlines.errors import ProfileError
 from ...domain.deadlines.models import TaxpayerProfile
+from ..aggregation.m232_related_party_obligation import StatedRecordsDerivation, stated_records_derivation
+from ..aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 from ..invoices.source_resolver_ports import (
@@ -43,12 +57,16 @@ from ..invoices.source_resolver_ports import (
     InvoiceSourceResolverPorts,
 )
 from ..user_profile.projections import projection_for_taxpayer
+from .modelo202_instalment import Modelo202InstalmentFactsReader
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
+
+_LOGGER = get_logger(__name__)
+_APPLICABILITY_PHASE_EVENT: Final = "overview_applicability_phase"
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,10 +79,19 @@ class FilingYearApplicabilityEvidence:
         ledger_payer_facts_for_year: The ledger derivations of payer facts for
             a filing year, keyed by payer fact token; a fact with no
             derivation is absent.
+        records_derivation_notes_for_year: The detail behind each derivation
+            read from the taxpayer's stated records for a filing year, keyed by
+            payer fact token: the turnover considered, where it came from and
+            the operations left out. Absent for a fact the records do not decide.
+        modelo_202_instalment_facts: What the read's stores know about one
+            Modelo 202 instalment's ingreso; ``None`` when the read is bound to
+            no such stores, so the instalment stays undecided.
     """
 
     profile_for_year: Callable[[int], TaxpayerProfile]
     ledger_payer_facts_for_year: Callable[[int], Mapping[str, LedgerPayerFactDerivation]]
+    modelo_202_instalment_facts: Modelo202InstalmentFactsReader | None = None
+    records_derivation_notes_for_year: Callable[[int], Mapping[str, str]] = lambda _year: NO_RECORDS_DERIVATION_NOTES
 
 
 class _CatalogueReadOnce:
@@ -110,7 +137,7 @@ def loaded_invoice_source_ports(catalogue: InvoiceCatalogue | None) -> InvoiceSo
     the catalogue as unreadable, so every ledger derivation is unknown rather
     than an empty ledger read as a ledger without operations.
 
-    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`).
+    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`).
     """
     return InvoiceSourceResolverPorts(catalogue_reader=_CatalogueAlreadyRead(catalogue))
 
@@ -134,6 +161,8 @@ def bind_filing_year_applicability_evidence(
     invoice_source_ports: InvoiceSourceResolverPorts,
     operation: PinnedAuthorityOperation,
     today: date,
+    modelo_202_instalment_facts: Modelo202InstalmentFactsReader | None = None,
+    related_party_records: Modelo232RelatedPartyReader | None = None,
 ) -> FilingYearApplicabilityEvidence:
     """Bind the per-year profile projection and ledger derivation to one read's stores.
 
@@ -146,6 +175,11 @@ def bind_filing_year_applicability_evidence(
         operation: The read's generation-pinned authority operation.
         today: The read's reference date; a year not yet ended is never
             complete.
+        modelo_202_instalment_facts: The Modelo 202 instalment reader bound to
+            the same read's stores, if any.
+        related_party_records: The reader of the Modelo 232 operations the
+            taxpayer states, if the read is bound to that store. Without it the
+            facts those statements answer stay undeclared.
 
     Returns:
         Evidence that derives each year on first use.
@@ -155,20 +189,31 @@ def bind_filing_year_applicability_evidence(
     ports = InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReadOnce(invoice_source_ports.catalogue_reader))
 
     def profile_for_year(filing_year: int) -> TaxpayerProfile:
-        return projection_for_taxpayer(record, schema=schema, as_of=date(filing_year, 12, 31))
-
-    def ledger_for_year(filing_year: int) -> Mapping[str, LedgerPayerFactDerivation]:
-        return derive_ledger_payer_facts(
-            filing_year,
-            bucket_id=bucket_id,
-            invoice_source_ports=ports,
-            operation=operation,
-            today=today,
+        return projection_for_taxpayer(
+            record, schema=schema, as_of=date(filing_year, 12, 31), withhold_unanswered_iva_block=True
         )
 
+    def ledger_for_year(filing_year: int) -> tuple[Mapping[str, LedgerPayerFactDerivation], Mapping[str, str]]:
+        records_notes: dict[str, str] = {}
+        with diagnostic_phase(_LOGGER, _APPLICABILITY_PHASE_EVENT, "ledger_payer_facts") as measured:
+            derived = derive_ledger_payer_facts(
+                filing_year,
+                bucket_id=bucket_id,
+                invoice_source_ports=ports,
+                operation=operation,
+                today=today,
+                related_party_records=related_party_records,
+                records_notes=records_notes,
+            )
+            measured["item_count"] = len(derived)
+        return derived, records_notes
+
+    derivations_for_year = _memoized(ledger_for_year)
     return FilingYearApplicabilityEvidence(
         profile_for_year=_memoized(profile_for_year),
-        ledger_payer_facts_for_year=_memoized(ledger_for_year),
+        ledger_payer_facts_for_year=lambda filing_year: derivations_for_year(filing_year)[0],
+        modelo_202_instalment_facts=modelo_202_instalment_facts,
+        records_derivation_notes_for_year=lambda filing_year: derivations_for_year(filing_year)[1],
     )
 
 
@@ -179,6 +224,8 @@ def derive_ledger_payer_facts(
     invoice_source_ports: InvoiceSourceResolverPorts,
     operation: PinnedAuthorityOperation,
     today: date,
+    related_party_records: Modelo232RelatedPartyReader | None = None,
+    records_notes: dict[str, str] | None = None,
 ) -> dict[str, LedgerPayerFactDerivation]:
     """Derive what the invoice ledger shows about payer facts for one filing year.
 
@@ -195,6 +242,12 @@ def derive_ledger_payer_facts(
         invoice_source_ports: The invoice read capability.
         operation: The generation-pinned authority operation.
         today: The reference date deciding whether the year has ended.
+        related_party_records: The reader of the stated Modelo 232 operations;
+            a fact declared as answered by them is derived from it, and absent
+            without one.
+        records_notes: When given, receives the detail of each fact derived
+            from the stated records, keyed by payer fact token, for a caller
+            that shows the operator what the derivation rested on.
 
     Returns:
         The derivation per payer fact token.
@@ -207,36 +260,140 @@ def derive_ledger_payer_facts(
     derived: dict[str, LedgerPayerFactDerivation] = {}
     if not operation.supported_filing_years().admits_filing_year(filing_year):
         return derived
+    year_ended = filing_year < today.year
     with validating_governed_facts(operation):
         for fact in resolve_payer_fact_catalogue(effective_date=date(filing_year, 12, 31)):
+            records = fact.records_source
+            if records is not None:
+                if related_party_records is not None:
+                    _derive_from_stated_records(
+                        derived,
+                        records_notes,
+                        fact,
+                        records,
+                        related_party_records,
+                        filing_year=filing_year,
+                        operation=operation,
+                        year_ended=year_ended,
+                    )
+                continue
             source = fact.ledger_source
             if source is None:
                 continue
-            support = operation.modelo_directory(source.modelo).supported_filing_years
-            if support is not None and not support.admits_filing_year(filing_year):
-                continue
-            revision = operation.revision_for_context(source.modelo, filing_year=filing_year, period=source.period)
-            if all(binding.id != source.record_count_binding for binding in revision.bindings):
-                raise RegistryValidationError(
-                    f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
-                    f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
-                )
-            resolution = resolver.resolve(
-                CalculationSourceContext(
-                    bucket_id=bucket_id,
-                    modelo=source.modelo.value,
-                    filing_year=filing_year,
-                    period=Period.from_year_and_code(filing_year, source.period),
-                    revision=revision,
-                    operation=operation,
-                ),
+            derivation = _ledger_source_derivation(
+                fact,
+                source,
+                resolver,
+                bucket_id=bucket_id,
+                filing_year=filing_year,
+                operation=operation,
+                year_ended=year_ended,
             )
-            derived[fact.token] = declared_record_count_derivation(
-                resolution,
-                record_count_binding=source.record_count_binding,
-                year_ended=filing_year < today.year,
-            )
+            if derivation is not None:
+                derived[fact.token] = derivation
     return derived
+
+
+def _derive_from_stated_records(
+    derived: dict[str, LedgerPayerFactDerivation],
+    records_notes: dict[str, str] | None,
+    fact: PayerFactProjection,
+    records: PayerFactRecordsSource,
+    reader: Modelo232RelatedPartyReader,
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+    year_ended: bool,
+) -> None:
+    """Record the derivation of a fact answered by the stated records, and its note, when the year is supported."""
+    stated = _stated_records_derivation(
+        records,
+        reader,
+        filing_year=filing_year,
+        operation=operation,
+        year_ended=year_ended,
+    )
+    if stated is None:
+        return
+    derived[fact.token] = stated.derivation
+    if records_notes is not None and stated.note is not None:
+        records_notes[fact.token] = stated.note
+
+
+def _ledger_source_derivation(
+    fact: PayerFactProjection,
+    source: PayerFactLedgerSource,
+    resolver: InvoiceCatalogueSourceResolver,
+    *,
+    bucket_id: str,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+    year_ended: bool,
+) -> LedgerPayerFactDerivation | None:
+    """Derive a fact from its source modelo's resolved record count; ``None`` outside that modelo's supported years."""
+    support = operation.modelo_directory(source.modelo).supported_filing_years
+    if support is not None and not support.admits_filing_year(filing_year):
+        return None
+    revision = operation.revision_for_context(source.modelo, filing_year=filing_year, period=source.period)
+    if all(binding.id != source.record_count_binding for binding in revision.bindings):
+        raise RegistryValidationError(
+            f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
+            f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
+        )
+    try:
+        resolution = resolver.resolve(
+            CalculationSourceContext(
+                bucket_id=bucket_id,
+                modelo=source.modelo.value,
+                filing_year=filing_year,
+                period=Period.from_year_and_code(filing_year, source.period),
+                revision=revision,
+                operation=operation,
+            ),
+        )
+    except ProfileError:
+        # The source modelo's own calculation will not read a profile that leaves
+        # a question it depends on unanswered, so the ledger shows nothing yet; the
+        # profile answer still decides the fact, and the read names the question.
+        _LOGGER.info(
+            "ledger payer fact left unknown: its source modelo refuses the profile",
+            extra={"payer_fact": fact.token, "modelo": source.modelo.value, "filing_year": filing_year},
+        )
+        return LedgerPayerFactDerivation.UNKNOWN
+    return declared_record_count_derivation(
+        resolution,
+        record_count_binding=source.record_count_binding,
+        year_ended=year_ended,
+    )
+
+
+def _stated_records_derivation(
+    source: PayerFactRecordsSource,
+    reader: Modelo232RelatedPartyReader,
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+    year_ended: bool,
+) -> StatedRecordsDerivation | None:
+    """Derive a fact from the records the taxpayer states; ``None`` outside the source modelo's supported years.
+
+    A threshold already passed cannot be undone by later operations, so a derived
+    yes stands. A derived no, a stated "none" included, only describes the
+    operations so far, so it is unknown until the ejercicio has ended. The end is
+    the ledger path's own convention, the calendar year; a taxpayer whose tax
+    period is not the calendar year is judged at that date too, because no
+    fiscal-year-end field exists to read.
+    """
+    support = operation.modelo_directory(source.modelo).supported_filing_years
+    if support is not None and not support.admits_filing_year(filing_year):
+        return None
+    # One store kind exists today; a new kind adds its own branch on ``source.kind`` here.
+    stated = stated_records_derivation(
+        reader, filing_year, operation=operation, modelo=source.modelo, period=source.period
+    )
+    if stated.derivation is LedgerPayerFactDerivation.DERIVED_NO and not year_ended:
+        return StatedRecordsDerivation(LedgerPayerFactDerivation.UNKNOWN)
+    return stated
 
 
 def declared_record_count_derivation(

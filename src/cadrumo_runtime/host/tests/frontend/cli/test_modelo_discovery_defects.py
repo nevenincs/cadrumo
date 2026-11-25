@@ -25,26 +25,30 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
+from cadrumo.application.modelo.registry_discovery import declared_modelo_period_tokens
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
-    create_calculable_modelo_work_unit as _create_111_work_unit,
+    SCENARIO_FILING_YEAR,
+    create_calculable_modelo_work_unit,
+    create_m303_work_unit,
 )
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m303_work_unit
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _OPERATOR_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.tax_id": "12345678Z",
     "identity.name": "Operator",
     "identity.surnames": "Operator",
@@ -52,21 +56,17 @@ _OPERATOR_FACTS = {
     "censo.activity_start_date": "2024-01-01",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "tax_residence.ccaa": "madrid",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     # Modelo 111 readiness requires the colegio concertado answer.
     "withholding.colegio_concertado": "false",
 }
 
+# The operator pays an employee with retencion, so Modelo 111 applies to the profile.
+_EMPLOYER_FACTS = {**_OPERATOR_FACTS, "withholding.has_employees": "true"}
+
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
     "taxpayer_type.legal_entity_form": "sl",
-    "identity.tax_id": "B12345674",
+    "identity.tax_id": "B00015016",
     "identity.name": "Company",
     "identity.surnames": "Company SL",
     "identity.legal_name": "Company SL",
@@ -74,6 +74,12 @@ _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.incn_prior_12_months": "7500000.00",
     "taxpayer_type.new_entity_first_two_profit_periods": "false",
 }
+
+
+def _declared_m210_period_tokens() -> tuple[str, ...]:
+    """The period tokens the Modelo 210 editions declare, read from the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return declared_modelo_period_tokens("210", operation=operation)
 
 
 def _m303_filing_evidence_args() -> tuple[str, ...]:
@@ -303,7 +309,7 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
+    assert unwrap_schema_envelope(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
 
 
 # ---------------------------------------------------------------------------
@@ -311,12 +317,10 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: ProfileSeeder) -> None:
-    """The Modelo 100 estimación-directa binding offers encoded choices
-    yet is consumed as a Decimal operand. ``bindings list`` must report
-    its ``input_channel`` as ``decimal`` and name the encoded values, so the
-    operator is not misled into supplying a label through the binding channel.
-    """
+def test_bindings_list_names_the_estimation_modality_as_derived_from_the_profile(
+    seed_profile: ProfileSeeder,
+) -> None:
+    """The Modelo 100 modality binding is read from the profile, so it advertises no decimal encoding to type."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
@@ -324,12 +328,11 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: P
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    row = next(line for line in lines if line.startswith("100\t") and "estimacion-directa-es-normal" in line)
-    columns = row.split("\t")
-    assert columns[-2] == "decimal", row
-    assert any(line.startswith("encoded_option\t") and "estimacion-directa-es-normal" in line for line in lines), (
-        result.output
-    )
+    row = next(line for line in lines if line.startswith("100	") and "estimacion-directa-es-normal" in line)
+    assert row.split("	")[4:6] == ["profile", "profile fact"], row
+    assert not any(
+        line.startswith("encoded_option	") and "estimacion-directa-es-normal" in line for line in lines
+    ), result.output
 
 
 def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> None:
@@ -386,9 +389,11 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
 
 
 def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile: ProfileSeeder) -> None:
-    """M210 readiness must fail closed when the requested period is not covered."""
+    """M210 readiness must fail closed when no edition declares the requested period."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    declared = _declared_m210_period_tokens()
+    assert "3T" not in declared
     result = invoke_cached_cli(
         [
             "app",
@@ -401,15 +406,15 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
             "--year",
             "2025",
             "--period",
-            "AD-HOC",
+            "3T",
         ],
     )
-    # Refused outright, naming the uncovered period and the revisions that exist.
+    # Refused outright, naming the undeclared period and the tokens the editions declare.
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     flat = " ".join(result.output.split())
-    assert "AD-HOC" in flat
-    assert "2026-y-siguientes" in flat
+    assert "3T" in flat
+    assert all(token in flat for token in declared), flat
 
 
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
@@ -512,9 +517,11 @@ def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance(seed_
 
     assert result.exit_code != 0, result.output
     flat = result.output.replace("\n", " ")
-    assert "EVENT-N" in flat
+    message = require_error_document(result.output)["error"]["message"]
+    # The period-token guidance names the retired token and offers only the declared ones.
+    assert "'evento'" in message
+    assert all(token in message for token in _declared_m210_period_tokens()), message
     assert "Valid tokens: evento" not in flat
-    assert "REFUSED_CLI_BOUNDARY" not in flat
     assert "Traceback" not in flat
 
 
@@ -539,7 +546,7 @@ def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: Pro
             "0A",
         ],
     )
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["ready"] is False
     # A not-ready scope still reports its payload and says so through its exit status.
     assert result.exit_code != 0, result.output
@@ -581,7 +588,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
     )
 
     # Overall readiness also waits on calculation bindings; the profile half is the subject here.
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["profile_ready"] is True
     assert "irpf.uses_objective_estimation" not in result.output
     assert "uses_objective_estimation_irpf" not in result.output
@@ -601,15 +608,16 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
     on calculation inputs.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_111_work_unit()
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
+    work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    assert any(line == "result summary Modelo 111 2025 1T" for line in lines), result.output
-    assert "result summary Modelo 111 2025 2025 1T" not in result.output
+    headline = f"result summary Modelo 111 1T {SCENARIO_FILING_YEAR}"
+    assert any(line == headline for line in lines), result.output
+    assert f"{headline} {SCENARIO_FILING_YEAR}" not in result.output
     summary_header_index = next(i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel"))
     first_casilla_index = next(i for i, line in enumerate(lines) if line.startswith("casilla\t"))
     # The summary block precedes the full casilla table.
@@ -626,13 +634,13 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
     prior-period data.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_111_work_unit()
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
+    work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
-    summary = _payload(result.output)["result_summary"]
+    summary = unwrap_schema_envelope(result.output)["result_summary"]
     assert summary, result.output
     assert all({"role", "casilla_id", "value", "label"} <= set(row) for row in summary)
     assert any(row["casilla_id"] == "30" for row in summary)
@@ -655,7 +663,7 @@ def _create_202_work_unit(period: str) -> str:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["period"] == {"filing_year": 2026, "code": period}
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
@@ -695,7 +703,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str,
     )
     assert result.exit_code == 0, result.output
     assert "invalid registry period" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     # The engine ran and persisted a draft calculation revision —
     # the same end stage Modelo 200 / 303 reach.
     assert payload["state"] == "borrador"
@@ -738,4 +746,4 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profil
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
-        assert _payload(calculated.output)["state"] == "borrador"
+        assert unwrap_schema_envelope(calculated.output)["state"] == "borrador"

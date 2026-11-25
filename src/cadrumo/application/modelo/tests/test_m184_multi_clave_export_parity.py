@@ -26,16 +26,18 @@ from ....domain.calculations.registry.detail_record_bindings import (
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing.record_renderer import record_render_rows
 from ...filing.record_types import RecordRenderRow
-from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 from ..action_errors import ModeloAggregationBindingError
+from ..calculation_modelo_adjustments import union_detail_rows_by_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_REVISION = "2025-y-siguientes"
+_REVISION = str(open_ended_revision("184").id)
+_EXERCISE = newest_authored_edition("184")
 
 
 def _revision():
@@ -110,7 +112,7 @@ def _observation(
         source_id=source_id,
         member_tax_id=nif,
         member_legal_name=name,
-        transaction_date=date(2025, 1, 1),
+        transaction_date=date(_EXERCISE, 1, 1),
         share_percentage=Decimal(share),
         base_imponible_assigned=Decimal(base),
         clave=clave,
@@ -197,7 +199,7 @@ def test_clave_conditional_fields_resolve_only_for_the_row_that_declares_them() 
             nif="22222222B",
             name="Dos",
             share="100",
-            base="2000",
+            base="2200",
             clave="D",
             subclave="03",
             rendimiento_neto_previo_eo=Decimal("500"),
@@ -298,29 +300,34 @@ def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse
     assert "importe" in divergent_fields
 
 
-def test_clave_a_reduccion_is_refused_at_the_row_boundary() -> None:
-    """The governing row-shape decision's clave-A block, enforced in code rather than only in prose.
+def _member_row(*, clave: str, subclave: str | None) -> Modelo184MemberRow:
+    return Modelo184MemberRow(
+        nif="11111111A",
+        nombre="Uno",
+        porcentaje=Decimal("100"),
+        importe=Decimal("6000"),
+        clave=clave,
+        subclave=subclave,
+        reduccion=Decimal("500"),
+    )
 
-    Modelling reducción as ONE shared field (matching the diseño's own
-    physical layout for positions 109-119) makes it reachable under clave A
-    unless refused explicitly -- its governing provision is unconfirmed
-    (the diseño's own LIRPF art. 24.2 citation does not exist), so a
-    populated value there must refuse rather than silently file an
-    ungrounded amount.
-    """
-    with pytest.raises(ValidationError, match="clave A reducción is blocked"):
-        Modelo184MemberRow(
-            nif="11111111A",
-            nombre="Uno",
-            porcentaje=Decimal("100"),
-            importe=Decimal("6000"),
-            clave="A",
-            reduccion=Decimal("500"),
-        )
+
+def test_clave_a_reduccion_populates_for_the_income_the_law_reduces() -> None:
+    """LIRPF art. 26.2 reduces art. 25.4 income, which is this record's clave A subclave 02."""
+    assert _member_row(clave="A", subclave="02").reduccion == Decimal("500")
+
+
+@pytest.mark.parametrize(
+    ("clave", "subclave"),
+    [("A", None), ("A", "01"), ("E", None)],
+)
+def test_a_reduccion_on_a_row_the_diseno_gives_none_is_refused(clave: str, subclave: str | None) -> None:
+    with pytest.raises(ValidationError, match="carries no reducción"):
+        _member_row(clave=clave, subclave=subclave)
 
 
 def test_clave_c_and_clave_d_reduccion_still_populate() -> None:
-    """The non-regression the clave-A block must not break: C and D still work."""
+    """Claves C and D carry the field on every subclave."""
     clave_c_row = Modelo184MemberRow(
         nif="11111111A",
         nombre="Uno",

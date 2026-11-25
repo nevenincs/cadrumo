@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import pytest
 
-from cadrumo.application.modelo.registry_discovery import registry_support_matrix
+from cadrumo.application import reference_catalogue
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
+from cadrumo.application.reference_catalogue import read_support_matrix
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
@@ -21,6 +23,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
+    AuthorityGenerationPin,
     SnapshotGlobalsComponentQuery,
 )
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
@@ -33,20 +36,35 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     synthetic_legal_identity,
 )
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
+from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_mcp.mcp.server import build_server
 from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
+from cadrumo_mcp.mcp.tests.authority_corruption import DESCRIPTOR_NAME, copy_and_corrupt_published_database
 from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_DESCRIPTOR_NAME = "authority.current.json"
 _SYNTHETIC_MODELO = "130"
 """The modelo whose titles the synthetic publications borrow, and the only one they hold."""
 
 
 def _a_portal_id() -> str:
     return str(next(iter(PORTAL_REGISTRY)))
+
+
+def _served_support(canonical: dict[str, Any], entries: int) -> dict[str, Any]:
+    """The support matrix as the tool serves it: the first ``entries`` rows, each with its renames counted."""
+    return {
+        **canonical,
+        "entries": [
+            {
+                **{name: value for name, value in entry.items() if name != "renames"},
+                "rename_count": len(entry["renames"]),
+            }
+            for entry in canonical["entries"][:entries]
+        ],
+    }
 
 
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
@@ -121,7 +139,19 @@ class _SucceededWhileHeld(IndexedRegistryAuthority):
 
 
 @pytest.mark.anyio
-async def test_public_authority_queries_preserve_coordinates_and_support_projection() -> None:
+async def test_public_authority_queries_preserve_coordinates_and_support_projection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    describe_modelo = reference_catalogue.registry_describe_modelo_for_registry_scope
+    observed_pins: list[AuthorityGenerationPin] = []
+
+    def record_pin(
+        modelo: str, *, filing_year: int, period: str, as_of: date | None, operation: PinnedAuthorityOperation
+    ) -> object:
+        observed_pins.append(operation.pin())
+        return describe_modelo(modelo, filing_year=filing_year, period=period, as_of=as_of, operation=operation)
+
+    monkeypatch.setattr(reference_catalogue, "registry_describe_modelo_for_registry_scope", record_pin)
     adapter = admitted_adapter()
     held = adapter.client
     try:
@@ -143,6 +173,9 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         assert described["report"]["period"] == "0A"
         assert described["report"]["revision"]
         assert described["report"]["authority_grade"] == "filing"
+        (pin,) = observed_pins
+        assert described["logical_generation"] == pin.logical_generation
+        assert described["reader_incarnation"] == pin.reader_incarnation
 
         low_grade = await adapter.call(
             "authority",
@@ -158,17 +191,41 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         assert low_grade["report"]["authority_grade"] == "applicability"
         assert (low_grade["report"]["filing_year"], low_grade["report"]["period"]) == (2024, "alta")
 
+        default_coordinates = await adapter.call("authority", {"query": "describe", "modelo": "036", "period": "alta"})
+        assert default_coordinates["outcome"] == "published"
+        assert default_coordinates["report"]["authority_grade"] == "applicability"
+
         with bundled_indexed_authority().operation() as operation:
-            canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")
+            canonical_support = read_support_matrix(operation=operation).model_dump(mode="json")
         support = await adapter.call("authority", {"query": "support"})
 
         assert support["outcome"] == "published"
         assert canonical_support["entries"], "the published authority supports no modelo; the comparison is empty"
-        assert support["report"]["entries"] == canonical_support["entries"]
+        assert support["paging"]["total"] == len(canonical_support["entries"])
+        assert support["report"] == _served_support(canonical_support, support["paging"]["returned"])
         assert support["report"]["modelo_count"] == len(canonical_support["entries"])
         assert adapter.client is held and held is not None
     finally:
         await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_authority_is_refused_to_a_connection_with_no_key_and_no_runtime(tmp_path: Path) -> None:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
+        adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as client:
+                names = {tool.name for tool in (await client.list_tools()).tools}
+                support = await client.call_tool("authority", {"query": "support"})
+        finally:
+            await adapter.close()
+
+    assert {"status", "authority", "corpus_search", "search", "execute"} <= names
+    assert support.is_error is True
+    assert isinstance(support.structured_content, dict)
+    assert support.structured_content["code"] == RefusalCode.UNAVAILABLE.value
+    assert support.structured_content["remedy"] == connection_unavailable_remedy(RefusalCode.UNAVAILABLE.value)
+    assert adapter.client is None and adapter.profile_id is None
 
 
 @pytest.mark.anyio
@@ -179,7 +236,7 @@ async def test_authority_response_provenance_is_the_publication_the_report_was_r
 ) -> None:
     artifact = _synthetic_artifact("mcp-provenance-publication")
     published = publish_authority_artifact(artifact)
-    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
+    authority = IndexedRegistryAuthority(tmp_path / DESCRIPTOR_NAME)
     with authority.operation() as held:
         pin = held.pin()
     with bundled_indexed_authority().operation() as packaged:
@@ -187,7 +244,7 @@ async def test_authority_response_provenance_is_the_publication_the_report_was_r
     assert pin.logical_generation == published.logical_generation == artifact.identity_digest
     assert pin.logical_generation != packaged_pin.logical_generation
 
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", authority)
     adapter = admitted_adapter()
     held = adapter.client
     try:
@@ -212,7 +269,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
     adapter = admitted_adapter()
     assert adapter.client is not None
     try:
@@ -222,31 +279,14 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
         await adapter.close()
 
 
-def _copy_and_corrupt_published_database(source_descriptor: Path, destination: Path) -> Path:
-    """Copy one real publication and alter one database byte in the isolated copy."""
-    descriptor = AuthorityDescriptor.read(source_descriptor)
-    copied_descriptor = destination / _DESCRIPTOR_NAME
-    copied_database = destination / descriptor.database
-    shutil.copy2(source_descriptor, copied_descriptor)
-    shutil.copy2(source_descriptor.parent / descriptor.database, copied_database)
-
-    offset = copied_database.stat().st_size // 2
-    with copied_database.open("r+b") as stream:
-        stream.seek(offset)
-        original = stream.read(1)
-        stream.seek(offset)
-        stream.write(bytes([original[0] ^ 0xFF]))
-    return copied_descriptor
-
-
 @pytest.mark.anyio
 async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_descriptor = bundled_authority_descriptor_path()
-    _copy_and_corrupt_published_database(source_descriptor, tmp_path)
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
+    copy_and_corrupt_published_database(source_descriptor, tmp_path)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
 
     adapter = admitted_adapter()
     assert adapter.client is not None
@@ -275,13 +315,13 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         assert pinned.profile_decode_context().generation == first_pin
         held_through_cutover.append(pinned)
 
-    authority = _SucceededWhileHeld(tmp_path / _DESCRIPTOR_NAME, succeed=succeed)
+    authority = _SucceededWhileHeld(tmp_path / DESCRIPTOR_NAME, succeed=succeed)
     with authority.operation() as initial:
         first_pin = initial.pin()
-        expected_entries = registry_support_matrix(operation=initial).model_dump(mode="json")["entries"]
-    assert expected_entries
+        expected_report = read_support_matrix(operation=initial).model_dump(mode="json")
+    assert expected_report["entries"]
 
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", authority)
     adapter = admitted_adapter()
     assert adapter.client is not None
     try:
@@ -294,7 +334,10 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
             assert result.structured_content["outcome"] == "published"
             assert result.structured_content["logical_generation"] == first_pin.logical_generation
             assert result.structured_content["reader_incarnation"] == first_pin.reader_incarnation
-            assert result.structured_content["report"]["entries"] == expected_entries
+            assert result.structured_content["report"] == _served_support(
+                expected_report, len(expected_report["entries"])
+            )
+            assert result.structured_content["paging"]["next_cursor"] is None
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

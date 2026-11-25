@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Callable
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import NoReturn, Self
 from uuid import uuid4
@@ -32,6 +32,7 @@ from ..contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS,
     INSTALLATION_SECRET_HANDOVER_SECONDS,
+    InstallationActContract,
     InstallationActRequest,
     InstallationCompleted,
     InstallationFailed,
@@ -48,6 +49,7 @@ from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
 from .installation_frame_io import read_installation_reply
 from .posix_endpoint import PosixEndpoint
+from .product_version import installed_product_version
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
 from .verified_transport import HeldExchange
@@ -186,12 +188,7 @@ class InstallationClient:
         """
         try:
             contract = INSTALLATION_ACT_CONTRACTS[installation_act_of(request)]
-            if (
-                contract.reply is not reply_type
-                or contract.takes_secret != (secret is not None)
-                or contract.delivers_secret != (hold_secret is not None)
-            ):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
+            _require_act_contract(contract, reply_type, secret, hold_secret)
             if timeout is None:
                 timeout = contract.deadline_seconds + (
                     INSTALLATION_SECRET_HANDOVER_SECONDS if contract.delivers_secret else 0
@@ -211,6 +208,20 @@ class InstallationClient:
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
+
+
+def _require_act_contract(
+    contract: InstallationActContract,
+    reply_type: type[InstallationCompleted],
+    secret: bytearray | None,
+    hold_secret: InstallationSecretHolder | None,
+) -> None:
+    if (
+        contract.reply is not reply_type
+        or contract.takes_secret != (secret is not None)
+        or contract.delivers_secret != (hold_secret is not None)
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _raise_wire_refusal(reply: AccessRefusal) -> NoReturn:
@@ -343,7 +354,7 @@ async def open_installed_installation_client(*, timeout: float = 10) -> Installa
     """
     try:
         root = effective_storage_root().resolve(strict=True)
-        product_version = version("cadrumo")
+        product_version = installed_product_version()
     except (OSError, PackageNotFoundError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
     endpoint = _installed_endpoint(root)

@@ -83,7 +83,7 @@ def build_assets_installed_environment(*, storage_root: Path) -> dict[str, str]:
     # Python path or another virtual-environment marker would invalidate the
     # installed-product origin assertion before the journey even starts.
     environment = clean_product_env()
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+    environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = "utf-8"
     return environment

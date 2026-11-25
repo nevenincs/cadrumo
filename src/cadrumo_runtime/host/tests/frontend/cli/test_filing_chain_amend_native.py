@@ -12,7 +12,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.filing_selection_operation import MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_snapshot_operation import MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -20,7 +20,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -43,6 +43,16 @@ pytestmark = [
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _BASELINE_INCOME = Decimal("1000.00")
 _CORRECTED_INCOME = Decimal("1100.00")
+_BASELINE_GASTOS = Decimal("250.00")
+# The imported filing records casilla values only; correcting box 01 reaches the
+# formulas that read these facts, so the amendment states them as the filer would.
+_UNRECORDED_BINDINGS = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": str(_BASELINE_GASTOS),
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+    "irpf.previous_year_economic_activity_net_income": "20000.00",
+}
 
 
 def _amend_scope(client_id: UUID) -> AccessScope:
@@ -117,7 +127,7 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
             work_unit_id=unit.work_unit_id,
             casilla_values={
                 validated_casilla_id("01", surface="native amend synthetic baseline"): _BASELINE_INCOME,
-                validated_casilla_id("02", surface="native amend synthetic baseline"): Decimal("250.00"),
+                validated_casilla_id("02", surface="native amend synthetic baseline"): _BASELINE_GASTOS,
             },
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="SYNTHETIC-NATIVE-AMEND-M130-2025-1T",
@@ -150,7 +160,12 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
             "--reason",
             "under-reported turnover",
             "--set",
-            "01=1100.00",
+            f"01={_CORRECTED_INCOME}",
+            *(
+                flag
+                for binding_id, value in _UNRECORDED_BINDINGS.items()
+                for flag in ("--binding", f"{binding_id}={value}")
+            ),
         )
         assert result.exit_code == 0, result.output
         amendment = unwrap_cli_result(result)
@@ -183,3 +198,5 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
         assert revision_result.exit_code == 0, revision_result.output
         revision = unwrap_cli_result(revision_result)
         assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INCOME
+        # The stated expenses reach their bound casilla; directa normal adds no provision.
+        assert Decimal(revision["casilla_values"]["02"]) == _BASELINE_GASTOS

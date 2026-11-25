@@ -6,17 +6,18 @@ import math
 from uuid import UUID
 
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from . import automation_requester_contracts as _contracts
+from . import automation_requester_contracts
 
 
 def validate_client_admission(
     profile_id: UUID,
     client: FrontendClient | None,
-    open_client: _contracts.RequesterClientOpener | None,
+    open_client: automation_requester_contracts.RequesterClientOpener | None,
     reviewer_client: FrontendClient | None,
     journey_timeout: float,
 ) -> None:

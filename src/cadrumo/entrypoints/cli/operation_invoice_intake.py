@@ -33,7 +33,7 @@ from ...core.hashing import sha256_file
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ._ledger_support import ledger_invoice_validation_no_recovery
+from .ledger_support import ledger_invoice_validation_no_recovery
 
 
 def _submit[ProjectionT: BaseModel](
@@ -95,13 +95,7 @@ def submit_invoice_import(
         result_type=InvoiceImportProjection,
     )
     projection = completed.projection
-    expected_effect = (
-        OperationEffect.NONE
-        if projection.created == 0
-        else OperationEffect.PARTIAL
-        if projection.refused
-        else OperationEffect.UPDATED
-    )
+    expected_effect = projection.settled_effect
     if (
         projection.profile_id != client.profile_id
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
@@ -133,6 +127,16 @@ def submit_invoice_wizard(
     invoice_class: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_period: str | None,
+    recipient_increase_period: str | None,
+    exercised_deduction_period: str | None,
+    art_80_tres_obligations_attested: bool | None,
     recargo_amount: str | None,
 ) -> InvoiceWizardProjection:
     """Validate and create one manually entered invoice in its bound worker."""
@@ -157,6 +161,16 @@ def submit_invoice_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+        recipient_increase_period=recipient_increase_period,
+        exercised_deduction_period=exercised_deduction_period,
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=recargo_amount,
     )
     completed = _submit(

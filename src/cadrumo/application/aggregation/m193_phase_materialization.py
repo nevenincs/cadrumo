@@ -12,23 +12,29 @@ from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from functools import partial
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role, form_role_validator, resolve_form_codes
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...domain.calculations.registry.withholding_party_rows import PENDING_PERCEPTOR_NAME, PENDING_PERCEPTOR_NIF
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
-_PENDING_PERCEPTOR_NIF = "999999999"
-_PENDING_PERCEPTOR_NAME = "VALORES PENDIENTE DE ABONO"
 _PENDING_FLAG_ROLE = "payee_pendiente_flag"
 _ANNUAL_PERIOD = "0A"
+
+
+def _pending_flag() -> str:
+    """Return the mark the Modelo 193 record design prints for a pending payment."""
+    return resolve_form_codes("modelo-190-193-withholding-binding-catalogue").code("modelo.193.pendiente.flag")
 
 
 def modelo_193_pending_disclosure_years(operation: PinnedAuthorityOperation) -> frozenset[int]:
@@ -79,14 +85,18 @@ class Modelo193SettledAmountAuthorityAdvisory(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     reason: Literal["m193_settled_row_amounts_unresolved_authority"] = "m193_settled_row_amounts_unresolved_authority"
-    modelo: Literal["193"] = "193"
+    modelo: Annotated[str, AfterValidator(form_role_validator("withholding.capital_annual"))] = Field(
+        default_factory=partial(form_for_role, "withholding.capital_annual")
+    )
     filing_year: FilingYear
-    accrual_year: int = Field(ge=2000, le=9999)
+    accrual_year: FourDigitYear
     affected_fields: tuple[Modelo193PhaseAmountField, ...] = (
         Modelo193PhaseAmountField.BASE_RETENCIONES,
         Modelo193PhaseAmountField.RETENCION_PRACTICADA,
     )
-    source_modelo: Literal["123"] = "123"
+    source_modelo: Annotated[str, AfterValidator(form_role_validator("withholding.capital_periodic"))] = Field(
+        default_factory=partial(form_for_role, "withholding.capital_periodic")
+    )
     """The periodic modelo whose captured capital allocation the row derives from."""
     source_kind: BindingSourceKind
     """The captured allocation's own source family."""
@@ -116,7 +126,7 @@ class Modelo193PhaseRow(BaseModel):
 
     phase: Modelo193DisclosurePhase
     filing_year: FilingYear
-    original_accrual_year: int = Field(ge=2000, le=9999)
+    original_accrual_year: FourDigitYear
     recognized_on: date
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1, max_length=128)
@@ -144,10 +154,10 @@ def _validate_pending_phase_row(row: Modelo193PhaseRow) -> None:
     if row.filing_year != row.original_accrual_year:
         raise ValueError("Modelo 193 pending disclosure belongs to the accrual year")
     if (
-        detail.perceptor_tax_id != _PENDING_PERCEPTOR_NIF
-        or detail.representative_tax_id != _PENDING_PERCEPTOR_NIF
-        or detail.perceptor_legal_name != _PENDING_PERCEPTOR_NAME
-        or detail.pendiente_flag != "X"
+        detail.perceptor_tax_id != PENDING_PERCEPTOR_NIF
+        or detail.representative_tax_id != PENDING_PERCEPTOR_NIF
+        or detail.perceptor_legal_name != PENDING_PERCEPTOR_NAME
+        or detail.pendiente_flag != _pending_flag()
         or detail.accrual_year is not None
     ):
         raise ValueError("Modelo 193 pending disclosure must use the prescribed recipient values")
@@ -297,13 +307,13 @@ def _pending_row(
     actual = capital.pending_payment.actual_recipient_detail
     detail = actual.model_copy(
         update={
-            "perceptor_tax_id": _PENDING_PERCEPTOR_NIF,
-            "representative_tax_id": _PENDING_PERCEPTOR_NIF,
-            "perceptor_legal_name": _PENDING_PERCEPTOR_NAME,
+            "perceptor_tax_id": PENDING_PERCEPTOR_NIF,
+            "representative_tax_id": PENDING_PERCEPTOR_NIF,
+            "perceptor_legal_name": PENDING_PERCEPTOR_NAME,
             "country_code": None,
             "province_code": None,
             "perceptor_mediador_flag": None,
-            "pendiente_flag": "X",
+            "pendiente_flag": _pending_flag(),
             "accrual_year": None,
             "transaction_date": recognized_on,
         }

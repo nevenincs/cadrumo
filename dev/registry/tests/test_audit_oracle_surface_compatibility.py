@@ -15,9 +15,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import (
-    _COMPATIBLE_SURFACE_PAIRS,
+    COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
@@ -48,7 +48,7 @@ def _build_catalogue() -> LiveParityCatalogue:
 
 
 def _modelo_130() -> ModeloDefinition:
-    modelo, _catalogues = _committed_modelo("130")
+    modelo, _catalogues = committed_modelo("130")
     return modelo
 
 
@@ -128,7 +128,7 @@ def test_real_oracle_compatible_pair_passes_audit(oracle_id: str, surface: str, 
     """Each registered production oracle's (surface, surface_kind) pair
     is accepted by the audit when bound to a real cross-reference."""
 
-    assert (surface, surface_kind) in _COMPATIBLE_SURFACE_PAIRS
+    assert (surface, surface_kind) in COMPATIBLE_SURFACE_PAIRS
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=oracle_id, surface=surface)
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
@@ -153,5 +153,5 @@ def test_compatibility_allow_list_matches_documented_pairs() -> None:
                 ("authenticated_simulator", "iva_id_check"),
             },
         )
-        == _COMPATIBLE_SURFACE_PAIRS
+        == COMPATIBLE_SURFACE_PAIRS
     )

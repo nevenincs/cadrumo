@@ -14,8 +14,7 @@ import pytest
 from sqlalchemy import text
 
 from .....core.config import override_settings
-from .....core.storage_taxonomy import StorageCategory
-from .....tests.storage_scope import storage_overrides
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.errors import RepositoryError
 from ....persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
@@ -23,6 +22,7 @@ from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 _PROFILE = "a690aa03-a33f-4998-92d7-6ee02c7b2d08"
 
 
@@ -36,7 +36,7 @@ def _records(version: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
         OAuthMetadata(
             account_email=f"{version}@example.invalid",
             granted_scopes=REQUIRED_SCOPES,
-            issued_at=datetime(2026, 10, 5, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
         ),
         DriveConfig(root_folder_id=f"synthetic-root-{version}"),
     )
@@ -45,9 +45,8 @@ def _records(version: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
 def _read_in_fresh_process(tmp_path: Path, expected: str | None) -> None:
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path / "cadrumo-storage",
+            cadrumo_storage_root=tmp_path / "cadrumo-storage",
             cadrumo_active_profile=_PROFILE,
-            **storage_overrides(tmp_path, StorageCategory.SECRETS),
         ),
         open_test_profile_session(_PROFILE),
     ):

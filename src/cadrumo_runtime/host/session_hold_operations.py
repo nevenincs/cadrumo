@@ -9,6 +9,12 @@ digest of exactly what it showed, an answer bound to that digest, and a
 cancellation at the observed revision. Every document passes unchanged, so the
 product that registered the operation owns its meaning and its words.
 
+An operation whose contract takes its amounts as a transient financial
+operand is submitted with ``operation_financial_submit``: the parent's input
+object travels once, as the runtime's financial input, and the relay keeps no
+reference to it afterwards. The runtime refuses it for any definition whose
+contract declares no such operand, so the hold still names no definition.
+
 A refusal is a closed reply that keeps the hold holding. The runtime's
 ``operation_changed`` cue is forwarded only while an operation this session
 relayed is unsettled. A sign-in to a provider is one more registered
@@ -19,13 +25,14 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from datetime import UTC, datetime
 from typing import Final, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
+from cadrumo.application.operations.error_detail import operation_error_detail_schema
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -41,9 +48,14 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo_client.commands.registered_operation_responses import (
     require_registered_response_control,
     submit_registered_review_response,
@@ -57,6 +69,7 @@ from cadrumo_client.contracts.deadline_budget import (
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
+    OperationFinancialInput,
     OperationManage,
     OperationManaged,
     OperationObserve,
@@ -65,13 +78,19 @@ from cadrumo_client.contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
+    OperationSubmitted,
 )
+from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    FrontendRefusedError,
+)
 from cadrumo_client.transport.operation_settlement import PinnedConnection, submit_operation
 
 RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
     "operation_submit": frozenset({"definition_id", "subject_ref", "payload"}),
+    "operation_financial_submit": frozenset({"definition_id", "subject_ref", "input"}),
     "operation_observe": frozenset({"operation_id", "after_cursor"}),
     "operation_result": frozenset({"operation_id"}),
     "operation_review": frozenset({"operation_id"}),
@@ -135,28 +154,13 @@ class OperationRelay:
         try:
             if action == "operation_submit":
                 return self._submit(request, deadline=deadline)
+            if action == "operation_financial_submit":
+                return self._submit_financial(request, deadline=deadline)
             operation_id = _text(request["operation_id"])
-            if action == "operation_observe":
-                observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
-                return {"kind": "operation_observed", "observation": _document(observation)}
-            if action == "operation_result":
-                return self._result(operation_id, deadline=deadline)
-            if action == "operation_review":
-                pending, document = self._review(operation_id, deadline=deadline)
-                return {
-                    "kind": "operation_review",
-                    "operation_id": operation_id,
-                    "interaction_id": pending.interaction_id,
-                    "revision": pending.revision,
-                    "expires_at": None if pending.expires_at is None else pending.expires_at.isoformat(),
-                    "review_digest": content_hash_hex(document),
-                    "document": document,
-                }
-            if action == "operation_respond":
-                return self._respond(operation_id, request, deadline=deadline)
-            if action == "operation_cancel":
-                return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
-            raise ValueError("unknown relay action")
+            return self._handle_named(action, request, operation_id, deadline=deadline)
+        except CustodyRecoveringEffectUnknownError:
+            # The lost worker may have committed the change: the relay's own unknown, never a refusal to repeat.
+            raise RelayRefusedError("unavailable") from None
         except FrontendRefusedError as error:
             raise RelayRefusedError(error.reason, holder_operation_id=error.holder_operation_id) from None
         except (RefusalError, ValidationError) as error:
@@ -173,6 +177,32 @@ class OperationRelay:
             raise RelayRefusedError("unavailable") from None
 
     # ── Exchanges ───────────────────────────────────────────────────────────
+
+    def _handle_named(
+        self, action: str, request: Mapping[str, object], operation_id: str, *, deadline: float
+    ) -> dict[str, object]:
+        """Dispatch actions that name an existing operation."""
+        if action == "operation_observe":
+            observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
+            return {"kind": "operation_observed", "observation": _document(observation)}
+        if action == "operation_result":
+            return self._result(operation_id, deadline=deadline)
+        if action == "operation_review":
+            pending, document = self._review(operation_id, deadline=deadline)
+            return {
+                "kind": "operation_review",
+                "operation_id": operation_id,
+                "interaction_id": pending.interaction_id,
+                "revision": pending.revision,
+                "expires_at": None if pending.expires_at is None else pending.expires_at.isoformat(),
+                "review_digest": content_hash_hex(document),
+                "document": document,
+            }
+        if action == "operation_respond":
+            return self._respond(operation_id, request, deadline=deadline)
+        if action == "operation_cancel":
+            return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
+        raise ValueError("unknown relay action")
 
     def _exchange(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         remaining_budget(deadline)
@@ -200,7 +230,40 @@ class OperationRelay:
             payload_json=payload_json,
             deadline=deadline,
         )
-        operation_id = submitted.receipt.operation_id
+        return self._start(pinned, submitted.receipt.operation_id, deadline=deadline)
+
+    def _submit_financial(self, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
+        """Hand the parent's input to the runtime once, as financial input, and let go of it."""
+        body = request["input"]
+        if isinstance(request, MutableMapping):
+            # The bridge's own copy of the input is dropped before anything else can read it.
+            request.pop("input", None)
+        if not isinstance(body, dict):
+            raise TypeError("expected an input object")
+        input_json = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+        body = None
+        try:
+            if len(input_json) > SUBMISSION_PAYLOAD_MAX_BYTES:
+                raise ValueError("input too large")
+            pinned = PinnedConnection.of(self._client)
+            submitted = self._exchange(
+                OperationFinancialInput(
+                    request_id=uuid4(),
+                    profile_id=pinned.profile_id,
+                    session_id=pinned.session_id,
+                    definition_id=_text(request["definition_id"]),
+                    subject_ref=_text(request["subject_ref"]),
+                    payload_json=input_json,
+                ),
+                deadline=deadline,
+            )
+        finally:
+            input_json = ""
+        if not isinstance(submitted, OperationSubmitted):
+            raise RelayRefusedError("unavailable")
+        return self._start(pinned, submitted.receipt.operation_id, deadline=deadline)
+
+    def _start(self, pinned: PinnedConnection, operation_id: str, *, deadline: float) -> dict[str, object]:
         started = self._exchange(
             OperationControl(
                 action="operation_start",
@@ -239,8 +302,9 @@ class OperationRelay:
         self._watch(observation.projection)
         return observation
 
-    def _result(self, operation_id: str, *, deadline: float) -> dict[str, object]:
-        projection = self._observe(operation_id, 0, deadline=deadline).projection
+    @staticmethod
+    def _result_schema(projection: OperationPublicProjectionV1) -> OperationSchemaIdentityV1:
+        """Return the schema a terminal operation's result document is read under, else refuse."""
         contract = projection.definition_contract
         schema = contract.result_schema
         # A refusal its definition declares carries a detail document, read the same way as a result.
@@ -248,8 +312,22 @@ class OperationRelay:
             projection.terminal_condition is OperationTerminalCondition.REFUSED
             and projection.refusal_ref in contract.refusal_detail_codes
         )
-        if projection.lifecycle is not OperationLifecycle.TERMINAL or not documented or schema is None:
+        if (
+            projection.lifecycle is OperationLifecycle.TERMINAL
+            and not documented
+            and projection.terminal_condition in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
+        ):
+            # Any other stop may carry the registered error detail, with the
+            # sentence the product words for it; one that recorded none has no result.
+            schema = operation_error_detail_schema()
+        elif projection.lifecycle is not OperationLifecycle.TERMINAL or not documented or schema is None:
             raise RelayRefusedError("no_result")
+        return schema
+
+    def _result(self, operation_id: str, *, deadline: float) -> dict[str, object]:
+        projection = self._observe(operation_id, 0, deadline=deadline).projection
+        contract = projection.definition_contract
+        schema = self._result_schema(projection)
         document = self._client.read_result_document(
             OperationResultProjectionRequestV1(
                 operation_id=projection.operation_id,
@@ -260,6 +338,8 @@ class OperationRelay:
             timeout=remaining_budget(deadline),
             deadline=deadline,
         )
+        if document.get("outcome") == "refused":
+            raise RelayRefusedError("no_result")
         if document.get("result_schema") != schema.model_dump(mode="json") or document.get(
             "definition_contract_digest"
         ) != str(contract.definition_contract_digest):

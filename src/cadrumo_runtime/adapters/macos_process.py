@@ -21,7 +21,9 @@ _MAXIMUM_PID = 2_147_483_647
 _MAXIMUM_NATIVE_ID = 0xFFFFFFFF
 
 
-class _BsdProcessInfo(ctypes.Structure):
+class BsdProcessInfo(ctypes.Structure):
+    """The ctypes layout of the macOS BSD process info structure."""
+
     _fields_ = (
         ("flags", ctypes.c_uint32),
         ("status", ctypes.c_uint32),
@@ -48,7 +50,9 @@ class _BsdProcessInfo(ctypes.Structure):
     )
 
 
-class _UniqueIdentifierInfo(ctypes.Structure):
+class UniqueIdentifierInfo(ctypes.Structure):
+    """The ctypes layout of the macOS unique process identifier info structure."""
+
     _fields_ = (
         ("executable_uuid", ctypes.c_uint8 * 16),
         ("unique_id", ctypes.c_uint64),
@@ -95,9 +99,9 @@ def decode_macos_process_info(payload: bytes, *, pid: int, expected_owner: str) 
         pid: Expected kernel-derived process ID.
         expected_owner: Independently verified native process UID.
     """
-    if len(payload) != ctypes.sizeof(_BsdProcessInfo) or type(pid) is not int or not 0 < pid <= 2_147_483_647:
+    if len(payload) != ctypes.sizeof(BsdProcessInfo) or type(pid) is not int or not 0 < pid <= 2_147_483_647:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    value = _BsdProcessInfo.from_buffer_copy(payload)
+    value = BsdProcessInfo.from_buffer_copy(payload)
     _require_bsd_process_identity(value, pid, expected_owner)
     return MacosProcessObservation(
         pid=pid,
@@ -123,7 +127,7 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat
         query = native.proc_pidinfo
         query.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int)
         query.restype = ctypes.c_int
-        value = _BsdProcessInfo()
+        value = BsdProcessInfo()
         ctypes.set_errno(0)
         count = query(pid, 3, 0, ctypes.byref(value), ctypes.sizeof(value))
         native_errno = ctypes.get_errno()
@@ -141,6 +145,95 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat
         )
     except (AttributeError, OSError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
+
+
+# Darwin sys/sysctl.h: CTL_KERN=1, KERN_ARGMAX=8, KERN_PROCARGS2=49.
+_CTL_KERN = 1
+_KERN_ARGMAX = 8
+_KERN_PROCARGS2 = 49
+_MAXIMUM_ARGUMENT_BYTES = 4 * 1024 * 1024
+
+
+def decode_macos_process_arguments(payload: bytes) -> tuple[str, ...]:
+    """Decode a complete KERN_PROCARGS2 record into the arguments after the program name.
+
+    The record is the argument count, the executed path, alignment padding and
+    then exactly that many argument strings; anything shorter or malformed refuses.
+
+    Args:
+        payload: Exact native KERN_PROCARGS2 bytes for one process.
+    """
+    if len(payload) < 4:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    count = struct.unpack("=i", payload[:4])[0]
+    path_end = payload.find(b"\0", 4)
+    if not 0 < count <= len(payload) or path_end <= 4:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    cursor = path_end
+    while cursor < len(payload) and payload[cursor] == 0:
+        cursor += 1
+    arguments: list[bytes] = []
+    for _ in range(count):
+        end = payload.find(b"\0", cursor)
+        if end < 0:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        arguments.append(payload[cursor:end])
+        cursor = end + 1
+    return tuple(os.fsdecode(argument) for argument in arguments[1:])
+
+
+def _read_kernel_arguments(pid: int) -> bytes:
+    native = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True)
+    control = native.sysctl
+    control.argtypes = (
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.c_uint,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_size_t),
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+    )
+    control.restype = ctypes.c_int
+    limit = ctypes.c_int()
+    size = ctypes.c_size_t(ctypes.sizeof(limit))
+    query = (ctypes.c_int * 2)(_CTL_KERN, _KERN_ARGMAX)
+    if control(query, 2, ctypes.byref(limit), ctypes.byref(size), None, 0) != 0:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    if not 0 < limit.value <= _MAXIMUM_ARGUMENT_BYTES:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    buffer = ctypes.create_string_buffer(limit.value)
+    size = ctypes.c_size_t(limit.value)
+    query = (ctypes.c_int * 3)(_CTL_KERN, _KERN_PROCARGS2, pid)
+    ctypes.set_errno(0)
+    if control(query, 3, buffer, ctypes.byref(size), None, 0) != 0:
+        # The kernel answers EINVAL for an exiting process or another account's.
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    if not 0 < size.value <= limit.value:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return buffer.raw[: size.value]
+
+
+def read_macos_process_arguments(pid: int, *, expected_owner: str) -> tuple[str, ...]:
+    """Read the arguments one exact incarnation was started with, after its program name.
+
+    The process record and the kernel incarnation are read on both sides of the
+    argument read, so a reused PID or a new program cannot supply the answer.
+
+    Args:
+        pid: Kernel-derived process ID.
+        expected_owner: Native UID supplied by the owning transport.
+    """
+    before = read_macos_process(pid, expected_owner=expected_owner)
+    incarnation = read_macos_incarnation(pid)
+    if incarnation is None:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    try:
+        payload = _read_kernel_arguments(pid)
+    except (AttributeError, OSError):
+        raise RefusalError(RefusalCode.UNAVAILABLE) from None
+    if read_macos_incarnation(pid) != incarnation or read_macos_process(pid, expected_owner=expected_owner) != before:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return decode_macos_process_arguments(payload)
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,9 +263,9 @@ def decode_macos_incarnation(payload: bytes, *, pid: int) -> MacosProcessIncarna
         payload: Exact native proc_uniqidentifierinfo record.
         pid: Kernel PID the record was requested for.
     """
-    if len(payload) != ctypes.sizeof(_UniqueIdentifierInfo) or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
+    if len(payload) != ctypes.sizeof(UniqueIdentifierInfo) or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    value = _UniqueIdentifierInfo.from_buffer_copy(payload)
+    value = UniqueIdentifierInfo.from_buffer_copy(payload)
     if not 0 < value.version <= _MAXIMUM_PID or value.unique_id <= 0:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     return MacosProcessIncarnation(pid=pid, version=int(value.version), unique_id=int(value.unique_id))
@@ -209,7 +302,7 @@ def read_macos_incarnation(pid: int) -> MacosProcessIncarnation | None:
         pid: Kernel PID, bounded before native integer conversion.
     """
     payload = read_macos_pidinfo(
-        pid, flavor=_PROC_PIDUNIQIDENTIFIERINFO, record_size=ctypes.sizeof(_UniqueIdentifierInfo)
+        pid, flavor=_PROC_PIDUNIQIDENTIFIERINFO, record_size=ctypes.sizeof(UniqueIdentifierInfo)
     )
     return None if payload is None else decode_macos_incarnation(payload, pid=pid)
 
@@ -387,7 +480,7 @@ class MacosProcessWatch:
             os.close(descriptor)
 
 
-def _require_bsd_process_identity(value: _BsdProcessInfo, pid: int, expected_owner: str) -> None:
+def _require_bsd_process_identity(value: BsdProcessInfo, pid: int, expected_owner: str) -> None:
     """Admit only the expected live native identity and complete creation timestamp."""
     if (
         value.pid != pid

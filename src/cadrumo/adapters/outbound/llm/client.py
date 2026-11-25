@@ -13,8 +13,6 @@ import asyncio
 import secrets
 import threading
 import time
-from collections.abc import Generator
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -24,29 +22,29 @@ from pydantic import BaseModel, Field
 
 from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_DEADLINE_SECONDS,
-    ModelRunConsentBinding,
     ModelRunLane,
     ModelRunMediaKind,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
 from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
-from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....core.time.clock import now
-from .consent import provider_reads_off_host
+from .consent import agent_consent_binding
 from .errors import (
-    LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
-    LLMContentionError,
     LLMRateLimitError,
 )
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
@@ -59,22 +57,15 @@ if TYPE_CHECKING:
     # leaving the runtime edge deferred, which is what breaks the cycle the
     # split creates: the stores import this package for the shared error and
     # model types, and the client refers back to them.
-    # The headroom measurements the contention authority consumes. Type-only
-    # for the same reason as the stores above: the runtime edge into the
-    # application package stays deferred to the one call site that needs it.
-    from ....application.provisioning import HardwareProfile
-    from ....application.provisioning_runtime import RuntimeResident
     from ...persistence.llm.cache import LLMCache
     from ...persistence.llm.consent_ledger import EvidenceConsentLedger
     from ...persistence.llm.run_records import LLMRunRecorder
     from ...persistence.llm.usage import UsageRecorder
 from ....core.config_support import LLMProvider
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from .models import LLMRequest, LLMResponse, PromptRegistry
-from .pricing import estimate_cost_usd
 from .providers.agent import AgentAdapter, lane_model_label, model_run_refusal_error
 from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
-from .providers.local import LocalAdapter
 
 _LOGGER = get_logger(__name__)
 
@@ -192,10 +183,10 @@ class _ProviderPacing:
     makes every LATER dispatch at that provider wait out the same window
     without having to be told about it.
 
-    Process-wide and keyed by provider, for the reason the inference arena is:
-    the constraint belongs to the vendor account, which two clients and two
-    batch runs share, so per-client state would pace neither. Off-host only in
-    practice, because nothing local issues a rate limit.
+    Process-wide and keyed by provider: the constraint belongs to the vendor
+    account, which two clients and two batch runs share, so per-client state
+    would pace neither. Off-host only in practice, because nothing local issues
+    a rate limit.
 
     Monotonic instants rather than wall-clock, so a clock adjustment mid-run
     cannot arm a wait measured in hours.
@@ -230,97 +221,7 @@ class _ProviderPacing:
             self._resume_at.clear()
 
 
-_PROVIDER_PACING = _ProviderPacing()
-
-
-class _OnHostInferenceArena:
-    """The process-wide occupancy bound on concurrent on-host inference.
-
-    **Refusal, not queueing, and the choice is argued from the failure
-    direction rather than from ergonomics.** A queue does not help when the
-    bound is too permissive -- both designs admit whatever the bound says -- and
-    it actively hurts when the bound is right: a waiting request holds its
-    decoded pages in the very memory under pressure for as long as it waits, so
-    the queue itself becomes an allocation that grows with load, and it runs
-    against headroom that was measured *before* it waited, which is the one
-    reading the contention check exists to keep fresh. A refusal is synchronous,
-    typed, and observable at the caller; the caller may retry after quiesce.
-
-    Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
-    loop that created it, and this process runs LLM work under several
-    short-lived loops (each ``asyncio.run`` from a synchronous CLI path opens a
-    new one), so a loop-bound primitive would silently bound nothing across
-    them. The occupancy count is guarded by a plain
-    :class:`threading.Lock` instead, which holds across loops and threads
-    alike, and is only ever held for the duration of an integer comparison --
-    never across an await.
-    """
-
-    def __init__(self, limit: int) -> None:
-        self._limit = limit
-        self._held = 0
-        self._lock = threading.Lock()
-
-    @property
-    def limit(self) -> int:
-        """Return the configured number of simultaneous on-host inference slots."""
-        return self._limit
-
-    @property
-    def held(self) -> int:
-        """Return how many slots are occupied right now."""
-        with self._lock:
-            return self._held
-
-    def try_acquire(self) -> bool:
-        """Take a slot if one is free, without ever blocking.
-
-        Returns:
-            True when a slot was taken and the caller must release it; False
-            when the arena is full and the caller must refuse.
-        """
-        with self._lock:
-            if self._held >= self._limit:
-                return False
-            self._held += 1
-            return True
-
-    def release(self) -> None:
-        """Give a slot back.
-
-        Raises:
-            RuntimeError: When more releases than acquisitions have run. This is
-                a bug in the dispatch path rather than an operator condition,
-                and it must be loud: a release that silently underflows would
-                let the arena admit more than its limit forever after, which is
-                the failure this whole class exists to prevent.
-        """
-        with self._lock:
-            if self._held <= 0:
-                msg = "on-host inference arena released more slots than it holds"
-                raise InternalInvariantError(msg)
-            self._held -= 1
-
-
-_on_host_arena: _OnHostInferenceArena | None = None
-_ON_HOST_ARENA_LOCK = threading.Lock()
-
-
-def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
-    """Return the process-wide on-host inference arena, sized on first use.
-
-    A singleton for the reason the bound exists at all: the resource it protects
-    is the machine, not the client object, so two :class:`LLMClient` instances
-    -- which production builds freely, one per caller -- must contend for the
-    same slots. Sized from settings at first use rather than rebuilt per client,
-    because a rebuild would hand a fresh, empty arena to the second client and
-    the bound would hold for neither.
-    """
-    global _on_host_arena
-    with _ON_HOST_ARENA_LOCK:
-        if _on_host_arena is None:
-            _on_host_arena = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
-        return _on_host_arena
+PROVIDER_PACING = _ProviderPacing()
 
 
 @dataclass(frozen=True)
@@ -329,6 +230,7 @@ class _AgentDispatch:
 
     port: ModelRunPort
     role: ModelRole
+    task_kind: ModelRunTaskKind | None
     lane: ModelRunLane
 
 
@@ -350,19 +252,6 @@ class LLMClient:
             often and how long a transient transport failure is re-sent. Which
             failures qualify is not tunable here -- that is the error taxonomy's
             answer, read through :func:`transport_retry_permitted`.
-        hardware_profile: Optional measured
-            :class:`~application.provisioning.HardwareProfile` used for the
-            headroom check instead of probing this machine. Injecting the
-            MEASUREMENT rather than the verdict keeps the real decision
-            function on the path: a post-quiesce reading exercises the same
-            comparison, margin and attribution production runs.
-        runtime_residents: Optional resident set standing in for a live read of
-            the runtime.
-        runtime_residents_measured: False states the resident set could not be
-            read, which is a different fact from a measured-empty one and
-            reaches the fail-closed arm rather than the shortfall arm. The two
-            are indistinguishable from the refusal alone, so a case that means
-            to prove one must say which.
         model_runs: Optional port through which a request dispatched to
             :attr:`~llm.LLMProvider.AGENT` reaches the agent service. Without
             one, the port bound to the running operation is used, and outside an
@@ -381,9 +270,6 @@ class LLMClient:
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
         retry_policy: LLMRetryPolicy | None = None,
-        hardware_profile: HardwareProfile | None = None,
-        runtime_residents: tuple[RuntimeResident, ...] | None = None,
-        runtime_residents_measured: bool = True,
         model_runs: ModelRunPort | None = None,
         caller: str = "cadrumo.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
@@ -399,10 +285,12 @@ class LLMClient:
         from ...persistence.llm.usage import UsageRecorder
 
         self.settings = settings or Settings()
-        self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
-        self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.cadrumo_llm_usage_dir)
+        self.cache = cache or LLMCache(root_dir=storage_path(StorageCategory.LLM_CACHE, settings=self.settings))
+        self.usage_recorder = usage_recorder or UsageRecorder(
+            root_dir=storage_path(StorageCategory.LLM_USAGE, settings=self.settings)
+        )
         self.run_record_recorder = run_record_recorder or LLMRunRecorder(
-            root_dir=self.settings.cadrumo_llm_run_record_dir,
+            root_dir=storage_path(StorageCategory.LLM_RUN_RECORD, settings=self.settings),
         )
         # Not swept by _sweep_retention_stores below, and deliberately so: the
         # consent ledger is an audit trail a withdrawal reads, not a diagnostic
@@ -410,9 +298,6 @@ class LLMClient:
         self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.retry_policy = retry_policy or LLMRetryPolicy()
-        self.hardware_profile = hardware_profile
-        self.runtime_residents = runtime_residents
-        self.runtime_residents_measured = runtime_residents_measured
         self.model_runs = model_runs
         self.caller = caller
         self.prompt_id = prompt_id
@@ -452,14 +337,10 @@ class LLMClient:
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.
         """
-        provider = request.provider_override or self._default_provider()
-        agent = await self._agent_dispatch(request) if provider is LLMProvider.AGENT else None
-        model = (
-            lane_model_label(agent.lane)
-            if agent is not None
-            else request.model_override or self._default_model(provider)
-        )
-        self._require_evidence_consent(provider, model, request)
+        provider = LLMProvider.AGENT
+        agent = await self._agent_dispatch(request)
+        model = lane_model_label(agent.lane)
+        self._require_evidence_consent(provider, model, request, lane=agent.lane, role=agent.role)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -467,36 +348,24 @@ class LLMClient:
             self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
             return response
 
-        adapter = self._build_adapter(provider, agent=agent, request=request)
+        adapter = self._build_adapter(agent=agent, request=request)
         provider_request = ProviderRequest(
             request_id=request_id,
             model=model,
             prompt=request.prompt,
             system=request.system,
-            max_tokens=request.max_tokens or self.settings.cadrumo_llm_default_max_tokens,
-            temperature=(
-                request.temperature
-                if request.temperature is not None
-                else self.settings.cadrumo_llm_default_temperature
-            ),
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
             timeout_s=self.settings.cadrumo_llm_default_timeout_s,
             images=request.images,
+            response_schema=request.response_schema,
         )
         self._require_image_support(adapter, provider_request)
-        provider_request = self._omit_unsupported_parameters(adapter, provider_request)
+        provider_request = self.omit_unsupported_parameters(adapter, provider_request)
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
-            with self._on_host_admission(provider):
-                # Inside the slot and outside the retry loop, both load-bearing.
-                # Inside, because a headroom reading taken before the slot is
-                # held can be invalidated by another request loading a model
-                # between the measurement and this dispatch. Outside, because a
-                # refusal that the retry loop could see would be re-sent on a
-                # schedule, turning one refusal into several while the memory it
-                # waits for is still held.
-                self._require_load_headroom(provider, provider_request.model)
-                completion = await self._complete_with_retries(adapter, provider_request)
+            completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             # WARNING, not ERROR: the caller owns this failure and renders it as
             # a typed refusal on stderr; an ERROR record would print the
@@ -531,17 +400,21 @@ class LLMClient:
             model=completion.model,
             input_tokens=completion.input_tokens,
             output_tokens=completion.output_tokens,
-            cost_estimate_usd=estimate_cost_usd(
-                provider=provider,
-                model=completion.model,
-                input_tokens=completion.input_tokens,
-                output_tokens=completion.output_tokens,
-            ),
+            # Unpriced, never free: the selected lane bills at rates Cadrumo
+            # does not see, and a caller budgeting from zero would read the
+            # call as costless.
+            cost_estimate_usd=None,
             cache_hit=False,
             created_at=now(),
             request_id=request_id,
         )
-        self.cache.write(request, response)
+        # A blank completion is a failed read, not an answer: a local reasoning
+        # model can spend its whole output budget on hidden reasoning and return
+        # no text for a request it answers fully on the next attempt. Caching it
+        # would replay the failure for every later request about the same
+        # document, so only a completion that carries text is cached.
+        if response.text.strip():
+            self.cache.write(request, response)
         self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
         _LOGGER.info(
             "llm request completed provider=%s model=%s input_tokens=%d output_tokens=%d",
@@ -552,73 +425,8 @@ class LLMClient:
         )
         return response
 
-    def _require_load_headroom(self, provider: LLMProvider, model: str) -> None:
-        """Refuse an on-host dispatch this machine has no measured room for.
-
-        **A wiring job, not a second detector.** The verdict comes from
-        :func:`~application.provisioning_runtime.assess_model_load_contention`, which
-        already owns the comparison, the safety margin, the fail-closed arm and
-        the attribution of a shortfall to the runtime's own residents versus a
-        peer process's device usage. That authority was deliberately
-        consolidated out of four call sites; re-deriving any part of it here
-        would undo the consolidation and give the dispatch point a second
-        opinion that could disagree with the doctor surface an operator just
-        read.
-
-        Resolved from its application defining module at call time rather than
-        at module load. The edge is downward and permitted, but this package is
-        imported by application code, so an eager binding would risk closing
-        that loop at import time.
-
-        **Assessed only where the catalogue makes a claim.** An uncatalogued
-        model has no declared requirement, and inventing one would be worse than
-        not checking: a requirement read as zero flows into the authority as the
-        amount the model needs, and the check then reports the load ADMITTED on
-        evidence nobody has. That is the reasoning
-        :attr:`~application.provisioning.ModelSelection.assessable_load` records
-        for every other caller, followed here rather than re-decided.
-
-        Args:
-            provider: The resolved provider this dispatch would run at.
-            model: The resolved model whose load is being judged.
-
-        Raises:
-            LLMContentionError: When the measured verdict is not admitted,
-                carrying the authority's typed precondition verdict, model, and
-                causes.
-        """
-        if provider_reads_off_host(provider):
-            return
-        from ....application.provisioning_runtime import assess_model_load_contention
-        from ....core.model_catalogue import model_candidate
-
-        candidate = model_candidate(model)
-        requirement_bytes = None if candidate is None else candidate.memory_requirement_bytes
-        if requirement_bytes is None:
-            return
-        snapshot = assess_model_load_contention(
-            model,
-            requirement_bytes,
-            profile=self.hardware_profile,
-            residents=self.runtime_residents,
-            residents_measured=self.runtime_residents_measured,
-            settings=self.settings,
-        )
-        if snapshot.admitted:
-            return
-        verdict = snapshot.precondition_verdict
-        if verdict is None:
-            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
-        raise LLMContentionError(
-            context={
-                "model": model,
-                "contention_causes": tuple(cause.value for cause in snapshot.causes),
-            },
-            precondition_verdict=verdict,
-        )
-
     @staticmethod
-    async def _await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
+    async def await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
         """Wait out any rate-limit window another dispatch already discovered.
 
         This is what makes the backoff apply ACROSS a run rather than within one
@@ -632,7 +440,7 @@ class LLMClient:
         remaining window stays armed and readable, so a surface that wants to
         report "paced for another N seconds" can, rather than blocking on it.
         """
-        remaining = min(_PROVIDER_PACING.remaining_s(provider), policy.budget_s)
+        remaining = min(PROVIDER_PACING.remaining_s(provider), policy.budget_s)
         if remaining <= 0:
             return
         _LOGGER.info("llm dispatch paced provider=%s waiting=%.2fs", provider.value, remaining)
@@ -644,13 +452,6 @@ class LLMClient:
         provider_request: ProviderRequest,
     ) -> ProviderCompletion:
         """Run one dispatch, re-sending it only while the taxonomy permits.
-
-        **Inside the admission slot, not around it.** A retrying request keeps
-        its on-host slot across its waits, which is the safe direction:
-        releasing it would let a second request take the arena and turn this
-        one's next attempt into a busy refusal -- converting a transient
-        failure into a different refusal for no reason. The bounded budget is
-        what keeps holding the slot honest.
 
         The budget is checked BEFORE sleeping, so a wait that would outlive the
         budget is not taken at all: the caller gets the real failure at the
@@ -674,7 +475,7 @@ class LLMClient:
         policy = self.retry_policy
         started = time.monotonic()
         attempt = 1
-        await self._await_shared_pacing(adapter.provider, policy)
+        await self.await_shared_pacing(adapter.provider, policy)
         while True:
             try:
                 return await adapter.complete(provider_request)
@@ -686,7 +487,7 @@ class LLMClient:
                     # permitted attempt still governs every dispatch after it,
                     # and arming only on the retrying path would let the item
                     # that gave up be the one that told nobody.
-                    _PROVIDER_PACING.arm(adapter.provider, min(delay, policy.budget_s))
+                    PROVIDER_PACING.arm(adapter.provider, min(delay, policy.budget_s))
                 if attempt >= policy.max_attempts or not transport_retry_permitted(exc):
                     raise
                 if time.monotonic() - started + delay > policy.budget_s:
@@ -701,59 +502,15 @@ class LLMClient:
                 await asyncio.sleep(delay)
                 attempt += 1
 
-    @contextmanager
-    def _on_host_admission(self, provider: LLMProvider) -> Generator[None]:
-        """Hold one on-host inference slot for the duration of a dispatch.
-
-        Applied at the client's single dispatch point, like every other boundary
-        on this path, and scoped to on-host providers through
-        :func:`~llm.consent.provider_reads_off_host` rather than a
-        hand-kept list of local transports -- so a provider added later is
-        off-host by construction, and correctly unbounded here, because an
-        off-host dispatch occupies none of this machine's device memory. The
-        resource this bound protects is local, so the bound is local too.
-
-        Wrapped around the adapter call ONLY, not around the whole method: a
-        cache hit runs no inference and returns before this point, and holding a
-        slot through a cache read would refuse a second request over work that
-        never touches the device.
-
-        Args:
-            provider: The resolved provider this dispatch runs at.
-
-        Yields:
-            Nothing; the slot is held for the body and released on any exit.
-
-        Raises:
-            LLMBusyError: When every on-host slot is already occupied.
-        """
-        if provider_reads_off_host(provider):
-            yield
-            return
-        arena = _on_host_inference_arena(self.settings)
-        if not arena.try_acquire():
-            raise LLMBusyError(
-                context={
-                    "provider": provider.value,
-                    "local_inference_limit": arena.limit,
-                    "local_inference_slot_available": False,
-                },
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.LOCAL_INFERENCE_SLOT_AVAILABLE,
-                    facts={
-                        "provider": provider.value,
-                        "local_inference_limit": arena.limit,
-                        "local_inference_slot_available": False,
-                    },
-                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                ),
-            )
-        try:
-            yield
-        finally:
-            arena.release()
-
-    def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
+    def _require_evidence_consent(
+        self,
+        provider: LLMProvider,
+        model: str,
+        request: LLMRequest,
+        *,
+        lane: ModelRunLane,
+        role: ModelRole,
+    ) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.
 
         Per-invocation consent is required; permitted dispatches are recorded.
@@ -761,11 +518,7 @@ class LLMClient:
         The confidentiality boundary, enforced at the client's single dispatch
         point for the reason the image boundary is: which requests may leave the
         host is a property of the DISPATCH, never of each caller remembering to
-        pin a provider. A caller may still pin
-        :attr:`~llm.LLMProvider.LOCAL` as documentation, but
-        no pin is load-bearing -- ``extract_invoice_fields_from_text`` is
-        exported with none, and a reader constructed with a cloud provider
-        reaches the same line as every other request.
+        pin a provider: every reader reaches the same line as every other request.
 
         **Ordered before the cache read and before adapter construction, both
         deliberately.** Before the cache read, so priming an entry under consent
@@ -796,11 +549,25 @@ class LLMClient:
         err on: the response is still cloud-derived, so a withdrawal must list
         it as a re-derivation candidate.
 
+        **An agent dispatch is off-host exactly when its lane says so.** The
+        resolved lane's typed ``reads_off_host`` flag decides, never the
+        provider, transport or model name. A lane that stays on this computer
+        needs no token and records no ledger entry, because no document leaves
+        the host; its endpoint is the agent service's loopback declaration, not
+        an endpoint this client posts to.
+
+        **The refusal is the role's, not the document's.** Its verdict states
+        the role and the ``consent_missing`` model-run refusal the agent service
+        gives the same run, so a caller reading many documents closes the role
+        once rather than refusing each document for the same reason.
+
         Args:
             provider: The resolved provider this request would dispatch at.
             model: The resolved model this request would dispatch at, recorded
                 in the ledger entry.
             request: The request, carrying its evidence marker and any token.
+            lane: The lane the agent service resolved for the request's role.
+            role: The role the request reads for, stated in the refusal.
 
         Raises:
             LLMConsentError: When an evidence-derived request would be
@@ -808,24 +575,23 @@ class LLMClient:
                 token, in a gestor deployment at all, or when the consent
                 ledger cannot record the permitted dispatch.
         """
-        if not request.evidence_derived or not provider_reads_off_host(provider):
+        if not request.evidence_derived or not lane.reads_off_host:
             return
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
+            facts: dict[str, str | int | bool] = {
+                "provider": provider.value,
+                "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
+                "consent_token_present": token is not None,
+                "model_role": role.value,
+                "model_run_refusal": ModelRunRefusalCode.CONSENT_MISSING.value,
+            }
             raise LLMConsentError(
                 translated_message=_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY,
-                context={
-                    "provider": provider.value,
-                    "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
-                    "consent_token_present": token is not None,
-                },
+                context=facts,
                 precondition_verdict=llm_no_recovery_verdict(
                     LLMPreconditionCondition.EVIDENCE_OFF_HOST_DISPATCH_PERMITTED,
-                    facts={
-                        "provider": provider.value,
-                        "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
-                        "consent_token_present": token is not None,
-                    },
+                    facts=facts,
                     provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 ),
             )
@@ -837,7 +603,7 @@ class LLMClient:
         )
 
     @staticmethod
-    def _omit_unsupported_parameters(adapter: ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
+    def omit_unsupported_parameters(adapter: ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
         """Clear request parameters the resolved model does not accept.
 
         Enforced at the same single dispatch point as the image boundary, and
@@ -874,10 +640,8 @@ class LLMClient:
         boundary refuses rather than degrades.
 
         Enforced here, at the client's single dispatch point, rather than inside
-        each adapter: the same reasoning
-        :func:`~llm.providers.base.post_provider_request` records for the
-        transport boundary -- a property of the dispatch, never of each
-        adapter's memory to catch.
+        each adapter: a property of the dispatch, never of each adapter's
+        memory to catch.
 
         Args:
             adapter: The resolved provider adapter about to run the request.
@@ -943,17 +707,6 @@ class LLMClient:
         except LLMCacheError:
             _LOGGER.debug("llm run-record write failed; continuing without it", exc_info=True)
 
-    @staticmethod
-    def _default_provider() -> LLMProvider:
-        """A request that names no provider runs on this machine; leaving it is always stated."""
-        return LLMProvider.LOCAL
-
-    def _default_model(self, provider: LLMProvider) -> str:
-        if provider is LLMProvider.LOCAL:
-            return self.settings.cadrumo_llm_ollama_text_model
-        msg = "an agent dispatch takes its model from the lane the service resolves"
-        raise InternalInvariantError(msg)
-
     async def _agent_dispatch(self, request: LLMRequest) -> _AgentDispatch:
         """Resolve the lane the agent service would use, before consent or cache are consulted.
 
@@ -979,36 +732,20 @@ class LLMClient:
         port = self.model_runs or current_model_run_port()
         if port is None:
             raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE), role=role)
-        lane = await port.lookup(role)
+        lane = await port.lookup(role, task_kind=request.task_kind)
         if isinstance(lane, ModelRunRefusal):
             raise model_run_refusal_error(lane, role=role)
         if request.images and lane.accepted_media is not None and ModelRunMediaKind.IMAGE not in lane.accepted_media:
             raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), role=role)
-        return _AgentDispatch(port=port, role=role, lane=lane)
+        return _AgentDispatch(port=port, role=role, task_kind=request.task_kind, lane=lane)
 
-    def _build_adapter(
-        self, provider: LLMProvider, *, agent: _AgentDispatch | None = None, request: LLMRequest | None = None
-    ) -> ProviderAdapter:
+    def _build_adapter(self, *, agent: _AgentDispatch, request: LLMRequest) -> ProviderAdapter:
         timeout_s = self.settings.cadrumo_llm_default_timeout_s
-        if provider is LLMProvider.LOCAL:
-            return LocalAdapter(timeout_s=timeout_s)
-        if agent is None or request is None:
-            msg = "an agent adapter is built only from a resolved lane"
-            raise InternalInvariantError(msg)
-        token = request.consent_token if request.evidence_derived else None
-        consent = (
-            None
-            if token is None
-            else ModelRunConsentBinding(
-                evidence_content_address=token.evidence_content_address,
-                provider_id=agent.lane.provider_id,
-                transport=agent.lane.transport,
-                model=agent.lane.model,
-            )
-        )
+        consent = agent_consent_binding(agent.lane, request.consent_token if request.evidence_derived else None)
         return AgentAdapter(
             port=agent.port,
             role=agent.role,
+            task_kind=agent.task_kind,
             lane=agent.lane,
             consent=consent,
             deadline_seconds=max(1, min(timeout_s, MODEL_RUN_MAX_DEADLINE_SECONDS)),

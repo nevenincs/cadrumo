@@ -11,27 +11,34 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     create_m130_work_unit,
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
 )
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 
 from .cli_runner import semantic_cli_output
 from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
 _LOCALES = ("en", "es", "ca", "hu")
+#: The revision the shared Modelo 130 scenario creates its work unit under.
+_M130_REVISION = str(open_ended_revision("130").id)
 
 
 def _seed_discarded_work(work_unit_id: str) -> None:
@@ -48,7 +55,9 @@ def _seed_discarded_work(work_unit_id: str) -> None:
 
 
 def _notice(output: str, code: str) -> dict[str, object]:
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(next(item for item in _notices(output) if item["code"] == code))
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(
+        next(item for item in unwrap_envelope_notices(output) if item["code"] == code)
+    )
 
 
 def _discarded_work_evidence(work_unit_id: str) -> dict[str, str | int]:
@@ -57,9 +66,9 @@ def _discarded_work_evidence(work_unit_id: str) -> dict[str, str | int]:
         "work_unit_id": work_unit_id,
         "work_unit_state": "descartado",
         "modelo": "130",
-        "filing_year": 2025,
+        "filing_year": SCENARIO_FILING_YEAR,
         "period": "1T",
-        "revision_id": "2019-y-siguientes",
+        "revision_id": _M130_REVISION,
     }
 
 
@@ -82,7 +91,11 @@ def _assert_terminal_refusal(
     assert document["command"] == command
     error = cast(dict[str, object], document["error"])
     assert "suggestion" not in error
-    assert error["action"] == {
+    action = cast(dict[str, object], error["action"])
+    # The terminal outcome is said in the catalogue's sentence, in the language the command answered in.
+    language = str(action["no_recovery_words_language"])
+    assert language in _LOCALES
+    assert action == {
         "failed_condition_id": failed_condition_id,
         "evidence": [
             {
@@ -97,6 +110,8 @@ def _assert_terminal_refusal(
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "terminal",
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[NoRecoveryOutcome.TERMINAL], locale=language),
+        "no_recovery_words_language": language,
     }
     return document
 
@@ -107,11 +122,11 @@ def _discarded_natural_target() -> list[str]:
         "--modelo",
         "130",
         "--year",
-        "2025",
+        str(SCENARIO_FILING_YEAR),
         "--period",
         "1T",
         "--revision",
-        "2019-y-siguientes",
+        _M130_REVISION,
     ]
 
 

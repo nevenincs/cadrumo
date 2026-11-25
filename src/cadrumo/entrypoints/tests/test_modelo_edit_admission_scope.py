@@ -19,7 +19,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, se
 
 from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.modelo.action_errors import ModeloEditBaselineStaleError
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.calculation_source_policy import (
@@ -158,7 +158,11 @@ def test_the_surface_classifies_every_address_by_what_can_reach_the_engine(
             elif source is not BindingSourceKind.MANUAL_INPUT and source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
                 assert entry.reason is ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
             else:
-                assert entry.reason is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
+                assert entry.reason in {
+                    ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE,
+                    ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE,
+                    ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION,
+                }
 
 
 def test_a_carry_binding_override_is_admitted_set_and_removed(tmp_path: Path) -> None:

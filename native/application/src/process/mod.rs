@@ -1,5 +1,7 @@
 //! CLI stream relay. Standard output remains a byte-for-byte operator result channel.
 pub mod creation;
+#[cfg(unix)]
+pub mod group;
 pub mod status;
 
 use crate::{

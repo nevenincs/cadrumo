@@ -16,22 +16,24 @@ from pydantic import ValidationError
 from ....core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from .errors import RegistryValidationError
 from .schema_deadlines import ModeloScheduleDefinition
-from .schema_verification import ProfilePredicateDefinition, ProfilePredicateOp
+from .schema_live_verification import ProfilePredicateDefinition, ProfilePredicateOp
 
 __all__ = [
     "FilingScheduleCarrier",
     "applicable_filing_schedules",
     "evaluate_profile_conditions",
     "profile_condition_matches",
+    "undecided_profile_condition_fields",
+    "unresolved_schedule_deciding_fields",
 ]
 
-_IVA_REGIME_PATH: Final[str] = "iva.regime"
+IVA_REGIME_PATH: Final[str] = "iva.regime"
 _IRPF_ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
-_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
+TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
 _PROFILE_ATTRIBUTE_FACTS: Final[dict[str, tuple[str, bool]]] = {
-    _IVA_REGIME_PATH: ("iva_regime", True),
+    IVA_REGIME_PATH: ("iva_regime", True),
     _IRPF_ESTIMATION_REGIME_PATH: ("irpf_estimation_regime", True),
-    _TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
+    TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
 }
 
 
@@ -77,6 +79,69 @@ def applicable_filing_schedules(
     return tuple(matched)
 
 
+def unresolved_schedule_deciding_fields(
+    revision: FilingScheduleCarrier,
+    profile_facts: Mapping[str, object] | object,
+    *,
+    period: str,
+) -> tuple[str, ...]:
+    """Return the unanswered predicate facts that leave ``period`` without a filing schedule.
+
+    A schedule that admits the period but fails only on facts the profile has not
+    answered is undecided rather than inapplicable: answering those facts can select
+    it. When some schedule already matches, or every schedule for the period fails
+    on an answered fact (a genuine cadence mismatch), nothing is unresolved.
+
+    Args:
+        revision: The revision, or its selection metadata, whose schedules decide.
+        profile_facts: Profile facts consulted by each schedule's predicates.
+        period: The period token the filing is for.
+    """
+    if not revision.filing_schedules or applicable_filing_schedules(revision, profile_facts, period=period):
+        return ()
+    fields: dict[str, None] = {}
+    for schedule in revision.filing_schedules:
+        if period not in schedule.periods:
+            continue
+        fields.update(
+            dict.fromkeys(
+                undecided_profile_condition_fields(
+                    schedule.profile_conditions,
+                    profile_facts,
+                    mode=schedule.profile_condition_mode,
+                ),
+            ),
+        )
+    return tuple(fields)
+
+
+def undecided_profile_condition_fields(
+    conditions: tuple[ProfilePredicateDefinition, ...],
+    profile_facts: Mapping[str, object] | object,
+    *,
+    mode: str,
+) -> tuple[str, ...]:
+    """Return the unanswered facts that answering could make ``conditions`` match.
+
+    A predicate set that fails only on facts the profile has not answered is
+    undecided rather than failed. Under ``"any"`` every unanswered failing
+    predicate is reported; under ``"all"`` they are reported only when no
+    answered predicate fails. A set that fails on an answered fact under
+    ``"all"`` has nothing undecided, and the result is empty.
+
+    Args:
+        conditions: The declared predicates, evaluated under ``mode``.
+        profile_facts: Profile facts consulted by each predicate.
+        mode: ``"all"`` or ``"any"``, as the predicate set declares.
+    """
+    failing = [condition for condition in conditions if not profile_condition_matches(condition, profile_facts)]
+    unanswered = [
+        condition.field for condition in failing if resolve_profile_fact(profile_facts, condition.field) is None
+    ]
+    decidable = bool(unanswered) if mode == "any" else len(unanswered) == len(failing)
+    return tuple(dict.fromkeys(unanswered)) if decidable else ()
+
+
 def evaluate_profile_conditions(
     conditions: tuple[ProfilePredicateDefinition, ...],
     profile_facts: Mapping[str, object] | object,
@@ -103,7 +168,7 @@ def profile_condition_matches(
     profile_facts: Mapping[str, object] | object,
 ) -> bool:
     """Return whether one declared predicate matches the supplied profile facts."""
-    observed = _resolve_profile_fact(profile_facts, condition.field)
+    observed = resolve_profile_fact(profile_facts, condition.field)
     if condition.op == ProfilePredicateOp.EQUALS:
         return observed == condition.value
     if condition.op == ProfilePredicateOp.NOT_EQUALS:
@@ -164,7 +229,7 @@ def _resolve_profile_fact_path(profile_facts: object, field: str) -> object:
     return current
 
 
-def _resolve_profile_fact(profile_facts: object, field: str) -> object:
+def resolve_profile_fact(profile_facts: object, field: str) -> object:
     """Resolve one declared schedule predicate against mapping or profile facts."""
     found, observed = _resolve_direct_profile_fact(profile_facts, field)
     if found:

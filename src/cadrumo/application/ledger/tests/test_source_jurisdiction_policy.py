@@ -1,10 +1,7 @@
 """Which jurisdiction a row is sourced in is decided once, for every surface.
 
-The rule used to live at the command boundary, where it answered only for
-operators typing at a terminal: a second frontend adding a ledger row would
-have had to reimplement it, and the likeliest reimplementation is the one that
-was wrong before -- default everything to ``ES``. Its consumer was already in
-this layer, so the decision now is too.
+The decision lives in this layer, so a frontend that adds a ledger row calls
+it rather than reimplementing it.
 
 What these hold is the decision itself, not its wording. Every case is driven
 through the real function with real enum members, and the two obligations are

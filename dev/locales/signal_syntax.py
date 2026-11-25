@@ -16,7 +16,7 @@ TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(
 
 
 TRANSLATION_CODE_RE: Final[re.Pattern[str]] = re.compile(
-    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?:=[^][,;\s]+)?|"
+    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?![\w])(?:=[^][,;\s]+)?|"
     r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b|\[\d{1,4}\]"
 )
 
@@ -54,7 +54,7 @@ TRANSLATION_URL_RE: Final[re.Pattern[str]] = re.compile(
 TRANSLATION_PATH_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])(?:[A-Za-z]:[\\/]|\\\\|\.{1,2}[\\/])[^\s<>()\[\]{}]+|"
     r"(?<![\w])(?:[\w.-]+[\\/])+[\w./-]+|"
-    r"(?<![\w])[\w-]+(?:\.[\w-]+)+(?=[\s,;:!?)]|$)"
+    r"(?<![\w])[\w-]+(?:\.[\w-]+)+(?:#[A-Za-z0-9_.-]+)?(?=[\s,;:!?)]|$)"
 )
 
 
@@ -68,8 +68,8 @@ TRANSLATION_NUMERIC_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])\d+(?:[.,
 
 
 TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])--[A-Za-z][A-Za-z0-9-]*(?:=[^\s,;:()[\]{}]+)?|"
-    r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
+    r"(?<![\w])--[^\W\d_][\w-]*(?:=[^\s,;:()[\]{}]+)?|"
+    r"(?<![\w])-[^\W\d_](?=\s|$|[,;:.)\]}])"
 )
 
 
@@ -98,6 +98,36 @@ TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za
 TRANSLATION_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?/?>")
 
 
+# Exact PascalCase identifiers from the spelling audit that are independently
+# attested in runtime type/module names or the Windows registry-value contract.
+# Keep this finite: a malformed identifier such as ``AccesRequest`` must remain
+# dictionary input even though it has the same general shape.
+TRANSLATION_PASCAL_IDENTIFIER_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "AeatAuthenticator",
+        "BindingId",
+        "CasillaId",
+        "CasillaObservation",
+        "CounterpartObservation",
+        "DiagnosticCheck",
+        "ForeignAssetObservation",
+        "InputClassification",
+        "InvoiceWithholdingEvidenceRequest",
+        "LedgerPaymentWithholdingEvidenceRequest",
+        "LongPathsEnabled",
+        "RelationId",
+        "SetupAnswers",
+    }
+)
+
+
+TRANSLATION_PASCAL_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9])(?:"
+    + "|".join(re.escape(name) for name in sorted(TRANSLATION_PASCAL_IDENTIFIER_NAMES, key=len, reverse=True))
+    + r")(?![A-Za-z0-9])"
+)
+
+
 TRANSLATION_HTML_LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(
     r"<(?P<tag>[A-Za-z][A-Za-z0-9:-]*)\b"
     r"(?=[^<>]*?\blang\s*=\s*[\"'](?P<locale>[A-Za-z]{2})(?:-[^\"']*)?[\"'])"
@@ -112,8 +142,193 @@ TRANSLATION_MARKDOWN_LINK_CONTEXT_RE: Final[re.Pattern[str]] = re.compile(
 
 
 TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?P<title>\b(?:[A-ZÁÉÍÓÚÜÑ][\wÁÉÍÓÚÜÑáéíóúüñ]*\s+){1,3})"
+    r"(?P<title>\b(?:Ley(?:\s+Orgánica)?|Real\s+Decreto(?:-ley|\s+Legislativo)?|"
+    r"Decreto(?:-ley|\s+Legislativo)?|Orden|Resolución)\s+)"
     r"(?P<identifier>[A-Z]{0,5}/?\d{1,4}/\d{4})\b"
+)
+
+
+TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado|"
+    # https://gobiernoabierto.navarra.es/es/transparencia/convenio-economico
+    r"Hacienda Foral|"
+    # Complete official DEHú service name; its individual words stay local.
+    # https://administracion.gob.es/lectura-facil/notificaciones
+    r"Dirección Electrónica Habilitada (?:Única|única)|"
+    # https://www.fnmt.es/es/contacto
+    r"Fábrica Nacional de Moneda y Timbre|"
+    # Retained proper names in profile adoption guidance and the ROI, REDEME
+    # and REBECA guides. Only the complete names change dictionary ownership.
+    r"Registro (?:Civil|de Operadores Intracomunitarios|de Devolución Mensual|"
+    r"Especial de Buques y Empresas Navieras de Canarias))\b"
+)
+
+
+# The terminology handbook keeps these Spanish tax nouns in foreign prose.
+# Match complete terms, including only their ordinary singular/plural forms;
+# the Spanish dictionary still checks every matched word. Multiword terms
+# must stay whole so their prepositions do not become global exceptions.
+# Owners: _data/terminology/concepts and the bienes de inversión register.
+TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:(?<![\w'’-])|(?<!\wl')(?<=l'))['‘’]?(?:bien(?:es)? de inversión|"
+    r"recargo de equivalencia|grupo de entidades de IVA|"
+    # The Modelo 200 checkbox is quoted using its exact printed label.
+    r"Extinción de entidad|"
+    # Keep the retained AEAT and legislation phrases whole. Their function
+    # words are checked in Spanish only within the legal expression.
+    r"labores del tabaco|Ley del IVA|razón social|pleno dominio|"
+    r"ganancias y pérdidas patrimoniales|período impositivo|tipo de gravamen|"
+    r"[Cc]ifra de negocios|domiciliación previa|"
+    # Full official tax names retained in the bilingual lifecycle guides.
+    # https://sede.agenciatributaria.gob.es/Sede/iva/novedades-iva/novedades-normativa-2025/orden-hac-1425-2025-9-diciembre.html
+    r"Impuesto sobre la Renta de las Personas Físicas|Impuesto sobre el Valor Añadido|"
+    # The wealth tax keeps its statutory name (Ley 19/1991) in the profile,
+    # wizard and overview catalogues, as the IRPF and IVA names do above.
+    # https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392
+    r"Impuesto sobre el Patrimonio|"
+    # The special IVA cash-accounting regime keeps its statutory name (LIVA
+    # arts. 163 decies to 163 sexiesdecies); Hungarian prose quotes only its
+    # criterion in parentheses.
+    # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
+    r"régimen especial del criterio de caja|criterio de caja|"
+    # Complete official identification and maritime-regime names, plus the
+    # installment-payment term retained in modelo guidance.
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/apoderamientos-otorgados.html
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-02-identificacion/modelo-036/pagina-2a-identificacion-personas-fisicas/identificacion.html
+    # https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/Afiliacion/10548/32840/610
+    # https://www3.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/pagos-fraccionados/gestiones-pagos-fraccionados.html
+    r"Número de Identificación Fiscal|Número de Identidad de Extranjero|"
+    r"Régimen Especial de Trabajadores del Mar|pago fraccionado|pagos fraccionados(?: anteriores)?|"
+    # This is the exact bold navigation label in the notifications guide.
+    # https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html
+    r"(?<=\*\*)Mis notificaciones(?=\*\*)|"
+    # Retained in the capital-goods labels and bilingual home-office notes.
+    # Route the whole phrase; its words still go through the Spanish dictionary.
+    r"cuota soportada|regla de prorrata|prorrata especial|datos censales|"
+    r"declaración (?:tributaria|censal|de la renta)|"
+    r"justificante de presentación|retenciones (?:del trabajo|de alquiler)|"
+    r"atribución de rentas|impuesto sobre sociedades|"
+    r"operaciones (?:vinculadas|intracomunitarias|con terceros)|"
+    r"sede electrónica|cuenta corriente tributaria|domiciliación bancaria|"
+    r"autoliquidación conjunta|referencia catastral|situación catastral|"
+    # AEAT uses both number forms and sentence-initial capitalization.
+    # https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-128e16_v1.05.pdf
+    r"(?:diseño|Diseño) de registros?|consulta de declaraciones presentadas|fichero BOE|"
+    r"cotejo por CSV|CSV cotejo|"
+    # English UI and guidance deliberately retain these complete Spanish
+    # statutory phrases. Keep the route phrase-specific: their component words
+    # (especially de, del, por, and common nouns) remain English dictionary
+    # input everywhere else. Sources: the live modelo findings, Censo and
+    # Renta terminology concepts, and the Modelo 036/037 and activity-asset
+    # register labels.
+    r"rendimiento neto del trabajo|rendimientos del trabajo|"
+    r"rendimientos del capital mobiliario(?: del ahorro)?|"
+    r"estimación directa|estimación objetiva(?: \(módulos\))?|"
+    # These complete Spanish labels are retained in the English profile,
+    # activity-asset and Modelo 210 catalogues. Spanish still checks each word;
+    # their prepositions and nouns are not English spelling exceptions.
+    r"tipo de renta|libertad de amortización|colegio concertado|"
+    r"importe neto de la cifra de negocios|suministro inmediato de información|"
+    r"acuse de recibo|número de rentas|"
+    r"(?:(?<=Objective assessment \()|(?<=Objective estimation \()|"
+    r"(?<=simplified VAT regime \()|(?<=objective-estimation \())módulos(?=\))|"
+    r"reales decretos|órdenes ministeriales|"
+    r"(?<=Spanish )leyes|(?<=per )contribuyente|"
+    r"certificado de retenciones e ingresos a cuenta|retenciones e ingresos a cuenta|"
+    r"certificado de situación censal|situación censal|"
+    r"censal(?= (?:certificate|facts|read))|"
+    r"código seguro de verificación|"
+    # The activity-income imputation guidance keeps the statutory name of the
+    # commercial accounting code (https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627)
+    # and RIRPF art. 7's two criteria, accrual (devengo) and cash (cobros y pagos),
+    # which the declaration forms and the imputation flags state in Spanish
+    # (https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820). The ingreso a cuenta
+    # is the payer's payment on account on income in kind (LIRPF art. 99).
+    r"código de comercio|cobros y pagos|devengo|ingresos? a cuenta|"
+    r"mínimo por descendientes|anualidades por alimentos|guarda y custodia|"
+    r"régimen de atribución de rentas|comunidad de bienes|sociedad civil|"
+    # The Renta/VAT guides retain these complete Spanish box and regime
+    # labels, including the two attested English hyphenated label forms.
+    # Component words stay in their surrounding language elsewhere; matched
+    # labels still require Spanish dictionary recognition word by word.
+    # The official box labels and legal terms below are retained as complete
+    # parenthetical labels in the translated filing guides. Match the label,
+    # not the surrounding explanation or its individual common words.
+    # Modelo 100/303 dictionaries and the 349 operator declaration own them:
+    # https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2024.html
+    r"(?:(?<=\()|(?<=; ))(?:Retribuciones dinerarias|Resultado final|"
+    r"cuota (?:íntegra|líquida|resultante)|territorio común|operador intracomunitario|"
+    r"vivienda habitual)(?=\))|"
+    # The Modelo 130 instructions name these exact quoted filing sections.
+    # https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI34.shtml
+    r"(?<=[\"“«])(?:Ingreso|A deducir|Negativa)(?=[\"”»])|"
+    # Numbered box 65, retained after the percent sign in the 303 guide.
+    # https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2025/Imagenes/Cap_9_303_eu_es.pdf
+    r"(?<=% )atribuible a la Administración del Estado(?=[\"”»])|"
+    r"(?:base (?:imponible|liquidable)|cuota devengada|régimen(?: |-)general|"
+    r"régimen simplificado|régimen de atribución|régimen-de-atribución)(?![\w-])|"
+    r"carácter social|entrega intracomunitaria|"
+    r"signos[, ]+índices[, ]+módulos|previsión social|"
+    r"código técnico de la edificación|hacienda foral|"
+    r"concierto económico|convenio económico|"
+    # These technical labels recur in the activity-asset UI. The match spans
+    # only the Spanish term; lookarounds require a precise register cue without
+    # sending surrounding English words to the Spanish dictionary.
+    r"(?:(?<=record )|(?<=change )|(?<=remove )|(?<=correct )|(?<=the )|(?<=a )|"
+    r"(?<=this )|(?<=its )|(?<=element's ))baja(?=\b)|"
+    r"baja(?= (?:date|figures|of|updated|recorded|is|was)\b)|"
+    r"(?:(?<=record )|(?<=replace )|(?<=correct )|(?<=forecast )|"
+    r"(?<=without a )|(?<=without the )|(?<=years without a )|"
+    r"(?<=the )|(?<=a )|(?<=this )|(?<=that ))dotación(?=\b)|"
+    r"dotación(?= (?:of|from|for|already|can|is|was|recorded)\b)|"
+    # The plural loses the singular's accent. Keep its attested English asset
+    # register collocations as narrow as the singular's, rather than accepting
+    # the word globally or overlooking a misspelled Spanish form.
+    r"(?:(?<=the )|(?<=these )|(?<=overlapping ))dotaciones(?=\b)|"
+    r"dotaciones(?= (?:after|for|in your tax returns|that no longer match)\b)|"
+    # `sede` is preserved only as the named AEAT filing service.
+    r"(?<=AEAT )sede(?=\b)|(?<=service \()sede(?=\))|"
+    # `compensación` is the Spanish Modelo 303 carry-forward term.
+    r"(?:(?<=previous Modelo 303 )|(?<=prior Modelo 303 )|"
+    r"(?<=previous )|(?<=prior )|(?<=carry-forward )|(?<=zero )|"
+    r"(?<=zero local )|(?<=Modelo 303 ))compensación(?=\b)|"
+    # Keep only the Spanish tax term inside these mixed-language collocations.
+    r"(?:(?<=IRPF )|(?<=withholding \())retención(?=\b)|"
+    r"retención(?= (?:fraction|withheld|rate|e ingresos)\b)|"
+    r"casillas?|modelos?|borrador(?:es)?|censos?|"
+    r"expedientes?|justificantes?|prorratas?|prorrateo|renta)['’]?(?![\w'’])",
+    re.IGNORECASE,
+)
+
+
+# These are AEAT's exact service names, not separate vocabulary exceptions
+# for the fragments that punctuation would otherwise split apart.
+TRANSLATION_CLAVE_NAME_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w'’])Cl@ve(?: Móvil| PIN| Permanente)?(?![\w'’])"
+)
+
+
+# The quarter example uses the same Hungarian year placeholder with the
+# domain's documented nT quarter notation (user_profile/quarter_sets.py).
+TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])ÉÉÉÉ-(?:HH-NN(?:TÓÓ:PP:MMZ)?|nT)(?![\w-])"
+)
+
+
+# Hungarian attaches case suffixes to foreign words, abbreviations, and numbers
+# with a hyphen. Strip only suffix spellings attested as Hunspell fragments in
+# the locale corpus, retaining the stem for normal spelling validation.
+TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w-])(?P<stem>(?:[^\W\d_][\w.-]*|\d+))-"
+    r"(?P<suffix>ból|ből|tól|től|nál|nél|ról|ről|os|ös|es)(?![\w-])"
+)
+
+
+# Hungarian attaches grammatical endings to percentages with a hyphen. Keep
+# only these endings structural, since the numeric filter removes the number
+# and percent sign later; unrelated endings remain spelling input.
+TRANSLATION_HUNGARIAN_PERCENT_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w-])(?P<stem>\d+\s*%)-(?P<suffix>os|ot|ban|ig|tól|ából|on)(?![\w-])"
 )
 
 

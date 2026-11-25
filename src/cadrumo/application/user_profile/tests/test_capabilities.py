@@ -12,16 +12,16 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
 from ....core.parsing.utils import parse_bool
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..capabilities import CapabilitySource, _parse_bool_fact, resolve_capability, resolve_capability_from_values
+from ..capabilities import CapabilitySource, parse_bool_fact, resolve_capability, resolve_capability_from_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -29,13 +29,13 @@ _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="19191919-1919-4191-8191-191919191919",
         facts=facts,
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -87,6 +87,25 @@ def test_authorized_fact_projection_uses_the_same_safety_floor_and_opt_out() -> 
     assert barred.source is CapabilitySource.SAFETY_FLOOR
 
 
+def test_gestor_mode_bars_the_off_host_gate_and_leaves_image_reading_to_the_profile() -> None:
+    """Image reading does not keep a document on this computer; the cloud gate does.
+
+    ``llm_vision`` permits a read with the image-reading model the person
+    selected, wherever that model runs. The standing bar on an off-host read
+    sits on ``cloud_evidence_upload`` alone, so gestor mode bars that one and
+    leaves ``llm_vision`` to its default and the profile's own answer.
+    """
+    gestor = load_settings().model_copy(update={"cadrumo_evidence_gestor_mode": True})
+
+    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=None, settings=gestor)
+    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=None, settings=gestor)
+
+    assert vision.enabled is True
+    assert vision.source is CapabilitySource.DEFAULT
+    assert cloud.enabled is False
+    assert cloud.source is CapabilitySource.SAFETY_FLOOR
+
+
 @pytest.mark.parametrize("token", ["no", "n", "false", "falso", "0"])
 def test_a_negative_answer_in_any_accepted_form_is_honoured(token: str) -> None:
     """A stored opt-out decides, rather than deferring to the deployment flag.
@@ -132,4 +151,4 @@ def test_the_reader_accepts_exactly_what_the_write_door_stores() -> None:
     while the door refuses them outright, so the drift ran in both directions.
     """
     for token in ("sí", "si", "s", "y", "yes", "true", "1", "verdadero", "no", "n", "falso", "0", "false", "on", "off"):
-        assert _parse_bool_fact(token) == parse_bool(token), f"reader and write door disagree on {token!r}"
+        assert parse_bool_fact(token) == parse_bool(token), f"reader and write door disagree on {token!r}"

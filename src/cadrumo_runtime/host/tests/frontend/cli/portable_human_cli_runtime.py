@@ -3,6 +3,12 @@
 The transport and physical worker isolation are test ports. Password proof,
 human admission, registered operation execution and access guards are production
 owners. This fixture proves those composed contracts, never native custody.
+
+The profile's agent service is a test port too: a model run an operation sends
+under its held START permit is answered by the stand-in that
+:func:`serving_portable_agent` binds, as the runtime relays it to the profile's
+admitted service. With none bound, the run is refused ``service_unavailable``,
+which is what the runtime answers when no service is admitted.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ from uuid import UUID, uuid4
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
@@ -45,13 +52,15 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
-from cadrumo.core.time.clock import now
+from cadrumo.core.config import override_settings
+from cadrumo.core.model_roles import ModelRole
+from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
@@ -60,9 +69,22 @@ from cadrumo_client.contracts.contracts import (
     RefusalCode,
     RefusalError,
 )
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunOutcome,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunServed,
+    ModelRunTaskKind,
+    decode_model_run_body,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport import credentials
+from cadrumo_client.transport.frame_io import read_document
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -73,9 +95,11 @@ from cadrumo_runtime.adapters.worker_authorization_client import WorkerAuthoriza
 from cadrumo_runtime.adapters.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo_runtime.adapters.worker_transport import WorkerChannel
 from cadrumo_runtime.commands import runtime_automation_request
+from cadrumo_runtime.contracts.profile_worker import ProfileWorkerReady
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationOwner,
+    WorkerAuthorizationRequest,
     WorkerAutomationInventoryRequest,
 )
 from cadrumo_runtime.host import session_owner, worker_service
@@ -106,7 +130,7 @@ class _Channel:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 self.incoming.condition.wait(remaining)
             result = bytes(self.incoming.data[:count])
             del self.incoming.data[:count]
@@ -128,7 +152,7 @@ class _Channel:
             if self.outgoing.closed:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             if time.monotonic() >= deadline:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             self.outgoing.data.extend(payload)
             self.outgoing.condition.notify_all()
 
@@ -165,7 +189,7 @@ class _Listener:
                 return self.pending.get(timeout=remaining)
             except Empty:
                 continue
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     def connect(self, *, timeout: float) -> ByteChannel:
         del timeout
@@ -194,7 +218,7 @@ class _LoanCustody(ProfileWorkerCustody):
         identity: ProfileWorkerIdentity,
         *,
         storage_root: Path,
-        clock: Callable[[], UtcInstant] = now,
+        clock: Callable[[], UtcInstant] = wall_now,
         monotonic: Callable[[], float] = time.monotonic,
         oracle: BucketSession | None = None,
     ) -> None:
@@ -204,14 +228,8 @@ class _LoanCustody(ProfileWorkerCustody):
             raise AssertionError("the portable custody loan requires its parent oracle")
         if oracle.bucket_id != str(identity.binding.profile_id):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        self.identity, self.root, self.oracle = identity, storage_root, oracle
-        self.clock, self.monotonic = clock, monotonic
-        self._leases: dict[UUID, AccessSession] = {}
-        self._ended: dict[UUID, AccessDenialCode] = {}
-        self._lock = RLock()
-        self._closed = False
-        self._sections = 0
-        self._material_update_pending = False
+        self.oracle = oracle
+        self._hold_nothing(identity, storage_root=storage_root, clock=clock, monotonic=monotonic)
 
     @override
     def _replace_key_session(self, leases: dict[UUID, AccessSession], dek: bytes) -> None:
@@ -235,19 +253,98 @@ class _ContextServer(RetainedRuntimeTransportServer):
         self.test_context.copy().run(super()._connection, channel)
 
 
+_SERVED_AGENTS: list[RecordingModelRuns] = []
+
+
+@contextmanager
+def serving_portable_agent(service: RecordingModelRuns) -> Generator[RecordingModelRuns]:
+    """Answer every model run the portable runtime relays with ``service`` until the block exits."""
+    _SERVED_AGENTS.append(service)
+    try:
+        yield service
+    finally:
+        _SERVED_AGENTS.remove(service)
+
+
+async def _agent_answer(
+    service: RecordingModelRuns, role: str, header: ModelRunHeader | None, body: ModelRunBody | None
+) -> tuple[ModelRunOutcome, bytearray]:
+    """Answer one lookup or run, in the outcome shape the service returns it."""
+    if header is None:
+        try:
+            known = ModelRole(role)
+        except ValueError:
+            return ModelRunOutcome(refusal=ModelRunRefusalCode.UNKNOWN_ROLE), bytearray()
+        lane = await service.lookup(known)
+        if isinstance(lane, ModelRunRefusal):
+            return ModelRunOutcome(refusal=lane.code), bytearray()
+        return ModelRunOutcome(lane=lane), bytearray()
+    if body is None:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    output = await service.run(header, body)
+    if isinstance(output, ModelRunRefusal):
+        return ModelRunOutcome(refusal=output.code), bytearray()
+    text = bytearray(output.text.encode("utf-8"))
+    served = ModelRunServed(
+        provider_id=output.provider_id,
+        transport=output.transport,
+        model=output.model,
+        agent_version=output.agent_version,
+    )
+    return ModelRunOutcome(served=served, text_byte_count=len(text)), text
+
+
+class _ModelRunLease(WorkerAuthorizationLease):
+    """A held permit whose one model run reaches the bound agent stand-in instead of a native channel."""
+
+    _answered = False
+
+    @override
+    def model_run(
+        self,
+        role: str,
+        header: ModelRunHeader | None,
+        body: bytearray,
+        *,
+        answer_seconds: float,
+        task_kind: ModelRunTaskKind | None = None,
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        del answer_seconds, task_kind
+        request = self.request
+        try:
+            # The production lease admits one run, only under a START permit.
+            if (
+                not isinstance(request, WorkerAuthorizationRequest)
+                or request.request.action is not AccessAction.START
+                or self._answered
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            self._answered = True
+            decoded = None if header is None else decode_model_run_body(body)
+        finally:
+            body[:] = bytes(len(body))
+        if not _SERVED_AGENTS:
+            return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
+        return asyncio.run(_agent_answer(_SERVED_AGENTS[-1], role, header, decoded))
+
+
 class _Authorization(WorkerAuthorizationClient):
     def __init__(self, identity: ProfileWorkerIdentity, root: Path, owner: WorkerAuthorizationOwner) -> None:
         super().__init__(identity=identity, root=root, parent_pid=os.getpid())
         self.owner = owner
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # The actual runtime owner evaluates admission and holds nothing once it answers.
+        with self.owner.authorize(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         # The actual runtime owner evaluates and holds its thread-affine fence.
         with self.owner.authorize(request):
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield _ModelRunLease(connections=self.connections, request=request)
 
     @override
     async def inventory(self, request: WorkerAutomationInventoryRequest) -> AutomationInventory:
@@ -255,9 +352,15 @@ class _Authorization(WorkerAuthorizationClient):
             return allowed.inventory
 
     @override
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # The runtime owner receives the worker's report as its endpoint would hand it on.
-        self.owner.operations_advanced(operation_ids, records_changed=records_changed)
+        self.owner.operations_advanced(operation_ids, records_changed=records_changed, settled=settled)
 
 
 class _Worker(ProfileWorkerHumanAdmission):
@@ -270,11 +373,14 @@ class _Worker(ProfileWorkerHumanAdmission):
         storage_root: Path,
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
-        wall_clock=now,
-        runtime_server_starter: Callable[[], int | None] | None = None,
+        wall_clock=wall_now,
+        exited: Callable[[_Worker], None] | None = None,
+        stopping: ChannelWake | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
-        # This worker runs in the runtime's own interpreter, so nothing contains a server it would start.
-        del wall_clock, runtime_server_starter
+        # The worker runs in a joined thread of this process: no process exit to watch,
+        # and the portable runtime admits no fixed clock.
+        del wall_clock, exited, stopping, fixed_clock
         if authorization is None or worker_script is not None:
             raise AssertionError("portable worker requires its runtime owner and no external script")
         oracle = current_active_bucket_session()
@@ -282,27 +388,42 @@ class _Worker(ProfileWorkerHumanAdmission):
             raise AssertionError("portable runtime requires its owned encrypted test oracle")
         self.identity = identity
         self._lock, self._operation_lock, self._human_lock = RLock(), RLock(), RLock()
-        self._stopping = Event()
+        self._stopping = NativeWake()
         self._human_candidate = None
         self._human_deadline = None
+        self._human_transaction_deadline = None
         control_client, control = _channels(identity.binding.os_owner_id)
         operation_client, operations = _channels(identity.binding.os_owner_id)
+        proof_client, proof = _channels(identity.binding.os_owner_id)
         # WorkerChannel names the production native union. These explicit test
         # transport ports satisfy its ByteChannel framing contract.
         self._channel = cast(WorkerChannel, control_client)
         self._operation_channel = cast(WorkerChannel, operation_client)
+        self._proof_channel = cast(WorkerChannel, proof_client)
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="portable-profile-worker")
         self.custody = _LoanCustody(identity, storage_root=storage_root, oracle=oracle)
 
         def run() -> None:
-            with activate_session(oracle), profile_adapter_composition():
+            with (
+                override_settings(
+                    cadrumo_storage_root=storage_root,
+                    cadrumo_active_profile=str(identity.binding.profile_id),
+                ),
+                activate_session(oracle),
+                profile_adapter_composition(),
+            ):
                 client = _Authorization(identity, storage_root, authorization)
                 host = ProfileWorkerOperationHost(self.custody, authorization=client)
                 human = ProfileWorkerHumanLogin(self.custody, decode=host.profile_decode_context)
                 try:
                     asyncio.run(
-                        worker_service._serve(
-                            cast(WorkerChannel, control), cast(WorkerChannel, operations), self.custody, human, host
+                        worker_service.serve(
+                            cast(WorkerChannel, control),
+                            cast(WorkerChannel, operations),
+                            cast(WorkerChannel, proof),
+                            self.custody,
+                            human,
+                            host,
                         )
                     )
                 except BaseException as error:
@@ -318,9 +439,21 @@ class _Worker(ProfileWorkerHumanAdmission):
                     raise
                 finally:
                     self.custody.close()
+                    # A worker that ends is a closed pipe to its parent.
+                    for served in (control, operations, proof):
+                        served.close()
 
         context = copy_context()
         self.running = self.pool.submit(context.run, run)
+        self._start_proof_dispatcher()
+        try:
+            # The production parent reads this key-free readiness before it owns the worker.
+            ready = read_document(self._channel, ProfileWorkerReady, deadline=DEFAULT_TIMEOUT_POLICY.deadline().instant)
+            if ready.identity != identity:
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        except BaseException:
+            self.close()
+            raise
 
     @override
     def _exchange_channel(self, operation: bool):
@@ -342,11 +475,18 @@ class _Worker(ProfileWorkerHumanAdmission):
             self._channel.close()
         if self._operation_channel is not None:
             self._operation_channel.close()
+        failures: list[BaseException] = []
+        self._close_proof_channel(failures)
+        if failures:
+            raise failures[0]
         try:
             self.running.result(timeout=15 if deadline is None else max(0, deadline - time.monotonic()))
         except RefusalError as error:
             if error.reason is not RefusalCode.CONNECTION_CLOSED:
                 raise
+        except asyncio.CancelledError:
+            # A stopped worker cancels its own request tasks; its loop may end that way, as its process would.
+            pass
         finally:
             if self.running.done():
                 self.pool.shutdown(wait=True)
@@ -354,6 +494,7 @@ class _Worker(ProfileWorkerHumanAdmission):
     @override
     def settle(self, *, deadline: float | None = None) -> None:
         self.close(deadline=deadline)
+        self._settle_proof_dispatcher(deadline=deadline)
 
 
 @dataclass(frozen=True)
@@ -404,6 +545,7 @@ def portable_human_cli_runtime(
     stop, boot = Event(), uuid4()
     login = _Login(listener.owner, str(uuid4()))
     native = MemoryNativePort() if native_store is None else native_store
+    test_context = copy_context()
     profiles = RuntimeProfileConnections(
         storage_root=root,
         storage_identity=listener.storage_identity,
@@ -411,6 +553,8 @@ def portable_human_cli_runtime(
         stop=stop,
         capture_login=lambda _: login,
         secret_store=lambda: native,
+        # Authority expiry is wall time; a replay's frozen document clock never reaches it.
+        wall_clock=wall_now,
     )
     server = _ContextServer(
         listener,
@@ -420,21 +564,36 @@ def portable_human_cli_runtime(
         boot_id=boot,
         authority_generation=published_authority_generation(),
     )
-    server.test_context = copy_context()
+    server.test_context = test_context
     owner = NativeRuntimeFixtureOwner(listener, stop, timeout=20)
     primary: BaseException | None = None
     with portable_password_custody(), pytest.MonkeyPatch.context() as patch:
-        patch.setattr(session_owner, "ProfileWorkerProcess", _Worker)
+
+        def construct_worker(*args, **kwargs):
+            # The synthetic worker borrows the fixture's declared test ports,
+            # never whichever context an asynchronous login caller carries.
+            return server.test_context.copy().run(_Worker, *args, **kwargs)
+
+        patch.setattr(session_owner, "ProfileWorkerProcess", construct_worker)
         if client_native_store is not None:
             patch.setattr(credentials, "installed_automation_secret_store", lambda: client_native_store)
             patch.setattr(runtime_automation_request, "installed_automation_secret_store", lambda: client_native_store)
 
-        async def open_transport(door: LaunchDoor, *, timeout: float = 10) -> VerifiedConnection:
+        async def open_transport(
+            door: LaunchDoor, *, timeout: float | None = None, timeout_deadline: TimeoutDeadline | None = None
+        ) -> VerifiedConnection:
             if door._expected.storage_identity != listener.storage_identity:
                 raise RefusalError(RefusalCode.ROOT_MISMATCH)
+            budget = (
+                timeout_deadline.remaining_seconds()
+                if timeout_deadline is not None
+                else 10.0
+                if timeout is None
+                else timeout
+            )
             return await asyncio.to_thread(
                 lambda: VerifiedConnection(
-                    listener.connect(timeout=timeout), expected=door._expected, deadline=time.monotonic() + timeout
+                    listener.connect(timeout=budget), expected=door._expected, deadline=time.monotonic() + budget
                 )
             )
 

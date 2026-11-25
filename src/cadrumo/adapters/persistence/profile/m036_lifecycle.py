@@ -32,7 +32,7 @@ from .snapshots import SecureSnapshotRepository
 from .translated_bucket_event_history import TranslatedBucketEventHistoryRepository
 
 
-class _M036AdapterInputError(CadrumoError):
+class M036AdapterInputError(CadrumoError):
     """Adapter-only invariant error consumed by the translation boundary."""
 
 
@@ -142,7 +142,7 @@ def build_m036_lifecycle_ports(*, bucket_id: str) -> M036LifecyclePorts:
                 not_found_factory=_record_not_found,
                 ambiguous_prefix_factory=_record_ambiguous,
                 domain_label="m036_declaration",
-                input_error_cls=_M036AdapterInputError,
+                input_error_cls=M036AdapterInputError,
                 objects=objects,
             ),
         ),

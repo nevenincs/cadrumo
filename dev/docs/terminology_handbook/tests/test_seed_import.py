@@ -23,10 +23,13 @@ import pytest
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from .._enrolment import EnrolmentCandidate
-from .._scaffold import ScaffoldAction, scaffold_handbook
-from .._seed_import import (
+from ..enrolment import EnrolmentCandidate
+from ..enums import ConceptDomain, TermStatus
+from ..loader import load_terminology_handbook
+from ..scaffold import ScaffoldAction, scaffold_handbook
+from ..seed_import import (
     SeedEntry,
     SeedImportError,
     SeedLicenceError,
@@ -38,12 +41,10 @@ from .._seed_import import (
     parse_ubterm_csv,
     source_attribution,
 )
-from ..enums import ConceptDomain, TermStatus
-from ..loader import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TODAY = date(2026, 6, 11)
+_TODAY = date(filing_year_envelope().horizon, 6, 11)
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 # A controlled concept whose es preferred label is the Spanish key the

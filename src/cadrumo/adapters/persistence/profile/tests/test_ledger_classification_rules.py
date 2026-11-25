@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from .....domain.transactions.classification_rule import LedgerClassificationRule
 from .....domain.transactions.enums import BusinessClassification
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -80,9 +80,9 @@ def test_rule_load_refuses_a_tampered_invalid_pattern(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = LedgerClassificationRuleRepository(objects=profile.repository)
         repository.save(original)
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == repository.namespace,
-            SecureObjectRow.object_key == original.rule_id,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == repository.namespace,
+            secure_objects_table.c.object_key == original.rule_id,
         )
 
         def invalidate_pattern(envelope: dict[str, object]) -> None:

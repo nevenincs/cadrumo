@@ -1,0 +1,87 @@
+# Which income tax a withholding recipient answers to, read from the leading
+# character of its Spanish tax identifier. Orden EHA/451/2008 arts. 3 to 5 give
+# each legal-person NIF a letter naming its legal form, N to a foreign entity and
+# W to a non-resident's permanent establishment; RGAT art. 18 gives natural
+# persons a DNI-based NIF, K and L prefixes, M without N.I.E., and the X/Y/Z
+# N.I.E. series.
+#
+# The regime is IRPF for a natural person (LIRPF art. 8), IS for the mercantile
+# and cooperative forms and temporary joint ventures (LIS art. 7), and IRNR for
+# a foreign entity, its permanent establishment or a Spaniard resident abroad
+# (L). A form the letter does not settle stays unknown: comunidades de bienes and
+# sociedades civiles may attribute their income to their members (LIRPF arts. 8.3
+# and 87), associations and public bodies may be exempt (LIS art. 9), and V and M
+# name no form. "digit" is the leading character of a DNI-based NIF.
+[fact]
+fact_id = "withholding-recipient-regime-by-tax-id-leader"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "withholding-recipient-regime-by-tax-id-leader:2008-07-01"
+date_axis = "filing_period"
+valid_from = 2008-07-01
+legal_refs = ["ley-35-2006:art-8", "ley-35-2006:art-87", "ley-27-2014:art-7"]
+source_refs = ["aeat-nif-personas-fisicas", "aeat-nif-personas-juridicas"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-nif-personas-fisicas"
+required_text = [
+  "formato de nueve caracteres: ocho dígitos",
+  "L, para los españoles residentes en el extranjero",
+  "K, para los españoles que, residiendo en España, sean menores de 14 años",
+  "la letra M, siete caracteres alfanuméricos y un carácter de verificación alfabético",
+  "Una letra inicial, que será la X. Una vez agotada la serie numérica, se seguirá el orden alfabético: Y, Z",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-nif-personas-juridicas"
+required_text = [
+  "A Sociedades anónimas",
+  "B Sociedades de responsabilidad limitada",
+  "C Sociedades colectivas",
+  "D Sociedades comanditarias",
+  "E Comunidades de bienes",
+  "F Sociedades cooperativas",
+  "G Asociaciones",
+  "Comunidades de propietarios en régimen de propiedad horizontal",
+  "J Sociedades civiles",
+  "Para las entidades extranjeras el NIF comenzará por la letra N",
+  "P Corporaciones Locales",
+  "Q Organismos públicos",
+  "R Congregaciones e Instituciones religiosas",
+  "Órganos de la Administración del Estado y de las Comunidades Autónomas",
+  "U Uniones Temporales de Empresas",
+  "V Otros tipos no definidos en el resto de claves",
+  "Para los establecimientos permanentes de entidades no residentes en territorio español, el número de identificación fiscal comenzará con la letra W",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "regime.digit", value = "irpf" },
+  { key = "regime.K", value = "irpf" },
+  { key = "regime.X", value = "irpf" },
+  { key = "regime.Y", value = "irpf" },
+  { key = "regime.Z", value = "irpf" },
+  { key = "regime.L", value = "irnr" },
+  { key = "regime.M", value = "unknown" },
+  { key = "regime.A", value = "is" },
+  { key = "regime.B", value = "is" },
+  { key = "regime.C", value = "is" },
+  { key = "regime.D", value = "is" },
+  { key = "regime.F", value = "is" },
+  { key = "regime.U", value = "is" },
+  { key = "regime.N", value = "irnr" },
+  { key = "regime.W", value = "irnr" },
+  { key = "regime.E", value = "unknown" },
+  { key = "regime.G", value = "unknown" },
+  { key = "regime.H", value = "unknown" },
+  { key = "regime.J", value = "unknown" },
+  { key = "regime.P", value = "unknown" },
+  { key = "regime.Q", value = "unknown" },
+  { key = "regime.R", value = "unknown" },
+  { key = "regime.S", value = "unknown" },
+  { key = "regime.V", value = "unknown" },
+]

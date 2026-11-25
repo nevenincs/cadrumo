@@ -8,17 +8,20 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event, Thread
+from typing import override
 from uuid import uuid4
 
 import pytest
 
-from ...contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from ...contracts.contracts import ChannelWake, ClientHello, RefusalCode, RefusalError, ServerHello
+from ...contracts.profile_access import SessionRequest
 from ...contracts.session_events import SignInChanged
 from ..frame_io import DOCUMENT_FRAME_KIND, read_frame_payload, write_document, write_session_event
 from ..framing import VerifiedConnection
 from ..native_wake import NativeWake
 from ..windows import WindowsEndpoint
 from ..windows_channel import WindowsChannel
+from .delegating_channel import DelegatingChannel
 
 pytestmark = [
     pytest.mark.integration,
@@ -68,32 +71,17 @@ class _Wait:
             self.done.set()
 
 
-class _Counted:
+class _Counted(DelegatingChannel):
     """The real channel, counting how often its reader starts a readiness wait."""
 
     def __init__(self, channel: WindowsChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.waits = 0
 
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
-
+    @override
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
         return self.channel.wait_readable(*wakes)
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        self.channel.write_all(payload, deadline=deadline)
-
-    def close(self) -> None:
-        self.channel.close()
 
 
 def test_a_wake_ends_an_idle_wait_and_later_input_is_read_whole(pair: tuple[WindowsChannel, WindowsChannel]) -> None:
@@ -194,6 +182,73 @@ def test_an_idle_subscription_waits_once_and_an_exchange_claims_the_connection_a
         connection.close()
 
 
+def _handshake(pool: ThreadPoolExecutor, server: WindowsChannel, client: WindowsChannel) -> VerifiedConnection:
+    """Complete the hello exchange: the client opens on ``pool`` while the server side answers here."""
+    connecting = pool.submit(
+        VerifiedConnection,
+        client,
+        expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
+        deadline=time.monotonic() + 5,
+    )
+    read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+    write_document(
+        server,
+        ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
+        deadline=time.monotonic() + 5,
+    )
+    return connecting.result(timeout=5)
+
+
+@pytest.mark.parametrize("closure", ["local", "peer", "exchange"])
+@pytest.mark.parametrize("broken_subscriber", [False, True])
+def test_every_connection_close_wakes_subscribers_once(
+    pair: tuple[WindowsChannel, WindowsChannel], closure: str, broken_subscriber: bool
+) -> None:
+    server, client = pair
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        connection = _handshake(pool, server, client)
+    disconnected = Event()
+    calls: list[None] = []
+
+    def closed() -> None:
+        calls.append(None)
+        disconnected.set()
+
+    def broken() -> None:
+        raise ValueError("synthetic callback failure")
+
+    try:
+        if broken_subscriber:
+            connection.subscribe_session_events(lambda _event: None, disconnected=broken)
+        connection.subscribe_session_events(lambda _event: None, disconnected=closed)
+        if closure == "local":
+            connection.close()
+        elif closure == "peer":
+            server.close()
+        else:
+            # Hold the exchange so its reader, rather than the idle reader,
+            # discovers the EOF after the peer consumes the request.
+            request = SessionRequest(
+                action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+            )
+            with (
+                pytest.raises(RefusalError),
+                connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 5) as exchange,
+            ):
+                read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+                server.close()
+                exchange.reply()
+        assert disconnected.wait(2), "terminal connection closure must wake event waiters"
+        connection.close()
+        reader = connection._event_reader
+        assert reader is not None
+        reader.join(2)
+        assert not reader.is_alive()
+        assert calls == [None]
+    finally:
+        connection.close()
+
+
 def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tmp_path: Path) -> None:
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -215,7 +270,7 @@ def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tm
         assert waiting.is_alive(), "with no deadline only a connection or a wake ends the wait"
         wake.set()
         waiting.join(2)
-        assert not waiting.is_alive() and refused == [RefusalCode.DEADLINE_EXCEEDED]
+        assert not waiting.is_alive() and refused == [RefusalCode.TIMEOUT]
         wake.clear()
         with ThreadPoolExecutor(max_workers=1) as pool:
             accepted = pool.submit(endpoint.accept, timeout=None, wakes=(wake,))
@@ -225,3 +280,98 @@ def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tm
         server.close()
     finally:
         endpoint.close()
+
+
+@pytest.mark.parametrize("failure", [False, True], ids=["explicit-close", "exchange-failure"])
+def test_disconnect_is_delivered_once_when_an_exchange_owns_the_reader(
+    pair: tuple[WindowsChannel, WindowsChannel], failure: bool
+) -> None:
+    server, client = pair
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        connection = _handshake(pool, server, client)
+    disconnected: list[None] = []
+    try:
+        # Holding the exchange prevents the idle reader from being the one
+        # to discover closure, reproducing the missed-notification race.
+        with connection._claimed():
+            connection.subscribe_session_events(lambda _event: None, disconnected=lambda: disconnected.append(None))
+            if failure:
+                server.close()
+                with pytest.raises(RefusalError):
+                    connection.send_secret(bytearray(b"test"), deadline=time.monotonic() + 2)
+            else:
+                connection.close()
+        connection.close()
+        reader = connection._event_reader
+        assert reader is not None
+        reader.join(2)
+        assert not reader.is_alive()
+        assert disconnected == [None]
+    finally:
+        connection.close()
+
+
+@pytest.mark.parametrize("interruption", [InterruptedError, KeyboardInterrupt], ids=["handled-signal", "raised-signal"])
+def test_an_interrupted_accept_settles_its_io_before_the_next_accept(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, interruption: type[BaseException]
+) -> None:
+    import _winapi
+
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    endpoint.listen()
+    try:
+
+        def interrupt_wait(*_arguments: object) -> int:
+            raise interruption
+
+        with monkeypatch.context() as guard:
+            # ConnectNamedPipe and its OVERLAPPED are real. Interrupt only the
+            # wait, so cancellation must settle that pending native operation.
+            guard.setattr(_winapi, "WaitForMultipleObjects", interrupt_wait)
+            if interruption is InterruptedError:
+                with pytest.raises(RefusalError) as caught:
+                    endpoint.accept(timeout=None)
+                assert caught.value.reason is RefusalCode.TIMEOUT
+            else:
+                with pytest.raises(KeyboardInterrupt):
+                    endpoint.accept(timeout=None)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            accepted = pool.submit(endpoint.accept, timeout=5)
+            client = endpoint.connect(timeout=5)
+            server = accepted.result(timeout=5)
+        try:
+            client.write_all(b"after-interrupt", deadline=time.monotonic() + 5)
+            assert server.read_exact(15, deadline=time.monotonic() + 5) == b"after-interrupt"
+        finally:
+            client.close()
+            server.close()
+    finally:
+        endpoint.close()
+
+
+def test_connection_close_cancels_a_held_native_reply_without_claiming_its_exchange(
+    pair: tuple[WindowsChannel, WindowsChannel],
+) -> None:
+    server, client = pair
+    pool = ThreadPoolExecutor(max_workers=2)
+    try:
+        connection = _handshake(pool, server, client)
+        pending = pool.submit(
+            connection.session,
+            SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 120,
+        )
+        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+        closing = pool.submit(connection.close)
+        closing.result(timeout=2)
+        with pytest.raises(RefusalError) as refused:
+            pending.result(timeout=2)
+        assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+        assert connection.closed
+        connection.close()
+    finally:
+        server.close()
+        client.close()
+        pool.shutdown(wait=True)

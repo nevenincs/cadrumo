@@ -14,13 +14,14 @@ point of moving it there.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope, revision_covering
 from ...calculations.registry.tests.authority_lease_support import private_authority_lease, scoped_when_requested
 from ..regularizacion_parameters import (
     BienesInversionParameterResolutionError,
@@ -28,6 +29,19 @@ from ..regularizacion_parameters import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+#: Every modelo 303 revision, with a filing-period date inside its own window.
+_REVISION_PROBES = tuple((str(revision.id), revision.valid_from) for revision in authored_revisions("303"))
+
+#: The newest closed modelo 303 revision: its window has an end, so a later date lies outside it.
+_CLOSED_303 = [revision for revision in authored_revisions("303") if revision.valid_to is not None][-1]
+_CLOSED_303_ID = str(_CLOSED_303.id)
+_CLOSED_303_PROBE = _CLOSED_303.valid_from
+_CLOSED_303_END = _CLOSED_303.valid_to
+assert _CLOSED_303_END is not None
+_AFTER_CLOSED_303 = _CLOSED_303_END + timedelta(days=1)
+#: A modelo 390 revision, which declares the capital-goods family not applicable.
+_M390_ID = str(revision_covering("390", filing_year_envelope().horizon).id)
 
 
 @pytest.fixture(scope="session")
@@ -46,17 +60,6 @@ def registry_authority() -> Iterator[PinnedAuthorityOperation]:
 def _scope_tests_that_request_the_registry_authority(request: pytest.FixtureRequest) -> Iterator[None]:
     with scoped_when_requested(request, "registry_authority"):
         yield
-
-
-#: Every modelo 303 revision, with a filing-period date inside its own window.
-_REVISION_PROBES = (
-    ("2022", date(2022, 6, 1)),
-    ("2023", date(2023, 6, 1)),
-    ("2024-hasta-08-y-2t", date(2024, 3, 1)),
-    ("2024-desde-09-y-3t", date(2024, 10, 1)),
-    ("2025", date(2025, 6, 1)),
-    ("2026-y-siguientes", date(2026, 6, 1)),
-)
 
 
 @pytest.mark.parametrize(("revision_id", "probe"), _REVISION_PROBES)
@@ -112,11 +115,11 @@ def test_the_resolved_values_equal_what_the_registry_declares(
     Compared against the registry rather than against a literal, so this test
     holds no legal value of its own and stays true if the law changes.
     """
-    revision = registry_authority.revision("303", "2025")
+    revision = registry_authority.revision("303", _CLOSED_303_ID)
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
-        filing_period_date=date(2025, 6, 1),
+        filing_period_date=_CLOSED_303_PROBE,
     )
     declared = {parameter.id: parameter.values[0].value for parameter in revision.parameters}
     assert bundle.ventana_anos_mueble == declared["m303-bien-inversion-ventana-anos-mueble"]
@@ -135,12 +138,12 @@ def test_a_revision_declaring_no_parameters_is_refused(
     applicable. Constructing a bundle from one would mean regularising a capital
     good on figures that revision never declared.
     """
-    revision = registry_authority.revision("390", "2025")
+    revision = registry_authority.revision("390", _M390_ID)
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
         resolve_bienes_inversion_regularizacion_parameters(
             revision,
             modelo_id="390",
-            filing_period_date=date(2025, 6, 1),
+            filing_period_date=_CLOSED_303_PROBE,
         )
     assert "declares no capital-goods regularisation figure" in str(excinfo.value)
 
@@ -149,12 +152,12 @@ def test_a_filing_date_outside_the_revision_window_is_refused(
     registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """TEETH: a value is not borrowed across the window that grounds it."""
-    revision = registry_authority.revision("303", "2025")
+    revision = registry_authority.revision("303", _CLOSED_303_ID)
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
         resolve_bienes_inversion_regularizacion_parameters(
             revision,
             modelo_id="303",
-            filing_period_date=date(2030, 1, 1),
+            filing_period_date=_AFTER_CLOSED_303,
         )
     assert "does not resolve for filing-period date" in str(excinfo.value)
 
@@ -168,14 +171,14 @@ def test_a_partial_family_is_refused(
     is a defect this resolver uniquely owns: the registry itself has no rule
     requiring the family to be complete, and a partial set loads cleanly.
     """
-    revision = registry_authority.revision("303", "2025")
+    revision = registry_authority.revision("303", _CLOSED_303_ID)
     kept = tuple(p for p in revision.parameters if not p.id.endswith("divisor-inmueble"))
     partial = revision.model_copy(update={"parameters": kept})
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
         resolve_bienes_inversion_regularizacion_parameters(
             partial,
             modelo_id="303",
-            filing_period_date=date(2025, 6, 1),
+            filing_period_date=_CLOSED_303_PROBE,
         )
     assert "divisor-inmueble" in str(excinfo.value)
 
@@ -188,11 +191,11 @@ def test_the_de_minimis_gate_follows_the_declared_comparison(
     Probed relative to the resolved threshold rather than to a literal, so the
     boundary case is exercised without this file asserting what the law says.
     """
-    revision = registry_authority.revision("303", "2025")
+    revision = registry_authority.revision("303", _CLOSED_303_ID)
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
-        filing_period_date=date(2025, 6, 1),
+        filing_period_date=_CLOSED_303_PROBE,
     )
     umbral = bundle.umbral_puntos
     assert not bundle.regularizacion_applies(umbral - Decimal("1"))

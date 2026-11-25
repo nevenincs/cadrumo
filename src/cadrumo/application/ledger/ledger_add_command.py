@@ -18,6 +18,8 @@ from ...core.parsing.dates import require_iso8601_date
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.capital_mobiliario_facts import require_concepto_capital_mobiliario
+from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
@@ -26,14 +28,17 @@ from ...domain.calculations.registry.prorrata_vocabulary import require_input_cl
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
+from ...domain.iva.vehicle_use import require_iva_vehicle_use
+from ...domain.transactions.enums import MANUAL_ENTRY_CLASSIFICATIONS, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
+from ...domain.transactions.model_validation import validate_figures_without_business
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..prorrata_register.service import ProrrataRegisterService
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ledger_add_contracts import LedgerAddRequest, LedgerAddSourceJurisdictionCode
 from .models import ManualLedgerTransactionCommand
+from .recargo_regime import require_recargo_regime_for_purchase
 from .source_jurisdiction import SourceJurisdictionOutcome, resolve_source_jurisdiction
 
 
@@ -70,18 +75,29 @@ def prepare_ledger_add_command(
     ``actor`` is the label the executing operation settled for this entry.
     """
     booked_date, value_date, amount = _resolve_ledger_add_dates(payload)
+    classification, direction = resolve_ledger_add_flow(payload)
+    _refuse_figures_without_business(payload, classification)
     category_id, business_pct = _resolve_ledger_add_business_share(
         payload,
         operation=operation,
         booked_date=booked_date,
     )
     source_jurisdiction = _resolve_ledger_add_jurisdiction(payload, operation=operation)
-    classification, direction = _resolve_ledger_add_flow(payload)
     registry_facts = _resolve_ledger_add_registry_facts(payload, booked_date=booked_date, operation=operation)
+    recargo_amount = parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount")
+    require_recargo_regime_for_purchase(
+        bucket_id=str(payload.profile_id),
+        direction=direction,
+        recargo_amount=recargo_amount,
+        effective_date=booked_date,
+        operation=operation,
+    )
     return ManualLedgerTransactionCommand(
         bucket_id=str(payload.profile_id),
         booked_date=booked_date,
         value_date=value_date,
+        operation_date=(require_iso8601_date(payload.operation_date) if payload.operation_date is not None else None),
+        accrual_date=(require_iso8601_date(payload.accrual_date) if payload.accrual_date is not None else None),
         amount=amount,
         currency=payload.currency,
         direction=direction,
@@ -96,10 +112,28 @@ def prepare_ledger_add_command(
         iva_category=registry_facts.iva_category,
         deduction_fact_kind=registry_facts.deduction_kind,
         investment_asset_id=payload.investment_asset_id,
+        iva_vehicle_use=(
+            require_iva_vehicle_use(payload.iva_vehicle_use) if payload.iva_vehicle_use is not None else None
+        ),
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
-        recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),
-        irpf_category=_resolve_ledger_add_irpf_category(payload, operation=operation),
+        arrendamiento_ref=payload.arrendamiento_ref,
+        inmueble_ref=payload.inmueble_ref,
+        gasto_capital_inmobiliario=(
+            require_gasto_capital_inmobiliario(payload.gasto_capital_inmobiliario, authority=operation)
+            if payload.gasto_capital_inmobiliario is not None and payload.gasto_capital_inmobiliario.strip()
+            else None
+        ),
+        posicion_ref=payload.posicion_ref,
+        concepto_capital_mobiliario=(
+            require_concepto_capital_mobiliario(
+                payload.concepto_capital_mobiliario, effective_date=booked_date, authority=operation
+            )
+            if payload.concepto_capital_mobiliario is not None and payload.concepto_capital_mobiliario.strip()
+            else None
+        ),
+        recargo_amount=recargo_amount,
+        irpf_category=resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,
         prorrata_reference=payload.prorrata_reference,
         art_104_tres_exclusion=registry_facts.exclusion,
@@ -203,18 +237,34 @@ def _resolve_ledger_add_jurisdiction(
     return jurisdiction.jurisdiction
 
 
-def _resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:
+def _refuse_figures_without_business(payload: LedgerAddRequest, classification: BusinessClassification) -> None:
+    """Refuse a new row whose classification denies a business figure the person typed.
+
+    Dropping the figure would write something other than what was asked, so the
+    add is refused with the registered sentence before any fact is resolved. A
+    blank text figure is no figure, as everywhere else in this request.
+    """
+    stated = {
+        name: value
+        for name, value in payload.model_dump().items()
+        if value is not None and not (isinstance(value, str) and not value.strip())
+    }
+    validate_figures_without_business(classification, stated)
+
+
+def resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:
+    """Validate and return the business classification and direction of a ledger add request."""
     try:
         classification = BusinessClassification(payload.business_classification)
         direction = TransactionDirection(payload.direction)
     except ValueError as error:
         raise TransactionValidationError("ledger add direction and classification must be canonical values") from error
-    if not is_classified(classification) and classification is not BusinessClassification.NOT_YET_PROCESSED:
+    if classification not in MANUAL_ENTRY_CLASSIFICATIONS:
         raise TransactionValidationError("this classification is assigned by the ledger pipeline")
     return classification, direction
 
 
-def _resolve_ledger_add_irpf_category(
+def resolve_ledger_add_irpf_category(
     payload: LedgerAddRequest,
     *,
     operation: PinnedAuthorityOperation,

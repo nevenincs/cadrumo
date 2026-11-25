@@ -15,14 +15,13 @@ import json
 from datetime import UTC, datetime
 
 import pytest
-from click.testing import Result
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
-from ...native_commands.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from .cli_runner import invoke_unbound_cli
+from .diagnostics_cli_support import invoke_diagnostics
 
 pytestmark = [
     pytest.mark.integration,
@@ -31,12 +30,6 @@ pytestmark = [
 ]
 
 __all__ = ["diagnostics_native_profile"]
-
-
-def _invoke(args: list[str], profile: NativeCliProfileFixture) -> Result:
-    if profile.label is None:
-        raise AssertionError("native diagnostics profile was not registered")
-    return invoke_diagnostics_cli(args, profile=profile, invoke_cli=invoke_unbound_cli)
 
 
 def _seed_latency_runs() -> None:
@@ -51,7 +44,7 @@ def _seed_latency_runs() -> None:
                 model="test-model",
                 duration_ms=duration_ms,
                 succeeded=True,
-                started_at=datetime(2026, 5, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 5, index, 9, 0, tzinfo=UTC),
             ),
         )
 
@@ -75,7 +68,7 @@ def _seed_error_runs() -> None:
                 duration_ms=100,
                 succeeded=False,
                 error_kind=error_kind,
-                started_at=datetime(2026, 5, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 5, index, 9, 0, tzinfo=UTC),
             ),
         )
 
@@ -84,9 +77,9 @@ def test_latency_reports_nearest_rank_percentiles(diagnostics_native_profile: Na
     """The verb reports P50/P95/P99 computed by the documented nearest-rank method."""
     _seed_latency_runs()
 
-    result = _invoke(["--format", "json", "app", "diagnostics", "latency"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "latency"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     overall = payload["overall"]
@@ -104,7 +97,7 @@ def test_latency_reports_nearest_rank_percentiles(diagnostics_native_profile: Na
 
 def test_latency_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run record the verb reports empty and surfaces a guidance notice."""
-    result = _invoke(["--format", "json", "app", "diagnostics", "latency"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "latency"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     payload = envelope["result"]
@@ -124,12 +117,12 @@ def test_latency_provider_filter_omits_by_provider_breakdown(
     """``--provider`` scopes ``overall`` and leaves ``by_provider`` empty."""
     _seed_latency_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         ["--format", "json", "app", "diagnostics", "latency", "--provider", "llm:claude:test-model"],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["overall"]["entries"] == 10
     assert payload["by_provider"] == []
@@ -139,7 +132,7 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
     """``--since``/``--until`` narrow the percentile computation by date."""
     _seed_latency_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         [
             "--format",
             "json",
@@ -147,14 +140,14 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
             "diagnostics",
             "latency",
             "--since",
-            "2026-05-01",
+            "1980-05-01",
             "--until",
-            "2026-05-01",
+            "1980-05-01",
         ],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["overall"]["entries"] == 1
     assert payload["overall"]["p50_duration_ms"] == 100
@@ -162,8 +155,8 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
 
 def test_latency_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
-    result = _invoke(
-        ["--format", "json", "app", "diagnostics", "latency", "--since", "01/04/2026"],
+    result = invoke_diagnostics(
+        ["--format", "json", "app", "diagnostics", "latency", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
@@ -174,9 +167,9 @@ def test_errors_reports_breakdown_by_provider_and_kind(diagnostics_native_profil
     """The verb breaks failures down by provider and error kind, most-frequent-first."""
     _seed_error_runs()
 
-    result = _invoke(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_failures"] is True
     assert payload["total_runs"] == 4
@@ -190,7 +183,7 @@ def test_errors_reports_breakdown_by_provider_and_kind(diagnostics_native_profil
 
 def test_errors_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no failed runs the verb reports empty and surfaces a guidance notice."""
-    result = _invoke(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     payload = envelope["result"]
@@ -208,9 +201,9 @@ def test_errors_succeeded_only_reports_no_failures(diagnostics_native_profile: N
     """A store with only succeeded runs reports zero failures against real recorded runs."""
     _seed_latency_runs()
 
-    result = _invoke(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 10
     assert payload["total_failed"] == 0
@@ -221,12 +214,12 @@ def test_errors_provider_filter_scopes_the_breakdown(diagnostics_native_profile:
     """``--provider`` restricts the breakdown to one provider's failures."""
     _seed_error_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         ["--format", "json", "app", "diagnostics", "errors", "--provider", "llm:codex:test-model"],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert payload["total_failed"] == 1
@@ -236,7 +229,7 @@ def test_errors_provider_filter_scopes_the_breakdown(diagnostics_native_profile:
 
 def test_errors_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--until`` value is refused instructively with a non-zero exit."""
-    result = _invoke(
+    result = invoke_diagnostics(
         ["--format", "json", "app", "diagnostics", "errors", "--until", "not-a-date"],
         diagnostics_native_profile,
     )

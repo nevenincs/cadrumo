@@ -13,23 +13,23 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
-from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 from .ledger_action_create_support import ledger_ports_for_test
+from .merge_test_support import BUCKET_ID, repositories, split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def _merged_state(secure_objects: SecureObjectRepository):
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent, split = _split_setup(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent, split = split_setup(secure_objects, transaction_repository, event_repository)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         bucket_event_repository=event_repository,
         transaction_repository=transaction_repository,
     ) as ports:
         merge = merge_transactions(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             child_transaction_ids=split.child_transaction_ids,
             actor="operator-A",
             ports=ports,
@@ -40,13 +40,13 @@ def _merged_state(secure_objects: SecureObjectRepository):
 
 def _restore(secure_objects, transaction_repository, event_repository, transaction_id: str, *, day: int = 6) -> None:
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         bucket_event_repository=event_repository,
         transaction_repository=transaction_repository,
     ) as ports:
         restore_manual_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator-B",
             ports=ports,
@@ -56,13 +56,13 @@ def _restore(secure_objects, transaction_repository, event_repository, transacti
 
 def _archive(secure_objects, transaction_repository, event_repository, transaction_id: str, *, day: int = 6) -> None:
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         bucket_event_repository=event_repository,
         transaction_repository=transaction_repository,
     ) as ports:
         archive_manual_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator-B",
             ports=ports,
@@ -76,7 +76,7 @@ def test_restoring_a_child_a_merge_archived_is_refused_while_the_merged_row_is_a
     transaction_repository, event_repository, _, split, merged_id = _merged_state(secure_objects)
     child_id = split.child_transaction_ids[0]
     before_catalogue = transaction_repository.load()
-    before_events = event_repository.load().for_bucket(_BUCKET_ID)
+    before_events = event_repository.load().for_bucket(BUCKET_ID)
 
     with pytest.raises(TransactionValidationError, match=merged_id) as raised:
         _restore(secure_objects, transaction_repository, event_repository, child_id)
@@ -85,7 +85,7 @@ def test_restoring_a_child_a_merge_archived_is_refused_while_the_merged_row_is_a
     assert raised.value.context["transaction_ids"] == merged_id
     assert raised.value.context["transaction_id"] == child_id
     assert transaction_repository.load() == before_catalogue
-    assert event_repository.load().for_bucket(_BUCKET_ID) == before_events
+    assert event_repository.load().for_bucket(BUCKET_ID) == before_events
     persisted = transaction_repository.load().get(child_id)
     assert persisted is not None
     assert persisted.lifecycle_state is TransactionLifecycleState.ARCHIVED
@@ -118,7 +118,7 @@ def test_originals_restore_once_the_merged_row_is_archived(secure_objects: Secur
         assert restored.lifecycle_state is TransactionLifecycleState.ACTIVE
     restored_events = [
         event
-        for event in event_repository.load().for_bucket(_BUCKET_ID)
+        for event in event_repository.load().for_bucket(BUCKET_ID)
         if event.event_type is BucketEventType.LEDGER_TRANSACTION_RESTORED
     ]
     assert len(restored_events) == 3
@@ -141,8 +141,8 @@ def test_the_merged_row_is_not_restorable_beside_active_originals(secure_objects
 def test_a_child_archived_on_its_own_restores_when_its_group_was_never_merged(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    _, split = _split_setup(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    _, split = split_setup(secure_objects, transaction_repository, event_repository)
     child_id = split.child_transaction_ids[0]
     _archive(secure_objects, transaction_repository, event_repository, child_id)
 

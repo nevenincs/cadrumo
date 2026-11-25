@@ -18,7 +18,7 @@ See Also:
         Builds the current review fingerprints, including the invoice catalogue.
     :func:`~application.filing.approval_stale_reasons`
         Compares the stored approval basis with the current invoice digest.
-    :func:`~application.filing.draft_review._invoice_catalogue_fingerprint`
+    :func:`~application.filing.draft_review.invoice_catalogue_fingerprint`
         Stable, order-independent digest over invoice catalogue records.
     :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
         Encrypted invoice store self-loaded by the review layer.
@@ -45,13 +45,13 @@ from ....application.filing.draft_review import ModeloApprovalStaleReason, appro
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
-from ...adapter_composition import build_draft_review_ports
+from ...adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -62,7 +62,7 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 # in the active session. The pure-fingerprint unit tests never touch storage, so
 # they use it only as the invoice-record stamp.
 _RUNTIME_BUCKET_ID = "0fab7c94-777c-4598-ae8f-c4b539f300c3"  # was 'filing-test'
-_COUNTERPARTY_CIF = "A58818501"
+_COUNTERPARTY_CIF = "B00010157"
 
 
 def _schema_provider() -> CasillaSchemaProvider:
@@ -76,7 +76,8 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Source mesh review test"),
         inputs={
             "01": Decimal("100"),
-            "02": Decimal("25"),
+            "gastos-deducibles-previos": Decimal("25"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
@@ -103,7 +104,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
 def test_approval_goes_stale_when_invoice_source_data_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)
@@ -154,7 +155,7 @@ def test_approval_not_stale_when_invoice_source_unchanged(
     meaningless. Approving and then re-checking against the identical catalogue
     must yield an empty reason tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)

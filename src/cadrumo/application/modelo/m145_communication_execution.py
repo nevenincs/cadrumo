@@ -27,8 +27,8 @@ from ..operations.execution_actor import OperationExecutionCallerReader, executi
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
@@ -79,6 +79,8 @@ from .m145_communication_records_ports import (
     M145CommunicationRecordsPorts,
     M145CommunicationRecordsPortsFactory,
 )
+from .m145_communication_refusal_doors import m145_record_decision_verdict
+from .ports import FicheroBoeRecordRenderer
 
 
 class _WriteGate:
@@ -100,7 +102,10 @@ class _WriteGate:
         self._released.wait()
         if not self._allowed:
             self._loop.call_soon_threadsafe(self.finished.set)
-            raise InternalInvariantError("M145 repository mutation was not admitted by its operation fence")
+            raise InternalInvariantError(
+                "M145 repository mutation was not admitted by its operation fence",
+                precondition_verdict=internal_invariant_verdict("m145_communication.mutation_admitted"),
+            )
         try:
             result = commit()
         except BaseException:
@@ -187,7 +192,10 @@ class _TrackedM145EventRepository(BucketEventHistoryRepositoryProtocol):
     ) -> BucketEventHistoryCatalogue:
         repository = self._repository
         if not isinstance(repository, _RevisionGuardedM145EventAppender):
-            raise InternalInvariantError("M145 export requires a revision-guarded event-history repository")
+            raise InternalInvariantError(
+                "M145 export requires a revision-guarded event-history repository",
+                precondition_verdict=internal_invariant_verdict("m145_communication.guarded_history_repository"),
+            )
         return self._gate.enter(lambda: repository.append_guarded(appender, attempts=attempts))
 
     @override
@@ -561,6 +569,8 @@ class M145CommunicationExecutor:
             operation_error = M145CommunicationOperationRecordNotFoundError(
                 str(error),
                 context=error.context,
+                translated_message="errors.error.m145_communication_record_not_found",
+                precondition_verdict=m145_record_decision_verdict("record_exists", {}),
             )
             refusal_code = M145_COMMUNICATION_RECORD_NOT_FOUND_REFUSAL_CODE
         else:

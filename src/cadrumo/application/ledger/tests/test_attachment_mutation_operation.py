@@ -35,6 +35,7 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.attachments.errors import AttachmentNotFoundError
 from ....domain.transactions.errors import TransactionValidationError
+from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,41 +53,18 @@ def _projection(
     return LedgerAttachmentProjection(
         profile_id=_PROFILE,
         operation_id=operation_id,
-        transaction=operation_module.LedgerTransactionProjection(
+        transaction=ledger_transaction_projection(
             transaction_id=_TRANSACTION_ID,
             date="2026-05-08",
             booked_date="2026-05-08",
-            value_date=None,
             amount="1.00",
-            currency="EUR",
             direction="outgoing",
             counterparty="Supplier SL",
             description="Invoice payment",
             business_classification="not_yet_processed",
             business_pct=None,
-            category_id=None,
-            taxable_base=None,
-            iva_rate=None,
-            iva_amount=None,
-            iva_category=None,
-            counterparty_country=None,
-            counterparty_identification_state=None,
-            irpf_category=None,
-            m210_income_classification=None,
-            usage_ratio_id=None,
-            prorrata_reference=None,
-            purchase_invoice_evidence_id=None,
-            invoice_id=None,
             attachment_ids=attachment_ids,
-            notes="",
             lifecycle_state="active",
-            classified_by="manual",
-            classified_at=None,
-            classification_reason="",
-            classification_confidence=None,
-            source_jurisdiction=None,
-            value_in_eur=None,
-            fx_rate=None,
             created_at=_AT.isoformat(),
             modified_at=_AT.isoformat(),
         ),
@@ -211,7 +189,7 @@ async def test_attach_marks_unknown_then_updated_and_publishes_outside_commit(
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "attach_manual_transaction_evidence", attach)
-    monkeypatch.setattr(operation_module, "_operation_projection", lambda *_args: _projection())
+    monkeypatch.setattr(operation_module, "operation_projection", lambda *_args, **_kwargs: _projection())
 
     executor = LedgerAttachExecutor(_ports_factory_for(context))
     completed = await executor.execute(_request(), context)
@@ -285,8 +263,8 @@ async def test_detach_marks_unknown_then_updated_and_publishes_outside_commit(
     monkeypatch.setattr(operation_module, "detach_manual_transaction_attachments", detach)
     monkeypatch.setattr(
         operation_module,
-        "_operation_projection",
-        lambda profile_id, operation_id, _result: _projection(
+        "operation_projection",
+        lambda profile_id, operation_id, _result, **_kwargs: _projection(
             operation_id=operation_id,
             attachment_ids=(),
         ),

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from .models import InvoiceCatalogue
+from .catalogue import InvoiceCatalogue
 
 
 @runtime_checkable

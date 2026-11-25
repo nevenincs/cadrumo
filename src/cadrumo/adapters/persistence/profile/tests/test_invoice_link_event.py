@@ -32,15 +32,14 @@ from cadrumo.application.invoices.transaction_linking import (
 )
 from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceLinkError
-from cadrumo.domain.invoices.models import Invoice, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.iva.schema import InvoiceKind
+from .issued_invoice_support import paid_servicios_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -184,33 +183,7 @@ def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
 
 
 def _invoice() -> Invoice:
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-EVENT-1",
-            "issued_at": date(2026, 5, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "payment_status": PaymentStatus.PAID,
-            "lines": (
-                InvoiceLine.model_validate(
-                    {
-                        "description": "Servicios",
-                        "quantity": Decimal("1"),
-                        "unit_price": Decimal("100.00"),
-                        "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.from_registry("RATE_21"),
-                        "iva_amount": Decimal("21.00"),
-                    },
-                ),
-            ),
-        },
-    )
+    return paid_servicios_invoice("INV-EVENT-1", issued_at=date(2026, 5, 1))
 
 
 def _transaction() -> Transaction:

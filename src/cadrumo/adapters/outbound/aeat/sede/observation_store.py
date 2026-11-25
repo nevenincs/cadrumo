@@ -43,7 +43,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import override
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.period import Period
 from .....core.time.clock import now
@@ -90,7 +90,7 @@ def filed_declaracion_observation_object_key(
             _safe_segment(expediente_id),
         ),
     )
-    return sha256_hex(key.encode(_UTF_8_ENCODING))
+    return sha256_hex(key.encode(UTF_8_ENCODING))
 
 
 def iva_compensation_wallet_observation_object_key(
@@ -112,7 +112,7 @@ def iva_compensation_wallet_observation_object_key(
             captured_at,
         ),
     )
-    return sha256_hex(key.encode(_UTF_8_ENCODING))
+    return sha256_hex(key.encode(UTF_8_ENCODING))
 
 
 def _safe_segment(value: str) -> str:

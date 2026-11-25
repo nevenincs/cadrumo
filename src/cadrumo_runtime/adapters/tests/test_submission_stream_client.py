@@ -29,9 +29,8 @@ from cadrumo_client.contracts.submission_payload import (
 )
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
-
-from .test_projection_page_client import MemoryChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -211,9 +210,7 @@ def test_wrong_readiness_or_early_refusal_sends_no_body(fault: str) -> None:
         write_document(channel, ready, deadline=time.monotonic() + 10)
         with pytest.raises(RefusalError) as no_body:
             channel.read_exact(1, deadline=time.monotonic() + 0.2)
-        assert no_body.value.reason is (
-            RefusalCode.DEADLINE_EXCEEDED if fault == "refusal" else RefusalCode.CONNECTION_CLOSED
-        )
+        assert no_body.value.reason is (RefusalCode.TIMEOUT if fault == "refusal" else RefusalCode.CONNECTION_CLOSED)
 
     outcome = _exchange(request, serve, pin_connection=fault == "connection")
     if fault == "refusal":

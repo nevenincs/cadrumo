@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import sys
 from typing import get_args
 
 import pytest
@@ -62,20 +63,9 @@ def test_every_projection_discriminator_and_payload_field_is_required() -> None:
         assert model_type.model_fields["projection_kind"].is_required(), model_type.__name__
 
 
-def test_all_seven_flat_projection_variants_validate() -> None:
-    references: tuple[FilingProjectionRef, ...] = (
-        M303ProrrataActivityProjectionRef(
-            projection_kind="m303_prorrata_activity",
-            slot=1,
-            field=M303ProrrataActivityProjectionField.CNAE,
-            casilla_id="500",
-        ),
-        M303DifferentiatedDeductionProjectionRef(
-            projection_kind="m303_differentiated_deduction",
-            slot=1,
-            field=M303DifferentiatedDeductionProjectionField.DOMESTIC_CURRENT_BASE,
-            casilla_id="700",
-        ),
+def _casilla_less_references() -> tuple[FilingProjectionRef, ...]:
+    """Projection references that carry no casilla of their own."""
+    return (
         M303RegimenSimplificadoActivityProjectionRef(
             projection_kind="m303_regimen_simplificado_activity",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
@@ -103,6 +93,24 @@ def test_all_seven_flat_projection_variants_validate() -> None:
         M303Exonerado390OperacionesTercerosProjectionRef(
             projection_kind="m303_exonerado_390_operaciones_terceros",
         ),
+    )
+
+
+def test_all_seven_flat_projection_variants_validate() -> None:
+    references: tuple[FilingProjectionRef, ...] = (
+        M303ProrrataActivityProjectionRef(
+            projection_kind="m303_prorrata_activity",
+            slot=1,
+            field=M303ProrrataActivityProjectionField.CNAE,
+            casilla_id="500",
+        ),
+        M303DifferentiatedDeductionProjectionRef(
+            projection_kind="m303_differentiated_deduction",
+            slot=1,
+            field=M303DifferentiatedDeductionProjectionField.DOMESTIC_CURRENT_BASE,
+            casilla_id="700",
+        ),
+        *_casilla_less_references(),
     )
 
     adapter: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
@@ -207,7 +215,7 @@ def test_fact_model_only_admits_source_declared_multiplicity(
         )
 
 
-@pytest.mark.parametrize("sub_index", [0, -1, 5, "1", True])
+@pytest.mark.parametrize("sub_index", [0, -1, "1", True])
 def test_fact_ref_requires_a_positive_exact_sub_index_when_present(sub_index: object) -> None:
     with pytest.raises((ValidationError, ValueError)):
         compile_filing_projection_ref(
@@ -219,6 +227,21 @@ def test_fact_ref_requires_a_positive_exact_sub_index_when_present(sub_index: ob
                 "sub_index": sub_index,
             }
         )
+
+
+def test_fact_ref_leaves_the_upper_bound_to_the_pinned_registry_consumer() -> None:
+    reference = compile_filing_projection_ref(
+        {
+            "projection_kind": "m303_regimen_simplificado_fact",
+            "cohort": "no_agricola",
+            "slot": 1,
+            "fact": "mesas_capacidad",
+            "sub_index": 5,
+        }
+    )
+
+    assert isinstance(reference, M303RegimenSimplificadoFactProjectionRef)
+    assert reference.sub_index == 5
 
 
 @pytest.mark.parametrize(
@@ -294,10 +317,15 @@ def test_slotless_marker_rejects_legacy_slot_and_models_are_frozen() -> None:
 
 def test_defining_module_is_the_single_projection_union_owner() -> None:
     assert owner.FilingProjectionRef is FilingProjectionRef
-    declarations = {
-        node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
-    }
-    assert {model_type.__name__ for model_type in _REF_MODELS} <= declarations
+    for model_type in _REF_MODELS:
+        defining_module = sys.modules[model_type.__module__]
+        declarations = {
+            node.name
+            for node in ast.walk(ast.parse(inspect.getsource(defining_module)))
+            if isinstance(node, ast.ClassDef)
+        }
+        assert model_type.__name__ in declarations
+        assert getattr(defining_module, model_type.__name__) is model_type
     assert owner.M303ProrrataActivityProjectionRef is not None
     assert owner.filing_projection_ref_casilla_id.__module__ == owner.__name__
 
@@ -335,35 +363,7 @@ def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() 
         )
         == "700"
     )
-    for casilla_less in (
-        M303RegimenSimplificadoActivityProjectionRef(
-            projection_kind="m303_regimen_simplificado_activity",
-            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
-            slot=1,
-            field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
-        ),
-        M303RegimenSimplificadoFactProjectionRef(
-            projection_kind="m303_regimen_simplificado_fact",
-            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
-            slot=1,
-            fact=M303RegimenSimplificadoFact.INDICE_CUOTA,
-        ),
-        M303RegimenSimplificadoModuleProjectionRef(
-            projection_kind="m303_regimen_simplificado_module",
-            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
-            slot=1,
-            module_order=1,
-            value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
-        ),
-        M303Exonerado390ActivityProjectionRef(
-            projection_kind="m303_exonerado_390_activity",
-            slot=1,
-            field=M303Exonerado390ActivityField.ACTIVITY_CODE,
-        ),
-        M303Exonerado390OperacionesTercerosProjectionRef(
-            projection_kind="m303_exonerado_390_operaciones_terceros",
-        ),
-    ):
+    for casilla_less in _casilla_less_references():
         assert filing_projection_ref_casilla_id(casilla_less) is None
 
 

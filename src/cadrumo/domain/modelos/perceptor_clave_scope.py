@@ -22,22 +22,22 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
+from ..calculations.registry.retencion_clave_catalogue import resolve_retencion_clave
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
-from ..calculations.registry.withholding_bindings import resolve_retencion_clave
 
 PERCEPTOR_CLAVE_SCOPE_FACT_ID: Final = "m190-perceptor-casilla-clave-scope"
-#: The modelo whose perceptor records the scope fact governs. The snapshot check
-#: tests it before resolving the fact, because a year the fact has no edition
-#: for is a finding only for this modelo.
-PERCEPTOR_CLAVE_SCOPE_MODELO: Final = Modelo("190")
+#: The role of the form whose perceptor records the scope fact governs. The snapshot
+#: check asks it before resolving the fact, because a year the fact has no edition
+#: for is a finding only for this form.
+_PERCEPTOR_RECORDS_ROLE: Final = "withholding.work_annual"
 _CASILLA_KEY_PREFIX: Final = "casilla:"
 _RESERVED_KEYS: Final = frozenset({"modelo", "row_clave_binding", "row_subclave_binding"})
 
@@ -53,13 +53,19 @@ class ClaveScopeToken:
     def parse(cls, raw: str) -> ClaveScopeToken:
         """Parse ``CLAVE`` or ``CLAVE.SUBCLAVE``; refuse any other shape."""
         clave, separator, subclave = raw.strip().partition(".")
-        if not clave or (separator and not (len(subclave) == 2 and subclave.isdigit())):
-            raise RegistryValidationError(f"perceptor clave scope token {raw!r} is not CLAVE or CLAVE.NN")
+        if not clave or (separator and not (str(len(subclave)) in _subclave_widths() and subclave.isdigit())):
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope token {raw!r} is not CLAVE or CLAVE.NN", declaration="perceptor_clave_scope"
+            )
         return cls(clave=clave, subclave=subclave if separator else None)
 
     def admits(self, clave: str, subclave: str | None) -> bool:
         """Whether a record with ``clave``/``subclave`` falls inside this token."""
         return clave == self.clave and (self.subclave is None or self.subclave == subclave)
+
+
+def _subclave_widths() -> frozenset[str]:
+    return resolve_form_codes("form-row-codes").codes("perceptor.subclave_digits")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +85,11 @@ class PerceptorClaveScope:
         """
         tokens = self.casillas.get(casilla_id)
         return tokens is None or any(token.admits(clave, subclave) for token in tokens)
+
+
+def governs_perceptor_records(modelo: object, *, authority: GovernedFactSource | None = None) -> bool:
+    """Return whether ``modelo`` is the form whose perceptor records the scope fact governs."""
+    return str(modelo) == form_for_role(_PERCEPTOR_RECORDS_ROLE, authority=authority)
 
 
 def resolve_perceptor_clave_scope(
@@ -102,7 +113,9 @@ def resolve_perceptor_clave_scope(
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("perceptor clave scope must resolve as a mapping fact")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            "perceptor clave scope must resolve as a mapping fact", declaration="perceptor_clave_scope"
+        )
     entries = _scope_entries(resolved)
     casillas = _casilla_scopes(entries)
     return PerceptorClaveScope(
@@ -118,9 +131,13 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("perceptor clave scope entries must be string-to-string")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                "perceptor clave scope entries must be string-to-string", declaration="perceptor_clave_scope"
+            )
         if entry.key in entries:
-            raise RegistryValidationError(f"duplicate perceptor clave scope key {entry.key!r}")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"duplicate perceptor clave scope key {entry.key!r}", declaration="perceptor_clave_scope"
+            )
         entries[entry.key] = entry.value.strip()
     return entries
 
@@ -128,7 +145,9 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
 def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
     if not (value is not None and value):
-        raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            f"perceptor clave scope is missing {key!r}", declaration="perceptor_clave_scope"
+        )
     return value
 
 
@@ -138,14 +157,20 @@ def _casilla_scopes(entries: Mapping[str, str]) -> dict[CasillaId, tuple[ClaveSc
         if key in _RESERVED_KEYS:
             continue
         if not key.startswith(_CASILLA_KEY_PREFIX):
-            raise RegistryValidationError(f"perceptor clave scope key {key!r} is not a casilla declaration")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope key {key!r} is not a casilla declaration", declaration="perceptor_clave_scope"
+            )
         casilla_id = validated_casilla_id(key.removeprefix(_CASILLA_KEY_PREFIX), surface="perceptor clave scope")
         tokens = tuple(ClaveScopeToken.parse(token) for token in value.split(",") if token.strip())
         if not tokens or len(tokens) != len(set(tokens)):
-            raise RegistryValidationError(f"perceptor clave scope for {casilla_id!r} has no unique tokens")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope for {casilla_id!r} has no unique tokens", declaration="perceptor_clave_scope"
+            )
         casillas[casilla_id] = tokens
     if not casillas:
-        raise RegistryValidationError("perceptor clave scope declares no casilla")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            "perceptor clave scope declares no casilla", declaration="perceptor_clave_scope"
+        )
     return casillas
 
 
@@ -243,10 +268,10 @@ def check_perceptor_clave_scope(
     would have to say.
     """
     del renta_first_slice_binding_targets
-    if modelo_id != PERCEPTOR_CLAVE_SCOPE_MODELO or not revision_binding_ids:
+    if not revision_binding_ids or not governs_perceptor_records(modelo_id):
         return []
     try:
-        # Modelo 190 is an annual summary, so its filing coordinate is the year's 0A period.
+        # This form is an annual summary, so its filing coordinate is the year's annual period.
         scope = resolve_perceptor_clave_scope(
             period=Period.from_year_and_code(filing_year, StandardPeriodCode.ANNUAL.value)
         )
@@ -272,10 +297,10 @@ register_cross_domain_snapshot_check(check_perceptor_clave_scope)
 
 __all__ = [
     "PERCEPTOR_CLAVE_SCOPE_FACT_ID",
-    "PERCEPTOR_CLAVE_SCOPE_MODELO",
     "ClaveScopeToken",
     "PerceptorClaveScope",
     "check_perceptor_clave_scope",
+    "governs_perceptor_records",
     "perceptor_clave_scope_failures",
     "resolve_perceptor_clave_scope",
     "row_field_value_bindings",

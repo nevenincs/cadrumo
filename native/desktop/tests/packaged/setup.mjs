@@ -11,14 +11,20 @@
 // must pass and observations that must fail.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, lstatSync, readdirSync, rmSync, statSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { createServer } from "node:http";
 import { connect as netConnect } from "node:net";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { descendants, survivors } from "./os.mjs";
-import { sleep, waitFor } from "./session.mjs";
+import { waitFor } from "./session.mjs";
 import { FAIL, PASS } from "./verdicts.mjs";
 
 const pass = (detail, data) => ({
@@ -39,9 +45,9 @@ export const SETUP_VARIABLE = "CADRUMO_PACKAGED_SETUP";
 export const FREE_SPACE_FLOOR_BYTES = 30 * 1024 ** 3;
 
 /** The largest the throwaway root may grow to before the watchdog stops the run. */
-export const SCRATCH_BUDGET_BYTES = 2 * 1024 ** 3;
+export const SCRATCH_BUDGET_BYTES = 8 * 1024 ** 3;
 
-/** What a setup that downloads nothing may still move: the preflight's handshakes and plan sizing. */
+/** What a setup that downloads nothing may still move: the reachability preflight's handshakes. */
 export const NO_TRANSFER_ALLOWANCE_BYTES = 1024 ** 2;
 
 /** Bytes the first attempt moves before the harness forces its interruption. */
@@ -314,7 +320,18 @@ export function browserResumeVerdict({ interrupted, resumed }) {
   if (resumed.resumeRequested !== true) {
     return fail("the click the window offered did not ask to resume");
   }
-  if (resumed.reviewsShown !== 0 || resumed.answersSent !== 0) {
+  const renewed = interrupted.windowChanged === true;
+  if (
+    renewed &&
+    (!Number.isSafeInteger(interrupted.oldPid) ||
+      !Number.isSafeInteger(interrupted.newPid) ||
+      interrupted.oldPid === interrupted.newPid)
+  )
+    return fail(
+      "the crash recovery did not establish a different owned window",
+    );
+  const reviews = renewed ? 1 : 0;
+  if (resumed.reviewsShown !== reviews || resumed.answersSent !== reviews) {
     return fail("Resume of an unchanged plan showed the plan again", {
       reviewsShown: resumed.reviewsShown,
       answersSent: resumed.answersSent,
@@ -332,13 +349,13 @@ export function browserResumeVerdict({ interrupted, resumed }) {
     return fail(`after Resume the item ended ${resumed.finalState}`);
   }
   return pass(
-    `resumed without a second review; ${resumed.wireBytes} bytes moved after Resume`,
+    `${renewed ? "resumed in a new window after its fresh review" : "resumed without a second review"}; ${resumed.wireBytes} bytes moved after Resume`,
   );
 }
 
 /**
  * A second setup of an item that is set up changes nothing: it settles as
- * nothing to do without showing a plan, moves no more than plan sizing does,
+ * nothing to do without showing a plan, moves no more than the preflight does,
  * and leaves the installed files as they were.
  */
 export function secondSetupVerdict({
@@ -365,6 +382,64 @@ export function secondSetupVerdict({
     });
   }
   return pass(`nothing to do; ${wireBytes} bytes moved, no file changed`);
+}
+
+const GUARDED_MEMBERS = new Set([
+  "components",
+  "models",
+  "buckets",
+  "active-profile",
+  "keystore",
+  "secrets",
+  "tokens",
+]);
+
+/** The log a Chromium build writes beside its executable while it runs, whichever program launched it. */
+const BROWSER_RUNTIME_LOG = "debug.log";
+
+/**
+ * Whether a real-storage change is one a setup or a profile of this run could
+ * have made, rather than another program's. A change naming one of `marks` or
+ * lying outside every watched root always counts. Under the per-user browser
+ * cache every change counts but one: a browser's own runtime log, written
+ * while no process of this run ran a browser from that cache. Another program
+ * running its browser writes that log; a setup installing there would add,
+ * replace or remove build files, and a browser this run launched from there
+ * would itself be a failure of isolation.
+ */
+export function guardedChange(
+  change,
+  { roots, marks, browserCache, runCommandLines },
+) {
+  const kind = change.slice(0, change.indexOf(" "));
+  const path = change.slice(change.indexOf(" ") + 1).replace(/\|absent$/, "");
+  if (
+    marks.some(
+      (mark) => mark && path.toLowerCase().includes(mark.toLowerCase()),
+    )
+  )
+    return true;
+  const root = roots.find(
+    (candidate) => path === candidate || path.startsWith(candidate + sep),
+  );
+  if (!root) return true;
+  if (browserCache && root.toLowerCase() === browserCache.toLowerCase()) {
+    const cache = browserCache.toLowerCase();
+    const runUsedCache = runCommandLines.some((line) =>
+      (line ?? "").toLowerCase().includes(cache),
+    );
+    return (
+      runUsedCache ||
+      kind === "removed" ||
+      basename(path).toLowerCase() !== BROWSER_RUNTIME_LOG
+    );
+  }
+  const parts = relative(root, path).split(sep).filter(Boolean);
+  const member = parts[0] === "development" ? parts[1] : parts[0];
+  return (
+    member !== undefined &&
+    (GUARDED_MEMBERS.has(member) || member.startsWith("profile-custody"))
+  );
 }
 
 /**
@@ -402,7 +477,6 @@ const STRIPPED_PROXY = new Set([
 ]);
 const BROWSER_BUILDS = ["chromium", "chromium_headless_shell"];
 const COMPLETE_MARKER = "INSTALLATION_COMPLETE";
-const WORKER_MODULE = "cadrumo_runtime.host.worker";
 
 /** Every image a run may start, directly or through the runtime and its workers. */
 export const TRACKED_PROCESSES = Object.freeze([
@@ -418,6 +492,9 @@ export const TRACKED_PROCESSES = Object.freeze([
   "chrome-headless-shell.exe",
   "headless_shell.exe",
   "msedgewebview2.exe",
+  "ollama.exe",
+  "ollama_llama_server.exe",
+  "llama-server.exe",
   "conhost.exe",
 ]);
 
@@ -545,13 +622,10 @@ export async function removeScratch(root, parent) {
     throw new Error(
       `refusing to remove ${root}: it is not a run root inside ${parent}`,
     );
-  for (let attempt = 0; attempt < 20 && existsSync(root); attempt += 1) {
-    try {
-      rmSync(root, { recursive: true, force: true, maxRetries: 3 });
-    } catch {
-      // A file a closing process still holds is retried below.
-    }
-    if (existsSync(root)) await sleep(500);
+  try {
+    rmSync(root, { recursive: true, force: true });
+  } catch {
+    return false;
   }
   return !existsSync(root);
 }
@@ -585,6 +659,36 @@ export class CountingProxy {
     this.tunnels = 0;
     this.hosts = new Set();
     this.sockets = new Set();
+    this.refusing = false;
+    this.refusals = 0;
+    this.gates = new Set();
+  }
+
+  /** Hold real encrypted transfer bytes after a bounded amount has passed. */
+  hold(hosts, afterBytes = 512 * 1024) {
+    const gate = {
+      hosts: new Set(hosts),
+      bytes: 0,
+      sockets: new Set(),
+      released: false,
+    };
+    gate.held = new Promise((resolve) => {
+      gate.resolve = resolve;
+    });
+    gate.release = () => {
+      gate.released = true;
+      for (const socket of gate.sockets) socket.resume();
+      this.gates.delete(gate);
+    };
+    gate.afterBytes = afterBytes;
+    this.gates.add(gate);
+    return gate;
+  }
+
+  /** Change only this harness-owned network boundary; no product switch. */
+  refuse(value) {
+    this.refusing = value;
+    for (const socket of this.sockets) socket.destroy();
   }
 
   async start() {
@@ -593,6 +697,13 @@ export class CountingProxy {
       response.end();
     });
     this.server.on("connect", (request, client, head) => {
+      if (this.refusing) {
+        this.refusals += 1;
+        client.end(
+          "HTTP/1.1 407 Proxy Authentication Required\r\nContent-Length: 0\r\n\r\n",
+        );
+        return;
+      }
       const authority = String(request.url ?? "");
       const split = authority.lastIndexOf(":");
       const host = authority.slice(0, split).replace(/^\[|\]$/g, "");
@@ -619,6 +730,19 @@ export class CountingProxy {
         }
         upstream.on("data", (chunk) => {
           this.downstream += chunk.length;
+          for (const gate of this.gates) {
+            if (gate.released || !gate.hosts.has(host)) continue;
+            gate.bytes += chunk.length;
+            if (gate.bytes >= gate.afterBytes) {
+              gate.sockets.add(upstream);
+              upstream.pause();
+              gate.resolve({
+                host,
+                bytes: gate.bytes,
+                at: new Date().toISOString(),
+              });
+            }
+          }
         });
         client.on("data", (chunk) => {
           this.upstream += chunk.length;
@@ -643,6 +767,7 @@ export class CountingProxy {
   }
 
   async stop() {
+    for (const gate of [...this.gates]) gate.release();
     for (const socket of this.sockets) socket.destroy();
     if (this.server) await new Promise((done) => this.server.close(done));
   }
@@ -652,10 +777,14 @@ export class CountingProxy {
 // The window driver
 // ---------------------------------------------------------------------------
 
+// The one provisioning panel: one row per element, each with its own
+// action, plan review and approval. Settings' provisioning section opens it.
 const DIALOG = ".setup-dialog";
-const FOOTER_BUTTONS = `${DIALOG} [data-slot=dialog-footer] button`;
-const ROW_BUTTON = (item) =>
-  `.setup-components [data-setup-row="${item}"] button`;
+const ROW = (item) => `${DIALOG} .setup-components [data-setup-row="${item}"]`;
+const ROW_BUTTON = (item) => `${ROW(item)} > button`;
+/** The row's plan review; its last button approves the plan. */
+const APPROVE_BUTTON = (item) => `${ROW(item)} [data-setup-review] button`;
+const OPEN_PANEL = "[data-settings-provisioning] button";
 
 /** Install once per document: records every time a plan is rendered for review. */
 function watchReviews() {
@@ -678,7 +807,7 @@ function watchReviews() {
   scan();
 }
 
-/** The closed fields of each row that a run records, with its wording. */
+/** The closed fields of each row that a run records. */
 export function compactRows(rows) {
   return rows.map((row) => ({
     item: row.item,
@@ -688,26 +817,593 @@ export function compactRows(rows) {
     recovery: row.recovery,
     size_bytes: row.size_bytes,
     version: row.version,
-    sentence: row.sentence,
     note: row.note,
   }));
 }
 
+/** The item's own setup in a snapshot: each item runs on its own. */
+export function runOf(snapshot, item) {
+  return snapshot?.runs?.find((run) => run.item === item) ?? null;
+}
+
+/** Await the existing UI subscription, without replacing its sole listener. */
+export function waitSetupSignal(session, wanted, timeout = 120000) {
+  return session.shell(
+    ({ wanted, timeout }) =>
+      new Promise((resolve, reject) => {
+        const matches = (value) => {
+          const snapshot = value?.snapshot;
+          if (!snapshot) return false;
+          return wanted.every(
+            ({
+              item,
+              stage,
+              outcome,
+              operationId,
+              state,
+              failure,
+              recovery,
+            }) => {
+              const wantsRow =
+                state !== undefined ||
+                failure !== undefined ||
+                recovery !== undefined;
+              const wantsRun =
+                !wantsRow ||
+                stage !== undefined ||
+                outcome !== undefined ||
+                operationId !== undefined;
+              const row = snapshot.rows?.find((entry) => entry.item === item);
+              if (
+                wantsRow &&
+                (!row ||
+                  (state !== undefined && row.state !== state) ||
+                  (failure !== undefined && row.failure !== failure) ||
+                  (recovery !== undefined && row.recovery !== recovery))
+              )
+                return false;
+              const run = snapshot.runs?.find((entry) => entry.item === item);
+              return (
+                !wantsRun ||
+                (run &&
+                  (!stage || run.stage === stage) &&
+                  (!outcome || run.outcome === outcome) &&
+                  (!operationId || run.operation_id === operationId))
+              );
+            },
+          );
+        };
+        let timer;
+        const finish = (value, error) => {
+          clearTimeout(timer);
+          window.removeEventListener("packaged-setup-snapshot", receive);
+          if (error) reject(error);
+          else resolve(value);
+        };
+        const receive = (event) => {
+          if (matches(event.detail)) finish(event.detail);
+        };
+        window.addEventListener("packaged-setup-snapshot", receive);
+        timer = setTimeout(
+          () => finish(null, new Error("setup signal deadline")),
+          timeout,
+        );
+        if (matches(window.__s10.setupLatest)) finish(window.__s10.setupLatest);
+      }),
+    { wanted, timeout },
+  );
+}
+
+/** DOM updates, rather than elapsed time, decide when the rail has rendered. */
+async function spinnerSignal(session, present) {
+  return session.shell(
+    (present) =>
+      new Promise((resolve, reject) => {
+        const selector = '[data-rail="settings"] [data-pin="busy"]';
+        let timer;
+        const observer = new MutationObserver(check);
+        function check() {
+          if (!!document.querySelector(selector) !== present) return;
+          observer.disconnect();
+          clearTimeout(timer);
+          const spinner = document.querySelector(selector);
+          const pin = spinner?.getBoundingClientRect();
+          const button = spinner?.closest("button")?.getBoundingClientRect();
+          const overlay =
+            !present ||
+            !!(
+              pin &&
+              button &&
+              pin.width < button.width &&
+              pin.x + pin.width / 2 > button.x + button.width / 2 &&
+              pin.y + pin.height / 2 < button.y + button.height / 2
+            );
+          resolve({ present, overlay });
+        }
+        observer.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+        });
+        timer = setTimeout(() => {
+          observer.disconnect();
+          reject(new Error("rail spinner deadline"));
+        }, 10000);
+        check();
+      }),
+    present,
+  );
+}
+
+export function concurrentSetupVerdict(evidence) {
+  const browser = runOf(evidence?.overlap?.snapshot, "browser");
+  const localAi = runOf(evidence?.overlap?.snapshot, "local_ai");
+  if (browser?.stage !== "running" || localAi?.stage !== "running")
+    return fail("the two real setup runs did not overlap", evidence);
+  if (!evidence.browserWire?.bytes || !evidence.localAiWire?.bytes)
+    return fail("both real transfers were not observed", evidence);
+  if (
+    !evidence.controls?.browserCancel ||
+    !evidence.controls?.localAiCancel ||
+    !evidence.controls?.modelHeld
+  )
+    return fail(
+      "the rows did not keep independent cancel controls while holding model downloads",
+      evidence,
+    );
+  if (evidence.browserActionAfterCancel !== true)
+    return fail(
+      "the idle browser stayed busy while only local AI ran",
+      evidence,
+    );
+  const cancelled = runOf(evidence?.cancelled?.snapshot, "browser");
+  const surviving = runOf(evidence?.cancelled?.snapshot, "local_ai");
+  if (
+    cancelled?.outcome !== "cancelled" ||
+    surviving?.stage !== "running" ||
+    surviving.operation_id !== localAi.operation_id
+  )
+    return fail(
+      "cancelling the browser did not leave the same local AI run live",
+      evidence,
+    );
+  if (
+    evidence?.spinnerDuring?.present !== true ||
+    evidence?.spinnerAfterCancel?.present !== true ||
+    evidence?.spinnerAfter?.present !== false
+  )
+    return fail("the global spinner did not follow all live runs", evidence);
+  if (!evidence.spinnerDuring.overlay || !evidence.spinnerAfterCancel.overlay)
+    return fail(
+      "the rail spinner was not an overlay on the Settings button",
+      evidence,
+    );
+  return pass(
+    "real browser and local AI transfers overlapped; browser cancellation left local AI live; the rail followed both",
+    evidence,
+  );
+}
+
+async function cancelConcurrentRun(driver, item, operationId) {
+  const run = runOf((await driver.read()).snapshot, item);
+  if (run?.operation_id !== operationId || run.stage === "settled") return;
+  if (!run.cancel_requested) {
+    const reply = await driver.session.call("desktop_setup_cancel", {
+      operationId,
+    });
+    if (!reply.ok) throw new Error("concurrent setup cleanup was refused");
+  }
+  return { item, operationId, stage: "settled" };
+}
+
+async function settleConcurrentRuns(driver, owned, gates) {
+  let settled = true;
+  const pending = [];
+  for (const [item, operationId] of owned) {
+    try {
+      const wanted = await cancelConcurrentRun(driver, item, operationId);
+      if (wanted) pending.push(wanted);
+    } catch {
+      settled = false;
+    }
+  }
+  // A held transfer cannot observe cancellation until its gate is released.
+  for (const gate of gates) gate.release();
+  if (pending.length) {
+    try {
+      await waitSetupSignal(driver.session, pending, 30000);
+    } catch {
+      settled = false;
+    }
+  }
+  driver.note("concurrent-setup-cleanup", { settled });
+}
+
+/** Leaves both runs cancelled so the existing browser resume lane can follow. */
+export async function runConcurrentSetup(
+  driver,
+  { lane, model },
+  onReview = async () => {},
+) {
+  const { session, proxy } = driver;
+  const evidence = {};
+  const gates = [];
+  const owned = new Map();
+  try {
+    await driver.openComponents();
+    const disclosure = session.page.locator(
+      `${DIALOG} [data-setup-element="local_ai"] > button`,
+    );
+    if ((await disclosure.getAttribute("aria-expanded")) !== "true")
+      await disclosure.click();
+    await driver.click(ROW_BUTTON("browser"), "browser setup");
+    const browserReview = await waitSetupSignal(session, [
+      { item: "browser", stage: "review" },
+    ]);
+    owned.set("browser", runOf(browserReview.snapshot, "browser").operation_id);
+    await session.page
+      .locator(`${DIALOG} [data-model="${CSSescape(model)}"] button`)
+      .first()
+      .click();
+    const localReview = await waitSetupSignal(session, [
+      { item: "local_ai", stage: "review" },
+    ]);
+    owned.set("local_ai", runOf(localReview.snapshot, "local_ai").operation_id);
+    const reviews = await waitSetupSignal(session, [
+      { item: "browser", stage: "review" },
+      { item: "local_ai", stage: "review" },
+    ]);
+    await onReview(reviews.snapshot);
+    for (const item of ["browser", "local_ai"]) {
+      const run = runOf(reviews.snapshot, item);
+      const hosts = [
+        ...new Set(run.review.entries.flatMap((entry) => entry.source_hosts)),
+      ];
+      if (!Array.isArray(hosts) || hosts.length === 0)
+        throw new Error(`${item} review names no hosts`);
+      gates.push(proxy.hold(hosts));
+      await driver.click(
+        `${APPROVE_BUTTON(item)}:last-child`,
+        `${item} approval`,
+      );
+      if (item === "browser") {
+        const answer = (await driver.setupCommands())
+          .filter(
+            (entry) =>
+              entry.cmd === "desktop_setup_answer" &&
+              entry.args?.decision === "apply",
+          )
+          .at(-1);
+        driver.approvals.push({
+          itemIds: [item],
+          digest: run.review.plan_digest,
+          at: new Date(answer.at).toISOString(),
+        });
+      }
+    }
+    evidence.overlap = await waitSetupSignal(session, [
+      { item: "browser", stage: "running" },
+      { item: "local_ai", stage: "running" },
+    ]);
+    await Promise.all(
+      ["browser", "local_ai"].map((item) =>
+        session.page
+          .locator(`${ROW(item)} [data-setup-progress]`)
+          .waitFor({ state: "visible", timeout: 30000 }),
+      ),
+    );
+    evidence.controls = await session.shell((model) => {
+      const cancel = (item) => {
+        const button = document.querySelector(
+          `[data-setup-row="${item}"] button`,
+        );
+        return !!button && !button.disabled;
+      };
+      const modelButton = document.querySelector(
+        `[data-model="${CSS.escape(model)}"] button`,
+      );
+      return {
+        browserCancel: cancel("browser"),
+        localAiCancel: cancel("local_ai"),
+        modelHeld: !!modelButton?.disabled,
+      };
+    }, model);
+    [evidence.browserWire, evidence.localAiWire] = await Promise.all(
+      gates.map((gate) =>
+        Promise.race([
+          gate.held,
+          new Promise((_, reject) => {
+            const timer = setTimeout(
+              () => reject(new Error("real transfer gate deadline")),
+              120000,
+            );
+            gate.held.finally(() => clearTimeout(timer));
+          }),
+        ]),
+      ),
+    );
+    evidence.spinnerDuring = await spinnerSignal(session, true);
+    const browser = runOf(evidence.overlap.snapshot, "browser");
+    driver.operationId = browser.operation_id;
+    driver.review = runOf(reviews.snapshot, "browser").review;
+    driver.completeAtCut = completedBuilds(driver.layout.browsers);
+    await driver.click(`${ROW("browser")} button`, "cancel browser only");
+    gates[0].release();
+    evidence.cancelled = await waitSetupSignal(session, [
+      {
+        item: "browser",
+        stage: "settled",
+        outcome: "cancelled",
+        operationId: browser.operation_id,
+      },
+      {
+        item: "local_ai",
+        stage: "running",
+        operationId: runOf(evidence.overlap.snapshot, "local_ai").operation_id,
+      },
+    ]);
+    evidence.spinnerAfterCancel = await spinnerSignal(session, true);
+    evidence.browserActionAfterCancel = await session.shell(
+      () =>
+        new Promise((resolve, reject) => {
+          const inspect = () => {
+            const row = document.querySelector('[data-setup-row="browser"]');
+            const button = row?.querySelector("button");
+            if (
+              button &&
+              !button.disabled &&
+              !row.querySelector("[data-setup-progress], [data-setup-review]")
+            ) {
+              observer.disconnect();
+              clearTimeout(timer);
+              resolve(true);
+            }
+          };
+          const observer = new MutationObserver(inspect);
+          observer.observe(document, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+          });
+          const timer = setTimeout(() => {
+            observer.disconnect();
+            reject(new Error("idle browser remained busy"));
+          }, 10000);
+          inspect();
+        }),
+    );
+    driver.cancelledTransfer = {
+      wireBytes: evidence.browserWire.bytes,
+      offered: evidence.cancelled.snapshot.rows.find(
+        (row) => row.item === "browser",
+      )?.recovery,
+      outcome: "cancelled",
+    };
+    driver.firstTransferAt = evidence.browserWire.at;
+    driver.concurrencyChecked = true;
+    await driver.click(
+      `${ROW("local_ai")} button`,
+      "cancel local AI independently",
+    );
+    gates[1].release();
+    evidence.settled = await waitSetupSignal(session, [
+      { item: "browser", stage: "settled", outcome: "cancelled" },
+      { item: "local_ai", stage: "settled", outcome: "cancelled" },
+    ]);
+    evidence.spinnerAfter = await spinnerSignal(session, false);
+    driver.note("concurrent-setup", { lane, model, ...evidence });
+    return concurrentSetupVerdict(evidence);
+  } catch (error) {
+    try {
+      await settleConcurrentRuns(driver, owned, gates);
+    } catch {
+      // Optional cleanup evidence must not replace the check's original failure.
+    }
+    throw error;
+  } finally {
+    for (const gate of gates) gate.release();
+  }
+}
+
+function CSSescape(value) {
+  return String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+}
+
+/** Judge the actual failed run, its rendered sentence and its local records. */
+export function setupFailureVerdict(observation) {
+  const {
+    run,
+    expectedSentence,
+    sentences,
+    action,
+    refusals,
+    events,
+    records,
+  } = observation;
+  if (!(refusals > 0))
+    return fail(
+      "the packaged engine never reached the refusing proxy",
+      observation,
+    );
+  if (
+    run?.stage !== "settled" ||
+    run.outcome !== "failed" ||
+    run.failure !== "blocked_by_network"
+  )
+    return fail(
+      "the setup did not settle with the induced network failure",
+      observation,
+    );
+  if (
+    !expectedSentence ||
+    /Cadrumo refused that request[.!]?/i.test(expectedSentence) ||
+    sentences?.length !== 1 ||
+    sentences[0] !== expectedSentence
+  )
+    return fail(
+      "the row does not show the canonical failure sentence exactly once",
+      observation,
+    );
+  if (!action?.trim())
+    return fail("the failed row offers no recovery action", observation);
+  const matches = (event) =>
+    event.kind === "failure" &&
+    event.source === "desktop" &&
+    event.failure?.code === "setup_failed" &&
+    event.failure?.reason === "setup_browser_failed" &&
+    event.failure?.causes?.some(
+      (cause) =>
+        cause.kind === "application" &&
+        cause.code === "setup_failed" &&
+        cause.reason === "blocked_by_network",
+    );
+  if (events?.length !== 1 || !matches(events[0]))
+    return fail(
+      "the setup failure was not recorded exactly once in diagnostics",
+      observation,
+    );
+  if (
+    records?.length !== 1 ||
+    !matches(records[0]) ||
+    records[0].sequence !== events[0].sequence ||
+    records[0].hostPid !== events[0].hostPid
+  )
+    return fail(
+      "the same failure was not persisted exactly once in the local log",
+      observation,
+    );
+  return pass(
+    "the setup failed with its plain sentence, recovery action and one local failure record",
+    observation,
+  );
+}
+
+/** Before successful setup: refuse real CONNECTs, then restore the normal route. */
+export async function runSetupFailureAcceptance({ driver, expectedSentence }) {
+  if (driver.item !== "browser")
+    throw new Error("the failure acceptance requires the browser row");
+  const before = await driver.session.call("diagnostics_snapshot", {
+    after: 0,
+  });
+  if (!before.ok)
+    return fail("diagnostics could not be read before inducing failure");
+  const prior = new Set(
+    before.value.events.map((event) => `${event.hostPid}:${event.sequence}`),
+  );
+  const refusals = driver.proxy.refusals;
+  driver.proxy.refuse(true);
+  try {
+    const started = await driver.session.call("desktop_setup_start", {
+      item: driver.item,
+      resume: false,
+    });
+    if (!started.ok)
+      return fail(
+        "the normal setup start was refused before a run was created",
+        started,
+      );
+    const operation = runOf(started.value.snapshot, driver.item)?.operation_id;
+    const setup = await driver.wait(
+      async () => {
+        const read = await driver.read();
+        const run = runOf(read.snapshot, driver.item);
+        return run &&
+          (!operation || run.operation_id === operation) &&
+          run.stage === "settled"
+          ? read
+          : null;
+      },
+      { timeout: 30000, what: "the real setup's network refusal" },
+    );
+    await driver.openComponents();
+    const row = driver.session.page.locator(ROW(driver.item));
+    await row
+      .locator("[data-setup-sentence]")
+      .filter({ hasText: expectedSentence })
+      .waitFor({ state: "visible", timeout: 10000 });
+    const sentences = await row
+      .locator("[data-setup-sentence]")
+      .allTextContents();
+    const action = await row
+      .locator("button:visible")
+      .first()
+      .innerText()
+      .catch(() => "");
+    const fresh = (event) =>
+      !prior.has(`${event.hostPid}:${event.sequence}`) &&
+      event.kind === "failure" &&
+      event.failure?.reason === "setup_browser_failed";
+    // Diagnostics writes Event JSON lines asynchronously; await its actual persisted record.
+    const evidence = await driver.wait(
+      async () => {
+        const answer = await driver.session.call("diagnostics_snapshot", {
+          after: 0,
+        });
+        if (!answer.ok || !answer.value.paths?.current) return null;
+        const path = answer.value.paths.current;
+        if (!strictlyInside(driver.layout.root, path))
+          throw new Error("the native log escaped the throwaway root");
+        let records;
+        try {
+          const lines = readFileSync(path, "utf8").split("\n");
+          lines.pop(); // An incomplete final line is still being written.
+          records = lines
+            .filter(Boolean)
+            .map((line) => JSON.parse(line))
+            .filter(fresh);
+        } catch {
+          return null;
+        }
+        return records.length
+          ? { events: answer.value.events.filter(fresh), records }
+          : null;
+      },
+      {
+        timeout: 10000,
+        what: "the setup failure's persisted local log event",
+        fatal: (error) =>
+          /escaped the throwaway root/.test(error?.message ?? ""),
+      },
+    );
+    const observation = {
+      run: runOf(setup.snapshot, driver.item),
+      expectedSentence,
+      sentences: sentences.map((sentence) => sentence.trim()),
+      action,
+      refusals: driver.proxy.refusals - refusals,
+      ...evidence,
+    };
+    driver.note("induced-setup-failure", observation);
+    return setupFailureVerdict(observation);
+  } finally {
+    driver.proxy.refuse(false);
+  }
+}
+
 /**
  * Drives the packaged window through the browser setup as a person would:
- * Settings, Components, the row's own button, the plan, the approval, then
- * Resume after a forced interruption. Clicks go through the page; every
+ * Settings, the provisioning panel, the row's own button, the plan, the
+ * row's approval, then Resume after a forced interruption. Clicks go through the page; every
  * reading comes from the host's own setup commands, the window's IPC trace
  * and the rendered document.
  */
 export class SetupDriver {
-  constructor({ session, input, signIn, layout, proxy, item = "browser" }) {
+  constructor({
+    session,
+    input,
+    signIn,
+    layout,
+    proxy,
+    item = "browser",
+    restartAfterCrash,
+  }) {
     this.session = session;
     this.input = input;
     this.signIn = signIn;
     this.layout = layout;
     this.proxy = proxy;
     this.item = item;
+    this.restartAfterCrash = restartAfterCrash;
     this.abortReason = null;
     this.approvals = [];
     this.timeline = [];
@@ -809,18 +1505,22 @@ export class SetupDriver {
       attempt += 1
     ) {
       await this.session.page.keyboard.press("Escape");
-      await sleep(400);
+      await this.session.page
+        .locator(DIALOG)
+        .waitFor({ state: "hidden", timeout: 10000 });
     }
     return !(await this.visible(DIALOG));
   }
 
-  /** Settings, Components: the section with this item's row. */
+  /** The provisioning panel, opened from Settings' one section, with this item's row. */
   async openComponents() {
+    if (await this.visible(ROW(this.item))) return;
     await this.closeDialog();
-    if (!(await this.visible(".setup-components")))
+    if (!(await this.visible(OPEN_PANEL)))
       await this.click("[data-rail=settings]", "the Settings rail item");
+    await this.click(OPEN_PANEL, "Settings' provisioning button");
     await this.session.page
-      .locator(`.setup-components [data-setup-row="${this.item}"]`)
+      .locator(ROW(this.item))
       .waitFor({ state: "visible", timeout: 60000 });
   }
 
@@ -839,38 +1539,32 @@ export class SetupDriver {
     this.rows = setup.snapshot.rows;
     const row = this.row(setup);
     this.note("rows-before", { rows: compactRows(this.rows) });
-    // The dialog opens once per launch while setup is incomplete; a person
-    // closes it to go to Settings instead.
-    await this.wait(() => this.visible(DIALOG), {
-      timeout: 20000,
-      what: "the setup dialog opened after sign-in",
-    }).catch(() => false);
     const dismissed = await this.closeDialog();
     if (row?.state !== "absent")
       return fail(`a clean root read the ${this.item} as ${row?.state}`, {
         rows: compactRows(this.rows),
       });
     return pass(
-      `${this.rows.length} rows; ${this.item} absent on the clean root${dismissed ? "; the first-run dialog closed" : ""}`,
+      `${this.rows.length} rows; ${this.item} absent on the clean root${dismissed ? "; the first-run panel closed" : ""}`,
       { rows: compactRows(this.rows) },
     );
   }
 
-  /** The row's own button opens the dialog on it and shows the plan. */
+  /** The row's own button in the panel shows the plan inside the row. */
   async showPlan() {
     await this.openComponents();
     this.rowLabel = await this.click(ROW_BUTTON(this.item), "the row's button");
     const setup = await this.wait(
       async () => {
         const read = await this.read();
-        return read.snapshot?.setup?.stage === "review" &&
-          (await this.visible(`[data-setup-plan="${this.item}"]`))
+        return runOf(read.snapshot, this.item)?.stage === "review" &&
+          (await this.visible(`${ROW(this.item)} [data-setup-plan]`))
           ? read
           : null;
       },
       { timeout: 240000, what: "the setup plan for review" },
     );
-    const run = setup.snapshot.setup;
+    const run = runOf(setup.snapshot, this.item);
     this.operationId = run.operation_id;
     this.review = run.review;
     const rendered = await this.session.shell(() =>
@@ -893,10 +1587,24 @@ export class SetupDriver {
     );
   }
 
-  /** The person approves the plan the dialog shows. */
+  /** The person approves the plan the row shows. */
   async approve() {
     const before = await this.lastSequence();
-    this.approveLabel = await this.click(FOOTER_BUTTONS, "the approve button");
+    this.phaseApprovalStart = this.approvals.length;
+    if (this.restartAfterCrash) {
+      this.crashGate = this.proxy.hold(
+        [
+          ...new Set(
+            this.review.entries.flatMap((entry) => entry.source_hosts),
+          ),
+        ],
+        INTERRUPT_AFTER_BYTES,
+      );
+    }
+    this.approveLabel = await this.click(
+      APPROVE_BUTTON(this.item),
+      "the row's approve button",
+    );
     const answer = await this.wait(
       async () =>
         (await this.setupCommands(before)).find(
@@ -921,163 +1629,177 @@ export class SetupDriver {
     });
   }
 
-  /** The profile worker carrying out the setup, found by its command line. */
-  async workers() {
-    const storage = this.layout.storage.toLowerCase();
-    const runtime = this.signIn.messages.find(
-      (message) => message.kind === "ready",
-    )?.pid;
-    const everything = await this.input.processes(TRACKED_PROCESSES);
-    const owned = new Set(
-      runtime ? descendants(everything, runtime).map((entry) => entry.pid) : [],
-    );
-    return everything.filter(
-      (process) =>
-        process.commandLine?.includes(WORKER_MODULE) &&
-        (owned.has(process.pid) ||
-          process.commandLine.toLowerCase().includes(storage)),
-    );
-  }
-
-  /**
-   * Forces an interruption mid-download: once the first attempt has moved
-   * INTERRUPT_AFTER_BYTES on the wire, the profile worker carrying it out is
-   * terminated, as a crash or power loss would end it.
-   */
+  /** Interrupt this native run once real transfer bytes cross the threshold. */
   async interrupt() {
-    const cut = await this.wait(
-      async () => {
-        const setup = await this.read();
-        const run = setup.snapshot?.setup;
-        const progress = run?.items.find((entry) => entry.item === this.item);
-        // The wire count is the measure; the window's own progress stands in
-        // when the download did not go through the counting proxy.
-        const moved = Math.max(
-          this.proxy.downstream - this.wireAtApproval,
-          progress?.completed ?? 0,
-        );
-        if (moved > NO_TRANSFER_ALLOWANCE_BYTES)
-          this.firstTransferAt ??= new Date().toISOString();
-        if (run?.stage === "settled")
-          throw new Error(
-            `the setup settled ${run.outcome} before ${INTERRUPT_AFTER_BYTES} bytes moved`,
-          );
-        return moved >= INTERRUPT_AFTER_BYTES
-          ? { moved, progress: progress ?? null }
-          : null;
-      },
-      {
-        timeout: 20 * 60 * 1000,
-        what: "the first megabytes of the download",
-        fatal: (error) => /^the setup settled/.test(error?.message ?? ""),
-      },
-    );
-    const workers = await this.workers();
-    if (workers.length === 0)
-      return fail(
-        "no profile worker under this storage root was found to interrupt",
-      );
-    this.completeAtCut = completedBuilds(this.layout.browsers);
-    const everything = await this.input.processes(TRACKED_PROCESSES);
-    this.cutTree = workers.flatMap((worker) => [
-      worker,
-      ...descendants(everything, worker.pid),
-    ]);
-    for (const worker of workers) process.kill(worker.pid);
-    // Whatever the worker had started and the runtime did not end with it
-    // would go on writing into the root; a crash leaves nothing running.
-    await sleep(10000);
-    const orphans = survivors(
-      this.cutTree.filter((entry) => !workers.includes(entry)),
-      await this.input.processes(TRACKED_PROCESSES),
-    );
-    for (const orphan of orphans) {
+    if (this.restartAfterCrash) {
+      if (!this.crashGate)
+        return fail("the browser transfer was not gated before approval");
+      let timer;
       try {
-        process.kill(orphan.pid);
-      } catch {
-        // It ended between the listing and the kill.
+        const transfer = await Promise.race([
+          this.crashGate.held,
+          new Promise((_, reject) => {
+            timer = setTimeout(
+              () => reject(new Error("transfer threshold deadline")),
+              20 * 60 * 1000,
+            );
+          }),
+        ]);
+        const setup = await this.read();
+        const run = runOf(setup.snapshot, this.item);
+        if (run?.stage !== "running")
+          return fail(
+            "the browser was no longer running at the crash boundary",
+            { run },
+          );
+        this.completeAtCut = completedBuilds(this.layout.browsers);
+        this.firstTransferAt = transfer.at;
+        this.cut = {
+          at: new Date().toISOString(),
+          wireBytes: transfer.bytes,
+          movedBytes: transfer.bytes,
+          operationId: run.operation_id,
+          completeBuilds: Object.keys(this.completeAtCut),
+          priorPlanDigest: this.review.plan_digest,
+        };
+        const restarted = await this.restartAfterCrash(this.cut);
+        if (
+          !restarted?.session ||
+          !Number.isSafeInteger(restarted.oldPid) ||
+          !Number.isSafeInteger(restarted.newPid) ||
+          restarted.oldPid === restarted.newPid
+        )
+          return fail(
+            "the crash callback did not return a different owned window",
+          );
+        this.session = restarted.session;
+        this.crashWindows = {
+          oldPid: restarted.oldPid,
+          newPid: restarted.newPid,
+        };
+        await this.session.shell(watchReviews);
+        this.note("crash-relaunch", { ...this.cut, ...this.crashWindows });
+        return pass(
+          "the owned GUI was killed during a held transfer and relaunched",
+          { ...this.cut, ...this.crashWindows },
+        );
+      } finally {
+        clearTimeout(timer);
+        this.crashGate.release();
+        this.crashGate = null;
       }
     }
+    const cut = await this.session.shell(
+      ({ item, threshold }) =>
+        new Promise((resolve, reject) => {
+          let timer;
+          const receive = (event) => {
+            const run = event.detail?.snapshot?.runs.find(
+              (entry) => entry.item === item,
+            );
+            const progress = run?.items.find((entry) => entry.item === item);
+            if (run?.stage === "settled")
+              finish(
+                null,
+                new Error(
+                  `setup settled ${run.outcome} before transfer threshold`,
+                ),
+              );
+            else if ((progress?.completed ?? 0) >= threshold)
+              finish({ operationId: run.operation_id, progress });
+          };
+          const finish = (value, error) => {
+            clearTimeout(timer);
+            window.removeEventListener("packaged-setup-snapshot", receive);
+            if (error) reject(error);
+            else resolve(value);
+          };
+          window.addEventListener("packaged-setup-snapshot", receive);
+          timer = setTimeout(
+            () => finish(null, new Error("transfer threshold deadline")),
+            20 * 60 * 1000,
+          );
+          receive({ detail: window.__s10.setupLatest });
+        }),
+      { item: this.item, threshold: INTERRUPT_AFTER_BYTES },
+    );
+    this.completeAtCut = completedBuilds(this.layout.browsers);
+    const answer = await this.session.call("desktop_setup_cancel", {
+      operationId: cut.operationId,
+    });
+    if (!answer.ok)
+      return fail("the per-item native cancellation was refused", answer);
     this.cut = {
       at: new Date().toISOString(),
       wireBytes: this.proxy.downstream - this.wireAtApproval,
-      movedBytes: cut.moved,
-      completed: cut.progress?.completed ?? null,
-      total: cut.progress?.total ?? null,
-      step: cut.progress?.step ?? null,
+      movedBytes: cut.progress.completed,
+      completed: cut.progress.completed,
+      total: cut.progress.total,
+      step: cut.progress.step,
       completeBuilds: Object.keys(this.completeAtCut),
-      workers: workers.map(({ pid, name }) => ({ pid, name })),
-      children: this.cutTree
-        .filter((entry) => !workers.includes(entry))
-        .map(({ pid, name }) => ({ pid, name })),
-      orphans: orphans.map(({ pid, name }) => ({ pid, name })),
+      operationId: cut.operationId,
     };
-    this.note("interrupt", this.cut);
-    const detail = `terminated ${workers.length} profile worker(s) ${this.cut.wireBytes} bytes into the download`;
-    return orphans.length
-      ? fail(
-          `${detail}; ${orphans.length} of its child process(es) kept running 10 s later and were ended by the harness`,
-          this.cut,
-        )
-      : pass(`${detail}; none of its children kept running`, this.cut);
+    this.note("cancel", this.cut);
+    await waitSetupSignal(this.session, [
+      {
+        item: this.item,
+        stage: "settled",
+        outcome: "cancelled",
+        operationId: cut.operationId,
+      },
+    ]);
+    return pass(
+      "cancelled this native setup after real transfer progress",
+      this.cut,
+    );
   }
 
   /** What the window shows once the interruption settled, signing in again if it ended the session. */
   async afterInterruption() {
-    let signedInAgain = false;
-    let setup = await this.wait(
-      async () => {
-        const read = await this.read().catch(() => null);
-        if (!read) return null;
-        if (read.state === "signed_out") return read;
-        const run = read.snapshot?.setup;
-        if (run?.operation_id === this.operationId && run.stage === "settled")
-          return read;
-        if (
-          read.state === "ready" &&
-          !run &&
-          this.row(read) &&
-          this.row(read).state !== "provisioning"
-        )
-          return read;
-        return null;
-      },
-      { timeout: 240000, what: "the interrupted setup to settle" },
-    );
-    if (setup.state === "signed_out") {
-      await this.session.page
-        .locator("#profile-password")
-        .waitFor({ state: "visible", timeout: 60000 });
-      const answer = await this.signIn.submit(this.session, this.signIn.secret);
-      if (answer?.kind !== "signed-in")
-        return fail(
-          `signing in again after the interruption answered ${answer?.kind}`,
-        );
-      signedInAgain = true;
-      await this.session.shell(watchReviews);
-      setup = await this.wait(
-        async () => {
-          const read = await this.read();
-          return read.state === "ready" && read.snapshot?.rows.length
-            ? read
-            : null;
-        },
-        { timeout: 180000, what: "the components after signing in again" },
+    if (this.crashWindows) {
+      const setup = await waitSetupSignal(
+        this.session,
+        [
+          {
+            item: this.item,
+            state: "failed",
+            failure: "interrupted",
+            recovery: "resume",
+          },
+        ],
+        120000,
+      );
+      await this.openComponents();
+      this.interrupted = {
+        wireBytes: this.cut.movedBytes,
+        offered: this.row(setup).recovery,
+        outcome: "interrupted",
+        row: compactRows([this.row(setup)])[0],
+        windowChanged: true,
+        ...this.crashWindows,
+      };
+      this.note("after-interruption", this.interrupted);
+      return pass(
+        "the relaunched app reports failed/interrupted and offers Resume",
+        this.interrupted,
       );
     }
-    const run = setup.snapshot?.setup ?? null;
+    const signedInAgain = false;
+    const setup = await waitSetupSignal(this.session, [
+      {
+        item: this.item,
+        stage: "settled",
+        outcome: "cancelled",
+        operationId: this.operationId,
+      },
+    ]);
+    const run = runOf(setup.snapshot, this.item);
     const row = this.row(setup);
     const dialog = await this.visible(DIALOG);
     const outcome = run?.operation_id === this.operationId ? run.outcome : null;
-    // The button the window offers: the dialog's main button follows the
-    // run's outcome; with no run on show, the row's own recovery.
-    const offered =
-      dialog && outcome === "interrupted"
-        ? "resume"
-        : dialog &&
-            ["failed", "cancelled", "not_enough_space"].includes(outcome)
-          ? "try_again"
-          : (row?.recovery ?? null);
+    // The button the window offers is the row's own, worded from its
+    // recovery, whether or not the panel is open.
+    const offered = row?.recovery ?? null;
     this.interrupted = {
       wireBytes: this.cut?.movedBytes ?? 0,
       outcome,
@@ -1097,18 +1819,11 @@ export class SetupDriver {
   async resume() {
     const reviewsBefore = (await this.reviewsRendered())?.length ?? 0;
     const before = await this.lastSequence();
-    if (this.interrupted.dialog) {
-      this.resumeLabel = await this.click(
-        FOOTER_BUTTONS,
-        "the dialog's main button",
-      );
-    } else {
-      await this.openComponents();
-      this.resumeLabel = await this.click(
-        ROW_BUTTON(this.item),
-        "the row's button",
-      );
-    }
+    await this.openComponents();
+    this.resumeLabel = await this.click(
+      ROW_BUTTON(this.item),
+      "the row's button",
+    );
     const started = await this.wait(
       async () =>
         (await this.setupCommands(before)).find(
@@ -1127,7 +1842,7 @@ export class SetupDriver {
     const settled = await this.wait(
       async () => {
         const read = await this.read();
-        const run = read.snapshot?.setup;
+        const run = runOf(read.snapshot, this.item);
         if (!run || run.operation_id === this.operationId) return null;
         resumedOperation = run.operation_id;
         if (run.stage === "review" && run.review) {
@@ -1135,8 +1850,8 @@ export class SetupDriver {
           // still reaches the full check and the second setup.
           const sequence = await this.lastSequence();
           await this.click(
-            FOOTER_BUTTONS,
-            "the approve button of a second plan",
+            APPROVE_BUTTON(this.item),
+            "the row's approve button of a second plan",
           );
           const answer = await this.wait(
             async () =>
@@ -1146,6 +1861,14 @@ export class SetupDriver {
               ),
             { timeout: 30000, what: "the answer to the second plan" },
           );
+          if (
+            !answer.ok ||
+            answer.args?.decision !== "apply" ||
+            answer.args?.planDigest !== run.review.plan_digest
+          )
+            throw new Error(
+              "the new window did not approve the exact plan it showed",
+            );
           answersSent += 1;
           this.approvals.push({
             itemIds: run.review.entries.map((entry) => entry.item),
@@ -1161,7 +1884,7 @@ export class SetupDriver {
     this.setupSettledAt = new Date().toISOString();
     const reviews = (await this.reviewsRendered()) ?? [];
     const after = completedBuilds(this.layout.browsers);
-    const run = settled.snapshot.setup;
+    const run = runOf(settled.snapshot, this.item);
     this.resumed = {
       label: this.resumeLabel,
       resumeRequested: started.args?.resume === true,
@@ -1178,10 +1901,24 @@ export class SetupDriver {
       finalState: this.row(settled)?.state ?? null,
     };
     this.note("resumed", this.resumed);
-    return browserResumeVerdict({
-      interrupted: this.interrupted,
-      resumed: this.resumed,
-    });
+    if (this.interrupted?.outcome !== "cancelled")
+      return browserResumeVerdict({
+        interrupted: this.interrupted,
+        resumed: this.resumed,
+      });
+    const reviewedRetry =
+      this.resumed.resumeRequested === false &&
+      this.resumed.reviewsShown === 1 &&
+      this.resumed.answersSent === 1;
+    return reviewedRetry && USABLE_STATES.includes(this.resumed.finalState)
+      ? pass(
+          "cancelled setup retried after one fresh plan review and finished usable",
+          this.resumed,
+        )
+      : fail(
+          "cancelled setup did not retry through its fresh plan review",
+          this.resumed,
+        );
   }
 
   /** The app's own full check of the item, asked for after setup settled. */
@@ -1212,9 +1949,7 @@ export class SetupDriver {
     const row = this.row(setup);
     this.rowsAfter = setup.snapshot.rows;
     await this.openComponents();
-    const shown = await this.session.page
-      .locator(`.setup-components [data-setup-row="${this.item}"]`)
-      .innerText();
+    const shown = await this.session.page.locator(ROW(this.item)).innerText();
     this.evidence = {
       itemId: this.item,
       state: row?.state ?? null,
@@ -1246,10 +1981,10 @@ export class SetupDriver {
     const tree = fingerprint([this.layout.browsers]);
     const reviewsBefore = (await this.reviewsRendered())?.length ?? 0;
     const wire = this.proxy.downstream;
-    const previous = (await this.read()).snapshot?.setup?.operation_id ?? null;
+    const previous =
+      runOf((await this.read()).snapshot, this.item)?.operation_id ?? null;
     const started = await this.session.call("desktop_setup_start", {
-      items: [this.item],
-      model: null,
+      item: this.item,
       resume: false,
     });
     if (!started.ok)
@@ -1260,7 +1995,7 @@ export class SetupDriver {
     const settled = await this.wait(
       async () => {
         const read = await this.read();
-        const run = read.snapshot?.setup;
+        const run = runOf(read.snapshot, this.item);
         if (!run || run.operation_id === previous) return null;
         if (run.stage === "review" && run.review && !reviewed) {
           reviewed = true;
@@ -1275,7 +2010,7 @@ export class SetupDriver {
       },
       { timeout: 300000, what: "the second setup to settle" },
     );
-    const run = settled.snapshot.setup;
+    const run = runOf(settled.snapshot, this.item);
     const reviews = (await this.reviewsRendered()) ?? [];
     this.second = {
       outcome: run.outcome,
@@ -1299,15 +2034,10 @@ export class SetupDriver {
  * own and stop nothing.
  */
 export async function runSetupAcceptance({ driver, check, results }) {
-  const steps = [
-    [
-      "setup-rows-before",
-      "a clean root reads the browser as not set up",
-      () => driver.rowsBefore(),
-    ],
+  const initial = [
     [
       "setup-review",
-      "Settings, Components and the browser row's button show its plan",
+      "Settings' provisioning button and the browser row's button show its plan",
       () => driver.showPlan(),
     ],
     [
@@ -1325,9 +2055,12 @@ export async function runSetupAcceptance({ driver, check, results }) {
       "the window shows the interruption and how to resume",
       () => driver.afterInterruption(),
     ],
+  ];
+  const steps = [
+    ...initial,
     [
-      "setup-resume",
-      "Resume finishes the setup without a second review",
+      "setup-recovery",
+      "the interrupted browser resumes under this window's approval and finishes",
       () => driver.resume(),
     ],
     [
@@ -1335,7 +2068,12 @@ export async function runSetupAcceptance({ driver, check, results }) {
       "one approval covered the browser before any byte moved",
       () =>
         planApprovalVerdict({
-          approvals: driver.approvals,
+          approvals: driver.approvals.slice(
+            driver.phaseApprovalStart ?? 0,
+            driver.crashWindows
+              ? (driver.phaseApprovalStart ?? 0) + 1
+              : undefined,
+          ),
           requiredItemIds: [driver.item],
           firstTransferAt: driver.firstTransferAt,
         }),
@@ -1353,7 +2091,7 @@ export async function runSetupAcceptance({ driver, check, results }) {
   ];
   const independent = new Set([
     "setup-interrupted",
-    "setup-resume",
+    "setup-recovery",
     "setup-one-approval",
   ]);
   const outcomes = {};
@@ -1370,29 +2108,14 @@ export async function runSetupAcceptance({ driver, check, results }) {
     });
     outcomes[id] = entry.verdict;
     // An interruption that left children running still happened.
-    const happened = id === "setup-interrupt" && driver.cut;
+    const happened =
+      id === "setup-interrupt" &&
+      driver.cut &&
+      (!driver.restartAfterCrash || driver.crashWindows);
     if (entry.verdict !== PASS && !independent.has(id) && !happened)
       blocked ??= id;
   }
   if (driver.evidence) recordItemEvidence(results, [driver.evidence]);
   results.evidence("setup-timeline.json", driver.timeline);
-  const others = (driver.rowsAfter ?? driver.rows ?? []).filter(
-    (row) => row.item !== driver.item,
-  );
-  await check(
-    "setup-local-ai",
-    "the local AI, its program and its models",
-    async () => ({
-      verdict: "SKIP",
-      detail: `opt-in, not run: ${
-        others
-          .map(
-            (row) =>
-              `${row.item} ${row.size_bytes === null ? "size unknown" : `${row.size_bytes} bytes`}`,
-          )
-          .join("; ") || "no rows were read"
-      }`,
-    }),
-  );
   return outcomes;
 }

@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...conformance.stamp import bundled_registry_root
+from ...tests.modelo_296_perceptor_support import REVISION, modelo_296_with_second_field_length
 from ..loader import load_modelo_directory, load_shared_catalogues
 from ..profile_schema import capture_profile_schema
 from ..validate_export_field_placement import (
@@ -37,24 +37,6 @@ from ..validate_export_field_placement import (
 from ..validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-
-_REVISION = "2024-2025"
-_PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
-
-
-def _modelo_296_with_second_field_length(tmp_path: Path, *, length: int) -> Path:
-    """Copy the shipped Modelo 296 tree, re-declaring one field's position count."""
-    modelo_dir = tmp_path / "296"
-    shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
-    record = modelo_dir / _PERCEPTOR_RECORD
-    document = load_toml(record)
-    export_layouts = document["revisions"][_REVISION]["export_layouts"]
-    perceptor = next(item for layout in export_layouts for item in layout["records"] if item["id"] == "m296-perceptor")
-    second_field = next(field for field in perceptor["fields"] if field["id"] == "m296-2024.perceptor.f002")
-    assert (second_field["offset"], second_field["length"]) == (2, 3)
-    second_field["length"] = length
-    record.write_text(render_toml(document), encoding="utf-8", newline="\n")
-    return modelo_dir
 
 
 def _placement_refusal_lines(modelo: ModeloDefinition) -> tuple[str, ...]:
@@ -106,7 +88,7 @@ def test_a_planted_overlap_is_refused_naming_the_fields_and_the_positions(tmp_pa
     two declarations. A refusal that named only the record would leave the
     author to find the pair by hand.
     """
-    modelo = load_modelo_directory(_modelo_296_with_second_field_length(tmp_path, length=5))
+    modelo = load_modelo_directory(modelo_296_with_second_field_length(tmp_path, length=5))
 
     refusals = _placement_refusal_lines(modelo)
 
@@ -126,7 +108,7 @@ def test_a_planted_gap_is_reported_naming_the_fields_and_the_positions(tmp_path:
     carries the population the check's module docstring measures, so the gate is
     the advisory's content, not an exception.
     """
-    modelo = load_modelo_directory(_modelo_296_with_second_field_length(tmp_path, length=1))
+    modelo = load_modelo_directory(modelo_296_with_second_field_length(tmp_path, length=1))
 
     planted = [
         advisory
@@ -162,27 +144,28 @@ def test_a_casilla_split_across_two_consecutive_fields_passes() -> None:
     modelo = load_modelo_directory(bundled_registry_root() / "modelos" / "296")
     declarante = next(
         record
-        for layout in modelo.revisions[_REVISION].export_layouts
+        for layout in modelo.revisions[REVISION].export_layouts
         for record in layout.records
         if record.id == "m296-declarante"
     )
     split = tuple(field for field in declarante.fields if str(field.casilla_id) == "03")
 
     assert tuple((field.offset, field.length) for field in split) == ((160, 13), (173, 2))
-    prefix = f"modelo {modelo.id} revision {_REVISION}"
+    prefix = f"modelo {modelo.id} revision {REVISION}"
     assert validate_export_record_field_placement(prefix=prefix, record=declarante) == []
     assert export_record_placement_advisories(prefix=prefix, record=declarante) == ()
 
 
 def test_a_binding_derived_record_is_judged_on_its_binding_spans_too() -> None:
-    """Modelo 720's head is declared by bindings, and must not read as unwritten.
+    """Modelo 720's ``type_1`` record is placed by two sites, and must not read as unwritten.
 
-    The ``type_1`` record declares ONE inline field, a reserved tail at position
-    181. Its first 180 positions come from the fixed export selectors of the
-    bindings naming ``type_1``. Judged on the inline field alone the record
-    looks like 180 unclaimed opening positions; judged on both declaration
-    sites it is contiguous from position 1. This is the case that decides
-    whether the check reports a real defect or its own blind spot.
+    Some of the record's positions belong to the fixed export selectors of the
+    bindings naming ``type_1``; the rest, including the reserved tail at
+    position 181 and the profile-fed contact fields, which have no fixed
+    selector, are declared inline. Judged on the inline fields alone the record
+    has holes wherever a selector writes; judged on both declaration sites it is
+    contiguous from position 1. This is the case that decides whether the check
+    reports a real defect or its own blind spot.
     """
     modelo = load_modelo_directory(bundled_registry_root() / "modelos" / "720")
     revision_id, revision = next(iter(modelo.revisions.items()))
@@ -192,15 +175,26 @@ def test_a_binding_derived_record_is_judged_on_its_binding_spans_too() -> None:
         for candidate in layout.records
         if candidate.id == "modelo-720-type-1"
     )
-    # Generated publication now expands the body. Reconstruct the unresolved
-    # inline-plus-binding declaration whose merge behavior this test proves.
-    assert all(field.offset is not None for field in record.fields)
-    inline = tuple(
-        field for field in record.fields if field.offset is not None and (field.offset < 58 or field.offset == 181)
-    )
-    record = record.model_copy(update={"fields": inline, "binding_record": "type_1"})
     prefix = f"modelo {modelo.id} revision {revision_id}"
     spans = binding_export_spans(revision)
+    # Generated publication expands the body, so every selector's positions also
+    # appear inline. Reconstruct the unresolved inline-plus-binding declaration
+    # whose merge behavior this test proves: drop exactly the inline fields whose
+    # positions a fixed selector of this record already places.
+    assert record.binding_record is not None
+    assert all(field.offset is not None and field.length is not None for field in record.fields)
+    selector_positions = {
+        position for span in spans[record.binding_record] for position in range(span.offset, span.end)
+    }
+    inline = tuple(
+        field
+        for field in record.fields
+        if field.offset is not None
+        and field.length is not None
+        and selector_positions.isdisjoint(range(field.offset, field.offset + field.length))
+    )
+    assert len(inline) < len(record.fields)
+    record = record.model_copy(update={"fields": inline})
 
     inline_only = record_placed_spans(record)
     assert inline_only[0].offset == 1

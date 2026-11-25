@@ -8,14 +8,14 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.bucket.output_language_hint import write_bucket_output_language_hint
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.session_events import ProfileLanguageChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

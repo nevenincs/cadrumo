@@ -8,6 +8,7 @@ from textual.widgets import Button, Input, Select, Static
 
 from .....application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -25,17 +26,17 @@ async def test_m303_evidence_screen_requires_an_explicit_answer_and_a_complete_e
         app.push_screen(
             OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
         )
-        await pilot.pause()
+        await settle(pilot)
 
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         assert str(app.screen.query_one("#m303-evidence-notice", Static).content)
 
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "false"
         app.screen.query_one("#m303-evidence-attachment-id", Input).value = _ATTACHMENT_ID
         app.screen.query_one("#m303-evidence-sha256", Input).value = _ATTACHMENT_ID
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
         assert len(dismissed) == 1
         submission = dismissed[0]
@@ -57,11 +58,11 @@ async def test_m303_evidence_screen_can_request_secure_admission_at_an_explicit_
         app.push_screen(
             OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
         )
-        await pilot.pause()
+        await settle(pilot)
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "true"
         app.screen.query_one("#m303-evidence-observed-at", Input).value = "2026-09-22T12:00:00Z"
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
         submission = dismissed[0]
         assert submission is not None
@@ -95,13 +96,13 @@ async def test_m303_evidence_screen_refuses_partial_or_ambiguous_evidence(
         app.push_screen(
             OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
         )
-        await pilot.pause()
+        await settle(pilot)
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "false"
         app.screen.query_one("#m303-evidence-attachment-id", Input).value = attachment_id
         app.screen.query_one("#m303-evidence-sha256", Input).value = sha256
         app.screen.query_one("#m303-evidence-observed-at", Input).value = observed_at
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
         assert dismissed == []
         notice = str(app.screen.query_one("#m303-evidence-notice", Static).content)
@@ -119,9 +120,9 @@ async def test_m303_evidence_screen_escape_dismisses_without_a_submission() -> N
         app.push_screen(
             OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
         )
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
 
         assert dismissed == [None]
         app.exit(None)
@@ -137,7 +138,7 @@ async def test_a_period_that_does_not_ask_the_exemption_offers_only_the_joint_re
         app.push_screen(
             OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=False), dismissed.append
         )
-        await pilot.pause()
+        await settle(pilot)
         assert not app.screen.query("#m303-evidence-attachment-id")
         assert not app.screen.query("#m303-evidence-observed-at")
         assert str(app.screen.query_one("#m303-evidence-hint", Static).content) == tr(
@@ -145,12 +146,12 @@ async def test_a_period_that_does_not_ask_the_exemption_offers_only_the_joint_re
         )
 
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         assert dismissed == []
 
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "true"
         app.screen.query_one("#m303-evidence-submit", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
         submission = dismissed[0]
         assert submission is not None

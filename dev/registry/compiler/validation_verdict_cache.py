@@ -42,13 +42,12 @@ from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_l
 from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _SCHEMA: Final = "registry-validation-verdict/v1"
 #: No validation runs this long; an older lock is abandoned whoever stamped it.
-_LOCK_STALE_SECONDS: Final = 900.0
+LOCK_STALE_SECONDS: Final = 900.0
 #: Waiting longer than this for a peer costs more than validating again.
 _LOCK_WAIT_CEILING_SECONDS: Final = 300.0
 _LOCK_POLL_SECONDS: Final = 0.25
@@ -62,7 +61,7 @@ def verdict_cache_dir() -> Path:
     """Resolve the runner-local validation verdict directory."""
     override = os.environ.get(VERDICT_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("registry-validation-verdicts")
 
 
@@ -272,7 +271,7 @@ def _abandoned(path: Path) -> bool:
 def _older_than_stale(path: Path) -> bool:
     """Whether ``path`` has outlived any validation that could still be running."""
     try:
-        return time.time() - path.stat().st_mtime > _LOCK_STALE_SECONDS
+        return time.time() - path.stat().st_mtime > LOCK_STALE_SECONDS
     except OSError:
         return False
 

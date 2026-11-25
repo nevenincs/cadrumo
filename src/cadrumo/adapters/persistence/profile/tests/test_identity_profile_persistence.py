@@ -1,8 +1,9 @@
-"""Encrypted profile persistence proof for auth-identity divergence.
+"""Encrypted profile persistence proof that the profile holds one Cl@ve identity.
 
-The application auth tests own the identity comparison policy. This one test
-owns the separate persistence fact: the validated profile edit door accepts a
-divergent DNI/NIE and the two identifiers are genuinely persisted.
+The application auth tests own the identity comparison policy. This test owns
+the separate persistence fact: the identity Cl@ve signs in with is the stored
+``identity.tax_id``, and the validated edit door refuses a second copy apart
+from it, so no divergent identity can be persisted.
 """
 
 from __future__ import annotations
@@ -11,23 +12,23 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    replace_test_profile_record,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
+from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "5a5a5a5a-5a5a-4a5a-8a5a-5a5a5a5a5a5a"
 _PROFILE_LABEL = "divergence-operator"
 _TAX_ID = "12345678Z"
-_OTHER_TAX_ID = "00000001R"
+_OTHER_TAX_ID = "00001005Q"
 _TAX_ID_PATH = "identity.tax_id"
 _DNI_NIE_PATH = "auth.dni_nie"
 
@@ -37,33 +38,28 @@ _isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 def _register_with_tax_id() -> None:
     """Publish the capsule carrying a fiscal id before reading the bucket."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),
                 UserProfileFact(path="auth.clave_movil_route", value="qr"),
             ),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
         label=_PROFILE_LABEL,
     )
 
 
 def _write_dni_nie(value: str) -> None:
-    """Set ``auth.dni_nie`` through the validated edit door."""
+    """Try to set the retired ``auth.dni_nie`` through the validated edit door."""
     with bound_test_profile_record(_BUCKET_ID) as repository:
-        record = repository.load(_BUCKET_ID)
-    replace_test_profile_record(
-        record.model_copy(
-            update={
-                "facts": (
-                    *(fact for fact in record.facts if fact.path != _DNI_NIE_PATH),
-                    UserProfileFact(path=_DNI_NIE_PATH, value=value),
-                ),
-            },
-        ),
-    )
+        apply_profile_fact_changes(
+            profile_id=_BUCKET_ID,
+            changes=(UserProfileFact(path=_DNI_NIE_PATH, value=value),),
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            profile_decode_context=repository.session.profile_decode_context,
+        )
 
 
 def _stored() -> dict[str, str | None]:
@@ -72,12 +68,10 @@ def _stored() -> dict[str, str | None]:
     return {path: values.get(path) for path in (_TAX_ID_PATH, _DNI_NIE_PATH)}
 
 
-def test_the_validated_edit_door_accepts_a_dni_that_diverges_from_the_tax_id() -> None:
-    """No write-time validator refuses the divergence; both values persist."""
+def test_the_validated_edit_door_refuses_a_second_clave_identity() -> None:
+    """A copy of the identity apart from the tax identifier is not a profile fact."""
     _register_with_tax_id()
-    _write_dni_nie(_OTHER_TAX_ID)
+    with pytest.raises(ProfileSchemaValidationError, match=r"auth\.dni_nie"):
+        _write_dni_nie(_OTHER_TAX_ID)
 
-    stored = _stored()
-    assert stored[_TAX_ID_PATH] == _TAX_ID
-    assert stored[_DNI_NIE_PATH] == _OTHER_TAX_ID
-    assert stored[_TAX_ID_PATH] != stored[_DNI_NIE_PATH]
+    assert _stored() == {_TAX_ID_PATH: _TAX_ID, _DNI_NIE_PATH: None}

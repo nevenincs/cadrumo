@@ -6,7 +6,7 @@ admitted surface entries, intent admissibility and the detail-row natural
 key. Admission lives in :mod:`.edit_admission`, parsing in
 :mod:`.edit_parsing` and preflight in :mod:`.edit_preflight`. It never writes
 -- persistence and the guarded compare-and-swap commit belong to
-:mod:`.revision_persistence` and :mod:`._edit_execution`.
+:mod:`.revision_persistence` and :mod:`.edit_execution`.
 
 A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
 is never accepted here as mutation authority: every coordinate below is
@@ -20,9 +20,12 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.hashing import content_hash_hex
+from typing import Final
+
+from ...core.hashing import canonical_json_bytes_with_member, content_hash_hex, sha256_hex
 from ...core.time.clock import now as clock_now
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot, registry_canonical_value
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from .edit_models import (
@@ -95,7 +98,21 @@ def calculation_head_digest(head: CalculationRevision | None) -> str:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
+    if type(head) is not CalculationRevision or type(head.rendering_snapshot) is not CalculationRenderingSnapshot:
+        return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
+    # The saved registry owner preserves complete historical schema fields. Its
+    # canonical encoding is kept for the live snapshot object, so a head read
+    # again under the same snapshot encodes only its own fields.
+    registry = registry_canonical_value(head.rendering_snapshot.registry_snapshot)
+    payload = head.model_dump(mode="json", exclude={"rendering_snapshot": {"registry_snapshot"}})
+    return sha256_hex(
+        canonical_json_bytes_with_member(
+            {"calculation_head": payload},
+            object_path=("calculation_head", "rendering_snapshot"),
+            member="registry_snapshot",
+            value=registry,
+        )
+    )
 
 
 def writable_scalar_entry(
@@ -184,11 +201,22 @@ def validate_binding_intent(
     address: ModeloEditBindingAddressV1,
     kind: ModeloEditBindingIntentKind,
 ) -> ModeloEditRefusalV1 | None:
-    """Return a refusal unless the admitted surface allows this binding intent."""
+    """Return a refusal unless the admitted surface allows this binding intent.
+
+    A row is named only by a statement of a carry; whether the binding's family
+    is stated row by row is the executor's to check against the registry.
+    """
     entry = writable_binding_entry(baseline, address.binding_id)
     if entry is None or kind not in entry.allowed_intents:
         return _disallowed_intent_refusal(address)
+    if address.row_identity is not None and kind not in _ROW_STATEMENT_INTENTS:
+        return _disallowed_intent_refusal(address)
     return None
+
+
+_ROW_STATEMENT_INTENTS: Final = frozenset(
+    {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT, ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE}
+)
 
 
 __all__ = [

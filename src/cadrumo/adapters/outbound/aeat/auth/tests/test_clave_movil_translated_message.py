@@ -40,8 +40,10 @@ _CLAVE_MOVIL_LOCALE_KEYS = [
     "adapters.auth.clave_movil.errors.session_expired",
     "adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
 ]
-_EXPIRED_AT = datetime(2026, 5, 28, 14, 25, 0, tzinfo=UTC)
-_LIVE_SESSION_AT = datetime(2099, 5, 28, 14, 30, 0, tzinfo=UTC)
+# The persisted-session probe judges idle deadlines against the wall clock, so both instants are relative to it.
+_CLOCK = datetime.now(UTC).replace(microsecond=0)
+_EXPIRED_AT = _CLOCK - timedelta(days=1)
+_LIVE_SESSION_AT = _CLOCK
 
 
 @pytest.fixture(autouse=True)
@@ -55,8 +57,7 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     unexpected = set(env_overrides) - {"cadrumo_clave_movil_dni_nie"}
     assert unexpected == set()
     return Settings(
-        cadrumo_token_dir=tmp_path,
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_clave_movil_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_movil_dni_nie")),
     )
 

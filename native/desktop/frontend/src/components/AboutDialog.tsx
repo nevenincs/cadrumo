@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
-import type { AboutComponent, AboutInfo, AboutNamed } from "../ipc/contract";
+import type { AboutComponent, AboutInfo, AboutNamed } from "../ipc/environment";
 import { aboutReport, versionLine, type AboutState } from "../shell/about";
 import { useStrings, type Translate } from "../shell/strings";
 
@@ -72,7 +72,7 @@ function Listing({
         />
         {title}
       </summary>
-      <ul className="grid max-h-60 gap-0.5 overflow-y-auto rounded-md border p-2 text-sm">
+      <ul className="grid max-h-60 gap-0.5 overflow-y-auto rounded-md bg-accent p-2 text-sm">
         {items.map((item) => (
           <li
             key={item.name}
@@ -249,7 +249,7 @@ export function AboutDialog({
           )}
           {state?.status === "failed" && (
             <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-              {t("desktop.about.load_failed", { code: state.code })}
+              {t("desktop.about.load_failed")}
             </Alert>
           )}
         </div>

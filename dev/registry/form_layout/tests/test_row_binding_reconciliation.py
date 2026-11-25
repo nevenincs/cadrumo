@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.afiliado_contribution_bindings import 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import export_field_casilla_id
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordRepeat
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
@@ -20,7 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 @pytest.fixture(scope="module")
 def pair():
-    before = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/156")).revisions["2003-y-siguientes"]
+    before = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/156")).revisions[
+        str(open_ended_revision("156").id)
+    ]
     before = scalar_member_history(before)
     bindings = {
         binding.provider.target_casilla_id: binding

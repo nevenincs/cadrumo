@@ -15,6 +15,7 @@ from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_
 from ....core.bucket_pointer import pointer_path
 from ....core.i18n.render import clear_output_language_cache, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from .corrupt_pointer_expectation import corrupt_pointer_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -25,15 +26,14 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
     for name in (
         "CADRUMO_ACTIVE_PROFILE",
         "CADRUMO_DATABASE_URL",
-        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "CADRUMO_STORAGE_ROOT",
         "CADRUMO_OUTPUT_LANGUAGE",
         "CADRUMO_SECRET_PASSPHRASE",
-        "CADRUMO_SECRET_STORE_DIR",
     ):
         env.pop(name, None)
     env.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         },
     )
@@ -94,44 +94,6 @@ def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
-    assert error["action"] == {
-        "failed_condition_id": "profile.active.pointer.valid",
-        "evidence": [
-            {
-                "condition_id": "profile.active.pointer.valid",
-                "evidence_id": "profile.active.pointer.corruption",
-                "provenance": "runtime_observation",
-                "values": {
-                    "path": str(pointer_file),
-                    "pointer_corrupt": True,
-                    "root_fallback_refused": True,
-                },
-            },
-        ],
-        "action": {
-            "action_id": "operator.profile.repair_active_pointer",
-            "target_command_key": "config.repair.profile",
-            "cli_path": ["aeat", "config", "repair", "profile"],
-        },
-        "argument_bindings": [
-            {
-                "argument_name": "clear_active",
-                "status": "resolved",
-                "value": True,
-                "source": "operator_action.verdict_context",
-                "source_key": "clear_active",
-                "source_evidence_id": None,
-            },
-            {
-                "argument_name": "yes",
-                "status": "missing",
-                "value": None,
-                "source": None,
-                "source_key": None,
-                "source_evidence_id": None,
-            },
-        ],
-        "missing_argument_names": ["yes"],
-        "conditionality": "requires_arguments",
-        "no_recovery_outcome": None,
-    }, error["action"]
+    assert error["action"] == corrupt_pointer_action(pointer_file, error["action"]["action_words_language"]), error[
+        "action"
+    ]

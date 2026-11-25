@@ -12,7 +12,6 @@ import asyncio
 import json
 import logging
 import sys
-import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
@@ -37,13 +36,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest, ProfileViewPageKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, profile_operation_subject
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.navigation import (
@@ -63,9 +62,10 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
+from cadrumo.entrypoints.tui.refusal.panel import RefusalPanel, RefusalSlot
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.operation_controller import OperationController
@@ -77,6 +77,7 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+from cadrumo_runtime.host.tests.served_runtime import connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -111,14 +112,6 @@ class _LoginObservation:
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 async def _until(pilot: Pilot[None], predicate: Callable[[], bool], *, seconds: float = 30) -> None:
@@ -271,14 +264,9 @@ def _destinations(operations: OperationsDestinationV1) -> TuiDestinationCatalogu
     return build_destination_catalogue(admissions=admissions, factories=factories)
 
 
-async def _journey(
-    client: FrontendClient,
-    registry: OperationRegistry,
-    secret_buffers: list[bytearray],
+async def _assert_secret_and_contract_must_agree(
+    client: FrontendClient, registry: OperationRegistry, subject: str
 ) -> None:
-    registered = [contract.definition_id for contract in registry.public_contract_set.definitions]
-    subject = profile_operation_subject(str(client.profile_id))
-
     # A secret and the contract must agree before anything is recorded, and a refused buffer is still wiped.
     named_source = registry.lookup(_GUARDED_OPERATION).request_type.model_validate(
         {"profile_id": client.profile_id, "name": "synthetic-certificate-source"}
@@ -301,124 +289,143 @@ async def _journey(
     assert stray_secret.value.reason is RefusalCode.INVALID_FRAME
     assert len(stray) == len(_TYPED_INPUT) and not any(stray)
 
-    operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(lambda: registry))
-    listing = operations(TuiScreenContextV1(destination=OPERATIONS_DESTINATION))
-    assert isinstance(listing, OperationsCatalogueScreen)
-    app = ScreenHostApp[None](listing)
-    async with app.run_test(size=(140, 60)) as pilot:
-        await _until(pilot, lambda: listing._catalogue is not None)
-        listed = listing.query_one("#operations-list", OptionList)
 
-        def offered() -> list[str]:
-            return [
-                option.id for option in listed.options if option.id is not None and not option.id.startswith("family:")
-            ]
+def _offered(listed: OptionList) -> list[str]:
+    return [option.id for option in listed.options if option.id is not None and not option.id.startswith("family:")]
 
-        # Every registered operation is listed, under one family heading each.
-        assert sorted(offered()) == registered
-        headings = [option for option in listed.options if option.id is not None and option.id.startswith("family:")]
-        assert len(headings) == len({definition_id.split(".", 1)[0] for definition_id in registered})
-        assert all(option.disabled for option in headings)
-        search = listing.query_one("#operations-search", Input)
-        search.value = _VIEW
-        await _until(pilot, lambda: offered() == [_VIEW])
-        search.value = ""
-        await _until(pilot, lambda: len(offered()) == len(registered))
 
-        # A read: the form refuses an incomplete request against its field, then runs the valid one.
-        run = await _open(pilot, listing, _VIEW)
-        assert _text(run.query_one(_field(run, "profile_id"), Static)) == str(client.profile_id)
-        assert str(client.session_id) in _text(run.query_one("#operation-run-session", Static))
-        run.query_one("#operation-run", Button).press()
-        await pilot.pause(0.2)
-        assert tr("tui.operations.form.invalid") in _text(run.query_one("#operation-run-notice", Static))
-        page_kind_error = _field(run, "page_kind").replace("operation-field-", "operation-field-error-")
-        assert _text(run.query_one(page_kind_error, Static))
-        assert not _text(run.query_one("#operation-result-receipt", Static))
-        run.query_one(_field(run, "page_kind"), Select).value = "status"
-        await pilot.pause()
-        assert _text(run.query_one("#operation-run-subject", Static)).endswith(f": {subject}")
-        await _run(pilot, run)
-        receipt = _text(run.query_one("#operation-result-receipt", Static))
-        assert tr("operation.modal.terminal.succeeded") in receipt
-        viewed = _result(run)
-        assert viewed["profile_id"] == str(client.profile_id)
-        assert viewed["page_kind"] == "status"
-        assert not _text(run.query_one("#operation-result-stopped", Static))
-        await _close(pilot, run, listing)
+async def _assert_every_operation_listed_and_searchable(
+    pilot: Pilot[None], listing: OperationsCatalogueScreen, registered: list[str]
+) -> None:
+    listed = listing.query_one("#operations-list", OptionList)
+    # Every registered operation is listed, under one family heading each.
+    assert sorted(_offered(listed)) == registered
+    headings = [option for option in listed.options if option.id is not None and option.id.startswith("family:")]
+    assert len(headings) == len({definition_id.split(".", 1)[0] for definition_id in registered})
+    assert all(option.disabled for option in headings)
+    search = listing.query_one("#operations-search", Input)
+    search.value = _VIEW
+    await _until(pilot, lambda: _offered(listed) == [_VIEW])
+    search.value = ""
+    await _until(pilot, lambda: len(_offered(listed)) == len(registered))
 
-        # A change, entered through the whole-request JSON editor, and a read that observes it.
-        run = await _open(pilot, listing, _RECIPIENT_ADD)
-        run.query_one("#operation-toggle-json", Button).press()
-        await pilot.pause()
-        whole_request = run.query_one("#operation-json", TextArea)
-        assert json.loads(whole_request.text) == {"profile_id": str(client.profile_id)}
-        whole_request.load_text(
-            json.dumps(
-                {"profile_id": str(client.profile_id), "recipient_id": _RECIPIENT, "public_key_hex": _RECIPIENT_KEY}
-            )
-        )
-        await _run(pilot, run)
-        receipt = _text(run.query_one("#operation-result-receipt", Static))
-        assert tr("operation.modal.terminal.succeeded") in receipt
-        assert f"{tr('tui.operations.receipt.effect')}: updated" in receipt
-        await _close(pilot, run, listing)
 
-        run = await _open(pilot, listing, _RECIPIENT_LIST)
-        await _run(pilot, run)
-        assert tr("operation.modal.terminal.succeeded") in _text(run.query_one("#operation-result-receipt", Static))
-        assert _RECIPIENT in json.dumps(_result(run))
-        assert _RECIPIENT_KEY in json.dumps(_result(run))
-        listed_by_form = _text(run.query_one("#operation-result-receipt", Static)).splitlines()[0].rsplit(": ", 1)[1]
-        await _close(pilot, run, listing)
+async def _run_a_read(
+    pilot: Pilot[None], listing: OperationsCatalogueScreen, client: FrontendClient, subject: str
+) -> None:
+    # A read: the form refuses an incomplete request against its field, then runs the valid one.
+    run = await _open(pilot, listing, _VIEW)
+    assert _text(run.query_one(_field(run, "profile_id"), Static)) == str(client.profile_id)
+    assert str(client.session_id) in _text(run.query_one("#operation-run-session", Static))
+    run.query_one("#operation-run", Button).press()
+    await pilot.pause(0.2)
+    assert tr("tui.operations.form.invalid") in _text(run.query_one("#operation-run-notice", Static))
+    page_kind_error = _field(run, "page_kind").replace("operation-field-", "operation-field-error-")
+    assert _text(run.query_one(page_kind_error, Static))
+    assert not _text(run.query_one("#operation-result-receipt", Static))
+    run.query_one(_field(run, "page_kind"), Select).value = "status"
+    await pilot.pause()
+    assert _text(run.query_one("#operation-run-subject", Static)).endswith(f": {subject}")
+    await _run(pilot, run)
+    receipt = _text(run.query_one("#operation-result-receipt", Static))
+    assert tr("operation.modal.terminal.succeeded") in receipt
+    viewed = _result(run)
+    assert viewed["profile_id"] == str(client.profile_id)
+    assert viewed["page_kind"] == "status"
+    # A read that succeeded shows no refusal: the slot holds none and mounts no panel.
+    stopped = run.query_one("#operation-result-stopped", RefusalSlot)
+    assert stopped.refusal is None
+    assert not stopped.query(RefusalPanel)
+    await _close(pilot, run, listing)
 
-        # A replay key: the same key from the form names the same operation, no key starts another one, and an
-        # operation that takes the typed operator input has no field to enter one in.
-        run = await _open(pilot, listing, _RECIPIENT_LIST)
-        run.query_one(_REPLAY_KEY_FIELD, Input).value = f"  {_REPLAY_KEY}  "
-        await _run(pilot, run)
-        first_keyed = _operation_id(run)
-        await _close(pilot, run, listing)
-        run = await _open(pilot, listing, _RECIPIENT_LIST)
-        run.query_one(_REPLAY_KEY_FIELD, Input).value = _REPLAY_KEY
-        await _run(pilot, run)
-        assert _operation_id(run) == first_keyed
-        await _close(pilot, run, listing)
-        run = await _open(pilot, listing, _RECIPIENT_LIST)
-        assert not run.query_one(_REPLAY_KEY_FIELD, Input).value
-        await _run(pilot, run)
-        unkeyed = _operation_id(run)
-        assert unkeyed not in {first_keyed, listed_by_form}
-        await _close(pilot, run, listing)
-        run = await _open(pilot, listing, _TYPED_INPUT_OPERATION)
-        assert not run.query(_REPLAY_KEY_FIELD)
-        await _close(pilot, run, listing)
 
-        # An operation with a one-shot secret: without the secret nothing is sent; with it, it travels and settles.
-        run = await _open(pilot, listing, _GUARDED_OPERATION)
-        secret_field = run.query_one("#operation-secret", Input)
-        assert secret_field.password
-        run.query_one(_field(run, "name"), Input).value = "synthetic-certificate-source"
-        run.query_one("#operation-run", Button).press()
-        await pilot.pause(0.2)
-        assert tr("tui.operations.form.secret_required") in _text(run.query_one("#operation-run-notice", Static))
-        assert not _text(run.query_one("#operation-result-receipt", Static))
-        secret_field.value = _TYPED_INPUT
-        await _run(pilot, run)
-        assert secret_field.value == ""
-        assert _TYPED_INPUT not in _rendered(app)
-        assert [len(buffer) for buffer in secret_buffers] == [0, len(_TYPED_INPUT.encode())]
-        assert not any(secret_buffers[1])
-        # The runtime took the secret and ran the operation, which refuses a source this profile never registered.
-        receipt = _text(run.query_one("#operation-result-receipt", Static))
-        assert tr("operation.modal.terminal.refused") in receipt
-        assert f"{tr('operation.modal.detail.receipt_refusal')}: REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND" in receipt
-        assert f"{tr('tui.operations.receipt.effect')}: none" in receipt
-        assert run._pages == ()
-        assert not _text(run.query_one("#operation-run-notice", Static))
-        await _close(pilot, run, listing)
-        listing.action_back()
+async def _run_a_change_then_read_it(
+    pilot: Pilot[None], listing: OperationsCatalogueScreen, client: FrontendClient
+) -> str:
+    """Return the operation id the listing read ran under."""
+    # A change, entered through the whole-request JSON editor, and a read that observes it.
+    run = await _open(pilot, listing, _RECIPIENT_ADD)
+    run.query_one("#operation-toggle-json", Button).press()
+    await pilot.pause()
+    whole_request = run.query_one("#operation-json", TextArea)
+    assert json.loads(whole_request.text) == {"profile_id": str(client.profile_id)}
+    whole_request.load_text(
+        json.dumps({"profile_id": str(client.profile_id), "recipient_id": _RECIPIENT, "public_key_hex": _RECIPIENT_KEY})
+    )
+    await _run(pilot, run)
+    receipt = _text(run.query_one("#operation-result-receipt", Static))
+    assert tr("operation.modal.terminal.succeeded") in receipt
+    assert f"{tr('tui.operations.receipt.effect')}: updated" in receipt
+    await _close(pilot, run, listing)
 
+    run = await _open(pilot, listing, _RECIPIENT_LIST)
+    await _run(pilot, run)
+    assert tr("operation.modal.terminal.succeeded") in _text(run.query_one("#operation-result-receipt", Static))
+    assert _RECIPIENT in json.dumps(_result(run))
+    assert _RECIPIENT_KEY in json.dumps(_result(run))
+    listed_by_form = _text(run.query_one("#operation-result-receipt", Static)).splitlines()[0].rsplit(": ", 1)[1]
+    await _close(pilot, run, listing)
+    return listed_by_form
+
+
+async def _assert_replay_key_names_one_operation(
+    pilot: Pilot[None], listing: OperationsCatalogueScreen, listed_by_form: str
+) -> None:
+    # A replay key: the same key from the form names the same operation, no key starts another one, and an
+    # operation that takes the typed operator input has no field to enter one in.
+    run = await _open(pilot, listing, _RECIPIENT_LIST)
+    run.query_one(_REPLAY_KEY_FIELD, Input).value = f"  {_REPLAY_KEY}  "
+    await _run(pilot, run)
+    first_keyed = _operation_id(run)
+    await _close(pilot, run, listing)
+    run = await _open(pilot, listing, _RECIPIENT_LIST)
+    run.query_one(_REPLAY_KEY_FIELD, Input).value = _REPLAY_KEY
+    await _run(pilot, run)
+    assert _operation_id(run) == first_keyed
+    await _close(pilot, run, listing)
+    run = await _open(pilot, listing, _RECIPIENT_LIST)
+    assert not run.query_one(_REPLAY_KEY_FIELD, Input).value
+    await _run(pilot, run)
+    unkeyed = _operation_id(run)
+    assert unkeyed not in {first_keyed, listed_by_form}
+    await _close(pilot, run, listing)
+    run = await _open(pilot, listing, _TYPED_INPUT_OPERATION)
+    assert not run.query(_REPLAY_KEY_FIELD)
+    await _close(pilot, run, listing)
+
+
+async def _run_an_operation_with_a_one_shot_secret(
+    pilot: Pilot[None],
+    listing: OperationsCatalogueScreen,
+    app: App[None],
+    secret_buffers: list[bytearray],
+) -> None:
+    # An operation with a one-shot secret: without the secret nothing is sent; with it, it travels and settles.
+    run = await _open(pilot, listing, _GUARDED_OPERATION)
+    secret_field = run.query_one("#operation-secret", Input)
+    assert secret_field.password
+    run.query_one(_field(run, "name"), Input).value = "synthetic-certificate-source"
+    run.query_one("#operation-run", Button).press()
+    await pilot.pause(0.2)
+    assert tr("tui.operations.form.secret_required") in _text(run.query_one("#operation-run-notice", Static))
+    assert not _text(run.query_one("#operation-result-receipt", Static))
+    secret_field.value = _TYPED_INPUT
+    await _run(pilot, run)
+    assert secret_field.value == ""
+    assert _TYPED_INPUT not in _rendered(app)
+    assert [len(buffer) for buffer in secret_buffers] == [0, len(_TYPED_INPUT.encode())]
+    assert not any(secret_buffers[1])
+    # The runtime took the secret and ran the operation, which refuses a source this profile never registered.
+    receipt = _text(run.query_one("#operation-result-receipt", Static))
+    assert tr("operation.modal.terminal.refused") in receipt
+    assert f"{tr('operation.modal.detail.receipt_refusal')}: REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND" in receipt
+    assert f"{tr('tui.operations.receipt.effect')}: none" in receipt
+    assert run._pages == ()
+    assert not _text(run.query_one("#operation-run-notice", Static))
+    await _close(pilot, run, listing)
+
+
+async def _assert_mcp_execute_names_the_same_subject(client: FrontendClient, listed_by_form: str, subject: str) -> None:
     # The external client execute tool, given the same request, names the same operation subject as the form did.
     executed = await asyncio.to_thread(
         call_admitted_operation,
@@ -433,6 +440,10 @@ async def _journey(
     assert (by_mcp.definition_id, by_mcp.subject_ref) == (by_form.definition_id, by_form.subject_ref)
     assert (by_form.definition_id, by_form.subject_ref) == (_RECIPIENT_LIST, subject)
 
+
+async def _assert_palette_opens_the_chosen_operation(
+    operations: OperationsDestinationV1, registered: list[str]
+) -> None:
     # The palette offers every registered operation and opens the destination on the chosen one.
     host = _PaletteHost(_destinations(operations))
     async with host.run_test() as palette_pilot:
@@ -453,12 +464,38 @@ async def _journey(
         assert _text(focused.screen.query_one("#operation-run-title", Static)) == _RECIPIENT_LIST
 
 
+async def _journey(
+    client: FrontendClient,
+    registry: OperationRegistry,
+    secret_buffers: list[bytearray],
+) -> None:
+    registered = [contract.definition_id for contract in registry.public_contract_set.definitions]
+    subject = profile_operation_subject(str(client.profile_id))
+    await _assert_secret_and_contract_must_agree(client, registry, subject)
+
+    operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(lambda: registry))
+    listing = operations(TuiScreenContextV1(destination=OPERATIONS_DESTINATION))
+    assert isinstance(listing, OperationsCatalogueScreen)
+    app = ScreenHostApp[None](listing)
+    async with app.run_test(size=(140, 60)) as pilot:
+        await _until(pilot, lambda: listing._catalogue is not None)
+        await _assert_every_operation_listed_and_searchable(pilot, listing, registered)
+        await _run_a_read(pilot, listing, client, subject)
+        listed_by_form = await _run_a_change_then_read_it(pilot, listing, client)
+        await _assert_replay_key_names_one_operation(pilot, listing, listed_by_form)
+        await _run_an_operation_with_a_one_shot_secret(pilot, listing, app, secret_buffers)
+        listing.action_back()
+
+    await _assert_mcp_execute_names_the_same_subject(client, listed_by_form, subject)
+    await _assert_palette_opens_the_chosen_operation(operations, registered)
+
+
 def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_run_on_a_real_runtime(
     tmp_path: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     caplog.set_level(logging.DEBUG)
     secret_buffers: list[bytearray] = []
-    take_secret = OperationRunScreen._take_secret
+    take_secret = OperationRunScreen.take_secret
 
     def observed_take_secret(screen: OperationRunScreen) -> bytearray | None:
         taken = take_secret(screen)
@@ -466,7 +503,7 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
             secret_buffers.append(taken)
         return taken
 
-    monkeypatch.setattr(OperationRunScreen, "_take_secret", observed_take_secret)
+    monkeypatch.setattr(OperationRunScreen, "take_secret", observed_take_secret)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -502,13 +539,15 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         registry = build_production_operation_registry()
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     client = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint),
+                        profile_id=profile_id,
+                        frontend=OperationFrontendProjection.TUI,
                     )
                     cleanup.callback(client.close)
                     proof = bytearray(PROFILE_INPUT.encode())
@@ -527,6 +566,6 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
                 finally:
                     endpoint.close()
 
-    logged = "\n".join(f"{record.getMessage()} {record.__dict__!r}" for record in caplog.records)
-    assert caplog.records
+    logged = "\n".join(f"{record.getMessage()} {record.__dict__!r}" for record in delivered_records(caplog))
+    assert delivered_records(caplog)
     assert _TYPED_INPUT not in logged

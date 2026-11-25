@@ -8,7 +8,7 @@ import pytest
 
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.models import Attachment
-from ..attachment_review import _project
+from ..attachment_review import project
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -27,7 +27,7 @@ def _project_locator(reference: str) -> str:
         bytes_size=42,
         captured_at=datetime(2026, 8, 23, tzinfo=UTC),
     )
-    return _project(attachment).provider_locator
+    return project(attachment).provider_locator
 
 
 def test_only_canonical_secret_free_drive_url_exposes_the_file_id() -> None:

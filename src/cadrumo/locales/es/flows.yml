@@ -45,9 +45,13 @@ flows:
       clear: Borrar
       completed_refresh_unavailable: La operación se completó, pero la vista actualizada
         no está disponible. Vuelve a Inicio para actualizarla.
+      conflict: El perfil cambió mientras lo editabas. Tu cambio no se ha guardado.
+        Revisa el perfil actual y vuelve a abrir el campo; pulsa F5 si necesitas recargarlo.
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       no_change: No fue necesario realizar cambios.
+      refresh_failed: No se ha podido cargar el perfil actual. Pulsa F5 para volver
+        a intentarlo antes de editar.
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar
@@ -66,9 +70,20 @@ flows:
     field_unavailable: Campo de perfil no disponible
     help:
       about: 'Sobre este ajuste:'
-      what: 'Qué es:'
-      where: 'Dónde encontrarlo:'
-      why: 'Por qué se pide:'
+    household:
+      close: Cerrar
+      full: Este grupo está lleno, así que no se pueden añadir más personas.
+      read_again: Volver a leer
+      read_failed: No se ha podido leer tu familia. Vuelve a leerla para intentarlo
+        de nuevo.
+      reading: Leyendo tu familia…
+      state_none_declared: Has indicado que no hay ninguna.
+      state_not_served: Tu perfil no ofrece este grupo.
+      state_unknown: No hay nada registrado para este grupo. Eso no es lo mismo que
+        ninguna.
+      title: Familia
+      unknown_outcome: Puede que el cambio se haya guardado, o no. Vuelve a leer tu
+        familia antes de cambiar nada más.
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
@@ -163,10 +178,12 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Baja de bienes de la actividad
           afiliado_cotizacion: Cuotas de afiliados
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT
+          capital_mobiliario_position: Intereses y dividendos del ahorro
           collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
           foreign_asset: Activo extranjero
@@ -190,10 +207,14 @@ flows:
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
+          prevision_social_contribution: Aportaciones a previsión social
           profile: Perfil
+          prorrata_register_activity: Actividades del registro de prorrata
           prorrata_regularizacion: Regularización de prorrata
           purchase_invoice_evidence: Evidencia de factura de compra
           relation_prefill: Declaración relacionada
+          renta_inmueble: Inmueble arrendado
+          retencion_soportada: Retenciones soportadas
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención
           withholding296: Perceptor de retención (modelo 296)
@@ -209,7 +230,7 @@ flows:
           reconciliation_mismatch: Discrepancia de conciliación
           stale_calculation: Cálculo desactualizado
         finding_severity:
-          blocking: Bloqueante
+          blocking: Bloqueo
           warning: Advertencia
         input_kind:
           bound: Vinculada
@@ -252,8 +273,8 @@ flows:
     change_button: Cambiar contraseña
     confirm_label: Confirma la contraseña nueva
     current_label: Contraseña actual
-    intro: Esto sustituye la contraseña que protege tu perfil. Los datos que protege
-      no se vuelven a cifrar, solo se reenvuelven.
+    intro: Esto sustituye la contraseña que protege tu perfil. Los datos protegidos
+      no se vuelven a cifrar; solo se vuelve a envolver su clave de cifrado.
     new_hint: Al menos 12 caracteres, combinando letras, números o símbolos.
     new_label: Contraseña nueva
     refusal:

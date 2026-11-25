@@ -187,7 +187,7 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, Iva
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .authored_edition_support import manual_oracle_payloads
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -251,7 +251,7 @@ def _aic(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, iva: Deci
         "base_amount": base,
         "iva_amount": iva,
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("intra_eu_current"),
-        "deduction_provenance": _deduction_provenance(
+        "deduction_provenance": ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("intra_eu_current"),
             source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
@@ -270,7 +270,7 @@ def _dg_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "base_amount": base,
         "iva_amount": iva,
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
-        "deduction_provenance": _deduction_provenance(
+        "deduction_provenance": ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("domestic_current"),
             source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
@@ -289,7 +289,7 @@ def _dr_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "base_amount": base,
         "iva_amount": iva,
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
-        "deduction_provenance": _deduction_provenance(
+        "deduction_provenance": ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("domestic_current"),
             source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
@@ -308,7 +308,7 @@ def _import_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decim
         "base_amount": base,
         "iva_amount": iva,
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("import_current"),
-        "deduction_provenance": _deduction_provenance(
+        "deduction_provenance": ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("import_current"),
             source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),

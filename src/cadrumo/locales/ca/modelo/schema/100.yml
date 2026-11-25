@@ -2,9 +2,20 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Interessos i despeses de reparació i conservació de l'immoble pendents
+            de deduir dels quatre exercicis anteriors
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalitat normal (N). No: modalitat simplificada (S).'
           label: Apliques la modalitat normal d'estimació directa?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'Part de la casella 0604: el que vas ingressar amb les autoliquidacions
+            del model 130 d''aquest exercici.'
+          label: Pagaments fraccionats ingressats en l'exercici · Model 130
+        renta-modelo-131-pagos-fraccionados:
+          help: 'Part de la casella 0604: el que vas ingressar amb les autoliquidacions
+            del model 131 d''aquest exercici.'
+          label: Pagaments fraccionats ingressats en l'exercici · Model 131
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -645,6 +656,21 @@ modelo:
             label: import total de les quantitats invertides amb dret a deducció
           irpf-anexo-b-vivienda-reinversion-aplicado:
             label: Import satisfet el 2021 i/o 2022 que s'aplica en l'exercici
+          irpf-anexo-c-base-liq-neg-base-positiva-compensable:
+            label: Base liquidable general positiva compensable amb bases negatives
+              d'exercicis anteriors (art. 50.3 LIRPF) [intern]
+          irpf-anexo-c-base-liq-neg-em1-aplicada-maxima:
+            label: 'Base liquidable general negativa de l''exercici anterior: compensació
+              màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em2-aplicada-maxima:
+            label: 'Base liquidable general negativa del segon exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em3-aplicada-maxima:
+            label: 'Base liquidable general negativa del tercer exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em4-aplicada-maxima:
+            label: 'Base liquidable general negativa del quart exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
           irpf-anexo-c-base-liq-neg-generado:
             label: Base liquidable general negativa de 2020 pendent de compensar en
               els 4 exercicis següents
@@ -706,6 +732,118 @@ modelo:
             label: Import pendent d'imputació
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Tipus d'ajut pública
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: compensació màxima amb el 25 % de l''altre saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: import pendent després de compensar-lo amb el
+              seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'Saldos negatius pendents de guanys i pèrdues patrimonials de l''estalvi:
+              marge de compensació amb el seu propi saldo positiu (art. 49 LIRPF)
+              [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'Saldos negatius pendents de guanys i pèrdues patrimonials de l''estalvi:
+              marge de compensació amb el 25 % de l''altre saldo positiu (art. 49
+              LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'Saldos negatius pendents de rendiments del capital mobiliari de
+              l''estalvi: marge de compensació amb el seu propi saldo positiu (art.
+              49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'Saldos negatius pendents de rendiments del capital mobiliari de
+              l''estalvi: marge de compensació amb el 25 % de l''altre saldo positiu
+              (art. 49 LIRPF) [intern]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: 'Fill/Filla 1 (*): Import de les anualitats per aliments satisfetes'
           irpf-anualidades-alimentos-hijo-1-nif:
@@ -3384,10 +3522,6 @@ modelo:
           irpf-red-prevision-social-aportaciones-empresa-decision-trabajador:
             label: Aportacions efectuades per l'empresa que derivin d'una decisió
               del treballador
-          irpf-red-prevision-social-aportaciones-individuales:
-            label: Aportacions individuals i contribucions empresarials (excepte els
-              derivats de contribucions empresarials a assegurances col·lectius de
-              dependència (Emplenar l'annex C.3)
           irpf-red-prevision-social-aportaciones-trabajador:
             label: Aportacions del treballador, excepte les consignades a [0438] i
               [0426]
@@ -3403,6 +3537,10 @@ modelo:
             label: Contribucions a assegurances col·lectius de dependència
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             label: Si no té NIF, marqui amb una \"X\"
+          irpf-red-prevision-social-exceso-ejercicios-anteriores:
+            label: Aportacions individuals i contribucions empresarials (excepte els
+              derivats de contribucions empresarials a assegurances col·lectius de
+              dependència (Emplena l'annex C.3)
           irpf-red-prevision-social-exceso-scd:
             label: Excessos derivats de contribucions empresarials a assegurances
               col·lectius de dependència (Emplenar l'annex C.3)
@@ -3604,6 +3742,8 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Tipus mitjans de gravamen ( [0534] = [0532] X 100 / [0505] );
               ( [0535] = [0533] X 100 / [0505] ): Part autonòmica'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: Rendes diferents de les del treball (límit de l'art. 20) [interna]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: Contribuent que ha d'efectuar l'imputació
           irpf-vehiculo-electrico-instalador-nif:
@@ -3627,6 +3767,10 @@ modelo:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
             title: Modelo 100 Annex C base liquidable general negativa carry-forward
+        renta-anexo-c-saldos-negativos-ahorro:
+          field:
+            title: Model 100 Annex C saldos negatius de la base de l'estalvi pendents
+              de compensar
         renta-cuota-chain:
           field:
             title: 'Model 100: cadena de càlcul de la quota de l''IRPF'
@@ -3636,10 +3780,16 @@ modelo:
         renta-final-settlement:
           field:
             title: Model 100 resultat final de la liquidació
+        renta-mini-model-deduccion-madrid-cuidado-ascendientes:
+          field:
+            title: 'Model 100: deducció de la Comunitat de Madrid per cura d''ascendents'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: 'Model 100 2025: deducció de la Comunitat de Madrid per naixement/adopció
               (casella 1039)'
+        renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas:
+          field:
+            title: 'Model 100: mínim per ascendents i deduccions autonòmiques'
         renta-movable-capital:
           field:
             title: Model 100 evidència de dependència del capital mobiliari
@@ -3666,10 +3816,151 @@ modelo:
           Físiques.
         title: IRPF declaració anual
       form:
+        outline:
+          activities:
+            heading: Rendiments d'activitats econòmiques
+          attributed-income:
+            heading: Atribucions i imputacions de rendes
+          capital-gains:
+            heading: Guanys i pèrdues patrimonials
+          employment:
+            heading: Rendiments del treball
+          family-minimum:
+            heading: Mínim personal i familiar
+          general-deductions:
+            heading: Deduccions generals (annex A)
+          household:
+            heading: Descendents i ascendents
+          identification:
+            heading: Declarant i cònjuge
+          income-holders:
+            heading: Titulars de les rendes
+          movable-capital:
+            heading: Rendiments del capital mobiliari
+          other-information:
+            heading: Partides pendents i altres informacions (annex C)
+          real-estate:
+            heading: Rendiments del capital immobiliari i imputacions de rendes immobiliàries
+          regional-deductions:
+            heading: Deduccions autonòmiques (annex B)
+          result:
+            heading: Resultat de la declaració
+          tax-bases:
+            heading: Base imposable, reduccions i base liquidable
+          tax-calculation:
+            heading: Càlcul de l'impost
+        page:
+          datoseconomicos:
+            heading: Titulars de les rendes
+            section:
+              general:
+                heading: Contribuent a qui correspon cada renda
+          datoseconomicos-resultados:
+            heading: Resum i càlcul de la declaració
+          datoseconomicos-tomadatosampliada:
+            heading: Dades detallades de rendes i deduccions
+          datosidentificativos:
+            heading: Dades identificatives
+            section:
+              general:
+                heading: Cònjuge no resident i no contribuent de l'IRPF
+          datosidentificativos-ascendientes:
+            heading: Ascendents
+          datosidentificativos-conyuge:
+            heading: Cònjuge
+            section:
+              general:
+                heading: Dades personals del cònjuge i residència a la UE o l'EEE
+          datosidentificativos-declarante:
+            heading: Declarant
+            section:
+              general:
+                heading: Dades personals del declarant
+          datosidentificativos-hijos:
+            heading: Fills i altres descendents
+            section:
+              general:
+                heading: Descendents no residents amb residència a la UE o l'EEE
+          declaracion:
+            heading: Declaració
+            section:
+              general:
+                heading: Comunitat autònoma i opció de tributació triada
         section:
+          anexoa:
+            heading: Millores energètiques en habitatges, vehicles elèctrics i punts
+              de recàrrega (annex A)
+          anexoares:
+            heading: Deducció per inversió en habitatge habitual (annex A)
+          anexoares-10:
+            heading: Deduccions per incentius i estímuls a la inversió empresarial
+              (annex A)
+          anexoares-2:
+            heading: Dades de l'habitatge habitual i de la inversió en empreses de
+              nova o recent creació (annex A)
+          anexoares-3:
+            heading: Deducció per lloguer de l'habitatge habitual (annex A)
+          anexoares-4:
+            heading: Deduccions per donatius i altres aportacions (annex A)
+          anexoares-5:
+            heading: Deducció per rendes obtingudes a Ceuta o Melilla (annex A)
+          anexoares-6:
+            heading: Deducció per residència habitual i efectiva a l'illa de La Palma
+              (annex A)
+          anexoares-7:
+            heading: Deducció per inversions i despeses en béns d'interès cultural
+              (annex A)
+          anexoares-8:
+            heading: Deduccions per obres de millora de l'eficiència energètica i
+              per vehicles elèctrics i punts de recàrrega (annex A)
+          anexoares-9:
+            heading: Reserves per a inversions a Canàries i a les Illes Balears i
+              deducció per a residents a la Unió Europea (annex A)
+          anexocres:
+            heading: Partides pendents d'aplicació i altres informacions (annex C)
+          ascendiente:
+            heading: Dades de cada ascendent
+          baseimponibleres:
+            heading: Saldo net positiu del capital mobiliari a la base imposable de
+              l'estalvi
+          baseimponibleres-2:
+            heading: Base imposable general i base imposable de l'estalvi
+          baseliquidableres:
+            heading: Base liquidable general i base liquidable de l'estalvi
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
               a tercers, o afectes a activitats econòmiques
+          calculoimpuestores:
+            heading: Retencions i ingressos a compte atribuïts per entitats en règim
+              d'atribució de rendes
+          calculoimpuestores-2:
+            heading: Retencions i ingressos a compte imputats per agrupacions d'interès
+              econòmic i UTE
+          calculoimpuestores-3:
+            heading: 'Càlcul de l''impost: quotes, deduccions, retencions i pagaments
+              a compte'
+          calculoimpuestores-4:
+            heading: Import de la deducció per lloguer de l'habitatge habitual
+          calculoimpuestores-5:
+            heading: Total de deduccions per incentius i estímuls a la inversió empresarial
+          calculoimpuestores-6:
+            heading: Total de deduccions per incentius i estímuls a la inversió empresarial
+          calculoimpuestores-7:
+            heading: Devolució que pugui resultar de la rectificació
+          compensacionconyugesres:
+            heading: Suspensió de l'ingrés i renúncia a la devolució entre cònjuges
+          datosadicionalesanexob:
+            heading: Informació addicional de les deduccions autonòmiques (annex B)
+          datosadicionalesanexob-2:
+            heading: 'Deduccions per naixement i per adopció de les Illes Balears:
+              abonament anticipat (annex B)'
+          datosadicionalesres:
+            heading: Rendes exemptes amb progressivitat i anualitats per aliments
+              a favor dels fills
+          deduccionautonomicares:
+            heading: Deduccions autonòmiques (annex B)
+          dt9:
+            heading: Valor de transmissió acumulat amb la disposició transitòria novena
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Guanys patrimonials per canvi de residència fora del territori
               espanyol (article 95 bis de la Llei de l'impost)
@@ -3685,6 +3976,130 @@ modelo:
           ganancias-y-perdidas-por-la-transmision-d-5aa38b:
             heading: Guanys i pèrdues per la transmissió de participacions de fons
               cotitzats (ETF) i d'accions de SICAV índex cotitzades
+          gcambioresidenciaextres:
+            heading: Resum de guanys patrimonials per canvi de residència fora del
+              territori espanyol
+          gpaccionesres:
+            heading: Resum de transmissions d'accions negociades
+          gpderechosres:
+            heading: Resum de transmissions de drets de subscripció
+          gpfondoscotires:
+            heading: Resum de transmissions de fons cotitzats (ETF) i d'accions de
+              SICAV índex cotitzades
+          gpfondosres:
+            heading: Resum de transmissions d'accions o participacions d'institucions
+              d'inversió col·lectiva
+          gpotrasganancias:
+            heading: Altres guanys patrimonials de la base imposable de l'estalvi
+          gpotrasgananciasejerant:
+            heading: Guanys i pèrdues de transmissions d'exercicis anteriors imputables
+              a aquest exercici
+          gpotrasgananciasejerantres:
+            heading: Resum de guanys i pèrdues de transmissions d'exercicis anteriors
+              imputables a aquest exercici
+          gpotrasgananciasres:
+            heading: Resum d'altres guanys patrimonials de la base imposable de l'estalvi
+          gpotroscriptomonedasres:
+            heading: Resum de transmissions de monedes virtuals
+          gpotroselementos:
+            heading: Transmissions d'altres elements patrimonials
+          gpotroselementos-2:
+            heading: 'Transmissions d''altres elements patrimonials amb preu ajornat:
+              guanys i pèrdues pendents d''imputació'
+          gpotroselementosres:
+            heading: Resum de transmissions d'altres elements patrimonials
+          gpotrosinmuebles:
+            heading: Transmissions d'immobles i drets reals sobre immobles
+          gpotrosinmuebles-2:
+            heading: 'Transmissions d''immobles amb preu ajornat: guanys pendents
+              d''imputació'
+          gpotrosinmuebles-3:
+            heading: Exempció per reinversió en habitatge habitual
+          gpotrosinmueblesres:
+            heading: Resum de transmissions d'immobles i drets reals sobre immobles
+          gppremios:
+            heading: 'Guanys i pèrdues patrimonials no derivats de transmissions:
+              jocs, premis i altres'
+          gppremiosres:
+            heading: Resum de guanys i pèrdues patrimonials no derivats de transmissions
+          gpreinversion:
+            heading: Guanys acollits a diferiment per reinversió imputables a aquest
+              exercici
+          gpreinversionres:
+            heading: Resum de guanys acollits a diferiment per reinversió imputables
+              a aquest exercici
+          hijo:
+            heading: Dades de cada descendent
+          ingresodevolucionres:
+            heading: Resultat a ingressar o a retornar
+          inmuebles:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmuebles-2:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmuebles-3:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmueblesres:
+            heading: Resum de rendiments del capital immobiliari i imputacions de
+              rendes immobiliàries
+          integracionres:
+            heading: Integració i compensació de guanys i pèrdues patrimonials
+          integracionres-2:
+            heading: Saldo net negatiu del capital mobiliari a la base imposable de
+              l'estalvi
+          irpfccaares:
+            heading: IRPF que correspon a la comunitat autònoma de residència
+          minimoperfamres:
+            heading: Mínim personal i familiar
+          rdtocapitalmobiliario:
+            heading: Rendiments del capital mobiliari
+          rdtocapitalmobiliariores:
+            heading: Resum de rendiments del capital mobiliari
+          rdtotrabajores:
+            heading: Resum de rendiments del treball
+          redbaseimponible:
+            heading: 'Reduccions de la base imposable: previsió social, discapacitat,
+              patrimonis protegits, pensions compensatòries i esportistes'
+          redbaseimponibleres:
+            heading: Reduccions de la base imposable
+          regestimadirecta:
+            heading: Activitats econòmiques en estimació directa
+          regestimadirectares:
+            heading: Resum d'activitats econòmiques en estimació directa
+          regestimaobj:
+            heading: Activitats econòmiques en estimació objectiva (excepte agrícoles,
+              ramaderes i forestals)
+          regestimaobjagricola:
+            heading: Activitats agrícoles, ramaderes i forestals en estimació objectiva
+          regestimaobjagricolares:
+            heading: Resum d'activitats agrícoles, ramaderes i forestals en estimació
+              objectiva
+          regestimaobjres:
+            heading: Resum d'activitats econòmiques en estimació objectiva (excepte
+              agrícoles, ramaderes i forestals)
+          regimenesespeciales:
+            heading: 'Atribució i imputació de rendes: entitats en atribució, agrupacions
+              d''interès econòmic i UTE, transparència fiscal internacional, drets
+              d''imatge i institucions d''inversió col·lectiva en paradisos fiscals'
+          regimenesespecialesres:
+            heading: Resum de rendes atribuïdes per entitats en règim d'atribució
+              de rendes
+          regimenesespecialesres-2:
+            heading: Resum de bases imputades per agrupacions d'interès econòmic i
+              UTE
+          regimenesespecialesres-3:
+            heading: Resum d'imputacions per transparència fiscal internacional, drets
+              d'imatge i institucions d'inversió col·lectiva en paradisos fiscals
+          regimenespecial:
+            heading: Socis d'entitats no residents afectats per fusions, escissions
+              o bescanvis de valors
+          regimenespecial-2:
+            heading: Operacions de fusió, escissió, aportació d'actius i bescanvi
+              de valors
+          regularizacionres:
+            heading: Regularització d'autoliquidacions anteriors o liquidacions administratives
           rendimientos-de-trabajo:
             heading: Rendiments de treball
           transmision-de-acciones-negociadas:
@@ -8246,6 +8661,9 @@ modelo:
                 en aquest únic període impositiu (base sobre la qual s'aplica la reducció
                 del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
                 per l'operador - vegeu la casella [1554])
+            trabajo-mar-renta-exenta:
+              label: Rendiments del treball exempts dels treballadors del mar (art.
+                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:
@@ -15810,6 +16228,21 @@ modelo:
                 title: 'Model 100 2024: dades del perfil personal i familiar'
           field:
             label: Exercici 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Discrepància de criteri administratiu
+              calculoimpuestores-2:
+                heading: Retencions i ingressos a compte atribuïts per entitats en
+                  règim d'atribució de rendes
+              calculoimpuestores-3:
+                heading: Retencions i ingressos a compte imputats per agrupacions
+                  d'interès econòmic i UTE
+              calculoimpuestores-4:
+                heading: 'Càlcul de l''impost: quotes, deduccions, retencions i pagaments
+                  a compte'
+              calculoimpuestores-5:
+                heading: Import de la deducció per lloguer de l'habitatge habitual
         '2025':
           casilla:
             '0003':
@@ -18024,12 +18457,6 @@ modelo:
               label: Comunitat autònoma de la declaració
             ZRUE2:
               label: Cònjuge país de residència UE o EEE
-            base-liq-neg-general-2024-aplicada-maxima:
-              label: 'Base liquidable general negativa ej. 2024: compensació màxima
-                aplicable (límit art.. 50.3 LIRPF) [interno]'
-            trabajo-mar-renta-exenta:
-              label: Rendiments del treball exempts dels treballadors del mar (art.
-                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:
@@ -18054,3 +18481,18 @@ modelo:
                 title: 'Model 100 2025: agregadors d''atribució/imputació de rendes'
           field:
             label: Exercici 2025
+          form:
+            section:
+              calculoimpuestores:
+                heading: Discrepància de criteri administratiu
+              calculoimpuestores-2:
+                heading: Retencions i ingressos a compte atribuïts per entitats en
+                  règim d'atribució de rendes
+              calculoimpuestores-3:
+                heading: Retencions i ingressos a compte imputats per agrupacions
+                  d'interès econòmic i UTE
+              calculoimpuestores-4:
+                heading: 'Càlcul de l''impost: quotes, deduccions, retencions i pagaments
+                  a compte'
+              calculoimpuestores-5:
+                heading: Import de la deducció per lloguer de l'habitatge habitual

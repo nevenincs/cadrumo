@@ -1,10 +1,11 @@
 """The reverse-charge classification pair, read end to end off real documents.
 
-Two documents that differ in one printed line, read through a real loopback
-endpoint speaking the runtime's wire shape. **No model is loaded and no
-inference runs** -- the reply is authored by the test, exactly as a reply from a
-real runtime would arrive, and everything downstream of the socket is production
-code: the real provider client, the real router, the real grounding stage.
+Two documents that differ in one printed line, read through the agent's
+model-run port, answered by a recording stand-in for the agent service on a
+lane that stays on this computer. **No model is loaded and no inference runs**
+-- the reply is authored by the test, exactly as the service would return a
+run's final text, and everything on this side of the port is production code:
+the real client, the real router, the real grounding stage.
 
 **Both fixtures are real documents rather than authored drafts.** The mention
 and the repercutido line are printed on the page and come back through the
@@ -33,63 +34,44 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.tests.load_headroom_support import extract_invoice_text_under_admitted_load
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
-from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.ledger.evidence_input import EvidenceInput
-from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.invoice_draft_extraction_ports import (
-    EvidenceConsentProof,
-    InvoiceDraftExtractionPorts,
-    StructuredInvoiceReadError,
-)
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.invoice_extraction_authority import (
-    InvoiceExtractionAuthorityValues,
     default_invoice_extraction_period,
 )
 from cadrumo.application.ledger.regime_contradiction import (
     draft_prints_a_repercutido_line,
     regime_contradiction_finding,
 )
-from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from cadrumo.core.config import Settings, load_settings, override_settings
-from cadrumo.core.config_support import LLMProvider
+from cadrumo.core.config import load_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 
-READING_RUNTIME_MODEL = "qwen2.5:7b"
+from .model_run_support import ON_HOST_LANE, serving_agent
+from .text_layer_reader_support import text_layer_reader_ports
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPorts:
@@ -109,7 +91,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def registry_legends() -> tuple[RegimeLegend, ...]:
     """Resolve the registry vocabulary on one pinned authority lease."""
     period = default_invoice_extraction_period()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
@@ -124,47 +106,6 @@ _CONTRADICTORY = _CORPUS / "es_reverse_charge_legend_beside_repercutido.pdf"
 #: composed here, so the legend table is matched against real printed text.
 _PRINTED_MENTION = "Inversión del sujeto pasivo (art. 84.Uno.2º LIVA)"
 _TEXT_LAYER_PORTS = _text_layer_ports_for_pages((_PRINTED_MENTION,))
-
-
-def _reader_ports(evidence: EvidenceInput, *, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:
-    """Bind the application reader contract to the real outbound text adapter."""
-
-    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
-        del data
-        raise StructuredInvoiceReadError()
-
-    def read_text(
-        transcription: DocumentTranscription,
-        settings: Settings,
-        _provider: LLMProvider | None,
-        _consent_token: EvidenceConsentProof | None,
-        authority_values: object,
-        /,
-    ) -> InvoiceDraft:
-        if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
-            raise TypeError("text reader requires resolved invoice extraction authority values")
-        return extract_invoice_text_under_admitted_load(
-            transcription, settings=settings, authority_values=authority_values, operation=operation
-        )
-
-    def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
-        raise AssertionError("the text-layer reader must not invoke the vision path")
-
-    def document_shape_probe(data: bytes) -> DocumentShape:
-        del data
-        return DocumentShape.PDF_TEXT_LAYER
-
-    return InvoiceDraftExtractionPorts(
-        resolve_evidence_input=lambda *_args: evidence,
-        evidence_input_ports=EvidenceInputPorts(document_shape_probe=document_shape_probe),
-        text_layer_ports=_TEXT_LAYER_PORTS,
-        parse_structured_invoice=parse_structured_invoice,
-        read_text=read_text,
-        propose_supply_nature=lambda *_args: None,
-        rasterise_pdf=lambda _data: (),
-        transcribe_vision=vision_not_expected,
-        consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
-    )
 
 
 _BASE_REPLY: dict[str, str | None] = {
@@ -196,42 +137,25 @@ _RETENCION_REPLY = _LAWFUL_REPLY | {
 }
 
 
-class _LoopbackRequestHandler(SilentLoopbackHandler):
-    """A real endpoint speaking the runtime's ``/api/chat`` shape."""
+class _Script:
+    """The reply the agent stand-in returns for the next run."""
 
-    reply: ClassVar[str]
-    requests: ClassVar[Queue[dict[str, object]]]
-
-    @override
-    def do_POST(self) -> None:
-        self.requests.put(dict(read_json_body(self)))
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                self.reply,
-                model=READING_RUNTIME_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
+    reply: ClassVar[str] = ""
 
 
 @pytest.fixture
 def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
-    """Serve a real reader on a loopback port; yield a callable taking the reply.
+    """Bind the agent stand-in on an on-host lane; yield a callable taking the reply.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime, because the
     reading path writes run record through the profile-bound encrypted
     repository. Taking the shared fixture keeps this a real storage runtime
     rather than disabling the run-record write to make the test pass.
     """
-    requests: Queue[dict[str, object]] = Queue()
-    _LoopbackRequestHandler.requests = requests
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as url:
+    with serving_agent(lane=ON_HOST_LANE, answer=lambda _body: _Script.reply):
 
         def read(document: Path, reply: dict[str, str | None]):
-            _LoopbackRequestHandler.reply = json.dumps(reply)
+            _Script.reply = json.dumps(reply)
             payload = document.read_bytes()
             evidence = EvidenceInput(
                 mime_type="application/pdf",
@@ -240,21 +164,17 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                 content_sha256=hashlib.sha256(payload).hexdigest(),
                 attachment_id="c" * 64,
             )
-            with override_settings(cadrumo_llm_ollama_chat_url=url):
-                # ``settings`` is required rather than resolved internally, so
-                # the override reaches the read instead of being silently
-                # bypassed.
-                return invoice_draft_extraction_module._read_transcription_semantically(
-                    evidence,
-                    transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
-                    settings=load_settings(),
-                    authority_period=default_invoice_extraction_period(),
-                    operation=operation,
-                    legends=legends,
-                    ports=_reader_ports(evidence, operation=operation),
-                )
+            return invoice_draft_extraction_module.read_transcription_semantically(
+                evidence,
+                transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
+                settings=load_settings(),
+                authority_period=default_invoice_extraction_period(),
+                operation=operation,
+                legends=legends,
+                ports=text_layer_reader_ports(evidence, text_layer_ports=_TEXT_LAYER_PORTS, operation=operation),
+            )
 
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             legends = resolve_regime_legends(
                 operation=operation,
                 effective_date=default_invoice_extraction_period().end_date,
@@ -310,7 +230,7 @@ def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve, re
         legends=registry_legends,
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
-    assert derivation.category == require_iva_category("domestic_reverse_charge")
+    assert derivation.category == require_iva_category("domestic_reverse_charge", effective_date=_ON_DATE)
     assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
@@ -325,13 +245,13 @@ def test_the_reverse_charge_is_not_relieved_on_an_establishment_premise() -> Non
     relieved. Admitting reverse charge would withhold a treatment on a premise
     that does not apply to it.
     """
-    relief_categories = registry_category_projection("relief_on_establishment_premise")
-    assert require_iva_category("domestic_reverse_charge") not in relief_categories
+    relief_categories = registry_category_projection("relief_on_establishment_premise", effective_date=_ON_DATE)
+    assert require_iva_category("domestic_reverse_charge", effective_date=_ON_DATE) not in relief_categories
     # The membership assertion alone would pass against an empty set, which is
     # the shape that proves nothing about the distinction being drawn.
     assert {
-        require_iva_category("intra_community_supply"),
-        require_iva_category("export_third_country_zero_rated"),
+        require_iva_category("intra_community_supply", effective_date=_ON_DATE),
+        require_iva_category("export_third_country_zero_rated", effective_date=_ON_DATE),
     } == relief_categories
 
 

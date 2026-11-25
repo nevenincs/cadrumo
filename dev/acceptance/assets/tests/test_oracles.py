@@ -39,3 +39,11 @@ def test_the_oracles_import_nothing_from_the_product() -> None:
     }
 
     assert not any(name.split(".")[0] == "cadrumo" for name in imported)
+
+
+def test_accrual_by_days_rounds_half_up_to_cents() -> None:
+    # 0.10 x 1 / 4 = 0.025 sits on the half cent and rounds up.
+    assert oracles.accrued_through(annual_charge=Decimal("0.10"), days_elapsed=1, days_in_year=4) == Decimal("0.03")
+    assert oracles.accrued_through(annual_charge=Decimal("300.00"), days_elapsed=90, days_in_year=365) == Decimal(
+        "73.97"
+    )

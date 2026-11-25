@@ -7,7 +7,7 @@ revision_id = "2025-y-siguientes"
 seed_source = "authored"
 review = { state = "generated", notes = "Historical summary and recipient grouping visually checked against BOE-A-2009-18567 PDF pages 21 and 23; edition-specific electronic fields pinned separately. Record offsets are not box numbers. HAC/1431/2025 art2 withdraws the paper annex from 2025, so that edition has no historical printed box numbers. All registered fields retain exact repeating record bindings. Declarant NIF, name and exercise use exact export context; taxpayer identity is distinct from the presenter. Signature, conditional display and human review remain pending." }
 generator_version = 1
-source_state_digest = "5edb2496f68f7a43d1cb82c84ca389f0a6e691299062be8e3f29e34a8fe68cdb"
+source_state_digest = "59b87e9a99f0268c2c829208b3d308f1ef18b1a145b2ead1b054b72674c2969c"
 design_sources = [
     { source_ref = "aeat-dr-190-2025", sha256 = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d" },
 ]

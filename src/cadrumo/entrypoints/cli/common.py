@@ -21,11 +21,10 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast, override
+from typing import TYPE_CHECKING, Protocol, cast
 
 import click
 import typer
-import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
 from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
@@ -33,12 +32,19 @@ from cadrumo_client.contracts.command_program import CommandProgram
 
 from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ...core.cli_metadata import is_metadata_invocation
+from ...core.cli_value_parsers import CliChoice, refuse_cli_value
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
-from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
+from ...core.json_contract import (
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+)
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
+from ...core.terminal_encoding import encode_terminal_text
 from ...core.text_bounds import NonEmptyStr
 from .operator_surface_reconciliation import operator_surface_target_reconciliation
 
@@ -48,17 +54,10 @@ from .operator_surface_reconciliation import operator_surface_target_reconciliat
 # publication therefore refuses the surface instead of falling back to a second
 # identifier universe maintained in Python.
 #
-# The parameter type is a module-level object because ``from __future__ import
-# annotations`` stringifies the ``Annotated`` metadata carrying
-# ``click_type=...`` and Typer re-evaluates that string in this module.  The
-# governed values themselves must not be resolved until Click converts a real
+# Each parser is a module-level object a command spec names as its value parser.
+# The governed values themselves are not resolved until Typer converts a real
 # command argument: importing the CLI, rendering help, and printing the version
 # are metadata-only operations and do not own an authority operation.
-#
-# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-# are the same runtime object behind two static names; the cast bridges only that
-# static duality, with no Any escape.
 def _published_modelo_codes() -> list[str]:
     """Return the identifiers admitted by the bundled published authority."""
     from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -67,64 +66,45 @@ def _published_modelo_codes() -> list[str]:
         return sorted(operation.modelo_ids())
 
 
-class _PublishedModeloCode(click.ParamType[str]):
-    """Validate a modelo identifier against the authority at argument use."""
+def _amendment_declaration_kinds() -> tuple[str, ...]:
+    """Return the declaration kinds an amendment can be filed as; never the original."""
+    from ...domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS
 
-    name = "modelo"
-
-    @property
-    def choices(self) -> tuple[str, ...]:
-        """Report the published identifiers when a schema asks for the choice set."""
-        return tuple(_published_modelo_codes())
-
-    @override
-    def convert(
-        self,
-        value: object,
-        param: click.Parameter | None,
-        ctx: click.Context | None,
-    ) -> str:
-        """Resolve the published directory only for a governed invocation."""
-        return click.Choice(_published_modelo_codes()).convert(value, param, ctx)
+    return tuple(kind.value for kind in AMENDMENT_DECLARATION_KINDS)
 
 
-MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedModeloCode(),
-)
+MODELO_CODE_CHOICE = CliChoice(_published_modelo_codes)
+AMENDMENT_DECLARATION_KIND_CHOICE = CliChoice(_amendment_declaration_kinds)
 
 
-class _PublishedIvaTerritorialScope(click.ParamType[str]):
+class _PublishedIvaTerritorialScope:
     """Project an IVA territorial scope through the published fact at argument use."""
-
-    name = "territorial_scope"
 
     @property
     def choices(self) -> tuple[str, ...]:
         """Report the published territorial tokens when a schema asks for the choice set."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import resolve_iva_classification_catalogue
 
         with bundled_indexed_authority().operation() as operation:
-            catalogue = resolve_iva_classification_catalogue(operation=operation)
+            # The choice set offers the vocabulary in force now, for a new entry.
+            catalogue = resolve_iva_classification_catalogue(today_madrid(), operation=operation)
             return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
 
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+    def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import require_iva_territorial_scope
 
-        accepted = self.choices
-        click.Choice(accepted).convert(value, param, ctx)
+        CliChoice.of(self.choices)(value)
         with bundled_indexed_authority().operation() as operation:
-            return require_iva_territorial_scope(value, operation=operation)
+            return require_iva_territorial_scope(value, effective_date=today_madrid(), operation=operation)
 
 
-class _PublishedEuMemberState(click.ParamType[str]):
+class _PublishedEuMemberState:
     """Project an EU IVA member-state token through the published fact at argument use."""
-
-    name = "member_state"
 
     @property
     def choices(self) -> tuple[str, ...]:
@@ -135,8 +115,7 @@ class _PublishedEuMemberState(click.ParamType[str]):
         with bundled_indexed_authority().operation() as operation:
             return tuple(str(state) for state in resolve_eu_member_state_catalogue(authority=operation).choices)
 
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+    def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.calculations.registry.errors import RegistryValidationError
@@ -148,42 +127,36 @@ class _PublishedEuMemberState(click.ParamType[str]):
                 return catalogue.require(value)
             except RegistryValidationError:
                 accepted = tuple(str(state) for state in catalogue.choices)
-        click.Choice(accepted).convert(value, param, ctx)
-        raise click.BadParameter(str(value), ctx=ctx, param=param)
+        CliChoice.of(accepted)(value)
+        refuse_cli_value(str(value))
 
 
-class _PublishedIrpfCategory(click.ParamType[str]):
-    """Resolve a ledger IRPF category token through the published taxonomy at argument use."""
+def parse_published_irpf_category(value: object) -> str:
+    """Resolve a ledger IRPF category token through the published taxonomy, naming the accepted ids on a refusal."""
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+    from ...domain.transactions.errors import TransactionValidationError
+    from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 
-    name = "irpf_category"
-
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
-        """Return the normalized token, naming the accepted ids on a refusal."""
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-        from ...domain.transactions.errors import TransactionValidationError
-        from ...domain.transactions.irpf_categories import require_ledger_irpf_category
-
-        with bundled_indexed_authority().operation() as operation:
-            try:
-                return require_ledger_irpf_category(str(value), authority=operation)
-            except TransactionValidationError as refusal:
-                self.fail(str(refusal), param, ctx)
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            return require_ledger_irpf_category(str(value), authority=operation)
+        except TransactionValidationError as refusal:
+            refuse_cli_value(str(refusal))
 
 
-IRPF_CATEGORY_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedIrpfCategory(),
-)
+def parse_review_state(value: object) -> ReviewState:
+    """Parse a review-state token case-insensitively."""
+    from ...application.review.enums import ReviewState
 
-IVA_TERRITORIAL_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedIvaTerritorialScope(),
-)
-EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedEuMemberState(),
-)
+    normalized = str(value).casefold()
+    for state in ReviewState:
+        if state.value.casefold() == normalized:
+            return state
+    refuse_cli_value(f"expected one of: {', '.join(state.value for state in ReviewState)}")
+
+
+IVA_TERRITORIAL_SCOPE_CHOICE = _PublishedIvaTerritorialScope()
+EU_MEMBER_STATE_CHOICE = _PublishedEuMemberState()
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -198,6 +171,7 @@ if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions.models import ActionReference, PreconditionVerdict
     from ...application.operator_surface.verb_input_contracts import VerbInputSchema
+    from ...application.review.enums import ReviewState
     from ...core.json_contract import ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -210,7 +184,6 @@ __all__ = [
     "emit_progress_line",
     "format_of",
     "no_active_profile_refusal",
-    "notice_lines",
     "profile_grounding_index_for_operation",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
@@ -285,7 +258,7 @@ _REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
 #:
 #: :data:`_REQUESTED_CLI_LEAF_CONTEXT` is reset by ``ctx.call_on_close`` when the
 #: Click context closes, which is correct for in-command reads and useless to the
-#: PROCESS boundary: ``_terminal_errors._emit_crash`` runs after that close, so it
+#: PROCESS boundary: ``terminal_errors.emit_crash`` runs after that close, so it
 #: asked and got ``None``, and every refusal escaping there published a null
 #: ``command`` even where the leaf was known.
 #:
@@ -326,7 +299,7 @@ class CliPolicyRefusalProjection(BaseModel):
 
 
 class _CommandGroup(Protocol):
-    def get_command(self, ctx: object, cmd_name: str) -> object | None:
+    def get_command(self, ctx: object, _cmd_name: str, /) -> object | None:
         """Resolve one real child command."""
 
 
@@ -488,21 +461,31 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
             canonical_cli_path=(target.program.executable_name, *target.cli_path),
         )
 
+    def with_executable(action: ResolvedActionReference) -> ResolvedActionReference:
+        target = next(row for row in ACTION_TARGETS if row.command_key == action.target_command_key)
+        if target.program is CommandProgram.AEAT:
+            from .command_specs import COMMAND_GRAPH
+
+            executable = COMMAND_GRAPH.root().token
+        else:
+            executable = target.program.executable_name
+        cli_path = action.cli_path
+        if cli_path is None:
+            raise LookupError(f"resolved CLI action has no command path: {action.target_command_key}")
+        return action.model_copy(update={"cli_path": (executable, *cli_path)})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
     if resolved.action is None:
         return resolved
-    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
-    if target.program is CommandProgram.AEAT:
-        from .command_specs import COMMAND_GRAPH
-
-        executable = COMMAND_GRAPH.root().token
-    else:
-        executable = target.program.executable_name
-    cli_path = resolved.action.cli_path
-    if cli_path is None:
-        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
-    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
-    return resolved.model_copy(update={"action": action})
+    return resolved.model_copy(
+        update={
+            "action": with_executable(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_executable(item.action)})
+                for item in resolved.alternative_actions
+            ),
+        }
+    )
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](
@@ -527,7 +510,7 @@ def attach_cli_policy_verdict[ExceptionT: Exception](
 # ---------------------------------------------------------------------
 
 
-def _is_metadata_invocation(ctx: typer.Context) -> bool:
+def common_is_metadata_invocation(ctx: typer.Context) -> bool:
     """Read metadata posture from captured tokens and eager callback flags.
 
     Click consumes eager ``--help`` / ``--version`` options before group
@@ -555,7 +538,7 @@ format_of = _format_of
 
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
-    typer.echo(ctx.get_help())
+    typer.echo(encode_terminal_text(ctx.get_help()))
 
 
 def _render_and_echo(*, format_name: str, payload: object, lines: tuple[str, ...]) -> None:
@@ -657,7 +640,7 @@ _SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=+-]+$")
 _POWERSHELL_SINGLE_QUOTE = re.compile("['\u2018\u2019\u201a\u201b]")
 
 
-def _powershell_action_token(token: str) -> str:
+def powershell_action_token(token: str) -> str:
     """Render one argv token as a PowerShell literal without enabling expansion.
 
     PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
@@ -671,7 +654,7 @@ def _powershell_action_token(token: str) -> str:
     return "'" + _POWERSHELL_SINGLE_QUOTE.sub(lambda quote: quote.group(0) * 2, token) + "'"
 
 
-def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+def action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
     from ...application.operator_surface.verb_input_contracts import cli_argv_for
     from ...core.json_contract import ResolvedNoticeAction
@@ -690,27 +673,9 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
             binding.argument_name: binding.value for binding in notice_action.argument_bindings
         }
         argv = cli_argv_for(schema, arguments)[2:]
-        rendered = " ".join(_powershell_action_token(token) for token in argv)
+        rendered = " ".join(powershell_action_token(token) for token in argv)
         lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
     return tuple(lines)
-
-
-def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
-    """Render envelope notices as the matching machine-parsable text lines.
-
-    Text mode receives no ``notices`` channel of its own, so a command that
-    passes notices to :func:`emit_envelope` and does not fold the same values
-    into its ``lines`` emits a diagnostic in JSON that is simply absent from the
-    terminal. Rebuilding the line from the notice itself is what stops the two
-    surfaces drifting: the code and the message are the notice's, never a second
-    sentence written beside it.
-
-    This is the tab-separated transport form every ``app`` surface uses. The
-    config storage surface renders its own wrapped, severity-labelled block
-    instead; that is a presentation choice for a human-read report and is not
-    substitutable here, where the line is parsed.
-    """
-    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
 
 
 def emit_envelope(
@@ -764,7 +729,7 @@ def emit_envelope(
         metadata_only: Skip profile notices, action resolution, and sandbox
             discovery for a callback that only renders command metadata.
     """
-    metadata_invocation = metadata_only or _is_metadata_invocation(ctx)
+    metadata_invocation = metadata_only or common_is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
     supplied_notices = tuple(notices or ())
     if metadata_invocation:
@@ -805,12 +770,11 @@ def emit_envelope(
     if metadata_invocation:
         rendered_lines = tuple(lines)
     else:
-        rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
-        from ...application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+        from ...application.operator_output.text_transport import notice_lines, with_sandbox_banner
 
-        sandbox_notice = sandbox_notice_for_active_bucket()
-        if sandbox_notice is not None:
-            rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
+        rendered_lines = with_sandbox_banner(
+            (*lines, *notice_lines(resolved_notices), *action_text_lines(resolved_notices))
+        )
     _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
 
 
@@ -920,7 +884,7 @@ def _bad(message: str) -> typer.BadParameter:
 bad = _bad
 
 
-def _no_active_profile_refusal() -> Exception:
+def common_no_active_profile_refusal() -> Exception:
     """Return the canonical no-active-profile refusal exception.
 
     A missing active profile is a workflow-state refusal, not a
@@ -960,7 +924,7 @@ def _no_active_profile_refusal() -> Exception:
     return attach_cli_policy_verdict(error, verdict=verdict)
 
 
-no_active_profile_refusal = _no_active_profile_refusal
+no_active_profile_refusal = common_no_active_profile_refusal
 
 
 def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
@@ -1012,26 +976,4 @@ def active_bucket_id_or_refuse() -> str:
     try:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
-
-
-# ---------------------------------------------------------------------
-# Output-language override
-# ---------------------------------------------------------------------
-
-
-def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply a subcommand-supplied ``--output-language`` to the render path.
-
-    ``--output-language`` on a subcommand short-circuits the root
-    callback's ``--language`` flow; rather than re-parsing, override the
-    Settings field directly and drop the cached language so any ``tr()``
-    fired during the verb body resolves to the requested locale.
-    """
-    if language is None:
-        return
-    from ...core.config import override_settings
-    from ...core.i18n.render import clear_output_language_cache
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
+        raise common_no_active_profile_refusal() from exc

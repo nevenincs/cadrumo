@@ -51,7 +51,7 @@ symbol variants -- so a measure qualified by a footnote is not read as \
 unqualified."""
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
+module = "src/cadrumo/adapters/inbound/borrador/extractors/modelo_100_summary.py"
 corpus = "AEAT borrador renta summary (extracted PDF text)"
 reason = """\
 Reads the taxpayer's own borrador summary, which AEAT publishes as prose \
@@ -65,9 +65,14 @@ corpus = "AEAT diseños de registro"
 reason = "Schema-side companion to the record-design authority; validates the shapes that reader produces."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/export_parse.py"
-corpus = "AEAT diseños de registro"
-reason = "Parses the fixed-width export field grammar the record designs declare."
+module = "src/cadrumo/domain/calculations/registry/export_xml_dictionary.py"
+corpus = "Official AEAT XML export dictionaries"
+reason = "Reads the published dictionary row grammar to resolve field identifiers, XML paths, data types and casilla identifiers for payload parsing and rendering. Values come from the published source payload; path overrides remain declared by the export layout."
+
+[[parser]]
+module = "dev/registry/compiler/design_sum.py"
+corpus = "Official AEAT XML export dictionaries"
+reason = "Reads the printed sum grammar of a declaration dictionary row (for example a summary box printed as the sum of other boxes) and decodes the one formula shape that restates it, so the authoring tool and the compiler read rows and formulas the same way. It derives no value: each added box and sign is checked against the row the dictionary prints, and the value lands in the registry authoring tree with its citation."
 
 [[parser]]
 module = "dev/registry/compiler/validate_layout_authority_content.py"
@@ -75,7 +80,7 @@ corpus = "AEAT diseños de registro"
 reason = "Checks a layout authority's cited content against the design text it claims to mirror."
 
 [[parser]]
-module = "dev/registry/compiler/_validate_semantic_role_required.py"
+module = "dev/registry/compiler/validate_semantic_role_required.py"
 corpus = "registry casilla declarations"
 reason = "Matches semantic-role identifiers; reads registry-authored ids rather than official prose, and is enrolled because the detector matches its casilla vocabulary."
 
@@ -85,12 +90,12 @@ corpus = "BOE consolidated legal text"
 reason = "Resolves legal-reference ids and their corpus anchors against bundled BOE text."
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/declaracion/_detect.py"
+module = "src/cadrumo/adapters/inbound/declaracion/detect.py"
 corpus = "AEAT declaración documents"
 reason = "Detects which modelo and ejercicio an imported AEAT document is, before any typed parse."
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/justificante/_extract.py"
+module = "src/cadrumo/adapters/inbound/justificante/extract.py"
 corpus = "AEAT justificante de presentación"
 reason = "Extracts the CSV and filing coordinates AEAT prints on a submission receipt."
 
@@ -120,7 +125,7 @@ corpus = "AEAT record-design transcriptions"
 reason = "Resolves a Contenido footnote pointer to the note text the design states beneath the table, so a reviewer authoring a representation rule can read what the pointer defers to. Enrolment authorises reading that prose and no value: the screen reports the note and derives nothing, and any scale or sign a note establishes still lands in the authoring tree with its provision. The design is located from the source reference's own corpus path rather than by globbing its directory, because one modelo bundles fifteen designs and a note resolved against the wrong year is worse evidence than none."
 
 [[parser]]
-module = "dev/locales/_casilla_keys.py"
+module = "dev/locales/casilla_keys.py"
 corpus = "AEAT casilla label and help text, as the registry stores it"
 reason = """Reads the edition-keyed chains a casilla's own AEAT label and help resolve through, so an inherited row shows the text its edition states. It reads key spellings over that prose; it establishes no value."""
 
@@ -163,3 +168,33 @@ reason = "Reads the declared scale, constants, enumerations and date patterns fo
 module = "dev/registry/pipeline/render_profile_authority.py"
 corpus = "AEAT diseños de registro (PDF)"
 reason = "Compares printed signed-composite prose and geometry with an independently reviewed render profile. Text or shape disagreement refuses the profile; the comparison establishes no new rendering policy."
+
+[[parser]]
+module = "dev/locales/signal_document_prose.py"
+corpus = "Generated documentation RST markers"
+reason = "Recognises the generated cadrumo-casilla-section-identifier marker to validate its exact adjacent section heading before excluding that identifier from spelling prose. The detector matches casilla in generator syntax; this module derives no regulatory value from official prose."
+
+[[parser]]
+module = "dev/locales/signal_syntax.py"
+corpus = "Locale catalogue and documentation syntax"
+reason = "Recognises translation syntax and Spanish tax terminology for language-aware spelling checks. The detector matches casilla in the terminology pattern; these matches route prose to its language dictionary and establish no regulatory value."
+
+[[parser]]
+module = "dev/locales/signal_tokens.py"
+corpus = "Locale catalogue command and file syntax"
+reason = "Recognises the casilla_code, value observation-file header quoted in translated CLI help so the spelling audit treats it as file syntax rather than translated words. The detector matches casilla in that header; this module reads no official prose and derives no regulatory value."
+
+[[parser]]
+module = "dev/quality/year_literal_casilla_ids.py"
+corpus = "First-party Python source"
+reason = "Recognises where first-party Python code places a string as a casilla id, so the year gate admits a box numbered like a year. The detector matches casilla in its name-word pattern; the module reads no official prose and derives no regulatory value."
+
+[[parser]]
+module = "dev/quality/year_literal_python_rules.py"
+corpus = "First-party Python source"
+reason = "Recognises year-named identifiers and year-shaped literals in first-party Python source for the year gate. The detector matches ejercicio in its year-word pattern; the module reads no official prose and derives no regulatory value."
+
+[[parser]]
+module = "dev/quality/year_literal_typescript.py"
+corpus = "First-party TypeScript source"
+reason = "Recognises year-named bindings and year-shaped literals in first-party TypeScript source for the year gate. The detector matches ejercicio in its year-binding pattern; the module reads no official prose and derives no regulatory value."

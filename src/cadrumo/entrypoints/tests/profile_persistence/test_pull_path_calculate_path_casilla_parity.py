@@ -79,12 +79,12 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import (
@@ -102,7 +102,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.binding_resolution import resolve_declaration_period_inputs
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -136,13 +136,9 @@ from cadrumo.domain.prorrata_register.register import ProrrataRegister, Prorrata
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.ready_profile_taxpayer import ready_profile_tax_id
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
@@ -167,7 +163,7 @@ _M115_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("04")
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
-_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 _M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores"
@@ -204,43 +200,10 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 }
 
 
-def _seed_ready_profile() -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_PROFILE_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value="false"),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-                UserProfileFact(
-                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                    value="false",
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0)
         yield profile.repository
 
 
@@ -304,7 +267,7 @@ def _urban_property(nif: str) -> Modelo180PropertyEvidence:
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",
@@ -408,7 +371,7 @@ def _m303_iva_transaction(
 
 def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=ready_profile_tax_id(),
         target_year=_PRORRATA_YEAR,
         target_period=_PRORRATA_PERIOD,
         target_registry_snapshot_ref=m303_registry_snapshot_ref(_PRORRATA_YEAR, _PRORRATA_PERIOD.registry_token),

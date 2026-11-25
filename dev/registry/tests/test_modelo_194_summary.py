@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.aggregation import RetencionClave
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_first_exercise
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
@@ -21,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _transaction(index: int, year: int, base: str, retention: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"fictional-asset-{index}",
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="PERCEPTOR SINTETICO",
         transaction_date=date(year, 6, 1),
         clave=RetencionClave.from_registry("G"),
@@ -41,11 +42,12 @@ def _transaction(index: int, year: int, base: str, retention: str) -> Withholdin
     )
 
 
-@pytest.mark.parametrize("epoch", ["2019", "2023", "2024"])
+@pytest.mark.parametrize("epoch", [str(revision.id) for revision in authored_revisions("194")])
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_official_five_box_summary_uses_the_actual_registry_formulas(epoch: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/194")).revisions[epoch]
     observations = tuple(
-        _transaction(i, int(epoch), base, retention)
+        _transaction(i, revision_first_exercise("194", epoch), base, retention)
         for i, (base, retention) in enumerate((("100", "19"), ("25", "5"), ("0", "0"), ("-40", "0"), ("-10", "0")))
     )
     bindings = resolve_withholding_binding_values(revision, observations)

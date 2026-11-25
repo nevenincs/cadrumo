@@ -21,14 +21,17 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from ..models import LLMRequest, LLMResponse
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 25, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 25, 0, tzinfo=UTC)
 
 
 def _populated_request() -> LLMRequest:
@@ -38,7 +41,7 @@ def _populated_request() -> LLMRequest:
         max_tokens=512,
         temperature=0.2,
         language="en",
-        cache_key="translation-batch-2026Q1",
+        cache_key=f"translation-batch-{_FILING_YEAR}Q1",
         provider_override=LLMProvider.AGENT,
         model_override="claude-opus-4-7",
     )
@@ -111,14 +114,14 @@ def test_llm_cache_keeps_tagged_and_underscore_models_in_distinct_encrypted_entr
     cache = LLMCache(root_dir=tmp_path / "llm-cache")
     tagged = _populated_response(
         _CREATED_AT,
-        provider=LLMProvider.LOCAL,
+        provider=LLMProvider.AGENT,
         model="qwen:3b",
         text="TAGGED-MODEL-RESPONSE",
         request_id="b" * 64,
     )
     underscored = _populated_response(
         _CREATED_AT,
-        provider=LLMProvider.LOCAL,
+        provider=LLMProvider.AGENT,
         model="qwen_3b",
         text="UNDERSCORE-MODEL-RESPONSE",
         request_id="c" * 64,
@@ -127,8 +130,8 @@ def test_llm_cache_keeps_tagged_and_underscore_models_in_distinct_encrypted_entr
     cache.write(request, tagged)
     cache.write(request, underscored)
 
-    tagged_loaded = cache.read(request, LLMProvider.LOCAL, tagged.model)
-    underscored_loaded = cache.read(request, LLMProvider.LOCAL, underscored.model)
+    tagged_loaded = cache.read(request, LLMProvider.AGENT, tagged.model)
+    underscored_loaded = cache.read(request, LLMProvider.AGENT, underscored.model)
 
     assert tagged_loaded is not None
     assert tagged_loaded.model == "qwen:3b"
@@ -158,7 +161,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.orm import SecureObjectRow
+    from ....persistence.storage.sql.tables import secure_objects_table
     from ..errors import LLMCacheError
 
     created_at = _CREATED_AT
@@ -171,8 +174,8 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     # from the nested response on the redacted entry. The column
     # accessor handles encrypt/decrypt automatically; the
     # The canonical cache namespace filter pins the right row.
-    stmt = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace,
+    stmt = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == LLM_CACHE_NAMESPACE.namespace,
     )
 
     def mutate(decoded):

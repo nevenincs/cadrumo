@@ -7,7 +7,7 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
@@ -15,7 +15,6 @@ from typing import NoReturn
 from uuid import uuid4
 
 import pytest
-from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -27,17 +26,16 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -45,15 +43,14 @@ from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusal
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
+from ...adapters import profile_worker_transport
 from ...adapters.profile_worker import ProfileWorkerProcess
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
+from ...adapters.tests.worker_authority_support import UnavailableApprovalAuthority
 from ..session_owner import ProfileWorkerSessionOwner
 
 pytestmark = [
@@ -65,23 +62,181 @@ pytestmark = [
 ]
 
 
-def _no_activity_authority(_: object) -> NoReturn:
+def no_activity_authority(_: object) -> NoReturn:
     raise AssertionError("activity observation must not request credentials or authority")
+
+
+def test_activity_replies_continue_while_the_real_diagnostic_file_sink_is_blocked(tmp_path: Path) -> None:
+    """A stalled log flush cannot consume the native worker's control deadline."""
+    import win32api
+    import win32event
+
+    entered_name, release_name = f"Local\\cadrumo-log-test-{uuid4()}", f"Local\\cadrumo-log-test-{uuid4()}"
+    entered = win32event.CreateEvent(None, True, False, entered_name)
+    release = win32event.CreateEvent(None, True, False, release_name)
+    script = tmp_path / "blocked_log_worker.py"
+    script.write_text(
+        "import win32event\n"
+        "from cadrumo.core.log_file_handler import AnnouncingRotatingFileHandler\n"
+        "from cadrumo_runtime.host.worker import run\n"
+        f"entered = win32event.OpenEvent(2, False, {entered_name!r})\n"
+        f"release = win32event.OpenEvent(0x100000, False, {release_name!r})\n"
+        "original = AnnouncingRotatingFileHandler.emit\n"
+        "held = False\n"
+        "def blocked(self, record):\n"
+        "    global held\n"
+        "    if not held:\n"
+        "        held = True\n"
+        "        win32event.SetEvent(entered)\n"
+        # Held until the test releases it, so a probe can only be answered while the sink is stuck.
+        f"        win32event.WaitForSingleObject(release, {int(3 * HANG_GUARD_SECONDS * 1000)})\n"
+        "    original(self, record)\n"
+        "AnnouncingRotatingFileHandler.emit = blocked\n"
+        "raise SystemExit(run())\n",
+        encoding="utf-8",
+    )
+    try:
+        with worker_profiles(tmp_path) as profiles:
+            root, ((identity, _), _) = profiles
+            worker = ProfileWorkerProcess(identity, storage_root=root, worker_script=script)
+            try:
+                assert (
+                    win32event.WaitForSingleObject(entered, int(HANG_GUARD_SECONDS * 1000)) == win32event.WAIT_OBJECT_0
+                )
+                for _ in range(16):
+                    probe = worker.activity(deadline=time.monotonic() + HANG_GUARD_SECONDS)
+                    assert probe is not None and probe.in_flight_operations == 0
+                    assert not worker.status().sessions
+                assert not worker.stopping
+            finally:
+                win32event.SetEvent(release)
+                worker.close()
+    finally:
+        win32api.CloseHandle(entered)
+        win32api.CloseHandle(release)
 
 
 def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSessionOwner:
     owner = ProfileWorkerSessionOwner(
         worker.identity,
         storage_root=root,
-        observe=_no_activity_authority,
-        human_secret=_no_activity_authority,
+        observe=no_activity_authority,
+        human_secret=no_activity_authority,
         guard=RLock(),
     )
     owner._worker = worker
     return owner
 
 
-def _profile_baseline(profile_id: object) -> tuple[int, str]:
+@contextmanager
+def _held_by_another_thread(lock: RLock) -> Generator[None]:
+    """Keep one of the worker's locks busy as a concurrent caller would."""
+    acquired, release = Event(), Event()
+
+    def hold() -> None:
+        with lock:
+            acquired.set()
+            release.wait(10)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        held = pool.submit(hold)
+        assert acquired.wait(5)
+        try:
+            yield
+        finally:
+            release.set()
+            held.result(timeout=10)
+
+
+def test_unanswered_activity_probe_keeps_the_busy_worker_and_its_sessions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A late heartbeat answer is unknown, never death: the worker, its lease and its stream survive.
+
+    The reply is held past the whole control-exchange budget, which once contained the worker.
+    """
+    import win32api
+    import win32event
+
+    control_budget = 1.0
+    monkeypatch.setattr(profile_worker_transport, "CONTROL_EXCHANGE_SECONDS", control_budget)
+
+    armed_name, entered_name, release_name = (f"Local\\cadrumo-probe-test-{uuid4()}" for _ in range(3))
+    armed, entered, release = (
+        win32event.CreateEvent(None, True, False, name) for name in (armed_name, entered_name, release_name)
+    )
+    script = tmp_path / "slow_activity_worker.py"
+    script.write_text(
+        "import win32event\n"
+        "from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost\n"
+        "from cadrumo_runtime.host.worker import run\n"
+        f"armed = win32event.OpenEvent(0x100000, False, {armed_name!r})\n"
+        f"entered = win32event.OpenEvent(2, False, {entered_name!r})\n"
+        f"release = win32event.OpenEvent(0x100000, False, {release_name!r})\n"
+        "original = ProfileWorkerOperationHost.in_flight_operation_count\n"
+        "held = False\n"
+        "def slow(self):\n"
+        "    global held\n"
+        "    if not held and win32event.WaitForSingleObject(armed, 0) == win32event.WAIT_OBJECT_0:\n"
+        "        held = True\n"
+        "        win32event.SetEvent(entered)\n"
+        "        win32event.WaitForSingleObject(release, 15000)\n"
+        "    return original(self)\n"
+        "ProfileWorkerOperationHost.in_flight_operation_count = slow\n"
+        "raise SystemExit(run())\n",
+        encoding="utf-8",
+    )
+    try:
+        with worker_profiles(tmp_path) as profiles:
+            root, ((identity, key), _) = profiles
+            worker = ProfileWorkerProcess(identity, storage_root=root, worker_script=script)
+            owner = _activity_owner(worker, root)
+            try:
+                admitted = lease(identity)
+                worker.install(admitted, bytearray(key))
+                # Install's own status reply counts operations too; only the probe after it is held.
+                win32event.SetEvent(armed)
+                started = time.monotonic()
+                assert owner.in_flight_operation_count(deadline=started + 0.5) is None
+                assert time.monotonic() - started < 3
+                assert win32event.WaitForSingleObject(entered, 5000) == win32event.WAIT_OBJECT_0
+                assert not worker.stopping and not owner.lost
+                # The first reply is still owed, so a second probe sends nothing and stays unknown.
+                assert owner.in_flight_operation_count(deadline=time.monotonic() + 0.2) is None
+                time.sleep(control_budget + 0.5)
+                assert not worker.stopping and not owner.lost
+                win32event.SetEvent(release)
+                # The next exchange discards the late activity reply and reads only its own.
+                assert worker.status().sessions == (admitted.session_id,)
+                assert owner.in_flight_operation_count(deadline=time.monotonic() + 5) == 0
+                assert not worker.stopping and not owner.lost
+            finally:
+                win32event.SetEvent(release)
+                worker.close()
+    finally:
+        for handle in (armed, entered, release):
+            win32api.CloseHandle(handle)
+
+
+def test_native_contention_refuses_custody_observation_but_only_worker_death_loses_it(tmp_path: Path) -> None:
+    """Only positive evidence of worker death fences the owner; a contended health check does not."""
+    with worker_profiles(tmp_path) as profiles:
+        root, ((identity, _), _) = profiles
+        worker = ProfileWorkerProcess(identity, storage_root=root)
+        owner = _activity_owner(worker, root)
+        try:
+            with _held_by_another_thread(worker._native_guard), pytest.raises(AutomationCustodyError):
+                owner.facts(uuid4())
+            assert not owner.lost and not worker.stopping
+            worker._scope.terminate(timeout=5)
+            with pytest.raises(AutomationCustodyError):
+                owner.facts(uuid4())
+            assert owner.lost
+        finally:
+            owner.close()
+
+
+def profile_baseline(profile_id: object) -> tuple[int, str]:
     """Read the real encrypted record before handing custody to a native worker."""
     _, decode = profile_authority_contexts()
     authenticate_profile_for_invocation(
@@ -106,7 +261,7 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             admitted = lease(identity)
             worker.install(admitted, bytearray(key))
             definition = "user-profile.field-mutation"
-            expected = build_production_operation_registry().lookup_public_contract(definition)
+            expected = production_operation_registry().lookup_public_contract(definition)
             assert worker.describe(admitted.session_id, definition).contract == expected
             with pytest.raises(AutomationCustodyError):
                 worker.describe(uuid4(), definition)
@@ -120,7 +275,7 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             worker.close()
 
 
-class BoundaryAuthority:
+class BoundaryAuthority(UnavailableApprovalAuthority):
     """Explicit authorization fault port; encryption, native transport and writes are real."""
 
     def __init__(self, *, deny_commit: bool) -> None:
@@ -151,25 +306,15 @@ class BoundaryAuthority:
                 expires_at=now() + timedelta(seconds=20),
             )
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         with self.guard:
             self.advanced.append(operation_ids)
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
@@ -183,7 +328,7 @@ class BoundaryAuthority:
 def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path: Path, deny_commit: bool) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
+        expected_revision, expected_digest = profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=deny_commit)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         activity = _activity_owner(worker, root)
@@ -191,11 +336,9 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
             admitted = lease(identity)
             worker.install(admitted, bytearray(key))
             assert activity.in_flight_operation_count(deadline=time.monotonic() + 3) == 0
-            with worker._lock:
+            with _held_by_another_thread(worker._lock):
                 assert activity.in_flight_operation_count(deadline=time.monotonic() + 0.05) is None
                 assert not worker.stopping
-            assert activity._activity_guard.acquire(timeout=3)
-            activity._activity_guard.release()
             request = OperationRequest(
                 definition_id="user-profile.field-mutation",
                 subject_ref=f"profile:{identity.binding.profile_id}",
@@ -324,7 +467,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
 def test_custody_control_retires_while_operation_waits_for_profile_authority(tmp_path: Path) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
+        expected_revision, expected_digest = profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=False)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         try:

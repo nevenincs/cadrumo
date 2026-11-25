@@ -177,6 +177,7 @@ Reconcile a filed modelo against its AEAT receipt <how-to/reconcile>
 :caption: Help
 
 Troubleshooting <how-to/troubleshooting>
+Sign in to an AI provider by hand <how-to/sign-in-to-an-ai-provider-by-hand>
 How to publish a validated runtime authority <how-to/publish-runtime-authority>
 Disclaimer <disclaimer>
 ```

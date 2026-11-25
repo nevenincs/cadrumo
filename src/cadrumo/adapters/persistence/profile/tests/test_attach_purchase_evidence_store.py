@@ -23,9 +23,7 @@ from typing import Any
 import pytest
 
 from .evidence_test_support import (
-    make_svc as _make_svc,
-)
-from .evidence_test_support import (
+    make_svc,
     pdf_file,
 )
 
@@ -34,7 +32,7 @@ __all__ = ["pdf_file"]
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )
@@ -108,7 +106,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
     """Register a PDF through the real evidence service and return its evidence id."""
-    service = _make_svc(profile.settings, profile.repository)
+    service = make_svc(profile.settings, profile.repository)
     result = service.add(bucket_id=_BUCKET, source_path=pdf_file)
     return result.record.evidence_id
 
@@ -244,7 +242,7 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
         kind=InvoiceKind.RECEIVED,
         invoice_number="INV-2026-001",
         issued_at=date(2026, 5, 1),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
     )

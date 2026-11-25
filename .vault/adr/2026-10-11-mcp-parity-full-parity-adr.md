@@ -10,11 +10,10 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
 supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
-modified: '2026-10-18'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:c23f63caac4a647c9b79d7c91d2ee80bdb10a09baf032789d411e3489fd92eff'
+body_hash: 'sha256:7bcccbc2922345e43a728b9c1b4e4fa595328a4b57f13dc170c2462dd8b1822e'
 ---
-
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -46,7 +45,7 @@ Binding:
 5. No operation inside the profile is held back from a frontend for being sensitive, destructive, an election, an attestation, a local filing act, a file input or output, or for want of an approval step, a file-exchange folder, a replay identity or a provenance mark. Withholding authentication, session and access administration, installation acts and acts outside the bound profile from MCP is not holding an operation back: they are not agent operations. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that the rule reached every operation, those acts included.)
 6. What remains is the same on every frontend: input validation, profile and subject checks, the finalised-revision guard, handle-level path checks, the session's lease and scope, and the surface a person may choose to narrow when starting the MCP server. The default surface is every operation inside the bound profile. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that it was everything.)
 7. Attribution is not a limit: an execution admitted on MCP records an actor derived from its session, and a row records whose decision its classification is. No refusal is built on either.
-8. Good conduct for an agent, such as telling the person before a destructive act, is guidance in the packaged agent text. It is never a product gate.
+8. Good conduct for an agent, such as telling the person before a destructive act, is guidance in the packaged agent text. It is not a product gate.
 
 Fixed boundary, not open to any decision: nothing on any frontend sends anything to the tax agency. Export writes a local file and the filed marker writes a local record.
 
@@ -79,10 +78,10 @@ As built by 2026-10-12, recorded here as implementation and not as commitments o
 
 ## Rationale
 
-The owner ruled it, twice, in terms that leave no exception. The earlier reading produced a server that could not do what the command line does, which defeats the purpose of the feature: an agent operating the application.
+The owner ruled parity twice. The earlier reading produced a server that could not do what the command line does, which defeats the purpose of the feature: an agent operating the application.
 
 ## Consequences
 
-- Inside its profile an agent can remove, reset, merge, export, record the filed marker, amend, import and classify exactly as the command line can, with no approval gate in the product. It cannot sign in, sign out, lock, administer access or act outside its profile (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`).
+- Inside its profile an agent can remove, reset, merge, export, record the filed marker, amend, import and classify exactly as the command line can, with no approval gate in the product for those acts. It cannot sign in, sign out, lock, administer access or act outside its profile (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`).
 - The safeguards that remain for those acts are the ones the command line has inside the operations, and the agent's own conduct as its packaged rules describe it.
 - The refusals, reduced results and their tests built between 2026-10-10 and 2026-10-11 are removed. The review findings that motivated them, recorded in `2026-10-11-mcp-parity-audit`, are closed as not applicable under this record, except those about defects on every frontend.

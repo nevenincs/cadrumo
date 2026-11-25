@@ -14,6 +14,7 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files, snapshot
+from dev.temporary_output import prepare_temp_root
 
 from .. import python_cohort, release_cohort
 from ..cohort_attestation import make_minimal_test_python_cohort
@@ -42,6 +43,7 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
     (root / ".gitattributes").write_bytes(b"*.py text eol=lf\n")
     (root / "program.py").write_bytes(b"original\r\n")
     expected = {".gitattributes": b"*.py text eol=lf\n", "program.py": b"original\n"}
+    expected_scratch_root = prepare_temp_root()
 
     def changing_snapshot(source: Path, files: Sequence[str], destination: Path) -> None:
         if mutation == "before_copy":
@@ -67,9 +69,10 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
         remove_build_root: bool,
     ) -> Never:
         assert authority_source_root == root and remove_build_root
-        assert scratch_root == root / "build"
+        assert scratch_root == expected_scratch_root
+        assert build_root.parent == scratch_root
         assert source_digest == _expected_identity(expected)
-        archive_path = python_cohort._archive_source_snapshot(
+        archive_path = python_cohort.archive_source_snapshot(
             build_root, source_files, output / "captured.zip", expected_source_digest=source_digest
         )
         with zipfile.ZipFile(archive_path) as archive:
@@ -77,7 +80,7 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
         raise _BuildInterceptedError
 
     monkeypatch.setattr(python_cohort, "snapshot", changing_snapshot)
-    monkeypatch.setattr(python_cohort, "_build_python_cohort_from_snapshot", inspect_capture)
+    monkeypatch.setattr(python_cohort, "build_python_cohort_from_snapshot", inspect_capture)
     with pytest.raises(_BuildInterceptedError):
         python_cohort.build_python_cohort(root, root / "build" / "cohort")
 
@@ -90,7 +93,7 @@ def test_clean_release_identity_is_verified_before_staging(
     root.mkdir()
     (root / "program.py").write_bytes(b"verified source\n")
     expected = _expected_identity({"program.py": b"verified source\n"})
-    archive_snapshot = python_cohort._archive_source_snapshot
+    archive_snapshot = python_cohort.archive_source_snapshot
 
     def changed_archive(
         build_root: Path, files: Sequence[str], destination: Path, *, expected_source_digest: str
@@ -104,7 +107,7 @@ def test_clean_release_identity_is_verified_before_staging(
             raise _BuildInterceptedError
         pytest.fail("a changed source reached staging before its identity was verified")
 
-    monkeypatch.setattr(python_cohort, "_archive_source_snapshot", changed_archive)
+    monkeypatch.setattr(python_cohort, "archive_source_snapshot", changed_archive)
     monkeypatch.setattr(python_cohort, "build_client_json", forbid_staging)
     expected_error = _BuildInterceptedError if mutation == "unchanged" else SystemExit
     with pytest.raises(expected_error) as caught:
@@ -194,9 +197,9 @@ def test_release_wrapper_preserves_requested_identity_in_default_snapshot_branch
             pytest.fail("a newly captured identity reached release artifact copying")
         raise _BuildInterceptedError
 
-    monkeypatch.setattr(release_cohort, "_build_identity", lambda _root: identity)
+    monkeypatch.setattr(release_cohort, "build_identity", lambda _root: identity)
     monkeypatch.setattr(release_cohort, "build_python_cohort", capture)
-    monkeypatch.setattr(release_cohort, "_copy_python_cohort", copy_boundary)
+    monkeypatch.setattr(release_cohort, "copy_python_cohort", copy_boundary)
     expected_error = SystemExit if changed_during_copy else _BuildInterceptedError
     with pytest.raises(expected_error) as caught:
         release_cohort.build_from_clean_source(

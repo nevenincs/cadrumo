@@ -25,12 +25,14 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +49,13 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
+    # The newest edition authored to filing grade: a newer applicability-only edition cannot build the filing snapshot.
+    (*_, newest_filing_grade) = authored_revisions_where(
+        "390", lambda revision: revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+    )
+    snapshot = compiled_bundled_authority().snapshot(
+        "390", filing_year=newest_filing_grade.valid_from.year, period="0A"
+    )
     binding = next(
         item
         for item, _provider in relation_prefill_bindings_for_period(snapshot.revision)
@@ -81,7 +89,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
     or, if the relation is a supplementary cross-check, declare it
     ``dependency_role = "factual_evidence"``.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     gaps: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
@@ -114,7 +122,7 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     Evidence relations that are alternate binding channels remain honestly
     classified as consumed by the production index.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     unconsumed_roles: set[str] = set()
     for modelo in modelos:
         for _revision_id, revision in modelo.revisions.items():

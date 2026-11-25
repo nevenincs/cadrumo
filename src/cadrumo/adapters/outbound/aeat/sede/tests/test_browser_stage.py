@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ......core.logging import get_logger
-from ..._playwright import PlaywrightError, PlaywrightTimeoutError
-from .._browser_stage import run_playwright_stage
+from ...playwright import PlaywrightError, PlaywrightTimeoutError
+from ..browser_stage import run_playwright_stage
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

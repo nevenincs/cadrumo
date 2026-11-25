@@ -24,13 +24,19 @@ from pathlib import Path
 import pytest
 from textual.pilot import Pilot
 
-from ......adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
-from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormBindingAddressV1,
+    ModeloFormOrigin,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
+from ......application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -44,10 +50,11 @@ from .....tests.profile_persistence.verification_repository_support import (
 )
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle_until
 from ..factory import InstalledModeloWorkbench
-from ..progress import NextAction, WorkbenchProgress, next_action_text, workbench_progress
+from ..progress import WorkbenchProgress, next_action_text
 from ..screen import ModeloWorkbenchScreen
-from .workbench_fixture import FakeActions
+from .workbench_fixture import FakeActions, served_progress
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,6 +62,7 @@ _YEAR = 2025
 _REASON = "withholding_detail_absent"
 _ATTESTED = "application.modelo.findings.withholding_detail_absent_attested"
 _UNPROVEN = "application.modelo.findings.withholding_detail_absent_unproven"
+_PAYS_WITHHELD_INCOME = UserProfileFact(path="withholding.has_employees", value=True)
 _EVERY_QUARTER = UserProfileFact(
     path=M111_NO_RETENCIONES_PROFILE_PATH, value=",".join(f"{_YEAR}:{quarter}" for quarter in ("1T", "2T", "3T", "4T"))
 )
@@ -63,10 +71,23 @@ _EVERY_QUARTER = UserProfileFact(
 @contextmanager
 def _declaration(tmp_path: Path, *, attested: bool) -> Generator[tuple[SeededOperatorWork, InstalledModeloWorkbench]]:
     with seeded_operator_work(
-        tmp_path, modelo="190", filing_year=_YEAR, period_code="0A", extra_facts=(_EVERY_QUARTER,) if attested else ()
+        tmp_path,
+        modelo="190",
+        filing_year=_YEAR,
+        period_code="0A",
+        extra_facts=(_PAYS_WITHHELD_INCOME, _EVERY_QUARTER) if attested else (_PAYS_WITHHELD_INCOME,),
     ) as work:
         installed = application_workbench(work.work_unit, operation=work.operation)
         work.recalculate()
+        # The resumen's totals are the sums of its own type-2 records, so an empty detail
+        # store leaves the form nothing to ask: the only open matter is the empty detail
+        # the check decides.
+        asked = [
+            field.address.binding_id
+            for field in installed.load(OutputLanguage.EN).form.answers
+            if isinstance(field.address, ModeloFormBindingAddressV1) and field.origin is ModeloFormOrigin.NEEDS_INPUT
+        ]
+        assert asked == [], "the declaration takes its totals from its own records, not from answers"
         yield work, installed
 
 
@@ -86,7 +107,7 @@ def _check(work: SeededOperatorWork) -> VerificationReport:
 
 
 def _progress(load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
-    return workbench_progress(load.form, staged=0, verified=load.verified, filed=load.filed)
+    return served_progress(load.form, staged=0, verified=load.verified, filed=load.filed)
 
 
 def _blocking_on_the_cause(form: ModeloWorkForm) -> list[str]:
@@ -105,19 +126,12 @@ async def _press_f8(installed: InstalledModeloWorkbench, actions: FakeActions) -
     async with app.run_test(size=(160, 48)) as pilot:
         await _opened(pilot, screen)
         await pilot.press("f8")
-        for _ in range(50):
-            await pilot.pause()
-            if actions.requested:
-                break
+        await settle_until(pilot, lambda: bool(actions.requested), "the check to be requested")
         app.exit(None)
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> None:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to finish reading its declaration")
 
 
 def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longer_blocks(tmp_path: Path) -> None:
@@ -133,9 +147,10 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
 
     assert _REASON in {note.reason for note in before.form.blocking_calculation_notes}
     assert before.form.verification is None
-    assert progress_before.next_action is NextAction.VERIFY, "only the check can say whether the empty detail stands"
+    assert progress_before.next_action is ModeloFormNextAction.VERIFY, (
+        "only the check can say whether the empty detail stands"
+    )
     assert next_line == "Check the declaration"
-    assert progress_before.filing_withheld, "filing stays withheld until the check has spoken"
     assert actions.requested == ["verify"], "F8 runs the check"
 
     assert _ATTESTED in {finding.message_locale_key for finding in report.findings}
@@ -145,7 +160,7 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
     assert len(attested) == 1, "the check's acceptance of the attestation is shown in the note's place"
     assert attested[0].attention is not ModeloFormAttention.BLOCKS
     assert _blocking_on_the_cause(after.form) == []
-    assert progress_after.next_action is not NextAction.VERIFY
+    assert progress_after.next_action is not ModeloFormNextAction.VERIFY
 
 
 def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_path: Path) -> None:
@@ -156,10 +171,8 @@ def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_
         after = installed.load(OutputLanguage.EN)
         progress_after = _progress(after)
 
-    assert progress_before.next_action is NextAction.VERIFY
-    assert progress_before.filing_withheld
+    assert progress_before.next_action is ModeloFormNextAction.VERIFY
     assert not report.granted_verificado_completo
     assert _REASON not in {note.reason for note in after.form.calculation_notes}
     assert _blocking_on_the_cause(after.form) == [_UNPROVEN], "the check refused, and its finding is what blocks"
-    assert progress_after.next_action is NextAction.RESOLVE
-    assert progress_after.filing_withheld
+    assert progress_after.next_action is ModeloFormNextAction.RESOLVE

@@ -32,6 +32,7 @@ reproducible and the runner can later back a gate.
 Usage::
 
     uv run --no-sync python -m dev.audit.semantic_duplication            # human report
+    uv run --no-sync python -m dev.audit.semantic_duplication --full     # every candidate, uncapped
     uv run --no-sync python -m dev.audit.semantic_duplication --json     # machine output
     uv run --no-sync python -m dev.audit.semantic_duplication --detector enum_subset
 """
@@ -41,6 +42,8 @@ from __future__ import annotations
 import argparse
 import ast
 import collections
+import io
+import itertools
 import json
 import sys
 from collections.abc import Iterator, Sequence
@@ -72,6 +75,8 @@ _MIN_CALL_FINGERPRINT = 5
 _MIN_FIELD_SET = 4
 _MIN_IMPORT_SET = 5
 
+_ENUM_BASES = frozenset({"StrEnum", "IntEnum", "Enum"})
+
 #: Rare-import overlap at or above this Jaccard is a candidate.
 _IMPORT_JACCARD_FLOOR = 0.65
 
@@ -102,10 +107,12 @@ class Module:
 
     path: Path
     relative: str
-    tree: ast.AST
-    enum_members: dict[str, set[str]] = field(default_factory=dict)
-    literals: set[object] = field(default_factory=set)
+    tree: ast.Module
+    enum_partitions: set[tuple[str, tuple[str, ...]]] = field(default_factory=set)
+    literal_scopes: list[frozenset[object]] = field(default_factory=list)
     first_party_imports: set[str] = field(default_factory=set)
+    imported_names: set[str] = field(default_factory=set)
+    closed_enum_names: frozenset[str] = frozenset()
 
 
 def _iter_source_files(root: Path) -> Iterator[Path]:
@@ -116,26 +123,43 @@ def _iter_source_files(root: Path) -> Iterator[Path]:
         yield path
 
 
-def _closed_enum_names(modules: Sequence[Module]) -> frozenset[str]:
-    """Return every closed value-set class declared anywhere in the tree.
+def _closed_enums(modules: Sequence[Module]) -> dict[str, frozenset[str]]:
+    """Return every closed value-set class declared in the tree, with its declared members.
 
     Discovered rather than listed. A hand-kept list of enums is itself the kind of
     restated inventory this runner exists to find, and it would go stale the first
     time a new closed axis landed.
     """
-    names: set[str] = set()
+    enums: dict[str, set[str]] = {}
     for module in modules:
         for node in ast.walk(module.tree):
-            if not isinstance(node, ast.ClassDef):
-                continue
-            for base in node.bases:
-                base_name = base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
-                if base_name in {"StrEnum", "IntEnum", "Enum"}:
-                    names.add(node.name)
-    return frozenset(names)
+            if isinstance(node, ast.ClassDef) and any(_base_name(base) in _ENUM_BASES for base in node.bases):
+                enums.setdefault(node.name, set()).update(_declared_members(node))
+    return {name: frozenset(members) for name, members in enums.items()}
 
 
-def _load_modules(roots: Sequence[Path]) -> list[Module]:
+def _base_name(base: ast.expr) -> str:
+    """Return the last segment of a class base expression."""
+    return _trailing_name(base) or ""
+
+
+def _trailing_name(node: ast.expr) -> str | None:
+    """Return the last segment of a name or attribute expression."""
+    if isinstance(node, ast.Name):
+        return node.id
+    return node.attr if isinstance(node, ast.Attribute) else None
+
+
+def _declared_members(node: ast.ClassDef) -> Iterator[str]:
+    """Yield the upper-case names an enum class body assigns."""
+    for statement in node.body:
+        targets = statement.targets if isinstance(statement, ast.Assign) else ()
+        for target in targets:
+            if isinstance(target, ast.Name) and target.id.isupper():
+                yield target.id
+
+
+def load_modules(roots: Sequence[Path]) -> list[Module]:
     """Parse every production module under ``roots`` once; every detector reads these.
 
     A module is named relative to its root's parent, so each site carries its
@@ -183,33 +207,34 @@ def _load_module(path: Path, root: Path) -> Module:
     return Module(path=path, relative=path.relative_to(root.parent).as_posix(), tree=tree)
 
 
-def _populate(modules: Sequence[Module], enum_names: frozenset[str]) -> None:
-    """Fill each module's referenced-meaning sets in a single AST pass."""
+def _populate(modules: Sequence[Module], enums: dict[str, frozenset[str]]) -> None:
+    """Fill each module's referenced meanings from its syntax tree."""
+    first_party_roots = {PurePosixPath(package).name for package in SOURCE_PACKAGES}
+    first_party_roots.update(PurePosixPath(module.relative).parts[0] for module in modules)
+    closed_enum_names = frozenset(enums)
     for module in modules:
+        module.closed_enum_names = closed_enum_names
+        module.literal_scopes = [_scope_literals(scope) for scope in _literal_scope_nodes(module.tree.body)]
         for node in ast.walk(module.tree):
-            _populate_reference_node(node, module, enum_names)
+            _populate_reference_node(node, module, closed_enum_names, first_party_roots)
 
 
 def detect_enum_subset(modules: Sequence[Module]) -> list[Candidate]:
-    """Modules naming the SAME multi-member subset of one closed enum.
+    """Modules drawing the SAME multi-member partition through one closed enum.
 
-    The subset a module references is a fingerprint of the partition it implements.
-    Two modules naming an identical unusual subset are drawing the same line through
-    the same closed axis, which is a rule stated twice.
+    A partition is members gathered in ONE expression: a collection, or an ``or``/``and``
+    chain testing one subject. Members a module merely mentions in unrelated places
+    state no line through the axis, so they are not a fingerprint of anything.
 
-    Whole-enum references are excluded: a module that names every member is usually
-    exhaustively dispatching, not partitioning.
+    Whole-enum references are excluded against the DECLARED members: a site naming every
+    member is usually exhaustively dispatching, not partitioning.
     """
-    by_subset: dict[tuple[str, tuple[str, ...]], list[str]] = collections.defaultdict(list)
-    enum_sizes: dict[str, int] = collections.defaultdict(int)
+    enums = _closed_enums(modules)
+    by_subset: dict[tuple[str, tuple[str, ...]], set[str]] = collections.defaultdict(set)
     for module in modules:
-        for enum_name, members in module.enum_members.items():
-            enum_sizes[enum_name] = max(enum_sizes[enum_name], len(members))
-    for module in modules:
-        for enum_name, members in module.enum_members.items():
-            if len(members) < 2 or len(members) == enum_sizes[enum_name]:
-                continue
-            by_subset[(enum_name, tuple(sorted(members)))].append(module.relative)
+        for enum_name, subset in module.enum_partitions:
+            if set(subset) != enums[enum_name]:
+                by_subset[(enum_name, subset)].add(module.relative)
     return [
         Candidate(
             detector="enum_subset",
@@ -222,36 +247,83 @@ def detect_enum_subset(modules: Sequence[Module]) -> list[Candidate]:
     ]
 
 
+def _scarce_literals(modules: Sequence[Module]) -> set[object]:
+    """Return the literals stated in more than one module but in few enough to be scarce."""
+    sites_by_literal: dict[object, set[str]] = collections.defaultdict(set)
+    for module in modules:
+        for scope in module.literal_scopes:
+            for literal in scope:
+                sites_by_literal[literal].add(module.relative)
+    return {literal for literal, sites in sites_by_literal.items() if 1 < len(sites) <= _SCARCE_LITERAL_CEILING}
+
+
+def _sites_by_scarce_pair(modules: Sequence[Module], scarce: set[object]) -> dict[tuple[object, object], set[str]]:
+    """Return, per pair of scarce literals met in one scope, the modules stating that pair."""
+    sites_by_pair: dict[tuple[object, object], set[str]] = collections.defaultdict(set)
+    for module in modules:
+        for scope in module.literal_scopes:
+            for pair in itertools.combinations(sorted(scope & scarce, key=repr), 2):
+                sites_by_pair[pair].add(module.relative)
+    return sites_by_pair
+
+
+def _shared_literals_by_site_pair(
+    sites_by_pair: dict[tuple[object, object], set[str]],
+) -> dict[tuple[str, str], set[object]]:
+    """Return, per pair of modules, the literals of every literal pair both state."""
+    shared: dict[tuple[str, str], set[object]] = collections.defaultdict(set)
+    for pair, sites in sites_by_pair.items():
+        for site_pair in itertools.combinations(sorted(sites), 2):
+            shared[site_pair].update(pair)
+    return shared
+
+
 def detect_scarce_literal(modules: Sequence[Module]) -> list[Candidate]:
-    """Modules sharing two or more SCARCE literals.
+    """Module pairs that each state the same two or more SCARCE literals TOGETHER.
 
     In a regulated domain a rule is a number. Two modules that both mention the same
     scarce rate, threshold or code are very often two implementations of the provision
     that fixes it -- and unlike a name, a regulated figure cannot be paraphrased.
 
     Two shared literals rather than one: a single shared figure is frequently a genuine
-    cross-reference, while a pair is a shared rule.
+    cross-reference, while a pair is a shared rule. The pair must meet inside one
+    function or top-level statement on both sides; two values hundreds of lines apart
+    are not one rule, and counting them made every large module collide with every other.
     """
-    sites_by_literal: dict[object, set[str]] = collections.defaultdict(set)
-    for module in modules:
-        for literal in module.literals:
-            sites_by_literal[literal].add(module.relative)
-    scarce = {
-        literal: sites for literal, sites in sites_by_literal.items() if 1 < len(sites) <= _SCARCE_LITERAL_CEILING
-    }
-    shared: dict[tuple[str, str], set[object]] = collections.defaultdict(set)
-    for literal, sites in scarce.items():
-        _accumulate_scarce_literal_pairs(literal, sites, shared)
+    scarce = _scarce_literals(modules)
+    shared = _shared_literals_by_site_pair(_sites_by_scarce_pair(modules, scarce))
     return [
         Candidate(
             detector="scarce_literal",
             fingerprint=" + ".join(repr(literal) for literal in sorted(literals, key=repr)[:6]),
-            sites=(left, right),
+            sites=site_pair,
             weight=len(literals),
         )
-        for (left, right), literals in shared.items()
-        if len(literals) >= 2
+        for site_pair, literals in shared.items()
     ]
+
+
+def _call_marks(call: ast.Call) -> list[str]:
+    """Return the callee and keyword marks of one call expression."""
+    marks: list[str] = []
+    func = call.func
+    name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+    if name is not None and name:
+        marks.append(f"call:{name}/{len(call.args)}")
+    # A keyword is the callee's vocabulary, so a second author cannot rename it.
+    marks.extend(f"kw:{keyword.arg}" for keyword in call.keywords if keyword.arg is not None)
+    return marks
+
+
+def _node_marks(inner: ast.AST) -> list[str]:
+    """Return the behaviour marks one syntax node contributes to a call fingerprint."""
+    if isinstance(inner, ast.Call):
+        return _call_marks(inner)
+    if isinstance(inner, ast.Constant) and _meaningful_literal(inner):
+        return [f"lit:{inner.value!r}"]
+    if isinstance(inner, ast.Compare):
+        return [f"cmp:{type(op).__name__}" for op in inner.ops]
+    return []
 
 
 def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
@@ -262,16 +334,11 @@ def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset
     differently while implementing the same rule.
     """
     marks: set[str] = set()
+    documentation = _documentation_constants(node)
     for inner in ast.walk(node):
-        if isinstance(inner, ast.Call):
-            func = inner.func
-            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if name is not None and name:
-                marks.add(f"call:{name}/{len(inner.args)}")
-        elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
-            marks.add(f"lit:{inner.value!r}")
-        elif isinstance(inner, ast.Compare):
-            marks.update(f"cmp:{type(op).__name__}" for op in inner.ops)
+        if id(inner) in documentation:
+            continue
+        marks.update(_node_marks(inner))
     return frozenset(marks)
 
 
@@ -303,21 +370,25 @@ def detect_call_fingerprint(modules: Sequence[Module]) -> list[Candidate]:
     ]
 
 
-def _normalised_expression(node: ast.AST) -> str | None:
+def _normalised_expression(node: ast.AST, closed_enum_names: frozenset[str]) -> str | None:
     """Return a naming-blind fingerprint of one expression, or ``None`` if trivial.
 
     Identifiers are erased and only STRUCTURE plus the closed-value members and
     literals survive, so two authors who spell the same derivation with different
     variable names produce the same fingerprint. A ternary choosing between two
     enum members on a comparison is the shape this exists to catch.
+
+    Each member keeps its enum, so ``Effect.NONE`` does not collide with ``Stage.NONE``.
+    A ternary keeps its order, so ``A if c else B`` does not collide with its inverse;
+    anything else is sorted, because ``{A, B}`` and ``{B, A}`` are one set.
     """
     marks: list[str] = []
     for inner in ast.walk(node):
-        _append_expression_mark(inner, marks)
+        _append_expression_mark(inner, marks, closed_enum_names)
     members = [mark for mark in marks if mark.startswith("member:")]
     if len(members) < 2:
         return None
-    return " ".join(sorted(marks))
+    return " ".join(marks if "ternary" in marks else sorted(marks))
 
 
 def detect_duplicated_derivation(modules: Sequence[Module]) -> list[Candidate]:
@@ -338,7 +409,7 @@ def detect_duplicated_derivation(modules: Sequence[Module]) -> list[Candidate]:
         for node in ast.walk(module.tree):
             if not isinstance(node, ast.IfExp | ast.Compare):
                 continue
-            shape = _normalised_expression(node)
+            shape = _normalised_expression(node, module.closed_enum_names)
             if shape is not None:
                 by_shape[shape].append(f"{module.relative}:{node.lineno}")
     return [
@@ -426,7 +497,7 @@ def detect_package_overlap(modules: Sequence[Module]) -> list[Candidate]:
     return candidates
 
 
-_DETECTORS = {
+DETECTORS = {
     "enum_subset": detect_enum_subset,
     "scarce_literal": detect_scarce_literal,
     "call_fingerprint": detect_call_fingerprint,
@@ -439,15 +510,15 @@ _DETECTORS = {
 
 def run(roots: Sequence[Path], detectors: Sequence[str]) -> list[Candidate]:
     """Run the named detectors over one corpus of ``roots`` and return candidates, heaviest first."""
-    modules = _load_modules(roots)
-    _populate(modules, _closed_enum_names(modules))
+    modules = load_modules(roots)
+    _populate(modules, _closed_enums(modules))
     found: list[Candidate] = []
     for name in detectors:
-        found.extend(_DETECTORS[name](modules))
+        found.extend(DETECTORS[name](modules))
     return sorted(found, key=lambda candidate: (-candidate.weight, candidate.detector, candidate.sites))
 
 
-def _render(candidates: Sequence[Candidate], limit: int) -> str:
+def render(candidates: Sequence[Candidate], limit: int | None) -> str:
     """Render a human report, heaviest candidates first."""
     lines: list[str] = []
     by_detector: dict[str, list[Candidate]] = collections.defaultdict(list)
@@ -456,13 +527,23 @@ def _render(candidates: Sequence[Candidate], limit: int) -> str:
     lines.append(f"{len(candidates)} candidate(s) across {len(by_detector)} detector(s)")
     lines.append("These are CANDIDATES, not verdicts: confirm each site before collapsing anything.\n")
     for detector, group in sorted(by_detector.items(), key=lambda kv: -len(kv[1])):
-        lines.append(f"== {detector}: {len(group)} candidate(s), showing up to {limit}")
-        for candidate in group[:limit]:
+        shown = group if limit is None else group[:limit]
+        scope = "showing all" if limit is None else f"showing up to {limit}, --full for all"
+        lines.append(f"== {detector}: {len(group)} candidate(s), {scope}")
+        for candidate in shown:
             lines.append(f"  [{candidate.weight}] {candidate.fingerprint}")
             for site in candidate.sites:
                 lines.append(f"       {site}")
         lines.append("")
     return "\n".join(lines)
+
+
+def emit(text: str) -> None:
+    """Write the report as UTF-8; fingerprints carry literals a Windows console codec cannot encode."""
+    stream = sys.stdout
+    if isinstance(stream, io.TextIOWrapper):
+        stream.reconfigure(encoding="utf-8")
+    stream.write(text)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -475,17 +556,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="A source root to scan; repeat for several. Defaults to every package under src/.",
     )
-    parser.add_argument("--detector", action="append", choices=sorted(_DETECTORS), default=None)
+    parser.add_argument("--detector", action="append", choices=sorted(DETECTORS), default=None)
     parser.add_argument("--limit", type=int, default=12)
-    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--full", action="store_true", help="List every candidate per detector, uncapped.")
+    parser.add_argument("--json", action="store_true", help="Emit every candidate as JSON (never capped).")
     args = parser.parse_args(argv)
 
-    candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(_DETECTORS))
+    candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(DETECTORS))
     if args.json:
-        json.dump([candidate.as_dict() for candidate in candidates], sys.stdout, indent=2)
-        sys.stdout.write("\n")
+        emit(json.dumps([candidate.as_dict() for candidate in candidates], indent=2) + "\n")
     else:
-        sys.stdout.write(_render(candidates, args.limit) + "\n")
+        emit(render(candidates, None if args.full else args.limit) + "\n")
     return 0
 
 
@@ -510,29 +591,99 @@ def _declared_field_names(node: ast.ClassDef) -> tuple[str, ...]:
     return fields
 
 
-def _populate_reference_node(node: ast.AST, module: Module, enum_names: frozenset[str]) -> None:
-    """Populate reference node."""
-    if (
-        isinstance(node, ast.Attribute)
-        and isinstance(node.value, ast.Name)
-        and node.value.id in enum_names
-        and node.attr.isupper()
-    ):
-        module.enum_members.setdefault(node.value.id, set()).add(node.attr)
-    elif isinstance(node, ast.Constant) and _meaningful_literal(node):
-        module.literals.add(node.value)
-    elif isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
-        module.first_party_imports.add(f"{'.' * (node.level or 0)}{node.module}")
-
-
-def _accumulate_scarce_literal_pairs(
-    literal: object, sites: set[str], shared: dict[tuple[str, str], set[object]]
+def _populate_reference_node(
+    node: ast.AST, module: Module, closed_enum_names: frozenset[str], first_party_roots: set[str]
 ) -> None:
-    """Accumulate scarce literal pairs."""
-    for left in sorted(sites):
-        for right in sorted(sites):
-            if left < right:
-                shared[(left, right)].add(literal)
+    """Record the enum partition or first-party import one node states."""
+    if isinstance(node, ast.ImportFrom | ast.Import):
+        _record_imports(node, module, first_party_roots)
+        return
+    for owner, members in _partition_members(node, closed_enum_names).items():
+        if len(members) >= 2:
+            module.enum_partitions.add((owner, tuple(sorted(members))))
+
+
+def _partition_members(node: ast.AST, closed_enum_names: frozenset[str]) -> dict[str, set[str]]:
+    """Return the members one collection or boolean chain gathers, by owning enum."""
+    if isinstance(node, ast.Set | ast.List | ast.Tuple):
+        operands: Sequence[ast.AST] = node.elts
+    elif isinstance(node, ast.BoolOp):
+        operands = [operand for value in node.values if isinstance(value, ast.Compare) for operand in value.comparators]
+    else:
+        return {}
+    gathered: dict[str, set[str]] = {}
+    for operand in operands:
+        reference = _enum_reference(operand, closed_enum_names)
+        if reference is not None:
+            gathered.setdefault(reference[0], set()).add(reference[1])
+    return gathered
+
+
+def _module_path(relative: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return a module's dotted parts and the parts of the package holding it."""
+    parts = PurePosixPath(relative).with_suffix("").parts
+    if parts[-1] == "__init__":
+        return parts[:-1], parts[:-1]
+    return parts, parts[:-1]
+
+
+def _record_imports(node: ast.ImportFrom | ast.Import, module: Module, first_party_roots: set[str]) -> None:
+    """Record first-party imports under absolute names, so equal text means one module.
+
+    ``.contracts`` in two packages is two modules, and ``typing`` is nobody's collaborator.
+    """
+    if isinstance(node, ast.Import):
+        targets = [alias.name for alias in node.names]
+        names = targets
+    else:
+        target = _absolute_import_target(node, module)
+        if target is None:
+            return
+        names = [f"{target}.{alias.name}" for alias in node.names]
+        targets = names if node.module is None else [target]
+    first_party = [target for target in targets if target.split(".")[0] in first_party_roots]
+    module.first_party_imports.update(first_party)
+    module.imported_names.update(name for name in names if name.split(".")[0] in first_party_roots)
+
+
+def _absolute_import_target(node: ast.ImportFrom, module: Module) -> str | None:
+    """Resolve a ``from`` import to its absolute module; ``None`` if it escapes the corpus."""
+    if not node.level:
+        return node.module
+    _, package = _module_path(module.relative)
+    ascent = node.level - 1
+    if ascent >= len(package):
+        return None
+    base = package[: len(package) - ascent]
+    return ".".join((*base, *((node.module,) if node.module is not None else ())))
+
+
+def _documentation_constants(node: ast.AST) -> set[int]:
+    """Return the string constants that are statements, which document and do nothing."""
+    return {
+        id(inner.value)
+        for inner in ast.walk(node)
+        if isinstance(inner, ast.Expr) and isinstance(inner.value, ast.Constant) and isinstance(inner.value.value, str)
+    }
+
+
+def _literal_scope_nodes(body: Sequence[ast.stmt]) -> Iterator[ast.stmt]:
+    """Yield the units a rule can live in: each function and each other statement, through classes."""
+    for statement in body:
+        if isinstance(statement, ast.ClassDef):
+            yield from _literal_scope_nodes(statement.body)
+        else:
+            yield statement
+
+
+def _scope_literals(scope: ast.stmt) -> frozenset[object]:
+    """Return the meaningful literals one scope states, without its documentation."""
+    documentation = _documentation_constants(scope)
+    return frozenset(
+        inner.value
+        for inner in ast.walk(scope)
+        if isinstance(inner, ast.Constant) and id(inner) not in documentation and _meaningful_literal(inner)
+    )
 
 
 def _append_import_overlap(left: Module, right: Module, candidates: list[Candidate]) -> None:
@@ -543,11 +694,7 @@ def _append_import_overlap(left: Module, right: Module, candidates: list[Candida
     overlap = len(left.first_party_imports & right.first_party_imports) / len(union)
     if overlap < _IMPORT_JACCARD_FLOOR:
         return
-    left_stem = Path(left.relative).stem
-    right_stem = Path(right.relative).stem
-    if any(right_stem in imported for imported in left.first_party_imports) or any(
-        left_stem in imported for imported in right.first_party_imports
-    ):
+    if _imports_module(left, right) or _imports_module(right, left):
         return
     candidates.append(
         Candidate(
@@ -557,6 +704,12 @@ def _append_import_overlap(left: Module, right: Module, candidates: list[Candida
             weight=int(overlap * 100),
         ),
     )
+
+
+def _imports_module(importer: Module, imported: Module) -> bool:
+    """Tell whether one module imports the other, comparing whole module names."""
+    name = ".".join(_module_path(imported.relative)[0])
+    return name in importer.first_party_imports or name in importer.imported_names
 
 
 def _accumulate_package_fingerprints(module: Module, by_package: dict[str, set[frozenset[str]]]) -> None:
@@ -569,10 +722,11 @@ def _accumulate_package_fingerprints(module: Module, by_package: dict[str, set[f
                 by_package[package].add(fingerprint)
 
 
-def _append_expression_mark(inner: ast.AST, marks: list[str]) -> None:
+def _append_expression_mark(inner: ast.AST, marks: list[str], closed_enum_names: frozenset[str]) -> None:
     """Append expression mark."""
-    if isinstance(inner, ast.Attribute) and inner.attr.isupper():
-        marks.append(f"member:{inner.attr}")
+    reference = _enum_reference(inner, closed_enum_names)
+    if reference is not None:
+        marks.append(f"member:{reference[0]}.{reference[1]}")
     elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
         marks.append(f"lit:{inner.value!r}")
     elif isinstance(inner, ast.Compare):
@@ -581,6 +735,16 @@ def _append_expression_mark(inner: ast.AST, marks: list[str]) -> None:
         marks.append("ternary")
     elif isinstance(inner, ast.BoolOp):
         marks.append(f"bool:{type(inner.op).__name__}")
+    elif isinstance(inner, ast.UnaryOp) and isinstance(inner.op, ast.Not):
+        marks.append("not")
+
+
+def _enum_reference(node: ast.AST, enum_names: frozenset[str]) -> tuple[str, str] | None:
+    """Return ``(enum, member)`` for ``Enum.MEMBER``, also when the enum is reached through a module."""
+    if not isinstance(node, ast.Attribute) or not node.attr.isupper():
+        return None
+    owner = _trailing_name(node.value)
+    return (owner, node.attr) if owner is not None and owner in enum_names else None
 
 
 if __name__ == "__main__":

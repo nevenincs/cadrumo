@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from ...navigation import TUI_DESTINATION_CATALOGUE
-from ...search import _DESTINATION_HELP_LOCALE_KEYS, _DESTINATION_LOCALE_KEYS
+from ...search import DESTINATION_HELP_LOCALE_KEYS, DESTINATION_LOCALE_KEYS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -26,9 +26,11 @@ _MODULES = (
     "destination.py",
     "interactions.py",
     "palette.py",
-    "refusal_explanation.py",
+    "run_fields.py",
     "run_result.py",
     "run_screen.py",
+    "run_submission.py",
+    "run_wording.py",
 )
 _NEW_DESTINATIONS = ("workbench.operations", "workbench.installation", "workbench.reference")
 
@@ -55,8 +57,8 @@ def _expected_keys() -> tuple[str, ...]:
     for descriptor in TUI_DESTINATION_CATALOGUE:
         if descriptor.destination in _NEW_DESTINATIONS:
             keys.add(descriptor.label_key)
-            keys.add(_DESTINATION_LOCALE_KEYS[descriptor.destination])
-            keys.add(_DESTINATION_HELP_LOCALE_KEYS[descriptor.destination])
+            keys.add(DESTINATION_LOCALE_KEYS[descriptor.destination])
+            keys.add(DESTINATION_HELP_LOCALE_KEYS[descriptor.destination])
     return tuple(sorted(keys))
 
 
@@ -117,7 +119,6 @@ def test_the_placeholders_agree_across_the_four_locales() -> None:
     for key in (
         "tui.operations.status.count",
         "tui.operations.result.page",
-        "tui.operations.stopped.remedy_command",
     ):
         english = _resolve(catalogues["en"], key) or ""
         names = {part.split("}")[0] for part in english.split("{")[1:]}

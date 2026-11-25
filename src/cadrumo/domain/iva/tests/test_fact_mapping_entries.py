@@ -14,8 +14,8 @@ from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
 from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from cadrumo.domain.iva._fact_mapping_entries import IvaMappingSubject, mapping_entries
 from cadrumo.domain.iva.errors import IvaValidationError
+from cadrumo.domain.iva.fact_mapping_entries import IvaMappingSubject, mapping_entries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

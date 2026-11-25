@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import calendar
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,13 +21,21 @@ from ..fixed_width_codec import (
     ExportJustification,
     ExportPadding,
     FixedWidthRecordRenderError,
+    fixed_width_field_order,
     render_fixed_width_export_field,
     render_fixed_width_export_record_body,
 )
 from ..fixed_width_parser import parse_fixed_width_export_field
 from ..schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_YEAR_TAIL = str(_YEAR)[-2:]
+_LEAP_YEAR = next(year for year in filing_year_envelope().years if calendar.isleap(year))
+_COMMON_YEAR = next(year for year in filing_year_envelope().years if not calendar.isleap(year))
+_SAMPLE_DATE = date(_YEAR, 3, 14)
 
 
 def _field(**overrides: object) -> ExportFieldDefinition:
@@ -47,6 +57,16 @@ def _field(**overrides: object) -> ExportFieldDefinition:
     return ExportFieldDefinition.model_validate(payload)
 
 
+def test_fixed_width_field_order_is_offset_then_id_with_unpositioned_fields_first() -> None:
+    """Equal offsets order by id and a field without an offset leads every positioned one."""
+    zeta = _field(id="zeta", offset=3, length=2)
+    alpha = _field(id="alpha", offset=3, length=2)
+    first = _field(id="first", offset=1, length=2)
+    logical = _field(id="logical", offset=None, length=None)
+    ordered = fixed_width_field_order((zeta, first, alpha, logical))
+    assert [field.id for field in ordered] == ["logical", "first", "alpha", "zeta"]
+
+
 def test_m369_required_complementaria_marker_keeps_the_official_negative_answer() -> None:
     """The required C-or-space marker preserves a negative answer on read-back."""
     field = _field(
@@ -58,7 +78,7 @@ def test_m369_required_complementaria_marker_keeps_the_official_negative_answer(
         required=True,
         padding="right_space",
         justification="left",
-        source_refs=("aeat-dr-369-2021",),
+        presence_marker="C",
     )
     for answer in ("C", " "):
         wire = render_fixed_width_export_field(field, answer)
@@ -66,9 +86,25 @@ def test_m369_required_complementaria_marker_keeps_the_official_negative_answer(
         assert render_fixed_width_export_field(field, parse_fixed_width_export_field(field, wire)) == wire
     with pytest.raises(RegistryValidationError, match="has no value"):
         render_fixed_width_export_field(field, None)
-    unrelated = field.model_copy(update={"source_refs": ("aeat-dr-200-2025",)})
+    unrelated = field.model_copy(update={"presence_marker": None})
     with pytest.raises(RegistryValidationError, match="has no value"):
         parse_fixed_width_export_field(unrelated, " ")
+
+
+@pytest.mark.parametrize("marker", [" ", "CC"])
+def test_presence_marker_refuses_blank_or_wrong_width(marker: str) -> None:
+    with pytest.raises(ValidationError, match="presence marker"):
+        _field(
+            kind="header",
+            casilla_id=None,
+            producer_key=FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
+            data_type="text",
+            length=1,
+            required=True,
+            padding="right_space",
+            justification="left",
+            presence_marker=marker,
+        )
 
 
 @pytest.mark.parametrize(("kind", "literal", "expected"), (("literal", "25", "25"), ("filler", None, "  ")))
@@ -276,45 +312,55 @@ def test_schema_refuses_a_policyless_allowed_domain_outside_the_scaled_amount_sh
         _field(length=1, allowed_values=("1",))
 
 
-def test_a_scaled_amount_slot_carries_a_closed_domain_in_whole_units() -> None:
-    """A member is the SEMANTIC value, and the declared scale takes it to the wire.
+def test_a_scaled_amount_slot_carries_a_closed_domain_of_wire_digit_runs() -> None:
+    """A member is the digit run the slot prints, so the domain reads as the design spells it.
 
-    This is the shape modelo 390's 2025 expired-rate slots take: fifteen integer
-    positions and two decimals in a seventeen-byte slot, whose design mandates
-    the value zero. Rendering and parsing settle the member identically, and the
-    refusal is the codec's -- a value outside the domain never reaches the wire
-    rather than being coerced onto it.
+    This is the shape of modelo 303's Tipo % slots: three integer positions and
+    two decimals in five bytes, whose design closes recargo de equivalencia to
+    ``"00000", "00050", "00062"``. Rendering and parsing settle the member
+    identically, and a value outside the domain never reaches the wire rather
+    than being coerced onto it.
     """
     field = _field(
-        length=17,
+        length=5,
         data_type="decimal",
         decimals=2,
-        allowed_values=("0",),
+        allowed_values=("0", "50", "62"),
     )
+
+    assert render_fixed_width_export_field(field, Decimal("0.50")) == "00050"
+    assert render_fixed_width_export_field(field, Decimal("0.62")) == "00062"
+    assert render_fixed_width_export_field(field, Decimal(0)) == "00000"
+    assert parse_fixed_width_export_field(field, "00050") == Decimal("0.50")
+    # A units reading of the domain would admit 50 % here and refuse 0.50 %.
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal(50))
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal("0.51"))
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        parse_fixed_width_export_field(field, "00051")
+    with pytest.raises(RegistryValidationError, match="not one of its allowed wire values"):
+        render_fixed_width_export_field(field, Decimal("0.505"))
+
+
+def test_a_zero_domain_on_a_scaled_slot_refuses_any_other_amount() -> None:
+    """Modelo 390's expired-rate slots: fifteen-and-two bytes mandated to zero."""
+    field = _field(length=17, data_type="decimal", decimals=2, allowed_values=("0",))
 
     assert render_fixed_width_export_field(field, Decimal("0.00")) == "0" * 17
     assert parse_fixed_width_export_field(field, "0" * 17) == Decimal("0.00")
-    # The domain is read in units, so the refused value is one euro, not one
-    # cent: a cents reading would have admitted this very wire form.
     with pytest.raises(RegistryValidationError, match="outside allowed_values"):
-        render_fixed_width_export_field(field, Decimal("1.00"))
+        render_fixed_width_export_field(field, Decimal("0.01"))
     with pytest.raises(RegistryValidationError, match="outside allowed_values"):
         parse_fixed_width_export_field(field, "0" * 14 + "100")
-    with pytest.raises(RegistryValidationError, match="not an allowed integer"):
-        render_fixed_width_export_field(field, Decimal("0.01"))
 
 
-def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> None:
-    """A member whose scaled wire form overflows the slot is refused.
-
-    Four unit digits and two decimals need six bytes. Charged the member the
-    bare slot width instead, a five-byte slot would have admitted a domain no
-    value in it can be written into.
-    """
+def test_a_scaled_domain_member_is_charged_the_slot_width() -> None:
+    """A member longer than the slot is refused; one that fills it is admitted."""
     with pytest.raises(ValidationError, match="out-of-width"):
-        _field(length=5, data_type="decimal", decimals=2, allowed_values=("1234",))
+        _field(length=5, data_type="decimal", decimals=2, allowed_values=("123456",))
 
-    assert _field(length=6, data_type="decimal", decimals=2, allowed_values=("1234",)).allowed_values == ("1234",)
+    assert _field(length=5, data_type="decimal", decimals=2, allowed_values=("12345",)).allowed_values == ("12345",)
 
 
 @pytest.mark.parametrize(
@@ -328,8 +374,8 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
         ),
         (
             {"length": 2, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS},
-            2026,
-            "26",
+            _YEAR,
+            _YEAR_TAIL,
             ParsedExportPolicyWireValue(
                 policy=ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
                 raw="26",
@@ -376,7 +422,7 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
             "0012345678901",
             "0012345678901",
         ),
-        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, 2026, "2026", Decimal(2026)),
+        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, _YEAR, str(_YEAR), Decimal(_YEAR)),
         ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH}, 8, "08", Decimal(8)),
         ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY}, "9", "09", Decimal(9)),
         (
@@ -388,9 +434,9 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
                 "date_format": "aaaammdd",
                 "value_policy": ExportValuePolicy.YYYYMMDD,
             },
-            "20240229",
-            "20240229",
-            "20240229",
+            f"{_LEAP_YEAR}0229",
+            f"{_LEAP_YEAR}0229",
+            f"{_LEAP_YEAR}0229",
         ),
         (
             {
@@ -401,9 +447,9 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
                 "date_format": "ddmmaaaa",
                 "value_policy": ExportValuePolicy.DDMMYYYY,
             },
-            "29022024",
-            "29022024",
-            "29022024",
+            f"2902{_LEAP_YEAR}",
+            f"2902{_LEAP_YEAR}",
+            f"2902{_LEAP_YEAR}",
         ),
     ),
 )
@@ -441,9 +487,9 @@ def test_complete_reviewed_policy_set_renders_and_parses_exact_wire_bytes(
             Decimal("-123.45"),
             "N",
         ),
-        (ExportValuePolicy.YYYYMMDD_TEXT_YEAR, {"length": 4}, "20250314", "2025"),
-        (ExportValuePolicy.YYYYMMDD_TEXT_MONTH, {"length": 2}, "20250314", "03"),
-        (ExportValuePolicy.YYYYMMDD_TEXT_DAY, {"length": 2}, "20250314", "14"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_YEAR, {"length": 4}, _SAMPLE_DATE.strftime("%Y%m%d"), str(_YEAR)),
+        (ExportValuePolicy.YYYYMMDD_TEXT_MONTH, {"length": 2}, _SAMPLE_DATE.strftime("%Y%m%d"), "03"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_DAY, {"length": 2}, _SAMPLE_DATE.strftime("%Y%m%d"), "14"),
     ),
 )
 def test_noninvertible_parts_preserve_their_exact_wire_bytes(
@@ -510,7 +556,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
         _field(
             length=4,
             value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
-            allowed_values=("2026",),
+            allowed_values=(str(_YEAR),),
         )
 
 
@@ -529,7 +575,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
                 "date_format": "aaaammdd",
                 "value_policy": ExportValuePolicy.YYYYMMDD,
             },
-            "20230229",
+            f"{_COMMON_YEAR}0229",
         ),
         (
             {
@@ -540,7 +586,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
                 "date_format": "ddmmaaaa",
                 "value_policy": ExportValuePolicy.DDMMYYYY,
             },
-            "29022023",
+            f"2902{_COMMON_YEAR}",
         ),
         (
             {
@@ -795,10 +841,10 @@ def test_record_renders_when_an_optional_numeric_casilla_is_absent() -> None:
     """
     body = render_fixed_width_export_record_body(
         _absence_record(required=False),
-        field_values={"01": "2010"},
+        field_values={"01": str(_YEAR)},
     )
 
-    assert body == b"20100000"
+    assert body == f"{_YEAR}0000".encode()
 
 
 def _occurrence_block_record() -> ExportRecordDefinition:
@@ -859,7 +905,7 @@ def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
     with pytest.raises(FixedWidthRecordRenderError) as excinfo:
         render_fixed_width_export_record_body(
             _absence_record(required=True),
-            field_values={"01": "2010"},
+            field_values={"01": str(_YEAR)},
         )
 
     error = excinfo.value
@@ -995,11 +1041,15 @@ def test_a_signed_money_amount_can_carry_a_mandated_value_domain() -> None:
         render_fixed_width_export_field(field, Decimal("-1"))
 
 
-def test_a_signed_money_domain_member_is_charged_the_implied_decimals() -> None:
-    """Members are whole units, so a 5-byte money slot holds at most three unit digits."""
-    assert _field(data_type="money", length=5, signed=True, allowed_values=("999",)).allowed_values == ("999",)
+def test_a_signed_money_domain_member_is_a_cents_digit_run() -> None:
+    """Money prints cents, so its members are cent runs and a 5-byte slot holds five digits."""
+    field = _field(data_type="money", length=5, signed=True, allowed_values=("150",))
+
+    assert render_fixed_width_export_field(field, Decimal("1.50")) == "00150"
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal(150))
     with pytest.raises(ValidationError, match="out-of-width"):
-        _field(data_type="money", length=5, signed=True, allowed_values=("1000",))
+        _field(data_type="money", length=5, signed=True, allowed_values=("123456",))
 
 
 def test_a_signed_domain_is_refused_on_any_shape_but_money() -> None:
@@ -1044,10 +1094,10 @@ def test_an_absent_optional_year_zero_fill_reads_back_as_absence() -> None:
 
     assert render_fixed_width_export_field(optional, None) == "0000"
     assert parse_fixed_width_export_field(optional, "0000") is None
-    assert parse_fixed_width_export_field(optional, "2025") == 2025
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+    assert parse_fixed_width_export_field(optional, str(_YEAR)) == _YEAR
+    with pytest.raises(RegistryValidationError, match="four-digit year"):
         parse_fixed_width_export_field(required, "0000")
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+    with pytest.raises(RegistryValidationError, match="four-digit year"):
         parse_fixed_width_export_field(optional, "0999")
 
 
@@ -1106,11 +1156,11 @@ def test_a_year_carried_as_an_integral_decimal_renders_and_a_fractional_one_refu
     """Integer casillas retain Decimal values through the filing renderer."""
     field = _field(length=4, value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR)
 
-    for year in ("1000", "2025", "9999"):
+    for year in ("1000", str(_YEAR), "9999"):
         assert render_fixed_width_export_field(field, Decimal(year)) == year
-    for invalid in ("2025.5", "NaN", "sNaN", "Infinity", "-Infinity"):
+    for invalid in (f"{_YEAR}.5", "NaN", "sNaN", "Infinity", "-Infinity"):
         with pytest.raises(RegistryValidationError, match="four-digit-year export value"):
             render_fixed_width_export_field(field, Decimal(invalid))
     for outside in ("999", "10000"):
-        with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+        with pytest.raises(RegistryValidationError, match="four-digit year"):
             render_fixed_width_export_field(field, Decimal(outside))

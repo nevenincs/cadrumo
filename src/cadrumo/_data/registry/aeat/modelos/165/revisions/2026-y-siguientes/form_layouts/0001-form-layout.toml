@@ -36,7 +36,7 @@ heading_key = "modelo.schema.165.form.page.modelo-165-declarante.heading"
 
 [[revisions.2026-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.165.form.section.general.heading"
+heading_key = "modelo.schema.165.form.page.modelo-165-declarante.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante-razon-social" },
     { kind = "field", id = "field-2", casilla_id = "numero-identificativo-declaracion" },
@@ -56,7 +56,7 @@ heading_key = "modelo.schema.165.form.page.modelo-165-socio.heading"
 
 [[revisions.2026-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.165.form.section.general.heading"
+heading_key = "modelo.schema.165.form.page.modelo-165-socio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "socio-nif" },
     { kind = "field", id = "field-2", casilla_id = "representante-legal-nif" },

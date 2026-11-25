@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from .....domain.justificante.errors import PdfModeloImportError
+from .....tests.log_records import delivered_records
 from ..source_provenance import sha256_file, source_pdf_reference_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -45,7 +46,7 @@ class TestSha256File:
         assert exc_info.value.translated_message == "adapters.inbound.pdf.errors.hash_failed"
         assert exc_info.value.__cause__ is None
 
-        log_text = "\n".join(record.getMessage() for record in caplog.records)
+        log_text = "\n".join(record.getMessage() for record in delivered_records(caplog))
         assert _SENSITIVE_BASENAME not in log_text
         assert str(missing_pdf) not in log_text
         assert "source=<input-pdf>" in log_text

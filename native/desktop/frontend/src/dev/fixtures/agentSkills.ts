@@ -1,8 +1,8 @@
 import type {
-  AgentSkillDetail,
-  AgentSkillSummary,
-  AgentSkillVerification,
-} from "../../shell/agentSkills";
+  SkillDetailRecord,
+  SkillRecord,
+  SkillVerificationRecord,
+} from "../../shell/agentGatewayContract";
 
 // Made-up skills shaped as cadrumo-agent serves its own: names, words and
 // digests are the fixture's, never the bundled skills'.
@@ -10,6 +10,7 @@ import type {
 /** How the scenario host serves skills: a handful, hundreds for scrolling,
  * a read that fails, or none at all. */
 export type FixtureSkills = "bundled" | "many" | "failed" | "unavailable";
+export const LONG_SKILL_PATH = `references/${"comprobaciones-".repeat(12)}trimestrales.md`;
 
 const digestOf = (seed: string) => {
   let hash = 0;
@@ -17,12 +18,15 @@ const digestOf = (seed: string) => {
   return hash.toString(16).padStart(8, "0").repeat(8);
 };
 
+/** The fixture inventory's revision, as the agent states one: a digest. */
+export const FIXTURE_SKILLS_REVISION = digestOf("fixture-skills");
+
 const skill = (
   name: string,
   description: string,
-  applies_when: AgentSkillSummary["applies_when"],
+  applies_when: SkillRecord["applies_when"],
   extra: string[] = [],
-): AgentSkillSummary => ({
+): SkillRecord => ({
   name,
   description,
   applies_when,
@@ -35,7 +39,7 @@ const skill = (
 });
 
 /** Sorted by name, as the agent lists them. */
-export const FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
+export const FIXTURE_SKILLS: readonly SkillRecord[] = [
   skill(
     "cadrumo-iva-trimestral",
     "Prepara la autoliquidación trimestral del IVA a partir del libro registro.",
@@ -50,7 +54,7 @@ export const FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
       profile_match: "all",
       temporal_trigger: "quarter_close",
     },
-    ["references/casillas.md"],
+    ["references/casillas.md", LONG_SKILL_PATH],
   ),
   skill(
     "cadrumo-renta-anual",
@@ -87,7 +91,7 @@ export const FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
 ].sort((a, b) => (a.name < b.name ? -1 : 1));
 
 /** Hundreds of skills, for a list that must scroll and never cap. */
-export const MANY_FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
+export const MANY_FIXTURE_SKILLS: readonly SkillRecord[] = [
   ...FIXTURE_SKILLS,
   ...Array.from({ length: 240 }, (_, index) =>
     skill(
@@ -98,7 +102,7 @@ export const MANY_FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
   ),
 ].sort((a, b) => (a.name < b.name ? -1 : 1));
 
-const frontmatter = (summary: AgentSkillSummary) =>
+const frontmatter = (summary: SkillRecord) =>
   [
     "---",
     `name: ${summary.name}`,
@@ -107,9 +111,7 @@ const frontmatter = (summary: AgentSkillSummary) =>
     "---",
   ].join("\n");
 
-export function fixtureSkillDetail(
-  summary: AgentSkillSummary,
-): AgentSkillDetail {
+export function fixtureSkillDetail(summary: SkillRecord): SkillDetailRecord {
   return {
     ...structuredClone(summary),
     content: `${frontmatter(summary)}\n\n# ${summary.name}\n\n${summary.description}\n\n## Pasos\n\n1. Lee los datos del perfil.\n2. Comprueba cada fuente.\n3. Propón el resultado para que la persona lo revise.\n`,
@@ -119,9 +121,9 @@ export function fixtureSkillDetail(
 /** The checks of one skill: one passes with a warning, one fails, the rest
  * pass clean. */
 export function fixtureSkillVerification(
-  summary: AgentSkillSummary,
-): AgentSkillVerification {
-  const findings: AgentSkillVerification["findings"] =
+  summary: SkillRecord,
+): SkillVerificationRecord {
+  const findings: SkillVerificationRecord["findings"] =
     summary.name === "cadrumo-facturas"
       ? [
           {

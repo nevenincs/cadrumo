@@ -7714,6 +7714,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 
 [[refusal]]
 modelo = "100"
+revision = "2022"
+casilla = "trabajo-mar-renta-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
 revision = "2023"
 casilla = "0057"
 category = "not_examined"
@@ -10214,6 +10221,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2023"
+casilla = "trabajo-mar-renta-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
 casilla = "1928"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'irpf-deduccion-catalunya-prestamo-identificador' starts its chain in this edition"
@@ -11029,13 +11043,6 @@ revision = "2024"
 casilla = "0695"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2024"
-casilla = "0700"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'resultado-ingresar-o-devolver-irpf' starts its chain in this edition"
 
 [[refusal]]
 modelo = "100"
@@ -13925,6 +13932,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2024"
 casilla = "prestacion-inss-maternidad-paternidad-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "trabajo-mar-renta-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -17110,13 +17124,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2025"
 casilla = "ZRUE2"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
-casilla = "base-liq-neg-general-2024-aplicada-maxima"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 

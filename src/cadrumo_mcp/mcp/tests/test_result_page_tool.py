@@ -34,16 +34,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.application.provisioning_browser import browser_not_provisioned_verdict
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -53,7 +49,8 @@ from cadrumo_client.contracts.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
     ProjectionPageRequest,
-    project_document_page,
+    encode_projection_document,
+    project_encoded_page,
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -96,7 +93,7 @@ class _PageClient:
         self.calls.append((result, page))
         if page.offset and self.deny_continuation:
             raise FrontendRefusedError("grant_inactive")
-        return project_document_page(self.document, page)
+        return project_encoded_page(encode_projection_document(self.document), page)
 
     def read_result_document(
         self, result: OperationResultProjectionRequestV1, *, deadline: float
@@ -302,13 +299,13 @@ def _unused_ports(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("contract description must not construct executor ports")
 
 
-def _auth_registry() -> OperationRegistry:
+def auth_registry() -> OperationRegistry:
     definition = build_auth_read_definition(_unused_ports)
     registration = build_auth_read_registration(definition)
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
-def _observed_operation_id() -> str:
+def observed_operation_id() -> str:
     return _result().operation_id
 
 
@@ -317,14 +314,14 @@ def _settled_request(registry: OperationRegistry) -> OperationResultProjectionRe
     contract = registry.lookup_public_contract(AUTH_READ_OPERATION_DEFINITION_ID)
     assert contract.result_schema is not None
     return OperationResultProjectionRequestV1(
-        operation_id=_observed_operation_id(),
+        operation_id=observed_operation_id(),
         terminal_revision=4,
         definition_contract_digest=contract.definition_contract_digest,
         result_schema=contract.result_schema,
     )
 
 
-class _ObservedClient(_PageClient):
+class ObservedClient(_PageClient):
     """A lease whose runtime observes one settled operation of a real public contract."""
 
     def __init__(self, profile_id: UUID, registry: OperationRegistry) -> None:
@@ -363,7 +360,7 @@ class _ObservedClient(_PageClient):
         contract = self.registry.lookup_public_contract(AUTH_READ_OPERATION_DEFINITION_ID)
         moment = datetime(2026, 9, 29, tzinfo=UTC)
         projection = OperationPublicProjectionV1(
-            operation_id=_observed_operation_id(),
+            operation_id=observed_operation_id(),
             definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(self.profile_id)),
             revision=4,
@@ -407,8 +404,8 @@ class _ObservedClient(_PageClient):
 @pytest.mark.anyio
 async def test_result_by_operation_id_alone_reads_what_the_full_request_reads() -> None:
     profile_id = uuid4()
-    registry = _auth_registry()
-    client = _ObservedClient(profile_id, registry)
+    registry = auth_registry()
+    client = ObservedClient(profile_id, registry)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
     complete = expected.model_dump(mode="json")
@@ -435,8 +432,8 @@ async def test_result_by_operation_id_alone_reads_what_the_full_request_reads() 
 @pytest.mark.anyio
 async def test_result_fills_only_what_the_caller_left_out() -> None:
     profile_id = uuid4()
-    registry = _auth_registry()
-    client = _ObservedClient(profile_id, registry)
+    registry = auth_registry()
+    client = ObservedClient(profile_id, registry)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
     try:
@@ -449,11 +446,11 @@ async def test_result_fills_only_what_the_caller_left_out() -> None:
 @pytest.mark.anyio
 async def test_result_by_operation_id_reports_a_refused_observation_without_reading() -> None:
     profile_id = uuid4()
-    client = _ObservedClient(profile_id, _auth_registry())
+    client = ObservedClient(profile_id, auth_registry())
     client.refusal = OperationObservationRefusalCode.UNKNOWN_OPERATION
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
-        refused = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+        refused = await adapter.call("result", {"result": {"operation_id": observed_operation_id()}})
     finally:
         await adapter.close()
     assert refused == {"outcome": "refused", "code": "unknown_operation"}
@@ -463,7 +460,7 @@ async def test_result_by_operation_id_reports_a_refused_observation_without_read
 @pytest.mark.anyio
 async def test_result_refuses_a_malformed_operation_id_before_observing() -> None:
     profile_id = uuid4()
-    client = _ObservedClient(profile_id, _auth_registry())
+    client = ObservedClient(profile_id, auth_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         refused = await adapter.call("result", {"result": {"operation_id": "not-an-operation"}})
@@ -495,7 +492,7 @@ def _not_successful() -> dict[str, JsonValue]:
     return cast(dict[str, JsonValue], refusal.model_dump(mode="json"))
 
 
-class _StoppedClient(_ObservedClient):
+class _StoppedClient(ObservedClient):
     """A lease whose runtime settled the operation refused, with or without a recorded detail."""
 
     def __init__(
@@ -538,7 +535,7 @@ class _StoppedClient(_ObservedClient):
 @pytest.mark.anyio
 async def test_the_result_of_a_stopped_operation_carries_what_it_recorded_about_why() -> None:
     profile_id = uuid4()
-    registry = _auth_registry()
+    registry = auth_registry()
     client = _StoppedClient(profile_id, registry, detail="recorded")
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
@@ -563,30 +560,12 @@ async def test_the_result_of_a_stopped_operation_carries_what_it_recorded_about_
 
 
 @pytest.mark.anyio
-async def test_a_feature_stopped_for_a_missing_dependency_names_its_recovery_action() -> None:
-    # The refusal the browser item raises when no build is installed, as a live read records it.
-    verdict = browser_not_provisioned_verdict({"chromium_installed": False})
-    recorded = _DETAIL.model_copy(update={"precondition_verdict_json": verdict.model_dump_json()})
-    profile_id = uuid4()
-    client = _StoppedClient(profile_id, _auth_registry(), detail="recorded", recorded=recorded)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
-    try:
-        stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
-    finally:
-        await adapter.close()
-    # The agent reads the refusal and its recovery from the top level, beside the document.
-    assert stopped["code"] == "operation_not_successful"
-    assert stopped["recovery_action_id"] == "operator.provision.browser"
-    assert stopped["error_detail"] == recorded.model_dump(mode="json")
-
-
-@pytest.mark.anyio
 async def test_a_stopped_operation_without_a_recovery_names_none() -> None:
     profile_id = uuid4()
-    client = _StoppedClient(profile_id, _auth_registry(), detail="recorded")
+    client = _StoppedClient(profile_id, auth_registry(), detail="recorded")
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
-        stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+        stopped = await adapter.call("result", {"result": {"operation_id": observed_operation_id()}})
     finally:
         await adapter.close()
     assert "error_detail" in stopped and "recovery_action_id" not in stopped
@@ -596,11 +575,11 @@ async def test_a_stopped_operation_without_a_recovery_names_none() -> None:
 @pytest.mark.parametrize("detail", ["absent", "denied"])
 async def test_a_stopped_operation_with_no_readable_detail_leaves_only_its_refusal(detail: str) -> None:
     profile_id = uuid4()
-    registry = _auth_registry()
+    registry = auth_registry()
     client = _StoppedClient(profile_id, registry, detail=detail)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
-        stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+        stopped = await adapter.call("result", {"result": {"operation_id": observed_operation_id()}})
     finally:
         await adapter.close()
     assert stopped == {"outcome": "reply", "document": _not_successful(), "code": "operation_not_successful"}
@@ -610,11 +589,11 @@ async def test_a_stopped_operation_with_no_readable_detail_leaves_only_its_refus
 @pytest.mark.anyio
 async def test_a_caller_that_asks_for_the_detail_itself_is_answered_by_one_read() -> None:
     profile_id = uuid4()
-    registry = _auth_registry()
+    registry = auth_registry()
     client = _StoppedClient(profile_id, registry, detail="recorded")
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     named = {
-        "operation_id": _observed_operation_id(),
+        "operation_id": observed_operation_id(),
         "result_schema": operation_error_detail_schema().model_dump(mode="json"),
     }
     try:
@@ -629,11 +608,11 @@ async def test_a_caller_that_asks_for_the_detail_itself_is_answered_by_one_read(
 @pytest.mark.anyio
 async def test_a_refusal_that_is_not_about_the_operation_stopping_reads_no_detail() -> None:
     profile_id = uuid4()
-    client = _ObservedClient(profile_id, _auth_registry())
+    client = ObservedClient(profile_id, auth_registry())
     client.document = _refusal_document()
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
-        stale = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+        stale = await adapter.call("result", {"result": {"operation_id": observed_operation_id()}})
     finally:
         await adapter.close()
     assert stale == {"outcome": "reply", "document": _refusal_document(), "code": "stale_operation_revision"}
@@ -643,11 +622,11 @@ async def test_a_refusal_that_is_not_about_the_operation_stopping_reads_no_detai
 @pytest.mark.anyio
 async def test_a_refused_document_with_an_unregistered_code_lifts_no_code() -> None:
     profile_id = uuid4()
-    client = _ObservedClient(profile_id, _auth_registry())
+    client = ObservedClient(profile_id, auth_registry())
     client.document = _refusal_document() | {"code": "OPERATION_NOT_SUCCESSFUL"}
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
-        refused = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+        refused = await adapter.call("result", {"result": {"operation_id": observed_operation_id()}})
     finally:
         await adapter.close()
     assert "code" not in refused and "recovery_action_id" not in refused

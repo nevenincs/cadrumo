@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
-from cadrumo_client.commands.registered_operation_projections import settled_registered_error_detail
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after, remaining_budget
 from cadrumo_client.contracts.operation_access import (
@@ -20,27 +19,25 @@ from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_B
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
 from cadrumo_client.transport.operation_changes import OperationChanges
+from cadrumo_client.transport.operation_settlement import settled_registered_error_detail
 
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from ....application.operations.models import OperationId
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-)
+from ....application.operations.registry import OperationPublicDefinitionContractV1
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalOperationRequest,
     CensalReviewProjectionV1,
 )
-from ....core.operations import OperationLifecycle, OperationTerminalCondition
-from .operation_censal_contracts import CensalReviewResult, _CensalReceiptState
-from .operation_censal_exchange import _exchange
-from .operation_censal_observation import _observe, _review_interaction, _validate_observation
-from .operation_censal_projection import _resolve_review, _validate_contract, _validate_terminal
-from .operation_censal_response import _respond
+from ....core.operations import OperationFrontendProjection, OperationLifecycle, OperationTerminalCondition
+from .operation_censal_contracts import CensalReceiptState, CensalReviewResult
+from .operation_censal_exchange import exchange
+from .operation_censal_observation import observe, review_interaction, validate_observation
+from .operation_censal_projection import resolve_review, validate_contract, validate_terminal
+from .operation_censal_response import respond
 
 
 def _submit_censal_operation(
@@ -63,7 +60,7 @@ def _submit_censal_operation(
         subject_ref=subject_ref,
         payload_json=payload_json,
     )
-    submitted = _exchange(client, session_id, submit_request, deadline=deadline)
+    submitted = exchange(client, session_id, submit_request, deadline=deadline)
     if not isinstance(submitted, OperationSubmitted):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return submitted, subject_ref
@@ -82,15 +79,15 @@ def review_censal_operation(
     if client.frontend is not OperationFrontendProjection.CLI or request.baseline.profile_id != str(profile_id):
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
-    contract = _validate_contract(client, request, deadline)
+    contract = validate_contract(client, request, deadline)
     submitted, subject_ref = _submit_censal_operation(client, request, profile_id, session_id, deadline)
     operation_id = submitted.receipt.operation_id
 
-    receipt = _CensalReceiptState()
+    receipt = CensalReceiptState()
     try:
         _start_censal_operation(client, submitted, profile_id, session_id, operation_id, deadline)
 
-        waiting, pending = _review_interaction(
+        waiting, pending = review_interaction(
             client,
             profile_id=profile_id,
             session_id=session_id,
@@ -105,7 +102,7 @@ def review_censal_operation(
         if pending is None:
             _raise_censal_terminal_error(client, waiting, contract, deadline)
         pending = _require_censal_pending(waiting, pending, receipt)
-        review = _resolve_review(
+        review = resolve_review(
             client,
             profile_id=profile_id,
             session_id=session_id,
@@ -115,7 +112,7 @@ def review_censal_operation(
             contract=contract,
         )
         apply = _decide_censal_review(review, request, decide)
-        _respond(
+        respond(
             client,
             profile_id=profile_id,
             session_id=session_id,
@@ -159,7 +156,7 @@ def _start_censal_operation(
         session_id=session_id,
         operation_id=operation_id,
     )
-    started = _exchange(client, session_id, start_request, deadline=deadline)
+    started = exchange(client, session_id, start_request, deadline=deadline)
     if not isinstance(started, OperationAcknowledged) or started.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
@@ -195,7 +192,7 @@ def _raise_censal_terminal_error(
 def _require_censal_pending(
     waiting: OperationObservationSuccessV1,
     pending: OperationReviewAvailableInteractionV1 | None,
-    receipt: _CensalReceiptState,
+    receipt: CensalReceiptState,
 ) -> OperationReviewAvailableInteractionV1:
     """Require a pending review or present the admitted terminal refusal."""
     if pending is None:
@@ -231,7 +228,7 @@ def _await_censal_terminal(
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
     deadline: float,
-    receipt: _CensalReceiptState,
+    receipt: CensalReceiptState,
     review: CensalReviewProjectionV1,
     apply: bool,
 ) -> CensalReviewResult:
@@ -241,14 +238,14 @@ def _await_censal_terminal(
             remaining_budget(deadline)
             if changes.armed:
                 changes.arm()
-            terminal = _observe(
+            terminal = observe(
                 client,
                 profile_id=profile_id,
                 session_id=session_id,
                 operation_id=operation_id,
                 deadline=deadline,
             )
-            _validate_observation(
+            validate_observation(
                 terminal,
                 operation_id=operation_id,
                 subject_ref=subject_ref,
@@ -263,7 +260,7 @@ def _await_censal_terminal(
             if state.lifecycle is OperationLifecycle.TERMINAL:
                 if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
                     _raise_censal_terminal_error(client, terminal, contract, deadline)
-                _validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
+                validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
                 if client.profile_id != profile_id or client.session_id != session_id:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return CensalReviewResult(projection=review, applied=apply)

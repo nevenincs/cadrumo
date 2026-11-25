@@ -7,9 +7,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-from cadrumo.core.storage_environment import STORAGE_ROOT, prepare_temporary_directory
-from dev._paths import REPO_ROOT
+from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root
 
 from .build_paths import docs_build_root, docs_html_root
 from .i18n import TARGET_LANGUAGES
@@ -45,7 +46,7 @@ def main() -> int:
     html_root = docs_html_root(REPO_ROOT)
     log = build_root / "locale-logs" / "languages.log"
     log.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-preview-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-preview-", dir=prepare_temp_root()) as scratch:
         environment = {
             **os.environ,
             "PYTHONIOENCODING": "utf-8",

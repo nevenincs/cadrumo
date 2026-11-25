@@ -27,26 +27,30 @@ def _namespace_flags() -> int:
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _lock_flags() -> int:
+def lock_flags() -> int:
+    """Return the open flags for a non-blocking, symlink-refusing lock file on POSIX."""
     if sys.platform != "win32":
         return os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _unix_socket() -> socket.socket:
+def unix_socket() -> socket.socket:
+    """Create a Unix stream socket, refusing on Windows."""
     if sys.platform != "win32":
         return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _accept_socket(listener: socket.socket) -> socket.socket:
+def accept_socket(listener: socket.socket) -> socket.socket:
+    """Accept one connection from a listening Unix socket, refusing on Windows."""
     if sys.platform != "win32":
         connection, _address = listener.accept()
         return connection
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _lock_exclusive(descriptor: int) -> None:
+def lock_exclusive(descriptor: int) -> None:
+    """Take a non-blocking exclusive lock on a descriptor, refusing on Windows."""
     if sys.platform != "win32":
         import fcntl
 
@@ -55,7 +59,8 @@ def _lock_exclusive(descriptor: int) -> None:
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _open_lock(directory_fd: int, name: str, flags: int) -> int:
+def open_lock(directory_fd: int, name: str, flags: int) -> int:
+    """Open or create the lock file in a directory, refusing an untrusted endpoint."""
     try:
         try:
             # Keep one persistent inode across contenders.
@@ -66,7 +71,8 @@ def _open_lock(directory_fd: int, name: str, flags: int) -> int:
         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED) from None
 
 
-def _socket_metadata(directory_fd: int, name: str) -> os.stat_result | None:
+def socket_metadata(directory_fd: int, name: str) -> os.stat_result | None:
+    """Return a name's metadata without following links, or None when absent."""
     try:
         return os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
     except FileNotFoundError:

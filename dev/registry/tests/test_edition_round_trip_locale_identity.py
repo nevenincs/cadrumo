@@ -23,26 +23,25 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..compiler.loader import load_modelo_directory
 from ..edition_round_trip import localization_differences
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: A real modelo whose 2016-2018 edition hydrates its rows from 2009-2011-junio
-#: through 2011-julio-2015, the edition compaction turned into a technical root.
+#: A real modelo whose third authored edition hydrates its rows from the first
+#: through the second, the edition compaction turned into a technical root.
 #: Its live chains carry the origin key this move produced; the chains the same
-#: edition carried before the move name 2011-julio-2015 in that one position.
+#: edition carried before the move name the second edition in that one position.
 _MODELO = "308"
-_EDITION = "2016-2018"
-_BEFORE_COMPACTION = "2011-julio-2015"
-_ORIGIN = "2009-2011-junio"
+_ORIGIN, _BEFORE_COMPACTION, _EDITION = (str(revision.id) for revision in authored_revisions(_MODELO)[:3])
 
 #: A real row of a real modelo whose own and lineage keys carry no help while a
 #: sibling edition's occurrence key does, with every label resolving the same.
 _HELP_MODELO = "303"
-_HELP_EDITION = "2022"
-_HELP_SIBLING = "2026-y-siguientes"
+_HELP_EDITION = str(authored_revisions(_HELP_MODELO)[0].id)
+_HELP_SIBLING = str(open_ended_revision(_HELP_MODELO).id)
 _HELP_ROW = "23"
 
 

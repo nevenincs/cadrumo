@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -14,10 +15,17 @@ from typing import override
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..runtime_wheel_acquisition import _acquire_all, _store_in_cache, grouped_wheel_requests
-from ..runtime_wheel_selection import _runtime_rows, plan_runtime_wheelhouses
+from ..build_storage import build_storage
+from ..runtime_wheel_acquisition import (
+    acquire_all,
+    cache_holds,
+    grouped_wheel_requests,
+    store_in_cache,
+    wheel_cache_dir,
+)
+from ..runtime_wheel_selection import plan_runtime_wheelhouses, runtime_rows
 from ..runtime_wheelhouse_contract import (
     PLATFORM_FLOORS,
     SUPPORTED_TARGETS,
@@ -164,15 +172,15 @@ def test_runtime_rows_come_only_from_the_canonical_inventory(tmp_path: Path) -> 
     staged.parent.mkdir(parents=True)
     staged.write_bytes(inventory.read_bytes())
 
-    assert _runtime_rows(tmp_path, None) == _runtime_rows(REPO_ROOT, None)
+    assert runtime_rows(tmp_path, None) == runtime_rows(REPO_ROOT, None)
 
     staged.unlink()
     with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
-        _runtime_rows(tmp_path, None)
+        runtime_rows(tmp_path, None)
 
     staged.write_text('{"schema": "cadrumo.python-runtime-matrix.v1"}', encoding="utf-8")
     with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
-        _runtime_rows(tmp_path, None)
+        runtime_rows(tmp_path, None)
 
 
 def _locked_wheel(payload: bytes, url: str) -> LockedWheel:
@@ -253,13 +261,115 @@ def test_one_universal_wheel_selected_by_three_runtimes_is_fetched_once(tmp_path
 
     with _CountingIndex(payload) as index:
         wheel = _locked_wheel(payload, index.url)
-        _acquire_all([_plan(runtime, wheel) for runtime in runtimes], wheel_dir, cache)
+        acquire_all([_plan(runtime, wheel) for runtime in runtimes], wheel_dir, cache)
 
         assert index.requests == 1
 
     for runtime in runtimes:
         assert (wheel_dir / runtime / wheel.filename).read_bytes() == payload
     assert sorted(path.name for path in cache.iterdir()) == [wheel.sha256]
+
+
+def test_index_bytes_that_differ_from_the_lock_digest_are_refused_and_never_cached(tmp_path: Path) -> None:
+    """A download is accepted only with the lock's exact size and SHA-256, and a drifted one is not cached."""
+    cache = tmp_path / "cache"
+    wheel_dir = tmp_path / "wheels"
+    (wheel_dir / "3.13").mkdir(parents=True)
+
+    with _CountingIndex(b"substituted wheel bytes") as index:
+        wheel = _locked_wheel(b"locked wheel bytes", index.url)
+        with pytest.raises(SystemExit, match="drifted"):
+            acquire_all([_plan("3.13", wheel)], wheel_dir, cache)
+
+    assert not (wheel_dir / "3.13" / wheel.filename).exists()
+    assert not cache_holds(cache, wheel)
+    assert not (cache / wheel.sha256).exists()
+
+
+def test_a_warm_cache_serves_every_wheel_without_reaching_the_index(tmp_path: Path) -> None:
+    """The second acquisition of an unchanged plan is answered from verified cache entries alone."""
+    payload = b"universal wheel bytes"
+    cache = tmp_path / "cache"
+
+    with _CountingIndex(payload) as index:
+        wheel = _locked_wheel(payload, index.url)
+        first = tmp_path / "first"
+        (first / "3.13").mkdir(parents=True)
+        assert acquire_all([_plan("3.13", wheel)], first, cache) == 0
+        assert cache_holds(cache, wheel)
+
+        second = tmp_path / "second"
+        (second / "3.13").mkdir(parents=True)
+        assert acquire_all([_plan("3.13", wheel)], second, cache) == 1
+
+        assert index.requests == 1
+    assert (second / "3.13" / wheel.filename).read_bytes() == payload
+
+
+def test_a_corrupted_cache_entry_is_not_served(tmp_path: Path) -> None:
+    """An entry whose bytes no longer hash to its lock digest is fetched again, not copied out."""
+    payload = b"universal wheel bytes"
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    wheel_dir = tmp_path / "wheels"
+    (wheel_dir / "3.13").mkdir(parents=True)
+
+    with _CountingIndex(payload) as index:
+        wheel = _locked_wheel(payload, index.url)
+        (cache / wheel.sha256).write_bytes(b"universal wheel bytez")
+        assert not cache_holds(cache, wheel)
+        assert acquire_all([_plan("3.13", wheel)], wheel_dir, cache) == 0
+        assert index.requests == 1
+
+    assert (wheel_dir / "3.13" / wheel.filename).read_bytes() == payload
+    assert cache_holds(cache, wheel)
+
+
+def test_a_cohort_build_environment_refetches_a_corrupted_entry_of_the_passed_through_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Inside the build isolation a cohort build runs under, the caller's cache is consulted and still re-verified.
+
+    ``build_runtime_wheelhouse`` resolves ``wheel_cache_dir()`` inside
+    ``build_storage``; this resolves it the same way, then acquires through it.
+    """
+    payload = b"universal wheel bytes"
+    work_parent = REPO_ROOT / "build" / "testing" / "runtime-wheelhouse-tests"
+    cache_parent = REPO_ROOT / ".cache" / "runtime-wheelhouse-tests"
+    work_parent.mkdir(parents=True, exist_ok=True)
+    cache_parent.mkdir(parents=True, exist_ok=True)
+    with (
+        tempfile.TemporaryDirectory(prefix="work-", dir=work_parent) as work,
+        tempfile.TemporaryDirectory(prefix="cache-", dir=cache_parent) as cache_root,
+        _CountingIndex(payload) as index,
+    ):
+        cache = Path(cache_root).resolve()
+        monkeypatch.setenv("CADRUMO_RUNTIME_WHEEL_CACHE_DIR", str(cache))
+        wheel = _locked_wheel(payload, index.url)
+        (cache / wheel.sha256).write_bytes(b"universal wheel bytez")
+
+        with build_storage(Path(work) / "cohort-work") as selected:
+            build_cache = wheel_cache_dir()
+            assert build_cache == cache
+            wheel_dir = selected / "wheels"
+            (wheel_dir / "3.13").mkdir(parents=True)
+            assert acquire_all([_plan("3.13", wheel)], wheel_dir, build_cache) == 0
+            assert (wheel_dir / "3.13" / wheel.filename).read_bytes() == payload
+
+        assert index.requests == 1
+        assert (cache / wheel.sha256).read_bytes() == payload
+
+
+def test_a_blank_cache_override_resolves_beneath_the_development_cache_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The environment template exports the override blank; that must not disable the cache."""
+    monkeypatch.setenv("CADRUMO_DEV_CACHE_ROOT", str(tmp_path / "dev-cache"))
+    monkeypatch.setenv("CADRUMO_RUNTIME_WHEEL_CACHE_DIR", "")
+    assert wheel_cache_dir() == tmp_path / "dev-cache" / "runtime-wheel-cache"
+
+    monkeypatch.setenv("CADRUMO_RUNTIME_WHEEL_CACHE_DIR", str(tmp_path / "relocated"))
+    assert wheel_cache_dir() == tmp_path / "relocated"
 
 
 def test_a_concurrent_cache_store_leaves_no_partial_entry(tmp_path: Path) -> None:
@@ -281,7 +391,7 @@ def test_a_concurrent_cache_store_leaves_no_partial_entry(tmp_path: Path) -> Non
 
     def store() -> None:
         barrier.wait(timeout=10)
-        _store_in_cache(cache, wheel, source)
+        store_in_cache(cache, wheel, source)
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         for future in [pool.submit(store) for _ in range(4)]:

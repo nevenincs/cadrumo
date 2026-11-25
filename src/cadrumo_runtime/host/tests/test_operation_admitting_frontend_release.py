@@ -14,11 +14,12 @@ import asyncio
 import os
 import secrets
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import override
+from types import SimpleNamespace
+from typing import Any, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -27,7 +28,11 @@ from pydantic import BaseModel, JsonValue
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.adapters.persistence.storage.errors import RepositoryError
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import (
+    ProfileWorkerCustody,
+    ProfileWorkerCustodySection,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import AggregationUnsupportedModeloError
 from cadrumo.application.operations.access_resolution import (
@@ -51,12 +56,18 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.models import OperationId, OperationRequest, new_operation_id
+from cadrumo.application.operations.models import (
+    OperationId,
+    OperationIdentity,
+    OperationRequest,
+    OperationStoredInvocation,
+    new_operation_id,
+)
 from cadrumo.application.operations.operation_definition import build_single_phase_definition
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
+from cadrumo.application.operations.projection_services import OperationResponseCapability
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
     OperationSchemaBindingV1,
@@ -72,9 +83,11 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.i18n.translatable import Translatable as tr
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -88,15 +101,23 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.projection_pages import ProjectionPageRequest, project_document_page
+from cadrumo_client.contracts.projection_pages import (
+    ProjectionPage,
+    ProjectionPageRequest,
+    encode_projection_document,
+    project_encoded_page,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from .. import operation_host
-from ..operation_authority import WorkerOperationBinding
+from .. import operation_settlement
 from ..operation_host import ProfileWorkerOperationHost
+from ..profile_connection import ProfileConnection
+from ..profile_connection_operations import authorize_operation_release
+from ..profile_host import RuntimeProfileHost
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -190,10 +211,9 @@ class _SessionsWitness(ProfileWorkerCustody):
         return session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    def section(self, session_id: UUID) -> ProfileWorkerCustodySection:
         self.require(session_id)
-        yield
+        return ProfileWorkerCustodySection(lambda: None)
 
     @override
     def retire(self, session_id: UUID) -> frozenset[UUID]:
@@ -209,6 +229,12 @@ class _ScopeCeilingPermit(WorkerAuthorizationClient):
         self._custody = custody
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         refusal = operation_scope_refusal(
@@ -216,9 +242,7 @@ class _ScopeCeilingPermit(WorkerAuthorizationClient):
         )
         if refusal is not None:
             raise ProfileAccessRefusedError(refusal.code)
-        yield WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        yield WorkerAuthorizationLease(connections=self.connections, request=request)
 
 
 class _SealedDocumentHost(ProfileWorkerOperationHost):
@@ -240,13 +264,13 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
         return now() + self.elapsed
 
     @override
-    def _composed(self) -> OperationComposedServices:
-        if self._services is None:
+    def composed(self) -> OperationComposedServices:
+        if self.services is None:
             registry = _registry()
             journal = OperationJournalRepository(storage_root=self.custody.root)
-            self._services = compose_operation_services(
+            self.services = compose_operation_services(
                 registry=registry,
-                authority_operation=self._pinned(),
+                authority_operation=self.pinned(),
                 journal=journal,
                 reader=journal,
                 event_stream=journal,
@@ -260,7 +284,7 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
                 cleanup_timeout=timedelta(minutes=2),
                 execution_authority=self._bind_execution(registry),
             )
-        return super()._composed()
+        return super().composed()
 
 
 def _session(identity: ProfileWorkerIdentity, kind: SessionKind) -> AccessSession:
@@ -332,7 +356,7 @@ class _Worker:
         return submitted.receipt.operation_id
 
     async def settled(self, operation_id: OperationId) -> None:
-        await self.host._composed().submission.settled(operation_id)
+        await self.host.composed().submission.settled(operation_id)
 
     async def run(
         self,
@@ -385,13 +409,16 @@ class _Worker:
             assert release.request.destination_id == session.client_id
             return document
 
+    async def result_request(self, operation_id: OperationId) -> OperationResultProjectionRequestV1:
+        return await self._result_request(operation_id, None)
+
     async def result_page(
         self, session: AccessSession, frontend: OperationFrontendProjection, operation_id: OperationId
     ) -> bytes:
         """Cut the first page as the worker does, inside the same released projection."""
         request = await self._result_request(operation_id, None)
         async with self.host.project(session.session_id, request, frontend=frontend) as (document, _release):
-            return project_document_page(document, ProjectionPageRequest()).decode()
+            return project_encoded_page(encode_projection_document(document), ProjectionPageRequest()).decode()
 
     async def review(
         self, session: AccessSession, frontend: OperationFrontendProjection, operation_id: OperationId
@@ -414,7 +441,7 @@ class _Worker:
 
     async def admitting_frontend(self, operation_id: OperationId) -> OperationFrontendProjection | None:
         """Read the frontend the worker stored with the invocation's admission."""
-        invocation = await self.host._composed().submission.stored_invocation(operation_id)
+        invocation = await self.host.composed().submission.stored_invocation(operation_id)
         return None if invocation.provenance is None else invocation.provenance.admitting_frontend
 
 
@@ -485,6 +512,74 @@ def test_every_frontend_reads_the_same_result_and_page_whichever_frontend_admitt
                 pages.add(await worker.result_page(session, frontend, operation_id))
         assert len(pages) == 1
         assert _FILE.encode() in next(iter(pages))
+
+    _exercise(tmp_path, scenario)
+
+
+def test_later_pages_reuse_one_invocation_only_for_the_same_reader_and_recheck_authority(tmp_path: Path) -> None:
+    """Paging spares the invocation read, never the disclosure guard or a reader's own read."""
+
+    async def scenario(worker: _Worker) -> None:
+        operation_id = await worker.run(worker.person, _CLI)
+        request = await worker.result_request(operation_id)
+        host = worker.host
+        reads: list[OperationId] = []
+        guards: list[AccessAction] = []
+        original_read = host.stored_invocation
+        execution = host.execution
+        assert execution is not None
+        original_guard = execution.guard_binding
+
+        async def counted_read(read_id: OperationId, *, require_idle: bool = False) -> OperationStoredInvocation:
+            reads.append(read_id)
+            return await original_read(read_id, require_idle=require_idle)
+
+        def counted_guard(identity: OperationIdentity, action: AccessAction, binding: Any) -> Any:
+            guards.append(action)
+            return original_guard(identity, action, binding)
+
+        patch = pytest.MonkeyPatch()
+        patch.setattr(host, "stored_invocation", counted_read)
+        patch.setattr(execution, "guard_binding", counted_guard)
+
+        async def page(session: AccessSession, offset: int, digest: str | None) -> ProjectionPage:
+            wanted = ProjectionPageRequest(offset=offset, expected_digest=digest)
+            async with host.project_page(session.session_id, request, frontend=_CLI, page=wanted) as (released, _):
+                return released
+
+        first = await page(worker.person, 0, None)
+        whole = first.decode()
+        assert (await page(worker.person, 1, first.document_digest)).decode() == whole[1:]
+        assert (await page(worker.person, 2, first.document_digest)).decode() == whole[2:]
+        assert reads == [operation_id]
+        assert guards == [AccessAction.RESULT] * 3
+
+        assert (await page(worker.key, 1, first.document_digest)).decode() == whole[1:]
+        assert reads == [operation_id, operation_id]
+
+        host.release_delivered_result(operation_id)
+        assert (await page(worker.key, 1, first.document_digest)).decode() == whole[1:]
+        assert reads == [operation_id, operation_id, operation_id]
+        patch.undo()
+
+    _exercise(tmp_path, scenario)
+
+
+def test_delivering_a_settled_result_discards_the_response_bearer_reserved_at_submission(tmp_path: Path) -> None:
+    """An operation that settled without a review does not hold its bearer until shutdown."""
+
+    async def scenario(worker: _Worker) -> None:
+        operation_id = await worker.run(worker.person, _CLI)
+        broker = worker.host.composed()._response_broker
+        actor = f"session:{worker.person.session_id}"
+
+        with pytest.raises(ValueError, match="already reserved"):
+            broker.reserve(operation_id, actor)
+
+        worker.host.release_delivered_result(operation_id)
+        worker.host.release_delivered_result(operation_id)
+
+        broker.reserve(operation_id, actor).close()
 
     _exercise(tmp_path, scenario)
 
@@ -574,12 +669,12 @@ def test_an_operation_stored_without_an_admission_releases_nothing_on_any_fronte
     """A read needs the admission the worker recorded, whoever reads and wherever."""
 
     async def scenario(worker: _Worker) -> None:
-        services = worker.host._composed()
-        execution = worker.host._execution
+        services = worker.host.composed()
+        execution = worker.host.execution
         assert execution is not None
         request = worker.request()
         operation_id = new_operation_id()
-        execution.bind(operation_id, WorkerOperationBinding(worker.key.session_id, _EXTERNAL_CLIENT, request))
+        await execution.bind(operation_id, WorkerOperationBinding(worker.key.session_id, _EXTERNAL_CLIENT, request))
         submitted = await services.submission.submit(
             request, actor_ref=f"session:{worker.key.session_id}", operation_id=operation_id
         )
@@ -622,21 +717,44 @@ def test_an_invocation_re_entered_on_another_frontend_is_read_whole_on_both(
     _exercise(tmp_path, scenario)
 
 
+def _reserved_response(worker: _Worker, operation_id: OperationId) -> tuple[OperationResponseCapability, ContentDigest]:
+    capability = worker.host.submissions[operation_id][1].response_capability
+    assert capability is not None
+    digest = worker.host.composed()._response_broker._entries[operation_id][1]
+    assert capability.matches(operation_id, f"session:{worker.host.submissions[operation_id][0]}", digest)
+    return capability, digest
+
+
+def _assert_response_retired(
+    worker: _Worker,
+    operation_id: OperationId,
+    session_id: UUID,
+    capability: OperationResponseCapability,
+    digest: ContentDigest,
+) -> None:
+    assert not capability.matches(operation_id, f"session:{session_id}", digest)
+    broker = worker.host.composed()._response_broker
+    broker.reserve(operation_id, f"session:{session_id}").close()
+    broker.discard(operation_id)
+
+
 def test_an_admission_whose_receipt_is_refused_settles_and_frees_its_subject(tmp_path: Path) -> None:
     """A submitter that loses its session before its receipt leaves no unstarted operation holding the subject."""
 
     async def scenario(worker: _Worker) -> None:
         operation_id = await worker.submit(worker.key, _EXTERNAL_CLIENT, worker.request())
+        capability, digest = _reserved_response(worker, operation_id)
         worker.host.custody.retire(worker.key.session_id)
 
         with pytest.raises(AutomationCustodyError):
             async with worker.host.release_submission(worker.key.session_id, operation_id, _EXTERNAL_CLIENT):
                 pytest.fail("a refused submitter must not receive its receipt")
 
-        settled = await worker.host._composed().submission.supervisor.inspect(operation_id)
+        settled = await worker.host.composed().submission.supervisor.inspect(operation_id)
         assert settled.lifecycle is OperationLifecycle.TERMINAL
         assert settled.terminal_condition is OperationTerminalCondition.REFUSED
         assert settled.effect is OperationEffect.NONE
+        _assert_response_retired(worker, operation_id, worker.key.session_id, capability, digest)
         assert await worker.run(worker.person, _CLI) != operation_id
 
     _exercise(tmp_path, scenario)
@@ -661,14 +779,156 @@ def test_a_subject_held_by_an_unsettled_operation_is_refused_as_busy(tmp_path: P
     _exercise(tmp_path, scenario)
 
 
+@pytest.mark.parametrize("replay", [False, True])
+def test_parent_refusal_after_submission_settles_only_the_withheld_admission(tmp_path: Path, replay: bool) -> None:
+    """The parent's final fence may refuse after the worker has already released a receipt."""
+
+    async def scenario(worker: _Worker) -> None:
+        request = worker.request(idempotency_key=_REPLAY_KEY)
+        submitted = await worker.host.submit(session_id=worker.person.session_id, frontend=_CLI, request=request)
+        held = submitted.receipt.operation_id
+        capability, digest = _reserved_response(worker, held)
+        if replay:
+            submitted = await worker.host.submit(session_id=worker.person.session_id, frontend=_CLI, request=request)
+            assert submitted.receipt.operation_id == held
+        fresh_admission = held if submitted.response_capability is not None else None
+        loop = asyncio.get_running_loop()
+        abandoned: list[bool] = []
+
+        def abandon(session_id: UUID, operation_id: OperationId, *, frontend: OperationFrontendProjection) -> bool:
+            assert session_id == worker.person.session_id and operation_id == held and frontend is _CLI
+            settled = asyncio.run_coroutine_threadsafe(
+                worker.host.abandon_submission(operation_id, session_id), loop
+            ).result(timeout=5)
+            abandoned.append(settled)
+            return settled
+
+        refusal = ProfileAccessRefusedError(AccessDenialCode.OS_SESSION_UNAVAILABLE)
+
+        @contextmanager
+        def withheld(_release: WorkerAuthorityRequest) -> Generator[None]:
+            raise refusal
+            yield
+
+        parent = cast(
+            RuntimeProfileHost,
+            SimpleNamespace(
+                authorize=withheld,
+                owner=SimpleNamespace(operation_worker=lambda: SimpleNamespace(abandon_submission=abandon)),
+            ),
+        )
+        connection = cast(ProfileConnection, SimpleNamespace(frontend=_CLI))
+        async with worker.host.release_submission(worker.person.session_id, held, _CLI) as release:
+
+            def final_fence() -> None:
+                with ExitStack() as guard, pytest.raises(ProfileAccessRefusedError) as refused:
+                    authorize_operation_release(parent, connection, release, guard, fresh_admission)
+                assert refused.value is refusal
+
+            await asyncio.to_thread(final_fence)
+        assert abandoned == ([] if replay else [True])
+        settled = await worker.host.composed().submission.supervisor.inspect(held)
+        if replay:
+            assert settled.lifecycle is OperationLifecycle.CREATED
+            assert capability.matches(held, f"session:{worker.person.session_id}", digest)
+            with pytest.raises(ValueError, match="already reserved"):
+                worker.host.composed()._response_broker.reserve(held, f"session:{worker.person.session_id}")
+            await worker.host.start(held, worker.person.session_id)
+            await worker.settled(held)
+        else:
+            assert settled.lifecycle is OperationLifecycle.TERMINAL
+            assert settled.terminal_condition is OperationTerminalCondition.REFUSED
+            assert settled.effect is OperationEffect.NONE
+            _assert_response_retired(worker, held, worker.person.session_id, capability, digest)
+        assert await worker.run(worker.person, _CLI) != held
+
+    _exercise(tmp_path, scenario)
+
+
+def test_abandonment_cannot_retire_another_sessions_original_admission(tmp_path: Path) -> None:
+    async def scenario(worker: _Worker) -> None:
+        held = await worker.submit(worker.person, _CLI, worker.request())
+        capability, digest = _reserved_response(worker, held)
+        assert not await worker.host.abandon_submission(held, worker.key.session_id)
+        assert capability.matches(held, f"session:{worker.person.session_id}", digest)
+        snapshot = await worker.host.composed().submission.supervisor.inspect(held)
+        assert snapshot.lifecycle is OperationLifecycle.CREATED
+        assert await worker.host.abandon_submission(held, worker.person.session_id)
+        assert not await worker.host.abandon_submission(held, worker.person.session_id)
+        _assert_response_retired(worker, held, worker.person.session_id, capability, digest)
+        assert await worker.run(worker.person, _CLI) != held
+
+    _exercise(tmp_path, scenario)
+
+
+def test_abandonment_preserves_a_running_executor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def scenario(worker: _Worker) -> None:
+        entered, finish = asyncio.Event(), asyncio.Event()
+        execute = _DocumentExecutor.execute
+
+        async def retained(
+            executor: _DocumentExecutor, request: OperationRequest[_DocumentRequest], context: OperationExecutorContext
+        ) -> str:
+            entered.set()
+            await finish.wait()
+            return await execute(executor, request, context)
+
+        monkeypatch.setattr(_DocumentExecutor, "execute", retained)
+        held = await worker.submit(worker.person, _CLI, worker.request())
+        capability, digest = _reserved_response(worker, held)
+        await worker.host.start(held, worker.person.session_id)
+        await entered.wait()
+        try:
+            assert not await worker.host.abandon_submission(held, worker.person.session_id)
+            snapshot = await worker.host.composed().submission.supervisor.inspect(held)
+            assert snapshot.lifecycle is OperationLifecycle.RUNNING
+            assert capability.matches(held, f"session:{worker.person.session_id}", digest)
+        finally:
+            finish.set()
+        await worker.settled(held)
+        assert not await worker.host.abandon_submission(held, worker.person.session_id)
+        assert capability.matches(held, f"session:{worker.person.session_id}", digest)
+
+    _exercise(tmp_path, scenario)
+
+
+def test_failed_abandonment_preserves_response_authority_until_settlement_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def scenario(worker: _Worker) -> None:
+        held = await worker.submit(worker.person, _CLI, worker.request())
+        capability, digest = _reserved_response(worker, held)
+        services = worker.host.composed()
+
+        async def refused_commit(*_args: object, **_kwargs: object) -> None:
+            raise RepositoryError("synthetic settlement persistence refusal")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(services.submission.supervisor._journal, "commit_settlement", refused_commit)
+            assert not await worker.host.abandon_submission(held, worker.person.session_id)
+
+        assert held in worker.host.submissions
+        assert capability.matches(held, f"session:{worker.person.session_id}", digest)
+        with pytest.raises(ValueError, match="already reserved"):
+            services._response_broker.reserve(held, f"session:{worker.person.session_id}")
+        snapshot = await services.submission.supervisor.inspect(held)
+        assert snapshot.lifecycle is OperationLifecycle.CREATED
+        assert await worker.host.abandon_submission(held, worker.person.session_id)
+        _assert_response_retired(worker, held, worker.person.session_id, capability, digest)
+        assert not await worker.host.abandon_submission(held, worker.person.session_id)
+        assert await worker.run(worker.person, _CLI) != held
+
+    _exercise(tmp_path, scenario)
+
+
 def test_an_admission_nobody_starts_settles_once_its_owner_has_lapsed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A submitter that vanishes after its receipt leaves no operation unsettled and no subject held for good."""
-    monkeypatch.setattr(operation_host, "_LAPSE_CHECK_SECONDS", 0.0)
+    monkeypatch.setattr(operation_settlement, "LAPSE_CHECK_SECONDS", 0.0)
 
     async def scenario(worker: _Worker) -> None:
-        supervisor = worker.host._composed().submission.supervisor
+        supervisor = worker.host.composed().submission.supervisor
         abandoned = await worker.submit(worker.key, _EXTERNAL_CLIENT, worker.request())
 
         # The lease has run out, but its submitter still has the grace to start it.
@@ -692,7 +952,7 @@ def test_a_new_submission_interrupts_an_admission_nobody_started_within_its_leas
     """The same runtime that admitted the abandoned operation gives its subject to the next submitter."""
 
     async def scenario(worker: _Worker) -> None:
-        supervisor = worker.host._composed().submission.supervisor
+        supervisor = worker.host.composed().submission.supervisor
         abandoned = await worker.submit(worker.key, _EXTERNAL_CLIENT, worker.request())
         assert await _refusal(worker.submit(worker.person, _CLI, worker.request())) is AccessDenialCode.SUBJECT_BUSY
 

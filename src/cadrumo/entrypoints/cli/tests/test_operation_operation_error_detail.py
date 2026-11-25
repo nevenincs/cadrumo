@@ -13,37 +13,33 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any, NoReturn, cast, override
+from typing import Any, cast, override
 from uuid import UUID
 
 import pytest
 from pydantic import JsonValue, TypeAdapter
 
 import cadrumo_client.commands.registered_operation_deadlines as registered_operation_deadlines
-from cadrumo.application.auth.operator_scope_ports import (
-    OperatorScopeBucketPaths,
-    OperatorScopePorts,
-    OperatorScopeSession,
-)
 from cadrumo.application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
 )
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+from cadrumo.application.modelo.calculation_operation import (
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
-    build_modelo_work_file_definition,
-    build_modelo_work_file_registration,
+)
+from cadrumo.application.modelo.operation_definitions import (
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
 )
+from cadrumo.application.modelo.operation_shared import (
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+)
 from cadrumo.application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.modelo.work_filing_contracts import ModeloWorkFileApproval, ModeloWorkFileRequest
@@ -72,14 +68,15 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus, PublicReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.core.errors.error_codes import build_error_envelope, get_registered_error_code
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.entrypoints.cli.operation_modelo_verification import run_modelo_work_filing, run_modelo_work_verification
 from cadrumo_client.commands.errors import (
     CliOperationStillRunningError,
@@ -106,8 +103,10 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.projection_pages import project_document_page
+from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ...tests.operation_contract_support import modelo_work_file_contract, unavailable, unavailable_operator_scope_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -156,14 +155,10 @@ def test_profile_requirement_explanation_survives_recorded_detail(message_key: s
     assert "private-flow-id" not in envelope.model_dump_json()
 
 
-def _unavailable(*_args: object, **_kwargs: object) -> NoReturn:
-    raise AssertionError("contract construction must not open a private profile")
-
-
 def _contract() -> OperationPublicDefinitionContractV1:
     definition = build_modelo_work_calculate_definition(
-        calculation_action_ports_factory=_unavailable,
-        attachment_store_factory=_unavailable,
+        calculation_action_ports_factory=unavailable,
+        attachment_store_factory=unavailable,
     )
     return build_modelo_work_calculate_registration(definition).contract
 
@@ -317,9 +312,9 @@ def _calculate(wire: _SettlingWire, *, settlement_timeout: float | None = None) 
         ModeloWorkCalculateRequest(work_unit_id=_WORK_UNIT, actor="operator"),
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=_WORK_UNIT,
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
         request_version=4,
-        result_version=2,
+        result_version=3,
         timeout=1,
         settlement_timeout=settlement_timeout,
         pending_check_command=f"aeat app modelo work revisions {_WORK_UNIT}",
@@ -408,32 +403,12 @@ def test_a_record_fault_detail_keeps_the_outbound_payload_classification() -> No
     assert error.terminal_precondition_verdict is None
 
 
-class _UnavailableOperatorScope:
-    """Tripwire ports: constructing the real public contract needs no private custody."""
-
-    def resolve(self, root: Path, bucket_id: str) -> NoReturn:
-        return _unavailable(root, bucket_id)
-
-    def acquire_lock(self, paths: OperatorScopeBucketPaths, *, wait_seconds: float) -> NoReturn:
-        return _unavailable(paths, wait_seconds=wait_seconds)
-
-    def release_lock(self, paths: OperatorScopeBucketPaths) -> NoReturn:
-        return _unavailable(paths)
-
-    def current(self) -> NoReturn:
-        return _unavailable()
-
-    def serves_bucket(self, session: OperatorScopeSession | None, bucket_id: str) -> NoReturn:
-        return _unavailable(session, bucket_id)
-
-
 def _verification_contract() -> OperationPublicDefinitionContractV1:
-    unavailable = _UnavailableOperatorScope()
     definition = build_modelo_work_verify_definition(
-        certificate_secret_backend_factory=_unavailable,
-        operator_scope_ports=OperatorScopePorts(storage=unavailable, session=unavailable),
-        verification_repository_bundle_factory=_unavailable,
-        profile_resolver=_unavailable,
+        certificate_secret_backend_factory=unavailable,
+        operator_scope_ports=unavailable_operator_scope_ports(),
+        verification_repository_bundle_factory=unavailable,
+        profile_resolver=unavailable,
     )
     return build_modelo_work_verify_registration(definition).contract
 
@@ -503,7 +478,7 @@ class _VerificationWire(FrontendClient):
                 runtime_boot_id=_PROFILE,
                 connection_id=_SESSION,
                 operation_id=_OPERATION,
-                page=project_document_page(encoded, request.page),
+                page=project_encoded_page(encode_projection_document(encoded), request.page),
             )
         reply = self.wire.operation(request, deadline=deadline)
         if isinstance(request, OperationObserve) and self.observers and self.cues == 0:
@@ -617,6 +592,63 @@ def test_verification_wait_expiry_preserves_identity_without_reading_or_replayin
     assert wire.exchanges[-1][0] == "operation_observe"
 
 
+def _assert_filing_exchanges(wire: _VerificationWire, request: ModeloWorkFileRequest, observations: int) -> None:
+    submitted = wire.requests[0]
+    assert isinstance(submitted, OperationSubmit)
+    assert submitted.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID
+    assert submitted.subject_ref == _WORK_UNIT
+    assert ModeloWorkFileRequest.model_validate_json(submitted.payload_json) == request
+    started = wire.requests[1]
+    assert isinstance(started, OperationControl)
+    assert started.action == "operation_start"
+    assert started.operation_id == _OPERATION
+    observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
+    assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
+    # The one event is read first; every later observation resumes after it.
+    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
+    bounded = [exchange for exchange in wire.exchanges if exchange[0] != "operation_result_page"]
+    assert [stage for stage, _, _ in bounded] == [
+        "contract",
+        "operation_submit",
+        "operation_start",
+        *(["operation_observe"] * observations),
+    ]
+    assert all(0 < deadline - entered <= 60 for _, entered, deadline in bounded)
+    assert len({request.request_id for request in wire.requests}) == len(wire.requests)
+    assert wire.cues == 1
+
+
+def _assert_filing_refusal_recorded(
+    raised: CliRecordedOperationError, wire: _VerificationWire, elapsed: float, result_deadline: float | None
+) -> None:
+    assert get_registered_error_code(raised).code == _REFUSAL_CODE
+    assert raised.translated_message == "aggregation.grouping.errors.unsupported_modelo"
+    assert raised.context is not None
+    assert raised.context["operation_id"] == _OPERATION
+    assert raised.context["reason"] == "typed_reason"
+    assert raised.context == {
+        "modelo": "111",
+        "reason": "typed_reason",
+        "operation_id": _OPERATION,
+        "effect": OperationEffect.NONE.value,
+        "terminal_condition": OperationTerminalCondition.REFUSED.value,
+    }
+    assert raised.terminal_precondition_verdict == cli_exception_no_recovery_verdict(
+        CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}
+    )
+    assert len(wire.wire.detail_reads) == 1
+    assert wire.exchanges[-1] == ("operation_result_page", elapsed, result_deadline)
+    assert result_deadline is not None
+    assert result_deadline > 60
+    assert result_deadline - elapsed >= 60
+
+
+def _assert_filing_still_running(raised: CliOperationStillRunningError, wire: _VerificationWire) -> None:
+    assert get_registered_error_code(raised).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
+    assert raised.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
+    assert wire.wire.detail_reads == []
+
+
 @pytest.mark.parametrize(
     ("elapsed", "settlement_timeout", "outcome", "result_deadline"),
     [
@@ -635,17 +667,10 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
     result_deadline: float | None,
 ) -> None:
     """Filing waits independently of transport, without replaying an approved operation on expiry."""
-    unavailable = _UnavailableOperatorScope()
-    definition = build_modelo_work_file_definition(
-        operator_scope_ports=OperatorScopePorts(storage=unavailable, session=unavailable),
-        filing_action_ports_factory=_unavailable,
-        certificate_secret_backend_factory=_unavailable,
-        profile_resolver=_unavailable,
-    )
     wire = _VerificationWire(
         elapsed_after_poll=elapsed,
         outcome_after_poll=outcome,
-        public_contract=build_modelo_work_file_registration(definition).contract,
+        public_contract=modelo_work_file_contract(),
     )
     _verification_clock(monkeypatch, wire)
     request = ModeloWorkFileRequest(
@@ -666,56 +691,14 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
                 wire, work_unit_id=_WORK_UNIT, request=request, timeout=60, settlement_timeout=settlement_timeout
             )
 
-    submitted = wire.requests[0]
-    assert isinstance(submitted, OperationSubmit)
-    assert submitted.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID
-    assert submitted.subject_ref == _WORK_UNIT
-    assert ModeloWorkFileRequest.model_validate_json(submitted.payload_json) == request
-    started = wire.requests[1]
-    assert isinstance(started, OperationControl)
-    assert started.action == "operation_start"
-    assert started.operation_id == _OPERATION
     observations = 3 if outcome == "refused" else 2
-    observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
-    assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
-    # The one event is read first; every later observation resumes after it.
-    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
-    bounded = [exchange for exchange in wire.exchanges if exchange[0] != "operation_result_page"]
-    assert [stage for stage, _, _ in bounded] == [
-        "contract",
-        "operation_submit",
-        "operation_start",
-        *(["operation_observe"] * observations),
-    ]
-    assert all(0 < deadline - entered <= 60 for _, entered, deadline in bounded)
-    assert len({request.request_id for request in wire.requests}) == len(wire.requests)
-    assert wire.cues == 1
+    _assert_filing_exchanges(wire, request, observations)
     if outcome == "refused":
         assert isinstance(raised.value, CliRecordedOperationError)
-        assert get_registered_error_code(raised.value).code == _REFUSAL_CODE
-        assert raised.value.translated_message == "aggregation.grouping.errors.unsupported_modelo"
-        assert raised.value.context is not None
-        assert raised.value.context["operation_id"] == _OPERATION
-        assert raised.value.context["reason"] == "typed_reason"
-        assert raised.value.context == {
-            "modelo": "111",
-            "reason": "typed_reason",
-            "operation_id": _OPERATION,
-            "effect": OperationEffect.NONE.value,
-            "terminal_condition": OperationTerminalCondition.REFUSED.value,
-        }
-        assert raised.value.terminal_precondition_verdict == cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}
-        )
-        assert len(wire.wire.detail_reads) == 1
-        assert wire.exchanges[-1] == ("operation_result_page", elapsed, result_deadline)
-        assert result_deadline is not None
-        assert result_deadline > 60
-        assert result_deadline - elapsed >= 60
+        _assert_filing_refusal_recorded(raised.value, wire, elapsed, result_deadline)
     else:
-        assert get_registered_error_code(raised.value).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
-        assert raised.value.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
-        assert wire.wire.detail_reads == []
+        assert isinstance(raised.value, CliOperationStillRunningError)
+        _assert_filing_still_running(raised.value, wire)
 
 
 def _notice(sequence: int, notice_code: str, display_code: str | None = None) -> OperationPublicNoticeEventV1:

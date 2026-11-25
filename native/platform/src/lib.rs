@@ -1,5 +1,7 @@
 #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
 compile_error!("Unsupported native platform");
+#[cfg(all(feature = "test-support", not(debug_assertions)))]
+compile_error!("release builds refuse the test-support feature");
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
@@ -9,19 +11,39 @@ use std::{
     ptr,
 };
 include!(env!("CADRUMO_CONTRACT_RS"));
+// The generated resolver vectors exist only in test builds.
+#[cfg(test)]
+include!(env!("CADRUMO_CONTRACT_VECTORS_RS"));
+#[cfg(unix)]
+pub mod account;
+#[cfg(all(target_os = "macos", feature = "appkit"))]
+pub mod application_icon;
 #[cfg(test)]
 mod conformance_tests;
 #[cfg(windows)]
 pub mod desktop;
+#[cfg(windows)]
+pub mod error_mode;
 pub mod file_changes;
 #[cfg(windows)]
 pub mod installation;
+#[cfg(target_os = "macos")]
+pub mod keychain;
 pub mod launch;
 #[cfg(all(test, unix))]
 mod posix_tests;
+pub mod process_exit;
+#[cfg(unix)]
+pub mod process_scope;
+pub mod runtime_connect;
+#[cfg(windows)]
+pub mod runtime_pipe;
+#[cfg(unix)]
+pub mod runtime_socket;
 pub mod storage;
 #[cfg(target_os = "macos")]
 pub mod transport;
+pub mod volume;
 
 #[repr(C)]
 pub struct Buffer {
@@ -50,15 +72,13 @@ fn context_for(
     exe: &Path,
     lookup: &dyn Fn(&str) -> Option<std::ffi::OsString>,
 ) -> Result<Context, String> {
-    let evidence = storage::detect_mode(exe)?;
-    let user = storage::resolve_storage_root_with(&evidence, lookup)
+    let package = storage::Package::installed(exe)?.root;
+    let user = storage::resolve_storage_root_with(lookup)
         .map_err(|refused| refused.to_string())?
         .root;
     let user = normalize_absolute_path(&user).map_err(|e| e.to_string())?;
-    let temporary =
-        storage::temporary_path(&user, lookup).map_err(|refused| refused.to_string())?;
+    let temporary = storage::temporary_path(&user).map_err(|refused| refused.to_string())?;
     let temporary = normalize_absolute_path(&temporary).map_err(|e| e.to_string())?;
-    let package = evidence.package;
     let authority = package.join(AUTHORITY);
     for field in HOST_INHERITED_FIELDS {
         storage::validate_inherited_pin(field, authority.as_os_str())
@@ -157,10 +177,10 @@ fn define_for(
 ) -> Result<launch::Defined, String> {
     let image = executable_image(executable)
         .ok_or_else(|| format!("{} is not a declared package image", executable.display()))?;
-    let evidence = storage::detect_mode(executable)?;
+    let package = storage::Package::installed(executable)?.root;
     let profile = launch::select(image, &[]).map_err(describe)?;
-    launch::define_environment(profile, ambient, &evidence.package.clone(), &|lookup| {
-        storage::resolve_storage_root_with(&evidence, lookup).map(|resolved| resolved.root)
+    launch::define_environment(profile, ambient, &package, &|lookup| {
+        storage::resolve_storage_root_with(lookup).map(|resolved| resolved.root)
     })
     .map_err(describe)
 }
@@ -334,11 +354,9 @@ pub unsafe extern "C" fn cadrumo_platform_define(
     }
     let package = unsafe { &*ctx }.paths[0].clone();
     let outcome = launch::select(image, &arguments).and_then(|profile| {
-        let exe = env::current_exe().map_err(|e| launch::DefineError::Failed(e.to_string()))?;
-        let evidence = storage::detect_mode(&exe).map_err(launch::DefineError::Failed)?;
         let ambient: Vec<_> = env::vars_os().collect();
         let defined = launch::define_environment(profile, &ambient, &package, &|lookup| {
-            storage::resolve_storage_root_with(&evidence, lookup).map(|resolved| resolved.root)
+            storage::resolve_storage_root_with(lookup).map(|resolved| resolved.root)
         })?;
         // Environment mutation occurs once, before Python or application threads exist.
         unsafe { launch::apply(&defined) }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
@@ -15,17 +16,19 @@ import pytest
 from cadrumo.application.operations.frontend_requests import OperationObservationRequestV1
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import document_frame
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.windows_channel import WindowsChannel
-from cadrumo_runtime.contracts.profile_worker import ProfileWorkerRefusal
+from cadrumo_client.transport.windows_process import WindowsProcessScope
+from cadrumo_runtime.contracts.profile_worker import ProfileWorkerActivity, ProfileWorkerRefusal
 
 from .. import profile_worker_transport as transport
 from ..profile_worker import ProfileWorkerProcess
-from ..windows_process import WindowsProcessScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -69,7 +72,7 @@ class _SlowWorkerChannel(WindowsChannel):
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         if self.awaiting_reply:
             if deadline - time.monotonic() < self.latency:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             self.awaiting_reply = False
         result = bytes(self.pending[:count])
         del self.pending[:count]
@@ -98,7 +101,7 @@ def _worker(latency: float) -> _Worker:
     worker._native_guard = RLock()
     worker._native_activity_lock = RLock()
     worker._native_activity = None
-    worker._stopping = Event()
+    worker._stopping = NativeWake()
     # Not a Linux scope, so the exchange needs no native membership check.
     worker._scope = WindowsProcessScope.__new__(WindowsProcessScope)
     worker._channel = _SlowWorkerChannel(latency)
@@ -132,18 +135,30 @@ def test_operation_reply_beyond_the_worker_authority_budget_still_contains_the_w
     with pytest.raises(RefusalError) as refused:
         _observe(worker)
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
     assert worker._stopping.is_set()
 
 
-def test_control_reply_keeps_its_short_budget() -> None:
-    worker = _worker(latency=11)
+def test_starved_worker_control_reply_keeps_the_worker() -> None:
+    """A control reply as late as one observed on a saturated host still reaches the runtime."""
+    worker = _worker(latency=13)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        worker.status()
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not worker.contained
+    assert not worker._stopping.is_set()
+
+
+def test_control_reply_beyond_timeout_contains_the_worker() -> None:
+    worker = _worker(latency=transport.CONTROL_EXCHANGE_SECONDS + 1)
 
     with pytest.raises(RefusalError) as refused:
         worker.status()
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
 
 
@@ -164,7 +179,7 @@ def test_contract_discovery_beyond_exchange_budget_contains_worker() -> None:
     with pytest.raises(RefusalError) as refused:
         worker.describe(uuid4(), "auth.local-read")
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
     assert worker._stopping.is_set()
 
@@ -181,7 +196,7 @@ def test_expired_free_or_reentrant_exchange_sends_nothing_and_keeps_worker(reent
     ):
         worker.prepare_api_admission(deadline=time.monotonic() - 1)
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert not channel.pending and not channel.awaiting_reply
     assert not worker.contained and not worker._stopping.is_set()
     with pytest.raises(ProfileAccessRefusedError) as available:
@@ -213,7 +228,7 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
             instant = 106.0
         with pytest.raises(RefusalError) as refused:
             response.result(timeout=2)
-        assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert refused.value.reason is RefusalCode.TIMEOUT
         assert not channel.pending and not channel.awaiting_reply
         assert not worker.contained and not worker._stopping.is_set()
         assert worker._lock.acquire(blocking=False), "expired borrower retained the exchange lock"
@@ -226,18 +241,44 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
         pool.shutdown(wait=True)
 
 
-def test_default_control_budget_also_bounds_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_control_timeout_also_ends_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
     worker = _worker(latency=0)
-    monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
+    monkeypatch.setattr(transport, "CONTROL_EXCHANGE_SECONDS", 0.03)
     with ThreadPoolExecutor(max_workers=1) as pool:
         with worker._lock:
             queued = pool.submit(worker.status)
             with pytest.raises(RefusalError) as refused:
                 queued.result(timeout=2)
-            assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert refused.value.reason is RefusalCode.TIMEOUT
         assert not worker.contained and not worker.stopping
         with pytest.raises(ProfileAccessRefusedError):
             worker.status()
+
+
+def test_queued_caller_that_times_out_is_named_without_containing_the_worker(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    worker = _worker(latency=0)
+    monkeypatch.setattr(transport, "CONTROL_EXCHANGE_SECONDS", 0.03)
+    caplog.set_level(logging.DEBUG, logger=transport.__name__)
+    with ThreadPoolExecutor(max_workers=1) as pool, worker._lock:
+        queued = pool.submit(worker.status)
+        with pytest.raises(RefusalError):
+            queued.result(timeout=2)
+
+    (record,) = [
+        item
+        for item in delivered_records(caplog, transport.__name__)
+        if item.getMessage() == "profile_worker_exchange_queue_timeout"
+    ]
+    assert record.levelno == logging.WARNING
+    fields = vars(record)
+    assert fields["request_type"] == "ProfileWorkerControlRequest"
+    assert fields["request_action"] == "status"
+    assert fields["operation_channel"] is False
+    assert fields["reason"] == RefusalCode.TIMEOUT.value
+    assert fields["queue_seconds"] >= 0.0 and fields["budget_seconds"] > 0.0
+    assert not worker.contained and not worker.stopping
 
 
 def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
@@ -252,14 +293,113 @@ def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
 
 
 def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyPatch) -> None:
-    worker = _worker(latency=11)
-    retiring = transport.ProfileWorkerTransport._retire_failed_exchange
+    worker = _worker(latency=transport.CONTROL_EXCHANGE_SECONDS + 1)
+    retiring = transport.ProfileWorkerTransport.retire_failed_exchange
 
     def retire(self: transport.ProfileWorkerTransport, error: BaseException, deadline: float | None) -> None:
         assert self.stopping, "a queued request can borrow the failed stream before retirement"
         retiring(self, error, deadline)
 
-    monkeypatch.setattr(transport.ProfileWorkerTransport, "_retire_failed_exchange", retire)
+    monkeypatch.setattr(transport.ProfileWorkerTransport, "retire_failed_exchange", retire)
     with pytest.raises(RefusalError):
         worker.status()
     assert worker.contained
+
+
+class _ProbeChannel(WindowsChannel):
+    """A control pipe whose worker answers an activity probe only when the test says so.
+
+    Every other request is answered at once with the worker's own typed refusal.
+    """
+
+    def __init__(self) -> None:
+        self.pending = bytearray()
+        self.requests: list[dict[str, str]] = []
+        self.written = Event()
+
+    @override
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        request = json.loads(bytes(payload[5:]))
+        self.requests.append(request)
+        self.written.set()
+        if request.get("action") != "activity":
+            reply = ProfileWorkerRefusal(
+                identity=_IDENTITY,
+                request_id=UUID(request["request_id"]),
+                reason=AccessDenialCode.OPERATION_UNAVAILABLE,
+            )
+            self.pending.extend(document_frame(reply))
+
+    def answer_probe(self, request_id: UUID) -> None:
+        self.pending.extend(
+            document_frame(ProfileWorkerActivity(identity=_IDENTITY, request_id=request_id, in_flight_operations=0))
+        )
+
+    @override
+    def read_ready(self) -> bool:
+        return bool(self.pending)
+
+    @override
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        if len(self.pending) < count:
+            raise RefusalError(RefusalCode.TIMEOUT)
+        result = bytes(self.pending[:count])
+        del self.pending[:count]
+        return result
+
+    @override
+    def close(self) -> None:
+        return None
+
+
+def _probed_worker() -> tuple[_Worker, _ProbeChannel, UUID]:
+    """Leave one activity probe unanswered on a worker's control pipe."""
+    worker = _worker(latency=0)
+    channel = _ProbeChannel()
+    worker._channel = channel
+    assert worker.activity(deadline=time.monotonic() + 0.05) is None
+    assert not worker.contained and not worker.stopping
+    return worker, channel, UUID(channel.requests[-1]["request_id"])
+
+
+def test_unanswered_probe_sends_nothing_more_and_keeps_the_worker() -> None:
+    worker, channel, _ = _probed_worker()
+
+    assert worker.activity(deadline=time.monotonic() + 0.05) is None
+    with pytest.raises(RefusalError) as refused:
+        worker.prepare_api_admission(deadline=time.monotonic() + 0.05)
+
+    assert refused.value.reason is RefusalCode.TIMEOUT
+    assert len(channel.requests) == 1
+    assert not worker.contained and not worker.stopping
+
+
+def test_late_probe_reply_is_discarded_before_the_next_exchange_reads_its_own() -> None:
+    worker, channel, probe = _probed_worker()
+    channel.answer_probe(probe)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        worker.status()
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not channel.pending
+    assert not worker.contained and not worker.stopping
+    channel.requests.clear()
+    channel.written.clear()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        answered = pool.submit(worker.activity, deadline=time.monotonic() + 5)
+        assert channel.written.wait(5)
+        channel.answer_probe(UUID(channel.requests[0]["request_id"]))
+        reply = answered.result(timeout=5)
+    assert reply is not None and reply.in_flight_operations == 0
+
+
+def test_misaddressed_late_probe_reply_is_a_framing_fault_that_contains_the_worker() -> None:
+    worker, channel, _ = _probed_worker()
+    channel.answer_probe(uuid4())
+
+    with pytest.raises(RefusalError) as refused:
+        worker.status()
+
+    assert refused.value.reason is RefusalCode.INVALID_FRAME
+    assert worker.contained and worker.stopping

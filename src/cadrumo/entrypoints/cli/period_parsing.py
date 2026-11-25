@@ -17,13 +17,14 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ...core.i18n.render import tr
 from .common import bad
 
 if TYPE_CHECKING:
     from ...core.period import Period
 
-__all__ = ["_canonical_period", "_optional_canonical_period"]
+__all__ = ["optional_canonical_period", "period_parsing_canonical_period"]
 
 
 # The ledger ``--period`` surface speaks ONE strict operator grammar — the
@@ -47,7 +48,7 @@ def _ledger_aeat_token(token: str) -> str | None:
     Validates ``token`` against the registry period union and accepts it only
     when it is a span-shaped :class:`StandardPeriodCode` member the
     ledger can filter by (quarters, months, annual). Extended-union members the ledger
-    does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
+    does not filter by (``EXT-*``, ``EVENT-N``) and instalment
     claves (``1P``-``4P``) return ``None``.
     """
     from ...core.period import StandardPeriodCode
@@ -64,13 +65,13 @@ def _ledger_aeat_token(token: str) -> str | None:
 #: Year used only to probe whether a token maps to a calendar date span. The
 #: span shape depends on the token's cadence, not the year, so any supported
 #: year answers identically; it never leaks into an operator-supplied period.
-_ACCEPTED_PERIOD_PROBE_YEAR = 2024
+_ACCEPTED_PERIOD_PROBE_YEAR = FOUR_DIGIT_YEAR_FIRST
 
 
 def _ledger_period_accepted_tokens() -> tuple[str, ...]:
     """Return the span-shaped registry tokens the ledger ``--period`` accepts.
 
-    Derived from the same rule :func:`_canonical_period` applies: a
+    Derived from the same rule :func:`period_parsing_canonical_period` applies: a
     :class:`StandardPeriodCode` member the ledger normalises
     (:func:`_ledger_aeat_token`) AND whose ``(year, token)`` :class:`Period`
     carries a calendar date span. The instalment claves (``1P``-``4P``) and the
@@ -95,7 +96,7 @@ def _ledger_period_accepted_tokens() -> tuple[str, ...]:
     return tuple(accepted)
 
 
-class _LedgerPeriodRefusal(typer.BadParameter):
+class LedgerPeriodRefusal(typer.BadParameter):
     """A ``--period`` refusal that carries the accepted token set as structured data.
 
     Subclasses :class:`typer.BadParameter` so the boundary behaviour is unchanged
@@ -127,7 +128,7 @@ class _LedgerPeriodRefusal(typer.BadParameter):
         self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
 
 
-def _canonical_period(period: str, *, year: int) -> Period:
+def period_parsing_canonical_period(period: str, *, year: int) -> Period:
     """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
@@ -158,20 +159,20 @@ def _canonical_period(period: str, *, year: int) -> Period:
             # A registry-valid token the ledger cannot filter by (an instalment
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
 
-    raise _LedgerPeriodRefusal(
+    raise LedgerPeriodRefusal(
         translated_message="cli.common.errors.period_unrecognised",
         context={"raw": period},
         accepted_period_tokens=_ledger_period_accepted_tokens(),
     )
 
 
-def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
+def optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
     """Resolve an optional ``--period`` / ``--year`` pair to :class:`Period` or ``None``.
 
     Returns ``None`` when no ``--period`` is supplied (the command scopes the
     whole ledger). When ``--period`` is supplied it requires ``--year`` (the
     AEAT token carries no year of its own) and converts the pair through
-    :func:`_canonical_period`; a ``--period``
+    :func:`period_parsing_canonical_period`; a ``--period``
     with no ``--year`` refuses with an instructive message naming the
     ``--year`` argument.
     """
@@ -179,4 +180,4 @@ def _optional_canonical_period(period: str | None, *, year: int | None) -> Perio
         return None
     if year is None:
         raise bad(tr("cli.common.errors.period_missing_year", token=period.strip()))
-    return _canonical_period(period, year=year)
+    return period_parsing_canonical_period(period, year=year)

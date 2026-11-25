@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..analysis.casilla_id_grammar import classify_casilla_id
 from ..analysis.continuity_integrity import chain_index, continuity_census, definition_findings, screen_authority
@@ -132,7 +133,8 @@ def test_screen_detects_a_chain_spanning_two_identifier_grammars(
     another. Without this the invariant gate would pass on a screen that could
     not see the condition at all.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision_id = str(authored_revisions("303")[-1].id)
+    revision = authority.modelo("303").revisions[revision_id]
     chained = [item for item in revision.casillas if getattr(item, "continuidad_id", None)]
     assert chained, "the fixture revision must carry continuity chains"
     donor = chained[0]
@@ -145,7 +147,7 @@ def test_screen_detects_a_chain_spanning_two_identifier_grammars(
     )
     mutated = revision.model_copy(update={"casillas": mutated_casillas})
     definition = authority.modelo("303").model_copy(
-        update={"revisions": {**authority.modelo("303").revisions, "2025": mutated}}
+        update={"revisions": {**authority.modelo("303").revisions, revision_id: mutated}}
     )
 
     grammars, _, _ = chain_index(definition)

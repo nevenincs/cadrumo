@@ -26,6 +26,7 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import NoActiveProfileError
 from ....core.profile_session import ProfileRecordUnavailability
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....tests.log_records import delivered_text
 from ..active_profile import resolve_active_profile_record
 from ..state_models import WorkflowState
 
@@ -55,7 +56,7 @@ def test_resolver_uses_active_profile_precedence_chain(tmp_path: Path) -> None:
         if pointer_bucket_id is not None:
             write_pointer(case_root, BucketPointer.selected(bucket_id=pointer_bucket_id, transition_revision=1))
 
-        with override_settings(cadrumo_active_profile=settings_profile, cadrumo_local_storage_root=case_root):
+        with override_settings(cadrumo_active_profile=settings_profile, cadrumo_storage_root=case_root):
             assert resolve_active_bucket_id() == expected_bucket_id
 
 
@@ -81,7 +82,7 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
 
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     write_pointer(tmp_path, BucketPointer.selected(bucket_id=bucket_id, transition_revision=1))
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow.active_profile")
 
         state = WorkflowState()
@@ -91,7 +92,7 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
 
     assert resolution.record is None
     assert resolution.unavailability is ProfileRecordUnavailability.NO_LIVE_CAPSULE
-    assert "active profile record resolution found no live bucket for the selected profile" in caplog.text
+    assert "active profile record resolution found no live bucket for the selected profile" in delivered_text(caplog)
     # The reason-erasing framing this replaced must not return unnoticed.
-    assert "returned no profile record" not in caplog.text
-    assert bucket_id not in caplog.text
+    assert "returned no profile record" not in delivered_text(caplog)
+    assert bucket_id not in delivered_text(caplog)

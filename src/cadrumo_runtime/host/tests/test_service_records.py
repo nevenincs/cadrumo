@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import logging
+import os
+import signal
 import sys
 import time
 from collections.abc import Generator
@@ -17,8 +21,13 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.core.diagnostic_log import DiagnosticFormatter
+from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import (
@@ -27,16 +36,20 @@ from cadrumo_client.contracts.extension_records import (
     ExtensionRecordReply,
     ExtensionRecordRequest,
 )
-from cadrumo_client.contracts.profile_access import ProfileStatus, SessionRequest, SessionsLocked
+from cadrumo_client.contracts.profile_access import ProfileStatus, SecretReady, SessionRequest, SessionsLocked
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
     ServiceCapability,
     ServiceConnected,
     VerifiedServicePeer,
 )
+from cadrumo_client.contracts.session_events import ServiceAdmissionChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
@@ -44,8 +57,10 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, NativeRuntimeFixtureOwner, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
+from .. import profile_connection_extension_records as extension_records
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [
     pytest.mark.integration,
@@ -123,7 +138,7 @@ class ServiceRecordRuntime:
     def connect_service(
         self, *, profile_id: UUID | None = None, service_id: str = SERVICE_ID
     ) -> InstalledServiceClient:
-        connection = connect(self.endpoint)
+        connection = connect_verified(self.endpoint)
         self.clients.append(connection)
         self.verifier.accept_next = True
         service = InstalledServiceClient(connection, profile_id=profile_id or self.profile_id, service_id=service_id)
@@ -133,16 +148,9 @@ class ServiceRecordRuntime:
 
     def admit(self, service: InstalledServiceClient):
         assert service.connected is not None
-        return self.human.service_access(
-            ServiceAdmission(
-                request_id=uuid4(),
-                profile_id=self.profile_id,
-                session_id=self.person_session_id,
-                recipient_connection_id=service.connected.connection_id,
-                service_id=service.service_id,
-            ),
-            deadline=time.monotonic() + 10,
-        )
+        person = FrontendClient(self.human, profile_id=self.profile_id, frontend=OperationFrontendProjection.CLI)
+        person._session_id = self.person_session_id
+        return person.service_admission(service.connected.connection_id, service.service_id)
 
 
 def _retained_connections_for_cleanup(
@@ -161,6 +169,7 @@ def _descriptor(
     *,
     model_runs: bool,
     digest: str,
+    operation_scope: AccessScope | None = None,
 ) -> InstalledServiceDescriptor:
     return InstalledServiceDescriptor(
         service_id=service_id,
@@ -169,7 +178,8 @@ def _descriptor(
         image_digest="1" * 64,
         descriptor_digest=digest * 64,
         record_capabilities=record_capabilities,
-        operation_scope=AccessScope(
+        operation_scope=operation_scope
+        or AccessScope(
             operations=frozenset(),
             actions=frozenset(),
             disclosures=frozenset(),
@@ -188,12 +198,15 @@ def service_record_runtime(
     record_capabilities: tuple[ExtensionRecordCapability, ...] | None = None,
     model_runs: bool = False,
     other_service_model_runs: bool | None = None,
+    operation_scope: AccessScope | None = None,
 ) -> Generator[ServiceRecordRuntime]:
     """Start real encrypted profiles and workers with two controlled authority ports.
 
     ``model_runs`` says whether the installed descriptor of :data:`SERVICE_ID`
     admits model runs. ``other_service_model_runs``, when given, installs a
     second descriptor, :data:`OTHER_SERVICE_ID`, that does or does not.
+    ``operation_scope`` is the registered-operation ceiling of :data:`SERVICE_ID`;
+    none leaves it with no operation.
     """
     with worker_profiles(tmp_path) as (root, targets):
         endpoint = WindowsEndpoint(storage_root=root)
@@ -213,6 +226,7 @@ def service_record_runtime(
                 (policy,) if record_capabilities is None else record_capabilities,
                 model_runs=model_runs,
                 digest="2",
+                operation_scope=operation_scope,
             )
         ]
         if other_service_model_runs is not None:
@@ -241,7 +255,7 @@ def service_record_runtime(
         owner.running = pool.submit(server.serve)
         try:
             assert server.ready.wait(3)
-            human = connect(endpoint)
+            human = connect_verified(endpoint)
             profile = targets[0][0].binding.profile_id
             admitted = login(human, profile, "password", PROFILE_INPUT.encode())
             assert isinstance(admitted, ProfileStatus), admitted
@@ -325,7 +339,7 @@ def test_real_service_record_cas_generation_delete_and_payload_wipe(tmp_path: Pa
 
 def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_path: Path) -> None:
     with service_record_runtime(tmp_path) as runtime:
-        unverified = connect(runtime.endpoint)
+        unverified = connect_verified(runtime.endpoint)
         runtime.clients.append(unverified)
         with pytest.raises(RefusalError) as refused:
             InstalledServiceClient(unverified, profile_id=runtime.profile_id, service_id=SERVICE_ID).claim()
@@ -372,29 +386,361 @@ def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_
         assert retired.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
 
 
-def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tmp_path: Path) -> None:
+@pytest.mark.parametrize("action", ["read", "generation", "delete", "write"])
+def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tmp_path: Path, action: str) -> None:
     with service_record_runtime(tmp_path) as runtime:
         service = runtime.connect_service()
         assert isinstance(runtime.admit(service), ServiceConnected)
         assert service.claim() is not None
         assert service.connected is not None
         runtime.verifier.connections.remove(service.connected.connection_id)
+        if action == "read":
+            with pytest.raises(RefusalError) as refused:
+                service.record_read(RECORD_CAPABILITY, "synthetic-record")
+            assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+            return
+        if action == "generation":
+            with pytest.raises(RefusalError) as refused:
+                service.observe_generation(RECORD_CAPABILITY)
+            assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+            return
+        lease = service.lease
+        assert lease is not None
+        request = ExtensionRecordRequest(
+            action="extension_record_read",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=lease.session_id,
+            lease_id=lease.lease_id,
+            capability=RECORD_CAPABILITY,
+            object_key="synthetic-record",
+        )
+        direct, material = service.connection.extension_record(request, deadline=time.monotonic() + 10)
+        assert isinstance(direct, ExtensionRecordReply)
+        assert direct.refusal is ExtensionRecordRefusal.LEASE_INACTIVE and material == bytearray()
+        payload = bytearray(b"synthetic secret never admitted") if action == "write" else None
+        if action == "delete":
+            result = service.record_delete(
+                RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        else:
+            assert payload is not None
+            result = service.record_write(
+                RECORD_CAPABILITY,
+                "synthetic-record",
+                payload,
+                expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+            )
+            assert payload == bytearray(len(payload))
+        assert result.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
 
-        read, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
-        assert read.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+
+@contextmanager
+def _paused_service_recheck(
+    runtime: ServiceRecordRuntime, monkeypatch: pytest.MonkeyPatch, *, check_number: int = 1
+) -> Generator[tuple[Event, Event]]:
+    entered, release = Event(), Event()
+    original = runtime.verifier.recheck_service
+    checks = 0
+
+    def paused(context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+        nonlocal checks
+        verified = original(context, channel, peer)
+        checks += 1
+        if checks == check_number:
+            entered.set()
+            assert release.wait(20), "test did not release native service verification"
+        return verified
+
+    with monkeypatch.context() as patch:
+        patch.setattr(runtime.verifier, "recheck_service", paused)
+        try:
+            yield entered, release
+        finally:
+            release.set()
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+def test_pending_service_admission_frees_the_person_slot_and_cannot_publish_after_cancel(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel: bool
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        finished = Event()
+        unsubscribe = runtime.human.subscribe_session_events(
+            lambda event: finished.set() if isinstance(event, ServiceAdmissionChanged) else None
+        )
+        try:
+            with _paused_service_recheck(runtime, monkeypatch) as (entered, release):
+                pending = runtime.human.service_access(
+                    ServiceAdmission(
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                        recipient_connection_id=service.connected.connection_id,
+                        service_id=service.service_id,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+                assert isinstance(pending, ServiceAdmissionPending)
+                assert entered.wait(20), "verification did not reach its controlled barrier"
+                # This is the same native person connection, not a second
+                # frontend that happens to hold a sibling human session.
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                query = ServiceAdmissionStatusQuery(
+                    action="service_admission_cancel" if cancel else "service_admission_status",
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=runtime.person_session_id,
+                    recipient_connection_id=service.connected.connection_id,
+                    service_id=service.service_id,
+                    admission_id=pending.admission_id,
+                )
+                waiting = runtime.human.service_access(query, deadline=time.monotonic() + 30)
+                assert isinstance(waiting, ServiceAdmissionPending) and waiting.cancelled is cancel
+                release.set()
+                assert finished.wait(30), "verification completion did not cue its exact holder"
+            if cancel:
+                assert service.claim() is None
+            else:
+                answer = runtime.human.service_access(
+                    query.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 30
+                )
+                assert isinstance(answer, ServiceConnected) and answer.lease is not None
+                assert service.claim() == answer.lease
+                stored = service.record_write(
+                    RECORD_CAPABILITY,
+                    "synthetic-record",
+                    bytearray(b"synthetic typed profile projection"),
+                    expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+                )
+                assert stored.state == "written"
+                present, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+                try:
+                    assert present.state == "present" and material == b"synthetic typed profile projection"
+                finally:
+                    material[:] = bytes(len(material))
+        finally:
+            unsubscribe()
+
+
+@pytest.mark.parametrize(
+    ("action", "check_number"), [("read", 1), ("generation", 1), ("delete", 1), ("write", 1), ("write", 2)]
+)
+def test_service_record_verification_allows_profile_status_and_lock_without_stale_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, action: str, check_number: int
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        assert service.claim() is not None
+        payload = bytearray(b"synthetic blocked write")
+
+        def request_record() -> tuple[ExtensionRecordReply, bytearray]:
+            if action == "read":
+                return service.record_read(RECORD_CAPABILITY, "synthetic-record")
+            if action == "generation":
+                return service.observe_generation(RECORD_CAPABILITY), bytearray()
+            if action == "delete":
+                return service.record_delete(
+                    RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+                ), bytearray()
+            return service.record_write(
+                RECORD_CAPABILITY, "synthetic-record", payload, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            ), bytearray()
+
+        host = runtime.profiles._profiles[runtime.profile_id]
+        original_access = host.owner.extension_record
+        accesses: list[UUID] = []
+
+        def record_access(request, material):
+            accesses.append(request.request_id)
+            return original_access(request, material)
+
+        monkeypatch.setattr(host.owner, "extension_record", record_access)
+        with (
+            _paused_service_recheck(runtime, monkeypatch, check_number=check_number) as (entered, release),
+            ThreadPoolExecutor(max_workers=1) as pool,
+        ):
+            pending = pool.submit(request_record)
+            try:
+                assert entered.wait(5), "record request did not reach native verification"
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 3,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                locked = runtime.human.session(
+                    SessionRequest(
+                        action="session_lock",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(locked, SessionsLocked)
+                assert runtime.person_session_id in locked.session_ids
+            finally:
+                release.set()
+            reply, material = pending.result(timeout=10)
+        assert reply.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
         assert material == bytearray()
-        generation = service.observe_generation(RECORD_CAPABILITY)
-        assert generation.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        deleted = service.record_delete(
-            RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        assert accesses == []
+        if action == "write":
+            assert payload == bytearray(len(payload))
+
+
+def test_a_service_admission_logs_how_long_it_waited_for_the_profile_and_each_stage(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="cadrumo_runtime.host.service_connection_records")
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        holder = next(
+            item for item in runtime.profiles._connections.values() if item.session_id == runtime.person_session_id
         )
-        assert deleted.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        payload = bytearray(b"synthetic secret never admitted")
-        written = service.record_write(
-            RECORD_CAPABILITY, "synthetic-record", payload, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        admission = ServiceAdmission(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=runtime.person_session_id,
+            recipient_connection_id=service.connected.connection_id,
+            service_id=SERVICE_ID,
         )
-        assert written.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        assert payload == bytearray(len(payload))
+        host = runtime.profiles._profiles[runtime.profile_id]
+        held_seconds = 0.4
+        # The profile is busy with other work while the admission is verified.
+        with host.guard:
+            reply = runtime.profiles._begin_service_admission(holder.context, admission)
+            assert isinstance(reply, ServiceAdmissionPending)
+            time.sleep(held_seconds)
+        deadline = time.monotonic() + 10
+        while not [record for record in caplog.records if record.getMessage() == "service_admission_timing"]:
+            assert time.monotonic() < deadline, "the admission logged no timing"
+            time.sleep(0.05)
+
+    (record,) = [record for record in caplog.records if record.getMessage() == "service_admission_timing"]
+    # Read the fields as the diagnostic log file writes them, after its field allowlist.
+    logged = json.loads(DiagnosticFormatter(LOG_FILE_FORMAT).format(record).split(" | ", 1)[1])
+    assert logged["outcome"] == "admitted", logged
+    assert logged["guard_wait_ms"] >= held_seconds * 1000 * 0.9, logged
+    assert all(isinstance(logged[name], int) for name in ("queued_ms", "recheck_ms", "commit_ms", "total_ms")), logged
+    assert logged["total_ms"] >= logged["guard_wait_ms"], logged
+
+
+@pytest.mark.parametrize("retirement", ["holder_lock", "recipient_disconnect", "recipient_disconnecting"])
+def test_service_admission_verification_allows_profile_work_and_refuses_retired_connections(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, retirement: str
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        recipient_id = service.connected.connection_id
+        recipient = runtime.profiles._connections[recipient_id]
+        retained = runtime.profiles._services[recipient_id]
+        host = runtime.profiles._profiles[runtime.profile_id]
+        retiring, finish_cleanup = Event(), Event()
+        original_retire = host.approvals.retire_connection
+
+        def paused_retirement(connection_id: UUID) -> None:
+            original_retire(connection_id)
+            if connection_id == recipient_id:
+                retiring.set()
+                assert finish_cleanup.wait(20), "test did not release disconnect cleanup"
+
+        if retirement == "recipient_disconnecting":
+            monkeypatch.setattr(host.approvals, "retire_connection", paused_retirement)
+        holder = next(
+            item for item in runtime.profiles._connections.values() if item.session_id == runtime.person_session_id
+        )
+        admission = ServiceAdmission(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=runtime.person_session_id,
+            recipient_connection_id=recipient_id,
+            service_id=SERVICE_ID,
+        )
+        with (
+            _paused_service_recheck(runtime, monkeypatch) as (entered, release),
+            ThreadPoolExecutor(max_workers=2) as pool,
+        ):
+            # Invoke the owning admission handler so the human's transport can
+            # exercise another real profile request while verification waits.
+            pending = pool.submit(runtime.profiles._admit_service, holder.context, admission)
+            disconnect = None
+            try:
+                assert entered.wait(5), "admission did not reach native verification"
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 3,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                if retirement == "holder_lock":
+                    locked = runtime.human.session(
+                        SessionRequest(
+                            action="session_lock",
+                            request_id=uuid4(),
+                            profile_id=runtime.profile_id,
+                            session_id=runtime.person_session_id,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(locked, SessionsLocked)
+                elif retirement == "recipient_disconnect":
+                    runtime.profiles.disconnect(recipient.context)
+                else:
+                    disconnect = pool.submit(runtime.profiles.disconnect, recipient.context)
+                    assert retiring.wait(5), "disconnect did not reach post-authority cleanup"
+                    assert runtime.profiles._connections.get(recipient_id) is recipient
+                    # Registry membership alone cannot resurrect a recipient whose
+                    # authority has ended but whose cleanup has not returned.
+                    with pytest.raises(ProfileAccessRefusedError) as ended:
+                        host.authority.attend(
+                            connection_id=holder.context.connection_id,
+                            parent_session_id=runtime.person_session_id,
+                            recipient_connection_id=recipient_id,
+                            scope=retained.descriptor.operation_scope,
+                        )
+                    assert ended.value.reason is AccessDenialCode.CONNECTION_MISMATCH
+                    release.set()
+                    refused = pending.result(timeout=10)
+                    assert isinstance(refused, AccessDenied)
+                    assert retained.lease is None
+            finally:
+                release.set()
+                finish_cleanup.set()
+            refused = pending.result(timeout=10)
+            if disconnect is not None:
+                disconnect.result(timeout=10)
+        assert isinstance(refused, AccessDenied)
+        assert refused.code is (
+            AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+            if retirement == "holder_lock"
+            else AccessDenialCode.CONNECTION_MISMATCH
+        )
+        assert retained.lease is None
+        assert recipient.session_id is None
 
 
 def test_service_refresh_tolerates_lease_retirement_before_profile_guard(
@@ -447,3 +793,109 @@ def test_service_refresh_tolerates_lease_retirement_before_profile_guard(
 
         assert service.connected is not None and service.connected.lease is None
         assert retained.lease is None
+
+
+def test_service_record_reply_is_not_bounded_by_the_client_input_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        assert service.claim() is not None
+        stored = bytearray(b"synthetic payload read after a long queue")
+        written = service.record_write(
+            RECORD_CAPABILITY, "synthetic-record", stored, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        assert written.state == "written"
+
+        # Serving a read always outlasts a client input window this short, as waiting on the guards does a long one.
+        with monkeypatch.context() as patch:
+            patch.setattr(extension_records, "CLIENT_INPUT_SECONDS", 0.001)
+            present, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+        try:
+            assert present.state == "present" and present.revision == written.revision
+            assert material == b"synthetic payload read after a long queue"
+        finally:
+            material[:] = bytes(len(material))
+
+        # The connection survived and serves the next request.
+        generation = service.observe_generation(RECORD_CAPABILITY)
+        assert generation.state == "generation" and generation.records_generation is not None
+        assert not service.connection.closed
+
+
+def test_service_record_write_input_is_bounded_and_waited_for_outside_the_profile_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        lease = service.claim()
+        assert lease is not None
+        host = runtime.profiles._profiles[runtime.profile_id]
+        request = ExtensionRecordRequest(
+            action="extension_record_write",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=lease.session_id,
+            lease_id=lease.lease_id,
+            capability=RECORD_CAPABILITY,
+            object_key="synthetic-record",
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+            byte_count=16,
+        )
+
+        with monkeypatch.context() as patch:
+            patch.setattr(extension_records, "CLIENT_INPUT_SECONDS", 5.0)
+            with service.connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 30) as held:
+                assert isinstance(held.reply().root, SecretReady)
+                waiting_since = time.monotonic()
+                # A service that withholds its secret must not keep the profile fenced meanwhile.
+                assert host.guard.acquire(timeout=2)
+                host.guard.release()
+                # The runtime, not this client, ends the wait: the connection closes when the window does.
+                with pytest.raises(RefusalError) as closed:
+                    held.reply()
+        assert closed.value.reason is RefusalCode.CONNECTION_CLOSED
+        assert time.monotonic() - waiting_since < 20
+
+
+def test_service_claim_during_custody_recovery_keeps_its_lease_for_the_parents_rebind(tmp_path: Path) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        lease = service.claim()
+        assert lease is not None
+
+        def person_status() -> object:
+            return runtime.human.session(
+                SessionRequest(
+                    action="session_status",
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=runtime.person_session_id,
+                ),
+                deadline=time.monotonic() + 10,
+            )
+
+        worker = runtime.profiles._profiles[runtime.profile_id].owner._worker
+        assert worker is not None
+        os.kill(worker._process.pid, signal.SIGTERM)
+        deadline = time.monotonic() + 30
+        while not (
+            isinstance(status := person_status(), ProfileStatus)
+            and status.status.denial is AccessDenialCode.CUSTODY_RECOVERING
+        ):
+            assert time.monotonic() < deadline, f"the runtime never suspended the person's lease: {status!r}"
+            time.sleep(0.05)
+
+        # A claim inside the window must neither re-approve nor withdraw the suspended child lease.
+        assert service.claim() == lease
+        assert service.connected is not None and service.connected.lease == lease
+
+        rebound = login(runtime.human, runtime.profile_id, "password", PROFILE_INPUT.encode())
+        assert isinstance(rebound, ProfileStatus) and rebound.status.denial is None, rebound
+        assert rebound.status.session_id == runtime.person_session_id
+        assert service.claim() == lease
+        absent, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+        assert absent.state == "absent" and material == bytearray()

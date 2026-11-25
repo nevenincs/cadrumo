@@ -96,7 +96,7 @@ def _usage_ratio_lock_target(bucket_id: str) -> Path:
         route = classify_storage_route(settings)
     else:
         route = classify_storage_route(settings_for_active_profile_bucket(trimmed, settings))
-    base = route.database_path.parent if route.database_path is not None else settings.cadrumo_local_storage_root
+    base = route.database_path.parent if route.database_path is not None else settings.cadrumo_storage_root
     safe = "".join(ch if (ch.isalnum() or ch in "-_") else "_" for ch in trimmed)
     return base / f"usage-ratios.{safe}.lock"
 
@@ -183,6 +183,8 @@ def derive_home_office_ratios_from_censo(
             authority=operation,
         ):
             profile = registry[category]
+            if not profile.proportionality.kind.is_usage_ratio:
+                continue
             derived[category] = effective_usage_ratio(profile.proportionality, raw_afectacion_ratio)
     with validating_governed_facts(operation):
         return UsageRatioProfile(ratios=derived)

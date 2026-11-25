@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.schema import BindingDefinition, Formu
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-from ._referential_integrity_support import (
+from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,

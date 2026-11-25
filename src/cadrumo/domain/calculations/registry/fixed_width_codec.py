@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import unicodedata
+from collections.abc import Iterable, Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Final, Literal, Protocol
 
 from pydantic import BeforeValidator
 
@@ -13,7 +14,7 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
-from .errors import RegistryValidationError
+from .errors import FixedWidthUnrepresentableCharacterError, FixedWidthValueOverflowError, RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyWireValue,
@@ -22,6 +23,10 @@ from .export_value_policy import (
     validate_export_wire_value,
 )
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, CasillaDataType
+
+_VOWELS: Final[frozenset[str]] = frozenset("AEIOU")
+#: The implied decimals the ``money`` wire type prints its amounts at.
+_MONEY_SCALE: Final = 2
 
 
 class ExportPadding(StrEnum):
@@ -50,15 +55,30 @@ class ExportEncoding(StrEnum):
     ISO_8859_15 = "iso-8859-15"
 
 
+class ExportAlphanumericText(StrEnum):
+    """Closed rules an official record design states for its alphanumeric field text.
+
+    A record that declares no rule writes its text as given. A design that
+    states one does so once for every alphanumeric and alphabetic field of the
+    record, so the rule is a record attribute rather than a per-field one.
+    """
+
+    #: "en mayúsculas sin caracteres especiales, y sin vocales acentuadas", with
+    #: the language's own letters Ñ and Ç kept and written in the record's
+    #: encoding.
+    UPPER_UNACCENTED = "upper_unaccented"
+
+
 class ExportSignPosition(StrEnum):
-    """A sign byte an official design reserves ahead of an amount's magnitude.
+    """How an official design writes an amount's sign where the general rule does not hold.
 
     The general AEAT convention reserves nothing: an 'N' displaces the leading
     digit of a negative amount and a non-negative amount is digits throughout.
     Some designs instead subdivide an amount into a leading alphabetic SIGNO
     position and a numeric magnitude that "no irá precedido de signo alguno";
     the magnitude then owns every remaining byte, and the sign byte follows
-    the design's own rule rather than the general one.
+    the design's own rule rather than the general one. Others keep the slot
+    undivided and only name a different marker.
     """
 
     #: 'N' when the amount is below zero, otherwise a space ("En cualquier otro
@@ -68,6 +88,10 @@ class ExportSignPosition(StrEnum):
     #: value is a non-negative magnitude written after an 'N'; when there is
     #: nothing to declare the whole slot "se rellenará a ceros".
     N_UNLESS_ZERO = "n_unless_zero"
+    #: No byte is reserved: the marker is the hyphen, "un caracter '-' inmediatamente
+    #: delante de los números", so a negative amount gives up its leading digit and
+    #: a non-negative one is digits throughout.
+    MINUS_DISPLACES_DIGIT = "minus_displaces_digit"
 
 
 def _coerce_closed_axis(value: object, axis: type[StrEnum]) -> object:
@@ -93,6 +117,10 @@ ExportEncodingValue = Annotated[
     ExportEncoding,
     BeforeValidator(lambda value: _coerce_closed_axis(value, ExportEncoding)),
 ]
+ExportAlphanumericTextValue = Annotated[
+    ExportAlphanumericText,
+    BeforeValidator(lambda value: _coerce_closed_axis(value, ExportAlphanumericText)),
+]
 ExportSignPositionValue = (
     Annotated[
         ExportSignPosition,
@@ -100,6 +128,25 @@ ExportSignPositionValue = (
     ]
     | None
 )
+
+
+class _PositionedField(Protocol):
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def offset(self) -> int | None: ...
+
+
+def fixed_width_field_order[FieldT: _PositionedField](fields: Iterable[FieldT]) -> tuple[FieldT, ...]:
+    """Return ``fields`` in the one order a fixed-width record is read, previewed and emitted.
+
+    Fields are taken by ``offset`` and by field id where two share an offset. A
+    field declaring no offset (a logical-only member, or any field of a layout
+    that is not positional) sorts ahead of every positioned one; the order never
+    gives it a position, so a consumer that needs geometry still refuses it.
+    """
+    return tuple(sorted(fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
 
 
 class ExportField(Protocol):
@@ -155,17 +202,38 @@ class ExportField(Protocol):
     def minimum_year(self) -> int | None: ...
 
     @property
+    def presence_marker(self) -> str | None: ...
+
+    @property
+    def absent_fill(self) -> Literal["spaces"] | None: ...
+
+    @property
     def source_refs(self) -> tuple[str, ...]: ...
 
 
-class _ExportRecord(Protocol):
+class ExportTextRecord(Protocol):
+    """The record declarations that govern how a field's text is written.
+
+    The encoding and the alphanumeric text rule belong to the record design,
+    not to a field, so a field is rendered as text only beside its record.
+    """
+
+    @property
+    def encoding(self) -> str:
+        """The character encoding the record is written in."""
+        ...
+
+    @property
+    def alphanumeric_text(self) -> ExportAlphanumericText | None:
+        """The design's rule for alphanumeric field text, or ``None`` where it states none."""
+        ...
+
+
+class _ExportRecord(ExportTextRecord, Protocol):
     """The registry-owned declaration shape needed by the record codec."""
 
     @property
     def id(self) -> str: ...
-
-    @property
-    def encoding(self) -> str: ...
 
     @property
     def fields(self) -> tuple[ExportField, ...]: ...
@@ -231,8 +299,40 @@ def validate_fixed_width_shape(field: ExportField) -> None:
         _validate_sign_position(field)
 
 
-def render_fixed_width_export_field(field: ExportField, value: object) -> str:
-    """Render one semantic field value to its complete exact-width wire text."""
+def _render_semantic_value(field: ExportField, value: object, record: ExportTextRecord | None) -> tuple[object, str]:
+    """Settle absent slots before policy projection and render an admitted semantic value."""
+    if _is_absent_slot(field, value) and (
+        not policy_defines_absent_slot(field.value_policy)
+        or (field.required and field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN)
+    ):
+        # Absence is settled BEFORE projection for every policy that does not
+        # claim the empty slot. Those projectors refuse ``None`` -- correctly, an
+        # absent quantity is not a quantity -- so testing absence only after
+        # projection made the blank fill unreachable on any field declaring a
+        # policy, and an optional casilla the taxpayer legitimately lacks could
+        # not be exported at all. The post-projection test below is kept for a
+        # policy that projects an empty slot through to an empty value.
+        rendered = render_absent_slot(field)
+    else:
+        value = project_export_value(field.value_policy, value)
+        if _is_absent_slot(field, value):
+            rendered = render_absent_slot(field)
+        else:
+            require_allowed_value(field, value)
+            require_minimum_year(field, value)
+            rendered = _render_typed_value(field, value, record)
+    return value, rendered
+
+
+def render_fixed_width_export_field(
+    field: ExportField, value: object, *, record: ExportTextRecord | None = None
+) -> str:
+    """Render one semantic field value to its complete exact-width wire text.
+
+    ``record`` is the record design the field belongs to. Given, its text rule
+    is applied to a text value and every character must be writable in its
+    encoding; a caller re-rendering an already written value may omit it.
+    """
     if field.length is None:
         raise RegistryValidationError(f"export field {field.id!r} must declare length")
     kind = str(getattr(field.kind, "value", field.kind))
@@ -253,26 +353,7 @@ def render_fixed_width_export_field(field: ExportField, value: object) -> str:
         if len(value.raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} parsed wire value has the wrong width")
         return value.raw
-    if _is_absent_slot(field, value) and (
-        not policy_defines_absent_slot(field.value_policy)
-        or (field.required and field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN)
-    ):
-        # Absence is settled BEFORE projection for every policy that does not
-        # claim the empty slot. Those projectors refuse ``None`` -- correctly, an
-        # absent quantity is not a quantity -- so testing absence only after
-        # projection made the blank fill unreachable on any field declaring a
-        # policy, and an optional casilla the taxpayer legitimately lacks could
-        # not be exported at all. The post-projection test below is kept for a
-        # policy that projects an empty slot through to an empty value.
-        rendered = render_absent_slot(field)
-    else:
-        value = project_export_value(field.value_policy, value)
-        if _is_absent_slot(field, value):
-            rendered = render_absent_slot(field)
-        else:
-            require_allowed_value(field, value)
-            require_minimum_year(field, value)
-            rendered = _render_typed_value(field, value)
+    value, rendered = _render_semantic_value(field, value, record)
     if not _is_absent_slot(field, value):
         validate_export_wire_value(field.value_policy, rendered)
     return rendered
@@ -305,7 +386,7 @@ def _render_record_field_bytes(
             )
         return render_empty_block_slot(field).encode(record.encoding)
     try:
-        return render_fixed_width_export_field(field, raw_value).encode(record.encoding)
+        return render_fixed_width_export_field(field, raw_value, record=record).encode(record.encoding)
     except (LookupError, UnicodeError, RegistryValidationError) as exc:
         raise FixedWidthRecordRenderError(
             field_id=field.id,
@@ -357,7 +438,7 @@ def render_fixed_width_export_record_body(
     This is the sole registry-owned record-byte producer. The outbound payload
     assembly owner appends record terminators while composing the final stream.
     """
-    fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
+    fields = fixed_width_field_order(record.fields)
     if not fields:
         raise FixedWidthRecordRenderError(
             field_id=None,
@@ -404,7 +485,7 @@ def pad_fixed_width_text(
 ) -> str:
     """Apply the canonical padding contract to already-rendered text."""
     if len(value) > length:
-        raise RegistryValidationError(f"fixed-width value exceeds length {length}")
+        raise FixedWidthValueOverflowError(rendered=value, field_length=length)
     if padding is ExportPadding.NONE:
         if justification is not ExportJustification.NONE:
             raise RegistryValidationError("no-padding fixed-width value requires no justification")
@@ -440,10 +521,10 @@ def _validate_signed_shape(field: ExportField) -> None:
 def _validate_sign_position(field: ExportField) -> None:
     """Refuse a reserved sign byte on a slot that cannot carry one.
 
-    ``BLANK_OR_N`` writes a negative amount, so it needs ``signed``;
-    ``N_UNLESS_ZERO`` writes a magnitude whose direction the design fixes, so a
-    negative value there would say the opposite of the constant 'N' and the
-    field must stay unsigned to refuse it.
+    ``BLANK_OR_N`` and ``MINUS_DISPLACES_DIGIT`` write a negative amount, so they
+    need ``signed``; ``N_UNLESS_ZERO`` writes a magnitude whose direction the
+    design fixes, so a negative value there would say the opposite of the constant
+    'N' and the field must stay unsigned to refuse it.
     """
     length = require_length(field)
     if field.data_type != "money":
@@ -458,7 +539,7 @@ def _validate_sign_position(field: ExportField) -> None:
         raise RegistryValidationError(
             f"sign_position export field {field.id!r} cannot also declare a value policy or allowed values",
         )
-    required_signed = field.sign_position is ExportSignPosition.BLANK_OR_N
+    required_signed = field.sign_position is not ExportSignPosition.N_UNLESS_ZERO
     if field.signed is not required_signed:
         raise RegistryValidationError(
             f"sign_position {field.sign_position!s} on export field {field.id!r} requires signed = "
@@ -479,7 +560,7 @@ def require_length(field: ExportField) -> int:
     return field.length
 
 
-def _render_typed_value(field: ExportField, value: object) -> str:
+def _render_typed_value(field: ExportField, value: object, record: ExportTextRecord | None) -> str:
     """Render one already-projected value under the field's declared data type."""
     if field.value_policy in {ExportValuePolicy.INTEGER_PART, ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART}:
         return _render_integer_part(field, value)
@@ -496,7 +577,41 @@ def _render_typed_value(field: ExportField, value: object) -> str:
         return _render_integer(field, value)
     if field.data_type == "boolean":
         return _pad(field, _render_boolean(value))
-    return _pad(field, _render_text(field, value))
+    text = _render_text(field, value)
+    return _pad(field, text if record is None else conform_record_text(field, text, record=record))
+
+
+def conform_record_text(field: ExportField, text: str, *, record: ExportTextRecord) -> str:
+    """Write ``text`` as the record design states its alphanumeric text, or refuse it.
+
+    This is the one place a record's text rule is applied, so the preview, the
+    written file and its verification read the same characters. Under
+    ``upper_unaccented`` the text is upper-cased and the accent is removed from
+    each vowel; Ñ and Ç are the language's own letters the design names, so they
+    stay. What the rule then leaves must be writable in the record's encoding
+    and must not be a control character, which would break the record; any
+    other character is refused by name rather than dropped or replaced.
+    """
+    text = unicodedata.normalize("NFC", text)
+    if record.alphanumeric_text is ExportAlphanumericText.UPPER_UNACCENTED:
+        text = "".join(_unaccented_vowel(character) for character in text.upper())
+    for character in text:
+        if unicodedata.category(character) == "Cc" or not _encodable(character, record.encoding):
+            raise FixedWidthUnrepresentableCharacterError(rendered=text, character=character, field_id=field.id)
+    return text
+
+
+def _unaccented_vowel(character: str) -> str:
+    base = unicodedata.normalize("NFD", character)[0]
+    return base if base in _VOWELS else character
+
+
+def _encodable(character: str, encoding: str) -> bool:
+    try:
+        character.encode(encoding)
+    except UnicodeEncodeError:
+        return False
+    return True
 
 
 def _render_text(field: ExportField, value: object) -> str:
@@ -527,16 +642,33 @@ def require_minimum_year(field: ExportField, value: object) -> None:
 
 
 def require_allowed_value(field: ExportField, value: object) -> None:
+    """Refuse a value whose wire digits are not one of the field's closed domain.
+
+    A closed domain is spelled as the canonical digit run the slot prints, so a
+    scaled field compares the value at its implied decimals: on a five-digit
+    Tipo % slot at two decimals ``0.50`` is ``50``, the run ``00050`` prints.
+    A value carrying more precision than the slot prints is refused rather than
+    rounded into a member.
+    """
     if field.allowed_values is None:
         return
-    number = _coerce_numeric(field, value)
+    number = _coerce_numeric(field, value) * Decimal(10 ** allowed_value_scale(field))
     if number != number.to_integral_value():
-        raise RegistryValidationError(f"export field {field.id!r} value is not an allowed integer")
+        raise RegistryValidationError(f"export field {field.id!r} value is not one of its allowed wire values")
     canonical = str(int(number))
     if canonical not in field.allowed_values:
         raise RegistryValidationError(
             f"export field {field.id!r} value {canonical!r} is outside allowed_values",
         )
+
+
+def allowed_value_scale(field: ExportField) -> int:
+    """Return the implied decimals a closed domain's digit runs are spelled at."""
+    if field.data_type == "money":
+        return _MONEY_SCALE
+    if field.data_type == "decimal":
+        return field.decimals or 0
+    return 0
 
 
 def _is_absent_slot(field: ExportField, value: object) -> bool:
@@ -592,9 +724,7 @@ def render_empty_block_slot(field: ExportField) -> str:
     obligatorio binds the occurrence, and an absent occurrence fills its block
     exactly as an absent optional slot is filled.
     """
-    if "aeat-dr-369-2021" in field.source_refs:
-        # DR369 v1.1, general notes 6-7, requires ALL unused slots to be
-        # spaces, explicitly including numeric fields and whole empty groups.
+    if field.absent_fill == "spaces":
         # Populated numeric values still use their declared padding; an actual
         # zero is a value, whereas an absent correction is no quantity at all.
         return " " * require_length(field)
@@ -602,7 +732,7 @@ def render_empty_block_slot(field: ExportField) -> str:
         # This source-backed sign slot prints 0 when its amount is absent. A
         # generic optional text fill would print a space and contradict the
         # signed-component wire policy before the record context guard runs.
-        rendered = _render_typed_value(field, project_export_value(field.value_policy, 0))
+        rendered = _render_typed_value(field, project_export_value(field.value_policy, 0), None)
         validate_export_wire_value(field.value_policy, rendered)
         return rendered
     if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
@@ -644,7 +774,7 @@ def _render_fractional_digits(field: ExportField, value: object) -> str:
     length = require_length(field)
     number = _coerce_numeric(field, value)
     fraction = number - number.to_integral_value(rounding=ROUND_DOWN)
-    scaled = fraction * (Decimal(10) ** length)
+    scaled = fraction * Decimal(10**length)
     if scaled != scaled.to_integral_value():
         raise RegistryValidationError(
             f"export field {field.id!r} cannot represent {length} fractional digits of a value carrying more precision",
@@ -654,13 +784,13 @@ def _render_fractional_digits(field: ExportField, value: object) -> str:
 
 def _render_scaled_numeric(field: ExportField, value: object, *, scale: int) -> str:
     number = _coerce_numeric(field, value)
-    scaled = (abs(number) * (Decimal(10) ** scale)).to_integral_value(rounding=ROUND_HALF_UP)
+    scaled = (abs(number) * Decimal(10**scale)).to_integral_value(rounding=ROUND_HALF_UP)
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 
 def _render_money(field: ExportField, value: object) -> str:
     number = _coerce_numeric(field, value)
-    scaled = round_to_cents(abs(number)) * 100
+    scaled = round_to_cents(abs(number)) * 10**_MONEY_SCALE
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 
@@ -668,6 +798,8 @@ def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -
     length = require_length(field)
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
+    if field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT:
+        return _render_displacing_marker(field, digits, marker="-", negative=negative, length=length)
     if field.sign_position is not None:
         return _render_with_reserved_sign(field, digits, negative=negative, length=length)
     if field.signed:
@@ -678,7 +810,7 @@ def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -
 def _render_with_reserved_sign(field: ExportField, digits: str, *, negative: bool, length: int) -> str:
     magnitude_width = length - 1
     if len(digits) > magnitude_width:
-        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
     magnitude = digits.rjust(magnitude_width, "0")
     if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
         return "0" * length if not digits.strip("0") else "N" + magnitude
@@ -701,10 +833,14 @@ def _render_signed_digits(field: ExportField, digits: str, *, negative: bool, le
     # amounts "15 enteros (o N + 14) y 2 decimales" on a seventeen-byte slot.
     # "Sin signos" excludes a blank as much as a '+': a blank belongs to
     # alphanumeric and alphabetic fields, which pad with blancos, not to these.
+    return _render_displacing_marker(field, digits, marker="N", negative=negative, length=length)
+
+
+def _render_displacing_marker(field: ExportField, digits: str, *, marker: str, negative: bool, length: int) -> str:
     magnitude_width = length - 1 if negative else length
     if len(digits) > magnitude_width:
-        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
-    return ("N" if negative else "") + digits.rjust(magnitude_width, "0")
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
+    return (marker if negative else "") + digits.rjust(magnitude_width, "0")
 
 
 def _render_boolean(value: object) -> str:
@@ -731,18 +867,25 @@ def _pad(field: ExportField, value: str) -> str:
             padding=field.padding,
             justification=field.justification,
         )
+    except FixedWidthValueOverflowError as exc:
+        raise FixedWidthValueOverflowError(rendered=exc.rendered, field_length=length, field_id=field.id) from exc
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"export field {field.id!r}: {exc}") from exc
 
 
 __all__ = [
+    "ExportAlphanumericText",
+    "ExportAlphanumericTextValue",
     "ExportEncoding",
     "ExportEncodingValue",
     "ExportJustification",
     "ExportJustificationValue",
     "ExportPadding",
     "ExportPaddingValue",
+    "ExportTextRecord",
     "FixedWidthRecordRenderError",
+    "conform_record_text",
+    "fixed_width_field_order",
     "pad_fixed_width_text",
     "render_empty_block_slot",
     "render_fixed_width_export_field",

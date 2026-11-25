@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-18'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:51d07a6b7993996bce898e6a41a34985caa930adc75de36b4545f83ca8476d68'
+body_hash: 'sha256:1218db394c5a91ae5ad835d3ddfc5e7434ca76bc22772f1ef81dddc7f292f336'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - '[[2026-10-27-sede-browser-adr]]'
 ---
 
 # `application-sign-in` adr: `Application sign-in` | (**status:** `accepted`)
@@ -154,9 +155,9 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 **Desktop sign-in view.**
 - It lives in the shell's own origin, never in the documentation frame. It is shown before the TUI pane starts whenever the active profile has no live sign-in. It is shown again whenever the sign-in times out, goes inactive or is locked, or when no profile exists. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that only the absence of a live sign-in was named.)
-- One dedicated token-checked host command takes the password in a raw IPC body. It spawns a fresh `aeat config login --secrets-stdin --json` with a piped stdin, which is closed after writing. The host zeroizes its own buffers, and stdout is kept out of diagnostics.
+- One dedicated token-checked host command takes the password in a raw IPC body. For the selected profile it starts the window's person hold, `cadrumo-runtime session hold --profile-id ID --password-stdin --persist-receipt`, writes the password to its stdin as one length-prefixed frame, and keeps that hold as the window's person session; the hold answers with its held line, which says whether the sign-in was stored, or with a typed refusal naming the runtime's reason, sign-in reason and retry wait. A sign-in naming another profile spawns a fresh `aeat config login --secrets-stdin --json` with a piped stdin, which is closed after writing. The host zeroizes its own buffers, and stdout is kept out of diagnostics.
 - Tauri and WebView2 copies of the password cannot be wiped, and the record says so.
-- The command runs as the CLI frontend. The shell holds no session, receipt or credential, never retries automatically and has DevTools disabled in release builds.
+- The selected profile's sign-in runs as the desktop person frontend through the hold child, and another profile's as the CLI frontend. The shell process holds no session, receipt or credential, never retries automatically and has DevTools disabled in release builds.
 - The view re-reads status after any failure. Recovery and `PROFILE_LOCKED` hand over to the TUI.
 
 **Profiles in the desktop view (amended 2026-10-06).**
@@ -173,7 +174,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 **Desktop status.**
 - A new unauthenticated runtime `sign_in_status` request reports presence and deadlines only. It never resumes or extends.
 - It is exposed under its own CLI leaf, `cadrumo-runtime config sign-in-status`, for the desktop to read.
-- It creates no profile host or worker and never reads the keychain.
+- It never reads the keychain. An unwatched read creates no profile host or worker; a watched read of a signed-out profile starts that profile's key-free worker ahead of its sign-in (`2026-10-22-startup-performance-worker-before-sign-in-adr`).
 - It reports `present`, `absent` or `unknown`, evaluated against the generation, the bound login and the deadlines.
 
 **TUI.**
@@ -306,3 +307,29 @@ Amended 2026-10-16 under `2026-10-16-idle-churn-adr`, on the operator's ruling t
 Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
 
 The wording "the legacy in-process paths are retired" above is kept as accepted history. It now reads together with this ruling: The Lifetime locators under `src/cadrumo/adapters/persistence/storage/` follow the code into `src/cadrumo_runtime`. The retirement of the legacy in-process paths named under Implementation is completed by `2026-10-18-runtime-authority-boundary-adr`: no CLI or TUI path authenticates, publishes a session or holds a DEK. The desktop's runtime-free profile list is unchanged. Its profile creation command still spawns `aeat config profile create`, which now presents the password to a runtime installation act.
+
+Amended 2026-10-22 under the operator's instruction to fix the root causes of a 40-50 s desktop start (`2026-10-22-startup-performance-request-path-audit`, finding sign-in-process-chain): the desktop signs the selected profile in through the person hold it keeps anyway, instead of a `config login` child followed by a second hold resuming the receipt; and a watched status read may start the signed-out profile's worker. Before, every desktop sign-in spawned `aeat config login`, and a status read never created a host or worker.
+
+## Amendment 2026-10-24: the window holds its own person session
+
+Accepted under the user's instruction of 2026-10-24 to implement native desktop sign-in, which retires the desktop's Python hold child. The **Desktop sign-in view** wording above, in which the host starts `cadrumo-runtime session hold ... --password-stdin --persist-receipt` and keeps that hold as the window's person session, is kept as accepted history and now reads together with this amendment.
+
+- The window signs the selected profile in on its own verified runtime connection, as the desktop frontend, with `persist_receipt` set; the runtime admits it as the desktop holder on the evidence it requires of the installed desktop image (`src/cadrumo_runtime/host/profile_connection_services.py:47`). That connection and its admitted session are the window's person session. Every request the hold child carried (status, activity, service admission, attendance, language, page presentation and the generic registered-operation relay) goes over that connection, in Rust, with the hold's reply shapes, refusals and event gating.
+- A window that finds the profile already signed in, or loses its connection, resumes the stored sign-in on a fresh connection of its own by presenting the receipt proof, as every other frontend does.
+- The desktop starts no `session hold` child. The command remains the runtime's canonical holder for development probes and attended admission under `2026-10-12-mcp-parity-attended-live-sign-in-adr`.
+- A sign-in that names another profile still runs `aeat config login`, because selecting a profile is the product's act. Profile creation and listing are unchanged.
+- Non-Windows desktops are unchanged: sign-in stays unavailable where no positive login and lock observer exists, as **Constraints** already states.
+- The host's password buffers are zeroized as before; the password now reaches the runtime in one secret frame instead of a child's standard input.
+- A reply to the window is bounded by the relay's assembled-document bound (16 MiB, `native/application/src/person_operations.rs`), not by the 64 KiB line the hold could write to its pipe; ruled by the user on 2026-10-24 ("lift") so that a settled ledger period or form read reaches the window in one reply.
+
+## Amendment 2026-10-28: pending first-login orchestration
+
+Accepted under the user's signal/slot-driven first-login instruction recorded in2026-10-28-debug-startup-reliability-adr. Selected and explicitly named targets resolve through current observations and use the native password path with correlated pending completion, claim and cancellation. The earlier CLI routing for another named profile is replaced for this GUI flow. The runtime still performs canonical profile selection only after successful login under its existing handover guard; a failed candidate preserves the previous session. No frontend writes the selected-profile pointer. One owner timeout spans the attempt, while readiness, completion and cancellation signals drive progress.
+
+## Amendment 2026-10-27: the view stream lane
+
+Accepted 2026-10-27 under `2026-10-27-sede-browser-adr`, on the user's choice of an in-app Sede browser streamed into the window ("implement 1)"). The consideration "The transport is strictly request-then-response. Pushed events are new protocol" is kept as accepted history and now reads together with this amendment.
+
+- The runtime gains one pushed binary lane, the view stream, used only by the `live.sede.view` operation. It runs on a dedicated verified connection on each leg, worker to host and host to window, never on the person connection or an operation channel. On those connections only, a new frame kind `B` carries image chunks and the bytes of a download or upload the person chose, and `J` carries control documents; `S` and `E` never appear there, and every other connection keeps refusing `B`. The frame layout, credit and bounds are ruled in `2026-10-27-sede-browser-adr`.
+- The window attaches to a view by asking on its own person connection, receiving a single-use attach token valid for 10 seconds, and presenting it as the first document of the view connection from the same native peer. The token binds the lane to the exact admitted desktop session that submitted the operation; it is never journaled, logged or persisted.
+- Retiring the window's person session (sign-out, lock, idle or absolute deadline, generation change, lock-down) unbinds the lane at once and cancels the view. The lane grants no other authority and never extends the idle deadline by itself. Person input sent on it counts as the person's activity under the 2026-10-15 amendment, at the window's existing bounded rate, because it is the person's keyboard and pointer input on an admitted person frontend.

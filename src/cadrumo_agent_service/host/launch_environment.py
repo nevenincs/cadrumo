@@ -11,8 +11,11 @@ and the admitted runtime's storage root, which the agent forwards to the program
 starts so that they serve the runtime's root and never resolve a default of
 their own. It also tells the agent, in plain variables, what Cadrumo supplies:
 the programs the agent may run, the tool server it may mount with its
-arguments, and the names it forwards. Skills and rules ship with the agent
-image; the service does not override their locations. The agent reads the
+arguments, the names it forwards, and the address of the local AI server the
+runtime manager supervises, which the agent's keyless local lane reaches,
+and the local engine the profile runs, whose lane alone the agent serves.
+Skills and rules ship with the agent image; the service does not override
+their locations. The agent reads the
 supplied variables; Cadrumo keeps no list of the agent's providers or lanes,
 and the agent reads each tool's trust from the tool server's own declarations.
 In a package the agent image's host defines the rest of the gateway's
@@ -25,8 +28,9 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypeGuard
 
+from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS, LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_ROOT,
@@ -34,10 +38,13 @@ from cadrumo.core.storage_environment import (
     child_environment,
     normalize_storage_path,
 )
+from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 if TYPE_CHECKING:
     from uuid import UUID
+
+    from ..providers.domain.record import LocalEngine
 
 HOSTED_ROOT_VARIABLE: Final = "CADRUMO_AGENT_HOSTED_ROOT"
 GATEWAY_PORT_VARIABLE: Final = "CADRUMO_AGENT_PORT"
@@ -62,15 +69,30 @@ TOOL_SERVER_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_CADRUMO"
 """The absolute path of the ``cadrumo-mcp`` tool server the agent may mount."""
 TOOL_SERVER_ARGUMENTS_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_ARGS_CADRUMO"
 """The JSON array of arguments the agent gives that tool server."""
+TOOL_SERVER_ARGUMENTS: Final = ("--surface", DEFAULT_MCP_SURFACE.value)
+"""The arguments every mount of the ``cadrumo-mcp`` tool server receives, the agent's and the console's."""
 FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
 """The comma-separated names the agent forwards to the tool servers and programs it starts."""
+OLLAMA_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_OLLAMA_BASE_URL"
+"""The loopback origin of the local AI server the runtime manager supervises."""
+OLLAMA_BASE_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}"
+LLAMACPP_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_LLAMACPP_BASE_URL"
+"""The loopback origin of the bundled llama-server the runtime manager supervises."""
+LLAMACPP_BASE_URL: Final = f"http://{LLAMA_SERVER_ADDRESS}"
+LOCAL_ENGINE_VARIABLE: Final = "CADRUMO_AGENT_LOCAL_ENGINE"
+"""The local engine the profile runs, whose keyless lane alone the agent's catalogue serves."""
+NO_LOCAL_ENGINE: Final = "none"
+"""The engine named where the profile's engine record cannot be read: the agent serves neither engine lane."""
 ADVERTISED_VARIABLES: Final = frozenset(
     {
+        LOCAL_ENGINE_VARIABLE,
         PROGRAM_AEAT_VARIABLE,
         PROGRAM_PYTHON_VARIABLE,
         TOOL_SERVER_VARIABLE,
         TOOL_SERVER_ARGUMENTS_VARIABLE,
         FORWARD_VARIABLE,
+        OLLAMA_BASE_URL_VARIABLE,
+        LLAMACPP_BASE_URL_VARIABLE,
     }
 )
 """What the service advertises to the gateway under the agent's prefix."""
@@ -114,9 +136,55 @@ def system_environment(received: Mapping[str, str], *, sys_platform: str | None 
     return {name: received[name] for name in names if name in received}
 
 
+def _valid_packaged_python(python: Path | None) -> TypeGuard[Path]:
+    return python is not None and python.is_absolute() and python.is_file()
+
+
+def _manifest_package_paths(package_root: Path) -> dict[str, object] | None:
+    manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
+    if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+        return None
+    manifest: object = json.loads(manifest_path.read_text(encoding="utf-8"))
+    layout = manifest.get("layout") if is_str_keyed_dict(manifest) else None
+    paths = layout.get("paths") if is_str_keyed_dict(layout) else None
+    if not is_str_keyed_dict(paths):
+        return None
+
+    return paths
+
+
+def _resolved_node_directory(packages: Path, package_root: Path, platform: str) -> Path | None:
+    node_root = packages.parent / "node"
+    node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
+    node_executable = node_executable.resolve(strict=True)
+    if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
+        return None
+    return node_executable.parent
+
+
+def _external_binary_directories(received: Mapping[str, str], platform: str) -> str | None:
+    return next(
+        (
+            value
+            for name, value in received.items()
+            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
+        ),
+        None,
+    )
+
+
+def _desktop_image_path(root: Path, name: object, placement_value: object) -> Path | None:
+    parts = _package_relative_parts(name)
+    placement = () if placement_value == "." else _package_relative_parts(placement_value)
+    if parts is None or placement is None:
+        return None
+    candidate = _resolve_package_path(root, (*placement, *parts))
+    return candidate if candidate is not None and candidate.is_file() else None
+
+
 def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path | None:
     """Return the packaged Node bin beside the manifest-declared packages, if present."""
-    if python is None or not python.is_absolute() or not python.is_file():
+    if not _valid_packaged_python(python):
         return None
     try:
         package_root = python.parent.resolve(strict=True)
@@ -124,34 +192,34 @@ def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path 
         if not resolved_python.is_relative_to(package_root):
             return None
 
-        manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
-        if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+        paths = _manifest_package_paths(package_root)
+        if paths is None:
             return None
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        layout = manifest.get("layout") if isinstance(manifest, dict) else None
-        paths = layout.get("paths") if isinstance(layout, dict) else None
-        if not isinstance(paths, dict):
+        packages = _packaged_python_packages(package_root, resolved_python, paths)
+        if packages is None:
             return None
-
-        executable_parts = _package_relative_parts(paths.get("executable"))
-        package_parts = _package_relative_parts(paths.get("packages"))
-        if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
-            return None
-        executable = package_root.joinpath(*executable_parts).resolve(strict=True)
-        if executable != resolved_python or not executable.is_file():
-            return None
-        packages = _resolve_package_path(package_root, package_parts)
-        if packages is None or not packages.is_dir():
-            return None
-
-        node_root = packages.parent / "node"
-        node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
-        node_executable = node_executable.resolve(strict=True)
-        if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
-            return None
-        return node_executable.parent
+        return _resolved_node_directory(packages, package_root, platform)
     except (OSError, RuntimeError, TypeError, ValueError, RecursionError):
         return None
+
+
+def _packaged_python_packages(
+    package_root: Path,
+    resolved_python: Path,
+    paths: dict[str, object],
+) -> Path | None:
+    executable_parts = _package_relative_parts(paths.get("executable"))
+    package_parts = _package_relative_parts(paths.get("packages"))
+    if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
+        return None
+    executable = package_root.joinpath(*executable_parts).resolve(strict=True)
+    if executable != resolved_python or not executable.is_file():
+        return None
+    packages = _resolve_package_path(package_root, package_parts)
+    if packages is None or not packages.is_dir():
+        return None
+
+    return packages
 
 
 def _package_relative_parts(value: object) -> tuple[str, ...] | None:
@@ -175,14 +243,7 @@ def agent_binary_directories(
 ) -> str | None:
     """Return public provider directories with the packaged Node directory prepended when present."""
     platform = sys.platform if sys_platform is None else sys_platform
-    external = next(
-        (
-            value
-            for name, value in received.items()
-            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
-        ),
-        None,
-    )
+    external = _external_binary_directories(received, platform)
     node_bin = _packaged_node_bin_directory(python, platform=platform)
     if node_bin is not None:
         path_separator = ";" if platform == "win32" else ":"
@@ -194,7 +255,7 @@ def agent_binary_directories(
 
 def auth_browser_executable(python: Path | None) -> Path | None:
     """Locate the declared desktop image that relays a provider's browser hook."""
-    if python is None or not python.is_absolute() or not python.is_file():
+    if not _valid_packaged_python(python):
         return None
     try:
         root = python.parent.resolve(strict=True)
@@ -209,12 +270,7 @@ def auth_browser_executable(python: Path | None) -> Path | None:
         if len(images) != 1:
             return None
         image = images[0]
-        parts = _package_relative_parts(image["name"] + layout["entrypoint_suffix"])
-        placement = () if image["placement"] == "." else _package_relative_parts(image["placement"])
-        if parts is None or placement is None:
-            return None
-        candidate = _resolve_package_path(root, (*placement, *parts))
-        return candidate if candidate is not None and candidate.is_file() else None
+        return _desktop_image_path(root, image["name"] + layout["entrypoint_suffix"], image["placement"])
     except (OSError, RuntimeError, KeyError, TypeError, ValueError, RecursionError):
         return None
 
@@ -227,6 +283,7 @@ def agent_launch_environment(
     aeat: Path | None,
     python: Path | None,
     received: Mapping[str, str],
+    local_engine: LocalEngine | None,
     sys_platform: str | None = None,
     profile_id: UUID | None = None,
 ) -> dict[str, str]:
@@ -240,7 +297,10 @@ def agent_launch_environment(
     the gateway, and the agent forwards it to the programs and tool servers it starts.
     ``profile_id`` is the profile the agent is started inside; the gateway and the
     tools it starts are told that profile's folder, derived here and forwarded
-    with the root, and never a folder of another profile.
+    with the root, and never a folder of another profile. ``local_engine`` is
+    the engine the profile runs, read from its engine record; ``None`` when that
+    record cannot be read, and then the agent is told ``none``: it starts and
+    serves neither engine's lane, and every other lane as before.
     """
     platform = sys.platform if sys_platform is None else sys_platform
     base = system_environment(received, sys_platform=platform)
@@ -273,9 +333,12 @@ def agent_launch_environment(
     if python is not None:
         environment[PROGRAM_PYTHON_VARIABLE] = str(python)
     environment[TOOL_SERVER_VARIABLE] = str(relay)
-    environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(["--surface", DEFAULT_MCP_SURFACE.value])
+    environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(list(TOOL_SERVER_ARGUMENTS))
     forwarded = [STORAGE_ROOT.variable]
     if PROFILE_ROOT_VARIABLE in environment:
         forwarded.append(PROFILE_ROOT_VARIABLE)
     environment[FORWARD_VARIABLE] = ",".join(forwarded)
+    environment[OLLAMA_BASE_URL_VARIABLE] = OLLAMA_BASE_URL
+    environment[LLAMACPP_BASE_URL_VARIABLE] = LLAMACPP_BASE_URL
+    environment[LOCAL_ENGINE_VARIABLE] = NO_LOCAL_ENGINE if local_engine is None else local_engine.value
     return environment

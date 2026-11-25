@@ -25,11 +25,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRefusalV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.censal_operation import (
@@ -46,6 +42,7 @@ from cadrumo.application.user_profile.censal_prepare_operation import (
 )
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,

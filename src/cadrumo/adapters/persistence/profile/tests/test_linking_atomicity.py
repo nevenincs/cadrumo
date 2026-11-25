@@ -31,8 +31,7 @@ from cadrumo.application.invoices.transaction_linking import (
     link_invoice_transaction_repositories,
 )
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.service import verify_link_consistency
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -40,7 +39,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
-from .....domain.iva.schema import InvoiceKind
+from .issued_invoice_support import paid_servicios_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -237,34 +236,7 @@ def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
 
 
 def _invoice() -> Invoice:
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-ATOMIC-1",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "payment_status": PaymentStatus.PAID,
-            "notes": "atomicity fixture",
-            "lines": (
-                InvoiceLine.model_validate(
-                    {
-                        "description": "Servicios",
-                        "quantity": Decimal("1"),
-                        "unit_price": Decimal("100.00"),
-                        "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.from_registry("RATE_21"),
-                        "iva_amount": Decimal("21.00"),
-                    },
-                ),
-            ),
-        },
-    )
+    return paid_servicios_invoice("INV-ATOMIC-1", issued_at=date(2026, 4, 1), notes="atomicity fixture")
 
 
 def _transaction() -> Transaction:

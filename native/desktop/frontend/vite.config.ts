@@ -1,8 +1,14 @@
-import { buildPath } from "../scripts/build-paths.mjs";
+import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
+import { chromeCatalogueModule } from "./dev/chrome-catalogue.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
-import { existsSync } from "node:fs";
+import {
+  testRunProductBuild,
+  testRunPorts,
+  testRunScenariosBuild,
+} from "./scripts/test-run-directory.mjs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
@@ -14,20 +20,30 @@ const source = fileURLToPath(new URL("./src", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
+// The generated window projections, which the desktop-window-fixtures target
+// seeds into this build's tree and which scripts/typecheck.mjs binds to the
+// same alias. A missing directory is reported by the file that imports from it.
+const fixtures = buildPath("window_fixtures");
 
 // The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are
 // never another's and nothing generated is written into the source tree.
+const CHROME_FILE = "chrome-strings.json";
 const GENERATED_INPUTS: Record<string, string> = {
-  "virtual:desktop-strings": "chrome-strings.json",
+  "virtual:operational-settings": "operational-settings.ts",
+  "virtual:desktop-strings": CHROME_FILE,
   "virtual:desktop-palette.css": "palette.css",
   "virtual:desktop-provider-icons": "provider-icons.json",
+  "virtual:desktop-navigation": "navigation.json",
 };
 
 export default defineConfig(({ command, mode }) => {
   const identity = readIdentity();
   const generated = buildPath("desktop_frontend_generated");
-  const ports = server();
+  const ports = {
+    ...server(),
+    ...testRunPorts(buildPath("desktop_results")),
+  };
   const environment = loadEnv(mode, root, "CADRUMO_DESKTOP_");
   const allowedHosts = (
     process.env.CADRUMO_DESKTOP_ALLOWED_HOSTS ??
@@ -39,25 +55,52 @@ export default defineConfig(({ command, mode }) => {
     .filter(Boolean);
   // `--mode scenarios` builds the development entry instead, minified, into
   // the testing directory. It is what the benchmarks measure, because a
-  // development server's unminified modules are not what ships; it is never
-  // the product and nothing packages it.
+  // development server's unminified modules are not what ships, and what the
+  // browser scenarios run against, served by `vite preview`, because nothing
+  // in a build watches the source tree. It is never the product and nothing
+  // packages it. Every server of this mode belongs to the browser tests and
+  // has ports of its own, so a test run neither meets nor reuses the server
+  // a developer has open.
   const scenarios = mode === "scenarios";
+  const listening = scenarios
+    ? { server: ports.hotPort, preview: ports.scenariosPort }
+    : { server: ports.devPort, preview: ports.previewPort };
   // The product has a workspace and a lightweight loading entry. The development entry beside it is never an
   // input of the product build, and the boundary plugin refuses its modules
-  // by any route.
+  // by any route. The scenario build has the pages the browser tests open:
+  // the shell on the scenario host, and one primitive over made-up data.
   const input: Record<string, string> = scenarios
-    ? { scenarios: resolve(root, "scenarios.html") }
+    ? {
+        scenarios: resolve(root, "scenarios.html"),
+        primitives: resolve(root, "primitives.html"),
+      }
     : {
         index: resolve(root, "index.html"),
         startup: resolve(root, "startup.html"),
       };
+  const cacheDirectory = requireBuildOutput(
+    scenarios
+      ? resolve(buildPath("desktop_cache"), "scenarios")
+      : buildPath("desktop_cache"),
+  );
+  const outputDirectory = requireBuildOutput(
+    scenarios
+      ? (testRunScenariosBuild(buildPath("desktop_results")) ??
+          resolve(buildPath("desktop_testing"), "scenarios"))
+      : (testRunProductBuild(buildPath("desktop_results")) ??
+          buildPath("desktop_frontend")),
+  );
   return {
     base: "./",
-    cacheDir: buildPath("desktop_cache"),
+    // A development server keeps its optimized dependencies here, keyed by the
+    // mode among other things, and a server of another mode would discard them.
+    // The test server of mode scenarios has its own, so it cannot make the
+    // display a developer has open reload.
+    cacheDir: cacheDirectory,
     build: {
-      outDir: scenarios
-        ? resolve(buildPath("desktop_testing"), "scenarios")
-        : buildPath("desktop_frontend"),
+      // A browser test run builds each bundle into its own directory: a
+      // build empties its output, including when another build is serving it.
+      outDir: outputDirectory,
       // The desktop package embeds this whole directory, so nothing from an
       // earlier build may be left in it.
       emptyOutDir: true,
@@ -66,26 +109,47 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: ports.host,
       allowedHosts,
-      port: ports.devPort,
+      port: listening.server,
       strictPort: true,
       // The shell's typefaces are the documentation's own files, outside
       // this project, so that directory of public assets is served as well.
-      fs: { allow: [root, docsStatic, generated] },
+      fs: { allow: [root, docsStatic, generated, fixtures] },
     },
     preview: {
       host: ports.host,
       allowedHosts,
-      port: ports.previewPort,
+      port: listening.preview,
       strictPort: true,
     },
-    resolve: { alias: { "@": source } },
+    resolve: {
+      alias: { "@": source, "@fixtures": fixtures },
+      // Each Radix primitive keeps its layer stack, focus-scope stack and
+      // portal state in module scope, so a dialog, a popover and a menu
+      // nested in one another only agree on who is on top when they all
+      // load one copy of these. The package manager may nest older copies
+      // beside a newer hoisted one; this makes the window load the one.
+      dedupe: [
+        "@radix-ui/react-dismissable-layer",
+        "@radix-ui/react-focus-guards",
+        "@radix-ui/react-focus-scope",
+        "@radix-ui/react-portal",
+        "@radix-ui/react-presence",
+      ],
+    },
     plugins: [
       {
         name: "desktop-server-ports",
         configResolved(config) {
           if (
-            config.server.port !== ports.devPort ||
-            config.preview.port !== ports.previewPort ||
+            resolve(config.build.outDir) !== resolve(outputDirectory) ||
+            resolve(config.cacheDir) !== resolve(cacheDirectory)
+          )
+            throw new Error(
+              "Desktop output and cache directories are owned by the selected CMake build.",
+            );
+          if (
+            config.server.port !== listening.server ||
+            config.preview.port !== listening.preview ||
             config.server.strictPort !== true ||
             config.preview.strictPort !== true
           )
@@ -109,9 +173,18 @@ export default defineConfig(({ command, mode }) => {
             this.error(
               `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target, or run just dev.`,
             );
+          if (id === "virtual:desktop-strings" && command === "build")
+            return "\0desktop-strings";
+          // Development keeps the file's normal transformation and HMR.
           // The file itself: it is then watched and transformed as any
           // stylesheet or JSON module is.
           return file;
+        },
+        load(id) {
+          if (id !== "\0desktop-strings") return;
+          const file = resolve(generated, CHROME_FILE);
+          this.addWatchFile(file);
+          return chromeCatalogueModule(JSON.parse(readFileSync(file, "utf8")));
         },
       },
       {

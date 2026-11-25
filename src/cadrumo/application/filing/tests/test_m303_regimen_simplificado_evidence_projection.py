@@ -42,6 +42,11 @@ from ....domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    split_exercise_revisions,
+)
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -55,22 +60,32 @@ from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimp
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import build_m303_filing_projection_plan
-from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
+from .producer_snapshot_support import (
+    elections,
+    m303_filing_facts,
+    m303_profile,
+    producer_snapshot_presenter,
+    taxpayer_identity,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_EXERCISE = _EARLY_DESIGN.valid_from.year
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    period = Period.from_year_and_code(_EXERCISE, "1T")
+    registry_snapshot = published_snapshot("303", filing_year=_EXERCISE, period="1T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
@@ -81,15 +96,15 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
     annual_activity = regimen_snapshot.orden.activities[0]
     assert annual_activity.kind == "no_agricola"
     assert annual_activity.iae_epigrafe is not None
-    assert annual_activity.orden_id == "m303:2026:iva:82e3988053fc055b601e"
+    assert annual_activity.orden_id == f"m303:{_EXERCISE}:iva:82e3988053fc055b601e"
     assert annual_activity.cuota_minima_pct == Decimal("20")
     reference = FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref)
     rows = RegimenSimplificadoFilingRows(
-        ejercicio=2026,
+        ejercicio=_EXERCISE,
         activities=(
             ActividadNoAgricolaSimplificado(
                 orden_id=annual_activity.orden_id,
-                ejercicio=2026,
+                ejercicio=_EXERCISE,
                 activity_id=annual_activity.orden_id,
                 iae_epigrafe=annual_activity.iae_epigrafe,
                 auxiliary_activity_indicator=annual_activity.auxiliary_activity_indicator,
@@ -202,16 +217,26 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
         )
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "period_code"),
-    ((2023, "1T"), (2024, "1T"), (2024, "3T"), (2025, "1T"), (2026, "1T"), (2026, "2T")),
-)
+def _epoch_coordinates() -> tuple[tuple[int, str], ...]:
+    """One supported (exercise, first quarterly period) per authored design, so every epoch is exercised."""
+    floor = filing_year_envelope().floor
+    coordinates: list[tuple[int, str]] = []
+    for design in authored_revisions("303"):
+        if design.valid_to is not None and design.valid_to.year < floor:
+            continue
+        year = max(design.valid_from.year, floor)
+        quarter = next(code for code in design.period_selector.periods_for_year(year) if code.endswith("T"))
+        coordinates.append((year, quarter))
+    return tuple(coordinates)
+
+
+@pytest.mark.parametrize(("filing_year", "period_code"), _epoch_coordinates())
 def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     filing_year: int,
     period_code: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Historical epochs and both 2026 branches preserve calculated module endpoint values."""
+    """Every authored design, including both branches of a split exercise, preserves calculated module endpoint values."""
     period = Period.from_year_and_code(filing_year, period_code)
     registry_snapshot = published_snapshot(
         "303",
@@ -351,7 +376,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     projection_snapshot = registry_snapshot.model_copy(
         update={"revision": registry_snapshot.revision.model_copy(update={"export_layouts": (layout,)})},
     )
-    facts = _m303_filing_facts(filing_year=filing_year, period_code=period_code).model_copy(
+    facts = m303_filing_facts(filing_year=filing_year, period_code=period_code).model_copy(
         update={
             "regimen_simplificado": evidence,
             "regimen_simplificado_result": evidence.calculation_result,
@@ -360,10 +385,10 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     producer = build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
@@ -390,16 +415,16 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
 @pytest.mark.parametrize(
     ("period_code", "revision_id"),
     (
-        ("01", "2026-hasta-01-y-1t"),
-        ("1T", "2026-hasta-01-y-1t"),
-        ("02", "2026-y-siguientes"),
-        ("2T", "2026-y-siguientes"),
+        ("01", str(_EARLY_DESIGN.id)),
+        ("1T", str(_EARLY_DESIGN.id)),
+        ("02", str(_LATE_DESIGN.id)),
+        ("2T", str(_LATE_DESIGN.id)),
     ),
 )
-def test_both_2026_branches_admit_the_published_dp30302_fields_and_preserve_multiplicity_refusal(
+def test_both_designs_of_the_split_exercise_admit_the_published_dp30302_fields_and_preserve_multiplicity_refusal(
     period_code: str, revision_id: str
 ) -> None:
-    snapshot = published_snapshot("303", filing_year=2026, period=period_code)
+    snapshot = published_snapshot("303", filing_year=_EXERCISE, period=period_code)
     assert snapshot.revision.id == revision_id
     refs = tuple(
         field.projection_ref
@@ -421,4 +446,4 @@ def test_both_2026_branches_admit_the_published_dp30302_fields_and_preserve_mult
                 (horno[0].model_copy(update={"sub_index": None}),), revision_id=revision_id
             )
     with pytest.raises(RegistryValidationError, match="unknown DP30302 simplified-regime revision"):
-        validate_m303_regimen_simplificado_endpoint_epoch(refs, revision_id="2026-unrecognized")
+        validate_m303_regimen_simplificado_endpoint_epoch(refs, revision_id=f"{_EXERCISE}-unrecognized")

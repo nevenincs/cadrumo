@@ -34,9 +34,12 @@ from ..withholding_bindings import (
     WithholdingProvider,
     resolve_withholding_binding_values,
 )
+from .authored_editions import filing_year_envelope
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
 _PERCEPCION_BINDING_ID = "modelo-190-percepciones-anual"
 _M190_WITHHOLDING_LEGAL_REFS = (
     "ley-35-2006:art-99",
@@ -57,10 +60,10 @@ _M190_WITHHOLDING_SOURCE_REFS = (
 
 def _revision_with(binding: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2024-y-siguientes",
-        localization_key="test.schema.revision.2024-y-siguientes.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        id=f"{_YEAR}-y-siguientes",
+        localization_key=f"test.schema.revision.{_YEAR}-y-siguientes.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
         source_refs=_M190_WITHHOLDING_SOURCE_REFS,
         bindings=(binding,),
@@ -82,22 +85,12 @@ def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"{nif}:{clave}:{subclave or '-'}",
         perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
+        transaction_date=date(_YEAR, 6, 1),
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **zero_incapacity_and_foral_fields(),
     )
 
 
@@ -106,7 +99,7 @@ def test_percepcion_count_counts_two_claves_for_one_perceptor_twice() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("11111111H", "A"), _obs("11111111H", "G")],
+        [_obs("00001500M", "A"), _obs("00001500M", "G")],
     )
     assert resolved[binding.id] == Decimal(2)
 
@@ -116,7 +109,7 @@ def test_percepcion_count_counts_recurring_perceptor_clave_once() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("22222222J", "A"), _obs("22222222J", "A")],
+        [_obs("00001501Y", "A"), _obs("00001501Y", "A")],
     )
     assert resolved[binding.id] == Decimal(1)
 
@@ -126,7 +119,7 @@ def test_percepcion_count_subclave_distinguishes_percepciones() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("33333333P", "B", "01"), _obs("33333333P", "B", "02")],
+        [_obs("00001502F", "B", "01"), _obs("00001502F", "B", "02")],
     )
     assert resolved[binding.id] == Decimal(2)
 
@@ -136,7 +129,7 @@ def test_percepcion_count_exceeds_distinct_perceptor_count() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("11111111H", "A"), _obs("11111111H", "G"), _obs("22222222J", "A")],
+        [_obs("00001500M", "A"), _obs("00001500M", "G"), _obs("00001501Y", "A")],
     )
     # Distinct perceptores would be 2; distinct percepciones is 3 — the figure
     # this fact must report for the M190 "numero total de percepciones" box.

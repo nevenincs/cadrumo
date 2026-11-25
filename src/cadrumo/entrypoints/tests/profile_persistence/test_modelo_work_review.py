@@ -14,7 +14,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     replace_test_profile_record,
 )
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.calculation_note_gate import (
+    ModeloCalculationBlockedError,
+    require_no_blocking_calculation_notes,
+)
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,
@@ -25,7 +31,7 @@ from cadrumo.application.modelo.work_review import (
     capture_modelo_work_review,
     read_modelo_work_review_current_coordinate,
 )
-from cadrumo.application.modelo.workspace import resolve_graded_snapshot_result
+from cadrumo.application.modelo.workspace_graded import resolve_graded_snapshot_result
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
@@ -42,6 +48,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
+from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
@@ -61,6 +68,11 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import (
+    CalculationNoteFact,
+    CalculationNoteSentence,
+    CalculationSourceIssue,
+)
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import (
@@ -74,7 +86,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_state_projection_read_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_state_projection_read_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -553,6 +565,118 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
     assert review.progress.target_count == len(manifest.casillas)
 
 
+def _persist_303_revision(repos: Repos, *issues: CalculationSourceIssue) -> tuple[WorkUnit, CalculationRevision]:
+    """Persist a Modelo 303 2025 1T work unit whose current revision carries ``issues``."""
+    work_repo, calculation_repo, _, _, _ = repos
+    work_unit = _persist_work_unit(repos, modelo=ModeloCode("303"), filing_year=2025, period_code="1T")
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_issues=issues,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values={},
+        created_at=T0,
+        updated_at=T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+        source_issues=issues,
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
+    work_repo.save(
+        upsert_work_unit(
+            work_repo.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
+        ),
+    )
+    return work_unit, revision
+
+
+def _review(repos: Repos, work_unit: WorkUnit) -> ModeloWorkReview:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    with bundled_indexed_authority().operation() as operation:
+        return build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+
+def test_a_note_that_refuses_the_check_is_a_review_blocker_naming_the_same_record_and_amount(repos: Repos) -> None:
+    """Review and check read one note selection, so a refused check never meets an empty review.
+
+    The check refuses before it persists a report, so a review that listed only
+    report findings showed no blocker for a declaration the check refused. The
+    unrouted base names its invoice, date and amount in both.
+    """
+    unrouted = CalculationSourceIssue(
+        reason="unrouted_declarable_quantity",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="IVA row carries 1500.00 EUR of 'base_amount_sum' that no binding draws",
+        resolver_id="ledger_iva_aggregation",
+        source_ref="invoice:" + "a" * 64,
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.UNROUTED_IVA_BASE,
+            rows=("invoice:" + "a" * 64 + ":0",),
+            row_date="2025-01-31",
+            row_amount=Decimal("1500.00"),
+        ),
+    )
+    advisory = CalculationSourceIssue(
+        reason="terminal_origin_mismatch",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="a value reached the declaration by an undeclared route",
+    )
+    work_unit, revision = _persist_303_revision(repos, unrouted, advisory)
+
+    review = _review(repos, work_unit)
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        require_no_blocking_calculation_notes(revision, action="verify")
+
+    context = refused.value.context or {}
+    (blocker,) = review.blockers
+    assert blocker.native_code == context["reasons"] == "unrouted_declarable_quantity"
+    assert blocker.axis is OperatorActionAxis.IMPORT_LEDGER_DATA
+    assert dict(blocker.facts) == {
+        "source_ref": "invoice:" + "a" * 64,
+        "row_date": "2025-01-31",
+        "row_amount": "1500.00",
+    }
+    assert {key: context[key] for key in ("source_ref", "row_date", "row_amount")} == dict(blocker.facts)
+    assert context["blocking_count"] == "1"
+
+
+def test_a_revision_without_a_blocking_note_adds_no_review_blocker(repos: Repos) -> None:
+    """A note that withholds nothing passes the check and is no review blocker either."""
+    advisory = CalculationSourceIssue(
+        reason="terminal_origin_mismatch",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="a value reached the declaration by an undeclared route",
+    )
+    work_unit, revision = _persist_303_revision(repos, advisory)
+
+    require_no_blocking_calculation_notes(revision, action="verify")
+    assert _review(repos, work_unit).blockers == ()
+
+
 def test_review_progress_schema_refuses_unnamed_or_impossible_counts() -> None:
     denominator = ModeloWorkProgressDenominator(
         registry_revision_id="2019-y-siguientes",
@@ -621,12 +745,12 @@ def _calculated_m130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
         calculation_repository=calculation_repo,
         bucket_event_repository=bucket_event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
-        )
+        ).revision
     return work_unit, revision
 
 
@@ -698,37 +822,7 @@ def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repo
 
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:
     work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
-    work_unit = _persist_work_unit(repos)
-    profile = load_test_profile_record(_BUCKET_ID)
-    replace_test_profile_record(
-        profile.model_copy(
-            update={
-                "facts": (
-                    *profile.facts,
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(
-                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                        value=False,
-                    ),
-                ),
-            },
-        ),
-    )
-    with calculation_ports_for_test(
-        bucket_id=work_unit.bucket_id,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
-    ) as _calculation_ports_413:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
-            ports=_calculation_ports_413,
-        )
+    work_unit, revision = _calculated_m130(repos)
 
     with bundled_indexed_authority().operation() as operation:
         review = build_modelo_work_review(
@@ -745,57 +839,32 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
 
     assert review.calculation_revision_id == revision.calculation_revision_id
     assert review.lifecycle_state is revision.state
-    assert rows[M130_INCOME_CASILLA].realised_kind is ModeloValueKind.LITERAL
-    assert rows[M130_INCOME_CASILLA].value == Decimal("10000")
-    assert rows[M130_INCOME_CASILLA].origin_anomaly is ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
-    assert rows[M130_INCOME_CASILLA].concrete_bindings
+    # The ledger owns casilla 01, so its figure is inherited from the ledger binding and nothing
+    # overrides it; the bucket calculation refuses an operator figure there.
+    assert rows[M130_INCOME_CASILLA].realised_kind is ModeloValueKind.INHERITED
+    assert rows[M130_INCOME_CASILLA].value == Decimal("0")
+    assert rows[M130_INCOME_CASILLA].origin_anomaly is None
+    assert rows[M130_INCOME_CASILLA].concrete_bindings[0].binding_id == _M130_INCOME_BINDING
+    assert rows[M130_INCOME_CASILLA].concrete_bindings[0].source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
     assert rows[M130_INCOME_CASILLA].concrete_bindings[0].resolved is True
     assert rows[M130_NET_RESULT_CASILLA].realised_kind is ModeloValueKind.COMPUTED
-    assert rows[M130_NET_RESULT_CASILLA].value == Decimal("7000")
+    assert rows[M130_NET_RESULT_CASILLA].value == Decimal("0")
     assert rows[M130_NET_RESULT_CASILLA].origin_anomaly is None
     assert rows[M130_CARRY_FORWARD_CASILLA].realised_kind is ModeloValueKind.COMPUTED
     carry_forward_formula = rows[M130_CARRY_FORWARD_CASILLA].concrete_formula
     assert carry_forward_formula is not None
     assert "modelo-130-resultados-negativos-anteriores" in carry_forward_formula.operand_refs
-    with calculation_ports_for_test(
-        bucket_id=work_unit.bucket_id,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
-    ) as _calculation_ports_453:
-        equal_value_revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("10000")},
-            ports=_calculation_ports_453,
-        )
-    with bundled_indexed_authority().operation() as operation:
-        equal_value_review = build_modelo_work_review(
-            work_unit.bucket_id,
-            work_unit.modelo,
-            work_unit.filing_year,
-            work_unit.period,
-            operation=operation,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-        )
-    equal_value_income = next(row for row in equal_value_review.casillas if row.casilla_id == M130_INCOME_CASILLA)
-    assert equal_value_review.calculation_revision_id == equal_value_revision.calculation_revision_id
-    assert equal_value_income.realised_kind is ModeloValueKind.INHERITED
-    assert equal_value_income.origin_anomaly is None
-    assert equal_value_income.concrete_bindings[0].resolved is True
 
     verification = verify_revision(
-        equal_value_revision.calculation_revision_id,
-        revision=equal_value_revision,
+        revision.calculation_revision_id,
+        revision=revision,
         work_unit=work_unit,
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         filing_repository=filing_repo,
         bucket_event_repository=bucket_event_repo,
-        clock=equal_value_revision.updated_at,
+        clock=revision.updated_at,
     )
     with bundled_indexed_authority().operation() as operation:
         verified_review = build_modelo_work_review(
@@ -822,12 +891,12 @@ def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos:
         calculation_repository=calculation_repo,
         bucket_event_repository=bucket_event_repo,
     ) as _calculation_ports_511:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_511,
-        )
+        ).revision
     raw_identity = "opaque-review-row-canary"
     fingerprint = "d" * 64
     amended = revision.model_copy(

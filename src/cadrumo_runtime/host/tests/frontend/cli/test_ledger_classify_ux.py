@@ -5,13 +5,19 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator, Sequence
+from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .ledger_ux_support import _imported_transaction_id_exact_profile, _invoke_exact_profile
+from ...native_profile_facts import native_general_iva_facts
+from .ledger_ux_support import imported_transaction_id_exact_profile, invoke_exact_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -21,20 +27,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Ledger UX",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 @pytest.fixture
@@ -46,7 +39,7 @@ def ledger_ux_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
 
 
 def _invoke(profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
-    return _invoke_exact_profile(profile, args)
+    return invoke_exact_profile(profile, args)
 
 
 def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
@@ -64,7 +57,7 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -100,7 +93,7 @@ def test_add_business_row_without_business_pct_succeeds(ledger_ux_profile: Nativ
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -127,7 +120,7 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`review <prefix>` resolves the prefix instead of refusing."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(ledger_ux_profile, ["--format", "json", "app", "ledger", "view", txn[:8]])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -143,7 +136,7 @@ def test_review_by_full_id_still_resolves_the_transaction(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`review <full>` keeps working after the prefix-resolution fix."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(ledger_ux_profile, ["--format", "json", "app", "ledger", "view", txn])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["transaction_id"] == txn
@@ -159,7 +152,7 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
     refusal is replaced with the specific reason; `config repair`
     cannot fix a bad CLI argument and must not be suggested.
     """
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--taxable-base", "-397.11"],
@@ -174,7 +167,7 @@ def test_classify_with_valid_taxable_base_still_succeeds(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """A non-negative `--taxable-base` classifies the row normally."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         [
@@ -199,7 +192,7 @@ def test_classify_accepts_business_pct_for_a_mixed_row(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`classify --classification MIXED --business-pct` works in one step."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         [
@@ -226,7 +219,7 @@ def test_classify_mixed_without_business_pct_names_the_flag(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`classify --classification MIXED` without the share names `--business-pct`."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         ["app", "ledger", "classify", txn, "--classification", "MIXED"],
@@ -241,7 +234,7 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`--business-pct` with a non-MIXED classification is refused, not dropped."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--business-pct", "0.5"],
@@ -256,7 +249,7 @@ def test_classify_refuses_m210_evidence_flags_on_auto_split(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """M210 evidence cannot be silently ignored by the automatic split route."""
-    transaction_id = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    transaction_id = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         [
@@ -279,7 +272,7 @@ def test_classify_reason_persists_to_transaction_notes(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`classify --reason` records WHY into the transaction notes."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         [
@@ -306,7 +299,7 @@ def test_classify_empty_reason_is_refused_instructively(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """An explicitly empty `--reason` is refused, naming the flag and the fix."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--reason", "   "],
@@ -321,7 +314,7 @@ def test_classify_without_reason_leaves_notes_unchanged(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """Omitting `--reason` keeps the no-rationale path working (notes stay empty)."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(
         ledger_ux_profile,
         ["--format", "json", "app", "ledger", "classify", txn, "--classification", "BUSINESS"],
@@ -337,7 +330,7 @@ def test_history_accepts_the_id_positionally_like_view(
     ledger_ux_profile: NativeCliProfileFixture,
 ) -> None:
     """`ledger history <id>` takes the id positionally, matching `ledger view`."""
-    txn = _imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
+    txn = imported_transaction_id_exact_profile(ledger_ux_profile, tmp_path)
     result = _invoke(ledger_ux_profile, ["--format", "json", "app", "ledger", "history", txn])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]

@@ -7,8 +7,8 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator already has an active session; call close()
-          or reauthenticate() before authenticating again.
+        already_active: AeatAuthenticator already has an active session; call AeatAuthenticator.close()
+          before authenticating again.
         assertion_failed: Fresh AEAT authentication did not produce a valid login
           assertion.
         capture_requires_active_session: Saving the browser session requires the currently
@@ -16,7 +16,8 @@ adapters:
         capture_requires_certificate: Saving the browser session requires an active
           certificate-backed session with protected-resource metadata.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
-        no_active_context: No active browser context; call authenticate() first.
+        no_active_context: No active browser context; call AeatAuthenticator.authenticate()
+          first.
         no_context_capture_storage: No active browser context; cannot capture storage
           state.
         persisted_session_verification_failed: Persisted AEAT browser session failed
@@ -25,41 +26,41 @@ adapters:
         session_stale: The AEAT session is stale; the idle deadline has elapsed.
     clave_movil:
       errors:
-        already_active: Cl@ve Móvil already has an active session; call close() before
-          authenticating again.
+        already_active: Cl@ve Móvil already has an active session; call ClaveMovilAuthProvider.close()
+          before authenticating again.
         approval_timeout: Cl@ve Móvil browser authentication did not complete within
           the configured timeout.
         desktop_unavailable: 'No interactive desktop is available. QR browser launch
           was refused. Open this link in your browser: %{authentication_url}'
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI
           or NIE before authenticating.
-        initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
+        initial_navigation_timeout: Initial navigation to Cl@ve Móvil did not complete
           within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
           parsed.
-        no_persisted_session: No persisted Cl@ve Movil session found; run `cadrumo-runtime
+        no_persisted_session: No persisted Cl@ve Móvil session found; run `cadrumo-runtime
           config auth status` first.
-        session_expired: Cl@ve Movil session has passed its idle deadline.
-        storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
+        session_expired: Cl@ve Móvil session has passed its idle deadline.
+        storage_state_hash_mismatch: Cl@ve Móvil storage-state hash mismatch; session
           data may be corrupt.
-        verify_requires_active_context: Cl@ve Móvil verify() requires an active browser
-          context; call authenticate() first.
+        verify_requires_active_context: Cl@ve Móvil ClaveMovilAuthProvider.verify()
+          requires an active browser context; call ClaveMovilAuthProvider.authenticate()
+          first.
   browser:
     errors:
-      not_provisioned: The Chromium browser that AEAT automation launches is not installed
-        on this computer. Provision it, then try again.
+      not_available: The browser isn't installed, so this can't run.
   google:
     calc_sheets:
       errors:
         api_call_failed: Google {action} call failed.
         api_call_refused: Google {action} call was refused (HTTP {status}).
         api_target_not_found: Google {action} target was not found.
-        googleapiclient_not_importable: googleapiclient is not importable; the Google
-          adapter cannot reach the API.
+        googleapiclient_not_importable: '`googleapiclient` is not importable; the
+          Google adapter cannot reach the API.'
     installation_client:
       errors:
         client_metadata_invalid: The Google client included with this installation
-          is not valid. Reinstall the application to restore it.
+          is not valid.
     oauth_flow:
       errors:
         browser_launcher_refused: The operating system browser launcher refused to
@@ -104,14 +105,14 @@ adapters:
           conflicts with the detected {detected!r}.
         tax_id_unresolved: Declaration tax id could not be resolved from the PDF text.
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
-          and --año to override.
-        year_conflict: --año {year} conflicts with detected {detected}.
+          and --year to override.
+        year_conflict: --year {year} conflicts with detected {detected}.
     financial:
       providers:
-        pdf_n26:
+        pdf_statement:
           errors:
-            parse_failed: Could not parse the N26 PDF statement. The source path has
-              been redacted from diagnostics.
+            parse_failed: Could not parse the PDF statement. The source path has been
+              redacted from diagnostics.
     justificante:
       errors:
         parse_failed: Could not parse the justificante PDF. The source path has been
@@ -121,10 +122,10 @@ adapters:
         hash_failed: PDF file could not be hashed.
   notificacion:
     errors:
-      sancion_does_not_reconcile: The amounts printed on the sanción document do not
-        reconcile, so the reading was refused. Check the document by hand.
-      sancion_incomplete: The sanción document could not be read completely. Open
-        it in the sede and check it by hand.
+      sancion_does_not_reconcile: The amounts printed on the penalty notice do not
+        reconcile, so the reading was refused. Check the document manually.
+      sancion_incomplete: The penalty notice could not be read completely. Open it
+        in the AEAT electronic office and check it manually.
   outbound:
     calculation_summary_pdf:
       errors:
@@ -187,8 +188,9 @@ adapters:
             check failed.
           namespace_blank: Local storage namespace must not be blank.
           namespace_create_path_too_long: 'Local storage could not create namespace
-            {namespace}: the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            {namespace}: the path exceeds the Windows path-length limit. Move CADRUMO_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
             forbidden path characters.
@@ -199,8 +201,9 @@ adapters:
           payload_commit_failed: Local storage could not commit object payload atomically.
           payload_read_permission: Local storage could not read object payload.
           payload_write_path_too_long: 'Local storage could not write the object payload:
-            the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            the path exceeds the Windows path-length limit. Move CADRUMO_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
             malformed.
@@ -208,8 +211,9 @@ adapters:
           sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
           sidecar_write_failed: Local storage could not write the object sidecar.
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
-            the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            the path exceeds the Windows path-length limit. Move CADRUMO_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           written_at_invalid: 'Local storage sidecar written_at is missing, unparseable,
             or carries no timezone: {actual_value}.'
   persistence:
@@ -226,7 +230,6 @@ adapters:
             register.
       inventory:
         errors:
-          inventory_ledger_absent: That inventory record book does not exist.
           inventory_ledger_already_exists: That inventory record book already exists.
           inventory_ledger_not_found: The requested inventory record book was not
             found.
@@ -238,10 +241,11 @@ adapters:
           load_register_failed: Unable to load the encrypted own bank account register.
   sede:
     errors:
-      censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate
+      censal_bad_landing: The AEAT tax registration page did not load correctly; re-authenticate
         and retry.
-      censal_modification_surface: The AEAT censal read was refused because it landed
-        on a modification page; this reader never changes censal data.
+      censal_modification_surface: The AEAT tax registration read was refused because
+        it landed on a modification page; this reader never changes tax registration
+        data.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
         tax year for this modelo.
       empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing
@@ -277,11 +281,11 @@ adapters:
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
-      playwright_buscar_click_failed: Clicking the Buscar button on the Sede page
-        failed.
-      playwright_combobox_open_failed: Opening the Sede combobox failed.
-      playwright_combobox_select_failed: Selecting a combobox option on the Sede page
-        failed.
+      playwright_buscar_click_failed: Clicking the `Buscar` (Search) button on the
+        AEAT electronic office page failed.
+      playwright_combobox_open_failed: Opening the AEAT drop-down list failed.
+      playwright_combobox_select_failed: Selecting an option from the AEAT drop-down
+        list failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'cadrumo-runtime config auth test' and retry.
       submitted_file_layout_parse_failed: The submitted file could not be read through

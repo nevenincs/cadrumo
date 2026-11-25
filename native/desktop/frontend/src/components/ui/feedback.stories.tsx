@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Specimen } from "@/dev/catalogue/Frame";
+import { useStrings } from "@/shell/strings";
+import { GlyphMark } from "../modelo/workspace/Marks";
 import { Alert, AlertDescription, AlertTitle } from "./alert";
 import { Badge } from "./badge";
 import { Button } from "./button";
@@ -109,4 +112,40 @@ export const EmptyStates: Story = {
       </EmptyState>
     </div>
   ),
+};
+
+function Glyphs() {
+  const t = useStrings();
+  return (
+    <Specimen
+      title="Glyph marks"
+      note="One glyph that says one thing: the wrapper is the image and carries the words."
+    >
+      <GlyphMark
+        icon="check"
+        words={t("workspace.declarations.list.group.recorded")}
+        className="text-success"
+      />
+      <GlyphMark
+        icon="alert"
+        words={t("workspace.modelo.level.missing")}
+        className="text-destructive"
+      />
+      <GlyphMark
+        icon="info"
+        words={t("workspace.modelo.level.info")}
+        className="text-faint"
+      />
+    </Specimen>
+  );
+}
+
+export const Marks: Story = {
+  render: () => <Glyphs />,
+  play: async ({ canvasElement }) => {
+    const marks = within(canvasElement).getAllByRole("img");
+    await expect(marks).toHaveLength(3);
+    for (const mark of marks)
+      await expect(mark).toHaveAccessibleName(expect.stringMatching(/\S/));
+  },
 };

@@ -7,9 +7,8 @@ shape-based pass: a heading-shaped key no layout declares is still extra.
 
 import pytest
 
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
-from .._registry_scanner import is_form_layout_heading_candidate, scan_form_layout_heading_keys
-from ..locale_audit import _audit_locale_file
+from ..form_layout_heading_scan import is_form_layout_heading_candidate, scan_form_layout_heading_keys
+from ..locale_audit import audit_locale_file
 from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,7 +35,7 @@ def test_an_undeclared_heading_shaped_key_is_still_extra() -> None:
 def test_inter_locale_parity_exempts_only_exact_declared_optional_headings() -> None:
     declared = "modelo.schema.303.form.authored.page-1.heading"
     stray = "modelo.schema.303.form.page.not-a-page.heading"
-    result = _audit_locale_file(
+    result = audit_locale_file(
         "en.yml",
         {},
         set(),
@@ -47,8 +46,8 @@ def test_inter_locale_parity_exempts_only_exact_declared_optional_headings() -> 
     assert result.inter_locale_missing == (stray,)
 
 
-def test_the_committed_catalogues_carry_no_extra_heading_keys() -> None:
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
+def test_the_committed_catalogues_carry_no_extra_heading_keys(committed_locale_manager: LocaleManager) -> None:
+    manager = committed_locale_manager
     result = manager.audit()
     extra = {key for file_result in result.files for key in file_result.codebase_extra if ".form." in key}
     assert extra == set()

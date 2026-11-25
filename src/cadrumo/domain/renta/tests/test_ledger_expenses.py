@@ -14,6 +14,7 @@ from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -25,9 +26,11 @@ from ...categories.proportionality import (
 from ...categories.proportionality_catalogue import require_proportionality_kind, require_statutory_cap_period
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
+from ...categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ..errors import RentaValidationError
 from ..ledger_expenses import (
     RentaDeductibilityContext,
+    RentaDeductibilityRefusal,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,
     RentaExpenseDirection,
@@ -36,9 +39,16 @@ from ..ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
+    renta_first_slice_expense_routing,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return support.years
 
 
 @pytest.fixture(scope="module")
@@ -93,6 +103,7 @@ def _citation() -> CategoryCitation:
         locator="test",
         url=parse_http_url(RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
+        source_ref="aeat-renta-2025-manual-parte1",
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )
@@ -316,17 +327,12 @@ def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split(
 def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists(
     category_profiles: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
-    """arrendamiento_vivienda_afecto carries no registry default_ratio.
+    """arrendamiento_vivienda_afecto is ineligible until the operator declares a ratio.
 
     It is the renter's parallel to amortizacion / ibi / comunidad
-    vivienda_afecto (HOME_OFFICE_OWNERSHIP siblings, none of which carry a
-    default_ratio either): the raw affectación ratio must come from the
-    operator, at no statutory multiplier, exactly like TELEFONIA_MOVIL below.
-    A registry-supplied ``default_ratio = "0.30"`` here used to fabricate a
-    30% deduction with zero operator input -- not a legally established
-    default, just an arbitrary guess that happened to double as the
-    suministros-only art. 30.2.5.b figure this category was wrongly grounded
-    on.
+    vivienda_afecto (HOME_OFFICE_OWNERSHIP siblings): the raw affectación
+    ratio must come from the operator, at no statutory multiplier. No
+    registry value stands in for it.
     """
     fact = _fact(
         category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
@@ -356,33 +362,34 @@ def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists(
     assert with_ratio.non_deductible_amount == Decimal("706.3000")
 
 
-def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists(
+def test_a_dwelling_ownership_expense_applies_the_ownership_share(
     category_profiles: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
-    fact = _fact(
-        category=SpendingCategory.from_registry("telefonia_movil"),
-        amount=Decimal("60.00"),
-        taxable_base=Decimal("39.00"),
-        iva_amount=Decimal("21.00"),
+    """DISCRIMINATING. A co-owner deducts by the affected area AND by the share of the dwelling owned.
+
+    The Manual práctico de Renta 2025 states that the ownership expenses of a
+    partly affected dwelling (amortización, IBI, comunidad) deduct "en proporción a
+    la parte de la vivienda afectada al desarrollo de la actividad y a su
+    porcentaje de titularidad en el inmueble referido". A half owner of a dwelling
+    whose office is a quarter of it deducts one eighth.
+    """
+    category = SpendingCategory.from_registry("ibi_vivienda_afecto")
+    fact = _fact(category=category, amount=Decimal("800.00"), taxable_base=Decimal("800.00"), iva_amount=Decimal("0"))
+    ratios = {category: Decimal("0.25")}
+
+    unknown_share = evaluate_renta_deductibility(fact, category_profiles[category], _context(usage_ratios=ratios))
+    half_owner = evaluate_renta_deductibility(
+        fact,
+        category_profiles[category],
+        _context(usage_ratios=ratios, ownership_share=Decimal("0.5")),
     )
 
-    missing = evaluate_renta_deductibility(
-        fact,
-        category_profiles[SpendingCategory.from_registry("telefonia_movil")],
-        _context(),
-    )
-    with_ratio = evaluate_renta_deductibility(
-        fact,
-        category_profiles[SpendingCategory.from_registry("telefonia_movil")],
-        _context(usage_ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.25")}),
-    )
-
-    assert missing.status is RentaDeductibilityStatus.INELIGIBLE
-    assert missing.reason == "missing usage ratio"
-    assert missing.deductible_amount == Decimal("0.00")
-    assert with_ratio.status is RentaDeductibilityStatus.ELIGIBLE
-    assert with_ratio.deductible_amount == Decimal("9.7500")
-    assert with_ratio.non_deductible_amount == Decimal("50.2500")
+    assert unknown_share.status is RentaDeductibilityStatus.INELIGIBLE
+    assert unknown_share.refusal is RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE
+    assert unknown_share.deductible_amount == Decimal("0")
+    assert half_owner.status is RentaDeductibilityStatus.ELIGIBLE
+    assert half_owner.applied_ratio == Decimal("0.125")
+    assert half_owner.deductible_amount == Decimal("100.00")
 
 
 def test_statutory_annual_cap_limits_health_insurance_amount(
@@ -405,24 +412,33 @@ def test_statutory_annual_cap_limits_health_insurance_amount(
     assert result.non_deductible_amount == Decimal("300.00")
 
 
-def test_daily_statutory_cap_variant_requires_days_and_variant(
+def test_a_dieta_row_claims_one_day_at_the_limit_without_an_overnight_stay(
     category_profiles: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
+    """A dieta is one day's meal; without a stated overnight stay the lower daily limit applies.
+
+    RIRPF art. 9.A.3.a sets 26,67 EUR a day in Spain without an overnight stay and
+    53,34 EUR with one. Nothing on a ledger row states the stay, so a row claims one
+    day at the limit that needs no further condition. A caller that knows the days
+    and the stay still selects them.
+    """
     fact = _fact(category=SpendingCategory.from_registry("manutencion_dietas_nacional"), amount=Decimal("80.00"))
     profile = category_profiles[SpendingCategory.from_registry("manutencion_dietas_nacional")]
 
-    missing = evaluate_renta_deductibility(fact, profile, _context())
-    capped = evaluate_renta_deductibility(
+    one_day = evaluate_renta_deductibility(fact, profile, _context())
+    two_days = evaluate_renta_deductibility(
         fact,
         profile,
         _context(statutory_cap_days=Decimal("2"), statutory_cap_variant_id="sin-pernocta"),
     )
 
-    assert missing.status is RentaDeductibilityStatus.INELIGIBLE
-    assert capped.status is RentaDeductibilityStatus.ELIGIBLE
-    assert capped.statutory_cap_applied == Decimal("53.34")
-    assert capped.deductible_amount == Decimal("53.34")
-    assert capped.non_deductible_amount == Decimal("26.66")
+    assert one_day.status is RentaDeductibilityStatus.ELIGIBLE
+    assert one_day.statutory_cap_applied == Decimal("26.67")
+    assert one_day.deductible_amount == Decimal("26.67")
+    assert two_days.status is RentaDeductibilityStatus.ELIGIBLE
+    assert two_days.statutory_cap_applied == Decimal("53.34")
+    assert two_days.deductible_amount == Decimal("53.34")
+    assert two_days.non_deductible_amount == Decimal("26.66")
 
 
 def test_fixed_percentage_profiles_are_supported_by_the_evaluator(
@@ -501,8 +517,8 @@ def test_non_deductible_profiles_cannot_become_observations(operation: PinnedAut
         build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-def test_exclusive_use_profiles_require_confirmation(operation: PinnedAuthorityOperation) -> None:
-    """Confirmation gates deductibility; it does not widen the basis to the gross.
+def test_exclusive_use_profiles_require_exclusive_business_use(operation: PinnedAuthorityOperation) -> None:
+    """Exclusive use gates deductibility; it does not widen the basis to the gross.
 
     The fixture's 200.00 gross is a 179.00 base plus 21.00 of input IVA. That
     IVA is recovered as cuota soportada on Modelo 303, so it is not an IRPF
@@ -521,38 +537,61 @@ def test_exclusive_use_profiles_require_confirmation(operation: PinnedAuthorityO
     )
 
     missing = evaluate_renta_deductibility(fact, profile, _context())
-    confirmed = evaluate_renta_deductibility(fact, profile, _context(exclusive_use_confirmed=True))
+    confirmed = evaluate_renta_deductibility(
+        fact.model_copy(update={"exclusive_business_use": True}), profile, _context()
+    )
 
     assert missing.status is RentaDeductibilityStatus.INELIGIBLE
+    assert missing.refusal is RentaDeductibilityRefusal.EXCLUSIVE_USE_REQUIRED
     assert confirmed.status is RentaDeductibilityStatus.ELIGIBLE
     assert confirmed.deductible_amount == fact.taxable_base == Decimal("179.00")
     # The 21.00 of input IVA stays out of the gasto rather than vanishing.
     assert confirmed.non_deductible_amount == Decimal("21.00")
 
 
-def test_first_slice_routes_every_eligible_category_to_a_real_casilla(
-    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+@pytest.mark.parametrize("year", _supported_years())
+def test_every_category_is_routed_or_left_to_the_activity_asset_register(
+    operation: PinnedAuthorityOperation,
+    year: int,
 ) -> None:
-    """Every :class:`SpendingCategory` builds a real observation.
+    """The first slice routes every category except the amortizable ones, which route nothing."""
+    effective_date = date(year, 12, 31)
+    catalogue = resolve_spending_category_catalogue(effective_date=effective_date, authority=operation)
 
-    The first-slice routing projection is a total mapping: no eligible
-    deductibility result is rejected for lacking a first-slice
-    casilla. This is the closed-gap counterpart of the routing table's
-    own ``test_every_spending_category_routes_to_a_first_slice_casilla``:
-    it proves the observation-construction boundary (not just the
-    routing table) reflects the closed set for a representative
-    previously-unrouted amortizable category.
-    """
-    fact = _fact(category=SpendingCategory.from_registry("hardware_amortizable"), amount=Decimal("55.00"))
-    result = evaluate_renta_deductibility(
-        fact,
-        category_profiles[SpendingCategory.from_registry("hardware_amortizable")],
-        _context(),
+    routing = renta_first_slice_expense_routing(effective_date=effective_date)
+
+    assert catalogue.amortizable
+    assert set(routing) == set(catalogue.categories) - set(catalogue.amortizable)
+    assert not {category for category in routing if category in catalogue.amortizable}
+    assert not {casilla for casilla in routing.values() if casilla in {"0208", "0227"}}
+
+
+@pytest.mark.parametrize("category", ["hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto"])
+@pytest.mark.parametrize("year", _supported_years())
+def test_an_amortizable_category_deducts_nothing_and_builds_no_observation(
+    operation: PinnedAuthorityOperation,
+    category: str,
+    year: int,
+) -> None:
+    """A purchase, however small, is acquisition evidence: only the register deducts its amortization."""
+    token = SpendingCategory.from_registry(category)
+    profile = resolve_category_profiles(year, operation=operation)[token]
+    fact = _fact(category=token, amount=Decimal("55.00")).model_copy(
+        update={
+            "operation_date": date(year, 3, 8),
+            "invoice_issue_date": date(year, 3, 7),
+            "posting_date": date(year, 3, 9),
+            "payment_date": date(year, 3, 10),
+        },
     )
 
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+    result = evaluate_renta_deductibility(fact, profile, _context(profile_year=year))
 
-    assert observation.target_casilla_id == "0208"
+    assert profile.proportionality.kind.is_non_deductible
+    assert result.status is RentaDeductibilityStatus.INELIGIBLE
+    assert result.deductible_amount == Decimal("0")
+    with pytest.raises(RentaValidationError, match="ineligible deductibility result"):
+        build_renta_deductible_expense_observation(fact, result, tax_year=year)
 
 
 def test_tax_year_mismatch_is_rejected_before_observation_creation(

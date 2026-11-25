@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
 from cadrumo.application.user_profile.operations import (
@@ -20,7 +20,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
     ProfileDescendantsOperationRequest,
 )
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 

@@ -16,13 +16,15 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FACT_ID = "test-projection-cache"
-_EFFECTIVE_DATE = date(2025, 6, 30)
+_YEAR = filing_year_envelope().horizon
+_EFFECTIVE_DATE = date(_YEAR, 6, 30)
 
 
 def _candidate(value: str) -> CandidateFactAuthority:
@@ -35,7 +37,7 @@ def _candidate(value: str) -> CandidateFactAuthority:
                 {
                     "variant_id": f"{_FACT_ID}:{value}",
                     "date_axis": "filing_period",
-                    "valid_from": date(2025, 1, 1),
+                    "valid_from": date(_YEAR, 1, 1),
                     "legal_refs": ("test-law",),
                     "review_status": "agent_reviewed",
                     "ownership": "authored",

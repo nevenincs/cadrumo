@@ -15,7 +15,7 @@ from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.artifact_admission import artifact_mime_type, creation_properties
 from ...google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ...google.tests.drive_list_server import DriveFilesListEndpoint
-from ...google.tests.drive_list_server import drive_files_list_endpoint as _endpoint
+from ...google.tests.drive_list_server import drive_files_list_endpoint as drive_list_server_endpoint
 
 _PROFILE = UUID("00a80000-0000-4000-8000-000000000008")
 _RECEIPTS: ContextVar[GoogleArtifactReceiptStore | None] = ContextVar("test_drive_creation_receipts", default=None)
@@ -91,7 +91,7 @@ def drive_files_list_endpoint(
             }
         token = _RECEIPTS.set(receipts)
         try:
-            with _endpoint(pages=pages, status=status, metadata=metadata) as endpoint:
+            with drive_list_server_endpoint(pages=pages, status=status, metadata=metadata) as endpoint:
                 yield endpoint
         finally:
             _RECEIPTS.reset(token)

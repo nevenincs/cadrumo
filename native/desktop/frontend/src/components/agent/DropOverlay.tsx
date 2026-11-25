@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
+import { listOf } from "@/shared/lists";
 import { useStrings } from "../../shell/strings";
 
 /** The modifier that arms a drop, as the keycap shows it. */
@@ -48,7 +49,7 @@ export function DropOverlay({
         : t("desktop.agent.drop_release_multiple", { count: fileCount });
   const types =
     acceptedTypes && acceptedTypes.length > 0
-      ? new Intl.ListFormat(locale, { type: "unit" }).format(acceptedTypes)
+      ? listOf(locale, acceptedTypes, "plain")
       : null;
   return (
     <div

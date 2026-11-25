@@ -31,19 +31,22 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.profile.tests.multi_year_roundtrip_support import (
+    assert_omitted_casilla_is_detected,
+    assert_two_ejercicio_round_trip,
+)
+from cadrumo.adapters.persistence.profile.tests.observation_lookup_support import (
+    saved_two_ejercicios,
+)
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -189,6 +192,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     assert imp_n1 == _IMPORTE_N1, f"year-N+1 importe should be {_IMPORTE_N1}; got {imp_n1}"
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_related_party_nif_identity_persists_across_both_exercises(tmp_path: Path) -> None:
     """The counterparty NIF stored in year N survives into year N+1 unchanged.
 
@@ -198,30 +212,10 @@ def test_related_party_nif_identity_persists_across_both_exercises(tmp_path: Pat
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         nif_n = loaded_n.observation.casilla_values.get(_VINCULADA_NIF_CASILLA)
         nif_n1 = loaded_n1.observation.casilla_values.get(_VINCULADA_NIF_CASILLA)
         assert nif_n is not None, "year-N observation missing vinculada-1-nif"
@@ -239,29 +233,10 @@ def test_importe_exceeds_threshold_in_both_years(tmp_path: Path) -> None:
     the importe would produce a threshold-failing (non-declarable-looking)
     observation. This test confirms both stored importes exceed the threshold.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _year_n_observation(),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(_year_n_observation()),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                _year_n_plus_1_observation(),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(_year_n_plus_1_observation()),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
+    with _saved_two_ejercicios(tmp_path, obs_n=_year_n_observation(), obs_n_plus_1=_year_n_plus_1_observation()) as (
+        loaded_n,
+        loaded_n1,
+    ):
         imp_n = loaded_n.observation.casilla_values.get(_VINCULADA_IMPORTE_CASILLA)
         imp_n1 = loaded_n1.observation.casilla_values.get(_VINCULADA_IMPORTE_CASILLA)
         assert imp_n is not None and imp_n > _THRESHOLD_EUR, (
@@ -279,35 +254,9 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     unequal to the full observation, proving the roundtrip assertions would
     catch a save-drops-field regression on the amount field.
     """
-    obs_n = _year_n_observation()
-    obs_n_no_importe = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != _VINCULADA_IMPORTE_CASILLA),
+    assert_omitted_casilla_is_detected(
+        tmp_path, _year_n_observation(), omitted=(_VINCULADA_IMPORTE_CASILLA,), captured_at=_CLOCK_N
     )
-
-    assert obs_n != obs_n_no_importe, (
-        "the full observation and the importe-omitted observation must be strictly unequal"
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation != obs_n_no_importe, (
-            "loaded observation equals the importe-omitted stub — the roundtrip silently dropped vinculada-1-importe"
-        )
-        assert loaded.observation == obs_n
 
 
 def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_manifest(
@@ -323,34 +272,17 @@ def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_mani
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # --- Year N -------------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+1 -----------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        assert loaded_n1 is not None
-        assert loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=obs_n,
+        obs_n_plus_1=obs_n1,
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
     # --- Enrollment recording (outside the profile context) ---------------

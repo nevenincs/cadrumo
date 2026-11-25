@@ -8,18 +8,22 @@ from uuid import uuid4
 import pytest
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal
+from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal, session_refusal_translation_key
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    CustodyRecoveringError,
+    FrontendRefusedError,
+)
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
 
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.operations import OperationEffect
 from ....core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
-from .._profile_session_gate import session_refusal_translation_key
 from ..errors import render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -93,14 +97,14 @@ def test_each_sign_in_refusal_keeps_its_own_message_and_wire_facts(
     assert expected != key
     context = rendered["context"]
     assert isinstance(context, dict)
-    # The desktop and scripts read the runtime's code and provenance, unchanged.
+    # Callers read the runtime's code and provenance, unchanged.
     assert context["reason"] == code.value
     if sign_in is not None:
         assert context["sign_in_reason"] == sign_in.reason
         if sign_in.binding is not None:
             assert context["sign_in_binding"] == sign_in.binding
         if sign_in.remaining_seconds is not None:
-            # The envelope carries context values as text; the desktop parses the number back.
+            # The envelope carries context values as text; callers parse the number back.
             assert context["seconds"] == str(sign_in.remaining_seconds)
 
 
@@ -166,3 +170,106 @@ def test_an_unrelated_refusal_keeps_its_runtime_code() -> None:
     error = _wire_refusal(AccessDenialCode.OPERATION_DENIED, None)
     rendered = _rendered(error)
     assert rendered["message"] == AccessDenialCode.OPERATION_DENIED.value
+
+
+def test_a_session_waiting_for_custody_to_recover_is_rendered_as_retryable_with_its_window() -> None:
+    reply = AccessRefusal(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        code=AccessDenialCode.CUSTODY_RECOVERING,
+        recovery_remaining_seconds=42,
+    )
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal) and decoded.recovery_remaining_seconds == 42
+    with pytest.raises(CustodyRecoveringError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
+    assert raised.value.remaining_seconds == 42
+    # The sign-in projection leaves it alone: repeating the command is the remedy, not a new sign-in.
+    with pytest.raises(CustodyRecoveringError) as projected:
+        raise_connection_refusal(raised.value)
+    assert projected.value is raised.value
+
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        payload = json.loads(render_error_payload(projected.value, as_json=True))["error"]
+        expected = tr("errors.refused.refused_runtime_custody_recovering", locale="en")
+    assert payload["code"] == "REFUSED_RUNTIME_CUSTODY_RECOVERING"
+    assert payload["retryable"] is True
+    assert payload["message"] == expected != "errors.refused.refused_runtime_custody_recovering"
+    assert payload["context"]["reason"] == AccessDenialCode.CUSTODY_RECOVERING.value
+    assert payload["context"]["seconds"] == "42"
+
+
+def test_a_change_the_lost_worker_was_serving_is_rendered_as_unknown_and_never_retryable() -> None:
+    operation_id = "3" * 64
+    reply = AccessRefusal(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        code=AccessDenialCode.CUSTODY_RECOVERING,
+        recovery_remaining_seconds=42,
+        effect=OperationEffect.UNKNOWN,
+        operation_id=operation_id,
+    )
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal) and decoded.effect is OperationEffect.UNKNOWN
+    with pytest.raises(CustodyRecoveringEffectUnknownError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
+    assert not isinstance(raised.value, CustodyRecoveringError)
+    assert (raised.value.remaining_seconds, raised.value.operation_id) == (42, operation_id)
+
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        payload = json.loads(render_error_payload(raised.value, as_json=True))["error"]
+        expected = tr("errors.refused.refused_runtime_custody_recovering_effect_unknown", locale="en")
+    assert payload["code"] == "REFUSED_RUNTIME_CUSTODY_RECOVERING_EFFECT_UNKNOWN"
+    assert payload["retryable"] is False
+    assert payload["message"] == expected != "errors.refused.refused_runtime_custody_recovering_effect_unknown"
+    assert payload["context"]["reason"] == AccessDenialCode.CUSTODY_RECOVERING.value
+    assert payload["context"]["effect"] == OperationEffect.UNKNOWN.value
+    assert payload["context"]["operation_id"] == operation_id
+    assert payload["context"]["seconds"] == "42"
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+@pytest.mark.parametrize(
+    "key",
+    [
+        "errors.refused.refused_runtime_custody_recovering",
+        "errors.refused.refused_runtime_custody_recovering_effect_unknown",
+    ],
+)
+def test_the_recovering_refusals_are_translated_in_every_language(language: OutputLanguage, key: str) -> None:
+    assert tr(key, locale=language.value) != key
+
+
+@pytest.mark.parametrize(
+    ("code", "effect", "operation_id", "match"),
+    [
+        (AccessDenialCode.SESSION_EXPIRED, OperationEffect.UNKNOWN, None, "unknown"),
+        (AccessDenialCode.CUSTODY_RECOVERING, OperationEffect.UPDATED, None, "unknown"),
+        (AccessDenialCode.CUSTODY_RECOVERING, None, "3" * 64, "names its operation"),
+    ],
+)
+def test_only_a_recovering_change_carries_an_unknown_effect_and_its_operation(
+    code: AccessDenialCode, effect: OperationEffect | None, operation_id: str | None, match: str
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        AccessRefusal(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            code=code,
+            effect=effect,
+            operation_id=operation_id,
+        )
+
+
+def test_a_window_is_refused_on_any_other_code() -> None:
+    with pytest.raises(ValueError, match="recovery window"):
+        AccessRefusal(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            code=AccessDenialCode.SESSION_EXPIRED,
+            recovery_remaining_seconds=42,
+        )

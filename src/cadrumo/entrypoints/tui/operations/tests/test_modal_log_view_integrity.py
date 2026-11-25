@@ -200,3 +200,51 @@ def test_a_resynchronizing_page_cannot_reach_the_fold_without_a_restart_cursor()
     """
     with pytest.raises(ValueError, match="requires one restart cursor"):
         _page(status=OperationReplayStatus.EXPIRED, anchor_cursor=7, next_cursor=7)
+
+
+def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> None:
+    from .....application.operations.frontend_requests import (
+        OperationPublicPhaseEventV1,
+        OperationPublicProgressEventV1,
+    )
+    from .....core.config import override_settings
+    from ..modal_wording import log_row_text
+
+    phase = OperationPublicPhaseEventV1(
+        sequence=1,
+        revision=1,
+        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        code="operation.phase",
+        phase_code="ledger.import.read",
+    )
+    progress = OperationPublicProgressEventV1(
+        sequence=2,
+        revision=1,
+        timestamp=phase.timestamp,
+        code="operation.progress",
+        completed=25,
+        total=100,
+        unit_code=None,
+        subject_code=None,
+    )
+    page = OperationPublicEventPageV1(
+        operation_id=_OPERATION_ID,
+        anchor_cursor=2,
+        requested_cursor=0,
+        next_cursor=2,
+        restart_cursor=None,
+        status=OperationReplayStatus.PAGE,
+        events=(phase, progress),
+    )
+    view = fold_event_page(build_initial_log_view(_OPERATION_ID), page)
+    assert view.rows[0].phase_code == phase.phase_code
+    assert (view.rows[1].completed, view.rows[1].total, view.rows[1].unit_code, view.rows[1].subject_code) == (
+        25,
+        100,
+        None,
+        None,
+    )
+    with override_settings(cadrumo_output_language="en"):
+        assert "25 / 100" in log_row_text(view.rows[1])
+        assert "25%" in log_row_text(view.rows[1])
+        assert log_row_text(view.rows[0]) != "Operation phase"

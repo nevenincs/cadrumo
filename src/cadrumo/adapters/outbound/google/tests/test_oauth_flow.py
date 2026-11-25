@@ -39,10 +39,10 @@ from .....core.config_google_client import OAuthClient
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .. import oauth_callback, oauth_flow
 from ..oauth_flow import (
-    _oauth_loopback_client_config,
-    _oauth_loopback_records,
-    _raise_local_server_error,
     credentials_to_records,
+    oauth_loopback_client_config,
+    oauth_loopback_records,
+    raise_local_server_error,
     require_exact_scope_grant,
     require_resolvable_profile_record,
     run_login_flow,
@@ -52,17 +52,19 @@ from .token_endpoint_server import token_endpoint
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
 def synthetic_browser_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
     """These loopback tests supply a fake browser; native desktop refusal has its own tests."""
-    monkeypatch.setattr(oauth_callback, "_require_browser_desktop", lambda: None)
+    monkeypatch.setattr(oauth_callback, "require_browser_desktop", lambda: None)
 
 
-def _valid_oauth_client() -> OAuthClient:
+def valid_oauth_client() -> OAuthClient:
     return OAuthClient(
         client_id="1234.apps.googleusercontent.com",
         client_secret="GOCSPX-deadbeef",
@@ -79,7 +81,7 @@ def test_consent_url_requests_exactly_the_three_non_sensitive_scopes() -> None:
     from google_auth_oauthlib.flow import InstalledAppFlow
 
     flow = InstalledAppFlow.from_client_config(
-        _oauth_loopback_client_config(_valid_oauth_client()), scopes=list(REQUIRED_SCOPES)
+        oauth_loopback_client_config(valid_oauth_client()), scopes=list(REQUIRED_SCOPES)
     )
     flow.redirect_uri = "http://127.0.0.1:1/"
     url, _state = flow.authorization_url()
@@ -93,7 +95,7 @@ def test_consent_url_requests_exactly_the_three_non_sensitive_scopes() -> None:
 def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     """The direct OAuth-flow handoff preserves canonical metadata instants."""
 
-    issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    issued_at = datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     token, metadata = credentials_to_records(
         refresh_token="1//refresh-token",
         client_id="desktop-client.apps.googleusercontent.com",
@@ -106,7 +108,7 @@ def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     # The token records the client the consent was granted to.
     assert token.client_id == "desktop-client.apps.googleusercontent.com"
     assert metadata.issued_at == issued_at
-    assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
+    assert metadata.model_dump(mode="json")["issued_at"] == f"{_YEAR}-05-26T09:00:00Z"
 
 
 def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
@@ -119,7 +121,7 @@ def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.com",
             granted_scopes=REQUIRED_SCOPES,
-            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         )
 
 
@@ -127,7 +129,7 @@ def test_local_server_error_classifier_routes_browser_failures() -> None:
     upstream = webbrowser.Error("the launcher failed")
 
     with pytest.raises(GoogleAuthBrowserOpenError) as raised:
-        _raise_local_server_error(upstream)
+        raise_local_server_error(upstream)
 
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
@@ -147,7 +149,7 @@ def test_local_server_error_classifier_routes_browser_failures() -> None:
 )
 def test_local_server_error_classifier_routes_network_failures(upstream: Exception) -> None:
     with pytest.raises(GoogleAuthNetworkError) as raised:
-        _raise_local_server_error(upstream)
+        raise_local_server_error(upstream)
 
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
@@ -165,7 +167,7 @@ def test_local_server_error_classifier_routes_network_failures(upstream: Excepti
 def test_local_server_error_classifier_never_reads_the_message(upstream: Exception) -> None:
     """Only the exception type decides; the consent receiver's own deadline is not a network failure."""
     with pytest.raises(GoogleAuthNetworkError) as raised:
-        _raise_local_server_error(upstream)
+        raise_local_server_error(upstream)
 
     assert raised.value.context == {"error_type": type(upstream).__name__}
     verdict = raised.value.terminal_precondition_verdict
@@ -177,7 +179,7 @@ def test_local_server_error_classifier_wraps_unclassified_failures() -> None:
     upstream = RuntimeError("access denied")
 
     with pytest.raises(GoogleAuthNetworkError) as raised:
-        _raise_local_server_error(upstream)
+        raise_local_server_error(upstream)
 
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
@@ -188,7 +190,7 @@ def test_profile_record_guard_refuses_a_missing_profile_bucket_pointer(tmp_path:
     with (
         override_settings(
             cadrumo_active_profile="missing-profile",
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
@@ -294,7 +296,7 @@ def test_both_sign_in_boundaries_apply_the_one_exact_scope_rule(granted: tuple[s
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.com",
             granted_scopes=granted,
-            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         )
     with pytest.raises(GoogleAuthScopeInsufficientError):
         require_exact_scope_grant(granted, account_email=None)
@@ -309,12 +311,12 @@ def test_login_flow_refuses_unavailable_profile_record_session_before_oauth_netw
 
     with (
         override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_active_profile=profile_id,
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
-        run_login_flow(_valid_oauth_client(), profile_id)
+        run_login_flow(valid_oauth_client(), profile_id)
 
     assert raised.value.context == {
         "profile": "1f54e86d-e8dd-4327-8651-cc6d9a44843c",
@@ -332,7 +334,7 @@ def test_login_flow_propagates_zero_row_profile_capsule_corruption_before_oauth_
         pytest.raises(ProfileRecordIntegrityError) as raised,
     ):
         reset_secure_object_store(profile.repository)
-        run_login_flow(_valid_oauth_client(), profile.bucket_id)
+        run_login_flow(valid_oauth_client(), profile.bucket_id)
 
     assert str(raised.value) == "profile capsule must contain exactly one current record row; it holds 0"
     assert not isinstance(raised.value, GoogleAuthProfileUnboundError)
@@ -352,9 +354,9 @@ def test_a_consent_that_issues_no_refresh_token_is_refused_before_identity_is_re
     with pytest.raises(GoogleAuthValidationError) as refused:
         # CAST-RATIONALE-thirdparty: the real credentials class leaves the attributes the
         # flow's credential protocol names unannotated, so it does not satisfy it structurally.
-        _oauth_loopback_records(
+        oauth_loopback_records(
             cast("OAuthCredentials", credentials),
-            _valid_oauth_client(),
+            valid_oauth_client(),
             before_handoff=None,
             acknowledged=None,
             expected_nonce="synthetic-nonce",
@@ -370,7 +372,7 @@ def test_a_consent_that_issues_no_refresh_token_is_refused_before_identity_is_re
     assert "synthetic-access-value" not in str(error)
 
 
-class _BrowserStandIn:
+class BrowserStandIn:
     """Stands in for the person at the browser: answers the consent and follows Google's redirect."""
 
     def __init__(self, answer: str) -> None:
@@ -407,7 +409,7 @@ def test_a_completed_token_exchange_is_accounted_as_a_change_before_a_later_refu
     the exchange acknowledged as a write first, so the operation cannot settle
     the refusal as having changed nothing.
     """
-    browser = _BrowserStandIn("code=synthetic-authorization-code")
+    browser = BrowserStandIn("code=synthetic-authorization-code")
     monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
     # The local endpoint is plain HTTP; the client library refuses that unless told it is a test transport.
     monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
@@ -418,9 +420,9 @@ def test_a_completed_token_exchange_is_accounted_as_a_change_before_a_later_refu
     ) as endpoint:
         # A stored client may only name Google's token endpoint; the copy points the
         # real exchange at the local one without weakening that rule.
-        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        client = valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
         with pytest.raises(GoogleAuthValidationError) as refused:
-            oauth_flow._run_local_server(
+            oauth_flow.run_local_server(
                 client,
                 before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
@@ -449,15 +451,15 @@ def test_a_declined_consent_is_refused_before_the_exchange_is_admitted(monkeypat
     the refusal arrives, and the refusal is of a kind the operation accepts
     as proof that nothing was granted.
     """
-    browser = _BrowserStandIn("error=access_denied")
+    browser = BrowserStandIn("error=access_denied")
     monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
     monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
     boundaries: list[str] = []
 
     with token_endpoint(status=200, body={"access_token": "synthetic-access-value"}) as endpoint:
-        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        client = valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
         with pytest.raises(GoogleAuthSignInRequiredError) as refused:
-            oauth_flow._run_local_server(
+            oauth_flow.run_local_server(
                 client,
                 before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
@@ -479,15 +481,15 @@ def test_an_error_the_token_endpoint_answers_is_never_taken_for_a_declined_conse
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """After an approved consent a grant may exist, so the exchange stays open whatever the endpoint says."""
-    browser = _BrowserStandIn("code=synthetic-authorization-code")
+    browser = BrowserStandIn("code=synthetic-authorization-code")
     monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
     monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
     boundaries: list[str] = []
 
     with token_endpoint(status=400, body={"error": "access_denied"}) as endpoint:
-        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        client = valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
         with pytest.raises(GoogleAuthNetworkError):
-            oauth_flow._run_local_server(
+            oauth_flow.run_local_server(
                 client,
                 before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),

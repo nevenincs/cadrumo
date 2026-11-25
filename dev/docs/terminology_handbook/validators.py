@@ -86,7 +86,7 @@ def legal_refs_resolve_validator(legal_ref_ids: Container[str] | None = None) ->
             explicit container lets a unit test resolve against a small
             synthetic catalogue without loading the full registry.
     """
-    resolved: Container[str] = _bundled_legal_ref_ids() if legal_ref_ids is None else legal_ref_ids
+    resolved: Container[str] = bundled_legal_ref_ids() if legal_ref_ids is None else legal_ref_ids
 
     def _validate(handbook: TerminologyHandbook) -> None:
         failures: list[str] = []
@@ -210,7 +210,7 @@ def default_handbook_validators(legal_ref_ids: Container[str] | None = None) -> 
     )
 
 
-def _bundled_legal_ref_ids() -> frozenset[str]:
+def bundled_legal_ref_ids() -> frozenset[str]:
     """Return every legal-reference id the bundled catalogue carries.
 
     Deliberately routed through the validated authority, and NOT through the

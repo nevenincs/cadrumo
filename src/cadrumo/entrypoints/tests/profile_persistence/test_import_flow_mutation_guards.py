@@ -7,6 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from cadrumo.application.aggregation.retenciones import RetencionObservation
+from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -22,7 +29,10 @@ from ....application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from ....application.modelo.calculation_revision_queries import get_calculation_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.work_lifecycle import (
     create_work_unit,
@@ -39,76 +49,62 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ...adapter_composition import (
-    build_amendment_action_ports,
-    build_calculation_action_ports,
-)
+from ...adapter_composition_work_ports import build_amendment_action_ports, build_calculation_action_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .import_flow_support import (
-    _IMPORT_INCOME_CASILLA,
-    _M111_ACTIVITY_AMOUNT_CASILLA,
-    _M111_ACTIVITY_COUNT_CASILLA,
-    _M111_ACTIVITY_WITHHELD_CASILLA,
-    _M111_AMENDMENT_CASILLA,
-    _M111_EMPLOYMENT_WITHHELD_CASILLA,
-    _M111_FORESTRY_WITHHELD_CASILLA,
-    _M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
-    _M111_IMPUTED_INCOME_WITHHELD_CASILLA,
-    _M111_PRIZE_WITHHELD_CASILLA,
-    _M111_PROFESSIONAL_WITHHELD_CASILLA,
-    _M111_TOTAL_WITHHELD_CASILLA,
-    _PROFILE_ID,
-    _T0,
-    _T1,
-    _T2,
-    _T3,
-    _T4,
-    _import_external_filing,
-    _Repos,
-    _seed_local_filing_record,
-    _seed_work_unit,
+    IMPORT_INCOME_CASILLA,
+    M111_AMENDMENT_CASILLA,
+    PROFILE_ID,
+    T0,
+    T1,
+    T2,
+    T3,
+    T4,
+    Repos,
+    import_external_filing,
     repos,
-    seed_ready_profile,
+    seed_local_filing_record,
+    seed_work_unit,
+    withholding_payer_repos,
 )
 
-__all__ = ["repos"]
+__all__ = ["repos", "withholding_payer_repos"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
-def test_import_refuses_discarded_work_unit(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_import_refuses_discarded_work_unit(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A discarded work unit cannot accept new imports."""
 
     wu_repo, _, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T1,
+        clock=T1,
     )
 
     with pytest.raises(WorkUnitMutationRefusedError):
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
             evidence_reference_id="JUST-LATE",
-            clock=_T2,
+            clock=T2,
         )
 
 
-def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
+def test_import_refuses_unknown_work_unit(repos: Repos) -> None:
     """A work_unit_id absent from the catalogue is rejected."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     with pytest.raises(WorkUnitNotFoundError):
         import_external_filing_evidence(
             work_unit_id="0" * 64,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+            casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-WHATEVER",
             work_unit_repository=wu_repo,
@@ -116,24 +112,24 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
             observation_repository=CalculationObservationRepository(),
-            clock=_T1,
+            clock=T1,
         )
 
 
 def test_external_import_refuses_m303_without_complete_filing_evidence(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     period = Period.from_year_and_code(2026, "1T")
     snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
     work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo="303",
         filing_year=2026,
         period=period,
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
 
@@ -148,7 +144,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
             observation_repository=CalculationObservationRepository(),
-            clock=_T1,
+            clock=T1,
         )
 
     assert len(cr_repo.load()) == 0
@@ -156,60 +152,69 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
 
 
 def test_amend_locally_filed_still_refused_after_import_path_exists(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    withholding_payer_repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The import path does not loosen the local-filing amendment evidence gate."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = withholding_payer_repos
     work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo="111",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
+    # One professional retención paid in the quarter: the Modelo 111 boxes come from it.
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(PROFILE_ID)),
+        modelo="111",
+        filing_year=2026,
+        period=work_unit.period,
+        observations=[
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="professional-payment-001",
+                perceptor_nif="12345678Z",
+                perceptor_name="Profesional Ejemplo",
+                scheme=RetencionScheme("actividades_profesionales"),
+                taxable_base=Decimal("1000.00"),
+                retencion_amount=Decimal("150.00"),
+                accrued_on="2026-03-15",
+            )
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
     with calculation_ports_for_test(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_180:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={
-                _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-                _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-                _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-                _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-                _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-                _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-                _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-                _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-                _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-                _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
-            },
+            casilla_inputs={},
             ports=_calculation_ports_180,
-            clock=_T1,
-        )
+            clock=T1,
+        ).revision
     verified_revision = revision.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": _T2,
+            "verified_at": T2,
             "verified_by": "operator-A",
-            "updated_at": _T2,
+            "updated_at": T2,
         }
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), verified_revision))
-    locally_filed = _seed_local_filing_record(
+    locally_filed = seed_local_filing_record(
         work_unit=work_unit,
         revision_id=verified_revision.calculation_revision_id,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        filed_at=_T3,
+        filed_at=T3,
         filed_by="operator-A",
     )
     assert locally_filed.external_evidence is None
@@ -217,12 +222,12 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
     with pytest.raises(AmendmentEvidenceMissingError), bundled_indexed_authority().operation() as operation:
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
-            overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            overrides={M111_AMENDMENT_CASILLA: Decimal("1700")},
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="needed to amend",
             actor="operator-A",
-            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-            clock=_T4,
+            ports=build_amendment_action_ports(bucket_id=PROFILE_ID, operation=operation),
+            clock=T4,
             operation=operation,
         )
 
@@ -258,7 +263,7 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
                 filing_repository=fr_repo,
                 bucket_event_repository=bv_repo,
                 observation_repository=CalculationObservationRepository(),
-                expected_tax_id="X1234567L",
+                expected_tax_id="X0001500M",
                 clock=_GUARD_CLOCK,
             )
 
@@ -276,14 +281,14 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     owner, with a real ready profile) so the calculate path's own
     profile-readiness gate is not what refuses this -- ``wu_repo`` is
     constructed claiming bucket A while the loaded unit's own
-    ``bucket_id`` is B, isolating exactly the missing check:
-    ``calculate_modelo_revision`` never compares
+    ``bucket_id`` is B, isolating exactly one check:
+    ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` compares
     ``work_unit_repository.bucket_id`` against the loaded unit's own
-    ``bucket_id``, unlike ``import_external_filing_evidence`` and the
-    calculation-revision addressing helpers in this same package.
+    ``bucket_id``, as ``import_external_filing_evidence`` and the
+    calculation-revision addressing helpers in this same package do.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
-        seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
+        seed_ready_profile(bucket_id=_GUARD_BUCKET_B, at=T0)
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
@@ -299,16 +304,12 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
                 bucket_event_repository=bv_repo,
             ) as _calculation_ports_295,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 foreign.work_unit_id,
                 actor="operator-A",
                 casilla_inputs={
-                    _GUARD_INCOME_CASILLA: Decimal("1000"),
-                    _GUARD_EXPENSE_CASILLA: Decimal("0"),
                     _GUARD_WITHHELD_CASILLA: Decimal("0"),
                     _GUARD_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
-                    _GUARD_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-                    _GUARD_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
                     _GUARD_HOME_DEDUCTION_CASILLA: Decimal("0"),
                     _GUARD_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
                 },
@@ -387,8 +388,8 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
 
 _GUARD_BUCKET_A = "6aa00000-0000-4000-8000-0000000000aa"
 _GUARD_BUCKET_B = "6bb00000-0000-4000-8000-0000000000bb"
-_GUARD_CLOCK = _T1
-_GUARD_INCOME_CASILLA = _IMPORT_INCOME_CASILLA
+_GUARD_CLOCK = T1
+_GUARD_INCOME_CASILLA = IMPORT_INCOME_CASILLA
 
 
 def _guard_work_unit(bucket_id: str) -> WorkUnit:
@@ -408,6 +409,6 @@ def _guard_work_unit(bucket_id: str) -> WorkUnit:
         filing_year=2026,
         period=period,
         revision_id="2019-y-siguientes",
-        created_at=_T0,
-        updated_at=_T0,
+        created_at=T0,
+        updated_at=T0,
     )

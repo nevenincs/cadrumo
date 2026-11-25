@@ -15,7 +15,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Un expediente o caso administrativo de la AEAT."
-definition = "Conjunto ordenado de actuaciones y documentos de un procedimiento tributario ante la AEAT. La aplicacion puede leer expedientes cuando hay autenticacion configurada en modo solo lectura; nunca escribe en ellos."
+definition = "Conjunto ordenado de actuaciones y documentos de un procedimiento tributario ante la AEAT. La aplicación puede leer expedientes cuando hay autenticación configurada en modo solo lectura; nunca escribe en ellos."
 
 [language.es.source]
 citation = "Ley 39/2015 del Procedimiento Administrativo Comun y Sede Electronica de la AEAT."

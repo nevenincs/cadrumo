@@ -18,7 +18,7 @@ from pydantic import AnyHttpUrl
 from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import (
+from ...adapters.persistence.storage.secure_object_probe_namespaces import (
     TEST_RUNTIME_PROFILE_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
 )

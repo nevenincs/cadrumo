@@ -15,12 +15,18 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
 import typer
 from pydantic import ValidationError
+
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from ...application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
+from ...application.ledger.invoice_unlink import InvoiceUnlinkCause, InvoiceUnlinkRefusedError
 from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult
 from ...application.ledger.models import (
     ManualLedgerTransactionPatch,
@@ -39,27 +45,10 @@ from ...domain.transactions.enums import (
     takes_business_share,
 )
 from ...domain.transactions.errors import TransactionValidationError
-from ._date_parsing import _parse_iso_date
-from ._decimal_parsing import parse_fraction, parse_optional_fraction
-from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
-from ._ledger_llm_cli import (
-    LedgerLlmRouteArguments,
-    dispatch_autosplit,
-    ledger_classify_llm,
-    ledger_operator_iva_derive,
-    ledger_saturate_llm,
-)
-from ._ledger_m210_classify_cli import M210LedgerClassifyOptions
-from ._ledger_support import (
-    invoice_link_error_bad_parameter,
-    ledger_transaction_validation_no_recovery,
-    ledger_validation_bad,
-    parse_amount_magnitude,
-    parse_decimal_option,
-    validate_business_pct_range,
-    validate_category_id,
-)
 from .common import bad, emit_envelope
+from .date_parsing import parse_iso_date
+from .decimal_parsing import parse_fraction, parse_optional_fraction
+from .ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from .ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
@@ -69,6 +58,30 @@ from .ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
 )
+from .ledger_llm_cli import (
+    LedgerLlmRouteArguments,
+    dispatch_autosplit,
+    ledger_classify_llm,
+    ledger_operator_iva_derive,
+    ledger_saturate_llm,
+)
+from .ledger_m210_classify_cli import M210LedgerClassifyOptions
+from .ledger_rental_inputs import rental_link_patch_values
+from .ledger_savings_inputs import savings_link_patch_values
+from .ledger_support import (
+    invoice_link_error_bad_parameter,
+    ledger_transaction_validation_no_recovery,
+    ledger_validation_bad,
+    parse_amount_magnitude,
+    parse_decimal_option,
+    validate_business_pct_range,
+    validate_category_id,
+)
+
+if TYPE_CHECKING:
+    from datetime import date
+
+    from ...application.ledger.link_operation import LedgerLinkOperationResult
 
 __all__ = [
     "ledger_archive",
@@ -81,9 +94,16 @@ __all__ = [
 ]
 
 
-def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
+def _parse_optional_iso_date(raw: str | None, *, label: str) -> date | None:
+    return parse_iso_date(raw, label=label) if raw is not None else None
+
+
+def _patch_from_options(
+    *, explicit: Mapping[str, object] | None = None, **values: object
+) -> ManualLedgerTransactionPatch:
+    """Build the patch from the options stated; ``explicit`` values are kept even when they clear a field."""
     return ManualLedgerTransactionPatch.model_validate(
-        {key: value for key, value in values.items() if value is not None},
+        {**{key: value for key, value in values.items() if value is not None}, **(explicit or {})},
     )
 
 
@@ -160,6 +180,8 @@ def ledger_add(
     direction: TransactionDirection,
     description: str,
     value_date: str | None = None,
+    operation_date: str | None = None,
+    accrual_date: str | None = None,
     currency: str = DEFAULT_CURRENCY,
     counterparty: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
@@ -171,6 +193,7 @@ def ledger_add(
     iva_category: IvaCategory | None = None,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
     investment_asset_id: str | None = None,
+    iva_vehicle_use: str | None = None,
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
     recargo_amount: str | None = None,
@@ -187,6 +210,11 @@ def ledger_add(
     idempotency_key: str | None = None,
     source_jurisdiction: str | None = None,
     account: str | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through exact-profile operation custody."""
     _require_add_assignable_classification(business_classification)
@@ -202,6 +230,8 @@ def ledger_add(
             direction=direction,
             description=description,
             value_date=value_date,
+            operation_date=operation_date,
+            accrual_date=accrual_date,
             currency=currency,
             counterparty=counterparty,
             business_classification=business_classification,
@@ -213,6 +243,7 @@ def ledger_add(
             iva_category=iva_category,
             deduction_fact_kind=deduction_fact_kind,
             investment_asset_id=investment_asset_id,
+            iva_vehicle_use=iva_vehicle_use,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
             recargo_amount=recargo_amount,
@@ -229,6 +260,11 @@ def ledger_add(
             idempotency_key=idempotency_key,
             source_jurisdiction=source_jurisdiction,
             own_account_id=account,
+            arrendamiento=arrendamiento,
+            inmueble=inmueble,
+            gasto_inmobiliario=gasto_inmobiliario,
+            posicion=posicion,
+            concepto_capital_mobiliario=concepto_capital_mobiliario,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -273,6 +309,8 @@ def ledger_update(
     transaction_id: str,
     booked_date: str | None = None,
     value_date: str | None = None,
+    operation_date: str | None = None,
+    accrual_date: str | None = None,
     amount: str | None = None,
     direction: TransactionDirection | None = None,
     currency: str | None = None,
@@ -290,8 +328,10 @@ def ledger_update(
     """Correct editable transaction facts through the exact-profile worker."""
     try:
         patch = _patch_from_options(
-            booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
-            value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
+            booked_date=_parse_optional_iso_date(booked_date, label="date"),
+            value_date=_parse_optional_iso_date(value_date, label="value-date"),
+            operation_date=_parse_optional_iso_date(operation_date, label="operation-date"),
+            accrual_date=_parse_optional_iso_date(accrual_date, label="accrual-date"),
             amount=parse_amount_magnitude(amount) if amount is not None else None,
             direction=direction,
             currency=currency,
@@ -386,7 +426,6 @@ def _dispatch_non_direct_classification_route(
     read_evidence: bool,
     saturate: bool,
     iva_category: IvaCategory | None,
-    vision_model: str | None,
     auto_split: bool,
     reject: bool,
     reason: str,
@@ -408,7 +447,6 @@ def _dispatch_non_direct_classification_route(
             apply=apply,
             actor=actor,
             read_evidence=read_evidence,
-            vision_model=vision_model,
             reject=reject,
             reason=reason,
         )
@@ -423,7 +461,6 @@ def _dispatch_non_direct_classification_route(
             "apply": apply,
             "actor": actor,
             "read_evidence": read_evidence,
-            "vision_model": vision_model,
             "reject": reject,
             "reason": reason,
         }
@@ -477,6 +514,22 @@ def _require_classification_business_pct(
         raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
 
 
+def _ledger_link_patch_values(
+    ctx: typer.Context,
+    rental: tuple[str | None, str | None, str | None],
+    savings: tuple[str | None, str | None],
+) -> dict[str, object]:
+    """Return the explicitly given rental and savings link fields of a classify patch."""
+    arrendamiento, inmueble, gasto_inmobiliario = rental
+    posicion, concepto_capital_mobiliario = savings
+    return {
+        **rental_link_patch_values(
+            ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
+        ),
+        **savings_link_patch_values(ctx, posicion=posicion, concepto_capital_mobiliario=concepto_capital_mobiliario),
+    }
+
+
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = None,
@@ -487,6 +540,7 @@ def ledger_classify(
     taxable_base: str | None = None,
     iva_rate: str | None = None,
     iva_amount: str | None = None,
+    recargo_amount: str | None = None,
     irpf_category: str | None = None,
     m210_tipo_renta_code: str | None = None,
     m210_gross_income_amount: str | None = None,
@@ -495,17 +549,23 @@ def ledger_classify(
     m210_payer_id: str | None = None,
     m210_asset_or_right_id: str | None = None,
     iva_category: IvaCategory | None = None,
+    exemption_article: str | None = None,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
     investment_asset_id: str | None = None,
+    iva_vehicle_use: str | None = None,
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
     actor: str | None = None,
     reaffirm: bool = False,
     llm: bool = False,
     apply: bool = False,
     saturate: bool = False,
     read_evidence: bool = False,
-    vision_model: str | None = None,
     auto_split: bool = False,
     reject: bool = False,
     reason: str | None = None,
@@ -532,7 +592,6 @@ def ledger_classify(
         read_evidence=read_evidence,
         saturate=saturate,
         iva_category=iva_category,
-        vision_model=vision_model,
         auto_split=auto_split,
         reject=reject,
         reason=reason or "",
@@ -572,12 +631,20 @@ def ledger_classify(
             taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
             iva_rate=parse_optional_fraction(iva_rate, label="iva-rate"),
             iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
+            recargo_amount=parse_decimal_option(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             iva_category=iva_category,
+            exemption_article=exemption_article,
             deduction_fact_kind=deduction_fact_kind,
             investment_asset_id=investment_asset_id,
+            iva_vehicle_use=iva_vehicle_use,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
+            explicit=_ledger_link_patch_values(
+                ctx,
+                (arrendamiento, inmueble, gasto_inmobiliario),
+                (posicion, concepto_capital_mobiliario),
+            ),
             notes=reason,
         )
         parsed_m210_gross_income_amount = parse_decimal_option(
@@ -612,7 +679,7 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    _emit_single_classification(ctx, result, reaffirm)
+    _emit_single_classification(ctx, result, reaffirm, transaction_id=transaction_id)
 
 
 def ledger_allocate(
@@ -665,10 +732,21 @@ def ledger_allocate(
     )
 
 
-def _link_refusal(reason: str | None) -> typer.BadParameter:
+def _link_refusal(outcome: LedgerLinkOperationResult) -> typer.BadParameter:
     """Map the closed worker refusal reason to its existing operator message."""
+    reason = outcome.reason
+    if reason == "ambiguous_invoice":
+        return bad(
+            tr(
+                "application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
+                invoice_id=outcome.invoice_id,
+                candidates=", ".join(outcome.candidate_invoice_ids),
+            )
+        )
     if reason == "cross_bucket_invoice":
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
+    if reason == "transaction_takes_no_invoice":
+        return bad(tr("cli.ledger.link.errors.transaction_takes_no_invoice"))
     if reason == "missing_invoice":
         return bad(tr("cli.ledger.link.errors.invoice_not_found"))
     return invoice_link_error_bad_parameter()
@@ -690,7 +768,7 @@ def ledger_link(
         actor=actor,
     )
     if outcome.outcome == "refused":
-        raise _link_refusal(outcome.reason)
+        raise _link_refusal(outcome)
     projection = outcome.projection
     if projection is None:
         raise invoice_link_error_bad_parameter()
@@ -719,9 +797,95 @@ def ledger_link(
     )
 
 
-def _emit_single_classification(ctx: typer.Context, result: LedgerClassifyOperationResult, reaffirm: bool) -> None:
+def _unlink_refusal(error: InvoiceUnlinkRefusedError) -> typer.BadParameter:
+    """Map the closed worker refusal cause to its operator message and next step."""
+    cause = error.cause
+    if cause is InvoiceUnlinkCause.LINK_NOT_FOUND:
+        return bad(tr("cli.ledger.unlink.errors.link_not_found"))
+    if cause is InvoiceUnlinkCause.TRANSACTION_CHANGED:
+        return bad(tr("cli.ledger.unlink.errors.transaction_changed"))
+    if cause is InvoiceUnlinkCause.INVOICE_CHANGED:
+        return bad(tr("cli.ledger.unlink.errors.invoice_changed"))
+    return bad(tr("cli.ledger.unlink.errors.finalized_calculation_reference"))
+
+
+def ledger_unlink(
+    ctx: typer.Context,
+    transaction_id: str,
+    invoice_id: str,
+    actor: str | None = None,
+) -> None:
+    """Remove a transaction's link to one reconciliation-catalogue invoice; the history keeps both."""
+    from .operation_ledger_unlink import unlink_ledger_invoice_for_cli
+
+    try:
+        unlinked = unlink_ledger_invoice_for_cli(
+            ctx,
+            transaction_id=transaction_id,
+            invoice_id=invoice_id,
+            actor=actor,
+        )
+    except InvoiceUnlinkRefusedError as refusal:
+        raise _unlink_refusal(refusal) from refusal
+
+    result = unlinked.result
+    payload = {
+        "operation": "ledger.unlink",
+        "bucket_id": str(result.profile_id),
+        "transaction_id": result.transaction_id,
+        "invoice_id": result.invoice_id,
+        "actor": result.actor,
+        "invoice_linked_transaction_ids": list(result.invoice_linked_transaction_ids),
+        "bucket_event_ids": list(result.bucket_event_ids),
+    }
+    lines = [
+        "operation\tledger.unlink",
+        f"bucket\t{result.profile_id}",
+        f"transaction_id\t{result.transaction_id}",
+        f"actor\t{result.actor}",
+        f"invoice_id\t{result.invoice_id}",
+    ]
+    from .ledger_results import LedgerUnlinkResult
+
+    emit_envelope(
+        ctx,
+        command="ledger.unlink",
+        result=LedgerUnlinkResult.model_validate(payload),
+        lines=lines,
+    )
+
+
+def _refuse_needs_withholding_category(transaction_id: str) -> CliRefusedBoundaryError:
+    """Say what the movement is missing, and attach the command that supplies it.
+
+    The sentence and its fix are the catalogue words the window serves for the
+    same refusal; the command path and its inputs are resolved from the live
+    command tree, never written here.
+    """
+    from ...application.ledger.classify_validation import needs_withholding_category_verdict
+    from ...application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
+    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY
+    from .common import attach_cli_policy_verdict
+
+    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY)
+    fix = tr(BLOCKER_FIX_LOCALE_KEYS["needs_withholding_category"])
+    details = f"{refusal} {fix}"
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.ledger.errors.command_input_invalid",
+            context={"details": details},
+        ),
+        verdict=needs_withholding_category_verdict(transaction_id=transaction_id),
+    )
+
+
+def _emit_single_classification(
+    ctx: typer.Context, result: LedgerClassifyOperationResult, reaffirm: bool, *, transaction_id: str
+) -> None:
     """Refuse an incomplete result before emitting its settled classification."""
     if result.outcome == "validation_error":
+        if result.validation_kind == "needs_withholding_category":
+            raise _refuse_needs_withholding_category(transaction_id)
         if result.validation_kind == "m210_incoming_only":
             raise bad(tr("cli.ledger.classify.m210_incoming_only"))
         if result.validation_kind == "m210_required_options":

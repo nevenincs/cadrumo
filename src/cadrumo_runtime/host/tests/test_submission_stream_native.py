@@ -28,7 +28,7 @@ from cadrumo.application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
 from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenamePublicResultV2, ModeloWorkRenameRequest
 from cadrumo.application.operations.financial_operand_contract import (
     OperationFinancialOperandRefusalCode,
@@ -42,6 +42,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.request_faults import RequestFault
@@ -57,7 +58,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
-from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -75,16 +76,18 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, SessionRequest, SessionsLocked
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadDescriptor
-from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, write_document, write_secret
+from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.verified_transport import HeldExchange
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _LoginObservation, _seed_periods
-from .test_modelo_metadata_history import _observe
+from .served_runtime import SyntheticLogin, admit_session
+from .test_modelo_metadata import connect, issue_scoped_key, seed_periods
+from .test_modelo_metadata_history import observe
 
 pytestmark = [
     pytest.mark.integration,
@@ -145,7 +148,9 @@ def native_bulk_runtime(
                         ),
                     ),
                 )
-                edit_input = ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(batch))
+                edit_input = ModeloEditOperatorInputV2(
+                    submission=ModeloEditApplySubmissionV1.from_submission(batch), output_language=OutputLanguage.EN
+                )
                 definitions = frozenset({"modelo.edit.apply", "modelo.edit.preflight"})
                 registry = build_production_operation_registry()
                 disclosures = {
@@ -182,10 +187,10 @@ def native_bulk_runtime(
                     allow_period_independent=False,
                     allow_delegation=False,
                 )
-                api_key = _issue_scoped_key(subject, scope=scope)
+                api_key = issue_scoped_key(subject, scope=scope)
             else:
-                work_unit, _ = _seed_periods(profile_id)
-                api_key = _issue_scoped_key(subject)
+                work_unit, _ = seed_periods(profile_id)
+                api_key = issue_scoped_key(subject)
             close_active_bucket_session()
 
             stop, boot = Event(), uuid4()
@@ -194,7 +199,7 @@ def native_bulk_runtime(
                 storage_identity=endpoint.storage_identity,
                 runtime_boot_id=boot,
                 stop=stop,
-                capture_login=lambda _channel: _LoginObservation(),
+                capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
                 secret_store=lambda: subject.native,
             )
             profiles.prepare_registry()
@@ -216,23 +221,6 @@ def native_bulk_runtime(
                             raise
     finally:
         endpoint.close()
-
-
-def _connect_with_raw_channel(
-    endpoint: WindowsEndpoint,
-) -> tuple[ByteChannel, VerifiedConnection]:
-    """Retain the endpoint-owned channel while the verified client admits a session."""
-    channel = endpoint.connect(timeout=3)
-    try:
-        client = VerifiedConnection(
-            channel,
-            expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-            deadline=time.monotonic() + 3,
-        )
-    except BaseException:
-        channel.close()
-        raise
-    return channel, client
 
 
 def _rename_request(work_unit: WorkUnit | ModeloWorkRenamePublicResultV2, new_name: str) -> ModeloWorkRenameRequest:
@@ -265,23 +253,21 @@ def _stream_request(
     )
 
 
-def _begin_upload(
-    channel: ByteChannel, client: VerifiedConnection, request: OperationSubmitPayload, *, deadline: float
-) -> OperationPayloadReady:
-    write_document(channel, request, deadline=deadline)
+def _begin_upload(upload: HeldExchange, request: OperationSubmitPayload) -> OperationPayloadReady:
     # Authentication may enqueue a session event before the transfer reply.
-    # Use the canonical reply demultiplexer and exact request correlation.
-    reply = client._reply(request.request_id, deadline=deadline).root
+    # The held exchange owns the connection's reads, so the connection's idle
+    # event reader cannot take this reply, and it correlates the exact request.
+    reply = upload.reply().root
     assert isinstance(reply, OperationPayloadReady), reply
     assert reply.request_id == request.request_id
     assert reply.descriptor == request.descriptor
     return reply
 
 
-def _send_chunk(channel: ByteChannel, content: bytes, offset: int, *, deadline: float) -> None:
+def _send_chunk(upload: HeldExchange, content: bytes, offset: int) -> None:
     chunk = bytearray(content[offset : offset + SUBMISSION_PAYLOAD_CHUNK_BYTES])
     assert chunk
-    write_secret(channel, chunk, deadline=deadline)
+    upload.send_secret(chunk)
     assert chunk == bytes(len(chunk))
 
 
@@ -390,9 +376,9 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
     work_unit: WorkUnit | ModeloWorkRenamePublicResultV2 = native_bulk_runtime.work_unit
 
     with ExitStack() as clients:
-        initial = _connect(endpoint)
+        initial = connect(endpoint)
         clients.callback(initial.close)
-        initial_session = _admit(initial, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        initial_session = admit_session(initial, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
 
         # The padding tests the byte-framed transport threshold only; it does not cover financial-row payloads.
         work_unit = _rename_and_execute(
@@ -405,9 +391,11 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
         )
         initial.close()
 
-        interrupted_channel, interrupted = _connect_with_raw_channel(endpoint)
+        interrupted = connect(endpoint)
         clients.callback(interrupted.close)
-        interrupted_session = _admit(interrupted, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        interrupted_session = admit_session(
+            interrupted, profile_id, method="api_key", proof=native_bulk_runtime.api_key
+        )
         partial_json = (
             " " * SUBMISSION_PAYLOAD_CHUNK_BYTES
             + _rename_request(work_unit, "Must not be submitted after disconnect").model_dump_json()
@@ -419,13 +407,16 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             payload_json=partial_json,
         )
         assert SUBMISSION_PAYLOAD_CHUNK_BYTES < len(partial_content) < 2 * SUBMISSION_PAYLOAD_CHUNK_BYTES
-        _begin_upload(interrupted_channel, interrupted, partial_request, deadline=time.monotonic() + 20)
-        _send_chunk(interrupted_channel, partial_content, 0, deadline=time.monotonic() + 20)
+        with interrupted.held_exchange(
+            partial_request, partial_request.request_id, deadline=time.monotonic() + 20
+        ) as upload:
+            _begin_upload(upload, partial_request)
+            _send_chunk(upload, partial_content, 0)
         interrupted.close()
 
-        survivor = _connect(endpoint)
+        survivor = connect(endpoint)
         clients.callback(survivor.close)
-        survivor_session = _admit(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
         work_unit = _rename_and_execute(
             survivor,
             profile_id=profile_id,
@@ -435,15 +426,15 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
         )
         survivor.close()
 
-        upload_channel, uploader = _connect_with_raw_channel(endpoint)
+        uploader = connect(endpoint)
         clients.callback(uploader.close)
-        upload_session = _admit(uploader, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
-        survivor = _connect(endpoint)
+        upload_session = admit_session(uploader, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        survivor = connect(endpoint)
         clients.callback(survivor.close)
-        survivor_session = _admit(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
-        human = _connect(endpoint)
+        survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
+        human = connect(endpoint)
         clients.callback(human.close)
-        human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+        human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
 
         locked_json = (
             " " * SUBMISSION_PAYLOAD_CHUNK_BYTES
@@ -456,30 +447,33 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             payload_json=locked_json,
         )
         assert SUBMISSION_PAYLOAD_CHUNK_BYTES < len(locked_content) < 2 * SUBMISSION_PAYLOAD_CHUNK_BYTES
-        _begin_upload(upload_channel, uploader, locked_request, deadline=time.monotonic() + 20)
-        _send_chunk(upload_channel, locked_content, 0, deadline=time.monotonic() + 20)
+        with uploader.held_exchange(
+            locked_request, locked_request.request_id, deadline=time.monotonic() + 40
+        ) as upload:
+            _begin_upload(upload, locked_request)
+            _send_chunk(upload, locked_content, 0)
 
-        locked = human.session(
-            SessionRequest(
-                action="session_lock",
-                request_id=uuid4(),
-                profile_id=profile_id,
-                session_id=human_session,
-                target_session_id=upload_session,
-            ),
-            deadline=time.monotonic() + 10,
-        )
-        assert isinstance(locked, SessionsLocked), locked
-        assert upload_session in locked.session_ids
+            locked = human.session(
+                SessionRequest(
+                    action="session_lock",
+                    request_id=uuid4(),
+                    profile_id=profile_id,
+                    session_id=human_session,
+                    target_session_id=upload_session,
+                ),
+                deadline=time.monotonic() + 10,
+            )
+            assert isinstance(locked, SessionsLocked), locked
+            assert upload_session in locked.session_ids
 
-        try:
-            _send_chunk(upload_channel, locked_content, SUBMISSION_PAYLOAD_CHUNK_BYTES, deadline=time.monotonic() + 20)
-            outcome = uploader._reply(locked_request.request_id, deadline=time.monotonic() + 20).root
-        except RefusalError as error:
-            assert error.reason is RefusalCode.CONNECTION_CLOSED
-        else:
-            assert isinstance(outcome, AccessRefusal), outcome
-            assert outcome.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.AUTHENTICATION_REQUIRED}
+            try:
+                _send_chunk(upload, locked_content, SUBMISSION_PAYLOAD_CHUNK_BYTES)
+                outcome = upload.reply().root
+            except RefusalError as error:
+                assert error.reason is RefusalCode.CONNECTION_CLOSED
+            else:
+                assert isinstance(outcome, AccessRefusal), outcome
+                assert outcome.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.AUTHENTICATION_REQUIRED}
 
         # Native submission is not autostart; this proves no successful receipt and a live survivor submit,
         # while canonical inventory remains outside this test's evidence.
@@ -501,9 +495,9 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
     runtime = native_bulk_runtime
     encoded = runtime.edit_input
     assert encoded is not None
-    client = _connect(runtime.endpoint)
+    client = connect(runtime.endpoint)
     try:
-        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+        session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
         for definition_id, expected_effect in (
             ("modelo.edit.preflight", OperationEffect.NONE),
             ("modelo.edit.apply", OperationEffect.UPDATED),
@@ -535,7 +529,7 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
             assert isinstance(started, OperationAcknowledged), started
             deadline = time.monotonic() + 30
             while True:
-                observed = _observe(client, runtime.profile_id, session_id, operation_id)
+                observed = observe(client, runtime.profile_id, session_id, operation_id)
                 if observed.projection.terminal_condition is not None:
                     break
                 assert time.monotonic() < deadline
@@ -561,17 +555,19 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     assert encoded is not None
     unread = json.loads(encoded.model_dump_json())
     unread["submission"]["binding_intents"][0]["synthetic_member"] = "synthetic"
-    client = _connect(runtime.endpoint)
+    client = connect(runtime.endpoint)
     try:
-        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+        session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
 
-        def submit(subject_ref: str, payload_json: str) -> OperationSubmitted | AccessRefusal:
+        def submit(
+            subject_ref: str, payload_json: str, definition_id: str = "modelo.edit.preflight"
+        ) -> OperationSubmitted | AccessRefusal:
             reply = client.operation(
                 OperationFinancialInput(
                     request_id=uuid4(),
                     profile_id=runtime.profile_id,
                     session_id=session_id,
-                    definition_id="modelo.edit.preflight",
+                    definition_id=definition_id,
                     subject_ref=subject_ref,
                     payload_json=payload_json,
                 ),
@@ -583,6 +579,8 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
         by_the_model = submit(runtime.work_unit.work_unit_id, json.dumps(unread))
         # The operand is whole, and its baseline belongs to another work unit than the one addressed.
         by_a_registered_error = submit("f" * 64, encoded.model_dump_json())
+        # A definition whose contract takes no financial operand is refused whatever the input.
+        no_operand = submit(runtime.work_unit.work_unit_id, encoded.model_dump_json(), "modelo.work.form")
         accepted = submit(runtime.work_unit.work_unit_id, encoded.model_dump_json())
     finally:
         client.close()
@@ -601,4 +599,6 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     assert by_a_registered_error.request_faults == (
         RequestFault(location=(), type=printed.code, message=printed.message),
     )
+    assert isinstance(no_operand, AccessRefusal), no_operand
+    assert no_operand.code is AccessDenialCode.OPERATION_DENIED
     assert isinstance(accepted, OperationSubmitted), accepted

@@ -25,16 +25,16 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 # The canonical definitions of both window rules. They are private to the
-# snapshot module because runtime reaches them only through snapshot build; this
+# snapshot modules because runtime reaches them only through snapshot build; this
 # gate needs the same rule applied to revisions no snapshot coordinate reaches,
 # and reading it a second time here is what would let the two disagree.
-from cadrumo.domain.calculations.registry.snapshot import (
-    check_revision_scoped_legal_windows,
-    check_revision_scoped_source_windows,
-)
+from cadrumo.domain.calculations.registry.snapshot import check_revision_scoped_legal_windows
+from cadrumo.domain.calculations.registry.snapshot_source_windows import check_revision_scoped_source_windows
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..compiler.authority import compiled_bundled_authority
 
@@ -82,7 +82,7 @@ def test_a_source_whose_window_closed_before_the_revision_is_reported(authority)
     and the proof and the normal path pass in the same run.
     """
     modelo = next(item for item in authority.modelos if str(item.id) == "190")
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("190").id)]
     assert _window_failures(modelo, revision, authority.catalogues) == []
 
     stale = revision.model_copy(update={"source_refs": (*revision.source_refs, "aeat-dr-190-2020")})
@@ -95,7 +95,7 @@ def test_a_source_whose_window_closed_before_the_revision_is_reported(authority)
 def test_a_legal_reference_effective_after_the_revision_is_reported(authority) -> None:
     """MUTATION: the legal-window half, which fails on a different date axis."""
     modelo = next(item for item in authority.modelos if str(item.id) == "190")
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[str(authored_revisions("190")[0].id)]
     assert _window_failures(modelo, revision, authority.catalogues) == []
 
     stale = revision.model_copy(update={"legal_refs": (*revision.legal_refs, "ley-35-2006:art-32")})

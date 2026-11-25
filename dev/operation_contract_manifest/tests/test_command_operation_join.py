@@ -31,7 +31,6 @@ from cadrumo.entrypoints.cli.command_operation_table import (
 )
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.operator_surface_reconciliation import recorded_command_operation_join
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.source_tree_support import SourceTree
 from cadrumo.tests.cli_fixture_ports import FreshCliInvocation
 from cadrumo.tests.inventory import SRC_CADRUMO, production_python_files, read_source
@@ -51,7 +50,10 @@ from dev.operation_contract_manifest.command_operation_derivation import (
     derive_live_command_operations,
     render_command_operation_table,
 )
-from dev.operation_contract_manifest.submission_flow import SubmissionFlow, Symbol
+from dev.operation_contract_manifest.submission_flow import SubmissionFlow
+from dev.operation_contract_manifest.submission_source import Symbol
+
+from .test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -118,7 +120,7 @@ def test_the_join_covers_every_executable_node_of_the_live_graph() -> None:
 def test_the_join_and_the_registry_name_the_same_operations() -> None:
     """Every operation in the join is registered, and every registered operation is in the join."""
     join = recorded_command_operation_join()
-    registered = {definition.definition_id for definition in build_production_operation_registry().definitions}
+    registered = {definition.definition_id for definition in production_operation_registry().definitions}
     joined = {row.operation_id for row in join.operations}
     submitted = {operation_id for row in join.commands for operation_id in row.operation_ids}
     assert joined == registered, (
@@ -216,10 +218,19 @@ def test_every_submission_is_constructed_where_the_reading_looks() -> None:
         ),
         pytest.param(
             ("app", "ledger", "classify"),
-            {"ledger.classify.single", "ledger.classify.bulk", "ledger.classify.review", "ledger.classify.iva-derive"},
+            # A review first resolves the operator's handle through the ledger view.
+            {
+                "ledger.classify.single",
+                "ledger.classify.bulk",
+                "ledger.classify.review",
+                "ledger.classify.iva-derive",
+                "ledger.view",
+            },
             id="four-modes",
         ),
-        pytest.param(("app", "ledger", "split"), {"ledger.split.manual", "ledger.split.review"}, id="two-modes"),
+        pytest.param(
+            ("app", "ledger", "split"), {"ledger.split.manual", "ledger.split.review", "ledger.view"}, id="two-modes"
+        ),
         pytest.param(("config", "profile", "edit"), {"user-profile.patch", "user-profile.view"}, id="profile-client"),
         pytest.param(("app", "overview", "calendar"), {"overview.calendar"}, id="named-selection"),
         pytest.param(("app", "quickfile"), {"modelo.quickfile"}, id="group-callback"),

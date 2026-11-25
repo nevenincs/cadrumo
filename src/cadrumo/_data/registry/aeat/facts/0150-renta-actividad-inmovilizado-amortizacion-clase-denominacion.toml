@@ -1,0 +1,72 @@
+# Official names of the amortization table classes of the activity-asset register,
+# keyed "<regime>.<class key>" with the class keys of the coefficient and period
+# parameters of the same regime. The "normal" names are the rows of the table of
+# LIS art. 12.1.a, which RIRPF art. 28 applies to the normal modality; the
+# "simplificada" names are the group descriptions of the simplified table that
+# the Orden de 27 de marzo de 1998 approves under RIRPF art. 30.1.a, which the
+# AEAT Renta manual reproduces. A name is the text of its row without a closing
+# full stop, so it is an official legal name and is not translated.
+[fact]
+fact_id = "renta-actividad-inmovilizado-amortizacion-clase-denominacion"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-actividad-inmovilizado-amortizacion-clase-denominacion:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12", "rd-439-2007:art-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones", "Olivar 2 por 100 100 años"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "normal.obra-civil-general", value = "Obra civil general" },
+  { key = "normal.obra-civil-pavimentos", value = "Pavimentos" },
+  { key = "normal.obra-civil-infraestructuras-mineras", value = "Infraestructuras y obras mineras" },
+  { key = "normal.central-hidraulica", value = "Centrales hidráulicas" },
+  { key = "normal.central-nuclear", value = "Centrales nucleares" },
+  { key = "normal.central-carbon", value = "Centrales de carbón" },
+  { key = "normal.central-renovable", value = "Centrales renovables" },
+  { key = "normal.central-otra", value = "Otras centrales" },
+  { key = "normal.edificio-industrial", value = "Edificios industriales" },
+  { key = "normal.terreno-escombrera", value = "Terrenos dedicados exclusivamente a escombreras" },
+  { key = "normal.almacen-deposito", value = "Almacenes y depósitos (gaseosos, líquidos y sólidos)" },
+  { key = "normal.edificio-comercial-administrativo-servicios-vivienda", value = "Edificios comerciales, administrativos, de servicios y viviendas" },
+  { key = "normal.instalacion-subestacion-red", value = "Subestaciones. Redes de transporte y distribución de energía" },
+  { key = "normal.instalacion-cables", value = "Cables" },
+  { key = "normal.instalacion-resto", value = "Resto instalaciones" },
+  { key = "normal.maquinaria", value = "Maquinaria" },
+  { key = "normal.equipo-medico", value = "Equipos médicos y asimilados" },
+  { key = "normal.transporte-locomotora-vagon-traccion", value = "Locomotoras, vagones y equipos de tracción" },
+  { key = "normal.transporte-buque-aeronave", value = "Buques, aeronaves" },
+  { key = "normal.transporte-interno", value = "Elementos de transporte interno" },
+  { key = "normal.transporte-externo", value = "Elementos de transporte externo" },
+  { key = "normal.transporte-autocamion", value = "Autocamiones" },
+  { key = "normal.mobiliario", value = "Mobiliario" },
+  { key = "normal.lenceria", value = "Lencería" },
+  { key = "normal.cristaleria", value = "Cristalería" },
+  { key = "normal.util-herramienta", value = "Útiles y herramientas" },
+  { key = "normal.molde-matriz-modelo", value = "Moldes, matrices y modelos" },
+  { key = "normal.enseres-otros", value = "Otros enseres" },
+  { key = "normal.equipo-electronico", value = "Equipos electrónicos" },
+  { key = "normal.equipo-proceso-informacion", value = "Equipos para procesos de información" },
+  { key = "normal.intangible-software", value = "Sistemas y programas informáticos" },
+  { key = "normal.intangible-audiovisual", value = "Producciones cinematográficas, fonográficas, videos y series audiovisuales" },
+  { key = "normal.otro-elemento", value = "Otros elementos" },
+  { key = "simplificada.edificio-otra-construccion", value = "Edificios y otras construcciones" },
+  { key = "simplificada.instalacion-mobiliario-enseres-resto-material", value = "Instalaciones, mobiliario, enseres y resto del inmovilizado material" },
+  { key = "simplificada.maquinaria", value = "Maquinaria" },
+  { key = "simplificada.transporte", value = "Elementos de transporte" },
+  { key = "simplificada.equipo-informacion-software", value = "Equipos para tratamiento de la información y sistemas y programas informáticos" },
+  { key = "simplificada.util-herramienta", value = "Útiles y herramientas" },
+  { key = "simplificada.ganado-vacuno-porcino-ovino-caprino", value = "Ganado vacuno, porcino, ovino y caprino" },
+  { key = "simplificada.ganado-equino-frutal-no-citrico", value = "Ganado equino y frutales no cítricos" },
+  { key = "simplificada.frutal-citrico-vinedo", value = "Frutales cítricos y viñedos" },
+  { key = "simplificada.olivar", value = "Olivar" },
+]

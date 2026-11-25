@@ -44,8 +44,7 @@ def test_profile_switch_cannot_observe_prior_bucket_engine(tmp_path: Path) -> No
     Opening bucket B is the second half of the in-process switch. Once B
     is active, resolving A's route again must NOT return the engine handle
     from before the switch — that handle was disposed at A's close, so a
-    fresh engine is created. The stale-engine window the audit found
-    (``persistence-global-engine-lifecycle``) is closed at the boundary.
+    fresh engine is created.
     """
     root_a = tmp_path / "a"
     root_b = tmp_path / "b"

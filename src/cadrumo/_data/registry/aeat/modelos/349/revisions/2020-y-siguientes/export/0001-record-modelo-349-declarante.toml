@@ -6,6 +6,8 @@ id = "modelo-349-declarante"
 record_type = "declarante"
 order = 0
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-349-2020-current"
 line_ending = "none"
 required = true
 

@@ -14,6 +14,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.type_guards import is_str_keyed_dict
 from .binding_aggregation import binding_aggregation_op
+from .binding_value_contract import BindingDataType
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputProvider
 from .schema_exports import ExportFieldDataType, OneBasedExportOffset
@@ -22,19 +23,16 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
-    "M347_OPERATION_CLAVES",
-    "M349_OPERATION_CLAVES",
     "BindingExportDataType",
     "BindingExportSelector",
     "BindingFixedExportSelector",
     "BindingRowExportSelector",
     "BindingRowSetSelector",
-    "BooleanBindingEncodedValue",
     "ManualInputRecordFieldSelector",
     "binding_export_selector",
     "binding_row_set_selector",
-    "boolean_binding_encoded_values",
     "canonical_selector_key_hint",
+    "computed_money_binding_failures",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "manual_input_record_field_selector",
@@ -385,73 +383,6 @@ def selector_as_dict(binding: BindingDefinition) -> dict[str, object]:
     return STR_KEYED_MAPPING_ADAPTER.validate_python(restored)
 
 
-class BooleanBindingEncodedValue(BaseModel):
-    """One accepted decimal encoding of a boolean-casilla ``manual_input`` binding.
-
-    A ``manual_input`` binding whose selector declares ``data_type = "boolean"``
-    (the Modelo 100 estimación-directa modality flag is the canonical case) is
-    consumed by the registry formulas as a numeric ``1`` / ``0`` operand. The
-    operator therefore supplies a decimal on the ``--binding`` channel, yet the
-    accepted values and their meaning are opaque from the raw
-    :class:`BindingDefinition`. This record makes one accepted value
-    explicit: ``encoded_value`` is the decimal the operator types,
-    ``boolean_meaning`` is the affirmative/negative sense it carries, and
-    ``registry_value`` is the underlying casilla token the boolean maps to (the
-    selector's declared ``true_value`` / ``false_value``).
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    encoded_value: str
-    boolean_meaning: bool
-    registry_value: str
-
-
-def boolean_binding_encoded_values(
-    binding: BindingDefinition,
-) -> tuple[BooleanBindingEncodedValue, ...]:
-    """Return the decimal encoding of a boolean-casilla ``manual_input`` binding.
-
-    The result is empty for every binding that is not a boolean-casilla
-    ``manual_input`` selector, so a caller can read a non-empty result as "this
-    binding is a decimal-encoded boolean flag". The encoding follows the
-    registry convention that a boolean operand is consumed as ``1`` (true) /
-    ``0`` (false); each sense is paired with the selector's declared
-    ``true_value`` / ``false_value`` casilla token, so the mapping is derived
-    from the binding definition, never hardcoded per modelo.
-
-    Returns:
-        Zero or two :class:`BooleanBindingEncodedValue` rows.
-
-    Raises:
-        RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against :class:`ManualInputProvider`
-            -- a malformed selector must be a named failure, not a silently
-            empty "not a boolean binding" result.
-    """
-    if binding.source is not BindingSourceKind.MANUAL_INPUT:
-        return ()
-    # Read through the declared model rather than raw dict keys: a
-    # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
-    # must raise, not silently return "not a boolean binding".
-    try:
-        selector = provider_member(binding, ManualInputProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed manual_input selector: {exc}",
-        ) from exc
-    if selector.data_type != "boolean":
-        return ()
-    true_value = selector.true_value
-    false_value = selector.false_value
-    if not isinstance(true_value, str) or not isinstance(false_value, str):
-        return ()
-    return (
-        BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value=true_value),
-        BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value=false_value),
-    )
-
-
 class ManualInputRecordFieldSelector(BaseModel):
     """The record-field shape of a validated ``manual_input`` binding selector.
 
@@ -719,6 +650,29 @@ def invariant_diagnostics(
     return []
 
 
+def computed_money_binding_failures(binding: BindingDefinition, label: str) -> list[str]:
+    """Return the diagnostics for a computed-IVA binding that is not a plain money output.
+
+    The four computed IVA kinds hand their resolver a destination, not an
+    operation: the resolver produces the amount itself and never reads the
+    declared aggregation, so an authored operator would be a dead declaration
+    that reads as if it chose how the amount folds. Their amount is a monetary
+    quantity, so any other value data type contradicts the quantity computed.
+    """
+    failures: list[str] = []
+    if binding.value.data_type is not BindingDataType.MONEY:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "
+            f"value data_type must be money, not {binding.value.data_type.value!r}",
+        )
+    if binding.aggregation is not None:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "
+            "the resolver computes the amount and never reads an aggregation, so none may be authored",
+        )
+    return failures
+
+
 def uppercase_alpha_code(field_label: str) -> Callable[[type, str], str]:
     """Build a field validator that rejects a non-uppercase-alphabetic code.
 
@@ -754,35 +708,24 @@ def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | Non
     return _validate
 
 
-M349_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
-#: Modelo 347's OWN clave de operacion vocabulary (RD 1065/2007 arts. 31/33,
-#: RD 1619/2012 disposicion adicional cuarta), disjoint from M349's
-#: intracommunity clave set above -- the letter A means a different thing in
-#: each. Confirmed against every bundled M347 diseno de registro (2008-2009,
-#: 2010, 2011, 2025-y-siguientes): none declares an "H" or "I" clave.
-M347_OPERATION_CLAVES: frozenset[str] = frozenset({"A", "B", "C", "D", "E", "F", "G"})
-
-
 def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]:
     """Build the shared ``intracommunity_clave`` field validator.
 
-    An invoice observation's clave is optional, must be uppercase, and must be
-    one of the closed AEAT clave de operación set.
+    An invoice observation's clave is optional and must be one uppercase letter.
     """
-    return operation_clave_validator(field_label="intracommunity_clave", claves=M349_OPERATION_CLAVES)
+    return operation_clave_validator(field_label="intracommunity_clave")
 
 
 def operation_clave_validator(
     *,
     field_label: str,
-    claves: frozenset[str],
 ) -> Callable[[type, str | None], str | None]:
-    """Build an optional, uppercase, closed-set clave-de-operacion field validator.
+    """Build an optional clave-de-operacion field validator for the letter's shape.
 
-    Generalises :func:`intracommunity_clave_validator` to any closed clave
-    vocabulary -- a modelo's clave letters mean nothing outside their own
-    modelo's set, so the closed set is a parameter, never a hand-listed
-    literal at the call site.
+    Which letters a modelo declares is registry data, which a record's own validator has
+    no pinned authority to read. The registry declares them in the counterpart operation
+    catalogue; the producers of a clave derive it from registry data or a closed enum, and
+    the registry test suite proves both agree.
     """
 
     def _validate(cls: type, value: str | None) -> str | None:
@@ -790,7 +733,7 @@ def operation_clave_validator(
             return None
         if value != value.upper():
             raise RegistryValidationError(f"{field_label} must be uppercase")
-        if value not in claves:
+        if len(value) != 1 or not value.isascii() or not value.isalpha():
             raise RegistryValidationError(f"{field_label} {value!r} is not an AEAT clave de operacion")
         return value
 

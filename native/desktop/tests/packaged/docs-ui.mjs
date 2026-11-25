@@ -12,6 +12,22 @@ export async function docsUiChecks({
   docsOrigin,
 }) {
   const page = session.page;
+  const chooseLanguage = async (code) => {
+    const settings = page.locator(".settings");
+    if (!(await settings.isVisible()))
+      await page.locator('.rail [data-rail="settings"]').click();
+    await settings.locator("select").selectOption(code);
+    await waitFor(
+      async () =>
+        (await session.shell(() => document.documentElement.lang)) === code &&
+        (await session.docs(
+          () => document.documentElement.lang.split("-")[0],
+        )) === code,
+      { timeout: 30000, what: "the shared shell and documentation language" },
+    );
+    await settings.press("Escape");
+    await settings.waitFor({ state: "hidden" });
+  };
   // Rail order and Settings choice order are locale-independent UI contracts.
   const rail = page.locator(".rail-group").first().locator("button");
   await check(
@@ -46,15 +62,7 @@ export async function docsUiChecks({
           );
           window.addEventListener("message", receive);
         }, docsOrigin);
-        await palette.getByRole("combobox").fill("modelo");
-        const rows = palette
-          .locator(".palette-results > section")
-          .first()
-          .getByRole("option");
-        await rows.first().waitFor({ state: "visible", timeout: 30000 });
-        const count = await rows.count();
-        const title = await rows.first().locator(".palette-title").innerText();
-        assert(count > 0);
+        await palette.locator('input[role="combobox"]').fill("modelo");
         const results = await waitFor(
           () => session.shell(() => window.__s14SearchResults),
           {
@@ -62,6 +70,18 @@ export async function docsUiChecks({
             what: "the real documentation search bridge reply",
           },
         );
+        assert(
+          results.length > 0,
+          "the real documentation search returned no results",
+        );
+        const rows = palette
+          .locator(".palette-results > section")
+          .last()
+          .getByRole("option");
+        await rows.first().waitFor({ state: "visible", timeout: 30000 });
+        const count = await rows.count();
+        const title = await rows.first().locator(".palette-title").innerText();
+        assert(count > 0);
         const order = ["concept", "casilla", "cli", "page"];
         const rank = (kind) =>
           order.includes(kind) ? order.indexOf(kind) : order.length;
@@ -71,7 +91,8 @@ export async function docsUiChecks({
         assert(selected && title.startsWith(selected.title));
         const expectedUrl = new URL(selected.url, shown).href;
         assert(expectedUrl.startsWith(`${docsOrigin}/`));
-        // Documentation rows have no action shortcut; the first section is docs.
+        // Actions are listed first; the documentation section is always last
+        // while a query searches it, and its rows carry no action shortcut.
         assert.equal(await rows.first().locator(".palette-chord").count(), 0);
         await rows.first().click();
         await palette.waitFor({ state: "hidden" });
@@ -93,6 +114,22 @@ export async function docsUiChecks({
         };
       } catch (error) {
         failed = true;
+        try {
+          await session.shell(() => {
+            window.__s14DocsFailure = {
+              text: document.querySelector(".palette")?.textContent,
+              sections: [
+                ...document.querySelectorAll(".palette-results > section"),
+              ].map((node) => ({
+                text: node.textContent,
+                options: node.querySelectorAll('[role="option"]').length,
+              })),
+              results: window.__s14SearchResults,
+            };
+          });
+        } catch {
+          /* Keep the original search failure. */
+        }
         throw error;
       } finally {
         try {
@@ -115,23 +152,49 @@ export async function docsUiChecks({
         localized,
         "the acceptance package must include a second documentation language",
       );
-      const descendant = new URL("search.html?q=modelo", localized.entry).href;
-      await visit(descendant);
-      // Docs Home is the documentation's own chord; the rail toggles the pane.
-      await page.keyboard.press("Alt+Home");
-      await waitFor(() => session.docsFrame()?.url() === localized.entry, {
-        timeout: 30000,
-        what: "the localized documentation home",
-      });
-      await session.waitDocs();
-      assert.equal(
-        await session.docs(() => document.documentElement.lang.split("-")[0]),
-        localized.code.split("-")[0],
+      const originalLanguage = await session.shell(
+        () => document.documentElement.lang,
       );
-      return {
-        verdict: PASS,
-        detail: `Docs Home returned from ${descendant} to ${localized.entry}`,
-      };
+      try {
+        await chooseLanguage(localized.code);
+        const descendant = new URL("search.html?q=modelo", localized.entry)
+          .href;
+        await visit(descendant);
+        await waitFor(
+          () =>
+            session.docs(() =>
+              window.__s10.messages.some(
+                (message) => message.fromParent && message.type === "keymap",
+              ),
+            ),
+          { timeout: 30000, what: "the documentation keymap handshake" },
+        );
+        const home = await session.docs(() => {
+          const brand = document.querySelector(
+            "a.cadrumo-header-brand[href], .header-center > a[href]",
+          );
+          if (!brand) throw new Error("the documentation home link is missing");
+          return new URL(brand.getAttribute("href"), document.baseURI).href;
+        });
+        await session.docsFrame().locator("h1").first().click();
+        // Docs Home is the documentation's own chord; the rail toggles the pane.
+        await page.keyboard.press("Alt+Home");
+        await waitFor(() => session.docsFrame()?.url() === home, {
+          timeout: 30000,
+          what: "the localized documentation home",
+        });
+        await session.waitDocs();
+        assert.equal(
+          await session.docs(() => document.documentElement.lang.split("-")[0]),
+          localized.code.split("-")[0],
+        );
+        return {
+          verdict: PASS,
+          detail: `Docs Home returned from ${descendant} to ${home}`,
+        };
+      } finally {
+        await chooseLanguage(originalLanguage);
+      }
     },
   );
 

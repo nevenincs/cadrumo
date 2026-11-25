@@ -1,10 +1,12 @@
-"""Published bytecode removes runtime compilation without trusting stale source."""
+"""Published bytecode removes runtime compilation and the per-import source read of the immutable image."""
 
 from __future__ import annotations
 
 import hashlib
 import importlib.machinery
+import importlib.util
 import os
+import struct
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -47,21 +49,23 @@ def test_published_cache_loads_without_compiling_and_keeps_runtime_files_unchang
     assert cache.read_bytes() == original
 
 
-def test_source_change_with_identical_size_and_timestamp_does_not_reuse_stale_cache(
+def test_published_cache_is_unchecked_hash_so_import_never_reads_the_source(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = tmp_path / "example.py"
     source.write_text("answer = 41\n", encoding="utf-8")
     cache = _compile(tmp_path)
-    monkeypatch.setattr(sys, "pycache_prefix", None)
     original = cache.read_bytes()
-    metadata = source.stat()
-    source.write_text("answer = 42\n", encoding="utf-8")
-    os.utime(source, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+    assert original[4:8] == struct.pack("<I", 0b01)
+    assert original[8:16] == importlib.util.source_hash(source.read_bytes())
+    monkeypatch.setattr(sys, "pycache_prefix", None)
     monkeypatch.setattr(sys, "dont_write_bytecode", True)
+    # The installed image is immutable, so an edited source is not consulted; the sources ship
+    # for tracebacks and the code-identity reader, not for import validation.
+    source.write_text("answer = 42\n", encoding="utf-8")
     module = ModuleType("example")
     importlib.machinery.SourceFileLoader("example", str(source)).exec_module(module)
-    assert module.answer == 42
+    assert module.answer == 41
     assert cache.read_bytes() == original
 
 

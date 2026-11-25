@@ -9,7 +9,7 @@ from typing import override
 import pytest
 
 from ...adapters.profile_worker import ProfileWorkerProcess
-from .test_worker_construction_cleanup import _owner
+from .test_worker_construction_cleanup import worker_construction_cleanup_owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -24,7 +24,7 @@ class _AdmittedWorker(ProfileWorkerProcess):
 
 
 def test_observation_can_borrow_worker_while_another_thread_holds_commit_fence(tmp_path: Path) -> None:
-    owner = _owner(tmp_path)
+    owner = worker_construction_cleanup_owner(tmp_path)
     worker = _AdmittedWorker()
     owner._worker = worker
     try:

@@ -1,0 +1,2423 @@
+//! The window's engine against a real engine of a throwaway installation: a
+//! storage root of its own, the bundled driver's layout, pinned archives and a
+//! local TLS publisher the engine's network reaches. Nothing here stands in
+//! for the engine; every review, event and report is the engine's own.
+use super::super::{
+    admission::{
+        Admission,
+        tests::{
+            ADDED, GB, LOCAL, Replies, TEXT, VISION, cause, declared, refusal, requested,
+            unpackaged, unselected,
+        },
+    },
+    wire::{Google, Snapshot},
+};
+use super::*;
+use cadrumo_application::error::application::Cause;
+use cadrumo_application::provisioning::{
+    browser::DriverManifest,
+    connection::{Network, Resolve},
+    engine::EngineConfig,
+    items::FULL_CHECK_BUDGET,
+    local_ai::{
+        Placement, ServerCall,
+        loopback::{ExchangeFailure, ExchangePhase},
+        registry,
+    },
+    pins::{ComponentPins, Platform},
+    test_servers::{Released, Reply, Request, TestCertificate, TlsServer, response},
+    transfer::RetryPolicy,
+};
+use sha2::{Digest, Sha256};
+use std::{
+    collections::BTreeMap,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+};
+
+const HOST: &str = "cdn.example.com";
+/// The registry the program pulls a model without a host of its own from.
+const MODEL_HOST: &str = "registry.ollama.ai";
+/// What the pinned local AI program archive is said to weigh.
+const PROGRAM_BYTES: u64 = 1000;
+const DRIVER: &str = "1.64.0-beta-1791568591000";
+const BROWSER_VERSION: &str = "156.0.8078.4";
+const GIB: u64 = 1024 * 1024 * 1024;
+
+/// The account before its sign-in has been read.
+fn unread() -> Google {
+    Google {
+        state: None,
+        email: None,
+        drive_folder_id: None,
+        stage: wire::GoogleStage::Idle,
+        failure: None,
+    }
+}
+
+/// A folder of its own under the system's temporary folder, removed when dropped.
+struct Scratch(PathBuf);
+
+impl Scratch {
+    fn new() -> Self {
+        let path = std::env::temp_dir().join(format!("cadrumo-setup-{}", operation_id()));
+        std::fs::create_dir_all(&path).unwrap();
+        Self(path)
+    }
+}
+
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        // A folder a test left behind is the system's temporary folder to clear.
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// The builds the bundled driver installs on this platform, as its pins name them.
+fn builds() -> Vec<(&'static str, &'static str)> {
+    let mut builds = vec![
+        ("chromium-1248", "chromium"),
+        ("chromium_headless_shell-1248", "chromium_headless_shell"),
+        ("ffmpeg-1013", "ffmpeg"),
+    ];
+    if Platform::current() == Some(Platform::WinX64) {
+        builds.push(("winldd-1007", "winldd"));
+    }
+    builds
+}
+
+/// The driver package as the bundled one lays it out.
+fn driver(folder: &Path) -> DriverManifest {
+    std::fs::create_dir_all(folder).unwrap();
+    let browsers = serde_json::json!({
+        "browsers": [
+            {"name": "chromium", "revision": "1248", "installByDefault": true,
+             "browserVersion": BROWSER_VERSION},
+            {"name": "chromium-headless-shell", "revision": "1248", "installByDefault": true,
+             "browserVersion": BROWSER_VERSION},
+            {"name": "ffmpeg", "revision": "1013", "installByDefault": true},
+            {"name": "winldd", "revision": "1007", "installByDefault": false}
+        ]
+    });
+    std::fs::write(folder.join("browsers.json"), browsers.to_string()).unwrap();
+    std::fs::write(
+        folder.join("package.json"),
+        serde_json::json!({"name": "playwright-core", "version": DRIVER}).to_string(),
+    )
+    .unwrap();
+    DriverManifest::read(folder).unwrap()
+}
+
+/// The pin table for one archive of each build, and the bytes each path serves.
+fn archives() -> (String, BTreeMap<String, Vec<u8>>) {
+    let platform = Platform::current().expect("tests run on a supported platform");
+    let mut table = format!("playwright_driver = \"{DRIVER}\"\nhosts = [\"{HOST}\"]\n");
+    let mut served = BTreeMap::new();
+    for (directory, prefix) in builds() {
+        // Bytes that match their pin but are no archive: setup fetches them,
+        // then fails to install them.
+        let bytes = format!("{directory} pinned bytes ")
+            .repeat(4096)
+            .into_bytes();
+        let path = format!("builds/{directory}/{prefix}.zip");
+        let digest: String = Sha256::digest(&bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        table.push_str(&format!(
+            "\n[[archives]]\nplatform = \"{}\"\ndirectory_name = \"{directory}\"\npath = \"{path}\"\nurls = [\"https://{HOST}/{path}\"]\ndownload_bytes = {}\nsha256 = \"{digest}\"\n",
+            platform.as_str(),
+            bytes.len(),
+        ));
+        served.insert(format!("/{path}"), bytes);
+    }
+    served.insert(PROGRAM_PATH.to_owned(), program_archive());
+    (table, served)
+}
+
+/// Where the publisher serves the local AI program archive.
+const PROGRAM_PATH: &str = "/program/ollama.zip";
+
+/// Bytes that match the program's pin but are no archive: setup downloads them, then
+/// fails to install them.
+fn program_archive() -> Vec<u8> {
+    vec![b'p'; usize::try_from(PROGRAM_BYTES).unwrap()]
+}
+
+/// The content security policy every answer of the publisher carries: one field longer than
+/// 4 KiB, as github.com, the local AI program's publisher, sends on every answer.
+fn policy() -> (&'static str, String) {
+    (
+        "Content-Security-Policy",
+        format!("default-src 'none'; {}", "a".repeat(4_200)),
+    )
+}
+
+/// How the publisher answers the first archive it is asked for.
+#[derive(Clone)]
+pub(in super::super) enum Serving {
+    Whole,
+    /// Its first bytes, then the rest once the gate is released.
+    Gated(Arc<Released>),
+}
+
+pub(in super::super) struct Fixture {
+    scratch: Scratch,
+    server: TlsServer,
+    certificate: TestCertificate,
+    free_bytes: Option<u64>,
+    reachable: bool,
+}
+
+impl Fixture {
+    pub(in super::super) fn new(serving: Serving) -> Self {
+        let scratch = Scratch::new();
+        let (table, served) = archives();
+        let pins = scratch.0.join("pins");
+        std::fs::create_dir_all(&pins).unwrap();
+        std::fs::write(pins.join("browser_archives.toml"), table).unwrap();
+        driver(&scratch.0.join("driver"));
+        // A model on the registry may be fetched from its storage hosts too, and a plan
+        // reaches every host a model may come from, so the publisher answers for each.
+        let model_hosts = registry::source_hosts(&ModelName::parse(TEXT).unwrap());
+        let names: Vec<&str> = std::iter::once(HOST)
+            .chain(model_hosts.iter().map(|host| host.as_str()))
+            .collect();
+        let certificate = TestCertificate::new(&names);
+        let server = TlsServer::start(&certificate, move |request: &Request| {
+            let Some(bytes) = served.get(request.target()) else {
+                return Reply::Bytes(response(
+                    "404 Not Found",
+                    &[("Content-Length", "0".into()), policy()],
+                    b"",
+                ));
+            };
+            let head = response(
+                "200 OK",
+                &[("Content-Length", bytes.len().to_string()), policy()],
+                b"",
+            );
+            match &serving {
+                Serving::Gated(gate) => {
+                    let split = bytes.len() / 2;
+                    let mut first = head;
+                    first.extend_from_slice(&bytes[..split]);
+                    Reply::Gated {
+                        first,
+                        rest: bytes[split..].to_vec(),
+                        gate: gate.clone(),
+                    }
+                }
+                Serving::Whole => {
+                    let mut whole = head;
+                    whole.extend_from_slice(bytes);
+                    Reply::Bytes(whole)
+                }
+            }
+        });
+        Self {
+            scratch,
+            server,
+            certificate,
+            free_bytes: Some(512 * GIB),
+            reachable: true,
+        }
+    }
+
+    /// The same installation with the local AI program pinned, as a build that ships it.
+    fn with_program(self) -> Self {
+        let platform = Platform::current().expect("tests run on a supported platform");
+        let table = format!(
+            "program = \"ollama\"
+version = \"9.9.9\"
+hosts = [\"{HOST}\"]
+
+[[archives]]
+platform = \"{}\"
+url = \"https://{HOST}{PROGRAM_PATH}\"
+format = \"zip\"
+executable = \"ollama\"
+download_bytes = {PROGRAM_BYTES}
+sha256 = \"{}\"
+",
+            platform.as_str(),
+            hex(&Sha256::digest(program_archive())),
+        );
+        std::fs::write(
+            self.scratch.0.join("pins").join("local_ai_program.toml"),
+            table,
+        )
+        .unwrap();
+        self
+    }
+
+    fn root(&self) -> PathBuf {
+        self.scratch.0.join("storage")
+    }
+
+    /// The engines of this fixture's installation, as the window's own are built.
+    fn engines(&self) -> Arc<Engines> {
+        let root = self.root();
+        let pins = self.scratch.0.join("pins");
+        let driver = self.scratch.0.join("driver");
+        let roots = self.certificate.roots();
+        let address: Option<SocketAddr> = self.reachable.then(|| self.server.address());
+        let free_bytes = self.free_bytes;
+        Arc::new(move |placement: Placement| {
+            let resolve: Arc<Resolve> = Arc::new(move |_: &str, _: u16| match address {
+                Some(address) => Ok(vec![address]),
+                None => Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "no such name",
+                )),
+            });
+            let config = EngineConfig {
+                storage_root: root.clone(),
+                locations: Locations::under(&root),
+                pins: ComponentPins::load(&pins)?,
+                driver: Some(DriverManifest::read(&driver)?),
+                platform: Platform::current(),
+                network: Network::with_parts(roots.clone(), resolve, None),
+                ambient: Box::new(|_| None),
+                local_ai_address: "127.0.0.1:9".parse().expect("an address"),
+                llama_server_folder: root.join("package").join("bin").join("llama"),
+                llama_server_build: "b1".into(),
+                placement,
+                browser_environment: BTreeMap::new(),
+                scratch: root.join("tmp"),
+                free_space: Box::new(move |_| free_bytes),
+                hardware: Some(Hardware {
+                    total_memory_bytes: Some(64 * GIB),
+                    nvidia_vram_bytes: None,
+                }),
+                policy: RetryPolicy::default(),
+            };
+            Ok(Installation {
+                engine: Engine::new(config)?,
+            })
+        })
+    }
+
+    /// The archive paths the publisher was asked for.
+    pub(in super::super) fn downloads(&self) -> usize {
+        self.server
+            .targets()
+            .iter()
+            .filter(|target| target.starts_with("/builds/"))
+            .count()
+    }
+}
+
+/// An admission over a service that answers nothing, as general setup consults none.
+fn unconsulted() -> Arc<Admission> {
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        unselected(),
+        unpackaged(),
+    ))
+}
+
+/// The window's component engine over `fixture`, with no download asked for.
+pub(in super::super) fn window(fixture: &Fixture) -> Components {
+    Components::new(fixture.engines(), unconsulted(), Arc::default())
+}
+
+/// The window's engine over `fixture`, admitting downloads from `replies`, which the
+/// caller keeps to ask what the engine read.
+pub(in super::super) fn serving(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>) {
+    let (components, replies, _) = watching(fixture, replies);
+    (components, replies)
+}
+
+/// As [`serving`], with the diagnostics the engine records its failures in.
+fn watching(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>, Arc<Diagnostics>) {
+    let replies = Arc::new(replies);
+    let admission = Arc::new(Admission::new(replies.clone(), unselected(), unpackaged()));
+    let diagnostics = Arc::new(Diagnostics::default());
+    let components = Components::new(fixture.engines(), admission, diagnostics.clone());
+    (components, replies, diagnostics)
+}
+
+/// The failures diagnostics hold, oldest first.
+fn recorded(diagnostics: &Diagnostics) -> Vec<ApplicationError> {
+    diagnostics
+        .snapshot(u64::MAX)
+        .events
+        .into_iter()
+        .filter_map(|event| event.failure)
+        .collect()
+}
+
+/// A setting the engine cannot use: the installation's engine cannot be built, and the
+/// error carries the category the engine classified it under.
+fn blocked() -> Error {
+    Error::Download(
+        cadrumo_application::provisioning::failure::TransferFailure::final_(
+            FailureCategory::BlockedByNetwork,
+        ),
+    )
+}
+
+/// The engine's part of the snapshot once `done` holds, composed as the
+/// window receives it.
+async fn until(components: &Components, done: impl Fn(&View) -> bool) -> Snapshot {
+    let mut changes = components.changes();
+    loop {
+        let view = components.view();
+        if done(&view) {
+            return compose(view, unread()).expect("a snapshot inside its closed sets");
+        }
+        changes.changed().await.expect("the engine is alive");
+    }
+}
+
+fn stage(view: &View) -> Option<RunStage> {
+    view.runs.first().map(|run| run.stage)
+}
+
+fn compose(view: View, google: Google) -> Option<Snapshot> {
+    super::super::compose(view, google)
+}
+
+fn review(snapshot: &Snapshot) -> (String, wire::Review) {
+    let run = snapshot.runs.first().expect("a setup");
+    (
+        run.operation_id.clone(),
+        run.review.clone().expect("a plan under review"),
+    )
+}
+
+async fn reviewing(components: &Components) -> (String, wire::Review) {
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    review(&until(components, |view| stage(view) == Some(RunStage::Review)).await)
+}
+
+#[tokio::test]
+async fn the_first_read_carries_every_items_codes_and_no_words() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    components.observe();
+    let snapshot = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage == CheckStage::Done)
+    })
+    .await;
+    assert_eq!(snapshot.rows_mode, Some(wire::CheckMode::Quick));
+    assert_eq!(
+        (snapshot.complete, snapshot.hardware_limited),
+        (Some(false), Some(false))
+    );
+    let browser = &snapshot.rows[0];
+    assert_eq!(
+        (browser.item.as_str(), browser.state, browser.recovery),
+        ("browser", wire::State::Absent, Some(wire::Recovery::SetUp))
+    );
+    assert_eq!(
+        browser.recovery_action_id.as_deref(),
+        Some("operator.provision.browser")
+    );
+    assert!(browser.size_bytes.is_some_and(|size| size > 0));
+    // This build pins no local AI, so nothing can set it up.
+    let local_ai = &snapshot.rows[1];
+    assert_eq!(
+        (local_ai.state, local_ai.blocked_reason, local_ai.recovery),
+        (
+            wire::State::Blocked,
+            Some(wire::BlockedReason::NotInThisBuild),
+            None
+        )
+    );
+    assert!(
+        snapshot
+            .details
+            .contains("item: browser; state: absent; check: quick")
+    );
+    let shown = serde_json::to_value(&snapshot).unwrap();
+    for word in ["name", "sentence", "action_label"] {
+        assert!(shown["rows"][0].get(word).is_none(), "{word}");
+    }
+    // Rows already read are not read again on the next observation.
+    let check = snapshot.check.unwrap().operation_id;
+    components.observe();
+    assert_eq!(
+        components.view().check.unwrap().operation_id,
+        check,
+        "a second observation reads nothing again"
+    );
+}
+
+#[tokio::test]
+async fn the_plan_waits_for_the_window_and_a_rejection_downloads_nothing() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    let (operation, plan) = reviewing(&components).await;
+    assert!(wire::is_hex64(&operation) && wire::is_hex64(&plan.plan_digest));
+    let entry = &plan.entries[0];
+    assert_eq!(
+        (entry.item.as_str(), entry.source_hosts.as_slice()),
+        ("browser", [HOST.to_owned()].as_slice())
+    );
+    let destination = PathBuf::from(entry.destination.as_deref().unwrap());
+    assert_eq!(
+        destination,
+        fixture.root().join("components").join("playwright")
+    );
+    assert!(plan.space_sufficient && plan.known_download_bytes > 0);
+    assert_eq!(fixture.downloads(), 0, "nothing moves before the answer");
+    components
+        .answer(&operation, &plan.plan_digest, wire::Decision::Reject)
+        .await
+        .unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!((run.outcome, run.failure), (Some(Outcome::Rejected), None));
+    assert_eq!(fixture.downloads(), 0);
+    // A settled setup has no plan pending.
+    assert_eq!(
+        components
+            .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+            .await,
+        Err(Refusal::NotPending)
+    );
+}
+
+#[tokio::test]
+async fn an_approval_binds_the_digest_shown_and_the_setup_runs_until_it_fails() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    let (operation, plan) = reviewing(&components).await;
+    assert_eq!(
+        components
+            .answer(&operation, &"0".repeat(64), wire::Decision::Apply)
+            .await,
+        Err(Refusal::PlanChanged)
+    );
+    assert_eq!(
+        components
+            .answer(&"1".repeat(64), &plan.plan_digest, wire::Decision::Apply)
+            .await,
+        Err(Refusal::NotPending)
+    );
+    assert_eq!(stage(&components.view()), Some(RunStage::Review));
+    components
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    // The bytes matched their pin but were no archive, so the install did not finish.
+    assert_eq!(run.outcome, Some(Outcome::Failed));
+    let failure = run.failure.expect("the category the setup failed with");
+    let browser = &run.items[0];
+    assert_eq!(browser.item, "browser");
+    let result = browser.result.as_ref().unwrap();
+    assert_eq!((result.changed, result.failure), (false, Some(failure)));
+    assert!(fixture.downloads() >= 1);
+    assert!(settled.details.contains(&format!("operation: {operation}")));
+    assert!(
+        settled
+            .details
+            .contains("dependencies.setup.browser.download")
+    );
+    assert!(settled.details.contains(&format!("hosts: {HOST}")));
+    // The rows were read again after the setup.
+    assert_eq!(settled.rows[0].state, wire::State::Failed);
+}
+
+#[tokio::test]
+async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    let (operation, plan) = reviewing(&components).await;
+    components
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    // Without Resume the same plan is shown again.
+    let (again, shown) = reviewing(&components).await;
+    assert_eq!(shown.plan_digest, plan.plan_digest);
+    components
+        .answer(&again, &shown.plan_digest, wire::Decision::Reject)
+        .await
+        .unwrap();
+    until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    // Resume of the approved plan runs at once: the start comes back running,
+    // or already settled, never waiting on a review.
+    components
+        .start(ItemId::Browser, true, false, None)
+        .await
+        .unwrap();
+    assert_ne!(stage(&components.view()), Some(RunStage::Review));
+    let resumed = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = resumed.runs.into_iter().next().unwrap();
+    assert_ne!(run.operation_id, operation);
+    assert_eq!(run.outcome, Some(Outcome::Failed));
+    assert!(
+        run.items[0]
+            .result
+            .as_ref()
+            .is_some_and(|result| result.failure.is_some())
+    );
+    // A window that approved nothing yet still asks.
+    let other = window(&fixture);
+    other
+        .start(ItemId::Browser, true, false, None)
+        .await
+        .unwrap();
+    until(&other, |view| stage(view) == Some(RunStage::Review)).await;
+    other.close().await;
+}
+
+#[tokio::test]
+async fn a_cancel_stops_a_running_setup_at_its_next_chunk() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let components = window(&fixture);
+    let (operation, plan) = reviewing(&components).await;
+    components
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    let running = until(&components, |view| {
+        view.runs
+            .first()
+            .is_some_and(|run| run.items.iter().any(|item| item.completed.is_some()))
+    })
+    .await;
+    let run = running.runs.into_iter().next().unwrap();
+    assert_eq!(run.stage, RunStage::Running);
+    assert!(run.cancellable);
+    let progress = &run.items[0];
+    assert_eq!(progress.step, Some(wire::Step::Download));
+    assert!(progress.completed.unwrap() <= progress.total.unwrap());
+    components.cancel(&operation).await.unwrap();
+    assert_eq!(
+        refusal(components.cancel(&operation).await),
+        Err(Refusal::NotCancellable)
+    );
+    let asked = components.view().runs.into_iter().next().unwrap();
+    assert!(asked.cancel_requested && !asked.cancellable);
+    gate.release();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!((run.outcome, run.failure), (Some(Outcome::Cancelled), None));
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Cancelled)
+    );
+    assert_eq!(
+        refusal(components.cancel(&operation).await),
+        Err(Refusal::NotPending)
+    );
+}
+
+/// Whether the window shows bytes moving for an item of its setup.
+fn moving(view: &View) -> bool {
+    view.runs
+        .first()
+        .is_some_and(|run| run.items.iter().any(|item| item.completed.is_some()))
+}
+
+/// A window whose approved setup holds at the gate halfway through its first archive.
+async fn running(fixture: &Fixture) -> Components {
+    let owner = window(fixture);
+    let (operation, plan) = reviewing(&owner).await;
+    owner
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    until(&owner, moving).await;
+    owner
+}
+
+/// A second window of the same installation, following the setup the first runs.
+async fn following(fixture: &Fixture) -> (Components, wire::Run) {
+    let follower = window(fixture);
+    follower
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    let run = until(&follower, moving)
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+    (follower, run)
+}
+
+#[tokio::test]
+async fn a_second_window_follows_the_running_setup_to_its_result_without_a_review() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+
+    // A window that closes while it follows leaves the setup running.
+    let (leaving, _) = following(&fixture).await;
+    leaving.close().await;
+    assert!(leaving.view().runs.is_empty());
+    assert_eq!(stage(&owner.view()), Some(RunStage::Running));
+
+    let (follower, run) = following(&fixture).await;
+    assert_eq!(run.stage, RunStage::Running);
+    assert!(run.review.is_none() && run.cancellable);
+    let browser = &run.items[0];
+    assert_eq!(
+        (browser.item.as_str(), browser.step),
+        ("browser", Some(wire::Step::Download))
+    );
+    assert!(browser.completed.unwrap() <= browser.total.unwrap());
+    gate.release();
+    let owned = until(&owner, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+    let followed = until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = followed.runs.into_iter().next().unwrap();
+    // The bytes matched their pin but were no archive, so the owner's install failed.
+    assert_eq!(owned.outcome, Some(Outcome::Failed));
+    assert_eq!((run.outcome, run.failure), (owned.outcome, owned.failure));
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        owned.failure,
+        "the item the run stopped at carries its failure"
+    );
+    assert_eq!(fixture.downloads(), 1, "only the owner downloaded");
+    assert_eq!(followed.rows[0].state, wire::State::Failed);
+}
+
+#[tokio::test]
+async fn a_following_window_cancels_the_setup_it_follows_as_the_persons_act() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+    let (follower, run) = following(&fixture).await;
+    follower.cancel(&run.operation_id).await.unwrap();
+    assert_eq!(
+        refusal(follower.cancel(&run.operation_id).await),
+        Err(Refusal::NotCancellable)
+    );
+    let asked = follower.view().runs.into_iter().next().unwrap();
+    assert!(asked.cancel_requested && !asked.cancellable);
+    assert_eq!(
+        asked.stage,
+        RunStage::Running,
+        "it follows until the setup ends"
+    );
+    gate.release();
+    let owned = until(&owner, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+    assert_eq!(owned.outcome, Some(Outcome::Cancelled));
+    let followed = until(&follower, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+    assert_eq!(
+        (followed.outcome, followed.failure),
+        (Some(Outcome::Cancelled), None)
+    );
+    assert_eq!(
+        followed.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Cancelled)
+    );
+}
+
+#[tokio::test]
+async fn a_cancel_declines_the_plan_a_setup_waits_on() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    let (operation, _) = reviewing(&components).await;
+    components.cancel(&operation).await.unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    assert_eq!(
+        settled.runs.into_iter().next().unwrap().outcome,
+        Some(Outcome::Cancelled)
+    );
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn a_second_start_joins_the_setup_that_waits() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    let (operation, _) = reviewing(&components).await;
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    assert_eq!(
+        components
+            .view()
+            .runs
+            .into_iter()
+            .next()
+            .unwrap()
+            .operation_id,
+        operation
+    );
+    components.close().await;
+    // Closing the window declines the plan and waits for its worker.
+    let run = components.view().runs.into_iter().next().unwrap();
+    assert_eq!(run.outcome, Some(Outcome::Cancelled));
+    let closed = components.start(ItemId::Browser, false, false, None).await;
+    assert_eq!(
+        closed.as_ref().err().and_then(Stop::refusal),
+        Some(Refusal::Unavailable)
+    );
+    assert_eq!(
+        cause(closed).reason.as_deref(),
+        Some("setup_window_closed"),
+        "the closed window is named, not left to read as a service that is silent"
+    );
+}
+
+#[tokio::test]
+async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
+    let mut fixture = Fixture::new(Serving::Whole);
+    fixture.free_bytes = Some(1);
+    let components = window(&fixture);
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    let full = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    assert_eq!(
+        full.runs.into_iter().next().unwrap().outcome,
+        Some(Outcome::NotEnoughSpace)
+    );
+
+    fixture.free_bytes = Some(512 * GIB);
+    fixture.reachable = false;
+    let components = window(&fixture);
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    let offline = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = offline.runs.into_iter().next().unwrap();
+    assert_eq!(
+        (run.outcome, run.failure),
+        (Some(Outcome::Failed), Some(wire::Failure::Offline))
+    );
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Offline)
+    );
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn a_setup_refused_in_its_planning_settles_with_its_category_and_records_it_once() {
+    let mut fixture = Fixture::new(Serving::Whole).with_program();
+    fixture.reachable = false;
+    let (components, _, diagnostics) = watching(&fixture, Replies::default());
+    components
+        .start(ItemId::LocalAi, false, false, None)
+        .await
+        .unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!(
+        (run.outcome, run.failure),
+        (Some(Outcome::Failed), Some(wire::Failure::Offline)),
+        "the window is given the category to word"
+    );
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Offline)
+    );
+    let row = settled
+        .rows
+        .iter()
+        .find(|row| row.item == "local_ai")
+        .unwrap();
+    assert_eq!(
+        row.state,
+        wire::State::Absent,
+        "a refusal before any writer leaves the row as it was, so the run says why"
+    );
+    let [error] = &recorded(&diagnostics)[..] else {
+        panic!("one failure is recorded for the setup");
+    };
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert_eq!(error.code, ErrorCode::SetupFailed);
+    assert!(
+        matches!(
+            &error.causes[..],
+            [Cause::Application { code: ErrorCode::SetupFailed, reason: Some(reason), .. }]
+                if reason == "offline"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn a_cancel_ends_a_setup_whose_planning_does_not_end_and_frees_its_start() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let engines = fixture.engines();
+    let gate = Arc::new(Released::default());
+    let held = gate.clone();
+    // An engine whose making does not end until the test lets it, as a planning that
+    // hangs reads to the window.
+    let hanging: Arc<Engines> = Arc::new(move |placement: Placement| {
+        held.wait();
+        engines(placement)
+    });
+    let diagnostics = Arc::new(Diagnostics::default());
+    let components = Arc::new(Components::new(hanging, unconsulted(), diagnostics.clone()));
+    let starting = {
+        let components = components.clone();
+        tokio::spawn(async move { components.start(ItemId::LocalAi, false, false, None).await })
+    };
+    let planning = until(&components, |view| stage(view) == Some(RunStage::Planning)).await;
+    let run = planning.runs.into_iter().next().unwrap();
+    assert!(run.cancellable, "a setup still planning can be cancelled");
+    assert!(!starting.is_finished(), "the start waits on the planning");
+
+    components.cancel(&run.operation_id).await.unwrap();
+    starting
+        .await
+        .unwrap()
+        .expect("the start returns once its setup ends");
+    let ended = components.view().runs.into_iter().next().unwrap();
+    assert_eq!(
+        (ended.stage, ended.outcome, ended.cancellable),
+        (RunStage::Settled, Some(Outcome::Cancelled), false)
+    );
+
+    // The planning ends after all: it is declined, and the setup stays as the person left it.
+    gate.release();
+    components.close().await;
+    let after = components.view().runs.into_iter().next().unwrap();
+    assert_eq!(
+        (after.operation_id, after.outcome, after.failure),
+        (run.operation_id, Some(Outcome::Cancelled), None)
+    );
+    assert!(recorded(&diagnostics).is_empty(), "a cancel is no failure");
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn an_item_this_build_cannot_set_up_settles_with_its_refusal() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    components
+        .start(ItemId::LocalAi, false, false, None)
+        .await
+        .unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!(
+        (run.outcome, run.failure),
+        (Some(Outcome::Failed), Some(wire::Failure::NotInThisBuild))
+    );
+}
+
+#[tokio::test]
+async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
+    // What a refused setting looks like to the window: the installation's engine cannot
+    // be built, and the error carries the category the engine classified it under.
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
+    let diagnostics = Arc::new(Diagnostics::default());
+    let components = Components::new(engines, unconsulted(), diagnostics.clone());
+
+    components.check(wire::CheckMode::Quick);
+
+    let checked = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage != CheckStage::Running)
+    })
+    .await;
+    let check = checked.check.unwrap();
+    assert_eq!(
+        (check.stage, check.failure),
+        (CheckStage::Failed, Some(wire::Failure::BlockedByNetwork)),
+        "the window words the category, as the role's other clients do"
+    );
+    assert!(checked.rows.is_empty());
+    let [error] = &recorded(&diagnostics)[..] else {
+        panic!("one failure is recorded for the check");
+    };
+    assert_eq!(error.reason.as_deref(), Some("setup_engine_unavailable"));
+    assert_eq!(error.code, ErrorCode::SetupFailed);
+}
+
+#[tokio::test]
+async fn a_setting_the_engine_cannot_use_fails_the_setup_with_its_category_and_records_why() {
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
+    let diagnostics = Arc::new(Diagnostics::default());
+    let components = Components::new(engines, unconsulted(), diagnostics.clone());
+
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!(
+        (run.outcome, run.failure),
+        (Some(Outcome::Failed), Some(wire::Failure::BlockedByNetwork))
+    );
+    let [error] = &recorded(&diagnostics)[..] else {
+        panic!("one failure is recorded for the setup");
+    };
+    assert_eq!(error.reason.as_deref(), Some("setup_engine_unavailable"));
+    assert_eq!(error.code, ErrorCode::SetupFailed);
+}
+
+#[test]
+fn a_local_ai_check_that_timed_out_is_recorded_with_the_request_and_its_timeout() {
+    let cause = NotRunningCause::Request {
+        call: ServerCall::Generate,
+        failure: ExchangeFailure {
+            phase: ExchangePhase::Exchange,
+            kind: std::io::ErrorKind::TimedOut,
+            bound: FULL_CHECK_BUDGET,
+        },
+    };
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ProgramNotRunning,
+        Some(&cause),
+        None,
+    );
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert_eq!(error.io_kind, Some(std::io::ErrorKind::TimedOut));
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Application { reason: Some(why), .. },
+                Cause::Io { io_kind, .. },
+            ] if category == "program_not_running"
+                && why == "generate_request_failed"
+                && io_kind == "TimedOut"
+        ),
+        "{:?}",
+        error.causes
+    );
+}
+
+#[test]
+fn a_failed_download_is_recorded_with_its_host_stage_status_and_attempts() {
+    use cadrumo_application::{
+        provisioning::failure::{FailureStage, TransferFailure},
+        value::HostName,
+    };
+    let mut answered = TransferFailure::transient(FailureCategory::ServerError)
+        .with_status(504)
+        .at_stage(FailureStage::Status)
+        .from_host(&HostName::new("github.com").unwrap());
+    answered.attempts = 19;
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ServerError,
+        None,
+        Some(&answered),
+    );
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Download { host: Some(host), stage: Some(stage), status: Some(504), io_kind: None, attempts: 19 },
+            ] if category == "server_error" && host == "github.com" && stage == "status"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert!(error.causes.iter().all(Cause::admissible));
+
+    let mut refused = TransferFailure::transient(FailureCategory::HostUnreachable)
+        .at_stage(FailureStage::Connect)
+        .with_io_kind(Some(std::io::ErrorKind::ConnectionRefused))
+        .from_host(&HostName::new("github.com").unwrap());
+    refused.attempts = 6;
+    let error = setup_failed(
+        ItemId::Browser,
+        FailureCategory::HostUnreachable,
+        None,
+        Some(&refused),
+    );
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Download { status: None, io_kind: Some(kind), attempts: 6, .. },
+            ] if category == "host_unreachable" && kind == "ConnectionRefused"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert!(
+        error.chain_summary().unwrap().ends_with(
+            "download from github.com stopped at connect (io ConnectionRefused) after 6 attempts"
+        ),
+        "{:?}",
+        error.chain_summary()
+    );
+}
+
+#[test]
+fn a_failed_setup_is_recorded_as_a_setup_failure_for_either_component_with_its_category() {
+    for (item, reason) in [
+        (ItemId::Browser, "setup_browser_failed"),
+        (ItemId::LocalAi, "setup_local_ai_failed"),
+    ] {
+        let error = setup_failed(item, FailureCategory::Offline, None, None);
+        assert_eq!(error.code, ErrorCode::SetupFailed, "{reason}");
+        assert_eq!(error.reason.as_deref(), Some(reason));
+        assert_eq!(
+            error.message, "The component setup could not be completed",
+            "the log line must not call a failed setup a terminal session"
+        );
+        assert!(matches!(
+            &error.causes[..],
+            [Cause::Application { code: ErrorCode::SetupFailed, reason: Some(category), .. }]
+                if category == "offline"
+        ));
+    }
+}
+
+#[tokio::test]
+async fn no_check_verify_or_general_setup_consults_the_agent_service() {
+    let fixture = Fixture::new(Serving::Whole);
+    let (components, replies, diagnostics) = watching(&fixture, Replies::default());
+    let finished = |after: Option<String>| {
+        move |view: &View| {
+            view.check.as_ref().is_some_and(|check| {
+                check.stage != CheckStage::Running && Some(&check.operation_id) != after.as_ref()
+            })
+        }
+    };
+    components.check(wire::CheckMode::Quick);
+    let first = until(&components, finished(None)).await.check.unwrap();
+    assert_eq!(first.stage, CheckStage::Done);
+    components.verify(vec![ItemId::Browser]);
+    until(&components, finished(Some(first.operation_id.clone()))).await;
+    let (operation, plan) = reviewing(&components).await;
+    decline(&components, &operation, &plan).await;
+    assert!(replies.asked().is_empty(), "{:?}", replies.asked());
+    assert!(recorded(&diagnostics).is_empty());
+}
+
+#[tokio::test]
+async fn a_start_returns_the_cause_of_its_refusal_and_leaves_recording_it_to_the_host() {
+    let fixture = Fixture::new(Serving::Whole);
+    let cases = [
+        (
+            "a service that does not answer",
+            Replies::default(),
+            "setup_provider_status_unanswered",
+            Some(Refusal::Unavailable),
+        ),
+        (
+            "a list outside the contract",
+            Replies::serving(&[], &[], &[])
+                .answering("local_models", serde_json::json!({"models": "none"})),
+            "setup_local_models_contract",
+            None,
+        ),
+    ];
+    for (name, replies, reason, refusal) in cases {
+        let (components, _, diagnostics) = watching(&fixture, replies);
+        let stopped = components
+            .start(ItemId::LocalAi, false, false, Some(requested(LOCAL, ADDED)))
+            .await;
+        assert_eq!(
+            stopped.as_ref().err().and_then(Stop::refusal),
+            refusal,
+            "{name}"
+        );
+        assert_eq!(cause(stopped).reason.as_deref(), Some(reason), "{name}");
+        assert!(
+            recorded(&diagnostics).is_empty(),
+            "{name}: the host that answers the window records it once"
+        );
+        assert!(components.view().runs.is_empty(), "{name}");
+    }
+}
+
+#[tokio::test]
+async fn a_cancel_that_cannot_reach_the_followed_setup_says_why_and_may_be_asked_again() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+    let real = fixture.engines();
+    let lost = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let switch = lost.clone();
+    let engines: Arc<Engines> = Arc::new(move |placement: Placement| {
+        if switch.load(std::sync::atomic::Ordering::Acquire) {
+            Err(blocked())
+        } else {
+            real(placement)
+        }
+    });
+    let follower = Components::new(engines, unconsulted(), Arc::default());
+    follower
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    let run = until(&follower, moving)
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+
+    lost.store(true, std::sync::atomic::Ordering::Release);
+    let stopped = follower.cancel(&run.operation_id).await;
+    assert_eq!(
+        stopped.as_ref().err().and_then(Stop::refusal),
+        Some(Refusal::Unavailable)
+    );
+    assert_eq!(
+        cause(stopped).reason.as_deref(),
+        Some("setup_engine_unavailable")
+    );
+    let shown = follower.view().runs.into_iter().next().unwrap();
+    assert!(
+        shown.cancellable && !shown.cancel_requested,
+        "nothing was asked of the followed setup"
+    );
+    gate.release();
+    until(&owner, |view| stage(view) == Some(RunStage::Settled)).await;
+    until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
+}
+
+#[tokio::test]
+async fn a_removal_the_engine_could_not_make_ready_says_why() {
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
+    let components = Components::new(engines, unconsulted(), Arc::default());
+    let stopped = components.remove_model(TEXT).await;
+    assert_eq!(
+        stopped.as_ref().err().and_then(Stop::refusal),
+        Some(Refusal::Unavailable)
+    );
+    assert_eq!(
+        cause(stopped).reason.as_deref(),
+        Some("setup_engine_unavailable")
+    );
+}
+
+#[tokio::test]
+async fn a_full_check_replaces_the_rows_it_read() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = window(&fixture);
+    components.verify(vec![ItemId::Browser]);
+    let checked = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage != CheckStage::Running)
+    })
+    .await;
+    let check = checked.check.unwrap();
+    assert_eq!(
+        (check.kind, check.stage),
+        (CheckKind::Verify, CheckStage::Done)
+    );
+    assert_eq!(checked.rows_mode, Some(wire::CheckMode::Full));
+    assert_eq!(checked.rows.len(), 1);
+}
+
+#[test]
+fn a_download_two_roles_share_is_counted_once_in_the_review() {
+    use cadrumo_application::{
+        provisioning::plan::{PlanEntry, PlanPart},
+        value::HostName,
+    };
+    let part = |role: &str, model: &str| PlanPart {
+        part_id: role.into(),
+        download_bytes: Some(100),
+        source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
+        destination: Some(Destination::OllamaModels),
+        installs_outside_program: false,
+        target_version: Some(model.into()),
+    };
+    let entry = PlanEntry::of_parts(
+        ItemId::LocalAi,
+        vec![
+            part("text_extraction", TEXT),
+            part("column_role_mapping", TEXT),
+        ],
+    )
+    .unwrap();
+    let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
+    let shown = review_view(&plan, &Locations::under(Path::new("/state")));
+    assert_eq!(
+        shown.entries[0]
+            .parts
+            .iter()
+            .map(|part| part.download_bytes)
+            .collect::<Vec<_>>(),
+        [Some(100), Some(0)]
+    );
+}
+
+#[test]
+fn the_review_names_the_folder_each_part_is_stored_in() {
+    use cadrumo_application::{
+        provisioning::plan::{PlanEntry, PlanPart},
+        value::HostName,
+    };
+    let locations = Locations::under(Path::new("/state"));
+    let program_folder = locations
+        .destination(Destination::LocalAiProgram)
+        .display()
+        .to_string();
+    let models_folder = locations
+        .destination(Destination::OllamaModels)
+        .display()
+        .to_string();
+    assert_ne!(program_folder, models_folder);
+    let part = |id: &str, destination: Destination, version: &str| PlanPart {
+        part_id: id.into(),
+        download_bytes: Some(100),
+        source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
+        destination: Some(destination),
+        installs_outside_program: false,
+        target_version: Some(version.into()),
+    };
+    let program = part(PROGRAM_PART, Destination::LocalAiProgram, "9.9.9");
+    let model = part("text_extraction", Destination::OllamaModels, TEXT);
+    let shown = |parts: Vec<PlanPart>| {
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).unwrap();
+        let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
+        let view = review_view(&plan, &locations).entries.remove(0);
+        // The folders are the parts' own; the entry as a whole names none, so no folder
+        // is shown twice.
+        assert_eq!(view.destination, None);
+        view.parts
+            .into_iter()
+            .map(|part| (part.part, part.destination))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        shown(vec![program.clone()]),
+        [(PROGRAM_PART.to_owned(), Some(program_folder.clone()))]
+    );
+    assert_eq!(
+        shown(vec![program, model.clone()]),
+        [
+            (PROGRAM_PART.to_owned(), Some(program_folder)),
+            ("text_extraction".to_owned(), Some(models_folder.clone())),
+        ]
+    );
+    assert_eq!(
+        shown(vec![model]),
+        [("text_extraction".to_owned(), Some(models_folder))]
+    );
+}
+
+/// The plan a start of the local AI alone puts under review, downloading `download` when
+/// one is asked for, with the window that asked for it and the operation it belongs to.
+async fn local_ai_plan(
+    fixture: &Fixture,
+    replies: Replies,
+    download: Option<wire::ModelDownload>,
+) -> (Components, String, wire::Review) {
+    let (components, _, diagnostics) = watching(fixture, replies);
+    components
+        .start(ItemId::LocalAi, false, false, download)
+        .await
+        .unwrap();
+    let asked = until(&components, |view| {
+        matches!(stage(view), Some(RunStage::Review | RunStage::Settled))
+    })
+    .await;
+    let run = asked.runs.first().expect("a setup");
+    assert_eq!(
+        run.stage,
+        RunStage::Review,
+        "the plan waits for the window, but the setup ended {:?} {:?}, recording {:?} after \
+         asking the publisher for {:?}; details: {}",
+        run.outcome,
+        run.failure,
+        recorded(&diagnostics),
+        fixture.server.targets(),
+        asked.details
+    );
+    let (operation, plan) = review(&asked);
+    (components, operation, plan)
+}
+
+/// Declines the plan under review, so nothing is set up.
+async fn decline(components: &Components, operation: &str, plan: &wire::Review) {
+    components
+        .answer(operation, &plan.plan_digest, wire::Decision::Reject)
+        .await
+        .unwrap();
+    until(components, |view| stage(view) == Some(RunStage::Settled)).await;
+}
+
+#[tokio::test]
+async fn general_setup_plans_the_local_ai_program_alone() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let (components, operation, plan) = local_ai_plan(&fixture, Replies::default(), None).await;
+    let entry = &plan.entries[0];
+    assert_eq!(entry.item, "local_ai");
+    assert_eq!(
+        entry
+            .parts
+            .iter()
+            .map(|part| (part.part.as_str(), part.download_bytes))
+            .collect::<Vec<_>>(),
+        [("program", Some(PROGRAM_BYTES))]
+    );
+    assert_eq!(fixture.downloads(), 0, "nothing moves before the answer");
+    decline(&components, &operation, &plan).await;
+}
+
+#[tokio::test]
+async fn an_added_model_no_catalogue_sizes_is_planned_with_an_unknown_download() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let replies = Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(2 * GB))]);
+    let (components, operation, plan) =
+        local_ai_plan(&fixture, replies, Some(requested(LOCAL, ADDED))).await;
+    let entry = &plan.entries[0];
+    assert_eq!(
+        entry
+            .parts
+            .iter()
+            .map(|part| (part.part.as_str(), part.download_bytes))
+            .collect::<Vec<_>>(),
+        [("program", Some(PROGRAM_BYTES)), ("download", None)]
+    );
+    assert_eq!(entry.parts[1].model.as_deref(), Some(ADDED));
+    // The entry totals what is known; the unsized part says the rest is not.
+    assert_eq!(entry.download_bytes, Some(PROGRAM_BYTES));
+    assert!(plan.has_unknown_size);
+    assert_eq!(fixture.downloads(), 0, "nothing moves before the answer");
+    decline(&components, &operation, &plan).await;
+    // The row the declined plan read says its size is unknown rather than what is known.
+    let local_ai = components
+        .view()
+        .rows
+        .into_iter()
+        .find(|row| row.item == "local_ai")
+        .expect("the local AI's row");
+    assert_eq!(local_ai.size_bytes, None);
+}
+
+#[tokio::test]
+async fn a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_anew() {
+    let mut digests = Vec::new();
+    for size in [2 * GB, 2 * GB + 1] {
+        let fixture = Fixture::new(Serving::Whole).with_program();
+        let replies = Replies::serving(&[TEXT], &[], &[(TEXT, Some(size))]);
+        let (components, operation, plan) =
+            local_ai_plan(&fixture, replies, Some(requested(LOCAL, TEXT))).await;
+        digests.push(plan.plan_digest.clone());
+        decline(&components, &operation, &plan).await;
+    }
+    assert_ne!(digests[0], digests[1]);
+}
+
+#[tokio::test]
+async fn a_download_that_cannot_be_admitted_refuses_the_start_and_runs_nothing() {
+    let unreadable = serde_json::json!({
+        "unreadable": true, "models": [], "reading": null, "reading_source": "none", "tasks": [], "local_lanes": [], "revision": "a".repeat(64),
+    });
+    let cases = [
+        (
+            "a model on no list",
+            Replies::serving(&[TEXT], &[], &[(VISION, Some(GB))]),
+            Refusal::ModelSelectionUnusable,
+        ),
+        (
+            "an unreadable list",
+            Replies::serving(&[TEXT], &[], &[]).answering("local_models", unreadable),
+            Refusal::ModelSelectionUnusable,
+        ),
+        (
+            "a service that does not answer",
+            Replies::default(),
+            Refusal::Unavailable,
+        ),
+    ];
+    for (name, replies, expected) in cases {
+        let fixture = Fixture::new(Serving::Whole);
+        let (components, _) = serving(&fixture, replies);
+        let start = || {
+            components.start(
+                ItemId::LocalAi,
+                false,
+                false,
+                Some(requested(LOCAL, VISION)),
+            )
+        };
+        assert_eq!(refusal(start().await), Err(expected), "{name}");
+        assert!(components.view().runs.is_empty(), "{name}: no run is shown");
+        // The refusal is the start's own: asking again is refused the same way.
+        assert_eq!(refusal(start().await), Err(expected), "{name}");
+        assert_eq!(fixture.downloads(), 0, "{name}");
+    }
+}
+
+#[tokio::test]
+async fn stopping_a_setup_another_window_runs_consults_no_service() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+    let (follower, replies) = serving(&fixture, Replies::default());
+    follower
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    let run = until(&follower, moving)
+        .await
+        .runs
+        .into_iter()
+        .next()
+        .unwrap();
+    let before = replies.asked();
+    // Asking another setup to stop builds an engine for nothing but that request.
+    follower.cancel(&run.operation_id).await.unwrap();
+    assert_eq!(replies.asked(), before);
+    gate.release();
+    until(&owner, |view| stage(view) == Some(RunStage::Settled)).await;
+    until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
+}
+
+/// Stores `model` (`name:tag` on the default registry) in the fixture's models folder
+/// as the program would, with one layer of its own, and returns its manifest.
+fn stored_model(fixture: &Fixture, model: &str) -> PathBuf {
+    let (name, tag) = model.split_once(':').expect("a tagged model");
+    let manifest = Locations::under(&fixture.root())
+        .models
+        .join("manifests")
+        .join(MODEL_HOST)
+        .join("library")
+        .join(name)
+        .join(tag);
+    std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+    let digest = |seed: &str| format!("sha256:{}", hex(&Sha256::digest(seed.as_bytes())));
+    let layer = |seed: &str| serde_json::json!({"digest": digest(seed), "size": 1});
+    std::fs::write(
+        &manifest,
+        serde_json::json!({"config": layer(&format!("{model} config")),
+                           "layers": [layer(&format!("{model} weights"))]})
+        .to_string(),
+    )
+    .unwrap();
+    manifest
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[tokio::test]
+async fn removing_a_model_deletes_it_alone_and_reads_the_rows_after() {
+    let fixture = Fixture::new(Serving::Whole);
+    let removed = stored_model(&fixture, TEXT);
+    let kept = stored_model(&fixture, VISION);
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(refusal(components.remove_model(TEXT).await), Ok(()));
+    assert!(!removed.exists());
+    assert!(kept.exists());
+    assert!(!components.view().rows.is_empty());
+    assert!(replies.asked().is_empty(), "a removal consults no service");
+}
+
+#[tokio::test]
+async fn removing_the_browser_deletes_its_staging_alone_and_reads_the_rows_after() {
+    let fixture = Fixture::new(Serving::Whole);
+    let root = fixture.root().join("components").join("playwright");
+    let staging = root.join(".cadrumo-staging");
+    let unrelated = root.join("notes");
+    std::fs::create_dir_all(&staging).unwrap();
+    std::fs::write(staging.join("partial"), b"x").unwrap();
+    std::fs::create_dir_all(&unrelated).unwrap();
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(refusal(components.remove(Removal::Browser).await), Ok(()));
+    assert!(!staging.exists());
+    assert!(unrelated.exists(), "only the browser's own folders go");
+    assert!(!components.view().rows.is_empty());
+    assert!(replies.asked().is_empty(), "a removal consults no service");
+}
+
+#[tokio::test]
+async fn removing_the_local_ai_hands_the_engine_the_models_on_the_lists_and_reads_the_rows_after() {
+    // The fixture's pins carry no program, so what the engine deletes is its own test's
+    // to show; here the removal must read the lists it selects from and settle.
+    let fixture = Fixture::new(Serving::Whole);
+    let (components, replies) = serving(
+        &fixture,
+        Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+    );
+    assert_eq!(refusal(components.remove(Removal::LocalAi).await), Ok(()));
+    let asked = replies.asked();
+    for action in ["provider_lanes", "catalog", "local_models"] {
+        assert!(
+            asked.iter().any(|seen| seen == action),
+            "{action}: {asked:?}"
+        );
+    }
+    assert!(!components.view().rows.is_empty());
+}
+
+#[tokio::test]
+async fn a_service_that_cannot_list_the_models_stops_the_local_ai_removal() {
+    let fixture = Fixture::new(Serving::Whole);
+    let kept = stored_model(&fixture, TEXT);
+    let (components, _) = serving(&fixture, Replies::default());
+    assert!(components.remove(Removal::LocalAi).await.is_err());
+    assert!(kept.exists());
+}
+
+#[tokio::test]
+async fn removing_the_local_ai_program_alone_keeps_every_model_and_asks_no_list() {
+    let fixture = Fixture::new(Serving::Whole);
+    let kept = stored_model(&fixture, TEXT);
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(
+        refusal(components.remove(Removal::LocalAiProgram).await),
+        Ok(())
+    );
+    assert!(kept.exists());
+    assert!(
+        replies.asked().is_empty(),
+        "the program alone selects no model"
+    );
+}
+
+#[tokio::test]
+async fn the_browser_is_not_removed_while_its_setup_holds_its_lock() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let components = running(&fixture).await;
+    assert_eq!(
+        refusal(components.remove(Removal::Browser).await),
+        Err(Refusal::Busy)
+    );
+    gate.release();
+    components.close().await;
+}
+
+#[tokio::test]
+async fn a_name_the_engine_cannot_pull_is_refused_before_any_engine_runs() {
+    let fixture = Fixture::new(Serving::Whole);
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(
+        refusal(components.remove_model("not a model").await),
+        Err(Refusal::ModelSelectionUnusable)
+    );
+    assert!(replies.asked().is_empty());
+}
+
+#[tokio::test]
+async fn explicit_download_plans_only_that_model_and_a_resume_keeps_it() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let replies = Replies::serving(
+        &[VISION, TEXT],
+        &[],
+        &[(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))],
+    )
+    .answering(
+        "catalog",
+        declared(
+            &[VISION, TEXT],
+            &[(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))],
+        ),
+    );
+    let (components, replies) = serving(&fixture, replies);
+    components
+        .start(
+            ItemId::LocalAi,
+            false,
+            false,
+            Some(requested(LOCAL, VISION)),
+        )
+        .await
+        .unwrap();
+    let asked = until(&components, |view| stage(view) == Some(RunStage::Review)).await;
+    let (operation, plan) = review(&asked);
+    assert_eq!(plan.entries.len(), 1);
+    let parts = &plan.entries[0].parts;
+    assert!(asked.valid());
+    assert_eq!(parts[1].model.as_deref(), Some(VISION));
+    assert_eq!(
+        parts
+            .iter()
+            .map(|part| (part.part.as_str(), part.download_bytes))
+            .collect::<Vec<_>>(),
+        [("program", Some(PROGRAM_BYTES)), ("download", Some(3 * GB))]
+    );
+    assert_eq!(plan.entries[0].download_bytes, Some(PROGRAM_BYTES + 3 * GB));
+    assert_eq!(fixture.downloads(), 0);
+    assert_eq!(replies.asked(), vec!["provider_lanes", "catalog"]);
+    decline(&components, &operation, &plan).await;
+    // A resumed request uses the same download and digest, without substituting TEXT.
+    components
+        .start(ItemId::LocalAi, true, false, None)
+        .await
+        .unwrap();
+    let asked = until(&components, |view| stage(view) == Some(RunStage::Review)).await;
+    let (operation, resumed) = review(&asked);
+    assert_eq!(resumed.plan_digest, plan.plan_digest);
+    decline(&components, &operation, &resumed).await;
+}
+
+/// The setup of `item` the window shows, if any.
+fn run_of(view: &View, item: ItemId) -> Option<&wire::Run> {
+    view.runs.iter().find(|run| run.item == item.as_str())
+}
+
+fn stage_of(view: &View, item: ItemId) -> Option<RunStage> {
+    run_of(view, item).map(|run| run.stage)
+}
+
+/// The progress of the one item a setup sets up.
+fn progress(run: &wire::Run) -> &wire::ItemProgress {
+    let [item] = run.items.as_slice() else {
+        panic!("a setup sets up one item: {:?}", run.items);
+    };
+    item
+}
+
+/// Starts `item` in `components`, approves the plan it shows, and returns its operation.
+async fn approved(components: &Components, item: ItemId) -> String {
+    components.start(item, false, false, None).await.unwrap();
+    let asked = until(components, |view| {
+        stage_of(view, item) == Some(RunStage::Review)
+    })
+    .await;
+    let run = asked
+        .runs
+        .iter()
+        .find(|run| run.item == item.as_str())
+        .expect("the item's setup");
+    let plan = run.review.clone().expect("a plan under review");
+    assert!(
+        plan.entries.iter().all(|entry| entry.item == item.as_str()),
+        "a setup plans its own item alone"
+    );
+    let operation = run.operation_id.clone();
+    components
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    operation
+}
+
+#[tokio::test]
+async fn the_browser_and_the_local_ai_set_up_at_the_same_time_each_on_its_own() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone())).with_program();
+    let components = window(&fixture);
+
+    let browser = approved(&components, ItemId::Browser).await;
+    until(&components, |view| {
+        run_of(view, ItemId::Browser).is_some_and(|run| progress(run).completed.is_some())
+    })
+    .await;
+    // The browser's setup holds its own lock alone: the local AI is planned beside it.
+    let local_ai = approved(&components, ItemId::LocalAi).await;
+    assert_ne!(browser, local_ai);
+    let both = until(&components, |view| {
+        run_of(view, ItemId::LocalAi).is_some_and(|run| {
+            progress(run)
+                .parts
+                .iter()
+                .any(|part| part.completed.is_some())
+        })
+    })
+    .await;
+    assert_eq!(
+        both.runs
+            .iter()
+            .map(|run| (run.item.as_str(), run.stage))
+            .collect::<Vec<_>>(),
+        [
+            ("browser", RunStage::Running),
+            ("local_ai", RunStage::Running)
+        ],
+        "both run at once, in the engine's item order"
+    );
+    let program = &progress(&both.runs[1]).parts[0];
+    assert_eq!(
+        (
+            program.part.as_str(),
+            program.model.as_deref(),
+            program.step
+        ),
+        ("program", None, Some(wire::Step::Download))
+    );
+    assert!(program.completed.unwrap() <= program.total.unwrap());
+    assert_eq!(program.total, Some(PROGRAM_BYTES));
+    assert!(
+        progress(&both.runs[0]).parts.is_empty(),
+        "the browser has no parts"
+    );
+    assert!(both.details.contains(&format!("operation: {browser}")));
+    assert!(both.details.contains(&format!("operation: {local_ai}")));
+
+    // A second start of a running item joins it.
+    components
+        .start(ItemId::LocalAi, false, false, None)
+        .await
+        .unwrap();
+    assert_eq!(
+        run_of(&components.view(), ItemId::LocalAi)
+            .unwrap()
+            .operation_id,
+        local_ai
+    );
+    // The local AI's setup holds its writer lock, so no model is removed meanwhile.
+    assert_eq!(
+        refusal(components.remove_model(TEXT).await),
+        Err(Refusal::Busy)
+    );
+    // A cancel names its setup: the local AI's goes on.
+    components.cancel(&browser).await.unwrap();
+    let view = components.view();
+    assert!(run_of(&view, ItemId::Browser).unwrap().cancel_requested);
+    let other = run_of(&view, ItemId::LocalAi).unwrap();
+    assert!(other.cancellable && !other.cancel_requested);
+
+    gate.release();
+    let settled = until(&components, |view| {
+        stage_of(view, ItemId::Browser) == Some(RunStage::Settled)
+            && stage_of(view, ItemId::LocalAi) == Some(RunStage::Settled)
+    })
+    .await;
+    assert_eq!(settled.runs[0].outcome, Some(Outcome::Cancelled));
+    let local_ai_run = &settled.runs[1];
+    // The bytes matched their pin but were no archive, so the program did not install.
+    assert_eq!(local_ai_run.outcome, Some(Outcome::Failed));
+    let program = &progress(local_ai_run).parts[0];
+    assert_eq!(
+        (program.completed, program.total),
+        (Some(PROGRAM_BYTES), Some(PROGRAM_BYTES))
+    );
+    let result = program.result.as_ref().expect("the program part's result");
+    assert_eq!(
+        (result.changed, result.failure, result.transferred_bytes),
+        (false, local_ai_run.failure, PROGRAM_BYTES)
+    );
+}
+
+#[tokio::test]
+async fn a_setup_counts_what_another_running_setup_still_downloads_against_the_space() {
+    use cadrumo_application::provisioning::plan::required_free_bytes;
+    let gate = Arc::new(Released::default());
+    let mut fixture = Fixture::new(Serving::Gated(gate.clone())).with_program();
+    let request = SetupRequest {
+        items: Some(vec![ItemId::Browser]),
+        approved: None,
+        reinstall: false,
+    };
+    let browser_bytes = (fixture.engines())(Placement::default())
+        .unwrap()
+        .engine
+        .setup(
+            &request,
+            &mut |_| Answer::Decline,
+            &mut |_| {},
+            &Cancellation::default(),
+        )
+        .plan
+        .expect("the browser's plan")
+        .known_download_bytes();
+    assert!(browser_bytes > PROGRAM_BYTES);
+    // Room for either download alone, not for both at once.
+    fixture.free_bytes = Some(required_free_bytes(browser_bytes));
+    let components = window(&fixture);
+
+    approved(&components, ItemId::LocalAi).await;
+    until(&components, |view| {
+        run_of(view, ItemId::LocalAi).is_some_and(|run| {
+            progress(run)
+                .parts
+                .iter()
+                .any(|part| part.completed.is_some())
+        })
+    })
+    .await;
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    // A setup that counted only its own download would ask for approval here instead.
+    let refused = until(&components, |view| {
+        matches!(
+            stage_of(view, ItemId::Browser),
+            Some(RunStage::Settled | RunStage::Review)
+        )
+    })
+    .await;
+    let stages: Vec<_> = refused
+        .runs
+        .iter()
+        .map(|run| (run.item.as_str(), run.stage, run.outcome))
+        .collect();
+    assert_eq!(
+        stages,
+        [
+            ("browser", RunStage::Settled, Some(Outcome::NotEnoughSpace)),
+            ("local_ai", RunStage::Running, None)
+        ]
+    );
+    assert_eq!(fixture.downloads(), 0, "no browser archive was asked for");
+
+    // Once the local AI's setup has ended, its bytes are no longer held against the
+    // volume, and the same space is enough for the browser.
+    gate.release();
+    until(&components, |view| {
+        stage_of(view, ItemId::LocalAi) == Some(RunStage::Settled)
+    })
+    .await;
+    approved(&components, ItemId::Browser).await;
+}
+
+#[tokio::test]
+async fn an_answer_and_a_cancel_reach_the_setup_they_name_among_several() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let components = window(&fixture);
+    components
+        .start(ItemId::Browser, false, false, None)
+        .await
+        .unwrap();
+    components
+        .start(ItemId::LocalAi, false, false, None)
+        .await
+        .unwrap();
+    let asked = until(&components, |view| {
+        stage_of(view, ItemId::Browser) == Some(RunStage::Review)
+            && stage_of(view, ItemId::LocalAi) == Some(RunStage::Review)
+    })
+    .await;
+    let [browser, local_ai] = asked.runs.as_slice() else {
+        panic!("one setup per item: {:?}", asked.runs);
+    };
+    let local_ai_digest = local_ai.review.as_ref().unwrap().plan_digest.clone();
+    // Each setup waits on the digest of its own plan alone.
+    assert_eq!(
+        components
+            .answer(
+                &browser.operation_id,
+                &local_ai_digest,
+                wire::Decision::Apply
+            )
+            .await,
+        Err(Refusal::PlanChanged)
+    );
+    components
+        .answer(
+            &local_ai.operation_id,
+            &local_ai_digest,
+            wire::Decision::Reject,
+        )
+        .await
+        .unwrap();
+    let view = until(&components, |view| {
+        stage_of(view, ItemId::LocalAi) == Some(RunStage::Settled)
+    })
+    .await;
+    assert_eq!(
+        view.runs[1].outcome,
+        Some(Outcome::Rejected),
+        "the rejection reached the local AI's setup"
+    );
+    assert_eq!(
+        view.runs[0].stage,
+        RunStage::Review,
+        "the browser's setup still waits"
+    );
+    components.cancel(&browser.operation_id).await.unwrap();
+    let view = until(&components, |view| {
+        stage_of(view, ItemId::Browser) == Some(RunStage::Settled)
+    })
+    .await;
+    assert_eq!(view.runs[0].outcome, Some(Outcome::Cancelled));
+    assert_eq!(view.runs[1].outcome, Some(Outcome::Rejected));
+    assert_eq!(fixture.downloads(), 0);
+}
+
+/// A plan of the local AI's program and two roles that read with one model.
+fn local_ai_entry() -> PlanEntry {
+    use cadrumo_application::{provisioning::plan::PlanPart, value::HostName};
+    let part = |id: &str, version: &str, bytes: u64| PlanPart {
+        part_id: id.into(),
+        download_bytes: Some(bytes),
+        source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
+        destination: Some(if id == PROGRAM_PART {
+            Destination::LocalAiProgram
+        } else {
+            Destination::OllamaModels
+        }),
+        installs_outside_program: false,
+        target_version: Some(version.into()),
+    };
+    PlanEntry::of_parts(
+        ItemId::LocalAi,
+        vec![
+            part(PROGRAM_PART, "9.9.9", 100),
+            part("text_extraction", TEXT, 300),
+            part("column_role_mapping", TEXT, 300),
+        ],
+    )
+    .unwrap()
+}
+
+fn local_ai_track() -> SetupTrack {
+    let mut track = SetupTrack {
+        item: ItemId::LocalAi,
+        operation_id: "a".repeat(64),
+        download: None,
+        stage: RunStage::Planning,
+        review: None,
+        answers: None,
+        answered: true,
+        following: false,
+        items: Vec::new(),
+        phases: Vec::new(),
+        hosts: BTreeSet::new(),
+        cancellation: Arc::default(),
+        cancel_requested: false,
+        outcome: None,
+        failure: None,
+    };
+    track.planned(&local_ai_entry());
+    track
+}
+
+/// The events the engine reports as the program downloads and installs and the model
+/// begins downloading.
+fn program_then_model() -> Vec<Event> {
+    let item = ItemId::LocalAi;
+    let part = |part: &str, model: Option<&str>, step| Event::Part {
+        item,
+        part: part.into(),
+        model: model.map(str::to_owned),
+        step,
+    };
+    let bytes = |part: &str, completed, total| Event::PartProgress {
+        item,
+        part: part.into(),
+        completed,
+        total,
+    };
+    vec![
+        Event::Phase {
+            item,
+            step: SetupStep::Download,
+        },
+        part(PROGRAM_PART, None, SetupStep::Download),
+        Event::Progress {
+            item,
+            completed: 100,
+            total: 400,
+        },
+        bytes(PROGRAM_PART, 100, 100),
+        part(PROGRAM_PART, None, SetupStep::Install),
+        part("text_extraction", Some(TEXT), SetupStep::Download),
+        Event::Progress {
+            item,
+            completed: 250,
+            total: 400,
+        },
+        bytes("text_extraction", 150, 300),
+    ]
+}
+
+/// What the window shows of each part: id, model, step and bytes.
+type PartRow<'a> = (
+    &'a str,
+    Option<&'a str>,
+    Option<wire::Step>,
+    Option<u64>,
+    Option<u64>,
+);
+
+#[test]
+fn the_local_ais_parts_carry_their_own_steps_and_bytes() {
+    let mut track = local_ai_track();
+    for event in program_then_model() {
+        take_event(&mut track, event);
+    }
+    let shown = run(&track);
+    assert_eq!(shown.item, "local_ai");
+    let item = progress(&shown);
+    assert_eq!((item.completed, item.total), (Some(250), Some(400)));
+    let parts: Vec<PartRow<'_>> = item
+        .parts
+        .iter()
+        .map(|part| {
+            (
+                part.part.as_str(),
+                part.model.as_deref(),
+                part.step,
+                part.completed,
+                part.total,
+            )
+        })
+        .collect();
+    let expected: [PartRow<'_>; 3] = [
+        (
+            "program",
+            None,
+            Some(wire::Step::Install),
+            Some(100),
+            Some(100),
+        ),
+        (
+            "text_extraction",
+            Some(TEXT),
+            Some(wire::Step::Download),
+            Some(150),
+            Some(300),
+        ),
+        // The second role reads with the model the first pulls.
+        ("column_role_mapping", Some(TEXT), None, None, None),
+    ];
+    assert_eq!(parts, expected);
+    assert!(item.parts.iter().all(|part| part.result.is_none()));
+}
+
+/// How the engine ends a setup that stopped at `item`, if at one.
+fn ended(outcome: Ended, item: Option<ItemId>, failure: Option<FailureCategory>) -> Report {
+    Report {
+        outcome,
+        mode: CheckMode::Quick,
+        rows: Vec::new(),
+        plan: None,
+        item,
+        failure,
+        failure_cause: None,
+        download_failure: None,
+        items: Vec::new(),
+    }
+}
+
+#[test]
+fn a_setup_that_stops_in_a_part_fails_that_part_alone() {
+    let mut track = local_ai_track();
+    for event in program_then_model() {
+        take_event(&mut track, event);
+    }
+    settle(
+        &mut track,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::HostUnreachable),
+        ),
+    );
+    let shown = run(&track);
+    let results: Vec<_> = progress(&shown)
+        .parts
+        .iter()
+        .map(|part| {
+            part.result
+                .as_ref()
+                .map(|result| (result.changed, result.failure, result.transferred_bytes))
+        })
+        .collect();
+    assert_eq!(
+        results,
+        [
+            Some((true, None, 100)),
+            Some((false, Some(wire::Failure::HostUnreachable), 150)),
+            None,
+        ]
+    );
+
+    let mut completed = local_ai_track();
+    for event in program_then_model() {
+        take_event(&mut completed, event);
+    }
+    settle(&mut completed, &ended(Ended::Completed, None, None));
+    let shown = run(&completed);
+    assert!(
+        progress(&shown)
+            .parts
+            .iter()
+            .all(|part| part.result.as_ref().is_some_and(|result| result.changed)),
+        "a completed setup set up every part, including one sharing a model"
+    );
+}
+
+/// What each part of `track` shows once settled: changed, failure and bytes.
+fn part_results(track: &SetupTrack) -> Vec<Option<(bool, Option<wire::Failure>, u64)>> {
+    let shown = run(track);
+    progress(&shown)
+        .parts
+        .iter()
+        .map(|part| {
+            part.result
+                .as_ref()
+                .map(|result| (result.changed, result.failure, result.transferred_bytes))
+        })
+        .collect()
+}
+
+#[test]
+fn a_failure_in_a_part_keeps_it_to_that_part() {
+    let mut downloading = local_ai_track();
+    for event in program_then_model().into_iter().take(4) {
+        take_event(&mut downloading, event);
+    }
+    settle(
+        &mut downloading,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::HostUnreachable),
+        ),
+    );
+    assert_eq!(
+        part_results(&downloading),
+        [
+            Some((false, Some(wire::Failure::HostUnreachable), 100)),
+            None,
+            None,
+        ]
+    );
+
+    let mut pulling = local_ai_track();
+    let mut events: Vec<Event> = program_then_model().into_iter().take(5).collect();
+    events.push(Event::Phase {
+        item: ItemId::LocalAi,
+        step: SetupStep::Download,
+    });
+    events.extend(program_then_model().into_iter().skip(5));
+    for event in events {
+        take_event(&mut pulling, event);
+    }
+    settle(
+        &mut pulling,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::HostUnreachable),
+        ),
+    );
+    assert_eq!(
+        part_results(&pulling),
+        [
+            Some((true, None, 100)),
+            Some((false, Some(wire::Failure::HostUnreachable), 150)),
+            None,
+        ]
+    );
+}
+
+/// An admission whose runtime manager selection record nobody can read.
+#[cfg(any(windows, target_os = "macos"))]
+fn unreadable_selection(fixture: &Fixture) -> Arc<Admission> {
+    let root = fixture.root().join("manager");
+    std::fs::create_dir_all(&root).unwrap();
+    cadrumo_manager::custody::write_local_record(
+        &root.join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
+        b"{",
+        4096,
+    )
+    .unwrap();
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        root,
+        unpackaged(),
+    ))
+}
+
+#[cfg(any(windows, target_os = "macos"))]
+#[tokio::test]
+async fn an_unreadable_engine_selection_refuses_the_local_ai_and_leaves_the_browser_alone() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = Components::new(
+        fixture.engines(),
+        unreadable_selection(&fixture),
+        Arc::default(),
+    );
+    let finished = |after: Option<String>| {
+        move |view: &View| {
+            view.check.as_ref().is_some_and(|check| {
+                check.stage != CheckStage::Running && Some(&check.operation_id) != after.as_ref()
+            })
+        }
+    };
+
+    // A setup of the local AI is refused before any engine runs, and shows no run.
+    let stopped = components.start(ItemId::LocalAi, false, false, None).await;
+    assert_eq!(
+        stopped.as_ref().err().and_then(Stop::refusal),
+        Some(Refusal::Unavailable)
+    );
+    assert_eq!(
+        cause(stopped).reason.as_deref(),
+        Some("setup_local_engine_unreadable")
+    );
+    assert!(components.view().runs.is_empty());
+
+    // A status read reads the browser alone and refuses the local AI beside it, quick
+    // or full.
+    components.check(wire::CheckMode::Quick);
+    let read = until(&components, finished(None)).await;
+    let quick = read.check.clone().unwrap();
+    assert_eq!(
+        (quick.stage, quick.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    assert_eq!(read.complete, Some(false));
+    components.check(wire::CheckMode::Full);
+    let read = until(&components, finished(Some(quick.operation_id.clone()))).await;
+    let refused = read.check.clone().unwrap();
+    assert_eq!(
+        (refused.stage, refused.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    // A full check of the local AI is refused before any engine runs.
+    components.verify(vec![ItemId::LocalAi]);
+    let verified = until(&components, finished(Some(refused.operation_id.clone())))
+        .await
+        .check
+        .unwrap();
+    assert_eq!(
+        (verified.stage, verified.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        refusal(components.remove(Removal::LocalAiProgram).await),
+        Err(Refusal::Unavailable)
+    );
+
+    // The browser reads no selection: its check, full check, setup and removal proceed.
+    assert!(components.check_browser().await.is_some());
+    components.verify(vec![ItemId::Browser]);
+    let browser = until(&components, finished(Some(verified.operation_id.clone())))
+        .await
+        .check
+        .unwrap();
+    assert_eq!((browser.stage, browser.refusal), (CheckStage::Done, None));
+    let (operation, plan) = reviewing(&components).await;
+    decline(&components, &operation, &plan).await;
+    assert_eq!(refusal(components.remove(Removal::Browser).await), Ok(()));
+}
+
+/// The package of `fixture`'s installation, carrying the llama-server program where its
+/// engines look for it.
+#[cfg(windows)]
+fn carrying_llama_server(fixture: &Fixture) -> PathBuf {
+    let package = fixture.root().join("package");
+    let folder = package.join("bin").join("llama");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("llama-server.exe"), b"llama-server").unwrap();
+    package
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn a_package_carrying_the_llama_server_reads_its_program_set_up_and_a_model_awaited() {
+    let fixture = Fixture::new(Serving::Whole);
+    let package = carrying_llama_server(&fixture);
+    // Nobody chose an engine: the package's llama-server is the default.
+    let admission = Admission::new(Arc::new(Replies::default()), unselected(), package);
+    let components = Components::new(fixture.engines(), Arc::new(admission), Arc::default());
+    components.observe();
+    let snapshot = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage == CheckStage::Done)
+    })
+    .await;
+    let local_ai = snapshot
+        .rows
+        .iter()
+        .find(|row| row.item == "local_ai")
+        .unwrap();
+    assert_eq!(
+        (local_ai.state, local_ai.awaits, local_ai.recovery),
+        (wire::State::Absent, Some(wire::Awaits::Model), None),
+        "the bundled program is set up and only a model remains"
+    );
+    assert_eq!(local_ai.version.as_deref(), Some("b1"));
+    assert_eq!(snapshot.complete, Some(false));
+    let browser = &snapshot.rows[0];
+    assert_eq!((browser.state, browser.awaits), (wire::State::Absent, None));
+}
+
+#[test]
+fn only_a_command_that_names_the_local_ai_or_every_item_reaches_it() {
+    assert!(reaches_local_ai(&[]));
+    assert!(reaches_local_ai(&[ItemId::LocalAi]));
+    assert!(reaches_local_ai(&[ItemId::Browser, ItemId::LocalAi]));
+    assert!(!reaches_local_ai(&[ItemId::Browser]));
+}
+
+#[test]
+fn local_ai_facts_name_each_stored_model_by_its_listed_name() {
+    let served = LocalAiServed {
+        engine: LocalEngine::LlamaCpp,
+        server: ServedServer::Dormant,
+        stored: vec![
+            ("listed0".to_owned(), true),
+            ("listed1".to_owned(), false),
+            ("unlisted".to_owned(), true),
+        ],
+    };
+    let named = [
+        ("listed0".to_owned(), "synthetic-held:1".to_owned()),
+        ("listed1".to_owned(), "synthetic-absent:1".to_owned()),
+    ];
+
+    assert_eq!(
+        local_ai_facts(&served, &named),
+        serde_json::json!({
+            "engine": "llamacpp",
+            "server": "dormant",
+            "models": [
+                {"name": "synthetic-held:1", "stored": true},
+                {"name": "synthetic-absent:1", "stored": false},
+            ],
+        })
+    );
+    for (server, word) in [
+        (ServedServer::Running, "running"),
+        (ServedServer::StartFailed, "start_failed"),
+    ] {
+        let facts = local_ai_facts(
+            &LocalAiServed {
+                server,
+                ..served.clone()
+            },
+            &named,
+        );
+        assert_eq!(facts["server"], word);
+    }
+}

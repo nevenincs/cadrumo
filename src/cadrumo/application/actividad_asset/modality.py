@@ -19,7 +19,7 @@ def direct_estimation_modality(profile_token: str | None, *, authority: Governed
     """
     token = (profile_token or "").strip()
     if not token:
-        raise ActividadAssetIncompleteError("the taxpayer profile declares no IRPF estimation regime")
+        raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.modality_not_declared")
     modalities: dict[str, DirectEstimationRegime] = {
         str(irpf_estimation_regime_directa_normal_token(authority=authority)): DirectEstimationRegime.NORMAL,
         str(irpf_estimation_regime_directa_simplificada_token(authority=authority)): DirectEstimationRegime.SIMPLIFIED,
@@ -27,7 +27,8 @@ def direct_estimation_modality(profile_token: str | None, *, authority: Governed
     modality = modalities.get(token)
     if modality is None:
         raise ActividadAssetUnsupportedError(
-            f"activity-asset amortization is enrolled only for direct estimation, not {token!r}",
+            context={"regime": token},
+            translated_message="ledger.actividad_asset.errors.modality_not_direct_estimation",
         )
     return modality
 

@@ -20,6 +20,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....tests.log_records import delivered_records
 from ..coercion import coerce_decimal, coerce_finite_european_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -87,7 +88,7 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
 
     relevant = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog, "cadrumo.core.decimal.coercion")
         if record.getMessage() == "coerce_decimal: could not parse value, returning configured default"
     ]
     assert len(relevant) == 1

@@ -56,13 +56,14 @@ _FILING_PACKAGE = Path(__file__).resolve().parent.parent
 #: standing classification.
 _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
     {
+        "FilingExportDesignIntegrityError",
         "FilingExportError",
+        "FilingExportIntegrityError",
         "FilingExportValidationError",
         "ModeloApplicationError",
         "ModeloBuilderError",
         "ModeloDraftError",
         "ModeloImportError",
-        "_ModeloBuilderError",
     }
 )
 
@@ -72,8 +73,9 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "__init__.py",
     "draft_construction.py",
     "export_parity.py",
-    "_m303_exonerado_390.py",
-    "_m303_export_applicability.py",
+    "export_xml_value_limits.py",
+    "m303_exonerado_390.py",
+    "m303_export_applicability.py",
     "draft_review.py",
     "runtime.py",
 )
@@ -93,7 +95,7 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Export receipt and read-back digest invariants are consumed by export.py, whose "
         "export/verify boundary projects them at the filed-artifact boundary."
     ),
-    "_producer_ownership.py": (
+    "producer_ownership.py": (
         "Producer-key ownership invariants are consumed by export_producer.py and reach "
         "the operator only through export.py's public export boundary."
     ),
@@ -101,9 +103,33 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Producer-snapshot completeness is consumed by export.py, whose "
         "public export boundary owns the resulting validation/catch path."
     ),
-    "_export_xml_dictionary.py": (
+    "export_producer_supply.py": (
+        "The unsupplied-producer refusal is raised while export.py prepares a draft, "
+        "so export.py's public export boundary owns its projection."
+    ),
+    "export_xml_dictionary.py": (
         "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."
+    ),
+    "export_xml_dictionary_modelo100.py": (
+        "Modelo 100 XML routing and declaration invariants feed export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
+    "export_xml_dictionary_values.py": (
+        "XML scalar wire-type and formatting invariants feed export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
+    "export_xml_dictionary_xsd.py": (
+        "XSD source, structure and version invariants feed export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
+    "export_xml_input_dictionary.py": (
+        "Input-dictionary field and layout design invariants carry their own locale key and feed "
+        "export_xml_dictionary.py, then export.py's public export/verification boundary."
+    ),
+    "export_xml_row_columns.py": (
+        "Row-column occurrence and total-box design invariants carry their own locale key and feed "
+        "export_xml_input_dictionary.py/export_verification.py, then export.py's export/verification boundary."
     ),
     "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
@@ -119,6 +145,14 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Modelo 190 signed-reintegro context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
     ),
+    "m193_context_validation.py": (
+        "Modelo 193 pending and devengo context invariants are consumed by record_field_renderer.py, "
+        "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
+    ),
+    "m347_declarado_row_scope.py": (
+        "Modelo 347 single-valued casilla attribution is checked by record_renderer.py before any declarado row "
+        "is written, so it reaches the operator only through export.py at the artifact boundary."
+    ),
     "m280_context_validation.py": (
         "Modelo 280 negative-imputation context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
@@ -132,10 +166,11 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 #: resolve to the one existing registered application terminal carrier; adding
 #: an undeclared exception type would bypass the registered error taxonomy.
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
-    "draft_construction.py": "_ModeloBuilderError",
+    "draft_construction.py": "ModeloApplicationError",
     "export_parity.py": "FilingExportError",
-    "_m303_exonerado_390.py": "FilingExportError",
-    "_m303_export_applicability.py": "FilingExportError",
+    "export_xml_value_limits.py": "ModeloApplicationError",
+    "m303_exonerado_390.py": "ModeloApplicationError",
+    "m303_export_applicability.py": "ModeloApplicationError",
     "runtime.py": "ModeloBuilderError",
 }
 
@@ -337,10 +372,10 @@ def test_terminal_application_refusal_preserves_the_established_domain_catch_fam
 
 
 def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> None:
-    from ..draft_construction import _decimal_input
+    from ..draft_construction import decimal_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _decimal_input("iva.base", object())
+        decimal_input("iva.base", object())
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.input_not_decimal"
     assert excinfo.value.context == {"input_id": "iva.base", "observed_type": "object"}
@@ -348,29 +383,45 @@ def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> No
 
 
 def test_binding_row_key_refusal_renders_as_its_key() -> None:
-    from ..draft_construction import _binding_row_index
+    from ..draft_construction import binding_row_index
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _binding_row_index("iva.rows", 0)
+        binding_row_index("iva.rows", 0)
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_row_key_not_positive_integer"
     _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_boolean_input_refusal_renders_as_its_key() -> None:
-    from ..draft_construction import _boolean_input
+    from ..draft_construction import boolean_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _boolean_input("iva.flag", Decimal("1"))
+        boolean_input("iva.flag", Decimal("1"))
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_value_not_boolean"
     _assert_terminal_application_refusal(excinfo.value)
 
 
-def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:
-    from ..export import _export_layout_not_renderable_error
+def test_xml_value_refusal_renders_as_its_key_and_terminal_condition() -> None:
+    from defusedxml import ElementTree
 
-    error = _export_layout_not_renderable_error("303", None)
+    from ..export_xml_value_limits import refuse_xml_values_outside_schema
+
+    schema = ElementTree.fromstring('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>')
+
+    with pytest.raises(ModeloApplicationError) as excinfo:
+        refuse_xml_values_outside_schema(
+            ElementTree.fromstring("<Declaracion/>"), schema=schema, source_id="literal", entries=()
+        )
+
+    assert str(excinfo.value) == "application.filing.export.errors.xml_schema_unreadable"
+    _assert_terminal_application_refusal(excinfo.value)
+
+
+def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:
+    from ..export import export_layout_not_renderable_error
+
+    error = export_layout_not_renderable_error("303", None)
 
     assert str(error) == "application.filing.export.errors.layout_not_renderable"
     assert error.context == {"modelo": "303", "reason_code": "no_complete_export_layouts"}

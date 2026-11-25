@@ -16,7 +16,7 @@ readiness and registry revision checks before inserting the
 :class:`~WorkUnit`.
 
 See Also:
-    :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
+    :mod:`cadrumo.entrypoints.cli.modelo_work_lifecycle_cli`:
         Calls these guards from ``app modelo work create``.
     :func:`cadrumo.domain.calculations.registry.applicability.derive_modelo_applicability`:
         Registry-owned modelo applicability classifier used by this guard.
@@ -27,10 +27,14 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import resolve_form_codes
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.modelos.errors import ModeloError
 
 if TYPE_CHECKING:
@@ -45,19 +49,21 @@ if TYPE_CHECKING:
 #: instead of surfacing a generic not-present-in-registry error. The values
 #: reuse the work-create refusal copy, which already names the ceded tax, its
 #: enabling law, and the regional filing route in every locale.
-CEDED_AUTONOMIC_MODELO_LOCALE_KEYS: dict[str, str] = {
-    "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
-    "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
-    "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
-    "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
-}
+_CEDED_AUTONOMIC_LOCALE_KEY = "cli.app.modelo.work.create_stub_modelo_{modelo}_refused"
+
+
+def _ceded_autonomic_modelos() -> frozenset[str]:
+    """Read the scope's list, or the published authority for a refusal raised before any scope opens."""
+    if governed_facts_in_scope() is not None:
+        return resolve_form_codes("form-row-codes").codes("ceded_autonomic.modelos")
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_form_codes("form-row-codes", authority=operation).codes("ceded_autonomic.modelos")
 
 
 def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
     """Return the instructive autonomic-redirect locale key for a ceded modelo.
 
-    ITP-AJD (``600`` / ``620``) and ISD (``650`` / ``660``) are ceded autonomic
-    taxes administered by the Comunidades Autónomas, not AEAT modelos present in
+    ITP-AJD and ISD are ceded autonomic taxes administered by the Comunidades Autónomas, not AEAT modelos present in
     the calculation registry. Discovery surfaces (``describe`` / ``casillas`` /
     ``formulas``) must redirect an operator who references one of these codes to
     the competent regional Hacienda / CCAA rather than surface a generic
@@ -68,7 +74,10 @@ def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
         :func:`modelo_work_create_refusal_locale_key`:
             The sibling work-create refusal this discovery redirect mirrors.
     """
-    return CEDED_AUTONOMIC_MODELO_LOCALE_KEYS.get(modelo.strip())
+    code = modelo.strip()
+    if code not in _ceded_autonomic_modelos():
+        return None
+    return _CEDED_AUTONOMIC_LOCALE_KEY.format(modelo=code)
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,7 +108,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
     See Also:
         :func:`ceded_autonomic_modelo_locale_key`:
             The domain-owned jurisdiction classifier delegated to here.
-        :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
+        :mod:`cadrumo.entrypoints.cli.modelo_work_lifecycle_cli`:
             Converts the locale key into a typed CLI refusal.
     """
     return ceded_autonomic_modelo_locale_key(modelo)
@@ -108,6 +117,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
 def modelo_work_create_applicability_refusal(
     modelo: str,
     *,
+    filing_year: int,
     allow_not_applicable: bool,
     record: UserProfileRecord | None,
     operation: PinnedAuthorityOperation,
@@ -120,6 +130,14 @@ def modelo_work_create_applicability_refusal(
     projected into :class:`cadrumo.domain.deadlines.models.TaxpayerProfile` facts and
     checked against the registry-owned applicability rules. Only
     ``NOT_APPLICABLE`` and ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
+
+    Args:
+        modelo: Modelo code of the work being created.
+        filing_year: Year of the work being created; applicability is decided
+            for the tax period ending on 31 December of that year.
+        allow_not_applicable: Whether the operator bypassed the guard.
+        record: The active profile record, or ``None`` when none is loaded.
+        operation: Caller-held pinned operation for applicability facts.
 
     Returns:
         A :class:`ModeloWorkCreateApplicabilityRefusal` for a blocking verdict,
@@ -146,7 +164,12 @@ def modelo_work_create_applicability_refusal(
         profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
     except ValidationError:
         return None
-    applicability = derive_modelo_applicability(profile, modelo.strip(), operation=operation)
+    applicability = derive_modelo_applicability(
+        profile,
+        modelo.strip(),
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+    )
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)
@@ -173,7 +196,6 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
 
 
 __all__ = [
-    "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "ModeloWorkCreateApplicabilityRefusal",
     "ModeloWorkCreateApplicabilityRefusedError",
     "ceded_autonomic_modelo_locale_key",

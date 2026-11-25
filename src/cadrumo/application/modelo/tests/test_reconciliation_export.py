@@ -13,14 +13,13 @@ from ..reconciliation_export import build_modelo_reconciliation_export_plan
 from ..reconciliation_export_labels import ReconciliationWorkbookLabels
 from ..reconciliation_list_operation import ModeloReconciliationListEntryProjection, ModeloReconciliationListProjection
 from ..reconciliation_records import ModeloReconciliationAdvisory, ModeloReconciliationDiffKind
-from .reconciliation_fixture import RECONCILIATION_PROFILE_FIXTURE as _PROFILE
-from .reconciliation_fixture import reconciliation_history_entry_fixture as _history_entry
+from .reconciliation_fixture import RECONCILIATION_PROFILE_FIXTURE, reconciliation_history_entry_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def reconciliation_projection_fixture() -> ModeloReconciliationListProjection:
-    entry = _history_entry(event_id="a" * 64)
+    entry = reconciliation_history_entry_fixture(event_id="a" * 64)
     difference = entry.diffs[0].model_copy(
         update={
             "diff_kind": ModeloReconciliationDiffKind.TOTAL,
@@ -44,7 +43,7 @@ def reconciliation_projection_fixture() -> ModeloReconciliationListProjection:
         }
     )
     return ModeloReconciliationListProjection(
-        profile_id=_PROFILE,
+        profile_id=RECONCILIATION_PROFILE_FIXTURE,
         reconciliation_count=1,
         reconciliations=(ModeloReconciliationListEntryProjection.from_history_entry(entry),),
     )
@@ -75,7 +74,9 @@ def test_export_refuses_missing_detail_and_profile_substitution() -> None:
 
 def test_empty_history_is_an_exportable_empty_review() -> None:
     plan = reconciliation_plan_fixture(
-        ModeloReconciliationListProjection(profile_id=_PROFILE, reconciliation_count=0, reconciliations=())
+        ModeloReconciliationListProjection(
+            profile_id=RECONCILIATION_PROFILE_FIXTURE, reconciliation_count=0, reconciliations=()
+        )
     )
     assert len(plan.value_cells) == 34
     assert plan.formula_cells == ()

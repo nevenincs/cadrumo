@@ -58,7 +58,7 @@ class InstalledAssetTuiReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class _PublicAssetActionTransition:
+class PublicAssetActionTransition:
     """Safe public state observed around one keyboard asset action."""
 
     button_id: str

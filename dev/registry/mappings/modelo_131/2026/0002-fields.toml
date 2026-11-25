@@ -930,10 +930,10 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "modelo-131-page-01.modelo-131.page1.declaracion-complementaria"
-kind = "binding"
+kind = "header"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-binding = "modelo-131.page1.declaracion-complementaria"
+producer_key = "amendment_evidence.is_complementaria"
 
 [entries.anchor]
 sheet = "Pág. 1"
@@ -1053,7 +1053,7 @@ ordinal = "4"
 record_identity = "DPA"
 
 [[entries]]
-export_field_id = "modelo-131-dpa-complementaria-indicator"
+export_field_id = "modelo-131-dpa-pagina-complementaria-indicator"
 kind = "computed"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]

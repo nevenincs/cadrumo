@@ -100,9 +100,9 @@ _VERIFY_CONSTRAINTS = _string_constraints(VerifySentence)
 _STEP_CONSTRAINTS = _string_constraints(StepSentence)
 _BLOCKED_DETAIL_CONSTRAINTS = _string_constraints(BlockedDetail)
 
-_SEQUENCE_ID_RE = re.compile(_SEQUENCE_ID_CONSTRAINTS.pattern or "")
-_IDENTIFIER_RE = re.compile(_IDENTIFIER_CONSTRAINTS.pattern or "")
-_JSON_PATH_RE = re.compile(_JSON_PATH_CONSTRAINTS.pattern or "")
+SEQUENCE_ID_RE = re.compile(_SEQUENCE_ID_CONSTRAINTS.pattern or "")
+IDENTIFIER_RE = re.compile(_IDENTIFIER_CONSTRAINTS.pattern or "")
+JSON_PATH_RE = re.compile(_JSON_PATH_CONSTRAINTS.pattern or "")
 #: Matches every ``{...}`` interpolation token; the inner text is validated
 #: separately so a malformed placeholder is an instructive error, not a miss.
 _PLACEHOLDER_RE = re.compile(r"\{([^{}]*)\}")
@@ -111,7 +111,7 @@ _PLACEHOLDER_RE = re.compile(r"\{([^{}]*)\}")
 _STRAY_BRACE_RE = re.compile(r"[{}]")
 
 #: The frame-introducing sigils, mapped to the frame kind they declare.
-_FRAME_SIGILS: dict[str, FrameKind] = {
+FRAME_SIGILS: dict[str, FrameKind] = {
     "@setup": FrameKind.SETUP,
     "@result": FrameKind.RESULT,
     "@static": FrameKind.STATIC,
@@ -119,7 +119,7 @@ _FRAME_SIGILS: dict[str, FrameKind] = {
 
 
 @dataclass
-class _FrameBuilder:
+class FrameBuilder:
     """Mutable accumulator for one frame while a line pass is in progress."""
 
     kind: FrameKind
@@ -170,7 +170,7 @@ def _validate_kebab_id(value: str, label: str, problems: list[str]) -> None:
     """
     minimum = _SEQUENCE_ID_CONSTRAINTS.min_length or 0
     maximum = _SEQUENCE_ID_CONSTRAINTS.max_length
-    if not _SEQUENCE_ID_RE.match(value) or (maximum is not None and not (minimum <= len(value) <= maximum)):
+    if not SEQUENCE_ID_RE.match(value) or (maximum is not None and not (minimum <= len(value) <= maximum)):
         bound = f"{minimum} to {maximum}" if maximum is not None else f"at least {minimum}"
         problems.append(f"{label} {value!r} must be a kebab-case identifier of {bound} characters")
 
@@ -180,7 +180,7 @@ def _placeholder_names(command_line: str, source: str, line_number: int, problem
     names: list[str] = []
     for match in _PLACEHOLDER_RE.finditer(command_line):
         inner = match.group(1).strip()
-        if not _IDENTIFIER_RE.match(inner):
+        if not IDENTIFIER_RE.match(inner):
             problems.append(
                 f"{_at(source, line_number)}: invalid placeholder {match.group(0)!r}; "
                 "a placeholder is '{name}' where name is a prior @capture identifier",
@@ -231,10 +231,10 @@ def _parse_capture(rest: str, source: str, line_number: int, problems: list[str]
         return None
     name, json_path = parts
     ok = True
-    if not _IDENTIFIER_RE.match(name):
+    if not IDENTIFIER_RE.match(name):
         problems.append(f"{_at(source, line_number)}: @capture name {name!r} is not a valid identifier")
         ok = False
-    if not _JSON_PATH_RE.match(json_path):
+    if not JSON_PATH_RE.match(json_path):
         problems.append(f"{_at(source, line_number)}: @capture json-path {json_path!r} is not a valid dotted path")
         ok = False
     if not ok:
@@ -277,7 +277,7 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
     json_path = path_part.strip()
     literal = literal_part.strip()
     ok = True
-    if not _JSON_PATH_RE.match(json_path):
+    if not JSON_PATH_RE.match(json_path):
         problems.append(f"{_at(source, line_number)}: @expect json-path {json_path!r} is not a valid dotted path")
         ok = False
     if not literal:
@@ -360,7 +360,7 @@ def _parse_step_sentence(rest: str, source: str, line_number: int, problems: lis
     return sentence, True
 
 
-def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], list[str]]:
+def parse_frame_lines(text: str, *, source: str) -> tuple[list[FrameBuilder], list[str]]:
     """Parse raw directive/seed text into ordered frame builders and problems.
 
     The low-level pass: it classifies every non-blank line, decomposes command
@@ -391,7 +391,7 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
     return state.builders, state.problems
 
 
-def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
+def _enforce_result_contract(builders: list[FrameBuilder], problems: list[str]) -> None:
     """Enforce the @result contract, relaxed for ``@static`` frames.
 
     An all-``@static`` sequence runs nothing, so it must carry NO @result. A
@@ -525,7 +525,7 @@ def refuse_payload_less_result_frame(sequence: ParsedSequence) -> None:
     )
 
 
-def _enforce_static_frames_state_a_reason(builders: list[_FrameBuilder], problems: list[str]) -> None:
+def _enforce_static_frames_state_a_reason(builders: list[FrameBuilder], problems: list[str]) -> None:
     """Every ``@static`` frame must carry a ``@blocked`` reason.
 
     A bare ``@static`` marker is indistinguishable from a frame nobody got round
@@ -544,7 +544,7 @@ def _enforce_static_frames_state_a_reason(builders: list[_FrameBuilder], problem
             )
 
 
-def _enforce_captures_and_placeholders(builders: list[_FrameBuilder], problems: list[str]) -> None:
+def _enforce_captures_and_placeholders(builders: list[FrameBuilder], problems: list[str]) -> None:
     """Enforce unique capture names and prior-capture placeholder resolution."""
     available: set[str] = set()
     seen_names: set[str] = set()
@@ -600,7 +600,7 @@ def parse_sequence(
 
     _validate_kebab_id(sequence_id.strip(), "sequence id", problems)
 
-    builders: list[_FrameBuilder] = []
+    builders: list[FrameBuilder] = []
     seed_raw = options.get("seed")
     seed = (seed_raw or "").strip() or None
     _append_seed_frames(seed, seeds_root, problems, builders)
@@ -631,9 +631,9 @@ def parse_sequence(
 class _FrameLineState:
     """Ordered line-pass accumulators, including pending narration."""
 
-    builders: list[_FrameBuilder] = field(default_factory=list)
+    builders: list[FrameBuilder] = field(default_factory=list)
     problems: list[str] = field(default_factory=list)
-    current: _FrameBuilder | None = None
+    current: FrameBuilder | None = None
     pending_step: tuple[str, int] | None = None
 
 
@@ -648,7 +648,7 @@ def _parse_frame_line(raw_line: str, offset: int, source: str, state: _FrameLine
     head, _, remainder = line.partition(" ")
     remainder = remainder.strip()
 
-    if head in _EXECUTABLES or head in _FRAME_SIGILS:
+    if head in _EXECUTABLES or head in FRAME_SIGILS:
         _append_command_frame(head, line, remainder, source, offset, state)
         return
 
@@ -697,7 +697,7 @@ def _append_command_frame(
     head: str, line: str, remainder: str, source: str, offset: int, state: _FrameLineState
 ) -> None:
     """Append command frame."""
-    kind = _FRAME_SIGILS.get(head, FrameKind.COMMAND)
+    kind = FRAME_SIGILS.get(head, FrameKind.COMMAND)
     command_line = line if head in _EXECUTABLES else remainder
     if not command_line:
         state.problems.append(f"{_at(source, offset)}: {head} requires an {_EXECUTABLE_DESCRIPTION} command")
@@ -708,7 +708,7 @@ def _append_command_frame(
         state.current = None
         return
     placeholders = _placeholder_names(command_line, source, offset, state.problems)
-    state.current = _FrameBuilder(
+    state.current = FrameBuilder(
         kind=kind,
         command_line=command_line,
         argv=argv,
@@ -794,10 +794,10 @@ def _record_blocked_line(remainder: str, source: str, offset: int, state: _Frame
 
 
 def _append_seed_frames(
-    seed: str | None, seeds_root: Path | None, problems: list[str], builders: list[_FrameBuilder]
+    seed: str | None, seeds_root: Path | None, problems: list[str], builders: list[FrameBuilder]
 ) -> None:
     """Append seed frames."""
-    from ._seeds import load_seed_frames
+    from .seeds import load_seed_frames
 
     if seed is not None:
         before = len(problems)
@@ -809,7 +809,7 @@ def _append_seed_frames(
 
 
 def _verify_sentence(
-    options: Mapping[str, str | None], builders: list[_FrameBuilder], problems: list[str]
+    options: Mapping[str, str | None], builders: list[FrameBuilder], problems: list[str]
 ) -> str | None:
     """Verify sentence."""
     _enforce_captures_and_placeholders(builders, problems)
@@ -839,7 +839,7 @@ def _verify_sentence(
     return verify
 
 
-def _require_result_expectations(result: _FrameBuilder, problems: list[str]) -> None:
+def _require_result_expectations(result: FrameBuilder, problems: list[str]) -> None:
     """Require result expectations."""
     if not result.expects:
         problems.append(

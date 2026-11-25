@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..language_switcher import (
     carries_switcher,
@@ -327,7 +327,7 @@ def _conf_switcher_context(
             **os.environ,
             "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
             "CADRUMO_DOCS_LANGUAGE": language,
-            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+            "CADRUMO_STORAGE_ROOT": storage_root,
         }
         for key, value in (("CADRUMO_DOCS_SITE_PREFIX", site_prefix), ("CADRUMO_DOCS_BASE_URL", base_url)):
             if value is None:

@@ -30,6 +30,7 @@ import pytest
 
 from ..schema import ModeloRevision
 from ..schema_exports import ExportRecordRepeat
+from .authored_editions import authored_revisions
 from .registry_tree import bundled_modelo_components, bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -109,6 +110,9 @@ def test_every_enrolled_defect_is_still_present() -> None:
     )
 
 
+_CONTROL_REVISIONS = [("347", str(authored_revisions("347")[0].id))]
+
+
 def _control_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
     revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
     assert _row_binding_ids(revision), (
@@ -117,7 +121,7 @@ def _control_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
     return revision
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id"), [("347", "2011-2024")])
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _CONTROL_REVISIONS)
 def test_a_repeating_revision_is_present_in_the_corpus(modelo_id: str, revision_id: str) -> None:
     """The control: a revision that declares row bindings and repeats their record really occurs here.
 
@@ -127,7 +131,7 @@ def test_a_repeating_revision_is_present_in_the_corpus(modelo_id: str, revision_
     assert _row_binding_defect(_control_revision(modelo_id, revision_id)) is None
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id"), [("347", "2011-2024")])
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _CONTROL_REVISIONS)
 def test_a_row_binding_record_without_its_repeat_is_detected(modelo_id: str, revision_id: str) -> None:
     """Teeth: the control with its repeat withdrawn is reported as not repeated.
 
@@ -158,7 +162,7 @@ def test_a_row_binding_record_without_its_repeat_is_detected(modelo_id: str, rev
     }
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id"), [("347", "2011-2024")])
+@pytest.mark.parametrize(("modelo_id", "revision_id"), _CONTROL_REVISIONS)
 def test_a_layout_reaching_no_row_binding_is_detected(modelo_id: str, revision_id: str) -> None:
     """Teeth: the control with every row-binding record removed is reported as unreachable."""
     revision = _control_revision(modelo_id, revision_id)

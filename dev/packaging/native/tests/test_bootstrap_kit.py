@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from ..hashing import digest
-from ..windows_msi_build import _deliver_kit
+from ..windows_msi_build import deliver_kit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -17,10 +17,10 @@ def test_delivery_keeps_identical_artifacts_and_publishes_descriptor_last(tmp_pa
     directory.mkdir()
     descriptor = directory / "kit.json"
     sources = {source.name: (source, digest(source))}
-    assert _deliver_kit(directory, descriptor, sources, "verified descriptor\n") == descriptor
+    assert deliver_kit(directory, descriptor, sources, "verified descriptor\n") == descriptor
     delivered = directory / source.name
     assert delivered.read_bytes() == source.read_bytes()
-    _deliver_kit(directory, descriptor, sources, "next descriptor\n")
+    deliver_kit(directory, descriptor, sources, "next descriptor\n")
     assert delivered.read_bytes() == source.read_bytes()
     assert descriptor.read_text(encoding="utf-8") == "next descriptor\n"
     assert sorted(path.name for path in directory.iterdir()) == ["kit.json", "runner.exe"]
@@ -36,7 +36,7 @@ def test_changed_source_preserves_last_descriptor_and_cleans_work(tmp_path: Path
     descriptor = directory / "kit.json"
     descriptor.write_text("previous descriptor", encoding="utf-8")
     with pytest.raises(ValueError, match="source changed"):
-        _deliver_kit(directory, descriptor, {source.name: (source, checksum)}, "replacement descriptor")
+        deliver_kit(directory, descriptor, {source.name: (source, checksum)}, "replacement descriptor")
     assert descriptor.read_text(encoding="utf-8") == "previous descriptor"
     assert [path.name for path in directory.iterdir()] == ["kit.json"]
 
@@ -48,7 +48,7 @@ def test_public_kit_publication_repairs_private_acl_and_allows_native_standard_r
     import win32con
     import win32security
 
-    from ..package_launch_smoke import _require_public_kit_file
+    from ..package_launch_smoke import require_public_kit_file
 
     directory = tmp_path / "services"
     directory.mkdir()
@@ -77,7 +77,7 @@ def test_public_kit_publication_repairs_private_acl_and_allows_native_standard_r
             restricted_acl,
         )
         with pytest.raises(AssertionError, match="private temporary ACL"):
-            _require_public_kit_file(path)
+            require_public_kit_file(path)
     token = win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32con.TOKEN_ALL_ACCESS)
     users = win32security.CreateWellKnownSid(win32security.WinBuiltinUsersSid, None)
     administrators = win32security.CreateWellKnownSid(win32security.WinBuiltinAdministratorsSid, None)
@@ -90,10 +90,10 @@ def test_public_kit_publication_repairs_private_acl_and_allows_native_standard_r
                 descriptor.read_bytes()
         finally:
             win32security.RevertToSelf()
-        _deliver_kit(directory, descriptor, sources, '{"schema":1}\n')
+        deliver_kit(directory, descriptor, sources, '{"schema":1}\n')
         for name in (*sources, descriptor.name):
             path = directory / name
-            _require_public_kit_file(path)
+            require_public_kit_file(path)
             security = win32security.GetFileSecurity(str(path), win32security.DACL_SECURITY_INFORMATION)
             assert not security.GetSecurityDescriptorControl()[0] & win32security.SE_DACL_PROTECTED
             assert any(

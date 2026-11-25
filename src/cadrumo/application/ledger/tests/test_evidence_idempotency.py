@@ -101,7 +101,7 @@ def test_the_keyless_derivation_still_folds_the_clock_deliberately() -> None:
         "bucket_id": _BUCKET,
         "source_sha256": "a" * 64,
         "media_kind": MediaKind.PDF,
-        "supplier": "ESB12345674",
+        "supplier": "ESB00015016",
         "invoice_number": "F-1",
         "invoice_date": "2024-11-15",
         "taxable_base": None,
@@ -126,7 +126,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, divergent_evidence_fields
 
     stamp = datetime(2024, 11, 15, 9, 0, tzinfo=UTC)
     prior = PurchaseInvoiceEvidence(
@@ -136,7 +136,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         source_sha256="a" * 64,
         attachment_id="a" * 64,
         media_kind=MediaKind.PDF,
-        supplier="ESB12345674",
+        supplier="ESB00015016",
         invoice_number="F-1",
         invoice_date="2024-11-15",
         taxable_base=Decimal("100.00"),
@@ -147,11 +147,11 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         updated_at=stamp,
     )
 
-    unchanged = _divergent_evidence_fields(
+    unchanged = divergent_evidence_fields(
         prior,
         source_sha256="a" * 64,
         media_kind=MediaKind.PDF,
-        supplier="ESB12345674",
+        supplier="ESB00015016",
         invoice_number="F-1",
         invoice_date="2024-11-15",
         taxable_base=Decimal("100.00"),
@@ -163,11 +163,11 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
 
     # Change two fields far apart in the record, including the notes field a
     # subset-match would be most tempted to skip.
-    divergent = _divergent_evidence_fields(
+    divergent = divergent_evidence_fields(
         prior,
         source_sha256="a" * 64,
         media_kind=MediaKind.PDF,
-        supplier="ESB12345674",
+        supplier="ESB00015016",
         invoice_number="F-1",
         invoice_date="2024-11-15",
         taxable_base=Decimal("250.00"),
@@ -188,11 +188,12 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
     through -- which is the failure mode a hand-kept list always eventually has.
 
     Identity, provenance and lifecycle fields are excluded because the caller
-    does not re-supply them on an add; they are outcomes, not inputs.
+    does not re-supply them on an add; they are outcomes, not inputs. So is the
+    readability finding, which the probe of the stored bytes produces.
     """
     import inspect
 
-    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, divergent_evidence_fields
 
     not_caller_supplied = {
         "evidence_id",
@@ -203,9 +204,10 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
         "updated_at",
         "linked_invoice_ids",
         "linked_transaction_ids",
+        "readability",
     }
     caller_supplied = set(PurchaseInvoiceEvidence.model_fields) - not_caller_supplied
-    source = inspect.getsource(_divergent_evidence_fields)
+    source = inspect.getsource(divergent_evidence_fields)
 
     missing = sorted(name for name in caller_supplied if f'"{name}"' not in source)
     assert missing == [], f"the conflict comparison must cover every caller-supplied field; missing: {missing}"

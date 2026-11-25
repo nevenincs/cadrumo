@@ -26,12 +26,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.aggregation.tests.ledger_transaction_support import iva_transaction
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
+from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -49,14 +49,8 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import OrdinaryM303SecureEvidence, joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -78,59 +72,18 @@ type _Seed = Callable[[str], str | None]
 
 def _ordinary_m303_profile_facts() -> dict[str, str]:
     """Reuse the application readiness baseline with the CLI's activity fact for the exercise."""
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date=f"{_EXERCISE}-01-01"))
+    facts = operator_profile_facts(activity_start_date=f"{_EXERCISE}-01-01")
     return facts
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the Modelo 303 work lifecycle the calculate route submits."""
-    operation_ids = frozenset(
-        {
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+_OPERATIONS = frozenset(
+    {
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+    }
+)
 
 
 def _no_sources(_bucket_id: str) -> None:
@@ -164,7 +117,7 @@ def _operator_session(
     return native_api_cli_session(
         tmp_path,
         invoke_cli=invoke_cli,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
     )
 
@@ -185,7 +138,7 @@ def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Proveedor de prueba SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number=f"REC-{_EXERCISE}-1T",
         issued_at=date(_EXERCISE, 2, 15),
@@ -230,7 +183,7 @@ def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str
         InvoiceCatalogueRepository(bucket_id=bucket_id).save(invoice_catalogue)
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
+                taxpayer_nif=directa_normal_tax_id(),
                 target_year=_EXERCISE,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,
@@ -305,10 +258,10 @@ def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissi
 
     ``domestic_investment`` names a bien de inversión and requires a reciprocal
     register asset identity the row does not carry, so the deduction has no
-    authority. The refusal must name the ledger row and the typed reason: before
-    the readiness gate existed this reached the operator as an internal outbound
-    payload-boundary defect naming a model class, which says nothing about which
-    field to correct.
+    authority. The ledger preflight, the earliest owner of that check, refuses with
+    its registered refusal before any aggregate is built. It must name the ledger
+    row and the typed reason, so the person knows which field to correct, and no
+    calculated cuota is reached.
     """
 
     def seed(bucket_id: str) -> str:
@@ -320,15 +273,36 @@ def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissi
 
         refused = _calculate(session, work_unit_id, *joint_return_options(joint_return_elected=True))
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
-    assert error["code"] == "ERROR_MODELO_AGGREGATION_BINDING", refused.output
+    assert error["code"] == "REFUSED_MODELO_LEDGER_PREFLIGHT_BLOCKED", refused.output
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification", refused.output
-    assert context["transaction_id"] == purchase_id
-    assert "investment_asset_id" in context["detail"]
+    # The words name the movement the person knows by date, description and signed
+    # amount; its identity is the refusal evidence the open-movement door is bound
+    # to, never the rendered context.
+    assert context["movement_description"] == f"ledger row ordinary-{_EXERCISE}-purchase"
+    assert context["movement_date"] == f"15 feb {_EXERCISE}"
+    assert context["movement_amount"] == "\u221260,50\u00a0\u20ac"
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == purchase_id
+    assert evidence["values"]["reason_code"] == "inadmissible_deduction_classification"
+    assert evidence["values"]["work_unit_id"] == work_unit_id
+    assert evidence["values"]["modelo"] == "303"
+    assert evidence["values"]["period"] == "1T"
+    assert evidence["values"]["year"] == _EXERCISE
+    # The door reclassifies the row the refusal names, with that row bound, so
+    # it runs as served rather than asking which movement is meant.
+    action = error["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.ledger_preflight.ready"
+    assert action["action"]["action_id"] == "operator.ledger.classify.movement"
+    assert action["action"]["target_command_key"] == "ledger.classify"
+    bound = {item["argument_name"]: item["value"] for item in action["argument_bindings"]}
+    assert bound == {"transaction_id": purchase_id}
+    assert action["missing_argument_names"] == []
 
 
 def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(

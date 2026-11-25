@@ -11,8 +11,12 @@ from typing import Any, TypedDict
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 from ....adapters.outbound.aeat.browser.site_health_records import (
     SiteHealthEvidence,
@@ -130,27 +134,16 @@ def _resolve_modelo_workflow_run_for_resume(
     )
 
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Resume"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value="false"),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-    UserProfileFact(
-        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-        value="false",
-    ),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
+def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="00000000T"),
+            UserProfileFact(path="identity.name", value="Test Operator"),
+            UserProfileFact(path="identity.surnames", value="Resume"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+        )
+    )
 
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
@@ -160,7 +153,7 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
                 context=operation.profile_create_context(),
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=bucket_id,
-                facts=_READY_PROFILE_FACTS,
+                facts=_ready_profile_facts(),
                 created_at=_T,
                 updated_at=_T,
             ),
@@ -565,12 +558,8 @@ def test_resume_is_idempotent_for_a_persistently_aborted_run(tmp_path: Path) -> 
     assert first.resumed_from_run_id == second.resumed_from_run_id == run_id
 
 
-def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None:
-    """``find_latest_run_for_period`` resolves the newest persisted run for
-    a ``(modelo, period)`` pair, so an operator who only knows the
-    work unit's modelo and period can discover the run id without
-    holding the 16-character hash by hand."""
-
+def _save_earlier_and_later_runs() -> tuple[WorkflowResult, WorkflowResult]:
+    """Persist two aborted runs of the same Modelo 130 first-quarter obligation, the second two days later."""
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
@@ -583,6 +572,16 @@ def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     _save_run(earlier)
     _save_run(later)
+    return earlier, later
+
+
+def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None:
+    """``find_latest_run_for_period`` resolves the newest persisted run for
+    a ``(modelo, period)`` pair, so an operator who only knows the
+    work unit's modelo and period can discover the run id without
+    holding the 16-character hash by hand."""
+
+    _earlier, later = _save_earlier_and_later_runs()
 
     resolved = _find_latest_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
     assert resolved.run_id == later.run_id
@@ -635,18 +634,7 @@ def test_find_unique_run_for_period_returns_single_match(tmp_path: Path) -> None
 
 
 def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guidance(tmp_path: Path) -> None:
-    earlier = _aborted_result(
-        run_id="a" * 16,
-        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
-    ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
-    later = _aborted_result(
-        run_id="b" * 16,
-        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
-    ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
-    _save_run(earlier)
-    _save_run(later)
+    earlier, later = _save_earlier_and_later_runs()
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
         _find_unique_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))

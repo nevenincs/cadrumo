@@ -6,16 +6,13 @@ import re
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ...domain.modelos.row_models import (
-    M184Clave,
-    M184ClaveDeclarado,
-    M184NaturalezaInmueble,
-    M184SituacionInmueble,
-    M184Subclave,
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
@@ -31,7 +28,7 @@ EDIT_WIRE_DECIMAL_PATTERN = re.compile(r"^-?\d+(\.\d+)?$")
 EDIT_WIRE_MODEL_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
-type _WireAmount = Annotated[str, Field(min_length=1, max_length=40)]
+type _WireAmount = Annotated[str, Field(min_length=1, max_length=64)]
 """One decimal amount as the exact characters submitted.
 
 ``Decimal`` validates from a number or a string but always serializes to a
@@ -46,7 +43,7 @@ too rather than being pre-normalised into acceptability.
 type _WireOptionalAmount = _WireAmount | None
 
 
-type _WireCode = Annotated[str, Field(max_length=40)]
+type _WireCode = Annotated[str, Field(max_length=64)]
 """One registry code exactly as supplied, left unhydrated on purpose.
 
 The M232 row type hydrates its own codes through ``BeforeValidator`` metadata.
@@ -96,10 +93,10 @@ class Modelo156AfiliadoRowWireV1(_WireDetailRowMirror):
     """Wire mirror of the member and its complete, explicitly addressed calendar."""
 
     row_type: Literal["afiliado"] = "afiliado"
-    nif: Annotated[str, Field(min_length=1, max_length=9)]
-    nombre: Annotated[str, Field(min_length=1, max_length=40)] | None = None
-    numero_afiliacion: Annotated[str, Field(pattern=r"^[0-9]{12}$")]
-    cotizaciones: Annotated[tuple[Modelo156MonthlyContributionWireV1, ...], Field(min_length=12, max_length=12)]
+    nif: Annotated[str, Field(min_length=1, max_length=16)]
+    nombre: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    numero_afiliacion: Annotated[str, Field(min_length=1, max_length=16, pattern=r"^[0-9]*$")]
+    cotizaciones: Annotated[tuple[Modelo156MonthlyContributionWireV1, ...], Field(min_length=1, max_length=16)]
 
     def to_row(self) -> Modelo156AfiliadoRow:
         """Revalidate through the same typed source used by local input."""
@@ -120,21 +117,21 @@ class Modelo184MemberRowWireV1(_WireDetailRowMirror):
     model_config = EDIT_WIRE_MODEL_CONFIG
 
     row_type: Literal["miembro"] = "miembro"
-    nif: Annotated[str, Field(min_length=1, max_length=20)]
-    nombre: Annotated[str, Field(max_length=200)] = ""
+    nif: Annotated[str, Field(min_length=1, max_length=32)]
+    nombre: Annotated[str, Field(max_length=256)] = ""
     pais: CountryCodeAlpha2 | None = None
     porcentaje: _WireAmount
     importe: _WireAmount
-    clave: M184Clave
-    subclave: M184Subclave | None = None
-    codigo_provincia: Annotated[str, Field(max_length=2)] | None = None
+    clave: str = Field(min_length=1)
+    subclave: str | None = None
+    codigo_provincia: Annotated[str, Field(max_length=16)] | None = None
     miembro_a_31_diciembre: bool | None = None
     dias_miembro: Annotated[int, Field(ge=0, le=366)] | None = None
-    domicilio_fiscal: Annotated[str, Field(max_length=40)] | None = None
-    naturaleza_inmueble: M184NaturalezaInmueble | None = None
-    situacion_inmueble: M184SituacionInmueble | None = None
-    referencia_catastral: Annotated[str, Field(max_length=20)] | None = None
-    clave_declarado: M184ClaveDeclarado | None = None
+    domicilio_fiscal: Annotated[str, Field(max_length=64)] | None = None
+    naturaleza_inmueble: str | None = None
+    situacion_inmueble: str | None = None
+    referencia_catastral: Annotated[str, Field(max_length=32)] | None = None
+    clave_declarado: str | None = None
     porcentaje_titularidad_inmueble: _WireOptionalAmount = None
     dias_arrendamiento: Annotated[int, Field(ge=0, le=366)] | None = None
     reduccion: _WireOptionalAmount = None
@@ -166,6 +163,12 @@ class Modelo184MemberRowWireV1(_WireDetailRowMirror):
             rendimiento_neto_minorado_agricola_eo=_optional_decimal(self.rendimiento_neto_minorado_agricola_eo),
         )
 
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
+
 
 class Modelo232VinculadaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
@@ -173,8 +176,8 @@ class Modelo232VinculadaRowWireV1(_WireDetailRowMirror):
     model_config = EDIT_WIRE_MODEL_CONFIG
 
     row_type: Literal["vinculada"] = "vinculada"
-    nif: Annotated[str, Field(min_length=1, max_length=20)]
-    nombre: Annotated[str, Field(max_length=200)] = ""
+    nif: Annotated[str, Field(min_length=1, max_length=32)]
+    nombre: Annotated[str, Field(max_length=256)] = ""
     pais: CountryCodeAlpha2
     tipo_vinculacion: _WireCode = ""
     tipo_operacion: _WireCode = ""
@@ -201,8 +204,8 @@ class Modelo349OperadorRowWireV1(_WireDetailRowMirror):
 
     row_type: Literal["operador"] = "operador"
     codigo_pais: CountryCodeAlpha2
-    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
-    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=32)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=256)]
     clave_operacion: Modelo349ClaveOperacionValue
     importe: _WireAmount
 
@@ -224,11 +227,11 @@ class Modelo349RectificacionRowWireV1(_WireDetailRowMirror):
 
     row_type: Literal["rectificacion"] = "rectificacion"
     codigo_pais: CountryCodeAlpha2
-    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
-    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=32)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=256)]
     clave_operacion: Modelo349ClaveOperacionValue
-    ejercicio: Annotated[str, Field(min_length=4, max_length=4)]
-    periodo: Annotated[str, Field(min_length=1, max_length=2)]
+    ejercicio: Annotated[str, Field(min_length=1, max_length=16)]
+    periodo: Annotated[str, Field(min_length=1, max_length=16)]
     base_rectificada: _WireAmount
     base_anterior: _WireAmount
 
@@ -252,14 +255,14 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
     model_config = EDIT_WIRE_MODEL_CONFIG
 
     row_type: Literal["agrupacion_renta"] = "agrupacion_renta"
-    source_id: Annotated[str, Field(min_length=1, max_length=200)]
-    tipo_renta_code: Annotated[str, Field(min_length=2, max_length=2)]
+    source_id: Annotated[str, Field(min_length=1, max_length=256)]
+    tipo_renta_code: Annotated[str, Field(min_length=1, max_length=16)]
     importe: _WireAmount
     tipo_gravamen: _WireAmount
     pagador_mode: str
-    pagador_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    pagador_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
     deriva_de_bien_derecho: bool
-    bien_derecho_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    bien_derecho_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
 
     def to_row(self) -> Modelo210AgrupacionRentaRow:
         """Translate back to the real, fully re-validated domain row."""
@@ -273,6 +276,12 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
             deriva_de_bien_derecho=self.deriva_de_bien_derecho,
             bien_derecho_id=self.bien_derecho_id,
         )
+
+    @field_validator("tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 type ModeloDetailRowWireV1 = Annotated[

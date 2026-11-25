@@ -1,0 +1,580 @@
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
+import { chordAria, chordText } from "@/shared/chords";
+import { INSPECTOR_CHORD } from "../ledgerChords";
+import { facts, listed, noted } from "../../../shell/compose";
+import type { LedgerPort, LedgerResult } from "../../../shell/ledger";
+import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
+import type { ClassifySelection } from "../../../shell/ledgerCommands";
+import { takesChanges } from "../../../shell/ledgerContract";
+import {
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
+import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
+import {
+  actionRows,
+  type StageEvent,
+  type StageState,
+} from "../../../shell/ledgerStage";
+import { useAgentHandoff } from "../../../shell/agentHandoff";
+import { useStrings } from "../../../shell/strings";
+import {
+  directionLabel,
+  lifecycleLabel,
+  statusLabel,
+  statusWord,
+} from "../movements/movementWords";
+import type { ActionRequest } from "./ActionDialog";
+import { ClassifySection } from "./ClassifySection";
+import { DetailsSection } from "./DetailsSection";
+import { DocumentsSection } from "./DocumentsSection";
+import { HistorySection } from "./HistorySection";
+import { InvoiceSection } from "./InvoiceSection";
+import {
+  INSPECTOR_SECTIONS,
+  currentSection,
+  lifecycleTakes,
+  type InspectorSection,
+} from "./inspectorModel";
+import {
+  declarationName,
+  lifecycleName,
+  revisionStateLabel,
+  seals,
+  sectionNames,
+} from "./inspectorWords";
+import { JumpIndex } from "./JumpIndex";
+import { useLedgerRead, type InspectorRead } from "./useInspectorReads";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
+import { formatAmount } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+
+/** How far below the top of the scroll a section's heading counts as
+ * reached, in CSS pixels. */
+const SPY_OFFSET = 24;
+
+/** Where the inspector was asked to open, each time it is asked. */
+export type InspectorFocus = {
+  section: InspectorSection | null;
+  /** Focus the jump index once drawn. */
+  index: boolean;
+  /** Tells one request from the next. */
+  tick: number;
+};
+
+/**
+ * The inspector of one movement: its stored state in the header, the
+ * actions behind ⋯, and one scroll of sections with a jump index that
+ * follows the reading. Its reads are made with the inspector, whether or
+ * not the window draws them: a window behind another, or read by an
+ * assistive technology without scrolling, reports nothing in view. The
+ * profile's documents and invoices come read from the panel. Every change it makes is staged into the page's changes; the
+ * header and the counts show what is stored.
+ */
+export function MovementInspector({
+  port,
+  row,
+  rows,
+  evidence,
+  invoices,
+  generation,
+  stage,
+  onStage,
+  classify,
+  issues,
+  checked,
+  duplicate = false,
+  accounts,
+  focus,
+  locale,
+  onClose,
+  onShow,
+  onOpenInvoice,
+  onAction,
+  onSplit,
+  onCopyProperties,
+  onSelectCohort,
+  onWritten,
+  say,
+}: {
+  port: LedgerPort;
+  row: LedgerTransactionReviewProjection;
+  /** The profile's documents and invoices, as the panel read them. */
+  evidence: InspectorRead<LedgerResult<"ledger.evidence.list">> | null;
+  invoices: InspectorRead<LedgerResult<"ledger.invoice.list">> | null;
+  /** The window's movements. */
+  rows: readonly LedgerTransactionReviewProjection[];
+  /** Which read of the window `row` comes from. */
+  generation: number | string;
+  stage: StageState;
+  onStage: (event: StageEvent) => void;
+  classify: ClassifySelection | null;
+  issues: readonly string[];
+  /** Whether readiness has been measured: until it has, a reviewed
+   * movement is not measured, never done. */
+  checked: boolean;
+  /** An import flagged it as a likely duplicate of a stored movement. */
+  duplicate?: boolean;
+  accounts: readonly OwnAccountChoice[] | null;
+  focus: InspectorFocus;
+  locale: string;
+  onClose: () => void;
+  onShow: (id: string) => void;
+  onOpenInvoice: (invoiceId: string) => void;
+  onAction: (request: ActionRequest) => void;
+  onSplit: (row: LedgerTransactionReviewProjection) => void;
+  /** Opens the choice of this movement's properties to copy, where the page
+   * keeps a copy. */
+  onCopyProperties?: (row: LedgerTransactionReviewProjection) => void;
+  onSelectCohort: (ids: string[]) => void;
+  /** Reads the window again after a write a section made at once. */
+  onWritten: () => void;
+  say: (text: string) => void;
+}) {
+  const t = useStrings();
+  const agentHandoff = useAgentHandoff();
+  const tx = row.transaction;
+  const id = tx.transaction_id;
+  const key = `${id}:${generation}`;
+  const scroll = useRef<HTMLDivElement>(null);
+  const indexFirst = useRef<HTMLButtonElement>(null);
+  const names = useMemo(() => sectionNames(t), [t]);
+  const byId = useMemo(
+    () =>
+      new Map(rows.map((entry) => [entry.transaction.transaction_id, entry])),
+    [rows],
+  );
+  const changes = stage.content.rows[id];
+  const actions = useMemo(
+    () =>
+      stage.content.actions.filter((action) => actionRows(action).includes(id)),
+    [stage.content.actions, id],
+  );
+
+  // ---- Reads -----------------------------------------------------------------
+  const prefix = isTransactionPrefix(id) ? { transaction_prefix: id } : null;
+  const track = useLedgerRead(port, "ledger.track", prefix, key, true);
+  const view = useLedgerRead(port, "ledger.view", prefix, key, true);
+  const history = useLedgerRead(
+    port,
+    "ledger.history.typed",
+    prefix ? { ...prefix, include_split_siblings: true } : null,
+    key,
+    true,
+  );
+  const tracked = track?.kind === "ready" ? track.result : null;
+  const sealing = (tracked?.participated_in ?? []).filter(seals);
+  const sealed = sealing.length > 0;
+  const vocabulary = useVocabulary();
+  const locks = useStagedCheck(
+    port,
+    useMemo(
+      () =>
+        stagedCheckRequest(
+          { ...stage.content, rows: { [id]: changes ?? {} }, drafts: [] },
+          new Map([[id, row]]),
+          { ids: [id] },
+        ),
+      [stage.content, id, changes, row],
+    ),
+  );
+  const answer = (locks.current ?? locks.shown)?.rows.get(id);
+  const scope = {
+    t,
+    locale,
+    row,
+    changes,
+    sealed,
+    transferLocked: answer?.transfer_locked_fields ?? null,
+    accounts,
+    vocabulary,
+    onStage,
+  };
+
+  // ---- The jump index --------------------------------------------------------
+  const [current, setCurrent] = useState<InspectorSection | null>("classify");
+  const spy = useCallback(() => {
+    const element = scroll.current;
+    if (!element) return;
+    const tops = INSPECTOR_SECTIONS.flatMap((section) => {
+      const found = element.querySelector<HTMLElement>(
+        `[data-section-body="${section}"]`,
+      );
+      return found ? [{ id: section, top: found.offsetTop }] : [];
+    });
+    setCurrent(
+      currentSection(
+        tops,
+        {
+          top: element.scrollTop,
+          height: element.clientHeight,
+          content: element.scrollHeight,
+        },
+        SPY_OFFSET,
+      ),
+    );
+  }, []);
+  useEffect(() => {
+    const element = scroll.current;
+    if (!element) return;
+    spy();
+    element.addEventListener("scroll", spy, { passive: true });
+    return () => element.removeEventListener("scroll", spy);
+  }, [spy, id]);
+  const jump = useCallback((section: InspectorSection, focusHeading = true) => {
+    const element = scroll.current;
+    const target = element?.querySelector<HTMLElement>(
+      `[data-section-body="${section}"]`,
+    );
+    if (!element || !target) return;
+    element.scrollTop = target.offsetTop;
+    if (focusHeading)
+      target.querySelector<HTMLElement>("h3")?.focus({ preventScroll: true });
+  }, []);
+  // A movement to classify opens on Classify; a request names its own
+  // section, and Alt+I focuses the index.
+  const opening = useRef({ focus, pending: row.review_status === "pending" });
+  useLayoutEffect(() => {
+    opening.current = { focus, pending: row.review_status === "pending" };
+  });
+  // Only a new movement or a new request moves the scroll.
+  useLayoutEffect(() => {
+    const { focus: asked, pending } = opening.current;
+    const wanted = asked.section ?? (pending ? "classify" : null);
+    if (wanted) jump(wanted, false);
+    if (asked.index) indexFirst.current?.focus();
+  }, [id, focus.tick, jump]);
+
+  // Brings one fact into view and opens its editor, as pressing it would.
+  // False where the page draws no editor for it, so the caller can say so.
+  const focusField = (field: string): boolean => {
+    const target = scroll.current?.querySelector<HTMLElement>(
+      `[data-field="${field}"]`,
+    );
+    if (
+      !target ||
+      target.getAttribute("aria-disabled") === "true" ||
+      (target instanceof HTMLInputElement && target.disabled) ||
+      (target instanceof HTMLButtonElement && target.disabled)
+    )
+      return false;
+    target.scrollIntoView({ block: "nearest" });
+    target.focus();
+    target.click();
+    return true;
+  };
+
+  // ---- The header ------------------------------------------------------------
+  const issueCount = checked ? issues.length : null;
+  const word = statusWord(row.review_status, issueCount);
+  const staged = Object.keys(changes ?? {}).length + actions.length;
+  const lifecycleItems = (
+    ["archive", "stash", "restore", "exclude"] as const
+  ).map((kind) => (
+    <DropdownMenuItem
+      key={kind}
+      disabled={!lifecycleTakes(kind, answer, sealed)}
+      onSelect={() => onAction({ kind, ids: [id] })}
+    >
+      {lifecycleName(t, kind)}…
+    </DropdownMenuItem>
+  ));
+  const cohort = useMemo(() => {
+    if (history?.kind !== "ready") return [];
+    return history.result.object_ids.filter((other) => {
+      const state = byId.get(other)?.transaction.lifecycle_state;
+      return state !== undefined && takesChanges(state);
+    });
+  }, [history, byId]);
+
+  const section = (name: InspectorSection, body: ReactNode) => (
+    <section
+      key={name}
+      data-section-body={name}
+      aria-labelledby={`inspector-${name}`}
+      className="grid gap-2 border-b px-3 py-3 last:border-b-0"
+    >
+      <h3
+        id={`inspector-${name}`}
+        tabIndex={-1}
+        className="text-sm font-semibold text-foreground outline-none focus-visible:underline"
+      >
+        {names[name]}
+      </h3>
+      {body}
+    </section>
+  );
+
+  return (
+    <div className="ledger-inspector flex min-h-0 flex-1 flex-col">
+      <div className="ledger-inspector-head grid gap-1 border-b px-3 py-2">
+        <div className="flex items-start gap-1">
+          <div className="grid min-w-0 flex-1">
+            <h2 className="text-base font-medium break-words">
+              {tx.description}
+            </h2>
+            <p className="text-sm text-muted-foreground break-words">
+              {facts(t, [
+                tx.counterparty ||
+                  t("desktop.ledger.inspector.no_counterparty"),
+                formatDay(locale, tx.date),
+              ])}
+            </p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton label={t("desktop.ledger.inspector.actions")}>
+                <Icon name="more" />
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                icon="reset"
+                disabled={staged === 0}
+                onSelect={() => onStage({ type: "revert_movement", id })}
+              >
+                {t("desktop.ledger.edit.revert_movement")}
+              </DropdownMenuItem>
+              {onCopyProperties && (
+                <DropdownMenuItem
+                  icon="copy"
+                  className="ledger-copy-properties-open"
+                  onSelect={() => onCopyProperties(row)}
+                >
+                  {t("desktop.ledger.properties.copy_open")}…
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                icon="split"
+                disabled={!answer?.takes_changes || sealed}
+                onSelect={() => onSplit(row)}
+              >
+                {t("desktop.ledger.inspector.action.split")}…
+              </DropdownMenuItem>
+              {cohort.length >= 2 && (
+                <DropdownMenuItem
+                  icon="merge"
+                  onSelect={() => onSelectCohort(cohort)}
+                >
+                  {t("desktop.ledger.inspector.action.merge_select")}
+                </DropdownMenuItem>
+              )}
+              {lifecycleItems}
+              {duplicate && (
+                <DropdownMenuItem
+                  icon="copy"
+                  className="ledger-archive-duplicate"
+                  disabled={!lifecycleTakes("archive", answer, sealed)}
+                  onSelect={() =>
+                    onAction({
+                      kind: "archive",
+                      ids: [id],
+                      reason: t("desktop.ledger.import_issue.duplicate"),
+                    })
+                  }
+                >
+                  {t("desktop.ledger.duplicate.archive")}…
+                </DropdownMenuItem>
+              )}
+              {agentHandoff && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    icon="agent"
+                    onSelect={() => agentHandoff.openMovement(id)}
+                  >
+                    {t("desktop.ledger.open_in_agent")}
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                icon="trash"
+                onSelect={() => onAction({ kind: "remove", id })}
+              >
+                {t("desktop.ledger.inspector.action.remove")}…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <IconButton
+            label={t("desktop.ledger.inspector.close")}
+            shortcut={chordText(INSPECTOR_CHORD)}
+            aria-keyshortcuts={chordAria(INSPECTOR_CHORD)}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </IconButton>
+        </div>
+        <p className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-medium tabular-nums">
+            {formatAmount(locale, tx.amount, { currency: tx.currency })}
+          </span>
+          <span>{directionLabel(t, tx.direction)}</span>
+          <Badge variant="neutral" data-status={word}>
+            {statusLabel(t, word, issueCount)}
+          </Badge>
+          {duplicate && (
+            <Badge variant="neutral" className="ledger-duplicate-badge">
+              <Icon name="copy" size="xs" className="text-warning" />
+              {t("desktop.ledger.import_issue.duplicate")}
+            </Badge>
+          )}
+          {tx.lifecycle_state !== "ACTIVE" && (
+            <Badge variant="neutral">
+              {lifecycleLabel(t, tx.lifecycle_state)}
+            </Badge>
+          )}
+        </p>
+        {staged > 0 && (
+          <p className="ledger-unsaved flex items-center gap-1.5 text-sm">
+            <span
+              aria-hidden="true"
+              className="h-4 border-l-2 border-dashed border-foreground"
+            />
+            {t("desktop.ledger.inspector.unsaved", { count: staged })}
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => onStage({ type: "revert_movement", id })}
+            >
+              {t("desktop.ledger.inspector.revert")}
+            </Button>
+          </p>
+        )}
+        {sealed && (
+          <p className="flex items-start gap-1 text-sm text-muted-foreground">
+            <Icon name="lock" size="xs" className="mt-0.5" />
+            {t("desktop.ledger.inspector.sealed", {
+              declarations: listed(
+                t,
+                sealing.map((use) =>
+                  noted(
+                    t,
+                    declarationName(
+                      t,
+                      use.modelo,
+                      use.period.filing_year,
+                      use.period.code,
+                    ),
+                    revisionStateLabel(t, use),
+                  ),
+                ),
+              ),
+            })}
+          </p>
+        )}
+      </div>
+      <JumpIndex
+        sections={INSPECTOR_SECTIONS}
+        current={current}
+        onJump={(target) => jump(target)}
+        names={names}
+        firstRef={indexFirst}
+        badges={
+          issues.length
+            ? {
+                classify: {
+                  count: issues.length,
+                  label: t("desktop.ledger.inspector.issue_count", {
+                    count: issues.length,
+                  }),
+                },
+              }
+            : undefined
+        }
+      />
+      <div
+        ref={scroll}
+        tabIndex={0}
+        aria-label={t("desktop.ledger.inspector.sections")}
+        className="ledger-inspector-body relative min-h-0 flex-1 overflow-y-auto focus-visible:-outline-offset-2"
+      >
+        {section(
+          "classify",
+          <ClassifySection
+            scope={scope}
+            port={port}
+            classify={classify}
+            issues={issues}
+            actions={actions}
+            rejectedBefore={
+              view?.kind === "ready" &&
+              view.result.latest_llm_rejection !== null
+            }
+            history={history?.kind === "ready" ? history.result : null}
+            onFocusField={focusField}
+            say={say}
+          />,
+        )}
+        {section(
+          "documents",
+          <DocumentsSection
+            port={port}
+            row={row}
+            answer={answer}
+            evidence={evidence}
+            actions={actions}
+            onStage={onStage}
+            locale={locale}
+            onWritten={onWritten}
+            say={say}
+          />,
+        )}
+        {section(
+          "invoice",
+          <InvoiceSection
+            port={port}
+            row={row}
+            answer={answer}
+            rows={rows}
+            invoices={invoices}
+            actions={actions}
+            allActions={stage.content.actions}
+            onStage={onStage}
+            locale={locale}
+            onShow={onShow}
+            onOpenInvoice={onOpenInvoice}
+            say={say}
+          />,
+        )}
+        {section(
+          "details",
+          <DetailsSection scope={scope} track={track} say={say} />,
+        )}
+        {section(
+          "history",
+          <HistorySection
+            row={row}
+            changes={changes}
+            history={history}
+            track={track}
+            rows={byId}
+            locale={locale}
+            onShow={onShow}
+          />,
+        )}
+      </div>
+    </div>
+  );
+}

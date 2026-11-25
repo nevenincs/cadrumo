@@ -21,11 +21,12 @@ from cadrumo.application.operator_surface.contract import get_operator_surface_c
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
 from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import (
     bind_public_cli_runner,
     cadrumo_click_command,
@@ -219,18 +220,11 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     register_cli_profile(
         label="operator",
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Workflow",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -259,11 +253,11 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     assert text_review.exit_code == 0, text_review.output
 
     return _WorkflowRoundTripOutcome(
-        status_payload=_json(status),
-        configured_payload=_json(configured),
-        imported_payload=_json(imported),
-        overview_payload=_json(overview),
-        review_payload=_json(review),
+        status_payload=unwrap_cli_result(status),
+        configured_payload=unwrap_cli_result(configured),
+        imported_payload=unwrap_cli_result(imported),
+        overview_payload=unwrap_cli_result(overview),
+        review_payload=unwrap_cli_result(review),
         review_text=text_review.output,
     )
 
@@ -363,7 +357,7 @@ def native_certificate_auth_reads(
             tested = invoke_read("test")
             assert status.exit_code == 0, status.output
             assert tested.exit_code == 0, tested.output
-            return _json(status), _json(tested)
+            return unwrap_cli_result(status), unwrap_cli_result(tested)
 
 
 def test_config_app_round_trip_certificate_auth_status_reports_configured(

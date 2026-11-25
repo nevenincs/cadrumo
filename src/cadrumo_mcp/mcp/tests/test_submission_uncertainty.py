@@ -11,12 +11,8 @@ from mcp.types import TextContent
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted
@@ -81,13 +77,13 @@ class _SubmitClient:
                     request_id=request.request_id,
                     runtime_boot_id=uuid4(),
                     connection_id=uuid4(),
-                    code=RefusalCode.DEADLINE_EXCEEDED
+                    code=RefusalCode.TIMEOUT
                     if self.submit_failure == "wire_runtime"
                     else AccessDenialCode.PERIOD_DENIED,
                 ),
                 OperationSubmitted,
             )
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     def close(self) -> None:
         self.closed = True
@@ -97,9 +93,9 @@ class _SubmitClient:
 @pytest.mark.parametrize(
     ("failure", "code"),
     (
-        ("runtime", RefusalCode.DEADLINE_EXCEEDED.value),
-        ("wire_runtime", RefusalCode.DEADLINE_EXCEEDED.value),
-        ("timeout", RefusalCode.DEADLINE_EXCEEDED.value),
+        ("runtime", RefusalCode.TIMEOUT.value),
+        ("wire_runtime", RefusalCode.TIMEOUT.value),
+        ("timeout", RefusalCode.TIMEOUT.value),
         ("os", RefusalCode.CONNECTION_CLOSED.value),
     ),
 )

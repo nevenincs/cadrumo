@@ -12,9 +12,10 @@ from uuid import UUID, uuid4
 import pytest
 from textual.app import App
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.hierarchy import InternalInvariantError
-from cadrumo.core.time.clock import now
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.time.clock import frozen_clock, now, wall_now
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
@@ -109,6 +110,22 @@ def test_lifetime_ends_only_when_a_known_expiry_has_passed() -> None:
 
 
 @pytest.mark.asyncio
+async def test_a_frozen_document_clock_neither_ends_nor_extends_a_wall_minted_session() -> None:
+    """The runtime mints session expiry on real time, so the TUI judges it on real time too."""
+    client = _Client()
+    live = wall_now() + timedelta(minutes=5)
+    lapsed = wall_now() - timedelta(seconds=1)
+    for document_instant in (live + timedelta(days=400), lapsed - timedelta(days=400)):
+        with frozen_clock(document_instant):
+            assert not BoundSession(client, known_expires_at=live).lifetime_ended()
+            assert BoundSession(client, known_expires_at=lapsed).lifetime_ended()
+            client.expires_at = live
+            assert await BoundSession(client).confirm_with_runtime(task_name=_TASK)
+            client.expires_at = lapsed
+            assert not await BoundSession(client).confirm_with_runtime(task_name=_TASK)
+
+
+@pytest.mark.asyncio
 async def test_a_confirmed_status_records_the_expiry_the_runtime_reported() -> None:
     client = _Client()
     binding = BoundSession(client)
@@ -147,20 +164,40 @@ async def test_a_client_rebound_before_the_question_is_not_asked_at_all() -> Non
     assert not await binding.confirm_with_runtime(task_name=_TASK)
 
 
+#: How long a check the watch owes may take to arrive; only a watch that never checks reaches it.
+_CHECK_DEADLINE_SECONDS = 10.0
+
+
 @pytest.mark.asyncio
 async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but_never_on_an_interval() -> None:
     client = _Client()
-    binding = BoundSession(client, known_expires_at=now() + timedelta(milliseconds=500))
+    binding = BoundSession(client)
     checks: list[float] = []
+    checking_threads: set[int] = set()
+    checked = asyncio.Event()
+
+    def check() -> None:
+        checks.append(now().timestamp())
+        checking_threads.add(threading.get_ident())
+        checked.set()
+
+    async def next_check() -> None:
+        await asyncio.wait_for(checked.wait(), timeout=_CHECK_DEADLINE_SECONDS)
+        checked.clear()
+
     app: App[None] = App()
     async with app.run_test() as pilot:
-        stop = binding.watch(app, lambda: checks.append(now().timestamp()))
-        await asyncio.sleep(0.3)
-        await pilot.pause()
-        assert checks == [], "the watch checked before anything could have ended"
+        owner_thread = threading.get_ident()
+        # The expiry is set once the app runs, so its deadline is measured from the watch rather than from startup.
+        expires_at = now() + timedelta(milliseconds=500)
+        binding.known_expires_at = expires_at
+        stop = binding.watch(app, check)
+        await next_check()
+        assert checks[0] >= expires_at.timestamp(), "the watch checked before the known expiry passed"
+        # A watch on an interval would check again inside this window; a missed tick can only let it pass.
         await asyncio.sleep(0.6)
-        await pilot.pause()
-        assert len(checks) == 1, "the known expiry was not checked once it passed"
+        await settle(pilot)
+        assert len(checks) == 1, "the watch checked again without an expiry or a retirement"
 
         retirement = client.retirement
         assert retirement is not None
@@ -168,15 +205,20 @@ async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but
         pushing = threading.Thread(target=retirement)
         pushing.start()
         pushing.join()
-        await pilot.pause()
+        await next_check()
         assert len(checks) == 2, "a pushed retirement did not reach the owner's loop"
+        assert checking_threads == {owner_thread}, "a check ran off the owner's loop"
 
         with pytest.raises(InternalInvariantError):
             binding.watch(app, lambda: None)
 
         stop()
         assert client.retirement is None
-        binding.known_expires_at = now() + timedelta(milliseconds=100)
+        # The clock is held for the confirmation, so however late the status reply arrives the expiry it
+        # reports is still ahead and confirmation reaches the re-arm; the expiry then passes in real time.
+        with frozen_clock(now()) as confirmed_at:
+            client.expires_at = confirmed_at + timedelta(milliseconds=100)
+            assert await binding.confirm_with_runtime(task_name=_TASK)
         await asyncio.sleep(0.3)
-        await pilot.pause()
+        await settle(pilot)
         assert len(checks) == 2, "a stopped watch still checked"

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._colocation_geometry_size import (
+from ..colocation_geometry_size import (
     column_aware_rendering_partitions,
     geometry_payload_ratio,
     render_page_text,

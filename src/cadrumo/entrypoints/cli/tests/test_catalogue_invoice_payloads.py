@@ -32,6 +32,7 @@ def _invoice_record_payload(invoice: Invoice) -> dict[str, object]:
         name: getattr(invoice, name) for name in CatalogueInvoiceRecordPayload.model_fields if hasattr(invoice, name)
     }
     payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    payload["settlement_amount"] = invoice.grand_total - (invoice.retention_amount or Decimal(0))
     payload["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
     provenance = invoice.provenance
     payload["source_filename"] = provenance.source_path.name if provenance is not None else None
@@ -56,7 +57,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         bucket_id="bucket-001",
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-STRICT-001",
         issued_at=date(2026, 3, 10),

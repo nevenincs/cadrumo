@@ -1,18 +1,57 @@
-"""Join portfolio summaries and legal calendar facts for one grouped filing list."""
+"""Join portfolio summaries and legal calendar facts for one grouped filing list, and say each row.
+
+Every frontend lists declarations from these rows: local work, returns due
+with no local work, returns the AEAT already holds with no local work linked,
+and obligations the coverage only advises. Each row keeps its own result and
+local state apart from the AEAT's, and names its next step and its words in
+the filer's language, so no frontend classifies a row itself. Whether a
+frontend may open or start a row is that frontend's admission to decide; a
+step it cannot perform is simply not offered there.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
+from typing import Final
 
+from pydantic import BaseModel
+
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.deadlines.effective_close import DeadlinePosture, EffectiveFilingDeadline
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.deadlines.models import ObligationStatus
+from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
+from ..overview.calendar import holiday_coverage_statement
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
+from ..overview.home import HomeAvailability
+from .calculation_notes import note_fact_text
 from .declaration_summary import DeclarationSummaryState
-from .declarations_calendar import DeclarationsCalendarEntryRefV1, DeclarationsCalendarProjectionV1
-from .declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1, DeclarationsWorkspaceProjectionV1
+from .declaration_targets import DeclarationTarget
+from .declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+    DeclarationsCalendarSource,
+    DeclarationsCalendarSourceStateV1,
+)
+from .declarations_workspace_contracts import (
+    DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceDeclarationRefV1,
+    DeclarationsWorkspaceProjectionV1,
+    DeclarationsWorkspaceZone,
+)
+from .value_presentation import format_casilla_value
+from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResult, ModeloFormResultDirection
+from .work_form_wording import date_text
 
 
 class DeclarationListGroup(StrEnum):
@@ -46,6 +85,28 @@ class DeclarationListRow:
         return None if self.calendar is None else self.calendar.adjusted_closes_on
 
 
+_GROUP_RANK: Final[Mapping[DeclarationListGroup, int]] = MappingProxyType(
+    {group: rank for rank, group in enumerate(DeclarationListGroup)}
+)
+
+
+def declaration_list_state_order_key(row: DeclarationListRow) -> tuple[int, bool, date, str, str, str]:
+    """Order rows by state: the group's work order, then the nearest known deadline, then identity.
+
+    A row without a deadline follows those that have one in its group, so every
+    frontend that lists rows by state shows them in this one order.
+    """
+    deadline = row.deadline
+    return (
+        _GROUP_RANK[row.group],
+        deadline is None,
+        deadline or date.max,
+        row.modelo,
+        "" if row.period is None else str(row.period),
+        row.key,
+    )
+
+
 def _external_completion(calendar: DeclarationsCalendarEntryRefV1) -> bool:
     return (
         calendar.aeat_submission_state is not None
@@ -55,20 +116,52 @@ def _external_completion(calendar: DeclarationsCalendarEntryRefV1) -> bool:
     )
 
 
+#: The deadline postures that put a return in front of the operator.
+_PRESSING_STATUSES: Final = frozenset({ObligationStatus.OVERDUE, ObligationStatus.DUE_TODAY, ObligationStatus.DUE_SOON})
+
+
+def _deadline_posture(calendar: DeclarationsCalendarEntryRefV1) -> DeadlinePosture:
+    """The canonical posture of the entry's effective close on the day the calendar was evaluated."""
+    return EffectiveFilingDeadline(
+        nominal_closes_on=calendar.closes_on,
+        closes_on=calendar.adjusted_closes_on,
+        holiday_coverage=calendar.holiday_coverage,
+        shift_reason=calendar.shift_reason,
+    ).posture_on(calendar.evaluated_on)
+
+
+def _closes_soon(calendar: DeclarationsCalendarEntryRefV1) -> bool:
+    """Whether the entry's close is overdue or within the deadline engine's due-soon window.
+
+    Judged from the close itself rather than the calendar's status, because an
+    externally filed return reads as filed there while a correction of it still
+    has its close to meet.
+    """
+    return _deadline_posture(calendar).status in _PRESSING_STATUSES
+
+
 def _local_group(
-    state: str, calendar: DeclarationsCalendarEntryRefV1 | None, today: date, *, is_correction: bool = False
+    state: str, calendar: DeclarationsCalendarEntryRefV1 | None, *, is_correction: bool = False
 ) -> DeclarationListGroup:
     if state in {"recorded", "superseded", "discarded"}:
         return DeclarationListGroup.RECORDED
     if state in {"blocked", "unreadable"}:
         return DeclarationListGroup.ATTENTION
-    if (
-        calendar is not None
-        and (is_correction or not _external_completion(calendar))
-        and (calendar.adjusted_closes_on - today).days <= 7
-    ):
+    if calendar is not None and (is_correction or not _external_completion(calendar)) and _closes_soon(calendar):
         return DeclarationListGroup.ATTENTION
     return DeclarationListGroup.READY if state == "checked" else DeclarationListGroup.IN_PROGRESS
+
+
+@dataclass(frozen=True, slots=True)
+class DeclarationListInputs:
+    """What the list joins, captured together: the local declarations and the legal calendar.
+
+    ``workspace`` is ``None`` when the local declarations could not be read;
+    the list is then unavailable, never shown as a profile holding nothing.
+    """
+
+    workspace: DeclarationsWorkspaceProjectionV1 | None
+    calendar: DeclarationsCalendarProjectionV1
 
 
 def declaration_list_rows(
@@ -77,27 +170,27 @@ def declaration_list_rows(
 ) -> tuple[DeclarationListRow, ...]:
     """Project every local row plus due, externally completed and advised obligations."""
     dates = {} if calendar is None else {item.semantic_key(): item for item in calendar.entries}
-    today = today_madrid() if calendar is None else calendar.as_of
     local_addresses: set[tuple[str, int, str]] = set()
     rows: list[DeclarationListRow] = []
     for declaration in workspace.declarations:
         key = (str(declaration.modelo), declaration.filing_year, declaration.period.registry_token)
         local_addresses.add(key)
         deadline = dates.get(key)
-        rows.append(_local_declaration_row(declaration, deadline, today))
-    rows.extend(_calendar_declaration_rows(dates, local_addresses, today))
+        rows.append(_local_declaration_row(declaration, deadline))
+    rows.extend(_calendar_declaration_rows(dates, local_addresses))
     if calendar is not None:
         rows.extend(
             DeclarationListRow(
                 f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
             )
             for item in calendar.coverage.advised
+            if not any(address[0] == item.modelo for address in local_addresses)
         )
     return tuple(rows)
 
 
 def _local_declaration_row(
-    declaration: DeclarationsWorkspaceDeclarationRefV1, deadline: DeclarationsCalendarEntryRefV1 | None, today: date
+    declaration: DeclarationsWorkspaceDeclarationRefV1, deadline: DeclarationsCalendarEntryRefV1 | None
 ) -> DeclarationListRow:
     """Keep local work status and correction urgency separate from external filing."""
     state = (
@@ -119,7 +212,6 @@ def _local_declaration_row(
         _local_group(
             state,
             deadline,
-            today,
             is_correction=declaration.summary is not None and declaration.summary.is_correction,
         ),
         declaration=declaration,
@@ -130,7 +222,6 @@ def _local_declaration_row(
 def _calendar_declaration_rows(
     dates: dict[tuple[str, int, str], DeclarationsCalendarEntryRefV1],
     local_addresses: set[tuple[str, int, str]],
-    today: date,
 ) -> list[DeclarationListRow]:
     """Append external unlinked returns and uncovered obligations in calendar order."""
     rows: list[DeclarationListRow] = []
@@ -153,8 +244,527 @@ def _calendar_declaration_rows(
             state = "aeat_needs_check" if item.evidence_conflicted or item.aeat_needs_check else "not_started"
             group = (
                 DeclarationListGroup.ATTENTION
-                if state == "aeat_needs_check" or (item.adjusted_closes_on - today).days <= 7
+                if state == "aeat_needs_check" or _closes_soon(item)
                 else DeclarationListGroup.NOT_STARTED
             )
             rows.append(DeclarationListRow(f"due:{key}", str(item.modelo), item.period, state, group, calendar=item))
     return rows
+
+
+# -- what each row offers and says ---------------------------------------------
+
+
+class DeclarationListNextStep(StrEnum):
+    """The one step a row offers, before any frontend's admission to open or start it."""
+
+    FIX = "fix"
+    START = "start"
+    OPEN_LOCAL_DRAFT = "open_local_draft"
+    CREATE_FILE = "create_file"
+    RECALCULATE = "recalculate"
+    CONTINUE = "continue"
+    NONE = "none"
+
+
+_LOCAL_STEPS: Final[frozenset[DeclarationListNextStep]] = frozenset(
+    {
+        # What blocks a declaration is fixed inside its own local work, so fixing opens it.
+        DeclarationListNextStep.FIX,
+        DeclarationListNextStep.OPEN_LOCAL_DRAFT,
+        DeclarationListNextStep.CREATE_FILE,
+        DeclarationListNextStep.RECALCULATE,
+        DeclarationListNextStep.CONTINUE,
+        DeclarationListNextStep.NONE,
+    }
+)
+"""The steps that open the row's own local work."""
+_DIRECTION_WORDS: Final = MappingProxyType(
+    {
+        ModeloFormResultDirection.TO_PAY: "to_pay",
+        ModeloFormResultDirection.TO_REFUND: "to_refund",
+        ModeloFormResultDirection.TO_CARRY_FORWARD: "to_carry_forward",
+        ModeloFormResultDirection.TO_DEDUCT_LATER: "negative_carried",
+        ModeloFormResultDirection.NIL: "zero",
+        ModeloFormResultDirection.NEGATIVE: "negative",
+        ModeloFormResultDirection.UNKNOWN: "unknown",
+    }
+)
+_NO_RESULT_STATES: Final[frozenset[str]] = frozenset({"not_started", "maybe", "aeat_unlinked"})
+_CLOSED_STATES: Final[frozenset[str]] = frozenset({"recorded", "superseded", "discarded"})
+_OPEN_WORK_STATES: Final[frozenset[str]] = frozenset({"draft", "calculated", "checked"})
+
+
+def is_unlinked_local_draft(row: DeclarationListRow) -> bool:
+    """Whether the row is original local work beside a return the AEAT already holds."""
+    calendar = row.calendar
+    return (
+        row.declaration is not None
+        and calendar is not None
+        and calendar.aeat_submission_state is not None
+        and calendar.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+        and not calendar.evidence_conflicted
+        and not calendar.aeat_needs_check
+        and row.state in _OPEN_WORK_STATES
+        and (row.declaration.summary is None or not row.declaration.summary.is_correction)
+    )
+
+
+def _local_step(row: DeclarationListRow) -> DeclarationListNextStep:
+    if is_unlinked_local_draft(row):
+        return DeclarationListNextStep.OPEN_LOCAL_DRAFT
+    if row.state == "checked":
+        return DeclarationListNextStep.CREATE_FILE
+    if row.state in _CLOSED_STATES:
+        return DeclarationListNextStep.NONE
+    return DeclarationListNextStep.CONTINUE
+
+
+def _needs_recalculation(row: DeclarationListRow) -> bool:
+    """Whether the note gate refuses the row's calculation: stale, or recorded before screens capped a figure."""
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is None:
+        return False
+    if summary.filed_before_grade_cap and row.state == "recorded":
+        return True
+    return summary.calculation_outdated and row.state not in _CLOSED_STATES
+
+
+def next_step(row: DeclarationListRow) -> DeclarationListNextStep | None:
+    """The step the row offers: fixing what blocks it, starting a due return, or opening its local work.
+
+    A calculation the note gate refuses as stale is calculated again first, as the form's next step is,
+    and so is a declaration recorded before screens existed whose export the gate refuses for a capped figure.
+    """
+    if _needs_recalculation(row):
+        return DeclarationListNextStep.RECALCULATE
+    if row.state == "blocked":
+        return DeclarationListNextStep.FIX
+    if row.state == "not_started":
+        return DeclarationListNextStep.START
+    if row.declaration is not None and row.state != "unreadable":
+        return _local_step(row)
+    return None
+
+
+def opens_local_work(step: DeclarationListNextStep) -> bool:
+    """Whether ``step`` opens the row's own local work, so needs a frontend's admission to open it."""
+    return step in _LOCAL_STEPS
+
+
+def blocking_count(row: DeclarationListRow) -> int:
+    """How many things block filing the row's declaration; zero when its summary does not say."""
+    summary = None if row.declaration is None else row.declaration.summary
+    return 0 if summary is None else summary.blocking_count or 0
+
+
+def calculation_note_words(row: DeclarationListRow, language: OutputLanguage) -> tuple[str, ...]:
+    """What the row's current calculation noted that withholds nothing, in the filer's language, in order.
+
+    A capped box whose zero its calculation proved is one: the list says the
+    zero stands, as the declaration's form does once reopened.
+    """
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is None:
+        return ()
+    return tuple(note_fact_text(fact, locale=language.value) for fact in dict.fromkeys(summary.proven_zero_notes))
+
+
+def next_step_words(row: DeclarationListRow, step: DeclarationListNextStep, language: OutputLanguage) -> str:
+    """The step in the filer's language."""
+    return tr(f"workspace.declarations.list.next.{step.value}", count=blocking_count(row), locale=language.value)
+
+
+def state_words(row: DeclarationListRow, language: OutputLanguage) -> str:
+    """Where the row stands, in the filer's language: its own state, never the AEAT's in its place."""
+    locale = language.value
+    calendar = row.calendar
+    if row.state == "aeat_unlinked" and calendar is not None and calendar.aeat_submitted_at is not None:
+        return tr(
+            "workspace.declarations.list.state.aeat_unlinked_on",
+            date=date_text(calendar.aeat_submitted_at, language),
+            locale=locale,
+        )
+    if row.state == "recorded":
+        return tr("workspace.declarations.list.group.recorded", locale=locale)
+    if row.state == "discarded":
+        return tr("workspace.declarations.work_state.descartado", locale=locale)
+    if row.state == "maybe":
+        return tr("workspace.declarations.list.maybe.help", locale=locale)
+    if is_unlinked_local_draft(row):
+        return tr("workspace.declarations.list.state.local_draft", locale=locale)
+    return ("▲ " if row.state == "blocked" else "") + tr(
+        "workspace.declarations.list.state." + row.state, locale=locale
+    )
+
+
+_CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
+_REDEME_UNSTATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.redeme_unstated"
+_RESULT_DIRECTION_LOCALE_KEY_PREFIX: Final[str] = "workspace.modelo.header.result."
+
+
+def _settlement_key(result: ModeloFormResult) -> str:
+    """The words a known result settles under, from the same resolver the form reads.
+
+    A carried IVA credit the filer may still ask back says so; one whose refund
+    waits on an unstated REDEME inscription says that instead of claiming the
+    credit is carried, which is not yet established.
+    """
+    if result.election_may_change:
+        return _CHOICE_PENDING_LOCALE_KEY
+    eligibility = result.refund_eligibility
+    if eligibility is not None and eligibility.outcome is RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED:
+        return _REDEME_UNSTATED_LOCALE_KEY
+    return _RESULT_DIRECTION_LOCALE_KEY_PREFIX + _DIRECTION_WORDS[result.direction]
+
+
+def _valued_result_words(result: ModeloFormResult, value: Decimal, language: OutputLanguage) -> str:
+    """A known amount with the way it settles, keeping the sign only where nothing says the direction."""
+    locale = language.value
+    shown_value = value if result.direction is ModeloFormResultDirection.UNKNOWN else abs(value)
+    amount = format_casilla_value(shown_value, data_type=CasillaDataType.MONEY, language=language)
+    key = _settlement_key(result)
+    if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
+        return tr(key, amount=amount, locale=locale)
+    if result.direction in AMOUNTLESS_RESULT_DIRECTIONS:
+        return tr(key, locale=locale)
+    return tr(key, locale=locale) + " · " + amount
+
+
+def result_words(row: DeclarationListRow, language: OutputLanguage) -> str | None:
+    """The declaration's own result in the filer's language; ``None`` for a row with no local result to state."""
+    summary = None if row.declaration is None else row.declaration.summary
+    result = None if summary is None else summary.result
+    if result is not None and result.value is not None:
+        return _valued_result_words(result, result.value, language)
+    if row.state in _NO_RESULT_STATES:
+        return None
+    declaration = row.declaration
+    not_calculated = (
+        row.state == "draft"
+        and declaration is not None
+        and not declaration.has_current_calculation
+        and not declaration.has_current_filing
+    )
+    key = (
+        "workspace.modelo.origin.not_calculated_yet"
+        if not_calculated
+        else "workspace.declarations.value.result_unknown"
+    )
+    return tr(key, locale=language.value)
+
+
+# -- group words, deadlines and help --------------------------------------------
+
+DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
+    {
+        DeclarationListGroup.ATTENTION: "workspace.declarations.list.group.attention",
+        DeclarationListGroup.IN_PROGRESS: "workspace.declarations.list.group.in_progress",
+        DeclarationListGroup.READY: "workspace.declarations.list.group.ready",
+        DeclarationListGroup.NOT_STARTED: "workspace.declarations.list.group.not_started",
+        DeclarationListGroup.RECORDED: "workspace.declarations.list.group.recorded",
+        DeclarationListGroup.AEAT_UNLINKED: "workspace.declarations.list.state.aeat_unlinked",
+        DeclarationListGroup.MAYBE: "workspace.declarations.list.group.maybe",
+    }
+)
+"""The heading of each group, total over the groups."""
+
+_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "aeat_unlinked": "workspace.declarations.list.aeat_unlinked.help.confirmed",
+        "unreadable": "workspace.declarations.list.unreadable.help",
+        "maybe": "workspace.declarations.list.maybe.help",
+        "aeat_needs_check": "workspace.declarations.list.aeat_needs_check.help",
+    }
+)
+"""What a row that opens no local work and starts nothing says when the filer chooses it."""
+
+
+def group_words(group: DeclarationListGroup, language: OutputLanguage) -> str:
+    """The group's heading in the filer's language."""
+    return tr(DECLARATION_GROUP_LOCALE_KEYS[group], locale=language.value)
+
+
+def _has_deadline_to_meet(row: DeclarationListRow) -> bool:
+    return row.calendar is not None and row.state != "aeat_unlinked" and row.state not in _CLOSED_STATES
+
+
+def row_days(row: DeclarationListRow) -> tuple[int | None, int | None]:
+    """The days left until the row's deadline and the days it is overdue; ``None`` for what does not apply.
+
+    Counted from the day the calendar was evaluated, so every frontend and the
+    calendar agree whatever its own clock says, and judged by the canonical
+    deadline posture of the row's close, so an unknown close past its nominal
+    date shows neither. A declaration recorded, replaced or discarded, and a
+    return the AEAT holds with no local work linked, have no deadline left to
+    meet.
+    """
+    calendar = row.calendar
+    if calendar is None or not _has_deadline_to_meet(row):
+        return None, None
+    if calendar.legal_status is ObligationStatus.FILED:
+        # Official evidence shows it filed, so it is never counted overdue.
+        return max((calendar.adjusted_closes_on - calendar.evaluated_on).days, 0), None
+    posture = _deadline_posture(calendar)
+    return posture.days_remaining, posture.days_overdue
+
+
+def opens_aeat_filing(row: DeclarationListRow) -> bool:
+    """Whether choosing the row opens the details of a return the AEAT holds, to read; nothing is linked or sent."""
+    return row.state == "aeat_unlinked"
+
+
+_AEAT_FILING_NOTE_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "workspace.declarations.list.aeat_unlinked.help.confirmed",
+    "workspace.declarations.list.aeat_unlinked.help.no_refile",
+    "workspace.declarations.list.aeat_unlinked.help.unavailable",
+)
+"""What the details of a return the AEAT holds say, in reading order."""
+
+
+def aeat_filing_notes(row: DeclarationListRow, language: OutputLanguage) -> tuple[str, ...] | None:
+    """What opening a return the AEAT holds says about it, in order; ``None`` for a row that opens none."""
+    if not opens_aeat_filing(row):
+        return None
+    return tuple(tr(key, locale=language.value) for key in _AEAT_FILING_NOTE_LOCALE_KEYS)
+
+
+def row_help_words(row: DeclarationListRow, language: OutputLanguage) -> str | None:
+    """What choosing a row that opens no local work says, or ``None`` for a row whose step says it all."""
+    key = _HELP_LOCALE_KEYS.get(row.state)
+    return None if key is None else tr(key, locale=language.value)
+
+
+# -- what the list could read, and what the new-declaration dialog offers -------
+
+
+def observed_text(moment: datetime, language: OutputLanguage) -> str:
+    """When a source was read, to the minute and in UTC, so no reader mistakes the zone it was read in."""
+    utc = moment.astimezone(UTC) if moment.tzinfo is not None else moment
+    return f"{date_text(utc.date(), language)} {utc:%H:%M} UTC"
+
+
+class ModeloDeclarationsListZoneV1(BaseModel):
+    """Whether one area of the local declarations could be read, and when."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    zone: DeclarationsWorkspaceZone
+    availability: DeclarationsWorkspaceAvailability
+    observed_at: datetime | None = None
+    #: The availability in the filer's language.
+    words: str
+
+
+class ModeloDeclarationsListSourceV1(BaseModel):
+    """Whether one source of the filing calendar could be read, and when, said as the list says it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: DeclarationsCalendarSource
+    availability: HomeAvailability
+    observed_at: datetime | None = None
+    #: The source, its availability and when it was read, or that it never was, in the filer's language.
+    words: str
+
+
+def zone_states(
+    workspace: DeclarationsWorkspaceProjectionV1, language: OutputLanguage
+) -> tuple[ModeloDeclarationsListZoneV1, ...]:
+    """Every area of the local declarations, with whether it could be read, in canonical order."""
+    return tuple(
+        ModeloDeclarationsListZoneV1(
+            zone=zone.zone,
+            availability=zone.availability,
+            observed_at=zone.observed_at,
+            words=tr("workspace.declarations.availability." + zone.availability.value, locale=language.value),
+        )
+        for zone in workspace.zones
+    )
+
+
+def _observed_words(source: DeclarationsCalendarSourceStateV1, language: OutputLanguage) -> str:
+    locale = language.value
+    if source.observed_at is not None:
+        return observed_text(source.observed_at, language)
+    if source.availability is HomeAvailability.NEVER_CAPTURED:
+        return tr("workspace.declarations.calendar.never_observed", locale=locale)
+    if source.availability is HomeAvailability.AVAILABLE:
+        return tr("workspace.declarations.calendar.observation.not_recorded", locale=locale)
+    return tr("workspace.declarations.calendar.observation.time_not_recorded", locale=locale)
+
+
+def source_words(source: DeclarationsCalendarSourceStateV1, language: OutputLanguage) -> str:
+    """One calendar source, whether it could be read, and when, or why no time is said."""
+    locale = language.value
+    observed = _observed_words(source, language)
+    return tr(
+        "workspace.declarations.calendar.detail.source",
+        source=tr("workspace.declarations.calendar.source." + source.source.value, locale=locale),
+        availability=tr("workspace.declarations.availability." + source.availability.value, locale=locale),
+        observed=observed,
+        locale=locale,
+    )
+
+
+def calendar_sources(
+    calendar: DeclarationsCalendarProjectionV1, language: OutputLanguage
+) -> tuple[ModeloDeclarationsListSourceV1, ...]:
+    """Every source of the filing calendar, with whether it could be read and when."""
+    return tuple(
+        ModeloDeclarationsListSourceV1(
+            source=source.source,
+            availability=source.availability,
+            observed_at=source.observed_at,
+            words=source_words(source, language),
+        )
+        for source in calendar.sources
+    )
+
+
+def source_notices(
+    workspace: DeclarationsWorkspaceProjectionV1,
+    calendar: DeclarationsCalendarProjectionV1 | None,
+    language: OutputLanguage,
+) -> tuple[str, ...]:
+    """What the list says beside its rows about what it could read.
+
+    The AEAT's evidence is named with whether it could be read and when, since
+    a return the AEAT holds shows only once it was; an area of the local
+    declarations read only in part says so, so the rows are never taken for
+    everything there is.
+    """
+    lines: list[str] = []
+    if calendar is not None:
+        lines.extend(
+            source_words(source, language)
+            for source in calendar.sources
+            if source.source is DeclarationsCalendarSource.AEAT_EVIDENCE
+        )
+    if any(zone.availability is DeclarationsWorkspaceAvailability.STALE for zone in workspace.zones):
+        lines.append(tr("workspace.declarations.refusal.source", locale=language.value))
+    return tuple(lines)
+
+
+def applicable_modelos(rows: tuple[DeclarationListRow, ...]) -> frozenset[str]:
+    """The modelos the list shows the filer as theirs: every one a row names, but those it only advises."""
+    return frozenset(row.modelo for row in rows if row.state != "maybe")
+
+
+def creation_targets(
+    rows: tuple[DeclarationListRow, ...], admitted: tuple[DeclarationTarget, ...]
+) -> tuple[DeclarationTarget, ...]:
+    """The addresses a declaration may be started at: those the authority admits, else the returns due."""
+    return admitted or tuple(
+        DeclarationTarget(row.modelo, row.period)
+        for row in rows
+        if row.period is not None and row.state == "not_started"
+    )
+
+
+def _due_not_started(rows: tuple[DeclarationListRow, ...]) -> list[DeclarationListRow]:
+    return sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+
+
+def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
+    """The first return due and not started, when it names its period."""
+    due = _due_not_started(rows)
+    return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
+
+
+def starting_creation_targets(
+    rows: tuple[DeclarationListRow, ...], targets: tuple[DeclarationTarget, ...], *, as_of: date
+) -> frozenset[DeclarationTarget]:
+    """For each modelo offered, the address the dialog starts on.
+
+    That is the modelo's first return due and not started; else its latest period already ended on
+    ``as_of``, the last one a filer can owe; else its earliest offered period. A period whose filing
+    family still waits on an unanswered profile fact is never the starting address, so no cadence is
+    suggested before the profile decides it.
+    """
+    eligible = {(target.modelo, target.period): target for target in targets if not target.profile_requirements}
+    starting: dict[str, DeclarationTarget] = {}
+    for row in sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max):
+        target = eligible.get((row.modelo, row.period)) if row.period is not None else None
+        if target is not None:
+            starting.setdefault(row.modelo, target)
+    for modelo, own in _targets_by_modelo(eligible.values()).items():
+        starting.setdefault(modelo, _latest_ended_or_first(own, as_of))
+    return frozenset(starting.values())
+
+
+def _targets_by_modelo(targets: Iterable[DeclarationTarget]) -> dict[str, list[DeclarationTarget]]:
+    by_modelo: dict[str, list[DeclarationTarget]] = {}
+    for target in targets:
+        by_modelo.setdefault(target.modelo, []).append(target)
+    return by_modelo
+
+
+def _latest_ended_or_first(own: list[DeclarationTarget], as_of: date) -> DeclarationTarget:
+    ended = [target for target in own if target.period.has_date_span() and target.period.end_date < as_of]
+    return max(ended, key=lambda target: target.period.end_date) if ended else own[0]
+
+
+def existing_declaration(
+    rows: tuple[DeclarationListRow, ...], target: DeclarationTarget
+) -> DeclarationsWorkspaceDeclarationRefV1 | None:
+    """The declaration already at exactly the chosen address, if there is one."""
+    return next(
+        (
+            row.declaration
+            for row in rows
+            if row.declaration is not None and row.modelo == target.modelo and row.period == target.period
+        ),
+        None,
+    )
+
+
+_UNSETTLED_COVERAGE: Final[frozenset[DeadlineHolidayCoverage]] = frozenset(
+    {DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE}
+)
+"""Holiday coverage that leaves an effective deadline short of final: the holiday calendar could not be read."""
+
+
+def deadline_note_words(rows: tuple[DeclarationListRow, ...], language: OutputLanguage) -> str | None:
+    """Say that an open deadline is not final when its holiday calendar was not checked; ``None`` otherwise."""
+    for row in rows:
+        calendar = row.calendar
+        if calendar is not None and _has_deadline_to_meet(row) and calendar.holiday_coverage in _UNSETTLED_COVERAGE:
+            return holiday_coverage_statement(calendar.holiday_coverage, language)
+    return None
+
+
+__all__ = [
+    "DECLARATION_GROUP_LOCALE_KEYS",
+    "DeclarationListGroup",
+    "DeclarationListInputs",
+    "DeclarationListNextStep",
+    "DeclarationListRow",
+    "ModeloDeclarationsListSourceV1",
+    "ModeloDeclarationsListZoneV1",
+    "aeat_filing_notes",
+    "applicable_modelos",
+    "blocking_count",
+    "calculation_note_words",
+    "calendar_sources",
+    "creation_targets",
+    "deadline_note_words",
+    "declaration_list_rows",
+    "declaration_list_state_order_key",
+    "existing_declaration",
+    "group_words",
+    "is_unlinked_local_draft",
+    "next_step",
+    "next_step_words",
+    "observed_text",
+    "opens_aeat_filing",
+    "opens_local_work",
+    "preferred_creation_target",
+    "result_words",
+    "row_days",
+    "row_help_words",
+    "source_notices",
+    "source_words",
+    "starting_creation_targets",
+    "state_words",
+    "zone_states",
+]

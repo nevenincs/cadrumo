@@ -1,0 +1,240 @@
+"""A filing handoff states the Modelo 100 boxes alone when no Modelo 130 period is asked for."""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from dataclasses import replace
+from datetime import date
+from decimal import Decimal
+from uuid import uuid4
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetFilingHandoffRequest
+from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetFilingHandoffProjection
+from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetFilingHandoffResult
+from cadrumo.application.actividad_asset.filing_handoff import ActivityAssetFilingHandoff
+from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetFilingHandoffSnapshot
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.period import Period
+from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
+from cadrumo.domain.renta.actividad_asset.election import (
+    DirectEstimationRegime,
+)
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
+from cadrumo.domain.renta.actividad_asset.lifecycle import (
+    ActivityAssetRevision,
+)
+from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduledAmortizationCharge,
+)
+
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ..schedule_walk import M100GapKind
+from .ledger_support import MemoryLedger
+from .operations_support import ACQUISITION, build_forecast, build_operations, build_revision
+from .register_support import MemoryRepository, memory_register_authority
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+_AUTHORITY = {"logical_generation": "a" * 64, "reader_incarnation": "b" * 64}
+
+
+def _operations_that_cannot_work_out_modelo_130() -> ActivityAssetOperations:
+    """Wire a register whose Modelo 130 box and schedule reads fail, so any reach for them shows."""
+
+    def no_modelo_130_box(_period: Period) -> CasillaId:
+        raise AssertionError("the Modelo 100 boxes alone must not read the Modelo 130 box")
+
+    def no_forecast(
+        revision: ActivityAssetRevision,
+        *,
+        covered_from: date,
+        covered_until: date,
+        history: AssetScheduleHistory,
+        requested_free_amount: Decimal | None = None,
+    ) -> ScheduledAmortizationCharge:
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.foral_territory")
+
+    repository = MemoryRepository()
+    ActivityAssetOperations(
+        repository=repository,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=build_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(),
+    ).create(build_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
+    return ActivityAssetOperations(
+        repository=repository,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=no_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=replace(memory_register_authority(), m130_amortization_casilla=no_modelo_130_box),
+    )
+
+
+def test_a_year_alone_projects_the_modelo_100_boxes_and_no_modelo_130_figure() -> None:
+    operations = build_operations()
+    claim = operations.record_claim(
+        operations.forecast(asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_until=date(_FIRST + 1, 1, 1)),
+        creating_operation="test.year",
+    ).claim
+
+    bare = operations.filing_handoff(tax_year=_FIRST)
+    framed = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
+
+    assert bare.material_m130 is None
+    assert bare.intangible_m130 is None
+    assert bare.material_m100 is not None
+    assert bare.material_m100.claim_ids == (claim.claim_id,)
+    assert bare.material_m100 == framed.material_m100
+    assert bare.intangible_m100 == framed.intangible_m100
+    assert framed.material_m130 is not None
+
+
+def test_a_year_alone_reads_no_modelo_130_authority_and_a_schedule_it_cannot_read_is_a_stated_gap() -> None:
+    handoff = _operations_that_cannot_work_out_modelo_130().filing_handoff(tax_year=_FIRST)
+
+    assert handoff.material_m130 is None
+    assert handoff.intangible_m130 is None
+    assert [(gap.asset_id, gap.kind, gap.accrued) for gap in handoff.m100_gaps] == [
+        ("laptop-1", M100GapKind.UNAVAILABLE, None),
+    ]
+
+
+def test_the_handoff_says_what_it_leaves_out_and_keeps_saying_so_across_the_wire() -> None:
+    operations = build_operations()
+
+    handoff = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
+
+    (gap,) = handoff.m100_gaps
+    assert gap.kind is M100GapKind.ACCRUED
+    assert gap.accrued is not None
+    assert gap.accrued > Decimal("0")
+    assert gap.covered_until == date(_FIRST + 1, 1, 1)
+    assert ActivityAssetFilingHandoffSnapshot.from_domain(handoff).to_domain() == handoff
+
+
+def test_a_year_alone_still_refuses_a_foral_residence() -> None:
+    with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
+        build_operations(territory=ResidenceTerritory.FORAL).filing_handoff(tax_year=_FIRST)
+
+
+@pytest.mark.parametrize("period", ["9T", str(_FIRST)])
+def test_a_stated_period_that_is_not_one_decodes_and_is_refused_with_its_reason(period: str) -> None:
+    request = ActivityAssetFilingHandoffRequest.model_validate_json(
+        f'{{"profile_id":"{uuid4()}","tax_year":{_FIRST},"m130_period":"{period}"}}'
+    )
+
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(ActividadAssetValidationError, match="m130_period_invalid"),
+    ):
+        request.requested_period(operation=operation)
+
+
+def test_an_empty_period_does_not_decode() -> None:
+    with pytest.raises(ValidationError):
+        ActivityAssetFilingHandoffRequest.model_validate_json(
+            f'{{"profile_id":"{uuid4()}","tax_year":{_FIRST},"m130_period":""}}'
+        )
+
+
+def test_the_request_decodes_with_or_without_a_period() -> None:
+    profile_id = uuid4()
+
+    bare = ActivityAssetFilingHandoffRequest.model_validate_json(f'{{"profile_id":"{profile_id}","tax_year":{_FIRST}}}')
+    explicit_null = ActivityAssetFilingHandoffRequest.model_validate_json(
+        f'{{"profile_id":"{profile_id}","tax_year":{_FIRST},"m130_period":null}}'
+    )
+    framed = ActivityAssetFilingHandoffRequest.model_validate_json(
+        f'{{"profile_id":"{profile_id}","tax_year":{_FIRST},"m130_period":"2T"}}'
+    )
+
+    assert bare.m130_period is None
+    assert explicit_null == bare
+    assert framed.m130_period == "2T"
+
+
+def test_the_handoff_round_trips_through_its_public_snapshot_with_the_modelo_130_absent() -> None:
+    bare = build_operations().filing_handoff(tax_year=_FIRST)
+
+    snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(bare)
+    restored = ActivityAssetFilingHandoffSnapshot.model_validate_json(snapshot.model_dump_json()).to_domain()
+
+    assert snapshot.material_m130 is None
+    assert snapshot.intangible_m130 is None
+    assert restored == bare
+
+
+def test_a_handoff_states_the_modelo_130_of_both_kinds_or_of_neither() -> None:
+    framed = build_operations().filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
+
+    with pytest.raises(ValidationError):
+        ActivityAssetFilingHandoff(
+            material_m100=framed.material_m100,
+            intangible_m100=framed.intangible_m100,
+            material_m130=framed.material_m130,
+        )
+    one_sided = ActivityAssetFilingHandoffSnapshot.from_domain(framed).model_dump() | {"intangible_m130": None}
+    with pytest.raises(ValidationError):
+        ActivityAssetFilingHandoffSnapshot.model_validate(one_sided)
+
+
+def test_the_result_states_the_modelo_130_exactly_for_a_requested_period() -> None:
+    operations = build_operations()
+    bare = operations.filing_handoff(tax_year=_FIRST)
+    framed = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
+
+    def result(handoff: ActivityAssetFilingHandoff, period: str | None) -> ActivityAssetFilingHandoffResult:
+        return ActivityAssetFilingHandoffResult.model_validate(
+            {
+                "profile_id": uuid4(),
+                "authority": _AUTHORITY,
+                "outcome": "succeeded",
+                "tax_year": _FIRST,
+                "m130_period": period,
+                "filing_handoff": handoff,
+            }
+        )
+
+    assert result(bare, None).m130_period is None
+    assert result(framed, "4T").m130_period == "4T"
+    with pytest.raises(ValidationError):
+        result(bare, "4T")
+    with pytest.raises(ValidationError):
+        result(framed, None)
+
+
+def test_the_public_projection_decodes_a_handoff_without_a_period() -> None:
+    bare = build_operations().filing_handoff(tax_year=_FIRST)
+    document = {
+        "profile_id": str(uuid4()),
+        "authority": _AUTHORITY,
+        "outcome": "succeeded",
+        "tax_year": _FIRST,
+        "filing_handoff": ActivityAssetFilingHandoffSnapshot.from_domain(bare).model_dump(mode="json"),
+    }
+
+    projection = ActivityAssetFilingHandoffProjection.model_validate_json(json.dumps(document))
+
+    assert projection.m130_period is None
+    assert projection.filing_handoff is not None
+    assert projection.filing_handoff.material_m130 is None
+    with pytest.raises(ValidationError):
+        ActivityAssetFilingHandoffProjection.model_validate_json(json.dumps({**document, "m130_period": "4T"}))

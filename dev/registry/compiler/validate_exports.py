@@ -66,7 +66,6 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._validate_helpers import missing_refs as _missing_refs
 from .corpus_catalogue import verify_source_file
 from .validate_evidence import EvidenceValidator
 from .validate_export_field_placement import (
@@ -75,6 +74,7 @@ from .validate_export_field_placement import (
     validate_export_record_field_placement,
 )
 from .validate_export_field_widths import validate_draft_field_slot_width
+from .validate_helpers import missing_refs
 from .validate_projection_endpoints import validate_projection_endpoint_declarations
 
 __all__ = [
@@ -110,8 +110,8 @@ def validate_export_layout_section(
     binding_spans = binding_export_spans(revision)
     for layout in revision.export_layouts:
         owner = f"export {layout.id}"
-        failures.extend(_missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, layout.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, layout.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, layout.source_refs, "layout_authority"))
         validate_embedded_envelope_source_authority(
             failures,
@@ -471,8 +471,8 @@ def _validate_export_field_references(
 ) -> None:
     """Validate an export field's evidence and the casilla its endpoint names."""
     owner = f"export field {field.id}"
-    failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
-    failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
+    failures.extend(missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
+    failures.extend(missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
     failures.extend(evidence.require_source_tier(prefix, owner, field.source_refs, "layout_authority"))
     endpoint_casilla_id = field.endpoint_casilla_id
     if endpoint_casilla_id is not None and endpoint_casilla_id not in casillas:

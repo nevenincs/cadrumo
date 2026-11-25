@@ -16,7 +16,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.hashing import canonical_json_bytes
 from .....core.tax_domain import TaxDomain
 from ..schema import ModeloDefinition, ModeloRevision
-from .artifact_runtime_support import _LEGAL_ID, _SOURCE_ID, minimal_revision
+from .artifact_runtime_support import LEGAL_ID, SOURCE_ID, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,8 +32,8 @@ def _modelo_with(*capabilities: str, revision: ModeloRevision) -> ModeloDefiniti
             "jurisdiction": "ES-AEAT",
             "output_sensitivity": SensitivityClass.FINANCIAL,
             "capabilities": capabilities,
-            "legal_refs": (_LEGAL_ID,),
-            "source_refs": (_SOURCE_ID,),
+            "legal_refs": (LEGAL_ID,),
+            "source_refs": (SOURCE_ID,),
             "revisions": {revision.id: revision},
         }
     )

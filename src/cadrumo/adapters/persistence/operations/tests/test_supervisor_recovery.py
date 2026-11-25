@@ -11,7 +11,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationOwnedResource,
-    OperationReplayPolicy,
 )
 from cadrumo.application.operations.interactions import OperationRejectResponse
 from cadrumo.application.operations.models import (
@@ -24,11 +23,9 @@ from cadrumo.application.operations.persistence.leases import (
     OperationLeaseObservationDisposition,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.registry import OperationReconciliationPolicy
 from cadrumo.core.operations import (
     OperationCancellation,
     OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationInteractionKind,
     OperationLifecycle,
@@ -37,18 +34,19 @@ from cadrumo.core.operations import (
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     DeadlineAcknowledgingExecutor,
     ResumableReviewExecutor,
     ReviewExecutor,
-    WaitingExecutor,
-    _capabilities,
-    _close_host_over_live_executor,
-    _registry,
-    _repositories,
-    _request,
-    _response,
-    _supervisor,
+    abandon_running_operation,
+    lapse_settler,
+    operation_repositories,
+    operation_supervisor,
+    resumable_review_supervisor,
+    supervisor_capabilities,
+    supervisor_registry,
+    supervisor_request,
+    supervisor_response,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -58,27 +56,29 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
     """Detaching only re-reads durable state; a new observer replays its exact cursor."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        registry = _registry(
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         initial_replay = asyncio.run(supervisor.replay(operation_id, 0, limit=20))
         saved_cursor = initial_replay.next_cursor
         detached = asyncio.run(supervisor.detach(operation_id))
-        response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent="reject", operation_id=operation_id, revision=waiting.revision)
         assert isinstance(response, OperationRejectResponse)
         consumed = asyncio.run(supervisor.reject(response))
-        observer_journal, observer_leases, observer_operands = _repositories(
+        observer_journal, observer_leases, observer_operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        observer = _supervisor(
+        observer = operation_supervisor(
             registry=registry,
             journal=observer_journal,
             leases=observer_leases,
@@ -104,29 +104,29 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
 def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_reconstruction(tmp_path: Path) -> None:
     """The persisted consumed checkpoint survives reconstruction by its same durable owner."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
         assert waiting.pending_interaction is not None
         assert asyncio.run(owner.detach(operation_id)) == waiting
-        response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent="reject", operation_id=operation_id, revision=waiting.revision)
         assert isinstance(response, OperationRejectResponse)
-        restarted = _supervisor(
+        restarted = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
         consumed = asyncio.run(restarted.reject(response))
         persisted = asyncio.run(journal.load(operation_id))
-        duplicate = _supervisor(
+        duplicate = operation_supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
 
@@ -155,39 +155,17 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        registry = _registry(
-            executor_type=ResumableReviewExecutor,
-            build=build,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
         )
-        owner = _supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
+        registry, owner = resumable_review_supervisor(
+            executor_type=ResumableReviewExecutor, build=build, journal=journal, leases=leases, operands=operands
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         checkpoint = asyncio.run(run_to_settlement(owner, operation_id))
-        recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        recovered_at = SUPERVISOR_NOW + timedelta(minutes=2)
+        recovery = lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at, registry=registry)
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         scope_ref = operation_conflict_scope_reference(
@@ -234,36 +212,13 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
 
 def test_expired_running_operation_reconciles_to_unknown_interruption_without_false_success(tmp_path: Path) -> None:
     """A fresh supervisor classifies owner loss from the real lease before publishing interruption."""
-    started = asyncio.Event()
-    executor = WaitingExecutor(started=started, release=asyncio.Event())
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
-        owner = _supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
-        )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
-        assert abandoned.lifecycle is OperationLifecycle.RUNNING
-        recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _supervisor(
-            registry=registry,
-            journal=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: recovered_at,
-        )
+        journal, leases, operands, operation_id = abandon_running_operation(tmp_path, profile.repository)
+        recovered_at = SUPERVISOR_NOW + timedelta(minutes=2)
+        recovery = lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
         terminal = asyncio.run(recovery.reconcile(operation_id))
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         reloaded = asyncio.run(reloaded_journal.load(operation_id))
@@ -289,15 +244,17 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 ),
@@ -315,7 +272,7 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
             OperationPersistedSnapshot,
             OperationPersistedSnapshot,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
@@ -335,7 +292,7 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
             subject_ref=terminal.identity.subject_ref,
         )
         released_lease = asyncio.run(
-            reloaded_leases.inspect(scope_ref, terminal.identity.operation_id, observed_at=_NOW)
+            reloaded_leases.inspect(scope_ref, terminal.identity.operation_id, observed_at=SUPERVISOR_NOW)
         )
 
     assert detached.lifecycle is OperationLifecycle.RUNNING
@@ -363,15 +320,17 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
     instant = [datetime.now(UTC)]
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     deadline=OperationDeadline.COOPERATIVE,
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
@@ -392,7 +351,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             OperationPersistedSnapshot,
             OperationPersistedSnapshot,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)

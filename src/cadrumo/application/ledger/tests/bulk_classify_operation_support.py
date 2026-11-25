@@ -22,9 +22,10 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..bulk_classify_operation import LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
 from ..persistence_ports import LedgerPersistenceConflictError
-from .test_classification_rule_plan import _BUCKET, _ClassificationScenario, _InMemoryTransactionRepository
+from .in_memory_transaction_repository import InMemoryTransactionRepository
+from .test_classification_rule_plan import BUCKET, ClassificationScenario
 
-PROFILE_ID = UUID(_BUCKET)
+PROFILE_ID = UUID(BUCKET)
 
 
 class CommitFence:
@@ -47,11 +48,11 @@ class CommitFence:
             self.active = False
 
 
-class RevisionedCatalogueRepository(_InMemoryTransactionRepository):
+class RevisionedCatalogueRepository(InMemoryTransactionRepository):
     """In-memory CAS with explicit confirmed and uncertain writer outcomes."""
 
     def __init__(self, catalogue: TransactionCatalogue, fence: CommitFence) -> None:
-        super().__init__(catalogue)
+        super().__init__(bucket_id=BUCKET, catalogue=catalogue, permit_secure_object_writes=True)
         self.fence = fence
         self.revision = "a" * 64
         self.loads = 0
@@ -135,7 +136,7 @@ class BulkClassifySubject:
         self.events = EffectEvents()
         self.operands = PrivateOperands()
         catalogue = TransactionCatalogue.from_transactions(transactions)
-        scenario = _ClassificationScenario(catalogue, operation=operation)
+        scenario = ClassificationScenario(catalogue, operation=operation)
         self.repository = RevisionedCatalogueRepository(catalogue, self.fence)
         self.ports = replace(scenario.ports, transaction_repository=self.repository)
         self.context = cast(

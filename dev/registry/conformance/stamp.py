@@ -202,21 +202,21 @@ from typing import Final
 from pydantic import ValidationError as PydanticValidationError
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import TomlDecodeError, parse_toml, to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..compiler.loader import load_modelo_directory
 from .manager import reset_conformance_cache
+from .stamp_toml import GOVERNANCE_KEYS, StampError, apply_governance, render_toml_value
 
 __all__ = [
-    "GOVERNANCE_KEYS",
-    "StampError",
     "StampResult",
     "StampableReviewStatus",
     "bundled_registry_root",
@@ -250,31 +250,6 @@ class StampableReviewStatus(StrEnum):
 type ReviewStatusInput = StampableReviewStatus | RevisionReviewStatus | str
 
 
-#: Emit order for the governance scalars, chosen so a manifest reads
-#: authorship first and the review claim after it.
-_EMIT_ORDER: Final[tuple[str, ...]] = (
-    "engineered_by",
-    "review_status",
-    "reviewed_by",
-    "reviewed_at",
-    "reviewed_against",
-)
-
-GOVERNANCE_KEYS: Final[tuple[str, ...]] = (
-    *(key for key in _EMIT_ORDER if key in REVISION_GOVERNANCE_FIELDS),
-    *sorted(REVISION_GOVERNANCE_FIELDS - set(_EMIT_ORDER)),
-)
-"""The governance scalars this writer owns, in the order it emits them.
-
-The SET is the shipped :data:`REVISION_GOVERNANCE_FIELDS`, never a second copy:
-that set is derived from the field declarations themselves and is the sole input
-to the loader's fragment refusal, so a fifth governance scalar added to the model
-must reach this writer without anybody remembering to update it. Only the ORDER
-is chosen here, and a field the emit order does not name is appended rather than
-dropped — an unordered field is a cosmetic gap, an unwritable one is a
-capability hole.
-"""
-
 #: The arguments that restate a revision's review CLAIM. A request touching any
 #: of them is governed by the effective-status guard; ``engineered_by`` is
 #: deliberately absent, because authorship is a different fact from signoff.
@@ -290,7 +265,7 @@ _SAFE_SEGMENT: Final = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 #: governance combination is legal. Built at import so a schema change that
 #: breaks the probe fails loudly here rather than surfacing later disguised as a
 #: refused governance stamp.
-_PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=2000, periods=("1T",))
+_PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=FOUR_DIGIT_YEAR_FIRST, periods=("1T",))
 
 #: Minimal localization key for the same probe revision. Never written and never
 #: resolved against a catalogue: the probe asks only whether a GOVERNANCE
@@ -306,12 +281,8 @@ _PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=2000, periods=("1T",))
 _PROBE_LOCALIZATION_KEY: Final = "probe"
 
 
-class StampError(RuntimeError):
-    """A governance stamp was refused, or could not be written safely."""
-
-
 @dataclass(frozen=True, slots=True)
-class _Stamp:
+class Stamp:
     """The four governance scalars, typed, as declared or as intended.
 
     ``review_status`` stays a plain string until the schema probe hydrates it:
@@ -335,7 +306,7 @@ class _Stamp:
             "reviewed_at": self.reviewed_at,
             "reviewed_against": self.reviewed_against,
         }
-        return {key: _render_toml_value(values[key]) for key in GOVERNANCE_KEYS if values[key] is not None}
+        return {key: render_toml_value(values[key]) for key in GOVERNANCE_KEYS if values[key] is not None}
 
     def declared_keys(self) -> frozenset[str]:
         """Return the governance keys this stamp carries a value for."""
@@ -514,7 +485,7 @@ def stamp_revision(
 
     manifest = revision_manifest_path(modelo, revision, registry_root=registry_root)
     modelo_dir = manifest.parent.parent.parent
-    compiled = _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
+    compiled = assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
 
     # BYTES, not text. ``read_text`` decodes under universal newlines and
     # ``write_text`` re-encodes under the platform's, so a read/write pair on
@@ -525,7 +496,7 @@ def stamp_revision(
     # whole-file rewrite, which is how it survived three review rounds.
     original_bytes = manifest.read_bytes()
     original = original_bytes.decode(UTF_8_ENCODING)
-    declared = _declared_governance(manifest, original, revision)
+    declared = declared_governance(manifest, original, revision)
     _assert_review_axis_is_writable(
         compiled.review_status,
         manifest=manifest,
@@ -541,15 +512,15 @@ def stamp_revision(
         reviewed_at=reviewed_at,
         scope=compiled.predecessor.revision_id if isinstance(compiled.predecessor, DeclaredPredecessor) else None,
     )
-    _assert_schema_accepts(revision, resolved, predecessor=compiled.predecessor)
+    assert_schema_accepts(revision, resolved, predecessor=compiled.predecessor)
 
     rendered = resolved.rendered()
     dropped = declared.declared_keys() - resolved.declared_keys()
     removed = tuple(key for key in GOVERNANCE_KEYS if key in dropped)
-    manifest.write_bytes(_apply_governance(original, revision, rendered).encode(UTF_8_ENCODING))
+    manifest.write_bytes(apply_governance(original, revision, rendered).encode(UTF_8_ENCODING))
 
     try:
-        _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
+        assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
     except StampError:
         manifest.write_bytes(original_bytes)
         raise
@@ -681,7 +652,7 @@ def _assert_review_axis_is_writable(
 
 
 def _assert_a_new_reviewer_restates_the_date(
-    declared: _Stamp,
+    declared: Stamp,
     *,
     reviewed_by: str | None,
     reviewed_at: date | None,
@@ -855,7 +826,7 @@ def _safe_exception_detail(exc: BaseException) -> str:
     return "; ".join(error["msg"] for error in validation_error.errors(include_url=False, include_input=False))
 
 
-def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
+def assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
     """Confirm the revision exists as a COMPILED record, never as a directory listing.
 
     A subdirectory-blind read of this registry has twice produced wrong verdicts,
@@ -883,7 +854,7 @@ def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str
     return compiled
 
 
-def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
+def declared_governance(manifest: Path, text: str, revision: str) -> Stamp:
     """Read the governance scalars the manifest already declares."""
     try:
         parsed = parse_toml(text)
@@ -910,7 +881,7 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
         table_raw,
         error_factory=lambda message: StampError(f"{manifest}: {message}"),
     )
-    return _Stamp(
+    return Stamp(
         engineered_by=_declared_text(manifest, table, "engineered_by"),
         review_status=_declared_text(manifest, table, "review_status"),
         reviewed_by=_declared_text(manifest, table, "reviewed_by"),
@@ -943,7 +914,7 @@ def _declared_date(manifest: Path, table: dict[str, object]) -> date | None:
 
 
 def _resolve_stamp(
-    declared: _Stamp,
+    declared: Stamp,
     *,
     engineered_by: str | None,
     clear_engineered_by: bool,
@@ -951,7 +922,7 @@ def _resolve_stamp(
     reviewed_by: str | None,
     reviewed_at: date | None,
     scope: str | None,
-) -> _Stamp:
+) -> Stamp:
     """Merge the requested changes onto what the manifest already declares.
 
     ``scope`` is the predecessor the COMPILED edition declares, or ``None`` when
@@ -981,14 +952,14 @@ def _resolve_stamp(
                 f"attached to a review the status denies. Record the review by also passing "
                 f"review_status={StampableReviewStatus.AGENT_REVIEWED.value!r}",
             )
-        return _Stamp(
+        return Stamp(
             engineered_by=author,
             review_status=status,
             reviewed_by=None,
             reviewed_at=None,
             reviewed_against=None,
         )
-    return _Stamp(
+    return Stamp(
         engineered_by=author,
         review_status=status,
         reviewed_by=reviewed_by if reviewed_by is not None else declared.reviewed_by,
@@ -997,9 +968,9 @@ def _resolve_stamp(
     )
 
 
-def _assert_schema_accepts(
+def assert_schema_accepts(
     revision: str,
-    resolved: _Stamp,
+    resolved: Stamp,
     *,
     predecessor: DeclaredPredecessor | NoPredecessor | None,
 ) -> None:
@@ -1023,7 +994,7 @@ def _assert_schema_accepts(
         ModeloRevision(
             id=revision,
             localization_key=_PROBE_LOCALIZATION_KEY,
-            valid_from=date(2000, 1, 1),
+            valid_from=date(FOUR_DIGIT_YEAR_FIRST, 1, 1),
             period_selector=_PROBE_PERIOD_SELECTOR,
             legal_refs=("probe:art-1",),
             source_refs=("probe-source",),
@@ -1038,214 +1009,3 @@ def _assert_schema_accepts(
         raise StampError(
             f"refused governance stamp for revision {revision!r}: {_safe_exception_detail(exc)}",
         ) from exc
-
-
-def _render_toml_value(value: object) -> str:
-    """Render one governance scalar in canonical TOML form.
-
-    Dates are emitted bare, matching ``valid_from`` in every shipped manifest;
-    strings are emitted with the escaping TOML requires so a reviewer name
-    carrying a quote cannot break the table.
-    """
-    if isinstance(value, date):
-        return value.isoformat()
-    text = str(value)
-    escaped = text.replace("\\", "\\\\").replace('"', '\\"')
-    return f'"{escaped}"'
-
-
-_QUOTE = '"'
-_TRIPLE_QUOTE = '"""'
-_LINE_CONTINUATION = "\\\n"
-
-#: Physical width the wrapped form aims for. Deliberately well under BOTH
-#: reviewability caps in the tree (520 and 600) rather than tracking either: this
-#: module lives in ``dev/`` and the gates in ``src/``, so importing one constant
-#: is the wrong direction, and a value comfortably below every cap needs no
-#: coordination.
-_WRAPPED_NOTE_WIDTH = 90
-
-#: Above this, a rendered assignment is wrapped. Short notes stay single-line, so
-#: the common manifest is untouched and diffs stay small.
-_WRAP_ASSIGNMENT_ABOVE = 200
-
-
-def _render_governance_assignment(key: str, rendered_value: str) -> str:
-    """Render one ``key = value`` line, wrapping a long note across lines.
-
-    Reviewer notes are prose and routinely run past 2,000 characters. Emitted on
-    one line they break the registry reviewability gates, and the sweep to wrap
-    them by hand has had to be repeated after each stamping round -- the churn
-    starts here, so it is stopped here.
-
-    The wrapped form is a TOML multi-line basic string whose newlines are all
-    eaten by line-ending backslashes, so the VALUE is byte-identical to the
-    single-line form. Only a plain quoted string is wrapped, and only when it has
-    spaces to break at; anything else is returned unchanged rather than risking a
-    value the writer cannot reproduce.
-
-    :func:`_without_governance_assignments` already walks an assignment's full
-    span, so a multi-line value written here stays replaceable by a later stamp --
-    the defect that once made two revisions permanently unstampable.
-    """
-    single = f"{key} = {rendered_value}"
-    if len(single) <= _WRAP_ASSIGNMENT_ABOVE:
-        return single
-    if not (rendered_value.startswith(_QUOTE) and rendered_value.endswith(_QUOTE)):
-        return single
-    if rendered_value.startswith(_TRIPLE_QUOTE) or " " not in rendered_value:
-        return single
-    inner = rendered_value[1:-1]
-    words = inner.split(" ")
-    line = ""
-    out: list[str] = []
-    for word in words:
-        if line and len(line) + 1 + len(word) > _WRAPPED_NOTE_WIDTH:
-            out.append(line + " ")
-            line = word
-        else:
-            line = f"{line} {word}" if line else word
-    out.append(line)
-    body = _LINE_CONTINUATION.join(out)
-    return f"{key} = {_TRIPLE_QUOTE}{_LINE_CONTINUATION}{body}{_TRIPLE_QUOTE}"
-
-
-def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str:
-    """Rewrite the manifest's governance keys inside its single revision table.
-
-    Line-oriented on purpose: a full TOML round-trip would reformat every
-    hand-authored multi-line array in the file and bury the one-line stamp in an
-    unreviewable diff. Only whole ``key = value`` lines for the four governance
-    keys are touched; every other line is passed through byte for byte.
-
-    "Byte for byte" includes the LINE TERMINATOR, which is why the joiner is
-    read off the input rather than assumed. ``splitlines`` discards the
-    terminator it split on, so re-joining with a fixed LF would silently rewrite
-    every line of a CRLF manifest — the same whole-file rewrite, arriving from
-    the other direction, that writing through ``write_text`` produced on an LF
-    one.
-    """
-    newline = "\r\n" if "\r\n" in text else "\n"
-    lines = text.splitlines()
-    header = f'[revisions."{revision}"]'
-    start = _revision_table_start(lines, header)
-
-    end = _revision_table_end(lines, start)
-    body = _without_governance_assignments(lines[start + 1 : end])
-    while body and not body[-1].strip():
-        body.pop()
-    body.extend(_render_governance_assignment(key, rendered[key]) for key in GOVERNANCE_KEYS if key in rendered)
-
-    rebuilt = [*lines[:start], lines[start], *body, "", *lines[end:]]
-    while rebuilt and not rebuilt[-1].strip():
-        rebuilt.pop()
-    return newline.join(rebuilt) + newline
-
-
-def _revision_table_start(lines: list[str], header: str) -> int:
-    """Find the exact manifest header line, refusing equivalent TOML spellings."""
-    try:
-        return next(index for index, line in enumerate(lines) if line.strip() == header)
-    except StopIteration as exc:
-        # REACHABLE, and it used to carry a pragma claiming otherwise on the
-        # ground that ``_declared_governance`` proves the table exists. That
-        # proves the table exists in PARSED TOML, never that any line matches
-        # this one exact spelling. Measured: both ``[revisions.'<id>']`` and
-        # ``[ revisions."<id>" ]`` parse to the same key, load through the real
-        # registry loader, and miss here. The line editor needs a literal line to
-        # edit, so the narrow match stays and the message names the requirement
-        # instead of leaving the caller with a manifest the loader accepts and
-        # this writer cannot address.
-        raise StampError(
-            f"{header} is not present as a whole line in the revision manifest. This writer edits the "
-            f"manifest line by line so a hand-authored file stays reviewable, so it needs the table "
-            f"header written in exactly that form; an equivalent TOML spelling such as a single-quoted "
-            f"or space-padded header parses to the same table and loads cleanly, but cannot be located "
-            f"here. Rewrite the header line in the canonical form and stamp again.",
-        ) from exc
-
-
-def _revision_table_end(lines: list[str], start: int) -> int:
-    """Index of the first line after the revision table that ``start`` opens.
-
-    A table ends at the next line that OPENS a new TOML table, but the scan
-    cannot simply look for a leading ``[``: a governance value written as a
-    multi-line basic string carries arbitrary prose, and a wrapped continuation
-    line may legitimately BEGIN with a bracket. Modelo 840 is the worked case --
-    its reviewed_by cites AEAT box numbers, and the wrap put ``[13]. VERIFIED
-    -- ...`` at the start of a line, which the naive scan read as a table header
-    and used to truncate the table thirty lines early. The rebuild then emitted
-    the remaining prose outside any table and the manifest stopped parsing, so
-    the revision was unstampable through this writer while its neighbours were
-    fine.
-
-    Skipping each governance assignment's full span keeps the scan on real
-    structure. This is the same span walk :func:`_without_governance_assignments`
-    performs; both must agree, or the body slice and the removal disagree about
-    where the table ends.
-    """
-    index = start + 1
-    while index < len(lines):
-        if _is_governance_line(lines[index]):
-            index += _governance_assignment_length(lines, index)
-            continue
-        if lines[index].startswith("["):
-            return index
-        index += 1
-    return len(lines)
-
-
-def _without_governance_assignments(body: list[str]) -> list[str]:
-    """Return ``body`` with every governance assignment removed, bodies included.
-
-    A governance value is a scalar, but a scalar written as a TOML multi-line
-    basic string still occupies several PHYSICAL lines. Dropping only the line
-    that carries the key orphans the remaining prose and the closing delimiter
-    as bare TOML, and a reviewer note conventionally opening ``agent: ...`` then
-    parses as a key with a colon where an equals belongs. That is not
-    hypothetical: it refused every attempt to restamp a revision whose
-    ``reviewed_by`` had been written in the triple-quoted form, while the
-    single-line form beside it stamped cleanly.
-
-    The refusal was the good outcome -- the caller restores the previous bytes
-    rather than leaving a broken manifest -- but it made those revisions
-    permanently unstampable through this writer.
-    """
-    kept: list[str] = []
-    index = 0
-    while index < len(body):
-        if _is_governance_line(body[index]):
-            index += _governance_assignment_length(body, index)
-            continue
-        kept.append(body[index])
-        index += 1
-    return kept
-
-
-def _governance_assignment_length(body: list[str], index: int) -> int:
-    """How many physical lines the governance assignment at ``index`` occupies.
-
-    One, unless its value opens a multi-line basic string that the same line
-    does not also close. An unterminated opener runs to the end of the table
-    rather than past it, so a malformed manifest cannot make this consume the
-    caller's unrelated lines.
-    """
-    _, _, after = body[index].partition("=")
-    if after.count('"""') % 2 == 0:
-        return 1
-    for offset in range(index + 1, len(body)):
-        if '"""' in body[offset]:
-            return offset - index + 1
-    return len(body) - index
-
-
-def _is_governance_line(line: str) -> bool:
-    """Whether a manifest line OPENS an assignment of one of the four governance scalars.
-
-    Anchored at the start of the line so a governance key name appearing inside
-    a continued array element is never mistaken for an assignment. The line is
-    the START of the assignment; :func:`_governance_assignment_length` decides
-    how far it runs.
-    """
-    stripped = line.lstrip()
-    return any(re.match(rf"{key}\s*=", stripped) for key in GOVERNANCE_KEYS)

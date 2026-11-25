@@ -8,19 +8,76 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
+        "--tax-id",
+        "00000027G",
+        "--name",
+        "Lucía",
+        "--surnames",
+        "Navarro Ibáñez",
         "--irpf-income-categories",
         "trabajo",
         "--taxpayer-birth-date",
-        "1985-06-15",
+        "1987-06-14",
         "--tax-residence-ccaa",
         "madrid",
         "--taxation-type",
         "1",
         "--taxpayer-sex",
-        "H",
+        "M",
         "--taxpayer-marital-status",
-        "1"
+        "2",
+        "--situacion-familiar",
+        "casado",
+        "--taxpayer-marriage-date",
+        "2014-09-15",
+        "--spouse-tax-id",
+        "00000001R",
+        "--spouse-name",
+        "Daniel",
+        "--spouse-surnames",
+        "Ortega Pina",
+        "--spouse-birth-date",
+        "1985-01-30",
+        "--spouse-sex",
+        "H",
+        "--no-spouse-non-resident-irpf"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "retencion-soportada",
+        "record",
+        "B00010009",
+        "--ejercicio",
+        "2025",
+        "--income-class",
+        "trabajo",
+        "--origin",
+        "operator_declaration",
+        "--retencion",
+        "2400",
+        "--ingreso-a-cuenta",
+        "0",
+        "--importe-integro",
+        "24000",
+        "--reducciones-aplicables",
+        "0",
+        "--gastos-deducibles",
+        "0",
+        "--payer-name",
+        "Pagador Sintetico SL"
       ],
       "captures": [],
       "envelope": null,
@@ -46,6 +103,89 @@
         "--period",
         "0A"
       ],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "work_unit_id",
+          "value": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A",
+        "--binding",
+        "renta-base-liquidable-negativa-general-anterior=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "attest-work-income",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--yes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "checked_revision_id",
+          "value": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c"
+      ],
       "captures": [],
       "envelope": null,
       "envelope_source": null,
@@ -69,12 +209,14 @@
         "2025",
         "--period",
         "0A",
-        "--casilla",
-        "0003=24000",
         "--binding",
-        "renta-certificado-trabajo-retenciones=2400",
+        "renta-base-liquidable-negativa-general-anterior=0",
         "--binding",
-        "renta-base-liquidable-negativa-general-anterior=0"
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
       ],
       "captures": [],
       "envelope": null,
@@ -92,19 +234,70 @@
         "app",
         "modelo",
         "work",
-        "verify",
-        "--modelo",
-        "100",
-        "--year",
-        "2025",
-        "--period",
-        "0A"
+        "attest-work-income",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--yes"
       ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "stated_revision_id",
+          "value": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest_work_income",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.work.attest_work_income.reused_sealed_revision",
+            "context": {
+              "calculation_revision_id": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
+              "current_calculation_revision_id": "aa7b68d197f9cc8ae85ae89d8479df9e31ced5aed45a4ce1ca0ef1a1815a72c3",
+              "state": "verificado_completo"
+            },
+            "message": "These inputs match calculation 3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c (state: checked and complete). No new draft was created. Select this saved calculation by its revision ID, or change the inputs.",
+            "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "applied": true,
+          "bucket_id": "<bucket-id>",
+          "calculation_revision_id": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
+          "filing_year": 2025,
+          "findings": [],
+          "modelo": "100",
+          "receipt_id": "1bc55b28fb67c6ff090bb3e9a7fa601d0feb149988c30fc64e2ce08f3c9542cb",
+          "statements": [
+            {
+              "action_words": "I have no employer contributions or protected-estate contributions to state",
+              "binding_ids": [
+                "renta-trabajo-aportacion-empresa-decision-trabajador",
+                "renta-trabajo-aportacion-patrimonio-protegido",
+                "renta-trabajo-contribucion-empresarial-prevision",
+                "renta-trabajo-contribucion-empresarial-seguro-dependencia"
+              ],
+              "effect_words": "Recorded as a 0 you stated: none of these contributions.",
+              "family": "renta_trabajo_income_not_stated",
+              "statement_words": "States that you have nothing in four boxes of your work income: employer contributions to pension plans and welfare mutuals (0008), employer contributions to dependency insurance (0009), contributions to the protected estate of a person with a disability (0010) and employer contributions made at your decision (0024). Each box is recorded as a 0 you stated, apart from a figure you typed. No payer certificate states these amounts, so only you can."
+            }
+          ],
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
       "text": null
     },
@@ -116,12 +309,9 @@
         "app",
         "modelo",
         "export",
-        "--modelo",
-        "100",
-        "--year",
-        "2025",
-        "--period",
-        "0A",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--revision",
+        "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
         "--output",
         "./modelo-100.boe"
       ],
@@ -144,6 +334,87 @@
           },
           {
             "action": null,
+            "code": "modelo.export.trabajo_deduction_not_computed",
+            "context": {
+              "filing_year": "2025",
+              "modelo": "100",
+              "period": "0A"
+            },
+            "message": "Your work income does not include the deductions only you can evidence: union dues (0014), professional-body fees (0015), legal-defence costs (0016) and the increase for geographic mobility (0020). If any applies, the return overstates your tax. State it in those boxes.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0596: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0597: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0153: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the return you filed to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0603: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
             "code": "config.login.session_not_persisted",
             "context": null,
             "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
@@ -151,18 +422,18 @@
           }
         ],
         "result": {
-          "bucket_event_id": "0ab3030e7114ab7fd24ce89f93fdaa221c6d08a255e88c9c53daeca4f1981f7a",
+          "bucket_event_id": "0d23b19dce1ec7e3c81902af5ee2417bde85de1fcd67b6f5c2cb82fa33effe1f",
           "bucket_id": "<bucket-id>",
-          "byte_size": 2207,
-          "calculation_revision_id": "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439",
-          "file_sha256": "e39e9ea0333bce06abf58cece98e21ce5dabfaf7b34b39643740f97e796dd1d0",
+          "byte_size": 2665,
+          "calculation_revision_id": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
+          "file_sha256": "447bf85cf387fdc33ebe422e457c58a8960899389b0552309ce02ce24bd0955a",
           "filing_year": 2025,
           "format": "xml-dictionary",
           "iva_wallet_decision_provenance": null,
           "modelo": "100",
           "operation": "modelo.export",
           "output_path": "<sandbox-workdir>/modelo-100.boe",
-          "payment_election": null,
+          "payment_election": "ingreso",
           "period": {
             "code": "0A",
             "filing_year": 2025
@@ -175,7 +446,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": null,
+          "resolved_result_disposition": "I",
           "software_identity_grade": null,
           "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },

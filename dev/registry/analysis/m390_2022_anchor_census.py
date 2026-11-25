@@ -7,9 +7,8 @@ identity.  The source's eight page shapes are stable enough to state as page
 cardinalities; the full 537-element anchor set is derived from that geometry and
 then compared exactly with the parser output.
 
-The 13-field auxiliary header is governed separately by
-``dev.registry.pipeline.m390_auxiliary_envelope``.  Including it here would
-turn a numbered-page census into a second owner for page zero.
+The 13-field auxiliary header on page zero is outside this census, which owns
+only the numbered pages.
 """
 
 from __future__ import annotations
@@ -106,11 +105,9 @@ class M3902022NumberedAnchorCensus:
 
 
 def _require_2022_source_identity(intermediate: RecordDesignIntermediate) -> None:
-    """Refuse an intermediate built from another source or design epoch."""
+    """Refuse an intermediate built from another source; the source pins its own design epoch."""
     if str(intermediate.source.source_ref) != "aeat-dr-390-2022":
         raise ValueError("M390 2022 numbered-anchor census requires aeat-dr-390-2022")
-    if intermediate.source.design_epoch != "2022":
-        raise ValueError("M390 2022 numbered-anchor census requires design epoch '2022'")
 
 
 def _validated_anchor_set(fields: tuple[RecordDesignIntermediateField, ...]) -> frozenset[M390NumberedAnchor]:

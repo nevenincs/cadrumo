@@ -33,10 +33,11 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -47,11 +48,12 @@ from cadrumo.tests.cli_envelope import (
     unwrap_envelope_notices,
     unwrap_schema_envelope,
 )
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -75,12 +77,8 @@ _PREMIUM = Decimal("240.00")
 _INVESTMENT_ASSET_ID = "BI-2025-ORDENADOR"
 
 
-def _profile_facts() -> dict[str, str]:
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date="2025-01-01"))
+def profile_facts() -> dict[str, str]:
+    facts = operator_profile_facts(activity_start_date="2025-01-01")
     return facts
 
 
@@ -88,7 +86,7 @@ def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(["--format", "json", *args])
 
 
-def _added_transaction_id(result: Result) -> str:
+def added_transaction_id(result: Result) -> str:
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
     transaction = payload["transaction"]
@@ -98,13 +96,13 @@ def _added_transaction_id(result: Result) -> str:
     return transaction_id
 
 
-def _seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
+def seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
     """Record the first-period nil compensation decision 303 asks before calculating."""
     snapshot_ref = published_snapshot("303", filing_year=2025, period="1T").snapshot_ref
     with open_test_profile_session(bucket_id):
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
+                taxpayer_nif=directa_normal_tax_id(),
                 target_year=2025,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,
@@ -124,19 +122,7 @@ def _seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
         )
 
 
-def _minimal_pdf(text: str) -> bytes:
-    """Return one syntactically minimal PDF carrying ``text``.
-
-    ``evidence add`` accepts only the document extensions a real purchase invoice
-    arrives in, so the fixture is a document rather than a text file. It stays
-    synthetic: the bytes name no real supplier, taxpayer or amount outside this
-    module's own constants.
-    """
-    body = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("ascii", errors="replace")
-    return b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" + body + b"\n%%EOF\n"
-
-
-def _register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Decimal, cuota: Decimal) -> str:
+def register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Decimal, cuota: Decimal) -> str:
     """Register one purchase invoice document and return its evidence id.
 
     The deduction's evidence pointer is derived from the registered record rather
@@ -144,7 +130,7 @@ def _register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Dec
     links one.
     """
     document = tmp_path / f"{label}.pdf"
-    document.write_bytes(_minimal_pdf(f"Factura {label} base {base} IVA {cuota}"))
+    document.write_bytes(text_pdf_bytes((f"Factura {label} base {base} IVA {cuota}",)))
     registered = _invoke(
         [
             "app",
@@ -173,8 +159,8 @@ def _register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Dec
     return evidence_id
 
 
-def _add_sale() -> str:
-    return _added_transaction_id(
+def add_sale() -> str:
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -204,10 +190,10 @@ def _add_sale() -> str:
 
 
 def _add_taxable_purchase(tmp_path: Path, *, extra_options: tuple[str, ...] = ()) -> str:
-    evidence_id = _register_purchase_invoice_evidence(
+    evidence_id = register_purchase_invoice_evidence(
         tmp_path, label="corriente", base=_PURCHASE_BASE, cuota=_PURCHASE_CUOTA
     )
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -244,10 +230,10 @@ def _add_taxable_purchase(tmp_path: Path, *, extra_options: tuple[str, ...] = ()
 
 
 def _add_investment_purchase(tmp_path: Path) -> str:
-    evidence_id = _register_purchase_invoice_evidence(
+    evidence_id = register_purchase_invoice_evidence(
         tmp_path, label="inversion", base=_INVESTMENT_BASE, cuota=_INVESTMENT_CUOTA
     )
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -310,7 +296,7 @@ def _declare_bien_inversion(acquisition_ledger_id: str) -> None:
 
 
 def _add_reta_quota() -> str:
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -342,7 +328,7 @@ def _add_reta_quota() -> str:
 
 
 def _add_exempt_premium() -> str:
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -396,12 +382,12 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
 ) -> None:
     """All five rows reach one 2025 1T calculation, and the casillas match hand arithmetic."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     _add_taxable_purchase(tmp_path)
     _declare_bien_inversion(_add_investment_purchase(tmp_path))
     _add_reta_quota()
@@ -437,12 +423,14 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
     # neither base may appear anywhere in the return.
     assert str(_RETA_QUOTA) not in values.values()
     assert str(_PREMIUM) not in values.values()
-    # And their absence is reported rather than silent: a base that reached no box
-    # is an advisory the operator sees on the calculation that omitted it.
+    # The exempt premium's absence is reported rather than silent: a base that
+    # reached no box is an advisory the operator sees on the calculation that
+    # omitted it. The RETA quota is no IVA operation at all, so it has no base
+    # to declare and nothing to report.
     advisories = "\n".join(str(notice) for notice in unwrap_envelope_notices(calculated.output))
     assert "unrouted_declarable_quantity" in advisories, advisories
     assert "domestic_exempt" in advisories
-    assert "operacion_no_sujeta" in advisories
+    assert "operacion_no_sujeta" not in advisories
 
 
 def test_an_investment_asset_id_without_its_register_record_is_refused(
@@ -456,12 +444,12 @@ def test_an_investment_asset_id_without_its_register_record_is_refused(
     without declaring the record.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     investment_transaction_id = _add_investment_purchase(tmp_path)
 
     refused = _calculate_1t()
@@ -487,12 +475,12 @@ def test_a_reta_quota_without_its_iva_substrate_still_blocks_the_quarter(
     undeclared base on a return, so the remedy stays the operator's declaration.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    bare = _added_transaction_id(
+    bare = added_transaction_id(
         _invoke(
             [
                 "app",
@@ -516,13 +504,17 @@ def test_a_reta_quota_without_its_iva_substrate_still_blocks_the_quarter(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "missing_taxable_base"
-    assert context["transaction_id"] == bare
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == bare
 
 
 def test_the_declared_substrate_unblocks_the_same_row(request: pytest.FixtureRequest) -> None:
@@ -532,10 +524,10 @@ def test_the_declared_substrate_unblocks_the_same_row(request: pytest.FixtureReq
     blocked the quarter but that nothing the operator could declare unblocked it.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
     quota = _add_reta_quota()
     assert quota
@@ -554,13 +546,13 @@ def test_a_deduction_claimed_on_the_exempt_premium_is_refused_by_the_cli(
 ) -> None:
     """A premium that bore no cuota cannot claim one, and the refusal names the row."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    evidence_id = _register_purchase_invoice_evidence(tmp_path, label="prima", base=_PREMIUM, cuota=Decimal("0.00"))
-    premium = _added_transaction_id(
+    evidence_id = register_purchase_invoice_evidence(tmp_path, label="prima", base=_PREMIUM, cuota=Decimal("0.00"))
+    premium = added_transaction_id(
         _invoke(
             [
                 "app",
@@ -596,13 +588,17 @@ def test_a_deduction_claimed_on_the_exempt_premium_is_refused_by_the_cli(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification"
-    assert context["transaction_id"] == premium
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == premium
 
 
 def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
@@ -616,12 +612,12 @@ def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
     asset is corrected rather than quietly carrying a link nothing reads.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     purchase = _add_taxable_purchase(
         tmp_path,
         extra_options=("--investment-asset-id", _INVESTMENT_ASSET_ID),
@@ -629,11 +625,14 @@ def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification"
-    assert context["transaction_id"] == purchase
-    assert "investment_asset_id" in context["detail"]
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == purchase

@@ -6,23 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-
-from ...compiler.authority import compiled_bundled_authority
-from ...compiler.loader import load_registry_tree
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from .._export_tree import render_complete_export_tree
-from ..record_design_intermediate import (
-    RecordDesignIntermediate,
-    RecordDesignIntermediateField,
-    load_record_design_intermediate,
-)
-from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
-from ..semantic_map import (
-    SemanticMapEntry,
-    load_semantic_map,
-)
+from ..semantic_map import SemanticMapEntry
 from ..source_defects import source_defects_for
+from .m390_semantic_map_support import (
+    assert_page_07_close,
+    load_edition_pair,
+    render_edition,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -129,23 +120,6 @@ _PAGE_2_DELTA_OWNERS = (
 )
 
 
-def _design(source_ref: str, *, filing_year: int, epoch: str) -> RecordDesignIntermediate:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return load_record_design_intermediate(
-        bundled_path(),
-        catalogues.sources,
-        source_ref=source_ref,
-        filing_year=filing_year,
-        design_epoch=epoch,
-    )
-
-
-def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], RecordDesignIntermediateField]:
-    return {
-        (sheet.record_identity, field.source_cell or ""): field for sheet in design.sheets for field in sheet.fields
-    }
-
-
 def _normalized_reused_owner(
     entry: SemanticMapEntry,
 ) -> tuple[
@@ -186,15 +160,14 @@ def _normalized_reused_owner(
 
 
 def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact_page_2_delta() -> None:
-    predecessor_design = _design(
-        _PREDECESSOR_SOURCE_REF, filing_year=_PREDECESSOR_EXERCISE, epoch=str(_PREDECESSOR_EXERCISE)
+    pair = load_edition_pair(
+        source_ref=_SOURCE_REF,
+        exercise=_DESIGN_EXERCISE,
+        predecessor_source_ref=_PREDECESSOR_SOURCE_REF,
+        predecessor_exercise=_PREDECESSOR_EXERCISE,
     )
-    design = _design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
-    predecessor_fields = _field_index(predecessor_design)
-    fields = _field_index(design)
-    measured_delta = {
-        key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)
-    }
+    design, predecessor_fields, fields, measured_delta = pair.design, pair.predecessor_fields, pair.fields, pair.delta
+    entries = pair.entries
 
     assert measured_delta == _PAGE_2_DELTA
     assert len(predecessor_fields) == 537
@@ -202,14 +175,8 @@ def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact
     assert len(set(predecessor_fields) & set(fields) - measured_delta) == 522
     assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
-    predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
-    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))
-    predecessor_entries = {
-        (entry.anchor.record_identity, entry.anchor.source_cell): entry for entry in predecessor_map.entries
-    }
-    entries = {(entry.anchor.record_identity, entry.anchor.source_cell): entry for entry in semantic_map.entries}
-    unchanged_keys = set(predecessor_fields) & set(fields) - measured_delta
-    assert {key: _normalized_reused_owner(predecessor_entries[key]) for key in unchanged_keys} == {
+    unchanged_keys = pair.stable
+    assert {key: _normalized_reused_owner(pair.predecessor_entries[key]) for key in unchanged_keys} == {
         key: _normalized_reused_owner(entries[key]) for key in unchanged_keys
     }
     actual = tuple(
@@ -229,36 +196,14 @@ def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact
 def test_m390_recargo_relayout_profile_and_map_render_all_numbered_anchors_from_the_exact_source(
     tmp_path: Path,
 ) -> None:
-    inputs = revision_render_inputs(
-        compiled_bundled_authority(),
-        modelo="390",
-        revision=str(_DESIGN_EXERCISE),
+    rendered = render_edition(
+        tmp_path,
+        exercise=_DESIGN_EXERCISE,
         source_ref=_SOURCE_REF,
-        bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id=f"generated-modelo-390-{_DESIGN_EXERCISE}-fichero",
-            line_ending="crlf",
-            source_ref=_SOURCE_REF,
-            source_sha256=_SOURCE_SHA256,
-        ),
-    )
-
-    rendered = render_complete_export_tree(
-        tmp_path / "export",
-        revision_id=str(_DESIGN_EXERCISE),
-        joined=inputs.joined,
-        semantic_map=inputs.semantic_map,
-        transport_profile=inputs.transport_profile,
-        render_profile=inputs.render_profile,
-        render_profile_source_evidence=inputs.render_profile_source_evidence,
+        source_sha256=_SOURCE_SHA256,
         source_defects=source_defects_for(_SOURCE_REF),
     )
 
     assert len(rendered.layout.records) == 8
     assert sum(len(record.fields) for record in rendered.layout.records) == 541
-    close = next(
-        field
-        for record in rendered.layout.records
-        for field in record.fields
-        if str(field.id) == "modelo-390-page-07-close"
-    )
-    assert close.literal == "</T39007000>"
+    assert_page_07_close(rendered)

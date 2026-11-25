@@ -55,7 +55,7 @@ _ROUTER = _SRC_ROOT / "application" / "ledger" / "invoice_draft_extraction.py"
 # Working AEAT parsers, aimed at fixed published layouts. Deliberately NOT swept
 # by this gate; they serve as its positive control.
 _AEAT_LAYOUT_PARSERS = (
-    _SRC_ROOT / "adapters" / "inbound" / "justificante" / "_extract.py",
+    _SRC_ROOT / "adapters" / "inbound" / "justificante" / "extract.py",
     _SRC_ROOT / "adapters" / "inbound" / "declaracion" / "parser.py",
 )
 

@@ -59,11 +59,15 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr as render_tr
 from ...core.identity.hex_ids import InvoiceId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ...domain.iva.components import category_components, registry_retencion_role_token
+from ...domain.iva.components import category_components, registry_retencion_role_token, retencion_role_of_kind
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import modelo_for_income_kind
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -174,6 +178,16 @@ class InvoiceWithholdingEvidenceError(CadrumoError):
         super().__init__(f"invoice withholding evidence refused: {refusal_code}")
         self.refusal_code = refusal_code
 
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """The filer's decision on evidence the capture refuses, named by its stable reason token."""
+        return no_action_precondition_verdict(
+            condition_id="invoice.withholding_evidence.admitted",
+            facts={"refusal_code": self.refusal_code, "admitted": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+
 
 class InvoiceWithholdingDefectsError(InvoiceWithholdingEvidenceError):
     """Refusal naming every defect that keeps an invoice's retención out of capture.
@@ -210,7 +224,7 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
     has no recognition date or liability-total field.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     income_kind: WithholdingIncomeKind
@@ -247,7 +261,7 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
 class InvoiceWithholdingCapture(BaseModel):
     """Canonical invoice-derived producer command and its consistent read revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     command: WithholdingEvidenceCaptureCommand
     scope: WithholdingWindowScope
@@ -403,13 +417,10 @@ def build_invoice_withholding_capture(
 
 
 def _modelo_for_income(income_kind: WithholdingIncomeKind) -> str:
-    if income_kind in {WithholdingIncomeKind.WORK, WithholdingIncomeKind.PROFESSIONAL}:
-        return "111"
-    if income_kind is WithholdingIncomeKind.URBAN_RENT:
-        return "115"
-    if income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
-        return "123"
-    raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
+    modelo = modelo_for_income_kind(income_kind)
+    if modelo is None:
+        raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
+    return modelo
 
 
 def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetencionProjectionDefect, ...]:
@@ -432,13 +443,8 @@ def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetenc
     a local ``kind is RECEIVED`` test would be a second, unvalidated copy of
     the same fact, free to drift from the table the rest of the engine reads.
     """
-    defects: list[InvoiceRetencionProjectionDefect] = []
-    if invoice.iva_category is None:
-        defects.append(InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED)
-    elif category_components(invoice.iva_category, invoice.kind).retencion_role != registry_retencion_role_token(
-        "taxpayer_liability",
-    ):
-        defects.append(InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY)
+    role_defect = _retencion_role_defect(invoice)
+    defects: list[InvoiceRetencionProjectionDefect] = [] if role_defect is None else [role_defect]
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):
         defects.append(InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED)
     if invoice.counterparty_country != _SPANISH_COUNTRY_CODE:
@@ -448,6 +454,23 @@ def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetenc
     if invoice.counterparty_tax_id is None:
         defects.append(InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID)
     return tuple(defects)
+
+
+def _retencion_role_defect(invoice: Invoice) -> InvoiceRetencionProjectionDefect | None:
+    """Judge whose money the retención is, on the invoice's devengo date."""
+    # An undeclared category still has a kind, and every row of that kind that
+    # admits a retención may agree on its role; only a disagreement is undeclared.
+    devengo_date = invoice.operation_date or invoice.issued_at
+    role = (
+        retencion_role_of_kind(invoice.kind, effective_date=devengo_date)
+        if invoice.iva_category is None
+        else category_components(invoice.iva_category, invoice.kind, effective_date=devengo_date).retencion_role
+    )
+    if role is None:
+        return InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
+    if role != registry_retencion_role_token("taxpayer_liability", effective_date=devengo_date):
+        return InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY
+    return None
 
 
 __all__ = [

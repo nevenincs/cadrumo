@@ -15,12 +15,10 @@ from typing import Any, override
 import pytest
 
 from cadrumo_agent_service.host.launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .. import environment_facts
-from ..application_environment import DECLARATION
 from ..environment_conformance import (
-    Reference,
     build_request,
     collect_facts,
     conformance_findings,
@@ -29,6 +27,8 @@ from ..environment_conformance import (
     reference_from_text,
     run,
 )
+from ..environment_conformance_types import Reference
+from ..environment_declaration_primitives import DECLARATION
 from ..layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -159,15 +159,12 @@ def test_a_package_without_its_agent_is_a_finding_and_a_checkout_without_one_is_
     assert unchecked == [], _rendered(unchecked)
 
 
-def _first_non_slot_system_name(facts: dict[str, Any]) -> str:
-    slots = set(facts["runtime"]["gateway_slots"]) | set(facts["runtime"]["advertised_variables"])
-    return str(
-        next(
-            name
-            for name in facts["runtime"]["composed"]
-            if name not in slots and name not in {"PATH", "TEMP", "TMP", "TMPDIR"}
-        )
-    )
+def _first_declared_system_name(facts: dict[str, Any]) -> str:
+    """A composed name the gateway profile declares as an operating-system base name."""
+    gateway = gateway_profile(load_reference(REPO_ROOT, _LAYOUT), facts["runtime"]["gateway_arguments"])
+    assert gateway is not None
+    base = set(gateway["base"])
+    return str(next(name for name in facts["runtime"]["composed"] if name in base))
 
 
 _Mutation = Callable[[dict[str, Any]], None]
@@ -182,6 +179,7 @@ def _set(path: tuple[str, ...], value: Any) -> _Mutation:
         container = facts
         for key in path[:-1]:
             container = container[key]
+        assert path[-1] in container, f"cannot mutate an unreported fact: {path}"
         container[path[-1]] = value
 
     return mutate
@@ -192,7 +190,7 @@ def _composer_writes(name: str) -> _Mutation:
 
 
 def _composer_omits_a_system_name(facts: dict[str, Any]) -> None:
-    facts["runtime"]["composed"].remove(_first_non_slot_system_name(facts))
+    facts["runtime"]["composed"].remove(_first_declared_system_name(facts))
 
 
 def _composer_omits_an_advertised_name(facts: dict[str, Any]) -> None:
@@ -205,6 +203,14 @@ def _runtime_adds_a_slot(facts: dict[str, Any]) -> None:
 
 def _runtime_drops_a_slot(facts: dict[str, Any]) -> None:
     facts["runtime"]["gateway_slots"].pop(0)
+
+
+def _service_reads_an_undeclared_slot(facts: dict[str, Any]) -> None:
+    facts["runtime"]["service_slots"].append("EXTRA_SLOT")
+
+
+def _service_leaves_a_declared_slot_unread(facts: dict[str, Any]) -> None:
+    facts["runtime"]["service_slots"].pop(0)
 
 
 def _composer_omits_a_slot(facts: dict[str, Any]) -> None:
@@ -300,6 +306,18 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
     ),
     ("composer-omits-a-system-name", _composer_omits_a_system_name, "runtime-launch", "composer omits"),
     (
+        "service-reads-an-undeclared-slot",
+        _service_reads_an_undeclared_slot,
+        "runtime-launch",
+        "the agent service reads that its profile does not declare",
+    ),
+    (
+        "service-leaves-a-declared-slot-unread",
+        _service_leaves_a_declared_slot_unread,
+        "runtime-launch",
+        "declared service slot the agent service does not read",
+    ),
+    (
         "gateway-invocation",
         _set(("runtime", "gateway_arguments"), ["-m", "elsewhere", "serve"]),
         "runtime-launch",
@@ -354,7 +372,6 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
         "installed default",
     ),
     ("log-default", _set(("cli", "log", "default"), "diagnostics"), "log-location", "default"),
-    ("log-relocation", _set(("cli", "log", "relocated"), "logs/relocated-logs"), "log-location", "relative value"),
     ("log-file", _set(("cli", "log", "file_name"), "other.log"), "log-location", "log file"),
 ]
 

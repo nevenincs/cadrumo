@@ -10,7 +10,7 @@ semantic_role = "motivo_declaracion_no_periodica"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
-# Modelo 309 casillas: the AD-HOC liquidacion's operator values, plus the
+# Modelo 309 casillas: the liquidacion's operator values, plus the
 # design's own computed totals ([22] and [24]).
 
 [[revisions."2016-2017".casillas]]

@@ -57,6 +57,19 @@ if(WIN32)
     list(APPEND distribution_arguments "-DCADRUMO_WIX_EXECUTABLE:FILEPATH=${CADRUMO_WIX_EXECUTABLE}")
   endif()
 endif()
+# An application bundle wraps the payload with its main executable and icon, and is
+# sealed with the configured identity; empty values leave a runtime-only package unwrapped.
+set(distribution_bundle_launcher "")
+set(distribution_bundle_icon "")
+if(distribution_desktop AND CADRUMO_BUNDLE_LAUNCHER)
+  list(APPEND distribution_dependencies cadrumo_bundle_launcher)
+  set(distribution_bundle_launcher "${CADRUMO_BUNDLE_LAUNCHER}")
+  set(distribution_bundle_icon "${CADRUMO_PATH_DESKTOP_ICONS}/icon.icns")
+  list(APPEND distribution_arguments "-DCADRUMO_CODESIGN:FILEPATH=${CADRUMO_CODESIGN}"
+    "-DCADRUMO_NATIVE_SIGNING_IDENTITY:STRING=${CADRUMO_NATIVE_SIGNING_IDENTITY}")
+endif()
+list(APPEND distribution_arguments "-DCADRUMO_BUNDLE_LAUNCHER:FILEPATH=${distribution_bundle_launcher}"
+  "-DCADRUMO_BUNDLE_ICON:FILEPATH=${distribution_bundle_icon}")
 # Every source preset shares the enrolled distribution preset. Keep its cache
 # bound to this payload until packaging finishes, even across source build trees.
 # Bracket arguments preserve literal paths without a second CMake expansion.

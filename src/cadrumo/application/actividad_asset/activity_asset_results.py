@@ -8,9 +8,10 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from ..operator_actions.models import PreconditionVerdict
 from .activity_asset_contracts import (
@@ -18,12 +19,29 @@ from .activity_asset_contracts import (
     ActivityAssetAuthorityProvenance,
     ActivityAssetId,
     ActivityAssetRefusalCode,
-    ActivityAssetTaxYear,
+    ActivityAssetRefusalReasonKey,
     require_da18_facts_match,
 )
+from .activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
+    ActivityAssetElectionLimits,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanAdvisory,
+    ActivityAssetPlanRow,
+    ActivityAssetReasonFactKind,
+    ActivityAssetTimelineEvent,
+    ServedWords,
+)
+from .filing_handoff import ActivityAssetFilingHandoff
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .operation_dtos import ActivityAssetFilingHandoffSnapshot, ActivityAssetRevisionSnapshot
-from .operations import ActivityAssetFilingHandoff
+from .result_requirements import (
+    ActivityAssetInspectionRevision,
+    require_claim_identity,
+    require_filing_frame,
+    require_inspected_asset_revisions,
+)
 
 ActivityAssetM130Period = Annotated[str, Field(min_length=1, max_length=16)]
 """The Modelo 130 period code a filing handoff is requested for."""
@@ -37,11 +55,18 @@ class ActivityAssetRefusalResult(BaseModel):
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdict | None = None
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+    reason_key: ActivityAssetRefusalReasonKey | None = None
+    reason_facts: dict[str, str] = Field(default_factory=dict)
+    reason_fact_kinds: dict[str, ActivityAssetReasonFactKind] = Field(default_factory=dict)
+    refusal_words: ServedWords | None = None
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _da18_facts_match_code(self) -> Self:
         require_da18_facts_match(self.code, self.accelerated_da18)
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
         return self
 
 
@@ -71,63 +96,6 @@ class ActivityAssetCreateResult(ActivityAssetOperationResult):
     def _validate_result(self) -> Self:
         self._require_outcome(has_payload=self.history is not None)
         return self
-
-
-class ActivityAssetInspectionRevision(BaseModel):
-    """One typed revision plus its deterministic identity for correction."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    revision: ActivityAssetRevisionSnapshot
-    revision_id: Hex64Str
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _identity_matches(self) -> Self:
-        if self.revision_id != self.revision.to_domain().revision_id:
-            raise ValueError("activity-asset inspection revision identity does not reproduce")
-        return self
-
-
-def require_inspected_asset_revisions(
-    *,
-    outcome: Literal["succeeded", "refused"],
-    asset_id: ActivityAssetId | None,
-    revisions: tuple[ActivityAssetInspectionRevision, ...] | None,
-) -> None:
-    """Require a successful inspection to name its asset and describe only that asset."""
-    if outcome == "succeeded" and asset_id is None:
-        raise ValueError("successful activity-asset inspection must identify its asset")
-    if revisions is not None and (
-        not revisions or asset_id is None or any(item.revision.asset_id != asset_id for item in revisions)
-    ):
-        raise ValueError("activity-asset inspection revisions must describe the requested asset")
-
-
-def require_claim_identity(claim_id: str | None, reproduced_claim_id: str | None) -> None:
-    """Require a claim and its identity together, and the identity to reproduce from the claim."""
-    if (reproduced_claim_id is None) != (claim_id is None):
-        raise ValueError("activity-asset claim result and identity must appear together")
-    if reproduced_claim_id is not None and claim_id != reproduced_claim_id:
-        raise ValueError("activity-asset claim identity does not reproduce")
-
-
-def require_filing_frame(
-    *,
-    outcome: Literal["succeeded", "refused"],
-    tax_year: ActivityAssetTaxYear | None,
-    m130_period: str | None,
-    filing_handoff: ActivityAssetFilingHandoff | ActivityAssetFilingHandoffSnapshot | None,
-) -> None:
-    """Require a handoff to sit inside the requested M100 tax year and M130 period."""
-    if outcome == "succeeded" and (tax_year is None or m130_period is None):
-        raise ValueError("successful activity-asset handoff must identify its filing frame")
-    if filing_handoff is not None:
-        if tax_year is None or m130_period is None:
-            raise ValueError("activity-asset filing handoff requires its requested filing frame")
-        if (filing_handoff.material_m100.tax_year, filing_handoff.intangible_m100.tax_year) != (tax_year, tax_year):
-            raise ValueError("activity-asset filing handoff differs from its requested tax year")
-        Period.from_year_and_code(tax_year, m130_period)
 
 
 class ActivityAssetInspectResult(ActivityAssetOperationResult):
@@ -190,7 +158,7 @@ class ActivityAssetClaimResult(ActivityAssetOperationResult):
 class ActivityAssetFilingHandoffResult(ActivityAssetOperationResult):
     """Private terminal result for the requested M100/M130 filing frame."""
 
-    tax_year: ActivityAssetTaxYear | None = None
+    tax_year: FourDigitYear | None = None
     m130_period: ActivityAssetM130Period | None = None
     filing_handoff: ActivityAssetFilingHandoff | None = None
 
@@ -204,4 +172,109 @@ class ActivityAssetFilingHandoffResult(ActivityAssetOperationResult):
             m130_period=self.m130_period,
             filing_handoff=self.filing_handoff,
         )
+        return self
+
+
+class ActivityAssetDescribeResult(ActivityAssetOperationResult):
+    """Private terminal result for appending one element's descriptive facts."""
+
+    history: ActivityAssetHistory | None = None
+    wrote: bool = False
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposeResult(ActivityAssetOperationResult):
+    """Private terminal result for recording one baja."""
+
+    history: ActivityAssetHistory | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposalCalculateResult(ActivityAssetOperationResult):
+    """Private terminal result with one baja's figures."""
+
+    asset_id: ActivityAssetId | None = None
+    calculation: ActivityAssetDisposalCalculationView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.calculation is not None)
+        return self
+
+
+class ActivityAssetListResult(ActivityAssetOperationResult):
+    """Private terminal result summarising the register."""
+
+    rows: tuple[ActivityAssetListRow, ...] | None = None
+    years: tuple[int, ...] = ()
+    default_year: int | None = None
+    """The year the register opens on: the latest listed year up to the backend's current one, else the earliest."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetPlanResult(ActivityAssetOperationResult):
+    """Private terminal result with one element's plan."""
+
+    asset_id: ActivityAssetId | None = None
+    rows: tuple[ActivityAssetPlanRow, ...] | None = None
+    limits: ActivityAssetElectionLimits | None = None
+    advisories: tuple[ActivityAssetPlanAdvisory, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetTimelineResult(ActivityAssetOperationResult):
+    """Private terminal result with one element's ordered history."""
+
+    asset_id: ActivityAssetId | None = None
+    events: tuple[ActivityAssetTimelineEvent, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.events is not None)
+        return self
+
+
+class ActivityAssetFormOptionsResult(ActivityAssetOperationResult):
+    """Private terminal result with what the registry admits."""
+
+    options: ActivityAssetFormOptionsView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.options is not None)
+        return self
+
+
+class ActivityAssetAcquisitionCandidatesResult(ActivityAssetOperationResult):
+    """Private terminal result listing candidate acquisitions."""
+
+    candidates: tuple[ActivityAssetAcquisitionCandidate, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.candidates is not None)
         return self

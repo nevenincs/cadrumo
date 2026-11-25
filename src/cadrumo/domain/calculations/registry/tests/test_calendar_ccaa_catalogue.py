@@ -1,4 +1,4 @@
-"""Tax-residence to deadline-calendar territory relation in the published catalogue."""
+"""Deadline-calendar territory catalogue in the published authority."""
 
 from __future__ import annotations
 
@@ -9,91 +9,80 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..calendar_ccaa_catalogue import _ENTRIES_FACT, _catalogue, resolve_calendar_ccaa_catalogue
-from ..ccaa_catalogue import resolve_ccaa_catalogue
+from ..calendar_ccaa_catalogue import ENTRIES_FACT, catalogue, resolve_calendar_ccaa_catalogue
 from ..errors import RegistryValidationError
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EFFECTIVE = date(2026, 4, 1)
+_EFFECTIVE = date(filing_year_envelope().horizon, 4, 1)
 
-# ISO 3166-2:ES subdivision codes of the fifteen common-regime communities,
-# written out independently of the registry so the relation is checked against
-# the standard rather than against itself.
-_ISO_3166_2_ES = {
-    "andalucia": "ES-AN",
-    "aragon": "ES-AR",
-    "asturias": "ES-AS",
-    "baleares": "ES-IB",
-    "canarias": "ES-CN",
-    "cantabria": "ES-CB",
-    "castilla_la_mancha": "ES-CM",
-    "castilla_y_leon": "ES-CL",
-    "cataluna": "ES-CT",
-    "comunidad_valenciana": "ES-VC",
-    "extremadura": "ES-EX",
-    "galicia": "ES-GA",
-    "la_rioja": "ES-RI",
-    "madrid": "ES-MD",
-    "murcia": "ES-MC",
-}
+# ISO 3166-2:ES subdivision codes of the fifteen common-regime communities, the
+# two foral communities and the two autonomous cities, written out independently
+# of the registry so the catalogue is checked against the standard.
+_ISO_3166_2_ES = (
+    "ES-AN",
+    "ES-AR",
+    "ES-AS",
+    "ES-IB",
+    "ES-CN",
+    "ES-CB",
+    "ES-CM",
+    "ES-CL",
+    "ES-CT",
+    "ES-EX",
+    "ES-GA",
+    "ES-RI",
+    "ES-MD",
+    "ES-MC",
+    "ES-NC",
+    "ES-PV",
+    "ES-VC",
+    "ES-CE",
+    "ES-ML",
+)
 
 
 def _published_entries() -> dict[str, str]:
     with bundled_indexed_authority().operation() as operation:
-        return dict(_ENTRIES_FACT.resolve_scoped_entries(effective_date=_EFFECTIVE, authority=operation))
+        return dict(ENTRIES_FACT.resolve_scoped_entries(effective_date=_EFFECTIVE, authority=operation))
 
 
-def test_every_declared_tax_residence_relates_to_its_iso_territory() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        residences = resolve_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation).choices
-        calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
-
-    assert {str(token) for token in residences} == set(_ISO_3166_2_ES)
-    related = {str(token): str(calendar.territory_for_tax_residence(str(token))) for token in residences}
-    assert related == _ISO_3166_2_ES
-
-
-def test_names_that_differ_between_vocabularies_still_relate() -> None:
+def test_catalogue_declares_every_iso_territory_in_order() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
 
-    assert calendar.definition(calendar.territory_for_tax_residence("baleares")).member_name == "ILLES_BALEARS"
-    assert calendar.definition(calendar.territory_for_tax_residence("comunidad_valenciana")).member_name == "VALENCIA"
+    assert tuple(str(token) for token in calendar.choices) == _ISO_3166_2_ES
 
 
-def test_unknown_tax_residence_is_refused_rather_than_mapped() -> None:
+def test_member_names_that_differ_from_the_tax_residence_vocabulary_project() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
+
+    assert calendar.definition("ES-IB").member_name == "ILLES_BALEARS"
+    assert calendar.definition("ES-VC").member_name == "VALENCIA"
+    assert calendar.definition("ES-CE").territory_kind == "autonomous_city"
+    assert calendar.definition("ES-NC").territory_kind == "foral_territory"
+
+
+def test_undeclared_territory_code_is_refused() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
 
     with pytest.raises(RegistryValidationError):
-        calendar.territory_for_tax_residence("navarra")
+        calendar.require("ES-XX")
 
 
-def _without(entries: Mapping[str, str], key: str) -> dict[str, str]:
-    return {name: value for name, value in entries.items() if name != key}
+def _with(entries: Mapping[str, str], key: str, value: str) -> dict[str, str]:
+    return {**entries, key: value}
 
 
 def test_published_entries_project_cleanly() -> None:
-    assert len(_catalogue(_published_entries()).tax_residence_territories) == len(_ISO_3166_2_ES)
+    assert len(catalogue(_published_entries()).definitions) == len(_ISO_3166_2_ES)
 
 
-def test_incomplete_relation_is_rejected() -> None:
-    entries = _without(_published_entries(), "calendar_ccaa.relation.tax_residence.murcia")
+def test_territory_count_that_disagrees_with_the_order_is_rejected() -> None:
+    entries = _with(_published_entries(), "calendar_ccaa.relation.calendar_territory_count", "18")
 
-    with pytest.raises(RegistryValidationError, match="common-regime count"):
-        _catalogue(entries)
-
-
-def test_relation_to_an_autonomous_city_is_rejected() -> None:
-    entries = _published_entries() | {"calendar_ccaa.relation.tax_residence.murcia": "ES-CE"}
-
-    with pytest.raises(RegistryValidationError, match="not a declared autonomous community"):
-        _catalogue(entries)
-
-
-def test_two_residences_on_one_territory_are_rejected() -> None:
-    entries = _published_entries() | {"calendar_ccaa.relation.tax_residence.murcia": "ES-MD"}
-
-    with pytest.raises(RegistryValidationError, match="two residences"):
-        _catalogue(entries)
+    with pytest.raises(RegistryValidationError, match="does not match"):
+        catalogue(entries)

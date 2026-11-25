@@ -143,6 +143,7 @@ legal_refs = [
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
+    "aeat-renta-2020-manual-parte1",
 ]
 formulas = [
     "renta-cuota-irpf-comunidad-autonoma",
@@ -183,9 +184,6 @@ source_refs = [
 formulas = [
     "renta-atribucion-capital-inmobiliario-rendimiento-neto-computable",
     "renta-atribucion-capital-inmobiliario-suma",
-    "renta-capital-inmobiliario-rendimiento-neto",
-    "renta-capital-inmobiliario-rendimiento-neto-reducido",
-    "renta-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-inmobiliario-suma-rentas-imputadas",
 ]
 [[revisions."2020".constructs]]
@@ -221,9 +219,10 @@ formulas = [
     "renta-iic-ganancias-reducidas-suma",
     "renta-iic-paraisos-fiscales-suma",
     "renta-iic-perdidas-reducidas-suma",
-    "renta-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-saldo-capital-mobiliario-cap-25-base-ahorro",
     "renta-capital-mobiliario-saldo-pendiente-base-ahorro",
+    "renta-capital-mobiliario-ahorro-saldo-positivo",
+    "renta-capital-mobiliario-ahorro-saldo-negativo",
 ]
 [[revisions."2020".constructs]]
 id = "renta-mini-model-ganancias-patrimoniales"
@@ -349,6 +348,8 @@ source_refs = [
     "aeat-dr-100-2020-xsd",
     "aeat-renta-2020-manual-parte1",
     "boe-modelo-100-2020-form",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
 ]
 bindings = [
     "renta-modelo-130-pagos-fraccionados",
@@ -364,4 +365,21 @@ formulas = [
 dependency_classifications = [
     "renta-dep-130",
     "renta-dep-131",
+]
+[[revisions."2020".constructs]]
+id = "renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas"
+legal_refs = [
+    "ley-35-2006:art-56",
+    "ley-35-2006:art-59",
+    "ley-35-2006:art-61",
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+    "aeat-dr-100-2020-dictionary",
+]
+formulas = [
+    "renta-minimo-ascendientes-estatal",
+    "renta-minimo-ascendientes-autonomico",
+    "renta-deducciones-autonomicas-suma",
 ]

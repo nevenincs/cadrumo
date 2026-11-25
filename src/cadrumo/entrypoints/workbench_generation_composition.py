@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..application.workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCensusMemo
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
 from ..application.workbench_generation_contracts import WorkbenchGenerationV1
-from ..application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from ..application.workbench_generation_reader import (
+    NotificationCustodyCount,
+    SecureProfileWorkbenchGenerationReadDoorV1,
+)
 
 if TYPE_CHECKING:
+    from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..application.live.notification_documents import NotificationDocumentRecord
+    from ..application.modelo.declarations_list import DeclarationListInputs
     from ..application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
         ModeloWorkspaceRefusedResultV1,
@@ -35,24 +42,80 @@ def compose_secure_workbench_generation_provider(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1,
     account_session_reader: Callable[[], HomeAccountSession],
+    census_memory: WorkbenchCensusMemo | None = None,
 ) -> Callable[[], WorkbenchGenerationV1]:
     """Bind one explicit profile and pinned authority to the existing read door.
 
     The caller owns authentication and the exact profile session. A fresh
     session check precedes each capture and the repository composition it
     performs; neither this builder nor its readers select an active profile.
+    ``census_memory`` is the session's kept census classification, so a
+    capture classifies only the journal records created since the previous
+    one; ``None`` classifies the whole journal every time.
     """
+    account_session_reader()
+    read_door = _secure_read_door(
+        profile_id=profile_id,
+        operation=operation,
+        operation_contracts=operation_contracts,
+        account_session_reader=account_session_reader,
+        census_memory=census_memory,
+    )
+
+    def capture() -> WorkbenchGenerationV1:
+        # Ledger ports capture current evidence; keep them per generation.
+        account_session_reader()
+        return InstalledWorkbenchGenerationProviderV1(read_door())()
+
+    return capture
+
+
+def compose_secure_declaration_list_reader(
+    *, profile_id: str, operation: PinnedAuthorityOperation, capture_memory: WorkbenchCaptureMemory | None
+) -> Callable[[], DeclarationListInputs]:
+    """Bind one explicit profile and pinned authority to the read door's declarations-list capture.
+
+    The list reads the same repositories through the same door as a generation,
+    without the account session only Home shows. ``capture_memory`` is the
+    memory the list-shaped reads of this profile share, so a read reuses the
+    legal calendar its predecessor computed; a reuse still needs the capture's
+    own freshly read profile, work-unit, filing, ledger and authority
+    identities to equal the stored ones. ``None`` recomputes every time.
+    """
+    read_door = _secure_read_door(
+        profile_id=profile_id,
+        operation=operation,
+        operation_contracts=None,
+        account_session_reader=None,
+        capture_memory=capture_memory,
+    )
+    return lambda: read_door().read_declaration_list_inputs()
+
+
+def _secure_read_door(
+    *,
+    profile_id: str,
+    operation: PinnedAuthorityOperation,
+    operation_contracts: OperationPublicContractSetV1 | None,
+    account_session_reader: Callable[[], HomeAccountSession] | None,
+    capture_memory: WorkbenchCaptureMemory | None = None,
+    census_memory: WorkbenchCensusMemo | None = None,
+) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
+    """Compose the read door over one profile's secure repositories, afresh for each capture."""
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
+    from ..adapters.persistence.profile.m232_related_party_records import Modelo232RelatedPartyStoreAdapter
     from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.modelo.filed_register_reader import filed_register_reader
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..core.time.clock import now
+    from .adapter_composition_work_ports import build_ledger_membership_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
     from .calendar_evidence_composition import compose_calendar_aeat_reader
-    from .censal_readback_composition import read_stored_censal_observation
+    from .censal_readback_composition import StoredCensalHistoryReader
     from .ledger_action_composition import compose_ledger_action_ports
 
-    account_session_reader()
     calendar_aeat_reader = compose_calendar_aeat_reader(operation)
     objects = secure_object_repository_for_bucket(profile_id)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
@@ -79,34 +142,55 @@ def compose_secure_workbench_generation_provider(
             invoice_repository=ledger_action_ports.invoice_repository,
             bucket_event_repository=ledger_action_ports.bucket_event_repository,
             ledger_action_ports=ledger_action_ports,
+            filed_register_reader=lambda work_units: filed_register_reader(
+                bucket_id=profile_id,
+                work_units=work_units,
+                ports=build_ledger_membership_ports(
+                    bucket_id=profile_id,
+                    transaction_repository=ledger_action_ports.transaction_repository,
+                    objects=objects,
+                ),
+                operation=operation,
+            ),
             verification_repository=calculation_binding.verification_repository(),
+            related_party_records=Modelo232RelatedPartyStoreAdapter(objects=objects),
+            credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
-            notification_custody_reader=_notification_custody_reader(profile_id),
-            census_observation_reader=lambda: asyncio.run(read_stored_censal_observation(UUID(profile_id))),
+            notification_custody_reader=StoredNotificationCustodyCounter(profile_id),
+            census_observation_reader=StoredCensalHistoryReader(UUID(profile_id), memo=census_memory),
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
             modelo_projection_reader=modelo_workspace_projection_reader(operation),
             calendar_aeat_reader=calendar_aeat_reader,
+            capture_memory=capture_memory,
         )
 
-    def capture() -> WorkbenchGenerationV1:
-        # Ledger ports capture current evidence; keep them per generation.
-        account_session_reader()
-        return InstalledWorkbenchGenerationProviderV1(read_door())()
-
-    return capture
+    return read_door
 
 
-def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
-    """Count this profile's existing notification snapshots without bytes."""
+@dataclass(frozen=True, slots=True)
+class StoredNotificationCustodyCounter:
+    """Count this profile's existing notification snapshots, and recheck that count by their stored keys."""
 
-    def read() -> int:
+    profile_id: str
+
+    def count(self) -> NotificationCustodyCount:
+        repository = self._repository()
+        # Keys first: a document stored between the two reads then shows as changed keys at the recheck.
+        stored_keys = repository.stored_keys()
+        return NotificationCustodyCount(count=len(repository.list_snapshots()), stored_keys=stored_keys)
+
+    def recount(self, prior: NotificationCustodyCount) -> int:
+        repository = self._repository()
+        if repository.stored_keys() == prior.stored_keys:
+            return prior.count
+        return len(repository.list_snapshots())
+
+    def _repository(self) -> SecureSnapshotRepository[NotificationDocumentRecord]:
         from ..adapters.persistence.profile.notification_documents import notification_document_repository
         from ..core.config import load_settings
 
-        return len(notification_document_repository(profile_id, load_settings()).list_snapshots())
-
-    return read
+        return notification_document_repository(self.profile_id, load_settings())
 
 
 def _declaration_result_casilla_reader(
@@ -123,10 +207,12 @@ def _declaration_result_casilla_reader(
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ..application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ..application.modelo.work_form_service import modelo_form_snapshot
         from ..core.errors.hierarchy import CadrumoError
+        from ..domain.modelos.codes import ModeloCode
 
         try:
-            snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+            snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), filing_year, period)
             return declaration_result_casilla_id(snapshot.revision)
         except (CadrumoError, ValueError, LookupError):
             return None
@@ -212,8 +298,8 @@ def resolve_modelo_workspace_static_inspection(
     """Read one exact work unit at static inspection admission."""
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
-    from ..application.modelo.workspace import resolve_static_inspection_result
     from ..application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
+    from ..application.modelo.workspace_schema import resolve_static_inspection_result
 
     return resolve_static_inspection_result(
         ModeloWorkspaceExactWorkUnitTargetV1(
@@ -237,13 +323,10 @@ def resolve_modelo_workspace_graded_snapshot(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
-    from ..application.modelo.workspace import resolve_graded_snapshot_result
+    from ..application.modelo.workspace_graded import resolve_graded_snapshot_result
     from ..application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
-    from .adapter_composition import (
-        build_calculation_action_ports,
-        build_diagnostics_ports,
-        build_state_projection_read_ports,
-    )
+    from .adapter_composition_ports import build_diagnostics_ports
+    from .adapter_composition_work_ports import build_calculation_action_ports, build_state_projection_read_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     objects = secure_object_repository_for_bucket(unit.bucket_id)

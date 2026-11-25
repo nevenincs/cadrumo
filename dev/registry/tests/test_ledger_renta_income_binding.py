@@ -18,13 +18,14 @@ coincidentally satisfy them.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.aggregation.renta_income_ledger import RentaIncomeObservation
+from cadrumo.application.aggregation.renta_income_models import RentaIncomeObservation
 from cadrumo.core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
@@ -33,6 +34,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ledger_binding_selector_support import LedgerIncomeFact
 from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
@@ -42,11 +44,22 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
@@ -71,12 +84,12 @@ def _tx(suffix: str) -> str:
 
 
 def _modelo_130_snapshot():
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -109,7 +122,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -118,7 +131,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -155,7 +168,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         gross_amount=Decimal("2120.00"),
         taxable_base_amount=Decimal("2000.00"),
         withheld_amount=Decimal("300.00"),
-        filing_date=date(2026, 3, 15),
+        filing_date=date(_YEAR, 3, 15),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
     )
@@ -165,7 +178,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
         withheld_amount=Decimal("0.00"),
-        filing_date=date(2026, 3, 20),
+        filing_date=date(_YEAR, 3, 20),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -202,7 +215,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -211,7 +224,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -257,7 +270,7 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -324,7 +337,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1000.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -333,7 +346,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -355,7 +368,7 @@ def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("0.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -381,7 +394,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -390,7 +403,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -415,7 +428,7 @@ def test_ungrounded_screen_reports_nothing_when_every_row_declares_its_base() ->
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
-        filing_date=date(2026, 2, 10),
+        filing_date=date(_YEAR, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
         withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
@@ -441,7 +454,7 @@ def test_ungrounded_screen_ignores_rows_no_base_reading_binding_consumes() -> No
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
-        filing_date=date(2026, 3, 5),
+        filing_date=date(_YEAR, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
         withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
@@ -490,7 +503,7 @@ def test_observation_refuses_a_grounding_marker_that_contradicts_its_base() -> N
             target_casilla_id=_M130_INGRESOS_CASILLA,
             gross_amount=Decimal("500.00"),
             taxable_base_amount=None,
-            filing_date=date(2026, 3, 5),
+            filing_date=date(_YEAR, 3, 5),
             grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
             withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
         )

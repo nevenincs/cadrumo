@@ -17,6 +17,8 @@ from ...application.ledger.list_operation import (
 )
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operations import OperationEffect, profile_operation_subject
 
@@ -47,6 +49,7 @@ def read_ledger_list_for_cli(
             sort_by=sort_by,
             sort_order=sort_order,
             exclude_llm_rejected=exclude_llm_rejected,
+            output_language=OutputLanguage(active_output_language()),
         ),
         definition_id=LEDGER_LIST_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),

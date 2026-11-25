@@ -26,8 +26,8 @@ msgid ""
 "Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM"
 " UTC (N hours)"
 msgstr ""
-"Publicat: YYYY-MM-DD Finestra de proves (soak): YYYY-MM-DD HH:MM UTC → "
-"YYYY-MM-DD HH:MM UTC (N hores)"
+"Publicat: YYYY-MM-DD Finestra d’observació: YYYY-MM-DD HH:MM UTC → YYYY-"
+"MM-DD HH:MM UTC (N hores)"
 
 #: ../../_release_notes_template.md:20
 msgid "Highlights"
@@ -111,4 +111,3 @@ msgstr ""
 "`pip install cadrumo==X.Y.Z` descarrega les dues distribucions de dades "
 "de versió exacta i `aeat --format json config repair` s'executa sense "
 "errors"
-

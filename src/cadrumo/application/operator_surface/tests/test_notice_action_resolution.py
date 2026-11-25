@@ -11,7 +11,7 @@ from ....core.json_contract import ResolvedActionArgument
 from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
-from .. import action_resolution as _action_resolution
+from .. import action_resolution
 from ..action_resolution import resolve_catalogue_action, resolve_notice_action
 from ..manifest import (
     InputSchemaInventoryRow,
@@ -229,7 +229,7 @@ def test_catalogue_and_producer_argument_declarations_fail_closed() -> None:
 
 def test_notice_resolution_uses_the_manifest_owned_catalogue_action_record() -> None:
     """The notice bridge consumes the manifest record rather than a parallel DTO."""
-    resolution_module = ast.parse(inspect.getsource(_action_resolution))
+    resolution_module = ast.parse(inspect.getsource(action_resolution))
     assert not any(
         isinstance(node, ast.ClassDef) and node.name == ManifestResolvedCatalogueAction.__name__
         for node in ast.walk(resolution_module)

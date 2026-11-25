@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     ArtifactKind,
@@ -49,7 +51,7 @@ def test_manifest_roundtrip_binds_every_file_and_stable_identity(tmp_path: Path)
     """Build diagnostics and creation time do not change the byte-cohort identity."""
     rows = _artifact_files(tmp_path)
     source = SourceIdentity(source_digest="a" * 64, tag="v0.2.1")
-    created = datetime(2026, 7, 17, 4, 0, tzinfo=UTC)
+    created = datetime(filing_year_envelope().horizon, 7, 17, 4, 0, tzinfo=UTC)
     first = create_manifest(
         root=tmp_path,
         version="0.2.1",

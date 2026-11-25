@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.deadlines.plazo import resolve_filing_window
@@ -56,16 +56,18 @@ def _work_unit(period: Period) -> WorkUnit:
 def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
     """Return (work_unit, period, closes_on, reference_on) for late M130 1T."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    resolution = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    window = None if resolution is None else resolution.dated_window
     assert window is not None, "registry must carry an M130 1T 2026 deadline window"
     closes_on = window.closes_on
+    assert closes_on is not None, "the M130 1T 2026 window must carry a close date"
     reference_on = closes_on + timedelta(days=40)
     return _work_unit(period), period, closes_on, reference_on
 
 
 def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
     """A past deadline yields posture plus advisory rate, never an assessment."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit, period, closes_on, reference_on = _overdue_context()
 
         posture = modelo_work_deadline_posture(work_unit, reference_on=reference_on)
@@ -86,6 +88,7 @@ def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
             period=period,
             operation=_authority_operation_for_test,
         )
+        assert expected is not None
         assert preview.band_id == expected.recargo_band.id
         assert preview.surcharge_pct == expected.recargo_band.surcharge_pct
         assert preview.interest_applies is expected.recargo_band.interest_applies
@@ -93,7 +96,7 @@ def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
 
 def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment() -> None:
     """The governed 12-month band remains correct while status stays unassessed."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit, period, closes_on, _reference_on = _overdue_context()
         anniversary = closes_on.replace(year=closes_on.year + 1)
         day_after = anniversary + timedelta(days=1)
@@ -124,6 +127,8 @@ def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment()
             period=period,
             operation=_authority_operation_for_test,
         )
+        assert anniversary_recovery is not None
+        assert day_after_recovery is not None
         assert anniversary_preview.band_id == anniversary_recovery.recargo_band.id
         assert anniversary_preview.interest_applies is anniversary_recovery.recargo_band.interest_applies
         assert day_after_preview.band_id == day_after_recovery.recargo_band.id
@@ -133,9 +138,11 @@ def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment()
 def test_in_time_deadline_posture_has_no_conditional_rate_preview() -> None:
     """An open voluntary window has only days remaining, with no rate guidance."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    resolution = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    window = None if resolution is None else resolution.dated_window
     assert window is not None
     closes_on = window.closes_on
+    assert closes_on is not None, "the M130 1T 2026 window must carry a close date"
     reference_on = closes_on - timedelta(days=5)
 
     posture = modelo_work_deadline_posture(_work_unit(period), reference_on=reference_on)

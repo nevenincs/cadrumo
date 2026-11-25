@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -30,18 +30,20 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _revision,
-    _seed_ready_profile,
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
+from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
+    T0,
+    T1,
+    dormant_resolver_live_revision,
+    seed_ready_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -94,8 +96,6 @@ _M130_PRIOR_YEAR_NET_INCOME = Decimal("8000")
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
     _M130_RETENCIONES_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -104,7 +104,7 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 @pytest.fixture
 def m130_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M130_BUCKET) as profile:
-        _seed_ready_profile(profile.repository, bucket_id=_M130_BUCKET)
+        seed_ready_profile(profile.repository, bucket_id=_M130_BUCKET, extra_facts=cash_criterion_facts(_M130_YEAR))
         yield profile.repository
 
 
@@ -157,6 +157,28 @@ def _income_transaction(
     )
 
 
+def _seed_prior_year_m100_net_income(objects: SecureObjectRepository) -> None:
+    """Store a real prior-year M100 net-income observation (upstream minoración substrate)."""
+    observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=_M130_PRIOR_YEAR,
+        period="0A",
+        observations=registry_grounded_observations(
+            modelo="100",
+            filing_year=_M130_PRIOR_YEAR,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
+        ),
+    )
+    obs_repo = CalculationObservationRepository(objects=objects)
+    save_stamped_observation(obs_repo, observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=T0)
+
+
 def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     m130_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -180,52 +202,11 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     )
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
 
-    # Real prior-year M100 net-income observation (upstream minoración substrate).
-    obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_M130_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
-    )
+    _seed_prior_year_m100_net_income(m130_objects)
 
     # Non-vacuity: casilla 01 binds the income aggregation source under test, and
     # the seeds are distinct (so a copy/contamination cannot satisfy the sum).
-    revision = _revision("130", _M130_REVISION)
+    revision = dormant_resolver_live_revision("130", _M130_REVISION)
     casilla_01 = next(c for c in revision.casillas if c.id == _M130_INGRESOS_CASILLA)
     assert casilla_01.binding == _M130_INGRESOS_BINDING
     assert any(
@@ -242,7 +223,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m130_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -256,7 +237,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
             work_unit.work_unit_id,
             casilla_inputs=_M130_MANUAL_INPUTS,
             ports=_calculation_ports_249,
-            clock=_T1,
+            clock=T1,
         )
 
     assert isinstance(result, BucketAggregationCalculationResult)
@@ -304,49 +285,9 @@ def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_l
     )
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
 
-    obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_M130_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
-    )
+    _seed_prior_year_m100_net_income(m130_objects)
 
-    revision = _revision("130", _M130_REVISION)
+    revision = dormant_resolver_live_revision("130", _M130_REVISION)
     assert any(
         str(b.source) == "ledger_renta_income_aggregation" and b.id == _M130_RETENCIONES_BINDING
         for b in revision.bindings
@@ -361,7 +302,7 @@ def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_l
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m130_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     manual_inputs_without_c06 = {
@@ -380,7 +321,7 @@ def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_l
             work_unit.work_unit_id,
             casilla_inputs=manual_inputs_without_c06,
             ports=_calculation_ports_359,
-            clock=_T1,
+            clock=T1,
         )
 
     assert Decimal(result.revision.casilla_values[_M130_INGRESOS_CASILLA]) == Decimal("2000.00")

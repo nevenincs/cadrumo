@@ -2,26 +2,43 @@
 
 from __future__ import annotations
 
+import base64
+import subprocess
+import threading
+import time
+from datetime import timedelta
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
-from .....application.user_profile.custody_ports import (
+from .....application.user_profile.custody_crypto_contracts import (
     ProfilePassphraseEncryptedRecord,
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
+from .....application.user_profile.proof_cancellation import ProfileProofCancellation
+from .....core.config import override_settings
+from .....core.secure_object_write import SecureObjectWrite
+from .....core.time.clock import frozen_clock, wall_now
+from ..bucket.directory_layout import bucket_paths
 from ..crypto.aead import EncryptedBlob, decrypt_record
+from ..custody import kdf_process
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
+from ..custody.kdf_worker_supervision import SupervisedKdfWorker
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository
+from ..custody.records import ProfileCustodyKdfParameters
 from ..custody.tests.label_head_probe import begin_advance
 from ..errors import DecryptionError
 from ..profile_custody import build_profile_custody_port
+from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from .passphrase_probe import open_with_passphrase
+from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_SYNTHETIC_PHRASE = "synthetic registration phrase"
 
 
 def test_local_record_store_preserves_bounded_read_write_and_clear(tmp_path: Path) -> None:
@@ -35,6 +52,50 @@ def test_local_record_store_preserves_bounded_read_write_and_clear(tmp_path: Pat
     assert store.read(record, maximum_bytes=16) == b"second"
     store.clear(record)
     assert not record.exists()
+
+
+def test_the_staged_bucket_bridge_session_opens_on_real_time_under_a_frozen_past_clock(tmp_path: Path) -> None:
+    """The one-minute bridge session a staged capsule write opens is minted, and judged, on real time.
+
+    DISCRIMINATING against minting the bridge on the document clock: a bridge
+    dated to a past instant would already have ended on real time, and the
+    staged repository would refuse its first write.
+    """
+    profile_id = uuid4()
+    publish_registration_capsule(tmp_path, str(profile_id))
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
+    port = build_profile_custody_port()
+    with (
+        frozen_clock((wall_now() - timedelta(days=400)).replace(microsecond=0)),
+        port.secure_object_repository(
+            profile_id=profile_id,
+            dek=b"k" * 32,
+            root=tmp_path,
+            database_file=bucket_paths(tmp_path, str(profile_id)).database_file,
+        ) as staged,
+    ):
+        staged.apply_batch(
+            (
+                SecureObjectWrite(
+                    namespace=namespace,
+                    object_key=object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=wall_now() - timedelta(days=400),
+                    payload=b"bridged",
+                ),
+            )
+        )
+        loaded = staged.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert loaded is not None
+    assert loaded.payload == b"bridged"
 
 
 def test_record_crypto_returns_the_application_dto_and_refuses_tampering() -> None:
@@ -175,3 +236,102 @@ def test_label_head_caller_explicitly_recovers_then_verifies_or_publishes(tmp_pa
     assert recovered_head.label_revision == 2
     assert repository.verify(label=replacement) == recovered_head
     assert not repository.pending_path(profile_id).exists()
+
+
+def test_registration_wraps_in_a_child_prewarmed_for_this_mint_and_leaves_none_running(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    launched: list[subprocess.Popen[bytes]] = []
+    adopted: list[bool] = []
+    launch_process = kdf_process.launch_worker_process
+    adopt = SupervisedKdfWorker.adopt
+
+    def observe_launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
+        process = launch_process(command, launch_kwargs)
+        launched.append(process)
+        return process
+
+    def observe_adopt(
+        worker: SupervisedKdfWorker, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> bool:
+        verdict = adopt(worker, deadline=deadline, cancellation=cancellation)
+        adopted.append(verdict)
+        return verdict
+
+    monkeypatch.setattr(kdf_process, "launch_worker_process", observe_launch)
+    monkeypatch.setattr(SupervisedKdfWorker, "adopt", observe_adopt)
+    profile_id = UUID("00000000-0000-4000-8000-0000000000a1")
+    dek = bytes(range(32))
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=False):
+        port = build_profile_custody_port()
+        material = port.create_registration_material(
+            profile_id=profile_id,
+            password=_SYNTHETIC_PHRASE,
+            dek=dek,
+            dek_epoch=base64.b64encode(b"e" * 16).decode("ascii"),
+            salt=b"s" * 16,
+            predecessor=None,
+        )
+        assert adopted == [True], "the wrap ran in the spare launched for this mint"
+        assert len(launched) == 1, "no successor is launched after the mint's last derivation"
+        assert all(process.poll() is not None for process in launched), "nothing outlives the mint"
+
+        unlocked = port.unlock_password(material, password=_SYNTHETIC_PHRASE)
+    assert unlocked.dek == dek
+
+
+def test_no_child_launch_is_in_flight_while_a_timed_calibration_sample_derives(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A launch competing with a measured derivation could read its cost high and weaken the chosen KDF."""
+    lock = threading.Lock()
+    launch_intervals: list[tuple[float, float]] = []
+    sample_intervals: list[tuple[float, float]] = []
+    adopted: list[bool] = []
+    enter, calibrate, adopt = SupervisedKdfWorker.__enter__, SupervisedKdfWorker.calibrate, SupervisedKdfWorker.adopt
+
+    def observe_launch(worker: SupervisedKdfWorker) -> SupervisedKdfWorker:
+        started = time.monotonic()
+        try:
+            return enter(worker)
+        finally:
+            with lock:
+                launch_intervals.append((started, time.monotonic()))
+
+    def observe_sample(worker: SupervisedKdfWorker, parameters: ProfileCustodyKdfParameters) -> float:
+        started = time.monotonic()
+        try:
+            return calibrate(worker, parameters)
+        finally:
+            with lock:
+                sample_intervals.append((started, time.monotonic()))
+
+    def observe_adopt(
+        worker: SupervisedKdfWorker, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> bool:
+        verdict = adopt(worker, deadline=deadline, cancellation=cancellation)
+        adopted.append(verdict)
+        return verdict
+
+    monkeypatch.setattr(SupervisedKdfWorker, "__enter__", observe_launch)
+    monkeypatch.setattr(SupervisedKdfWorker, "calibrate", observe_sample)
+    monkeypatch.setattr(SupervisedKdfWorker, "adopt", observe_adopt)
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True):
+        build_profile_custody_port().create_registration_material(
+            profile_id=UUID("00000000-0000-4000-8000-0000000000a2"),
+            password=_SYNTHETIC_PHRASE,
+            dek=bytes(range(32)),
+            dek_epoch=base64.b64encode(b"e" * 16).decode("ascii"),
+            salt=b"t" * 16,
+            predecessor=None,
+        )
+
+    assert len(sample_intervals) >= 2, "calibration measured more than one sample"
+    assert any(adopted), "samples ran in prewarmed children, so the scenario exercised the prewarm"
+    overlapping = [
+        (launch, sample)
+        for launch in launch_intervals
+        for sample in sample_intervals
+        if launch[0] < sample[1] and sample[0] < launch[1]
+    ]
+    assert overlapping == [], "a child launch ran while a timed calibration sample derived"

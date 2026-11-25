@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
@@ -23,17 +21,16 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
-from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello, RefusalError
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -45,6 +42,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from .......frontend.tui.launcher import main
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,28 +53,6 @@ pytestmark = [
 ]
 
 _REPLACEMENT = "s16-new-native-tui-passphrase-do-not-print"
-
-
-class _LoginObservation:
-    login_id = "tui-password-rotation-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _require_runtime_app(value: object) -> CadrumoTuiApp:
@@ -112,7 +88,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-password-rotation-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
@@ -126,37 +102,44 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             if not isinstance(app, CadrumoTuiApp):
                 screen = pilot.app.screen
                 assert isinstance(screen, RuntimeLoginScreen)
+                login: RuntimeLoginScreen = screen
                 submit = screen.query_one("#runtime-login-submit", Button)
-                async with asyncio.timeout(90):
-                    while (screen._worker is not None and not screen._worker.is_finished) or submit.disabled:
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: (login._worker is None or login._worker.is_finished) and not submit.disabled,
+                    "the sign-in worker to finish and the submit control to enable",
+                    workers=False,
+                )
                 method = screen.query_one("#runtime-login-method", Select)
                 method.value = RuntimeLoginMethod.PASSWORD
-                await pilot.pause()
+                await settle(pilot, workers=False)
                 credential = screen.query_one("#runtime-login-credential", Input)
                 assert credential.password
                 credential.value = PROFILE_INPUT if not stages else _REPLACEMENT
                 stages.append("login-original" if not stages else "login-replacement")
                 submit.scroll_visible(animate=False)
-                await pilot.pause()
-                await pilot.click("#runtime-login-submit")
+                assert await click_when_laid_out(pilot, submit)
                 assert credential.value == ""
                 return
 
             root_app = _require_runtime_app(pilot.app)
-            async with asyncio.timeout(90):
-                while root_app.account_session is None:
-                    await pilot.pause(0.05)
-            assert root_app.account_session.profile_label == "Enrollment tests"
-            async with asyncio.timeout(90):
-                while True:
-                    current_screen = root_app.screen
-                    if not isinstance(current_screen, ProfileManagerScreen):
-                        await pilot.pause(0.05)
-                        continue
-                    if current_screen.query("#manager-search"):
-                        break
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: root_app.account_session is not None,
+                "the account session to be published",
+                workers=False,
+            )
+            session = root_app.account_session
+            assert session is not None
+            assert session.profile_label == "Enrollment tests"
+            await settle_until(
+                pilot,
+                lambda: (
+                    isinstance(root_app.screen, ProfileManagerScreen) and bool(root_app.screen.query("#manager-search"))
+                ),
+                "the profile manager to show its search control",
+                workers=False,
+            )
             if "password-changed" in stages:
                 stages.append("fresh-root")
                 root_app.exit()
@@ -164,10 +147,12 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
 
             assert stages == ["login-original"]
             root_app.run_account_action(AccountActionV1.PASSWORD)
-            async with asyncio.timeout(90):
-                while not isinstance(root_app.screen, PassphraseScreen):
-                    await pilot.pause(0.05)
-            await pilot.pause()
+            await settle_until(
+                pilot,
+                lambda: isinstance(root_app.screen, PassphraseScreen),
+                "the passphrase screen to open",
+                workers=False,
+            )
             screen = root_app.screen
             assert isinstance(screen, PassphraseScreen)
             fields = tuple(screen.query(Input))
@@ -178,19 +163,22 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             screen.action_change()
             assert all(field.value == "" for field in fields)
             root_app._watch_account_session()
-            async with asyncio.timeout(90):
-                while root_app.return_value is None:
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: root_app.return_value is not None,
+                "the app to return the recompose request",
+                workers=False,
+            )
             assert root_app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
             stages.append("password-changed")
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     old = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(old.close)
                     old_proof = bytearray(PROFILE_INPUT.encode())
@@ -209,7 +197,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                         old.status()
 
                     fresh = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(fresh.close)
                     fresh_proof = bytearray(_REPLACEMENT.encode())

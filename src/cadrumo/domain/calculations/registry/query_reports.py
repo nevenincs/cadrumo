@@ -42,7 +42,6 @@ from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from .binding_provider import BindingProvider
-from .binding_selector_utils import BooleanBindingEncodedValue
 from .ids import BindingId, FormulaId, LegalRefId, ParameterId, SourceRefId
 from .schema_input_kind import InputKind
 from .support_matrix import ModeloEntry
@@ -222,7 +221,6 @@ class ModeloBindingQueryRow(BaseModel):
     #: ITSELF here, because the fold and the slot are one declaration; every
     #: other binding names none.
     relation_inputs: tuple[BindingId, ...] = ()
-    encoded_options: tuple[BooleanBindingEncodedValue, ...] = ()
     operator_input_required: bool = True
 
 

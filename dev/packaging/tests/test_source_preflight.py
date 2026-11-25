@@ -10,7 +10,7 @@ import pytest
 
 from ..lane_verification_core import find_repo_root
 from ..source_data_contract import source_data_paths
-from ..source_preflight import _root_for, _summary
+from ..source_preflight import root_for, source_preflight_summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,7 +21,7 @@ _OUTSIDE_ROOTS = "<outside-source-data-roots>"
 def test_summary_counts_the_real_source_data_tree() -> None:
     """The summary reflects the live source-data set, fully partitioned."""
     paths = source_data_paths(find_repo_root())
-    summary = _summary(paths)
+    summary = source_preflight_summary(paths)
 
     assert summary["ok"] is True
     assert summary["source_file_count"] == len(paths)
@@ -34,10 +34,10 @@ def test_summary_counts_the_real_source_data_tree() -> None:
 
 def test_root_for_classifies_source_paths_and_the_outside_sentinel() -> None:
     """A path under a configured root resolves to it; anything else is the sentinel."""
-    assert _root_for(f"{_SOURCE_DATA_ROOT}/registry/aeat/modelos/036/manifest.toml") == _SOURCE_DATA_ROOT
-    assert _root_for(_SOURCE_DATA_ROOT) == _SOURCE_DATA_ROOT
-    assert _root_for("README.md") == _OUTSIDE_ROOTS
-    assert _root_for("src/cadrumo/core/config.py") == _OUTSIDE_ROOTS
+    assert root_for(f"{_SOURCE_DATA_ROOT}/registry/aeat/modelos/036/manifest.toml") == _SOURCE_DATA_ROOT
+    assert root_for(_SOURCE_DATA_ROOT) == _SOURCE_DATA_ROOT
+    assert root_for("README.md") == _OUTSIDE_ROOTS
+    assert root_for("src/cadrumo/core/config.py") == _OUTSIDE_ROOTS
 
 
 def test_source_preflight_cli_json_contract() -> None:

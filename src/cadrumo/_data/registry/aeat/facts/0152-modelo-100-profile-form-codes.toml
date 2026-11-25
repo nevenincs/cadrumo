@@ -1,0 +1,69 @@
+[fact]
+fact_id = "modelo-100-profile-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-profile-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-100-2025-xsd", "aeat-dr-100-2025-dictionary"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["tipo_EstadoCivil", "1 = SOLTERO", "4 = SEPARADO / DIVORCIADO", "H = HOMBRE", "tipo_GradoDiscapacidad", "tipo_CCAA", "2 = DECLARANTE", "TIPOTRIBUTACION", "tipo_OpcionesSyN"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["ECIVIL", "TIPOTRIBUTACION", "E1MED"]
+
+# The estimation_directa_modalidad entries are casilla 0168's clave (E1MED, tipo_OpcionesSyN:
+# N normal, S simplificada), keyed by the estimation-regime token that selects each.
+# The ccaa entries are the tipo_CCAA numbering of the Modelo 100 record design, not a
+# general CCAA numbering: Modelo 763 and the INE comunidad codes differ. The two ciudades
+# autónomas take the design's own 18 (CIUDAD DE CEUTA) and 19 (CIUDAD DE MELILLA), declared
+# identically in every bundled edition from 2020 to 2025. No residente (20) is declared by
+# the design but carries no common-regime residence token, and the design assigns 14 and 15
+# to nothing.
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "sex.hombre", value = "H" },
+  { key = "sex.mujer", value = "M" },
+  { key = "marital_status.soltero", value = "1" },
+  { key = "marital_status.casado", value = "2" },
+  { key = "marital_status.viudo", value = "3" },
+  { key = "marital_status.separado_divorciado", value = "4" },
+  { key = "marital_status.pareja_hecho", value = "5" },
+  { key = "marital_status_export.members", value = "soltero,casado,viudo,separado_divorciado" },
+  { key = "disability_grade.ge_33_lt_65", value = "1" },
+  { key = "disability_grade.ge_65", value = "2" },
+  { key = "disability_grade.judicial_incapacity", value = "3" },
+  { key = "disability_grade.assistance_or_reduced_mobility", value = "4" },
+  { key = "declaration_type.individual", value = "1" },
+  { key = "declaration_type.joint", value = "2" },
+  { key = "ccaa.andalucia", value = "01" },
+  { key = "ccaa.aragon", value = "02" },
+  { key = "ccaa.asturias", value = "03" },
+  { key = "ccaa.baleares", value = "04" },
+  { key = "ccaa.canarias", value = "05" },
+  { key = "ccaa.cantabria", value = "06" },
+  { key = "ccaa.castilla_la_mancha", value = "07" },
+  { key = "ccaa.castilla_y_leon", value = "08" },
+  { key = "ccaa.cataluna", value = "09" },
+  { key = "ccaa.extremadura", value = "10" },
+  { key = "ccaa.galicia", value = "11" },
+  { key = "ccaa.madrid", value = "12" },
+  { key = "ccaa.murcia", value = "13" },
+  { key = "ccaa.la_rioja", value = "16" },
+  { key = "ccaa.comunidad_valenciana", value = "17" },
+  { key = "ccaa.ceuta", value = "18" },
+  { key = "ccaa.melilla", value = "19" },
+  { key = "holder.declarante", value = "2" },
+  { key = "holder.conyuge", value = "3" },
+  { key = "holder.hijo1", value = "4" },
+  { key = "holder.hijo2", value = "5" },
+  { key = "holder.hijo3", value = "6" },
+  { key = "holder.hijo4", value = "7" },
+  { key = "estimation_directa_modalidad.directa_normal", value = "N" },
+  { key = "estimation_directa_modalidad.directa_simplificada", value = "S" },
+]

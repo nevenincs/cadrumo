@@ -4,7 +4,8 @@ The receipt module's writers are reachable through one chain: the storage
 adapter behind the login-session port, the application login service that
 the runtime drives, and the runtime's own profile host and sweep. Profile
 deletion removes the receipt through the custody transaction, which fences
-the sign-in generation first. Any other production module naming a writer,
+the sign-in generation first. The session prune deletes only keychain
+entries the receipt's root recorded minting and no receipt names. Any other production module naming a writer,
 the receipt's keychain service or its file is a second owner and fails here.
 """
 
@@ -17,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -29,6 +30,8 @@ _MCP_ROOT = REPO_ROOT / "src/cadrumo_mcp"
 """``src/cadrumo_mcp``: the separately shipped MCP service, which owns no receipt mutation."""
 
 _RECEIPT = "adapters/persistence/storage/custody/acceleration_receipt.py"
+_KEYCHAIN = "adapters/persistence/storage/custody/acceleration_keychain.py"
+_PRUNE = "adapters/persistence/storage/custody/acceleration_session_prune.py"
 _ADAPTER = "adapters/persistence/storage/profile_login_session.py"
 _PORT = "application/user_profile/login_session_port.py"
 _LOGIN = "application/user_profile/login_session.py"
@@ -41,19 +44,19 @@ _TAXONOMY = "core/storage_taxonomy_locations.py"
 
 _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     # The receipt module's own writers and the keychain material they hold.
-    "_write_acceleration_receipt": frozenset({_RECEIPT}),
-    "_store_acceleration_secret": frozenset({_RECEIPT}),
-    "_delete_acceleration_secret": frozenset({_RECEIPT}),
-    "_delete_keychain_entry": frozenset({_RECEIPT}),
+    "write_acceleration_receipt": frozenset({_RECEIPT}),
+    "store_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
+    "delete_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN, _PRUNE}),
+    "_delete_keychain_entry": frozenset({_KEYCHAIN}),
     "_delete_profile_session": frozenset({_RECEIPT}),
-    "_delete_refused_receipt": frozenset({_RECEIPT}),
-    "_clear_captured_receipt": frozenset({_RECEIPT}),
-    "PROFILE_SESSION_KEYCHAIN_SERVICE": frozenset({_RECEIPT}),
+    "delete_refused_receipt": frozenset({_RECEIPT}),
+    "clear_captured_receipt": frozenset({_RECEIPT}),
+    "PROFILE_SESSION_KEYCHAIN_SERVICE": frozenset({_KEYCHAIN}),
     # Its public mutators, reached only through the storage adapter.
     "mint_profile_session": frozenset({_RECEIPT, _ADAPTER}),
     "delete_profile_session": frozenset({_RECEIPT, _ADAPTER}),
     "resume_profile_session_with_key": frozenset({_RECEIPT, _ADAPTER}),
-    "profile_session_path": frozenset({_RECEIPT, _ADAPTER}),
+    "profile_session_path": frozenset({_RECEIPT, _ADAPTER, _PRUNE}),
     # The runtime's lock-down and sweep revoke directly, generation first.
     "revoke_profile_sign_in": frozenset({_RECEIPT, _RUNTIME_HOST, _RUNTIME_SWEEP}),
     # The port the application login service drives.
@@ -68,9 +71,10 @@ _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
 """Each name that mutates a receipt, and the only modules that may name it."""
 
 _RECEIPT_LITERALS: Mapping[str, frozenset[str]] = {
-    "profile-session:v2": frozenset({_RECEIPT}),
+    "profile-session:v2": frozenset({_KEYCHAIN}),
     "session.v2.json": frozenset({_RECEIPT, _TAXONOMY}),
     "session.v2.retirement.json": frozenset({_RECEIPT, _TAXONOMY}),
+    "session.v2.minted.json": frozenset({_RECEIPT, _TAXONOMY}),
 }
 """Spelling the receipt's keychain service or file reaches it without a writer."""
 
@@ -113,6 +117,18 @@ def _named(node: ast.AST) -> str | None:
     return None
 
 
+def _docstring_nodes(tree: ast.AST) -> set[ast.AST]:
+    """Return string expressions that are documentation, not executable strings."""
+    docstrings: set[ast.AST] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) or not node.body:
+            continue
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            docstrings.add(first.value)
+    return docstrings
+
+
 def receipt_ownership_findings(
     root: Path, mcp_root: Path | None = None, runtime_root: Path | None = None
 ) -> list[ReceiptOwnershipFinding]:
@@ -120,12 +136,13 @@ def receipt_ownership_findings(
     findings: list[ReceiptOwnershipFinding] = []
     for module, path in _production_modules(root, mcp_root, runtime_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstrings = _docstring_nodes(tree)
         for node in ast.walk(tree):
             name = _named(node)
             owners = _RECEIPT_WRITERS.get(name) if name is not None else None
             if name is not None and owners is not None and module not in owners:
                 findings.append(ReceiptOwnershipFinding(module, getattr(node, "lineno", 0), name))
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node not in docstrings:
                 for literal, literal_owners in _RECEIPT_LITERALS.items():
                     if literal in node.value and module not in literal_owners:
                         findings.append(ReceiptOwnershipFinding(module, node.lineno, literal))
@@ -189,6 +206,24 @@ def test_the_gate_reports_a_planted_second_owner(tmp_path: Path, planted: str) -
     findings = receipt_ownership_findings(tmp_path)
 
     assert {(finding.module, finding.name) for finding in findings} == {("entrypoints/cli/resume_shortcut.py", name)}
+
+
+def test_docstrings_are_ignored_but_executable_receipt_strings_are_reported(tmp_path: Path) -> None:
+    intruder = tmp_path / "entrypoints" / "cli" / "resume_shortcut.py"
+    intruder.parent.mkdir(parents=True)
+    intruder.write_text(
+        '"""Historical note mentioning session.v2.json."""\n'
+        "def forget(root):\n"
+        "    path = 'session.v2.json'\n"
+        "    return path\n",
+        encoding="utf-8",
+    )
+
+    findings = receipt_ownership_findings(tmp_path)
+
+    assert [(finding.module, finding.name) for finding in findings] == [
+        ("entrypoints/cli/resume_shortcut.py", "session.v2.json")
+    ]
 
 
 @pytest.mark.parametrize("planted", sorted(_PLANTED))

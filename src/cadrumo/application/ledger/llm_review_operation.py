@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ...core.hashing import sha256_hex
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -42,13 +43,15 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .llm_review_contracts import (
+    LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_LLM_REVIEW_DEFINITION_IDS,
     LedgerLlmReviewRequest,
     bound_ledger_llm_projection,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject,
+    ledger_llm_review_subject_reference,
 )
 from .llm_review_execution import (
     LedgerLlmOperationPortsFactory,
@@ -61,7 +64,7 @@ from .llm_review_results import LedgerLlmExecutionResult, LedgerLlmOperationResu
 from .read_access import resolve_ledger_read_access
 
 
-def _review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+def review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
     """Release only this invocation's digest-bound authority-free review facts."""
     if not isinstance(operand, LedgerLlmReviewedOperand) or operand.request.preview:
         raise ValueError("invalid ledger reviewed operand")
@@ -86,7 +89,13 @@ def resolve_ledger_llm_review_access(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.definition_id != ledger_llm_review_definition_id(request.payload):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    resolved = resolve_ledger_read_access(
+        request,
+        context,
+        profile_id=request.payload.profile_id,
+        periods=frozenset(),
+        subject_ref=ledger_llm_review_subject(request.payload),
+    )
     disclosures = resolved.policy.disclosures
     if context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
         schema = context.contract.review_projection_schema
@@ -112,7 +121,7 @@ def resolve_ledger_llm_review_access(
     return ResolvedOperationAccess(request=resolved.request, policy=policy)
 
 
-def _result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+def result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     """Match the complete private invocation to its exact settled public receipt."""
     if not isinstance(result, LedgerLlmExecutionResult):
         raise ValueError("invalid ledger review terminal result")
@@ -146,7 +155,7 @@ def build_ledger_llm_review_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=LedgerLlmReviewRequest,
-        subject_reference=OperationSubjectReferenceV1.profile(),
+        subject_reference=ledger_llm_review_subject_reference(definition_id),
         result_type=LedgerLlmExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=LedgerLlmReviewRequest,
@@ -157,7 +166,11 @@ def build_ledger_llm_review_definition(
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RESUMABLE,
-            cancellation=OperationCancellation.UNSUPPORTED,
+            # A classification review waiting for its answer has written nothing,
+            # so letting it go releases its movement with no effect.
+            cancellation=OperationCancellation.COOPERATIVE
+            if definition_id == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+            else OperationCancellation.UNSUPPORTED,
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.RESUMABLE,
             baseline=OperationBaselinePolicy.EXACT_APPROVAL,
@@ -165,10 +178,15 @@ def build_ledger_llm_review_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        # A reader refusal's verdict names the local AI setup that lets the
+        # suggestion run; a frontend in another process learns it only from the
+        # recorded detail. Its context is the scrubbed envelope context, which
+        # names records, never transaction text or amounts.
+        public_error_detail=True,
     )
 
 
@@ -192,7 +210,7 @@ def build_ledger_llm_review_registration(definition: OperationDefinition) -> Ope
         review_projection_schema=review,
         interaction_response_schema=response,
         reviewed_operand_type=LedgerLlmReviewedOperand,
-        review_projector=_review_projector,
-        result_projector=_result_projector,
+        review_projector=review_projector,
+        result_projector=result_projector,
         access_resolver=resolve_ledger_llm_review_access,
     )

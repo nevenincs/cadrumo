@@ -27,7 +27,7 @@ import pytest
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_rows import parse_pdf_row
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,7 +61,7 @@ def test_an_unknown_type_token_is_still_refused() -> None:
 @pytest.mark.parametrize("prefix", ["14-100-ejercicio-2009", "15-100-ejercicio-2010", "16-100-ejercicio-2011"])
 def test_the_bundled_modelo_100_editions_carry_no_position_holes(prefix: str) -> None:
     """The real corpus case: each of these reported holes across most of its records."""
-    matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
+    matches = [path for path in bundled_designs() if path.name.startswith(prefix)]
     assert matches, f"the bundled design {prefix!r} is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])
@@ -93,7 +93,7 @@ def test_the_later_editions_recover_the_doubly_glued_row(prefix: str) -> None:
     guess. A line whose neighbours do not produce its exact token is still left
     alone, and the reader still invents no positions.
     """
-    matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
+    matches = [path for path in bundled_designs() if path.name.startswith(prefix)]
     assert matches, f"the bundled design {prefix!r} is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

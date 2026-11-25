@@ -25,11 +25,11 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
@@ -39,16 +39,23 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.modelo.work_form_field_vocabulary import (
+    TYPED_EDITABILITIES,
+    ModeloFormOrigin,
+)
+from cadrumo.application.modelo.work_form_models import (
+    ModeloWorkForm,
+    confirmable,
+)
+from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction, form_next_step
 from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
@@ -58,21 +65,22 @@ from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list_models import CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel, CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
-from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
-from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.tests.frame import capture
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
-from dev.docs.sequences.runner import SANDBOX_PROFILE_LABEL, SequenceSandbox, executed_sequence_sandbox
+from dev.docs.sequences.runner import executed_sequence_sandbox
+from dev.docs.sequences.sandbox import SANDBOX_PROFILE_LABEL, SequenceSandbox, owned_scratch_directory
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
 NEXT_PAGE: Final[str] = "next-page"
@@ -93,20 +101,17 @@ _TYPED_SAMPLES: Final[Mapping[str, str]] = {
     "decimal": "100",
     "integer": "1",
     "ratio": "50",
-    "year": "2026",
     "text": "SINTETICO",
 }
-"""What the review walk types, by the box's value kind; a kind not listed is passed over."""
+"""What the review walk types, by the box's value kind; a kind not listed (except year) is passed over."""
 
 type _Walk = Callable[["SequenceScenario", Pilot[object]], Awaitable[None]]
 
 
 def _require_no_confirmable_value(form: ModeloWorkForm, scenario: SequenceScenario) -> None:
     """Require no confirmable value."""
-    steps = {
-        workbench_progress(form, staged=0, verified=verified, filed=False).next_action for verified in (False, True)
-    }
-    if steps != {NextAction.CONFIRM}:
+    steps = {form_next_step(form, verified=verified, filed=False).action for verified in (False, True)}
+    if steps != {ModeloFormNextAction.CONFIRM}:
         raise PageUnavailableError(
             f"{scenario.sequence_id}: F8 would {', '.join(sorted(step.value for step in steps))}, not confirm"
         )
@@ -358,12 +363,20 @@ async def _press_f8_with_nothing_to_confirm(scenario: SequenceScenario, pilot: P
     await _settle(pilot)
 
 
+def _typed_sample(data_type: str) -> str | None:
+    """Return what the review walk types into a box of this value kind; a year box takes the support horizon."""
+    if data_type == "year":
+        with bundled_indexed_authority().operation() as operation:
+            return str(operation.supported_filing_years().horizon)
+    return _TYPED_SAMPLES.get(data_type)
+
+
 async def _stage(
     scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
 ) -> bool:
     """Put a sample into one box's panel and keep it, or close the panel when the box or the value is refused."""
     field = entry.field
-    sample = _TYPED_SAMPLES.get(field.data_type)
+    sample = _typed_sample(field.data_type)
     if sample is None or field.editability not in TYPED_EDITABILITIES:
         return False
     editor = await _open_panel(pilot, casilla_list, entry)
@@ -547,31 +560,34 @@ class ShotRefusal:
     detail: str
 
 
-def capture_scenario(
-    scenario: SequenceScenario,
-    shots: Sequence[Shot],
-) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
-    """Run a scenario's sequence once and capture every requested shot over its outcome.
+@dataclass(frozen=True, slots=True)
+class ScenarioWorld:
+    """A sequence's executed sandbox, held open so several captures can read the one declaration."""
 
-    A shot whose page the declaration does not offer is returned as a refusal
-    instead of a frame; anything wrong with the scenario as a whole still raises.
-    """
+    provenance: ScenarioProvenance
+    sandbox: SequenceSandbox
+
+
+def _unknown_pages(scenario: SequenceScenario, shots: Sequence[Shot]) -> None:
     pages = scenario_pages(scenario)
     unknown = sorted({shot.page for shot in shots} - set(pages))
     if unknown:
         raise ScenarioError(f"unknown page(s) {', '.join(unknown)}; accepted: {', '.join(pages)}")
-    discovered, problems = discover_sequences(sequence_id=scenario.sequence_id)
+
+
+@contextmanager
+def scenario_world(sequence_id: str) -> Generator[ScenarioWorld]:
+    """Run a sequence once and keep its sandbox open for every capture taken over it."""
+    discovered, problems = discover_sequences(sequence_id=sequence_id)
     if problems or len(discovered) != 1:
-        raise ScenarioError(f"sequence {scenario.sequence_id!r} could not be read: {'; '.join(problems)}")
+        raise ScenarioError(f"sequence {sequence_id!r} could not be read: {'; '.join(problems)}")
     item = discovered[0]
     golden = read_golden(item.page, item.sequence_id)
     golden_digest = sha256(golden_path(item.page, item.sequence_id).read_bytes()).hexdigest()
 
     with (
-        TemporaryDirectory(
-            prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
-        ) as scratch,
-        executed_sequence_sandbox(item.sequence, sandbox_root=Path(scratch)) as (sandbox, transcript),
+        owned_scratch_directory("cadrumo-tui-scenario-") as scratch,
+        executed_sequence_sandbox(item.sequence, sandbox_root=scratch) as (sandbox, transcript),
     ):
         divergences = check_transcript(item.sequence, transcript, golden, page=item.page)
         provenance = ScenarioProvenance(
@@ -581,11 +597,35 @@ def capture_scenario(
             matches_golden=not divergences,
             golden_problems=tuple(divergences[:_GOLDEN_PROBLEMS_KEPT]),
         )
-        # The installed session enters this composition before it builds the
-        # root; the CLI frames above compose their own per invocation.
-        with profile_adapter_composition():
-            frames, refusals = asyncio.run(_capture_all(scenario, sandbox, tuple(shots)))
-    return provenance, frames, refusals
+        yield ScenarioWorld(provenance=provenance, sandbox=sandbox)
+
+
+def capture_in_world(
+    world: ScenarioWorld,
+    scenario: SequenceScenario,
+    shots: Sequence[Shot],
+) -> tuple[tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
+    """Capture shots over an open world; a shot whose page the declaration does not offer is a refusal."""
+    _unknown_pages(scenario, shots)
+    # The installed session enters this composition before it builds the
+    # root; the CLI frames of the sequence compose their own per invocation.
+    with profile_adapter_composition():
+        return asyncio.run(_capture_all(scenario, world.sandbox, tuple(shots)))
+
+
+def capture_scenario(
+    scenario: SequenceScenario,
+    shots: Sequence[Shot],
+) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
+    """Run a scenario's sequence once and capture every requested shot over its outcome.
+
+    A shot whose page the declaration does not offer is returned as a refusal
+    instead of a frame; anything wrong with the scenario as a whole still raises.
+    """
+    _unknown_pages(scenario, shots)
+    with scenario_world(scenario.sequence_id) as world:
+        frames, refusals = capture_in_world(world, scenario, shots)
+    return world.provenance, frames, refusals
 
 
 async def _capture_all(
@@ -624,7 +664,7 @@ async def _capture_all(
         await asyncio.to_thread(client.close)
 
 
-async def _no_recovery() -> FrontendClient:
+async def _no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
     """A review capture never opens profile recovery."""
     raise ScenarioError("a scenario capture must not open profile recovery")
 
@@ -739,12 +779,15 @@ __all__ = [
     "ScenarioError",
     "ScenarioFrame",
     "ScenarioProvenance",
+    "ScenarioWorld",
     "SequenceScenario",
     "Shot",
     "ShotRefusal",
+    "capture_in_world",
     "capture_scenario",
     "page_interfaces",
     "resolve_scenario",
     "scenario_pages",
     "scenario_surface",
+    "scenario_world",
 ]

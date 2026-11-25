@@ -54,7 +54,6 @@ def project_record_design_for_revision(
 def _require_exact_m369_source(intermediate: RecordDesignIntermediate) -> None:
     if (
         intermediate.source.source_sha256 != _M369_SOURCE_SHA256
-        or intermediate.source.design_epoch != "2021"
         or len(intermediate.variable_envelopes) != 1
         or intermediate.variable_envelopes[0].body_content != _M369_BODY_CONTENT
     ):

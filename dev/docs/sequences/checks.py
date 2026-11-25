@@ -8,24 +8,26 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import re
 import subprocess
 import sys
-from collections.abc import Generator
+import time
+from collections.abc import Callable, Generator, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Annotated, Final, cast
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.tests.golden_comparison import canonicalise
-from dev._paths import REPO_ROOT, UTF_8
-from dev.packaging.command_execution import run_command
+from dev.dependency_observation.observation import active_observation, unobserved
+from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
 
 from .authority_currency import require_current_authority
@@ -41,26 +43,40 @@ from .golden_store import (
 )
 from .parser import parse_sequence
 from .runner import (
-    _PROGRESS_JOURNAL_ENV,
+    PROGRESS_JOURNAL_ENV,
     SequenceTranscript,
-    _sequence_progress_scope,
     execute_page_sequences,
     execute_sequence,
+    sequence_progress_scope,
 )
+from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
+from .seed_generator import check_seeds
+from .verdict_cache import SequenceVerdicts, published_sequence_verdicts, reuse_forced_off
 
 __all__ = [
+    "ADVISORY_PREFIX",
+    "DEFAULT_REFRESH_JOBS",
+    "EXECUTE_ALL_OPTION",
+    "PROBLEM_PREFIX",
     "READER_FRAME_OUTPUT_ADVISORY_BYTES",
+    "REFRESHED_PREFIX",
     "DiscoveredSequence",
+    "RefreshUnit",
+    "VerdictPolicy",
     "check_page_coherence",
     "check_page_coherence_in_subprocess",
     "check_sequences",
     "check_sequences_in_subprocess",
     "default_docs_root",
     "discover_sequences",
+    "frame_runs_command",
     "oversized_frame_advisories",
+    "pages_running_command",
     "recorded_output_bytes",
+    "refresh_pages",
     "refresh_sequences",
+    "refresh_units",
     "unused_capture_advisories",
 ]
 
@@ -73,7 +89,7 @@ _FENCE_OPEN_RE = re.compile(r"^(?P<fence>`{3,})\{cli-sequence\}\s+(?P<id>\S+)\s*
 
 _OPTION_RE = re.compile(r"^:(?P<key>[a-z][a-z0-9_-]*):\s*(?P<value>.*)$")
 
-_SKIPPED_DOC_DIRS = frozenset({"_build", "_sequences", "_static", "_templates"})
+SKIPPED_DOC_DIRS = frozenset({"_build", "_sequences", "_static", "_templates"})
 
 _PROFILE_COMMAND_MENTION: str = "aeat config profile"
 
@@ -90,11 +106,29 @@ COHERENCE_TIER_PREFIX: str = "page-coherence (cumulative page run, not the golde
 #: text view or a narrower command serves the page better.
 READER_FRAME_OUTPUT_ADVISORY_BYTES: Final[int] = 64 * 1024
 
+#: Page-sharded refresh children run at once when the operator names no ``--jobs``.
+#: Sequences are hermetically independent, so only the schedule changes; eight
+#: is the fleet's explicit lane width for a shared host, never the whole machine.
+DEFAULT_REFRESH_JOBS: Final[int] = 8
+
+#: Line prefixes a refresh child prints and its parent reads back. The CLI's own
+#: report uses the same constants, so the two ends cannot drift apart.
+REFRESHED_PREFIX: Final[str] = "refreshed: "
+ADVISORY_PREFIX: Final[str] = "advisory: "
+PROBLEM_PREFIX: Final[str] = "problem: "
+#: The ``check`` option that executes every addressed sequence instead of reusing recorded verdicts.
+EXECUTE_ALL_OPTION: Final[str] = "--execute-all"
+
+#: A sequence pays for its own runtime and profile worker before its first frame,
+#: roughly what three frames cost. The shard schedule weighs a sequence by its
+#: executed frames plus this, so the heaviest unit starts first.
+_SEQUENCE_STARTUP_FRAMES: Final[int] = 3
+
 
 class DiscoveredSequence(BaseModel):
     """One ``cli-sequence`` directive found on an enrolled docs page."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     page: str
     sequence_id: SequenceId
@@ -105,7 +139,7 @@ class DiscoveredSequence(BaseModel):
 class _SequenceProgressRecord(BaseModel):
     """Strict child-to-parent receipt for the last executing sequence frame."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     page: _NonEmptyText
     sequence_id: SequenceId
@@ -125,12 +159,12 @@ def default_docs_root() -> Path:
     return repo_root / "docs"
 
 
-def _page_files(docs_root: Path) -> list[Path]:
+def checks_page_files(docs_root: Path) -> list[Path]:
     """Return every markdown page under ``docs_root``, skipping non-page trees."""
     pages: list[Path] = []
     for path in scan_directory(docs_root, pattern="*.md", recursive=True):
         relative = path.relative_to(docs_root)
-        if relative.parts and relative.parts[0] in _SKIPPED_DOC_DIRS:
+        if relative.parts and relative.parts[0] in SKIPPED_DOC_DIRS:
             continue
         pages.append(path)
     return pages
@@ -246,7 +280,7 @@ def discover_sequences(
     problems: list[str] = []
     seen_ids: dict[str, str] = {}
 
-    page_files = _page_files(root)
+    page_files = checks_page_files(root)
     if page is not None:
         wanted = root / f"{page}.md"
         page_files = [path for path in page_files if path == wanted]
@@ -337,7 +371,7 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+            with sequence_progress_scope(item.page), execute_in_fresh_sandbox(item.sequence) as transcript:
                 expectation_problems = evaluate_expectations(item.sequence, transcript, page=item.page)
                 if expectation_problems:
                     all_problems.extend(expectation_problems)
@@ -349,9 +383,252 @@ def refresh_sequences(
                 written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
                 advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
+            all_problems.append(f"page {item.page!r}: {with_notes(exc)}")
             continue
     return tuple(written), tuple(all_problems), tuple(advisories)
+
+
+def frame_runs_command(argv: Sequence[str], command: Sequence[str]) -> bool:
+    """Return whether ``argv`` invokes ``command``: its tokens, consecutive, after the executable.
+
+    ``command`` is a command path such as ``("app", "ledger", "classify")``. Options
+    and their values may surround it, so the match is a consecutive run of tokens
+    rather than a prefix.
+    """
+    tokens = tuple(argv[1:])
+    wanted = tuple(command)
+    if not wanted:
+        return False
+    return any(tokens[start : start + len(wanted)] == wanted for start in range(len(tokens) - len(wanted) + 1))
+
+
+def pages_running_command(discovered: Sequence[DiscoveredSequence], command: Sequence[str]) -> tuple[str, ...]:
+    """Return the pages, in discovery order, with an EXECUTED frame invoking ``command``.
+
+    A ``@static`` frame only displays a command and no golden records it, so it
+    selects nothing. Seed frames execute and are recorded, so they count.
+    """
+    pages = dict.fromkeys(
+        item.page
+        for item in discovered
+        if any(frame_runs_command(frame.argv, command) for frame in item.sequence.executed_frames)
+    )
+    return tuple(pages)
+
+
+@dataclass(frozen=True)
+class RefreshUnit:
+    """One child's share of a refresh: a whole page, or one sequence of a heavy page."""
+
+    page: str
+    sequence_id: str | None
+    weight: int
+
+    @property
+    def label(self) -> str:
+        """Name the unit in progress lines."""
+        return self.page if self.sequence_id is None else f"{self.page} ({self.sequence_id})"
+
+
+def _sequence_refresh_weight(item: DiscoveredSequence) -> int:
+    return len(item.sequence.executed_frames) + _SEQUENCE_STARTUP_FRAMES
+
+
+def refresh_units(discovered: Sequence[DiscoveredSequence], *, jobs: int) -> tuple[RefreshUnit, ...]:
+    """Cut the executable sequences into the units one child each refreshes, in discovery order.
+
+    A page is one unit, so its sequences share one interpreter and one start-up. A
+    page heavier than an even share of the whole corpus across ``jobs`` workers
+    would set the finish time by itself, so it splits into one unit per sequence;
+    each sequence still runs in its own fresh sandbox, as in a serial refresh.
+    Weight is the executed frame count (seed frames included) plus the per-sequence
+    start-up.
+    """
+    by_page: dict[str, list[DiscoveredSequence]] = {}
+    for item in discovered:
+        if item.sequence.executed_frames:
+            by_page.setdefault(item.page, []).append(item)
+    total = sum(_sequence_refresh_weight(item) for items in by_page.values() for item in items)
+    share = total / max(1, jobs)
+    units: list[RefreshUnit] = []
+    for page, items in by_page.items():
+        weight = sum(_sequence_refresh_weight(item) for item in items)
+        if len(items) > 1 and weight > share:
+            units.extend(RefreshUnit(page, item.sequence_id, _sequence_refresh_weight(item)) for item in items)
+        else:
+            units.append(RefreshUnit(page, None, weight))
+    return tuple(units)
+
+
+def _refresh_child_command(*, unit: RefreshUnit, docs_root: Path | None, goldens_root: Path | None) -> list[str]:
+    scope = ("--page", unit.page) if unit.sequence_id is None else ("--sequence", unit.sequence_id)
+    command = [sys.executable, "-m", "dev.docs.sequences", "refresh", *scope, "--jobs", "1"]
+    if docs_root is not None:
+        command.extend(("--docs-root", str(docs_root)))
+    if goldens_root is not None:
+        command.extend(("--goldens-root", str(goldens_root)))
+    return command
+
+
+def _problem_entries(stderr: str) -> tuple[str, ...]:
+    """Split a refresh child's stderr back into the problems it reported."""
+    entries: list[str] = []
+    for line in stderr.splitlines():
+        if line.startswith(PROBLEM_PREFIX):
+            entries.append(line.removeprefix(PROBLEM_PREFIX))
+        elif entries:
+            entries[-1] += "\n" + line
+    return tuple(entries)
+
+
+@dataclass(frozen=True)
+class _UnitRefreshReport:
+    """What one refresh child wrote, advised and refused."""
+
+    written: tuple[Path, ...]
+    advisories: tuple[str, ...]
+    problems: tuple[str, ...]
+    seconds: float
+
+
+def _refresh_unit_in_child(unit: RefreshUnit, command: list[str]) -> _UnitRefreshReport:
+    started = time.monotonic()
+    result = run_command(command, cwd=REPO_ROOT, environment=english_pinned_environment())
+    lines = result.stdout.splitlines()
+    written = tuple(Path(line.removeprefix(REFRESHED_PREFIX)) for line in lines if line.startswith(REFRESHED_PREFIX))
+    advisories = tuple(line.removeprefix(ADVISORY_PREFIX) for line in lines if line.startswith(ADVISORY_PREFIX))
+    problems = _refresh_child_problems(unit, result) if result.returncode != 0 else ()
+    return _UnitRefreshReport(written, advisories, problems, time.monotonic() - started)
+
+
+def _refresh_child_problems(unit: RefreshUnit, result: CommandResult) -> tuple[str, ...]:
+    """The problems a failed refresh child reported, else one entry carrying its whole output."""
+    report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+    reported = _problem_entries(result.stderr) if result.returncode == 1 else ()
+    return reported or (
+        f"page {unit.label}: refresh child failed (exit {result.returncode}):\n{report or '<no output>'}",
+    )
+
+
+def refresh_pages(
+    *,
+    docs_root: Path | None = None,
+    goldens_root: Path | None = None,
+    pages: Sequence[str] | None = None,
+    jobs: int = DEFAULT_REFRESH_JOBS,
+    progress: Callable[[str], None] | None = None,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]]:
+    """Refresh the named pages, or every enrolled page when ``pages`` is ``None``.
+
+    With ``jobs > 1`` and more than one :class:`RefreshUnit`, each unit is refreshed
+    by its own English-pinned child interpreter, ``jobs`` at a time, heaviest unit
+    first (:func:`refresh_units` says what a unit is). The goldens come from the
+    same :func:`refresh_sequences` engine in the same fresh per-sequence sandboxes a
+    serial run uses, so the written bytes do not depend on the schedule. Otherwise
+    the pages refresh serially in this process. Sharding also bounds what one
+    interpreter accumulates, which a single process refreshing every sequence does
+    not.
+
+    Args:
+        docs_root: The narrative pages tree; defaults to the committed ``docs/``.
+        goldens_root: Optional golden tree override.
+        pages: Docname-style pages to refresh; ``None`` for all.
+        jobs: Children run at once.
+        progress: Receives one line as each unit finishes.
+
+    Returns:
+        ``(written, problems, advisories)`` in page order, as :func:`refresh_sequences`.
+
+    Raises:
+        SequenceEngineError: When a sequence would execute and the registry
+            authority the runner reads is not current.
+    """
+    requested: list[str | None] = [None] if pages is None else list(dict.fromkeys(pages))
+    if jobs <= 1:
+        return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
+
+    discovered, all_problems = _discover_requested_pages(requested, docs_root=docs_root)
+    units = refresh_units(discovered, jobs=jobs)
+    if len(units) <= 1:
+        return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
+
+    require_current_authority()
+    advisories: list[str] = []
+    for item in discovered:
+        advisories.extend(unused_capture_advisories(item))
+    reports = _refresh_units_in_children(
+        units, jobs=jobs, docs_root=docs_root, goldens_root=goldens_root, progress=progress
+    )
+
+    written: list[Path] = []
+    for index in range(len(units)):
+        written.extend(reports[index].written)
+        advisories.extend(reports[index].advisories)
+        all_problems.extend(reports[index].problems)
+    return tuple(written), tuple(all_problems), tuple(dict.fromkeys(advisories))
+
+
+def _discover_requested_pages(
+    requested: Sequence[str | None], *, docs_root: Path | None
+) -> tuple[list[DiscoveredSequence], list[str]]:
+    """Discover every requested page's sequences and discovery problems, in page order."""
+    discovered: list[DiscoveredSequence] = []
+    all_problems: list[str] = []
+    for page in requested:
+        found, problems = discover_sequences(docs_root=docs_root, page=page)
+        discovered.extend(found)
+        all_problems.extend(problems)
+    return discovered, all_problems
+
+
+def _refresh_units_in_children(
+    units: Sequence[RefreshUnit],
+    *,
+    jobs: int,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+    progress: Callable[[str], None] | None,
+) -> dict[int, _UnitRefreshReport]:
+    """Refresh each unit in its own child, ``jobs`` at a time and heaviest first, reporting each as it finishes."""
+    schedule = sorted(range(len(units)), key=lambda index: units[index].weight, reverse=True)
+    reports: dict[int, _UnitRefreshReport] = {}
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {
+            pool.submit(
+                _refresh_unit_in_child,
+                units[index],
+                _refresh_child_command(unit=units[index], docs_root=docs_root, goldens_root=goldens_root),
+            ): index
+            for index in schedule
+        }
+        for future in as_completed(futures):
+            index = futures[future]
+            reports[index] = report = future.result()
+            if progress is not None:
+                outcome = "FAILED" if report.problems else f"{len(report.written)} golden(s)"
+                progress(
+                    f"{units[index].label}: {outcome} in {report.seconds:.0f}s ({len(reports)}/{len(units)} units)"
+                )
+    return reports
+
+
+def _refresh_pages_serially(
+    requested: Sequence[str | None],
+    *,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]]:
+    written: list[Path] = []
+    problems: list[str] = []
+    advisories: list[str] = []
+    for page in requested:
+        page_written, page_problems, page_advisories = refresh_sequences(
+            docs_root=docs_root, goldens_root=goldens_root, page=page
+        )
+        written.extend(page_written)
+        problems.extend(page_problems)
+        advisories.extend(page_advisories)
+    return tuple(written), tuple(problems), tuple(advisories)
 
 
 def check_sequences(
@@ -360,12 +637,18 @@ def check_sequences(
     goldens_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
+    verdicts: VerdictPolicy | None = None,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Execute the addressed sequences and compare against committed goldens.
 
     This is THE engine check function: the ``check`` CLI mode, the Sphinx
     ``builder-inited`` hook, and the pytest gate all call it, so a divergence
     reds every surface through one execution path.
+
+    With ``verdicts``, each sequence whose content key has a recorded clean
+    verdict is reported as reused instead of executed (unless the policy only
+    records), and each sequence that passes is recorded as soon as it does, so
+    an interrupted run keeps the verdicts it completed.
 
     Returns:
         ``(problems, advisories)``. Empty ``problems`` is a clean pass; each
@@ -379,11 +662,22 @@ def check_sequences(
         SequenceEngineError: When a sequence would execute and the registry
             authority the runner reads is not current.
     """
-    discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
+    with unobserved():
+        # Discovery reads pages and contracts, which key each sequence on their own;
+        # only what executing a sequence reads belongs to its observed product inputs.
+        discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
     if any(item.sequence.executed_frames for item in discovered):
         require_current_authority()
     all_problems = list(problems)
+    if page is None and sequence_id is None:
+        # The recipes are shared by every sequence, so a drifted persona frame is a corpus-level
+        # fault; a scoped run leaves it to the unscoped gate.
+        all_problems.extend(check_seeds())
     advisories: list[str] = []
+    observation = active_observation()
+    keyed = None if verdicts is None else verdicts.open(docs_root=docs_root, goldens_root=goldens_root)
+    if keyed is not None and observation is None:
+        keyed.prepare_unobserved_run()
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
         if not item.sequence.executed_frames:
@@ -394,13 +688,47 @@ def check_sequences(
             all_problems.append(str(exc))
             continue
         advisories.extend(oversized_frame_advisories(item.page, golden))
+        key = None if keyed is None else keyed.key(item)
+        if keyed is not None and verdicts is not None and verdicts.reuse:
+            reused = keyed.reused(item)
+            if reused is not None:
+                verdicts.report(f"{item.page}/{item.sequence_id}: {reused}")
+                continue
         try:
-            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
-                all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
+            with sequence_progress_scope(item.page), execute_in_fresh_sandbox(item.sequence) as transcript:
+                sequence_problems = check_transcript(item.sequence, transcript, golden, page=item.page)
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
+            all_problems.append(f"page {item.page!r}: {with_notes(exc)}")
             continue
+        all_problems.extend(sequence_problems)
+        if keyed is not None and key is not None and not sequence_problems:
+            if observation is not None:
+                observation.note_imported_modules()
+            try:
+                keyed.record_clean(item, key=key, observation=observation)
+            except SequenceEngineError as exc:
+                all_problems.append(str(exc))
     return tuple(all_problems), tuple(advisories)
+
+
+@dataclass(frozen=True)
+class VerdictPolicy:
+    """How a check consults the per-sequence verdict cache.
+
+    ``reuse`` lets a recorded clean verdict stand in for execution; without it
+    every addressed sequence executes and each pass is still recorded.
+    ``report`` receives one line naming every recorded verdict reused.
+    """
+
+    reuse: bool = True
+    report: Callable[[str], None] = print
+
+    def open(self, *, docs_root: Path | None, goldens_root: Path | None) -> SequenceVerdicts:
+        """Key the corpus under the published authority; refuses a stale authority."""
+        return published_sequence_verdicts(
+            docs_root=docs_root if docs_root is not None else default_docs_root(),
+            goldens_root=goldens_root,
+        )
 
 
 def english_pinned_environment() -> dict[str, str]:
@@ -416,18 +744,20 @@ def english_pinned_environment() -> dict[str, str]:
     composed its own environment would drift from this one and measure a
     differently-configured product.
     """
+    authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = ambient_product_settings_removed()
-    # This is the check runner's scratch allocation, not product configuration.
-    # Preserve its resolved location across children: a build-tree default can
-    # exceed the native Unix socket path bound before a sequence starts.
-    environment["CADRUMO_TEMP_DIR"] = str(prepare_temporary_directory())
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+    if authority_root:
+        # The parent confirmed currency of THIS authority; a child that fell back to
+        # its own default would execute against one the parent never checked. The
+        # native spelling is the one the checkout's own default takes.
+        environment[AUTHORITY_ROOT_ENV] = str(Path(authority_root))
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
     return environment
 
 
-def _timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
+def timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
     """Render the last frame recorded by a timed-out check child.
 
     The runner writes only runtime-derived data immediately before each actual
@@ -456,6 +786,17 @@ def _positive_finite_timeout(value: str) -> float:
     return timeout
 
 
+def _positive_jobs(value: str) -> int:
+    """Parse a worker count for argparse."""
+    try:
+        jobs = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a whole number of at least 1") from exc
+    if jobs < 1:
+        raise argparse.ArgumentTypeError("must be a whole number of at least 1")
+    return jobs
+
+
 def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str, ...]:
     """Run one check child; return its report tuple (empty on a clean pass).
 
@@ -463,12 +804,10 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    with TemporaryDirectory(
-        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
-    ) as tmp:
-        journal = Path(tmp) / "last-frame.json"
+    with owned_scratch_directory("cli-sequence-progress-") as tmp:
+        journal = tmp / "last-frame.json"
         environment = english_pinned_environment()
-        environment[_PROGRESS_JOURNAL_ENV] = str(journal)
+        environment[PROGRESS_JOURNAL_ENV] = str(journal)
         try:
             result = run_command(
                 command,
@@ -479,7 +818,7 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
         except subprocess.TimeoutExpired as exc:
             if timeout is None:
                 raise
-            raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
+            raise SequenceEngineError(timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
     report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
@@ -496,11 +835,14 @@ def _scoped_check_command(
     docs_root: Path | None,
     goldens_root: Path | None,
     coherence: bool,
+    reuse_verdicts: bool = True,
 ) -> list[str]:
     """Build one page-scoped ``check`` child command line."""
     command = [sys.executable, "-m", "dev.docs.sequences", "check", "--page", page]
     if coherence:
         command.append("--coherence")
+    elif not reuse_verdicts:
+        command.append(EXECUTE_ALL_OPTION)
     if docs_root is not None:
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None and not coherence:
@@ -515,6 +857,7 @@ def _check_pages_in_subprocesses(
     jobs: int,
     timeout: float | None,
     coherence: bool = False,
+    reuse_verdicts: bool = True,
 ) -> tuple[str, ...]:
     """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
 
@@ -526,13 +869,17 @@ def _check_pages_in_subprocesses(
     discovery fault is reported by both the parent and its page's child; on an
     already-red gate the repetition is cosmetic.
 
+    In the golden tier with ``reuse_verdicts``, a page whose every executed
+    sequence has a recorded clean verdict starts no child at all; the parent
+    reports each verdict it reused. A page with any unrecorded sequence starts
+    its child, which reuses and records sequence by sequence through the same
+    cache.
+
     Returns:
         The merged report tuple: the parent discovery problems (if any)
         followed by one complete diagnostic report per failing page child.
         Empty on a clean pass.
     """
-    from concurrent.futures import ThreadPoolExecutor
-
     discovered, discovery_problems = discover_sequences(docs_root=docs_root)
     counts: dict[str, int] = {}
     for item in discovered:
@@ -540,19 +887,54 @@ def _check_pages_in_subprocesses(
     # Longest page first: with bounded workers, scheduling the heaviest pages
     # early keeps the tail short (the largest page bounds the ideal wall).
     pages = sorted(counts, key=lambda page: counts[page], reverse=True)
+    if not coherence and reuse_verdicts and not discovery_problems:
+        pages = _pages_needing_execution(discovered, pages, docs_root=docs_root, goldens_root=goldens_root)
 
     reports: list[str] = []
     if discovery_problems:
         reports.append("\n".join(f"FAIL: {problem}" for problem in discovery_problems))
     if pages:
         commands = [
-            _scoped_check_command(page=page, docs_root=docs_root, goldens_root=goldens_root, coherence=coherence)
+            _scoped_check_command(
+                page=page,
+                docs_root=docs_root,
+                goldens_root=goldens_root,
+                coherence=coherence,
+                reuse_verdicts=reuse_verdicts,
+            )
             for page in pages
         ]
         with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
             for child_report in pool.map(lambda command: _run_check_child(command, timeout=timeout), commands):
                 reports.extend(child_report)
     return tuple(reports)
+
+
+def _pages_needing_execution(
+    discovered: Sequence[DiscoveredSequence],
+    pages: list[str],
+    *,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+) -> list[str]:
+    """Drop the pages whose every executed sequence has a recorded clean verdict, reporting each reuse."""
+    policy = VerdictPolicy()
+    verdicts = policy.open(docs_root=docs_root, goldens_root=goldens_root)
+    reused: dict[str, list[str]] = {}
+    pending: set[str] = set()
+    for item in discovered:
+        if not item.sequence.executed_frames:
+            continue
+        description = verdicts.reused(item)
+        if description is None:
+            pending.add(item.page)
+        else:
+            reused.setdefault(item.page, []).append(f"{item.page}/{item.sequence_id}: {description}")
+    for page in pages:
+        if page not in pending:
+            for line in reused.get(page, ()):
+                policy.report(line)
+    return [page for page in pages if page in pending]
 
 
 def check_sequences_in_subprocess(
@@ -563,6 +945,7 @@ def check_sequences_in_subprocess(
     sequence_id: str | None = None,
     timeout: float | None = None,
     jobs: int = 1,
+    reuse_verdicts: bool = True,
 ) -> tuple[str, ...]:
     """Run the golden check in fresh English-pinned interpreter(s).
 
@@ -581,6 +964,12 @@ def check_sequences_in_subprocess(
     Children run to completion unless the caller explicitly supplies an
     elapsed-time deadline; correctness does not depend on host speed.
 
+    Every child consults the per-sequence verdict cache
+    (:mod:`dev.docs.sequences.verdict_cache`): a sequence with a recorded clean
+    verdict for its exact inputs is reused, and each sequence that passes is
+    recorded. ``reuse_verdicts=False``, or :data:`~dev.docs.sequences.verdict_cache.FORCE_ENV`
+    set in this process, executes every sequence and still records passes.
+
     Returns:
         An empty tuple on success, or the complete child diagnostic report(s)
         on a golden divergence.
@@ -592,14 +981,20 @@ def check_sequences_in_subprocess(
     # Refused here, once, so a stale authority is not reported by every child
     # as a golden divergence.
     require_current_authority()
+    # The children's environment drops every ``CADRUMO_*`` setting, so the
+    # force switch reaches them as an explicit option instead.
+    reuse_verdicts = reuse_verdicts and not reuse_forced_off()
     if jobs > 1 and page is None and sequence_id is None:
         return _check_pages_in_subprocesses(
             docs_root=docs_root,
             goldens_root=goldens_root,
             jobs=jobs,
             timeout=timeout,
+            reuse_verdicts=reuse_verdicts,
         )
     command = [sys.executable, "-m", "dev.docs.sequences", "check"]
+    if not reuse_verdicts:
+        command.append(EXECUTE_ALL_OPTION)
     if docs_root is not None:
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None:
@@ -655,10 +1050,10 @@ def check_page_coherence_in_subprocess(
 
 
 @contextmanager
-def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
+def execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
-    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
-        yield execute_sequence(sequence, sandbox_root=Path(tmp))
+    with owned_scratch_directory("seq-") as tmp:
+        yield execute_sequence(sequence, sandbox_root=tmp)
 
 
 def check_page_coherence(
@@ -705,7 +1100,7 @@ def check_page_coherence(
     return tuple(all_problems)
 
 
-def _build_argument_parser() -> argparse.ArgumentParser:
+def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m dev.docs.sequences",
         description="Refresh or check the committed cli-sequence goldens.",
@@ -717,8 +1112,32 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     ):
         sub = subparsers.add_parser(mode, help=help_text)
         scope = sub.add_mutually_exclusive_group()
-        scope.add_argument("--page", help="docname-style page path, e.g. tutorials/first-filing")
+        if mode == "refresh":
+            scope.add_argument(
+                "--page",
+                action="append",
+                help="docname-style page path, e.g. tutorials/first-filing; repeat to refresh several pages",
+            )
+        else:
+            scope.add_argument("--page", help="docname-style page path, e.g. tutorials/first-filing")
         scope.add_argument("--sequence", help="one sequence id")
+        if mode == "refresh":
+            scope.add_argument(
+                "--command",
+                help=(
+                    "refresh every page that EXECUTES this command path, e.g. 'app ledger classify'; "
+                    "pages that only display it as a @static frame are not selected"
+                ),
+            )
+            sub.add_argument(
+                "--jobs",
+                type=_positive_jobs,
+                default=DEFAULT_REFRESH_JOBS,
+                help=(
+                    "pages refreshed at once, each in its own child interpreter "
+                    f"(default {DEFAULT_REFRESH_JOBS}); 1 refreshes serially in this process"
+                ),
+            )
         sub.add_argument("--docs-root", type=Path, default=None, help=argparse.SUPPRESS)
         sub.add_argument("--goldens-root", type=Path, default=None, help=argparse.SUPPRESS)
         if mode == "check":
@@ -733,6 +1152,23 @@ def _build_argument_parser() -> argparse.ArgumentParser:
                 ),
             )
             sub.add_argument(
+                EXECUTE_ALL_OPTION,
+                action="store_true",
+                help=(
+                    "execute every addressed sequence instead of reusing a recorded clean "
+                    "verdict for identical inputs; passing sequences are still recorded"
+                ),
+            )
+            sub.add_argument(
+                "--stamp",
+                type=Path,
+                default=None,
+                help=(
+                    "on a clean unscoped run, write this stamp and a Makefile-syntax "
+                    "depfile beside it (STAMP.d) naming every input the verdicts read"
+                ),
+            )
+            sub.add_argument(
                 "--timeout",
                 type=_positive_finite_timeout,
                 default=None,
@@ -742,10 +1178,16 @@ def _build_argument_parser() -> argparse.ArgumentParser:
                     "last started page, sequence, frame, and resolved command on expiry"
                 ),
             )
+    seeds = subparsers.add_parser(
+        "seeds",
+        help="render the persona-derived profile frames of the seed recipes, or with --check fail on drift",
+    )
+    seeds.add_argument("--check", action="store_true", help="report drift without rewriting any recipe")
+    seeds.add_argument("--seeds-root", type=Path, default=None, help=argparse.SUPPRESS)
     return parser
 
 
-def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | None:
+def checks_owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | None:
     """Return the docname of the page enrolling ``sequence_id``, or ``None``.
 
     Used only to make the single-sequence advisory name the exact page-level
@@ -851,12 +1293,12 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     """Check page coherence items."""
     executable = [item for item in items if item.sequence.executed_frames]
     try:
-        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
-            with _sequence_progress_scope(docname):
+        with owned_scratch_directory("page-") as tmp:
+            with sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],
                     label=docname,
-                    sandbox_root=Path(tmp),
+                    sandbox_root=tmp,
                 )
             for item, transcript in zip(executable, transcripts, strict=True):
                 all_problems.extend(
@@ -865,11 +1307,11 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
                 )
     except SequenceEngineError as exc:
         all_problems.append(
-            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {_with_notes(exc)}",
+            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {with_notes(exc)}",
         )
 
 
-def _with_notes(error: BaseException) -> str:
+def with_notes(error: BaseException) -> str:
     """Render an execution failure with the notes the runner attached, such as where its logs were kept."""
     notes: object = getattr(error, "__notes__", ())
     lines = [str(error)]

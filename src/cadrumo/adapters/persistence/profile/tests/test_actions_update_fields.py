@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
+from cadrumo.application.ledger.manual_update import update_manual_transaction_fields
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -16,11 +16,10 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
+    BUCKET_ID,
+    repositories,
 )
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
-)
+from .workspace_support import FILING_YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,16 +27,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("75.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -49,13 +48,13 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
         )
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         updated = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(
                 description="classified row",
@@ -76,7 +75,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     assert updated.transaction.category_id == "office-supplies"
     assert updated.transaction.taxable_base == Decimal("61.98")
     assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger classify"
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = event_repository.load().for_bucket(BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
@@ -87,16 +86,16 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
 def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 7, 15),
                 amount=Decimal("250.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -110,13 +109,13 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
         )
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         updated = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(
                 business_classification=BusinessClassification.BUSINESS,
@@ -139,16 +138,16 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
 def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassification(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -167,13 +166,13 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         )
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         updated = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="operator-C",
@@ -191,9 +190,57 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     assert updated.transaction.irpf_category is None
     assert updated.transaction.usage_ratio_id is None
     assert updated.transaction.prorrata_reference is None
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = event_repository.load().for_bucket(BUCKET_ID)
     assert [event.event_type for event in events[1:]] == [
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
         BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
     ]
+
+
+def test_update_manual_transaction_fields_clears_a_business_category_and_keeps_the_classification(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = repositories(secure_objects)
+    with ledger_ports_for_test(
+        bucket_id=BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=BUCKET_ID,
+                booked_date=date(FILING_YEAR, 5, 1),
+                amount=Decimal("40.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="office supplies",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                idempotency_key="category-clear",
+            ),
+            ports=ports,
+            occurred_at=datetime(FILING_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+        )
+        assert created.transaction.category_id == "office-supplies"
+
+    with ledger_ports_for_test(
+        bucket_id=BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction_fields(
+            bucket_id=BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(category_id=None),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(FILING_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    stored = transaction_repository.load().transactions[created.ref.transaction_id]
+    assert updated.transaction.category_id is None
+    assert stored.category_id is None
+    assert stored.business_classification is BusinessClassification.BUSINESS

@@ -32,15 +32,16 @@ from cadrumo.core.operations import (
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     ResumableReviewExecutor,
-    _capabilities,
-    _registry,
-    _repositories,
-    _request,
-    _supervisor,
+    operation_repositories,
+    operation_supervisor,
+    supervisor_capabilities,
+    supervisor_registry,
+    supervisor_request,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -56,7 +57,7 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
     fail_diagnostics: bool,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         effects: list[str] = []
@@ -74,12 +75,12 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
         def failed_log(*_args: object, **_kwargs: object) -> None:
             raise OSError("synthetic diagnostic sink failure")
 
-        logger = get_logger("cadrumo.application.operations._execution_context")
+        logger = get_logger("cadrumo.application.operations.execution_context")
         if fail_diagnostics:
             monkeypatch.setattr(logger, "log", failed_log)
         authority = Authorization()
-        supervisor = _supervisor(
-            registry=_registry(executor_type=TimingExecutor, build=TimingExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=TimingExecutor, build=TimingExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -90,7 +91,7 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
 
         async def exercise() -> None:
             try:
-                operation_id = await supervisor.submit(_request())
+                operation_id = await supervisor.submit(supervisor_request())
                 await supervisor.start(operation_id)
                 settled = await supervisor.settled(operation_id)
                 expected = OperationTerminalCondition.FAILED if fail_body else OperationTerminalCondition.SUCCEEDED
@@ -106,7 +107,9 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
         with caplog.at_level(logging.DEBUG, logger=logger.name):
             asyncio.run(exercise())
         records = [
-            record for record in caplog.records if record.name == logger.name and record.msg == "operation_commit_phase"
+            record
+            for record in delivered_records(caplog)
+            if record.name == logger.name and record.msg == "operation_commit_phase"
         ]
         if fail_diagnostics:
             assert records == []
@@ -181,12 +184,12 @@ async def wait_for_executor_entry(entered: asyncio.Event, settlement: asyncio.Ta
 @pytest.mark.parametrize("boundary", [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, None])
 def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, boundary: AccessAction | None) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
-        supervisor = _supervisor(
-            registry=_registry(executor_type=Executor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=Executor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -199,10 +202,10 @@ def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, 
             if boundary is AccessAction.SUBMIT:
                 authority.denied = boundary
                 with pytest.raises(ProfileAccessRefusedError):
-                    await supervisor.submit(_request(), operation_id="3" * 64)
+                    await supervisor.submit(supervisor_request(), operation_id="3" * 64)
                 assert not executor.entered.is_set()
                 return
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             if boundary is AccessAction.START:
                 authority.denied = boundary
                 with pytest.raises(ProfileAccessRefusedError):
@@ -230,12 +233,12 @@ def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, 
 
 def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
-        supervisor = _supervisor(
-            registry=_registry(executor_type=Executor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=Executor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -246,7 +249,7 @@ def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) 
         service = OperationSubmissionService(supervisor, OperationResponseAuthorityBroker())
 
         async def exercise() -> None:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             authority.denied = AccessAction.START
             with pytest.raises(ProfileAccessRefusedError):
                 await service.start(operation_id)
@@ -257,7 +260,7 @@ def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) 
             assert not executor.entered.is_set()
             authority.denied = None
             # Left CREATED, the refused start would hold the subject and refuse this submission.
-            assert await supervisor.submit(_request(), operation_id="4" * 64) == "4" * 64
+            assert await supervisor.submit(supervisor_request(), operation_id="4" * 64) == "4" * 64
             await supervisor.shutdown()
 
         asyncio.run(exercise())
@@ -265,13 +268,13 @@ def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) 
 
 def test_revocation_after_start_admission_prevents_actual_executor_entry(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
         authority.deny_executor_entry = True
-        supervisor = _supervisor(
-            registry=_registry(executor_type=Executor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=Executor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -281,7 +284,7 @@ def test_revocation_after_start_admission_prevents_actual_executor_entry(tmp_pat
         )
 
         async def exercise() -> None:
-            operation_id = await supervisor.submit(_request())
+            operation_id = await supervisor.submit(supervisor_request())
             await supervisor.start(operation_id)
             settled = await supervisor.settled(operation_id)
             assert settled.terminal_condition is OperationTerminalCondition.REFUSED
@@ -324,13 +327,13 @@ class ConcurrentExecutor:
 
 def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         authority = Authorization()
         executor = ConcurrentExecutor(authority)
-        supervisor = _supervisor(
-            registry=_registry(executor_type=ConcurrentExecutor, build=lambda: executor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=ConcurrentExecutor, build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -340,7 +343,7 @@ def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) 
         )
 
         async def exercise() -> None:
-            operation_id = await supervisor.submit(_request())
+            operation_id = await supervisor.submit(supervisor_request())
             await supervisor.start(operation_id)
             settled = await supervisor.settled(operation_id)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -352,22 +355,22 @@ def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) 
 
 def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         entered, release = asyncio.Event(), asyncio.Event()
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=lambda: ResumableReviewExecutor(
                 result_ref="result:resumed", resume_entered=entered, release_resume=release
             ),
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 durability=OperationDurability.RESUMABLE, replay=OperationReplayPolicy.RESUMABLE
             ),
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -376,18 +379,18 @@ def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Pat
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request()))
+        operation_id = asyncio.run(owner.submit(supervisor_request()))
         before = asyncio.run(run_to_settlement(owner, operation_id))
         authority = Authorization()
         authority.denied = AccessAction.RESUME
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="3" * 64,
             token="4" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+            clock=lambda: SUPERVISOR_NOW + timedelta(minutes=2),
             execution_authority=authority,
         )
         with pytest.raises(ProfileAccessRefusedError):
@@ -400,12 +403,12 @@ def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Pat
 @pytest.mark.parametrize("expired", [False, True])
 def test_continuation_respects_exact_owner_then_rechecks_executor_authority(tmp_path: Path, expired: bool) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
-        registry = _registry(executor_type=Executor, build=lambda: executor)
-        original = _supervisor(
+        registry = supervisor_registry(executor_type=Executor, build=lambda: executor)
+        original = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -414,23 +417,23 @@ def test_continuation_respects_exact_owner_then_rechecks_executor_authority(tmp_
             token="2" * 64,
             lease_duration=timedelta(minutes=1),
         )
-        recovery = _supervisor(
+        recovery = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="3" * 64,
             token="4" * 64,
-            clock=lambda: _NOW + timedelta(seconds=120 if expired else 1),
+            clock=lambda: SUPERVISOR_NOW + timedelta(seconds=120 if expired else 1),
             execution_authority=authority,
         )
 
         async def exercise() -> None:
-            operation_id = await original.submit(_request())
+            operation_id = await original.submit(supervisor_request())
             before = await journal.load(operation_id)
             stored = await recovery.stored_invocation(operation_id, require_idle=True)
             assert stored.identity == before.identity
-            assert stored.request.payload == _request().payload
+            assert stored.request.payload == supervisor_request().payload
             if not expired:
                 with pytest.raises(ValueError, match="not owned"):
                     await recovery.continue_operation(operation_id)

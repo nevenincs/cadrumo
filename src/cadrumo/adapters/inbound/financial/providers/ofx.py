@@ -40,6 +40,7 @@ from typing import Protocol, override, runtime_checkable
 
 from .....core.decimal.grammar import DecimalSeparator
 from .....core.errors.hierarchy import CoreValidationError
+from .....core.external_constants import OFX_EXTENSIONS
 from .....core.logging import get_logger
 from .....core.optional_extras import (
     OFX_EXTRA,
@@ -49,7 +50,6 @@ from .....core.optional_extras import (
 )
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._constants import OFX_EXTENSIONS
 from .base import (
     FinancialProvider,
     FinancialValidationError,
@@ -119,6 +119,7 @@ class _ParsedOfxRow:
     """One OFX transaction's parsed fields, ready to project to a raw transaction."""
 
     transaction_id: str
+    statement_reference: str | None
     counterparty: str | None
     memo: str
     trntype: str
@@ -135,7 +136,7 @@ def _normalise_text_value(value: object, *, default: str = "") -> str:
     return value.strip() or default
 
 
-def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
+def resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
     """Return the ``(currency, account_id)`` context for one OFX statement block.
 
     ``account_id`` is the statement's declared ``ACCTID``, or empty when the
@@ -226,7 +227,7 @@ class OfxProvider(FinancialProvider):
             statements = self._load_statements(source_bytes)
             transaction_count = 0
             for statement in statements:
-                _, account_id = _resolve_statement_context(statement)
+                _, account_id = resolve_statement_context(statement)
                 for transaction in statement.transactions:
                     transaction_count += 1
                     self._parse_ofx_row(
@@ -257,7 +258,7 @@ class OfxProvider(FinancialProvider):
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
         for statement in self._load_statements(source_bytes):
-            currency, account_id = _resolve_statement_context(statement)
+            currency, account_id = resolve_statement_context(statement)
             for transaction in statement.transactions:
                 source_row_index += 1
                 parsed = self._parse_ofx_row(
@@ -288,6 +289,7 @@ class OfxProvider(FinancialProvider):
                     counterparty=parsed.counterparty,
                     description=parsed.description,
                     raw_fields=raw_fields,
+                    statement_reference=parsed.statement_reference,
                 )
 
     def _parse_ofx_row(
@@ -304,8 +306,9 @@ class OfxProvider(FinancialProvider):
             InvalidFinancialSourceError: When the transaction cannot be parsed.
         """
         try:
-            transaction_id = _stripped_attr(transaction, "fitid")
-            if not transaction_id:
+            statement_reference = _stripped_attr(transaction, "fitid") or None
+            transaction_id = statement_reference
+            if transaction_id is None:
                 transaction_id = synthesize_transaction_id(
                     provider_name=f"{self.name}-{account_id or _UNNAMED_ACCOUNT}",
                     source_sha256=source_sha256,
@@ -330,6 +333,7 @@ class OfxProvider(FinancialProvider):
             ) from None
         return _ParsedOfxRow(
             transaction_id=transaction_id,
+            statement_reference=statement_reference,
             counterparty=counterparty,
             memo=memo,
             trntype=trntype,

@@ -18,7 +18,8 @@ dependencies, creates `env/.env` from `env/.env.example` when it is missing and
 copies in the values you set in the `main` worktree's `env/.env`, installs the repository tooling, provisions the local search service, and
 publishes the runtime registry authority. Each step prints its own progress,
 and the command is safe to run again. `just setup` runs only the environment
-and tooling steps; CI and the devcontainer use it.
+and tooling steps, including the lock-pinned locale spelling dictionaries
+(downloaded and hash-verified without Node); CI and the devcontainer use it.
 
 The devcontainer (`.devcontainer/devcontainer.json`) runs `just setup` for you.
 Browser automation is optional: `just setup-browser` installs the Playwright
@@ -126,6 +127,19 @@ Load local development environment values explicitly, for example with
 dotenv files themselves. Session-admission overrides belong to the runtime owner,
 and tests must select their intended policy explicitly rather than inherit a
 developer's local override.
+
+### Component engine coverage
+
+The native component engine (`native/application/src/provisioning/`) downloads,
+installs, checks and removes the browser and the local AI for the desktop
+application; no Python provisions a component, and
+`dev/quality/tests/test_no_python_provisioning.py` refuses one that tries. A change
+to the engine runs `just test-native-provisioning-linux` beside the gate below. It
+runs the engine's tests on Linux, directly or through WSL, including the transfer
+fault set in `native/application/tests/provisioning_faults.rs`.
+
+The continuous-integration workflows do not run this lane; where it runs is the
+runner fleet's decision.
 
 ### Native host and credential-store coverage
 

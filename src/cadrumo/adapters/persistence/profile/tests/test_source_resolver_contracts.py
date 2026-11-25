@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 
@@ -13,7 +12,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -22,14 +20,17 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _OTHER_BUCKET_ID,
-    _invoice,
-    _modelo_revision,
-    _public_resolution,
-    _resolver,
+    BUCKET_ID,
+    OTHER_BUCKET_ID,
+    m349_resolution,
+    modelo_revision,
+    public_resolution,
+    source_resolver,
+    source_resolver_invoice,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -121,7 +122,7 @@ def _same_facts_invoice(*, with_category: bool):
     kind = InvoiceKind.ISSUED
     number = "PARITY-2026-001"
     issued = date(2026, 4, 2)
-    tax_id = "B12345674"
+    tax_id = "B00015016"
     return Invoice(
         invoice_id=derive_invoice_id(
             kind=kind,
@@ -131,7 +132,7 @@ def _same_facts_invoice(*, with_category: bool):
             currency="EUR",
             grand_total=Decimal("4840.00"),
         ),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=kind,
         invoice_number=number,
         issued_at=issued,
@@ -197,14 +198,14 @@ def test_the_informativas_are_unaffected_by_that_divergence(
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((_same_facts_invoice(with_category=False),)))
     context = CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2011-2024"),
+        revision=modelo_revision("347", "2011-2024"),
     )
 
-    resolution = _resolver(repository).resolve(context)
+    resolution = source_resolver(repository).resolve(context)
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4840.00")
@@ -264,9 +265,10 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
 
 #: The Modelo 347 record-key facts the slim store never carried: the operations
 #: RD 1065/2007 art. 34.1.d, j and k relate separately, the leased premises of
-#: art. 34.1.d, and the annual basis of art. 33.1. Their canonical reachability is
-#: proven through the real resolver by the declarado and inmueble record tests over
-#: the compiled registry, not by the slim-store contract.
+#: art. 34.1.d, the annual basis of art. 33.1, and the declarado's provincia the
+#: person stated for the counterparty. Their canonical reachability is proven
+#: through the real resolver by the declarado and inmueble record tests over the
+#: compiled registry, not by the slim-store contract.
 
 
 _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
@@ -277,8 +279,16 @@ _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
         "arrendamiento_local_negocio",
         "situacion_inmueble",
         "referencia_catastral",
+        "party_provincia_code",
     },
 )
+
+
+#: The filing name the person declared for the counterparty and the handle that
+#: names its stated-facts record in a refusal. Read from the counterparty's
+#: stated facts, never an invoice; reached through the real resolver by the
+#: declared-party-name row and export tests.
+_STATED_PARTY_NAME_FACTS: frozenset[str] = frozenset({"party_filing_name", "party_handle"})
 
 
 def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contribute() -> None:
@@ -299,8 +309,12 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
         "rectified_year",
         "rectified_period",
         "rectified_base_previous",
+        "earlier_year_modification",
     }
-    assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS
+    assert (
+        set(InvoiceObservation.model_fields) - non_declarable
+        == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS | _STATED_PARTY_NAME_FACTS
+    )
 
 
 def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
@@ -319,7 +333,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         modelo="347",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        revision=_modelo_revision("347", "2011-2024"),
+        revision=modelo_revision("347", "2011-2024"),
     )
 
     # Pinned for the same reason as the M349 proof above: these are the facts
@@ -331,7 +345,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     # Above the 3,005.06 EUR annual threshold below which Modelo 347 declares
     # no counterparty, so the reachable facts are declarable ones.
     declared_facts = {
-        "party_tax_id": "B12345674",
+        "party_tax_id": "B00015016",
         "country_code": "ES",
         "transaction_date": date(2025, 2, 10),
         "base_amount": Decimal("3000.00"),
@@ -346,7 +360,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
             kind=InvoiceKind.ISSUED,
             invoice_number="M347-C-2025-001",
             issued_at=date(2025, 2, 10),
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             currency="EUR",
             grand_total=Decimal("3630.00"),
         ),
@@ -355,7 +369,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         invoice_number="M347-C-2025-001",
         issued_at=date(2025, 2, 10),
         counterparty_name="Cliente M347 SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=Decimal("3000.00"),
         iva_total=Decimal("630.00"),
@@ -373,7 +387,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         ),
         payment_status=PaymentStatus.PENDING,
     )
-    resolution = _public_resolution((canonical,), context=context)
+    resolution = public_resolution((canonical,), context=context)
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("3630.00")
     assert {item.source_ref for item in resolution.provenance} == {
@@ -412,7 +426,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
     before this the two layers disagreed about the same record.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    unattributed = _invoice(
+    unattributed = source_resolver_invoice(
         bucket_id=None,
         invoice_number="F-2026-UNATTRIBUTED",
         issued_at=date(2026, 1, 15),
@@ -421,19 +435,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((unattributed,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
@@ -451,8 +453,8 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
     invoice surfacing in another's return.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    foreign = _invoice(
-        bucket_id=_OTHER_BUCKET_ID,
+    foreign = source_resolver_invoice(
+        bucket_id=OTHER_BUCKET_ID,
         invoice_number="F-2026-FOREIGN",
         issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
@@ -460,19 +462,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((foreign,)))
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
-
-    resolution = _resolver(repository).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.provenance == ()

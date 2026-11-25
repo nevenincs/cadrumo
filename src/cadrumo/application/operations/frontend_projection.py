@@ -272,20 +272,8 @@ def _validate_projection_progress(projection: OperationPublicProjectionV1) -> No
 
 
 def _validate_projection_cancellation_availability(projection: OperationPublicProjectionV1) -> None:
-    if projection.financial_operand_pending and (
-        projection.definition_contract.transient_financial_operand is None
-        or projection.lifecycle is not OperationLifecycle.CREATED
-        or projection.terminal_condition is not None
-        or projection.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("financial pending custody requires a created, uneffected typed invocation")
-    if projection.financial_operand_cancelled_before_delivery and (
-        projection.definition_contract.transient_financial_operand is None
-        or projection.lifecycle is not OperationLifecycle.TERMINAL
-        or projection.terminal_condition is not OperationTerminalCondition.CANCELLED
-        or projection.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("pre-delivery financial cancellation requires its exact none-effect terminal")
+    _validate_pending_financial_custody(projection)
+    _validate_financial_cancelled_before_delivery(projection)
     if (
         projection.cancellation is OperationCancellation.UNSUPPORTED
         and projection.cancellable_now
@@ -296,6 +284,26 @@ def _validate_projection_cancellation_availability(projection: OperationPublicPr
         raise ValueError("public cancellation cannot remain currently available after it is requested")
     if projection.cancellable_now and projection.lifecycle is OperationLifecycle.SETTLING:
         raise ValueError("public cancellation cannot be currently available while settlement is underway")
+
+
+def _validate_pending_financial_custody(projection: OperationPublicProjectionV1) -> None:
+    if projection.financial_operand_pending and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.CREATED
+        or projection.terminal_condition is not None
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("financial pending custody requires a created, uneffected typed invocation")
+
+
+def _validate_financial_cancelled_before_delivery(projection: OperationPublicProjectionV1) -> None:
+    if projection.financial_operand_cancelled_before_delivery and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.TERMINAL
+        or projection.terminal_condition is not OperationTerminalCondition.CANCELLED
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("pre-delivery financial cancellation requires its exact none-effect terminal")
 
 
 __all__ = [

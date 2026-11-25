@@ -15,8 +15,7 @@ from ..workbook_demo_eu_refund import build_eu_refund_plan
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-def test_eu_refund_example_keeps_both_invoices_and_honest_absences() -> None:
-    source, plan = build_eu_refund_plan()
+def _assert_eu_refund_inputs_and_absences(source, plan) -> None:
     inputs = {
         cell.casilla_id: cell.value
         for cell in plan.value_cells
@@ -33,6 +32,9 @@ def test_eu_refund_example_keeps_both_invoices_and_honest_absences() -> None:
     assert not any(cell.address.tab is TabName.CALCULOS for cell in plan.formula_cells)
     mirrors = {cell.casilla_id for cell in plan.formula_cells if cell.address.tab is TabName.FORM}
     assert {"devolucion.importe-solicitado", "decl.op1-cuota", "decl.op2-cuota"} <= mirrors
+
+
+def _assert_eu_refund_guide_text(plan) -> None:
     text = "\n".join(str(cell.value) for cell in plan.value_cells)
     assert not re.search(r"\b[0-9a-f]{64}\b", text)
     assert plan.guide is not None
@@ -41,11 +43,21 @@ def test_eu_refund_example_keeps_both_invoices_and_honest_absences() -> None:
     assert "entradas independientes" in guide_text
     assert "datos bancarios obligatorios" in guide_text
     assert "Ejemplo ficticio" in guide_text
-    workbook = load_workbook(BytesIO(materialize_export_plan(plan)))
+
+
+def _assert_eu_refund_guide_sheet(plan, workbook) -> None:
     guide = workbook[TabName.GUIDE.value]
     assert guide.cell(1, 1).value == plan.guide.title
     for row, paragraph in enumerate(plan.guide.paragraphs, 7):
         assert guide.cell(row, 1).value == paragraph
         assert guide.cell(row, 1).alignment.wrap_text
         assert guide.row_dimensions[row].height >= 33
+
+
+def test_eu_refund_example_keeps_both_invoices_and_honest_absences() -> None:
+    source, plan = build_eu_refund_plan()
+    _assert_eu_refund_inputs_and_absences(source, plan)
+    _assert_eu_refund_guide_text(plan)
+    workbook = load_workbook(BytesIO(materialize_export_plan(plan)))
+    _assert_eu_refund_guide_sheet(plan, workbook)
     workbook.close()

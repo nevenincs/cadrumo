@@ -18,9 +18,10 @@ from dataclasses import dataclass
 from itertools import combinations, product
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ._spelling import load_dictionaries
+from .signal_spelling import is_search_keyword_surface
+from .spelling import load_dictionaries
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -61,7 +62,9 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # "inter vivos" is Latin, and "bitcoin" is the asset name.
     # Casilla text plus the interface domains: Latin and asset names, and words that
     # are transport tokens, field ids or English terms rather than Spanish prose
-    # ("movil" is the clave_movil provider token).
+    # ("movil" is the clave_movil provider token; "rectificacion" is the row-kind
+    # token of the typed --row option, which transport never translates; "posicion" is the
+    # --posicion option of the ledger doors, named as typed).
     "es": frozenset(
         {
             "Coin",
@@ -79,10 +82,15 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "name",
             "operacion",
             "pais",
+            "posicion",
             "prestacion",
             "razon",
             "record",
+            "rectificacion",
             "records",
+            # The rectification_method token the registry declares in
+            # 0141-invoice-legal-classification-catalogue, named as typed.
+            "sustitucion",
             "retencion",
             "revision",
             "super",
@@ -91,7 +99,8 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
         }
     ),
     # Proper names (Sorolla, Illes Balears, Tokio) and correct inflections:
-    # "sorok" (rows), "sorod" (your queue), "egyenleget" (accusative), "nekik" (to them).
+    # "sorok" (rows), "sorod" (your queue), "egyenleget" (accusative), "nekik" (to them),
+    # and "alkulcs" (sub-key, the Modelo 345 subclave) in its cases; "álkulcs" would mean a false key.
     "hu": frozenset(
         {
             "Alkulcs",
@@ -101,6 +110,10 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "Sorolla",
             "Tokio",
             "adatsorokat",
+            "alkulcs",
+            "alkulcshoz",
+            "alkulcsnak",
+            "alkulcsot",
             "egyenleget",
             "forfait",
             "konyvelom",
@@ -141,7 +154,8 @@ class UnaccentedWord:
     candidates: tuple[str, ...]
 
 
-def _restorations(word: str, table: Mapping[str, str], known: Callable[[str], bool]) -> tuple[str, ...]:
+def restorations(word: str, table: Mapping[str, str], known: Callable[[str], bool]) -> tuple[str, ...]:
+    """Return the known spellings of a word with its accents or enye restored."""
     bases = [word]
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))
@@ -346,7 +360,7 @@ def cache_unaccented_word_verdict(
 ) -> None:
     """Memoize native or foreign acceptance before trying accent restorations."""
     plain = dictionary.lookup(word) or any(other.lookup(word) for other in foreign)
-    verdicts[word] = () if plain else _restorations(word, table, dictionary.lookup)
+    verdicts[word] = () if plain else restorations(word, table, dictionary.lookup)
 
 
 def verbatim_run_end(words: list[str], start: int, end: int, source_texts: list[str]) -> int:
@@ -396,7 +410,8 @@ def unaccented_words_for_locale(
     accepted = reviewed.get(locale, frozenset())
     verdicts: dict[str, tuple[str, ...]] = {}
     for key, value in sorted(values.get(locale, {}).items()):
-        if value is None:
+        # Search aliases omit accents on purpose: the frontend folds diacritics when matching.
+        if value is None or is_search_keyword_surface(key):
             continue
         prose = _NOT_PROSE.sub(" ", _CODE_SPAN.sub(" ", value))
         for word in sorted(set(_WORD.findall(prose))):

@@ -27,11 +27,13 @@ from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     FilingDeclarationKind,
     FilingOrigin,
+    ModeloRecord,
     ModeloRecordStatus,
 )
 from ...domain.modelos.work_unit import WorkUnitState
 from .declaration_summary import DeclarationSummary
 from .declaration_targets import DeclarationTarget
+from .stored_data_integrity import StoredDataIntegrityMixin
 
 if TYPE_CHECKING:
     pass
@@ -40,8 +42,14 @@ if TYPE_CHECKING:
 DECLARATIONS_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsWorkspaceProjectionError(CadrumoError):
-    """The supplied authorities cannot form one coherent safe snapshot."""
+class DeclarationsWorkspaceProjectionError(StoredDataIntegrityMixin, CadrumoError):
+    """The supplied authorities cannot form one coherent safe snapshot.
+
+    A stored-data integrity fault: no operator input at the refusal site joins
+    the authorities, so the error carries the terminal integrity verdict.
+    """
+
+    integrity_record = "declarations_workspace_projection"
 
 
 class DeclarationsWorkspaceZone(StrEnum):
@@ -71,6 +79,11 @@ class DeclarationsWorkspaceAvailability(StrEnum):
     NEVER_CAPTURED = "never_captured"
     UNAVAILABLE = "unavailable"
 
+    @property
+    def is_observable(self) -> bool:
+        """Whether the zone holds an observation that can support a claim, current or stale."""
+        return self in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
+
 
 class DeclarationsLifecycleKind(StrEnum):
     """Sanitized lifecycle meanings accepted by the workspace projection.
@@ -84,6 +97,8 @@ class DeclarationsLifecycleKind(StrEnum):
     CREATED = "created"
     RENAMED = "renamed"
     CALCULATED = "calculated"
+    #: A calculation the filer's own edits produced: their changes, applied.
+    EDITED = "edited"
     VERIFIED = "verified"
     VERIFICATION_REFUSED = "verification_refused"
     FILED = "filed"
@@ -110,10 +125,7 @@ class DeclarationsWorkspaceZoneObservationV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _availability_has_truthful_evidence(self) -> Self:
-        observable = self.availability in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        observable = self.availability.is_observable
         if observable and self.observed_at is None:
             raise ValueError("an available or stale Declarations zone requires an observation time")
         if self.availability is DeclarationsWorkspaceAvailability.AVAILABLE and self.reason_code is not None:
@@ -134,10 +146,7 @@ class DeclarationsWorkspaceZoneStateV1(DeclarationsWorkspaceZoneObservationV1):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
-        observable = self.availability in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        observable = self.availability.is_observable
         if observable != (self.item_count is not None):
             raise ValueError("only observable Declarations zones carry a measured item count")
         if not self.sources or len(self.sources) != len(set(self.sources)):
@@ -218,7 +227,34 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
     amends_filing_record_id: FilingRecordId | None = Field(default=None, exclude=True, repr=False)
+    superseded_by_filing_record_id: FilingRecordId | None = Field(default=None, exclude=True, repr=False)
+    member_nif: str | None = Field(default=None, exclude=True, repr=False)
     evidence_kind: ExternalEvidenceKind | None = None
+
+    @classmethod
+    def from_record(cls, record: ModeloRecord) -> Self:
+        """Retain the exact immutable filing and its two distinct relationships.
+
+        Args:
+            record: The :class:`ModeloRecord` to project.
+        """
+        return cls(
+            filing_record_id=record.filing_record_id,
+            work_unit_id=record.work_unit_id,
+            calculation_revision_id=record.calculation_revision_id,
+            modelo=record.modelo,
+            filing_year=record.filing_year,
+            period=record.period,
+            filed_at=record.filed_at,
+            local_status=record.status,
+            origin=record.origin,
+            confirmation=record.confirmation,
+            declaration_kind=record.declaration_kind,
+            amends_filing_record_id=record.amends_filing_record_id,
+            superseded_by_filing_record_id=record.superseded_by_filing_record_id,
+            member_nif=record.member_nif,
+            evidence_kind=record.external_evidence.kind if record.external_evidence is not None else None,
+        )
 
     @property
     def aeat_accepted(self) -> bool:
@@ -300,7 +336,7 @@ loading inside a projection that is meant to be a pure join.
 
 
 class SettledResultUnitV1(Protocol):
-    """The work-unit surface :func:`~cadrumo.application.modelo.declarations_workspace._settled_result` actually reads.
+    """The work-unit surface :func:`~cadrumo.application.modelo.declarations_workspace.settled_result` actually reads.
 
     Declared structurally so the reader's contract is the four attributes it
     consumes rather than the whole :class:`WorkUnit` aggregate. A caller that

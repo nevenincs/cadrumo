@@ -2,18 +2,33 @@
 
 :class:`CalculationRevision` holds the saved calculation and its evidence.
 :class:`ModeloRecord` selects the saved filing content.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
+from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     assert_revision_snapshot_evidence_coverage,
 )
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
+from ..modelo.calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SourceDisagreementResolutions,
+    blocking_calculation_issues,
+    saved_calculation_filed_before_grade_cap,
+    saved_calculation_screen_outdated,
+)
+from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
+from ..modelo.credit_resolution import CREDIT_RESOLUTION_APPLIED_REASON
 from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
@@ -38,6 +53,8 @@ def build_calculation_review_snapshot(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     filing_record: ModeloRecord | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ReviewSnapshot:
     """Retain saved values and captured evidence, with explicit attribution gaps.
 
@@ -47,8 +64,110 @@ def build_calculation_review_snapshot(
     source trace does not prove any individual amount's contributing rows.
 
     The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    ``operation``, when given, is the pinned authority the staleness of the
+    revision's screen is read under; without it the review states no staleness.
     The ``filing_record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
+    ``resolutions`` are the source disagreements the operator accepted: a covered disagreement is listed as
+    accepted and no longer as withheld, exactly as the calculation's own gate decides it.
     """
+    _assert_saved_selection(selection, revision, work_unit)
+    assert_revision_snapshot_evidence_coverage(revision)
+    _assert_saved_filing(selection, revision, filing_record)
+    ledger = revision.ledger_filing_evidence
+    rows = ledger.rows if ledger is not None else ()
+    _assert_ledger_fingerprints(revision)
+    saved_form = capture_review_form(revision)
+    findings = _review_findings(revision, saved_form is not None, resolutions)
+    if operation is not None:
+        findings.extend(_staleness_findings(revision, work_unit, operation))
+    evidence = _excluded_attachment_inventory(revision)
+    contributions, amounts = _scalar_values(revision)
+    _append_row_values(revision, contributions, amounts)
+    text_values = _text_values(revision, contributions)
+    if any(item.kind is ReviewSourceKind.UNAVAILABLE for item in contributions):
+        findings.append(
+            ReviewFinding(
+                code="review.amount_attribution_unavailable",
+                detail="Unattributed amounts are saved results, not inferred totals from adjacent ledger rows.",
+            )
+        )
+    return seal_review_snapshot(
+        ReviewSnapshotContent(
+            schema_version=2,
+            selection=selection,
+            status=ReviewStatus.INCOMPLETE,
+            saved_form=saved_form,
+            calculation_lifecycle=_calculation_lifecycle(revision, work_unit, filing_record),
+            amounts=tuple(amounts),
+            text_values=tuple(text_values),
+            ledger_rows=rows,
+            contributions=tuple(contributions),
+            evidence=evidence,
+            findings=tuple(findings),
+        )
+    )
+
+
+def _staleness_findings(
+    revision: CalculationRevision, work_unit: WorkUnit, operation: PinnedAuthorityOperation
+) -> list[ReviewFinding]:
+    """The findings of a saved screen the pinned authority outdates, then of a figure filed before grade caps."""
+    modelo, filing_year, period = str(work_unit.modelo), work_unit.filing_year, work_unit.period
+    findings: list[ReviewFinding] = []
+    if saved_calculation_screen_outdated(
+        revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    ):
+        findings.append(_screen_outdated_finding())
+    if saved_calculation_filed_before_grade_cap(
+        revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    ):
+        findings.append(_filed_before_grade_cap_finding())
+    return findings
+
+
+def _excluded_attachment_inventory(revision: CalculationRevision) -> tuple[EvidenceInventoryItem, ...]:
+    """Each attachment the ledger rows name, sorted, as excluded: its bytes are not selected for publication."""
+    ledger = revision.ledger_filing_evidence
+    rows = ledger.rows if ledger is not None else ()
+    return tuple(
+        EvidenceInventoryItem(
+            evidence_id=attachment_id,
+            source_revision=revision.calculation_revision_id,
+            disposition=EvidenceDisposition.EXCLUDED,
+            reason="Original attachment bytes were not selected for this spreadsheet publication.",
+        )
+        for attachment_id in sorted({attachment_id for row in rows for attachment_id in row.attachment_ids})
+    )
+
+
+def _calculation_lifecycle(
+    revision: CalculationRevision, work_unit: WorkUnit, filing_record: ModeloRecord | None
+) -> ReviewCalculationLifecycle:
+    """The revision's standing in its work unit and, when one is selected, its filing record's status."""
+    return ReviewCalculationLifecycle(
+        state=revision.state,
+        is_current_calculation=work_unit.current_calculation_revision_id == revision.calculation_revision_id,
+        is_current_filing=work_unit.filed_calculation_revision_id == revision.calculation_revision_id,
+        filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
+        filing_status=filing_record.status if filing_record is not None else None,
+        aeat_confirmation=filing_record.confirmation if filing_record is not None else None,
+    )
+
+
+def _same_decimal(raw_input: str | None, value: Decimal) -> bool:
+    if raw_input is None:
+        return False
+    try:
+        return Decimal(raw_input) == value
+    except InvalidOperation:
+        return False
+
+
+def _assert_saved_selection(
+    selection: CalculationReviewSelection,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+) -> None:
     if (
         work_unit.bucket_id != str(selection.profile_id)
         or work_unit.work_unit_id != selection.work_unit_id
@@ -61,7 +180,13 @@ def build_calculation_review_snapshot(
         or revision.registry_snapshot_ref != selection.registry_snapshot_ref
     ):
         raise ValueError("saved review selection does not match its persisted revision and profile")
-    assert_revision_snapshot_evidence_coverage(revision)
+
+
+def _assert_saved_filing(
+    selection: CalculationReviewSelection,
+    revision: CalculationRevision,
+    filing_record: ModeloRecord | None,
+) -> None:
     if filing_record is not None and (
         filing_record.bucket_id != str(selection.profile_id)
         or filing_record.work_unit_id != selection.work_unit_id
@@ -71,6 +196,9 @@ def build_calculation_review_snapshot(
         or filing_record.period.registry_token != selection.period
     ):
         raise ValueError("saved review filing record does not match the selected revision and profile")
+
+
+def _assert_ledger_fingerprints(revision: CalculationRevision) -> None:
     ledger = revision.ledger_filing_evidence
     rows = ledger.rows if ledger is not None else ()
     fingerprint_snapshot = revision.ledger_filing_snapshot
@@ -80,6 +208,11 @@ def build_calculation_review_snapshot(
             row.fingerprint != fingerprints.get(row.transaction_id) for row in rows
         ):
             raise ValueError("saved ledger evidence does not match its captured fingerprints")
+
+
+def _review_findings(
+    revision: CalculationRevision, has_saved_form: bool, resolutions: SourceDisagreementResolutions
+) -> list[ReviewFinding]:
     findings = [
         ReviewFinding(
             code="review.original_authority_generation_unavailable",
@@ -101,14 +234,14 @@ def build_calculation_review_snapshot(
             ),
         ),
     ]
-    saved_form = capture_review_form(revision)
     if revision.rendering_snapshot is not None:
         findings = [
             finding for finding in findings if finding.code != "review.original_authority_generation_unavailable"
         ]
-    if saved_form is not None:
+    if has_saved_form:
         findings = [finding for finding in findings if finding.code != "review.saved_form_layout_unavailable"]
-    if revision.source_transaction_ids and ledger is None:
+    findings.extend(calculation_note_findings(revision, resolutions))
+    if revision.source_transaction_ids and revision.ledger_filing_evidence is None:
         findings.append(
             ReviewFinding(
                 code="review.captured_ledger_unavailable",
@@ -116,39 +249,42 @@ def build_calculation_review_snapshot(
                 related_ids=revision.source_transaction_ids,
             )
         )
-    evidence = tuple(
-        EvidenceInventoryItem(
-            evidence_id=attachment_id,
-            source_revision=revision.calculation_revision_id,
-            disposition=EvidenceDisposition.EXCLUDED,
-            reason="Original attachment bytes were not selected for this spreadsheet publication.",
-        )
-        for attachment_id in sorted({attachment_id for row in rows for attachment_id in row.attachment_ids})
+    return findings
+
+
+def _scalar_contribution(
+    revision: CalculationRevision,
+    casilla_id: CasillaId,
+    value: Decimal,
+    observation: CasillaObservation | None,
+    amount_id: str,
+    contribution_id: str,
+) -> ReviewContribution:
+    operator_layer = revision.operator_layer
+    raw_input = operator_layer.decimal_casilla_inputs.get(casilla_id) if operator_layer is not None else None
+    manual = observation is not None and observation.formula_id is None and _same_decimal(raw_input, value)
+    return ReviewContribution(
+        contribution_id=contribution_id,
+        kind=ReviewSourceKind.MANUAL_INPUT if manual else ReviewSourceKind.UNAVAILABLE,
+        source_id=amount_id,
+        source_revision=revision.calculation_revision_id,
+        detail=(
+            "Exact manual input retained in this saved revision."
+            if manual
+            else "Saved output; exact contribution mapping was not captured for review."
+        ),
     )
+
+
+def _scalar_values(revision: CalculationRevision) -> tuple[list[ReviewContribution], list[ReviewAmount]]:
     observations = {item.casilla_id: item for item in revision.observations}
     contributions: list[ReviewContribution] = []
     amounts: list[ReviewAmount] = []
-    text_values: list[ReviewTextValue] = []
     for casilla_id, value in sorted(revision.casilla_values.items()):
         amount_id = f"casilla:{casilla_id}"
         contribution_id = f"source:{amount_id}"
         observation = observations.get(casilla_id)
-        operator_layer = revision.operator_layer
-        raw_input = operator_layer.decimal_casilla_inputs.get(casilla_id) if operator_layer is not None else None
-        manual = observation is not None and observation.formula_id is None and _same_decimal(raw_input, value)
-        contributions.append(
-            ReviewContribution(
-                contribution_id=contribution_id,
-                kind=ReviewSourceKind.MANUAL_INPUT if manual else ReviewSourceKind.UNAVAILABLE,
-                source_id=amount_id,
-                source_revision=revision.calculation_revision_id,
-                detail=(
-                    "Exact manual input retained in this saved revision."
-                    if manual
-                    else "Saved output; exact contribution mapping was not captured for review."
-                ),
-            )
-        )
+        contributions.append(_scalar_contribution(revision, casilla_id, value, observation, amount_id, contribution_id))
         amounts.append(
             ReviewAmount(
                 amount_id=amount_id,
@@ -162,6 +298,14 @@ def build_calculation_review_snapshot(
                 source_refs=observation.source_refs if observation is not None else (),
             )
         )
+    return contributions, amounts
+
+
+def _append_row_values(
+    revision: CalculationRevision,
+    contributions: list[ReviewContribution],
+    amounts: list[ReviewAmount],
+) -> None:
     for (casilla_id, row_index), value in sorted(revision.row_casilla_values.items()):
         amount_id = f"casilla:{casilla_id}:row:{row_index}"
         contribution_id = f"source:{amount_id}"
@@ -185,6 +329,10 @@ def build_calculation_review_snapshot(
                 contribution_ids=(contribution_id,),
             )
         )
+
+
+def _text_values(revision: CalculationRevision, contributions: list[ReviewContribution]) -> list[ReviewTextValue]:
+    text_values: list[ReviewTextValue] = []
     for observation in sorted(revision.observations, key=lambda item: item.casilla_id):
         if not isinstance(observation.value, str):
             continue
@@ -210,41 +358,64 @@ def build_calculation_review_snapshot(
                 source_refs=observation.source_refs,
             )
         )
-    if any(item.kind is ReviewSourceKind.UNAVAILABLE for item in contributions):
-        findings.append(
-            ReviewFinding(
-                code="review.amount_attribution_unavailable",
-                detail="Unattributed amounts are saved results, not inferred totals from adjacent ledger rows.",
-            )
-        )
-    return seal_review_snapshot(
-        ReviewSnapshotContent(
-            schema_version=2,
-            selection=selection,
-            status=ReviewStatus.INCOMPLETE,
-            saved_form=saved_form,
-            calculation_lifecycle=ReviewCalculationLifecycle(
-                state=revision.state,
-                is_current_calculation=work_unit.current_calculation_revision_id == revision.calculation_revision_id,
-                is_current_filing=work_unit.filed_calculation_revision_id == revision.calculation_revision_id,
-                filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
-                filing_status=filing_record.status if filing_record is not None else None,
-                aeat_confirmation=filing_record.confirmation if filing_record is not None else None,
-            ),
-            amounts=tuple(amounts),
-            text_values=tuple(text_values),
-            ledger_rows=rows,
-            contributions=tuple(contributions),
-            evidence=evidence,
-            findings=tuple(findings),
-        )
+    return text_values
+
+
+CALCULATION_NOTE_FINDING_PREFIX = "calculation_note."
+"""Prefix of the finding code that carries one persisted note withholding the saved revision from filing."""
+
+
+def _screen_outdated_finding() -> ReviewFinding:
+    return ReviewFinding(
+        code=CALCULATION_NOTE_FINDING_PREFIX + CALCULATION_SCREEN_OUTDATED_REASON,
+        detail="This saved revision was screened against other declarations than the pinned authority holds; "
+        "it is shown for review, and the calculation withholds it from checking, exporting and recording "
+        "until it is calculated again.",
     )
 
 
-def _same_decimal(raw_input: str | None, value: Decimal) -> bool:
-    if raw_input is None:
-        return False
-    try:
-        return Decimal(raw_input) == value
-    except InvalidOperation:
-        return False
+def _filed_before_grade_cap_finding() -> ReviewFinding:
+    return ReviewFinding(
+        code=CALCULATION_NOTE_FINDING_PREFIX + FILED_BEFORE_GRADE_CAP_REASON,
+        detail="This revision was recorded as filed before calculations were screened for grade caps, and a box "
+        "a capped binding reaches holds a figure; it is shown for review, and the calculation withholds it from "
+        "exporting until it is calculated again.",
+    )
+
+
+def calculation_note_findings(
+    revision: CalculationRevision, resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+) -> list[ReviewFinding]:
+    """One finding per persisted note that withholds the revision from checking, exporting and recording.
+
+    The review is a preview, so it shows such a value rather than refusing it.
+    A note that names a box has that box as its first related id and, when it
+    names a source such as the binding whose grade cap holds it, that source
+    as the second. A note naming no box is a revision-level finding with no
+    related ids, which the workbook lists among the review findings only. A
+    source disagreement that ``resolutions`` covers withholds nothing, so it is
+    listed as accepted instead.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
+    accepted = [
+        ReviewFinding(
+            code=CALCULATION_NOTE_FINDING_PREFIX + CREDIT_RESOLUTION_APPLIED_REASON,
+            detail="The operator accepted the value in use for this disagreement between sources; "
+            f"the acceptance changes no figure (finding {issue.disagreement.finding_key[:16]}).",
+            related_ids=() if issue.casilla_id is None else (str(issue.casilla_id),),
+        )
+        for issue in revision.source_issues
+        if issue.disagreement is not None and resolutions.covers(issue.disagreement.finding_key)
+    ]
+    return accepted + [
+        ReviewFinding(
+            code=CALCULATION_NOTE_FINDING_PREFIX + issue.reason,
+            detail="This saved figure is shown for review; the calculation withholds it from checking, "
+            "exporting and recording.",
+            related_ids=()
+            if issue.casilla_id is None
+            else (str(issue.casilla_id), *(() if issue.source_ref is None else (issue.source_ref,))),
+        )
+        for issue in blocking_calculation_issues(revision, resolutions)
+    ]

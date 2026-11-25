@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import shutil
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,8 +19,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
@@ -29,7 +31,7 @@ from ..compiler.fact_validation import retired_fact_provider_closure_failures
 from ..compiler.loader import load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 from ..pipeline.candidate_staging import stage_generated_export_candidate
-from ..pipeline.cli import supporting_modelos
+from ..pipeline.published_edition_staging import supporting_modelos
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -141,31 +143,63 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
 
 def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
     """Inside the supported filing years, each authored legal change is its own variant."""
-    administrator_rate = "lirpf-art-101:retencion-administrador-reducida"
-    assert (
-        _resolve_scalar(administrator_rate, date(2022, 12, 31)).variant_id
-        != _resolve_scalar(administrator_rate, date(2023, 1, 1)).variant_id
-    )
-    professional_rate = "rirpf-art-95:retencion-actividades-profesionales-general"
-    assert (
-        _resolve_scalar(professional_rate, date(2023, 1, 25)).variant_id
-        != _resolve_scalar(professional_rate, date(2023, 1, 26)).variant_id
-    )
+    envelope = committed_supported_filing_years().date_envelope()
+
+    def changes_inside_the_envelope(fact_id: str) -> list[date]:
+        return sorted(
+            variant.valid_from
+            for variant in _catalogue().facts[fact_id].variants
+            if variant.valid_from is not None and envelope.floor < variant.valid_from <= envelope.horizon
+        )
+
+    def assert_each_change_is_its_own_variant(fact_id: str) -> list[date]:
+        changes = changes_inside_the_envelope(fact_id)
+        assert changes, f"{fact_id} authors no legal change inside the supported filing years"
+        for change in changes:
+            assert (
+                _resolve_scalar(fact_id, change - timedelta(days=1)).variant_id
+                != _resolve_scalar(fact_id, change).variant_id
+            ), f"{fact_id} does not change variant on {change}"
+        return changes
+
+    assert_each_change_is_its_own_variant("lirpf-art-101:retencion-administrador-reducida")
+    assert_each_change_is_its_own_variant("rirpf-art-95:retencion-actividades-profesionales-general")
     exclusion = "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"
-    assert _resolve_scalar(exclusion, date(2024, 12, 31)).payload.value == Decimal("250000")
-    assert _resolve_scalar(exclusion, date(2025, 1, 1)).payload.value == Decimal("150000")
+    latest_change = assert_each_change_is_its_own_variant(exclusion)[-1]
+    assert _resolve_scalar(exclusion, latest_change - timedelta(days=1)).payload.value == Decimal("250000")
+    assert _resolve_scalar(exclusion, latest_change).payload.value == Decimal("150000")
     assert _resolve_entities(
-        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2022, 1, 1)
+        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", envelope.floor
     ).payload.entities == frozenset({"subvencion_capital", "indemnizacion"})
     assert _resolve_entities(
-        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2022, 1, 1)
+        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", envelope.floor
     ).payload.entities == frozenset({"subvencion_corriente", "subvencion_capital", "indemnizacion"})
 
 
-def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
-    # Historical variants stay authored, but the registry's floor refuses them.
+def test_real_resolution_below_the_floor_reads_the_authored_variant_as_a_backward_projection() -> None:
+    """A standing rate reaches below the floor and before its first window; it never claims grade there."""
+    rate = "liva-art-161:recargo-rate-general"
+    floor = committed_supported_filing_years().date_envelope().floor
+    starts = sorted(
+        variant.valid_from for variant in _catalogue().facts[rate].variants if variant.valid_from is not None
+    )
+    below_floor_start = max(start for start in starts if start < floor)
+
+    inside_a_window = _resolve_scalar(rate, below_floor_start)
+    assert inside_a_window.variant_id.endswith(below_floor_start.isoformat())
+    assert inside_a_window.published_on_date
+    assert inside_a_window.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert inside_a_window.projected_from_date == floor
+
+    before_every_window = _resolve_scalar(rate, starts[0] - timedelta(days=1))
+    assert before_every_window.variant_id.endswith(starts[0].isoformat())
+    assert not before_every_window.published_on_date
+    assert before_every_window.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before_every_window.projected_from_date == starts[0]
+
+    # A threshold declares no standing rate, so the floor stays a refusal for it.
     with pytest.raises(RegistryValidationError, match="falls outside the supported filing years"):
-        _resolve_scalar("liva-art-161:recargo-rate-general", date(2012, 9, 1))
+        _resolve_scalar("lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur", floor - timedelta(days=1))
 
 
 def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -182,7 +216,7 @@ def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeyp
 
 _STAGED_MODELO = "210"
 #: An edition of the modelo's delta chain; staging resolves it into the complete edition it stands for.
-_STAGED_REVISION = "2025"
+_STAGED_REVISION = str(authored_revisions(_STAGED_MODELO)[-2].id)
 _REMOVED_FACT_ID = "lirpf-art-101:retencion-administrador-general"
 _REMOVED_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
 

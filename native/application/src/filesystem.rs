@@ -80,7 +80,7 @@ pub(crate) fn digest_reader(
         }
         hash.update(&buffer[..n]);
     }
-    Sha256Digest::new(format!("{:x}", hash.finalize()))
+    Sha256Digest::from_hash(hash.finalize())
 }
 
 pub(crate) const JSON_BYTES_LIMIT: u64 = 16 * 1024 * 1024;
@@ -102,15 +102,18 @@ pub(crate) fn json_file_cancellable<T: serde::de::DeserializeOwned>(
 }
 
 pub(crate) fn json_bytes(path: &Path) -> Result<Vec<u8>, Error> {
+    bounded_bytes(path, JSON_BYTES_LIMIT)
+}
+
+/// The whole of a regular, unlinked file, refused when it is longer than `limit`.
+pub(crate) fn bounded_bytes(path: &Path, limit: u64) -> Result<Vec<u8>, Error> {
     refuse_links(path)?;
     if !fs::metadata(path)?.is_file() {
-        return Err(Error::Integrity("expected a regular JSON file".into()));
+        return Err(Error::Integrity("expected a regular file".into()));
     }
     let mut bytes = Vec::new();
-    File::open(path)?
-        .take(JSON_BYTES_LIMIT + 1)
-        .read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > JSON_BYTES_LIMIT {
+    File::open(path)?.take(limit + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > limit {
         return Err(Error::LimitExceeded);
     }
     Ok(bytes)
@@ -120,6 +123,40 @@ pub(crate) fn write_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<
     let mut file = File::options().write(true).create_new(true).open(path)?;
     file.write_all(&serde_json::to_vec(value)?)?;
     file.sync_all()?;
+    Ok(())
+}
+
+/// Replaces `path` with `value` atomically: a crash leaves the old document or the new
+/// one, never a mixture. The parent folder must exist and belong to the caller.
+pub(crate) fn replace_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<(), Error> {
+    static WRITES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| Error::Invalid("atomic write needs a file name".into()))?;
+    let sequence = WRITES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let pending = path.with_file_name(format!(".{name}.{}.{sequence}.tmp", std::process::id()));
+    refuse_links(path)?;
+    refuse_links(&pending)?;
+    let written = write_json(&pending, value).and_then(|()| Ok(fs::rename(&pending, path)?));
+    if written.is_err() {
+        let _ = fs::remove_file(&pending);
+    }
+    written?;
+    if let Some(parent) = path.parent() {
+        sync_folder(parent)?;
+    }
+    Ok(())
+}
+
+/// Makes the names a rename or removal just changed in `folder` durable where the
+/// platform needs to be asked: on Unix the folder itself is synced. On Windows the file
+/// system journals a rename or removal with the change, so nothing more is asked.
+pub(crate) fn sync_folder(folder: &Path) -> Result<(), Error> {
+    #[cfg(unix)]
+    File::open(folder)?.sync_all()?;
+    #[cfg(not(unix))]
+    let _ = folder;
     Ok(())
 }
 
@@ -220,7 +257,7 @@ mod cancellation_tests {
         let bytes = vec![11u8; 131_073];
         assert_eq!(
             digest_reader(&mut Cursor::new(&bytes), &Cancellation::default()).unwrap(),
-            Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes))).unwrap()
+            Sha256Digest::of(&bytes)
         );
     }
 }

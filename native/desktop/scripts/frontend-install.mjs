@@ -9,6 +9,7 @@ import {
   lstatSync,
   openSync,
   readFileSync,
+  realpathSync,
   rmSync,
 } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
@@ -271,10 +272,14 @@ export function installDecision(frontend, platform = currentPlatform()) {
 export const SETUP_INSTALL = ["ci", "--include=dev", "--no-audit", "--no-fund"];
 
 // The npm CLI shipped beside this Node binary, found the way DesktopTools.cmake
-// does: node_modules next to node on Windows, lib/node_modules on POSIX.
+// does: an npm link beside node that resolves to the CLI, as package managers
+// install it, then node_modules next to node on Windows, lib/node_modules on POSIX.
 export function bundledNpmCli(node = process.execPath) {
   const directory = dirname(node);
+  const link = resolve(directory, "npm");
+  const linked = existsSync(link) ? realpathSync(link) : "";
   const candidates = [
+    ...(linked.endsWith("/npm-cli.js") ? [linked] : []),
     resolve(directory, "node_modules/npm/bin/npm-cli.js"),
     resolve(directory, "../lib/node_modules/npm/bin/npm-cli.js"),
   ];

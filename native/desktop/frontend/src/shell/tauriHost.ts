@@ -1,19 +1,16 @@
-import { Channel, invoke } from "@tauri-apps/api/core";
-import type {
-  ContextMenuItem,
-  DesktopSetup,
-  LogBatch,
-  ManagerSignal,
-  ShellToken,
-  SignInSignal,
-  WindowPresentation,
-} from "../ipc/contract";
+import { Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import type { DesktopSetup } from "../ipc/componentSetup";
+import type { LogBatch, ShellToken, WindowPresentation } from "../ipc/contract";
+import type { ManagerSignal, SignInSignal } from "../ipc/account";
 import type { AgentAccess } from "./agentAccess";
+import { SEND_PLAN } from "./agentSendRefusals";
 import type {
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
   AgentUploadEvent,
+  AgentDropSignal,
 } from "./agentSession";
 import {
   readSkillDetail,
@@ -21,16 +18,26 @@ import {
   readSkillVerification,
 } from "./agentSkills";
 import type { AgentViews } from "./agentViews";
+import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
-import type { HostCall } from "./hostCall";
-import { hostCall } from "./hostCall";
+import type { CallPlan, HostCall } from "./hostCall";
+import { modelListState } from "./modelListState";
+import { hostCall, observedInvoke } from "./hostCall";
+import { refuseIfEnded, sessionBound } from "./sessionGate";
+import { settingsSetupState, type ProviderSettings } from "./providerSettings";
 import type {
   ProviderSignInSnapshot,
-  ProviderSettings,
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
-} from "./providerSettings";
-import { openTauriTerminal } from "./tauriTerminal";
+} from "./providerSettingsContract";
+import type { BackgroundTaskCue } from "./backgroundTasksContract";
+import { tauriLedger } from "./tauriLedger";
+import { tauriModelo } from "./tauriModelo";
+import { tauriSedeView } from "./tauriSedeView";
+import {
+  observeTauriConsoleEnvironment,
+  openTauriTerminal,
+} from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const PROFILE_HEADER = "x-cadrumo-profile";
@@ -50,18 +57,41 @@ function takeToken(): ShellToken | null {
 export function tauriHost(): Host {
   const token = takeToken();
   const call = hostCall(token);
+  // Commands only a signed-in session can ask. Subscriptions and their
+  // release are never refused for the session and stay on `call`.
+  const bound = sessionBound(call);
+  // One cue serves the overview and the run: it says only that a read may
+  // answer differently.
+  const observeAeatSync = async (changed: () => void) => {
+    let active = true;
+    const updates = new Channel<null>();
+    updates.onmessage = () => {
+      if (active) changed();
+    };
+    const subscription = await call("aeat_sync_observe", { updates });
+    return () => {
+      active = false;
+      void call("aeat_sync_unobserve", { subscription }).catch(() => undefined);
+    };
+  };
   const openExternal = (url: string) =>
     call("open_external", { url }).then(() => undefined);
-  // A command whose body is a password and nothing else. The token travels
-  // as a header, and so does the label of the profile it names,
-  // percent-encoded, since a header carries no other text.
+  // A command whose body is a password, or one JSON object holding it, and
+  // nothing else. The token travels as a header, and so does the label of
+  // the profile it names, percent-encoded, since a header carries no other
+  // text.
   const submit = <Result>(
-    command: "sign_in_submit" | "profile_create",
+    command:
+      | "sign_in_submit"
+      | "sign_out_with_password"
+      | "profile_create"
+      | "profile_password_change"
+      | "profile_aeat_credential_save",
     password: Uint8Array,
     profile?: string,
   ): Promise<Result> =>
     token
-      ? invoke<Result>(command, password, {
+      ? observedInvoke<Result>(token, command, password, {
           headers: {
             "x-cadrumo-token": token,
             ...(profile === undefined
@@ -87,22 +117,23 @@ export function tauriHost(): Host {
           );
         };
       },
-      readiness: (profile) => call("profile_censo_readiness", { profile }),
-      start: (profile) => call("profile_censo_start", { profile }),
+      readiness: (profile) => bound("profile_censo_readiness", { profile }),
+      start: (profile) => bound("profile_censo_start", { profile }),
       status: (profile, operation) =>
-        call("profile_censo_status", { profile, operation }),
-      answer: (profile, operation, reviewDigest, decision) =>
-        call("profile_censo_answer", {
+        bound("profile_censo_status", { profile, operation }),
+      answer: (profile, operation, reviewDigest, decision, accepted) =>
+        bound("profile_censo_answer", {
           profile,
           operation,
           reviewDigest,
           decision,
+          accepted: accepted ?? null,
         }),
     },
     userProfile: {
-      read: (language) => call("user_profile_read", { language }),
+      read: (language) => bound("user_profile_read", { language }),
       change: (change) =>
-        call("user_profile_change", { change }).then(() => undefined),
+        bound("user_profile_change", { change }).then(() => undefined),
       async observe(changed) {
         let active = true;
         const updates = new Channel<null>();
@@ -117,7 +148,125 @@ export function tauriHost(): Host {
           );
         };
       },
+      aeat: {
+        pickCertificate: () => bound("profile_aeat_certificate_pick", {}),
+        async saveCredential(credential) {
+          const body = new TextEncoder().encode(JSON.stringify(credential));
+          try {
+            refuseIfEnded();
+            await submit("profile_aeat_credential_save", body);
+          } finally {
+            body.fill(0);
+          }
+        },
+      },
     },
+    profileCompanions: {
+      household: (language, plan) =>
+        bound("user_profile_household", { language }, plan),
+      householdDraft: (language, draft, plan) =>
+        bound("user_profile_household_draft", { language, draft }, plan),
+      imputationElection: (profile, taxYear, language) =>
+        bound("user_profile_imputation_election", {
+          profile,
+          taxYear,
+          language,
+        }),
+    },
+    borrador: {
+      read: (profile, selector) =>
+        bound("aeat_sync_borrador_read", { profile, selector }),
+      query: (profile, selector) =>
+        bound("aeat_sync_borrador_query", { profile, selector }),
+      compare: (profile, year, language) =>
+        bound("aeat_sync_borrador_compare", { profile, year, language }),
+    },
+    aeatSync: {
+      status: (language) => bound("aeat_sync_status", { language }),
+      observe: observeAeatSync,
+      start: (profile, request) =>
+        bound("aeat_sync_start", { profile, request }).then(() => undefined),
+    },
+    aeatSyncResults: {
+      async results(profile, language) {
+        const [served, notifications] = await Promise.all([
+          bound("aeat_sync_results", { profile, language }),
+          bound("aeat_sync_notifications", { profile }),
+        ]);
+        return { ...served, notifications };
+      },
+      retry: (profile, area, part, acknowledgedUnknown) =>
+        bound("aeat_sync_retry", {
+          profile,
+          area,
+          item: part,
+          acknowledgedUnknown,
+        }).then(() => undefined),
+      pickBorrador: () => bound("aeat_sync_borrador_pick", {}),
+      importBorrador: (profile, file, year) =>
+        bound("aeat_sync_borrador_import", { profile, file, year }),
+    },
+    aeatSyncRun: {
+      progress: (profile) => bound("aeat_sync_progress", { profile }),
+      observe: observeAeatSync,
+      stop: (profile) =>
+        bound("aeat_sync_stop", { profile }).then(() => undefined),
+      retry: (profile, area, item, acknowledgedUnknown) =>
+        bound("aeat_sync_retry", {
+          profile,
+          area,
+          item,
+          acknowledgedUnknown,
+        }).then(() => undefined),
+      resume: (profile) =>
+        bound("aeat_sync_resume", { profile }).then(() => undefined),
+    },
+    aeatSyncPrepare: {
+      prepare: () => bound("aeat_sync_prepare", {}),
+      async signIn(stage) {
+        const progress = new Channel<AeatSignInStage>();
+        progress.onmessage = stage;
+        await bound("aeat_sync_sign_in", { progress });
+      },
+      cancelSignIn: () =>
+        call("aeat_sync_sign_in_cancel", {}).then(() => undefined),
+    },
+    views: {
+      notifications: () => bound("profile_views_notifications", {}),
+      filingCalendar: (range, language) =>
+        bound("profile_views_calendar", {
+          from: range.from,
+          to: range.to,
+          language,
+        }),
+      home: (language) => bound("profile_views_home", { language }),
+      reference: (query, limit, language) =>
+        bound("profile_views_reference", { query, limit, language }),
+      operations: (limit, after) =>
+        bound("profile_views_operations", { limit, after }),
+    },
+    ledger: tauriLedger(token, call),
+    backgroundTasks: {
+      async observe(listener) {
+        let active = true;
+        const updates = new Channel<BackgroundTaskCue>();
+        updates.onmessage = (cue) => {
+          if (active) listener(cue);
+        };
+        const subscription = await call("background_tasks_observe", {
+          updates,
+        });
+        return () => {
+          active = false;
+          void call("background_tasks_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      revisions: () => bound("background_tasks_revisions", {}),
+    },
+    modelo: tauriModelo(token, call),
+    sedeView: tauriSedeView(call),
     attendance: {
       async inventory() {
         const reply = (await call("runtime_attendance_inventory", {})) as {
@@ -162,7 +311,6 @@ export function tauriHost(): Host {
       },
     },
     available: true,
-    nativeMenus: true,
     window: {
       action: (action) =>
         call("shell_window_action", { action }).then(() => undefined),
@@ -177,15 +325,29 @@ export function tauriHost(): Host {
           );
         };
       },
+      async guardClose(asked) {
+        const requests = new Channel<null>();
+        requests.onmessage = () => asked();
+        const subscription = await call("shell_close_guard_subscribe", {
+          requests,
+        });
+        return () => {
+          requests.onmessage = () => undefined;
+          void call("shell_close_guard_unsubscribe", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
     },
     environment: () => call("desktop_environment", {}),
     about: () => call("about_info", {}),
+    previousClose: () => call("previous_close", {}),
     language: {
       read: () => call("desktop_language_read", {}),
       set: (language) => call("desktop_language_set", { language }),
       async observe(listener) {
         const updates = new Channel<
-          import("../ipc/contract").DesktopLanguage
+          import("../ipc/environment").DesktopLanguage
         >();
         updates.onmessage = listener;
         const subscription = await call("desktop_language_observe", {
@@ -203,15 +365,18 @@ export function tauriHost(): Host {
       read: () => call("desktop_setup_read", {}),
       check: (mode) => call("desktop_setup_check", { mode }),
       verify: (items) => call("desktop_setup_verify", { items }),
-      start: (items, options = {}) =>
+      start: (item, options = {}) =>
         call("desktop_setup_start", {
-          items,
-          model: options.model ?? null,
+          item,
           resume: options.resume ?? false,
+          ...(options.reinstall ? { reinstall: true } : {}),
+          ...(options.download ? { download: options.download } : {}),
         }),
       answer: (operationId, planDigest, decision) =>
         call("desktop_setup_answer", { operationId, planDigest, decision }),
       cancel: (operationId) => call("desktop_setup_cancel", { operationId }),
+      removeModel: (model) => call("desktop_setup_remove_model", { model }),
+      remove: (removal) => call("desktop_setup_remove", { removal }),
       signInGoogle: () => call("desktop_google_sign_in", {}),
       signOutGoogle: () => call("desktop_google_sign_out", {}),
       async observe(listener) {
@@ -254,6 +419,8 @@ export function tauriHost(): Host {
     startManager: () => call("manager_start", {}),
     installManager: (scope) => call("manager_install", { scope }),
     signOut: () => call("sign_out", {}),
+    signOutWithPassword: (password, profile) =>
+      submit("sign_out_with_password", password, profile),
     signIn: (password, profile) => submit("sign_in_submit", password, profile),
     profiles: {
       list: () => call("profile_list", {}),
@@ -263,6 +430,8 @@ export function tauriHost(): Host {
         call("profile_delete", { review, confirmation, acknowledged }).then(
           () => undefined,
         ),
+      changePassword: (passwords) =>
+        submit("profile_password_change", passwords),
     },
     openTerminal: (kind, size, listener) =>
       token
@@ -270,6 +439,7 @@ export function tauriHost(): Host {
         : Promise.reject(
             new Error("The desktop host did not provide a launch token."),
           ),
+    observeConsoleEnvironment: observeTauriConsoleEnvironment,
     async subscribeLogs(listener: (batch: LogBatch) => void) {
       const records = new Channel<LogBatch>();
       records.onmessage = listener;
@@ -285,13 +455,6 @@ export function tauriHost(): Host {
     exportLogs: (text) => call("logs_export", { text }),
     copyLogs: (text) => call("logs_copy", { text }).then(() => undefined),
     revealLogs: () => call("logs_reveal", {}).then(() => undefined),
-    async showMenu(items: ContextMenuItem[], at?: { x: number; y: number }) {
-      const { chosen } = await call(
-        "shell_context_menu",
-        at ? { items, x: at.x, y: at.y } : { items },
-      );
-      return chosen;
-    },
     openExternal,
     providerSettings: tauriProviderSettings(token, openExternal),
     agentAccess: tauriAgentAccess(call),
@@ -318,6 +481,16 @@ function refusal(code: string): Error & { code: string } {
   return Object.assign(new Error(code), { code });
 }
 
+/** Every provider settings command may reject with its service's refusal. */
+const SERVICE_REFUSALS: CallPlan = { serviceRefusals: true };
+
+/** A change refused `busy` waits on the agent's start, which the settings say
+ * with the step to try again: a state of the setup, not a fault. */
+const SETTINGS_CHANGE: CallPlan = {
+  ...SERVICE_REFUSALS,
+  state: (code) => code === "busy",
+};
+
 function tauriProviderSettings(
   token: ShellToken | null,
   openExternal: (url: string) => Promise<void>,
@@ -327,11 +500,25 @@ function tauriProviderSettings(
   const command = <Result>(
     name: string,
     args: Record<string, string>,
+    plan?: CallPlan,
   ): Promise<Result> =>
-    token ? invoke<Result>(name, { ...args, token }) : unavailable();
+    token
+      ? observedInvoke<Result>(token, name, { ...args, token }, undefined, {
+          ...plan,
+          ...SERVICE_REFUSALS,
+        })
+      : unavailable();
   return {
-    status: () =>
-      command<ProviderSettingsAnswer>("provider_settings_status", {}),
+    status: (plan) =>
+      command<ProviderSettingsAnswer>(
+        "provider_settings_status",
+        {},
+        {
+          ...plan,
+          state: settingsSetupState,
+        },
+      ),
+    observeConsoleLogin: (changed) => listen("provider-login-changed", changed),
     async set({ provider, revision, secret, base_url }) {
       if (!token) return unavailable();
       // An empty address is the catalogue's default; absent keeps the stored one.
@@ -343,7 +530,8 @@ function tauriProviderSettings(
         throw refusal("base_url_rejected");
       const key = new TextEncoder().encode(secret);
       try {
-        return await invoke<ProviderSettingsRecord>(
+        return await observedInvoke<ProviderSettingsRecord>(
+          token,
           "provider_settings_set",
           key,
           {
@@ -358,26 +546,36 @@ function tauriProviderSettings(
                   : { [BASE_URL_HEADER]: base_url }),
             },
           },
+          SETTINGS_CHANGE,
         );
       } finally {
         key.fill(0);
       }
     },
     turnOff: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_remove", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_remove",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     turnOn: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_turn_on", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_turn_on",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     reset: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_reset", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_reset",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
+    signOut: ({ provider, revision }) =>
+      command<ProviderSettingsRecord>(
+        "provider_sign_out",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     signIn: {
       start: ({ provider, revision, method }) =>
         command<ProviderSignInSnapshot>("provider_sign_in_start", {
@@ -393,6 +591,26 @@ function tauriProviderSettings(
         command<ProviderSignInSnapshot>("provider_sign_in_cancel", {
           attemptId,
         }),
+      async submitCode({ attemptId, code }) {
+        if (!token) return unavailable();
+        const bytes = new TextEncoder().encode(code);
+        try {
+          return await observedInvoke<ProviderSignInSnapshot>(
+            token,
+            "provider_sign_in_submit_code",
+            bytes,
+            {
+              headers: {
+                [TOKEN_HEADER]: token,
+                "x-cadrumo-attempt-id": attemptId,
+              },
+            },
+            SERVICE_REFUSALS,
+          );
+        } finally {
+          bytes.fill(0);
+        }
+      },
       openExternal,
     },
   };
@@ -428,6 +646,11 @@ function readable<T>(read: T | null): T {
   return read;
 }
 
+/** The plan of a read that lists models: its states are noted, not reported. */
+function listingModels(plan?: CallPlan): CallPlan {
+  return { ...plan, state: (code) => modelListState(code) !== null };
+}
+
 /** The agent session and views of the desktop host. */
 function tauriAgent(call: HostCall): {
   agentSession: AgentSession;
@@ -448,7 +671,34 @@ function tauriAgent(call: HostCall): {
           );
         };
       },
-      providerCatalog: () => call("agent_provider_catalog", {}),
+      providerCatalog: (retry) =>
+        call("agent_provider_catalog", {}, listingModels(retry)),
+      localModels: () => call("agent_local_models", {}, listingModels()),
+      addLocalModel: (lane, model, expectedRevision) =>
+        call("agent_local_model_add", { lane, model, expectedRevision }),
+      removeLocalModel: (lane, model, expectedRevision) =>
+        call("agent_local_model_remove", { lane, model, expectedRevision }),
+      resetLocalModels: (expectedRevision) =>
+        call("agent_local_models_reset", { expectedRevision }),
+      localEngine: () => call("agent_local_engine", {}, listingModels()),
+      chooseLocalEngine: (engine, placement, expectedRevision) =>
+        call("agent_local_engine_choose", {
+          engine,
+          placement,
+          expectedRevision,
+        }),
+      chooseReadingModel: (lane, model, expectedRevision) =>
+        call("agent_reading_model_choose", { lane, model, expectedRevision }),
+      chooseTaskModel: (taskKind, choice, expectedRevision) =>
+        call("agent_task_model_choose", {
+          taskKind,
+          lane: choice?.lane ?? null,
+          model: choice?.model ?? null,
+          effort: choice?.effort ?? null,
+          expectedRevision,
+        }),
+      modelLicence: (provider, transport, model) =>
+        call("agent_model_licence", { provider, transport, model }),
       skills: () =>
         call("agent_skills", {}).then((answer) =>
           readable(readSkillInventory(answer)),
@@ -474,12 +724,42 @@ function tauriAgent(call: HostCall): {
         call("agent_conversation_rename", { conversationId, title }).then(
           () => undefined,
         ),
-      send: (request) => call("agent_send", { request }),
-      attach: (conversationId, filterLabel, onEvent) => {
+      send: (request) => call("agent_send", { request }, SEND_PLAN),
+      attach: (conversationId, filterLabel, onEvent, dropId) => {
         const updates = new Channel<AgentUploadEvent>();
         updates.onmessage = onEvent;
-        return call("agent_attach", { conversationId, filterLabel, updates });
+        return call("agent_attach", {
+          conversationId,
+          filterLabel,
+          updates,
+          ...(dropId ? { dropId } : {}),
+        });
       },
+      attachLedgerMovement: (conversationId, transactionId) =>
+        call("agent_attach_ledger_movement", {
+          conversationId,
+          transactionId,
+        }),
+      async observeDrops(listener) {
+        let active = true;
+        const updates = new Channel<AgentDropSignal>();
+        updates.onmessage = (signal) => {
+          if (active) listener(signal);
+        };
+        const subscription = await call("agent_drop_observe", { updates });
+        return () => {
+          active = false;
+          void call("agent_drop_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      removeDocuments: (conversationId, name) =>
+        call("agent_documents_remove", {
+          conversationId,
+          ...(name === undefined ? {} : { name }),
+        }).then(() => undefined),
+      attachmentPolicy: () => call("agent_attachment_policy", {}),
       cancel: (replyId) =>
         call("agent_cancel", { replyId }).then(() => undefined),
       pending: (conversationId) => call("agent_pending", { conversationId }),
@@ -493,6 +773,17 @@ function tauriAgent(call: HostCall): {
           approval: { reply_id, request_id },
           optionId,
         }).then(() => undefined),
+      attachmentCard: ({ reply_id, request_id }) =>
+        call("agent_attachment_card", { approval: { reply_id, request_id } }),
+      attachmentRelease: ({ reply_id, request_id }, optionId, scope) =>
+        call("agent_attachment_release", {
+          approval: { reply_id, request_id },
+          optionId,
+          scope,
+        }),
+      attachmentGrants: () => call("agent_attachment_grants", {}),
+      attachmentGrantRevoke: (grantId) =>
+        call("agent_attachment_grant_revoke", { grantId }),
       async observe(conversationId, listener) {
         const events = new Channel<AgentStreamEvent>();
         events.onmessage = listener;

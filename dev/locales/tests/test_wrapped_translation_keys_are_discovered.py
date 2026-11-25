@@ -29,8 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from .._ast_scanner import scan_source_tree
-from .._paths import SRC_DIR
+from ..ast_scanner import scan_source_tree
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

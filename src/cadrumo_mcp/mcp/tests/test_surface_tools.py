@@ -8,7 +8,6 @@ surface out of search and describe, and names the surface when it is admitted.
 
 from __future__ import annotations
 
-import sys
 from datetime import timedelta
 from types import SimpleNamespace
 from typing import NoReturn, cast
@@ -26,26 +25,20 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
-from cadrumo.core import logging as cadrumo_logging
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_mcp.mcp.access_scope import surface_scope
 
-from .. import main as mcp_main
 from .. import runtime_adapter as mcp_runtime
-from .. import server as mcp_server
 from ..protocol_contract import MCP_TOOL_CATALOGUE
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface, McpSurfaceName
+from .admitted_lease import admitted_access_status
+from .entry_point_support import run_entry_point
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -84,31 +77,8 @@ class _AdmittedClient:
         self.session_id = uuid4()
         self.registry = registry
         self.described: list[str] = []
-        self._status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=profile_id,
-            session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=now() + timedelta(minutes=5),
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(_EVERY_ID),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        self._status = admitted_access_status(
+            profile_id, self.session_id, expires_at=now() + timedelta(minutes=5), operations=frozenset(_EVERY_ID)
         )
 
     def status(self) -> SimpleNamespace:
@@ -171,8 +141,10 @@ async def test_a_tool_the_surface_leaves_out_does_not_answer() -> None:
     try:
         for name in left_out:
             assert await narrowed.call(name, {}) == {"outcome": "refused", "code": "unknown_tool"}
-            # The same call reaches the tool on the full surface, which then refuses its empty arguments.
-            assert await whole.call(name, {}) == {"outcome": "refused", "code": "invalid_request"}
+            # The same call reaches the tool on the full surface, which refuses empty arguments or the
+            # missing sign-in; neither is the unknown tool.
+            reached = await whole.call(name, {})
+            assert reached["outcome"] == "refused" and reached["code"] != "unknown_tool", (name, reached)
     finally:
         await narrowed.close()
         await whole.close()
@@ -258,22 +230,10 @@ async def test_an_admission_names_the_finite_scope_ceiling_for_every_surface(
         "profile_id": profile_id,
         "credential_reference": reference,
         "frontend": OperationFrontendProjection.EXTERNAL_CLIENT,
-        "timeout": PROFILE_ADMISSION_TIMEOUT_SECONDS,
+        "timeout": DEFAULT_TIMEOUT_POLICY.timeout_seconds,
         "scope": surface_scope(surface),
     }
     assert opened == [expected]
-
-
-def _run_entry_point(monkeypatch: pytest.MonkeyPatch, arguments: list[str]) -> list[dict[str, object]]:
-    """Run the installed entry point on these arguments and return what it asked to be served."""
-    served: list[dict[str, object]] = []
-    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    monkeypatch.delenv("CADRUMO_MCP_REQUIRED_VERSION", raising=False)
-    monkeypatch.setattr(sys, "argv", ["cadrumo-mcp", *arguments])
-    monkeypatch.setattr(cadrumo_logging, "configure_logging", lambda: None)
-    monkeypatch.setattr(mcp_server, "serve", lambda **options: served.append(options))
-    mcp_main.main()
-    return served
 
 
 @pytest.mark.parametrize("unknown", ["read-only", "Full", "", "everything"])
@@ -281,7 +241,7 @@ def test_the_entry_point_refuses_an_unknown_surface_before_serving(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], unknown: str
 ) -> None:
     with pytest.raises(SystemExit) as stopped:
-        _run_entry_point(monkeypatch, ["--profile-id", str(uuid4()), "--surface", unknown])
+        run_entry_point(monkeypatch, ["--profile-id", str(uuid4()), "--surface", unknown])
 
     assert stopped.value.code == 2
     message = capsys.readouterr().err
@@ -296,7 +256,7 @@ def test_the_entry_point_serves_the_surface_it_is_given(
 ) -> None:
     profile_id = uuid4()
 
-    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--surface", surface.value])
+    served = run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--surface", surface.value])
 
     assert served == [{"profile_id": profile_id, "credential_reference": None, "surface": MCP_SURFACES[surface]}]
 
@@ -304,7 +264,7 @@ def test_the_entry_point_serves_the_surface_it_is_given(
 def test_the_entry_point_serves_the_full_surface_when_none_is_named(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id, reference = uuid4(), uuid4()
 
-    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", str(reference)])
+    served = run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", str(reference)])
 
     assert served == [
         {"profile_id": profile_id, "credential_reference": reference, "surface": MCP_SURFACES[DEFAULT_MCP_SURFACE]}

@@ -17,7 +17,7 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.filing_year import FilingYear
+from cadrumo.core.filing_year import FilingYear, is_four_digit_year
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import RegistrySelectorPeriodCode
@@ -40,8 +40,9 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenGeneratedManifest
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
@@ -254,9 +255,9 @@ def load_bundled_external_oracle_inventory() -> ExternalOracleInventory:
     """
     evidence: list[ExternalOracleEvidence] = []
     unattributed: list[UnattributedOraclePayload] = []
-    for corpus, locate_directory in _ORACLE_CORPUS_DIRECTORIES.items():
+    for corpus, locate_directory in ORACLE_CORPUS_DIRECTORIES.items():
         for payload_path in scan_directory(locate_directory(), pattern="modelo-*.json"):
-            record = _read_oracle_payload(corpus, payload_path)
+            record = read_oracle_payload(corpus, payload_path)
             if isinstance(record, UnattributedOraclePayload):
                 unattributed.append(record)
             else:
@@ -575,7 +576,7 @@ def _manual_worked_example_directory() -> Path:
 #: raises when its directory is missing: resolving at import time would make an
 #: absent capture corpus an import failure of this whole module rather than a
 #: loud failure of the fold that needs it.
-_ORACLE_CORPUS_DIRECTORIES: Final[Mapping[ExternalOracleCorpus, Callable[[], Path]]] = {
+ORACLE_CORPUS_DIRECTORIES: Final[Mapping[ExternalOracleCorpus, Callable[[], Path]]] = {
     ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY: replay_corpus_directory,
     ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: _manual_worked_example_directory,
 }
@@ -619,7 +620,7 @@ class ExternalOracleInventory(ExternalGroundingModel):
         return tuple(sorted({(modelo, year) for modelo, year, _period in self.attributed_coordinates}))
 
 
-def _read_oracle_payload(
+def read_oracle_payload(
     corpus: ExternalOracleCorpus, payload_path: Path
 ) -> ExternalOracleEvidence | UnattributedOraclePayload:
     """Read one bundled payload into typed evidence, attributed to a modelo and year.
@@ -646,8 +647,8 @@ def _read_oracle_payload(
     not something this function can know. Silently taking the declared value
     would attribute figures to a revision the file's own name denies.
     """
-    payload = _parse_oracle_payload(corpus, payload_path)
-    name_modelo_id, name_filing_year = _attribution_from_payload_name(payload_path)
+    payload = parse_oracle_payload(corpus, payload_path)
+    name_modelo_id, name_filing_year = attribution_from_payload_name(payload_path)
     _validate_oracle_payload_name_matches(payload, payload_path, name_modelo_id, name_filing_year)
     return _attribute_oracle_payload(corpus, payload_path, payload, name_modelo_id, name_filing_year)
 
@@ -726,7 +727,7 @@ def audit_oracle_bindings(
                     f"{cross_reference.id} bound oracle {oracle_id!r}: {exc}"
                 )
                 continue
-            if (cross_reference.surface, oracle.surface_kind) not in _COMPATIBLE_SURFACE_PAIRS:
+            if (cross_reference.surface, oracle.surface_kind) not in COMPATIBLE_SURFACE_PAIRS:
                 failures.append(
                     f"modelo {modelo.id} revision {revision.id} cross-reference {cross_reference.id} "
                     f"surface {str(cross_reference.surface)!r} is not compatible with oracle "
@@ -798,7 +799,7 @@ def _walk_resolved_endpoints(revision: ModeloRevision) -> Iterator[ResolvedExpor
                 yield ResolvedExportEndpoint(str(layout.id), str(record.id), casilla_id, "row_field", None)
 
 
-def _parse_oracle_payload(corpus: ExternalOracleCorpus, payload_path: Path) -> OraclePayload:
+def parse_oracle_payload(corpus: ExternalOracleCorpus, payload_path: Path) -> OraclePayload:
     """Parse one bundled payload through its corpus's strict model.
 
     Two refusals live here, both loud and neither tolerant of a shape nothing
@@ -819,7 +820,7 @@ def _parse_oracle_payload(corpus: ExternalOracleCorpus, payload_path: Path) -> O
         RegistryValidationError: When the payload violates its corpus's model,
             or declares a corpus token other than ``corpus``.
     """
-    model = _ORACLE_PAYLOAD_MODELS[corpus]
+    model = ORACLE_PAYLOAD_MODELS[corpus]
     try:
         payload = model.model_validate(json.loads(payload_path.read_text(encoding=UTF_8_ENCODING)))
     except ValidationError as exc:
@@ -834,7 +835,7 @@ def _parse_oracle_payload(corpus: ExternalOracleCorpus, payload_path: Path) -> O
     return payload
 
 
-def _attribution_from_payload_name(payload_path: Path) -> tuple[ModeloId | None, int | None]:
+def attribution_from_payload_name(payload_path: Path) -> tuple[ModeloId | None, int | None]:
     """Read the ``modelo-<id>-<year>-<scenario>.json`` naming convention off a payload.
 
     Returns ``(None, None)`` when the name does not follow the convention. The
@@ -893,7 +894,7 @@ def _attribute_oracle_payload(
     )
 
 
-_COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
+COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
         ("integration_test_service", "integration_test_service"),
@@ -1081,8 +1082,8 @@ def revision_selection_coordinates(
     period grammar.  The canonical selector remains responsible for matching a
     request to that token.
     """
-    if not 2000 <= assessment_horizon <= 2099:
-        raise ValueError("assessment_horizon must be between 2000 and 2099")
+    if not is_four_digit_year(assessment_horizon):
+        raise ValueError("assessment_horizon must be a four-digit year")
     declared = _declared_selection_years(revision, assessment_horizon)
     if not declared:
         raise RegistryValidationError(
@@ -1126,7 +1127,7 @@ class ResolvedExportEndpoint:
     field: ExportFieldDefinition | None
 
 
-_ORACLE_PAYLOAD_MODELS: Final[Mapping[ExternalOracleCorpus, type[OraclePayload]]] = {
+ORACLE_PAYLOAD_MODELS: Final[Mapping[ExternalOracleCorpus, type[OraclePayload]]] = {
     ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY: RentaWebOpenReplayPayload,
     ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: ManualWorkedExamplePayload,
 }

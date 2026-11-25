@@ -3,6 +3,7 @@ use crate::{
     environment::{self, Launch, Parent},
     terminal::{
         Kind, Program, TerminalState, console,
+        console_environment::ConsoleEnvironment,
         credit::PAUSE,
         frame::{Decoded, decode},
         ipc,
@@ -335,7 +336,14 @@ async fn python_kind_is_a_repl_in_workspace_with_the_pinned_storage_root() {
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
-        .open(Kind::Python, 1000, 40, sink, state.document())
+        .open_with(
+            Kind::Python,
+            1000,
+            40,
+            sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
@@ -389,7 +397,14 @@ async fn tui_kind_draws_the_alternate_screen_from_the_workspace_with_pinned_stor
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
-        .open(Kind::Tui, 120, 40, sink, state.document())
+        .open_with(
+            Kind::Tui,
+            120,
+            40,
+            sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
@@ -451,7 +466,14 @@ async fn console_kind_is_the_absolute_platform_shell_with_package_bin_first() {
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
-        .open(Kind::Console, 1000, 40, sink, state.document())
+        .open_with(
+            Kind::Console,
+            1000,
+            40,
+            sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     let control = Registered(&state, id);
     let mut screen = Screen::new(frames, &control);
@@ -925,10 +947,24 @@ async fn a_page_load_settles_every_kind_and_new_sessions_replace_them() {
     let (python_sink, python_frames) = collector();
     let (tui_sink, tui_frames) = collector();
     let python = state
-        .open(Kind::Python, 120, 40, python_sink, state.document())
+        .open_with(
+            Kind::Python,
+            120,
+            40,
+            python_sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     let tui = state
-        .open(Kind::Tui, 120, 40, tui_sink, state.document())
+        .open_with(
+            Kind::Tui,
+            120,
+            40,
+            tui_sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     let python_control = Registered(&state, python);
     let mut python_screen = Screen::new(python_frames, &python_control);
@@ -953,7 +989,14 @@ async fn a_page_load_settles_every_kind_and_new_sessions_replace_them() {
     }
     let (sink, frames) = collector();
     let reopened = state
-        .open(Kind::Python, 120, 40, sink, state.document())
+        .open_with(
+            Kind::Python,
+            120,
+            40,
+            sink,
+            state.document(),
+            &ConsoleEnvironment::base(),
+        )
         .unwrap();
     assert!(reopened > tui);
     let control = Registered(&state, reopened);
@@ -971,7 +1014,7 @@ mod relocated {
     use std::collections::BTreeMap;
 
     // Reports the storage root this process resolves through both owners.
-    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import StorageMode, configured_storage_root, storage_mode; assert storage_mode().mode is StorageMode.INSTALLED; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
+    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import configured_storage_root; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_storage_root), os.getcwd()]))";
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -987,7 +1030,6 @@ mod relocated {
     }
 
     /// A fresh directory under the runner's configured temporary root.
-    /// The probe verifies installed mode from the imported package itself.
     fn relocation_scratch(label: &str) -> Scratch {
         let base = std::env::temp_dir().join(format!(
             "cadrumo-{label}-{}-{}",
@@ -1001,11 +1043,10 @@ mod relocated {
     }
 
     fn settings_storage_names() -> Vec<String> {
-        serde_json::from_value(contract()["application_environment"]["location_names"].clone())
-            .unwrap()
+        vec![root_variable()]
     }
 
-    /// The canonical root override, which wins in every mode.
+    /// The one storage variable.
     fn root_variable() -> String {
         contract()["root"]["variable"].as_str().unwrap().to_owned()
     }
@@ -1066,7 +1107,7 @@ mod relocated {
 
     fn assert_resolves(values: &[PathBuf], storage: &Path, cwd: &Path) {
         assert_eq!(values[0], storage, "configured_storage_root");
-        assert_eq!(values[1], storage, "Settings.cadrumo_local_storage_root");
+        assert_eq!(values[1], storage, "Settings.cadrumo_storage_root");
         assert!(same_path(&values[2], cwd), "child working directory");
     }
 
@@ -1233,8 +1274,7 @@ mod relocated {
     }
 
     /// The webview profile and the window state live in the declared storage
-    /// member beneath the explicit root, not under the development tool cache,
-    /// and an absolute override of that member is honoured.
+    /// member beneath the explicit root, not under the development tool cache.
     #[tokio::test]
     async fn the_webview_profile_and_window_state_live_at_the_declared_location() {
         use crate::shell::window_state::{self, Placement};

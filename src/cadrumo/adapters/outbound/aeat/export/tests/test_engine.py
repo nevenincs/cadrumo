@@ -9,16 +9,18 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.submission.engine import SubmissionEngine
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from .....persistence.profile.submission import SubmissionRepository
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
+from .preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
+_YEAR = filing_year_envelope().horizon
 
 
-_SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
+_SUBMITTED_AT = datetime(_YEAR, 5, 28, 12, 55, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -28,13 +30,18 @@ def _secure_database(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _engine_root(tmp_path: Path) -> Path:
+    """Storage root the engine under test is configured with; nothing may create it."""
+    return tmp_path / "engine-storage"
+
+
 def _build_engine(tmp_path: Path) -> SubmissionEngine:
     """Compose the engine with production persistence, deadline, and auth boundaries."""
     return SubmissionEngine(
         auth_provider=clave_movil_provider(identity="12345678Z"),
         deadline_checker=deadline_checker(),
         repository=SubmissionRepository(),
-        settings=Settings(cadrumo_submissions_dir=tmp_path / "submissions"),
+        settings=Settings(cadrumo_storage_root=_engine_root(tmp_path)),
     )
 
 
@@ -46,7 +53,7 @@ def _historical_filing(draft_label: str = "draft-1", modelo: str = "130") -> Mod
         draft_id="draft-1",
         modelo=modelo,
         period=modelo_draft().period,
-        profile_tax_id="X1234567L",
+        profile_tax_id="X0001500M",
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
         submitted_at=_SUBMITTED_AT,
         attempts=(
@@ -69,4 +76,4 @@ def test_engine_exposes_no_remote_write_methods(tmp_path: Path) -> None:
 
     assert not hasattr(engine, "submit_draft")
     assert not hasattr(engine, "submit_amendment")
-    assert not (tmp_path / "submissions").exists()
+    assert not _engine_root(tmp_path).exists()

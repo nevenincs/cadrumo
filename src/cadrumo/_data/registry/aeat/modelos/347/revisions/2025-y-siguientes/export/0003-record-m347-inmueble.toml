@@ -6,6 +6,8 @@ id = "m347-inmueble"
 record_type = "inmueble"
 order = 2
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-347-2025"
 line_ending = "crlf"
 required = false
 repeat = "binding_rows"
@@ -150,6 +152,15 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 source_refs = ["aeat-dr-347-2025"]
+
+[revisions.2025-y-siguientes.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = "m347-2025.inmueble.f008"
@@ -300,7 +311,7 @@ source_refs = ["aeat-dr-347-2025"]
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
 declarado_tax_id = "inmueble.arrendatario-nif"
 importe_total = "inmueble.importe-operacion"
-party_legal_name = "inmueble.arrendatario-nombre"
+party_filing_name = "inmueble.arrendatario-nombre"
 premises_address = "inmueble.direccion"
 referencia_catastral = "inmueble.referencia-catastral"
 situacion_inmueble = "inmueble.situacion"

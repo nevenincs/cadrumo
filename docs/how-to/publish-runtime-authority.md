@@ -138,7 +138,7 @@ again.
 
 Publication also projects the shared `floor`, `horizon`, and optional
 `hard_ceiling` support envelope and the typed runtime catalogues for IVA rules,
-place of supply, countries and territories, recargo bands, and apoderamiento
+place of supply, countries and territories, surcharge bands, and power of attorney
 scopes. Every required catalogue must be populated. Modelo and tax-domain
 identifiers accept their stable syntax in code, but membership belongs to this
 validated authority; an identifier absent from its published vocabulary is not
@@ -212,7 +212,7 @@ operations retain their admitted reader.
 On Windows, publication removes an older content-addressed database only after
 it can acquire an exclusive handle, so an in-flight reader defers cleanup until
 a later publication. On POSIX systems publication retains superseded database
-files: unlinking an open file succeeds there and does not provide a safe
+files: removing an open file succeeds there and does not provide a safe
 cross-process lease signal. The immutable filename prevents those retained
 bytes from being selected by the current descriptor.
 

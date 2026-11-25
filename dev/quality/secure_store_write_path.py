@@ -302,7 +302,9 @@ def _bindings(
 
     An accessor is a function whose return annotation names a repository, so
     ``self._drafts().save(draft)`` and ``_draft_repo().save(draft)`` resolve to
-    the store they hand back. Without it a lazily resolved repository -- the
+    the store they hand back. A ``@property`` accessor binds an attribute
+    instead, so ``self._drafts.save(draft)`` resolves the same way. Without
+    these bindings a lazily resolved repository -- the
     shape used wherever construction must wait for a bucket -- is invisible on
     both sides, and the gate reports a store that is written every run.
     """
@@ -390,7 +392,11 @@ def _declared_read_only(declaration: Path = _DECLARATION) -> dict[str, str]:
 
 def evaluate(roots: tuple[Path, ...] = _SOURCE_ROOTS, declaration: Path = _DECLARATION) -> tuple[str, ...]:
     """Return the verdict lines; an empty tuple is a pass."""
-    usage = collect_store_usage(roots)
+    return verdict_for_usage(collect_store_usage(roots), declaration)
+
+
+def verdict_for_usage(usage: tuple[StoreUsage, ...], declaration: Path = _DECLARATION) -> tuple[str, ...]:
+    """Return the verdict lines for already collected store usage; an empty tuple is a pass."""
     observed = {store.name for store in usage if store.is_read_only}
     declared = _declared_read_only(declaration)
     problems: list[str] = []
@@ -455,6 +461,7 @@ def _collect_repository_binding(
     """Collect repository binding."""
     if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
         _collect_callable_repository_binding(node, repositories, names, accessors)
+        _collect_property_repository_binding(node, repositories, attributes)
     elif isinstance(node, ast.AnnAssign):
         _collect_annotated_repository_binding(node, repositories, names, attributes)
     elif isinstance(node, ast.Assign):
@@ -466,6 +473,17 @@ def _collect_repository_binding(
                 names[target.id] = source
             elif isinstance(target, ast.Attribute):
                 attributes[target.attr] = source
+
+
+def _collect_property_repository_binding(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    repositories: frozenset[str],
+    attributes: dict[str, str],
+) -> None:
+    """Bind an annotated property return to attribute access on its holder."""
+    if any(isinstance(decorator, ast.Name) and decorator.id == "property" for decorator in node.decorator_list):
+        for repository in _annotated_repositories(node.returns, repositories):
+            attributes[node.name] = repository
 
 
 def _collect_store_call(

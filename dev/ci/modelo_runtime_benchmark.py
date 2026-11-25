@@ -3,7 +3,10 @@
 Run ``uv run python -m dev.ci.modelo_runtime_benchmark --output PATH`` with an
 empty output directory. The default journey is the enrolled Modelo 100 local
 export. ``--profile-first-decode`` adds a bounded first-decode CPU profile;
-leave it off for before/after timings. The sandbox and native owner retain all
+``--profile-first-admission`` profiles synchronous human admission with wall
+time to attribute blocking waits and profiles worker fixture/observer setup
+before the worker serves requests. Leave both off for before/after timings.
+The sandbox and native owner retain all
 normal validation, currentness, guard, custody and cleanup behavior.
 
 Boundary timings are inclusive; nested decode/load totals must not be added.
@@ -26,12 +29,13 @@ import argparse
 import cProfile
 import functools
 import json
+import logging
 import os
 import sys
 import threading
 import time
 from collections.abc import Callable, Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import CodeType
@@ -40,7 +44,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .perf_measurement import process_tree_cpu
 
@@ -53,7 +57,9 @@ _AGGREGATE_FLUSH_BOUNDARIES = frozenset(
 
 
 @dataclass
-class _Total:
+class Total:
+    """Accumulated call count and wall, process CPU and thread CPU seconds for one boundary."""
+
     calls: int = 0
     wall_seconds: float = 0.0
     cpu_seconds: float = 0.0
@@ -63,14 +69,24 @@ class _Total:
 class RuntimeBenchmarkRecorder:
     """Retain only timing, counts and code identities from one benchmark process."""
 
-    def __init__(self, output: Path, *, role: Literal["parent", "worker"], profile_first_decode: bool = False) -> None:
+    def __init__(
+        self,
+        output: Path,
+        *,
+        role: Literal["parent", "worker"],
+        profile_first_decode: bool = False,
+        profile_first_admission: bool = False,
+    ) -> None:
         """Bind one process-local recorder to the benchmark's owned output tree."""
         self.path = output / f"{role}-{os.getpid()}.jsonl"
         self.lock = threading.RLock()
         self.counts: dict[str, int] = {}
-        self.totals: dict[str, _Total] = {}
+        self.totals: dict[str, Total] = {}
         self.profile_first_decode = profile_first_decode
         self._profiled = False
+        self.profile_first_admission = profile_first_admission
+        self._admission_profiled = False
+        self.diagnostic_timeline: list[dict[str, object]] = []
 
     def _write(self, record: dict[str, object]) -> None:
         with self.lock, self.path.open("a", encoding=UTF_8) as target:
@@ -92,29 +108,60 @@ class RuntimeBenchmarkRecorder:
             outcome = type(error).__name__
             raise
         finally:
-            sample = _Total(1, time.perf_counter() - wall, time.process_time() - cpu, time.thread_time() - thread)
+            sample = Total(1, time.perf_counter() - wall, time.process_time() - cpu, time.thread_time() - thread)
             self._finish(boundary, call, outcome, sample, aggregate=aggregate)
 
-    def _finish(self, boundary: str, call: int, outcome: str, sample: _Total, *, aggregate: bool) -> None:
+    def _finish(self, boundary: str, call: int, outcome: str, sample: Total, *, aggregate: bool) -> None:
+        finished = time.perf_counter()
         if aggregate:
             with self.lock:
-                total = self.totals.setdefault(boundary, _Total())
+                total = self.totals.setdefault(boundary, Total())
                 total.calls += 1
                 total.wall_seconds += sample.wall_seconds
                 total.cpu_seconds += sample.cpu_seconds
                 total.thread_cpu_seconds += sample.thread_cpu_seconds
+                if boundary == "diagnostics.logger_log":
+                    self.diagnostic_timeline.append(
+                        {
+                            "call": call,
+                            "outcome": outcome,
+                            "thread_id": threading.get_ident(),
+                            "finished_monotonic_seconds": finished,
+                            **asdict(sample),
+                        }
+                    )
         else:
-            self._write({"event": "finish", "boundary": boundary, "call": call, "outcome": outcome, **asdict(sample)})
+            self._write(
+                {
+                    "event": "finish",
+                    "boundary": boundary,
+                    "call": call,
+                    "outcome": outcome,
+                    "finished_monotonic_seconds": finished,
+                    **asdict(sample),
+                }
+            )
             if boundary in _AGGREGATE_FLUSH_BOUNDARIES:
                 self.flush()
 
-    def wrap[**P, R](self, original: Callable[P, R], boundary: str) -> Callable[P, R]:
+    def wrap[**P, R](self, original: Callable[P, R], boundary: str, *, aggregate: bool = False) -> Callable[P, R]:
         """Observe a real callable, forwarding its exact arguments and return value."""
 
         @functools.wraps(original)
         def measured(*args: P.args, **kwargs: P.kwargs) -> R:
-            with self.measure(boundary, aggregate=boundary == "operations.strict_schema"):
-                return original(*args, **kwargs)
+            profile = cProfile.Profile(timer=time.perf_counter) if self.claim_admission_profile(boundary) else None
+            try:
+                with self.measure(boundary, aggregate=aggregate or boundary == "operations.strict_schema"):
+                    if profile is not None:
+                        profile.enable()
+                    try:
+                        return original(*args, **kwargs)
+                    finally:
+                        if profile is not None:
+                            profile.disable()
+            finally:
+                if profile is not None:
+                    self.retain_profile(profile, boundary=boundary, timer="perf_counter")
 
         return measured
 
@@ -122,6 +169,15 @@ class RuntimeBenchmarkRecorder:
         """Publish monotonic cumulative totals at coarse boundaries and scope exit."""
         with self.lock:
             totals = {boundary: asdict(total) for boundary, total in self.totals.items()}
+            if self.diagnostic_timeline:
+                self._write(
+                    {
+                        "event": "diagnostic_timeline",
+                        "semantics": "cumulative",
+                        "boundary": "diagnostics.logger_log",
+                        "measurements": self.diagnostic_timeline,
+                    }
+                )
             self._write({"event": "aggregate", "semantics": "cumulative", "boundaries": totals})
 
     def claim_decode_profile(self, model_name: str) -> bool:
@@ -136,8 +192,24 @@ class RuntimeBenchmarkRecorder:
                 self._profiled = True
             return selected
 
-    def retain_profile(self, profile: cProfile.Profile) -> None:
-        """Retain bounded CPU-function statistics without paths, locals or inputs."""
+    def claim_admission_profile(self, boundary: str) -> bool:
+        """Reserve one synchronous human-admission profile on its calling thread."""
+        if boundary != "admission.runtime_human" or not self.profile_first_admission:
+            return False
+        with self.lock:
+            if self._admission_profiled:
+                return False
+            self._admission_profiled = True
+            return True
+
+    def retain_profile(
+        self,
+        profile: cProfile.Profile,
+        *,
+        boundary: str | None = None,
+        timer: Literal["thread_time", "perf_counter"] = "thread_time",
+    ) -> None:
+        """Retain bounded function statistics without paths, locals or inputs."""
         rows = [
             _profile_row(
                 entry.code,
@@ -148,10 +220,30 @@ class RuntimeBenchmarkRecorder:
             )
             for entry in profile.getstats()
         ]
+        self_key, total_key = "self_cpu_seconds", "cumulative_cpu_seconds"
+        if timer == "perf_counter":
+            for row in rows:
+                row["self_wall_seconds"] = row.pop(self_key)
+                row["cumulative_wall_seconds"] = row.pop(total_key)
+            self_key, total_key = "self_wall_seconds", "cumulative_wall_seconds"
         # Keep both rankings: nested async scopes can overlap cumulative cost.
-        by_self = sorted(rows, key=lambda row: row["self_cpu_seconds"], reverse=True)[:30]
-        by_total = sorted(rows, key=lambda row: row["cumulative_cpu_seconds"], reverse=True)[:30]
-        self._write({"event": "decode_profile", "timer": "thread_time", "by_self": by_self, "by_cumulative": by_total})
+        by_self = sorted(rows, key=lambda row: row[self_key], reverse=True)[:30]
+        by_total = sorted(rows, key=lambda row: row[total_key], reverse=True)[:30]
+        self._write(
+            {
+                "event": (
+                    "bootstrap_profile"
+                    if boundary is not None and boundary.startswith("startup.")
+                    else "admission_profile"
+                    if boundary is not None
+                    else "decode_profile"
+                ),
+                "timer": timer,
+                "boundary": boundary,
+                "by_self": by_self,
+                "by_cumulative": by_total,
+            }
+        )
 
     def record_tree(self, *, wall_seconds: float, own_cpu_seconds: float, child_cpu_seconds: float) -> None:
         """Record the shared process-tree measurement after owned children close."""
@@ -194,7 +286,7 @@ def _profile_row(
     }
 
 
-def _patch_function_aliases[**P, R](
+def patch_function_aliases[**P, R](
     patch: pytest.MonkeyPatch, original: Callable[P, R], replacement: Callable[P, R]
 ) -> None:
     """Observe existing direct-import consumers as well as the defining module."""
@@ -206,23 +298,23 @@ def _patch_function_aliases[**P, R](
 
 
 def _observe_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
-    from cadrumo.application.modelo.calculation_actions import (
+    from cadrumo.application.modelo.calculation_bucket_actions import (
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     )
     from cadrumo.application.modelo.export import export_modelo_revision
     from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
     from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
-    _patch_function_aliases(
+    patch_function_aliases(
         patch, strict_model_json_schema, recorder.wrap(strict_model_json_schema, "operations.strict_schema")
     )
-    _patch_function_aliases(
+    patch_function_aliases(
         patch,
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
         recorder.wrap(calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, "modelo.calculate"),
     )
-    _patch_function_aliases(patch, export_modelo_revision, recorder.wrap(export_modelo_revision, "modelo.export"))
-    _patch_function_aliases(
+    patch_function_aliases(patch, export_modelo_revision, recorder.wrap(export_modelo_revision, "modelo.export"))
+    patch_function_aliases(
         patch,
         build_production_operation_registry,
         recorder.wrap(build_production_operation_registry, "operations.build_registry"),
@@ -235,6 +327,9 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
     from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
     from cadrumo_client.transport.frontend_client import FrontendClient
     from cadrumo_runtime.adapters.profile_worker import ProfileWorkerProcess
+    from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost
+    from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+    from cadrumo_runtime.host.profile_host import RuntimeProfileHost
     from cadrumo_runtime.host.profile_login import ProfileWorkerHumanLogin
 
     patch.setattr(
@@ -250,16 +345,38 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
         "authenticate",
         recorder.wrap(ProfileWorkerHumanLogin.authenticate, "admission.worker_password"),
     )
-    _patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
-    _patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
+    for owner, name, boundary in (
+        (RuntimeProfileConnections, "_login", "admission.runtime_login"),
+        (RuntimeProfileConnections, "_prepare", "admission.prepare"),
+        (RuntimeProfileConnections, "_host", "admission.host"),
+        (RuntimeProfileConnections, "prepare_registry", "startup.prepare_registry"),
+        (RuntimeProfileConnections, "admit_human_login", "admission.runtime_human"),
+        (RuntimeProfileConnections, "finish_login", "admission.finish"),
+        (RuntimeProfileConnections, "_status", "admission.status"),
+        (RuntimeProfileConnections, "_sign_out_other_profiles", "admission.sign_out_others"),
+        (RuntimeProfileHost, "__init__", "admission.profile_host_construct"),
+        (ProfileWorkerProcess, "_accept_startup_channel", "startup.accept_worker_channel"),
+        (ProfileWorkerProcess, "_open_worker_channels", "startup.open_worker_channels"),
+        (ProfileWorkerHumanLogin, "bind", "admission.worker_bind"),
+        (ProfileWorkerOperationHost, "__init__", "startup.worker_operation_host_construct"),
+        (ProfileWorkerOperationHost, "warm_imports", "startup.worker_warm_imports"),
+    ):
+        patch.setattr(owner, name, recorder.wrap(getattr(owner, name), boundary))
+    patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
+    patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
     if sys.platform == "win32":
         from cadrumo_client.transport.windows import WindowsEndpoint
-        from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+        from cadrumo_client.transport.windows_process import WindowsProcessScope
 
         patch.setattr(
             WindowsProcessScope, "launch", recorder.wrap(WindowsProcessScope.launch, "startup.native_process_launch")
         )
         patch.setattr(WindowsEndpoint, "connect", recorder.wrap(WindowsEndpoint.connect, "startup.native_connect"))
+
+
+def observe_logging(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
+    """Measure every logger record emission as one aggregate diagnostics boundary."""
+    patch.setattr(logging.Logger, "_log", recorder.wrap(logging.Logger._log, "diagnostics.logger_log", aggregate=True))
 
 
 @contextmanager
@@ -300,6 +417,7 @@ def observe_runtime_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[
                     recorder.retain_profile(profile)
 
     with pytest.MonkeyPatch.context() as patch:
+        observe_logging(patch, recorder)
         for method in ("load", "load_revisioned"):
             original = getattr(CalculationRevisionCatalogueRepository, method)
             patch.setattr(
@@ -317,7 +435,43 @@ def observe_runtime_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[
             recorder.flush()
 
 
-def copy_instrumented_worker(output: Path, *, profile_first_decode: bool = False) -> Path:
+@contextmanager
+def observe_worker_composition(
+    recorder: RuntimeBenchmarkRecorder,
+    composition_factory: Callable[[], AbstractContextManager[None]],
+    *,
+    profile_setup: bool = False,
+    observer: Callable[[RuntimeBenchmarkRecorder], AbstractContextManager[None]] = observe_runtime_boundaries,
+) -> Generator[None]:
+    """Separate fixture and observer setup before yielding on the same worker thread."""
+    profile = cProfile.Profile(timer=time.perf_counter) if profile_setup else None
+    with ExitStack() as scope:
+        try:
+            with recorder.measure("startup.worker_fixture_and_observer_setup"):
+                if profile is not None:
+                    profile.enable()
+                try:
+                    with recorder.measure("startup.worker_fixture_entry"):
+                        scope.enter_context(composition_factory())
+                    with recorder.measure("startup.worker_observer_entry"):
+                        scope.enter_context(observer(recorder))
+                finally:
+                    if profile is not None:
+                        profile.disable()
+        finally:
+            if profile is not None:
+                recorder.retain_profile(
+                    profile, boundary="startup.worker_fixture_and_observer_setup", timer="perf_counter"
+                )
+        yield
+
+
+def copy_instrumented_worker(
+    output: Path,
+    *,
+    profile_first_decode: bool = False,
+    profile_setup: bool = False,
+) -> Path:
     """Copy today's fixture, validating the generated bootstrap before publication."""
     from dev.docs.sequences import runtime_fixture
 
@@ -327,12 +481,12 @@ def copy_instrumented_worker(output: Path, *, profile_first_decode: bool = False
     if source.count(original) != 1:
         raise ValueError("runtime fixture main entrypoint changed; update the benchmark copy owner")
     bootstrap = (
-        "    from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_runtime_boundaries\n"
+        "    from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition\n"
         "    @contextmanager\n"
         "    def _benchmark_composition():\n"
         f"        _recorder = RuntimeBenchmarkRecorder(Path({str(output)!r}), role='worker',\n"
         f"            profile_first_decode={profile_first_decode!r})\n"
-        "        with _worker_composition(), observe_runtime_boundaries(_recorder):\n"
+        f"        with observe_worker_composition(_recorder, _worker_composition, profile_setup={profile_setup!r}):\n"
         "            yield\n"
         "    raise SystemExit(run(composition_factory=_benchmark_composition))"
     )
@@ -359,7 +513,14 @@ def record_runtime_tree(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
         yield
 
 
-def benchmark_sequence(output: Path, *, page: str, sequence_id: str, profile_first_decode: bool = False) -> None:
+def benchmark_sequence(
+    output: Path,
+    *,
+    page: str,
+    sequence_id: str,
+    profile_first_decode: bool = False,
+    profile_first_admission: bool = False,
+) -> None:
     """Execute one discovered real sequence; an occupied destination is refused."""
     from dev.docs.build import ensure_isolated_storage_root
 
@@ -376,8 +537,12 @@ def benchmark_sequence(output: Path, *, page: str, sequence_id: str, profile_fir
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     authority_root = load_settings().cadrumo_authority_root
-    recorder = RuntimeBenchmarkRecorder(output, role="parent")
-    worker = copy_instrumented_worker(output, profile_first_decode=profile_first_decode)
+    recorder = RuntimeBenchmarkRecorder(output, role="parent", profile_first_admission=profile_first_admission)
+    worker = copy_instrumented_worker(
+        output,
+        profile_first_decode=profile_first_decode,
+        profile_setup=profile_first_admission,
+    )
 
     def frame(index: int) -> Generator[None]:
         with recorder.measure(f"sequence.frame.{index}"):
@@ -405,6 +570,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--page", default="how-to/modelo-100")
     parser.add_argument("--sequence-id", default="modelo-100-export-file")
     parser.add_argument("--profile-first-decode", action="store_true")
+    parser.add_argument("--profile-first-admission", action="store_true")
     options = parser.parse_args(argv)
     try:
         benchmark_sequence(
@@ -412,6 +578,7 @@ def main(argv: list[str] | None = None) -> int:
             page=options.page,
             sequence_id=options.sequence_id,
             profile_first_decode=options.profile_first_decode,
+            profile_first_admission=options.profile_first_admission,
         )
     except Exception as error:
         print(

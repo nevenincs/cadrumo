@@ -10,27 +10,25 @@ import ast
 import inspect
 import textwrap
 from collections.abc import Callable
-from datetime import date
 
 import pytest
 
 from .....application.storage.calc_sheets.engine import build_export_plan
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._calc_sheets_apply_values import (
-    written_cell_values,
-)
 from ..calc_sheets_apply import (
-    _new_target_export_preview,
-    _plan_value_payload,
+    new_target_export_preview,
+    plan_value_payload,
     preview_export_plan,
 )
+from ..calc_sheets_apply_values import (
+    written_cell_values,
+)
+from ._calc_sheets_support import modelo_130_first_quarter_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-    return build_export_plan(snapshot)
+    return build_export_plan(modelo_130_first_quarter_snapshot())
 
 
 class TestNewTargetPreview:
@@ -38,7 +36,7 @@ class TestNewTargetPreview:
 
     def test_every_value_cell_previews_as_changed_and_nothing_is_stale(self) -> None:
         plan = _m130_plan()
-        preview = _new_target_export_preview(plan)
+        preview = new_target_export_preview(plan)
 
         assert preview.spreadsheet_exists is False
         assert preview.spreadsheet_id is None
@@ -46,7 +44,7 @@ class TestNewTargetPreview:
         assert preview.folder_id is None
         assert preview.ranges_to_clear == ()
         assert preview.value_cells_unchanged == 0
-        assert preview.value_cells_changed == len(written_cell_values(_plan_value_payload(plan)))
+        assert preview.value_cells_changed == len(written_cell_values(plan_value_payload(plan)))
         assert preview.formula_cells_to_write == len(plan.formula_cells)
 
 
@@ -84,9 +82,9 @@ class TestPreviewNeverWrites:
             "_create_spreadsheet",
             "_ensure_plan_tabs_and_grid",
             "_force_spreadsheet_locale",
-            "_write_plan_values",
+            "write_plan_values",
             "_clear_stale_addresses",
-            "_apply_plan_structural_requests",
+            "apply_plan_structural_requests",
         ):
             assert forbidden_call not in source, f"preview_export_plan must never call {forbidden_call}"
 

@@ -40,7 +40,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def registry_legends() -> tuple[RegimeLegend, ...]:
     """Resolve the registry vocabulary on one pinned authority lease."""
     period = default_invoice_extraction_period()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
@@ -109,7 +109,8 @@ def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding(
     # established, so naming it would send the operator to a value that does not
     # exist on the record.
     assert finding.field == "regime_legend"
-    assert finding.detail
+    assert finding.words is not None
+    assert dict(finding.words.params)["mention"]
 
 
 def test_a_stated_rate_alone_contradicts_even_with_no_legible_cuota(

@@ -6,8 +6,8 @@ import hashlib
 from collections.abc import Iterable
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.packaging.authority_staging import authoring_authority_root
+from dev.paths import REPO_ROOT
 
 from .registry_collapse_models import FingerprintEntry
 
@@ -70,7 +70,8 @@ def fingerprint_digest(entries: Iterable[FingerprintEntry]) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
-def _file_change_count(before: tuple[FingerprintEntry, ...], after: tuple[FingerprintEntry, ...]) -> int:
+def file_change_count(before: tuple[FingerprintEntry, ...], after: tuple[FingerprintEntry, ...]) -> int:
+    """Count the paths whose content digest differs between two fingerprints."""
     left = {item.path: item.sha256 for item in before}
     right = {item.path: item.sha256 for item in after}
     return sum(left.get(path) != right.get(path) for path in set(left) | set(right))

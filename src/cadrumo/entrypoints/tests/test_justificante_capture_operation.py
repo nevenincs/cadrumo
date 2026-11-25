@@ -4,22 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import AsyncGenerator, Sequence
-from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime, timedelta
+from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.operations.secure_references import (
+    OperationSecureReferenceRepository,
+)
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import justificante as justificante_module
 from ...application.live.justificante import (
@@ -47,7 +47,7 @@ from ...application.modelo.filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.capabilities import OperationOwnedResource
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
@@ -56,11 +56,10 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_errors import ProfileAccessRefusedError
+from ...application.operations.registry import OperationRegistry
 from ...core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -71,6 +70,8 @@ from ...domain.justificante.schema import Justificante
 from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
 )
+from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -80,71 +81,14 @@ _YEAR = 2026
 _PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _EXPEDIENTE = "202613000010001A"
 _CSV = "ABCD1234EFGH5678"
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _FILING_RECORD_ID = "6" * 64
 _PDF = b"%PDF-1.4\nsynthetic AEAT receipt\n%%EOF"
 _PDF_SHA256 = hashlib.sha256(_PDF).hexdigest()
 
 
-class _ExecutionAuthority:
-    """Real supervisor authority port with an optional deterministic refusal."""
-
-    def __init__(self, events: list[str], *, refuse_guard: int | None = None) -> None:
-        self.events = events
-        self.refuse_guard = refuse_guard
-        self.guard_calls = 0
-        self.guard_depth = 0
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.guard_calls += 1
-        guard_number = self.guard_calls
-        self.events.append(f"commit-guard-enter:{guard_number}")
-        if guard_number == self.refuse_guard:
-            self.events.append(f"commit-guard-refused:{guard_number}")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-        self.guard_depth += 1
-        try:
-            yield
-        finally:
-            self.guard_depth -= 1
-            self.events.append(f"commit-guard-exit:{guard_number}")
-
-
-class _Resources:
-    """Synthetic browser process whose activation and supervisor cleanup are observable."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.active = False
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        assert not self.active
-        self.active = True
-        self.events.append("browser-activate")
-        try:
-            yield
-        finally:
-            self.active = False
-            self.events.append("browser-deactivate")
-
-    async def close(self) -> None:
-        assert not self.active
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("browser-close")
-
-
 class _SnapshotPersistence:
-    def __init__(self, *, bucket_id: str, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, *, bucket_id: str, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.bucket_id = bucket_id
         self.events = events
         self.authority = authority
@@ -190,8 +134,8 @@ class _ReadPort:
         self,
         events: list[str],
         *,
-        resources: _Resources,
-        authority: _ExecutionAuthority,
+        resources: ObservableBrowserResources,
+        authority: FencedExecutionAuthority,
     ) -> None:
         self.events = events
         self.resources = resources
@@ -230,7 +174,7 @@ class _ReadPort:
 
 
 class _Verifier:
-    def __init__(self, events: list[str], *, resources: _Resources) -> None:
+    def __init__(self, events: list[str], *, resources: ObservableBrowserResources) -> None:
         self.events = events
         self.resources = resources
 
@@ -243,7 +187,7 @@ class _Verifier:
 
 
 class _Metadata:
-    def __init__(self, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.events = events
         self.authority = authority
         self.saved: list[Justificante] = []
@@ -255,7 +199,7 @@ class _Metadata:
 
 
 class _Filing:
-    def __init__(self, events: list[str], authority: _ExecutionAuthority, *, bucket_id: str) -> None:
+    def __init__(self, events: list[str], authority: FencedExecutionAuthority, *, bucket_id: str) -> None:
         self.events = events
         self.authority = authority
         self.bucket_id = bucket_id
@@ -287,7 +231,7 @@ class _FilingReconciliation:
     def __init__(
         self,
         events: list[str],
-        authority: _ExecutionAuthority,
+        authority: FencedExecutionAuthority,
         pinned_authority: PinnedAuthorityOperation,
         *,
         bucket_id: str,
@@ -326,11 +270,6 @@ class _FilingReconciliation:
         )
 
 
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def _parsed_receipt() -> Justificante:
     return Justificante(
         csv=_CSV,
@@ -346,6 +285,128 @@ def _parsed_receipt() -> Justificante:
     )
 
 
+@dataclass(frozen=True)
+class _Capture:
+    """What one supervised justificante capture left behind, for outcome assertions."""
+
+    bucket_id: str
+    terminal: OperationPersistedSnapshot
+    submitted_id: str
+    events: list[str]
+    writes: list[str]
+    execution_authority: FencedExecutionAuthority
+    composition_calls: list[tuple[str, PinnedAuthorityOperation]]
+    authority: PinnedAuthorityOperation
+    metadata: _Metadata
+    journal: OperationJournalRepository
+    registry: OperationRegistry
+    operands: OperationSecureReferenceRepository
+
+
+def _assert_each_write_runs_inside_its_guard(capture: _Capture) -> None:
+    events, writes, execution_authority = capture.events, capture.writes, capture.execution_authority
+    # Four fresh local-write fences protect capture, authenticity,
+    # metadata, and filing evidence. The supervisor also fences its
+    # final encrypted result operand, which is a separate fifth guard.
+    assert execution_authority.guard_calls == 5
+    write_positions = [index for index, event in enumerate(events) if event in writes]
+    for guard_number, write_position in enumerate(write_positions[:3], start=1):
+        assert events.index(f"commit-guard-enter:{guard_number}") < write_position
+        assert write_position < events.index(f"commit-guard-exit:{guard_number}")
+    metadata_filing_guard = 4
+    assert events.index(f"commit-guard-enter:{metadata_filing_guard}") < write_positions[3]
+    assert write_positions[3] < write_positions[4]
+    assert write_positions[4] < events.index(f"commit-guard-exit:{metadata_filing_guard}")
+
+
+def _assert_safe_projection(capture: _Capture) -> None:
+    bucket_id, submitted_id, terminal = capture.bucket_id, capture.submitted_id, capture.terminal
+    metadata, journal, registry, operands = capture.metadata, capture.journal, capture.registry, capture.operands
+    result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
+    contract = registry.lookup_public_contract(JUSTIFICANTE_CAPTURE_DEFINITION_ID)
+    assert contract.result_schema is not None
+    projection_result = asyncio.run(
+        result_service.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=submitted_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=contract.result_schema,
+            ),
+            JustificanteCapturePublicResultV1,
+        )
+    )
+    assert isinstance(projection_result, OperationResultProjectionSuccessV1)
+    projection = projection_result.projection
+    assert isinstance(projection, JustificanteCapturePublicResultV1)
+    assert projection.bucket_id == bucket_id
+    assert projection.modelo == _MODELO
+    assert projection.filing_year == _YEAR
+    assert projection.period == _PERIOD.registry_token
+    assert projection.expediente_id == _EXPEDIENTE
+    assert projection.csv == _CSV
+    assert projection.pdf_sha256 == _PDF_SHA256
+    assert projection.justificante_metadata_registered
+    assert projection.filing_evidence_stamped
+    assert projection.filing_record_id == _FILING_RECORD_ID
+    assert set(projection.model_dump()) == {
+        "bucket_id",
+        "snapshot_id",
+        "modelo",
+        "filing_year",
+        "period",
+        "expediente_id",
+        "csv",
+        "pdf_sha256",
+        "source_kind",
+        "state",
+        "captured_at",
+        "justificante_metadata_registered",
+        "calendar_evidence_available",
+        "modelo_filing_record_required",
+        "filing_evidence_stamped",
+        "filing_record_id",
+    }
+    assert "pdf_base64" not in projection.model_dump()
+    assert "pdf_bytes" not in projection.model_dump()
+    assert len(metadata.saved) == 2
+
+
+def _assert_succeeded_capture(capture: _Capture) -> None:
+    terminal, writes = capture.terminal, capture.writes
+    composition_calls, authority = capture.composition_calls, capture.authority
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.UPDATED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
+    assert writes == [
+        "snapshot-save",
+        "authenticity-save",
+        "metadata-save",
+        "metadata-save",
+        "filing-reconcile",
+    ]
+    _assert_each_write_runs_inside_its_guard(capture)
+    assert composition_calls[0][1] is authority
+
+    _assert_safe_projection(capture)
+
+
+def _assert_refused_capture(capture: _Capture) -> None:
+    terminal, events, writes = capture.terminal, capture.events, capture.writes
+    execution_authority, metadata = capture.execution_authority, capture.metadata
+    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.effect is OperationEffect.UNKNOWN
+    assert terminal.terminal_receipt.result_ref is None
+    assert execution_authority.guard_calls == 4
+    assert writes == ["snapshot-save", "authenticity-save", "metadata-save"]
+    assert "commit-guard-refused:4" in events
+    assert "filing-reconcile" not in events
+    assert len(metadata.saved) == 1
+
+
 @pytest.mark.parametrize("refuse_guard", [None, 4], ids=["all-writes-commit", "late-commit-refused"])
 def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_receipt_fields(
     tmp_path: Path,
@@ -356,7 +417,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         events: list[str] = []
-        execution_authority = _ExecutionAuthority(events, refuse_guard=refuse_guard)
+        execution_authority = FencedExecutionAuthority(events, refuse_guard=refuse_guard)
         persistence = _SnapshotPersistence(
             bucket_id=profile.bucket_id,
             events=events,
@@ -366,7 +427,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
             bucket_id=profile.bucket_id,
             repository=JustificanteCaptureSnapshotRepository(persistence=persistence),
         )
-        resources = _Resources(events)
+        resources = ObservableBrowserResources(events)
         read_port = _ReadPort(events, resources=resources, authority=execution_authority)
         metadata = _Metadata(events, execution_authority)
         filing = _Filing(events, execution_authority, bucket_id=profile.bucket_id)
@@ -424,38 +485,27 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
         admitted = resolve_operation_access(
             registry=registry,
             request=request,
-            context=OperationAccessContext(
+            context=operation_access_context(
+                registration.contract,
                 profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
                 frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
                 authority_operation=authority,
             ),
         )
         assert admitted.request.profile_id == profile_id
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
+        journal, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
             execution_authority=execution_authority,
         )
         operation_id = "3" * 64 if refuse_guard is None else "4" * 64
         submitted_id = asyncio.run(supervisor.submit(request, operation_id=operation_id))
-        terminal = asyncio.run(_run_to_terminal(supervisor, submitted_id))
+        terminal = asyncio.run(run_to_terminal(supervisor, submitted_id))
 
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert composition_calls == [(profile.bucket_id, authority)]
@@ -474,88 +524,21 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
                 "filing-reconcile",
             }
         ]
+        capture = _Capture(
+            bucket_id=profile.bucket_id,
+            terminal=terminal,
+            submitted_id=submitted_id,
+            events=events,
+            writes=writes,
+            execution_authority=execution_authority,
+            composition_calls=composition_calls,
+            authority=authority,
+            metadata=metadata,
+            journal=journal,
+            registry=registry,
+            operands=operands,
+        )
         if refuse_guard is None:
-            assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-            assert terminal.effect is OperationEffect.UPDATED
-            assert terminal.terminal_receipt is not None
-            assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
-            assert writes == [
-                "snapshot-save",
-                "authenticity-save",
-                "metadata-save",
-                "metadata-save",
-                "filing-reconcile",
-            ]
-            # Four fresh local-write fences protect capture, authenticity,
-            # metadata, and filing evidence. The supervisor also fences its
-            # final encrypted result operand, which is a separate fifth guard.
-            assert execution_authority.guard_calls == 5
-            write_positions = [index for index, event in enumerate(events) if event in writes]
-            for guard_number, write_position in enumerate(write_positions[:3], start=1):
-                assert events.index(f"commit-guard-enter:{guard_number}") < write_position
-                assert write_position < events.index(f"commit-guard-exit:{guard_number}")
-            metadata_filing_guard = 4
-            assert events.index(f"commit-guard-enter:{metadata_filing_guard}") < write_positions[3]
-            assert write_positions[3] < write_positions[4]
-            assert write_positions[4] < events.index(f"commit-guard-exit:{metadata_filing_guard}")
-            assert composition_calls[0][1] is authority
-
-            result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
-            contract = registry.lookup_public_contract(JUSTIFICANTE_CAPTURE_DEFINITION_ID)
-            assert contract.result_schema is not None
-            projection_result = asyncio.run(
-                result_service.resolve(
-                    OperationResultProjectionRequestV1(
-                        operation_id=submitted_id,
-                        terminal_revision=terminal.revision,
-                        definition_contract_digest=contract.definition_contract_digest,
-                        result_schema=contract.result_schema,
-                    ),
-                    JustificanteCapturePublicResultV1,
-                )
-            )
-            assert isinstance(projection_result, OperationResultProjectionSuccessV1)
-            projection = projection_result.projection
-            assert isinstance(projection, JustificanteCapturePublicResultV1)
-            assert projection.bucket_id == profile.bucket_id
-            assert projection.modelo == _MODELO
-            assert projection.filing_year == _YEAR
-            assert projection.period == _PERIOD.registry_token
-            assert projection.expediente_id == _EXPEDIENTE
-            assert projection.csv == _CSV
-            assert projection.pdf_sha256 == _PDF_SHA256
-            assert projection.justificante_metadata_registered
-            assert projection.filing_evidence_stamped
-            assert projection.filing_record_id == _FILING_RECORD_ID
-            assert set(projection.model_dump()) == {
-                "bucket_id",
-                "snapshot_id",
-                "modelo",
-                "filing_year",
-                "period",
-                "expediente_id",
-                "csv",
-                "pdf_sha256",
-                "source_kind",
-                "state",
-                "captured_at",
-                "justificante_metadata_registered",
-                "calendar_evidence_available",
-                "modelo_filing_record_required",
-                "filing_evidence_stamped",
-                "filing_record_id",
-            }
-            assert "pdf_base64" not in projection.model_dump()
-            assert "pdf_bytes" not in projection.model_dump()
-            assert len(metadata.saved) == 2
+            _assert_succeeded_capture(capture)
         else:
-            assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
-            assert terminal.effect is OperationEffect.UNKNOWN
-            assert terminal.terminal_receipt is not None
-            assert terminal.terminal_receipt.effect is OperationEffect.UNKNOWN
-            assert terminal.terminal_receipt.result_ref is None
-            assert execution_authority.guard_calls == 4
-            assert writes == ["snapshot-save", "authenticity-save", "metadata-save"]
-            assert "commit-guard-refused:4" in events
-            assert "filing-reconcile" not in events
-            assert len(metadata.saved) == 1
+            _assert_refused_capture(capture)

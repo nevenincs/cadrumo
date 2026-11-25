@@ -8,40 +8,32 @@ builds are counted by observing the real builder, never by replacing it.
 
 from __future__ import annotations
 
-import sys
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from types import FrameType
 from typing import Any, cast
 
 import pytest
 
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
-from ..overview.calendar import build_overview_calendar
 from ..overview.home import HomeAccountSession, HomeSessionPosture
-from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchMemoSlot
+from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner, WorkbenchMemoSlot
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
 from ..workbench_generation_contracts import WorkbenchGenerationV1
 from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from .workbench_generation_support import calendar_builds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 @dataclass
@@ -107,26 +99,6 @@ def _session(operation: PinnedAuthorityOperation) -> _Session:
     )
 
 
-def _calendar_builds(action: Callable[[], object]) -> int:
-    """Count calls into the real calendar builder while ``action`` runs."""
-    code = build_overview_calendar.__code__
-    builds = 0
-    previous = sys.getprofile()
-
-    def observe(frame: FrameType, event: str, arg: object) -> None:
-        nonlocal builds
-        del arg
-        if event == "call" and frame.f_code is code:
-            builds += 1
-
-    sys.setprofile(observe)
-    try:
-        action()
-    finally:
-        sys.setprofile(previous)
-    return builds
-
-
 def _without_compute_instants(value: object) -> object:
     """Drop the instants a calendar records for when it was computed; nothing else."""
     if isinstance(value, dict):
@@ -146,9 +118,9 @@ def test_an_unchanged_session_reuses_its_calendar_and_publishes_the_same_generat
     session = _session(authority_operation)
     memory = WorkbenchCaptureMemory()
 
-    first_builds = _calendar_builds(lambda: session.capture(memory))
+    first_builds = calendar_builds(lambda: session.capture(memory))
     reused: list[WorkbenchGenerationV1] = []
-    reuse_builds = _calendar_builds(lambda: reused.append(session.capture(memory)))
+    reuse_builds = calendar_builds(lambda: reused.append(session.capture(memory)))
     fresh = session.capture(None)
 
     assert first_builds > 0
@@ -159,8 +131,8 @@ def test_an_unchanged_session_reuses_its_calendar_and_publishes_the_same_generat
 def test_the_counter_detects_rebuilding_on_every_capture(authority_operation: PinnedAuthorityOperation) -> None:
     session = _session(authority_operation)
 
-    first = _calendar_builds(lambda: session.capture(None))
-    second = _calendar_builds(lambda: session.capture(None))
+    first = calendar_builds(lambda: session.capture(None))
+    second = calendar_builds(lambda: session.capture(None))
 
     assert first > 0
     assert second == first, "without a memory every capture rebuilds, and the counter sees it"
@@ -181,7 +153,7 @@ def test_any_changed_input_rebuilds_the_calendar(authority_operation: PinnedAuth
     else:
         session.now = _NOW + timedelta(days=1)
     changed: list[WorkbenchGenerationV1] = []
-    builds = _calendar_builds(lambda: changed.append(session.capture(memory)))
+    builds = calendar_builds(lambda: changed.append(session.capture(memory)))
 
     assert builds > 0, f"a changed {change} must not be served from memory"
     assert _comparable(changed[0]) == _comparable(session.capture(None))
@@ -193,8 +165,8 @@ def test_a_closed_memory_serves_and_keeps_nothing(authority_operation: PinnedAut
     session.capture(memory)
     memory.close()
 
-    after_close = _calendar_builds(lambda: session.capture(memory))
-    again = _calendar_builds(lambda: session.capture(memory))
+    after_close = calendar_builds(lambda: session.capture(memory))
+    again = calendar_builds(lambda: session.capture(memory))
 
     assert after_close > 0
     assert again == after_close, "a closed memory must not start storing again"
@@ -237,3 +209,298 @@ def test_a_slot_builds_once_per_unchanged_key() -> None:
     assert slot.reuse(tomorrow, build(tomorrow)) == "2026-09-04"
     assert slot.reuse(today, build(today)) == "2026-09-03"
     assert builds == [today, tomorrow, today]
+
+
+def test_a_slot_names_the_key_of_the_result_it_keeps() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    assert slot.kept_key() is None
+    slot.reuse("first", lambda: "a")
+    assert slot.kept_key() == "first"
+    slot.reuse("second", lambda: "b")
+    assert slot.kept_key() == "second"
+    slot.clear()
+    assert slot.kept_key() is None
+
+
+def test_a_refreshed_result_is_served_without_building_again() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    builds: list[str] = []
+
+    def build() -> str:
+        builds.append("next")
+        return "built"
+
+    assert slot.refresh("next", lambda: "refreshed", current=lambda: True)
+    assert slot.reuse("next", build) == "refreshed"
+    assert builds == []
+    assert not slot.refresh("next", lambda: "again", current=lambda: True), "a kept key was refreshed again"
+
+
+def test_a_refresh_overtaken_by_a_newer_input_keeps_nothing() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+
+    assert not slot.refresh("next", lambda: "stale", current=lambda: False)
+    assert slot.kept_key() is None
+    assert slot.reuse("next", lambda: "built") == "built"
+
+
+def test_a_read_for_the_key_being_refreshed_joins_the_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+    builds: list[str] = []
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        builds.append("refresh")
+        return "refreshed"
+
+    def read() -> str:
+        builds.append("read")
+        return "built"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    served: list[str] = []
+    joining = threading.Thread(target=lambda: served.append(slot.reuse("next", read)))
+    joining.start()
+    release.set()
+    joining.join()
+    refresh.join()
+
+    assert served == ["refreshed"]
+    assert builds == ["refresh"]
+
+
+def test_a_read_for_another_key_never_waits_for_a_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        return "refreshed"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    try:
+        assert slot.reuse("other", lambda: "built") == "built"
+        assert not slot.refresh("other", lambda: "second", current=lambda: True), "two refreshes ran at once"
+    finally:
+        release.set()
+        refresh.join()
+
+
+def test_a_read_joining_a_failed_refresh_builds_itself() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+
+    def failing() -> str:
+        started.set()
+        release.wait()
+        raise RuntimeError("refresh failed")
+
+    def refresh() -> None:
+        with pytest.raises(RuntimeError):
+            slot.refresh("next", failing, current=lambda: True)
+
+    refreshing = threading.Thread(target=refresh)
+    refreshing.start()
+    started.wait()
+    served: list[str] = []
+    joining = threading.Thread(target=lambda: served.append(slot.reuse("next", lambda: "built")))
+    joining.start()
+    release.set()
+    joining.join()
+    refreshing.join()
+
+    assert served == ["built"]
+
+
+def test_a_closed_slot_keeps_no_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    slot.close()
+
+    assert not slot.refresh("next", lambda: "refreshed", current=lambda: True)
+    assert slot.kept_key() is None
+
+
+def test_an_ended_or_replaced_session_starts_no_form_refresh() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    ran: list[str] = []
+    owner.for_profile("first").keep_form_refresh(lambda: ran.append("first"))
+    owner.for_profile("second")
+    assert owner.refresh_settled_form() is None
+
+    owner.for_profile("second").keep_form_refresh(lambda: ran.append("second"))
+    owner.close()
+    assert owner.refresh_settled_form() is None
+
+    memory = owner.for_profile("third")
+    memory.keep_form_refresh(lambda: ran.append("third"))
+    started = owner.refresh_settled_form()
+    assert started is not None
+    started.join()
+    memory.close()
+    memory.keep_form_refresh(lambda: ran.append("after close"))
+    assert memory.refresh_form() is None
+    assert ran == ["third"]
+
+
+def test_a_read_waiting_for_a_refresh_marks_it_joined() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+    joined: list[bool] = []
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        return "refreshed"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    joined.append(slot.refresh_joined())
+    reading = threading.Thread(target=lambda: slot.reuse("next", lambda: "built"))
+    reading.start()
+    for _ in range(1000):
+        if slot.refresh_joined():
+            break
+        threading.Event().wait(0.01)
+    joined.append(slot.refresh_joined())
+    release.set()
+    reading.join()
+    refresh.join()
+
+    assert joined == [False, True]
+    assert not slot.refresh_joined()
+
+
+def test_a_refresh_waits_while_requests_are_served_and_goes_on_once_they_are_quiet() -> None:
+    busy = threading.Event()
+    busy.set()
+    memory = WorkbenchCaptureMemory(deferred=busy.is_set)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False)))
+    waiting.start()
+    waiting.join(timeout=0.3)
+    assert waiting.is_alive(), "a refresh went on while requests were being served"
+    busy.clear()
+    waiting.join(timeout=10)
+
+    assert answered == [True]
+
+
+def test_a_refresh_holds_on_through_its_extra_quiet_period() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: False)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(
+        target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False, quiet_for=0.4))
+    )
+    waiting.start()
+    waiting.join(timeout=0.2)
+    assert waiting.is_alive(), "a refresh started before its extra quiet period passed"
+    waiting.join(timeout=10)
+
+    assert answered == [True]
+
+
+def test_a_refresh_a_read_waits_for_goes_on_however_busy_requests_are() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: True)
+
+    assert memory.yield_to_requests(unless=lambda: True, quiet_for=60)
+
+
+def test_a_refresh_waiting_for_quiet_stops_when_its_session_ends() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: True)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False)))
+    waiting.start()
+    memory.close()
+    waiting.join(timeout=10)
+
+    assert answered == [False]
+
+
+def test_a_memory_without_a_request_signal_never_holds_a_refresh_back() -> None:
+    memory = WorkbenchCaptureMemory()
+
+    assert memory.yield_to_requests(unless=lambda: False, quiet_for=60)
+
+
+def _kept(memory: WorkbenchCaptureMemory) -> bool:
+    """Whether the memory still stores and serves work: a second reuse of one key builds nothing."""
+    key = cast(Any, object())
+    builds: list[int] = []
+
+    def build() -> Any:
+        builds.append(1)
+        return cast(Any, object())
+
+    memory.calendar.reuse(key, build)
+    memory.calendar.reuse(key, build)
+    return len(builds) == 1
+
+
+def test_an_owner_hands_one_profile_the_same_open_memory() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+
+    memory = owner.for_profile(_PROFILE_ID)
+
+    assert owner.for_profile(_PROFILE_ID) is memory
+    assert _kept(memory)
+
+
+def test_form_memory_cannot_be_filled_after_session_close_or_reused_after_handover() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    memory = owner.for_profile(_PROFILE_ID)
+    builds: list[str] = []
+
+    def end_session_during_build() -> None:
+        builds.append("closed-during-build")
+        owner.close()
+
+    memory.form_projection.reuse("same-input", end_session_during_build)
+    memory.form_projection.clear()
+    memory.form_projection.reuse("same-input", lambda: builds.append("closed-reader"))
+    assert builds == ["closed-during-build", "closed-reader"]
+    fresh = owner.for_profile(_PROFILE_ID)
+    fresh.form_projection.reuse("same-input", lambda: builds.append("fresh"))
+    fresh.form_projection.reuse("same-input", lambda: builds.append("must-not-build"))
+    assert builds[-1] == "fresh"
+    owner.for_profile("22222222-2222-4222-8222-222222222222")
+    fresh.form_projection.reuse("same-input", lambda: builds.append("handed-over"))
+    assert builds[-1] == "handed-over"
+
+
+def test_another_profile_closes_the_memory_the_first_kept() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    first = owner.for_profile(_PROFILE_ID)
+
+    second = owner.for_profile("22222222-2222-4222-8222-222222222222")
+
+    assert second is not first
+    assert not _kept(first), "a closed memory stores nothing for the previous profile"
+    assert _kept(second)
+
+
+def test_a_session_end_closes_the_memory_and_the_next_read_starts_empty() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    before = owner.for_profile(_PROFILE_ID)
+    key = cast(Any, object())
+    kept = cast(Any, object())
+    before.calendar.reuse(key, lambda: kept)
+
+    owner.close()
+
+    after = owner.for_profile(_PROFILE_ID)
+    assert after is not before
+    assert not _kept(before), "a capture still holding the closed memory stores nothing"
+    assert after.calendar.reuse(key, lambda: cast(Any, object())) is not kept, "nothing kept before the end is served"
+    owner.close()
+    owner.close()

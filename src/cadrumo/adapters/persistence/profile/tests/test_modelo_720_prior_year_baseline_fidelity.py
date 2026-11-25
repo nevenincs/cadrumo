@@ -51,6 +51,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -68,23 +69,22 @@ from .....application.foreign_asset_thresholds import foreign_asset_declaration_
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from .....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
-from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from ._observation_lookup_support import find_observation
 from .cross_period_clean_state_support import (
     BUCKET_ID as CLEAN_STATE_BUCKET_ID,
 )
 from .cross_period_clean_state_support import evaluate_clean_state
+from .multi_year_roundtrip_support import assert_omitted_casilla_is_detected, assert_two_ejercicio_round_trip
+from .observation_lookup_support import find_observation, save_app_filing_observation, saved_two_ejercicios
 from .published_authority_support import published_authority_operation
 from .relation_prefill_support import empty_profile_read_ports
 
@@ -104,7 +104,7 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
-with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+with bundled_indexed_authority().operation() as _module_authority_operation_for_test:
     _M720_THRESHOLDS = foreign_asset_declaration_thresholds(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
@@ -440,6 +440,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     )
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: Path) -> None:
     """Asset identifiers survive the roundtrip unchanged across both annual cycles.
 
@@ -451,30 +462,10 @@ def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: 
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # Cuentas identifier: Decimal("12345678901234") must survive unchanged.
         ident_cuentas_n = loaded_n.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
         ident_cuentas_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
@@ -500,14 +491,7 @@ def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _year_n_observation(),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(_year_n_observation()),
-            )
-        )
+        save_app_filing_observation(repo, _year_n_observation(), captured_at=_CLOCK_N)
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
@@ -543,30 +527,10 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # Use cuentas.valoracion to measure the cuentas-class delta specifically.
         val_n = loaded_n.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
         val_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
@@ -575,7 +539,7 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
 
         delta = val_n1 - val_n
         assert delta > _REDECLARATION_DELTA_EUR, (
-            f"year-N+1 minus year-N delta ({delta}) must exceed €{_REDECLARATION_DELTA_EUR} "
+            f"year-N+1 minus year-N delta ({delta}) must exceed {_REDECLARATION_DELTA_EUR} € "
             f"to satisfy art. 42-bis.5 re-declaration trigger condition in the test scenario"
         )
 
@@ -584,18 +548,11 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     obs_n = _year_n_observation_with_explicit_inmuebles_zero()
     assert obs_n.casilla_values[_INMUEBLES_VALORACION_CASILLA] == _INMUEBLES_N
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
+        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         report = resolve_bindings_from_local_store(
             snapshot_n1,
@@ -617,7 +574,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert {item.dependency_treatment for item in report.prefilled} == {"factual_evidence"}
 
     prior_baseline = _prior_baseline_observation_from_bindings(dict(report.binding_values))
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         findings = modelo_720_redeclaration_advisory_findings(
             prior_observation=prior_baseline,
             current_observation=_year_n_plus_1_advisory_observation(),
@@ -662,19 +619,12 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
     }
 
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
     ):
         primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         secondary_repository = CalculationObservationRepository(objects=runtime.secondary.repository)
-        primary_repository.save(
-            primary_repository.prepare_observation_envelope(
-                prior_observation,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(prior_observation),
-            )
-        )
+        save_app_filing_observation(primary_repository, prior_observation, captured_at=_CLOCK_N)
         primary_resolution = PreviousFilingSourceResolver(
             repository=primary_repository,
             registry_snapshot=snapshot,
@@ -721,18 +671,11 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
     assert _INMUEBLES_VALORACION_CASILLA not in obs_n.casilla_values
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
+        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with (
-            _indexed_authority_for_test().operation() as _authority_operation_for_test,
+            bundled_indexed_authority().operation() as _authority_operation_for_test,
             pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"),
         ):
             resolve_bindings_from_local_store(
@@ -754,15 +697,8 @@ def _prior_year_baseline_consumer_outcome(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=CLEAN_STATE_BUCKET_ID):
         repository = CalculationObservationRepository()
         if prior_observation is not None:
-            repository.save(
-                repository.prepare_observation_envelope(
-                    prior_observation,
-                    source_kind="app_filing",
-                    captured_at=_CLOCK_N,
-                    stamped_revision_id=revision_id_for_observation(prior_observation),
-                )
-            )
-        with _indexed_authority_for_test().operation() as operation:
+            save_app_filing_observation(repository, prior_observation, captured_at=_CLOCK_N)
+        with bundled_indexed_authority().operation() as operation:
             resolution = PreviousFilingSourceResolver(
                 repository=repository,
                 registry_snapshot=snapshot,
@@ -841,7 +777,7 @@ def test_absent_prior_year_filing_stays_unresolved_and_blocking_while_explicit_z
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             modelo_720_redeclaration_advisory_findings(
                 prior_observation=_year_n_advisory_observation(),
@@ -865,38 +801,12 @@ def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_del
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: omitting the valoracion casilla produces strict inequality."""
-    obs_n = _year_n_observation()
-    obs_n_no_val = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period="0A",
-        observations=tuple(
-            o
-            for o in obs_n.observations
-            if o.casilla_id not in (_CUENTAS_VALORACION_CASILLA, _VALORES_VALORACION_CASILLA)
-        ),
+    assert_omitted_casilla_is_detected(
+        tmp_path,
+        _year_n_observation(),
+        omitted=(_CUENTAS_VALORACION_CASILLA, _VALORES_VALORACION_CASILLA),
+        captured_at=_CLOCK_N,
     )
-
-    assert obs_n != obs_n_no_val, "the full observation and the valoracion-omitted observation must be strictly unequal"
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation != obs_n_no_val, (
-            "loaded observation equals the valoracion-omitted stub — "
-            "the roundtrip silently dropped cuentas.valoracion / valores.valoracion"
-        )
-        assert loaded.observation == obs_n
 
 
 def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_manifest(
@@ -939,34 +849,17 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # --- Year N -------------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+1 -----------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        assert loaded_n1 is not None
-        assert loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=obs_n,
+        obs_n_plus_1=obs_n1,
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
     # --- Enrollment recording (outside the profile context) ---------------

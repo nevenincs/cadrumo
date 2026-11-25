@@ -14,8 +14,11 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from cadrumo.application.modelo.calculation import visible_calculation_casilla_values
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.revision_inventory_operation import (
     MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionsProjection,
@@ -36,20 +39,18 @@ from cadrumo.application.modelo.work_verification_contracts import (
     ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
 )
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
-from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     MODELO_OPERATION_TEST_ACTOR,
@@ -57,11 +58,12 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_verification_report,
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
-from ..adapter_composition import build_calculation_action_ports, build_verification_repository_bundle
+from ..adapter_composition_work_ports import build_calculation_action_ports, build_verification_repository_bundle
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
-from .registered_executor_seeding_support import _seeded_modelo_filing_record
+from .registered_executor_seeding_support import seeded_modelo_filing_record
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -88,15 +90,7 @@ def test_verification_projects_persisted_report_and_authoritative_noop(
         request = OperationRequest(definition_id="modelo.work.verify", subject_ref=unit.work_unit_id, payload=payload)
         contract = registry.lookup_public_contract(request.definition_id)
         assert contract.result_schema is not None
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.periods == frozenset({unit.period})
         assert AccessAction.COMMIT in access.policy.actions
@@ -108,7 +102,7 @@ def test_verification_projects_persisted_report_and_authoritative_noop(
             )
         assert denied.value.reason is AccessDenialCode.OPERATION_DENIED
         repositories = build_verification_repository_bundle(str(profile_id), operation=operation)
-        bound = compose_modelo_revision_access(lambda _profile_id, *, operation: repositories)
+        bound = compose_modelo_revision_access(lambda _profile_id, *, operation, mutation_writer=None: repositories)
         with pytest.raises(ProfileAccessRefusedError) as foreign:
             bound(request, replace(context, profile_id=uuid4()))
         assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -162,13 +156,16 @@ def test_revision_snapshot_reads_exact_historical_revision_under_sealed_period(
         unit = WorkUnitCatalogueRepository().load().get(historical.work_unit_id)
         assert unit is not None
 
-        newer = calculate_modelo_revision(
+        seed_m130_income_transaction(
+            amount=Decimal("1000.00"), filing_year=unit.filing_year, source_key="newer", bucket_id=str(profile_id)
+        )
+        newer = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             historical.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=str(profile_id), operation=operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
-            casilla_inputs={validated_casilla_id("06"): Decimal("0")},
+            casilla_inputs={},
             binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        )
+        ).revision
         assert newer.calculation_revision_id != historical_revision_id
         assert newer.created_at > historical.created_at
         persisted_revisions = CalculationRevisionCatalogueRepository().load().for_work_unit(historical.work_unit_id)
@@ -187,15 +184,7 @@ def test_revision_snapshot_reads_exact_historical_revision_under_sealed_period(
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        submit_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        submit_context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         submitted_access = resolve_operation_access(registry=registry, request=request, context=submit_context)
         assert submitted_access.request.periods == frozenset({unit.period})
         assert AccessAction.COMMIT not in submitted_access.policy.actions
@@ -272,7 +261,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
         registry,
         profile_id,
     ):
-        filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
+        filing_record_id, casilla_id = seeded_modelo_filing_record(profile_id, operation=operation)
         filing = ModeloRecordCatalogueRepository().load().get(filing_record_id)
         assert filing is not None
         revision = CalculationRevisionCatalogueRepository().load().get(filing.calculation_revision_id)
@@ -282,7 +271,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
 
         payload = ModeloWorkAmendRequest(
             baseline=ModeloWorkAmendBaseline(from_filing_record_id=filing_record_id),
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             overrides=(ModeloWorkAmendOverride(casilla_id=casilla_id, value="101"),),
             reason="corrected source amount",
             actor=MODELO_OPERATION_TEST_ACTOR,
@@ -293,15 +282,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
 
         access = resolve_operation_access(registry=registry, request=request, context=context)
 
@@ -312,7 +293,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
         assert AccessAction.COMMIT in access.policy.actions
 
         repositories = build_verification_repository_bundle(str(profile_id), operation=operation)
-        bound = compose_modelo_revision_access(lambda _profile_id, *, operation: repositories)
+        bound = compose_modelo_revision_access(lambda _profile_id, *, operation, mutation_writer=None: repositories)
         with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
             bound(request, replace(context, profile_id=uuid4()))
         assert foreign_profile.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -353,15 +334,7 @@ def test_unfiltered_revision_inventory_requires_all_periods_and_returns_complete
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.period_independent is True
         assert access.request.periods == frozenset()

@@ -25,12 +25,13 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.transactions.date_partition import LedgerDatePartition
 from ...domain.transactions.errors import (
     TransactionIdPrefixError,
     TransactionNotFoundError,
     TransactionValidationError,
 )
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -71,7 +72,7 @@ from .lifecycle_projections import (
 )
 from .models import ManualLedgerTransactionResult
 from .protocols import TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 
 class LedgerLifecycleValidationRefusedError(CadrumoError):
@@ -188,15 +189,12 @@ class _LedgerLifecycleExecutor:
         self._ports_factory = ports_factory
         self._execution_caller_reader = execution_caller_reader
 
-    async def execute(
+    def _require_identity(
         self,
         request: OperationRequest[BaseModel],
         context: OperationExecutorContext,
-    ) -> str | OperationRefusalEvidence:
-        payload = request.payload
-        if not isinstance(payload, LedgerLifecycleMutationRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        bucket_id = str(payload.profile_id)
+        bucket_id: str,
+    ) -> None:
         subject = profile_operation_subject(bucket_id)
         if (
             request.definition_id != self._operation_id
@@ -206,6 +204,17 @@ class _LedgerLifecycleExecutor:
             or require_active_bucket_id() != bucket_id
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | OperationRefusalEvidence:
+        payload = request.payload
+        if not isinstance(payload, LedgerLifecycleMutationRequest):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        bucket_id = str(payload.profile_id)
+        self._require_identity(request, context, bucket_id)
         await context.events.phase(self._operation_id)
         actor = execution_actor_label(
             self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
@@ -280,6 +289,7 @@ class _LedgerLifecycleExecutor:
             self._operation_id,
             settled,
             tracked.replaced(prepared.transaction_id),
+            language=payload.output_language,
         )
         result = LedgerLifecycleOperationResult(
             outcome="updated",
@@ -473,9 +483,9 @@ def _resolve_lifecycle_access(
     *,
     operation_id: LedgerLifecycleOperationId,
 ) -> ResolvedOperationAccess:
-    if request.definition_id != operation_id or not isinstance(request.payload, LedgerLifecycleMutationRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=operation_id, request_type=LedgerLifecycleMutationRequest
+    )
 
 
 def resolve_ledger_archive_access(

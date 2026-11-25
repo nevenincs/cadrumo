@@ -51,6 +51,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from functools import lru_cache
 from types import MappingProxyType
 from typing import Annotated, Final
 
@@ -59,13 +60,9 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
-from ....core.remote_authority import first_aeat_host
 from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
-from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .ids import (
-    CrossReferenceId,
-    OracleId,
     SourceRefId,
     VerificationExpectationId,
     VerificationPredicateId,
@@ -74,7 +71,6 @@ from .ids import (
     WorkbookParityRefId,
 )
 from .schema_base import (
-    EvidenceTierField,
     LegalRefs,
     RegistryModel,
     SettlementDirection,
@@ -85,13 +81,13 @@ from .schema_base import (
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [
+    "FLOOR_SUBTRACTION_GROUP_ORDER",
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "VERIFICATION_PREDICATE_SPECIFICATIONS",
     "DiscrepancyCause",
-    "LiveCrossReferenceDecision",
+    "FloorSubtractionGroup",
     "ParsedVerificationPredicate",
-    "ProfilePredicateDefinition",
     "RegistryVerificationPolicy",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
@@ -104,44 +100,6 @@ __all__ = [
     "parse_verification_predicate_expression",
     "verification_predicate_operator_name",
 ]
-
-
-ProfileFactValue = bool | int | str
-
-
-READ_ONLY_HTTP_METHODS: Final[frozenset[str]] = frozenset({"GET", "HEAD", "OPTIONS"})
-"""The HTTP methods that cannot change state on an AEAT surface.
-
-Not an enum: HTTP methods are an external vocabulary this codebase does not close, and
-declaring one here would assert a completeness the registry has no authority over. What
-is closed is THIS set -- the methods a read surface may use -- and it was written out
-here and again as a private set in `remote_state_guard`, where the read-only mandate is
-enforced. Two copies of a security allowlist is one copy too many.
-"""
-
-SIMULATOR_HTTP_METHODS: Final[frozenset[str]] = READ_ONLY_HTTP_METHODS | {"POST"}
-"""Read-only methods plus POST, which a simulator may accept.
-
-Derived from the read-only set rather than relisted, so a method admitted to the
-read-only allowlist cannot be accidentally withheld from the simulator one -- and, more
-importantly, so a method removed from read-only cannot silently survive here.
-"""
-
-
-class ProfilePredicateOp(StrEnum):
-    """The comparison a profile predicate performs."""
-
-    EQUALS = "equals"
-    NOT_EQUALS = "not_equals"
-    INCLUDES = "includes"
-    """The observed value is a token set that contains the predicate token.
-
-    An absent set contains nothing, so it never matches.
-    """
-
-
-ProfilePredicateOpField = Annotated[ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))]
-"""Registry token hydrated into a ProfilePredicateOp member."""
 
 
 class WorkbookFormulaCoverage(StrEnum):
@@ -175,284 +133,6 @@ VerificationFindingKindField = Annotated[
     VerificationFindingKind, BeforeValidator(coerce_enum_member(VerificationFindingKind))
 ]
 """Registry token hydrated into a VerificationFindingKind member."""
-
-
-class LiveVerificationSurface(StrEnum):
-    """The kind of AEAT surface a live cross-reference verifies against.
-
-    Declared because six tokens were compared as bare strings across this module and
-    its two neighbours, and two of the groupings below were written out three times
-    each. The `surface` annotations stay `str` deliberately: a member compares equal to
-    its token, so nothing about validation changes here, and retyping a validated field
-    is a separate decision from naming the vocabulary.
-    """
-
-    OPEN_SIMULATOR = "open_simulator"
-    INTEGRATION_TEST_SERVICE = "integration_test_service"
-    AUTHENTICATED_SIMULATOR = "authenticated_simulator"
-    PUBLIC_READ_SURFACE = "public_read_surface"
-    AUTHENTICATED_READ_SURFACE = "authenticated_read_surface"
-    STATIC_OFFICIAL_DOCUMENTATION = "static_official_documentation"
-
-
-READ_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
-    {
-        LiveVerificationSurface.PUBLIC_READ_SURFACE,
-        LiveVerificationSurface.AUTHENTICATED_READ_SURFACE,
-    },
-)
-"""Surfaces that read live AEAT data rather than a simulator or a static document.
-
-Written out at three sites in this module before this existed. These are the surfaces
-that must refuse synthetic data and are restricted to safe HTTP methods, so a surface
-added to this set inherits both rules at once instead of one of them.
-"""
-
-SIMULATOR_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
-    {
-        LiveVerificationSurface.OPEN_SIMULATOR,
-        LiveVerificationSurface.INTEGRATION_TEST_SERVICE,
-        LiveVerificationSurface.AUTHENTICATED_SIMULATOR,
-    },
-)
-"""Surfaces that are not AEAT production infrastructure."""
-
-LiveVerificationSurfaceField = Annotated[
-    LiveVerificationSurface,
-    BeforeValidator(coerce_enum_member(LiveVerificationSurface)),
-]
-"""The surface as a REGISTRY SCHEMA field.
-
-`LiveCrossReferenceDecision` validates strictly and is built from registry TOML, so the
-declared token needs the coercion hop to arrive as a member. The bare enum stays the
-form this module's own comparisons use, and the two subsets stay derived from it.
-"""
-
-
-def _validate_open_or_public_authentication(
-    surface: str,
-    requires_authentication: bool,
-    cross_reference_id: CrossReferenceId,
-) -> None:
-    if surface == LiveVerificationSurface.OPEN_SIMULATOR and requires_authentication:
-        raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} open simulator must not require authentication",
-        )
-    if surface == LiveVerificationSurface.PUBLIC_READ_SURFACE and requires_authentication:
-        raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} public read surface must not require authentication",
-        )
-
-
-def _validate_authenticated_read_authentication(
-    surface: str,
-    requires_authentication: bool,
-    requires_aeat_authorization: bool,
-    cross_reference_id: CrossReferenceId,
-) -> None:
-    if surface != "authenticated_read_surface":
-        return
-    if not requires_authentication:
-        raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} authenticated read surface must require authentication",
-        )
-    if not requires_aeat_authorization:
-        raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} authenticated read surface must require authorization",
-        )
-
-
-def _validate_authenticated_simulator_authentication(
-    surface: str,
-    requires_authentication: bool,
-    cross_reference_id: CrossReferenceId,
-) -> None:
-    if surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and not requires_authentication:
-        raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} authenticated simulator must require authentication",
-        )
-
-
-class ProfilePredicateDefinition(RegistryModel):
-    """Declare one profile condition that controls verification applicability."""
-
-    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: ProfilePredicateOpField
-    value: ProfileFactValue
-    explanation: str = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _includes_names_one_token(self) -> ProfilePredicateDefinition:
-        if self.op is ProfilePredicateOp.INCLUDES and (not isinstance(self.value, str) or not self.value.strip()):
-            raise RegistryValidationError(f"profile predicate on {self.field!r} uses 'includes' with a non-token value")
-        return self
-
-
-class LiveCrossReferenceDecision(RegistryModel):
-    """Declare a resolved live cross-reference and its supporting evidence."""
-
-    id: CrossReferenceId
-    evidence_tier: EvidenceTierField
-    surface: LiveVerificationSurfaceField
-    guard_policy_id: str
-    allowed_hosts: tuple[str, ...] = ()
-    allowed_methods: tuple[str, ...] = ()
-    forbidden_actions: tuple[str, ...] = Field(min_length=1)
-    synthetic_data_allowed: bool
-    requires_authentication: bool
-    requires_aeat_authorization: bool
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    # Optional: id of an oracle adapter registered in LiveParityCatalogue.
-    # When set, the calculation engine looks up the bound adapter to drive
-    # synthetic-payload verification under the cross-reference's policy.
-    # Resolution against the catalogue happens at calculation time, not at
-    # registry-load time, so the registry remains loadable when adapters
-    # are imported lazily.
-    oracle_id: OracleId | None = None
-    # Optional applicability gate: when non-empty the cross-reference is
-    # only applicable to a taxpayer profile whose values satisfy these
-    # predicates under the chosen mode. An empty tuple (the default) means
-    # the cross-reference is unconditionally applicable. Used to gate
-    # optional surfaces (GROI / IXVI for ROI-enrolled subjects, OSS
-    # bindings for OSS-enrolled subjects, etc.).
-    applicability_condition_mode: ConditionModeField = ConditionMode.ALL
-    applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
-
-    @field_validator("oracle_id")
-    @classmethod
-    @pydantic_validation_boundary
-    def _oracle_id_shape(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        # kebab-case ASCII identifier: lowercase alpha start, alphanumerics
-        # plus hyphens, no trailing hyphen.
-        if not value[0].isalpha() or not value[0].islower():
-            raise RegistryValidationError("oracle_id must start with a lowercase ASCII letter")
-        if value.endswith("-"):
-            raise RegistryValidationError("oracle_id must not end with a hyphen")
-        for char in value:
-            if not (char.islower() and char.isascii()) and not char.isdigit() and char != "-":
-                raise RegistryValidationError(
-                    f"oracle_id contains unsupported character {char!r}; "
-                    f"only lowercase ASCII letters, digits, and hyphens are permitted",
-                )
-        return value
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
-        self._validate_evidence_tier_alignment()
-        self._validate_allowed_hosts_declared()
-        self._validate_authentication_constraints()
-        self._validate_synthetic_data_constraints()
-        for method in self.allowed_methods:
-            self._validate_allowed_method(method)
-        if self.applicability_condition_mode is ConditionMode.ANY and not self.applicability_predicates:
-            raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
-        return self
-
-    def _validate_evidence_tier_alignment(self) -> None:
-        """The evidence_tier must match the surface's regulatory class.
-
-        Live surfaces (simulators, integration test services) carry
-        executable parity evidence; read surfaces and static
-        documentation carry observation evidence only.
-        """
-        if self.surface in SIMULATOR_SURFACES and self.evidence_tier != "executable_parity_evidence":
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} live surface requires executable parity evidence",
-            )
-        if self.surface in READ_SURFACES and self.evidence_tier == "executable_parity_evidence":
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface is observation evidence, not parity",
-            )
-        if (
-            self.surface == LiveVerificationSurface.STATIC_OFFICIAL_DOCUMENTATION
-            and self.evidence_tier == "executable_parity_evidence"
-        ):
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation is not executable parity evidence",
-            )
-
-    def _validate_allowed_hosts_declared(self) -> None:
-        """Every non-static surface must declare its allowed_hosts."""
-        if (
-            self.surface
-            in {
-                "open_simulator",
-                "integration_test_service",
-                "public_read_surface",
-                "authenticated_read_surface",
-                "authenticated_simulator",
-            }
-            and not self.allowed_hosts
-        ):
-            raise RegistryValidationError(f"cross-reference {self.id!r} must declare allowed_hosts")
-
-    def _validate_authentication_constraints(self) -> None:
-        """Per-surface auth + AEAT-authorization requirements.
-
-        Open simulators and public reads must not require auth;
-        authenticated reads must require both auth and AEAT
-        authorization; authenticated simulators must require auth.
-        """
-        _validate_open_or_public_authentication(self.surface, self.requires_authentication, self.id)
-        _validate_authenticated_read_authentication(
-            self.surface,
-            self.requires_authentication,
-            self.requires_aeat_authorization,
-            self.id,
-        )
-        _validate_authenticated_simulator_authentication(self.surface, self.requires_authentication, self.id)
-
-    def _validate_synthetic_data_constraints(self) -> None:
-        """Read surfaces and static docs must not accept synthetic data.
-
-        Additionally, no cross-reference whose ``allowed_hosts`` include an
-        AEAT-owned host (suffix match against ``agenciatributaria.gob.es``
-        or ``aeat.es``) may declare ``synthetic_data_allowed = true``.
-        Synthetic taxpayer, counterparty, declaration, profile, or form
-        data is prohibited on AEAT-hosted live surfaces; the surface
-        shape (``open_simulator`` / ``authenticated_simulator``) does not
-        license synthetic input against AEAT infrastructure.
-        """
-        if self.surface in READ_SURFACES and self.synthetic_data_allowed:
-            raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
-        if self.surface == LiveVerificationSurface.STATIC_OFFICIAL_DOCUMENTATION and self.synthetic_data_allowed:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation cannot accept synthetic data",
-            )
-        if self.synthetic_data_allowed:
-            aeat_host = first_aeat_host(self.allowed_hosts)
-            if aeat_host is not None:
-                raise RegistryValidationError(
-                    f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
-                    f"on AEAT-hosted allowed host {aeat_host!r}; synthetic data is prohibited "
-                    f"on AEAT-hosted live surfaces",
-                )
-
-    def _validate_allowed_method(self, method: str) -> None:
-        """Per-surface HTTP method allowlist + uppercase shape requirement."""
-        if method.upper() != method:
-            raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
-        if self.surface in READ_SURFACES and method not in READ_ONLY_HTTP_METHODS:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface method {method!r} is not read-only",
-            )
-        # authenticated_simulator declares the AEAT-prescribed query
-        # method (POST is the GROI / IXVI form-submit mechanism). The
-        # remote-state guard's HTTP-method check stays strict for
-        # ``kind="http"`` operations; only the cross-reference's
-        # allowed_methods declaration is widened.
-        if self.surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and method not in SIMULATOR_HTTP_METHODS:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated simulator method "
-                f"{method!r} not in (GET, HEAD, OPTIONS, POST)",
-            )
 
 
 class WorkbookParityReference(RegistryModel):
@@ -697,8 +377,9 @@ class RegistryVerificationPolicy:
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
     {
         "art109_activity_income_withholding_ge_70pct",
-        # ue_eee_status: TaxpayerProfile derived property (True iff
-        # country_of_fiscal_residence is an EU/EEA code, post-Brexit). Consumed
+        # ue_eee_status: TaxpayerProfile derived flag, read on the date of the
+        # filing period under verification (True iff
+        # country_of_fiscal_residence is an EU/EEA code on that date). Consumed
         # by profile_flag_enabled directly and by
         # casilla_equals_implies_profile_flag for the M210 IRNR
         # tipo_renta="ue_residente" residence cross-check.
@@ -737,9 +418,31 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # zero-default lanes safely when at most one is positive.
         "at_most_one_positive",
         "any_nonzero",
+        # cap_le_when_positive(["limited_id", "ceiling_id"]) — a positive limited
+        # amount needs a present ceiling and must not exceed it; a ceiling at or
+        # below zero admits none. Authored for the M130 C15 / M131 C11 caps
+        # ("solamente si en la casilla ... se hubiera obtenido una cantidad
+        # positiva") and the M200 art. 26 LIS ceiling.
         "cap_le_when_positive",
         # A positive elective application requires an actually present stock value.
         "positive_application_le_present_stock",
+        # application_equals_present_maximum(["application_id", "maximum_id"]) —
+        # a mandatory application: the maximum must be present and the applied
+        # amount must equal it exactly, so applying less and applying more both
+        # refuse and an unresolved maximum blocks. BLOCKING-only. Authored for
+        # LIRPF art. 50.3, whose compensation "deberá efectuarse en la cuantía
+        # máxima que permita cada uno de los ejercicios siguientes".
+        "application_equals_present_maximum",
+        # application_order_immaterial(["capacity_id", "stock_id", "stock_id", ...])
+        # — the amounts applied from several origin years of one kind do not
+        # depend on the order the origin years are taken in. Holds when at most
+        # one listed stock is strictly positive, when the capacity is at or
+        # below zero, or when the capacity covers every positive stock; an
+        # absent capacity with two or more positive stocks never holds. BLOCKING-
+        # only. Authored for LIRPF art. 49.2, which fixes the cuantía máxima a
+        # year compensates but states no order among the four origin years, so
+        # a result that turns on that order stays at calculation grade.
+        "application_order_immaterial",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
         # "consequent_casilla_id"]) — categorical-conditional material
         # implication: when the operator-entered raw text value of the named
@@ -842,6 +545,17 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "equals_sum",
         "implies_any_nonzero",
         "implies_nonzero",
+        # limited_subtractions_respect_floor(["floor_id", "base_id"],
+        # ["pre_floor_id", ...], ["limited_id", ...], ["unclassified_id", ...],
+        # ["exempt_id", ...]) — a floor that bounds only some of the amounts
+        # subtracted from a base: when the floor is positive, the base less the
+        # pre-floor subtractions and the limited subtractions must not fall below
+        # it unless the limited subtractions are nil, and unclassified
+        # subtractions may not be what could take it below. BLOCKING-only. Authored for the Modelo 200
+        # cuota liquida minima of LIS art. 30 bis.2. See
+        # _evaluate_limited_subtractions_respect_floor in
+        # cadrumo.application.modelo.verification_predicates.
+        "limited_subtractions_respect_floor",
         "profile_field_required",
         # profile_flag_enabled("profile_field_name") — profile-state advisory:
         # FIRES (ADVISORY shown) iff the named boolean TaxpayerProfile field is
@@ -875,6 +589,8 @@ class VerificationPredicateOperator(StrEnum):
     ANY_NONZERO = "any_nonzero"
     CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
     POSITIVE_APPLICATION_LE_PRESENT_STOCK = "positive_application_le_present_stock"
+    APPLICATION_EQUALS_PRESENT_MAXIMUM = "application_equals_present_maximum"
+    APPLICATION_ORDER_IMMATERIAL = "application_order_immaterial"
     CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
     CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
     CASILLA_EQUALS_IMPLIES_ZERO = "casilla_equals_implies_zero"
@@ -885,6 +601,7 @@ class VerificationPredicateOperator(StrEnum):
     EQUALS_SUM = "equals_sum"
     IMPLIES_ANY_NONZERO = "implies_any_nonzero"
     IMPLIES_NONZERO = "implies_nonzero"
+    LIMITED_SUBTRACTIONS_RESPECT_FLOOR = "limited_subtractions_respect_floor"
     PROFILE_FIELD_REQUIRED = "profile_field_required"
     PROFILE_FLAG_ENABLED = "profile_flag_enabled"
     ROLL_FORWARD_BALANCES = "roll_forward_balances"
@@ -901,6 +618,25 @@ class VerificationPredicateSyntax(StrEnum):
     CASILLA_LITERAL_PROFILE_FIELD = "casilla_literal_profile_field"
     CASILLA_LITERAL_CASILLA_PAIR = "casilla_literal_casilla_pair"
     CASILLA_TRIPLE_CUTOFF = "casilla_triple_cutoff"
+    FLOOR_SUBTRACTION_GROUPS = "floor_subtraction_groups"
+
+
+class FloorSubtractionGroup(StrEnum):
+    """The five bracketed groups of a ``floor_subtraction_groups`` expression, in order."""
+
+    #: The floor casilla and the base the subtractions are taken from, in that order.
+    FLOOR_AND_BASE = "floor_and_base"
+    #: Subtractions taken from the base before the floor is compared.
+    PRE_FLOOR = "pre_floor"
+    #: Subtractions that may reduce the base only down to the floor.
+    LIMITED = "limited"
+    #: Subtractions whose relation to the floor the governing text does not settle.
+    UNCLASSIFIED = "unclassified"
+    #: Subtractions that apply whatever the floor, even below it.
+    EXEMPT = "exempt"
+
+
+FLOOR_SUBTRACTION_GROUP_ORDER: Final[tuple[FloorSubtractionGroup, ...]] = tuple(FloorSubtractionGroup)
 
 
 @dataclass(frozen=True, slots=True)
@@ -929,6 +665,18 @@ class ParsedVerificationPredicate:
     profile_field: str = ""
     applicability_filter: str = ""
     cutoff: str = ""
+    #: Casilla count of each bracketed group, in :data:`FLOOR_SUBTRACTION_GROUP_ORDER`;
+    #: empty for every syntax that is not ``floor_subtraction_groups``.
+    group_sizes: tuple[int, ...] = ()
+
+    def casilla_groups(self) -> tuple[tuple[str, ...], ...]:
+        """Split ``casilla_ids`` back into the bracketed groups it was read from."""
+        groups: list[tuple[str, ...]] = []
+        start = 0
+        for size in self.group_sizes:
+            groups.append(self.casilla_ids[start : start + size])
+            start += size
+        return tuple(groups)
 
 
 def _predicate_specification(
@@ -990,6 +738,18 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
         ),
+        VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: _predicate_specification(
+            VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        # A capacity and at least two stocks: one stock has no order to settle.
+        VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL: _predicate_specification(
+            VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=3,
+        ),
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES: _predicate_specification(
             VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
             VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR,
@@ -1049,6 +809,13 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
         ),
+        # A floor, a base and at least one limited subtraction; the group grammar
+        # fixes the rest of the shape.
+        VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR: _predicate_specification(
+            VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR,
+            VerificationPredicateSyntax.FLOOR_SUBTRACTION_GROUPS,
+            minimum_casilla_ids=3,
+        ),
         VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _predicate_specification(
             VerificationPredicateOperator.PROFILE_FIELD_REQUIRED,
             VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED,
@@ -1073,6 +840,8 @@ _RATIO_PATTERN = _re.compile(
 )
 _PROFILE_FIELD_REQUIRED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
 _PROFILE_FLAG_ENABLED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)"\)$')
+_GROUPS_PREDICATE_PATTERN = _re.compile(r"^\w+\((?P<groups>\[[^\]]*\](?:\s*,\s*\[[^\]]*\])*)\)$")
+_GROUP_PATTERN = _re.compile(r"\[(?P<arguments>[^\]]*)\]")
 
 
 def verification_predicate_operator_name(expression: str) -> str | None:
@@ -1206,6 +975,46 @@ def _parse_profile_flag_enabled_predicate(
     return ParsedVerificationPredicate(operator=operator, arguments=(field,), profile_field=field)
 
 
+def _printed_box(token: str) -> str:
+    """The printed box a casilla token names, without its page-segment qualifier."""
+    return token.rpartition(":")[2]
+
+
+def _parse_floor_subtraction_groups_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    _syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse the five bracketed groups of a floor-and-subtractions predicate.
+
+    The shape is part of the grammar: exactly five groups, the first naming the
+    floor and the base, the limited group naming at least one subtraction, and
+    no casilla in two places. A casilla read in two groups would be counted
+    under two classifications at once, so such an expression is refused. Two
+    tokens are the same casilla when they name the same printed box, whether or
+    not one of them is qualified by its page segment.
+    """
+    match = _GROUPS_PREDICATE_PATTERN.match(stripped)
+    if match is None:
+        return None
+    groups = tuple(
+        _predicate_argument_tokens(group.group("arguments")) for group in _GROUP_PATTERN.finditer(match.group("groups"))
+    )
+    if len(groups) != len(FLOOR_SUBTRACTION_GROUP_ORDER):
+        return None
+    floor_and_base, _pre_floor, limited, _unclassified, _exempt = groups
+    casilla_ids = tuple(token for group in groups for token in group)
+    boxes = {_printed_box(token) for token in casilla_ids}
+    if len(floor_and_base) != 2 or not limited or len(boxes) != len(casilla_ids):
+        return None
+    return ParsedVerificationPredicate(
+        operator=operator,
+        arguments=casilla_ids,
+        casilla_ids=casilla_ids,
+        group_sizes=tuple(len(group) for group in groups),
+    )
+
+
 _PredicateExpressionParser = Callable[
     [VerificationPredicateOperator, str, VerificationPredicateSyntax],
     ParsedVerificationPredicate | None,
@@ -1221,30 +1030,53 @@ _PREDICATE_EXPRESSION_PARSERS: Mapping[VerificationPredicateSyntax, _PredicateEx
         VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD: _parse_list_predicate,
         VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR: _parse_list_predicate,
         VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF: _parse_list_predicate,
+        VerificationPredicateSyntax.FLOOR_SUBTRACTION_GROUPS: _parse_floor_subtraction_groups_predicate,
     },
 )
+
+
+_PARSED_PREDICATE_CACHE_SIZE: Final[int] = 4096
 
 
 def parse_verification_predicate_expression(expression: str) -> ParsedVerificationPredicate | None:
     """Parse one runtime-supported verification-predicate DSL expression.
 
     ``None`` means the expression is unknown or malformed. Registry validation
-    turns that state into an authoring-time refusal; the runtime retains its
-    defensive fallback for anything that bypasses registry validation.
+    turns that state into an authoring-time refusal, and runtime evaluation
+    refuses it on every call rather than treating it as holding.
+
+    The parse reads only ``expression`` and immutable module grammar, and the
+    result is a frozen value of strings and tuples, so repeated verification
+    runs share one bounded memo per distinct well-formed expression text. A
+    malformed text leaves the memo as a raise, which :func:`functools.lru_cache`
+    never stores, so the memo holds successful parses only and each malformed
+    call is parsed and refused afresh.
     """
+    try:
+        return parse_verification_predicate_expression_memo(expression)
+    except RegistryValidationError:
+        return None
+
+
+@lru_cache(maxsize=_PARSED_PREDICATE_CACHE_SIZE)
+def parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate:
+    """Parse a verification predicate expression into its operator and parsed form."""
     operator_name = verification_predicate_operator_name(expression)
     if operator_name is None:
-        return None
+        raise RegistryValidationError("verification predicate expression names no operator")
     try:
         operator = VerificationPredicateOperator(operator_name)
     except ValueError:
-        return None
+        raise RegistryValidationError("verification predicate operator is not in the vocabulary") from None
     specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
     stripped = expression.strip()
     parser = _PREDICATE_EXPRESSION_PARSERS.get(specification.syntax)
     if parser is None:
         raise AssertionError(f"unsupported verification predicate syntax {specification.syntax!r}")
-    return parser(operator, stripped, specification.syntax)
+    parsed = parser(operator, stripped, specification.syntax)
+    if parsed is None:
+        raise RegistryValidationError("verification predicate expression does not match its operator grammar")
+    return parsed
 
 
 class VerificationPredicateDefinition(RegistryModel):
@@ -1282,19 +1114,31 @@ class VerificationPredicateDefinition(RegistryModel):
       Authored for alternative result lanes such as Modelo 202 art. 40.3
       claves 18/26, where the downstream formula uses both zero-default
       lanes but the official instruction permits only one positive lane.
-    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
-      ceiling casilla is strictly positive, the limited casilla MUST NOT
-      exceed the ceiling, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10
-      and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
-      figurar... un importe superior a la cantidad positiva consignada").
-      Predicate holds when ceiling ≤ 0; the cap applies only when the
-      operator's gross liability is positive.
+    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — a strictly
+      positive limited casilla requires a present ceiling and MUST NOT exceed
+      it, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10 and Modelo 130
+      C15 ≤ C14 ("solamente si en la casilla ... se hubiera obtenido una
+      cantidad positiva"; "en ningún caso podrá figurar... un importe superior
+      a la cantidad positiva consignada"). A ceiling at or below zero admits
+      no positive limited amount; an omitted or non-positive limited amount
+      holds.
     - positive_application_le_present_stock(["application_id", "stock_id"]) —
       an omitted or non-positive elective application holds without
       requiring a stock value. A positive application requires the stock
       casilla to be present and must not exceed its actual value. Missing
       stock is not interpreted as zero; this predicate does not validate
       either operand's sign outside that comparison.
+    - ``application_equals_present_maximum(["application_id", "maximum_id"])``
+      — a mandatory application: the maximum casilla must be present and the
+      application (an omitted one reads as zero) must equal it exactly.
+      Applying less or more than the maximum is violated, and an absent
+      maximum is violated whatever the application, because the amount the
+      law requires is unknown.
+    - ``application_order_immaterial(["capacity_id", "stock_id", ...])`` — the
+      split of a capacity across several origin stocks does not depend on
+      their order: at most one stock is positive, the capacity is at or below
+      zero, or it covers every positive stock. An absent capacity with two or
+      more positive stocks is violated.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with a strictly-positive antecedent test: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR
@@ -1321,6 +1165,25 @@ class VerificationPredicateDefinition(RegistryModel):
       non-blocking alert rather than a refusal). The first consequent
       slot onward is the constituent set; a single consequent reduces to
       ``implies_nonzero``.
+    - ``limited_subtractions_respect_floor(["floor_id", "base_id"],
+      ["pre_floor_id", ...], ["limited_id", ...], ["unclassified_id", ...],
+      ["exempt_id", ...])`` — a floor that bounds only some of the amounts
+      subtracted from a base, classified by group. A floor at or below zero
+      holds. Otherwise the base less the pre-floor subtractions and the
+      limited subtractions must reach the floor, unless the limited
+      subtractions are nil: below the floor already, nothing limited may be
+      subtracted at all. With no such breach, unclassified subtractions that
+      would take what is left below the floor are violated as unresolved,
+      because the governing text does not say which side of the floor they
+      fall on and the outcome depends on it; exempt subtractions are read by
+      nothing. The groups
+      are exactly five, the first names the floor and the base, the limited
+      group is not empty and no printed box sits in two groups, qualified by
+      its page segment or not. Missing values read
+      as zero. BLOCKING-only. Authored for the Modelo 200 cuota liquida minima
+      [00619] of LIS art. 30 bis.2, whose restantes deducciones apply only "hasta
+      el importe de dicha cuota liquida minima" while the Canarias deductions
+      apply below it.
     - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — the
       printed-total invariant: predicate holds iff the first casilla equals
       the exact sum of every casilla after it, missing values reading as

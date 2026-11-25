@@ -129,7 +129,7 @@ class _MarkedMessage(str):
         )
 
 
-class _MarkingTranslations(NullTranslations):
+class MarkingTranslations(NullTranslations):
     """Answer every lookup with what the word reads in every language at once.
 
     Each language's own catalogue is consulted, so a word no catalogue
@@ -186,7 +186,7 @@ def _directories(app: Sphinx) -> list[Path]:
     return [Path(app.srcdir, directory) for directory in app.config.locale_dirs] + [Path(package_dir, "locale")]
 
 
-def _catalogue(language: str, directories: Sequence[Path]) -> NullTranslations:
+def catalogue(language: str, directories: Sequence[Path]) -> NullTranslations:
     """Return one language's catalogue of Sphinx's own messages, or an empty one."""
     found: NullTranslations | None = None
     for directory in directories:
@@ -216,7 +216,7 @@ _FROZEN: Final[tuple[tuple[str, str, str], ...]] = (
 )
 
 
-def _mark_frozen_words(catalogues: Sequence[NullTranslations]) -> None:
+def mark_frozen_words(catalogues: Sequence[NullTranslations]) -> None:
     """Replace each word resolved before this compile could answer it with its mark."""
     from importlib import import_module
 
@@ -243,7 +243,7 @@ def register(app: Sphinx) -> None:
     if slots is None:
         return
     directories = _directories(app)
-    catalogues = [_catalogue(language, directories) for language in slots.languages]
-    locale.translators[_NAMESPACE, _CATALOGUE] = _MarkingTranslations(catalogues, Rendering.PLAIN)
-    app.translator = _MarkingTranslations(catalogues, Rendering.TEMPLATE)
-    _mark_frozen_words(catalogues)
+    catalogues = [catalogue(language, directories) for language in slots.languages]
+    locale.translators[_NAMESPACE, _CATALOGUE] = MarkingTranslations(catalogues, Rendering.PLAIN)
+    app.translator = MarkingTranslations(catalogues, Rendering.TEMPLATE)
+    mark_frozen_words(catalogues)

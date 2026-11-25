@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .python_runtime_matrix import RuntimeRecord, load_runtime_inventory
 

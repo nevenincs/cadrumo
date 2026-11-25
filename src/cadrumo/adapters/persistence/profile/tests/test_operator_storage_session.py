@@ -10,11 +10,6 @@ from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import configure_operator_auth
-from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
-    InwardOperatorScopeStorage,
-    build_inward_operator_scope_ports,
-    build_inward_operator_scope_ports_for_active_route,
-)
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -26,25 +21,30 @@ from cadrumo.application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
-from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_results import (
     AuthOperationRequiresCustodySessionError,
     AuthOperationScopeConflictError,
     AuthProviderNotConfiguredError,
 )
+from cadrumo.application.auth.operator_revocation import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
+from cadrumo.application.tests.operator_scope_fakes import (
+    InwardOperatorScopeStorage,
+    build_inward_operator_scope_ports,
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.application.user_profile.profile_keys import profile_keys
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -198,7 +198,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
 ) -> None:
     """Certificate logout removes only the persisted session, not its configured custody."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         certificate_path = tmp_path / "personal.p12"
@@ -311,7 +311,7 @@ def test_reset_removes_certificate_registry_and_secure_secret(
 ) -> None:
     """Certificate reset removes registrations and canonical secure-storage secrets."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         cert_path = tmp_path / "operator.p12"
@@ -391,19 +391,25 @@ def test_certificate_reset_clears_path_without_removing_other_provider(
         ]
 
 
-def test_reset_uses_token_directory_from_supplied_settings(
+def test_reset_clears_the_acquisition_lock_in_the_token_member_of_the_supplied_settings(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A supplied Settings object routes acquisition-lock cleanup to its token root."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    """A supplied Settings object routes acquisition-lock cleanup to the token member of its storage root."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _create_profile(_PROFILE_A, provider="certificate", operation=operation)
-        token_dir = tmp_path / "target-tokens"
-        with override_settings(cadrumo_token_dir=token_dir) as settings, open_test_profile_session(_PROFILE_A):
+        with open_test_profile_session(_PROFILE_A):
+            settings = load_settings()
             lock_path = auth_acquisition_lock_path(
                 settings,
                 AuthProviderKind.CERTIFICATE,
                 bucket_id=_PROFILE_A,
             )
+            expected_lock = (
+                storage_root
+                / storage_location(StorageCategory.TOKENS).relative_path()
+                / f"{_PROFILE_A}-{AuthProviderKind.CERTIFICATE.value}-auth.lock"
+            )
+            assert lock_path == expected_lock
             with acquire_auth_acquisition_lock(
                 settings,
                 AuthProviderKind.CERTIFICATE,

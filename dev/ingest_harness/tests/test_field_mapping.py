@@ -14,7 +14,7 @@ import pytest
 
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 
-from .._field_mapping import (
+from ..field_mapping import (
     KEY_FIELD_MAPPINGS,
     FieldMapping,
     MappingKind,
@@ -24,8 +24,8 @@ from .._field_mapping import (
     unmapped_slot_census,
     validate_mapping_targets,
 )
-from .._key import CorpusKey, IngestCorpusDocument
-from .._scoring import score_emission
+from ..key import CorpusKey, IngestCorpusDocument
+from ..scoring import score_emission
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

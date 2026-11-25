@@ -24,6 +24,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -41,10 +42,10 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.entrypoints.cli.overview_results import OverviewPipelineModeloPayload
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -68,7 +69,7 @@ def _native_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperatio
 
 def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
     return {
-        "taxpayer_type.entity_type": "natural_person",
+        **native_general_iva_facts(),
         "identity.tax_id": "12345678Z",
         "identity.name": "Native",
         "identity.surnames": "Pipeline",
@@ -78,13 +79,6 @@ def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
         "irpf.estimation_regime": "directa_normal",
         "taxpayer_type.fiscal_residency": "resident_irpf",
         "tax_residence.ccaa": "madrid",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
 
 
@@ -93,7 +87,7 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     close_active_bucket_session()
 
 
-def _invoke(arguments: list[str]):
+def _invoke(arguments: list[str]) -> Result:
     fixture = _NATIVE_FIXTURE.get()
     assert fixture.label == _LABEL
     close_active_bucket_session()
@@ -110,6 +104,35 @@ def _create_complete_pipeline_profile() -> None:
     _create_profile(activity_start_date="2025-10-01")
 
 
+def _create_calculated_130_unit() -> tuple[str, Result]:
+    """Create a Modelo 130 4T work unit and calculate it, returning its id and the calculation reply."""
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+
+    # The prior year's income is not supplied: a first-year activity has no earlier Modelo 100,
+    # so the backend derives 0 and casilla 13 is 100 (RIRPF art. 110.3.c, income <= 9000).
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0
+    return work_unit_id, calculated
+
+
 @pytest.mark.usefixtures("_native_backend")
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
@@ -124,7 +147,7 @@ def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
     )
     assert result.exit_code == 0
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
 
     assert payload["filing_year"] == 2025
     assert payload["period"] == "1T"
@@ -156,7 +179,7 @@ def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
     )
     assert result.exit_code == 0
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
 
     assert payload["ledger"]["total_count"] == 1
     assert payload["ledger"]["pending_review_count"] == 1
@@ -173,28 +196,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     is honestly ``ready``."""
 
     _create_profile(activity_start_date="2025-10-01")
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
+    work_unit_id, _calculated = _create_calculated_130_unit()
 
     verified = _invoke(
         [
@@ -204,7 +206,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
         ],
     )  # fmt: skip
     assert verified.exit_code == 0
-    assert _payload(verified.output)["granted_verificado_completo"] is True
+    assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is True
 
     filed = _invoke(
         [
@@ -219,7 +221,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
     assert result.exit_code == 0
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
 
     assert payload["ledger"]["total_count"] == 0
     matching = [row for row in payload["modelos"] if row["modelo"] == "130"]
@@ -242,41 +244,22 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     reports the ``calculated`` state and keeps the pipeline unready."""
 
     _create_profile(activity_start_date="2025-10-01")
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
+    work_unit_id, _calculated = _create_calculated_130_unit()
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
     assert result.exit_code == 0
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
 
     matching = [row for row in payload["modelos"] if row["modelo"] == "130"]
     assert len(matching) == 1
     assert matching[0]["state"] == "calculated"
     assert payload["ready"] is False
     readiness_notices = [
-        notice for notice in _notices(result.output) if notice["code"] == "overview.pipeline.modelo.calculated"
+        notice
+        for notice in unwrap_envelope_notices(result.output)
+        if notice["code"] == "overview.pipeline.modelo.calculated"
     ]
     assert readiness_notices
     assert all(
@@ -316,35 +299,14 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     """
 
     _create_complete_pipeline_profile()
-    created = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0
-    work_unit_id = _payload(created.output)["work_unit_id"]
-
-    calculated = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    work_unit_id, calculated = _create_calculated_130_unit()
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     before = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
     assert before.exit_code == 0
-    before_row = next(row for row in _payload(before.output)["modelos"] if row["modelo"] == "130")
+    before_row = next(row for row in unwrap_schema_envelope(before.output)["modelos"] if row["modelo"] == "130")
     assert before_row["state"] == ModeloReadinessState.CALCULATED.value
     assert before_row["summary"] != "Modelo 130: check incomplete."
 
@@ -397,13 +359,15 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
     assert after.exit_code == 0
-    payload = _payload(after.output)
+    payload = unwrap_schema_envelope(after.output)
     after_row = next(row for row in payload["modelos"] if row["modelo"] == "130")
     assert after_row["state"] == ModeloReadinessState.INCOMPLETO.value
     assert after_row["blocking_finding_count"] == 0
     assert after_row["summary"] == "Modelo 130: check incomplete."
     assert payload["ready"] is False
-    assert any(notice["code"] == "overview.pipeline.modelo.incomplete" for notice in _notices(after.output))
+    assert any(
+        notice["code"] == "overview.pipeline.modelo.incomplete" for notice in unwrap_envelope_notices(after.output)
+    )
 
 
 @pytest.mark.usefixtures("_native_backend")
@@ -423,7 +387,7 @@ def test_pipeline_is_read_only_and_safe_to_run_repeatedly() -> None:
     )
     assert first.exit_code == 0
     assert second.exit_code == 0
-    assert _payload(first.output) == _payload(second.output)
+    assert unwrap_schema_envelope(first.output) == unwrap_schema_envelope(second.output)
 
 
 def test_pipeline_modelo_row_enforces_the_canonical_readiness_contract() -> None:

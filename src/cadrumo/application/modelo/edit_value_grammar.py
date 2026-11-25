@@ -18,13 +18,16 @@ See Also:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Final
 
 from pydantic import Field
 
+from ...core.spanish_postcode import SPANISH_PROVINCE_CODES
 from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
+from ...domain.calculations.registry.ratio_scale import ratio_scale
 from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import (
@@ -39,12 +42,14 @@ from .edit_contract import EditModel
 MONEY_FRACTION_DIGITS: Final = 2
 """A euro amount is entered in cents at most; the parser never rounds a finer value."""
 
-MONEY_OPERAND_MAXIMUM: Final = Decimal("999999999999.99")
+MONEY_OPERAND_MAXIMUM: Final = Decimal(10**15) - Decimal("0.01")
 """The magnitude bound of one hand-entered euro amount, applied to money addresses only.
 
-The manual-override financial-operand declaration of the edit operation states
-the same bound from here, so the parser, the executor and the wire cannot
-disagree about which amounts an operator may enter.
+This is an input guard, not a form's field width: it sits above the widest money field a
+form declares, so it never refuses an amount a form could hold, and the record design
+refuses what its own field cannot hold at export. The manual-override financial-operand
+declaration of the edit operation states the same bound from here, so the parser, the
+executor and the wire cannot disagree about which amounts an operator may enter.
 """
 
 type _BoundedToken = Annotated[str, Field(min_length=1, max_length=128)]
@@ -84,10 +89,20 @@ class ModeloEditRatioUnit(StrEnum):
     UNDECLARED = "undeclared"
 
 
-class ModeloEditChoiceV1(EditModel):
-    """One registry-declared choice: the stored code, never translated."""
+EDIT_CHOICE_LABEL_PREFIX: Final = "application.modelo.edit_choice."
+"""Where the words of served choices live, one family under it per data type."""
 
-    code: _BoundedToken
+
+class ModeloEditChoiceV1(EditModel):
+    """One offered choice: the stored code, never translated, and the catalogue id of its word where it has one.
+
+    A form's design can declare the blank itself as a choice, as an unmarked
+    checkbox: an empty ``code`` is that stated blank, which is neither an entry
+    that was never made nor a refused one.
+    """
+
+    code: Annotated[str, Field(max_length=128)]
+    word: _BoundedToken | None = None
 
 
 class ModeloEditValueGrammarV1(EditModel):
@@ -156,13 +171,8 @@ def ratio_unit(data_type: str, maximum: Decimal | None) -> ModeloEditRatioUnit |
     A declared maximum of 100 makes the figure a percent and a maximum of 1 a
     fraction; a ratio that declares neither is undeclared, never guessed.
     """
-    if data_type != CasillaDataType.RATIO:
-        return None
-    if maximum == Decimal(100):
-        return ModeloEditRatioUnit.PERCENT
-    if maximum == Decimal(1):
-        return ModeloEditRatioUnit.FRACTION
-    return ModeloEditRatioUnit.UNDECLARED
+    scale = ratio_scale(data_type, maximum)
+    return None if scale is None else ModeloEditRatioUnit(scale.value)
 
 
 def _casilla_fraction_digits(family: ModeloEditValueFamily, is_money: bool) -> int | None:
@@ -174,6 +184,16 @@ def _casilla_fraction_digits(family: ModeloEditValueFamily, is_money: bool) -> i
 
 def _canonical_grammar_bound(value: Decimal | None) -> str | None:
     return None if value is None else canonical_decimal_string(value)
+
+
+def _casilla_choices(data_type: str, declared: tuple[str, ...] | None) -> tuple[ModeloEditChoiceV1, ...] | None:
+    """Return what a box offers: its declared list, or every province for a province box declaring none."""
+    if data_type != CasillaDataType.PROVINCE_CODE:
+        return None if declared is None else tuple(ModeloEditChoiceV1(code=token) for token in declared)
+    return tuple(
+        ModeloEditChoiceV1(code=token, word=f"{EDIT_CHOICE_LABEL_PREFIX}{data_type}.{token}")
+        for token in (SPANISH_PROVINCE_CODES if declared is None else declared)
+    )
 
 
 def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV1:
@@ -193,11 +213,7 @@ def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV
         sign=constraints.sign if constraints is not None else CasillaSignConstraint.ANY,
         minimum=_canonical_grammar_bound(minimum),
         maximum=_canonical_grammar_bound(maximum),
-        choices=(
-            tuple(ModeloEditChoiceV1(code=token) for token in constraints.enum)
-            if constraints is not None and constraints.enum is not None
-            else None
-        ),
+        choices=_casilla_choices(data_type, constraints.enum if constraints is not None else None),
         min_length=constraints.min_length if constraints is not None else None,
         max_length=constraints.max_length if constraints is not None else None,
         pattern=constraints.pattern if constraints is not None else None,
@@ -213,14 +229,53 @@ _BINDING_DECIMAL_TYPES: Final = frozenset(
 )
 
 
-def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevision) -> ModeloEditValueGrammarV1:
+@dataclass(frozen=True, slots=True)
+class ConsumedBindingChannels:
+    """The bindings a revision's formulas read as dates or enum keys, computed once per revision."""
+
+    date_ids: frozenset[str]
+    enum_ids: frozenset[str]
+
+    @classmethod
+    def of(cls, revision: ModeloRevision) -> ConsumedBindingChannels:
+        """Walk the revision's formula graph once for both sets.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+        """
+        return cls(
+            date_ids=frozenset(revision_date_binding_ids(revision)),
+            enum_ids=frozenset(enum_consumed_binding_ids(revision)),
+        )
+
+
+def _date_consumed(
+    binding: BindingDefinition, revision: ModeloRevision, channels: ConsumedBindingChannels | None
+) -> bool:
+    ids = revision_date_binding_ids(revision) if channels is None else channels.date_ids
+    return binding.id in ids
+
+
+def _enum_consumed(
+    binding: BindingDefinition, revision: ModeloRevision, channels: ConsumedBindingChannels | None
+) -> bool:
+    ids = enum_consumed_binding_ids(revision) if channels is None else channels.enum_ids
+    return binding.id in ids
+
+
+def binding_value_grammar(
+    binding: BindingDefinition,
+    *,
+    revision: ModeloRevision,
+    channels: ConsumedBindingChannels | None = None,
+) -> ModeloEditValueGrammarV1:
     """Project one binding onto the entry grammar of its override.
 
     The override reaches the engine the way the explicit ``--binding`` path
     routes it: a binding the revision's formulas read as an enum key takes its
     token verbatim, a decimal, integer or boolean binding takes a decimal
     (boolean encoded 0 / 1), and a date-consumed, row-set, or free-text binding
-    has no override channel.
+    has no override channel. A row-set column whose registry family the filer
+    states row by row takes that statement: a nonnegative amount.
 
     See Also:
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
@@ -228,13 +283,23 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
     """
     value = binding.value
     data_type = value.data_type
-    if binding.id in revision_date_binding_ids(revision) or value.channel in {
+    family_stated = binding.absence_attestation
+    if family_stated is not None and family_stated.row_grain:
+        return ModeloEditValueGrammarV1(
+            data_type=data_type.value,
+            family=ModeloEditValueFamily.DECIMAL,
+            channel=ModeloEditValueChannel.DECIMAL,
+            max_fraction_digits=MONEY_FRACTION_DIGITS,
+            sign=CasillaSignConstraint.NON_NEGATIVE,
+            money_operand_bound=True,
+        )
+    if _date_consumed(binding, revision, channels) or value.channel in {
         BindingValueChannel.DATE,
         BindingValueChannel.ROW_SET,
     }:
         channel = ModeloEditValueChannel.UNAVAILABLE
         family = ModeloEditValueFamily.DATE if data_type is BindingDataType.DATE else ModeloEditValueFamily.TEXT
-    elif binding.id in enum_consumed_binding_ids(revision):
+    elif _enum_consumed(binding, revision, channels):
         channel, family = ModeloEditValueChannel.TEXT, ModeloEditValueFamily.TEXT
     elif data_type in _BINDING_DECIMAL_TYPES:
         channel = ModeloEditValueChannel.DECIMAL
@@ -257,8 +322,10 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
 
 
 __all__ = [
+    "EDIT_CHOICE_LABEL_PREFIX",
     "MONEY_FRACTION_DIGITS",
     "MONEY_OPERAND_MAXIMUM",
+    "ConsumedBindingChannels",
     "ModeloEditChoiceV1",
     "ModeloEditRatioUnit",
     "ModeloEditValueChannel",

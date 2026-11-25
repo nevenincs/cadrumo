@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     pass
 
 
-def _resolve_libreoffice_runner(executable: str | None) -> Path:
+def resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
     if executable is None:
         found = shutil.which("soffice") or shutil.which("libreoffice")

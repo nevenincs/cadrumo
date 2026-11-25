@@ -13,16 +13,16 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
-from click.testing import Result
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
-from ...native_commands.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from .cli_runner import invoke_unbound_cli
+from .diagnostics_cli_support import invoke_diagnostics
 
 pytestmark = [
     pytest.mark.integration,
@@ -31,12 +31,6 @@ pytestmark = [
 ]
 
 __all__ = ["diagnostics_native_profile"]
-
-
-def _invoke(args: list[str], profile: NativeCliProfileFixture) -> Result:
-    if profile.label is None:
-        raise AssertionError("native diagnostics profile was not registered")
-    return invoke_diagnostics_cli(args, profile=profile, invoke_cli=invoke_unbound_cli)
 
 
 def _seed_runs() -> None:
@@ -67,28 +61,12 @@ def _seed_runs() -> None:
                 duration_ms=duration_ms,
                 succeeded=succeeded,
                 error_kind=error_kind,
-                started_at=datetime(2026, 6, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 6, index, 9, 0, tzinfo=UTC),
             ),
         )
 
 
-def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """The verb groups real recorded runs by provider, then by model within each provider."""
-    _seed_runs()
-
-    result = _invoke(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-
-    assert payload["has_run_data"] is True
-    assert payload["total_runs"] == 6
-    assert payload["total_succeeded"] == 5
-    assert payload["total_failed"] == 1
-
-    providers = {row["provider"]: row for row in payload["by_provider"]}
-    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
-
-    claude = providers["llm:claude:test-model"]
+def _assert_claude_usage(claude: dict[str, Any]) -> None:
     assert claude["runs"] == 4
     assert claude["succeeded"] == 3
     assert claude["failed"] == 1
@@ -110,7 +88,8 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
     assert claude_model_b["failed"] == 1
     assert claude_model_b["success_rate"] == "0.5000"
 
-    codex = providers["llm:codex:test-model"]
+
+def _assert_codex_usage(codex: dict[str, Any]) -> None:
     assert codex["runs"] == 2
     assert codex["succeeded"] == 2
     assert codex["failed"] == 0
@@ -119,12 +98,32 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
     assert codex["models"][0]["model"] == "model-a"
     assert codex["models"][0]["runs"] == 2
 
+
+def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: NativeCliProfileFixture) -> None:
+    """The verb groups real recorded runs by provider, then by model within each provider."""
+    _seed_runs()
+
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
+    assert result.exit_code == 0, result.output
+    payload = unwrap_cli_result(result)
+
+    assert payload["has_run_data"] is True
+    assert payload["total_runs"] == 6
+    assert payload["total_succeeded"] == 5
+    assert payload["total_failed"] == 1
+
+    providers = {row["provider"]: row for row in payload["by_provider"]}
+    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
+
+    _assert_claude_usage(providers["llm:claude:test-model"])
+    _assert_codex_usage(providers["llm:codex:test-model"])
+
     assert payload["overall_success_rate"] == "0.8333"
 
 
 def test_llm_usage_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run record the verb reports empty and surfaces a guidance notice."""
-    result = _invoke(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
+    result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     payload = envelope["result"]
@@ -144,12 +143,12 @@ def test_llm_usage_provider_filter_scopes_the_summary(diagnostics_native_profile
     """``--provider`` restricts the summary to one provider label."""
     _seed_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         ["--format", "json", "app", "diagnostics", "llm-usage", "--provider", "llm:codex:test-model"],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert len(payload["by_provider"]) == 1
     assert payload["by_provider"][0]["provider"] == "llm:codex:test-model"
@@ -162,7 +161,7 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
     """``--since``/``--until`` narrow the usage summary by date."""
     _seed_runs()
 
-    result = _invoke(
+    result = invoke_diagnostics(
         [
             "--format",
             "json",
@@ -170,14 +169,14 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
             "diagnostics",
             "llm-usage",
             "--since",
-            "2026-06-01",
+            "1980-06-01",
             "--until",
-            "2026-06-01",
+            "1980-06-01",
         ],
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert len(payload["by_provider"]) == 1
@@ -188,8 +187,8 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
 
 def test_llm_usage_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
-    result = _invoke(
-        ["--format", "json", "app", "diagnostics", "llm-usage", "--since", "01/04/2026"],
+    result = invoke_diagnostics(
+        ["--format", "json", "app", "diagnostics", "llm-usage", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
@@ -202,7 +201,7 @@ def test_llm_usage_human_text_reports_provider_and_model_lines(
     """The human-readable text output lists per-provider and nested per-model rows."""
     _seed_runs()
 
-    result = _invoke(["app", "diagnostics", "llm-usage"], diagnostics_native_profile)
+    result = invoke_diagnostics(["app", "diagnostics", "llm-usage"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
     assert "llm:claude:test-model" in result.output
     assert "llm:codex:test-model" in result.output

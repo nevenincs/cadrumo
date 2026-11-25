@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#llm-package-split'
 date: '2026-08-16'
-modified: '2026-10-03'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:466cbbaf5ec04441a95ed5b4e4720f331cde9adf9888710f3b5fafb2d5317c4e'
+body_hash: 'sha256:f00484efe73279460d1b4a9b46fddd1f1f819f7f23f1a73596603c771157ba6f'
 related:
-  - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -23,10 +22,6 @@ related:
 Auto-generated index of all documents tagged with `#llm-package-split`.
 
 ## Documents
-
-### adr
-
-- `2026-08-06-llm-package-split-adr` - `llm-package-split` adr: `Local-inference document reading as a gated subpackage: exempt from encryption, bound by the persistence gates` | (**status:** `proposed`)
 
 ### audit
 

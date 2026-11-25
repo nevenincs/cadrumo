@@ -41,7 +41,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.authority import compiled_bundled_authority
 

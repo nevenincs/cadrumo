@@ -4,6 +4,8 @@ continuidad_id = "irpf-rendimiento-trabajo-aportacion-empresa-decision-trabajado
 number = "0024"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_aportacion_empresa_decision_trabajador"
+input_kind = "bound"
+binding = "renta-trabajo-aportacion-empresa-decision-trabajador"
 legal_refs = ["ley-35-2006:art-17"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
@@ -46,6 +48,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "0438"
 number = "0438"
+input_kind = "bound"
+binding = "renta-prevision-social-aportaciones-empresa-decision-trabajador-0438"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_aportaciones_empresa_decision_trabajador"
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
@@ -53,6 +57,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "0499"
 number = "0499"
+input_kind = "bound"
+binding = "renta-prevision-social-aportaciones-empresarios-individuales-0499"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_aportaciones_autonomos_empresarios"
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
@@ -665,6 +671,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "1832"
 number = "1832"
+input_kind = "bound"
+binding = "renta-activity-asset-disposal-loss-property-1832"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_perdida_inmueble_imputable_ejercicio"
 continuidad_id = "irpf-perdida-inmueble-imputable-ejercicio"
@@ -758,6 +766,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "1843"
 number = "1843"
+input_kind = "bound"
+binding = "renta-activity-asset-disposal-gain-property-1843"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta_imputable"
 continuidad_id = "irpf-ganancia-inmueble-no-exenta-imputable"
@@ -1627,7 +1637,7 @@ id = "TIPOTRIBUTACION"
 number = "*04"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
-semantic_role = "irpf_tipo_tributacion"
+semantic_role = "irpf_declaracion_tipo_tributacion"
 required = true
 input_kind = "bound"
 binding = "renta-profile-declaration-type"
@@ -1685,3 +1695,544 @@ semantic_role_cardinality_reason = "EO-agraria art. 32.1 irregularidad reducció
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32-2015"], source_refs = ["aeat-renta-2022-manual-parte1"] }
 legal_refs = ["ley-35-2006:art-32-2015"]
 source_refs = ["aeat-renta-2022-manual-parte1"]
+# Working figures of the Ley 35/2006 art. 50.3 compensation (Anexo C, bases
+# liquidables generales negativas). "La compensación deberá efectuarse en la
+# cuantía máxima que permita cada uno de los ejercicios siguientes", and each
+# origin year expires after four years, so the positive base is consumed oldest
+# row first: each row's applied amount must equal the lesser of its pending
+# stock and the positive base the older rows leave. None is an AEAT box; each is
+# internal and read only by the blocking gates that require every applied row
+# (1381, 1383, 1386, 1389) to equal its maximum.
+#
+# The positive base before compensation: casilla 0500 is the base liquidable
+# general before the compensation 0501, floored at zero because only a positive
+# base compensates.
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-base-positiva-compensable"
+continuidad_id = "irpf-anexo-c-base-liq-neg-base-positiva-compensable"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-base-positiva-compensable]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-base-positiva-compensable"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_base_positiva_compensable"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 50.3 positive base liquidable general before compensation; no AEAT box carries it, and one figure feeds every origin row's maximum."
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-base-positiva-compensable"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em4-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em4-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em4-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em4-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em4-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em3-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em3-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em3-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em3-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em3-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em2-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em2-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em2-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em2-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em2-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em1-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em1-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em1-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em1-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+# Working figures of the Ley 35/2006 art. 49 compensation of pending negative
+# savings balances (Anexo C.3): step capacities, each origin row's maximum and
+# what step 1 leaves of it. None is an AEAT box; the gates read them.
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-paso1-capacidad"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-paso1-capacidad]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-paso1-capacidad"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso1_capacidad"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 49.1 step-1 capacity of the gains and losses pending balances; no AEAT box carries it."
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-paso1-capacidad"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em4-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em4-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em4-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em4-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em3-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em3-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em3-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em3-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em2-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em2-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em2-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em2-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em1-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em1-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em1-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em1-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em4-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em4-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em4-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em4-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em3-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em3-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em3-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em3-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em2-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em2-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em2-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em2-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em1-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em1-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em1-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em1-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-paso1-capacidad"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-paso1-capacidad]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-paso1-capacidad"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso1_capacidad"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 49.1 step-1 capacity of the capital mobiliario pending balances; no AEAT box carries it."
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-paso1-capacidad"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em4-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em4-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em4-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em4-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em3-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em3-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em3-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em3-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em2-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em2-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em2-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em2-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em1-paso1-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em1-paso1-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em1-paso1-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso1_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em1-paso1-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em4-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em4-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em4-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em4-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em3-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em3-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em3-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em3-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em2-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em2-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em2-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em2-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em1-resto-paso1"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em1-resto-paso1]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em1-resto-paso1"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_resto_paso1"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em1-resto-paso1"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-paso2-capacidad"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-paso2-capacidad]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-paso2-capacidad"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso2_capacidad"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 49.1 step-2 capacity of the gains and losses pending balances; no AEAT box carries it."
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-paso2-capacidad"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em4-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em4-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em4-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em4-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em3-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em3-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em3-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em3-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em2-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em2-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em2-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em2-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-gyp-ahorro-em1-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-gyp-ahorro-em1-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-gyp-ahorro-em1-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-gyp-ahorro-em1-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-paso2-capacidad"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-paso2-capacidad]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-paso2-capacidad"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso2_capacidad"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 49.1 step-2 capacity of the capital mobiliario pending balances; no AEAT box carries it."
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-paso2-capacidad"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em4-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em4-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em4-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em4-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em3-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em3-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em3-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em3-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em2-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em2-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em2-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em2-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "saldo-neg-rcm-ahorro-em1-paso2-maxima"
+continuidad_id = "irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [saldo-neg-rcm-ahorro-em1-paso2-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "saldo-neg-rcm-ahorro-em1-paso2-maxima"
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_anexo_c_saldo_neg_rcm_ahorro_paso2_maxima"
+input_kind = "computed"
+formula = "renta-saldo-neg-rcm-ahorro-em1-paso2-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+# Exempt employment income of a trabajador del mar: the art. 7.p) LIRPF
+# pathway (work abroad, capped annually) or the REBECA pathway (Ley 19/1994
+# arts. 73 and 75, a fraction of the navigation income). Both are plain
+# exemptions. They are not rentas exentas con progresividad (DA 20ª LIRPF),
+# which is what box 0525 carries: the manual, cap. 15, defines that class as
+# treaty income that still sets the rate. No AEAT box
+# carries the maritime amount, so it is an internal node and files nowhere.
+[[revisions."2022".casillas]]
+id = "trabajo-mar-renta-exenta"
+number = "trabajo-mar-renta-exenta"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_trabajo_mar_renta_exenta"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "internal carrier of the maritime-worker exemption (art. 7.p LIRPF or REBECA); AEAT's record design has no box for it in any edition."
+input_kind = "computed"
+formula = "renta-maritime-exempt-income"
+internal_only = true
+legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".casillas]]
+id = "RESINGDEV"
+continuidad_id = "resultado-ingresar-o-devolver-irpf"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:2008 y aeat-dr-100-2022-dictionary:2198: RESINGDEV, ruta /DatosEconomicos/Resultados/IngresoDevolucionRes/RESINGDEV, tipo N102, impresa [0695]; el diccionario 2021 imprime la fila y el registro de la edicion 2021 no declara la casilla."
+number = "0695"
+section = ["resultados", "ingreso_devolucion_res"]
+data_type = "decimal"
+semantic_role = "resultado_ingresar_o_devolver_irpf"
+input_kind = "computed"
+formula = "renta-resultado-ingresar-o-devolver"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+
+# The rentas other than work income that LIRPF art. 20 weighs against its 6.500 euros limit. The
+# Manual practico defines them as the algebraic sum of the net capital, activity, imputed and
+# capital-gain income, before reductions and without integration or compensation. No box of the
+# return holds that sum, so it is an internal node.
+[[revisions."2022".casillas]]
+id = "rentas-distintas-del-trabajo"
+continuidad_id = "irpf-trabajo-rentas-distintas-del-trabajo"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [rentas-distintas-del-trabajo]; it is a computation-only member of the edition, not a box of the form."
+number = "rentas-distintas-del-trabajo"
+section = ["resultados", "rdto_trabajo_res"]
+semantic_role = "irpf_trabajo_rentas_distintas_del_trabajo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Internal operand of the art. 20 LIRPF other-income limit; the AEAT record design has no box for it, so it files nowhere."
+input_kind = "computed"
+formula = "renta-trabajo-rentas-distintas-del-trabajo"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]

@@ -6,22 +6,23 @@ public invoice record definitions and ``derive_invoice_id`` remain there.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.decimal.coercion import coerce_decimal
-from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.codes import normalise_iso_4217_currency
-from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..iva.identification import identification_state_for_printed_tax_identifier
-from ..iva.schema import InvoiceKind
+from ..iva.schema import EUMemberState, InvoiceKind
 from .errors import InvoiceValidationError
+from .validation_pass import answer_once
 from .validators import validate_counterparty_tax_id, validate_country_code
 
 if TYPE_CHECKING:
@@ -46,7 +47,7 @@ def _coerce_date(value: object) -> date:
         return value
     if isinstance(value, str):
         try:
-            result = _parse_iso8601_date(value)
+            result = parse_iso8601_date(value)
         except ValueError as exc:
             raise InvoiceValidationError(str(exc)) from exc
         if result is None:
@@ -95,6 +96,7 @@ def normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
         ("fx_rate_date", _coerce_optional_date),
         ("fx_rate_observation_date", _coerce_optional_date),
         ("operation_date", _coerce_optional_date),
+        ("document_received_on", _coerce_optional_date),
         ("created_at", _coerce_optional_datetime),
         ("updated_at", _coerce_optional_datetime),
     ):
@@ -153,7 +155,7 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
     if isinstance(country_raw, str):
         payload["counterparty_country"] = _judging(
             "counterparty_country",
-            lambda: validate_country_code(country_raw),
+            lambda: answer_once(validate_country_code, country_raw),
         )
     tax_id = payload.get("counterparty_tax_id")
     if isinstance(tax_id, str):
@@ -162,7 +164,7 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
         country_key = country if isinstance(country, str) else None
         payload["counterparty_tax_id"] = _judging(
             "counterparty_tax_id",
-            lambda: validate_counterparty_tax_id(tax_id_raw, country=country_key),
+            lambda: answer_once(validate_counterparty_tax_id, tax_id_raw, country=country_key),
         )
     # Every structured creation path -- bulk import, the wizard, the CLI, the
     # ingestion mapper -- reaches this one normaliser, so reading the
@@ -178,11 +180,14 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
     if payload.get("counterparty_identification_state") is None:
         printed = payload.get("counterparty_tax_id")
         payload["counterparty_identification_state"] = (
-            identification_state_for_printed_tax_identifier(printed, operation=_pinned_invoice_operation())
-            if isinstance(printed, str)
-            else None
+            answer_once(_printed_identification_state, printed) if isinstance(printed, str) else None
         )
     return payload
+
+
+def _printed_identification_state(printed: str) -> EUMemberState | None:
+    """Read the identification a printed tax identifier states, under the pinned operation."""
+    return identification_state_for_printed_tax_identifier(printed, operation=_pinned_invoice_operation())
 
 
 def normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
@@ -229,18 +234,6 @@ def require_invoice_text(value: object, message: str) -> str:
     if not isinstance(value, str):
         raise InvoiceValidationError(message)
     return value
-
-
-def require_optional_non_negative(value: Decimal | None, message: str) -> None:
-    """Raise ``message`` when ``value`` is present and negative."""
-    if value is not None and value < ZERO:
-        raise InvoiceValidationError(message)
-
-
-def require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
-    """Raise ``message`` when ``actual`` does not equal ``expected``."""
-    if actual != expected:
-        raise InvoiceValidationError(message)
 
 
 def normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
@@ -332,7 +325,7 @@ def derive_invoice_id_when_complete(
     # art. 6.1.d mandatory cases): omitting the key entirely is now a legal
     # way to state "no tax id", not an incomplete payload, so it defaults here
     # before the completeness check rather than short-circuiting derivation.
-    payload.setdefault("counterparty_tax_id", None)
+    default_absent_counterparty_tax_id(payload)
     if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
         return payload
     kind, invoice_number, issued_at, counterparty_tax_id, currency, grand_total = _validated_invoice_identity_values(
@@ -353,6 +346,12 @@ def derive_invoice_id_when_complete(
     return payload
 
 
+def default_absent_counterparty_tax_id(payload: dict[str, object]) -> dict[str, object]:
+    """Declare an omitted counterparty tax id absent, exactly as identity derivation does."""
+    payload.setdefault("counterparty_tax_id", None)
+    return payload
+
+
 def normalise_invoice_collections(
     payload: dict[str, object],
     *,
@@ -364,6 +363,10 @@ def normalise_invoice_collections(
     if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
         payload["lines"] = OBJECT_TUPLE_ADAPTER.validate_python(payload["lines"])
     return payload
+
+
+INVOICE_PAYMENT_ID_PATTERN: Final = r"^[0-9a-f]{64}$"
+"""The shape of a payment id once trimmed and lowercased: a transaction id, 64 lowercase hex digits."""
 
 
 def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
@@ -379,7 +382,7 @@ def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object
     if not normalized:
         payload["payment_id"] = None
         return payload
-    if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+    if re.fullmatch(INVOICE_PAYMENT_ID_PATTERN, normalized) is None:
         raise InvoiceValidationError("payment_id must be a 64-character lowercase hex digest")
     payload["payment_id"] = normalized
     return payload

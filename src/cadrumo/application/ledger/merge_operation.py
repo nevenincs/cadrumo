@@ -37,14 +37,14 @@ from .actions_split_merge import merge_transactions
 from .id_resolution import resolve_transaction_id
 from .models import MergeTransactionsResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_MERGE_OPERATION_DEFINITION_ID = "ledger.merge"
 LEDGER_MERGE_PHASE = "ledger.merge"
 _MAX_MERGE_CHILDREN = 128
-_MAX_MERGE_RESULT_JSON_BYTES = 16_384
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
-_Reason = Annotated[str, Field(max_length=500)]
+MAX_MERGE_RESULT_JSON_BYTES = 16_384
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
+_Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 _ChildPrefixes = Annotated[tuple[_TransactionPrefix, ...], Field(min_length=2, max_length=_MAX_MERGE_CHILDREN)]
 _TransactionIds = Annotated[tuple[TransactionId, ...], Field(min_length=2, max_length=_MAX_MERGE_CHILDREN)]
@@ -186,7 +186,7 @@ class LedgerMergeExecutor:
                 reason=payload.reason,
                 ports=pinned_ports,
             )
-            return _operation_result(
+            return operation_result(
                 profile_id=payload.profile_id,
                 expected_child_ids=child_ids,
                 result=result,
@@ -231,7 +231,7 @@ def _preflight_result(*, profile_id: UUID, child_ids: tuple[str, ...]) -> None:
 
 def _require_result_bound(projection: LedgerMergeOperationResult) -> None:
     """Reject a result projection larger than its registered byte bound."""
-    if len(projection.model_dump_json().encode("utf-8")) > _MAX_MERGE_RESULT_JSON_BYTES:
+    if len(projection.model_dump_json().encode("utf-8")) > MAX_MERGE_RESULT_JSON_BYTES:
         raise TransactionValidationError("ledger merge result exceeds its registered projection bound")
 
 
@@ -280,7 +280,7 @@ def _merged_transaction_lineage_matches(
     )
 
 
-def _operation_result(
+def operation_result(
     *,
     profile_id: UUID,
     expected_child_ids: tuple[str, ...],
@@ -305,7 +305,8 @@ def _operation_result(
     return projection
 
 
-def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a ledger merge result after matching it to its terminal receipt."""
     if type(result) is not LedgerMergeExecutionResult or not terminal_receipt_matches(
         receipt,
         definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID,
@@ -338,12 +339,9 @@ def resolve_ledger_merge_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-ledger consent and COMMIT for manual merge."""
-    if request.definition_id != LEDGER_MERGE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerMergeRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID, request_type=LedgerMergeRequest
+    )
 
 
 def build_ledger_merge_registration(
@@ -353,7 +351,7 @@ def build_ledger_merge_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerMergeOperationResult,
-        result_projector=_project_operation_result,
+        result_projector=project_operation_result,
         access_resolver=resolve_ledger_merge_access,
     )
 

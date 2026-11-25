@@ -17,17 +17,17 @@ from .casilla_catalogue_models import (
     CasillaOccurrence,
     Values,
 )
-from .casilla_resolution import _served_locale
+from .casilla_resolution import served_locale
 from .casilla_text_comparison import (
-    _content_tokens,
-    _segments,
+    content_tokens,
+    segments,
 )
 from .casilla_text_policy import (
     SOURCE_LOCALE,
 )
 
 
-def _record_dropped_casilla_content(
+def record_dropped_casilla_content(
     self: ModeloCasillaCatalogue,
     index: int,
     occurrence: CasillaOccurrence,
@@ -41,50 +41,50 @@ def _record_dropped_casilla_content(
     spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
     if spanish is None:
         return
-    source = _content_tokens(spanish)
+    source = content_tokens(spanish)
     if not source:
         return
     served = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
     if served is None or served[1] != locale:
         return
-    rendered = _content_tokens(self.resolve(index, field_name, locale, values) or "", spelled=True)
+    rendered = content_tokens(self.resolve(index, field_name, locale, values) or "", spelled=True)
     # A reference repeated in one sentence states the same box once.
     missing = Counter({token: 1 for token in source if token not in rendered})
     if missing:
         dropped[served[0]] = tuple(sorted(missing.elements()))
 
 
-def _record_casilla_segment_renderings(
+def record_casilla_segment_renderings(
     key: str, spanish_texts: frozenset[str], locale: str, view: Values, rendered: dict[str, set[str]]
 ) -> None:
     """Record casilla segment renderings."""
     translation = view.get(locale, {}).get(key)
     if translation is None or len(spanish_texts) != 1:
         return
-    spanish = _segments(next(iter(spanish_texts)))
-    parts = _segments(translation)
+    spanish = segments(next(iter(spanish_texts)))
+    parts = segments(translation)
     if len(spanish) != len(parts) or len(spanish) < 2:
         return
     for source_part, rendering in zip(spanish, parts, strict=True):
         rendered[source_part.strip()].add(rendering.strip())
 
 
-def _record_casilla_rendering_segments(
+def record_casilla_rendering_segments(
     key: str, spanish_texts: frozenset[str], locale: str, view: Values, rendered: dict[str, set[str]]
 ) -> None:
     """Record casilla rendering segments."""
     translation = view.get(locale, {}).get(key)
     if translation is None or len(spanish_texts) != 1:
         return
-    spanish = _segments(next(iter(spanish_texts)))
-    parts = _segments(translation)
+    spanish = segments(next(iter(spanish_texts)))
+    parts = segments(translation)
     if len(spanish) != len(parts) or len(spanish) < 2:
         return
     for source_part, rendering in zip(spanish, parts, strict=True):
         rendered[rendering.strip()].add(source_part.strip())
 
 
-def _record_casilla_lineage_locale_drift(
+def record_casilla_lineage_locale_drift(
     self: ModeloCasillaCatalogue,
     locale: str,
     groups: Mapping[tuple[str, str, str, str], list[int]],
@@ -102,7 +102,7 @@ def _record_casilla_lineage_locale_drift(
                 {
                     text
                     for index in members
-                    if _served_locale(self, index, field_name, locale, values) == locale
+                    if served_locale(self, index, field_name, locale, values) == locale
                     and (text := self.resolve(index, field_name, locale, values)) is not None
                 }
             )
@@ -111,7 +111,7 @@ def _record_casilla_lineage_locale_drift(
     )
 
 
-def _record_stale_casilla_translation(
+def record_stale_casilla_translation(
     self: ModeloCasillaCatalogue,
     index: int,
     occurrence: CasillaOccurrence,

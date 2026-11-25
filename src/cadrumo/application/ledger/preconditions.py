@@ -31,6 +31,8 @@ class LedgerPreconditionCondition(StrEnum):
     EVIDENCE_XML_INVOICE_SUPPORTED = "ledger.evidence.xml_invoice_supported"
     FILER_POSTCODE_VALID = "ledger.filer.postcode_valid"
     COUNTERPARTY_IDENTIFIER_VALID = "ledger.counterparty.identifier_valid"
+    COUNTERPARTY_PROVINCIA_KNOWN = "ledger.counterparty.provincia_known"
+    COUNTERPARTY_FILING_NAME_STATED = "ledger.counterparty.filing_name_stated"
 
 
 class LedgerPreconditionErrorMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):

@@ -7,23 +7,21 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_M202_REVISION_ID = "2025-y-siguientes"
+_M202_REVISION_ID = str(open_ended_revision("202").id)
 _M202_PROFILE_ID = "9f8cdb06-8956-4a23-8db4-e7a51efa2ada"  # was 'modelo-202-declaracion-pdf'
 _M202_TARGET_CASILLAS = ("01", "03", "04", "34")
 _M202_EXTRACTOR_LINK_ID = "modelo-202-extractor"
@@ -32,7 +30,7 @@ _M202_PARSER = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 
 def _committed_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load the live Modelo 202 registry entry and its shared catalogues."""
-    return _committed_modelo("202")
+    return committed_modelo("202")
 
 
 def _provisional_m202_profile(modelo: ModeloDefinition) -> ExtractionProfileDefinition:

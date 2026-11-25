@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -12,16 +9,17 @@ import pytest
 
 from ..manager import LocaleManager
 from ..signal_discovery import dynamic_key_families
-from ..signal_document_prose import embedded_document_language_prose, visible_document_prose
-from ..signal_documentation_inventory import documentation_source_inventory
+from ..signal_document_prose import visible_document_prose
 from ..signal_domain_summary import domain_summaries, headline
-from ..signal_echo_classification import load_platform_identity_terms, translation_invariant_echo_reason
 from ..signal_parallel_inventory import parallel_localization_inventory
 from ..signal_policy import LOCALES
 from ..signal_source_inventory import collect_source_inventory
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text, human_translation_text
 from ..signal_translation_matrix import translation_matrix
+from .signal_support import (
+    signal_list,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,15 +33,6 @@ def _mapping(value: object) -> Mapping[str, object]:
         if not isinstance(key, str):
             raise AssertionError("expected string mapping keys")
         result[key] = item
-    return result
-
-
-def _list(value: object) -> list[object]:
-    """Narrow one report payload list for length and member assertions."""
-    if not isinstance(value, list):
-        raise AssertionError("expected a list payload")
-    result: list[object] = []
-    result.extend(value)
     return result
 
 
@@ -155,14 +144,14 @@ def test_spelling_filter_excludes_transport_syntax_but_keeps_visible_labels() ->
 
     filtered, excluded = filtered_translation_text(value)
 
-    assert filtered == "open or guide visible guide ."
+    assert filtered == "Open or Guide Visible guide ."
     assert excluded == 10
 
 
 def test_spelling_filter_keeps_plain_prose_and_removes_file_extensions() -> None:
     filtered, excluded = filtered_translation_text("Olvassa el a guide.md fájlt, majd folytassa.")
 
-    assert filtered == "olvassa el a fájlt majd folytassa."
+    assert filtered == "Olvassa el a fájlt majd folytassa."
     assert excluded == 1
 
 
@@ -414,7 +403,7 @@ def test_source_inventory_reports_dot_key_uniqueness_and_semantic_duplicate_find
     conflicts = [finding for finding in findings if finding["kind"] == "conflicting_duplicate_translation_key"]
     assert len(conflicts) == inventory["conflicting_duplicate_declarations"] == 1
     assert conflicts[0]["key"] == "cli.save"
-    declarations = [_mapping(declaration) for declaration in _list(conflicts[0]["declarations"])]
+    declarations = [_mapping(declaration) for declaration in signal_list(conflicts[0]["declarations"])]
     assert [declaration["placeholders"] for declaration in declarations] == [[], ["name"], []]
 
 
@@ -455,7 +444,7 @@ def test_dynamic_key_families_use_registered_concrete_values() -> None:
 
 
 def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal
     from .. import signal_discovery as discovery_module
 
     source = tmp_path / "source"
@@ -475,7 +464,7 @@ def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_p
         lambda markers: ({"wizard.setup.*": ("wizard.setup.status.ready",)}, ("profile.keys.*",)),
     )
 
-    payload = signal_module.locale_signal(manager, repository=tmp_path)
+    payload = signal.locale_signal(manager, repository=tmp_path)
 
     assert "wizard.setup.status.ready" in payload["details"]["required_keys"]
     assert "wizard.setup.status.stale" in payload["details"]["required_keys"]
@@ -552,403 +541,111 @@ def test_generated_user_doc_adapter_reads_visible_prose_not_option_or_literal_sy
     assert all("raw_internal_token" not in text for text in rendered)
 
 
-def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) -> None:
-    page = tmp_path / "legal.rst"
+def test_generated_cli_docs_exempt_only_exact_executable_command_headings(tmp_path) -> None:
+    page = tmp_path / "docs" / "cli" / "commands.rst"
+    page.parent.mkdir(parents=True)
+    command = "aeat app diagnostics errors"
+    unknown_path = "aeat app diagnostics definitely-unknown"
+    command_with_option = "aeat app diagnostics errors --format"
     page.write_text(
-        "Legal reference\n===============\n\n"
-        ".. raw:: html\n\n"
-        '   <blockquote lang="es"><p>Administracion Tributaria</p></blockquote>\n',
+        f"{command}\n{'=' * len(command)}\n\n"
+        "Check this adjacent misspeling.\n\n"
+        f"{unknown_path}\n{'-' * len(unknown_path)}\n\n"
+        f"{command_with_option}\n{'-' * len(command_with_option)}\n\n"
+        "Run aeat app diagnostics errors for the report.\n",
         encoding="utf-8",
     )
 
-    assert embedded_document_language_prose(page) == ((6, "es", "administracion tributaria"),)
+    prose = visible_document_prose(page)
+
+    assert prose == (
+        (4, "Check this adjacent misspeling."),
+        (7, unknown_path),
+        (10, command_with_option),
+        (12, "Run aeat app diagnostics errors for the report."),
+    )
 
 
-def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
-    source = docs / page
-    source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text(source_text, encoding="utf-8")
-    templates = docs / "locales" / "pot"
-    template = templates / Path(page).with_suffix(".pot")
-    template.parent.mkdir(parents=True, exist_ok=True)
-    template.write_text(pot_text, encoding="utf-8")
-    (templates / ".source-manifest.json").write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "sources": {page: hashlib.sha256(source.read_bytes()).hexdigest()},
-            }
+def test_generated_casilla_inventory_excludes_only_exact_registry_section_heading(tmp_path) -> None:
+    page = tmp_path / "docs" / "_generated" / "casillas" / "130.rst"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "Casilla reference\n=================\n\n"
+        "Model reference navigation.\n\n"
+        '.. cadrumo-casilla-section-identifier: ["did", "devolucion_banco_bank_name"]\n\n'
+        "Did › Devolucion banco bank name\n" + "-" * len("Did › Devolucion banco bank name") + "\n\n"
+        "Review this misspeling carefully.\n",
+        encoding="utf-8",
+    )
+
+    prose = visible_document_prose(page)
+
+    assert prose == (
+        (2, "Casilla reference"),
+        (4, "Model reference navigation."),
+        (11, "Review this misspeling carefully."),
+    )
+
+
+def test_generated_casilla_marker_validates_first_heading_parsed_as_subtitle(tmp_path) -> None:
+    page = tmp_path / "docs" / "_generated" / "casillas" / "038.rst"
+    page.parent.mkdir(parents=True)
+    heading = "Declarante"
+    page.write_text(
+        "Casilla reference\n=================\n\n"
+        '.. cadrumo-casilla-section-identifier: ["declarante"]\n\n'
+        f"{heading}\n{'-' * len(heading)}\n\n"
+        "Nearby misspeling stays visible.\n",
+        encoding="utf-8",
+    )
+
+    prose = visible_document_prose(page)
+
+    assert prose == ((2, "Casilla reference"), (9, "Nearby misspeling stays visible."))
+
+
+@pytest.mark.parametrize(
+    "page_path, marker, separator, heading",
+    [
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier ["did"]',
+            "\n\n",
+            "Did",
         ),
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier: ["other"]',
+            "\n\n",
+            "Expected wrong heading",
+        ),
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier: ["did"]',
+            "\nIntervening prose\n\n",
+            "Did",
+        ),
+        (
+            "docs/_generated/other.rst",
+            '.. cadrumo-casilla-section-identifier: ["did"]',
+            "\n\n",
+            "Did",
+        ),
+    ],
+)
+def test_casilla_section_marker_fails_closed_when_stale_or_out_of_scope(
+    tmp_path: Path,
+    page_path: str,
+    marker: str,
+    separator: str,
+    heading: str,
+) -> None:
+    page = tmp_path / page_path
+    page.parent.mkdir(parents=True, exist_ok=True)
+    page.write_text(
+        "Casilla reference\n=================\n\n" + marker + separator + heading + "\n" + "-" * len(heading) + "\n",
         encoding="utf-8",
     )
 
-
-def test_documentation_inventory_extracts_live_source_and_enrols_english_for_spelling(tmp_path) -> None:
-    docs = tmp_path / "docs"
-    docs.mkdir()
-    _write_docs_source_cache(
-        docs,
-        "guide.md",
-        "# Filing guide\n\nReview the current return.\n",
-        'msgid ""\nmsgstr ""\n\nmsgid "Filing guide"\nmsgstr ""\n\nmsgid "Review the current return."\nmsgstr ""\n',
-    )
-    catalogue_messages = {
-        ("guide.po", "Filing guide"): {"ca": True, "es": True, "hu": True},
-        ("guide.po", "Review the current return."): {"ca": True, "es": True, "hu": True},
-    }
-    values: dict[str, dict[str, str]] = {}
-
-    inventory, findings = documentation_source_inventory(
-        tmp_path,
-        catalogue_messages,
-        spelling_values=values,
-    )
-
-    assert findings == []
-    assert {
-        key: inventory[key]
-        for key in (
-            "docs_source_pages",
-            "docs_source_messages",
-            "docs_catalogue_files_expected",
-            "docs_catalogue_files_read",
-            "docs_source_drift_pages",
-            "docs_source_messages_missing",
-            "docs_catalogue_messages_stale",
-            "docs_extraction_failures",
-            "docs_orphan_catalogue_files",
-            "docs_orphan_source_templates",
-            "docs_generated_english_only_pages",
-        )
-    } == {
-        "docs_source_pages": 1,
-        "docs_source_messages": 2,
-        "docs_catalogue_files_expected": 3,
-        "docs_catalogue_files_read": 3,
-        "docs_source_drift_pages": 0,
-        "docs_source_messages_missing": 0,
-        "docs_catalogue_messages_stale": 0,
-        "docs_extraction_failures": 0,
-        "docs_orphan_catalogue_files": 0,
-        "docs_orphan_source_templates": 0,
-        "docs_generated_english_only_pages": 0,
-    }
-    assert values["en"] == {
-        "parallel:docs/guide.md:Filing guide": "Filing guide",
-        "parallel:docs/guide.md:Review the current return.": "Review the current return.",
-    }
-
-
-def test_documentation_inventory_enumerates_source_to_catalogue_drift(tmp_path) -> None:
-    docs = tmp_path / "docs"
-    docs.mkdir()
-    _write_docs_source_cache(
-        docs,
-        "guide.md",
-        "# Current source\n",
-        'msgid ""\nmsgstr ""\n\nmsgid "Current source"\nmsgstr ""\n',
-    )
-    inventory, findings = documentation_source_inventory(
-        tmp_path,
-        {("guide.po", "Old source"): {"ca": True, "es": True, "hu": True}},
-    )
-
-    assert inventory["docs_source_drift_pages"] == 1
-    assert inventory["docs_source_messages_missing"] == 3
-    assert inventory["docs_catalogue_messages_stale"] == 3
-    assert len(findings) == 3
-    assert {finding["kind"] for finding in findings} == {"docs_source_catalogue_drift"}
-    assert all(finding["missing_message_ids"] == ["Current source"] for finding in findings)
-    assert all(finding["stale_message_ids"] == ["Old source"] for finding in findings)
-
-
-def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -> None:
-    docs = tmp_path / "docs"
-    _write_docs_source_cache(
-        docs,
-        "guide.md",
-        "# Filing guide\n\nReview the current return.\n\nOne return.\n",
-        'msgid ""\nmsgstr ""\n\n'
-        'msgid "Filing guide"\nmsgstr ""\n\n'
-        'msgid "Review the current return."\nmsgstr ""\n\n'
-        'msgid "One return"\nmsgid_plural "Many returns"\nmsgstr[0] ""\nmsgstr[1] ""\n',
-    )
-    catalogue_messages = {
-        ("guide.po", "Filing guide"): {"ca": True, "es": True, "hu": True},
-        ("guide.po", "Review the current return."): {"ca": True, "es": True, "hu": True},
-        ("guide.po", "One return\x04Many returns"): {"ca": True, "es": True, "hu": True},
-    }
-    catalogue_translations = {
-        ("guide.po", "Review the current return."): {
-            "ca": ("Review the current returns.",),
-            "es": (" Review   THE current return! ",),
-        },
-        ("guide.po", "One return\x04Many returns"): {
-            "ca": ("One return", "Many returns"),
-        },
-    }
-
-    inventory, findings = documentation_source_inventory(
-        tmp_path,
-        catalogue_messages,
-        catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
-        catalogue_translations=catalogue_translations,
-    )
-
-    assert inventory["docs_translation_comparisons"] == 4
-    assert inventory["docs_translation_source_echo"] == 3
-    assert inventory["docs_translation_source_echo_ratio"] == 0.75
-    assert inventory["docs_translation_near_echo"] == 1
-    assert inventory["docs_translation_near_echo_ratio"] == 0.25
-    assert inventory["docs_translation_source_echo_ca"] == 2
-    assert inventory["docs_translation_source_echo_es"] == 1
-    assert inventory["docs_translation_near_echo_ca"] == 1
-    assert len(_list(inventory["docs_translation_source_echo_samples"])) == 3
-    assert len(_list(inventory["docs_translation_near_echo_samples"])) == 1
-    exact = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
-    near = [finding for finding in findings if finding["kind"] == "docs_translation_near_echo"]
-    assert len(exact) == 3
-    assert len(near) == 1
-    assert all(finding["classification"] == "blocking" for finding in exact)
-    assert near[0]["classification"] == "advisory"
-    ratio = near[0]["ratio"]
-    assert isinstance(ratio, (int, float))
-    assert ratio >= 0.9
-
-
-def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_path, monkeypatch) -> None:
-    from .. import signal_documentation_echo as echo_module
-
-    class _Dictionary:
-        def lookup(self, word: str) -> bool:
-            return word.casefold() == "manual"
-
-    monkeypatch.setattr(
-        echo_module,
-        "load_dictionaries",
-        lambda _repository: {locale: _Dictionary() for locale in LOCALES},
-    )
-    docs = tmp_path / "docs"
-    messages = (
-        "Download",
-        "Review the current return",
-        "`--help`",
-        "Modelo 303",
-        "PDF",
-        "Cadrumo",
-        "Manual",
-    )
-    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
-    _write_docs_source_cache(docs, "guide.md", "# Echo classification\n", pot)
-    catalogue_messages = {("guide.po", message): {"ca": True, "es": True, "hu": True} for message in messages}
-    catalogue_translations = {
-        ("guide.po", "Download"): {"ca": ("Download",)},
-        ("guide.po", "Review the current return"): {"es": ("Review the current return",)},
-        ("guide.po", "`--help`"): {"ca": ("`--help`",)},
-        ("guide.po", "Modelo 303"): {"es": ("Modelo 303",)},
-        ("guide.po", "PDF"): {"es": ("PDF",)},
-        ("guide.po", "Cadrumo"): {"ca": ("Cadrumo",)},
-        ("guide.po", "Manual"): {"ca": ("Manual",)},
-    }
-
-    inventory, findings = documentation_source_inventory(
-        tmp_path,
-        catalogue_messages,
-        catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
-        catalogue_translations=catalogue_translations,
-    )
-
-    assert inventory["docs_translation_comparisons"] == 7
-    assert inventory["docs_translation_source_echo"] == 2
-    assert inventory["docs_translation_invariant_echo"] == 5
-    assert inventory["docs_translation_invariant_echo_ca"] == 3
-    assert inventory["docs_translation_invariant_echo_es"] == 2
-    assert inventory["docs_translation_invariant_echo_hu"] == 0
-    for reason in (
-        "inline_code",
-        "modelo_form",
-        "platform_format",
-        "canonical_product_identity",
-        "target_dictionary_shared_term",
-    ):
-        assert inventory[f"docs_translation_invariant_echo_reason_{reason}"] == 1
-    blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
-    invariant = [finding for finding in findings if finding["kind"] == "docs_translation_invariant_echo"]
-    assert {finding["source"] for finding in blocking} == {"Download", "Review the current return"}
-    assert all(finding["classification"] == "blocking" for finding in blocking)
-    assert {finding["reason"] for finding in invariant} == {
-        "inline_code",
-        "modelo_form",
-        "platform_format",
-        "canonical_product_identity",
-        "target_dictionary_shared_term",
-    }
-    assert all(finding["classification"] == "advisory" for finding in invariant)
-
-
-def test_translation_echo_invariants_use_identity_syntax_and_language_evidence() -> None:
-    class _Dictionary:
-        def __init__(self, words: set[str] | None = None, *, accept_all: bool = False) -> None:
-            self.words = words or set()
-            self.accept_all = accept_all
-
-        def lookup(self, word: str) -> bool:
-            return self.accept_all or word.casefold() in self.words
-
-    target = _Dictionary(accept_all=True)
-    english = _Dictionary({"download", "the", "current", "return"})
-
-    assert (
-        translation_invariant_echo_reason(
-            "Cadrumo vX.Y.Z",
-            "es",
-            dictionary=target,
-            source_dictionary=english,
-        )
-        == "canonical_product_identity"
-    )
-    assert (
-        translation_invariant_echo_reason(
-            "vX.Y.Z",
-            "es",
-            dictionary=target,
-            source_dictionary=english,
-        )
-        is None
-    )
-    assert (
-        translation_invariant_echo_reason(
-            "Windows (x86-64)",
-            "es",
-            dictionary=target,
-            source_dictionary=english,
-        )
-        == "platform_format"
-    )
-    assert (
-        translation_invariant_echo_reason(
-            "Régimen de atribución de rentas (socios)",
-            "es",
-            dictionary=target,
-            source_dictionary=english,
-        )
-        == "target_dictionary_shared_term"
-    )
-    assert (
-        translation_invariant_echo_reason(
-            "Download the current return",
-            "es",
-            dictionary=target,
-            source_dictionary=english,
-        )
-        is None
-    )
-
-
-def test_platform_identity_terms_follow_the_download_descriptor(tmp_path) -> None:
-    descriptor = tmp_path / "docs" / "_data" / "download_channels.toml"
-    descriptor.parent.mkdir(parents=True)
-    descriptor.write_text(
-        '[[channel]]\nplatform = "macOS (Apple silicon), Linux (x86-64 and arm64)"\n\n'
-        '[[channel]]\nplatform = "Windows (x86-64)"\n',
-        encoding="utf-8",
-    )
-
-    terms = load_platform_identity_terms(tmp_path)
-
-    assert {"macos", "linux", "windows"}.issubset(terms)
-    assert "any" not in terms
-    assert "any platform with python 3 13+" not in terms
-
-
-@pytest.mark.parametrize("source", ("!", "●", "↓", "▹ ▿", "…", "`/`", "`?`"))
-def test_literal_symbols_are_invariant_without_language_dictionaries(source: str) -> None:
-    assert translation_invariant_echo_reason(source, "hu", dictionary=None) == "symbol_only"
-
-
-@pytest.mark.parametrize("source", ("`Enter`", "`Esc`", "`i`"))
-def test_keyboard_and_alphabetic_marks_require_existing_literal_code_contract(source: str) -> None:
-    assert translation_invariant_echo_reason(source, "ca", dictionary=None) == "inline_code"
-
-
-@pytest.mark.parametrize("source", ("Enter", "Esc", "Space", "i", "", " ", "Review the return!"))
-def test_symbol_invariance_does_not_exempt_unmarked_words_or_prose(source: str) -> None:
-    assert translation_invariant_echo_reason(source, "es", dictionary=None) is None
-
-
-def test_symbol_classification_preserves_blocking_prose_and_missing_translations(tmp_path, monkeypatch) -> None:
-    from .. import signal_documentation_echo as echo_module
-
-    monkeypatch.setattr(echo_module, "load_dictionaries", lambda _repository: {})
-    docs = tmp_path / "docs"
-    messages = ("●", "`Enter`", "Review the current return!", "Fill in the box")
-    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
-    _write_docs_source_cache(docs, "guide.md", "# Filing guide\n", pot)
-    catalogue_messages = {("guide.po", message): {"es": True} for message in messages if message != "Fill in the box"}
-    catalogue_translations = {
-        ("guide.po", message): {"es": (message,)} for message in messages if message != "Fill in the box"
-    }
-
-    inventory, findings = documentation_source_inventory(
-        tmp_path,
-        catalogue_messages,
-        catalogue_files={("es", "guide.po")},
-        catalogue_translations=catalogue_translations,
-    )
-
-    assert inventory["docs_translation_source_echo"] == 1
-    assert inventory["docs_translation_invariant_echo"] == 2
-    blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
-    assert [finding["source"] for finding in blocking] == ["Review the current return!"]
-    missing = [finding for finding in findings if finding["kind"] == "docs_source_catalogue_drift"]
-    assert any(finding["missing_message_ids"] == ["Fill in the box"] for finding in missing)
-
-
-def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:
-    docs = tmp_path / "docs"
-    docs.mkdir()
-    (docs / "guide.md").write_text("# Filing guide\n", encoding="utf-8")
-
-    inventory, findings = documentation_source_inventory(tmp_path, {})
-
-    assert inventory["docs_source_pages"] == 1
-    assert inventory["docs_extraction_failures"] == 1
-    extraction = [finding for finding in findings if finding["kind"] == "docs_source_extraction_failure"]
-    assert len(extraction) == 1
-    assert extraction[0]["classification"] == "blocking"
-    assert extraction[0]["domain"] == "docs"
-    assert extraction[0]["error_type"] == "FileNotFoundError"
-    assert sum(finding["kind"] == "docs_catalogue_missing" for finding in findings) == 3
-
-
-def test_spellcheck_fails_closed_when_pinned_dictionaries_are_absent(tmp_path) -> None:
-    spelling, inventory, findings = spellcheck_catalogues(
-        {"cli.title"},
-        {"ca": {"cli.title": "Declaració tributària"}},
-        tmp_path,
-    )
-
-    assert spelling == {}
-    assert inventory["spelling_tool_failures"] == 1
-    assert findings[0]["kind"] == "spelling_tool_unavailable"
-
-
-def test_identifier_signal_pattern_terminates_on_adversarial_underscore_runs() -> None:
-    """The snake_case arm must not backtrack exponentially on a near-miss run.
-
-    ``_filtered_translation_text`` runs the identifier pattern over arbitrary
-    translator-supplied prose, and Spanish, Catalan and Galician prose is full
-    of non-ASCII letters. Such a letter is a word character the ASCII-only
-    identifier body cannot consume, so a long underscore-separated run ending
-    in one forces the pattern to prove no split matches. With an ambiguous
-    "body or separator" spelling that proof doubles in cost per segment: the
-    input below takes minutes, against microseconds once the split is unique.
-    """
-    adversarial = "A_" + "0_" * 30 + "é"
-
-    started = time.perf_counter()
-    filtered, _ = filtered_translation_text(adversarial)
-    elapsed = time.perf_counter() - started
-
-    assert elapsed < 2.0
-    assert "é" in filtered
+    with pytest.raises(ValueError, match="casilla section"):
+        visible_document_prose(page)

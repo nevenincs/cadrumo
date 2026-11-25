@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ...core.identity.bucket import BucketId
 from ...core.identity.profile_label import ProfileLabel
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class ProfileBucketPointer(BaseModel):
@@ -17,7 +17,7 @@ class ProfileBucketPointer(BaseModel):
     pointer cannot fail on a value the manifest accepted.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     label: ProfileLabel

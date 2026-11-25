@@ -18,13 +18,15 @@ Real registry authority, real engine, real source mesh; nothing is mocked.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -33,10 +35,11 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -45,11 +48,11 @@ from ....domain.calculations.registry.bindings import CasillaObservationValueKin
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -62,6 +65,10 @@ _M347_DECLARATION_KIND: CasillaId = validated_casilla_id("decl.tipo-declaracion"
 _M100_YEAR = 2024
 _ANNUAL = "0A"
 _BASE_LIQUIDABLE_NEGATIVA_GENERAL: CasillaId = validated_casilla_id("1391", surface="_BASE_LIQUIDABLE_NEGATIVA")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _PAGOS_OUTPUT_BY_SOURCE: dict[str, CasillaId] = {
     "130": validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT"),
     "131": validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT"),
@@ -76,10 +83,10 @@ _SOURCED_ELSEWHERE = frozenset(
         "ledger_oss_aggregation",
         "collectible_invoice",
         "payable_invoice",
+        "retencion_soportada",
+        *BUCKET_AGGREGATION_LOCK_SOURCES,
     },
 )
-_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset({"renta-certificado-trabajo-retenciones"})
-
 __all__ = ["secure_objects"]
 
 
@@ -88,41 +95,26 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _seed_profile(*identity: UserProfileFact) -> None:
-    """Seed a single natural-person taxpayer whose facts cover Modelo 100's calculation bindings."""
-    record = _create_profile_record_for_test(
+def _seed_profile(*identity: UserProfileFact, without: Collection[str] = ()) -> None:
+    """Seed a single natural-person taxpayer whose facts cover Modelo 100's calculation bindings.
+
+    ``without`` names the persona facts, such as its name, this taxpayer never stated.
+    """
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            *identity,
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                *identity,
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            ),
+            without=without,
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -133,9 +125,9 @@ def _seed_filed(
     modelo: str,
     filing_year: int,
     period: str,
-    casilla_id: CasillaId,
+    casilla_ids: tuple[CasillaId, ...],
 ) -> None:
-    """Persist one filed zero-valued source casilla through the production observation store."""
+    """Persist one filing's zero-valued source casillas through the production observation store."""
     observation = RegistryModeloObservation(
         modelo=modelo,
         filing_year=filing_year,
@@ -144,18 +136,11 @@ def _seed_filed(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            casilla_values={casilla_id: Decimal("0")},
+            casilla_values=dict.fromkeys(casilla_ids, Decimal("0")),
         ),
     )
     repository = CalculationObservationRepository(objects=secure_objects)
-    repository.save(
-        repository.prepare_observation_envelope(
-            observation,
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation),
-        ),
-    )
+    save_stamped_observation(repository, observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
 
 
 def _calculate(
@@ -197,16 +182,16 @@ def _calculate_m100(secure_objects: SecureObjectRepository) -> BucketAggregation
         modelo="100",
         filing_year=_M100_YEAR - 1,
         period=_ANNUAL,
-        casilla_id=_BASE_LIQUIDABLE_NEGATIVA_GENERAL,
+        casilla_ids=(_BASE_LIQUIDABLE_NEGATIVA_GENERAL, *_PRIOR_ANEXO_C_REMAINDERS),
     )
     for source, casilla_id in _PAGOS_OUTPUT_BY_SOURCE.items():
         for quarter in ("1T", "2T", "3T", "4T"):
-            _seed_filed(secure_objects, modelo=source, filing_year=_M100_YEAR, period=quarter, casilla_id=casilla_id)
+            _seed_filed(
+                secure_objects, modelo=source, filing_year=_M100_YEAR, period=quarter, casilla_ids=(casilla_id,)
+            )
     snapshot = published_authority_operation().snapshot("100", filing_year=_M100_YEAR, period=_ANNUAL)
     zero_bindings = {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS and binding.source not in _SOURCED_ELSEWHERE
+        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _SOURCED_ELSEWHERE
     }
     return _calculate(secure_objects, modelo="100", filing_year=_M100_YEAR, binding_values=zero_bindings)
 
@@ -241,7 +226,9 @@ def test_the_declarant_identity_reaches_modelo_100_from_the_profile(secure_objec
 def test_a_profile_without_a_name_leaves_it_empty_and_says_which_fields_to_declare(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    _seed_profile(UserProfileFact(path="identity.tax_id", value="12345678Z"))
+    _seed_profile(
+        UserProfileFact(path="identity.tax_id", value="12345678Z"), without=("identity.name", "identity.surnames")
+    )
 
     result = _calculate_m100(secure_objects)
 

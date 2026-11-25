@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,7 +13,11 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    newest_authored_edition,
+    newest_authored_editions,
+)
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -22,6 +26,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
@@ -52,6 +57,7 @@ from ...filing.producer_snapshot import (
     build_filing_producer_snapshot,
 )
 from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .. import revision_replay_inputs
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -61,7 +67,10 @@ _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 # salary certificate as the 0596 retenciones source.
 _SALARY_CERTIFICATE_EDITIONS = newest_authored_editions("100", 2)
 
-_CLOCK = datetime(_SUPPORT.horizon, 6, 27, 12, 45, tzinfo=UTC)
+_YEAR = _SUPPORT.horizon
+_M100_YEAR = newest_authored_edition("100")
+_M390_YEAR = filing_grade_exercises("390")[-1]
+_CLOCK = datetime(_YEAR, 6, 27, 12, 45, tzinfo=UTC)
 _BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
@@ -75,7 +84,7 @@ _M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
     "0596",
     surface="_M100_RETENCIONES_TRABAJO_CASILLA",
 )
-_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-certificado-trabajo-retenciones"
+_M100_RETENCION_SOPORTADA_TRABAJO_BINDING = "renta-retencion-soportada-trabajo"
 _M100_M111_RETENCIONES_BINDING = "renta-modelo-111-retenciones-periodicas"
 
 
@@ -165,15 +174,15 @@ def _revision(
 
 
 def test_revision_replay_inputs_include_calculated_informational_casillas() -> None:
-    work_unit = _work_unit(modelo="390", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="390", filing_year=_M390_YEAR, period_code="0A")
     revision = _revision(
         work_unit,
-        casilla_values={_M390_EJERCICIO_CASILLA: Decimal("2025")},
+        casilla_values={_M390_EJERCICIO_CASILLA: Decimal(_M390_YEAR)},
     )
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
-    assert replay_inputs[_M390_EJERCICIO_CASILLA] == "2025"
+    assert replay_inputs[_M390_EJERCICIO_CASILLA] == str(_M390_YEAR)
 
 
 def test_revision_replay_never_turns_a_text_casilla_placeholder_into_zero_text() -> None:
@@ -183,39 +192,42 @@ def test_revision_replay_never_turns_a_text_casilla_placeholder_into_zero_text()
     every text casilla the operator left empty. Stringifying it would hand the
     filing renderer a ``"0"`` for a text field such as the declaration type.
     """
-    work_unit = _work_unit(modelo="390", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="390", filing_year=_M390_YEAR, period_code="0A")
     revision = _revision(
         work_unit,
         casilla_values={
-            _M390_EJERCICIO_CASILLA: Decimal("2025"),
+            _M390_EJERCICIO_CASILLA: Decimal(_M390_YEAR),
             _M390_TIPO_DECLARACION_CASILLA: Decimal("0"),
         },
     )
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
-    assert replay_inputs[_M390_EJERCICIO_CASILLA] == "2025"
+    assert replay_inputs[_M390_EJERCICIO_CASILLA] == str(_M390_YEAR)
     assert _M390_TIPO_DECLARACION_CASILLA not in replay_inputs
 
 
 def test_revision_replay_preserves_a_stated_date_and_omits_an_absent_date_placeholder() -> None:
     """M347's unfilled signature date never becomes an invalid filed date ``0``."""
-    work_unit = _work_unit(modelo="347", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="347", filing_year=_YEAR, period_code="0A")
     signature_date = validated_casilla_id("firma-fecha")
     absent = _revision(work_unit, casilla_values={signature_date: Decimal("0")})
     stated = _revision(
         work_unit,
-        input_values_by_casilla_id={signature_date: "2026-02-01"},
+        input_values_by_casilla_id={signature_date: date(_YEAR, 2, 1).isoformat()},
         casilla_values={signature_date: Decimal("0")},
     )
 
     assert signature_date not in revision_filing_replay_inputs(revision=absent, work_unit=work_unit)
-    assert revision_filing_replay_inputs(revision=stated, work_unit=work_unit)[signature_date] == "2026-02-01"
+    assert (
+        revision_filing_replay_inputs(revision=stated, work_unit=work_unit)[signature_date]
+        == date(_YEAR, 2, 1).isoformat()
+    )
 
 
 def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None:
-    work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
-    revision = _resolved_revision(modelo="180", filing_year=2024, period_code="0A")
+    work_unit = _work_unit(modelo="180", filing_year=_YEAR, period_code="0A")
+    revision = _resolved_revision(modelo="180", filing_year=_YEAR, period_code="0A")
     manual_required = next(
         casilla for casilla in revision.casillas if casilla.required and casilla.input_kind == InputKind.MANUAL
     )
@@ -230,7 +242,7 @@ def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None
 
 
 def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_salaried_profile() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="100", filing_year=_M100_YEAR, period_code="0A")
     revision = _revision(
         work_unit,
         relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
@@ -253,7 +265,7 @@ def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_sal
 
 
 def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="100", filing_year=_M100_YEAR, period_code="0A")
     revision = _revision(work_unit)
     profile = TaxpayerProfile(
         tax_id="12345678Z",
@@ -273,26 +285,94 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
 
 
+def test_revision_replay_inputs_reuse_the_callers_pinned_operation_for_relation_zero_applicability(
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relation-zero synthesis must reuse the caller's pinned operation, not reopen a default.
+
+    Before this fix, ``_not_applicable_relation_zero_ids`` called
+    ``derive_modelo_applicability`` without ``operation=``, so it leased a fresh
+    default authority generation instead of reusing the one the caller already
+    pinned -- mixing authority generations within a single operation. This
+    spies on the real applicability function to prove the exact pinned object
+    reaches it unchanged.
+
+    The filing year is the newest Modelo 100 edition the registry authors
+    rather than a written year, because which exercise is replayed states
+    nothing about the pin. It is not the support horizon: the horizon
+    exercise of an annual Renta declaration still awaits its approving
+    Orden, which the export path refuses before any relation is reached.
+    """
+    work_unit = _work_unit(modelo="100", filing_year=newest_authored_edition("100"), period_code="0A")
+    revision = _revision(
+        work_unit,
+        relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
+    )
+    profile = TaxpayerProfile(
+        tax_id="12345678Z",
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
+        iva_regime=IVARegime("GENERAL"),
+    )
+    observed_operations: list[PinnedAuthorityOperation | None] = []
+    original = revision_replay_inputs.derive_modelo_applicability
+
+    def _spy(
+        profile_arg: TaxpayerProfile,
+        modelo_arg: str,
+        *,
+        reference_date: date,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> object:
+        observed_operations.append(operation)
+        return original(profile_arg, modelo_arg, reference_date=reference_date, operation=operation)
+
+    monkeypatch.setattr(revision_replay_inputs, "derive_modelo_applicability", _spy)
+
+    revision_filing_replay_inputs(
+        revision=revision,
+        work_unit=work_unit,
+        workflow_profile=profile,
+        operation=operation,
+    )
+
+    assert observed_operations
+    assert all(observed is operation for observed in observed_operations)
+
+
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
-def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_0596(filing_year: int) -> None:
+def test_revision_replay_inputs_replay_the_payer_record_credit_a_calculation_stored(filing_year: int) -> None:
+    """The family value the calculation resolved for 0596 replays from the stored binding."""
     work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
-        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
-        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        binding_overrides={_M100_RETENCION_SOPORTADA_TRABAJO_BINDING: "4500.00"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00")},
     )
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
-    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert replay_inputs[_M100_RETENCION_SOPORTADA_TRABAJO_BINDING] == "4500.00"
     assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
-def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(filing_year: int) -> None:
+def test_revision_replay_inputs_never_turn_a_0596_figure_into_a_payer_record_credit(filing_year: int) -> None:
+    """A 0596 figure with no stored binding is not recovered onto the payer-record family.
+
+    The family is resolved from the taxpayer's payer records and refuses a
+    caller value, so no figure, keyed or calculated, may be replayed as one.
+    """
     work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
-    revision = _revision(
+    keyed = _revision(
+        work_unit,
+        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+    )
+    verified = _revision(
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         relation_overrides={
@@ -306,12 +386,13 @@ def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(
         },
     )
 
-    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+    keyed_inputs = revision_filing_replay_inputs(revision=keyed, work_unit=work_unit)
+    verified_inputs = revision_filing_replay_inputs(revision=verified, work_unit=work_unit)
 
-    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
-    assert replay_inputs["renta-modelo-130-pagos-fraccionados"] == "1520.00"
-    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
-    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+    for replay_inputs in (keyed_inputs, verified_inputs):
+        assert _M100_RETENCION_SOPORTADA_TRABAJO_BINDING not in replay_inputs
+        assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+    assert verified_inputs["renta-modelo-130-pagos-fraccionados"] == "1520.00"
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
@@ -339,7 +420,7 @@ def test_revision_replay_inputs_replay_an_override_for_a_binding_the_registry_re
 
 
 def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfield() -> None:
-    work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
+    work_unit = _work_unit(modelo="349", filing_year=_YEAR, period_code="1T")
     revision = _revision(
         work_unit,
         detail_rows=(
@@ -360,7 +441,7 @@ def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfie
 
 
 def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> None:
-    work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
+    work_unit = _work_unit(modelo="349", filing_year=_YEAR, period_code="1T")
     revision = _revision(
         work_unit,
         detail_rows=(
@@ -369,7 +450,7 @@ def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> Non
                 nif_comunitario="DE123456789",
                 razon_social="ALEMAN GMBH",
                 clave_operacion="E",
-                ejercicio="2025",
+                ejercicio=str(_SUPPORT.floor),
                 periodo="2T",
                 base_rectificada=Decimal("1100.00"),
                 base_anterior=Decimal("1000.00"),
@@ -383,20 +464,20 @@ def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> Non
     assert replay_inputs["iva-349-rectificacion-row-nif"] == {"1": "123456789"}
     assert replay_inputs["iva-349-rectificacion-row-apellidos"] == {"1": "ALEMAN GMBH"}
     assert replay_inputs["iva-349-rectificacion-row-clave"] == {"1": "E"}
-    assert replay_inputs["iva-349-rectificacion-row-ejercicio"] == {"1": "2025"}
+    assert replay_inputs["iva-349-rectificacion-row-ejercicio"] == {"1": str(_SUPPORT.floor)}
     assert replay_inputs["iva-349-rectificacion-row-periodo"] == {"1": "2T"}
     assert replay_inputs["iva-349-rectificacion-row-base-rectificada"] == {"1": Decimal("1100.00")}
     assert replay_inputs["iva-349-rectificacion-row-base-anterior"] == {"1": Decimal("1000.00")}
 
 
 def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows() -> None:
-    work_unit = _work_unit(modelo="720", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="720", filing_year=_YEAR, period_code="0A")
     row_binding_values = {
         "modelo-720-asset-row-class": {"1": "C"},
         "modelo-720-asset-row-country": {"1": "AD"},
         "modelo-720-asset-row-currency": {"1": "EUR"},
         "modelo-720-asset-row-identifier": {"1": "AD-ACCOUNT-001"},
-        "modelo-720-asset-row-acquisition-date": {"1": "2020-01-15"},
+        "modelo-720-asset-row-acquisition-date": {"1": date(_SUPPORT.floor, 1, 15).isoformat()},
         "modelo-720-asset-row-valuation": {"1": "40000"},
     }
     revision = _revision(work_unit, row_binding_values=row_binding_values)
@@ -427,7 +508,7 @@ def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows(
     assert draft_rows[("modelo-720-asset-row-country", 1)] == "AD"
     assert draft_rows[("modelo-720-asset-row-currency", 1)] == "EUR"
     assert draft_rows[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
-    assert draft_rows[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
+    assert draft_rows[("modelo-720-asset-row-acquisition-date", 1)] == date(_SUPPORT.floor, 1, 15).isoformat()
     assert draft_rows[("modelo-720-asset-row-valuation", 1)] == Decimal("40000")
 
 
@@ -463,7 +544,7 @@ def _replayed_annual_draft(
     scalar_bindings: dict[str, Decimal],
     row_binding_values: dict[str, dict[str, str]],
     expected_values: dict[CasillaId, Decimal],
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     text_inputs: dict[CasillaId, str] | None = None,
 ):
     """Rehydrate one calculated annual revision through the public draft path."""
@@ -518,14 +599,14 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 ) -> None:
     """The canonical exporter carries two persisted property rows to disk."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL", "2": "ARRENDADOR DOS SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28", "2": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1", "2": "1"},
-        "modelo-180-perceptor-row-base": {"1": "3000", "2": "2000"},
+        "modelo-180-perceptor-row-base": {"1": "3500", "2": "1500"},
         "modelo-180-perceptor-row-withholding-percentage": {"1": "19", "2": "19"},
         "modelo-180-perceptor-row-retenciones": {"1": first_withholding, "2": second_withholding},
-        "modelo-180-perceptor-row-accrual-year": {"1": "2025", "2": "2025"},
+        "modelo-180-perceptor-row-accrual-year": {"1": str(_YEAR), "2": str(_YEAR)},
         "modelo-180-perceptor-row-property-situation": {"1": "1", "2": "1"},
         "modelo-180-perceptor-row-cadastral-reference": {
             "1": "1234567VK4713C0001XY",
@@ -560,7 +641,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B00015016", "B00015016")
     assert _parsed_field_values(parsed, "modelo-180-decl-total-perceptores") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-180-decl-base-total") == (Decimal("5000.00"),)
     # Both contiguous components declare one total, so each parsed slot carries
@@ -574,7 +655,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_control_totals(tmp_path: Path) -> None:
     """Optional annual-detail slots remain absent without breaking read-back."""
     rows = {
-        "modelo-190-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-190-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL", "2": "PERCEPTOR DOS SL"},
         "modelo-190-perceptor-row-provincia": {"1": "28", "2": "28"},
         "modelo-190-perceptor-row-clave": {"1": "G", "2": "G"},
@@ -589,8 +670,14 @@ def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_contr
         modelo="190",
         scalar_bindings={
             "modelo-190-percepciones-anual": Decimal("2"),
-            "modelo-190-111-trabajo-dinerario-importe-anual": Decimal("600"),
-            "modelo-190-111-retenciones-anual": Decimal("110"),
+            "modelo-190-perceptor-rows-percepcion-dineraria-total": Decimal("600"),
+            "modelo-190-perceptor-rows-percepcion-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-dineraria-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-retencion-practicada-total": Decimal("110"),
+            "modelo-190-perceptor-rows-ingreso-a-cuenta-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-retencion-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
         },
         row_binding_values=rows,
         expected_values={
@@ -611,7 +698,7 @@ def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_contr
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B00015016", "B00015016")
     # This optional unsigned-integer slot uses zero fill, and zero is a valid
     # count. The wire alone cannot distinguish absent input from measured zero.
     assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (
@@ -641,7 +728,7 @@ def _m190_2022_draft(*, text_inputs: dict[CasillaId, str] | None = None):
     """Replay one calculated Modelo 190 2022 revision with a single perceptor."""
     return _replayed_annual_draft(
         modelo="190",
-        filing_year=2022,
+        filing_year=_SUPPORT.floor,
         scalar_bindings={
             "modelo-190-percepciones-anual": Decimal("1"),
             "modelo-190-perceptor-rows-percepcion-dineraria-total": Decimal("600"),
@@ -654,7 +741,7 @@ def _m190_2022_draft(*, text_inputs: dict[CasillaId, str] | None = None):
             "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
         },
         row_binding_values={
-            "modelo-190-perceptor-row-nif": {"1": "B12345674"},
+            "modelo-190-perceptor-row-nif": {"1": "B00015016"},
             "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL"},
             "modelo-190-perceptor-row-provincia": {"1": "28"},
             "modelo-190-perceptor-row-clave": {"1": "G"},
@@ -737,7 +824,11 @@ def test_populated_m190_2022_text_contact_fields_round_trip_through_the_fichero(
         parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources),
     )
 
-    assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == supplied
+    # The 190 design writes every alphanumeric field in upper case unless the field says otherwise,
+    # and the e-mail field does not, so the address comes back as the design writes it.
+    assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == {
+        field_id: value.upper() for field_id, value in supplied.items()
+    }
 
 
 @pytest.mark.parametrize("missing_row", ("1", "2"))
@@ -747,7 +838,7 @@ def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(
 ) -> None:
     """A required property field cannot become an accepted blank wire slot."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1"},
@@ -824,7 +915,7 @@ def test_persisted_m232_rows_produce_no_replay_inputs_when_absent() -> None:
     The empty case the finding asks for: without it the one-row assertion below
     could pass on a projection that emitted the slots unconditionally.
     """
-    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="232", filing_year=_YEAR, period_code="0A")
     revision = _revision(work_unit)
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
@@ -839,7 +930,7 @@ def test_persisted_m232_row_reaches_filing_replay() -> None:
     storage while replay produced nothing for them, silently losing the rows
     during export or filing reconstruction.
     """
-    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="232", filing_year=_YEAR, period_code="0A")
     row = _m232_row(1)
     revision = _revision(work_unit, detail_rows=(row,))
 
@@ -858,7 +949,7 @@ def test_persisted_m232_rows_fill_every_declared_row_slot() -> None:
     Row order is the slot order, so a projection that collapsed rows onto one
     slot or dropped the tail would surface here rather than in an export diff.
     """
-    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="232", filing_year=_YEAR, period_code="0A")
     rows = tuple(_m232_row(index) for index in range(1, 6))
     revision = _revision(work_unit, detail_rows=rows)
 
@@ -876,9 +967,9 @@ def test_m232_replay_keys_are_declared_casillas_of_the_resolved_revision() -> No
     Guards against the projection inventing coordinates: an id that no casilla
     declares would be dropped downstream exactly as silently as no id at all.
     """
-    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="232", filing_year=_YEAR, period_code="0A")
     revision = _revision(work_unit, detail_rows=(_m232_row(1),))
-    resolved_revision = _resolved_revision(modelo="232", filing_year=2025, period_code="0A")
+    resolved_revision = _resolved_revision(modelo="232", filing_year=_YEAR, period_code="0A")
     declared = {casilla.id for casilla in resolved_revision.casillas}
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)

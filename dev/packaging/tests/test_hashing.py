@@ -12,7 +12,7 @@ from typing import Final, Protocol
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .. import cohort_manifest, distribution_evidence_emit, evidence, smoke_homebrew
 from ..command_execution import run_command

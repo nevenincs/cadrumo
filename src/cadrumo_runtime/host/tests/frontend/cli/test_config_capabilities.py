@@ -42,7 +42,7 @@ _CREDENTIAL_INPUT = "capability-test-passphrase"
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         # Setup takes its own lease, as a command does, and releases it before the

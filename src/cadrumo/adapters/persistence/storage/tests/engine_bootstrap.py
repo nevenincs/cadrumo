@@ -15,12 +15,12 @@ from sqlalchemy import Engine
 
 from .....core.config import Settings
 from ..sql.engine import create_engine_from_settings
-from ..sql.orm import Base
+from ..sql.tables import metadata
 
 
 def bootstrap_sqlite_engine(db_path: Path) -> Engine:
     """Create a real SQLite engine at ``db_path`` with the schema materialized."""
 
     engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
+    metadata.create_all(engine)
     return engine

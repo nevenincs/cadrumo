@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Monthly code-health report: duplication, import quality, complexity.
+"""Monthly code-health report: duplication, import quality, complexity and native sources.
 
 Composes the EXISTING scanners already shipped under ``dev/`` into one
 red/amber/green dashboard, so a contributor gets a single command and a single
@@ -27,6 +27,10 @@ model:
 * **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
   maintainability, and cognitive scan. Any current hotspot is RED; zero is
   GREEN. This dimension has no development-state partition.
+* **Native source inventories and token duplication** -- inventories
+  TypeScript, TSX, CSS and Rust and records separate jscpd observations.
+  Scanner output does not identify the complete analysed population, so these
+  dimensions are AMBER-unavailable even if the aggregate counts match.
 
 This module does not re-implement any scanner; it shells out to or imports the
 existing tools and applies one shared severity vocabulary on top. Keeping the
@@ -65,13 +69,14 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.exit_codes import FINDINGS_CODES, OK
+from dev.paths import REPO_ROOT, UTF_8
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
+from .native_health import SCOPES, LanguageScope, classify, inventory, scan
 
 _UTF_8: Final[str] = UTF_8
 
@@ -276,6 +281,28 @@ def audit_complexity() -> DimensionReport:
     return DimensionReport(name="complexity", status=Status.GREEN, headline="no complexity hotspots")
 
 
+def audit_native_language(repo_root: Path, scope: LanguageScope) -> DimensionReport:
+    """Report the filesystem inventory and advisory token-copy observations."""
+    name = f"{scope.name}-duplication"
+    try:
+        files = inventory(repo_root, scope)
+        entries = tuple(classify(repo_root, path) for path in files)
+    except (OSError, UnicodeError) as exc:
+        return DimensionReport(name=name, status=Status.AMBER, headline=str(exc), available=False)
+    result = scan(repo_root, scope)
+    details = [
+        "Token matches are review leads; semantic duplication is not measured.",
+        "Inventory excludes node_modules, target, dist, build, generated and .git directories.",
+    ]
+    details.extend(f"inventory [{entry.role}]: {entry.path.as_posix()}" for entry in entries)
+    if result.outcome is DuplicationOutcome.UNAVAILABLE:
+        return DimensionReport(name=name, status=Status.AMBER, headline=result.reason, details=details, available=False)
+    details[:0] = [group.render() for group in result.raw_groups]
+    headline = f"{len(files)} files inventoried; {result.files_analyzed} analysed; {result.clone_count} token clone(s)"
+    details.insert(0, "Scanner reports aggregate counts, not file identities; complete coverage is unproven.")
+    return DimensionReport(name=name, status=Status.AMBER, headline=headline, details=details, available=False)
+
+
 # ---------------------------------------------------------------------------
 # Report aggregation
 # ---------------------------------------------------------------------------
@@ -321,6 +348,7 @@ def build_report(repo_root: Path) -> HealthReport:
             audit_duplication(repo_root),
             audit_layering(repo_root),
             audit_complexity(),
+            *(audit_native_language(repo_root, scope) for scope in SCOPES),
         ),
     )
 

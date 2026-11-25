@@ -43,6 +43,11 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    INTRACOMMUNITY_OPERATOR_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -52,11 +57,11 @@ from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObs
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
-    assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_source_guards import assert_no_novel_source_kinds
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
@@ -77,10 +82,9 @@ from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
@@ -94,30 +98,8 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET_ID = "34900000-0000-4000-8000-000000000349"
 
 
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="source-boundary"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value="false"),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-    # carries the row as filer data, so it must be stated rather than assumed.
-    # False is the truthful value for this natural-person filer.
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
 _ATTRIBUTION_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="E12345674"),
+    UserProfileFact(path="identity.tax_id", value="E00015008"),
     UserProfileFact(path="identity.name", value="Ready CB"),
     UserProfileFact(path="activities.description", value="attribution-entity activity"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -128,14 +110,13 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
     UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
     UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
+    UserProfileFact(path="censo.large_company", value="false"),
     UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
-    UserProfileFact(path="attribution_entity.legal_form", value="comunidad_bienes"),
     UserProfileFact(path="attribution_entity_socios.0.nif", value="22222222B"),
     UserProfileFact(path="attribution_entity_socios.0.name", value="Member Two"),
     UserProfileFact(path="attribution_entity_socios.0.share_pct", value=Decimal("40")),
     UserProfileFact(path="attribution_entity_socios.0.base_imponible_assigned", value=Decimal("4000")),
     UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="1"),
-    UserProfileFact(path="attribution_entity_socios.0.role", value="comunero"),
     # Clave del rendimiento is a REQUIRED schema field (Orden HAP/2250/2015
     # art. 3, LIRPF arts. 86-87), so the readiness gate refuses M184 work
     # without it. "D" is actividades economicas, which is what this fixture
@@ -146,7 +127,6 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="attribution_entity_socios.1.share_pct", value=Decimal("60")),
     UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
     UserProfileFact(path="attribution_entity_socios.1.participe_clave", value="1"),
-    UserProfileFact(path="attribution_entity_socios.1.role", value="comunero"),
     UserProfileFact(path="attribution_entity_socios.1.clave", value="D"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
     # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
@@ -156,28 +136,15 @@ _ATTRIBUTION_PROFILE_FACTS = (
 )
 
 
-def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -185,7 +152,23 @@ def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        yield profile.repository
+
+
+@pytest.fixture
+def oss_enrolled_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """The repository of a profile enrolled in the OSS/IOSS special regime, so Modelo 369 applies."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0, facts=(UserProfileFact(path="iva.oss_enrolled", value=True),))
+        yield profile.repository
+
+
+@pytest.fixture
+def intracommunity_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """The repository of a profile whose taxpayer trades with other Member States, so Modelo 349 applies."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        seed_persona_profile(INTRACOMMUNITY_OPERATOR_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 
@@ -357,9 +340,9 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        profile_context = _profile_creation_context_for_test()
+        profile_context = profile_creation_context_for_test()
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
@@ -372,7 +355,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
 
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
@@ -460,11 +443,11 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         revision=revision,
         calculated_at=_T1,
     )
-    from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+    from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
     from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
-    from cadrumo.application.aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from cadrumo.application.aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
 
     catalogue_read_ports = InvoiceCatalogueReadPorts(
         invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repo),
@@ -496,7 +479,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
                     objects=secure_objects,
                 ),
             ).resolve(context),
-            LedgerRentaIncomeAggregationSourceResolver(ports=catalogue_read_ports).resolve(context),
+            LedgerRentaIncomeAggregationSourceResolver(
+                ports=catalogue_read_ports,
+                activity_asset_history_repository=ActividadAssetHistoryRepository(
+                    bucket_id=_BUCKET_ID,
+                    objects=secure_objects,
+                ),
+                transaction_repository=tx_repo,
+            ).resolve(context),
             OssIossLedgerSourceResolver(ports=catalogue_read_ports, candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(
                 ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repo),
@@ -528,14 +518,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 
 
 def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
-    secure_objects: SecureObjectRepository,
+    oss_enrolled_objects: SecureObjectRepository,
 ) -> None:
     """OssIossLedgerSourceResolver is enrolled and fires on M369 (esquema-union).
 
     With empty candidates the resolver returns an empty resolution but claims its
     owned source so the binding does not appear as unhandled on source_diagnostics.
     """
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(oss_enrolled_objects)
     work_unit = _seed(wu_repo, modelo="369", filing_year=2026, period="1T", revision_id="esquema-union")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -567,14 +557,14 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
 
 
 def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
-    secure_objects: SecureObjectRepository,
+    intracommunity_objects: SecureObjectRepository,
 ) -> None:
     """InvoiceCatalogueSourceResolver is enrolled and fires on M349.
 
     With an empty invoice catalogue the resolver returns an empty resolution but
     claims its owned sources so 'collectible_invoice' does not appear as unhandled.
     """
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(intracommunity_objects)
     work_unit = _seed(wu_repo, modelo="349", filing_year=2026, period="1T", revision_id="2020-y-siguientes")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -679,7 +669,7 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         _register_sole_holder(observations, objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),

@@ -22,22 +22,24 @@ from ...application.ledger.actions_classification import (
     apply_classification_rule_match,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
+from ...application.ledger.manual_update import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
+from ...application.operations.subject_reference import expected_operation_subject
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
@@ -183,7 +185,7 @@ def seed_invoice(profile_id: UUID, *, number: str) -> str:
             invoice_number=number,
             issued_at=date(2025, 1, 21),
             counterparty_name="Synthetic Supplier",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             base_total=Decimal("100.00"),
             iva_total=Decimal("21.00"),
@@ -229,14 +231,26 @@ def stored_state(
     return dict(ports.transaction_repository.load().transactions), stored_events(profile_id)
 
 
+def declared_subject(
+    driver: conformance.ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+) -> str:
+    """The subject the definition's own declaration names for ``payload``."""
+    reference = driver.services.submission.supervisor.registry.lookup(definition_id).subject_reference
+    subject = expected_operation_subject(reference, profile_id=profile_id, payload=payload)
+    assert subject is not None, definition_id
+    return subject
+
+
 def submit(
-    driver: conformance._ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> OperationObservationSuccessV1:
     """Run one operation through the real supervisor to where it settles or waits for its review."""
 
     async def run() -> OperationObservationSuccessV1:
         submitted, _observed = await driver.run(
-            definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
+            definition_id=definition_id,
+            subject_ref=declared_subject(driver, definition_id=definition_id, profile_id=profile_id, payload=payload),
+            payload=payload,
         )
         return await driver.observe(submitted.receipt.operation_id)
 
@@ -244,7 +258,7 @@ def submit(
 
 
 def review_and_apply(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     *,
     definition_id: str,
     profile_id: UUID,
@@ -259,7 +273,9 @@ def review_and_apply(
 
     async def run() -> OperationObservationSuccessV1:
         submitted, waiting = await driver.run(
-            definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
+            definition_id=definition_id,
+            subject_ref=declared_subject(driver, definition_id=definition_id, profile_id=profile_id, payload=payload),
+            payload=payload,
         )
         assert waiting.projection.pending_interaction is not None, waiting.projection
         while_pending()
@@ -280,14 +296,14 @@ def succeeded(observed: OperationObservationSuccessV1) -> bool:
 
 
 def resolve_result[ResultT: BaseModel](
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
     observed: OperationObservationSuccessV1,
     result_type: type[ResultT],
 ) -> ResultT:
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,

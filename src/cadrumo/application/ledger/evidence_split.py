@@ -4,7 +4,7 @@ The model proposes per-child *proportions* (fractions); the system derives the
 per-child euro amounts in :func:`derive_child_amounts` so they sum EXACTLY to the
 parent gross to the cent (the remainder lands on the last child). The model never
 emits a euro amount (``llm-selects-system-derives-tax-numbers``). This bridges
-:func:`~cadrumo.application.ledger.llm_classification.suggest_evidence_split` to
+:func:`~cadrumo.application.ledger.llm_evidence_split.suggest_evidence_split` to
 :func:`~cadrumo.application.ledger.actions_split_merge.split_transaction`, whose
 children must sum to the parent magnitude exactly.
 """
@@ -33,10 +33,10 @@ def derive_child_amounts(gross: Decimal, proportions: Sequence[Decimal]) -> tupl
 
     A single proportion (``1.0``) is the "no split warranted" verdict and yields
     ``(gross,)`` — the whole amount on one child. The caller
-    (:func:`~cadrumo.application.ledger.llm_classification.suggest_evidence_split`)
+    (:func:`~cadrumo.application.ledger.llm_evidence_split.suggest_evidence_split`)
     surfaces that verdict for review and never drives a one-way split through
     :func:`~cadrumo.application.ledger.actions_split_merge.split_transaction`;
-    :func:`~cadrumo.application.ledger.llm_classification.apply_evidence_split`
+    :func:`~cadrumo.application.ledger.llm_evidence_split.apply_evidence_split`
     refuses a single-child suggestion.
 
     Returns:

@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from .....tests.log_records import delivered_text
 from ..authority import bundled_indexed_authority, release_bundled_indexed_authority
 from ..authority_store import AuthorityStoreError
 from .shared_authority_isolation import isolated_shared_authority
@@ -61,8 +62,9 @@ def test_release_is_refused_and_logged_while_an_operation_holds_a_lease(
     with owner.operation(), caplog.at_level(logging.WARNING):
         assert release_bundled_indexed_authority() is False
 
-    assert "the shared registry authority stayed open" in caplog.text
-    assert "hold leases" in caplog.text
+    logged = delivered_text(caplog)
+    assert "the shared registry authority stayed open" in logged
+    assert "hold leases" in logged
     # The refusal closed nothing: the same owner is still shared and still reads.
     assert bundled_indexed_authority() is owner
     with owner.operation() as operation:

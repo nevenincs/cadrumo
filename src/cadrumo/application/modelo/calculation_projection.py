@@ -30,8 +30,8 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar
-from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 from .calculation import visible_calculation_casilla_values, visible_calculation_observations
+from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 from .result_summary import ResultSummaryRole, calculation_result_summary
 from .verification_projection import ModeloRegistrySnapshotCoordinates
 

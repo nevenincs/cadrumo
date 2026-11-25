@@ -40,8 +40,15 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
+)
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -56,20 +63,19 @@ from ....adapters.persistence.profile.calculation_observations import (
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from ....application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
@@ -80,19 +86,20 @@ from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_filing_action_ports
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
+from ...adapter_composition_work_ports import build_filing_action_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .general_iva_profile_facts_support import general_iva_profile_facts
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _BUCKET_ID = "30300000-0000-4000-8000-000000000032"
 _YEAR = 2026
 _REFUND_PERIOD = "2T"
@@ -122,14 +129,6 @@ _SALDO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fi
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit
 #: that is refunded (REDEME) or carried (compensar).
-_NEGATIVE_CREDIT_ENGINE_INPUTS = {
-    "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-soportado-interiores-cuota": Decimal("1000.00"),
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-    "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-}
 
 
 @contextmanager
@@ -157,30 +156,16 @@ def _activity_start_date_for_period(period_token: str) -> date:
 
 def _store_operator_profile(*, period_token: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=_activity_start_date_for_period(period_token)),
+            facts=general_iva_profile_facts(
+                tax_id=_TAX_ID,
+                activity_start_date=_activity_start_date_for_period(period_token),
             ),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -193,6 +178,7 @@ def workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerPro
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         activity_start_date=_activity_start_date_for_period(period_token),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -260,12 +246,12 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_266:
-            revision = calculate_modelo_revision(
+            seed_m303_period_cuotas(work_unit.work_unit_id, soportado=M303_LEDGER_CUOTA)
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
                 iva_compensation_decision=report.decision,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period,
@@ -275,7 +261,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
                 filing_period_date=date(_YEAR, 6, 30),
                 ports=_calculation_ports_266,
                 clock=_DECIDED_AT,
-            )
+            ).revision
     # The scenario genuinely produced a negative result and a positive carry saldo.
     assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
     saldo = revision.casilla_values[_SALDO_CASILLA]

@@ -16,12 +16,8 @@ from dev.packaging.installed_runtime import installed_cli_runtime
 class RepositoryInstalledProcessWorld:
     """Keep the existing real installed runtime and clean environment implementations."""
 
-    def environment(
-        self, *, storage_root: Path, authority_root: Path, runtime_socket_dir: Path | None = None
-    ) -> dict[str, str]:
-        return build_installed_cli_environment(
-            storage_root=storage_root, authority_root=authority_root, runtime_socket_dir=runtime_socket_dir
-        )
+    def environment(self, *, storage_root: Path, authority_root: Path) -> dict[str, str]:
+        return build_installed_cli_environment(storage_root=storage_root, authority_root=authority_root)
 
     def runtime(self, cli: Path, environment: Mapping[str, str], log: Path) -> AbstractContextManager[None]:
         return installed_cli_runtime(cli, environment, log)

@@ -20,8 +20,8 @@ from ...application.modelo.reconciliation_import_operation import (
     ModeloReconciliationImportRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._modelo_behavior_support import resolve_optional_cli_period
-from ._modelo_cli_support import validate_work_unit_selector
+from .modelo_behavior_support import resolve_optional_cli_period
+from .modelo_cli_support import validate_work_unit_selector
 
 
 def import_modelo_reconciliation(

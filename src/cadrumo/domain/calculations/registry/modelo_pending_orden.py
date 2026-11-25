@@ -48,8 +48,6 @@ __all__ = (
 
 from enum import StrEnum
 
-from ....core.time.clock import today_madrid
-
 
 class ModeloApprovalCadence(StrEnum):
     """Typed token for a registry-declared approval cadence."""
@@ -91,20 +89,20 @@ _PENDING_ORDEN_VOCABULARY_FACT_ID = "modelo-pending-" + "orden-vocabulary"
 
 def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve pending-filing vocabulary through the governed mapping seam."""
-    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
     from .schema_base import DateAxis
 
+    # A vocabulary read holds no date: it takes the editions inside the support
+    # envelope, never the run date.
     selected_authority = require_governed_fact_authority(authority, subject="pending Orden vocabulary")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_PENDING_ORDEN_VOCABULARY_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
+    vocabulary = StringMappingFact(
+        fact_id=_PENDING_ORDEN_VOCABULARY_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        policy=StringMappingPolicy(
+            subject="pending Orden vocabulary", value_whitespace=MappingValueWhitespace.PRESERVE
         ),
     )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("registry vocabulary has an invalid mapping shape")
-    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    return vocabulary.resolve_support_envelope_entries(selected_authority)
 
 
 def _publication_year_message(filing_year: int, expected_publication_year: int) -> str:

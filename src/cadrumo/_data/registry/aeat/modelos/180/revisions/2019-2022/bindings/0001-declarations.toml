@@ -70,7 +70,7 @@ required_text = ["modelo 180"]
 
 [[revisions.2019-2022.bindings]]
 id = "modelo-180-perceptor-row-name"
-provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nombre", fact = "row_field", row_field = "perceptor_name", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nombre", fact = "row_field", row_field = "party_filing_name", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-58-2003:art-93"]

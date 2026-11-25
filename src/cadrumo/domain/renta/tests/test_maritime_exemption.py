@@ -12,16 +12,24 @@ Expected values are grounded in:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.authority import bundled_indexed_authority
+from ....core.errors.hierarchy import InternalInvariantError
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.facts.payloads import MappingFactEntry, MappingFactPayload
+from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
+from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ..errors import RentaValidationError
 from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -37,6 +45,14 @@ from ..maritime_exemption import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
 _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
 _DA41_LEGAL_REFS = ("ley-35-2006:da-41",)
@@ -46,6 +62,28 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 _AUTHORITY = PublishedGovernedFactSource()
 _FILING_PERIOD = date(2025, 12, 31)
 _DEVENGO_DATE = date(2025, 12, 31)
+
+
+@dataclass(slots=True)
+class _RebecaMappingSource:
+    """Change one registry mapping while retaining the pinned source for other facts."""
+
+    operation: PinnedAuthorityOperation
+    registry: str
+    queries: list[str] = field(default_factory=list)
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.queries.append(query.fact_id)
+        resolved = self.operation.resolve_governed_fact(query)
+        if query.fact_id != "rebeca-eligible-vessel-registries":
+            return resolved
+        assert isinstance(resolved, ResolvedMappingFact)
+        return resolved.model_copy(
+            update={"payload": MappingFactPayload(entries=(MappingFactEntry(key="registries", value=self.registry),))}
+        )
+
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        return self.operation.supported_filing_years()
 
 
 _ART_7P_SELECTOR_CASES = (
@@ -209,7 +247,29 @@ class TestRebecaEligible:
 
     def test_selector_cases(self) -> None:
         for label, facts, expected in _REBECA_SELECTOR_CASES:
-            assert rebeca_eligible(facts) is expected, label
+            assert rebeca_eligible(facts, effective_date=_DEVENGO_DATE) is expected, label
+
+    def test_an_explicit_source_controls_both_selector_and_calculation(self) -> None:
+        with bundled_indexed_authority().operation() as operation:
+            source = _RebecaMappingSource(operation=operation, registry="custom-register")
+            ordinary = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+            custom = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="custom-register")
+            assert not rebeca_eligible(ordinary, effective_date=_DEVENGO_DATE, authority=source)
+            assert rebeca_eligible(custom, effective_date=_DEVENGO_DATE, authority=source)
+            result = calculate_rebeca_exemption(
+                gross_navigation_income=Decimal("1000"), facts=custom, authority=source, devengo_date=_DEVENGO_DATE
+            )
+            assert result.value == Decimal("500")
+            assert source.queries[-2:] == ["rebeca-eligible-vessel-registries", "rebeca-maritime-exemption-fraction"]
+
+    def test_selector_without_an_authority_scope_refuses(self) -> None:
+        facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+        # A fresh thread does not inherit this module's operation fixture.
+        with (
+            ThreadPoolExecutor(max_workers=1) as pool,
+            pytest.raises(InternalInvariantError, match="generation-pinned"),
+        ):
+            pool.submit(rebeca_eligible, facts, effective_date=_DEVENGO_DATE).result()
 
 
 class TestDa41Eligible:
@@ -298,7 +358,7 @@ class TestCheckRetmarMandatoryFiling:
 
 
 class TestCalculateArt7pExemption:
-    """Art. 7.p) calculation: min(annual_salary / 365 * qualifying_days, 60_100).
+    """Art. 7.p) calculation: min(annual_salary / days_of_year * qualifying_days, 60_100).
 
     Expected values are derived from Ley 35/2006 Art. 7.p) BOE-A-2006-20764:
     cap = 60,100 EUR. The formula is statutory, not hand-computed.
@@ -310,6 +370,56 @@ class TestCalculateArt7pExemption:
         waters_type="international",
     )
 
+    @pytest.mark.parametrize(
+        ("year", "salary", "expected"),
+        [
+            (2023, "36500", "10000"),
+            (2024, "36600", "10000"),
+        ],
+    )
+    def test_the_reparto_runs_over_every_day_of_the_year(self, year: int, salary: str, expected: str) -> None:
+        # RIRPF art. 6.2: "un criterio de reparto proporcional teniendo en cuenta el
+        # numero total de dias del ano". 100 days of a salary that earns 100 EUR a day.
+        obs = calculate_art_7p_exemption(
+            annual_salary=Decimal(salary),
+            qualifying_days=100,
+            facts=self._BASE_FACTS,
+            filing_period=date(year, 12, 31),
+        )
+        assert obs.value == Decimal(expected)
+
+    def test_a_leap_year_divides_the_same_salary_by_one_day_more(self) -> None:
+        # By hand: 36,500 x 100 / 365 = 10,000.00, and 36,500 x 100 / 366 = 9,972.677... = 9,972.68.
+        in_a_common_year, in_a_leap_year = (
+            calculate_art_7p_exemption(
+                annual_salary=Decimal("36500"),
+                qualifying_days=100,
+                facts=self._BASE_FACTS,
+                filing_period=date(year, 12, 31),
+            ).value
+            for year in (2023, 2024)
+        )
+        assert isinstance(in_a_common_year, Decimal)
+        assert isinstance(in_a_leap_year, Decimal)
+        assert in_a_common_year.quantize(Decimal("0.01")) == Decimal("10000.00")
+        assert in_a_leap_year.quantize(Decimal("0.01")) == Decimal("9972.68")
+
+    def test_only_a_leap_year_admits_a_366th_day(self) -> None:
+        obs = calculate_art_7p_exemption(
+            annual_salary=Decimal("36600"),
+            qualifying_days=366,
+            facts=self._BASE_FACTS,
+            filing_period=date(2024, 12, 31),
+        )
+        assert obs.value == Decimal("36600")
+        with pytest.raises(RentaValidationError):
+            calculate_art_7p_exemption(
+                annual_salary=Decimal("36500"),
+                qualifying_days=366,
+                facts=self._BASE_FACTS,
+                filing_period=date(2023, 12, 31),
+            )
+
     def test_standard_case_below_cap(self) -> None:
         # No published AEAT worked example covers this prorate input set;
         # the numeric value assertion would re-apply the formula under
@@ -319,6 +429,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -332,6 +443,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("73000"),
             qualifying_days=365,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.value == Decimal("60100")
 
@@ -341,6 +453,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("60100"),
             qualifying_days=365,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.value == Decimal("60100")
 
@@ -353,6 +466,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=1,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
@@ -365,6 +479,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
@@ -373,6 +488,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.source_refs == _ART_7P_SOURCE_REFS
 
@@ -389,6 +505,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=100,
                 facts=facts,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_zero_salary(self) -> None:
@@ -399,6 +516,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("0"),
                 qualifying_days=100,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_zero_qualifying_days(self) -> None:
@@ -409,6 +527,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=0,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_qualifying_days_exceeding_year(self) -> None:
@@ -419,6 +538,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=366,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
 
@@ -446,6 +566,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -462,6 +583,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("40000"),
             facts=facts,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -478,6 +600,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("50000"),
             facts=facts,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -488,6 +611,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.legal_refs == _REBECA_LEGAL_REFS
 
@@ -495,6 +619,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.source_refs == _REBECA_SOURCE_REFS
 
@@ -509,6 +634,7 @@ class TestCalculateRebecaExemption:
             calculate_rebeca_exemption(
                 gross_navigation_income=Decimal("30000"),
                 facts=facts,
+                devengo_date=_DEVENGO_DATE,
             )
 
     def test_raises_on_zero_income(self) -> None:
@@ -518,6 +644,7 @@ class TestCalculateRebecaExemption:
             calculate_rebeca_exemption(
                 gross_navigation_income=Decimal("0"),
                 facts=self._REBECA_FACTS,
+                devengo_date=_DEVENGO_DATE,
             )
 
 
@@ -541,6 +668,7 @@ def test_art7p_legal_refs_contain_no_wrong_provision() -> None:
         annual_salary=Decimal("36500"),
         qualifying_days=100,
         facts=facts,
+        filing_period=_FILING_PERIOD,
     )
     assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
@@ -557,6 +685,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
     obs = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),
         facts=facts,
+        devengo_date=_DEVENGO_DATE,
     )
     assert obs.legal_refs == _REBECA_LEGAL_REFS
 
@@ -603,6 +732,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
             vessel_flag="foreign",
             waters_type="international",
         ),
+        filing_period=_FILING_PERIOD,
     )
     rebeca_obs = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),
@@ -610,6 +740,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
             worker_class="trabajador_del_mar",
             vessel_registry="REBECA",
         ),
+        devengo_date=_DEVENGO_DATE,
     )
 
     legal_refs = set(art7p_obs.legal_refs) | set(rebeca_obs.legal_refs)

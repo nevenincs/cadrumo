@@ -11,17 +11,13 @@ say what it corrected.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
-from decimal import Decimal
-from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...iva.schema import InvoiceKind
-from ..enums import InvoiceClass, IvaRate, PaymentStatus
-from ..models import Invoice, InvoiceLine
+from ..enums import InvoiceClass
+from .issued_services_invoice_support import issued_services_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -33,43 +29,12 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
-_BASE = Decimal("1000.00")
-_CUOTA = Decimal("210.00")
-
-
-def _line() -> InvoiceLine:
-    return InvoiceLine(
-        description="Servicios profesionales",
-        quantity=Decimal("1"),
-        unit_price=_BASE,
-        subtotal=_BASE,
-        iva_rate=IvaRate.from_registry("RATE_21"),
-        iva_amount=_CUOTA,
-    )
-
-
-def _invoice(**overrides: Any) -> Invoice:
-    payload: dict[str, Any] = {
-        "kind": InvoiceKind.ISSUED,
-        "invoice_number": "2026/RECT-1",
-        "issued_at": date(2026, 4, 15),
-        "counterparty_name": "Cliente SL",
-        "counterparty_tax_id": "B12345674",
-        "counterparty_country": "ES",
-        "base_total": _BASE,
-        "iva_total": _CUOTA,
-        "grand_total": _BASE + _CUOTA,
-        "currency": "EUR",
-        "lines": (_line(),),
-        "payment_status": PaymentStatus.PAID,
-    }
-    payload.update(overrides)
-    return Invoice(**payload)  # type: ignore[arg-type]
+_INVOICE_NUMBER = "2026/RECT-1"
 
 
 def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
     """Every invoice before this guard is, and remains, an ordinaria."""
-    invoice = _invoice()
+    invoice = issued_services_invoice(_INVOICE_NUMBER)
 
     assert invoice.invoice_class == InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series is None
@@ -78,7 +43,8 @@ def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
 
 def test_a_rectificativa_names_the_invoice_it_corrects_in_its_own_series() -> None:
     """The truthful rectificativa is representable with both mandatory facts."""
-    invoice = _invoice(
+    invoice = issued_services_invoice(
+        _INVOICE_NUMBER,
         invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"),
         series="R",
         rectifies_invoice_number="2026/RECT-0",
@@ -92,13 +58,17 @@ def test_a_rectificativa_names_the_invoice_it_corrects_in_its_own_series() -> No
 def test_a_rectificativa_with_no_series_is_refused() -> None:
     """RD 1619/2012 art. 6.1.a.2.º makes a specific series obligatoria for rectificativas."""
     with pytest.raises(ValidationError, match="must be issued in a specific series"):
-        _invoice(invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"), rectifies_invoice_number="2026/RECT-0")
+        issued_services_invoice(
+            _INVOICE_NUMBER,
+            invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"),
+            rectifies_invoice_number="2026/RECT-0",
+        )
 
 
 def test_a_rectificativa_naming_nothing_it_corrects_is_refused() -> None:
     """LIVA art. 89 requires a rectificativa to rectify a named prior invoice."""
     with pytest.raises(ValidationError, match="must name the invoice it rectifies"):
-        _invoice(invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"), series="R")
+        issued_services_invoice(_INVOICE_NUMBER, invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"), series="R")
 
 
 def test_a_stray_rectification_reference_on_an_ordinaria_is_refused() -> None:
@@ -108,12 +78,12 @@ def test_a_stray_rectification_reference_on_an_ordinaria_is_refused() -> None:
     correction the invoice's own declared class denies.
     """
     with pytest.raises(ValidationError, match="rectifies_invoice_number only applies to a factura rectificativa"):
-        _invoice(rectifies_invoice_number="2026/RECT-0")
+        issued_services_invoice(_INVOICE_NUMBER, rectifies_invoice_number="2026/RECT-0")
 
 
 def test_a_series_alone_is_permitted_on_any_invoice_class() -> None:
     """Series are a general RD 1619/2012 art. 6.1.a concept, not exclusive to rectificativas."""
-    invoice = _invoice(series="A")
+    invoice = issued_services_invoice(_INVOICE_NUMBER, series="A")
 
     assert invoice.invoice_class == InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series == "A"

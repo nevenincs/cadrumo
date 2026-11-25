@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import (
     LiveParityCatalogue,
     OracleEnvironment,
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelo_130() -> ModeloDefinition:
-    modelo, _catalogues = _committed_modelo("130")
+    modelo, _catalogues = committed_modelo("130")
     return modelo
 
 
@@ -102,8 +102,8 @@ def test_binding_to_unregistered_oracle_fails_with_unknown_oracle_message() -> N
 
 
 def test_aggregate_audit_collects_failures_across_modelos() -> None:
-    modelo_130, _catalogues = _committed_modelo("130")
-    modelo_111, _catalogues = _committed_modelo("111")
+    modelo_130, _catalogues = committed_modelo("130")
+    modelo_111, _catalogues = committed_modelo("111")
 
     bound_130 = _bind_oracle_id_on_first_cross_reference(modelo_130, "missing-130")
     bound_111 = _bind_oracle_id_on_first_cross_reference(modelo_111, "missing-111")

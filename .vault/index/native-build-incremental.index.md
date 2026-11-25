@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#native-build-incremental'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f0eabda0f4cf8a82c44050c44ad00958dc979433f6e159bc228402dc8aa47f40'
+body_hash: 'sha256:20215e8a68dd9b226dda6a2ccba62755381717b071dbb87d516ac8429cf45f03'
 related:
   - '[[2026-10-16-native-build-incremental-adr]]'
   - '[[2026-10-16-native-build-incremental-audit]]'
-  - '[[2026-10-16-native-build-incremental-ledger]]'
-  - '[[2026-10-16-native-build-incremental-plan]]'
 ---
 
 # `native-build-incremental` feature index
@@ -27,11 +25,3 @@ Auto-generated index of all documents tagged with `#native-build-incremental`.
 ### audit
 
 - `2026-10-16-native-build-incremental-audit` - `native-build-incremental` audit: incremental packaging and single-MSI integration
-
-### exec
-
-- `2026-10-16-native-build-incremental-ledger` - `native-build-incremental` ledger
-
-### plan
-
-- `2026-10-16-native-build-incremental-plan` - `native-build-incremental` plan

@@ -26,31 +26,32 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ...compiler.loader import load_modelo_directory
 from .. import cli as tree_cli
-from .._tree_validation import GeneratedExportTreeValidationContext
 from ..candidate_staging import ignore_export_authority_directories, stage_generated_export_candidate
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
     check_prepared_invocation,
     publish_prepared_invocation,
-    stage_published_modelo,
-    supporting_modelos,
 )
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..published_edition_staging import stage_published_modelo, supporting_modelos
 from ..render_check import revision_render_inputs
+from ..tree_validation import GeneratedExportTreeValidationContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "210"
-_REVISION = "2026-y-siguientes"
+_OPEN_ENDED = open_ended_revision(_MODELO)
+_REVISION = str(_OPEN_ENDED.id)
 _SOURCE_REF = "aeat-dr-210-2026"
-_FILING_YEAR = 2026
+_FILING_YEAR = _OPEN_ENDED.valid_from.year
 _PERIOD = "EVENT-1"
 
 
@@ -324,7 +325,7 @@ def test_absent_delta_export_clearance_and_tree_roll_back_together(tmp_path: Pat
         assert "cleared_families" not in metadata["revisions"][_REVISION]
         raise RegistryValidationError("planted post-cutover refusal")
 
-    monkeypatch.setattr(tree_cli, "_validate_final_live_target", refuse_live)
+    monkeypatch.setattr(tree_cli, "validate_final_live_target", refuse_live)
     with pytest.raises(RegistryValidationError, match="previous revision was restored"):
         publish_prepared_invocation(prepared, rendered, target_state)
     assert _tree_bytes(modelo_root) == before

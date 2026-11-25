@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -25,11 +26,11 @@ class TestDeclaredPeriodTokensAutocomplete:
 
     def test_empty_modelo_returns_empty_tuple(self) -> None:
         """Empty and whitespace-only modelo strings return () without error."""
-        from .._modelo_behavior_support import _declared_period_tokens
+        from ..modelo_behavior_support import declared_period_tokens
 
-        assert _declared_period_tokens("") == ()
-        assert _declared_period_tokens("   ") == ()
-        assert _declared_period_tokens(None) == ()
+        assert declared_period_tokens("") == ()
+        assert declared_period_tokens("   ") == ()
+        assert declared_period_tokens(None) == ()
 
     def test_unknown_modelo_swallows_cadrumo_error_and_returns_empty(self) -> None:
         """An unregistered modelo triggers an CadrumoError from the registry.
@@ -38,11 +39,11 @@ class TestDeclaredPeriodTokensAutocomplete:
         unknown modelos. The narrowed except arm catches it and returns (),
         matching the autocomplete contract.
         """
-        from .._modelo_behavior_support import _declared_period_tokens
+        from ..modelo_behavior_support import declared_period_tokens
 
         # "XXXXXX" is guaranteed unregistered; the real authority raises
         # RegistryValidationError which is an CadrumoError subtype.
-        result = _declared_period_tokens("XXXXXX")
+        result = declared_period_tokens("XXXXXX")
         assert result == ()
 
     def test_known_modelo_returns_period_tokens(self) -> None:
@@ -52,9 +53,9 @@ class TestDeclaredPeriodTokensAutocomplete:
         the authority resolves the definition, and the period set is returned.
         Modelo 303 is a known quarterly modelo; its tokens include quarterly markers.
         """
-        from .._modelo_behavior_support import _declared_period_tokens
+        from ..modelo_behavior_support import declared_period_tokens
 
-        result = _declared_period_tokens("303")
+        result = declared_period_tokens("303")
         # Modelo 303 is quarterly; at minimum the four quarterly tokens are present.
         assert isinstance(result, tuple)
         assert len(result) > 0
@@ -75,31 +76,33 @@ class TestDeclaredPeriodTokensAutocomplete:
         """
         import logging
 
-        from .. import _modelo_behavior_support as _modelo_module
-        from .._modelo_behavior_support import _declared_period_tokens
+        from .. import modelo_behavior_support
+        from ..modelo_behavior_support import declared_period_tokens
 
         # The logger belongs to the module that owns the helper, not the
         # extracted command module that imports it.
-        assert hasattr(_modelo_module, "_log")
-        logger = _modelo_module._log
-        assert "cadrumo.entrypoints.cli._modelo_behavior_support" in logger.name
+        assert hasattr(modelo_behavior_support, "log")
+        logger = modelo_behavior_support.log
+        assert "cadrumo.entrypoints.cli.modelo_behavior_support" in logger.name
 
         def _raise_unexpected(*_args: object, **_kwargs: object) -> tuple[str, ...]:
             raise RuntimeError("synthetic registry defect")
 
-        monkeypatch.setattr(_modelo_module, "declared_modelo_period_tokens", _raise_unexpected)
+        monkeypatch.setattr(modelo_behavior_support, "declared_modelo_period_tokens", _raise_unexpected)
         with caplog.at_level(logging.DEBUG, logger=logger.name):
-            assert _declared_period_tokens("303", operation=operation) == ()
+            assert declared_period_tokens("303", operation=operation) == ()
 
+        delivered = delivered_records(caplog, logger.name)
         debug_records = [
             record
-            for record in caplog.records
-            if record.levelno == logging.DEBUG and "_declared_period_tokens" in record.message
+            for record in delivered
+            if record.levelno == logging.DEBUG and "declared_period_tokens" in record.message
         ]
-        assert len(debug_records) == 1, [record.message for record in caplog.records]
-        exc_info = debug_records[0].exc_info
-        assert isinstance(exc_info, tuple), exc_info
-        assert exc_info[0] is RuntimeError
+        assert len(debug_records) == 1, [record.message for record in delivered]
+        # Handlers receive the traceback as text; the live exception is not kept on the record.
+        traceback_text = debug_records[0].exc_text
+        assert traceback_text is not None and "Traceback" in traceback_text
+        assert "RuntimeError" in traceback_text
 
     def test_cadrumo_error_subtype_is_swallowed_not_propagated(self) -> None:
         """Any CadrumoError subclass raised by the authority is caught and swallowed.
@@ -108,10 +111,10 @@ class TestDeclaredPeriodTokensAutocomplete:
         the function returns () rather than propagating the error to Click.
         """
         from ....core.errors.hierarchy import CadrumoError
-        from .._modelo_behavior_support import _declared_period_tokens
+        from ..modelo_behavior_support import declared_period_tokens
 
         # Both the "totally unknown" and the "empty" paths return () silently.
         # The unknown modelo exercises the real CadrumoError arm.
-        result = _declared_period_tokens("99999")
+        result = declared_period_tokens("99999")
         assert result == ()
         assert not isinstance(result, CadrumoError)

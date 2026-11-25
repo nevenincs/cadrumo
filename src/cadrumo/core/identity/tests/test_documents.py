@@ -12,14 +12,14 @@ from __future__ import annotations
 import pytest
 
 from ..documents import IdentityDocument, IdentityError, is_identity_structurally_shaped
-from ..documents import validate_identity as _validate_identity
+from ..documents import validate_identity as documents_validate_identity
 from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def validate_identity(candidate: object) -> IdentityDocument:
-    return _validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
+    return documents_validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
 
 
 def test_valid_identity_document_variants_round_trip() -> None:
@@ -29,7 +29,7 @@ def test_valid_identity_document_variants_round_trip() -> None:
             (
                 "00000000T",
                 "12345678Z",
-                "87654321X",
+                "00001502F",
                 "12345678z",
                 "  12345678Z  ",
                 "12345678-Z",
@@ -39,16 +39,16 @@ def test_valid_identity_document_variants_round_trip() -> None:
         (
             "nie",
             (
-                "X1234567L",
-                "Y0000000Z",
-                "Z0000000M",
-                "x1234567L",
+                "X0001500M",
+                "Y0001007D",
+                "Z0001008R",
+                "x0001500M",
             ),
             IdentityDocument.NIE,
         ),
         (
             "cif",
-            ("A12345674", "P1234567D", "C12345674", "C1234567D"),
+            ("A00015008", "P0001500H", "C00015008", "C0001501F"),
             IdentityDocument.CIF,
         ),
     )
@@ -157,7 +157,7 @@ class TestCifKindCatalogue:
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from ..tax_id import validate_spanish_tax_id
 
-        for candidate in ("K1234567L", "L1234567L", "M1234567L"):
+        for candidate in ("K0001000B", "L0001001N", "M0001002J"):
             assert validate_spanish_tax_id(candidate, SPANISH_TAX_ID_FORMAT) == candidate
             assert validate_identity(candidate) is IdentityDocument.NIF
 

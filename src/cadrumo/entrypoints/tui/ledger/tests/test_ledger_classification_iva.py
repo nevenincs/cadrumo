@@ -14,11 +14,13 @@ from .....application.ledger import models as ledger_models
 from .....application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
+from .....core.i18n.render import tr
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.models import BucketTransactionRef
 from ...components.host import ScreenHostApp
+from ...tests.settling import settle
 from .. import classification as classification_ui
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController
@@ -69,8 +71,7 @@ async def _choose_and_confirm(
     await pilot.press("enter")
     assert screen.flow_state is LedgerFlowState.CONFIRMING
     screen.query_one("#ledger-classification-confirm", Button).press()
-    await screen.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -86,7 +87,7 @@ async def test_iva_and_allocation_fields_reach_the_shared_submitter_as_typed_val
     screen = LedgerClassificationScreen(_action_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         _set_input(screen, "taxable_base", "100.00")
         _set_input(screen, "iva_rate", "0.21")
         _set_input(screen, "iva_amount", "0")
@@ -130,7 +131,7 @@ async def test_a_share_and_a_rate_keep_the_fraction_digits_they_have(rate: str) 
     screen = LedgerClassificationScreen(_action_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         _set_input(screen, "iva_rate", rate)
         _set_input(screen, "business_pct", "0.333")
         await _choose_and_confirm(pilot, screen, row=2)  # MIXED
@@ -147,7 +148,7 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
     screen = LedgerClassificationScreen(_action_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await _choose_and_confirm(pilot, screen, row=0)  # BUSINESS
 
     assert screen.flow_state is LedgerFlowState.SUCCEEDED
@@ -168,7 +169,6 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
 @pytest.mark.parametrize(
     ("field_name", "value", "row", "message"),
     (
-        ("iva_rate", "21", 0, "decimal fraction"),
         ("business_pct", "1.01", 2, "business_pct must be within"),
         # Shapes the command line refuses through the same canonical grammar.
         ("taxable_base", "1e3", 0, "taxable_base must be a decimal"),
@@ -190,15 +190,33 @@ async def test_invalid_rate_or_percentage_refuses_before_submit(
     screen = LedgerClassificationScreen(_action_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         _set_input(screen, field_name, value)
         await pilot.press("enter") if row == 0 else await _choose_and_confirm(pilot, screen, row=row)
         if row == 0:
             screen.query_one("#ledger-classification-confirm", Button).press()
-            await pilot.pause()
+            await settle(pilot)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         assert not door.calls
         assert message in str(screen.query_one("#ledger-refusal", Static).render())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rate", ["21", "1.01"])
+async def test_a_percentage_like_rate_shows_the_words_the_backend_serves(rate: str) -> None:
+    door = _ClassificationDoor()
+    screen = LedgerClassificationScreen(_action_controller(door))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 60)) as pilot:
+        await settle(pilot)
+        _set_input(screen, "iva_rate", rate)
+        await pilot.press("enter")
+        screen.query_one("#ledger-classification-confirm", Button).press()
+        await settle(pilot)
+        assert screen.flow_state is LedgerFlowState.CONFIRMING
+        assert not door.calls
+        served = tr("errors.refused.transaction_iva_rate_not_fraction", value=rate)
+        assert str(screen.query_one("#ledger-refusal", Static).render()) == served
 
 
 @pytest.mark.asyncio
@@ -211,7 +229,7 @@ async def test_invalid_deduction_kind_refuses_before_submit(monkeypatch: pytest.
     screen = LedgerClassificationScreen(_action_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         _set_input(screen, "deduction_fact_kind", "not-a-deduction-kind")
         await _choose_and_confirm(pilot, screen, row=0)
         assert screen.flow_state is LedgerFlowState.CONFIRMING

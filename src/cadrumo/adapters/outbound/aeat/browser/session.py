@@ -20,10 +20,10 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from .....core.errors.hierarchy import InternalInvariantError
 
@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     from playwright.async_api import (
         Browser,
         BrowserContext,
+        Dialog,
+        Download,
+        FileChooser,
         Page,
         Playwright,
         ProxySettings,
@@ -46,20 +49,22 @@ from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.file_permissions import restrict_directory_permissions
-from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from .....core.time.clock import now
-from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._site_health_probe import probe_response
+from ..playwright import PlaywrightError, PlaywrightTimeoutError
 from .errors import (
     BrowserError,
     BrowserFailureMode,
+    BrowserNotReadyError,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
+from .site_health_probe import probe_response
 from .site_health_records import (
     SiteHealthEvidence,
     SiteHealthStatus,
@@ -67,6 +72,33 @@ from .site_health_records import (
 )
 
 logger = get_logger(__name__)
+
+
+#: The refusal for a browser that is not available.
+_BROWSER_NOT_AVAILABLE_KEY = "adapters.browser.errors.not_available"
+
+#: The sentence Playwright's launch raises when the browser build it names is not in the browsers folder.
+_MISSING_EXECUTABLE_MARKER = "Executable doesn't exist"
+
+
+def _browser_not_available(exc: BaseException, *, profile_name: str) -> BrowserNotReadyError | None:
+    """Return the plain refusal when ``exc`` is Playwright finding no browser to launch, else ``None``."""
+    if not isinstance(exc, PlaywrightError) or _MISSING_EXECUTABLE_MARKER not in exc.message:
+        return None
+    logger.error(
+        "browser work refused failure_mode=%s profile=%s",
+        BrowserFailureMode.BROWSER_NOT_AVAILABLE,
+        profile_name,
+    )
+    return BrowserNotReadyError(
+        "Chromium browser build is not available",
+        translated_message=_BROWSER_NOT_AVAILABLE_KEY,
+        precondition_verdict=browser_no_action_verdict(
+            condition=BrowserPreconditionCondition.BROWSER_AVAILABLE,
+            facts={"browser_available": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
 
 
 class BrowserSession:
@@ -133,6 +165,58 @@ class BrowserSession:
                 be created, evasion setup fails, or this session already owns a
                 live browser.
         """
+        return await self._create_context(provisioner=provisioner, storage_state=storage_state, view=None)
+
+    async def create_view_context(
+        self,
+        *,
+        observer: ViewPageObserver,
+        provisioner: BrowserContextProvisioner | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> BrowserContext:
+        """Create the context of the person-driven Sede view.
+
+        The context is built exactly like :meth:`create_context`, from the
+        same storage state and provisioner. It is a browser for a person and
+        restricts nothing: no route, request guard or WebSocket or service
+        worker block is installed. It is the one context that accepts
+        downloads: Playwright hands a download's bytes over only through the
+        browser's own transient file, which the view streams to the window and
+        deletes when the transfer ends. Before it is returned, while it has no
+        page, ``observer`` is attached, so it hears of every page the context
+        opens and of every popup, download, file chooser and dialog. The
+        observer only learns of these events; nothing is aborted or closed on
+        its behalf. Every other context, and every guard Cadrumo's automated
+        flows apply, is unchanged.
+
+        Args:
+            observer: The page-observer hook.
+            provisioner: Optional :class:`BrowserContextProvisioner` used to
+                decorate the new context call.
+            storage_state: Optional in-memory storage state mapping passed
+                directly to ``browser.new_context``.
+
+        Returns:
+            The BrowserContext, with no page.
+
+        Raises:
+            BrowserError: As :meth:`create_context`, including when the
+                observer cannot be attached.
+        """
+        return await self._create_context(
+            provisioner=provisioner,
+            storage_state=storage_state,
+            view=_ViewContextWatch(observer),
+        )
+
+    async def _create_context(
+        self,
+        *,
+        provisioner: BrowserContextProvisioner | None,
+        storage_state: Mapping[str, object] | None,
+        view: _ViewContextWatch | None,
+    ) -> BrowserContext:
+        """Launch the owned browser and build one context, observed when ``view`` is set."""
         async with self._lifecycle_lock:
             if self._browser is not None:
                 raise BrowserError(
@@ -164,11 +248,17 @@ class BrowserSession:
                     storage_state=storage_state,
                     provisioner=provisioner,
                 )
+                if view is not None:
+                    # The person's own downloads; every automated context keeps refusing them.
+                    context_kwargs["accept_downloads"] = True
                 context = await await_cancellation_complete(
                     self._create_playwright_context(browser, context_kwargs),
                     task_name="cadrumo-browser-context-create",
                 )
                 await self._apply_evasion(context)
+                if view is not None:
+                    # Before any page exists, so the observer hears of every page.
+                    view.install(context)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
             except asyncio.CancelledError as cancellation:
@@ -215,39 +305,14 @@ class BrowserSession:
             proxy["bypass"] = self.settings.cadrumo_proxy_bypass
         return proxy
 
-    def _require_bundled_browser_provisioned(self) -> None:
-        """Refuse a bundled-Chromium launch before Playwright reports a missing executable.
-
-        Playwright-managed Chromium is the only supported browser, so the
-        check runs before every launch.
-        """
-        from .....application.provisioning_browser import probe_playwright_browser
-
-        status = probe_playwright_browser(settings=self.settings)
-        if status.available:
-            return
-        logger.error(
-            "browser launch refused failure_mode=%s profile=%s",
-            BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-            self.profile.name,
-        )
-        raise BrowserError(
-            "Chromium browser build is not provisioned",
-            failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-            context={"profile": self.profile.name},
-            translated_message=tr("adapters.browser.errors.not_provisioned"),
-            precondition_verdict=status.precondition_verdict,
-        )
-
     async def _launch_owned_chromium(self, proxy: ProxySettings | None) -> None:
         """Retain the browser before deferred launch cancellation can escape."""
         self._browser = await self._launch_chromium(proxy)
 
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
-        self._require_bundled_browser_provisioned()
         try:
-            root = self.settings.cadrumo_chromium_data_root
+            root = storage_path(StorageCategory.CHROMIUM_DATA, settings=self.settings)
             root.mkdir(parents=True, exist_ok=True, mode=0o700)
             self._working_directory = TemporaryDirectory(prefix="session-", dir=root)
             working_path = Path(self._working_directory.name).resolve()
@@ -265,9 +330,6 @@ class BrowserSession:
             }
             for directory in set(child_directories.values()):
                 directory.mkdir(mode=0o700)
-            from .....core.storage_taxonomy import StorageCategory
-            from .....core.storage_taxonomy_locations import storage_path
-
             temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=self.settings)
             temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
             child_environment: dict[str, str | float] = dict(os.environ)
@@ -290,6 +352,9 @@ class BrowserSession:
                 raise InternalInvariantError("Chromium context has no browser owner")
             return browser
         except Exception as exc:
+            refusal = _browser_not_available(exc, profile_name=self.profile.name)
+            if refusal is not None:
+                raise refusal from None
             logger.error(
                 "browser launch failed failure_mode=%s profile=%s headless=%s has_proxy=%s exc_type=%s",
                 BrowserFailureMode.BROWSER_LAUNCH_FAILED,
@@ -347,7 +412,7 @@ class BrowserSession:
             # production flow in this adapter reads a browser-triggered
             # download from disk -- the sole consumer,
             # `capture_submitted_file_artefact`, already re-fetches the
-            # captured URL in-memory via `context.request` -- so this is a
+            # captured URL in-memory via `GuardedApiRequests` -- so this is a
             # zero-behaviour-change default project-wide
             # (sensitive-financial-data-secure-storage-only).
             "accept_downloads": False,
@@ -633,6 +698,83 @@ class BrowserSession:
         if self._working_directory is not None:
             self._working_directory.cleanup()
             self._working_directory = None
+
+
+class ViewPageObserver(Protocol):
+    """Page-observer hook of the Sede view context.
+
+    :meth:`BrowserSession.create_view_context` calls it on the event loop
+    that drives the context, for every page of that context, popups
+    included. The calls only report: the browser keeps the page, popup,
+    download, file chooser and dialog, and the observer decides what the
+    person is offered. Each method must return promptly; an exception it
+    raises is logged by type and changes nothing in the browser.
+
+    Page URLs, titles, file names and dialog text are private taxpayer data.
+    An observer keeps them in memory only and never logs, persists or
+    journals them.
+    """
+
+    def page_opened(self, page: Page) -> None:
+        """Report a page opened in the context by code, such as a provider login page."""
+        ...
+
+    def popup_opened(self, popup: Page, opener: Page) -> None:
+        """Report a popup ``opener`` opened; it stays open and keeps loading."""
+        ...
+
+    def download_started(self, page: Page, download: Download) -> None:
+        """Report a download ``page`` started.
+
+        The view context accepts downloads, so Chromium writes the bytes to
+        its own transient file; the observer streams them from there to the
+        window and deletes the file when the transfer ends.
+        """
+        ...
+
+    def file_chooser_opened(self, page: Page, file_chooser: FileChooser) -> None:
+        """Report a file chooser ``page`` opened; it stays pending until the observer answers it."""
+        ...
+
+    def dialog_opened(self, page: Page, dialog: Dialog) -> None:
+        """Report an alert, confirm, prompt or beforeunload dialog on ``page``.
+
+        The dialog stays open, and the page waits, until the observer accepts
+        or dismisses it.
+        """
+        ...
+
+
+class _ViewContextWatch:
+    """Attach one Sede view context to its page observer."""
+
+    def __init__(self, observer: ViewPageObserver) -> None:
+        self._observer = observer
+
+    def install(self, context: BrowserContext) -> None:
+        """Observe every page the context opens from now on."""
+        context.on("page", self._on_page)
+
+    async def _on_page(self, page: Page) -> None:
+        page.on("download", lambda download: self._report("download", self._observer.download_started, page, download))
+        page.on(
+            "filechooser",
+            lambda chooser: self._report("filechooser", self._observer.file_chooser_opened, page, chooser),
+        )
+        page.on("dialog", lambda dialog: self._report("dialog", self._observer.dialog_opened, page, dialog))
+        # Playwright fixes a page's opener when it creates the page.
+        opener = await page.opener()
+        if opener is None:
+            self._report("page", self._observer.page_opened, page)
+        else:
+            self._report("popup", self._observer.popup_opened, page, opener)
+
+    @staticmethod
+    def _report(event: str, call: Callable[..., None], *arguments: object) -> None:
+        try:
+            call(*arguments)
+        except Exception as exc:
+            logger.error("aeat view page observer failed event=%s exc_type=%s", event, type(exc).__name__)
 
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:

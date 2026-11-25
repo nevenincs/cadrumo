@@ -4,7 +4,6 @@ import inspect
 from dataclasses import replace
 
 import pytest
-from click import IntRange
 from typer.testing import CliRunner
 
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
@@ -252,10 +251,9 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
             parser=DeferredTarget(".test_command_runtime", "public_parser", __package__),
         )
         if use_parser
-        else ValueContract(DeferredTarget("builtins", "int"), click_type=DeferredTarget("click", "IntRange"))
+        else ValueContract(DeferredTarget("builtins", "int"))
     )
     expected_parser = public_parser if use_parser else None
-    expected_click_type = None if use_parser else IntRange
     constraint = ParameterConstraint(
         minimum=1,
         maximum=3,
@@ -315,10 +313,6 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
         assert parameter.resolve_path is spec.constraint.resolve_path
         assert parameter.allow_dash is spec.constraint.allow_dash
         assert parameter.parser is expected_parser
-        if expected_click_type is None:
-            assert parameter.click_type is None
-        else:
-            assert isinstance(parameter.click_type, expected_click_type)
 
 
 def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> None:

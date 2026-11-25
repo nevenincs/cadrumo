@@ -37,8 +37,10 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     unrouted_ledger_renta_income_quantities,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -50,15 +52,17 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 from .test_renta_income_actividad_contract import (
-    _m130_2026_q1_revision,
-    _m130_revision_without_the_retenciones_binding,
+    m130_2026_q1_revision,
+    m130_revision_without_the_retenciones_binding,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-_Q1 = Period.from_year_and_code(2026, "1T")
-_Q4 = Period.from_year_and_code(2026, "4T")
+BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q4 = Period.from_year_and_code(_YEAR, "4T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _DOMESTIC_GENERAL = IvaCategory("domestic_general")
@@ -85,8 +89,8 @@ def _transaction(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 2, 10),
-        value_date=date(2026, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
         amount=cash,
         currency="EUR",
         counterparty="Cliente SL",
@@ -96,7 +100,7 @@ def _transaction(
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={},
@@ -110,7 +114,7 @@ def _transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -124,7 +128,7 @@ def _issued_invoice(
     retention_amount: Decimal | None,
     retention_rate: Decimal | None,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -138,11 +142,11 @@ def _issued_invoice(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": number,
-            "issued_at": date(2026, 2, 10),
+            "issued_at": date(_YEAR, 2, 10),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
-            "bucket_id": _BUCKET,
+            "bucket_id": BUCKET,
             "base_total": base,
             "iva_total": line.iva_amount,
             "grand_total": base + line.iva_amount,
@@ -157,7 +161,7 @@ def _issued_invoice(
     )
 
 
-def _declared_pair() -> tuple[TransactionCatalogue, InvoiceCatalogue]:
+def declared_pair() -> tuple[TransactionCatalogue, InvoiceCatalogue]:
     """Two issued invoices whose retención each invoice states, at 15 % and 7 %."""
     profesional = _transaction(provider_id="cobro-15", cash=_PROFESIONAL_CASH)
     reduced = _transaction(provider_id="cobro-07", cash=_REDUCED_CASH)
@@ -192,7 +196,7 @@ def _aggregate(
     return aggregate_renta_income_ledger(
         transactions,
         invoices,
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         period=period,
         modelo="130",
         target_casilla_id=_M130_INGRESOS_CASILLA,
@@ -208,10 +212,10 @@ def test_declared_retenciones_at_two_rates_reach_the_credit() -> None:
     7 % of 2.000,00, so the credit is 290,00. No single rate over the combined
     3.000,00 base reproduces that figure, which is why two rates are used.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT
@@ -227,7 +231,7 @@ def test_every_consumed_row_carries_its_declaring_marker() -> None:
     The marker is what the fact dispatches on, so a row whose figure the invoice
     states and one reconstructed from cash must not arrive indistinguishable.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     observations = _aggregate(transactions, invoices).observations
 
@@ -249,12 +253,12 @@ def test_an_inferred_row_raises_the_advisory_and_leaves_the_credit_unchanged() -
     retención is reconstructed, so the credit stays at 290,00 and the excluded
     amount is reported with its count.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     inferred = _transaction(provider_id="cobro-sin-factura", cash=Decimal("850.00"))
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), inferred))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
@@ -276,12 +280,12 @@ def test_a_substrate_less_row_is_unresolved_rather_than_a_proven_zero() -> None:
     nothing, which the ledger does not know, so it is reported as unresolved and
     the credit stays at the declared 290,00.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     substrate_less = _transaction(provider_id="cobro-sin-base", cash=Decimal("400.00"))
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), substrate_less))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
@@ -310,7 +314,7 @@ def test_employment_and_non_activity_rows_never_reach_the_credit() -> None:
     reported as inferred or unresolved, because neither leaves a retención
     undetermined: there is none to determine.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     employment = _transaction(
         provider_id="nomina",
         cash=Decimal("1800.00"),
@@ -320,7 +324,7 @@ def test_employment_and_non_activity_rows_never_reach_the_credit() -> None:
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), employment, uncategorised))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT
@@ -343,13 +347,13 @@ def test_the_unrouted_quantity_screen_is_silent_while_a_binding_draws_the_retenc
     the revision and the same rows produce the finding, which is what proves the
     screen was watching rather than switched off.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     observations = _aggregate(transactions, invoices).observations
 
-    assert unrouted_ledger_renta_income_quantities(_m130_2026_q1_revision(), observations) == ()
+    assert unrouted_ledger_renta_income_quantities(m130_2026_q1_revision(), observations) == ()
 
     stripped = unrouted_ledger_renta_income_quantities(
-        _m130_revision_without_the_retenciones_binding(),
+        m130_revision_without_the_retenciones_binding(),
         observations,
     )
     assert len(stripped) == 1
@@ -365,10 +369,10 @@ def test_the_fourth_quarter_credit_agrees_with_the_same_ledger_read_annually() -
     consistency the annual declaration has to agree with, asserted against the
     hand-derived 290,00 rather than against either read's own output.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     fourth_quarter = _aggregate(transactions, invoices, period=_Q4)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, fourth_quarter.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT

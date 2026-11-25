@@ -38,6 +38,10 @@ modelo:
           gasto-importe-anual:
             label: Amount of expenses
           gastos-total-declarante:
+            help: The sum of the amounts of expenses (positions 195 to 207) of the
+              expense-relationship records you declare. If you enter “S” in NATURE
+              OF THE DECLARANT, enter zeros and include no expense records (Orden
+              HAC/56/2024, type 1 record, positions 220 to 234).
             label: Deductible expenses (art. 26.1.a Law 35/2006)
           payee-base-retenciones-193:
             label: Withholding and payment-on-account base

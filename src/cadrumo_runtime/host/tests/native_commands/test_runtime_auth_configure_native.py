@@ -195,6 +195,70 @@ def test_native_cli_auth_configure_settles_and_reads_back_exact_profile_state(
         assert status_payload["certificate_path"] == str(certificate)
 
 
+class _DriftedConfigureResult(AuthConfigurePublicResultV2):
+    """A result model the runtime's shipped contract was not generated from, as after a missed manifest regeneration."""
+
+    drifted_member: str | None = None
+
+
+def test_native_cli_refuses_a_stale_result_contract_by_operation_before_submission(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A command built against another result model is refused by name before anything is submitted."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="native-auth-stale-contract",
+            facts={
+                "identity.name": "Synthetic",
+                "identity.surnames": "Stale Contract",
+                "activities.description": "synthetic test profile",
+            },
+        )
+        invoked: list[str] = []
+
+        def drifted_completion[ResultT: BaseModel](
+            client: FrontendClient,
+            payload: BaseModel,
+            *,
+            definition_id: str,
+            subject_ref: str,
+            result_type: type[ResultT],
+            request_version: int,
+            result_version: int,
+            timeout: float,
+            allow_refusal_detail: bool = False,
+        ) -> RegisteredOperationCompletion[_DriftedConfigureResult]:
+            invoked.append(definition_id)
+            return run_registered_operation(
+                client,
+                payload,
+                definition_id=definition_id,
+                subject_ref=subject_ref,
+                result_type=_DriftedConfigureResult,
+                request_version=request_version,
+                result_version=result_version,
+                timeout=timeout,
+                allow_refusal_detail=allow_refusal_detail,
+            )
+
+        monkeypatch.setattr(configure_bridge, "run_registered_operation", drifted_completion)
+        refused = _invoke(profile, "config", "auth", "configure", "--provider", "clave_movil")
+
+        assert invoked == [AUTH_CONFIGURE_OPERATION_DEFINITION_ID]
+        assert refused.exit_code == 2, refused.output
+        error = json.loads(refused.stderr)["error"]
+        assert error["code"] == "REFUSED_CLI_OPERATION_CONTRACT_STALE"
+        assert error["context"]["reason"] == "operation_contract_stale"
+        assert error["context"]["reason"] != "runtime_invalid_frame"
+        assert error["context"]["operation"] == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
+        assert error["context"]["field"] == "result_schema"
+        assert error["context"]["effect"] == "none"
+
+        status = _invoke(profile, "config", "auth", "status")
+        assert status.exit_code == 0, status.output
+        assert unwrap_cli_result(status)["provider"] != "clave_movil"
+
+
 def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unknown_choices(tmp_path: Path) -> None:
     """A route is saved with its provider, and an invalid choice is refused without being echoed."""
     with native_cli_profile_scope(tmp_path) as profile:
@@ -204,7 +268,6 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
                 "identity.name": "Synthetic",
                 "identity.surnames": "Auth Route",
                 "identity.tax_id": "12345678Z",
-                "auth.dni_nie": "87654321X",
                 "activities.description": "synthetic test profile",
             },
         )
@@ -219,14 +282,10 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
         assert configured.exit_code == 0, configured.output
         payload = unwrap_cli_result(configured)
         assert payload["provider"] == "clave_movil"
-        # The two identities disagree; the result says so without naming either.
-        assert payload["identity_alignment"] == "mismatch"
-        assert payload["complete"] is False
-        precondition_action = payload["precondition_action"]
-        assert isinstance(precondition_action, dict)
-        assert precondition_action["failed_condition_id"] == "auth.clave_movil.identity_aligned"
+        # The profile tax id is the Cl@ve identity, so the result is aligned without naming it.
+        assert payload["identity_alignment"] == "matches"
+        assert payload["complete"] is True
         assert "12345678Z" not in configured.stdout
-        assert "87654321X" not in configured.stdout
 
         status = _invoke(profile, "config", "auth", "status")
         assert status.exit_code == 0, status.output

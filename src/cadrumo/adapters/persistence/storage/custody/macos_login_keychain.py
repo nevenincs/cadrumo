@@ -26,6 +26,52 @@ from .macos_keychain_contracts import (
 from .macos_keychain_policy import keychain_acl_role, keychain_refusal, login_keychain_path, require_keychain_status
 
 
+@contextmanager
+def _suspend_keychain_interaction(ui_get: NativeKeychainFunction, ui_set: NativeKeychainFunction) -> Generator[None]:
+    """Hold the shared native UI state disabled until this caller finishes."""
+    with UI_LOCK:
+        previous = ctypes.c_ubyte()
+        require_keychain_status(native_integer(ui_get(ctypes.byref(previous))))
+        if previous.value not in (0, 1):
+            raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
+        try:
+            require_keychain_status(native_integer(ui_set(0)))
+            observed = ctypes.c_ubyte(1)
+            require_keychain_status(native_integer(ui_get(ctypes.byref(observed))))
+            if observed.value != 0:
+                raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
+            yield
+        finally:
+            restored = ctypes.c_ubyte()
+            if (
+                ui_set(previous.value) != SUCCESS
+                or ui_get(ctypes.byref(restored)) != SUCCESS
+                or restored.value != previous.value
+            ):
+                # Failure to restore shared native UI state is facility
+                # unavailability; it must also prevent a prepared read
+                # result from being released as successful.
+                raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
+
+
+@contextmanager
+def noninteractive_keychain_access() -> Generator[None]:
+    """Refuse native Keychain interaction while a noninteractive credential call runs.
+
+    Acceleration and automation share the process-global native UI switch and
+    its lock. Restoring it is verified before a result may be released.
+    """
+    if sys.platform != "darwin":
+        raise keychain_refusal(AutomationCustodyCode.UNSUPPORTED)
+    security = ctypes.CDLL(SECURITY)
+    ui_get = bind_native_function(
+        security, "SecKeychainGetUserInteractionAllowed", [ctypes.POINTER(ctypes.c_ubyte)], ctypes.c_int32
+    )
+    ui_set = bind_native_function(security, "SecKeychainSetUserInteractionAllowed", [ctypes.c_ubyte], ctypes.c_int32)
+    with _suspend_keychain_interaction(ui_get, ui_set):
+        yield
+
+
 class LoginKeychain:
     """Explicit encrypted OS login store; no entitlement or search-list fallback."""
 
@@ -136,32 +182,8 @@ class LoginKeychain:
 
     @contextmanager
     def _noninteractive(self) -> Generator[None]:
-        # The file-based implementation uses a process-global UI switch. All
-        # cooperating automation-store callers share this lock for the whole
-        # native session, including mutation read-back and error cleanup.
-        with UI_LOCK:
-            previous = ctypes.c_ubyte()
-            require_keychain_status(native_integer(self.ui_get(ctypes.byref(previous))))
-            if previous.value not in (0, 1):
-                raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
-            try:
-                require_keychain_status(native_integer(self.ui_set(0)))
-                observed = ctypes.c_ubyte(1)
-                require_keychain_status(native_integer(self.ui_get(ctypes.byref(observed))))
-                if observed.value != 0:
-                    raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
-                yield
-            finally:
-                restored = ctypes.c_ubyte()
-                if (
-                    self.ui_set(previous.value) != SUCCESS
-                    or self.ui_get(ctypes.byref(restored)) != SUCCESS
-                    or restored.value != previous.value
-                ):
-                    # Failure to restore shared native UI state is facility
-                    # unavailability; it must also prevent a prepared read
-                    # result from being released as successful.
-                    raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
+        with _suspend_keychain_interaction(self.ui_get, self.ui_set):
+            yield
 
     def _validate_keychain(self, keychain: int, path: str) -> None:
         buffer = ctypes.create_string_buffer(4096)

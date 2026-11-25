@@ -110,10 +110,6 @@ impl<'a> Readiness<'a> {
         self.at(Instant::now());
     }
 
-    fn timeout(&self) -> u32 {
-        self.deadline.map_or(INFINITE, timeout_until)
-    }
-
     fn raw(&self, limit: usize) -> io::Result<Vec<Handle>> {
         if self.handles.len() > limit {
             return Err(io::ErrorKind::InvalidInput.into());
@@ -128,40 +124,66 @@ impl<'a> Readiness<'a> {
     /// Block until a handle is signaled or the nearest deadline passes.
     pub fn wait(&self) -> io::Result<Woken> {
         let handles = self.raw(MAXIMUM_WAIT_OBJECTS)?;
-        let timeout = self.timeout();
-        if handles.is_empty() {
-            if timeout == INFINITE {
-                return Err(io::ErrorKind::InvalidInput.into());
+        self.wait_until_ready(|timeout| {
+            if handles.is_empty() {
+                if timeout == INFINITE {
+                    return Err(io::ErrorKind::InvalidInput.into());
+                }
+                std::thread::sleep(Duration::from_millis(u64::from(timeout)));
+                return Ok(Woken::Elapsed);
             }
-            std::thread::sleep(Duration::from_millis(u64::from(timeout)));
-            return Ok(Woken::Elapsed);
-        }
-        // SAFETY: every handle is borrowed from an object that outlives `self`.
-        let result =
-            unsafe { WaitForMultipleObjects(handles.len() as u32, handles.as_ptr(), 0, timeout) };
-        woken(result, handles.len() as u32, false)
+            // SAFETY: every handle is borrowed from an object that outlives `self`.
+            let result = unsafe {
+                WaitForMultipleObjects(handles.len() as u32, handles.as_ptr(), 0, timeout)
+            };
+            woken(result, handles.len() as u32, false)
+        })
     }
 
     /// As [`Readiness::wait`], also returning when window-thread input is queued,
     /// including input already queued before the call.
     pub fn wait_with_messages(&self) -> io::Result<Woken> {
         let handles = self.raw(MAXIMUM_WAIT_OBJECTS - 1)?;
-        // SAFETY: every handle is borrowed from an object that outlives `self`;
-        // an empty array is permitted and then only input or the timeout end it.
-        let result = unsafe {
-            MsgWaitForMultipleObjectsEx(
-                handles.len() as u32,
-                if handles.is_empty() {
-                    ptr::null()
-                } else {
-                    handles.as_ptr()
-                },
-                self.timeout(),
-                QS_ALLINPUT,
-                MWMO_INPUTAVAILABLE,
-            )
-        };
-        woken(result, handles.len() as u32, true)
+        self.wait_until_ready(|timeout| {
+            // SAFETY: every handle is borrowed from an object that outlives `self`;
+            // an empty array is permitted and then only input or the timeout end it.
+            let result = unsafe {
+                MsgWaitForMultipleObjectsEx(
+                    handles.len() as u32,
+                    if handles.is_empty() {
+                        ptr::null()
+                    } else {
+                        handles.as_ptr()
+                    },
+                    timeout,
+                    QS_ALLINPUT,
+                    MWMO_INPUTAVAILABLE,
+                )
+            };
+            woken(result, handles.len() as u32, true)
+        })
+    }
+
+    fn wait_until_ready(&self, wait: impl FnMut(u32) -> io::Result<Woken>) -> io::Result<Woken> {
+        self.wait_until_ready_with_clock(wait, Instant::now)
+    }
+
+    fn wait_until_ready_with_clock(
+        &self,
+        mut wait: impl FnMut(u32) -> io::Result<Woken>,
+        mut now: impl FnMut() -> Instant,
+    ) -> io::Result<Woken> {
+        loop {
+            let timeout = self.deadline.map_or(INFINITE, |deadline| {
+                timeout_millis(deadline.saturating_duration_since(now()))
+            });
+            let result = wait(timeout)?;
+            // Windows timeout resolution can end a kernel wait before the
+            // monotonic deadline. Recompute the remaining wait in that case.
+            if result != Woken::Elapsed || self.deadline.is_none_or(|deadline| now() >= deadline) {
+                return Ok(result);
+            }
+        }
     }
 }
 
@@ -176,9 +198,12 @@ fn woken(result: u32, count: u32, input: bool) -> io::Result<Woken> {
     }
 }
 
-/// Milliseconds until `deadline`, rounded up so a wait never ends before it.
+/// Milliseconds until `deadline`, keeping positive sub-millisecond waits nonzero.
 fn timeout_until(deadline: Instant) -> u32 {
-    let remaining = deadline.saturating_duration_since(Instant::now());
+    timeout_millis(deadline.saturating_duration_since(Instant::now()))
+}
+
+fn timeout_millis(remaining: Duration) -> u32 {
     let millis = remaining.as_nanos().div_ceil(1_000_000);
     millis.min(u128::from(INFINITE - 1)) as u32
 }
@@ -200,14 +225,81 @@ mod tests {
     use super::*;
 
     #[test]
+    fn an_early_timeout_rounds_the_sub_millisecond_remainder_up_until_the_deadline() {
+        let start = Instant::now();
+        let middle = start + Duration::from_micros(500);
+        let deadline = start + Duration::from_millis(1);
+        let mut clock = [start, middle, middle, deadline].into_iter();
+        let mut readiness = Readiness::default();
+        readiness.at(deadline);
+        let mut timeouts = Vec::new();
+        let result = readiness.wait_until_ready_with_clock(
+            |timeout| {
+                timeouts.push(timeout);
+                Ok(Woken::Elapsed)
+            },
+            || {
+                clock
+                    .next()
+                    .expect("the elapsed deadline must end the retries")
+            },
+        );
+        assert_eq!(result.unwrap(), Woken::Elapsed);
+        assert_eq!(timeouts, [1, 1]);
+        assert_eq!(clock.next(), None);
+    }
+
+    #[test]
+    fn an_early_kernel_timeout_retries_without_losing_a_signal_or_input() {
+        for ready in [Woken::Signaled, Woken::Input] {
+            let mut readiness = Readiness::default();
+            readiness.after(Duration::from_secs(60));
+            let mut calls = 0;
+            let result = readiness.wait_until_ready(|timeout| {
+                assert!(timeout > 0);
+                calls += 1;
+                Ok(if calls == 1 { Woken::Elapsed } else { ready })
+            });
+            assert_eq!(result.unwrap(), ready);
+            assert_eq!(calls, 2);
+        }
+    }
+
+    #[test]
+    fn an_elapsed_deadline_and_kernel_errors_do_not_retry() {
+        let mut readiness = Readiness::default();
+        readiness.now();
+        let mut calls = 0;
+        assert_eq!(
+            readiness
+                .wait_until_ready(|timeout| {
+                    calls += 1;
+                    assert_eq!(timeout, 0);
+                    Ok(Woken::Elapsed)
+                })
+                .unwrap(),
+            Woken::Elapsed
+        );
+        assert_eq!(calls, 1);
+        readiness.after(Duration::from_secs(60));
+        let error = readiness.wait_until_ready(|_| Err(io::ErrorKind::PermissionDenied.into()));
+        assert_eq!(error.unwrap_err().kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    #[test]
     fn an_idle_set_waits_for_its_deadline_and_a_signal_ends_the_wait_once() {
         let event = Event::new().unwrap();
         let mut readiness = Readiness::default();
         readiness.handle(event.as_handle());
-        readiness.after(Duration::from_millis(60));
-        let started = Instant::now();
+        let deadline = Instant::now() + Duration::from_millis(60);
+        readiness.at(deadline);
         assert_eq!(readiness.wait().unwrap(), Woken::Elapsed);
-        assert!(started.elapsed() >= Duration::from_millis(60));
+        let returned = Instant::now();
+        assert!(
+            returned >= deadline,
+            "idle wait ended {:?} before its armed deadline",
+            deadline.saturating_duration_since(returned)
+        );
 
         let signal = Arc::clone(&event);
         let signaller = std::thread::spawn(move || {

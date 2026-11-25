@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -37,11 +38,20 @@ from ....core.aggregation import BindingSourceKind
 from ....core.hashing import content_hash_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_invoice_withholding as bridge
-from ..modelo_results import ModeloAggregateResult
+from ..modelo_query_results import ModeloAggregateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OPERATION_ID = "b" * 64
@@ -300,7 +310,7 @@ def test_aggregate_cli_invoice_route_uses_worker_summary_without_ambient_authori
     result = cast(ModeloAggregateResult, rendered["result"])
     assert result.withholding_window is not None
     assert result.withholding_window.generation == 1
-    assert "B12345674" not in result.model_dump_json()
+    assert "B00015016" not in result.model_dump_json()
     assert "150.00" not in result.model_dump_json()
     assert rendered["lines"] == [
         "operation\tmodelo.aggregate",

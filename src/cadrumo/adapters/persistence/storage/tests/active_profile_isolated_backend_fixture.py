@@ -111,7 +111,7 @@ def active_profile_isolated_backend_fixture(
     *,
     bucket_id: str = DEFAULT_BUCKET_ID,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     dispose_engine_around: bool = False,
     settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
@@ -133,16 +133,16 @@ def active_profile_isolated_backend_fixture(
 
     ``settings_overrides`` is a third axis: some sites additionally pin a
     Settings field ``isolated_profile_storage_root`` does not itself set (most
-    commonly ``cadrumo_output_language``, also ``cadrumo_live_state_dir``).
+    commonly ``cadrumo_output_language``).
     Applied via :func:`~cadrumo.core.config.override_settings` OUTSIDE (before)
     ``isolated_profile_storage_root`` in the with-tuple, matching the majority
     of the sites this replaces -- ``isolated_profile_storage_root`` layers its
-    own ``cadrumo_local_storage_root`` override on top without disturbing
+    own ``cadrumo_storage_root`` override on top without disturbing
     fields the caller already set, so the two compose regardless of which
     field each touches. Default ``None`` preserves every existing caller's
     behaviour unchanged. Pass a callable (``lambda tmp_path: {...}``) instead
     of a plain mapping when an override value must derive from the per-test
-    ``tmp_path`` (e.g. ``cadrumo_live_state_dir=tmp_path / "probe-live-state"``),
+    ``tmp_path`` (e.g. ``cadrumo_certificate_path=tmp_path / "bundle.p12"``),
     since a plain mapping is captured once at fixture-construction time.
 
     ``profile_overrides`` is a fourth axis: a small number of sites need a
@@ -183,7 +183,7 @@ def module_scoped_profile_isolated_backend_fixture(
     *,
     bucket_id: str = DEFAULT_BUCKET_ID,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     dispose_engine_around: bool = False,
     settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
     profile_overrides: Mapping[str, str] | None = None,

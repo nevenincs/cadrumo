@@ -18,17 +18,18 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _RENDIMIENTO_NETO_REDUCIDO = validated_casilla_id("1481", surface="test_modelo_100_modelo_131_relations")
 _M131_SUMA_RENDIMIENTOS_NETOS = "01"
 _M131_RESULTADO = "15"
+_M131_RESULTADO_ANTERIORES = "14"
 
 
 def _editions() -> tuple[ModeloRevision, ...]:
-    return tuple(_loaded_registry()[0]["100"].revisions.values())
+    return tuple(loaded_registry()[0]["100"].revisions.values())
 
 
 def _modelo_131_sources(revision: ModeloRevision) -> set[str]:
@@ -50,4 +51,4 @@ def test_no_edition_folds_modelo_131_casilla_01_into_modelo_100() -> None:
 
 def test_every_edition_keeps_the_modelo_131_pagos_fraccionados_relation() -> None:
     for revision in _editions():
-        assert _modelo_131_sources(revision) == {_M131_RESULTADO}, revision.id
+        assert _modelo_131_sources(revision) == {_M131_RESULTADO, _M131_RESULTADO_ANTERIORES}, revision.id

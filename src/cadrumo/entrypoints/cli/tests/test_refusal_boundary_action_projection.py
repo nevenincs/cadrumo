@@ -36,12 +36,15 @@ from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
+    NoRecoveryOutcome,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
 from ....core.redaction.rules import redact_for_log
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import command_error_boundary
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
+from .corrupt_pointer_expectation import corrupt_pointer_action
+from .served_action_expectation import served_action_words, served_no_recovery_words
 
 __all__ = ["english_locale_fixture"]
 
@@ -124,7 +127,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
     @command_error_boundary
     def inspect_pointer(json_out: bool = typer.Option(False, "--json")) -> None:
         del json_out
-        Settings(cadrumo_local_storage_root=tmp_path)
+        Settings(cadrumo_storage_root=tmp_path)
 
     result = invoke_typer_app(pointer_app, ["--json"], catch_exceptions=False)
 
@@ -137,47 +140,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
-    assert error["action"] == {
-        "failed_condition_id": "profile.active.pointer.valid",
-        "evidence": [
-            {
-                "condition_id": "profile.active.pointer.valid",
-                "evidence_id": "profile.active.pointer.corruption",
-                "provenance": "runtime_observation",
-                "values": {
-                    "path": str(pointer_file),
-                    "pointer_corrupt": True,
-                    "root_fallback_refused": True,
-                },
-            },
-        ],
-        "action": {
-            "action_id": "operator.profile.repair_active_pointer",
-            "target_command_key": "config.repair.profile",
-            "cli_path": ["aeat", "config", "repair", "profile"],
-        },
-        "argument_bindings": [
-            {
-                "argument_name": "clear_active",
-                "status": "resolved",
-                "value": True,
-                "source": "operator_action.verdict_context",
-                "source_key": "clear_active",
-                "source_evidence_id": None,
-            },
-            {
-                "argument_name": "yes",
-                "status": "missing",
-                "value": None,
-                "source": None,
-                "source_key": None,
-                "source_evidence_id": None,
-            },
-        ],
-        "missing_argument_names": ["yes"],
-        "conditionality": "requires_arguments",
-        "no_recovery_outcome": None,
-    }
+    assert error["action"] == corrupt_pointer_action(pointer_file, error["action"]["action_words_language"])
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
@@ -251,11 +214,6 @@ def test_nested_validation_fails_closed_without_one_typed_verdict(validate: Call
     ("error", "condition", "facts"),
     [
         (
-            MissingOptionalExtraError(OptionalExtra(extra="proof", import_name="absent.proof", feature="proof")),
-            "provisioning.optional_extra.importable",
-            {"extra": "proof", "import_name": "absent.proof", "importable": False},
-        ),
-        (
             CoreValidationError(context={"section": "aeat.pre303", "validation_error": "withheld"}),
             "cli.external_constants.section_valid",
             {"section": "aeat.pre303", "valid": False},
@@ -264,7 +222,7 @@ def test_nested_validation_fails_closed_without_one_typed_verdict(validate: Call
 )
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 def test_shared_boundary_maps_declared_s114_producers(
-    error: CoreValidationError | MissingOptionalExtraError,
+    error: CoreValidationError,
     condition: str,
     facts: dict[str, str | bool],
     locale: str,
@@ -292,25 +250,26 @@ def test_shared_boundary_maps_declared_s114_producers(
     assert action["action"] is None
     assert action["conditionality"] == "not_applicable"
     assert action["no_recovery_outcome"] == "operator_decision"
-    if isinstance(error, MissingOptionalExtraError):
-        # `feature` is a fixed label from the extras registry and the message
-        # key interpolates it, so it rides the envelope. What the narrow view
-        # still withholds is the `extra` record itself and the module
-        # `name`/`path` attributes the exception carries.
-        assert envelope["context"] == {
-            "extra": "proof",
-            "feature": "proof",
-            "import_name": "absent.proof",
-            "importable": "false",
-        }
-        assert "import_name" in envelope["context"]
-        # The refusal must be actionable: it names the extra and how to get it
-        # rather than rendering the catch-all internal-error sentence.
-        assert "pip install cadrumo[proof]" in result.stderr
-    else:
-        assert envelope["context"] == {"section": "aeat.pre303", "validation_error_type": "ValidationError"}
-        assert "validation_error" not in envelope["context"]
-        assert "withheld" not in result.stderr
+    assert envelope["context"] == {"section": "aeat.pre303", "validation_error_type": "ValidationError"}
+    assert "validation_error" not in envelope["context"]
+    assert "withheld" not in result.stderr
+
+
+def test_a_missing_optional_extra_is_refused_without_a_recovery_action() -> None:
+    """The point-of-use refusal carries its registered code and projects no recovery action."""
+    producer_app = typer.Typer()
+
+    @producer_app.command()
+    @command_error_boundary
+    def refuse(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        raise MissingOptionalExtraError(OptionalExtra(extra="proof", import_name="absent.proof", feature="proof"))
+
+    result = invoke_typer_app(producer_app, ["--json"], catch_exceptions=False)
+
+    error = json.loads(result.stderr)["error"]
+    assert error["code"] == "ERROR_OPTIONAL_EXTRA_MISSING"
+    assert error["action"] is None
 
 
 def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path) -> None:
@@ -326,7 +285,10 @@ def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path
     document = json.loads(result.stderr)
     assert document["command"] == "ledger.list"
     error = document["error"]
+    language = error["action"]["action_words_language"]
     assert error["action"] == {
+        **served_action_words("operator.profile.create", language),
+        "target_operation_ids": ["user-profile.patch", "user-profile.view"],
         "failed_condition_id": "profile.active.available",
         "evidence": [
             {
@@ -428,7 +390,7 @@ def test_real_root_no_recovery_refusal_projects_the_closed_outcome(tmp_path: Pat
 def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path: Path) -> None:
     """A real held auth lock reaches the CLI only through its typed verdict."""
     auth_app = typer.Typer()
-    settings = Settings(cadrumo_token_dir=tmp_path / "tokens")
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     @auth_app.command()
     @command_error_boundary
@@ -447,6 +409,7 @@ def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path
     document = json.loads(result.stderr)
     action = document["error"]["action"]
     assert action == {
+        **served_no_recovery_words(NoRecoveryOutcome.OPERATOR_DECISION, action["no_recovery_words_language"]),
         "failed_condition_id": "auth.acquisition_lock.available",
         "evidence": [
             {

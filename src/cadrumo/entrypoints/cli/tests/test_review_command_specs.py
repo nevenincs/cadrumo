@@ -8,8 +8,8 @@ from typer.testing import CliRunner
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 
-from .._review_command_specs import REVIEW_COMMAND_SPECS
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..review_command_specs import REVIEW_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

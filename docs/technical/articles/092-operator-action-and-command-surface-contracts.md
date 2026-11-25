@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-092` · **Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
+**Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
 
 <!-- preserved:article -->
 **Scope:** 18 files across `operator_actions`, `operator_output`, and `operator_surface`, totaling 4,319 lines, 170,666 bytes, and 33,293 measured `o200k_base` proxy tokens. All seven bounded-reader pages and assigned ranges were read. The fourth page exceeded the output limit as one combined response; its help-module range was recovered with smaller line-bounded reads. Static inspection only; no application execution or tests were run.

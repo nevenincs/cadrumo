@@ -13,39 +13,46 @@ from textual.widgets import Button, DataTable, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.workspace import (
-    LedgerAffectedDeclarationRefV1,
     LedgerInvoiceReconciliationRefV1,
-    LedgerLinkInconsistencyRefV1,
     LedgerWorkspaceArea,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.i18n.render import tr
-from .....core.period import Period
 from .....domain.attachments.enums import AttachmentSource
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle, settle_until
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor
-from .workspace_fixtures import ledger_evidence_action, ledger_projection, ledger_review_action
+from .review_door_fixtures import MemoryEvidenceReviewListDoor, synthetic_draft
+from .test_ledger_flows import ImportDoor
+from .workspace_fixtures import (
+    LEDGER_SUGGESTED_INVOICE,
+    ClassificationDoor,
+    ledger_classify_action,
+    ledger_evidence_action,
+    ledger_projection,
+    ledger_reconciled_projection,
+    ledger_review_action,
+    ledger_review_door,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_TX = "a" * 64
+TX = "a" * 64
 _TX_B = "b" * 64
-_INVOICE = "c" * 64
 _INVOICE_D = "d" * 64
 _EVIDENCE = "e" * 64
 
 
-def _link_action() -> ActionReference:
+def link_action() -> ActionReference:
     return ActionReference(action_id=lookup_action("operator.ledger.link").action_id)
 
 
@@ -63,42 +70,8 @@ def _evidence_item() -> AttachmentReviewItem:
     )
 
 
-def _reconciled_projection():
-    projection = ledger_projection()
-    return projection.model_copy(
-        update={
-            "invoice_reconciliations": (
-                LedgerInvoiceReconciliationRefV1(
-                    invoice_id=_INVOICE,
-                    transaction_id=_TX,
-                    amount_match=True,
-                    counterparty_match=True,
-                    score="1.0",
-                    invoice_total="1250.00",
-                    transaction_amount="1250.00",
-                    invoice_counterparty="Suministros Delta SL",
-                    transaction_counterparty="Suministros Delta SL",
-                ),
-            ),
-            "link_inconsistencies": (
-                LedgerLinkInconsistencyRefV1(invoice_id="f" * 64, transaction_id=_TX, direction="invoice-only"),
-            ),
-            "affected_declarations": (
-                LedgerAffectedDeclarationRefV1(
-                    modelo="303",
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "2T"),
-                    calculation_revision_id="b" * 64,
-                    changed_count=2,
-                    removed_count=1,
-                ),
-            ),
-        }
-    )
-
-
 def _two_suggestion_projection():
-    projection = _reconciled_projection()
+    projection = ledger_reconciled_projection()
     second = LedgerInvoiceReconciliationRefV1(
         invoice_id=_INVOICE_D,
         transaction_id=_TX_B,
@@ -124,7 +97,7 @@ def _render_all(screen: LedgerReconciliationScreen) -> str:
     return "\n".join(values)
 
 
-class _LinkDoor:
+class LinkDoor:
     def __init__(self) -> None:
         self.calls: list[LedgerLinkSubmissionV1] = []
 
@@ -133,7 +106,7 @@ class _LinkDoor:
         return LedgerLinkResultV1(transaction_id=submission.transaction_id, invoice_id=submission.invoice_id)
 
 
-class _SlowLinkDoor(_LinkDoor):
+class _SlowLinkDoor(LinkDoor):
     def __init__(self) -> None:
         super().__init__()
         self.started = asyncio.Event()
@@ -173,11 +146,12 @@ async def test_evidence_renders_only_safe_metadata_and_restores_semantic_focus()
     screen = LedgerEvidenceScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#ledger-evidence", DataTable)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == _EVIDENCE
         await pilot.press("enter")
+        await settle(pilot)
         assert screen.requested_review is not None
         assert screen.requested_review.attachment_id == _EVIDENCE
         assert screen.requested_review.action == ledger_evidence_action()
@@ -190,52 +164,56 @@ async def test_evidence_renders_only_safe_metadata_and_restores_semantic_focus()
 
 @pytest.mark.asyncio
 async def test_local_reconciliation_renders_distinct_source_and_submits_exact_visible_pair_once() -> None:
-    door = _LinkDoor()
+    door = LinkDoor()
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
+        ledger_reconciled_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
         assert "AEAT" in rendered
-        await pilot.press("enter", "enter")
-        await app.workers.wait_for_complete()
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
         assert len(door.calls) == 1
-        assert door.calls[0].transaction_id == _TX
-        assert door.calls[0].invoice_id == _INVOICE
-        assert door.calls[0].action == _link_action()
+        assert door.calls[0].transaction_id == TX
+        assert door.calls[0].invoice_id == LEDGER_SUGGESTED_INVOICE
+        assert door.calls[0].action == link_action()
         await pilot.press("enter")
         assert len(door.calls) == 1
         affected = screen.query_one("#ledger-affected", DataTable)
-        assert tuple(str(value) for value in affected.get_row_at(0)) == ("303", "2026 2T", "2/1")
+        assert tuple(str(value) for value in affected.get_row_at(0)) == ("303", "2026 2T", "2/1/0")
 
 
 @pytest.mark.asyncio
 async def test_reordered_table_selection_resolves_exact_semantic_pair_not_cursor_position() -> None:
-    door = _LinkDoor()
+    door = LinkDoor()
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _two_suggestion_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#ledger-suggestions", DataTable)
         # Invoice cells are "issuer · total", so ascending order puts the
         # second suggestion (Cliente Omega) above the first (Suministros Delta).
         table.sort("invoice")
-        await pilot.pause()
+        await settle(pilot)
         assert table.ordered_rows[0].key.value == f"{_TX_B}:{_INVOICE_D}"
         table.move_cursor(row=0)
-        await pilot.press("enter", "enter")
-        await app.workers.wait_for_complete()
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
         assert screen.selected_pair == (_TX_B, _INVOICE_D)
         assert len(door.calls) == 1
         assert door.calls[0].transaction_id == _TX_B
@@ -247,28 +225,31 @@ async def test_reconciliation_restores_semantic_transaction_and_refuses_escape_i
     door = _SlowLinkDoor()
     context = TuiScreenContextV1(
         destination="workbench.ledger",
-        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=_TX),
+        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=TX),
     )
     controller = LedgerWorkspaceController(
         context,
-        _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
+        ledger_reconciled_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         suggestions = screen.query_one("#ledger-suggestions", DataTable)
         assert app.focused is suggestions
-        assert suggestions.ordered_rows[suggestions.cursor_row].key.value == f"{_TX}:{_INVOICE}"
-        await pilot.press("enter", "enter")
-        await asyncio.wait_for(door.started.wait(), timeout=1)
+        assert suggestions.ordered_rows[suggestions.cursor_row].key.value == f"{TX}:{LEDGER_SUGGESTED_INVOICE}"
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle_until(pilot, door.started.is_set, "the link write to start", workers=False)
         await pilot.press("escape")
+        await settle(pilot, workers=False)
         assert screen.flow_state is LedgerFlowState.SUBMITTING
         assert not screen.back_requested
         assert screen.is_mounted
         door.release.set()
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
         assert len(door.calls) == 1
 
@@ -277,18 +258,20 @@ async def test_reconciliation_restores_semantic_transaction_and_refuses_escape_i
 async def test_reconciliation_failure_copy_is_generic_and_sensitive_exception_is_not_rendered() -> None:
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _reconciled_projection(),
+        ledger_reconciled_projection(),
         LedgerWorkspaceInjection(
-            review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_FailingLinkDoor()
+            review_action=ledger_review_action(), link_action=link_action(), link_submitter=_FailingLinkDoor()
         ),
     )
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerReconciliationScreen(controller)
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
-            await pilot.press("enter", "enter")
-            await app.workers.wait_for_complete()
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
             assert screen.flow_state is LedgerFlowState.FAILED
             assert "The link could not be saved." in rendered
@@ -300,7 +283,7 @@ async def test_reconciliation_failure_copy_is_generic_and_sensitive_exception_is
 @pytest.mark.asyncio
 @pytest.mark.parametrize("screen_kind", ("evidence", "reconciliation"))
 async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(screen_kind: str) -> None:
-    projection = ledger_projection() if screen_kind == "evidence" else _reconciled_projection()
+    projection = ledger_projection() if screen_kind == "evidence" else ledger_reconciled_projection()
     if screen_kind == "evidence":
         controller = LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
@@ -316,13 +299,13 @@ async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(
             TuiScreenContextV1(destination="workbench.ledger"),
             projection,
             LedgerWorkspaceInjection(
-                review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=link_action(), link_submitter=LinkDoor()
             ),
         )
     screen = LedgerEvidenceScreen(controller) if screen_kind == "evidence" else LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
         owners = tuple(
@@ -351,7 +334,7 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
             TuiScreenContextV1(destination="workbench.ledger"),
             ledger_projection(),
             LedgerWorkspaceInjection(
-                review_action=ledger_review_action(), evidence_action=_link_action(), evidence_items=()
+                review_action=ledger_review_action(), evidence_action=link_action(), evidence_items=()
             ),
         )
     with pytest.raises(ValueError, match="canonical command"):
@@ -359,7 +342,7 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
             TuiScreenContextV1(destination="workbench.ledger"),
             ledger_projection(),
             LedgerWorkspaceInjection(
-                review_action=ledger_review_action(), link_action=ledger_evidence_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=ledger_evidence_action(), link_submitter=LinkDoor()
             ),
         )
 
@@ -369,13 +352,13 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
     with override_settings(cadrumo_output_language="en"):
         controller = LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
-            _reconciled_projection(),
+            ledger_reconciled_projection(),
             LedgerWorkspaceInjection(review_action=ledger_review_action()),
         )
         screen = LedgerReconciliationScreen(controller)
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert screen.query_one("#ledger-suggestions", DataTable).row_count == 1
             assert screen.query_one("#ledger-inconsistencies", DataTable).row_count == 1
             assert screen.query_one("#ledger-affected", DataTable).row_count == 1
@@ -391,7 +374,7 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
 
 
 def _all_routes_controller() -> LedgerWorkspaceController:
-    projection = _reconciled_projection()
+    projection = ledger_reconciled_projection()
     return LedgerWorkspaceController(
         # Focused on the first entry: this exercise walks every route including
         # classification, which is reachable only once the operator has chosen
@@ -407,13 +390,15 @@ def _all_routes_controller() -> LedgerWorkspaceController:
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
-            import_door=_ImportDoor(),
+            review_door=ledger_review_door(projection),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
+            import_door=ImportDoor(),
             evidence_action=ledger_evidence_action(),
             evidence_items=(_evidence_item(),),
-            link_action=_link_action(),
-            link_submitter=_LinkDoor(),
+            evidence_review_door=MemoryEvidenceReviewListDoor((synthetic_draft(1),)),
+            link_action=link_action(),
+            link_submitter=LinkDoor(),
         ),
     )
 
@@ -430,7 +415,7 @@ async def test_all_seven_routes_are_focus_reachable_with_one_scroll_owner_and_no
     assert not isinstance(screen, LedgerUnavailableScreen)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=size) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert geometry_band(app, size[0]) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
         owners = tuple(
@@ -449,14 +434,14 @@ async def test_all_seven_routes_are_focus_reachable_with_one_scroll_owner_and_no
 
 @pytest.mark.asyncio
 async def test_link_door_is_not_called_for_a_pair_absent_from_visible_projection() -> None:
-    door = _LinkDoor()
+    door = LinkDoor()
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
+        ledger_reconciled_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=link_action(), link_submitter=door),
     )
     with pytest.raises(ValueError, match="absent from the visible reconciliation projection"):
-        await controller.submit_link(_TX, "f" * 64)
+        await controller.submit_link(TX, "f" * 64)
     assert not door.calls
 
 
@@ -477,7 +462,7 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
             screen = LedgerEvidenceScreen(controller)
             app = ScreenHostApp[None](screen)
             async with app.run_test(size=(80, 24)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 titles.append(str(next(iter(screen.query(".cadrumo-banner"))).render()))
                 assert screen.query_one("#ledger-evidence", DataTable).ordered_rows[0].key.value == _EVIDENCE
     assert len(set(titles)) == 4
@@ -535,19 +520,19 @@ async def test_reconciliation_copy_pins_local_source_and_canonical_semantics(
     with override_settings(cadrumo_output_language=locale):
         controller = LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
-            _reconciled_projection(),
+            ledger_reconciled_projection(),
             LedgerWorkspaceInjection(
-                review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=link_action(), link_submitter=LinkDoor()
             ),
         )
         screen = LedgerReconciliationScreen(controller)
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _render_all(screen)
             assert all(text in rendered for text in expected)
             suggestion = screen.query_one("#ledger-suggestions", DataTable)
-            assert suggestion.ordered_rows[0].key.value == f"{_TX}:{_INVOICE}"
+            assert suggestion.ordered_rows[0].key.value == f"{TX}:{LEDGER_SUGGESTED_INVOICE}"
 
 
 def test_slice3_modules_have_no_io_cli_adapter_or_sensitive_content_access() -> None:
@@ -585,13 +570,13 @@ async def test_a_suggested_link_shows_the_values_it_was_suggested_on() -> None:
         TuiScreenContextV1(destination="workbench.ledger"),
         _two_suggestion_projection(),
         LedgerWorkspaceInjection(
-            review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+            review_action=ledger_review_action(), link_action=link_action(), link_submitter=LinkDoor()
         ),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = _render_all(screen)
         app.exit(None)
 

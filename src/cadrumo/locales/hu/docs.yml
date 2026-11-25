@@ -1,10 +1,14 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: A tevékenységi eszköznyilvántartás kivezetéséből származó
+        nyereség, veszteség vagy többlet, az ezen kiadás szerinti mezőbe összeadva
       afiliado_cotizacion: az általad megadott tagi befizetési naptárból
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
       borrador: az AEAT-adatokból (borrador)
+      capital_mobiliario_position: a megtakarítási pozícióidhoz kapcsolt főkönyvi
+        tételekből és a kifizetőid igazolásaiból
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
       foreign_asset: a külföldi vagyonelemeiből
@@ -19,8 +23,8 @@ docs:
       ledger_oss_aggregation: az OSS-értékesítési nyilvántartásaiból
       ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
         szerinti kiadási nyilvántartásaiból
-      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado kiadási
-        nyilvántartásaiból
+      ledger_renta_gastos_pago_fraccionado_aggregation: a részletfizetésekhez tartozó
+        kiadási nyilvántartásokból
       ledger_renta_income_aggregation: a bevételi nyilvántartásaiból
       ledger_transaction: a nyilvántartásaiból
       m303_regimen_simplificado_annual_summary: a Modelo 303 egyszerűsített rendszerének
@@ -30,16 +34,22 @@ docs:
       manual_input: az általad megadott értékből
       payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
+      prevision_social_contribution: a nyugdíj-hozzájárulási igazolásaidon szereplő
+        hozzájárulásokból
       profile: az adózói profiljából
+      prorrata_register_activity: az arányosítási nyilvántartásod tevékenységeiből
       prorrata_regularizacion: az arányosítás korrekciójából
       purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
+      renta_inmueble: a bérbe adott ingatlanjaidból, azok bérleti szerződéseiből és
+        a hozzájuk kapcsolt főkönyvi tételekből
+      retencion_soportada: a kifizetőid igazolásain szereplő levonásokból
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból
       withholding296: a Modelo 296 kedvezményezettenkénti levonásaiból
     cadence:
-      ad_hoc: Az esemény bekövetkezésekor benyújtandó
       annual: Évente benyújtandó
+      event: Az esemény bekövetkezésekor benyújtandó
       monthly: Havonta benyújtandó
       profile_based: A profilod szerint benyújtandó
       quarterly: Negyedévente benyújtandó
@@ -129,9 +139,9 @@ docs:
       exit_unavailable: A külső szolgáltatás nem érhető el.
       exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
       exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
-      intro: 'Ezt az oldalt akkor használd, ha ``aeat`` hívásokat szkriptelsz: a folyamat
-        kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
-        írja le.'
+      intro: 'Ezt az oldalt akkor használd, ha az ``aeat`` hívásokat szkriptből futtatod:
+        a folyamat kilépési kódjait és a minden parancsra érvényes TTY/JSON-kimeneti
+        viselkedést írja le.'
       output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
         formázott szöveget ad. Ha a ``--format json`` kapcsolót megadják (vagy a kimenetet
         átirányítják), a CLI hívásonként egyetlen JSON-dokumentumot ad. A ``SchemaEnvelope``
@@ -191,8 +201,8 @@ docs:
         a TTY/JSON kimeneti szerződéshez.
       next_config: Nyisd meg a :doc:`config` oldalt a helyi beállítási és karbantartási
         parancsokhoz.
-      next_howto: Nyisd meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
-        és a feladatútmutatókhoz.
+      next_howto: Nyisd meg a :doc:`/how-to/index` oldalt a bevezető útmutatókhoz
+        és a feladatleírásokhoz.
       next_schemas: Nyisd meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
       open_family_link: Az ``aeat {family}`` referenciájának megnyitása
       start_here: Kezdd az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
@@ -353,23 +363,24 @@ docs:
       show_output: Kimenet megjelenítése
   terminology:
     cli:
-      authority: A forrás hitelesítő szerve, ha a mező „source”.
+      authority: A forrás hitelesítő szerve, ha a mező `source`.
       check: Írás nélkül jelzi az eltérést; eltérés esetén nem nulla kóddal lép ki.
       concept_id: A kezelendő fogalom azonosítója.
       domain: 'IATE: az engedélyezett tárgyköri mezők halmaza (ismételhető).'
       dry_run: Írás nélkül jelzi, mi kerülne betöltésre.
       export_path: A letöltött forrásexportfájl elérési útja.
-      field_name: short_description | definition | scope_note | source | term.
-      field_value: A mező értéke (a „source” esetén hivatkozás; a „term” esetén címke).
+      field_name: '`short_description` | `definition` | `scope_note` | `source` |
+        `term`.'
+      field_value: A mező értéke (a `source` esetén hivatkozás; a `term` esetén címke).
       help: A terminológiai kézikönyv karbantartása.
       language: A nyelvi szakasz kódja.
       min_reliability: 'IATE: a megtartandó minimális megbízhatósági kód (>= 3).'
-      relation_kind: broader | related.
+      relation_kind: '`broader` | `related`.'
       relation_source: A kapcsolat kiinduló fogalmának azonosítója.
       relation_target: A célfogalom azonosítója.
       remove_relation: A kapcsolat hozzáadása helyett eltávolítja azt.
       remove_term_label: Az eltávolítandó kifejezés pontos címkéje.
       replaced_by: Az utódfogalom azonosítója (kötelező).
       retire_concept: A kivezetendő fogalom azonosítója.
-      seed_source: 'A-szintű forrás: iate | ubterm (ellenőrzés után eurovoc).'
-      term_status: A kifejezés állapota, ha a mező „term”.
+      seed_source: 'A-szintű forrás: `iate` | `ubterm` (ellenőrzés után `eurovoc`).'
+      term_status: A kifejezés állapota, ha a mező `term`.

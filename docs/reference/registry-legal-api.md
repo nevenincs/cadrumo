@@ -52,10 +52,15 @@ refusal naming the publication command, not an empty authority. See
 The descriptor format is `cadrumo-authority-descriptor-v1`; its exact members
 are `format`, `database`, `database_size`, `database_sha256`, and
 `logical_generation`. The database format is
-`cadrumo-authority-sqlite-v4`. Its manifest binds the logical generation and
-the complete component directory; it records nothing about the compiler or the
-environment that built it. A database in an older format is refused rather than
-read. The physical database digest is both the
+`cadrumo-authority-sqlite-v6`, which carries the snapshot-proof tables. Its
+manifest binds the logical generation and the complete component directory; it
+records nothing about the compiler or the environment that built it. The proof
+tables record the validator closure digest under which the published proofs
+hold; no snapshot check reads the run date, so a proof holds whatever day the
+program runs. Runtime still admits the preceding
+`cadrumo-authority-sqlite-v5`, whose proofs were bound to a run-date window, as
+a database without proofs, which makes every snapshot take full validation, and
+refuses anything older rather than reading it. The physical database digest is both the
 descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
@@ -107,7 +112,7 @@ shape of a string.
 The compiler, not the product runtime, expands authoring deltas into complete
 canonical revisions. The database also carries typed runtime catalogues for IVA
 regulations, place-of-supply rules, country aliases, Spanish postal territories,
-territorial carve-outs, recargo bands, and apoderamiento scopes. These are
+territorial carve-outs, <span lang="es">recargo</span> bands, and <span lang="es">apoderamiento</span> scopes. These are
 frozen schema records, not embedded TOML bytes or an untyped JSON bag. A
 write or read refuses an authority when any required runtime catalogue is empty.
 
@@ -136,7 +141,7 @@ read-only database.
 publication whose recorded identity digest differs from the identity of the
 live registry and source evidence. See
 [Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
-for the canonical command, publication guarantees, currentness checks, and
+for the canonical command, publication guarantees, checks that the authority is current, and
 recovery path.
 
 ## Filing-input contract shapes

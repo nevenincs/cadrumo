@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-09'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b1d1c83cc788ccdd690125e5247f0726ad3480b9931f9c84ce59b5edde8cd5c'
+body_hash: 'sha256:a26c16653af6331ce40134b7bd4a97ac9e75d82e1ee1cf9be2d09a37012957a8'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -315,7 +315,7 @@ the first clause falls and the other two stand independently.
 
 ### DECISION: the two Art. 81.1 exclusions get DIFFERENT shapes, and the stock problem gets neither
 
-Research grounded both exclusions across the 2020-2025 manuals, byte-stable, and the
+Research grounded both exclusions across the bundled Renta manuals of every authored edition, byte-stable, and the
 decision follows from three findings rather than from preference.
 
 **Both exclusions are deliberate, not oversights, and the evidence is stronger than
@@ -413,14 +413,14 @@ being measured false. "Parity with 0613" was never achievable because the two ca
 not share a rule shape. If a future reform makes 0611's cap uniform again, the parity
 question genuinely reopens and this decision should be revisited rather than cited.
 
-### Amendment: the 0611 closure is reversed; M100/2024 must use the existing derived-scalar pattern
+### Amendment: the 0611 closure is reversed; the existing derived-scalar pattern is required
 
 The preceding 0611 decision is superseded. Its decisive premise was false: 0613 is also
 resolved by a variable per-child Python fold before the registry consumes a derived profile
 scalar. It therefore demonstrates the exact architectural boundary 0611 needs; neither
 casilla requires a new registry aggregation primitive.
 
-For M100/2024, 0611 is authorized to become registry-computed through the established
+For the Modelo 100 edition in scope, 0611 is authorized to become registry-computed through the established
 pattern: calculate the canonical per-child fold once in the domain/application layer, expose
 that result as a derived profile scalar only when every required fact and threshold is
 resolved, bind it with `profile/copy`, and terminate in a binding-leaf registry formula with
@@ -430,15 +430,15 @@ it never exposes an operator-supplied 0611 fallback.
 
 Implementation must add the selector, binding, formula, construct membership, computed
 casilla declaration, and complete source/legal provenance as one invariant. Registry-engine
-proof must preserve the 2024 oracles: 2,400 euros for twins, 1,200 for one child, 600 for six
+proof must preserve the existing oracles: 2,400 euros for twins, 1,200 for one child, 600 for six
 months, 1,350 for an alta-posterior child, and the mixed-cap multi-child case. It must also
 prove that direct `--casilla 0611` cannot bypass or overwrite the producer and that calculate
 and pull resolve through the same path. The accepted default-relationship ambiguity advisory
 remains visible.
 
-This authorization is revision-scoped. M100/2020 through 2022 remain manual until their
-cotizaciones ceiling is backed by year-parameterized facts and bindings. M100/2023 and 2025
-require their own enrollment and revision-specific proof. Closing the research Step records
+This authorization is revision-scoped. Editions whose cotizaciones ceiling is not yet backed
+by year-parameterized facts and bindings remain manual until it is. Every other edition
+requires its own enrollment and revision-specific proof. Closing the research Step records
 this corrected decision only; a separate implementation Step owns delivery of the producer.
 
 ## Amendment: a design review corrected all four decisions, and refuted one
@@ -499,7 +499,7 @@ produced by the fix intended to correct an under-grant, which is the exact parti
 failure this campaign stopped at three times.
 
 The recommended set separates preadoptivo-or-permanente from temporal, keeps tutela as one
-member covering its post-2021 successor since no statute distinguishes them, and makes the
+member covering its post-reform successor since no statute distinguishes them, and makes the
 ordinary case the default so absence of the fact means an ordinary descendant. Being wrong by
 carrying an unused member costs a retirement sweep; being wrong by collapsing two costs
 silent wrong filings.

@@ -314,6 +314,30 @@ mod tests {
         );
     }
 
+    #[test]
+    fn racing_first_acquisitions_of_a_new_lock_never_report_it_missing() {
+        let scratch = Scratch::new("lock-race");
+        for round in 0..200 {
+            let path = scratch.0.join(format!("claim-{round}.lock"));
+            let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+            let outcomes: Vec<_> = (0..2)
+                .map(|_| {
+                    let (path, barrier) = (path.clone(), std::sync::Arc::clone(&barrier));
+                    std::thread::spawn(move || {
+                        barrier.wait();
+                        LocalLock::acquire(&path, Duration::ZERO).map(|lock| lock.is_some())
+                    })
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .map(|handle| handle.join().expect("racer"))
+                .collect();
+            for outcome in &outcomes {
+                assert!(outcome.is_ok(), "round {round}: {outcomes:?}");
+            }
+        }
+    }
+
     #[cfg(windows)]
     #[test]
     fn a_reparse_point_leaf_is_refused() {

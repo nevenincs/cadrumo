@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -40,6 +41,8 @@ from ..evidence_advisory import (
     missing_evidence_advisory_observations,
 )
 from ..source_mesh import CalculationSourceDiagnostic
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
@@ -57,8 +60,8 @@ def _observations(
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 15),
-        value_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 15),
         amount=amount,
         currency="EUR",
         counterparty="ACME SL",
@@ -68,7 +71,7 @@ def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -214,7 +217,13 @@ def test_advisory_silent_on_exempt_iva_category() -> None:
 
 def test_advisory_silent_on_personal_non_business_row() -> None:
     """A PERSONAL OUTGOING row with no evidence does not fire."""
-    tx = _tx("personal-expense", business_classification=BusinessClassification.PERSONAL)
+    tx = _tx(
+        "personal-expense",
+        business_classification=BusinessClassification.PERSONAL,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
     assert _observations([tx]) == ()
 
 
@@ -337,7 +346,13 @@ def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
         _tx("sig-income", direction=TransactionDirection.INCOMING),
         _tx("has-attachment", attachment_ids=("b" * 64,)),
         _tx("has-invoice", purchase_invoice_evidence_id="pinv-batch"),
-        _tx("personal", business_classification=BusinessClassification.PERSONAL),
+        _tx(
+            "personal",
+            business_classification=BusinessClassification.PERSONAL,
+            taxable_base=None,
+            iva_rate=None,
+            iva_amount=None,
+        ),
         _tx("exempt", iva_category=IvaCategory("domestic_exempt")),
     ]
     diagnostics = _observations(rows)

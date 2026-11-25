@@ -9,8 +9,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -19,6 +19,7 @@ from cadrumo.entrypoints.tui.account import (
 )
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import SessionsLocked
 from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -106,7 +107,7 @@ class _StrictClient(FrontendClient):
 
 
 def _factories(client: _StrictClient) -> AccountFactoriesV1:
-    async def open_recovery_client() -> FrontendClient:
+    async def open_recovery_client(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return client
 
     def unavailable_profile(_context: object) -> object:
@@ -237,7 +238,8 @@ def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(mo
     client, fresh = _StrictClient(), _StrictClient()
     fresh._profile_id = client.profile_id
 
-    async def open_fresh() -> FrontendClient:
+    async def open_fresh(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+        assert timeout == 12.5
         return fresh
 
     def unavailable_profile(_context: object) -> object:
@@ -261,7 +263,7 @@ def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(mo
         assert borrowed is client
         assert bytes(current_passphrase) == b"current-password"
         assert bytes(new_passphrase) == bytes(new_passphrase_confirmation) == b"replacement-password"
-        reader = fresh_client()
+        reader = fresh_client(12.5)
         assert reader is fresh and reader is not client
         reader.close()
         return ProfileRotationCompletion(operation_id="a" * 64, outcome=outcome)

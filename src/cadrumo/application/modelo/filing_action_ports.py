@@ -8,6 +8,7 @@ another repository's implementation details.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -29,6 +30,7 @@ from ..calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 from ..filing.draft_review_ports import DraftReviewPorts
+from .credit_resolution_repository import CreditResolutionReader
 from .verification_repository_ports import WorkflowRunRepositoryProtocol
 
 if TYPE_CHECKING:
@@ -54,13 +56,25 @@ class FilingActionPorts:
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
     retencion_observation_ports: RetencionObservationPorts
+    credit_resolution_reader: CreditResolutionReader
 
 
 class FilingActionPortsFactory(Protocol):
     """Construct the filing authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> FilingActionPorts:
-        """Return the filing bundle for one bucket and held authority context."""
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> FilingActionPorts:
+        """Return the filing bundle for one bucket and held authority context.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so an operation can account
+        for its effect from the writes that really began.
+        """
         ...
 
 

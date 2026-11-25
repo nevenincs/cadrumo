@@ -19,6 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePage,
     DisclosurePageRequest,
+    grant_use,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -155,6 +156,8 @@ def project_automation_inventory_result(result: BaseModel, receipt: OperationTer
                 expires_at=item.expires_at,
                 unattended=item.unattended,
                 allow_os_lock=item.allow_os_lock,
+                label=item.label,
+                use=grant_use(item.scope),
             )
             for item in result.grants
         ),
@@ -192,6 +195,7 @@ def project_automation_inventory_result(result: BaseModel, receipt: OperationTer
                     allow_os_lock=item.proposal.allow_os_lock,
                     target_grant_id=item.proposal.target_grant_id,
                     target_key_id=item.proposal.target_key_id,
+                    label=item.proposal.label,
                 ),
                 expires_at=item.expires_at,
             )

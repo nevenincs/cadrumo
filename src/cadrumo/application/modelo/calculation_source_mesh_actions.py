@@ -1,0 +1,803 @@
+"""Resolve registered calculation source families for a bucket."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from datetime import date
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.period import Period
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
+from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.iva_wallet_carry_targets import (
+    iva_wallet_owned_binding_ids_for_revision,
+)
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataSourceRole,
+    prorrata_source_casilla_id,
+)
+from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
+from ...domain.modelos.work_unit import WorkUnit
+from ...domain.prorrata_register.register import ProrrataRegisterError
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.iva_ledger import IvaLedgerSettlementApportionment, settled_sector_definitive_percentages
+from ..calculations.m303_settlement_observation import m303_annual_settlement_observation
+from ..persistence_errors import PersistenceDegradationError
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..user_profile.profile_read_ports import ProfileReadPorts
+from .advisory_binding_value import add_advisory_binding_value_diagnostics
+from .calculation_action_ports import (
+    CalculationActionPorts,
+)
+from .calculation_route import CalculationRouteStage, require_calculation_route_resolver
+from .calculation_source_staging import (
+    add_expected_missing_binding_diagnostics,
+    add_terminal_origin_diagnostics,
+    add_unhandled_source_diagnostics,
+    resolve_prorrata_regularizacion_sources,
+    stage_prorrata_definitive_percentage,
+)
+from .imputation_filings import imputation_filings_from_repositories
+from .m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_annual_summary_applies_to_profile,
+    taxpayer_profile_for_work,
+)
+from .prior_return_held import prior_return_held
+from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ..aggregation.foreign_assets import ForeignAssetIngestObservation
+    from ..aggregation.renta_imputation import ImputationFilingHistory
+    from ..aggregation.source_mesh import (
+        CalculationSourceContext,
+        CalculationSourceResolution,
+    )
+    from ..calculations.modelo_202_instalment_resolution import Modelo202InstalmentResolver
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+    from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
+
+
+def resolve_bucket_source_mesh(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    date_binding_values: Mapping[BindingId, date] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    filing_period_date: date | None = None,
+    profile: ModeloWorkProfile | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    income_family_entry_digests: Mapping[str, str] | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
+) -> CalculationSourceResolution:
+    """Resolve enrolled sources against one pinned operation and profile.
+
+    Takes ``snapshot`` as a :class:`RegistrySnapshot`.
+    """
+    profile, profile_read_ports = _work_profile_and_read_ports(profile, work_unit, ports)
+    resolved_transaction_repository = ports.transaction_repository
+    memoized_transaction_repository = (
+        transaction_repository
+        if transaction_repository is not None
+        else MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    )
+    prorrata_register_repository = ports.prorrata_register_repository
+    iva_investment_asset_register = None
+    iva_investment_asset_profile_id = None
+    if any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings):
+        iva_investment_asset_register = resolved_transaction_repository.migrate_iva_deduction_authority(
+            asset_profile_id=work_unit.bucket_id,
+        )
+        iva_investment_asset_profile_id = work_unit.bucket_id
+    from ..aggregation.source_mesh import CalculationSourceContext, ModeloSourceResolver
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+
+    renta_catalogue_read_ports = InvoiceCatalogueReadPorts(
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
+        transaction_reader=memoized_transaction_repository,
+    )
+    context = CalculationSourceContext(
+        bucket_id=work_unit.bucket_id,
+        work_unit_id=work_unit.work_unit_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        revision=snapshot.revision,
+        caller_binding_values=dict(binding_values or {}),
+        caller_enum_binding_values=dict(enum_binding_values or {}),
+        caller_casilla_ids=frozenset(casilla_inputs or {}),
+        income_family_entry_digests=dict(income_family_entry_digests or {}),
+        caller_row_attestations=row_attestations,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        profile=profile,
+        operation=ports.operation,
+    )
+
+    def resolve_declared(
+        resolver: ModeloSourceResolver,
+        *,
+        stage: CalculationRouteStage = "mesh",
+    ) -> CalculationSourceResolution:
+        require_calculation_route_resolver(stage, resolver)
+        return resolver.resolve(context)
+
+    annual_summary_resolutions, inventory_resolutions = _resolve_conditional_families(
+        resolve_declared, snapshot, ports, profile
+    )
+    from ..aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
+    from ..aggregation.source_resolution_operations import merge_source_resolutions
+
+    def resolve_ledger_iva(settlement: IvaLedgerSettlementApportionment | None) -> CalculationSourceResolution:
+        return resolve_declared(
+            LedgerIvaAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                invoice_catalogue_read_ports=ports.invoice_catalogue_read_ports,
+                prorrata_register_repository=prorrata_register_repository,
+                investment_asset_register=iva_investment_asset_register,
+                investment_asset_profile_id=iva_investment_asset_profile_id,
+                settlement=settlement,
+            )
+        )
+
+    family_resolutions = _resolve_mesh_families(
+        resolve_declared,
+        snapshot,
+        work_unit,
+        ports,
+        memoized_transaction_repository,
+        prorrata_register_repository,
+        renta_catalogue_read_ports,
+        profile_read_ports,
+        foreign_asset_observations,
+        foreign_asset_row_observations,
+        inventory_resolutions,
+        annual_summary_resolutions,
+        set_aside_binding_ids(snapshot.revision, casilla_inputs or {}),
+    )
+    source_resolution = _source_resolution_excluding_iva_compensation(
+        snapshot,
+        merge_source_resolutions((resolve_ledger_iva(None), *family_resolutions)),
+    )
+    settlement = _prorrata_settlement_apportionment(
+        snapshot,
+        work_unit,
+        ports=ports,
+        source_resolution=source_resolution,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+    )
+    if settlement is not None:
+        source_resolution = _source_resolution_excluding_iva_compensation(
+            snapshot,
+            merge_source_resolutions((resolve_ledger_iva(settlement), *family_resolutions)),
+        )
+    source_resolution = resolve_prorrata_regularizacion_sources(
+        registry_snapshot=snapshot,
+        work_unit=work_unit,
+        context=context,
+        source_resolution=source_resolution,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+        prorrata_register_repository=prorrata_register_repository,
+        bienes_inversion_repository=ports.bienes_inversion_repository,
+        observation_repository=ports.observation_repository,
+        transaction_repository=memoized_transaction_repository,
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
+        investment_asset_register=iva_investment_asset_register,
+        investment_asset_profile_id=iva_investment_asset_profile_id,
+        operation=ports.operation,
+    )
+    return _with_closing_diagnostics(snapshot, source_resolution, operation=ports.operation)
+
+
+def _with_closing_diagnostics(
+    snapshot: RegistrySnapshot, source_resolution: CalculationSourceResolution, *, operation: PinnedAuthorityOperation
+) -> CalculationSourceResolution:
+    """Add the diagnostics of unhandled bindings, terminal origins, expected gaps and advisory values."""
+    source_resolution = add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
+    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=operation)
+
+
+def _work_profile_and_read_ports(
+    profile: ModeloWorkProfile | None,
+    work_unit: WorkUnit,
+    ports: CalculationActionPorts,
+) -> tuple[ModeloWorkProfile | None, ProfileReadPorts]:
+    """Load the bucket's work profile when none was supplied and pair it with its read ports."""
+    if profile is None:
+        from .profile_readiness_gate import load_modelo_work_profile
+
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=ports.operation.profile_decode_context(),
+        )
+    profile_read_ports = (
+        ports.profile_read_ports
+        if profile is None
+        else ProfileReadPorts(path_values=ModeloWorkProfilePathValues(profile=profile))
+    )
+    return profile, profile_read_ports
+
+
+def _resolve_conditional_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile: ModeloWorkProfile | None,
+) -> tuple[tuple[CalculationSourceResolution, ...], tuple[CalculationSourceResolution, ...]]:
+    """Resolve the annual-summary and inventory families, returned in that order."""
+    from ..aggregation.inventory import InventorySourceResolver
+    from ..calculations.m303_regimen_simplificado_annual_summary import (
+        M303RegimenSimplificadoAnnualSummarySourceResolver,
+    )
+    from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
+
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if any(
+        binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+        for binding in snapshot.revision.bindings
+    ):
+        annual_summary_resolutions = (
+            resolve_declared(
+                M303RegimenSimplificadoAnnualSummarySourceResolver(
+                    registry_snapshot=snapshot,
+                    work_unit_repository=ports.work_unit_repository,
+                    calculation_repository=ports.calculation_repository,
+                    filing_repository=ports.filing_repository,
+                    regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+                        taxpayer_profile_for_work(profile),
+                    ),
+                    operation=ports.operation,
+                ),
+                stage="conditional",
+            ),
+        )
+    inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
+        inventory_resolutions = (
+            resolve_declared(
+                InventorySourceResolver(
+                    inventory_repository=ports.inventory_repository,
+                    claim_reads=InventoryClaimLedgerReads(
+                        transactions=ports.transaction_repository.load,
+                        asset_revisions=lambda: ports.activity_asset_history_repository.load().revisions,
+                    ),
+                ),
+            ),
+        )
+    return annual_summary_resolutions, inventory_resolutions
+
+
+def _prorrata_settlement_apportionment(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    source_resolution: CalculationSourceResolution,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+) -> IvaLedgerSettlementApportionment | None:
+    """Return the definitive percentage the settlement liquidation deducts at, once known.
+
+    LIVA art. 105.Cuatro: the year's last liquidation deducts its own cuotas at
+    the definitive percentage. A periodic return at that liquidation reads it
+    from its own declared volumes; the annual summary reads it from the filed
+    settlement liquidation. Every other case keeps the provisional percentage.
+    """
+    revision = snapshot.revision
+    sources = {binding.source for binding in revision.bindings}
+    if not {BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.PRORRATA_REGULARIZACION} <= sources:
+        return None
+    if work_unit.modelo == form_for_role("iva.periodic"):
+        return _periodic_settlement_apportionment(
+            snapshot,
+            work_unit,
+            ports=ports,
+            source_resolution=source_resolution,
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs=text_casilla_inputs,
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            date_binding_values=date_binding_values,
+            relation_values=relation_values,
+            filing_period_date=filing_period_date,
+        )
+    if work_unit.modelo != form_for_role("iva.annual_summary"):
+        return None
+    return _annual_summary_settlement_apportionment(snapshot, work_unit, ports=ports)
+
+
+def _periodic_settlement_apportionment(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    source_resolution: CalculationSourceResolution,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+) -> IvaLedgerSettlementApportionment | None:
+    """Read the definitive percentage from the settlement liquidation's own declared volumes."""
+    if not is_m303_annual_settlement_period(work_unit.period, authority=ports.operation):
+        return None
+    percentage = stage_prorrata_definitive_percentage(
+        registry_snapshot=snapshot,
+        work_unit=work_unit,
+        source_resolution=source_resolution,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+    )
+    if percentage is None:
+        return None
+    return _settlement_with_sector_definitives(work_unit, ports=ports, period=work_unit.period, percentage=percentage)
+
+
+def _annual_summary_settlement_apportionment(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+) -> IvaLedgerSettlementApportionment | None:
+    """Read the definitive percentage from the filed settlement liquidation."""
+    revision = snapshot.revision
+    settlement = m303_annual_settlement_observation(
+        ports.observation_repository,
+        filing_year=work_unit.filing_year,
+        operation=ports.operation,
+    )
+    volumen_total_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.VOLUMEN_TOTAL)
+    definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
+    if settlement.payload is None or volumen_total_id is None or definitive_id is None:
+        return None
+    filed = settlement.payload.observation.casilla_values
+    volumen_total = filed.get(volumen_total_id)
+    percentage = filed.get(definitive_id)
+    if volumen_total is None or volumen_total <= Decimal("0") or percentage is None:
+        return None
+    return _settlement_with_sector_definitives(
+        work_unit, ports=ports, period=settlement.periods[0], percentage=percentage
+    )
+
+
+def _settlement_with_sector_definitives(
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    period: Period,
+    percentage: Decimal,
+) -> IvaLedgerSettlementApportionment | None:
+    """Attach each differentiated sector's settled definitive percentage (LIVA art. 101.Uno).
+
+    A sectorized register whose sectors are not all settled keeps the whole
+    settlement liquidation at its provisional percentages; an unreadable
+    register is left to the ledger resolver, which reports the degradation.
+    """
+    try:
+        register = require_prorrata_register_coordinates_current(
+            ports.prorrata_register_repository.load(),
+            operation=ports.operation,
+        )
+    except (PersistenceDegradationError, ProrrataRegisterError):
+        return None
+    sector_percentages = settled_sector_definitive_percentages(register, work_unit.filing_year)
+    if sector_percentages is None:
+        return None
+    return IvaLedgerSettlementApportionment(period=period, percentage=percentage, sector_percentages=sector_percentages)
+
+
+def _source_resolution_excluding_iva_compensation(
+    snapshot: RegistrySnapshot,
+    resolution: CalculationSourceResolution,
+) -> CalculationSourceResolution:
+    """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
+    excluded_bindings = _iva_wallet_source_ids(snapshot)
+    if not _iva_wallet_sources_present(resolution, excluded_bindings=excluded_bindings):
+        return resolution
+    return _without_iva_wallet_sources(resolution, excluded_bindings=excluded_bindings)
+
+
+def _iva_wallet_source_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:
+    """Resolve the binding identities owned by the IVA wallet.
+
+    One set now answers both channels: the fold-value channel is keyed by the
+    slot binding it materialises into, so the wallet's carry has a single
+    identity rather than a binding id paired with a separate relation id.
+    """
+    return iva_wallet_owned_binding_ids_for_revision(
+        modelo_id=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+    )
+
+
+def _iva_wallet_sources_present(
+    resolution: CalculationSourceResolution,
+    *,
+    excluded_bindings: frozenset[BindingId],
+) -> bool:
+    """Return whether a non-wallet resolver supplied a wallet-owned value."""
+    return bool(
+        excluded_bindings.intersection(resolution.binding_values)
+        or excluded_bindings.intersection(resolution.relation_values),
+    )
+
+
+def _without_iva_wallet_sources(
+    resolution: CalculationSourceResolution,
+    *,
+    excluded_bindings: frozenset[BindingId],
+) -> CalculationSourceResolution:
+    """Remove non-wallet values and provenance for wallet-owned identities."""
+    return resolution.model_copy(
+        update={
+            "binding_values": {k: v for k, v in resolution.binding_values.items() if k not in excluded_bindings},
+            "relation_values": {k: v for k, v in resolution.relation_values.items() if k not in excluded_bindings},
+            "provenance": tuple(
+                item
+                for item in resolution.provenance
+                if not any(item.source_ref.endswith(f":{binding_id}") for binding_id in excluded_bindings)
+                and item.source_ref.split(":", 1)[0] not in excluded_bindings
+            ),
+        },
+    )
+
+
+def _resolve_mesh_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    ports: CalculationActionPorts,
+    memoized_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
+    profile_read_ports: ProfileReadPorts,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+    inventory_resolutions: tuple[CalculationSourceResolution, ...],
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...],
+    held_sources_set_aside: frozenset[BindingId],
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve every enrolled source family except the IVA ledger through the mesh context.
+
+    The IVA ledger is resolved by the caller, because the annual settlement
+    liquidation re-resolves it once the definitive prorrata percentage is known.
+    """
+    from ..aggregation.prorrata_register_activity import ProrrataRegisterActivitySourceResolver
+
+    return (
+        *_resolve_ledger_income_families(
+            resolve_declared,
+            ports,
+            memoized_transaction_repository,
+            prorrata_register_repository,
+            renta_catalogue_read_ports,
+        ),
+        resolve_declared(
+            ProrrataRegisterActivitySourceResolver(prorrata_register_repository=prorrata_register_repository)
+        ),
+        *_resolve_observation_families(
+            resolve_declared,
+            work_unit,
+            ports,
+            memoized_transaction_repository,
+            profile_read_ports,
+            foreign_asset_observations,
+            foreign_asset_row_observations,
+        ),
+        *inventory_resolutions,
+        *_resolve_cross_period_families(
+            resolve_declared,
+            snapshot,
+            ports,
+            profile_read_ports,
+            work_unit.bucket_id,
+            held_sources_set_aside=held_sources_set_aside,
+        ),
+        *annual_summary_resolutions,
+    )
+
+
+def _resolve_ledger_income_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    ports: CalculationActionPorts,
+    memoized_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the Renta expense and income ledger families, Impatriado and IRNR income, then let properties."""
+    from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
+    from ..aggregation.modelo_bindings import (
+        LedgerIrnrIncomeAggregationSourceResolver,
+        LedgerRentaIncomeAggregationSourceResolver,
+    )
+    from ..aggregation.modelo_bindings_renta_expenses import (
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
+    )
+    from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
+    from ..aggregation.source_resolution_operations import source_context_operation
+
+    def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
+        with source_context_operation(context) as authority:
+            return imputation_filings_from_repositories(
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                observation_repository=ports.observation_repository,
+                filing_repository=ports.filing_repository,
+                authority=authority,
+            )
+
+    def held_prior_return(context: CalculationSourceContext) -> bool:
+        return prior_return_held(
+            bucket_id=context.bucket_id,
+            modelo=context.modelo,
+            period=context.period,
+            observation_repository=ports.observation_repository,
+            filing_repository=ports.filing_repository,
+        )
+
+    return (
+        resolve_declared(
+            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+                ports=renta_catalogue_read_ports,
+                prorrata_register_repository=prorrata_register_repository,
+                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                activity_asset_history_repository=ports.activity_asset_history_repository,
+                inventory_repository=ports.inventory_repository,
+                imputation_filings=imputation_filings,
+            )
+        ),
+        resolve_declared(
+            LedgerRentaIncomeAggregationSourceResolver(
+                ports=renta_catalogue_read_ports,
+                activity_asset_history_repository=ports.activity_asset_history_repository,
+                transaction_repository=memoized_transaction_repository,
+                imputation_filings=imputation_filings,
+            )
+        ),
+        resolve_declared(
+            LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                invoice_reader=renta_catalogue_read_ports.invoice_reader,
+                prorrata_register_repository=prorrata_register_repository,
+                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                activity_asset_history_repository=ports.activity_asset_history_repository,
+                imputation_filings=imputation_filings,
+            )
+        ),
+        resolve_declared(
+            LedgerImpatriadoIncomeAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+            )
+        ),
+        resolve_declared(
+            LedgerIrnrIncomeAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+            )
+        ),
+        resolve_declared(
+            RentaInmuebleSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+                prior_return_held=held_prior_return,
+            )
+        ),
+    )
+
+
+def _resolve_observation_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    work_unit: WorkUnit,
+    ports: CalculationActionPorts,
+    memoized_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    profile_read_ports: ProfileReadPorts,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the OSS/IOSS, withholding, invoice, foreign-asset and member families."""
+    from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+    from ..aggregation.capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
+    from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+    from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
+    from ..aggregation.prevision_social_contribution_source import PrevisionSocialContributionSourceResolver
+    from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
+    from ..aggregation.withholding_source import WithholdingSourceResolver
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
+    from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
+
+    return (
+        resolve_declared(
+            OssIossLedgerSourceResolver(
+                ports=ports.invoice_catalogue_read_ports,
+            )
+        ),
+        resolve_declared(
+            RetencionesAggregationSourceResolver(
+                ports=ports.retencion_observation_ports,
+                m115_no_relevant_payment_periods=m115_no_relevant_payment_periods_for_bucket(
+                    work_unit.bucket_id,
+                    profile_path_values_reader=profile_read_ports.path_values,
+                ),
+                invoice_catalogue=ports.invoice_catalogue_read_ports,
+                filing_names=ports.invoice_source_ports.counterparty_filing_names,
+            ),
+        ),
+        resolve_declared(
+            WithholdingSourceResolver(
+                ports=ports.percepciones_observation_ports,
+                retencion_ports=ports.retencion_observation_ports,
+                filing_names=ports.invoice_source_ports.counterparty_filing_names,
+            )
+        ),
+        resolve_declared(RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)),
+        resolve_declared(
+            CapitalMobiliarioPositionSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+            )
+        ),
+        resolve_declared(
+            PrevisionSocialContributionSourceResolver(repository=ports.prevision_social_contribution_repository)
+        ),
+        resolve_declared(
+            InvoiceCatalogueSourceResolver(
+                ports=ports.invoice_source_ports,
+            )
+        ),
+        resolve_declared(
+            ForeignAssetsAggregationSourceResolver(
+                observations=foreign_asset_observations,
+                row_observations=foreign_asset_row_observations,
+                register_loader=ports.foreign_asset_register_repository.load,
+            )
+        ),
+        resolve_declared(AtribucionMemberSourceResolver()),
+    )
+
+
+def _modelo_202_instalment_resolver(
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile_read_ports: ProfileReadPorts,
+    bucket_id: str,
+) -> Modelo202InstalmentResolver | None:
+    """Bind the Modelo 202 instalment resolution where the revision credits a single instalment.
+
+    The decision is the one the cross-period gate reads, bound to this
+    calculation's stores and the ejercicio's derived modality.
+    """
+    from ..calculations.modelo_202_instalment_relation import (
+        modelo_202_modality_for_bucket,
+        reads_modelo_202_instalment,
+    )
+    from ..calculations.relation_prefill import activity_start_date_for_bucket
+    from ..overview.modelo202_instalment_evidence import (
+        Modelo202InstalmentStores,
+        art_40_3_election_reader_for_bucket,
+        bind_modelo_202_instalment_resolver,
+    )
+
+    operation = ports.operation
+    if not reads_modelo_202_instalment(snapshot, operation=operation):
+        return None
+    path_values = profile_read_ports.path_values
+    return bind_modelo_202_instalment_resolver(
+        Modelo202InstalmentStores(
+            bucket_id=bucket_id,
+            observations=ports.observation_repository,
+            work_units=ports.work_unit_repository.load,
+            calculations=ports.calculation_repository,
+            transactions=ports.transaction_repository.load,
+            activity_start_date=activity_start_date_for_bucket(bucket_id, profile_path_values_reader=path_values),
+            election_for=art_40_3_election_reader_for_bucket(bucket_id, operation=operation),
+        ),
+        modality=modelo_202_modality_for_bucket(
+            bucket_id,
+            filing_year=snapshot.filing_year,
+            operation=operation,
+            profile_path_values_reader=path_values,
+        ),
+        operation=operation,
+    )
+
+
+def _resolve_cross_period_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile_read_ports: ProfileReadPorts,
+    bucket_id: str,
+    *,
+    held_sources_set_aside: frozenset[BindingId],
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the previous-filing, relation-prefill and IVA compensation partition families.
+
+    A carry whose held earlier return the current return's marked boxes set
+    aside is left unresolved, for the filer's statement of its figure.
+    """
+    from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations.multi_year import PreviousFilingSourceResolver
+    from ..calculations.relation_prefill import RelationPrefillSourceResolver
+
+    return (
+        resolve_declared(
+            PreviousFilingSourceResolver(
+                registry_snapshot=snapshot,
+                repository=ports.observation_repository,
+                iva_history_repository=ports.iva_compensation_history_repository,
+                profile_read_ports=profile_read_ports,
+                excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
+                    modelo_id=snapshot.modelo.id,
+                    revision_id=snapshot.revision.id,
+                )
+                | held_sources_set_aside,
+                operation=ports.operation,
+            )
+        ),
+        resolve_declared(
+            RelationPrefillSourceResolver(
+                registry_snapshot=snapshot,
+                repository=ports.observation_repository,
+                profile_read_ports=profile_read_ports,
+                operation=ports.operation,
+                modelo_202_instalment_resolver=_modelo_202_instalment_resolver(
+                    snapshot, ports, profile_read_ports, bucket_id
+                ),
+            )
+        ),
+        resolve_declared(
+            IvaCompensationAnnualPartitionSourceResolver(
+                registry_snapshot=snapshot,
+                repository=ports.observation_repository,
+                operation=ports.operation,
+            )
+        ),
+    )

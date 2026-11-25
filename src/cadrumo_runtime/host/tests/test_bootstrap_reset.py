@@ -16,7 +16,6 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import recovery_custody
 from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
 from cadrumo.application.user_profile.custody_ports import (
@@ -24,6 +23,7 @@ from cadrumo.application.user_profile.custody_ports import (
     ProfileCustodyRecoveryUnlockPort,
 )
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError, enroll_profile_recovery
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.bootstrap import PasswordReset
@@ -36,7 +36,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_access_management import _connect, _LoginObservation
+from .served_runtime import SyntheticLogin, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -47,7 +47,7 @@ pytestmark = [
 ]
 
 
-class _MutableLogin(_LoginObservation):
+class MutableLogin(SyntheticLogin):
     locked = False
 
     @override
@@ -63,7 +63,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     valid_proof = case != "wrong-proof"
-    login = _MutableLogin()
+    login = MutableLogin("native-access-management-test-login")
     original_rewrap = recovery_custody.rewrap_profile_passphrase_under_lock
     if case == "publication-failure":
 
@@ -121,7 +121,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                wire = _connect(endpoint)
+                wire = connect_verified(endpoint)
                 client = FrontendClient(wire, profile_id=profile, frontend=OperationFrontendProjection.CLI)
                 code = bytearray(handed[0].encode() if valid_proof else b"not-the-recovery-code")
                 replacement = bytearray(b"replacement-bootstrap-password-for-test")
@@ -138,7 +138,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
                         assert load_committed_profile_password_material(profile, root=root).envelope == original
                         monkeypatch.setattr(recovery_custody, "rewrap_profile_passphrase_under_lock", original_rewrap)
                         retry = FrontendClient(
-                            _connect(endpoint), profile_id=profile, frontend=OperationFrontendProjection.CLI
+                            connect_verified(endpoint), profile_id=profile, frontend=OperationFrontendProjection.CLI
                         )
                         try:
                             completed = retry.reset_password(

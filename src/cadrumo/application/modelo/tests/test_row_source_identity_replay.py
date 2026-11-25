@@ -11,6 +11,11 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import (
     ModeloBindingValue,
@@ -22,7 +27,7 @@ from ....domain.filing.schema import (
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.submission.models import ModeloDraftStatus
-from .._row_source_identity_replay import (
+from ..row_source_identity_replay import (
     attach_revision_row_source_identities,
 )
 
@@ -30,6 +35,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _RAW_IDENTITY = "opaque-inventory-activity-canary"
 _DIGEST = "a" * 64
+
+
+_YEAR = newest_authored_edition("100")
+_REVISION = str(revision_covering("100", _YEAR).id)
 
 
 def _binding(
@@ -49,9 +58,13 @@ def _binding(
     )
 
 
+def _flag(binding_id: str, *, row_index: int, value: bool) -> ModeloBindingValue:
+    return _binding(binding_id, row_index=row_index).model_copy(update={"value": value})
+
+
 def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
-    period = Period.from_year_and_code(2025, "0A")
-    snapshot = RegistrySnapshotRef(modelo="100", revision_id="2025", modelo_year=2025, period="0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
+    snapshot = RegistrySnapshotRef(modelo="100", revision_id=_REVISION, modelo_year=_YEAR, period="0A")
     draft_id = compute_modelo_draft_id(
         modelo="100",
         period=period,
@@ -60,7 +73,7 @@ def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
         values=(),
         binding_values=binding_values,
     )
-    now = datetime(2026, 8, 23, tzinfo=UTC)
+    now = datetime(filing_year_envelope().horizon, 8, 23, tzinfo=UTC)
     return ModeloDraft(
         draft_id=draft_id,
         modelo="100",
@@ -73,7 +86,7 @@ def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
         binding_values=binding_values,
         created_at=now,
         updated_at=now,
-        schema_version=registry_schema_version(modelo="100", revision_id="2025"),
+        schema_version=registry_schema_version(modelo="100", revision_id=_REVISION),
     )
 
 
@@ -93,8 +106,8 @@ def _revision(
     return CalculationRevision.model_construct(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="100",
-            revision_id="2025",
-            modelo_year=2025,
+            revision_id=_REVISION,
+            modelo_year=_YEAR,
             period="0A",
         ),
         row_binding_values=rows,
@@ -115,6 +128,23 @@ def test_replay_attaches_exact_coordinate_without_exposing_raw_identity() -> Non
     assert replayed.draft_id != draft.draft_id
     public = f"{replayed.model_dump()!r} {replayed.model_dump_json()}"
     assert _RAW_IDENTITY not in public
+
+
+def test_replay_compares_a_flag_row_in_the_form_persistence_stores_it() -> None:
+    draft = _draft((_flag("flag-column", row_index=1, value=True), _flag("flag-column-off", row_index=1, value=False)))
+    revision = _revision(rows={"flag-column": {"1": "1"}, "flag-column-off": {"1": "0"}}, identities={})
+
+    replayed = attach_revision_row_source_identities(draft=draft, revision=revision)
+
+    assert [value.value for value in replayed.binding_values] == [True, False]
+
+
+def test_replay_refuses_a_flag_row_whose_persisted_value_is_the_other_flag() -> None:
+    draft = _draft((_flag("flag-column", row_index=1, value=True),))
+    revision = _revision(rows={"flag-column": {"1": "0"}}, identities={})
+
+    with pytest.raises(ModeloValidationError, match="does not match persisted revision row"):
+        attach_revision_row_source_identities(draft=draft, revision=revision)
 
 
 def test_replay_preserves_unidentified_m720_rows() -> None:

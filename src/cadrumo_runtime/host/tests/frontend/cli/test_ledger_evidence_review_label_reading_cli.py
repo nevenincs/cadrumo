@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo.adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from cadrumo.application.ledger.extraction_draft_store import (
     ExtractionDraftDocument,
@@ -37,11 +38,10 @@ from cadrumo.application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,7 +49,6 @@ _REFERENCE = "ev-label-reading-001"
 _LABEL_READING_CODES = {
     LabelReadingFallbackCause.READER_UNAVAILABLE: "ledger.evidence.label_reading.reader_unavailable",
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: "ledger.evidence.label_reading.headroom_refused",
-    LabelReadingFallbackCause.INFERENCE_SLOT_BUSY: "ledger.evidence.label_reading.busy_refused",
 }
 _REVIEW_VIEW = ["app", "ledger", "evidence", "review", "view", _REFERENCE]
 
@@ -59,11 +58,7 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
     LabelReadingFallbackCause.READER_UNAVAILABLE: ("InvoiceDraftReaderUnavailableError", None),
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: (
         "InvoiceDraftReaderHeadroomRefusedError",
-        ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
-    ),
-    LabelReadingFallbackCause.INFERENCE_SLOT_BUSY: (
-        "InvoiceDraftReaderBusyRefusedError",
-        "llm.local_inference.slot_available",
+        LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value,
     ),
 }
 
@@ -71,7 +66,7 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
 def _draft() -> InvoiceDraft:
     """A draft missing exactly the fields the fallbacks below name as unread."""
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         invoice_number="2026-0142",
         invoice_date="2026-03-10",
         taxable_base=Decimal("100.00"),
@@ -112,7 +107,7 @@ def _store(bucket_id: str, draft: InvoiceDraft) -> None:
 
 
 def _json_notices() -> list[dict[str, object]]:
-    result = _invoke(["--format", "json", *_REVIEW_VIEW])
+    result = invoke(["--format", "json", *_REVIEW_VIEW])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     assert envelope["command"] == "ledger.evidence.review.view", result.output
@@ -125,7 +120,7 @@ def _json_notices() -> list[dict[str, object]]:
 
 
 def _text_notice_codes() -> list[str]:
-    result = _invoke(_REVIEW_VIEW)
+    result = invoke(_REVIEW_VIEW)
     assert result.exit_code == 0, result.output
     return [line.split("\t")[1] for line in result.output.splitlines() if line.startswith("notice\t")]
 
@@ -178,7 +173,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_names_none_in_review(ses
                 draft=_draft(),
                 extractor="extract_invoice_draft_from_evidence",
                 drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
-                label_reading_fallback=_fallback(LabelReadingFallbackCause.INFERENCE_SLOT_BUSY),
+                label_reading_fallback=_fallback(LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED),
             ),
         ),
     )

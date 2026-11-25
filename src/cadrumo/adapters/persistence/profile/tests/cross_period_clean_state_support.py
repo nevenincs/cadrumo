@@ -37,6 +37,7 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -79,8 +80,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
@@ -96,38 +96,29 @@ _M390_REVISION = "2025"
 _M353_YEAR = 2026
 _M353_PERIOD = "12"
 _CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
-_GROUP_MEMBER_A = "A00000000"
-_GROUP_MEMBER_B = "B00000000"
-_GROUP_MEMBER_C = "C00000000"
+_GROUP_MEMBER_A = "A00010009"
+_GROUP_MEMBER_B = "B00010082"
+_GROUP_MEMBER_C = "C00010231"
 
 
 def _store_ready_profile(
     *,
     bucket_id: str = _BUCKET_ID,
     profile_id: str = _PROFILE_ID,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
 ) -> None:
     with bundled_indexed_authority().operation():
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value=tax_id),
-                    UserProfileFact(path="identity.name", value="Ready"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="test activity"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                facts=persona_facts_beneath(
+                    (
+                        UserProfileFact(path="identity.tax_id", value=tax_id),
+                        UserProfileFact(path="identity.name", value="Ready"),
+                        UserProfileFact(path="identity.surnames", value="Operator"),
+                        UserProfileFact(path="activities.description", value="test activity"),
+                    )
                 ),
                 created_at=_CLOCK,
                 updated_at=_CLOCK,
@@ -324,7 +315,7 @@ def _seed_member_322_filing(
     )
 
     evidence_reference_id = f"JUST322{member_nif}"
-    _persist_justificante_metadata(
+    cross_period_clean_state_persist_justificante_metadata(
         evidence_reference_id,
         modelo="322",
         period=_M353_PERIOD,
@@ -374,13 +365,13 @@ def _seed_member_322_filing(
     )
 
 
-def _persist_justificante_metadata(
+def cross_period_clean_state_persist_justificante_metadata(
     csv: str,
     *,
     modelo: str,
     period: str,
     filing_year: int,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
     presentation_id: str | None = None,
 ) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
@@ -434,7 +425,7 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
 def _external_evidence_blockers(
     filing: ModeloRecord,
     source_kind: str,
-    expected_tax_id: str | None = "X1234567L",
+    expected_tax_id: str | None = "X0001500M",
     source_metadata: dict[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
     return filing_external_evidence_blockers(
@@ -493,7 +484,9 @@ def _persist_source_justificante_if_needed(
     omitted: bool,
 ) -> None:
     if _is_justificante_evidence(evidence_kind) and not omitted:
-        _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
+        cross_period_clean_state_persist_justificante_metadata(
+            evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR
+        )
 
 
 def _seed_source_period_filing(
@@ -522,7 +515,7 @@ def _seed_source_period_filing(
         evidence_reference_id=evidence_reference_id,
         source_headers=source_headers,
         actor="aeat-import-test",
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
         # The M303 source quarters carry operator-selected filing facts
         # the import path cannot infer from casilla values, so they are
         # supplied explicitly rather than defaulted.
@@ -549,7 +542,7 @@ def _source_observation_metadata(
     default_source_metadata = {
         "aeat_register_status": "ALTA",
         "aeat_expediente_id": f"EXP-303-{_M390_YEAR}-{period}",
-        "authenticated_identity": "X1234567L",
+        "authenticated_identity": "X0001500M",
     }
     if _is_justificante_evidence(evidence_kind) and not omitted:
         default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
@@ -594,6 +587,7 @@ def _seed_official_303_source_period(
     omit_justificante_metadata_periods: set[str],
     source_kind_by_period: dict[str, str],
     source_metadata_by_period: dict[str, dict[str, str] | None],
+    extra_values_by_period: dict[str, dict[CasillaId, Decimal]],
     operation: PinnedAuthorityOperation,
 ) -> None:
     evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
@@ -606,7 +600,7 @@ def _seed_official_303_source_period(
         omitted=omitted,
     )
     work_unit = _create_source_303_work_unit(period, operation=operation)
-    values = _source_values(period, source_casilla_ids)
+    values = {**_source_values(period, source_casilla_ids), **extra_values_by_period.get(period, {})}
     _seed_source_period_filing(
         observation_repository=observation_repository,
         work_unit=work_unit,
@@ -641,7 +635,13 @@ def _seed_official_303_source_filings(
     omit_justificante_metadata_periods: set[str] | None = None,
     source_kind_by_period: dict[str, str] | None = None,
     source_metadata_by_period: dict[str, dict[str, str] | None] | None = None,
+    extra_values_by_period: dict[str, dict[CasillaId, Decimal]] | None = None,
 ) -> None:
+    """Seed one filed M303 per quarter the annual 390 depends on.
+
+    ``extra_values_by_period`` adds filed casillas beyond the cross-period
+    requirement, for a dependent calculation that reads more of each quarter.
+    """
     _store_ready_profile()
     evidence_kind_by_period = evidence_kind_by_period or {}
     omit_justificante_metadata_periods = omit_justificante_metadata_periods or set()
@@ -657,6 +657,7 @@ def _seed_official_303_source_filings(
                 omit_justificante_metadata_periods=omit_justificante_metadata_periods,
                 source_kind_by_period=source_kind_by_period,
                 source_metadata_by_period=source_metadata_by_period,
+                extra_values_by_period=extra_values_by_period or {},
                 operation=operation,
             )
 
@@ -751,7 +752,7 @@ def _evaluate_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_id: str = _BUCKET_ID,
-    taxpayer_tax_id: str | None = "X1234567L",
+    taxpayer_tax_id: str | None = "X0001500M",
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
@@ -800,7 +801,7 @@ external_evidence_blockers = _external_evidence_blockers
 live_capture_filing = _live_capture_filing
 m390_first_quarter_evidence = _m390_first_quarter_evidence
 member_fan_in_requirement = _member_fan_in_requirement
-persist_justificante_metadata = _persist_justificante_metadata
+persist_justificante_metadata = cross_period_clean_state_persist_justificante_metadata
 save_member_322_observation = _save_member_322_observation
 seed_member_322_filing = _seed_member_322_filing
 seed_official_303_source_filings = _seed_official_303_source_filings

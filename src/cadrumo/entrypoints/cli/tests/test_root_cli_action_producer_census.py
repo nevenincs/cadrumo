@@ -9,16 +9,17 @@ from types import ModuleType
 
 import pytest
 
-from .. import _log_levels as log_levels_module
 from .. import app_diagnostics_commands as diagnostics_module
 from .. import app_live_commands as live_module
+from .. import app_live_period as live_period_module
+from .. import log_levels
 from ..config import archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 _MODULES: tuple[ModuleType, ...] = (
-    log_levels_module,
+    log_levels,
     diagnostics_module,
     maintenance_module,
     live_module,
@@ -29,7 +30,7 @@ _MODULES: tuple[ModuleType, ...] = (
 # separately so a new notice cannot hide behind that one shared constructor.
 _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
     "cadrumo.entrypoints.cli.app_diagnostics_commands": {
-        ("_llm_no_run_data_notice", "code", "operator.ledger.classify"),
+        ("llm_no_run_data_notice", "code", "operator.ledger.classify"),
         ("diagnostics_run_health", "'diagnostics.run_health.session_stale'", None),
         ("diagnostics_run_health", "'diagnostics.run_health.no_session'", None),
         ("diagnostics_errors", "'diagnostics.errors.no_failures'", None),
@@ -40,11 +41,11 @@ _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
         ("_reconcile_notices", "'config.profile.archive.reconcile.failures'", "operator.profile.archive.reconcile"),
     },
     "cadrumo.entrypoints.cli.app_live_commands": {
-        ("_filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),
-        ("_filed_discover_notices", "'live.filed.discover.no_taxpayer_specific_denominator'", None),
+        ("filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),
+        ("filed_discover_notices", "'live.filed.discover.no_taxpayer_specific_denominator'", None),
         ("_limit_reached_notice", "'live.filed.limit_reached'", "operator.live.filed.pull_all"),
-        ("_filed_pull_all_notices", "'live.filed.pull_all.pairs_refused'", "operator.live.filed.pull_all"),
-        ("_filed_pull_all_notices", "'live.filed.pull_all.no_taxpayer_specific_denominator'", None),
+        ("filed_pull_all_notices", "'live.filed.pull_all.pairs_refused'", "operator.live.filed.pull_all"),
+        ("filed_pull_all_notices", "'live.filed.pull_all.no_taxpayer_specific_denominator'", None),
         ("_skipped_casilla_notice", "'live.filed.pull.casillas_not_enrolled'", None),
     },
 }
@@ -57,8 +58,8 @@ _LLM_NOTICE_CALLERS = {
 }
 
 _NATIVE_PARSE_VALIDATION_CARRIERS = {
-    ("_live_period_option", "f'invalid AEAT period {period!r} for year {year}'"),
-    ("_required_live_period_option", "'--period is required'"),
+    ("live_period_option", "f'invalid AEAT period {period!r} for year {year}'"),
+    ("required_live_period_option", "'--period is required'"),
     ("filed_pull_cmd", "tr('cli.app.live.filed.pull_dry_run_single_mode_error')"),
     ("filed_pull_cmd", "'--period and --expediente are only valid for one --modelo with --year'"),
 }
@@ -118,23 +119,24 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
     llm_callers: set[tuple[str, str]] = set()
     for function in _functions(diagnostics_module):
         for call in ast.walk(function):
-            if isinstance(call, ast.Call) and _call_name(call.func) == "_llm_no_run_data_notice":
+            if isinstance(call, ast.Call) and _call_name(call.func) == "llm_no_run_data_notice":
                 code = _keyword(call, "code")
                 assert code is not None
                 llm_callers.add((function.name, ast.unparse(code)))
     assert llm_callers == _LLM_NOTICE_CALLERS
 
     parse_carriers: set[tuple[str, str]] = set()
-    for function in _functions(live_module):
-        for call in ast.walk(function):
-            if isinstance(call, ast.Call) and _call_name(call.func) == "BadParameter":
-                assert len(call.args) == 1
-                parse_carriers.add((function.name, ast.unparse(call.args[0])))
+    for module in (live_module, live_period_module):
+        for function in _functions(module):
+            for call in ast.walk(function):
+                if isinstance(call, ast.Call) and _call_name(call.func) == "BadParameter":
+                    assert len(call.args) == 1
+                    parse_carriers.add((function.name, ast.unparse(call.args[0])))
     assert parse_carriers == _NATIVE_PARSE_VALIDATION_CARRIERS
 
     log_level_calls = {
         (function.name, _call_name(call.func))
-        for function in _functions(log_levels_module)
+        for function in _functions(log_levels)
         for call in ast.walk(function)
         if isinstance(call, ast.Call)
         and _call_name(call.func) in {"LogLevelResolutionError", "_invalid_environment_log_level_error"}
@@ -148,7 +150,7 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
 
 @pytest.mark.parametrize("code", sorted(code for _, code in _LLM_NOTICE_CALLERS))
 def test_llm_no_run_notices_resolve_the_catalogue_action_at_runtime(code: str) -> None:
-    notice = diagnostics_module._llm_no_run_data_notice(code=code)
+    notice = diagnostics_module.llm_no_run_data_notice(code=code)
 
     assert notice.action is not None
     assert notice.action.model_dump(mode="json") == {

@@ -13,9 +13,9 @@ import pytest
 from cadrumo.application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.workbench_operations import ModeloCasillaHelpProjectionV1, ModeloCasillaHelpRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import WorkUnitState
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -208,7 +208,7 @@ def test_queue_and_transport_share_one_deadline(monkeypatch: pytest.MonkeyPatch)
 
 def test_queue_timeout_never_starts_a_second_operation(monkeypatch: pytest.MonkeyPatch) -> None:
     source, _, _, _, transport = _source(monkeypatch)
-    monkeypatch.setattr(reads, "_READ_TIMEOUT_SECONDS", 0.02)
+    monkeypatch.setattr(reads, "READ_TIMEOUT_SECONDS", 0.02)
 
     async def scenario() -> None:
         first = asyncio.create_task(asyncio.to_thread(_help, source, "01"))
@@ -216,7 +216,7 @@ def test_queue_timeout_never_starts_a_second_operation(monkeypatch: pytest.Monke
         try:
             with pytest.raises(RefusalError) as raised:
                 await asyncio.to_thread(_help, source, "02")
-            assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert raised.value.reason is RefusalCode.TIMEOUT
             assert len(transport.calls) == 1
         finally:
             transport.release.set()

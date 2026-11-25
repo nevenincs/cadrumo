@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of BOE-A-2022-19290 AnnexII, printed158996-159001. First applicable periods begin January2023. The historical complementaria procedure is retained, without later rectificativa motives or boxes108/111. Rate cells retain this edition's own record-design literals and scale. Outstanding: complementaria marker and explicit no-activity declaration; annual activity descriptions; payment/refund72/73 and non-IBAN details; extra electronic activity worksheets. No operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "d4bb14b7840486a8740422f030ee66e4f65aebff919ba539dadb585155b9f790"
+source_state_digest = "cc334de359d5821e535590016648bbefa02622a3911a81df16a7976bacf1ce1f"
 design_sources = [
     { source_ref = "aeat-dr-303-2023", sha256 = "6d7c9b6284325b727c85e59d2a28d22653d9dbca75eca3f038f0046bda25e70f" },
     { source_ref = "boe-modelo-303-2023-form-pdf", sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590" },
@@ -194,6 +194,13 @@ placements = [
     { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion.base", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.interior.devengado", kind = "working_figure" },
+    { casilla_id = "iva.autorepercutido.interior.devengado.base", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-bases-cuotas", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-bases-cuotas.base", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-bases-cuotas.operador", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-bases-cuotas.operador.base", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-recargo", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-recargo.operador", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria.deducible", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria.devengado", kind = "working_figure" },
@@ -232,6 +239,8 @@ placements = [
     { casilla_id = "iva.soportado.interiores.base", kind = "working_figure" },
     { casilla_id = "iva.soportado.interiores.bienes-inversion", kind = "working_figure" },
     { casilla_id = "iva.soportado.interiores.bienes-inversion.base", kind = "working_figure" },
+    { casilla_id = "recargo.reducido.transitorio", kind = "working_figure" },
+    { casilla_id = "recargo.super-reducido", kind = "working_figure" },
 ]
 
 [[revisions.2023.form_layouts.pages]]
@@ -253,8 +262,8 @@ blocks = [
     { kind = "context_field", id = "conjunta", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f014", heading_key = "modelo.schema.303.form.authored.conjunta.heading", official_heading = "Autoliquidación conjunta", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading" }, { value = "2", heading_key = "modelo.schema.303.form.authored.no.heading" }] },
     { kind = "context_field", id = "criterio-caja", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f015", heading_key = "modelo.schema.303.form.authored.criterio-caja.heading", official_heading = "Régimen especial del criterio de caja", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading" }, { value = "2", heading_key = "modelo.schema.303.form.authored.no.heading" }] },
     { kind = "context_field", id = "destinatario-caja", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f016", heading_key = "modelo.schema.303.form.authored.destinatario-caja.heading", official_heading = "Destinatario de operaciones acogidas al criterio de caja", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading" }, { value = "2", heading_key = "modelo.schema.303.form.authored.no.heading" }] },
-    { kind = "context_field", id = "opcion-prorrata", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f017", heading_key = "modelo.schema.303.form.authored.opcion-prorrata.heading", official_heading = "Opción por la prorrata especial" },
-    { kind = "context_field", id = "revocacion-prorrata", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f018", heading_key = "modelo.schema.303.form.authored.revocacion-prorrata.heading", official_heading = "Revocación de la opción por la prorrata especial" },
+    { kind = "context_field", id = "opcion-prorrata", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f017", heading_key = "modelo.schema.303.form.authored.opcion-prorrata.heading", official_heading = "Opción por la prorrata especial", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading", official_heading = "SI para el último periodo (12 y 4T)" }, { value = "2", heading_key = "modelo.schema.303.form.authored.prorrata-especial-no.heading", official_heading = "Blanco para periodos distintos del último (12 y 4T), y NO para el último periodo (12 y 4T)" }] },
+    { kind = "context_field", id = "revocacion-prorrata", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f018", heading_key = "modelo.schema.303.form.authored.revocacion-prorrata.heading", official_heading = "Revocación de la opción por la prorrata especial", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading", official_heading = "SI para el último periodo (12 y 4T)" }, { value = "2", heading_key = "modelo.schema.303.form.authored.prorrata-especial-no.heading", official_heading = "Blanco para periodos distintos del último (12 y 4T), y NO para el último periodo (12 y 4T)" }] },
     { kind = "context_field", id = "concurso", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f019", heading_key = "modelo.schema.303.form.authored.concurso.heading", official_heading = "Declaración de concurso en este período", choices = [{ value = "1", heading_key = "modelo.schema.303.form.authored.si.heading" }, { value = "2", heading_key = "modelo.schema.303.form.authored.no.heading" }] },
     { kind = "context_field", id = "fecha-concurso", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f020", heading_key = "modelo.schema.303.form.authored.fecha-concurso.heading", official_heading = "Fecha del auto de declaración de concurso" },
     { kind = "context_field", id = "tipo-concurso", export_layout_id = "generated-modelo-303-2023-fichero", export_record_id = "m303-declaration", export_field_id = "m303-2023.dp30301.f021", heading_key = "modelo.schema.303.form.authored.tipo-concurso.heading", official_heading = "Autoliquidación preconcursal o postconcursal" },

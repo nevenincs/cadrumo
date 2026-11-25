@@ -19,13 +19,14 @@ def _require_session(client: FrontendClient, session_id: UUID) -> None:
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
 
-def _exchange(
+def exchange(
     client: FrontendClient,
     session_id: UUID,
     request: OperationRequest,
     *,
     deadline: float,
 ) -> OperationReply:
+    """Send a request over the client session and await the exchange within the deadline."""
     _require_session(client, session_id)
     reply = client.operation(request, deadline=deadline)
     _require_session(client, session_id)

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DirectoryTree, Input, Select, Static
 
-from ....application.ledger.actions_import import LedgerProviderID
+from ....application.ledger.actions_import import LedgerProviderID, installed_ledger_providers
 from ....application.ledger.own_account_operation import LedgerOwnAccountRequest, OwnAccountProjection
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
@@ -18,22 +18,30 @@ from ....core.i18n.render import tr
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentScroll
-from .controller import LedgerRouteRequested, LedgerWorkspaceController
+from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState, LedgerImportOutcomeV1, LedgerImportRequestV1, LedgerImportSourceKind
 from .own_accounts import LedgerOwnAccountDoorV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerRouteRequested
 
 #: The account choice that binds rows only through the statement's own account identifier.
 _UNBOUND_ACCOUNT: Final = "-"
 
-#: The readers an operator may pick for a bank statement, automatic first.
-IMPORT_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
+#: The readers the import screen has words for, automatic first.
+_LABELLED_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
     LedgerProviderID.AUTO,
     LedgerProviderID.CSV,
     LedgerProviderID.OFX,
     LedgerProviderID.XLSX,
-    LedgerProviderID.PDF_N26,
+    LedgerProviderID.PDF,
 )
+
+
+def import_providers() -> tuple[LedgerProviderID, ...]:
+    """Return the readers an operator may pick: the labelled ones this installation parses."""
+    installed = set(installed_ledger_providers())
+    return tuple(provider for provider in _LABELLED_PROVIDERS if provider in installed)
+
 
 _SOURCE_KIND_LOCALE_KEYS: Final[dict[LedgerImportSourceKind, str]] = {
     LedgerImportSourceKind.BANK_STATEMENT: "tui.ledger.import.kind.bank_statement",
@@ -45,7 +53,7 @@ _PROVIDER_LOCALE_KEYS: Final[dict[LedgerProviderID, str]] = {
     LedgerProviderID.CSV: "tui.ledger.import.provider.csv",
     LedgerProviderID.OFX: "tui.ledger.import.provider.ofx",
     LedgerProviderID.XLSX: "tui.ledger.import.provider.xlsx",
-    LedgerProviderID.PDF_N26: "tui.ledger.import.provider.pdf_n26",
+    LedgerProviderID.PDF: "tui.ledger.import.provider.pdf",
 }
 
 _EDITABLE_CONTROLS: Final = (
@@ -97,6 +105,8 @@ def import_outcome_lines(outcome: LedgerImportOutcomeV1) -> tuple[str, ...]:
 class LedgerImportScreen(LedgerConfirmationFlowScreen):
     """Read an operator-chosen source, show what it would write, and write it on confirmation."""
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.IMPORT
+
     FLOW_NAME = "import"
     CSS: ClassVar[str] = LedgerConfirmationFlowScreen.CSS + tokenised(
         """
@@ -131,7 +141,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.import.provider_label",
             )
             yield Select[str](
-                tuple((tr(_PROVIDER_LOCALE_KEYS[provider]), provider.value) for provider in IMPORT_PROVIDERS),
+                tuple((tr(_PROVIDER_LOCALE_KEYS[provider]), provider.value) for provider in import_providers()),
                 value=LedgerProviderID.AUTO.value,
                 allow_blank=False,
                 id="ledger-import-provider",
@@ -309,7 +319,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                     event.button.disabled = True
                     self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.import.previewing"))
                     self.run_worker(self._preview(request), exclusive=True)
-            case "ledger-import-cancel" if self.flow_state in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+            case "ledger-import-cancel" if self.can_cancel_flow:
                 self._cancel_flow()
             case "ledger-import-confirm" if self.flow_state is LedgerFlowState.CONFIRMING:
                 self._transition(LedgerFlowState.SUBMITTING)
@@ -317,11 +327,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-import-cancel", Button).disabled = True
                 self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.import.progress"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "ledger-import-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "ledger-import-again" if self.flow_state.is_settled:
                 self._start_again()
             case _:
                 return
@@ -366,7 +372,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             outcome = await self.controller.apply_import(request)
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.import.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.import.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self.outcome = outcome
@@ -388,7 +394,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     @override
     def _cancel_flow(self) -> None:
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self.previewed = None
         self._transition(LedgerFlowState.CANCELLED)
@@ -399,4 +405,4 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         self._offer_again()
 
 
-__all__ = ["IMPORT_PROVIDERS", "LedgerImportScreen", "import_outcome_lines"]
+__all__ = ["LedgerImportScreen", "import_outcome_lines", "import_providers"]

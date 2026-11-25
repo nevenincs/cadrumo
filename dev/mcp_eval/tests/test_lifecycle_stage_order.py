@@ -14,7 +14,7 @@ from itertools import permutations
 
 import pytest
 
-from .._models import LIFECYCLE_STAGE_ORDER, lifecycle_stages_in_canonical_order
+from ..models import LIFECYCLE_STAGE_ORDER, lifecycle_stages_in_canonical_order
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

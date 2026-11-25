@@ -9,164 +9,35 @@
 //! runtime child holds the exact person session; this host retains its pipe and
 //! nonsecret identity. Provider keys cross only a bounded service exchange.
 
-use super::launcher::Event;
+mod admission;
+pub(super) mod protocol;
+mod retry;
+#[cfg(test)]
+mod tests;
+
+use self::admission::{AdmissionWork, admit_person, person_failed};
+use self::protocol::{
+    Allowed, Changed, Gateway, Launch, Observe, Prepared, StartReply, State, Status, allowed,
+    service_refusal, start_reply,
+};
+use self::retry::{RETRY, RetryBudget};
+use super::launcher::{Event, Startup};
 use super::runner::{self, Signal, Supervised};
-use cadrumo_application::{
-    diagnostics::{Diagnostics, HostStage},
-    error::application::{ApplicationError, ErrorCode, Operation, Result},
-};
-use serde::Serialize;
-use std::{
-    fmt::Write as _,
-    future::Future,
-    pin::Pin,
-    process::Command,
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, AtomicU64, Ordering},
-    },
-    time::{Duration, Instant},
-};
+use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
+use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
+use cadrumo_application::diagnostics::{Diagnostics, HostStage};
+use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
+use std::fmt::Write as _;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Condvar, Mutex};
+use std::time::{Duration, Instant};
 use tauri::ipc::Channel;
 use tokio::sync::{Notify, mpsc};
 use zeroize::Zeroizing;
 
-/// Initial retry delay; later failures back off, up to three retries.
-pub const RETRY: Duration = Duration::from_secs(30);
-/// How long a started launcher has to report its service before it is refused.
-const START_LIMIT: Duration = Duration::from_secs(30);
-
-pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
-use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
-
-fn service_refusal(code: &str) -> Refusal {
-    match code {
-        "signed_out" => Refusal::SignedOut,
-        "credentials_unavailable" | "credentials_invalid" => Refusal::ProviderCredentialMissing,
-        "agent_incompatible" | "stores_newer" => Refusal::ServiceIncompatible,
-        _ => Refusal::from_launcher(code),
-    }
-}
-
-/// What the service answered a start request.
-#[derive(Debug, PartialEq, Eq)]
-enum StartReply {
-    Starting,
-    /// Other tree work holds the service; the agent it serves is unchanged.
-    Busy,
-    Refused(Refusal),
-}
-
-fn start_reply(reply: &serde_json::Value) -> Result<StartReply> {
-    match (reply["kind"].as_str(), reply["code"].as_str()) {
-        (Some("starting"), _) => Ok(StartReply::Starting),
-        (Some("refused"), Some("busy")) => Ok(StartReply::Busy),
-        (Some("refused"), code) => Ok(StartReply::Refused(service_refusal(
-            code.unwrap_or("service_failed"),
-        ))),
-        _ => Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-            .with_reason("agent_start_reply_unexpected")),
-    }
-}
-
-/// Where the agent service of the signed-in profile is.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "state", rename_all = "snake_case")]
-pub enum State {
-    Stopped,
-    Starting,
-    Ready { agent_version: String },
-    Refused { code: Refusal },
-}
-
-/// The published status: its state, and the lane it runs on.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct Status {
-    #[serde(flatten)]
-    pub state: State,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub lane: Option<&'static str>,
-}
-
-/// What the sign-in status allows, read from one observation.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Allowed {
-    /// Serve the profile with this label.
-    Serve(String),
-    /// A local sign-in change fences authority until its fresh observation.
-    Pending,
-    Refuse(Refusal),
-}
-
-/// One sign-in observation, as the supervisor reads it.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Observation {
-    pub supported: bool,
-    pub present: bool,
-    pub runtime_available: bool,
-    pub refused: bool,
-    pub active_profile: Option<String>,
-}
-
-/// Anything but a present sign-in on a working runtime with a selected
-/// profile stops the agent. A failed read is unknown, and unknown stops it.
-pub fn allowed(observed: &Result<Observation>) -> Allowed {
-    if let Err(error) = observed
-        && error.code == ErrorCode::SessionUnavailable
-        && error.reason.as_deref() == Some("sign_in_mutation_in_progress")
-    {
-        return Allowed::Pending;
-    }
-    let Ok(observed) = observed else {
-        return Allowed::Refuse(Refusal::RuntimeUnavailable);
-    };
-    if !observed.supported {
-        return Allowed::Refuse(Refusal::ServiceAbsent);
-    }
-    if !observed.runtime_available || observed.refused {
-        return Allowed::Refuse(Refusal::RuntimeUnavailable);
-    }
-    match (&observed.active_profile, observed.present) {
-        (Some(profile), true) => Allowed::Serve(profile.clone()),
-        _ => Allowed::Refuse(Refusal::SignedOut),
-    }
-}
-
-pub type Observe =
-    Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Result<Observation>> + Send>> + Send + Sync>;
-/// Resolves at the next sign-in observation after it is called; supervision
-/// looks again then, and never on a timer of its own.
-pub type Changed = Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
-/// Builds the command for the profile, given the bearer minted for it.
-pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
-
-/// What one start runs.
-pub struct Prepared {
-    pub command: Command,
-    pub person: Option<super::person::HeldPerson>,
-}
-
-/// How the gateway of the running launcher is reached. The bearer goes
-/// nowhere but to that loopback gateway.
-#[derive(Clone)]
-pub struct Gateway {
-    pub port: u16,
-    pub bearer: Arc<Zeroizing<String>>,
-    /// The profile's agent workspace the launcher reported.
-    pub workspace_root: String,
-    /// Which launcher reported it; a later one is another gateway.
-    pub generation: u64,
-    /// A controller can replace its gateway without replacing the launcher.
-    /// Retained observations must not authorize that replacement, even if its
-    /// port is reused.
-    instance: Arc<()>,
-}
-
-impl Gateway {
-    pub fn same_instance(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.instance, &other.instance)
-    }
-}
+/// Last resort for an owner that never reports readiness or terminal completion.
+const STARTUP_TIMEOUT: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
 
 struct Running {
     supervised: Supervised,
@@ -179,17 +50,53 @@ struct Running {
     started: Instant,
 }
 
+struct Preparing {
+    generation: u64,
+    profile: String,
+    started: Instant,
+    cancelled: Arc<AtomicBool>,
+}
+
+struct Admitting {
+    generation: u64,
+    cancel: Arc<Notify>,
+    cancelled: Arc<AtomicBool>,
+    ready: Option<Event>,
+}
+
+enum Completion {
+    Started(u64, Result<Running>),
+    Admitted(u64, Result<super::admin::Endpoint>),
+}
+
 struct Listener {
     channel: Channel<Status>,
 }
 
+/// Called each time the agent becomes ready: for a profile's sign-in, another profile, or
+/// a service start or restart.
+pub type Ready = Arc<dyn Fn() + Send + Sync>;
+
 struct Shared {
     status: Mutex<Status>,
     listener: Mutex<Option<Listener>>,
+    ready: Mutex<Vec<Ready>>,
     gateway: Mutex<Option<Gateway>>,
     admin: Mutex<Option<super::admin::Endpoint>>,
+    /// Signalled, under `admin`, whenever the endpoint, the status or the close
+    /// changes, so administration waiting on a starting service looks again.
+    admitted: Condvar,
     running: Mutex<Option<Running>>,
+    preparing: Mutex<Option<Preparing>>,
+    admitting: Mutex<Option<Admitting>>,
+    completions: mpsc::UnboundedSender<Completion>,
+    completed: Mutex<Option<mpsc::UnboundedReceiver<Completion>>>,
+    tasks: Mutex<Vec<tauri::async_runtime::JoinHandle<()>>>,
     closed: AtomicBool,
+    /// Set when the service is stopped because its person signed out, until
+    /// another start begins: an administration call that stop cut short is the
+    /// sign-out, not a failure.
+    signed_out: AtomicBool,
     started: AtomicBool,
     retry_requested: AtomicBool,
     wake: Notify,
@@ -198,7 +105,7 @@ struct Shared {
     diagnostics: Arc<Diagnostics>,
     grace: Duration,
     retry: Duration,
-    start_limit: Duration,
+    startup_timeout: Duration,
 }
 
 /// The supervision of one host's launcher.
@@ -207,6 +114,33 @@ pub struct Supervisor {
     observe: Observe,
     changed: Changed,
     launch: Option<Launch>,
+}
+
+/// What administration found while it waited for a starting service.
+#[derive(Debug, Eq, PartialEq)]
+pub enum AdminWait {
+    /// The endpoint is admitted; administration may exchange with it.
+    Admitted,
+    /// The service is not starting, so no endpoint is on its way.
+    NotStarting,
+    /// The service was still starting when the bound elapsed.
+    StillStarting,
+}
+
+/// Wakes administration waiting on `admitted` after a change it must see. Taking
+/// `admin` orders the signal after any waiter's look at the state.
+fn signal_admission(shared: &Shared) {
+    drop(lock(&shared.admin));
+    shared.admitted.notify_all();
+}
+
+/// Holds the admitted endpoint and wakes administration waiting for it. The
+/// window's reads answered busy because the service was not yet admitted are
+/// cued to read again by the status it holds, sent once more.
+fn admit(shared: &Shared, endpoint: super::admin::Endpoint) {
+    *lock(&shared.admin) = Some(endpoint);
+    shared.admitted.notify_all();
+    republish(shared);
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -230,6 +164,23 @@ fn mint_bearer() -> Result<Zeroizing<String>> {
 }
 
 impl Supervisor {
+    /// A host without a runnable service publishes its reason without observing
+    /// sign-in or starting a supervision task.
+    #[cfg(any(not(windows), test))]
+    pub fn unavailable(
+        observe: Observe,
+        changed: Changed,
+        reason: Refusal,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
+        let supervisor = Self::new(observe, changed, None, diagnostics);
+        *lock(&supervisor.shared.status) = Status {
+            state: State::Refused { code: reason },
+            lane: None,
+        };
+        supervisor
+    }
+
     /// `launch` builds the launcher command; without one this host has no
     /// agent service and says so.
     pub fn new(
@@ -256,6 +207,7 @@ impl Supervisor {
         grace: Duration,
         retry: Duration,
     ) -> Self {
+        let (completions, completed) = mpsc::unbounded_channel();
         let status = if launch.is_some() {
             Status {
                 state: State::Stopped,
@@ -273,10 +225,18 @@ impl Supervisor {
             shared: Arc::new(Shared {
                 status: Mutex::new(status),
                 listener: Mutex::new(None),
+                ready: Mutex::new(Vec::new()),
                 gateway: Mutex::new(None),
                 admin: Mutex::new(None),
+                admitted: Condvar::new(),
                 running: Mutex::new(None),
+                preparing: Mutex::new(None),
+                admitting: Mutex::new(None),
+                completions,
+                completed: Mutex::new(Some(completed)),
+                tasks: Mutex::new(Vec::new()),
                 closed: AtomicBool::new(false),
+                signed_out: AtomicBool::new(false),
                 started: AtomicBool::new(false),
                 retry_requested: AtomicBool::new(false),
                 wake: Notify::new(),
@@ -285,7 +245,7 @@ impl Supervisor {
                 diagnostics,
                 grace,
                 retry,
-                start_limit: START_LIMIT,
+                startup_timeout: STARTUP_TIMEOUT,
             }),
             observe,
             changed,
@@ -296,10 +256,10 @@ impl Supervisor {
     /// A fixture launcher's speed is not under test; it gets `limit` to report
     /// its service instead of the product's start limit.
     #[cfg(test)]
-    fn starting_within(mut self, limit: Duration) -> Self {
+    fn timeout_within(mut self, limit: Duration) -> Self {
         Arc::get_mut(&mut self.shared)
             .expect("timing is set before supervision begins")
-            .start_limit = limit;
+            .startup_timeout = limit;
         self
     }
 
@@ -312,6 +272,9 @@ impl Supervisor {
     /// An explicit user retry starts a new bounded attempt budget. Passive
     /// status reads never reset failures; canonical sign-in still gates launch.
     pub fn retry(&self) {
+        if self.launch.is_none() {
+            return;
+        }
         self.shared.retry_requested.store(true, Ordering::Release);
         self.shared.wake.notify_one();
         self.begin();
@@ -358,6 +321,115 @@ impl Supervisor {
         endpoint.exchange(request, secret)
     }
 
+    /// Waits, off the window's thread, while the service is starting and its
+    /// admin endpoint is not yet admitted. A service that is not starting
+    /// answers at once. The bound is the start limit the supervisor itself
+    /// gives a launcher before it refuses the start as timed out.
+    pub fn await_admin(&self) -> AdminWait {
+        self.begin();
+        let deadline = Instant::now() + self.shared.startup_timeout;
+        let mut admin = lock(&self.shared.admin);
+        loop {
+            if let Some(settled) = self.settled_admission(admin.is_some()) {
+                return settled;
+            }
+            let left = deadline.saturating_duration_since(Instant::now());
+            if left.is_zero() {
+                return AdminWait::StillStarting;
+            }
+            admin = self
+                .shared
+                .admitted
+                .wait_timeout(admin, left)
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .0;
+        }
+    }
+
+    /// The admission as it stands, without waiting: a service still starting
+    /// answers [`AdminWait::StillStarting`] at once, for a read the window
+    /// makes again when the service publishes the agent ready.
+    pub fn admin_now(&self) -> AdminWait {
+        self.begin();
+        if lock(&self.shared.admin).is_some() {
+            return AdminWait::Admitted;
+        }
+        // Stopped is the state before the supervisor's first observation and while a
+        // sign-in change awaits its fresh one: a start is on its way unless the
+        // service is closed, has no launch, or published why it does not serve.
+        let not_coming = match lock(&self.shared.status).state {
+            State::Refused { .. } => true,
+            State::Stopped => self.launch.is_none(),
+            State::Starting | State::Ready { .. } => false,
+        };
+        if self.shared.closed.load(Ordering::Acquire) || not_coming {
+            AdminWait::NotStarting
+        } else {
+            AdminWait::StillStarting
+        }
+    }
+
+    /// Admitted, or not starting, or `None` while the service is still starting.
+    fn settled_admission(&self, admitted: bool) -> Option<AdminWait> {
+        if admitted {
+            return Some(AdminWait::Admitted);
+        }
+        if self.shared.closed.load(Ordering::Acquire)
+            || lock(&self.shared.status).state != State::Starting
+        {
+            return Some(AdminWait::NotStarting);
+        }
+        None
+    }
+
+    /// The admitted service identity for a sequence of related administration reads.
+    /// Whether the service is stopping, or stopped, because its person signed out.
+    pub fn signed_out(&self) -> bool {
+        self.shared.signed_out.load(Ordering::Acquire)
+            || matches!(
+                lock(&self.shared.status).state,
+                State::Refused {
+                    code: Refusal::SignedOut
+                }
+            )
+    }
+
+    pub fn admin_generation(&self) -> Result<u64> {
+        self.begin();
+        lock(&self.shared.admin)
+            .as_ref()
+            .map(|endpoint| endpoint.generation)
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("agent_admin_unavailable")
+            })
+    }
+
+    /// Exchange with the same admitted service, rejecting retirement or replacement.
+    pub fn administer_generation(
+        &self,
+        request: serde_json::Value,
+        generation: u64,
+    ) -> Result<serde_json::Value> {
+        let changed = || {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("agent_admin_generation_changed")
+        };
+        let endpoint = lock(&self.shared.admin)
+            .as_ref()
+            .filter(|endpoint| endpoint.generation == generation)
+            .cloned()
+            .ok_or_else(changed)?;
+        let answer = endpoint.exchange(request, None)?;
+        if lock(&self.shared.admin)
+            .as_ref()
+            .is_none_or(|endpoint| endpoint.generation != generation)
+        {
+            return Err(changed());
+        }
+        Ok(answer)
+    }
+
     pub fn person_request(&self, request: serde_json::Value) -> Result<serde_json::Value> {
         self.begin();
         let person = lock(&self.shared.running)
@@ -381,6 +453,11 @@ impl Supervisor {
             *listener = Some(Listener { channel });
         }
         id
+    }
+
+    /// Calls `ready` each later time the agent becomes ready, after every earlier hook.
+    pub fn on_ready(&self, ready: Ready) {
+        lock(&self.shared.ready).push(ready);
     }
 
     /// Removes the listener `subscription`, never a newer one.
@@ -414,6 +491,7 @@ impl Supervisor {
     pub async fn close(&self) -> Result<()> {
         self.shared.closed.store(true, Ordering::Release);
         self.shared.wake.notify_one();
+        signal_admission(&self.shared);
         let worker = lock(&self.shared.worker).take();
         let stopped = stop_running(&self.shared, None, AgentStopCause::WindowClosing).await;
         if let Some(worker) = worker
@@ -440,11 +518,32 @@ fn publish(shared: &Shared, state: State) {
         current.state = state;
         current.clone()
     };
+    signal_admission(shared);
     if let State::Refused { code } = status.state {
         shared
             .diagnostics
             .service(None, ServiceFact::AgentRefused { reason: code });
     }
+    if matches!(status.state, State::Ready { .. }) {
+        let hooks = lock(&shared.ready).clone();
+        for ready in hooks {
+            ready();
+        }
+    }
+    let mut listener = lock(&shared.listener);
+    if listener
+        .as_ref()
+        .is_some_and(|held| held.channel.send(status).is_err())
+    {
+        *listener = None;
+    }
+}
+
+/// Sends the window the status it already holds, unchanged: the cue on which
+/// the views that wait on a busy or pending read ask for it again. Nothing is
+/// recorded and no ready hook runs, since nothing changed state.
+fn republish(shared: &Shared) {
+    let status = lock(&shared.status).clone();
     let mut listener = lock(&shared.listener);
     if listener
         .as_ref()
@@ -460,6 +559,25 @@ async fn stop_running(
     generation: Option<u64>,
     cause: AgentStopCause,
 ) -> Result<()> {
+    if cause == AgentStopCause::SignedOut {
+        shared.signed_out.store(true, Ordering::Release);
+    }
+    if let Some(preparing) = lock(&shared.preparing).as_ref()
+        && generation.is_none_or(|wanted| wanted == preparing.generation)
+    {
+        preparing.cancelled.store(true, Ordering::Release);
+    }
+    {
+        let mut admitting = lock(&shared.admitting);
+        if admitting
+            .as_ref()
+            .is_some_and(|pending| generation.is_none_or(|wanted| wanted == pending.generation))
+            && let Some(pending) = admitting.take()
+        {
+            pending.cancelled.store(true, Ordering::Release);
+            pending.cancel.notify_one();
+        }
+    }
     let taken = {
         let mut running = lock(&shared.running);
         if generation.is_some_and(|wanted| running.as_ref().map(|r| r.generation) != Some(wanted)) {
@@ -477,6 +595,7 @@ async fn stop_running(
             .is_some_and(|endpoint| endpoint.generation == running.generation)
         {
             *admin = None;
+            shared.admitted.notify_all();
         }
     }
     {
@@ -504,146 +623,187 @@ async fn stop_running(
     ended.map(|_| ())
 }
 
-async fn start(
+fn cancelled_start() -> ApplicationError {
+    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+        .with_reason("agent_start_cancelled")
+}
+
+/// Stops a service process this start launched and will not run.
+async fn stop_supervised(shared: &Arc<Shared>, supervised: Supervised) -> Result<()> {
+    let grace = shared.grace;
+    tauri::async_runtime::spawn_blocking(move || supervised.stop(grace))
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))?
+        .map(|_| ())
+}
+
+fn millis(duration: Duration) -> u64 {
+    duration.as_millis().try_into().unwrap_or(u64::MAX)
+}
+
+async fn prepare_start(
     shared: &Arc<Shared>,
     launch: &Launch,
     profile: String,
     signals: &mpsc::UnboundedSender<(u64, Signal)>,
-) -> Result<()> {
+    generation: u64,
+    cancelled: Arc<AtomicBool>,
+    preparation_started: Instant,
+) -> Result<Running> {
     let bearer = Arc::new(mint_bearer()?);
     let gateway_bearer = Arc::new(mint_bearer()?);
     let launch = launch.clone();
     let prepare_bearer = bearer.clone();
     let prepare_profile = profile.clone();
-    let preparation_started = Instant::now();
-    // Include held-person acquisition (which can wait on another consumer)
-    // in the visible startup interval, not just the child launch afterwards.
-    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
     shared
         .diagnostics
         .service(None, ServiceFact::AgentStarting { generation });
-    let (Prepared { command, person }, person_failure) =
-        tauri::async_runtime::spawn_blocking(move || {
-            let prepared = launch(&prepare_bearer, &prepare_profile)?;
-            let failure = prepared
-                .person
-                .as_ref()
-                .map(|person| lock(person).failures());
-            Ok::<_, ApplicationError>((prepared, failure))
-        })
+    let Prepared {
+        command,
+        person: acquire_person,
+        local_engine_default,
+    } = tauri::async_runtime::spawn_blocking(move || launch(&prepare_bearer, &prepare_profile))
         .await
         .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let prepared_at = Instant::now();
+    if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
+        return Err(cancelled_start());
+    }
+    // The person session, which on a cold start resumes the stored sign-in
+    // (it can also wait on another consumer doing so), is acquired while the
+    // service process starts on the profile id alone. The service's signals
+    // wait as early ones until this start is running with its person, so
+    // nothing is admitted without it.
+    let acquiring = tauri::async_runtime::spawn_blocking(move || {
+        let began = Instant::now();
+        let person = acquire_person()?;
+        let failure = person.as_ref().map(|person| lock(person).failures());
+        Ok::<_, ApplicationError>((person, failure, began.elapsed()))
+    });
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
     let gateway_secret = gateway_bearer.clone();
-    let supervised = tauri::async_runtime::spawn_blocking(move || {
-        runner::start_child(
+    let (entered, supervised) = tauri::async_runtime::spawn_blocking(move || {
+        let entered = Instant::now();
+        let supervised = runner::start_child(
             command,
-            Some((secret.as_str(), gateway_secret.as_str())),
+            Some(Startup {
+                bearer: secret.as_str(),
+                gateway_bearer: gateway_secret.as_str(),
+                local_engine_default,
+            }),
             move |signal| {
                 let _ = sender.send((generation, signal));
             },
             diagnostics,
-        )
+        );
+        (entered, supervised)
     })
     .await
-    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))?;
+    let supervised = supervised?;
+    let spawned_at = Instant::now();
+    let phases = supervised.phases();
+    let acquired = acquiring
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))
+        .and_then(|acquired| acquired);
+    let (person, person_failure, person_wait) = match acquired {
+        Ok(acquired) => acquired,
+        Err(error) => {
+            stop_supervised(shared, supervised).await?;
+            return Err(error);
+        }
+    };
     shared.diagnostics.service(
         None,
         ServiceFact::AgentStartupTiming {
             generation,
-            prepare_ms: prepared_at
-                .duration_since(preparation_started)
-                .as_millis()
-                .try_into()
-                .unwrap_or(u64::MAX),
-            spawn_ms: prepared_at
-                .elapsed()
-                .as_millis()
-                .try_into()
-                .unwrap_or(u64::MAX),
+            command_ms: millis(prepared_at.duration_since(preparation_started)),
+            spawn_ms: millis(spawned_at.duration_since(prepared_at)),
+            queue_ms: millis(entered.duration_since(prepared_at)),
+            creation_lock_ms: millis(phases.creation_lock),
+            create_ms: millis(phases.create),
+            contain_ms: millis(phases.contain),
+            person_ms: millis(person_wait),
         },
     );
-    let refused = {
-        let mut running = lock(&shared.running);
-        if shared.closed.load(Ordering::Acquire) {
-            Some(supervised)
-        } else {
-            *running = Some(Running {
-                supervised,
-                profile,
-                generation,
-                bearer,
-                gateway_bearer,
-                person,
-                person_failure,
-                started: Instant::now(),
-            });
-            None
-        }
-    };
-    if let Some(supervised) = refused {
-        let grace = shared.grace;
-        match tauri::async_runtime::spawn_blocking(move || supervised.stop(grace)).await {
-            Ok(Ok(_)) => {}
-            Ok(Err(error)) => shared.diagnostics.host_failure(HostStage::Agent, error),
-            Err(_) => shared
-                .diagnostics
-                .contained_panic(Some(HostStage::Agent), Operation::Cli),
-        }
+    if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
+        stop_supervised(shared, supervised).await?;
+        return Err(cancelled_start());
     }
-    Ok(())
+    Ok(Running {
+        supervised,
+        profile,
+        generation,
+        bearer,
+        gateway_bearer,
+        person,
+        person_failure,
+        started: preparation_started,
+    })
 }
 
-/// A failed service gets three automatic retries. The last refusal remains
-/// visible until an explicit retry, sign-in/profile change or host reopen.
-#[derive(Default)]
-struct RetryBudget {
-    failures: u32,
-    after: Option<Instant>,
-    refusal: Option<Refusal>,
-}
-
-impl RetryBudget {
-    fn waiting(&self) -> bool {
-        self.failures >= 4 || self.after.is_some_and(|at| Instant::now() < at)
-    }
-
-    fn failed(&mut self, shared: &Shared) {
-        if let State::Refused { code } = lock(&shared.status).state {
-            self.refusal = Some(code);
+fn start(
+    shared: &Arc<Shared>,
+    launch: &Launch,
+    profile: String,
+    signals: &mpsc::UnboundedSender<(u64, Signal)>,
+) {
+    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
+    shared.signed_out.store(false, Ordering::Release);
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let started = Instant::now();
+    *lock(&shared.preparing) = Some(Preparing {
+        generation,
+        profile: profile.clone(),
+        started,
+        cancelled: cancelled.clone(),
+    });
+    let (owner, launch, signals) = (shared.clone(), launch.clone(), signals.clone());
+    let task = tauri::async_runtime::spawn(async move {
+        let result = prepare_start(
+            &owner, &launch, profile, &signals, generation, cancelled, started,
+        )
+        .await;
+        if let Err(failed) = owner
+            .completions
+            .send(Completion::Started(generation, result))
+            && let Completion::Started(_, Ok(running)) = failed.0
+        {
+            let grace = owner.grace;
+            let _ =
+                tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
         }
-        self.failures = self.failures.saturating_add(1);
-        if self.failures >= 4 {
-            self.after = None;
-            shared.diagnostics.service(
-                None,
-                ServiceFact::AgentRetryExhausted {
-                    attempts: self.failures,
-                },
-            );
-        } else {
-            let delay = shared.retry.saturating_mul(1 << (self.failures - 1));
-            self.after = Some(Instant::now() + delay);
-            shared.diagnostics.service(
-                None,
-                ServiceFact::AgentRetryScheduled {
-                    delay_ms: delay.as_millis().try_into().unwrap_or(u64::MAX),
-                },
-            );
-        }
-    }
+    });
+    let mut tasks = lock(&shared.tasks);
+    tasks.retain(|task| !task.inner().is_finished());
+    tasks.push(task);
 }
 
 async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, launch: Launch) {
     let (signals, mut received) = mpsc::unbounded_channel::<(u64, Signal)>();
+    let mut completed = lock(&shared.completed)
+        .take()
+        .expect("one supervision owner");
+    let mut completions = std::collections::VecDeque::new();
+    let mut early = Vec::new();
     let mut retries = RetryBudget::default();
     let mut serving: Option<String> = None;
+    // Since when the runtime has not read as available, while it has not.
+    let mut runtime_awaited: Option<Instant> = None;
+    // Since when no sign-in observation has decided whether the agent may serve:
+    // before the first one answers, and while a sign-in change fences it. A
+    // launcher's service is read as starting meanwhile, so the wait has the
+    // start's own bound, past which it is refused as timed out.
+    let mut undecided: Option<Instant> = Some(Instant::now());
     'supervision: while !shared.closed.load(Ordering::Acquire) {
         if shared.retry_requested.swap(false, Ordering::AcqRel) {
             retries = RetryBudget::default();
+            if undecided.is_some() {
+                undecided = Some(Instant::now());
+            }
         }
         let wake = shared.wake.notified();
         tokio::pin!(wake);
@@ -655,6 +815,21 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         tokio::pin!(observation);
         let failed_person = person_failed(&shared);
         tokio::pin!(failed_person);
+        let startup_timeout = async {
+            match startup_due(&shared) {
+                Some(deadline) => tokio::time::sleep_until(deadline.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
+        tokio::pin!(startup_timeout);
+        let undecided_at = undecided_due(&shared, undecided);
+        let undecided_timeout = async move {
+            match undecided_at {
+                Some(deadline) => tokio::time::sleep_until(deadline.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
+        tokio::pin!(undecided_timeout);
         // CLI status reads can take seconds. Launcher refusal/exit must clear
         // the gateway and publish its cause while that read is still pending.
         let observed = loop {
@@ -667,14 +842,73 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     continue 'supervision;
                 }
                 Some((generation, signal)) = received.recv() => {
+                    if lock(&shared.running).is_none() && lock(&shared.preparing).as_ref().is_some_and(|p| p.generation == generation) {
+                        early.push((generation, signal));
+                        continue;
+                    }
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
                     }
+                }
+                Some(completion) = completed.recv() => {
+                    match completion {
+                        Completion::Started(generation, result) => {
+                            // Keeping a privately owned child needs no new
+                            // authority observation. Readiness/admission still
+                            // cannot publish an endpoint until the exact
+                            // canonical profile is observed below. Process
+                            // exit/refusal must remain observable meanwhile.
+                            let pending = {
+                                let mut preparing = lock(&shared.preparing);
+                                if preparing.as_ref().is_some_and(|pending| pending.generation == generation) {
+                                    preparing.take()
+                                } else {
+                                    None
+                                }
+                            };
+                            let valid = pending.as_ref().is_some_and(|pending| !pending.cancelled.load(Ordering::Acquire));
+                            match result {
+                                Ok(running) if valid => {
+                                    *lock(&shared.running) = Some(running);
+                                    for (epoch, signal) in early.drain(..) {
+                                        if epoch == generation && handle(&shared, epoch, signal).await {
+                                            retries.failed(&shared);
+                                        }
+                                    }
+                                }
+                                Ok(running) => {
+                                    let grace = shared.grace;
+                                    let _ = tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
+                                    early.retain(|(epoch, _)| *epoch != generation);
+                                }
+                                Err(error) if valid => {
+                                    shared.diagnostics.host_failure(HostStage::Agent, error);
+                                    publish(&shared, State::Refused { code: Refusal::ServiceFailed });
+                                    retries.failed(&shared);
+                                }
+                                Err(_) => early.retain(|(epoch, _)| *epoch != generation),
+                            }
+                        }
+                        completion @ Completion::Admitted(..) => {
+                            completions.push_back(completion);
+                            continue 'supervision;
+                        }
+                    }
+                }
+                () = &mut startup_timeout => {
+                    retries.timeout();
+                    let _ = stop_running(&shared, None, AgentStopCause::ProtocolRefused).await;
+                    publish(&shared, State::Refused { code: Refusal::Timeout });
+                    continue 'supervision;
                 }
                 (generation, error) = &mut failed_person => {
                     if retire_failed_person(&shared, generation, error).await {
                         retries.failed(&shared);
                     }
+                    continue 'supervision;
+                }
+                () = &mut undecided_timeout => {
+                    refuse_undecided(&shared);
                     continue 'supervision;
                 }
                 observed = &mut observation => break observed,
@@ -684,18 +918,165 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         if shared.closed.load(Ordering::Acquire) {
             break;
         }
+        if matches!(allowed, Allowed::Refuse(Refusal::RuntimeUnavailable)) {
+            runtime_awaited.get_or_insert_with(Instant::now);
+        } else {
+            runtime_awaited = None;
+        }
+        // A runtime still starting, or briefly away, is waited for until its
+        // readiness bound: only a runtime that stays unavailable past it is
+        // refused.
+        let awaiting_runtime =
+            runtime_awaited.is_some_and(|since| since.elapsed() < shared.startup_timeout);
+        // A fenced sign-in keeps the wait it began; a decided observation ends it,
+        // and a runtime still awaited is bounded by its own readiness wait.
+        if matches!(allowed, Allowed::Pending) {
+            undecided.get_or_insert_with(Instant::now);
+        } else {
+            undecided = None;
+        }
+        let undecided_lapsed =
+            undecided.is_some_and(|since| since.elapsed() >= shared.startup_timeout);
+        if let Some(preparing) = lock(&shared.preparing).as_ref()
+            && !matches!(&allowed, Allowed::Serve(profile) if *profile == preparing.profile)
+        {
+            preparing.cancelled.store(true, Ordering::Release);
+        }
+        while let Some(completion) = completions.pop_front() {
+            match completion {
+                Completion::Started(generation, result) => {
+                    let preparing = {
+                        let mut held = lock(&shared.preparing);
+                        if held
+                            .as_ref()
+                            .is_some_and(|pending| pending.generation == generation)
+                        {
+                            held.take()
+                        } else {
+                            None
+                        }
+                    };
+                    let valid = preparing.as_ref().is_some_and(|pending| {
+                        !pending.cancelled.load(Ordering::Acquire)
+                            && matches!(&allowed, Allowed::Serve(profile) if *profile == pending.profile)
+                    });
+                    match result {
+                        Ok(running) if valid => {
+                            *lock(&shared.running) = Some(running);
+                            for (epoch, signal) in early.drain(..) {
+                                if epoch == generation && handle(&shared, epoch, signal).await {
+                                    retries.failed(&shared);
+                                }
+                            }
+                        }
+                        Ok(running) => {
+                            let grace = shared.grace;
+                            let _ = tauri::async_runtime::spawn_blocking(move || {
+                                running.supervised.stop(grace)
+                            })
+                            .await;
+                            early.retain(|(epoch, _)| *epoch != generation);
+                        }
+                        Err(error) if valid => {
+                            shared.diagnostics.host_failure(HostStage::Agent, error);
+                            publish(
+                                &shared,
+                                State::Refused {
+                                    code: Refusal::ServiceFailed,
+                                },
+                            );
+                            retries.failed(&shared);
+                        }
+                        Err(_) => {
+                            early.retain(|(epoch, _)| *epoch != generation);
+                        }
+                    }
+                }
+                Completion::Admitted(generation, result) => {
+                    let pending = {
+                        let mut held = lock(&shared.admitting);
+                        if held
+                            .as_ref()
+                            .is_some_and(|pending| pending.generation == generation)
+                        {
+                            held.take()
+                        } else {
+                            None
+                        }
+                    };
+                    let current = lock(&shared.running).as_ref().is_some_and(|running| {
+                        running.generation == generation
+                            && matches!(&allowed, Allowed::Serve(profile) if *profile == running.profile)
+                    });
+                    if let Some(pending) = pending
+                        && current
+                        && !pending.cancelled.load(Ordering::Acquire)
+                    {
+                        match result {
+                            Ok(endpoint) => {
+                                admit(&shared, endpoint);
+                                if let Some(ready) = pending.ready {
+                                    let _ = handle(&shared, generation, Signal::Event(ready)).await;
+                                }
+                            }
+                            Err(error) => {
+                                let timeout = error.reason.as_deref() == Some("agent_timeout");
+                                shared.diagnostics.host_failure(HostStage::Agent, error);
+                                publish(
+                                    &shared,
+                                    State::Refused {
+                                        code: if timeout {
+                                            Refusal::Timeout
+                                        } else {
+                                            Refusal::ServiceFailed
+                                        },
+                                    },
+                                );
+                                let _ = stop_running(
+                                    &shared,
+                                    Some(generation),
+                                    AgentStopCause::ProtocolRefused,
+                                )
+                                .await;
+                                if timeout {
+                                    retries.timeout();
+                                } else {
+                                    retries.failed(&shared);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let preparation_expired = lock(&shared.preparing).as_ref().is_some_and(|pending| {
+            !pending.cancelled.load(Ordering::Acquire)
+                && pending.started.elapsed() >= shared.startup_timeout
+        });
+        if preparation_expired {
+            if let Some(pending) = lock(&shared.preparing).as_ref() {
+                pending.cancelled.store(true, Ordering::Release);
+            }
+            publish(
+                &shared,
+                State::Refused {
+                    code: Refusal::Timeout,
+                },
+            );
+            retries.timeout();
+        }
         let starting_expired = lock(&shared.running).as_ref().is_some_and(|running| {
-            lock(&shared.admin).is_none() && running.started.elapsed() >= shared.start_limit
+            lock(&shared.admin).is_none() && running.started.elapsed() >= shared.startup_timeout
         });
         if starting_expired {
             publish(
                 &shared,
                 State::Refused {
-                    code: Refusal::ServiceFailed,
+                    code: Refusal::Timeout,
                 },
             );
             let _ = stop_running(&shared, None, AgentStopCause::ProtocolRefused).await;
-            retries.failed(&shared);
+            retries.timeout();
         }
         let current = lock(&shared.running).as_ref().map(|r| r.profile.clone());
         match (&current, &allowed) {
@@ -704,12 +1085,14 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 let cause = match &allowed {
                     Allowed::Serve(_) => AgentStopCause::ProfileChanged,
                     Allowed::Pending => AgentStopCause::SignInUnavailable,
-                    Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignInUnavailable,
+                    Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignedOut,
                     Allowed::Refuse(_) => AgentStopCause::RuntimeUnavailable,
                 };
                 let _ = stop_running(&shared, None, cause).await;
                 match &allowed {
+                    Allowed::Pending if undecided_lapsed => refuse_undecided(&shared),
                     Allowed::Pending => publish(&shared, State::Stopped),
+                    Allowed::Refuse(_) if awaiting_runtime => await_runtime(&shared),
                     Allowed::Refuse(code) => {
                         if *code == Refusal::SignedOut {
                             retries = RetryBudget::default();
@@ -725,7 +1108,9 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     }
                 }
             }
+            (None, Allowed::Pending) if undecided_lapsed => refuse_undecided(&shared),
             (None, Allowed::Pending) => publish(&shared, State::Stopped),
+            (None, Allowed::Refuse(_)) if awaiting_runtime => await_runtime(&shared),
             (None, Allowed::Refuse(code)) => {
                 // A failed observation is not evidence of a new sign-in. Keep
                 // the same profile's budget through transient runtime failures.
@@ -741,22 +1126,10 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 if serving.as_deref() != Some(profile.as_str()) {
                     retries = RetryBudget::default();
                 }
-                if !retries.waiting() {
+                if !retries.waiting() && lock(&shared.preparing).is_none() {
                     serving = Some(profile.clone());
                     publish(&shared, State::Starting);
-                    if let Err(error) = start(&shared, &launch, profile.clone(), &signals).await {
-                        shared.diagnostics.host_failure(
-                            cadrumo_application::diagnostics::HostStage::Agent,
-                            error,
-                        );
-                        publish(
-                            &shared,
-                            State::Refused {
-                                code: Refusal::ServiceFailed,
-                            },
-                        );
-                        retries.failed(&shared);
-                    }
+                    start(&shared, &launch, profile.clone(), &signals);
                 } else if let Some(code) = retries.refusal {
                     // The runtime recovered, but this service's last failure
                     // still explains why its retry budget is waiting/exhausted.
@@ -767,7 +1140,15 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         // Nothing is read on a timer: the next round starts at a new sign-in
         // observation, an explicit wake, a launcher failure, or the one
         // deadline this round set (a retry, or a start that must have finished).
-        let due = next_due(&shared, &retries);
+        let due = next_due(&shared, &retries)
+            .into_iter()
+            .chain(
+                runtime_awaited
+                    .map(|since| since + shared.startup_timeout)
+                    .filter(|at| *at > Instant::now()),
+            )
+            .chain(undecided_due(&shared, undecided).filter(|at| *at > Instant::now()))
+            .min();
         // Starting this round may have installed a different held session.
         let failed_person = person_failed(&shared);
         tokio::pin!(failed_person);
@@ -781,7 +1162,16 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         loop {
             tokio::select! {
                 _ = &mut wake => break,
-                () = &mut changed => break,
+                () = &mut changed => {
+                    // A sign-in change awaits its fresh observation as
+                    // Stopped: a read made meanwhile waits for the start
+                    // rather than being told the person is signed out.
+                    if lock(&shared.status).state == (State::Refused { code: Refusal::SignedOut }) {
+                        publish(&shared, State::Stopped);
+                        undecided.get_or_insert_with(Instant::now);
+                    }
+                    break;
+                }
                 () = &mut deadline => break,
                 (generation, error) = &mut failed_person => {
                     if retire_failed_person(&shared, generation, error).await {
@@ -790,35 +1180,39 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     break;
                 }
                 Some((generation, signal)) = received.recv() => {
+                    if lock(&shared.running).is_none() && lock(&shared.preparing).as_ref().is_some_and(|p| p.generation == generation) {
+                        early.push((generation, signal));
+                        continue;
+                    }
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
                         break;
                     }
                 }
+                Some(completion) = completed.recv() => {
+                    match completion {
+                        started @ Completion::Started(..) => {
+                            // The observation loop above installs private child
+                            // ownership even if its observation stays pending.
+                            let _ = shared.completions.send(started);
+                        }
+                        admitted => completions.push_back(admitted),
+                    }
+                    break;
+                }
             }
         }
     }
     let _ = stop_running(&shared, None, AgentStopCause::WindowClosing).await;
-}
-
-/// A failed shared profile read must retire the service it admitted promptly,
-/// without waiting for the busy bridge child or another sign-in observation.
-async fn person_failed(shared: &Shared) -> (u64, ApplicationError) {
-    let held = lock(&shared.running).as_ref().and_then(|running| {
-        running
-            .person_failure
-            .clone()
-            .map(|failure| (running.generation, failure))
-    });
-    let Some((generation, mut failure)) = held else {
-        return std::future::pending().await;
-    };
-    loop {
-        if let Some(error) = failure.borrow_and_update().clone() {
-            return (generation, error);
-        }
-        if failure.changed().await.is_err() {
-            return std::future::pending().await;
+    let tasks = std::mem::take(&mut *lock(&shared.tasks));
+    for task in tasks {
+        let _ = task.await;
+    }
+    while let Ok(completion) = completed.try_recv() {
+        if let Completion::Started(_, Ok(running)) = completion {
+            let grace = shared.grace;
+            let _ =
+                tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
         }
     }
 }
@@ -850,7 +1244,7 @@ async fn retire_failed_person(
         },
     );
     let cause = if retired {
-        AgentStopCause::SignInUnavailable
+        AgentStopCause::SignedOut
     } else {
         AgentStopCause::ProtocolRefused
     };
@@ -862,18 +1256,67 @@ async fn retire_failed_person(
 
 /// The one moment this round must look again without a new observation: when
 /// a refused start may be retried, or when a starting launcher has had its time.
+/// Waits for a runtime that does not read as available yet, as Stopped: a
+/// start follows once it does, and a read made meanwhile waits for it.
+fn await_runtime(shared: &Shared) {
+    if lock(&shared.status).state != State::Stopped {
+        log::info!("agent waits for the runtime to read as available");
+    }
+    publish(shared, State::Stopped);
+}
+
+/// When a launcher's service read as starting, with no start under way, must
+/// stop being waited for: `since` plus the start's bound, while the published
+/// state is still the Stopped a read is told to wait on.
+fn undecided_due(shared: &Shared, since: Option<Instant>) -> Option<Instant> {
+    let waited_on = lock(&shared.status).state == State::Stopped
+        && lock(&shared.running).is_none()
+        && lock(&shared.preparing).is_none();
+    since
+        .filter(|_| waited_on)
+        .map(|since| since + shared.startup_timeout)
+}
+
+/// A sign-in that stayed undecided past the start's bound: the agent is refused
+/// as timed out, with its log line, rather than read as starting forever. A
+/// later decided observation, or a retry, starts it as usual.
+fn refuse_undecided(shared: &Shared) {
+    if lock(&shared.status).state
+        != (State::Refused {
+            code: Refusal::Timeout,
+        })
+    {
+        log::warn!(
+            "agent start refused: no sign-in observation decided within {} s",
+            shared.startup_timeout.as_secs()
+        );
+    }
+    publish(
+        shared,
+        State::Refused {
+            code: Refusal::Timeout,
+        },
+    );
+}
+
 fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {
     let retry = retries.after.filter(|at| *at > Instant::now());
+    retry.into_iter().chain(startup_due(shared)).min()
+}
+
+fn startup_due(shared: &Shared) -> Option<Instant> {
     let starting = lock(&shared.running).as_ref().and_then(|running| {
         lock(&shared.admin)
             .is_none()
-            .then_some(running.started + shared.start_limit)
+            .then_some(running.started + shared.startup_timeout)
     });
-    retry.into_iter().chain(starting).min()
+    let preparation = lock(&shared.preparing).as_ref().and_then(|pending| {
+        (!pending.cancelled.load(Ordering::Acquire))
+            .then_some(pending.started + shared.startup_timeout)
+    });
+    starting.into_iter().chain(preparation).min()
 }
 
-/// Acts on one launcher signal. True when the launcher ended unasked, which
-/// delays the next start.
 async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
     let (bearer, gateway_bearer, process) = {
         let running = lock(&shared.running);
@@ -907,47 +1350,54 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                     stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
                 return true;
             };
-            let admitted = tauri::async_runtime::spawn_blocking(move || {
-                let mut person = lock(&person);
-                if person.identity["runtime_boot_id"] != runtime_boot_id || person.identity["profile_id"] != profile_id {
-                    return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason("service_ready_identity_mismatch"));
-                }
-                let reply = person.exchange(serde_json::json!({"action":"service_admission", "recipient_connection_id":connection_id, "service_id":service_id}))?;
-                if reply["kind"] == "service_connected" {
-                    Ok(())
-                } else {
-                    Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason("service_admission_reply_unexpected"))
-                }
-            }).await.unwrap_or_else(|_| {
-                shared.diagnostics.contained_panic(Some(HostStage::Agent), Operation::Cli);
-                Err(ApplicationError::new(ErrorCode::Panic, Operation::Cli))
-            });
-            let admitted = match admitted {
-                Ok(()) => true,
-                Err(error) => {
-                    shared.diagnostics.host_failure(HostStage::Agent, error);
-                    false
-                }
-            };
-            if !admitted {
-                let _ =
-                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
-                publish(
-                    shared,
-                    State::Refused {
-                        code: Refusal::ServiceFailed,
-                    },
-                );
-                return true;
+            if lock(&shared.admitting).is_some() {
+                return false;
             }
-            *lock(&shared.admin) = Some(super::admin::Endpoint {
+            let cancelled = Arc::new(AtomicBool::new(false));
+            let cancel = Arc::new(Notify::new());
+            *lock(&shared.admitting) = Some(Admitting {
+                generation,
+                cancel: cancel.clone(),
+                cancelled: cancelled.clone(),
+                ready: None,
+            });
+            let deadline = lock(&shared.running).as_ref().unwrap().started + shared.startup_timeout;
+            let owner = shared.clone();
+            let endpoint = super::admin::Endpoint {
                 port: admin_port,
                 bearer,
                 generation,
                 gate: Default::default(),
+            };
+            let task = tauri::async_runtime::spawn(async move {
+                let began = Instant::now();
+                let result = admit_person(AdmissionWork {
+                    person,
+                    boot: runtime_boot_id,
+                    profile: profile_id,
+                    recipient: connection_id,
+                    service: service_id,
+                    deadline,
+                    cancelled,
+                    cancel,
+                })
+                .await
+                .map(|()| endpoint);
+                // The status the window waits on answers only once this
+                // admission completes, so its cost is kept beside startup's.
+                owner.diagnostics.service(
+                    None,
+                    ServiceFact::AgentAdmissionTiming {
+                        generation,
+                        admitted: result.is_ok(),
+                        elapsed_ms: began.elapsed().as_millis().try_into().unwrap_or(u64::MAX),
+                    },
+                );
+                let _ = owner
+                    .completions
+                    .send(Completion::Admitted(generation, result));
             });
+            lock(&shared.tasks).push(task);
             false
         }
         Signal::Event(Event::Ready {
@@ -955,9 +1405,23 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             agent_version,
             workspace_root,
         }) => {
-            if !lock(&shared.admin)
+            {
+                let mut admitting = lock(&shared.admitting);
+                if let Some(pending) = admitting
+                    .as_mut()
+                    .filter(|pending| pending.generation == generation)
+                {
+                    pending.ready = Some(Event::Ready {
+                        gateway_port,
+                        agent_version,
+                        workspace_root,
+                    });
+                    return false;
+                }
+            }
+            if lock(&shared.admin)
                 .as_ref()
-                .is_some_and(|endpoint| endpoint.generation == generation)
+                .is_none_or(|endpoint| endpoint.generation != generation)
             {
                 let _ =
                     stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
@@ -980,10 +1444,19 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             publish(shared, State::Ready { agent_version });
             false
         }
+        // A read the window was told busy or pending for has settled: the
+        // status it holds is sent again as the cue to read it again.
+        Signal::Event(Event::ReadSettled) => {
+            republish(shared);
+            false
+        }
         // A start the service declined because other tree work, such as a
         // provider sign-in, holds it: the agent it serves, if any, is unchanged.
         Signal::Event(Event::Refused { code }) if code == "busy" => false,
         Signal::Event(Event::Refused { code }) => {
+            if let Some(pending) = lock(&shared.admitting).as_mut() {
+                pending.ready = None;
+            }
             publish(
                 shared,
                 State::Refused {
@@ -994,6 +1467,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             false
         }
         Signal::Event(Event::Stopped { reason }) => {
+            if let Some(pending) = lock(&shared.admitting).as_mut() {
+                pending.ready = None;
+            }
             *lock(&shared.gateway) = None;
             if reason == "agent_retired" {
                 // The hosted controller was retired for an operation such as
@@ -1039,1173 +1515,6 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             }
             let _ = stop_running(shared, Some(generation), AgentStopCause::LauncherEnded).await;
             true
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn replacing_a_gateway_in_the_same_launcher_invalidates_its_admission() {
-        let first = Gateway {
-            port: 12345,
-            bearer: Arc::new(Zeroizing::new("test-bearer".to_owned())),
-            workspace_root: "workspace".to_owned(),
-            generation: 1,
-            instance: Arc::new(()),
-        };
-        assert!(first.same_instance(&first.clone()));
-        let replacement = Gateway {
-            instance: Arc::new(()),
-            ..first.clone()
-        };
-        assert!(!first.same_instance(&replacement));
-    }
-
-    /// Stands in for new sign-in observations: the test's source is read again every `period`.
-    fn every(period: Duration) -> Changed {
-        Arc::new(move || Box::pin(tokio::time::sleep(period)))
-    }
-
-    fn observed(present: bool, runtime: bool, profile: Option<&str>) -> Result<Observation> {
-        Ok(Observation {
-            supported: true,
-            present,
-            runtime_available: runtime,
-            refused: false,
-            active_profile: profile.map(str::to_owned),
-        })
-    }
-
-    #[test]
-    fn only_a_present_sign_in_on_a_working_runtime_with_a_profile_serves() {
-        assert_eq!(
-            allowed(&observed(true, true, Some("A"))),
-            Allowed::Serve("A".into())
-        );
-        for (status, refusal) in [
-            // Sign-out, a lock, idle or absolute expiry: the sign-in is gone.
-            (observed(false, true, Some("A")), Refusal::SignedOut),
-            (observed(true, true, None), Refusal::SignedOut),
-            (
-                observed(true, false, Some("A")),
-                Refusal::RuntimeUnavailable,
-            ),
-            (
-                Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
-                Refusal::RuntimeUnavailable,
-            ),
-            (
-                Err(ApplicationError::new(
-                    ErrorCode::SessionUnavailable,
-                    Operation::Cli,
-                )),
-                Refusal::RuntimeUnavailable,
-            ),
-        ] {
-            assert_eq!(allowed(&status), Allowed::Refuse(refusal));
-        }
-        assert_eq!(
-            allowed(&Err(ApplicationError::new(
-                ErrorCode::SessionUnavailable,
-                Operation::Cli
-            )
-            .with_reason("sign_in_mutation_in_progress"))),
-            Allowed::Pending
-        );
-        let mut refused = observed(true, true, Some("A")).unwrap();
-        refused.refused = true;
-        assert_eq!(
-            allowed(&Ok(refused.clone())),
-            Allowed::Refuse(Refusal::RuntimeUnavailable)
-        );
-        refused.supported = false;
-        assert_eq!(
-            allowed(&Ok(refused)),
-            Allowed::Refuse(Refusal::ServiceAbsent)
-        );
-    }
-
-    #[test]
-    fn statuses_serialize_as_the_column_reads_them() {
-        let lane = Some("development");
-        for (state, expected) in [
-            (
-                State::Stopped,
-                serde_json::json!({"state": "stopped", "lane": "development"}),
-            ),
-            (
-                State::Starting,
-                serde_json::json!({"state": "starting", "lane": "development"}),
-            ),
-            (
-                State::Ready {
-                    agent_version: "0.4.1".into(),
-                },
-                serde_json::json!({"state": "ready", "agent_version": "0.4.1", "lane": "development"}),
-            ),
-            (
-                State::Refused {
-                    code: Refusal::ProviderCredentialMissing,
-                },
-                serde_json::json!({"state": "refused", "code": "agent_provider_credential_missing", "lane": "development"}),
-            ),
-        ] {
-            assert_eq!(
-                serde_json::to_value(Status { state, lane }).unwrap(),
-                expected
-            );
-        }
-        assert_eq!(
-            serde_json::to_value(Status {
-                state: State::Refused {
-                    code: Refusal::ServiceAbsent
-                },
-                lane: None
-            })
-            .unwrap(),
-            serde_json::json!({"state": "refused", "code": "agent_service_absent"})
-        );
-        assert_eq!(
-            Refusal::from_launcher("agent_signed_out"),
-            Refusal::SignedOut
-        );
-    }
-
-    #[test]
-    fn the_bearer_is_fresh_hex_each_time() {
-        let first = mint_bearer().unwrap();
-        let second = mint_bearer().unwrap();
-        assert_eq!(first.len(), 64);
-        assert!(first.bytes().all(|b| b.is_ascii_hexdigit()));
-        assert_ne!(*first, *second);
-    }
-
-    #[test]
-    fn a_busy_start_is_not_a_refusal_of_the_agent() {
-        use serde_json::json;
-        assert_eq!(
-            start_reply(&json!({"kind": "starting"})).unwrap(),
-            StartReply::Starting
-        );
-        assert_eq!(
-            start_reply(&json!({"kind": "refused", "code": "busy"})).unwrap(),
-            StartReply::Busy
-        );
-        assert_eq!(
-            start_reply(&json!({"kind": "refused", "code": "signed_out"})).unwrap(),
-            StartReply::Refused(Refusal::SignedOut)
-        );
-        assert_eq!(
-            start_reply(&json!({"kind": "refused"})).unwrap(),
-            StartReply::Refused(Refusal::ServiceFailed)
-        );
-        for reply in [json!({}), json!({"kind": "ready"}), json!({"code": "busy"})] {
-            let error = start_reply(&reply).unwrap_err();
-            assert_eq!(
-                error.reason.as_deref(),
-                Some("agent_start_reply_unexpected")
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn repeated_start_failures_exhaust_retries_and_profile_change_resets_them() {
-        let source = Arc::new(Mutex::new(observed(true, true, Some("A"))));
-        let current = source.clone();
-        let observe: Observe = Arc::new(move || {
-            let result = lock(&current).clone();
-            Box::pin(async move { result })
-        });
-        let attempts = Arc::new(AtomicU64::new(0));
-        let count = attempts.clone();
-        let launch: Launch = Arc::new(move |_, _| {
-            count.fetch_add(1, Ordering::SeqCst);
-            Err(ApplicationError::new(
-                ErrorCode::SpawnFailed,
-                Operation::Cli,
-            ))
-        });
-        let diagnostics = Arc::new(Diagnostics::default());
-        let supervisor = Supervisor::with_timing(
-            observe,
-            every(Duration::from_millis(1)),
-            Some(launch),
-            diagnostics.clone(),
-            Duration::from_millis(1),
-            Duration::from_millis(2),
-        );
-        supervisor.status();
-        tokio::time::timeout(Duration::from_secs(5), async {
-            while attempts.load(Ordering::SeqCst) < 4 {
-                tokio::time::sleep(Duration::from_millis(5)).await;
-            }
-        })
-        .await
-        .unwrap();
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        assert_eq!(attempts.load(Ordering::SeqCst), 4);
-        assert_eq!(
-            supervisor.status().state,
-            State::Refused {
-                code: Refusal::ServiceFailed
-            }
-        );
-        let facts: Vec<_> = diagnostics
-            .snapshot(u64::MAX)
-            .events
-            .into_iter()
-            .filter_map(|event| event.service)
-            .collect();
-        let delays: Vec<_> = facts
-            .iter()
-            .filter_map(|fact| match fact {
-                ServiceFact::AgentRetryScheduled { delay_ms } => Some(*delay_ms),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(delays, [2, 4, 8]);
-        assert!(
-            facts
-                .iter()
-                .any(|fact| matches!(fact, ServiceFact::AgentRetryExhausted { attempts: 4 }))
-        );
-        // Neither a failed read nor an unavailable runtime creates a new
-        // authorization epoch or replenishes an exhausted attempt budget.
-        for unavailable in [
-            Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
-            observed(true, false, Some("A")),
-        ] {
-            *lock(&source) = unavailable;
-            tokio::time::timeout(Duration::from_secs(5), async {
-                while supervisor.status().state
-                    != (State::Refused {
-                        code: Refusal::RuntimeUnavailable,
-                    })
-                {
-                    tokio::time::sleep(Duration::from_millis(2)).await;
-                }
-            })
-            .await
-            .unwrap();
-            *lock(&source) = observed(true, true, Some("A"));
-            tokio::time::timeout(Duration::from_secs(5), async {
-                while supervisor.status().state
-                    != (State::Refused {
-                        code: Refusal::ServiceFailed,
-                    })
-                {
-                    tokio::time::sleep(Duration::from_millis(2)).await;
-                }
-            })
-            .await
-            .unwrap();
-            tokio::time::sleep(Duration::from_millis(30)).await;
-            assert_eq!(attempts.load(Ordering::SeqCst), 4);
-        }
-        supervisor.retry();
-        tokio::time::timeout(Duration::from_secs(5), async {
-            while attempts.load(Ordering::SeqCst) < 8 {
-                tokio::time::sleep(Duration::from_millis(5)).await;
-            }
-        })
-        .await
-        .unwrap();
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        assert_eq!(attempts.load(Ordering::SeqCst), 8);
-        *lock(&source) = observed(true, true, Some("B"));
-        tokio::time::timeout(Duration::from_secs(5), async {
-            while attempts.load(Ordering::SeqCst) < 12 {
-                tokio::time::sleep(Duration::from_millis(5)).await;
-            }
-        })
-        .await
-        .unwrap();
-        supervisor.close().await.unwrap();
-        assert_eq!(attempts.load(Ordering::SeqCst), 12);
-    }
-
-    #[tokio::test]
-    async fn explicit_retry_still_requires_canonical_sign_in() {
-        let calls = Arc::new(AtomicU64::new(0));
-        let count = calls.clone();
-        let observe: Observe = Arc::new(move || {
-            count.fetch_add(1, Ordering::SeqCst);
-            Box::pin(async { observed(false, true, Some("A")) })
-        });
-        let launch: Launch = Arc::new(|_, _| panic!("retry cannot authorize a signed-out profile"));
-        let supervisor = Supervisor::with_timing(
-            observe,
-            every(Duration::from_secs(60)),
-            Some(launch),
-            Arc::new(Diagnostics::default()),
-            Duration::from_millis(1),
-            Duration::from_millis(1),
-        );
-        supervisor.status();
-        tokio::time::timeout(Duration::from_secs(5), async {
-            while supervisor.status().state
-                != (State::Refused {
-                    code: Refusal::SignedOut,
-                })
-            {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-        let before = calls.load(Ordering::SeqCst);
-        supervisor.retry();
-        tokio::time::timeout(Duration::from_secs(5), async {
-            while calls.load(Ordering::SeqCst) == before {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-        assert_eq!(
-            supervisor.status().state,
-            State::Refused {
-                code: Refusal::SignedOut
-            }
-        );
-        supervisor.close().await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn closing_does_not_wait_for_a_pending_status_read() {
-        let entered = Arc::new(Notify::new());
-        let notify = entered.clone();
-        let observe: Observe = Arc::new(move || {
-            let notify = notify.clone();
-            Box::pin(async move {
-                notify.notify_one();
-                std::future::pending().await
-            })
-        });
-        let launch: Launch = Arc::new(|_, _| panic!("pending status cannot authorize launch"));
-        let supervisor = Supervisor::new(
-            observe,
-            every(Duration::from_millis(1)),
-            Some(launch),
-            Arc::new(Diagnostics::default()),
-        );
-        supervisor.status();
-        entered.notified().await;
-        tokio::time::timeout(Duration::from_secs(1), supervisor.close())
-            .await
-            .unwrap()
-            .unwrap();
-    }
-
-    #[cfg(windows)]
-    mod live {
-        use super::*;
-        use crate::agent::runner::tests::{alive, launcher_script, powershell, reported};
-        use crate::shell::sign_in::process::tests::{Gate, HANG_GUARD};
-        use tauri::ipc::InvokeResponseBody;
-        use tokio::sync::watch;
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn launcher_refusal_is_handled_while_status_read_is_pending() {
-            let calls = Arc::new(AtomicU64::new(0));
-            let count = calls.clone();
-            let observe: Observe = Arc::new(move || {
-                let first = count.fetch_add(1, Ordering::SeqCst) == 0;
-                Box::pin(async move {
-                    if first {
-                        observed(true, true, Some("A"))
-                    } else {
-                        std::future::pending().await
-                    }
-                })
-            });
-            let launch: Launch = Arc::new(|_, _| {
-                Ok(Prepared {
-                    person: None,
-                    command: powershell(
-                        "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
-                    ),
-                })
-            });
-            let supervisor = Supervisor::with_timing(
-                observe,
-                every(Duration::from_millis(5)),
-                Some(launch),
-                Arc::new(Diagnostics::default()),
-                Duration::from_secs(5),
-                Duration::from_secs(60),
-            );
-            supervisor.status();
-            tokio::time::timeout(Duration::from_secs(20), async {
-                loop {
-                    if supervisor.status().state
-                        == (State::Refused {
-                            code: Refusal::ServiceIncompatible,
-                        })
-                        && lock(&supervisor.shared.running).is_none()
-                    {
-                        break;
-                    }
-                    tokio::time::sleep(Duration::from_millis(10)).await;
-                }
-            })
-            .await
-            .unwrap();
-            assert!(
-                calls.load(Ordering::SeqCst) >= 2,
-                "the second status read is still pending"
-            );
-            assert!(supervisor.gateway().is_none());
-            supervisor.close().await.unwrap();
-        }
-
-        struct Rig {
-            supervisor: Supervisor,
-            observation: Arc<Mutex<Result<Observation>>>,
-            statuses: Arc<Mutex<Vec<serde_json::Value>>>,
-            diagnostics: Arc<Diagnostics>,
-            holders: Arc<Mutex<Vec<HolderFixture>>>,
-            /// Moves on at each published status and each recorded diagnostic.
-            recorded: Arc<watch::Sender<u64>>,
-            /// Holds a retiring launcher at each step the test inspects.
-            gate: Option<Gate>,
-        }
-
-        impl Rig {
-            /// Lets the launcher go on once it has reached `point`.
-            fn release(&mut self, point: &str) {
-                let gate = self.gate.as_mut().expect("this launcher waits at a gate");
-                tokio::task::block_in_place(|| {
-                    gate.reached(point);
-                    gate.go();
-                });
-            }
-        }
-
-        struct HolderFixture {
-            pid: u32,
-            identity: serde_json::Value,
-        }
-
-        /// Controlled holder-protocol evidence over real child pipes, not an
-        /// installed runtime or a proof of native person authentication.
-        fn held_protocol_fixture(
-            profile: &str,
-            ignore_end: bool,
-            retire_at_gate: Option<&str>,
-        ) -> (Prepared, HolderFixture) {
-            let profile_id = match profile {
-                "A" => "11111111-1111-4111-8111-111111111111",
-                "B" => "22222222-2222-4222-8222-222222222222",
-                _ => panic!("unexpected fixture profile"),
-            };
-            let identity = serde_json::json!({
-                "kind": "session_held",
-                "profile_id": profile_id,
-                "session_id": super::super::super::person::request_id().unwrap(),
-                "runtime_boot_id": super::super::super::person::request_id().unwrap(),
-                "connection_id": super::super::super::person::request_id().unwrap(),
-            });
-            let recipient = super::super::super::person::request_id().unwrap();
-            let reply = serde_json::json!({
-                "kind": "service_connected",
-                "request_id": super::super::super::person::request_id().unwrap(),
-                "runtime_boot_id": identity["runtime_boot_id"],
-                "connection_id": identity["connection_id"],
-                "profile_id": profile_id,
-                "service_id": "cadrumo-agent-service",
-                "lease": {
-                    "lease_id": super::super::super::person::request_id().unwrap(),
-                    "session_id": super::super::super::person::request_id().unwrap(),
-                    "parent_session_id": identity["session_id"],
-                    "profile_id": profile_id,
-                    "runtime_boot_id": identity["runtime_boot_id"],
-                    "connection_id": recipient,
-                    "service_id": "cadrumo-agent-service",
-                    "descriptor_digest": "a".repeat(64),
-                },
-            });
-            let holder_script = format!(
-                "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
-                 while (($line = [Console]::In.ReadLine()) -ne $null) {{ \
-                     $request = $line | ConvertFrom-Json; \
-                     if ($request.action -ne 'service_admission' -or \
-                         $request.recipient_connection_id -ne '{recipient}' -or \
-                         $request.service_id -ne 'cadrumo-agent-service' -or \
-                         $request.psobject.Properties.Name.Count -ne 4) {{ exit 7 }}; \
-                     $reply = '{reply}' | ConvertFrom-Json; \
-                     $reply.request_id = $request.request_id; \
-                     [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 8)); \
-                     [Console]::Out.Flush(); \
-                 }} }}"
-            );
-            let person = crate::agent::person::Person::hold_answering_within(
-                powershell(&holder_script),
-                profile_id,
-                HANG_GUARD,
-            )
-            .unwrap();
-            assert_eq!(person.identity, identity);
-            let witness = HolderFixture {
-                pid: person.child_id(),
-                identity,
-            };
-            let ready = serde_json::json!({
-                "event": "service_ready",
-                "protocol": 1,
-                "admin_port": 4001,
-                "runtime_boot_id": witness.identity["runtime_boot_id"],
-                "connection_id": recipient,
-                "profile_id": profile_id,
-                "service_id": "cadrumo-agent-service",
-            });
-            // The existing launcher first reads and checks both independently
-            // minted startup credentials. Add only the service readiness frame
-            // before its existing agent-ready frame and child-tree behavior.
-            let mut script = launcher_script(ignore_end);
-            if let Some(gate) = retire_at_gate {
-                let normal_exit = r#"$null = [Console]::In.ReadToEnd(); [Console]::Out.WriteLine('{"event":"agent_stopped","reason":"agent_host_closed"}'); exit 0"#;
-                assert!(script.contains(normal_exit));
-                // Each step waits for the test, never for an amount of time.
-                script = script.replace(
-                    normal_exit,
-                    &format!(
-                        r#"{gate}Wait-Gate 'ready'; [Console]::Out.WriteLine('{{"event":"agent_stopped","reason":"agent_retired"}}'); [Console]::Out.Flush(); Wait-Gate 'retired'; exit 3"#
-                    ),
-                );
-            }
-            let marker = "$grandchild = ";
-            assert_eq!(script.matches(marker).count(), 1);
-            let script = script.replacen(
-                marker,
-                &format!("[Console]::Out.WriteLine('{ready}'); [Console]::Out.Flush(); {marker}"),
-                1,
-            );
-            (
-                Prepared {
-                    person: Some(Arc::new(Mutex::new(person))),
-                    command: powershell(&script),
-                },
-                witness,
-            )
-        }
-
-        fn rig(ignore_end: bool, retire_after_ready: bool) -> Rig {
-            let observation = Arc::new(Mutex::new(observed(true, true, Some("A"))));
-            let source = observation.clone();
-            let observe: Observe = Arc::new(move || {
-                let current = lock(&source).clone();
-                Box::pin(async move { current })
-            });
-            let holders = Arc::new(Mutex::new(Vec::new()));
-            let witnesses = holders.clone();
-            let gate = retire_after_ready.then(Gate::new);
-            let gate_script = gate.as_ref().map(Gate::script);
-            let launch: Launch = Arc::new(move |_, profile| {
-                let (prepared, witness) =
-                    held_protocol_fixture(profile, ignore_end, gate_script.as_deref());
-                lock(&witnesses).push(witness);
-                Ok(prepared)
-            });
-            let recorded = Arc::new(watch::Sender::new(0u64));
-            let diagnostics = Arc::new(Diagnostics::default());
-            let moved = recorded.clone();
-            diagnostics.on_recorded(Arc::new(move || moved.send_modify(|count| *count += 1)));
-            let supervisor = Supervisor::with_timing(
-                observe,
-                every(Duration::from_millis(100)),
-                Some(launch),
-                diagnostics.clone(),
-                Duration::from_millis(if ignore_end { 500 } else { 10_000 }),
-                Duration::from_secs(60),
-            )
-            .starting_within(HANG_GUARD);
-            let statuses = Arc::new(Mutex::new(Vec::new()));
-            let sink = statuses.clone();
-            let moved = recorded.clone();
-            supervisor.subscribe(Channel::new(move |body| {
-                let InvokeResponseBody::Json(body) = body else {
-                    panic!("expected a JSON status")
-                };
-                sink.lock()
-                    .unwrap()
-                    .push(serde_json::from_str(&body).unwrap());
-                moved.send_modify(|count| *count += 1);
-                Ok(())
-            }));
-            Rig {
-                supervisor,
-                observation,
-                statuses,
-                diagnostics,
-                holders,
-                recorded,
-                gate,
-            }
-        }
-
-        /// What `seen` finds once a published status or recorded diagnostic
-        /// makes it true. The guard bounds only a supervisor that hangs.
-        async fn until_seen<T>(rig: &Rig, what: &str, mut seen: impl FnMut() -> Option<T>) -> T {
-            let mut recorded = rig.recorded.subscribe();
-            tokio::time::timeout(HANG_GUARD, async {
-                loop {
-                    if let Some(found) = seen() {
-                        return found;
-                    }
-                    recorded.changed().await.unwrap();
-                }
-            })
-            .await
-            .unwrap_or_else(|_| panic!("{what}: {:?}", rig.statuses.lock().unwrap()))
-        }
-
-        /// The first status in `state` published at or after index `from`.
-        async fn until(rig: &Rig, from: usize, state: &str) -> serde_json::Value {
-            until_seen(rig, &format!("never {state}"), || {
-                let statuses = rig.statuses.lock().unwrap();
-                statuses[from.min(statuses.len())..]
-                    .iter()
-                    .find(|status| status["state"] == state)
-                    .cloned()
-            })
-            .await
-        }
-
-        /// The launcher, its reported grandchild, and its real held-protocol child.
-        async fn serving(rig: &Rig, from: usize) -> (u32, u32, u32) {
-            let ready = until(rig, from, "ready").await;
-            let (grandchild, length) = reported(ready["agent_version"].as_str().unwrap());
-            assert_eq!(length, "64", "the launcher read the minted bearer");
-            let gateway = rig.supervisor.gateway().unwrap();
-            assert_eq!(gateway.port, 4000);
-            let admin_bearer = {
-                let admin = lock(&rig.supervisor.shared.admin);
-                let endpoint = admin
-                    .as_ref()
-                    .expect("service admitted before agent readiness");
-                assert_eq!(endpoint.port, 4001);
-                assert_eq!(endpoint.generation, gateway.generation);
-                assert_eq!(endpoint.bearer.len(), 64);
-                assert_ne!(endpoint.bearer.as_str(), gateway.bearer.as_str());
-                endpoint.bearer.clone()
-            };
-            let snapshot = rig.diagnostics.snapshot(u64::MAX);
-            let ready = snapshot
-                .events
-                .iter()
-                .rev()
-                .find(|event| {
-                    matches!(
-                        event.service,
-                        Some(ServiceFact::AgentReady {
-                            gateway_port: 4000,
-                            ..
-                        })
-                    )
-                })
-                .unwrap();
-            let process = ready.status.as_ref().unwrap();
-            assert_eq!(
-                process.role,
-                cadrumo_application::process::status::ProcessRole::AgentLauncher
-            );
-            assert!(process.pid > 0);
-            assert!(
-                !serde_json::to_string(&snapshot.events)
-                    .unwrap()
-                    .contains(gateway.bearer.as_str())
-            );
-            assert!(
-                !serde_json::to_string(&snapshot.events)
-                    .unwrap()
-                    .contains(admin_bearer.as_str())
-            );
-            assert_eq!(gateway.workspace_root, r"C:\lane\ws");
-            assert_eq!(gateway.bearer.len(), 64);
-            let (launcher, person) = {
-                let running = lock(&rig.supervisor.shared.running);
-                let running = running.as_ref().unwrap();
-                (running.supervised.id(), running.person.clone().unwrap())
-            };
-            let person = lock(&person);
-            let holders = lock(&rig.holders);
-            let witness = holders
-                .iter()
-                .find(|holder| holder.pid == person.child_id())
-                .unwrap();
-            assert_eq!(person.identity, witness.identity);
-            assert!(
-                alive(witness.pid),
-                "the original held-protocol child is retained"
-            );
-            (launcher, grandchild, witness.pid)
-        }
-
-        /// The running processes among `pids`, each as its pid and start time:
-        /// once a process ends, another process can be given its pid.
-        fn instances(pids: (u32, u32, u32)) -> Vec<String> {
-            let output = powershell(&format!(
-                "foreach ($id in {},{},{}) {{ \
-                     $p = Get-Process -Id $id -ErrorAction SilentlyContinue; \
-                     if ($p) {{ [Console]::Out.WriteLine(\"$id@$($p.StartTime.Ticks)\") }} }}; \
-                 exit 0",
-                pids.0, pids.1, pids.2
-            ))
-            .output()
-            .unwrap();
-            assert!(output.status.success());
-            String::from_utf8(output.stdout)
-                .unwrap()
-                .lines()
-                .map(str::to_owned)
-                .collect()
-        }
-
-        /// Every one of the launcher's processes, while it serves.
-        fn started(pids: (u32, u32, u32)) -> Vec<String> {
-            let started = instances(pids);
-            assert!(
-                started.len() == 3 && started.iter().all(|process| !process.ends_with('@')),
-                "every started process runs: {started:?}"
-            );
-            started
-        }
-
-        /// Once the supervisor has finished stopping them, none of the started
-        /// processes remains: the job is empty and the holder reaped.
-        fn gone(pids: (u32, u32, u32), started: &[String]) {
-            let running = instances(pids);
-            assert!(
-                started.iter().all(|process| !running.contains(process)),
-                "a started process survived: {running:?}"
-            );
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn a_shared_person_failure_retires_a_ready_service_and_allows_a_fresh_start() {
-            let rig = rig(false, false);
-            serving(&rig, 0).await;
-            let original = rig.supervisor.gateway().unwrap();
-            let person = lock(&rig.supervisor.shared.running)
-                .as_ref()
-                .unwrap()
-                .person
-                .clone()
-                .unwrap();
-            // This holder deliberately cannot answer a background language
-            // request. Its launcher stays alive until the supervisor stops it.
-            let error = tauri::async_runtime::spawn_blocking(move || {
-                lock(&person)
-                    .exchange(serde_json::json!({"action":"language_read"}))
-                    .unwrap_err()
-            })
-            .await
-            .unwrap();
-            until(&rig, 0, "refused").await;
-            until_seen(&rig, "failed service not retired", || {
-                let stopped = lock(&rig.supervisor.shared.running).is_none();
-                stopped.then_some(())
-            })
-            .await;
-            assert!(rig.supervisor.gateway().is_none());
-            assert!(
-                rig.diagnostics
-                    .snapshot(u64::MAX)
-                    .events
-                    .iter()
-                    .any(|event| {
-                        event
-                            .failure
-                            .as_ref()
-                            .is_some_and(|failure| failure.reason == error.reason)
-                    })
-            );
-            // A new start gets its own admitted session. It does not retry
-            // the background request that lost the old one.
-            let from = lock(&rig.statuses).len();
-            rig.supervisor.retry();
-            serving(&rig, from).await;
-            assert!(!original.same_instance(&rig.supervisor.gateway().unwrap()));
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn a_retired_person_stops_the_service_without_a_service_failure_retry() {
-            let rig = rig(false, false);
-            serving(&rig, 0).await;
-            let generation = rig.supervisor.gateway().unwrap().generation;
-            // Keep the next authority observation retired as well.
-            *rig.observation.lock().unwrap() = observed(false, true, Some("A"));
-            let from = lock(&rig.statuses).len();
-            let retry = retire_failed_person(
-                &rig.supervisor.shared,
-                generation,
-                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
-                    .with_reason("person_session_retired"),
-            )
-            .await;
-            assert!(!retry);
-            let refused = until(&rig, from, "refused").await;
-            assert_eq!(refused["code"], "agent_signed_out");
-            assert!(rig.supervisor.gateway().is_none());
-            assert!(lock(&rig.supervisor.shared.running).is_none());
-            assert!(
-                !rig.diagnostics
-                    .snapshot(u64::MAX)
-                    .events
-                    .iter()
-                    .any(|event| {
-                        event.failure.is_some()
-                            || matches!(
-                                event.service,
-                                Some(ServiceFact::AgentRetryScheduled { .. })
-                            )
-                    })
-            );
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn each_sign_in_trigger_stops_the_launcher_and_its_tree() {
-            for (trigger, observation, published) in [
-                (
-                    "sign-out, lock or expiry",
-                    observed(false, true, Some("A")),
-                    "refused",
-                ),
-                (
-                    "runtime unavailable",
-                    observed(true, false, Some("A")),
-                    "refused",
-                ),
-                (
-                    "unreadable status",
-                    Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
-                    "refused",
-                ),
-                (
-                    "local sign-in mutation in progress",
-                    Err(
-                        ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
-                            .with_reason("sign_in_mutation_in_progress"),
-                    ),
-                    "stopped",
-                ),
-                ("another profile", observed(true, true, Some("B")), "ready"),
-            ] {
-                let rig = rig(false, false);
-                assert_eq!(
-                    rig.supervisor.status().lane,
-                    None,
-                    "the service reports no invented lane"
-                );
-                let first = serving(&rig, 0).await;
-                let processes = started(first);
-                let changed = rig.statuses.lock().unwrap().len();
-                *rig.observation.lock().unwrap() = observation;
-                // Each outcome is published only after the launcher is stopped.
-                let settled = if published == "ready" {
-                    "stopped"
-                } else {
-                    published
-                };
-                let after = until(&rig, changed, settled).await;
-                gone(first, &processes);
-                assert!(
-                    rig.supervisor.gateway().is_none_or(|g| g.generation > 1),
-                    "{trigger}: the old gateway is forgotten"
-                );
-                if published == "ready" {
-                    // The new profile is served by a new launcher with a new bearer.
-                    let second = serving(&rig, changed).await;
-                    assert_ne!(second, first);
-                    let states: Vec<_> = rig
-                        .statuses
-                        .lock()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s["state"].clone())
-                        .collect();
-                    assert!(
-                        states
-                            .windows(2)
-                            .any(|w| w[0] == "stopped" && w[1] == "starting"),
-                        "{states:?}"
-                    );
-                } else if published == "refused" {
-                    assert_eq!(
-                        after["code"],
-                        if trigger.starts_with("sign-out") {
-                            "agent_signed_out"
-                        } else {
-                            "agent_runtime_unavailable"
-                        },
-                        "{trigger}"
-                    );
-                }
-                rig.supervisor.close().await.unwrap();
-                assert!(lock(&rig.supervisor.shared.running).is_none());
-            }
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn window_close_stops_the_launcher_even_when_it_ignores_its_input() {
-            let rig = rig(true, false);
-            rig.supervisor.status();
-            let pids = serving(&rig, 0).await;
-            let processes = started(pids);
-            let closing = Instant::now();
-            rig.supervisor.close().await.unwrap();
-            assert!(closing.elapsed() < Duration::from_secs(15));
-            gone(pids, &processes);
-            assert!(rig.supervisor.gateway().is_none());
-            // Closed for good: nothing starts again.
-            rig.supervisor.status();
-            tokio::time::sleep(Duration::from_millis(400)).await;
-            assert!(lock(&rig.supervisor.shared.running).is_none());
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn controller_retirement_is_neutral_but_owned_service_exit_is_failed_and_retried() {
-            let mut rig = rig(false, true);
-            rig.supervisor.status();
-            serving(&rig, 0).await;
-            let generation = rig.supervisor.gateway().unwrap().generation;
-            let after_ready = rig.statuses.lock().unwrap().len();
-            rig.release("ready");
-
-            // The launcher now waits at its gate: its service is still running.
-            until(&rig, after_ready, "stopped").await;
-            assert!(rig.supervisor.gateway().is_none());
-            assert!(
-                lock(&rig.supervisor.shared.admin)
-                    .as_ref()
-                    .is_some_and(|endpoint| endpoint.generation == generation)
-            );
-            assert!(
-                !rig.diagnostics
-                    .snapshot(u64::MAX)
-                    .events
-                    .iter()
-                    .any(|event| matches!(event.service, Some(ServiceFact::AgentRefused { .. })))
-            );
-
-            let after_retirement = rig.statuses.lock().unwrap().len();
-            rig.release("retired");
-            let refused = until(&rig, after_retirement, "refused").await;
-            assert_eq!(refused["code"], "agent_service_failed");
-            // Refusal is published before process cleanup and retry scheduling.
-            // Observe the completed transition before inspecting its facts.
-            until_seen(
-                &rig,
-                "service exit must finish cleanup and schedule its retry",
-                || {
-                    rig.diagnostics
-                        .snapshot(u64::MAX)
-                        .events
-                        .iter()
-                        .any(|event| {
-                            matches!(
-                                event.service,
-                                Some(ServiceFact::AgentRetryScheduled { delay_ms: 60_000 })
-                            )
-                        })
-                        .then_some(())
-                },
-            )
-            .await;
-            assert!(lock(&rig.supervisor.shared.admin).is_none());
-
-            let facts: Vec<_> = rig
-                .diagnostics
-                .snapshot(u64::MAX)
-                .events
-                .into_iter()
-                .filter_map(|event| event.service)
-                .collect();
-            assert!(facts.iter().any(|fact| matches!(
-                fact,
-                ServiceFact::AgentRefused {
-                    reason: Refusal::ServiceFailed
-                }
-            )));
-            assert!(
-                facts.iter().any(|fact| matches!(
-                    fact,
-                    ServiceFact::AgentRetryScheduled { delay_ms: 60_000 }
-                ))
-            );
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn a_retired_agent_is_stopped_until_its_replacement_reports_ready() {
-            let rig = rig(false, false);
-            rig.supervisor.status();
-            serving(&rig, 0).await;
-            let generation = rig.supervisor.gateway().unwrap().generation;
-            let retired = rig.supervisor.gateway().unwrap();
-
-            // The service retires the superseded tree first: nothing serves.
-            assert!(
-                !handle(
-                    &rig.supervisor.shared,
-                    generation,
-                    Signal::Event(Event::Stopped {
-                        reason: "agent_retired".into(),
-                    }),
-                )
-                .await
-            );
-            assert_eq!(rig.supervisor.status().state, State::Stopped);
-            assert!(rig.supervisor.gateway().is_none());
-
-            // A start declined as busy changes nothing it serves.
-            assert!(
-                !handle(
-                    &rig.supervisor.shared,
-                    generation,
-                    Signal::Event(Event::Refused {
-                        code: "busy".into(),
-                    }),
-                )
-                .await
-            );
-            assert_eq!(rig.supervisor.status().state, State::Stopped);
-
-            // The replacement's ready line serves it, through a new gateway.
-            assert!(
-                !handle(
-                    &rig.supervisor.shared,
-                    generation,
-                    Signal::Event(Event::Ready {
-                        gateway_port: 4001,
-                        agent_version: "replacement".into(),
-                        workspace_root: r"C:\lane\workspace".into(),
-                    }),
-                )
-                .await
-            );
-            assert_eq!(
-                rig.supervisor.status().state,
-                State::Ready {
-                    agent_version: "replacement".into()
-                }
-            );
-            let replacement = rig.supervisor.gateway().unwrap();
-            assert_eq!(replacement.port, 4001);
-            assert!(!replacement.same_instance(&retired));
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn a_busy_start_leaves_the_serving_agent_ready() {
-            let rig = rig(false, false);
-            rig.supervisor.status();
-            serving(&rig, 0).await;
-            let generation = rig.supervisor.gateway().unwrap().generation;
-            let before = rig.supervisor.status().state;
-            assert!(
-                !handle(
-                    &rig.supervisor.shared,
-                    generation,
-                    Signal::Event(Event::Refused {
-                        code: "busy".into(),
-                    }),
-                )
-                .await
-            );
-            assert_eq!(rig.supervisor.status().state, before);
-            assert!(rig.supervisor.gateway().is_some());
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn stopped_reasons_other_than_controller_retirement_remain_refusals() {
-            let rig = rig(false, false);
-            rig.supervisor.status();
-            serving(&rig, 0).await;
-            let generation = rig.supervisor.gateway().unwrap().generation;
-
-            assert!(
-                !handle(
-                    &rig.supervisor.shared,
-                    generation,
-                    Signal::Event(Event::Stopped {
-                        reason: "agent_signed_out".into(),
-                    }),
-                )
-                .await
-            );
-            assert_eq!(
-                rig.supervisor.status().state,
-                State::Refused {
-                    code: Refusal::SignedOut
-                }
-            );
-            assert!(rig.supervisor.gateway().is_none());
-            assert!(
-                lock(&rig.supervisor.shared.admin)
-                    .as_ref()
-                    .is_some_and(|endpoint| endpoint.generation == generation)
-            );
-            rig.supervisor.close().await.unwrap();
-        }
-
-        #[tokio::test(flavor = "multi_thread")]
-        async fn a_launcher_that_ends_unasked_is_a_failed_service_and_is_not_restarted_at_once() {
-            let observation = Arc::new(Mutex::new(observed(true, true, Some("A"))));
-            let source = observation.clone();
-            let observe: Observe = Arc::new(move || {
-                let current = lock(&source).clone();
-                Box::pin(async move { current })
-            });
-            let starts = Arc::new(AtomicU64::new(0));
-            let counted = starts.clone();
-            let launch: Launch = Arc::new(move |_, _| {
-                counted.fetch_add(1, Ordering::AcqRel);
-                Ok(Prepared {
-                    person: None,
-                    command: powershell(
-                        "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
-                    ),
-                })
-            });
-            let supervisor = Supervisor::with_timing(
-                observe,
-                every(Duration::from_millis(100)),
-                Some(launch),
-                Arc::new(Diagnostics::default()),
-                Duration::from_secs(5),
-                Duration::from_secs(60),
-            );
-            supervisor.status();
-            let deadline = Instant::now() + Duration::from_secs(30);
-            while supervisor.status().state
-                != (State::Refused {
-                    code: Refusal::ServiceIncompatible,
-                })
-            {
-                assert!(Instant::now() < deadline);
-                tokio::time::sleep(Duration::from_millis(50)).await;
-            }
-            tokio::time::sleep(Duration::from_millis(800)).await;
-            assert_eq!(starts.load(Ordering::Acquire), 1);
-            assert!(lock(&supervisor.shared.running).is_none());
-            // A changed sign-in is a new start.
-            *observation.lock().unwrap() = observed(false, true, Some("A"));
-            tokio::time::sleep(Duration::from_millis(400)).await;
-            *observation.lock().unwrap() = observed(true, true, Some("A"));
-            let deadline = Instant::now() + Duration::from_secs(10);
-            while starts.load(Ordering::Acquire) < 2 {
-                assert!(Instant::now() < deadline);
-                tokio::time::sleep(Duration::from_millis(50)).await;
-            }
-            supervisor.close().await.unwrap();
         }
     }
 }

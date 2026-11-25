@@ -15,6 +15,7 @@ import pytest
 
 from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.transactions.enums import TransactionDirection
 from ......tests.inventory import FIXTURES_DIR
 from ..base import InvalidFinancialSourceError
@@ -25,8 +26,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 _FIXTURES = FIXTURES_DIR / "financial"
 
 
-def test_csv_provider_ingests_supported_bank_layouts() -> None:
-    """The CSV provider should ingest each supported bank layout."""
+def test_csv_provider_reads_bank_exports_through_the_one_statement_vocabulary() -> None:
+    """Exports from several banks read through the bank-neutral vocabulary; the banks are only test data."""
     for fixture_name, expected_currency, expected_description in (
         ("bbva-sample.csv", "EUR", "Transferencia recibida CLIENTE UNO"),
         ("santander-sample.csv", "EUR", "Pago cuota autonomos"),
@@ -51,8 +52,137 @@ def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     provider = CsvProvider()
     parsed_rows = tuple(provider.ingest(_FIXTURES / "synthetic-transactions.csv"))
     assert len(parsed_rows) == 2
-    assert parsed_rows[0].raw.provider_transaction_id.startswith("bbva-")
+    assert parsed_rows[0].raw.provider_transaction_id.startswith("csv-provider-")
     assert parsed_rows[0].raw.provenance.source_row_index == 2
+
+
+@pytest.mark.parametrize(
+    ("header", "rows", "expected"),
+    [
+        ("Fecha;Concepto;Importe", ("02/01/2026;Compra;-1.234,56", "03/01/2026;Venta;20,00"), ["1234.56", "20.00"]),
+        ("Date,Description,Amount", ('2026-01-02,Purchase,"-1,234.56"', "2026-01-03,Sale,20.00"), ["1234.56", "20.00"]),
+    ],
+    ids=["comma-decimal", "period-decimal"],
+)
+def test_the_decimal_separator_is_read_from_the_file_itself(
+    tmp_path: Path, header: str, rows: tuple[str, ...], expected: list[str]
+) -> None:
+    """No bank tells the reader the convention; the printed amounts do."""
+    source = tmp_path / "statement.csv"
+    source.write_text("\n".join((header, *rows)) + "\n", encoding="utf-8")
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [str(row.raw.amount) for row in parsed] == expected
+
+
+def test_catalan_statement_headers_are_part_of_the_vocabulary(tmp_path: Path) -> None:
+    """A Catalan export reads without a model: its headers are ordinary statement terms."""
+    source = tmp_path / "extracte.csv"
+    source.write_text(
+        "Data operació;Descripció;Import;Saldo\n02/03/2026;Rebut aigua;-23,10;976,90\n"
+        "15/03/2026;Transferència rebuda;400,00;1.376,90\n",
+        encoding="utf-8",
+    )
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [
+        ("2026-03-02", "23.10"),
+        ("2026-03-15", "400.00"),
+    ]
+    assert [row.raw.description for row in parsed] == ["Rebut aigua", "Transferència rebuda"]
+
+
+def test_a_trailing_summary_row_is_checked_against_the_movements_and_not_imported(tmp_path: Path) -> None:
+    """A ``TOTAL`` row a spreadsheet appends is not a movement; its total must be their sum."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe;Saldo;\n08/01/2026;Pago tarjeta;-469,52 EUR;5.730,48 EUR;\n"
+        "12/01/2026;Transferencia recibida;100,00 EUR;5.830,48 EUR;\nTOTAL;;-369,52 EUR;;\n",
+        encoding="utf-8",
+    )
+
+    validation = CsvProvider().validate_source(source)
+    parsed = list(CsvProvider().ingest(source))
+
+    assert validation.is_valid
+    assert any("summary row" in warning for warning in validation.warnings)
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [
+        ("2026-01-08", "469.52"),
+        ("2026-01-12", "100.00"),
+    ]
+
+
+def test_a_summary_total_the_movements_do_not_sum_to_refuses_the_file(tmp_path: Path) -> None:
+    """A total that disagrees with the rows means a movement was lost or misread."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe\n08/01/2026;Pago tarjeta;-469,52\n12/01/2026;Transferencia recibida;100,00\n"
+        "TOTAL;;-469,52\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError, match="does not equal the sum of the movements"):
+        list(CsvProvider().ingest(source))
+
+
+def test_a_row_without_a_date_between_movements_is_still_refused(tmp_path: Path) -> None:
+    """Only the trailing run of word-dated rows is a summary; one between movements is unreadable."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe\n08/01/2026;Pago tarjeta;-469,52\nSubtotal;;-469,52\n"
+        "12/01/2026;Transferencia recibida;100,00\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError, match="row 3 could not be parsed"):
+        list(CsvProvider().ingest(source))
+
+
+@pytest.mark.parametrize("amount_header", ["amount_eur", "Amount (EUR)", "Importe EUR"])
+def test_an_amount_header_naming_its_currency_is_the_amount_column(tmp_path: Path, amount_header: str) -> None:
+    """``amount_eur`` and ``Importe (EUR)`` name the amount column with its currency attached."""
+    source = tmp_path / "export.csv"
+    source.write_text(
+        f"booking_date,partner_name,reference,{amount_header},currency\n"
+        "2026-01-08,Suministros Aranda,Pago tarjeta,-469.52,EUR\n",
+        encoding="utf-8",
+    )
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [("2026-01-08", "469.52")]
+
+
+def test_month_first_dates_are_read_month_first(tmp_path: Path) -> None:
+    """A date whose second group exceeds 12 reads every date of the file month-first."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Date,Description,Amount\n01/31/2026,Rent,-800.00\n02/03/2026,Fee,-2.00\n", encoding="utf-8")
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [row.raw.booked_date.isoformat() for row in parsed] == ["2026-01-31", "2026-02-03"]
+
+
+def test_dates_printed_in_both_orders_refuse_the_file(tmp_path: Path) -> None:
+    """A 13th in either group cannot be one convention, so the file is not guessed at."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Date,Description,Amount\n13/01/2026,Rent,-800.00\n01/14/2026,Fee,-2.00\n", encoding="utf-8")
+
+    validation = CsvProvider().validate_source(source)
+
+    assert not validation.is_valid
+    assert validation.warnings == ("the statement prints dates in both day-month and month-day order",)
+
+
+def test_an_amount_no_printed_value_decides_is_refused(tmp_path: Path) -> None:
+    """``1.234`` with nothing else to decide by is either a thousand or one point two; it is refused."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Fecha;Concepto;Importe\n02/01/2026;Compra;-1.234\n", encoding="utf-8")
+
+    with pytest.raises(InvalidFinancialSourceError, match="does not decide"):
+        list(CsvProvider().ingest(source))
 
 
 def test_csv_provider_explicit_direction_column_overrides_positive_amount_sign(tmp_path: Path) -> None:
@@ -98,7 +228,7 @@ def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:
 
 
 def test_generic_csv_missing_currency_warning_is_provider_neutral(tmp_path: Path) -> None:
-    """A generic CSV selected via the CSV provider must not be labelled as N26."""
+    """A generic CSV selected via the CSV provider names no bank in its warning."""
     source = tmp_path / "generic.csv"
     source.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
 
@@ -108,8 +238,8 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral(tmp_path: Path
     assert validation.warnings == ("CSV has no currency column; falling back to EUR",)
 
 
-def test_n26_csv_missing_currency_warning_keeps_provider_label(tmp_path: Path) -> None:
-    """N26-specific headers still receive the N26 warning copy."""
+def test_generic_vocabulary_names_no_bank_however_rich_its_headers(tmp_path: Path) -> None:
+    """The generic English and German header vocabulary is no bank's layout, so no bank is named."""
     source = tmp_path / "n26.csv"
     source.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Transaction ID\n2026-04-15,Client SL,Invoice 1,121.00,n26-001\n",
@@ -119,7 +249,7 @@ def test_n26_csv_missing_currency_warning_keeps_provider_label(tmp_path: Path) -
     validation = CsvProvider().validate_source(source)
 
     assert validation.is_valid, validation.warnings
-    assert validation.warnings == ("N26 CSV has no currency column; falling back to EUR",)
+    assert validation.warnings == ("CSV has no currency column; falling back to EUR",)
 
 
 def test_csv_provider_rejects_short_currency_cell_with_column_context(tmp_path: Path) -> None:
@@ -278,3 +408,24 @@ def test_csv_provider_sniffs_delimiter_below_a_metadata_preamble(tmp_path: Path)
     validation = CsvProvider().validate_source(source)
 
     assert "delimiter=';'" in (validation.detected_dialect or "")
+
+
+def test_the_printed_reference_column_is_read_trimmed_and_absent_when_blank(tmp_path: Path) -> None:
+    """A Referencia cell is the statement's printed reference; a blank cell or no column means none."""
+    year = filing_year_envelope().horizon
+    printed = tmp_path / "con-referencia.csv"
+    printed.write_text(
+        f"Fecha;Concepto;Importe;Referencia\n02/01/{year};Recibo luz;-60,50;  0049-REF-184  \n03/01/{year};Venta;20,00;\n",
+        encoding="utf-8",
+    )
+    unprinted = tmp_path / "sin-referencia.csv"
+    unprinted.write_text(f"Fecha;Concepto;Importe\n02/01/{year};Recibo luz;-60,50\n", encoding="utf-8")
+
+    with_column = list(CsvProvider().ingest(printed))
+    without_column = list(CsvProvider().ingest(unprinted))
+
+    assert [row.raw.statement_reference for row in with_column] == ["0049-REF-184", None]
+    assert with_column[0].raw.provider_transaction_id == "0049-REF-184"
+    # A row without a printed reference keeps a synthesized provider id, never shown as a reference.
+    assert with_column[1].raw.provider_transaction_id.startswith("csv-provider-")
+    assert without_column[0].raw.statement_reference is None

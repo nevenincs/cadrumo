@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import cast
@@ -11,7 +10,6 @@ from typing import cast
 import pytest
 from pydantic import BaseModel
 from textual.app import App
-from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -41,16 +39,17 @@ from .....application.operations.interactions import OperationResponseIntent, Op
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
+from ...tests.settling import settle, settle_until
 from ..controller_port import OperationResponseControlPort
 from ..interactions import OperationModalReviewInteractionV1, resolve_modal_interaction_state
 from ..modal import OperationModal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_OPERATION_ID = "a" * 64
+OPERATION_ID = "a" * 64
 _INTERACTION_ID = "b" * 64
-_NOW = datetime(2026, 9, 27, tzinfo=UTC)
+NOW = datetime(2026, 9, 27, tzinfo=UTC)
 
 
 class _SafeReview(BaseModel):
@@ -59,7 +58,7 @@ class _SafeReview(BaseModel):
 
 @lru_cache(maxsize=1)
 def _contracts() -> OperationPublicContractSetV1:
-    return build_production_operation_registry().public_contract_set
+    return production_operation_registry().public_contract_set
 
 
 def _observation() -> OperationObservationSuccessV1:
@@ -68,7 +67,7 @@ def _observation() -> OperationObservationSuccessV1:
     assert contract.review_projection_schema is not None
     assert contract.interaction_response_schema is not None
     reference = OperationReviewProjectionReferenceV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         interaction_id=_INTERACTION_ID,
         revision=4,
         review_projection_schema=contract.review_projection_schema,
@@ -76,7 +75,7 @@ def _observation() -> OperationObservationSuccessV1:
         expires_at=None,
     )
     pending = OperationReviewAvailableInteractionV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         interaction_id=_INTERACTION_ID,
         revision=4,
         presentation_code="operation.review.ready",
@@ -85,7 +84,7 @@ def _observation() -> OperationObservationSuccessV1:
         review_reference=reference,
     )
     projection = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         definition_id=contract.definition_id,
         subject_ref="profile:active",
         revision=4,
@@ -96,8 +95,8 @@ def _observation() -> OperationObservationSuccessV1:
         terminal_condition=None,
         effect=OperationEffect.NONE,
         phase_code="operation.review.ready",
-        started_at=_NOW,
-        updated_at=_NOW,
+        started_at=NOW,
+        updated_at=NOW,
         progress=None,
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
@@ -113,7 +112,7 @@ def _observation() -> OperationObservationSuccessV1:
         diagnostic_ref=None,
     )
     page = OperationPublicEventPageV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         anchor_cursor=1,
         requested_cursor=0,
         status=OperationReplayStatus.PAGE,
@@ -121,7 +120,7 @@ def _observation() -> OperationObservationSuccessV1:
             OperationPublicPhaseEventV1(
                 revision=4,
                 sequence=1,
-                timestamp=_NOW,
+                timestamp=NOW,
                 code="operation.review.ready",
                 phase_code="operation.review.ready",
             ),
@@ -142,7 +141,7 @@ class _Control:
     async def inspect(self) -> OperationResponseControlSuccessV1:
         self.inspect_count += 1
         return OperationResponseControlSuccessV1(
-            operation_id=_OPERATION_ID,
+            operation_id=OPERATION_ID,
             interaction_id=_INTERACTION_ID,
             revision=4,
             available=bool(self.permitted),
@@ -171,7 +170,7 @@ class _Cued:
         self.armed = False
 
 
-class _Controller:
+class Controller:
     def __init__(self, *, failing_action: str) -> None:
         self.failing_action = failing_action
         self.observation = _observation()
@@ -183,14 +182,14 @@ class _Controller:
 
     @property
     def operation_id(self) -> str:
-        return _OPERATION_ID
+        return OPERATION_ID
 
     @property
     def actor_ref(self) -> str:
         return "operator:access-loss"
 
     async def start(self) -> str:
-        return _OPERATION_ID
+        return OPERATION_ID
 
     def operation_changes(self) -> _Cued:
         return _Cued()
@@ -209,7 +208,7 @@ class _Controller:
         return OperationObservationSuccessV1(
             projection=projection,
             event_page=OperationPublicEventPageV1(
-                operation_id=_OPERATION_ID,
+                operation_id=OPERATION_ID,
                 anchor_cursor=1,
                 requested_cursor=1,
                 status=OperationReplayStatus.CAUGHT_UP,
@@ -242,8 +241,8 @@ class _Controller:
         raise FrontendRefusedError("profile_session_expired")
 
 
-class _Host(App[None]):
-    def __init__(self, controller: _Controller) -> None:
+class Host(App[None]):
+    def __init__(self, controller: Controller) -> None:
         super().__init__()
         self.controller = controller
         self.closed = asyncio.Event()
@@ -258,19 +257,18 @@ class _Host(App[None]):
         self.run_worker(self._present())
 
 
-async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    async with asyncio.timeout(10):
-        while not predicate():
-            await pilot.pause(0.02)
-
-
 @pytest.mark.parametrize("failing_action", ["observe", "transport", "cancel", "detach", "apply", "reject"])
 def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failing_action: str) -> None:
     async def run() -> None:
-        controller = _Controller(failing_action=failing_action)
-        host = _Host(controller)
+        controller = Controller(failing_action=failing_action)
+        host = Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
-            await _until(pilot, lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None)
+            await settle_until(
+                pilot,
+                lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None,
+                "the modal to show the operation",
+                workers=False,
+            )
             modal = host.screen
             assert isinstance(modal, OperationModal)
             assert "review.private" in str(modal.query_one("#operation-modal-review", Static).content)
@@ -280,9 +278,9 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
                 controller.release_second_observe.set()
             else:
                 await pilot.click(f"#btn-operation-{failing_action}")
-            await _until(pilot, lambda: modal._view_model is None)
+            await settle_until(pilot, lambda: modal._view_model is None, "the modal to erase its view", workers=False)
             controller.release_second_observe.set()
-            await pilot.pause(0.05)
+            await settle(pilot, workers=False)
             assert modal._interaction is None
             assert modal._log_view.rows == ()
             for suffix in ("phase", "deadlines", "diagnostic", "receipt", "review", "log"):
@@ -291,7 +289,7 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
                 assert modal.query_one(f"#btn-operation-{action}", Button).disabled
             assert not modal.query_one("#btn-operation-close", Button).disabled
             await pilot.click("#btn-operation-close")
-            await _until(pilot, host.closed.is_set)
+            await settle_until(pilot, host.closed.is_set, "the modal to close", workers=False)
             assert host.outcome is None
 
     asyncio.run(run())
@@ -299,7 +297,7 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
 
 def test_cached_review_controls_reinspect_permission_without_rebinding() -> None:
     async def run() -> None:
-        controller = _Controller(failing_action="observe")
+        controller = Controller(failing_action="observe")
         projection = controller.observation.projection
         first = await resolve_modal_interaction_state(controller, projection, BaseModel)
         assert isinstance(first, OperationModalReviewInteractionV1)

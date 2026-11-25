@@ -22,16 +22,17 @@ from typing import Any, Protocol, cast
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-_MAX_FRAME = 65536
-_MAX_SLOTS = 8
+from .gnome_collection_identity import gnome_collection_id
+
+MAX_FRAME = 65536
+MAX_SLOTS = 8
 _BASE = 0x80000000 | 0x474E4D45
-_COLLECTION_CLASS = _BASE + 110
-_CLASS, _TOKEN, _TRUSTED, _ID = 0, 1, 0x86, 0x102
-_TRANSIENT, _LOCKED = _BASE + 201, _BASE + 210
-_PREFIX = "/org/freedesktop/secrets/collection/"
-_BUS = "org.freedesktop.DBus"
-_HANDSHAKE = b"PRIVATE-GNOME-KEYRING-PKCS11-PROTOCOL-V-1"
-_CALLS = {
+COLLECTION_CLASS = _BASE + 110
+CLASS, TOKEN, TRUSTED, ID = 0, 1, 0x86, 0x102
+TRANSIENT, LOCKED = _BASE + 201, _BASE + 210
+BUS = "org.freedesktop.DBus"
+HANDSHAKE = b"PRIVATE-GNOME-KEYRING-PKCS11-PROTOCOL-V-1"
+CALLS = {
     "C_Initialize": (1, b"ay", b""),
     "C_Finalize": (2, b"", b""),
     "C_GetSlotList": (4, b"yfu", b"au"),
@@ -144,60 +145,47 @@ def _close_on_exit(close: Callable[[], None]) -> Generator[None]:
         close()
 
 
-def gnome_collection_id(collection: str) -> bytes:
-    """Decode only canonical GNOME collection paths, with an exact roundtrip."""
-    _require(isinstance(collection, str) and collection.startswith(_PREFIX) and len(collection) <= 1024)
-    encoded = collection[len(_PREFIX) :]
-    result = bytearray()
-    index = 0
-    while index < len(encoded):
-        character = encoded[index]
-        if character.isascii() and character.isalnum():
-            result.append(ord(character))
-            index += 1
-        else:
-            _require(character == "_" and index + 2 < len(encoded))
-            hexadecimal = encoded[index + 1 : index + 3]
-            _require(all(value in "0123456789abcdef" for value in hexadecimal))
-            result.append(int(hexadecimal, 16))
-            index += 3
-    _require(bool(result) and 0 not in result)
-    roundtrip = _collection_path_spelling(result)
-    _require(roundtrip == encoded)
-    return bytes(result)
-
-
-def _u32(value: int) -> bytes:
+def u32(value: int) -> bytes:
+    """Encode an unsigned integer as four big-endian bytes."""
     return struct.pack(">I", value)
 
 
-def _ulong(value: int) -> bytes:
+def ulong(value: int) -> bytes:
+    """Encode an unsigned integer as eight big-endian bytes."""
     return struct.pack(">Q", value)
 
 
-def _blob(value: bytes) -> bytes:
-    return _u32(len(value)) + value
+def blob(value: bytes) -> bytes:
+    """Encode bytes behind a four-byte big-endian length prefix."""
+    return u32(len(value)) + value
 
 
-class _Reader:
+class Reader:
+    """A bounds-checked cursor over a big-endian metadata RPC reply."""
+
     def __init__(self, data: bytes) -> None:
+        """Wrap the reply bytes with a cursor positioned at the start."""
         self.data, self.offset = data, 0
 
     def take(self, length: int) -> bytes:
+        """Consume and return the next length bytes, refusing a read past the end."""
         _require(0 <= length <= len(self.data) - self.offset)
         value = self.data[self.offset : self.offset + length]
         self.offset += length
         return value
 
     def number(self, size: int = 4) -> int:
+        """Read a big-endian unsigned integer of the given byte size."""
         return int.from_bytes(self.take(size), "big")
 
-    def blob(self, maximum: int = _MAX_FRAME) -> bytes:
+    def blob(self, maximum: int = MAX_FRAME) -> bytes:
+        """Read a length-prefixed byte string no longer than the given maximum."""
         length = self.number()
         _require(length <= maximum)
         return self.take(length)
 
     def handles(self, maximum: int) -> tuple[int, ...]:
+        """Read a flagged list of distinct nonzero 64-bit handles bounded by maximum."""
         _require(self.take(1) == b"\x01")
         count = self.number()
         _require(count <= maximum)
@@ -207,10 +195,11 @@ class _Reader:
         return result
 
     def finish(self) -> None:
+        """Require that the whole reply has been consumed."""
         _require(self.offset == len(self.data))
 
 
-def _control_directory(control: object) -> tuple[Path, int]:
+def control_directory(control: object) -> tuple[Path, int]:
     """Pin the owner-only directory without traversing any symlink component."""
     _require(
         isinstance(control, str) and 0 < len(control) <= 1024 and "\0" not in control,
@@ -244,13 +233,14 @@ def _control_directory(control: object) -> tuple[Path, int]:
         raise
 
 
-class _MetadataRpc:
+class MetadataRpc:
     """Closed read-only V1 subset; each frame shares the existing deadline."""
 
     deadline: float
     sock: _MetadataSocketProtocol
 
     def __init__(self, directory_fd: int, *, provider_pid: int, deadline: float) -> None:
+        """Connect to the provider's metadata socket under the shared deadline, refusing off Linux."""
         if sys.platform != "linux":
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.deadline = deadline
@@ -279,11 +269,13 @@ class _MetadataRpc:
             raise
 
     def remaining(self) -> float:
+        """Return the seconds left before the deadline, refusing once it has passed."""
         remaining = self.deadline - time.monotonic()
         _require(remaining > 0, AutomationCustodyCode.UNAVAILABLE)
         return remaining
 
     def receive(self, length: int) -> bytes:
+        """Read exactly length bytes from the socket within the deadline."""
         data = bytearray()
         while len(data) < length:
             self.sock.settimeout(self.remaining())
@@ -292,16 +284,17 @@ class _MetadataRpc:
             data.extend(chunk)
         return bytes(data)
 
-    def call(self, name: str, payload: bytes = b"") -> _Reader:
-        _require(name in _CALLS)
-        call_id, signature, response = _CALLS[name]
-        data = _u32(call_id) + _blob(signature) + payload
-        _require(len(data) <= _MAX_FRAME)
+    def call(self, name: str, payload: bytes = b"") -> Reader:
+        """Send a named metadata RPC call and return a reader over its validated reply."""
+        _require(name in CALLS)
+        call_id, signature, response = CALLS[name]
+        data = u32(call_id) + blob(signature) + payload
+        _require(len(data) <= MAX_FRAME)
         self.sock.settimeout(self.remaining())
-        self.sock.sendall(_u32(len(data)) + data)
+        self.sock.sendall(u32(len(data)) + data)
         length = int.from_bytes(self.receive(4), "big")
-        _require(4 <= length <= _MAX_FRAME)
-        reply = _Reader(self.receive(length))
+        _require(4 <= length <= MAX_FRAME)
+        reply = Reader(self.receive(length))
         returned_id = reply.number()
         if returned_id == 0:
             native_code = reply.number(8)
@@ -312,17 +305,19 @@ class _MetadataRpc:
         return reply
 
     def empty(self, name: str, payload: bytes = b"") -> None:
+        """Run a call whose reply must carry no payload."""
         self.call(name, payload).finish()
 
     def close(self) -> None:
+        """Close the underlying socket."""
         self.sock.close()
 
 
-def _secret_slot(rpc: _MetadataRpc) -> int:
-    slots = rpc.call("C_GetSlotList", b"\x01" + _u32(_MAX_SLOTS)).handles(_MAX_SLOTS)
+def _secret_slot(rpc: MetadataRpc) -> int:
+    slots = rpc.call("C_GetSlotList", b"\x01" + u32(MAX_SLOTS)).handles(MAX_SLOTS)
     matches: list[int] = []
     for slot in slots:
-        reply = rpc.call("C_GetTokenInfo", _ulong(slot))
+        reply = rpc.call("C_GetTokenInfo", ulong(slot))
         label, manufacturer, model, serial = (reply.blob(32) for _ in range(4))
         _require(tuple(map(len, (label, manufacturer, model, serial))) == (32, 32, 16, 16))
         for _ in range(11):
@@ -337,27 +332,27 @@ def _secret_slot(rpc: _MetadataRpc) -> int:
     return matches[0]
 
 
-def _collection_metadata(rpc: _MetadataRpc, session: int, identifier: bytes) -> dict[int, bytes]:
-    template = ((_CLASS, struct.pack("@L", _COLLECTION_CLASS)), (_ID, identifier))
-    encoded = _u32(len(template)) + b"".join(
-        _u32(kind) + b"\x01" + _u32(len(value)) + _blob(value) for kind, value in template
+def _collection_metadata(rpc: MetadataRpc, session: int, identifier: bytes) -> dict[int, bytes]:
+    template = ((CLASS, struct.pack("@L", COLLECTION_CLASS)), (ID, identifier))
+    encoded = u32(len(template)) + b"".join(
+        u32(kind) + b"\x01" + u32(len(value)) + blob(value) for kind, value in template
     )
-    rpc.empty("C_FindObjectsInit", _ulong(session) + encoded)
+    rpc.empty("C_FindObjectsInit", ulong(session) + encoded)
     try:
-        matches = rpc.call("C_FindObjects", _ulong(session) + _u32(2)).handles(2)
+        matches = rpc.call("C_FindObjects", ulong(session) + u32(2)).handles(2)
     finally:
-        rpc.empty("C_FindObjectsFinal", _ulong(session))
+        rpc.empty("C_FindObjectsFinal", ulong(session))
     _require(len(matches) == 1, AutomationCustodyCode.UNAVAILABLE)
     requested = (
-        (_CLASS, 8),
-        (_ID, len(identifier)),
-        (_TOKEN, 1),
-        (_TRANSIENT, 1),
-        (_TRUSTED, 1),
-        (_LOCKED, 1),
+        (CLASS, 8),
+        (ID, len(identifier)),
+        (TOKEN, 1),
+        (TRANSIENT, 1),
+        (TRUSTED, 1),
+        (LOCKED, 1),
     )
-    payload = _ulong(session) + _ulong(matches[0]) + _u32(len(requested))
-    payload += b"".join(_u32(kind) + _u32(length) for kind, length in requested)
+    payload = ulong(session) + ulong(matches[0]) + u32(len(requested))
+    payload += b"".join(u32(kind) + u32(length) for kind, length in requested)
     reply = rpc.call("C_GetAttributeValue", payload)
     _require(reply.number() == len(requested))
     values: dict[int, bytes] = {}
@@ -376,22 +371,22 @@ def _collection_metadata(rpc: _MetadataRpc, session: int, identifier: bytes) -> 
     native_code = reply.number(8)
     reply.finish()
     _require(not native_code and not invalid_attribute, AutomationCustodyCode.UNAVAILABLE)
-    _require(values[_CLASS] == struct.pack("@L", _COLLECTION_CLASS) and values[_ID] == identifier)
-    for kind in (_TOKEN, _TRANSIENT, _TRUSTED, _LOCKED):
+    _require(values[CLASS] == struct.pack("@L", COLLECTION_CLASS) and values[ID] == identifier)
+    for kind in (TOKEN, TRANSIENT, TRUSTED, LOCKED):
         _require(values[kind] in (b"\0", b"\x01"))
     return values
 
 
-def _read_metadata(rpc: _MetadataRpc, identifier: bytes) -> dict[int, bytes]:
-    rpc.empty("C_Initialize", b"\x01" + _blob(_HANDSHAKE))
+def _read_metadata(rpc: MetadataRpc, identifier: bytes) -> dict[int, bytes]:
+    rpc.empty("C_Initialize", b"\x01" + blob(HANDSHAKE))
     with _close_on_exit(lambda: rpc.empty("C_Finalize")):
-        opened = rpc.call("C_OpenSession", _ulong(_secret_slot(rpc)) + _ulong(4))
+        opened = rpc.call("C_OpenSession", ulong(_secret_slot(rpc)) + ulong(4))
         session = opened.number(8)
         opened.finish()
         _require(session > 0)
         # These scopes own only this connection's new session. Every cleanup
         # call retains the original absolute operation deadline.
-        with _close_on_exit(lambda: rpc.empty("C_CloseSession", _ulong(session))):
+        with _close_on_exit(lambda: rpc.empty("C_CloseSession", ulong(session))):
             return _collection_metadata(rpc, session, identifier)
 
 
@@ -404,23 +399,21 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
         owner = bus.owner
         _require(isinstance(owner, str) and owner.startswith(":"), AutomationCustodyCode.UNAVAILABLE)
         gnome_owner = _one(
-            bus.call("/org/freedesktop/DBus", _BUS, "GetNameOwner", "s", ("org.gnome.keyring",), destination=_BUS)
+            bus.call("/org/freedesktop/DBus", BUS, "GetNameOwner", "s", ("org.gnome.keyring",), destination=BUS)
         )
         _require(gnome_owner == owner, AutomationCustodyCode.UNAVAILABLE)
-        pid = _one(
-            bus.call("/org/freedesktop/DBus", _BUS, "GetConnectionUnixProcessID", "s", (owner,), destination=_BUS)
-        )
+        pid = _one(bus.call("/org/freedesktop/DBus", BUS, "GetConnectionUnixProcessID", "s", (owner,), destination=BUS))
         _require(type(pid) is int and pid > 0, AutomationCustodyCode.UNAVAILABLE)
         control = _one(bus.call("/org/gnome/keyring/daemon", "org.gnome.keyring.Daemon", "GetControlDirectory"))
-        _directory, directory_fd = _control_directory(control)
+        _directory, directory_fd = control_directory(control)
         with _close_on_exit(lambda: os.close(directory_fd)):
-            rpc = _MetadataRpc(directory_fd, provider_pid=pid, deadline=bus.deadline)
+            rpc = MetadataRpc(directory_fd, provider_pid=pid, deadline=bus.deadline)
             with _close_on_exit(rpc.close):
                 values = _read_metadata(rpc, identifier)
         bus.verify_owner()
         _require(bus.owner == owner, AutomationCustodyCode.UNAVAILABLE)
         gnome_owner = _one(
-            bus.call("/org/freedesktop/DBus", _BUS, "GetNameOwner", "s", ("org.gnome.keyring",), destination=_BUS)
+            bus.call("/org/freedesktop/DBus", BUS, "GetNameOwner", "s", ("org.gnome.keyring",), destination=BUS)
         )
         _require(gnome_owner == owner, AutomationCustodyCode.UNAVAILABLE)
         alias = _one(
@@ -449,18 +442,11 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
 
 
-def _collection_path_spelling(result: bytearray) -> str:
-    roundtrip = "".join(
-        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
-    )
-    return roundtrip
-
-
 def _parent_directory_suitable(info: os.stat_result, uid: int) -> bool:
     return stat.S_ISDIR(info.st_mode) and info.st_uid in (0, uid) and not info.st_mode & 0o022
 
 
 def _require_metadata_suitability(values: dict[int, bytes], locked: bool) -> None:
     """Require the observed persistent unlocked protected collection before item access."""
-    _require(values[_TOKEN] == b"\x01" and values[_TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
-    _require(not locked and values[_LOCKED] == b"\0" and values[_TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER)
+    _require(values[TOKEN] == b"\x01" and values[TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
+    _require(not locked and values[LOCKED] == b"\0" and values[TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER)

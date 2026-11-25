@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...core.errors.severity import BaseSeverity
-from ...domain.user_profile.errors import UserProfileValidationError
+from ...domain.user_profile.errors import ProfileSchemaValidationError, UserProfileError, UserProfileValidationError
 from ...domain.user_profile.plantilla_media import PlantillaMediaRefusalKind, plantilla_media_refusals
 from ...domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -24,6 +24,7 @@ from ...domain.user_profile.schema import (
 from ...domain.user_profile.values import (
     UserProfileFact,
     UserProfileRecord,
+    compose_legal_full_name,
     section_field_key,
     validate_profile_fact,
 )
@@ -32,12 +33,9 @@ from .commands import (
     ProfileValidationReport,
 )
 from .completeness import (
-    IVA_REGIME_PATH,
     atribucion_socio_forbidden_country_paths,
     atribucion_socio_missing_country_paths,
-    conditional_profile_missing_required,
-    iva_regime_required,
-    missing_required_field_paths,
+    profile_completeness_gaps,
 )
 from .projections import in_window_order
 
@@ -96,6 +94,13 @@ was previously the only content-format type in the schema that nothing
 checked, so ``banana`` stored and stayed.
 """
 
+TEXT_LENGTH_ISSUE_CODE: Final[str] = "text_too_long"
+"""Issue code for a text past what the record carrying its field holds."""
+
+_IDENTITY_NAME_PATH: Final[str] = "identity.name"
+_IDENTITY_SURNAMES_PATH: Final[str] = "identity.surnames"
+_IDENTITY_LEGAL_NAME_PATH: Final[str] = "identity.legal_name"
+
 DERIVED_FIELD_ISSUE_CODE: Final[str] = "derived_field_not_editable"
 """Issue code for a write aimed at a path the engine computes.
 
@@ -142,6 +147,7 @@ PROFILE_VALIDATION_ISSUE_CODES: Final[tuple[str, ...]] = (
     ENUM_VALUE_ISSUE_CODE,
     DATE_VALUE_ISSUE_CODE,
     EMAIL_VALUE_ISSUE_CODE,
+    TEXT_LENGTH_ISSUE_CODE,
     DERIVED_FIELD_ISSUE_CODE,
     UNKNOWN_FIELD_ISSUE_CODE,
     EFFECTIVE_WINDOW_UNUSED_CODE,
@@ -157,12 +163,13 @@ tuple lives beside the issue-code declarations so a new producer must update
 one source of truth before its dynamic locale key can be rendered.
 """
 
-_ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
+ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
     ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.DATE: DATE_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.BOOLEAN: BOOLEAN_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.EMAIL: EMAIL_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.TEXT_LENGTH: TEXT_LENGTH_ISSUE_CODE,
 }
 """How a refusal kind is reported as an issue.
 
@@ -239,10 +246,10 @@ class ProfileValidationService:
         issues: list[ProfileValidationIssue] = []
         for fact in facts:
             issues.extend(self._validate_one_fact(fact))
-        issues.extend(self._required_field_issues(facts))
-        issues.extend(self._conditional_completeness_issues(facts))
+        issues.extend(self._completeness_issues(facts))
         issues.extend(self._atribucion_socio_country_issues(facts))
         issues.extend(self._plantilla_media_issues(facts))
+        issues.extend(self._composed_legal_name_issues(facts))
         issues.extend(self._unenforced_expiry_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
@@ -370,7 +377,7 @@ class ProfileValidationService:
         return (
             ProfileValidationIssue(
                 severity=BaseSeverity.ERROR,
-                code=_ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
+                code=ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
                 path=fact.path,
                 message=refusal.message,
             ),
@@ -445,7 +452,33 @@ class ProfileValidationService:
             if fact.valid_to is not None
         )
 
-    def _required_field_issues(
+    def _composed_legal_name_issues(self, facts: tuple[UserProfileFact, ...]) -> tuple[ProfileValidationIssue, ...]:
+        """Refuse a name and surnames that each fit and together overrun the legal name's bound.
+
+        A natural person's filing carries the two joined as one legal name, so each
+        part fitting alone does not make the name a filing can hold.
+        """
+        declared = self._field_index.get(_IDENTITY_LEGAL_NAME_PATH)
+        limit = None if declared is None else declared[1].max_length
+        if limit is None:
+            return ()
+        values = {fact.path: fact.value for fact in facts}
+        surnames, name = values.get(_IDENTITY_SURNAMES_PATH), values.get(_IDENTITY_NAME_PATH)
+        if not isinstance(surnames, str) or not isinstance(name, str):
+            return ()
+        observed = len(compose_legal_full_name(surnames=surnames, name=name))
+        if observed <= limit:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=TEXT_LENGTH_ISSUE_CODE,
+                path=_IDENTITY_SURNAMES_PATH,
+                message=f"surnames and name together hold {observed} characters and admit at most {limit}",
+            ),
+        )
+
+    def _completeness_issues(
         self,
         facts: tuple[UserProfileFact, ...],
     ) -> tuple[ProfileValidationIssue, ...]:
@@ -465,31 +498,31 @@ class ProfileValidationService:
         # pass. The shared row-aware helper is what makes "required" mean
         # per-row, and the overview reads the same one so the enforcing
         # surface and the displayed one cannot drift apart again.
+        # Schema-required and conditionally required gaps come from the one
+        # completeness answer the readiness gate also reads, so the door that
+        # refuses completing setup and the gate that refuses modelo work name
+        # the same facts.
         values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
-        return tuple(
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code=REQUIRED_FIELD_MISSING_CODE,
-                path=path,
-                message=f"required field {path} is missing",
-            )
-            for path in missing_required_field_paths(self._schema, values)
-            if not (path == IVA_REGIME_PATH and not iva_regime_required(values))
-        )
-
-    def _conditional_completeness_issues(
-        self,
-        facts: tuple[UserProfileFact, ...],
-    ) -> tuple[ProfileValidationIssue, ...]:
-        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
-        return tuple(
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
-                path=path,
-                message=f"conditionally required field {path} is missing",
-            )
-            for path in conditional_profile_missing_required(values)
+        gaps = profile_completeness_gaps(self._schema, values)
+        return (
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=REQUIRED_FIELD_MISSING_CODE,
+                    path=path,
+                    message=f"required field {path} is missing",
+                )
+                for path in gaps.schema_required
+            ),
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+                    path=path,
+                    message=f"conditionally required field {path} is missing",
+                )
+                for path in gaps.conditional
+            ),
         )
 
     def _atribucion_socio_country_issues(
@@ -567,7 +600,7 @@ class ProfileValidationService:
 
 _PROFILE_SCHEMA_VALIDATION_MESSAGE: Final[str] = "profile facts failed schema validation"
 
-_REPORTED_ISSUE_LIMIT: Final[int] = 3
+_ISSUE_MESSAGE_LIMIT: Final[int] = 3
 """How many refused facts the message names before it summarises the rest.
 
 The operator needs the first few named to act; an unbounded list on a badly
@@ -581,6 +614,7 @@ def reject_invalid_profile_facts(
     *,
     require_complete: bool,
     schema: ProfileSchemaDefinition,
+    changed_paths: frozenset[str] | None = None,
 ) -> None:
     """Refuse a fact set on blocking schema issues, or return silently.
 
@@ -608,14 +642,13 @@ def reject_invalid_profile_facts(
         ProfileSchemaValidationError: When any blocking issue remains, naming
             the refused paths and why.
     """
-    from ...domain.user_profile.errors import ProfileSchemaValidationError
-
     service = ProfileValidationService(schema=schema)
     report = service.validate_facts(profile_id, facts)
-    blocking = _blocking_profile_issues(report, require_complete=require_complete)
+    blocking = _editable_issues(_blocking_profile_issues(report, require_complete=require_complete), changed_paths)
     if not blocking:
         return
     detail = _blocking_profile_detail(blocking)
+    _refuse_first_text_length_issue(blocking, schema=schema)
     raise ProfileSchemaValidationError(
         f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {detail}",
         context={
@@ -626,6 +659,58 @@ def reject_invalid_profile_facts(
         },
         translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
     )
+
+
+def profile_text_too_long_error(path: str, *, limit: int, schema: ProfileSchemaDefinition) -> UserProfileError:
+    """Build the refusal naming the profile field to shorten by its operator label, never its value."""
+    from .preflight import build_profile_preflight_requirement
+
+    return ProfileSchemaValidationError(
+        f"profile field {path} admits at most {limit} characters",
+        context={"field": build_profile_preflight_requirement(path, schema=schema).label, "limit": limit},
+        translated_message="application.user_profile.errors.profile_text_too_long",
+    )
+
+
+def _refuse_first_text_length_issue(
+    issues: tuple[ProfileValidationIssue, ...],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    limits = {
+        f"{section.key}.{field.key}": field.max_length
+        for section in schema.sections
+        for field in section.fields
+        if field.max_length is not None
+    }
+    for issue in issues:
+        if issue.code == TEXT_LENGTH_ISSUE_CODE and issue.path is not None:
+            raise profile_text_too_long_error(issue.path, limit=limits[issue.path], schema=schema)
+
+
+def refuse_overlong_profile_text(record: UserProfileRecord, *, schema: ProfileSchemaDefinition) -> None:
+    """Refuse a stored :class:`UserProfileRecord` holding a text past its field's bound, naming that field.
+
+    Such a value is present rather than missing, so it must not read as an incomplete profile.
+    """
+    report = ProfileValidationService(schema=schema).validate_record(record)
+    _refuse_first_text_length_issue(report.issues, schema=schema)
+
+
+def _editable_issues(
+    issues: tuple[ProfileValidationIssue, ...],
+    changed_paths: frozenset[str] | None,
+) -> tuple[ProfileValidationIssue, ...]:
+    """Drop a stored text's length from what refuses a write that does not touch it.
+
+    Such a value stays valid to hold: its own refusal comes when a filing needs it, naming the field, so editing
+    a phone number is not refused for a name no one changed.
+    """
+    if changed_paths is None:
+        return issues
+    name_parts = {_IDENTITY_NAME_PATH, _IDENTITY_SURNAMES_PATH}
+    touched = changed_paths | name_parts if changed_paths & name_parts else changed_paths
+    return tuple(issue for issue in issues if issue.code != TEXT_LENGTH_ISSUE_CODE or issue.path in touched)
 
 
 def _blocking_profile_issues(
@@ -643,8 +728,8 @@ def _blocking_profile_issues(
 
 def _blocking_profile_detail(blocking: tuple[ProfileValidationIssue, ...]) -> str:
     """Render the bounded operator detail carried by a schema refusal."""
-    named = "; ".join(issue.message for issue in blocking[:_REPORTED_ISSUE_LIMIT])
-    remaining = len(blocking) - _REPORTED_ISSUE_LIMIT
+    named = "; ".join(issue.message for issue in blocking[:_ISSUE_MESSAGE_LIMIT])
+    remaining = len(blocking) - _ISSUE_MESSAGE_LIMIT
     return f"{named}; and {remaining} more" if remaining > 0 else named
 
 
@@ -663,7 +748,10 @@ __all__ = [
     "NUMERIC_VALUE_ISSUE_CODE",
     "PROFILE_VALIDATION_ISSUE_CODES",
     "REQUIRED_FIELD_MISSING_CODE",
+    "TEXT_LENGTH_ISSUE_CODE",
     "UNKNOWN_FIELD_ISSUE_CODE",
     "ProfileValidationService",
+    "profile_text_too_long_error",
+    "refuse_overlong_profile_text",
     "reject_invalid_profile_facts",
 ]

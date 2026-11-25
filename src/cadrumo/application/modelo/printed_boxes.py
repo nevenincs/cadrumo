@@ -17,12 +17,15 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
+from ...domain.calculations.registry.schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 
@@ -83,4 +86,46 @@ def snapshot_printed_boxes(operation: PinnedAuthorityOperation, snapshot: Regist
     return printed_boxes(snapshot.revision, operation.form_layout(snapshot.modelo.id, snapshot.revision.id))
 
 
-__all__ = ["PrintedBoxes", "printed_box_number", "printed_boxes", "snapshot_printed_boxes"]
+def first_printed_dependent(snapshot: RegistrySnapshot, binding_id: BindingId) -> CasillaId | None:
+    """The nearest box the form prints whose calculation reads ``binding_id``, directly or through working figures.
+
+    A binding that feeds a formula rather than populating a box has no box of its own, so a note
+    about it names the first printed box that waits on it. Among boxes at the same distance the
+    lowest casilla id is taken, so the answer does not depend on declaration order.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
+    printed = printed_boxes(snapshot.revision, None)
+    formulas = snapshot.revision.formulas
+    frontier = sorted(
+        {formula.target_casilla_id for formula in formulas if binding_id in expression_binding_refs(formula.expression)}
+    )
+    seen: set[CasillaId] = set()
+    while frontier:
+        reached = [casilla_id for casilla_id in frontier if printed.prints(casilla_id)]
+        if reached:
+            return reached[0]
+        seen.update(frontier)
+        frontier = _next_dependents(formulas, seen)
+    return None
+
+
+def _next_dependents(formulas: Sequence[FormulaDefinition], seen: set[CasillaId]) -> list[CasillaId]:
+    """The unseen formula targets that read any casilla already reached, in casilla id order."""
+    return sorted(
+        {
+            formula.target_casilla_id
+            for formula in formulas
+            if formula.target_casilla_id not in seen
+            and any(casilla_id in seen for casilla_id in expression_casilla_refs(formula.expression))
+        }
+    )
+
+
+__all__ = [
+    "PrintedBoxes",
+    "first_printed_dependent",
+    "printed_box_number",
+    "printed_boxes",
+    "snapshot_printed_boxes",
+]

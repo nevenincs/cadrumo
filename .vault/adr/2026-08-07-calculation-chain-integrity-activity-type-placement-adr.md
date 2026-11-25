@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:c6c322be613dbd140ec0d260c31e2baa30acb67916716b16b9b350c002eed4ac'
+body_hash: 'sha256:dbc508c86e36818b34626f125659adcf4f63c3c9c70c26fc123774ce1f97582e'
 related:
   - "[[2026-07-26-multi-activity-profile-reference]]"
   - "[[2026-07-26-multi-activity-profile-adr]]"
@@ -45,7 +45,7 @@ is to add a fourth rather than reconcile them.
 - The registry already models the axis STRUCTURALLY, as a partition of the M100
   declaration by section: `reg_estima_directa`/`actividad_est_directa` against
   `reg_estima_obj_agricola`/`actividad_agr`. Both partitions exist in the SAME
-  M100 2025 revision, which is structural proof that one taxpayer files both.
+  M100 revision, which is structural proof that one taxpayer files both.
 - AEAT records *Tipo de actividad* per activity SLOT, alongside sección I.A.E.
   and grupo o epígrafe, as part of a triple. It is a declared fact per activity,
   not a derived classification.
@@ -60,7 +60,7 @@ is to add a fourth rather than reconcile them.
 
 **A. A scalar activity-type field on `TaxpayerProfile`.** Rejected. It models the
 axis per taxpayer while the rate is selected per row. The refutation is
-structural rather than a matter of degree: the M100 2025 revision carries the
+structural rather than a matter of degree: the M100 revision carries the
 directa and the agrarian-objetiva partitions concurrently, so a single scalar
 cannot represent a filer who holds both. `TaxpayerProfile.irpf_estimation_regime`
 already embodies this flattening, which is why filtering on it measured inert.

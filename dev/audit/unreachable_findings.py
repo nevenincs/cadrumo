@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,57 +15,58 @@ from dev.quality.source_import_analysis import (
 )
 
 from .unreachable_dataclasses import dataclass_member_uses
-from .unreachable_definitions import _collection_uses, _definitions
+from .unreachable_definitions import collection_uses, source_definitions
+from .unreachable_form_codes import CodeSources, DeclaredCodes, member_code_is_declared
 from .unreachable_frameworks import framework_contracts
-from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
-from .unreachable_memo import _walked, parse_module
+from .unreachable_graph import collapse_packages, importers_of_span, reachable_closure, resolved_symbol_uses
+from .unreachable_memo import parse_module, walked
 from .unreachable_models import (
-    _CONFIDENCE_BY_ORDER,
-    _CONFIDENCE_ORDER,
-    _DATA_SHAPED_KINDS,
-    _TOP_LEVEL_KINDS,
+    CONFIDENCE_BY_ORDER,
+    CONFIDENCE_ORDER,
+    DATA_SHAPED_KINDS,
+    TOP_LEVEL_KINDS,
     Confidence,
+    Definition,
     ModuleFinding,
     ModuleReach,
+    OutsideUse,
     ShippedModule,
     SymbolFinding,
     SymbolKind,
     TestFinding,
-    _Definition,
-    _OutsideUse,
 )
-from .unreachable_policy import _DEV_LABEL
+from .unreachable_policy import DEV_LABEL, TRUSTED_OUTSIDE_LABELS
 from .unreachable_receiver_types import receiver_types
 from .unreachable_records import record_member_uses
-from .unreachable_references import _references, _string_tokens, assembled_reference_names
+from .unreachable_references import assembled_reference_names, source_references, string_tokens
 from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
 
 
-def _module_findings(
+def unreachable_findings_module_findings(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
     script_reach: frozenset[str],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     importers: Mapping[str, frozenset[str]],
     edges: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
-    """Report audited modules no product command reaches and no ``dev/`` tool uses.
+    """Report modules no product command, developer tool or build hook uses.
 
-    A module ``dev/`` imports is in use, and so is everything it imports in
+    A module ``dev/`` or ``packaging/`` imports is in use, as are its imports in
     turn: deleting it breaks a repository gate rather than shrinking what an
-    installed user reaches. The clear rests on the same resolved ``dev`` corpus
+    installed user reaches. The clear rests on the same trusted resolved corpus
     label that clears a symbol; a ``tests`` label, including ``dev/`` tests,
     only annotates the finding.
     """
     findings: list[ModuleFinding] = []
-    dev_roots = [name for name in modules if _DEV_LABEL in outside.labels_for_module(name)]
-    dev_reach = reachable_closure(dev_roots, modules, dict(edges))
-    audited = frozenset(name for name in modules if spec.audits(name)) - dev_reach
+    tooling_roots = [name for name in modules if TRUSTED_OUTSIDE_LABELS.intersection(outside.labels_for_module(name))]
+    tooling_reach = reachable_closure(tooling_roots, modules, dict(edges))
+    audited = frozenset(name for name in modules if spec.audits(name)) - tooling_reach
     unreachable = audited - full_reach
-    for name, spanned in _collapse_packages(unreachable, modules):
+    for name, spanned in collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))
     for name in sorted((runtime_reach & audited) - script_reach):
         module = modules[name]
@@ -75,7 +77,7 @@ def _module_findings(
                 ModuleReach.MODULE_EXEC_ONLY,
                 1,
                 outside.labels_for_module(name),
-                _importers_of_span(name, modules, importers),
+                importers_of_span(name, modules, importers),
             ),
         )
     for name in sorted((full_reach & audited) - runtime_reach):
@@ -87,29 +89,31 @@ def _module_findings(
                 ModuleReach.TYPE_ONLY,
                 1,
                 outside.labels_for_module(name),
-                _importers_of_span(name, modules, importers),
+                importers_of_span(name, modules, importers),
             ),
         )
     return tuple(findings)
 
 
-def _symbol_findings(
+def unreachable_findings_symbol_findings(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-) -> tuple[tuple[SymbolFinding, ...], int, int]:
-    """Return the symbol findings, the data-corpus clears, and the ``dev/`` clears.
+    form_codes: FormCodes | None = None,
+) -> tuple[tuple[SymbolFinding, ...], int, int, int]:
+    """Return the symbol findings and the data, ``dev/`` and registry-code clear counts.
 
-    The two clear counts stay separate because they answer different
-    questions: ``data_cleared`` is a registry declaration naming a member the
-    import graph cannot see, while ``dev_cleared`` is a repository gate that
-    consumes the symbol. Folding them into one number under the data name
-    would misreport both.
+    The clear counts stay separate because they answer different questions:
+    ``data_cleared`` is a registry declaration naming a member the import graph
+    cannot see, ``dev_cleared`` is a repository gate that consumes the symbol,
+    and ``registry_cleared`` is a registry-coded enum member whose code the
+    registry declares. Folding them into one number would misreport all three.
     """
+    form_codes = form_codes or FormCodes({}, {})
     entries = spec.entry_points
     member_names: set[str] = set()
     literal_tokens: set[str] = set()
@@ -119,12 +123,12 @@ def _symbol_findings(
     receivers = receiver_types(modules)
     for name in full_reach:
         tree = modules[name].tree
-        member_names |= _references(tree)
-        literal_tokens |= _string_tokens(tree)
+        member_names |= source_references(tree)
+        literal_tokens |= string_tokens(tree)
         literal_tokens |= set(assembled_reference_names(tree))
         resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules), receivers)
-        self_uses[name] = _references(tree)
-        whole_use |= _collection_uses(tree)
+        self_uses[name] = source_references(tree)
+        whole_use |= collection_uses(tree)
 
     contracts = framework_contracts(modules)
     schema_uses = (
@@ -134,13 +138,12 @@ def _symbol_findings(
     )
     usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use, schema_uses)
     findings: list[SymbolFinding] = []
-    data_cleared = 0
-    dev_cleared = 0
+    cleared: Counter[str] = Counter()
     audited_reach = sorted(name for name in runtime_reach if spec.audits(name))
     for name in audited_reach:
         module = modules[name]
-        for definition in _definitions(module.tree, contracts.get(name)):
-            finding, data_clear, dev_clear = _definition_finding(
+        for definition in source_definitions(module.tree, contracts.get(name)):
+            finding, clearance = _definition_finding(
                 name,
                 module,
                 definition,
@@ -149,20 +152,25 @@ def _symbol_findings(
                 outside,
                 data_tokens,
                 declared_values,
+                form_codes,
             )
-            data_cleared += data_clear
-            dev_cleared += dev_clear
+            cleared[clearance] += 1
             if finding is not None:
                 findings.append(finding)
     # An overloaded definition yields one row per signature; keep the first.
-    return tuple({finding.id: finding for finding in findings}.values()), data_cleared, dev_cleared
+    return (
+        tuple({finding.id: finding for finding in findings}.values()),
+        cleared[_DATA],
+        cleared[_DEV],
+        cleared[_REGISTRY],
+    )
 
 
 def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
     """Return ``(module subjects, (module, name) symbol subjects)`` a test imports from the shipped tree."""
     modules: set[str] = set()
     symbols: set[tuple[str, str]] = set()
-    for node in _walked(test.tree):
+    for node in walked(test.tree):
         if isinstance(node, ast.Import):
             modules.update(alias.name for alias in node.names if alias.name in known)
         elif isinstance(node, ast.ImportFrom):
@@ -199,7 +207,7 @@ def _support_hop_subjects(
     """
     reached_modules: set[str] = set()
     reached_symbols: set[tuple[str, str]] = set()
-    for node in _walked(test.tree):
+    for node in walked(test.tree):
         if not isinstance(node, ast.ImportFrom):
             continue
         base = resolve_relative_import(test.name, test.is_package, node.level, node.module)
@@ -211,7 +219,7 @@ def _support_hop_subjects(
     return frozenset(reached_modules), frozenset(reached_symbols)
 
 
-def _test_findings(
+def unreachable_test_findings(
     spec: ShippedTreeSpec,
     known: frozenset[str],
     module_findings: tuple[ModuleFinding, ...],
@@ -255,7 +263,7 @@ def _unreachable_module_finding(
     spanned: int,
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     importers: Mapping[str, frozenset[str]],
 ) -> ModuleFinding:
     """Combine the unreachable package span with all outside-use labels."""
@@ -273,8 +281,23 @@ def _unreachable_module_finding(
         ModuleReach.UNREACHABLE,
         spanned,
         tuple(sorted(used_by)),
-        _importers_of_span(name, modules, importers),
+        importers_of_span(name, modules, importers),
     )
+
+
+_PYTHON = "python"
+_DATA = "data"
+_DEV = "dev"
+_REGISTRY = "registry"
+_KEPT = "reported"
+
+
+@dataclass(frozen=True)
+class FormCodes:
+    """Registry-coded enums and the codes the shipped declarations give them."""
+
+    sources: CodeSources
+    declared: DeclaredCodes
 
 
 @dataclass(frozen=True)
@@ -289,11 +312,11 @@ class _SymbolUsage:
     schema_uses: frozenset[tuple[str, str]]
 
 
-def _python_reaches_definition(name: str, definition: _Definition, usage: _SymbolUsage) -> bool:
+def _python_reaches_definition(name: str, definition: Definition, usage: _SymbolUsage) -> bool:
     """Apply exact top-level references before member and enum-collection uses."""
     if (name, definition.qualname) in usage.schema_uses or (name, definition.qualname) in usage.resolved_uses:
         return True
-    if definition.kind in _TOP_LEVEL_KINDS:
+    if definition.kind in TOP_LEVEL_KINDS:
         if (name, definition.name) in usage.resolved_uses or definition.name in usage.self_uses[name]:
             return True
         if definition.name in usage.literal_tokens:
@@ -304,12 +327,12 @@ def _python_reaches_definition(name: str, definition: _Definition, usage: _Symbo
 
 
 def _data_reaches_definition(
-    definition: _Definition,
+    definition: Definition,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
 ) -> bool:
     """Clear data-shaped members by tokens or values, and classes by whole parsed values."""
-    if definition.kind in _DATA_SHAPED_KINDS and (
+    if definition.kind in DATA_SHAPED_KINDS and (
         definition.name in data_tokens or (definition.value and definition.value in declared_values)
     ):
         return True
@@ -320,22 +343,28 @@ def _data_reaches_definition(
 def _definition_finding(
     name: str,
     module: ShippedModule,
-    definition: _Definition,
+    definition: Definition,
     spec: ShippedTreeSpec,
     usage: _SymbolUsage,
-    outside: _OutsideUse,
+    outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-) -> tuple[SymbolFinding | None, int, int]:
-    """Keep Python, data and resolved dev clears separate and in their original order."""
+    form_codes: FormCodes,
+) -> tuple[SymbolFinding | None, str]:
+    """Clear resolved uses, naming which kind of evidence cleared the definition."""
     if _python_reaches_definition(name, definition, usage):
-        return None, 0, 0
+        return None, _PYTHON
     if _data_reaches_definition(definition, data_tokens, declared_values):
-        return None, 1, 0
+        return None, _DATA
+    if definition.kind is SymbolKind.ENUM_MEMBER and member_code_is_declared(
+        name, definition.owner, definition.value, form_codes.sources, form_codes.declared
+    ):
+        return None, _REGISTRY
     labels = outside.labels_for_name(definition.name)
-    # Tests annotate findings; only an exact development-tool reference clears.
-    if _DEV_LABEL in outside.resolved_labels(name, definition.qualname):
-        return None, 0, 1
+    # Tests annotate findings; only a resolved tooling or build-hook edge clears.
+    resolved_labels = outside.resolved_labels(name, definition.qualname)
+    if TRUSTED_OUTSIDE_LABELS.intersection(resolved_labels):
+        return None, _DEV if DEV_LABEL in resolved_labels else _PYTHON
     return (
         SymbolFinding(
             path=relative_to_repo(module.path, spec),
@@ -346,8 +375,7 @@ def _definition_finding(
             used_by=labels,
             module=name,
         ),
-        0,
-        0,
+        _KEPT,
     )
 
 
@@ -421,8 +449,8 @@ def _orphan_test_finding(
     if all(_module_is_dead(m, dead_roots) for m in modules) and not live_pairs:
         subjects = tuple(sorted(dead_modules)) + tuple(sorted(f"{m}:{n}" for m, n in dead_pairs))
         weakest = max(
-            (_CONFIDENCE_ORDER[dead_symbols[pair]] for pair in dead_pairs),
-            default=_CONFIDENCE_ORDER[Confidence.EXACT],
+            (CONFIDENCE_ORDER[dead_symbols[pair]] for pair in dead_pairs),
+            default=CONFIDENCE_ORDER[Confidence.EXACT],
         )
-        return TestFinding(relative_to_repo(test.path, spec), test.name, subjects, _CONFIDENCE_BY_ORDER[weakest])
+        return TestFinding(relative_to_repo(test.path, spec), test.name, subjects, CONFIDENCE_BY_ORDER[weakest])
     return None

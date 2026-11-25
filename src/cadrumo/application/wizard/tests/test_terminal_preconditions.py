@@ -13,19 +13,20 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from ...user_profile.registration import ProfileRegistrationError
 from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module
 from .. import patch_edit as patch_edit_module
 from .. import status as status_module
 from ..commands import (
-    _require_profile_label_available,
-    _require_profile_name,
-    _run_full_flow,
+    require_profile_label_available,
+    require_profile_name,
+    run_full_flow,
 )
 from ..errors import (
     WizardEditUnsupportedConsoleError,
@@ -37,9 +38,9 @@ from ..errors import (
 from ..patch_edit import missing_filing_baseline_flag_groups_for_flow, require_filing_baseline
 from ..status import (
     WizardStatusError,
-    _next_wizard_action,
-    _require_active_profile_tax_id,
     load_active_taxpayer_profile,
+    next_wizard_action,
+    require_active_profile_tax_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -72,7 +73,7 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "status:_require_active_profile_tax_id:WizardStatusError:1": _contract(
+    "status:require_active_profile_tax_id:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
         (("active_profile_tax_id_declared", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -84,31 +85,31 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_run_full_flow:WizardMissingFlagError:1": _contract(
+    "commands:run_full_flow:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
         (("required_flags_supplied", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
+    "commands:run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "commands:_run_full_flow:WizardUnsupportedConsoleError:1": _contract(
+    "commands:run_full_flow:WizardUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "commands:_require_profile_name:WizardMissingFlagError:1": _contract(
+    "commands:require_profile_name:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
         (("profile_name_supplied", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_require_profile_label_available:WizardValidationError:1": _contract(
+    "commands:require_profile_label_available:WizardValidationError:1": _contract(
         WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
         (("profile_registration_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -123,14 +124,6 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 }
 
 _WIZARD_PRODUCER_MODULES: tuple[ModuleType, ...] = (status_module, commands_module, patch_edit_module)
-
-
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
 
 
 def _wizard_carriers() -> dict[str, ast.Call]:
@@ -174,7 +167,7 @@ def _wizard_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_name = _call_name(node.func)
+                error_name = call_name(node.func)
                 if error_name is not None and error_name in error_names:
                     verdict = next(
                         (keyword.value for keyword in node.keywords if keyword.arg == "precondition_verdict"),
@@ -193,34 +186,18 @@ def _wizard_carriers() -> dict[str, ast.Call]:
     return carriers
 
 
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
-    return value
-
-
 def _precondition(call: ast.Call) -> ast.Call:
-    value = _keyword(call, "precondition_verdict")
+    value = keyword_value(call, "precondition_verdict")
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "wizard_no_action_verdict"
+    assert call_name(value.func) == "wizard_no_action_verdict"
     return value
 
 
 def _condition(precondition: ast.Call) -> WizardPreconditionCondition:
-    value = _keyword(precondition, "condition")
+    value = keyword_value(precondition, "condition")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "WizardPreconditionCondition"
     return WizardPreconditionCondition[value.attr]
-
-
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
 
 
 def _enum_keyword(
@@ -228,7 +205,7 @@ def _enum_keyword(
     name: str,
     enum: type[ActionEvidenceProvenance] | type[NoRecoveryOutcome],
 ):
-    value = _keyword(precondition, name)
+    value = keyword_value(precondition, name)
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == enum.__name__
     return enum[value.attr]
@@ -267,7 +244,7 @@ def test_wizard_terminal_carrier_totality_is_exact_and_mutation_sensitive() -> N
         expected = _WIZARD_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _enum_keyword(precondition, "provenance", ActionEvidenceProvenance) is expected.provenance
         assert _enum_keyword(precondition, "outcome", NoRecoveryOutcome) is expected.outcome
 
@@ -281,9 +258,9 @@ def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_c
     for source, module_name in source_modules:
         tree = ast.parse(source)
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module_name
 
@@ -291,13 +268,13 @@ def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_c
         module_name
         for source, module_name in source_modules
         for node in ast.walk(ast.parse(source))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert delegates == [WizardError.__module__]
 
     tree = ast.parse(inspect.getsource(status_module))
     next_action = next(
-        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "next_wizard_action"
     )
     literal_strings = {
         node.value.lower()
@@ -330,20 +307,20 @@ def test_wizard_status_next_action_declares_only_the_registered_resolved_login_a
     source = inspect.getsource(status_module)
     tree = ast.parse(source)
     function = next(
-        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "next_wizard_action"
     )
     action_ids = {
         node.args[0].value
         for node in ast.walk(function)
         if isinstance(node, ast.Call)
-        and _call_name(node.func) == "declare_next_action"
+        and call_name(node.func) == "declare_next_action"
         and node.args
         and isinstance(node.args[0], ast.Constant)
         and isinstance(node.args[0].value, str)
     }
     assert action_ids == {"operator.auth.login"}
     assert (
-        _next_wizard_action(
+        next_wizard_action(
             has_profile=False,
             missing_required=(),
             missing_enrolment=(),
@@ -369,7 +346,7 @@ def test_missing_active_profile_has_an_exact_application_state_operator_decision
 
 def test_missing_active_tax_id_has_an_exact_application_state_operator_decision_verdict() -> None:
     with pytest.raises(WizardStatusError) as raised:
-        _require_active_profile_tax_id(
+        require_active_profile_tax_id(
             {},
             active_profile="profile-id",
             requirement="Tax identifier",
@@ -388,7 +365,7 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
     with pytest.raises(WizardMissingFlagError) as raised:
-        _require_profile_name(registry_setup_flow, None)
+        require_profile_name(registry_setup_flow, None)
 
     _assert_terminal_contract(
         raised.value,
@@ -402,12 +379,12 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
 def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        missing = commands_module._missing_required_flags(registry_setup_flow, {})
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        missing = commands_module.missing_required_flags(registry_setup_flow, {})
         assert missing
 
         with pytest.raises(WizardMissingFlagError) as raised:
-            _run_full_flow(
+            run_full_flow(
                 registry_setup_flow,
                 {},
                 quiet=True,
@@ -451,7 +428,7 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
     *, registry_setup_flow: WizardFlow
 ) -> None:
     with pytest.raises(WizardValidationError) as raised:
-        _require_profile_label_available(
+        require_profile_label_available(
             registry_setup_flow,
             "Taken profile",
             label_is_registered=True,
@@ -467,7 +444,7 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
 
 
 def test_unregistered_profile_label_passes_the_application_state_gate(*, registry_setup_flow: WizardFlow) -> None:
-    _require_profile_label_available(
+    require_profile_label_available(
         registry_setup_flow,
         "Unregistered profile",
         label_is_registered=False,
@@ -477,9 +454,9 @@ def test_unregistered_profile_label_passes_the_application_state_gate(*, registr
 def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
-            _run_full_flow(
+            run_full_flow(
                 registry_setup_flow,
                 {},
                 quiet=False,
@@ -504,10 +481,10 @@ def test_interactive_profile_create_remains_custody_refused_before_console_handl
 ) -> None:
     """Current custody rejects create; neither status nor wizard offers it as recovery."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(ProfileRegistrationError),
     ):
-        _run_full_flow(
+        run_full_flow(
             registry_setup_flow,
             {},
             quiet=False,

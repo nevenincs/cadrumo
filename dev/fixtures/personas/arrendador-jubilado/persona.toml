@@ -1,0 +1,146 @@
+format = 1
+
+[persona]
+id = "arrendador-jubilado"
+title = "Jubilado viudo que alquila una vivienda"
+summary = """
+Manuel Esteve, viudo de 70 años residente en Sevilla, cobra una pensión pública
+de jubilación y alquila como vivienda habitual de su inquilina un piso que
+heredó. El alquiler de vivienda está exento de IVA y no le obliga a ninguna
+autoliquidación periódica; declara los rendimientos del capital inmobiliario,
+con la reducción del 50 % del art. 23.2 LIRPF, en el Modelo 100.
+"""
+taxpayer = "arrendador.titular"
+fiscal_year = "horizon-1"
+modelos = ["100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "arrendador.titular" }
+"name" = { identity = "arrendador.titular", field = "name" }
+"surnames" = { identity = "arrendador.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"enrollment-large-company" = false
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "andalucia"
+"address-postcode" = "41010"
+"irpf-income-categories" = ["capital_inmobiliario", "pension"]
+"taxation-type" = "1"
+"taxpayer-sex" = "H"
+"taxpayer-marital-status" = "3"
+"taxpayer-birth-date" = { year = "horizon-71", month = 9, day = 2 }
+"third-party-transactions-above-347-threshold" = false
+
+[[own_accounts]]
+label = "Cuenta de la pensión"
+holding = "titular"
+iban = "ES2800000000000000000002"
+designations = [{ role = "refund", modelo = "100" }]
+
+# The taxpayer transcribes the payer's certificate: the catalogue holds no
+# certificate document, so the figures are recorded as his own declaration.
+[[withholding_certificates]]
+payer = "arrendador.pagador-pension"
+ejercicio = "horizon-1"
+income_class = "trabajo"
+origin = "operator_declaration"
+importe_integro = "21840.00"
+retencion = "2180.00"
+# A public pension certificate states no reducción (LIRPF art. 18) and no
+# deductible expense (LIRPF art. 19.2.a), so both are stated as none.
+reducciones_aplicables = "0.00"
+gastos_deducibles = "0.00"
+
+# Neither derivation names an employer contribution, patrimonio protegido or other
+# imputed work income, so he states none of it for the ejercicio.
+[[work_income_none_statements]]
+ejercicio = "horizon-1"
+
+# Declarative scenario facts for the let dwelling. No production operation that
+# records them was located; the reader keeps this block as expectation input
+# and reports it as not materialised.
+[[rental_properties]]
+id = "piso-arrendado"
+use = "vivienda_habitual_arrendatario"
+tenant = "arrendador.inquilina"
+contract_start = { year = "horizon-2", month = 6, day = 1 }
+monthly_rent = "950.00"
+days_let = "full_year"
+amortization_base = "108000.00"
+amortization_rate = "0.03"
+amortization_base_note = "Construction share of the acquisition value by inheritance, which exceeds the construction share of the valor catastral."
+# Property facts below are synthetic persona facts, stated so the profile property row is complete.
+situacion = "1" # synthetic: a property with a cadastral reference in territorio comun
+referencia_catastral = "0000002VK0000N0001LH" # synthetic; control letters computed with the Catastro algorithm
+naturaleza = "urbana" # synthetic
+titularidad_regimen = "pleno_dominio" # synthetic
+titular = "primer_declarante" # synthetic
+porcentaje_propiedad = "100.00" # synthetic: the whole property is his
+importe_adquisicion = "150000.00" # synthetic: the inherited value
+valor_suelo = "42000.00" # synthetic: so the construction share of the acquisition is 108000.00
+adquisicion_titulo = "lucrativa" # synthetic: inherited, as the persona's summary states
+fecha_adquisicion = { year = "horizon-3", month = 3, day = 15 } # synthetic: inherited before the lease and before every return year
+gastos_tributos_adquisicion = "0.00" # synthetic: no acquisition expenses or taxes are added to the inherited value
+valores_catastrales = [
+  { year = "horizon-1", total = "90000.00", construccion = "54000.00" }, # synthetic
+]
+arrendado_desde = { year = "horizon-2", month = 6, day = 1 } # synthetic: the dwelling is let from the first lease start
+# Lease facts below are synthetic persona facts; the art. 23.2 rate is derived from them, never stated.
+fecha_contrato = { year = "horizon-2", month = 6, day = 1 } # synthetic: signed on contract_start
+fecha_inicio = { year = "horizon-2", month = 6, day = 1 } # synthetic: starts on contract_start
+uso_vivienda = true # synthetic: the let is of a dwelling
+zona_tensionada = false # synthetic
+primer_arrendamiento_vivienda = false # synthetic
+arrendatario_pariente_art24 = false # synthetic
+incumple_lau_17_6 = false # synthetic
+# The ledger rows of the let dwelling, by reference prefix: the rents link to the lease, each expense to the
+# property with its registry concept (casillas 0115, 0109, 0114 and 0106).
+ledger_links = [
+  { ref_prefix = "ARR-REN-", target = "arrendamiento" },
+  { ref_prefix = "ARR-IBI-", target = "inmueble", gasto = "tributos" },
+  { ref_prefix = "ARR-COM-", target = "inmueble", gasto = "comunidad" },
+  { ref_prefix = "ARR-SEG-", target = "inmueble", gasto = "primas_seguro" },
+  { ref_prefix = "ARR-REP-", target = "inmueble", gasto = "reparacion_conservacion" },
+]
+# Synthetic: nothing is pending under LIRPF art. 23.1.a.1 (the four-year carry of interest plus repairs that
+# exceed the rents). The dwelling carries no financing interest, its repairs (240.00) are far below its rents
+# (11400.00) in every year of the lease, and it was not let before contract_start.
+pendiente_intereses_reparacion = "0.00"
+# rehabilitacion_fecha is omitted: no rehabilitation. The tenant's age band at signing is derived from
+# the tenant identity's synthetic birth date.
+
+# His own copy of the previous year's Renta: no negative general base was left
+# pending to offset, so the four-year carry of casilla 1380 starts from zero,
+# and no negative savings balance either (Anexo C.3 boxes 1263, 1266, 1269, 1270, 1276, 1279, 1282 and 1283).
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "1263" = "0.00", "1266" = "0.00", "1269" = "0.00", "1270" = "0.00", "1276" = "0.00", "1279" = "0.00", "1282" = "0.00", "1283" = "0.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Bases liquidables generales negativas y saldos negativos de la base del ahorro pendientes en la declaración de la renta del ejercicio anterior"
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_general_bases_pending"
+nothing_pending = true
+
+# No interest, dividends or other capital mobiliario in this year or the four before it, so no negative balance of it is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_capital_income_pending"
+nothing_pending = true
+
+# No sale of shares, funds or other asset in this year or the four before it, so no negative savings balance of gains and losses is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_gains_losses_pending"
+nothing_pending = true

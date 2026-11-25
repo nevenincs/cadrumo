@@ -467,7 +467,7 @@ class TestTheGuardCanActuallyFire:
     def test_a_remote_call_of_every_forbidden_verb_is_caught(self, verb: str) -> None:
         """Every verb in the fixture must be detected in a call context."""
         source = f"class Fetch:\n    def run(self, url, payload):\n        self._client.{verb}(url, data=payload)\n"
-        assert _offending_lines("_declarations_fetch.py", source, verb) == (3,), (
+        assert _offending_lines("declarations_fetch.py", source, verb) == (3,), (
             f"the guard did not detect a call to forbidden verb {verb!r}"
         )
 
@@ -483,7 +483,7 @@ class TestTheGuardCanActuallyFire:
             _line_of(_OBSERVATION_STORE_SOURCE, "self._repository.save(record)"),
             _line_of(_OBSERVATION_STORE_SOURCE, "self._observations.save(record)"),
         )
-        assert _offending_lines("_declarations_fetch.py", _OBSERVATION_STORE_SOURCE, "save") == expected
+        assert _offending_lines("declarations_fetch.py", _OBSERVATION_STORE_SOURCE, "save") == expected
         assert _offending_lines("tests/observation_store.py", _OBSERVATION_STORE_SOURCE, "save") == expected
 
     def test_the_storage_property_exemption_does_not_excuse_a_different_verb(self) -> None:
@@ -537,7 +537,7 @@ class TestTheGuardCanActuallyFire:
 
     def test_the_port_adapter_exemption_does_not_leak_to_other_paths(self) -> None:
         """The identical adapter anywhere else is refused, definition and call alike."""
-        assert _offending_lines("_declarations_fetch.py", _PORT_ADAPTER_SOURCE, "save") == _port_adapter_save_lines(
+        assert _offending_lines("declarations_fetch.py", _PORT_ADAPTER_SOURCE, "save") == _port_adapter_save_lines(
             _PORT_ADAPTER_SOURCE
         )
 

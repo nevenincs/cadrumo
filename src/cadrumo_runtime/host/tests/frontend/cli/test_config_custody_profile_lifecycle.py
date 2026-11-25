@@ -32,13 +32,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
@@ -49,6 +49,7 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -85,7 +86,7 @@ def _run_cadrumo(
     return run_fresh_cli(
         args,
         settings={
-            "cadrumo_local_storage_root": str(storage_root),
+            "cadrumo_storage_root": str(storage_root),
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },
@@ -117,7 +118,7 @@ def _run_runtime(
             cwd=REPO_ROOT,
             env=subprocess_cli_env(
                 extra={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+                    "CADRUMO_STORAGE_ROOT": str(storage_root),
                     "CADRUMO_OUTPUT_LANGUAGE": "en",
                     **(extra_env or {}),
                 }
@@ -140,7 +141,7 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
     root to the child, which reaches the profile through its own login.
     """
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
@@ -173,7 +174,7 @@ def _assert_cli_logout_requires_human_proof(storage_root: Path) -> None:
 
 def _sign_out_password_authenticated_connection(storage_root: Path, profile_id: str) -> HumanSignedOut:
     """Exercise real keychainless sign-out on its own proven native connection."""
-    with override_settings(cadrumo_local_storage_root=storage_root):
+    with override_settings(cadrumo_storage_root=storage_root):
         proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
         try:
             with asyncio.run(
@@ -194,27 +195,23 @@ def _sign_out_password_authenticated_connection(storage_root: Path, profile_id: 
             proof[:] = bytes(len(proof))
 
 
+def _assert_deleted_envelope(deleted: subprocess.CompletedProcess[str], *, name: str) -> None:
+    """Check the success envelope of one confirmed deletion of ``name``."""
+    assert deleted.returncode == 0, _combined_output(deleted)
+    envelope = json.loads(deleted.stdout)
+    assert envelope["status"] == "success"
+    assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert envelope["result"]["display_name"] == name
+    assert envelope["result"]["deleted"] is True
+
+
 def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path: Path) -> None:
-    """Only an explicitly deselected target can be deleted after proven human sign-out."""
+    """Deleting a signed-out profile that is not selected leaves the selected profile in place."""
     profile_id = _register_profile(tmp_path, "delete-after-logout")
 
     with native_profile_view_server(tmp_path):
         _assert_cli_logout_requires_human_proof(tmp_path)
         _sign_out_password_authenticated_connection(tmp_path, profile_id)
-        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
-
-        # Human sign-out revokes access; the selected target remains protected.
-        still_selected = _run_cadrumo(
-            tmp_path,
-            ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
-        )
-        assert still_selected.returncode == 2, _combined_output(still_selected)
-        refusal = json.loads(still_selected.stderr)
-        assert refusal["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-        assert refusal["error"]["context"] == {
-            "name": "delete-after-logout",
-            "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
-        }
         assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
 
         replacement_id = _register_profile(tmp_path, "surviving-replacement")
@@ -223,12 +220,8 @@ def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path:
             tmp_path,
             ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
         )
-        assert deleted.returncode == 0, _combined_output(deleted)
-        envelope = json.loads(deleted.stdout)
-        assert envelope["status"] == "success"
-        assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-        assert envelope["result"]["display_name"] == "delete-after-logout"
-        assert envelope["result"]["deleted"] is True
+        _assert_deleted_envelope(deleted, name="delete-after-logout")
+        assert observe_active_profile_pointer(tmp_path).bucket_id == replacement_id
 
         listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
         assert listed.returncode == 0, _combined_output(listed)
@@ -237,29 +230,35 @@ def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path:
         ] == [("surviving-replacement", True)]
 
 
-def test_active_profile_delete_still_refuses_through_real_root(tmp_path: Path) -> None:
-    """The leaf exemption never bypasses the exact active-pointer refusal."""
-    _register_profile(tmp_path, "keep-active")
+def test_active_profile_delete_is_torn_down_by_the_runtime_through_real_root(tmp_path: Path) -> None:
+    """Only the runtime's teardown destroys the selected profile, and it clears that selection."""
+    profile_id = _register_profile(tmp_path, "delete-active")
+    _register_profile(tmp_path, "unselected-survivor")
+    with active_profile_pointer_transaction(tmp_path) as selection:
+        selection.select(profile_id)
+    delete_selected = ("--format", "json", "config", "profile", "delete", "delete-active", "--yes")
 
-    deleted = _run_cadrumo(
-        tmp_path,
-        ("--format", "json", "config", "profile", "delete", "keep-active", "--yes"),
-    )
-    assert deleted.returncode != 0, _combined_output(deleted)
-    envelope = json.loads(deleted.stderr)
-    assert envelope["status"] == "error"
-    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-    assert envelope["error"]["context"] == {
-        "name": "keep-active",
-        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
-    }
+    # Without the runtime nothing can drain the target's worker or retire its
+    # sessions, so the confirmed deletion refuses and destroys nothing.
+    unavailable = _run_cadrumo(tmp_path, delete_selected)
+    assert unavailable.returncode == 2, _combined_output(unavailable)
+    refusal = json.loads(unavailable.stderr)
+    assert refusal["status"] == "error"
+    assert refusal["error"]["code"] == "REFUSED_LOCAL_RUNTIME"
+    assert refusal["error"]["context"]["reason"] == "runtime_unavailable"
+    assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
 
-    listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
-    assert listed.returncode == 0, _combined_output(listed)
-    profiles = json.loads(listed.stdout)["result"]["profiles"]
-    assert [(profile["bucket_id"], profile["name"], profile["active"]) for profile in profiles] == [
-        ("<bucket-id>", "keep-active", True)
-    ]
+    with native_profile_view_server(tmp_path):
+        deleted = _run_cadrumo(tmp_path, delete_selected)
+        _assert_deleted_envelope(deleted, name="delete-active")
+        assert json.loads(deleted.stdout)["active_profile"] is None
+        assert observe_active_profile_pointer(tmp_path).bucket_id is None
+
+        listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+        assert listed.returncode == 0, _combined_output(listed)
+        assert [
+            (profile["name"], profile["active"]) for profile in json.loads(listed.stdout)["result"]["profiles"]
+        ] == [("unselected-survivor", False)]
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
@@ -271,18 +270,11 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -338,16 +330,13 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
         closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
         assert closed_again.returncode == 0, _combined_output(closed_again)
 
-        # Human sign-out preserves selection, so deletion still refuses until
-        # the canonical pointer transaction explicitly deselects the profile.
-        selected_delete = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
-        assert selected_delete.returncode == 2, _combined_output(selected_delete)
+        # Human sign-out preserves selection; the runtime's deletion teardown
+        # clears it along with the capsule.
         assert observe_active_profile_pointer(tmp_path).bucket_id == bucket_dirs[0].name
-        with active_profile_pointer_transaction(tmp_path) as selection:
-            selection.clear()
         deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
         assert deleted.returncode == 0, _combined_output(deleted)
         assert "deleted\ttrue" in deleted.stdout
+        assert observe_active_profile_pointer(tmp_path).bucket_id is None
 
         remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
         assert remaining.returncode == 0, _combined_output(remaining)
@@ -367,18 +356,11 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -426,18 +408,11 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -498,18 +473,11 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -809,36 +777,22 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         tmp_path,
         "alpha",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Alpha Operator",
             "identity.surnames": "Operator",
             "activities.description": "consulting",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     beta_id = _register_profile(
         tmp_path,
         "beta",
         **{
-            "identity.tax_id": "87654321X",
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
+            "identity.tax_id": "X0001502F",
             "identity.name": "Beta Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

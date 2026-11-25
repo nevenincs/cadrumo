@@ -29,7 +29,8 @@ profile:
         IAE fejezetet, ha ismered)
     capabilities:
       google_export: Engedélyezi a Google Sheets exportálást?
-      llm_vision: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+      llm_vision: Engedélyezed a beolvasott vagy kép alapú dokumentumok olvasását
+        az általad kiválasztott képolvasó modellel?
     censo:
       activity_start_date: Mikortól van bevallási kötelezettsége / mikor regisztrált?
         (ÉÉÉÉ-HH-NN, opcionális)
@@ -42,22 +43,15 @@ profile:
     identity:
       legal_name: Jogi személy cégneve az exportfejlécekhez
       name: A helyi áttekintésekben megjelenített név
-      notes: Megjegyzések saját nyilvántartáshoz (opcionális)
       surnames: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax_id: Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz
     irpf:
+      activity_income_imputation_criterion: Melyik elv rendeli az adóévekhez a tevékenységed
+        bevételeit és kiadásait?
       art109_activity_income_withholding_ge_70pct: Alkalmazandó az Art. 109 szerinti
         70%-os tevékenységi jövedelemfedezeti kivétel
+      codigo_comercio_accounting: Vezetsz Código de Comercio szerinti könyvvitelt?
       estimation_regime: IRPF becslési rend
-      objective_estimation_modulos_iae_epigraph: IAE-epigráfus az objektív becslési
-        modulokhoz
-      objective_estimation_modulos_module_1_units: Az 1. modul éves egységei
-      objective_estimation_modulos_module_2_units: A 2. modul éves egységei
-      objective_estimation_modulos_module_3_units: A 3. modul éves egységei
-      objective_estimation_modulos_module_4_units: A 4. modul éves egységei
-      objective_estimation_modulos_module_5_units: Az 5. modul éves egységei
-      objective_estimation_modulos_module_6_units: A 6. modul éves egységei
-      objective_estimation_modulos_module_7_units: A 7. modul éves egységei
       special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
     iva:
@@ -81,6 +75,8 @@ profile:
       bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
       monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
         a Modelo 721 küszöbértékét
+      patrimonio_declaration_threshold_met: 'Bevallásra kötelezett az Impuesto sobre
+        el Patrimonio alapján: fizetendő adó, vagy 2 000 000 eurót meghaladó vagyon'
       premio_loteria_gravamen_especial_sin_retencion: Különadó alá eső lottó- vagy
         fogadási nyeremény forrásadó-levonás és adóelőleg nélkül (Modelo 136)
       premio_loteria_gravamen_especial_trimestres: Negyedévek, amelyekben az ilyen
@@ -93,6 +89,8 @@ profile:
     preferences:
       output_language: CLI kimeneti nyelv ehhez a profilhoz
     renta_family:
+      convive_con_otro_progenitor: 'Egyszülős egység: együtt él az egység valamelyik
+        gyermekének másik szülőjével'
       descendants_eu_eea_deduction: EU/EGT-leszármazottak a családi egység levonásában
       minor_children_in_unit: Kiskorú gyermekek a családi egységben
       situacion_familiar: Családi helyzet (LIRPF 82. cikk)
@@ -118,30 +116,39 @@ profile:
     tax:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
     tax_residence:
-      ccaa: Adóügyi illetőség szerinti autonóm közösség
+      ccaa: Adóügyi illetőség szerinti autonóm közösség vagy város
       jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
     taxpayer_type:
+      cierre_ejercicio_dia: A hónap melyik napján zárul a társaság üzleti éve?
+      cierre_ejercicio_mes: Melyik hónapban zárul a társaság üzleti éve?
+      cooperativa_fiscalmente_protegida: A társaság adóügyileg védett szövetkezet?
       country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
         kód, pl. GB, DE, FR)
       declaration_roles: A bejelentő szervezet betölt-e valamelyik alábbi intézményi
         szerepet a Modelo 347 (harmadik felekkel folytatott ügyletek) szempontjából?
       entity_type: Entitástípus
+      erd_tipo_gravamen_especifico: A társaság kis méretű, és a LIS 101. cikke szerinti
+        sajátos adókulccsal adózik?
+      fecha_constitucion: Mikor alapították a társaságot?
       fiscal_residency: Adóügyi illetőségi kategória
       incn_prior_12_months: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban,
         opcionális)
       irpf_income_categories: IRPF jövedelemkategóriák
       legal_entity_form: Jogi forma
-      ley_49_2002_special_regime_option_date: A Ley 49/2002 szerinti különleges rendszer
-        választásának bejelentett dátuma
-      ley_49_2002_special_regime_option_declared: A szervezet a Modelo 036-on bejelentette
-        a Ley 49/2002 II. címe szerinti különleges adózási rendszer választását?
-      ley_49_2002_special_regime_renunciation_date: A Ley 49/2002 szerinti különleges
-        rendszerről való lemondás bejelentett dátuma
-      ley_49_2002_special_regime_renunciation_declared: A szervezet a Modelo 036-on
-        bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszerről
-        való lemondást?
+      marca_instrumental: Vonatkozik a társaságra a nyomtatványterv 7. megjegyzése
+        szerinti instrumentális jelölés?
       new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
         az első két nyereséges adóidőszakának egyikében?
+      pago_fraccionado_art_40_3_elected: Élt-e a társaság a cégbejelentésében (declaración
+        censal) az LIS 40.3. cikkely szerinti választással a részletfizetésre?
+      principal_cnae: Mi a társaság fő tevékenységének négyjegyű CNAE-kódja?
+      principal_cnae_classification: Melyik CNAE-osztályozás szerint adod meg a fő
+        tevékenységed kódját?
+      regimen_entidad_capital_riesgo: A társaság a LIS 50. cikke szerinti kockázatitőke-társaság?
+      regimen_entidades_navieras_tonelaje: A társaság a hajózási tonnaadó-rendszert
+        alkalmazza?
+      regimen_ley_49_2002: A társaság a Ley 49/2002 szerinti rendszert alkalmazza?
+      regimen_socimi: A társaság a SOCIMI-rendszert (Ley 11/2009) alkalmazza?
       representante_fiscal_nif: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n
         kívüli esetén kötelező)
       representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
@@ -151,25 +158,46 @@ profile:
       modelo_115_no_relevant_payment_periods: Modelo 115 releváns kifizetés nélküli
         időszakai
       pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
+      pays_non_resident_income_with_retencion: Forrásadó-köteles jövedelmet fizetsz
+        állandó telephely nélküli külföldi illetőségűeknek
       pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
       pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
   schema:
     field:
       activities:
-        cnae:
-          label: CNAE-kód
+        cuota_provincial_province_code:
+          label: A tartományi kvóta tartománya
         description:
           label: Tevékenység leírása
+        expositores_autoventa:
+          label: Önkiszolgáló értékesítő kijelzők
         iae_epigraph:
           label: IAE-epigrafus
-      attribution_entity:
-        legal_form:
+        local_afecto_indirectamente:
+          label: Van közvetetten használt helyisége
+        maquinas_recreativas_tipo_a:
+          label: A típusú szórakoztató gépek
+        maquinas_recreativas_tipo_b:
+          label: B típusú szórakoztató gépek
+        municipality_code:
+          label: A tevékenység településkódja
+        municipality_name:
+          label: A tevékenység települése
+        province_code:
+          label: A tevékenység tartománykódja
+        tipo_actividad:
           choices:
-            comunidad_bienes: Közös tulajdon (comunidad de bienes)
-            herencia_yacente: Hagyaték (herencia yacente)
-            other: Egyéb
-            sociedad_civil: Polgári jogi társaság (sociedad civil)
-          label: Hozzárendelő entitás jogi formája
+            A01: Ingatlan bérbeadók
+            A02: Független állattenyésztés
+            A03: Máshová nem sorolt egyéb vállalkozói tevékenységek
+            A04: Művészeti vagy sport jellegű szakmai tevékenységek
+            A05: Egyéb szakmai tevékenységek
+            B01: Mezőgazdasági tevékenység
+            B02: Függő állattenyésztési tevékenység
+            B03: Erdészeti tevékenység
+            B04: Tutajos kagylótenyésztés
+            B05: Halászati tevékenység, a tutajos kagylótenyésztés kivételével
+          label: Tevékenység típusa (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
@@ -208,18 +236,12 @@ profile:
           label: Csökkentett nettó mezőgazdasági jövedelem (objektív becslés)
         rendimiento_neto_previo_eo:
           label: Előzetes nettó jövedelem (objektív becslés)
-        role:
-          choices:
-            comunero: Tulajdonostárs
-            participe: Részes
-            socio: Társ
-          label: Tagi szerepkör
         share_pct:
           label: Részesedés aránya
         situacion_inmueble:
           label: Az ingatlan elhelyezkedési státusza
         subclave:
-          label: A jövedelemtétel alkódja (Modelo 184)
+          label: A jövedelemtétel részkódja (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Tagra jutó hozzárendelt adóalap
@@ -234,8 +256,6 @@ profile:
       auth:
         clave_movil_route:
           label: Cl@ve Móvil útvonal
-        dni_nie:
-          label: DNI vagy NIE a Cl@ve-hoz
         fecha_validez:
           label: Érvényességi dátum
         numero_soporte:
@@ -248,22 +268,20 @@ profile:
         google_export:
           label: Google-exportálás
         llm_vision:
-          label: Helyi képfelismerés
+          label: Képolvasás
       censo:
         activity_end_date:
           label: Tevékenység vége
         activity_start_date:
           label: Tevékenység kezdete
+        aeat_administracion_code:
+          label: AEAT Administración kódja
+        aeat_administracion_name:
+          label: AEAT Administración
+        aeat_delegacion_code:
+          label: AEAT Delegación kódja
         divergencia:
           label: Censo-eltérések
-        elected_withholding_pct:
-          label: Választott forrásadókulcs
-        establecimiento_type:
-          choices:
-            arrendado: Bérelt
-            cedido_gratuitamente: Ingyenesen átengedett
-            propio: Saját tulajdonú
-          label: Telephely típusa
         large_company:
           label: Nagyvállalati minősítés
         public_administration_budget_gt_6000000:
@@ -283,10 +301,80 @@ profile:
           label: Adóügyi cím
         fiscal_address_cadastral_reference:
           label: Az adóügyi cím kataszteri hivatkozása
-        fiscal_address_is_habitual_vivienda:
-          label: Az adóügyi cím az állandó lakóhely
+        fiscal_address_municipality_code:
+          label: Az adóügyi lakcím településkódja
+        fiscal_address_municipality_name:
+          label: Az adóügyi lakcím települése
+        fiscal_address_province_code:
+          label: Az adóügyi lakcím tartománykódja
         postcode:
           label: Irányítószám
+      iae_elemento_tributario:
+        actividad:
+          label: Tevékenység
+        code:
+          label: Adóelem kódja
+        description:
+          label: Adóelem leírása
+        linea:
+          label: Sor
+        numero:
+          label: Mennyiség
+      iae_local:
+        actividad:
+          label: Tevékenység
+        afectacion:
+          choices:
+            ejercicio: Ahol a tevékenységet végzik
+            indirecta: Közvetetten a tevékenységhez rendelt
+          label: A helyiség rendeltetése
+        escalera:
+          label: Lépcsőház
+        km:
+          label: km
+        municipality_code:
+          label: Településkód
+        municipality_name:
+          label: Település
+        numero:
+          label: Házszám
+        piso:
+          label: Emelet
+        portal:
+          label: Kapu
+        postcode:
+          label: Irányítószám
+        province_code:
+          label: Tartománykód
+        puerta:
+          label: Ajtó
+        superficie_computable:
+          label: Beszámítható terület (m²)
+        superficie_rectificada:
+          label: Helyesbített terület (m²)
+        superficie_total:
+          label: Teljes terület (m²)
+        telefono:
+          label: Telefon
+        uso_destino_code:
+          label: Használat vagy rendeltetés kódja
+        uso_destino_description:
+          label: Használat vagy rendeltetés
+        via_nombre:
+          label: Közterület neve
+        via_sg:
+          label: Közterület jellege
+      iae_local_superficie:
+        clase:
+          label: Területosztály (Regla 14)
+        computable:
+          label: Beszámítható (m²)
+        local:
+          label: Helyiség
+        rectificada:
+          label: Helyesbített (m²)
+        total:
+          label: Teljes (m²)
       identity:
         email:
           label: Kapcsolattartó e-mail
@@ -294,20 +382,37 @@ profile:
           label: Cégnév
         name:
           label: Utónév
-        notes:
-          label: Megjegyzések
         surnames:
           label: Vezetéknevek
         tax_id:
-          help:
-            what: 'Az adóazonosító száma: a DNI-n szereplő NIF, külföldi állampolgárként
-              a NIE, illetve jogi személy esetén a NIF.'
-            where: A DNI- vagy NIE-kártyáján, illetve az AEAT által kiadott NIF-kártyán.
-              Bármely korábbi bevalláson vagy AEAT-levélen is szerepel.
-            why: Minden bevallást ezzel a számmal nyújtanak be; az AEAT ez alapján
-              azonosít téged.
           label: Adóazonosító (NIF/NIE/CIF)
+      inversiones_posicion:
+        fecha_fin:
+          label: Tulajdonos eddig
+        fecha_inicio:
+          label: Tulajdonos ettől
+        identificador:
+          label: A pozíció saját azonosítód
+        pagador_nif:
+          label: Kifizető adóazonosítója
+        pagador_nombre:
+          label: Kifizető neve
+        pais_origen:
+          label: A jövedelem forrásállama
+        porcentaje_titularidad:
+          label: Tulajdoni hányadod
+        tipo:
+          choices:
+            cuenta: Folyó- vagy megtakarítási számla
+            deposito: Lekötött betét
+            valores_negociables: Értékpapírszámla
+          label: Pozíció fajtája
       irpf:
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: Pénzforgalom szerint (RIRPF 7.2. cikk)
+            devengo: Teljesítés szerint
+          label: A bevételek és kiadások időbeli elszámolása
         activity_kind:
           choices:
             profesional: Szakmai tevékenység
@@ -315,28 +420,14 @@ profile:
           label: Tevékenység típusa
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
+        codigo_comercio_accounting:
+          label: A Código de Comercio szerinti könyvvitelt vezetsz
         estimation_regime:
           choices:
             directa_normal: Normál közvetlen becslés
             directa_simplificada: Egyszerűsített közvetlen becslés
             objetiva: Objektív becslés (módulos)
           label: Becslési rendszer
-        objective_estimation_modulos_iae_epigraph:
-          label: IAE-epigrafus (modulok)
-        objective_estimation_modulos_module_1_units:
-          label: 1. modul egységei
-        objective_estimation_modulos_module_2_units:
-          label: 2. modul egységei
-        objective_estimation_modulos_module_3_units:
-          label: 3. modul egységei
-        objective_estimation_modulos_module_4_units:
-          label: 4. modul egységei
-        objective_estimation_modulos_module_5_units:
-          label: 5. modul egységei
-        objective_estimation_modulos_module_6_units:
-          label: 6. modul egységei
-        objective_estimation_modulos_module_7_units:
-          label: 7. modul egységei
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bevétel
         objective_estimation_prior_year_gross_income_eur:
@@ -353,8 +444,6 @@ profile:
           label: Munkajövedelem összesen
         plantilla_media:
           label: Átlagos állományi létszám naptári évenként
-        professional_income_withholding_ge_70pct:
-          label: Szakmai forrásadó eléri a 70%-ot
         special_regime:
           choices:
             general: Általános rendszer
@@ -366,12 +455,6 @@ profile:
         autoconsumo_promotor_base:
           label: Ingatlanfejlesztői önadóztatás adóalapja
         cash_accounting_regime_enrolled:
-          help:
-            what: A pénzforgalmi áfa különleges rendszerét (criterio de caja) választottad?
-            where: A Modelo 036-on kell választani, és az adózói adataid között látható.
-              Ha nem választottad, a válasz Nem.
-            why: Ebben a rendszerben az áfa a számlák kifizetésekor és nem kiállításukkor
-              esedékes, ami megváltoztatja az egyes időszakok számait.
           label: Pénzforgalmi rendszerbeli tagság
         does_intracomunitario:
           label: Közösségen belüli ügyletek
@@ -380,13 +463,6 @@ profile:
         group_member_enrolled:
           label: IVA-csoporttag (Modelo 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
-          help:
-            what: Levonhatja-e azokat az áfa-előlegeket, amelyeket szénhidrogéneknek
-              adóraktári rendszerből való kivételekor fizetett.
-            where: Csak azokat a vállalkozásokat érinti, amelyek üzemanyagot vesznek
-              ki adóraktárból (depósito fiscal). A legtöbb adózó válasza Nem.
-            why: Ezeket az előlegeket az áfabevallásban vonják le, így a jogosultság
-              megváltoztatja a fizetendő összeget.
           label: Szénhidrogén-adóraktári előleglevonási jogosultság
         intracommunity_operations_exceed_50000_eur:
           label: Közösségen belüli ügyletek 50.000 EUR felett
@@ -395,23 +471,10 @@ profile:
             general: Csak általános rendszer
             mixed: Általános és egyszerűsített rendszer együtt
             simplified: Csak egyszerűsített rendszer
-          help:
-            what: 'Mely áfarendszereket kombinálja a 303-as bevallásod: csak az általánost,
-              csak az egyszerűsítettet, vagy mindkettőt.'
-            where: Az adózói bejelentkezésén szereplő egyes tevékenységek áfarendszeréből
-              következik.
-            why: A Modelo 303-nak minden rendszerhez külön része van; ez dönti el,
-              mely részeket kell kitölteni.
           label: A Modelo 303 rendszerösszetétele
         oss_enrolled:
           label: OSS/IOSS-regisztráció
         redeme_enrolled:
-          help:
-            what: Szerepel-e a REDEME-ben, a havi áfa-visszatérítési nyilvántartásban.
-            where: A Modelo 036-on kell kérelmezni, és az adózói adataid között látható.
-              Ha soha nem kérted, a válasz Nem.
-            why: A nyilvántartásba vétel miatt az áfabevallás negyedéves helyett havi
-              lesz, és az SII kötelezővé válik.
           label: REDEME-regisztráció
         regime:
           choices:
@@ -421,27 +484,132 @@ profile:
               (REAGP)
             RECARGO_EQUIVALENCIA: Kiegyenlítő pótlék (recargo de equivalencia)
             SIMPLIFICADO: Egyszerűsített
-          help:
-            what: Az az áfa- (IVA-) rendszer, amelyben a tevékenysége nyilvántartásba
-              van véve.
-            where: Az adózói bejelentkezésén (Modelo 036 vagy Modelo 037), vagy az
-              adózói adatai között az AEAT elektronikus ügyfélkapujában.
-            why: Ez dönti el, milyen áfabevallásokat nyújt be, és hogyan számítják
-              az áfát az eladásain és beszerzésein.
           label: IVA-rendszer
         roi_enrolled:
           label: ROI/VIES-regisztráció
         sii_enrolled:
           label: SII-regisztráció
         voluntary_sii_enrolled:
-          help:
-            what: Önként csatlakoztál-e az SII-hez, az áfa-nyilvántartásaid azonnali
-              elektronikus továbbításához az AEAT felé.
-            where: Az önkéntes csatlakozást a Modelo 036-on kell kérelmezni, és az
-              adózói adataid között látható. Ha soha nem kérted, a válasz Nem.
-            why: Az SII-tagok online vezetik áfa-nyilvántartásaikat az AEAT-nál, ami
-              egyes kötelezettségeket és határidőket megváltoztat.
           label: Önkéntes SII-tagság
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Vezetéknév és keresztnév, illetve cégnév
+        codigo_provincia:
+          label: Tartománykód
+        domicilio_fiscal:
+          label: A képviselő spanyolországi adóügyi lakcíme
+        forma_juridica:
+          label: F/J (természetes vagy jogi személy)
+        nif:
+          label: NIF
+        representante:
+          label: Képviselő (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Név vagy cégnév
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Nyereség vagy veszteség
+        identificacion:
+          label: Azonosító
+        pais_residencia_fiscal:
+          label: Adóügyi illetőség szerinti ország
+        suma_ajustes_resultado_contable:
+          label: A számviteli eredmény korrekcióinak összege
+        suma_deducciones_di_internacional_anteriores:
+          label: A korábbi időszakok nemzetközi kettős adóztatás miatti levonásainak
+            összege
+        volumen_operaciones:
+          label: Ügyleti forgalom
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Valós értékelési korrekció
+        capital:
+          label: Jegyzett tőke
+        codigo_provincia_pais:
+          label: Tartomány-/országkód
+        correccion_valor_perdidas_ganancias:
+          label: Értékkorrekció az eredménykimutatásban
+        efecto_correccion_valorativa_base_imponible:
+          label: Az értékelési korrekció hatása az adóalapra
+        eliminacion_deterioro_contable:
+          label: A számviteli értékvesztés kiszűrése
+        eliminacion_deterioro_valores_participacion:
+          label: A részesedést megtestesítő értékpapírok értékvesztésének kiszűrése
+        ingresos_por_dividendos:
+          label: Osztalékbevétel
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Név vagy cégnév
+        otras_partidas_patrimonio_neto:
+          label: Egyéb nettó vagyoni tételek
+        porcentaje_participacion:
+          label: Részesedési arány
+        reservas_y_otras_partidas_fondos_propios:
+          label: Tartalékok és egyéb saját tőke tételek
+        resultado_ultimo_ejercicio:
+          label: Az utolsó üzleti év eredménye
+        reversion_perdidas_deterioro_valores:
+          label: Értékpapírok értékvesztésének visszaírása
+        saldo_correcciones_fiscales_pendientes:
+          label: Függőben lévő adókorrekciók egyenlege
+        valor_en_libros:
+          label: Könyv szerinti érték
+        valor_nominal_total:
+          label: Teljes névérték
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Vezetéknév és keresztnév, illetve cégnév
+        codigo_provincia_pais:
+          label: Tartomány-/országkód
+        forma_juridica:
+          label: F/J/Egyéb (jogi forma)
+        nif:
+          label: NIF
+        nominal:
+          label: Névérték
+        porcentaje_participacion:
+          label: Részesedési arány
+        representante:
+          label: Képviselő (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: Beépít-e a társaságod függő kisebb szervezeteket?
+        has_establecimiento_permanente:
+          label: Vannak-e a társaságodnak külföldi állandó telephelyei?
+        has_participacion_directa:
+          label: Rendelkezik-e a társaságod közvetlen részesedéssel más szervezetekben?
+        has_participacion_socio:
+          label: Vannak-e a társaságodnak közvetlen részesedéssel rendelkező tagjai
+            vagy részvényesei?
+        has_representante_legal:
+          label: Vannak-e a társaságodnak meghatalmazottai vagy törvényes képviselői?
+        has_secretario_consejo:
+          label: Van-e a társaságodnak igazgatótanácsi titkára?
+        has_socio_sicav_disolucion:
+          label: Tagja-e a társaságod egy megszűnt SICAV-nak?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Vezetéknév és keresztnév
+        fecha_poder:
+          label: A meghatalmazás kelte
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Közjegyző/egyéb
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Vezetéknév és keresztnév
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: Az újrabefektetés tárgyát képező kollektív befektetési forma NIF-je
+        nif_sociedad_disuelta:
+          label: A megszűnt társaság NIF-je
       maritime_worker:
         annual_salary:
           label: Éves munkabér
@@ -477,12 +645,14 @@ profile:
         worker_class:
           choices:
             trabajador_del_mar: Tengerész
-          label: Trabajador del mar (besorolás)
+          label: Tengerészeti dolgozó besorolása
       obligations:
         bienes_extranjero_above_threshold:
           label: Modelo 720 küszöbérték túllépve
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 küszöbérték túllépve
+        patrimonio_declaration_threshold_met:
+          label: Impuesto sobre el Patrimonio bevallási kötelezettség (714-es modelo)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Lottónyeremény forrásadó-levonás nélkül (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -494,17 +664,6 @@ profile:
       preferences:
         output_language:
           label: Kimeneti nyelv
-      properties:
-        cadastral_reference:
-          label: Kataszteri hivatkozás
-        use_type:
-          choices:
-            habitual: Fő lakóhely
-            imputed_income: Vélelmezett jövedelem (nem bérbe adott)
-            mixed: Vegyes használat
-            other: Egyéb
-            rental: Bérbe adott
-          label: Ingatlan hasznosítása
       provenance:
         source:
           choices:
@@ -519,11 +678,54 @@ profile:
           label: Érvényes ettől
         valid_to:
           label: Érvényes eddig
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Egyéb
+            vivienda_asequible_o_social: Megfizethető vagy szociális lakás
+          label: A lakás célja a szervezet számára
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Közigazgatási szerv
+            entidad_sin_fines_lucro: Nonprofit szervezet
+          label: A nem természetes személy bérlő típusa
+        arrendatario_pariente_art24:
+          label: A bérlő hozzátartozó (24. cikk)
+        fecha_contrato:
+          label: A szerződés dátuma
+        fecha_fin:
+          label: Záró dátum
+        fecha_inicio:
+          label: Kezdő dátum
+        incumple_lau_17_6:
+          label: Megsérti a LAU 17.6. cikkét (feszített zóna)
+        inmueble:
+          label: Bérbe adott ingatlan (sorkulcs)
+        inquilinos:
+          label: Bérlők
+        primer_arrendamiento_vivienda:
+          label: A lakás első bérbeadása
+        rehabilitacion_fecha:
+          label: A felújítás befejezésének dátuma
+        renta_inicial:
+          label: Kezdő bérleti díj
+        renta_ultima_contrato_anterior:
+          label: Az előző szerződés utolsó bérleti díja
+        uso_vivienda:
+          label: Lakásbérlet
+        zona_tensionada:
+          label: Feszített lakáspiaci övezet
       renta_family:
         anualidades_alimentos_euros:
           label: Bírósági határozat alapján fizetett gyermektartásdíj
         ascendants:
           label: Felmenők
+        ascendiente:
+          label: Felmenő
+        ascendientes_count:
+          label: Felmenők száma
+        convive_con_otro_progenitor:
+          label: Együtt él a háztartás valamelyik gyermekének másik szülőjével
         cotizaciones_ss_madre_2024:
           label: Anya társadalombiztosítási járulékai (2024)
         descendants:
@@ -551,14 +753,80 @@ profile:
       renta_filing:
         declaration_type:
           label: Bevallás típusa
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: 50 %-os csökkentés
-            tier-60: 60 %-os csökkentés
-            tier-70: 70 %-os csökkentés
-            tier-90: 90 %-os csökkentés
-          label: Bérbeadási kedvezmény sávja (art. 23.2)
+            lucrativa: Ingyenes
+            onerosa: Visszterhes
+          label: Szerzés jogcíme
+        amortizacion_acumulada:
+          label: Igazolt halmozott értékcsökkenés
+        amortizacion_acumulada_desde:
+          label: A halmozott értékcsökkenés vonatkozási napja
+        arrendado_desde:
+          label: Az ingatlan első bérbeadásának napja
+        direccion:
+          label: Az ingatlan címe
+        fecha_adquisicion:
+          label: Szerzés dátuma
+        fecha_transmision:
+          label: Átruházás dátuma
+        gastos_tributos_adquisicion:
+          label: Szerzési költségek és adók
+        importe_adquisicion:
+          label: Szerzési érték
+        importes_movimientos:
+          choices:
+            inmueble_completo: A teljes ingatlan összegei
+            parte_propia: Saját tulajdonrész
+          label: A kapcsolt főkönyvi tételek összegei
+        inmueble_principal:
+          label: Főingatlan (sorkulcs)
+        mejoras:
+          label: A főkönyv előtti felújítások
+        naturaleza:
+          choices:
+            rustica: Külterületi
+            urbana: Belterületi
+          label: Az ingatlan jellege
+        porcentaje_propiedad:
+          label: Tulajdoni hányad (%)
+        porcentaje_usufructo:
+          label: Haszonélvezeti hányad (%)
+        referencia_catastral:
+          label: Kataszteri hivatkozási szám
+        sin_arrendar:
+          label: Soha ki nem adott ingatlan
+        situacion:
+          choices:
+            '1': Kataszteri hivatkozási számmal, közös adóterületen
+            '2': Kataszteri hivatkozási számmal, a Baszkföldön
+            '3': Kataszteri hivatkozási számmal, Navarrában
+            '4': Spanyolországban, kataszteri hivatkozási szám nélkül
+            '5': Külföldön
+          label: Az ingatlan elhelyezkedése
+        titular:
+          choices:
+            comun: Mindkét házastárs közös
+            conyuge: Házastárs
+            hijo: Gyermek
+            primer_declarante: Első bevalló
+          label: Az ingatlan jogosultja
+        titular_hijo_ordinal:
+          label: A jogosult gyermek sorszáma
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Csupasz tulajdon
+            pleno_dominio: Teljes tulajdon
+            pleno_dominio_y_usufructo: Teljes tulajdon és haszonélvezet
+            usufructo: Haszonélvezet
+          label: Tulajdonosi jogcím
+        usos:
+          label: Bérbeadástól eltérő használatok
+        valor_suelo:
+          label: A telek értéke
+        valores_catastrales:
+          label: Kataszteri értékek IBI-évenként
       renta_spouse:
         birth_date:
           label: Házastárs születési dátuma
@@ -615,28 +883,28 @@ profile:
             castilla_la_mancha: Kasztília-La Mancha
             castilla_y_leon: Kasztília és León
             cataluna: Katalónia
+            ceuta: Ceuta (autonóm város)
             comunidad_valenciana: Valenciai Közösség
             extremadura: Extremadura
             galicia: Galicia
             la_rioja: La Rioja
             madrid: Madrid
+            melilla: Melilla (autonóm város)
             murcia: Murcia
-          label: Lakóhely szerinti autonóm közösség
+          label: Lakóhely szerinti autonóm közösség vagy város
         jurisdiction_scope:
           choices:
             common_regime: Közös területi rendszer
             foral_unsupported: Forális terület (Baszkföld vagy Navarra) - még nem
               támogatott
-          help:
-            what: Az adózása a közös területi rendszer vagy egy forális terület (Baszkföld
-              vagy Navarra) szabályait követi-e.
-            where: 'Az adózási lakcíméből következik: Álava, Bizkaia, Gipuzkoa vagy
-              Navarra területén forális, Spanyolország többi részén közös terület.'
-            why: Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak rád.
-              A forális területek a saját adóhivatalukhoz nyújtanak be, ez még nem
-              támogatott.
           label: Területi adórendszer
       taxpayer_type:
+        cierre_ejercicio_dia:
+          label: Üzleti év zárónapja
+        cierre_ejercicio_mes:
+          label: Üzleti év záróhónapja
+        cooperativa_fiscalmente_protegida:
+          label: Adóügyileg védett szövetkezet
         country_of_fiscal_residence:
           label: Adóügyi illetőség országa
         declaration_roles:
@@ -647,6 +915,10 @@ profile:
             legal_entity: Jogi személy (társaság)
             natural_person: Magánszemély
           label: Adózó típusa
+        erd_tipo_gravamen_especifico:
+          label: Kis méretű társaság sajátos adókulccsal (LIS 101. cikk)
+        fecha_constitucion:
+          label: Alapítás dátuma
         fiscal_residency:
           choices:
             non_resident_irnr: Nem spanyolországi illetőségű (IRNR)
@@ -667,33 +939,30 @@ profile:
             sll: Munkavállalói korlátolt felelősségű társaság (S.L.L.)
             sociedad_civil_mercantil: Kereskedelmi célú polgári jogi társaság
           label: Jogi forma
-        ley_49_2002_special_regime_option_date:
-          label: Ley 49/2002 választásának dátuma
-        ley_49_2002_special_regime_option_declared:
-          label: Ley 49/2002 rendszer választva
-        ley_49_2002_special_regime_renunciation_date:
-          label: Ley 49/2002 lemondásának dátuma
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Ley 49/2002 rendszerről lemondva
+        marca_instrumental:
+          label: Instrumentális jelölés (7. megjegyzés)
         new_entity_first_two_profit_periods:
           label: Az első két nyereséges időszak egyikében
+        pago_fraccionado_art_40_3_elected:
+          label: LIS 40.3. cikkely szerinti választás a részletfizetésnél
+        principal_cnae:
+          label: Fő tevékenység CNAE-kódja
+        principal_cnae_classification:
+          label: A fő tevékenység CNAE-osztályozása
+        regimen_entidad_capital_riesgo:
+          label: Kockázatitőke-társaság (LIS 50. cikk)
+        regimen_entidades_navieras_tonelaje:
+          label: Hajózási tonnaadó-rendszer
+        regimen_ley_49_2002:
+          label: Ley 49/2002 szerinti rendszer
+        regimen_socimi:
+          label: SOCIMI-rendszer (Ley 11/2009)
         representante_fiscal_nif:
           label: Adóügyi képviselő NIF-je
         representante_fiscal_nombre:
           label: Adóügyi képviselő neve
-        sal_capital_social:
-          label: Jegyzett tőke
-        sal_reserva_especial_dotada:
-          label: Már képzett különleges tartalék
-        sal_socios_trabajadores_count:
-          label: Dolgozó tagok száma
         tributacion_estado_porcentaje:
           label: Államnak fizetett adó aránya
-      usage_ratios:
-        business_ratio:
-          label: Üzleti használati arány
-        category_id:
-          label: Kategória
       vivienda_office:
         office_m2:
           label: Irodai célra használt alapterület (m2)
@@ -710,6 +979,9 @@ profile:
           label: Modelo 115 releváns kifizetés nélküli időszakai
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
+        pays_non_resident_income_with_retencion:
+          label: Forrásadó-köteles jövedelmet fizetsz külföldi illetőségűeknek (216-os
+            és 296-os modelo)
         pays_professionals_with_retencion:
           label: Szakembereknek forrásadóval fizet
         pays_rent_with_retencion:
@@ -719,10 +991,6 @@ profile:
         summary: Az általad végzett gazdasági tevékenységek, tevékenységenként egy
           sorral.
         title: Gazdasági tevékenységek
-      attribution_entity:
-        summary: Az általad működtetett jövedelem-hozzárendelési jogalany (comunidad
-          de bienes, sociedad civil) jogi formája.
-        title: Jövedelem-hozzárendelő entitás jogi formája
       attribution_entity_socios:
         summary: A jogalany tagjai és az egyes tagoknak hozzárendelt jövedelemrész.
         title: A hozzárendelő entitás tagjai
@@ -736,7 +1004,8 @@ profile:
         title: AEAT-hitelesítés
       capabilities:
         summary: Mely opcionális szolgáltatásokat használhat ez a profil, például
-          a beolvasott dokumentumok helyi olvasását.
+          a beolvasott vagy kép alapú dokumentumok olvasását az általad kiválasztott
+          modellel.
         title: Szolgáltatási képességek
       censo:
         summary: Az AEAT adózói nyilvántartásába (Modelo 036/037) történt bejelentkezése
@@ -745,9 +1014,25 @@ profile:
       contact:
         summary: Hol érhet el téged az AEAT, és mi az adózási lakcímed.
         title: Kapcsolat és adóügyi cím
+      iae_elemento_tributario:
+        summary: Az egyes tevékenységek adóelemei a 840-es nyomtatványhoz, soronként
+          egy sor.
+        title: IAE adóelemek
+      iae_local:
+        summary: 'Az egyes tevékenységek helyiségei, helyiségenként egy sor: ahol
+          végzed, vagy amit közvetetten használsz.'
+        title: IAE helyiségek
+      iae_local_superficie:
+        summary: Az egyes helyiségek területei Regla 14 osztályonként, osztályonként
+          egy sor.
+        title: Helyiségterületek (Regla 14)
       identity:
         summary: 'A neved és NIF-számod: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
+      inversiones_posicion:
+        summary: A bankszámláid, lekötött betéteid és értékpapírszámláid, pozíciónként
+          egy sor. Ide kerülnek az állandó adataik; az összegek a főkönyvből jönnek.
+        title: Megtakarítási pozíciók
       irpf:
         summary: Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások
           terhelik.
@@ -755,9 +1040,43 @@ profile:
       iva:
         summary: Az áfa (IVA) rendszere, és milyen gyakran nyújtja be a bevallását.
         title: IVA-profil
+      m200_administrador:
+        summary: Azok a személyek, akik a társaságot igazgatják, vezetik vagy ellenőrzik,
+          személyenként egy sor.
+        title: Ügyvezetők és igazgatók
+      m200_entidad_menor_dependiente:
+        summary: A bevallásodba beépített függő kisebb szervezetek, szervezetenként
+          egy sor.
+        title: Függő kisebb szervezetek
+      m200_establecimiento_permanente:
+        summary: A külföldön működő állandó telephelyek, telephelyenként egy sor.
+        title: Állandó telephelyek
+      m200_participacion_directa:
+        summary: Azok a szervezetek, amelyekben az időszak végén közvetlen részesedéssel
+          rendelkezel, részesedésenként egy sor.
+        title: Közvetlen részesedések
+      m200_participacion_socio:
+        summary: Azok a személyek és szervezetek, amelyek közvetlen részesedéssel
+          rendelkeznek a társaságodban, tagonként egy sor.
+        title: Tagok és részvényesek jegyzéke
+      m200_relaciones:
+        summary: Hogy a társaságodnak van-e sora a 200-as modell 2. oldalának minden
+          választható szakaszában.
+        title: Bejelentett kapcsolatok
+      m200_representante_legal:
+        summary: A társaság meghatalmazottai vagy törvényes képviselői, személyenként
+          egy sor.
+        title: Törvényes képviselő
+      m200_secretario_consejo:
+        summary: Az igazgatótanács titkára, illetve aki ennek feladatait ellátja.
+        title: Az igazgatótanács titkára
+      m200_socio_sicav_disolucion:
+        summary: A megszűnt SICAV-ok, amelyeknek tagja vagy, és az intézmény, amelybe
+          a felszámolási részt újra befekteted.
+        title: Megszűnt SICAV-ok tagjai
       maritime_worker:
         summary: 'Csak tengerészeknek: a különleges kedvezményeket meghatározó besorolás.'
-        title: Trabajador del mar (besorolás)
+        title: Tengerészeti dolgozó
       obligations:
         summary: Azok az értékhatárok, amelyek eldöntik, kell-e bizonyos bevallásokat
           benyújtania.
@@ -766,13 +1085,13 @@ profile:
         summary: Hogyan kommunikál veled az alkalmazás, például az egyes képernyők
           nyelve.
         title: Kezelői beállítások
-      properties:
-        summary: A tulajdonodban lévő vagy általad bérbe adott ingatlanok, ingatlanonként
-          egy sorral.
-        title: Ingatlanok és bérbeadás
       provenance:
         summary: Honnan származnak a profil adatai, és mikortól érvényesek.
         title: Eredet és érvényesség
+      renta_arrendamiento:
+        summary: Az ingatlanaid bérleti szerződései, szerződésenként egy sor, az aláíráskor
+          rögzített adatokkal.
+        title: Bérleti szerződések
       renta_family:
         summary: Gyermekek és más hozzátartozók, akik után családi kedvezmény illetheti
           meg.
@@ -780,9 +1099,10 @@ profile:
       renta_filing:
         summary: Hogyan nyújtja be az éves személyi jövedelemadó-bevallását (Renta).
         title: Bevallási környezet (Renta)
-      renta_rental:
-        summary: A bérbeadásból származó jövedelem háttéradatai az éves bevallásban.
-        title: Bérbeadási környezet (Renta)
+      renta_inmueble:
+        summary: A bérbe adott ingatlanaid, ingatlanonként egy sor. Ide kerülnek az
+          állandó adataik; az összegek a főkönyvből jönnek.
+        title: Bérbe adott ingatlanok
       renta_spouse:
         summary: A házastársad adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)
@@ -796,10 +1116,6 @@ profile:
       taxpayer_type:
         summary: Milyen típusú adózó vagy, és milyen jövedelemfajtákból van bevételed.
         title: Adózó típusa és jövedelemkategóriák
-      usage_ratios:
-        summary: A közösen használt eszközök, például autó vagy telefon üzleti használatának
-          aránya.
-        title: Használati arányok és levonhatóság
       vivienda_office:
         summary: Használod-e a fő lakóhelyed egy részét irodaként a tevékenységedhez.
         title: Állandó lakás irodai hasznosítása
@@ -822,4 +1138,5 @@ profile:
       profil-alapmező
     numeric_field_invalid: Érvénytelen numerikus mező
     required_field_missing: Hiányzik egy kötelező profilmező.
+    text_too_long: Túl hosszú szöveg
     unknown_field: Ismeretlen mező

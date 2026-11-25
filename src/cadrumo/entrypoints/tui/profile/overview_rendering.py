@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -28,27 +29,81 @@ from ..components.widgets import (
     SourceActionDescriptor,
 )
 from .aeat_auth_setup import readiness_text
+from .household import HOUSEHOLD_TITLE_LOCALE_KEY
 from .overview_contracts import (
-    _ABSENT_GLYPH,
-    _COMPLETE_SETUP_KEY,
-    _DOCUMENT_READER_CARD_ID,
-    _FIELD_COLUMN_WIDTH,
-    _LANGUAGE_ACTION,
-    _LANGUAGE_KEY,
-    _PLANTILLA_MEDIA_BUTTON_ID,
-    _PLANTILLA_MEDIA_SECTION,
-    _PRESENT_GLYPH,
-    _REQUIRED_MARK,
-    _ROW_INDEX_SEPARATOR,
-    _SOURCE_ACTION_LOCALE_KEYS,
-    _SOURCE_DESCRIPTION_LOCALE_KEYS,
-    _SOURCE_TITLE_LOCALE_KEYS,
+    ABSENT_GLYPH,
+    COMPLETE_SETUP_KEY,
+    FIELD_COLUMN_WIDTH,
+    HOUSEHOLD_BUTTON_ID,
+    HOUSEHOLD_SECTION,
+    LANGUAGE_ACTION,
+    LANGUAGE_KEY,
+    PLANTILLA_MEDIA_BUTTON_ID,
+    PLANTILLA_MEDIA_SECTION,
+    PRESENT_GLYPH,
+    RECORD_GROUPS_BUTTON_ID_PREFIX,
+    REQUIRED_MARK,
+    ROW_INDEX_SEPARATOR,
+    SOURCE_ACTION_LOCALE_KEYS,
+    SOURCE_DESCRIPTION_LOCALE_KEYS,
+    SOURCE_TITLE_LOCALE_KEYS,
 )
+from .record_groups_panel import RECORD_GROUPS_TITLE_LOCALE_KEY
 from .setup_journey import ProfileSetupStage
 
 if TYPE_CHECKING:
+    from textual.widgets._data_table import ColumnKey
+
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
     from .overview import ProfileManagerScreen
+
+
+def _sync_source_card(
+    screen: ProfileManagerScreen, source: ProfileAcquisitionSourceKey, door_ready: bool, credential_ready: bool
+) -> None:
+    # A saved profile can rebuild the source cards while a readiness
+    # read settles. The redraw calls this again after mounting them.
+    for card in screen.query(SourceActionCard).filter(f"#source-{source.value}"):
+        for button in card.query(Button):
+            button.display = door_ready
+            button.disabled = not (door_ready and credential_ready)
+
+
+def _repaint_profile_sections(
+    previous: ProfileOverview,
+    updated: ProfileOverview,
+    *,
+    tables: Mapping[str, DataTable[str]],
+    columns_by_section: Mapping[str, list[ColumnKey]],
+    fields_by_key: dict[str, ProfileFieldView],
+    fold: Callable[[str], DisclosureGroup],
+    fold_title: Callable[[ProfileOverview, ProfileSectionView], str],
+    visible_fields: Callable[[ProfileOverview, ProfileSectionView], tuple[ProfileFieldView, ...]],
+    rendered_row: Callable[[ProfileFieldView], tuple[str, str, str]],
+) -> bool:
+    for was, now in zip(previous.sections, updated.sections, strict=True):
+        table = tables.get(now.key)
+        columns = columns_by_section.get(now.key)
+        if table is None or columns is None:
+            # The page was never fully rendered, so there are no cells to
+            # address. Build it rather than silently dropping the update.
+            return False
+        fold(now.key).title = fold_title(updated, now)
+        for after in now.fields:
+            fields_by_key[after.path] = after
+        for before, after in zip(visible_fields(previous, was), visible_fields(updated, now), strict=True):
+            old_cells = rendered_row(before)
+            new_cells = rendered_row(after)
+            if old_cells == new_cells:
+                continue
+            for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
+                if old_cell != new_cell:
+                    # ``update_width`` defaults off, which would clip a value
+                    # that grew past the column's current width — the full
+                    # rebuild sizes columns as it adds rows, and this is the
+                    # equivalent for a cell written in place.
+                    table.update_cell(after.path, column, new_cell, update_width=True)
+    return True
 
 
 class ProfileOverviewRenderingMixin:
@@ -59,9 +114,9 @@ class ProfileOverviewRenderingMixin:
         return [
             SourceActionCard(
                 SourceActionDescriptor(
-                    title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
-                    description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
-                    action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                    title=tr(SOURCE_TITLE_LOCALE_KEYS[source.key]),
+                    description=tr(SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
+                    action_label=tr(SOURCE_ACTION_LOCALE_KEYS[source.key]),
                     credential_requirement=self._credential_requirement_badge(source.key),
                 ),
                 id=f"source-{source.key.value}",
@@ -105,12 +160,7 @@ class ProfileOverviewRenderingMixin:
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
             if self._aeat_auth_setup is not None and source.requires_aeat_authentication:
                 credential_ready = self._auth_readiness is not None and self._auth_readiness.ready
-            # A saved profile can rebuild the source cards while a readiness
-            # read settles. The redraw calls this again after mounting them.
-            for card in self.query(SourceActionCard).filter(f"#source-{source.key.value}"):
-                for button in card.query(Button):
-                    button.display = door_ready
-                    button.disabled = not (door_ready and credential_ready)
+            _sync_source_card(self, source.key, door_ready, credential_ready)
 
     async def _redraw(self: ProfileManagerScreen) -> None:
         """Rebuild the profile context and every schema section table.
@@ -141,17 +191,6 @@ class ProfileOverviewRenderingMixin:
                     Button(tr("tui.aeat_auth.edit"), id="manager-auth-edit", compact=True),
                 )
             await sources.mount_all(self._source_cards())
-        if showing_sources and self._open_document_reader is not None:
-            await sources.mount(
-                SourceActionCard(
-                    SourceActionDescriptor(
-                        title=tr("tui.local_reader.card.title"),
-                        description=tr("tui.local_reader.card.description"),
-                        action_label=tr("tui.local_reader.card.action"),
-                    ),
-                    id=_DOCUMENT_READER_CARD_ID,
-                )
-            )
         self._sync_source_actions()
         await self._render_sections()
         self._render_onboarding()
@@ -169,13 +208,8 @@ class ProfileOverviewRenderingMixin:
         _update_section_search_feedback(self, any_visible)
 
     def _required_now(self: ProfileManagerScreen, overview: ProfileOverview, field: ProfileFieldView) -> bool:
-        """Whether setup requires this row now: missing, or answered and required.
-
-        A repeatable section's template row is marked required but demands
-        nothing until the operator adds a row, so it is not counted here;
-        the overview's own missing list is the authority on what is owed.
-        """
-        return field.path in overview.missing_required or (field.required and field.present)
+        """Whether setup requires this row now, as the overview decides it."""
+        return overview.requires_now(field)
 
     def _visible_fields(
         self: ProfileManagerScreen, overview: ProfileOverview, section: ProfileSectionView
@@ -239,31 +273,19 @@ class ProfileOverviewRenderingMixin:
             self._render_chrome()
             self._clear_notice()
             await self._render_profile_context()
-            for was, now in zip(previous.sections, updated.sections, strict=True):
-                table = self._table_by_section.get(now.key)
-                columns = self._columns_by_section.get(now.key)
-                if table is None or columns is None:
-                    # The page was never fully rendered, so there are no cells to
-                    # address. Build it rather than silently dropping the update.
-                    await self._redraw_now()
-                    return
-                self.query_one(f"#fold-{now.key}", DisclosureGroup).title = self._fold_title(updated, now)
-                for after in now.fields:
-                    self._field_by_key[after.path] = after
-                for before, after in zip(
-                    self._visible_fields(previous, was), self._visible_fields(updated, now), strict=True
-                ):
-                    old_cells = self._rendered_row(before)
-                    new_cells = self._rendered_row(after)
-                    if old_cells == new_cells:
-                        continue
-                    for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
-                        if old_cell != new_cell:
-                            # ``update_width`` defaults off, which would clip a value
-                            # that grew past the column's current width — the full
-                            # rebuild sizes columns as it adds rows, and this is the
-                            # equivalent for a cell written in place.
-                            table.update_cell(after.path, column, new_cell, update_width=True)
+            if not _repaint_profile_sections(
+                previous,
+                updated,
+                tables=self._table_by_section,
+                columns_by_section=self._columns_by_section,
+                fields_by_key=self._field_by_key,
+                fold=lambda key: self.query_one(f"#fold-{key}", DisclosureGroup),
+                fold_title=self._fold_title,
+                visible_fields=self._visible_fields,
+                rendered_row=self.rendered_row,
+            ):
+                await self._redraw_now()
+                return
             self._render_onboarding()
 
     async def _render_profile_context(self: ProfileManagerScreen) -> None:
@@ -282,7 +304,7 @@ class ProfileOverviewRenderingMixin:
         )
 
     @staticmethod
-    def _rendered_row(field: ProfileFieldView) -> tuple[str, str, str]:
+    def rendered_row(field: ProfileFieldView) -> tuple[str, str, str]:
         """The three cells a field occupies, as the single authority on both paths.
 
         The full rebuild and the incremental update must agree on what a row
@@ -295,9 +317,9 @@ class ProfileOverviewRenderingMixin:
         the presentation here, so the schema's translated label is never
         edited to carry it.
         """
-        label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
+        label = f"{field.label}{REQUIRED_MARK}" if field.required else field.label
         if field.row_index is not None:
-            label = f"{field.row_index}{_ROW_INDEX_SEPARATOR}{label}"
+            label = f"{field.row_index}{ROW_INDEX_SEPARATOR}{label}"
         value = field.value or ""
         if value and field.choices:
             value = next(
@@ -305,7 +327,7 @@ class ProfileOverviewRenderingMixin:
                 tr("flows.manager.choice_unavailable"),
             )
         return (
-            _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
+            PRESENT_GLYPH if field.present else ABSENT_GLYPH,
             label,
             value,
         )
@@ -373,11 +395,11 @@ class ProfileOverviewRenderingMixin:
         # The short account name rather than the field's own label, so the
         # footer keeps every key on an eighty-column terminal.
         label = tr("tui.root.account_key.language") if field is not None else ""
-        bindings = self._bindings.key_to_bindings.get(_LANGUAGE_KEY)
+        bindings = self._bindings.key_to_bindings.get(LANGUAGE_KEY)
         if bindings is None:
             return
-        self._bindings.key_to_bindings[_LANGUAGE_KEY] = [
-            replace(binding, description=label, show=bool(label)) if binding.action == _LANGUAGE_ACTION else binding
+        self._bindings.key_to_bindings[LANGUAGE_KEY] = [
+            replace(binding, description=label, show=bool(label)) if binding.action == LANGUAGE_ACTION else binding
             for binding in bindings
         ]
         self.refresh_bindings()
@@ -421,13 +443,13 @@ async def _mount_profile_section_table(
     screen._table_by_section[section.key] = table
     screen._columns_by_section[section.key] = [
         table.add_column(tr("flows.manager.column.state")),
-        table.add_column(tr("flows.manager.column.field"), width=_FIELD_COLUMN_WIDTH),
+        table.add_column(tr("flows.manager.column.field"), width=FIELD_COLUMN_WIDTH),
         table.add_column(tr("flows.manager.column.value")),
     ]
     for field in visible:
         # ``height=None`` wraps long labels in the capped field column instead
         # of pushing the value column outside the viewport.
-        table.add_row(*screen._rendered_row(field), key=field.path, height=None)
+        table.add_row(*screen.rendered_row(field), key=field.path, height=None)
 
 
 async def _mount_profile_section_actions(
@@ -440,15 +462,39 @@ async def _mount_profile_section_actions(
             await panel.mount(
                 Button(tr("flows.manager.rows.remove"), id=f"manager-remove-row-{section.key}", compact=True)
             )
-    if section.key == _PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
+    if section.key == HOUSEHOLD_SECTION and screen._household is not None:
+        # The people of the household are added and removed one at a time
+        # through the destination the household read serves.
+        await panel.mount(Button(tr(HOUSEHOLD_TITLE_LOCALE_KEY), id=HOUSEHOLD_BUTTON_ID, compact=True))
+    if screen._record_groups is not None and section.key in referenced_sections(screen.overview):
+        # A section whose rows another field names heads related records; the
+        # schema serves which, so no section is named here.
+        await panel.mount(
+            Button(
+                tr(RECORD_GROUPS_TITLE_LOCALE_KEY),
+                id=f"{RECORD_GROUPS_BUTTON_ID_PREFIX}{section.key}",
+                compact=True,
+            )
+        )
+    if section.key == PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
         # Average-workforce years are indexed records, not repeatable section rows.
         await panel.mount(
             Button(
                 tr("profile.schema.field.irpf.plantilla_media.label"),
-                id=_PLANTILLA_MEDIA_BUTTON_ID,
+                id=PLANTILLA_MEDIA_BUTTON_ID,
                 compact=True,
             )
         )
+
+
+def referenced_sections(overview: ProfileOverview) -> frozenset[str]:
+    """The sections one of whose rows a served field names, as the profile view declares it."""
+    return frozenset(
+        field.references_section
+        for section in overview.sections
+        for field in section.fields
+        if field.references_section is not None
+    )
 
 
 def _update_section_search_feedback(screen: ProfileManagerScreen, any_visible: bool) -> None:
@@ -485,7 +531,7 @@ def _query_matches_section(query: str, section: ProfileSectionView) -> bool:
 
 def _query_matches_field(screen: ProfileManagerScreen, query: str, field: ProfileFieldView) -> bool:
     """Match the normalized query against the path and rendered row wording."""
-    return query in fold_for_matching(" ".join((field.path, *screen._rendered_row(field)[1:])))
+    return query in fold_for_matching(" ".join((field.path, *screen.rendered_row(field)[1:])))
 
 
 def _profile_requirement_text(screen: ProfileManagerScreen) -> str:
@@ -521,7 +567,7 @@ async def _mount_profile_context(screen: ProfileManagerScreen, requirements: str
         # Continue completes the setup walk itself, so it needs no duplicate button.
         await context.mount(
             Button(
-                tr("flows.manager.complete_setup.button", key=_COMPLETE_SETUP_KEY.upper()),
+                tr("flows.manager.complete_setup.button", key=COMPLETE_SETUP_KEY.upper()),
                 id="manager-complete-setup",
                 compact=True,
             )

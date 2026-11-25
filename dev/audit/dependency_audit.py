@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 """Multi-ecosystem dependency vulnerability audit gate.
 
-This is the fleet's single dependency-audit implementation; the copy in every
-repository is identical. It is the ONE audit that GATES: a published advisory
+It is the ONE audit that GATES: a published advisory
 against a pinned version is a verdict, not a lead.
 
 Why it does not simply shell out to ``uv audit``
 ------------------------------------------------
 ``uv audit`` is a preview feature that exits ``0`` even when it prints
-advisories, so three repositories in this fleet shipped a "GATE" that could not
-fail. Deriving a gate's verdict from a preview tool's text summary keeps the
-gate one release note away from breaking again, and it covers only Python --
-while these repositories also lock npm and cargo dependencies and vendor
+advisories, so a gate built on its exit code cannot fail. Deriving a gate's
+verdict from a preview tool's text summary keeps the gate one release note away
+from breaking again, and it covers only Python --
+while this repository also locks npm and cargo dependencies and vendors
 binaries.
 
 So the gate resolves the pinned coordinates itself, out of the lockfiles that
@@ -29,17 +28,15 @@ of anybody's exit code. Consequences that are deliberate:
 Exit codes
 ----------
 ``0`` clean, ``1`` findings (or an expired suppression), ``7`` the audit could
-not complete. Only ``0`` is a pass. The numbers are lane L9's fleet-wide
-contract (``dev/exit_codes.py``): ``OK``, ``FAILED``, and the "the scanner did
-not actually run" code -- used here on a GATING target because a gate that
-could not run must not be readable either as a pass or as a finding. The values
-are restated rather than imported so this file stays standalone and stdlib-only
-in every repository.
+not complete. Only ``0`` is a pass. The numbers are ``dev/exit_codes.py``'s
+``OK``, ``FAILED`` and ``TOOL_BROKEN``; the last is used on this GATING check
+because a gate that could not run must not be readable either as a pass or as
+a finding.
 
 Output
 ------
 A human summary on stdout always. ``--json`` writes the machine-readable report
-to stdout instead; when ``VAULTSPEC_CI_REPORTS`` names a directory the same
+to stdout instead; when ``CADRUMO_CI_REPORTS_DIR`` names a directory the same
 report is additionally written to ``<dir>/dependency-audit.json``. With the
 variable unset nothing is written anywhere, which preserves cadrumo's
 deliberate zero-artifact posture.
@@ -65,12 +62,12 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from dev.exit_codes import FAILED, OK, TOOL_BROKEN
 from dev.report_storage import report_directory
 
-#: See the module docstring: these mirror ``dev/exit_codes.py`` (lane L9).
-EXIT_OK = 0
-EXIT_FINDINGS = 1
-EXIT_BROKEN = 7
+EXIT_OK = OK
+EXIT_FINDINGS = FAILED
+EXIT_BROKEN = TOOL_BROKEN
 
 _OSV_QUERYBATCH = "https://api.osv.dev/v1/querybatch"
 _OSV_VULN = "https://api.osv.dev/v1/vulns/"
@@ -95,7 +92,7 @@ _SKIP_DIRS = frozenset(
         ".pytest-tmp",
         ".mypy_cache",
         ".ruff_cache",
-        ".logs",
+        ".tmp",
         "tmp",
         "scratch",
         "typings",
@@ -174,21 +171,38 @@ def _iter_lockfiles(root: Path) -> list[Path]:
     return found
 
 
-def _read_uv_lock(path: Path) -> list[Coordinate]:
-    """Return every ``(name, version)`` pinned by a ``uv.lock``."""
+def _read_uv_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every registry ``(name, version)`` pinned by a ``uv.lock``.
+
+    Only a package resolved from a package index is a public coordinate. The
+    project itself and its editable, virtual, path, directory, git and URL
+    members are local, so their names never leave the machine.
+    """
     data = parse_toml(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     return [
         Coordinate("PyPI", pkg["name"], pkg["version"], rel)
         for pkg in data.get("package", ())
-        if pkg.get("name") and pkg.get("version")
+        if pkg.get("name") and pkg.get("version") and "registry" in (pkg.get("source") or {})
     ]
 
 
-def _read_package_lock(path: Path) -> list[Coordinate]:
-    """Return every version pinned by an npm ``package-lock.json``."""
+def _is_npm_registry_entry(key: str, entry: dict[str, Any]) -> bool:
+    """Return whether a lockfile v2/v3 entry is an installed registry package.
+
+    Workspace members sit outside ``node_modules/``, a linked package is a local
+    folder, and a ``file:`` or git ``resolved`` is not published anywhere.
+    """
+    if "node_modules/" not in key or entry.get("link"):
+        return False
+    resolved = entry.get("resolved")
+    return resolved is None or (isinstance(resolved, str) and resolved.startswith("https://"))
+
+
+def _read_package_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every registry version pinned by an npm ``package-lock.json``."""
     data = json.loads(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     out: list[Coordinate] = []
     packages = data.get("packages")
     if isinstance(packages, dict):
@@ -197,21 +211,25 @@ def _read_package_lock(path: Path) -> list[Coordinate]:
                 continue  # "" is the root project itself.
             name = entry.get("name") or key.rsplit("node_modules/", 1)[-1]
             version = entry.get("version")
-            if name and version and not entry.get("link"):
+            if name and version and _is_npm_registry_entry(key, entry):
                 out.append(Coordinate("npm", name, version, rel))
     else:  # lockfileVersion 1
         _read_legacy_npm_dependencies(data.get("dependencies") or {}, rel, out)
     return out
 
 
-def _read_cargo_lock(path: Path) -> list[Coordinate]:
-    """Return every crate version pinned by a ``Cargo.lock``."""
+def _read_cargo_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every crates.io version pinned by a ``Cargo.lock``.
+
+    A workspace crate has no source and a git dependency names a repository,
+    so only a registry-sourced crate is a public coordinate.
+    """
     data = parse_toml(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     return [
         Coordinate("crates.io", pkg["name"], pkg["version"], rel)
         for pkg in data.get("package", ())
-        if pkg.get("name") and pkg.get("version") and pkg.get("source")
+        if pkg.get("name") and pkg.get("version") and str(pkg.get("source") or "").startswith(("registry+", "sparse+"))
     ]
 
 
@@ -250,7 +268,7 @@ def collect_coordinates(root: Path = REPO_ROOT) -> list[Coordinate]:
     seen: set[Coordinate] = set()
     for lockfile in _iter_lockfiles(root):
         try:
-            for coord in readers[lockfile.name](lockfile):
+            for coord in readers[lockfile.name](lockfile, root):
                 seen.add(coord)
         except AuditError:
             raise
@@ -273,6 +291,9 @@ class Suppression:
     id: str
     reason: str
     expires: _dt.date
+    ecosystem: str | None = None
+    package: str | None = None
+    version: str | None = None
 
     def expired(self, today: _dt.date) -> bool:
         """Return whether this suppression has passed its expiry date."""
@@ -293,27 +314,43 @@ def load_suppressions(path: Path = ALLOWLIST_PATH) -> list[Suppression]:
     except TomlDecodeError as error:
         raise AuditError(f"{path.name} is not valid TOML: {error}") from error
 
-    out: list[Suppression] = []
-    for index, entry in enumerate(data.get("suppression", ()), start=1):
-        missing = [k for k in ("id", "reason", "expires") if not entry.get(k)]
-        if missing:
-            raise AuditError(
-                f"{path.name}: suppression #{index} is missing "
-                f"{', '.join(missing)}. Every suppression needs an advisory id, "
-                "a reason, and an expiry date."
-            )
-        expires = entry["expires"]
-        if isinstance(expires, _dt.datetime):
-            expires = expires.date()
-        if not isinstance(expires, _dt.date):
-            raise AuditError(
-                f"{path.name}: suppression {entry['id']} has expires="
-                f"{expires!r}; write it as a bare TOML date, e.g. 2026-12-31."
-            )
-        if not str(entry["reason"]).strip():
-            raise AuditError(f"{path.name}: suppression {entry['id']} has an empty reason.")
-        out.append(Suppression(str(entry["id"]), str(entry["reason"]), expires))
-    return out
+    return [_parse_suppression(path, index, entry) for index, entry in enumerate(data.get("suppression", ()), start=1)]
+
+
+def _parse_suppression(path: Path, index: int, entry: dict[str, Any]) -> Suppression:
+    missing = [k for k in ("id", "reason", "expires") if not entry.get(k)]
+    if missing:
+        raise AuditError(
+            f"{path.name}: suppression #{index} is missing "
+            f"{', '.join(missing)}. Every suppression needs an advisory id, "
+            "a reason, and an expiry date."
+        )
+    expires = _suppression_expiry(path, entry)
+    if not str(entry["reason"]).strip():
+        raise AuditError(f"{path.name}: suppression {entry['id']} has an empty reason.")
+    scope = _suppression_scope(path, entry)
+    return Suppression(str(entry["id"]), str(entry["reason"]), expires, *scope)
+
+
+def _suppression_expiry(path: Path, entry: dict[str, Any]) -> _dt.date:
+    expires = entry["expires"]
+    if isinstance(expires, _dt.datetime):
+        expires = expires.date()
+    if not isinstance(expires, _dt.date):
+        raise AuditError(
+            f"{path.name}: suppression {entry['id']} has expires="
+            f"{expires!r}; write it as a bare TOML date, e.g. 2026-12-31."
+        )
+    return expires
+
+
+def _suppression_scope(path: Path, entry: dict[str, Any]) -> tuple[Any, ...]:
+    scope = tuple(entry.get(key) for key in ("ecosystem", "package", "version"))
+    if any(value is not None for value in scope) and not all(
+        isinstance(value, str) and value.strip() for value in scope
+    ):
+        raise AuditError(f"{path.name}: suppression {entry['id']} requires ecosystem, package and version together.")
+    return scope
 
 
 # --------------------------------------------------------------------------
@@ -467,7 +504,7 @@ class Report:
     def as_dict(self) -> dict[str, Any]:
         """Return the JSON report body."""
         return {
-            "schema": "vaultspec.dependency-audit/1",
+            "schema": "cadrumo.dependency-audit/1",
             "generated": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
             "repository": REPO_ROOT.name,
             "surfaces": self.surfaces,
@@ -548,7 +585,7 @@ def write_artifact(report: Report, destination: str | None = None) -> Path | Non
     Args:
         report: The audit result to serialise.
         destination: Where to write. ``None`` -- the default, and what
-            :func:`main` passes -- reads ``VAULTSPEC_CI_REPORTS``. An empty
+            :func:`main` passes -- reads ``CADRUMO_CI_REPORTS_DIR``. An empty
             string means "nowhere", which is exactly what an unset variable
             amounts to. The parameter exists so a caller (a test included) can
             state the destination as a real value rather than reaching into
@@ -556,7 +593,7 @@ def write_artifact(report: Report, destination: str | None = None) -> Path | Non
 
     Returns:
         The path written, or ``None`` when no destination was named. With
-        ``VAULTSPEC_CI_REPORTS`` unset nothing is written anywhere: cadrumo
+        ``CADRUMO_CI_REPORTS_DIR`` unset nothing is written anywhere: cadrumo
         adopts the whole standard and simply never sets it.
     """
     directory = report_directory(destination)
@@ -656,12 +693,11 @@ def _append_advisory_finding(
     aliases = list(detail.get("aliases") or [])
     seen_ids.add(identifier)
     seen_ids.update(aliases)
-    covering = None
-    covering = _covering_suppression(identifier, aliases, live, used)
     merged: set[Coordinate] = set()
     for key in (identifier, *aliases):
         merged |= hits.get(key, set())
     affected = sorted(merged)
+    covering = _covering_suppression(identifier, aliases, live, used, affected)
     report.findings.append(
         Finding(
             id=identifier,
@@ -676,20 +712,31 @@ def _append_advisory_finding(
 
 
 def _covering_suppression(
-    identifier: str, aliases: list[str], live: dict[str, Suppression], used: set[str]
+    identifier: str, aliases: list[str], live: dict[str, Suppression], used: set[str], affected: list[Coordinate]
 ) -> Suppression | None:
     """Select and mark the first live suppression across the advisory and its aliases."""
     for key in (identifier, *aliases):
         if key in live:
+            suppression = live[key]
+            if suppression.ecosystem is not None and (
+                not affected
+                or any(
+                    (coordinate.ecosystem, coordinate.name, coordinate.version)
+                    != (suppression.ecosystem, suppression.package, suppression.version)
+                    for coordinate in affected
+                )
+            ):
+                continue
             used.add(key)
-            return live[key]
+            return suppression
     return None
 
 
 def _read_legacy_npm_dependencies(deps: dict[str, Any], rel: str, out: list[Coordinate]) -> None:
     """Read each pinned legacy npm dependency before recursing into its children."""
     for name, entry in deps.items():
-        if isinstance(entry, dict) and entry.get("version"):
+        # A legacy local, file: or git dependency records its specifier as the version.
+        if isinstance(entry, dict) and entry.get("version") and ":" not in str(entry["version"]):
             out.append(Coordinate("npm", name, entry["version"], rel))
             nested = entry.get("dependencies")
             if isinstance(nested, dict):

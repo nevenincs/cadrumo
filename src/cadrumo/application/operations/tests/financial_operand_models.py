@@ -30,15 +30,15 @@ class FinancialOperandBatch(BaseModel):
     values: tuple[Decimal, ...]
 
 
-def _baseline(operand: BaseModel) -> BaseModel:
+def baseline(operand: BaseModel) -> BaseModel:
     return cast(FinancialOperandBatch, operand).baseline
 
 
-def _baseline_reference(baseline: BaseModel) -> str:
+def baseline_reference(baseline: BaseModel) -> str:
     return cast(FinancialOperandBaseline, baseline).baseline_id
 
 
-async def _no_receipt(requirement: object) -> None:
+async def no_receipt(requirement: object) -> None:
     return None
 
 
@@ -52,8 +52,8 @@ def financial_operand_declaration() -> OperationTransientFinancialOperandDeclara
         baseline_schema=financial_operand_model_identity(
             schema_id="test.baseline", schema_version=1, model_type=FinancialOperandBaseline
         ),
-        baseline_accessor=_baseline,
-        baseline_reference=_baseline_reference,
+        baseline_accessor=baseline,
+        baseline_reference=baseline_reference,
         lifetime=timedelta(minutes=5),
-        effect_receipt_resolver=_no_receipt,
+        effect_receipt_resolver=no_receipt,
     )

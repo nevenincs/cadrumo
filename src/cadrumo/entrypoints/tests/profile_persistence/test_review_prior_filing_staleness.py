@@ -20,7 +20,7 @@ See Also:
     :func:`~cadrumo.application.filing.tests.filing_support.empty_prior_filing_observations_fingerprint`
         Supplies the explicit empty-source fingerprint used by tests and
         overrides.
-    :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
+    :func:`~application.filing.draft_review.prior_filing_observations_fingerprint`
         Stable, order-independent digest over stored prior-observation payloads.
     :mod:`~application.filing.tests.test_review_profile_activity_staleness`
         Sister approval-basis coverage for another self-loaded source surface.
@@ -37,15 +37,16 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.filing.draft_construction import build_draft
 from ....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ...adapter_composition import build_draft_review_ports
+from ...adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -72,7 +73,8 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Prior filing staleness test"),
         inputs={
             "01": Decimal("100"),
-            "02": Decimal("25"),
+            "gastos-deducibles-previos": Decimal("25"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
@@ -102,27 +104,51 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     )
 
 
+def _save_prior_filing(
+    repository: CalculationObservationRepository, value: str, *, source_kind: str = "app_filing"
+) -> None:
+    """Store the prior filing's observation at ``value``, replacing any earlier one at the same key."""
+    repository.save(
+        repository.prepare_observation_envelope(
+            _prior_observation(value=value),
+            source_kind=source_kind,
+            stamped_revision_id=_stamped_revision_id(),
+        )
+    )
+
+
+def _approve_operator_draft(
+    draft: ModeloDraft,
+    *,
+    bucket_id: str,
+    schema_provider: CasillaSchemaProvider,
+    ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
+) -> ModeloDraft:
+    return approve_draft(
+        draft,
+        bucket_id=bucket_id,
+        approved_by="operator",
+        schema_provider=schema_provider,
+        ports=ports,
+        operation=operation,
+    )
+
+
 def test_approval_goes_stale_when_prior_filing_observation_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)
         repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="100.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "100.00")
         ports = build_draft_review_ports(bucket_id=bucket_id)
-        approved = approve_draft(
+        approved = _approve_operator_draft(
             draft,
             bucket_id=bucket_id,
-            approved_by="operator",
             schema_provider=schema_provider,
             ports=ports,
             operation=_authority_operation_for_test,
@@ -133,13 +159,7 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
 
         # Mutate ONLY the prior filing: same (modelo, year, period) key, different
         # filed value, so the self-loaded observation-store digest must change.
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="250.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "250.00")
 
         reasons = approval_stale_reasons(
             approved,
@@ -165,24 +185,17 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     meaningless. Approving and re-checking against the identical store must yield
     an empty reason tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)
         repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-        repository.save(
-            repository.prepare_observation_envelope(
-                _prior_observation(value="100.00"),
-                source_kind="app_filing",
-                stamped_revision_id=_stamped_revision_id(),
-            )
-        )
+        _save_prior_filing(repository, "100.00")
         ports = build_draft_review_ports(bucket_id=bucket_id)
-        approved = approve_draft(
+        approved = _approve_operator_draft(
             draft,
             bucket_id=bucket_id,
-            approved_by="operator",
             schema_provider=schema_provider,
             ports=ports,
             operation=_authority_operation_for_test,
@@ -199,3 +212,54 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
 
         assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
         assert reasons == ()
+
+
+def test_pending_correction_changes_approval_but_hidden_official_refresh_does_not(
+    _active_bucket_runtime: TestRuntimeProfile,
+) -> None:
+    """A local 150 replaces official 100; an official refresh to 130 stays behind it."""
+    with bundled_indexed_authority().operation() as operation:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        repository = CalculationObservationRepository(bucket_id=bucket_id)
+        ports = build_draft_review_ports(bucket_id=bucket_id)
+        draft = _ready_draft(schema_provider)
+        _save_prior_filing(repository, "100.00", source_kind="aeat_csv_register")
+        approved = _approve_operator_draft(
+            draft,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+
+        _save_prior_filing(repository, "150.00")
+        reasons = approval_stale_reasons(
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        assert reasons == (ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,)
+
+        approved_pending = _approve_operator_draft(
+            draft,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        _save_prior_filing(repository, "130.00", source_kind="aeat_csv_register")
+        reasons_after_official_refresh = approval_stale_reasons(
+            approved_pending,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        assert reasons_after_official_refresh == ()
+        layers = repository.load_observation_layers("130", _PERIOD)
+        assert layers.official is not None and layers.pending_local is not None and layers.effective is not None
+        assert layers.official.observation.casilla_values[_M130_RESULTADO_CASILLA] == Decimal("130.00")
+        assert layers.effective.observation.casilla_values[_M130_RESULTADO_CASILLA] == Decimal("150.00")

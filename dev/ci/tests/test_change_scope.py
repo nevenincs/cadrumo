@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..change_scope import (
     CHANGE_CLASS_RULES,
@@ -219,10 +219,14 @@ def test_unclassified_non_python_change_selects_only_the_contract_set(tmp_path: 
         "dev/docs/sequences/runner.py",
         "dev/docs/build.py",
         "dev/packaging/command_execution.py",
-        "dev/_paths.py",
+        "dev/paths.py",
         "src/cadrumo/entrypoints/cli/app.py",
+        "src/cadrumo_client/commands/registered_operation.py",
+        "src/cadrumo_runtime/host/operation_authority.py",
         "src/cadrumo/_data/registry/aeat/modelo_303/2025.toml",
         "src/cadrumo/locales/es/LC_MESSAGES/cadrumo.po",
+        "dev/registry/bindings.py",
+        "dev/registry/pipeline/authority_publication.py",
         "uv.lock",
     ],
 )
@@ -236,8 +240,6 @@ def test_documented_output_changes_select_the_sequence_goldens_gate(path: str) -
         "README.md",
         ".github/workflows/merge-gate.yml",
         "dev/ci/change_scope.py",
-        "dev/registry/bindings.py",
-        "dev/registry/pipeline/authority_publication.py",
         "dev/packaging/release.py",
         "dev/documentation.py",
         "src/cadrumo_mcp/plugin.py",
@@ -324,7 +326,16 @@ def test_cli_json_reports_the_full_selection(tmp_path: Path, capsys: pytest.Capt
 def test_cli_without_a_manifest_selects_every_test_root(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert set(payload["targets"]) == {"src/cadrumo", "src/cadrumo_mcp", "dev", "native", "packaging"}
+    assert set(payload["targets"]) == {
+        "src/cadrumo",
+        "src/cadrumo_client",
+        "src/cadrumo_runtime",
+        "src/cadrumo_mcp",
+        "src/cadrumo_agent_service",
+        "dev",
+        "native",
+        "packaging",
+    }
     assert payload["ci_contracts"] and payload["sequence_goldens"]
 
 

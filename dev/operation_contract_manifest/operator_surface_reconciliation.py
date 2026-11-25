@@ -20,7 +20,8 @@ from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.operator_surface_reconciliation import current_operator_surface_reconciliation
 from cadrumo.entrypoints.cli.verb_input_schema import is_exposable_command_spec
 from cadrumo_client.commands.graph import CommandSpecGraph
-from cadrumo_client.commands.spec import NON_LEAF_COMMAND_KINDS
+from cadrumo_client.commands.spec import NON_LEAF_COMMAND_KINDS, CommandSpec, CommandSpecNode
+from cadrumo_client.contracts.command_ports import CommandRegistrationMetadata
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
@@ -37,30 +38,8 @@ def _graph_action_target(target: ActionTarget, graph: CommandSpecGraph) -> Opera
             "operator_action_program", reason=f"missing or duplicate graph action target: {target.command_key}"
         )
     node = matches[0]
-    metadata = command_registration_for_node(node, graph=graph)
-    if metadata is None or metadata.cli_path is None or metadata.policy is None:
-        raise OperatorSurfaceContractError(
-            "operator_action_program", reason=f"unregistered action target: {target.command_key}"
-        )
-    if not node.path or node.path[0] != target.program.executable_name or metadata.cli_path != node.path[1:]:
-        raise OperatorSurfaceContractError(
-            "operator_action_program", reason=f"wrong projected program path for {target.command_key}"
-        )
-    path = metadata.cli_path
-    if len(path) < 2:
-        raise OperatorSurfaceContractError(
-            "operator_action_program", reason=f"unmounted action target: {target.command_key}"
-        )
-    parent = graph.resolve_path(node.path[:2])
-    family = graph.resolve_path(node.path[:3])
-    if (
-        parent.kind not in NON_LEAF_COMMAND_KINDS
-        or family.kind not in NON_LEAF_COMMAND_KINDS
-        or family.parent_key != parent.key
-    ):
-        raise OperatorSurfaceContractError(
-            "operator_action_program", reason=f"invalid mounted parents for {target.command_key}"
-        )
+    metadata = _registered_target(target, graph, node)
+    path, parent, family = _mounted_target_path(target, graph, node, metadata)
     provenance = f"{target.program.executable_name} CommandSpecGraph metadata"
     root_landing = node.spec.kind in NON_LEAF_COMMAND_KINDS and metadata.command.startswith("root.")
     return reconcile_operator_surface_inventory(
@@ -89,7 +68,7 @@ def _graph_action_target(target: ActionTarget, graph: CommandSpecGraph) -> Opera
             ProfilePolicyInventoryRow(
                 subject_leaf_key=metadata.command,
                 classification="profile_bound_write"
-                if not root_landing and metadata.policy.write_route == "profile-bound"
+                if not root_landing and _profile_bound_policy(metadata)
                 else "non_profile_bound",
                 should_expose_externally=not root_landing,
                 provenance=provenance,
@@ -101,6 +80,59 @@ def _graph_action_target(target: ActionTarget, graph: CommandSpecGraph) -> Opera
             ),
         ),
     )
+
+
+def _profile_bound_policy(metadata: CommandRegistrationMetadata) -> bool:
+    """Read the validated registration policy without inventing a missing classification."""
+    if metadata.policy is None:
+        raise OperatorSurfaceContractError("operator_action_program", reason="missing action policy")
+    return metadata.policy.write_route == "profile-bound"
+
+
+def _registered_target(
+    target: ActionTarget, graph: CommandSpecGraph, node: CommandSpecNode
+) -> CommandRegistrationMetadata:
+    """Require a projected command path and policy before reading target metadata."""
+    metadata = command_registration_for_node(node, graph=graph)
+    if metadata is None or metadata.cli_path is None or metadata.policy is None:
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"unregistered action target: {target.command_key}"
+        )
+    return metadata
+
+
+def _mounted_target_path(
+    target: ActionTarget,
+    graph: CommandSpecGraph,
+    node: CommandSpecNode,
+    metadata: CommandRegistrationMetadata,
+) -> tuple[tuple[str, ...], CommandSpec, CommandSpec]:
+    """Validate executable identity and mounted parents before projecting an action."""
+    if (
+        metadata.cli_path is None
+        or not node.path
+        or node.path[0] != target.program.executable_name
+        or metadata.cli_path != node.path[1:]
+    ):
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"wrong projected program path for {target.command_key}"
+        )
+    path = metadata.cli_path
+    if len(path) < 2:
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"unmounted action target: {target.command_key}"
+        )
+    parent = graph.resolve_path(node.path[:2])
+    family = graph.resolve_path(node.path[:3])
+    if (
+        parent.kind not in NON_LEAF_COMMAND_KINDS
+        or family.kind not in NON_LEAF_COMMAND_KINDS
+        or family.parent_key != parent.key
+    ):
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"invalid mounted parents for {target.command_key}"
+        )
+    return path, parent, family
 
 
 def current_program_action_reconciliation() -> OperatorSurfaceReconciliation:

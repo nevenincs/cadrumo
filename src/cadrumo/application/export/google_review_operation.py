@@ -6,10 +6,10 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
 
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -19,7 +19,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_exact_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -39,7 +39,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING,
@@ -52,18 +51,16 @@ from .google_review_operation_contracts import (
     GoogleReviewResult,
 )
 from .google_review_operation_executor import GoogleReviewExecutor
+from .terminal_result_validation import terminal_receipt_has_result_only
 
 
 def resolve_google_review_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require a human, whole-profile authority and explicit financial disclosure."""
-    if (
-        request.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-        or type(request.payload) is not GoogleReviewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    resolved = resolve_ledger_exact_request_access(
+        request, context, request_types={GOOGLE_REVIEW_OPERATION_DEFINITION_ID: GoogleReviewRequest}
+    )
     disclosures = profile_and_tax_value_projection_disclosures(context, resolved.policy.disclosures)
     return replace(
         resolved,
@@ -113,13 +110,9 @@ def project_google_review_result(value: BaseModel, receipt: OperationTerminalRec
         or receipt.identity.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
         or receipt.identity.subject_ref != profile_operation_subject(str(private.result.profile_id))
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or receipt.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or receipt.effect.value != private.effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        or not terminal_receipt_has_result_only(receipt)
     ):
         raise ValueError("Google review result differs from its terminal receipt")
     return private.result

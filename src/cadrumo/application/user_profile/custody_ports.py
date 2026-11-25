@@ -4,11 +4,14 @@ Application policy owns the neutral models and structural protocols declared
 here. Persistence owns bucket layout, custody records, cryptography, key
 material, and repository construction. An executable host binds that concrete
 infrastructure for its lifetime through the single aggregate port below.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -17,12 +20,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, Protocol, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ...core.classification.policies import SensitivityClass
-from ...core.errors.hierarchy import CoreError, InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.json_shapes import model_json_object
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.storage_taxonomy import StorageCategory, StorageCustodyProfile
@@ -36,344 +38,24 @@ if TYPE_CHECKING:
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 from .authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
+from .custody_crypto_contracts import (
+    ProfileRecordCryptoPort,
+)
+from .custody_record_ports import (
+    ProfileCustodyCapsuleLabelPort,
+    ProfileCustodyCapsuleSummaryWitnessPort,
+    ProfileCustodyEnvelopePort,
+    ProfileCustodyLabelHeadPort,
+    ProfileCustodyLocalRecordStore,
+    ProfileCustodyPasswordMaterialPort,
+    ProfileCustodyPasswordProofMaterialPort,
+    ProfileCustodyRecoveryEnvelopePort,
+    ProfileCustodySecureObjectRepositoryPort,
+    ProfileCustodySentinelPort,
+)
+from .kdf_strength import ProfileKdfStrength
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
-
-
-class ProfileCustodyCommitPort(Protocol):
-    """Publication identity exposed by one recognized profile capsule."""
-
-    @property
-    def transaction_id(self) -> UUID:
-        """The transaction that durably published this capsule."""
-        ...
-
-    @property
-    def publication_kind(self) -> ProfilePublicationKindValue:
-        """Whether this capsule was enrolled locally or restored."""
-        ...
-
-    @property
-    def published_at(self) -> str:
-        """The canonical UTC instant recorded by the publication marker."""
-        ...
-
-
-class ProfileCustodyCapsuleLabelPort(Protocol):
-    """Canonical label provenance exposed by physical custody storage."""
-
-    @property
-    def label(self) -> str:
-        """The normalized operator-facing profile label."""
-        ...
-
-    @property
-    def label_revision(self) -> int:
-        """The revision of this label lineage."""
-        ...
-
-    @property
-    def content_digest(self) -> str:
-        """The digest of the label payload excluding derived digests."""
-        ...
-
-    @property
-    def self_digest(self) -> str:
-        """The digest authenticating the complete label record."""
-        ...
-
-    def canonical_json_bytes(self) -> bytes:
-        """Return the canonical bytes committed into the capsule inventory."""
-        ...
-
-
-class ProfileCustodyCapsuleSummaryWitnessPort(Protocol):
-    """One coherent, non-authenticating observation of a committed capsule.
-
-    The commit and the label were read under a single filesystem anchor and
-    proved to name the same UUID, so a consumer may join them without
-    re-opening either record and without entering custody at all.
-    """
-
-    @property
-    def profile_id(self) -> UUID:
-        """The UUID proven independently by both observed records."""
-        ...
-
-    @property
-    def commit(self) -> ProfileCustodyCommitPort:
-        """The recognized current publication marker."""
-        ...
-
-    @property
-    def label(self) -> ProfileCustodyCapsuleLabelPort:
-        """The UUID-bound label provenance observed under the same anchor."""
-        ...
-
-
-class ProfileCustodyLabelHeadPort(Protocol):
-    """Authenticated head of one committed profile-label lineage."""
-
-    @property
-    def label_revision(self) -> int:
-        """The latest authenticated label revision."""
-        ...
-
-    @property
-    def label_content_digest(self) -> str:
-        """The content digest of the latest authenticated label."""
-        ...
-
-    @property
-    def label_self_digest(self) -> str:
-        """The self-digest of the latest authenticated label."""
-        ...
-
-    @property
-    def self_digest(self) -> str:
-        """The self-digest authenticating this lineage head."""
-        ...
-
-
-class ProfileCustodyPasswordMaterialPort(Protocol):
-    """Normal-password material exposed by the custody read boundary.
-
-    Every record-shaped port here declares its fields read-only.  The custody
-    records these narrow are frozen, and a mutable protocol member is invariant,
-    so a read-write declaration would make the real record unassignable to the
-    very port that exists to narrow it.  Read-only is also the truthful shape:
-    the application observes committed custody state, it never writes back
-    through the narrowed view.
-    """
-
-    @property
-    def envelope(self) -> ProfileCustodyEnvelopePort:
-        """The committed password envelope for this profile."""
-        ...
-
-    @property
-    def sentinel(self) -> ProfileCustodySentinelPort:
-        """The committed DEK sentinel proving an unwrap succeeded."""
-        ...
-
-    @property
-    def capsule_path(self) -> Path:
-        """Where the recognized capsule this material was read from lives.
-
-        The application does not open custody files by path; the provider owns
-        those reads. The path identifies the exact recognized capsule.
-        """
-        ...
-
-    @property
-    def commit(self) -> ProfileCustodyCommitPort:
-        """The capsule publication marker that authenticated this material."""
-        ...
-
-
-class ProfileCustodyPasswordProofMaterialPort(Protocol):
-    """Only the two records a password proof reads."""
-
-    @property
-    def envelope(self) -> ProfileCustodyEnvelopePort:
-        """The password envelope to unwrap."""
-        ...
-
-    @property
-    def sentinel(self) -> ProfileCustodySentinelPort:
-        """The sentinel that proves the unwrapped DEK."""
-        ...
-
-
-class ProfileCustodySecureObjectRawRowPort(Protocol):
-    """Metadata and payload fields exposed by one secure-object row."""
-
-    @property
-    def namespace(self) -> str:
-        """The registered namespace this row was written under."""
-        ...
-
-    @property
-    def object_key(self) -> bytes:
-        """The opaque digest addressing this row within its namespace."""
-        ...
-
-    @property
-    def payload(self) -> bytes:
-        """The row's stored ciphertext."""
-        ...
-
-    @property
-    def revision_id(self) -> str | None:
-        """The row's current CAS revision token."""
-        ...
-
-    @property
-    def previous_revision_id(self) -> str | None:
-        """The revision this row replaced."""
-        ...
-
-    @property
-    def payload_hash(self) -> str | None:
-        """The plaintext digest recorded at write time."""
-        ...
-
-    @property
-    def ciphertext_hash(self) -> str | None:
-        """The ciphertext digest recorded at write time."""
-        ...
-
-    @property
-    def write_provenance(self) -> str | None:
-        """The recorded origin of this row's most recent write."""
-        ...
-
-    @property
-    def source_event_id(self) -> str | None:
-        """The lifecycle event that produced this row, if any."""
-        ...
-
-
-class ProfileCustodySecureObjectRecordPort(Protocol):
-    """Decrypted secure-object payload and its CAS revision token."""
-
-    @property
-    def revision_id(self) -> str:
-        """The record's current CAS revision token."""
-        ...
-
-    @property
-    def payload(self) -> bytes:
-        """The decrypted record bytes."""
-        ...
-
-
-class ProfileCustodySecureObjectRepositoryPort(Protocol):
-    """The small encrypted-object surface needed by a profile capsule."""
-
-    def object_key_digest(self, object_key: str | bytes) -> bytes:
-        """Derive the repository's stored lookup digest for one natural key."""
-        ...
-
-    def iter_all_records_raw(
-        self,
-        *,
-        namespace: str | None = None,
-    ) -> Iterator[ProfileCustodySecureObjectRawRowPort]:
-        """Iterate rows without bypassing the repository's integrity checks."""
-        ...
-
-    def load(
-        self,
-        namespace: str,
-        object_key: str,
-        *,
-        expected_class: SensitivityClass,
-        max_supported_version: int,
-    ) -> ProfileCustodySecureObjectRecordPort | None:
-        """Load and decrypt one object under its registered namespace contract.
-
-        Core types:
-        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
-        """
-        ...
-
-    def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
-        """Commit an atomic set of encrypted-object writes."""
-        ...
-
-
-class ProfileCustodyEnvelopePort(Protocol):
-    """Opaque password-envelope contract accepted by custody transactions."""
-
-    profile_id: UUID
-    password_generation: int
-    self_digest: str
-    dek_epoch: str
-
-    def canonical_json_bytes(self) -> bytes:
-        """Return the exact committed bytes of this envelope.
-
-        Declared because a rotation must name the envelope it believes it is
-        replacing: the compare-and-swap witness is the digest of these bytes,
-        and computing it from anything else would let a concurrent write slip
-        between the read and the swap. The application still reads no field of
-        the payload -- it forwards the bytes and their digest, both opaque.
-        """
-        ...
-
-
-class ProfileCustodySentinelPort(Protocol):
-    """Opaque DEK-sentinel contract accepted by custody transactions."""
-
-    profile_id: UUID
-
-    def canonical_json_bytes(self) -> bytes:
-        """Return the exact committed bytes of this sentinel.
-
-        Declared for the same reason as the envelope's: a backup carries the
-        record verbatim, and the archive is built from bytes rather than from
-        fields. The bytes cross the boundary; their MEANING does not. Nothing
-        here reads a field of the payload, and the sentinel carries no
-        plaintext secret to read in any case.
-        """
-        ...
-
-
-class ProfileCustodyRecoveryEnvelopePort(Protocol):
-    """Recovery-envelope contract forwarded to custody storage.
-
-    The two identity fields are declared because the application genuinely
-    reads them: a recovery wrapper is only valid for the exact profile and
-    DEK epoch it was minted against, and an enrollment that cannot be
-    checked against the password envelope beside it is an enrollment nothing
-    can prove belongs to this capsule. Everything else about the record --
-    the KDF parameters, the wrapped key, the AAD descriptor -- stays opaque,
-    because the application has no business INTERPRETING key material.
-
-    "Interpreting" rather than "touching" is the precise line, and
-    :meth:`canonical_json_bytes` is why it has to be stated. A backup carries
-    this record verbatim, so the application does handle the whole of it --
-    wrapped key, KDF parameters and all -- as an opaque run of bytes it
-    forwards and digests without reading a field. What stays forbidden is
-    deciding anything from the payload's contents. A reader who sees that
-    method sitting under this paragraph should conclude the two agree, not
-    that one of them is stale.
-    """
-
-    profile_id: UUID
-    dek_epoch: str
-
-    def canonical_json_bytes(self) -> bytes:
-        """Return the exact committed bytes of this recovery wrapper."""
-        ...
-
-
-class ProfileCustodyLocalRecordStore(Protocol):
-    """The filesystem capabilities needed by custody-owner authorities."""
-
-    def ensure_directory(self, path: Path) -> None:
-        """Create or validate one custody-owned directory."""
-        ...
-
-    def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        """Return the anchored local-record lock context."""
-        ...
-
-    def root_lock(self, root: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        """Return the canonical profile-custody root lock context."""
-        ...
-
-    def read(self, path: Path, *, maximum_bytes: int) -> bytes:
-        """Read one bounded, no-follow local record."""
-        ...
-
-    def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
-        """Atomically persist one local record."""
-        ...
-
-    def clear(self, path: Path) -> None:
-        """Remove one anchored local record without following its leaf."""
-        ...
+from .proof_cancellation import ProfileProofCancellation
 
 
 def canonical_snapshot_payload(model: BaseModel) -> dict[str, object]:
@@ -426,138 +108,6 @@ def ensure_profile_custody_owner_root(store: ProfileCustodyLocalRecordStore, roo
 def default_profile_custody_local_record_store() -> ProfileCustodyLocalRecordStore:
     """Resolve the composed local-record store through the custody boundary."""
     return profile_custody_port().local_record_store()
-
-
-class ProfileRecordCryptoError(CoreError):
-    """The configured profile-record crypto provider rejected an operation.
-
-    Roots at :class:`~core.errors.hierarchy.CoreError` so the refusal binds to the error
-    registry rather than reaching an operator as an unregistered builtin. The
-    port deliberately does not root at the persistence layer's own
-    :exc:`~adapters.persistence.storage.errors.EncryptionError`: this package exists
-    to keep the adapter's crypto types off the application port, and adopting
-    that family would make the port's refusal catchable by every storage-family
-    handler — a broadening, not a re-root. :exc:`RuntimeError` is retained so
-    the ancestry every existing caller was written against is unchanged.
-    """
-
-
-class ProfileCustodyRecordIntegrityError(CoreError):
-    """The persistence provider refused a malformed or altered custody record."""
-
-
-class ProfileCustodyConcurrentChangeError(ProfileCustodyRecordIntegrityError):
-    """A capsule changed generation between two reads of one observation.
-
-    Narrower than its parent on purpose: the store is not damaged, the caller
-    simply lost a race with a publication or a deletion.  A listing that
-    reports this is telling the operator to look again, not to repair.
-    """
-
-
-class ProfileRecordEncryptedBlob(BaseModel):
-    """Neutral encrypted-record shape exchanged across the application port."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    nonce: bytes = Field(min_length=12, max_length=12)
-    ciphertext: bytes = Field(min_length=16)
-
-    def to_wire(self) -> bytes:
-        """Serialise the blob as its canonical nonce-plus-ciphertext bytes."""
-        return self.nonce + self.ciphertext
-
-    @classmethod
-    def from_wire(cls, payload: bytes) -> ProfileRecordEncryptedBlob:
-        """Parse the canonical wire representation without adapter imports."""
-        minimum = 12 + 16
-        if len(payload) < minimum:
-            raise ProfileRecordCryptoError(
-                f"AEAD payload too short: got {len(payload)} bytes, need at least {minimum}",
-            )
-        return cls(nonce=payload[:12], ciphertext=payload[12:])
-
-
-@dataclass(frozen=True, slots=True)
-class ProfilePassphraseKdfPolicy:
-    """Supported Argon2id version and window for passphrase-sealed records."""
-
-    version: int
-    minimum_memory_cost_kib: int
-    maximum_memory_cost_kib: int
-    minimum_time_cost: int
-    maximum_time_cost: int
-    minimum_parallelism: int
-    maximum_parallelism: int
-    salt_bytes: int
-
-
-@dataclass(frozen=True, slots=True)
-class ProfilePassphraseKdfParameters:
-    """Persisted KDF parameters accompanying one passphrase-sealed record."""
-
-    version: int
-    memory_cost: int
-    time_cost: int
-    parallelism: int
-    salt: bytes
-
-
-@dataclass(frozen=True, slots=True)
-class ProfilePassphraseEncryptedRecord:
-    """Neutral KDF metadata and AEAD ciphertext minted by persistence."""
-
-    parameters: ProfilePassphraseKdfParameters
-    blob: ProfileRecordEncryptedBlob
-
-
-class ProfileRecordCryptoPort(Protocol):
-    """AEAD and passphrase-sealing operations for profile-owned records."""
-
-    def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
-        """Return the single supported Argon2id version and cost window."""
-        ...
-
-    def passphrase_kdf_window_accepts(
-        self,
-        *,
-        memory_cost: int,
-        time_cost: int,
-        parallelism: int,
-        salt: bytes,
-    ) -> bool:
-        """Return whether persisted parameters satisfy the supported cost window."""
-        ...
-
-    def encrypt_record(
-        self,
-        plaintext: bytes,
-        *,
-        key: bytes,
-        associated_data: bytes | None = None,
-    ) -> ProfileRecordEncryptedBlob:
-        """Encrypt one record using authenticated associated data."""
-        ...
-
-    def decrypt_record(
-        self,
-        blob: ProfileRecordEncryptedBlob,
-        *,
-        key: bytes,
-        associated_data: bytes | None = None,
-    ) -> bytes:
-        """Decrypt one record and verify its authenticated associated data."""
-        ...
-
-    def seal_with_passphrase(
-        self,
-        plaintext: bytes,
-        *,
-        passphrase: bytes,
-        associated_data: bytes,
-    ) -> ProfilePassphraseEncryptedRecord:
-        """Derive a fresh passphrase key and seal one record under it."""
-        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -1084,6 +634,7 @@ class ProfileCustodyPort(Protocol):
         dek_epoch: str,
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength | None = None,
     ) -> ProfileCustodyRegistrationMaterial:
         """Mint a password envelope and its DEK sentinel.
 
@@ -1091,6 +642,20 @@ class ProfileCustodyPort(Protocol):
         or ``None`` for a new profile's first envelope. The adapter derives
         the successor's generation and predecessor digest from it rather
         than taking them as free values, so the two cannot disagree.
+
+        ``strength`` replaces calibration with a point measured earlier. It is
+        accepted only for a replacement and only when it lies on the grid,
+        fits this host, meets the fallback floor and is strictly stronger than
+        ``predecessor``'s; anything else is refused, never weakened.
+        """
+        ...
+
+    def measure_stronger_password_kdf(self, profile_id: UUID, *, root: Path | None = None) -> ProfileKdfStrength | None:
+        """Measure, in the background, a point strictly stronger than a fallback envelope's, else ``None``.
+
+        Only an envelope at the fixed fallback point is measured. The
+        measurement reads the envelope's public salt alone, yields to any
+        waiting unlock and never adopts the fallback.
         """
         ...
 
@@ -1163,6 +728,8 @@ class ProfileCustodyPort(Protocol):
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
+        timeout_deadline: float | None = None,
+        cancellation: ProfileProofCancellation | None = None,
     ) -> ProfileCustodyUnlockPort:
         """Authenticate one committed password envelope and sentinel."""
         ...
@@ -1173,6 +740,10 @@ class ProfileCustodyPort(Protocol):
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         """Durably deny delegated custody; return whether optional cleanup finished."""
+        ...
+
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        """Whether any local installation holds automation custody for ``profile_id``, retired or not."""
         ...
 
     def replace_password_envelope(
@@ -1193,6 +764,39 @@ class ProfileCustodyPort(Protocol):
         root: Path | None = None,
     ) -> ProfileCustodyPasswordMaterialPort:
         """Load the committed password proof material for one profile."""
+        ...
+
+    def stage_password_replacement(
+        self,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyEnvelopePort,
+        rotated: ProfileCustodyEnvelopePort,
+        previous_row_provenance: str,
+        rehead_row_provenance: str,
+        root: Path,
+    ) -> None:
+        """Durably publish the intent of one password-envelope replacement before its record re-head."""
+        ...
+
+    def make_record_durable(self, profile_id: UUID, *, root: Path) -> None:
+        """Make the profile record's committed writes durable against power loss."""
+        ...
+
+    def resolve_password_replacement(self, profile_id: UUID, *, root: Path) -> str:
+        """Settle an in-flight password replacement into one consistent state and name what it did."""
+        ...
+
+    def clear_password_replacement(self, profile_id: UUID, *, root: Path) -> None:
+        """Discard a settled password-replacement intent."""
+        ...
+
+    def password_replacement_pending(self, profile_id: UUID, *, root: Path) -> bool:
+        """Whether a password-replacement intent awaits resolution, without taking any lock."""
+        ...
+
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        """Whether the committed password envelope holds the fixed fallback KDF point."""
         ...
 
     def is_authentication_proof_failure(
@@ -1304,6 +908,7 @@ def create_profile_custody_registration_material(
     dek_epoch: str,
     salt: bytes,
     predecessor: ProfileCustodyEnvelopePort | None = None,
+    strength: ProfileKdfStrength | None = None,
 ) -> ProfileCustodyRegistrationMaterial:
     """Mint the password envelope and DEK sentinel at the custody boundary.
 
@@ -1320,6 +925,7 @@ def create_profile_custody_registration_material(
         dek_epoch=dek_epoch,
         salt=salt,
         predecessor=predecessor,
+        strength=strength,
     )
 
 
@@ -1422,6 +1028,8 @@ def unlock_profile_custody_password(
     material: ProfileCustodyPasswordProofMaterialPort,
     *,
     password: str,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> ProfileCustodyUnlockPort:
     """Authenticate one committed profile through its password envelope.
 
@@ -1431,7 +1039,9 @@ def unlock_profile_custody_password(
     material already loaded from the exact target capsule, so a caller cannot
     resolve one profile and unwrap another through ambient state.
     """
-    return profile_custody_port().unlock_password(material, password=password)
+    return profile_custody_port().unlock_password(
+        material, password=password, timeout_deadline=timeout_deadline, cancellation=cancellation
+    )
 
 
 def replace_profile_custody_password_envelope(
@@ -1450,11 +1060,59 @@ def replace_profile_custody_password_envelope(
     )
 
 
+def stage_profile_custody_password_replacement(
+    *,
+    profile_id: UUID,
+    current: ProfileCustodyEnvelopePort,
+    rotated: ProfileCustodyEnvelopePort,
+    previous_row_provenance: str,
+    rehead_row_provenance: str,
+    root: Path,
+) -> None:
+    """Durably publish one password replacement's recovery intent through its owner."""
+    profile_custody_port().stage_password_replacement(
+        profile_id=profile_id,
+        current=current,
+        rotated=rotated,
+        previous_row_provenance=previous_row_provenance,
+        rehead_row_provenance=rehead_row_provenance,
+        root=root,
+    )
+
+
+def make_profile_custody_record_durable(profile_id: UUID, *, root: Path) -> None:
+    """Make the profile record's committed writes durable through the custody boundary."""
+    profile_custody_port().make_record_durable(profile_id, root=root)
+
+
+def resolve_profile_custody_password_replacement(profile_id: UUID, *, root: Path) -> str:
+    """Settle an in-flight password replacement through the custody boundary; the caller holds the lock."""
+    return profile_custody_port().resolve_password_replacement(profile_id, root=root)
+
+
+def clear_profile_custody_password_replacement(profile_id: UUID, *, root: Path) -> None:
+    """Discard a settled password-replacement intent through the custody boundary."""
+    profile_custody_port().clear_password_replacement(profile_id, root=root)
+
+
+def profile_custody_password_replacement_pending(profile_id: UUID, *, root: Path) -> bool:
+    """Probe for an unresolved password replacement without taking the custody lock."""
+    return profile_custody_port().password_replacement_pending(profile_id, root=root)
+
+
 def load_profile_custody_password_material(
     profile_id: UUID, *, root: Path | None = None
 ) -> ProfileCustodyPasswordMaterialPort:
     """Load committed password proof material through the custody boundary."""
     return profile_custody_port().load_password_material(profile_id, root=root)
+
+
+def profile_custody_password_kdf_at_fallback(profile_id: UUID, *, root: Path | None = None) -> bool:
+    """Report whether a profile's committed password envelope holds the fixed fallback KDF point.
+
+    Reads only committed, non-secret envelope metadata; no key material is touched.
+    """
+    return profile_custody_port().password_kdf_at_fallback(profile_id, root=root)
 
 
 def map_profile_authentication_proof_failure(
@@ -1540,39 +1198,21 @@ __all__ = [
     "ProfileBucketStoragePathsPort",
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
-    "ProfileCustodyCapsuleLabelPort",
     "ProfileCustodyCarryMaterial",
-    "ProfileCustodyCommitPort",
-    "ProfileCustodyEnvelopePort",
-    "ProfileCustodyLabelHeadPort",
-    "ProfileCustodyLocalRecordStore",
-    "ProfileCustodyPasswordMaterialPort",
-    "ProfileCustodyPasswordProofMaterialPort",
     "ProfileCustodyPort",
-    "ProfileCustodyRecordIntegrityError",
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRecoveryEnrollmentMaterial",
-    "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodyRecoveryMaterialPort",
     "ProfileCustodyRecoveryUnlockPort",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
-    "ProfileCustodySecureObjectRawRowPort",
-    "ProfileCustodySecureObjectRecordPort",
-    "ProfileCustodySecureObjectRepositoryPort",
-    "ProfileCustodySentinelPort",
     "ProfileCustodyUnlockPort",
-    "ProfilePassphraseEncryptedRecord",
-    "ProfilePassphraseKdfParameters",
-    "ProfilePassphraseKdfPolicy",
-    "ProfileRecordCryptoError",
-    "ProfileRecordCryptoPort",
-    "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
+    "clear_profile_custody_password_replacement",
     "clear_profile_output_language_hint",
     "create_profile_custody_registration_material",
     "create_profile_recovery_enrollment_material",
@@ -1582,8 +1222,11 @@ __all__ = [
     "ensure_profile_custody_owner_root",
     "install_profile_recovery_envelope",
     "load_profile_custody_recovery_material",
+    "make_profile_custody_record_durable",
     "map_profile_authentication_proof_failure",
     "profile_custody_owner_root",
+    "profile_custody_password_kdf_at_fallback",
+    "profile_custody_password_replacement_pending",
     "profile_custody_port",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
@@ -1595,6 +1238,8 @@ __all__ = [
     "refuse_profile_login_without_password_channel",
     "remove_profile_recovery_envelope",
     "replace_profile_custody_password_envelope",
+    "resolve_profile_custody_password_replacement",
+    "stage_profile_custody_password_replacement",
     "unlock_profile_custody_password",
     "unlock_profile_custody_recovery",
     "verify_profile_custody_dek_against_sentinel",

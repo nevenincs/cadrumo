@@ -198,7 +198,7 @@ def project_auth_read_result(result: BaseModel, receipt: OperationTerminalReceip
         test=AuthTestSnapshot.from_test(validated.test) if validated.test else None,
         sync_readiness=validated.sync_readiness,
         setup=(
-            auth_setup_handoff(validated.profile_id, validated.sync_readiness)
+            auth_setup_handoff(validated.sync_readiness)
             if validated.kind == "setup" and validated.sync_readiness is not None
             else None
         ),

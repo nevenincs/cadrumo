@@ -16,8 +16,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
-from ..analysis import generated_tree_state as _generated_tree_state_module
+from ..analysis import generated_tree_state
 from ..analysis.generated_tree_state import STATES, classify_comparison, generated_state_inventory, tree_states
 from ..compiler.authority import compiled_bundled_authority
 
@@ -105,7 +106,7 @@ def test_a_comparison_failure_is_excluded_not_reported_reproducible(
     def _broken_compare(authority: object, *, modelo: str, revision: str, **_roots: object) -> object:
         raise ValueError(f"synthetic comparison failure for {modelo}/{revision}")
 
-    monkeypatch.setattr(_generated_tree_state_module, "compare_revision_against_committed", _broken_compare)
+    monkeypatch.setattr(generated_tree_state, "compare_revision_against_committed", _broken_compare)
 
     states = tree_states(authority, (modelo_id,))
 
@@ -121,17 +122,12 @@ def test_selected_candidate_record_drift_cannot_borrow_bundled_currentness(tmp_p
     authority = compiled_bundled_authority()
     candidate = tmp_path / "registry" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "111"), candidate / "modelos" / "111")
+    revision_id = str(open_ended_revision("111").id)
     record = (
-        candidate
-        / "modelos"
-        / "111"
-        / "revisions"
-        / "2019-y-siguientes"
-        / "export"
-        / "0001-record-modelo-111-page-01.toml"
+        candidate / "modelos" / "111" / "revisions" / revision_id / "export" / "0001-record-modelo-111-page-01.toml"
     )
     document = load_toml(record)
-    records = document["revisions"]["2019-y-siguientes"]["export_layouts"][0]["records"]
+    records = document["revisions"][revision_id]["export_layouts"][0]["records"]
     selected_record = next(item for item in records if item["id"] == "modelo-111-page-01")
     assert selected_record["id"] == "modelo-111-page-01"
     selected_record["id"] = "modelo-111-page-01-corrupt"

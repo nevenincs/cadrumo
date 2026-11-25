@@ -152,6 +152,10 @@ class CadrumoError(Exception):
 
     __bare_base_rationale__: ClassVar[str] = "central root of the registry-bound exception hierarchy"
 
+    #: Context keys the in-process envelope shows but a record kept for another
+    #: process never carries, because their values can repeat document content.
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset[str]()
+
     code = _DeclaredErrorCode()
 
     def __init_subclass__(cls, **kwargs: object) -> None:
@@ -187,7 +191,7 @@ class CadrumoError(Exception):
         renders a zero-length ``args`` and a one-element ``args`` of ``""``
         identically), so this changes only the shape of ``.args``, not any
         rendered text. That shape matters to a subclass such as
-        :class:`~entrypoints.cli._tty.NonTtyRefusedError`, which constructs
+        :class:`~entrypoints.cli.tty.NonTtyRefusedError`, which constructs
         with neither argument specifically so ``args`` stays empty and the CLI
         renderer's ``error.args and error.args[0]`` check
         (:mod:`core.errors.error_codes`) falls through to the registry
@@ -210,7 +214,12 @@ class CadrumoError(Exception):
 
 
 class RecordedRegisteredError(CadrumoError):
-    """Render a recorded registry reference without recreating its original exception."""
+    """Render a recorded registry reference without recreating its original exception.
+
+    A recorded error may keep the typed terminal verdict its original carried,
+    so a frontend can act on the remedy it names. The verdict is held opaque,
+    as :class:`TerminalPreconditionErrorMixin` holds it.
+    """
 
     def __init__(
         self,
@@ -218,17 +227,24 @@ class RecordedRegisteredError(CadrumoError):
         *,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
-        """Accept only a declared code and locally supplied presentation facts."""
+        """Accept only a declared code, locally supplied presentation facts and the recorded verdict."""
         from .error_codes import get_registered_error_code_by_code
 
         self._recorded_code = get_registered_error_code_by_code(registered_code).code
         super().__init__(context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
 
     @property
     def recorded_code(self) -> str:
         """Return the validated code, without exception text or arguments."""
         return self._recorded_code
+
+    @property
+    def terminal_precondition_verdict(self) -> object | None:
+        """Return the opaque terminal verdict the recorded error carried, if one was recorded."""
+        return self._terminal_precondition_verdict
 
 
 def pydantic_validation_boundary[**PydanticArgs, PydanticResultT](
@@ -260,6 +276,10 @@ class AuthError(CadrumoError):
 
 class AeatLoginAssertionError(AuthError):
     """Raised when an AEAT login assertion cannot be produced or trusted."""
+
+
+class ViewCaptureIdentityMismatchError(AeatLoginAssertionError):
+    """Raised when AEAT shows a Sede view's captured session signed in as another taxpayer."""
 
 
 class TerminalPreconditionErrorMixin[VerdictT]:
@@ -298,8 +318,13 @@ class CorpusAnchorResolutionError(CoreError):
     """Corpus authoring cannot resolve one unique extracted authority unit."""
 
 
-class InternalInvariantError(CoreError):
-    """Raised when composed production state violates an internal invariant."""
+class InternalInvariantError(TerminalPreconditionErrorMixin[object], CoreError):
+    """Raised when composed production state violates an internal invariant.
+
+    An invariant is a fault of the program or of stored state, never of the
+    operator's input, so a raise site in the operator-facing application layers
+    states the terminal verdict of the invariant it names.
+    """
 
 
 class DecimalFormatError(CoreError):
@@ -336,16 +361,6 @@ class ProfileAnswerTypeError(CoreValidationError):
     Application-layer wizard code raises the narrower
     :class:`application.wizard.errors.WizardAnswerTypeError`, which
     inherits from this class, so callers catching either type continue to work.
-    """
-
-
-class CadrumoObservabilityError(CadrumoError):
-    """Base class for observability-layer errors.
-
-    Lives in :mod:`core.errors` (rather than the leaf
-    :mod:`core.observability` subpackage) so other subpackages can catch it
-    without importing observability internals. Concrete subclasses are
-    declared in :mod:`core.observability.errors`.
     """
 
 

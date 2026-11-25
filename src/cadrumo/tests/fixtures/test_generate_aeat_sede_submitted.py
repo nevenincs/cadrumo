@@ -26,12 +26,12 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
-from ._generate_aeat_sede_submitted import (
-    _BASE_IMPONIBLE_AHORRO,
-    _BASE_IMPONIBLE_GENERAL,
-    _CARRY_AGREEMENT_NAME,
-    _CARRY_AGREEMENT_XML,
-    _SUBMITTED,
+from .generate_aeat_sede_submitted import (
+    BASE_IMPONIBLE_AHORRO,
+    BASE_IMPONIBLE_GENERAL,
+    CARRY_AGREEMENT_NAME,
+    CARRY_AGREEMENT_XML,
+    SUBMITTED,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -40,11 +40,11 @@ _UTF_8 = "utf-8"
 
 
 def _committed_xml() -> Path:
-    return _SUBMITTED / _CARRY_AGREEMENT_NAME
+    return SUBMITTED / CARRY_AGREEMENT_NAME
 
 
 def _root() -> Element[str]:
-    root = DefusedElementTree.fromstring(_CARRY_AGREEMENT_XML)
+    root = DefusedElementTree.fromstring(CARRY_AGREEMENT_XML)
     assert root is not None
     return root
 
@@ -59,7 +59,7 @@ def test_the_committed_fixture_is_still_what_the_generator_produces() -> None:
     """
     committed = _committed_xml().read_bytes()
 
-    assert committed == _CARRY_AGREEMENT_XML.encode(_UTF_8)
+    assert committed == CARRY_AGREEMENT_XML.encode(_UTF_8)
 
 
 def test_the_sidecar_records_the_bytes_beside_it() -> None:
@@ -88,8 +88,8 @@ def test_the_fixture_still_holds_the_property_it_exists_for() -> None:
     general = [node.text for node in root.iter() if node.tag in {"BIGRALH", "BIGRALJ"}]
     ahorro = [node.text for node in root.iter() if node.tag in {"BIAHOH", "BIAHOJ"}]
 
-    assert general == [_BASE_IMPONIBLE_GENERAL, _BASE_IMPONIBLE_GENERAL]
-    assert ahorro == [_BASE_IMPONIBLE_AHORRO, _BASE_IMPONIBLE_AHORRO]
+    assert general == [BASE_IMPONIBLE_GENERAL, BASE_IMPONIBLE_GENERAL]
+    assert ahorro == [BASE_IMPONIBLE_AHORRO, BASE_IMPONIBLE_AHORRO]
 
 
 def test_the_mandatory_aux_block_is_present_and_first() -> None:

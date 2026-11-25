@@ -22,12 +22,13 @@ from textual.dom import DOMNode
 from textual.timer import Timer
 from textual.widgets import Button, Footer, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.time.clock import now
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.time.clock import wall_now
 from cadrumo.entrypoints.tui.account import (
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
@@ -126,6 +127,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         self._requester_factory = requester_factory
         self._cleared = False
         self._locking = False
+        self._expiry_deferred = False
         self._reading = False
         self._lapse_timer: Timer | None = None
         self._disclosure_digest: ContentDigest | None = None
@@ -215,7 +217,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
             status,
             profile_id=self._profile_id,
             session_id=self._session_id,
-            at=now(),
+            at=wall_now(),
             requires_automation_grant=True,
         )
 
@@ -314,14 +316,27 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         """Read status once more when the session or its grant lapses."""
         if self._lapse_timer is not None:
             self._lapse_timer.stop()
-        delay = max(0.0, (deadline - now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
+        delay = max(0.0, (deadline - wall_now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
         self._lapse_timer = self.set_timer(delay, self._start_status_read)
 
     def _expire(self) -> None:
         if self._cleared:
             return
         self._clear_presentation()
+        if any(
+            isinstance(screen, RuntimeAutomationRequesterScreen) and screen.holds_request
+            for screen in self.screen_stack
+        ):
+            # A request this lease submitted, often the one whose approval
+            # retired it, settles on its own delivery. The person sees that
+            # settled result before the shell leaves; closing it leaves.
+            self._expiry_deferred = True
+            return
         self.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+
+    def _requester_closed(self, _outcome: object) -> None:
+        if self._expiry_deferred and self.is_running:
+            self.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
 
     def _begin_lock(self, action: _LockAction) -> None:
         if self._cleared or self._locking:
@@ -385,7 +400,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         factory = self._requester_factory
         if not self._cleared and not self._locking and self._binding_is_current() and factory is not None:
             try:
-                self.push_screen(factory(self._client))
+                self.push_screen(factory(self._client), callback=self._requester_closed)
             except Exception:
                 self._shell().query_one("#restricted-availability", Static).update(tr("tui.automation_request.invalid"))
 

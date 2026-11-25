@@ -30,10 +30,10 @@ from cadrumo_client.commands.shared_contracts import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+    translation_key,
 )
-from cadrumo_client.commands.shared_contracts import translation_key as _key
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.commands.spec_schema import config_payload_schema as _schema
+from cadrumo_client.commands.spec_schema import config_payload_schema
 from cadrumo_client.contracts.command_ports import CommandNodeKind, ProfileAuthenticationPosture
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage", __package__))
@@ -69,7 +69,7 @@ def _option(
         declarations=declarations,
         value=value,
         default=ParameterDefault.required() if required else ParameterDefault.value(False if flag else None),
-        help_key=_key(help_key),
+        help_key=translation_key(help_key),
         is_flag=flag,
         flag_value=True if flag else None,
         multiple=multiple,
@@ -94,9 +94,9 @@ _OUTPUT_LANGUAGE_OPTION = _option(
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_apoderado": "._apoderado",
-    "_auth": ".auth",
-    "_auth_diagnostics": "._auth_diagnostics",
+    "apoderado": ".apoderado",
+    "auth": ".auth",
+    "auth_diagnostics": ".auth_diagnostics",
     "certificate": ".certificate",
 }
 
@@ -123,13 +123,15 @@ def _leaf(
         parent_key=parent,
         token=token,
         kind=CommandNodeKind.LEAF,
-        help_key=_key(help_key),
+        help_key=translation_key(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(*parameters, _OUTPUT_LANGUAGE_OPTION),
         policy=policy,
         handler=_handler(module, handler),
-        result_schema=schema if isinstance(schema, ResultSchemaSpec) else _schema(schema, key.replace("_", ".")),
+        result_schema=schema
+        if isinstance(schema, ResultSchemaSpec)
+        else config_payload_schema(schema, key.replace("_", ".")),
         machine_secret=machine_secret,
         profile_authentication=profile_authentication,
     )
@@ -148,7 +150,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "providers",
         "cli.config.auth.providers_help",
-        "_auth",
+        "auth",
         "auth_providers",
         _AUTH_PROVIDERS_SCHEMA,
         ENCRYPTED_READ,
@@ -159,7 +161,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "configure",
         "cli.config.auth.configure_help",
-        "_auth",
+        "auth",
         "auth_configure",
         "AuthConfigurePayload",
         ENCRYPTED_WRITE,
@@ -182,7 +184,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "status",
         "cli.config.auth.status_help",
-        "_auth",
+        "auth",
         "auth_status",
         "AuthStatusPayload",
         ENCRYPTED_READ,
@@ -193,7 +195,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "test",
         "cli.config.auth.test_help",
-        "_auth",
+        "auth",
         "auth_test",
         "AuthTestPayload",
         ENCRYPTED_READ,
@@ -204,7 +206,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "login",
         "cli.config.auth.login_help",
-        "_auth",
+        "auth",
         "auth_login",
         "AuthLoginPayload",
         AEAT_SESSION_WRITE,
@@ -219,7 +221,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "logout",
         "cli.config.auth.logout_help",
-        "_auth",
+        "auth",
         "auth_logout",
         "AuthLogoutPayload",
         ENCRYPTED_WRITE,
@@ -233,7 +235,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth",
         "reset",
         "cli.config.auth.reset_help",
-        "_auth",
+        "auth",
         "auth_reset",
         "AuthResetPayload",
         ENCRYPTED_DESTRUCTIVE,
@@ -249,7 +251,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_diagnostics",
         "list",
         "cli.config.auth.diagnostics.list_help",
-        "_auth_diagnostics",
+        "auth_diagnostics",
         "auth_diagnostics_list",
         "AuthDiagnosticsListResult",
         ENCRYPTED_READ,
@@ -259,13 +261,16 @@ AUTH_COMMAND_SPECS = (
         "config_auth_diagnostics",
         "view",
         "cli.config.auth.diagnostics.view_help",
-        "_auth_diagnostics",
+        "auth_diagnostics",
         "auth_diagnostics_view",
         "AuthDiagnosticsViewResult",
         ENCRYPTED_READ,
         (
             ArgumentSpec(
-                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id",
+                TEXT_VALUE,
+                ParameterDefault.required(),
+                translation_key("cli.config.auth.diagnostics.id_help"),
             ),
         ),
     ),
@@ -274,13 +279,16 @@ AUTH_COMMAND_SPECS = (
         "config_auth_diagnostics",
         "report",
         "cli.config.auth.diagnostics.report_help",
-        "_auth_diagnostics",
+        "auth_diagnostics",
         "auth_diagnostics_report",
         "AuthDiagnosticsReportResult",
         ENCRYPTED_WRITE,
         (
             ArgumentSpec(
-                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id",
+                TEXT_VALUE,
+                ParameterDefault.required(),
+                translation_key("cli.config.auth.diagnostics.id_help"),
             ),
             _option(
                 "phone_state",
@@ -297,7 +305,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_apoderado",
         "status",
         "cli.config.auth.apoderado.status_help",
-        "_apoderado",
+        "apoderado",
         "apoderado_status",
         "ApoderadoStatusResult",
         ENCRYPTED_READ,
@@ -307,7 +315,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_apoderado",
         "configure",
         "cli.config.auth.apoderado.configure_help",
-        "_apoderado",
+        "apoderado",
         "apoderado_configure",
         "ApoderadoConfigureResult",
         ENCRYPTED_WRITE,
@@ -326,7 +334,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_apoderado",
         "clear",
         "cli.config.auth.apoderado.clear_help",
-        "_apoderado",
+        "apoderado",
         "apoderado_clear",
         "ApoderadoClearResult",
         ENCRYPTED_DESTRUCTIVE,
@@ -336,7 +344,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_apoderado",
         "check",
         "cli.config.auth.apoderado.check_help",
-        "_apoderado",
+        "apoderado",
         "apoderado_check",
         "ApoderadoCheckResult",
         ENCRYPTED_READ,
@@ -349,7 +357,7 @@ AUTH_COMMAND_SPECS = (
         "config_auth_apoderado_scopes",
         "list",
         "cli.config.auth.apoderado.scopes.list_help",
-        "_apoderado",
+        "apoderado",
         "apoderado_scopes_list",
         _APODERADO_SCOPES_SCHEMA,
         ENCRYPTED_READ,

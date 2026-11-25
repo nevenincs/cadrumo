@@ -181,7 +181,7 @@ class _Outcome:
     shape: str = ""
 
 
-def _bundled_designs() -> tuple[Path, ...]:
+def bundled_designs() -> tuple[Path, ...]:
     """Every parseable design file under the corpus, enumerated independently.
 
     Recursive and suffix-only on purpose: it asks nothing of the parser, the
@@ -351,7 +351,7 @@ def _provenance_only_design_names() -> frozenset[str]:
 
 
 def _outcomes() -> tuple[_Outcome, ...]:
-    return tuple(_classify(path) for path in _bundled_designs())
+    return tuple(_classify(path) for path in bundled_designs())
 
 
 def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:
@@ -362,7 +362,7 @@ def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:
     what AEAT publishes, every assertion below would pass over nothing, and that
     silence is exactly the failure mode this module exists to remove.
     """
-    designs = _bundled_designs()
+    designs = bundled_designs()
     assert designs, "no bundled design was enumerated at all; the corpus path or suffix set has moved"
     modelos = {path.relative_to(bundled_path(*_DESIGN_ROOT_PARTS)).parts[0] for path in designs}
     assert len(modelos) > 10, f"only {len(modelos)} modelo director(ies) reached; the walk has narrowed"
@@ -376,7 +376,7 @@ def test_every_bundled_design_produces_a_classified_outcome() -> None:
     worklist below is what says how many succeed.
     """
     outcomes = _outcomes()
-    assert len(outcomes) == len(_bundled_designs())
+    assert len(outcomes) == len(bundled_designs())
 
     unclassified = [
         f"modelo {outcome.modelo} design {outcome.design!r}: {outcome.detail}"
@@ -518,7 +518,7 @@ def test_every_correction_is_visibly_distinct_from_complete_and_carries_its_grou
 
     for outcome in corrected:
         assert outcome.detail, f"modelo {outcome.modelo} {outcome.design!r} is 'corrected' with no stated grounding"
-        matches = [path for path in _bundled_designs() if path.name == outcome.design]
+        matches = [path for path in bundled_designs() if path.name == outcome.design]
         assert matches, f"corrected design {outcome.design!r} no longer resolves to a bundled file"
         extraction = extract_record_design(matches[0])
         for correction in extraction.corrections:

@@ -60,6 +60,10 @@ MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
     "rd-1619-2012:art-2",
 )
 
+#: A declared received invoice claims a deduction whose factura the records do
+#: not hold; its ``invoice_id`` fact names the invoice to attach it to.
+INVOICE_SOURCE_DOCUMENT_MISSING_KEY = "application.modelo.findings.invoice_source_document_missing"
+
 
 #: Legal grounding for a cuota-less row that declares no base. LIVA art. 164.Uno.6
 #: obliges the taxpayer to declare the operations; the M303 base casillas are
@@ -76,11 +80,17 @@ CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS: tuple[str, ...] = (
 LEDGER_TRANSACTION_SOURCE_REF_PREFIX: Final = "transaction:"
 
 
+#: The scenario a rectificación de deducciones falls under while the records
+#: hold no factura rectificativa that grounds its authority. A received
+#: rectificativa holding its document is that authority's production writer, so
+#: this refusal is terminal only while the catalogue holds no such document.
+RECTIFICATION_DOCUMENT_SCENARIO: Final = "rectification_document_unrecordable"
+
+
 UNRECORDABLE_DEDUCTION_SCENARIOS: Final = {
-    "intra_eu_self_assessment": "intra_eu_self_assessment_unrecordable",
     "customs_declaration": "import_document_unrecordable",
     "reagp_receipt": "reagp_document_unrecordable",
-    "rectification_evidence": "rectification_document_unrecordable",
+    "rectification_evidence": RECTIFICATION_DOCUMENT_SCENARIO,
 }
 
 

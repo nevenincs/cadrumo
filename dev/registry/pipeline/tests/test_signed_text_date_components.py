@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from calendar import isleap
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import ParsedExportFieldValue, parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
@@ -17,14 +19,21 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.loader import load_shared_catalogues
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from ..joined_record_design import JoinedRecordDesignField, design_view
 from ..record_design_intermediate import load_record_design_intermediate
-from ..render_profile_validation import _field_anchor
+from ..render_profile_validation import field_anchor
 from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_HORIZON = filing_year_envelope().horizon
+#: The latest leap and common years up to the horizon: the calendar refusals need one of each.
+_LEAP = next(year for year in range(_HORIZON, _HORIZON - 8, -1) if isleap(year))
+_COMMON = next(year for year in range(_HORIZON, _HORIZON - 8, -1) if not isleap(year))
 
 
 def _component(
@@ -113,15 +122,22 @@ def test_text_date_components_round_trip_and_calendar_refusal() -> None:
         _component("day", 7, 2, ExportValuePolicy.YYYYMMDD_TEXT_DAY),
     )
     _record(fields)
-    for value in ("20240229", "20250101", "99991231"):
+    for value in (f"{_LEAP}0229", f"{_COMMON}0101", "99991231"):
         wire = "".join(render_fixed_width_export_field(field, value) for field in fields)
         assert wire == value
         parsed = _parse_components("layout", "components", wire, fields)
         assert tuple(item.value for item in parsed) == (value, value, value)
-    for value in ("20250229", "20251301", "20250132", "2025-01-01", "2025011", "202501011"):
+    for value in (
+        f"{_COMMON}0229",
+        f"{_COMMON}1301",
+        f"{_COMMON}0132",
+        f"{_COMMON}-01-01",
+        f"{_COMMON}011",
+        f"{_COMMON}01011",
+    ):
         with pytest.raises(RegistryValidationError):
             render_fixed_width_export_field(fields[0], value)
-    for wire in ("20250229", "20251301", "20250001", "202501AA"):
+    for wire in (f"{_COMMON}0229", f"{_COMMON}1301", f"{_COMMON}0001", f"{_COMMON}01AA"):
         with pytest.raises(RegistryValidationError):
             _parse_components("layout", "components", wire, fields)
     with pytest.raises(ValueError, match="complete adjacent components"):
@@ -130,7 +146,7 @@ def test_text_date_components_round_trip_and_calendar_refusal() -> None:
     assert "".join(render_fixed_width_export_field(field, None) for field in optional) == "00000000"
     assert all(item.value is None for item in _parse_components("layout", "components", "00000000", optional))
     with pytest.raises(RegistryValidationError):
-        _parse_components("layout", "components", "20250000", optional)
+        _parse_components("layout", "components", f"{_COMMON}0000", optional)
 
 
 def _signed_triplet(*, integer_width: int, zero_sign: bool = False) -> tuple[ExportFieldDefinition, ...]:
@@ -200,10 +216,17 @@ def test_signed_source_triplets_round_trip_and_refuse_impossible_shapes() -> Non
 def test_reviewed_pdf_parts_have_distinct_derived_profile_anchors() -> None:
     root = Path("src/cadrumo/_data")
     sources = load_shared_catalogues(root / "registry/aeat").sources
+    mappings = Path("dev/registry/mappings/modelo_190")
+    epoch = min(path.name for path in mappings.iterdir() if path.is_dir())
+    source_ref = f"aeat-dr-190-{epoch}"
     intermediate = load_record_design_intermediate(
-        root, sources, source_ref="aeat-dr-190-2020", filing_year=2020, design_epoch="2020"
+        root,
+        sources,
+        source_ref=source_ref,
+        filing_year=source_first_exercise(source_reference(source_ref)),
+        design_epoch=epoch,
     )
-    semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_190/2020"))
+    semantic_map = load_semantic_map(mappings / epoch)
     parent = next(
         field
         for sheet in intermediate.sheets
@@ -217,6 +240,6 @@ def test_reviewed_pdf_parts_have_distinct_derived_profile_anchors() -> None:
     sign_view = design_view(JoinedRecordDesignField(parser_field=parent, semantic_entry=sign))
     magnitude_view = design_view(JoinedRecordDesignField(parser_field=parent, semantic_entry=magnitude))
     assert (sign_view.semantic_part_offset, magnitude_view.semantic_part_offset) == (81, 82)
-    assert _field_anchor(sign_view) != _field_anchor(magnitude_view)
+    assert field_anchor(sign_view) != field_anchor(magnitude_view)
     assert parent.semantic_part_offset is None
     assert "semantic_part_offset" not in parent.model_dump(mode="json")

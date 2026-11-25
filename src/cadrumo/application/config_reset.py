@@ -14,8 +14,8 @@ from ..core.time.clock import now
 from ..domain.retention.errors import RetentionFloorError
 from ..domain.retention.floor import RetentionFloorAssessment, erase_is_blocked
 from .auth.certificate_secret_backend import CertificateSecretBackendFactory
-from .auth.operator import reset_operator_auth
 from .auth.operator_cleanup import clear_operator_auth_acquisition_locks
+from .auth.operator_revocation import reset_operator_auth
 from .auth.operator_scope import operator_auth_revocation_is_reachable
 from .auth.operator_scope_ports import OperatorScopePorts
 from .bucket_maintenance.contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
@@ -125,12 +125,12 @@ def start_config_reset(
     operation_id = new_config_reset_operation_id()
     with (
         repository.operation_lock(operation_id),
-        active_profile_pointer_transaction(settings.cadrumo_local_storage_root) as pointer_transaction,
+        active_profile_pointer_transaction(settings.cadrumo_storage_root) as pointer_transaction,
     ):
         pointer_snapshot = _capture_pointer_snapshot(pointer_transaction.read())
         target_ids = set(
             list_profile_buckets(
-                root=settings.cadrumo_local_storage_root,
+                root=settings.cadrumo_storage_root,
             ),
         )
         if pointer_snapshot.record.bucket_id is not None:
@@ -141,7 +141,7 @@ def start_config_reset(
             raise _already_running_error(exc) from exc
         maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
         with maintenance_service.deletion_target_locks(
-            root=settings.cadrumo_local_storage_root,
+            root=settings.cadrumo_storage_root,
             bucket_ids=target_ids,
             wait_seconds=settings.cadrumo_file_lock_timeout_s,
         ):
@@ -244,7 +244,7 @@ def resume_config_reset(
         if operation.status is ConfigResetOperationStatus.COMPLETE:
             return operation
         with active_profile_pointer_transaction(
-            settings.cadrumo_local_storage_root,
+            settings.cadrumo_storage_root,
         ) as pointer_transaction:
             current_pointer = _capture_pointer_snapshot(pointer_transaction.read())
             lock_ids = tuple(
@@ -259,7 +259,7 @@ def resume_config_reset(
             )
             maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
             with maintenance_service.deletion_target_locks(
-                root=settings.cadrumo_local_storage_root,
+                root=settings.cadrumo_storage_root,
                 bucket_ids=lock_ids,
                 wait_seconds=settings.cadrumo_file_lock_timeout_s,
             ):
@@ -779,7 +779,7 @@ def _clear_auth_for_targets(
         target = _update_target(
             target,
             fingerprint=assessment.fingerprint,
-            retention=_retention_decision_from_record(
+            retention=retention_decision_from_record(
                 assessment.retention,
                 target.retention,
             ),
@@ -791,10 +791,11 @@ def _clear_auth_for_targets(
     return operation
 
 
-def _retention_decision_from_record(
+def retention_decision_from_record(
     assessment: RetentionFloorAssessment | None,
     recorded: ConfigResetRetentionDecision | None,
 ) -> ConfigResetRetentionDecision:
+    """Return the retention decision to apply, keeping an override only where still valid."""
     if assessment is None:
         return _retention_decision(
             None,
@@ -845,7 +846,7 @@ def _reconcile_pointer(
         repository.save(operation)
     active_bucket_id = operation.pointer_snapshot.record.bucket_id
     if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
-        with active_profile_pointer_transaction(load_settings().cadrumo_local_storage_root) as pointer_transaction:
+        with active_profile_pointer_transaction(load_settings().cadrumo_storage_root) as pointer_transaction:
             pointer_transaction.clear()
     for index in indexes:
         target = operation.targets[index]
@@ -859,7 +860,7 @@ def _reconcile_pointer(
     return operation
 
 
-def _refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
+def refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
     """Refuse to erase a target whose filed records are still legally retained.
 
     The Administration's right to review a filed self-assessment prescribes four
@@ -1008,14 +1009,14 @@ def _delete_targets(
         )
         target = _update_target(
             target,
-            retention=_retention_decision_from_record(assessment.retention, target.retention),
+            retention=retention_decision_from_record(assessment.retention, target.retention),
         )
         operation = _replace_target(operation, index, target)
         repository.save(operation)
         if target.phase is ConfigResetTargetPhase.DELETING and not assessment.exists:
             operation = _recognize_completed_erase(repository, operation, index, target)
             continue
-        _refuse_erase_inside_the_retention_floor(target)
+        refuse_erase_inside_the_retention_floor(target)
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(
                 target,

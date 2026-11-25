@@ -28,21 +28,19 @@ test (aeat-quality-gates).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.iva_ledger import (
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
+from cadrumo.application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from cadrumo.application.prorrata_register.service import ProrrataRegisterService
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -52,7 +50,7 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -64,13 +62,6 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across operator ingress and IVA projection."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
@@ -148,6 +139,7 @@ def _save_txns(
 
 def _deducible_cuota(
     tx_repo: TransactionCatalogueRepository,
+    invoices: InvoiceCatalogueRepository,
     *,
     operation: PinnedAuthorityOperation,
 ) -> Decimal:
@@ -156,6 +148,7 @@ def _deducible_cuota(
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
+        invoice_reader=invoices,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
@@ -194,7 +187,9 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(
         tx_repo = _save_txns(objects, txns)
 
         # Non-electing operator: no register write -> whole-entity, no apportionment.
-        baseline = _deducible_cuota(tx_repo, operation=authority_operation)
+        baseline = _deducible_cuota(
+            tx_repo, InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects), operation=authority_operation
+        )
 
         # Operator elects especial through the exact service `elect-especial` calls.
         _active_service(operation=authority_operation).declare(
@@ -207,7 +202,9 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(
                 source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             )
         )
-        especial = _deducible_cuota(tx_repo, operation=authority_operation)
+        especial = _deducible_cuota(
+            tx_repo, InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects), operation=authority_operation
+        )
 
     multiplier = general_percentage / Decimal("100")
     # LIVA art. 106.Uno: regla 1.a (full) + regla 2.a (nil) + regla 3.a (general %).
@@ -237,7 +234,9 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(
         objects = profile.repository
         tx_repo = _save_txns(objects, txns)
 
-        baseline = _deducible_cuota(tx_repo, operation=authority_operation)
+        baseline = _deducible_cuota(
+            tx_repo, InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects), operation=authority_operation
+        )
 
         service = _active_service(operation=authority_operation)
         # Operator declares the art. 9.1.c partition (`declare-sector`) ...
@@ -265,7 +264,9 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
-        sectored = _deducible_cuota(tx_repo, operation=authority_operation)
+        sectored = _deducible_cuota(
+            tx_repo, InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects), operation=authority_operation
+        )
 
     # LIVA art. 101: each sector's input deducts at its sector percentage.
     expected_sectored = _INPUT_CUOTA * (sector_a_pct / Decimal("100")) + _INPUT_CUOTA * (sector_b_pct / Decimal("100"))
@@ -289,6 +290,8 @@ def test_non_electing_operator_path_is_byte_identical(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = _save_txns(objects, txns)
-        result = _deducible_cuota(tx_repo, operation=authority_operation)
+        result = _deducible_cuota(
+            tx_repo, InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects), operation=authority_operation
+        )
 
     assert result == _INPUT_CUOTA * 2

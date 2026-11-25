@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Retenciones sobre alquileres de inmuebles urbanos."
-definition = "Autoliquidacion periodica de las retenciones practicadas sobre las rentas pagadas por el arrendamiento de inmuebles urbanos, como el local del negocio."
+definition = "Autoliquidación periódica de las retenciones practicadas sobre las rentas pagadas por el arrendamiento de inmuebles urbanos, como el local del negocio."
 
 [language.es.source]
 citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007."

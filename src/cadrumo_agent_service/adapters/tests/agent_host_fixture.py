@@ -92,6 +92,9 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
+    if mode == "waiting_ready":
+        sys.stdin.buffer.read()
+        return
     if mode == "chatty":
         sys.stderr.buffer.write(b"x" * CHATTY_BYTES)
         sys.stderr.buffer.flush()

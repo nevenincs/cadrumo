@@ -2,24 +2,28 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.legal_text import spanish_date
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_snapshot as _committed_snapshot,
+    committed_modelo,
+    committed_snapshot,
 )
 from .authored_edition_support import legal_text_match
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+_NEWEST = open_ended_revision("036")
+_NEWEST_EDITION = str(_NEWEST.id)
+#: The day the open-ended edition's design takes effect, and the exercise it falls in.
+_NEWEST_FROM = _NEWEST.valid_from
+#: The authored edition right before the open-ended one.
+_PREVIOUS_EDITION = str(authored_revisions("036")[-2].id)
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "orden-eha-1274-2007:art-1",
@@ -33,7 +37,7 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 
 
 def _load_modelo_036() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("036")
+    return committed_modelo("036")
 
 
 def test_modelo_036_validator_accepts_committed_definition() -> None:
@@ -47,7 +51,7 @@ def test_modelo_036_validator_accepts_committed_definition() -> None:
 def test_modelo_036_metadata_matches_its_approving_and_amending_ordenes() -> None:
     modelo, _ = _load_modelo_036()
     assert modelo.tax_domain == "censo"
-    assert modelo.cadence == "ad_hoc"
+    assert modelo.cadence == "event"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-1274-2007:art-1" in modelo.legal_refs
     assert "orden-eha-1274-2007:art-2" in modelo.legal_refs
@@ -79,7 +83,7 @@ def test_modelo_036_revision_starts_when_the_amending_orden_applies() -> None:
 
 
 def test_modelo_036_snapshot_builds_for_event_periods() -> None:
-    # M036 is event-triggered (cadence="ad_hoc"); the period names are
+    # M036 is event-triggered (cadence="event"); the period names are
     # the three censal event kinds the form supports. Snapshot.period
     # max_length=32 accommodates these descriptive names.
     for period in ("alta", "modificacion", "baja"):
@@ -87,23 +91,23 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
         # censal alta/modificacion/baja is filed on AEAT's sede -- this
         # application produces no fichero for it, so a filing-grade snapshot
         # asks for capability the modelo neither has nor claims.
-        snapshot = _committed_snapshot(
+        snapshot = committed_snapshot(
             "036",
-            2025,
+            _NEWEST_FROM.year,
             period,
             RegistryAuthorityGrade.APPLICABILITY,
-            on=date(2025, 2, 3),
+            on=_NEWEST_FROM,
         )
-        assert snapshot.revision.id == "2025-02-03-y-siguientes"
+        assert snapshot.revision.id == _NEWEST_EDITION
 
 
 def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
-    snapshot = _committed_snapshot(
+    snapshot = committed_snapshot(
         "036",
-        2025,
+        _NEWEST_FROM.year,
         "alta",
         RegistryAuthorityGrade.APPLICABILITY,
-        on=date(2025, 2, 3),
+        on=_NEWEST_FROM,
     )
     assert "rd-1065-2007:art-9" in snapshot.legal
     assert "rd-1065-2007:art-10" in snapshot.legal
@@ -115,7 +119,7 @@ def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
 
 def test_modelo_036_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_036()
-    revision = modelo.revisions["2025-02-03-y-siguientes"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     profile = next(profile for profile in revision.extraction_profiles if profile.id == "modelo-036-declaracion-pdf")
 
@@ -129,15 +133,15 @@ def test_modelo_036_declaration_pdf_profile_legal_refs_match_target_casillas() -
 
 def test_modelo_036_filing_schedule_is_event_triggered() -> None:
     modelo, _ = _load_modelo_036()
-    revision = modelo.revisions["2025-02-03-y-siguientes"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-036-event-triggered")
-    assert schedule.period_kind == "ad_hoc"
+    assert schedule.period_kind == "event"
     assert set(schedule.periods) == {"alta", "modificacion", "baja"}
 
 
 def test_historical_modelo_036_filing_consumer_cites_the_applicable_boe_clause() -> None:
     modelo, _ = _load_modelo_036()
-    revision = modelo.revisions["2023-hasta-2025-02-02"]
+    revision = modelo.revisions[_PREVIOUS_EDITION]
 
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
     filing = next(link for link in revision.application_links if link.surface == "filing")

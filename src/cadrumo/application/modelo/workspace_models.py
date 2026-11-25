@@ -32,39 +32,42 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.filing.schema import ModeloScalar
-from ...domain.modelos.calculation_revision import CalculationSourceRef
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
 from ..operator_actions.models import ActionReference
-from ..state_projection import ProjectionModeloReadiness
-from . import _workspace_model_validation as _workspace_validation
+from ..state_projection_models import ProjectionModeloReadiness
+from . import workspace_model_validation
+from .edit_contract import MAX_REPEATED_ROW_VALUES
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
 
-_complete_capability_denominator = _workspace_validation.complete_capability_denominator
-_require_facet_availability_payload = _workspace_validation.require_facet_availability_payload
-_require_facet_baseline_coordinate = _workspace_validation.require_facet_baseline_coordinate
-_require_facet_cursor_coordinate = _workspace_validation.require_facet_cursor_coordinate
-_require_facet_page_state = _workspace_validation.require_facet_page_state
-_require_graded_projection_facet_coordinates = _workspace_validation.require_graded_projection_facet_coordinates
-_require_graded_projection_facet_names = _workspace_validation.require_graded_projection_facet_names
-_require_graded_projection_facets = _workspace_validation.require_graded_projection_facets
-_require_projection_baseline_coordinate = _workspace_validation.require_projection_baseline_coordinate
-_require_projection_capability_coordinates = _workspace_validation.require_projection_capability_coordinates
-_require_projection_readiness_coordinate = _workspace_validation.require_projection_readiness_coordinate
-_require_projection_schema_facet_contributors = _workspace_validation.require_projection_schema_facet_contributors
-_require_projection_schema_facet_coordinate = _workspace_validation.require_projection_schema_facet_coordinate
-_require_projection_schema_facet_identity = _workspace_validation.require_projection_schema_facet_identity
-_require_projection_schema_facet_name = _workspace_validation.require_projection_schema_facet_name
-_require_static_projection_scope = _workspace_validation.require_static_projection_scope
-_require_unique_contributor_identities = _workspace_validation.require_unique_contributor_identities
+_complete_capability_denominator = workspace_model_validation.complete_capability_denominator
+_require_facet_availability_payload = workspace_model_validation.require_facet_availability_payload
+_require_facet_baseline_coordinate = workspace_model_validation.require_facet_baseline_coordinate
+_require_facet_cursor_coordinate = workspace_model_validation.require_facet_cursor_coordinate
+_require_facet_page_state = workspace_model_validation.require_facet_page_state
+_require_graded_projection_facet_coordinates = workspace_model_validation.require_graded_projection_facet_coordinates
+_require_graded_projection_facet_names = workspace_model_validation.require_graded_projection_facet_names
+_require_graded_projection_facets = workspace_model_validation.require_graded_projection_facets
+_require_projection_baseline_coordinate = workspace_model_validation.require_projection_baseline_coordinate
+_require_projection_capability_coordinates = workspace_model_validation.require_projection_capability_coordinates
+_require_projection_readiness_coordinate = workspace_model_validation.require_projection_readiness_coordinate
+_require_projection_schema_facet_contributors = workspace_model_validation.require_projection_schema_facet_contributors
+_require_projection_schema_facet_coordinate = workspace_model_validation.require_projection_schema_facet_coordinate
+_require_projection_schema_facet_identity = workspace_model_validation.require_projection_schema_facet_identity
+_require_projection_schema_facet_name = workspace_model_validation.require_projection_schema_facet_name
+_require_static_projection_scope = workspace_model_validation.require_static_projection_scope
+_require_unique_contributor_identities = workspace_model_validation.require_unique_contributor_identities
 
 _MAX_FACET_PAGE_SIZE = 200
 _MAX_CONTRIBUTORS = 32
 _MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
+# A formula's distinct reads: the Modelo 100 sum of autonomic deductions reads a box
+# for every enrolled deduction of every comunidad, several hundred.
+_MAX_FORMULA_OPERANDS = 2048
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
-_MAX_REPEATED_ROW_VALUES = 200
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
@@ -603,7 +606,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     check, so it cannot honestly claim "no constraints declared" the way an
     empty tuple would."""
     formula_operands: Annotated[
-        tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+        tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_FORMULA_OPERANDS)
     ] = ()
     relation_endpoints: Annotated[
         tuple[ModeloWorkspaceRelationEndpointReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
@@ -654,7 +657,7 @@ class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
     binding_id: BindingId
     row_index: Annotated[int, Field(ge=1)]
     values: Annotated[
-        tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=_MAX_REPEATED_ROW_VALUES)
+        tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=MAX_REPEATED_ROW_VALUES)
     ]
 
 
@@ -939,7 +942,7 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     """The canonical readiness report for this exact target, when measured.
 
     Deliberately the producer's own
-    :class:`~cadrumo.application.state_projection.ProjectionModeloReadiness`
+    :class:`~cadrumo.application.state_projection_models.ProjectionModeloReadiness`
     rather than a Workspace-local restatement of it. Every axis this
     projection would carry -- profile requirements, registry availability,
     binding resolution, ledger preflight -- is already typed on that record,

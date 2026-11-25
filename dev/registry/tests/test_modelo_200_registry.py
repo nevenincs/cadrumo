@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from html import unescape
 from typing import get_args
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft
@@ -23,7 +23,9 @@ from cadrumo.core.filing_projection_ref import (
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -31,15 +33,34 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_casill
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.legal_grounding import verify_legal_catalogue_grounding
 from dev.registry.compiler.loader import modelo_fact_scope
-from dev.registry.edition_export_scenarios import M200_SCENARIO_PERIODS, m200_export_scenario
+from dev.registry.edition_export_scenarios import m200_export_scenario
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 
-from .authored_edition_support import source_first_exercise, source_with_sha256, sources_where
+from .authored_edition_support import (
+    newest_authored_editions,
+    revision_covering,
+    source_first_exercise,
+    source_with_sha256,
+    sources_where,
+)
+from .filing_reach_support import with_filing_reach
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The two newest Modelo 200 editions the registry authors. The AEAT manual worked examples the
+# calculation oracles reproduce are the earlier edition's, which the newest edition's design
+# continues.
+_ORACLE_EXERCISE, _CURRENT_EXERCISE = newest_authored_editions("200", 2)
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.casilla") -> CasillaId:
@@ -129,13 +150,13 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=_ORACLE_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     construct = snapshot.revision.constructs[0]
     assert construct.filing_schedules == ("modelo-200-anual",)
-    assert construct.deadline_windows == ("modelo-200-2024-0a",)
+    assert construct.deadline_windows == (f"modelo-200-{_ORACLE_EXERCISE}-0a",)
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
     }
@@ -151,15 +172,21 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
     } <= linked_surfaces
 
 
-# The exercise of the official Modelo 200 design whose generated layout is published
-# at filing grade, found by the design's pinned bytes.
+# The exercise of the official Modelo 200 design whose generated layout is published,
+# found by the design's pinned bytes.
 _GENERATED_LAYOUT_EXERCISE = source_first_exercise(
     source_with_sha256("92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509")
 )
 
 
-def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
-    """The published generated layout makes its earned filing claim live."""
+def test_modelo_200_generated_layout_reaches_exactly_its_declared_grade() -> None:
+    """The published generated layout is served at the grade its edition declares, and no higher.
+
+    A layout is not a filing claim. The edition carrying it is read at
+    calculation grade, where the layout and its casillas are present; a filing
+    snapshot is served only if the edition itself declares filing grade, and
+    is otherwise refused at the authority boundary with the declared rung named.
+    """
     modelo, catalogues = _load_modelo_200()
 
     snapshot = build_snapshot(
@@ -168,12 +195,36 @@ def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
         source_root=bundled_path(),
         filing_year=_GENERATED_LAYOUT_EXERCISE,
         period="0A",
-        grade=RegistryAuthorityGrade.FILING,
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
-
-    assert snapshot.revision.authority_grade is RegistryAuthorityGrade.FILING
     assert len(snapshot.revision.export_layouts) == 1
     assert snapshot.revision.casillas
+
+    declared = snapshot.revision.effective_authority_grade
+    if declared is RegistryAuthorityGrade.FILING:
+        filing = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=_GENERATED_LAYOUT_EXERCISE,
+            period="0A",
+            grade=RegistryAuthorityGrade.FILING,
+        )
+        assert filing.revision.id == snapshot.revision.id
+        return
+    with pytest.raises(RegistryValidationError) as exc_info:
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=_GENERATED_LAYOUT_EXERCISE,
+            period="0A",
+            grade=RegistryAuthorityGrade.FILING,
+        )
+    assert str(exc_info.value) == (
+        f"modelo 200 revision {snapshot.revision.id} declares {declared.value!r} authority grade, "
+        "which cannot satisfy the requested 'filing' snapshot authority."
+    )
 
 
 # Every bundled Modelo 200 approving order, read with the exercise its applicability
@@ -217,7 +268,7 @@ def test_modelo_200_calendar_year_deadline_matches_boe_order(source_id: str) -> 
 
 def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_200()
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[revision_covering("200", _ORACLE_EXERCISE).id]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
     # Grounding is proved against the bundled corpus itself: the evidence
@@ -228,8 +279,16 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs
     assert revision.orden_aplicabilidad == (_M200_FORM_ORDER_REF,)
-    assert catalogues.sources["aeat-modelo-200-manual-2024"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources["boe-modelo-200-2025-form"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources[f"aeat-modelo-200-manual-{_ORACLE_EXERCISE}"].evidence_tier == "official_source_guidance"
+    (order_form,) = sources_where(
+        lambda source: (
+            source.id.startswith("boe-modelo-200-")
+            and source.id.endswith("-form")
+            and source.applies_from is not None
+            and source.applies_from.year == _ORACLE_EXERCISE
+        )
+    )
+    assert order_form.evidence_tier == "official_source_guidance"
     reference = legal[_M200_FORM_ORDER_REF]
     assert reference.document_id == "BOE-A-2025-12818"
     assert reference.kind == "orden"
@@ -243,7 +302,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -267,7 +326,7 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -287,15 +346,14 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
         references = tuple(reference for reference in m200_references if type(reference) is model_type)
         declared_slots = {_projection_slot(reference) for reference in references}
         slot_cap = max(declared_slots)
-        upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
+        code_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
 
         assert declared_slots == set(range(1, slot_cap + 1))
-        assert upper_bound == {slot_cap}
+        assert code_bound == set(), "the revision's endpoints own the slot cap"
         assert all(filing_projection_ref_casilla_id(reference) is None for reference in references)
 
         cap_plus_one = references[0].model_dump(mode="json") | {"slot": slot_cap + 1}
-        with pytest.raises(ValidationError, match="less than or equal"):
-            compile_filing_projection_ref(cap_plus_one)
+        assert compile_filing_projection_ref(cap_plus_one) not in m200_references
 
 
 def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segmento() -> None:
@@ -317,7 +375,7 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -352,7 +410,7 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -401,9 +459,11 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
     )
 
     liquida_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_CASILLA].expression))
+    # The manual's operation subtracts the deductions applied from 00582 and floors at zero; the
+    # cuota liquida minima 00619 bounds the deductions consigned, not the cuota liquida itself.
+    assert _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA not in liquida_refs
     assert {
         _M200_CUOTA_LIQUIDA_PREVIA_CASILLA,
-        _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA,
         _m200_casilla("DP200014B:00583"),
         _m200_casilla("DP200014B:00585"),
         _m200_casilla("DP200014B:00584"),
@@ -466,18 +526,16 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     ``00599 = (00625 / 100) x (00592 - 01766 - 01784)`` and
     ``00611 = 00599 - pagos_fraccionados`` produce the signed results.
     Pagos fraccionados ``(00601 + 00603 + 00605)`` are sourced from the
-    company's Modelo 202 instalment filings and reach Modelo 200 through
-    the ``modelo-200-pagos-fraccionados-anuales`` cross-model
-    relation, which aggregates the 1P/2P/3P instalments; the worked
-    example's 10.000 pagos fraccionados is supplied as that relation's
-    resolved value.
+    company's Modelo 202 instalment filings, one relation per instalment
+    and modalidad; the worked example states only their 10.000 total, so it
+    is supplied as the first instalment and the others are 0.
     """
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -489,16 +547,21 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("10000"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("10000"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
@@ -516,13 +579,13 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
     stages where a positive upstream value can silently produce a zero downstream
     one (`no-silent-under-declaration`):
 
-    - ``00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
+    - ``DP200012:00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
     - ``00501`` (resultado antes de IS) → ``DP200014:00552`` (base imponible)
 
     Each remaining manual transition is guarded by an ADVISORY
     ``implies_nonzero`` predicate so a positive accounting profit cannot silently
     grant VERIFICADO_COMPLETO with a zero fiscal base. The earliest guard
-    (00500→00501) is what catches the
+    (DP200012:00500→00501) is what catches the
     operator who declares a profit but leaves the fiscal-base starting point at
     zero — a case the 00501→00552 advisory cannot catch because 00501 is *its*
     antecedent. The cuota stage is now formula-owned, so a stale advisory there
@@ -533,7 +596,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -541,7 +604,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
     predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
     expected = {
         "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": (
-            'implies_nonzero(["00500", "DP200012:00501"])'
+            'implies_nonzero(["DP200012:00500", "DP200012:00501"])'
         ),
         "modelo-200-base-imponible-determinada-cuando-resultado-positivo": (
             'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
@@ -569,7 +632,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -586,13 +649,18 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
                 "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+                "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
-                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+                "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+                "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
             },
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
         )
 
 
@@ -613,7 +681,9 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     sociedad de responsabilidad limitada). A sociedad de capital is
     taxed at the LIS Art. 29 general rate, so the dispatch resolves
     ``00558`` to the registry's ``is.modelo-200.tipo-gravamen-general``
-    value (25); the cuota íntegra then matches the manual oracle.
+    value (25), which the current edition's casilla 00558 holds as its record
+    design's four-digit code "2500" (aeat-dr-200-2025 DP200014 field 31,
+    Nota 1); the cuota íntegra then matches the manual oracle.
 
     The expected outputs are read from the manual table, not recomputed
     by the test author, so the test fails if the registry formula or the
@@ -624,7 +694,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -642,20 +712,25 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
-        "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general rate (25) for a sociedad limitada"
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2500"), (
+        "tipo de gravamen 00558 must code the LIS Art. 29 general rate (25) as 2500 for a sociedad limitada"
     )
     assert result.values[_M200_BASE_NIVELACION_CASILLA] == Decimal("1000000.00"), (
         "base imponible después de la reserva de nivelación 01330 must equal "
@@ -680,7 +755,7 @@ def _normalized_text(value: str) -> str:
     )
 
 
-def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif() -> None:
+def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif(registry_authority) -> None:
     """The canonical 2025 scenario exports, and page 21's INCN block carries its NIF.
 
     Six records of the layout consist of projection fields alone and are
@@ -693,11 +768,22 @@ def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif()
     permanente. NIF de los establecimientos permanentes [1..5]" at positions
     288, 297, 306, 315 and 324, each nine characters, alfanumérico.  One
     supplied row fills slot 1 and leaves slots 2-5 to blancos.
+
+    The writer serves filing-grade snapshots only, and the edition is rendered
+    for its own bytes, not for a filing claim, so its grade is lifted in an
+    in-memory copy of the authority; the registry's declared grade is untouched.
     """
-    period = M200_SCENARIO_PERIODS["2025-y-siguientes"]
+    edition = revision_covering("200", _CURRENT_EXERCISE)
+    (token,) = edition.period_selector.periods_for_year(_CURRENT_EXERCISE)
+    period = Period.from_year_and_code(_CURRENT_EXERCISE, str(token))
     scenario = m200_export_scenario(period)
     registry_root = bundled_path("registry", "aeat")
-    payload, profile = _render_scenario_payload(scenario, registry_root=registry_root, period=period)
+    payload, profile = _render_scenario_payload(
+        scenario,
+        registry_root=registry_root,
+        authority=with_filing_reach(registry_authority, "200", str(edition.id)),
+        period=period,
+    )
 
     page_21 = next(record for record in payload.split(b"\r\n") if record.startswith(b"<T20021000>"))
     assert isinstance(profile, Modelo200ProfileFacts)
@@ -716,31 +802,29 @@ class _ScenarioPayloadSink:
         self.payload = payload.payload
 
 
-def _render_scenario_payload(scenario, *, registry_root, period) -> tuple[bytes, object]:
-    with modelo_fact_scope(registry_root / "modelos" / "200"):
-        authority = compile_validated_authority(registry_root, bundled_path())
-        with validating_governed_facts(authority):
-            provider = schema_provider_from_authority(
-                authority,
-                modelos=("200",),
-                filing_year=period.filing_year,
-                period=period,
-            )
-            draft = build_draft(
-                modelo="200",
-                period=period,
-                profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 projection pages"),
-                inputs=scenario.inputs,
-                schema_provider=provider,
-            ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-            sink = _ScenarioPayloadSink()
-            producer_snapshot = scenario.producer_snapshot()
-            export_draft(
-                draft,
-                payload_consumer=sink,
-                producer_snapshot=producer_snapshot,
-                prior_domiciliation_election=scenario.prior_domiciliation_election,
-                product_software_identity=scenario.product_software_identity_factory(),
-                schema_provider=provider,
-            )
+def _render_scenario_payload(scenario, *, registry_root, authority, period) -> tuple[bytes, object]:
+    with modelo_fact_scope(registry_root / "modelos" / "200"), validating_governed_facts(authority):
+        provider = schema_provider_from_authority(
+            authority,
+            modelos=("200",),
+            filing_year=period.filing_year,
+            period=period,
+        )
+        draft = build_draft(
+            modelo="200",
+            period=period,
+            profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 projection pages"),
+            inputs=scenario.inputs,
+            schema_provider=provider,
+        ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+        sink = _ScenarioPayloadSink()
+        producer_snapshot = scenario.producer_snapshot()
+        export_draft(
+            draft,
+            payload_consumer=sink,
+            producer_snapshot=producer_snapshot,
+            prior_domiciliation_election=scenario.prior_domiciliation_election,
+            product_software_identity=scenario.product_software_identity_factory(),
+            schema_provider=provider,
+        )
     return sink.payload, producer_snapshot.model_profile

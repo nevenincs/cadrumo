@@ -4,7 +4,7 @@
 use std::{
     fs,
     io::{self, Read},
-    os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    os::fd::{AsFd, AsRawFd, FromRawFd, OwnedFd},
     os::unix::net::UnixStream,
     path::PathBuf,
 };
@@ -24,6 +24,11 @@ pub struct Identity {
 }
 
 impl Process {
+    /// Observe exit through the exact pidfd that authenticated this process.
+    pub fn exit_watch(&self) -> io::Result<cadrumo_platform::process_exit::ProcessExitWatch> {
+        cadrumo_platform::process_exit::ProcessExitWatch::from_pidfd(self.descriptor.as_fd())
+    }
+
     pub fn pid(&self) -> u32 {
         self.pid
     }
@@ -303,55 +308,5 @@ mod tests {
         assert!(!process.alive().unwrap());
         assert!(process.signal(libc::SIGTERM).is_err());
         assert!(process.identity().is_err());
-    }
-}
-
-/// A wait on one process's exit that blocks in the kernel instead of polling.
-#[derive(Debug)]
-pub struct ExitWatch(OwnedFd);
-
-impl ExitWatch {
-    /// Share the held pidfd, so the watch names exactly the held process.
-    pub fn of(process: &Process) -> io::Result<Self> {
-        process.descriptor.try_clone().map(Self)
-    }
-
-    /// Open by pid; only for an unreaped child, whose pid cannot be reused.
-    pub fn open(pid: u32) -> io::Result<Self> {
-        let pid = i32::try_from(pid)
-            .ok()
-            .filter(|pid| *pid > 0)
-            .ok_or(io::ErrorKind::InvalidInput)?;
-        // SAFETY: pidfd_open receives only integer values and returns an owned descriptor.
-        let descriptor = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
-        if descriptor < 0 {
-            return Err(io::Error::last_os_error());
-        }
-        // SAFETY: successful pidfd_open returns a new close-on-exec descriptor.
-        Ok(Self(unsafe { OwnedFd::from_raw_fd(descriptor as i32) }))
-    }
-
-    /// Block until the process has ended; a pidfd becomes readable at exit.
-    pub fn wait(&self) -> io::Result<()> {
-        loop {
-            let mut poll = libc::pollfd {
-                fd: self.0.as_raw_fd(),
-                events: libc::POLLIN,
-                revents: 0,
-            };
-            // SAFETY: poll points to one initialized pollfd for this owned descriptor.
-            let result = unsafe { libc::poll(&mut poll, 1, -1) };
-            if result < 0 {
-                let error = io::Error::last_os_error();
-                if error.kind() == io::ErrorKind::Interrupted {
-                    continue;
-                }
-                return Err(error);
-            }
-            if poll.revents & libc::POLLNVAL != 0 {
-                return Err(io::ErrorKind::InvalidInput.into());
-            }
-            return Ok(());
-        }
     }
 }

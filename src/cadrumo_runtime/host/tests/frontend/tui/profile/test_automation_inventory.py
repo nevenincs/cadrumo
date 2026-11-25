@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from threading import Event
-from typing import override
+from typing import Literal, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -14,7 +14,6 @@ from textual.content import Content
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
@@ -28,17 +27,20 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
     AccessScope,
     AuthorityState,
     Availability,
     EffectiveScopeSummary,
+    GrantUse,
     disclosure_digest,
 )
 from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
@@ -143,6 +145,7 @@ def _inventory(profile_id: UUID) -> AutomationInventoryProjection:
                 expires_at=instant + timedelta(days=1),
                 unattended=True,
                 allow_os_lock=False,
+                use=GrantUse.OTHER,
             ),
         ),
         keys=(
@@ -185,12 +188,6 @@ def _inventory(profile_id: UUID) -> AutomationInventoryProjection:
     )
 
 
-async def _until[T](pilot: Pilot[T], condition: Callable[[], bool]) -> None:
-    async with asyncio.timeout(5):
-        while not condition():
-            await pilot.pause(0.02)
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("loss", ["changed_binding", "expired"])
 async def test_inventory_tables_show_public_details_and_refresh_only_on_action(
@@ -209,7 +206,12 @@ async def test_inventory_tables_show_public_details_and_refresh_only_on_action(
     monkeypatch.setattr(subject, "read_automation_inventory", read)
     screen = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(screen).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: screen.query_one("#automation-inventory-grants", DataTable).row_count == 1)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#automation-inventory-grants", DataTable).row_count == 1,
+            "screen.query_one('#automation-inventory-grants', DataTable).row_cou...",
+            workers=False,
+        )
         assert calls == 1 and client.status_calls == 2
         assert screen.query_one("#automation-inventory-keys", DataTable).row_count == 1
         assert screen.query_one("#automation-inventory-requests", DataTable).row_count == 1
@@ -224,17 +226,19 @@ async def test_inventory_tables_show_public_details_and_refresh_only_on_action(
         assert "secret" not in details and "verifier" not in details and "dek" not in details
         grant_row = screen.query_one("#automation-inventory-grants", DataTable).get_row_at(0)
         assert str(projection.grants[0].grant_id) == grant_row[0]
-        await pilot.pause(0.05)
+        await settle(pilot)
         assert calls == 1
 
         screen.query_one("#automation-inventory-refresh", Button).press()
-        await _until(pilot, lambda: calls == 2 and not screen._busy)
+        await settle_until(
+            pilot, lambda: calls == 2 and not screen._busy, "calls == 2 and not screen._busy", workers=False
+        )
         if loss == "changed_binding":
             client._session_id = uuid4()
         else:
             client.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         screen.query_one("#automation-inventory-refresh", Button).press()
-        await _until(pilot, lambda: screen.access_lost)
+        await settle_until(pilot, lambda: screen.access_lost, "screen.access_lost", workers=False)
         assert calls == 2
         assert screen.query_one("#automation-inventory-grants", DataTable).row_count == 0
         assert screen.query_one("#automation-inventory-refresh", Button).disabled
@@ -247,17 +251,17 @@ def test_period_restrictions_and_review_validity_are_not_collapsed() -> None:
     scope = inventory.grants[0].scope
     unrestricted = scope.model_copy(update={"periods": None})
     none_allowed = scope.model_copy(update={"periods": ()})
-    assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject._scope(unrestricted))
-    assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject._scope(none_allowed))
-    assert "2026/3T" in "\n".join(detail_subject._scope(scope))
+    assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject.scope(unrestricted))
+    assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject.scope(none_allowed))
+    assert "2026/3T" in "\n".join(detail_subject.scope(scope))
     unattended_notice = tr("tui.automation_inventory.unattended_notice")
-    assert unattended_notice in detail_subject._grant_detail(inventory.grants[0])
-    assert unattended_notice not in detail_subject._grant_detail(
+    assert unattended_notice in detail_subject.grant_detail(inventory.grants[0])
+    assert unattended_notice not in detail_subject.grant_detail(
         inventory.grants[0].model_copy(update={"unattended": False})
     )
 
     request = inventory.requests[0]
-    detail = detail_subject._request_detail(request)
+    detail = detail_subject.request_detail(request)
     assert request.expires_at.isoformat() in detail
     assert request.proposal.expires_at.isoformat() in detail
     assert request.proposal.key_expires_at is not None
@@ -283,11 +287,18 @@ async def test_known_session_expiry_clears_display_without_a_second_inventory_re
     monkeypatch.setattr(subject, "read_automation_inventory", read)
     screen = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(screen).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: screen.query_one("#automation-inventory-grants", DataTable).row_count == 1)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#automation-inventory-grants", DataTable).row_count == 1,
+            "screen.query_one('#automation-inventory-grants', DataTable).row_cou...",
+            workers=False,
+        )
         client.expires_at = datetime.now(UTC) + timedelta(milliseconds=700)
         screen.query_one("#automation-inventory-refresh", Button).press()
-        await _until(pilot, lambda: reads == 2 and not screen._busy)
-        await _until(pilot, lambda: screen.access_lost)
+        await settle_until(
+            pilot, lambda: reads == 2 and not screen._busy, "reads == 2 and not screen._busy", workers=False
+        )
+        await settle_until(pilot, lambda: screen.access_lost, "screen.access_lost", workers=False)
         assert reads == 2
         assert screen.query_one("#automation-inventory-grants", DataTable).row_count == 0
         assert screen.query_one("#automation-inventory-refresh", Button).disabled
@@ -298,7 +309,7 @@ async def test_known_session_expiry_clears_display_without_a_second_inventory_re
 async def test_parent_opens_human_inventory_without_rebinding_client(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("inventory cannot open a recovery connection")
 
     def read(bound: FrontendClient) -> AutomationInventoryCompletion:
@@ -308,15 +319,30 @@ async def test_parent_opens_human_inventory_without_rebinding_client(monkeypatch
     monkeypatch.setattr(subject, "read_automation_inventory", read)
     parent = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(parent).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: not parent.query_one("#runtime-access-view-automation", Button).disabled)
+        await settle_until(
+            pilot,
+            lambda: not parent.query_one("#runtime-access-view-automation", Button).disabled,
+            "not parent.query_one('#runtime-access-view-automation', Button).dis...",
+            workers=False,
+        )
         parent.query_one("#runtime-access-view-automation", Button).press()
-        await _until(pilot, lambda: isinstance(pilot.app.screen, subject.RuntimeAutomationInventoryScreen))
+        await settle_until(
+            pilot,
+            lambda: isinstance(pilot.app.screen, subject.RuntimeAutomationInventoryScreen),
+            "isinstance(pilot.app.screen, subject.RuntimeAutomationInventoryScreen)",
+            workers=False,
+        )
         inventory = pilot.app.screen
         assert isinstance(inventory, subject.RuntimeAutomationInventoryScreen)
-        await _until(pilot, lambda: inventory.is_mounted)
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-grants", DataTable).row_count == 1)
+        await settle_until(pilot, lambda: inventory.is_mounted, "inventory.is_mounted", workers=False)
+        await settle_until(
+            pilot,
+            lambda: inventory.query_one("#automation-inventory-grants", DataTable).row_count == 1,
+            "inventory.query_one('#automation-inventory-grants', DataTable).row_...",
+            workers=False,
+        )
         inventory.action_close()
-        await _until(pilot, lambda: pilot.app.screen is parent)
+        await settle_until(pilot, lambda: pilot.app.screen is parent, "pilot.app.screen is parent", workers=False)
         assert not parent.access_lost
         assert not client.closed
 
@@ -330,7 +356,7 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
 
     def read(_bound: FrontendClient) -> AutomationInventoryCompletion:
         started.set()
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test inventory read was not released")
         finished.set()
         return AutomationInventoryCompletion(operation_id="c" * 64, projection=_inventory(client.profile_id))
@@ -338,19 +364,61 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
     monkeypatch.setattr(subject, "read_automation_inventory", read)
     screen = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(screen).run_test(size=(130, 45)) as pilot:
-        assert await asyncio.to_thread(started.wait, 5)
+        assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
+        worker = screen._worker
+        assert worker is not None
+        cancellation_started = asyncio.Event()
+        cancel = worker.cancel
+
+        def cancel_and_signal() -> None:
+            cancel()
+            cancellation_started.set()
+
+        monkeypatch.setattr(worker, "cancel", cancel_and_signal)
         closing = asyncio.ensure_future(pilot.app.pop_screen())
         try:
-            await asyncio.sleep(0.05)
+            await asyncio.wait_for(cancellation_started.wait(), SETTLE_TIMEOUT_SECONDS)
+            assert not screen._live
             assert not closing.done()
             assert not finished.is_set()
             assert screen._inventory is None
         finally:
             release.set()
-        await asyncio.wait_for(closing, 5)
+        await asyncio.wait_for(closing, SETTLE_TIMEOUT_SECONDS)
         assert finished.is_set()
         assert screen._inventory is None
         assert not client.closed
+
+
+async def _open_decision_modal[ResultT](
+    pilot: Pilot[ResultT], inventory: subject.RuntimeAutomationInventoryScreen, choice: Literal["approve", "decline"]
+) -> decision_subject.RuntimeAutomationDecisionScreen:
+    """Select the one pending request, press its approve or decline button and return the decision modal."""
+    await settle_until(
+        pilot,
+        lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1,
+        "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
+        workers=False,
+    )
+    table = inventory.query_one("#automation-inventory-requests", DataTable)
+    table.focus()
+    table.move_cursor(row=0)
+    await settle_until(
+        pilot,
+        lambda: not inventory.query_one(f"#automation-inventory-{choice}", Button).disabled,
+        f"not inventory.query_one('#automation-inventory-{choice}', Button).di...",
+        workers=False,
+    )
+    inventory.query_one(f"#automation-inventory-{choice}", Button).press()
+    await settle_until(
+        pilot,
+        lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen),
+        "isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDeci...",
+        workers=False,
+    )
+    modal = pilot.app.screen
+    assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+    return modal
 
 
 @pytest.mark.asyncio
@@ -378,7 +446,7 @@ async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proo
         assert password is not None and bytes(password) == b"fresh-review-proof"
         captured.append(password)
         started.set()
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test approval was not released")
         return AutomationDecisionCompletion("c" * 64, review.receipt, OperationEffect.UPDATED)
 
@@ -386,15 +454,7 @@ async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proo
     monkeypatch.setattr(decision_subject, "run_automation_decision", decide)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1)
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await _until(pilot, lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled)
-        inventory.query_one("#automation-inventory-approve", Button).press()
-        await _until(pilot, lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen))
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "approve")
         consent = str(modal.query_one("#automation-decision-review", Static).content)
         assert str(review.receipt.profile_id) in consent
         assert str(review.receipt.request_id) in consent
@@ -408,16 +468,26 @@ async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proo
         password_field.value = "fresh-review-proof"
         modal.query_one("#automation-decision-confirm", Button).press()
         try:
-            assert await asyncio.to_thread(started.wait, 5)
+            assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
             assert password_field.value == ""
             assert modal.query_one("#automation-decision-confirm", Button).disabled
         finally:
             release.set()
-        await _until(pilot, lambda: modal._outcome is not None and modal._outcome.completed and not modal._busy)
+        await settle_until(
+            pilot,
+            lambda: modal._outcome is not None and modal._outcome.completed and not modal._busy,
+            "modal._outcome is not None and modal._outcome.completed and not mod...",
+            workers=False,
+        )
         assert captured and captured[0] == bytes(len(captured[0]))
         modal.action_close()
-        await _until(pilot, lambda: pilot.app.screen is inventory)
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 0)
+        await settle_until(pilot, lambda: pilot.app.screen is inventory, "pilot.app.screen is inventory", workers=False)
+        await settle_until(
+            pilot,
+            lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 0,
+            "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
+            workers=False,
+        )
         status = str(inventory.query_one("#automation-inventory-status", Static).content)
         assert "c" * 64 in status and OperationEffect.UPDATED.value in status
         assert not client.closed
@@ -448,18 +518,15 @@ async def test_decline_has_no_password_and_preserves_unknown_post_submit_effect(
     monkeypatch.setattr(decision_subject, "run_automation_decision", refuse)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1)
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await _until(pilot, lambda: not inventory.query_one("#automation-inventory-decline", Button).disabled)
-        inventory.query_one("#automation-inventory-decline", Button).press()
-        await _until(pilot, lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen))
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "decline")
         assert not modal.query("#automation-decision-password")
         modal.query_one("#automation-decision-confirm", Button).press()
-        await _until(pilot, lambda: modal._outcome is not None and not modal._busy)
+        await settle_until(
+            pilot,
+            lambda: modal._outcome is not None and not modal._busy,
+            "modal._outcome is not None and not modal._busy",
+            workers=False,
+        )
         assert modal._outcome is not None
         assert modal._outcome.operation_id == "d" * 64
         assert modal._outcome.effect is None and not modal._outcome.completed
@@ -467,8 +534,13 @@ async def test_decline_has_no_password_and_preserves_unknown_post_submit_effect(
             modal.query_one("#automation-decision-status", Static).content
         )
         modal.action_close()
-        await _until(pilot, lambda: pilot.app.screen is inventory)
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 0)
+        await settle_until(pilot, lambda: pilot.app.screen is inventory, "pilot.app.screen is inventory", workers=False)
+        await settle_until(
+            pilot,
+            lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 0,
+            "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
+            workers=False,
+        )
         assert "d" * 64 in str(inventory.query_one("#automation-inventory-status", Static).content)
         assert not client.closed
 
@@ -495,7 +567,7 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
     ) -> AutomationDecisionCompletion:
         assert decision == "approve" and password is not None
         started.set()
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test decision was not released")
         finished.set()
         if failed:
@@ -511,31 +583,35 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
     monkeypatch.setattr(decision_subject, "run_automation_decision", decide)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await _until(pilot, lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1)
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await _until(pilot, lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled)
-        inventory.query_one("#automation-inventory-approve", Button).press()
-        await _until(pilot, lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen))
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "approve")
         client.expires_at = datetime.now(UTC) + timedelta(milliseconds=650)
         password_field = modal.query_one("#automation-decision-password", Input)
         password_field.value = "fresh-proof"
         modal.query_one("#automation-decision-confirm", Button).press()
         try:
-            assert await asyncio.to_thread(started.wait, 5)
-            await _until(pilot, lambda: modal.access_lost)
+            assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
+            await settle_until(pilot, lambda: modal.access_lost, "modal.access_lost", workers=False)
             assert str(modal.query_one("#automation-decision-review", Static).content) == ""
             assert password_field.value == ""
             assert not finished.is_set()
+            worker = modal._worker
+            assert worker is not None
+            cancellation_started = asyncio.Event()
+            cancel = worker.cancel
+
+            def cancel_and_signal() -> None:
+                cancel()
+                cancellation_started.set()
+
+            monkeypatch.setattr(worker, "cancel", cancel_and_signal)
             closing = asyncio.ensure_future(pilot.app.pop_screen())
-            await asyncio.sleep(0.05)
+            await asyncio.wait_for(cancellation_started.wait(), SETTLE_TIMEOUT_SECONDS)
+            assert not modal._live
+            assert not finished.is_set()
             assert not closing.done()
         finally:
             release.set()
-        await asyncio.wait_for(closing, 5)
+        await asyncio.wait_for(closing, SETTLE_TIMEOUT_SECONDS)
         assert finished.is_set()
         assert modal._outcome is not None
         assert modal._outcome.operation_id == "e" * 64
@@ -545,7 +621,7 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
             OperationTerminalCondition.FAILED if failed else OperationTerminalCondition.SUCCEEDED
         )
         assert modal._review is None and modal._consent_text == ""
-        await _until(pilot, lambda: pilot.app.screen is inventory)
-        await _until(pilot, lambda: inventory.access_lost)
+        await settle_until(pilot, lambda: pilot.app.screen is inventory, "pilot.app.screen is inventory", workers=False)
+        await settle_until(pilot, lambda: inventory.access_lost, "inventory.access_lost", workers=False)
         assert inventory.query_one("#automation-inventory-requests", DataTable).row_count == 0
         assert not client.closed

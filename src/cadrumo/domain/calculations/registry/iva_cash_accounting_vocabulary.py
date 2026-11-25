@@ -13,7 +13,7 @@ from .facts.resolution import (
     required_mapping_entry,
     unique_mapping_tokens,
 )
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource
 from .iva_schema_vocabulary_source import (
     SCHEMA_VOCABULARY_SUBJECT,
     UNIQUE_TOKENS_REQUIREMENT,
@@ -73,7 +73,7 @@ class IvaCashAccountingTreatmentCatalogue:
 
 def resolve_iva_cash_accounting_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
     """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
@@ -120,7 +120,7 @@ def resolve_iva_cash_accounting_catalogue(
 
 def default_iva_cash_accounting_treatment(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Return the registry-declared default cash-accounting treatment."""
@@ -133,37 +133,10 @@ def default_iva_cash_accounting_treatment(
 def require_iva_cash_accounting_treatment(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Validate one value against the dated cash-accounting vocabulary."""
-    return resolve_iva_cash_accounting_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).require(value)
-
-
-def require_registry_declared_iva_cash_accounting_treatment(
-    value: object,
-    *,
-    effective_date: date,
-) -> IvaCashAccountingTreatment:
-    """Return one treatment token declared by the facts a validation is validating.
-
-    A registry validator resolves its vocabulary from the candidate in scope,
-    never from the published authority: the artifact reader validates the
-    document it has just decoded while holding the shared-artifact lock, so a
-    validator reaching for the bundle asks that lock for the artifact it is in
-    the middle of producing. Absence of a scope is a refusal rather than a
-    fallback, because the fallback is the deadlock.
-    """
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA cash-accounting validation requires the governed facts being validated to be "
-            "in scope; registry validation must not resolve a treatment through the published "
-            "authority artifact",
-        )
     return resolve_iva_cash_accounting_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -175,6 +148,5 @@ __all__ = [
     "IvaCashAccountingTreatmentDefinition",
     "default_iva_cash_accounting_treatment",
     "require_iva_cash_accounting_treatment",
-    "require_registry_declared_iva_cash_accounting_treatment",
     "resolve_iva_cash_accounting_catalogue",
 ]

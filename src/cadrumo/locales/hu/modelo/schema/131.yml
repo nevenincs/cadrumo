@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: A 131-es nyomtatvány idei korábbi bevallásaidban szereplő, eddig le
+            nem vont negatív eredmények előjel nélküli összege.
+          label: Az év korábbi negyedéveinek még le nem vont negatív eredményei ·
+            11. rovat
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Beszedési megbízás: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
@@ -90,8 +95,6 @@ modelo:
             az adóévben kezdődött, azt a negyedévet kell figyelembe venni, amelyben
             megkezdődött.
           label: 'Lakáslevonás (mezőgazdaság): aktív napok az első negyedévben'
-        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
-          label: Kiegészítő bevallás
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
           help: 'Csak abban a kivételes esetben, ha a negyedévben a Modelo 130 (részletfizetés)
             nyomtatványt is be kell nyújtania: add meg az ott e levonásként szereplő
@@ -202,7 +205,7 @@ modelo:
           irpf-pf-modulos-volumen-sin-datos-base:
             label: Forgalom vagy bevétel alapadatok nélkül
           irpf-pf-saldo-negativo-fin-periodo:
-            label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
+            label: Későbbi időszakokra átvihető negatív egyenleg
           minoracion-rendimientos-actividades-economicas:
             label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
               után

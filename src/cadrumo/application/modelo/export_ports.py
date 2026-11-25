@@ -9,6 +9,7 @@ prorrata, investment, and transaction authorities as the rest of the export.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -31,11 +32,14 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.own_accounts import OwnAccountRegister
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
+from .credit_resolution_repository import CreditResolutionReader
 
 
 class Modelo360SolicitudRegisterReaderProtocol(Protocol):
@@ -52,6 +56,20 @@ class OwnAccountRegisterReaderProtocol(Protocol):
     def load(self) -> OwnAccountRegister:
         """Return the register, empty when no own account was ever entered."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class M303ArrivalPorts:
+    """The repositories the Modelo 303 ledger and register arrivals are read from.
+
+    The export and the declaration's form resolve those arrivals through the
+    same function, so both take them from this one shape.
+    """
+
+    prorrata_register: ProrrataRegisterRepositoryProtocol
+    bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
+    transaction: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,14 +97,29 @@ class ModeloExportPorts:
     own_accounts: OwnAccountRegisterReaderProtocol
     """The own-account register every charge and refund account is resolved from."""
     transaction: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
+    """The same bucket's invoice catalogue, the IVA source of every invoiced operation."""
+    activity_assets: ActivityAssetHistoryRepository
+    """Read for the names the export's notes call the taxpayer's elements by."""
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
+    credit_resolution: CreditResolutionReader
+    """Read for the operator's acceptances of disputed figures, which lift the hold on exactly those figures."""
     product_software_identity: AeatProductSoftwareIdentity
     """Program identifier and developer NIF for layouts whose envelope prefix reserves them.
 
     It is a property of the installed product, not of one command, so the
     composition root supplies it once for every entrypoint that exports.
     """
+
+    def m303_arrivals(self) -> M303ArrivalPorts:
+        """The bundle's authorities the Modelo 303 arrivals are read from."""
+        return M303ArrivalPorts(
+            prorrata_register=self.prorrata_register,
+            bienes_inversion=self.bienes_inversion,
+            transaction=self.transaction,
+            invoices=self.invoices,
+        )
 
 
 class ModeloExportPortsFactory(Protocol):
@@ -98,8 +131,14 @@ class ModeloExportPortsFactory(Protocol):
         bucket_id: str,
         m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
         operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> ModeloExportPorts:
-        """Return all authorities for one invocation and its held operation."""
+        """Return all authorities for one invocation and its held operation.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so the export can account for
+        its effect from the writes that really began.
+        """
         ...
 
 

@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-172` · **Topic:** [Operator interfaces, part 2: secure transport and operation bridges](../topics/operator-interfaces-part-2.md)
+**Topic:** [Operator interfaces: secure transport and operation bridges](../topics/operator-interfaces-transport-and-bridges.md)
 
 <!-- preserved:article -->
 ## Scope and method

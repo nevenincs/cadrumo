@@ -3,7 +3,6 @@
 //! Concrete lifetime orchestration remains owned by Background. Native event loops
 //! use these contracts without acquiring or duplicating its process and start claims.
 
-#[cfg(any(windows, test))]
 use crate::background::Background;
 use crate::session::claim::StartClaim;
 use std::{io, path::Path};
@@ -29,7 +28,6 @@ pub trait CutoverRuntime {
     fn abandon_cutover(&mut self) {}
     fn rollback(&mut self, _claim: StartClaim) {}
 }
-#[cfg(any(windows, test))]
 impl CutoverRuntime for Background {
     fn root(&self) -> Option<&Path> {
         Some(self.storage_root())
@@ -76,6 +74,11 @@ pub trait ManagerLifecycle: CutoverRuntime {
     fn quit_completed(&self) -> bool {
         false
     }
+    /// Demands the local AI server for the agent service; `None` while no server can
+    /// run here.
+    fn demand_local_ai(&self) -> Option<crate::supervision::local_ai::DemandAnswer> {
+        None
+    }
     fn poll(&mut self) -> io::Result<()>;
     fn begin_session_end(&mut self);
     fn session_end_settled(&self) -> bool;
@@ -85,10 +88,12 @@ pub trait ManagerLifecycle: CutoverRuntime {
     #[cfg(windows)]
     fn readiness<'a>(&'a self, _into: &mut crate::wake::windows::Readiness<'a>) {}
 }
-#[cfg(any(windows, test))]
 impl ManagerLifecycle for Background {
     fn retry(&mut self) -> io::Result<()> {
         Background::retry(self)
+    }
+    fn demand_local_ai(&self) -> Option<crate::supervision::local_ai::DemandAnswer> {
+        Background::demand_local_ai(self)
     }
     fn restart(&mut self) -> io::Result<()> {
         Background::restart(self)

@@ -70,8 +70,10 @@ from .calculation_summary_pdf_ports import (
 )
 from .calculation_summary_presentation import (
     CalculationSummaryChromeUnavailableError,
+    CalculationSummaryPresentation,
     build_calculation_summary_presentation,
 )
+from .refusal_door_verdicts import safety_stop_verdict
 from .review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
 
 if TYPE_CHECKING:
@@ -81,6 +83,7 @@ if TYPE_CHECKING:
 
 _UTF_8: Final[str] = "utf-8"
 _REPORT_PAYLOAD_KEYS: Final[frozenset[str]] = frozenset({"content_version", "header", "rows"})
+_REPORT_PAYLOAD_KEYS_WITH_RESOLUTIONS: Final[frozenset[str]] = _REPORT_PAYLOAD_KEYS | {"credit_resolutions"}
 
 
 class CalculationSummaryVerificationOutcome(StrEnum):
@@ -232,7 +235,7 @@ class CalculationSummaryVerification(BaseModel):
         return tuple(check.reason for check in self.checks if check.reason is not None)
 
 
-class _DocumentReading(BaseModel):
+class DocumentReading(BaseModel):
     """What the document layer established, for the store layer to continue from."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -243,6 +246,7 @@ class _DocumentReading(BaseModel):
 
     @property
     def refused(self) -> bool:
+        """Report whether any check refuses the document reading."""
         return any(check.refuses for check in self.checks)
 
 
@@ -299,13 +303,16 @@ def _parse_report(report_bytes: bytes) -> ModeloCalculationReport | None:
         decoded = _strict_json(report_bytes)
     except (UnicodeDecodeError, ValueError):
         return None
-    if not is_str_keyed_dict(decoded) or frozenset(decoded) != _REPORT_PAYLOAD_KEYS:
+    if not is_str_keyed_dict(decoded) or frozenset(decoded) not in (
+        _REPORT_PAYLOAD_KEYS,
+        _REPORT_PAYLOAD_KEYS_WITH_RESOLUTIONS,
+    ):
         return None
     if decoded["content_version"] != CALCULATION_REPORT_CONTENT_VERSION:
         return None
     try:
         return ModeloCalculationReport.model_validate_json(
-            canonical_json_bytes({"header": decoded["header"], "rows": decoded["rows"]}),
+            canonical_json_bytes({key: value for key, value in decoded.items() if key != "content_version"}),
         )
     except (ValidationError, ValueError):
         return None
@@ -367,7 +374,24 @@ def _text_layer_gaps(
     except CalculationSummaryChromeUnavailableError:
         return ("chrome",)
     page = _compact(contents.page_text)
-    gaps = [
+    gaps = _identity_gaps(page, report=report, statement=statement)
+    gaps.extend(
+        f"resolution {fact.label}"
+        for fact in presentation.resolutions
+        if _compact(fact.label) not in page or _compact(fact.value) not in page
+    )
+    cursor = page.find(_compact(presentation.sections[0].heading)) if presentation.sections else 0
+    if cursor < 0:
+        return (*gaps, "sections")
+    gaps.extend(_casilla_gaps(page, presentation, cursor))
+    return tuple(gaps)
+
+
+def _identity_gaps(
+    page: str, *, report: ModeloCalculationReport, statement: CalculationReportCertificationStatement
+) -> list[str]:
+    """The identity and digest labels whose value the compacted page text does not show."""
+    return [
         label
         for label, value in (
             ("taxpayer_tax_id", report.header.taxpayer_tax_id),
@@ -378,9 +402,11 @@ def _text_layer_gaps(
         )
         if _compact(value) not in page
     ]
-    cursor = page.find(_compact(presentation.sections[0].heading)) if presentation.sections else 0
-    if cursor < 0:
-        return (*gaps, "sections")
+
+
+def _casilla_gaps(page: str, presentation: CalculationSummaryPresentation, cursor: int) -> list[str]:
+    """The casillas whose number is not followed by its value, walking the page text in order from ``cursor``."""
+    gaps: list[str] = []
     for section in presentation.sections:
         for row in section.rows:
             number = _compact(row.casilla_number)
@@ -391,7 +417,7 @@ def _text_layer_gaps(
                 gaps.append(f"casilla {row.casilla_number}")
                 continue
             cursor = value_at + len(value)
-    return tuple(gaps)
+    return gaps
 
 
 def _check_statement(
@@ -429,20 +455,20 @@ def _read_document(
     *,
     reader: CalculationSummaryPdfReader,
     trusted_public_key_hex: str | None,
-) -> _DocumentReading:
+) -> DocumentReading:
     checks = _Checks(CalculationSummaryVerificationLayer.DOCUMENT)
     try:
         contents = reader(payload)
     except CalculationSummaryPdfUnreadableError:
         checks.failed(CalculationSummaryCheckName.PDF, CalculationSummaryVerificationReason.PDF_UNREADABLE)
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     checks.passed(CalculationSummaryCheckName.PDF)
     if not checks.expect(
         CalculationSummaryCheckName.CADRUMO_REPORT,
         contents.product_metadata is not None,
         CalculationSummaryVerificationReason.NOT_A_CADRUMO_REPORT,
     ):
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     names = (REPORT_ATTACHMENT_NAME, CSV_ATTACHMENT_NAME, STATEMENT_ATTACHMENT_NAME, SIGNATURE_ATTACHMENT_NAME)
     missing = [name for name in names if name not in contents.attachments]
     for name in missing:
@@ -452,7 +478,7 @@ def _read_document(
             detail=name,
         )
     if missing:
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     checks.passed(CalculationSummaryCheckName.ATTACHMENTS)
     report_bytes = contents.attachments[REPORT_ATTACHMENT_NAME]
     csv_bytes = contents.attachments[CSV_ATTACHMENT_NAME]
@@ -460,7 +486,7 @@ def _read_document(
     signature = contents.attachments[SIGNATURE_ATTACHMENT_NAME]
     statement = _check_statement(checks, statement_bytes)
     if statement is None:
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     _check_document_integrity(
         checks,
         contents,
@@ -476,10 +502,10 @@ def _read_document(
         checks.failed(
             CalculationSummaryCheckName.REPORT_CANONICAL, CalculationSummaryVerificationReason.REPORT_NOT_CANONICAL
         )
-        return _DocumentReading(checks=tuple(checks.rows), statement=statement)
+        return DocumentReading(checks=tuple(checks.rows), statement=statement)
     checks.passed(CalculationSummaryCheckName.REPORT_CANONICAL)
     _check_report_derivation(checks, contents, statement, report, csv_bytes)
-    return _DocumentReading(checks=tuple(checks.rows), statement=statement, report=report)
+    return DocumentReading(checks=tuple(checks.rows), statement=statement, report=report)
 
 
 def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExportPorts) -> frozenset[str]:
@@ -492,7 +518,7 @@ def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExp
 
 
 @dataclass(frozen=True, slots=True)
-class _ExistingSigningKeypairCapability:
+class ExistingSigningKeypairCapability:
     """Keep report reconstruction bound to the keypair already read."""
 
     keypair: ReviewPackageSigningKeypair
@@ -507,12 +533,14 @@ class _ExistingSigningKeypairCapability:
         if canonical_bucket_id(bucket_id) != self.keypair.bucket_id:
             raise ReviewPackageSigningError(
                 "review-package signing capability is bound to a different bucket",
+                translated_message="application.modelo.errors.signing_capability_other_profile",
+                precondition_verdict=safety_stop_verdict("signing_capability_bucket"),
             )
         return self.keypair
 
 
-def _trace_against_store(
-    reading: _DocumentReading,
+def trace_against_store(
+    reading: DocumentReading,
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
@@ -569,7 +597,7 @@ def _trace_against_store(
             revision.calculation_revision_id,
             active_bucket_id=active_bucket_id,
             export_ports=export_ports,
-            signing_keypair=_ExistingSigningKeypairCapability(keypair),
+            signing_keypair=ExistingSigningKeypairCapability(keypair),
             operation=operation,
             report_language=report.header.report_language,
             exported_at=statement.exported_at,
@@ -581,9 +609,13 @@ def _trace_against_store(
         return tuple(checks.rows)
     # The facts a later lifecycle step legitimately changes are compared by the
     # checks above, so the rebuild is judged as of the export: the recorded
-    # state, verification and filing facts stand in for the current ones.
+    # state, verification and filing facts stand in for the current ones. So do
+    # the resolutions: the document attests to the acceptances applied when it
+    # was produced, and a later revocation neither changes that nor fails the
+    # check; the store is not asked which acceptances are active now.
     as_exported = rebuilt.model_copy(
         update={
+            "credit_resolutions": report.credit_resolutions,
             "header": rebuilt.header.model_copy(
                 update={
                     "calculation_revision_state": statement.calculation_revision_state,
@@ -658,7 +690,7 @@ def verify_calculation_summary(
     store_rows: tuple[CalculationSummaryVerificationCheck, ...] = ()
     store_checked = False
     if store is not None and reading.statement is not None and reading.report is not None:
-        store_rows = _trace_against_store(
+        store_rows = trace_against_store(
             reading,
             active_bucket_id=store.active_bucket_id,
             export_ports=store.export_ports,

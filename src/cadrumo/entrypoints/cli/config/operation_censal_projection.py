@@ -27,7 +27,7 @@ from ....application.operations.frontend_requests import (
     OperationReviewProjectionSuccessV1,
 )
 from ....application.operations.models import OperationId
-from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ....application.operations.registry import OperationPublicDefinitionContractV1
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -39,8 +39,13 @@ from ....application.user_profile.censal_operation import (
     CensalReviewProjectionV1,
 )
 from ....core.hashing import canonical_json_bytes
-from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from .operation_censal_exchange import _exchange
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
+from .operation_censal_exchange import exchange
 
 
 def _decode_censal_terminal(
@@ -91,9 +96,10 @@ def _expected_schema(
     )
 
 
-def _validate_contract(
+def validate_contract(
     client: FrontendClient, request: CensalOperationRequest, deadline: float
 ) -> OperationPublicDefinitionContractV1:
+    """Validate the censal operation's public contract against its request and result schemas."""
     contract = client.contract(CENSAL_OPERATION_DEFINITION_ID, deadline=deadline)
     expected_request = _expected_schema(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
@@ -119,7 +125,7 @@ def _validate_contract(
     return contract
 
 
-def _resolve_review(
+def resolve_review(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -129,13 +135,14 @@ def _resolve_review(
     deadline: float,
     contract: OperationPublicDefinitionContractV1,
 ) -> CensalReviewProjectionV1:
+    """Resolve the review of a censal operation through the client."""
     request = OperationReview(
         request_id=uuid4(),
         profile_id=profile_id,
         session_id=session_id,
         review=OperationReviewProjectionRequestV1(reference=pending.review_reference),
     )
-    reply = _exchange(client, session_id, request, deadline=deadline)
+    reply = exchange(client, session_id, request, deadline=deadline)
     if (
         not isinstance(reply, OperationProjected)
         or reply.operation_id != operation_id
@@ -163,7 +170,7 @@ def _resolve_review(
     return success.projection
 
 
-def _validate_terminal(
+def validate_terminal(
     client: FrontendClient,
     observed: OperationObservationSuccessV1,
     *,
@@ -172,6 +179,7 @@ def _validate_terminal(
     apply: bool,
     deadline: float,
 ) -> None:
+    """Validate the terminal observation of a censal operation against its contract and review."""
     expected_outcome = CensalOperationOutcome.APPLIED if apply else CensalOperationOutcome.REJECTED
     permitted_effects = {OperationEffect.UPDATED} if apply else {OperationEffect.NONE, OperationEffect.UPDATED}
     projection = observed.projection

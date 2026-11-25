@@ -16,21 +16,15 @@ allowed_values = ["0", "1"]
 sheet = "DP200020B"
 source_row = 39
 source_cell = "A39"
-ordinal = 34
+ordinal = "34"
 record_identity = "DP200020B"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200020b-r0039"
-decision_statement = "DP200020B source row 39: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200020B source row 39; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200020B"
-source_row = 39
-source_cell = "A39"
-ordinal = 34
-record_identity = "DP200020B"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200020B row 39. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 44, BOE Pág. 73165 prints this field as the checkbox 'Si es una entidad cuyo importe neto de la cifra de negocios durante los 12 meses anteriores a la fecha en que se inicie el período impositivo', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -46,7 +40,7 @@ allowed_values = []
 sheet = "DP200020D"
 source_row = 110
 source_cell = "A110"
-ordinal = 105
+ordinal = "105"
 record_identity = "DP200020D"
 
 [singleton_rules.evidence]
@@ -70,7 +64,7 @@ allowed_values = []
 sheet = "DP200023"
 source_row = 26
 source_cell = "A26"
-ordinal = 21
+ordinal = "21"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
@@ -78,7 +72,7 @@ authority_kind = "official_source"
 source_sheet = "DP200023"
 source_cell = "H16"
 expected_normalized_statement = "AAAAMMDD"
-justification = "Reviewed official-source analogy for exact field DP200023 row 26; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no format in the own cells of field DP200023 row 26 (operation 2 of the repeated fusión, escisión, canje de valores block). Its sibling cell DP200023!H16, the same date of operation 1 in that block, states AAAAMMDD, as do the same dates of operations 3, 4 and 5 (rows 36-37, 46-47, 56-57), and this field's description names a date of the same kind and width."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -94,7 +88,7 @@ allowed_values = []
 sheet = "DP200023"
 source_row = 27
 source_cell = "A27"
-ordinal = 22
+ordinal = "22"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
@@ -102,7 +96,7 @@ authority_kind = "official_source"
 source_sheet = "DP200023"
 source_cell = "H17"
 expected_normalized_statement = "AAAAMMDD"
-justification = "Reviewed official-source analogy for exact field DP200023 row 27; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no format in the own cells of field DP200023 row 27 (operation 2 of the repeated fusión, escisión, canje de valores block). Its sibling cell DP200023!H17, the same date of operation 1 in that block, states AAAAMMDD, as do the same dates of operations 3, 4 and 5 (rows 36-37, 46-47, 56-57), and this field's description names a date of the same kind and width."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -118,7 +112,7 @@ allowed_values = []
 sheet = "DP200024"
 source_row = 31
 source_cell = "A31"
-ordinal = 26
+ordinal = "26"
 record_identity = "DP200024"
 
 [singleton_rules.evidence]
@@ -142,7 +136,7 @@ allowed_values = []
 sheet = "DP200024"
 source_row = 34
 source_cell = "A34"
-ordinal = 29
+ordinal = "29"
 record_identity = "DP200024"
 
 [singleton_rules.evidence]
@@ -166,7 +160,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 12
 source_cell = "A12"
-ordinal = 7
+ordinal = "7"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -190,7 +184,7 @@ allowed_values = ["1", "2", "3"]
 sheet = "DP200DID"
 source_row = 13
 source_cell = "A13"
-ordinal = 8
+ordinal = "8"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]

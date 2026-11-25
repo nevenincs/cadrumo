@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones del capital mobiliario."
-definition = "Declaracion informativa anual que resume las retenciones sobre rendimientos del capital mobiliario declaradas en los modelos 123 del ejercicio, con el detalle por perceptor."
+definition = "Declaración informativa anual que resume las retenciones sobre rendimientos del capital mobiliario declaradas en los modelos 123 del ejercicio, con el detalle por perceptor."
 
 [language.es.source]
 citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."

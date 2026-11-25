@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { useEscapeLayer } from "@/components/ui/escapeLayers";
 import { revealFocused } from "@/components/ui/reveal";
 
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
@@ -19,14 +20,34 @@ function PopoverAnchor(
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
+/** What a popover offers the popovers opened inside it. */
+interface PopoverLayer {
+  close: () => void;
+  /** Whether the node is in this popover or in one open inside it: a nested
+   * popover's content is portaled out of the enclosing one's. */
+  holds: (node: Node) => boolean;
+  /** Counts an inner popover's content as this one's while it is open. */
+  nest: (inner: PopoverLayer) => () => void;
+}
+
+/** The popover a popover was opened inside, for what only the inner one sees. */
+const EnclosingPopover = React.createContext<PopoverLayer | null>(null);
+
 /**
  * A non-modal surface anchored to its trigger. It closes on Escape or a
  * press outside and hands focus back to the trigger. It never grows past the
  * window: tall content scrolls inside it.
  *
- * Escape pressed inside it closes it at the first press. The foundation gives
- * the key to the topmost layer only, so a tooltip showing anywhere in the
- * window would otherwise take the first press and leave the popover up.
+ * Escape closes it while it is the topmost layer still open (see
+ * `useEscapeLayer`), and `onEscapeKeyDown` can leave the key to a field inside.
+ *
+ * Focus goes back to the trigger a task after the popover has gone, so whatever
+ * took focus in between keeps it: a menu opened in that moment would otherwise
+ * lose focus to the trigger and close. If what took it is outside the popover
+ * around this one, that one closes too: its own watch never saw focus leave,
+ * for the element holding it was removed without losing it. Focus inside a
+ * popover opened within that one, as when the inner one is opened again in
+ * that moment, is still inside it.
  */
 function PopoverContent({
   className,
@@ -35,39 +56,59 @@ function PopoverContent({
   collisionPadding = 8,
   children,
   onFocusCapture,
+  onCloseAutoFocus,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
-  const dismiss = React.useRef<HTMLButtonElement>(null);
+  const { ref: layer, button: dismiss } = useEscapeLayer(onEscapeKeyDown);
+  const enclosing = React.useContext(EnclosingPopover);
+  const self = React.useMemo((): PopoverLayer => {
+    const inner = new Set<PopoverLayer>();
+    return {
+      close: () => dismiss.current?.click(),
+      holds: (node) =>
+        (dismiss.current?.parentElement?.contains(node) ?? false) ||
+        [...inner].some((layer) => layer.holds(node)),
+      nest: (layer) => {
+        inner.add(layer);
+        return () => inner.delete(layer);
+      },
+    };
+  }, [dismiss]);
+  React.useEffect(() => enclosing?.nest(self), [enclosing, self]);
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          const held = document.activeElement;
+          if (held && held !== document.body) {
+            event.preventDefault();
+            if (enclosing && !enclosing.holds(held)) enclosing.close();
+          }
+        }}
         // Tall content scrolls inside: what takes focus is brought into view.
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
           revealFocused(event);
         }}
-        onKeyDownCapture={(event) => {
-          // A layer portalled out of the popover keeps its own Escape.
-          if (
-            event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node)
-          )
-            dismiss.current?.click();
-        }}
         align={align}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          "z-(--layer-popover) max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) origin-(--radix-popover-content-transform-origin) overflow-y-auto rounded-xl border bg-popover p-3.5 text-popover-foreground shadow-overlay outline-none",
+          "z-(--layer-popover) max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) origin-(--radix-popover-content-transform-origin) overflow-y-auto rounded-xl bg-popover p-3.5 text-popover-foreground shadow-overlay outline-none",
+          // Where colours are forced the shadow is dropped: an edge stands in.
+          "forced-colors:border forced-colors:border-[CanvasText]",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
       >
-        {children}
-        <PopoverPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+        <EnclosingPopover.Provider value={self}>
+          {children}
+        </EnclosingPopover.Provider>
+        <PopoverPrimitive.Close ref={layer} hidden tabIndex={-1} />
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );

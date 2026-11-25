@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { HostFailure } from "../ipc/contract";
 import type {
-  HostFailure,
   ManagerStatus,
   ProfileList,
   SignInRefusal,
   SignInStatus,
   SignOutResult,
-} from "../ipc/contract";
+} from "../ipc/account";
 import type { Host } from "./host";
 import { nameable, targetOf } from "./profiles";
+import {
+  confirmSessionWith,
+  endSession,
+  sessionEnded as windowSessionEnded,
+  startSession,
+} from "./sessionGate";
 import { failureCode } from "../errors";
 
 const unknownStatus: SignInStatus = {
@@ -30,7 +36,8 @@ function sameStatus(left: SignInStatus | null, right: SignInStatus): boolean {
     left.refusal?.retryAfterSeconds === right.refusal?.retryAfterSeconds &&
     left.refusal?.operation === right.refusal?.operation &&
     left.refusal?.ioKind === right.refusal?.ioKind &&
-    left.refusal?.osCode === right.refusal?.osCode
+    left.refusal?.osCode === right.refusal?.osCode &&
+    left.reconnecting?.passwordRequired === right.reconnecting?.passwordRequired
   );
 }
 
@@ -109,6 +116,9 @@ export function phaseOf(
   if (!status) return "checking";
   if (!status.runtimeAvailable) return "services-down";
   if (!status.supported) return "unsupported";
+  // Runtime presence can outlive this desktop's usable person session. A
+  // restoration refusal keeps the selected profile and opens password proof.
+  if (status.refusal) return "unknown";
   if (status.state === "present") return "signed-in";
   if (status.state === "unknown") return "unknown";
   // With none selected, the profiles that exist are still there to choose
@@ -121,10 +131,16 @@ export function phaseOf(
   return "signed-out";
 }
 
+/** Whether `status` says a session is signed in that the window may work for. */
+function signedIn(status: SignInStatus | null): boolean {
+  return status !== null && phaseOf(true, status) === "signed-in";
+}
+
 /** Refusals that outlast the attempt that met them. */
 const STANDING: ReadonlySet<string> = new Set([
   "PROFILE_LOCKED",
   "KEYRING_UNAVAILABLE",
+  "SESSION_NOT_PERSISTED",
   "THROTTLED",
 ]);
 
@@ -137,26 +153,6 @@ export function canSignIn(phase: AccountPhase): boolean {
 }
 
 const COUNTDOWN_TICK_MS = 250;
-const STARTUP_WAIT_MS = 90_000;
-
-/** Bound read-only UI waits even if the transport never settles its promise.
- * Late answers are ignored; native process cleanup remains owned by Tauri. */
-async function boundedRead<T>(read: Promise<T>): Promise<T> {
-  let timer: number | undefined;
-  try {
-    return await Promise.race([
-      read,
-      new Promise<never>((_, reject) => {
-        timer = window.setTimeout(
-          () => reject({ code: "timed_out" }),
-          STARTUP_WAIT_MS,
-        );
-      }),
-    ]);
-  } finally {
-    window.clearTimeout(timer);
-  }
-}
 
 /** The seconds left of a refusal's wait. No timer runs unless one is owed. */
 function useCountdown(refusal: SignInRefusal | null) {
@@ -194,6 +190,7 @@ export function useSignIn(host: Host) {
   const [status, setStatus] = useState<SignInStatus | null>(null);
   const [refusal, setRefusal] = useState<SignInRefusal | null>(null);
   const [busy, setBusy] = useState(false);
+  const [clearingSavedSignIn, setClearingSavedSignIn] = useState(false);
   const [startingServices, setStartingServices] = useState(false);
   const [observingStartup, setObservingStartup] = useState(
     host.available && host.startManager !== undefined,
@@ -221,6 +218,10 @@ export function useSignIn(host: Host) {
   const [signOutFailure, setSignOutFailure] = useState<SignInRefusal | null>(
     null,
   );
+  // Whether this window asked the signed-in session to end. The views of that
+  // session stop reading from the ask, not from the status read that follows:
+  // the host announces the end to every observer before that read answers.
+  const sessionEnding = useRef(false);
   const request = useRef(0);
   const invalidation = useRef(0);
   const transport = useRef(host);
@@ -229,10 +230,25 @@ export function useSignIn(host: Host) {
   const statusRead = useRef<{
     generation: number;
     promise: Promise<void>;
+    /** Settles once the status itself is taken, before any profile list. */
+    taken: Promise<void>;
   } | null>(null);
   const submitting = useRef(false);
   const currentRefusal = refusal ?? status?.refusal ?? null;
   const retrySeconds = useCountdown(currentRefusal);
+  // Every status the window takes as current passes here, so the window's
+  // session gate follows the account the moment a status says the session
+  // started or ended, before any view renders or reads on that news.
+  const adopt = useCallback((next: SignInStatus | null) => {
+    const was = signedIn(latestStatus.current);
+    const now = signedIn(next);
+    latestStatus.current = next;
+    if (was && !now) endSession();
+    if (!was && now) {
+      sessionEnding.current = false;
+      startSession();
+    }
+  }, []);
   const invalidate = useCallback(() => {
     ++invalidation.current;
     ++request.current;
@@ -274,6 +290,8 @@ export function useSignIn(host: Host) {
       )
         return;
       const generation = ++request.current;
+      let statusTaken!: () => void;
+      const taken = new Promise<void>((resolve) => (statusTaken = resolve));
       const promise = Promise.resolve().then(async () => {
         try {
           if (
@@ -285,7 +303,7 @@ export function useSignIn(host: Host) {
           // Show the independent canonical CLI status read before the
           // optional profile list. Read profiles only while there is a
           // sign-in to prepare; an unreadable list is not an empty one.
-          const next = await boundedRead(host.signInStatus());
+          const next = await host.signInStatus();
           if (
             !mounted.current ||
             generation !== request.current ||
@@ -296,7 +314,8 @@ export function useSignIn(host: Host) {
           awaitingManagerAuth.current = false;
           if (managerObserved) setObservingStartup(false);
           setStatus(next);
-          latestStatus.current = next;
+          adopt(next);
+          statusTaken();
           // A list that names another profile as selected than the status
           // does is older than it: not shown beside it, and never a ground
           // for naming the profile a password goes to.
@@ -313,9 +332,7 @@ export function useSignIn(host: Host) {
             next.state === "present"
           )
             return;
-          const list = await boundedRead(host.profiles.list()).catch(
-            () => null,
-          );
+          const list = await host.profiles.list().catch(() => null);
           if (generation !== request.current) return;
           listed.current = list;
           // Unread, the rows that were held are kept as what was last
@@ -340,18 +357,19 @@ export function useSignIn(host: Host) {
                     !host.startManager),
               refusal,
             };
-            latestStatus.current = failed;
+            adopt(failed);
             setStatus(failed);
           }
         } finally {
+          statusTaken();
           if (statusRead.current?.generation === generation)
             statusRead.current = null;
         }
       });
-      statusRead.current = { generation, promise };
+      statusRead.current = { generation, promise, taken };
       await promise;
     },
-    [host, managerAllows, managerObserved],
+    [adopt, host, managerAllows, managerObserved],
   );
 
   useEffect(() => {
@@ -362,7 +380,7 @@ export function useSignIn(host: Host) {
     managerRef.current = null;
     awaitingManagerAuth.current = true;
     invalidate();
-    latestStatus.current = null;
+    adopt(null);
     setStatus(null);
     setManager(null);
     const accept = (next: ManagerStatus) => {
@@ -374,7 +392,7 @@ export function useSignIn(host: Host) {
         if (previous?.state === next.state) return;
         invalidate();
         awaitingManagerAuth.current = true;
-        latestStatus.current = null;
+        adopt(null);
         setStatus(null);
         setRefusal(null);
         setObservingStartup(true);
@@ -389,7 +407,7 @@ export function useSignIn(host: Host) {
         runtimeAvailable: false,
         refusal: next.failure ? refusalFrom(next.failure) : null,
       };
-      latestStatus.current = unavailable;
+      adopt(unavailable);
       setStatus(unavailable);
       setRefusal(null);
       setChosen(null);
@@ -429,7 +447,8 @@ export function useSignIn(host: Host) {
         );
     }
     if (host.managerStatus) {
-      void boundedRead(host.managerStatus())
+      void host
+        .managerStatus()
         .then((next) => {
           if (revision < 0) accept(next);
         })
@@ -450,7 +469,7 @@ export function useSignIn(host: Host) {
       close?.();
       invalidate();
     };
-  }, [host, invalidate, managerObserved, refresh]);
+  }, [adopt, host, invalidate, managerObserved, refresh]);
 
   useEffect(() => {
     if (!host.observeSignIn) return;
@@ -488,7 +507,7 @@ export function useSignIn(host: Host) {
           return;
         invalidate();
         statusReadFailed.current = signal.kind === "sign-in-observation-failed";
-        latestStatus.current = next;
+        adopt(next);
         setStatus(next);
         setRefusal(null);
         setChosen(null);
@@ -511,7 +530,7 @@ export function useSignIn(host: Host) {
               return;
             const promise = Promise.resolve().then(async () => {
               try {
-                const list = await boundedRead(accounts.list());
+                const list = await accounts.list();
                 if (
                   !active ||
                   generation !== request.current ||
@@ -528,7 +547,7 @@ export function useSignIn(host: Host) {
                   statusRead.current = null;
               }
             });
-            statusRead.current = { generation, promise };
+            statusRead.current = { generation, promise, taken: promise };
             await promise;
           })();
         }
@@ -544,52 +563,18 @@ export function useSignIn(host: Host) {
       active = false;
       close?.();
     };
-  }, [host, invalidate, managerAllows, refresh]);
+  }, [adopt, host, invalidate, managerAllows, refresh]);
 
   useEffect(() => {
     mounted.current = true;
-    let active = true;
-    let expired = false;
-    const deadline = window.setTimeout(() => {
-      expired = true;
-      setObservingStartup(false);
-      // A missing answer is not readiness. Give a stalled initial read a
-      // visible failure instead of leaving a skeleton on screen forever.
-      if (!latestStatus.current && host.available) {
-        const unavailable = {
-          ...unknownStatus,
-          runtimeAvailable: false,
-          refusal: { code: "runtime_unavailable", retryAfterSeconds: null },
-        };
-        latestStatus.current = unavailable;
-        setStatus(unavailable);
-      }
-    }, STARTUP_WAIT_MS);
-    const observeStartup = async () => {
-      do {
-        await refresh();
-        if (!active) return;
-        if (
-          !host.startManager ||
-          statusReadFailed.current ||
-          latestStatus.current?.runtimeAvailable !== false
-        ) {
-          window.clearTimeout(deadline);
-          setObservingStartup(false);
-          return;
-        }
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
-      } while (active && !expired);
-    };
-    // Production observations own manager progress; the legacy fixture port
-    // retains its existing bounded startup reads.
-    if (managerObserved) void refresh();
-    else void observeStartup();
+    // Native manager/sign-in observations own readiness. An outstanding host
+    // promise stays pending until its owner answers or reports a timeout.
+    void refresh().finally(() => {
+      if (mounted.current && !managerObserved) setObservingStartup(false);
+    });
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
     return () => {
-      active = false;
-      window.clearTimeout(deadline);
       mounted.current = false;
       invalidate();
       window.removeEventListener("focus", focus);
@@ -609,6 +594,38 @@ export function useSignIn(host: Host) {
           (settledPhase === "checking" || settledPhase === "services-down")
         ? "starting"
         : settledPhase;
+  // A session signed in to after the ask is a new one, not the one that ended.
+  const signedInPhase = phase === "signed-in";
+  const wasSignedIn = useRef(signedInPhase);
+  useEffect(() => {
+    if (signedInPhase && !wasSignedIn.current) {
+      sessionEnding.current = false;
+      startSession();
+    }
+    // A session that ends without the window asking (an idle expiry) ends
+    // for every command bound to it, as one the person signed out of does.
+    // `adopt` has normally ended it already; this also covers the account
+    // leaving the signed-in phase for the manager's sake.
+    if (!signedInPhase && wasSignedIn.current) endSession();
+    wasSignedIn.current = signedInPhase;
+  }, [signedInPhase]);
+  // A view refused for a missing session may hear before this state does;
+  // a fresh read settles whether the session is gone.
+  // The profile list that follows a status is no part of the answer.
+  useEffect(
+    () =>
+      confirmSessionWith(async () => {
+        const reading = statusRead.current;
+        if (reading && reading.generation === request.current)
+          await reading.taken;
+        else await refresh();
+      }),
+    [refresh],
+  );
+  const sessionEnded = useCallback(
+    () => sessionEnding.current || windowSessionEnded(),
+    [],
+  );
   const startServices = async (scope?: "user" | "machine") => {
     if (!host.startManager || startingManager.current || submitting.current)
       return;
@@ -626,19 +643,7 @@ export function useSignIn(host: Host) {
         return;
       }
       if (managerObserved) return;
-      const until = performance.now() + 90_000;
-      do {
-        await refresh();
-        if (
-          !mounted.current ||
-          statusReadFailed.current ||
-          latestStatus.current?.runtimeAvailable
-        )
-          return;
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
-      } while (mounted.current && performance.now() < until);
-      if (mounted.current)
-        setRefusal({ code: "runtime_unavailable", retryAfterSeconds: null });
+      await refresh();
     } catch (error) {
       if (mounted.current) setRefusal(refusalFrom(error));
     } finally {
@@ -699,7 +704,7 @@ export function useSignIn(host: Host) {
         // the invalidated generation; no second CLI call is needed to display it.
         signedIn = true;
         statusReadFailed.current = false;
-        latestStatus.current = result.status;
+        adopt(result.status);
         setStatus(result.status);
         listed.current = null;
         setProfiles(null);
@@ -760,7 +765,7 @@ export function useSignIn(host: Host) {
         else {
           signedIn = true;
           statusReadFailed.current = false;
-          latestStatus.current = login.status;
+          adopt(login.status);
           setStatus(login.status);
           listed.current = null;
           setProfiles(null);
@@ -818,6 +823,49 @@ export function useSignIn(host: Host) {
     return made !== null;
   };
 
+  const clearSavedSignIn = async (password: Uint8Array, profile: string) => {
+    if (
+      submitting.current ||
+      !managerAllows() ||
+      mustChoose ||
+      profile !== (target?.name ?? status?.active_profile)
+    ) {
+      password.fill(0);
+      return false;
+    }
+    submitting.current = true;
+    invalidate();
+    const generation = request.current;
+    setBusy(true);
+    setClearingSavedSignIn(true);
+    setRefusal(null);
+    setRemaining(null);
+    try {
+      const result = await host.signOutWithPassword(password, profile);
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return false;
+      setRemaining(result);
+      return true;
+    } catch (error) {
+      if (mounted.current && generation === request.current)
+        setRefusal(submitRefusalFrom(error));
+      return false;
+    } finally {
+      password.fill(0);
+      if (mounted.current && generation === request.current)
+        await refresh(true);
+      submitting.current = false;
+      if (mounted.current) {
+        setBusy(false);
+        setClearingSavedSignIn(false);
+      }
+    }
+  };
+
   const signOut = async () => {
     if (submitting.current || !managerAllows()) return;
     submitting.current = true;
@@ -834,6 +882,8 @@ export function useSignIn(host: Host) {
         !managerAllows()
       )
         return;
+      sessionEnding.current = true;
+      endSession();
       const remaining = await host.signOut();
       if (
         !mounted.current ||
@@ -843,6 +893,9 @@ export function useSignIn(host: Host) {
         return;
       setRemaining(remaining);
     } catch (error) {
+      // A sign-out that failed leaves the session as it was.
+      sessionEnding.current = false;
+      startSession();
       if (mounted.current && generation === request.current)
         setSignOutFailure(refusalFrom(error));
     } finally {
@@ -855,6 +908,8 @@ export function useSignIn(host: Host) {
 
   return {
     manager,
+    /** The session waits for a fresh proof; the person is not signed out. */
+    reconnecting: status?.reconnecting ?? null,
     recoveringServices:
       manager?.state === "recovering" || manager?.state === "waiting",
     status,
@@ -892,10 +947,16 @@ export function useSignIn(host: Host) {
     startServices,
     remaining,
     signOutFailure,
+    /** Whether this window asked the signed-in session to end and it has not
+     * been signed in to since. A read of that session that is refused for it
+     * is no longer wanted by anyone. */
+    sessionEnded,
     gated: GATED.has(phase),
     canSignIn: canSignIn(phase),
     submit,
     signOut,
+    clearSavedSignIn,
+    clearingSavedSignIn,
     /** The person has seen what was refused: a refusal that came from an
      * attempt is not shown again when its surface is next opened. What is
      * still true stays: a wait that is running, a profile that is locked. */

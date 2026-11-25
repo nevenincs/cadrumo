@@ -35,14 +35,17 @@ from ....tests.aeat_literal_fixtures import (
     CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
 )
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    _authoritative_citation_origins,
+    authoritative_citation_origins,
 )
 from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _citation(url: str) -> CategoryCitation:
@@ -53,8 +56,8 @@ def _citation(url: str) -> CategoryCitation:
         url=url,
         quote=tr("texto autoritativo"),
         legal_ref="ley-35-2006:art-30",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
 
@@ -144,7 +147,7 @@ def test_accepted_origins_agree_with_the_canonical_domain_registry() -> None:
     :func:`test_origin_set_is_read_from_the_registry_at_call_time`.
     """
     domains = load_external_constants().aeat.domains
-    accepted = _authoritative_citation_origins()
+    accepted = authoritative_citation_origins()
 
     assert domains.host_suffix.lower() in accepted
     assert domains.boe.lower().endswith(next(o for o in accepted if "boe" in o))
@@ -162,7 +165,7 @@ def test_origin_set_is_read_from_the_registry_at_call_time() -> None:
     """
     import inspect
 
-    source = inspect.getsource(_authoritative_citation_origins)
+    source = inspect.getsource(authoritative_citation_origins)
 
     assert "load_external_constants()" in source, source
     for literal in (AEAT_HOST_SUFFIX_EXPECTED, "boe.es"):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -14,16 +15,15 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import activ
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
-from cadrumo.core.operations import OperationEffect, OperationLifecycle
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationLifecycle
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 
 from ...adapters.profile_worker import ProfileWorkerProcess
 from ...adapters.tests.profile_worker_support import lease, worker_profiles
-from ...adapters.windows_process import WindowsOwnedProcess
 from .test_profile_worker_operations import BoundaryAuthority
 
 pytestmark = [
@@ -60,16 +60,19 @@ def test_drain_contains_worker_and_preserves_created_operation_for_recovery(tmp_
         try:
             assert win32event.WaitForSingleObject(retained_process_handle, 0) == win32event.WAIT_TIMEOUT
             opened = datetime.now(UTC)
-            with activate_session(
-                BucketSession.open_resumed(
-                    bucket_id=str(identity.binding.profile_id),
-                    dek=key,
-                    idle_minutes=15,
-                    opened_at=opened,
-                    idle_deadline=opened + timedelta(minutes=15),
-                    absolute_deadline=opened + timedelta(minutes=240),
-                    storage_root=root,
-                )
+            with (
+                closing(
+                    BucketSession.open_resumed(
+                        bucket_id=str(identity.binding.profile_id),
+                        dek=key,
+                        idle_minutes=15,
+                        opened_at=opened,
+                        idle_deadline=opened + timedelta(minutes=15),
+                        absolute_deadline=opened + timedelta(minutes=240),
+                        storage_root=root,
+                    )
+                ) as session,
+                activate_session(session),
             ):
                 profile_record = load_test_profile_record(identity.binding.profile_id, root=root)
             admitted = lease(identity)

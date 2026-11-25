@@ -24,15 +24,18 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ....application.modelo.work_form_models import (
+from ....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    address_key,
+)
+from ....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
-    address_key,
 )
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
+from ....tests.log_records import delivered_records
 from ....tests.terminal_sizes import TERMINAL_FLOOR
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
@@ -43,6 +46,7 @@ from ..modelo.workbench.review import EditReviewScreen
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
+from .settling import SettleTimeoutError, settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -63,18 +67,29 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
         yield installed
 
 
+@pytest.fixture(scope="module")
+def interaction_workbench(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
+    """One real quarterly declaration for the interaction checks.
+
+    Seeding encrypted storage dominates a case, and these cases only stage edits
+    on a mounted screen; the typed-value check itself asserts the stored form is
+    unchanged afterwards.
+    """
+    with real_workbench(tmp_path_factory.mktemp("acceptance-interaction")) as installed:
+        yield installed
+
+
 async def _panel_opened(pilot: Pilot[None]) -> bool:
     """Wait for the box panel Enter opens, docked or in the dialog, once the box's full help has been read."""
-    for _ in range(200):
-        if pilot.app.screen.query(CasillaEditorPanel):
-            return True
-        await pilot.pause()
-    return False
+    try:
+        await settle_until(pilot, lambda: bool(pilot.app.screen.query(CasillaEditorPanel)), "the box panel Enter opens")
+    except SettleTimeoutError:
+        return False
+    return True
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
     form = screen.form
     assert form is not None, "the workbench never finished reading its declaration"
     return form
@@ -135,8 +150,7 @@ async def test_no_transport_token_reaches_what_the_filer_reads(
             form = await _opened(pilot, screen)
             if keys:
                 await pilot.press(*keys)
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
             if keys == ("s",):
                 assert isinstance(app.screen, WorkbenchSourcesScreen), "the sources view did not open"
             elif keys == ("f1",):
@@ -156,9 +170,10 @@ async def test_no_transport_token_reaches_what_the_filer_reads(
 @pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
 @pytest.mark.parametrize("theme", _THEMES)
 async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
-    tmp_path: Path, language: OutputLanguage, size: tuple[int, int], theme: str
+    interaction_workbench: InstalledModeloWorkbench, language: OutputLanguage, size: tuple[int, int], theme: str
 ) -> None:
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
+    installed = interaction_workbench
+    with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
@@ -166,7 +181,7 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
             form = await _opened(pilot, screen)
             casilla_list = screen.query_one(CasillaList)
             casilla_list.focus_address(address_key(_editable(form).address))
-            await pilot.pause()
+            await settle(pilot)
             origin = casilla_list.highlighted
             assert origin is not None
             returns: dict[str, bool] = {}
@@ -175,11 +190,10 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
                 ("sources", ("s",), ("escape",)),
             ):
                 await pilot.press(*opening)
-                await pilot.pause()
+                await settle(pilot)
                 assert app.screen is not screen or await _panel_opened(pilot), f"{name} did not open"
                 await pilot.press(*closing)
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
                 highlighted = casilla_list.highlighted
                 returns[name] = (
                     app.screen is screen
@@ -198,7 +212,7 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
 @pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
 @pytest.mark.parametrize("theme", _THEMES)
 async def test_a_typed_value_is_kept_nowhere_once_abandoned(
-    tmp_path: Path,
+    interaction_workbench: InstalledModeloWorkbench,
     caplog: pytest.LogCaptureFixture,
     language: OutputLanguage,
     size: tuple[int, int],
@@ -206,7 +220,8 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
 ) -> None:
     caplog.set_level(logging.DEBUG)
     typed = "987654.32" if language is OutputLanguage.EN else "987654,32"
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
+    installed = interaction_workbench
+    with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
@@ -217,23 +232,21 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
             await pilot.press("enter")
             assert await _panel_opened(pilot)
             await pilot.press(*typed, "escape")
-            await pilot.pause()
+            await settle(pilot)
             after_cancel = [change.text for change in screen.staged_changes]
             await pilot.press("enter")
             assert await _panel_opened(pilot)
             # Keep and stay, so the panel closes on this box rather than refilling for the next.
             await pilot.press(*typed, "ctrl+enter")
-            await pilot.pause()
+            await settle(pilot)
             staged = len(screen.staged_changes)
             assert staged == 1
             await pilot.press("R")
             # Review checks the staged changes in a worker before opening its dialog.
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(app.screen, EditReviewScreen)
             await pilot.click("#review-discard")
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             after_discard = len(screen.staged_changes)
             app.exit(None)
         stored = installed.load(language).form
@@ -245,4 +258,8 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
     assert after_cancel == []
     assert after_discard == 0
     digits = typed.replace(",", "").replace(".", "")
-    assert not [record for record in caplog.records if digits in record.getMessage().replace(",", "").replace(".", "")]
+    assert not [
+        record
+        for record in delivered_records(caplog)
+        if digits in record.getMessage().replace(",", "").replace(".", "")
+    ]

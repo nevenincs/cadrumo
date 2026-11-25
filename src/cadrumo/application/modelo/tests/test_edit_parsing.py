@@ -7,7 +7,7 @@ from the parser. The typed half is the same function the executor re-applies.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -19,6 +19,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_base import CasillaDataType, CasillaSignConstraint
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.filing.schema import ModeloScalar
 from ....domain.modelos.codes import ModeloCode
 from ...operations.schema_identity import OperationSchemaIdentityV1
@@ -31,6 +32,7 @@ from ..edit_models import (
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditParseRequestV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -39,7 +41,7 @@ from ..edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from ..edit_parse_text import parse_refusal_text
-from ..edit_parsing import ModeloEditParseRequestV1, parse_modelo_edit_lexeme, validate_modelo_edit_value
+from ..edit_parsing import parse_modelo_edit_lexeme, validate_modelo_edit_value
 from ..edit_value_grammar import (
     ModeloEditChoiceV1,
     ModeloEditValueChannel,
@@ -48,6 +50,8 @@ from ..edit_value_grammar import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _DIGEST = "a" * 64
 
@@ -119,7 +123,7 @@ _GRAMMARS: dict[str, ModeloEditValueGrammarV1] = {
 _BINDING = "modelo-999-coeficiente"
 
 
-def _baseline() -> ModeloEditBaselineV1:
+def baseline() -> ModeloEditBaselineV1:
     identity = OperationSchemaIdentityV1(schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint=_DIGEST)
     now = datetime.now(UTC)
     return ModeloEditBaselineV1(
@@ -136,13 +140,13 @@ def _baseline() -> ModeloEditBaselineV1:
         ),
         bucket_id="parse-bucket",
         modelo=ModeloCode(Modelo("130").value),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         work_unit_id="b" * 64,
         work_unit_record_digest=_DIGEST,
         calculation_head_digest=_DIGEST,
         current_calculation_revision_id=None,
-        law_selected_revision_id="2019-y-siguientes",
+        law_selected_revision_id=str(open_ended_revision("130").id),
         schema_identity=ModeloEditSchemaIdentityV1(
             schema_id="modelo-130-schema", schema_fingerprint=_DIGEST, completeness_manifest_digest=_DIGEST
         ),
@@ -186,7 +190,7 @@ def _parse(
         ModeloEditParseRequestV1(
             address=ModeloEditScalarAddressV1(casilla_id=casilla_id), entry_locale=locale, lexeme=lexeme
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=tax_id_format,
     )
 
@@ -248,7 +252,7 @@ def test_the_other_conventions_decimal_mark_is_read_when_it_cannot_be_a_grouping
         (OutputLanguage.ES, "   ", ModeloEditParseReason.EMPTY),
         (OutputLanguage.EN, "1234.567", ModeloEditParseReason.TOO_MANY_DECIMALS),
         (OutputLanguage.ES, "0,001", ModeloEditParseReason.TOO_MANY_DECIMALS),
-        (OutputLanguage.EN, "1000000000000", ModeloEditParseReason.OUT_OF_OPERAND_RANGE),
+        (OutputLanguage.EN, "1000000000000000", ModeloEditParseReason.OUT_OF_OPERAND_RANGE),
     ],
 )
 def test_a_number_that_cannot_be_read_exactly_is_refused_with_its_reason(
@@ -305,7 +309,7 @@ def test_the_request_never_dumps_or_shows_its_lexeme() -> None:
         ("04", "2,5", ModeloEditParseReason.NOT_AN_INTEGER),
         ("04", "13", ModeloEditParseReason.ABOVE_MAXIMUM),
         ("05", "quizá", ModeloEditParseReason.NOT_A_BOOLEAN),
-        ("06", "31/03/2025", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
+        ("06", f"31/03/{_YEAR}", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
         ("09", "tarjeta", ModeloEditParseReason.NOT_IN_CHOICES),
         ("10", "ABCDE", ModeloEditParseReason.TOO_LONG),
         ("10", "ab1", ModeloEditParseReason.PATTERN_MISMATCH),
@@ -324,7 +328,7 @@ def test_ratios_and_fine_decimals_are_not_held_to_the_money_scale() -> None:
         ModeloEditParseRequestV1(
             address=ModeloEditBindingAddressV1(binding_id=_BINDING), entry_locale=OutputLanguage.EN, lexeme="0.1575"
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=None,
     )
     assert _value(binding) == Decimal("0.1575")
@@ -407,7 +411,7 @@ def test_the_typed_half_reads_machine_canonical_values(
         (_MONEY, Decimal("0.125"), ModeloEditParseReason.TOO_MANY_DECIMALS),
         (_MONEY, True, ModeloEditParseReason.NOT_A_NUMBER),
         (_BOOLEAN, "2", ModeloEditParseReason.NOT_A_BOOLEAN),
-        (_DATE, "2025-03-31", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
+        (_DATE, date(_YEAR, 3, 31).isoformat(), ModeloEditParseReason.CHANNEL_UNAVAILABLE),
         (_CHOICE, 7, ModeloEditParseReason.NOT_TEXT),
     ],
 )
@@ -420,3 +424,82 @@ def test_the_typed_half_refuses_what_the_engine_would_refuse(
 
     assert isinstance(outcome, ModeloEditParseRefusalV1)
     assert outcome.reason == reason
+
+
+_THREE_DIGIT_MONEY = _MONEY.model_copy(update={"max_fraction_digits": 3})
+
+
+def _parse_against(
+    grammar: ModeloEditValueGrammarV1, lexeme: str, locale: OutputLanguage
+) -> ModeloEditParsedValueV1 | ModeloEditRefusedV1:
+    base = baseline()
+    entry = ModeloEditWritableScalarSurfaceEntryV1(
+        casilla_id="11",
+        data_type=CasillaDataType(grammar.data_type),
+        allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE,),
+        grammar=grammar,
+    )
+    return parse_modelo_edit_lexeme(
+        ModeloEditParseRequestV1(
+            address=ModeloEditScalarAddressV1(casilla_id="11"), entry_locale=locale, lexeme=lexeme
+        ),
+        baseline=base.model_copy(update={"permitted_surface": (*base.permitted_surface, entry)}),
+        tax_id_format=None,
+    )
+
+
+@pytest.mark.parametrize("casilla_id", ["01", "04"])
+@pytest.mark.parametrize(
+    ("locale", "lexeme", "as_thousands", "as_decimal"),
+    [
+        (OutputLanguage.EN, "1.000", "1000", "1.000"),
+        (OutputLanguage.ES, "1,000", "1000", "1,000"),
+        (OutputLanguage.HU, "1,000", "1000", "1,000"),
+        (OutputLanguage.EN, "-1.000", "-1000", "-1.000"),
+        (OutputLanguage.EN, "12.345", "12345", "12.345"),
+    ],
+)
+def test_a_lone_decimal_mark_before_three_digits_is_two_way_readable_on_a_short_address(
+    casilla_id: str, locale: OutputLanguage, lexeme: str, as_thousands: str, as_decimal: str
+) -> None:
+    result = _parse(casilla_id, lexeme, locale)
+
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditParseRefusalV1)
+    assert result.refusal.reason is ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS
+    assert result.refusal.message_arguments == (as_thousands, as_decimal)
+
+
+def test_three_typed_fraction_digits_are_read_where_the_address_takes_them() -> None:
+    result = _parse_against(_THREE_DIGIT_MONEY, "1.000", OutputLanguage.EN)
+
+    assert _value(result) == Decimal("1.000")
+
+
+def test_typed_trailing_zeros_within_the_address_scale_stay_accepted() -> None:
+    assert _value(_parse("01", "1.50", OutputLanguage.EN)) == Decimal("1.5")
+
+
+@pytest.mark.parametrize(
+    ("lexeme", "limit"),
+    [("1.5000", "2"), ("1234.000", "2"), ("1.2500", "2")],
+)
+def test_more_typed_fraction_digits_than_the_address_takes_are_refused_though_equal(lexeme: str, limit: str) -> None:
+    result = _parse("01", lexeme, OutputLanguage.EN)
+
+    assert _reason(result) is ModeloEditParseReason.TOO_MANY_DECIMALS
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditParseRefusalV1)
+    assert result.refusal.message_arguments == (limit,)
+
+
+def test_a_typed_wire_decimal_is_not_a_lexeme_and_is_not_ambiguous() -> None:
+    outcome = validate_modelo_edit_value(
+        Decimal("1.000"),
+        address=ModeloEditScalarAddressV1(casilla_id="01"),
+        grammar=_MONEY,
+        tax_id_format=None,
+    )
+
+    assert isinstance(outcome, ModeloEditParsedValueV1)
+    assert outcome.value == Decimal("1.000")

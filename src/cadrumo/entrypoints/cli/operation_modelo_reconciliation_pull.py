@@ -11,6 +11,7 @@ from cadrumo_client.commands.registered_operation import run_registered_operatio
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+from ...application.live.remote_state_models import FiledDataCaptureReport
 from ...application.modelo.reconciliation import ModeloReconciliationReport
 from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
@@ -19,11 +20,33 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
     reconciliation_pull_source_ref,
 )
-from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from .operation_filed_single import read_filed_single_capture_for_cli
 from .operation_justificante_capture import capture_justificante_for_cli
 from .operation_modelo_metadata import read_modelo_work_unit
+
+
+def _projection_matches_source(
+    projection: ModeloReconciliationImportProjection,
+    profile_id: str,
+    work_unit_id: str,
+    source: ModeloReconciliationEvidenceKind,
+    expected_source: str,
+) -> bool:
+    return (
+        projection.bucket_id == profile_id
+        and projection.work_unit_id == work_unit_id
+        and projection.source_kind is source
+        and projection.source_path == expected_source
+    )
+
+
+def _captured_observation_id(captured: FiledDataCaptureReport) -> str:
+    if captured.captured_count != 1 or len(captured.observation_paths) != 1 or captured.casilla_count == 0:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return Path(captured.observation_paths[0]).name
 
 
 def pull_modelo_reconciliation(
@@ -62,15 +85,13 @@ def pull_modelo_reconciliation(
             ctx,
             modelo=str(unit.modelo),
             year=unit.filing_year,
-            output_root=load_settings().cadrumo_filed_declarations_dir,
+            output_root=storage_path(StorageCategory.FILED_DECLARATIONS),
             period=unit.period,
             expediente_id=None,
             limit=1,
             expected_profile_id=client.profile_id,
         ).report
-        if captured.captured_count != 1 or len(captured.observation_paths) != 1 or captured.casilla_count == 0:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        observation_id = Path(captured.observation_paths[0]).name
+        observation_id = _captured_observation_id(captured)
     else:
         capture = capture_justificante_for_cli(
             ctx,
@@ -107,10 +128,7 @@ def pull_modelo_reconciliation(
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
         or completed.effect is not OperationEffect.UPDATED
-        or projection.bucket_id != profile_id
-        or projection.work_unit_id != unit.work_unit_id
-        or projection.source_kind is not source
-        or projection.source_path != expected_source
+        or not _projection_matches_source(projection, profile_id, unit.work_unit_id, source, expected_source)
     ):
         raise invalid_completion_error(completed)
     return projection.to_report()

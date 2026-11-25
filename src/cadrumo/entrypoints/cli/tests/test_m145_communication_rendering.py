@@ -28,7 +28,7 @@ from ....application.modelo.m145_communication_records import (
     M145CommunicationValidationIssueKind,
     M145CommunicationValidationResult,
 )
-from .._modelo_m145_rendering import (
+from ..modelo_m145_rendering import (
     m145_export_result_lines,
     m145_export_result_payload,
     m145_record_result_lines,

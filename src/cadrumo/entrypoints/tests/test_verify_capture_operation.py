@@ -3,21 +3,19 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
-from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
+from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import verify as verify_module
 from ...application.live import verify_capture_operation as capture_module
@@ -32,15 +30,14 @@ from ...application.live.verify_capture_operation import (
     build_verify_capture_registration,
     resolve_verify_capture_access,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.identity_check_verdict import IdentityCheckVerdict
@@ -51,73 +48,28 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
+from .supervised_operation_rig import (
+    build_supervised_operation,
+    cli_submit_context,
+    operation_access_context,
+    run_to_terminal,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _FOREIGN_PROFILE_ID = UUID("22222222-2222-4222-8222-222222222222")
-_NIF = "B12345674"
+_NIF = "B00015016"
 _RAW_EVIDENCE_LOCATOR = "private://synthetic-verify-evidence"
-
-
-class _ExecutionAuthority:
-    """Supervisor authority port that records each fresh commit fence."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.guard_calls = 0
-        self.guard_depth = 0
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.guard_calls += 1
-        guard_number = self.guard_calls
-        self.guard_depth += 1
-        self.events.append(f"commit-guard-enter:{guard_number}")
-        try:
-            yield
-        finally:
-            self.guard_depth -= 1
-            self.events.append(f"commit-guard-exit:{guard_number}")
-
-
-class _Resources:
-    """Synthetic browser owner with observable activation and cleanup."""
-
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.active = False
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        assert not self.active
-        self.active = True
-        self.events.append("browser-activate")
-        try:
-            yield
-        finally:
-            self.active = False
-            self.events.append("browser-deactivate")
-
-    async def close(self) -> None:
-        assert not self.active
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("browser-close")
 
 
 class _VerifyPersistence:
     """In-memory application port whose write requires an active supervisor guard."""
 
-    def __init__(self, *, bucket_id: str, events: list[str], authority: _ExecutionAuthority) -> None:
+    def __init__(self, *, bucket_id: str, events: list[str], authority: FencedExecutionAuthority) -> None:
         self.bucket_id = bucket_id
         self.events = events
         self.authority = authority
@@ -139,36 +91,87 @@ class _VerifyPersistence:
         self.rows[str(observation.observation_id)] = observation
 
 
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def _supervisor(
     *,
     tmp_path: Path,
     registry: OperationRegistry,
     profile_repository: Any,
     authority: PinnedAuthorityOperation,
-    execution_authority: _ExecutionAuthority,
+    execution_authority: FencedExecutionAuthority,
 ) -> tuple[OperationSupervisor, OperationJournalRepository, Any]:
-    durable_root = tmp_path / "operations"
-    journal = OperationJournalRepository(storage_root=durable_root)
-    operands = operation_secure_reference_repository(objects=profile_repository)
-    supervisor = OperationSupervisor(
-        authority_operation=authority,
+    journal, _, operands, supervisor, _ = build_supervised_operation(
+        tmp_path=tmp_path,
+        objects=profile_repository,
+        authority=authority,
         registry=registry,
-        journal=journal,
-        event_stream=journal,
-        leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-        operands=operands,
-        owner_id="1" * 64,
-        lease_token_factory=lambda: "2" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=5),
+        now=_NOW,
         execution_authority=execution_authority,
     )
     return supervisor, journal, operands
+
+
+def _assert_two_captures_settled_and_projected(
+    first_terminal: OperationPersistedSnapshot,
+    first_frame: object,
+    second_terminal: OperationPersistedSnapshot,
+    second_frame: object,
+    bucket_id: str,
+) -> None:
+    assert first_terminal.lifecycle is second_terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert (
+        first_terminal.terminal_condition is second_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    )
+    assert first_terminal.effect is OperationEffect.UPDATED
+    assert second_terminal.effect is OperationEffect.NONE
+    assert first_terminal.terminal_receipt is not None
+    assert first_terminal.terminal_receipt.effect is OperationEffect.UPDATED
+    assert second_terminal.terminal_receipt is not None
+    assert second_terminal.terminal_receipt.effect is OperationEffect.NONE
+    assert isinstance(first_frame, OperationResultProjectionSuccessV1)
+    assert isinstance(second_frame, OperationResultProjectionSuccessV1)
+    first_result = first_frame.projection
+    second_result = second_frame.projection
+    assert isinstance(first_result, VerifyCapturePublicResultV1)
+    assert isinstance(second_result, VerifyCapturePublicResultV1)
+    assert first_result.bucket_id == second_result.bucket_id == bucket_id
+    assert first_result.observation_id == second_result.observation_id
+    assert first_result.surface is second_result.surface is VerifySurface.TGVI
+    assert first_result.nif == _NIF
+    assert first_result.expected is IdentityCheckVerdict.VALID
+    assert first_result.matched_expectation is True
+    assert "raw_evidence_locator" not in first_result.model_dump()
+    assert _RAW_EVIDENCE_LOCATOR not in first_result.model_dump_json()
+
+
+def _assert_capture_effects_and_guards(
+    events: list[str],
+    acquisitions: list[tuple[VerifySurface, str, object | None]],
+    execution_authority: FencedExecutionAuthority,
+    resources: list[ObservableBrowserResources],
+) -> None:
+    assert acquisitions == [
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
+    ]
+    assert events.count("observation-save") == 1
+    assert events.count("remote-acquire") == 2
+    assert events.index("remote-acquire") < events.index("browser-deactivate") < events.index("commit-guard-enter:1")
+    assert events.index("commit-guard-enter:1") < events.index("observation-save")
+    assert execution_authority.guard_calls == 4  # observation + result operand for each successful operation
+    assert len(resources) == 2
+    assert all(resource.closed and resource.close_calls == 1 for resource in resources)
+
+
+def _assert_wrong_scope_refused_without_effect(
+    wrong_scope_terminal: OperationPersistedSnapshot, events: list[str]
+) -> None:
+    assert wrong_scope_terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert wrong_scope_terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert wrong_scope_terminal.effect is OperationEffect.NONE
+    assert wrong_scope_terminal.terminal_receipt is not None
+    assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
+    assert events.count("remote-acquire") == 2
+    assert events.count("observation-save") == 1
 
 
 def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_effects(
@@ -180,9 +183,9 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         profile_id = UUID(profile.bucket_id)
         assert profile_id == _PROFILE_ID
         events: list[str] = []
-        execution_authority = _ExecutionAuthority(events)
+        execution_authority = FencedExecutionAuthority(events)
         persistence = _VerifyPersistence(bucket_id=profile.bucket_id, events=events, authority=execution_authority)
-        resources: list[_Resources] = []
+        resources: list[ObservableBrowserResources] = []
         acquisitions: list[tuple[VerifySurface, str, object | None]] = []
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
@@ -194,8 +197,8 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
             assert pinned_authority is authority
             events.append("provider-preflight")
 
-        def resources_factory() -> _Resources:
-            resource = _Resources(events)
+        def resources_factory() -> ObservableBrowserResources:
+            resource = ObservableBrowserResources(events)
             resources.append(resource)
             return resource
 
@@ -238,14 +241,8 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         admitted = resolve_operation_access(
             registry=registry,
             request=request,
-            context=OperationAccessContext(
-                profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-                authority_operation=authority,
+            context=cli_submit_context(
+                profile_id=profile_id, contract=registration.contract, authority_operation=authority
             ),
         )
         assert admitted.request.profile_id == profile_id
@@ -261,75 +258,158 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
-        async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(VERIFY_TGVI_CAPTURE_DEFINITION_ID)
-            assert contract.result_schema is not None
-            result = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                VerifyCapturePublicResultV1,
+        async def run_successes() -> tuple[tuple[OperationPersistedSnapshot, object], ...]:
+            first = await settle_and_project(
+                supervisor, result_service, registry, request, VerifyCapturePublicResultV1, operation_id="3" * 64
             )
-            return terminal, result
-
-        async def run_successes() -> tuple[tuple[OperationPersistedSnapshot, BaseModel], ...]:
-            return await run("3" * 64), await run("4" * 64)
+            second = await settle_and_project(
+                supervisor, result_service, registry, request, VerifyCapturePublicResultV1, operation_id="4" * 64
+            )
+            return first, second
 
         (first_terminal, first_frame), (second_terminal, second_frame) = asyncio.run(run_successes())
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: str(_FOREIGN_PROFILE_ID))
         wrong_scope_id = asyncio.run(supervisor.submit(request, operation_id="5" * 64))
-        wrong_scope_terminal = asyncio.run(_run_to_terminal(supervisor, wrong_scope_id))
+        wrong_scope_terminal = asyncio.run(run_to_terminal(supervisor, wrong_scope_id))
 
-    assert first_terminal.lifecycle is second_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert (
-        first_terminal.terminal_condition is second_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    _assert_two_captures_settled_and_projected(
+        first_terminal, first_frame, second_terminal, second_frame, profile.bucket_id
     )
-    assert first_terminal.effect is OperationEffect.UPDATED
-    assert second_terminal.effect is OperationEffect.NONE
-    assert first_terminal.terminal_receipt is not None
-    assert first_terminal.terminal_receipt.effect is OperationEffect.UPDATED
-    assert second_terminal.terminal_receipt is not None
-    assert second_terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert isinstance(first_frame, OperationResultProjectionSuccessV1)
-    assert isinstance(second_frame, OperationResultProjectionSuccessV1)
-    first_result = first_frame.projection
-    second_result = second_frame.projection
-    assert isinstance(first_result, VerifyCapturePublicResultV1)
-    assert isinstance(second_result, VerifyCapturePublicResultV1)
-    assert first_result.bucket_id == second_result.bucket_id == profile.bucket_id
-    assert first_result.observation_id == second_result.observation_id
-    assert first_result.surface is second_result.surface is VerifySurface.TGVI
-    assert first_result.nif == _NIF
-    assert first_result.expected is IdentityCheckVerdict.VALID
-    assert first_result.matched_expectation is True
-    assert "raw_evidence_locator" not in first_result.model_dump()
-    assert _RAW_EVIDENCE_LOCATOR not in first_result.model_dump_json()
+    _assert_capture_effects_and_guards(events, acquisitions, execution_authority, resources)
+    _assert_wrong_scope_refused_without_effect(wrong_scope_terminal, events)
 
-    assert acquisitions == [
-        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
-        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
-    ]
-    assert events.count("observation-save") == 1
-    assert events.count("remote-acquire") == 2
-    assert events.index("remote-acquire") < events.index("browser-deactivate") < events.index("commit-guard-enter:1")
-    assert events.index("commit-guard-enter:1") < events.index("observation-save")
-    assert execution_authority.guard_calls == 4  # observation + result operand for each successful operation
-    assert len(resources) == 2
-    assert all(resource.closed and resource.close_calls == 1 for resource in resources)
 
-    assert wrong_scope_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert wrong_scope_terminal.terminal_condition is OperationTerminalCondition.REFUSED
-    assert wrong_scope_terminal.effect is OperationEffect.NONE
-    assert wrong_scope_terminal.terminal_receipt is not None
-    assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
-    assert events.count("remote-acquire") == 2
-    assert events.count("observation-save") == 1
+def _settle_tgvi(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    payload_nif: str | None,
+    recorded_tax_id: str | None,
+    acquire_failure: BaseException | None = None,
+) -> tuple[OperationPersistedSnapshot, list[str]]:
+    """Run one TGVI check through the real supervisor against a profile with a chosen recorded number."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
+        events: list[str] = []
+        acquired_nifs: list[str] = []
+        execution_authority = FencedExecutionAuthority(events)
+        persistence = _VerifyPersistence(bucket_id=profile.bucket_id, events=events, authority=execution_authority)
+        if recorded_tax_id is not None:
+            register_minimal_profile(profile_id=profile.bucket_id, overrides={"identity.tax_id": recorded_tax_id})
+        monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
+        monkeypatch.setattr(capture_module, "now", lambda: _NOW)
+        monkeypatch.setattr(verify_module, "now", lambda: _NOW)
+
+        async def acquire(
+            _surface: VerifySurface,
+            nif: str,
+            _expected: object | None,
+            _authority: PinnedAuthorityOperation,
+        ) -> VerifyLiveObservation:
+            acquired_nifs.append(nif)
+            if acquire_failure is not None:
+                raise acquire_failure
+            return VerifyLiveObservation(nif=nif, verdict=IdentityCheckVerdict.VALID)
+
+        definition = build_verify_capture_definition(
+            VerifySurface.TGVI,
+            persistence_factory=lambda _bucket_id: persistence,
+            acquire=acquire,
+            browser_resources_factory=lambda: ObservableBrowserResources(events),
+            provider_preflight=lambda _profile_id, _authority: None,
+        )
+        registry = OperationRegistry(
+            definitions=(definition,), public_registrations=(build_verify_capture_registration(definition),)
+        )
+        supervisor, _journal, _operands = _supervisor(
+            tmp_path=tmp_path,
+            registry=registry,
+            profile_repository=profile.repository,
+            authority=authority,
+            execution_authority=execution_authority,
+        )
+        request = OperationRequest(
+            definition_id=VERIFY_TGVI_CAPTURE_DEFINITION_ID,
+            subject_ref=profile_operation_subject(profile.bucket_id),
+            payload=VerifyCaptureRequest(profile_id=UUID(profile.bucket_id), nif=payload_nif),
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            return await run_to_terminal(supervisor, await supervisor.submit(request, operation_id="7" * 64))
+
+        terminal = asyncio.run(run())
+    return terminal, [f"acquired:{nif}" for nif in acquired_nifs]
+
+
+def test_omitted_nif_checks_the_profiles_own_recorded_taxpayer_number(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With no NIF in the request the worker reads the number from the exact profile record."""
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=None, recorded_tax_id=_NIF)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert acquired == [f"acquired:{_NIF}"]
+
+
+def test_a_supplied_nif_wins_over_the_profile_number(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """An explicit NIF is checked as given, even when the profile records another."""
+    other = "B00010157"
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=other, recorded_tax_id=_NIF)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert acquired == [f"acquired:{other}"]
+
+
+def test_omitted_nif_without_a_recorded_number_refuses_before_any_remote_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A profile with no readable number has no subject to check, so nothing is acquired."""
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=None, recorded_tax_id=None)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref == "REFUSED_APPLICATION_LIVE_INPUT"
+    assert acquired == []
+
+
+def test_an_ended_aeat_session_settles_as_its_own_refusal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both adapter shapes of an ended session surface the same registered refusal and nothing is saved."""
+    login_wall = SedeNavigationError(
+        "register did not load",
+        failure_mode=SedeFailureMode.SESSION_ENDED,
+        translated_message="adapters.sede.errors.session_expired_nav_failed",
+    )
+    idle_expiry = AeatSessionExpiredError("session is stale")
+    refusals: list[str | None] = []
+    for failure in (login_wall, idle_expiry):
+        terminal, acquired = _settle_tgvi(
+            tmp_path / type(failure).__name__,
+            monkeypatch,
+            payload_nif=_NIF,
+            recorded_tax_id=None,
+            acquire_failure=failure,
+        )
+        assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+        assert terminal.effect is OperationEffect.NONE
+        assert acquired == [f"acquired:{_NIF}"]
+        assert terminal.terminal_receipt is not None
+        refusals.append(terminal.terminal_receipt.refusal_ref)
+
+    assert refusals == ["REFUSED_APPLICATION_LIVE_AEAT_SESSION_ENDED"] * 2
+
+
+def test_a_navigation_failure_is_not_reported_as_an_ended_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A navigation failure keeps its own code and is never promoted to the session refusal."""
+    navigation = SedeNavigationError("goto failed", failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED)
+    terminal, _acquired = _settle_tgvi(
+        tmp_path, monkeypatch, payload_nif=_NIF, recorded_tax_id=None, acquire_failure=navigation
+    )
+
+    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref is None
 
 
 def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
@@ -355,7 +435,7 @@ def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
             registry=registry,
             profile_repository=profile.repository,
             authority=authority,
-            execution_authority=_ExecutionAuthority(events),
+            execution_authority=FencedExecutionAuthority(events),
         )
         request = OperationRequest(
             definition_id=VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID,
@@ -364,7 +444,7 @@ def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
         )
 
         async def run() -> OperationPersistedSnapshot:
-            return await _run_to_terminal(supervisor, await supervisor.submit(request, operation_id="6" * 64))
+            return await run_to_terminal(supervisor, await supervisor.submit(request, operation_id="6" * 64))
 
         terminal = asyncio.run(run())
 
@@ -393,12 +473,5 @@ def test_capture_access_refuses_a_foreign_profile_subject() -> None:
     with pytest.raises(ProfileAccessRefusedError):
         resolve_verify_capture_access(
             request,
-            OperationAccessContext(
-                profile_id=_PROFILE_ID,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-            ),
+            operation_access_context(registration.contract, profile_id=_PROFILE_ID),
         )

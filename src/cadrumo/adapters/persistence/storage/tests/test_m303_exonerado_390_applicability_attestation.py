@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
@@ -18,7 +19,6 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
     resolve_m303_exonerado_390_not_applicable_attestation,
 )
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
-from cadrumo.domain.attachments.errors import AttachmentValidationError
 from cadrumo.domain.attachments.m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
     M303Exonerado390ApplicabilityAttestation,
@@ -30,7 +30,7 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .....core.period import Period
 from ..attachment import AttachmentStore
-from .profile_capsule_runtime import bound_test_profile_record, seed_modelo_ready_profile_record
+from .profile_capsule_runtime import bound_test_profile_record
 from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -61,7 +61,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -102,7 +102,7 @@ def test_admission_refuses_a_period_whose_return_does_not_ask_the_exemption(
 ) -> None:
     """Only 12 and 4T ask the Modelo 390 exemption; an earlier period's attestation is refused before custody."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
 
@@ -128,7 +128,7 @@ def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) ->
     """A monthly filer answers the exemption in period 12, as a quarterly filer does in 4T."""
     december = Period.from_year_and_code(2025, "12")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -156,11 +156,11 @@ def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) ->
 
 def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, operation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
 
-            with pytest.raises(AttachmentValidationError, match="not supported"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 admit_m303_exonerado_390_applicability_attestation(
                     bucket_id=_BUCKET_ID,
                     request=_request(M303Exonerado390ApplicabilityAssertion.APPLICABLE),
@@ -170,6 +170,39 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
                     clock=lambda: _CAPTURED_AT,
                 )
 
+            assert dict(raised.value.context or {}).get("reason") == "applicable_unsupported"
+
+            assert tuple(store.iter_manifests()) == ()
+
+
+@pytest.mark.parametrize(
+    ("observed_at", "captured_at"),
+    [
+        (_OBSERVED_AT, _OBSERVED_AT - timedelta(days=270)),
+        (_OBSERVED_AT - timedelta(days=1), _CAPTURED_AT),
+    ],
+    ids=["observed-after-the-capture-clock", "observed-before-the-period-ended"],
+)
+def test_admission_refuses_an_observation_outside_its_window_as_unadmissible_evidence(
+    tmp_path: Path, operation, observed_at: datetime, captured_at: datetime
+) -> None:
+    """The operator's observation instant is refused as their evidence, not reported as a custody integrity fault."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
+        with bound_test_profile_record(_BUCKET_ID):
+            store = AttachmentStore()
+
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
+                admit_m303_exonerado_390_applicability_attestation(
+                    bucket_id=_BUCKET_ID,
+                    request=_request(observed_at=observed_at),
+                    actor="operator:test",
+                    operation=operation,
+                    store=store,
+                    clock=lambda: captured_at,
+                )
+
+            assert dict(raised.value.context or {}).get("reason") == "observation_timing"
             assert tuple(store.iter_manifests()) == ()
 
 
@@ -185,7 +218,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -223,7 +256,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                 ),
             )
 
-            with pytest.raises(AttachmentValidationError, match="conflicting"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
                     filing_year=2025,
@@ -234,13 +267,15 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                     clock=lambda: _CAPTURED_AT,
                 )
 
+            assert dict(raised.value.context or {}).get("reason") == "conflicting_assertions"
+
 
 def test_resolution_refuses_an_attestation_stale_against_the_current_profile_witness(
     tmp_path: Path,
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -267,7 +302,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
                 now=updated_at,
             )
 
-            with pytest.raises(AttachmentValidationError, match="does not match"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
                     filing_year=2025,
@@ -277,3 +312,5 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
                     store=store,
                     clock=lambda: updated_at,
                 )
+
+            assert dict(raised.value.context or {}).get("reason") == "evidence_coordinate_mismatch"

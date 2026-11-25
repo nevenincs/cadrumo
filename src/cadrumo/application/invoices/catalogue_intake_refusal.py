@@ -36,6 +36,10 @@ type InvoiceWizardFieldName = Literal[
     "invoice_class",
     "series",
     "rectifies_invoice_number",
+    "rectification_method",
+    "rectification_cause",
+    "rectification_direction",
+    "document_received_on",
     "recargo_amount",
 ]
 

@@ -29,8 +29,8 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import (
@@ -40,25 +40,24 @@ from cadrumo.application.calculations.tests.filing_evidence import (
     general_m303_filing_evidence,
     regimen_simplificado_filing_evidence,
 )
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
@@ -66,7 +65,7 @@ from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summa
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
@@ -108,24 +107,27 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports, build_verification_repository_bundle
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_filing_action_ports,
+    build_verification_repository_bundle,
+)
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
 
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -177,30 +179,24 @@ def _summary_casilla_ids() -> tuple[CasillaId, ...]:
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
-                UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="activity"),
+                    UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
+                    UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         )
     )
 
@@ -285,15 +281,7 @@ def _source_values(evidence: FilingInstanceEvidence) -> Mapping[CasillaId, Decim
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("SIMPLIFICADO"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, iva_regime="SIMPLIFICADO", activity_start_date=date(_YEAR, 1, 1))
 
 
 def _verification_repositories_for_test(
@@ -327,7 +315,7 @@ def _persist_presentado_source(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         source_work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="303",
@@ -522,7 +510,7 @@ def _calculate_m390_annual(
     filings: ModeloRecordCatalogueRepository,
 ):
     snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="390",
@@ -638,9 +626,9 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
     assert handoff.values[_summary_casilla_ids()[0]] != Decimal("0")
 
     definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-    statement = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == definition.namespace,
-        SecureObjectRow.object_key == definition.require_default_object_key(),
+    statement = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == definition.namespace,
+        secure_objects_table.c.object_key == definition.require_default_object_key(),
     )
 
     def mutate(document: dict[str, object]) -> None:
@@ -679,7 +667,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A filed source is invalid as soon as the live pointer no longer names it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -720,7 +708,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """VERIFICADO_COMPLETO is not a substitute for the filed PRESENTADO source."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -760,7 +748,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A target draft cannot be verified after its filed source receipt is superseded."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -865,7 +853,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
     )
 
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
     ):
         verify_modelo_revision_with_preconditions(
@@ -933,7 +921,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         )
     with (
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
     ):
         export_modelo_revision(
             ModeloExportCommand(

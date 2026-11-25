@@ -31,6 +31,7 @@ if not (__package__ is not None and __package__):
 
 _INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging.installed_wheel_binding")
 installed_wheel_payload_sha256 = _INSTALLED_WHEEL_BINDING.installed_wheel_payload_sha256
+installed_python_for_cli = _INSTALLED_WHEEL_BINDING.installed_python_for_cli
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult
 run_command = _COMMAND_EXECUTION.run_command
@@ -42,9 +43,7 @@ _JSON_FORMAT: Final[tuple[str, ...]] = ("--format", "json")
 PROFILE_LABEL = "installed-oracle"
 PROFILE_TAX_ID = "B66012345"
 MODEL = "200"
-YEAR = "2024"
 PERIOD = "0A"
-REGISTRY_REVISION = "2024"
 TARGET_CASILLA = "DP200014:00562"
 EXPECTED_VALUE = Decimal("23000.00")
 EXPECTED_FORMULA = "modelo-200-cuota-integra"
@@ -52,7 +51,7 @@ EXPECTED_FORMULA = "modelo-200-cuota-integra"
 # Sociedades, so its public observation cites that article by its registry
 # legal reference.
 EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
-EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
+EXPECTED_SOURCE_REF_PREFIX = "aeat-modelo-200-manual-"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
 #: The one warning this oracle's own execution posture guarantees.
 #:
@@ -76,7 +75,7 @@ CASILLAS = (
     "DP200012:00501=100000.00",
     "DP200013:00417=0.00",
     "DP200013:00418=0.00",
-    "01032=0.00",
+    "DP200014:01032=0.00",
     "DP200014:00547=0.00",
     "DP200014:01033=0.00",
     "DP200014:01034=0.00",
@@ -84,14 +83,20 @@ CASILLAS = (
 BINDINGS = (
     "modelo-200-profile-legal-entity-form=sl",
     "modelo-200-profile-incn-prior-12-months=500000",
+    # The rate reads the preceding período's turnover, a carry of that período's Modelo 200.
+    "modelo-200-incn-periodo-impositivo-anterior=500000",
     "modelo-200-profile-tributacion-estado-porcentaje=100",
 )
 RELATIONS = (
     "modelo-200-bin-pendiente-ejercicios-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-    "modelo-200-pagos-fraccionados-anuales=0",
-    "modelo-200-pagos-fraccionados-anuales-40-2=0",
+    "modelo-200-pago-fraccionado-primero-40-2=0",
+    "modelo-200-pago-fraccionado-primero-40-3=0",
+    "modelo-200-pago-fraccionado-segundo-40-2=0",
+    "modelo-200-pago-fraccionado-segundo-40-3=0",
+    "modelo-200-pago-fraccionado-tercero-40-2=0",
+    "modelo-200-pago-fraccionado-tercero-40-3=0",
 )
 
 
@@ -186,7 +191,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     environment.update(
         {
             "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(resolved_root),
+            "CADRUMO_STORAGE_ROOT": str(resolved_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             # Packaging oracles use an isolated disposable root and explicitly
             # select the non-keychain test posture. This avoids host keyring
@@ -233,6 +238,9 @@ def profile_create_arguments() -> tuple[str, ...]:
         "--no-iva-cash-accounting-regime-enrolled",
         "--no-iva-voluntary-sii-enrolled",
         "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        # The claimed block also owes the large-company condition, which
+        # decides whether its Modelo 303 is filed monthly or quarterly.
+        "--no-enrollment-large-company",
         "--tax-residence-jurisdiction-scope",
         "common_regime",
         "--tax-residence-ccaa",
@@ -261,7 +269,52 @@ def complete_setup_arguments() -> tuple[str, ...]:
     return ("config", "profile", "complete-setup")
 
 
-def work_create_arguments() -> tuple[str, ...]:
+@dataclass(frozen=True, slots=True)
+class OracleCoordinate:
+    """The filing year and registry revision the oracle's calculation addresses."""
+
+    year: int
+    revision: str
+
+
+#: Run by the installed interpreter, so the coordinate comes from the authority the installed build carries.
+#: The oracle addresses the oldest supported year whose target casilla cites an AEAT manual: its filing
+#: deadline has long closed, which keeps the calculation's deadline notice stable as the horizon moves.
+_COORDINATE_PROBE = r"""
+import json
+import sys
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+modelo, period, casilla_id, prefix = sys.argv[1:5]
+with bundled_indexed_authority().operation() as operation:
+    for year in operation.supported_filing_years().years:
+        revision = operation.revision_for_context(modelo, filing_year=year, period=period)
+        casilla = next((item for item in revision.casillas if str(item.id) == casilla_id), None)
+        if casilla is not None and any(str(ref).startswith(prefix) for ref in casilla.source_refs):
+            print(json.dumps({"year": year, "revision": str(revision.id)}))
+            break
+    else:
+        raise SystemExit("no supported year grounds the oracle casilla in an AEAT manual")
+"""
+
+
+def installed_oracle_coordinate(
+    cli: Path, *, cwd: Path, env: dict[str, str], timeout_seconds: float
+) -> OracleCoordinate:
+    """Ask the installed interpreter's pinned authority which year and revision the oracle addresses."""
+    python = installed_python_for_cli(cli)
+    result = _run(
+        (str(python), "-I", "-c", _COORDINATE_PROBE, MODEL, PERIOD, TARGET_CASILLA, EXPECTED_SOURCE_REF_PREFIX),
+        cwd=cwd,
+        env=env,
+        timeout_seconds=timeout_seconds,
+    )
+    document = json.loads(result.stdout.strip().splitlines()[-1])
+    return OracleCoordinate(year=int(document["year"]), revision=str(document["revision"]))
+
+
+def work_create_arguments(coordinate: OracleCoordinate) -> tuple[str, ...]:
     """Return the public work-unit creation argument sequence."""
     return (
         "app",
@@ -271,11 +324,11 @@ def work_create_arguments() -> tuple[str, ...]:
         "--modelo",
         MODEL,
         "--year",
-        YEAR,
+        str(coordinate.year),
         "--period",
         PERIOD,
         "--revision",
-        REGISTRY_REVISION,
+        coordinate.revision,
         "--name",
         "Installed Modelo 200 oracle",
         "--by",
@@ -473,9 +526,9 @@ def assert_grounded_observations(
         raise InstalledTaxOracleError(
             f"{TARGET_CASILLA} does not cite {EXPECTED_LEGAL_REF!r}",
         )
-    if EXPECTED_SOURCE_REF not in target["source_refs"]:
+    if not any(str(ref).startswith(EXPECTED_SOURCE_REF_PREFIX) for ref in target["source_refs"]):
         raise InstalledTaxOracleError(
-            f"{TARGET_CASILLA} does not cite {EXPECTED_SOURCE_REF!r}",
+            f"{TARGET_CASILLA} does not cite an AEAT manual ({EXPECTED_SOURCE_REF_PREFIX}...)",
         )
     return target
 
@@ -573,8 +626,11 @@ def run_installed_tax_oracle(
         authenticated=True,
     )
 
+    coordinate = installed_oracle_coordinate(
+        resolved_cli, cwd=resolved_work_dir, env=environment, timeout_seconds=timeout_seconds
+    )
     create = _run(
-        (*authenticated_base, *work_create_arguments()),
+        (*authenticated_base, *work_create_arguments(coordinate)),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,

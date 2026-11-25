@@ -3,14 +3,20 @@
 Ground truth: Art. 84 Ley 35/2006 (LIRPF) — reducción en base imponible por
 tributación conjunta:
 
-    Unidad familiar tipo 1 (matrimonio, Art. 82.1.1°): €3,400 reducción.
-    Unidad familiar tipo 2 (monoparental, Art. 82.1.2°): €2,150 reducción.
+    Art. 84.2.3º, first modality (spouses, Art. 82.1.1ª, with or without
+    children): €3,400 reducción.
+    Art. 84.2.4º, second modality (single parent, Art. 82.1.2ª): €2,150, which
+    "no se aplicará ... cuando el contribuyente conviva con el padre o la madre
+    de alguno de los hijos que forman parte de su unidad familiar".
     Individual (declaration_type != 2): €0.
 
-The formula ``renta-{year}-reduccion-art-84-conjunta`` derives the reducción from
-two profile bindings:
-  - ``renta-{year}-profile-declaration-type`` (Decimal "1"=individual, "2"=conjunta)
-  - ``renta-{year}-profile-family-minor-children-in-unit`` (Decimal "0"=no, "1"=yes)
+The formula ``renta-reduccion-art-84-conjunta`` derives the reducción from
+three profile bindings:
+  - ``renta-profile-declaration-type`` (Decimal "1"=individual, "2"=conjunta)
+  - ``renta-profile-family-situacion-familiar`` (Art. 82 situation token,
+    ``casado`` = first modality)
+  - ``renta-profile-family-convive-otro-progenitor`` (yes/no, read only for the
+    second modality; unstated keeps the box unresolved)
 
 Anti-tautology: flipping declaration_type from "2" to "1" must change 0461 from
 €3,400 to €0. A formula that returns a constant would produce a false negative
@@ -26,6 +32,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .authored_editions import newest_authored_editions
+from .modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
@@ -43,6 +50,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PRIOR_EDITION, _REVIEWED_EDITION = newest_authored_editions("100", 2)
 
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
+# Art. 82 LIRPF family-situation tokens: casado forms the first unit, soltero the second.
+_SOLTERO = "soltero"
+_CASADO = "casado"
 _ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
 
 _ZERO_RELATIONS = {
@@ -51,10 +61,15 @@ _ZERO_RELATIONS = {
 }
 
 _PRIOR_EDITION_BINDINGS = {
+    "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+    "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
     "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
@@ -62,9 +77,27 @@ _PRIOR_EDITION_BINDINGS = {
     # BIN-pendiente fresh-filer baseline: previous_filing binding for
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
 }
 
 _REVIEWED_EDITION_BINDINGS = {
+    "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+    "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
@@ -72,6 +105,18 @@ _REVIEWED_EDITION_BINDINGS = {
     "renta-profile-marriage-month-end": Decimal("0"),
     # BIN-pendiente fresh-filer baseline (reviewed-edition binding).
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
 }
 
 
@@ -115,8 +160,9 @@ def _scenario(
     filing_year: int,
     scenario_label: str,
     declaration_type: Decimal,
-    minor_children_in_unit: Decimal,
+    situacion_familiar: str,
     expected_0461: Decimal,
+    convive_otro_progenitor: Decimal | None = None,
 ) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
         id=f"m100-{filing_year}-0461-{scenario_label}",
@@ -128,9 +174,17 @@ def _scenario(
         binding_values={
             **_EDITIONS[filing_year],
             "renta-profile-declaration-type": declaration_type,
-            "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
+            "renta-profile-family-minor-children-in-unit": Decimal(situacion_familiar != _CASADO),
+            **(
+                {}
+                if convive_otro_progenitor is None
+                else {"renta-profile-family-convive-otro-progenitor": convive_otro_progenitor}
+            ),
         },
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={
+            "renta-profile-tax-residence-ccaa": "madrid",
+            "renta-profile-family-situacion-familiar": situacion_familiar,
+        },
         relation_values=_ZERO_RELATIONS,
         date_context={"filing_period": date(filing_year, 12, 31)},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(filing_year - 45, 6, 15)},
@@ -152,9 +206,9 @@ def _scenario(
 
 @pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
 def test_0461_conjunta_tipo_1_matrimonio_yields_3400(filing_year: int) -> None:
-    """declaration_type=2 (conjunta) + minor_children_in_unit=0 (tipo-1 matrimonio) → 0461 = €3,400.
+    """declaration_type=2 (conjunta) + family situation casado (tipo-1 matrimonio) → 0461 = €3,400.
 
-    Oracle: Art. 84.2.1 LIRPF — unidad familiar tipo 1 (matrimonio) electing
+    Oracle: Art. 84.2.3º LIRPF — unidad familiar tipo 1 (matrimonio) electing
     tributación conjunta receives reducción €3,400 in base imponible general.
     Source: the edition's AEAT Renta Manual, section Tributación conjunta, cuadro.
     """
@@ -162,7 +216,7 @@ def test_0461_conjunta_tipo_1_matrimonio_yields_3400(filing_year: int) -> None:
         filing_year,
         "conjunta-tipo-1-3400",
         declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("0"),
+        situacion_familiar=_CASADO,
         expected_0461=Decimal("3400.00"),
     )
     report = run_registry_calculation_scenario(scenario)
@@ -180,7 +234,7 @@ def test_0461_individual_yields_0(filing_year: int) -> None:
         filing_year,
         "individual-zero",
         declaration_type=Decimal("1"),
-        minor_children_in_unit=Decimal("0"),
+        situacion_familiar=_CASADO,
         expected_0461=Decimal("0.00"),
     )
     report = run_registry_calculation_scenario(scenario)
@@ -189,9 +243,9 @@ def test_0461_individual_yields_0(filing_year: int) -> None:
 
 @pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
 def test_0461_conjunta_tipo_2_monoparental_yields_2150(filing_year: int) -> None:
-    """declaration_type=2 (conjunta) + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €2,150.
+    """declaration_type=2 (conjunta) + single parent not living with the other parent → 0461 = €2,150.
 
-    Oracle: Art. 84.2.2° LIRPF — unidad familiar tipo 2 (monoparental, soltero/separado
+    Oracle: Art. 84.2.4º LIRPF — unidad familiar tipo 2 (monoparental, soltero/separado
     con hijos a cargo) electing tributación conjunta receives reducción €2,150 in the
     base imponible general via casilla 0461.
     Source: the edition's AEAT Renta Manual, section Tributación conjunta, cuadro reducción.
@@ -200,7 +254,8 @@ def test_0461_conjunta_tipo_2_monoparental_yields_2150(filing_year: int) -> None
         filing_year,
         "conjunta-tipo-2-monoparental-2150",
         declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("1"),
+        situacion_familiar=_SOLTERO,
+        convive_otro_progenitor=Decimal("0"),
         expected_0461=Decimal("2150.00"),
     )
     report = run_registry_calculation_scenario(scenario)
@@ -218,14 +273,14 @@ def test_0461_anti_tautology_declaration_type_change(filing_year: int) -> None:
         filing_year,
         "anti-tautology-conjunta",
         declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("0"),
+        situacion_familiar=_CASADO,
         expected_0461=Decimal("3400.00"),
     )
     individual_scenario = _scenario(
         filing_year,
         "anti-tautology-individual",
         declaration_type=Decimal("1"),
-        minor_children_in_unit=Decimal("0"),
+        situacion_familiar=_CASADO,
         expected_0461=Decimal("0.00"),
     )
     for scenario in (conjunta_scenario, individual_scenario):
@@ -238,3 +293,54 @@ def test_0461_anti_tautology_declaration_type_change(filing_year: int) -> None:
         conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
         != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]
     ), "0461 must differ between declaration_type=2 and declaration_type=1"
+
+
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_tipo_2_living_with_the_other_parent_yields_0(filing_year: int) -> None:
+    """A single parent who lives with the other parent of a child gets no reducción.
+
+    Oracle: Art. 84.2.4º LIRPF, last sentence: the €2,150 "no se aplicará esta
+    reducción cuando el contribuyente conviva con el padre o la madre de alguno
+    de los hijos que forman parte de su unidad familiar".
+    """
+    scenario = _scenario(
+        filing_year,
+        "conjunta-tipo-2-convive-0",
+        declaration_type=Decimal("2"),
+        situacion_familiar=_SOLTERO,
+        convive_otro_progenitor=Decimal("1"),
+        expected_0461=Decimal("0.00"),
+    )
+    report = run_registry_calculation_scenario(scenario)
+    assert_registry_scenario_matches(report)
+
+
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_tipo_2_with_cohabitation_unstated_stays_unresolved(filing_year: int) -> None:
+    """Without the cohabitation fact a single-parent unit's reducción is unknown, never €2,150 or €0."""
+    scenario = _scenario(
+        filing_year,
+        "conjunta-tipo-2-convive-unstated",
+        declaration_type=Decimal("2"),
+        situacion_familiar=_SOLTERO,
+        expected_0461=Decimal("2150.00"),
+    )
+    report = run_registry_calculation_scenario(scenario)
+
+    assert _REDUCCION_ART_84_CASILLA not in report.calculation.values
+    assert report.status == "mismatch"
+
+
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_tipo_1_does_not_read_the_cohabitation_fact(filing_year: int) -> None:
+    """The married unit's €3,400 does not depend on the single-parent cohabitation fact."""
+    scenario = _scenario(
+        filing_year,
+        "conjunta-tipo-1-convive-ignored",
+        declaration_type=Decimal("2"),
+        situacion_familiar=_CASADO,
+        convive_otro_progenitor=Decimal("1"),
+        expected_0461=Decimal("3400.00"),
+    )
+    report = run_registry_calculation_scenario(scenario)
+    assert_registry_scenario_matches(report)

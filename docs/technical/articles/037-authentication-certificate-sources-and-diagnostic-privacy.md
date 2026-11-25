@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-037` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+**Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -38,7 +38,7 @@ The modules show strong exact-profile routing, typed receipts, secret redaction 
 ## Coverage appendix
 
 - auth/__init__.py (3 lines) (`src/cadrumo/application/auth/__init__.py`)
-- auth/_mutation.py (56 lines) (`src/cadrumo/application/auth/_mutation.py`)
+- auth/_mutation.py (56 lines) (`src/cadrumo/application/auth/mutation.py`)
 - auth/acquisition_lock.py (480 lines) (`src/cadrumo/application/auth/acquisition_lock.py`)
 - auth/actions.py (50 lines) (`src/cadrumo/application/auth/actions.py`)
 - auth/apoderado_command_ports.py (257 lines) (`src/cadrumo/application/auth/apoderado_command_ports.py`)

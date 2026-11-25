@@ -92,7 +92,7 @@ def encrypted_user_cli(isolated_user_cli: Path) -> Path:
 
 
 def _assert_secure_database_payload(bucket_id: str, *plaintext_canaries: str) -> None:
-    storage_root = load_settings().cadrumo_local_storage_root
+    storage_root = load_settings().cadrumo_storage_root
     db_path = bucket_paths(storage_root, bucket_id).database_file
     assert db_path.exists()
     on_disk = read_db_at_rest_bytes(db_path)
@@ -239,7 +239,6 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "2026-01-01",
             "--to",
             "2026-03-31",
-            "--allow-incomplete",
         ],
     )
     assert calendar_result.exit_code == 0, calendar_result.output

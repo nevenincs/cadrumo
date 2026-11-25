@@ -15,6 +15,8 @@ from textual.widgets import Static
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.entrypoints.tui.tests.settling import settle
 
 from ..authority import IncomeTaxAuthorityResolution, resolve_income_tax_authority
 from ..scenario import AcceptanceOutcome
@@ -37,7 +39,7 @@ from ..tui_journey import blocked_tui_journey_evidence, build_tui_journey_eviden
 from ..tui_lifecycle_contract import installed_lifecycle_contract
 from ..tui_navigation import wait_for_tui_refresh
 from ..tui_operation_controls import activate_tui_operation
-from ..tui_terminal_observation import _observe_operation_terminal, settled_notice_terminal
+from ..tui_terminal_observation import observe_operation_terminal, settled_notice_terminal
 from ..tui_xsd_validation import validate_modelo_100_xsd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -65,14 +67,14 @@ class _Operation:
         return AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
     def supported_filing_years(self) -> _Support:
-        return _Support(floor=2022)
+        return _Support(floor=filing_year_envelope().floor)
 
     def snapshot(self, modelo: str, /, *, filing_year: int, period: str) -> _Snapshot:
         return _Snapshot(revision=_Revision(id=f"{modelo}-{filing_year}", export_layouts=()))
 
 
 def _resolution() -> IncomeTaxAuthorityResolution:
-    return resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21))
+    return resolve_income_tax_authority(_Operation(), as_of=date(filing_year_envelope().horizon, 9, 21))
 
 
 def test_unavailable_tui_contract_is_blocked_without_claiming_submission() -> None:
@@ -146,7 +148,7 @@ def test_the_lifecycle_contract_drives_controls_the_real_workbench_and_its_dialo
         workbench = ModeloWorkbenchScreen(cast("Any", _UnreadableDeclaration()))
         app = ScreenHostApp(workbench)
         async with app.run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert {"c", "f8", "e"} <= set(workbench.active_bindings)
             for selector in (
                 contract.calculate.refusal_notice_id,
@@ -158,14 +160,14 @@ def test_the_lifecycle_contract_drives_controls_the_real_workbench_and_its_dialo
             with pytest.raises(TuiJourneyError, match="could not read its form"):
                 await wait_for_workbench(pilot, seconds=10)
             app.push_screen(ConfirmScreen(title="t", message="m", confirm_label="a", cancel_label="c"))
-            await pilot.pause()
+            await settle(pilot)
             for selector in (contract.local_file.confirmation_id, contract.calculate.at_risk_proceed_id):
                 assert selector is not None
                 app.screen.query_one(selector, Button)
             app.pop_screen()
             offer = WorkbenchExportOffer(artefacts=(ModeloExportArtefact.FICHERO_BOE,), asks_elections=False)
             app.push_screen(WorkbenchExportScreen(offer))
-            await pilot.pause()
+            await settle(pilot)
             assert contract.export.activation_id is not None
             app.screen.query_one(contract.export.activation_id, Button)
             app.screen.query_one("#export-path", Input)
@@ -232,7 +234,7 @@ def test_the_refresh_wait_closes_the_statement_of_what_a_recalculation_changed()
         async with app.run_test() as pilot:
             statement = WorkbenchResultScreen(())
             app.push_screen(statement)
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is statement
             await wait_for_tui_refresh(pilot, binding=installed_lifecycle_contract().calculate, maximum_polls=50)
             assert app.screen is not statement
@@ -246,7 +248,7 @@ def test_an_operation_never_starts_under_an_earlier_workbench_notice() -> None:
     from cadrumo.core.i18n.render import tr
 
     async def scenario() -> None:
-        app = _WidgetsApp(Static(tr("tui.modelo.workbench.operation.done"), id="wb-notice"))
+        app = _WidgetsApp(Static(tr("workspace.modelo.operation.done"), id="wb-notice"))
         async with app.run_test() as pilot:
             with pytest.raises(TuiJourneyError, match="earlier workbench notice"):
                 await activate_tui_operation(pilot, binding=installed_lifecycle_contract().calculate)
@@ -258,7 +260,7 @@ def test_the_next_step_key_is_refused_while_the_workbench_offers_another_step() 
     """F8 runs whatever step is offered; pressing it while filling is offered would not verify."""
     from cadrumo.core.i18n.render import tr
 
-    fill_offered = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.fill", count=2), key="n")
+    fill_offered = tr("tui.modelo.next_line", action=tr("workspace.modelo.next.fill", count=2), key="n")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(fill_offered, id="wb-next"))
@@ -276,14 +278,17 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
     the confirmation dialog can list: a box a source fills is confirmed in its
     own panel instead, since keeping a value there would replace the source.
     """
-    from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, ModeloFormOrigin
+    from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormOrigin
+    from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, revised_field
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
 
     form = synthetic_form(needs_input=False)
 
     def swap(block: object) -> object:
         if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06":
-            field = block.field.model_copy(update={"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "bindings": ()})
+            field = revised_field(
+                block.field, origin=ModeloFormOrigin.DEFAULT_TO_CONFIRM, bindings=(), unattributed=True
+            )
             return block.model_copy(update={"field": field})
         return block
 
@@ -315,7 +320,7 @@ def test_assumed_values_are_confirmed_reviewed_and_submitted_for_apply_through_t
     """
     from decimal import Decimal
 
-    from cadrumo.application.modelo.work_form_models import ModeloFormCasillaAddressV1
+    from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -392,7 +397,7 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     """
     from datetime import UTC, datetime
 
-    from cadrumo.application.modelo.work_form_models import ModeloFormExport
+    from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormExport
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -408,7 +413,7 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     form = synthetic_form(needs_input=False)
     assert form.calculation_revision_id is not None
     current_file = ModeloFormExport(
-        exported_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        exported_at=datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC),
         calculation_revision_id=form.calculation_revision_id,
         current=True,
     )
@@ -438,7 +443,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 
     from ..tui_readback import workbench_notice
 
-    greeting = tr("tui.modelo.workbench.legend.first_open")
+    greeting = tr("tui.modelo.legend.first_open")
 
     async def scenario() -> str:
         app = _WidgetsApp(Static(greeting, id="wb-notice"))
@@ -453,7 +458,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 def test_the_record_step_is_refused_while_the_workbench_offers_verifying() -> None:
     from cadrumo.core.i18n.render import tr
 
-    verify_offered = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.verify"), key="F8")
+    verify_offered = tr("tui.modelo.next_line", action=tr("workspace.modelo.next.verify"), key="F8")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(verify_offered, id="wb-next"))
@@ -474,16 +479,16 @@ def _workbench_notice(copy_key: str, explanation: str | None = None) -> str:
 @pytest.mark.parametrize(
     ("copy_key", "explanation", "expected"),
     [
-        ("tui.modelo.workbench.operation.done", None, ("succeeded", AcceptanceOutcome.PROVEN)),
-        ("tui.modelo.workbench.result_diff.nothing_changed", None, ("succeeded", AcceptanceOutcome.PROVEN)),
+        ("workspace.modelo.operation.done", None, ("succeeded", AcceptanceOutcome.PROVEN)),
+        ("workspace.modelo.result_diff.nothing_changed", None, ("succeeded", AcceptanceOutcome.PROVEN)),
         (
-            "tui.modelo.workbench.operation.not_done",
+            "workspace.modelo.operation.not_done",
             "The attestation belongs to another quarter.",
             ("refused", AcceptanceOutcome.BLOCKED),
         ),
-        ("tui.modelo.workbench.operation.not_done", None, ("not_completed", AcceptanceOutcome.FAILED)),
-        ("tui.modelo.workbench.operation.not_done", "   ", None),
-        ("tui.modelo.workbench.operation.done", "and something else", None),
+        ("workspace.modelo.operation.not_done", None, ("not_completed", AcceptanceOutcome.FAILED)),
+        ("workspace.modelo.operation.not_done", "   ", None),
+        ("workspace.modelo.operation.done", "and something else", None),
         ("tui.modelo.m303_evidence.cancelled", None, None),
     ],
 )
@@ -496,15 +501,15 @@ def test_a_settled_workbench_notice_is_its_sentence_alone_or_followed_by_a_refus
 def test_a_notice_that_only_starts_like_a_settled_sentence_is_not_a_terminal() -> None:
     from cadrumo.core.i18n.render import tr
 
-    assert settled_notice_terminal(tr("tui.modelo.workbench.operation.not_done") + "x") is None
+    assert settled_notice_terminal(tr("workspace.modelo.operation.not_done") + "x") is None
     assert settled_notice_terminal("") is None
 
 
 @pytest.mark.parametrize(
     ("copy_key", "explanation", "condition"),
     [
-        ("tui.modelo.workbench.operation.not_done", "The attestation belongs to another quarter.", "refused"),
-        ("tui.modelo.workbench.operation.done", None, "succeeded"),
+        ("workspace.modelo.operation.not_done", "The attestation belongs to another quarter.", "refused"),
+        ("workspace.modelo.operation.done", None, "succeeded"),
     ],
 )
 def test_a_modal_that_dismissed_itself_settles_from_the_workbench_notice(
@@ -524,7 +529,7 @@ def test_a_modal_that_dismissed_itself_settles_from_the_workbench_notice(
     async def scenario() -> TuiTerminalEvidence:
         app = _WidgetsApp(Static(notice, id="wb-notice"))
         async with app.run_test():
-            return await _observe_operation_terminal(
+            return await observe_operation_terminal(
                 _NoPausePilot(app),
                 modal=DismissedModal(),
                 binding=TuiOperationBinding(
@@ -576,7 +581,7 @@ def test_a_result_statement_does_not_replace_the_dismissed_operations_terminal(
         async with app.run_test() as pilot:
             modal = PublicOperationModal()
             app.push_screen(modal)
-            await pilot.pause()
+            await settle(pilot)
             statement = WorkbenchResultScreen(())
 
             class SettlementPilot(Pilot[None]):
@@ -598,12 +603,12 @@ def test_a_result_statement_does_not_replace_the_dismissed_operations_terminal(
             observer = SettlementPilot(app)
             if expected_outcome is None:
                 with pytest.raises(TuiJourneyError, match="did not expose a terminal operation status"):
-                    await _observe_operation_terminal(
+                    await observe_operation_terminal(
                         observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
                     )
                 assert app.screen is statement
             else:
-                terminal = await _observe_operation_terminal(
+                terminal = await observe_operation_terminal(
                     observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
                 )
                 assert terminal.outcome is expected_outcome

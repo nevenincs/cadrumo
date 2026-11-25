@@ -5,7 +5,7 @@ corpus-search failure that reaches the CLI boundary renders as its proper
 category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
 Each class binds one registered ``ErrorCode`` (declared in
-``core.errors.registry._application_part1``) whose ``message_key`` supplies the
+``core.errors.registry._application_reads``) whose ``message_key`` supplies the
 localized envelope message, and the specifics ride on ``context`` — the same
 contextual detail an external adapter may project onto an envelope (the offending
 query/limit/ref). The condition itself travels as a ``reason`` discriminant

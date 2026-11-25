@@ -19,7 +19,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 
 from ......application.user_profile.custody_ports import (
@@ -51,7 +51,7 @@ _REPLACEMENT = "isolation-replacement-operator-secret"
 
 
 def _register(label: str, passphrase: str) -> UUID:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     outcome = register_profile_with_credentials(
         label=label,
         passphrase=passphrase,
@@ -91,7 +91,7 @@ def test_one_profiles_recovery_code_cannot_reset_anothers_passphrase(tmp_path: P
     all. The same code then resets A, so the refusal is the code's identity,
     not a broken reset path.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_a = _register("Isolation A", _CREDENTIAL_A)
         code_a = _enroll(profile_a, _CREDENTIAL_A)

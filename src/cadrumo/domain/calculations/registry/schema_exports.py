@@ -22,16 +22,19 @@ from ....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
+from ....core.filing_year import FourDigitYear
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
-from . import export_field_validation as _export_field_validation
+from . import export_field_validation
 from .errors import RegistryValidationError
 from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
-from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue
+from .export_value_policy import ExportValuePolicyValue
+from .field_absence import later_absent_when_empty, later_absent_when_none
 from .fixed_width_codec import (
+    ExportAlphanumericTextValue,
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
@@ -39,7 +42,14 @@ from .fixed_width_codec import (
 )
 from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
-from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
+from .party_name_composition import PartyNameComposition
+from .schema_base import (
+    CasillaDataType,
+    LegalRefs,
+    RegistryModel,
+    SourceRefs,
+    coerce_enum_member,
+)
 
 __all__ = [
     "DeclaracionIdiomaValue",
@@ -56,6 +66,7 @@ __all__ = [
     "OneBasedExportOffset",
     "ProjectionEndpointDeclaration",
     "RecordDiscriminator",
+    "XmlDictionaryRowTarget",
 ]
 
 type OneBasedExportOffset = Annotated[int, Field(ge=1)]
@@ -298,6 +309,12 @@ class FilingEnvelopeDefinition(RegistryModel):
     # Only an exact source-reviewed trailing record marker may set this.
     # Absence serialises to the existing envelope grammar without an extra key.
     record_terminator: Literal["crlf"] | None = Field(default=None, exclude_if=lambda value: value is None)
+    # Only a design printing its scheme period as a bare quarter sets this, and
+    # absence serialises to the existing envelope grammar without an extra key.
+    scheme_period_form: Literal["bare_quarter"] | None = Field(default=None, exclude_if=lambda value: value is None)
+    # The period tokens a design's own period row lists; absence serialises to the
+    # existing envelope grammar without an extra key.
+    period_tokens: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -395,7 +412,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     source_ref: SourceRefId
     source_sha256: ContentDigest
     record_identity: str = Field(min_length=1)
-    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
+    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
     product_identity_requirement: Literal["aeat-product-software-identity-v1"]
 
@@ -553,8 +570,38 @@ class ExportFieldDefinition(RegistryModel):
     """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
-    minimum_year: int | None = Field(default=None, ge=1000, le=9999)
+    minimum_year: FourDigitYear | None = None
     """An official lower bound on a four-digit filing-year value."""
+    presence_marker: str | None = Field(default=None, min_length=1)
+    """The constant a mandatory slot prints when its boolean fact or computed marker holds.
+
+    The design declares such a slot with exactly two contents, a blank or this
+    constant (DR369 prints ``[blanco | constante "C"]``). The blank is the slot's
+    populated negative answer, so an ordinary return is never a missing value.
+    Carried by generated layouts from the design row they derive from.
+    """
+    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal", "month_ordinal"] | None = None
+    """Which part of a scheme-qualified filing period this design row prints.
+
+    The filing period is the one authority for these rows, so an export never asks
+    the operator to restate it. Carried by generated layouts from the reviewed page.
+    """
+    scheme_period_type: str | None = Field(default=None, min_length=1)
+    """The constant a scheme period-type row prints, read from that design row."""
+    absent_fill: Literal["spaces"] | None = None
+    """How this numeric slot prints when it carries no information.
+
+    Without it a numeric slot's blank fill is its zero padding. A design can state
+    otherwise for its unused slots, as DR369's general notes 6-7 do, which keeps an
+    absent quantity apart from a declared zero.
+    """
+    party_name: PartyNameComposition | None = Field(default=None, exclude_if=later_absent_when_none)
+    """How a party-name slot is composed from the parts its party's filing name states.
+
+    Carried by generated layouts from the reviewed design text that prescribes
+    the field's content, so the order and separator are the design's and the
+    width stays this field's own ``length``.
+    """
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -622,26 +669,24 @@ class ExportFieldDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        _export_field_validation.validate_export_field_kind(self)
-        if self.minimum_year is not None and self.value_policy is not ExportValuePolicy.FOUR_DIGIT_YEAR:
-            raise RegistryValidationError("minimum_year requires the four-digit-year value policy")
+        export_field_validation.validate_export_field_kind(self)
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
         """Project the declared shape onto the axes a value policy constrains."""
-        return _export_field_validation.export_field_wire_shape(self)
+        return export_field_validation.export_field_wire_shape(self)
 
     def validate_allowed_values(self) -> None:
         """Constrain an exact reviewed semantic integer domain."""
-        _export_field_validation.validate_export_allowed_values(self)
+        export_field_validation.validate_export_allowed_values(self)
 
     def validate_value_policy(self) -> None:
         """Require each explicit policy to match its complete fixed-width shape."""
-        _export_field_validation.validate_export_value_policy(self)
+        export_field_validation.validate_export_value_policy(self)
 
     def validate_decimals(self) -> None:
         """Require an explicit scale on every decimal field."""
-        _export_field_validation.validate_export_field_decimals(self)
+        export_field_validation.validate_export_field_decimals(self)
 
 
 class RecordDiscriminator(RegistryModel):
@@ -667,6 +712,17 @@ class ExportRecordDefinition(RegistryModel):
     record_type: str
     order: NonNegativeInt
     encoding: ExportEncodingValue
+    alphanumeric_text: ExportAlphanumericTextValue | None = Field(default=None, exclude_if=later_absent_when_none)
+    """How the record design states its alphanumeric field text is written.
+
+    Absent where the design states no rule, and the text is written as given.
+    Declared once for the record because the design states it once for all of
+    its alphanumeric and alphabetic fields.
+    """
+
+    alphanumeric_text_source_ref: SourceRefId | None = Field(default=None, exclude_if=later_absent_when_none)
+    """The design whose own text states :attr:`alphanumeric_text`; required with it."""
+
     line_ending: ExportLineEndingField
     required: bool = True
     repeat: ExportRecordRepeatField | None = None
@@ -697,6 +753,16 @@ class ExportRecordDefinition(RegistryModel):
             has_projection=has_projection,
             allow_unresolved_binding_record=allow_unresolved_binding_record,
         )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _alphanumeric_text_names_its_source(self) -> ExportRecordDefinition:
+        if (self.alphanumeric_text is None) != (self.alphanumeric_text_source_ref is None):
+            raise RegistryValidationError(
+                f"export record {self.id!r} must declare alphanumeric_text together with "
+                "alphanumeric_text_source_ref, the design whose own text states the rule",
+            )
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -838,12 +904,45 @@ class XmlDictionaryPathOverride(RegistryModel):
     reason: str = Field(min_length=1, max_length=1024)
 
 
+class XmlDictionaryRowTarget(RegistryModel):
+    """One official dictionary row whose printed number is shared, with the casilla it reads.
+
+    An AEAT dictionary may print one box number on several rows, and the
+    registry keeps one casilla per concept, so the printed number alone cannot
+    say which casilla a row reads. The edition whose dictionary prints such a
+    row declares the casilla it reads here, with the row's own evidence: the
+    dictionary line that prints it and the XSD element that settles it.
+
+    The evidence belongs to the edition that states it. A target citing a
+    dictionary other than the layout's current one is refused, so a later
+    edition whose dictionary still repeats the number states its own targets
+    instead of inheriting a claim made about another publication.
+    """
+
+    field_id: str = Field(min_length=1, max_length=64)
+    casilla_id: CasillaId
+    dictionary_source_ref: SourceRefId
+    dictionary_line: int = Field(ge=1)
+    xsd_source_ref: SourceRefId
+    xsd_element: str = Field(min_length=1, max_length=128)
+
+
 class ExportLayoutDefinition(RegistryModel):
     """Declare the complete wire layout used to render an official export."""
 
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
     dictionary_source_ref: SourceRefId | None = None
+    input_dictionary_source_ref: SourceRefId | None = Field(default=None, exclude_if=later_absent_when_none)
+    """The edition's input dictionary, read only for repeated records the declaration dictionary lacks.
+
+    AEAT publishes two dictionaries per edition. The declaration dictionary names
+    what a filed return carries; the input dictionary also names repeated detail
+    records that the declaration dictionary leaves out, although the edition's XSD
+    declares them. A row binding that names a field of such a record is placed
+    through this dictionary, checked against the XSD, and never displaces a row
+    of the declaration dictionary.
+    """
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
@@ -872,6 +971,16 @@ class ExportLayoutDefinition(RegistryModel):
     because the writer and the export parser resolve their rows from the same
     call: a correction applied to only one of them would make an artefact verify
     as drift against itself.
+    """
+
+    dictionary_row_targets: tuple[XmlDictionaryRowTarget, ...] = Field(
+        default_factory=tuple, exclude_if=later_absent_when_empty
+    )
+    """Dictionary rows that read a casilla other than the one their printed number names.
+
+    Declared only where this edition's dictionary prints one number on several
+    rows. Applied where the dictionary is read, with the path overrides, so the
+    renderer and the export parser resolve one row set.
     """
 
     aux_idioma: DeclaracionIdiomaValue = None
@@ -947,6 +1056,7 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} must declare aux_idioma: the declaration's Aux block is "
             "mandatory in every AEAT XSD and no dictionary declares its rows",
         )
+    _validate_input_dictionary_ref(layout)
     override_fields = [override.field_id for override in layout.dictionary_path_overrides]
     duplicates = sorted({name for name in override_fields if override_fields.count(name) > 1})
     if duplicates:
@@ -954,11 +1064,62 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} declares more than one dictionary path override for "
             f"{duplicates!r}, so which correction applies is ambiguous",
         )
+    _validate_dictionary_row_targets(layout)
+
+
+def _validate_dictionary_row_targets(layout: ExportLayoutDefinition) -> None:
+    """Hold each row target to this layout's own dictionary and XSD."""
+    target_fields = [target.field_id for target in layout.dictionary_row_targets]
+    repeated = sorted({name for name in target_fields if target_fields.count(name) > 1})
+    if repeated:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares more than one dictionary row target for "
+            f"{repeated!r}, so which casilla the row reads is ambiguous",
+        )
+    for target in layout.dictionary_row_targets:
+        if target.dictionary_source_ref != layout.dictionary_source_ref:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} row target {target.field_id!r} cites dictionary "
+                f"{target.dictionary_source_ref!r}, which is not the layout's dictionary "
+                f"{layout.dictionary_source_ref!r}; a target's evidence is never inherited",
+            )
+        if target.xsd_source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} row target {target.field_id!r} XSD source "
+                f"{target.xsd_source_ref!r} must be included in source_refs",
+            )
+
+
+def _validate_input_dictionary_ref(layout: ExportLayoutDefinition) -> None:
+    """Require a declared input dictionary to be a second, cited dictionary of the layout."""
+    reference = layout.input_dictionary_source_ref
+    if reference is None:
+        return
+    if reference == layout.dictionary_source_ref:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} names its declaration dictionary again as its input dictionary",
+        )
+    if reference not in layout.source_refs:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} input dictionary source must be included in source_refs",
+        )
 
 
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
     _validate_non_xml_metadata(layout)
     _validate_non_xml_envelope(layout)
+    _validate_alphanumeric_text_sources(layout)
+
+
+def _validate_alphanumeric_text_sources(layout: ExportLayoutDefinition) -> None:
+    """Require each record's text rule to cite a design the layout itself is built from."""
+    for record in layout.records:
+        source_ref = record.alphanumeric_text_source_ref
+        if source_ref is not None and source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} record {record.id!r} alphanumeric text source "
+                f"{source_ref!r} must be included in source_refs",
+            )
 
 
 def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
@@ -970,6 +1131,16 @@ def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
     if layout.dictionary_path_overrides:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares dictionary path overrides on a {layout.format} layout, "
+            "which reads no dictionary",
+        )
+    if layout.dictionary_row_targets:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares dictionary row targets on a {layout.format} layout, "
+            "which reads no dictionary",
+        )
+    if layout.input_dictionary_source_ref is not None:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares an input dictionary on a {layout.format} layout, "
             "which reads no dictionary",
         )
 

@@ -21,6 +21,7 @@ from cadrumo.application.operator_actions.models import (
     ConditionEvidence,
     PreconditionVerdict,
 )
+from cadrumo.application.operator_actions.served_actions import served_action_fields
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import list_runs, load_run, save_run
@@ -32,6 +33,7 @@ from cadrumo.application.workflow.run_models import (
     WorkflowStep,
 )
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import (
     ActionArgumentStatus,
@@ -43,9 +45,10 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -82,20 +85,7 @@ _PROFILE_LABEL = "Native resume operator"
 
 
 def _profile_facts() -> dict[str, str]:
-    return {
-        "taxpayer_type.entity_type": "natural_person",
-        "identity.name": "Native",
-        "identity.surnames": "Resume",
-        "activities.description": "consulting",
-        "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    }
+    return native_general_iva_facts()
 
 
 @pytest.fixture(autouse=True)
@@ -315,11 +305,7 @@ def test_runs_lists_persisted_run_ids() -> None:
     assert "130\t2026 1T" in result.output
 
 
-def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_command() -> None:
-    """The real CLI renders persisted facts and no longer carries a string recovery channel."""
-    run = _builder_refused_run("f" * 16)
-    save_run(run)
-
+def _assert_stored_builder_refusal(run: WorkflowResult) -> WorkflowResult:
     stored_before = load_run(run.run_id)
     assert stored_before == run
     terminal = stored_before.steps[-1]
@@ -332,7 +318,10 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert terminal.precondition_verdict.action is not None
     assert terminal.precondition_verdict.action.action_id == "operator.modelo.work.calculate"
     assert terminal.precondition_verdict.missing_argument_names == ("work_unit_id",)
+    return stored_before
 
+
+def _assert_text_runs_listing() -> None:
     text_result = _invoke_work(["runs"])
     assert text_result.exit_code == 0, text_result.output
     assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction" in text_result.output
@@ -343,6 +332,8 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert '"missing_argument_names":["work_unit_id"]' in text_result.output
     assert '"conditionality":"requires_arguments"' in text_result.output
 
+
+def _assert_json_runs_projection(run: WorkflowResult) -> None:
     json_result = _invoke_work(["runs"], format="json")
     assert json_result.exit_code == 0, json_result.output
     payload = json.loads(json_result.output)["result"]
@@ -381,8 +372,12 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         "missing_argument_names": ["work_unit_id"],
         "conditionality": "requires_arguments",
         "no_recovery_outcome": None,
+        # The served words and routing of the offered action, in the language the CLI answers in.
+        **json.loads(json.dumps(served_action_fields("operator.modelo.work.calculate", OutputLanguage.ES))),
     }
 
+
+def _assert_run_and_details_projection(run: WorkflowResult) -> None:
     run_result = _invoke_work(["run", run.run_id], format="json")
     assert run_result.exit_code == 0, run_result.output
     full = json.loads(run_result.output)["result"]
@@ -394,6 +389,17 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert details["summary_detail_facts"] == {"error_code": "workflow.draft.build_failure"}
     assert full["modelo"] == "130"
     assert full["obligation_status"] == "UPCOMING"
+
+
+def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_command() -> None:
+    """The real CLI renders persisted facts and no longer carries a string recovery channel."""
+    run = _builder_refused_run("f" * 16)
+    save_run(run)
+
+    stored_before = _assert_stored_builder_refusal(run)
+    _assert_text_runs_listing()
+    _assert_json_runs_projection(run)
+    _assert_run_and_details_projection(run)
 
     _reopen_oracle_session()
     assert load_run(run.run_id) == stored_before

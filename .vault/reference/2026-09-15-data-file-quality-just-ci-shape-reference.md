@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#data-file-quality'
 date: '2026-09-15'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb918c6c35facdea644506567c031229ee30222c3d40e412bdcb04009ed00668'
+body_hash: 'sha256:592cf76638801467994bbd7181446c2d5e8f7cec24ac2159ee508442ad8c502f'
 related: []
 ---
 
@@ -53,19 +53,16 @@ Path policy must be explicit. Never scan or mutate
 `src/cadrumo/_data/corpus/**`: `.gitattributes` declares those artefacts
 byte-exact evidence. TOML checks should cover authored registry and repository
 TOML while excluding caches, lock artefacts, generated output, and byte-exact
-corpus. YAML checks should cover repository YAML, including CloudFormation
-custom tags. Generic YAML mutation must refuse `src/cadrumo/locales/**` because
+corpus. YAML checks should cover repository YAML. Generic YAML mutation must refuse `src/cadrumo/locales/**` because
 locale catalogue mutation is owned by the locale CLI; `check-locales` remains
 the semantic catalogue gate.
 
-The current manual syntax hooks are not green: `check-toml` rejects mixed
-carriage returns in `dev/registry/pipeline/generated_tree_dispositions.toml`,
-and `check-yaml` rejects CloudFormation `!Ref` in
-`infra/docs-static-site.yaml`. A new blocking gate therefore needs tag-aware
-YAML handling and a formatting sweep before CI enrolment.
+The current manual TOML syntax hook is not green: `check-toml` rejects mixed
+carriage returns in `dev/registry/pipeline/generated_tree_dispositions.toml`.
+A new blocking gate therefore needs a formatting sweep before CI enrolment.
 
 Tests belong in `dev/quality/tests/` and should prove complete source-tree
 discovery, corpus and generated exclusions, malformed TOML/YAML detection,
-CloudFormation-tag support, format drift, read-only check behavior,
+format drift, read-only check behavior,
 explicit-path repair boundaries, locale mutation refusal, and tool failure
 propagation.

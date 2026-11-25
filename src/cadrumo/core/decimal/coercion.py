@@ -1,20 +1,17 @@
 """Canonical :class:`~decimal.Decimal` coercion helpers for the AEAT domain.
 
-Consolidates three independent ``_coerce_decimal`` copies that previously
-lived in ``_calc_sheets_pull``, ``_row_set_assembly``, and
-:mod:`invoices.models`. All call-sites use :func:`coerce_decimal`,
-:func:`coerce_decimal_strict`, or :func:`normalize_decimal_separators` from this
-module rather than open-coding decimal parsing.
+Call-sites use :func:`coerce_decimal`, :func:`coerce_decimal_strict`, or
+:func:`normalize_decimal_separators` from this module rather than open-coding
+decimal parsing.
 
-Variant analysis
-----------------
+Variants
+--------
 
-* ``_calc_sheets_pull`` — returned ``Decimal | None`` with no default.
-  Callers checked for ``None`` explicitly to detect empty cells.
-* ``_row_set_assembly`` — took a required ``default: Decimal`` keyword
-  argument and always returned ``Decimal``.  Callers passed ``Decimal("0")``.
-* ``invoices.models`` — raised ``TypeError`` on unparseable input (strict
-  pydantic-validator context).
+* Nullable cells: ``Decimal | None`` with no default. Callers check for
+  ``None`` explicitly to detect empty cells.
+* Aggregation: a required ``default: Decimal`` keyword argument, always
+  returning ``Decimal``. Callers pass ``Decimal("0")``.
+* Strict validators: raise ``TypeError`` on unparseable input.
 
 Canonical resolution
 --------------------
@@ -31,10 +28,8 @@ A single ``default`` keyword argument covers all three patterns:
   raise :exc:`TypeError` when the return is ``None`` — the validator itself
   turns that into a :exc:`pydantic.ValidationError`.
 
-The helper treats ``int`` inputs as valid (the ``_models.py`` variant did;
-the other two would have produced ``Decimal(str(int))`` anyway), allowing
-callers that pass mixed int / str / Decimal worksheet values to work
-without pre-conversion.
+The helper treats ``int`` inputs as valid, allowing callers that pass mixed
+int / str / Decimal worksheet values to work without pre-conversion.
 """
 
 from __future__ import annotations
@@ -203,11 +198,8 @@ def normalize_decimal_separators(text: str, *, strip_thousands: bool) -> str:
     when ``False`` only the comma is converted (``"1234,56"`` -> ``"1234.56"``),
     for inputs already free of thousands separators.
 
-    Single canonical home for the comma/dot separator normalisation that the
-    sede, registry-export, renta-web-oracle, and PDF-label parsers previously
-    open-coded inline. Each caller keeps its own surrounding validation,
-    symbol-stripping, locale-detection, and error handling; only the separator
-    transform is shared.
+    Each caller keeps its own surrounding validation, symbol-stripping,
+    locale-detection, and error handling; only the separator transform is shared.
     """
     if strip_thousands:
         return text.replace(".", "").replace(",", ".")

@@ -15,7 +15,7 @@ Protocol (MCP) executable is `cadrumo-mcp`.
 | Non-interactive conventions | Root and leaf help | [Automation reference](../cli/automation.rst) |
 
 The filing stages relate as `calculate` → `review` → `verify` → `export` →
-human filing → local record → reconcile. The stage names describe Cadrumo's
+human filing → local record → `reconcile`. The stage names describe Cadrumo's
 local workflow. Exact command definitions come from live `aeat ... --help`.
 Read [the workflow explanation](../explanation/index.md) for why the stages are
 separate and [the how-to guides](../how-to/index.md) for task sequences.
@@ -27,8 +27,8 @@ separate and [the how-to guides](../how-to/index.md) for task sequences.
 | `CADRUMO_*` / `cadrumo_*` | Cadrumo product | Local state, output, providers, profiles, credentials storage, and product behavior |
 | `AEAT_*` / `aeat_*` | AEAT integration | Sede endpoints and paths, bundled manual and normative corpus roots, and the language of authority terminology |
 
-Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`,
-`CADRUMO_SECRET_STORE_DIR`, and `CADRUMO_OUTPUT_LANGUAGE`. For the output
+Examples of product controls include `CADRUMO_STORAGE_ROOT` and
+`CADRUMO_OUTPUT_LANGUAGE`. For the output
 language and its precedence, see
 [Choose the output language](../how-to/profile-setup.md#choose-the-output-language).
 Every variable is listed in [Environment overrides](environment-overrides.md).

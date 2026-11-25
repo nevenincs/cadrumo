@@ -34,6 +34,7 @@ wizard:
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
     invalid_tax_id: 'Invalid NIF/CIF/DNI/NIE for %{prompt_key}: %{raw}. %{detail}'
+    invalid_year: 'Invalid tax year for %{prompt_key}: %{raw}. Use four digits (YYYY).'
     select_unknown: 'Unrecognised value for %{flag} (%{prompt_key}): %{raw}. Valid
       options: %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
@@ -71,11 +72,12 @@ wizard:
       google-export:
         prompt: Enable Google Sheets export?
       llm-vision:
-        prompt: Enable on-host LLM vision for reading invoices?
+        prompt: Allow reading scanned or image documents with the image-reading model
+          you selected?
       title: Service capabilities
     certificate:
       path:
-        prompt: Enter the path to your digital certificate (.p12, .pfx)
+        prompt: Enter the path to your digital certificate (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:
@@ -125,6 +127,9 @@ wizard:
           born.
         invalid_range: The month must be between %{minimum} and %{maximum}.
         prompt: Month when the mother completed 30 contribution days after the birth
+      apellidos-nombre:
+        prompt: Descendant's surnames and name (surnames first)
+        too_long: Enter the surnames and name in at most %{limit} characters.
       birth-date:
         prompt: Date of birth
       convivencia:
@@ -172,7 +177,7 @@ wizard:
         help: Leave blank if this descendant has not died.
         prompt: Date of death
       gastos-guarderia:
-        both_declared: Give either the annual guardería total or the month-by-month
+        both_declared: Give either the annual nursery total or the month-by-month
           amounts for this child, not both. The monthly detail is the only one that
           can express the year the child turns three, so clear the annual total.
         help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
@@ -190,19 +195,19 @@ wizard:
           semicolons; a span may be written MM-MM:AMOUNT. For example 9-12:210;1:180.
           Months run 1 to 12, amounts are whole euros, and each month may appear only
           once.
-        prompt: Guardería spend for this child, month by month (optional)
+        prompt: Nursery spending for this child, month by month (optional)
       inscripcion-registro-civil:
         help: Date the adoption was inscribed in the Registro Civil. Where inscription
           was not required, give the date of the judicial or administrative resolution
           instead. The under-three increase is counted from that date.
         prompt: Registro Civil inscription date
       meses-madre-trabajo:
-        help: 'For the maternity deduction (Art. 81 LIRPF): WHICH months the mother
-          paid Social Security while this child qualified -- under 3, or (age-independent)
-          inside the adopcion/acogimiento entry-date window recorded via INSCRIPCION/ACOGIMIENTO.
-          Write MM or MM-MM, separated by '';'' (for example 5-8 or 1;2;11;12). The
-          months rather than their number, because the guarderia increase is prorated
-          by the months these and the nursery months share.'
+        help: 'For the maternity deduction (Art. 81 LIRPF): which months the mother
+          paid Social Security while this child qualified (under age 3, or regardless
+          of age within the adoption/fostering entry-date window recorded via INSCRIPCION/ACOGIMIENTO).
+          Write MM or MM-MM, separated by '';'' (for example 5-8 or 1;2;11;12). Enter
+          the months themselves, not their number, because the childcare increase
+          is prorated by the months these and the nursery months overlap.'
         invalid_range: Enter months as MM or MM-MM, separated by ';' (for example
           5-8 or 1;2;11;12), each between %{minimum} and %{maximum}.
         prompt: Which months the mother worked while entitled -- child under 3, or
@@ -254,6 +259,13 @@ wizard:
     familia:
       title: Family situation
     family:
+      family-convive-con-otro-progenitor:
+        help: Article 84.2.4 of the personal income tax law (LIRPF) denies the joint-taxation
+          reduction of a single-parent family unit when the taxpayer lives with the
+          father or mother of any child in the unit. Leave this unanswered if you
+          do not know; Cadrumo then cannot work out that reduction.
+        prompt: Do you live with the father or mother of any child in your family
+          unit?
       family-descendants-eu-eea-deduction:
         prompt: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
@@ -283,15 +295,19 @@ wizard:
       declaration-roles:
         help: Modelo 347 declaring role; pass --declaration-roles once per role
       descendiente:
-        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,COTIZACIONES_SS_MADRE=N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<surnames
+          and name>]
       does-intracomunitario:
-        help: Conducts intracomunitario operations
+        help: Conducts intra-EU operations
       enrollment-large-company:
         help: Large-company enrollment
       enrollment-public-administration-budget-gt-6000000:
         help: Public administration budget over 6,000,000
       entity-type:
         help: Natural person, legal entity, or attribution entity
+      family-convive-con-otro-progenitor:
+        help: 'Single-parent unit: whether you live with the father or mother of a
+          child in the unit (article 84.2.4 LIRPF)'
       family-descendants-eu-eea-deduction:
         help: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
@@ -302,22 +318,34 @@ wizard:
       google-export:
         help: Enable Google Sheets export.
       has-employees:
-        help: Has employees and pays salaries with retención
+        help: Has employees and pays salaries subject to withholding
       incn-prior-12-months:
         help: Net turnover (importe neto de la cifra de negocios) over the prior 12
           months, in euros. Above 6,000,000 EUR Modelo 202 mandates the Art. 40.3
           LIS modality; below it both modalities are available. Optional.
+      irpf-activity-income-imputation-criterion:
+        help: 'RIRPF art. 7 criterion for activity income and expenses in the tax
+          year given by --irpf-activity-income-imputation-year: `devengo` (the usual
+          answer) or `cobros_y_pagos` (cash; binds for three years; not with Código
+          de Comercio accounting).'
+      irpf-activity-income-imputation-year:
+        help: Four-digit tax year (ejercicio) the imputation criterion and the Código
+          de Comercio answer are stated for. Required with either; the answers for
+          other years are kept.
+      irpf-codigo-comercio-accounting:
+        help: Declare whether you keep Código de Comercio accounting in the tax year
+          given by --irpf-activity-income-imputation-year.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
       irpf-special-regime:
-        help: IRPF special regime. "general" for most taxpayers. "impatriado" for
+        help: IRPF special regime. `general` for most taxpayers. `impatriado` for
           workers who relocated to Spain and elected the Beckham Law regime (Art.
           93 LIRPF), available for the first 6 years after relocation.
       irpf-special-regime-start-date:
-        help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
-          irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
+        help: Date the worker elected the impatriate regime (YYYY-MM-DD). Only when
+          irpf-special-regime is `impatriado`. RIRPF Art. 116. The regime expires
           at the end of the 6th calendar year.
       iva-cash-accounting-regime-enrolled:
         help: Declare enrolment in the special IVA cash-accounting regime.
@@ -349,23 +377,13 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       legal-name:
         help: Legal or company name for legal-entity export headers
-      ley-49-2002-option-date:
-        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
-          option.
-      ley-49-2002-option-declared:
-        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
-          II option.
-      ley-49-2002-renunciation-date:
-        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
-          renunciation.
-      ley-49-2002-renunciation-declared:
-        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
-          49/2002 Title II regime.
       llm-vision:
-        help: Enable on-host LLM vision for reading invoices.
+        help: Allow reading scanned or image documents with the image-reading model
+          you selected.
       modelo-111-no-retenciones-periods:
-        help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
-          (for example 2025:2T,2025:3T). Use only when no subject payments were made.
+        help: Comma-separated Modelo 111 periods with no withholding, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no payments subject to withholding
+          were made.
       modelo-115-no-relevant-payment-periods:
         help: Comma-separated Modelo 115 periods with no relevant urban-rent payment,
           format YYYY:PERIOD (for example 2025:3T,2025:4T). This is explicit local
@@ -378,40 +396,31 @@ wizard:
         help: Mark this when a newly-created legal entity is in one of its first two
           profit-making tax periods (LIS Art. 29) to opt into the 15 percent reduced
           rate. Optional; unset leaves the entity on its otherwise-applicable rate.
-      notes:
-        help: Notes for your own records (optional)
-      objective-estimation-modulos-iae-epigraph:
-        help: IAE epigraph for objective-estimation modules, such as 972.
-      objective-estimation-modulos-module-1-units:
-        help: Annual module 1 units for objective-estimation modules.
-      objective-estimation-modulos-module-2-units:
-        help: Annual module 2 units for objective-estimation modules.
-      objective-estimation-modulos-module-3-units:
-        help: Annual module 3 units for objective-estimation modules.
-      objective-estimation-modulos-module-4-units:
-        help: Annual module 4 units for objective-estimation modules.
-      objective-estimation-modulos-module-5-units:
-        help: Annual module 5 units for objective-estimation modules.
-      objective-estimation-modulos-module-6-units:
-        help: Annual module 6 units for objective-estimation modules.
-      objective-estimation-modulos-module-7-units:
-        help: Annual module 7 units for objective-estimation modules.
       output-language:
         help: CLI output language for this profile
+      pago-fraccionado-art-40-3-elected:
+        help: States whether the entity elected, in its census declaration, the Art.
+          40.3 LIS option (instalments on the taxable base of the first 3, 9 or 11
+          months); the negative form records that it did not or that it renounced
+          it. Optional; left unset, neither answer is assumed.
+      patrimonio-declaration-threshold-met:
+        help: Your Impuesto sobre el Patrimonio tax is payable or, if not, your assets
+          and rights are worth more than 2,000,000 euros
       pays-capital-income-with-retencion:
-        help: Pays capital income with retención
+        help: Pays capital income subject to withholding
+      pays-non-resident-income-with-retencion:
+        help: Pays income subject to IRNR withholding to non-residents without a permanent
+          establishment
       pays-professionals-with-retencion:
-        help: Pays professionals with retención
+        help: Pays professionals subject to withholding
       pays-rent-with-retencion:
-        help: Pays local rent with retención
+        help: Pays urban property rent subject to withholding
       premio-loteria-gravamen-especial-sin-retencion:
-        help: Obtained a lottery or betting prize subject to the gravamen especial
-          without retención or ingreso a cuenta (Modelo 136)
+        help: Obtained a lottery or betting prize subject to the special tax without
+          withholding or payment on account (Modelo 136)
       premio-loteria-gravamen-especial-trimestres:
         help: Quarters in which the prize was cashed, as YYYY-nT tokens separated
           by | (for example 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: At least 70% of professional income with prior retención
       representante-fiscal-nif:
         help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
           non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
@@ -461,8 +470,8 @@ wizard:
       tax-id:
         help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       tax-residence-ccaa:
-        help: Tax-residence autonomous community, under the common regime. If the
-          value is not recognised, the error lists the accepted communities.
+        help: Tax-residence autonomous community or city, under the common regime.
+          If the value is not recognised, the error lists the accepted territories.
       tax-residence-jurisdiction-scope:
         help: 'Declared territorial regime: common territory or the not-yet-supported
           foral territory.'
@@ -480,8 +489,8 @@ wizard:
           4 = separated or divorced, 5 = registered civil partnership.'
       taxpayer-marriage-date:
         help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
-          = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
-          Art. 82 LIRPF).
+          = 2 (married). Derives casillas 0245/0246/0247 (marriage duration during
+          the tax year, Art. 82 LIRPF).
       taxpayer-sex:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
@@ -539,19 +548,40 @@ wizard:
             label: Simplified regime only
         prompt: Which Modelo 303 regime composition applies?
       title: IVA
-    notes:
-      notes:
-        prompt: Notes for your own records (optional)
-      title: Notes for your own records
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Art. 109 70% activity-income coverage exception applies
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
       does-intracomunitario:
-        prompt: Conducts intracomunitario operations
+        prompt: Conducts intra-EU operations
       has-employees:
-        prompt: Has employees and pays salaries with retención
+        prompt: Do you have employees and pay salaries subject to withholding?
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Only if you elected it in your return and do not keep Código
+              de Comercio accounting; it binds you for at least three years.
+            label: Cash (cobros y pagos)
+          devengo:
+            description: 'The usual answer: income and expenses count in the year
+              they arise, whatever the payment date.'
+            label: Accrual (devengo)
+        help: 'Accrual (devengo) is the usual answer: income and expenses belong to
+          the year they arise, whatever the payment date. Cash (cobros y pagos) is
+          an election open only if you do not keep Código de Comercio accounting (RIRPF
+          art. 7.2); it binds you for at least three years and is stated in your return.
+          If you are not sure, leave this blank: the activity boxes stay unresolved
+          until you state it.'
+        prompt: Which criterion do you use to place your business income and expenses
+          in a tax year? Accrual (devengo) is the usual answer.
+      irpf-activity-income-imputation-year:
+        help: The election is made year by year, so the answer is saved for that year
+          only and the answers for other years stay as they are.
+        prompt: Which tax year (ejercicio) is this answer for? Enter four digits.
+      irpf-codigo-comercio-accounting:
+        prompt: Do you keep accounting under the Código de Comercio (required or voluntary)
+          in that tax year? If you do, cash is not open to you.
       irpf-estimation-regime:
         choices:
           directa-normal:
@@ -560,7 +590,7 @@ wizard:
             label: Direct estimation, normal
           directa-simplificada:
             description: Real-income accounting with simplified books - the usual
-              choice for most autónomos.
+              choice for most self-employed people.
             label: Direct estimation, simplified
           objetiva:
             description: 'Module-based (signos, índices, módulos): tax computed from
@@ -578,59 +608,42 @@ wizard:
             description: You have opted for the Article 93 LIRPF special regime (Modelo
               151).
             label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
-        help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
+        help: The impatriate (Beckham Law) regime applies for the first 6 tax years
           after relocation. Most taxpayers are on the general regime.
         prompt: IRPF special regime (Beckham Law / Art. 93 LIRPF)
       irpf-special-regime-start-date:
-        help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
+        help: Date the worker opted into the impatriate regime (RIRPF Art. 116). The
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
       modelo-111-no-retenciones-periods:
-        help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
-          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
-        prompt: Modelo 111 no-retenciones periods
+        help: Comma-separated YYYY:PERIOD periods in which no income subject to withholding
+          or payment on account was paid, so no all-blank Modelo 111 is filed.
+        prompt: Modelo 111 periods with no withholding
       modelo-115-no-relevant-payment-periods:
         help: Comma-separated YYYY:PERIOD periods where no relevant urban-rent payment
           subject to withholding occurred, permitting a local zero Modelo 115 calculation.
         prompt: Modelo 115 no-relevant-payment periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
-      objective-estimation-modulos-iae-epigraph:
-        help: Stored once per annual profile. Coefficients remain in the modelo registry.
-        prompt: IAE epigraph for objective-estimation modules
-      objective-estimation-modulos-module-1-units:
-        prompt: Annual module 1 units
-      objective-estimation-modulos-module-2-units:
-        prompt: Annual module 2 units
-      objective-estimation-modulos-module-3-units:
-        prompt: Annual module 3 units
-      objective-estimation-modulos-module-4-units:
-        prompt: Annual module 4 units
-      objective-estimation-modulos-module-5-units:
-        prompt: Annual module 5 units
-      objective-estimation-modulos-module-6-units:
-        prompt: Annual module 6 units
-      objective-estimation-modulos-module-7-units:
-        prompt: Annual module 7 units
-      objective-estimation-modulos-module-units:
-        help: Stable annual unit count for this module slot. The selected IAE epigraph
-          defines whether the slot means employees, local surface, electricity consumption,
-          or another official module.
+      patrimonio-declaration-threshold-met:
+        prompt: Your Impuesto sobre el Patrimonio tax is payable, or your assets and
+          rights are worth more than 2,000,000 euros
       pays-capital-income-with-retencion:
-        prompt: Pays capital income with retención
+        prompt: Do you pay capital income subject to withholding?
+      pays-non-resident-income-with-retencion:
+        prompt: Pays income subject to withholding to non-residents without a permanent
+          establishment
       pays-professionals-with-retencion:
-        prompt: Pays professionals with retención
+        prompt: Do you pay professionals subject to withholding?
       pays-rent-with-retencion:
-        prompt: Pays local rent with retención
+        prompt: Do you pay urban property rent subject to withholding?
       premio-loteria-gravamen-especial-sin-retencion:
-        prompt: Obtained a lottery or betting prize subject to the gravamen especial
-          without retención or ingreso a cuenta
+        prompt: Obtained a lottery or betting prize subject to the special tax without
+          withholding or payment on account
       premio-loteria-gravamen-especial-trimestres:
         help: One YYYY-nT token per natural quarter, separated by | (for example 2025-1T|2025-3T).
           Each quarter opens its own Modelo 136 filing.
         prompt: Quarters in which the prize was cashed
-      professional-income-withholding-ge-70pct:
-        prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:
         prompt: In the calendar year the Modelo 347 covers, did your operations with
           any one person or entity exceed EUR 3,005.06 (EUR 300.51 for amounts you
@@ -726,6 +739,8 @@ wizard:
             label: Castile and León
           cataluna:
             label: Catalonia
+          ceuta:
+            label: Ceuta (autonomous city)
           comunidad_valenciana:
             label: Valencian Community
           extremadura:
@@ -736,6 +751,8 @@ wizard:
             label: La Rioja
           madrid:
             label: Madrid
+          melilla:
+            label: Melilla (autonomous city)
           murcia:
             label: Murcia
       country-of-fiscal-residence:
@@ -757,7 +774,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: Name of fiscal representative in Spain
       tax-residence-ccaa:
-        prompt: Tax-residence autonomous community
+        prompt: Tax-residence autonomous community or city
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:
@@ -841,31 +858,31 @@ wizard:
       declaration-roles:
         choices:
           propiedad-horizontal-entity:
-            description: An entity to which Ley 49/1960 on propiedad horizontal applies.
-            label: Propiedad horizontal community
+            description: An entity to which Ley 49/1960 on horizontal property applies.
+            label: Horizontal property community
           public-administration-entity:
             description: An entity integrated in a public administration, additionally
-              subject to declaring the subvenciones, auxilios or ayudas it grants
-              (RD 1065/2007 art. 31.2, second paragraph).
+              subject to declaring the subsidies, assistance or aid it grants (RD
+              1065/2007 art. 31.2, second paragraph).
             label: Entity integrated in a public administration
           social-character-entity:
             description: A private entity or establishment of carácter social under
-              LIVA (Ley 37/1992) art. 20.tres.
+              LIVA art. 20.tres (Ley 37/1992).
             label: Carácter social entity
           statutory-information-duty-entity:
-            description: An authority, public body, cámara or corporación, colegio
-              or asociación profesional, mutualidad de previsión social, partido político,
-              sindicato or asociación empresarial subject to the duty to supply tax
+            description: An authority, public body, chamber or corporation, professional
+              college or association, social welfare mutual society, political party,
+              trade union, or business association subject to the duty to supply tax
               information (LGT art. 94.1 and 94.2).
             label: Entity subject to the general information duty
           third-party-fee-collector:
-            description: A sociedad, asociación, colegio profesional or other entity
-              that collects professional fees or intellectual/industrial/authorship-rights
-              income on behalf of its socios, asociados or colegiados (RD 1065/2007
-              art. 31.3).
+            description: A company, association, professional college, or other entity
+              that collects professional fees or income from intellectual property,
+              copyright, or other rights on behalf of its members, associates, or
+              registered professionals (RD 1065/2007 art. 31.3).
             label: Collects fees on behalf of third parties
-        help: 'Institutional roles that unlock Modelo 347 claves C, D or E: collecting
-          professional fees on behalf of third parties (art. 31.3), a propiedad horizontal
+        help: 'Institutional roles that unlock Modelo 347 keys C, D or E: collecting
+          professional fees on behalf of third parties (art. 31.3), a horizontal property
           community (Ley 49/1960), a carácter social entity (LIVA art. 20.tres), an
           entity subject to the general information duty (LGT art. 94), or an entity
           integrated in a public administration. Leave blank if none apply.'
@@ -882,8 +899,8 @@ wizard:
               Impuesto sobre Sociedades.
             label: Legal entity (company)
           natural-person:
-            description: An individual taxpayer (autónomo or private person) filing
-              under IRPF.
+            description: An individual taxpayer (self-employed or private person)
+              filing under IRPF.
             label: Natural person
         help: Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or
           attribution entity
@@ -906,7 +923,7 @@ wizard:
             label: Movable capital income
           ganancias-patrimoniales:
             description: Capital gains or losses from selling assets (shares, property,
-              crypto).
+              cryptocurrency).
             label: Capital gains
           pension:
             description: Pension income - treated as employment income under IRPF.
@@ -932,34 +949,25 @@ wizard:
               regime asked about below.'
             label: Non-profit entity
           sl:
-            description: 'Sociedad Limitada: the standard small-company form, minimum
-              capital 3.000 EUR.'
+            description: 'Private limited company (SL): the standard small-company
+              form, minimum capital 3.000 EUR.'
             label: Limited liability company (S.L.)
           sll:
             label: Worker-owned limited liability company (S.L.L.)
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
-      ley-49-2002-option-date:
-        help: Use the ISO date corresponding to Modelo 036 casilla 653.
-        prompt: Date declared for the Ley 49/2002 special-regime option
-      ley-49-2002-option-declared:
-        help: Use the declaration fact from Modelo 036 casilla 651; legal application
-          still depends on the statutory requirements and no renunciation.
-        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
-          special fiscal regime?
-      ley-49-2002-renunciation-date:
-        help: Use the ISO date corresponding to Modelo 036 casilla 654.
-        prompt: Date declared for the Ley 49/2002 special-regime renunciation
-      ley-49-2002-renunciation-declared:
-        help: Use the declaration fact from Modelo 036 casilla 652.
-        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
-          49/2002 special fiscal regime?
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.
         prompt: Is this a newly-created legal entity in one of its first two profit-making
           tax periods?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Applies only to legal entities. With net turnover below the Art. 40.3
+          threshold, this election decides whether each Modelo 202 instalment yields
+          a payment. If you do not know, leave it unanswered: no answer is assumed.'
+        prompt: Did the entity elect, in its census declaration, the Art. 40.3 LIS
+          option for its instalment payments?
       title: Taxpayer type
     title: Setup wizard
     verifier:

@@ -6,16 +6,13 @@ import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.auth.session_types import AeatSession
 from cadrumo.application.live.filed_data_ports import FiledEffectGuard
@@ -29,39 +26,45 @@ from cadrumo.application.live.iva_wallet_capture_operation import (
 )
 from cadrumo.application.live.remote_state_models import IvaWalletCaptureReport
 from cadrumo.application.live.session import SessionWriteReporter
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .supervised_operation_rig import (
+    ProcessResourceScope,
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    operation_access_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_TARGET_PERIOD = Period.from_year_and_code(2025, "3T")
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_TARGET_PERIOD = Period.from_year_and_code(_YEAR, "3T")
 _TAXPAYER_NIF = "12345678Z"
 _REPORT = IvaWalletCaptureReport(
     taxpayer_ref="synthetic-taxpayer-ref",
-    target_year=2025,
+    target_year=_YEAR,
     target_period=_TARGET_PERIOD,
-    observation_path="encrypted-observations/iva-wallet/2025-3T.json",
+    observation_path=f"encrypted-observations/iva-wallet/{_YEAR}-3T.json",
     decision_key="synthetic-wallet-decision",
     row_count=2,
     total_pending="120.00",
@@ -124,7 +127,7 @@ class _SyntheticIvaRemoteStatePort:
     ) -> IvaWalletCaptureReport:
         assert session is self.session
         assert settings is self.settings
-        assert (target_year, target_period) == (2025, _TARGET_PERIOD)
+        assert (target_year, target_period) == (_YEAR, _TARGET_PERIOD)
         assert taxpayer_nif == _TAXPAYER_NIF
         assert output_root == Path("synthetic-wallet-output")
         assert progress_context is None
@@ -151,33 +154,6 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
-class _ResourceScope:
-    """Track operation-owned browser cleanup without launching a process."""
-
-    def __init__(self) -> None:
-        self.activation_depth = 0
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self) -> Generator[None]:
-        self.activation_depth += 1
-        try:
-            yield
-        finally:
-            self.activation_depth -= 1
-
-    async def close(self) -> None:
-        assert self.activation_depth == 0
-        self.close_calls += 1
-        self.closed = True
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp_path: Path) -> None:
     """Record one synthetic wallet observation with profile-scoped authority."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
@@ -188,7 +164,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             output_root=Path("synthetic-wallet-output"),
             iva_remote_state_port=cast(IvaRemoteStatePort, port),
         )
-        resources = _ResourceScope()
+        resources = ProcessResourceScope()
 
         def provider_preflight(profile_id_arg: UUID, pinned_authority: PinnedAuthorityOperation) -> None:
             assert profile_id_arg == profile_id
@@ -199,7 +175,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             events.append("composition")
             return composition
 
-        def resources_factory() -> _ResourceScope:
+        def resources_factory() -> ProcessResourceScope:
             events.append("browser-resources")
             return resources
 
@@ -215,18 +191,13 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=IvaWalletCaptureRequest(
                 profile_id=profile_id,
-                target_year=2025,
+                target_year=_YEAR,
                 target_period="3T",
                 taxpayer_nif=_TAXPAYER_NIF,
             ),
         )
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
+        access_context = operation_access_context(
+            registration.contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
         )
 
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
@@ -234,53 +205,15 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
         assert admitted.request.periods == frozenset({_TARGET_PERIOD})
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        foreign_profile_id = uuid4()
-        assert foreign_profile_id != profile_id
-        foreign_request = request.model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-            }
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
+
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        terminal, projected = asyncio.run(
+            settle_and_project(supervisor, result_service, registry, request, IvaWalletCapturePublicResultV1)
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
-
-        async def run():
-            operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
-            contract = registry.lookup_public_contract(definition.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                IvaWalletCapturePublicResultV1,
-            )
-            return terminal, projected
-
-        terminal, projected = asyncio.run(run())
 
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -288,7 +221,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
     assert isinstance(projected, OperationResultProjectionSuccessV1)
     assert isinstance(projected.projection, IvaWalletCapturePublicResultV1)
     result = projected.projection
-    assert (result.target_year, result.target_period) == (2025, "3T")
+    assert (result.target_year, result.target_period) == (_YEAR, "3T")
     assert result.taxpayer_ref == _REPORT.taxpayer_ref
     assert _TAXPAYER_NIF not in result.model_dump_json()
     assert not hasattr(result, "taxpayer_nif")

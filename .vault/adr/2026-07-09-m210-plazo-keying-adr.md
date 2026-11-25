@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m210-plazo-keying'
 date: '2026-07-09'
-modified: '2026-10-03'
-body_hash: 'sha256:59e6a0fc97e188fc37b5805db71ea9d63eec2602641e79089aee72bee17d7d34'
+modified: '2026-11-04'
+body_hash: 'sha256:8b20d28f2aa5733ef7bb89806fca6649472e5583403e02c7d7336c236513c3eb'
 related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
@@ -195,8 +195,8 @@ two-digit M210 codes validated against the registry's existing code projection. 
 default to empty/unqualified. No parallel resultado enum, tipo-renta code catalogue,
 or lossy `TipoRentaIrnr` projection is introduced.
 
-**Annual resultado/tipo window rows** are authored on the 2025 revision
-`deadline_windows` fragment (grounded `legal_refs = ["orden-eha-3316-2010:art-5"]`):
+**Annual resultado/tipo window rows** are authored on the existing M210
+revision's `deadline_windows` fragment (grounded `legal_refs = ["orden-eha-3316-2010:art-5"]`):
 arrendamiento a-ingresar (`tipo_renta_scope in {arrendamiento tipos 01/35}`,
 `resultado_scope = A_INGRESAR`, opens 1-Apr / closes 20-Apr of year+1); cuota cero
 (`resultado_scope = CUOTA_CERO`, opens 1-Jan / closes 20-Jan of year+1); a devolver

@@ -166,6 +166,71 @@ def read_recipient_operation_history(profile_id: UUID) -> BucketEventHistoryCata
     return build_bucket_event_history_repository(bucket_id=str(profile_id)).load()
 
 
+def _assert_recipient_added(
+    case: RecipientOperationConformanceCase,
+    projection: BaseModel,
+    profile_id: UUID,
+    after: RecipientFingerprintRegister,
+) -> tuple[BucketEventType, dict[str, str]]:
+    assert isinstance(case.request, ReviewPackageRecipientAddRequest)
+    assert isinstance(projection, ReviewPackageRecipientAddProjection)
+    assert projection.profile_id == profile_id
+    matches = tuple(row for row in after.records if row.recipient_id == case.recipient_id)
+    assert len(matches) == 1
+    stored = matches[0]
+    assert stored.public_key_hex == case.public_key_hex
+    assert stored.label == case.label
+    assert projection.recipient == ReviewPackageRecipientProjection.from_record(stored)
+    assert tuple(row for row in after.records if row.recipient_id != case.recipient_id) == tuple(
+        row for row in case.expected_register_before.records if row.recipient_id != case.recipient_id
+    )
+    return BucketEventType.COLLAB_RECIPIENT_REGISTERED, {
+        "recipient_id": stored.recipient_id,
+        "label": stored.label,
+        "fingerprint_sha256": stored.fingerprint_sha256,
+    }
+
+
+def _assert_recipient_removed(
+    case: RecipientOperationConformanceCase,
+    projection: BaseModel,
+    after: RecipientFingerprintRegister,
+) -> tuple[BucketEventType, dict[str, str]]:
+    assert case.action == "remove"
+    assert isinstance(case.request, ReviewPackageRecipientRemoveRequest)
+    assert isinstance(projection, ReviewPackageRecipientRemoveProjection)
+    expected_records = tuple(
+        row for row in case.expected_register_before.records if row.recipient_id != case.recipient_id
+    )
+    assert after.records == expected_records
+    assert projection == case.expected_projection
+    return BucketEventType.COLLAB_RECIPIENT_REMOVED, {"recipient_id": case.recipient_id}
+
+
+def _assert_recipient_event(
+    case: RecipientOperationConformanceCase,
+    profile_id: UUID,
+    history_after: BucketEventHistoryCatalogue,
+    event_type: BucketEventType,
+    expected_payload: dict[str, str],
+) -> None:
+    assert all(
+        history_after.events.get(event_id) == event for event_id, event in case.expected_history_before.events.items()
+    )
+    new_events = tuple(
+        event for event_id, event in history_after.events.items() if event_id not in case.expected_history_before.events
+    )
+    assert len(new_events) == 1
+    event = new_events[0]
+    assert event.bucket_id == str(profile_id)
+    assert event.event_type is event_type
+    assert event.object_type is BucketEventObjectType.RECIPIENT
+    assert event.object_id == case.recipient_id
+    assert event.actor == "operator"
+    assert dict(event.payload) == expected_payload
+    assert "public_key_hex" not in event.payload
+
+
 def assert_recipient_operation_conformance_result(
     case: RecipientOperationConformanceCase,
     projection: BaseModel,
@@ -188,52 +253,12 @@ def assert_recipient_operation_conformance_result(
         return
 
     if case.action == "add":
-        assert isinstance(case.request, ReviewPackageRecipientAddRequest)
-        assert isinstance(projection, ReviewPackageRecipientAddProjection)
-        assert projection.profile_id == profile_id
-        matches = tuple(row for row in after.records if row.recipient_id == case.recipient_id)
-        assert len(matches) == 1
-        stored = matches[0]
-        assert stored.public_key_hex == case.public_key_hex
-        assert stored.label == case.label
-        assert projection.recipient == ReviewPackageRecipientProjection.from_record(stored)
-        assert tuple(row for row in after.records if row.recipient_id != case.recipient_id) == tuple(
-            row for row in case.expected_register_before.records if row.recipient_id != case.recipient_id
-        )
-        event_type = BucketEventType.COLLAB_RECIPIENT_REGISTERED
-        expected_payload = {
-            "recipient_id": stored.recipient_id,
-            "label": stored.label,
-            "fingerprint_sha256": stored.fingerprint_sha256,
-        }
+        event_type, expected_payload = _assert_recipient_added(case, projection, profile_id, after)
     else:
-        assert case.action == "remove"
-        assert isinstance(case.request, ReviewPackageRecipientRemoveRequest)
-        assert isinstance(projection, ReviewPackageRecipientRemoveProjection)
-        expected_records = tuple(
-            row for row in case.expected_register_before.records if row.recipient_id != case.recipient_id
-        )
-        assert after.records == expected_records
-        assert projection == case.expected_projection
-        event_type = BucketEventType.COLLAB_RECIPIENT_REMOVED
-        expected_payload = {"recipient_id": case.recipient_id}
+        event_type, expected_payload = _assert_recipient_removed(case, projection, after)
 
     assert len(after.records) == len(case.expected_register_before.records) + (1 if case.action == "add" else -1)
-    assert all(
-        history_after.events.get(event_id) == event for event_id, event in case.expected_history_before.events.items()
-    )
-    new_events = tuple(
-        event for event_id, event in history_after.events.items() if event_id not in case.expected_history_before.events
-    )
-    assert len(new_events) == 1
-    event = new_events[0]
-    assert event.bucket_id == str(profile_id)
-    assert event.event_type is event_type
-    assert event.object_type is BucketEventObjectType.RECIPIENT
-    assert event.object_id == case.recipient_id
-    assert event.actor == "operator"
-    assert dict(event.payload) == expected_payload
-    assert "public_key_hex" not in event.payload
+    _assert_recipient_event(case, profile_id, history_after, event_type, expected_payload)
 
 
 __all__ = [

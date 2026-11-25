@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { buildPath } from "./build-paths.mjs";
-import { developmentServer } from "./development-server.mjs";
+import { developmentServer, PORT_KEYS } from "./development-server.mjs";
 
 export function identity() {
   const value = JSON.parse(
@@ -82,7 +82,7 @@ export function server() {
   if (typeof value.host !== "string" || !value.host.trim())
     throw new Error("Missing frontend bind address");
   const fixed = developmentServer();
-  for (const key of ["devPort", "previewPort", "docsPort", "cataloguePort"])
+  for (const key of PORT_KEYS)
     if (!Number.isInteger(value[key]) || value[key] < 1 || value[key] > 65535)
       throw new Error(`Invalid frontend ${key}`);
     else if (value[key] !== fixed[key])
@@ -178,18 +178,25 @@ function shellPolicy(policy, origin) {
 // Tauri reads frontendDist as a URL first, so an absolute Windows path such as
 // C:\dist becomes a URL with the scheme "c:" and no asset is embedded. Tauri
 // resolves a relative path against the configuration file's directory and
-// always reads it as a directory.
-export function frontendDirectory(configDirectory, frontend) {
-  if (!isAbsolute(configDirectory) || !isAbsolute(frontend))
-    throw new Error(
-      "The configuration and frontend directories must be absolute.",
-    );
-  const path = relative(configDirectory, frontend).split(sep).join("/");
+// always reads it as a directory. The configuration is compiled into the host
+// image, so a path it names stays relative: no image records where it was built.
+function relativeToConfiguration(configDirectory, target, what) {
+  if (!isAbsolute(configDirectory) || !isAbsolute(target))
+    throw new Error(`The configuration and ${what} paths must be absolute.`);
+  const path = relative(configDirectory, target).split(sep).join("/");
   if (!path || isAbsolute(path) || URL.canParse(path))
     throw new Error(
-      "The frontend must be a directory path relative to the Tauri configuration.",
+      `The ${what} must be a path relative to the Tauri configuration.`,
     );
   return path;
+}
+
+export function frontendDirectory(configDirectory, frontend) {
+  return relativeToConfiguration(configDirectory, frontend, "frontend");
+}
+
+export function iconFile(configDirectory, icon) {
+  return relativeToConfiguration(configDirectory, icon, "icon");
 }
 
 export function tauriConfig(
@@ -197,6 +204,7 @@ export function tauriConfig(
   product,
   { configDirectory, frontend, icons },
   platform = process.platform,
+  deploymentTarget = process.env.MACOSX_DEPLOYMENT_TARGET,
 ) {
   const [main] = template.app.windows;
   return {
@@ -221,7 +229,19 @@ export function tauriConfig(
     },
     bundle: {
       ...template.bundle,
-      icon: [resolve(icons, "icon.ico"), resolve(icons, "icon.png")],
+      icon: ["icon.ico", "icon.png"].map((name) =>
+        iconFile(configDirectory, resolve(icons, name)),
+      ),
+      // The Tauri driver exports its own deployment target from this key, replacing the
+      // canonical floor the build environment carries, so the key restates that floor.
+      ...(platform === "darwin" && deploymentTarget
+        ? {
+            macOS: {
+              ...template.bundle?.macOS,
+              minimumSystemVersion: deploymentTarget,
+            },
+          }
+        : {}),
     },
   };
 }

@@ -31,8 +31,8 @@ from ....application.live.filed_history_discovery import (
 )
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity, SchemaEnvelope
-from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from ..app_live_commands import _filed_discover_notices, _filed_discover_result_and_lines
+from ..app_live_command_specs import LIVE_COMMAND_SPECS
+from ..app_live_commands import filed_discover_notices, filed_discover_result_and_lines
 from ..app_live_filed_results import FiledDiscoverResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -105,7 +105,7 @@ def test_the_schema_carries_no_bespoke_notice_field() -> None:
 
 
 def test_the_result_survives_a_strict_json_roundtrip() -> None:
-    result, _lines = _filed_discover_result_and_lines(_profile_report())
+    result, _lines = filed_discover_result_and_lines(_profile_report())
     assert FiledDiscoverResult.model_validate_json(result.model_dump_json()) == result
 
 
@@ -113,7 +113,7 @@ def test_the_result_survives_a_strict_json_roundtrip() -> None:
 
 
 def test_the_payload_carries_each_pairs_signals_and_its_anomaly_flag() -> None:
-    result, _lines = _filed_discover_result_and_lines(_both_signals_report())
+    result, _lines = filed_discover_result_and_lines(_both_signals_report())
     by_modelo = {pair.modelo: pair for pair in result.pairs}
 
     assert by_modelo["303"].signals == [FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY.value]
@@ -123,7 +123,7 @@ def test_the_payload_carries_each_pairs_signals_and_its_anomaly_flag() -> None:
 
 
 def test_the_counts_separate_the_two_signals() -> None:
-    result, _lines = _filed_discover_result_and_lines(_both_signals_report())
+    result, _lines = filed_discover_result_and_lines(_both_signals_report())
     assert result.pair_count == 2
     assert result.profile_expected_count == 1
     assert result.register_options_only_count == 1
@@ -131,7 +131,7 @@ def test_the_counts_separate_the_two_signals() -> None:
 
 
 def test_the_text_lines_and_the_payload_report_the_same_counts() -> None:
-    result, lines = _filed_discover_result_and_lines(_profile_report())
+    result, lines = filed_discover_result_and_lines(_profile_report())
     joined = "\n".join(lines)
     assert f"{result.pair_count}" in joined
     assert "profile_expected_count" in joined
@@ -150,17 +150,17 @@ def test_the_register_scope_caveat_always_fires() -> None:
     # not depend on how many register-only pairs came back: it is about what the
     # option list establishes at all.
     for report in (_profile_report(), _register_only_report()):
-        codes = [notice.code for notice in _filed_discover_notices(report)]
+        codes = [notice.code for notice in filed_discover_notices(report)]
         assert "live.filed.discover.register_options_scope_unconfirmed" in codes
 
 
 def test_a_report_with_a_profile_denominator_raises_no_warning() -> None:
-    notices = _filed_discover_notices(_profile_report())
+    notices = filed_discover_notices(_profile_report())
     assert [notice.severity for notice in notices] == [NoticeSeverity.INFO]
 
 
 def test_a_report_without_a_profile_denominator_warns() -> None:
-    notices = _filed_discover_notices(_register_only_report())
+    notices = filed_discover_notices(_register_only_report())
     warnings = [notice for notice in notices if notice.severity is NoticeSeverity.WARNING]
     assert len(warnings) == 1
     assert warnings[0].code == "live.filed.discover.no_taxpayer_specific_denominator"
@@ -171,12 +171,12 @@ def test_every_notice_message_resolves_to_real_copy() -> None:
     # front of the operator, which is the failure the locale honesty gate exists
     # for; assert it here too because this verb's notices are its whole caveat.
     for report in (_profile_report(), _register_only_report()):
-        for notice in _filed_discover_notices(report):
+        for notice in filed_discover_notices(report):
             assert notice.message
             assert "cli.app.live.filed." not in notice.message
 
 
 def test_every_notice_carries_machine_queryable_context() -> None:
-    for notice in _filed_discover_notices(_register_only_report()):
+    for notice in filed_discover_notices(_register_only_report()):
         assert notice.context is not None and notice.context
         assert all(isinstance(value, str) for value in notice.context.values())

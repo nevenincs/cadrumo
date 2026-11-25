@@ -41,7 +41,13 @@ from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
-from .....application.modelo.source_policy import SourceFamily
+from .....application.modelo.work_form_typing_effect import (
+    CLEAR_EFFECT_LOCALE_KEY,
+    RESTORE_EFFECT_LOCALE_KEY,
+    ModeloFormDisplacement,
+    typing_effect_key,
+    typing_effect_words,
+)
 from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
@@ -49,11 +55,10 @@ from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
 from .issue_scale import blocks_marked
 from .ports import WorkbenchChangeKind
-from .session import Displacement, StagedChange
+from .session import StagedChange
 from .sources import BOX_LIST_LINES
 from .status_bar import StatusBar
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
-from .wording import period_words
 
 if TYPE_CHECKING:
     from .header import StatusLine
@@ -75,55 +80,36 @@ class ReviewNote:
     blocking: bool
 
 
-_NAMED_FILING: Final[str] = "named_filing"
 _FRAME: Final[int] = 4
 """Cells a dialog's border and padding take on each side, for a first estimate of its paragraph width."""
-REVIEW_EFFECTS: Final[tuple[str, ...]] = (
-    "clear",
-    "restore",
-    *(f"set_{item.value}" for item in Displacement),
-    *(f"replaces_{family.value}" for family in SourceFamily),
-    f"replaces_{_NAMED_FILING}",
-)
-"""Every effect the review can state for a change; a replaced source is named by its family."""
 _NOTE_MARKS: Final[Mapping[bool, WorkbenchMark]] = {True: BLOCKS_MARK, False: CHECK_MARK}
 """A finding that refuses the changes blocks; any other is worth checking, marked as every surface marks it."""
-_AND_MORE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.review.and_more"
+_AND_MORE_LOCALE_KEY: Final[str] = "workspace.modelo.review.and_more"
 _NAMED_BOXES_UP_TO: Final[int] = 20
 """Past this many boxes a list of their numbers stops helping; the sections that hold them are named instead."""
 
 
-def _effect_key(effect: str) -> str:
-    return f"tui.modelo.workbench.review.effect.{effect}"
-
-
 def change_effect_key(change: StagedChange) -> str:
-    """The catalogue key saying in words what one change does.
-
-    A value that replaces a source says which kind of place that value came
-    from, and which declaration when it was carried from exactly one; the key
-    for one earlier declaration takes ``{modelo}`` and ``{period}``.
-    """
+    """The catalogue key saying in words what one change does; a typed value's is its field's."""
     if change.kind is WorkbenchChangeKind.CLEAR:
-        return _effect_key("clear")
+        return CLEAR_EFFECT_LOCALE_KEY
     if change.kind is WorkbenchChangeKind.RESTORE:
-        return _effect_key("restore")
-    source = change.field.source
-    if change.displaces is Displacement.SOURCE and source is not None:
-        if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
-            return _effect_key(f"replaces_{_NAMED_FILING}")
-        return _effect_key(f"replaces_{source.family.value}")
-    return _effect_key(f"set_{change.displaces.value}")
+        return RESTORE_EFFECT_LOCALE_KEY
+    return typing_effect_key(change.field)
 
 
 def change_effect_text(change: StagedChange) -> str:
-    """Say in words what one change does, naming the source a replaced value came from."""
-    key = change_effect_key(change)
-    source = change.field.source
-    if key == _effect_key(f"replaces_{_NAMED_FILING}") and source is not None:
-        filing = source.earlier_filings[0]
-        return tr(key, modelo=filing.modelo, period=period_words(filing.period))
-    return tr(key)
+    """Say in words what one change does, naming the source a replaced value came from.
+
+    A statement says what the form serves for it, never words of the workbench's own.
+    """
+    if change.statement is not None:
+        return change.statement.effect_words
+    if change.prior_value is not None:
+        return change.prior_value.effect_words
+    if change.kind is WorkbenchChangeKind.SET:
+        return typing_effect_words(change.field)
+    return tr(change_effect_key(change))
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,9 +160,9 @@ def unattributed_words(unattributed: UnattributedBoxes, *, console: Console, wid
 def at_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
     """Say what applying does to values nobody is recorded as having typed, naming their boxes at ``width``."""
     if not unattributed.boxes:
-        return tr("tui.modelo.workbench.review.operator_entries_unknown")
+        return tr("workspace.modelo.review.operator_entries_unknown")
     return tr(
-        "tui.modelo.workbench.review.operator_entries_at_risk",
+        "workspace.modelo.review.operator_entries_at_risk",
         count=len(unattributed.boxes),
         boxes=unattributed_words(unattributed, console=console, width=width),
     )
@@ -185,9 +171,9 @@ def at_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: in
 def recalculation_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
     """Say what recalculating does to values nobody is recorded as having typed, naming their boxes at ``width``."""
     if not unattributed.boxes:
-        return tr("tui.modelo.workbench.calculate.operator_entries_unknown")
+        return tr("workspace.modelo.calculate.operator_entries_unknown")
     return tr(
-        "tui.modelo.workbench.calculate.operator_entries_at_risk",
+        "workspace.modelo.calculate.operator_entries_at_risk",
         count=len(unattributed.boxes),
         boxes=unattributed_words(unattributed, console=console, width=width),
     )
@@ -199,9 +185,9 @@ def change_line(change: StagedChange) -> str:
     box = f"[{field.box}] " if (field.box is not None and field.box) else ""
     effect = change_effect_text(change)
     if change.before_changed:
-        effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
+        effect = f"{effect} · {tr('workspace.modelo.review.before_changed')}"
     return tr(
-        "tui.modelo.workbench.review.change_line",
+        "workspace.modelo.review.change_line",
         box=box,
         concept=field.label.text,
         before=change.previous_text,
@@ -212,7 +198,8 @@ def change_line(change: StagedChange) -> str:
 
 def _displacing_count(changes: tuple[StagedChange, ...]) -> int:
     return sum(
-        change.kind is WorkbenchChangeKind.SET and change.displaces in {Displacement.SOURCE, Displacement.CALCULATION}
+        change.kind is WorkbenchChangeKind.SET
+        and change.displaces in {ModeloFormDisplacement.SOURCE, ModeloFormDisplacement.CALCULATION}
         for change in changes
     )
 
@@ -334,15 +321,13 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="review-status")
             yield localized(
-                Static(
-                    tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
-                ),
-                "tui.modelo.workbench.review.title",
+                Static(tr("workspace.modelo.review.title", count=len(self._changes)), id="review-title", markup=False),
+                "workspace.modelo.review.title",
                 count=len(self._changes),
             )
             yield localized(
-                Static(tr("tui.modelo.workbench.review.nothing_saved"), id="review-subtitle", markup=False),
-                "tui.modelo.workbench.review.nothing_saved",
+                Static(tr("workspace.modelo.review.nothing_saved"), id="review-subtitle", markup=False),
+                "workspace.modelo.review.nothing_saved",
             )
             with VerticalScroll(id="review-body", can_focus=True):
                 for index, change in enumerate(self._changes):
@@ -352,21 +337,21 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 if displacing:
                     yield localized(
                         Static(
-                            tr("tui.modelo.workbench.review.displacing", count=displacing),
+                            tr("workspace.modelo.review.displacing", count=displacing),
                             id="review-warning",
                             markup=False,
                         ),
-                        "tui.modelo.workbench.review.displacing",
+                        "workspace.modelo.review.displacing",
                         count=displacing,
                     )
                 if self._rebased:
                     yield localized(
                         Static(
-                            tr("tui.modelo.workbench.review.rebased", count=self._rebased),
+                            tr("workspace.modelo.review.rebased", count=self._rebased),
                             id="review-rebased",
                             markup=False,
                         ),
-                        "tui.modelo.workbench.review.rebased",
+                        "workspace.modelo.review.rebased",
                         count=self._rebased,
                     )
                 if self._at_risk is not None:
@@ -378,32 +363,32 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 if self._notes:
                     yield Static(self._notes_text(), id="review-findings", markup=False)
             if self._needs_acknowledgement:
-                yield TickBox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
+                yield TickBox(tr("workspace.modelo.review.acknowledge"), id="review-acknowledge", compact=True)
             with Horizontal(id="review-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.review.back"), id="review-back"), "tui.modelo.workbench.review.back"
+                    Button(tr("workspace.modelo.review.back"), id="review-back"), "workspace.modelo.review.back"
                 )
                 yield localized(
-                    Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error"),
-                    "tui.modelo.workbench.review.discard",
+                    Button(tr("workspace.modelo.review.discard"), id="review-discard", variant="error"),
+                    "workspace.modelo.review.discard",
                 )
                 yield localized(
                     Button(
-                        tr("tui.modelo.workbench.review.apply"),
+                        tr("workspace.modelo.review.apply"),
                         id="review-apply",
                         variant="primary",
                         disabled=not self._may_apply(acknowledged=False),
                     ),
-                    "tui.modelo.workbench.review.apply",
+                    "workspace.modelo.review.apply",
                 )
 
     def _notes_text(self) -> Content:
-        lines = [tr("tui.modelo.workbench.review.findings_heading")]
+        lines = [tr("workspace.modelo.review.findings_heading")]
         for note in self._notes:
             box = f"[{note.box}] " if (note.box is not None and note.box) else ""
             lines.append(f"{_NOTE_MARKS[note.blocking].glyph} {box}{note.message}")
         if self._blocked:
-            lines.append(tr("tui.modelo.workbench.review.blocked"))
+            lines.append(tr("workspace.modelo.review.blocked"))
         return blocks_marked("\n".join(lines))
 
     def _may_apply(self, *, acknowledged: bool) -> bool:
@@ -461,7 +446,6 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
 
 
 __all__ = [
-    "REVIEW_EFFECTS",
     "EditReviewScreen",
     "ReviewDecision",
     "ReviewNote",

@@ -33,7 +33,7 @@ type = layers
 name = Every MCP service source package has a declared lane
 containers = cadrumo_mcp
 layers =
-    access : mcp
+    mcp
 exhaustive = True
 
 [importlinter:contract:closed-client-classification]
@@ -57,7 +57,7 @@ type = layers
 name = Every agent service source package has a declared lane
 containers = cadrumo_agent_service
 layers =
-    adapters : host : installed_client : main : providers : service : admin : contracts : (locales)
+    bootstrap : adapters : host : installed_client : local_ai_relay : main : providers : service : gateway_credentials : service_administration : service_provider_status : service_sign_out : service_attachment_admin : service_console_environment : service_scheduling : service_startup : service_support : admin : contracts : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-dev-classification]
@@ -65,7 +65,8 @@ type = layers
 name = Every repository tooling package has a declared lane
 containers = dev
 layers =
-    _paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_profile_fixture : docs : env : exit_codes : first_party_source : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : test_runs : tests : tui
+    paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : dependency_observation : deploy : desktop_agent_live : desktop_automation_stage : desktop_household_fixture : desktop_imputation_election_fixture : desktop_persona_world : desktop_profile_fixture : desktop_withholding_refusal_words_fixture : desktop_year_authority_fixture : docs : env : exit_codes : first_party_source : fixture_projections : identity : ingest_harness : init : locales : mcp_eval : measure : operation_contract_manifest : packaging : prettier_json : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : temporary_output : test_runs : tests : tui
+    tool_storage
 exhaustive = True
 
 [importlinter:contract:closed-documentation-classification]
@@ -104,6 +105,31 @@ forbidden_modules =
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------
+# Consumer-only trees (read by the import gate; Import Linter ignores them)
+# ---------------------------------------------------------------------------
+# Every repository-root directory or module holding Python is a root above,
+# an entry here, or an [import-gate:excluded-trees] entry; the gate refuses
+# anything else.  Each entry is one repository-root path and its reason.
+# Consumer trees import first-party roots but are not importable packages
+# (``packaging`` would shadow the PyPI distribution and ``src-tauri`` is not a
+# module name), so Import Linter cannot graph them.  The gate parses every
+# file below them as a consumer: its static and dynamic first-party targets
+# must exist, be public, and name their canonical defining module.
+
+[import-gate:consumer-trees]
+conftest.py = Repository pytest root configuration, loaded by pytest from the checkout rather than imported as a package.
+native = Native build, installer and desktop scripts: embedded interpreter bootstrap and probes, desktop fixture generators and packaged smoke tests run by CMake, Cargo and the bundled interpreter.
+packaging = Distribution build hooks and Homebrew and Scoop manifest generators, run by the build backend and release tooling from the checkout.
+
+# Consumer paths shipped inside installed artifacts are held to the forbidden
+# modules of the shipped-code contract, as the shipped roots are.
+
+[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]
+native/application/src = Probe and runtime-identity scripts embedded with include_str in the installed native application.
+native/desktop/src-tauri/src/python = Desktop CLI entrypoint and manager dispatch scripts embedded with include_str in the installed desktop shell.
+native/interpreter = Interpreter bootstrap copied into every installed runtime by the packaging assembly.
+
+# ---------------------------------------------------------------------------
 # Inward dependency direction
 # ---------------------------------------------------------------------------
 
@@ -116,6 +142,16 @@ source_modules =
 forbidden_modules =
     cadrumo_agent_service
     cadrumo_mcp
+allow_indirect_imports = False
+
+[importlinter:contract:client-and-mcp-do-not-know-the-agent-service]
+type = forbidden
+name = Shared client and MCP service do not know the agent service
+source_modules =
+    cadrumo_client
+    cadrumo_mcp
+forbidden_modules =
+    cadrumo_agent_service
 allow_indirect_imports = False
 
 [importlinter:contract:core-is-innermost]
@@ -236,6 +272,19 @@ forbidden_modules =
     cadrumo_runtime
 allow_indirect_imports = False
 
+# The agent service is admitted as a runtime client and holds no login, session
+# or custody authority.  Its generic Windows Job Object launcher lives in
+# cadrumo_client.transport, so the service reaches no cadrumo_runtime module.
+[importlinter:contract:service-never-reaches-runtime-authority]
+type = forbidden
+name = The agent service is a runtime client and cannot import runtime authority or tax composition
+source_modules =
+    cadrumo_agent_service
+forbidden_modules =
+    cadrumo_runtime
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
 [importlinter:contract:person-bridge-knows-no-product-setup]
 type = forbidden
 name = The held person bridge relays registered operations without importing product setup code
@@ -243,13 +292,8 @@ source_modules =
     cadrumo_runtime.host.session_hold
     cadrumo_runtime.host.session_hold_operations
 forbidden_modules =
-    cadrumo.application.dependency_activity
     cadrumo.application.dependency_contracts
-    cadrumo.application.dependency_network
-    cadrumo.application.dependency_receipts
     cadrumo.application.dependency_registry
-    cadrumo.application.dependency_setup_operation
-    cadrumo.application.dependency_transfer
     cadrumo.application.dependency_wording
     cadrumo.application.provisioning
     cadrumo.adapters.outbound.google
@@ -262,13 +306,8 @@ name = The runtime's commands run no product setup or Google sign-in code; the p
 source_modules =
     cadrumo_runtime.commands
 forbidden_modules =
-    cadrumo.application.dependency_activity
     cadrumo.application.dependency_contracts
-    cadrumo.application.dependency_network
-    cadrumo.application.dependency_receipts
     cadrumo.application.dependency_registry
-    cadrumo.application.dependency_setup_operation
-    cadrumo.application.dependency_transfer
     cadrumo.application.dependency_wording
     cadrumo.adapters.outbound.google
 allow_indirect_imports = False
@@ -312,6 +351,29 @@ forbidden_modules =
     cadrumo_client.transport
     cadrumo_client.logging
     cadrumo_runtime
+allow_indirect_imports = False
+
+# Every client consumer loads these frame contracts at start through
+# cadrumo_client.transport.frame_io, whose own reply transfers reach operation
+# contracts only from function and TYPE_CHECKING scope.  The operation
+# registry's definition and executor closure is not needed to frame a
+# document, report a session event or name a frontend.
+[importlinter:contract:client-frame-contracts-are-registry-free]
+type = forbidden
+name = Client frame contracts do not load the operation registry
+source_modules =
+    cadrumo_client.contracts.contracts
+    cadrumo_client.contracts.session_events
+    cadrumo_client.contracts.submission_payload
+    cadrumo_client.contracts.access_refusals
+    cadrumo_client.contracts.access_vocabulary
+    cadrumo_client.contracts.sign_in_outcomes
+    cadrumo_client.contracts.model_runs
+    cadrumo_client.transport.transport_cleanup
+forbidden_modules =
+    cadrumo.application.operations.registry
+    cadrumo.application.operations.operation_definition
+    cadrumo.application.operations.owner
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------

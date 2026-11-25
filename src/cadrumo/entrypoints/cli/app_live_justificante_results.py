@@ -18,7 +18,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import FilingRecordId, SnapshotId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
-from ._app_live_payloads_support import JustificantePeriodToken
+from .app_live_payloads_support import JustificantePeriodToken
 
 
 class JustificanteCaptureResult(OutputSchema):

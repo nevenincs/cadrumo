@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 @pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
 def test_llm_diagnostics_date_parser_uses_catalogue_leaf(locale: str) -> None:
     """The command's existing date parser retains the localized message leaf."""
-    from cadrumo.entrypoints.cli.ledger_read_commands import _parse_iso_date
+    from cadrumo.entrypoints.cli.ledger_read_commands import parse_iso_date
 
     with override_settings(cadrumo_output_language=locale):
         clear_output_language_cache()
@@ -24,7 +24,7 @@ def test_llm_diagnostics_date_parser_uses_catalogue_leaf(locale: str) -> None:
             value="not-a-date",
         )
         with pytest.raises(typer.BadParameter) as error:
-            _parse_iso_date("not-a-date", "--since")
+            parse_iso_date("not-a-date", "--since")
     clear_output_language_cache()
 
     assert error.value.message == expected

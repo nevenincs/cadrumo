@@ -21,15 +21,15 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.authority import PinnedAuthorityOperation
+from ..calculations.registry.form_codes import differs_from_role
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .carry_window import resolve_iva_compensation_carry_window_years
 from .errors import (
@@ -37,11 +37,15 @@ from .errors import (
     IvaCompensationYearRangeError,
 )
 
+_ANNUAL_SORT_RANK = 99
+_OTHER_PERIOD_SORT_RANK = 100
+"""Both sort after every month and quarter."""
+
 #: The provenances whose rows declare an opening carry-forward balance rather
 #: than generating credit in a filed period. Both members belong here: the
 #: retired ``status`` literal wrote one token for a seed AND a correction, so
 #: branching on it silently treated the two as one path.
-_OPERATOR_DECLARED_PROVENANCES = frozenset(
+OPERATOR_DECLARED_PROVENANCES = frozenset(
     {
         IvaCompensationStateProvenance.OPERATOR_SEED,
         IvaCompensationStateProvenance.OPERATOR_CORRECTION,
@@ -60,7 +64,7 @@ class IvaCompensationExpiryReviewState(StrEnum):
 class IvaCompensationPeriodState(BaseModel):
     """Latest known Modelo 303 compensation state for one filed period."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: SubjectTaxId | None = Field(
         default=None,
@@ -121,7 +125,7 @@ class IvaCompensationPeriodState(BaseModel):
     final_result_amount: Decimal | None = None
     generated_amount: Decimal = Field(ge=Decimal("0"))
     available_end_amount: Decimal = Field(ge=Decimal("0"))
-    source_observation_key: str = Field(min_length=1, max_length=96)
+    source_observation_key: str = Field(min_length=1, max_length=128)
     source_artefact_sha256: ContentDigest | None = Field(
         default=None,
         description=(
@@ -163,7 +167,7 @@ class IvaCompensationPeriodState(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ValueError("period.filing_year must match filing_year")
         if (
-            self.registry_snapshot_ref.modelo != Modelo("303").value
+            differs_from_role(self.registry_snapshot_ref.modelo, "iva.periodic")
             or self.registry_snapshot_ref.modelo_year != self.filing_year
             or self.registry_snapshot_ref.period != self.period.registry_token
         ):
@@ -174,7 +178,7 @@ class IvaCompensationPeriodState(BaseModel):
 class IvaCompensationCarryForwardLot(BaseModel):
     """One generated IVA compensation balance tracked from its source period."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: SubjectTaxId | None = Field(
         default=None,
@@ -191,7 +195,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
     remaining_amount: Decimal = Field(ge=ZERO)
     age_years: NonNegativeInt
     expiry_review_state: IvaCompensationExpiryReviewState
-    source_observation_key: str = Field(min_length=1, max_length=96)
+    source_observation_key: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -206,7 +210,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
 class IvaCompensationCarryForwardReport(BaseModel):
     """Carry-forward lot projection from filed Modelo 303 compensation history."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     as_of_year: FilingYear
     lots: tuple[IvaCompensationCarryForwardLot, ...]
@@ -345,10 +349,10 @@ def iva_compensation_year_opening_balance(
 
 
 def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
-    if not FILING_YEAR_MIN <= as_of_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= as_of_year <= FOUR_DIGIT_YEAR_LAST:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"as_of_year": as_of_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
+            context={"as_of_year": as_of_year, "min_year": FOUR_DIGIT_YEAR_FIRST, "max_year": FOUR_DIGIT_YEAR_LAST},
         )
 
 
@@ -397,7 +401,7 @@ def _append_state_carry_forward_lot(
 def _state_carry_forward_amount(state: IvaCompensationPeriodState) -> Decimal:
     if state.generated_amount > ZERO:
         return state.generated_amount
-    if state.provenance in _OPERATOR_DECLARED_PROVENANCES:
+    if state.provenance in OPERATOR_DECLARED_PROVENANCES:
         return state.available_end_amount
     return ZERO
 
@@ -417,7 +421,7 @@ def _materialize_carry_forward_lots(
             applied_amount=item.applied_amount,
             remaining_amount=item.remaining_amount,
             age_years=max(0, as_of_year - item.source_filing_year),
-            expiry_review_state=_expiry_review_state(
+            expiry_review_state=expiry_review_state(
                 source_filing_year=item.source_filing_year,
                 source_period=item.source_period,
                 as_of_year=as_of_year,
@@ -438,17 +442,13 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
 
     - ``last_period_amount`` (``iva.anual.compensacion-ultimo-periodo-97``,
       AEAT box 97, "Resultado de la última autoliquidación. A compensar") is
-      the saldo the LAST filed period carries forward — the year-generated
-      remaining credit still pending at the end of the last period's
-      autoliquidación (its disponible, net of any prior-year credit still
-      pending).
+      the credit the LAST filed period's own result generated, so the balance
+      that period carried in from earlier periods stays out of it.
     - ``generated_not_in_last_amount`` (``iva.anual.compensacion-generada-ejercicio-no-97``,
-      AEAT box 662, "Cuotas a compensar generadas en el ejercicio, distintas a
-      las incluidas en [97]") is the
-      remaining of credits GENERATED in the ejercicio that did NOT carry into
-      the last period's autoliquidación (e.g. a credit refunded in an
-      intervening period, so it left the carry chain) — explicitly the year's
-      pending credit not included in AEAT box 97.
+      AEAT box 662) is the rest of the year's pending credit. Manual IVA 2025
+      p. 279: "las cuotas a compensar generadas en el ejercicio en alguno de los
+      períodos de liquidación distintos del último, cuando no estén incluidas en
+      la casilla 97".
 
     Applied credits appear in NEITHER box. The AEAT annual identity
     ``[86] = [95] − [97] − [98] − [662]`` binds the pair: box 97 + box 662 must
@@ -457,7 +457,7 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
     generated_not_in_last_amount`` always holds.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: FilingYear
     last_period_amount: Decimal = Field(ge=ZERO)
@@ -485,32 +485,22 @@ def derive_iva_compensation_year_end_carry_partition(
     year's pending credit with no double-count and no drop (the AEAT identity).
 
     The discriminator between ``iva.anual.compensacion-ultimo-periodo-97``
-    (AEAT box 97, carried into the last period) and
-    ``iva.anual.compensacion-generada-ejercicio-no-97`` (AEAT box 662,
-    generated-but-not-carried) is the last filed period's available
-    carry-forward saldo (``available_end_amount`` =
-    ``iva.compensacion-pendiente-periodos-posteriores`` + generated):
+    (AEAT box 97) and ``iva.anual.compensacion-generada-ejercicio-no-97`` (AEAT
+    box 662) is what the last filed period itself generated, read from its
+    ``generated_amount``. Manual IVA 2025 p. 278: of 900 pending at year end, 500
+    generated in 3T and 200 in 4T, "Casilla 97: 200" and "Casilla 662: 500". The
+    last period's available balance is the wrong discriminator: it also holds
+    what earlier periods generated and carried in.
 
-    - ``iva.anual.compensacion-ultimo-periodo-97`` = the year-generated credit
-      carried into the last period — the last filed period's disponible
-      (``available_end_amount``) capped at the year's total remaining (the
-      disponible may also carry prior-YEAR credit, which AEAT box 97 must not
-      double-count, hence the cap).
-    - ``iva.anual.compensacion-generada-ejercicio-no-97`` = the rest of the year's remaining credit (generated in the
-      ejercicio but not carried into the last period's autoliquidación).
-
-    In the common always-carry case every pending credit flows forward into the
-    last period, so ``iva.anual.compensacion-ultimo-periodo-97`` collapses to the
-    whole year's remaining and ``iva.anual.compensacion-generada-ejercicio-no-97``
-    is zero. When a period's credit does NOT carry into the last period (it left
-    the chain), that remaining lands in ``iva.anual.compensacion-generada-ejercicio-no-97``.
+    A last period whose credit is requested as devolución generates nothing, so
+    box 97 is zero and any other credit of the year stays in box 662.
 
     Returns an :class:`IvaCompensationYearEndCarryPartition`.
     """
-    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= filing_year <= FOUR_DIGIT_YEAR_LAST:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"filing_year": filing_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
+            context={"filing_year": filing_year, "min_year": FOUR_DIGIT_YEAR_FIRST, "max_year": FOUR_DIGIT_YEAR_LAST},
         )
     total_year_remaining = sum(
         (lot.remaining_amount for lot in report.lots if lot.source_filing_year == filing_year),
@@ -520,14 +510,10 @@ def derive_iva_compensation_year_end_carry_partition(
         (state for state in period_states if state.filing_year == filing_year),
         key=lambda state: iva_compensation_period_sort_key(state.period),
     )
-    last_disponible = year_states[-1].available_end_amount if year_states else ZERO
-    # The last period's disponible is the year credit it carries forward
-    # (iva.anual.compensacion-ultimo-periodo-97, AEAT box 97); it may ALSO carry
-    # prior-YEAR credit still pending, which that annual carry id must not
-    # double-count, so cap at the year's own total remaining. Everything the
-    # year generated but the last period did not carry (it left the chain) is
-    # iva.anual.compensacion-generada-ejercicio-no-97 — the remainder of the partition.
-    last_period = min(last_disponible, total_year_remaining)
+    last_generated = year_states[-1].generated_amount if year_states else ZERO
+    # Capped for a report that also holds a later year's applications, which can
+    # have consumed this year's lots.
+    last_period = min(last_generated, total_year_remaining)
     generated_not_in_last = total_year_remaining - last_period
     return IvaCompensationYearEndCarryPartition(
         filing_year=filing_year,
@@ -558,11 +544,11 @@ def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     if period.kind is PeriodKind.MONTHLY:
         return (int(period.registry_token), period.registry_token)
     if period.standard_code is StandardPeriodCode.ANNUAL:
-        return (99, period.registry_token)
-    return (100, period.registry_token)
+        return (_ANNUAL_SORT_RANK, period.registry_token)
+    return (_OTHER_PERIOD_SORT_RANK, period.registry_token)
 
 
-def _expiry_review_state(
+def expiry_review_state(
     *,
     source_filing_year: int,
     source_period: Period,
@@ -583,6 +569,7 @@ def _expiry_review_state(
 
 
 __all__ = [
+    "OPERATOR_DECLARED_PROVENANCES",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardReport",
     "IvaCompensationExpiryReviewState",

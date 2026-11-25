@@ -5,34 +5,30 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
     ModeloFormTextDisclosure,
+)
+from .....application.modelo.work_form_header import result_view
+from .....application.modelo.work_form_models import ModeloFormField
+from .....application.modelo.work_form_next_step import is_result_field
+from .....application.modelo.work_form_wording import (
+    SOURCE_WORDED_ORIGINS,
+    aeat_imported_on,
+    editability_text,
+    origin_explanation,
 )
 from .....core.i18n.render import lookup_translation, tr
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import description_text, grid_cell_title, rate_note
 from .editor import read_only_reason
-from .header import (
-    is_result_field,
-    result_view,
-)
 from .screen_constants import (
-    _FOOTER_PRIORITY,
-    _FRAGMENT_SEPARATOR,
-    _HELP_ONLY_KEYS,
-    _SCREEN_LOCALE_KEYS,
+    FOOTER_PRIORITY,
+    FRAGMENT_SEPARATOR,
+    HELP_ONLY_KEYS,
+    SCREEN_LOCALE_KEYS,
 )
-from .vocabulary import (
-    ATTENTION_MARKS,
-    SOURCE_WORDED_ORIGINS,
-    aeat_imported_on,
-    attention_words_key,
-    editability_text,
-    origin_explanation,
-    origin_text,
-)
+from .vocabulary import ATTENTION_MARKS, attention_words_key, origin_text
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -49,7 +45,7 @@ class WorkbenchHelpContentMixin:
             if self.has_class("-short")
             else [self._help_title(entry), self._state_line(entry)]
         )
-        lines.append(description_text(field) or tr("tui.modelo.workbench.help.no_explanation"))
+        lines.append(description_text(field) or tr("workspace.modelo.help.no_explanation"))
         note = rate_note(entry, self._language)
         if note is not None:
             lines.append(note)
@@ -63,19 +59,17 @@ class WorkbenchHelpContentMixin:
             lines.extend(self._card_lines(card, field))
         form = self.form
         if form is not None and is_result_field(form, field):
-            view = result_view(form, self._language, staged=len(self._session.changes), recorded=self.recorded)
+            view = result_view(form, self._language, recorded=self.recorded)
             if view is not None:
                 lines.extend(view.help)
         return lines
 
     def _all_keys_text(self: ModeloWorkbenchScreen) -> str:
         """Every key the help and the legend name; on a declaration recorded as filed, none that would change it."""
-        descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
+        descriptions = {**self._list_locale_keys(), **SCREEN_LOCALE_KEYS}
         hidden = self._hidden_keys()
         return " · ".join(
-            self._key_label(key, descriptions[key])
-            for key in (*_FOOTER_PRIORITY, *_HELP_ONLY_KEYS)
-            if key not in hidden
+            self._key_label(key, descriptions[key]) for key in (*FOOTER_PRIORITY, *HELP_ONLY_KEYS) if key not in hidden
         )
 
     def _help_title(self: ModeloWorkbenchScreen, entry: CasillaListEntry) -> str:
@@ -83,7 +77,7 @@ class WorkbenchHelpContentMixin:
         box = f"[{field.box}] " if (field.box is not None and field.box) else ""
         title = f"{box}{grid_cell_title(entry) or field.label.text}"
         if field.label.disclosure is not ModeloFormTextDisclosure.LOCALIZED:
-            title = f"{title} ({tr(f'tui.modelo.workbench.disclosure.{field.label.disclosure.value}')})"
+            title = f"{title} ({tr(f'workspace.modelo.disclosure.{field.label.disclosure.value}')})"
         return title
 
     def _state_line(self: ModeloWorkbenchScreen, entry: CasillaListEntry) -> str:
@@ -96,7 +90,13 @@ class WorkbenchHelpContentMixin:
         field = entry.field
         if self.recorded:
             parts = [
-                origin_text(field, recorded=True, aeat_imported=aeat_imported_on(self.form), language=self._language)
+                origin_text(
+                    field,
+                    recorded=True,
+                    aeat_imported=aeat_imported_on(self.form),
+                    language=self._language,
+                    calculated=entry.calculated,
+                )
             ]
             reason = read_only_reason(field, self._language, recorded=True)
             if reason is not None:
@@ -105,7 +105,14 @@ class WorkbenchHelpContentMixin:
         parts = (
             []
             if entry.staged_replaces_absence
-            else [origin_text(field, aeat_imported=aeat_imported_on(self.form), language=self._language)]
+            else [
+                origin_text(
+                    field,
+                    aeat_imported=aeat_imported_on(self.form),
+                    language=self._language,
+                    calculated=entry.calculated,
+                )
+            ]
         )
         attention = entry.attention
         if attention is not None:
@@ -129,19 +136,17 @@ class WorkbenchHelpContentMixin:
     def _card_lines(self: ModeloWorkbenchScreen, card: ModeloCasillaHelpCardV1, field: ModeloFormField) -> list[str]:
         lines: list[str] = []
         if card.formula is not None:
-            lines.append(tr("tui.modelo.workbench.help.formula", formula=card.formula.text))
+            lines.append(tr("workspace.modelo.help.formula", formula=card.formula.text))
         said = self._said_by_origin(field)
         for origin in card.origins:
             if origin not in said:
-                lines.append(tr("tui.modelo.workbench.help.origin", origin=origin))
+                lines.append(tr("workspace.modelo.help.origin", origin=origin))
         if card.feeds:
-            lines.append(tr("tui.modelo.workbench.help.feeds", boxes=", ".join(card.feeds)))
+            lines.append(tr("workspace.modelo.help.feeds", boxes=", ".join(card.feeds)))
         for quote in card.quotes:
-            quoted = _FRAGMENT_SEPARATOR.join(quote.fragments)
-            lines.append(tr("tui.modelo.workbench.help.official", source=quote.source, text=quoted))
+            quoted = FRAGMENT_SEPARATOR.join(quote.fragments)
+            lines.append(tr("workspace.modelo.help.official", source=quote.source, text=quoted))
         if card.legal_basis:
-            lines.append(
-                tr("tui.modelo.workbench.help.legal", citations="; ".join(item.text for item in card.legal_basis))
-            )
+            lines.append(tr("workspace.modelo.help.legal", citations="; ".join(item.text for item in card.legal_basis)))
         lines.extend(card.constraints)
         return lines

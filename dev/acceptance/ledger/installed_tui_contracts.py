@@ -4,36 +4,44 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from decimal import Decimal
-from typing import Literal, cast
+from typing import Final, Literal, cast
 
-_SCHEMA_VERSION = "ledger-01-installed-tui-v1"
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-
-_YEAR = 2025
-
-
-_COUNTERPARTY_NIF = "A58818501"
+SCHEMA_VERSION = "ledger-01-installed-tui-v1"
 
 
-_INVOICE_BASE = Decimal("100.00")
+def _supported_year() -> int:
+    """The newest filing year the pinned authority supports."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
 
 
-_INVOICE_IVA = Decimal("21.00")
+YEAR: Final = _supported_year()
 
 
-_INVOICE_TOTAL = _INVOICE_BASE + _INVOICE_IVA
+COUNTERPARTY_NIF = "B00000281"
 
 
-_TUI_IMPORTED_TRANSACTION_AMOUNT = Decimal("10.00")
+INVOICE_BASE = Decimal("100.00")
 
 
-_TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
+INVOICE_IVA = Decimal("21.00")
 
 
-_LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
+INVOICE_TOTAL = INVOICE_BASE + INVOICE_IVA
 
 
-_N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+TUI_IMPORTED_TRANSACTION_AMOUNT = Decimal("10.00")
+
+
+TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
+
+
+LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
+
+
+STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
 type ChildMode = Literal[
@@ -121,7 +129,7 @@ class TuiOnlyCliOracleReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class _TuiOnlyRun:
+class TuiOnlyRun:
     """Private coordinates retained only while an outer journey reads back its own store."""
 
     receipt: LedgerTuiChildReceipt

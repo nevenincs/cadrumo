@@ -22,6 +22,8 @@ AEAT_HOST_SUFFIX_EXPECTED = _AEAT.domains.host_suffix
 # moves them with the constants instead of leaving nine test modules pinned to
 # a host the product no longer uses.
 SEDE_ROOT_URL_FIXTURE = f"{_AEAT.domains.sede}/"
+# Synthetic login-wall redirect used to exercise ended-session detection.
+SEDE_LOGIN_WALL_URL_FIXTURE = f"{_AEAT.domains.sede}/Sede/identificacion.html"
 IVA_WALLET_SOURCE_URL_FIXTURE = f"{_AEAT.domains.sede}/wallet"
 COTEJO_VERIFICATION_URL_FIXTURE = f"{_AEAT.domains.sede}/cotejo/A1B2C3D4E5F6G7H8"
 #: Base of the published Diseno de Registro tree. Catalogue tests assert the
@@ -145,6 +147,9 @@ REDACTION_INTERNAL_PATH_CANARY = "/internal/path?token=12345"
 REDACTION_PATH_CANARY = "/wlpl/SECRET-PATH/Submit?session=ABCDEFGHIJ"
 UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY = "/wlpl/OTHER/MutatingPath"
 UNCLASSIFIED_WWW2_READ_PATH_CANARY = "/wlpl/some/path"
+API_GUARD_READ_PATH_FIXTURE = "/wlpl/SYNT-TEST/ConsultaDocumento"
+API_GUARD_WRITE_PATH_CANARY = "/wlpl/SYNT-TEST/PresentarDeclaracion"
+API_GUARD_OTHER_READ_PATH_FIXTURE = "/wlpl/SYNT-TEST/Otro"
 LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE = "/wlpl/DAI3-RUTI/CarteraCuotas"
 RENTA_REGIMEN_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/regimen"
 RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/renta"
@@ -298,6 +303,7 @@ __all__ = [
     "REDACTION_INTERNAL_PATH_CANARY",
     "REDACTION_PATH_CANARY",
     "REMOTE_GUARD_LITERAL_SCAN_TOKENS",
+    "SEDE_LOGIN_WALL_URL_FIXTURE",
     "STATIC_DESIGN_REGISTER_PATH_FIXTURE",
     "UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY",
     "UNCLASSIFIED_WWW2_READ_PATH_CANARY",
@@ -352,3 +358,18 @@ SEDE_TEST_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/test"
 WWW6_LOGIN_URL_FIXTURE = "https://www6.agenciatributaria.gob.es/login"
 WWW6_PRIVATE_QUERY_DISCLOSURE_CANARY = "https://www6.agenciatributaria.gob.es/private?secret=do-not-publish"
 WWW6_UNLISTED_URL_CANARY = "https://www6.agenciatributaria.gob.es/unlisted"
+
+# Synthetic view and redaction inputs, including mutation-shaped routes.
+VIEW_HOME_PATH_FIXTURE = "/Sede/inicio.html"
+VIEW_UPLOAD_PATH_FIXTURE = "/Sede/aportar.html"
+VIEW_WORKER_PATH_FIXTURE = "/Sede/sw.js"
+VIEW_DOWNLOAD_PATH_FIXTURE = "/wlpl/justificante.pdf"
+VIEW_DOCUMENT_PATH_FIXTURE = "/wlpl/DOCU-MENT/justificante.pdf"
+VIEW_SUBMIT_PATH_CANARY = "/wlpl/PRES-MODE/PresentarDeclaracion"
+VIEW_CONSULTATION_PATH_FIXTURE = "/wlpl/BUGC-JDIT/Consulta"
+VIEW_INSECURE_URL_CANARY = f"http://sede.example.es{VIEW_HOME_PATH_FIXTURE}?nif=synthetic"
+VIEW_CONSULTATION_URL_FIXTURE = (
+    f"https://sede.example.es{VIEW_CONSULTATION_PATH_FIXTURE}?ejercicio=2025&modelo=303#resumen"
+)
+VIEW_PRIVATE_URL_CANARY = f"{_AEAT.domains.www1}/private/page?nif=synthetic"
+LOGGING_TOKEN_URL_CANARY = f"{_AEAT.domains.sede}/Sede/x?token=abc"

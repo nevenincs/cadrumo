@@ -83,6 +83,7 @@ formulas = [
     "modelo-131-pago-fraccionado-agrario",
     "modelo-131-suma-pagos-previos",
     "modelo-131-diferencia",
+    "modelo-131-resultados-negativos-anteriores-cap",
     "modelo-131-total",
     "modelo-131-resultado",
     "modelo-131-saldo-negativo-fin-periodo",

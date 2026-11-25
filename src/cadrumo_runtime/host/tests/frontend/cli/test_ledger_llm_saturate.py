@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
-import json
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
-from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
+from .profile_cli_support import invoke_native_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -27,44 +29,11 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Operator IVA",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    assert profile.label is not None
-    close_active_bucket_session()
-    result = invoke_cached_cli(
-        (
-            "--language",
-            "en",
-            "--format",
-            "json",
-            "--profile",
-            profile.label,
-            "--profile-secrets-stdin",
-            *command,
-        ),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-    )
-    assert profile.passphrase not in result.output
-    return result
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _view(profile: NativeCliProfileFixture, transaction_id: str) -> dict[str, Any]:
-    result = _invoke(profile, "app", "ledger", "view", transaction_id)
+    result = invoke_native_profile(profile, "app", "ledger", "view", transaction_id)
     assert result.exit_code == 0, result.output
     return unwrap_cli_result(result)
 
@@ -74,13 +43,13 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-ledger-operator-iva", facts=_PROFILE_FACTS)
 
-        added = _invoke(
+        added = invoke_native_profile(
             profile,
             "app",
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -95,11 +64,11 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
         assert isinstance(transaction_id, str) and len(transaction_id) == 64
 
         before = _view(profile, transaction_id)
-        missing_category = _invoke(profile, "app", "ledger", "classify", transaction_id, "--saturate")
+        missing_category = invoke_native_profile(profile, "app", "ledger", "classify", transaction_id, "--saturate")
         assert missing_category.exit_code != 0
         assert "iva-category" in missing_category.output or "llm" in missing_category.output.lower()
 
-        incompatible_flags = _invoke(
+        incompatible_flags = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -112,7 +81,7 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
         assert incompatible_flags.exit_code != 0
         assert "--classification" in incompatible_flags.output
 
-        not_business = _invoke(
+        not_business = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -128,7 +97,7 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
         assert after_refusal["review_status"] == before["review_status"]
         assert after_refusal["transaction"] == before["transaction"]
 
-        classified = _invoke(
+        classified = invoke_native_profile(
             profile,
             "app",
             "ledger",
@@ -141,7 +110,7 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
         )
         assert classified.exit_code == 0, classified.output
 
-        derived = _invoke(
+        derived = invoke_native_profile(
             profile,
             "app",
             "ledger",

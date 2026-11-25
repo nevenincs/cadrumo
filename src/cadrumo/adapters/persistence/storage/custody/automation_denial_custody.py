@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .....application.user_profile.automation_enrollment import (
     EnrollmentControlState,
     EnrollmentGrant,
+    EnrollmentRecord,
 )
 from .....application.user_profile.automation_lifecycle import (
     AutomationDenial,
@@ -19,9 +23,11 @@ from .automation_crypto import (
 )
 from .automation_denial_projection import denied_enrollment_grant, denied_enrollment_requests
 from .automation_enrollment_custody import AutomationEnrollmentCustody
+from .automation_native_identity import CLIENT_NAMESPACE
 from .automation_records import (
     AutomationControlPayload,
     ProtectedControlAnchor,
+    StoredAutomationGrant,
 )
 from .filesystem import (
     clear_profile_custody_local_record,
@@ -70,9 +76,11 @@ class AutomationDenialCustody(AutomationEnrollmentCustody):
                 state = self._denied_state(change, anchor, payload)
                 revision = self._publish_enrollment(state, denial=change)
                 generation = state.profile_lock_generation
+                self._delete_revoked_client_keys(state.grants, state.requests)
             else:
                 revision = anchor.witness.revision if anchor is not None else None
                 generation = payload.profile_lock_generation
+                self._delete_revoked_client_keys(payload.grants, payload.requests)
             clear_profile_custody_local_record(self.directory / "denial.json")
         except AutomationCustodyError:
             return AutomationDenialReceipt(
@@ -91,6 +99,32 @@ class AutomationDenialCustody(AutomationEnrollmentCustody):
             revision=revision,
             profile_lock_generation=generation,
         )
+
+    def _delete_revoked_client_keys(
+        self,
+        grants: Iterable[EnrollmentGrant | StoredAutomationGrant],
+        requests: Iterable[EnrollmentRecord],
+    ) -> None:
+        """Delete the client's stored copy of every delivered key the published denial revoked.
+
+        The enrolling client keeps each delivered key in the same account's
+        native store, named by the credential reference this custody minted
+        for the enrollment and sealed in its record, so the exact name is the
+        whole proof of ownership and nothing is read or decoded first. The
+        exact delete is idempotent: it runs before the denial intent is
+        cleared, so a store that cannot answer keeps the denial pending and a
+        reconciliation retries it, and a completed one finds nothing left. A
+        suspended key, which a resume can restore, is kept.
+        """
+        revoked = {
+            item.key.key_id
+            for entry in grants
+            for item in entry.keys
+            if item.key.state is AuthorityState.REVOKED or entry.grant.state is AuthorityState.REVOKED
+        }
+        for record in requests:
+            if record.credential_reference is not None and record.candidate_key_id in revoked:
+                self.secrets.delete(CLIENT_NAMESPACE, str(record.credential_reference))
 
     def _denied_state(
         self,

@@ -30,7 +30,7 @@ class InstalledParentImage(BaseModel):
     """Installed native parent image permitted to start a human frontend holder."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    launch_image: Annotated[str, Field(min_length=1, max_length=32767)]
+    launch_image: Annotated[str, Field(min_length=1, max_length=32768)]
     image_digest: ContentDigest
 
 
@@ -39,7 +39,7 @@ class InstalledServiceDescriptor(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     service_id: Annotated[str, Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")]
-    launch_image: Annotated[str, Field(min_length=1, max_length=32767)]
+    launch_image: Annotated[str, Field(min_length=1, max_length=32768)]
     launch_module: Annotated[str, Field(min_length=1, max_length=256)]
     image_digest: ContentDigest
     descriptor_digest: ContentDigest
@@ -139,6 +139,33 @@ class ServiceAdmission(BaseModel):
     session_id: UUID
     recipient_connection_id: UUID
     service_id: Annotated[str, Field(min_length=1, max_length=64)]
+
+
+class ServiceAdmissionStatusQuery(BaseModel):
+    """Observe or cancel one exact pending service admission, never repeat it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["service_admission_status", "service_admission_cancel"]
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    recipient_connection_id: UUID
+    service_id: Annotated[str, Field(min_length=1, max_length=64)]
+    admission_id: UUID
+
+
+class ServiceAdmissionPending(BaseModel):
+    """A bounded admission handle, with no lease or authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["service_admission_pending"] = "service_admission_pending"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    service_id: str
+    admission_id: UUID
+    cancelled: bool = False
 
 
 class ServiceConnected(BaseModel):

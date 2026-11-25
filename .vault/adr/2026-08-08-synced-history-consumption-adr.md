@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#synced-history-consumption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e056a70fe52e3d6a512f3c849738439af4b5a5c1597d766ee2462d4ed76fd5a0'
+body_hash: 'sha256:2fd70df445e965673c2e92f4fb68efc6714df7bf48a85ae1b7380768e2451623'
 related:
   - "[[2026-08-08-synced-history-consumption-research]]"
 ---
@@ -47,7 +47,7 @@ Four measured facts constrain any ruling, and none of them was available when th
 record was scaffolded.
 
 The 72 reachable carries are consumed TODAY, proven by execution rather than by
-reading a resolver: Modelo 100 for 2024, casilla 0604, is absent on a profile with
+reading a resolver: Modelo 100, casilla 0604, is absent on a profile with
 no history and holds 1416.00 on a profile with a pulled one, both poles driven
 through the live operator calculate over one law-resolved revision, with no
 refusal diagnostic on the pulled pole. A ruling that a channel must not consume

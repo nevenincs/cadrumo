@@ -44,13 +44,18 @@ from dev.registry.compiler.schema_family_coverage import (
 
 from ...compiler.loader import load_modelo_directory
 from ..coverage import REQUIRED_COVERAGE_TIERS
-from ..loader_directory_mode_support import load_revision as _shared_load_revision
-from ..loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..loader_directory_mode_support import (
+    STANDARD_REVISION_EXERCISE,
+    load_revision,
+    standard_revision_preamble_text,
+    write_modelo,
+)
 from ..schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_YEAR = STANDARD_REVISION_EXERCISE
+_REVISION_ID = str(_YEAR)
 _LEGAL_REF = "ley-58-2003:art-29"
 _MANIFEST_HOME_REFUSAL = "must be declared in the revision's revision.toml"
 
@@ -72,17 +77,17 @@ source_refs = ["aeat-manual"]
 
 
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
-        manifest_extra=manifest_extra,
+        manifest_text=standard_revision_preamble_text() + manifest_extra,
         fragment_extra=fragment_extra,
     )
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _revision(**overrides: object) -> ModeloRevision:
@@ -90,9 +95,9 @@ def _revision(**overrides: object) -> ModeloRevision:
     return ModeloRevision.model_validate(
         {
             "id": _REVISION_ID,
-            "localization_key": "modelo.schema.999.revision.2025",
-            "valid_from": datetime.date(2025, 1, 1),
-            "period_selector": {"years": (2025,), "periods": ("0A",)},
+            "localization_key": f"modelo.schema.999.revision.{_REVISION_ID}",
+            "valid_from": datetime.date(_YEAR, 1, 1),
+            "period_selector": {"years": (_YEAR,), "periods": ("0A",)},
             "legal_refs": (_LEGAL_REF,),
             "source_refs": ("aeat-manual",),
             **overrides,

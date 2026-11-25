@@ -7,9 +7,9 @@ existing typed models. Projection and restoration validate the original models.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from cadrumo.application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
@@ -37,14 +37,20 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
+from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntrySource,
     OverviewCalendarRange,
+    OverviewCalendarScope,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
+    require_decided_derivations,
 )
 from cadrumo.application.overview.coverage import ObligationCoverageReport
 from cadrumo.application.overview.home import (
@@ -57,10 +63,14 @@ from cadrumo.application.search.workbench import WorkbenchDestinationAdmission
 from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationAvailability,
 )
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.models import ObligationStatus
+from cadrumo.domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteFact
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidenceKind,
@@ -239,6 +249,7 @@ class PublicDeclarationTarget(BaseModel):
 
     modelo: str
     period: PublicPeriod
+    profile_requirements: tuple[str, ...]
 
 
 class PublicDeclarationsWorkspaceCalculationRevisionRefV1(BaseModel):
@@ -284,7 +295,25 @@ class PublicDeclarationSummary(BaseModel):
     checked: bool
     result: PublicModeloFormResult | None
     is_correction: bool
+    calculation_outdated: bool
+    proven_zero_notes: tuple[CalculationNoteFact, ...]
+    filed_before_grade_cap: bool
     technical_reason: str | None
+
+
+class PublicRefundEligibility(BaseModel):
+    """Typed local-human view of RefundEligibility: whether the IVA refund may be asked for, and why.
+
+    ``legal_refs`` are the registry's declared references for the provisions the
+    outcome rests on. A frontend renders the header's words; this carries the
+    machine-readable outcome beside them so none of it is re-derived there.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: RefundEligibilityOutcome
+    basis: RefundEligibilityBasis
+    legal_refs: tuple[str, ...]
 
 
 class PublicModeloFormResult(BaseModel):
@@ -298,6 +327,7 @@ class PublicModeloFormResult(BaseModel):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None
     election_may_change: bool
+    refund_eligibility: PublicRefundEligibility | None
 
 
 class PublicDeclarationsWorkspaceFilingRefV1(BaseModel):
@@ -317,6 +347,8 @@ class PublicDeclarationsWorkspaceFilingRefV1(BaseModel):
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
     amends_filing_record_id: str | None
+    superseded_by_filing_record_id: str | None
+    member_nif: str | None
     evidence_kind: ExternalEvidenceKind | None
 
 
@@ -357,6 +389,7 @@ class PublicDeclarationsCalendarProjectionV1(BaseModel):
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[PublicDeclarationsCalendarEntryRefV1, ...]
     coverage: ObligationCoverageReport
+    suppressed_entries: tuple[PublicDeclarationsCalendarSuppressedEntryV1, ...]
 
 
 class PublicDeclarationsCalendarEntryRefV1(BaseModel):
@@ -372,7 +405,6 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: str | None
     payment_cutoff_on: date | None
     evaluated_on: date
     days_overdue: int | None
@@ -388,6 +420,52 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: PublicModeloWorkConditionalRecargoPreview | None
     recovery_action: PublicDeclaredNextAction | None
+    days_until_close: int | None
+    filing_status: OverviewFilingStatus
+    scopes: tuple[OverviewCalendarScope, ...]
+
+    @model_validator(mode="after")
+    def _derivations_are_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "days_until_close": days_until_close(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    holiday_coverage=self.holiday_coverage,
+                ),
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.aeat_submission_state,
+                    local_filing_state=self.local_filing_state,
+                    period_state=self.user_state,
+                ),
+                "scopes": deadline_scopes(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    status=self.legal_status,
+                    user_state=self.user_state,
+                    aeat_evidence_withheld=self.aeat_submission_state is None,
+                ),
+            },
+        )
+        return self
+
+
+class PublicDeclarationsCalendarSuppressedEntryV1(BaseModel):
+    """Typed local-human workbench view of DeclarationsCalendarSuppressedEntryV1."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str
+    filing_year: int
+    period: PublicPeriod
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
+    verdict: ApplicabilityVerdict
+    verdict_words: str
+    verdict_words_language: OutputLanguage
+    reason: str
 
 
 class PublicHomeGenerationStateV1(BaseModel):
@@ -432,6 +510,10 @@ class PublicHomeNextAction(BaseModel):
     modelo: str | None
     filing_year: int | None
     period: PublicPeriod | None
+    action_words: str | None
+    reason_words: str | None
+    period_words: str | None
+    words_language: OutputLanguage | None
 
 
 class PublicDeclaredNextAction(BaseModel):
@@ -455,6 +537,25 @@ class PublicHomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+    due_on_text: str
+    period_words: str
+    words_language: OutputLanguage
+    filing_status_words: str | None
+    filing_status: OverviewFilingStatus
+
+    @model_validator(mode="after")
+    def _filing_status_is_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.aeat_submission_state,
+                    local_filing_state=self.local_filing_state,
+                    period_state=self.period_state,
+                )
+            },
+        )
+        return self
 
 
 class PublicHomeDeclarationResume(BaseModel):
@@ -469,6 +570,9 @@ class PublicHomeDeclarationResume(BaseModel):
     name: str
     state: HomeDeclarationState
     revision_id: str | None
+    state_words: str | None
+    period_words: str | None
+    words_language: OutputLanguage | None
 
 
 class PublicLedgerGenerationStateV1(BaseModel):
@@ -508,6 +612,8 @@ class PublicLedgerAffectedDeclarationRefV1(BaseModel):
     calculation_revision_id: str
     changed_count: int
     removed_count: int
+    register_state: str = "current"
+    register_change_count: int = 0
 
 
 class PublicSearchGenerationStateV1(BaseModel):

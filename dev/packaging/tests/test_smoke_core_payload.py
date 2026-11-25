@@ -14,32 +14,33 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from ..authority_staging import authoring_authority_root
 from ..cohort_attestation import (
     add_test_runtime_wheelhouse,
     add_test_source_archive,
     make_test_command_spec_attestation,
 )
+from ..distribution_limits import PYPI_FILE_CAP_BYTES
 from ..google_oauth import GOOGLE_OAUTH_RESOURCE
 from ..hashing import sha256_path
-from ..lane_verification_core import build_companion_wheels, build_root_snapshot, build_sdist, build_wheel
+from ..lane_verification_core import build_root_snapshot
 from ..proof_ledger import recorded_proofs, reset_proof_ledger
 from ..python_cohort import load_python_cohort
-from ..smoke_core import _assert_complete_wheel_cohort
-from ..smoke_sdist_core import _assert_sdist_contains_expected_data
+from ..shared_cohort import shared_cohort
+from ..smoke_core import assert_complete_wheel_cohort
+from ..smoke_sdist_core import assert_sdist_contains_expected_data
 from ..source_data_contract import (
-    _CORPUS_SOURCE_PREFIX,
-    _MANUAL_PDF_PRESENCE_FLOOR,
-    _configured_corpus_binary_suffixes,
-    _is_corpus_source_binary,
-    _validated_source_data_inventory,
+    CORPUS_SOURCE_PREFIX,
     assert_wheel_contains_source_data,
     build_source_data_paths,
+    configured_corpus_binary_suffixes,
     expected_wheel_data_paths,
+    is_corpus_source_binary,
+    manual_pdf_presence_floor,
     source_data_paths,
+    validated_source_data_inventory,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -53,23 +54,21 @@ _REVIEW_FOUND_PATHS = {
 
 
 def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_path: Path) -> None:
-    """Build the wheel and prove source-data parity against companion ownership."""
-    uv = shutil.which("uv")
-    assert uv is not None
+    """Prove the real wheel's source-data parity against companion ownership."""
     source_paths = source_data_paths(_REPO_ROOT)
-    suffixes = _configured_corpus_binary_suffixes(_REPO_ROOT)
-    split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    suffixes = configured_corpus_binary_suffixes(_REPO_ROOT)
+    split_owned = {path for path in source_paths if "/tests/" not in path and is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
 
-    # Build every artifact from an isolated snapshot, never from the live
-    # working tree: the expectations above come from the same enumeration
-    # `build_root_snapshot` copies from, and in the shared factory worktree a
-    # live-tree build can straddle a torn peer edit, producing an artifact
-    # that matches no fixed content and failing this test as if it were a
-    # packaging regression (issue 613). One root serves all six builds.
-    build_root = build_root_snapshot(_REPO_ROOT, tmp_path / "build-source")
-
-    wheel = build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
+    # Every artifact comes from one isolated snapshot, never from the live
+    # working tree: in the shared factory worktree a live-tree build can
+    # straddle a torn peer edit, producing an artifact that matches no fixed
+    # content and failing this test as if it were a packaging regression
+    # (issue 613). The shared cohort is keyed by the content of the same
+    # enumeration the expectations above read, plus the selected authority,
+    # so its artifacts are the ones a fresh snapshot build of this tree makes.
+    cohort = shared_cohort()
+    wheel = cohort.wheel
     with zipfile.ZipFile(wheel) as archive:
         members = set(archive.namelist())
     actual_runtime = {name for name in members if name.startswith("cadrumo/_data/") and not name.endswith("/")}
@@ -95,7 +94,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         for path in source_paths - split_owned
         if "/tests/" not in path and not _excluded(path)
     }
-    authority_root = authoring_authority_root(build_root)
+    authority_root = authoring_authority_root(_REPO_ROOT)
     descriptor = authority_root / "authority.current.json"
     selected_database = authority_root / AuthorityDescriptor.read(descriptor).database
     assert descriptor.is_file() and selected_database.is_file()
@@ -107,13 +106,13 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     independently_expected.add(GOOGLE_OAUTH_RESOURCE.removeprefix("src/"))
     assert expected_wheel_data_paths(_REPO_ROOT) == independently_expected
     assert actual_runtime == independently_expected
-    assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
+    assert not {f"cadrumo/_data/corpus/{path.removeprefix(CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
 
-    companions = build_companion_wheels(tmp_path, uv, build_root=build_root)
+    companions = cohort.companions
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         expected_version = load_toml(handle)["project"]["version"]
     assert (
-        _assert_complete_wheel_cohort(
+        assert_complete_wheel_cohort(
             wheel,
             data_wheel_manuals=companions[0],
             data_wheel_official=companions[1],
@@ -122,7 +121,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         == expected_version
     )
     with pytest.raises(SystemExit, match="labels do not match"):
-        _assert_complete_wheel_cohort(
+        assert_complete_wheel_cohort(
             wheel,
             data_wheel_manuals=companions[1],
             data_wheel_official=companions[0],
@@ -141,10 +140,10 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     expected_sdist_data = {
         path
         for path in source_paths
-        if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path and not _excluded_from_sdist(path)
+        if not is_corpus_source_binary(path, suffixes) and "/tests/" not in path and not _excluded_from_sdist(path)
     }
-    sdist = build_sdist(tmp_path, uv, build_root=build_root)
-    _assert_sdist_contains_expected_data(sdist, expected_sdist_data, corpus_binary_suffixes=suffixes)
+    sdist = cohort.sdist
+    assert_sdist_contains_expected_data(sdist, expected_sdist_data, corpus_binary_suffixes=suffixes)
     assert sdist.stat().st_size < PYPI_FILE_CAP_BYTES
 
     cohort_dir = tmp_path / "real-cohort"
@@ -152,7 +151,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     # build_companion_wheels runs `uv build` without --wheel, which already
     # produced all companion sdists from this same fixed source. Rebuilding them here
     # repeated three backend invocations without exercising a second contract.
-    companion_artifacts_dir = tmp_path / "companion-wheels"
+    companion_artifacts_dir = cohort.companion_directory
     manuals_sdists = scan_directory(companion_artifacts_dir, pattern="cadrumo_data_manuals-*.tar.gz")
     official_sdists = scan_directory(companion_artifacts_dir, pattern="cadrumo_data_official-*.tar.gz")
     normatives_sdists = scan_directory(companion_artifacts_dir, pattern="cadrumo_data_normatives-*.tar.gz")
@@ -204,7 +203,7 @@ def _seed_shipped_data_repository(origin: Path) -> set[str]:
         f"__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n/{GOOGLE_OAUTH_RESOURCE}\n",
         encoding="utf-8",
     )
-    source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_MANUAL_PDF_PRESENCE_FLOOR}
+    source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *manual_pdf_presence_floor(_REPO_ROOT)}
     for relative in sorted(source_paths):
         path = origin / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -275,7 +274,7 @@ def test_shipped_data_inventory_refuses_a_named_path_absent_from_disk(tmp_path: 
     (origin / present).write_bytes(b"present")
 
     with pytest.raises(SystemExit, match="are absent from"):
-        _validated_source_data_inventory(
+        validated_source_data_inventory(
             origin,
             {present, "src/cadrumo/_data/missing.toml"},
             origin="synthetic inventory",
@@ -294,7 +293,7 @@ def test_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp_path: P
     origin = tmp_path / "origin"
     origin.mkdir()
     _seed_shipped_data_repository(origin)
-    removed = next(iter(sorted(_MANUAL_PDF_PRESENCE_FLOOR)))
+    removed = next(iter(sorted(manual_pdf_presence_floor(_REPO_ROOT))))
     (origin / removed).unlink()
 
     with pytest.raises(SystemExit, match="missing required manual PDFs"):
@@ -362,14 +361,14 @@ def test_sdist_refuses_declared_authoring_input_exclusions(tmp_path: Path) -> No
         info.size = 1
         archive.addfile(info, io.BytesIO(b"x"))
     with pytest.raises(SystemExit, match="sdist leaked configured exclusions"):
-        _assert_sdist_contains_expected_data(
+        assert_sdist_contains_expected_data(
             archive_path,
             set(),
             corpus_binary_suffixes=(".pdf",),
             excluded_patterns=("src/cadrumo/_data/registry/aeat/**",),
         )
     with pytest.raises(SystemExit, match="sdist is missing"):
-        _assert_sdist_contains_expected_data(
+        assert_sdist_contains_expected_data(
             archive_path, {"src/cadrumo/_data/required.json"}, corpus_binary_suffixes=(".pdf",)
         )
 
@@ -385,7 +384,7 @@ def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_pat
     here -- a configured suffix is caught, an unconfigured one is not -- and the
     widened set proves the population is the parameter rather than a constant.
     """
-    configured = _configured_corpus_binary_suffixes(_REPO_ROOT)
+    configured = configured_corpus_binary_suffixes(_REPO_ROOT)
     assert ".docx" in configured
     assert ".doc" not in configured
     reset_proof_ledger()
@@ -393,7 +392,7 @@ def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_pat
     # A member whose suffix the configuration excludes must be caught.
     leaked = _write_corpus_sdist(tmp_path / "leaked.tar.gz", {"aeat_official/a.docx"})
     with pytest.raises(SystemExit, match="companion-owned corpus binaries"):
-        _assert_sdist_contains_expected_data(leaked, set(), corpus_binary_suffixes=configured)
+        assert_sdist_contains_expected_data(leaked, set(), corpus_binary_suffixes=configured)
 
     # Corpus members the configuration does not exclude are not leaks, and the
     # archive that carries only those must pass rather than be flagged.
@@ -401,11 +400,11 @@ def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_pat
         tmp_path / "clean.tar.gz",
         {"aeat_official/b.json", "aeat_official/c.html", "aeat_official/d.doc"},
     )
-    _assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=configured)
+    assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=configured)
     assert "sdist source shipped-data payload" in recorded_proofs()
 
     # The same archive read against a configuration that DOES exclude ``.doc``
     # is a leak. A literal tuple in the assertion could not produce this answer.
     with pytest.raises(SystemExit, match="companion-owned corpus binaries"):
-        _assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=(*configured, ".doc"))
+        assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=(*configured, ".doc"))
     reset_proof_ledger()

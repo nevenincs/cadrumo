@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import sys
+import textwrap
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -14,6 +17,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config import load_settings, override_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+from .....tests.audited_process import run_audited_process
 from ...profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..bucket.directory_layout import bucket_paths
@@ -84,7 +88,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
     isolated_root = tmp_path / "isolated-storage"
     isolated_database = isolated_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
 
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
         publish_test_profile_capsule(_CONTROL_BUCKET_ID, label="Contamination control", root=storage_root)
         try:
@@ -240,3 +244,62 @@ def _secure_object_namespaces(database_path: Path) -> tuple[str, ...]:
                 "SELECT namespace FROM secure_objects ORDER BY namespace",
             )
         )
+
+
+#: A process whose first warning arrives inside an isolated root, so its diagnostic log file is bound there.
+_FIRST_WARNING_INSIDE_AN_ISOLATED_ROOT = textwrap.dedent(
+    """
+    import logging
+    import sys
+    from pathlib import Path
+
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo.core.logging import flush_logging
+
+    tree = Path(sys.argv[1])
+    with isolated_profile_storage_root(tmp_path=tree) as root:
+        logging.getLogger("cadrumo.proof").warning("a slow phase inside the isolated root")
+        assert flush_logging(timeout=30.0)
+        assert any(root.rglob("*.log")), "the diagnostic log file was not bound inside the isolated root"
+
+
+    def contents() -> dict[str, bytes]:
+        return {path.relative_to(tree).as_posix(): path.read_bytes() for path in tree.rglob("*") if path.is_file()}
+
+
+    at_rest = contents()
+    logging.getLogger("cadrumo.proof").warning("after the isolated root ended")
+    assert flush_logging(timeout=30.0)
+    assert contents() == at_rest, "the ended root was written after it ended"
+    tree.rename(tree.with_name(f"{tree.name}-sealed"))
+    print("sealed")
+    """
+)
+
+
+def test_an_ended_isolated_root_is_at_rest_after_the_process_logged_into_it(tmp_path: Path) -> None:
+    """A root a sealed profile world is built in must be digestible and renamable the moment it ends.
+
+    The diagnostic log file binds beneath the storage root current at the
+    process's first warning. A phase slowed past its threshold inside the root
+    records that warning, after which the file kept being written into the
+    ended tree and held it open: the sealed world's own verification failed, or
+    renaming it into place was refused with an access-denied error on Windows.
+    """
+    environment = dict(os.environ)
+    environment["CADRUMO_STORAGE_ROOT"] = str(tmp_path / "outside")
+    environment["PYTHONPATH"] = str(Path(__file__).resolve().parents[5])
+    tree = tmp_path / "world"
+
+    run = run_audited_process(
+        [sys.executable, "-c", _FIRST_WARNING_INSIDE_AN_ISOLATED_ROOT, str(tree)],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+
+    assert run.returncode == 0, run.stderr
+    assert isinstance(run.stdout, str)
+    assert run.stdout.strip().splitlines()[-1] == "sealed"
+    assert (tmp_path / "world-sealed").is_dir()

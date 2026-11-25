@@ -21,6 +21,7 @@ struct WireEvent {
     host_pid: u32,
     kind: EventKind,
     process: Option<u64>,
+    terminal_session: Option<u64>,
     failure: Option<WireFailure>,
     status: Option<WireStatus>,
     stage: Option<HostStage>,
@@ -158,6 +159,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         source: wire.source,
         timestamp_ms: wire.timestamp_ms,
         host_pid: wire.host_pid,
+        terminal_session: wire.terminal_session,
         kind: wire.kind,
         process: wire.process,
         failure,
@@ -168,6 +170,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         host_exit_code: wire.host_exit_code,
         lifecycle: wire.lifecycle,
         webview_failure: None,
+        desktop_diagnostic: None,
         helper_timing: None,
         helper_result: None,
         service: wire.service,
@@ -263,6 +266,14 @@ pub(super) fn lifecycle_context(fact: LifecycleFact, context: &mut BTreeMap<Stri
         StoodDown { reason } => field(context, "lifecycle_reason", reason),
         Failed { last } => field(context, "restart_class", last),
         EventsDropped { count } => field(context, "events_dropped", count),
+        LocalAiUnavailable { engine, reason } => {
+            field(context, "local_ai_engine", engine);
+            field(context, "lifecycle_reason", reason);
+        }
+        LocalAiServer { engine, change } => {
+            field(context, "local_ai_engine", engine);
+            field(context, "local_ai_server_change", change);
+        }
         SupervisorEnded { result } => {
             let encoded = serde_json::to_value(result).expect("closed outcome serializes");
             context.insert("supervisor_outcome".into(), encoded["outcome"].clone());
@@ -311,6 +322,43 @@ mod tests {
             ),
         );
         serde_json::to_value(&diagnostics.snapshot(u64::MAX).events[0]).unwrap()
+    }
+
+    #[test]
+    fn persisted_terminal_session_metadata_is_typed_and_ordinary_events_omit_it() {
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let process = diagnostics.start(123, ProcessRole::Console);
+        let failure = ApplicationError::new(ErrorCode::InvalidArguments, Operation::Terminal);
+        diagnostics.failure_for_terminal(process, 37, failure.clone());
+        diagnostics.failure_for(process, failure);
+        let snapshot = diagnostics.snapshot(0);
+        let failures: Vec<_> = snapshot
+            .events
+            .iter()
+            .filter(|event| event.failure.is_some())
+            .collect();
+        let wire = serde_json::to_value(failures[0]).unwrap();
+        let entry =
+            parse(&serde_json::to_vec(&wire).unwrap()).expect("shared native schema is admitted");
+        assert_eq!(entry.context["terminal_session"], 37);
+        assert_eq!(entry.context["reason_code"], "invalid_arguments");
+        let ordinary = parse(&serde_json::to_vec(failures[1]).unwrap()).unwrap();
+        assert!(!ordinary.context.contains_key("terminal_session"));
+        for value in [
+            Value::from(-1),
+            Value::from("37"),
+            serde_json::json!({"private": true}),
+        ] {
+            let mut invalid = wire.clone();
+            invalid["terminalSession"] = value;
+            assert!(parse(&serde_json::to_vec(&invalid).unwrap()).is_none());
+        }
+        let mut other_source = wire.clone();
+        other_source["source"] = Value::from("desktop");
+        assert!(parse(&serde_json::to_vec(&other_source).unwrap()).is_none());
+        let mut extra = wire;
+        extra["unknownField"] = Value::from(37);
+        assert!(parse(&serde_json::to_vec(&extra).unwrap()).is_none());
     }
 
     #[test]

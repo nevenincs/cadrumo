@@ -13,6 +13,41 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.google.status",
+        "error": {
+          "action": {
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
+            "evidence": [
+              {
+                "condition_id": "google.auth.client_metadata.available",
+                "evidence_id": "google.auth.client_metadata.available.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                  "client_metadata_present": false
+                }
+              }
+            ],
+            "failed_condition_id": "google.auth.client_metadata.available",
+            "missing_argument_names": [],
+            "no_recovery_outcome": "safety",
+            "no_recovery_words": "This was stopped to protect your data, so no action is offered.",
+            "no_recovery_words_language": "en"
+          },
+          "category": "REFUSED",
+          "code": "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
+          "context": {
+            "effect": "none",
+            "operation_id": "81ce0a477259d3de41c3a118c464a17fb136952b722666c228145ba82b5adec0",
+            "profile": "<profile-id>",
+            "refusal_code": "REFUSED_GOOGLE_CONFIGURATION",
+            "terminal_condition": "refused"
+          },
+          "message": "This installation does not include the Google client it needs to sign in. Google features are unavailable.",
+          "retryable": false,
+          "runbook_id": null,
+          "trace_id": null
+        },
         "notices": [
           {
             "action": null,
@@ -22,19 +57,11 @@
             "severity": "warning"
           }
         ],
-        "result": {
-          "account_email": null,
-          "granted_scopes": [],
-          "issued_at": null,
-          "operation": "config.google.status",
-          "profile": "<profile-id>",
-          "session_present": false
-        },
         "schema_version": "2",
-        "status": "warning"
+        "status": "error"
       },
-      "envelope_source": "stdout",
-      "exit_code": 0,
+      "envelope_source": "stderr",
+      "exit_code": 2,
       "kind": "command",
       "stderr_text": null,
       "text": null

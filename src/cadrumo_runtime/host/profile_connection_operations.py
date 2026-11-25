@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
-from typing import TYPE_CHECKING
+from importlib.metadata import version
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
-from cadrumo.core.operations import OperationLifecycle
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationLifecycle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -36,6 +39,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
+    OperationSubmitted,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
 from cadrumo_client.contracts.session_events import OperationChanged, ProfileRecordsChanged
@@ -44,17 +48,34 @@ from cadrumo_client.contracts.submission_payload import (
     FinancialOperandInputDescriptor,
 )
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import (
+    SEDE_VIEW_DEFINITION_ID,
+    ViewAttachGranted,
+    ViewAttachRequest,
+    ViewConnect,
+)
 from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerOperationReceipt
+from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
+from ..application.operation_cue_timing import log_operation_cue_timing
 from .operation_projection import prepare_operation_projection
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 from .submission_stream import stream_operation_submission
+from .view_stream_state import ViewAttachGrant
+from .view_stream_worker_link import open_worker_view_leg
 
 _log = get_logger(__name__)
 
 # Operations one connection may wait on at once; the oldest watch gives way.
 _OPERATION_WATCHES_PER_CONNECTION = 64
+
+# A person's submitted changes not yet observed settled; the oldest gives way.
+_PERSON_WRITES_PENDING = 256
+
+_SAVED_EFFECTS: Final = frozenset({OperationEffect.UPDATED, OperationEffect.PARTIAL})
+"""Settled effects that saved a change; an unknown effect is no evidence that anything saved."""
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -78,6 +99,43 @@ def _require_scope_admits(connection: ProfileConnection, definition_id: str) -> 
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+def authorize_operation_release(
+    host: RuntimeProfileHost,
+    connection: ProfileConnection,
+    release: WorkerAuthorityRequest,
+    release_guard: ExitStack,
+    fresh_admission: OperationId | None,
+) -> datetime:
+    """Retire a fresh unstarted admission if the final parent fence withholds its receipt."""
+    try:
+        allowed = release_guard.enter_context(host.authorize(release))
+    except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+        if fresh_admission is not None:
+            try:
+                host.owner.operation_worker().abandon_submission(
+                    release.session_id, fresh_admission, frontend=connection.frontend
+                )
+            except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as cleanup:
+                _log.warning(
+                    "parent-withheld admission left unsettled operation=%s error=%s",
+                    fresh_admission,
+                    type(cleanup).__name__,
+                )
+        raise
+    return allowed.expires_at
+
+
+def _admitted_status(status: ProfileStatus | AccessDenied) -> ProfileStatus:
+    """Return a session status that grants access; refuse a denied one, with a suspended session's window."""
+    if isinstance(status, AccessDenied):
+        raise ProfileAccessRefusedError(status.code, recovery_remaining_seconds=status.recovery_remaining_seconds)
+    if status.status.denial is not None:
+        raise ProfileAccessRefusedError(
+            status.status.denial, recovery_remaining_seconds=status.status.recovery_remaining_seconds
+        )
+    return status
+
+
 def _session_mismatch(connection: ProfileConnection) -> AccessDenialCode:
     """Name why a request's session is not this connection's: a retirement such as a sign-out leaves none."""
     return (
@@ -85,6 +143,131 @@ def _session_mismatch(connection: ProfileConnection) -> AccessDenialCode:
         if connection.session_id is None
         else AccessDenialCode.CONNECTION_MISMATCH
     )
+
+
+def _lost_in_flight(
+    host: RuntimeProfileHost,
+    request: OperationRequest,
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+) -> ProfileAccessRefusedError | None:
+    """Return the session's recovery refusal when the worker serving ``request`` was lost meanwhile.
+
+    A failed worker channel, an owner left without a worker, or a session the
+    authority already suspended may each be that loss. It is established here,
+    not by the next request, so this request reports it. Any other failure, or
+    one that left the worker serving, keeps its own answer.
+    """
+    if isinstance(error, ProfileAccessRefusedError) and error.reason is not AccessDenialCode.CUSTODY_RECOVERING:
+        return None
+    if isinstance(error, AutomationCustodyError) and error.reason is not AutomationCustodyCode.UNAVAILABLE:
+        return None
+    host.owner.observe_exit()
+    try:
+        host.authority.require_unsuspended(request.session_id)
+    except ProfileAccessRefusedError as recovering:
+        return recovering
+    return None
+
+
+def _carries_change(request: OperationRequest) -> bool:
+    """Whether ``request`` asks the worker for a change, rather than to read or describe what exists."""
+    return not isinstance(
+        request,
+        OperationContract | OperationObserve | OperationResult | OperationResultPage | OperationReview,
+    )
+
+
+def _named_operation(request: OperationRequest) -> OperationId | None:
+    """The existing operation a change names; a submission names none until the worker answers it."""
+    if isinstance(request, OperationControl):
+        return request.operation_id
+    if isinstance(request, OperationManage):
+        return request.management.operation_id
+    if isinstance(request, OperationSecret):
+        return request.requirement.identity.operation_id
+    return None
+
+
+def log_operation_refusal(
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    lost: ProfileAccessRefusedError | None,
+    request: OperationRequest,
+    unknown: bool,
+) -> None:
+    """Log only refusal metadata, never private operands."""
+    # A typed refusal is an answer, not a fault: name the request and the
+    # registered fault codes, never a traceback, a payload or a message.
+    _log.warning(
+        "runtime operation refused code=%s request=%s definition=%s faults=%s effect=%s",
+        error.reason if lost is None else lost.reason,
+        type(request).__name__,
+        request.definition_id if isinstance(request, OperationSubmit) else "-",
+        ",".join(fault.type for fault in error.request_faults)
+        if isinstance(error, AutomationCustodyError) and error.request_faults
+        else "-",
+        OperationEffect.UNKNOWN.value if unknown else "-",
+    )
+
+
+def operation_refusal(
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    served_by: RuntimeProfileHost | None,
+    request: OperationRequest,
+    context: ConnectionContext,
+    boot: UUID,
+) -> AccessRefusal:
+    """Report a typed refusal and identify an uncertain in-flight effect."""
+    lost = None if served_by is None else _lost_in_flight(served_by, request, error)
+    unknown = lost is not None and _carries_change(request)
+    log_operation_refusal(error, lost, request, unknown)
+    if lost is not None:
+        # The worker was lost while it served this request: the session is recovering,
+        # and a change it carried may have taken effect, so it is never offered as safe to repeat.
+        return AccessRefusal(
+            request_id=request.request_id,
+            runtime_boot_id=boot,
+            connection_id=context.connection_id,
+            code=lost.reason,
+            recovery_remaining_seconds=lost.recovery_remaining_seconds,
+            effect=OperationEffect.UNKNOWN if unknown else None,
+            operation_id=_named_operation(request) if unknown else None,
+        )
+    else:
+        return AccessRefusal(
+            request_id=request.request_id,
+            runtime_boot_id=boot,
+            connection_id=context.connection_id,
+            code=error.reason,
+            sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
+            request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
+            holder_operation_id=error.holder_operation_id if isinstance(error, ProfileAccessRefusedError) else None,
+            recovery_remaining_seconds=error.recovery_remaining_seconds
+            if isinstance(error, ProfileAccessRefusedError)
+            else None,
+        )
+
+
+def operation_change_cues(
+    boot: UUID,
+    profile_id: UUID,
+    reported: set[OperationId],
+    operation_watches: dict[UUID, dict[OperationId, UUID]],
+    connections: dict[UUID, ProfileConnection],
+) -> list[OperationChanged]:
+    """Build cues for live sessions watching one of the reported operations."""
+    return [
+        OperationChanged(
+            runtime_boot_id=boot,
+            connection_id=connection_id,
+            profile_id=profile_id,
+            session_id=connection.session_id,
+        )
+        for connection_id, watches in operation_watches.items()
+        if (connection := connections.get(connection_id)) is not None
+        and connection.profile_id == profile_id
+        and connection.session_id is not None
+        and any(watches.get(operation_id) == connection.session_id for operation_id in reported)
+    ]
 
 
 class ProfileConnectionOperationMixin:
@@ -157,42 +340,88 @@ class ProfileConnectionOperationMixin:
         """Hold newly observed authority through the final bounded frontend write."""
         reply: OperationReply | AccessRefusal
         deadline = time.monotonic() + 5
+        # Set once the request may reach the worker; a loss after that may have taken its change with it.
+        served_by: RuntimeProfileHost | None = None
         with self._language_observed_after(context), ExitStack() as release_guard:
             try:
                 release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
                 if isinstance(request, OperationFinancialInput):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
+                # A suspended session learns how long it may still rebind before any worker is borrowed for it.
+                host.owner.observe_exit()
+                host.authority.require_unsuspended(request.session_id)
+                served_by = host
                 if isinstance(request, OperationSecret):
                     self._operation_secret(host, connection, channel, request)
                     return
-                reply, expires_at = self._operation_reply(
-                    connection, host, context, channel, request, release_guard=release_guard
-                )
-                self._watch_observed_operation(connection, request, reply)
+                if isinstance(request, OperationObserve):
+                    reply, expires_at = self._observe_and_watch_operation(
+                        connection, host, context, channel, request, release_guard=release_guard
+                    )
+                else:
+                    reply, expires_at = self._operation_reply(
+                        connection, host, context, channel, request, release_guard=release_guard
+                    )
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
-                # Preserve bounded typed refusal facts; no secret or private result is disclosed.
-                _log.warning("runtime operation refused code=%s", error.reason, exc_info=error)
-                reply = AccessRefusal(
-                    request_id=request.request_id,
-                    runtime_boot_id=self.boot,
-                    connection_id=context.connection_id,
-                    code=error.reason,
-                    sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
-                    request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
-                    holder_operation_id=error.holder_operation_id
-                    if isinstance(error, ProfileAccessRefusedError)
-                    else None,
-                )
+                reply = operation_refusal(error, served_by, request, context, self.boot)
                 deadline = time.monotonic() + 5
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
+        if served_by is None:
+            return
+        # Every fence of this request is released. A connection's requests are
+        # served in order, so a submission is remembered before its own
+        # connection can observe it.
+        if isinstance(request, OperationObserve):
+            self._renew_after_person_write(served_by, context, request, reply)
+        else:
+            self._note_person_write(served_by, context, channel, request, reply)
+
+    def _observe_and_watch_operation(
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationObserve,
+        *,
+        release_guard: ExitStack,
+    ) -> tuple[OperationReply, datetime | None]:
+        """Authorize a watch, then read again so a commit between snapshot and watch cannot be lost."""
+        with ExitStack() as first_guard:
+            reply, expires_at = self._operation_reply(
+                connection, host, context, channel, request, release_guard=first_guard
+            )
+            self._watch_observed_operation(connection, request, reply)
+            if not (
+                isinstance(reply, OperationObserved)
+                and isinstance(reply.observation, OperationObservationSuccessV1)
+                and reply.observation.projection.lifecycle is not OperationLifecycle.TERMINAL
+            ):
+                release_guard.enter_context(first_guard.pop_all())
+                return reply, expires_at
+        # The first disclosure fence must be released before worker IPC: its
+        # authorization callbacks need the same profile guard. The watch now
+        # catches every later commit; the second read covers every earlier one.
+        try:
+            reply, expires_at = self._operation_reply(
+                connection, host, context, channel, request, release_guard=release_guard
+            )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+            self._watch_observed_operation(connection, request, None)
+            raise
+        self._watch_observed_operation(connection, request, reply)
+        return reply, expires_at
 
     def _watch_observed_operation(
-        self: RuntimeProfileConnections, connection: ProfileConnection, request: OperationRequest, reply: OperationReply
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        request: OperationRequest,
+        reply: OperationReply | None,
     ) -> None:
         """Keep cueing a connection about an operation it observed until it observes it terminal."""
         if not isinstance(request, OperationObserve) or connection.session_id is None:
@@ -204,6 +433,8 @@ class ProfileConnectionOperationMixin:
             and observation.projection.lifecycle is not OperationLifecycle.TERMINAL
         )
         with self._guard:
+            if connection.session_id != request.session_id:
+                return
             watches = self._operation_watches.setdefault(connection.context.connection_id, {})
             watches.pop(operation_id, None)
             if running:
@@ -213,13 +444,100 @@ class ProfileConnectionOperationMixin:
             elif not watches:
                 del self._operation_watches[connection.context.connection_id]
 
+    def _note_person_write(
+        self: RuntimeProfileConnections,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationRequest,
+        reply: OperationReply | AccessRefusal,
+    ) -> None:
+        """Remember a change the person submitted on an attended connection, to renew their session once it saves.
+
+        Attendance is the connection's accepted report of the person's own
+        input under the submitting session, which a script resuming a sign-in
+        never makes. A read, and anything an automation's process submits, is
+        never remembered. The renewal itself still requires the live human
+        session that submitted the change.
+        """
+        if not isinstance(request, OperationSubmit | OperationSubmitPayload) or not isinstance(
+            reply, OperationSubmitted
+        ):
+            return
+        with self._guard:
+            connection = self._connections.get(context.connection_id)
+        if (
+            connection is None
+            or connection.attended_session_id != request.session_id
+            or not host.may_change_records(request.definition_id)
+        ):
+            return
+        try:
+            automation = self._nonhuman_peer(context, channel)
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+            # The submission was answered; an unverifiable peer is never taken for the person.
+            return
+        if automation:
+            return
+        operation_id = reply.receipt.operation_id
+        with self._guard:
+            writes = self._person_writes
+            writes.pop(operation_id, None)
+            writes[operation_id] = (context.connection_id, request.session_id)
+            while len(writes) > _PERSON_WRITES_PENDING:
+                del writes[next(iter(writes))]
+
+    def _renew_after_person_write(
+        self: RuntimeProfileConnections,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        request: OperationObserve,
+        reply: OperationReply | AccessRefusal,
+    ) -> None:
+        """Renew the person's session once the same session observes its remembered change settled as saved.
+
+        The settled effect is the worker's own projection, released to this
+        session under its current authority, not the frontend's claim. A change
+        that saved nothing, or settled with an unknown effect, is forgotten
+        unrenewed.
+        """
+        if not isinstance(reply, OperationObserved) or not isinstance(reply.observation, OperationObservationSuccessV1):
+            return
+        projection = reply.observation.projection
+        if projection.lifecycle is not OperationLifecycle.TERMINAL:
+            return
+        operation_id = request.observation.operation_id
+        with self._guard:
+            if self._person_writes.get(operation_id) != (context.connection_id, request.session_id):
+                return
+            del self._person_writes[operation_id]
+        if projection.effect not in _SAVED_EFFECTS:
+            return
+        with host.guard:
+            if not self._admitting():
+                return
+            try:
+                # An expired or retired session is refused here and stays ended.
+                self._note_person_activity(host, context.connection_id, request.session_id)
+            except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+                # The change stands and its reply was sent; only this renewal is lost.
+                diagnostic_event(
+                    _log,
+                    "person_write_renewal_failed",
+                    fields=diagnostic_error_fields(error),
+                    level=logging.WARNING,
+                )
+
     def _operations_advanced(
         self: RuntimeProfileConnections,
         profile_id: UUID,
         operation_ids: tuple[OperationId, ...],
         records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
     ) -> None:
         """Cue each connection of this profile still observing one of the operations its worker reported."""
+        log_operation_cue_timing("fanout_start", operation_ids, settled=settled)
+        cue_attempt_count = 0
         if records_changed:
             with self._guard:
                 record_cues = [
@@ -233,24 +551,17 @@ class ProfileConnectionOperationMixin:
                     if connection.profile_id == profile_id and connection.session_id is not None
                 ]
             for cue in record_cues:
+                cue_attempt_count += 1
                 self._events.publish_cue(cue)
         reported = set(operation_ids)
         with self._guard:
-            cues = [
-                OperationChanged(
-                    runtime_boot_id=self.boot,
-                    connection_id=connection_id,
-                    profile_id=profile_id,
-                    session_id=connection.session_id,
-                )
-                for connection_id, watches in self._operation_watches.items()
-                if (connection := self._connections.get(connection_id)) is not None
-                and connection.profile_id == profile_id
-                and connection.session_id is not None
-                and any(watches.get(operation_id) == connection.session_id for operation_id in reported)
-            ]
+            cues = operation_change_cues(self.boot, profile_id, reported, self._operation_watches, self._connections)
         for cue in cues:
+            cue_attempt_count += 1
             self._events.publish_cue(cue)
+        log_operation_cue_timing(
+            "publish_cues_complete", operation_ids, cue_attempt_count=cue_attempt_count, settled=settled
+        )
 
     @contextmanager
     def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:
@@ -278,6 +589,20 @@ class ProfileConnectionOperationMixin:
         channel: ByteChannel,
         request: OperationRequest,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        connection = self._request_connection(context, channel, request)
+        with self._guard:
+            host = self._profiles.get(connection.profile_id)
+        if host is None:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        return connection, host
+
+    def _request_connection(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationRequest | ViewAttachRequest,
+    ) -> ProfileConnection:
+        """Check the shared native peer, runtime and exact profile session."""
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         if not self._admitting():
@@ -287,11 +612,7 @@ class ProfileConnectionOperationMixin:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         if connection.session_id != request.session_id:
             raise ProfileAccessRefusedError(_session_mismatch(connection))
-        with self._guard:
-            host = self._profiles.get(connection.profile_id)
-        if host is None:
-            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        return connection, host
+        return connection
 
     def _operation_reply(
         self: RuntimeProfileConnections,
@@ -309,9 +630,9 @@ class ProfileConnectionOperationMixin:
             return self._submit_payload_reply(connection, host, channel, request, release_guard=release_guard)
         # Worker callbacks need this same profile guard; never hold it while
         # waiting for the native execution channel.
-        reply, release = prepare_operation_projection(host, connection, request)
-        allowed = release_guard.enter_context(host.authorize(release))
-        return reply, allowed.expires_at
+        reply, release, fresh_admission = prepare_operation_projection(host, connection, request)
+        expires_at = authorize_operation_release(host, connection, release, release_guard, fresh_admission)
+        return reply, expires_at
 
     def _contract_reply(
         self: RuntimeProfileConnections,
@@ -356,11 +677,7 @@ class ProfileConnectionOperationMixin:
         request: OperationContract,
     ) -> ProfileStatus:
         """Observe, under the caller's profile fence, that the session may see this definition now."""
-        status = self._status(connection, host, request.request_id, request.session_id)
-        if isinstance(status, AccessDenied):
-            raise ProfileAccessRefusedError(status.code)
-        if status.status.denial is not None:
-            raise ProfileAccessRefusedError(status.status.denial)
+        status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
         if request.definition_id not in status.status.effective_scope.operations:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         return status
@@ -383,7 +700,7 @@ class ProfileConnectionOperationMixin:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) and request.idempotency_key is not None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        reply, release = stream_operation_submission(
+        reply, release, fresh_admission = stream_operation_submission(
             host,
             connection,
             request,
@@ -392,8 +709,8 @@ class ProfileConnectionOperationMixin:
             require_session=lambda: self._require_upload_session(connection, host, request),
             deadline=time.monotonic() + SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
         )
-        allowed = release_guard.enter_context(host.authorize(release))
-        return reply, allowed.expires_at
+        expires_at = authorize_operation_release(host, connection, release, release_guard, fresh_admission)
+        return reply, expires_at
 
     def _operation_deadline(self: RuntimeProfileConnections, expires_at: datetime | None) -> float:
         if expires_at is None:
@@ -418,14 +735,104 @@ class ProfileConnectionOperationMixin:
         if connection.session_id != request.session_id:
             raise ProfileAccessRefusedError(_session_mismatch(connection))
         with host.guard:
-            status = self._status(connection, host, request.request_id, request.session_id)
-            if isinstance(status, AccessDenied):
-                raise ProfileAccessRefusedError(status.code)
-            if status.status.denial is not None:
-                raise ProfileAccessRefusedError(status.status.denial)
+            status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
             scope = status.status.effective_scope
             if request.definition_id not in scope.operations or AccessAction.SUBMIT not in scope.actions:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             expires_at = status.status.session_expires_at
             if expires_at is None or expires_at <= self._wall_clock():
                 raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+
+    def view_attach(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest
+    ) -> None:
+        """Issue a single-use attach token to the desktop session that submitted this running view.
+
+        The view's worker leg is opened on the first attach. The token is bound
+        to this session, profile, native peer, boot and operation.
+        """
+        reply: ViewAttachGranted | AccessRefusal
+        try:
+            with self.operation_admission():
+                connection, host = self._view_target(context, channel, request)
+                with self._views.opening:
+                    if self._views.worker_bind(request.operation_id) is None:
+                        worker = host.owner.operation_worker()
+                        bind, worker_channel = open_worker_view_leg(
+                            storage_root=self.root,
+                            identity=worker.identity,
+                            verify=worker.verify_view_channel,
+                            product_version=version("cadrumo"),
+                        )
+                        if bind.definition_id != SEDE_VIEW_DEFINITION_ID or bind.operation_id != request.operation_id:
+                            worker_channel.close()
+                            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                        self._views.bind_worker(profile_id=connection.profile_id, bind=bind, channel=worker_channel)
+                token = self._views.issue(
+                    ViewAttachGrant(
+                        operation_id=request.operation_id,
+                        profile_id=connection.profile_id,
+                        session_id=request.session_id,
+                        person_connection_id=context.connection_id,
+                        peer=context.peer,
+                        runtime_boot_id=self.boot,
+                    )
+                )
+                reply = ViewAttachGranted(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    operation_id=request.operation_id,
+                    attach_token=token,
+                )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+            _log.warning("runtime view attach refused code=%s", error.reason)
+            reply = self._view_refusal(context, request.request_id, error)
+        write_document(channel, reply, deadline=time.monotonic() + 5)
+
+    def view_connect(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewConnect
+    ) -> None:
+        """Admit this connection as a view connection by its attach token, then relay until it unbinds."""
+        try:
+            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            if not self._admitting():
+                raise RefusalError(RefusalCode.DRAINING)
+            leg = self._views.admit(
+                attach_token=request.attach_token, operation_id=request.operation_id, context=context, channel=channel
+            )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+            _log.warning("runtime view connection refused code=%s", error.reason)
+            refusal = self._view_refusal(context, request.request_id, error)
+            write_document(channel, refusal, deadline=time.monotonic() + 5)
+            return
+        self._views.serve_window(leg, request.request_id)
+
+    def _view_target(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest
+    ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        """Require the exact desktop person connection, its profile and its current session."""
+        connection = self._request_connection(context, channel, request)
+        if connection.frontend is not OperationFrontendProjection.DESKTOP:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        with self._guard:
+            host = self._profiles.get(connection.profile_id)
+        if host is None:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        with host.guard:
+            _admitted_status(self._status(connection, host, request.request_id, request.session_id))
+        return connection, host
+
+    def _view_refusal(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        request_id: UUID,
+        error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    ) -> AccessRefusal:
+        return AccessRefusal(
+            request_id=request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            code=error.reason,
+        )

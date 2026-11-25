@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.public_scalar import PublicDecimal
 
@@ -25,14 +26,14 @@ class BienesInversionListRequest(BienesInversionProfileRequest):
 class BienesInversionDeclareRequest(BienesInversionProfileRequest):
     """Declare one capital good using the existing operator-owned facts."""
 
-    identifier: str = Field(min_length=1)
+    identifier: str = Field(min_length=1, max_length=128)
     description: str = Field(min_length=1)
-    acquisition_year: int = Field(ge=1, le=2099)
+    acquisition_year: FourDigitYear
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)
     cuota_soportada: PublicDecimal
     prorrata_inicial_pct: PublicDecimal
     kind: str = Field(min_length=1)
     art108_elegible: bool = True
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
-    disposal_year: int | None = Field(default=None, ge=1, le=2099)
+    disposal_year: FourDigitYear | None = None
     disposal_regime: str | None = Field(default=None, min_length=1)

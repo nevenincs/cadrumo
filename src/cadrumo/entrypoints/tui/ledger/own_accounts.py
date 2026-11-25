@@ -32,8 +32,11 @@ from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..operations.outcome import OperationOutcomeUnknownError
+from .controller import LedgerWorkspaceController
+from .text_values import blank_to_none
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _SECRET_INPUTS = ("#own-account-iban", "#own-account-bic")
 _TEXT_INPUTS = (
@@ -68,11 +71,6 @@ class LedgerOwnAccountDoorV1(Protocol):
     async def __call__(self, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
         """Submit one request and return its masked, receipt-correlated result."""
         ...
-
-
-def _blank_to_none(value: str) -> str | None:
-    stripped = value.strip()
-    return stripped or None
 
 
 def _role_label(role: OwnAccountRole) -> str:
@@ -119,6 +117,12 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         self.selected_id: str | None = None
         self.staged: LedgerOwnAccountRequest | None = None
         self._busy = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A register read or write is out through the door."""
+        return self._busy
 
     DEFAULT_CSS = tokenised(
         """
@@ -304,15 +308,15 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
     def _detail_fields(self) -> dict[str, object]:
         """Collect the entered details; a blank field is not part of the request."""
         fields: dict[str, object] = {
-            "label": _blank_to_none(self._value("#own-account-label")),
+            "label": blank_to_none(self._value("#own-account-label")),
             "holding": OwnAccountHolding(self._select("#own-account-holding")),
-            "iban": _blank_to_none(self._value("#own-account-iban")),
-            "swift_bic": _blank_to_none(self._value("#own-account-bic")),
-            "bank_name": _blank_to_none(self._value("#own-account-bank-name")),
-            "bank_address": _blank_to_none(self._value("#own-account-bank-address")),
-            "bank_city": _blank_to_none(self._value("#own-account-bank-city")),
-            "bank_country_code": _blank_to_none(self._value("#own-account-bank-country")),
-            "currency": _blank_to_none(self._value("#own-account-currency")),
+            "iban": blank_to_none(self._value("#own-account-iban")),
+            "swift_bic": blank_to_none(self._value("#own-account-bic")),
+            "bank_name": blank_to_none(self._value("#own-account-bank-name")),
+            "bank_address": blank_to_none(self._value("#own-account-bank-address")),
+            "bank_city": blank_to_none(self._value("#own-account-bank-city")),
+            "bank_country_code": blank_to_none(self._value("#own-account-bank-country")),
+            "currency": blank_to_none(self._value("#own-account-currency")),
             "opened_on": require_iso8601_date_unless_blank(self._value("#own-account-opened-on")),
         }
         return {name: value for name, value in fields.items() if value is not None}
@@ -345,7 +349,7 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         if button_id == "own-account-review":
             return self._stage_details()
         role = OwnAccountRole(self._select("#own-account-role"))
-        modelo = _blank_to_none(self._value("#own-account-modelo"))
+        modelo = blank_to_none(self._value("#own-account-modelo"))
         if button_id == "own-account-review-undesignate":
             request = self._request(action="undesignate", role=role, modelo=modelo)
             return request, tr(
@@ -409,35 +413,81 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
 
     async def _submit(self, request: LedgerOwnAccountRequest) -> None:
         """Run one request through the door, then re-read the register after a change."""
+        # Cleared on every exit, an unexpected failure included: a body left in flight refuses Back and quitting.
+        try:
+            await self._send(request)
+        finally:
+            self._busy = False
+
+    async def _send(self, request: LedgerOwnAccountRequest) -> None:
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
         reading = request.action == "list"
         status.update(tr("tui.ledger.records.loading" if reading else "tui.ledger.records.saving"))
         try:
             result = await self.door(request)
-            if not reading:
-                self._clear_secrets()
-                result = await self.door(self._request(action="list"))
         except AccountSessionExpiredError as error:
             self._clear_private_view()
             refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(
+                tr("tui.ledger.records.failed")
+                if reading
+                else self.failed_write_status(error, "tui.ledger.records.failed")
+            )
             return
         except CadrumoError as error:
-            refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
-            self._set_staged_controls(staged=self.staged is not None)
-            return
-        finally:
-            self._busy = False
-        self._show_register(result)
-        if not reading:
+            unknown_refusal = door_refusal_text(error)
+            refusal.update(unknown_refusal)
+            if reading:
+                status.update(tr("tui.ledger.records.failed"))
+                return
+            outcome = self.failed_write_status(error, "tui.ledger.records.failed")
+            status.update(outcome)
+            if not isinstance(error, OperationOutcomeUnknownError):
+                self._set_staged_controls(staged=self.staged is not None)
+                return
+            # The change may be saved: drop it and its account numbers, and offer the form again only over
+            # the register as it now stands, so nothing is resent against the one read before it.
+            self._clear_secrets()
             self._unstage()
-            status.update(tr("tui.ledger.records.saved"))
-            if self.selected_id is not None:
-                await self._show_detail(self.selected_id)
-        else:
+            if await self._reread_register(unknown_refusal=unknown_refusal):
+                status.update(outcome)
+            return
+        if reading:
+            self._show_register(result)
             status.update("" if self.accounts else tr("tui.ledger.own_accounts.empty"))
+            return
+        # The write returned, so it is saved whatever the follow-up read says.
+        self._clear_secrets()
+        self._unstage()
+        status.update(tr("tui.ledger.records.saved"))
+        await self._reread_register(unknown_refusal=None)
+
+    async def _reread_register(self, *, unknown_refusal: str | None) -> bool:
+        """Read the register again after a change and report whether it was read.
+
+        A failed read says only that it failed. After a saved change that is
+        all it says; after one whose outcome is unknown, ``unknown_refusal``,
+        which names the operation, stays beside the read's own refusal.
+        """
+        status = self.query_one("#ledger-flow-status", Static)
+        refusal = self.query_one("#ledger-refusal", Static)
+        failed = (
+            "tui.ledger.flow.refresh_failed" if unknown_refusal is None else "tui.ledger.flow.refresh_failed_unknown"
+        )
+        try:
+            result = await self.door(self._request(action="list"))
+        except CadrumoError as error:
+            if isinstance(error, AccountSessionExpiredError):
+                self._clear_private_view()
+            read_refusal = door_refusal_text(error)
+            refusal.update(read_refusal if unknown_refusal is None else "\n".join((unknown_refusal, read_refusal)))
+            status.update(tr(failed))
+            return False
+        self._show_register(result)
+        if self.selected_id is not None:
+            await self._show_detail(self.selected_id)
+        return True
 
     def _show_register(self, result: LedgerOwnAccountResult) -> None:
         """Render the masked register projection the operation returned."""
@@ -573,13 +623,6 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         self.query_one("#own-account-detail", Static).update("")
         cast("DataTable[str]", self.query_one("#ledger-own-accounts", DataTable)).clear()
         self._set_staged_controls(staged=False)
-
-    @override
-    def action_back(self) -> None:
-        if self._busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 __all__ = ["LedgerOwnAccountDoorV1", "LedgerOwnAccountsScreen"]

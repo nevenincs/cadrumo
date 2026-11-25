@@ -4,6 +4,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import { developmentModules } from "../dev/product-boundary";
+import { testRunProductBuild } from "../scripts/test-run-directory.mjs";
 import { SCENARIO_HOST_MARKER } from "../src/dev/marker";
 import { AEAT_SEDE } from "../src/shell/links";
 
@@ -93,7 +94,9 @@ test("the addresses the shell opens are the product's own constants", () => {
 });
 
 test("the production build contains no development scenario code", () => {
-  const built = buildPath("desktop_frontend");
+  const built =
+    testRunProductBuild(buildPath("desktop_results")) ??
+    buildPath("desktop_frontend");
   expect(existsSync(join(built, "index.html"))).toBe(true);
   expect(
     files(built).filter((name) => /scenario|docs-fixture|stories/i.test(name)),

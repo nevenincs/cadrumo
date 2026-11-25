@@ -45,7 +45,7 @@
             "provisional_percentage": "80",
             "provisional_provenance": "inicio_actividad",
             "regime": "especial",
-            "schema_version": "2",
+            "schema_version": "3",
             "sector_id": null,
             "source_observation_ref": null,
             "source_registry_snapshot_refs": []

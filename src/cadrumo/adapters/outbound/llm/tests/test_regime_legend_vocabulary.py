@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from .....core.field_origin import FieldOrigin
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.regime_legend import RegimeLegend, regime_legend_phrases, resolve_regime_legends
 from .....domain.iva.schema import IvaCategory
 from ..invoice_extraction_prompt import (
@@ -66,7 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _resolve_legends() -> tuple[RegimeLegend, ...]:
     with bundled_indexed_authority().operation() as operation:
-        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+        return resolve_regime_legends(operation=operation, effective_date=date(filing_year_envelope().horizon, 1, 1))
 
 
 _LEGENDS = _resolve_legends()

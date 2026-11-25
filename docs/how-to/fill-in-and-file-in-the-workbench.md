@@ -23,8 +23,8 @@ explains that step.
    **Not started**, Enter asks you to confirm that you want to start it.
 
 To choose another declaration, press `+`. Choose the Modelo first. In the
-period picker, press Enter to select a period, then select **Create and open**.
-Esc on the period picker returns to the Modelo picker; Esc there cancels.
+period picker, press `Enter` to select a period, then select **Create and open**.
+`Esc` on the period picker returns to the Modelo picker; `Esc` there cancels.
 
 The list shows the state, result direction, deadline and next action. Use `/`
 to search by modelo number, name or period in words; accents do not affect the
@@ -75,7 +75,7 @@ The figures are Cadrumo's calculation. The AEAT has not seen them.
 - **The navigator** on the left lists the official pages and their sections.
   Each shows the most serious thing inside it (▲, then !, then ◐) with a
   count. A finished section shows ✓. A section that does not apply this period
-  is dimmed and says so. Press Space, or ← and →, to close or open a page.
+  is dimmed and says so. Press `Space`, or ← and →, to close or open a page.
   On a narrow terminal the navigator becomes one line above the list; use `[`
   and `]` to change page.
 - **The list** shows each box: its number in brackets, its label, its value
@@ -89,7 +89,7 @@ The figures are Cadrumo's calculation. The AEAT has not seen them.
   ↑ and ↓ to move between rows. On a narrow terminal the table is stacked
   instead.
 - **Records that repeat**, such as the intra-community traders in Modelo 349,
-  appear as a numbered table. Use ↑ and ↓ or Page Up and Page Down to scroll
+  appear as a numbered table. Use ↑ and ↓ or `Page Up` and `Page Down` to scroll
   through the rows. These values are read-only here; change them where they
   come from, for example in your records.
 
@@ -131,7 +131,7 @@ applied yet". When a box cannot be typed into, the panel says why and what to
 do: a value that follows your records, for example, is corrected in Records and
 then recalculated.
 
-Press `x` or Delete to clear a value you entered, and `u` to go back to the
+Press `x` or `Delete` to clear a value you entered, and `u` to go back to the
 value before your change.
 
 ### Confirm an assumed value
@@ -286,7 +286,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 - Press `?` once. The help band opens and its first line lists the symbols on
   this screen, with counts.
 - Press `?` a second time to open **Symbols and keys**: every symbol with its
-  meaning, grouped, and the keys. Press Esc or `?` to close it.
+  meaning, grouped, and the keys. Press `Esc` or `?` to close it.
 - The first time you open a declaration, a notice says "New here? Press ? to
   see what each symbol means."
 
@@ -316,7 +316,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 | ← and → or `h` and `l` | Move between cells in a table |
 | Space | Open or close a page |
 | `b` | Confirm assumed values of a section or page |
-| `x` or Delete | Clear a value you entered |
+| `x` or `Delete` | Clear a value you entered |
 | `u` | Undo a change you have not applied |
 | `s` | The sources map |
 | `i` | Issues |

@@ -1,0 +1,87 @@
+# Pinned public conformance-vector declaration for Modelo 200 revision 2024.
+#
+# Only the generation MANIFEST digest is pinned, not the output digests it
+# already contains. The manifest enumerates every generated output with its own
+# sha256, so any change to any output changes the manifest and therefore this
+# digest: one pin carries the identical fail-closed property. The pin stays
+# committed data rather than being re-derived beside the enrollment, which is
+# what keeps the canonical_builder_conflict check from being tautological.
+# A regenerated export tree must refresh this digest under review.
+
+authority_id = "dev.registry.filing-export-conformance"
+mechanism_source_ref = "generated-provenance/200/2024"
+generation_manifest_sha256 = "dc1695b50fb78687a25c79a246e149efec4ad182d3356358c456efa5678f8b30"
+filing_year = 2024
+period_code = "0A"
+
+[coordinate]
+modelo = "200"
+revision = "2024"
+layout_ids = ["generated-modelo-200-2024-fichero"]
+
+[inputs.decimal]
+# Casilla 00501 is the resultado de la cuenta de perdidas y ganancias: a
+# required manual input and the base-determination starting point. It carries
+# a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
+# exercised; a zero here would render a degenerate base and prove far less.
+"DP200012:00501" = "100000"
+# INCN of the preceding período impositivo (LIS art. 29.1 and art. 101), read
+# from the preceding Modelo 200. NOT a neutral zero: this value selects the
+# tipo de gravamen branch outright. For 2024, below the microempresa threshold
+# of one million euros (is.modelo-200.incn-umbral-microempresa) LIS art. 29.1
+# as worded by Ley 31/2022 art. 39 gives the reduced 23% rate
+# (is.modelo-200.tipo-gravamen-pyme-display); at or above it the GENERAL
+# art. 29 rate of 25% applies. This value clears that threshold, so the general
+# branch is the one exercised, and it is coherent with the declared 00501
+# result.
+"modelo-200-incn-periodo-impositivo-anterior" = "12000000"
+# INCN of the twelve months before the period (LIS DA 15a): below 20 million
+# euros the BIN compensation keeps the 70% limit. The same figure, since that
+# preceding período lasted twelve months.
+"modelo-200-profile-incn-prior-12-months" = "12000000"
+"modelo-200-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-bin-pendiente-ejercicios-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+"modelo-200-pago-fraccionado-primero-40-2" = "0"
+"modelo-200-pago-fraccionado-primero-40-3" = "0"
+"modelo-200-pago-fraccionado-segundo-40-2" = "0"
+"modelo-200-pago-fraccionado-segundo-40-3" = "0"
+"modelo-200-pago-fraccionado-tercero-40-2" = "0"
+"modelo-200-pago-fraccionado-tercero-40-3" = "0"
+
+[inputs.enum]
+"modelo-200-profile-legal-entity-form" = "sl"
+
+[boolean_inputs]
+"modelo-200-profile-new-entity-flag" = false
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2024.dp200001.f0001"
+emitted_offset = 328
+length = 2
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2024.dp200001.f0002"
+emitted_offset = 330
+length = 3
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2024.dp200001.f0003"
+emitted_offset = 333
+length = 5
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2024.dp200001.f0004"
+emitted_offset = 338
+length = 1
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2024.dp200001.f0113"
+emitted_offset = 943
+length = 12

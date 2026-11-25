@@ -6,7 +6,7 @@ from typing import Never
 
 from pydantic import BaseModel
 
-from ....domain.transactions.models import LedgerDatePartition
+from ....domain.transactions.date_partition import LedgerDatePartition
 
 
 class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:
@@ -17,6 +17,9 @@ class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:
 
     def exists(self) -> bool:
         raise AssertionError("this unit test does not access this catalogue")
+
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        raise AssertionError("this unit test does not probe this catalogue's stored bytes")
 
     def load(self, **_kwargs: object) -> CatalogueT:
         raise AssertionError("this unit test does not read this catalogue")
@@ -40,6 +43,9 @@ class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:
         raise AssertionError("this unit test does not mutate this catalogue")
 
     def to_secure_object_write(self, catalogue: object, **_kwargs: object) -> Never:
+        raise AssertionError("this unit test does not prepare secure catalogue writes")
+
+    def to_secure_object_write_unit(self, catalogue: object, **_kwargs: object) -> Never:
         raise AssertionError("this unit test does not prepare secure catalogue writes")
 
     def save_with_secure_object_writes(self, catalogue: object, extra_writes: object, **_kwargs: object) -> Never:
@@ -106,3 +112,8 @@ class UnusedEvidenceAttachmentIngestor:
 
     def ingest(self, request: object) -> Never:
         raise AssertionError("this unit test does not ingest attachments")
+
+
+def unused_evidence_document_shape_probe(data: bytes) -> Never:
+    """Refuse a shape probe that a unit test isolating another owner must never reach."""
+    raise AssertionError("this unit test does not probe evidence bytes")

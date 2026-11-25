@@ -52,7 +52,7 @@ from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,7 +64,7 @@ _ADVISED_NOTICE: Final = "ledger.evidence.review.advised_pending"
 _PAGE: Final = (
     "FACTURA 2026-0142\n"
     "Emisor: Acme Suministros SL\n"
-    "NIF B12345674\n"
+    "NIF B00015016\n"
     "Calle Mayor 3, 28001 Madrid\n"
     "Espana\n"
     "Cliente: Islas Comercial SL\n"
@@ -93,7 +93,7 @@ def _attribution_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAu
     the reading path produces it.
     """
     draft = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         supplier_postal_code="28001",
         supplier_country="Espana",
@@ -138,7 +138,7 @@ def _country_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthor
     advisory the moment the reader's field split moved underneath it.
     """
     read = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         customer_country_code="XX",
         customer_stated_country_code="XX",
         taxable_base=Decimal("100.00"),
@@ -152,7 +152,7 @@ def _country_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthor
 def _clean_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return a draft carrying nothing advisory: the control every filter needs."""
     read = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         taxable_base=Decimal("100.00"),
     )
@@ -184,7 +184,7 @@ def seeded_queue(tmp_path: Path) -> Iterator[None]:
 
 
 def _listed(*args: str) -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "list", *args])
+    result = invoke(["--format", "json", "app", "ledger", "evidence", "review", "list", *args])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert isinstance(payload, dict)
@@ -284,7 +284,7 @@ def test_the_notice_is_absent_when_the_narrowed_queue_carries_none() -> None:
 @pytest.mark.usefixtures("seeded_queue")
 def test_the_text_queue_carries_the_same_counts_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "list"])
+    result = invoke(["app", "ledger", "evidence", "review", "list"])
 
     assert result.exit_code == 0, result.output
     lines = {line.split("\t")[0]: line for line in result.output.splitlines()}

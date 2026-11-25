@@ -1434,28 +1434,28 @@
     {
       "source": "maps/stage-1/01-operator-interfaces-part-1.md",
       "source_sha256": "7e1194437e0e6673ccaf4f17cfc788314adcc0b78588e0660bd9fa5e4e84229f",
-      "page": "topics/operator-interfaces-part-1.md",
+      "page": "topics/operator-interfaces-command-graph.md",
       "section": "topic",
       "body_sha256": "579db0d60f8cf824afaa2f01d29476b9e1db09ab3beb97812f984d5948fcb0a4"
     },
     {
       "source": "map/synthesis-briefs/01-operator-interfaces-part-1.md",
       "source_sha256": "6f806a673f742f13b72d081947b935e9746af104e137977b44ed4e46b82ce30d",
-      "page": "topics/operator-interfaces-part-1.md",
+      "page": "topics/operator-interfaces-command-graph.md",
       "section": "summary",
       "body_sha256": "36dc4a6a0b1146925c8bdeedb951aa392d448bd6b52e9fd58f23a6576abd174e"
     },
     {
       "source": "maps/stage-1/01-operator-interfaces-part-2.md",
       "source_sha256": "5f33c53a5e8ffbb0e267591610206662cec4afa3eab6480b2dad1e678d8e62e9",
-      "page": "topics/operator-interfaces-part-2.md",
+      "page": "topics/operator-interfaces-transport-and-bridges.md",
       "section": "topic",
       "body_sha256": "a35c4b71a680f150b38c1d8de35456a6275cb1888f7a5831d51124744213050a"
     },
     {
       "source": "map/synthesis-briefs/01-operator-interfaces-part-2.md",
       "source_sha256": "f6dd436d5a87b527c369f3f8715c35eb1b9ccc8617b7c53b7ec70ca14e80fd6e",
-      "page": "topics/operator-interfaces-part-2.md",
+      "page": "topics/operator-interfaces-transport-and-bridges.md",
       "section": "summary",
       "body_sha256": "d4585f30495a35de58730934b30961ed72eac0d76ab8abde4f1772e6b27316c7"
     },
@@ -1588,28 +1588,28 @@
     {
       "source": "maps/stage-1/11-modelo-work-and-revision-lifecycle-part-1.md",
       "source_sha256": "85ab4e3bb9af2132960af272356a542d8c8fad80bcb3179e8aef2b4165c3123b",
-      "page": "topics/modelo-work-and-revision-lifecycle-part-1.md",
+      "page": "topics/modelo-work-calculation-and-filing.md",
       "section": "topic",
       "body_sha256": "68ed79526209416feb45850d02a26a93b12d2334bdcf58e1d3fa752ec403db84"
     },
     {
       "source": "map/synthesis-briefs/11-modelo-work-and-revision-lifecycle-part-1.md",
       "source_sha256": "a509ffbd3e927401368f770f25f65f37ef2a35bc253955e627627b503f7a7623",
-      "page": "topics/modelo-work-and-revision-lifecycle-part-1.md",
+      "page": "topics/modelo-work-calculation-and-filing.md",
       "section": "summary",
       "body_sha256": "8e5cd9f60894dd625223f5a23b8322c3ed4543fc3796188336ca84c0146f1032"
     },
     {
       "source": "maps/stage-1/11-modelo-work-and-revision-lifecycle-part-2.md",
       "source_sha256": "f35b1f40ccac9e1bb46a439336c0d40e79c0f1f42117a7410fbb51433d27d892",
-      "page": "topics/modelo-work-and-revision-lifecycle-part-2.md",
+      "page": "topics/modelo-work-verification-and-workspace.md",
       "section": "topic",
       "body_sha256": "6c57c30e3795e9f77f4455c96210b8d5fa5d4dcbbbc0c164f9a626b39aba3783"
     },
     {
       "source": "map/synthesis-briefs/11-modelo-work-and-revision-lifecycle-part-2.md",
       "source_sha256": "c7540d7c862418c73c0df45ddebeb016ac28ee0214b1de84cc207cf21074857f",
-      "page": "topics/modelo-work-and-revision-lifecycle-part-2.md",
+      "page": "topics/modelo-work-verification-and-workspace.md",
       "section": "summary",
       "body_sha256": "b741f9d680a9f4adf505e7891e556b7f9d653f86a70b9976ba28b4ab44a64cc9"
     },

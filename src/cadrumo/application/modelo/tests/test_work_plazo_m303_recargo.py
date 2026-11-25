@@ -34,7 +34,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -93,13 +93,15 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
     frozen literal. The recargo band is cross-checked against the domain
     ``build_recovery_for_overdue`` computation, not a hand-picked percentage.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for quarter, filing_year in _quarter_year_cases():
             case_id = f"M303 {filing_year} {quarter}"
             period = Period.from_year_and_code(filing_year, quarter)
-            window = resolve_filing_window("303", filing_year, period)
+            resolution = resolve_filing_window("303", filing_year, period)
+            window = None if resolution is None else resolution.dated_window
             assert window is not None, f"registry must carry an {case_id} window"
             closes_on = window.closes_on
+            assert closes_on is not None, case_id
 
             reference_today = closes_on + timedelta(days=40)
             work_unit = _work_unit_for(quarter, filing_year)
@@ -125,6 +127,7 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
                 period=period,
                 operation=_authority_operation_for_test,
             )
+            assert expected is not None
             assert preview.band_id == expected.recargo_band.id, case_id
             assert preview.surcharge_pct == expected.recargo_band.surcharge_pct, case_id
             assert preview.interest_applies is expected.recargo_band.interest_applies, case_id
@@ -141,9 +144,11 @@ def test_in_time_m303_quarter_is_silent() -> None:
     for quarter, filing_year in _quarter_year_cases():
         case_id = f"M303 {filing_year} {quarter}"
         period = Period.from_year_and_code(filing_year, quarter)
-        window = resolve_filing_window("303", filing_year, period)
+        resolution = resolve_filing_window("303", filing_year, period)
+        window = None if resolution is None else resolution.dated_window
         assert window is not None, case_id
         closes_on = window.closes_on
+        assert closes_on is not None, case_id
 
         reference_today = closes_on - timedelta(days=5)
         work_unit = _work_unit_for(quarter, filing_year)
@@ -169,7 +174,8 @@ def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:
     for filing_year in _FILING_YEARS:
         for quarter in _QUARTERS:
             period = Period.from_year_and_code(filing_year, quarter)
-            window = resolve_filing_window("303", filing_year, period)
+            resolution = resolve_filing_window("303", filing_year, period)
+            window = None if resolution is None else resolution.dated_window
             assert window is not None, f"M303 {filing_year} {quarter} window missing"
             closes_on = window.closes_on
             assert isinstance(closes_on, date)

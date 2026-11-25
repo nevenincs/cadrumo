@@ -280,10 +280,11 @@ def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifi
 def load_reconciliation_filed_observation(bucket_id: str, observation_id: str) -> FiledObservationProtocol:
     """Resolve a filed manifest only from the operation's exact encrypted profile."""
     from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-    from ..core.config import load_settings
+    from ..core.storage_taxonomy import StorageCategory
+    from ..core.storage_taxonomy_locations import storage_path
 
     store = FiledDeclaracionObservationStore(
-        load_settings().cadrumo_filed_declarations_dir,
+        storage_path(StorageCategory.FILED_DECLARATIONS),
         objects=secure_object_repository_for_bucket(bucket_id),
     )
     return store.load_observation(Path(observation_id))

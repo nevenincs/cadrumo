@@ -18,9 +18,9 @@ finalized audit surface.
 See Also:
     :class:`TransactionRevisionParticipationIndex`:
         Per-transaction secure object rebuilt by this module.
-    :func:`cadrumo.application.modelo.verification_actions._build_participation_writes`:
+    :func:`cadrumo.application.modelo.participation_writes.build_participation_writes`:
         Write-time co-emission path that keeps the index current during
-        verification persistence.
+        verification and filing persistence.
 """
 
 from __future__ import annotations
@@ -28,12 +28,12 @@ from __future__ import annotations
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
     CalculationRevision,
-    CalculationRevisionState,
 )
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
 from ...domain.modelos.participation_index import (
@@ -60,7 +60,7 @@ class ParticipationRebuildStats(BaseModel):
             or reverted to borrador since the last rebuild.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_count: NonNegativeInt
     participation_count: NonNegativeInt
@@ -97,10 +97,7 @@ def _participation_for_sealed_revision(
     if work_unit is None:
         return None
 
-    is_filed = revision.state in {
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
+    is_filed = revision.state in FILED_REVISION_STATES
     filing_record = _filing_record_for_revision(revision.calculation_revision_id, filings) if is_filed else None
     participation = TransactionRevisionParticipation(
         calculation_revision_id=revision.calculation_revision_id,

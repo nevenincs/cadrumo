@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 
 from ..maintenance_support import GeneratedArtifactInspection
+from .party_name_statements import verify_party_name_statements
 from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
@@ -46,7 +47,7 @@ from .semantic_map import (
 )
 from .semantic_map_validation import (
     SemanticMapAnomalyException,
-    _validate_semantic_map_with_admissions,
+    validate_semantic_map_with_admissions,
 )
 
 __all__ = [
@@ -253,7 +254,7 @@ def join_record_design_semantics(
 ) -> JoinedRecordDesign:
     """Join static parser/map evidence through a non-filing revision inspection."""
     intermediate = project_record_design_for_revision(intermediate, inspection.revision_id)
-    validated = _validate_semantic_map_with_admissions(
+    validated = validate_semantic_map_with_admissions(
         semantic_map,
         intermediate,
         inspection,
@@ -276,6 +277,7 @@ def _join_record_design_semantics(
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
+    verify_party_name_statements(semantic_map, intermediate)
     entries_by_anchor: dict[AnchorKey, list[SemanticMapEntry]] = {}
     for entry in semantic_map.entries:
         entries_by_anchor.setdefault(semantic_anchor_key(entry.anchor), []).append(entry)

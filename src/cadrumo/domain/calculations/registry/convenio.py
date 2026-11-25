@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ....core.decimal.constants import ONE, ZERO
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
@@ -31,6 +32,8 @@ from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .errors import RegistryValidationError
 from .ids import LegalRefId
 from .schema_base import DateAxis, RegistryModel
+
+_COUNTRY_CODE_PATTERN = f"^{COUNTRY_CODE_ALPHA2_PATTERN}$"
 
 if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation
@@ -145,7 +148,7 @@ class ConvenioTreaty(RegistryModel):
     modelled yet; the schema leaves room for them without foreclosing.
     """
 
-    country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    country_code: CountryCodeAlpha2 = Field(pattern=_COUNTRY_CODE_PATTERN)
     document_id: str = Field(min_length=1, max_length=64)
     overrides: tuple[ConvenioOverrideRow, ...] = Field(min_length=1)
     notes: str | None = Field(default=None, max_length=512)

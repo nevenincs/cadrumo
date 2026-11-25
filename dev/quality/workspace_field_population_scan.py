@@ -141,14 +141,20 @@ def _record_generic_factory_construction(
         bound = _type_parameter_models(node, known)
         if not bound:
             continue
-        for inner in ast.walk(node):
-            if not isinstance(inner, ast.Call) or not isinstance(inner.func, ast.Name):
-                continue
-            model = bound.get(inner.func.id)
-            if model is not None:
-                supplied[model].update(
-                    keyword.arg for keyword in inner.keywords if (keyword.arg is not None and keyword.arg)
-                )
+        _record_factory_calls(node, bound, supplied)
+
+
+def _record_factory_calls(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, bound: dict[str, str], supplied: defaultdict[str, set[str]]
+) -> None:
+    for inner in ast.walk(node):
+        if not isinstance(inner, ast.Call) or not isinstance(inner.func, ast.Name):
+            continue
+        model = bound.get(inner.func.id)
+        if model is not None:
+            supplied[model].update(
+                keyword.arg for keyword in inner.keywords if (keyword.arg is not None and keyword.arg)
+            )
 
 
 def _declared_fields(models_module: Path) -> dict[str, dict[str, bool]]:
@@ -173,7 +179,7 @@ def _declared_fields(models_module: Path) -> dict[str, dict[str, bool]]:
 
 def _supplied_fields(source_root: Path, models_module: Path, known: set[str]) -> dict[str, set[str]]:
     """Return, per model, every field name some construction site supplies."""
-    supplied: dict[str, set[str]] = defaultdict(set)
+    supplied: defaultdict[str, set[str]] = defaultdict(set)
     for path in source_root.rglob("*.py"):
         if path == models_module or not is_production_source(path, root=source_root):
             continue

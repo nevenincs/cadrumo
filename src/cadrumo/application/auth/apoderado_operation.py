@@ -17,6 +17,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -27,6 +28,7 @@ from ...core.operations import (
 from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
+    operation_disclosures,
     require_declared_action,
     require_period_independent_replay_or_authority,
 )
@@ -38,7 +40,6 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
@@ -99,25 +100,11 @@ def _require_apoderado_access_request(
 def _apoderado_disclosures(
     operation_id: ApoderadoOperationId, context: OperationAccessContext
 ) -> frozenset[DisclosurePermission]:
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        return frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    if context.action is not AccessAction.RESULT:
-        return disclosures
-    schema = context.contract.result_schema
-    if schema is None or schema.schema_id != operation_id + ".result":
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return frozenset(
-        DisclosurePermission(destination_id=context.destination_id, projection_id=schema.schema_id, category=category)
-        for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
+    return operation_disclosures(
+        context,
+        observed_by=frozenset({AccessAction.OBSERVE}),
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+        result_schema_id=operation_id + ".result",
     )
 
 
@@ -186,9 +173,7 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
                     sensitive_input=OperationSensitiveInputPolicy.NONE,
                     conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
                     owned_resources=frozenset(),
-                    permitted_effects=frozenset(
-                        {OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}
-                    )
+                    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT
                     if mutating
                     else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
 from ...domain.transactions.models import Transaction
-from .actions_manual import ledger_transaction_result_payload
 from .classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
@@ -16,6 +15,7 @@ from .llm_review_contracts import bound_ledger_llm_projection
 from .llm_review_operand import LedgerLlmReviewedOperand
 from .llm_review_results import LedgerLlmOperationResult
 from .llm_review_workflow import LlmReviewDecision
+from .manual_read import ledger_transaction_result_payload
 from .models import ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 
@@ -117,11 +117,32 @@ def project_ledger_llm_writer_result(
         classification = LedgerClassifyOperationResult(
             outcome="classified",
             profile_id=operand.request.profile_id,
-            transaction=LedgerTransactionProjection.from_payload(payload.transaction),
+            transaction=LedgerTransactionProjection.from_payload(
+                payload.transaction, language=operand.request.output_language
+            ),
             deduction_fact_kind=result.transaction.deduction_fact_kind.value
             if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)
             else None,
             investment_asset_id=result.transaction.investment_asset_id,
+            iva_vehicle_use=(
+                result.transaction.iva_vehicle_use.value if result.transaction.iva_vehicle_use is not None else None
+            ),
+            exemption_article=(
+                result.transaction.exemption_article.value if result.transaction.exemption_article is not None else None
+            ),
+            arrendamiento_ref=result.transaction.arrendamiento_ref,
+            inmueble_ref=result.transaction.inmueble_ref,
+            gasto_capital_inmobiliario=(
+                str(result.transaction.gasto_capital_inmobiliario)
+                if result.transaction.gasto_capital_inmobiliario is not None
+                else None
+            ),
+            posicion_ref=result.transaction.posicion_ref,
+            concepto_capital_mobiliario=(
+                str(result.transaction.concepto_capital_mobiliario)
+                if result.transaction.concepto_capital_mobiliario is not None
+                else None
+            ),
             review_status=payload.review_status,
             bucket_event_ids=result.bucket_event_ids,
         )

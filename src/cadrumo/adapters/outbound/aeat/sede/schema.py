@@ -7,15 +7,11 @@ malformed or unsupported AEAT response shapes fail during parsing.
 Every boundary-crossing record carries ``mode: Literal["read"]``. That
 field is a DOCUMENTATION AND TEST marker, not a runtime guard: nothing
 in production reads it, so it constrains a record's declared shape and
-nothing else. It was previously described here as "part of the
-structural write-guard", which credited it with protection it does not
-provide.
+nothing else.
 
 The package does not mutate AEAT state, but that is a property the
 guards below MAINTAIN rather than one the type system makes impossible.
-Stating it as a structural incapability is what this note exists to
-stop, because a reader asking whether this boundary can write is asking
-the right question and deserves the real answer:
+The guards are:
 
 * A forbidden-verb scan over the package's own source text
   (``_no_write_surface_fixture.txt``, enforced by
@@ -39,12 +35,10 @@ the right question and deserves the real answer:
   forbids outright, so one shared list cannot serve every surface. The
   shared runtime rule is ``_adapter_utils.assert_read_landing``.
 
-The residual this note previously named -- a ``page.click`` on a filing
-control in a module with no landing refusal, passing the verb scan
-(``click`` is allowed), ``_assert_read_http`` (never consulted for a
-browser POST) and this ``mode`` marker (never read) -- is now a
-mechanism rather than a matter of review: adding such a click to an
-unenrolled module fails the enrollment gate.
+A ``page.click`` on a filing control in a module with no landing refusal
+passes the verb scan (``click`` is allowed), ``_assert_read_http`` (never
+consulted for a browser POST) and this ``mode`` marker (never read).
+Adding such a click to an unenrolled module fails the enrollment gate.
 
 What remains true, and is stated so nobody mistakes the above for more
 than it is: the enrollment gate is a SOURCE scan, so it establishes that
@@ -63,24 +57,27 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from functools import partial
+from typing import Annotated, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import AfterValidator, AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
-from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
+from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FilingYear
 from .....core.identity.aeat_expediente import AeatExpedienteId
 from .....core.identity.digest import ContentDigest
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
+from .....domain.calculations.registry.form_codes import form_for_role, form_role_validator
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from .errors import SedeValidationError
 
 
@@ -92,11 +89,11 @@ class FiledDeclaracionArtefact(BaseModel):
     remains in BOE, AEAT instructions, manuals, and registry definitions.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
     source_url: AnyHttpUrl
-    content_type: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(min_length=1, max_length=256)
     byte_count: NonNegativeInt
     sha256: ContentDigest
     captured_at: datetime
@@ -113,7 +110,7 @@ class ObservedCasillaValue(BaseModel):
     the conversion succeeds on text that merely looks numeric.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: str = Field(min_length=1, max_length=4096)
@@ -180,7 +177,7 @@ class ObservedCasillaSkip(BaseModel):
     which field was skipped without disclosing what it holds.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     label: str = Field(min_length=1, max_length=512)
@@ -203,7 +200,7 @@ class IvaCompensationWalletRow(BaseModel):
     reserved for a richer AEAT view that itemises the movement columns.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generation_year: FilingYear
     generation_period: Period
@@ -223,11 +220,13 @@ class IvaCompensationWalletObservation(BaseModel):
     decision for Modelo 303 casilla `110`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    target_modelo: Literal["303"] = "303"
+    target_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))] = Field(
+        default_factory=partial(form_for_role, "iva.periodic")
+    )
     target_year: FilingYear
     target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()
@@ -258,9 +257,9 @@ class FiledDeclarationAvailability(BaseModel):
             before historical ones.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicios: tuple[int, ...] = ()
     mode: Literal["read"] = "read"
 
@@ -270,10 +269,8 @@ class FiledDeclarationAvailability(BaseModel):
     def _ejercicios_in_range(cls, value: tuple[int, ...]) -> tuple[int, ...]:
         """Reject an ejercicio outside the range every other record in this module accepts."""
         for ejercicio in value:
-            if not FILING_YEAR_MIN <= ejercicio <= FILING_YEAR_MAX:
-                error = SedeValidationError(
-                    f"ejercicio outside the supported range [{FILING_YEAR_MIN}, {FILING_YEAR_MAX}]: {ejercicio!r}"
-                )
+            if not FOUR_DIGIT_YEAR_FIRST <= ejercicio <= FOUR_DIGIT_YEAR_LAST:
+                error = SedeValidationError(f"ejercicio is not written with four digits: {ejercicio!r}")
                 raise ValueError(str(error)) from error
         return value
 
@@ -296,7 +293,7 @@ class FiledDeclarationAvailabilityReport(BaseModel):
             :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     items: tuple[FiledDeclarationAvailability, ...] = ()
     discovered_at: UtcInstant
@@ -326,11 +323,16 @@ class FiledDeclaracionObservation(BaseModel):
     ``casillas``; and it is not free-form provenance text, so a flat map loses
     the record-design position that makes it auditable. ``metadata`` remains the
     home for register-row provenance that genuinely is untyped text.
+
+    ``filing_kind_marker`` carries the submitted fichero's complementaria
+    readings, blank included. ``None`` means the marker was not read -- no
+    submitted file, a failed parse, or a capture stored before the marker was
+    read -- never that it was blank.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     period: Period
     expediente_id: AeatExpedienteId
@@ -340,6 +342,7 @@ class FiledDeclaracionObservation(BaseModel):
     artefacts: tuple[FiledDeclaracionArtefact, ...] = Field(min_length=1)
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
     registry_snapshot_ref: RegistrySnapshotRef

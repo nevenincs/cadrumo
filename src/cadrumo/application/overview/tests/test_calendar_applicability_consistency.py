@@ -27,57 +27,74 @@ from datetime import date
 
 import pytest
 
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..explain import build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _CALENDAR_RANGE = OverviewCalendarRange(
-    from_date=date(2026, 1, 1),
-    to_date=date(2026, 12, 31),
+    from_date=date(_YEAR, 1, 1),
+    to_date=date(_YEAR, 12, 31),
 )
-_TODAY = date(2026, 4, 1)
+_TODAY = date(_YEAR, 4, 1)
+# The cadence is stated so every window carries the modelo's applicability: an
+# unanswered large-company fact holds the cadence-decided windows as undecided
+# rows, which say nothing about applicability and are tested where that
+# question is.
+_STATED_CADENCE = ModeloEnrollment(large_company=False)
 
 
 def _autonomo() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
 def _sociedad_limitada() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X9876543K",
+        tax_id="X0001004S",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
 def _attribution_entity() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
@@ -118,7 +135,7 @@ def _collect_verdicts_from_explain(
     """Call build_overview_explain for each modelo and collect the verdict."""
     verdicts: dict[str, ApplicabilityVerdict] = {}
     for modelo in modelos:
-        explain = build_overview_explain(profile, modelo=modelo, year=2026, operation=operation)
+        explain = build_overview_explain(profile, modelo=modelo, year=_YEAR, operation=operation)
         verdicts[modelo] = explain.verdict
     return verdicts
 
@@ -189,7 +206,7 @@ def test_derive_modelo_applicability_is_the_shared_implementation() -> None:
 
     from .. import calendar as calendar_module
 
-    calendar_fn = calendar_module._derive_modelo_applicability
+    calendar_fn = calendar_module.derive_modelo_applicability
     explain_fn = getclosurevars(build_overview_explain).globals["derive_modelo_applicability"]
 
     assert calendar_fn is explain_fn, (

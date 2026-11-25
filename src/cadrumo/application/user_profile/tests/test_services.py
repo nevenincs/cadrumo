@@ -51,6 +51,14 @@ def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[No
         yield
 
 
+#: The taxpayer model facts a ready profile states: without them the calendar cannot
+#: place the taxpayer, so a profile is never ready regardless of the axis under test.
+_TAXPAYER_MODEL = (
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+)
+
+
 def _record(
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
@@ -220,7 +228,7 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(
     record = _record(
         schema,
         operation,
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        facts=(*_TAXPAYER_MODEL, UserProfileFact(path="identity.tax_id", value="12345678Z")),
     )
     report = svc.report(
         record=record,
@@ -260,7 +268,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     complete_record = _record(
         schema,
         operation,
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        facts=(*_TAXPAYER_MODEL, UserProfileFact(path="identity.tax_id", value="12345678Z")),
     )
     ready_report = svc.report(
         record=complete_record,
@@ -274,7 +282,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     assert ready_report.ready and ready_report.missing == ()
     assert reads == []
 
-    empty_record = _record(schema, operation)
+    empty_record = _record(schema, operation, facts=_TAXPAYER_MODEL)
     missing_report = svc.report(
         record=empty_record,
         modelo="100",
@@ -326,12 +334,18 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Both boolean declarations are complete; absence remains a refusal."""
+    """A teaching employer owes the attestation: both boolean declarations are complete, absence is a refusal."""
     service = ProfilePreflightService(schema=schema)
+    payroll_at_a_school = (
+        *_TAXPAYER_MODEL,
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="activities.iae_epigraph", value="931.1"),
+        UserProfileFact(path="censo.large_company", value=False),
+    )
     period = Period.from_year_and_code(2026, "1T")
 
     missing = service.report(
-        record=_record(schema, operation),
+        record=_record(schema, operation, facts=payroll_at_a_school),
         modelo=Modelo("111").value,
         revision_id="2019-y-siguientes",
         period=period,
@@ -348,7 +362,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
             record=_record(
                 schema,
                 operation,
-                facts=(UserProfileFact(path="withholding.colegio_concertado", value=declared),),
+                facts=(*payroll_at_a_school, UserProfileFact(path="withholding.colegio_concertado", value=declared)),
             ),
             modelo=Modelo("111").value,
             revision_id="2019-y-siguientes",
@@ -382,7 +396,7 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(
         schema,
         operation,
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(path="identity.legal_name", value="Rocio Ferrer Administracion Sociedad Limitada"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
@@ -416,7 +430,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
             schema,
             operation,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 identity_fact,
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),

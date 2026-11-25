@@ -14,15 +14,15 @@ from cadrumo.application.modelo.m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_composition,
     m303_regimen_simplificado_scope_for_profile,
 )
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from .....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -56,32 +56,21 @@ def _work_unit() -> WorkUnit:
     )
 
 
-#: The three facts the profile schema requires of every record. A profile
-#: missing any of them cannot be COMPLETE, and this test needs a COMPLETE one.
-_SCHEMA_REQUIRED_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-)
-
-
 def _store_profile(*, composition: M303RegimeComposition) -> None:
-    facts = (
-        *_SCHEMA_REQUIRED_FACTS,
-        UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
+        )
     )
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=facts,
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         )
     )
 

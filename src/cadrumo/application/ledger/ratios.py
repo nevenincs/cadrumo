@@ -5,14 +5,15 @@ the application-layer ledger actions backed by the domain
 ``usage_ratios`` module. This module adds two read-only verbs that
 close the discoverability and pre-calculate readiness gaps:
 
-  ``eligible``  enumerate categories that may carry a user ratio,
-                annotated with their statutory default ratio
+  ``eligible``  enumerate categories that may carry a user ratio, each with
+                its registry label, notes and proportionality kind
   ``validate``  inspect the persisted profile against eligibility and
                 bound rules; report missing categories per modelo
 """
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
@@ -20,11 +21,15 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
+from ...core.text_bounds import NonEmptyStr
+from ...core.time.clock import now
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
-from ...domain.buckets.event import BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
@@ -34,23 +39,31 @@ from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ...domain.usage_ratios.service import usage_ratio_bucket_lock
 from ..bucket_event_repository import bucket_event_history_repository
-from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
+from .persistence_ports import LedgerPersistenceConflictError
+from .usage_ratio_repository import (
+    load_usage_ratio_profile,
+    save_usage_ratio_profile_with_writes,
+)
 
 
 class EligibleCategoryRow(BaseModel):
     """One row in the ``ratios eligible`` listing.
 
-    ``default_ratio`` is None for eligible categories whose
-    proportionality rule does not ship a statutory default; the
-    operator must supply an override before the modelo pre-calculate
-    readiness check passes.
+    No category ships a statutory ratio: the operator must supply an
+    override, or the censo must declare the area, before the modelo
+    pre-calculate readiness check passes.
+
+    ``label`` and ``notes`` are the registry's wording for the category, said
+    in the requested language: every frontend shows these rather than keeping
+    a vocabulary of its own.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     proportionality_kind: ProportionalityKind
-    default_ratio: Decimal | None = Field(default=None)
+    label: NonEmptyStr
+    notes: NonEmptyStr
     override_present: bool
 
 
@@ -90,20 +103,22 @@ def eligible_ratio_categories(
     *,
     year: int,
     operation: PinnedAuthorityOperation,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> tuple[EligibleCategoryRow, ...]:
-    """Return all eligible categories with their default ratio + override flag.
+    """Return all eligible categories with their registry wording, kind + override flag.
 
     The output is sorted by canonical category value so callers can
     diff snapshots without ordering noise. Each row is an :class:`EligibleCategoryRow`.
 
     Args:
         profile: The operator's persisted per-category overrides.
-        year: Filing year whose category profiles supply the statutory
-            default ratio. Required rather than defaulted: the default ratio
-            is year-versioned regulatory data, and a pinned year would apply
-            one year's law to every filing.
+        year: Filing year whose category profiles supply the proportionality
+            kind. Required rather than defaulted: the rule is year-versioned
+            regulatory data, and a pinned year would apply one year's law to
+            every filing.
         operation: The caller-owned authority generation used for every
             category and governed-fact query in this projection.
+        language: The language the registry's label and notes keys are said in.
     """
     rows: list[EligibleCategoryRow] = []
     year_profiles = resolve_category_profiles(year, operation=operation)
@@ -116,7 +131,8 @@ def eligible_ratio_categories(
             EligibleCategoryRow(
                 category=category,
                 proportionality_kind=rule.kind,
-                default_ratio=rule.default_ratio,
+                label=tr(str(category_profile.display_label), locale=language.value),
+                notes=tr(str(rule.notes), locale=language.value),
                 override_present=category in profile.ratios,
             ),
         )
@@ -193,7 +209,11 @@ def validate_ratios_profile(
 
 
 def list_eligible_ratios_for_bucket(
-    *, bucket_id: str, year: int, operation: PinnedAuthorityOperation
+    *,
+    bucket_id: str,
+    year: int,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> tuple[EligibleCategoryRow, ...]:
     """Convenience: load the bucket's profile and project the eligibility report.
 
@@ -202,13 +222,14 @@ def list_eligible_ratios_for_bucket(
 
     Args:
         bucket_id: The bucket whose persisted profile is projected.
-        year: Filing year whose category profiles supply the statutory
-            default ratio.
+        year: Filing year whose category profiles supply the proportionality
+            kind.
         operation: The caller-owned authority generation used to decode the
             stored profile.
+        language: The language the registry's label and notes keys are said in.
     """
     profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-    return eligible_ratio_categories(profile, year=year, operation=operation)
+    return eligible_ratio_categories(profile, year=year, operation=operation, language=language)
 
 
 def validate_ratios_for_bucket(
@@ -225,56 +246,6 @@ def validate_ratios_for_bucket(
         operation=operation,
         require_overrides_for=require_overrides_for,
     )
-
-
-def set_usage_ratio(
-    *, bucket_id: str, category: SpendingCategory, ratio: Decimal, operation: PinnedAuthorityOperation
-) -> Decimal | None:
-    """Set or replace one per-category usage-ratio override on the bucket.
-
-    Loads the bucket's :class:`UsageRatioProfile`, applies the override through
-    the domain ``with_ratio`` validator, and persists the result. Returns the
-    prior override value for the category (``None`` when there was none) so the
-    caller can emit a before/after audit event. Application command boundary for
-    the CLI ``ledger ratios set`` verb; the CLI no longer calls the domain
-    load/save primitives directly.
-
-    The load-modify-save runs under the per-bucket
-    :func:`cadrumo.domain.usage_ratios.service.usage_ratio_bucket_lock` so two concurrent
-    writers cannot read the same snapshot and lose one another's override.
-    """
-    with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-        prior = profile.ratios.get(category)
-        with validating_governed_facts(operation):
-            save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
-        return prior
-
-
-def unset_usage_ratio(
-    *, bucket_id: str, category: SpendingCategory, operation: PinnedAuthorityOperation
-) -> Decimal | None:
-    """Clear one per-category usage-ratio override on the bucket.
-
-    Returns the cleared value. Raises :class:`UsageRatioValidationError` when
-    the category carries no persisted override (so the caller can surface a
-    precise "nothing to clear" message). Application command boundary for the
-    CLI ``ledger ratios unset`` verb.
-
-    The load-modify-save runs under the per-bucket
-    :func:`cadrumo.domain.usage_ratios.service.usage_ratio_bucket_lock` so a concurrent
-    ``set`` on a sibling category cannot be lost by this clear.
-    """
-    with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-        prior = profile.ratios.get(category)
-        if prior is None:
-            raise UsageRatioValidationError(
-                f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
-            )
-        with validating_governed_facts(operation):
-            save_usage_ratio_profile(profile.without_ratio(category), bucket_id=bucket_id)
-        return prior
 
 
 class RatiosCensoOverrideWarning(BaseModel):
@@ -301,25 +272,26 @@ def censo_business_pct_for(
     year: int,
     operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
-    """Return the legally-effective business_pct for a category from censo.
+    """Return the censo-derived degree of use a row's ``business_pct`` is stamped with.
 
-    The per-category projection of
-    :func:`cadrumo.domain.usage_ratios.service.derive_home_office_ratios_from_censo`:
-    given a single :class:`SpendingCategory` and the operator's bound
-    censo ``office_m2 / total_m2``, returns the
-    ``raw_afectacion_ratio * statutory_multiplier`` value the classify
-    and allocate paths should stamp onto ``Transaction.business_pct``
-    when no operator override is present. Returns ``None`` for
-    categories outside the HOME_OFFICE families or when no censo has
-    been applied yet, signalling to the caller that the operator's
-    explicit value (or the registry default) governs instead.
+    ``Transaction.business_pct`` is the degree of use of the expense in the
+    activity, which is what IVA deducts (LIVA art. 95, read as the TEAC
+    unified criterion of 19-07-2023 reads it). For the home-office families
+    the censo default is the raw afectación ``office_m2 / total_m2`` with no
+    statutory factor. The IRPF factor of LIRPF art. 30.2, regla 5.ª b) is
+    applied only by the Renta category rule over the usage-ratio store
+    (:func:`cadrumo.domain.usage_ratios.service.derive_home_office_ratios_from_censo`),
+    so it never reaches the IVA cuota.
+
+    Returns ``None`` for categories outside the HOME_OFFICE families or when
+    no censo has been applied yet, signalling to the caller that the
+    operator's explicit value governs instead.
     """
     if raw_afectacion_ratio is None:
         return None
-    if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
+    if family_for(category, effective_date=date(year, 12, 31), authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
-    rule = resolve_category_profiles(year, operation=operation)[category].proportionality
-    return effective_usage_ratio(rule, raw_afectacion_ratio)
+    return raw_afectacion_ratio
 
 
 class BusinessSharePctOutcome(StrEnum):
@@ -332,7 +304,7 @@ class BusinessSharePctOutcome(StrEnum):
 
     #: The operator supplied a share; no profile fact is consulted.
     STATED = "stated"
-    #: The censo fact and the category's statutory rule produced one.
+    #: The censo afectación supplied the degree of use.
     DERIVED_FROM_CENSO = "derived_from_censo"
     #: No category, so there is nothing to apportion against.
     NO_CATEGORY = "no_category"
@@ -403,11 +375,12 @@ def resolve_business_share_pct(
         category: The row's spending category, or ``None`` when unset.
         censo_afectacion_ratio: The bound ``office_m2 / total_m2`` from the
             applied censo, or ``None`` when none has been applied.
-        year: The filing year whose category profiles supply the statutory
-            multiplier. Year-versioned regulatory data, so it comes from the
-            row's own booked date rather than a pinned literal.
+        year: The filing year whose category families decide which
+            categories the censo apportions. Year-versioned regulatory data,
+            so it comes from the row's own booked date rather than a pinned
+            literal.
         operation: The caller-owned authority generation used for category
-            family and proportionality resolution.
+            family resolution.
 
     Returns:
         The resolution, carrying a share only where one was decided.
@@ -438,17 +411,17 @@ def censo_override_warning(
     year: int,
     operation: PinnedAuthorityOperation,
 ) -> RatiosCensoOverrideWarning | None:
-    """Return a typed warning when an override deviates from the censo.
+    """Return a typed warning when a usage-ratio override deviates from the censo.
 
-    The check is silent for non-HOME_OFFICE categories: only the
-    suministros and ownership home-office families are legally bound
-    to the censo-derived afectación ratio (LIRPF Art. 30.2 rule 5,
-    Ley 6/2017 BOE-A-2017-12544). For HOME_OFFICE categories the
-    helper computes the legally-effective ratio (raw afectación times
-    the rule's ``statutory_multiplier``) and compares it against
-    ``override_ratio`` for exact equality. A non-equal pair returns a
-    :class:`RatiosCensoOverrideWarning`; equal values (and
-    non-home-office categories) return ``None``.
+    The override is a value of the Renta usage-ratio store, which holds the
+    IRPF-effective ratio, so it is compared against the IRPF derivation: raw
+    afectación times the rule's ``statutory_multiplier`` (LIRPF art. 30.2,
+    regla 5.ª b), for the suministros family; the raw afectación for the
+    ownership family). It says nothing about IVA, which deducts a row's degree
+    of use (see :func:`censo_business_pct_for`). The check is silent for
+    non-HOME_OFFICE categories. A non-equal pair returns a
+    :class:`RatiosCensoOverrideWarning`; equal values (and non-home-office
+    categories) return ``None``.
 
     Args:
         category: The category being overridden via ``ratios set``.
@@ -467,6 +440,8 @@ def censo_override_warning(
     if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
     rule = resolve_category_profiles(year, operation=operation)[category].proportionality
+    if not rule.kind.is_usage_ratio:
+        return None
     derived = effective_usage_ratio(rule, raw_afectacion_ratio)
     if derived == override_ratio:
         return None
@@ -490,8 +465,6 @@ __all__ = [
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
     "resolve_business_share_pct",
-    "set_usage_ratio",
-    "unset_usage_ratio",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]
@@ -508,35 +481,67 @@ class UsageRatioMutationOutcomeV1(BaseModel):
     censo_override_warning: RatiosCensoOverrideWarning | None = None
 
 
-def _emit_ratio_event(
+def _ratio_event(
     *,
     bucket_id: str,
     event_type: BucketEventType,
     object_id: str,
     payload: dict[str, str],
     actor: str,
-) -> None:
-    """Append one ratios audit event to the bucket-event history.
+    occurred_at: datetime,
+) -> BucketEvent:
+    """Derive one ratios audit event without persisting it.
 
     The event's type, object class, actor and payload shape are the audit
     record's contract, not a display choice, so they are decided here rather
     than by whichever surface performed the mutation.
     """
-    from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType
-    from ...domain.buckets.event_repository import emit_bucket_event
+    from ...domain.buckets.event_repository import build_bucket_event
 
-    emit_bucket_event(
-        repository=bucket_event_history_repository(bucket_id=bucket_id),
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
-        occurred_at=now(),
+        occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.PROFILE,
         object_id=object_id,
         payload=payload,
         payload_version=1,
     )
+
+
+_RATIO_COMMIT_ATTEMPTS = 4
+
+
+def _commit_ratio_change(*, bucket_id: str, profile: UsageRatioProfile, events: tuple[BucketEvent, ...]) -> None:
+    """Persist ``profile`` and its audit ``events`` in one secure-object batch.
+
+    Both rows live in the bucket's one encrypted database, so the batch commits
+    them together or not at all. The event write carries the revision the
+    history was read at; when another writer appended in between, the batch is
+    refused whole and re-composed against the newly current history. Re-running
+    is safe: the profile is a value computed before this call and the events are
+    content-addressed, so a retry collapses onto the same entries.
+    """
+    from ...domain.buckets.event_repository import bucket_event_history_write
+
+    repository = bucket_event_history_repository(bucket_id=bucket_id)
+    last_conflict: LedgerPersistenceConflictError | None = None
+    for _attempt in range(_RATIO_COMMIT_ATTEMPTS):
+        try:
+            save_usage_ratio_profile_with_writes(
+                profile,
+                (bucket_event_history_write(repository, events),),
+                bucket_id=bucket_id,
+            )
+        except LedgerPersistenceConflictError as conflict:
+            last_conflict = conflict
+            continue
+        return
+    if last_conflict is not None:
+        raise last_conflict
+    raise AssertionError("ratio co-commit exhausted without a conflict")
 
 
 def _ratio_change_payload(*, category: SpendingCategory, prior: Decimal | None, new: Decimal | None) -> dict[str, str]:
@@ -566,11 +571,10 @@ def apply_usage_ratio_override(
     the operator declared to the AEAT. A surface that performed the write and
     forgot the comparison would let an override silently contradict the Censo.
 
-    NOT ATOMIC, and deliberately reported rather than papered over: the ratio
-    store and the event history are separate secure objects with no shared
-    commit, so a failure after the write leaves a persisted override with no
-    audit event. Making it atomic needs the co-commit treatment the invoice
-    link writer uses; this function does not invent one.
+    The profile row and the audit events commit in one secure-object batch
+    (see :func:`_commit_ratio_change`), so a failure leaves neither an override
+    without its event nor an event without its override. The Censo comparison is
+    computed before the batch, so its warning event joins it.
 
     Args:
         bucket_id: The owning profile bucket.
@@ -586,14 +590,7 @@ def apply_usage_ratio_override(
     Returns:
         The prior and new values, plus any Censo override warning raised.
     """
-    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=ratio, operation=operation)
-    _emit_ratio_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_SET,
-        object_id=category.value,
-        payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
-        actor=actor,
-    )
+    occurred_at = now()
     warning = (
         censo_override_warning(
             category=category,
@@ -605,19 +602,38 @@ def apply_usage_ratio_override(
         if profile_id is not None and raw_afectacion_ratio is not None
         else None
     )
-    if warning is not None:
-        _emit_ratio_event(
-            bucket_id=bucket_id,
-            event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
-            object_id=warning.category.value,
-            payload={
-                "category": warning.category.value,
-                "override_ratio": str(warning.override_ratio),
-                "censo_derived_ratio": str(warning.censo_derived_ratio),
-                "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
-            },
-            actor=actor,
-        )
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
+        prior = profile.ratios.get(category)
+        with validating_governed_facts(operation):
+            updated = profile.with_ratio(category, ratio)
+        events = [
+            _ratio_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.LEDGER_RATIOS_SET,
+                object_id=category.value,
+                payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
+                actor=actor,
+                occurred_at=occurred_at,
+            )
+        ]
+        if warning is not None:
+            events.append(
+                _ratio_event(
+                    bucket_id=bucket_id,
+                    event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
+                    object_id=warning.category.value,
+                    payload={
+                        "category": warning.category.value,
+                        "override_ratio": str(warning.override_ratio),
+                        "censo_derived_ratio": str(warning.censo_derived_ratio),
+                        "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
+                    },
+                    actor=actor,
+                    occurred_at=occurred_at,
+                )
+            )
+        _commit_ratio_change(bucket_id=bucket_id, profile=updated, events=tuple(events))
     return UsageRatioMutationOutcomeV1(
         category=category,
         prior_ratio=prior,
@@ -631,7 +647,7 @@ def clear_usage_ratio_override(
 ) -> UsageRatioMutationOutcomeV1:
     """Clear one override and record the clearance.
 
-    Carries the same non-atomicity as :func:`apply_usage_ratio_override`.
+    Commits the clearance and its event together, as :func:`apply_usage_ratio_override` does.
 
     Args:
         bucket_id: The owning profile bucket.
@@ -646,12 +662,23 @@ def clear_usage_ratio_override(
     Raises:
         UsageRatioValidationError: When the category carries no override.
     """
-    prior = unset_usage_ratio(bucket_id=bucket_id, category=category, operation=operation)
-    _emit_ratio_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_UNSET,
-        object_id=category.value,
-        payload=_ratio_change_payload(category=category, prior=prior, new=None),
-        actor=actor,
-    )
+    occurred_at = now()
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
+        prior = profile.ratios.get(category)
+        if prior is None:
+            raise UsageRatioValidationError(
+                f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
+            )
+        with validating_governed_facts(operation):
+            updated = profile.without_ratio(category)
+        event = _ratio_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_RATIOS_UNSET,
+            object_id=category.value,
+            payload=_ratio_change_payload(category=category, prior=prior, new=None),
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+        _commit_ratio_change(bucket_id=bucket_id, profile=updated, events=(event,))
     return UsageRatioMutationOutcomeV1(category=category, prior_ratio=prior, new_ratio=None)

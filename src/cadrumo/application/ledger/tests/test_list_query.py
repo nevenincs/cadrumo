@@ -10,7 +10,7 @@ frontend rely on it rather than reimplementing it.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -18,23 +18,26 @@ from pathlib import Path
 from typing import Any, TypedDict, Unpack, cast, override
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.dates import transaction_eligible_date_span
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from ..action_ports import LedgerActionPorts
+from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
+from ..transaction_projection import LedgerTransactionReviewProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -42,12 +45,17 @@ _BUCKET = "11111111-1111-4111-8111-111111111111"
 
 
 def _transaction(
-    *, provider_id: str, amount: Decimal, group_label: str | None = None, own_account_id: str | None = None
+    *,
+    provider_id: str,
+    amount: Decimal,
+    group_label: str | None = None,
+    own_account_id: str | None = None,
+    filing_date: date = date(2024, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        booked_date=filing_date,
+        value_date=filing_date,
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -100,72 +108,10 @@ def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
 @contextmanager
 def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueRepositoryProtocol]:
     """Build a deterministic transaction catalogue through the read protocol."""
-    yield _InMemoryTransactionRepository(
+    yield CatalogueTransactionRepository(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
-    """Deterministic inward fake for the application transaction read port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    ),
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
 
 
 class _MissingEventHistoryRepository:
@@ -337,3 +283,152 @@ def test_sort_ledger_results_is_reusable_on_its_own() -> None:
     ordered = sort_ledger_results(results, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
 
     assert [item.transaction.raw.amount for item in ordered] == [Decimal("10.00"), Decimal("30.00")]
+
+
+def _cash_accounting_transaction(*, provider_id: str, filing_date: date, operation_date: date) -> Transaction:
+    """A criterio-de-caja row whose devengo date sits apart from its ledger filing date."""
+    base = _transaction(provider_id=provider_id, amount=Decimal("1210.00"), filing_date=filing_date)
+    return Transaction.model_validate(
+        {
+            **base.model_dump(),
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "iva_category": IvaCategory("domestic_general"),
+            "cash_accounting_treatment": IvaCashAccountingTreatment("supplier_regime"),
+            "operation_date": operation_date,
+            "cash_accounting_payment_evidence": (
+                IvaCashAccountingPaymentEvidence(
+                    payment_date=filing_date,
+                    taxable_base=Decimal("1000.00"),
+                    iva_amount=Decimal("210.00"),
+                    recargo_amount=Decimal("0.00"),
+                ),
+            ),
+            "classified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "classified_by": "manual",
+        }
+    )
+
+
+class _PartitionOnlyRepository(CatalogueTransactionRepository):
+    """A read port that serves a period read from its date partition alone.
+
+    The in-window half is chosen by overlap with each row's eligible date span,
+    the same candidate superset the stored partition returns, so it can hold a
+    row whose filing date lies outside the window. A whole-catalogue read
+    refuses, which is what makes reaching for it observable.
+    """
+
+    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+        super().__init__(bucket_id=bucket_id, catalogue=catalogue)
+        self.windows: list[tuple[date, date]] = []
+
+    @override
+    def load(self) -> TransactionCatalogue:
+        raise AssertionError("a period listing read the whole catalogue")
+
+    @override
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        self.windows.append((start, end))
+        in_window: list[Transaction] = []
+        for transaction in self._catalogue:
+            earliest, latest = transaction_eligible_date_span(transaction)
+            if earliest <= end and latest >= start:
+                in_window.append(transaction)
+        return LedgerDatePartition(in_window=TransactionCatalogue.from_transactions(in_window), index_complete=True)
+
+
+def _period_query(period: str, year: int, **overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
+    return LedgerTransactionListQuery(
+        spec=LedgerReviewFilterSpec.from_strings([f"period={period}", f"year={year}"]), **overrides
+    )
+
+
+def test_a_period_listing_reads_only_that_periods_date_partition() -> None:
+    """A period filter asks for its own window and never decrypts the whole bucket."""
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(
+            (
+                _transaction(provider_id="before", amount=Decimal("1.00"), filing_date=date(2024, 3, 31)),
+                _transaction(provider_id="first", amount=Decimal("2.00"), filing_date=date(2024, 4, 1)),
+                _transaction(provider_id="last", amount=Decimal("3.00"), filing_date=date(2024, 6, 30)),
+                _transaction(provider_id="after", amount=Decimal("4.00"), filing_date=date(2024, 7, 1)),
+            )
+        ),
+    )
+
+    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+
+    assert repository.windows == [(date(2024, 4, 1), date(2024, 6, 30))]
+    assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["first", "last"]
+    assert page.total == 2
+    assert page.truncated is False
+
+
+def test_a_period_listing_narrows_the_partition_superset_to_the_filing_date() -> None:
+    """A row the partition offers only for its devengo date stays off the period page.
+
+    The partition selects candidates by eligible date span, so a criterio-de-caja
+    row filed in July but accrued in May is in its in-window half. The listing
+    filters on the ledger filing date; showing that row would make the period
+    page disagree with the full-scan page.
+    """
+    accrued_in_window = _cash_accounting_transaction(
+        provider_id="accrued-in-window", filing_date=date(2024, 7, 15), operation_date=date(2024, 5, 2)
+    )
+    filed_in_window = _cash_accounting_transaction(
+        provider_id="filed-in-window", filing_date=date(2024, 5, 20), operation_date=date(2024, 3, 2)
+    )
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(
+            (
+                accrued_in_window,
+                filed_in_window,
+                _transaction(provider_id="plain", amount=Decimal("5.00"), filing_date=date(2024, 6, 1)),
+            )
+        ),
+    )
+    offered = repository.partition_by_date_range(date(2024, 4, 1), date(2024, 6, 30)).in_window
+    assert accrued_in_window.transaction_id in offered.transactions, (
+        "fixture must place the devengo-only row inside the partition superset for this proof to mean anything"
+    )
+
+    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+
+    assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["filed-in-window", "plain"]
+    assert page.total == 2
+
+
+def test_a_listing_without_a_period_reads_the_whole_catalogue() -> None:
+    """Only a period filter can bound the read; other clauses still see every row."""
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions((_transaction(provider_id="a", amount=Decimal("1.00")),)),
+    )
+
+    with pytest.raises(AssertionError, match="whole catalogue"):
+        _page(repository, _query())
+    assert repository.windows == []
+
+
+def test_a_listed_row_names_the_own_account_it_is_bound_to_and_never_its_number() -> None:
+    bound = ledger_list_row(_transaction(provider_id="a", amount=Decimal("10.00"), own_account_id="acc-01"))
+    unbound = ledger_list_row(_transaction(provider_id="b", amount=Decimal("20.00")))
+
+    assert bound.own_account_id == "acc-01"
+    assert unbound.own_account_id is None
+    assert "acc-01" not in bound.transaction.model_dump_json()
+    with pytest.raises(ValidationError):
+        LedgerTransactionReviewProjection(
+            transaction=bound.transaction,
+            review_status=bound.review_status,
+            group_label=None,
+            own_account_id="ES9121000418450200051332",
+            classification_reason_source=bound.classification_reason_source,
+            classification_reason_words=bound.classification_reason_words,
+            classification_reason_words_language=bound.classification_reason_words_language,
+        )

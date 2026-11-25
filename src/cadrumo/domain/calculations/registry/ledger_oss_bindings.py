@@ -2,46 +2,76 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, Self
+from enum import StrEnum
+from functools import partial
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.time.clock import today_madrid
+from ....core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
+from ....core.period import Period
 from ...iva.classification import TransactionKind, require_transaction_kind
+from ...iva.errors import IvaValidationError
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ._ledger_binding_resolution import (
-    resolve_ledger_family_binding_values,
-    unsupported_ledger_family_observations,
-)
+from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
-from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
-from .governed_fact_scope import governed_facts_in_scope, require_governed_fact_authority
+from .eu_member_state_catalogue import require_eu_member_state
+from .governed_fact_scope import require_governed_fact_authority
 from .ids import BindingId
-from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
+from .iva_rate_kind_catalogue import require_iva_rate_kind
+from .ledger_binding_resolution import resolve_ledger_family_binding_values
 from .ledger_binding_selector_support import OSS_IOSS_LEDGER_FACTS, LedgerIvaFact, OssIossLedgerFact
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_selector_vocabulary_date,
     require_ledger_aggregation_op,
     require_ledger_fact,
 )
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
+    from .governed_fact_scope import GovernedFactSource
     from .schema import BindingDefinition, ModeloRevision
 
 
-def _coerce_registry_eu_member_state(value: object) -> EUMemberState:
-    """Hydrate from candidate facts during validation, or the bundle at runtime."""
-    if governed_facts_in_scope() is not None:
-        return require_registry_declared_eu_member_state(value, effective_date=today_madrid())
-    return require_eu_member_state(value, effective_date=today_madrid())
+_SELECTOR_TOKEN: Final = re.compile(r"[a-z][a-z0-9_]*")
+"""The closed form of an authored OSS/IOSS selector token."""
+
+
+def _member_state_token_form(value: object) -> object:
+    """Refuse a destination token outside the ISO 3166-1 alpha-2 form before the member-state type projects it.
+
+    A selector carries no governing date of its own, so its membership in the
+    dated member-state vocabulary is checked by
+    :func:`ledger_oss_revision_vocabulary_failures` on the date of the revision
+    that declares it.
+    """
+    if isinstance(value, EUMemberState):
+        return value
+    if not isinstance(value, str):
+        raise RegistryValidationError("destination member state must be an ISO 3166-1 alpha-2 registry token")
+    try:
+        return normalise_iso_3166_alpha2_jurisdiction(value.strip().upper())
+    except CoreValidationError as error:
+        raise RegistryValidationError(
+            "destination member state must be an ISO 3166-1 alpha-2 registry token"
+        ) from error
+
+
+class OssLineEffect(StrEnum):
+    """What a line's magnitudes do to its destination and rate."""
+
+    SUPPLY = "supply"
+    CORRECTION = "correction"
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -68,6 +98,9 @@ class OssIossLedgerObservation(BaseModel):
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR (already applied at the
             destination MS rate per OSS / IOSS rules).
+        effect: Whether the amounts add a supply or take a correction off one.
+        corrected_period: The earlier period the amounts adjust, or ``None`` when they belong
+            to the period being filed. Such a line reaches the return only as a correction row.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -81,6 +114,18 @@ class OssIossLedgerObservation(BaseModel):
     transaction_kind: TransactionKind
     base_amount: Decimal
     iva_amount: Decimal
+    effect: OssLineEffect = OssLineEffect.SUPPLY
+    corrected_period: Period | None = None
+
+    @property
+    def signed_base_amount(self) -> Decimal:
+        """Return the base as it counts towards a sum: a correction takes off what a supply adds."""
+        return -self.base_amount if self.effect is OssLineEffect.CORRECTION else self.base_amount
+
+    @property
+    def signed_iva_amount(self) -> Decimal:
+        """Return the cuota as it counts towards a sum: a correction takes off what a supply adds."""
+        return -self.iva_amount if self.effect is OssLineEffect.CORRECTION else self.iva_amount
 
     @model_validator(mode="after")
     def _validate_registry_regime(self) -> Self:
@@ -122,7 +167,7 @@ class LedgerOssProvider(BaseModel):
     kind: Literal[BindingSourceKind.LEDGER_OSS_AGGREGATION] = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
     regime: OssIossRegime
-    destination_member_state: Annotated[EUMemberState, BeforeValidator(_coerce_registry_eu_member_state)]
+    destination_member_state: Annotated[EUMemberState, BeforeValidator(_member_state_token_form)]
     rate_kind: Annotated[IvaRateKind, BeforeValidator(coerce_enum_member(IvaRateKind))]
     invoice_direction: Annotated[InvoiceKind, BeforeValidator(coerce_enum_member(InvoiceKind))]
     transaction_kinds: Annotated[
@@ -131,29 +176,21 @@ class LedgerOssProvider(BaseModel):
     ] = Field(min_length=1)
     fact: OssIossLedgerFact = LedgerIvaFact.IVA_AMOUNT_SUM
 
-    @field_validator("regime", mode="after")
+    @field_validator("regime", "rate_kind", mode="after")
     @classmethod
-    def _validate_registry_regime(cls, value: OssIossRegime) -> OssIossRegime:
-        """Refuse a binding selector whose regime is absent from facts authority."""
-        authority = governed_facts_in_scope()
-        return require_oss_ioss_regime(value, effective_date=today_madrid(), authority=authority)
-
-    @field_validator("rate_kind", mode="after")
-    @classmethod
-    def _validate_registry_rate_kind(cls, value: IvaRateKind) -> IvaRateKind:
-        """Refuse a binding rate tier absent from the IVA facts being validated."""
-        if governed_facts_in_scope() is not None:
-            return require_registry_declared_iva_rate_kind(value, effective_date=today_madrid())
-        return require_iva_rate_kind(value, effective_date=today_madrid())
+    def _token_form(cls, value: str) -> str:
+        """Refuse a token outside the closed authored form; its dated membership is the revision's check."""
+        if _SELECTOR_TOKEN.fullmatch(value) is None:
+            raise RegistryValidationError(f"OSS/IOSS selector token {value!r} is not a lowercase registry token")
+        return value
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
-    def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
-        """Refuse binding transaction kinds absent from the classification fact."""
-        authority = require_governed_fact_authority(None, subject="ledger OSS binding validation")
-        return tuple(
-            require_transaction_kind(kind, effective_date=today_madrid(), operation=authority) for kind in value
-        )
+    def _transaction_kinds_form(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
+        for kind in value:
+            if _SELECTOR_TOKEN.fullmatch(kind) is None:
+                raise RegistryValidationError(f"transaction kind {kind!r} is not a lowercase registry token")
+        return value
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
@@ -161,6 +198,76 @@ class LedgerOssProvider(BaseModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("transaction_kinds entries must be unique")
         return value
+
+
+def _refusal(check: Callable[[], object]) -> str | None:
+    """Return the refusal ``check`` raises, or ``None`` when it admits its value.
+
+    The transaction-kind vocabulary refuses with the IVA domain's validation
+    error, the others with the registry's.
+    """
+    try:
+        check()
+    except (RegistryValidationError, IvaValidationError) as exc:
+        return str(exc)
+    return None
+
+
+def ledger_oss_selector_vocabulary_failures(
+    selector: LedgerOssProvider,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> tuple[str, ...]:
+    """Return the refusals one OSS/IOSS selector earns against the vocabulary in force on ``effective_date``.
+
+    The selector model checks only the form of its tokens, because a selector
+    carries no date of its own; membership in the dated regime, member-state,
+    rate-tier and transaction-kind vocabularies is judged here, on the date and
+    against the facts the caller names.
+    """
+    checks: list[Callable[[], object]] = [
+        partial(require_oss_ioss_regime, selector.regime, effective_date=effective_date, authority=authority),
+        partial(
+            require_eu_member_state,
+            selector.destination_member_state,
+            effective_date=effective_date,
+            authority=authority,
+        ),
+        partial(require_iva_rate_kind, selector.rate_kind, effective_date=effective_date, authority=authority),
+    ]
+    checks.extend(
+        partial(require_transaction_kind, kind, effective_date=effective_date, operation=authority)
+        for kind in selector.transaction_kinds
+    )
+    return tuple(refusal for refusal in map(_refusal, checks) if refusal is not None)
+
+
+def ledger_oss_revision_vocabulary_failures(
+    revision: ModeloRevision,
+    *,
+    authority: GovernedFactSource,
+) -> list[str]:
+    """Return every OSS/IOSS selector's dated-vocabulary refusal, read on the revision's start.
+
+    The date is :func:`ledger_selector_vocabulary_date`: the revision's own
+    ``valid_from``, raised to the support floor when the revision starts below it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
+    on_date = ledger_selector_vocabulary_date(revision, authority.supported_filing_years())
+    if on_date is None:
+        return []
+    return [
+        f"binding {binding.id!r} has malformed OSS/IOSS selector: {failure}"
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_OSS_AGGREGATION
+        for failure in ledger_oss_selector_vocabulary_failures(
+            provider_member(binding, LedgerOssProvider),
+            effective_date=on_date,
+            authority=authority,
+        )
+    ]
 
 
 def validate_ledger_oss_aggregation_binding_definition(
@@ -196,7 +303,8 @@ def _oss_build_matcher(
 
     def matcher(observation: OssIossLedgerObservation) -> bool:
         return (
-            observation.regime == regime
+            observation.corrected_period is None
+            and observation.regime == regime
             and observation.destination_member_state == destination
             and observation.rate_kind == rate_kind
             and observation.invoice_direction is direction
@@ -211,8 +319,8 @@ def _oss_aggregate(
     selector: LedgerOssProvider,
 ) -> Decimal:
     if selector.fact == LedgerIvaFact.IVA_AMOUNT_SUM:
-        return sum((observation.iva_amount for observation in matched), Decimal("0"))
-    return sum((observation.base_amount for observation in matched), Decimal("0"))
+        return sum((observation.signed_iva_amount for observation in matched), Decimal("0"))
+    return sum((observation.signed_base_amount for observation in matched), Decimal("0"))
 
 
 def resolve_ledger_oss_aggregation_binding_values(
@@ -246,45 +354,6 @@ def resolve_ledger_oss_aggregation_binding_values(
         provider_model=LedgerOssProvider,
         build_matcher=_oss_build_matcher,
         aggregate=_oss_aggregate,
-    )
-
-
-def _oss_is_declarable(observation: OssIossLedgerObservation) -> bool:
-    return observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0")
-
-
-def unsupported_ledger_oss_observations(
-    revision: ModeloRevision,
-    observations: Iterable[OssIossLedgerObservation],
-) -> tuple[OssIossLedgerObservation, ...]:
-    """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
-
-    Delegates the screen to :func:`unsupported_ledger_family_observations` —
-    see that function for the shared fail-closed contract (why an unmatched
-    observation is a modelling gap, not a legitimate zero). This family's
-    own contribution is narrow: the compound regime/destination/rate/
-    direction/transaction-kind match predicate (reused from the resolver's
-    ``_oss_build_matcher``, so the ``transaction_kinds`` set is built once
-    per binding rather than once per (observation, binding) pair) and a
-    false-fire guard excluding an observation carrying neither base nor IVA
-    (both zero). No ``extra_exclusion``.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose OSS bindings define the
-            supported classification tuples.
-        observations: Validated OSS/IOSS observations to screen.
-
-    Returns:
-        Tuple of observations whose non-zero base/cuota is selected by no
-        ``ledger_oss_aggregation`` binding.
-    """
-    return unsupported_ledger_family_observations(
-        revision,
-        observations,
-        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        provider_model=LedgerOssProvider,
-        build_matcher=_oss_build_matcher,
-        is_declarable=_oss_is_declarable,
     )
 
 

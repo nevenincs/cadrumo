@@ -13,8 +13,15 @@ test("window controls use authenticated commands and native presentation", async
       tokens: [] as unknown[],
       maximized: false,
       fullscreen: false,
+      chrome: "custom" as "custom" | "native",
       fail: false,
-      publish: (next: { maximized: boolean; fullscreen: boolean }) => {
+      diagnostics: [] as Record<string, unknown>[],
+      crash: () => undefined as void,
+      publish: (next: {
+        maximized: boolean;
+        fullscreen: boolean;
+        chrome: "custom" | "native";
+      }) => {
         void next;
       },
     };
@@ -29,6 +36,9 @@ test("window controls use authenticated commands and native presentation", async
           if (command.startsWith("shell_window_"))
             state.tokens.push(args.token);
           switch (command) {
+            case "desktop_frontend_diagnostic":
+              state.diagnostics.push(args.report as Record<string, unknown>);
+              return null;
             case "manager_status":
               return { state: "ready", failure: null };
             case "manager_subscribe":
@@ -48,6 +58,19 @@ test("window controls use authenticated commands and native presentation", async
                 id: number;
               };
               state.publish = (next) => channel.onmessage({ ...next });
+              state.crash = () =>
+                channel.onmessage(
+                  new Proxy(
+                    { maximized: false, fullscreen: false, chrome: "custom" },
+                    {
+                      get(target, name) {
+                        if (name === "maximized")
+                          throw new Error("private-react-canary");
+                        return Reflect.get(target, name);
+                      },
+                    },
+                  ),
+                );
               state.publish(state);
               return channel.id;
             }
@@ -126,6 +149,8 @@ test("window controls use authenticated commands and native presentation", async
           }
         ).__windowTest,
     );
+  // The page asks before its own close button closes, so the close it sends
+  // is the answer that the host does not hold to ask the page again.
   await expect
     .poll(async () => (await read()).actions)
     .toEqual([
@@ -133,7 +158,7 @@ test("window controls use authenticated commands and native presentation", async
       "toggle_maximize",
       "drag",
       "minimize",
-      "close",
+      "close_now",
     ]);
   expect((await read()).tokens.every((token) => token === "a".repeat(64))).toBe(
     true,
@@ -143,12 +168,140 @@ test("window controls use authenticated commands and native presentation", async
       window as unknown as {
         __windowTest: {
           fullscreen: boolean;
-          publish: (next: { maximized: boolean; fullscreen: boolean }) => void;
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
         };
       }
     ).__windowTest;
     state.fullscreen = true;
-    state.publish({ maximized: false, fullscreen: true });
+    state.publish({ maximized: false, fullscreen: true, chrome: "custom" });
+  });
+  await expect(maximize).toBeDisabled();
+  await page.evaluate(() => {
+    const state = (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest;
+    state.publish({ maximized: false, fullscreen: false, chrome: "native" });
+  });
+  // A native window shows the system's controls, not the page's.
+  await expect(maximize).toHaveCount(0);
+  await expect(page.locator("header.titlebar")).toHaveAttribute(
+    "data-chrome",
+    "native",
+  );
+  const brand = page.locator("header.titlebar .titlebar-brand");
+  const windowed = await brand.evaluate(
+    (element) => getComputedStyle(element).paddingInlineStart,
+  );
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: true,
+      chrome: "native",
+    });
+  });
+  // Full screen hides the system's controls, so the brand gives back their inset.
+  await expect(page.locator("header.titlebar")).toHaveAttribute(
+    "data-fullscreen",
+    "",
+  );
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .not.toBe(windowed);
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+    });
+  });
+  await expect(page.locator("header.titlebar")).not.toHaveAttribute(
+    "data-fullscreen",
+  );
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .toBe(windowed);
+  // The header takes the row the host seated its controls in, and clears them
+  // by the inset the host measured.
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: { publish: (next: Record<string, unknown>) => void };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+      nativeControls: { height: 38, inset: 76 },
+    });
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("header.titlebar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+    )
+    .toBe(38);
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .toBe("76px");
+  await expect(brand.locator('[data-slot="logo"] img')).toHaveCSS(
+    "width",
+    "16px",
+  );
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: {
+          publish: (next: {
+            maximized: boolean;
+            fullscreen: boolean;
+            chrome: "custom" | "native";
+          }) => void;
+        };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: true,
+      chrome: "custom",
+    });
   });
   await expect(maximize).toBeDisabled();
   await page.evaluate(() => {
@@ -165,4 +318,106 @@ test("window controls use authenticated commands and native presentation", async
   await expect(
     page.getByText(label("desktop.titlebar.failed"), { exact: true }),
   ).toBeVisible();
+  const diagnostics = () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __windowTest: { diagnostics: Record<string, unknown>[] };
+          }
+        ).__windowTest.diagnostics,
+    );
+  await expect
+    .poll(async () =>
+      (await diagnostics()).some(
+        (record) =>
+          record.event === "command_rejected" &&
+          record.command === "shell_window_action" &&
+          record.code === "webview_failed",
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(() => {
+    console.debug("private-diagnostic-canary");
+    console.info("private-diagnostic-canary");
+    console.warn("private-diagnostic-canary");
+    console.error("private-diagnostic-canary");
+    window.dispatchEvent(
+      new ErrorEvent("error", { message: "private-diagnostic-canary" }),
+    );
+    window.dispatchEvent(
+      new PromiseRejectionEvent("unhandledrejection", {
+        promise: Promise.resolve(),
+        reason: new Error("private-diagnostic-canary"),
+      }),
+    );
+  });
+  await expect(
+    page.getByText(label("desktop.error.internal"), { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(async () =>
+      (await diagnostics())
+        .filter((record) => record.event === "console")
+        .map((record) => record.level),
+    )
+    .toEqual(["DEBUG", "INFO", "WARNING", "ERROR"]);
+  const reports = await diagnostics();
+  expect(reports.some((record) => record.event === "uncaught_error")).toBe(
+    true,
+  );
+  expect(reports.some((record) => record.event === "unhandled_rejection")).toBe(
+    true,
+  );
+  expect(JSON.stringify(reports)).not.toContain("private-diagnostic-canary");
+  await page.evaluate(() => {
+    (
+      window as unknown as { __windowTest: { crash: () => void } }
+    ).__windowTest.crash();
+  });
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.error.internal"),
+  );
+  await expect
+    .poll(async () =>
+      (await diagnostics()).some((record) => record.event === "react_error"),
+    )
+    .toBe(true);
+  expect(JSON.stringify(await diagnostics())).not.toContain(
+    "private-react-canary",
+  );
+  // Even a fatal render error leaves the principal close control usable.
+  await page.evaluate(() => {
+    (
+      window as unknown as { __windowTest: { fail: boolean } }
+    ).__windowTest.fail = false;
+  });
+  await page
+    .getByRole("button", { name: label("desktop.titlebar.close"), exact: true })
+    .click();
+  await expect
+    .poll(async () => (await read()).actions.at(-1))
+    .toBe("close_now");
+  // The fallback mounts the header outside the window's column. Where the
+  // system draws the controls, nothing in the header is as tall as its row,
+  // and it still keeps the row the host seated the controls in.
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: { publish: (next: Record<string, unknown>) => void };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+      nativeControls: { height: 38, inset: 84 },
+    });
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("header.titlebar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+    )
+    .toBe(38);
 });

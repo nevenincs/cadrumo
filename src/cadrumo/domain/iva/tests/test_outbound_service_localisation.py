@@ -25,7 +25,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...calculations.registry.iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
@@ -54,7 +54,7 @@ _SUBJECT_AT_A_SPANISH_RATE = frozenset(
 
 
 def _art_69_dos_services() -> tuple[IvaArt69DosService, ...]:
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         catalogue = resolve_iva_art69_dos_service_catalogue(effective_date=date(2025, 6, 15), authority=operation)
     return tuple(definition.token for definition in catalogue.definitions)
 
@@ -117,7 +117,7 @@ def test_a_b2c_service_outside_the_comunidad_stays_taxed_here(
     it not-subject relieved a taxable supply on the strength of the customer's
     address alone.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=customer_residency,
@@ -142,7 +142,7 @@ def test_the_pre_change_row_would_have_booked_each_of_them_not_subject(
     every one of them, which is exactly the population it was sending to
     not-subject.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = _outbound_service(
             customer_residency=customer_residency,
             customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
@@ -166,7 +166,7 @@ def test_the_spanish_territories_are_the_ones_art_69_dos_names_back_in() -> None
     Melilla". So even a service ON that list stays taxed here for those
     recipients, and no reading of the exception can reach them.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for customer_residency in (
             IvaTerritorialScope.from_registry("es_canarias"),
             IvaTerritorialScope.from_registry("es_ceuta_melilla"),
@@ -190,7 +190,7 @@ def test_the_b2c_branch_demands_the_tier_that_selects_its_category() -> None:
     category. Defaulting it would pick GENERAL for a service that may be
     reduced, which is a silent wrong answer rather than a refusal.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = _outbound_service(
             customer_residency=IvaTerritorialScope.from_registry("third_country"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
@@ -215,7 +215,7 @@ def test_every_listed_service_to_a_third_country_consumer_leaves_the_tai(
     file -- and so a member added WITHOUT the row reading it fails here instead
     of quietly staying taxed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -246,7 +246,7 @@ def test_the_same_listed_service_stays_taxed_for_the_spanish_territories(
     back out in the same sentence, so every listed service stays realizada en el
     TAI for those recipients. Same items as the case above, opposite answer.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=customer_residency,
@@ -267,7 +267,7 @@ def test_an_unstated_item_does_not_lift_the_supply_out_of_the_tai() -> None:
     does. Treating the empty field as "not on the list" would be the correct
     answer often and a silent relief the rest of the time.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -287,7 +287,7 @@ def test_the_excepted_branch_is_not_asked_for_a_tier_it_never_uses() -> None:
     The sibling B2C branch refuses without one. Demanding it here too would ask
     the operator for a fact the branch they landed on does not read.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -311,7 +311,7 @@ def test_a_stated_item_moves_nothing_on_the_b2b_limb(
     nothing to except it from. This is where a fix reaching one row too far
     would show: the B2B answer must be identical with and without the item.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         stated = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=customer_residency,
@@ -354,7 +354,7 @@ def test_a_b2b_service_outside_the_comunidad_is_still_not_subject(
     the limb on a valid IVA number would drop every unregistered business into
     the taxed branch, which is the mirror error of the one this change fixes.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(customer_residency=customer_residency, customer_tax_status=customer_tax_status),
             operation=_authority_operation_for_test,
@@ -386,7 +386,7 @@ def test_a_condition_the_article_does_not_settle_reaches_neither_limb(
     identification as an empresario for these rules even when it does not act as
     one, and that needs its own grounding.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _outbound_service(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),

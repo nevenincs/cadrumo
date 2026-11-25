@@ -16,11 +16,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_SUCCESSOR = filing_year_envelope().horizon
+_PREDECESSOR = _SUCCESSOR - 1
+_SPAN = f"{_PREDECESSOR}-{_SUCCESSOR}"
 _CHAINS = (("0848", "pendiente-ejercicio"), ("1965", "pendiente-ejercicio-anterior"))
 
 
@@ -94,29 +98,29 @@ source_refs = ["aeat-manual"]
         encoding="utf-8",
         newline="\n",
     )
-    _write_revision(revisions_dir, "2024", _revision_text("2024"))
-    _write_revision(revisions_dir, "2025", _revision_text("2025", evolution_ids=evolution_ids))
+    _write_revision(revisions_dir, str(_PREDECESSOR), _revision_text(str(_PREDECESSOR)))
+    _write_revision(revisions_dir, str(_SUCCESSOR), _revision_text(str(_SUCCESSOR), evolution_ids=evolution_ids))
     return modelo
 
 
 def test_distinct_evolution_ids_load_with_both_chains_declared(tmp_path: Path) -> None:
     """The normal path: one evolution per chain, each under its own id."""
-    evolution_ids = ("m999-0848-2024-2025-label-evolved", "m999-1965-2024-2025-label-evolved")
+    evolution_ids = (f"m999-0848-{_SPAN}-label-evolved", f"m999-1965-{_SPAN}-label-evolved")
     modelo = load_modelo_directory(_scratch_modelo(tmp_path, evolution_ids=evolution_ids))
 
     declared = {
         str(evolution.id): str(evolution.continuidad_id)
-        for evolution in modelo.revisions["2025"].casilla_continuidad_evolutions
+        for evolution in modelo.revisions[str(_SUCCESSOR)].casilla_continuidad_evolutions
     }
     assert declared == {
-        "m999-0848-2024-2025-label-evolved": "pendiente-ejercicio",
-        "m999-1965-2024-2025-label-evolved": "pendiente-ejercicio-anterior",
+        f"m999-0848-{_SPAN}-label-evolved": "pendiente-ejercicio",
+        f"m999-1965-{_SPAN}-label-evolved": "pendiente-ejercicio-anterior",
     }
 
 
 def test_two_chains_sharing_one_evolution_id_are_refused(tmp_path: Path) -> None:
     """The defect: different continuity chains whose evolutions carry the same id."""
-    shared = "m999-1965-2024-2025-label-evolved"
+    shared = f"m999-1965-{_SPAN}-label-evolved"
 
     with pytest.raises(RegistryLoadError, match=rf"casilla_continuidad_evolutions declares duplicate ids: '{shared}'"):
         load_modelo_directory(_scratch_modelo(tmp_path, evolution_ids=(shared, shared)))

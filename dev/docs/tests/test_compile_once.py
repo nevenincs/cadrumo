@@ -20,12 +20,11 @@ from sphinx.config import Config
 
 from cadrumo.core.external_constants import OutputLanguage
 
+from ..compile_comparison import IntendedDifference, compare
 from ..compile_once import (
     WITNESS_LANGUAGE,
-    IntendedDifference,
-    _per_language_inventory,
-    compare,
     main,
+    per_language_inventory,
     roots_to_write,
     witness_root,
 )
@@ -111,7 +110,7 @@ def test_each_language_gets_its_own_object_inventory(tmp_path: Path) -> None:
             )
         )
         files = {"objects.inv": compiled / "objects.inv"}
-        written = _per_language_inventory(files, slots, compiled / "staging")
+        written = per_language_inventory(files, slots, compiled / "staging")
         assert files == {}, "the compiled inventory is not a fifth inventory the site holds"
         assert written["en"]["objects.inv"].read_bytes() == _inventory(["index std:doc -1 index.html Filing calendar"])
         assert written["es"]["objects.inv"].read_bytes() == _inventory(
@@ -127,7 +126,7 @@ def test_an_inventory_without_the_compressed_entry_header_is_refused(tmp_path: P
     try:
         (tmp_path / "objects.inv").write_bytes(b"# Sphinx inventory version 1\nindex index.html\n")
         with pytest.raises(SystemExit, match="does not carry the compressed-entry header"):
-            _per_language_inventory({"objects.inv": tmp_path / "objects.inv"}, slots, tmp_path / "staging")
+            per_language_inventory({"objects.inv": tmp_path / "objects.inv"}, slots, tmp_path / "staging")
     finally:
         deactivate()
 
@@ -181,7 +180,7 @@ def test_a_declared_intended_difference_is_reported_apart_with_its_reason(
 ) -> None:
     """A difference kept on purpose must never be folded into the count it would hide in."""
     monkeypatch.setattr(
-        "dev.docs.compile_once.INTENDED_DIFFERENCES",
+        "dev.docs.compile_comparison.INTENDED_DIFFERENCES",
         (
             IntendedDifference(
                 context="attr:h1.id",
@@ -215,7 +214,7 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
     one difference and no whole difference at all.
     """
     monkeypatch.setattr(
-        "dev.docs.compile_once.INTENDED_DIFFERENCES",
+        "dev.docs.compile_comparison.INTENDED_DIFFERENCES",
         (
             IntendedDifference(
                 context="attr:a.title",

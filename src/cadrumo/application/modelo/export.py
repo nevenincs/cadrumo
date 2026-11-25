@@ -39,88 +39,55 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+import functools
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import NamedTuple
-
-from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.atomic_write import StagedPublication
-from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
-from ...core.filing_producer_key import FilingProducerKey
-from ...core.filing_year import FilingYear
-from ...core.hashing import prefixed_digest
-from ...core.identity.bucket import BucketId
-from ...core.identity.digest import ContentDigest, PrefixedContentDigest
-from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.refund_election import RefundElection
-from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
-from ...core.time.clock import MADRID_TZ
-from ...core.time.clock import now as _utc_now
-from ...domain.bienes_inversion.register import (
-    BienesInversionIvaRegister,
-    RegistroRegularizacionResult,
-    compute_registro_regularizacion,
-)
-from ...domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionRegularizacionParameters,
-    resolve_bienes_inversion_regularizacion_parameters,
-)
+from ...core.result_disposition import ResultDisposition
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from ...domain.deadlines.plazo import resolve_filing_window
-from ...domain.filing.errors import FilingExportError
-from ...domain.filing.protocols import ModeloInputs
-from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
+from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
+from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
+from ...domain.filing.errors import (
+    FilingExportDeclaredPartyNameError,
+    FilingExportError,
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValueOverflowError,
+)
+from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
-    DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID,
     AeatProductSoftwareIdentity,
-    AeatSoftwareIdentityGrade,
 )
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import (
-    SEALED_REVISION_STATES,
+    FILED_REVISION_STATES,
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
     ModeloError,
+    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportRequiredRecordAbsentError,
+    ModeloExportValueOverflowError,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.prorrata_register.register import ProrrataRegister
-from ...domain.transactions.own_accounts import (
-    OwnAccountId,
-    OwnAccountRegister,
-    OwnAccountRegisterError,
-    OwnAccountRole,
-    OwnBankAccount,
-)
-from ..aggregation.iva_ledger import (
-    IvaDifferentiatedDeductionContribution,
-    IvaLedgerAggregation,
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_differentiated_deduction_contributions,
-)
-from ..aggregation.m303_arrivals import (
-    resolve_m303_prorrata_transition_arrival,
-    resolve_m303_supplier_regime_arrival,
-)
+from ...domain.period import calculation_filing_date
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
@@ -128,1309 +95,110 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
 )
-from ..filing.draft_construction import build_draft
-from ..filing.draft_review import approve_draft
-from ..filing.draft_review_ports import DraftReviewPorts
-from ..filing.export import export_draft, export_layout_renderability_reason
-from ..filing.export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
+from ..filing.export import export_draft
+from ..filing.export_verification import (
+    DeclaracionExportResult,
+    FilingExportConsumedResult,
+    FilingExportPayloadConsumer,
+    assert_export_artifact_matches_receipt,
+)
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
-    FilingElectionFacts,
-    FilingModelProfileFacts,
     FilingProducerSnapshot,
-    FilingProducerSnapshotError,
-    GeneralFilingProfileFacts,
-    M303FilingFacts,
-    Modelo111ProfileFacts,
-    Modelo202ProducerProfile,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-    resolve_m303_filing_facts,
 )
-from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
-from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
-from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
-from ._required_binding_gate import (
-    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
-)
-from ._row_source_identity_replay import attach_revision_row_source_identities
+from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 from .action_errors import (
     CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloChargeAccountMissingError,
-    ModeloDomiciliationPastCutoffError,
-    ModeloPreconditionErrorMixin,
-    ModeloPriorDomiciliationElectionRefusedError,
-    ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
-from .calculation_note_gate import require_work_unit_calculation_unblocked
+from .assumed_value_gate import (
+    ModeloAssumedValueStage,
+    require_assumed_values_confirmed,
+    unconfirmed_assumed_fields,
+)
+from .calculation_note_gate import SourceDisagreementResolutions, require_work_unit_calculation_unblocked
+from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import applied_resolution_notes, credit_resolutions_for_work, load_credit_resolutions
+from .credit_resolution_repository import CreditResolutionReader
+from .export_accounts import (
+    build_export_producer_snapshot,
+    export_charge_account,
+    export_completeness_unverified,
+    export_refund_account,
+    m303_nota_three_requires_refund_account,
+    refund_account_country,
+    require_domiciliation_before_cutoff,
+    require_instalment_election_admissible,
+    require_m360_solicitud_for_export,
+    resolve_export_accounts,
+    selected_account_reference,
+)
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
+from .export_contracts import (
+    ModeloExportAccountReference,
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportEvidenceMissingError,
+    ModeloExportNoActiveBucketError,
+    ModeloExportResult,
+    ModeloIvaWalletDecisionProvenance,
+    PreparedModeloExport,
+)
+from .export_field_refusal import export_field_level_refusal
 from .export_ports import ModeloExportPorts
-from .export_sink import LocalFileExportSink
+from .export_preparation import (
+    approve_export_draft,
+    compose_export_dictionary_values,
+    envelope_requires_product_identity,
+    envelope_stamped_software_identity,
+    export_sink,
+    iva_wallet_decision_export_provenance,
+    raise_if_export_layout_unsupported,
+    raise_if_ledger_export_evidence_missing,
+    require_exportable_revision_state,
+    requireprior_domiciliation_marker_layout,
+    resolve_work_unit_period,
+)
+from .export_settlement import DeclaredSettlement, declared_settlement, settlement_dictionary_values
+from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
-    m303_regimen_simplificado_scope_for_profile,
 )
+from .m390_prorrata_apartado_gate import (
+    Modelo390ProrrataApartadoStage,
+    require_modelo_390_prorrata_apartado_rendered,
+)
+from .modelo_bucket_events import emit_modelo_bucket_event
 from .preconditions import (
-    ModeloPreconditionFailure,
     build_modelo_precondition_failure,
     build_modelo_precondition_failure_for_scenario,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
-from .profile_export_binding import (
-    resolve_declaration_contact,
-    resolve_export_identity,
-    resolve_profile_export_values,
-    taxpayer_identity_profile_facts,
+from .profile_drift_gate import require_profile_reads_current_for_export
+from .refund_account_authority import refund_account_legal_refs
+from .refusal_door_verdicts import (
+    operator_choice_verdict,
+    safety_stop_verdict,
+    stored_defect_verdict,
 )
-from .result_disposition_resolution import require_admissible_charge_account, resolve_modelo_result_disposition
-from .revision_persistence import (
-    emit_modelo_bucket_event as _emit_bucket_event,
+from .required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved,
 )
-from .revision_persistence import (
-    require_filing_instance_evidence_for_work_unit,
-)
-from .revision_replay_inputs import revision_filing_replay_inputs
+from .result_disposition_resolution import resolve_modelo_result_disposition
+from .selectors import require_work_unit_holds_a_calculation
+from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
-_LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
-_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
-    "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. "
-    "Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, "
-    "or CSV cotejo."
-)
-_COMPLETENESS_UNVERIFIED_MESSAGE = (
-    "This fichero-BOE was NOT completeness-verified: its modelo revision declares no calculation-completeness "
-    "manifest, so the structural-parity gate could not confirm every required casilla reached disk. The file may "
-    "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
-)
 
-
-class ModeloExportReadinessRefusal(BaseModel):
-    """Application-owned readiness fact and its declared operator outcome."""
-
-    model_config = _STRICT_FROZEN
-
-    reason: str
-    context: dict[str, str]
-    precondition_failure: ModeloPreconditionFailure
-
-
-def _modelo_export_layout_readiness_refusal(
-    *,
-    modelo: str,
-    layout: ExportLayoutDefinition | None,
-) -> ModeloExportReadinessRefusal | None:
-    """Project one resolved export layout into the application readiness contract."""
-    reason = export_layout_renderability_reason(modelo, layout)
-    if reason is None:
-        return None
-    context = {"modelo": modelo, "reason": reason}
-    if layout is not None:
-        context["layout_id"] = layout.id
-        context["layout_format"] = str(layout.format)
-    return ModeloExportReadinessRefusal(
-        reason=reason,
-        context=context,
-        precondition_failure=build_modelo_precondition_failure_for_scenario(
-            subject_leaf_key="modelo.readiness",
-            scenario_id="modelo.readiness.export_layout.unrenderable",
-            evidence_id="modelo.readiness.export_layout",
-            evidence_values=context,
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            action_argument_values={"modelo": modelo},
-        ),
-    )
-
-
-def modelo_export_readiness_refusal(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    registry_ready: bool,
-) -> ModeloExportReadinessRefusal | None:
-    """Return the one declared readiness outcome when local export is unavailable.
-
-    The application evaluates layout renderability and chooses the declared
-    action.  The CLI may only resolve this returned verdict against its live
-    surface before presentation.
-    """
-    if not registry_ready:
-        return None
-    provider = build_runtime_schema_provider(
-        filing_year=filing_year,
-        period=period,
-        modelos=(modelo,),
-    )
-    subview = provider.get_subview(modelo)
-    layout = subview.export_layouts[0] if subview.export_layouts else None
-    return _modelo_export_layout_readiness_refusal(modelo=modelo, layout=layout)
-
-
-class ModeloIvaWalletDecisionProvenance(BaseModel):
-    """Redacted audit join for the Modelo 303 IVA wallet authority decision.
-
-    This intentionally excludes taxpayer identifiers, wallet amounts, and local
-    recurrence amounts. The fingerprint lets audits join back to encrypted
-    secure-object storage without copying live fiscal values into export events
-    or result payloads.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    decision_ref: PrefixedContentDigest
-    selected_authority: str = Field(min_length=1, max_length=64)
-    divergence: str = Field(min_length=1, max_length=64)
-    target_year: FilingYear
-    target_period: Period
-    authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
-    authority_source_refs: tuple[PrefixedContentDigest, ...] = Field(default_factory=tuple)
-
-
-class _PreparedModeloExport(NamedTuple):
-    """Validated inputs shared by draft approval and export persistence."""
-
-    work_unit: WorkUnit
-    revision: CalculationRevision
-    period: Period
-    schema_provider: RegistrySchemaAccessor
-    iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None
-    prior_domiciliation_election: PriorDomiciliationElectionProjection
-    amendment_evidence: AmendmentEvidence | None
-
-
-class ModeloExportCrossBucketRefusedError(ModeloError):
-    """Raised when the addressed revision's parent work unit belongs to a bucket other than the active profile bucket.
-
-    Bucket events must scope to the active bucket; allowing the service
-    to emit into a foreign bucket would let any caller pollute another
-    operator's history.
-    """
-
-
-class ModeloExportNoActiveBucketError(ModeloError):
-    """Raised when no active profile bucket is configured.
-
-    Export needs an active bucket because the resulting MODELO_EXPORTED
-    event is scoped to a bucket id and the work-unit lookup is
-    bucket-bound.
-    """
-
-
-class ModeloExportEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloExportError):
-    """Raised when a ledger-derived revision lacks exportable evidence."""
-
-
-class ModeloExportUnsupportedError(ModeloExportError):
-    """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
-
-
-class ModeloExportCommand(BaseModel):
-    """Strict input contract for :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
-
-    Attributes:
-        calculation_revision_id: SHA-256 hex id of the calculation
-            revision to export. Must be in ``VERIFICADO_COMPLETO`` or
-            ``FILED`` state.
-        output_path: Absolute or working-directory-relative path to
-            write the fichero-BOE artefact. Its parent directory must
-            already exist; an existing file is refused unless
-            ``replace_existing`` is set.
-        actor: Operator identifier captured into the
-            ``MODELO_EXPORTED`` event payload and used as the draft
-            ``approved_by`` field for the transient export draft.
-        refund_election: The operator's per-filing Modelo 303 negative-result
-            disposition election threaded into the shared disposition resolver so
-            the exported fichero "Tipo de declaración" matches the election made at
-            filing. Defaults to ``COMPENSAR``; ``DEVOLVER`` requests the credit
-            back and is honoured only for a lawful refund period (refused
-            otherwise).
-        payment_election: The operator's positive-result settlement election.
-            ``INGRESO`` retains the standard declaration type, while a supported
-            Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
-            sign-incompatible elections are refused by the shared resolver.
-        prior_domiciliation_election: Explicit Modelo 303 action for a prior
-            domiciliation. ``None`` resolves the neutral ``KEEP`` value, except
-            for a Modelo 303 rectificativa stating casilla 111, where the choice
-            decides whether Nota 3 puts the refund account on the DID page and
-            is therefore required.
-        charge_account_id: Per-filing choice of the own account AEAT debits for
-            a domiciliación. ``None`` resolves the register's CHARGE
-            designation for the modelo, else its designation for every modelo.
-        refund_account_id: Per-filing choice of the own account AEAT pays a
-            refund into, resolved like ``charge_account_id`` from the REFUND
-            designations when ``None``.
-        replace_existing: Whether the operator explicitly chose to replace a
-            file already at ``output_path``. An export is the artefact an
-            operator carries to AEAT, so destroying an earlier one is never
-            the default.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    calculation_revision_id: CalculationRevisionId
-    output_path: Path
-    actor: str = Field(min_length=1, max_length=128)
-    presenter: PresenterIdentity | None = None
-    taxpayer_identity: TaxpayerIdentityFacts | None = None
-    amendment_evidence: AmendmentEvidence | None = None
-    refund_election: RefundElection = RefundElection.COMPENSAR
-    payment_election: PaymentElection = PaymentElection.INGRESO
-    prior_domiciliation_election: PriorDomiciliationElection | None = None
-    charge_account_id: OwnAccountId | None = None
-    refund_account_id: OwnAccountId | None = None
-    replace_existing: bool = False
-
-
-class ModeloExportAccountReference(BaseModel):
-    """Which account the exported fichero carries, without any account material.
-
-    Attributes:
-        role: Whether the account page carries a charge or a refund account.
-        own_account_id: The own account resolved for that role, or ``None`` when
-            the account is embedded in the filing's own facts (a modelo 360
-            solicitud's account).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    role: OwnAccountRole
-    own_account_id: OwnAccountId | None = None
-
-
-class ModeloExportResult(BaseModel):
-    """Receipt produced by :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
-
-    Composes the lower-level
-    :class:`~cadrumo.application.filing.export_verification.DeclaracionExportResult` (already a
-    byte-level receipt of the written file) with the work-unit-level
-    identity the operator addresses.
-
-    Attributes:
-        calculation_revision_id: The exported revision id.
-        work_unit_id: The parent work unit's id.
-        bucket_id: The bucket the work unit lives in (always equal to
-            the active profile bucket at export time).
-        modelo: AEAT modelo identifier.
-        filing_year: AEAT filing year.
-        period: Filing period as a typed :class:`~cadrumo.core.period.Period` value.
-        output_path: Absolute path the file was written to.
-        byte_size: Size of the written file in bytes.
-        file_sha256: Hex-encoded SHA-256 of the written bytes.
-        format: Wire format string (currently always ``"fichero-boe"``).
-        exported_at: UTC timestamp of the write.
-        actor: Operator identifier captured into the event.
-        bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
-            to the catalogue.
-        resolved_result_disposition: The single resolved AEAT declaration type,
-            or ``None`` for a modelo whose design carries no disposition.
-        payment_election: The semantic positive-result election when applicable.
-        refund_election: The semantic negative-result election when applicable.
-        selected_account: The role and own-account identity of the account the
-            fichero carries, or ``None`` when it carries no account.
-        casilla_provenance: Regulatory grounding for casillas covered
-            by the exported fichero-BOE layout.
-        software_identity_grade: Grade of the program identifier and
-            developer NIF stamped into an envelope-prefixed header, or
-            ``None`` when the selected layout renders no such header.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    calculation_revision_id: CalculationRevisionId
-    work_unit_id: WorkUnitId
-    bucket_id: BucketId
-    modelo: str = Field(min_length=1, max_length=8)
-    filing_year: FilingYear
-    period: Period
-    output_path: Path
-    byte_size: NonNegativeInt
-    file_sha256: ContentDigest
-    format: str = Field(min_length=1)
-    exported_at: datetime
-    actor: str = Field(min_length=1, max_length=128)
-    bucket_event_id: str = Field(min_length=1, max_length=128)
-    resolved_result_disposition: ResultDisposition | None = ResultDisposition.INGRESO
-    payment_election: PaymentElection | None = None
-    refund_election: RefundElection | None = None
-    prior_domiciliation_election: PriorDomiciliationElectionProjection = Field(
-        default_factory=lambda: PriorDomiciliationElectionProjection(
-            election=PriorDomiciliationElection.KEEP,
-        ),
-    )
-    selected_account: ModeloExportAccountReference | None = None
-    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
-    iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
-    software_identity_grade: AeatSoftwareIdentityGrade | None = None
-    local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
-    official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
-    domiciliation_cutoff_unverified: bool = Field(
-        default=False,
-        description=(
-            "True when a domiciliación (U) export was not checked against a direct-debit cutoff because the filing "
-            "window declares no payment cutoff date. The CLI surfaces a non-blocking advisory when set. False for "
-            "every other disposition and whenever a cutoff was declared and met."
-        ),
-    )
-    completeness_unverified: bool = Field(
-        default=False,
-        description=(
-            "True when a fixed-width fichero-BOE export could not be completeness-verified because the modelo "
-            "revision declares no calculation-completeness manifest, so the structural-parity gate did not run. "
-            "The CLI surfaces a non-blocking coverage advisory when set. False when the gate ran (manifest present) "
-            "or the transport is not the fixed-width fichero-BOE."
-        ),
-    )
-
-    @property
-    def completeness_advisory_message(self) -> str:
-        """Operator-facing coverage advisory text for a completeness-unverified export."""
-        return _COMPLETENESS_UNVERIFIED_MESSAGE
-
-
-def envelope_stamped_software_identity(
-    export_layout: ExportLayoutDefinition | None,
-    *,
-    product_software_identity: AeatProductSoftwareIdentity,
-) -> AeatProductSoftwareIdentity | None:
-    """Return the identity the selected layout's header reserves, or ``None``.
-
-    AEAT reserves the program identifier and developer NIF slots in an envelope
-    prefix or auxiliary envelope header. A fixed-record layout that authors its
-    envelope as an ordinary record stamps them through literals bound to the
-    development mock identity fact instead. A layout doing neither carries no
-    software identity at all, and claiming one for it would state a header fact
-    the file does not hold. Both the fichero-BOE writer and the calculation
-    report answer the question here so a report cannot name a grade the filing
-    file would not carry.
-    """
-    if export_layout is None:
-        return None
-    if _envelope_requires_product_identity(export_layout):
-        return product_software_identity
-    if _stamps_development_mock_identity(export_layout):
-        return product_software_identity
-    return None
-
-
-def _envelope_requires_product_identity(export_layout: ExportLayoutDefinition | None) -> bool:
-    """Whether the declared envelope has a product identity input slot.
-
-    A layout stamping the identity through fact-bound literals already carries
-    the bytes, so the renderer is not handed an identity it has no slot for.
-    """
-    return export_layout is not None and (
-        export_layout.auxiliary_envelope_header is not None
-        or (
-            export_layout.filing_envelope is not None
-            and export_layout.filing_envelope.product_identity_requirement is not None
-        )
-    )
-
-
-def _stamps_development_mock_identity(export_layout: ExportLayoutDefinition) -> bool:
-    """Whether any record field takes its literal from the development mock identity fact."""
-    return any(
-        field.literal_fact is not None and field.literal_fact.fact_id == DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID
-        for record in export_layout.records
-        for field in record.fields
-    )
-
-
-def _sha256_ref(value: str) -> str:
-    return prefixed_digest(value.encode("utf-8"))
-
-
-def _export_sink(command: ModeloExportCommand) -> LocalFileExportSink:
-    return LocalFileExportSink(path=command.output_path, replace_existing=command.replace_existing)
-
-
-def _iva_wallet_decision_export_provenance(
-    decision: IvaCompensationReconciliationDecision | None,
-) -> ModeloIvaWalletDecisionProvenance | None:
-    """Project an IVA wallet decision into a redacted export/event join record."""
-    if decision is None:
-        return None
-    return ModeloIvaWalletDecisionProvenance(
-        decision_ref=_sha256_ref(decision.model_dump_json()),
-        selected_authority=str(decision.selected_authority),
-        divergence=str(decision.divergence),
-        target_year=decision.target_year,
-        target_period=decision.target_period,
-        authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
-        authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
-    )
-
-
-def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
-    """Refuse ledger-derived exports that lack bundled evidence or a reference."""
-    if any(
-        issue.reason
-        in {
-            "iva_selected_scope_evidence_failure",
-            "iva_compensation_annual_source_evidence_failure",
-        }
-        for issue in revision.source_issues
-    ):
-        raise ModeloExportEvidenceMissingError(
-            translated_message="application.modelo.errors.export_ledger_evidence_missing",
-            context={"calculation_revision_id": revision.calculation_revision_id},
-        )
-    if not revision.source_transaction_ids:
-        return
-    if revision.ledger_filing_evidence is not None:
-        return
-    if revision.ledger_filing_snapshot is not None:
-        return
-    raise ModeloExportEvidenceMissingError(
-        translated_message="application.modelo.errors.export_ledger_evidence_missing",
-        context={"calculation_revision_id": revision.calculation_revision_id},
-    )
-
-
-def require_exportable_revision_state(revision: CalculationRevision) -> None:
-    """Refuse a revision no export artefact may be produced from.
-
-    Only a sealed :class:`CalculationRevision` -- verificado-completo, presentado, or a superseded
-    presentado -- describes a settled calculation. A draft is still being
-    edited, so any artefact rendered from it would claim a state the revision
-    does not hold. Every modelo export destination applies this one rule rather
-    than restating the state set.
-
-    Raises:
-        CalculationRevisionStateError: The revision is not sealed.
-    """
-    if revision.state not in SEALED_REVISION_STATES:
-        raise CalculationRevisionStateError(
-            translated_message="application.modelo.errors.export_revision_state_refused",
-            context={
-                "calculation_revision_id": revision.calculation_revision_id,
-                "state": revision.state.value,
-            },
-        )
-
-
-def _compose_export_dictionary_values(
-    *,
-    draft: ModeloDraft,
-    taxpayer_identity: TaxpayerIdentityFacts,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-    profile_export_bindings: Sequence[BindingDefinition] = (),
-) -> dict[str, object]:
-    """Resolve typed XML dictionary values from canonical profile bindings."""
-    values: dict[str, object] = dict(
-        resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id, operation=operation),
-    )
-    if taxpayer_identity.full_name is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"cause": "XML dictionary export requires exact taxpayer full_name"},
-        )
-    values["DPNIF_D"] = draft.profile_tax_id
-    values["DP_APENOM_D"] = taxpayer_identity.full_name
-    return values
-
-
-def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return the typed :class:`~cadrumo.core.period.Period` carried by the work unit."""
-    if work_unit.period.filing_year != work_unit.filing_year:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
-        )
-    return work_unit.period
-
-
-def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> None:
-    """Refuse a modelo whose registry snapshot cannot render fichero-BOE bytes."""
-    modelo = str(work_unit.modelo)
-    subview = schema_provider.get_subview(modelo)
-    layout = subview.export_layouts[0] if subview.export_layouts else None
-    reason = export_layout_renderability_reason(modelo, layout)
-    if reason is None:
-        return
-    context = {
-        "modelo": modelo,
-        "reason": reason,
-    }
-    if layout is not None:
-        context["layout_id"] = layout.id
-        context["layout_format"] = layout.format
-    raise ModeloExportUnsupportedError(
-        translated_message="application.modelo.errors.export_unsupported",
-        context=context,
-    )
-
-
-def _requireprior_domiciliation_marker_layout(
-    *,
-    work_unit: WorkUnit,
-    prior_domiciliation_election: PriorDomiciliationElectionProjection,
-    schema_provider: RegistrySchemaAccessor,
-) -> None:
-    """Require the selected registry revision to own the rectificativa ``X`` field."""
-    if prior_domiciliation_election.election is PriorDomiciliationElection.KEEP:
-        return
-    marker_producer_key = FilingProducerKey.PRIOR_DOMICILIATION_ACTION
-    layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
-    if any(
-        field.producer_key is marker_producer_key
-        for layout in layouts
-        for record in layout.records
-        for field in record.fields
-    ):
-        return
-    raise ModeloPriorDomiciliationElectionRefusedError(
-        translated_message="errors.refused.refused_modeloprior_domiciliation_election",
-        context={
-            "modelo": str(work_unit.modelo),
-            "revision_id": work_unit.revision_id,
-            "producer_key": marker_producer_key.value,
-            "revision_renders_action_marker": False,
-        },
-    )
-
-
-def _approve_export_draft(
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    actor: str,
-    approved_at: datetime,
-    period: Period,
-    schema_provider: RegistrySchemaAccessor,
-    ports: DraftReviewPorts,
-    operation: PinnedAuthorityOperation,
-) -> tuple[Period, ModeloDraft]:
-    """Build and approve the export draft for one :class:`~CalculationRevision`.
-
-    The :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` is forwarded to
-    :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
-    so export uses the same profile-applicability relation inputs as the filing
-    workflow gate. Returns the resolved :class:`~cadrumo.core.period.Period` and approved
-    :class:`~domain.filing.schema.ModeloDraft`.
-    """
-    inputs: ModeloInputs = revision_filing_replay_inputs(
-        revision=revision,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-    )
-    try:
-        draft = build_draft(
-            modelo=work_unit.modelo,
-            period=period,
-            profile=filing_profile_from_taxpayer(workflow_profile),
-            inputs=inputs,
-            closed_record_row_sets=revision.closed_record_row_sets,
-            schema_provider=schema_provider,
-        )
-        draft = attach_revision_row_source_identities(draft=draft, revision=revision)
-        approved = approve_draft(
-            draft,
-            bucket_id=work_unit.bucket_id,
-            approved_by=actor,
-            schema_provider=schema_provider,
-            ports=ports,
-            operation=operation,
-            approved_at=approved_at,
-        )
-    except FilingExportError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_approval_failed",
-            context={"calculation_revision_id": revision.calculation_revision_id},
-        ) from exc
-    return period, approved
-
-
-def _resolve_m303_export_arrivals(
-    *,
-    period: Period,
-    prorrata_register: ProrrataRegister,
-    iva_aggregation: IvaLedgerAggregation,
-    bienes_register: BienesInversionIvaRegister,
-    operation: PinnedAuthorityOperation,
-) -> tuple[
-    tuple[IvaDifferentiatedDeductionContribution, ...],
-    BienesInversionIvaRegister,
-    RegistroRegularizacionResult,
-    BienesInversionRegularizacionParameters,
-]:
-    """Assemble current canonical register arrivals from the work-unit-bound register."""
-    snapshot = operation.snapshot(
-        Modelo("303").value,
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    )
-    if prorrata_register.is_sectorized:
-        apportionment = iva_aggregation.prorrata_apportionment
-        if apportionment is None or not apportionment.sector_apportionments:
-            raise FilingProducerSnapshotError(
-                "modelo 303 differentiated sectors require canonical sector apportionment",
-            )
-        contributions = resolve_iva_differentiated_deduction_contributions(
-            snapshot.revision, iva_aggregation.observations, apportionment=apportionment, operation=operation
-        )
-    else:
-        contributions = ()
-    bienes_parameters = resolve_bienes_inversion_regularizacion_parameters(
-        snapshot.revision,
-        modelo_id=Modelo("303").value,
-        filing_period_date=period.end_date,
-    )
-    definitive_by_identifier: dict[str, Decimal] = {}
-    for record in bienes_register.in_window_records(period.filing_year, parameters=bienes_parameters):
-        entry = prorrata_register.entry_for(
-            period.filing_year,
-            sector_id=record.prorrata_sector_id,
-        )
-        if entry is not None and entry.definitive_percentage is not None:
-            definitive_by_identifier[record.identifier] = entry.definitive_percentage
-    regularisation_result = compute_registro_regularizacion(
-        bienes_register,
-        regularizacion_year=period.filing_year,
-        prorrata_definitiva_by_identifier=definitive_by_identifier,
-        parameters=bienes_parameters,
-    )
-    if regularisation_result.pending_percentage_count:
-        raise FilingProducerSnapshotError(
-            "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
-        )
-    # The bundle travels out beside the result it produced, so the facts the
-    # oracle later checks cannot be handed a bundle other than the one the
-    # projection actually used.
-    return contributions, bienes_register, regularisation_result, bienes_parameters
-
-
-def _require_m303_regimen_simplificado_scope_matches_profile(
-    *,
-    filing_facts: M303FilingFacts,
-    workflow_profile: TaxpayerProfile,
-) -> None:
-    """Require persisted M303 evidence to agree with the canonical profile scope."""
-    expected_scope = m303_regimen_simplificado_scope_for_profile(workflow_profile)
-    if filing_facts.regimen_simplificado.scope_decision != expected_scope:
-        raise FilingProducerSnapshotError(
-            "modelo 303 simplified-regime filing evidence disagrees with the canonical IVA profile composition",
-        )
-
-
-class _ResolvedOwnAccount(NamedTuple):
-    """One role's account as resolved for the filing, or why it cannot serve.
-
-    ``embedded`` is the one account that is not an own account: a modelo 360
-    solicitud's representante account, carried by the solicitud itself.
-    """
-
-    account: OwnBankAccount | None
-    unavailable_reason: str | None = None
-    embedded: RefundAccount | None = None
-
-
-class _ExportAccounts(NamedTuple):
-    """The charge and refund own accounts one export may place on its account page."""
-
-    charge: _ResolvedOwnAccount
-    refund: _ResolvedOwnAccount
-
-
-def _resolve_own_account(
-    register: OwnAccountRegister,
-    *,
-    role: OwnAccountRole,
-    modelo: Modelo,
-    explicit_id: str | None,
-    on: date,
-    context: Mapping[str, object],
-) -> _ResolvedOwnAccount:
-    """Resolve ``role``: the per-filing choice, else the modelo designation, else the ALL one.
-
-    An explicit choice is the operator's deliberate instruction, so an unknown or
-    closed account refuses at once. A designated account that is closed on the
-    export date is only unavailable: the export refuses when the role is needed.
-    """
-    if explicit_id is not None:
-        try:
-            account = register.account(explicit_id)
-        except OwnAccountRegisterError as exc:
-            raise _missing_account_error(
-                role, context={**context, "reason": "own_account_unregistered", "own_account_id": explicit_id}
-            ) from exc
-        if not account.open_on(on):
-            raise _missing_account_error(
-                role, context={**context, "reason": "own_account_closed", "own_account_id": explicit_id}
-            )
-        return _ResolvedOwnAccount(account=account)
-    designated = register.designated(role, modelo)
-    if designated is None:
-        return _ResolvedOwnAccount(account=None)
-    if not designated.open_on(on):
-        return _ResolvedOwnAccount(account=designated, unavailable_reason="own_account_closed")
-    return _ResolvedOwnAccount(account=designated)
-
-
-def _missing_account_error(
-    role: OwnAccountRole, *, context: Mapping[str, object]
-) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
-    if role is OwnAccountRole.CHARGE:
-        return ModeloChargeAccountMissingError(
-            "a domiciliacion export requires a charge account on file",
-            context=dict(context),
-        )
-    return ModeloRefundAccountMissingError(
-        "the export's account page requires a refund account on file",
-        context=dict(context),
-    )
-
-
-def _unavailable_context(context: Mapping[str, object], resolved: _ResolvedOwnAccount) -> dict[str, object]:
-    """Name why a resolved account cannot serve, by its opaque id only."""
-    if resolved.unavailable_reason is None:
-        return dict(context)
-    if resolved.account is None:
-        return {**context, "reason": resolved.unavailable_reason}
-    return {**context, "reason": resolved.unavailable_reason, "own_account_id": resolved.account.own_account_id}
-
-
-def _resolve_m360_refund_account(
-    register: OwnAccountRegister,
-    entry: Modelo360SolicitudEntry,
-    *,
-    explicit_id: str | None,
-    on: date,
-    context: Mapping[str, object],
-) -> _ResolvedOwnAccount:
-    """Resolve the account a modelo 360 solicitud declares; designations never answer it.
-
-    DR360 campo 114 makes the account part of the solicitud: the solicitante's own
-    account by reference, or the representante's embedded in the solicitud. Campos
-    115 and 116 are both obligatorio, so a referenced own account without a BIC is
-    refused here rather than at the first blank position.
-    """
-    if explicit_id is not None:
-        raise _missing_account_error(
-            OwnAccountRole.REFUND,
-            context={**context, "reason": "m360_account_declared_on_solicitud", "own_account_id": explicit_id},
-        )
-    choice = entry.account
-    if choice is None:
-        return _ResolvedOwnAccount(account=None, unavailable_reason="m360_account_undeclared")
-    if isinstance(choice, Modelo360RepresentanteAccountChoice):
-        return _ResolvedOwnAccount(account=None, embedded=choice.account)
-    resolved = _resolve_own_account(
-        register,
-        role=OwnAccountRole.REFUND,
-        modelo=Modelo("360"),
-        explicit_id=choice.own_account_id,
-        on=on,
-        context=context,
-    )
-    if resolved.account is not None and not resolved.account.swift_bic:
-        raise _missing_account_error(
-            OwnAccountRole.REFUND,
-            context={**context, "reason": "refund_account_bic_missing", "own_account_id": choice.own_account_id},
-        )
-    return resolved
-
-
-def _resolve_export_accounts(
-    command: ModeloExportCommand,
-    *,
-    work_unit: WorkUnit,
-    export_ports: ModeloExportPorts,
-    exported_at: datetime,
-    m360_solicitud: Modelo360SolicitudEntry | None,
-) -> _ExportAccounts:
-    """Resolve the filing's charge and refund own accounts from the ledger register.
-
-    The one resolution point at the export boundary: every modelo's account page
-    reads the same register, and which account it carries follows the resolved
-    disposition, never the modelo's name. A modelo 360 solicitud declares its own
-    refund account, so its refund role reads the solicitud instead.
-    """
-    register = export_ports.own_accounts.load()
-    modelo = Modelo(str(work_unit.modelo))
-    on = exported_at.astimezone(MADRID_TZ).date()
-    context = {"calculation_revision_id": command.calculation_revision_id}
-    if m360_solicitud is not None:
-        refund = _resolve_m360_refund_account(
-            register,
-            m360_solicitud,
-            explicit_id=command.refund_account_id,
-            on=on,
-            context=context,
-        )
-    else:
-        refund = _resolve_own_account(
-            register,
-            role=OwnAccountRole.REFUND,
-            modelo=modelo,
-            explicit_id=command.refund_account_id,
-            on=on,
-            context=context,
-        )
-    return _ExportAccounts(
-        charge=_resolve_own_account(
-            register,
-            role=OwnAccountRole.CHARGE,
-            modelo=modelo,
-            explicit_id=command.charge_account_id,
-            on=on,
-            context=context,
-        ),
-        refund=refund,
-    )
-
-
-def _refund_account_country(resolved: _ResolvedOwnAccount) -> str | None:
-    """The country of the refund account the filing would be paid into, when one can serve."""
-    projected = _refund_account_projection(resolved)
-    return None if projected is None or projected.iban is None else projected.iban[:2]
-
-
-def _require_domiciliation_before_cutoff(
-    command: ModeloExportCommand,
-    *,
-    work_unit: WorkUnit,
-    resolved_result_disposition: ResultDisposition | None,
-    exported_at: datetime,
-    operation: PinnedAuthorityOperation,
-) -> bool:
-    """Refuse a domiciliación dated after the filing window's payment cutoff.
-
-    The cutoff is compared with the export's Europe/Madrid civil date, since
-    AEAT's direct-debit deadline is a Spanish-calendar day. Returns whether the
-    export is a domiciliación the registry gives no cutoff for, which is an
-    advisory rather than a refusal: an undeclared cutoff is unknown, not open.
-    """
-    if resolved_result_disposition is not ResultDisposition.DOMICILIACION:
-        return False
-    window = resolve_filing_window(
-        str(work_unit.modelo),
-        work_unit.filing_year,
-        work_unit.period,
-        authority=operation,
-    )
-    cutoff = None if window is None else window.payment_cutoff_on
-    if cutoff is None:
-        return True
-    export_on = exported_at.astimezone(MADRID_TZ).date()
-    if export_on <= cutoff:
-        return False
-    raise ModeloDomiciliationPastCutoffError(
-        translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
-        context={
-            "calculation_revision_id": command.calculation_revision_id,
-            "modelo": str(work_unit.modelo),
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period.registry_token,
-            "payment_cutoff_on": cutoff.isoformat(),
-            "export_on": export_on.isoformat(),
-        },
-    )
-
-
-def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:
-    if resolved.account is None or resolved.unavailable_reason is not None:
-        return None
-    return ChargeAccount(iban=resolved.account.iban)
-
-
-def _refund_account_projection(resolved: _ResolvedOwnAccount) -> RefundAccount | None:
-    if resolved.embedded is not None:
-        return resolved.embedded
-    account = resolved.account
-    if account is None or resolved.unavailable_reason is not None:
-        return None
-    return RefundAccount(
-        iban=account.iban,
-        swift_bic=account.swift_bic,
-        bank_name=account.bank_name,
-        bank_address=account.bank_address,
-        bank_city=account.bank_city,
-        bank_country_code=account.bank_country_code,
-    )
-
-
-def _selected_account_reference(
-    producer_snapshot: FilingProducerSnapshot,
-    *,
-    accounts: _ExportAccounts,
-) -> ModeloExportAccountReference | None:
-    """Name the carried account by role and opaque identity, never by its material."""
-    selected = producer_snapshot.selected_account
-    if selected is None:
-        return None
-    if selected.role == "charge":
-        charge = accounts.charge.account
-        return ModeloExportAccountReference(
-            role=OwnAccountRole.CHARGE,
-            own_account_id=None if charge is None else charge.own_account_id,
-        )
-    # An embedded representante account has no own-account id to record.
-    refund = accounts.refund.account
-    return ModeloExportAccountReference(
-        role=OwnAccountRole.REFUND,
-        own_account_id=None if refund is None else refund.own_account_id,
-    )
-
-
-def _build_export_producer_snapshot(
-    *,
-    command: ModeloExportCommand,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    resolved_result_disposition: ResultDisposition | None,
-    prior_domiciliation_election: PriorDomiciliationElectionProjection,
-    amendment_evidence: AmendmentEvidence | None,
-    accounts: _ExportAccounts,
-    m360_solicitud: Modelo360SolicitudEntry | None,
-    export_ports: ModeloExportPorts,
-    operation: PinnedAuthorityOperation,
-) -> FilingProducerSnapshot:
-    """Build the sole typed producer boundary or refuse before any write."""
-    presenter, taxpayer_identity = _require_export_identity(
-        command,
-        work_unit=work_unit,
-        operation=operation,
-    )
-    try:
-        modelo = Modelo(str(work_unit.modelo))
-        iva_profile = workflow_profile.iva
-        refund_account = _refund_account_projection(accounts.refund)
-        charge_account = _charge_account_projection(accounts.charge)
-        nota_three_refund_account = _require_export_accounts(
-            command,
-            work_unit=work_unit,
-            revision=revision,
-            accounts=accounts,
-            charge_account=charge_account,
-            refund_account=refund_account,
-            resolved_result_disposition=resolved_result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election.election,
-            amendment_evidence=amendment_evidence,
-        )
-        model_profile, m303_filing_facts = _resolve_export_model_profile(
-            modelo=modelo,
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=workflow_profile,
-            iva_profile=iva_profile,
-            export_ports=export_ports,
-            operation=operation,
-            m360_solicitud=m360_solicitud,
-        )
-        if m360_solicitud is not None:
-            account_page_refund_account = refund_account is not None
-        else:
-            account_page_refund_account = nota_three_refund_account
-        return build_filing_producer_snapshot(
-            modelo=modelo,
-            taxpayer_tax_id=workflow_profile.tax_id,
-            taxpayer_identity=taxpayer_identity,
-            presenter=presenter,
-            model_profile=model_profile,
-            elections=FilingElectionFacts(
-                result_disposition=resolved_result_disposition,
-                payment=command.payment_election,
-                refund=command.refund_election,
-                prior_domiciliation=prior_domiciliation_election.election,
-            ),
-            amendment_evidence=amendment_evidence,
-            refund_account=refund_account,
-            charge_account=charge_account,
-            account_page_refund_account=account_page_refund_account,
-            m303_filing_facts=m303_filing_facts,
-            # Read separately from the identity pair: AEAT's "persona con quien
-            # relacionarse" is a third party, and under a gestor it is routinely
-            # neither the taxpayer nor the presenter.
-            declaration_contact=resolve_declaration_contact(
-                bucket_id=work_unit.bucket_id,
-                operation=operation,
-            ),
-        )
-    except (FilingProducerSnapshotError, ValueError) as exc:
-        # A typed cause (FilingProducerSnapshotError, e.g. the M202 producer-facts
-        # completeness refusal) may already carry structured context -- the
-        # missing fact identifiers, a reason -- that a bare `cause_type` would
-        # otherwise discard. Merge it forward so the operator-visible refusal
-        # names what is actually missing instead of only that something failed.
-        context: dict[str, object] = {
-            "calculation_revision_id": command.calculation_revision_id,
-            "cause_type": type(exc).__name__,
-        }
-        cause_context = getattr(exc, "context", None)
-        if cause_context:
-            context.update(cause_context)
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context=context,
-        ) from exc
-
-
-def _m303_nota_three_requires_refund_account(
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    prior_domiciliation_election: PriorDomiciliationElection,
-    amendment_evidence: AmendmentEvidence | None,
-) -> bool:
-    """Read Nota 3 only for a rectificativa that keeps the prior domiciliation."""
-    nota_three = (
-        str(work_unit.modelo) == Modelo("303").value
-        and amendment_evidence is not None
-        and amendment_evidence.is_rectificativa
-        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
-        and revision.casilla_values.get(validated_casilla_id("111", surface="M303 Nota 3 account page")) is not None
-    )
-    return nota_three
-
-
-def _export_refund_account_is_missing(refund_account: RefundAccount | None) -> bool:
-    """Require a present refund account with its IBAN, the identity every account page renders."""
-    return refund_account is None or refund_account.iban is None
-
-
-def _require_export_accounts(
-    command: ModeloExportCommand,
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    accounts: _ExportAccounts,
-    charge_account: ChargeAccount | None,
-    refund_account: RefundAccount | None,
-    resolved_result_disposition: ResultDisposition | None,
-    prior_domiciliation_election: PriorDomiciliationElection,
-    amendment_evidence: AmendmentEvidence | None,
-) -> bool:
-    """Refuse an export whose bank-account page has no account to carry.
-
-    Returns whether Modelo 303 Nota 3 requires the refund account on the
-    account page even though the disposition itself is not a refund: a
-    rectificativa stating casilla 111 under a kept prior domiciliation.
-    """
-    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id}
-    if resolved_result_disposition is ResultDisposition.DOMICILIACION:
-        if charge_account is None:
-            raise _missing_account_error(OwnAccountRole.CHARGE, context=_unavailable_context(context, accounts.charge))
-        require_admissible_charge_account(work_unit=work_unit, charge_account=charge_account)
-        return False
-    nota_three = _m303_nota_three_requires_refund_account(
-        work_unit, revision, prior_domiciliation_election, amendment_evidence
-    )
-    refund = resolved_result_disposition is not None and result_disposition_is_refund(resolved_result_disposition)
-    if (refund or nota_three) and _export_refund_account_is_missing(refund_account):
-        raise _missing_account_error(OwnAccountRole.REFUND, context=_unavailable_context(context, accounts.refund))
-    return nota_three and not refund
-
-
-def _require_export_identity(
-    command: ModeloExportCommand,
-    *,
-    work_unit: WorkUnit,
-    operation: PinnedAuthorityOperation,
-) -> tuple[PresenterIdentity, TaxpayerIdentityFacts]:
-    """Resolve the producer identity, deriving it from the profile when unset.
-
-    An explicit command identity wins, so a caller that knows better -- a
-    future representative or gestor surface -- overrides without threading
-    anything new through this path. Otherwise the identity is read from the
-    filing profile in the work unit's OWN bucket, which is the same bucket the
-    export's other profile-sourced values already resolve against; taking it
-    from the active bucket instead would let a cross-bucket export stamp one
-    taxpayer's declaration with another's name.
-
-    The refusal survives derivation rather than being replaced by it: a profile
-    that is absent, or that declares no tax id or no usable name, still refuses
-    here instead of producing a filed artefact with a half-built identity.
-    """
-    if command.presenter is not None and command.taxpayer_identity is not None:
-        return command.presenter, command.taxpayer_identity
-    derived = resolve_export_identity(
-        bucket_id=work_unit.bucket_id,
-        operation=operation,
-    )
-    presenter = command.presenter or (derived[0] if derived else None)
-    taxpayer_identity = command.taxpayer_identity or (derived[1] if derived else None)
-    if presenter is None or taxpayer_identity is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "explicit presenter and taxpayer identity facts are required",
-            },
-        )
-    return presenter, taxpayer_identity
-
-
-def _require_m360_solicitud(
-    *,
-    modelo: Modelo,
-    work_unit: WorkUnit,
-    export_ports: ModeloExportPorts,
-) -> Modelo360SolicitudEntry | None:
-    """Return the modelo 360 solicitud the operator declared for the work unit's period.
-
-    ``None`` for every other modelo. For modelo 360 an undeclared solicitud is refused
-    here: its header, parties and account holder exist nowhere else, and a solicitud
-    rendered without them would be a blank page 1, not a smaller one.
-    """
-    if modelo != Modelo("360"):
-        return None
-    entry = export_ports.m360_solicitud.load().entry_for(work_unit.period)
-    if entry is None:
-        raise FilingProducerSnapshotError(
-            "modelo 360 requires the solicitud facts declared for its period",
-            context={
-                "reason": "m360_solicitud_undeclared",
-                "filing_year": work_unit.period.filing_year,
-                "period": work_unit.period.registry_token,
-            },
-        )
-    return entry
-
-
-def _require_m360_solicitud_for_export(
-    command: ModeloExportCommand,
-    *,
-    work_unit: WorkUnit,
-    export_ports: ModeloExportPorts,
-) -> Modelo360SolicitudEntry | None:
-    """Load the modelo 360 solicitud before any account resolves, refusing an undeclared one."""
-    try:
-        return _require_m360_solicitud(
-            modelo=Modelo(str(work_unit.modelo)),
-            work_unit=work_unit,
-            export_ports=export_ports,
-        )
-    except FilingProducerSnapshotError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause_type": type(exc).__name__,
-                **(exc.context or {}),
-            },
-        ) from exc
-
-
-def _resolve_export_model_profile(
-    *,
-    modelo: Modelo,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    iva_profile: ModeloIVAProfile | None,
-    export_ports: ModeloExportPorts,
-    operation: PinnedAuthorityOperation,
-    m360_solicitud: Modelo360SolicitudEntry | None,
-) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
-    if m360_solicitud is not None:
-        return m360_solicitud.facts, None
-    if modelo == Modelo("303"):
-        if iva_profile is None:
-            raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
-        return iva_profile, _resolve_m303_filing_facts_for_export(
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=workflow_profile,
-            export_ports=export_ports,
-            operation=operation,
-        )
-    if modelo == Modelo("202"):
-        return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
-    if modelo == Modelo("111"):
-        return Modelo111ProfileFacts(colegio_concertado=workflow_profile.colegio_concertado), None
-    return GeneralFilingProfileFacts(), None
-
-
-def _resolve_m303_filing_facts_for_export(
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    export_ports: ModeloExportPorts,
-    operation: PinnedAuthorityOperation,
-) -> M303FilingFacts:
-    filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
-        work_unit=work_unit,
-        revision=revision,
-    )
-    if filing_instance_evidence is None:
-        raise ModeloExportEvidenceMissingError(
-            f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
-        )
-    prorrata_register_repository = export_ports.prorrata_register
-    prorrata_register = require_prorrata_register_coordinates_current(
-        prorrata_register_repository.load(),
-        operation=operation,
-    )
-    bienes_register = export_ports.bienes_inversion.load()
-    iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=work_unit.bucket_id,
-        period=work_unit.period,
-        prorrata_register_repository=prorrata_register_repository,
-        transaction_repository=export_ports.transaction,
-        investment_asset_register=bienes_register,
-        investment_asset_profile_id=work_unit.bucket_id,
-        operation=operation,
-    )
-    (
-        differentiated_contributions,
-        bienes_register,
-        regularisation_result,
-        bienes_parameters,
-    ) = _resolve_m303_export_arrivals(
-        period=filing_instance_evidence.m303.period,
-        prorrata_register=prorrata_register,
-        iva_aggregation=iva_aggregation,
-        bienes_register=bienes_register,
-        operation=operation,
-    )
-    filing_facts = resolve_m303_filing_facts(
-        evidence=filing_instance_evidence,
-        supplier_regime=resolve_m303_supplier_regime_arrival(
-            period=work_unit.period,
-            iva_aggregation=iva_aggregation,
-        ),
-        prorrata_transition=resolve_m303_prorrata_transition_arrival(
-            period=work_unit.period,
-            prorrata_register=prorrata_register,
-            operation=operation,
-        ),
-        prorrata_register=prorrata_register,
-        differentiated_contributions=differentiated_contributions,
-        bienes_register=bienes_register,
-        regularisation_result=regularisation_result,
-        bienes_parameters=bienes_parameters,
-    )
-    _require_m303_regimen_simplificado_scope_matches_profile(
-        filing_facts=filing_facts,
-        workflow_profile=workflow_profile,
-    )
-    return filing_facts
-
-
-def _export_completeness_unverified(work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> bool:
-    """Re-read the export subview after publication and report missing completeness."""
-    _export_subview = schema_provider.get_subview(str(work_unit.modelo))
-    _export_layout = _export_subview.export_layouts[0] if _export_subview.export_layouts else None
-    completeness_unverified = (
-        _export_layout is not None
-        and _export_layout.format is ExportLayoutFormat.FIXED_WIDTH
-        and _export_subview.completeness_manifest is None
-    )
-
-    return completeness_unverified
+def _layout_fields(subview: RegistryModeloSubview) -> Iterator[ExportFieldDefinition]:
+    """Every field of every export layout the selected edition declares."""
+    return (field for layout in subview.export_layouts for record in layout.records for field in record.fields)
 
 
 def _persist_exported_draft(
@@ -1449,9 +217,10 @@ def _persist_exported_draft(
     schema_provider: RegistrySchemaAccessor,
     operation: PinnedAuthorityOperation,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
 ) -> ModeloExportResult:
-    m360_solicitud = _require_m360_solicitud_for_export(command, work_unit=work_unit, export_ports=export_ports)
-    accounts = _resolve_export_accounts(
+    m360_solicitud = require_m360_solicitud_for_export(command, work_unit=work_unit, export_ports=export_ports)
+    accounts = resolve_export_accounts(
         command,
         work_unit=work_unit,
         export_ports=export_ports,
@@ -1465,16 +234,34 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
         payment_election=command.payment_election,
-        refund_account_country=_refund_account_country(accounts.refund),
+        refund_account_country=refund_account_country(accounts.refund),
     )
-    domiciliation_cutoff_unverified = _require_domiciliation_before_cutoff(
+    domiciliation_cutoff_unverified = require_domiciliation_before_cutoff(
         command,
         work_unit=work_unit,
         resolved_result_disposition=resolved_result_disposition,
         exported_at=exported_at,
         operation=operation,
     )
-    producer_snapshot = _build_export_producer_snapshot(
+    settlement = declared_settlement(
+        str(work_unit.modelo),
+        schema_provider.get_snapshot(str(work_unit.modelo)).revision,
+        {value.casilla_id: value.value for value in approved.values},
+        disposition=resolved_result_disposition,
+    )
+    require_instalment_election_admissible(
+        command,
+        work_unit=work_unit,
+        revision=revision,
+        resolved_result_disposition=resolved_result_disposition,
+        settled_amount=settlement.amount,
+        accounts=accounts,
+        exported_at=exported_at,
+        operation=operation,
+    )
+    export_subview = schema_provider.get_subview(str(work_unit.modelo))
+    export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
+    producer_snapshot = build_export_producer_snapshot(
         command=command,
         work_unit=work_unit,
         revision=revision,
@@ -1486,16 +273,242 @@ def _persist_exported_draft(
         m360_solicitud=m360_solicitud,
         export_ports=export_ports,
         operation=operation,
+        export_layout=export_layout,
+        cited_producer_keys=frozenset(
+            field.producer_key for field in _layout_fields(export_subview) if field.producer_key is not None
+        ),
+        cites_period_start=any(
+            field.draft_attribute is ExportDraftAttribute.PERIOD_START_DATE for field in _layout_fields(export_subview)
+        ),
     )
-    selected_account = _selected_account_reference(producer_snapshot, accounts=accounts)
-    export_subview = schema_provider.get_subview(str(work_unit.modelo))
-    export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
+    selected_account = selected_account_reference(producer_snapshot, accounts=accounts)
     software_identity = envelope_stamped_software_identity(
         export_layout,
         product_software_identity=export_ports.product_software_identity,
     )
-    dictionary_values = (
-        _compose_export_dictionary_values(
+    dictionary_values = _dictionary_values_with_settlement(
+        command,
+        approved=approved,
+        producer_snapshot=producer_snapshot,
+        work_unit=work_unit,
+        operation=operation,
+        export_subview=export_subview,
+        export_layout=export_layout,
+        settlement=settlement,
+        disposition=resolved_result_disposition,
+        charge_account=export_charge_account(accounts),
+        refund_account=export_refund_account(accounts),
+    )
+    emit_event = functools.partial(
+        _emit_export_event,
+        command=command,
+        work_unit=work_unit,
+        iva_wallet_provenance=iva_wallet_provenance,
+        resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        selected_account=selected_account,
+        exported_at=exported_at,
+        bucket_event_repository=export_ports.bucket_event,
+    )
+    product_identity = software_identity if envelope_requires_product_identity(export_layout) else None
+    receipt: DeclaracionExportResult | FilingExportConsumedResult
+    if payload_consumer is not None:
+        receipt = _consume_export_payload(
+            payload_consumer=payload_consumer,
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election.election,
+            product_software_identity=product_identity,
+            schema_provider=schema_provider,
+        )
+        event = emit_event(receipt=receipt)
+    else:
+        receipt, event = _stage_publish_and_record_export(
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election.election,
+            product_software_identity=product_identity,
+            schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
+            emit_event=emit_event,
+        )
+
+    return _export_result(
+        command=command,
+        work_unit=work_unit,
+        revision=revision,
+        activity_assets=export_ports.activity_assets,
+        period=period,
+        receipt=receipt,
+        event=event,
+        resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        selected_account=selected_account,
+        exported_at=exported_at,
+        iva_wallet_provenance=iva_wallet_provenance,
+        software_identity=software_identity,
+        domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
+        schema_provider=schema_provider,
+        credit_resolution=export_ports.credit_resolution,
+    )
+
+
+def _dictionary_values_with_settlement(
+    command: ModeloExportCommand,
+    *,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    export_subview: RegistryModeloSubview,
+    export_layout: ExportLayoutDefinition | None,
+    settlement: DeclaredSettlement,
+    disposition: ResultDisposition | None,
+    charge_account: ChargeAccount | None,
+    refund_account: RefundAccount | None,
+) -> dict[str, object] | None:
+    """Return the export dictionary values with the declared settlement values merged in."""
+    dictionary_values = _dictionary_values_for_export(
+        approved,
+        producer_snapshot,
+        work_unit,
+        operation,
+        export_subview,
+        export_layout,
+    )
+    if dictionary_values is not None:
+        dictionary_values.update(
+            _settlement_values_for_export(
+                command,
+                settlement=settlement,
+                work_unit=work_unit,
+                disposition=disposition,
+                charge_account=charge_account,
+                refund_account=refund_account,
+                operation=operation,
+            )
+        )
+    return dictionary_values
+
+
+def _stage_publish_and_record_export(
+    *,
+    command: ModeloExportCommand,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: dict[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    schema_provider: RegistrySchemaAccessor,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+    emit_event: Callable[..., BucketEvent],
+) -> tuple[DeclaracionExportResult, BucketEvent]:
+    """Write the export to staging, publish it, check it against the receipt, then record its event.
+
+    The event states that a file was exported, and the declaration's form reads
+    it as the file the operator is to file. It is therefore recorded only once
+    the file is on the operator's path with the receipt's bytes. A publication
+    refused because the path became occupied leaves no event. When the event
+    cannot be recorded, the file this export just published is withdrawn, so
+    no unrecorded fichero is left behind.
+    """
+    sink = export_sink(command)
+    with sink.staged() as staged:
+        receipt = _write_export_staging(
+            staged=staged,
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election,
+            product_software_identity=product_software_identity,
+            schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
+        )
+        if mutation_writer is None:
+            sink.publish(staged)
+        else:
+            mutation_writer(lambda: sink.publish(staged))
+
+    assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
+    try:
+        event = emit_event(receipt=receipt)
+    except BaseException:
+        _withdraw_unrecorded_export(receipt, artifact_path=command.output_path, mutation_writer=mutation_writer)
+        raise
+    return receipt, event
+
+
+def _withdraw_unrecorded_export(
+    receipt: DeclaracionExportResult,
+    *,
+    artifact_path: Path,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+) -> None:
+    """Remove the file this export published, while it still holds the receipt's bytes.
+
+    Bytes that no longer match the receipt are not this export's to remove and
+    stay on the path.
+    """
+
+    def withdraw() -> None:
+        try:
+            assert_export_artifact_matches_receipt(receipt, artifact_path=artifact_path)
+        except FilingExportError:
+            return
+        artifact_path.unlink()
+
+    try:
+        if mutation_writer is None:
+            withdraw()
+        else:
+            mutation_writer(withdraw)
+    except OSError:
+        # The event failure being raised is the outcome the caller acts on, and
+        # the operation already settles its effect as unknown after a write began.
+        return
+
+
+def _settlement_values_for_export(
+    command: ModeloExportCommand,
+    *,
+    settlement: DeclaredSettlement,
+    work_unit: WorkUnit,
+    disposition: ResultDisposition | None,
+    charge_account: ChargeAccount | None,
+    refund_account: RefundAccount | None,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, object]:
+    """Derive the settlement, instalment and account values an XML dictionary export carries."""
+    return settlement_dictionary_values(
+        disposition=disposition,
+        settlement=settlement,
+        instalment=command.instalment_election,
+        first_instalment_share=first_instalment_share(
+            str(work_unit.modelo),
+            period_day=calculation_filing_date(work_unit.period, authority=operation),
+            authority=operation,
+        ),
+        charge_account=charge_account,
+        refund_account=refund_account,
+        refund_legal_refs=lambda: refund_account_legal_refs(work_unit, operation=operation),
+    )
+
+
+def _dictionary_values_for_export(
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    export_subview: RegistryModeloSubview,
+    export_layout: ExportLayoutDefinition | None,
+) -> dict[str, object] | None:
+    return (
+        compose_export_dictionary_values(
             draft=approved,
             taxpayer_identity=producer_snapshot.taxpayer_identity,
             bucket_id=work_unit.bucket_id,
@@ -1505,61 +518,46 @@ def _persist_exported_draft(
         if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
         else None
     )
-    # The fichero-BOE bytes are staged, the MODELO_EXPORTED event is committed,
-    # and only then does the artefact become operator-visible: a crash between
-    # the write and the event leaves a staged file carrying no provenance
-    # rather than a filing artefact no event accounts for. The staging file is
-    # an unguessable sibling reserved by the shared deferred-publish tier,
-    # which discards it on EVERY exit that does not publish -- including an
-    # operator interrupt -- so cleartext financial data cannot outlive a failed
-    # export next to the destination the operator chose.
-    sink = _export_sink(command)
-    with sink.staged() as staged:
-        receipt = _write_export_staging(
-            staged=staged,
-            command=command,
-            approved=approved,
-            producer_snapshot=producer_snapshot,
-            dictionary_values=dictionary_values,
-            prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=software_identity if _envelope_requires_product_identity(export_layout) else None,
-            schema_provider=schema_provider,
-            mutation_writer=mutation_writer,
-        )
-        event = _emit_export_event(
-            command=command,
-            work_unit=work_unit,
-            receipt=receipt,
-            iva_wallet_provenance=iva_wallet_provenance,
-            resolved_result_disposition=resolved_result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election,
-            selected_account=selected_account,
-            exported_at=exported_at,
-            bucket_event_repository=export_ports.bucket_event,
-        )
-        # Defence in depth: the sink re-checks the path before staging and
-        # translates a destination that changed underneath it (a TOCTOU race,
-        # a file that appeared after the check) into the same typed refusal.
-        if mutation_writer is None:
-            sink.publish(staged)
-        else:
-            mutation_writer(lambda: sink.publish(staged))
 
-    # The receipt below was measured against the staging file, and the result and
-    # the durable MODELO_EXPORTED event both publish those numbers against
-    # ``command.output_path`` instead. Re-bind them to the artefact that
-    # actually landed, through the same check the draft writer used, so the
-    # published size and digest are proven of the operator-visible file rather
-    # than transplanted from the staging path the rename has just consumed.
-    assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
 
+def _export_result(
+    *,
+    command: ModeloExportCommand,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    activity_assets: ActivityAssetHistoryRepository,
+    period: Period,
+    receipt: DeclaracionExportResult | FilingExportConsumedResult,
+    event: BucketEvent,
+    resolved_result_disposition: ResultDisposition | None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
+    selected_account: ModeloExportAccountReference | None,
+    exported_at: datetime,
+    iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
+    software_identity: AeatProductSoftwareIdentity | None,
+    domiciliation_cutoff_unverified: bool,
+    schema_provider: RegistrySchemaAccessor,
+    credit_resolution: CreditResolutionReader,
+) -> ModeloExportResult:
     # Coverage honesty: a fixed-width fichero-BOE whose revision declares no
     # completeness manifest cannot be structural-parity-verified (the pre-write
     # gate in export_draft only runs when a manifest is present), so surface a
     # non-blocking advisory rather than implying the export was verified.
-    completeness_unverified = _export_completeness_unverified(work_unit, schema_provider)
+    completeness_unverified = export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
+        calculation_notes=(
+            *read_recorded_notes(revision.source_issues, activity_assets),
+            *applied_resolution_notes(
+                revision,
+                load_credit_resolutions(
+                    credit_resolution,
+                    modelo=str(work_unit.modelo),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
+            ),
+        ),
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,
@@ -1602,6 +600,7 @@ def _persist_exported_draft(
         software_identity_grade=None if software_identity is None else software_identity.grade,
         domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         completeness_unverified=completeness_unverified,
+        trabajo_deductions_not_computed=trabajo_recorded(revision),
     )
 
 
@@ -1627,6 +626,7 @@ def _write_export_staging(
             product_software_identity=product_software_identity,
             schema_provider=schema_provider,
             mutation_writer=mutation_writer,
+            states_whole_return=True,
         )
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
@@ -1636,38 +636,124 @@ def _write_export_staging(
         # whose registry snapshot declares no export layout (e.g. Modelo 202 has
         # no Diseño de Registros authored, so a verified-complete revision cannot
         # be written to fichero-BOE), which reads as a misleading disk/IO failure.
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context=_export_write_failure_context(command, exc),
-        ) from exc
+        raise export_write_failure(command, exc) from exc
 
 
-def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
-    """Name what the operator must supply when the refusal is a missing identity fact.
+def _consume_export_payload(
+    *,
+    payload_consumer: FilingExportPayloadConsumer,
+    command: ModeloExportCommand,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    schema_provider: RegistrySchemaAccessor,
+) -> FilingExportConsumedResult:
+    try:
+        return export_draft(
+            approved,
+            payload_consumer=payload_consumer,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election,
+            product_software_identity=product_software_identity,
+            schema_provider=schema_provider,
+            states_whole_return=True,
+        )
+    except FilingExportError as exc:
+        raise export_write_failure(command, exc) from exc
 
-    The layout refuses a blank required field by its producer key, which is a
-    registry spelling the operator never sees; the profile fact it is read from
-    is what they declare. Any other export failure keeps its own cause.
-    """
-    missing_producer_key = (exc.context or {}).get("missing_producer_key")
-    profile_facts = (
-        taxpayer_identity_profile_facts(missing_producer_key) if isinstance(missing_producer_key, str) else ()
-    )
-    if not profile_facts:
-        return {"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)}
-    named = " or ".join(profile_facts)
-    return {
+
+def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloError:
+    """Keep a refused box's own message; the generic one would read as a disk problem."""
+    if isinstance(exc, FilingExportValueOverflowError):
+        return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportDeclaredPartyNameError):
+        return _declared_party_name_refusal(command, exc)
+    refusal_context: dict[str, object] = {
         "calculation_revision_id": command.calculation_revision_id,
-        "cause": f"the export requires the profile fact {named}, which is not set",
-        "missing_profile_facts": list(profile_facts),
+        **(exc.context or {}),
     }
+    if isinstance(exc, FilingExportRequiredRecordAbsentError):
+        return ModeloExportRequiredRecordAbsentError(
+            context=refusal_context, precondition_verdict=operator_choice_verdict("export_required_record_absent")
+        )
+    field_refusal = export_field_level_refusal(command, exc)
+    if field_refusal is not None:
+        return field_refusal
+    return ModeloExportError(
+        translated_message="application.modelo.errors.export_draft_write_failed",
+        context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        precondition_verdict=stored_defect_verdict("export_draft_write"),
+    )
+
+
+def _declared_party_name_refusal(
+    command: ModeloExportCommand, exc: FilingExportDeclaredPartyNameError
+) -> ModeloExportDeclaredPartyNameError:
+    """Name the slot, a non-identifying party handle and the door.
+
+    The party's identifier reaches only the in-process envelope, where the door
+    binds it; the name is never carried.
+    """
+    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})}
+    if exc.tax_identifier is not None:
+        context["tax_identifier"] = exc.tax_identifier
+    if exc.country_code is not None:
+        context["country_code"] = exc.country_code
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.declared_party_name.unstated",
+        evidence_id="modelo.export.declared_party_name",
+        evidence_values={
+            "calculation_revision_id": command.calculation_revision_id,
+            "reason": exc.reason,
+            "named": False,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=("tax_identifier", "country_code", "kind"),
+    )
+    return ModeloExportDeclaredPartyNameError(context=context, precondition_verdict=failure.verdict)
+
+
+def _export_value_overflow_refusal(
+    command: ModeloExportCommand, exc: FilingExportValueOverflowError
+) -> ModeloExportValueOverflowError:
+    """Refuse a value wider than its slot in the record design, naming the slot and, for text, the value.
+
+    Cutting the value to fit would declare something else, so nothing is
+    written. A text value is shown because it is what the filer recorded and
+    has to find again - a counterparty's name, an address; an amount is
+    named by its slot only.
+    """
+    context: dict[str, object] = {
+        "calculation_revision_id": command.calculation_revision_id,
+        "field_id": exc.field_id,
+        "field_length": exc.field_length,
+        "value_length": len(exc.rendered),
+    }
+    if exc.record_type is not None:
+        context["record_type"] = exc.record_type
+    if exc.first_position is not None:
+        context["first_position"] = exc.first_position
+        context["last_position"] = exc.first_position + exc.field_length - 1
+    if exc.data_type == CasillaDataType.TEXT:
+        return ModeloExportValueOverflowError(
+            translated_message="application.modelo.errors.export_text_value_overflow",
+            context={**context, "field_value": exc.rendered},
+            precondition_verdict=operator_choice_verdict("export_value_overflow"),
+        )
+    return ModeloExportValueOverflowError(
+        context=context, precondition_verdict=operator_choice_verdict("export_value_overflow")
+    )
 
 
 def _emit_export_event(
     *,
     command: ModeloExportCommand,
     work_unit: WorkUnit,
-    receipt: DeclaracionExportResult,
+    receipt: DeclaracionExportResult | FilingExportConsumedResult,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
@@ -1704,6 +790,8 @@ def _emit_export_event(
         ResultDisposition.CUENTA_CORRIENTE_INGRESO,
     }:
         event_payload["payment_election"] = command.payment_election.value
+        if command.instalment_election.splits:
+            event_payload["instalment_election"] = command.instalment_election.value
     if resolved_result_disposition in {
         ResultDisposition.COMPENSACION,
         ResultDisposition.DEVOLUCION,
@@ -1718,6 +806,35 @@ def _emit_export_event(
         event_payload["selected_account_role"] = selected_account.role.value
         if selected_account.own_account_id is not None:
             event_payload["selected_own_account_id"] = selected_account.own_account_id
+    _append_prior_domiciliation_event(event_payload, prior_domiciliation_election)
+    if iva_wallet_provenance is not None:
+        event_payload.update(
+            {
+                "iva_wallet_decision_ref": iva_wallet_provenance.decision_ref,
+                "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
+                "iva_wallet_divergence": iva_wallet_provenance.divergence,
+                "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
+                "iva_wallet_target_period": iva_wallet_provenance.target_period.registry_token,
+                "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
+                "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
+            },
+        )
+    return emit_modelo_bucket_event(
+        repository=bucket_event_repository,
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_EXPORTED,
+        occurred_at=exported_at,
+        actor=command.actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=command.calculation_revision_id,
+        payload=event_payload,
+    )
+
+
+def _append_prior_domiciliation_event(
+    event_payload: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
+) -> None:
     if prior_domiciliation_election.baseline_filing_record_id is not None:
         event_payload["prior_domiciliation_baseline_filing_record_id"] = (
             prior_domiciliation_election.baseline_filing_record_id
@@ -1733,28 +850,6 @@ def _emit_export_event(
         event_payload["prior_domiciliation_baseline_source_header_locator"] = (
             prior_domiciliation_election.baseline_source_header_locator or ""
         )
-    if iva_wallet_provenance is not None:
-        event_payload.update(
-            {
-                "iva_wallet_decision_ref": iva_wallet_provenance.decision_ref,
-                "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
-                "iva_wallet_divergence": iva_wallet_provenance.divergence,
-                "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
-                "iva_wallet_target_period": iva_wallet_provenance.target_period.registry_token,
-                "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
-                "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
-            },
-        )
-    return _emit_bucket_event(
-        repository=bucket_event_repository,
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_EXPORTED,
-        occurred_at=exported_at,
-        actor=command.actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=command.calculation_revision_id,
-        payload=event_payload,
-    )
 
 
 def _raise_if_deductible_iva_evidence_missing(
@@ -1808,7 +903,7 @@ def load_exportable_revision_target(
     Raises:
         CalculationRevisionNotFoundError: No revision carries that id.
         WorkUnitNotFoundError: The revision names a work unit that is absent.
-        ModeloExportError: The work unit lacks required filing-instance evidence.
+        M303FilingEvidenceError: The work unit lacks valid filing-instance evidence.
         ModeloExportCrossBucketRefusedError: The work unit belongs to another
             bucket than the active one.
     """
@@ -1825,20 +920,14 @@ def load_exportable_revision_target(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    try:
-        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
-    except ModeloError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": calculation_revision_id,
-                "cause_type": type(exc).__name__,
-            },
-        ) from exc
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    # A calculation withdrawn from its work unit stays stored, but it is no longer the declaration's to export.
+    require_work_unit_holds_a_calculation(work_unit)
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
+            precondition_verdict=safety_stop_verdict("export_cross_profile"),
         )
     return revision, work_unit
 
@@ -1849,29 +938,31 @@ def _prepare_modelo_export_schema(
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions,
 ) -> tuple[Period, RegistrySchemaAccessor]:
-    period = _resolve_work_unit_period(work_unit)
+    period = resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
         period=period,
         modelos=(work_unit.modelo,),
     )
-    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
+    raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
-    _require_persisted_required_bindings_resolved(
+    require_persisted_revision_required_bindings_resolved(
         work_unit=work_unit,
         revision=revision,
         action="export",
         operation=operation,
+        profile=checked_profile,
     )
     require_work_unit_calculation_unblocked(
-        work_unit=work_unit, revision=revision, action="export", operation=operation
+        work_unit=work_unit, revision=revision, action="export", operation=operation, resolutions=resolutions
     )
     return period, schema_provider
 
@@ -1884,6 +975,7 @@ def _require_modelo_export_clean_state(
     iva_wallet_decision: IvaCompensationReconciliationDecision | None,
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     require_cross_period_clean_state(
         work_unit,
@@ -1906,6 +998,9 @@ def _require_modelo_export_clean_state(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=revision,
+        work_unit_repository=export_ports.work_unit,
+        subject_leaf_key="modelo.export",
+        operation=operation,
     )
 
 
@@ -1922,16 +1017,17 @@ def _resolve_modelo_exportprior_domiciliation(
     """Resolve the page-3 prior-domiciliation action, KEEP unless the filing must choose.
 
     KEEP is the neutral value: it leaves the marker blank and changes nothing
-    AEAT holds. Only a Modelo 303 rectificativa stating casilla 111 makes the
+    AEAT holds. Only a Modelo 303 rectificativa stating the rectified amount makes the
     choice consequential -- KEEP puts the refund account on the DID page under
     Nota 3, CANCEL_OR_MODIFY does not -- so that filing alone must state it.
     """
-    if command.prior_domiciliation_election is None and _m303_nota_three_requires_refund_account(
-        work_unit, revision, PriorDomiciliationElection.KEEP, amendment_evidence
+    if command.prior_domiciliation_election is None and m303_nota_three_requires_refund_account(
+        work_unit, revision, PriorDomiciliationElection.KEEP, amendment_evidence, operation=operation
     ):
         raise ModeloExportPriorDomiciliationElectionRequiredError(
-            "a Modelo 303 rectificativa stating casilla 111 requires an explicit prior-domiciliation election",
+            "a Modelo 303 rectificativa stating the rectified amount requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
+            precondition_verdict=operator_choice_verdict("export_prior_domiciliation_election"),
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
         election=command.prior_domiciliation_election or PriorDomiciliationElection.KEEP,
@@ -1941,7 +1037,7 @@ def _resolve_modelo_exportprior_domiciliation(
         observation_repository=export_ports.observation,
         operation=operation,
     )
-    _requireprior_domiciliation_marker_layout(
+    requireprior_domiciliation_marker_layout(
         work_unit=work_unit,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=schema_provider,
@@ -1958,7 +1054,7 @@ def _prepare_modelo_export(
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
-) -> _PreparedModeloExport:
+) -> PreparedModeloExport:
     """Load and validate every persisted authority required before export bytes."""
     revision, work_unit = load_exportable_revision_target(
         command.calculation_revision_id,
@@ -1971,7 +1067,30 @@ def _prepare_modelo_export(
         retencion_ports=export_ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
-    require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
+    require_modelo_193_settled_row_amount_authority(
+        work_unit, revision, stage=Modelo193SettledRowStage.EXPORT, operation=operation
+    )
+    # A filed revision is already declared: only a declaration still being prepared holds assumed values.
+    if revision.state not in FILED_REVISION_STATES:
+        require_assumed_values_confirmed(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=export_ports.work_unit,
+                calculation_repository=export_ports.calculation,
+                verification_repository=export_ports.verification,
+                credit_resolutions=export_ports.credit_resolution,
+                operation=operation,
+            ),
+            stage=ModeloAssumedValueStage.EXPORT,
+        )
+    require_modelo_390_prorrata_apartado_rendered(
+        work_unit,
+        registry_revision_id=revision.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=export_ports.prorrata_register,
+        operation=operation,
+        stage=Modelo390ProrrataApartadoStage.EXPORT,
+    )
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
         revision,
@@ -1981,7 +1100,10 @@ def _prepare_modelo_export(
         filing_repository=export_ports.filing,
         justificante_repository=export_ports.justificante,
     )
-    require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision, work_unit=work_unit)
+    # A grant seals the revision, but a profile edit is not held at the write, so
+    # the facts the verified figures rest on are compared again here.
+    require_profile_reads_current_for_export(revision, work_unit, operation=operation)
     # A handoff whose filed source was replaced makes the revision a statement
     # about superseded facts, so it is refused before anything judges that
     # revision's own evidence -- the order verification and filing keep too.
@@ -1991,16 +1113,17 @@ def _prepare_modelo_export(
         work_unit_repository=export_ports.work_unit,
         calculation_repository=export_ports.calculation,
         filing_repository=export_ports.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies(work_unit),
         operation=operation,
     )
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
     _raise_if_deductible_iva_evidence_missing(revision, operation=operation)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
         operation=operation,
+        resolutions=credit_resolutions_for_work(export_ports.credit_resolution, work_unit),
     )
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
@@ -2018,6 +1141,7 @@ def _prepare_modelo_export(
         iva_wallet_decision=iva_wallet_decision,
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
     prior_domiciliation_election = _resolve_modelo_exportprior_domiciliation(
         command,
@@ -2028,12 +1152,12 @@ def _prepare_modelo_export(
         export_ports=export_ports,
         operation=operation,
     )
-    return _PreparedModeloExport(
+    return PreparedModeloExport(
         work_unit=work_unit,
         revision=revision,
         period=period,
         schema_provider=schema_provider,
-        iva_wallet_provenance=_iva_wallet_decision_export_provenance(iva_wallet_decision),
+        iva_wallet_provenance=iva_wallet_decision_export_provenance(iva_wallet_decision),
         prior_domiciliation_election=prior_domiciliation_election,
         amendment_evidence=amendment_evidence,
     )
@@ -2048,6 +1172,7 @@ def export_modelo_revision(
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
 
@@ -2067,18 +1192,25 @@ def export_modelo_revision(
     decision provenance, and cross-period clean state. It then rebuilds and
     approves a transient :class:`~domain.filing.schema.ModeloDraft`, builds one typed
     filing producer snapshot, serializes through
-    ``cadrumo.application.filing.export_draft``, appends ``MODELO_EXPORTED`` to
-    the bucket-event-history catalogue, and finally publishes the staged
-    artefact onto the operator's path. Any write, event, or publication failure
-    discards the staged cleartext artefact before raising.
+    ``cadrumo.application.filing.export_draft``, publishes the staged artefact
+    onto the operator's path, checks it against the receipt, and only then
+    appends ``MODELO_EXPORTED`` to the bucket-event-history catalogue. A write or
+    publication failure discards the staged cleartext artefact before raising
+    and records no event; an event failure withdraws the published file while
+    it still holds the receipt's bytes.
+
+    When ``payload_consumer`` is supplied the validated fichero bytes are handed
+    to it in memory instead and no file is written: ``command.output_path``
+    then names the artefact the caller publishes those bytes inside, and the
+    ``MODELO_EXPORTED`` event records it with the digest of the fichero bytes.
 
     Returns:
-        :class:`~cadrumo.application.modelo.export.ModeloExportResult`: The export
+        :class:`~cadrumo.application.modelo.export_contracts.ModeloExportResult`: The export
         receipt, including byte size, digest, event id, casilla provenance, and
         any redacted IVA wallet decision provenance.
 
     See Also:
-        :class:`~cadrumo.application.modelo.export.ModeloExportCommand`:
+        :class:`~cadrumo.application.modelo.export_contracts.ModeloExportCommand`:
             Strict input envelope for the revision id, output path, actor, and
             refund election.
         :func:`~cadrumo.application.filing.producer_snapshot.build_filing_producer_snapshot`:
@@ -2092,15 +1224,17 @@ def export_modelo_revision(
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             translated_message="application.modelo.errors.export_no_active_bucket",
+            precondition_verdict=no_active_profile_verdict("export_bucket"),
         )
 
     # Validate the destination before touching the catalogue or writing any
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
     # late publication — and never after cleartext financial bytes exist.
-    _export_sink(command).require_writable()
+    if payload_consumer is None:
+        export_sink(command).require_writable()
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     prepared = _prepare_modelo_export(
         command,
         active_bucket_id=active_bucket_id,
@@ -2118,7 +1252,7 @@ def export_modelo_revision(
     prior_domiciliation_provenance = prepared.prior_domiciliation_election
     amendment_evidence = prepared.amendment_evidence
 
-    export_period, approved = _approve_export_draft(
+    export_period, approved = approve_export_draft(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
@@ -2144,21 +1278,5 @@ def export_modelo_revision(
         schema_provider=schema_provider,
         operation=operation,
         mutation_writer=mutation_writer,
+        payload_consumer=payload_consumer,
     )
-
-
-__all__ = [
-    "ModeloExportAccountReference",
-    "ModeloExportCommand",
-    "ModeloExportCrossBucketRefusedError",
-    "ModeloExportEvidenceMissingError",
-    "ModeloExportNoActiveBucketError",
-    "ModeloExportResult",
-    "ModeloExportUnsupportedError",
-    "ModeloIvaWalletDecisionProvenance",
-    "_raise_if_ledger_export_evidence_missing",
-    "envelope_stamped_software_identity",
-    "export_modelo_revision",
-    "load_exportable_revision_target",
-    "require_exportable_revision_state",
-]

@@ -12,15 +12,29 @@ import type {
   DocsLink,
   DocsSearchResult,
   DocsTheme,
-} from "../ipc/contract";
+} from "../ipc/docsBridge";
+import {
+  docsCan,
+  docsTravel,
+  docsTravelLapsed,
+  docsVisited,
+  NO_DOCS_HISTORY,
+  readDocsPlace,
+  type DocsHistory,
+} from "../shell/docsHistory";
+import { onDocsOrigin } from "../shell/docsOrigin";
 
 const CHANNEL = "cadrumo-desktop";
 const VERSION = 1;
 const SEARCH_LIMIT = 8;
 const SEARCH_TIMEOUT_MS = 4000;
+const SEARCH_TOTAL_TIMEOUT_MS = 30000;
 const EXTERNAL_BURST = 3;
 const EXTERNAL_WINDOW_MS = 10000;
 const MAX_SELECTION = 65536;
+// How long a Back or Forward the window asked for is awaited; a page that
+// never reports the move leaves the record where it was.
+const TRAVEL_TIMEOUT_MS = 3000;
 // The page's own bounds; a request beyond them is refused without an answer.
 const MAX_QUERY = 256;
 const MAX_URL = 4096;
@@ -38,8 +52,6 @@ export type DocsMenuRequest = {
   /** Shell viewport coordinates. */
   x: number;
   y: number;
-  /** False when the menu key opened it, so it belongs at x, y. */
-  pointer: boolean;
   selection: string;
   link: DocsLink | null;
 };
@@ -72,6 +84,8 @@ type Props = {
   onShortcut: (id: string) => void;
   onOpenExternal: (url: string) => void;
   onMenu: (request: DocsMenuRequest) => void;
+  /** Whether Back and Forward can move the page, each time that changes. */
+  onHistory?: (can: { back: boolean; forward: boolean }) => void;
 };
 
 function readTheme(value: unknown): DocsTheme {
@@ -102,7 +116,7 @@ function readResults(
       return null;
     }
     // A result may only point back into the documentation.
-    if (url.origin !== origin) return null;
+    if (!onDocsOrigin(url, origin)) return null;
     const ranges = Array.isArray(r.ranges)
       ? (r.ranges as unknown[]).filter(
           (range): range is [number, number] =>
@@ -135,10 +149,18 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     const frame = useRef<HTMLIFrameElement>(null);
     const features = useRef<BridgeFeature[]>([]);
     const pending = useRef(
-      new Map<string, (results: DocsSearchResult[] | null) => void>(),
+      new Map<
+        string,
+        {
+          receive: (results: DocsSearchResult[] | null) => void;
+          progress: () => void;
+        }
+      >(),
     );
     const nextId = useRef(1);
     const externals = useRef<number[]>([]);
+    const history = useRef<DocsHistory>(NO_DOCS_HISTORY);
+    const travelTimer = useRef<number | undefined>(undefined);
     const live = useRef(props);
     live.current = props;
 
@@ -156,6 +178,31 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       },
       [origin],
     );
+
+    // Keeps the record and tells the window only when what Back and Forward
+    // can do has changed.
+    const remember = useCallback((next: DocsHistory) => {
+      const was = docsCan(history.current);
+      history.current = next;
+      const now = docsCan(next);
+      if (now.back !== was.back || now.forward !== was.forward)
+        live.current.onHistory?.(now);
+    }, []);
+    const travel = useCallback(
+      (direction: "back" | "forward") => {
+        const next = docsTravel(history.current, direction);
+        if (next === history.current) return;
+        remember(next);
+        window.clearTimeout(travelTimer.current);
+        travelTimer.current = window.setTimeout(
+          () => remember(docsTravelLapsed(history.current)),
+          TRAVEL_TIMEOUT_MS,
+        );
+        post("command", { name: direction });
+      },
+      [post, remember],
+    );
+    useEffect(() => () => window.clearTimeout(travelTimer.current), []);
 
     useEffect(() => {
       const searches = pending.current;
@@ -178,6 +225,16 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         switch (data.type) {
           case "ready": {
             ready.current = true;
+            if (typeof data.url === "string") {
+              window.clearTimeout(travelTimer.current);
+              remember(
+                docsVisited(
+                  history.current,
+                  data.url,
+                  readDocsPlace(data.entry, data.traversed),
+                ),
+              );
+            }
             const announced: unknown[] = Array.isArray(data.features)
               ? data.features
               : [];
@@ -200,6 +257,18 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             });
             break;
           }
+          case "location":
+            if (typeof data.url === "string") {
+              window.clearTimeout(travelTimer.current);
+              remember(
+                docsVisited(
+                  history.current,
+                  data.url,
+                  readDocsPlace(data.entry, data.traversed),
+                ),
+              );
+            }
+            break;
           case "language-change":
             if (
               typeof data.language === "string" &&
@@ -248,8 +317,6 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             p.onMenu({
               x: rect.left + element.clientLeft + data.x,
               y: rect.top + element.clientTop + data.y,
-              // Pages built before the bridge reported it were pointer-opened.
-              pointer: data.pointer !== false,
               // Bounded here as well as in the bridge: a hostile script can
               // post without the bridge.
               selection:
@@ -268,10 +335,15 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
           }
           case "search-results": {
             if (typeof data.id !== "string") break;
-            const resolve = searches.get(data.id);
-            if (!resolve) break;
+            const request = searches.get(data.id);
+            if (!request) break;
             searches.delete(data.id);
-            resolve(readResults(data.results, origin));
+            request.receive(readResults(data.results, origin));
+            break;
+          }
+          case "search-progress": {
+            if (typeof data.id !== "string") break;
+            searches.get(data.id)?.progress();
             break;
           }
           default:
@@ -280,10 +352,10 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       window.addEventListener("message", receive);
       return () => {
         window.removeEventListener("message", receive);
-        for (const resolve of searches.values()) resolve(null);
+        for (const request of searches.values()) request.receive(null);
         searches.clear();
       };
-    }, [origin, post]);
+    }, [origin, post, remember]);
 
     useEffect(() => {
       if (
@@ -312,8 +384,8 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       ref,
       () => ({
         focus: () => frame.current?.focus(),
-        back: () => post("command", { name: "back" }),
-        forward: () => post("command", { name: "forward" }),
+        back: () => travel("back"),
+        forward: () => travel("forward"),
         home: () => {
           if (!features.current.includes("home")) return false;
           post("command", { name: "home" });
@@ -328,7 +400,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
           } catch {
             return false;
           }
-          if (target.origin !== origin || target.href.length > MAX_URL)
+          if (!onDocsOrigin(target, origin) || target.href.length > MAX_URL)
             return false;
           post("command", { name: "navigate", url: target.href });
           return true;
@@ -345,15 +417,34 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
               return;
             }
             const id = `search-${nextId.current++}`;
-            const timer = window.setTimeout(() => {
+            const started = performance.now();
+            let timer: number;
+            const expire = () => {
               pending.current.delete(id);
               reject(new Error("docs-search-timeout"));
-            }, SEARCH_TIMEOUT_MS);
-            pending.current.set(id, (results) => {
+            };
+            // The docs page acknowledges and reports progress while Pagefind
+            // loads and searches. Silence remains bounded to four seconds;
+            // progress cannot keep an abandoned request alive indefinitely.
+            const arm = () => {
               window.clearTimeout(timer);
-              if (results) resolve(results);
-              else reject(new Error("docs-search-malformed"));
+              const remaining =
+                SEARCH_TOTAL_TIMEOUT_MS - (performance.now() - started);
+              if (remaining <= 0) return expire();
+              timer = window.setTimeout(
+                expire,
+                Math.min(SEARCH_TIMEOUT_MS, remaining),
+              );
+            };
+            pending.current.set(id, {
+              progress: arm,
+              receive: (results) => {
+                window.clearTimeout(timer);
+                if (results) resolve(results);
+                else reject(new Error("docs-search-malformed"));
+              },
             });
+            arm();
             post("search", {
               id,
               query: query.slice(0, MAX_QUERY),
@@ -361,7 +452,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             });
           }),
       }),
-      [post, origin],
+      [post, origin, travel],
     );
 
     return (

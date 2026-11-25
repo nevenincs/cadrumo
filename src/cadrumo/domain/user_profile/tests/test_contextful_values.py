@@ -35,7 +35,7 @@ _PIN = AuthorityGenerationPin(
 _CREATE = ProfileCreateContext(schema=_SCHEMA, generation=_PIN)
 _DECODE = ProfileDecodeContext(schema=_SCHEMA, generation=_PIN)
 _PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
-_INSTANT = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 5, 7, 10, 0, tzinfo=UTC)
 _CUSTOM_SOURCE = "fixture_custom"
 
 

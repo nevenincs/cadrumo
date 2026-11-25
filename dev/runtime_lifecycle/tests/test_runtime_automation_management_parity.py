@@ -26,16 +26,18 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
+    AdministrationSubject,
     administration_subject,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo_client.commands.compiler import build_command_app
@@ -43,6 +45,7 @@ from cadrumo_client.contracts.access_management import AccessManagementRequest
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -78,15 +81,40 @@ pytestmark = [
 ]
 
 
+async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
+    async with asyncio.timeout(timeout):
+        while not predicate():
+            await asyncio.sleep(0.05)
+
+
+def _human_automation_cli(profile_id: UUID, *leaf: str) -> dict[str, Any]:
+    result = invoke_typer_app(
+        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+        (
+            "--format",
+            "json",
+            "--profile",
+            str(profile_id),
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "automation",
+            *leaf,
+        ),
+        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+    )
+    assert result.exit_code == 0, result.output
+    assert PROFILE_INPUT not in result.output
+    document = json.loads(result.stdout)
+    assert document["status"] in {"success", "warning"}
+    assert isinstance(document["result"], dict)
+    return document["result"]
+
+
 def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Real Windows transport/workers bridge both interfaces; secret stores are memory ports."""
-
-    async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
-        async with asyncio.timeout(timeout):
-            while not predicate():
-                await asyncio.sleep(0.05)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -154,8 +182,10 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                         profile_id=selected_profile, frontend=OperationFrontendProjection.TUI
                     )
 
-                async def open_recovery() -> FrontendClient:
-                    return await open_fresh(profile_id)
+                async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+                    return await open_installed_client(
+                        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout
+                    )
 
                 def requester_for(reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
                     assert reviewer is human
@@ -269,7 +299,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
 
         with (
             override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ),
@@ -311,30 +341,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                 resources.insert(0, TransportCleanup(api))
                 assert api.status().status.grant_valid
 
-                def human_cli(*leaf: str) -> dict[str, Any]:
-                    result = invoke_typer_app(
-                        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                        (
-                            "--format",
-                            "json",
-                            "--profile",
-                            str(profile_id),
-                            "--profile-secrets-stdin",
-                            "config",
-                            "profile",
-                            "automation",
-                            *leaf,
-                        ),
-                        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                    )
-                    assert result.exit_code == 0, result.output
-                    assert PROFILE_INPUT not in result.output
-                    document = json.loads(result.stdout)
-                    assert document["status"] in {"success", "warning"}
-                    assert isinstance(document["result"], dict)
-                    return document["result"]
-
-                inspected = human_cli("inspect", str(outcome.request_id))
+                inspected = _human_automation_cli(profile_id, "inspect", str(outcome.request_id))
                 receipt = inspected["review"]["receipt"]
                 assert (
                     receipt["request_id"] == str(outcome.request_id)
@@ -342,7 +349,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                 )
                 assert receipt["grant_id"] == str(metadata.grant_id) and receipt["key_id"] == str(metadata.key_id)
                 assert receipt["review_digest"] == outcome.review_digest
-                denied = human_cli("deny", "key", str(metadata.key_id))
+                denied = _human_automation_cli(profile_id, "deny", "key", str(metadata.key_id))
                 assert denied["target_id"] == str(metadata.key_id) and denied["kind"] == "key"
                 assert denied["receipt"]["access_denied"] is True
                 try:
@@ -378,15 +385,133 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                 asyncio.run(close_async_resources(*resources, task_name="tui-cli-parity-close", primary_error=primary))
 
 
+async def _published_request_id(subject: AdministrationSubject, before: set[UUID], pending_cli: Future[Result]) -> UUID:
+    """Wait for the CLI create to publish exactly one new review and return its request id."""
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        new_requests = tuple(
+            item for item in subject.store.enrollment_state().requests if item.request_id not in before
+        )
+        if new_requests:
+            break
+        if pending_cli.done():
+            pytest.fail(f"CLI create exited before its TUI review: {pending_cli.result()!r}")
+        await asyncio.sleep(0.05)
+    else:
+        pytest.fail("CLI create did not publish a review for the TUI")
+    assert len(new_requests) == 1
+    return new_requests[0].request_id
+
+
+async def _select_pending_review(
+    pilot: Pilot[object], inventory: RuntimeAutomationInventoryScreen, request_id: UUID, profile_id: UUID
+) -> Any:
+    inventory.query_one("#automation-inventory-refresh", Button).press()
+    await _until(
+        pilot,
+        lambda: (
+            inventory.access_lost
+            or (
+                inventory._inventory is not None
+                and not inventory._busy
+                and any(item.receipt.request_id == request_id for item in inventory._inventory.requests)
+            )
+        ),
+    )
+    assert not inventory.access_lost
+    current = inventory._inventory
+    assert current is not None
+    review_index, review = next(
+        (index, item) for index, item in enumerate(current.requests) if item.receipt.request_id == request_id
+    )
+    assert review.receipt.profile_id == profile_id
+    assert review.receipt.stage is EnrollmentStage.REQUESTED
+    request_table = inventory.query_one("#automation-inventory-requests", DataTable)
+    request_table.focus()
+    request_table.move_cursor(row=review_index)
+    await _until(pilot, lambda: inventory._selected_review is review)
+    details = str(inventory.query_one("#automation-inventory-details", Static).content)
+    assert str(request_id) in details and review.receipt.review_digest in details
+    return review
+
+
+async def _decide(
+    pilot: Pilot[object], inventory: RuntimeAutomationInventoryScreen, decision: str, request_id: UUID, review: Any
+) -> None:
+    button_id = f"#automation-inventory-{decision}"
+    await _until(pilot, lambda: not inventory.query_one(button_id, Button).disabled)
+    inventory.query_one(button_id, Button).press()
+    await _until(pilot, lambda: isinstance(pilot.app.screen, RuntimeAutomationDecisionScreen))
+    modal = pilot.app.screen
+    assert isinstance(modal, RuntimeAutomationDecisionScreen)
+    consent = str(modal.query_one("#automation-decision-review", Static).content)
+    assert str(request_id) in consent and review.receipt.review_digest in consent
+    if decision == "approve":
+        approval_password = modal.query_one("#automation-decision-password", Input)
+        assert approval_password.password and approval_password.value == ""
+        approval_password.value = PROFILE_INPUT
+    else:
+        assert not modal.query("#automation-decision-password")
+    modal.query_one("#automation-decision-confirm", Button).press()
+    await _until(pilot, lambda: modal._outcome is not None and not modal._busy)
+    settled = modal._outcome
+    assert settled is not None and settled.completed and not settled.access_lost
+    if decision == "approve":
+        wiped_password = modal.query_one("#automation-decision-password", Input)
+        assert wiped_password.value == "" and modal._pending_proof is None
+    modal.action_close()
+    await _until(pilot, lambda: pilot.app.screen is inventory and inventory._inventory is None)
+
+
+async def _settled_create_result(
+    pending_cli: Future[Result], profile_id: UUID, request_id: UUID, expected_stage: str
+) -> dict[str, Any]:
+    result = await asyncio.to_thread(pending_cli.result, 45)
+    assert result.exit_code == 0, result.output
+    assert PROFILE_INPUT not in result.output and '"proposal"' not in result.stdout
+    envelope = json.loads(result.stdout)
+    assert envelope["command"] == "config.profile.automation.create"
+    create_result = envelope["result"]
+    assert create_result["profile_id"] == str(profile_id)
+    assert create_result["submitted"]["request_id"] == str(request_id)
+    assert create_result["terminal"]["request_id"] == str(request_id)
+    assert create_result["terminal"]["stage"] == expected_stage
+    return create_result
+
+
+async def _assert_final_inventory(
+    pilot: Pilot[object], inventory: RuntimeAutomationInventoryScreen, results: list[dict[str, Any]]
+) -> None:
+    inventory.query_one("#automation-inventory-refresh", Button).press()
+    await _until(
+        pilot,
+        lambda: inventory.access_lost or (inventory._inventory is not None and not inventory._busy),
+    )
+    assert not inventory.access_lost
+    final = inventory._inventory
+    assert final is not None
+    assert len(final.grants) == len(final.keys) == 1
+    assert final.grants[0].state.value == final.keys[0].state.value == "active"
+    assert final.grants[0].grant_id == UUID(results[0]["terminal"]["grant_id"])
+    assert final.keys[0].key_id == UUID(results[0]["terminal"]["key_id"])
+    expected_requests = {UUID(item["terminal"]["request_id"]): item["terminal"]["stage"] for item in results}
+    final_requests = {item.receipt.request_id: item for item in final.requests}
+    assert set(expected_requests) <= set(final_requests)
+    for request_id, stage in expected_requests.items():
+        review = final_requests[request_id]
+        assert review.receipt.stage.value == stage
+        table = inventory.query_one("#automation-inventory-requests", DataTable)
+        table.focus()
+        table.move_cursor(row=tuple(final.requests).index(review))
+        await _until(pilot, lambda review=review: inventory._selected_review is review)
+        details = str(inventory.query_one("#automation-inventory-details", Static).content)
+        assert str(request_id) in details and review.receipt.review_digest in details
+
+
 def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The TUI can review CLI-created enrollments and settle approval and decline."""
-
-    async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
-        async with asyncio.timeout(timeout):
-            while not predicate():
-                await asyncio.sleep(0.05)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -427,7 +552,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
         def invoke_create() -> Result:
             with override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ):
@@ -450,32 +575,9 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
         def invoke_in_context(context: Context, operation: Callable[[], Result]) -> Result:
             return context.run(operation)
 
-        def human_cli(*leaf: str) -> dict[str, Any]:
-            result = invoke_typer_app(
-                build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                (
-                    "--format",
-                    "json",
-                    "--profile",
-                    str(profile_id),
-                    "--profile-secrets-stdin",
-                    "config",
-                    "profile",
-                    "automation",
-                    *leaf,
-                ),
-                input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-            )
-            assert result.exit_code == 0, result.output
-            assert PROFILE_INPUT not in result.output
-            document = json.loads(result.stdout)
-            assert document["status"] in {"success", "warning"}
-            assert isinstance(document["result"], dict)
-            return document["result"]
-
         with (
             override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ),
@@ -520,132 +622,13 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
                                 pending_cli: Future[Result] = cli_pool.submit(
                                     invoke_in_context, copy_context(), invoke_create
                                 )
-                                deadline = time.monotonic() + 30
-                                while time.monotonic() < deadline:
-                                    new_requests = tuple(
-                                        item
-                                        for item in subject.store.enrollment_state().requests
-                                        if item.request_id not in before
-                                    )
-                                    if new_requests:
-                                        break
-                                    if pending_cli.done():
-                                        pytest.fail(
-                                            f"CLI create exited before its TUI review: {pending_cli.result()!r}"
-                                        )
-                                    await asyncio.sleep(0.05)
-                                else:
-                                    pytest.fail("CLI create did not publish a review for the TUI")
-                                assert len(new_requests) == 1
-                                request_id = new_requests[0].request_id
-
-                                inventory.query_one("#automation-inventory-refresh", Button).press()
-                                await _until(
-                                    pilot,
-                                    lambda request_id=request_id: (
-                                        inventory.access_lost
-                                        or (
-                                            inventory._inventory is not None
-                                            and not inventory._busy
-                                            and any(
-                                                item.receipt.request_id == request_id
-                                                for item in inventory._inventory.requests
-                                            )
-                                        )
-                                    ),
+                                request_id = await _published_request_id(subject, before, pending_cli)
+                                review = await _select_pending_review(pilot, inventory, request_id, profile_id)
+                                await _decide(pilot, inventory, decision, request_id, review)
+                                results.append(
+                                    await _settled_create_result(pending_cli, profile_id, request_id, expected_stage)
                                 )
-                                assert not inventory.access_lost
-                                current = inventory._inventory
-                                assert current is not None
-                                review_index, review = next(
-                                    (index, item)
-                                    for index, item in enumerate(current.requests)
-                                    if item.receipt.request_id == request_id
-                                )
-                                assert review.receipt.profile_id == profile_id
-                                assert review.receipt.stage is EnrollmentStage.REQUESTED
-                                request_table = inventory.query_one("#automation-inventory-requests", DataTable)
-                                request_table.focus()
-                                request_table.move_cursor(row=review_index)
-                                await _until(pilot, lambda review=review: inventory._selected_review is review)
-                                details = str(inventory.query_one("#automation-inventory-details", Static).content)
-                                assert str(request_id) in details and review.receipt.review_digest in details
-
-                                button_id = f"#automation-inventory-{decision}"
-                                await _until(
-                                    pilot,
-                                    lambda button_id=button_id: not inventory.query_one(button_id, Button).disabled,
-                                )
-                                inventory.query_one(button_id, Button).press()
-                                await _until(
-                                    pilot,
-                                    lambda: isinstance(pilot.app.screen, RuntimeAutomationDecisionScreen),
-                                )
-                                modal = pilot.app.screen
-                                assert isinstance(modal, RuntimeAutomationDecisionScreen)
-                                consent = str(modal.query_one("#automation-decision-review", Static).content)
-                                assert str(request_id) in consent and review.receipt.review_digest in consent
-                                if decision == "approve":
-                                    approval_password = modal.query_one("#automation-decision-password", Input)
-                                    assert approval_password.password and approval_password.value == ""
-                                    approval_password.value = PROFILE_INPUT
-                                else:
-                                    assert not modal.query("#automation-decision-password")
-                                modal.query_one("#automation-decision-confirm", Button).press()
-                                await _until(
-                                    pilot,
-                                    lambda modal=modal: modal._outcome is not None and not modal._busy,
-                                )
-                                settled = modal._outcome
-                                assert settled is not None and settled.completed and not settled.access_lost
-                                if decision == "approve":
-                                    wiped_password = modal.query_one("#automation-decision-password", Input)
-                                    assert wiped_password.value == "" and modal._pending_proof is None
-                                modal.action_close()
-                                await _until(
-                                    pilot,
-                                    lambda: pilot.app.screen is inventory and inventory._inventory is None,
-                                )
-                                result = await asyncio.to_thread(pending_cli.result, 45)
-                                assert result.exit_code == 0, result.output
-                                assert PROFILE_INPUT not in result.output and '"proposal"' not in result.stdout
-                                envelope = json.loads(result.stdout)
-                                assert envelope["command"] == "config.profile.automation.create"
-                                create_result = envelope["result"]
-                                assert create_result["profile_id"] == str(profile_id)
-                                assert create_result["submitted"]["request_id"] == str(request_id)
-                                assert create_result["terminal"]["request_id"] == str(request_id)
-                                assert create_result["terminal"]["stage"] == expected_stage
-                                results.append(create_result)
-
-                            inventory.query_one("#automation-inventory-refresh", Button).press()
-                            await _until(
-                                pilot,
-                                lambda: (
-                                    inventory.access_lost or (inventory._inventory is not None and not inventory._busy)
-                                ),
-                            )
-                            assert not inventory.access_lost
-                            final = inventory._inventory
-                            assert final is not None
-                            assert len(final.grants) == len(final.keys) == 1
-                            assert final.grants[0].state.value == final.keys[0].state.value == "active"
-                            assert final.grants[0].grant_id == UUID(results[0]["terminal"]["grant_id"])
-                            assert final.keys[0].key_id == UUID(results[0]["terminal"]["key_id"])
-                            expected_requests = {
-                                UUID(item["terminal"]["request_id"]): item["terminal"]["stage"] for item in results
-                            }
-                            final_requests = {item.receipt.request_id: item for item in final.requests}
-                            assert set(expected_requests) <= set(final_requests)
-                            for request_id, stage in expected_requests.items():
-                                review = final_requests[request_id]
-                                assert review.receipt.stage.value == stage
-                                table = inventory.query_one("#automation-inventory-requests", DataTable)
-                                table.focus()
-                                table.move_cursor(row=tuple(final.requests).index(review))
-                                await _until(pilot, lambda review=review: inventory._selected_review is review)
-                                details = str(inventory.query_one("#automation-inventory-details", Static).content)
-                                assert str(request_id) in details and review.receipt.review_digest in details
+                            await _assert_final_inventory(pilot, inventory, results)
                             inventory.action_close()
 
                         await ScreenHostApp(inventory).run_async(headless=True, auto_pilot=drive)
@@ -671,13 +654,13 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
                 approved_request_id = UUID(approved_result["terminal"]["request_id"])
                 declined_request_id = UUID(declined_result["terminal"]["request_id"])
-                approved_inspection = human_cli("inspect", str(approved_request_id))["review"]
-                declined_inspection = human_cli("inspect", str(declined_request_id))["review"]
+                approved_inspection = _human_automation_cli(profile_id, "inspect", str(approved_request_id))["review"]
+                declined_inspection = _human_automation_cli(profile_id, "inspect", str(declined_request_id))["review"]
                 assert approved_inspection["receipt"]["stage"] == EnrollmentStage.COMPLETE.value
                 assert declined_inspection["receipt"]["stage"] == EnrollmentStage.DECLINED.value
                 assert approved_inspection["receipt"]["key_id"] == approved_result["terminal"]["key_id"]
                 assert declined_inspection["receipt"]["key_id"] is None
-                listed = human_cli("list")["inventory"]
+                listed = _human_automation_cli(profile_id, "list")["inventory"]
                 assert len(listed["grants"]) == len(listed["keys"]) == 1
                 assert listed["grants"][0]["grant_id"] == approved_result["terminal"]["grant_id"]
                 assert listed["keys"][0]["key_id"] == approved_result["terminal"]["key_id"]

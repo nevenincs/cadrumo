@@ -1,29 +1,28 @@
-"""Modelo 390 ejercicio 2026 follows the form Orden HAC/27/2026 approves, at applicability grade.
+"""Modelo 390 ejercicio 2026 follows the form Orden HAC/27/2026 approves, at calculation grade.
 
 The Orden replaces the modelo 390 form from ejercicio 2026 and adds one box,
 [112], the pago a cuenta on fuel supplies deducted in the year, which the form's
-own caption subtracts from the result of the liquidation. AEAT has not
-published the matching diseno de registro, so the edition carries no generated
-export layout and claims no filing grade; the previous edition is unchanged.
+own caption subtracts from the result of the liquidation. The edition's export
+layout is generated from AEAT's own diseno de registro for that ejercicio. It
+claims no filing grade while its filed-declaracion extraction profile awaits a
+filed return to anchor on; the previous edition is unchanged.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from functools import cache
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import (
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
+from cadrumo.domain.deadlines.festivos import is_business_day, load_holiday_calendar
 
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.registry_schema_support import committed_modelo
@@ -34,6 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NEW_BOX = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"
 _RESULT = "iva.anual.resultado-liquidacion"
 _FORM = "boe-modelo-390-2026-form"
+_DESIGN = "aeat-dr-390-2026"
 _DAYS = {"treinta": 30, "treinta y un": 31}
 
 
@@ -69,7 +69,7 @@ def _result_formula(revision: ModeloRevision) -> FormulaDefinition:
     return formula
 
 
-def test_the_first_year_of_the_new_form_is_authored_at_applicability_grade() -> None:
+def test_the_first_year_of_the_new_form_is_authored_at_calculation_grade() -> None:
     _, catalogues = _modelo()
     year = _first_year()
     revision = _selected(year)
@@ -78,8 +78,9 @@ def test_the_first_year_of_the_new_form_is_authored_at_applicability_grade() -> 
     )
 
     assert resolution.projection_direction is TemporalProjectionDirection.AUTHORED
-    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert revision.export_layouts == ()
+    assert revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+    (layout,) = revision.export_layouts
+    assert _DESIGN in {str(source) for source in layout.source_refs}
     assert _selected(year - 1).authority_grade is RegistryAuthorityGrade.FILING
     assert _selected(year - 1).export_layouts
 
@@ -104,16 +105,24 @@ def test_the_window_follows_the_statutory_plazo_of_the_following_january() -> No
     words = legal_text_match(
         "orden-eha-3111-2009:art-8", r"en los ([a-z ]+?) primeros dias naturales del mes de enero siguiente"
     ).group(1)
+    nominal_close = date(year + 1, 1, _DAYS[words])
     (window,) = _selected(year).deadline_windows
     assert window.filing_year == year
-    assert (window.opens_on, window.closes_on) == (date(year + 1, 1, 1), date(year + 1, 1, _DAYS[words]))
+    assert window.opens_on == date(year + 1, 1, 1)
+    # A nominal close that falls on a national inhabil moves to the next dia habil (Ley 39/2015 art. 30.5).
+    with bundled_indexed_authority().operation() as operation:
+        calendar = load_holiday_calendar(year + 1, operation=operation)
+    assert window.closes_on >= nominal_close
+    assert is_business_day(window.closes_on, calendar=calendar, ccaa_code=None)
+    skipped = (nominal_close + timedelta(days=offset) for offset in range((window.closes_on - nominal_close).days))
+    assert not any(is_business_day(day, calendar=calendar, ccaa_code=None) for day in skipped)
 
 
 def test_filing_grade_is_refused_for_the_new_form_and_kept_for_the_previous_year() -> None:
     authority = compiled_bundled_authority()
     year = _first_year()
-    applicability = authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY)
-    assert str(applicability.revision.id) == str(_selected(year).id)
+    calculation = authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    assert str(calculation.revision.id) == str(_selected(year).id)
     with pytest.raises(RegistryValidationError) as refusal:
         authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.FILING)
     failure = refusal.value.registry_failure

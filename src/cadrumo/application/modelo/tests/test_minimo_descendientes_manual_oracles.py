@@ -39,9 +39,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.resources.bundled_data import bundled_path
@@ -49,7 +47,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue
-from ..profile_binding import (
+from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
     second_entitled_filer_indicated,
@@ -161,7 +159,7 @@ def _asturias_children() -> dict[str, UserProfileFactValue]:
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 22}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 19}-01-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
     }
 
 
@@ -217,7 +215,7 @@ def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, UserPr
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.code,
         "renta_filing.declaration_type": "1",
     }
     if youngest_files_own_return:
@@ -264,7 +262,7 @@ def _valenciana_conjunta() -> dict[str, UserProfileFactValue]:
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.code,
         "renta_filing.declaration_type": "2",
     }
 
@@ -328,7 +326,7 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not(
 
     unmarried, _ = _aggregates(_valenciana_conjunta(), operation=operation)
     married, _ = _aggregates(
-        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value},
+        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code},
         operation=operation,
     )
 
@@ -339,6 +337,7 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not(
     assert unmarried < married
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
     """Pins the derivation input directly, so the branch cannot go unentered.
 
@@ -349,7 +348,7 @@ def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
     conjunta = _valenciana_conjunta()
     assert second_entitled_filer_indicated(conjunta) is True
     assert (
-        second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value})
+        second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code})
         is False
     )
 
@@ -406,7 +405,7 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     is the mutation pair proving the flag reads the predicate rather than a
     constant.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         key = f"renta_family.anualidades_sin_minimo_descendientes_{_ORACLE_YEAR}"
 
         excluded: dict[str, UserProfileFactValue] = {

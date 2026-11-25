@@ -26,21 +26,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .settling import settle_until
+
 if TYPE_CHECKING:
     from ..profile.overview import ProfileManagerScreen
 
 __all__ = ["wait_until_settled"]
-
-_SETTLE_BARRIER_LIMIT = 400
-"""How many barriers the page gets to settle within before the test gives up.
-
-A cap, not a wait: this bounds a failure rather than a success. A write
-through the real encrypted door settles within single-digit barriers even
-on a loaded machine, because a barrier yields to the event loop rather
-than spinning on it, so exhausting a bound this size means the page is
-not going to settle at all — which is a finding about the page rather
-than about the machine's speed.
-"""
 
 
 async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
@@ -61,12 +52,15 @@ async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
     assertion that reports the progress line as though it were the
     outcome.
 
-    Two barriers at minimum, and the second is not padding. The settling
-    handler clears the flag and then repaints, and a rebuild mounts
-    widgets that the barrier which delivered the completion never walked —
-    :meth:`textual.pilot.Pilot.pause` only waits on the widgets present
-    when it was posted. Reading immediately after the flag cleared can
-    therefore see the tables the redraw has already replaced.
+    Two settled rounds at minimum, and the second is not padding. The
+    settling handler clears the flag and then repaints, and a rebuild mounts
+    widgets that the round which delivered the completion never walked.
+    Reading immediately after the flag cleared can therefore see the tables
+    the redraw has already replaced.
+
+    The wait is bounded by time, not by a count of pauses: a write through
+    the real encrypted door runs key derivation on a worker thread, and on a
+    loaded machine that outlasts any fixed number of pauses.
 
     Deliberately not a :meth:`textual.worker.WorkerManager.wait_for_complete`:
     joining the write worker directly would hold the UI task against a
@@ -74,13 +68,6 @@ async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
     page to *appear* are asking a different question and must not use
     this.
     """
-    for _ in range(_SETTLE_BARRIER_LIMIT):
-        await pilot.pause()
-        write = app._pending_write
-        if write is None:
-            await pilot.pause()
-            return
-    message = (
-        f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
+    await settle_until(
+        pilot, lambda: app._pending_write is None, "the page to settle its write in flight", workers=False
     )
-    raise AssertionError(message)

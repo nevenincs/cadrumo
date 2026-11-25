@@ -12,23 +12,23 @@ from .casilla_catalogue_models import (
     CatalogueFindings,
     CollapseResult,
 )
-from .casilla_resolution import _served_locale
+from .casilla_resolution import served_locale
 from .casilla_text_comparison import (
-    _is_derived_help,
+    is_derived_help,
 )
 from .casilla_text_policy import (
-    _EDITION_TEXT_PLACEHOLDER,
-    _FIELDS,
-    _GLOSSARY_ARTIFACT,
-    _IRREGULAR_WHITESPACE,
-    _PLACEHOLDER,
-    _TRUNCATED,
+    EDITION_TEXT_PLACEHOLDER,
+    FIELDS,
+    GLOSSARY_ARTIFACT,
+    IRREGULAR_WHITESPACE,
+    PLACEHOLDER,
     SOURCE_LOCALE,
     SOURCE_TRUNCATED_SPANISH,
+    TRUNCATED,
 )
 
 
-def _record_casilla_key_findings(
+def record_casilla_key_findings(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record casilla key findings."""
@@ -47,16 +47,16 @@ def _record_casilla_key_findings(
     )
 
 
-def _record_derived_casilla_help(
+def record_derived_casilla_help(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record derived casilla help."""
     found.derived_help[locale] = tuple(
-        sorted(key for key, value in leaves.items() if value is not None and _is_derived_help(key, value))
+        sorted(key for key, value in leaves.items() if value is not None and is_derived_help(key, value))
     )
 
 
-def _record_casilla_placeholders(
+def record_casilla_placeholders(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record casilla placeholders."""
@@ -66,18 +66,18 @@ def _record_casilla_placeholders(
             for key, value in leaves.items()
             if value is not None
             and (
-                (key.endswith(".label") and _PLACEHOLDER.search(value))
-                or (key.endswith(".title") and _EDITION_TEXT_PLACEHOLDER.search(value))
+                (key.endswith(".label") and PLACEHOLDER.search(value))
+                or (key.endswith(".title") and EDITION_TEXT_PLACEHOLDER.search(value))
             )
         )
     )
 
 
-def _record_casilla_glossary_artifacts(
+def record_casilla_glossary_artifacts(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record casilla glossary artifacts."""
-    artifact = _GLOSSARY_ARTIFACT.get(locale)
+    artifact = GLOSSARY_ARTIFACT.get(locale)
     found.glossary_artifacts[locale] = (
         ()
         if artifact is None
@@ -87,7 +87,7 @@ def _record_casilla_glossary_artifacts(
     )
 
 
-def _record_casilla_truncation(
+def record_casilla_truncation(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record casilla truncation."""
@@ -97,27 +97,25 @@ def _record_casilla_truncation(
             key
             for key, value in leaves.items()
             if (value is not None and value)
-            and _TRUNCATED.search(value)
+            and TRUNCATED.search(value)
             and value not in SOURCE_TRUNCATED_SPANISH
             and not (sources.get(key, frozenset()) & SOURCE_TRUNCATED_SPANISH)
         )
     )
 
 
-def _record_casilla_whitespace(
+def record_casilla_whitespace(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, leaves: Mapping[str, str | None]
 ) -> None:
     """Record casilla whitespace."""
     found.irregular_whitespace[locale] = tuple(
         sorted(
-            key
-            for key, value in leaves.items()
-            if (value is not None and value) and _IRREGULAR_WHITESPACE.search(value)
+            key for key, value in leaves.items() if (value is not None and value) and IRREGULAR_WHITESPACE.search(value)
         )
     )
 
 
-def _record_casilla_plan_findings(
+def record_casilla_plan_findings(
     self: ModeloCasillaCatalogue, locale: str, found: CatalogueFindings, plan: CollapseResult
 ) -> None:
     """Record casilla plan findings."""
@@ -127,7 +125,7 @@ def _record_casilla_plan_findings(
     found.lineage_lifts[locale] = tuple(sorted(plan.plan.settings.get(locale, {})))
 
 
-def _record_casilla_unresolved_spanish(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
+def record_casilla_unresolved_spanish(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
     """Record casilla unresolved spanish."""
     found.unresolved_spanish = tuple(
         sorted(
@@ -138,22 +136,22 @@ def _record_casilla_unresolved_spanish(self: ModeloCasillaCatalogue, found: Cata
     )
 
 
-def _record_casilla_fallback_translations(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
+def record_casilla_fallback_translations(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
     """Record casilla fallback translations."""
     found.untranslated = {
         locale: sum(
             1
             for index in range(len(self.occurrences))
-            for field_name in _FIELDS
+            for field_name in FIELDS
             if self.resolve(index, field_name, locale) is not None
-            and _served_locale(self, index, field_name, locale) != locale
+            and served_locale(self, index, field_name, locale) != locale
         )
         for locale in self.locales
         if locale != SOURCE_LOCALE
     }
 
 
-def _record_casilla_content_and_segment_drift(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
+def record_casilla_content_and_segment_drift(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
     """Record casilla content and segment drift."""
     found.dropped_source_content = {
         locale: tuple(sorted(self.dropped_source_content(locale))) for locale in self.locales if locale != SOURCE_LOCALE
@@ -169,7 +167,7 @@ def _record_casilla_content_and_segment_drift(self: ModeloCasillaCatalogue, foun
     }
 
 
-def _record_casilla_lineage_translation_drift(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
+def record_casilla_lineage_translation_drift(self: ModeloCasillaCatalogue, found: CatalogueFindings) -> None:
     """Record casilla lineage translation drift."""
     found.translation_drift = self.translation_drift()
     found.stale_translations = {

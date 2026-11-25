@@ -42,7 +42,7 @@ from cadrumo.application.corpus_search.terminology import (
 )
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from .enums import ConceptDomain, TermStatus
 from .errors import TerminologyValidationError
@@ -178,7 +178,7 @@ class SeedProvenance(BaseModel):
     concepts authored from scratch.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source: _FreeShort
     attribution: _Attribution
@@ -194,7 +194,7 @@ class TermSection(BaseModel):
     ``hiddenLabel``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     label: _Label
     term_status: TermStatus
@@ -230,7 +230,7 @@ class TermSection(BaseModel):
 class LanguageSource(BaseModel):
     """Source citation grounding a language section's definition."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     citation: _Citation
     authority: _FreeShort | None = None
@@ -248,7 +248,7 @@ class LanguageSection(BaseModel):
     validation step, not here.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     language: OutputLanguage
     short_description: _ShortDescription
@@ -291,7 +291,7 @@ class ConceptRecord(BaseModel):
     acyclicity are handbook-level gates, not per-record invariants.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     concept_id: _ConceptId
     domain: ConceptDomain

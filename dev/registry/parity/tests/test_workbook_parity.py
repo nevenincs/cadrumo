@@ -29,26 +29,28 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.packaging.command_execution import CommandResult
 
-from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .. import workbook_parity_libreoffice as _libreoffice
-from .._parity_tapes import ParityScenario
+from ...conformance.registry_schema_support import committed_modelo
+from .. import workbook_parity_libreoffice
+from ..parity_tapes import ParityScenario
 from ..workbook_parity_binary_conversion import (
     convert_binary_xls_with_libreoffice,
     converted_binary_xls_with_libreoffice,
 )
 from ..workbook_parity_libreoffice import (
     LIBREOFFICE_FAILURE_CONTEXT_KEY,
+    LibreOfficeConversionError,
     LibreOfficeFailureCause,
-    _LibreOfficeConversionError,
-    _subprocess_failure_detail,
     run_workbook_with_libreoffice,
+    subprocess_failure_detail,
 )
 from ..workbook_parity_models import (
     SyntheticInputSet,
     SyntheticInputValue,
+    WorkbookArtefactReport,
     WorkbookCellRef,
 )
 from ..workbook_parity_scanning import (
@@ -73,12 +75,19 @@ _M130_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_CASILLA_
 # the budget only has to stop a hung parse; it stays well clear of the real cost.
 _COMMITTED_WORKBOOK_SCAN_OPTIONS = WorkbookScanOptions(per_file_timeout_seconds=60)
 
-_COMMITTED_M303_RECORD_DESIGN = (
-    Path("disenos_registro")
-    / "modelo_303"
-    / "files"
-    / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-)
+_YEAR = filing_year_envelope().horizon
+_M130_REVISION = str(open_ended_revision("130").id)
+_M303_REVISION = str(open_ended_revision("303").id)
+
+
+def _record_design(modelo: str, extension: str) -> Path:
+    """Return the first committed record-design workbook of a modelo, found on disk, relative to the corpus root."""
+    files = Path("disenos_registro") / f"modelo_{modelo}" / "files"
+    (design,) = sorted((bundled_path("corpus", "aeat_official") / files).glob(f"01-{modelo}-*{extension}"))
+    return files / design.name
+
+
+_COMMITTED_M303_RECORD_DESIGN = _record_design("303", ".xlsx")
 
 
 def _write_formula_workbook(path: Path) -> None:
@@ -108,12 +117,12 @@ def _write_static_workbook(path: Path) -> None:
 
 
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -211,13 +220,7 @@ def test_scan_budget_exhaustion_is_a_timeout_not_a_formula_free_workbook() -> No
 
 def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
     root = bundled_path("corpus", "aeat_official")
-    workbook_path = (
-        root
-        / "disenos_registro"
-        / "modelo_130"
-        / "files"
-        / "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
-    )
+    workbook_path = root / _record_design("130", ".xls")
 
     report = convert_binary_xls_with_libreoffice(workbook_path, root=root)
 
@@ -231,13 +234,7 @@ def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
 
 def test_committed_binary_xls_context_yields_temporary_xlsx_workbook() -> None:
     root = bundled_path("corpus", "aeat_official")
-    workbook_path = (
-        root
-        / "disenos_registro"
-        / "modelo_130"
-        / "files"
-        / "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
-    )
+    workbook_path = root / _record_design("130", ".xls")
 
     with converted_binary_xls_with_libreoffice(workbook_path, root=root) as converted_path:
         assert converted_path.suffix == ".xlsx"
@@ -274,7 +271,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
     synthetic = SyntheticInputSet(
         id="modelo-130-record-design-rejected",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -293,7 +290,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
             workbook=workbook,
             output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
             registry_outputs={"casilla-19": _M130_CASILLA_19},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
         )
 
 
@@ -346,14 +343,14 @@ def test_discover_workbooks_requires_existing_root(tmp_path: Path) -> None:
         discover_workbooks(missing)
 
 
-def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
+def _scanned_formula_workbook_with_synthetic_input(tmp_path: Path) -> tuple[WorkbookArtefactReport, SyntheticInputSet]:
     workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
     _write_formula_workbook(workbook_path)
     workbook = scan_workbook(workbook_path, root=tmp_path)
     synthetic = SyntheticInputSet(
         id="synthetic-303-basic",
         modelo="303",
-        revision="2026",
+        revision=_M303_REVISION,
         values=(
             SyntheticInputValue(
                 id="base",
@@ -363,6 +360,11 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
             ),
         ),
     )
+    return workbook, synthetic
+
+
+def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     report = compare_registry_to_workbook(
         synthetic_input=synthetic,
@@ -385,22 +387,7 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
 
 
 def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) -> None:
-    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
-    _write_formula_workbook(workbook_path)
-    workbook = scan_workbook(workbook_path, root=tmp_path)
-    synthetic = SyntheticInputSet(
-        id="synthetic-303-basic",
-        modelo="303",
-        revision="2026",
-        values=(
-            SyntheticInputValue(
-                id="base",
-                value=Decimal("10"),
-                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
-                registry_binding="iva.base",
-            ),
-        ),
-    )
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     with pytest.raises(RegistryValidationError, match="missing legal_refs"):
         compare_registry_to_workbook(
@@ -441,22 +428,7 @@ def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) 
 
 
 def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:
-    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
-    _write_formula_workbook(workbook_path)
-    workbook = scan_workbook(workbook_path, root=tmp_path)
-    synthetic = SyntheticInputSet(
-        id="synthetic-303-basic",
-        modelo="303",
-        revision="2026",
-        values=(
-            SyntheticInputValue(
-                id="base",
-                value=Decimal("10"),
-                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
-                registry_binding="iva.base",
-            ),
-        ),
-    )
+    workbook, synthetic = _scanned_formula_workbook_with_synthetic_input(tmp_path)
 
     with pytest.raises(RegistryValidationError, match="output ids must match exactly"):
         compare_registry_to_workbook(
@@ -474,7 +446,7 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
     synthetic = SyntheticInputSet(
         id="modelo-130-basic",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -489,8 +461,8 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
         ParityScenario(
             id="modelo-130-basic",
             modelo="130",
-            revision="2019-y-siguientes",
-            filing_year=2026,
+            revision=_M130_REVISION,
+            filing_year=_YEAR,
             period="1T",
             workbook_path=tmp_path / "modelo-130.xlsx",
             synthetic_input=synthetic,
@@ -503,7 +475,7 @@ def test_parity_scenario_rejects_negative_tolerance(tmp_path: Path) -> None:
     synthetic = SyntheticInputSet(
         id="modelo-130-negative-tolerance",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -518,8 +490,8 @@ def test_parity_scenario_rejects_negative_tolerance(tmp_path: Path) -> None:
         ParityScenario(
             id="modelo-130-negative-tolerance",
             modelo="130",
-            revision="2019-y-siguientes",
-            filing_year=2026,
+            revision=_M130_REVISION,
+            filing_year=_YEAR,
             period="1T",
             workbook_path=tmp_path / "modelo-130.xlsx",
             synthetic_input=synthetic,
@@ -536,7 +508,7 @@ def test_parity_scenario_zero_tolerance_accepts_exact_comparison(tmp_path: Path)
     synthetic = SyntheticInputSet(
         id="modelo-303-zero-tolerance",
         modelo="303",
-        revision="2026",
+        revision=_M303_REVISION,
         values=(
             SyntheticInputValue(
                 id="base",
@@ -549,8 +521,8 @@ def test_parity_scenario_zero_tolerance_accepts_exact_comparison(tmp_path: Path)
     scenario = ParityScenario(
         id="modelo-303-zero-tolerance",
         modelo="303",
-        revision="2026",
-        filing_year=2026,
+        revision=_M303_REVISION,
+        filing_year=_YEAR,
         period="1T",
         workbook_path=workbook_path,
         synthetic_input=synthetic,
@@ -641,7 +613,7 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
 
 
 def test_libreoffice_conversion_error_carries_its_cause_into_the_registry_error() -> None:
-    registry_error = _LibreOfficeConversionError(LibreOfficeFailureCause.NO_OUTPUT, "no workbook").as_registry_error()
+    registry_error = LibreOfficeConversionError(LibreOfficeFailureCause.NO_OUTPUT, "no workbook").as_registry_error()
 
     assert isinstance(registry_error, RegistryValidationError)
     assert str(registry_error) == "no workbook"
@@ -667,7 +639,7 @@ def test_libreoffice_refuses_a_profile_root_too_deep_to_initialise(
     shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
     deep_temp_root = tmp_path / ("t" * 150)
     deep_temp_root.mkdir()
-    monkeypatch.setattr(_libreoffice, "prepare_temporary_directory", lambda: deep_temp_root)
+    monkeypatch.setattr(workbook_parity_libreoffice, "prepare_temp_root", lambda: deep_temp_root)
 
     with pytest.raises(RegistryValidationError, match="user profile root") as excinfo:
         run_workbook_with_libreoffice(
@@ -805,7 +777,7 @@ def test_subprocess_failure_detail_omits_raw_stdout_stderr_content() -> None:
     assert "some-real-user" in exc.stdout, "premise: CalledProcessError.stdout must actually carry the raw text"
     assert "SECRET_TOKEN=abc123" in exc.stderr, "premise: CalledProcessError.stderr must actually carry the raw text"
 
-    detail = _subprocess_failure_detail(exc)
+    detail = subprocess_failure_detail(exc)
 
     assert "some-real-user" not in detail
     assert "SECRET_TOKEN" not in detail
@@ -824,4 +796,4 @@ def test_subprocess_failure_detail_handles_completed_process_without_exception()
         stderr="",
     )
 
-    assert _subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"
+    assert subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"

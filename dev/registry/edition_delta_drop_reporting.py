@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import edition_delta_order_restoration as _edition_delta_order_restoration
+from . import edition_delta_order_restoration
 from .edition_delta_drop_types import DropOutcome
 
 __all__ = ("render_drop_outcome",)
@@ -26,7 +26,7 @@ def render_drop_outcome(outcome: DropOutcome) -> str:
                 f"kept_no_identity={family.kept_no_identity}"
             )
     lines.extend(
-        _edition_delta_order_restoration._order_lines(
+        edition_delta_order_restoration.order_lines(
             outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families
         )
     )

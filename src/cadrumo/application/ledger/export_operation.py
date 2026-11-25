@@ -79,6 +79,8 @@ class LedgerExportRowProjection(BaseModel):
     invoice_id: str
     booked_date: str
     value_date: str
+    operation_date: str = ""
+    accrual_date: str = ""
     effective_date: str
     amount: str
     currency: str

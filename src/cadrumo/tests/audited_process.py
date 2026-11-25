@@ -10,6 +10,7 @@ provide the complete argv explicitly.
 from __future__ import annotations
 
 import asyncio
+import os
 import subprocess
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -115,6 +116,7 @@ async def _run_audited_process(
     else:
         raise TypeError("a string input requires text=True")
 
+    launch_command, launch_env = _direct_interpreter_launch(rendered_command, env)
     process_options: _ProcessOptions = {}
     if pass_fds:
         process_options["pass_fds"] = tuple(pass_fds)
@@ -123,9 +125,9 @@ async def _run_audited_process(
     if startupinfo is not None:
         process_options["startupinfo"] = startupinfo
     process = await asyncio.create_subprocess_exec(
-        *rendered_command,
+        *launch_command,
         cwd=cwd,
-        env=env,
+        env=launch_env,
         stdin=asyncio.subprocess.PIPE if payload is not None else None,
         stdout=asyncio.subprocess.PIPE if capture_output else None,
         stderr=asyncio.subprocess.PIPE if capture_output else None,
@@ -170,6 +172,37 @@ async def _run_audited_process(
             stderr=result.stderr,
         )
     return result
+
+
+#: The variable a Windows virtual-environment ``python.exe`` sets before it
+#: starts the base interpreter; the base interpreter reads it to adopt the
+#: environment's ``sys.executable``, prefix and site-packages.
+_VENV_LAUNCHER_VARIABLE = "__PYVENV_LAUNCHER__"
+
+
+def _direct_interpreter_launch(
+    command: list[str], env: Mapping[str, str] | None
+) -> tuple[list[str], Mapping[str, str] | None]:
+    """Start this environment's base interpreter directly instead of through its launcher.
+
+    On Windows a virtual environment's ``python.exe`` is a separate launcher
+    process whose only work is to start the base interpreter with
+    ``__PYVENV_LAUNCHER__`` set. Doing that here yields the same interpreter
+    configuration with one process creation fewer, which is the dominant
+    start-up cost of a fresh-interpreter probe on a busy Windows host. Any
+    other argv, including another interpreter or a console script, is
+    launched exactly as given.
+    """
+    if sys.platform != "win32" or not command or sys.prefix == sys.base_prefix:
+        return command, env
+    base = getattr(sys, "_base_executable", None)
+    if not isinstance(base, str) or not base or Path(command[0]) != Path(sys.executable):
+        return command, env
+    if Path(base) == Path(sys.executable) or not Path(base).is_file():
+        return command, env
+    launch_env = dict(os.environ if env is None else env)
+    launch_env[_VENV_LAUNCHER_VARIABLE] = sys.executable
+    return [base, *command[1:]], launch_env
 
 
 def _render_output(

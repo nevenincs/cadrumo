@@ -34,8 +34,8 @@ from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from ..surfaces import MCP_SURFACES, McpSurface
 from .session import connected_server_and_client_session
-from .test_operation_search_tool import _AdmittedClient, _registry
-from .test_result_page_tool import _observed_operation_id, _ObservedClient
+from .test_operation_search_tool import AdmittedClient, operation_search_tool_registry
+from .test_result_page_tool import ObservedClient, observed_operation_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -45,26 +45,38 @@ _READ_ONLY = {
     "describe",
     "authority",
     "corpus_search",
+    "views",
     "observe",
     "result",
     "result_page",
     "review",
 }
-"""The tools that cannot change a record or reach the network, written here apart from the catalogue."""
+"""The tools that cannot change a record or a file, written here apart from the catalogue."""
+
+_READS_THE_NETWORK: set[str] = set()
+"""The read-only tools some call of which reaches another host."""
 
 _READING_EXCHANGES = (OperationObserve, OperationReview)
 """The operation requests that only read; every other one submits, starts, resumes or manages."""
 
-_READING_METHODS = {"status", "describe", "operation", "read_result_document", "read_result_page", "close"}
+_READING_METHODS = {
+    "status",
+    "describe",
+    "operation",
+    "read_result_document",
+    "read_result_page",
+    "read_profile_view",
+    "close",
+}
 
 
 class _WatchedLease:
     """An admitted lease that answers reads and keeps what was asked of it, by method and by exchange."""
 
     def __init__(self, profile_id: UUID) -> None:
-        registry = _registry()
-        self._lease = _AdmittedClient(profile_id, registry)
-        self._observed = _ObservedClient(profile_id, registry)
+        registry = operation_search_tool_registry()
+        self._lease = AdmittedClient(profile_id, registry)
+        self._observed = ObservedClient(profile_id, registry)
         self.profile_id, self.frontend, self.session_id = profile_id, self._lease.frontend, self._lease.session_id
         self.sent: list[type] = []
         self.unexpected: list[str] = []
@@ -93,13 +105,17 @@ class _WatchedLease:
     def read_result_page(self, result: Any, page: Any, *, deadline: float) -> object:
         return self._observed.read_result_page(result, page, deadline=deadline)
 
+    def read_profile_view(self, page_kinds: tuple[object, ...]) -> SimpleNamespace:
+        # The profile's language, read through its registered read-only view, which stores none here.
+        return SimpleNamespace(items=lambda _kind: (), record_revision=1, content_digest="0" * 64)
+
     def close(self) -> None:
         self._lease.close()
 
 
 def _read_only_calls() -> dict[str, dict[str, object]]:
     """One representative call for each read-only tool that is served under a session."""
-    operation_id = _observed_operation_id()
+    operation_id = observed_operation_id()
     digest = sha256_hex(b"synthetic review contract")
     review = OperationReviewProjectionRequestV1(
         reference=OperationReviewProjectionReferenceV1(
@@ -125,6 +141,7 @@ def _read_only_calls() -> dict[str, dict[str, object]]:
             "page": ProjectionPageRequest().model_dump(mode="json"),
         },
         "review": {"review": review.model_dump(mode="json")},
+        "views": {"query": "ledger"},
     }
 
 
@@ -136,8 +153,11 @@ def test_every_tool_in_the_catalogue_declares_its_hints_and_the_read_only_set_is
     assert {name for name, hints in MCP_TOOL_HINTS.items() if hints.read_only} == _READ_ONLY
     for name, hints in MCP_TOOL_HINTS.items():
         if hints.read_only:
-            # A tool that only reads destroys nothing, reaches nothing and is harmless to repeat.
-            assert hints == ToolHints(hints.title, read_only=True, destructive=False, idempotent=True, open_world=False)
+            # A tool that only reads destroys nothing and is harmless to repeat.
+            reaches = name in _READS_THE_NETWORK
+            assert hints == ToolHints(
+                hints.title, read_only=True, destructive=False, idempotent=True, open_world=reaches
+            )
         else:
             assert hints.idempotent is False, name
 

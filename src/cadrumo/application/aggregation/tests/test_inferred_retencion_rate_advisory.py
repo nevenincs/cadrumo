@@ -40,7 +40,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -48,25 +47,29 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.aggregation import LedgerWithholdingDerivation
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
     statutory_activity_retencion_rates,
 )
-from .._retencion_rate_advisory import (
+from ..renta_income_ledger import aggregate_renta_income_ledger
+from ..renta_income_models import RentaIncomeObservation
+from ..retencion_rate_advisory import (
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
     INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
     inferred_actividad_retencion_rate_advisory_observations,
 )
-from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,
+    csv_income_raw,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -76,29 +79,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BASE = Decimal("2000.00")
 _IVA = Decimal("420.00")
 _GROSS = _BASE + _IVA
-_EFFECTIVE_DATE = date(2024, 3, 15)
+_EFFECTIVE_DATE = date(_YEAR, 3, 15)
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
-
-
-def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2024, 3, 15),
-        value_date=date(2024, 3, 15),
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente SA",
-        description=f"income row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
 
 
 def _income_row(
@@ -110,7 +92,7 @@ def _income_row(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw(provider_id, amount=Decimal(cash)),
+            "raw": csv_income_raw(provider_id, amount=Decimal(cash), value_date=_EFFECTIVE_DATE),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -121,7 +103,7 @@ def _income_row(
             "iva_category": iva_category,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -137,7 +119,7 @@ def _observations(*rows: Transaction) -> tuple[RentaIncomeObservation, ...]:
     aggregation = aggregate_renta_income_ledger(
         TransactionCatalogue.from_transactions(rows),
         bucket_id="test",
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,

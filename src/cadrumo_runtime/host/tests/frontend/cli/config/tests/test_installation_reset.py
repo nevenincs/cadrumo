@@ -8,6 +8,7 @@ import sys
 import time
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -33,7 +34,6 @@ from cadrumo.application.config_reset_models import (
     ConfigResetOperationStatus,
     ConfigResetTargetPhase,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionReceipt,
@@ -43,6 +43,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import has_async_cleanup_failure
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.operation_installation import run_installation_act
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo_client.commands.errors import CliOperationStillRunningError, CliRefusedBoundaryError
@@ -100,7 +101,6 @@ from cadrumo_client.transport.installation_client import InstallationClient as R
 from cadrumo_client.transport.windows import WindowsEndpoint as WindowsRuntimeEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel as WindowsRuntimeChannel
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.host import installation_reset
 from cadrumo_runtime.host.installation_reset import register_reset_acts
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -159,7 +159,7 @@ def _installed(
         )
         close_active_bucket_session()
         with (
-            scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(process_root or root)),
+            scoped_env_var("CADRUMO_STORAGE_ROOT", str(process_root or root)),
             serving_registered_runtime(
                 endpoint,
                 root,
@@ -290,13 +290,38 @@ def _document(reply: object) -> dict[str, Any]:
 
 
 def _forbid_the_in_process_reset(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fail any reset the command line would do in its own process, leaving the runtime's own handlers alone."""
+    """Allow real reset work only inside the real runtime's installation dispatch.
 
-    def refuse(*_arguments: object, **_keywords: object) -> ConfigResetOperation:
-        raise AssertionError("the command line must never reset in its own process; the reset is the runtime's act")
+    Client and server share this test process. Observe the serving context,
+    rather than relying on an eager imported function escaping a monkeypatch.
+    The dispatcher, handlers and application reset all still run for real.
+    """
+    serving: ContextVar[bool] = ContextVar("serving_installation_reset", default=False)
+    settle = RuntimeProfileConnections.settle_installation_act
+    start = config_reset.start_config_reset
+    resume = config_reset.resume_config_reset
 
-    monkeypatch.setattr(config_reset, "start_config_reset", refuse)
-    monkeypatch.setattr(config_reset, "resume_config_reset", refuse)
+    def settle_in_serving_context(self: RuntimeProfileConnections, *arguments: Any, **keywords: Any) -> object:
+        token = serving.set(True)
+        try:
+            return settle(self, *arguments, **keywords)
+        finally:
+            serving.reset(token)
+
+    def require_serving() -> None:
+        assert serving.get(), "the command line must never reset in its own process; the reset is the runtime's act"
+
+    def served_start(*arguments: Any, **keywords: Any) -> ConfigResetOperation:
+        require_serving()
+        return start(*arguments, **keywords)
+
+    def served_resume(*arguments: Any, **keywords: Any) -> ConfigResetOperation:
+        require_serving()
+        return resume(*arguments, **keywords)
+
+    monkeypatch.setattr(RuntimeProfileConnections, "settle_installation_act", settle_in_serving_context)
+    monkeypatch.setattr(config_reset, "start_config_reset", served_start)
+    monkeypatch.setattr(config_reset, "resume_config_reset", served_resume)
 
 
 def test_a_reset_drains_every_hosted_profile_before_storage_is_touched_and_keeps_them_fenced_until_it_settles(
@@ -312,7 +337,7 @@ def test_a_reset_drains_every_hosted_profile_before_storage_is_touched_and_keeps
         seen["capsules"] = [_capsule(installation, profile).exists() for profile in installation.profiles]
         return real_start(**arguments)
 
-    monkeypatch.setattr(installation_reset, "start_config_reset", observe_then_start)
+    monkeypatch.setattr(config_reset, "start_config_reset", observe_then_start)
     with _installed(tmp_path) as installation, ExitStack() as hosts, _client(installation.endpoint) as client:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
         for profile in installation.profiles:
@@ -535,7 +560,7 @@ def test_the_start_command_beside_a_running_runtime_sends_the_act_and_prints_its
         seen["capsules"] = [_capsule(installation, profile).exists() for profile in installation.profiles]
         return real_start(**arguments)
 
-    monkeypatch.setattr(installation_reset, "start_config_reset", observe_then_start)
+    monkeypatch.setattr(config_reset, "start_config_reset", observe_then_start)
     _forbid_the_in_process_reset(monkeypatch)
     with _installed(tmp_path) as installation, ExitStack() as hosts, _client(installation.endpoint) as client:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
@@ -621,19 +646,28 @@ def test_a_runtime_that_cannot_be_verified_is_not_a_reason_to_reset_in_process(
     assert all(capsule.exists() for capsule in capsules)
 
 
-def _no_package_metadata(_name: str) -> str:
+def _no_package_metadata() -> str:
     raise PackageNotFoundError("cadrumo")
 
 
-def _not_reached(refused: pytest.ExceptionInfo[CliRefusedBoundaryError], *, endpoint: str) -> None:
+def _not_reached(
+    refused: pytest.ExceptionInfo[CliRefusedBoundaryError],
+    *,
+    endpoint: str,
+    runtime_refusals: frozenset[RuntimeRefusalCode] = frozenset({RuntimeRefusalCode.UNAVAILABLE}),
+) -> None:
     """The report says a runtime may be there, that nothing was sent or changed, and to run the command again."""
     assert "run the command again" in str(refused.value)
-    assert refused.value.context == {
+    context = refused.value.context
+    assert context is not None, context
+    reason = context.get("runtime_refusal")
+    assert isinstance(reason, str) and reason in {code.value for code in runtime_refusals}, context
+    assert context == {
         "runtime_endpoint": endpoint,
-        "runtime_refusal": RuntimeRefusalCode.UNAVAILABLE.value,
+        "runtime_refusal": reason,
         "effect": "none",
         "retry": "same_command",
-    }
+    }, context
 
 
 @pytest.mark.parametrize("metadata", ["installed", "missing"])
@@ -644,7 +678,7 @@ def test_with_no_runtime_for_the_root_the_command_is_refused_as_unavailable_and_
     _forbid_the_in_process_reset(monkeypatch)
     if metadata == "missing":
         # A client that cannot name its own cohort can still see that nothing is listening.
-        monkeypatch.setattr(installation_client, "version", _no_package_metadata)
+        monkeypatch.setattr(installation_client, "installed_product_version", _no_package_metadata)
     root, profile = _profile_under_another_root(tmp_path)
     arguments = ("start", "--yes") if verb == "start" else ("resume", "--operation-id", "0" * 64, "--yes")
     with derived_storage_settings(root):
@@ -696,7 +730,13 @@ def test_a_runtime_whose_endpoint_is_busy_is_reported_with_the_retry_and_nothing
     assert observed is RuntimeEndpointPresence.HELD
     assert printed.exit_code != 0
     assert "run the command again" in printed.output
-    _not_reached(refused, endpoint="held")
+    # The native pipe wait and the enclosing deadline expire together. Both
+    # documented refusal outcomes mean nothing was sent to this held endpoint.
+    _not_reached(
+        refused,
+        endpoint="held",
+        runtime_refusals=frozenset({RuntimeRefusalCode.UNAVAILABLE, RuntimeRefusalCode.TIMEOUT}),
+    )
 
 
 def test_a_client_that_cannot_name_its_cohort_beside_a_running_runtime_never_resets_in_process(
@@ -705,7 +745,7 @@ def test_a_client_that_cannot_name_its_cohort_beside_a_running_runtime_never_res
     _forbid_the_in_process_reset(monkeypatch)
     with _installed(tmp_path) as installation:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
-        monkeypatch.setattr(installation_client, "version", _no_package_metadata)
+        monkeypatch.setattr(installation_client, "installed_product_version", _no_package_metadata)
 
         printed = _invoke("start", "--yes")
         with pytest.raises(CliRefusedBoundaryError) as refused:

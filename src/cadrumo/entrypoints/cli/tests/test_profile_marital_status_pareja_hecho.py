@@ -10,11 +10,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,4 +51,4 @@ def test_profile_create_help_advertises_pareja_de_hecho_marital_status() -> None
 
     assert result.exit_code == 0, result.output
     compact_help = re.sub(r"\s+", "", result.output)
-    assert "1|2|3|4|5" in compact_help
+    assert "5=registeredcivilpartnership" in compact_help

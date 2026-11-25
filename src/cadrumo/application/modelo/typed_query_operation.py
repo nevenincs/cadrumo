@@ -26,7 +26,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
+from ..state_projection_models import ModeloProfileRefusalCause, ProjectionModeloReadiness
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .query_read_contracts import (
     ModeloBindingsResolveRequest,
@@ -52,11 +52,12 @@ from .typed_query_contracts import (
 )
 
 
-def _readiness_summary(
+def readiness_summary(
     payload: ModeloReadinessOperationRequest,
     factory: ModeloQueryReadPortsFactory,
     operation: PinnedAuthorityOperation,
 ) -> ModeloReadinessSummaryProjection:
+    """Summarize modelo readiness for the request from the canonical reader's axes."""
     # The canonical reader constructs all axes once. Its human prose stays in
     # worker memory and never enters the automation result operand.
     source = read_modelo_readiness(payload, factory, operation=operation)
@@ -187,7 +188,7 @@ class ModeloReadinessSummaryExecutor:
 
         async def capture() -> str:
             result = await asyncio.to_thread(
-                _readiness_summary, request.payload, self._factory, context.authority_operation
+                readiness_summary, request.payload, self._factory, context.authority_operation
             )
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)

@@ -3,31 +3,6 @@ binding_source_refs = ["aeat-dr-369-2021"]
 casilla_source_refs = ["aeat-dr-369-2021"]
 live_cross_reference_source_refs = ["aeat-modelo-369-procedure"]
 application_link_source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 4 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -49,6 +24,18 @@ source_refs = [
     "aeat-modelo-369-procedure",
     "boe-modelo-369-2021-form",
 ]
+
+[revisions."esquema-importacion".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-quinvicies", "ley-37-1992:art-163-sexvicies", "ley-37-1992:art-163-septvicies", "ley-37-1992:art-163-octovicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[revisions."esquema-importacion".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-quinvicies", "ley-37-1992:art-163-sexvicies", "ley-37-1992:art-163-septvicies", "ley-37-1992:art-163-octovicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
 
 [revisions."esquema-importacion".predecessor.none]
 cause = "parallel_scheme_variants"

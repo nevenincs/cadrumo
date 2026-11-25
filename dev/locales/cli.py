@@ -10,20 +10,21 @@ import typer
 
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR, SRC_DIR
-from ._registry_scanner import scan_modelo_schema_keys
-from ._signal import locale_signal
-from ._status import CatalogueStatusRecord, catalogue_status
-from ._subtree_move import (
+from .errors import LocaleError
+from .locale_audit import LocaleAuditResult, LocaleFileAudit, LocalePlaceholderMismatch
+from .locale_tree import flatten_raw_locale_leaves
+from .manager import LocaleManager
+from .paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR, SRC_DIR
+from .registry_scanner import scan_modelo_schema_keys
+from .signal import locale_signal
+from .signal_report import NON_GATING_OUTCOMES
+from .status import CatalogueStatusRecord, catalogue_status
+from .subtree_move import (
     LocaleMoveConflict,
     LocaleMoveDisposition,
     LocaleSubtreeMoveResult,
     normalise_key_prefix,
 )
-from .errors import LocaleError
-from .locale_audit import LocaleAuditResult, LocaleFileAudit, LocalePlaceholderMismatch
-from .locale_tree import _flatten_raw_locale_leaves
-from .manager import LocaleManager
 
 _REVISION_PREFIX_TEMPLATE = "modelo.schema.{modelo}.revision.{revision}"
 
@@ -50,12 +51,12 @@ def audit(ctx: typer.Context) -> None:
 def _echo_audit(result: LocaleAuditResult) -> None:
     """Render a structured manager audit without owning validation policy."""
     for file_result in result.files:
-        _echo_file_audit(file_result)
+        echo_file_audit(file_result)
     for mismatch in result.placeholder_mismatches:
         _echo_placeholder_mismatch(mismatch)
 
 
-def _echo_file_audit(file_result: LocaleFileAudit) -> None:
+def echo_file_audit(file_result: LocaleFileAudit) -> None:
     """Echo one catalogue's key-set, revision-move, and scalar findings.
 
     A revision rename shows up as one key missing and another extra, hundreds
@@ -152,7 +153,7 @@ def _interface_values() -> dict[str, dict[str, str | None]]:
     manager = _default_manager()
     values: dict[str, dict[str, str | None]] = {}
     for locale in sorted(load_casilla_values(LOCALES_DIR)):
-        leaves = _flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
+        leaves = flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
         values[locale] = {
             key: value
             for key, value in leaves.items()
@@ -243,7 +244,10 @@ def status(
     ] = False,
     check: Annotated[
         bool,
-        typer.Option("--check", help="Exit 1 when the complete locale backlog is not empty."),
+        typer.Option(
+            "--check",
+            help="Exit 1 when any blocking locale finding or open inventory remains; advisory findings do not gate.",
+        ),
     ] = False,
 ) -> None:
     """Print the cross-surface locale status.
@@ -257,7 +261,7 @@ def status(
     if json_output:
         payload = locale_signal(manager)
         typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":")))
-        if check and payload["outcome"] != "complete":
+        if check and payload["outcome"] not in NON_GATING_OUTCOMES:
             raise typer.Exit(code=1)
         return
     for record in catalogue_status(manager):

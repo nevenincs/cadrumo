@@ -81,6 +81,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -204,6 +205,7 @@ def _territory_already_settled(
     draft: InvoiceDraft,
     party: PartyAddress,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether this party's country evidence settled its territory anyway.
@@ -221,12 +223,13 @@ def _territory_already_settled(
         getattr(draft, party.country_field, None),
         operation=operation,
     )
-    if territorial_scope_for_country(from_name, operation=operation) is not None:
+    if territorial_scope_for_country(from_name, effective_date=effective_date, operation=operation) is not None:
         return True
     return (
         territorial_scope_for_country(
             getattr(draft, party.country_code_field, None),
             operation=operation,
+            effective_date=effective_date,
         )
         is not None
     )
@@ -235,6 +238,7 @@ def _territory_already_settled(
 def country_vocabulary_advisory(
     draft: InvoiceDraft,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> CountryVocabularyAdvisory | None:
     """Return what an operator must be told about this draft's country codes, or ``None``.
@@ -251,6 +255,7 @@ def country_vocabulary_advisory(
     Args:
         draft: The draft to check, carrying each party's stated country code and
             printed country name as the reader recovered them.
+        effective_date: The date whose territorial vocabulary resolves the parties' territories.
         operation: Caller-owned pinned authority operation used for country
             vocabulary and territory resolution.
 
@@ -271,7 +276,7 @@ def country_vocabulary_advisory(
         status = record_country_code_status(stated, operation=operation)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue
-        if _territory_already_settled(draft, party, operation=operation):
+        if _territory_already_settled(draft, party, effective_date=effective_date, operation=operation):
             continue
         # The status is non-``None``, so the field holds a token the record
         # stated as a country code and the normalisation is total.

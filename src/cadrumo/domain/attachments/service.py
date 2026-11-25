@@ -149,7 +149,7 @@ def _link_attachment(
         return attachment
     updated = attachment.model_copy(update={field: (*related_ids, related_id)})
     store.write_manifest(updated)
-    _logger.info("linked attachment %s to %s %s", attachment_id, related_kind, related_id)
+    _logger.info("linked attachment to %s", related_kind)
     return updated
 
 

@@ -132,34 +132,35 @@ impl RuntimeProcess {
 
     /// A blocking wait on this process's exit, so the supervisor learns of it
     /// as an event; `None` when it has already ended.
-    pub(super) fn exit_watch(&self) -> io::Result<Option<ExitWatch>> {
-        let watch = match self {
-            #[cfg(windows)]
-            Self::Launched(_) | Self::Adopted(_) => super::windows::ExitWatch::open(self.pid()),
-            #[cfg(target_os = "linux")]
-            Self::Launched(child) => crate::linux::process::ExitWatch::open(child.id()),
-            #[cfg(target_os = "linux")]
-            Self::Adopted(opened) => crate::linux::process::ExitWatch::of(&opened.held),
-            #[cfg(target_os = "macos")]
-            Self::Launched(child) => crate::macos::process::ExitWatch::open(child.id()),
+    pub(super) fn exit_watch(
+        &mut self,
+    ) -> io::Result<Option<cadrumo_platform::process_exit::ProcessExitWatch>> {
+        use cadrumo_platform::process_exit::ProcessExitWatch;
+        match self {
+            Self::Launched(child) => match ProcessExitWatch::for_child(child) {
+                Ok(watch) => Ok(Some(watch)),
+                Err(error) => {
+                    // Registration loss alone never proves exit; inspect the owned child once.
+                    if child.try_wait()?.is_some() {
+                        Ok(None)
+                    } else {
+                        Err(error)
+                    }
+                }
+            },
+            #[cfg(any(windows, target_os = "linux"))]
+            Self::Adopted(opened) => opened.held.exit_watch().map(Some),
             #[cfg(target_os = "macos")]
             Self::Adopted(opened) => {
-                // Registered by pid: the held process proves the pid still names it.
-                let watch = crate::macos::process::ExitWatch::open(opened.identity.pid);
+                let watch = ProcessExitWatch::for_retained_pid(opened.identity.pid);
+                // A retained identity, rechecked after registration, fences PID reuse.
                 if opened.held.exited()? {
                     return Ok(None);
                 }
-                watch
+                watch.map(Some)
             }
             #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
-            _ => Err(io::Error::from(io::ErrorKind::Unsupported)),
-        };
-        match watch {
-            Ok(watch) => Ok(Some(ExitWatch(watch))),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
-            #[cfg(target_os = "linux")]
-            Err(error) if error.raw_os_error() == Some(libc::ESRCH) => Ok(None),
-            Err(error) => Err(error),
+            Self::Adopted(_) => Err(io::ErrorKind::Unsupported.into()),
         }
     }
 
@@ -168,28 +169,6 @@ impl RuntimeProcess {
         match self {
             Self::Launched(child) => child.kill(),
             Self::Adopted(opened) => adopted_terminate(opened),
-        }
-    }
-}
-
-/// A wait on one supervised process's exit.
-pub(super) struct ExitWatch(
-    #[cfg(windows)] super::windows::ExitWatch,
-    #[cfg(target_os = "linux")] crate::linux::process::ExitWatch,
-    #[cfg(target_os = "macos")] crate::macos::process::ExitWatch,
-    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))] std::convert::Infallible,
-);
-
-impl ExitWatch {
-    /// Block until the process has ended.
-    pub(super) fn wait(&self) -> io::Result<()> {
-        #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
-        {
-            self.0.wait()
-        }
-        #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
-        {
-            match self.0 {}
         }
     }
 }

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#calendar-obligations'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1efcee66d7cb938032cf09aad7e930c20f10a179cc955cc990cf6df9e792498'
+body_hash: 'sha256:f7028ef332273909ce6135e9b19ab43d0788d70186eab7e2fc87e31a4b08221c'
 related:
   - "[[2026-09-23-calendar-obligations-plan]]"
 ---
@@ -85,6 +85,8 @@ related:
 - `S07` `M` `dev/registry/tests/test_authority_artifact_currency.py`
 - `S07` `M` `.vault/adr/2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr.md`
 - `S07` `verify:` `pytest -n0 -m unit currency, admission, catalogue, festivos (49)` -> `pass`
+- `S10` `verify:` `locator-check: modelos/136 applicability 0001-declarations.toml:35; filing-calendar-agenda.json:95` -> `pass`
+- `S10` `by:` `plan-closure`
 
 ## Notes
 

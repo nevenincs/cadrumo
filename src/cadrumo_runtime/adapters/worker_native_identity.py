@@ -7,16 +7,26 @@ from uuid import UUID, uuid5
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
-from .windows_process import WindowsProcessScope
 from .worker_transport import WorkerChannel
 
 
 def worker_operation_namespace(worker_id: UUID) -> UUID:
     """Separate private execution I/O from authority-held custody control calls."""
     return uuid5(worker_id, "cadrumo-profile-operations")
+
+
+def worker_proof_namespace(worker_id: UUID) -> UUID:
+    """Keep exact-attempt cancellation independent of a busy proof channel."""
+    return uuid5(worker_id, "cadrumo-profile-proof-control")
+
+
+def worker_view_namespace(worker_id: UUID) -> UUID:
+    """Keep a view's pushed image stream off both the control and the execution channel."""
+    return uuid5(worker_id, "cadrumo-profile-view")
 
 
 def verify_worker_native_pid(

@@ -1,6 +1,6 @@
 """Tests for the bucket-scoped notifications snapshot service.
 
-The ``"live"`` literal in ``cadrumo_live_state_dir / "live" / "notifications" / ...``
+The ``"live"`` literal in ``<live-state storage path> / "live" / "notifications" / ...``
 is a ``not (...).exists()`` refusal guard proving a captured notification never
 leaks into a plaintext audit-trail file alongside the encrypted secure-object
 write. An accessor aimed at the wrong location would leave that assertion
@@ -29,6 +29,8 @@ from cadrumo.application.live.notifications import (
     notifications_snapshot_object_key,
 )
 from cadrumo.core.config import Settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -283,7 +285,7 @@ class TestSecureStorage:
         assert b"B12345678" in record.payload
         assert b"B12345678" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
-            secure_engine.settings.cadrumo_live_state_dir
+            storage_path(StorageCategory.LIVE_STATE, settings=secure_engine.settings)
             / "live"
             / "notifications"
             / f"{secure_engine.bucket_id}.jsonl"

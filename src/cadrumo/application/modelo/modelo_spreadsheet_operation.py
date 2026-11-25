@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
-    OperationEffect,
 )
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -33,7 +33,7 @@ def build_modelo_spreadsheet_definitions(
     """Declare local XLSX export without constructing providers."""
     definitions: list[OperationDefinition] = []
     for definition_id, (request_type, _result_type, _outcome_type) in MODELO_SPREADSHEET_OPERATION_CONTRACTS.items():
-        effects = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED})
+        effects = EFFECTS_WITHOUT_PARTIAL_COMMIT
         definitions.append(
             build_single_phase_definition(
                 definition_id=definition_id,

@@ -41,22 +41,18 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
 
-from ._invoice_confirmation_test_support import (
-    InvoiceAuthorityFixture,
-    invoice_draft_extraction_kwargs,
-)
 from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
+    BUCKET_ID,
     isolated_settings,
+    make_svc,
     secure_objects,
-)
-from .evidence_test_support import (
-    make_svc as _make_svc,
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 from .evidence_test_support import seeded_filer_profile as seeded_filer_profile
+from .invoice_confirmation_test_support import (
+    InvoiceAuthorityFixture,
+    invoice_draft_extraction_kwargs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,8 +79,8 @@ def _stored(
     """
     source = tmp_path / name
     source.write_bytes(specimen.read_bytes())
-    service = _make_svc(isolated_settings, secure_objects)
-    record = service.add(bucket_id=_BUCKET_ID, source_path=source).record
+    service = make_svc(isolated_settings, secure_objects)
+    record = service.add(bucket_id=BUCKET_ID, source_path=source).record
     return record.evidence_id, record.source_sha256
 
 
@@ -118,14 +114,14 @@ class TestConsentTokenBinding:
 
         with pytest.raises(LLMConsentError):
             extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 evidence_id=second_id,
                 settings=isolated_settings,
                 consent_token=EvidenceConsentToken(
                     surface=_SURFACE,
                     evidence_content_address=first_address,
                 ),
-                **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+                **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
             )
 
     def test_a_token_minted_for_this_document_is_accepted(
@@ -151,11 +147,11 @@ class TestConsentTokenBinding:
         )
 
         draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=evidence_id,
             settings=isolated_settings,
             consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=address),
-            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         )
 
         assert draft is not None
@@ -182,10 +178,10 @@ class TestConsentTokenBinding:
         )
 
         draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=evidence_id,
             settings=isolated_settings,
-            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         )
 
         assert draft is not None
@@ -220,14 +216,14 @@ class TestConsentTokenBinding:
 
         with pytest.raises(LLMConsentError) as raised:
             extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 evidence_id=second_id,
                 settings=isolated_settings,
                 consent_token=EvidenceConsentToken(
                     surface=_SURFACE,
                     evidence_content_address=first_address,
                 ),
-                **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+                **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
             )
 
         context = raised.value.context

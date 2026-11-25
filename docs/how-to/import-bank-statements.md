@@ -30,11 +30,16 @@ Confirm the active profile before you write transaction data:
 
 ## Statement file format
 
-`--provider csv` reads bank exports in the BBVA, Santander, CaixaBank, Revolut,
-and N26 layouts. `aeat` detects the delimiter and matches the header row to a
-layout. The Spanish layouts use comma decimals; Revolut and N26 use period
-decimals. The first line is the column header; each later line is one movement.
-A BBVA-style file looks like this:
+`--provider csv` reads a bank export from any bank whose header row names its
+columns in ordinary statement terms, in Spanish, English or German: a date such
+as `Fecha operación` or `Date`, an amount such as `Importe` or `Amount`, and a
+description such as `Concepto` or `Description`. `aeat` detects the delimiter,
+finds the header row, and reads the date order and decimal separator from the
+file's own values; an amount it cannot read either way is refused, not guessed.
+Under `--provider auto`, an export whose headers use other names is read by the
+local language model, which names each column once. The first line is the
+column header; each later line is one movement. A file with Spanish headers
+looks like this:
 
 ```text
 Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
@@ -58,9 +63,28 @@ row:
 
 `--provider csv` names the statement format. `--provider auto` asks `aeat` to
 detect it. The recognized providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
-`xls`, and `pdf-n26` (an N26 PDF statement). If detection picks the wrong format,
-replace `auto` with the exact provider - run `aeat app ledger import --help` or
-see the [CLI reference](../cli/index.rst) for the current provider list.
+`xls`, and `pdf` (a PDF statement from any bank). If detection picks the wrong
+format, replace `auto` with the exact provider - run
+`aeat app ledger import --help` or see the [CLI reference](../cli/index.rst) for
+the current provider list.
+
+`--provider pdf` reads a PDF statement in any bank's layout and language. A
+local language model proposes the movements it finds on each page, and `aeat`
+keeps only the movements whose date and amount are printed together on one
+line of the statement. When the statement prints an opening and closing
+balance, or a running balance on each line, the kept movements must add up to
+it, or the import is refused. A printed line with a date and an amount that no
+kept movement accounts for also refuses the import, unless the opening and
+closing balances prove that nothing is missing, and so does a movement whose
+direction only the model decided when no printed balance confirms it. Run a dry
+run first: it lists every proposal that was not kept and says when the
+statement prints no balance to check against.
+Reading a PDF statement needs a model
+chosen for the text extraction role in the Cadrumo agent. A page without
+a text layer is transcribed by the model chosen for the vision transcription
+role. The statement never leaves your computer: if the model chosen for a role
+would send it off the machine, the import refuses before anything is sent. See
+[Classify transactions with an LLM](classify-with-llm.md#how-a-read-chooses-its-model).
 
 If the path does not exist or is not readable, the command refuses cleanly and
 names the path (`Invalid value for '--file': the path ... does not exist or is
@@ -241,7 +265,7 @@ and [LLM-assisted suggestions](classify-with-llm.md).
 Run preflight before calculating a modelo, then check the overall state of your records.
 Preflight looks at each record inside the period and flags anything still missing
 before any sums are trusted - a missing classification, category, base, VAT
-amount, VAT rate, split reference, or unconvertible currency:
+amount, VAT rate, split reference, or currency that cannot be converted:
 
 ```{cli-sequence} import-check-readiness
 :verify: Confirm the period's readiness is reported for the classified quarter.

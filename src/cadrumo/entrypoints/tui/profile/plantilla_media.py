@@ -25,6 +25,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, OptionList, Static
 
 from ....core.decimal.grammar import try_parse_canonical_decimal
+from ....core.filing_year import four_digit_year_in
 from ....core.i18n.render import tr
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from ..components.language import localized, refresh_localized_widgets
@@ -88,15 +89,8 @@ def plantilla_media_state_label(state: PlantillaMediaState) -> str:
 
 
 def _parse_year(raw: str) -> int | None:
-    """Return the typed year as a whole number, or ``None`` when it is not one.
-
-    Only ASCII digits count: ``int`` would also accept a sign, underscores
-    and other scripts' digits, none of which is a year an operator means.
-    """
-    text = raw.strip()
-    if not text or not text.isascii() or not text.isdigit():
-        return None
-    return int(text)
+    """Return the typed year, or ``None`` when it is not one written with four digits."""
+    return four_digit_year_in(raw)
 
 
 class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):

@@ -15,13 +15,14 @@ from .casilla_catalogue_models import (
 )
 
 
-def _served_locale(
+def served_locale(
     catalogue: ModeloCasillaCatalogue,
     index: int,
     field_name: str,
     locale: str,
     values: Values | None = None,
 ) -> str | None:
+    """Return a casilla catalogue field in the locale, falling back to the served default."""
     source = modelo_localization_source(
         catalogue.occurrences[index].chain(field_name),
         locale=locale,

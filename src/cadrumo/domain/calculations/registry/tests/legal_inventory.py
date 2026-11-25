@@ -10,6 +10,6 @@ def legal_reference_ids(self: PinnedAuthorityOperation) -> tuple[str, ...]:
     """Return every published legal declaration identity without hydrating payloads."""
     return tuple(
         query.reference_id
-        for query in self._reader.component_queries()
+        for query in self.reader.component_queries()
         if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_REFERENCE
     )

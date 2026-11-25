@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 
 from ......application.user_profile.login_session import authenticate_profile_for_invocation
@@ -71,7 +71,7 @@ _NOT_READY = "errors.storage.runtime.not_ready"
 
 def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: Path) -> None:
     """Create, authenticate, then decrypt the profile rows written at creation."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
@@ -113,7 +113,7 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
     that process's authorities first: what remains is exactly what any other
     process sees, a selected profile with no key in memory.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             label=_LABEL,
@@ -142,7 +142,7 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
     operator their key, so a login that still succeeded afterwards would mean
     the wrap is not the thing gating access.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label=_LABEL,

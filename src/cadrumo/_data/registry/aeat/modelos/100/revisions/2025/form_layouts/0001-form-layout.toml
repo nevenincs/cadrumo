@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "2e8c679a7151847f422ce74cdbb54bd482301498334c02ec79b952f6ff43d649"
+source_state_digest = "eb6e4daace1c266c98aedf46776e7c9b61f42363bd44a64efc9202f2aa50ca81"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -693,7 +693,6 @@ placements = [
     { casilla_id = "0695", kind = "on_form", box_number = "0695" },
     { casilla_id = "0698", kind = "on_form", box_number = "0698" },
     { casilla_id = "0699", kind = "on_form", box_number = "0699" },
-    { casilla_id = "0700", kind = "on_form", box_number = "0700" },
     { casilla_id = "0701", kind = "on_form", box_number = "0701" },
     { casilla_id = "0702", kind = "on_form", box_number = "0702" },
     { casilla_id = "0703", kind = "on_form", box_number = "0703" },
@@ -2220,49 +2219,174 @@ placements = [
     { casilla_id = "2248", kind = "on_form", box_number = "2248" },
     { casilla_id = "A", kind = "on_form" },
     { casilla_id = "AJ", kind = "unplaced", unplaced_reason = "no_official_anchor" },
-    { casilla_id = "ANOASDLG", kind = "working_figure" },
-    { casilla_id = "APENOMDLG", kind = "working_figure" },
-    { casilla_id = "APENOMDLG_ASC", kind = "working_figure" },
+    { casilla_id = "ANOASDLG", kind = "on_form" },
+    { casilla_id = "APENOMDLG", kind = "on_form" },
+    { casilla_id = "APENOMDLG_ASC", kind = "on_form" },
     { casilla_id = "C", kind = "on_form" },
-    { casilla_id = "CONVASDLG", kind = "working_figure" },
+    { casilla_id = "CONVASDLG", kind = "on_form" },
     { casilla_id = "D", kind = "on_form" },
-    { casilla_id = "DECFAL", kind = "working_figure" },
-    { casilla_id = "DNIASDLG", kind = "working_figure" },
-    { casilla_id = "DPFNAC_C", kind = "working_figure" },
-    { casilla_id = "DPFNAC_D", kind = "working_figure" },
-    { casilla_id = "DPGMIN_C", kind = "working_figure" },
-    { casilla_id = "DPGMIN_D", kind = "working_figure" },
-    { casilla_id = "DPNIF_C", kind = "working_figure" },
-    { casilla_id = "DPNIF_D", kind = "working_figure" },
-    { casilla_id = "DP_APENOM_C", kind = "working_figure" },
-    { casilla_id = "DP_APENOM_D", kind = "working_figure" },
+    { casilla_id = "DECFAL", kind = "on_form" },
+    { casilla_id = "DNIASDLG", kind = "on_form" },
+    { casilla_id = "DPFNAC_C", kind = "on_form" },
+    { casilla_id = "DPFNAC_D", kind = "on_form" },
+    { casilla_id = "DPGMIN_C", kind = "on_form" },
+    { casilla_id = "DPGMIN_D", kind = "on_form" },
+    { casilla_id = "DPNIF_C", kind = "on_form" },
+    { casilla_id = "DPNIF_D", kind = "on_form" },
+    { casilla_id = "DP_APENOM_C", kind = "on_form" },
+    { casilla_id = "DP_APENOM_D", kind = "on_form" },
     { casilla_id = "E", kind = "on_form" },
-    { casilla_id = "ECIVIL", kind = "working_figure" },
+    { casilla_id = "ECIVIL", kind = "on_form" },
     { casilla_id = "F", kind = "on_form" },
-    { casilla_id = "FALLASDLG", kind = "working_figure" },
-    { casilla_id = "FALLDLG", kind = "working_figure" },
-    { casilla_id = "FNACDLG", kind = "working_figure" },
+    { casilla_id = "FALLASDLG", kind = "on_form" },
+    { casilla_id = "FALLDLG", kind = "on_form" },
+    { casilla_id = "FNACDLG", kind = "on_form" },
     { casilla_id = "G", kind = "on_form" },
     { casilla_id = "H", kind = "on_form" },
-    { casilla_id = "HIJOSUE", kind = "working_figure" },
+    { casilla_id = "HIJOSUE", kind = "on_form" },
     { casilla_id = "I", kind = "on_form" },
     { casilla_id = "J", kind = "on_form" },
     { casilla_id = "M", kind = "on_form" },
-    { casilla_id = "MINUSDLG", kind = "working_figure" },
-    { casilla_id = "NIFDLG", kind = "working_figure" },
-    { casilla_id = "NORESIDENTE", kind = "working_figure" },
-    { casilla_id = "PCTMINASDLG", kind = "working_figure" },
+    { casilla_id = "MINUSDLG", kind = "on_form" },
+    { casilla_id = "NIFDLG", kind = "on_form" },
+    { casilla_id = "NORESIDENTE", kind = "on_form" },
+    { casilla_id = "PCTMINASDLG", kind = "on_form" },
     { casilla_id = "PH18", kind = "working_figure" },
-    { casilla_id = "RESIDENTEUE", kind = "working_figure" },
-    { casilla_id = "SEXO_C", kind = "working_figure" },
-    { casilla_id = "SEXO_D", kind = "working_figure" },
-    { casilla_id = "TIPOTRIBUTACION", kind = "working_figure" },
-    { casilla_id = "ZCCAD", kind = "working_figure" },
-    { casilla_id = "ZRUE2", kind = "working_figure" },
-    { casilla_id = "base-liq-neg-general-2024-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "RESIDENTEUE", kind = "on_form" },
+    { casilla_id = "RESINGDEV", kind = "on_form", box_number = "0700" },
+    { casilla_id = "SEXO_C", kind = "on_form" },
+    { casilla_id = "SEXO_D", kind = "on_form" },
+    { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },
+    { casilla_id = "ZCCAD", kind = "on_form" },
+    { casilla_id = "ZRUE2", kind = "on_form" },
+    { casilla_id = "base-liq-neg-general-base-positiva-compensable", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em1-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em2-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em3-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "prestacion-inss-maternidad-paternidad-exenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "rentas-distintas-del-trabajo", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad", kind = "working_figure" },
     { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "datosidentificativos-declarante"
+official_ref = "DatosIdentificativos/Declarante"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-declarante.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-declarante.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DPNIF_D" },
+    { kind = "field", id = "field-2", casilla_id = "DP_APENOM_D" },
+    { kind = "field", id = "field-3", casilla_id = "SEXO_D" },
+    { kind = "field", id = "field-4", casilla_id = "ECIVIL" },
+    { kind = "field", id = "field-5", casilla_id = "DPFNAC_D" },
+    { kind = "field", id = "field-6", casilla_id = "DPGMIN_D" },
+    { kind = "field", id = "field-7", casilla_id = "DECFAL" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "datosidentificativos-conyuge"
+official_ref = "DatosIdentificativos/Conyuge"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-conyuge.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-conyuge.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DPNIF_C" },
+    { kind = "field", id = "field-2", casilla_id = "DP_APENOM_C" },
+    { kind = "field", id = "field-3", casilla_id = "DPFNAC_C" },
+    { kind = "field", id = "field-4", casilla_id = "DPGMIN_C" },
+    { kind = "field", id = "field-5", casilla_id = "SEXO_C" },
+    { kind = "field", id = "field-6", casilla_id = "RESIDENTEUE" },
+    { kind = "field", id = "field-7", casilla_id = "ZRUE2" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "datosidentificativos"
+official_ref = "DatosIdentificativos"
+heading_key = "modelo.schema.100.form.page.datosidentificativos.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.page.datosidentificativos.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "NORESIDENTE" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "declaracion"
+heading_key = "modelo.schema.100.form.page.declaracion.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.page.declaracion.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "ZCCAD" },
+    { kind = "field", id = "field-2", casilla_id = "TIPOTRIBUTACION" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "datosidentificativos-hijos"
+official_ref = "DatosIdentificativos/Hijos"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-hijos.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "hijo"
+heading_key = "modelo.schema.100.form.section.hijo.heading"
+blocks = [
+    { kind = "repeating", id = "hijo-rows", row_source = "row_set_binding", binding_id = "renta-family-descendant-tax-id", max_rows = 15, columns = [{ key = "box-nifdlg", heading_key = "modelo.schema.100.form.column.box-nifdlg.heading", casilla_id = "NIFDLG", binding_id = "renta-family-descendant-tax-id" }, { key = "box-apenomdlg", heading_key = "modelo.schema.100.form.column.box-apenomdlg.heading", casilla_id = "APENOMDLG", binding_id = "renta-family-descendant-display-name" }, { key = "box-fnacdlg", heading_key = "modelo.schema.100.form.column.box-fnacdlg.heading", casilla_id = "FNACDLG", binding_id = "renta-family-descendant-birth-date" }, { key = "box-minusdlg", heading_key = "modelo.schema.100.form.column.box-minusdlg.heading", casilla_id = "MINUSDLG", binding_id = "renta-family-descendant-disability-grade" }, { key = "box-falldlg", heading_key = "modelo.schema.100.form.column.box-falldlg.heading", casilla_id = "FALLDLG", binding_id = "renta-family-descendant-death-date" }] },
+]
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-hijos.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "HIJOSUE" },
+]
+
+[[revisions.2025.form_layouts.pages]]
+id = "datosidentificativos-ascendientes"
+official_ref = "DatosIdentificativos/Ascendientes"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-ascendientes.heading"
+
+[[revisions.2025.form_layouts.pages.sections]]
+id = "ascendiente"
+heading_key = "modelo.schema.100.form.section.ascendiente.heading"
+blocks = [
+    { kind = "repeating", id = "ascendiente-rows", row_source = "row_set_binding", binding_id = "renta-family-ascendant-tax-id", max_rows = 4, columns = [{ key = "box-dniasdlg", heading_key = "modelo.schema.100.form.column.box-dniasdlg.heading", casilla_id = "DNIASDLG", binding_id = "renta-family-ascendant-tax-id" }, { key = "box-apenomdlg-asc", heading_key = "modelo.schema.100.form.column.box-apenomdlg-asc.heading", casilla_id = "APENOMDLG_ASC", binding_id = "renta-family-ascendant-display-name" }, { key = "box-anoasdlg", heading_key = "modelo.schema.100.form.column.box-anoasdlg.heading", casilla_id = "ANOASDLG", binding_id = "renta-family-ascendant-birth-date" }, { key = "box-pctminasdlg", heading_key = "modelo.schema.100.form.column.box-pctminasdlg.heading", casilla_id = "PCTMINASDLG", binding_id = "renta-family-ascendant-disability-grade" }, { key = "box-convasdlg", heading_key = "modelo.schema.100.form.column.box-convasdlg.heading", casilla_id = "CONVASDLG", binding_id = "renta-family-ascendant-cohabiting-descendant-count" }, { key = "box-fallasdlg", heading_key = "modelo.schema.100.form.column.box-fallasdlg.heading", casilla_id = "FALLASDLG", binding_id = "renta-family-ascendant-death-date" }] },
 ]
 
 [[revisions.2025.form_layouts.pages]]
@@ -3996,7 +4120,7 @@ blocks = [
 id = "ingresodevolucionres"
 heading_key = "modelo.schema.100.form.section.ingresodevolucionres.heading"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "0700" },
+    { kind = "field", id = "field", casilla_id = "RESINGDEV" },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]
@@ -4013,7 +4137,7 @@ heading_key = "modelo.schema.100.form.page.datoseconomicos.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datoseconomicos.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0001" },
     { kind = "field", id = "field-2", casilla_id = "0026" },
@@ -4211,6 +4335,7 @@ blocks = [
     { kind = "field", id = "field-88", casilla_id = "0152" },
     { kind = "field", id = "field-89", casilla_id = "0153" },
     { kind = "field", id = "field-90", casilla_id = "0154" },
+    { kind = "repeating", id = "inmueble-rows", row_source = "row_set_binding", binding_id = "renta-inmueble-porcentaje-propiedad-0063", max_rows = 180, columns = [{ key = "box-0063", heading_key = "modelo.schema.100.form.column.box-0063.heading", casilla_id = "0063", binding_id = "renta-inmueble-porcentaje-propiedad-0063" }, { key = "box-0065", heading_key = "modelo.schema.100.form.column.box-0065.heading", casilla_id = "0065", binding_id = "renta-inmueble-situacion-0065" }, { key = "box-0066", heading_key = "modelo.schema.100.form.column.box-0066.heading", casilla_id = "0066", binding_id = "renta-inmueble-referencia-catastral-0066" }, { key = "box-0067", heading_key = "modelo.schema.100.form.column.box-0067.heading", casilla_id = "0067", binding_id = "renta-inmueble-urbana-0067" }, { key = "box-0068", heading_key = "modelo.schema.100.form.column.box-0068.heading", casilla_id = "0068", binding_id = "renta-inmueble-rustica-0068" }, { key = "box-0069", heading_key = "modelo.schema.100.form.column.box-0069.heading", casilla_id = "0069", binding_id = "renta-inmueble-direccion-0069" }, { key = "box-0075", heading_key = "modelo.schema.100.form.column.box-0075.heading", casilla_id = "0075", binding_id = "renta-inmueble-arrendado-0075" }, { key = "box-0091", heading_key = "modelo.schema.100.form.column.box-0091.heading", casilla_id = "0091", binding_id = "renta-inmueble-inquilino-1-nif-0091" }, { key = "box-0092", heading_key = "modelo.schema.100.form.column.box-0092.heading", casilla_id = "0092", binding_id = "renta-inmueble-inquilino-1-nif-extranjero-0092" }, { key = "box-0093", heading_key = "modelo.schema.100.form.column.box-0093.heading", casilla_id = "0093", binding_id = "renta-inmueble-fecha-contrato-0093" }, { key = "box-0094", heading_key = "modelo.schema.100.form.column.box-0094.heading", casilla_id = "0094", binding_id = "renta-inmueble-inquilino-2-nif-0094" }, { key = "box-0095", heading_key = "modelo.schema.100.form.column.box-0095.heading", casilla_id = "0095", binding_id = "renta-inmueble-inquilino-2-nif-extranjero-0095" }, { key = "box-0097", heading_key = "modelo.schema.100.form.column.box-0097.heading", casilla_id = "0097", binding_id = "renta-inmueble-inquilino-3-nif-0097" }, { key = "box-0098", heading_key = "modelo.schema.100.form.column.box-0098.heading", casilla_id = "0098", binding_id = "renta-inmueble-inquilino-3-nif-extranjero-0098" }, { key = "box-0101", heading_key = "modelo.schema.100.form.column.box-0101.heading", casilla_id = "0101", binding_id = "renta-inmueble-dias-arrendado-0101" }, { key = "box-0102", heading_key = "modelo.schema.100.form.column.box-0102.heading", casilla_id = "0102", binding_id = "renta-inmueble-ingresos-integros-0102" }, { key = "box-0105", heading_key = "modelo.schema.100.form.column.box-0105.heading", casilla_id = "0105", binding_id = "renta-inmueble-gasto-interes-financiacion-0105" }, { key = "box-0106", heading_key = "modelo.schema.100.form.column.box-0106.heading", casilla_id = "0106", binding_id = "renta-inmueble-gasto-reparacion-conservacion-0106" }, { key = "box-0109", heading_key = "modelo.schema.100.form.column.box-0109.heading", casilla_id = "0109", binding_id = "renta-inmueble-gasto-comunidad-0109" }, { key = "box-0110", heading_key = "modelo.schema.100.form.column.box-0110.heading", casilla_id = "0110", binding_id = "renta-inmueble-gasto-formalizacion-contrato-0110" }, { key = "box-0111", heading_key = "modelo.schema.100.form.column.box-0111.heading", casilla_id = "0111", binding_id = "renta-inmueble-gasto-defensa-juridica-0111" }, { key = "box-0112", heading_key = "modelo.schema.100.form.column.box-0112.heading", casilla_id = "0112", binding_id = "renta-inmueble-gasto-servicios-terceros-0112" }, { key = "box-0113", heading_key = "modelo.schema.100.form.column.box-0113.heading", casilla_id = "0113", binding_id = "renta-inmueble-gasto-suministros-0113" }, { key = "box-0114", heading_key = "modelo.schema.100.form.column.box-0114.heading", casilla_id = "0114", binding_id = "renta-inmueble-gasto-primas-seguro-0114" }, { key = "box-0115", heading_key = "modelo.schema.100.form.column.box-0115.heading", casilla_id = "0115", binding_id = "renta-inmueble-gasto-tributos-0115" }, { key = "box-0116", heading_key = "modelo.schema.100.form.column.box-0116.heading", casilla_id = "0116", binding_id = "renta-inmueble-gasto-saldos-dudoso-cobro-0116" }, { key = "box-0148", heading_key = "modelo.schema.100.form.column.box-0148.heading", casilla_id = "0148", binding_id = "renta-inmueble-gasto-otros-0148" }, { key = "box-0118", heading_key = "modelo.schema.100.form.column.box-0118.heading", casilla_id = "0118", binding_id = "renta-inmueble-adquisicion-onerosa-0118" }, { key = "box-0119", heading_key = "modelo.schema.100.form.column.box-0119.heading", casilla_id = "0119", binding_id = "renta-inmueble-adquisicion-lucrativa-0119" }, { key = "box-0120", heading_key = "modelo.schema.100.form.column.box-0120.heading", casilla_id = "0120", binding_id = "renta-inmueble-fecha-adquisicion-0120" }, { key = "box-0121", heading_key = "modelo.schema.100.form.column.box-0121.heading", casilla_id = "0121", binding_id = "renta-inmueble-fecha-transmision-0121" }, { key = "box-0122", heading_key = "modelo.schema.100.form.column.box-0122.heading", casilla_id = "0122", binding_id = "renta-inmueble-dias-arrendado-amortizacion-0122" }, { key = "box-0100", heading_key = "modelo.schema.100.form.column.box-0100.heading", casilla_id = "0100", binding_id = "renta-inmueble-reduccion-aplicable-0100" }, { key = "box-0103", heading_key = "modelo.schema.100.form.column.box-0103.heading", casilla_id = "0103", binding_id = "renta-inmueble-gastos-pendientes-anteriores-0103" }, { key = "box-0104", heading_key = "modelo.schema.100.form.column.box-0104.heading", casilla_id = "0104", binding_id = "renta-inmueble-gastos-pendientes-aplicados-0104" }, { key = "box-0107", heading_key = "modelo.schema.100.form.column.box-0107.heading", casilla_id = "0107", binding_id = "renta-inmueble-intereses-reparacion-aplicados-0107" }, { key = "box-0108", heading_key = "modelo.schema.100.form.column.box-0108.heading", casilla_id = "0108", binding_id = "renta-inmueble-intereses-reparacion-pendientes-0108" }, { key = "box-1224", heading_key = "modelo.schema.100.form.column.box-1224.heading", casilla_id = "1224", binding_id = "renta-inmueble-intereses-reparacion-pendientes-futuros-1224" }, { key = "box-1211", heading_key = "modelo.schema.100.form.column.box-1211.heading", casilla_id = "1211", binding_id = "renta-inmueble-anexo-c1-titular-1211" }, { key = "box-1212", heading_key = "modelo.schema.100.form.column.box-1212.heading", casilla_id = "1212", binding_id = "renta-inmueble-anexo-c1-referencia-catastral-1212" }, { key = "box-1213", heading_key = "modelo.schema.100.form.column.box-1213.heading", casilla_id = "1213", binding_id = "renta-inmueble-anexo-c1-pendiente-inicio-1213" }, { key = "box-1214", heading_key = "modelo.schema.100.form.column.box-1214.heading", casilla_id = "1214", binding_id = "renta-inmueble-anexo-c1-aplicado-1214" }, { key = "box-1215", heading_key = "modelo.schema.100.form.column.box-1215.heading", casilla_id = "1215", binding_id = "renta-inmueble-anexo-c1-pendiente-inicio-1215" }, { key = "box-1216", heading_key = "modelo.schema.100.form.column.box-1216.heading", casilla_id = "1216", binding_id = "renta-inmueble-anexo-c1-aplicado-1216" }, { key = "box-1217", heading_key = "modelo.schema.100.form.column.box-1217.heading", casilla_id = "1217", binding_id = "renta-inmueble-anexo-c1-pendiente-futuro-1217" }, { key = "box-1218", heading_key = "modelo.schema.100.form.column.box-1218.heading", casilla_id = "1218", binding_id = "renta-inmueble-anexo-c1-pendiente-inicio-1218" }, { key = "box-1219", heading_key = "modelo.schema.100.form.column.box-1219.heading", casilla_id = "1219", binding_id = "renta-inmueble-anexo-c1-aplicado-1219" }, { key = "box-1220", heading_key = "modelo.schema.100.form.column.box-1220.heading", casilla_id = "1220", binding_id = "renta-inmueble-anexo-c1-pendiente-futuro-1220" }, { key = "box-1221", heading_key = "modelo.schema.100.form.column.box-1221.heading", casilla_id = "1221", binding_id = "renta-inmueble-anexo-c1-pendiente-inicio-1221" }, { key = "box-1222", heading_key = "modelo.schema.100.form.column.box-1222.heading", casilla_id = "1222", binding_id = "renta-inmueble-anexo-c1-aplicado-1222" }, { key = "box-1223", heading_key = "modelo.schema.100.form.column.box-1223.heading", casilla_id = "1223", binding_id = "renta-inmueble-anexo-c1-pendiente-futuro-1223" }, { key = "box-0123", heading_key = "modelo.schema.100.form.column.box-0123.heading", casilla_id = "0123", binding_id = "renta-inmueble-valor-catastral-0123" }, { key = "box-0124", heading_key = "modelo.schema.100.form.column.box-0124.heading", casilla_id = "0124", binding_id = "renta-inmueble-valor-catastral-construccion-0124" }, { key = "box-0125", heading_key = "modelo.schema.100.form.column.box-0125.heading", casilla_id = "0125", binding_id = "renta-inmueble-porcentaje-construccion-0125" }, { key = "box-0126", heading_key = "modelo.schema.100.form.column.box-0126.heading", casilla_id = "0126", binding_id = "renta-inmueble-importe-adquisicion-0126" }, { key = "box-0127", heading_key = "modelo.schema.100.form.column.box-0127.heading", casilla_id = "0127", binding_id = "renta-inmueble-gastos-adquisicion-0127" }, { key = "box-0128", heading_key = "modelo.schema.100.form.column.box-0128.heading", casilla_id = "0128", binding_id = "renta-inmueble-mejoras-anteriores-0128" }, { key = "box-0129", heading_key = "modelo.schema.100.form.column.box-0129.heading", casilla_id = "0129", binding_id = "renta-inmueble-mejoras-ejercicio-0129" }, { key = "box-0130", heading_key = "modelo.schema.100.form.column.box-0130.heading", casilla_id = "0130", binding_id = "renta-inmueble-base-amortizacion-0130" }, { key = "box-0131", heading_key = "modelo.schema.100.form.column.box-0131.heading", casilla_id = "0131", binding_id = "renta-inmueble-amortizacion-0131" }, { key = "box-0149", heading_key = "modelo.schema.100.form.column.box-0149.heading", casilla_id = "0149", binding_id = "renta-inmueble-rendimiento-neto-0149" }, { key = "box-0150", heading_key = "modelo.schema.100.form.column.box-0150.heading", casilla_id = "0150", binding_id = "renta-inmueble-reduccion-0150" }, { key = "box-0153", heading_key = "modelo.schema.100.form.column.box-0153.heading", casilla_id = "0153", binding_id = "renta-inmueble-retenciones-0153" }, { key = "box-0154", heading_key = "modelo.schema.100.form.column.box-0154.heading", casilla_id = "0154", binding_id = "renta-inmueble-rendimiento-neto-reducido-0154" }, { key = "box-0073", heading_key = "modelo.schema.100.form.column.box-0073.heading", casilla_id = "0073", binding_id = "renta-inmueble-disposicion-0073" }, { key = "box-0083", heading_key = "modelo.schema.100.form.column.box-0083.heading", casilla_id = "0083", binding_id = "renta-inmueble-imputacion-valor-catastral-0083" }, { key = "box-0084", heading_key = "modelo.schema.100.form.column.box-0084.heading", casilla_id = "0084", binding_id = "renta-inmueble-imputacion-valor-catastral-revisado-0084" }, { key = "box-0085", heading_key = "modelo.schema.100.form.column.box-0085.heading", casilla_id = "0085", binding_id = "renta-inmueble-imputacion-dias-0085" }, { key = "box-0087", heading_key = "modelo.schema.100.form.column.box-0087.heading", casilla_id = "0087", binding_id = "renta-inmueble-imputacion-porcentaje-disposicion-0087" }, { key = "box-0089", heading_key = "modelo.schema.100.form.column.box-0089.heading", casilla_id = "0089", binding_id = "renta-inmueble-renta-imputada-0089" }] },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]
@@ -4272,6 +4397,7 @@ blocks = [
     { kind = "field", id = "field-53", casilla_id = "0225" },
     { kind = "field", id = "field-54", casilla_id = "0236" },
     { kind = "field", id = "field-55", casilla_id = "0226" },
+    { kind = "repeating", id = "inventory-activity-rows", row_source = "row_set_binding", binding_id = "renta-inventory-activity-closing-increase-0177", max_rows = 6, columns = [{ key = "box-0177", heading_key = "modelo.schema.100.form.column.box-0177.heading", casilla_id = "0177", binding_id = "renta-inventory-activity-closing-increase-0177" }, { key = "box-0181", heading_key = "modelo.schema.100.form.column.box-0181.heading", casilla_id = "0181", binding_id = "renta-inventory-activity-acquisition-cost-0181" }, { key = "box-0182", heading_key = "modelo.schema.100.form.column.box-0182.heading", casilla_id = "0182", binding_id = "renta-inventory-activity-closing-decrease-0182" }] },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]
@@ -4675,6 +4801,7 @@ blocks = [
     { kind = "field", id = "field-23", casilla_id = "1652" },
     { kind = "field", id = "field-24", casilla_id = "1653" },
     { kind = "field", id = "field-25", casilla_id = "1654" },
+    { kind = "repeating", id = "elemento-patrimonial-rows", row_source = "row_set_binding", binding_id = "renta-activity-asset-disposal-row-element-type-1626", max_rows = 80, columns = [{ key = "box-1626", heading_key = "modelo.schema.100.form.column.box-1626.heading", casilla_id = "1626", binding_id = "renta-activity-asset-disposal-row-element-type-1626" }, { key = "box-1612", heading_key = "modelo.schema.100.form.column.box-1612.heading", casilla_id = "1612", binding_id = "renta-activity-asset-disposal-row-onerous-transfer-1612" }, { key = "box-1631", heading_key = "modelo.schema.100.form.column.box-1631.heading", casilla_id = "1631", binding_id = "renta-activity-asset-disposal-row-transmission-date-1631" }, { key = "box-1632", heading_key = "modelo.schema.100.form.column.box-1632.heading", casilla_id = "1632", binding_id = "renta-activity-asset-disposal-row-acquisition-date-1632" }, { key = "box-1633", heading_key = "modelo.schema.100.form.column.box-1633.heading", casilla_id = "1633", binding_id = "renta-activity-asset-disposal-row-transmission-value-1633" }, { key = "box-1637", heading_key = "modelo.schema.100.form.column.box-1637.heading", casilla_id = "1637", binding_id = "renta-activity-asset-disposal-row-acquisition-value-1637" }, { key = "box-1638", heading_key = "modelo.schema.100.form.column.box-1638.heading", casilla_id = "1638", binding_id = "renta-activity-asset-disposal-row-loss-difference-1638" }, { key = "box-1639", heading_key = "modelo.schema.100.form.column.box-1639.heading", casilla_id = "1639", binding_id = "renta-activity-asset-disposal-row-loss-1639" }, { key = "box-1640", heading_key = "modelo.schema.100.form.column.box-1640.heading", casilla_id = "1640", binding_id = "renta-activity-asset-disposal-row-gain-difference-1640" }, { key = "box-1654", heading_key = "modelo.schema.100.form.column.box-1654.heading", casilla_id = "1654", binding_id = "renta-activity-asset-disposal-row-gain-1654" }] },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]
@@ -5023,13 +5150,191 @@ blocks = [
     { kind = "field", id = "field-48", casilla_id = "1440" },
 ]
 
-[[revisions.2025.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.100.form.page.other-inputs.heading"
+[[revisions.2025.form_layouts.outline]]
+id = "identification"
+heading_key = "modelo.schema.100.form.outline.identification.heading"
+sections = [
+    { page_id = "declaracion", section_id = "general" },
+    { page_id = "datosidentificativos-declarante", section_id = "general" },
+    { page_id = "datosidentificativos-conyuge", section_id = "general" },
+    { page_id = "datosidentificativos", section_id = "general" },
+]
 
-[[revisions.2025.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.100.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["renta-modelo-100-estimacion-directa-es-normal"] },
+[[revisions.2025.form_layouts.outline]]
+id = "household"
+heading_key = "modelo.schema.100.form.outline.household.heading"
+sections = [
+    { page_id = "datosidentificativos-hijos", section_id = "hijo" },
+    { page_id = "datosidentificativos-hijos", section_id = "general" },
+    { page_id = "datosidentificativos-ascendientes", section_id = "ascendiente" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "income-holders"
+heading_key = "modelo.schema.100.form.outline.income-holders.heading"
+sections = [
+    { page_id = "datoseconomicos", section_id = "general" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "employment"
+heading_key = "modelo.schema.100.form.outline.employment.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "rdtotrabajores" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtotrabajo" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtotrabajo-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "movable-capital"
+heading_key = "modelo.schema.100.form.outline.movable-capital.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "rdtocapitalmobiliariores" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtocapitalmobiliario" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "real-estate"
+heading_key = "modelo.schema.100.form.outline.real-estate.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "inmueblesres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles-3" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "activities"
+heading_key = "modelo.schema.100.form.outline.activities.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regestimadirectares" },
+    { page_id = "datoseconomicos-resultados", section_id = "regestimaobjres" },
+    { page_id = "datoseconomicos-resultados", section_id = "regestimaobjagricolares" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimadirecta" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobj" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobjagricola" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "attributed-income"
+heading_key = "modelo.schema.100.form.outline.attributed-income.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-3" },
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres-3" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenesespeciales" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "capital-gains"
+heading_key = "modelo.schema.100.form.outline.capital-gains.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "gppremiosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpfondosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpfondoscotires" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpaccionesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpderechosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotroscriptomonedasres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrosinmueblesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotroselementosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrasgananciasres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrasgananciasejerantres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpreinversionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gcambioresidenciaextres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gppremios" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "dt9" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpfondos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpfondoscoti" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpacciones" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpderechos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroscriptomonedas" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroscriptomonedas-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles-3" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroselementos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroselementos-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrasganancias" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrasgananciasejerant" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpreinversion" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gcambioresidenciaext" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenespecial" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenespecial-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "tax-bases"
+heading_key = "modelo.schema.100.form.outline.tax-bases.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "integracionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseimponibleres" },
+    { page_id = "datoseconomicos-resultados", section_id = "integracionres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseimponibleres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "redbaseimponibleres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "redbaseimponible" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseliquidableres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "family-minimum"
+heading_key = "modelo.schema.100.form.outline.family-minimum.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "minimoperfamres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "tax-calculation"
+heading_key = "modelo.schema.100.form.outline.tax-calculation.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-4" },
+    { page_id = "datoseconomicos-resultados", section_id = "irpfccaares" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "general-deductions"
+heading_key = "modelo.schema.100.form.outline.general-deductions.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-3" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-5" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-4" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-5" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-6" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-7" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-8" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "anexoa" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-9" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-10" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-6" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "regional-deductions"
+heading_key = "modelo.schema.100.form.outline.regional-deductions.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "deduccionautonomicares" },
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesanexob" },
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesanexob-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "other-information"
+heading_key = "modelo.schema.100.form.outline.other-information.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "anexocres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "result"
+heading_key = "modelo.schema.100.form.outline.result.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regularizacionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "compensacionconyugesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "ingresodevolucionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-7" },
 ]

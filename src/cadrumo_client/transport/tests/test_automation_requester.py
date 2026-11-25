@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import Literal, cast
@@ -282,6 +283,22 @@ def test_decline_is_terminal_without_key_or_poll_success_claim() -> None:
     wire.receipt = submitted.model_copy(update={"stage": EnrollmentStage.DECLINED})
     assert journey.wait_for_terminal().terminal == wire.receipt
     assert journey.completion is not None and journey.completion.credential is None
+    assert wire.submits == 1
+
+
+def test_delivery_poll_is_followed_by_observation_without_an_extra_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
+    journey, _, wire, _ = _journey()
+    submitted = journey.submit(_proposal(EnrollmentKind.ENROLL))
+    poll = wire.enrollment_poll
+
+    def answered(request: EnrollmentPoll, **kwargs):
+        result = poll(request, **kwargs)
+        wire.receipt = submitted.model_copy(update={"stage": EnrollmentStage.DECLINED})
+        return result
+
+    monkeypatch.setattr(wire, "enrollment_poll", answered)
+    monkeypatch.setattr(time, "sleep", lambda _delay: pytest.fail("the runtime poll already owns the wait"))
+    assert journey.wait_for_terminal().terminal.stage is EnrollmentStage.DECLINED
     assert wire.submits == 1
 
 

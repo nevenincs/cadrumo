@@ -9,29 +9,31 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile, seed_ready_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.action_errors import ModeloAggregationBindingError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.action_errors import (
+    ModeloAggregationBindingError,
+    ModeloAggregationInputConflictError,
+    ModeloLedgerPreflightBlockedError,
+)
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.operations.error_detail import served_words_language
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
+from ....core.i18n.render import tr
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
@@ -47,9 +49,8 @@ from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceE
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
+from .ready_profile_taxpayer import persona_tax_id, ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -205,77 +206,9 @@ def _seed_303_work_unit(
     )
 
 
-def _store_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="design"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
-def _store_first_period_profile(objects: SecureObjectRepository) -> None:
-    """Store a profile whose IVA activity begins inside the 2026 1T filing period.
-
-    A taxpayer whose ``censo.activity_start_date`` falls within the target period
-    has no in-scope prior Modelo 303 period, so the prior-compensation dependency
-    is pre-activity and the IVA wallet gate grounds a ``first_period_zero``
-    decision instead of blocking. This is the genuine new-filer / sin-actividad
-    scenario: the first Modelo 303 with an empty ledger.
-    """
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="design"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2026, 1, 15)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=ready_profile_tax_id(),
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
         target_registry_snapshot_ref=published_authority_operation()
@@ -332,7 +265,7 @@ def _assert_modelo_303_trace(revision: CalculationRevision) -> None:
 def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, _cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     incoming = _transaction(
@@ -415,7 +348,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
 def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     incomplete = _transaction(
@@ -427,7 +360,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     ).model_copy(update={"category_id": None})
     tx_repo.save(TransactionCatalogue.from_transactions((incomplete,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -435,10 +368,12 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         )
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     rendered = resolve_error_message(exc_info.value)
-    assert "%{detail}" not in rendered
-    assert "deductible-expense ledger transaction has no category_id" in rendered
+    assert "%{" not in rendered
+    # The refusal is worded in the served language; the need is that language's own words.
+    need = tr("application.modelo.errors.ledger_preflight_need.missing_category", locale=served_words_language().value)
+    assert need in rendered, rendered
 
     assert len(cr_repo.load()) == 0
 
@@ -447,7 +382,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """IVA-owned modelos still require IVA amount/rate facts for equivalent base-only rows."""
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     base_only = _transaction(
@@ -459,7 +394,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
     ).model_copy(update={"iva_amount": None, "iva_rate": None})
     tx_repo.save(TransactionCatalogue.from_transactions((base_only,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -468,7 +403,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
             clock=_T1,
         )
 
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "missing_iva_amount"
     assert len(cr_repo.load()) == 0
@@ -477,7 +412,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
 def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compensation_periods(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, _cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     ledger_rows = (
         _transaction(
@@ -644,7 +579,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     tx_repo.save(
@@ -661,7 +596,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         ),
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
+    with pytest.raises(ModeloAggregationInputConflictError) as excinfo, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -670,7 +605,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
     assert all(
@@ -681,11 +616,11 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
+    with pytest.raises(ModeloAggregationInputConflictError) as excinfo, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -694,7 +629,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
     assert all(
@@ -705,7 +640,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
@@ -739,7 +674,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     decision and the calculate produces a zero result with NO ledger import, NO seed,
     and NO manual override — the path a new filer needs.
     """
-    _store_first_period_profile(secure_objects)
+    seed_persona_profile("autonomo-alta-reciente", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
@@ -772,7 +707,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     # The IVA wallet authority recorded a non-blocking first-period zero decision,
     # so prior compensation was grounded rather than silently assumed.
     decision = IvaWalletDecisionRepository(objects=secure_objects).load_decision(
-        "12345678Z",
+        persona_tax_id("alta.titular"),
         Period.from_year_and_code(2026, "1T"),
     )
     assert decision is not None

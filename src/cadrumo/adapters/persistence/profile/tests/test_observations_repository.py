@@ -52,23 +52,28 @@ def test_observation_key_error_build_error_envelope() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _unvalidated_period(filing_year: int) -> Period:
+    """A period a model copy carries outside four digits, which no validated construction can reach."""
+    return Period.from_year_and_code(2026, "1T").model_copy(update={"filing_year": filing_year})
+
+
 def test_observation_key_raises_on_year_below_range() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        observation_key("303", Period.from_year_and_code(1999, "1T"))
+        observation_key("303", _unvalidated_period(999))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.filing_year_out_of_range"
 
 
 def test_observation_key_raises_on_year_above_range() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        observation_key("303", Period.from_year_and_code(2100, "1T"))
+        observation_key("303", _unvalidated_period(10000))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.filing_year_out_of_range"
 
 
 def test_observation_key_succeeds_on_boundary_years() -> None:
-    assert observation_key("303", Period.from_year_and_code(2000, "1T")) == "303:2000:1T"
-    assert observation_key("303", Period.from_year_and_code(2099, "4T")) == "303:2099:4T"
+    assert observation_key("303", Period.from_year_and_code(1000, "1T")) == "303:1000:1T"
+    assert observation_key("303", Period.from_year_and_code(9999, "4T")) == "303:9999:4T"
 
 
 def test_observation_key_derives_storage_token_from_typed_period() -> None:
@@ -113,14 +118,14 @@ def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
 
 def test_iva_wallet_decision_key_raises_on_year_below_range() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        iva_wallet_decision_key("12345678A", Period.from_year_and_code(1999, "1T"))
+        iva_wallet_decision_key("12345678A", _unvalidated_period(999))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.iva_wallet_target_year_out_of_range"
 
 
 def test_iva_wallet_decision_key_raises_on_year_above_range() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        iva_wallet_decision_key("12345678A", Period.from_year_and_code(2100, "1T"))
+        iva_wallet_decision_key("12345678A", _unvalidated_period(10000))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.iva_wallet_target_year_out_of_range"
 

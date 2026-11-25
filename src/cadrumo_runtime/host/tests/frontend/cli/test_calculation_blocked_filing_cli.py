@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -34,19 +34,18 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id_from_revision,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,18 +53,19 @@ _YEAR = "2025"
 _PERIOD = "4T"
 _REASON = "unrouted_declarable_quantity"
 _BLOCKED_CODE = "REFUSED_MODELO_CALCULATION_BLOCKED"
-# The prior-year net income only varies so that the clearing recalculation is a
-# new calculation: calculations are content addressed, and an unchanged input set
-# would resolve to the earlier clean calculation instead of a newer one.
-_FIRST_PRIOR_YEAR_INCOME = "13000"
-_LATER_PRIOR_YEAR_INCOME = "14000"
+# Box 16 only varies so that the clearing recalculation is a new calculation:
+# calculations are content addressed, and an unchanged input set would resolve to
+# the earlier clean calculation instead of a newer one. The previous year's income
+# is left to its source: a typed figure that differs from it is a contested figure.
+_FIRST_BOX_16 = "0.00"
+_LATER_BOX_16 = "1.00"
 
 
-def _calculate_options(prior_year_income: str) -> tuple[str, ...]:
+def _calculate_options(box_16: str) -> tuple[str, ...]:
     return (
         "--casilla", "05=0.00",
         "--casilla", "06=0.00",
-        "--binding", f"irpf.previous_year_economic_activity_net_income={prior_year_income}",
+        "--casilla", f"16={box_16}",
         "--binding", "modelo-130-resultados-negativos-anteriores=0",
     )  # fmt: skip
 
@@ -94,15 +94,15 @@ def _calculate_and_verify() -> tuple[str, str]:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
-    revision_id = _recalculate(work_unit_id, _FIRST_PRIOR_YEAR_INCOME)
+    revision_id = _recalculate(work_unit_id, _FIRST_BOX_16)
     return work_unit_id, revision_id
 
 
-def _recalculate(work_unit_id: str, prior_year_income: str) -> str:
+def _recalculate(work_unit_id: str, box_16: str) -> str:
     calculated = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(prior_year_income)]
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(box_16)]
     )
     assert calculated.exit_code == 0, calculated.output
     verified = invoke_cached_cli(
@@ -113,7 +113,7 @@ def _recalculate(work_unit_id: str, prior_year_income: str) -> str:
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    verified_payload = _payload(verified.output)
+    verified_payload = unwrap_schema_envelope(verified.output)
     assert verified_payload["granted_verificado_completo"] is True
     revision_id = verified_payload["calculation_revision_id"]
     assert isinstance(revision_id, str)
@@ -199,11 +199,15 @@ def _assert_blocked(exit_code: int, output: str, *, revision_id: str, action: st
     assert _english_sentence() in str(error["message"]), output
 
 
-def _assert_unverified(exit_code: int, output: str, *, revision_id: str) -> None:
-    """The public state guard names the exact unverified calculation, without claiming a grant."""
+def _assert_unverified(exit_code: int, output: str, *, revision_id: str, code: str) -> None:
+    """The public state guard names the exact unverified calculation, without claiming a grant.
+
+    An export of it is refused, for the filer settles it by checking the
+    declaration; filing it is the generic state guard.
+    """
     assert exit_code != 0, output
     error = require_error_document(output)["error"]
-    assert error["code"] == "ERROR_MODELO_CALCULATION_REVISION_STATE", output
+    assert error["code"] == code, output
     assert error["context"]["calculation_revision_id"] == revision_id, output
     assert error["context"]["state"] == "borrador", output
 
@@ -242,34 +246,38 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
         assert not any(report.granted_verificado_completo for report in reports)
 
     refused_output = tmp_path / "modelo-130-blocked.txt"
-    # Default selection keeps its independent verified-state guard. The explicit
-    # revision option names the draft without granting eligibility to export it.
+    # The default export takes the declaration's current calculation, as the window and the table do, so the
+    # export itself refuses the unchecked draft; naming it by id is refused the same way.
     exit_code, output = _export(work_unit_id, refused_output)
-    assert exit_code == 2, output
-    assert require_error_document(output)["error"]["code"] == "REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE"
+    _assert_unverified(exit_code, output, revision_id=blocked_revision_id, code="REFUSED_MODELO_REVISION_NOT_SEALED")
     assert not refused_output.exists()
     exit_code, output = _export(work_unit_id, refused_output, revision_id=blocked_revision_id)
-    _assert_unverified(exit_code, output, revision_id=blocked_revision_id)
+    _assert_unverified(exit_code, output, revision_id=blocked_revision_id, code="REFUSED_MODELO_REVISION_NOT_SEALED")
     assert not refused_output.exists()
 
     filed = invoke_cached_cli(
         ["--format", "json", "--language", "en", "app", "modelo", "work", "file", blocked_revision_id],
     )
-    _assert_unverified(filed.exit_code, filed.output, revision_id=blocked_revision_id)
+    _assert_unverified(
+        filed.exit_code,
+        filed.output,
+        revision_id=blocked_revision_id,
+        code="ERROR_MODELO_CALCULATION_REVISION_STATE",
+    )
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
-    assert _payload(status.output)["filed_calculation_revision_id"] is None
+    assert unwrap_schema_envelope(status.output)["filed_calculation_revision_id"] is None
 
-    cleared_revision_id = _recalculate(work_unit_id, _LATER_PRIOR_YEAR_INCOME)
+    cleared_revision_id = _recalculate(work_unit_id, _LATER_BOX_16)
     assert cleared_revision_id not in {blocked_revision_id, clean_revision_id}
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
-    assert _payload(status.output)["current_calculation_revision_id"] == cleared_revision_id
+    assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == cleared_revision_id
 
     cleared_output = tmp_path / "modelo-130-cleared.txt"
     exit_code, output = _export(work_unit_id, cleared_output)
     assert exit_code == 0, output
-    assert _payload(output)["calculation_revision_id"] == cleared_revision_id
+    assert unwrap_schema_envelope(output)["calculation_revision_id"] == cleared_revision_id
     assert cleared_output.stat().st_size > 0
 
 
@@ -284,6 +292,6 @@ def test_the_identical_calculation_without_the_note_exports(seed_profile: Profil
     exit_code, output = _export(work_unit_id, output_path)
 
     assert exit_code == 0, output
-    assert _payload(output)["calculation_revision_id"] == planted_revision_id
+    assert unwrap_schema_envelope(output)["calculation_revision_id"] == planted_revision_id
     assert output_path.stat().st_size > 0
     assert json.loads(output)["status"] != "error"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ..modelo_maritime_commands import _parse_maritime_amounts
+from ..modelo_maritime_commands import parse_maritime_amounts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -26,6 +26,14 @@ class TestHelpSurfaceLocalisation:
         assert "preview_maritime_exemption_help" not in result.output
         assert expected in result.output or "REBECA" in result.output
 
+    def test_help_offers_the_year_in_the_language_asked(self) -> None:
+        result = invoke_cached_cli(
+            ["--language", "es", "app", "modelo", "work", "preview-maritime-exemption", "--help"],
+        )
+        assert result.exit_code == 0, result.output
+        assert "--year" in result.output
+        assert "preview_maritime_exemption_year_help" not in result.output
+
 
 class TestAmountGrammarRefusal:
     """The frontend amount parser rejects tokens before submitting to the worker."""
@@ -36,11 +44,11 @@ class TestAmountGrammarRefusal:
     )
     def test_non_canonical_annual_salary_refuses(self, raw_amount: str) -> None:
         with pytest.raises(typer.BadParameter) as refusal:
-            _parse_maritime_amounts(annual_salary=raw_amount, gross_navigation_income=None)
+            parse_maritime_amounts(annual_salary=raw_amount, gross_navigation_income=None)
         assert "--annual-salary" in str(refusal.value)
 
     @pytest.mark.parametrize("raw_amount", ["1e3", "+36500", "36.500", "36500,00"])
     def test_non_canonical_navigation_income_refuses(self, raw_amount: str) -> None:
         with pytest.raises(typer.BadParameter) as refusal:
-            _parse_maritime_amounts(annual_salary=None, gross_navigation_income=raw_amount)
+            parse_maritime_amounts(annual_salary=None, gross_navigation_income=raw_amount)
         assert "--gross-navigation-income" in str(refusal.value)

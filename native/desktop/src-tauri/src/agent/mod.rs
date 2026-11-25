@@ -6,15 +6,23 @@
 //! launcher's loopback gateway, with each run's stream on a Tauri channel.
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
-mod admin;
+pub(crate) mod admin;
+mod console_environment;
+mod dropping;
 mod gateway;
 mod launcher;
+pub(crate) mod local_models;
+mod movement;
 pub(crate) mod person;
-mod runner;
+#[cfg(windows)]
+mod provider_login;
+mod records;
+pub(crate) mod recovery;
+pub(crate) mod runner;
 mod session;
 mod sse;
 mod stream;
-mod supervisor;
+pub(crate) mod supervisor;
 mod upload;
 
 use crate::{
@@ -26,36 +34,117 @@ use cadrumo_application::{diagnostics::Diagnostics, error::application::Result};
 use serde::Serialize;
 use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use stream::StreamEvent;
-use supervisor::{Observation, Status, Supervisor};
+use supervisor::{Supervisor, protocol::Observation, protocol::Status};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
 
 /// A refusal the column words from its stable code.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Refused {
     pub code: String,
+    /// The tokens of context the refused run's first request needs, where the
+    /// agent's refusal states it: a model whose window is too small for it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub needed_tokens: Option<u32>,
+    /// The tokens of context the model is held or loaded with, where the
+    /// agent's refusal states it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_tokens: Option<u32>,
+    /// The reference of the service's log line that says why, where it gives one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_ref: Option<String>,
+    /// The lane a conversation is fixed to, where the agent's refusal states it.
+    /// Boxed, as the next field is, so every refusal stays small where it is
+    /// returned as an error.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lane: Option<Box<LaneFact>>,
+    /// The model change a send must acknowledge, where the agent's refusal
+    /// states it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_change: Option<Box<SelectionChange>>,
+}
+
+/// The provider and transport a conversation stays on.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct LaneFact {
+    pub provider: String,
+    pub transport: String,
+}
+
+/// A model and the effort it runs at; `effort` is null where none is set.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ModelChoice {
+    pub model: String,
+    pub effort: Option<String>,
+}
+
+/// What switching the model would drop from the conversation's history.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct HistoryLoss {
+    pub retained_messages: u32,
+    pub estimated_tokens: u32,
+    pub omitted_messages: u32,
+}
+
+/// A change of model the person must acknowledge before the run starts.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct SelectionChange {
+    pub previous: ModelChoice,
+    pub requested: ModelChoice,
+    pub history: HistoryLoss,
 }
 
 impl Refused {
     pub fn new(code: String) -> Self {
-        Self { code }
+        Self {
+            code,
+            needed_tokens: None,
+            context_tokens: None,
+            log_ref: None,
+            lane: None,
+            selection_change: None,
+        }
     }
 }
 
+/// The manager's pipe the agent service demands the local AI server through.
+#[cfg(windows)]
+const LOCAL_AI_DEMAND_PIPE: &str = "CADRUMO_LOCAL_AI_DEMAND_PIPE";
+/// The JSON array of the images that may serve that pipe.
+#[cfg(windows)]
+const LOCAL_AI_DEMAND_SERVERS: &str = "CADRUMO_LOCAL_AI_DEMAND_SERVERS";
+
 /// The agent host one window serves.
 pub struct AgentHost {
+    #[cfg(windows)]
+    login_watch: std::sync::Mutex<Option<provider_login::Watch>>,
     supervisor: Supervisor,
     session: Session,
     diagnostics: Arc<Diagnostics>,
     sign_in: Arc<SignIn>,
+    drops: dropping::Drops,
     attendance: std::sync::Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
+    /// The storage root the runtime manager reads its records from, which holds the
+    /// local engine selection this host hands on.
+    storage_root: PathBuf,
+    /// The package this process runs from, whose contents decide the local engine a
+    /// profile that chose none runs.
+    package_root: PathBuf,
+    /// Held across each read or choice of the local engine setting and the manager
+    /// record change that follows it, so an older read never overwrites a newer one.
+    engine_record: std::sync::Mutex<()>,
 }
 
 impl AgentHost {
-    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
+    fn new(
+        sign_in: Arc<SignIn>,
+        diagnostics: Arc<Diagnostics>,
+        storage_root: PathBuf,
+        package_root: PathBuf,
+    ) -> Self {
         let watched = sign_in.clone();
-        let changed: supervisor::Changed =
+        let changed: supervisor::protocol::Changed =
             Arc::new(move || Box::pin(watched.observation_changed()));
         let held = sign_in.clone();
         let observed = sign_in.clone();
@@ -71,27 +160,156 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, profile: &str| {
+        #[cfg(windows)]
+        let launched_from = package_root.clone();
+        #[cfg(windows)]
+        let served_root = storage_root.clone();
+        #[cfg(windows)]
+        let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
-            let person = sign_in.person(&profile_id)?;
+            // Held only once the service process has started on the profile id
+            // alone: on a cold start it resumes the stored sign-in, for seconds.
+            let resuming = sign_in.clone();
+            let resumed_profile = profile_id.clone();
+            let person: supervisor::protocol::AcquirePerson =
+                Box::new(move || resuming.person(&resumed_profile).map(Some));
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
-            Ok(supervisor::Prepared {
+            // The service demands the local AI server through the manager before it reads
+            // a document on this computer. Without a route it demands nothing, and a local
+            // read finds the server as it is.
+            if let Ok((pipe, servers)) =
+                cadrumo_manager::ipc::windows::local_ai_demand_route(&launched_from, &served_root)
+                && let Ok(servers) = serde_json::to_string(&servers)
+            {
+                command.env(LOCAL_AI_DEMAND_PIPE, pipe);
+                command.env(LOCAL_AI_DEMAND_SERVERS, servers);
+            }
+            Ok(supervisor::protocol::Prepared {
                 command,
-                person: Some(person),
+                person,
+                local_engine_default:
+                    cadrumo_application::provisioning::local_ai::package_default_engine(
+                        &launched_from,
+                    ),
             })
         });
+        #[cfg(windows)]
+        let supervisor = Supervisor::new(observe, changed, Some(launch), diagnostics.clone());
+        #[cfg(not(windows))]
+        let supervisor = Supervisor::unavailable(
+            observe,
+            changed,
+            cadrumo_application::diagnostics::service::AgentRefusal::UnsupportedPlatform,
+            diagnostics.clone(),
+        );
         Self {
-            supervisor: Supervisor::new(observe, changed, Some(launch), diagnostics.clone()),
+            supervisor,
+            #[cfg(windows)]
+            login_watch: std::sync::Mutex::new(None),
             session: Session::default(),
             diagnostics,
             sign_in: held,
+            drops: dropping::Drops::default(),
             attendance: std::sync::Mutex::new(None),
+            storage_root,
+            package_root,
+            engine_record: std::sync::Mutex::new(()),
         }
+    }
+
+    /// The hold over one read or choice of the local engine setting and its record change.
+    fn engine_record(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.engine_record
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// The storage root the runtime manager reads its local engine selection from.
+    pub(crate) fn storage_root(&self) -> &std::path::Path {
+        &self.storage_root
+    }
+
+    /// The package this process runs from.
+    pub(crate) fn package_root(&self) -> &std::path::Path {
+        &self.package_root
+    }
+
+    /// The host's diagnostics, where a command records why it failed.
+    pub(crate) fn diagnostics(&self) -> &Diagnostics {
+        &self.diagnostics
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager's selection
+    /// record: a stored choice is written unless the record holds it, no choice removes
+    /// the record so the package's defaults apply, and a setting nobody can read leaves it
+    /// alone. The service's setting stands whether or not the record could be changed: a
+    /// failure is recorded, and the next read changes it again.
+    fn record_local_engine(&self, setting: &local_models::LocalEngineSetting) {
+        if let Err(error) = local_models::sync_record(&self.storage_root, setting.record_sync()) {
+            self.diagnostics.host_failure(
+                cadrumo_application::diagnostics::HostStage::Agent,
+                cadrumo_application::error::application::ApplicationError::new(
+                    cadrumo_application::error::application::ErrorCode::WriteFailed,
+                    cadrumo_application::error::application::Operation::Cli,
+                )
+                .with_reason("local_engine_selection_store")
+                .caused_by(error),
+            );
+        }
+    }
+
+    /// Reads the person's local engine setting from the service admitted as `generation`
+    /// and hands it on to the runtime manager's selection record, under the record's hold.
+    /// A read that does not succeed leaves the record as it is.
+    fn sync_local_engine_once(&self, generation: u64) -> std::result::Result<(), SyncMiss> {
+        use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+        let _record = self.engine_record();
+        let answer = self
+            .administer_generation(serde_json::json!({"action":"local_engine"}), generation)
+            .map_err(|error| match sync_error_code(&error) {
+                Some(code) => sync_miss(code, error),
+                None => SyncMiss::Superseded,
+            })?;
+        if let Some(code) = local_models::refusal(&answer) {
+            return Err(sync_miss(
+                code,
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(code),
+            ));
+        }
+        let setting = local_models::parse_engine(&answer).ok_or_else(|| {
+            SyncMiss::Failed(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("admin_local_engine_contract"),
+            )
+        })?;
+        self.record_local_engine(&setting);
+        Ok(())
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager each time the
+    /// agent becomes ready for a profile, so the record follows the profile signed in
+    /// even when the window never opens the setting.
+    fn sync_local_engine_when_ready(self: &Arc<Self>) {
+        let host = Arc::downgrade(self);
+        self.supervisor.on_ready(Arc::new(move || {
+            let host = host.clone();
+            // The read crosses the service's admin channel, and a retry waits, which block.
+            // Dropping the handle detaches the sync; nothing awaits it.
+            drop(tauri::async_runtime::spawn_blocking(move || {
+                sync_local_engine(&host)
+            }));
+        }));
     }
 
     /// Stops the launcher and everything it started, for good.
     pub async fn close(&self) -> Result<()> {
+        #[cfg(windows)]
+        self.login_watch
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
+        self.drops.clear(None);
         self.stop_attendance(None);
         self.session.close();
         self.supervisor.close().await
@@ -142,6 +360,27 @@ impl AgentHost {
         self.supervisor.administer(request, secret)
     }
 
+    /// Waits while the service is starting for its admin endpoint; see the supervisor.
+    pub(crate) fn await_admin(&self) -> supervisor::AdminWait {
+        self.supervisor.await_admin()
+    }
+
+    /// The admission as it stands, without waiting; see the supervisor.
+    pub(crate) fn admin_now(&self) -> supervisor::AdminWait {
+        self.supervisor.admin_now()
+    }
+
+    pub(crate) fn admin_generation(&self) -> Result<u64> {
+        self.supervisor.admin_generation()
+    }
+
+    pub(crate) fn administer_generation(&self, request: Value, generation: u64) -> Result<Value> {
+        if !matches!(request["action"].as_str(), Some("catalog" | "status")) {
+            self.require_person()?;
+        }
+        self.supervisor.administer_generation(request, generation)
+    }
+
     fn require_person(&self) -> Result<()> {
         let reply = self
             .supervisor
@@ -162,17 +401,130 @@ impl AgentHost {
         Ok(())
     }
 
-    /// The column receives only `code`; the failure behind it is recorded with
-    /// its reason and cause chain.
+    /// The column receives a stable code; failures outside initial admission
+    /// retain their reason and cause chain in diagnostics.
     fn refuse(
         &self,
         code: &str,
         error: cadrumo_application::error::application::ApplicationError,
     ) -> Refused {
-        self.diagnostics
-            .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
-        Refused::new(code.to_owned())
+        command_refusal(
+            &self.diagnostics,
+            &self.supervisor.status().state,
+            self.supervisor.signed_out(),
+            code,
+            error,
+        )
     }
+}
+
+/// The waits before a ready sync of the local engine setting asks again after a
+/// transient miss; after the last one it gives up and records the miss.
+const SYNC_RETRIES: [std::time::Duration; 3] = [
+    std::time::Duration::from_secs(1),
+    std::time::Duration::from_secs(2),
+    std::time::Duration::from_secs(4),
+];
+
+/// Why a ready sync of the local engine setting did not change the manager record.
+enum SyncMiss {
+    /// The service admitted for that readiness is gone, or the person left: a later
+    /// readiness syncs again, so there is nothing to record.
+    Superseded,
+    /// The service is busy, not ready yet, or reconnecting: asking again may succeed.
+    Transient(cadrumo_application::error::application::ApplicationError),
+    /// Anything else, recorded at once.
+    Failed(cadrumo_application::error::application::ApplicationError),
+}
+
+/// The miss a read refused with the column code `code` is.
+fn sync_miss(
+    code: &str,
+    error: cadrumo_application::error::application::ApplicationError,
+) -> SyncMiss {
+    match code {
+        "agent_service_busy" | "agent_service_not_ready" | "agent_reconnecting" => {
+            SyncMiss::Transient(error)
+        }
+        "agent_signed_out" => SyncMiss::Superseded,
+        _ => SyncMiss::Failed(error),
+    }
+}
+
+/// The column code a failed read crosses as, or `None` when the service admitted for the
+/// readiness was replaced or retired.
+fn sync_error_code(
+    error: &cadrumo_application::error::application::ApplicationError,
+) -> Option<&'static str> {
+    if error.reason.as_deref() == Some("agent_admin_generation_changed") {
+        return None;
+    }
+    Some(match person_refusal(error) {
+        "agent_service_failed" => admin_refusal(error),
+        code => code,
+    })
+}
+
+/// Syncs the local engine setting for the service ready now, asking again after each
+/// transient miss while that same service stays admitted and the host lives, at most
+/// once per wait in [`SYNC_RETRIES`]. Only a miss it gives up on is recorded.
+fn sync_local_engine(host: &std::sync::Weak<AgentHost>) {
+    let Some(generation) = host
+        .upgrade()
+        .and_then(|held| held.supervisor.admin_generation().ok())
+    else {
+        return;
+    };
+    let mut waits = SYNC_RETRIES.iter();
+    loop {
+        let Some(held) = host.upgrade() else {
+            return;
+        };
+        let error = match held.sync_local_engine_once(generation) {
+            Ok(()) | Err(SyncMiss::Superseded) => return,
+            Err(SyncMiss::Failed(error)) => {
+                held.diagnostics
+                    .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+                return;
+            }
+            Err(SyncMiss::Transient(error)) => error,
+        };
+        let Some(wait) = waits.next() else {
+            held.diagnostics
+                .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+            return;
+        };
+        drop(held);
+        std::thread::sleep(*wait);
+    }
+}
+
+/// Calls racing service admission are retryable; a call cut short by the person's
+/// sign-out answers that sign-out; other failures keep their diagnostics.
+fn command_refusal(
+    diagnostics: &Diagnostics,
+    state: &supervisor::protocol::State,
+    signed_out: bool,
+    code: &str,
+    error: cadrumo_application::error::application::ApplicationError,
+) -> Refused {
+    use cadrumo_application::error::application::ErrorCode;
+    if signed_out {
+        return Refused::new("agent_signed_out".to_owned());
+    }
+    let awaiting_admission = matches!(state, supervisor::protocol::State::Starting)
+        && matches!(
+            (error.code, error.reason.as_deref()),
+            (
+                ErrorCode::SessionUnavailable,
+                Some("agent_service_unavailable")
+            ) | (ErrorCode::ReadFailed, Some("agent_admin_unavailable"))
+        );
+    if awaiting_admission {
+        return Refused::new("agent_service_busy".to_owned());
+    }
+    diagnostics.host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+    Refused::new(code.to_owned())
 }
 
 /// Registers the host once the shell's sign-in owner exists.
@@ -184,10 +536,25 @@ pub fn dialog_plugin<R: Runtime>() -> TauriPlugin<R> {
 
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
+    let storage_root = launch.working_directory.clone();
+    let package_root = launch.package_root.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
         .setup(move |app, _| {
             let sign_in = app.state::<Arc<SignIn>>().inner().clone();
-            app.manage(Arc::new(AgentHost::new(sign_in, diagnostics.clone())));
+            let host = Arc::new(AgentHost::new(
+                sign_in,
+                diagnostics.clone(),
+                storage_root.clone(),
+                package_root.clone(),
+            ));
+            host.sync_local_engine_when_ready();
+            console_environment::watch(app.clone(), &host);
+            #[cfg(windows)]
+            {
+                *host.login_watch.lock().unwrap_or_else(|e| e.into_inner()) =
+                    provider_login::Watch::start(app.clone(), &storage_root);
+            }
+            app.manage(host);
             Ok(())
         })
         .build()
@@ -200,6 +567,15 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_status_subscribe,
         agent_status_unsubscribe,
         agent_provider_catalog,
+        agent_local_models,
+        agent_local_model_add,
+        agent_local_model_remove,
+        agent_local_models_reset,
+        agent_reading_model_choose,
+        agent_task_model_choose,
+        agent_local_engine,
+        agent_local_engine_choose,
+        agent_model_licence,
         agent_skills,
         agent_skill,
         agent_skill_verify,
@@ -212,13 +588,22 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_pending,
         agent_questions_answer,
         agent_approval_decide,
+        agent_attachment_card,
+        agent_attachment_release,
+        agent_attachment_grants,
+        agent_attachment_grant_revoke,
         agent_observe,
         agent_unobserve,
         agent_conversations,
         agent_history,
         agent_snapshot,
         agent_documents,
+        agent_documents_remove,
         agent_attach,
+        agent_attach_ledger_movement,
+        agent_attachment_policy,
+        agent_drop_observe,
+        agent_drop_unobserve,
         runtime_attendance_inventory,
         runtime_attendance_decide,
         runtime_attendance_subscribe,
@@ -229,6 +614,10 @@ pub fn commands<R: Runtime>() -> Commands<R> {
 #[tauri::command]
 async fn runtime_attendance_inventory(host: State<'_, Arc<AgentHost>>) -> Result<Value> {
     let host = host.inner().clone();
+    // A successful password response can precede the watch's post-mutation
+    // observation. Wait for that observation before the fresh-only identity
+    // and held-session checks in person_request; never use stale presence.
+    host.sign_in.read_status().await?;
     tauri::async_runtime::spawn_blocking(move || {
         host.person_request(serde_json::json!({"action":"attendance_inventory"}))
     })
@@ -314,10 +703,14 @@ async fn blocking<T: Send + 'static>(
     .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
 }
 
-/// A service still starting or recovering does not mean the person signed out.
+/// A service still starting or recovering does not mean the person signed out,
+/// and neither does a session the runtime keeps suspended while it recovers.
 fn person_refusal(
     error: &cadrumo_application::error::application::ApplicationError,
 ) -> &'static str {
+    if recovery::is_recovering(error) {
+        return "agent_reconnecting";
+    }
     match error.reason.as_deref() {
         Some("agent_service_unavailable") => "agent_service_busy",
         Some("person_not_signed_in" | "person_request_refused" | "person_session_retired") => {
@@ -362,9 +755,34 @@ fn selection_refusal(
     }
 }
 
-/// Whether the service answered that it is still working on the request.
-fn catalog_busy(answer: &Value) -> bool {
-    answer["kind"] == "refused" && answer["code"] == "busy"
+/// The catalog the service relayed, or the refusal it answered under the code the
+/// column words. A catalog the agent served outside its pinned schema is refused as
+/// unavailable with the service log line's reference; the service still working on
+/// it answers busy and keeps the answer for the next read, which the column makes.
+fn catalog_answer(answer: Value) -> std::result::Result<Value, Refused> {
+    if answer["kind"] != "refused" {
+        return Ok(answer);
+    }
+    let code = match answer["code"].as_str() {
+        Some("catalog_unavailable") => "agent_catalog_unavailable",
+        _ => local_models::refusal(&answer).unwrap_or("agent_service_failed"),
+    };
+    Err(Refused {
+        log_ref: answer["log_ref"]
+            .as_str()
+            .filter(|reference| log_reference(reference))
+            .map(str::to_owned),
+        ..Refused::new(code.to_owned())
+    })
+}
+
+/// A log reference as the service mints one: a short token of hex digits and hyphens.
+fn log_reference(reference: &str) -> bool {
+    !reference.is_empty()
+        && reference.len() <= 64
+        && reference
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() || b == b'-')
 }
 
 fn refused<T>(code: &str) -> std::result::Result<T, Refused> {
@@ -406,21 +824,340 @@ async fn agent_status_unsubscribe(
     Ok(())
 }
 
-/// cadrumo-agent's provider catalog, relayed unchanged and unfiltered.
+/// cadrumo-agent's provider catalog as the agent service relays it, with the
+/// selected local engine's facts the manager serves in place of the agent's probe
+/// of a server that sleeps until a document is read.
 #[tauri::command]
-async fn agent_provider_catalog(
+async fn agent_provider_catalog<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    let setup = app
+        .try_state::<Arc<crate::shell::setup::SetupHost>>()
+        .map(|setup| setup.inner().clone());
+    blocking(&host, move |host| {
+        let facts = setup.and_then(|setup| setup.local_ai_facts());
+        let catalog = host
+            .administer(catalog_request(facts), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        catalog_answer(catalog)
+    })
+    .await
+}
+
+/// The most bytes of local AI facts a catalogue read carries, well inside the service's
+/// administration document with the request's own fields.
+const LOCAL_AI_FACTS_BYTES: usize = 3072;
+
+/// A catalogue read, carrying `facts` where they fit; without them the service holds
+/// a local lane whose server its agent could not read unknown.
+fn catalog_request(facts: Option<Value>) -> Value {
+    match facts.filter(|facts| facts.to_string().len() <= LOCAL_AI_FACTS_BYTES) {
+        Some(facts) => serde_json::json!({"action": "catalog", "local_ai": facts}),
+        None => serde_json::json!({"action": "catalog"}),
+    }
+}
+
+/// The models the person added to the local lanes' lists and the model documents
+/// are read with, as the agent service stores them.
+#[tauri::command]
+async fn agent_local_models(
     host: State<'_, Arc<AgentHost>>,
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
-        let catalog = host
-            .administer(serde_json::json!({"action":"catalog"}), None)
+        let answer = host
+            .administer(serde_json::json!({"action":"local_models"}), None)
             .map_err(|error| host.refuse(admin_refusal(&error), error))?;
-        // The service still working on it answers busy and keeps the answer
-        // for the next read, which the column makes.
-        if catalog_busy(&catalog) {
-            return refused("agent_service_busy");
+        if let Some(code) = local_models::refusal(&answer) {
+            return refused(code);
         }
-        Ok(catalog)
+        served_local_models(host, answer)
+    })
+    .await
+}
+
+/// The service's list answer as it serves it, once it reads as its contract states.
+fn served_local_models(host: &AgentHost, answer: Value) -> std::result::Result<Value, Refused> {
+    local_models::served(answer).ok_or_else(|| local_models_contract(host))
+}
+
+/// A list answer outside the service's contract.
+fn local_models_contract(host: &AgentHost) -> Refused {
+    host.refuse(
+        "agent_service_failed",
+        cadrumo_application::error::application::ApplicationError::new(
+            cadrumo_application::error::application::ErrorCode::ReadFailed,
+            cadrumo_application::error::application::Operation::Cli,
+        )
+        .with_reason("admin_local_models_contract"),
+    )
+}
+
+/// One guarded change to the person's lists, answered with every added model
+/// after it or the reason it was not made.
+fn change_local_models(host: &AgentHost, request: Value) -> std::result::Result<Value, Refused> {
+    let answer = host
+        .administer(request, None)
+        .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+    if let Some(code) = local_models::change_refusal(&answer) {
+        return refused(code);
+    }
+    served_local_models(host, answer)
+}
+
+/// Adds `model` to `lane`'s list, at the revision the person read.
+#[tauri::command]
+async fn agent_local_model_add(
+    host: State<'_, Arc<AgentHost>>,
+    lane: String,
+    model: String,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "local_model_add",
+                "provider": lane,
+                "model": model,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Takes the added `model` off `lane`'s list, at the revision the person read.
+#[tauri::command]
+async fn agent_local_model_remove(
+    host: State<'_, Arc<AgentHost>>,
+    lane: String,
+    model: String,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "local_model_remove",
+                "provider": lane,
+                "model": model,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Stores `model` on `lane` as the model documents are read with: the one the
+/// person selected in the agent's model picker, at the revision read.
+#[tauri::command]
+async fn agent_reading_model_choose(
+    host: State<'_, Arc<AgentHost>>,
+    lane: String,
+    model: String,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "reading_model_choose",
+                "provider": lane,
+                "model": model,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Sets the lane, model and effort `task_kind` runs with, or, with no lane and
+/// model, clears it so the kind runs on the model documents are read with, at
+/// the revision the person read. The kind and the effort are the agent's own
+/// vocabulary, served in its catalogue; the service checks the kind against it.
+#[tauri::command]
+async fn agent_task_model_choose(
+    host: State<'_, Arc<AgentHost>>,
+    task_kind: String,
+    lane: Option<String>,
+    model: Option<String>,
+    effort: Option<String>,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    let chosen = match (&lane, &model) {
+        (Some(lane), Some(model)) => local_models::is_lane(lane) && local_models::is_model(model),
+        (None, None) => effort.is_none(),
+        _ => false,
+    };
+    if !chosen
+        || !local_models::is_task_kind(&task_kind)
+        || !effort.as_deref().is_none_or(local_models::is_effort)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    let mut request = serde_json::json!({
+        "action": "task_model_choose",
+        "task_kind": task_kind,
+        "expected_revision": expected_revision,
+    });
+    if let (Some(lane), Some(model)) = (lane, model) {
+        request["provider"] = Value::from(lane);
+        request["model"] = Value::from(model);
+    }
+    if let Some(effort) = effort {
+        request["effort"] = Value::from(effort);
+    }
+    blocking(&host, move |host| change_local_models(host, request)).await
+}
+
+/// Removes the list record, readable or not, at the revision the person read.
+#[tauri::command]
+async fn agent_local_models_reset(
+    host: State<'_, Arc<AgentHost>>,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    if !local_models::is_revision(&expected_revision) {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "local_models_reset",
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// The local engine and placement, as the agent service stores them. A readable setting
+/// is handed on to the runtime manager, which runs that engine's server.
+#[tauri::command]
+async fn agent_local_engine(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        let _record = host.engine_record();
+        let answer = host
+            .administer(serde_json::json!({"action":"local_engine"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if let Some(code) = local_models::refusal(&answer) {
+            return refused(code);
+        }
+        let (setting, answer) =
+            local_models::served_engine(answer).ok_or_else(|| local_engine_contract(host))?;
+        host.record_local_engine(&setting);
+        Ok(answer)
+    })
+    .await
+}
+
+/// An engine setting answer outside the service's contract.
+fn local_engine_contract(host: &AgentHost) -> Refused {
+    host.refuse(
+        "agent_service_failed",
+        cadrumo_application::error::application::ApplicationError::new(
+            cadrumo_application::error::application::ErrorCode::ReadFailed,
+            cadrumo_application::error::application::Operation::Cli,
+        )
+        .with_reason("admin_local_engine_contract"),
+    )
+}
+
+/// Stores `engine` and `placement` at the revision the person read. The service retires
+/// the agent tree when either changes and starts its replacement, which the supervisor
+/// reports as the agent's status; the setting is then handed on to the runtime manager.
+#[tauri::command]
+async fn agent_local_engine_choose(
+    host: State<'_, Arc<AgentHost>>,
+    engine: String,
+    placement: String,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    let Some(chosen) = local_models::engine_token(&engine) else {
+        return refused("agent_invalid_request");
+    };
+    if local_models::placement_token(&placement).is_none()
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        // An engine this package cannot run never reaches the service.
+        if let Some(code) = local_models::engine_unavailable(chosen, &host.package_root) {
+            return refused(code);
+        }
+        let _record = host.engine_record();
+        let answer = host
+            .administer(
+                serde_json::json!({
+                    "action": "local_engine_choose",
+                    "engine": engine,
+                    "placement": placement,
+                    "expected_revision": expected_revision,
+                }),
+                None,
+            )
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if let Some(code) = local_models::change_refusal(&answer) {
+            return refused(code);
+        }
+        let (setting, answer) =
+            local_models::served_engine(answer).ok_or_else(|| local_engine_contract(host))?;
+        host.record_local_engine(&setting);
+        Ok(answer)
+    })
+    .await
+}
+
+/// Whether `text` has the grammar of an agent provider identity: a lowercase
+/// slug of up to 64 characters.
+fn is_agent_provider(text: &str) -> bool {
+    (1..=64).contains(&text.len())
+        && text.starts_with(|c: char| c.is_ascii_lowercase())
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+/// The licence text of one model a lane lists, relayed from the ready agent.
+#[tauri::command]
+async fn agent_model_licence(
+    host: State<'_, Arc<AgentHost>>,
+    provider: String,
+    transport: String,
+    model: String,
+) -> std::result::Result<Value, Refused> {
+    if !is_agent_provider(&provider)
+        || !matches!(transport.as_str(), "api" | "cli")
+        || !local_models::is_model(&model)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        gateway::Client::new(&Session::gateway(&host.supervisor)?)
+            .licence(&provider, &transport, &model)
     })
     .await
 }
@@ -496,7 +1233,12 @@ async fn agent_conversation_delete(
     conversation_id: String,
 ) -> std::result::Result<(), Refused> {
     blocking(&host, move |host| {
-        host.session.delete(&host.supervisor, &conversation_id)
+        host.session.delete(&host.supervisor, &conversation_id)?;
+        // Its text grants name bytes that no longer exist, so one left behind
+        // covers nothing; the person still sees and can revoke it.
+        let forget = serde_json::json!({"action":"attachment_conversation_forget","conversation_id":conversation_id});
+        let _ = host.administer(forget, None);
+        Ok(())
     })
     .await
 }
@@ -596,6 +1338,106 @@ async fn agent_approval_decide(
     .await
 }
 
+/// What the service says the card shows for a read a run is parked on. The
+/// request's own words decide none of it.
+#[tauri::command]
+async fn agent_attachment_card(
+    host: State<'_, Arc<AgentHost>>,
+    approval: RequestRef,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        let request = attachment_read_request("attachment_card", &approval, None)?;
+        host.administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// Puts the person's answer to the service, which records the release before the
+/// agent hears of it. The agent's request is answered only once the service has
+/// released the read: anything else leaves the read parked and nothing sent. The
+/// scope `decline` only records the person's refusal; the window then declines
+/// the request itself.
+#[tauri::command]
+async fn agent_attachment_release(
+    host: State<'_, Arc<AgentHost>>,
+    approval: RequestRef,
+    option_id: String,
+    scope: Option<String>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        let request = attachment_read_request("attachment_release", &approval, scope.as_deref())?;
+        let answer = host
+            .administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if answer["kind"] == "released" {
+            host.session
+                .decide(&host.supervisor, &approval, &option_id)?;
+        }
+        Ok(answer)
+    })
+    .await
+}
+
+/// The remembered attachment grants, for the agent panel's settings.
+#[tauri::command]
+async fn agent_attachment_grants(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        host.administer(serde_json::json!({"action":"attachment_grants"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// Revokes one remembered grant; the next read asks again.
+#[tauri::command]
+async fn agent_attachment_grant_revoke(
+    host: State<'_, Arc<AgentHost>>,
+    grant_id: String,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        if grant_id.len() != 32 || !grant_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return refused("agent_invalid_request");
+        }
+        let request = serde_json::json!({"action":"attachment_grant_revoke","grant_id":grant_id});
+        host.administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// The administration request about one parked read, once its names are shown to be names.
+fn attachment_read_request(
+    action: &str,
+    approval: &RequestRef,
+    scope: Option<&str>,
+) -> std::result::Result<Value, Refused> {
+    let plain = |value: &str| {
+        !value.is_empty()
+            && value.len() <= 128
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+    };
+    if !plain(&approval.reply_id)
+        || !plain(&approval.request_id)
+        || !matches!(
+            scope,
+            None | Some("once" | "session" | "remember" | "decline")
+        )
+    {
+        return refused("agent_invalid_request");
+    }
+    Ok(serde_json::json!({
+        "action": action,
+        "run_id": approval.reply_id,
+        "permission_request_id": approval.request_id,
+        "scope": scope,
+    }))
+}
+
 #[tauri::command]
 async fn agent_observe(
     host: State<'_, Arc<AgentHost>>,
@@ -663,6 +1505,19 @@ async fn agent_documents(
     .await
 }
 
+#[tauri::command]
+async fn agent_documents_remove(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+    name: Option<String>,
+) -> std::result::Result<(), Refused> {
+    blocking(&host, move |host| {
+        host.session
+            .remove_documents(&host.supervisor, &conversation_id, name.as_deref())
+    })
+    .await
+}
+
 /// Opens the host's file dialog over the window, for files of the kinds the
 /// conversation's storage takes, and streams each one the person picks into
 /// that storage. It answers with what was picked, each queued or refused
@@ -675,6 +1530,7 @@ async fn agent_attach<R: Runtime>(
     window: tauri::WebviewWindow<R>,
     conversation_id: String,
     filter_label: String,
+    drop_id: Option<String>,
     updates: Channel<upload::UploadEvent>,
 ) -> std::result::Result<Vec<upload::Picked>, Refused> {
     use tauri_plugin_dialog::DialogExt;
@@ -691,18 +1547,22 @@ async fn agent_attach<R: Runtime>(
         let extensions: Vec<&str> = policy.extensions.iter().map(String::as_str).collect();
         // The packaged test host takes the lane's files where the lane gives
         // some; every other build always asks the person.
-        let paths: Vec<std::path::PathBuf> = match upload::lane_picks(upload::lane_directory()) {
-            Some(paths) => paths,
-            None => window
-                .dialog()
-                .file()
-                .set_parent(&window)
-                .add_filter(filter_label, &extensions)
-                .blocking_pick_files()
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|picked| picked.into_path().ok())
-                .collect(),
+        let paths: Vec<std::path::PathBuf> = if let Some(id) = drop_id {
+            host.drops.take(&id, &gateway)?
+        } else {
+            match upload::lane_picks(upload::lane_directory()) {
+                Some(paths) => paths,
+                None => window
+                    .dialog()
+                    .file()
+                    .set_parent(&window)
+                    .add_filter(filter_label, &extensions)
+                    .blocking_pick_files()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|picked| picked.into_path().ok())
+                    .collect(),
+            }
         };
         let (picked, queued) = upload::stage(paths, &policy);
         if !queued.is_empty() {
@@ -715,10 +1575,281 @@ async fn agent_attach<R: Runtime>(
     .await
 }
 
+/// Stores one Libro movement in the conversation's own storage: what the
+/// registered `ledger.view` read serves of it for the signed-in profile,
+/// unchanged as JSON, checked against the storage's policy and sent from
+/// memory with its digest. It answers the record a message can name, which
+/// the column stages; nothing reaches a model until the person sends that
+/// message. No file is written and no path is involved.
+#[tauri::command]
+async fn agent_attach_ledger_movement(
+    host: State<'_, Arc<AgentHost>>,
+    ledger: State<'_, Arc<crate::shell::ledger::LedgerHost>>,
+    conversation_id: String,
+    transaction_id: String,
+) -> std::result::Result<Value, movement::MovementRefused> {
+    if !gateway::run_id(&conversation_id) || !movement::handle(&transaction_id) {
+        return Err(Refused::new("agent_invalid_request".to_owned()).into());
+    }
+    let served = ledger
+        .movement(&transaction_id)
+        .await
+        .map_err(movement::ledger_refusal)?;
+    let (name, bytes) = movement::attachment(&served)?;
+    drop(served);
+    Ok(blocking(&host, move |host| {
+        let gateway = Session::gateway(&host.supervisor)?;
+        let client = gateway::Client::new(&gateway);
+        let policy = upload::policy_of(&client.attachment_policy()?)?;
+        upload::store_made(&client, &conversation_id, &name, &bytes, &policy)
+    })
+    .await?)
+}
+
+/// Watches native drags without exposing file paths to the webview.
+#[tauri::command]
+async fn agent_drop_observe<R: Runtime>(
+    host: State<'_, Arc<AgentHost>>,
+    window: tauri::WebviewWindow<R>,
+    updates: Channel<dropping::Signal>,
+) -> std::result::Result<u32, Refused> {
+    let subscription = blocking(&host, move |host| {
+        Ok(host
+            .drops
+            .observe(updates, Session::gateway(&host.supervisor)?))
+    })
+    .await?;
+    if !host
+        .drops
+        .listening
+        .swap(true, std::sync::atomic::Ordering::AcqRel)
+    {
+        let owner = host.inner().clone();
+        let observed = window.clone();
+        window.on_window_event(move |event| {
+            if let tauri::WindowEvent::DragDrop(drag) = event
+                && let Ok(scale) = observed.scale_factor()
+            {
+                owner.drops.event(drag, scale);
+            }
+        });
+    }
+    Ok(subscription)
+}
+
+#[tauri::command]
+fn agent_drop_unobserve(host: State<'_, Arc<AgentHost>>, subscription: u32) {
+    host.drops.clear(Some(subscription));
+}
+
+#[tauri::command]
+async fn agent_attachment_policy(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        let gateway = Session::gateway(&host.supervisor)?;
+        upload::served_policy(gateway::Client::new(&gateway).attachment_policy()?)
+    })
+    .await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_refused_catalog_crosses_as_a_refusal_never_as_a_catalog() {
+        let catalog = serde_json::json!({"kind": "catalog", "providers": []});
+        assert_eq!(catalog_answer(catalog.clone()), Ok(catalog));
+        let reference = "123e4567-e89b-42d3-a456-426614174000";
+        let departed = catalog_answer(serde_json::json!(
+            {"kind": "refused", "code": "catalog_unavailable", "log_ref": reference}
+        ))
+        .unwrap_err();
+        assert_eq!(departed.code, "agent_catalog_unavailable");
+        assert_eq!(departed.log_ref.as_deref(), Some(reference));
+        for (code, crossed) in [
+            ("busy", "agent_service_busy"),
+            ("signed_out", "agent_signed_out"),
+            ("service_stopping", "agent_service_not_ready"),
+            ("invented", "agent_service_failed"),
+        ] {
+            let refused =
+                catalog_answer(serde_json::json!({"kind": "refused", "code": code})).unwrap_err();
+            assert_eq!((refused.code.as_str(), refused.log_ref), (crossed, None));
+        }
+        // A reference that is not one the service mints is dropped, not relayed.
+        let odd = catalog_answer(serde_json::json!(
+            {"kind": "refused", "code": "catalog_unavailable", "log_ref": "../log <b>"}
+        ))
+        .unwrap_err();
+        assert_eq!(odd.log_ref, None);
+    }
+
+    #[test]
+    fn a_catalog_read_carries_the_local_ai_facts_only_where_they_fit() {
+        let facts = serde_json::json!({"engine": "llamacpp", "server": "dormant", "models": []});
+        assert_eq!(
+            catalog_request(Some(facts.clone())),
+            serde_json::json!({"action": "catalog", "local_ai": facts})
+        );
+        assert_eq!(
+            catalog_request(None),
+            serde_json::json!({"action": "catalog"})
+        );
+        let oversized = serde_json::json!({"models": "x".repeat(LOCAL_AI_FACTS_BYTES)});
+        assert_eq!(
+            catalog_request(Some(oversized)),
+            serde_json::json!({"action": "catalog"})
+        );
+    }
+
+    #[test]
+    fn a_ready_sync_asks_again_only_after_a_transient_miss_and_a_bounded_number_of_times() {
+        let error = || ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli);
+        for code in [
+            "agent_service_busy",
+            "agent_service_not_ready",
+            "agent_reconnecting",
+        ] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Transient(_)),
+                "{code}"
+            );
+        }
+        assert!(matches!(
+            sync_miss("agent_signed_out", error()),
+            SyncMiss::Superseded
+        ));
+        for code in ["agent_service_failed", "agent_local_models_unknown"] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Failed(_)),
+                "{code}"
+            );
+        }
+        // A replaced or retired service supersedes the sync; a timeout is busy; a person
+        // who left is signed out; anything else failed.
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_generation_changed")),
+            None
+        );
+        assert_eq!(
+            sync_error_code(&ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)),
+            Some("agent_service_busy")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("person_not_signed_in")),
+            Some("agent_signed_out")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_unreadable")),
+            Some("agent_service_failed")
+        );
+        assert_eq!(SYNC_RETRIES, [1, 2, 4].map(std::time::Duration::from_secs));
+    }
+
+    #[test]
+    fn admission_races_are_quiet_and_retryable_only_while_starting() {
+        for (code, reason) in [
+            (ErrorCode::SessionUnavailable, "agent_service_unavailable"),
+            (ErrorCode::ReadFailed, "agent_admin_unavailable"),
+        ] {
+            for (state, expected, failures) in [
+                (
+                    supervisor::protocol::State::Starting,
+                    "agent_service_busy",
+                    0,
+                ),
+                (
+                    supervisor::protocol::State::Stopped,
+                    "agent_service_failed",
+                    1,
+                ),
+                (
+                    supervisor::protocol::State::Ready {
+                        agent_version: "synthetic".into(),
+                    },
+                    "agent_service_failed",
+                    1,
+                ),
+                (
+                    supervisor::protocol::State::Refused {
+                        code:
+                            cadrumo_application::diagnostics::service::AgentRefusal::ServiceFailed,
+                    },
+                    "agent_service_failed",
+                    1,
+                ),
+            ] {
+                let diagnostics = Diagnostics::default();
+                let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
+                let refused =
+                    command_refusal(&diagnostics, &state, false, "agent_service_failed", error);
+                assert_eq!(refused.code, expected);
+                assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), failures);
+            }
+        }
+    }
+
+    #[test]
+    fn a_call_the_persons_sign_out_cut_short_answers_signed_out_and_logs_no_failure() {
+        // b26: the service stopped for the sign-out while the catalogue read was
+        // in flight, and its unreadable reply was logged as a failure.
+        let diagnostics = Diagnostics::default();
+        let error = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+            .with_reason("admin_catalog")
+            .caused_by(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("admin_read"),
+            );
+        let refused = command_refusal(
+            &diagnostics,
+            &supervisor::protocol::State::Ready {
+                agent_version: "synthetic".into(),
+            },
+            true,
+            "agent_service_failed",
+            error.clone(),
+        );
+        assert_eq!(refused.code, "agent_signed_out");
+        assert!(diagnostics.snapshot(u64::MAX).events.is_empty());
+        // The same failure while the person is signed in stays a failure.
+        let refused = command_refusal(
+            &diagnostics,
+            &supervisor::protocol::State::Ready {
+                agent_version: "synthetic".into(),
+            },
+            false,
+            "agent_service_failed",
+            error,
+        );
+        assert_eq!(refused.code, "agent_service_failed");
+        assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), 1);
+    }
+
+    #[test]
+    fn unexpected_startup_failures_remain_visible() {
+        for (code, reason) in [
+            (ErrorCode::ReadFailed, "admin_document_parse"),
+            (ErrorCode::Panic, "agent_admin_unavailable"),
+            (ErrorCode::SessionUnavailable, "person_session_retired"),
+        ] {
+            let diagnostics = Diagnostics::default();
+            let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
+            let refused = command_refusal(
+                &diagnostics,
+                &supervisor::protocol::State::Starting,
+                false,
+                "agent_service_failed",
+                error,
+            );
+            assert_eq!(refused.code, "agent_service_failed");
+            let snapshot = diagnostics.snapshot(u64::MAX);
+            assert_eq!(snapshot.events.len(), 1);
+            assert_eq!(snapshot.events[0].failure.as_ref().unwrap().code, code);
+        }
+    }
 
     #[test]
     fn provider_selection_preserves_busy_and_sign_in_refusals() {
@@ -747,6 +1878,18 @@ mod tests {
                 .with_reason(reason);
             assert_eq!(person_refusal(&error), expected, "{reason}");
         }
+    }
+
+    #[test]
+    fn a_session_the_runtime_keeps_suspended_is_reconnecting_and_not_signed_out() {
+        use cadrumo_application::error::application::ChildRefusal;
+        let refused = |code: &str| {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("person_request_refused")
+                .caused_by(ChildRefusal::answered(&serde_json::json!({"code": code})))
+        };
+        assert_eq!(person_refusal(&refused("recovering")), "agent_reconnecting");
+        assert_eq!(person_refusal(&refused("inactive")), "agent_signed_out");
     }
 
     #[test]

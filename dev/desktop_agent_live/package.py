@@ -13,12 +13,27 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
 from ..packaging.native.hashing import digest
 from ..packaging.native.layout import desktop_image
 from ..packaging.native.service_descriptors import refresh_service_image_digests
+
+
+def _replace_copy(source: Path, target: Path) -> None:
+    # Never rewrite a signed executable's existing vnode: macOS can retain its
+    # prior code-signing validation after an in-place copy. Publish fresh bytes
+    # with their metadata only after the copy has completed.
+    descriptor, name = tempfile.mkstemp(prefix=f".{target.name}-", dir=target.parent)
+    temporary = Path(name)
+    os.close(descriptor)
+    try:
+        shutil.copy2(source, temporary)
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _files(root: Path) -> dict[str, os.stat_result]:
@@ -62,7 +77,7 @@ def mirror(source: Path, destination: Path, *, rebound: frozenset[str]) -> int:
         ):
             target = destination / member
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source / member, target)
+            _replace_copy(source / member, target)
             copied += 1
     return copied
 
@@ -80,7 +95,7 @@ def stage_lane_package(layout: dict[str, Any], staged: Path, host: Path, destina
     if manifest["files"].get(descriptor_member) != digest(staged / descriptor_member):
         raise ValueError("the staged service descriptors differ from the package manifest")
     mirror(staged, destination, rebound=frozenset({image.package_path, descriptor_member, manifest_member}))
-    shutil.copy2(host, destination / image.package_path)
+    _replace_copy(host, destination / image.package_path)
     refresh_service_image_digests(destination, descriptor_member)
     manifest["files"][image.package_path] = digest(destination / image.package_path)
     manifest["files"][descriptor_member] = digest(destination / descriptor_member)

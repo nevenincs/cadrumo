@@ -20,7 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...ledger.persistence_ports import LedgerPersistenceConflictError
@@ -28,7 +28,8 @@ from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueReposito
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import projection_operation
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
@@ -44,11 +45,11 @@ from ..projection_operation import (
     ModeloProjectOperationProjection,
     ModeloProjectOperationRequest,
     ProjectionOverride,
-    _prepare_and_maybe_commit,
     build_modelo_compare_definition,
     build_modelo_compare_registration,
     build_modelo_project_definition,
     build_modelo_project_registration,
+    prepare_and_maybe_commit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -186,13 +187,13 @@ def test_public_request_and_result_validators_reject_incomplete_values() -> None
                 },
                 "casilla_observations": [],
                 "m100_projection": {
-                    "base_liquidable_general_0505": "0",
-                    "pagos_fraccionados_0604": "0",
-                    "cuota_integra_estatal_0545": "0",
-                    "cuota_integra_autonomica_0546": "0",
-                    "cuota_liquida_estatal_0595": "0",
-                    "cuota_liquida_autonomica_0596": "0",
-                    "cuota_resultante_0597": "0",
+                    "base_liquidable_general": "0",
+                    "pagos_fraccionados": "0",
+                    "cuota_integra_estatal": "0",
+                    "cuota_integra_autonomica": "0",
+                    "cuota_liquida_estatal": "0",
+                    "cuota_liquida_autonomica": "0",
+                    "cuota_resultante": "0",
                 },
             }
         )
@@ -249,18 +250,6 @@ def test_comparison_public_result_retains_order_and_every_provenance_reference()
         ModeloCompareOperationProjection.model_validate(
             projection.model_dump() | {"sections": (CompareSectionProjection(section="base", rows=(first,)),)}
         )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
 
 
 class _Fence:
@@ -328,7 +317,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
     failure: Exception | None,
     effects: tuple[OperationEffect, ...],
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=changed, fence=fence, failure=failure)
     context = cast(
@@ -337,7 +326,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
     )
     repository = ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](str(_PROFILE))
     if failure is None:
-        result = await _prepare_and_maybe_commit(
+        result = await prepare_and_maybe_commit(
             calculation_repository=repository,
             migration=cast(ProjectionMigrationPort, migration),
             context=context,
@@ -346,7 +335,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
         assert result is migration.plan
     else:
         with pytest.raises(type(failure)):
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=repository,
                 migration=cast(ProjectionMigrationPort, migration),
                 context=context,
@@ -364,7 +353,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
 async def test_preparation_failure_never_enters_commit_or_claims_a_write(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=True, fence=fence, prepare_failure=ValueError("bad legacy relation"))
     context = cast(
@@ -373,7 +362,7 @@ async def test_preparation_failure_never_enters_commit_or_claims_a_write(
     )
     repository = ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](str(_PROFILE))
     with pytest.raises(ValueError, match="bad legacy relation"):
-        await _prepare_and_maybe_commit(
+        await prepare_and_maybe_commit(
             calculation_repository=repository,
             migration=cast(ProjectionMigrationPort, migration),
             context=context,
@@ -387,7 +376,7 @@ async def test_preparation_failure_never_enters_commit_or_claims_a_write(
 async def test_confirmed_migration_remains_updated_if_later_projection_fails(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     fence = _Fence()
     migration = _Migration(changed=True, fence=fence)
     repository = SimpleNamespace(bucket_id=str(_PROFILE))
@@ -407,7 +396,7 @@ async def test_confirmed_migration_remains_updated_if_later_projection_fails(
         assert not fence.active and migration.commits == 1
         raise ValueError("later canonical projection failure")
 
-    monkeypatch.setattr(projection_operation, "_valid_execution", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(projection_operation, "valid_execution", lambda *_args, **_kwargs: True)
     monkeypatch.setattr(projection_operation, "project_modelo_100_from_m130", fail_projection)
     executor = ModeloProjectExecutor(
         cast(CalculationActionPortsFactory, factory), cast(ProjectionMigrationPort, migration)

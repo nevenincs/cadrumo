@@ -13,22 +13,22 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import (
-    _BOX_85_BINDING,
-    _BOX_97_BINDING,
-    _BOX_662_BINDING,
-    _M303_COMPENSACION_APLICADA_CASILLA,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_DISPONIBLE_CASILLA,
-    _M303_GENERADA_CASILLA,
-    _M303_POSTERIOR_CASILLA,
-    _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA,
-    _M303_RESULTADO_CASILLA,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    _modelo_390_annual_snapshot,
+    BOX_85_BINDING,
+    BOX_97_BINDING,
+    BOX_662_BINDING,
+    M303_COMPENSACION_APLICADA_CASILLA,
+    M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
+    M303_PRINTED_COMPENSATION_REFERENCE_CASILLA,
+    M303_RESULTADO_CASILLA,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+    modelo_390_annual_snapshot,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.calculations.iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
@@ -44,7 +44,7 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -145,10 +145,10 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     Files four 303 quarters with a real carried-pending chain (1T credit carried,
     2T applies part of it, 4T generates more) as observations, then resolves the
     M390 annual compensation partition through its production source resolver.
-    The two carry-box bindings must carry the FIFO partition
-    (box 97 = 120, box 662 = 0), NOT the per-period relation sums (50 / 100),
-    proving the registry no longer routes the boxes through the double-counting
-    per-period relation path.
+    The two carry-box bindings must carry the partition: box 97 the last period's
+    own result (50), box 662 the rest of the year's pending credit (70), together
+    the 120 still pending, proving the boxes are not routed through the
+    double-counting per-period relation path (50 / 100).
     """
     quarter_chain = [
         ("1T", Decimal("-100.00"), Decimal("100.00"), Decimal("0.00"), Decimal("0.00"), Decimal("100.00")),
@@ -166,18 +166,18 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
                     filing_year=2025,
                     period=period,
                     casilla_values={
-                        _M303_RESULTADO_CASILLA: resultado,
-                        _M303_GENERADA_CASILLA: generada,
-                        _M303_COMPENSACION_APLICADA_CASILLA: aplicada,
-                        _M303_POSTERIOR_CASILLA: posterior,
-                        _M303_DISPONIBLE_CASILLA: disponible,
+                        M303_RESULTADO_CASILLA: resultado,
+                        M303_GENERADA_CASILLA: generada,
+                        M303_COMPENSACION_APLICADA_CASILLA: aplicada,
+                        M303_POSTERIOR_CASILLA: posterior,
+                        M303_DISPONIBLE_CASILLA: disponible,
                     },
                 ),
                 disposition=ResultDisposition.COMPENSACION,
             )
 
-        snapshot = _modelo_390_annual_snapshot()
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        snapshot = modelo_390_annual_snapshot()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             resolution = IvaCompensationAnnualPartitionSourceResolver(
                 repository=observation_repo,
                 registry_snapshot=snapshot,
@@ -193,11 +193,11 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             )
 
     _4t_disponible = quarter_chain[-1][5]
-    assert resolution.binding_values[_BOX_97_BINDING] == _4t_disponible
-    assert resolution.binding_values[_BOX_662_BINDING] == Decimal("0.00")
+    assert resolution.binding_values[BOX_97_BINDING] == Decimal("50.00")
+    assert resolution.binding_values[BOX_662_BINDING] == Decimal("70.00")
     assert resolution.relation_values == {}
     assert not resolution.unresolved_binding_ids
-    assert resolution.binding_values[_BOX_97_BINDING] + resolution.binding_values[_BOX_662_BINDING] == _4t_disponible
+    assert resolution.binding_values[BOX_97_BINDING] + resolution.binding_values[BOX_662_BINDING] == _4t_disponible
     assert resolution.provenance
     assert {item.dependency_treatment for item in resolution.provenance} == {"direct_annual_settlement"}
     assert {item.resolved_binding_source for item in resolution.provenance} == {
@@ -221,18 +221,18 @@ def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path
                     filing_year=2025,
                     period=period,
                     casilla_values={
-                        _M303_RESULTADO_CASILLA: resultado,
-                        _M303_GENERADA_CASILLA: generada,
-                        _M303_COMPENSACION_APLICADA_CASILLA: Decimal("0.00"),
-                        _M303_POSTERIOR_CASILLA: posterior,
-                        _M303_DISPONIBLE_CASILLA: disponible,
+                        M303_RESULTADO_CASILLA: resultado,
+                        M303_GENERADA_CASILLA: generada,
+                        M303_COMPENSACION_APLICADA_CASILLA: Decimal("0.00"),
+                        M303_POSTERIOR_CASILLA: posterior,
+                        M303_DISPONIBLE_CASILLA: disponible,
                     },
                 ),
                 disposition=ResultDisposition.COMPENSACION,
             )
 
-        snapshot = _modelo_390_annual_snapshot()
-        with _indexed_authority_for_test().operation() as authority_operation:
+        snapshot = modelo_390_annual_snapshot()
+        with bundled_indexed_authority().operation() as authority_operation:
             resolution = IvaCompensationAnnualPartitionSourceResolver(
                 repository=observation_repo,
                 registry_snapshot=snapshot,
@@ -248,12 +248,12 @@ def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path
             )
 
     assert not resolution.binding_values
-    assert set(resolution.unresolved_binding_ids) == {_BOX_85_BINDING, _BOX_97_BINDING, _BOX_662_BINDING}
+    assert set(resolution.unresolved_binding_ids) == {BOX_85_BINDING, BOX_97_BINDING, BOX_662_BINDING}
     assert {
         diagnostic.binding_id
         for diagnostic in resolution.diagnostics
         if diagnostic.reason == "iva_compensation_annual_source_evidence_failure"
-    } == {_BOX_85_BINDING, _BOX_97_BINDING, _BOX_662_BINDING}
+    } == {BOX_85_BINDING, BOX_97_BINDING, BOX_662_BINDING}
 
 
 def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tmp_path: Path) -> None:
@@ -305,18 +305,18 @@ def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tm
                     filing_year=2025,
                     period=period,
                     casilla_values={
-                        _M303_RESULTADO_CASILLA: resultado,
-                        _M303_GENERADA_CASILLA: generada,
-                        _M303_COMPENSACION_APLICADA_CASILLA: aplicada,
-                        _M303_POSTERIOR_CASILLA: posterior,
-                        _M303_DISPONIBLE_CASILLA: disponible,
+                        M303_RESULTADO_CASILLA: resultado,
+                        M303_GENERADA_CASILLA: generada,
+                        M303_COMPENSACION_APLICADA_CASILLA: aplicada,
+                        M303_POSTERIOR_CASILLA: posterior,
+                        M303_DISPONIBLE_CASILLA: disponible,
                     },
                 ),
                 disposition=disposition,
             )
 
-        snapshot = _modelo_390_annual_snapshot()
-        with _indexed_authority_for_test().operation() as authority_operation:
+        snapshot = modelo_390_annual_snapshot()
+        with bundled_indexed_authority().operation() as authority_operation:
             resolution = IvaCompensationAnnualPartitionSourceResolver(
                 repository=observation_repo,
                 registry_snapshot=snapshot,
@@ -331,15 +331,257 @@ def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tm
                 ),
             )
 
-    assert resolution.binding_values[_BOX_97_BINDING] == Decimal("50.00")
-    assert resolution.binding_values[_BOX_662_BINDING] == Decimal("0.00")
+    assert resolution.binding_values[BOX_97_BINDING] == Decimal("50.00")
+    assert resolution.binding_values[BOX_662_BINDING] == Decimal("0.00")
     # 1T filed [78] = [87] = 0.00, so no credit came from earlier years: a proven zero.
-    assert resolution.binding_values[_BOX_85_BINDING] == Decimal("0.00")
+    assert resolution.binding_values[BOX_85_BINDING] == Decimal("0.00")
     assert not resolution.unresolved_binding_ids
     assert not {
         diagnostic.binding_id
         for diagnostic in resolution.diagnostics
         if diagnostic.reason == "iva_compensation_annual_source_evidence_failure"
+    }
+
+
+def _resolve_partition_for_quarters(
+    tmp_path: Path,
+    quarters: tuple[tuple[ResultDisposition, dict[CasillaId, Decimal]], ...],
+) -> CalculationSourceResolution:
+    """File four M303 quarters through the production ingress and resolve the M390 partition."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
+        observation_repo = CalculationObservationRepository()
+        for period, (disposition, casilla_values) in zip(("1T", "2T", "3T", "4T"), quarters, strict=True):
+            _save_normalized_m303_carry_observation(
+                observation_repo,
+                registry_grounded_modelo_observation(
+                    modelo="303",
+                    filing_year=2025,
+                    period=period,
+                    casilla_values=casilla_values,
+                ),
+                disposition=disposition,
+            )
+        snapshot = modelo_390_annual_snapshot()
+        with bundled_indexed_authority().operation() as authority_operation:
+            return IvaCompensationAnnualPartitionSourceResolver(
+                repository=observation_repo,
+                registry_snapshot=snapshot,
+                operation=authority_operation,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=_FIFO_BUCKET_ID,
+                    modelo="390",
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "0A"),
+                    revision=snapshot.revision,
+                ),
+            )
+
+
+def _quarter(
+    resultado: str,
+    *,
+    generada: str = "0.00",
+    aplicada: str | None = None,
+    posterior: str | None = None,
+    disponible: str,
+) -> dict[CasillaId, Decimal]:
+    """One quarter's compensation casillas; an omitted box 78 or 87 is not stated, not zero."""
+    values = {
+        M303_RESULTADO_CASILLA: Decimal(resultado),
+        M303_GENERADA_CASILLA: Decimal(generada),
+        M303_DISPONIBLE_CASILLA: Decimal(disponible),
+    }
+    if aplicada is not None:
+        values[M303_COMPENSACION_APLICADA_CASILLA] = Decimal(aplicada)
+    if posterior is not None:
+        values[M303_POSTERIOR_CASILLA] = Decimal(posterior)
+    return values
+
+
+def test_modelo_390_unknown_opening_with_in_year_compensation_leaves_85_97_and_662_unresolved(
+    tmp_path: Path,
+) -> None:
+    """1T states neither box 87 nor box 78, so the opening credit is unknown.
+
+    2T then compensates 30.00 (box 78). The FIFO charges that to the unknown
+    opening first, so the year's own 100.00 credit may be untouched or partly
+    used; boxes 97 and 662 cannot be stated, and none of the three may read as zero.
+    """
+    compensacion = ResultDisposition.COMPENSACION
+    resolution = _resolve_partition_for_quarters(
+        tmp_path,
+        (
+            (compensacion, _quarter("-100.00", generada="100.00", disponible="100.00")),
+            (compensacion, _quarter("-10.00", aplicada="30.00", posterior="70.00", disponible="70.00")),
+            (compensacion, _quarter("-10.00", aplicada="0.00", posterior="70.00", disponible="70.00")),
+            (compensacion, _quarter("-10.00", aplicada="0.00", posterior="70.00", disponible="70.00")),
+        ),
+    )
+
+    assert not resolution.binding_values
+    assert set(resolution.unresolved_binding_ids) == {BOX_85_BINDING, BOX_97_BINDING, BOX_662_BINDING}
+    opening_diagnostics = {
+        diagnostic.binding_id: diagnostic.message
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "source_issue"
+    }
+    assert set(opening_diagnostics) == {BOX_85_BINDING, BOX_97_BINDING, BOX_662_BINDING}
+    assert all("unknown, not zero" in message for message in opening_diagnostics.values())
+
+
+def test_modelo_390_unknown_opening_without_compensation_still_resolves_97_and_662(tmp_path: Path) -> None:
+    """With box 78 zero in every quarter, nothing can have consumed credit generated in the year.
+
+    Boxes 97 and 662 then do not depend on the unknown opening: 4T generates
+    50.00 and nothing was applied, so 97 = 50.00 and 662 = 0.00. Box 85 stays unknown.
+    """
+    negativa = ResultDisposition.NEGATIVA
+    resolution = _resolve_partition_for_quarters(
+        tmp_path,
+        (
+            (negativa, _quarter("0.00", disponible="0.00")),
+            (negativa, _quarter("0.00", aplicada="0.00", posterior="0.00", disponible="0.00")),
+            (negativa, _quarter("0.00", aplicada="0.00", posterior="0.00", disponible="0.00")),
+            (
+                ResultDisposition.COMPENSACION,
+                _quarter("-50.00", generada="50.00", aplicada="0.00", disponible="50.00"),
+            ),
+        ),
+    )
+
+    assert resolution.binding_values == {
+        BOX_97_BINDING: Decimal("50.00"),
+        BOX_662_BINDING: Decimal("0.00"),
+    }
+    assert resolution.unresolved_binding_ids == (BOX_85_BINDING,)
+
+
+def test_modelo_390_known_opening_keeps_all_three_boxes_resolved_with_in_year_compensation(tmp_path: Path) -> None:
+    """1T states box 87 = 900.00 and box 78 = 100.00, so the opening is 1000.00 (87 + 78).
+
+    The opening is consumed first: 100 (1T) + 150 (2T) leave 750.00; 3T generates
+    40.00 and 4T applies 760.00, taking the last 750.00 of the opening and
+    10.00 of the year's lot, leaving 30.00 for the year-end boxes. Box 85 is the opening consumed, 1000.00.
+    """
+    ingreso = ResultDisposition.INGRESO
+    resolution = _resolve_partition_for_quarters(
+        tmp_path,
+        (
+            (ingreso, _quarter("10.00", aplicada="100.00", posterior="900.00", disponible="900.00")),
+            (ingreso, _quarter("10.00", aplicada="150.00", posterior="750.00", disponible="750.00")),
+            (
+                ResultDisposition.COMPENSACION,
+                _quarter("-40.00", generada="40.00", aplicada="0.00", posterior="750.00", disponible="790.00"),
+            ),
+            (ingreso, _quarter("10.00", aplicada="760.00", posterior="30.00", disponible="30.00")),
+        ),
+    )
+
+    assert not resolution.unresolved_binding_ids
+    assert resolution.binding_values[BOX_85_BINDING] == Decimal("1000.00")
+    assert resolution.binding_values[BOX_97_BINDING] + resolution.binding_values[BOX_662_BINDING] == Decimal("30.00")
+
+
+_ingreso = ResultDisposition.INGRESO
+_compensa = ResultDisposition.COMPENSACION
+_negativa = ResultDisposition.NEGATIVA
+
+
+@pytest.mark.parametrize(
+    ("quarters", "box_85", "box_97", "box_662"),
+    [
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="200.00", posterior="800.00", disponible="800.00")),
+                (_negativa, _quarter("0.00", aplicada="600.00", posterior="200.00", disponible="200.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="700.00", disponible="900.00"),
+                ),
+            ),
+            "800.00",
+            "200.00",
+            "500.00",
+            id="manual-iva-2025-p277",
+        ),
+        pytest.param(
+            (
+                (_ingreso, _quarter("100.00", aplicada="0.00", posterior="0.00", disponible="0.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="0.00", disponible="200.00"),
+                ),
+                (_negativa, _quarter("0.00", aplicada="0.00", posterior="200.00", disponible="200.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
+            ),
+            "0.00",
+            "500.00",
+            "200.00",
+            id="manual-iva-2025-p279",
+        ),
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
+                (_ingreso, _quarter("100.00", aplicada="300.00", posterior="0.00", disponible="0.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="0.00", disponible="500.00"),
+                ),
+            ),
+            "200.00",
+            "500.00",
+            "0.00",
+            id="manual-iva-2025-p280-example-2",
+        ),
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
+                (_negativa, _quarter("0.00", aplicada="0.00", posterior="300.00", disponible="300.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="300.00", disponible="800.00"),
+                ),
+            ),
+            "100.00",
+            "500.00",
+            "200.00",
+            id="manual-iva-2025-p280-example-3",
+        ),
+    ],
+)
+def test_modelo_390_boxes_85_97_and_662_match_the_manual_examples(
+    tmp_path: Path,
+    quarters: tuple[tuple[ResultDisposition, dict[CasillaId, Decimal]], ...],
+    box_85: str,
+    box_97: str,
+    box_662: str,
+) -> None:
+    """Manual IVA 2025 pp. 277-281. Box 97 is the result of the last autoliquidación and box 662 the year's other
+    pending credit: "las cuotas a compensar generadas en el ejercicio en alguno de los períodos de liquidación
+    distintos del último".
+    """
+    resolution = _resolve_partition_for_quarters(tmp_path, quarters)
+
+    assert resolution.binding_values == {
+        BOX_85_BINDING: Decimal(box_85),
+        BOX_97_BINDING: Decimal(box_97),
+        BOX_662_BINDING: Decimal(box_662),
     }
 
 
@@ -352,7 +594,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     state casillas through ``iva_compensation_annual_partition`` so boxes 97/662
     are _produced together from the FIFO partition.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         quarter_data = [
             ("1T", Decimal("100.00"), Decimal("40.00"), Decimal("60.00"), Decimal("20.00")),
             ("2T", Decimal("80.00"), Decimal("30.00"), Decimal("50.00"), Decimal("10.00")),
@@ -369,17 +611,17 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                         filing_year=2025,
                         period=period,
                         casilla_values={
-                            _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
-                            _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
-                            _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
-                            _M303_RESULTADO_CASILLA: Decimal("-1.00"),
-                            _M303_GENERADA_CASILLA: compensacion,
+                            M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
+                            M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
+                            M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
+                            M303_RESULTADO_CASILLA: Decimal("-1.00"),
+                            M303_GENERADA_CASILLA: compensacion,
                         },
                     ),
                     disposition=ResultDisposition.COMPENSACION,
                 )
 
-            snapshot = _modelo_390_annual_snapshot()
+            snapshot = modelo_390_annual_snapshot()
             relation_vals = resolve_relations_from_local_store(
                 snapshot,
                 repository=observation_repo,
@@ -419,27 +661,27 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
         assert not annual_partition.relation_values
         # These quarters state no box 78 or 87, so the credit the year opened with
         # is unknown: box 85 stays unresolved instead of reading as zero.
-        assert annual_partition.unresolved_binding_ids == (_BOX_85_BINDING,)
-        assert _BOX_85_BINDING not in annual_partition.binding_values
+        assert annual_partition.unresolved_binding_ids == (BOX_85_BINDING,)
+        assert BOX_85_BINDING not in annual_partition.binding_values
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
 
 
 def test_relation_prefill_fifo_state_refuses_printed_number_compensation_references(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID),
     ):
         # Every sibling in this module runs inside a real bucket runtime; these
         # two reached CalculationObservationRepository with no active session.
-        snapshot = _modelo_390_annual_snapshot()
+        snapshot = modelo_390_annual_snapshot()
         repository = CalculationObservationRepository()
         generated_observation = registry_grounded_observations(
             modelo="303",
             filing_year=2025,
             period="4T",
             casilla_values={
-                _M303_RESULTADO_CASILLA: Decimal("-50.00"),
-                _M303_GENERADA_CASILLA: Decimal("50.00"),
+                M303_RESULTADO_CASILLA: Decimal("-50.00"),
+                M303_GENERADA_CASILLA: Decimal("50.00"),
             },
         )[0]
         valid_observation = RegistryModeloObservation(
@@ -463,7 +705,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
                 "observations": (
                     *envelope.observation.observations,
                     generated_observation.model_copy(
-                        update={"casilla_id": _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA}
+                        update={"casilla_id": M303_PRINTED_COMPENSATION_REFERENCE_CASILLA}
                     ),
                 ),
             },
@@ -488,8 +730,8 @@ def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mi
             repository,
             period="4T",
             casilla_values={
-                _M303_RESULTADO_CASILLA: Decimal("-25.00"),
-                _M303_GENERADA_CASILLA: Decimal("25.00"),
+                M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                M303_GENERADA_CASILLA: Decimal("25.00"),
             },
             disposition=ResultDisposition.COMPENSACION,
         )
@@ -497,17 +739,17 @@ def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mi
             update={
                 "observations": tuple(
                     observation.model_copy(update={"value": Decimal("99.00")})
-                    if observation.casilla_id == _M303_DISPONIBLE_CASILLA
+                    if observation.casilla_id == M303_DISPONIBLE_CASILLA
                     else observation
                     for observation in envelope.observation.observations
                 ),
             },
         )
         repository.save(envelope.model_copy(update={"observation": mismatched_observation}))
-        snapshot = _modelo_390_annual_snapshot()
+        snapshot = modelo_390_annual_snapshot()
 
         with (
-            _indexed_authority_for_test().operation() as _authority_operation_for_test,
+            bundled_indexed_authority().operation() as _authority_operation_for_test,
             pytest.raises(M303CarryIngressError),
         ):
             IvaCompensationAnnualPartitionSourceResolver(
@@ -528,15 +770,15 @@ def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mi
 def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp_path: Path) -> None:
     """Identical negative results diverge only by the filed C/D disposition."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID),
     ):
         # Every sibling in this module runs inside a real bucket runtime; these
         # two reached CalculationObservationRepository with no active session.
         repository = CalculationObservationRepository()
         input_values = {
-            _M303_RESULTADO_CASILLA: Decimal("-25.00"),
-            _M303_GENERADA_CASILLA: Decimal("25.00"),
+            M303_RESULTADO_CASILLA: Decimal("-25.00"),
+            M303_GENERADA_CASILLA: Decimal("25.00"),
         }
         carried = _prepare_m303_carry_envelope(
             repository,
@@ -550,7 +792,7 @@ def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp
             casilla_values=input_values,
             disposition=ResultDisposition.DEVOLUCION,
         )
-        snapshot = _modelo_390_annual_snapshot()
+        snapshot = modelo_390_annual_snapshot()
 
         carried_values = resolve_iva_compensation_annual_partition_binding_values(
             snapshot.revision, (carried,), filing_year=2025, operation=_authority_operation_for_test
@@ -559,24 +801,24 @@ def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp
             snapshot.revision, (refunded,), filing_year=2025, operation=_authority_operation_for_test
         )
 
-        assert carried_values[_BOX_97_BINDING] == Decimal("25.00")
-        assert carried_values[_BOX_662_BINDING] == Decimal("0.00")
-        assert refunded_values[_BOX_97_BINDING] == Decimal("0.00")
-        assert refunded_values[_BOX_662_BINDING] == Decimal("0.00")
+        assert carried_values[BOX_97_BINDING] == Decimal("25.00")
+        assert carried_values[BOX_662_BINDING] == Decimal("0.00")
+        assert refunded_values[BOX_97_BINDING] == Decimal("0.00")
+        assert refunded_values[BOX_662_BINDING] == Decimal("0.00")
 
 
 def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evidence(tmp_path: Path) -> None:
     """Missing or conflicting filing disposition cannot participate in FIFO."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID),
     ):
         with pytest.raises(ValidationError, match="requires canonical result disposition"):
             _raw_m303_carry_envelope(
                 period="4T",
                 casilla_values={
-                    _M303_RESULTADO_CASILLA: Decimal("-25.00"),
-                    _M303_GENERADA_CASILLA: Decimal("25.00"),
+                    M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                    M303_GENERADA_CASILLA: Decimal("25.00"),
                 },
                 result_disposition=None,
             )
@@ -584,8 +826,8 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
             CalculationObservationRepository(),
             period="4T",
             casilla_values={
-                _M303_RESULTADO_CASILLA: Decimal("-25.00"),
-                _M303_GENERADA_CASILLA: Decimal("25.00"),
+                M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                M303_GENERADA_CASILLA: Decimal("25.00"),
             },
             disposition=ResultDisposition.COMPENSACION,
         ).model_copy(
@@ -603,7 +845,7 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
 
         with pytest.raises(M303CarryIngressError):
             resolve_iva_compensation_annual_partition_binding_values(
-                _modelo_390_annual_snapshot().revision,
+                modelo_390_annual_snapshot().revision,
                 (conflicting,),
                 filing_year=2025,
                 operation=_authority_operation_for_test,

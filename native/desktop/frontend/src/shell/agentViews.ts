@@ -5,16 +5,24 @@ import type {
   TranscriptItem,
 } from "@/components/agent/types";
 import { failureCode } from "../errors";
-import { effortWords } from "./agentCatalog";
+import {
+  formatClock,
+  formatMonth,
+  formatRelative,
+} from "../shared/dateFormats";
+import { formatCount } from "../shared/numbers";
+import { effortWords } from "./agentOffer";
 import { sentFiles } from "./agentDocuments";
+import type { ThreadStatus } from "./agentGatewayContract";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
-  AgentEffort,
-  AgentToolKind,
-  AgentTransport,
-} from "./agentSession";
-import { conditionWords, toolKindWords } from "./agentWords";
+  AgentRanWith,
+  AgentReplyRecord,
+  AgentSnapshot,
+  AgentTurnRecord,
+} from "./agentSnapshotContract";
+import { conditionWords, toolKindWords, toolIdentityWords } from "./agentWords";
+import { listed } from "./compose";
+import { logRef } from "./providerSignInWords";
 import type { Translate } from "./strings";
 
 // What a host serves the agent column, as the host answers it. A desktop
@@ -29,69 +37,6 @@ import type { Translate } from "./strings";
 // What the agent does not serve is not here: no title but the first run's, no
 // message id that tells two identical messages apart, no place for a tool call
 // among a reply's text.
-
-/** A run's lifecycle: cadrumo-agent's `ThreadStatus`, as it is served. */
-export type AgentRunStatus =
-  | "submitted"
-  | "running"
-  | "input_required"
-  | "cancelling"
-  | "cancelled"
-  | "completed"
-  | "failed"
-  | "archived"
-  | "repair_needed"
-  | "reconciling"
-  | "deleting";
-
-/** Why a provider failed a run: cadrumo-agent's `ProviderCondition`. */
-export type AgentProviderCondition =
-  | "network_unreachable"
-  | "provider_overloaded"
-  | "unauthenticated"
-  | "throttled"
-  | "usage_exhausted"
-  | "credits_exhausted"
-  | "budget_exhausted"
-  | "invalid_request"
-  | "unknown";
-
-/** Where a tool call is: cadrumo-agent's `ToolCallStatus`. */
-export type AgentToolStatus =
-  "pending" | "in_progress" | "completed" | "failed";
-
-/** A tool call as the agent reports it: its `tool_call_id`, its `title` (the
- * tool's name), its `kind` and its `status`. The stream carries nothing of
- * its input or result; the history may say more in `details`. */
-export type AgentToolCall = {
-  id: string;
-  title: string;
-  tool_kind: AgentToolKind;
-  status: AgentToolStatus;
-  /** What the history says of the call, as the agent worded it and the
-   * host cut it: its input, its result and the places it touched. Absent
-   * while the call is only streamed. */
-  details?: string[];
-};
-
-/** What a reply ran with, as the agent froze it when the run started: the
- * provider and the way into it, the model and the effort it applied. The
- * display names are the agent's own and are absent where it served none. */
-export type AgentRanWith = {
-  provider: string;
-  transport: AgentTransport;
-  provider_display_name?: string | null;
-  model: string;
-  model_display_name?: string | null;
-  effort?: AgentEffort | null;
-};
-
-/** The tokens a run's provider reported, as the agent counts them. The agent
- * serves no cost, and none is made up. */
-export type AgentUsage = {
-  input_tokens: number;
-  output_tokens: number;
-};
 
 /** One conversation: a chain of runs, composed by the host. */
 export type AgentConversationRecord = {
@@ -140,31 +85,9 @@ export type AgentDocumentsQuery = {
   q?: string;
 };
 
-/** A stored document a message names, as the history echoes it. */
-export type AgentDocumentReference = {
-  name: string;
-  sha256: string | null;
-  media_type: string | null;
-};
-
-/** The record of a reply (a run) itself. */
-export type AgentReplyRecord = {
-  kind: "reply";
-  /** The run's id: the reply's handle. */
-  id: string;
-  status: AgentRunStatus;
-  /** For a failed run, why its provider failed. */
-  provider_condition?: AgentProviderCondition | null;
-  /** For a failed run, the agent's one line about it. */
-  failure_reason?: string | null;
-  /** Messages queued behind the run's current turn. */
-  queued_messages?: number;
-  selection?: AgentRanWith | null;
-  usage?: AgentUsage | null;
-};
-
 /**
- * What history lists of a conversation, oldest first, in the order the host
+ * What the column lists of a conversation: the history's records, oldest
+ * first, in the order the host
  * composes it from its runs. Each record names the reply (run) it comes from,
  * and a reply's records are listed together: the person's messages, then its
  * tool calls, then the agent's messages, and last the reply's own record.
@@ -176,49 +99,25 @@ export type AgentReplyRecord = {
  * A reply in progress has no agent message here: the agent records a message
  * when its turn ends, and the text so far comes from the stream. A reply that
  * failed before it wrote has no message either, and its reply record says
- * why. The host invents neither.
+ * why. The host invents neither. The column lists the thoughts the stream
+ * gave beside them.
  */
-export type AgentTurnRecord =
-  | {
-      kind: "person";
-      /** cadrumo-agent's `message_id`, a hash of role and content where it
-       * has none. Two identical messages can share one: only their order
-       * tells them apart. */
-      id: string;
-      reply_id: string;
-      text: string;
-      /** When it was sent, as an ISO instant; null where the agent has no
-       * time for it. */
-      sent_at: string | null;
-      /** The stored documents the message named, in the order it named
-       * them; absent where none. */
-      attachments?: AgentDocumentReference[];
-      /** The skills the message loaded, by name; absent or empty where
-       * none. */
-      skills?: string[];
-    }
-  | {
-      kind: "agent";
-      /** cadrumo-agent's `message_id`: the id the stream's text names. */
-      id: string;
-      reply_id: string;
-      text: string;
-    }
-  | ({ kind: "tool"; reply_id: string } & AgentToolCall)
-  /** What the agent thought on the way, by the stream's `message_id`. The
-   * history lists none: only the stream has it, and the column keeps it
-   * beside what it reads for as long as it watches. */
-  | { kind: "thought"; id: string; reply_id: string; text: string }
-  | AgentReplyRecord;
+export type AgentColumnRecord = AgentTurnRecord | AgentThoughtRecord;
+
+/** What the agent thought on the way, by the stream's `message_id`. The
+ * history lists none: only the stream has it, and the column keeps it beside
+ * what it reads for as long as it watches. The window's own record, never
+ * the host's. */
+export type AgentThoughtRecord = {
+  kind: "thought";
+  id: string;
+  reply_id: string;
+  text: string;
+};
 
 /** The reply a record belongs to. */
-export const replyIdOf = (record: AgentTurnRecord): string =>
+export const replyIdOf = (record: AgentColumnRecord): string =>
   record.kind === "reply" ? record.id : record.reply_id;
-
-export type AgentSnapshot = {
-  history: AgentTurnRecord[];
-  pending: { questionnaires: AgentQuestionnaire[]; approvals: AgentApproval[] };
-};
 
 /** The agent views a host offers. Each read is refused while nobody is
  * signed in, as the profile's own views are. */
@@ -235,12 +134,32 @@ export interface AgentViews {
 }
 
 /** A read the column makes: not offered by the host, on its way, refused,
- * or answered. Not offered is its own state, never shown as empty. */
+ * or answered. Not offered is its own state, never shown as empty. A refusal
+ * keeps the reference of the log line that says why, where it carries one. */
 export type AgentRead<T> =
   | { kind: "unavailable" }
   | { kind: "loading" }
-  | { kind: "failed"; code: string }
+  | { kind: "failed"; code: string; logRef?: string }
   | { kind: "ready"; value: T };
+
+/** A refused read: its code, and its log reference where it is a bounded
+ * token. */
+function failedRead(error: unknown): {
+  kind: "failed";
+  code: string;
+  logRef?: string;
+} {
+  const served =
+    typeof error === "object" && error !== null
+      ? (error as { log_ref?: unknown })
+      : {};
+  const ref = logRef(served.log_ref);
+  return {
+    kind: "failed",
+    code: failureCode(error),
+    ...(ref ? { logRef: ref } : {}),
+  };
+}
 
 /**
  * Reads what `read` asks for whenever it changes, and drops the answer to a
@@ -267,7 +186,7 @@ export function useAgentRead<T>(
         if (current)
           setState({
             for: read,
-            read: { kind: "failed", code: failureCode(error) },
+            read: failedRead(error),
           });
       },
     );
@@ -299,27 +218,35 @@ export function useCachedRead<T>(
     owner: string | null;
     read: AgentRead<T>;
   }>({ owner, read: { kind: "loading" } });
-  const asked = useRef<{ owner: string | null; ask: number } | null>(null);
+  const asked = useRef<{
+    owner: string | null;
+    ask: number;
+    read: () => Promise<T>;
+  } | null>(null);
+  const generation = useRef(0);
   if (state.owner !== owner) setState({ owner, read: { kind: "loading" } });
   useEffect(() => {
     if (!read || !enabled) return;
     const last = asked.current;
-    if (last && last.owner === owner && last.ask === ask) return;
-    asked.current = { owner, ask };
+    if (last && last.owner === owner && last.ask === ask && last.read === read)
+      return;
+    asked.current = { owner, ask, read };
+    const mine = generation.current;
     let current = true;
     let settled = false;
     read().then(
       (value) => {
         settled = true;
-        if (current) setState({ owner, read: { kind: "ready", value } });
+        if (current && mine === generation.current)
+          setState({ owner, read: { kind: "ready", value } });
       },
       (error: unknown) => {
         settled = true;
-        if (current)
+        if (current && mine === generation.current)
           setState((held) =>
             held.owner === owner && held.read.kind === "ready"
               ? held
-              : { owner, read: { kind: "failed", code: failureCode(error) } },
+              : { owner, read: failedRead(error) },
           );
       },
     );
@@ -330,7 +257,11 @@ export function useCachedRead<T>(
     };
   }, [read, owner, enabled, ask]);
   const put = useCallback(
-    (value: T) => setState({ owner, read: { kind: "ready", value } }),
+    (value: T) => {
+      // A newer accepted answer supersedes any read still in flight.
+      generation.current += 1;
+      setState({ owner, read: { kind: "ready", value } });
+    },
     [owner],
   );
   if (!read) return { read: { kind: "unavailable" }, put };
@@ -340,8 +271,9 @@ export function useCachedRead<T>(
   };
 }
 
-/** Whether a run is still going: neither settled nor past help. */
-export const isLiveStatus = (status: AgentRunStatus): boolean =>
+/** Whether a run is still going: neither settled nor past help. A run whose
+ * status the host could not read is not taken for one still going. */
+export const isLiveStatus = (status: ThreadStatus | null): boolean =>
   status === "submitted" ||
   status === "running" ||
   status === "input_required" ||
@@ -351,7 +283,9 @@ export const isLiveStatus = (status: AgentRunStatus): boolean =>
  * repair or is being reconciled is neither being written nor finished: the
  * column says so beside the conversation, and the transcript draws no
  * indicator for it. */
-function replyState(status: AgentRunStatus): AgentReplyState {
+function replyState(status: ThreadStatus | null): AgentReplyState {
+  // A run whose status the host could not read draws no indicator.
+  if (status === null) return "complete";
   switch (status) {
     case "submitted":
     case "running":
@@ -372,33 +306,62 @@ function replyState(status: AgentRunStatus): AgentReplyState {
 }
 
 /** Why a reply failed, in localized words from its typed provider condition.
- * The agent's failure prose remains for diagnostics and is not shown here. */
+ * A model the lane cannot run is named with the lane it ran on, as the run
+ * recorded them. The agent's failure prose remains for diagnostics and is
+ * not shown here. */
 function failureWords(
   t: Translate,
   reply: AgentReplyRecord,
 ): string | undefined {
+  const ran = reply.selection;
+  if (reply.provider_condition === "model_unavailable" && ran?.model)
+    return t("desktop.agent.condition_model_unavailable_named", {
+      model: ran.model_display_name ?? ran.model,
+      provider: ran.provider_display_name ?? ran.provider ?? "",
+      connection: t(
+        ran.transport === "api"
+          ? "desktop.providers.connection_api"
+          : "desktop.providers.connection_app",
+      ),
+    });
   return reply.provider_condition
     ? conditionWords(t, reply.provider_condition)
     : undefined;
 }
 
-/** When a message was sent, in words: the time today, else the day too. */
-const timeFormats = new Map<string, Intl.DateTimeFormat>();
+/** The way on a failed reply offers: the provider settings for a lane that is
+ * signed out, the model picker for a model the lane cannot run. Neither is
+ * retried as it is. */
+function failureAction(reply: AgentReplyRecord) {
+  switch (reply.provider_condition) {
+    case "unauthenticated":
+      return "provider_settings" as const;
+    case "model_unavailable":
+      return "choose_model" as const;
+    default:
+      return undefined;
+  }
+}
 
+/** Where a carried message came from, in words: the conversation it is
+ * known by where the window lists it, else only that it is an earlier one.
+ * Null for a message said in this conversation. */
+function carriedWords(
+  t: Translate,
+  run: string | null | undefined,
+  titles: ReadonlyMap<string, string> | undefined,
+): string | undefined {
+  if (!run) return undefined;
+  const title = titles?.get(run);
+  return title
+    ? t("desktop.agent.carried_from", { title })
+    : t("desktop.agent.carried_from_unknown");
+}
+
+/** When a message was sent, in words: the time today, else the day too. */
 function sentLabel(locale: string, at: Date, now: Date): string | undefined {
   if (!Number.isFinite(at.getTime())) return undefined;
-  const sameDay = dayStart(at) === dayStart(now);
-  const key = `${locale}:${sameDay}`;
-  let format = timeFormats.get(key);
-  if (!format) {
-    format = new Intl.DateTimeFormat(locale, {
-      ...(sameDay ? {} : { day: "numeric", month: "short" }),
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    timeFormats.set(key, format);
-  }
-  return format.format(at);
+  return formatClock(locale, at, { withDay: dayStart(at) !== dayStart(now) });
 }
 
 type TranscriptProjectionEntry = {
@@ -412,18 +375,20 @@ type TranscriptProjectionCache = {
   locale?: string;
   t?: Translate;
   day?: number;
-  entries: Map<AgentTurnRecord, TranscriptProjectionEntry>;
+  titles?: ReadonlyMap<string, string>;
+  entries: Map<AgentColumnRecord, TranscriptProjectionEntry>;
 };
 
 /** Retains unchanged rows only for this transcript's latest projection. */
 export function createTranscriptProjection() {
   const cache: TranscriptProjectionCache = { entries: new Map() };
   return (
-    records: readonly AgentTurnRecord[],
+    records: readonly AgentColumnRecord[],
     locale: string,
     t: Translate,
     now = new Date(),
-  ) => transcriptItems(records, locale, t, now, cache);
+    titles?: ReadonlyMap<string, string>,
+  ) => transcriptItems(records, locale, t, now, cache, titles);
 }
 
 /**
@@ -435,11 +400,12 @@ export function createTranscriptProjection() {
  * reply's record alone makes.
  */
 export function transcriptItems(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
   locale: string,
   t: Translate,
   now: Date = new Date(),
   cache?: TranscriptProjectionCache,
+  titles?: ReadonlyMap<string, string>,
 ): TranscriptItem[] {
   const replies = new Map<string, AgentReplyRecord>();
   const lastAgent = new Map<string, number>();
@@ -467,12 +433,11 @@ export function transcriptItems(
   const drawn = (reply: AgentReplyRecord) => {
     const state = replyState(reply.status);
     const reason = state === "failed" ? failureWords(t, reply) : undefined;
+    const action = state === "failed" ? failureAction(reply) : undefined;
     return {
       state,
       ...(reason ? { failureReason: reason } : {}),
-      ...(state === "failed" && reply.provider_condition === "unauthenticated"
-        ? { failureAction: "provider_settings" as const }
-        : {}),
+      ...(action ? { failureAction: action } : {}),
       ...(reply.status === "input_required"
         ? { waitingOnPerson: true as const }
         : {}),
@@ -480,10 +445,13 @@ export function transcriptItems(
   };
   const items: TranscriptItem[] = [];
   const previous =
-    cache?.locale === locale && cache.t === t && cache.day === dayStart(now)
+    cache?.locale === locale &&
+    cache.t === t &&
+    cache.day === dayStart(now) &&
+    cache.titles === titles
       ? cache.entries
       : undefined;
-  const entries = new Map<AgentTurnRecord, TranscriptProjectionEntry>();
+  const entries = new Map<AgentColumnRecord, TranscriptProjectionEntry>();
   records.forEach((record, index) => {
     if (
       record.kind === "thought" ||
@@ -493,7 +461,7 @@ export function transcriptItems(
     const id =
       record.kind === "reply"
         ? unique(`reply:${record.id}`)
-        : unique(`${record.kind}:${record.reply_id}:${record.id}`);
+        : unique(`${record.kind}:${record.reply_id}:${record.id ?? ""}`);
     const reply =
       record.kind === "agent" ? replies.get(record.reply_id) : undefined;
     const last =
@@ -519,6 +487,7 @@ export function transcriptItems(
     let item: TranscriptItem | undefined;
     switch (record.kind) {
       case "person": {
+        const carried = carriedWords(t, record.carried_from_run_id, titles);
         const sentAtLabel = record.sent_at
           ? sentLabel(locale, new Date(record.sent_at), now)
           : undefined;
@@ -526,33 +495,52 @@ export function transcriptItems(
           kind: "person",
           id,
           text: record.text,
-          ...(record.attachments?.length
+          ...(record.attachments.length
             ? { files: sentFiles(record.attachments) }
             : {}),
-          ...(record.skills?.length ? { skills: record.skills } : {}),
+          ...(record.skills.length ? { skills: record.skills } : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
+          ...(carried ? { carriedLabel: carried } : {}),
         };
         break;
       }
-      case "tool":
+      case "tool": {
+        // A call the agent named no title for is named by its kind.
+        const kind = record.tool_kind
+          ? toolKindWords(t, record.tool_kind)
+          : undefined;
+        const words = toolIdentityWords(t, {
+          server: record.tool_server,
+          name: record.tool_name,
+          title: record.title,
+          kind: record.tool_kind,
+        });
+        const failureMessage =
+          record.status === "failed" ? record.failure?.message : undefined;
         item = {
           kind: "tool",
           id,
-          label: record.title,
+          label: words.label,
           state: record.status,
-          detail: toolKindWords(t, record.tool_kind),
-          ...(record.details?.length ? { internals: record.details } : {}),
+          ...(kind && words.label !== kind ? { detail: kind } : {}),
+          ...(words.description ? { description: words.description } : {}),
+          ...(failureMessage ? { failureMessage } : {}),
+          ...(record.details.length ? { internals: record.details } : {}),
         };
         break;
-      case "agent":
+      }
+      case "agent": {
+        const carried = carriedWords(t, record.carried_from_run_id, titles);
         item = {
           kind: "agent",
           id,
           text: record.text,
           ...(last && reply ? drawn(reply) : { state: "complete" as const }),
           ...(thought ? { thinking: thought } : {}),
+          ...(carried ? { carriedLabel: carried } : {}),
         };
         break;
+      }
       case "reply": {
         const state = drawn(record);
         if (state.state === "complete") break;
@@ -570,7 +558,8 @@ export function transcriptItems(
       entries.set(record, { item, reply, last, thinking: thought });
     }
   });
-  if (cache) Object.assign(cache, { locale, t, day: dayStart(now), entries });
+  if (cache)
+    Object.assign(cache, { locale, t, day: dayStart(now), titles, entries });
   return items;
 }
 
@@ -579,7 +568,6 @@ const capitalized = (text: string, locale: string) =>
 
 /** How long ago an instant was, in the largest whole unit, in words. */
 function agoLabel(locale: string, at: Date, now: Date): string {
-  const words = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const seconds = Math.round((at.getTime() - now.getTime()) / 1000);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["year", 365 * 86_400],
@@ -591,8 +579,8 @@ function agoLabel(locale: string, at: Date, now: Date): string {
   ];
   for (const [unit, size] of units)
     if (Math.abs(seconds) >= size)
-      return words.format(Math.round(seconds / size), unit);
-  return words.format(0, "minute");
+      return formatRelative(locale, Math.round(seconds / size), unit);
+  return formatRelative(locale, 0, "minute");
 }
 
 /** The calendar day of an instant, where the person is. */
@@ -613,19 +601,16 @@ export function conversationGroups(
     currentId,
     untitled,
     now = new Date(),
+    documentCounts,
   }: {
     locale: string;
     archived: boolean;
     currentId: string | null;
     untitled: string;
     now?: Date;
+    documentCounts?: Readonly<Record<string, number>>;
   },
 ): ConversationGroup[] {
-  const days = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  const months = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-  });
   const today = dayStart(now);
   const groups: {
     heading: string;
@@ -640,8 +625,8 @@ export function conversationGroups(
     const behind = Math.round((today - dayStart(at)) / 86_400_000);
     const heading = capitalized(
       behind <= 1
-        ? days.format(-Math.max(0, behind), "day")
-        : months.format(at),
+        ? formatRelative(locale, -Math.max(0, behind), "day")
+        : formatMonth(locale, at),
       locale,
     );
     let group = groups.at(-1);
@@ -653,8 +638,9 @@ export function conversationGroups(
       id: record.id,
       title: record.title || untitled,
       lastActivityLabel: agoLabel(locale, at, now),
-      // Cadrumo's custody serves no documents yet, so none is counted.
-      documentCount: 0,
+      ...(documentCounts?.[record.id] !== undefined
+        ? { documentCount: documentCounts[record.id] }
+        : {}),
       archived: record.archived,
       current: record.id === currentId,
     });
@@ -674,9 +660,10 @@ export function useConversationGroups(
     archived: boolean;
     currentId: string | null;
     untitled: string;
+    documentCounts?: Readonly<Record<string, number>>;
   },
 ): ConversationGroup[] | null {
-  const { locale, archived, currentId, untitled } = options;
+  const { locale, archived, currentId, untitled, documentCounts } = options;
   return useMemo(
     () =>
       read.kind === "ready"
@@ -685,16 +672,17 @@ export function useConversationGroups(
             archived,
             currentId,
             untitled,
+            documentCounts,
           })
         : null,
-    [read, locale, archived, currentId, untitled],
+    [read, locale, archived, currentId, untitled, documentCounts],
   );
 }
 
 /** What the newest reply of a conversation that says so ran with; undefined
  * where none says. */
 export function newestRanWith(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
 ): AgentRanWith | undefined {
   for (let index = records.length - 1; index >= 0; index -= 1) {
     const record = records[index];
@@ -707,7 +695,7 @@ export function newestRanWith(
  * the newest of them ran with, and the tokens all of them used. Each is null
  * where no reply served it. */
 export function replyFacts(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
   locale: string,
   t: Translate,
 ): { ranWith: string | null; usage: string | null } {
@@ -716,16 +704,29 @@ export function replyFacts(
   );
   const selection = newestRanWith(records);
   const ranWith = selection
-    ? [
-        selection.provider_display_name || selection.provider,
-        selection.model_display_name || selection.model,
-        ...(selection.effort ? [effortWords(t, selection.effort)] : []),
-      ].join(", ")
+    ? listed(
+        t,
+        [
+          selection.provider_display_name || selection.provider,
+          selection.model_display_name || selection.model,
+          selection.effort ? effortWords(t, selection.effort) : null,
+        ].filter((part): part is string => Boolean(part)),
+        "plain",
+      )
     : null;
+  // A reply counts only where its provider reported both of its counts.
   const counted = replies.flatMap((reply) =>
-    reply.usage ? [reply.usage] : [],
+    reply.usage &&
+    reply.usage.input_tokens !== null &&
+    reply.usage.output_tokens !== null
+      ? [
+          {
+            input_tokens: reply.usage.input_tokens,
+            output_tokens: reply.usage.output_tokens,
+          },
+        ]
+      : [],
   );
-  const number = new Intl.NumberFormat(locale);
   return {
     ranWith: ranWith
       ? t("desktop.agent.ran_with", { selection: ranWith })
@@ -733,10 +734,12 @@ export function replyFacts(
     usage:
       counted.length > 0
         ? t("desktop.agent.usage", {
-            input: number.format(
+            input: formatCount(
+              locale,
               counted.reduce((sum, used) => sum + used.input_tokens, 0),
             ),
-            output: number.format(
+            output: formatCount(
+              locale,
               counted.reduce((sum, used) => sum + used.output_tokens, 0),
             ),
           })

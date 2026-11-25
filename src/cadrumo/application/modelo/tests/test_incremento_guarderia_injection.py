@@ -19,23 +19,35 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
-from ..profile_binding import (
-    _declared_profile_selectors,
-    _guarderia_cap_anual,
-    _inject_derived_incremento_guarderia_facts,
+from ..profile_derived_facts import (
+    declared_profile_selectors,
+    guarderia_cap_anual,
+    inject_derived_incremento_guarderia_facts,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2024
-_KEY = f"renta_family.incremento_guarderia_{_YEAR}"
+_KEY = "renta_family.incremento_guarderia"
+
+
+def _declaring_edition() -> int:
+    """The newest authored Modelo 100 edition whose bindings declare the increment selector."""
+    declaring = authored_revisions_where(
+        "100",
+        lambda revision: _KEY in declared_profile_selectors(revision),
+    )
+    return declaring[-1].valid_from.year
+
+
+_YEAR = _declaring_edition()
 
 
 def _snapshot(year: int = _YEAR) -> RegistrySnapshot:
@@ -49,7 +61,7 @@ def _facts(child: DescendantInfo) -> dict[str, Any]:
 def _manual_worked_child() -> DescendantInfo:
     """The manual's hijo mayor, on its REAL facts.
 
-    Born 2 September 2021 and turning three within the period; the mother is
+    Born 2 September three years before the exercise and turning three within the period; the mother is
     entitled May to August; the nursery's complete months are January to June.
     The two month sets share May and June, so the basis is two months.
 
@@ -58,7 +70,7 @@ def _manual_worked_child() -> DescendantInfo:
     reached the same figure without ever intersecting anything.
     """
     return DescendantInfo(
-        birth_date=date(2021, 9, 2),
+        birth_date=date(_YEAR - 3, 9, 2),
         meses_madre_trabajo=(5, 6, 7, 8),
         gastos_guarderia_mensuales=parse_guarderia_mensual("1-6:1145", field="test"),
         # The manual's own child turns three in September, and states that month as
@@ -76,7 +88,7 @@ def test_the_binding_declares_the_selector_the_injector_writes() -> None:
     that named a different key would leave the fact unwritten and the casilla
     silently unresolved — with no failure anywhere to say so.
     """
-    assert _KEY in _declared_profile_selectors(_snapshot().revision)
+    assert _KEY in declared_profile_selectors(_snapshot().revision)
 
 
 def test_the_cap_resolves_from_the_registry_parameter() -> None:
@@ -85,18 +97,18 @@ def test_the_cap_resolves_from_the_registry_parameter() -> None:
     It previously existed only inside the formula expression, which the
     application layer cannot read.
     """
-    assert _guarderia_cap_anual(_snapshot()) == Decimal("1000")
+    assert guarderia_cap_anual(_snapshot()) == Decimal("1000")
 
 
 def test_the_injector_lands_the_manual_worked_figure() -> None:
     """End of the wiring: a real snapshot in, the manual's 166,67 out."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 
@@ -109,10 +121,10 @@ def test_the_injector_is_inert_where_no_consumer_is_declared() -> None:
     Positive control for the assertion above: without it, an injector that
     ignored the gate entirely would pass every other test here.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index, _snapshot(), frozenset(), operation=_authority_operation_for_test
         )
 
@@ -125,14 +137,14 @@ def test_a_stored_value_at_the_derived_key_is_overwritten() -> None:
     Deferring to it would substitute an operator's number for the law's — the
     same defect the sibling guardería injector documents.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
         index[_KEY] = Decimal("999999")
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 
@@ -145,13 +157,13 @@ def test_a_childless_profile_resolves_to_zero_rather_than_absent() -> None:
     Distinct from the unresolvable cases, which leave the fact ABSENT so the
     casilla stays visibly unresolved instead of reading as a computed nil.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index: dict[str, Any] = {}
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 

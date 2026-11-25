@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -13,17 +14,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.mark.parametrize(
-    ("revision_id", "field_count", "source"),
+    ("position", "field_count", "source"),
     [
-        ("2022", 42, "aeat-dr-193-2019"),
-        ("2023", 48, "aeat-dr-193-2023"),
-        ("2024", 52, "aeat-dr-193-2024"),
-        ("2025-y-siguientes", 53, "aeat-dr-193-2025"),
+        (0, 42, "aeat-dr-193-2019"),
+        (1, 48, "aeat-dr-193-2023"),
+        (2, 52, "aeat-dr-193-2024"),
+        (3, 53, "aeat-dr-193-2025"),
     ],
 )
-def test_official_sections_preserve_both_repeating_record_owners(
-    revision_id: str, field_count: int, source: str
-) -> None:
+def test_official_sections_preserve_both_repeating_record_owners(position: int, field_count: int, source: str) -> None:
+    revision_id = str(authored_revisions("193")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/193")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()

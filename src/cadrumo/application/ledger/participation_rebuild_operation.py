@@ -26,7 +26,7 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID = "ledger.participation.rebuild"
 
@@ -115,11 +115,12 @@ def resolve_ledger_participation_rebuild_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require unrestricted periods and explicit COMMIT for the index replacement."""
-    if request.definition_id != LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerParticipationRebuildRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
+        request_type=LedgerParticipationRebuildRequest,
+    )
 
 
 def build_ledger_participation_rebuild_registration(

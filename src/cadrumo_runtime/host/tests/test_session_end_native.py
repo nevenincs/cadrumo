@@ -16,9 +16,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import Automa
 from cadrumo.application.operations.models import OperationReconciliationOutcome, OperationRequest
 from cadrumo.application.operations.persistence.events import OperationReconciliationEvent
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.contracts import ExitReason, RefusalError
@@ -28,7 +27,7 @@ from ...adapters.tests.profile_worker_support import lease, worker_profiles
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..shutdown import RuntimeStop
-from .test_profile_worker_operations import BoundaryAuthority, _no_activity_authority, _profile_baseline
+from .test_profile_worker_operations import BoundaryAuthority, no_activity_authority, profile_baseline
 
 pytestmark = [
     pytest.mark.integration,
@@ -50,7 +49,7 @@ def test_session_end_contains_native_worker_before_settling_its_live_lease(tmp_p
 
     with worker_profiles(tmp_path) as (root, ((original, key), _)):
         profile_id = original.binding.profile_id
-        revision, digest = _profile_baseline(profile_id)
+        revision, digest = profile_baseline(profile_id)
         stop = RuntimeStop()
         profiles = RuntimeProfileConnections(
             storage_root=root, storage_identity="test", runtime_boot_id=original.runtime_boot_id, stop=stop
@@ -60,7 +59,7 @@ def test_session_end_contains_native_worker_before_settling_its_live_lease(tmp_p
             store=AutomationControlStore(root=root, binding=original.binding, secrets_store_factory=_no_credentials),
             runtime_boot_id=profiles.boot,
             registry=registry,
-            connected=_no_activity_authority,
+            connected=no_activity_authority,
             logins=tuple,
             admitting=profiles._private_work_available,
         )

@@ -40,7 +40,7 @@ from typing import Protocol, override, runtime_checkable
 from ...core.auth_provider import AuthProviderDescription
 from ...core.errors.severity import BaseSeverity
 from ...core.period import Period
-from ...domain.deadlines.models import Schedule, TaxpayerProfile
+from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases are domain-owned input contracts.
 # This module consumes them for its protocol annotations; callers import them
@@ -94,6 +94,24 @@ class DeadlineEngineProtocol(Protocol):
             profile: The :class:`TaxpayerProfile` whose filing obligations are scheduled.
             year: The calendar year for which the schedule is computed.
             today: Optional reference date for open-period classification.
+        """
+        ...
+
+    def target_obligation(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        modelo: str,
+        period: Period,
+        today: date | None = None,
+    ) -> ModeloDeadline | None:
+        """Return the obligation ``profile`` owes for one exact target, or ``None``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` the obligation is resolved for.
+            modelo: The exact modelo of the target.
+            period: The exact :class:`Period` of the target.
+            today: Optional reference date for status classification.
         """
         ...
 

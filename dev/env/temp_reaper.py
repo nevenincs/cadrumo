@@ -31,13 +31,10 @@ by observation.
 **Run directories carry their owner too**, in the PID embedded in the
 directory name, so the same observed-liveness rule applies and a finished run's
 output is reclaimed at any age -- there is no retention window. EVERY family
-under ``.logs`` is swept, discovered rather than named: ``test-runs``,
+under ``.tmp/logs`` is swept, discovered rather than named: ``test-runs``,
 ``audit-runs``, ``lane-runs`` and whatever the next one is called all allocate
-through the same function and all carry the same pid. They are swept across BOTH
-bases that can hold them: the checkout, where repository tooling
-writes, and the OS temp directory, where a pytest controller writes because
-``conftest.py`` roots its run outside the checkout. Sweeping only the checkout
-left the busier of the two unbounded, which is this module's own opening story.
+through the same function and all carry the same pid. Repository tooling and
+pytest controllers both write under that one configured root.
 
 This module is a library. Its operator surface is ``just clean`` (report) and
 ``just clean-apply`` (act), which drive :func:`report_temporary_storage` as one
@@ -514,13 +511,9 @@ def report_temporary_storage(
 
     _report_pytest_storage(stream, apply)
 
-    # Both bases, because a pytest controller roots its run under the OS temp
-    # directory rather than the checkout (see conftest.py) and the repository base
-    # alone left that one growing without bound. EVERY family, because `.logs` has
-    # no privileged child: `audit-runs` and `lane-runs` carry an owner's pid in the
-    # same marker `test-runs` does, and assessing only the family this section was
-    # first written for left the others to be judged by name alone, with no owner
-    # check, while a run was still writing into them.
+    # EVERY family, because `.tmp/logs` has no privileged child: `audit-runs` and
+    # `lane-runs` carry an owner's pid in the same marker `test-runs` does, so each
+    # is judged by its owner rather than by its name.
     _report_run_storage(stream, apply, verbose)
 
     # A run's scratch sits directly under the temp base, not inside its run

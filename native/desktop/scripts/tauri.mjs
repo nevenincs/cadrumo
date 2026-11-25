@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -17,7 +18,6 @@ import {
   identity as readIdentity,
   profile,
   artifactFile,
-  executable,
   tauriConfig,
 } from "./configuration.mjs";
 
@@ -32,20 +32,12 @@ const action = process.argv[2] ?? "build";
 const backendOnly = ["test-unit", "test-package", "clippy-backend"].includes(
   action,
 );
-const filter = process.argv[3];
+const filter = process.argv[3] ?? process.env.CADRUMO_DESKTOP_HOST_TEST_FILTER;
 if (
   (backendOnly || action === "test") &&
   (process.argv.length > 4 || filter?.startsWith("-"))
 )
   throw new Error("Host tests accept one optional Rust test-name filter.");
-if (action === "run") {
-  const result = spawnSync(executable(), process.argv.slice(3), {
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  if (result.error) throw result.error;
-  process.exit(result.status ?? 1);
-}
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = buildPath("desktop_icons");
 const contract = process.env.CADRUMO_NATIVE_CONTRACT;
@@ -57,10 +49,14 @@ const stamp = buildStamp(selectedProfile.debug, identity);
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR: backendOnly
-    ? resolve(buildPath("desktop_testing"), "backend-cargo")
-    : buildPath("desktop_cargo"),
+  // One source snapshot and one target directory for every host action:
+  // Cargo keys a path dependency's units by its source path, so a second
+  // snapshot or target would compile cadrumo-application and the whole
+  // dependency graph again for the backend tests.
+  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
+  // The icon the desktop sets for itself where the platform takes none from a bundle.
+  CADRUMO_DESKTOP_ICON: resolve(icons, "icon.icns"),
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
   // The linked manager crate embeds the process manifest of this build kind on Windows.
   CADRUMO_PROCESS_MANIFEST: resolve(
@@ -74,6 +70,8 @@ const environment = {
   CADRUMO_ID_MANAGER_NAME: identity.manager_name,
   ...stamp.environment,
 };
+environment.CARGO_BUILD_BUILD_DIR = environment.CARGO_TARGET_DIR;
+environment.CARGO_BUILD_TARGET_DIR = environment.CARGO_TARGET_DIR;
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =
     Object.keys(environment).find((key) => key.toUpperCase() === "PATH") ??
@@ -86,11 +84,31 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
 // Preserve Cargo's input timestamps while synchronizing additions and removals.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
-  backendOnly
-    ? resolve(buildPath("desktop_testing"), "backend-host")
-    : buildPath("desktop_host"),
+  buildPath("desktop_host"),
   { incremental: true },
 );
+/** macOS draws an application icon at the size of its whole canvas, and its own
+ * icons keep to Apple's grid: a rounded square 824 points wide, centred in 1024,
+ * the rest clear. The tile fills its canvas edge to edge, so on macOS it would
+ * stand larger than every icon beside it. The macOS icon sets the tile's artwork
+ * in that square instead, over the tile's own ground where its corners differ. */
+function macosIconSource(svg) {
+  const root = svg.match(/<svg\b[^>]*>/);
+  const ground = svg.match(/<path\b[^>]*\bfill="(#[0-9A-Fa-f]{6})"/);
+  if (!root || !ground)
+    throw new Error("The application icon lacks the tile the macOS icon sets.");
+  const placed = root[0]
+    .replace(/\s(?:width|height)="[^"]*"/g, "")
+    .replace("<svg", '<svg x="100" y="100" width="824" height="824"');
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">',
+    '<clipPath id="macos-shape"><rect x="100" y="100" width="824" height="824" rx="185.4"/></clipPath>',
+    '<g clip-path="url(#macos-shape)">',
+    `<rect x="100" y="100" width="824" height="824" fill="${ground[1]}"/>`,
+    svg.replace(/^<\?xml[^>]*>\s*/, "").replace(root[0], placed),
+    "</g></svg>",
+  ].join("\n");
+}
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: snapshot.project,
@@ -142,7 +160,12 @@ contentBuild(
         ),
       fileURLToPath(new URL("content-build.mjs", import.meta.url)),
     ],
-    outputs: [icons, resolve(icons, "icon.ico"), resolve(icons, "icon.png")],
+    outputs: [
+      icons,
+      resolve(icons, "icon.ico"),
+      resolve(icons, "icon.png"),
+      resolve(icons, "icon.icns"),
+    ],
     record: resolve(buildPath("desktop_cache"), "icons-build.json"),
     identity: {
       node: process.version,
@@ -150,13 +173,16 @@ contentBuild(
       arch: process.arch,
     },
   },
-  () =>
-    run([
-      "icon",
-      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
-      "--output",
-      icons,
-    ]),
+  () => {
+    const source = resolve(desktop, "../../docs/_static/cadrumo-icon.svg");
+    run(["icon", source, "--output", icons]);
+    const macos = resolve(buildPath("desktop_cache"), "macos-icon");
+    mkdirSync(macos, { recursive: true });
+    const macosSource = resolve(macos, "icon.svg");
+    writeFileSync(macosSource, macosIconSource(readFileSync(source, "utf8")));
+    run(["icon", macosSource, "--output", macos]);
+    copyFileSync(resolve(macos, "icon.icns"), resolve(icons, "icon.icns"));
+  },
 );
 if (action === "prepare") process.exit(0);
 if (action === "build") {
@@ -211,6 +237,10 @@ if (action === "build") {
 } else if (action === "test" || action === "clippy" || backendOnly) {
   const testing = ["test", "test-unit", "test-package"].includes(action);
   const live = ["test", "test-package", "clippy"].includes(action);
+  if (testing && filter)
+    console.error(
+      `Only desktop host tests matching "${filter}" run: this is not the whole suite.`,
+    );
   const args = testing
     ? [
         "test",
@@ -228,24 +258,36 @@ if (action === "build") {
             ]
           : []),
       ]
-    : [
-        "clippy",
-        ...(selectedProfile.debug ? [] : ["--release"]),
-        "--locked",
-        "--all-targets",
-        ...(live ? ["--features", "live-package-tests"] : []),
-        "--",
-        "-D",
-        "warnings",
-      ];
-  const result = spawnSync("cargo", args, {
-    cwd: snapshot.crate,
-    env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  if (result.error) throw result.error;
-  process.exit(result.status ?? 1);
+    : null;
+  // The test targets link cadrumo-platform's test-support feature, which that
+  // crate refuses to compile in a release build. A release lint therefore
+  // covers the binary alone, and every target, tests included, is linted under
+  // the dev profile in either configuration.
+  const lint = (scope) => [
+    "clippy",
+    ...scope,
+    "--locked",
+    ...(live ? ["--features", "live-package-tests"] : []),
+    "--",
+    "-D",
+    "warnings",
+  ];
+  const invocations = args
+    ? [args]
+    : selectedProfile.debug
+      ? [lint(["--all-targets"])]
+      : [lint(["--release", "--bins"]), lint(["--all-targets"])];
+  for (const invocation of invocations) {
+    const result = spawnSync("cargo", invocation, {
+      cwd: snapshot.crate,
+      env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
+      stdio: "inherit",
+      windowsHide: true,
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
+  process.exit(0);
 } else {
   throw new Error(`Unknown host action: ${action}`);
 }

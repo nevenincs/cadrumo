@@ -64,7 +64,7 @@ class WithholdingWindowScope(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
 
     @property
@@ -99,7 +99,7 @@ class WithholdingProjectionIdentity(BaseModel):
     def token(self) -> str:
         """Return the stable liability identity, independent of later settlement."""
         identity = self.model_dump(mode="json", exclude={"settlement_event_id"})
-        return sha256_hex(_canonical_json(identity).encode("utf-8"))
+        return sha256_hex(withholding_canonical_json(identity).encode("utf-8"))
 
 
 class SourceLiabilitySnapshot(BaseModel):
@@ -127,9 +127,9 @@ class SourceLiabilitySnapshot(BaseModel):
     def source_token(self) -> str:
         """Return the guard scope, deliberately independent of revisions."""
         return sha256_hex(
-            _canonical_json({"source_kind": self.source_kind, "source_object_id": self.source_object_id}).encode(
-                "utf-8"
-            )
+            withholding_canonical_json(
+                {"source_kind": self.source_kind, "source_object_id": self.source_object_id}
+            ).encode("utf-8")
         )
 
 
@@ -149,7 +149,7 @@ class EconomicAllocation(BaseModel):
     def guard_identity(self) -> str:
         """Return the allocation identity without revision or settlement IDs."""
         return sha256_hex(
-            _canonical_json(
+            withholding_canonical_json(
                 {
                     "source_kind": self.liability.source_kind,
                     "source_object_id": self.liability.source_object_id,
@@ -241,7 +241,7 @@ class WithholdingMutationEnvelope(BaseModel):
     idempotency_key: str = Field(min_length=1, max_length=128)
     entries: tuple[WithholdingProjectionEntry, ...] = ()
     baseline: WithholdingWindowBaseline | None = None
-    reason: str | None = Field(default=None, min_length=1, max_length=500)
+    reason: str | None = Field(default=None, min_length=1, max_length=512)
     supersedes_generation_id: WithholdingGenerationId | None = None
     # Admission control for the write, independent of the evidence's replay identity.
     source_catalogue_baseline: WithholdingSourceCatalogueBaseline | None = Field(default=None, exclude=True, repr=False)
@@ -255,8 +255,8 @@ class WithholdingMutationEnvelope(BaseModel):
     def command_digest(self) -> str:
         """Return the canonical digest used for idempotency comparison."""
         value = self.model_dump(mode="json")
-        value["entries"] = sorted(value["entries"], key=lambda item: _identity_json_token(item["identity"]))
-        return sha256_hex(_canonical_json(value).encode("utf-8"))
+        value["entries"] = sorted(value["entries"], key=lambda item: withholding_canonical_json(item["identity"]))
+        return sha256_hex(withholding_canonical_json(value).encode("utf-8"))
 
 
 def _validate_mutation_envelope(envelope: WithholdingMutationEnvelope) -> None:
@@ -287,7 +287,12 @@ def _validate_mode_shape(envelope: WithholdingMutationEnvelope) -> None:
     elif envelope.mode is WithholdingMutationMode.REPLACE:
         if not envelope.entries or envelope.baseline is None:
             raise ValueError("replace requires entries and an exact baseline")
-    elif envelope.entries or envelope.baseline is None or not (envelope.reason is not None and envelope.reason):
+    else:
+        _validate_clear_shape(envelope)
+
+
+def _validate_clear_shape(envelope: WithholdingMutationEnvelope) -> None:
+    if envelope.entries or envelope.baseline is None or not (envelope.reason is not None and envelope.reason):
         raise ValueError("clear requires a baseline, a reason, and no entries")
 
 
@@ -451,11 +456,12 @@ def _successor(
     return tuple(sorted((*current, *envelope.entries), key=lambda entry: entry.identity.token))
 
 
-def _identity_json_token(value: object) -> str:
-    return _canonical_json(value)
+def withholding_canonical_json(value: object) -> str:
+    """Spell a value the way stored withholding identities and digests were hashed.
 
-
-def _canonical_json(value: object) -> str:
+    It differs from the core canonical form on purpose: it escapes non-ASCII and
+    admits NaN, and adopting that form would move every stored token.
+    """
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
@@ -480,4 +486,5 @@ __all__ = [
     "WithholdingWindowBaseline",
     "WithholdingWindowScope",
     "WithholdingWindowState",
+    "withholding_canonical_json",
 ]

@@ -1,0 +1,369 @@
+"""Retained connection-bound login attempts, settled by cues and exact claims."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import time
+from _thread import RLock as RLockType
+from dataclasses import dataclass, field
+from threading import BoundedSemaphore, Event, Thread
+from typing import TYPE_CHECKING
+from uuid import UUID
+
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.errors.failure_report import log_boundary_failure
+from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    OrchestrationTimeoutError,
+    TimeoutDeadline,
+)
+from cadrumo_client.contracts.profile_access import (
+    AccessRefusal,
+    ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
+    ProfileStatus,
+    SecretReady,
+)
+from cadrumo_client.contracts.session_events import ProfileLoginChanged
+from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.transport.frame_io import read_secret, write_document
+
+from ..application.session_authority_contracts import HumanAdmissionControl
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
+
+if TYPE_CHECKING:
+    from .profile_connections import RuntimeProfileConnections
+
+_LOGGER = get_logger(__name__)
+
+
+@dataclass
+class PendingProfileLogin:
+    """One retained proof owner; only its original connection can claim it."""
+
+    context: ConnectionContext
+    request: ProfileLogin
+    connection: ProfileConnection
+    host: RuntimeProfileHost
+    secret: bytearray = field(repr=False)
+    deadline: TimeoutDeadline = field(default_factory=DEFAULT_TIMEOUT_POLICY.deadline)
+    control: HumanAdmissionControl = field(default_factory=HumanAdmissionControl)
+    finished: Event = field(default_factory=Event)
+    result: ProfileStatus | AccessRefusal | None = None
+    failure: BaseException | None = field(default=None, repr=False)
+    thread: Thread | None = field(default=None, repr=False)
+
+    def retained_cleanup(self) -> AsyncResourceCleanupError | None:
+        """The original failed cleanup owner, never replaced by a retry attempt."""
+        if self.failure is None:
+            return None
+        for key in ("async_cleanup_error", "cleanup_error"):
+            cleanup = self.failure.__dict__.get(key)
+            if isinstance(cleanup, AsyncResourceCleanupError):
+                return cleanup
+        return None
+
+
+def claim_login_slot(
+    guard: RLockType, pending_logins: dict[UUID, PendingProfileLogin], slots: BoundedSemaphore, connection_id: UUID
+) -> bool:
+    """Claim bounded proof capacity while retaining existing cleanup owners."""
+    with guard:
+        prior = pending_logins.get(connection_id)
+        if prior is not None and (not prior.finished.is_set() or prior.retained_cleanup() is not None):
+            return False
+        if prior is None and len(pending_logins) >= 32:
+            return False
+        return slots.acquire(blocking=False)
+
+
+def settle_login_attempt(
+    attempt: PendingProfileLogin, *, deadline: float, guard: RLockType, pending_logins: dict[UUID, PendingProfileLogin]
+) -> bool:
+    """Cancel and join the original proof owner, retaining unfinished cleanup."""
+    # A password attempt can move to its successor host; release the guard it took.
+    guard_held = attempt.host.guard
+    acquired = guard_held.acquire(timeout=max(0.0, deadline - time.monotonic()))
+    if acquired:
+        try:
+            attempt.control.cancel()
+        finally:
+            guard_held.release()
+    if attempt.thread is not None and attempt.thread.ident is not None:
+        attempt.thread.join(timeout=max(0.0, deadline - time.monotonic()))
+    if not attempt.finished.is_set() or (attempt.thread is not None and attempt.thread.is_alive()):
+        return False
+    cleanup = attempt.retained_cleanup()
+    if isinstance(cleanup, AsyncResourceCleanupError):
+        try:
+            asyncio.run(cleanup.retry_cleanup())
+        except BaseException:
+            return False
+        attempt.failure = None
+    with guard:
+        if pending_logins.get(attempt.context.connection_id) is attempt:
+            pending_logins.pop(attempt.context.connection_id)
+    return acquired
+
+
+def discard_failed_login(
+    pending: PendingProfileLogin | None,
+    guard: RLockType,
+    pending_logins: dict[UUID, PendingProfileLogin],
+    connection_id: UUID,
+) -> None:
+    """Wipe an interrupted proof and discard only its own retained attempt."""
+    if pending is None:
+        return
+    pending.secret[:] = bytes(len(pending.secret))
+    with guard:
+        if pending_logins.get(connection_id) is pending:
+            pending_logins.pop(connection_id)
+
+
+def release_unstarted_login(pending: PendingProfileLogin | None, slots: BoundedSemaphore) -> None:
+    """Return capacity only when no proof thread took ownership."""
+    if pending is None or pending.thread is None or pending.thread.ident is None:
+        if pending is not None:
+            pending.secret[:] = bytes(len(pending.secret))
+        slots.release()
+
+
+def login_claim_matches(
+    pending: PendingProfileLogin, context: ConnectionContext, request: ProfileLoginStatusQuery
+) -> bool:
+    """Match the exact connection and original login request."""
+    return (
+        pending.context == context
+        and pending.request.profile_id == request.profile_id
+        and pending.request.request_id == request.login_request_id
+    )
+
+
+class ProfileConnectionLoginMixin:
+    """Keep the sole connection reader available during an owned login proof."""
+
+    def _login(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ProfileLogin
+    ) -> ProfileLoginPending | ProfileStatus | AccessDenied:
+        if not claim_login_slot(self._guard, self._pending_logins, self._login_slots, context.connection_id):
+            return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
+        pending: PendingProfileLogin | None = None
+        timeout = DEFAULT_TIMEOUT_POLICY.deadline()
+        try:
+            connection, host = self._prepare(context, channel, request)
+            write_document(
+                channel,
+                SecretReady(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                ),
+                deadline=timeout.instant,
+            )
+            with read_secret(channel, deadline=timeout.instant) as secret:
+                pending = PendingProfileLogin(context, request, connection, host, bytearray(secret), deadline=timeout)
+            if request.method == "api_key":
+                return self._login_proof(
+                    connection, host, context, request, pending.secret, pending.control, pending.deadline
+                )
+            with host.guard, self._guard:
+                if (
+                    self._closed
+                    or self._connections.get(context.connection_id) is not connection
+                    or connection.disconnecting
+                ):
+                    return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+                self._pending_logins[context.connection_id] = pending
+            pending.thread = Thread(target=self._run_login, args=(pending,), name="profile-login", daemon=True)
+            pending.thread.start()
+            return self._login_pending(pending, request.request_id)
+        except BaseException:
+            discard_failed_login(pending, self._guard, self._pending_logins, context.connection_id)
+            raise
+        finally:
+            release_unstarted_login(pending, self._login_slots)
+
+    def _run_login(self: RuntimeProfileConnections, pending: PendingProfileLogin) -> None:
+        request, context = pending.request, pending.context
+        try:
+            result = self._password_or_receipt_proof(pending)
+            if isinstance(result, AccessDenied):
+                result = AccessRefusal(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    code=result.code,
+                    sign_in=result.sign_in,
+                    recovery_remaining_seconds=result.recovery_remaining_seconds,
+                )
+        except BaseException as error:
+            pending.failure = error
+            log_boundary_failure(_LOGGER, "profile_login_attempt_failed", error, level=logging.WARNING)
+            code = (
+                error.reason
+                if isinstance(error, (AutomationCustodyError, ProfileAccessRefusedError, RefusalError))
+                else RefusalCode.UNAVAILABLE
+            )
+            if isinstance(error, OrchestrationTimeoutError):
+                code = RefusalCode.TIMEOUT
+            sign_in = error.sign_in if isinstance(error, ProfileAccessRefusedError) else None
+            if sign_in is not None and sign_in.reason == "credential_rejected":
+                code = AutomationCustodyCode.CREDENTIAL_REJECTED
+            result = AccessRefusal(
+                request_id=request.request_id,
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                code=code,
+                sign_in=sign_in,
+            )
+        finally:
+            pending.secret[:] = bytes(len(pending.secret))
+            self._login_slots.release()
+        with self._guard:
+            pending.result = result
+            pending.finished.set()
+            if (
+                self._connections.get(context.connection_id) is not pending.connection
+                and pending.retained_cleanup() is None
+            ):
+                self._pending_logins.pop(context.connection_id, None)
+        self._events.publish(
+            ProfileLoginChanged(
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                profile_id=request.profile_id,
+                login_request_id=request.request_id,
+            )
+        )
+        self._sign_in_changed()
+        self.lifecycle_changed()
+
+    def _password_or_receipt_proof(
+        self: RuntimeProfileConnections, pending: PendingProfileLogin
+    ) -> ProfileStatus | AccessDenied:
+        """Prove a retained login, following a password attempt onto custody it replaced itself.
+
+        A password proof of a profile whose envelope holds the fixed fallback
+        may re-wrap that envelope at a stronger point and then refuse as custody
+        changed, without a sign-in reason, because it opened the generation it
+        just replaced. Only that refusal is followed, once: the replaced
+        incarnation is retired, the connection moves to the host bound to the
+        committed generation, and the same password is proved there within the
+        attempt's own deadline. Any other refusal, a cancelled attempt or a
+        generation that is not the attempt's own successor ends the attempt as
+        before. The proof path wipes the secret it is given, so a copy is held
+        for this attempt only and wiped with it.
+        """
+        request, context = pending.request, pending.context
+        if request.method != "password":
+            return self._login_proof(
+                pending.connection, pending.host, context, request, pending.secret, pending.control, pending.deadline
+            )
+        retained = bytearray(pending.secret)
+        try:
+            replaced = pending.host
+            try:
+                return self._login_proof(
+                    pending.connection, replaced, context, request, pending.secret, pending.control, pending.deadline
+                )
+            except ProfileAccessRefusedError as error:
+                if error.reason is not AccessDenialCode.CUSTODY_CHANGED or error.sign_in is not None:
+                    raise
+            successor = self._follow_own_custody_replacement(pending, replaced)
+            if isinstance(successor, AccessDenied):
+                return successor
+            pending.secret[:] = retained
+            return self._login_proof(
+                pending.connection, successor, context, request, pending.secret, pending.control, pending.deadline
+            )
+        finally:
+            retained[:] = bytes(len(retained))
+
+    def _follow_own_custody_replacement(
+        self: RuntimeProfileConnections, pending: PendingProfileLogin, replaced: RuntimeProfileHost
+    ) -> RuntimeProfileHost | AccessDenied:
+        """Move a live attempt to the host of the generation it committed, or deny it as custody changed."""
+        changed = AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
+        if pending.control.cancelled or time.monotonic() >= pending.deadline.instant:
+            return changed
+        context, request, connection = pending.context, pending.request, pending.connection
+        successor = self._host(request.profile_id, context)
+        if successor.store.binding.custody_generation != replaced.store.binding.custody_generation + 1:
+            return changed
+        with successor.guard:
+            with self._guard:
+                if (
+                    self._closed
+                    or self._connections.get(context.connection_id) is not connection
+                    or connection.disconnecting
+                ):
+                    return changed
+                pending.host = successor
+            self._prepare_profile_login(connection, successor, context, request)
+        return successor
+
+    def _login_pending(
+        self: RuntimeProfileConnections, pending: PendingProfileLogin, request_id: UUID
+    ) -> ProfileLoginPending:
+        return ProfileLoginPending(
+            request_id=request_id,
+            runtime_boot_id=self.boot,
+            connection_id=pending.context.connection_id,
+            profile_id=pending.request.profile_id,
+            login_request_id=pending.request.request_id,
+        )
+
+    def _login_status(
+        self: RuntimeProfileConnections, context: ConnectionContext, request: ProfileLoginStatusQuery
+    ) -> ProfileLoginPending | ProfileStatus | AccessRefusal | AccessDenied:
+        with self._guard:
+            pending = self._pending_logins.get(context.connection_id)
+        if pending is None or not login_claim_matches(pending, context, request):
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        host = pending.host
+        with host.guard:
+            if request.action == "profile_login_cancel":
+                pending.control.cancel()
+            if pending.finished.is_set():
+                result = pending.result
+                if result is None:
+                    return AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
+                if isinstance(result, ProfileStatus) and result.status.session_id is not None:
+                    current = self._status(pending.connection, host, request.request_id, result.status.session_id)
+                    if isinstance(current, AccessDenied):
+                        return current
+                    return result.model_copy(update={"request_id": request.request_id, "status": current.status})
+                return result.model_copy(update={"request_id": request.request_id})
+        return self._login_pending(pending, request.request_id)
+
+    def _cancel_connection_login(self: RuntimeProfileConnections, context: ConnectionContext) -> None:
+        with self._guard:
+            pending = self._pending_logins.get(context.connection_id)
+        if pending is not None:
+            with pending.host.guard:
+                pending.control.cancel()
+            if pending.finished.is_set() and pending.retained_cleanup() is None:
+                with self._guard:
+                    if self._pending_logins.get(context.connection_id) is pending:
+                        self._pending_logins.pop(context.connection_id)
+
+    def _settle_pending_logins(self: RuntimeProfileConnections, *, deadline: float) -> tuple[UUID, ...]:
+        """Keep original proof threads and failed cleanup owners until shutdown settles them."""
+        with self._guard:
+            pending = tuple(self._pending_logins.values())
+        unsettled: set[UUID] = set()
+        for attempt in pending:
+            if not settle_login_attempt(
+                attempt, deadline=deadline, guard=self._guard, pending_logins=self._pending_logins
+            ):
+                unsettled.add(attempt.request.profile_id)
+        return tuple(sorted(unsettled))

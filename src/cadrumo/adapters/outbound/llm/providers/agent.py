@@ -9,7 +9,7 @@ run's final reply text.
 
 from __future__ import annotations
 
-from typing import override
+from typing import Final, override
 
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
@@ -20,13 +20,15 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from .....application.operations.model_runs import ModelRunPort
+from .....application.operator_actions.models import PreconditionVerdict
 from .....core.config_support import LLMProvider
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
-from ..errors import LLMConfigError, LLMConsentError, LLMError, LLMProviderError
+from ..errors import LLMConfigError, LLMConsentError, LLMContentionError, LLMError, LLMProviderError
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ..response_json import first_json_object
 from .base import ProviderAdapter, ProviderCompletion, ProviderRequest
@@ -36,6 +38,12 @@ JSON_REASK_INSTRUCTION = (
 )
 """Appended to the prompt for the single re-ask a reply without a JSON object earns."""
 
+_NO_SELECTION_LOCALE_KEY: Final = "errors.refused.refused_llm_no_model_selected"
+"""The refusal sentence for a role with no selected model."""
+
+_CANNOT_READ_IMAGES_LOCALE_KEY: Final = "errors.refused.refused_llm_model_cannot_read_images"
+"""The refusal sentence for a selected model not stated to read images: the person picks one that can."""
+
 _CONFIGURATION_REFUSALS = frozenset(
     {
         ModelRunRefusalCode.SERVICE_UNAVAILABLE,
@@ -43,27 +51,56 @@ _CONFIGURATION_REFUSALS = frozenset(
         ModelRunRefusalCode.PROFILE_LOCKED,
         ModelRunRefusalCode.NO_SELECTION,
         ModelRunRefusalCode.LANE_UNAVAILABLE,
+        ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+        ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES,
         ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
     }
 )
 
 
-def lane_model_label(lane: ModelRunLane) -> str:
+def lane_model_label(lane: ModelRunLane | ModelRunOutput) -> str:
     """Return the model identity records carry for an agent run: its lane and model together."""
     return f"{lane.provider_id}/{lane.transport}/{lane.model}"
 
 
-def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLMError:
-    """Return the typed error a consumer receives for a refused model run."""
+def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> PreconditionVerdict:
+    """Return the typed verdict for a refused model run.
+
+    The verdict states the agent's refusal code and the role it was for, and
+    names no action. A selected model the lane's local server does not hold
+    also states that it is not installed, and a role with no selection says so
+    in a stable fact.
+    """
     facts: dict[str, str | int | bool] = {"model_run_refusal": refusal.code.value, "model_role": role.value}
-    verdict = llm_no_recovery_verdict(
+    if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
+        facts |= {"role": role.value}
+    elif refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
+        facts |= {"role": role.value, "role_model_installed": False}
+    elif refusal.code is ModelRunRefusalCode.NO_SELECTION:
+        facts |= {"role": role.value, "role_selection_required": True}
+    return llm_no_recovery_verdict(
         LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,
         facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
     )
-    context = {"provider": LLMProvider.AGENT.value, **facts}
+
+
+def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLMError:
+    """Return the typed error a consumer receives for a refused model run."""
+    verdict = model_run_refusal_verdict(refusal, role=role)
+    context = {"provider": LLMProvider.AGENT.value, **verdict.evidence[0].values}
     if refusal.code is ModelRunRefusalCode.CONSENT_MISSING:
         return LLMConsentError(context=context, precondition_verdict=verdict)
+    if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
+        return LLMContentionError(context=context, precondition_verdict=verdict)
+    if refusal.code is ModelRunRefusalCode.NO_SELECTION:
+        return LLMConfigError(
+            context=context, precondition_verdict=verdict, translated_message=_NO_SELECTION_LOCALE_KEY
+        )
+    if refusal.code is ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES:
+        return LLMConfigError(
+            context=context, precondition_verdict=verdict, translated_message=_CANNOT_READ_IMAGES_LOCALE_KEY
+        )
     if refusal.code in _CONFIGURATION_REFUSALS:
         return LLMConfigError(context=context, precondition_verdict=verdict)
     return LLMProviderError(context=context)
@@ -73,7 +110,9 @@ class AgentAdapter(ProviderAdapter):
     """Run one request on the lane the agent service resolved for its role.
 
     The lane was resolved, and any consent bound to it, before this adapter was
-    built, so the service refuses the run if it would now use another lane.
+    built. Consent is bound only when the lane reads off-host, and the service
+    refuses the run if it would now use another lane or an off-host lane
+    without consent.
     Whether the lane accepts the request's attachments was checked against the
     catalog before dispatch; the agent still refuses at admission what it cannot
     take.
@@ -87,6 +126,7 @@ class AgentAdapter(ProviderAdapter):
         *,
         port: ModelRunPort,
         role: ModelRole,
+        task_kind: ModelRunTaskKind | None,
         lane: ModelRunLane,
         consent: ModelRunConsentBinding | None,
         deadline_seconds: int,
@@ -94,7 +134,9 @@ class AgentAdapter(ProviderAdapter):
     ) -> None:
         """Bind the adapter to one resolved lane."""
         self._port, self._role, self._lane = port, role, lane
-        self._header = ModelRunHeader(role=role.value, deadline_seconds=deadline_seconds, consent=consent)
+        self._header = ModelRunHeader(
+            role=role.value, task_kind=task_kind, deadline_seconds=deadline_seconds, consent=consent
+        )
         self._expects_json = expects_json
 
     @override
@@ -109,6 +151,7 @@ class AgentAdapter(ProviderAdapter):
             ),
             max_output_tokens=request.max_tokens,
             temperature=request.temperature,
+            response_schema=request.response_schema,
         )
         output = await self._run(body)
         if self._expects_json and first_json_object(output.text) is None:
@@ -116,10 +159,9 @@ class AgentAdapter(ProviderAdapter):
             output = await self._run(reask)
             if first_json_object(output.text) is None:
                 raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID), role=self._role)
-        served = ModelRunLane(provider_id=output.provider_id, transport=output.transport, model=output.model)
         return ProviderCompletion(
             text=output.text,
-            model=lane_model_label(served),
+            model=lane_model_label(output),
             input_tokens=0,
             output_tokens=0,
         )
@@ -131,4 +173,10 @@ class AgentAdapter(ProviderAdapter):
         return result
 
 
-__all__ = ["JSON_REASK_INSTRUCTION", "AgentAdapter", "lane_model_label", "model_run_refusal_error"]
+__all__ = [
+    "JSON_REASK_INSTRUCTION",
+    "AgentAdapter",
+    "lane_model_label",
+    "model_run_refusal_error",
+    "model_run_refusal_verdict",
+]

@@ -18,6 +18,7 @@ from ..aggregation.retencion_observations_repository import (
 from ..aggregation.withholding_observation_service import (
     WithholdingObservationService,
 )
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 
 class TransactionCatalogueReadPort(Protocol):
@@ -46,6 +47,8 @@ class ModeloAggregateOperationPorts:
     retencion_observation_repository: RetencionObservationRepository
     percepcion_observation_repository: PercepcionObservationRepository
     withholding_observation_service: WithholdingObservationService
+    invoice_catalogue: InvoiceCatalogueReadPorts
+    """The received invoices and paying movements a periodic window's calculation reads beside its store."""
 
 
 class ModeloAggregateOperationPortsFactory(Protocol):

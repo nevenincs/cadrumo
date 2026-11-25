@@ -14,7 +14,9 @@ from datetime import date
 
 import pytest
 
+from ......application.modelo.work_form_header import deadline_view
 from ......application.modelo.work_form_service import modelo_form_deadline
+from ......application.modelo.work_form_wording import date_text
 from ......application.overview.calendar import build_overview_calendar
 from ......application.overview.calendar_models import OverviewCalendarRange
 from ......application.overview.tests.calendar_test_support import profile
@@ -24,8 +26,6 @@ from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import bundled_indexed_authority
 from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.modelos.codes import ModeloCode
-from ..header import deadline_view
-from ..wording import date_text
 from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -38,10 +38,10 @@ def _calendar_words(effective: date) -> str:
     """What the header should say for a calendar row closing on ``effective``, counted from the same day."""
     shown = date_text(effective, OutputLanguage.EN)
     if effective < _TODAY:
-        return tr("tui.modelo.workbench.header.deadline_passed", locale="en", date=shown)
+        return tr("workspace.modelo.header.deadline_passed", locale="en", date=shown)
     if effective == _TODAY:
-        return tr("tui.modelo.workbench.header.deadline_today", locale="en", date=shown)
-    return tr("tui.modelo.workbench.header.deadline", locale="en", date=shown, days=(effective - _TODAY).days)
+        return tr("workspace.modelo.header.deadline_today", locale="en", date=shown)
+    return tr("workspace.modelo.header.deadline", locale="en", date=shown, days=(effective - _TODAY).days)
 
 
 def test_the_header_names_the_calendar_rows_date_and_counts_its_days_from_the_same_day() -> None:
@@ -56,7 +56,6 @@ def test_the_header_names_the_calendar_rows_date_and_counts_its_days_from_the_sa
                 operation,
                 ModeloCode(entry.modelo),
                 entry.period,
-                holiday_territory=taxpayer.holiday_territory,
                 reference_on=_TODAY,
             )
             assert deadline is not None, f"the workbench reads no deadline for {entry.modelo} {entry.period}"

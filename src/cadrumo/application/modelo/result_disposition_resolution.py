@@ -14,8 +14,8 @@ composer and the cross-period carry persistence both read the disposition from
 submits and the cross-period carry the next period reads can never disagree (a
 period requested as devolución is excluded from compensación carry - never
 both). It reuses the per-modelo result→code derivation
-(:func:`~core.result_disposition.derive_result_disposition`) and the REDEME/last-period
-eligibility gate (:func:`~domain.iva.refund_eligibility.refund_disposition_available`); it does
+(:func:`~derive_result_disposition`) and the REDEME/last-period
+eligibility gate (:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility`); it does
 not duplicate either.
 
 Before resolving the result, the persisted :class:`CalculationRevision` value map
@@ -27,10 +27,10 @@ Legal basis (Modelo 303 refund election): RD 1624/1992 (RIVA) art. 30 (Registro
 de devolución mensual); Ley 37/1992 (LIVA) art. 116 (the monthly-refund right).
 
 See Also:
-    :func:`core.result_disposition.derive_result_disposition`
+    :func:`derive_result_disposition`
         Diseño-grounded result-to-code derivation used before Modelo 303 refund
         election handling.
-    :func:`domain.iva.refund_eligibility.refund_disposition_available`
+    :func:`domain.iva.refund_eligibility.resolve_refund_eligibility`
         Law-determined REDEME/last-period eligibility gate layered on a carried
         Modelo 303 credit.
     :func:`application.modelo.filing_actions.file_modelo_revision`
@@ -45,18 +45,13 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
-from ...core.result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-    result_disposition_declares,
-)
+from ...core.result_disposition import ResultDisposition, result_disposition_declares
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -64,13 +59,19 @@ from ...domain.calculations.registry.casilla_membership import (
     format_noncanonical_casilla_reference,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.deadlines.models import ChargeAccount, TaxpayerProfile
-from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
+from ...domain.iva.refund_eligibility import (
+    RedemeEnrolmentState,
+    redeme_enrolment_state,
+    refund_eligibility_for_period,
+)
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.work_unit import WorkUnit
-from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from .action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -79,6 +80,10 @@ from .action_errors import (
     ModeloRefundElectionNotEligibleError,
     ModeloResultDispositionUncodifiedError,
 )
+from .calculation_helpers import assert_snapshot_matches_work_unit_revision
+from .lifecycle_view_refusal_doors import profile_facts_verdict
+from .refusal_door_verdicts import operator_choice_verdict, registry_defect_verdict
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -104,14 +109,14 @@ def resolve_modelo_result_disposition(
     against which the revision's ``casilla_values`` are validated.
 
     Computes the modelo's base disposition from its final-result casilla via
-    :func:`~core.result_disposition.derive_result_disposition`, then — for a Modelo 303
+    :func:`~derive_result_disposition`, then — for a Modelo 303
     credit (``C``) — applies the refund election: a taxpayer inscribed in the
     Registro de devolución mensual (REDEME) is treated as
     requesting devolución (``D``) for eligible negative periods under a standing
     monthly-devolución disposition policy; a non-REDEME taxpayer who explicitly
     elects ``DEVOLVER`` requests devolución for the negative *last* period of the
     year (Ley 37/1992 art. 116). The eligibility gate
-    (:func:`~domain.iva.refund_eligibility.refund_disposition_available`) confirms the refund is
+    (:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility`) confirms the refund is
     lawful for the period. Every other disposition is returned unchanged.
 
     ``refund_election`` is the operator's per-filing opt-in (default
@@ -202,7 +207,7 @@ def base_modelo_result_disposition(
             header but the modelo has no codified spec, so any code written
             there would be a guess.
     """
-    registry_revision, result_values = _result_disposition_values_for_revision(
+    registry_revision, result_values = result_disposition_values_for_revision(
         work_unit=work_unit,
         revision=revision,
         period=period,
@@ -225,6 +230,7 @@ def base_modelo_result_disposition(
                 "revision_id": registry_revision.id,
                 "producer_key": producer_key.value,
             },
+            precondition_verdict=registry_defect_verdict("result_disposition_uncodified"),
         )
     return None
 
@@ -243,11 +249,13 @@ def _resolve_elected_disposition(
         if payment_election is not PaymentElection.INGRESO:
             raise ModeloPaymentElectionIncompatibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
             )
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={"modelo": str(work_unit.modelo), "refund_election": refund_election.value},
             )
         return None
@@ -255,6 +263,7 @@ def _resolve_elected_disposition(
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={
                     "modelo": str(work_unit.modelo),
                     "base_disposition": base_disposition.value,
@@ -266,6 +275,7 @@ def _resolve_elected_disposition(
     if payment_election is not PaymentElection.INGRESO:
         raise ModeloPaymentElectionIncompatibleError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -275,6 +285,7 @@ def _resolve_elected_disposition(
     if refund_election is RefundElection.DEVOLVER and base_disposition is not ResultDisposition.COMPENSACION:
         raise ModeloRefundElectionNotEligibleError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -301,11 +312,13 @@ def _apply_payment_election(
     if payment_election is PaymentElection.CUENTA_CORRIENTE:
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     if not result_disposition_declares(str(work_unit.modelo), ResultDisposition.DOMICILIACION):
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     return ResultDisposition.DOMICILIACION
@@ -360,6 +373,7 @@ def require_admissible_charge_account(*, work_unit: WorkUnit, charge_account: Ch
         return
     raise ModeloPaymentElectionCapabilityRefusedError(
         translated_message="errors.error.error_modelos",
+        precondition_verdict=operator_choice_verdict("result_election"),
         context={
             "modelo": str(work_unit.modelo),
             "payment_election": PaymentElection.DOMICILIACION.value,
@@ -368,7 +382,7 @@ def require_admissible_charge_account(*, work_unit: WorkUnit, charge_account: Ch
     )
 
 
-def _result_disposition_values_for_revision(
+def result_disposition_values_for_revision(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
@@ -393,7 +407,7 @@ def _result_disposition_values_for_revision(
     # assert_snapshot_matches_work_unit_revision so the two resolution sites
     # cannot drift in wording or refusal type.
     try:
-        snapshot = operation.snapshot(
+        snapshot = operation.reading_snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=period.registry_token,
@@ -406,6 +420,10 @@ def _result_disposition_values_for_revision(
                 "filing_year": work_unit.filing_year,
                 "period": period.registry_token,
             },
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.AUTHORITY_AVAILABLE,
+                facts={"modelo": str(work_unit.modelo), "available": False},
+            ),
         ) from exc
     assert_snapshot_matches_work_unit_revision(work_unit, snapshot, period=period)
     _reject_non_revision_casilla_values(
@@ -445,15 +463,19 @@ def _reject_non_revision_casilla_values(
 
     if noncanonical_details:
         details = "; ".join(noncanonical_details)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_refs": details},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     if unknown_ids:
         unknown = ", ".join(repr(casilla_id) for casilla_id in unknown_ids)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 
@@ -485,7 +507,7 @@ def _apply_modelo_303_refund_election(
     A non-REDEME taxpayer who does not elect ``DEVOLVER`` keeps the carry-forward
     ``C``; every disposition other than a Modelo 303 ``COMPENSACION`` is untouched.
     """
-    if work_unit.modelo != Modelo("303").value or declaration_type is not ResultDisposition.COMPENSACION:
+    if work_unit.modelo != form_for_role("iva.periodic") or declaration_type is not ResultDisposition.COMPENSACION:
         return declaration_type
 
     iva_profile = workflow_profile.iva
@@ -497,27 +519,34 @@ def _apply_modelo_303_refund_election(
                 "period": period.registry_token,
                 "iva_profile_present": False,
             },
+            profile_precondition_verdict=profile_facts_verdict(("iva.redeme_enrolled",), modelo="303"),
         )
-    redeme = iva_profile.redeme_enrolled
+    redeme = redeme_enrolment_state(iva_profile.redeme_enrolled)
+    eligibility = refund_eligibility_for_period(period=period, redeme=redeme)
     # Standing REDEME election: resolve eligible negative periods to devolución,
     # independent of the per-filing flag.
-    if redeme and refund_disposition_available(redeme_enrolled=redeme, period=period):
+    if redeme is RedemeEnrolmentState.ENROLLED and eligibility.refund_allowed:
         return ResultDisposition.DEVOLUCION
 
     if refund_election is not RefundElection.DEVOLVER:
         return declaration_type
 
-    # Per-filing opt-in for a non-REDEME taxpayer: only lawful in the last filing
-    # period of the year. Refuse an out-of-window election instead of silently
-    # discarding the refund request or silently filing an unlawful refund.
-    if not is_last_filing_period_of_year(period):
+    # Per-filing opt-in for a non-REDEME taxpayer: only lawful where the shared
+    # resolver admits the refund, which outside the year's last filing period
+    # needs a stated REDEME inscription. Refuse anything else instead of
+    # silently discarding the refund request or silently filing an unlawful
+    # refund, and never read an unstated inscription as a no.
+    if not eligibility.refund_allowed:
         raise ModeloRefundElectionNotEligibleError(
             translated_message="application.modelo.errors.refund_election_not_eligible",
             context={
                 "modelo": Modelo("303").value,
                 "filing_year": str(period.filing_year),
                 "period": period.registry_token,
+                "refund_eligibility": eligibility.outcome.value,
+                "refund_eligibility_basis": eligibility.basis.value,
             },
+            precondition_verdict=operator_choice_verdict("refund_election_not_eligible"),
         )
     return ResultDisposition.DEVOLUCION
 

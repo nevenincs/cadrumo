@@ -18,11 +18,16 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 
 from ..contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
-from ..contracts.deadline_budget import deadline_after, remaining_budget
+from ..contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    TimeoutDeadline,
+    deadline_after,
+    remaining_budget,
+)
 from .framing import VerifiedConnection
 from .transport_cleanup import TransportCleanup
 
-_LOGGER = get_logger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class EndpointConnector(Protocol):
@@ -38,14 +43,14 @@ class EndpointConnector(Protocol):
         ...
 
 
-def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
+def carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
     """Keep failed startup owners visible after cancellation or deadline mapping."""
     for failure in async_cleanup_failures(source):
         attach_async_cleanup_error(target, failure)
 
 
 class LaunchDoor:
-    """Connect to an existing owner without provisioning or starting a process."""
+    """Connect to an existing owner without starting a process."""
 
     def __init__(
         self,
@@ -61,7 +66,7 @@ class LaunchDoor:
 
     async def _connect(self, deadline: float) -> VerifiedConnection:
         def connect() -> VerifiedConnection:
-            channel = self._endpoint.connect(timeout=min(0.5, remaining_budget(deadline)))
+            channel = self._endpoint.connect(timeout=remaining_budget(deadline))
             return VerifiedConnection(channel, expected=self._expected, deadline=deadline)
 
         task = asyncio.create_task(asyncio.to_thread(connect))
@@ -82,20 +87,29 @@ class LaunchDoor:
                     discard(), task_name="runtime-connect-cleanup", cancellation=cancellation
                 )
             except asyncio.CancelledError as retained:
-                _carry_cleanup_owner(retained, retained)
+                carry_cleanup_owner(retained, retained)
                 raise
             raise
 
-    async def open(self, *, timeout: float = 10) -> VerifiedConnection:
+    async def open(
+        self, *, timeout: float | None = None, timeout_deadline: TimeoutDeadline | None = None
+    ) -> VerifiedConnection:
         """Return a peer/cohort-verified connection without transmitting credentials."""
         with diagnostic_scope():
+            deadline = (
+                timeout_deadline.instant
+                if timeout_deadline is not None
+                else DEFAULT_TIMEOUT_POLICY.deadline().instant
+                if timeout is None
+                else deadline_after(timeout)
+            )
             started = time.monotonic()
-            diagnostic_event(_LOGGER, "runtime_connect_started", fields={"timeout_seconds": timeout})
+            diagnostic_event(LOGGER, "runtime_connect_started", fields={"timeout_seconds": timeout})
             opened: VerifiedConnection | None = None
             try:
-                opened = await self._open_connection(timeout=timeout)
+                opened = await self._open_connection(deadline=deadline)
                 diagnostic_event(
-                    _LOGGER,
+                    LOGGER,
                     "runtime_connect_finished",
                     fields={
                         "outcome": "connected",
@@ -111,37 +125,39 @@ class LaunchDoor:
                         task_name="runtime-connect-result-diagnostic-close",
                         primary_error=error,
                     )
-                refusal = isinstance(error, RefusalError)
-                cancelled = isinstance(error, asyncio.CancelledError)
-                diagnostic_event(
-                    _LOGGER,
-                    "runtime_connect_finished",
-                    fields={
-                        **diagnostic_error_fields(error),
-                        "outcome": "cancelled" if cancelled else "refused" if refusal else "failed",
-                        "reason_code": (
-                            error.reason.value
-                            if isinstance(error, RefusalError)
-                            else "operation_cancelled"
-                            if cancelled
-                            else "unexpected_failure"
-                        ),
-                        "elapsed_seconds": time.monotonic() - started,
-                        "cleanup_incomplete": bool(async_cleanup_failures(error)),
-                    },
-                    level=DEBUG if cancelled else WARNING if refusal else ERROR,
-                    primary_error=error,
-                )
+                self._report_open_failure(error, started)
                 raise
             return opened
 
-    async def _open_connection(self, *, timeout: float) -> VerifiedConnection:
-        deadline = deadline_after(timeout)
+    def _report_open_failure(self, error: BaseException, started: float) -> None:
+        refusal = isinstance(error, RefusalError)
+        cancelled = isinstance(error, asyncio.CancelledError)
+        diagnostic_event(
+            LOGGER,
+            "runtime_connect_finished",
+            fields={
+                **diagnostic_error_fields(error),
+                "outcome": "cancelled" if cancelled else "refused" if refusal else "failed",
+                "reason_code": (
+                    error.reason.value
+                    if isinstance(error, RefusalError)
+                    else "operation_cancelled"
+                    if cancelled
+                    else "unexpected_failure"
+                ),
+                "elapsed_seconds": time.monotonic() - started,
+                "cleanup_incomplete": bool(async_cleanup_failures(error)),
+            },
+            level=DEBUG if cancelled else WARNING if refusal else ERROR,
+            primary_error=error,
+        )
+
+    async def _open_connection(self, *, deadline: float) -> VerifiedConnection:
         opened: VerifiedConnection | None = None
         try:
-            async with asyncio.timeout(timeout):
+            async with asyncio.timeout(remaining_budget(deadline)):
                 try:
-                    with startup_phase(_LOGGER, "existing_connect"):
+                    with startup_phase(LOGGER, "existing_connect"):
                         opened = await self._connect(deadline)
                         return opened
                 except RefusalError as error:
@@ -149,9 +165,9 @@ class LaunchDoor:
                         raise
                     raise RefusalError(RefusalCode.UNAVAILABLE) from error
         except TimeoutError as error:
-            refusal = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            refusal = RefusalError(RefusalCode.TIMEOUT)
             if isinstance(error.__cause__, asyncio.CancelledError):
-                _carry_cleanup_owner(refusal, error.__cause__)
+                carry_cleanup_owner(refusal, error.__cause__)
             raise refusal from error
 
         except BaseException as error:

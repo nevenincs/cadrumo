@@ -28,6 +28,7 @@ from ...domain.calculations.registry.authority_artifact import AuthorityComponen
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -65,7 +66,7 @@ def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
 
 def m303_declaration_type_header_key(*, filing_year: int, period: str, operation: PinnedAuthorityOperation) -> str:
     """Resolve the declaration-type header key for one governed M303 filing scope."""
-    entries = _selected_registry_mapping(
+    entries = selected_registry_mapping(
         modelo="303",
         filing_year=filing_year,
         period=period,
@@ -120,7 +121,7 @@ def _validated_carry_mapping_entries(
     return entries
 
 
-def _selected_registry_mapping(
+def selected_registry_mapping(
     *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
 ) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
@@ -297,10 +298,10 @@ def normalize_m303_carry_observation_envelope(
     projection, and the normalized available/generated pair are checked before
     a later reader can treat the observation as carry evidence.
     """
-    if envelope.observation.modelo != Modelo("303").value:
+    if envelope.observation.modelo != form_for_role("iva.periodic"):
         return envelope
 
-    registry_mapping = _selected_registry_mapping(
+    registry_mapping = selected_registry_mapping(
         modelo=envelope.observation.modelo,
         filing_year=envelope.observation.filing_year,
         period=envelope.observation.period,
@@ -338,7 +339,7 @@ def validate_normalized_m303_carry_observation_envelope(
     Every supported Modelo 303 writer produces this canonical shape; an
     unnormalized payload is invalid persisted state, not a compatibility form.
     """
-    if envelope.observation.modelo != Modelo("303").value:
+    if envelope.observation.modelo != form_for_role("iva.periodic"):
         raise M303CarryIngressError(
             translated_message=_translated_error("non_target_modelo_envelope"),
             context={"modelo": envelope.observation.modelo},

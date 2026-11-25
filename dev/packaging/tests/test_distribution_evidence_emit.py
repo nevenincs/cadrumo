@@ -45,7 +45,7 @@ from ..installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,
     EXPECTED_NOTICE_CODES,
-    EXPECTED_SOURCE_REF,
+    EXPECTED_SOURCE_REF_PREFIX,
     EXPECTED_VALUE,
     TARGET_CASILLA,
     InstalledTaxEvidence,
@@ -72,7 +72,7 @@ _TARGET_CASILLA = TARGET_CASILLA
 _TARGET_VALUE = str(EXPECTED_VALUE)
 _FORMULA = EXPECTED_FORMULA
 _LEGAL_REFS = (EXPECTED_LEGAL_REF,)
-_SOURCE_REFS = (EXPECTED_SOURCE_REF,)
+_SOURCE_REFS = (f"{EXPECTED_SOURCE_REF_PREFIX}fixture",)
 _NOTICE = tuple(sorted(EXPECTED_NOTICE_CODES))
 _REVISION = "a" * 64
 _COHORT_VERSION = "0.2.1"
@@ -423,19 +423,19 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
 
     from ..distribution_evidence_emit import (
         EvidenceCohortBindingError,
-        _tax_evidence_from_mapping,
+        tax_evidence_from_mapping,
     )
 
     cohort = _release_cohort(tmp_path / "cohort")
     tax_mapping = _tax_evidence(tmp_path, cohort).to_jsonable()
     del tax_mapping["checkout_imports_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
-        _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
+        tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 
     tax_mapping = _tax_evidence(tmp_path, cohort).to_jsonable()
     del tax_mapping["ambient_product_executables_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
-        _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
+        tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 
 
 def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: Path) -> None:

@@ -15,9 +15,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -28,7 +28,7 @@ from .. import runtime_adapter as mcp_runtime
 from ..lifecycle_notices import LifecycleNoticeBoard
 from ..protocol_contract import sign_in_remedy
 from ..runtime_adapter import RuntimeMcpAdapter
-from .test_authentication_handover import _Client
+from .test_authentication_handover import Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -70,7 +70,7 @@ def test_a_notice_not_yet_told_outlives_its_connection_for_exactly_one_result() 
     assert _told(board, "status") is None
 
 
-class _WatchedClient(_Client):
+class _WatchedClient(Client):
     """A key lease that keeps the receivers the adapter subscribes, as the runtime's connection does."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -103,7 +103,7 @@ async def _authenticated(
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         asked.append(credential_reference)

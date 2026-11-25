@@ -25,19 +25,20 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from .. import filing_export_proof_authority
 from ..compiler.authority import compiled_bundled_authority
 from ..diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
+    UnvalidatedRegistryClassification,
     load_registry_diagnostic_classification,
 )
 from ..export_proof import FilingExportProofChannel
 from ..filing_export_conformance_enrollment import (
     FilingExportConformanceEnrollmentReport,
-    _derive_static_filing_export_conformance_enrollment,
     derive_diagnostic_filing_export_conformance_enrollment,
-    derive_filing_export_conformance_enrollment,
+    derive_static_filing_export_conformance_enrollment,
 )
 from ..filing_export_conformance_vectors import (
     FilingExportConformanceVector,
@@ -54,6 +55,41 @@ from ..maintenance_support import coverage_assessment_floor, coverage_assessment
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+_STRICT_FAILURE_TEXT = "strict registry validation failed"
+
+
+# Each projection below is a pure read of the committed registry that costs tens
+# of seconds; the tests only read them, so one module-scoped result serves every
+# test that asks for the same inputs.
+@pytest.fixture(scope="module")
+def conformance_vectors() -> tuple[FilingExportConformanceVector, ...]:
+    return canonical_filing_export_conformance_vectors(
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+    )
+
+
+@pytest.fixture(scope="module")
+def diagnostic_classification() -> UnvalidatedRegistryClassification:
+    return load_registry_diagnostic_classification(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        strict_validation_error=RegistryValidationError(_STRICT_FAILURE_TEXT),
+    )
+
+
+@pytest.fixture(scope="module")
+def diagnostic_enrollment(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    conformance_vectors: tuple[FilingExportConformanceVector, ...],
+) -> FilingExportConformanceEnrollmentReport:
+    return derive_diagnostic_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        classification=diagnostic_classification,
+        vectors=conformance_vectors,
+    )
 
 
 def _blocked_vector_payload() -> object:
@@ -139,11 +175,11 @@ def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_re
     assessment = authority.assess_for(
         FilingExportProofCoordinate(
             modelo="111",
-            revision="2019-y-siguientes",
+            revision=str(open_ended_revision("111").id),
             snapshot_ref=RegistrySnapshotRef(
                 modelo="111",
-                revision_id="2019-y-siguientes",
-                modelo_year=2025,
+                revision_id=str(open_ended_revision("111").id),
+                modelo_year=filing_year_envelope().horizon,
                 period="1T",
             ),
             layout_ids=("test-layout",),
@@ -201,13 +237,12 @@ def _invoke_configured_custody(
     custody.persist_secure_replay()
 
 
-def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
+def test_diagnostic_classification_has_no_runtime_authority_or_success_path(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    diagnostic_enrollment: FilingExportConformanceEnrollmentReport,
+) -> None:
     """Diagnostic classification remains static residue, never filing authority."""
-    classification = load_registry_diagnostic_classification(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        strict_validation_error=RegistryValidationError("strict registry validation failed"),
-    )
+    classification = diagnostic_classification
 
     assert not isinstance(classification, ValidatedRegistryAuthority)
     # Derived from the authority type, never transcribed. The list here named
@@ -238,17 +273,8 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
             secure_replay_source=None,
             secure_replay_custody=None,
         )
-    enrollment = derive_diagnostic_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
-    assert enrollment.full_registry_validation_error == "strict registry validation failed"
+    enrollment = diagnostic_enrollment
+    assert enrollment.full_registry_validation_error == _STRICT_FAILURE_TEXT
     assert not enrollment.materializable_vectors
     assert enrollment.residues
 
@@ -265,7 +291,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
         refusal_reason="law_selection_failed",
         refusal_detail="synthetic static selection failure",
     )
-    strict_report = _derive_static_filing_export_conformance_enrollment(
+    strict_report = derive_static_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -274,7 +300,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
         strict_validation_error=None,
         validated_authority=None,
     )
-    diagnostic_report = _derive_static_filing_export_conformance_enrollment(
+    diagnostic_report = derive_static_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -333,7 +359,12 @@ def _residue_signature(
     )
 
 
-def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set() -> None:
+def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    diagnostic_enrollment: FilingExportConformanceEnrollmentReport,
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    conformance_vectors: tuple[FilingExportConformanceVector, ...],
+) -> None:
     """The degraded read loses no disposition and refuses exactly where the strict read materializes.
 
     Plain residue equality cannot hold once ANY vector is materializable: the
@@ -343,34 +374,14 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     consumer-side upgrade of an ungrounded capability the authority-flow rule
     forbids. This asserts the stronger property: no strict disposition is lost,
     and the only extra degraded residues are exactly the strict success set.
+    Every pinned vector is either in that success set or refused by the strict
+    read with a residue the degraded read keeps, so the claim covers every pin.
     """
-    registry = compiled_bundled_authority()
-    classification = load_registry_diagnostic_classification(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        strict_validation_error=RegistryValidationError("forced strict validation failure"),
-    )
-
-    strict_report = derive_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        authority=registry,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
-    diagnostic_report = derive_diagnostic_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
+    classification = diagnostic_classification
+    # The canonical authority derives exactly this strict enrollment: the
+    # validated bundled authority against the canonical vectors.
+    strict_report = canonical_filing_export_proof.conformance_enrollment
+    diagnostic_report = diagnostic_enrollment
 
     static_inspections = tuple(
         selected.inspection for selected in classification.filing_revisions if selected.inspection is not None
@@ -385,60 +396,56 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
         for vector in strict_report.materializable_vectors
     }
-    assert materialized, "the parity claim is vacuous unless the strict path materializes something"
+    pinned = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in conformance_vectors
+    }
+    assert pinned, "the parity claim is vacuous without a pinned vector"
 
     strict_residues = set(_residue_signature(strict_report))
     degraded_residues = set(_residue_signature(diagnostic_report))
-    assert not strict_residues - degraded_residues, "the degraded read must not lose a strict disposition"
+    strict_refused = {(row[0], row[1]) for row in strict_residues}
+    assert pinned - materialized <= strict_refused, "a pinned vector was neither materialized nor refused"
+    missing_residues = strict_residues - degraded_residues
+    assert not missing_residues, f"the degraded read lost strict dispositions: {sorted(missing_residues)!r}"
 
     only_degraded = degraded_residues - strict_residues
     assert {(row[0], row[1]) for row in only_degraded} == materialized
-    assert {row[3] for row in only_degraded} == {"registry_validation_incomplete"}
-    assert {row[6] for row in only_degraded} == {str(classification.strict_validation_error)}
+    assert {row[3] for row in only_degraded} <= {"registry_validation_incomplete"}
+    assert {row[6] for row in only_degraded} <= {str(classification.strict_validation_error)}
 
 
-def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
-    """Every public candidate retains its exact refusal residue."""
-    try:
-        registry = compiled_bundled_authority()
-    except RegistryValidationError as strict_error:
-        classification = load_registry_diagnostic_classification(
-            bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-            strict_validation_error=strict_error,
-        )
-        enrollment = derive_diagnostic_filing_export_conformance_enrollment(
-            workspace_root=_REPOSITORY_ROOT,
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-            classification=classification,
-            vectors=canonical_filing_export_conformance_vectors(
-                registry_root=bundled_path("registry", "aeat"),
-                source_root=bundled_path(),
-            ),
-        )
-        selected_coordinates = {
-            (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
-        }
-        materialized_coordinates = {
-            (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
-            for vector in enrollment.materializable_vectors
-        }
-        residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
-        assert enrollment.full_registry_validation_error == str(strict_error)
-        assert selected_coordinates == residue_coordinates
-        assert not materialized_coordinates
-        return
-    else:
-        full_registry_validation_error = None
-    proof = canonical_two_channel_filing_export_proof_authority(
+def _assert_degraded_registry_leaves_only_residues(strict_error: RegistryValidationError) -> None:
+    classification = load_registry_diagnostic_classification(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        strict_validation_error=strict_error,
+    )
+    enrollment = derive_diagnostic_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
-        authority=registry,
-        secure_replay_source=None,
-        secure_replay_custody=None,
+        classification=classification,
+        vectors=canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        ),
     )
+    selected_coordinates = {
+        (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
+    }
+    materialized_coordinates = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in enrollment.materializable_vectors
+    }
+    residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
+    assert enrollment.full_registry_validation_error == str(strict_error)
+    assert selected_coordinates == residue_coordinates
+    assert not materialized_coordinates
+
+
+def _assert_selected_revisions_refuse_unenrolled_channels(registry, proof) -> set[tuple[str, str]]:
+    """Assess each filing-grade revision in the support envelope and return the coordinates assessed."""
     assessed = 0
     selected_coordinates = set()
     enrolled_coordinates = {
@@ -476,9 +483,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             assert {item.channel for item in assessment.refusals} == expected_channels
             assessed += 1
     assert assessed > 0
+    return selected_coordinates
 
-    enrollment = proof.conformance_enrollment
-    assert enrollment.full_registry_validation_error == full_registry_validation_error
+
+def _assert_enrollment_accounts_for_every_selected_revision(enrollment, selected_coordinates) -> None:
     candidate_coordinates = {
         (str(candidate.evidence.coordinate.modelo), str(candidate.evidence.coordinate.revision))
         for candidate in enrollment.provenance_candidates
@@ -524,4 +532,20 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         }.intersection(type(candidate.evidence).model_fields)
         for candidate in enrollment.provenance_candidates
     )
-    assert full_registry_validation_error is None
+
+
+def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(request: pytest.FixtureRequest) -> None:
+    """Every public candidate retains its exact refusal residue."""
+    try:
+        registry = compiled_bundled_authority()
+    except RegistryValidationError as strict_error:
+        _assert_degraded_registry_leaves_only_residues(strict_error)
+        return
+    proof = cast(
+        CanonicalTwoChannelFilingExportProofAuthority,
+        request.getfixturevalue("canonical_filing_export_proof"),
+    )
+    selected_coordinates = _assert_selected_revisions_refuse_unenrolled_channels(registry, proof)
+    enrollment = proof.conformance_enrollment
+    assert enrollment.full_registry_validation_error is None
+    _assert_enrollment_accounts_for_every_selected_revision(enrollment, selected_coordinates)

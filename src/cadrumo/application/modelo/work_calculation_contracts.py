@@ -7,6 +7,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .calculation_advisory_projection import ModeloCalculationAdvisories
@@ -14,6 +15,11 @@ from .calculation_projection import ModeloCalculationSnapshot
 from .calculation_request_fields import ModeloCalculationInputFieldsV1
 from .edit_apply_row_contracts import ModeloDetailRowWireV1
 from .metadata_projection import ModeloWorkMetadataSnapshot
+from .projection_operation import (
+    ProjectUnresolvedBindingProjection,
+    ProjectUnresolvedCasillaProjection,
+    require_unresolved_boxes_carry_no_value,
+)
 from .work_change_contracts import ModeloWorkUnitSubjectId
 
 
@@ -93,32 +99,107 @@ class ModeloOperatorEntriesCarry(StrEnum):
     REPLACED_BY_REQUEST = "replaced_by_request"
 
 
+class ModeloHeadStatementKind(StrEnum):
+    """What kind of caller-supplied statement a calculation head recorded."""
+
+    #: A value the person typed into a box.
+    CASILLA_VALUE = "casilla_value"
+    #: A value the person set for an input over what its source supplies.
+    BINDING_OVERRIDE = "binding_override"
+    #: The person's statement that an earlier-filing carry holds no amount.
+    ABSENCE_ATTESTATION = "absence_attestation"
+    #: The person's stated figure for an earlier filing the product does not hold.
+    VALUE_ATTESTATION = "value_attestation"
+    #: The person's statement of the carry on one row of a repeating group.
+    ROW_ATTESTATION = "row_attestation"
+    #: Figures the person entered by hand for an income family the product does not calculate.
+    INCOME_FAMILY_ENTRY = "income_family_entry"
+    #: A box the person explicitly cleared.
+    CLEARED_CASILLA = "cleared_casilla"
+    #: The detail rows the head was calculated with.
+    DETAIL_ROWS = "detail_rows"
+    #: The Modelo 303 filing facts the person answered.
+    M303_FILING_EVIDENCE = "m303_filing_evidence"
+    #: The Modelo 210 income selections.
+    M210_SELECTION = "m210_selection"
+    #: The admitted borrador snapshot the head was calculated with.
+    BORRADOR_SNAPSHOT = "borrador_snapshot"
+
+
+class ModeloUnusedHeadStatement(BaseModel):
+    """One statement the replaced head recorded that the new calculation did not carry.
+
+    ``subject`` names what the statement speaks of: the casilla id, the binding
+    id, the income family token or the borrador snapshot id, and ``None`` for a
+    statement about the whole declaration. ``box`` and ``label`` are the printed
+    number and the label of the box the statement reaches, when it reaches one
+    the form prints. ``value`` is the value the statement held, when it holds
+    one. ``words`` says what the statement was, in the result's ``words_language``.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: ModeloHeadStatementKind
+    subject: Annotated[str, Field(min_length=1, max_length=256)] | None
+    row_identity: Annotated[str, Field(min_length=1, max_length=256)] | None = None
+    box: Annotated[str, Field(min_length=1, max_length=128)] | None = None
+    label: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
+    value: Annotated[str, Field(min_length=1, max_length=4_096)] | None = None
+    words: Annotated[str, Field(min_length=1, max_length=1_024)]
+
+
 class ModeloWorkCalculateReplacedHead(BaseModel):
     """The calculation head one calculation replaced as the declaration's current one.
 
     Calculating stores a new revision and removes none. The earlier revision,
     with every value it held, stays readable by its id; ``operator_entries``
     says whether the person's entries in it reached the new head.
+
+    When the request carried its own inputs, ``unused_statements`` names every
+    statement the earlier head recorded that the new calculation did not carry.
+    ``unused_statements_complete`` is ``False`` when the earlier head did not
+    record which of its values the person entered: the list then names only
+    the statements it did record, and values the person typed may be missing
+    from it. Both keep their defaults for any other carry.
     """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
-    operator_entries: ModeloOperatorEntriesCarry
-
-
-class ModeloWorkCalculatePublicResultV2(BaseModel):
-    """Writer-returned calculation facts and advisories under the same authority."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[2] = 2
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    operator_entries: ModeloOperatorEntriesCarry
+    unused_statements: tuple[ModeloUnusedHeadStatement, ...] = ()
+    unused_statements_complete: bool = True
+
+    @model_validator(mode="after")
+    def _statements_only_when_replaced(self) -> Self:
+        if self.operator_entries is not ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST and (
+            self.unused_statements or not self.unused_statements_complete
+        ):
+            raise ValueError("only a calculation that replaced the person's entries names unused statements")
+        return self
+
+
+class ModeloWorkCalculatePublicResultV3(BaseModel):
+    """Writer-returned calculation facts and advisories under the same authority.
+
+    A box in ``unresolved_casillas`` or bound by a binding in
+    ``unresolved_bindings`` has no value in ``calculation``. Both lists, and the
+    words in them, are the Modelo 100 projection's, in ``words_language``; they
+    describe this run and are not stored with the revision.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    result_version: Literal[3] = 3
     work_unit_id: ModeloWorkUnitSubjectId
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     calculation: ModeloCalculationSnapshot
     advisories: ModeloCalculationAdvisories
     unit: ModeloWorkMetadataSnapshot
     revision_published: bool
+    unresolved_bindings: tuple[ProjectUnresolvedBindingProjection, ...]
+    unresolved_casillas: tuple[ProjectUnresolvedCasillaProjection, ...]
+    words_language: OutputLanguage
     #: ``None`` when the work unit had no calculation before this one, or when
     #: this one left the same revision current.
     replaced_head: ModeloWorkCalculateReplacedHead | None = None
@@ -130,6 +211,15 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
             and self.replaced_head.calculation_revision_id == self.calculation_revision_id
         ):
             raise ValueError("a calculation does not replace the revision it returns")
+        self._require_parent_coordinates()
+        require_unresolved_boxes_carry_no_value(
+            {row.key for row in self.calculation.casilla_values},
+            self.unresolved_bindings,
+            self.unresolved_casillas,
+        )
+        return self
+
+    def _require_parent_coordinates(self) -> None:
         if (
             self.work_unit_id != self.calculation.work_unit_id
             or self.work_unit_id != self.unit.work_unit_id
@@ -141,4 +231,3 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
             or self.calculation.registry_snapshot_ref.revision_id != self.unit.revision_id
         ):
             raise ValueError("calculation result does not match its writer-returned parent")
-        return self

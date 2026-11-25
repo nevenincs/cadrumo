@@ -6,23 +6,145 @@ import json
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import CoreValidationError
 
 from ..catalog import (
+    TASK_KIND_DESCRIPTION_MAX_LENGTH,
+    BackgroundInput,
+    BackgroundOption,
     ProviderAuthKind,
     ProviderConsumer,
     ProviderTransport,
-    development_key_variable,
     parse_provider_catalog,
     validate_https_base_url,
+    validate_loopback_http_base_url,
 )
+from .synthetic_task_kinds import synthetic_task_kinds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 3) -> str:
-    return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
+_UNSTATED: Any = object()
+
+
+def _document(*lanes: dict[str, Any], schema_version: int = 8, task_kinds: Any = _UNSTATED) -> str:
+    document: dict[str, Any] = {"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}}
+    if task_kinds is not ...:
+        document["task_kinds"] = synthetic_task_kinds() if task_kinds is _UNSTATED else task_kinds
+    return json.dumps(document)
+
+
+def _with_task_kind(**overrides: Any) -> str:
+    first, *rest = synthetic_task_kinds()
+    return _document(_key_lane(), task_kinds=[{**first, **overrides}, *rest])
+
+
+_HOSTED_BACKGROUND: dict[str, Any] = {"runnable": True, "inputs": ["text", "image", "pdf"], "options": []}
+_DIGEST = "sha256:" + "a" * 64
+
+
+def _model(model_id: str, **overrides: Any) -> dict[str, Any]:
+    """Return one declared model with every field the agent prints and no stated fact."""
+    model: dict[str, Any] = {
+        "id": model_id,
+        "display_name": model_id,
+        "effort": {"reasoning": "toggle", "control": "none", "levels": [], "default": None},
+        "vision": None,
+        "size_bytes": None,
+        "context_length": None,
+        "licence": None,
+        "artefacts": None,
+    }
+    model.update(overrides)
+    return model
+
+
+def _local_model(model_id: str, *, vision: bool, **overrides: Any) -> dict[str, Any]:
+    """Return one declared model with every fact stated, as the agent prints a local model."""
+    stated: dict[str, Any] = {
+        "vision": vision,
+        "size_bytes": 1_889_519_687,
+        "context_length": 262_144,
+        "licence": {"spdx": "Apache-2.0", "name": "Synthetic licence", "digest": _DIGEST},
+    }
+    stated.update(overrides)
+    return _model(model_id, **stated)
+
+
+def _with_licence(licence: dict[str, Any]) -> str:
+    return _document(_keyless_lane(models=[_local_model("synthetic-reader:1", vision=False, licence=licence)]))
+
+
+def _with_model(**overrides: Any) -> str:
+    return _document(_keyless_lane(models=[{**_local_model("synthetic-reader:1", vision=False), **overrides}]))
+
+
+def _without(lane: dict[str, Any], field: str) -> dict[str, Any]:
+    return {key: value for key, value in lane.items() if key != field}
+
+
+_SHA_A = "a" * 64
+_SHA_B = "b" * 64
+_COMMIT = "0123456789abcdef0123456789abcdef01234567"
+_REGISTRY: dict[str, Any] = {"source": "registry", "name": "synthetic-reader:1"}
+_MODEL_FILE: dict[str, Any] = {"file": "Synthetic-Q4_K_M.gguf", "sha256": _SHA_A, "size_bytes": 1_107_409_952}
+_PROJECTOR_FILE: dict[str, Any] = {"file": "mmproj-Synthetic-Q8_0.gguf", "sha256": _SHA_B, "size_bytes": 445_053_216}
+_HUGGINGFACE: dict[str, Any] = {
+    "source": "huggingface",
+    "repository": "Owner/Synthetic-GGUF",
+    "revision": _COMMIT,
+    "model": _MODEL_FILE,
+}
+
+
+def _artefacts(**overrides: Any) -> dict[str, Any]:
+    stated: dict[str, Any] = {"ollama": _REGISTRY, "llamacpp": _HUGGINGFACE, "llamacpp_default_context": 8192}
+    stated.update(overrides)
+    return stated
+
+
+def _with_artefacts(artefacts: dict[str, Any] | None) -> str:
+    return _with_model(artefacts=artefacts)
+
+
+_REFUSED_ARTEFACTS: dict[str, dict[str, Any]] = {
+    "artefacts-unknown-field": _artefacts(extra=1),
+    "artefacts-missing-ollama": _without(_artefacts(), "ollama"),
+    "artefacts-missing-llamacpp": _without(_artefacts(), "llamacpp"),
+    "artefacts-missing-default-context": _without(_artefacts(), "llamacpp_default_context"),
+    "artefacts-name-no-engine": _artefacts(ollama=None, llamacpp=None, llamacpp_default_context=None),
+    "artefacts-context-without-llamacpp": _artefacts(llamacpp=None),
+    "artefacts-context-zero": _artefacts(llamacpp_default_context=0),
+    "artefacts-ollama-huggingface-form": _artefacts(ollama=_HUGGINGFACE),
+    "artefacts-unknown-source": _artefacts(llamacpp={"source": "url", "name": "x"}),
+    "registry-unknown-field": _artefacts(ollama={**_REGISTRY, "digest": _SHA_A}),
+    "registry-name-traversal": _artefacts(ollama={**_REGISTRY, "name": "../models:1"}),
+    "registry-name-empty": _artefacts(ollama={**_REGISTRY, "name": ""}),
+    "registry-name-too-many-parts": _artefacts(ollama={**_REGISTRY, "name": "a/b/c/d:1"}),
+    "huggingface-unknown-field": _artefacts(llamacpp={**_HUGGINGFACE, "branch": "main"}),
+    "huggingface-missing-model": _artefacts(llamacpp=_without(_HUGGINGFACE, "model")),
+    "huggingface-branch-revision": _artefacts(llamacpp={**_HUGGINGFACE, "revision": "main"}),
+    "huggingface-uppercase-revision": _artefacts(llamacpp={**_HUGGINGFACE, "revision": _COMMIT.upper()}),
+    "huggingface-repository-without-owner": _artefacts(llamacpp={**_HUGGINGFACE, "repository": "Synthetic-GGUF"}),
+    "huggingface-file-not-gguf": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "file": "model.bin"}}),
+    "huggingface-file-in-subfolder": _artefacts(
+        llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "file": "sub/model.gguf"}}
+    ),
+    "huggingface-short-digest": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "sha256": "a" * 63}}),
+    "huggingface-size-zero": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "size_bytes": 0}}),
+    "huggingface-size-beyond-u64": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "size_bytes": 2**64}}),
+    "huggingface-file-unknown-field": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "url": "x"}}),
+    "huggingface-projector-is-the-model": _artefacts(llamacpp={**_HUGGINGFACE, "projector": _MODEL_FILE}),
+    "huggingface-projector-same-digest": _artefacts(
+        llamacpp={**_HUGGINGFACE, "projector": {**_PROJECTOR_FILE, "sha256": _SHA_A}}
+    ),
+}
+
+
+def _with_background(lane: dict[str, Any], background: dict[str, Any]) -> str:
+    return _document({**lane, "background": background})
 
 
 def _key_lane(**overrides: Any) -> dict[str, Any]:
@@ -35,10 +157,66 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
         "auth_kind": "api_key",
         "default_base_url": None,
         "agent_credential_id": "example",
+        "reads_off_host": True,
         "cli_programs": [],
+        "recommended": {},
+        "background": _HOSTED_BACKGROUND,
     }
     lane.update(overrides)
     return lane
+
+
+def test_a_cli_lane_may_offer_logout_and_one_that_declares_none_offers_none() -> None:
+    offered = parse_provider_catalog(_document(_cli_lane(logout=True)))
+    unstated = parse_provider_catalog(_document(_cli_lane()))
+    assert offered.providers[0].logout
+    assert not unstated.providers[0].logout
+
+
+def test_a_version_eight_document_carries_its_task_kinds_in_served_order() -> None:
+    catalog = parse_provider_catalog(_document(_key_lane()))
+
+    assert catalog.schema_version == 8
+    assert [(kind.id, kind.display_name, kind.description) for kind in catalog.task_kinds] == [
+        (kind["id"], kind["display_name"], kind["description"]) for kind in synthetic_task_kinds()
+    ]
+
+
+def test_a_task_kind_id_outside_the_agents_present_vocabulary_parses_as_stated() -> None:
+    kinds = [{"id": "summary", "display_name": "Summary", "description": "A synthetic sentence."}]
+
+    catalog = parse_provider_catalog(_document(_key_lane(), task_kinds=kinds))
+
+    assert [kind.id for kind in catalog.task_kinds] == ["summary"]
+
+
+def test_a_task_kind_description_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "d" * TASK_KIND_DESCRIPTION_MAX_LENGTH
+
+    catalog = parse_provider_catalog(_with_task_kind(description=longest))
+
+    assert catalog.task_kinds[0].description == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_task_kind(description=longest + "d"))
+
+
+def test_a_lane_whose_executor_sends_an_effort_declares_effort_after_the_reply_options() -> None:
+    effort_only = parse_provider_catalog(
+        _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["effort"]})
+    )
+    every_option = parse_provider_catalog(
+        _with_background(
+            _key_lane(),
+            {
+                "runnable": True,
+                "inputs": ["text"],
+                "options": ["temperature", "context_tokens", "response_schema", "effort"],
+            },
+        )
+    )
+
+    assert effort_only.providers[0].background.options == (BackgroundOption.EFFORT,)
+    assert every_option.providers[0].background.options[-1] is BackgroundOption.EFFORT
 
 
 def _cli_lane(**overrides: Any) -> dict[str, Any]:
@@ -51,7 +229,37 @@ def _cli_lane(**overrides: Any) -> dict[str, Any]:
         "auth_kind": "provider_sign_in_only",
         "default_base_url": None,
         "agent_credential_id": None,
+        "reads_off_host": True,
         "cli_programs": ["example"],
+        "recommended": {},
+        "background": _HOSTED_BACKGROUND,
+    }
+    lane.update(overrides)
+    return lane
+
+
+def _keyless_lane(**overrides: Any) -> dict[str, Any]:
+    lane: dict[str, Any] = {
+        "id": "local_api",
+        "provider": "local",
+        "transport": "api",
+        "display_name": "Local",
+        "description": "Synthetic keyless lane on this computer",
+        "auth_kind": "none",
+        "default_base_url": "http://127.0.0.1:41000",
+        "agent_credential_id": None,
+        "reads_off_host": False,
+        "cli_programs": [],
+        "models": [
+            _local_model("synthetic-reader:1", vision=False),
+            _local_model("synthetic-viewer:1", vision=True),
+        ],
+        "recommended": {"text": "synthetic-reader:1"},
+        "background": {
+            "runnable": True,
+            "inputs": ["text", "image"],
+            "options": ["temperature", "context_tokens", "response_schema"],
+        },
     }
     lane.update(overrides)
     return lane
@@ -77,7 +285,7 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     catalog = parse_provider_catalog(_document(_key_lane(), _cli_lane(), gateway, defaulted))
 
     assert catalog.provider_ids == ("example_api", "example_cli", "sample_cli", "plain_api")
-    assert catalog.credential_lane_ids == ("example_api", "sample_cli", "plain_api")
+    assert [entry.agent_credential_id for entry in catalog.providers] == ["example", None, "sample", "plain"]
     api = catalog.providers[0]
     assert (api.transport, api.auth_kind, api.agent_credential_id, api.cli_programs) == (
         ProviderTransport.API,
@@ -92,27 +300,287 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     assert api.consumers == (ProviderConsumer.ASSISTANT,)
 
 
-def test_the_development_variable_is_constructed_from_the_provider_id() -> None:
-    catalog = parse_provider_catalog(_document(_key_lane(), _cli_lane()))
-
-    assert {entry.development_variable for entry in catalog.providers} == {"CADRUMO_LLM_EXAMPLE_API_KEY"}
-    assert development_key_variable("zz_provider") == "CADRUMO_LLM_ZZ_PROVIDER_API_KEY"
-
-
-def test_version_three_retains_presentation_metadata_without_affecting_authentication() -> None:
+def test_version_five_retains_presentation_metadata_without_affecting_authentication() -> None:
     icon = {"key": "example", "variants": [{"variant": "mono", "media_type": "image/svg+xml", "sha256": "a" * 64}]}
     effort = {"reasoning": "supported", "control": "levels", "levels": ["low", "high"], "default": "low"}
-    document = json.loads(_document(_cli_lane(icon=icon, models=[{"id": "sample", "effort": effort}])))
+    document = json.loads(_document(_cli_lane(icon=icon, models=[_model("sample", effort=effort)])))
     document["icon_attribution"] = {"title": "Synthetic artwork", "licence": "MIT"}
 
     catalog = parse_provider_catalog(json.dumps(document))
 
     assert catalog.providers[0].description == "Synthetic CLI provider"
     assert catalog.providers[0].icon == icon
-    assert catalog.providers[0].models[0]["effort"] == effort
+    assert catalog.providers[0].models[0].effort == effort
     assert catalog.icon_attribution == document["icon_attribution"]
-    assert catalog.credential_lane_ids == ()
+    assert catalog.providers[0].agent_credential_id is None
     assert catalog.providers[0].auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
+
+
+def test_a_keyless_lane_parses_with_its_loopback_url_and_on_host_flag() -> None:
+    catalog = parse_provider_catalog(
+        _document(_key_lane(), _keyless_lane(recommended={"vision": "synthetic-viewer:1"}))
+    )
+
+    keyless = catalog.entry("local_api")
+    assert keyless is not None
+    assert keyless.auth_kind is ProviderAuthKind.NONE
+    assert (keyless.agent_credential_id, keyless.default_base_url) == (None, "http://127.0.0.1:41000")
+    assert keyless.reads_off_host is False
+    assert keyless.recommended == {"vision": "synthetic-viewer:1"}
+    assert catalog.providers[0].reads_off_host is True
+    assert catalog.providers[0].recommended == {}
+
+
+def test_a_lane_shaped_as_the_agents_local_lane_parses_every_typed_model_fact() -> None:
+    """The lane mirrors the agent's printed local lane field for field, with invented model ids and facts."""
+    lane = _keyless_lane(
+        description="Open models run on this computer by a local server.",
+        default_base_url="http://127.0.0.1:11434",
+        icon=None,
+        platform={"docs_url": None, "models_url": None, "status": {"kind": "none", "page_url": None, "api_url": None}},
+        default_model="synthetic-reader:1",
+        models=[
+            _local_model("synthetic-viewer:1", vision=True),
+            _local_model("synthetic-reader:1", vision=False),
+            _model("synthetic-unstated:1"),
+        ],
+        recommended={"vision": "synthetic-viewer:1", "text": "synthetic-reader:1"},
+        unread=[],
+    )
+
+    keyless = parse_provider_catalog(_document(lane)).entry("local_api")
+
+    assert keyless is not None
+    viewer = keyless.model("synthetic-viewer:1")
+    assert viewer is not None and viewer.licence is not None
+    assert (viewer.vision, viewer.size_bytes, viewer.context_length) == (True, 1_889_519_687, 262_144)
+    assert (viewer.licence.spdx, viewer.licence.name, viewer.licence.digest) == (
+        "Apache-2.0",
+        "Synthetic licence",
+        _DIGEST,
+    )
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.vision is False
+    unstated = keyless.model("synthetic-unstated:1")
+    assert unstated is not None
+    assert (unstated.vision, unstated.size_bytes, unstated.context_length, unstated.licence) == (None, None, None, None)
+    assert keyless.model("synthetic-absent:1") is None
+    assert keyless.background.runnable is True
+    assert keyless.background.inputs == (BackgroundInput.TEXT, BackgroundInput.IMAGE)
+    assert keyless.background.options == (
+        BackgroundOption.TEMPERATURE,
+        BackgroundOption.CONTEXT_TOKENS,
+        BackgroundOption.RESPONSE_SCHEMA,
+    )
+
+
+def test_a_lane_that_runs_no_background_request_parses_with_no_input() -> None:
+    catalog = parse_provider_catalog(_with_background(_cli_lane(), {"runnable": False, "inputs": [], "options": []}))
+
+    background = catalog.providers[0].background
+    assert (background.runnable, background.inputs, background.options) == (False, (), ())
+
+
+def test_a_licence_without_an_spdx_identifier_parses() -> None:
+    licence = {"spdx": None, "name": "Synthetic community licence", "digest": _DIGEST}
+
+    keyless = parse_provider_catalog(_with_licence(licence)).entry("local_api")
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.licence is not None
+    assert (reader.licence.spdx, reader.licence.name) == (None, "Synthetic community licence")
+
+
+_AGENT_MODEL_ID_LENGTH = 512
+"""cadrumo-agent's longest public id, which its catalogues bound a model id by."""
+_AGENT_LANES = 128
+"""The most lanes cadrumo-agent's catalogues carry."""
+_AGENT_DISPLAY_LENGTH = 256
+"""cadrumo-agent's longest display text, which its catalogues bound a licence's SPDX identifier by."""
+
+
+def _lanes(count: int) -> str:
+    """Return a document of ``count`` keyless lanes, each its own provider identity."""
+    return _document(
+        *(
+            _keyless_lane(id=f"local{index}_api", provider=f"local{index}", display_name=f"Local {index}")
+            for index in range(count)
+        )
+    )
+
+
+def test_a_model_the_agent_states_a_zero_size_for_parses_with_that_size() -> None:
+    keyless = parse_provider_catalog(_with_model(size_bytes=0)).entry("local_api")
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.size_bytes == 0
+
+
+def test_a_model_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "m" * _AGENT_MODEL_ID_LENGTH
+    document = _document(_keyless_lane(models=[_local_model(longest, vision=False)], recommended={"text": longest}))
+
+    keyless = parse_provider_catalog(document).entry("local_api")
+
+    assert keyless is not None and keyless.model(longest) is not None
+    assert keyless.recommended == {"text": longest}
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_model(id=longest + "m"))
+
+
+def test_a_model_id_with_a_control_character_is_refused() -> None:
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_model(id="synthetic\x00reader:1"))
+
+
+def test_as_many_lanes_as_the_agent_allows_parse_and_one_more_is_refused() -> None:
+    assert len(parse_provider_catalog(_lanes(_AGENT_LANES)).providers) == _AGENT_LANES
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_lanes(_AGENT_LANES + 1))
+
+
+def test_an_spdx_identifier_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "S" * _AGENT_DISPLAY_LENGTH
+    keyless = parse_provider_catalog(_with_licence({"spdx": longest, "name": "Synthetic", "digest": _DIGEST})).entry(
+        "local_api"
+    )
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.licence is not None and reader.licence.spdx == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_licence({"spdx": longest + "S", "name": "Synthetic", "digest": _DIGEST}))
+
+
+_AGENT_PROVIDER_ID_LENGTH = 64
+"""cadrumo-agent's longest provider metadata key, which bounds a provider id and its credential id."""
+_PROGRAM_NAME_LENGTH = 255
+"""The longest file name a cli program can have on a common filesystem."""
+
+
+def _provider_lane(provider: str) -> dict[str, Any]:
+    return _key_lane(id=f"{provider}_api", provider=provider, agent_credential_id=provider)
+
+
+def test_a_provider_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "p" * _AGENT_PROVIDER_ID_LENGTH
+    lane_id = f"{longest}_api"
+
+    entry = parse_provider_catalog(_document(_provider_lane(longest))).entry(lane_id)
+
+    assert entry is not None and (entry.id, entry.provider, entry.agent_credential_id) == (lane_id, longest, longest)
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_provider_lane(longest + "p")))
+
+
+def test_a_credential_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "c" * _AGENT_PROVIDER_ID_LENGTH
+
+    entry = parse_provider_catalog(_document(_key_lane(agent_credential_id=longest))).entry("example_api")
+
+    assert entry is not None and entry.agent_credential_id == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_key_lane(agent_credential_id=longest + "c")))
+
+
+def test_a_lane_id_one_past_the_longest_provider_and_transport_is_neither_parsed_nor_looked_up() -> None:
+    catalog = parse_provider_catalog(_document(_key_lane()))
+
+    assert catalog.entry("p" * (_AGENT_PROVIDER_ID_LENGTH + 1) + "_api") is None
+    assert catalog.entry("example_api") is not None
+
+
+def test_a_lane_id_stored_under_the_earlier_forty_character_rule_still_parses() -> None:
+    provider = "o" * 36
+    entry = parse_provider_catalog(_document(_provider_lane(provider))).entry(f"{provider}_api")
+
+    assert entry is not None and len(entry.id) == 40
+
+
+def test_a_display_name_as_long_as_the_agent_serves_parses_and_one_longer_is_refused() -> None:
+    longest = "D" * _AGENT_DISPLAY_LENGTH
+
+    entry = parse_provider_catalog(_document(_key_lane(display_name=longest))).entry("example_api")
+
+    assert entry is not None and entry.display_name == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_key_lane(display_name=longest + "D")))
+
+
+@pytest.mark.parametrize(
+    "program",
+    [
+        pytest.param("x" * _PROGRAM_NAME_LENGTH, id="longest-file-name"),
+        pytest.param("agy", id="short"),
+        pytest.param("Example-CLI.v2", id="mixed-case-dot-and-hyphen"),
+    ],
+)
+def test_a_cli_program_that_is_one_file_name_parses(program: str) -> None:
+    entry = parse_provider_catalog(_document(_cli_lane(cli_programs=[program]))).entry("example_cli")
+
+    assert entry is not None and entry.cli_programs == (program,)
+
+
+@pytest.mark.parametrize(
+    "program",
+    [
+        pytest.param("x" * (_PROGRAM_NAME_LENGTH + 1), id="one-past-the-longest-file-name"),
+        pytest.param("", id="empty"),
+        pytest.param("bin/example", id="slash"),
+        pytest.param("bin\\example", id="backslash"),
+        pytest.param("c:example", id="drive-colon"),
+        pytest.param("exam\tple", id="control-character"),
+    ],
+)
+def test_a_cli_program_that_is_not_one_file_name_is_refused(program: str) -> None:
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_cli_lane(cli_programs=[program])))
+
+
+def test_the_keyless_kind_takes_no_credential_no_sign_in_and_no_url_override() -> None:
+    kind = ProviderAuthKind.NONE
+
+    assert (kind.accepts_direct_credential, kind.accepts_provider_sign_in, kind.accepts_base_url) == (
+        False,
+        False,
+        False,
+    )
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["http://127.0.0.1:11434", "http://localhost:1", "http://[::1]:65535", "http://127.0.0.1/", "http://localhost"],
+)
+def test_loopback_http_origins_pass(url: str) -> None:
+    assert validate_loopback_http_base_url(url) == url
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://127.0.0.1:11434",
+        "http://192.0.2.1:11434",
+        "http://gateway.example.invalid:11434",
+        "http://127.0.0.2:11434",
+        "http://[::2]:11434",
+        "http://[::1:11434",
+        "http://127.0.0.1:11434/*",
+        "http://127.0.0.1:11434/api",
+        "http://user:pw@127.0.0.1:11434",
+        "http://127.0.0.1:11434?q=1",
+        "http://127.0.0.1:11434#frag",
+        "http://127.0.0.1:0",
+        "http://127.0.0.1:65536",
+        "http://127.0.0.1:",
+        " http://127.0.0.1:11434",
+        "",
+    ],
+)
+def test_non_loopback_or_decorated_urls_are_refused(url: str) -> None:
+    with pytest.raises(ValueError):
+        validate_loopback_http_base_url(url)
 
 
 def test_entry_lookup_refuses_ids_outside_the_lane_grammar() -> None:
@@ -155,7 +623,153 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=4), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=9), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=7), id="retired-schema-version-seven"),
+        pytest.param(_document(_key_lane(), schema_version=7, task_kinds=...), id="version-seven-without-task-kinds"),
+        pytest.param(_document(_key_lane(), schema_version=6), id="retired-schema-version-six"),
+        pytest.param(_document(_key_lane(), task_kinds=...), id="missing-task-kinds"),
+        pytest.param(_document(_key_lane(), task_kinds=None), id="task-kinds-null"),
+        pytest.param(
+            _document(_key_lane(), task_kinds=[synthetic_task_kinds()[0], synthetic_task_kinds()[0]]),
+            id="duplicate-task-kind",
+        ),
+        pytest.param(_with_task_kind(id="Classification"), id="task-kind-id-outside-grammar"),
+        pytest.param(_with_task_kind(display_name=""), id="task-kind-display-name-empty"),
+        pytest.param(_with_task_kind(description=""), id="task-kind-description-empty"),
+        pytest.param(_with_task_kind(unexpected="x"), id="task-kind-unknown-field"),
+        pytest.param(
+            _document(_key_lane(), task_kinds=[{"id": "classification", "display_name": "Synthetic"}]),
+            id="task-kind-missing-description",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["effort", "temperature"]}),
+            id="effort-before-a-reply-option",
+        ),
+        pytest.param(_document(_key_lane(), schema_version=5), id="retired-schema-version-five"),
+        pytest.param(_document(_key_lane(), schema_version=4), id="retired-schema-version-four"),
+        pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),
+        pytest.param(
+            _document({key: value for key, value in _key_lane().items() if key != "reads_off_host"}),
+            id="missing-reads-off-host",
+        ),
+        pytest.param(
+            _document({key: value for key, value in _keyless_lane().items() if key != "reads_off_host"}),
+            id="keyless-lane-missing-reads-off-host",
+        ),
+        pytest.param(_document(_key_lane(reads_off_host="false")), id="reads-off-host-not-a-bool"),
+        pytest.param(_document(_keyless_lane(default_base_url="https://127.0.0.1:41000")), id="https-on-keyless"),
+        pytest.param(_document(_keyless_lane(default_base_url="http://192.0.2.1:41000")), id="non-loopback-http"),
+        pytest.param(_document(_keyless_lane(default_base_url="http://127.0.0.1:41000/api")), id="loopback-path"),
+        pytest.param(
+            _document(_keyless_lane(default_base_url="http://user:pw@127.0.0.1:41000")), id="loopback-credential"
+        ),
+        pytest.param(_document(_keyless_lane(default_base_url="http://127.0.0.1:41000?q=1")), id="loopback-query"),
+        pytest.param(_document(_keyless_lane(default_base_url=None)), id="keyless-without-url"),
+        pytest.param(_document(_key_lane(default_base_url="http://127.0.0.1:41000")), id="http-on-key-lane"),
+        pytest.param(
+            _document(
+                _cli_lane(
+                    auth_kind="api_key_with_base_url",
+                    agent_credential_id="example",
+                    default_base_url="http://localhost:41000",
+                )
+            ),
+            id="http-on-gateway-lane",
+        ),
+        pytest.param(_document(_keyless_lane(agent_credential_id="local")), id="credential-id-on-keyless"),
+        pytest.param(_document(_keyless_lane(recommended={"vision": "not-listed:1"})), id="recommended-not-listed"),
+        pytest.param(_document(_keyless_lane(recommended={"": "synthetic-reader:1"})), id="recommended-empty-key"),
+        pytest.param(_document(_keyless_lane(recommended={"vision": 1})), id="recommended-not-a-string"),
+        pytest.param(
+            _document(_key_lane(recommended={"text": "synthetic-reader:1"})), id="recommended-on-modelless-lane"
+        ),
+        pytest.param(_document(_without(_keyless_lane(), "recommended")), id="missing-recommended"),
+        pytest.param(_document(_without(_key_lane(), "background")), id="missing-background"),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text", "audio"], "options": []}),
+            id="unknown-input-kind",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text", "text"], "options": []}),
+            id="duplicate-input",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["image", "text"], "options": []}),
+            id="inputs-out-of-order",
+        ),
+        pytest.param(
+            _with_background(
+                _key_lane(), {"runnable": True, "inputs": ["text"], "options": ["temperature", "temperature"]}
+            ),
+            id="duplicate-option",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["seed"]}),
+            id="unknown-option",
+        ),
+        pytest.param(
+            _with_background(
+                _key_lane(), {"runnable": True, "inputs": ["text"], "options": ["response_schema", "temperature"]}
+            ),
+            id="options-out-of-order",
+        ),
+        pytest.param(
+            _with_background(_cli_lane(), {"runnable": False, "inputs": ["text"], "options": []}),
+            id="unrunnable-lane-with-input",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": "yes", "inputs": [], "options": []}),
+            id="runnable-not-a-bool",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": [], "extra": 1}),
+            id="background-unknown-field",
+        ),
+        pytest.param(_with_model(size_bytes=-1), id="size-negative"),
+        pytest.param(_with_model(size_bytes="1"), id="size-not-an-integer"),
+        pytest.param(_with_model(size_bytes=1.5), id="size-fractional"),
+        pytest.param(_with_model(context_length=0), id="context-length-zero"),
+        pytest.param(_with_model(vision="yes"), id="vision-not-a-bool"),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "artefacts")])),
+            id="model-missing-artefacts",
+        ),
+        *[pytest.param(_with_artefacts(value), id=name) for name, value in _REFUSED_ARTEFACTS.items()],
+        pytest.param(_with_model(installed=True), id="model-unknown-field"),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "licence")])),
+            id="model-missing-licence",
+        ),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "vision")])),
+            id="model-missing-vision",
+        ),
+        pytest.param(
+            _document(_keyless_lane(models=[_model("synthetic-reader:1"), _model("synthetic-reader:1")])),
+            id="duplicate-model",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "A" * 64}),
+            id="licence-digest-uppercase",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "md5:" + "a" * 32}),
+            id="licence-digest-wrong-algorithm",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "a" * 63}),
+            id="licence-digest-short",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "g" * 64}),
+            id="licence-digest-not-hex",
+        ),
+        pytest.param(_with_licence({"spdx": "MIT", "name": "", "digest": _DIGEST}), id="licence-name-empty"),
+        pytest.param(_with_licence({"spdx": "MIT", "name": "Synthetic"}), id="licence-missing-digest"),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": _DIGEST, "url": "x"}),
+            id="licence-unknown-field",
+        ),
         pytest.param(_document(_key_lane(), schema_version=2), id="retired-schema-version"),
         pytest.param(_document(_key_lane(), schema_version=0), id="schema-version-zero"),
         pytest.param(_document(), id="no-lanes"),
@@ -187,3 +801,72 @@ def test_acceptable_base_url_passes() -> None:
 def test_malformed_catalog_is_refused(document: str) -> None:
     with pytest.raises(CoreValidationError):
         parse_provider_catalog(document)
+
+
+def _artefacts_of(document: str, model_id: str = "synthetic-reader:1") -> Any:
+    entry = parse_provider_catalog(document).entry("local_api")
+    assert entry is not None
+    model = entry.model(model_id)
+    assert model is not None
+    return model.artefacts
+
+
+def test_a_model_with_registry_artefacts_for_both_engines_parses() -> None:
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(llamacpp=_REGISTRY, llamacpp_default_context=8192)))
+
+    assert artefacts.ollama.name == "synthetic-reader:1"
+    assert artefacts.llamacpp.source == "registry"
+    assert artefacts.llamacpp.name == "synthetic-reader:1"
+    assert artefacts.llamacpp_default_context == 8192
+
+
+def test_a_huggingface_artefact_with_a_projector_parses() -> None:
+    projected = {**_HUGGINGFACE, "projector": _PROJECTOR_FILE}
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(llamacpp=projected)))
+
+    assert artefacts.llamacpp.source == "huggingface"
+    assert artefacts.llamacpp.repository == "Owner/Synthetic-GGUF"
+    assert artefacts.llamacpp.revision == _COMMIT
+    assert artefacts.llamacpp.model.size_bytes == 1_107_409_952
+    assert artefacts.llamacpp.projector.file == "mmproj-Synthetic-Q8_0.gguf"
+    assert artefacts.llamacpp.projector.sha256 == _SHA_B
+
+
+def test_a_huggingface_artefact_leaves_a_missing_projector_out() -> None:
+    assert "projector" not in _HUGGINGFACE
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts()))
+
+    assert artefacts.llamacpp.projector is None
+
+
+def test_a_single_engine_artefact_set_parses() -> None:
+    ollama_only = _artefacts_of(_with_artefacts(_artefacts(llamacpp=None, llamacpp_default_context=None)))
+    llamacpp_only = _artefacts_of(_with_artefacts(_artefacts(ollama=None)))
+
+    assert ollama_only.llamacpp is None
+    assert ollama_only.llamacpp_default_context is None
+    assert llamacpp_only.ollama is None
+    assert llamacpp_only.llamacpp.source == "huggingface"
+
+
+def test_a_registry_name_with_a_host_and_a_tag_parses() -> None:
+    name = "registry.example.com/library/synthetic:q4_0"
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(ollama={**_REGISTRY, "name": name})))
+
+    assert artefacts.ollama.name == name
+
+
+def test_a_model_with_no_artefacts_parses_with_none() -> None:
+    assert _artefacts_of(_with_artefacts(None)) is None
+
+
+def test_artefacts_are_frozen() -> None:
+    artefacts = _artefacts_of(_with_artefacts(_artefacts()))
+
+    with pytest.raises(ValidationError):
+        artefacts.llamacpp_default_context = 1
+    with pytest.raises(ValidationError):
+        artefacts.ollama.name = "other"

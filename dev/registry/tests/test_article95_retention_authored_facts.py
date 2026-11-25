@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -16,11 +16,11 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
-from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
-from .profile_schema_support import authored_history_supported_filing_years
+from .profile_schema_support import authored_fact_catalogue, authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -34,20 +34,6 @@ _RATE_IDS = frozenset(
         "rirpf-art-95:retencion-actividades-forestales",
         "rirpf-art-95:retencion-actividades-estimacion-objetiva",
     }
-)
-_REDACTION_STARTS = (
-    date(2007, 4, 1),
-    date(2015, 1, 1),
-    date(2015, 7, 12),
-    date(2018, 12, 23),
-    date(2023, 1, 26),
-)
-_REDACTION_PUBLICATIONS = (
-    date(2007, 3, 31),
-    date(2014, 12, 6),
-    date(2015, 7, 11),
-    date(2018, 12, 22),
-    date(2023, 1, 25),
 )
 _EXPECTED_RATE_VALUES = {
     "rirpf-art-95:retencion-actividades-profesionales-general": ("0.15", "0.18", "0.15", "0.15", "0.15"),
@@ -67,8 +53,14 @@ _EXPECTED_RATE_VALUES = {
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
-    return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts if fact.fact_id in _RATE_IDS})
+    return authored_fact_catalogue(_RATE_IDS)
+
+
+@cache
+def _redaction_starts() -> tuple[date, ...]:
+    """Return the days the BOE redactions take effect, as the authored variants of the general rate start."""
+    variants = _catalogue().facts["rirpf-art-95:retencion-actividades-profesionales-general"].variants
+    return tuple(variant.valid_from for variant in variants if variant.valid_from is not None)
 
 
 def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
@@ -86,32 +78,49 @@ def test_article_95_rates_are_authored_once() -> None:
     assert set(_catalogue().facts) == _RATE_IDS
 
 
+def test_article_95_redactions_take_effect_on_their_boe_dates() -> None:
+    assert [start.isoformat() for start in _redaction_starts()] == [
+        "2007-04-01",
+        "2015-01-01",
+        "2015-07-12",
+        "2018-12-23",
+        "2023-01-26",
+    ]
+
+
 @pytest.mark.parametrize(
-    ("fact_id", "effective_date", "value", "variant_suffix"),
+    ("fact_id", "redaction", "value"),
     tuple(
-        (fact_id, effective_date, value, effective_date.isoformat())
+        (fact_id, redaction, value)
         for fact_id, values in _EXPECTED_RATE_VALUES.items()
-        for effective_date, value in zip(_REDACTION_STARTS, values, strict=True)
+        for redaction, value in enumerate(values)
     ),
 )
-def test_article_95_rate_boundaries_select_the_boe_redaction_value(
-    fact_id: str, effective_date: date, value: str, variant_suffix: str
-) -> None:
+def test_article_95_rate_boundaries_select_the_boe_redaction_value(fact_id: str, redaction: int, value: str) -> None:
+    effective_date = _redaction_starts()[redaction]
     resolved = _resolve(fact_id, effective_date)
 
     assert resolved.payload.value == Decimal(value)
-    assert resolved.variant_id.endswith(variant_suffix)
-    assert resolved.source_refs == (f"boe-rirpf-art-95-{variant_suffix}",)
+    assert resolved.variant_id.endswith(effective_date.isoformat())
+    assert resolved.source_refs == (f"boe-rirpf-art-95-{effective_date.isoformat()}",)
 
 
-def test_article_95_rates_do_not_project_before_the_first_redaction_in_force() -> None:
-    """The first redaction declares when it entered into force, and that is a legal boundary."""
-    first = _REDACTION_STARTS[0]
+def test_article_95_rates_before_the_first_redaction_read_it_as_a_backward_projection() -> None:
+    """A date always has a rate: before the first redaction in force, that redaction answers, marked as projected."""
+    fact_id = "rirpf-art-95:retencion-actividades-profesionales-general"
+    first = min(
+        variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None
+    )
 
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first - timedelta(days=1))
+    before = _resolve(fact_id, first - timedelta(days=1))
+    assert before.payload.value == Decimal("0.15")
+    assert before.variant_id.endswith(first.isoformat())
+    assert before.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before.projected_from_date == first
+    assert not before.published_on_date
 
     resolved = _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first)
+    assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
     assert resolved.payload.value == Decimal("0.15")
     assert resolved.payload.unit == "fraction"
     assert resolved.source_refs == (f"boe-rirpf-art-95-{first.isoformat()}",)
@@ -122,13 +131,16 @@ def test_each_authored_rate_variant_has_its_own_hash_pinned_boe_window() -> None
     shared = load_shared_catalogues(source_root / "registry" / "aeat")
 
     for fact in _catalogue().facts.values():
-        assert tuple(variant.valid_from for variant in fact.variants) == _REDACTION_STARTS
-        for variant, published_at in zip(fact.variants, _REDACTION_PUBLICATIONS, strict=True):
+        assert tuple(variant.valid_from for variant in fact.variants) == _redaction_starts()
+        published: list[str] = []
+        for variant in fact.variants:
             source = shared.sources[variant.source_refs[0]]
             assert source.applies_from == variant.valid_from
             assert source.applies_to == variant.valid_to
-            assert source.published_at == published_at
+            assert source.published_at is not None
+            published.append(source.published_at.isoformat())
             assert variant.source_citations[0].source_ref == source.id
+        assert published == ["2007-03-31", "2014-12-06", "2015-07-11", "2018-12-22", "2023-01-25"]
 
     assert (
         governed_fact_catalogue_failures(

@@ -9,7 +9,7 @@ output.
 The key ground-truth fields available from every manifest:
 
 * ``tax_id``          — the redacted identifier the sidecar declares: a NIE/NIF
-                        for a personal filer (``Y0000001S``) or a CIF for a
+                        for a personal filer (``Y0001006P``) or a CIF for a
                         sociedad's IS modelo (e.g. Modelo 202 ``B00000001``).
 * ``csv``             — ``SANITIZED{modelo}{ejercicio}`` (the synthetic CSV
                         injected by the sanitiser, e.g. ``SANITIZED1302024``).
@@ -45,19 +45,19 @@ from pydantic import TypeAdapter
 
 from .....core.aeat_csv import is_aeat_csv
 from .....core.directory_scan import scan_directory
-from .....core.period import Period
+from .....core.period import Period, is_filing_period_token
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import aeat_host
-from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.inventory import FIXTURES_DIR
 from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
-_JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
+_JUSTIFICANTES_DIR = FIXTURES_DIR / "justificantes"
 _SEDE_HOST = aeat_host("sede")
 
 # The sanitiser injects a redacted tax id per fixture: a NIE/NIF for a personal
-# filer (Y0000001S) but a CIF for a sociedad's Impuesto sobre Sociedades modelo
+# filer (Y0001006P) but a CIF for a sociedad's Impuesto sobre Sociedades modelo
 # (e.g. Modelo 202 -> B00000001). This shape (optional leading letter, 7-8
 # digits, trailing control character) locates the tax-id replacement in the
 # sidecar, distinct from the redacted date (01-01-1900) and the
@@ -69,35 +69,6 @@ _SYNTHETIC_TAX_ID_RE = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
 _CSV_SYNTHETIC_RE = re.compile(r"^SANITIZED(\d{3})(\d{4})$")
 
 _REPLACEMENTS_ADAPTER: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
-
-# Fixtures where the PDF body prints only the ejercicio year as the period
-# (no explicit "Período N" label) — the parser's observed period therefore
-# equals the year string, not the filename period token.
-_PERIOD_EQUALS_EJERCICIO: frozenset[tuple[str, str]] = frozenset(
-    {
-        # M190 Resumen anual 2024: positional layout prints only year.
-        ("190", "2024-0A"),
-        # M390 2021-0A: real multi-page PDF in English layout that omits
-        # a labelled Período token; parser promotes ejercicio as period.
-        # M390 2022-0A and 2023-0A are synthetic fixtures that print
-        # "Periodo: 0A" explicitly — their period IS "0A", not the year.
-        ("390", "2021-0A"),
-        # M100 2023: newer layout omits labelled Período token.
-        ("100", "2023-0A"),
-        # M036: censal declaracion with event codes (alta/modificacion/baja),
-        # no calendar Periodo label; parser falls back to ejercicio year.
-        ("036", "2025-0A"),
-        ("036", "2025-alta"),
-        # M184, M232, M347, M720, M840: annual informativas with no Periodo
-        # label; parser fallback returns the ejercicio year.
-        ("184", "2024-0A"),
-        ("232", "2016-0A"),
-        ("232", "2018-0A"),
-        ("347", "2024-0A"),
-        ("720", "2024-0A"),
-        ("840", "2024-0A"),
-    },
-)
 
 
 @dataclass(frozen=True)
@@ -112,16 +83,16 @@ class _SidecarGroundTruth:
     expected_period: str
 
 
-def _derive_expected_period(modelo: str, stem: str, ejercicio: str, filename_period: str) -> str:
+def _derive_expected_period(ejercicio: str, filename_period: str) -> str:
     """Return the period token the parser is expected to emit for this fixture.
 
-    Most fixtures emit the period verbatim from the PDF.  A small set of
-    annual / resumen-anual layouts omit the labelled period and the parser
-    promotes the ejercicio year instead.
+    A calendar period token in the fixture name is printed in the PDF and is
+    emitted verbatim. A censal event code (alta, modificacion, baja) names no
+    calendar period, so the parser promotes the ejercicio instead.
     """
-    if (modelo, stem) in _PERIOD_EQUALS_EJERCICIO:
-        return ejercicio
-    return filename_period
+    if is_filing_period_token(filename_period):
+        return filename_period
+    return ejercicio
 
 
 def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGroundTruth | None:
@@ -164,7 +135,7 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
         # Inconsistent manifest — skip rather than assert garbage.
         return None  # pragma: no cover
 
-    expected_period = _derive_expected_period(modelo, stem, sidecar_ejercicio, period_from_stem)
+    expected_period = _derive_expected_period(sidecar_ejercicio, period_from_stem)
 
     return _SidecarGroundTruth(
         expected_tax_id=tax_id_token,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from cadrumo_client.commands.execution_policies import ENCRYPTED_DESTRUCTIVE, PROFILE_READ, state_free_group_spec
-from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.secret_contracts import (
     MachineSecretFieldSpec,
@@ -76,7 +76,7 @@ def _recovery_leaf(
         help_key=TranslationKey(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(*parameters, _OUTPUT_LANGUAGE),
+        parameters=(*parameters, OUTPUT_LANGUAGE_OPTION),
         policy=policy,
         handler=LazyBinding.available(DeferredTarget("cadrumo_runtime.commands.recovery", handler)),
         result_schema=ResultSchemaSpec(

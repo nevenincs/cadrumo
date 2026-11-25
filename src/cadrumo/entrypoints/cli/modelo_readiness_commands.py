@@ -4,20 +4,21 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo.export import modelo_export_readiness_refusal
+from ...application.modelo.export_contracts import modelo_export_readiness_refusal
 from ...application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from ...application.operations.public_period import PublicPeriod
-from ...application.state_projection import ProjectionModeloReadiness
+from ...application.state_projection_models import ProjectionModeloReadiness
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
-from ._action_rendering import resolved_precondition_action_json_cell
-from ._modelo_cli_support import unsupported_local_work_period_refusal
+from .action_rendering import resolved_precondition_action_json_cell
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
-from .modelo_results import (
+from .decimal_parsing import optional_decimal_text
+from .modelo_behavior_support import resolve_year_period
+from .modelo_query_results import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
     ModeloReadinessMissingRequirementPayload,
@@ -63,7 +64,7 @@ def modelo_readiness(
     )
     report = to_modelo_readiness_report(projection)
     revision_id = report.revision_id
-    readiness_result = _readiness_result(
+    readiness_result = modelo_readiness_commands_readiness_result(
         report,
         authority_generation=projection.authority_generation,
         modelo=modelo,
@@ -95,15 +96,10 @@ def modelo_readiness(
 def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
     if period is None:
         return None
-    try:
-        return Period.from_year_and_code(filing_year, period)
-    except PeriodError as exc:
-        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
-            raise refusal from exc
-        raise
+    return resolve_year_period(filing_year, period, modelo=modelo)
 
 
-def _readiness_result(
+def modelo_readiness_commands_readiness_result(
     report: ProjectionModeloReadiness,
     *,
     authority_generation: ContentDigest,
@@ -111,6 +107,7 @@ def _readiness_result(
     revision_id: RevisionId,
     filing_year: int,
 ) -> ModeloReadinessResult:
+    """Build the modelo readiness result for the report, authority generation and revision."""
     return ModeloReadinessResult(
         authority_generation=authority_generation,
         profile_id=str(report.profile_id),
@@ -152,6 +149,10 @@ def _readiness_result(
                 transaction_id=issue.transaction_id,
                 reason=issue.reason.value,
                 detail=issue.detail,
+                missing_facts=list(issue.missing_facts),
+                derived_modification_base=optional_decimal_text(issue.derived_modification_base),
+                derived_modification_cuota=optional_decimal_text(issue.derived_modification_cuota),
+                derived_modification_recargo=optional_decimal_text(issue.derived_modification_recargo),
             )
             for issue in report.ledger_issues
         ],

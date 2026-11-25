@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from cadrumo.adapters.persistence.profile.submission import (
     SubmissionRepository,
@@ -16,20 +16,24 @@ from cadrumo.adapters.persistence.profile.submission import (
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import ClassificationError, PathContainmentError
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
+from cadrumo.tests.log_records import delivered_text
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: The capsule authority resolves a bucket id as a UUID, so a readable slug
 #: cannot stand in for one. Matches the constant sibling suites declare.
 _BUCKET_ID = "3f2a91c4-6d5e-4a7b-9c81-0e4d2b6f8a13"
-_PERIOD = Period.from_year_and_code(2026, "1T")
-_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 30, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(FILING_YEAR, "1T")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(FILING_YEAR, 5, 26, 15, 30, 0, tzinfo=UTC)
 
 
 def _make_filing(
@@ -40,7 +44,7 @@ def _make_filing(
     profile_tax_id: str = "00000000T",
     period: object = _PERIOD,
 ) -> ModeloPresentado:
-    submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    submitted_at = datetime(FILING_YEAR, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = (draft_id.encode().hex() + "0" * 16)[:16]
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.{attempt_ordinal}",
@@ -114,7 +118,7 @@ class TestSaveLoad:
         assert repo.list_submission_ids() == (filing.submission_id,)
 
     def test_period_dict_round_trips_through_model_boundary(self) -> None:
-        filing = _make_filing(period={"filing_year": 2026, "code": "1T"})
+        filing = _make_filing(period={"filing_year": FILING_YEAR, "code": "1T"})
 
         assert filing.period == _PERIOD
 
@@ -124,7 +128,7 @@ class TestSaveLoad:
 
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):
-            _make_filing(period="2026Q1")
+            _make_filing(period=f"{filing_year_envelope().horizon}Q1")
 
 
 class TestListAndIter:
@@ -153,18 +157,22 @@ class TestListAndIter:
 
         with session_scope(get_engine(runtime_profile.settings)) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == SubmissionRepository.namespace,
-                    SecureObjectRow.object_key == future.submission_id,
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == SubmissionRepository.namespace,
+                    secure_objects_table.c.object_key == future.submission_id,
                 ),
-            ).scalar_one()
-            row.schema_version = SubmissionRepository.schema_version + 1
+            ).one()
+            session.execute(
+                update(secure_objects_table)
+                .where(secure_objects_table.c.id == row.id)
+                .values(schema_version=SubmissionRepository.schema_version + 1),
+            )
 
         caplog.set_level("WARNING")
 
         assert tuple(repo.iter_submissions()) == (healthy,)
-        assert "skipping unreadable submission" in caplog.text
-        assert "más reciente de lo que admite esta aplicación" in caplog.text
+        assert "skipping unreadable submission" in delivered_text(caplog)
+        assert "más reciente de lo que admite esta aplicación" in delivered_text(caplog)
 
 
 class TestDelete:

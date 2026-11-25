@@ -70,11 +70,11 @@ def capture_modelo_calculation(
     """Materialize one calculation revision over a window in which it did not move.
 
     The revision is exactly what the sole calculation-revision authority
-    (:func:`~cadrumo.application.modelo.calculation_actions.get_calculation_revision`)
+    (:func:`~cadrumo.application.modelo.calculation_revision_queries.get_calculation_revision`)
     returned. This module computes nothing and reconstructs nothing; it adds
     the currentness coordinate a pinned multi-producer read needs.
     """
-    from .calculation_actions import get_calculation_revision
+    from .calculation_revision_queries import get_calculation_revision
 
     return _CALCULATION_CAPTURE_SCOPE.capture(
         coordinate=_calculation_capture_coordinate(calculation_revision_id),

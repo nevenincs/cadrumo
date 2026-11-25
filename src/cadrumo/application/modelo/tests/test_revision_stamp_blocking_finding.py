@@ -12,6 +12,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -25,6 +26,7 @@ from ..verification_report_facts import classify_verification_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "33bf8a22-b0de-4f9c-8c83-f92cfb84c669"  # was 'revision-stamp-blocking'
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 _M303_REQUIREMENT_LEGAL_REFS = ("ley-58-2003:art-119",)
@@ -34,8 +36,8 @@ _M303_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-303-procedure",)
 def _requirement() -> CrossPeriodDependencyRequirement:
     return CrossPeriodDependencyRequirement(
         source_modelo="303",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("binding-303-casilla-01",),
@@ -48,8 +50,8 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
     return CrossPeriodCleanStateVerdict(
         bucket_id=_BUCKET_ID,
         target_modelo="390",
-        target_filing_year=2025,
-        target_period=Period.from_year_and_code(2025, "0A"),
+        target_filing_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "0A"),
         dependencies=(evidence,),
     )
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c7cb0dcf33af9c5700437ca077a2391b45d4fc81351a1952f3f05192625777e'
+body_hash: 'sha256:84e43b5377c77215acdb9a2f33930e81728e6b41fe1d4bc2e82aed0512911790'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -563,8 +563,8 @@ calc-sheet transport exports casilla numbers and formulas, not taxpayer
 identity — so a retype cannot reach it structurally; the export constraint
 from the original Constraints section is narrowed to fixed-width
 fichero-BOE only. The locale catalogues are clean: every tax-id reference
-found is prose ABOUT an identifier, never a format declaration. `src/cadrumo/llm/`
-is confirmed well-governed, not a leak: LLM-extracted identifiers land in
+found is prose ABOUT an identifier, never a format declaration. The model
+extraction path is confirmed well-governed, not a leak: LLM-extracted identifiers land in
 an unvalidated draft model first, `_agreed_counterparty_tax_id()` REFUSES
 confirmation when operator-supplied and extracted NIFs disagree, and the
 persisted path runs `validate_spanish_tax_id()` / `validate_iva_number()`
@@ -644,7 +644,7 @@ written; it was never consulted.
 ### The measurement, re-derived independently for this amendment
 
 **Real AEAT-issued values.** Three, captured from live Sede sessions against
-one taxpayer's IRPF filings for 2021, 2022 and 2023 and byte-identical
+one taxpayer's IRPF filings for three successive years and byte-identical
 across two independent capture rounds (`2026-04-25-aeat-verify-research`,
 `2026-04-26-aeat-verify-audit`): `FNBB57PE9KZ5TN4R`, `MZRSYDRL5JMPJPRT`,
 `TUD4V9XAUV7QJ8QV`. Each is exactly sixteen uppercase alphanumeric

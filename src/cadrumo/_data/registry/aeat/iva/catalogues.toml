@@ -2,10 +2,9 @@
 #
 # THE FILE CARRIES NO YEAR. Nothing in this catalogue is year-dated: every
 # citation names a LIVA article and quotes it verbatim, and the retrieval_date
-# records when the bundled corpus was read, not when the rule applies. The year
-# used to live in the filename alone, which meant admitting a filing year meant
-# copying the whole table -- and a copied table of provisions is a fabricated
-# citation wearing a legal reference.
+# records when the bundled corpus was read, not when the rule applies. A copied
+# table of provisions per year would be a fabricated citation wearing a legal
+# reference.
 #
 # THE SPANS ARE DERIVED, NOT ASSERTED. Each citation's window is bounded by the
 # cited provision's own effective span in the registry legal catalogue, and a
@@ -350,6 +349,34 @@ valid_from = 2022-01-01
 valid_to = 2026-12-31
 quoted_text = "Dos. Los empresarios acogidos al régimen especial de la agricultura, ganadería y pesca tendrán derecho a percibir una compensación a tanto alzado por las cuotas del Impuesto sobre el Valor Añadido que hayan soportado o satisfecho por las adquisiciones o importaciones de bienes o en los servicios que les hayan sido prestados, en la medida en que utilicen dichos bienes y servicios en la realización de actividades a las que resulte aplicable dicho régimen especial."
 retrieval_date = 2026-08-11
+
+[[regulations]]
+category = "special_regime_used_goods"
+requires_reverse_charge = false
+requires_supplier_iva_id = false
+manual_references = []
+notes = "Regimen especial de los bienes usados, objetos de arte, antiguedades y objetos de coleccion. El revendedor lo aplica operacion por operacion (art. 135.Dos); la base imponible es el margen de beneficio con el IVA incluido (art. 137), la factura no consigna la cuota (art. 138) y el adquirente no la deduce (art. 138)."
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-135"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+quoted_text = "Dos. No obstante lo dispuesto en el apartado anterior, los sujetos pasivos revendedores podrán aplicar a cualquiera de las operaciones enumeradas en el mismo el régimen general del impuesto, en cuyo caso tendrán derecho a deducir las cuotas del impuesto soportadas o satisfechas en la adquisición o importación de los bienes objeto de reventa"
+retrieval_date = 2026-11-22
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-137"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+quoted_text = "Artículo 137. La base imponible. Uno. La base imponible de las entregas de bienes a las que se aplique el régimen especial de los bienes usados, objetos de arte, antigüedades y objetos de colección estará constituida por el margen de beneficio de cada operación aplicado por el sujeto pasivo revendedor, minorado en la cuota del Impuesto sobre el Valor Añadido correspondiente a dicho margen."
+retrieval_date = 2026-11-22
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-138"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+quoted_text = "Artículo 138. Repercusión del Impuesto. En las facturas que documenten las operaciones a que resulte aplicable este régimen especial, los sujetos pasivos no podrán consignar separadamente la cuota repercutida, debiendo entenderse ésta comprendida en el precio total de la operación. No serán deducibles las cuotas soportadas por los adquirentes de bienes usados, objetos de arte, antigüedades u objetos de colección que les hayan sido entregados por sujetos pasivos revendedores con aplicación del régimen especial regulado en este capítulo."
+retrieval_date = 2026-11-22
 
 [[regulations]]
 category = "operacion_no_sujeta"

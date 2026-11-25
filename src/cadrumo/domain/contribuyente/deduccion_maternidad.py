@@ -8,8 +8,9 @@ ordinary cap plus the applicable increment.
 
 from __future__ import annotations
 
-from collections.abc import Container
+from collections.abc import Container, Mapping
 from datetime import date
+from decimal import Decimal
 
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
@@ -155,6 +156,31 @@ def _resolve_alta_posterior_increment(
     return _resolve_maternidad_scalar(authority, declarations["formula.increment_fact_id"], effective_date)
 
 
+def _importes_por_hijo(
+    meses_por_hijo: list[tuple[str, int]],
+    *,
+    filing_year: int,
+    alta_posterior_hijos: Container[str],
+    authority: GovernedFactSource | None,
+) -> list[tuple[str, int]]:
+    """Each child's amount after the monthly accrual, the annual cap and any alta increment."""
+    mensual = _resolve_maternidad_figure(filing_year, "mensual", authority=authority)
+    cap_anual = _resolve_maternidad_figure(filing_year, "cap-anual", authority=authority)
+    increment = _resolve_alta_posterior_increment(filing_year, authority=authority)
+    importes: list[tuple[str, int]] = []
+    for hijo_id, meses in meses_por_hijo:
+        importe = meses * mensual
+        cap = cap_anual
+        if increment is not None and hijo_id in alta_posterior_hijos:
+            importe += increment
+            # The raised cap is DERIVED from its two inputs rather than stored,
+            # so it cannot drift away from them the way an independent literal
+            # would.
+            cap = cap_anual + increment
+        importes.append((hijo_id, min(importe, cap)))
+    return importes
+
+
 def compute_deduccion_maternidad_0611(
     meses_por_hijo: list[tuple[str, int]],
     *,
@@ -180,18 +206,49 @@ def compute_deduccion_maternidad_0611(
 
     Returns an integer euros amount.
     """
-    mensual = _resolve_maternidad_figure(filing_year, "mensual", authority=authority)
-    cap_anual = _resolve_maternidad_figure(filing_year, "cap-anual", authority=authority)
-    increment = _resolve_alta_posterior_increment(filing_year, authority=authority)
-    total = 0
-    for hijo_id, meses in meses_por_hijo:
-        importe = meses * mensual
-        cap = cap_anual
-        if increment is not None and hijo_id in alta_posterior_hijos:
-            importe += increment
-            # The raised cap is DERIVED from its two inputs rather than stored,
-            # so it cannot drift away from them the way an independent literal
-            # would.
-            cap = cap_anual + increment
-        total += min(importe, cap)
+    return sum(
+        importe
+        for _, importe in _importes_por_hijo(
+            meses_por_hijo,
+            filing_year=filing_year,
+            alta_posterior_hijos=alta_posterior_hijos,
+            authority=authority,
+        )
+    )
+
+
+def compute_deduccion_maternidad_0611_limitada_por_cotizaciones(
+    meses_por_hijo: list[tuple[str, int]],
+    *,
+    cotizaciones_por_hijo: Mapping[str, Decimal | None],
+    filing_year: int,
+    alta_posterior_hijos: Container[str] = frozenset(),
+    authority: GovernedFactSource | None = None,
+) -> Decimal | None:
+    """Compute the deducción where each child is also limited by the mother's cotizaciones.
+
+    Art. 81 LIRPF as it stood until the Ley 31/2022 reform bounded each child's
+    deducción by both the annual cap and the cotizaciones y cuotas totales a la
+    Seguridad Social y Mutualidades devengadas after that child's birth. Every
+    child's amount is the one :func:`compute_deduccion_maternidad_0611` forms,
+    then limited by that child's own stated figure in *cotizaciones_por_hijo*,
+    and the limited amounts are summed.
+
+    Returns ``None`` when a child with a positive amount has no stated figure
+    (absent from the mapping or ``None``): the box stays unresolved rather than
+    reading a missing figure as zero or as no limit.
+    """
+    total = Decimal(0)
+    for hijo_id, importe in _importes_por_hijo(
+        meses_por_hijo,
+        filing_year=filing_year,
+        alta_posterior_hijos=alta_posterior_hijos,
+        authority=authority,
+    ):
+        if importe <= 0:
+            continue
+        cotizaciones = cotizaciones_por_hijo.get(hijo_id)
+        if cotizaciones is None:
+            return None
+        total += min(Decimal(importe), cotizaciones)
     return total

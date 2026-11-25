@@ -1,6 +1,5 @@
-//! Process panic recording: every panic reaches the durable diagnostics log
-//! before unwinding begins, so a panic that cannot unwind (an FFI callback, a
-//! panic during cleanup) still leaves its record before the process aborts.
+//! Process panic recording without waiting for output or event-ring locks.
+//! Delivery is best effort: abrupt abort can lose a queued panic record.
 //!
 //! The payload is never written. Panic messages can carry formatted values,
 //! including `Debug` output of private data; the record keeps only the source

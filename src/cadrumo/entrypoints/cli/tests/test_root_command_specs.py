@@ -9,8 +9,8 @@ from typer.testing import CliRunner
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 
-from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..main import cli_app
+from ..root_command_specs import ROOT_COMMAND_SPECS
 
 app = cli_app()
 

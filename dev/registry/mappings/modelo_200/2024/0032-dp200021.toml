@@ -73,7 +73,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0006"
 kind = "casilla"
-casilla_id = "00987"
+casilla_id = "DP200021:00987"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -398,7 +398,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0031"
 kind = "casilla"
-casilla_id = "01897"
+casilla_id = "DP200021:01897"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -411,7 +411,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0032"
 kind = "casilla"
-casilla_id = "01901"
+casilla_id = "DP200021:01901"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -424,7 +424,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0033"
 kind = "casilla"
-casilla_id = "00988"
+casilla_id = "DP200021:00988"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -515,7 +515,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0040"
 kind = "casilla"
-casilla_id = "00989"
+casilla_id = "DP200021:00989"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -541,7 +541,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0042"
 kind = "casilla"
-casilla_id = "00630"
+casilla_id = "DP200021:00630"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -554,7 +554,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0043"
 kind = "casilla"
-casilla_id = "00631"
+casilla_id = "DP200021:00631"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -567,7 +567,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0044"
 kind = "casilla"
-casilla_id = "00632"
+casilla_id = "DP200021:00632"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -580,7 +580,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0045"
 kind = "casilla"
-casilla_id = "00579"
+casilla_id = "DP200021:00579"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]

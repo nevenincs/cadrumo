@@ -39,6 +39,11 @@ validator at the registry boundary accepted any five digits, so ``99999``
 passed as a Spanish postcode with a province that does not exist.
 """
 
+SPANISH_PROVINCE_CODES: Final[tuple[str, ...]] = tuple(
+    code for code in (f"{number:02d}" for number in range(100)) if re.fullmatch(SPANISH_PROVINCE_CODE_PATTERN, code)
+)
+"""Every province code the pattern admits, in order, so a list of them cannot drift from it."""
+
 SPANISH_POSTCODE_PATTERN: Final[str] = SPANISH_PROVINCE_CODE_PATTERN + r"[0-9]{3}"
 """Five digits whose leading pair is a province code in 01..52, unanchored."""
 
@@ -47,6 +52,9 @@ OptionalSpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^$|^{SPANI
 
 SpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_POSTCODE_PATTERN}$")]
 """A postcode a record requires to be declared."""
+
+SPANISH_MUNICIPALITY_CODE_PATTERN: Final = rf"^{SPANISH_PROVINCE_CODE_PATTERN}[0-9]{{3}}$"
+"""An INE municipality code: the province code, then the municipality number."""
 
 SpanishProvinceCode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")]
 """A standalone province code in 01..52, as an AEAT record design's provincia field carries it."""
@@ -65,7 +73,9 @@ def is_spanish_postcode(value: str) -> bool:
 
 
 __all__ = [
+    "SPANISH_MUNICIPALITY_CODE_PATTERN",
     "SPANISH_POSTCODE_PATTERN",
+    "SPANISH_PROVINCE_CODES",
     "SPANISH_PROVINCE_CODE_PATTERN",
     "OptionalSpanishPostcode",
     "SpanishPostcode",

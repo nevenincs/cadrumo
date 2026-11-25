@@ -17,6 +17,23 @@ use zeroize::Zeroizing;
 /// the desktop holds the rest back until one ends.
 pub const CAPACITY: usize = 4;
 
+/// How long a connect exchange may take: login preparation must first reap the running
+/// gateway (up to 20 s).
+pub const CONNECT_EXCHANGE: Duration = Duration::from_secs(60);
+
+/// How long a provider sign-out may take: the service runs the agent's logout, which
+/// waits for the provider's own logout and confirms it with a fresh status probe,
+/// within the service's 45 s logout bound.
+pub const SIGN_OUT_EXCHANGE: Duration = Duration::from_secs(60);
+
+/// How long a status exchange may take. Status also runs a contained supplier check: five
+/// seconds of execution, ten for tree cleanup, then output drain and profile-authority
+/// reads. Its deadline must encompass that work.
+pub const STATUS_EXCHANGE: Duration = Duration::from_secs(30);
+
+/// How long any other exchange may take. Login polling stays short.
+pub const EXCHANGE: Duration = Duration::from_secs(6);
+
 /// The exchanges in flight with one service, at most [`CAPACITY`].
 #[derive(Default)]
 pub struct Gate {
@@ -71,17 +88,34 @@ fn action_reason(action: &str) -> &'static str {
     match action {
         "catalog" => "admin_catalog",
         "status" => "admin_status",
+        "provider_lanes" => "admin_provider_lanes",
         "set" => "admin_set",
         "remove" => "admin_remove",
         "turn_on" => "admin_turn_on",
         "reset" => "admin_reset",
         "auth" => "admin_auth",
         "sign_in" => "admin_sign_in",
+        "sign_out" => "admin_sign_out",
         "start" => "admin_start",
         "stop" => "admin_stop",
         "connect" => "admin_connect_provider",
         "connect_status" => "admin_connect_status",
         "connect_cancel" => "admin_connect_cancel",
+        "connect_submit_code" => "admin_connect_submit_code",
+        "local_models" => "admin_local_models",
+        "local_model_add" => "admin_local_model_add",
+        "local_model_remove" => "admin_local_model_remove",
+        "local_models_reset" => "admin_local_models_reset",
+        "reading_model_choose" => "admin_reading_model_choose",
+        "task_model_choose" => "admin_task_model_choose",
+        "local_engine" => "admin_local_engine",
+        "local_engine_choose" => "admin_local_engine_choose",
+        "attachment_card" => "admin_attachment_card",
+        "attachment_release" => "admin_attachment_release",
+        "attachment_grants" => "admin_attachment_grants",
+        "attachment_grant_revoke" => "admin_attachment_grant_revoke",
+        "attachment_conversation_forget" => "admin_attachment_conversation_forget",
+        "console_environment" => "admin_console_environment",
         _ => "admin_undeclared_action",
     }
 }
@@ -214,15 +248,12 @@ impl Endpoint {
             return Err(failed("admin_request_too_large"));
         }
         let address = SocketAddr::from(([127, 0, 0, 1], self.port));
-        // Login preparation must first reap the running gateway (up to 20 s).
-        // Status also runs a contained supplier check: five seconds of execution,
-        // ten for tree cleanup, then output drain and profile-authority reads.
-        // Its deadline must encompass that work. Login polling stays short.
-        let bound = Duration::from_secs(match request["action"].as_str() {
-            Some("connect") => 60,
-            Some("status") => 30,
-            _ => 6,
-        });
+        let bound = match request["action"].as_str() {
+            Some("connect") => CONNECT_EXCHANGE,
+            Some("sign_out") => SIGN_OUT_EXCHANGE,
+            Some("status") => STATUS_EXCHANGE,
+            _ => EXCHANGE,
+        };
         // The wait for a place is bounded like the exchange, and apart from it.
         let _permit = self.gate.enter(Instant::now() + bound)?;
         let deadline = Instant::now() + bound;
@@ -307,6 +338,41 @@ mod tests {
         endpoint(port)
             .exchange(json!({"action": "catalog"}), None)
             .unwrap_err()
+    }
+
+    #[test]
+    fn sign_out_exchange_allows_the_agents_logout_and_its_confirmation() {
+        let port = serve(|mut stream| {
+            let mut header = [0u8; 4];
+            stream.read_exact(&mut header).unwrap();
+            let mut bearer = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut bearer).unwrap();
+            stream.read_exact(&mut header).unwrap();
+            let mut body = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut body).unwrap();
+            let request: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(request["action"], "sign_out");
+
+            // Past the six-second bound of an ordinary exchange: the agent's
+            // logout and its confirming status probe take longer than that.
+            std::thread::sleep(Duration::from_secs(7));
+
+            let reply = serde_json::to_vec(&json!({
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "accepted"},
+            }))
+            .unwrap();
+            stream
+                .write_all(&(reply.len() as u32).to_be_bytes())
+                .unwrap();
+            stream.write_all(&reply).unwrap();
+        });
+
+        let reply = endpoint(port)
+            .exchange(json!({"action": "sign_out"}), None)
+            .unwrap();
+        assert_eq!(reply["kind"], "accepted");
     }
 
     #[test]
@@ -434,8 +500,17 @@ mod tests {
         for (action, reason) in [
             ("catalog", "admin_catalog"),
             ("status", "admin_status"),
+            ("provider_lanes", "admin_provider_lanes"),
             ("start", "admin_start"),
             ("connect_status", "admin_connect_status"),
+            ("local_models", "admin_local_models"),
+            ("local_model_add", "admin_local_model_add"),
+            ("reading_model_choose", "admin_reading_model_choose"),
+            ("task_model_choose", "admin_task_model_choose"),
+            ("local_engine", "admin_local_engine"),
+            ("local_engine_choose", "admin_local_engine_choose"),
+            ("attachment_release", "admin_attachment_release"),
+            ("console_environment", "admin_console_environment"),
             ("unheard_of", "admin_undeclared_action"),
         ] {
             let error = endpoint(port)
@@ -564,6 +639,9 @@ mod tests {
         let reply = endpoint(port)
             .exchange(json!({"action": "catalog"}), None)
             .unwrap();
-        assert!(super::super::catalog_busy(&reply));
+        assert_eq!(
+            super::super::catalog_answer(reply).unwrap_err().code,
+            "agent_service_busy"
+        );
     }
 }

@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-from ..gnome_collection_protection import gnome_collection_id
+from ..gnome_collection_identity import gnome_collection_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

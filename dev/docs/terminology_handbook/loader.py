@@ -31,7 +31,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import freeze_toml, read_toml, to_str_keyed_dict
 
@@ -70,7 +70,7 @@ class TerminologyHandbook(BaseModel):
     target exists without re-deriving the graph.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     concepts: tuple[ConceptRecord, ...] = Field(default=())
 

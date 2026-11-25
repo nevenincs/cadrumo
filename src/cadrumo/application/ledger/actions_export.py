@@ -48,6 +48,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "invoice_id",
     "booked_date",
     "value_date",
+    "operation_date",
+    "accrual_date",
     "effective_date",
     "amount",
     "currency",
@@ -180,7 +182,7 @@ def _ledger_export_rows(
         and (period is None or period.contains(transaction.raw.value_date or transaction.raw.booked_date))
     )
     return tuple(
-        _ledger_export_row(bucket_id=bucket_id, transaction=transaction)
+        ledger_export_row(bucket_id=bucket_id, transaction=transaction)
         for transaction in sorted(
             transactions,
             key=lambda item: (
@@ -200,7 +202,8 @@ def optional_text(value: str | None) -> str:
     return value or ""
 
 
-def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExportRow:
+def ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExportRow:
+    """Project a transaction into a ledger export row for the bucket."""
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     return LedgerExportRow(
@@ -210,6 +213,8 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         invoice_id=optional_text(transaction.invoice_id),
         booked_date=raw.booked_date.isoformat(),
         value_date="" if raw.value_date is None else raw.value_date.isoformat(),
+        operation_date="" if transaction.operation_date is None else transaction.operation_date.isoformat(),
+        accrual_date="" if transaction.accrual_date is None else transaction.accrual_date.isoformat(),
         effective_date=effective_date.isoformat(),
         amount=format_decimal(raw.amount),
         currency=raw.currency,

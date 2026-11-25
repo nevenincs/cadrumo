@@ -1,86 +1,137 @@
-import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
+import type { AgentEngineHealth } from "../../shell/agentSession";
+import {
+  groupedByProvider,
+  laneStatus,
+  offerMatches,
+  type LaneReason,
+  type LaneStatus,
+  type OfferedLane,
+} from "../../shell/agentOffer";
+import type { SetupRow } from "../../ipc/componentSetup";
+import { engineNotRunningWords } from "../../shell/engineHealth";
+import { connectionWords } from "../../shell/providerConnection";
+import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
+import { EngineDoor } from "../setup/EngineDoor";
+import { rowSentence } from "../setup/setupWords";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
-import type {
-  ProviderSignIn,
-  ProviderSignInMethod,
-} from "../../shell/providerSettings";
+import { SignInAdvice } from "./SignInAdvice";
+import type { ProviderSignIn } from "../../shell/providerSettings";
+import type { ProviderSignInMethod } from "../../shell/providerSettingsContract";
 import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
-
-/** One status for a connection, in the same words wherever it is shown. */
-type ConnectionStatus =
-  "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
-
-/** Describe what is set, without claiming more than the reading says. */
-function connectionStatus(provider: ProviderStatus): ConnectionStatus {
-  if (provider.reason === "record_unreadable") return "setup_needed";
-  if (provider.mode === "disabled") return "off";
-  if (provider.readiness === "unusable") return "setup_needed";
-  // An app connection needs its app, whatever it signs in with.
-  if (provider.cliState === "not_installed") return "setup_needed";
-  if (provider.authKind === "provider_sign_in_only") {
-    if (
-      provider.cliState === "installed_signed_in" ||
-      provider.readiness === "ready"
-    )
-      return "ready";
-    if (
-      provider.cliState === "installed_signed_out" ||
-      provider.readiness === "sign_in_required"
-    )
-      return "sign_in_needed";
-    return "not_checked";
-  }
-  if (provider.readiness === "ready") return "ready";
-  if (provider.readiness === "sign_in_required") return "sign_in_needed";
-  if (
-    provider.mode === "key" ||
-    provider.mode === "oauth_token" ||
-    provider.source !== "none"
-  )
-    return "saved";
-  return "setup_needed";
-}
 
 const STATUS_WORDS = {
   ready: "desktop.providers.status_ready",
   saved: "desktop.providers.status_saved",
+  signed_in: "desktop.providers.status_signed_in",
   not_checked: "desktop.providers.status_not_checked",
   setup_needed: "desktop.providers.status_setup_needed",
   sign_in_needed: "desktop.providers.status_sign_in_needed",
+  unconfirmed: "desktop.providers.status_unconfirmed",
+  engine_not_running: "desktop.agent.engine_not_running",
   off: "desktop.providers.status_off",
-} as const satisfies Record<ConnectionStatus, string>;
+} as const satisfies Record<LaneStatus, string>;
 
-function statusWords(t: Translate, status: ConnectionStatus): string {
+/** A lane's status in one word; a lane turned off with its key stored says
+ * that the key is kept, as the service serves `credential_saved`. */
+function statusWords(
+  t: Translate,
+  status: LaneStatus,
+  provider: ProviderStatus,
+): string {
+  if (status === "off" && provider.credentialSaved)
+    return t("desktop.providers.status_off_kept");
   return t(STATUS_WORDS[status]);
 }
 
-/** Only a connection the agent can use stands out; one that is not set up,
- * not signed in or off is said quietly, since nothing is wrong with it. */
-function statusVariant(status: ConnectionStatus): "success" | "neutral" {
-  return status === "ready" ? "success" : "neutral";
+/** The statuses that wait on the person, drawn in the warning tone; one in
+ * use reads in the body text, and one with nothing to do (off, not checked)
+ * in secondary text. */
+const STATUS_TONE: Record<LaneStatus, string> = {
+  ready: "text-foreground",
+  saved: "text-foreground",
+  signed_in: "text-foreground",
+  not_checked: "text-muted-foreground",
+  off: "text-muted-foreground",
+  setup_needed: "text-warning",
+  sign_in_needed: "text-warning",
+  unconfirmed: "text-warning",
+  engine_not_running: "text-warning",
+};
+
+/** Why a lane stands where it does and what moves it on, in words. A lane
+ * whose app could not be confirmed says it through its served cause and
+ * step instead, so it has none here. */
+function reasonWords(
+  t: Translate,
+  reason: LaneReason,
+  provider: ProviderStatus,
+  engine: AgentEngineHealth | null,
+  setup: SetupRow | null,
+): string | null {
+  switch (reason) {
+    case "turned_off":
+      return t("desktop.providers.reason_turned_off");
+    case "record_unreadable":
+      return t("desktop.providers.reason_record_unreadable");
+    case "app_missing":
+      return t("desktop.providers.detail_app_missing", {
+        provider: provider.name,
+      });
+    case "add_key":
+      return t("desktop.providers.reason_add_key", { provider: provider.name });
+    case "check_settings":
+      return t("desktop.providers.reason_check_settings");
+    case "key_saved":
+      return t("desktop.providers.reason_key_saved");
+    case "sign_in":
+      return t("desktop.providers.detail_sign_in", { provider: provider.name });
+    case "app_unconfirmed":
+      return null;
+    case "signed_in":
+      return t("desktop.providers.reason_signed_in", {
+        provider: provider.name,
+      });
+    case "not_checked":
+      return t("desktop.providers.reason_not_checked");
+    case "engine_not_running":
+      return engine ? engineNotRunningWords(t, engine) : null;
+    case "local_setup":
+    case "local_ready":
+      return setup
+        ? rowSentence(t, setup)
+        : t("desktop.providers.reason_local_ready");
+  }
 }
 
-function connectionWords(
-  t: Translate,
-  transport: ProviderStatus["transport"],
-): string {
-  return transport === "api"
-    ? t("desktop.providers.connection_api")
-    : t("desktop.providers.connection_app");
-}
+/** The refusal of a change while the agent is starting, which passes by
+ * waiting: a key being saved keeps its form and what was typed in it. */
+const agentStarting = (outcome: ProviderOutcome | undefined) =>
+  outcome?.kind === "refused" && outcome.code === "busy";
 
 /** Why a change was not made, in words where it is a refusal we know. */
-function refusalWords(t: Translate, code: string): string {
-  switch (code) {
+function refusalWords(
+  t: Translate,
+  outcome: Extract<ProviderOutcome, { kind: "refused" }>,
+): string {
+  switch (outcome.code) {
     case "not_signed_in":
       return t("desktop.providers.refused_not_signed_in");
     case "profile_locked":
@@ -97,63 +148,75 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.providers.refused_runtime_unavailable");
     case "person_act_required":
       return t("desktop.providers.refused_person_act_required");
+    case "model_list_full":
+      return t("desktop.providers.refused_model_list_full");
+    case "busy":
+      return outcome.cause === "agent_tree_running"
+        ? t("desktop.providers.refused_agent_starting")
+        : t("desktop.providers.refused_busy");
+    case "service_failed":
+      return t("desktop.providers.refused_service_failed");
+    case "timed_out":
+      return t("desktop.providers.refused_timed_out");
     default:
       return t("desktop.providers.change_failed");
   }
 }
 
-/** The one line that says what to do about a connection, or null where its
- * status already says it all. */
-function detailWords(t: Translate, provider: ProviderStatus): string | null {
-  const status = connectionStatus(provider);
-  if (status === "off")
-    return provider.credentialSaved
-      ? t("desktop.providers.detail_off_kept")
-      : t("desktop.providers.detail_off");
-  if (provider.reason === "record_unreadable")
-    return t("desktop.providers.reason_record_unreadable");
-  if (provider.cliState === "not_installed")
-    return t("desktop.providers.detail_app_missing", {
-      provider: provider.name,
-    });
-  if (provider.authKind === "provider_sign_in_only") {
-    if (status === "setup_needed")
-      return t("desktop.providers.reason_check_settings");
-    if (status === "sign_in_needed")
-      return t("desktop.providers.detail_sign_in", { provider: provider.name });
-    return null;
-  }
-  switch (provider.reason) {
-    case undefined:
-    case "turned_off":
-    case "not_configured":
-    case "sign_in_with_provider_tool":
-      break;
-    default:
-      return refusalWords(t, provider.reason);
-  }
-  if (status === "setup_needed" && provider.readiness === "unusable")
-    return t("desktop.providers.reason_check_settings");
-  if (status === "sign_in_needed")
-    return t("desktop.providers.detail_sign_in", { provider: provider.name });
-  return null;
+/** A refused change: why, the served cause where the refusal words do not
+ * already say it, and the log line's reference. */
+function Refusal({
+  outcome,
+  provider,
+  children,
+}: {
+  outcome: Extract<ProviderOutcome, { kind: "refused" }>;
+  provider: string;
+  children?: ReactNode;
+}) {
+  const t = useStrings();
+  const said =
+    outcome.code === "busy" && outcome.cause === "agent_tree_running";
+  return (
+    <div role="alert" className="flex items-start gap-2 text-sm">
+      <Icon name="alert" className="mt-0.5 text-destructive" />
+      <div className="grid flex-1 gap-1">
+        <span>{refusalWords(t, outcome)}</span>
+        {!said && <SignInAdvice causes={[outcome.cause]} provider={provider} />}
+        {outcome.logRef && (
+          <p data-slot="change-log-ref" className="text-muted-foreground">
+            {t("desktop.providers.sign_in_log_ref")}{" "}
+            <code className="font-mono text-foreground select-all">
+              {outcome.logRef}
+            </code>
+          </p>
+        )}
+        {children}
+      </div>
+    </div>
+  );
 }
 
 /**
  * Where a key or token is written to be saved. The field is the only place
- * the secret ever is: it is not kept as the field changes, only whether it
- * holds anything is. Saving reads it once, empties it and hands the secret
- * on; nothing here can show a stored one, and the field has no placeholder
- * that could be taken for a key.
+ * the secret ever is: nothing keeps it as the field changes, only whether it
+ * holds anything. Saving reads it and hands the secret on; the field keeps
+ * what was typed until the save is answered, so a save refused while the
+ * agent starts can be tried again as it was, and the form is gone, with the
+ * field, once the save is done. Nothing here can show a stored key, and the
+ * field has no placeholder that could be taken for one.
  */
 function SecretForm({
   provider,
   saving,
+  refused,
   onSave,
   onCancel,
 }: {
   provider: ProviderStatus;
   saving: boolean;
+  /** The last save was refused while the agent starts. */
+  refused?: Extract<ProviderOutcome, { kind: "refused" }>;
   onSave: (secret: ProviderSecret) => void;
   onCancel: () => void;
 }) {
@@ -161,25 +224,23 @@ function SecretForm({
   const secretId = useId();
   const addressId = useId();
   const secret = useRef<HTMLInputElement>(null);
-  const address = useRef<HTMLInputElement>(null);
   const [filled, setFilled] = useState(false);
   const gateway = provider.authKind === "api_key_with_base_url";
   // A gateway without a default address needs one written.
   const needsAddress = gateway && !provider.defaultBaseUrl;
-  const [addressFilled, setAddressFilled] = useState(Boolean(provider.baseUrl));
-  const held = !filled || (needsAddress && !addressFilled) || saving;
+  const [address, setAddress] = useState(provider.baseUrl ?? "");
+  const held = !filled || (needsAddress && address.trim() === "") || saving;
+  const defaults = provider.defaultBaseUrl
+    ? [{ value: provider.defaultBaseUrl, label: provider.defaultBaseUrl }]
+    : null;
 
   const save = (event: FormEvent) => {
     event.preventDefault();
-    const field = secret.current;
-    if (!field || held) return;
-    const value = field.value.trim();
-    field.value = "";
-    setFilled(false);
-    if (value === "") return;
+    const value = secret.current?.value.trim() ?? "";
+    if (held || value === "") return;
     onSave({
       secret: value,
-      ...(gateway ? { baseUrl: address.current?.value.trim() ?? "" } : {}),
+      ...(gateway ? { baseUrl: address.trim() } : {}),
     });
   };
 
@@ -193,7 +254,7 @@ function SecretForm({
           ref={secret}
           id={secretId}
           type="password"
-          autoComplete="off"
+          autoComplete="new-password"
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
@@ -208,17 +269,15 @@ function SecretForm({
           <FieldLabel htmlFor={addressId}>
             {t("desktop.providers.base_url_label")}
           </FieldLabel>
-          <Input
-            ref={address}
+          <TextEditor
             id={addressId}
             type="url"
             inputMode="url"
-            spellCheck={false}
-            defaultValue={provider.baseUrl ?? ""}
-            aria-required={needsAddress}
-            onInput={(event) =>
-              setAddressFilled(event.currentTarget.value.trim() !== "")
-            }
+            value={address}
+            onChange={setAddress}
+            required={needsAddress}
+            suggestions={defaults}
+            opensEmpty
           />
           <FieldDescription>
             {provider.defaultBaseUrl
@@ -229,12 +288,17 @@ function SecretForm({
           </FieldDescription>
         </Field>
       )}
+      {refused && <Refusal outcome={refused} provider={provider.provider} />}
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           {t("desktop.providers.cancel")}
         </Button>
         <Button type="submit" variant="primary" size="sm" disabled={held}>
-          {saving ? t("desktop.providers.saving") : t("desktop.providers.save")}
+          {saving
+            ? t("desktop.providers.saving")
+            : refused
+              ? t("desktop.providers.save_retry")
+              : t("desktop.providers.save")}
         </Button>
       </div>
     </form>
@@ -242,13 +306,15 @@ function SecretForm({
 }
 
 /**
- * One connection of a provider. Its header says where it stands and holds the
- * one switch that turns it on or off for the agent, the same for every
- * connection; setting it up (a key, or a sign-in) is a row of its own below,
- * offered while it is on.
+ * One connection of a provider, on one row: its provider's mark and name
+ * with the way it connects, one status word, whether a conversation on it
+ * leaves this computer, the one thing to do about it where there is one, and
+ * the switch that turns it on or off for the agent. The reason for its
+ * status, its key, address, sign-in and models are behind its expander.
  */
-function WayRow({
+function LaneRow({
   provider,
+  hidden = false,
   busy,
   outcome,
   onSave,
@@ -257,9 +323,16 @@ function WayRow({
   onReset,
   onRefresh,
   signInSupported,
+  readsPending,
   onSignIn,
+  onSignOut,
+  consoleSignInCommand,
+  models,
+  engine,
+  setup,
 }: {
   provider: ProviderStatus;
+  hidden?: boolean;
   busy: boolean;
   outcome?: ProviderOutcome;
   onSave: (secret: ProviderSecret) => void;
@@ -268,62 +341,193 @@ function WayRow({
   onReset: () => void;
   onRefresh: () => void;
   signInSupported: boolean;
+  /** The service is still reading the sign-in methods behind its answer. */
+  readsPending: boolean;
   onSignIn: () => void;
+  /** Signs the lane out, where the host offers it. */
+  onSignOut?: () => void;
+  /** The served console command template, with its `{provider}` slot. */
+  consoleSignInCommand?: string;
+  /** The models of a keyless lane on this computer, shown while it is on. */
+  models?: ReactNode;
+  /** What the service measured of the lane's local engine, where it did. */
+  engine: AgentEngineHealth | null;
+  /** The setup row of the local AI that runs this lane's engine, where it has one. */
+  setup: SetupRow | null;
 }) {
   const t = useStrings();
   const headingId = useId();
+  const bodyId = useId();
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  // A save the form handed on: once its answer comes, the form closes,
+  // unless the agent was starting, when it stays open with what was typed.
+  const [saving, setSaving] = useState(false);
+  const [wasBusy, setWasBusy] = useState(busy);
+  if (wasBusy !== busy) {
+    setWasBusy(busy);
+    if (wasBusy && saving) {
+      setSaving(false);
+      if (!agentStarting(outcome)) setEditing(false);
+    }
+  }
   const signInOnly = provider.authKind === "provider_sign_in_only";
+  const keyless = provider.authKind === "none";
+  const keyed = !signInOnly && !keyless;
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
-  const state = connectionStatus(provider);
-  const detail = detailWords(t, provider);
-  const connection = connectionWords(t, provider.transport);
+  // Where a sign-in-only lane's sign-in stands: offered, still being read, or
+  // unavailable by a complete answer.
+  const signInState = !signInOnly
+    ? undefined
+    : signInSupported
+      ? "offered"
+      : readsPending
+        ? "pending"
+        : "unavailable";
+  const { status, reason } = laneStatus(
+    provider,
+    engine,
+    setup ? setup.state === "ready" : null,
+  );
+  const reasonLine = reasonWords(t, reason, provider, engine, setup);
+  const connection = connectionWords(t, provider);
+  // A keyless lane runs against the server on this computer that Cadrumo
+  // launches the agent with, not the address the agent declares by default,
+  // so no address is shown for it.
   const address =
     provider.authKind === "api_key_with_base_url"
       ? (provider.baseUrl ?? provider.defaultBaseUrl)
       : undefined;
+  const addKey = () => {
+    setExpanded(true);
+    setEditing(true);
+  };
+  const formRefusal =
+    editing && outcome?.kind === "refused" && agentStarting(outcome)
+      ? outcome
+      : undefined;
+  const leaves = provider.readsOffHost;
+  // The one thing to do about the lane, where there is one.
+  const action =
+    off || busy ? null : status === "sign_in_needed" &&
+      signInState === "offered" ? (
+      <Button variant="outline" size="xs" onClick={onSignIn}>
+        {t("desktop.providers.sign_in_action")}
+      </Button>
+    ) : status === "signed_in" && provider.signOutAvailable && onSignOut ? (
+      <Button
+        variant="outline"
+        size="xs"
+        aria-label={t("desktop.providers.sign_out_label", {
+          provider: provider.name,
+        })}
+        onClick={onSignOut}
+      >
+        {t("desktop.providers.sign_out_action")}
+      </Button>
+    ) : keyed && !hasKey && !editing ? (
+      <Button variant="outline" size="xs" onClick={addKey}>
+        {t("desktop.providers.add_key")}
+      </Button>
+    ) : status === "engine_not_running" && engine?.state === "not_running" ? (
+      <EngineDoor door={engine.door} />
+    ) : null;
   return (
     <li
+      data-provider={provider.provider}
       data-lane={provider.id}
+      data-transport={provider.transport}
+      data-auth-kind={provider.authKind}
+      data-sign-in={signInState}
+      data-reads-off-host={leaves === undefined ? undefined : String(leaves)}
+      hidden={hidden}
       aria-labelledby={headingId}
-      className="way grid gap-2 rounded-lg border bg-card p-3"
+      className={cn("rounded-lg bg-card", hidden ? "hidden" : "grid")}
     >
-      <div className="flex min-w-0 items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <h5
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 px-3 py-2">
+        <ProviderMark provider={provider.provider} size="md" />
+        <div className="grid min-w-0 gap-0.5">
+          <h4
             id={headingId}
             className="min-w-0 font-medium wrap-anywhere text-foreground"
           >
-            {connection}
-          </h5>
-          <Badge variant={statusVariant(state)}>{statusWords(t, state)}</Badge>
-          {busy && (
-            <span className="text-sm text-muted-foreground">
-              {t("desktop.providers.saving")}
+            {provider.name}
+            <span className="font-normal text-muted-foreground">
+              {" · "}
+              {connection}
             </span>
-          )}
+          </h4>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span
+              data-slot="provider-status"
+              data-status={status}
+              data-reason={reason}
+              className={STATUS_TONE[status]}
+            >
+              {statusWords(t, status, provider)}
+            </span>
+            {leaves !== undefined && (
+              <span
+                data-slot="reads-off-host"
+                title={t(
+                  leaves
+                    ? "desktop.providers.reads_off_host"
+                    : "desktop.providers.reads_on_host",
+                )}
+                className="inline-flex text-muted-foreground"
+              >
+                <Icon name={leaves ? "globe" : "home"} />
+                <span className="sr-only">
+                  {t(
+                    leaves
+                      ? "desktop.providers.reads_off_host"
+                      : "desktop.providers.reads_on_host",
+                  )}
+                </span>
+              </span>
+            )}
+            {busy && (
+              <span className="text-muted-foreground">
+                {t("desktop.providers.saving")}
+              </span>
+            )}
+            {action}
+          </div>
         </div>
-        <Switch
-          checked={!off}
-          disabled={busy}
-          aria-label={t("desktop.providers.use_in_agent", {
-            provider: provider.name,
-            connection,
-          })}
-          onCheckedChange={(on) => (on ? onTurnOn() : onTurnOff())}
-        />
+        <div className="flex shrink-0 items-center gap-1">
+          <Switch
+            checked={!off}
+            disabled={busy}
+            aria-label={t("desktop.providers.use_in_agent", {
+              provider: provider.name,
+              connection,
+            })}
+            onCheckedChange={(on) => (on ? onTurnOn() : onTurnOff())}
+          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            data-slot="lane-expander"
+            aria-expanded={expanded}
+            aria-controls={bodyId}
+            aria-label={t("desktop.providers.lane_details", {
+              provider: provider.name,
+              connection,
+            })}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            <Icon
+              name="chevronDown"
+              className={cn("transition-transform", expanded && "rotate-180")}
+            />
+          </Button>
+        </div>
       </div>
-      {detail && <p className="text-sm text-foreground">{detail}</p>}
-      {address && !off && (
-        <p className="text-sm text-muted-foreground wrap-anywhere">
-          {t("desktop.providers.address", { url: address })}
-        </p>
-      )}
       {outcome?.kind === "saved_unread" && (
         <p
           role="status"
-          className="flex flex-wrap items-center gap-2 text-sm text-foreground"
+          className="flex flex-wrap items-center gap-2 px-3 pb-2 text-sm text-foreground"
         >
           <Icon name="info" className="text-muted-foreground" />
           <span className="flex-1">{t("desktop.providers.saved_unread")}</span>
@@ -332,152 +536,201 @@ function WayRow({
           </Button>
         </p>
       )}
-      {outcome?.kind === "refused" && (
-        <p role="alert" className="flex items-start gap-2 text-sm">
-          <Icon name="alert" className="mt-0.5 text-destructive" />
-          <span>{refusalWords(t, outcome.code)}</span>
-        </p>
+      {outcome?.kind === "refused" && !formRefusal && (
+        <div className="px-3 pb-2">
+          <Refusal outcome={outcome} provider={provider.provider} />
+        </div>
       )}
-      {!off && (
-        <div className="grid gap-2 border-t pt-2">
-          {signInOnly ? (
-            signInSupported ? (
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={onSignIn}>
-                  {t("desktop.providers.sign_in_action")}
-                </Button>
-              </div>
-            ) : (
-              <p role="note" className="text-sm text-muted-foreground">
-                {t("desktop.providers.sign_in_unavailable", {
-                  provider: provider.name,
-                })}
-              </p>
-            )
-          ) : editing ? (
-            <SecretForm
-              provider={provider}
-              saving={busy}
-              onSave={(secret) => {
-                onSave(secret);
-                setEditing(false);
-              }}
-              onCancel={() => setEditing(false)}
-            />
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={busy}
-                onClick={() => setEditing(true)}
-              >
-                {hasKey
-                  ? t("desktop.providers.replace_key")
-                  : t("desktop.providers.add_key")}
-              </Button>
-              {hasKey && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={busy}
-                  onClick={onReset}
-                >
-                  {t("desktop.providers.remove_key")}
-                </Button>
-              )}
-            </div>
+      {/* A collapsed row lays out nothing of its details; the row keeps
+          whether its key form is open. */}
+      {expanded && (
+        <div
+          id={bodyId}
+          data-slot="lane-details"
+          className="grid gap-3 border-t border-border px-3 py-3"
+        >
+          {reasonLine && (
+            <p data-slot="lane-reason" className="text-sm text-foreground">
+              {reasonLine}
+            </p>
           )}
+          {(reason === "app_unconfirmed" || reason === "app_missing") && (
+            <SignInAdvice
+              causes={[provider.cliStateCause]}
+              step={provider.nextStep}
+              command={consoleSignInCommand}
+              provider={provider.provider}
+            />
+          )}
+          {address && !off && (
+            <p className="text-sm text-muted-foreground wrap-anywhere">
+              {t("desktop.providers.address", { url: address })}
+            </p>
+          )}
+          {!off && signInOnly && status !== "signed_in" && (
+            <>
+              {signInState === "pending" && (
+                <p role="status" className="text-sm text-muted-foreground">
+                  {t("desktop.providers.sign_in_checking")}
+                </p>
+              )}
+              {signInState === "unavailable" && (
+                <p role="note" className="text-sm text-muted-foreground">
+                  {t("desktop.providers.sign_in_unavailable", {
+                    provider: provider.name,
+                  })}
+                </p>
+              )}
+            </>
+          )}
+          {!off &&
+            keyed &&
+            (editing ? (
+              <SecretForm
+                provider={provider}
+                saving={busy}
+                {...(formRefusal ? { refused: formRefusal } : {})}
+                onSave={(secret) => {
+                  setSaving(true);
+                  onSave(secret);
+                }}
+                onCancel={() => {
+                  setSaving(false);
+                  setEditing(false);
+                }}
+              />
+            ) : (
+              hasKey && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={addKey}
+                  >
+                    {t("desktop.providers.replace_key")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy}
+                    onClick={onReset}
+                  >
+                    {t("desktop.providers.remove_key")}
+                  </Button>
+                </div>
+              )
+            ))}
+          {!off && keyless && models}
         </div>
       )}
     </li>
   );
 }
 
-type ProviderGroup = {
-  provider: string;
-  name: string;
-  lanes: ProviderStatus[];
-};
+/** Where the agent service stands while it cannot answer for the provider
+ * settings: still `starting` (the host answers busy until it admits the
+ * service), or `stopped` with the reason it published and, where a new start
+ * can move it on, a way to start it again. */
+export type ProviderServiceWait =
+  | { state: "starting" }
+  | { state: "stopped"; words: string; onRetry?: () => void };
 
-/** Keep each provider's API and app connections together, but independent. */
-function providerGroups(providers: readonly ProviderStatus[]): ProviderGroup[] {
-  const groups = new Map<string, ProviderGroup>();
-  for (const lane of inListOrder(providers)) {
-    const group = groups.get(lane.provider);
-    if (group) group.lanes.push(lane);
-    else
-      groups.set(lane.provider, {
-        provider: lane.provider,
-        name: lane.name,
-        lanes: [lane],
-      });
-  }
-  return [...groups.values()];
-}
-
-function ProviderGroupRow({
-  group,
-  t,
-  renderLane,
+/**
+ * The AI providers while the agent service cannot answer for them, said once
+ * with the way on. While it starts, each connection the agent declares is
+ * drawn as waiting on it, where the catalogue has been read; a service that
+ * stopped serves no catalogue, so only its reason and the way on are said.
+ * Nothing can be changed here: the service holds the settings.
+ */
+export function ProviderSettingsWaiting({
+  lanes,
+  wait,
+  embedded = false,
 }: {
-  group: ProviderGroup;
-  t: Translate;
-  renderLane: (lane: ProviderStatus) => ReactNode;
+  /** The lanes the agent declares, as the offer lists them; none while the
+   * catalogue is unread. Drawn only while the service starts. */
+  lanes: readonly OfferedLane[];
+  wait: ProviderServiceWait;
+  embedded?: boolean;
 }) {
+  const t = useStrings();
+  const titleId = useId();
+  const failed = wait.state === "stopped";
+  const ordered = groupedByProvider(
+    failed ? [] : lanes,
+    (lane) => lane.provider,
+    (lane) => lane.transport,
+  ).flat();
   return (
-    <li data-provider={group.provider} className="rounded-lg border bg-card">
-      <details className="group/provider">
-        <summary className="flex min-h-control-lg cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-2 rounded-lg px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <ProviderMark provider={group.provider} size="md" />
-            <h4 className="min-w-0 flex-1 font-medium break-words text-foreground">
-              {group.name}
-            </h4>
-          </span>
-          <Icon
-            name="chevronDown"
-            className="shrink-0 text-faint transition-transform group-open/provider:rotate-180"
-          />
-          <span className="flex w-full basis-full flex-wrap gap-1.5">
-            {group.lanes.map((lane) => {
-              const state = connectionStatus(lane);
-              return (
-                <Badge key={lane.id} variant={statusVariant(state)}>
-                  {t("desktop.providers.summary", {
-                    connection: connectionWords(t, lane.transport),
-                    status: statusWords(t, state),
-                  })}
-                </Badge>
-              );
-            })}
-          </span>
-        </summary>
-        <ul className="grid gap-2 px-2 pb-2">{group.lanes.map(renderLane)}</ul>
-      </details>
-    </li>
-  );
-}
-
-/** The lanes with a provider's lanes together, in the order the provider's
- * first lane was served, its API lane before the other. */
-function inListOrder(providers: readonly ProviderStatus[]) {
-  const groups = new Map<string, ProviderStatus[]>();
-  for (const lane of providers)
-    groups.set(lane.provider, [...(groups.get(lane.provider) ?? []), lane]);
-  return [...groups.values()].flatMap((lanes) =>
-    [...lanes].sort(
-      (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
-    ),
+    <section
+      aria-labelledby={titleId}
+      data-service-state={wait.state}
+      className="provider-settings grid gap-2"
+    >
+      <h3
+        id={titleId}
+        className={embedded ? "sr-only" : "font-medium text-foreground"}
+      >
+        {t("desktop.providers.title")}
+      </h3>
+      <div
+        role={failed ? "alert" : "status"}
+        data-slot="providers-service"
+        className="flex flex-wrap items-center gap-2 text-sm text-foreground"
+      >
+        <span className="min-w-0 flex-1">
+          {failed ? wait.words : t("desktop.providers.agent_starting")}
+        </span>
+        {failed && wait.onRetry && (
+          <Button variant="outline" size="sm" onClick={wait.onRetry}>
+            {t("desktop.agent.retry")}
+          </Button>
+        )}
+      </div>
+      {ordered.length > 0 && (
+        <ul className="grid gap-2">
+          {ordered.map((lane) => (
+            <li
+              key={lane.id}
+              data-provider={lane.provider}
+              data-lane={lane.id}
+              data-transport={lane.transport}
+              data-auth-kind={lane.authKind}
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 rounded-lg bg-card px-3 py-2"
+            >
+              <ProviderMark provider={lane.provider} size="md" />
+              <div className="grid min-w-0 gap-0.5">
+                <h4 className="min-w-0 font-medium wrap-anywhere text-foreground">
+                  {lane.name}
+                  <span className="font-normal text-muted-foreground">
+                    {" · "}
+                    {connectionWords(t, lane)}
+                  </span>
+                </h4>
+                <span
+                  data-slot="provider-status"
+                  data-status="starting"
+                  className="text-sm text-muted-foreground"
+                >
+                  {t("desktop.providers.status_starting")}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
 /**
- * The AI providers of the signed-in profile, one card for each connection the
- * agent has: named and drawn as the agent's provider list names and draws it,
- * with one status, the one thing to do about it, and the person's way to set
- * an API key or sign in. A stored key is never shown, and only these
- * controls, pressed by the person, change one.
+ * The AI providers of the signed-in profile, one row for each connection the
+ * agent has, in the agent's order with each provider's API before its app:
+ * named and drawn as the agent's provider list names and draws it, with one
+ * status, the one thing to do about it, and the person's way to set an API
+ * key or sign in. A stored key is never shown, and only these controls,
+ * pressed by the person, change one.
  */
 export function ProviderSettings({
   providers,
@@ -487,13 +740,21 @@ export function ProviderSettings({
   onTurnOff,
   onTurnOn,
   onReset,
+  onSignOut,
   onRefresh,
   onSignInTerminal,
   signIn,
   signInProviders = [],
   signInMethods = {},
   revisions = {},
+  readsPending = false,
+  consoleSignInCommand,
   identity = null,
+  localModels,
+  lanes,
+  query = "",
+  embedded = false,
+  onMatch,
 }: {
   providers: readonly ProviderStatus[];
   /** The way whose change is on its way. */
@@ -504,6 +765,8 @@ export function ProviderSettings({
   onTurnOff: (providerId: string) => void;
   onTurnOn: (providerId: string) => void;
   onReset: (providerId: string) => void;
+  /** Signs a lane out, where the host offers it. */
+  onSignOut?: (providerId: string) => void;
   onRefresh: () => void;
   /** Refreshes the lane after sign-in and returns its freshly read revision. */
   onSignInTerminal?: (
@@ -519,13 +782,26 @@ export function ProviderSettings({
   >;
   /** Current lane revisions from the same provider status read. */
   revisions?: Readonly<Record<string, string>>;
+  /** The same read's `reads_pending`: the service still reads the sign-in
+   * methods behind it. */
+  readsPending?: boolean;
+  /** The console command that signs a provider in by hand, with a
+   * `{provider}` slot, as the service serves it. */
+  consoleSignInCommand?: string;
   /** Signed-in profile identity, used to discard an open attempt on switch. */
   identity?: string | null;
+  /** The model controls of a keyless lane, where the host offers them: a
+   * lane on this computer has no key or sign-in, only its models. */
+  localModels?: (lane: ProviderStatus) => ReactNode;
+  /** What the agent offers of each lane, by lane id: what the service
+   * measured of a local engine's lane among it. */
+  lanes?: ReadonlyMap<string, OfferedLane>;
+  query?: string;
+  embedded?: boolean;
+  onMatch?: (matches: boolean) => void;
 }) {
   const t = useStrings();
   const titleId = useId();
-  const searchId = useId();
-  const [query, setQuery] = useState("");
   const [selection, setSelection] = useState<{
     laneId: string;
     identity: string | null;
@@ -547,82 +823,76 @@ export function ProviderSettings({
   const selectedMethods = selectedProvider
     ? (signInMethods[selectedProvider.provider] ?? [])
     : [];
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  const visibleGroups = providerGroups(providers)
-    .map((group) => ({
-      ...group,
-      lanes: group.lanes.filter((lane) => {
-        if (!normalizedQuery) return true;
-        const searchable = [
-          group.name,
-          connectionWords(t, lane.transport),
-          statusWords(t, connectionStatus(lane)),
-        ]
-          .join(" ")
-          .toLocaleLowerCase();
-        return searchable.includes(normalizedQuery);
-      }),
-    }))
-    .filter((group) => group.lanes.length > 0);
+  const engineOf = (lane: ProviderStatus) =>
+    lane.authKind === "none" ? (lanes?.get(lane.id)?.engine ?? null) : null;
+  // A lane whose engine runs on this computer is as ready as the local AI set
+  // up to run it, which the setup row serves.
+  const localAi = useProvisioning().localAiRow;
+  const setupOf = (lane: ProviderStatus) => (engineOf(lane) ? localAi : null);
+  const ordered = groupedByProvider(
+    providers,
+    (lane) => lane.provider,
+    (lane) => lane.transport,
+  ).flat();
+  const laneMatches = (lane: ProviderStatus) =>
+    offerMatches(
+      [
+        lane.name,
+        connectionWords(t, lane),
+        statusWords(
+          t,
+          laneStatus(
+            lane,
+            engineOf(lane),
+            setupOf(lane) ? setupOf(lane)?.state === "ready" : null,
+          ).status,
+          lane,
+        ),
+      ],
+      query,
+    );
+  const matches = ordered.some(laneMatches);
+  useEffect(() => onMatch?.(matches), [matches, onMatch]);
   return (
     <section aria-labelledby={titleId} className="provider-settings grid gap-2">
-      <div className="grid gap-1">
-        <h3 id={titleId} className="font-medium text-foreground">
-          {t("desktop.providers.title")}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t("desktop.providers.group_intro")}
-        </p>
-      </div>
-      <Field>
-        <FieldLabel htmlFor={searchId}>
-          {t("desktop.providers.search_label")}
-        </FieldLabel>
-        <Input
-          id={searchId}
-          type="search"
-          value={query}
-          placeholder={t("desktop.providers.search_placeholder")}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
-      </Field>
+      <h3
+        id={titleId}
+        className={embedded ? "sr-only" : "font-medium text-foreground"}
+      >
+        {t("desktop.providers.title")}
+      </h3>
       <ul className="grid gap-2">
-        {visibleGroups.map((group) => (
-          <ProviderGroupRow
-            key={group.provider}
-            group={group}
-            t={t}
-            renderLane={(lane) => (
-              <WayRow
-                key={lane.id}
-                provider={lane}
-                busy={busyId === lane.id}
-                outcome={outcomes[lane.id]}
-                signInSupported={Boolean(
-                  signIn?.openExternal &&
-                  revisions[lane.id] &&
-                  signInProviders.includes(lane.provider) &&
-                  (signInMethods[lane.provider]?.length ?? 0) > 0,
-                )}
-                onSignIn={() => setSelection({ laneId: lane.id, identity })}
-                onSave={(secret) => onSave(lane.id, secret)}
-                onTurnOff={() => onTurnOff(lane.id)}
-                onTurnOn={() => onTurnOn(lane.id)}
-                onReset={() => onReset(lane.id)}
-                onRefresh={onRefresh}
-              />
+        {ordered.map((lane) => (
+          <LaneRow
+            // The local engine's lane is one row whichever engine serves it:
+            // choosing the other engine, from inside its details, keeps the
+            // row and its details open.
+            key={engineOf(lane) ? "local-engine" : lane.id}
+            provider={lane}
+            engine={engineOf(lane)}
+            setup={setupOf(lane)}
+            hidden={!laneMatches(lane)}
+            busy={busyId === lane.id}
+            outcome={outcomes[lane.id]}
+            signInSupported={Boolean(
+              signIn?.openExternal &&
+              revisions[lane.id] &&
+              signInProviders.includes(lane.provider) &&
+              (signInMethods[lane.provider]?.length ?? 0) > 0,
             )}
+            readsPending={readsPending}
+            onSignIn={() => setSelection({ laneId: lane.id, identity })}
+            consoleSignInCommand={consoleSignInCommand}
+            onSave={(secret) => onSave(lane.id, secret)}
+            onTurnOff={() => onTurnOff(lane.id)}
+            onTurnOn={() => onTurnOn(lane.id)}
+            onReset={() => onReset(lane.id)}
+            {...(onSignOut ? { onSignOut: () => onSignOut(lane.id) } : {})}
+            onRefresh={onRefresh}
+            models={lane.authKind === "none" ? localModels?.(lane) : undefined}
           />
         ))}
       </ul>
-      {visibleGroups.length === 0 && (
-        <p
-          role="status"
-          className="rounded-lg border p-3 text-sm text-muted-foreground"
-        >
-          {t("desktop.providers.search_empty")}
-        </p>
-      )}
       <details className="text-sm text-muted-foreground">
         <summary className="w-fit cursor-pointer rounded-sm py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {t("desktop.providers.icon_credits")}
@@ -642,6 +912,7 @@ export function ProviderSettings({
           revision={selectedRevision}
           signIn={signIn}
           methods={selectedMethods}
+          consoleSignInCommand={consoleSignInCommand}
           onOpenChange={(open) => {
             if (!open) setSelection(null);
           }}
@@ -662,8 +933,7 @@ export function ProviderSettings({
                 currentIdentity.current === selectedIdentity
                   ? freshRevision
                   : undefined,
-              )
-              .catch(() => undefined);
+              );
           }}
         />
       )}

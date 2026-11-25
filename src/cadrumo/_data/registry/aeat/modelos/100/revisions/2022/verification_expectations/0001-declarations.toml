@@ -1,0 +1,183 @@
+# Reconcile-when-present enrolment of the Ley 35/2006 art. 50.3 compensation
+# chain: the compensation 0501, the remainders 1384, 1387 and 1390, this year's
+# own negative base 1391 and the internal working figures behind the per-row
+# maximum. Each is reconciled when a
+# filing prints it and stays out of the coverage denominator (min_coverage =
+# 0), so a return with nothing to compensate keeps its verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-art-50-3-compensacion-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "0501",
+    "1384",
+    "1387",
+    "1390",
+    "1391",
+    "base-liq-neg-general-base-positiva-compensable",
+    "base-liq-neg-general-em4-aplicada-maxima",
+    "base-liq-neg-general-em3-aplicada-maxima",
+    "base-liq-neg-general-em2-aplicada-maxima",
+    "base-liq-neg-general-em1-aplicada-maxima",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+# Reconcile-when-present enrolment of the Ley 35/2006 art. 84.2 joint-reduction
+# remainder 0506 that reduces the base imponible del ahorro. It is reconciled
+# when a filing prints it and stays out of the coverage denominator
+# (min_coverage = 0), so an individual return with no joint reduction keeps its
+# verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-art-84-conjunta-remanente-ahorro-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0506"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-84", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+# Reconcile-when-present enrolment of the Ley 35/2006 figures that an edition
+# computes from descendant and rental facts: the rental-yield reduction 0150
+# (art. 23.2), the maternity deducción 0611 (art. 81) and its childcare
+# increment 0613 (art. 81.2). Each
+# is reconciled when a filing prints it and stays out of the coverage
+# denominator (min_coverage = 0), so a return without a rental or a child keeps
+# its verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-art-23-2-art-81-2-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0150", "0611", "0613"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-81", "ley-35-2006:art-81-2"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+# Anexo C.3 applied and carry-forward rows of the negative savings balances
+# pending from earlier ejercicios, and the internal step 1/2 maxima that fix
+# 0439-0455 (art. 49.2). A filing prints the rows only when such a balance is
+# pending, so they reconcile when present and stay out of the coverage
+# denominator; the internal steps are never printed.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-saldos-negativos-ahorro-pendientes-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "1260",
+    "1262",
+    "1263",
+    "1265",
+    "1266",
+    "1268",
+    "1269",
+    "1273",
+    "1275",
+    "1276",
+    "1278",
+    "1279",
+    "1281",
+    "1282",
+    "saldo-neg-gyp-ahorro-em1-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em1-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em1-resto-paso1",
+    "saldo-neg-gyp-ahorro-em2-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em2-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em2-resto-paso1",
+    "saldo-neg-gyp-ahorro-em3-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em3-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em3-resto-paso1",
+    "saldo-neg-gyp-ahorro-em4-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em4-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em4-resto-paso1",
+    "saldo-neg-gyp-ahorro-paso1-capacidad",
+    "saldo-neg-gyp-ahorro-paso2-capacidad",
+    "saldo-neg-rcm-ahorro-em1-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em1-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em1-resto-paso1",
+    "saldo-neg-rcm-ahorro-em2-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em2-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em2-resto-paso1",
+    "saldo-neg-rcm-ahorro-em3-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em3-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em3-resto-paso1",
+    "saldo-neg-rcm-ahorro-em4-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em4-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em4-resto-paso1",
+    "saldo-neg-rcm-ahorro-paso1-capacidad",
+    "saldo-neg-rcm-ahorro-paso2-capacidad",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+# Reconcile-when-present enrolment of the Ley 35/2006 art. 20 work-income
+# reduction 0023 and the rentas distintas del trabajo it is conditioned on.
+# Each is reconciled when a filing prints it and stays out of the coverage
+# denominator (min_coverage = 0), so a return without work income keeps its
+# verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-art-20-reduccion-trabajo-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0023", "rentas-distintas-del-trabajo"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+# Reconcile-when-present enrolment of the Ley 35/2006 arts. 22 and 23 figures the
+# property rows compute: each let property's net yield 0149 and reduced net
+# yield 0154, filled row by row by the renta_inmueble resolver from the
+# property's records. Each is reconciled when a filing prints it and stays out
+# of the coverage denominator (min_coverage = 0), so a return without a let
+# property keeps its verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-capital-inmobiliario-inmueble-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0149", "0154"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]

@@ -25,6 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory
 from ....domain.transactions.dates import transaction_eligible_date_span
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -32,12 +33,14 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .iva_authority_support import aggregate_iva_ledger_observations
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PAYMENT = date(2026, 8, 20)
+_PAYMENT = date(_YEAR, 8, 20)
 """3T -- when the bank credit landed."""
 
-_OPERATION = date(2026, 2, 10)
+_OPERATION = date(_YEAR, 2, 10)
 """1T -- when the invoice was issued, the art. 75 devengo date."""
 
 _CUOTA = Decimal("210.00")
@@ -57,7 +60,7 @@ def _raw(provider_id: str) -> RawTransaction:
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 8, 21, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 8, 21, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -86,7 +89,7 @@ def _cuota_by_quarter(transaction: Transaction) -> dict[str, Decimal]:
     for code in ("1T", "2T", "3T", "4T"):
         aggregation = aggregate_iva_ledger_observations(
             catalogue,
-            period=Period.from_year_and_code(2026, code),
+            period=Period.from_year_and_code(_YEAR, code),
         )
         totals[code] = sum(
             (observation.iva_amount or Decimal("0") for observation in aggregation.observations),
@@ -174,4 +177,4 @@ def test_the_eligible_span_covers_both_dates_without_the_criterio_de_caja_fallba
     span = transaction_eligible_date_span(_transaction("tx-span", operation_date=_OPERATION))
 
     assert span == (_OPERATION, _PAYMENT)
-    assert span[1].year == 2026
+    assert span[1].year == _YEAR

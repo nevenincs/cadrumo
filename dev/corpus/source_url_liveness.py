@@ -155,11 +155,6 @@ WITHDRAWN_SOURCE_URLS: Final[Mapping[str, str]] = {
     "presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-utilizando-datos-anteriores.html": (
         "AEAT returned HTTP 404 for the captured modelo 131 prior-data presentation guide on 2026-10-15"
     ),
-    "https://sede.agenciatributaria.gob.es/Sede/en_gb/todas-gestiones/impuestos-tasas/"
-    "declaraciones-informativas/modelo-289-decla_informativa-anual-cuentas-financieras_/"
-    "gestiones/servicio-web-presentacion-modelo-289.html": (
-        "AEAT retired the English-language modelo 289 web-service page after capture"
-    ),
     "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/"
     "archivos_20/126v01e2020_v1.07.xlsx": (
         "AEAT withdrew the modelo 126 design workbook from its static file tree after capture"
@@ -167,6 +162,10 @@ WITHDRAWN_SOURCE_URLS: Final[Mapping[str, str]] = {
     "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/"
     "archivos_20/128v01e2020_v1.07.xlsx": (
         "AEAT withdrew the modelo 128 design workbook from its static file tree after capture"
+    ),
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/dr210e22.xls": (
+        "AEAT returned HTTP 404 on 2026-11-08 for the modelo 210 Orden EHA/3316/2010 design (devengos between "
+        "1 January and 1 June 2022) captured on 2026-10-01"
     ),
     "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx": (
         "AEAT replaced the modelo 202 ejercicio-2025 workbook at a different address"

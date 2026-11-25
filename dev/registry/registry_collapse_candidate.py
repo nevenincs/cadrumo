@@ -7,22 +7,20 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.edition_delta_assessment import MigrationAssessment, assess_migration_state
 
 from .registry_collapse_assessment import assessment_coverage_gaps, assessor_scope_gaps, finding_transition
 from .registry_collapse_assessment_normalization import normalized_assessment
-from .registry_collapse_authority_queries import _revision_inventory
+from .registry_collapse_authority_queries import revision_inventory
 from .registry_collapse_comparison import compare_modelos
 from .registry_collapse_converter import canonical_converter
-from .registry_collapse_fingerprints import _file_change_count, fingerprint_digest, fingerprint_tree
-from .registry_collapse_models import _MODELOS, CheckStatus, ComparisonResult, FingerprintEntry, ModeloOutcome
+from .registry_collapse_fingerprints import file_change_count, fingerprint_digest, fingerprint_tree
+from .registry_collapse_models import MODELOS, CheckStatus, ComparisonResult, FingerprintEntry, ModeloOutcome
 from .registry_collapse_requests import compare_temporal
-from .registry_collapse_roots import _root_gaps, root_eligibility, root_overlap_diagnostics
+from .registry_collapse_roots import root_eligibility, root_gaps, root_overlap_diagnostics
 
 
 def _copy_modelo(source: Path, destination: Path) -> None:
@@ -31,7 +29,7 @@ def _copy_modelo(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination)
 
 
-def _verify_one(
+def verify_one(
     modelo_id: str,
     source: Path,
     candidate: Path,
@@ -41,6 +39,7 @@ def _verify_one(
     ceiling: int,
     converter: Callable[[Path, Path], Mapping[str, object]] = canonical_converter,
 ) -> dict[str, object]:
+    """Verify one modelo source against its collapse candidate across the supported years."""
     before_files = fingerprint_tree(source)
     static_scope_gaps = assessor_scope_gaps()
     roots = root_eligibility(source)
@@ -54,7 +53,7 @@ def _verify_one(
     _copy_modelo(source, candidate)
     converter_report, defect = _run_converter(converter, source, candidate)
     after_files = fingerprint_tree(candidate)
-    changed_files = _file_change_count(before_files, after_files)
+    changed_files = file_change_count(before_files, after_files)
     after_assessment, candidate_scope_gaps, roots_after, equivalence, temporal = _candidate_assessment_state(
         candidate,
         before,
@@ -213,7 +212,7 @@ def _candidate_is_complete(
         and after_assessment is not None
         and after_assessment.minimal
         and not scope_gaps
-        and not _root_gaps(roots_after)
+        and not root_gaps(roots_after)
         and equivalence.status is CheckStatus.PASSED
         and temporal.status is CheckStatus.PASSED
         and idempotence.status is CheckStatus.PASSED
@@ -268,11 +267,11 @@ def _verified_modelo_result(
         "candidate_path": str(candidate),
         "source_fingerprint": fingerprint_digest(before_files),
         "candidate_fingerprint": fingerprint_digest(fingerprint_tree(candidate)),
-        "authored_revisions": _revision_inventory(before),
+        "authored_revisions": revision_inventory(before),
         "root_eligibility": roots,
         "root_overlap_diagnostics": root_overlap,
         "candidate_root_eligibility": roots_after,
-        "candidate_root_gaps": _root_gaps(roots_after),
+        "candidate_root_gaps": root_gaps(roots_after),
         "assessor_scope_gaps": scope_gaps,
         "before_bytes": sum(item.bytes for item in before_files),
         "after_bytes": sum(item.bytes for item in fingerprint_tree(candidate)),
@@ -295,11 +294,12 @@ def _verified_modelo_result(
     }
 
 
-def _replace_candidate_modelo(registry_candidate: Path, modelo: Mapping[str, object]) -> None:
+def replace_candidate_modelo(registry_candidate: Path, modelo: Mapping[str, object]) -> None:
+    """Replace the candidate modelo tree with the verified one when its readiness passed."""
     if modelo.get("source_apply_readiness") != CheckStatus.PASSED:
         return
     source = Path(str(modelo["candidate_path"]))
-    target = registry_candidate / _MODELOS / str(modelo["modelo"])
+    target = registry_candidate / MODELOS / str(modelo["modelo"])
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(source, target)

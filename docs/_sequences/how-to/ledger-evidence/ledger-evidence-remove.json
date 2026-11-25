@@ -87,13 +87,15 @@
             ],
             "failed_condition_id": "ledger.evidence.reference_resolves",
             "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "no_recovery_outcome": "operator_decision",
+            "no_recovery_words": "This needs your own decision; no action can take it for you.",
+            "no_recovery_words_language": "en"
           },
           "category": "REFUSED",
           "code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
           "context": {
             "effect": "none",
-            "operation_id": "d6883aee034d865617c0ac496c3dca06b77aa107ef851f10d344985ed4fe505c",
+            "operation_id": "fc3c0b61c29d40f188326c7d1ab144525e071a88b6daa5a08856639b5dc4395b",
             "refusal_code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
             "terminal_condition": "refused"
           },

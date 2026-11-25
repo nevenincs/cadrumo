@@ -11,7 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, _ManualLedgerTransactionInput
+from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionInput, ManualLedgerTransactionPatch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,8 +102,8 @@ def test_manual_ledger_command_and_patch_share_the_canonical_input_normalisation
 def test_manual_ledger_command_and_patch_have_one_input_normalisation_owner() -> None:
     """The shared input invariant is declared only on the private ledger base."""
 
-    assert ManualLedgerTransactionCommand.__bases__ == (_ManualLedgerTransactionInput,)
-    assert ManualLedgerTransactionPatch.__bases__ == (_ManualLedgerTransactionInput,)
+    assert ManualLedgerTransactionCommand.__bases__ == (ManualLedgerTransactionInput,)
+    assert ManualLedgerTransactionPatch.__bases__ == (ManualLedgerTransactionInput,)
     for model in (ManualLedgerTransactionCommand, ManualLedgerTransactionPatch):
         assert "_normalise_country_codes" not in model.__dict__
         assert "_normalise_currency" not in model.__dict__

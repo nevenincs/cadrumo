@@ -18,10 +18,12 @@ from ..producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
     Modelo202ProducerProfile,
+    RefundAccountSelection,
+)
+from ..producer_snapshot_m210 import (
     Modelo210DevolucionFactSet,
     Modelo210IngresoFactSet,
     Modelo210ProfileFacts,
-    RefundAccountSelection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

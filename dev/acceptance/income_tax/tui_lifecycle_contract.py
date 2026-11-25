@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .tui_contracts import InstalledTuiContract, TuiJourneyError, TuiOperationBinding
-from .tui_selectors import _REVIEW_APPLY, WORKBENCH_AT_RISK_PROCEED, WORKBENCH_LIST, WORKBENCH_NOTICE
+from .tui_selectors import REVIEW_APPLY, WORKBENCH_AT_RISK_PROCEED, WORKBENCH_LIST, WORKBENCH_NOTICE
 
 if TYPE_CHECKING:
     pass
@@ -72,7 +72,7 @@ def installed_lifecycle_contract(
         ),
         apply=TuiOperationBinding(
             "modelo.edit.apply",
-            activation_id=_REVIEW_APPLY,
+            activation_id=REVIEW_APPLY,
             terminal_result_id=modal_terminal,
             refresh_result_id=WORKBENCH_LIST,
             refusal_notice_id=WORKBENCH_NOTICE,
@@ -80,7 +80,7 @@ def installed_lifecycle_contract(
     )
 
 
-def _require_operation_binding(binding: TuiOperationBinding) -> None:
+def require_operation_binding(binding: TuiOperationBinding) -> None:
     """Refuse to drive an incomplete or ambiguous public control contract."""
     missing = binding.missing(label=binding.operation_id)
     if missing:

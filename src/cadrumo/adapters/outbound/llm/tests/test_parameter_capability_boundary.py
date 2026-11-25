@@ -50,7 +50,7 @@ def _request(
 class _RefusesTemperature(ProviderAdapter):
     """An adapter whose model rejects an explicitly-sent temperature."""
 
-    provider = LLMProvider.LOCAL
+    provider = LLMProvider.AGENT
 
     @override
     def unsupported_parameters(self, model: str) -> frozenset[str]:
@@ -70,7 +70,7 @@ def test_the_dispatch_point_clears_a_parameter_the_model_refuses() -> None:
     """
     request = _request(model="picky-model", temperature=0.7)
 
-    cleared = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
+    cleared = LLMClient.omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert cleared.temperature is None
 
@@ -84,7 +84,7 @@ def test_the_dispatch_point_leaves_a_parameter_the_model_accepts() -> None:
     """
     request = _request(model="tolerant-model", temperature=0.7)
 
-    kept = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
+    kept = LLMClient.omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert kept.temperature == 0.7
 
@@ -100,7 +100,7 @@ def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
     """
 
     class _Plain(ProviderAdapter):
-        provider = LLMProvider.LOCAL
+        provider = LLMProvider.AGENT
 
         @override
         async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover

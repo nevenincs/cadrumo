@@ -55,9 +55,12 @@ from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPER
 from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.i18n.render import lookup_translation
@@ -66,11 +69,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_percepcion_observation_ports,
     build_retencion_observation_ports,
 )
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
@@ -92,14 +96,14 @@ _YEAR = 2025
 _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _ABSENT_CODE = "modelo.aggregate.calculation_rows_absent"
 
-_LANDLORD_A = "B12345674"
-_LANDLORD_B = "A08000143"
+_LANDLORD_A = "B00015016"
+_LANDLORD_B = "A00010066"
 _LANDLORD_OTHER_YEAR = "B00000011"
 _LANDLORD_OWN_WINDOW = "B00000022"
-_EMPLOYEE = "11111111H"
-_PROFESSIONAL = "22222222J"
-_PERCEPTOR_OTHER_YEAR = "33333333P"
-_PERCEPTOR_OWN_WINDOW = "44444444A"
+_EMPLOYEE = "00001500M"
+_PROFESSIONAL = "00001501Y"
+_PERCEPTOR_OTHER_YEAR = "00001502F"
+_PERCEPTOR_OWN_WINDOW = "00001503P"
 
 
 type _Seed = Callable[[str], None]
@@ -153,7 +157,9 @@ def _operator_profile_preparer(operation: PinnedAuthorityOperation, seed: _Seed)
     """Complete the readiness-baseline profile the resolver context mirrors, then seed its stores."""
 
     def prepare(profile_id: UUID, root: Path) -> None:
-        facts = complete_profile_facts(operation.profile_schema(), MODELO_READY_PROFILE_FACTS)
+        facts = complete_profile_facts(
+            operation.profile_schema(), persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION,))
+        )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
         with bound_test_profile_record(profile_id, root=root) as repository:
             ready = repository.complete_setup(
@@ -285,7 +291,7 @@ def _rent(*, landlord: str, source_id: str, accrued_on: date, base: str, retenci
             cadastral_reference="1234567VK4713C0001XY",
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",
@@ -316,16 +322,7 @@ def _percepcion(
         subclave="01",
         percibido_dinerario=Decimal(percibido),
         retencion_practicada=Decimal(retencion),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal(percibido),
         porcentaje_retencion=Decimal("15"),
     )

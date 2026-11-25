@@ -26,7 +26,7 @@ from ..application.diagnostics_repair_operations import (
 )
 from ..application.operations.operation_definition import OperationDefinition
 from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
-from .adapter_composition import build_diagnostics_ports
+from .adapter_composition_ports import build_diagnostics_ports
 
 if TYPE_CHECKING:
     from ..application.connectivity_probe import ConnectivityProbePort, ObservedSiteHealth

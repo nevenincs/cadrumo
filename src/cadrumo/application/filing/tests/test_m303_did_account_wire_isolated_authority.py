@@ -1,9 +1,8 @@
-"""Isolated M303 DID account-wire proof against the official 2026 design."""
+"""Isolated M303 DID account-wire proof against the official design of the newest edition."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
@@ -26,10 +25,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
-from ....domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionParameterProvenance,
-    BienesInversionRegularizacionParameters,
-)
+from ....domain.bienes_inversion.tests.explicit_parameters import params_for
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -37,7 +33,7 @@ from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -47,6 +43,7 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
 from ....domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -87,55 +84,14 @@ from ..runtime import RegistrySchemaAccessor, collection_from_snapshot, subview_
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-#: Provenance stamped onto directly-constructed projections in this module. A
-#: result must name the registry declaration its figures came from; these tests
-#: build results by hand rather than by projection, so they state it explicitly.
-_PROVENANCE = BienesInversionParameterProvenance(
-    modelo_id="303",
-    revision_id="2025",
-    parameter_ids=(
-        "m303-bien-inversion-ventana-anos-mueble",
-        "m303-bien-inversion-ventana-anos-inmueble",
-        "m303-bien-inversion-divisor-mueble",
-        "m303-bien-inversion-divisor-inmueble",
-        "m303-bien-inversion-regularizacion-umbral-puntos",
-    ),
-    resolved_on=_prov_date(2025, 6, 1),
-)
-
-
-#: The resolved bundle the regularisation result above was produced under. The
-#: oracle compares the result's carried provenance against this, so the two must
-#: name the same declaration.
-_PARAMS = BienesInversionRegularizacionParameters(
-    ventana_anos_mueble=4,
-    ventana_anos_inmueble=9,
-    divisor_mueble=Decimal("5"),
-    divisor_inmueble=Decimal("10"),
-    umbral_puntos=Decimal("10"),
-    umbral_comparison=ThresholdComparison.EXCLUSIVE,
-    provenance=_PROVENANCE,
-)
-
-
-def _params_for(year: int) -> BienesInversionRegularizacionParameters:
-    """The bundle, resolved for ``year``.
-
-    The projection refuses a bundle resolved for a different filing year, so a
-    fixture cannot pin one year and be applied to another.
-    """
-    return _PARAMS.model_copy(
-        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
-    )
-
-
 _SOURCE_REF = "aeat-dr-303-2026"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
-_REVISION_ID = "2026-y-siguientes"
+_REVISION_ID = str(open_ended_revision("303").id)
+_EXERCISE = newest_authored_edition("303")
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
-_REFUND_ACCOUNT = RefundAccount(
+REFUND_ACCOUNT = RefundAccount(
     iban=_REFUND_IBAN,
     swift_bic="DEUTDEFF",
     bank_name="Refund Bank",
@@ -143,7 +99,7 @@ _REFUND_ACCOUNT = RefundAccount(
     bank_city="Berlin",
     bank_country_code="DE",
 )
-_CHARGE_ACCOUNT = ChargeAccount(iban=_CHARGE_IBAN)
+CHARGE_ACCOUNT = ChargeAccount(iban=_CHARGE_IBAN)
 _LEGAL_REFS = '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
 
 #: ``ordinal`` is the PRINTED label the official design carries, preserved
@@ -173,9 +129,9 @@ def _required_iae_epigrafe(value: str | None) -> str:
     return value
 
 
-def _m303_2026_snapshot() -> RegistrySnapshot:
-    """Load the real 2026 revision from the published authority artifact."""
-    return published_snapshot(Modelo("303").value, filing_year=2026, period="2T")
+def _m303_snapshot() -> RegistrySnapshot:
+    """Load the real newest revision from the published authority artifact."""
+    return published_snapshot(Modelo("303").value, filing_year=_EXERCISE, period="2T")
 
 
 #: Modelo 303 prints these thirteen declared rows. Other roles in the shared
@@ -226,7 +182,7 @@ def _projection_rows_envelope_layout(
     *,
     required: bool,
 ) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
-    """Attach one canonical regimen-simplificado repeated record to a real 2026 snapshot."""
+    """Attach one canonical regimen-simplificado repeated record to a real newest-edition snapshot."""
     projection_ref = M303RegimenSimplificadoActivityProjectionRef(
         projection_kind="m303_regimen_simplificado_activity",
         cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
@@ -269,10 +225,10 @@ def _projection_rows_envelope_layout(
     return _filing_envelope_layout(snapshot, layout)
 
 
-def _product_software_identity() -> AeatProductSoftwareIdentity:
+def product_software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:isolated-m303-envelope",
@@ -300,8 +256,8 @@ def _m303_did_producer_snapshot(
     non_agricultural_activity_count: int = 0,
 ) -> FilingProducerSnapshot:
     """Build real approved-draft producer authority for the isolated DID layout."""
-    period = Period.from_year_and_code(2026, "2T")
-    taxpayer = _taxpayer_profile()
+    period = Period.from_year_and_code(_EXERCISE, "2T")
+    taxpayer = taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
     return build_filing_producer_snapshot(
@@ -315,10 +271,10 @@ def _m303_did_producer_snapshot(
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
         model_profile=iva_profile,
-        elections=_elections(disposition),
+        elections=elections(disposition),
         amendment_evidence=None,
-        refund_account=_REFUND_ACCOUNT,
-        charge_account=_CHARGE_ACCOUNT,
+        refund_account=REFUND_ACCOUNT,
+        charge_account=CHARGE_ACCOUNT,
         m303_filing_facts=_m303_filing_facts(
             period,
             registry_snapshot=registry_snapshot,
@@ -327,7 +283,7 @@ def _m303_did_producer_snapshot(
     )
 
 
-def _taxpayer_profile() -> TaxpayerProfile:
+def taxpayer_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAXPAYER_TAX_ID,
         iva_regime=IVARegime("GENERAL"),
@@ -435,6 +391,7 @@ def _m303_filing_facts(
         ),
         prorrata_transition=M303ProrrataTransitionArrival(
             period=period,
+            is_applicable=False,
             transition=None,
             register_evidence=(),
         ),
@@ -448,13 +405,13 @@ def _m303_filing_facts(
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
-            parameters_provenance=_params_for(period.filing_year).provenance,
+            parameters_provenance=params_for(period.filing_year).provenance,
         ),
-        bienes_parameters=_params_for(period.filing_year),
+        bienes_parameters=params_for(period.filing_year),
     )
 
 
-def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
+def elections(disposition: ResultDisposition) -> FilingElectionFacts:
     return FilingElectionFacts(
         result_disposition=disposition,
         payment=(
@@ -465,9 +422,9 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
     )
 
 
-def _draft() -> ModeloDraft:
-    period = Period.from_year_and_code(2026, "2T")
-    timestamp = datetime(2026, 8, 11, 12, 0, tzinfo=UTC)
+def draft() -> ModeloDraft:
+    period = Period.from_year_and_code(_EXERCISE, "2T")
+    timestamp = datetime(_EXERCISE, 8, 11, 12, 0, tzinfo=UTC)
     return ModeloDraft(
         draft_id="d" + "0" * 63,
         modelo="303",
@@ -507,7 +464,7 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
     expected_occurrences: tuple[tuple[str, int], ...],
 ) -> None:
     registry_snapshot, layout = _projection_rows_envelope_layout(
-        _m303_2026_snapshot(),
+        _m303_snapshot(),
         required=False,
     )
     producer_snapshot = _m303_did_producer_snapshot(
@@ -520,10 +477,10 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
         FilingEnvelopeRenderRequest(
             registry_snapshot=registry_snapshot,
             layout=layout,
-            draft=_draft(),
+            draft=draft(),
             producer_snapshot=producer_snapshot,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
+            product_software_identity=product_software_identity(),
         ),
     )
 
@@ -533,7 +490,7 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
 
 def test_m303_envelope_refuses_a_required_projection_record_without_an_applicable_occurrence() -> None:
     registry_snapshot, layout = _projection_rows_envelope_layout(
-        _m303_2026_snapshot(),
+        _m303_snapshot(),
         required=True,
     )
     producer_snapshot = _m303_did_producer_snapshot(
@@ -548,24 +505,24 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
             FilingEnvelopeRenderRequest(
                 registry_snapshot=registry_snapshot,
                 layout=layout,
-                draft=_draft(),
+                draft=draft(),
                 producer_snapshot=producer_snapshot,
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
             ),
         )
 
 
 def test_production_m303_generated_authority_is_visible_at_the_filing_boundary() -> None:
-    """The filing boundary now receives the generated 2026 layout.
+    """The filing boundary now receives the generated layout of the newest edition.
 
     This replaces the retired absence assertion.  The complete layout remains
     owned by the hash-pinned generated tree; this consumer only proves that the
     selected runtime snapshot exposes it unchanged.
     """
-    registry_snapshot = _m303_2026_snapshot()
+    registry_snapshot = _m303_snapshot()
     (layout,) = registry_snapshot.revision.export_layouts
-    assert layout.id == "generated-modelo-303-2026-y-siguientes-fichero"
+    assert layout.id == f"generated-modelo-303-{_REVISION_ID}-fichero"
     assert layout.filing_envelope is not None
     assert {field.kind for record in layout.records for field in record.fields} == {
         CasillaFieldKind.CASILLA,
@@ -617,10 +574,10 @@ def test_production_m303_generated_authority_is_visible_at_the_filing_boundary()
         FilingEnvelopeRenderRequest(
             registry_snapshot=regimen_snapshot,
             layout=regimen_layout,
-            draft=_draft(),
+            draft=draft(),
             producer_snapshot=producer_snapshot,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
+            product_software_identity=product_software_identity(),
         ),
     )
     assert tuple((item.record_id, item.occurrence) for item in rendered.occurrences) == ((regimen_record.id, 1),)
@@ -646,13 +603,13 @@ def test_production_m303_generated_authority_is_visible_at_the_filing_boundary()
             FilingEnvelopeRenderRequest(
                 registry_snapshot=malformed_snapshot,
                 layout=malformed_layout,
-                draft=_draft(),
+                draft=draft(),
                 producer_snapshot=_m303_did_producer_snapshot(
                     ResultDisposition.DEVOLUCION,
                     registry_snapshot=malformed_snapshot,
                     non_agricultural_activity_count=1,
                 ),
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
             ),
         )

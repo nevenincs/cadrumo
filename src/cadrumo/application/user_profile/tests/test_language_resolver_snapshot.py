@@ -39,7 +39,7 @@ _KEY = "tui.home.title"
 @pytest.fixture
 def composed_language_host(tmp_path: Path) -> Generator[None]:
     """A host with no explicit language setting and the production resolver registered."""
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""):
         register_language_resolver()
         tr(_KEY)  # the locale catalogue itself is loaded once, at first use
         try:
@@ -96,12 +96,11 @@ def test_canonical_preference_adoption_changes_rendering_without_file_io(compose
     assert output_language() == "es"
 
 
-def test_interactive_profile_choice_precedes_inherited_setting_without_changing_cli(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_interactive_profile_choice_precedes_inherited_setting_without_changing_cli(tmp_path: Path) -> None:
     """The TUI's live preference agrees with the canonical desktop value; CLI stays transient."""
-    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "es")
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    # The inherited setting is an explicit override: process-wide settings are
+    # built once, so an environment variable set here would not be observed.
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.ES):
         register_language_resolver()
         try:
             adopt_profile_output_language(OutputLanguage.CA)

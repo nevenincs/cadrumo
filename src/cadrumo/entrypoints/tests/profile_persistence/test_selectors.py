@@ -12,25 +12,28 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
     select_current_verified_revision,
     select_exportable_revision,
     select_modelo_calculation_revision,
 )
-from cadrumo.application.modelo.work_addressing import (
-    ModeloRevisionPick,
-    ModeloWorkAddress,
+from cadrumo.application.modelo.work_address_errors import (
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkVisibleTargetAmbiguousError,
+)
+from cadrumo.application.modelo.work_addressing import (
+    ModeloRevisionPick,
+    ModeloWorkAddress,
     resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -41,6 +44,7 @@ from cadrumo.application.modelo.work_selection import (
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
+from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -58,12 +62,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -74,37 +73,10 @@ _P_2026_1T = Period.from_year_and_code(2026, "1T")
 _SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000130"
 _REVISION_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000131"
 _EXPLICIT_PROFILE_ID = "13000000-0000-4000-8000-000000000132"
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Modelo Selector"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+    seed_ready_profile(bucket_id=bucket_id, at=_T0)
 
 
 _OUTPUT_CASILLA: CasillaId = validated_casilla_id("01")
@@ -731,12 +703,19 @@ def test_exportable_revision_prefers_filed_then_current_verified(
     )
 
 
-def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
+def test_exportable_revision_refuses_draft_current_no_current_and_ambiguous_verified(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
     operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
     work_unit = _seed_work_unit(wu_repo, operation=operation)
+    filed = _seed_revision(
+        cr_repo,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        created_at=_T0,
+        output=Decimal("5"),
+    )
     draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -763,8 +742,22 @@ def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
     with pytest.raises(ModeloCalculationRevisionSelectorStateError):
         select_exportable_revision(draft_current, calculation_repository=cr_repo, operation=operation)
 
-    with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:
+    # A work unit with no current calculation exports nothing, however many verified revisions it stores.
+    with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as absent:
         select_exportable_revision(work_unit, calculation_repository=cr_repo, operation=operation)
+    absent_verdict = absent.value.terminal_precondition_verdict
+    assert isinstance(absent_verdict, PreconditionVerdict)
+    absent_action = absent_verdict.action
+    assert absent_action is not None
+    assert absent_action.action_id == "operator.modelo.work.calculate"
+
+    # A current calculation that is neither verified nor a draft, with no filed pointer naming it,
+    # falls back to one verified revision.
+    unpointed_filed_current = work_unit.model_copy(
+        update={"current_calculation_revision_id": filed.calculation_revision_id}
+    )
+    with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:
+        select_exportable_revision(unpointed_filed_current, calculation_repository=cr_repo, operation=operation)
     assert {candidate.calculation_revision_id for candidate in raised.value.candidates} == {
         verified_a.calculation_revision_id,
         verified_b.calculation_revision_id,

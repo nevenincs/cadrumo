@@ -31,9 +31,9 @@ from pydantic_core import PydanticCustomError
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.filing_year import YEAR_DIGITS, is_four_digit_year
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.utils import parse_bool
-from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.spanish_postcode import OptionalSpanishPostcode
 from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
 from ..calculations.registry.ccaa_catalogue import default_ccaa, require_ccaa
@@ -42,12 +42,16 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import require_irpf_income_category
 from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
 from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
-from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
+from ..calculations.registry.situacion_familiar_catalogue import (
+    require_situacion_familiar,
+    situacion_familiar_monoparental_required,
+)
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.ccaa import CCAA
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import (
     FiscalResidency,
+    RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
@@ -121,6 +125,11 @@ def _parse_optional_bool_token(value: object, *, field_name: str) -> OptionalWiz
 PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
 
+EJERCICIO_STATED_PROFILE_PATHS: Final[frozenset[str]] = frozenset(
+    {"irpf.activity_income_imputation_criterion", "irpf.codigo_comercio_accounting"}
+)
+"""Paths the RIRPF art. 7 resolver reads only from a fact dated into an ejercicio; an undated value answers nothing."""
+
 
 # ---------------------------------------------------------------------------
 # SetupAnswers
@@ -183,14 +192,8 @@ class SetupAnswers(BaseModel):
     """Optional INCN as a canonical decimal string."""
     new_entity_first_two_profit_periods: OptionalWizardBool = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
-    ley_49_2002_option_declared: OptionalWizardBool = ""
-    """Optional three-state bool for the governed special-regime option."""
-    ley_49_2002_option_date: str = ""
-    """ISO-8601 date declared for the governed special-regime option."""
-    ley_49_2002_renunciation_declared: OptionalWizardBool = ""
-    """Optional three-state bool for governed special-regime renunciation."""
-    ley_49_2002_renunciation_date: str = ""
-    """ISO-8601 date declared for governed special-regime renunciation."""
+    pago_fraccionado_art_40_3_elected: OptionalWizardBool = ""
+    """Optional three-state bool: the LIS Art. 40.3 election stated in the censal declaration."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
     declaration_roles: str = ""
@@ -205,7 +208,7 @@ class SetupAnswers(BaseModel):
     taxpayer_disability_grade: OptionalDisabilityGrade = ""
     taxpayer_death_date: str = ""
 
-    # ── spouse (taxation_type == "2") ────────────────────────────────────
+    # ── spouse (joint taxation_type) ─────────────────────────────────────
     spouse_tax_id: str = ""
     spouse_name: str = ""
     spouse_surnames: str = ""
@@ -219,6 +222,8 @@ class SetupAnswers(BaseModel):
     # ── family ───────────────────────────────────────────────────────────
     family_descendants_eu_eea_deduction: bool = False
     family_minor_children_in_unit: bool = False
+    family_convive_con_otro_progenitor: OptionalWizardBool = ""
+    """Three-state fact of a single-parent unit: ``True``, ``False`` or blank when unanswered (Art. 84.2.4º LIRPF)."""
     situacion_familiar: OptionalSituacionFamiliar = ""
     """Art. 82 LIRPF family situation governing conjunta eligibility."""
     unidad_familiar_descendientes_exclusivos: OptionalWizardBool = ""
@@ -239,39 +244,47 @@ class SetupAnswers(BaseModel):
     iva_hydrocarbon_deposit_advance_payment_deduction_entitled: OptionalWizardBool = ""
 
     # ── enrollment ───────────────────────────────────────────────────────
-    enrollment_large_company: bool = False
+    enrollment_large_company: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     enrollment_public_administration_budget_gt_6000000: bool = False
 
     # ── retencion / modelo obligation booleans ───────────────────────────
-    has_employees: bool = False
+    has_employees: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     colegio_concertado: OptionalWizardBool = ""
-    pays_professionals_with_retencion: bool = False
-    professional_income_withholding_ge_70pct: bool = False
-    art109_activity_income_withholding_ge_70pct: bool = False
-    pays_rent_with_retencion: bool = False
-    pays_capital_income_with_retencion: bool = False
+    pays_professionals_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    art109_activity_income_withholding_ge_70pct: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    pays_rent_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    pays_capital_income_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    pays_non_resident_income_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
+    irpf_activity_income_imputation_criterion: str = ""
+    """RIRPF art. 7 criterion the taxpayer states for ``irpf_activity_income_imputation_year``; blank when unstated."""
+    irpf_activity_income_imputation_year: str = ""
+    """Four-digit ejercicio the criterion and the accounting answer below are stated for."""
+    irpf_codigo_comercio_accounting: OptionalWizardBool = ""
+    """Three-state fact: whether Codigo de Comercio accounting is kept in that ejercicio, or blank when unanswered."""
     irpf_activity_kind: OptionalIrpfActivityKind = ""
-    objective_estimation_modulos_iae_epigraph: str = ""
-    objective_estimation_modulos_module_1_units: str = ""
-    objective_estimation_modulos_module_2_units: str = ""
-    objective_estimation_modulos_module_3_units: str = ""
-    objective_estimation_modulos_module_4_units: str = ""
-    objective_estimation_modulos_module_5_units: str = ""
-    objective_estimation_modulos_module_6_units: str = ""
-    objective_estimation_modulos_module_7_units: str = ""
     irpf_special_regime: OptionalIrpfSpecialRegime = ""
     """IRPF special-regime axis. Blank for the general regime."""
     irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime."""
-    does_intracomunitario: bool = False
+    does_intracomunitario: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     third_party_transactions_above_347_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     bienes_extranjero_above_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     monedas_virtuales_extranjero_above_threshold: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    patrimonio_declaration_threshold_met: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     premio_loteria_gravamen_especial_sin_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
@@ -295,9 +308,6 @@ class SetupAnswers(BaseModel):
     # ── capabilities ─────────────────────────────────────────────────────
     llm_vision: bool = True
     google_export: bool = True
-
-    # ── notes ────────────────────────────────────────────────────────────
-    notes: str = ""
 
     # ------------------------------------------------------------------
     # Validators — taxonomy classes are imported from their defining modules
@@ -344,16 +354,49 @@ class SetupAnswers(BaseModel):
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
 
     @field_validator(
+        "has_employees",
+        "pays_professionals_with_retencion",
+        "pays_rent_with_retencion",
+        "pays_capital_income_with_retencion",
+        "pays_non_resident_income_with_retencion",
+        "art109_activity_income_withholding_ge_70pct",
+        "does_intracomunitario",
         "third_party_transactions_above_347_threshold",
         "bienes_extranjero_above_threshold",
         "monedas_virtuales_extranjero_above_threshold",
+        "patrimonio_declaration_threshold_met",
         "premio_loteria_gravamen_especial_sin_retencion",
+        "enrollment_large_company",
         mode="before",
     )
     @classmethod
     @pydantic_validation_boundary
     def _parse_optional_payer_fact_bool(cls, value: object) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="payer applicability fact")
+
+    @field_validator("family_convive_con_otro_progenitor", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_cohabitation_bool(cls, value: object) -> OptionalWizardBool:
+        return _parse_optional_bool_token(value, field_name="family_convive_con_otro_progenitor")
+
+    @field_validator("irpf_codigo_comercio_accounting", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_commercial_accounting_bool(cls, value: object) -> OptionalWizardBool:
+        return _parse_optional_bool_token(value, field_name="irpf_codigo_comercio_accounting")
+
+    @field_validator("irpf_activity_income_imputation_year")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_irpf_activity_income_imputation_year(cls, value: str) -> str:
+        if value == "":
+            return value
+        if len(value) != YEAR_DIGITS or not (value.isascii() and value.isdigit()) or not is_four_digit_year(int(value)):
+            raise ValueError(
+                f"irpf_activity_income_imputation_year must be a four-digit ejercicio (YYYY), got {value!r}"
+            )
+        return value
 
     @field_validator("premio_loteria_gravamen_especial_trimestres")
     @classmethod
@@ -533,7 +576,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaDeclaracionType):
             return value
         if isinstance(value, str):
-            return RentaDeclaracionType(value)
+            return RentaDeclaracionType.from_code(value)
         raise ProfileAnswerTypeError("taxation_type must be a RentaDeclaracionType member, string token, or blank")
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
@@ -545,7 +588,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaSexCode):
             return value
         if isinstance(value, str):
-            return RentaSexCode(value)
+            return RentaSexCode.from_code(value)
         raise ProfileAnswerTypeError("sex code must be a RentaSexCode member, string token, or blank")
 
     @field_validator("taxpayer_marital_status", mode="before")
@@ -557,7 +600,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaMaritalStatus):
             return value
         if isinstance(value, str):
-            return RentaMaritalStatus(value)
+            return RentaMaritalStatus.from_code(value)
         raise ProfileAnswerTypeError(
             "taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank",
         )
@@ -589,7 +632,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaDisabilityGrade):
             return value
         if isinstance(value, str):
-            return RentaDisabilityGrade(value)
+            return RentaDisabilityGrade.from_code(value)
         raise ProfileAnswerTypeError("disability grade must be a RentaDisabilityGrade member, string token, or blank")
 
     @field_validator("incn_prior_12_months")
@@ -606,27 +649,17 @@ class SetupAnswers(BaseModel):
             raise ValueError(f"incn_prior_12_months must be a decimal number, got {value!r}") from exc
         return value
 
-    @field_validator(
-        "objective_estimation_modulos_module_1_units",
-        "objective_estimation_modulos_module_2_units",
-        "objective_estimation_modulos_module_3_units",
-        "objective_estimation_modulos_module_4_units",
-        "objective_estimation_modulos_module_5_units",
-        "objective_estimation_modulos_module_6_units",
-        "objective_estimation_modulos_module_7_units",
-    )
+    @field_validator("pago_fraccionado_art_40_3_elected", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _validate_objective_estimation_modulos_units(cls, value: str) -> str:
-        from decimal import Decimal, InvalidOperation
-
-        if value == "":
-            return value
-        try:
-            Decimal(value)
-        except InvalidOperation as exc:
-            raise ValueError(f"objective-estimation modulos units must be decimal numbers, got {value!r}") from exc
-        return value
+    def _parse_pago_fraccionado_art_40_3_elected(
+        cls,
+        value: object,
+    ) -> OptionalWizardBool:
+        return _parse_optional_bool_token(
+            value,
+            field_name="pago_fraccionado_art_40_3_elected",
+        )
 
     @field_validator("new_entity_first_two_profit_periods", mode="before")
     @classmethod
@@ -640,19 +673,6 @@ class SetupAnswers(BaseModel):
             field_name="new_entity_first_two_profit_periods",
         )
 
-    @field_validator(
-        "ley_49_2002_option_declared",
-        "ley_49_2002_renunciation_declared",
-        mode="before",
-    )
-    @classmethod
-    @pydantic_validation_boundary
-    def _parse_ley_49_2002_optional_bool(
-        cls,
-        value: object,
-    ) -> OptionalWizardBool:
-        return _parse_optional_bool_token(value, field_name="ley_49_2002_optional_bool")
-
     @field_validator("activity_start_date")
     @classmethod
     @pydantic_validation_boundary
@@ -665,20 +685,6 @@ class SetupAnswers(BaseModel):
             date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError(f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}") from exc
-        return value
-
-    @field_validator("ley_49_2002_option_date", "ley_49_2002_renunciation_date")
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_ley_49_2002_dates(cls, value: str) -> str:
-        from datetime import date
-
-        if value == "":
-            return value
-        try:
-            date.fromisoformat(value)
-        except ValueError as exc:
-            raise ValueError(f"Ley 49/2002 dates must be ISO-8601 (YYYY-MM-DD), got {value!r}") from exc
         return value
 
     @field_validator("irpf_special_regime_start_date")
@@ -698,13 +704,19 @@ class SetupAnswers(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        if self.taxation_type == RentaDeclaracionType.JOINT and not self.spouse_tax_id:
+        # Only the married unit (Art. 82.1.1ª LIRPF) declares a spouse; a
+        # single-parent unit (Art. 82.1.2ª) has none. An unstated situation
+        # keeps the requirement, since the unit could be the married one.
+        single_parent_unit = bool(self.situacion_familiar) and situacion_familiar_monoparental_required(
+            self.situacion_familiar
+        )
+        if self.taxation_type == RentaDeclaracionType.JOINT and not single_parent_unit and not self.spouse_tax_id:
             # A stable custom error type (not the generic ``value_error``) lets
             # the operator-facing boundary route this cross-field refusal to its
             # own localized message rather than the raw English text below.
             raise PydanticCustomError(
                 "spouse_tax_id_required_joint",
-                "spouse_tax_id is required when taxation_type is joint (taxation_type='2')",
+                "spouse_tax_id is required when taxation_type is joint for a married family unit",
             )
         return self
 
@@ -720,6 +732,7 @@ class SetupAnswers(BaseModel):
 
 
 __all__ = [
+    "EJERCICIO_STATED_PROFILE_PATHS",
     "PROFILE_OUTPUT_LANGUAGE_PATH",
     "SetupAnswers",
 ]

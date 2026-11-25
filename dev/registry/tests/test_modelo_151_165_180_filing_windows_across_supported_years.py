@@ -28,7 +28,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as CompiledAuthority
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
@@ -213,3 +214,16 @@ def test_modelo_151_states_one_schedule_and_one_export_link(
     assert len(link_ordens) == 1
     assert schedule_ordens == link_ordens
     assert {str(ref) for ref in link.source_refs} == layout_sources
+
+
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_modelo_180_has_a_january_window_in_every_supported_year(
+    edition: Callable[[str, int], ModeloRevision], filing_year: int
+) -> None:
+    """RIRPF art. 108.2 sets electronic filing "entre el 1 de enero y el 31 de enero del año
+    siguiente", so every supported ejercicio, including one whose calendar AEAT has not yet
+    published, carries that nominal window; the weekend shift is applied at read time."""
+    window = _annual_window(edition("180", filing_year), filing_year)
+
+    assert window.opens_on == date(filing_year + 1, 1, 1)
+    assert window.closes_on == date(filing_year + 1, 1, 31)

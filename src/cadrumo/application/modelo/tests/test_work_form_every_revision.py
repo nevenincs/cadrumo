@@ -22,25 +22,26 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period, accepted_filing_period_codes
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
 from ....domain.calculations.registry.modelo_localization import binding_locale_key
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormEditability,
-    ModeloFormLayoutProvenance,
     ModeloFormOrigin,
-    ModeloFormRepeatingBlock,
     ModeloFormTextDisclosure,
-    ModeloWorkForm,
     address_key,
 )
+from ..work_form_models import (
+    ModeloFormLayoutProvenance,
+    ModeloFormRepeatingBlock,
+    ModeloWorkForm,
+)
 from ..work_form_service import modelo_form_snapshot
-from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -72,21 +73,7 @@ def _form(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str
         period,
         str(operation.revision_for_context(modelo, filing_year=year, period=period.registry_token).id),
     )
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000998",
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="d" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
-    )
+    review = uncalculated_review(snapshot, operation, modelo=modelo, filing_year=year, period=period)
     form = build_modelo_work_form(
         review=review,
         snapshot=snapshot,
@@ -103,11 +90,15 @@ def _form(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str
 def _shown_casillas(form: ModeloWorkForm) -> list[str]:
     """Every casilla a form accounts for: fields, repeating-group columns, working figures and unplaced boxes."""
     shown = [key[1] for key in (address_key(field.address) for field in form.fields()) if key[0] == "casilla"]
+    # A repeating group may open the rows behind a box the form already shows as their total.
+    fields = set(shown)
     for page in form.pages:
         for section in page.sections:
             for block in section.blocks:
                 if isinstance(block, ModeloFormRepeatingBlock):
-                    shown.extend(casilla for casilla in block.column_casilla_ids if casilla is not None)
+                    shown.extend(
+                        casilla for casilla in block.column_casilla_ids if casilla is not None and casilla not in fields
+                    )
     return shown
 
 

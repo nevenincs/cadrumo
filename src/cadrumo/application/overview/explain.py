@@ -29,25 +29,26 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now, today_madrid
-from ...domain.calculations.registry.applicability import (
+from ...core.type_guards import is_object_set_or_frozenset
+from ...domain.calculations.registry.applicability import derive_modelo_applicability, iter_modelo_applicability_rules
+from ...domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
     ModeloApplicabilityRule,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules,
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys, profile_path_value
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS
+from ...domain.deadlines.effective_close import effective_filing_deadline
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
@@ -76,7 +77,7 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
 
-_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
+_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in UNMODELED_OBLIGATIONS.items()}
 """Recognized-but-unmodeled obligations keyed by bare modelo code.
 
 Derived once from
@@ -142,9 +143,9 @@ class OverviewExplain(BaseModel):
         generated_at: UTC timestamp of when the aggregator ran.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     year: FilingYear
     applicable: bool
     verdict: ApplicabilityVerdict
@@ -167,10 +168,12 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "art109_activity_income_withholding_ge_70pct",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
+    "pays_non_resident_income_with_retencion",
     "does_intracomunitario",
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
     "monedas_virtuales_extranjero_above_threshold",
+    "patrimonio_declaration_threshold_met",
     "premio_loteria_gravamen_especial_sin_retencion",
 )
 
@@ -188,7 +191,14 @@ def _base_applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict
     return keys
 
 
-def _exclusion_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+def _exclusion_condition_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+    """Return the non-payer-fact conditions the rule's exclusions read.
+
+    An exclusion's ``payer_fact`` is not listed here: it is one of the rule's
+    gating payer facts, which
+    :attr:`~cadrumo.domain.calculations.registry.applicability_models.ModeloApplicabilityRule.gating_payer_facts`
+    enumerates for every caller.
+    """
     keys: dict[str, None] = {}
     for exclusion in rule.exclusions:
         if exclusion.entity_types:
@@ -199,8 +209,6 @@ def _exclusion_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, Non
             keys["irpf_income_categories"] = None
         if exclusion.declaration_roles is not None:
             keys["declaration_roles"] = None
-        if exclusion.payer_fact is not None:
-            keys.update(dict.fromkeys(payer_fact_profile_keys(exclusion.payer_fact)))
     return keys
 
 
@@ -208,11 +216,12 @@ def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str,
     """Return the taxpayer-profile paths ``rule`` reads, in first-read order.
 
     Mirrors the gates :meth:`ModeloApplicabilityRule.evaluate` checks: the
-    positive gates, each exclusion's conditions, and the payer facts named by
-    the rule and its exclusions, expanded to the profile keys the registry
-    declares for them. A derived payer fact therefore contributes every flag it
-    reads, so an exclusion such as an SII one lists each enrolment that can
-    establish it.
+    positive gates, each exclusion's conditions, and then the rule's
+    ``gating_payer_facts`` — the fact the rule requires and the fact an
+    exclusion reads alike — expanded to the profile keys the registry declares
+    for them. A derived payer fact therefore contributes every flag it reads,
+    so an exclusion such as an SII one lists each enrolment that can establish
+    it.
 
     Args:
         rule: The applicability rule whose inputs are listed.
@@ -222,12 +231,13 @@ def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str,
         without duplicates.
     """
     keys = _base_applicability_profile_fact_keys(rule)
-    keys.update(_exclusion_profile_fact_keys(rule))
-    if rule.required_payer_fact is not None:
-        keys.update(dict.fromkeys(payer_fact_profile_keys(rule.required_payer_fact)))
+    keys.update(_exclusion_condition_profile_fact_keys(rule))
+    for fact in rule.gating_payer_facts:
+        keys.update(dict.fromkeys(payer_fact_profile_keys(fact)))
     return tuple(keys)
 
 
+@runtime_checkable
 class _HasValueAttribute(Protocol):
     @property
     def value(self) -> object: ...
@@ -237,15 +247,15 @@ def _profile_fact_value(value: object) -> _ProfileFactValue:
     """Render one profile value as the explain payload's scalar."""
     if value is None:
         return ""
-    if isinstance(value, frozenset):
-        items = cast(frozenset[object], value)
+    if is_object_set_or_frozenset(value) and isinstance(value, frozenset):
+        items = value
         rendered_items: list[str] = []
         for item in items:
             item_value: object = getattr(item, "value", item)
             rendered_items.append(str(item_value))
         return ",".join(sorted(rendered_items))
-    if hasattr(value, "value"):
-        value = cast(_HasValueAttribute, value).value
+    if isinstance(value, _HasValueAttribute):
+        value = value.value
     if isinstance(value, str | bool | int):
         return value
     return str(value)
@@ -283,9 +293,12 @@ def _iva_enrollment_profile_facts(profile: TaxpayerProfile) -> dict[str, _Profil
     # The nested IVA + enrolment sub-models also gate applicability.
     # An undeclared IVA sub-model surfaces each fact as an explicit empty
     # string, like the undeclared axes above, rather than dropping the keys.
+    # A declared block whose enrolment is unanswered reads the same way: the
+    # enrolments are three-state, so the gap is a value the payload must
+    # carry rather than a scalar it refuses.
     iva = getattr(profile, "iva", None)
     return {
-        f"iva.{iva_field}": "" if iva is None else getattr(iva, iva_field)
+        f"iva.{iva_field}": _profile_fact_value(None if iva is None else getattr(iva, iva_field))
         for iva_field in (
             "roi_enrolled",
             "oss_enrolled",
@@ -390,11 +403,15 @@ def _applicability_inputs_for_year(
     profile: TaxpayerProfile,
     year: int,
     evidence: FilingYearApplicabilityEvidence | None,
-) -> tuple[TaxpayerProfile, Mapping[str, LedgerPayerFactDerivation]]:
-    """Return the profile and ledger derivations the calendar decides ``year``'s row on."""
+) -> tuple[TaxpayerProfile, Mapping[str, LedgerPayerFactDerivation], Mapping[str, str]]:
+    """Return the profile, ledger derivations and their notes the calendar decides ``year``'s row on."""
     if evidence is None:
-        return profile, dict[str, LedgerPayerFactDerivation]()
-    return evidence.profile_for_year(year), evidence.ledger_payer_facts_for_year(year)
+        return profile, dict[str, LedgerPayerFactDerivation](), dict[str, str]()
+    return (
+        evidence.profile_for_year(year),
+        evidence.ledger_payer_facts_for_year(year),
+        evidence.records_derivation_notes_for_year(year),
+    )
 
 
 def build_overview_explain(
@@ -435,7 +452,8 @@ def build_overview_explain(
             Defaults to today. Tests pass this explicitly; the CLI uses
             the real current date.
         operation: Optional caller-held pinned authority operation. When
-            omitted, this builder opens the bundled indexed operation.
+            omitted, this builder opens the bundled indexed operation once
+            and threads it through every deadline lookup.
         applicability_evidence: Optional per-filing-year evidence bound by
             the composition root. When supplied, the verdict and the listed
             profile facts are decided on the profile as of ``year`` and on the
@@ -472,12 +490,16 @@ def build_overview_explain(
 
     _require_registered_modelo(modelo_id, filing_year=resolved_year, operation=operation)
 
-    year_profile, ledger_payer_facts = _applicability_inputs_for_year(profile, resolved_year, applicability_evidence)
+    year_profile, ledger_payer_facts, records_notes = _applicability_inputs_for_year(
+        profile, resolved_year, applicability_evidence
+    )
     applicability = derive_modelo_applicability(
         year_profile,
         modelo_id,
+        reference_date=date(resolved_year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger_payer_facts,
+        records_derivation_notes=records_notes,
     )
     rule = next(
         (rule for rule in iter_modelo_applicability_rules(operation=operation) if rule.modelo == modelo_id),
@@ -492,12 +514,14 @@ def build_overview_explain(
         modelo=modelo_id,
         year=resolved_year,
         engine=engine,
+        operation=operation,
     )
-    out_of_plazo_warning = _out_of_plazo_warning(
+    out_of_plazo_warning = explain_out_of_plazo_warning(
         profile,
         modelo=modelo_id,
         year=resolved_year,
         today=reference_today,
+        operation=operation,
     )
 
     return OverviewExplain(
@@ -520,6 +544,7 @@ def _scheduling_rationale(
     modelo: str,
     year: int,
     engine: DeadlineExplanationEngine | None,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return the deadline engine's scheduling text, or ``None``.
 
@@ -530,7 +555,7 @@ def _scheduling_rationale(
     :class:`~domain.deadlines.errors.DeadlineValidationError` failures remain
     typed :class:`OverviewExplainError` refusals.
     """
-    deadline_engine = engine or DeadlineEngine()
+    deadline_engine = engine or DeadlineEngine(authority=operation)
     try:
         return deadline_engine.explain(profile, modelo, year=year)
     except NoDeadlineWindowsError:
@@ -552,12 +577,53 @@ def _scheduling_rationale(
         ) from exc
 
 
-def _out_of_plazo_warning(
+def _known_filing_close(
+    profile: TaxpayerProfile,
+    *,
+    modelo: str,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> date | None:
+    """The latest effective close of the modelo's matching windows, or ``None`` when any is unknown or none exists."""
+    deadline_engine = DeadlineEngine(authority=operation)
+    try:
+        windows = deadline_engine.deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return None
+    # Lateness is counted from the close the filer actually has, the same
+    # effective close every other surface judges against.
+    deadlines = tuple(
+        effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
+        for code, revision, window in windows
+        if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
+    )
+    if not deadlines or not all(deadline.close_known for deadline in deadlines):
+        return None
+    return max(deadline.closes_on for deadline in deadlines)
+
+
+def deadline_windows_unavailable(year: int, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the pinned registry holds no deadline windows for ``year``.
+
+    ``True`` only for the benign no-windows data gap, the state in which an
+    explanation's scheduling rationale and out-of-plazo warning are absent
+    because nothing is known, not because the filing is on time. Any other
+    schedule failure propagates.
+    """
+    try:
+        DeadlineEngine(authority=operation).deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return True
+    return False
+
+
+def explain_out_of_plazo_warning(
     profile: TaxpayerProfile,
     *,
     modelo: str,
     year: int,
     today: date,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return an old-deadline warning for ``overview explain``.
 
@@ -565,20 +631,13 @@ def _out_of_plazo_warning(
     modelo apply?"). This helper adds a separate timing warning: a
     historical return can still be applicable while its
     voluntary filing window closed long ago.
+
+    ``profile`` is a :class:`TaxpayerProfile`. ``operation`` is the caller's
+    pinned authority operation; the window lookup never opens its own.
     """
-    deadline_engine = DeadlineEngine()
-    try:
-        windows = deadline_engine.deadline_windows(year)
-    except NoDeadlineWindowsError:
+    closes_on = _known_filing_close(profile, modelo=modelo, year=year, operation=operation)
+    if closes_on is None:
         return None
-    matching_windows = tuple(
-        window
-        for code, revision, window in windows
-        if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
-    )
-    if not matching_windows:
-        return None
-    closes_on = max(window.closes_on for window in matching_windows)
     twelve_month_boundary = twelve_month_anniversary(closes_on)
     if today < twelve_month_boundary:
         return None

@@ -14,11 +14,11 @@ posture, logs the validation problem, and lets the rendering layer emit the
 generic extemporaneous-filing warning.
 
 See Also:
-    :func:`cadrumo.application.modelo.effective_deadline.resolve_effective_filing_deadline`:
+    :func:`cadrumo.domain.deadlines.effective_close.resolve_effective_filing_deadline`:
         Nominal and business-day close dates of the plazo voluntario.
     :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
-    :func:`cadrumo.entrypoints.cli._modelo_rendering.work_deadline_output_from_posture`:
+    :func:`cadrumo.entrypoints.cli.modelo_rendering.work_deadline_output_from_posture`:
         Projects this summary onto JSON payloads and warning notices.
 """
 
@@ -34,15 +34,16 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from .effective_deadline import resolve_effective_filing_deadline
 
 _LOG = get_logger(__name__)
 
@@ -175,7 +176,6 @@ def modelo_work_deadline_posture(
     *,
     reference_on: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
-    holiday_territory: CalendarCCAA | None = None,
 ) -> ModeloWorkDeadlinePosture | None:
     """Return voluntary-deadline posture and rate-only preview, if known.
 
@@ -212,17 +212,39 @@ def modelo_work_deadline_posture(
         operation: Optional caller-pinned registry operation. When supplied, the
             deadline window, holiday calendar and recargo band use its
             governed-fact generation.
-        holiday_territory: The filer's autonomous community for the holiday
-            shift. ``None`` checks national holidays only, and the posture's
-            ``holiday_coverage`` says so.
 
     Returns:
         A :class:`ModeloWorkDeadlinePosture`, or ``None`` when the registry has
-        no deadline window for the work unit's filing axis.
+        no deadline window for the work unit's filing axis, or when the window's
+        close is unknown and the reference date is past its nominal close.
 
     See Also:
-        :func:`cadrumo.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
+        :func:`cadrumo.entrypoints.cli.modelo_rendering.work_unit_deadline_output_from_posture`:
             Converts the summary into operator-facing payloads and notices.
+    """
+    return modelo_deadline_posture(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        reference_on=reference_on,
+        operation=operation,
+    )
+
+
+def modelo_deadline_posture(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    reference_on: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> ModeloWorkDeadlinePosture | None:
+    """Return the voluntary-deadline posture of one filing coordinate, if known.
+
+    The coordinate form of :func:`modelo_work_deadline_posture`, for a caller
+    holding a filed record rather than its work unit. A filing reads it on its
+    own presentation date, so the posture it serves agrees with the timeliness
+    the record kept.
     """
     from ...domain.deadlines.errors import DeadlineValidationError
     from ...domain.deadlines.recargo import build_recovery_for_overdue
@@ -230,37 +252,42 @@ def modelo_work_deadline_posture(
     resolved_reference_on = reference_on or today_madrid()
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
         deadline = resolve_effective_filing_deadline(
-            str(work_unit.modelo),
-            work_unit.filing_year,
-            work_unit.period,
-            holiday_territory=holiday_territory,
+            modelo,
+            filing_year,
+            period,
             operation=pinned,
         )
         if deadline is None:
             return None
-        days_overdue = deadline.days_overdue_on(resolved_reference_on)
+        posture = deadline.posture_on(resolved_reference_on)
+        days_overdue = posture.days_overdue
+        days_remaining = posture.days_remaining
+        if days_overdue is None and days_remaining is None:
+            # A close that is unknown and lies past its nominal date: lateness
+            # cannot be judged, so no posture and no recargo preview are given.
+            return None
         if days_overdue is None:
             return ModeloWorkDeadlinePosture(
                 closes_on=deadline.closes_on,
                 nominal_closes_on=deadline.nominal_closes_on,
                 holiday_coverage=deadline.holiday_coverage,
-                days_remaining=deadline.days_remaining_on(resolved_reference_on),
+                days_remaining=days_remaining,
             )
         try:
             recovery = build_recovery_for_overdue(
                 closes_on=deadline.closes_on,
                 reference_today=resolved_reference_on,
-                modelo=str(work_unit.modelo),
-                period=work_unit.period,
+                modelo=modelo,
+                period=period,
                 operation=pinned,
             )
         except DeadlineValidationError:
             _LOG.debug(
                 "modelo work deadline preview resolution failed; returning overdue posture without preview "
                 "modelo=%s filing_year=%s period=%s days_overdue=%s",
-                work_unit.modelo,
-                work_unit.filing_year,
-                work_unit.period.registry_token,
+                modelo,
+                filing_year,
+                period.registry_token,
                 days_overdue,
                 exc_info=True,
             )
@@ -307,7 +334,7 @@ def calculated_m210_plazo_resolution(
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
-    if work_unit.modelo != Modelo("210"):
+    if work_unit.modelo != form_for_role("irnr.income"):
         return None
     if revision.unresolved_outcomes:
         # The declaration result rests on a value the engine could not resolve,
@@ -315,6 +342,7 @@ def calculated_m210_plazo_resolution(
         # the absent quota as a zero one.
         return None
 
+    from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
     from ...domain.deadlines.plazo import resolve_filing_window
     from .result_disposition_resolution import resolve_modelo_result_disposition
 
@@ -328,13 +356,17 @@ def calculated_m210_plazo_resolution(
     if resultado is None:
         return None
     tipo_renta_code = revision.m210_official_tipo_renta_code
-    window = resolve_filing_window(
+    resolution = resolve_filing_window(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
         resultado=resultado,
         tipo_renta_code=tipo_renta_code,
+        authority=operation,
     )
+    # A window whose close is unknown yields no notice, as an unknown deadline
+    # does everywhere on this surface; it is never stated against a nominal date.
+    window = None if resolution is None else resolution.dated_window
     if window is None:
         return None
 
@@ -351,8 +383,15 @@ def calculated_m210_plazo_resolution(
     }
     if tipo_renta_code is not None:
         context["tipo_renta_code"] = tipo_renta_code
-    if window.payment_cutoff_on is not None:
-        context["payment_cutoff_on"] = window.payment_cutoff_on.isoformat()
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as bundled:
+            payment_cutoff_on = resolve_payment_cutoff(str(work_unit.modelo), window, operation=bundled).cutoff_on
+    else:
+        payment_cutoff_on = resolve_payment_cutoff(str(work_unit.modelo), window, operation=operation).cutoff_on
+    if payment_cutoff_on is not None:
+        context["payment_cutoff_on"] = payment_cutoff_on.isoformat()
 
     return M210PlazoResolution(closes_on=window.closes_on.isoformat(), context=context)
 
@@ -362,6 +401,7 @@ __all__ = [
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkDeadlinePosture",
     "calculated_m210_plazo_resolution",
+    "modelo_deadline_posture",
     "modelo_work_deadline_posture",
     "validate_modelo_work_deadline_posture",
 ]

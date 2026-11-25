@@ -10,24 +10,33 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Self
+from typing import Final, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.ids import ModeloId, RevisionId
+from ..modelo.work_form_wording import date_text, period_words
+from ..operations.error_detail import served_words_language
 from ..operator_actions.models import DeclaredNextAction
 from .agenda import OverviewAgenda
 from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    decide_filing_status,
 )
+from .filing_status_words import filing_status_words
+
+HOME_PREVIEW_LIMIT: Final = 3
+"""How many next actions and agenda entries the Home zone previews."""
 
 HOME_REASON_BLOCKED_DEPENDENCY: str = "blocked_dependency"
 HOME_REASON_BLOCKED_EVIDENCE: str = "blocked_evidence"
@@ -35,16 +44,6 @@ HOME_REASON_BLOCKED_REVIEW: str = "blocked_review"
 HOME_REASON_DECLARATION_NEEDS_REVIEW: str = "declaration_needs_review"
 HOME_REASON_EVIDENCE_MISSING: str = "evidence_missing"
 HOME_REASON_LEDGER_CLASSIFICATION_PENDING: str = "ledger_classification_pending"
-
-HOME_ACTION_REASON_CODES: tuple[str, ...] = (
-    HOME_REASON_BLOCKED_DEPENDENCY,
-    HOME_REASON_BLOCKED_EVIDENCE,
-    HOME_REASON_BLOCKED_REVIEW,
-    HOME_REASON_DECLARATION_NEEDS_REVIEW,
-    HOME_REASON_EVIDENCE_MISSING,
-    HOME_REASON_LEDGER_CLASSIFICATION_PENDING,
-)
-"""Complete finite vocabulary for Home next-action reason labels."""
 
 
 class HomeAvailability(StrEnum):
@@ -55,6 +54,11 @@ class HomeAvailability(StrEnum):
     STALE = "stale"
     NEVER_CAPTURED = "never_captured"
     UNAVAILABLE = "unavailable"
+
+    @property
+    def is_observable(self) -> bool:
+        """Whether the zone holds an observation that can support a claim, current or stale."""
+        return self in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
 
 
 class HomeSessionPosture(StrEnum):
@@ -99,7 +103,7 @@ class HomeTargetKind(StrEnum):
 class HomeZoneState(BaseModel):
     """Authority and freshness state shared by every Home zone."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     availability: HomeAvailability
     observed_at: datetime | None = None
@@ -111,14 +115,23 @@ class HomeZoneState(BaseModel):
     in; a reason code alone sends the operator to guess which of dozens of
     fields the refusal meant.
     """
+    reason_words: str | None = Field(default=None, min_length=1, max_length=512)
+    """The reason said in ``reason_words_language``; served with the projection, absent where the catalogue has none."""
+    reason_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_honest_availability_evidence(self) -> Self:
+        _validate_words_language(self.reason_words, self.reason_words_language)
         _validate_missing_paths_reason(self)
         _validate_reason_matches_availability(self)
         _validate_observation_matches_availability(self)
         return self
+
+
+def _validate_words_language(words: str | None, language: OutputLanguage | None) -> None:
+    if (words is None) != (language is None):
+        raise ValueError("served Home words and their language travel together")
 
 
 def _validate_missing_paths_reason(state: HomeZoneState) -> None:
@@ -143,10 +156,10 @@ def _validate_observation_matches_availability(state: HomeZoneState) -> None:
 class HomeAccountSession(BaseModel):
     """Non-secret account identity and local custody posture for the header."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     posture: HomeSessionPosture
-    profile_label: str | None = Field(default=None, min_length=1, max_length=200)
+    profile_label: str | None = Field(default=None, min_length=1, max_length=256)
     expires_at: datetime | None = None
 
     @model_validator(mode="after")
@@ -164,7 +177,7 @@ class HomeAccountSession(BaseModel):
 class HomeNextAction(BaseModel):
     """Application-ranked action shown without frontend-owned urgency logic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rank: NonNegativeInt
     action: DeclaredNextAction
@@ -172,10 +185,18 @@ class HomeNextAction(BaseModel):
     modelo: ModeloId | None = None
     filing_year: FilingYear | None = None
     period: Period | None = None
+    action_words: str | None = Field(default=None, min_length=1, max_length=256)
+    """What the action does, said in ``words_language``; served with the projection."""
+    reason_words: str | None = Field(default=None, min_length=1, max_length=256)
+    """Why the action is offered, said in ``words_language``; served with the projection."""
+    period_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The period the action names, said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_complete_natural_address(self) -> Self:
+        _validate_words_language(self.action_words or self.reason_words or self.period_words, self.words_language)
         address = (self.modelo, self.filing_year, self.period)
         if any(value is not None for value in address) and not all(value is not None for value in address):
             raise ValueError("a next-action declaration address must be complete or absent")
@@ -187,19 +208,25 @@ class HomeNextAction(BaseModel):
 class HomeDeclarationResume(BaseModel):
     """Natural declaration address and current revision state for resumption."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     modelo: ModeloId
     filing_year: FilingYear
     period: Period
-    name: str = Field(min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=256)
     state: HomeDeclarationState
     revision_id: RevisionId | None = None
+    state_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The state said in ``words_language``; served with the projection."""
+    period_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The period said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_period_year(self) -> Self:
+        _validate_words_language(self.state_words or self.period_words, self.words_language)
         if self.filing_year != self.period.filing_year:
             raise ValueError("declaration filing_year must match its period year")
         return self
@@ -208,25 +235,34 @@ class HomeDeclarationResume(BaseModel):
 class HomeLedgerReadiness(BaseModel):
     """Ledger quality counts; zone availability decides whether zero is known."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: NonNegativeInt
     requiring_review: NonNegativeInt
     unclassified: NonNegativeInt
     missing_evidence: NonNegativeInt
+    summary_words: str | None = Field(default=None, min_length=1, max_length=512)
+    """The counts said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_subsets(self) -> Self:
+        _validate_words_language(self.summary_words, self.words_language)
         if any(value > self.entries for value in (self.requiring_review, self.unclassified, self.missing_evidence)):
             raise ValueError("Ledger issue counts cannot exceed the entry count")
         return self
 
 
 class HomeAgendaEntry(BaseModel):
-    """One legal filing date with independent local and observed-AEAT axes."""
+    """One legal filing date with independent local and observed-AEAT axes.
 
-    model_config = _STRICT_FROZEN
+    ``due_on_text`` and ``period_words`` say the date and the period in
+    ``words_language`` the way the declarations list says them, so no frontend
+    formats a date or a period token itself.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloId
     filing_year: FilingYear
@@ -235,12 +271,60 @@ class HomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+    due_on_text: str = Field(min_length=1, max_length=64)
+    period_words: str = Field(min_length=1, max_length=128)
+    words_language: OutputLanguage
+    filing_status_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The filing status said in ``words_language``, from the decided status."""
+
+    @classmethod
+    def worded(
+        cls,
+        *,
+        modelo: ModeloId,
+        filing_year: FilingYear,
+        period: Period,
+        due_on: date,
+        period_state: OverviewPeriodState,
+        local_filing_state: OverviewLocalFilingState,
+        aeat_submission_state: OverviewAeatSubmissionState,
+        language: OutputLanguage,
+    ) -> Self:
+        """Build the row with its date, period and filing status said in ``language``."""
+        status = decide_filing_status(
+            aeat_submission_state=aeat_submission_state,
+            local_filing_state=local_filing_state,
+            period_state=period_state,
+        )
+        return cls(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            due_on=due_on,
+            period_state=period_state,
+            local_filing_state=local_filing_state,
+            aeat_submission_state=aeat_submission_state,
+            due_on_text=date_text(due_on, language),
+            period_words=period_words(period, language),
+            words_language=language,
+            filing_status_words=filing_status_words(status, language),
+        )
+
+    @computed_field
+    @property
+    def filing_status(self) -> OverviewFilingStatus:
+        """The one filing status this row states, from the AEAT evidence Home may show."""
+        return decide_filing_status(
+            aeat_submission_state=self.aeat_submission_state,
+            local_filing_state=self.local_filing_state,
+            period_state=self.period_state,
+        )
 
 
 class HomeProjectionV1(BaseModel):
     """Complete immutable input rendered by Home; it performs no reads itself."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generated_at: datetime
     account: HomeAccountSession
@@ -297,7 +381,7 @@ def _validate_messages_claim(state: HomeZoneState, count: NonNegativeInt | None)
 
 
 def _validate_action_preview(actions: tuple[HomeNextAction, ...]) -> None:
-    if len(actions) > 3:
+    if len(actions) > HOME_PREVIEW_LIMIT:
         raise ValueError("Home may preview at most three next actions")
     ranks = tuple(item.rank for item in actions)
     if ranks != tuple(range(len(actions))):
@@ -305,7 +389,7 @@ def _validate_action_preview(actions: tuple[HomeNextAction, ...]) -> None:
 
 
 def _validate_agenda_preview(agenda: tuple[HomeAgendaEntry, ...]) -> None:
-    if len(agenda) > 3:
+    if len(agenda) > HOME_PREVIEW_LIMIT:
         raise ValueError("Home may preview at most three agenda entries")
     addresses = tuple((item.modelo, item.filing_year, item.period.registry_token) for item in agenda)
     if len(set(addresses)) != len(addresses):
@@ -333,7 +417,7 @@ def _validate_agenda_evidence_claim(
 class HomeProjectionInput(BaseModel):
     """Already-local reader results and explicit authority state for Home."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generated_at: datetime
     account: HomeAccountSession
@@ -427,16 +511,13 @@ def _project_agenda(
             entry.period.registry_token,
         ),
     )[:3]
-    evidence_observable = evidence_state.availability in {
-        HomeAvailability.AVAILABLE,
-        HomeAvailability.STALE,
-    }
+    evidence_observable = evidence_state.availability.is_observable
     return tuple(_project_agenda_entry(entry, evidence_observable=evidence_observable) for entry in ordered)
 
 
 def _project_agenda_entry(entry: OverviewCalendarEntry, *, evidence_observable: bool) -> HomeAgendaEntry:
     evidence = entry.filing_evidence
-    return HomeAgendaEntry(
+    return HomeAgendaEntry.worded(
         modelo=entry.modelo,
         filing_year=entry.filing_year or entry.period.filing_year,
         period=entry.period,
@@ -446,6 +527,7 @@ def _project_agenda_entry(entry: OverviewCalendarEntry, *, evidence_observable: 
         aeat_submission_state=(
             evidence.aeat_submission_state if evidence_observable else OverviewAeatSubmissionState.NOT_OBSERVED
         ),
+        language=served_words_language(),
     )
 
 

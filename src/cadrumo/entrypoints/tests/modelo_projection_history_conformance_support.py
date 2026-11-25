@@ -10,7 +10,9 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.bucket_event_projection import BucketEventProjection
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.history import assemble_modelo_lifecycle_history
 from ...application.modelo.history_timeline_operation import (
     ModeloHistoryTimelineProjection,
@@ -21,7 +23,8 @@ from ...application.modelo.lifecycle_history_operation import (
     ModeloHistoryOperationProjection,
     ModeloHistoryOperationRequest,
 )
-from ...application.modelo.projection import compare_modelo_years, project_modelo_100_from_m130
+from ...application.modelo.projection import project_modelo_100_from_m130
+from ...application.modelo.projection_compare import compare_modelo_years
 from ...application.modelo.projection_operation import (
     ModeloCompareOperationProjection,
     ModeloCompareOperationRequest,
@@ -29,12 +32,14 @@ from ...application.modelo.projection_operation import (
     ModeloProjectOperationRequest,
 )
 from ...application.modelo.work_lifecycle import create_work_unit
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.user_profile.values import UserProfileFact
-from ..adapter_composition import build_calculation_action_ports, build_modelo_history_ports, build_work_lifecycle_ports
+from ..adapter_composition_ports import build_modelo_history_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from . import modelo_operation_test_support
 
 
@@ -62,7 +67,7 @@ def _seed_2026_revision(profile_id: UUID, *, operation: PinnedAuthorityOperation
         operation=operation,
     )
     with bundled_indexed_authority().operation() as calculation_operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=bucket_id, operation=calculation_operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -116,12 +121,12 @@ def prepare_modelo_projection_history_conformance_case(
 
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+        persona_facts_beneath(
+            (
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+            ),
+            without=("identity.",),
         ),
     )
     if definition_id == "modelo.project":
@@ -134,7 +139,8 @@ def prepare_modelo_projection_history_conformance_case(
         )
         assert expected.quarters_filed == 1 and expected.quarters_available == ("1T",)
         return ModeloProjectionHistoryConformanceCase(
-            request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025, ccaa="madrid"),
+            # The region is left to the profile, whose tax residence states the one expected above.
+            request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025),
             expected_projection=ModeloProjectOperationProjection.from_service(
                 profile_id, expected, authority_generation=operation.generation.logical_generation
             ),

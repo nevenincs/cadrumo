@@ -11,8 +11,9 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.dates import transaction_filing_date
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

@@ -25,10 +25,10 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_SCHEMA_FAMILY_FIELDS,
 )
 
-_MODELOS: Final = "modelos"
+MODELOS: Final = "modelos"
 
 
-_REPRESENTATION_ONLY: Final = frozenset(
+REPRESENTATION_ONLY: Final = frozenset(
     {
         "inherited_from",
         "predecessor",
@@ -42,18 +42,19 @@ _REPRESENTATION_ONLY: Final = frozenset(
         "family_removals",
         "family_positions",
         "cleared_families",
+        "family_disposition_removals",
         "scoped_families",
     }
 )
 
 
 # Only typed revision declarations carry these storage source defaults.
-_REVISION_SOURCE_DEFAULT_FIELDS: Final = frozenset(
+REVISION_SOURCE_DEFAULT_FIELDS: Final = frozenset(
     field for _section, field in family_source_default_fields(include_casillas=True)
 )
 
 
-_FACT_QUERY_TYPES: Final = {
+FACT_QUERY_TYPES: Final = {
     GovernedFactFamily.SCALAR: ScalarFactQuery,
     GovernedFactFamily.BRACKET: BracketFactQuery,
     GovernedFactFamily.MAPPING: MappingFactQuery,
@@ -64,7 +65,7 @@ _FACT_QUERY_TYPES: Final = {
 }
 
 
-_EXPECTED_ASSESSMENT_FAMILIES: Final = REVISION_SCHEMA_FAMILY_FIELDS | frozenset(
+EXPECTED_ASSESSMENT_FAMILIES: Final = REVISION_SCHEMA_FAMILY_FIELDS | frozenset(
     spec.section for spec in CANONICAL_FAMILY_SPECS if spec.singleton
 )
 

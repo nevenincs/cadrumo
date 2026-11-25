@@ -20,39 +20,34 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_TAXPAYER_NIF = "12345678Z"
+_TAXPAYER_NIF = ready_profile_tax_id()
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
     surface="_DECL_EJERCICIO_CASILLA",
@@ -65,41 +60,9 @@ _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id(
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Generator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _seed_taxpayer_profile(runtime.repository)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         yield
-
-
-def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
-    """Seed the bucket profile with the taxpayer NIF so the IVA wallet
-    reconciliation gate added to ``calculate_modelo_revision`` resolves
-    the work-unit taxpayer identity."""
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        ),
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
 
 
 def _repositories():
@@ -108,18 +71,6 @@ def _repositories():
         CalculationRevisionCatalogueRepository(),
         BucketEventHistoryRepository(),
     )
-
-
-def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-    }
 
 
 def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaCompensationReconciliationDecision:
@@ -188,11 +139,12 @@ def _calculate_303(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_174:
-            return calculate_modelo_revision(
+            return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
-                binding_values=_modelo_303_engine_inputs(),
+                # The quarter's cuotas come from the bucket's IVA ledger, here empty.
+                binding_values={},
                 iva_compensation_decision=decision,
                 filing_period_date=period_date,
                 ports=_calculation_ports_174,
@@ -200,7 +152,7 @@ def _calculate_303(
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:m303-declaration-period-binding", operation=operation
                 ),
-            )
+            ).revision
 
 
 def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(

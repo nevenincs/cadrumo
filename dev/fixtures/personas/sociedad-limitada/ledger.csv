@@ -1,0 +1,13 @@
+ref,year,month,day,description,amount,currency,counterparty,classification,category_id,irpf_category,iva_category,taxable_base,iva_rate,iva_amount,recargo_amount,deduction_kind,invoice_kind,invoice_number,retencion_rate,retencion_amount,document
+SOC-ALQ-1,horizon-1,1,15,Alquiler de equipos y licencias trimestre,-1633.50,EUR,sociedad.proveedor,BUSINESS,software_suscripcion,,domestic_general,1350.00,0.21,283.50,,domestic_current,received,PV-001,,,factura-soc-alq-1
+SOC-VTA-1,horizon-1,1,30,Desarrollo de tienda online,6292.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,5200.00,0.21,1092.00,,,issued,TDO-001,,,
+SOC-VTA-2,horizon-1,2,27,Mantenimiento de plataformas web,2178.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,1800.00,0.21,378.00,,,issued,TDO-002,,,
+SOC-ALQ-2,horizon-1,4,15,Alquiler de equipos y licencias trimestre,-1633.50,EUR,sociedad.proveedor,BUSINESS,software_suscripcion,,domestic_general,1350.00,0.21,283.50,,domestic_current,received,PV-002,,,factura-soc-alq-2
+SOC-VTA-3,horizon-1,4,29,Desarrollo de aplicacion de reservas,7744.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,6400.00,0.21,1344.00,,,issued,TDO-003,,,
+SOC-VTA-4,horizon-1,6,30,Mantenimiento de plataformas web,2178.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,1800.00,0.21,378.00,,,issued,TDO-004,,,
+SOC-ALQ-3,horizon-1,7,15,Alquiler de equipos y licencias trimestre,-1633.50,EUR,sociedad.proveedor,BUSINESS,software_suscripcion,,domestic_general,1350.00,0.21,283.50,,domestic_current,received,PV-003,,,factura-soc-alq-3
+SOC-VTA-5,horizon-1,7,31,Desarrollo de intranet corporativa,5687.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,4700.00,0.21,987.00,,,issued,TDO-005,,,
+SOC-VTA-6,horizon-1,9,30,Mantenimiento de plataformas web,2178.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,1800.00,0.21,378.00,,,issued,TDO-006,,,
+SOC-ALQ-4,horizon-1,10,15,Alquiler de equipos y licencias trimestre,-1633.50,EUR,sociedad.proveedor,BUSINESS,software_suscripcion,,domestic_general,1350.00,0.21,283.50,,domestic_current,received,PV-004,,,factura-soc-alq-4
+SOC-VTA-7,horizon-1,10,31,Desarrollo de pasarela de pagos,8833.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,7300.00,0.21,1533.00,,,issued,TDO-007,,,
+SOC-VTA-8,horizon-1,12,19,Mantenimiento de plataformas web,2178.00,EUR,sociedad.cliente,BUSINESS,,,domestic_general,1800.00,0.21,378.00,,,issued,TDO-008,,,

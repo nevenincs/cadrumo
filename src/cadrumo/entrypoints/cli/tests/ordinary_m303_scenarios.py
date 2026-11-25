@@ -1,4 +1,4 @@
-"""Secure ordinary-2025 Modelo 303 input helpers for real CLI tests.
+"""Secure ordinary Modelo 303 input helpers for real CLI tests.
 
 Every period asks the joint-return election; only the last settlement period of
 the year (4T or 12) asks the Modelo 390 exemption and so takes an attestation.
@@ -7,16 +7,12 @@ the year (4T or 12) asks the Modelo 390 exemption and so takes an attestation.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Literal
 
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import invoke_joined_cli
-
-_OBSERVED_AT_BY_LAST_PERIOD = {
-    "4T": "2025-12-31T12:00:00+00:00",
-    "12": "2025-12-31T12:00:00+00:00",
-}
 
 
 def joint_return_options(*, joint_return_elected: bool = True) -> tuple[str, ...]:
@@ -42,8 +38,17 @@ class OrdinaryM303SecureEvidence:
         )
 
 
-def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
-    """Admit one real 2025 last-period non-applicability attestation."""
+def admit_ordinary_m303_secure_evidence(
+    *, filing_year: int, period: Literal["4T", "12"] = "4T"
+) -> OrdinaryM303SecureEvidence:
+    """Admit one real last-period non-applicability attestation for the caller's ``filing_year``.
+
+    The attestation is observed at the close of that year's last settlement period, so
+    the caller names the year of the return it calculates and that period must already
+    have ended: an observation dated in the future is refused, as it is for an operator,
+    and an attestation for another year answers nothing.
+    """
+    observed_at = datetime(filing_year, 12, 31, 12, tzinfo=UTC).isoformat()
     result = invoke_joined_cli(
         [
             "--format",
@@ -53,11 +58,11 @@ def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -
             "work",
             "attest-m303-exonerado-390",
             "--year",
-            "2025",
+            str(filing_year),
             "--period",
             period,
             "--observed-at",
-            _OBSERVED_AT_BY_LAST_PERIOD[period],
+            observed_at,
         ]
     )
     assert result.exit_code == 0, result.output

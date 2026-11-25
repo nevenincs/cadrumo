@@ -45,9 +45,14 @@ flows:
       clear: Törlés
       completed_refresh_unavailable: A művelet befejeződött, de a frissített nézet
         nem érhető el. Térj vissza a kezdőlapra a frissítéshez.
+      conflict: A profil szerkesztés közben megváltozott. A módosításodat nem mentettük.
+        Ellenőrizd az aktuális profilt, és nyisd meg újra a mezőt; az újratöltéshez
+        nyomd meg az F5 billentyűt.
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
       no_change: Nem volt szükség módosításra.
+      refresh_failed: Az aktuális profilt nem sikerült betölteni. Szerkesztés előtt
+        nyomd meg az F5 billentyűt az újrapróbálkozáshoz.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
@@ -55,7 +60,7 @@ flows:
       shape:
         date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
         decimal: Szám, tizedesponttal - például 1234.56.
-        email: Egy e-mail-cím - például nev@pelda.hu.
+        email: Egy e-mail-cím - például `nev@pelda.hu`.
         integer: Egész szám, ezreselválasztó nélkül.
         money: Összeg euróban, tizedesponttal - például 1234.56.
       stale_result: A mentés befejeződött, de már egy újabb profilverzió látható.
@@ -66,9 +71,20 @@ flows:
     field_unavailable: Nem elérhető profilmező
     help:
       about: 'Erről a beállításról:'
-      what: 'Mi ez:'
-      where: 'Hol találod:'
-      why: 'Miért kell:'
+    household:
+      close: Bezárás
+      full: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
+      read_again: Újraolvasás
+      read_failed: A családodat nem sikerült beolvasni. Olvasd be újra, hogy még egyszer
+        megpróbáld.
+      reading: A családod beolvasása…
+      state_none_declared: Azt adtad meg, hogy nincs egy sem.
+      state_not_served: A profilod nem kínálja ezt a csoportot.
+      state_unknown: Ehhez a csoporthoz semmi sincs rögzítve. Ez nem azonos azzal,
+        hogy nincs egy sem.
+      title: Család
+      unknown_outcome: Lehet, hogy a módosítás mentésre került, de az is lehet, hogy
+        nem. Mielőtt bármi mást módosítasz, olvasd be újra a családodat.
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
@@ -160,10 +176,12 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Tevékenységi eszköz kivezetése
           afiliado_cotizacion: Tagi befizetések
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet
+          capital_mobiliario_position: Megtakarítási kamatok és osztalékok
           collectible_invoice: Kimenő számlák
           design_constant: Tervezeti állandó
           foreign_asset: Külföldi eszköz
@@ -187,10 +205,14 @@ flows:
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás
+          prevision_social_contribution: Nyugdíj-hozzájárulások
           profile: Profil
+          prorrata_register_activity: Arányosítási nyilvántartás tevékenységei
           prorrata_regularizacion: Arányosítás kiigazítása
           purchase_invoice_evidence: Beszerzési számla bizonylata
           relation_prefill: Kapcsolódó bevallás
+          renta_inmueble: Bérbe adott ingatlan
+          retencion_soportada: Elszenvedett levonások
           retenciones_aggregation: Levonások összesítése
           withholding: Levonási nyilvántartás
           withholding296: Levonási kedvezményezett (Modelo 296)

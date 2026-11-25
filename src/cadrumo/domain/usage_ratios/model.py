@@ -3,15 +3,15 @@
 Defines :class:`UsageRatioProfile` — the strict, frozen pydantic v2 record
 that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
-``cadrumo.domain.deductibility`` to look up an override before falling back to
-the statutory :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio`.
+``cadrumo.domain.deductibility`` to look up an override. No registry value
+stands in for an absent one: the proportion is a fact about the taxpayer.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived lazily
 from the current pinned generation's complete category-profile corpus, never
 from one filing year. Each decoded profile retains only that immutable set so
 later pure edits perform no hidden authority read. Eligibility gates what a
 persisted profile may STORE, so a year-scoped set would invalidate an operator's
 stored overrides the moment the filing year rolled over. The year-versioned half -- the statutory multiplier
-and default ratio the law fixes per year -- is read at use time from
+the law fixes per year -- is read at use time from
 :func:`domain.categories.registry.resolve_category_profiles`, which takes the year
 explicitly.
 """
@@ -21,7 +21,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Set
 from decimal import Decimal
 from types import MappingProxyType
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field, PrivateAttr, field_serializer, field_validator, model_validator
 
@@ -33,10 +33,14 @@ from ..calculations.registry.governed_fact_scope import (
     cache_governed_projection,
     governed_facts_in_scope,
 )
-from ..categories.registry import load_category_profiles
+from ..categories.proportionality import effective_usage_ratio
+from ..categories.registry import load_category_profiles, resolve_category_profile
 from ..categories.spending_category import SpendingCategory
 from ..categories.spending_category_catalogue import require_spending_category
 from .errors import UsageRatioValidationError
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
@@ -222,9 +226,8 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
     """Return the operator's persisted ratio for ``category``, or ``None`` if unset.
 
     Pure helper consumed by ``cadrumo.domain.deductibility``. When the return
-    value is ``None`` the caller falls back to
-    :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio` and
-    records the resolution source in the transaction trace fields.
+    value is ``None`` the proportion is undeclared and the caller treats the
+    deduction as unresolved rather than substituting a registry value.
 
     Args:
         profile: The operator's currently persisted :class:`UsageRatioProfile`.
@@ -252,14 +255,20 @@ def validate_usage_ratio_reference(
     category_id: str | None,
     usage_ratio_id: str,
     business_pct: Decimal | None = None,
+    year: int,
+    operation: PinnedAuthorityOperation,
 ) -> UsageRatioReference:
     """Validate a ledger transaction's usage-ratio reference against ``profile``.
 
     Usage-ratio profiles are keyed by :class:`SpendingCategory`; therefore a
     persisted ledger reference must be the concrete category value, not a CLI
     alias or a parallel identifier. When a row also carries ``business_pct``,
-    the percentage must match the referenced profile ratio so the stored
-    transaction fact and its proportionality source cannot drift.
+    that degree of use, carried through the category's IRPF rule for
+    ``year``, must equal the referenced profile ratio, so the stored
+    transaction fact and its proportionality source cannot drift. The row
+    holds the degree of use because IVA deducts it; the profile holds the
+    IRPF-effective share, which for home-office suministros is the degree of
+    use times the statutory multiplier.
 
     Returns:
         The validated :class:`UsageRatioReference` anchored to the profile.
@@ -286,8 +295,10 @@ def validate_usage_ratio_reference(
     ratio = resolve_user_ratio(profile, ratio_category)
     if ratio is None:
         raise UsageRatioValidationError(f"usage_ratio_id {usage_ratio_id!r} is not configured in the active bucket")
-    if business_pct is not None and business_pct != ratio:
-        raise UsageRatioValidationError(
-            f"business_pct {business_pct} does not match usage_ratio_id {usage_ratio_id!r} ratio {ratio}",
-        )
+    if business_pct is not None:
+        rule = resolve_category_profile(ratio_category, year, operation=operation).proportionality
+        if effective_usage_ratio(rule, business_pct) != ratio:
+            raise UsageRatioValidationError(
+                f"business_pct {business_pct} does not match usage_ratio_id {usage_ratio_id!r} ratio {ratio}",
+            )
     return UsageRatioReference(usage_ratio_id=usage_ratio_id, category=ratio_category, ratio=ratio)

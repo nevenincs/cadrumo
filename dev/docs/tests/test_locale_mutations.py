@@ -8,7 +8,7 @@ import pytest
 from babel.messages.catalog import Catalog, Message
 from babel.messages.pofile import read_po
 
-from ..locale_catalogue_io import _render_catalogue
+from ..locale_catalogue_io import render_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -22,7 +22,7 @@ def test_catalogue_has_one_final_newline_without_changing_translation(translatio
     if with_obsolete:
         catalogue.obsolete["Previous filing"] = Message("Previous filing", "Presentació anterior\n")
 
-    rendered = _render_catalogue(catalogue)
+    rendered = render_catalogue(catalogue)
     restored = read_po(io.BytesIO(rendered.encode("utf-8")))
 
     assert rendered.endswith("\n")

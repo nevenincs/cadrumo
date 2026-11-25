@@ -22,6 +22,7 @@ from cadrumo.application.modelo.work_review import ModeloWorkReview, build_model
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -43,7 +44,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-_NOW = datetime(2026, 8, 12, 10, 0, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 8, 12, 10, 0, tzinfo=UTC)
 RAW_ROW_IDENTITY = "opaque-inventory-activity-review-canary"
 ROW_FINGERPRINT = "d" * 64
 _ROW_BINDING_ID = "review-inventory-row"
@@ -71,7 +72,7 @@ def persist_blocked_review(tmp_path: Path, *, operation: PinnedAuthorityOperatio
         calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
         verification_repository = VerificationReportCatalogueRepository(objects=objects)
         modelo = ModeloCode("130")
-        filing_year = 2026
+        filing_year = filing_year_envelope().horizon
         period = Period.from_year_and_code(filing_year, "1T")
         snapshot = published_snapshot(modelo, filing_year=filing_year, period=period.registry_token)
         affected_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.legal_refs)

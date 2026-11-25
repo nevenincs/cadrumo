@@ -2,7 +2,7 @@
 
 A sibling property to :mod:`~tests.test_storage_provenance_gate`, and neither
 gate subsumes the other. The provenance gate matches the *join*: it fires
-whenever ``cadrumo_local_storage_root`` is joined onto by ``/``, ``joinpath``,
+whenever ``cadrumo_storage_root`` is joined onto by ``/``, ``joinpath``,
 ``glob``, ``rglob``, ``iterdir``, or a ``Path(...)`` wrapper, and it cannot see
 a location spelled out as a literal with no root in sight. This gate matches
 the *literal*: a shipped module or a test hand-typing the taxonomy's own
@@ -81,11 +81,10 @@ from ...tests.inventory import (
     production_python_files,
     releases_parsed_sources,
 )
+from ...tests.storage_provenance import enclosing_scope, function_spans
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_MODULE_SCOPE: Final[str] = "<module>"
 
 
 @cache
@@ -124,30 +123,6 @@ def _docstring_constant(node: ast.AST) -> ast.Constant | None:
     ):
         return body[0].value
     return None
-
-
-def _function_spans(tree: ast.AST) -> list[tuple[int, int, str]]:
-    """Return ``(start, end, dotted name)`` for every function, nested ones included."""
-    spans: list[tuple[int, int, str]] = []
-
-    def walk(node: ast.AST, prefix: str) -> None:
-        for child in ast.iter_child_nodes(node):
-            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-                name = f"{prefix}{child.name}"
-                if not isinstance(child, ast.ClassDef):
-                    spans.append((child.lineno, child.end_lineno or child.lineno, name))
-                walk(child, f"{name}.")
-            else:
-                walk(child, prefix)
-
-    walk(tree, "")
-    return spans
-
-
-def _enclosing_scope(lineno: int, spans: list[tuple[int, int, str]]) -> str:
-    """Return the innermost function containing ``lineno``, or the module scope."""
-    enclosing = [(start, name) for start, end, name in spans if start <= lineno <= end]
-    return max(enclosing)[1] if enclosing else _MODULE_SCOPE
 
 
 # --------------------------------------------------------------------- #
@@ -189,7 +164,7 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
     fires or does not, without touching the filesystem.
     """
     vocabulary = _taxonomy_vocabulary()
-    spans = _function_spans(ast.parse(source))
+    spans = function_spans(ast.parse(source))
     sites: list[LiteralSite] = []
     for match in _EMBEDDED_SLASH_LITERAL.finditer(source):
         literal = match.group(1)
@@ -199,7 +174,7 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
             sites.append(
                 LiteralSite(
                     module=module,
-                    function=_enclosing_scope(lineno, spans),
+                    function=enclosing_scope(lineno, spans),
                     lineno=lineno,
                     literal=literal,
                 )
@@ -207,14 +182,9 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
     return tuple(sites)
 
 
-#: Narrow site pins for deliberate non-storage literals in production.
-#: The runtime installer probe only reads standard executable locations and
-#: never writes operator data to those directories.
-PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
-    {
-        ("application/provisioning_host.py", "_standard_executable_paths"),
-    },
-)
+#: Narrow site pins for deliberate non-storage literals in production, as
+#: ``(module, function)``. None is needed today.
+PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset[tuple[str, str]]()
 
 
 @releases_parsed_sources
@@ -290,7 +260,7 @@ def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
             governed += 1
     if governed < 2:
         return ()
-    spans = _function_spans(tree)
+    spans = function_spans(tree)
     sites: list[ChainSite] = []
 
     def _literal_segments(operands: list[ast.expr]) -> tuple[str, ...]:
@@ -311,13 +281,13 @@ def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
         operands = _flatten_div_chain(top)
         segments = _literal_segments(operands)
         if len(segments) >= 2:
-            scope = _enclosing_scope(top.lineno, spans)
+            scope = enclosing_scope(top.lineno, spans)
             sites.append(ChainSite(module=module, function=scope, lineno=top.lineno, segments=segments))
 
     for node in joins:
         segments = _literal_segments(list(node.args))
         if len(segments) >= 2:
-            scope = _enclosing_scope(node.lineno, spans)
+            scope = enclosing_scope(node.lineno, spans)
             sites.append(ChainSite(module=module, function=scope, lineno=node.lineno, segments=segments))
 
     return tuple(sites)
@@ -329,13 +299,6 @@ def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
 #: would make the assertion compare the taxonomy against itself.
 PERMITTED_PIN_MODULES: Final[frozenset[str]] = frozenset(
     {
-        # storage_overrides()/relocated_storage_path() ARE the accessors under
-        # test; the multi-segment expectation is the independent oracle their
-        # own docstrings describe.
-        "tests/test_storage_scope.py",
-        # "The directory names asserted below are deliberate literals... the
-        # expectation must come from outside the declaration."
-        "core/tests/test_ensure_storage_tree.py",
         # "The oracle is the filesystem, walked after the fact, compared
         # against an expectation derived from STORAGE_TAXONOMY... calling the
         # same iteration the materialiser calls would assert nothing at all."
@@ -345,9 +308,6 @@ PERMITTED_PIN_MODULES: Final[frozenset[str]] = frozenset(
         # let a Settings/classifier defect drift both sides in lockstep. Its
         # own module docstring justifies each pinned literal by name.
         "core/tests/test_storage_route_classification.py",
-        # "...each is the independent oracle for what its settings field
-        # defaults to when unoverridden, not scaffolding."
-        "core/tests/test_storage_substrate_state_root.py",
         # "This module owns the on-disk-name oracle, and owning it is the
         # point... Deriving the expectation from the taxonomy would turn
         # every assertion below into the taxonomy compared with itself."
@@ -366,29 +326,11 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
             "core/tests/test_storage_taxonomy_name_unification.py",
             "test_the_database_url_resolves_to_its_pre_migration_shape",
         ),
-        # An arbitrary operator-supplied override value for a relative-path
-        # env var, asserting anchor computation -- not the taxonomy's own
-        # declared subpath for INVOICES/ATTACHMENTS. The segments overlap
-        # with real category names by coincidence of a plausible-looking
-        # probe value, not because this asserts what those categories
-        # resolve to by default.
+        # Independent resolver oracles for the managed Playwright cache and
+        # the repository-local storage-root default.
         (
-            "core/tests/test_config.py",
-            "TestRepoRelativePathNormalisationCoverage.test_relative_audit_flagged_paths_resolve_under_project_root",
-        ),
-        # Independent resolver oracles for the managed Playwright cache,
-        # spawned Ollama home and repository-local storage-root default.
-        (
-            "application/tests/test_provisioning_browser.py",
+            "application/tests/test_browser_location.py",
             "test_browsers_root_defaults_under_the_configured_storage_root",
-        ),
-        (
-            "application/tests/test_provisioning_host.py",
-            "test_start_spawns_the_located_runtime_with_controlled_model_storage_and_waits_for_it",
-        ),
-        (
-            "core/tests/test_storage_environment.py",
-            "test_shared_root_relocates_settings_and_relative_refinements",
         ),
         # Independent oracle for the pywin32 generated cache: the reviewed
         # packaging patch documents this exact location, so the test pins it

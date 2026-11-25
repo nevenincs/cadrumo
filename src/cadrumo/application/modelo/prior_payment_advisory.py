@@ -40,6 +40,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     require_observation_envelope_coordinates_current,
 )
+from .registry_input_refusals import registry_integrity_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -54,7 +55,7 @@ _SOURCE_KIND = "modelo_130_prior_pago_fraccionado"
 
 
 @dataclass(frozen=True, slots=True)
-class _PriorPaymentDeclaration:
+class PriorPaymentDeclaration:
     """The selected declaration's casilla identities for one Modelo 130 revision."""
 
     modelo: str
@@ -67,19 +68,25 @@ class _PriorPaymentDeclaration:
 def _declared_casilla(declarations: Mapping[str, str], key: str) -> CasillaId:
     value = declarations.get(key)
     if not (value is not None and value):
-        raise RegistryValidationError(f"prior-payment declaration lacks {key!r}")
+        raise RegistryValidationError(
+            f"prior-payment declaration lacks {key!r}",
+            precondition_verdict=registry_integrity_verdict("prior_payment_declaration"),
+        )
     return validated_casilla_id(value, surface=f"{_MAPPING_FACT_ID} {key}")
 
 
-def _selected_registry_declaration(
+def selected_registry_declaration(
     revision: ModeloRevision,
     *,
     modelo: str,
     period_token: str,
     filing_year: int,
     operation: PinnedAuthorityOperation,
-) -> _PriorPaymentDeclaration | None:
-    """Resolve the dated declaration when it applies to the selected work scope."""
+) -> PriorPaymentDeclaration | None:
+    """Resolve the dated declaration when it applies to the selected work scope.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     effective_date = date(filing_year, 12, 31)
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
@@ -89,20 +96,29 @@ def _selected_registry_declaration(
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("selected prior-payment declaration must resolve as a mapping fact")
+        raise RegistryValidationError(
+            "selected prior-payment declaration must resolve as a mapping fact",
+            precondition_verdict=registry_integrity_verdict("prior_payment_declaration"),
+        )
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
     selected_modelo = declarations.get("modelo")
     if not (selected_modelo is not None and selected_modelo):
-        raise RegistryValidationError("selected prior-payment declaration lacks a model coordinate")
+        raise RegistryValidationError(
+            "selected prior-payment declaration lacks a model coordinate",
+            precondition_verdict=registry_integrity_verdict("prior_payment_declaration"),
+        )
     if selected_modelo != modelo:
         return None
     selected_revision = declarations.get("revision")
     if not (selected_revision is not None and selected_revision):
-        raise RegistryValidationError("selected prior-payment declaration lacks a revision coordinate")
+        raise RegistryValidationError(
+            "selected prior-payment declaration lacks a revision coordinate",
+            precondition_verdict=registry_integrity_verdict("prior_payment_declaration"),
+        )
     if selected_revision != revision.id:
         return None
     operation.revision_for_context(selected_modelo, filing_year=filing_year, period=period_token, on=effective_date)
-    return _PriorPaymentDeclaration(
+    return PriorPaymentDeclaration(
         modelo=selected_modelo,
         prior_payment=_declared_casilla(declarations, "casilla.prior_payment"),
         cumulative_income=_declared_casilla(declarations, "casilla.cumulative_income"),
@@ -170,7 +186,7 @@ def collect_prior_payment_not_deducted_diagnostics(
                 observation_repository=observation_repository,
                 operation=indexed_operation,
             )
-    declaration = _selected_registry_declaration(
+    declaration = selected_registry_declaration(
         revision,
         modelo=modelo,
         period_token=period_token,
@@ -235,7 +251,7 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
                 observation_repository=observation_repository,
                 operation=indexed_operation,
             )
-    declaration = _selected_registry_declaration(
+    declaration = selected_registry_declaration(
         revision,
         modelo=modelo,
         period_token=period_token,

@@ -5,7 +5,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -14,9 +13,12 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
-from ..compiler.fact_loader import load_governed_facts
 from .authored_edition_support import legal_text_match
-from .profile_schema_support import authored_history_supported_filing_years, committed_supported_filing_years
+from .profile_schema_support import (
+    authored_fact_catalogue,
+    authored_history_supported_filing_years,
+    committed_supported_filing_years,
+)
 
 _IDS = frozenset(
     (
@@ -38,8 +40,7 @@ _DT32_LAST_EXTENDED_EXERCISE = int(_DT32_WINDOW.group(2))
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
-    return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts if fact.fact_id in _IDS})
+    return authored_fact_catalogue(_IDS)
 
 
 def _value(fact_id: str, effective_date: date) -> Decimal:

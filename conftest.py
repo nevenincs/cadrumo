@@ -64,10 +64,12 @@ _SOURCE_ROOT = _REPOSITORY_ROOT / "src"
 if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
+from dev.temporary_output import prepare_temp_root  # noqa: E402
+from dev.tool_storage import storage_directory  # noqa: E402
+
 from cadrumo.core.storage_environment import (  # noqa: E402
     configured_storage_root,
     resolve_storage_path,
-    storage_directory,
 )
 
 # The tests package initializer is intentionally inert and env_loader is pure
@@ -86,18 +88,24 @@ def _pin_storage_override(name: str, default: str) -> Path:
 
 
 _pin_storage_override("CADRUMO_DEV_CACHE_ROOT", "development/cache")
-_TEST_LOG_ROOT = _pin_storage_override("CADRUMO_TEST_LOG_ROOT", "development")
+
+
+def _temporary_output_override(name: str) -> Path:
+    """Use the shared developer temporary authority before any bootstrap write."""
+    return prepare_temp_root(override=os.environ.get(name, ""))
+
+
+_TEST_LOG_ROOT = _temporary_output_override("CADRUMO_TEST_LOG_ROOT")
+os.environ["CADRUMO_TEST_LOG_ROOT"] = str(_TEST_LOG_ROOT)
 _pin_storage_override("CADRUMO_DOCS_BUILD_ROOT", "development/build/docs")
-_TEMP_BASE = _pin_storage_override("CADRUMO_TEMP_DIR", "tmp")
-# Browser binaries are provisioned assets shared by isolated test profiles.
-# Pin both the product probe and direct Playwright starts before private roots
-# replace the operator's storage root.
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(
-    _pin_storage_override("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "components/playwright")
-)
-_SCRATCH_BASE = os.environ.get("CADRUMO_SCRATCH_BASE", "").strip()
-if _SCRATCH_BASE:
-    os.environ["CADRUMO_SCRATCH_BASE"] = str(storage_directory("CADRUMO_SCRATCH_BASE", "tmp", root=_BASE_STORAGE_ROOT))
+_TEMP_BASE = prepare_temp_root()
+# Browser binaries are installed assets shared by isolated test profiles. Pin
+# where they are installed before private roots replace the operator's storage
+# root; a worker inherits the controller's pin instead of re-deriving it from
+# the controller's private root. The private root below links this tree in.
+if not os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip():
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(resolve_storage_path("components/playwright", root=_BASE_STORAGE_ROOT))
+os.environ["CADRUMO_SCRATCH_BASE"] = str(_temporary_output_override("CADRUMO_SCRATCH_BASE"))
 
 # Relative cache/artifact refinements must remain anchored to the operator's
 # root after Cadrumo tests install a process-private local state root.
@@ -117,16 +125,13 @@ for _storage_variable in (
         os.environ[_storage_variable] = str(
             storage_directory(_storage_variable, "development", root=_BASE_STORAGE_ROOT)
         )
-for _report_variable in ("CADRUMO_CI_REPORTS_DIR", "VAULTSPEC_CI_REPORTS"):
-    _report_destination = os.environ.get(_report_variable, "").strip()
-    if _report_destination:
-        os.environ[_report_variable] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
+_report_destination = os.environ.get("CADRUMO_CI_REPORTS_DIR", "").strip()
+if _report_destination:
+    os.environ["CADRUMO_CI_REPORTS_DIR"] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
 
 # Keep Python bytecode separate from the interpreter's ambient cache setting
 # without rebinding environment variables used by machine-managed tools.
-sys.pycache_prefix = str(
-    storage_directory("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache", root=_BASE_STORAGE_ROOT)
-)
+sys.pycache_prefix = str(_pin_storage_override("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache"))
 
 # Python and stdlib temp files start under Cadrumo's configured temporary root.
 # The run logger narrows TEMP/TMP/TMPDIR to its own scratch immediately below.
@@ -136,28 +141,18 @@ tempfile.tempdir = str(_TEMP_BASE)
 
 # Importing the dev logger is safe before Cadrumo runtime imports. Its run and
 # scratch outputs now resolve under the configured storage root.
-from dev.test_runs import logging as _run_logging  # noqa: E402
+from dev.test_runs import logging  # noqa: E402
 
-_run_logging.prepare_environment(_TEST_LOG_ROOT)
-# A configured product log path stays authoritative. Relative values were
-# resolved against the original root before test isolation; only a blank value
-# falls through to the per-run product-log default.
-if os.environ.get("CADRUMO_LOG_DIR", "").strip():
-    os.environ["CADRUMO_LOG_DIR"] = str(
-        storage_directory("CADRUMO_LOG_DIR", "development/logs", root=_BASE_STORAGE_ROOT)
-    )
-else:
-    os.environ.pop("CADRUMO_LOG_DIR", None)
-
+logging.prepare_environment(_TEST_LOG_ROOT)
 # Keep collection-time product data process-private under this run's scratch.
 # This value is set before importing any module that may resolve Settings.
 _PURE_STDLIB_COLLECTION_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
+os.environ["CADRUMO_STORAGE_ROOT"] = str(_PURE_STDLIB_COLLECTION_ROOT)
 
 _PURE_STDLIB_AUTHORITY_ROOT = Path(__file__).resolve().parent / ".authority"
 """This checkout's published authority, kept outside the packaged tree.
 
-Mirrors ``dev._paths.DEFAULT_AUTHORITY_ROOT`` exactly. That module seeds the
+Mirrors ``dev.paths.DEFAULT_AUTHORITY_ROOT`` exactly. That module seeds the
 same variable for every ``python -m dev.*`` entry point, but it is private to
 ``dev`` and nothing this conftest already imports reaches it, so the value is
 spelled out here in pure stdlib for the same reason the collection storage root
@@ -169,7 +164,7 @@ A real ambient value stays authoritative, so a run pointed at another authority
 tree -- a release verification against staged bytes, say -- is not overridden by
 the checkout's own. A BLANK one does not count as ambient: ``Settings`` carries
 ``env_ignore_empty``, so an empty variable exported by a shell profile reads as
-unset there and would resolve the PACKAGED location, while ``dev._paths`` seeds
+unset there and would resolve the PACKAGED location, while ``dev.paths`` seeds
 the checkout's own for every other entry point. Testing the value rather than
 its mere presence is what keeps pytest and the dev tooling on one answer.
 """
@@ -177,6 +172,9 @@ if not os.environ.get("CADRUMO_AUTHORITY_ROOT", "").strip():
     os.environ["CADRUMO_AUTHORITY_ROOT"] = str(_PURE_STDLIB_AUTHORITY_ROOT)
 
 _collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
+_collection_storage_root.link_installed_component(
+    _PURE_STDLIB_COLLECTION_ROOT, "components/playwright", Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])
+)
 collection_storage_root = _collection_storage_root.collection_storage_root
 register_collection_storage_root_cleanup = _collection_storage_root.register_collection_storage_root_cleanup
 
@@ -198,12 +196,16 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
     from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider
     from cadrumo.tests.cli_fixture_ports import CliInvocation, FreshCliInvocation
+    from cadrumo_runtime.host.tests.view_session_world import ViewSessionWorld
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
-# it. Unset `VAULTSPEC_CI_REPORTS` - every local run - and it does nothing,
-# which is what keeps this repository's zero-artifact posture intact.
+# it. Unset `CADRUMO_CI_REPORTS_DIR` - every local run - and it does nothing,
+# which is what keeps this repository's zero-artifact posture intact. The
+# network guard arms before collection so every test, and every profile worker
+# a test starts, meets its refusing loopback proxy.
 pytest_plugins = (
+    "cadrumo.tests.network_guard",
     "dev.ci_reports",
     "dev.packaging.tests.installed_process_fixture",
     "cadrumo.tests.pytest_plugin",
@@ -233,6 +235,14 @@ def module_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[int | None, by
     from cadrumo_runtime.host.tests.frontend.tui.module_execution import run_tui_module
 
     return run_tui_module(tmp_path_factory.mktemp("tui-module"))
+
+
+@pytest.fixture(scope="session")
+def view_session_world() -> ViewSessionWorld:
+    """Inject the tax-owned certificate profile and session custody into runtime-owned view assertions."""
+    from cadrumo.adapters.outbound.aeat.auth.tests.view_session_support import CertificateViewSessionWorld
+
+    return CertificateViewSessionWorld()
 
 
 @pytest.fixture(scope="session")
@@ -394,7 +404,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from cadrumo.adapters.persistence.profile.usage_ratios import (
         load_usage_ratios,
         load_usage_ratios_with_censo_guard,
-        save_usage_ratios,
+        save_usage_ratios_with_secure_object_writes,
     )
     from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
         composed_profile_persistence_ports,
@@ -420,7 +430,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from cadrumo.application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from cadrumo.core.redaction.tax_identity_admission import bind_tax_identity_admission
     from cadrumo.domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
-    from cadrumo.entrypoints.adapter_composition import calculation_revision_catalogue_repository
+    from cadrumo.entrypoints.adapter_composition_work_ports import calculation_revision_catalogue_repository
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
@@ -431,7 +441,10 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository),
         bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository),
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
-        bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios),
+        bind_usage_ratio_profile_persistence(
+            loader=load_usage_ratios,
+            co_saver=save_usage_ratios_with_secure_object_writes,
+        ),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),
         bind_calculation_revision_catalogue_repository_factory(calculation_revision_catalogue_repository),
         bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
@@ -535,29 +548,29 @@ def pytest_configure(config: pytest.Config) -> None:
     # runs finalisers promptly on CPython, so the sweep is skipped, as pytester
     # itself does.
     config.stash[gc_collect_iterations_key] = 0
-    _run_logging.configure(config)
+    logging.configure(config)
 
 
 def pytest_runtest_logstart(nodeid: str, location: tuple[str, int | None, str]) -> None:
     """Record the test identity before execution begins."""
     del location
-    _run_logging.log_start(nodeid)
+    logging.log_start(nodeid)
 
 
 def pytest_runtest_logreport(report: pytest.TestReport) -> None:
     """Persist each test verdict and immediate failure detail."""
-    _run_logging.log_report(report)
+    logging.log_report(report)
 
 
 def pytest_collectreport(report: pytest.CollectReport) -> None:
     """Persist collection failures immediately."""
-    _run_logging.log_collection_report(report)
+    logging.log_collection_report(report)
 
 
 def pytest_internalerror(excrepr: object, excinfo: object) -> None:
     """Persist pytest internal errors that have no test or collection report."""
     del excinfo
-    _run_logging.log_internal_error(excrepr)
+    logging.log_internal_error(excrepr)
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
@@ -566,7 +579,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
     marker_hook.fail_session_on_held_serials(session)
     marker_hook.fail_session_on_marker_violations(session)
     fixture_resolution_hook.fail_session_on_refused_requests(session)
-    _run_logging.finish(session.config, session.exitstatus)
+    logging.finish(session.config, session.exitstatus)
 
 
 def pytest_testnodedown(node: object, error: object | None) -> None:
@@ -613,7 +626,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     """
     if not hasattr(config, "workerinput"):
         _release_shared_registry_authority()
-    _run_logging.restate(config)
+    logging.restate(config)
 
 
 @pytest.fixture

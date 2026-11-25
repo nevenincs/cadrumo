@@ -17,21 +17,17 @@ from collections.abc import Mapping
 from typing import Final, get_args
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import OptionList
 
-from ......application.aggregation.source_mesh import CalculationSourceDiagnosticReason
+from ......application.aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ......application.modelo.calculation_notes import (
     CALCULATION_NOTE_ATTENTION,
     what_locale_key,
     what_to_do_locale_key,
 )
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
-    ModeloFormIssue,
-    ModeloWorkForm,
-)
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import lookup_translation
@@ -41,10 +37,10 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -55,11 +51,6 @@ _TOKENS: Final[Mapping[str, re.Pattern[str]]] = {
     "snake-case identifier": re.compile(r"\b[a-z]+_[a-z0-9_]+\b"),
     "placeholder": re.compile(r"%\{|\{[a-z_]+\}"),
 }
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _notes_form(*, box: str | None, casilla_id: str | None) -> ModeloWorkForm:
@@ -163,9 +154,9 @@ def test_notes_join_the_findings_on_one_scale() -> None:
         lines = issue_lines(form)
 
     assert [(line.level, line.from_calculation) for line in lines] == [
-        (IssueLevel.BLOCKS, True),
-        (IssueLevel.CHECK, False),
-        (IssueLevel.CHECK, True),
+        (ModeloFormAttention.BLOCKS, True),
+        (ModeloFormAttention.CHECK, False),
+        (ModeloFormAttention.CHECK, True),
     ]
     assert lines[0].where == "In your records"
     assert lines[0].message == "An amount from your records is not placed in any box of this declaration."
@@ -175,10 +166,10 @@ def test_notes_join_the_findings_on_one_scale() -> None:
 
 async def _list_text(form: ModeloWorkForm) -> str:
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             options = screen.query_one("#issues-list", OptionList)
             text = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
             app.exit(None)
@@ -218,3 +209,27 @@ async def test_a_declaration_opened_afresh_says_to_calculate_again_to_see_the_no
 
     assert "Calculate again to see the calculation's notes." not in held
     assert "Calculate again to see the calculation's notes." in afresh
+
+
+@pytest.mark.asyncio
+async def test_a_note_opened_in_place_reads_what_its_calculation_worded_after_its_sentence() -> None:
+    """The catalogue's sentence lists the note; opening it reads the account its resolver worded for the filer."""
+    written = "Liquidation 1T declared deductible input IVA, but the ledger holds none for it."
+    note = ModeloFormCalculationNote(reason="source_issue", attention=ModeloFormAttention.MISSING, message=written)
+    form = synthetic_form(needs_input=False).model_copy(update={"calculation_notes": (note,)})
+    with override_settings(cadrumo_output_language="en"):
+        screen = WorkbenchIssuesScreen(served_load(form))
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
+            options = screen.query_one("#issues-list", OptionList)
+            closed = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
+            await pilot.press("enter")
+            await settle(pilot)
+            opened = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
+            app.exit(None)
+
+    sentence = "Some information this figure depends on is missing or could not be used."
+    assert sentence in re.sub(r"\s+", " ", closed)
+    assert written not in re.sub(r"\s+", " ", closed)
+    assert written in re.sub(r"\s+", " ", opened)

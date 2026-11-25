@@ -14,7 +14,8 @@ from ..binding_selector_utils import selector_as_dict
 from ..rate_box_partition import derive_rate_box_partitions
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloRevision
-from .m390_formula_support import assert_partition_is_not_double_counted
+from .authored_editions import revision_covering
+from .m390_formula_support import assert_partition_is_not_double_counted, temporary_rate_year
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -110,7 +111,11 @@ def test_no_formula_consumes_both_layers_of_a_rate_partition() -> None:
 
 def test_a_blind_control_added_beside_its_printed_boxes_is_rejected() -> None:
     """Prove that the graph guard detects an indirect second copy of a tier."""
-    revision = next(revision for revision_id, revision in _revisions() if revision_id == "2024")
+    revision = next(
+        revision
+        for revision_id, revision in _revisions()
+        if revision_id == str(revision_covering("390", temporary_rate_year()).id)
+    )
     partition = next(
         partition
         for partition in derive_rate_box_partitions(revision)

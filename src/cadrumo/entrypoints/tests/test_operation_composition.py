@@ -23,7 +23,7 @@ from ...application.export.calculation_review_xlsx_operation import (
     CalculationReviewXlsxExecutionResult,
     CalculationReviewXlsxRequest,
 )
-from ...application.modelo.operation_definitions import ModeloWorkCalculateExecutor
+from ...application.modelo.calculation_operation import ModeloWorkCalculateExecutor
 from ...application.modelo.reconciliation_export_operation import ReconciliationExportXlsxRequest
 from ...application.operations.composition import (
     OperationComposedServices,
@@ -223,8 +223,11 @@ def test_production_composition_exposes_only_public_services() -> None:
 
 
 def test_production_composition_imports_user_profile_operations_from_its_canonical_module() -> None:
-    source_path = Path(__file__).parents[1] / "operation_composition.py"
-    tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    source_paths = Path(__file__).parents[1].glob("operation_composition*.py")
+    tree = ast.Module(
+        body=[node for path in source_paths for node in ast.parse(path.read_text(encoding="utf-8")).body],
+        type_ignores=[],
+    )
     imported_modules = tuple(node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
 
     assert not any(module.endswith("_operation_definitions") for module in imported_modules)
@@ -234,8 +237,11 @@ def test_production_composition_imports_user_profile_operations_from_its_canonic
 
 
 def test_production_composition_imports_only_public_operation_defining_modules() -> None:
-    source_path = Path(__file__).parents[1] / "operation_composition.py"
-    tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    source_paths = Path(__file__).parents[1].glob("operation_composition*.py")
+    tree = ast.Module(
+        body=[node for path in source_paths for node in ast.parse(path.read_text(encoding="utf-8")).body],
+        type_ignores=[],
+    )
     operation_imports = tuple(
         node
         for node in ast.walk(tree)

@@ -32,6 +32,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
 from ..operations.access_resolution import (
@@ -81,7 +82,7 @@ class QuickfileExecutionResult(BaseModel):
     projection: QuickfileProjection
 
 
-class _Writes(LedgerCommitAttemptTracker):
+class Writes(LedgerCommitAttemptTracker):
     """Count completed concrete writes while preserving canonical uncertain outcomes."""
 
     def __init__(self) -> None:
@@ -102,14 +103,6 @@ class _Writes(LedgerCommitAttemptTracker):
         super().call_writer(write)
         with self._count_lock:
             self._count += 1
-
-    def effect(self, *, incomplete: bool) -> OperationEffect:
-        """Retain earlier writes when a later stage refuses or becomes uncertain."""
-        if self.has_uncertain_write:
-            return OperationEffect.UNKNOWN
-        if self.confirmed_write:
-            return OperationEffect.PARTIAL if incomplete else OperationEffect.UPDATED
-        return OperationEffect.NONE
 
 
 def _admit_quickfile_request(request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> None:
@@ -143,11 +136,11 @@ def _inputs(payload: QuickfileRequest, ports: QuickfileOperationPorts, work_unit
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     supplied = payload.ordinary_m303_filing_evidence
     evidence = None
-    if payload.modelo == "303":
+    if payload.modelo == form_for_role("iva.periodic"):
         if supplied is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
-                    "missing", {"modelo": "303", "evidence_present": False}
+                    "missing", {"modelo": payload.modelo, "evidence_present": False}
                 )
             )
         evidence = author_ordinary_m303_evidence_for_work(
@@ -186,7 +179,7 @@ class QuickfileExecutor:
         payload = request.payload
         _admit_quickfile_request(request, context)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        writes = _Writes()
+        writes = Writes()
         loop = asyncio.get_running_loop()
         admission_failure: BaseException | None = None
         await context.events.phase(QUICKFILE_OPERATION_DEFINITION_ID)

@@ -25,9 +25,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    open_test_profile_session,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.application.auth.sessions import ClaveAuthFacts, clave_auth_facts_from_profile_values
@@ -55,7 +55,7 @@ _isolated_storage = isolated_profile_storage_fixture()
 
 def _read_active_profile_auth_facts() -> ClaveAuthFacts:
     """Read profile auth facts through public session-bound application doors."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return ClaveAuthFacts()
@@ -82,7 +82,6 @@ def _seed_profile(bucket_id: str = _BUCKET_ID, *, label: str = _PROFILE_LABEL) -
             display_name=label,
             overrides={
                 "identity.tax_id": _TAX_ID,
-                "auth.dni_nie": _TAX_ID,
                 "auth.numero_soporte": _SOPORTE,
                 "auth.clave_movil_route": ClaveMovilRoute.QR.value,
             },
@@ -105,7 +104,6 @@ def test_the_same_record_reads_under_its_session_and_stays_sealed_without_one() 
         sealed = _read_active_profile_auth_facts()
 
     assert unlocked.tax_id == _TAX_ID
-    assert unlocked.dni_nie == _TAX_ID
     assert unlocked.numero_soporte == _SOPORTE
     assert unlocked.clave_movil_route is ClaveMovilRoute.QR
 

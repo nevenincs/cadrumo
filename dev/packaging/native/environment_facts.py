@@ -31,6 +31,21 @@ _WORKER_ENVIRONMENT = "spawn_env"
 """The name under which the agent's worker management builds its worker's environment."""
 
 
+def _type_label(annotation: type) -> str:
+    if issubclass(annotation, enum.Enum):
+        return "language" if annotation.__name__ == "OutputLanguage" else "text"
+    for label, accepted in (
+        ("boolean", bool),
+        ("integer", int),
+        ("number", float),
+        ("text", str),
+        ("path", PurePath),
+    ):
+        if issubclass(annotation, accepted):
+            return label
+    return f"other:{annotation!r}"
+
+
 def kind_label(annotation: object) -> str:
     """Name the value space of a settings field, as the package's kinds are compared with it.
 
@@ -51,18 +66,7 @@ def kind_label(annotation: object) -> str:
         return "secret"
     if not isinstance(annotation, type):
         return f"other:{annotation!r}"
-    if issubclass(annotation, enum.Enum):
-        return "language" if annotation.__name__ == "OutputLanguage" else "text"
-    for label, accepted in (
-        ("boolean", bool),
-        ("integer", int),
-        ("number", float),
-        ("text", str),
-        ("path", PurePath),
-    ):
-        if issubclass(annotation, accepted):
-            return label
-    return f"other:{annotation!r}"
+    return _type_label(annotation)
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -85,39 +89,11 @@ def _without_environment(names: set[str]) -> Generator[None]:
         os.environ.update(hidden)
 
 
-def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
-    """Collect the command line's settings, built-in storage root and diagnostic-log placement."""
-    from cadrumo.core.config import AuthorityRootSettings, Settings
-    from cadrumo.core.errors.hierarchy import CoreValidationError
-    from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
-    from cadrumo.core.storage_environment import (
-        STORAGE_PATH_RULES,
-        STORAGE_ROOT,
-        TEMPORARY_VARIABLES,
-        StorageMode,
-        StorageRootRefusal,
-        host_installed_default_root,
-    )
-    from cadrumo.core.storage_taxonomy import StorageCategory
-    from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
+def _storage_root_facts() -> dict[str, object]:
+    from cadrumo.core.storage_environment import STORAGE_PATH_RULES, STORAGE_ROOT, StorageRootRefusal
 
-    fields = Settings.model_fields
-    environment_fields = {
-        environment_name: field
-        for field_name, field in fields.items()
-        for environment_name in Settings._environment_names_for_field(field_name)
-    }
-    settings = {
-        name: kind_label(environment_fields[name].annotation) if name in environment_fields else None
-        for name in sorted(Settings.env_var_names())
-    }
-    root = {
+    root: dict[str, object] = {
         "variable": STORAGE_ROOT.variable,
-        "development_variable": STORAGE_ROOT.development_variable,
-        "development_default": Path(*STORAGE_ROOT.development_default).as_posix(),
-        "checkout_marker": STORAGE_ROOT.checkout_marker,
-        "precedence": {mode.value: list(STORAGE_ROOT.root_variables(mode)) for mode in StorageMode},
-        "relative_override": {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode},
         "installed_defaults": [
             {
                 "platform": rule.platform.value,
@@ -138,6 +114,34 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "refusals": [refusal.value for refusal in StorageRootRefusal],
         "path_rules": STORAGE_PATH_RULES._asdict(),
     }
+    return root
+
+
+def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
+    """Collect the command line's settings, built-in storage root and diagnostic-log placement."""
+    from cadrumo.core.config import AuthorityRootSettings, Settings
+    from cadrumo.core.errors.hierarchy import CoreValidationError
+    from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
+    from cadrumo.core.storage_environment import (
+        STORAGE_ROOT,
+        TEMPORARY_VARIABLES,
+        host_installed_default_root,
+    )
+    from cadrumo.core.storage_taxonomy import StorageCategory
+    from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
+    from cadrumo.core.time.fixed_clock import FIXED_CLOCK_VARIABLES
+
+    fields = Settings.model_fields
+    environment_fields = {
+        environment_name: field
+        for field_name, field in fields.items()
+        for environment_name in Settings.environment_names_for_field(field_name)
+    }
+    settings = {
+        name: kind_label(environment_fields[name].annotation) if name in environment_fields else None
+        for name in sorted(Settings.env_var_names())
+    }
+    root = _storage_root_facts()
     try:
         default_root: dict[str, str] = {"root": str(host_installed_default_root(request["received"]))}
     except CoreValidationError as error:
@@ -145,11 +149,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     log_root = scratch / "log-root"
     # The settings are built from their arguments alone: this process's own overrides place its logs elsewhere.
     with _without_environment(set(settings)):
-        default_logs = storage_path(StorageCategory.LOGS, settings=Settings(cadrumo_local_storage_root=log_root))
-        relocated_logs = storage_path(
-            StorageCategory.LOGS,
-            settings=Settings(cadrumo_local_storage_root=log_root, cadrumo_log_dir=Path(request["log_relative"])),
-        )
+        default_logs = storage_path(StorageCategory.LOGS, settings=Settings(cadrumo_storage_root=log_root))
     return {
         "settings": settings,
         "root": root,
@@ -158,9 +158,9 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "authority_variables": sorted(name.upper() for name in AuthorityRootSettings.model_fields),
         "temporary_variables": list(TEMPORARY_VARIABLES),
         "profile_variables": [PROFILE_ROOT_VARIABLE],
+        "fixed_clock_variables": list(FIXED_CLOCK_VARIABLES),
         "log": {
             "default": _relative(default_logs, log_root),
-            "relocated": _relative(relocated_logs, log_root),
             "file_name": PurePath(storage_location(StorageCategory.LOG_FILE).subpath).name,
         },
     }
@@ -175,12 +175,14 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         PACKAGE_PYTHON_VARIABLE,
         PACKAGE_RELAY_VARIABLE,
     )
+    from cadrumo_agent_service.adapters.local_ai_demand import SERVICE_SLOTS
     from cadrumo_agent_service.host.launch_environment import (
         ADVERTISED_VARIABLES,
         GATEWAY_SLOTS,
         agent_launch_environment,
     )
     from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode
+    from cadrumo_agent_service.providers.domain.record import LocalEngine
     from cadrumo_client.contracts.contracts import (
         NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
         RESERVED_HOST_EXIT_CODES,
@@ -198,6 +200,8 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         received=request["received"],
         # Any profile: the gateway is always started inside one, and its folder is a slot.
         profile_id=uuid.UUID("00000000-0000-4000-8000-000000000000"),
+        # The host always names the profile's engine; any declared engine composes the same facts.
+        local_engine=LocalEngine.LLAMACPP,
     )
     return {
         "agent_variable": PACKAGE_AGENT_VARIABLE,
@@ -206,6 +210,7 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         "advertised_variables": sorted(ADVERTISED_VARIABLES),
         "gateway_arguments": list(GATEWAY_ARGUMENTS),
         "gateway_slots": sorted(GATEWAY_SLOTS),
+        "service_slots": sorted(SERVICE_SLOTS),
         "composed": sorted(composed),
         "reserved_exit_codes": [
             {"owner": reserved.owner, "first": reserved.first, "last": reserved.last}
@@ -214,6 +219,23 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         "launch_profile_refused": NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
         "native_refusals": [refusal.value for refusal in NativeLaunchRefusalCode],
     }
+
+
+def _worker_setting_name(target: ast.expr) -> str | None:
+    if (
+        isinstance(target, ast.Subscript)
+        and isinstance(target.value, ast.Name)
+        and target.value.id == _WORKER_ENVIRONMENT
+        and isinstance(target.slice, ast.Call)
+        and isinstance(target.slice.func, ast.Name)
+        and target.slice.func.id == "setting_env"
+        and len(target.slice.args) == 1
+        and isinstance(target.slice.args[0], ast.Constant)
+        and isinstance(target.slice.args[0].value, str)
+    ):
+        return target.slice.args[0].value
+
+    return None
 
 
 def worker_environment_writes(module: str, setting_env: Callable[[str], str]) -> list[str]:
@@ -231,18 +253,9 @@ def worker_environment_writes(module: str, setting_env: Callable[[str], str]) ->
         if not isinstance(node, ast.Assign):
             continue
         for target in node.targets:
-            if (
-                isinstance(target, ast.Subscript)
-                and isinstance(target.value, ast.Name)
-                and target.value.id == _WORKER_ENVIRONMENT
-                and isinstance(target.slice, ast.Call)
-                and isinstance(target.slice.func, ast.Name)
-                and target.slice.func.id == "setting_env"
-                and len(target.slice.args) == 1
-                and isinstance(target.slice.args[0], ast.Constant)
-                and isinstance(target.slice.args[0].value, str)
-            ):
-                names.add(setting_env(target.slice.args[0].value))
+            name = _worker_setting_name(target)
+            if name is not None:
+                names.add(setting_env(name))
     return sorted(names)
 
 

@@ -6,10 +6,10 @@ import re
 from time import monotonic
 from typing import Any
 
-from .installed_tui_contracts import InstalledAssetTuiError, _PublicAssetActionTransition
+from .installed_tui_contracts import InstalledAssetTuiError, PublicAssetActionTransition
 
 
-def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
+def public_surface_diagnostic(pilot: Any) -> dict[str, object]:
     """Describe only public screen identity and widget IDs for a failed stage."""
     screen = pilot.app.screen
     ids: set[str] = set()
@@ -25,7 +25,7 @@ def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
     }
 
 
-async def _wait_for_public_selector(
+async def wait_for_public_selector(
     pilot: Any,
     selector: str,
     *,
@@ -47,11 +47,11 @@ async def _wait_for_public_selector(
     raise InstalledAssetTuiError(
         f"installed TUI did not expose {selector}",
         stage=stage,
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-async def _wait_for_public_selector_absent(
+async def wait_for_public_selector_absent(
     pilot: Any,
     selector: str,
     *,
@@ -74,11 +74,11 @@ async def _wait_for_public_selector_absent(
     raise InstalledAssetTuiError(
         f"installed TUI did not complete the public operation for {selector}",
         stage=stage,
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-async def _open_ledger_destination(*, pilot: Any) -> None:
+async def open_ledger_destination(*, pilot: Any) -> None:
     """Open Ledger through the public command palette, never a private route."""
     from textual.css.query import NoMatches
     from textual.widgets import Input, OptionList
@@ -92,7 +92,7 @@ async def _open_ledger_destination(*, pilot: Any) -> None:
         raise InstalledAssetTuiError(
             "installed TUI did not expose its public command palette controls",
             stage="ledger_navigation",
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         ) from exc
     query.value = "Ledger"
     deadline = monotonic() + 45.0
@@ -100,13 +100,13 @@ async def _open_ledger_destination(*, pilot: Any) -> None:
         if results.option_count > 0:
             results.highlighted = 0
             await pilot.press("enter")
-            await _wait_for_public_selector(pilot, "#ledger-navigation", stage="ledger_ready", timeout_seconds=45.0)
+            await wait_for_public_selector(pilot, "#ledger-navigation", stage="ledger_ready", timeout_seconds=45.0)
             return
         await pilot.pause()
     raise InstalledAssetTuiError(
         "installed TUI command palette did not offer Ledger",
         stage="ledger_navigation",
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
@@ -129,11 +129,11 @@ def _safe_asset_result_state(rendered: str) -> str:
 def _asset_transition_diagnostic(
     *,
     pilot: Any,
-    transition: _PublicAssetActionTransition,
+    transition: PublicAssetActionTransition,
     rendered: str,
 ) -> dict[str, object]:
     """Add only safe public action state to the existing surface diagnostic."""
-    diagnostic = _public_surface_diagnostic(pilot)
+    diagnostic = public_surface_diagnostic(pilot)
     diagnostic.update(
         {
             "asset_action": transition.button_id,
@@ -146,29 +146,29 @@ def _asset_transition_diagnostic(
     return diagnostic
 
 
-async def _activate_public_button(
+async def activate_public_button(
     *,
     pilot: Any,
     selector: str,
     stage: str,
     capture_asset_result: bool = True,
-) -> _PublicAssetActionTransition:
+) -> PublicAssetActionTransition:
     """Activate one visible button and retain a safe before/after state receipt."""
     from textual.widgets import Button, Static
 
-    button = await _wait_for_public_selector(pilot, selector, stage=stage)
+    button = await wait_for_public_selector(pilot, selector, stage=stage)
     if not isinstance(button, Button):
         raise InstalledAssetTuiError(
             "installed TUI control has an unexpected type",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
-    result = await _wait_for_public_selector(pilot, "#asset-result", stage=stage) if capture_asset_result else None
+    result = await wait_for_public_selector(pilot, "#asset-result", stage=stage) if capture_asset_result else None
     if result is not None and not isinstance(result, Static):
         raise InstalledAssetTuiError(
             "installed TUI asset result control has an unexpected type",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
     result_before = str(result.render()).strip() if result is not None else ""
     button_disabled_before = button.disabled
@@ -176,12 +176,12 @@ async def _activate_public_button(
         raise InstalledAssetTuiError(
             "installed TUI asset action is disabled before public keyboard activation",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
     button.focus()
     await pilot.press("enter")
     await pilot.pause()
-    return _PublicAssetActionTransition(
+    return PublicAssetActionTransition(
         button_id=button.id or selector.removeprefix("#"),
         result_before=result_before,
         result_after_activation=str(result.render()).strip() if result is not None else "",
@@ -189,16 +189,16 @@ async def _activate_public_button(
     )
 
 
-async def _set_public_input(*, pilot: Any, selector: str, value: str, stage: str) -> None:
+async def set_public_input(*, pilot: Any, selector: str, value: str, stage: str) -> None:
     """Enter a synthetic value through one visible Textual Input control."""
     from textual.widgets import Input
 
-    field = await _wait_for_public_selector(pilot, selector, stage=stage)
+    field = await wait_for_public_selector(pilot, selector, stage=stage)
     if not isinstance(field, Input):
         raise InstalledAssetTuiError(
             "installed TUI control has an unexpected type",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
     field.value = value
     await pilot.pause()
@@ -214,24 +214,24 @@ def _asset_result_matches(
     )
 
 
-async def _wait_for_asset_result(
+async def wait_for_asset_result(
     *,
     pilot: Any,
     expected_prefix: str,
     expected_suffix: str | None = None,
     stage: str,
-    transition: _PublicAssetActionTransition | None = None,
+    transition: PublicAssetActionTransition | None = None,
     timeout_seconds: float = 45.0,
 ) -> str:
     """Wait for one public asset action result without preserving raw errors."""
     from textual.widgets import Static
 
-    result = await _wait_for_public_selector(pilot, "#asset-result", stage=stage)
+    result = await wait_for_public_selector(pilot, "#asset-result", stage=stage)
     if not isinstance(result, Static):
         raise InstalledAssetTuiError(
             "installed TUI asset result control has an unexpected type",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
     deadline = monotonic() + timeout_seconds
     changed_from_prior_result = transition is None
@@ -247,7 +247,7 @@ async def _wait_for_asset_result(
                 diagnostic=(
                     _asset_transition_diagnostic(pilot=pilot, transition=transition, rendered=rendered)
                     if transition is not None
-                    else _public_surface_diagnostic(pilot)
+                    else public_surface_diagnostic(pilot)
                 ),
             )
         if _asset_result_matches(rendered, expected_prefix, expected_suffix, changed_from_prior_result):
@@ -264,21 +264,21 @@ async def _wait_for_asset_result(
         diagnostic=(
             _asset_transition_diagnostic(pilot=pilot, transition=transition, rendered=rendered)
             if transition is not None
-            else _public_surface_diagnostic(pilot)
+            else public_surface_diagnostic(pilot)
         ),
     )
 
 
-async def _wait_for_current_revision_id(*, pilot: Any, stage: str, timeout_seconds: float = 45.0) -> str:
+async def wait_for_current_revision_id(*, pilot: Any, stage: str, timeout_seconds: float = 45.0) -> str:
     """Read a canonical immutable revision ID from the public screen projection."""
     from textual.widgets import Static
 
-    current = await _wait_for_public_selector(pilot, "#asset-current-revision-id", stage=stage)
+    current = await wait_for_public_selector(pilot, "#asset-current-revision-id", stage=stage)
     if not isinstance(current, Static):
         raise InstalledAssetTuiError(
             "installed TUI current-revision control has an unexpected type",
             stage=stage,
-            diagnostic=_public_surface_diagnostic(pilot),
+            diagnostic=public_surface_diagnostic(pilot),
         )
     deadline = monotonic() + timeout_seconds
     while monotonic() < deadline:
@@ -290,16 +290,16 @@ async def _wait_for_current_revision_id(*, pilot: Any, stage: str, timeout_secon
     raise InstalledAssetTuiError(
         "installed TUI did not expose the current immutable revision identity",
         stage=stage,
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-async def _open_activity_asset_screen(*, pilot: Any) -> None:
+async def open_activity_asset_screen(*, pilot: Any) -> None:
     """Reach the public asset screen with the visible Ledger action button."""
-    await _activate_public_button(
+    await activate_public_button(
         pilot=pilot,
         selector="#ledger-activity-assets",
         stage="asset_screen_ready",
         capture_asset_result=False,
     )
-    await _wait_for_public_selector(pilot, "#asset-id", stage="asset_screen_ready", timeout_seconds=45.0)
+    await wait_for_public_selector(pilot, "#asset-id", stage="asset_screen_ready", timeout_seconds=45.0)

@@ -13,7 +13,7 @@ from contextvars import ContextVar
 from pathlib import Path
 
 from ...core.paths import effective_storage_root
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.user_profile.schema_migration import ProfileSchemaMigration
 from .capsule_record import ProfileRecordSession, ProfileRecordStore
 from .custody_repository import profile_custody_transaction_lock
@@ -35,7 +35,7 @@ def migrate_profile_record_on_open(
     """
     storage_root = effective_storage_root(root)
     with profile_custody_transaction_lock(storage_root, session.profile_id):
-        migration = ProfileRecordStore(session=session, root=storage_root).migrate_legacy_schema(now=_utc_now())
+        migration = ProfileRecordStore(session=session, root=storage_root).migrate_legacy_schema(now=now())
     if migration is not None and migration.cleared_paths:
         staged = set(_STAGED_CLEARED_PATHS.get()) | set(migration.cleared_paths)
         _STAGED_CLEARED_PATHS.set(tuple(sorted(staged)))

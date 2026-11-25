@@ -60,7 +60,7 @@ def test_frame_authentication_uses_real_command_metadata_and_preserves_authored_
     else:
         monkeypatch.setattr(sequence_runner, "invoke_cached_cli", invoke)
     with override_settings(cadrumo_dev_test_database_password=SecretStr("docs-frame-proof")):
-        sequence_runner._invoke_authenticated_frame(args, program=program)
+        sequence_runner.invoke_authenticated_frame(args, program=program)
     assert len(calls) == 1
     actual_args, supplied = calls[0]
     if proof_field is not None:

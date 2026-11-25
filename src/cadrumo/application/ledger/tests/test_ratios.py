@@ -6,6 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.registry import load_category_profiles
 from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
@@ -39,11 +41,52 @@ class TestEligible:
         others = [row for row in rows if row.category is not sample_category]
         assert all(row.override_present is False for row in others)
 
-    def test_eligible_default_ratios_are_in_range_when_present(self, operation: PinnedAuthorityOperation) -> None:
-        rows = eligible_ratio_categories(UsageRatioProfile(), year=2025, operation=operation)
-        for row in rows:
-            if row.default_ratio is not None:
-                assert Decimal("0") <= row.default_ratio <= Decimal("1")
+
+class TestEligibleWording:
+    """The rows carry the registry's own label and notes, said in the requested language."""
+
+    def test_rows_say_the_registry_wording_in_the_requested_language(self, operation: PinnedAuthorityOperation) -> None:
+        english = {
+            row.category.value: row
+            for row in eligible_ratio_categories(
+                UsageRatioProfile(), year=2025, operation=operation, language=OutputLanguage.EN
+            )
+        }
+        spanish = {
+            row.category.value: row
+            for row in eligible_ratio_categories(
+                UsageRatioProfile(), year=2025, operation=operation, language=OutputLanguage.ES
+            )
+        }
+
+        assert english["ibi_vivienda_afecto"].label == "Property tax (IBI) on home used for business"
+        assert english["ibi_vivienda_afecto"].notes == (
+            "Deductible in proportion to the home's floor area used for the business and to your ownership share "
+            "in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, "
+            "property tax on the home used for business)."
+        )
+        assert spanish["ibi_vivienda_afecto"].label == "IBI de la vivienda afecta"
+        assert spanish["ibi_vivienda_afecto"].notes == (
+            "Deducible en proporción a la superficie de la vivienda afecta a la actividad y a tu porcentaje de "
+            "titularidad en ella; no se aplica el 30 % de los suministros (Ley 35/2006 art. 29.2, Reglamento "
+            "IRPF art. 22.3, IBI de la vivienda afecta)."
+        )
+        # The registry names this category's label under a key that does not follow its token.
+        assert english["suministros_home_office_luz"].label == "Home-office electricity"
+        assert spanish["suministros_home_office_luz"].label == "Electricidad del despacho en casa"
+
+    @pytest.mark.parametrize("language", list(OutputLanguage))
+    def test_every_eligible_row_resolves_its_registry_keys_in_every_language(
+        self, language: OutputLanguage, operation: PinnedAuthorityOperation
+    ) -> None:
+        token = I18N_STRICT_MISSING_KEYS.set(True)
+        try:
+            rows = eligible_ratio_categories(UsageRatioProfile(), year=2025, operation=operation, language=language)
+        finally:
+            I18N_STRICT_MISSING_KEYS.reset(token)
+
+        assert {row.category for row in rows} == set(ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        assert all(row.label.strip() and row.notes.strip() for row in rows)
 
 
 class TestValidate:

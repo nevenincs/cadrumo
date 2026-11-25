@@ -20,13 +20,14 @@ from datetime import datetime
 from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
+from ...domain.transactions.lineage_models import SplitLineage, TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.execution_actor import actor_label_is_automation
 from .action_ports import LedgerActionPorts
@@ -41,6 +42,7 @@ from .actions_common import (
     remove_transaction,
     replace_transaction,
     require_actor,
+    require_recordable_reason,
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
@@ -50,6 +52,7 @@ from .actions_common import (
     save_transaction_catalogue_invoices_and_events,
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
+    withheld_figures_event_payload,
 )
 from .models import (
     LedgerCatalogueResetReport,
@@ -237,12 +240,13 @@ def mark_transaction_reviewed_excluded(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger review exclusion")
+    require_recordable_reason(reason, operation="ledger review exclusion")
     trimmed_source_command = require_source_command(source_command, operation="ledger review exclusion")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be reviewed-excluded; archived, stashed, "
             "and split-parent rows are already out of filing scope",
@@ -283,6 +287,7 @@ def mark_transaction_reviewed_excluded(
             "previous_business_pct": format_decimal(current.business_pct, none_value=""),
             "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
             "reason": reason.strip(),
+            **withheld_figures_event_payload(current),
         },
     )
     replacement = with_classification_origin(
@@ -335,6 +340,7 @@ def remove_manual_transaction(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger removal")
+    require_recordable_reason(reason, operation="ledger removal")
     trimmed_source_command = require_source_command(source_command, operation="ledger removal")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -644,6 +650,7 @@ def reset_ledger_catalogue(
         raise ValueError("max_receipt_items must be positive when provided")
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger reset")
+    require_recordable_reason(reason, operation="ledger reset")
     trimmed_source_command = require_source_command(source_command, operation="ledger reset")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -759,17 +766,7 @@ def _require_no_double_count_with_merge(
         return
     if lineage.role is SplitRole.MERGED:
         active_originals = tuple(
-            sorted(
-                other.transaction_id
-                for other in catalogue.values()
-                if other.lifecycle_state is TransactionLifecycleState.ACTIVE
-                and other.split_lineage is not None
-                and other.split_lineage.split_group_id == lineage.split_group_id
-                and (
-                    other.split_lineage.role is SplitRole.PARENT
-                    or other.transaction_id in lineage.sibling_transaction_ids
-                )
-            ),
+            sorted(other.transaction_id for other in catalogue.values() if _active_merge_original(other, lineage)),
         )
         if active_originals:
             raise TransactionValidationError(
@@ -785,16 +782,7 @@ def _require_no_double_count_with_merge(
         return
     active_merged = tuple(
         sorted(
-            other.transaction_id
-            for other in catalogue.values()
-            if other.lifecycle_state is TransactionLifecycleState.ACTIVE
-            and other.split_lineage is not None
-            and other.split_lineage.role is SplitRole.MERGED
-            and other.split_lineage.split_group_id == lineage.split_group_id
-            and (
-                lineage.role is SplitRole.PARENT
-                or current.transaction_id in other.split_lineage.sibling_transaction_ids
-            )
+            other.transaction_id for other in catalogue.values() if _active_merge_successor(other, current, lineage)
         ),
     )
     if active_merged:
@@ -823,6 +811,7 @@ def _transition_manual_transaction_lifecycle(
 ) -> ManualLedgerTransactionResult:
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger lifecycle")
+    require_recordable_reason(reason, operation="ledger lifecycle")
     trimmed_source_command = require_source_command(source_command, operation="ledger lifecycle")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
@@ -871,6 +860,7 @@ def _transition_manual_transaction_lifecycle(
             "previous_lifecycle_state": current.lifecycle_state.value,
             "lifecycle_state": state.value,
             "reason": reason.strip(),
+            **withheld_figures_event_payload(current),
         },
     )
     lifecycle_entry = TransactionLifecycleLineageEntry(
@@ -1013,3 +1003,22 @@ __all__ = [
     "restore_manual_transaction",
     "stash_manual_transaction",
 ]
+
+
+def _active_merge_original(other: Transaction, lineage: SplitLineage) -> bool:
+    return (
+        other.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and other.split_lineage is not None
+        and other.split_lineage.split_group_id == lineage.split_group_id
+        and (other.split_lineage.role is SplitRole.PARENT or other.transaction_id in lineage.sibling_transaction_ids)
+    )
+
+
+def _active_merge_successor(other: Transaction, current: Transaction, lineage: SplitLineage) -> bool:
+    return (
+        other.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and other.split_lineage is not None
+        and other.split_lineage.role is SplitRole.MERGED
+        and other.split_lineage.split_group_id == lineage.split_group_id
+        and (lineage.role is SplitRole.PARENT or current.transaction_id in other.split_lineage.sibling_transaction_ids)
+    )

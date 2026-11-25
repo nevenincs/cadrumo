@@ -14,6 +14,8 @@ def resolve_current_transaction_id(self: AcquisitionLineageReference, replacemen
     revision while enabling stale-state detection after ID-affecting edits.
     """
     current = self.observed_transaction_id
+    if current is None:
+        raise ActividadAssetValidationError("acquisition has no observed transaction")
     seen: set[str] = set()
     while current in replacements:
         if current in seen:

@@ -59,7 +59,7 @@ def test_casillas_command_explain_option_displays_localized_help() -> None:
     assert "legal_refs" in result.output
     assert "source_refs" in result.output
     assert "Total cumulative business income for the tax year." in result.output
-    assert "Total cumulative business expenses for the tax year." in result.output
+    assert "Cumulative deductible expenses and amortization of the economic activity." in result.output
     assert "rd-439-2007:art-110" in result.output
     assert "aeat-modelo-130-instructions" in result.output
 

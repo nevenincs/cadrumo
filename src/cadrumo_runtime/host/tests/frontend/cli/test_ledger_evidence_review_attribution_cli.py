@@ -44,7 +44,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,7 +54,7 @@ _NOTICE_CODE: Final = "ledger.evidence.review.party_attribution_unverified"
 _PAGE: Final = (
     "FACTURA 2026-0142\n"
     "Emisor: Acme Suministros SL\n"
-    "NIF B12345674\n"
+    "NIF B00015016\n"
     "Calle Mayor 3, 28001 Madrid\n"
     "Espana\n"
     "Cliente: Islas Comercial SL\n"
@@ -77,7 +77,7 @@ def _reader_envelope(field: str, anchor: str) -> FieldProvenance:
 def _grounded_draft(*, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return the draft the reading path produces for the page above."""
     draft = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         supplier_postal_code="28001",
         supplier_country="Espana",
@@ -132,7 +132,7 @@ def seeded_draft(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iter
 
 
 def _envelope() -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
+    result = invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
     assert result.exit_code == 0, result.output
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
 
@@ -188,7 +188,7 @@ def test_the_advisory_names_the_fields_whose_attribution_is_unchecked() -> None:
 @pytest.mark.usefixtures("seeded_draft")
 def test_the_text_surface_carries_the_same_advisory_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
+    result = invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
 
     assert result.exit_code == 0, result.output
     assert _NOTICE_CODE in result.output

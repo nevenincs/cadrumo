@@ -3,7 +3,7 @@
 This is the annual first-slice expense projection behind the
 ``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
 :class:`~domain.transactions.models.TransactionCatalogue` and a
-:class:`~domain.invoices.models.InvoiceCatalogue` from the application-owned catalogue
+:class:`~domain.invoices.catalogue.InvoiceCatalogue` from the application-owned catalogue
 read capabilities, uses purchase-invoice evidence to validate deductible-expense
 facts, and returns
 binding-ready :class:`~domain.renta.ledger_expenses.RentaDeductibleExpenseObservation`
@@ -13,7 +13,9 @@ The source-mesh resolver in :mod:`~.modelo_bindings` applies the target
 :class:`~domain.calculations.registry.schema.ModeloRevision`, resolves registry
 bindings, and reports source issues or unrouted expenses on its
 :class:`~.source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
-projection is intentionally separate in :mod:`~.renta_gasto_ledger`.
+projection is separate in :mod:`~.renta_gasto_ledger` (no invoice evidence, a
+cumulative window) but evaluates each categorised row through the same
+category rules built here by :func:`resolve_category_deduction_rules`.
 
 Related: :mod:`~.iva_ledger` and :mod:`~.renta_income_ledger` for sibling
 ledger projections.
@@ -22,30 +24,26 @@ ledger projections.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
-from typing import TYPE_CHECKING, overload
-
-from pydantic import BaseModel, Field
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal.constants import ZERO
-from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as tr
-from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period, PeriodKind
-from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_exento_token,
+    iva_regime_recargo_equivalencia_token,
     require_iva_regime,
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import SpendingCategory
@@ -54,54 +52,56 @@ from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfile
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
-from ...domain.contribuyente.tax_residence import parse_tax_region
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.schema import InvoiceKind
+from ...domain.contribuyente.tax_residence import ResidenceTerritory, classify_tax_region, parse_tax_region
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
-    RentaDeductibilityStatus,
-    RentaDeductibleExpenseFact,
     RentaDeductibleExpenseObservation,
-    RentaExpenseDirection,
-    build_renta_deductible_expense_observation,
-    evaluate_renta_deductibility,
-    normalize_spending_category,
+    StatutoryCapClaim,
     resolve_region_category_profiles,
-    select_deductibility_profile,
+    statutory_cap_trims,
 )
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.rental_link import has_rental_link
+from ...domain.transactions.savings_link import has_savings_link
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileRecord
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..user_profile.profile_read_recorder import profile_view_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import fact_value, profile_fact_index
-from . import _shared_issue_reasons
-from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
-from ._renta_business_eligibility import (
-    relies_on_activity_marker,
-    renta_expense_business_proportion,
-)
+from ..user_profile.projections import fact_value, profile_fact_index, record_to_path_values
 from .catalogue_read_binding import require_catalogue_reads_bound_to
-from .currency_predicates import (
-    effective_eur_amount,
-    effective_eur_iva_amount,
-    effective_eur_taxable_base,
-    is_non_eur_without_conversion,
-)
 from .errors import AggregationPeriodError
+from .models import CasillaAggregation, CasillaProvenance
+from .renta_business_eligibility import (
+    RentaExpenseAdvisory,
+    renta_expense_advisory,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
-_LEDGER_CATALOGUE_ID = "ledger"
+from .renta_imputation import ImputationCriteria, expense_incurred_date
+from .renta_income_diagnostics import received_rectificativa_reading
+from .renta_ledger_classification import CategoryRuleRefusal, classify_renta_transaction, resolve_category_rule
+from .renta_ledger_evidence import (
+    refund_left_to_correction_netting,
+)
+from .renta_ledger_models import (
+    RentaLedgerAggregationIssue,
+    RentaLedgerExpenseAggregation,
+)
+
+_TAX_REGION_PATH = "tax_residence.ccaa"
 
 
 # Registry authority: selected renta-ledger insurance variants, category-profile
 # routing, issue/applicability, and binding declarations are consumed through the dated mapping
-def _registry_renta_ledger_declarations(
+def registry_renta_ledger_declarations(
     *,
     modelo: str,
     filing_year: int,
@@ -109,9 +109,11 @@ def _registry_renta_ledger_declarations(
 ) -> dict[str, str]:
     """Resolve the selected renta-ledger declaration mapping without fallbacks."""
     effective_date = date(filing_year, 12, 31)
-    directory = operation.modelo_directory(modelo)
-    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-        raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    select_revision_metadata_for_year(
+        operation.modelo_directory(modelo),
+        filing_year=filing_year,
+        on=effective_date,
+    )
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-ledger-category-variant-routing-mapping",
@@ -163,94 +165,12 @@ def _registry_renta_iva_ratio_declarations(
     return entries
 
 
-class RentaLedgerAggregationIssueReason(StrEnum):
-    """Machine-readable reasons why a ledger row did not produce an observation.
-
-    The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
-    ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
-    ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
-    :class:`~application.aggregation.iva_ledger.IvaLedgerAggregationIssueReason`
-    through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
-    Renta-only refusal raised against quarter-level requests; the
-    remaining values describe Renta-specific deductibility checks.
-    """
-
-    UNSUPPORTED_PERIOD = "unsupported_period"
-    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
-    ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW = "activity_marked_pending_annual_review"
-    """An actividad-marked expense the quarterly M130 accepts but the annual declaration holds for review.
-
-    Narrower than ``UNCLASSIFIED_BUSINESS_STATE``: the row carries an explicit
-    ``actividad_economica`` IRPF category, so it is not unclassified -- it is
-    awaiting the business-classification review the filing-grade annual
-    projection requires. Naming it separately tells the operator that the same
-    row already fed a pago fraccionado and what action clears it.
-    """
-    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    MISSING_CATEGORY = "missing_category"
-    UNKNOWN_CATEGORY = "unknown_category"
-    MISSING_CATEGORY_PROFILE = "missing_category_profile"
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
-    MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"
-    UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
-    PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH = "purchase_invoice_evidence_bucket_mismatch"
-    PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH = "purchase_invoice_evidence_link_mismatch"
-    PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = "partial_or_multi_transaction_purchase_invoice_evidence"
-    AMOUNT_MISMATCH = "amount_mismatch"
-    INVALID_LEDGER_FACT = "invalid_ledger_fact"
-    INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
-    REGION_UNDECLARED_FOR_OVERRIDE = "region_undeclared_for_override"
-
-
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
 #:
 #: These issues explain why a ledger row was excluded, so refusing one over its
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-
-
-class RentaLedgerAggregationIssue(BaseModel):
-    """Traceable exclusion emitted while aggregating ledger rows."""
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: TransactionId
-    purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
-    category_id: str | None = Field(default=None, min_length=1, max_length=128)
-    reason: RentaLedgerAggregationIssueReason
-    detail: IssueDetail
-
-
-class _PurchaseInvoiceEvidencePayload(BaseModel):
-    """Typed enrichment fields copied from a reconciled linked invoice."""
-
-    model_config = _STRICT_FROZEN
-
-    invoice_issue_date: date | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-
-
-class RentaLedgerExpenseAggregation(
-    LedgerAggregationResultBase[RentaDeductibleExpenseObservation, RentaLedgerAggregationIssue],
-):
-    """First-slice Renta observations plus binding-ready casilla totals.
-
-    Carries no ``out_of_window_summary``: this annual first-slice aggregation
-    has no repository-backed date partition, unlike the base's four other
-    known subclasses -- deliberately not declared here (see
-    :class:`~._models.LedgerAggregationResultBase`).
-    """
-
-    profile_year: FilingYear
-
-    @property
-    def casilla_values(self) -> Mapping[CasillaId, Decimal]:
-        """Return the frozen mapping of binding-ready casilla totals."""
-        return self.casilla_aggregation.casilla_values
 
 
 def _seguro_enfermedad_person_counts(
@@ -265,7 +185,7 @@ def _seguro_enfermedad_person_counts(
     """Resolve insured-person variant counts using selected registry declarations."""
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
-    declarations = _registry_renta_ledger_declarations(
+    declarations = registry_renta_ledger_declarations(
         modelo=modelo,
         filing_year=filing_year,
         operation=operation,
@@ -287,7 +207,14 @@ def _seguro_enfermedad_person_counts(
         except ProfileNotFoundError:
             return {}
     counts = seguro_enfermedad_insured_counts_from_facts(
-        profile_fact_index(record, profile_schema),
+        # The insured count reads the descendants, the two disability grades and the marital status.
+        profile_view_under(
+            profile_fact_index(record, profile_schema),
+            "renta_family.descendiente.",
+            "renta_taxpayer.disability_grade",
+            "renta_spouse.disability_grade",
+            "renta_taxpayer.marital_status",
+        ),
         filing_year=filing_year,
     )
     return {
@@ -296,7 +223,7 @@ def _seguro_enfermedad_person_counts(
     }
 
 
-def _resolve_residence_ccaa(
+def resolve_residence_ccaa(
     *,
     bucket_id: str,
     profile_record: UserProfileRecord | None = None,
@@ -323,24 +250,86 @@ def _resolve_residence_ccaa(
             authority operation used when the record is loaded.
         operation: Pinned authority operation supplying the profile decode context.
     """
-    if profile_decode_context is None:
-        profile_decode_context = operation.profile_decode_context()
-    record = profile_record
-    if record is None:
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=profile_decode_context,
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
-
-    raw = fact_value(record, "tax_residence.ccaa")
+    raw = _recorded_tax_region(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
     if raw is None:
         return None
     try:
         return parse_tax_region(raw)
     except (ForalRegimeError, TaxResidenceProfileError):
+        return None
+
+
+def resident_territory(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation,
+    as_of: date | None = None,
+) -> ResidenceTerritory:
+    """Classify a :class:`UserProfileRecord` tax residence as common, foral or unresolved.
+
+    Reads the same fact as :func:`resolve_residence_ccaa` and asks the same
+    parser. An absent reading is common; a recorded one the catalogue cannot
+    parse is unresolved, because it established nothing.
+
+    ``as_of`` reads the residence in force on that date, so a later move does not
+    reach back over an earlier filing period. When residence is recorded only for
+    other dates the answer is :attr:`ResidenceTerritory.PERIOD_UNKNOWN`.
+    """
+    record = _tax_region_record(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    reading = record_to_path_values(record, as_of=as_of).get(_TAX_REGION_PATH)
+    if reading is None and as_of is not None and fact_value(record, _TAX_REGION_PATH) is not None:
+        return ResidenceTerritory.PERIOD_UNKNOWN
+    return classify_tax_region(reading)
+
+
+def _recorded_tax_region(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Return the raw ``tax_residence.ccaa`` fact, or ``None`` with no profile or fact."""
+    return fact_value(
+        _tax_region_record(
+            bucket_id=bucket_id,
+            profile_record=profile_record,
+            profile_decode_context=profile_decode_context,
+            operation=operation,
+        ),
+        _TAX_REGION_PATH,
+    )
+
+
+def _tax_region_record(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> UserProfileRecord | None:
+    if profile_record is not None:
+        return profile_record
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        ).load(bucket_id)
+    except ProfileNotFoundError:
         return None
 
 
@@ -387,6 +376,89 @@ def resolve_iva_deduction_ratio(
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
             )
+    source = _iva_deduction_source(
+        bucket_id=bucket_id,
+        ejercicio=ejercicio,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if source.exempt_ratio is not None or source.register is None:
+        return source.exempt_ratio
+    resolution = source.register.resolve_provisional(ejercicio, sector_id=None)
+    if resolution.percentage is None:
+        return None
+    return resolution.percentage / source.percentage_divisor
+
+
+@dataclass(frozen=True, slots=True)
+class AnnualIvaDeduction:
+    """The year's IVA-deduction fraction as an annual return reads it.
+
+    Attributes:
+        ratio: The fraction, or ``None`` when no regime rations the deduction.
+        definitive_pending: The prorrata applies but no definitive percentage is
+            registered yet, so the year's non-deductible IVA is not known. The
+            provisional percentage does not stand in for it.
+    """
+
+    ratio: Decimal | None
+    definitive_pending: bool = False
+
+
+def resolve_annual_iva_deduction(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    profile_record: UserProfileRecord | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> AnnualIvaDeduction:
+    """Resolve the IVA-deduction fraction that closes the year for the annual return.
+
+    The provisional percentage only governs the year's liquidations; the last one
+    computes the definitive prorrata and regularises them (LIVA art. 105.Cuatro), and
+    that percentage applies to all the year's cuotas (art. 105.Seis). The non-deductible
+    IVA that joins the acquisition cost (Manual Renta, ch. 7) is therefore the definitive one.
+
+    ``profile_record`` is the :class:`UserProfileRecord`, the stored taxpayer profile record.
+    """
+    source = _iva_deduction_source(
+        bucket_id=bucket_id,
+        ejercicio=ejercicio,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if source.exempt_ratio is not None or source.register is None:
+        return AnnualIvaDeduction(ratio=source.exempt_ratio)
+    entry = source.register.entry_for(ejercicio, sector_id=None)
+    if entry is None or entry.definitive_percentage is None:
+        return AnnualIvaDeduction(ratio=None, definitive_pending=True)
+    return AnnualIvaDeduction(ratio=entry.definitive_percentage / source.percentage_divisor)
+
+
+@dataclass(frozen=True, slots=True)
+class _IvaDeductionSource:
+    """Where a year's IVA-deduction fraction comes from: an exempt regime, or an apportioning register."""
+
+    percentage_divisor: Decimal
+    exempt_ratio: Decimal | None = None
+    register: ProrrataRegister | None = None
+
+
+def _iva_deduction_source(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    profile_record: UserProfileRecord | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> _IvaDeductionSource:
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
     ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio, operation=operation)
@@ -401,18 +473,16 @@ def resolve_iva_deduction_ratio(
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         exempt_ratio=exempt_ratio,
+        effective_date=date(ejercicio, 12, 31),
     )
     if profile_exempt_ratio is not None:
-        return profile_exempt_ratio
+        return _IvaDeductionSource(percentage_divisor=percentage_divisor, exempt_ratio=profile_exempt_ratio)
 
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
     entry = register.entry_for(ejercicio, sector_id=None)
     if entry is None or not regime_apportions_deduction(entry.regime):
-        return None
-    resolution = register.resolve_provisional(ejercicio, sector_id=None)
-    if resolution.percentage is None:
-        return None
-    return resolution.percentage / percentage_divisor
+        return _IvaDeductionSource(percentage_divisor=percentage_divisor)
+    return _IvaDeductionSource(percentage_divisor=percentage_divisor, register=register)
 
 
 def _profile_exempt_iva_ratio(
@@ -421,6 +491,7 @@ def _profile_exempt_iva_ratio(
     profile_record: UserProfileRecord | None,
     profile_decode_context: ProfileDecodeContext,
     exempt_ratio: Decimal,
+    effective_date: date,
 ) -> Decimal | None:
     record = profile_record
     if record is None:
@@ -434,10 +505,117 @@ def _profile_exempt_iva_ratio(
     raw_regime = fact_value(record, "iva.regime")
     if raw_regime is None:
         return None
-    regime = require_iva_regime(raw_regime.strip().upper())
-    if regime == iva_regime_exento_token():
+    regime = require_iva_regime(raw_regime.strip().upper(), effective_date=effective_date)
+    if regime in (
+        iva_regime_exento_token(effective_date=effective_date),
+        iva_regime_recargo_equivalencia_token(effective_date=effective_date),
+    ):
+        # LIVA art. 154.Dos: the retailer in the recargo de equivalencia deducts none of the IVA she bears.
         return exempt_ratio
     return None
+
+
+@dataclass(frozen=True, slots=True)
+class RentaCategoryDeductionRules:
+    """The category rules and evaluation context one Renta expense pipeline runs its rows through.
+
+    The annual Modelo 100 expense pipeline and the Modelo 130 quarterly gasto
+    pipeline both decide a row's deductible amount with
+    :func:`~cadrumo.domain.renta.ledger_expenses.evaluate_renta_deductibility`
+    against these, so the usage ratio, the insured-person counts of the statutory
+    cap and the recoverable-IVA share reach both from one construction.
+    """
+
+    profile_year: int
+    profiles: Mapping[SpendingCategory, CategoryProfile]
+    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]]
+    context: RentaDeductibilityContext
+
+
+def resolve_category_deduction_rules(
+    *,
+    bucket_id: str,
+    profile_year: int,
+    modelo: str,
+    usage_ratios: Mapping[SpendingCategory, Decimal] | None,
+    residence_ccaa: CCAA | None,
+    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None,
+    iva_deduction_ratio: Decimal | None,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
+) -> RentaCategoryDeductionRules:
+    """Resolve the category profiles and the deductibility context for one filing year.
+
+    Args:
+        bucket_id: Stable bucket identifier used to load the profile when
+            ``profile_record`` is absent.
+        profile_year: Filing year whose category profiles govern the rows.
+        modelo: Modelo identifier receiving the aggregation; it selects the registry
+            revision that declares the insured-person count fields.
+        usage_ratios: Per-category business-use ratios; the effective ratio the
+            usage-ratio rule multiplies by, statutory multiplier included.
+        residence_ccaa: Ordinary-residence comunidad, selecting a territorial override.
+        region_category_overrides: Per-comunidad override layer; defaults to the
+            registry-provisioned (empty) layer.
+        iva_deduction_ratio: Activity-wide IVA-deduction fraction, or ``None``.
+        profile_record: The :class:`UserProfileRecord` supplying the
+            insured-person counts; loaded from the bucket when absent.
+        profile_decode_context: Decode context of the caller-held authority operation.
+        operation: Generation-pinned authority operation.
+        ownership_share: The taxpayer's ownership share of the partly affected
+            dwelling, or ``None`` when no source states it.
+        register_owned_transaction_ids: The ledger rows the activity-asset
+            register declares as an asset's acquisition.
+
+    Returns:
+        The rules, ready for :func:`resolve_category_rule` and the evaluator.
+    """
+    return RentaCategoryDeductionRules(
+        profile_year=profile_year,
+        profiles=resolve_category_profiles(profile_year, operation=operation),
+        region_overrides=(
+            region_category_overrides
+            if region_category_overrides is not None
+            else resolve_region_category_profiles(profile_year)
+        ),
+        context=RentaDeductibilityContext(
+            profile_year=profile_year,
+            usage_ratios=dict(usage_ratios or {}),
+            residence_ccaa=residence_ccaa,
+            iva_deduction_ratio=iva_deduction_ratio,
+            ownership_share=ownership_share,
+            register_owned_transaction_ids=register_owned_transaction_ids,
+            statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
+                bucket_id=bucket_id,
+                profile_record=profile_record,
+                filing_year=profile_year,
+                modelo=modelo,
+                profile_decode_context=profile_decode_context,
+                operation=operation,
+            ),
+        ),
+    )
+
+
+def accepted_row_advisory(
+    transaction: Transaction,
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> RentaExpenseAdvisory | None:
+    """Return the advisory a row that produced an expense observation carries, or ``None``."""
+    resolved = resolve_category_rule(
+        transaction.category_id,
+        profiles=rules.profiles,
+        region_overrides=rules.region_overrides,
+        context=rules.context,
+        profile_year=rules.profile_year,
+    )
+    if isinstance(resolved, CategoryRuleRefusal):
+        return None
+    return renta_expense_advisory(transaction, resolved[1].proportionality)
 
 
 def aggregate_renta_ledger_expenses_from_repositories(
@@ -454,6 +632,9 @@ def aggregate_renta_ledger_expenses_from_repositories(
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -468,7 +649,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
     registry-provisioned layer, :func:`resolve_region_category_profiles`).
 
-    Also derives the activity's IVA-deduction ratio (:func:`resolve_iva_deduction_ratio`)
+    Also derives the activity's IVA-deduction ratio (:func:`resolve_annual_iva_deduction`)
     from the bucket's ``iva.regime`` profile fact and its
     :class:`~domain.prorrata_register.register.ProrrataRegister`, so the non-recoverable
     share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for
@@ -492,6 +673,9 @@ def aggregate_renta_ledger_expenses_from_repositories(
                 prorrata_register_repository=prorrata_register_repository,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
@@ -501,7 +685,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     # below tests) falls inside it, and the reverse — a transaction inside the
     # window whose linked invoice puts it outside. Pre-filtering by the
     # transaction's own date with ``load_for_date_range`` silently drops both
-    # shapes before ``_classify_renta_transaction`` ever runs, so the
+    # shapes before ``classify_renta_transaction`` ever runs, so the
     # ``OUTSIDE_PERIOD`` diagnostic the operator needs to see never fires for a
     # multi-year catalogue. Mirrors the same revert already applied to
     # ``_iva_ledger`` / ``_renta_income_ledger`` / ``_renta_gasto_ledger`` /
@@ -509,14 +693,14 @@ def aggregate_renta_ledger_expenses_from_repositories(
     require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     transactions = ports.transaction_reader.load()
     invoices = ports.invoice_reader.load()
-    residence_ccaa = _resolve_residence_ccaa(
+    residence_ccaa = resolve_residence_ccaa(
         bucket_id=bucket_id,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
     )
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
-    iva_deduction_ratio = resolve_iva_deduction_ratio(
+    iva_deduction = resolve_annual_iva_deduction(
         bucket_id=bucket_id,
         ejercicio=resolved_ejercicio,
         profile_record=profile_record,
@@ -535,10 +719,14 @@ def aggregate_renta_ledger_expenses_from_repositories(
         modelo=modelo,
         residence_ccaa=residence_ccaa,
         region_category_overrides=region_category_overrides,
-        iva_deduction_ratio=iva_deduction_ratio,
+        iva_deduction_ratio=iva_deduction.ratio,
+        definitive_prorrata_pending=iva_deduction.definitive_pending,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
+        criteria=criteria,
     )
 
 
@@ -555,9 +743,13 @@ def aggregate_renta_ledger_expenses(
     residence_ccaa: CCAA | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     iva_deduction_ratio: Decimal | None = None,
+    definitive_prorrata_pending: bool = False,
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -580,6 +772,7 @@ def aggregate_renta_ledger_expenses(
         region_category_overrides: Optional per-:class:`CCAA` category-profile
             override layer; defaults to :func:`resolve_region_category_profiles`
             (empty) so every fact falls through to the state year profile.
+        definitive_prorrata_pending: The year's definitive prorrata is not registered, so IVA-bearing rows wait.
         iva_deduction_ratio: Optional activity-wide IVA-deduction fraction
             (LIVA arts. 94/104), threaded onto :class:`RentaDeductibilityContext`
             so the non-recoverable share of a fact's input IVA joins its
@@ -593,6 +786,13 @@ def aggregate_renta_ledger_expenses(
             authority operation when ``profile_record`` is supplied directly.
         operation: Existing generation-pinned authority operation. When omitted,
             one indexed operation is opened at this composition boundary.
+        ownership_share: The taxpayer's ownership share of the partly affected
+            dwelling, applied by the categories whose rule requires it.
+        register_owned_transaction_ids: The ledger rows the activity-asset
+            register declares as an asset's acquisition; the register deducts
+            them through its amortization schedule.
+        criteria: The dated imputation election that places each row; ``None``
+            keeps the fact's own filing date, for a caller not consulting the profile.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -611,36 +811,83 @@ def aggregate_renta_ledger_expenses(
                 residence_ccaa=residence_ccaa,
                 region_category_overrides=region_category_overrides,
                 iva_deduction_ratio=iva_deduction_ratio,
+                definitive_prorrata_pending=definitive_prorrata_pending,
                 profile_record=profile_record,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
-    resolved_period = _resolve_annual_period(period)
+    resolved_period = resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
-    profiles = resolve_category_profiles(resolved_profile_year, operation=operation)
-    region_overrides = (
-        region_category_overrides
-        if region_category_overrides is not None
-        else resolve_region_category_profiles(resolved_profile_year)
-    )
-    context = RentaDeductibilityContext(
+    rules = resolve_category_deduction_rules(
+        bucket_id=bucket_id,
         profile_year=resolved_profile_year,
-        usage_ratios=dict(usage_ratios or {}),
+        modelo=modelo,
+        usage_ratios=usage_ratios,
         residence_ccaa=residence_ccaa,
+        region_category_overrides=region_category_overrides,
         iva_deduction_ratio=iva_deduction_ratio,
-        statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
-            bucket_id=bucket_id,
-            profile_record=profile_record,
-            filing_year=resolved_profile_year,
-            modelo=modelo,
-            profile_decode_context=profile_decode_context,
-            operation=operation,
-        ),
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
     )
+    observations, issues, advisories = _classified_renta_rows(
+        transactions,
+        invoices,
+        bucket_id=bucket_id,
+        resolved_period=resolved_period,
+        resolved_profile_year=resolved_profile_year,
+        rules=rules,
+        activity_key=activity_key,
+        criteria=criteria,
+        definitive_prorrata_pending=definitive_prorrata_pending,
+    )
+
+    if criteria is not None:
+        corrected = received_rectificativa_reading(
+            invoices,
+            transactions,
+            bucket_id=bucket_id,
+            window_start=date(resolved_period.filing_year, 1, 1),
+            window_end=resolved_period.end_date,
+            criteria=criteria,
+        )
+        observations = _net_received_corrections(observations, corrected.fractions)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
+    casilla_aggregation = renta_ledger_casilla_aggregation(resolved_period, observations, modelo=modelo)
+    return RentaLedgerExpenseAggregation(
+        modelo=modelo,
+        period=resolved_period,
+        profile_year=resolved_profile_year,
+        observations=tuple(observations),
+        issues=tuple(issues),
+        casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
+    )
+
+
+def _classified_renta_rows(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    resolved_period: Period,
+    resolved_profile_year: int,
+    rules: RentaCategoryDeductionRules,
+    activity_key: str,
+    criteria: ImputationCriteria | None,
+    definitive_prorrata_pending: bool,
+) -> tuple[list[RentaDeductibleExpenseObservation], list[RentaLedgerAggregationIssue], list[RentaExpenseAdvisory]]:
+    """Place every active ledger row into an accepted observation, an exclusion issue or an advisory."""
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -649,274 +896,101 @@ def aggregate_renta_ledger_expenses(
             # (a final disposition): omit it silently, no observation and no
             # advisory-bearing issue.
             continue
-        outcome = _classify_renta_transaction(
+        if has_savings_link(posicion_ref=transaction.posicion_ref):
+            # A savings-position expense belongs to the position's capital-mobiliario return.
+            continue
+        if has_rental_link(arrendamiento_ref=transaction.arrendamiento_ref, inmueble_ref=transaction.inmueble_ref):
+            # The rental resolver owns a row linked to a lease or a property.
+            continue
+        if criteria is not None and refund_left_to_correction_netting(transaction, invoices):
+            continue
+        outcome = classify_renta_transaction(
             transaction,
             invoices=invoices,
             bucket_id=bucket_id,
             resolved_period=resolved_period,
             resolved_profile_year=resolved_profile_year,
-            profiles=profiles,
-            region_overrides=region_overrides,
-            context=context,
+            profiles=rules.profiles,
+            region_overrides=rules.region_overrides,
+            context=rules.context,
             activity_key=activity_key,
+            criteria=criteria,
+            definitive_prorrata_pending=definitive_prorrata_pending,
         )
         if isinstance(outcome, RentaLedgerAggregationIssue):
             issues.append(outcome)
         else:
             observations.append(outcome)
-
-    casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
-    return RentaLedgerExpenseAggregation(
-        modelo=modelo,
-        period=resolved_period,
-        profile_year=resolved_profile_year,
-        observations=tuple(observations),
-        issues=tuple(issues),
-        casilla_aggregation=casilla_aggregation,
-    )
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
+    return observations, issues, advisories
 
 
-def _classify_renta_transaction(
-    transaction: Transaction,
+def _apply_statutory_cap_trims(
+    observations: list[RentaDeductibleExpenseObservation],
     *,
+    rules: RentaCategoryDeductionRules,
+    transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue,
-    bucket_id: str,
-    resolved_period: Period,
-    resolved_profile_year: int,
-    profiles: Mapping[SpendingCategory, CategoryProfile],
-    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
-    context: RentaDeductibilityContext,
-    activity_key: str,
-) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
-    """Filter + classify one ledger transaction against the Renta-expense pipeline.
+) -> list[RentaDeductibleExpenseObservation]:
+    """Hold the observations that share one statutory cap to that cap together."""
+    trims = statutory_cap_trims(
+        tuple(
+            StatutoryCapClaim(
+                claim_id=observation.observation_id,
+                transaction_id=observation.transaction_id,
+                category=observation.category,
+                imputed_on=observation.filing_date,
+                incurred_on=expense_incurred_date(transactions.transactions[observation.transaction_id], invoices),
+                deductible_amount=observation.deductible_amount,
+            )
+            for observation in observations
+        ),
+        profiles=rules.profiles,
+        context=rules.context,
+    )
+    if not trims:
+        return observations
+    return [
+        _trimmed_observation(observation, trims[observation.observation_id])
+        if observation.observation_id in trims
+        else observation
+        for observation in observations
+    ]
 
-    Returns either a typed :class:`RentaDeductibleExpenseObservation`
-    (the transaction survives every gate and is eligible) or a typed
-    :class:`RentaLedgerAggregationIssue` (any gate rejects it). The
-    twelve original early-return branches each project to a typed
-    issue with their dedicated reason code; the eligible path returns
-    the constructed observation.
-    """
-    direction = _renta_direction_for(transaction.direction, transaction.purchase_invoice_evidence_id)
-    if direction is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
-            f"transaction direction {transaction.direction.value!r} is not a Renta expense flow",
+
+def _net_received_corrections(
+    observations: list[RentaDeductibleExpenseObservation], fractions: Mapping[str, Decimal]
+) -> list[RentaDeductibleExpenseObservation]:
+    """Take off each row what the corrections remove from its invoice, before any statutory cap reads it."""
+    return [
+        _trimmed_observation(
+            observation,
+            round_to_cents(observation.deductible_amount * (Decimal("1") - fractions[observation.invoice_id])),
         )
-    if is_non_eur_without_conversion(transaction):
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-            f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
-        )
-    # Use the EUR projection after rejecting unconverted non-EUR rows, so converted
-    # rows contribute their EUR equivalent while EUR rows retain their raw amount.
-    eur_amount = effective_eur_amount(transaction)
-    proportion = _renta_business_proportion_or_issue(transaction)
-    if isinstance(proportion, RentaLedgerAggregationIssue):
-        return proportion
-    category_profile = _renta_category_profile_or_issue(
-        transaction,
-        profiles=profiles,
-        region_overrides=region_overrides,
-        context=context,
-        profile_year=resolved_profile_year,
-    )
-    if isinstance(category_profile, RentaLedgerAggregationIssue):
-        return category_profile
-    category, profile = category_profile
-    fact = _renta_expense_fact_or_issue(
-        transaction,
-        invoices=invoices,
-        bucket_id=bucket_id,
-        direction=direction,
-        category=category,
-        activity_key=activity_key,
-        eur_amount=eur_amount,
-        proportion=proportion,
-    )
-    if isinstance(fact, RentaLedgerAggregationIssue):
-        return fact
-    return _renta_observation_or_issue(
-        transaction,
-        fact=fact,
-        profile=profile,
-        context=context,
-        period=resolved_period,
+        if observation.invoice_id is not None and observation.invoice_id in fractions
+        else observation
+        for observation in observations
+    ]
+
+
+def _trimmed_observation(
+    observation: RentaDeductibleExpenseObservation,
+    deductible_amount: Decimal,
+) -> RentaDeductibleExpenseObservation:
+    gross = observation.gross_amount
+    return observation.model_copy(
+        update={
+            "deductible_amount": deductible_amount,
+            "non_deductible_amount": gross - deductible_amount,
+            "applied_ratio": Decimal("0") if gross == Decimal("0") else deductible_amount / gross,
+        },
     )
 
 
-def _renta_business_proportion_or_issue(
-    transaction: Transaction,
-) -> Decimal | RentaLedgerAggregationIssue:
-    """Return the annual filing business proportion or its precise refusal."""
-    # Annual filing deliberately refuses the actividad marker that quarterly M130
-    # accepts, through the shared predicate rather than a second policy copy.
-    proportion = renta_expense_business_proportion(transaction, accept_activity_marker=False)
-    if proportion is not None:
-        return proportion
-    if relies_on_activity_marker(transaction):
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
-            "actividad-marked expense needs business-classification review before the annual declaration",
-        )
-    reason = (
-        RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-    )
-    return _renta_transaction_issue(
-        transaction,
-        reason,
-        f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses",
-    )
-
-
-def _renta_category_profile_or_issue(
-    transaction: Transaction,
-    *,
-    profiles: Mapping[SpendingCategory, CategoryProfile],
-    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
-    context: RentaDeductibilityContext,
-    profile_year: int,
-) -> tuple[SpendingCategory, CategoryProfile] | RentaLedgerAggregationIssue:
-    """Resolve the first-slice category and the profile selected for residence."""
-    category_id = transaction.category_id
-    if category_id is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
-            "classified expense transaction has no ledger category",
-        )
-    try:
-        category = normalize_spending_category(category_id)
-    except ValueError:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-            f"ledger category {category_id!r} is not in the spending taxonomy",
-        )
-    profile = profiles.get(category)
-    if profile is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
-            f"category {category.value!r} has no profile for {profile_year}",
-        )
-    category_region_overrides = {
-        ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
-    }
-    selected_profile = select_deductibility_profile(
-        state_profile=profile,
-        region_override_profiles=category_region_overrides,
-        context=context,
-    )
-    if selected_profile is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
-            (
-                f"category {category.value!r} carries a territorial-regime deductibility override for "
-                f"{profile_year} but the residence comunidad autonoma is undeclared"
-            ),
-        )
-    return category, selected_profile
-
-
-def _renta_expense_fact_or_issue(
-    transaction: Transaction,
-    *,
-    invoices: InvoiceCatalogue,
-    bucket_id: str,
-    direction: RentaExpenseDirection,
-    category: SpendingCategory,
-    activity_key: str,
-    eur_amount: Decimal,
-    proportion: Decimal,
-) -> RentaDeductibleExpenseFact | RentaLedgerAggregationIssue:
-    """Enrich a transaction with invoice evidence and construct its expense fact."""
-    evidence_payload = _purchase_invoice_evidence_payload(
-        invoices=invoices,
-        bucket_id=bucket_id,
-        transaction_id=transaction.transaction_id,
-        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
-        category_id=transaction.category_id,
-        transaction_amount=eur_amount,
-    )
-    if isinstance(evidence_payload, RentaLedgerAggregationIssue):
-        return evidence_payload
-    try:
-        return RentaDeductibleExpenseFact(
-            transaction_id=transaction.transaction_id,
-            invoice_id=transaction.purchase_invoice_evidence_id,
-            catalogue_id=_LEDGER_CATALOGUE_ID,
-            operation_date=transaction.raw.value_date or transaction.raw.booked_date,
-            invoice_issue_date=evidence_payload.invoice_issue_date,
-            posting_date=transaction.raw.booked_date,
-            gross_amount=_business_fact_amount(eur_amount, proportion),
-            taxable_base=_business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion),
-            iva_amount=_business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion),
-            direction=direction,
-            category=category,
-            activity_key=activity_key,
-        )
-    except ValueError as exc:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            str(exc),
-        )
-
-
-def _renta_observation_or_issue(
-    transaction: Transaction,
-    *,
-    fact: RentaDeductibleExpenseFact,
-    profile: CategoryProfile,
-    context: RentaDeductibilityContext,
-    period: Period,
-) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
-    """Apply filing-period and deductibility gates to one validated fact."""
-    if not period.contains(fact.filing_date):
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            f"filing date {fact.filing_date.isoformat()} is outside {period}",
-        )
-    result = evaluate_renta_deductibility(fact, profile, context)
-    if result.status is not RentaDeductibilityStatus.ELIGIBLE:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
-            result.reason,
-        )
-    try:
-        return build_renta_deductible_expense_observation(fact, result, tax_year=period.filing_year)
-    except ValueError as exc:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            str(exc),
-        )
-
-
-def _renta_transaction_issue(
-    transaction: Transaction,
-    reason: RentaLedgerAggregationIssueReason,
-    detail: str,
-) -> RentaLedgerAggregationIssue:
-    return RentaLedgerAggregationIssue(
-        transaction_id=transaction.transaction_id,
-        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
-        category_id=transaction.category_id,
-        reason=reason,
-        detail=detail,
-    )
-
-
-def _resolve_annual_period(period: Period) -> Period:
+def resolve_annual_period(period: Period) -> Period:
+    """Return the period when it is annual, else refuse."""
     resolved = period
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
@@ -926,211 +1000,13 @@ def _resolve_annual_period(period: Period) -> Period:
     return resolved
 
 
-def _renta_direction_for(
-    direction: TransactionDirection,
-    purchase_invoice_evidence_id: str | None,
-) -> RentaExpenseDirection | None:
-    if direction is TransactionDirection.OUTGOING:
-        return RentaExpenseDirection.OUTGOING_EXPENSE
-    if direction is TransactionDirection.INCOMING and purchase_invoice_evidence_id is not None:
-        return RentaExpenseDirection.REFUND
-    return None
-
-
-@overload
-def _business_fact_amount(amount: None, proportion: Decimal) -> None: ...
-@overload
-def _business_fact_amount(amount: Decimal, proportion: Decimal) -> Decimal: ...
-def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decimal | None:
-    if amount is None:
-        return None
-    if amount < ZERO:
-        raise ValueError("ledger amount must be a non-negative magnitude")
-    return amount * proportion
-
-
-def _purchase_invoice_evidence_payload(
-    *,
-    invoices: InvoiceCatalogue,
-    bucket_id: str,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str | None,
-    category_id: str | None,
-    transaction_amount: Decimal,
-) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
-    if purchase_invoice_evidence_id is None:
-        return _PurchaseInvoiceEvidencePayload()
-    invoice = invoices.get(purchase_invoice_evidence_id)
-    if invoice is None:
-        return _missing_purchase_invoice_issue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-        )
-    reference_issue = _purchase_invoice_reference_issue(
-        invoice,
-        bucket_id=bucket_id,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-    )
-    if reference_issue is not None:
-        return reference_issue
-    return _purchase_invoice_payload_for_totals(
-        invoice,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-        transaction_amount=transaction_amount,
-    )
-
-
-def _missing_purchase_invoice_issue(
-    *,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-) -> RentaLedgerAggregationIssue:
-    """Describe an evidence reference absent from the confirmed invoice catalogue."""
-    # The evidence reference addresses two id spaces and only the invoice
-    # catalogue carries the fiscal totals this fold-in needs, so a miss here is
-    # NOT proof the reference is broken: it is also what a legitimately
-    # registered, not-yet-confirmed evidence record looks like from this side.
-    # Naming both cases keeps the operator from hunting a phantom missing record.
-    return RentaLedgerAggregationIssue(
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-        reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
-        detail=(
-            "transaction references no confirmed invoice in the catalogue, so this expense carries no "
-            "invoice totals to fold in; if the reference names a registered evidence record, confirming "
-            "it into an invoice does NOT repoint this transaction, and no verb currently replaces an "
-            "already-set purchase-invoice-evidence reference -- so record the expense against the "
-            "confirmed invoice on a transaction that has no evidence reference yet"
-        ),
-    )
-
-
-def _purchase_invoice_reference_issue(
-    invoice: Invoice,
-    *,
-    bucket_id: str,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-) -> RentaLedgerAggregationIssue | None:
-    """Validate bucket, kind, and reciprocal-link constraints for one invoice."""
-    if invoice.bucket_id != bucket_id:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH,
-            detail="transaction references purchase invoice evidence outside the active bucket",
-        )
-    if invoice.kind is not InvoiceKind.RECEIVED:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND,
-            detail=f"purchase invoice evidence kind {invoice.kind.value!r} is not RECEIVED",
-        )
-    if transaction_id not in invoice.linked_transaction_ids:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH,
-            detail="transaction and purchase invoice evidence links are not reciprocal",
-        )
-    if len(invoice.linked_transaction_ids) != 1:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
-            detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
-        )
-    return None
-
-
-def _purchase_invoice_payload_for_totals(
-    invoice: Invoice,
-    *,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-    transaction_amount: Decimal,
-) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
-    """Reconcile EUR totals and project the linked invoice's evidence payload."""
-    # invoice.grand_total is denominated in invoice.currency (native), while
-    # transaction_amount is the caller's already-EUR-converted eur_amount (see
-    # effective_eur_amount). Comparing them directly mixes currencies: a
-    # legitimate foreign-currency invoice would compare its native total
-    # against a converted EUR figure and mismatch even when the two documents
-    # agree, so this compares grand_total_eur instead. An invoice that cannot
-    # itself resolve a EUR total (foreign currency, unconverted) has no EUR
-    # figure to compare or fold in, so it is refused the same way rather than
-    # silently treated as a domestic-currency match.
-    invoice_grand_total_eur = invoice.grand_total_eur
-    if invoice_grand_total_eur is None or transaction_amount != invoice_grand_total_eur:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
-            detail="linked transaction amount does not match invoice grand total",
-        )
-    # invoice.base_total / invoice.iva_total are native-currency (same
-    # currency as invoice.currency); the EUR-safe *_eur properties are the
-    # ones that already exist for exactly this purpose (used correctly in
-    # invoice_retencion.py). base_total_eur cannot be None here: the
-    # grand_total_eur check above already proved the invoice resolves to EUR.
-    base_total_eur = invoice.base_total_eur
-    iva_total_eur = invoice.iva_total_eur
-    if base_total_eur is None or iva_total_eur is None:
-        msg = (
-            f"purchase invoice {purchase_invoice_evidence_id} resolves a EUR grand total but no EUR "
-            "base or cuota; its EUR-equivalent totals disagree with one another"
-        )
-        raise ValueError(msg)
-    return _PurchaseInvoiceEvidencePayload(
-        invoice_issue_date=invoice.issued_at,
-        taxable_base=base_total_eur,
-        iva_amount=iva_total_eur,
-    )
-
-
-def _taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
-    """Return the EUR taxable_base: the linked invoice's (already EUR), else the transaction's own.
-
-    ``transaction.taxable_base`` is native-currency (see
-    ``domain.transactions.tests.test_gross_invariant``), so the fallback goes
-    through the EUR-equivalent accessor rather than the raw field.
-    """
-    if evidence_payload.taxable_base is not None:
-        return evidence_payload.taxable_base
-    return effective_eur_taxable_base(transaction)
-
-
-def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
-    """Return the EUR iva_amount: the linked invoice's (already EUR), else the transaction's own.
-
-    Via the EUR-equivalent accessor -- see :func:`_taxable_base_for`.
-    """
-    if evidence_payload.iva_amount is not None:
-        return evidence_payload.iva_amount
-    return effective_eur_iva_amount(transaction)
-
-
-def _casilla_aggregation(
+def renta_ledger_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaDeductibleExpenseObservation],
     *,
     modelo: str,
 ) -> CasillaAggregation:
+    """Total deductible amounts by target casilla and build their provenance rows."""
     totals: dict[CasillaId, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
     grouped: dict[tuple[CasillaId, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}
@@ -1157,9 +1033,11 @@ def _casilla_aggregation(
 
 
 __all__ = [
-    "RentaLedgerAggregationIssue",
-    "RentaLedgerAggregationIssueReason",
-    "RentaLedgerExpenseAggregation",
+    "CategoryRuleRefusal",
+    "RentaCategoryDeductionRules",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
+    "resolve_category_deduction_rules",
+    "resolve_category_rule",
+    "resolve_residence_ccaa",
 ]

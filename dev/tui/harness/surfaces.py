@@ -68,9 +68,9 @@ def _login() -> App[Any]:
     import asyncio
     from uuid import UUID
 
-    from cadrumo.application.operations.registry import OperationFrontendProjection
     from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
     from cadrumo.core.async_cleanup import close_async_resources
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo_client.transport.frontend_client import FrontendClient
     from cadrumo_client.transport.installed_client import open_installed_client
@@ -118,6 +118,7 @@ def _manager() -> App[Any]:
     from cadrumo.application.user_profile.overview import build_profile_overview
     from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.application.user_profile.profile_summary import summary_inventory
+    from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.core.bucket_pointer import require_active_bucket_id
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -141,7 +142,12 @@ def _manager() -> App[Any]:
             profile_id,
             profile_decode_context=profile_decode_context,
         )
-        overview = build_profile_overview(profiles.load(profile_id), label=label, schema=profile_decode_context.schema)
+        overview = build_profile_overview(
+            profiles.load(profile_id),
+            label=label,
+            schema=profile_decode_context.schema,
+            flow=build_setup_flow(operation),
+        )
 
     def _persist(path: str, value: str, expected_revision: int, expected_content_digest: str):
         with bundled_indexed_authority().operation() as operation:
@@ -153,7 +159,12 @@ def _manager() -> App[Any]:
                 expected_content_digest=expected_content_digest,
                 profile_decode_context=operation.profile_decode_context(),
             )
-            return build_profile_overview(record, label=label, schema=operation.profile_decode_context().schema)
+            return build_profile_overview(
+                record,
+                label=label,
+                schema=operation.profile_decode_context().schema,
+                flow=build_setup_flow(operation),
+            )
 
     return ScreenHostApp(
         ProfileManagerScreen(
@@ -237,7 +248,7 @@ def _profile_surfaces() -> tuple[Surface, ...]:
             f"Profile setup or editing: {state.value}",
             partial(build_profile_fixture, state),
             interfaces=profile_fixture_interfaces(state),
-            provision=profile_fixture_storage,
+            provision=partial(profile_fixture_storage, state),
         )
         for state in ProfileFixtureState
     )
@@ -273,6 +284,89 @@ def _ledger_import_account_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _ledger_entries_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger entries and export tools over synthetic doors."""
+    from .ledger_entries_fixtures import EntriesFixtureState, build_entries_fixture, entries_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-entries-{state.value}",
+            f"Ledger entries and export: {state.value}",
+            partial(build_entries_fixture, state),
+            interfaces=entries_fixture_interfaces(state),
+        )
+        for state in EntriesFixtureState
+    )
+
+
+def _ledger_categorisation_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger categorisation tools over synthetic doors."""
+    from .ledger_categorisation_fixtures import (
+        CategorisationFixtureState,
+        build_categorisation_fixture,
+        categorisation_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"ledger-categorisation-{state.value}",
+            f"Ledger categorisation: {state.value}",
+            partial(build_categorisation_fixture, state),
+            interfaces=categorisation_fixture_interfaces(state),
+        )
+        for state in CategorisationFixtureState
+    )
+
+
+def _ledger_evidence_files_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger evidence and attachments tools over synthetic doors."""
+    from .ledger_evidence_files_fixtures import (
+        EvidenceFilesFixtureState,
+        build_evidence_files_fixture,
+        evidence_files_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"ledger-evidence-files-{state.value}",
+            f"Ledger evidence and attachments: {state.value}",
+            partial(build_evidence_files_fixture, state),
+            interfaces=evidence_files_fixture_interfaces(state),
+        )
+        for state in EvidenceFilesFixtureState
+    )
+
+
+def _ledger_invoices_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger records, invoices and reconciliation tools over synthetic doors."""
+    from .ledger_invoices_fixtures import InvoicesFixtureState, build_invoices_fixture, invoices_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-invoices-{state.value}",
+            f"Ledger records, invoices and reconciliation: {state.value}",
+            partial(build_invoices_fixture, state),
+            interfaces=invoices_fixture_interfaces(state),
+        )
+        for state in InvoicesFixtureState
+    )
+
+
+def _ledger_registers_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger registers tools over synthetic doors."""
+    from .ledger_registers_fixtures import RegisterFixtureState, build_register_fixture, register_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-registers-{state.value}",
+            f"Ledger registers: {state.value}",
+            partial(build_register_fixture, state),
+            interfaces=register_fixture_interfaces(state),
+        )
+        for state in RegisterFixtureState
+    )
+
+
 def _modelo_export_surfaces() -> tuple[Surface, ...]:
     """The export dialog's own-account choice and the result that names it."""
     from .modelo_export_fixtures import (
@@ -300,6 +394,11 @@ SURFACES: dict[str, Surface] = {
         *_profile_surfaces(),
         *_ledger_own_account_surfaces(),
         *_ledger_import_account_surfaces(),
+        *_ledger_entries_surfaces(),
+        *_ledger_categorisation_surfaces(),
+        *_ledger_evidence_files_surfaces(),
+        *_ledger_invoices_surfaces(),
+        *_ledger_registers_surfaces(),
         *_modelo_export_surfaces(),
         Surface(
             "registration",

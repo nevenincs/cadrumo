@@ -39,7 +39,7 @@ from click.testing import Result
 from ....tests.inventory import FIXTURES_DIR
 from ...tests.ledger_corpus_support import load_corpus_oracle_rules, match_corpus_rule
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -82,7 +82,7 @@ def _year_of(row: dict[str, object]) -> int:
 # --- Annual reach: the operator wants the whole year, not one quarter --------
 def test_corpus_spans_both_years() -> None:
     """The full-year reviewer must see rows in 2025 AND 2026 (cross-year ledger)."""
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     years = {_year_of(r) for r in rows}
     assert {2025, 2026} <= years, years
 
@@ -136,7 +136,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
 
     # Bulk-classify the full-corpus business rows against the oracle. --file
     # carries classification + category only, so non-MIXED rows go in one pass.
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     lines = ["transaction_id,classification,category_id"]
     classified_ids: set[str] = set()
     for row in rows:
@@ -163,7 +163,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
     assert applied == len(classified_ids), (applied, len(classified_ids))
 
     # Assemble the annual picture by hand: there is no verb that does this.
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     rows_2025 = [r for r in rows if _year_of(r) == 2025]
     business_2025 = [r for r in rows_2025 if r.get("business_classification") == "BUSINESS"]
     income_rows = [r for r in business_2025 if r.get("direction") == "INCOMING"]
@@ -185,7 +185,7 @@ def test_full_year_total_equals_sum_of_its_quarters() -> None:
     Proves the operator CAN reconstruct the year from per-period views — but
     only by summing four separate queries; the CLI offers no annual aggregate.
     """
-    rows_2025 = [r for r in _list_rows() if _year_of(r) == 2025]
+    rows_2025 = [r for r in list_ledger_rows_via_cli() if _year_of(r) == 2025]
 
     def _quarter(month: int) -> int:
         return (month - 1) // 3 + 1
@@ -228,7 +228,7 @@ def test_cross_year_invoice_is_settled_the_next_year_under_a_prior_year_referenc
     nothing links the prior-year reference to the paid-year settlement — the
     devengo-vs-caja reconciliation is fully manual.
     """
-    row, _reference, raised_year = _cross_year_invoice(_list_rows())
+    row, _reference, raised_year = _cross_year_invoice(list_ledger_rows_via_cli())
     # Settled (booked) the following year, while the invoice reference names the prior
     # fiscal year. The operator, not the CLI, must decide which year's Renta the
     # income belongs to.
@@ -244,7 +244,7 @@ def test_cross_year_invoice_falls_outside_its_raising_year_period_filter() -> No
     year's Renta. A year-end reviewer working from the period filter alone would
     under-count its income by this row unless they reconcile devengo by hand.
     """
-    row, reference, raised_year = _cross_year_invoice(_list_rows())
+    row, reference, raised_year = _cross_year_invoice(list_ledger_rows_via_cli())
     settled_year = _year_of(row)
     raised = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", f"year={raised_year}"])
     assert raised.exit_code == 0, raised.output

@@ -15,24 +15,28 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import freeze_toml, parse_toml, render_toml
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
+from ..compiler.authority import compile_validated_authority
 from ..compiler.loader_cache import registry_disk_cache_dir
 from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
+from .cited_catalogue_support import install_cited_catalogue_entries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SYNTHETIC_LEGAL_REF = "test-ley-001:art-1"
+_YEAR = filing_year_envelope().horizon
+_SYNTHETIC_REVISION = str(_YEAR)
 
 
 def _install_committed_profile_schema(root: Path) -> None:
@@ -67,42 +71,37 @@ def _install_committed_profile_schema(root: Path) -> None:
         catalogue = root.joinpath("registry", "aeat", *parts)
         catalogue.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(bundled_path("registry", "aeat", *parts), catalogue)
-    _install_cited_catalogue_entries(root)
+    install_cited_catalogue_entries(root)
 
 
-def _install_cited_catalogue_entries(root: Path) -> None:
-    """Carry the legal and source entries the installed inputs cite, with their corpus files.
-
-    The closure is read from the installed files themselves, so an input that
-    starts citing another provision brings that provision along instead of
-    this helper restating a list.
-    """
-    catalogues = compiled_bundled_authority().catalogues
-    installed_text = "\n".join(
-        path.read_text(encoding="utf-8") for path in (root / "registry").rglob("*.toml") if path.is_file()
-    )
-    legal = {key: entry for key, entry in catalogues.legal.items() if f'"{key}"' in installed_text}
-    sources = {key: entry for key, entry in catalogues.sources.items() if f'"{key}"' in installed_text}
-    document: dict[str, object] = {
-        "legal": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in legal.items()},
-        "sources": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in sources.items()},
-    }
-    legal_dir = root / "registry" / "aeat" / "legal"
+def _write_minimal_registry_sources(tmp_path: Path) -> tuple[Path, Path, Path]:
+    """Lay out a one-modelo registry tree with corpus files; return its root, revision dir and a corpus file."""
+    registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / _SYNTHETIC_REVISION
+    revision_dir.mkdir(parents=True)
     legal_dir.mkdir(parents=True, exist_ok=True)
-    (legal_dir / "cited-inputs.toml").write_text(render_toml(freeze_toml(document)), encoding="utf-8")
-    corpus_paths = {entry.corpus_ref.split("#", 1)[0] for entry in legal.values() if entry.corpus_ref}
-    corpus_paths.update(entry.corpus_path for entry in sources.values() if entry.corpus_path)
-    for corpus_path in corpus_paths:
-        bundled_file = bundled_path(*corpus_path.split("/"))
-        for sibling in bundled_file.parent.glob(f"{bundled_file.name}*"):
-            target = root.joinpath(*corpus_path.split("/")).with_name(sibling.name)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(sibling, target)
+    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
+    corpus_file.parent.mkdir(parents=True)
+    corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
+
+    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
+    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    return registry_root, revision_dir, corpus_file
 
 
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
@@ -117,12 +116,12 @@ def test_authority_returns_the_shared_immutable_snapshot_for_a_repeated_filing_c
 ) -> None:
     """One admitted filing context resolves to one immutable snapshot, not a fresh copy per call."""
     authority = registry_authority
-    first = authority.snapshot("130", filing_year=2026, period="1T")
-    second = authority.snapshot("130", filing_year=2026, period="1T")
+    first = authority.snapshot("130", filing_year=_YEAR, period="1T")
+    second = authority.snapshot("130", filing_year=_YEAR, period="1T")
 
     assert first is second
     assert first.model_config.get("frozen") is True
-    assert first.revision.period_selector.includes_year(2026)
+    assert first.revision.period_selector.includes_year(_YEAR)
     assert "1T" in first.revision.period_selector.periods
 
 
@@ -130,7 +129,7 @@ def test_authority_exposes_validated_legal_corpus_provenance(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The published generation carries the canonical classifier's result for a BOE provision."""
-    snapshot = registry_authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = registry_authority.snapshot("130", filing_year=_YEAR, period="1T")
     boe_reference = next(reference_id for reference_id, entry in snapshot.legal.items() if entry.authority == "boe")
     with bundled_indexed_authority().operation() as operation:
         evidence = operation.legal_evidence(boe_reference)
@@ -139,13 +138,13 @@ def test_authority_exposes_validated_legal_corpus_provenance(
 
 def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: ValidatedRegistryAuthority) -> None:
     authority = registry_authority
-    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("130", filing_year=_YEAR, period="1T")
 
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000.00"),
-            _M130_GASTOS_CASILLA: Decimal("4000.00"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000.00"),
             _M130_RETENCIONES_CASILLA: Decimal("50.00"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("5000.00"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20.00"),
@@ -159,7 +158,8 @@ def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: Val
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
         },
-        date_context={"filing_period": date(2026, 4, 20)},
+        date_context={"filing_period": date(_YEAR, 4, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
     )
 
     assert _M130_RESULTADO_CASILLA in result.values
@@ -175,12 +175,12 @@ def test_authority_snapshot_is_authority_owned_revision_projection(
 ) -> None:
     authority = registry_authority
 
-    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("130", filing_year=_YEAR, period="1T")
     modelo = authority.modelo("130")
 
     assert snapshot.modelo == modelo
     assert snapshot.revision == modelo.revisions[snapshot.revision.id]
-    assert authority.snapshot("130", filing_year=2026, period="1T") == snapshot
+    assert authority.snapshot("130", filing_year=_YEAR, period="1T") == snapshot
     assert modelo in authority.modelos
 
 
@@ -188,19 +188,19 @@ def test_authority_rejects_unknown_modelo(registry_authority: ValidatedRegistryA
     authority = registry_authority
 
     with pytest.raises(RegistrySnapshotError, match="999"):
-        authority.snapshot("999", filing_year=2026, period="1T")
+        authority.snapshot("999", filing_year=_YEAR, period="1T")
 
 
 def test_authority_deadline_windows_are_validated_and_sorted(registry_authority: ValidatedRegistryAuthority) -> None:
     authority = registry_authority
 
-    windows = authority.deadline_windows(2026, modelos=("130",))
+    windows = authority.deadline_windows(_YEAR, modelos=("130",))
 
     assert [window.period for _, _, window in windows] == [
-        Period.from_year_and_code(2026, "1T"),
-        Period.from_year_and_code(2026, "2T"),
-        Period.from_year_and_code(2026, "3T"),
-        Period.from_year_and_code(2026, "4T"),
+        Period.from_year_and_code(_YEAR, "1T"),
+        Period.from_year_and_code(_YEAR, "2T"),
+        Period.from_year_and_code(_YEAR, "3T"),
+        Period.from_year_and_code(_YEAR, "4T"),
     ]
     assert [window.closes_on for _, _, window in windows] == sorted(window.closes_on for _, _, window in windows)
 
@@ -276,9 +276,9 @@ source_refs = ["test-source-001"]
 """
 
 _MINIMAL_REVISION_TOML_TEMPLATE = """\
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = {{ year_from = 2025, periods = ["0A"] }}
+[revisions."{revision}"]
+valid_from = {revision}-01-01
+period_selector = {{ year_from = {revision}, periods = ["0A"] }}
 # This fixture exists to be a registry tree whose BYTES change, so the cache can
 # be shown to invalidate. It is intended to answer nothing beyond which revision
 # applies -- it declares no formulas and no export layout and is not meant to --
@@ -289,7 +289,7 @@ legal_refs = ["test-ley-001:art-1"]
 source_refs = ["{source_ref}"]
 orden_aplicabilidad = ["test-ley-001:art-1"]
 
-[[revisions."2025".application_links]]
+[[revisions."{revision}".application_links]]
 id = "test-filing-link"
 surface = "filing"
 consumer = "cli.app"
@@ -297,7 +297,7 @@ requires_snapshot = true
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-002"]
 
-[[revisions."2025".casillas]]
+[[revisions."{revision}".casillas]]
 id = "01"
 number = "01"
 section = ["test"]
@@ -305,7 +305,7 @@ data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 
-[[revisions."2025".workbook_parity_refs]]
+[[revisions."{revision}".workbook_parity_refs]]
 id = "test-workbook-001"
 workbook_source = "test-source-001"
 fixture_id = "test-fixture-001"
@@ -314,18 +314,18 @@ runner_required = false
 tolerance = "0.00"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
-"""
+""".replace("{revision}", _SYNTHETIC_REVISION)
 
 
 _SECOND_CASILLA_FRAGMENT_TOML = """
-[[revisions."2025".casillas]]
+[[revisions."{revision}".casillas]]
 id = "02"
 number = "02"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
-"""
+""".replace("{revision}", _SYNTHETIC_REVISION)
 
 
 def test_authority_cache_invalidates_when_fragmented_revision_changes(
@@ -340,22 +340,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(
     that says nothing about recursive coverage.
     """
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     write_fragmented_revision(
         revision_dir,
@@ -379,8 +364,8 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(
     second = compile_validated_authority(registry_root, tmp_path)
 
     assert first is not second
-    assert tuple(casilla.id for casilla in first.modelo("999").revisions["2025"].casillas) == ("01",)
-    assert tuple(casilla.id for casilla in second.modelo("999").revisions["2025"].casillas) == ("01", "02")
+    assert tuple(casilla.id for casilla in first.modelo("999").revisions[_SYNTHETIC_REVISION].casillas) == ("01",)
+    assert tuple(casilla.id for casilla in second.modelo("999").revisions[_SYNTHETIC_REVISION].casillas) == ("01", "02")
 
 
 def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_bytes(
@@ -392,22 +377,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     tree must compile afresh and a restored tree must compile back to its
     original content rather than to the state it last saw.
     """
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     write_fragmented_revision(
         revision_dir,
@@ -417,7 +387,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     clear_fingerprint_cache()
 
     auth1 = compile_validated_authority(registry_root, tmp_path)
-    assert auth1.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
+    assert auth1.modelo("999").revisions[_SYNTHETIC_REVISION].source_refs == ("test-source-001",)
 
     # Modify file to invalidate cache
     write_fragmented_revision(
@@ -427,7 +397,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     clear_fingerprint_cache()
 
     auth3 = compile_validated_authority(registry_root, tmp_path)
-    assert auth3.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
+    assert auth3.modelo("999").revisions[_SYNTHETIC_REVISION].source_refs == ("test-source-002",)
 
     # Restore the exact original bytes rather than resetting caches: the loader
     # must not keep serving B for a tree that is byte-identical to A again.
@@ -439,29 +409,14 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
 
     auth4 = compile_validated_authority(registry_root, tmp_path)
 
-    assert auth4.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
+    assert auth4.modelo("999").revisions[_SYNTHETIC_REVISION].source_refs == ("test-source-001",)
 
 
 def test_authority_cache_invalidates_when_source_evidence_changes(
     tmp_path: Path, isolated_provider_registration: None
 ) -> None:
     """Authority validation must rerun when corpus evidence changes under the same source root."""
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, corpus_file = _write_minimal_registry_sources(tmp_path)
     write_fragmented_revision(
         revision_dir,
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001"),
@@ -482,22 +437,7 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
 ) -> None:
     """A filesystem validation marker must not bypass casilla-reference guards."""
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     ambiguous_revision = _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001").replace(
         'number = "01"',
@@ -506,7 +446,7 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
     )
     ambiguous_revision += """\
 
-[[revisions."2025".casillas]]
+[[revisions."{revision}".casillas]]
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
@@ -514,7 +454,7 @@ section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
-"""
+""".replace("{revision}", _SYNTHETIC_REVISION)
     write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
@@ -544,28 +484,13 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(
 ) -> None:
     """A reused printed number with one bare-id owner must fail at authority load."""
 
-    registry_root = tmp_path / "registry" / "aeat"
-    _install_committed_profile_schema(tmp_path)
-    legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    registry_root, revision_dir, _ = _write_minimal_registry_sources(tmp_path)
 
     ambiguous_revision = (
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001")
         + """\
 
-[[revisions."2025".casillas]]
+[[revisions."{revision}".casillas]]
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
@@ -573,7 +498,7 @@ section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
-"""
+""".replace("{revision}", _SYNTHETIC_REVISION)
     )
     write_fragmented_revision(revision_dir, ambiguous_revision)
 

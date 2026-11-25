@@ -8,7 +8,6 @@ reach the estatal/autonómico channels and the downstream tariff calculation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -17,35 +16,28 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from .....application.modelo.profile_binding import resolve_profile_sourced_bindings
 from .....core.casilla_id import validated_casilla_id
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each persisted profile resolution."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _supported_filing_years() -> tuple[int, ...]:
@@ -128,13 +120,13 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
         descendientes = (DescendantInfo(birth_date=date(_FILING_YEAR - 12, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
+            create_user_profile_record(
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=tuple(facts),
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         snapshot = _snapshot(_FILING_YEAR)
@@ -161,8 +153,8 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
+            create_user_profile_record(
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=(
                     *facts,
@@ -176,7 +168,7 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
                 ),
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)
@@ -187,10 +179,22 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         date_context={"filing_period": date(year, 12, 31)},
         binding_values={
             **resolution.binding_values,
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         },
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
@@ -227,13 +231,13 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
+            create_user_profile_record(
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         snapshot = _snapshot(_FILING_YEAR)

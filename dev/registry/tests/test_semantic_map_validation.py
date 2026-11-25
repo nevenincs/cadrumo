@@ -13,14 +13,15 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline import semantic_map_validation
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
-    RecordDesignWorkbookFormat,
 )
 from ..pipeline.semantic_map import SemanticMap
 from ..pipeline.semantic_map_validation import (
@@ -28,72 +29,39 @@ from ..pipeline.semantic_map_validation import (
     resolve_semantic_map_casilla_tokens,
     validate_semantic_map,
 )
+from .semantic_map_intermediate_support import intermediate_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
+
+
+_M200_EPOCH = _design_epoch("aeat-dr-200-2025")
+# A design epoch below the support floor, which no parser design carries.
+_WRONG_EPOCH = str(filing_year_envelope().floor - 1)
+
+
 @pytest.fixture
 def _m303_snapshot():
-    return compiled_bundled_authority().inspect_revision("303", filing_year=2025, period="4T")
+    return compiled_bundled_authority().inspect_revision("303", filing_year=filing_year_envelope().horizon, period="4T")
 
 
 @pytest.fixture
 def _m200_inspection() -> RegistryRevisionInspection:
     """A revision that declares projection endpoints the map must biject with."""
-    return compiled_bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
+    return compiled_bundled_authority().inspect_revision("200", filing_year=filing_year_envelope().horizon, period="0A")
 
 
 @pytest.fixture
 def _m130_inspection() -> RegistryRevisionInspection:
     """A revision that declares no projection endpoint, so a synthetic map can validate."""
-    return compiled_bundled_authority().inspect_revision("130", filing_year=2026, period="1T")
-
-
-def _intermediate_payload(
-    *,
-    source_sha256: str = "0" * 64,
-    source_ref: str = "aeat-dr-200-2025",
-    design_epoch: str = "2025",
-) -> dict[str, object]:
-    return {
-        "source": {
-            "source_ref": source_ref,
-            "source_sha256": source_sha256,
-            "workbook_format": RecordDesignWorkbookFormat.XLSX,
-            "design_epoch": design_epoch,
-        },
-        "sheets": (
-            {
-                "sheet": "Registro tipo 1",
-                "record_identity": "registro-tipo-1",
-                "declared_total": 2,
-                "fields": (
-                    {
-                        "sheet": "Registro tipo 1",
-                        "record_identity": "registro-tipo-1",
-                        "source_row": 14,
-                        "source_cell": "A14",
-                        "ordinal": "1",
-                        "offset": 1,
-                        "length": 1,
-                        "aeat_type": "AN",
-                        "normalized_description": "Campo uno",
-                    },
-                    {
-                        "sheet": "Registro tipo 1",
-                        "record_identity": "registro-tipo-1",
-                        "source_row": 15,
-                        "source_cell": "A15",
-                        "ordinal": "2",
-                        "offset": 2,
-                        "length": 1,
-                        "aeat_type": "AN",
-                        "normalized_description": "Campo dos",
-                    },
-                ),
-            },
-        ),
-    }
+    return compiled_bundled_authority().inspect_revision("130", filing_year=filing_year_envelope().horizon, period="1T")
 
 
 def _semantic_map_payload(
@@ -102,7 +70,7 @@ def _semantic_map_payload(
     source_ref: str = "aeat-dr-200-2025",
     source_sha256: str = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
     modelo: str = "200",
-    design_epoch: str = "2025",
+    design_epoch: str = _M200_EPOCH,
     variable_envelopes: tuple[dict[str, object], ...] = (),
 ) -> dict[str, object]:
     return {
@@ -123,7 +91,7 @@ def _semantic_map_payload(
     }
 
 
-def _variable_envelope_intermediate_payload(
+def _variable_envelopeintermediate_payload(
     *,
     record_identity: str,
     sheet: str = "Registro tipo 1",
@@ -275,8 +243,8 @@ def _real_source_sha256(snapshot: RegistryRevisionInspection, source_ref: str = 
 #: reaches its own assertion again. The projection-specific cases keep modelo 200
 #: and modelo 303 deliberately: their subject IS the declaration bijection.
 _M130_MODELO = "130"
-_M130_EPOCH = "2019"
 _M130_DESIGN_REF = "aeat-dr-130-2019-v12"
+_M130_EPOCH = _design_epoch(_M130_DESIGN_REF)
 _M130_LEGAL_REF = "rd-439-2007:art-110"
 
 
@@ -368,11 +336,11 @@ def test_casilla_token_refuses_absence_and_never_infers_segment_identity(token: 
         )
 
 
-def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m130_inspection) -> None:
-    """A complete map resolves through the real M200 source and target revision."""
-    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
+def _complete_m130_pair(m130_inspection) -> tuple[str, RecordDesignIntermediate, SemanticMap]:
+    """A complete two-literal map over the real M130 design source, with its digest and intermediate."""
+    source_sha256 = _real_source_sha256(m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
+        intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -400,6 +368,12 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m13
             ),
         ),
     )
+    return source_sha256, intermediate, semantic_map
+
+
+def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m130_inspection) -> None:
+    """A complete map resolves through the real M200 source and target revision."""
+    _, intermediate, semantic_map = _complete_m130_pair(_m130_inspection)
 
     validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
@@ -420,7 +394,7 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
     """Map source pins are exact and cannot cross-match a same-epoch design."""
     intermediate_source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=intermediate_source_sha256),
+        intermediate_payload(source_sha256=intermediate_source_sha256),
     )
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -440,8 +414,12 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
 @pytest.mark.parametrize(
     ("modelo", "design_epoch", "message"),
     (
-        ("303", "2025", "semantic map modelo '303' does not match target revision modelo '200'"),
-        ("200", "2024", "semantic map design epoch '2024' does not match parser design epoch '2025'"),
+        ("303", _M200_EPOCH, "semantic map modelo '303' does not match target revision modelo '200'"),
+        (
+            "200",
+            _WRONG_EPOCH,
+            f"semantic map design epoch '{_WRONG_EPOCH}' does not match parser design epoch '{_M200_EPOCH}'",
+        ),
     ),
 )
 def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_design_epoch(
@@ -453,7 +431,7 @@ def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_desi
     """A map authored against a different modelo or design epoch cannot enter scope validation."""
     intermediate_source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=intermediate_source_sha256),
+        intermediate_payload(source_sha256=intermediate_source_sha256),
     )
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -476,7 +454,7 @@ def test_validation_refuses_catalogued_parser_source_absent_from_selected_revisi
     source_ref = "aeat-dr-200-2025"
     source_sha256 = _m200_inspection.sources[source_ref].sha256
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256),
+        intermediate_payload(source_sha256=source_sha256),
     )
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -530,7 +508,7 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
 ) -> None:
     """No anomaly declaration can turn an incomplete or ambiguous map into a join."""
     source_sha256 = _real_source_sha256(_m200_inspection)
-    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    intermediate = RecordDesignIntermediate.model_validate(intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(_semantic_map_payload(entries=entries, source_sha256=source_sha256))
     exception = SemanticMapAnomalyException(
         source_ref="aeat-dr-200-2025",
@@ -604,7 +582,7 @@ def test_validation_refuses_unresolved_canonical_semantic_references(
     """Casilla, binding, and evidence references resolve only through the snapshot."""
     source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
+        intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
     second = _entry(
         legal_ref=_M130_LEGAL_REF,
@@ -631,7 +609,7 @@ def test_validation_refuses_unresolved_canonical_semantic_references(
 def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout(_m200_inspection) -> None:
     """Generated-layout identifiers are grammar-validated and map-local unique."""
     source_sha256 = _real_source_sha256(_m200_inspection)
-    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    intermediate = RecordDesignIntermediate.model_validate(intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
             entries=(
@@ -648,7 +626,7 @@ def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout
 def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_inference(_m200_inspection) -> None:
     """An exact typed ref may appear at most once, independent of its source anchor."""
     source_sha256 = _real_source_sha256(_m200_inspection)
-    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    intermediate = RecordDesignIntermediate.model_validate(intermediate_payload(source_sha256=source_sha256))
     projection_ref = _projection_ref()
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -678,7 +656,7 @@ def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_infere
 def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot(_m200_inspection) -> None:
     """A source anchor cannot admit a typed row owner absent from the revision."""
     source_sha256 = _real_source_sha256(_m200_inspection)
-    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    intermediate = RecordDesignIntermediate.model_validate(intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
             entries=(
@@ -702,13 +680,13 @@ def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303
     """A selected M303 snapshot admits its complete typed endpoint matrix only."""
     references = tuple(declaration.projection_ref for declaration in _m303_snapshot.projection_endpoints)
 
-    semantic_map_validation._validate_projection_ref_bijection(
+    semantic_map_validation.validate_projection_ref_bijection(
         references,
         projection_endpoints=_m303_snapshot.projection_endpoints,
     )
 
     with pytest.raises(RegistryValidationError, match="omits target-revision projection declarations"):
-        semantic_map_validation._validate_projection_ref_bijection(
+        semantic_map_validation.validate_projection_ref_bijection(
             references[1:],
             projection_endpoints=_m303_snapshot.projection_endpoints,
         )
@@ -716,36 +694,7 @@ def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303
 
 def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m130_inspection) -> None:
     """Anomalies name only a source condition and retain the full bijection gate."""
-    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
-    intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
-    )
-    semantic_map = SemanticMap.model_validate(
-        _semantic_map_payload(
-            modelo=_M130_MODELO,
-            source_ref=_M130_DESIGN_REF,
-            design_epoch=_M130_EPOCH,
-            source_sha256=source_sha256,
-            entries=(
-                _entry(
-                    legal_ref=_M130_LEGAL_REF,
-                    source_ref=_M130_DESIGN_REF,
-                    row=14,
-                    ordinal=1,
-                    field_id="generated.literal.one",
-                    literal="T",
-                ),
-                _entry(
-                    legal_ref=_M130_LEGAL_REF,
-                    source_ref=_M130_DESIGN_REF,
-                    row=15,
-                    ordinal=2,
-                    field_id="generated.literal.two",
-                    literal="0",
-                ),
-            ),
-        ),
-    )
+    source_sha256, intermediate, semantic_map = _complete_m130_pair(_m130_inspection)
     exception = SemanticMapAnomalyException(
         source_ref=_M130_DESIGN_REF,
         source_sha256=source_sha256,
@@ -775,7 +724,7 @@ def test_validation_uses_no_legacy_export_layout_membership_or_identifier_infere
     """A novel generated ID validates without consulting the unverified legacy tree."""
     source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
+        intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -825,15 +774,15 @@ def test_duplicate_or_colliding_variable_envelope_identities_are_refused_before_
     before the boundary function ever runs -- proving those two guards are
     unreachable dead code relative to any input the type system admits.
     """
-    base = _intermediate_payload()
+    base = intermediate_payload()
 
     with pytest.raises(ValidationError, match="composition identities must each be unique"):
         RecordDesignIntermediate.model_validate(
             {
                 **base,
                 "variable_envelopes": (
-                    _variable_envelope_intermediate_payload(record_identity="envelope-wrap", row=20),
-                    _variable_envelope_intermediate_payload(record_identity="envelope-wrap", row=30),
+                    _variable_envelopeintermediate_payload(record_identity="envelope-wrap", row=20),
+                    _variable_envelopeintermediate_payload(record_identity="envelope-wrap", row=30),
                 ),
             },
         )
@@ -842,7 +791,7 @@ def test_duplicate_or_colliding_variable_envelope_identities_are_refused_before_
             {
                 **base,
                 "variable_envelopes": (
-                    _variable_envelope_intermediate_payload(record_identity="registro-tipo-1", row=20),
+                    _variable_envelopeintermediate_payload(record_identity="registro-tipo-1", row=20),
                 ),
             },
         )
@@ -850,7 +799,7 @@ def test_duplicate_or_colliding_variable_envelope_identities_are_refused_before_
 
 def test_variable_envelope_boundary_refuses_reviewed_contract_without_parser_envelope() -> None:
     """A reviewed envelope contract cannot compose a wrapper the parser never printed."""
-    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload())
+    intermediate = RecordDesignIntermediate.model_validate(intermediate_payload())
     source_sha256 = "9" * 64
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -869,17 +818,17 @@ def test_variable_envelope_boundary_refuses_reviewed_contract_without_parser_env
         RegistryValidationError,
         match="declares a variable-envelope contract but parser output contains no variable envelope",
     ):
-        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation.validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_variable_envelope_boundary_refuses_more_than_one_parser_envelope() -> None:
     """The composition authority admits exactly one parser envelope per design."""
     intermediate = RecordDesignIntermediate.model_validate(
         {
-            **_intermediate_payload(),
+            **intermediate_payload(),
             "variable_envelopes": (
-                _variable_envelope_intermediate_payload(record_identity="envelope-one", row=20),
-                _variable_envelope_intermediate_payload(record_identity="envelope-two", row=30),
+                _variable_envelopeintermediate_payload(record_identity="envelope-one", row=20),
+                _variable_envelopeintermediate_payload(record_identity="envelope-two", row=30),
             ),
         },
     )
@@ -896,7 +845,7 @@ def test_variable_envelope_boundary_refuses_more_than_one_parser_envelope() -> N
         RegistryValidationError,
         match="variable-envelope composition authority admits exactly one parser envelope per design",
     ):
-        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation.validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 @pytest.mark.parametrize("declared_envelope_count", (0, 2))
@@ -905,8 +854,8 @@ def test_variable_envelope_boundary_refuses_wrong_number_of_reviewed_contracts(d
     source_sha256 = "9" * 64
     intermediate = RecordDesignIntermediate.model_validate(
         {
-            **_intermediate_payload(source_sha256=source_sha256),
-            "variable_envelopes": (_variable_envelope_intermediate_payload(record_identity="envelope-wrap"),),
+            **intermediate_payload(source_sha256=source_sha256),
+            "variable_envelopes": (_variable_envelopeintermediate_payload(record_identity="envelope-wrap"),),
         },
     )
     declared_envelopes = tuple(
@@ -928,7 +877,7 @@ def test_variable_envelope_boundary_refuses_wrong_number_of_reviewed_contracts(d
         RegistryValidationError,
         match=(f"requires exactly one reviewed variable-envelope semantic contract, found {declared_envelope_count}"),
     ):
-        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation.validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
@@ -936,8 +885,8 @@ def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
     source_sha256 = "9" * 64
     intermediate = RecordDesignIntermediate.model_validate(
         {
-            **_intermediate_payload(source_sha256=source_sha256),
-            "variable_envelopes": (_variable_envelope_intermediate_payload(record_identity="envelope-wrap"),),
+            **intermediate_payload(source_sha256=source_sha256),
+            "variable_envelopes": (_variable_envelopeintermediate_payload(record_identity="envelope-wrap"),),
         },
     )
     semantic_map = SemanticMap.model_validate(
@@ -957,7 +906,7 @@ def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
         RegistryValidationError,
         match="reviewed variable-envelope contract names 'envelope-other' but the parser owns 'envelope-wrap'",
     ):
-        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation.validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_validation_module_carries_no_legacy_layout_dependency() -> None:

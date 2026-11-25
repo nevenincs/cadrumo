@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import sys
 import time
 from collections.abc import AsyncGenerator
-from concurrent.futures import Future
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, asynccontextmanager
-from threading import Thread
-from typing import TypeGuard
+from typing import Final, TypeGuard
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.application.operations.errors import OperationContractStaleError
 from cadrumo.application.operations.frontend_requests import (
     OperationResponseControlRequestV1,
     OperationResultProjectionRequestV1,
@@ -20,6 +22,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.request_faults import registered_error_fault
@@ -27,13 +30,15 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.operation_access import operation_management_action
-from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, project_document_page
+from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES
 from cadrumo_client.contracts.submission_payload import FinancialOperandInputDescriptor
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import close_transport_after_failure
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerAdmissionAbandoned,
     ProfileWorkerContractRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
@@ -62,16 +67,61 @@ from cadrumo_runtime.contracts.profile_worker import (
 from ..adapters.worker_lease_transfer import read_worker_lease
 from ..adapters.worker_transport import WorkerChannel
 from .operation_host import ProfileWorkerOperationHost
+from .worker_request_activity import worker_request_served
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 _LOGGER = get_logger(__name__)
 
+OPERATION_REQUEST_SLOW_SECONDS: Final = 2.0
+"""An operation-channel request that takes this long to answer is logged as slow."""
 
-async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: bool = False) -> ProfileWorkerRequest:
+
+def _operation_request_fields(request: object) -> dict[str, DiagnosticValue]:
+    """Project only a request's class name and, where its contract carries one, its validated definition id.
+
+    The class name is closed because only classes the worker contract defines
+    are named. Nothing from the request's payload, session or operation is read.
+    """
+    defined_here = type(request).__module__ == ProfileWorkerRequest.__module__
+    fields: dict[str, DiagnosticValue] = {
+        "request_type": type(request).__name__ if defined_here else "UnknownWorkerRequest"
+    }
+    if isinstance(
+        request, ProfileWorkerSubmitRequest | ProfileWorkerSubmissionBeginRequest | ProfileWorkerContractRequest
+    ):
+        fields["definition_id"] = request.definition_id
+    return fields
+
+
+def _record_operation_started(fields: dict[str, DiagnosticValue]) -> None:
+    """Mark which request is active, so a handler that never answers still leaves its name."""
+    diagnostic_event(_LOGGER, "profile_worker_operation_request_started", fields={**fields, "outcome": "started"})
+
+
+def _record_operation_elapsed(fields: dict[str, DiagnosticValue], *, started: float, outcome: str) -> None:
+    """Log how long one request took: at WARNING from the slow bound, at DEBUG below it."""
+    elapsed = max(0.0, time.monotonic() - started)
+    diagnostic_event(
+        _LOGGER,
+        "profile_worker_operation_request_elapsed",
+        fields={
+            **fields,
+            "elapsed_seconds": round(elapsed, 3),
+            "budget_seconds": OPERATION_REQUEST_SLOW_SECONDS,
+            "outcome": outcome,
+        },
+        level=logging.WARNING if elapsed >= OPERATION_REQUEST_SLOW_SECONDS else logging.DEBUG,
+        primary_error=sys.exception(),
+    )
+
+
+async def receive(
+    channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor, *, control: bool = False
+) -> ProfileWorkerRequest:
     """Read one bounded worker request, consuming lease transfers only on control."""
 
     def read() -> ProfileWorkerRequest:
-        deadline = time.monotonic() + 5
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline().instant
         request = read_document(channel, ProfileWorkerRequest, deadline=deadline)
         if isinstance(request.root, ProfileWorkerLeaseTransferRequest):
             if not control:
@@ -82,30 +132,20 @@ async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: boo
         return request
 
     while not failed.is_set():
-        if await _input_ready(channel, failed):
+        if await input_ready(channel, failed, input_executor):
             return await await_cancellation_complete(asyncio.to_thread(read), task_name="profile-worker-read")
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-async def _input_ready(channel: WorkerChannel, failed: asyncio.Event) -> bool:
+async def input_ready(channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor) -> bool:
     """Block one thread on the channel until input, the worker's failure, or cancellation.
 
-    The thread is the waiter's own, so an idle channel holds no shared executor
-    thread, and it has returned before the channel is read or released.
+    The service owns its input executor separately from application work. Each
+    wait has returned before the channel is read or released; later requests
+    reuse the same threads instead of starting one for every exchange.
     """
     wake = NativeWake()
-    waited: Future[bool] = Future()
-    # Running from here on, so nothing can cancel it before the thread answers.
-    waited.set_running_or_notify_cancel()
-
-    def wait() -> None:
-        try:
-            waited.set_result(channel.wait_readable(wake))
-        except BaseException as error:
-            waited.set_exception(error)
-
-    Thread(target=wait, name="profile-worker-input", daemon=True).start()
-    outcome = asyncio.wrap_future(waited)
+    outcome = asyncio.wrap_future(input_executor.submit(channel.wait_readable, wake))
     stopping = asyncio.ensure_future(failed.wait())
     try:
         await asyncio.wait((outcome, stopping), return_when=asyncio.FIRST_COMPLETED)
@@ -119,56 +159,104 @@ async def _input_ready(channel: WorkerChannel, failed: asyncio.Event) -> bool:
     return await outcome
 
 
+def _write_operation_refusal(
+    channel: WorkerChannel,
+    operations: ProfileWorkerOperationHost,
+    request_id: UUID,
+    refusal: AutomationCustodyError | ProfileAccessRefusedError | ValidationError,
+) -> None:
+    """Write only the established correlated refusal and registered fault fields."""
+    if isinstance(refusal, ProfileAccessRefusedError):
+        _LOGGER.warning("worker operation access refused code=%s", refusal.reason, exc_info=refusal)
+    write_document(
+        channel,
+        ProfileWorkerRefusal(
+            identity=operations.custody.identity,
+            request_id=request_id,
+            reason=AutomationCustodyCode.INVALID if isinstance(refusal, ValidationError) else refusal.reason,
+            request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
+            holder_operation_id=refusal.holder_operation_id if isinstance(refusal, ProfileAccessRefusedError) else None,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+
+
 async def operate(
     channel: WorkerChannel,
     operations: ProfileWorkerOperationHost,
     failed: asyncio.Event,
     uploads: WorkerSubmissionStaging,
     changed: asyncio.Event,
+    input_executor: ThreadPoolExecutor,
+    ready: asyncio.Event | None = None,
 ) -> None:
     """Dispatch operation-channel requests and serialize refusals on that channel.
 
-    ``changed`` wakes custody expiry after each request, which may have staged an upload.
+    ``changed`` wakes custody expiry after acts that may change staged uploads.
     """
+    if ready is not None:
+        ready.set()
     try:
         while True:
-            request = (await receive(channel, failed)).root
+            request = (await receive(channel, failed, input_executor)).root
+            expiry_needed = True
+            fields = _operation_request_fields(request)
+            _record_operation_started(fields)
+            started = time.monotonic()
+            outcome = "raised"
             try:
-                await _dispatch_request(channel, operations, request, uploads)
+                with worker_request_served():
+                    await dispatch_request(channel, operations, request, uploads)
+                expiry_needed = _needs_upload_expiry(request, uploads)
+                outcome = "completed"
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
+                outcome = "refused"
                 if failed.is_set():
                     raise
-                if isinstance(refusal, ProfileAccessRefusedError):
-                    _LOGGER.warning("worker operation access refused code=%s", refusal.reason, exc_info=refusal)
-                write_document(
+                _write_operation_refusal(channel, operations, request.request_id, refusal)
+            except OperationContractStaleError:
+                # The shipped manifest and the composed group disagree for this
+                # operation only. Answer it as unavailable, with no retry
+                # signal, and keep serving the profile's other operations.
+                outcome = "refused"
+                if failed.is_set():
+                    raise
+                _LOGGER.error("worker operation contract is stale; operation refused as unavailable")
+                _write_operation_refusal(
                     channel,
-                    ProfileWorkerRefusal(
-                        identity=operations.custody.identity,
-                        request_id=request.request_id,
-                        reason=AutomationCustodyCode.INVALID
-                        if isinstance(refusal, ValidationError)
-                        else refusal.reason,
-                        request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
-                        holder_operation_id=refusal.holder_operation_id
-                        if isinstance(refusal, ProfileAccessRefusedError)
-                        else None,
-                    ),
-                    deadline=time.monotonic() + 5,
+                    operations,
+                    request.request_id,
+                    ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE),
                 )
             finally:
+                if expiry_needed:
+                    changed.set()
+                _record_operation_elapsed(fields, started=started, outcome=outcome)
                 del request
-                changed.set()
     except Exception:
         failed.set()
         raise
 
 
-async def _dispatch_request(
+def _needs_upload_expiry(request: object, uploads: WorkerSubmissionStaging) -> bool:
+    """Skip expiry only after custody-validated reads with no staged uploads left.
+
+    A staged upload still needs the pass if that validation retired any of
+    its sessions. Other requests always wake the expiry owner.
+    """
+    return not (
+        (is_read(request) or isinstance(request, ProfileWorkerContractRequest))
+        and uploads.seconds_until_expiry() is None
+    )
+
+
+async def dispatch_request(
     channel: WorkerChannel,
     operations: ProfileWorkerOperationHost,
     request: object,
     uploads: WorkerSubmissionStaging,
 ) -> None:
+    """Route a worker request to the submission staging or the operation host."""
     if isinstance(
         request,
         ProfileWorkerSubmitRequest
@@ -185,7 +273,7 @@ async def _dispatch_request(
     if isinstance(request, ProfileWorkerOperationRequest | ProfileWorkerResumeRequest):
         await _handle_operation(channel, operations, request)
         return
-    if _is_read(request):
+    if is_read(request):
         await _serve_read(channel, operations, request)
         return
     if isinstance(request, ProfileWorkerManageRequest):
@@ -251,7 +339,10 @@ async def _handle_submission(
         )
         return
     if isinstance(request, ProfileWorkerSubmissionBeginRequest):
-        contract = operations.contract(request.session_id, request.definition_id)
+        contract = await await_cancellation_complete(
+            asyncio.to_thread(operations.contract, request.session_id, request.definition_id),
+            task_name="profile-worker-upload-contract",
+        )
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
             contract.transient_financial_operand is not None
         ):
@@ -262,7 +353,7 @@ async def _handle_submission(
         _write_upload_accepted(channel, operations, request.request_id, request.upload_id)
         return
     if isinstance(request, ProfileWorkerSubmissionChunkRequest):
-        operations.custody.require(request.session_id)
+        await operations.custody.require_off_loop(request.session_id)
         uploads.append(request)
         _write_upload_accepted(channel, operations, request.request_id, request.upload_id)
         return
@@ -326,6 +417,7 @@ async def _submit_payload_reply(
                 request_id=request_id,
                 receipt=submitted.receipt,
                 release=release,
+                newly_admitted=submitted.response_capability is not None,
             ),
             deadline=time.monotonic() + 5,
         )
@@ -362,6 +454,22 @@ async def _handle_operation(
     operations: ProfileWorkerOperationHost,
     request: ProfileWorkerOperationRequest | ProfileWorkerResumeRequest,
 ) -> None:
+    if isinstance(request, ProfileWorkerOperationRequest) and request.action == "operation_abandon":
+        settled = await await_cancellation_complete(
+            operations.abandon_submission(request.operation_id, request.session_id),
+            task_name="profile-operation-abandon",
+        )
+        write_document(
+            channel,
+            ProfileWorkerAdmissionAbandoned(
+                identity=operations.custody.identity,
+                request_id=request.request_id,
+                operation_id=request.operation_id,
+                settled=settled,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        return
     if isinstance(request, ProfileWorkerResumeRequest):
         operation_id = await operations.resume(request.operation_id, request.session_id, frontend=request.frontend)
         action = AccessAction.RESUME
@@ -389,7 +497,7 @@ type _ReadRequest = (
 )
 
 
-def _is_read(request: object) -> TypeGuard[_ReadRequest]:
+def is_read(request: object) -> TypeGuard[_ReadRequest]:
     """Tell whether a request only reads: an observation, a projection, a page, or the inspection of a review."""
     if isinstance(request, ProfileWorkerManageRequest):
         # Applying and rejecting a review extend this request type; only the type itself inspects.
@@ -478,29 +586,27 @@ async def _read_reply(operations: ProfileWorkerOperationHost, request: _ReadRequ
                 release=release,
             )
         return
-    async with operations.project(
-        request.session_id,
-        request.projection,
-        frontend=request.frontend,
-        page=request.page if isinstance(request, ProfileWorkerProjectPageRequest) else None,
-    ) as (
-        document,
-        release,
-    ):
-        if isinstance(request, ProfileWorkerProjectPageRequest):
+    if isinstance(request, ProfileWorkerProjectPageRequest):
+        async with operations.project_page(
+            request.session_id, request.projection, frontend=request.frontend, page=request.page
+        ) as (page, release):
             yield ProfileWorkerProjectionPage(
                 identity=operations.custody.identity,
                 request_id=request.request_id,
-                page=project_document_page(document, request.page),
+                page=page,
                 release=release,
             )
-        else:
-            yield ProfileWorkerProjection(
-                identity=operations.custody.identity,
-                request_id=request.request_id,
-                document=document,
-                release=release,
-            )
+        return
+    async with operations.project(request.session_id, request.projection, frontend=request.frontend) as (
+        document,
+        release,
+    ):
+        yield ProfileWorkerProjection(
+            identity=operations.custody.identity,
+            request_id=request.request_id,
+            document=document,
+            release=release,
+        )
 
 
 @asynccontextmanager

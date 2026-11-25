@@ -67,7 +67,7 @@ def resolve_modelo_spreadsheet_access(
     if operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     period = payload.period.to_period()
-    snapshot = operation.snapshot(payload.modelo, filing_year=period.filing_year, period=period.registry_token)
+    snapshot = operation.reading_snapshot(payload.modelo, filing_year=period.filing_year, period=period.registry_token)
     periods = _source_periods(payload, period=period, snapshot=snapshot)
     resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=periods)
     policy = OperationAccessPolicy.model_validate(

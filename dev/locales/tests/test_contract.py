@@ -46,7 +46,7 @@ from ..manager import LocaleManager
 __all__ = ["pin_english_locale"]
 
 from cadrumo.application import operator_surface
-from cadrumo.application.operator_surface import help as _help_module
+from cadrumo.application.operator_surface import help
 from cadrumo.application.operator_surface.contract import (
     get_operator_surface_contract,
 )
@@ -261,9 +261,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     # the root landing was shortened, which made this test pass over a real
     # regression -- following content to where it went, without asking whether
     # it was entitled to go there.
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
-    assert "CADRUMO_SECRET_STORE_DIR" in root_text
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in config_text
+    assert "CADRUMO_STORAGE_ROOT" in root_text
+    assert "CADRUMO_STORAGE_ROOT" in config_text
     assert "CADRUMO_SECRET_PASSPHRASE" not in config_text
     for option in (
         "--profile-secrets-stdin",
@@ -370,7 +369,7 @@ def _field_max_length(model: type[BaseModel], field: str) -> int | None:
     """Return the ``max_length`` constraint ``model.field`` carries, if any.
 
     Introspects the live pydantic field metadata rather than hand-copying the
-    80/120/160 caps from ``_models.py``, so a future constraint change is
+    80/120/160 caps from ``models.py``, so a future constraint change is
     picked up automatically instead of silently drifting from the check.
     """
     info = model.model_fields.get(field)
@@ -403,7 +402,7 @@ def _capped_translation_keys() -> tuple[tuple[str, int], ...]:
     always literal Python strings in ``_help.py`` (never translated), so they never
     match a ``tr(...)`` value and are correctly absent from the returned set.
     """
-    tree = ast.parse(inspect.getsource(_help_module))
+    tree = ast.parse(inspect.getsource(help))
     found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):

@@ -31,7 +31,9 @@ _QUIET_PASSES = 2
 _PASS_INTERVAL_SECONDS = 0.002
 
 
-class _CoalitionInfo(ctypes.Structure):
+class CoalitionInfo(ctypes.Structure):
+    """The native macOS coalition record holding the resource and task coalition ids."""
+
     _fields_ = (("coalition_ids", ctypes.c_uint64 * 2), ("reserved", ctypes.c_uint64 * 3))
 
 
@@ -41,9 +43,9 @@ def decode_macos_resource_coalition(payload: bytes) -> int:
     Args:
         payload: Exact native proc_pidcoalitioninfo record.
     """
-    if len(payload) != ctypes.sizeof(_CoalitionInfo):
+    if len(payload) != ctypes.sizeof(CoalitionInfo):
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    value = _CoalitionInfo.from_buffer_copy(payload)
+    value = CoalitionInfo.from_buffer_copy(payload)
     coalition = int(value.coalition_ids[0])
     if coalition <= 0:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -56,7 +58,9 @@ def read_macos_resource_coalition(pid: int) -> int | None:
     Args:
         pid: Kernel PID, bounded before native integer conversion.
     """
-    payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(_CoalitionInfo))
+    if sys.platform != "darwin":
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(CoalitionInfo))
     return None if payload is None else decode_macos_resource_coalition(payload)
 
 
@@ -177,6 +181,21 @@ def macos_coalition_members(coalition: int, *, port: MacosCoalitionPort) -> tupl
     return tuple(members)
 
 
+def _coalition_termination_pass(
+    coalition: int,
+    native: MacosCoalitionPort,
+    signalled: set[MacosProcessIncarnation],
+    exclude: MacosProcessIncarnation | None,
+) -> tuple[set[MacosProcessIncarnation], bool]:
+    """Recheck prior signals, then kill this pass's nonexcluded members."""
+    signalled = {incarnation for incarnation in signalled if native.incarnation(incarnation.pid) == incarnation}
+    members = tuple(member for member in macos_coalition_members(coalition, port=native) if member != exclude)
+    for member in members:
+        if native.signal(member, _SIGKILL) is MacosSignalDelivery.DELIVERED:
+            signalled.add(member)
+    return signalled, not members and not signalled
+
+
 def terminate_macos_coalition(
     coalition: int,
     *,
@@ -194,7 +213,7 @@ def terminate_macos_coalition(
 
     Args:
         coalition: Resource coalition ID to empty.
-        deadline: Monotonic deadline; exceeding it raises DEADLINE_EXCEEDED.
+        deadline: Monotonic deadline; exceeding it raises TIMEOUT.
         exclude: Exact incarnation that must survive, if any.
         port: Native process facts; defaults to the Darwin kernel.
     """
@@ -204,17 +223,13 @@ def terminate_macos_coalition(
     signalled: set[MacosProcessIncarnation] = set()
     quiet = 0
     while True:
-        signalled = {incarnation for incarnation in signalled if native.incarnation(incarnation.pid) == incarnation}
-        members = tuple(member for member in macos_coalition_members(coalition, port=native) if member != exclude)
-        for member in members:
-            if native.signal(member, _SIGKILL) is MacosSignalDelivery.DELIVERED:
-                signalled.add(member)
-        quiet = quiet + 1 if not members and not signalled else 0
+        signalled, pass_quiet = _coalition_termination_pass(coalition, native, signalled, exclude)
+        quiet = quiet + 1 if pass_quiet else 0
         if quiet >= _QUIET_PASSES:
             return
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         time.sleep(min(_PASS_INTERVAL_SECONDS, remaining))
 
 

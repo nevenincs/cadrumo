@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .....application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
 from .....application.aggregation.prorrata_volume import project_prorrata_declared_volume_rollup
 from .....application.modelo.calculation_notes import BLOCKING_REASONS, note_attention
@@ -21,10 +23,12 @@ from .....domain.calculations.registry.iva_legal_vocabulary import require_iva_e
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
-from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
-from .test_iva_ledger_prorrata_apportionment import _fully_taxable_purchase, _fully_taxable_sale
+from .test_iva_ledger_prorrata_apportionment import fully_taxable_purchase_row, fully_taxable_sale_row
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
@@ -39,19 +43,21 @@ def _sale(
     excluded: bool = False,
     year: int = 2026,
 ) -> Transaction:
-    original = _fully_taxable_sale(name)
+    original = fully_taxable_sale_row(name)
     data = original.model_dump()
     data.pop("transaction_id")
     raw = original.raw.model_dump()
     raw.update(booked_date=date(year, 10, 10), value_date=date(year, 10, 10))
-    data.update(raw=raw, iva_category=require_iva_category(category))
+    data.update(raw=raw, iva_category=require_iva_category(category, effective_date=_ON_DATE))
     if category == "domestic_exempt":
         raw["amount"] = Decimal("50")
         data.update(
             taxable_base=Decimal("50"),
             iva_rate=Decimal(0),
             iva_amount=Decimal(0),
-            exemption_article=require_iva_exemption_article(article) if (article is not None and article) else None,
+            exemption_article=require_iva_exemption_article(article, effective_date=date(year, 10, 10))
+            if (article is not None and article)
+            else None,
         )
     if excluded:
         data["art_104_tres_exclusion"] = Art104TresExclusion("non_habitual_real_estate_or_financial")
@@ -75,13 +81,14 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             _sale("exempt-sale", category="domestic_exempt", article=None if unclassified else "art_20_uno_8"),
             _sale("excluded-sale", excluded=True),
             _sale("prior-year-sale", year=2025),
-            _fully_taxable_purchase("purchase-not-turnover"),
+            fully_taxable_purchase_row("purchase-not-turnover"),
         )
         transactions.save(TransactionCatalogue.from_transactions(rows))
         aggregation = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET,
             period=Period.from_year_and_code(2026, "0A"),
             transaction_repository=transactions,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             prorrata_register_repository=prorrata,
             investment_asset_register=bienes.load(),
             investment_asset_profile_id=_BUCKET,
@@ -112,9 +119,9 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             period_token=_SETTLEMENT,
             filing_year=2026,
             bucket_id=_BUCKET,
-            observation_repository=CalculationObservationRepository(objects=profile.repository),
             prorrata_register_repository=prorrata,
             transaction_repository=transactions,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             bienes_inversion_repository=bienes,
             operation=operation,
         )
@@ -132,13 +139,13 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
 
 @pytest.mark.parametrize("period", ["1T", "4T"])
 def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path, period: str) -> None:
-    from sqlalchemy import select
+    from sqlalchemy import update
 
     from .....domain.prorrata_register.register import ProrrataRegister
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql.engine import get_engine
-    from ...storage.sql.orm import SecureObjectRow
     from ...storage.sql.session import session_scope
+    from ...storage.sql.tables import secure_objects_table
 
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile,
@@ -147,13 +154,16 @@ def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path,
         prorrata = ProrrataRegisterRepository(bucket_id=_BUCKET, objects=profile.repository)
         prorrata.save(ProrrataRegister())
         with session_scope(get_engine(profile.settings)) as session:
-            row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+            tampered = session.execute(
+                update(secure_objects_table)
+                .where(
+                    secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    secure_objects_table.c.object_key
+                    == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
                 )
-            ).scalar_one()
-            row.payload = b"unreadable-register-ciphertext"
+                .values(payload=b"unreadable-register-ciphertext"),
+            )
+            assert tampered.rowcount == 1
         diagnostics = collect_prorrata_regularizacion_diagnostics(
             operation.snapshot("303", filing_year=2026, period=period).revision,
             {},
@@ -161,9 +171,9 @@ def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path,
             period_token=period,
             filing_year=2026,
             bucket_id=_BUCKET,
-            observation_repository=CalculationObservationRepository(objects=profile.repository),
             prorrata_register_repository=prorrata,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(
                 bucket_id=_BUCKET, objects=profile.repository
             ),

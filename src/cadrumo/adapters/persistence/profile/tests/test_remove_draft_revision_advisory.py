@@ -29,10 +29,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 from .remove_draft_revision_support import create_row, seed_revision_citing_transaction
 
@@ -42,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_remove_advises_on_draft_revision_and_still_removes(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-cited",
@@ -57,7 +55,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
     )
 
     report = remove_manual_transaction(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         reason="duplicate income",
@@ -87,7 +85,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
 def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-dry",
@@ -102,7 +100,7 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
     )
 
     report = remove_manual_transaction(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -121,7 +119,7 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
 def test_remove_uncited_row_yields_empty_draft_advisory(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     cited_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-other",
@@ -141,7 +139,7 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
     )
 
     report = remove_manual_transaction(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=uncited_id,
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -160,7 +158,7 @@ def test_remove_discarded_draft_is_not_advised(
 ) -> None:
     # A DESCARTADO (discarded) draft is not a live filing: removing a row it
     # cites must NOT raise an advisory.
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-discarded",
@@ -175,7 +173,7 @@ def test_remove_discarded_draft_is_not_advised(
     )
 
     report = remove_manual_transaction(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         transaction_repository=transaction_repository,

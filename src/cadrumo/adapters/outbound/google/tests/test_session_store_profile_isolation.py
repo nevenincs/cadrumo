@@ -16,6 +16,7 @@ import pytest
 from .....core.bucket_pointer import BucketPointer, read_pointer_selection, write_pointer
 from .....core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from .....core.storage_environment import ChildEnvironmentProfile, child_environment
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     secure_object_payload_aad,
@@ -30,6 +31,7 @@ from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _REFRESH_MARKER = "synthetic-refresh-profile-isolation"
 _TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
@@ -46,7 +48,7 @@ def _sign_in() -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
         OAuthMetadata(
             account_email="profile-a@example.invalid",
             granted_scopes=REQUIRED_SCOPES,
-            issued_at=datetime(2026, 10, 19, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 10, 19, tzinfo=UTC),
         ),
         DriveConfig(root_folder_id="synthetic-root-folder"),
     )

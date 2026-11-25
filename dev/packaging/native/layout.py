@@ -5,15 +5,16 @@ from __future__ import annotations
 import importlib
 import json
 import platform
+import posixpath
 import re
 import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 # Entrypoint names reach C string literals, CMake target names and Python source.
 _ENTRYPOINT_NAME = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
@@ -21,7 +22,7 @@ _ENTRYPOINT_NAME = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
 _CMAKE_TARGET = re.compile(r"[A-Za-z0-9_.+-]+")
 _CMAKE_VARIABLE = re.compile(r"[A-Z][A-Z0-9_]*")
 _IMAGE_REQUIRED = frozenset({"name", "placement", "target", "artifact", "desktop", "signed", "version_arguments"})
-_IMAGE_OPTIONAL = frozenset({"startup"})
+_IMAGE_OPTIONAL = frozenset({"startup", "entitlements"})
 # The platform context maps only an image in the package root, or a declared entrypoint in the
 # native directory, back to the package; any other placement could not find its package.
 _PACKAGE_ROOT = "."
@@ -40,6 +41,8 @@ class ApplicationImage:
     signed: bool
     startup: bool
     version_arguments: tuple[str, ...]
+    entitlements: str | None = None
+    """Repository-relative property list of the entitlements the image is signed with, when it has any."""
 
     @property
     def package_path(self) -> str:
@@ -69,7 +72,21 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
             raise ValueError(f"Native entrypoint is not a declared console script: {entrypoint}")
     bundled_images(shared)
     application_images(shared)
+    application_bundle(shared)
     return shared
+
+
+def _validate_bundled_image(name: str, entry: object, entrypoints: list[str]) -> dict[str, object]:
+    if not _ENTRYPOINT_NAME.fullmatch(name) or name in entrypoints:
+        raise ValueError(f"Bundled image is not a distinct lowercase hyphenated name: {name!r}")
+    if not isinstance(entry, dict) or set(cast(dict[str, object], entry)) != {"distribution", "description"}:
+        raise ValueError(f"Bundled image {name} must declare its distribution and description")
+    entry = cast(dict[str, object], entry)
+    if not all(isinstance(value, str) and value for value in entry.values()):
+        raise ValueError(f"Bundled image {name} values must be non-empty strings")
+    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", cast(str, entry["distribution"])):
+        raise ValueError(f"Bundled image {name} must name a canonical distribution")
+    return entry
 
 
 def bundled_images(layout: dict[str, Any]) -> dict[str, dict[str, str]]:
@@ -82,15 +99,8 @@ def bundled_images(layout: dict[str, Any]) -> dict[str, dict[str, str]]:
     if not isinstance(declared, dict):
         raise ValueError("bundled_images must be a mapping")
     images: dict[str, dict[str, str]] = {}
-    for name, entry in declared.items():
-        if not _ENTRYPOINT_NAME.fullmatch(name) or name in layout["entrypoints"]:
-            raise ValueError(f"Bundled image is not a distinct lowercase hyphenated name: {name!r}")
-        if not isinstance(entry, dict) or set(entry) != {"distribution", "description"}:
-            raise ValueError(f"Bundled image {name} must declare its distribution and description")
-        if not all(isinstance(value, str) and value for value in entry.values()):
-            raise ValueError(f"Bundled image {name} values must be non-empty strings")
-        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", entry["distribution"]):
-            raise ValueError(f"Bundled image {name} must name a canonical distribution")
+    for name, entry in cast(dict[str, object], declared).items():
+        entry = _validate_bundled_image(name, entry, layout["entrypoints"])
         images[str(name)] = {"distribution": str(entry["distribution"]), "description": str(entry["description"])}
     return images
 
@@ -113,12 +123,7 @@ def entrypoint_files(layout: dict[str, Any]) -> dict[str, str]:
     return {name: f"{native}/{name}{layout['entrypoint_suffix']}" for name in layout["entrypoints"]}
 
 
-def _image(entry: object, suffix: str) -> ApplicationImage:
-    if not isinstance(entry, dict) or not _IMAGE_REQUIRED <= set(entry) <= _IMAGE_REQUIRED | _IMAGE_OPTIONAL:
-        raise ValueError(
-            f"Application image must declare {sorted(_IMAGE_REQUIRED)} and optionally {sorted(_IMAGE_OPTIONAL)}: "
-            f"{entry!r}"
-        )
+def _image_identifiers(entry: dict[str, object]) -> tuple[str, str, str, str]:
     name, placement, target, artifact = entry["name"], entry["placement"], entry["target"], entry["artifact"]
     if not isinstance(name, str) or not _ENTRYPOINT_NAME.fullmatch(name):
         raise ValueError(f"Application image name is not a lowercase hyphenated identifier: {name!r}")
@@ -128,21 +133,70 @@ def _image(entry: object, suffix: str) -> ApplicationImage:
         raise ValueError(f"Application image {name} must name the CMake variable holding its artifact: {artifact!r}")
     if placement != _PACKAGE_ROOT:
         raise NotImplementedError(f"Application image {name} placement {placement!r} is not implemented")
+    return name, cast(str, placement), target, artifact
+
+
+def _image_options(name: str, entry: dict[str, object]) -> tuple[dict[str, bool], tuple[str, ...]]:
     flags = {key: entry.get(key, False) for key in ("desktop", "signed", "startup")}
     if not all(isinstance(value, bool) for value in flags.values()):
         raise ValueError(f"Application image {name} flags must be booleans: {flags}")
     arguments = entry["version_arguments"]
-    if not isinstance(arguments, list) or not all(isinstance(item, str) and item for item in arguments):
+    if not isinstance(arguments, list) or not all(
+        isinstance(item, str) and item for item in cast(list[object], arguments)
+    ):
         raise ValueError(f"Application image {name} version_arguments must be a list of non-empty strings")
+    return cast(dict[str, bool], cast(object, flags)), tuple(cast(list[str], arguments))
+
+
+def _image(entry: object, suffix: str) -> ApplicationImage:
+    if (
+        not isinstance(entry, dict)
+        or not _IMAGE_REQUIRED <= set(cast(dict[str, object], entry)) <= _IMAGE_REQUIRED | _IMAGE_OPTIONAL
+    ):
+        raise ValueError(
+            f"Application image must declare {sorted(_IMAGE_REQUIRED)} and optionally {sorted(_IMAGE_OPTIONAL)}: "
+            f"{entry!r}"
+        )
+    entry = cast(dict[str, object], entry)
+    name, placement, target, artifact = _image_identifiers(entry)
+    flags, arguments = _image_options(name, entry)
     return ApplicationImage(
         name=name,
         file=f"{name}{suffix}",
         placement=placement,
         target=target,
         artifact=artifact,
-        version_arguments=tuple(arguments),
+        version_arguments=arguments,
+        entitlements=_image_entitlements(name, entry),
         **flags,
     )
+
+
+def _image_entitlements(name: str, entry: dict[str, object]) -> str | None:
+    declared = entry.get("entitlements")
+    if declared is None:
+        return None
+    if not isinstance(declared, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*", declared):
+        raise ValueError(f"Application image {name} entitlements must be a plain relative path: {declared!r}")
+    if declared.startswith("."):
+        raise ValueError(f"Application image {name} entitlements must be a plain relative path: {declared!r}")
+    return declared
+
+
+def _check_image_collision(
+    image: ApplicationImage, entrypoints: set[str], occupied: dict[str, str], images: list[ApplicationImage]
+) -> None:
+    if image.name in entrypoints:
+        # A same-named copy at the package root is the displaced entrypoint the verifier refuses.
+        raise ValueError(f"Application image collides with a console entrypoint: {image.name}")
+    if image.package_path.casefold() in occupied:
+        raise ValueError(
+            f"Application image {image.file} collides with package file {occupied[image.package_path.casefold()]}"
+        )
+    if any(image.name == other.name for other in images):
+        raise ValueError(f"Duplicate application image: {image.name}")
+    if any(image.artifact == other.artifact for other in images):
+        raise ValueError(f"Application images share the artifact variable {image.artifact}")
 
 
 def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
@@ -156,23 +210,61 @@ def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
     }
     entrypoints = set(layout["entrypoints"]) | set(layout.get("bundled_images", {}))
     images: list[ApplicationImage] = []
-    for entry in declared:
+    for entry in cast(list[object], declared):
         image = _image(entry, layout["entrypoint_suffix"])
-        if image.name in entrypoints:
-            # A same-named copy at the package root is the displaced entrypoint the verifier refuses.
-            raise ValueError(f"Application image collides with a console entrypoint: {image.name}")
-        if image.package_path.casefold() in occupied:
-            raise ValueError(
-                f"Application image {image.file} collides with package file {occupied[image.package_path.casefold()]}"
-            )
-        if any(image.name == other.name for other in images):
-            raise ValueError(f"Duplicate application image: {image.name}")
-        if any(image.artifact == other.artifact for other in images):
-            raise ValueError(f"Application images share the artifact variable {image.artifact}")
+        _check_image_collision(image, entrypoints, occupied, images)
         images.append(image)
     if sum(image.desktop for image in images) > 1:
         raise ValueError("At most one application image is the desktop application")
     return tuple(images)
+
+
+_BUNDLE_FIELDS = frozenset({"executable_directory", "resources", "payload"})
+_BUNDLE_SEGMENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+
+
+@dataclass(frozen=True)
+class ApplicationBundle:
+    """Bundle-relative placements of an application wrapper around the flat package.
+
+    The wrapper's main executable lives in the executable directory; the package lives
+    unchanged beneath the resources directory, where non-code files can be sealed.
+    """
+
+    executable_directory: str
+    resources: str
+    payload: str
+
+    @property
+    def payload_from_executable(self) -> str:
+        """Return the package directory relative to the main executable's directory."""
+        return posixpath.relpath(self.payload, self.executable_directory)
+
+
+def _bundle_path(name: str, value: object) -> str:
+    if not isinstance(value, str) or not all(_BUNDLE_SEGMENT.fullmatch(part) for part in value.split("/")):
+        raise ValueError(f"application_bundle.{name} must be a relative path of plain segments: {value!r}")
+    return value
+
+
+def application_bundle(layout: dict[str, Any]) -> ApplicationBundle | None:
+    """Validate the platform's application wrapper placements, when it declares a wrapper."""
+    declared = layout.get("application_bundle")
+    if declared is None:
+        return None
+    if not isinstance(declared, dict) or set(cast(dict[str, object], declared)) != _BUNDLE_FIELDS:
+        raise ValueError(f"application_bundle must declare exactly {sorted(_BUNDLE_FIELDS)}")
+    entry = cast(dict[str, object], declared)
+    bundle = ApplicationBundle(**{name: _bundle_path(name, entry[name]) for name in sorted(_BUNDLE_FIELDS)})
+    if not bundle.payload.startswith(bundle.resources + "/"):
+        raise ValueError("application_bundle.payload must lie beneath its resources directory")
+    if bundle.executable_directory.startswith(bundle.resources + "/") or bundle.resources.startswith(
+        bundle.executable_directory + "/"
+    ):
+        raise ValueError("application_bundle executable and resources directories must be distinct")
+    if desktop_image(layout) is None:
+        raise ValueError("An application bundle requires the platform's desktop image")
+    return bundle
 
 
 def desktop_image(layout: dict[str, Any]) -> ApplicationImage | None:

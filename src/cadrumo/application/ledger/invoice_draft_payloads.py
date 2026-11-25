@@ -10,10 +10,12 @@ Core types:
 
 from __future__ import annotations
 
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect
+from ..operations.next_step import OperationNextStepV1
 from .invoice_draft_records import InvoiceDraftIdentityDocumentFields, LabelReadingFallbackCause
 from .structured_invoice_ports import StructuredInvoiceClassificationKind
 
@@ -65,6 +67,13 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     note: str = ""
 
 
+class EvidenceFindingWordsPayload(OutputSchema):
+    """Which sentence explains a finding and the values it quotes. Mirrors FindingWords."""
+
+    wording: str
+    params: list[tuple[str, str]] = []
+
+
 class EvidenceDraftDiscrepancyPayload(OutputSchema):
     """One deterministic check the read document failed."""
 
@@ -73,6 +82,10 @@ class EvidenceDraftDiscrepancyPayload(OutputSchema):
     detail: str = ""
     expected: str | None = None
     observed: str | None = None
+    words: EvidenceFindingWordsPayload | None = None
+    #: The sentence served for ``words`` and the language it is in.
+    detail_words: str | None = None
+    detail_words_language: str | None = None
 
 
 class EvidenceStructuredInvoiceClassPayload(OutputSchema):
@@ -89,6 +102,10 @@ class EvidenceLabelReadingFallbackPayload(OutputSchema):
     unread_fields: list[str]
     reader_error_type: str
     failed_condition_id: str | None = None
+    refusal_code: str | None = None
+    refusal_words: str | None = None
+    refusal_words_language: OutputLanguage | None = None
+    next_step: OperationNextStepV1 | None = None
 
 
 class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):
@@ -133,6 +150,7 @@ __all__ = [
     "EvidenceExtractResult",
     "EvidenceFieldAmbiguityCandidatePayload",
     "EvidenceFieldProvenancePayload",
+    "EvidenceFindingWordsPayload",
     "EvidenceLabelReadingFallbackPayload",
     "EvidenceStructuredInvoiceClassPayload",
 ]

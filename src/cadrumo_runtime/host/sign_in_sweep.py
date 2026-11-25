@@ -12,13 +12,21 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     inspect_profile_session,
     revoke_profile_sign_in,
 )
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_matches
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import (
+    PersistedProfileSession,
+    profile_session_login_matches,
+)
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyLockContendedError
 from cadrumo.adapters.persistence.storage.custody.filesystem import profile_custody_root_lock
 from cadrumo.adapters.persistence.storage.custody.filesystem_primitives import anchor_directory
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+    ProfileAccessBinding,
+)
 from cadrumo.core.base64_codec import b64_encode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.installation import Installation
@@ -55,48 +63,84 @@ def sweep_saved_sign_ins(
             return ()
         anchor_directory(anchors, directory)
         for entry in directory.iterdir():
-            try:
-                profile_id = UUID(entry.name)
-            except ValueError:
-                continue
-            if str(profile_id) != entry.name or profile_id in hosted_profiles:
-                continue
-            with ExitStack() as profile_anchor:
-                anchor_directory(profile_anchor, entry)
-                receipt = inspect_profile_session(storage_root=root, profile_id=profile_id)
-                if receipt is None:
-                    continue
-                try:
-                    binding = current_automation_profile_binding(
-                        root=root,
-                        profile_id=profile_id,
-                        installation_id=installation.installation_id,
-                        os_owner_id=installation.os_owner_id,
-                    )
-                except AutomationCustodyError:
-                    # Missing/unreadable custody is not positive replacement
-                    # evidence and cannot authorize deletion of its receipt.
-                    continue
-                custody_changed = (
-                    receipt.custody_generation != binding.custody_generation
-                    or receipt.dek_epoch != b64_encode(binding.dek_epoch.bytes)
-                )
-                matching = tuple(
-                    login
-                    for login in logins
-                    if login.os_owner_id == installation.os_owner_id
-                    and profile_session_login_matches(record=receipt, login_id=login.login_id)
-                )
-                positive = any(
-                    login.lock_state is OsLockState.LOCKED
-                    or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
-                    for login in matching
-                )
-                if not custody_changed and not positive and (matching or not inventory_complete):
-                    continue
-                revoke_profile_sign_in(SignInGenerationCustody(root=root, binding=binding))
+            profile_id = sweep_saved_profile(
+                entry,
+                root=root,
+                installation=installation,
+                logins=logins,
+                inventory_complete=inventory_complete,
+                hosted_profiles=hosted_profiles,
+            )
+            if profile_id is not None:
                 retired.append(profile_id)
     return tuple(retired)
+
+
+def sweep_saved_profile(
+    entry: Path,
+    *,
+    root: Path,
+    installation: Installation,
+    logins: tuple[OsLoginContext, ...],
+    inventory_complete: bool,
+    hosted_profiles: frozenset[UUID],
+) -> UUID | None:
+    """Inspect and revoke one receipt only with positive retirement evidence."""
+    try:
+        profile_id = UUID(entry.name)
+    except ValueError:
+        return None
+    if str(profile_id) != entry.name or profile_id in hosted_profiles:
+        return None
+    with ExitStack() as profile_anchor:
+        anchor_directory(profile_anchor, entry)
+        receipt = inspect_profile_session(storage_root=root, profile_id=profile_id)
+        if receipt is None:
+            return None
+        try:
+            binding = current_automation_profile_binding(
+                root=root,
+                profile_id=profile_id,
+                installation_id=installation.installation_id,
+                os_owner_id=installation.os_owner_id,
+            )
+        except AutomationCustodyError:
+            # Missing/unreadable custody is not positive replacement
+            # evidence and cannot authorize deletion of its receipt.
+            return None
+        if not saved_sign_in_retired(receipt, binding, installation, logins, inventory_complete):
+            return None
+        revoke_profile_sign_in(SignInGenerationCustody(root=root, binding=binding))
+        return profile_id
+
+
+def saved_custody_changed(receipt: PersistedProfileSession, binding: ProfileAccessBinding) -> bool:
+    """Detect a positively replaced custody binding."""
+    return receipt.custody_generation != binding.custody_generation or receipt.dek_epoch != b64_encode(
+        binding.dek_epoch.bytes
+    )
+
+
+def saved_sign_in_retired(
+    receipt: PersistedProfileSession,
+    binding: ProfileAccessBinding,
+    installation: Installation,
+    logins: tuple[OsLoginContext, ...],
+    inventory_complete: bool,
+) -> bool:
+    """Require replacement or positive login loss before retiring a saved sign-in."""
+    custody_changed = saved_custody_changed(receipt, binding)
+    matching = tuple(
+        login
+        for login in logins
+        if login.os_owner_id == installation.os_owner_id
+        and profile_session_login_matches(record=receipt, login_id=login.login_id)
+    )
+    positive = any(
+        login.lock_state is OsLockState.LOCKED or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
+        for login in matching
+    )
+    return custody_changed or positive or (not matching and inventory_complete)
 
 
 def revoke_other_saved_sign_ins(

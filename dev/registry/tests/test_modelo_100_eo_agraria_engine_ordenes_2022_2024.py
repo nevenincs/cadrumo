@@ -40,11 +40,11 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.text_fold import normalise_corpus_text
-from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
@@ -93,22 +93,27 @@ class _Example:
     modulos: Decimal
 
 
-_EXAMPLES = {
-    "2022": _Example(
+_ORDEN_2022 = "orden-hfp-1335-2021"
+_ORDEN_2023 = "orden-hfp-1172-2022"
+_ORDEN_2024 = "orden-hfp-1359-2023"
+# Each worked example belongs to the ejercicio its orden de módulos governs; the registry resolves that
+# ejercicio from the orden, so no year is written here.
+_ORDEN_EXAMPLES = {
+    _ORDEN_2022: _Example(
         indices=(Decimal("0.09"), Decimal("0.18"), Decimal("0.56")),
         bases=(Decimal("2846.90"), Decimal("10473.45"), Decimal("2665.60")),
         previo=Decimal("21234.55"),
         minorado=Decimal("7949.55"),
         modulos=Decimal("7154.59"),
     ),
-    "2023": _Example(
+    _ORDEN_2023: _Example(
         indices=(Decimal("0.13"), Decimal("0.26"), Decimal("0.56")),
         bases=(Decimal("4112.19"), Decimal("15128.32"), Decimal("2665.60")),
         previo=Decimal("27154.71"),
         minorado=Decimal("13869.71"),
         modulos=Decimal("12482.74"),
     ),
-    "2024": _Example(
+    _ORDEN_2024: _Example(
         indices=(Decimal("0.09"), Decimal("0.26"), Decimal("0.56")),
         bases=(Decimal("2846.90"), Decimal("15128.32"), Decimal("2665.60")),
         previo=Decimal("25889.42"),
@@ -122,7 +127,7 @@ _INDICE_ASALARIADO = Decimal("0.90")
 _CODIGO_12_INDICE = Decimal("0.37")
 # The reducción general for Anexo I activities, from the BOE text of each year's
 # governing provision (see the module docstring).
-_RATES = {"2022": Decimal("25"), "2023": Decimal("15"), "2024": Decimal("5")}
+_ORDEN_RATES = {_ORDEN_2022: Decimal("25"), _ORDEN_2023: Decimal("15"), _ORDEN_2024: Decimal("5")}
 
 
 @cache
@@ -137,6 +142,11 @@ def _orden_years() -> dict[str, str]:
     return years
 
 
+_EXAMPLES = {year: _ORDEN_EXAMPLES[orden] for year, orden in _orden_years().items() if orden in _ORDEN_EXAMPLES}
+_RATES = {year: _ORDEN_RATES[orden] for year, orden in _orden_years().items() if orden in _ORDEN_RATES}
+_YEAR_OF_ORDEN = {orden: year for year, orden in _orden_years().items()}
+
+
 @cache
 def _snapshot(year: str) -> RegistrySnapshot:
     return compiled_bundled_authority().snapshot(
@@ -147,22 +157,9 @@ def _snapshot(year: str) -> RegistrySnapshot:
 def _calculate(year: str, inputs: dict[str, Decimal]) -> dict[CasillaId, Decimal]:
     snapshot = _snapshot(year)
     revision = snapshot.revision
-    decimals: dict[str, Decimal] = {}
-    booleans: dict[str, bool] = {}
-    dates: dict[str, date] = {}
-    enums: dict[str, str] = {}
-    for binding in revision.bindings:
-        if binding.source is BindingSourceKind.RELATION_PREFILL:
-            continue
-        channel = binding.value.channel
-        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            decimals[binding.id] = Decimal("0")
-        elif channel is BindingValueChannel.BOOLEAN:
-            booleans[binding.id] = False
-        elif channel is BindingValueChannel.DATE:
-            dates[binding.id] = date(1975, 6, 15)
-        elif channel is BindingValueChannel.ENUM:
-            enums[binding.id] = "madrid"
+    decimals, booleans, dates, enums = neutral_binding_values(
+        binding for binding in revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
+    )
     decimals["renta-profile-declaration-type"] = Decimal("1")
     result = calculate_registry_snapshot(
         snapshot,
@@ -250,7 +247,7 @@ def test_the_chain_reproduces_the_manual_minorado_and_modulos(year: str) -> None
     assert values[_c("1537")] == example.previo
     assert values[_c("1539")] == example.minorado
     assert abs(values[_c("1548")] - example.modulos) <= _CENT
-    if year != "2022":
+    if year != _YEAR_OF_ORDEN[_ORDEN_2022]:
         assert values[_c("1548")] == example.modulos
 
 
@@ -265,12 +262,15 @@ def test_the_reduccion_general_applies_the_year_s_rate_to_the_modulos(year: str)
 
 
 def test_the_2022_and_2024_manuals_print_the_reduccion_general_the_engine_applies() -> None:
-    assert _percent(_EXAMPLES["2022"].modulos, _RATES["2022"]) == Decimal("1788.65")
-    assert _percent(_EXAMPLES["2024"].modulos, _RATES["2024"]) == Decimal("567.20")
+    for orden, printed in ((_ORDEN_2022, Decimal("1788.65")), (_ORDEN_2024, Decimal("567.20"))):
+        year = _YEAR_OF_ORDEN[orden]
+        assert _percent(_EXAMPLES[year].modulos, _RATES[year]) == printed
 
 
 def test_the_2023_manual_states_the_anexo_i_rate_its_example_omits() -> None:
-    corpus = bundled_path("manual_corpus_text", "manuals", "renta", "2023", "part1", "source.pdf.corpus_text.json")
+    corpus = bundled_path(
+        "manual_corpus_text", "manuals", "renta", _YEAR_OF_ORDEN[_ORDEN_2023], "part1", "source.pdf.corpus_text.json"
+    )
     text = json.loads(corpus.read_text(encoding="utf-8"))["normalised_text"]
     assert normalise_corpus_text("ha elevado del 10 al 15 por 100 la reducción prevista") in text
     assert normalise_corpus_text("Reducción de carácter general: 10% s/12.482,74 = 1.248,27 euros") in text

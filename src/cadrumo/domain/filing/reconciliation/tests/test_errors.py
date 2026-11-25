@@ -1,7 +1,7 @@
 """Tests for the reconciliation error hierarchy.
 
 `ReconciliationError` and its children are surfaced to operators via the
-typed-error registry (`core/errors/registry/_domain.py`) which references
+typed-error registry (`core/errors/registry/domain.py`) which references
 them by string-literal dotted name. The string reference is invisible to
 static AST import-graph analysis, so the module needs an explicit test
 file to keep it inside the coverage gate.

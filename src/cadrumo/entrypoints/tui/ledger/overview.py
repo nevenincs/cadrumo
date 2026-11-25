@@ -13,28 +13,28 @@ from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
 from .actividad_asset import ActivityAssetScreen
-from .controller import (
-    LedgerInvoiceCatalogueRequested,
-    LedgerInvoiceEntryRequested,
-    LedgerWorkspaceController,
-    LedgerWorkspaceScreen,
-    area_label,
-    item_count_label,
-    status_label,
-)
+from .controller import LedgerWorkspaceController, area_label, item_count_label, status_label
 from .own_accounts import LedgerOwnAccountsScreen
+from .workspace_screen import LedgerInvoiceCatalogueRequested, LedgerInvoiceEntryRequested, LedgerWorkspaceScreen
 
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
     """Lead with unresolved work and affected declarations, never financial totals."""
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.OVERVIEW
+
     IS_WORKSPACE_OVERVIEW: ClassVar[bool] = True
     AUTO_FOCUS: ClassVar[str | None] = ""
     """No compose-time focus: it centres the table before layout and scrolls a tall page past its heading."""
 
-    def __init__(self, controller: LedgerWorkspaceController) -> None:
-        """Retain the injected read-only workspace controller."""
+    def __init__(self, controller: LedgerWorkspaceController, *, selection_dropped: bool = False) -> None:
+        """Retain the injected read-only workspace controller.
+
+        ``selection_dropped`` says this overview opened in place of entries
+        asked for with one transaction selected, which the overview cannot show.
+        """
         super().__init__(controller, id="ledger-overview-screen")
+        self._selection_dropped = selection_dropped
 
     @override
     def compose(self) -> ComposeResult:
@@ -73,7 +73,21 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
                     Button(tr("tui.ledger.activity_asset.title"), id="ledger-activity-assets"),
                     "tui.ledger.activity_asset.title",
                 )
-            yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+            yield self._refusal_notice()
+
+    def _refusal_notice(self) -> Static:
+        """The page's notice line, carrying the dropped-selection notice when one applies.
+
+        The notice is kept as a localized widget so a language switch rewords it,
+        while any later message written over it is left alone.
+        """
+        if not self._selection_dropped:
+            return Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+        key = "tui.ledger.overview.selection_dropped"
+        return localized(
+            Static(tr(key), id="ledger-refusal", classes="ledger-refusal", markup=False),
+            key,
+        )
 
     @override
     async def refresh_language(self) -> None:
@@ -111,10 +125,6 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         # The table is the page's first control; scrolling to it on focus would land a
         # page taller than the terminal past its opening heading.
         self.query_one("#ledger-navigation", DataTable).focus(scroll_visible=False)
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Route an Enter press on the one-stop destination table."""
-        self.handle_navigation_selection(event)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Open the invoice entry form."""

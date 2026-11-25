@@ -46,10 +46,11 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .errors import LiveNifIvaCertificateRequiredError
+from .errors import LiveNifIvaCertificateRequiredError, raise_if_aeat_session_ended
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .live_operation_execution import own_provider_browser
 from .live_operation_registration import build_live_operation_definition
+from .profile_taxpayer_number import resolve_profile_taxpayer_number
 from .verify import VerifyObservation, VerifyService, VerifySurface
 from .verify_ports import VerifyObservationPersistencePort
 
@@ -72,12 +73,16 @@ class VerifyLiveObservation(BaseModel):
 
 
 class VerifyCaptureRequest(BaseModel):
-    """Protect the requested NIF and expectation in secure operation input."""
+    """Protect the requested NIF and expectation in secure operation input.
+
+    Omitting ``nif`` checks the profile's own taxpayer number, which the worker
+    resolves from the exact profile record.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    nif: str = Field(min_length=1, max_length=32)
+    nif: str | None = Field(default=None, min_length=1, max_length=32)
     expected: IdentityCheckVerdictValue | None = None
 
 
@@ -175,23 +180,21 @@ class VerifyCaptureExecutor:
         """Fetch remotely before a fresh COMMIT guard for the local event."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != _definition_id(self._surface)
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != bucket_id
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        self._require_profile_binding(request, context, bucket_id)
         if self._surface is VerifySurface.NIF_IVA:
             raise LiveNifIvaCertificateRequiredError()
 
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
+        nif = payload.nif or resolve_profile_taxpayer_number(bucket_id, context.authority_operation)
         resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
         with resources.activate():
-            observed = await self._acquire(self._surface, payload.nif, payload.expected, context.authority_operation)
-        if tax_id_identity_token(observed.nif) != tax_id_identity_token(payload.nif):
+            try:
+                observed = await self._acquire(self._surface, nif, payload.expected, context.authority_operation)
+            except Exception as exc:
+                raise_if_aeat_session_ended(exc)
+                raise
+        if tax_id_identity_token(observed.nif) != tax_id_identity_token(nif):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
         await context.events.phase(_PHASES[2])
@@ -216,6 +219,21 @@ class VerifyCaptureExecutor:
             return await context.operands.put(
                 VerifyCaptureOperationReport(observation=record, newly_persisted=newly_persisted), written_at=now()
             )
+
+    def _require_profile_binding(
+        self,
+        request: OperationRequest[VerifyCaptureRequest],
+        context: OperationExecutorContext,
+        bucket_id: str,
+    ) -> None:
+        if (
+            request.definition_id != _definition_id(self._surface)
+            or request.subject_ref != profile_operation_subject(bucket_id)
+            or context.identity.definition_id != request.definition_id
+            or context.identity.subject_ref != request.subject_ref
+            or require_active_bucket_id() != bucket_id
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def build_verify_capture_definition(

@@ -15,23 +15,25 @@ import pytest
 from textual.app import App, ComposeResult
 
 from ......application.modelo.source_policy import SourceFamily
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBlocker,
     ModeloFormCasillaAddressV1,
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
+from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ......tests.locales_root_fixture import locales_root_scope
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -44,7 +46,7 @@ from ..casilla_list_models import (
 from ..casilla_list_values import (
     description_text,
 )
-from ..vocabulary import EARLIER_FILING_GLYPH, ORIGIN_GLYPHS, origin_text, origin_words
+from ..vocabulary import EARLIER_FILING_GLYPH, ORIGIN_GLYPHS, origin_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -116,7 +118,7 @@ async def _render(
     with override_settings(cadrumo_output_language=language.value):
         app = _ListHarness(items, language, density)
         async with app.run_test(size=(width, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             lines = [widget.render_line(y).text for y in range(widget.size.height)]
     return [line.rstrip() for line in lines if line.strip()]
@@ -204,7 +206,7 @@ def test_a_description_that_opens_by_naming_its_box_loses_that_opening_in_every_
 def test_a_reworded_box_opening_in_the_catalogue_is_followed_rather_than_missed(tmp_path: Path) -> None:
     """The opening is the catalogue's own words for the row's box, so rewording them moves what is dropped."""
     (tmp_path / "en.yml").write_text(
-        "tui:\n  modelo:\n    workbench:\n      help:\n        box_opening: 'Field {box} -'\n",
+        "workspace:\n  modelo:\n    help:\n      box_opening: 'Field {box} -'\n",
         encoding="utf-8",
     )
 

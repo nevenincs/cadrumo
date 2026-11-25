@@ -132,7 +132,7 @@ heading_key = "modelo.schema.714.form.page.714-01-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-01-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "identificacion.tipo-declaracion" },
     { kind = "field", id = "field-2", casilla_id = "decl.ejercicio" },
@@ -195,7 +195,7 @@ blocks = [
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.714.form.section.general-2.heading"
+heading_key = "modelo.schema.714.form.page.714-01-patrimonio.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "identificacion.regimen-economico-matrimonio" },
     { kind = "field", id = "field-2", casilla_id = "identificacion-8" },
@@ -224,7 +224,7 @@ blocks = [
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.714.form.section.general-3.heading"
+heading_key = "modelo.schema.714.form.page.714-01-patrimonio.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "identificacion-12" },
 ]
@@ -244,7 +244,7 @@ heading_key = "modelo.schema.714.form.page.714-02-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-02-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-02.indicador-de-pagina-complementaria-714-02" },
 ]
@@ -408,7 +408,7 @@ heading_key = "modelo.schema.714.form.page.714-03-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-03-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-03.indicador-de-pagina-complementaria-714-03" },
 ]
@@ -620,7 +620,7 @@ heading_key = "modelo.schema.714.form.page.714-04-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-04-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-04.indicador-de-pagina-complementaria-714-04" },
 ]
@@ -838,7 +838,7 @@ heading_key = "modelo.schema.714.form.page.714-05-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-05-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-05.indicador-de-pagina-complementaria-714-05" },
 ]
@@ -1008,7 +1008,7 @@ heading_key = "modelo.schema.714.form.page.714-06-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-06-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-06.indicador-de-pagina-complementaria-714-06" },
 ]
@@ -1131,7 +1131,7 @@ heading_key = "modelo.schema.714.form.page.714-07-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-07-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-07.indicador-de-pagina-complementaria-714-07" },
 ]
@@ -1267,7 +1267,7 @@ heading_key = "modelo.schema.714.form.page.714-08-patrimonio.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.714.form.section.general.heading"
+heading_key = "modelo.schema.714.form.page.714-08-patrimonio.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-714.714-08.indicador-de-pagina-complementaria-714-08" },
 ]

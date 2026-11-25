@@ -30,7 +30,10 @@ import pytest
 
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.compiler.authority import compiled_bundled_authority
+
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -40,13 +43,11 @@ _THRESHOLD_PARAMETER_IDS = (
     "m303-bien-inversion-regularizacion-umbral-puntos",
 )
 
-_M303_REVISIONS = (
-    "2022",
-    "2023",
-    "2024-hasta-08-y-2t",
-    "2024-desde-09-y-3t",
-    "2025",
-    "2026-y-siguientes",
+#: The modelo 303 revisions that govern an exercise from the support floor up.
+_M303_REVISIONS = tuple(
+    str(revision.id)
+    for revision in authored_revisions("303")
+    if revision.valid_to is None or revision.valid_to.year >= filing_year_envelope().floor
 )
 
 _M303_REVISIONS_ROOT = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
@@ -84,7 +85,13 @@ def _declared_values_in_source(revision_id: str, parameter_id: str) -> tuple[str
         revision_source = parse_toml((_M303_REVISIONS_ROOT / current / "revision.toml").read_text(encoding="utf-8"))
         revisions = revision_source.get("revisions", {})
         declared = revisions.get(current, {}) if isinstance(revisions, dict) else {}
-        predecessor = declared.get("predecessor") if isinstance(declared, dict) else None
+        # A delta inherits its parameters through its explicit predecessor or, when it is a sibling
+        # design of the same exercise, through the storage baseline it names.
+        predecessor = (
+            declared.get("predecessor") or declared.get("family_storage_baseline")
+            if isinstance(declared, dict)
+            else None
+        )
         if not isinstance(predecessor, str):
             break
         current = predecessor

@@ -235,7 +235,7 @@ def _perceptor_record(*, filing_year: int, base: Decimal, withholding: Decimal) 
     zero = Decimal("0")
     return WithholdingObservation(
         source_id=f"capital-{filing_year}",
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="TITULAR SINTETICO",
         transaction_date=date(filing_year, 6, 30),
         clave=RetencionClave.from_registry("A"),

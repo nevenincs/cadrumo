@@ -27,6 +27,7 @@ from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..enums import TransactionDirection
+from ..gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL
 from ..irpf_categories import (
     has_activity_irpf_category,
     has_non_work_irpf_category,
@@ -36,6 +37,7 @@ from ..irpf_categories import (
 )
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..rental_link import RENTAL_LINK_IRPF_CATEGORY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,6 +66,10 @@ def _activity_category() -> str:
 
 def _employment_category() -> str:
     return _category_id_for_purpose("employment_income")
+
+
+def _prize_category() -> str:
+    return _category_id_for_purpose("prize_payment_withholding")
 
 
 def _raw(*, amount: Decimal) -> RawTransaction:
@@ -123,7 +129,7 @@ def test_unknown_token_does_not_unlock_the_withholding_relaxation() -> None:
             iva_amount=Decimal("420.00"),
         )
 
-    assert "must equal the gross to the cent" in str(excinfo.value)
+    assert GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL in str(excinfo.value)
 
 
 def test_outgoing_only_rent_treatment_does_not_relax_an_incoming_row() -> None:
@@ -137,7 +143,7 @@ def test_outgoing_only_rent_treatment_does_not_relax_an_incoming_row() -> None:
             iva_amount=Decimal("420.00"),
         )
 
-    assert "must equal the gross to the cent" in str(excinfo.value)
+    assert GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL in str(excinfo.value)
 
 
 def test_renta_income_tag_does_not_unlock_the_relaxation() -> None:
@@ -219,6 +225,14 @@ def test_predicates_resolve_through_the_closed_catalogue_with_direction() -> Non
     assert has_rent_irpf_category(_activity_category(), direction=outgoing) is False
 
 
+def test_the_rental_category_takes_both_directions_and_is_not_paid_net() -> None:
+    rental = ledger_irpf_category(RENTAL_LINK_IRPF_CATEGORY)
+
+    assert rental is not None
+    assert set(rental.directions) == {TransactionDirection.INCOMING, TransactionDirection.OUTGOING}
+    assert not rental.net_paid
+
+
 def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     """Resolution answers both "is this catalogued" and "for this direction"."""
     accepted = tuple(row.id for row in ledger_irpf_category_catalogue())
@@ -228,6 +242,10 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
         _employment_category(),
         _RENT_CATEGORY,
         "arrendamiento_vivienda_afecto",
+        RENTAL_LINK_IRPF_CATEGORY,
+        "capital_mobiliario",
+        "ganancias_patrimoniales",
+        _prize_category(),
     }
 
     assert ledger_irpf_category("bogus_withholding") is None
@@ -238,3 +256,8 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     assert trabajo is not None
     assert trabajo.directions == (TransactionDirection.INCOMING,)
     assert ledger_irpf_category(_employment_category(), direction=TransactionDirection.OUTGOING) is None
+
+    prize = ledger_irpf_category(_prize_category())
+    assert prize is not None
+    assert prize.directions == (TransactionDirection.OUTGOING,)
+    assert ledger_irpf_category(_prize_category(), direction=TransactionDirection.INCOMING) is None

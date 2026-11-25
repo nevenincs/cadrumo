@@ -16,8 +16,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 
 from .access_vocabulary import AccessScope
 
@@ -75,7 +75,7 @@ class AttendanceCandidate(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     attendance_id: UUID
     process_id: Annotated[int, Field(gt=0)] | None
-    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None
+    image_path: Annotated[str, Field(min_length=1, max_length=32768)] | None
     frontend: OperationFrontendProjection
     scope: AccessScope
     requested_at: datetime

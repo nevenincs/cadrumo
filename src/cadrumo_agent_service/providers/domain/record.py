@@ -14,6 +14,12 @@ axes; that state is never persisted.
 The secret travels as :class:`~pydantic.SecretStr`. Every ordinary dump, repr
 and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
+
+A separate per-profile record, kept in a record capability of its own, holds
+the models the person added by name to a local lane's model list, the local
+engine setting (which engine runs models on this computer and where they run)
+and the lane, model and effort the person set per task kind. It holds no
+secret.
 """
 
 from __future__ import annotations
@@ -21,13 +27,15 @@ from __future__ import annotations
 import json
 import secrets
 from enum import StrEnum
-from typing import Final, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import (
     BaseModel,
     Field,
     FieldSerializationInfo,
     SecretStr,
+    StringConstraints,
+    ValidationError,
     field_serializer,
     field_validator,
     model_validator,
@@ -35,11 +43,11 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 
-from .catalog import BASE_URL_MAX_LENGTH, ProviderId, validate_https_base_url
+from .catalog import BASE_URL_MAX_LENGTH, MAX_TASK_KINDS, EffortLevel, LaneId, TaskKindId, validate_https_base_url
 
 PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
 CREDENTIAL_SECRET_MIN_LENGTH: Final[int] = 8
@@ -111,7 +119,7 @@ def new_settings_generation() -> str:
 class ProviderCredential(BaseModel):
     """One stored direct credential and its optional gateway URL."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: CredentialKind
     secret: SecretStr
@@ -142,16 +150,16 @@ class ProviderCredential(BaseModel):
 class ProviderPreferences(BaseModel):
     """Validated non-secret preferences; deliberately empty in schema version 1."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class ProviderSettingsRecord(BaseModel):
     """One profile's settings for one provider."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     schema_version: Literal[1]
-    provider: ProviderId
+    provider: LaneId
     assistant_auth: AssistantAuth
     credential_state: CredentialState
     credential: ProviderCredential | None = None
@@ -166,6 +174,223 @@ class ProviderSettingsRecord(BaseModel):
         if configured != (self.credential is not None):
             raise ValueError("credential material is present exactly when the credential state is configured")
         return self
+
+
+LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[4]] = 4
+
+LOCAL_MODEL_LIST_MAX_MODELS: Final[int] = 64
+"""The most models a person adds to the local model list."""
+
+ModelId = Annotated[str, StringConstraints(pattern=MODEL_RUN_MODEL_ID_PATTERN)]
+"""A model id exactly as the lane names it, under the catalogue's own id rule."""
+
+
+class LocalEngine(StrEnum):
+    """The engine that runs models on this computer."""
+
+    LLAMACPP = "llamacpp"
+    OLLAMA = "ollama"
+
+
+class LocalPlacement(StrEnum):
+    """Where the local engine runs a model: on a graphics device when the load fits, or on the processor only."""
+
+    AUTO = "auto"
+    CPU_ONLY = "cpu_only"
+
+
+DEFAULT_LOCAL_PLACEMENT: Final[LocalPlacement] = LocalPlacement.AUTO
+
+
+class ListedModel(BaseModel):
+    """One lane and one of its models, as the person named them; nothing here is secret."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    lane: LaneId
+    """The catalogue lane id, never the provider identity alone."""
+    model: ModelId
+
+
+class TaskModel(BaseModel):
+    """The lane, model and effort the person set for one task kind; nothing here is secret.
+
+    ``task_kind`` is the agent's own id for the kind, from its served
+    vocabulary. ``effort`` is one of the levels the agent states for the
+    model on its lane, or ``None`` when the person set none: then the run
+    names no effort.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    task_kind: TaskKindId
+    lane: LaneId
+    model: ModelId
+    effort: EffortLevel | None = None
+
+
+class LocalModelListRecord(BaseModel):
+    """The models one profile added to its local lanes' model lists, the model it reads with and its local engine.
+
+    ``models`` holds the models added by name, in the order they were added.
+    The lane's recommended models are listed by cadrumo-agent's catalogue and
+    are not stored here; a model the record does not name was not added.
+    ``reading`` is the lane and model the person selected in the agent's model
+    picker, on any lane, local or not; ``None`` when none is stored.
+    ``engine`` and ``placement`` are the local engine setting as the person
+    chose it; ``None`` where the person chose none, which reads as the default
+    engine the package serves and follows it. ``tasks`` holds the lane, model
+    and effort the person set per task kind, at most one per kind; a kind it
+    does not name runs on the model documents are read with.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[4]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
+    tasks: tuple[TaskModel, ...] = Field(default=(), max_length=MAX_TASK_KINDS)
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_entry_per_model(self) -> Self:
+        pairs = [(entry.lane, entry.model) for entry in self.models]
+        if len(pairs) != len(set(pairs)):
+            raise ValueError("a lane lists a model at most once")
+        kinds = [task.task_kind for task in self.tasks]
+        if len(kinds) != len(set(kinds)):
+            raise ValueError("a task kind has at most one setting")
+        return self
+
+    def lane_models(self, lane: str) -> tuple[str, ...]:
+        """Return the models added to ``lane``'s list, in the order they were added."""
+        return tuple(entry.model for entry in self.models if entry.lane == lane)
+
+    def task(self, task_kind: str) -> TaskModel | None:
+        """Return the setting the person stored for ``task_kind``, or ``None`` when there is none."""
+        return next((task for task in self.tasks if task.task_kind == task_kind), None)
+
+
+class _EngineListRecord(BaseModel):
+    """Schema version 3 of the record: the model list, the reading model and the local engine, before task kinds."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[3]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+
+class _ModelListRecord(BaseModel):
+    """Schema version 2 of the record: the model list and the reading model, before the local engine setting."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[2]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+
+class _RoleChoice(BaseModel):
+    """One entry of the per-role record schema version 1 stored before the model list."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    lane: LaneId
+    model: ModelId
+
+
+class _RoleChoicesRecord(BaseModel):
+    """Schema version 1 of the record: the lane and model the person chose per role."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[1]
+    selections: tuple[_RoleChoice, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+
+def local_model_list_record_document(record: LocalModelListRecord) -> bytes:
+    """Return the model list record's at-rest JSON; it carries no secret."""
+    document = record.model_dump(mode="json")
+    return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
+    """Parse at-rest JSON back into a model list record.
+
+    A schema version 3 record holds no task kind setting: every kind runs on
+    the model documents are read with, so it is read with none set.
+
+    A schema version 2 record holds no local engine setting: the person chose
+    none, so it is read with none chosen.
+
+    A schema version 1 record names a lane and a model per role. Each model it
+    names is one the person chose, so it is read as a model on that lane's
+    list, in the order stored and once per lane. It names no single model to
+    read with, so none is read as selected; the desktop stores the picker's
+    model on its next change.
+
+    The stored bytes are not rewritten here; the next change writes the
+    current version under the revision read.
+
+    Raises:
+        pydantic.ValidationError: When the payload is not a valid record of any version.
+        UnicodeDecodeError: When the payload is not UTF-8.
+    """
+    text = payload.decode("utf-8")
+    try:
+        return LocalModelListRecord.model_validate_json(text)
+    except ValidationError:
+        pass
+    try:
+        engine_record = _EngineListRecord.model_validate_json(text)
+    except ValidationError:
+        pass
+    else:
+        return LocalModelListRecord(
+            schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+            models=engine_record.models,
+            reading=engine_record.reading,
+            engine=engine_record.engine,
+            placement=engine_record.placement,
+            generation=engine_record.generation,
+            updated_at=engine_record.updated_at,
+        )
+    try:
+        listed_record = _ModelListRecord.model_validate_json(text)
+    except ValidationError:
+        pass
+    else:
+        return LocalModelListRecord(
+            schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+            models=listed_record.models,
+            reading=listed_record.reading,
+            generation=listed_record.generation,
+            updated_at=listed_record.updated_at,
+        )
+    earlier = _RoleChoicesRecord.model_validate_json(text)
+    listed: dict[tuple[str, str], ListedModel] = {}
+    for choice in earlier.selections:
+        listed.setdefault((choice.lane, choice.model), ListedModel(lane=choice.lane, model=choice.model))
+    return LocalModelListRecord(
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        models=tuple(listed.values()),
+        generation=earlier.generation,
+        updated_at=earlier.updated_at,
+    )
 
 
 def provider_settings_record_document(record: ProviderSettingsRecord) -> bytes:
@@ -188,16 +413,27 @@ def parse_provider_settings_record(payload: bytes) -> ProviderSettingsRecord:
 __all__ = [
     "CREDENTIAL_SECRET_MAX_LENGTH",
     "CREDENTIAL_SECRET_MIN_LENGTH",
+    "DEFAULT_LOCAL_PLACEMENT",
+    "LOCAL_MODEL_LIST_MAX_MODELS",
+    "LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION",
     "PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION",
     "AssistantAuth",
     "CredentialKind",
     "CredentialSecretRefusal",
     "CredentialState",
+    "ListedModel",
+    "LocalEngine",
+    "LocalModelListRecord",
+    "LocalPlacement",
+    "ModelId",
     "ProviderCredential",
     "ProviderPreferences",
     "ProviderSettingsRecord",
+    "TaskModel",
     "credential_secret_refusal",
+    "local_model_list_record_document",
     "new_settings_generation",
+    "parse_local_model_list_record",
     "parse_provider_settings_record",
     "provider_settings_record_document",
 ]

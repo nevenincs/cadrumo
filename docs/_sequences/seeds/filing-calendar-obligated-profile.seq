@@ -1,2 +1,6 @@
-@step Declare an economic-activity IRPF obligation on the profile so the calendar has modelos to show.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-income-categories actividad_economica --activity-start-date 2025-01-01
+:persona: autonomo-fontanero
+:profile: tax-id name surnames irpf-income-categories activity-start-date pays-rent-with-retencion third-party-transactions-above-347-threshold
+@step State a plumber active for years, with an economic-activity IRPF obligation, so the calendar and backlog have modelos to show.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --tax-id 00000026A --name Javier --surnames "Montero Alcaraz" --irpf-income-categories actividad_economica --activity-start-date 2017-03-01 --pays-rent-with-retencion --third-party-transactions-above-347-threshold
+:generated: end

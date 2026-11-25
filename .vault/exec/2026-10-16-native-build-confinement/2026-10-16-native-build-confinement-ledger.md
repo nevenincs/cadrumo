@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#native-build-confinement'
 date: '2026-10-16'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3fdeb38b998355dd23c1afba42ddb219d6a01aba26ce4f57a23ac03d679f6185'
+body_hash: 'sha256:89c060c0ad9e1f121b21d4ec1c71f45923ba641fd0f85fabc0feb0ed9c0b1cb5'
 related:
   - "[[2026-10-16-native-build-confinement-plan]]"
 ---
@@ -179,6 +179,10 @@ related:
 - `S02` `verify:` `uv run python -m dev.quality.types --count (0 diagnostics)` -> `pass`
 - `S02` `verify:` `docs test_docs_build.py collect-only (66 tests, 0 errors)` -> `pass`
 - `S02` `verify:` `pytest dev/packaging dev/release dev/env dev/tests -n 6 (2630 passed, 26 failed)` -> `fail`
+- `S01` `verify:` `locator-check: no UV_CACHE or UV_TOOL in justfile, dev/_paths.py, conftests` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S02` `verify:` `locator-check: dev/packaging/native/agent_runtime.py:70-75; native/desktop/CMakeLists.txt:100-106` -> `pass`
+- `S02` `by:` `plan-closure`
 
 ## Notes
 

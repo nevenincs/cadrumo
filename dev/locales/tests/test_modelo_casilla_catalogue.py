@@ -21,13 +21,15 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from ..casilla_catalogue_install import resume_install
 from ..casilla_catalogue_models import CasillaOccurrence, CollapseVerificationError
 from ..casilla_source_inventory import load_casilla_values
-from ..casilla_text_comparison import _segments
+from ..casilla_text_comparison import segments
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_OCC_2023 = "modelo.schema.999.revision.2023.casilla.01.label"
-_OCC_2024 = "modelo.schema.999.revision.2024.casilla.01.label"
+_FIRST = "first-edition"
+_SECOND = "second-edition"
+_OCC_FIRST = f"modelo.schema.999.revision.{_FIRST}.casilla.01.label"
+_OCC_SECOND = f"modelo.schema.999.revision.{_SECOND}.casilla.01.label"
 _LINEAGE = "modelo.schema.999.casilla.continuidad.base.label"
 
 
@@ -45,8 +47,8 @@ def _occurrence(revision: str, chain: tuple[str, ...], *, inherited_from: str | 
 
 def _chains() -> tuple[CasillaOccurrence, ...]:
     return (
-        _occurrence("2023", (_OCC_2023, _LINEAGE)),
-        _occurrence("2024", (_OCC_2024, _OCC_2023, _LINEAGE), inherited_from="2023"),
+        _occurrence(_FIRST, (_OCC_FIRST, _LINEAGE)),
+        _occurrence(_SECOND, (_OCC_SECOND, _OCC_FIRST, _LINEAGE), inherited_from=_FIRST),
     )
 
 
@@ -60,20 +62,20 @@ def _applied(catalogue: ModeloCasillaCatalogue) -> dict[str, dict[str, str | Non
 
 
 def test_a_restated_inherited_value_is_removed_without_changing_any_resolution() -> None:
-    catalogue = _catalogue({"es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible"}})
+    catalogue = _catalogue({"es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible"}})
     before = catalogue.resolution()
 
     working = _applied(catalogue)
 
-    assert _OCC_2024 not in working["es"]
+    assert _OCC_SECOND not in working["es"]
     assert catalogue.resolution(working) == before
 
 
 def test_text_every_edition_agrees_on_lands_once_on_the_lineage_key() -> None:
     catalogue = _catalogue(
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible"},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+            "es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible"},
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Tax base"},
         }
     )
     before = catalogue.resolution()
@@ -88,27 +90,27 @@ def test_text_every_edition_agrees_on_lands_once_on_the_lineage_key() -> None:
 def test_an_edition_specific_text_is_kept_and_its_translation_is_not_lifted_past_it() -> None:
     catalogue = _catalogue(
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible ajustada"},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Adjusted tax base"},
+            "es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible ajustada"},
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Adjusted tax base"},
         }
     )
     before = catalogue.resolution()
 
     working = _applied(catalogue)
 
-    assert working["es"][_OCC_2024] == "Base imponible ajustada"
-    assert working["en"][_OCC_2024] == "Adjusted tax base"
+    assert working["es"][_OCC_SECOND] == "Base imponible ajustada"
+    assert working["en"][_OCC_SECOND] == "Adjusted tax base"
     assert catalogue.resolution(working) == before
 
 
 def test_null_leaves_orphans_and_derived_help_are_delete_targets() -> None:
-    orphan = "modelo.schema.999.revision.2023.casilla.99.label"
-    derived = "modelo.schema.999.revision.2023.casilla.01.help"
+    orphan = f"modelo.schema.999.revision.{_FIRST}.casilla.99.label"
+    derived = f"modelo.schema.999.revision.{_FIRST}.casilla.01.help"
     catalogue = _catalogue(
         {
             "es": {
-                _OCC_2023: "Base imponible",
-                _OCC_2024: None,
+                _OCC_FIRST: "Base imponible",
+                _OCC_SECOND: None,
                 orphan: "Nadie la lee",
                 derived: "Indique o revise «Base imponible» para completar esta autoliquidación.",
             },
@@ -118,10 +120,10 @@ def test_null_leaves_orphans_and_derived_help_are_delete_targets() -> None:
     findings = catalogue.findings()
     plan = catalogue.collapse_plan().plan
 
-    assert findings.null_leaves["es"] == (_OCC_2024,)
+    assert findings.null_leaves["es"] == (_OCC_SECOND,)
     assert findings.orphan_keys["es"] == (orphan,)
     assert findings.derived_help["es"] == (derived,)
-    assert {_OCC_2024, orphan, derived} <= plan.removals["es"].keys()
+    assert {_OCC_SECOND, orphan, derived} <= plan.removals["es"].keys()
     assert not findings.pure
 
 
@@ -131,8 +133,13 @@ def test_declared_binding_text_survives_casilla_collapse_but_unknown_binding_tex
     catalogue = ModeloCasillaCatalogue(
         _chains(),
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible", declared: "Nombre", unknown: "Huérfana"},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base", declared: "Name", unknown: "Orphan"},
+            "es": {
+                _OCC_FIRST: "Base imponible",
+                _OCC_SECOND: "Base imponible",
+                declared: "Nombre",
+                unknown: "Huérfana",
+            },
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Tax base", declared: "Name", unknown: "Orphan"},
         },
         binding_presentation_keys=frozenset({declared}),
     )
@@ -144,15 +151,15 @@ def test_declared_binding_text_survives_casilla_collapse_but_unknown_binding_tex
     assert all(declared in leaves and unknown not in leaves for leaves in plan.working.values())
     assert plan.plan.removals["es"][unknown] == "orphan"
     assert plan.plan.removals["en"][unknown] == "orphan"
-    assert _OCC_2024 not in plan.working["es"]
+    assert _OCC_SECOND not in plan.working["es"]
     assert catalogue.resolution(plan.working) == plan.baseline
 
 
 def test_a_placeholder_is_reported_and_a_clean_surface_is_pure() -> None:
-    placeholder = _catalogue({"es": {_OCC_2023: "Casilla 01: base imponible"}})
+    placeholder = _catalogue({"es": {_OCC_FIRST: "Casilla 01: base imponible"}})
     clean = _catalogue({"es": {_LINEAGE: "Base imponible"}, "en": {_LINEAGE: "Tax base"}})
 
-    assert placeholder.findings().placeholders["es"] == (_OCC_2023,)
+    assert placeholder.findings().placeholders["es"] == (_OCC_FIRST,)
     assert clean.findings().pure
 
 
@@ -210,8 +217,8 @@ def test_an_applied_collapse_is_installed_only_as_proven_and_is_idempotent(tmp_p
     _write_catalogue(
         locales,
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible"},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+            "es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible"},
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Tax base"},
         },
     )
     catalogue = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
@@ -229,7 +236,7 @@ def test_an_applied_collapse_is_installed_only_as_proven_and_is_idempotent(tmp_p
 def test_a_pending_install_blocks_a_new_plan_until_resumed(tmp_path: Path) -> None:
     locales = tmp_path / "locales"
     pending = tmp_path / "pending"
-    _write_catalogue(locales, {"es": {_OCC_2023: "Base imponible"}, "en": {}})
+    _write_catalogue(locales, {"es": {_OCC_FIRST: "Base imponible"}, "en": {}})
     (pending / "locales").mkdir(parents=True)
     catalogue = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
 
@@ -249,7 +256,7 @@ def test_an_interrupted_install_is_finished_from_its_staged_catalogue(tmp_path: 
     """
     locales = tmp_path / "locales"
     pending = tmp_path / "pending"
-    _write_catalogue(locales, {"es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible"}, "en": {}})
+    _write_catalogue(locales, {"es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible"}, "en": {}})
     _write_catalogue(pending / "locales", {"es": {_LINEAGE: "Base imponible"}, "en": {}})
     before = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales)).resolution()
 
@@ -297,15 +304,15 @@ def test_authoring_refuses_new_segment_drift_before_installation(
         locales,
         {
             "es": {
-                _OCC_2023: "Resultado de conversión: Abono - Navarra",
-                _OCC_2024: "Resultado de conversión: Abono - Estado",
+                _OCC_FIRST: "Resultado de conversión: Abono - Navarra",
+                _OCC_SECOND: "Resultado de conversión: Abono - Estado",
             },
-            "en": {_OCC_2023: "Conversion result: Credit - Navarre", _OCC_2024: initial},
+            "en": {_OCC_FIRST: "Conversion result: Credit - Navarre", _OCC_SECOND: initial},
         },
     )
     before = load_casilla_values(locales)
     catalogue = ModeloCasillaCatalogue(_chains(), before)
-    manifest = {"en": {_OCC_2024: replacement}}
+    manifest = {"en": {_OCC_SECOND: replacement}}
 
     if refused:
         with pytest.raises(CollapseVerificationError, match="inconsistent composed-segment renderings"):
@@ -314,8 +321,8 @@ def test_authoring_refuses_new_segment_drift_before_installation(
     else:
         assert catalogue.author(manifest, locales, pending) == {"en": 1}
         installed = load_casilla_values(locales)
-        assert installed["en"][_OCC_2024] == replacement
-        assert installed["en"][_OCC_2023] == before["en"][_OCC_2023]
+        assert installed["en"][_OCC_SECOND] == replacement
+        assert installed["en"][_OCC_FIRST] == before["en"][_OCC_FIRST]
     assert not pending.exists()
 
 
@@ -326,19 +333,19 @@ def test_a_spanish_segment_edit_checks_the_translations_before_installation(tmp_
         locales,
         {
             "es": {
-                _OCC_2023: "Resultado de conversión: Abono - Navarra",
-                _OCC_2024: "Resultado de conversión: Devolución - Estado",
+                _OCC_FIRST: "Resultado de conversión: Abono - Navarra",
+                _OCC_SECOND: "Resultado de conversión: Devolución - Estado",
             },
             "en": {
-                _OCC_2023: "Conversion result: Credit - Navarre",
-                _OCC_2024: "Conversion result: Refund - State",
+                _OCC_FIRST: "Conversion result: Credit - Navarre",
+                _OCC_SECOND: "Conversion result: Refund - State",
             },
         },
     )
     before = load_casilla_values(locales)
     catalogue = ModeloCasillaCatalogue(_chains(), before)
     with pytest.raises(CollapseVerificationError, match="inconsistent composed-segment renderings"):
-        catalogue.author({"es": {_OCC_2024: "Resultado de conversión: Abono - Estado"}}, locales, pending)
+        catalogue.author({"es": {_OCC_SECOND: "Resultado de conversión: Abono - Estado"}}, locales, pending)
     assert load_casilla_values(locales) == before
     assert not pending.exists()
 
@@ -346,16 +353,18 @@ def test_a_spanish_segment_edit_checks_the_translations_before_installation(tmp_
 def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path: Path) -> None:
     locales = tmp_path / "locales"
     pending = tmp_path / "pending"
-    _write_catalogue(locales, {"es": {_LINEAGE: "Base imponible", _OCC_2024: "Base imponible del ejercicio"}, "en": {}})
+    _write_catalogue(
+        locales, {"es": {_LINEAGE: "Base imponible", _OCC_SECOND: "Base imponible del ejercicio"}, "en": {}}
+    )
     catalogue = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
 
-    changed = catalogue.author({"es": {_OCC_2024: None, _LINEAGE: "Base imponible"}}, locales, pending)
+    changed = catalogue.author({"es": {_OCC_SECOND: None, _LINEAGE: "Base imponible"}}, locales, pending)
 
     assert changed == {"es": 1, "en": 1}
     assert load_casilla_values(locales)["es"] == {_LINEAGE: "Base imponible"}
     agreeing = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
     with pytest.raises(CollapseVerificationError, match="continuity evolution"):
-        agreeing.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending)
+        agreeing.author({"es": {_OCC_SECOND: "Base imponible del ejercicio"}}, locales, pending)
     assert not pending.exists()
 
 
@@ -365,7 +374,7 @@ def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path
         (CasillaEvolutionKind.LABEL_EVOLVED, "base", "later", True),
         (CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED, "base", "later", True),
         (CasillaEvolutionKind.LEGAL_REFS_EVOLVED, "base", "later", False),
-        (CasillaEvolutionKind.REPURPOSED, "base", "later", False),
+        (CasillaEvolutionKind.REPURPOSED, "base", "later", True),
         (CasillaEvolutionKind.LABEL_EVOLVED, "another-base", "later", False),
         (CasillaEvolutionKind.LABEL_EVOLVED, "base", "unrelated", False),
     ],
@@ -389,7 +398,7 @@ def test_authoring_requires_the_matching_typed_label_evolution(
         source_refs=("aeat-test-design",),
     )
     catalogue = ModeloCasillaCatalogue(occurrences, before, label_evolutions={"999": (evolution,)})
-    manifest = {"es": {_OCC_2024: "Base imponible del ejercicio"}}
+    manifest = {"es": {_OCC_SECOND: "Base imponible del ejercicio"}}
     if accepted:
         assert catalogue.author(manifest, locales, pending) == {"es": 1, "en": 1}
         installed = ModeloCasillaCatalogue(occurrences, load_casilla_values(locales))
@@ -400,6 +409,39 @@ def test_authoring_requires_the_matching_typed_label_evolution(
             catalogue.author(manifest, locales, pending)
         assert load_casilla_values(locales) == before
     assert not pending.exists()
+
+
+def test_collapse_keeps_each_caption_across_a_repurposed_box(tmp_path: Path) -> None:
+    """A later edition reading the declaring edition's key keeps its own caption after collapse."""
+    locales, pending = tmp_path / "locales", tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_LINEAGE: "Deducción generada 2024"}, "en": {}})
+    rows = tuple(replace(row, revision=revision) for row, revision in zip(_chains(), ("floor", "later"), strict=True))
+    floor_key = "modelo.schema.999.revision.floor.casilla.01.label"
+    later_key = "modelo.schema.999.revision.later.casilla.01.label"
+    rows = (
+        replace(rows[0], label_chain=(floor_key, _LINEAGE)),
+        replace(rows[1], label_chain=(later_key, floor_key, _LINEAGE), inherited_from="floor"),
+    )
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="cohort-repurposed",
+        continuidad_id="base",
+        from_revision="floor",
+        to_revision="later",
+        evolution_kind=CasillaEvolutionKind.REPURPOSED,
+        legal_refs=("ley-27-2014:art-10",),
+        source_refs=("aeat-test-design",),
+    )
+    evolutions = {"999": (evolution,)}
+    catalogue = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions=evolutions)
+    manifest = {"es": {floor_key: "Deducción generada 2023", later_key: "Deducción generada 2024"}}
+    catalogue.author(manifest, locales, pending)
+
+    installed = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions=evolutions)
+    working = installed.collapse_plan().working
+
+    assert installed.resolve(0, "label", "es", working) == "Deducción generada 2023"
+    assert installed.resolve(1, "label", "es", working) == "Deducción generada 2024"
+    assert working["es"].get(_LINEAGE) != "Deducción generada 2023"
 
 
 def test_a_label_evolution_covers_inherited_text_but_not_a_further_split(tmp_path: Path) -> None:
@@ -421,7 +463,10 @@ def test_a_label_evolution_covers_inherited_text_but_not_a_further_split(tmp_pat
     )
     rows = (first, second, third)
     catalogue = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions={"999": (evolution,)})
-    assert catalogue.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending) == {"es": 2, "en": 2}
+    assert catalogue.author({"es": {_OCC_SECOND: "Base imponible del ejercicio"}}, locales, pending) == {
+        "es": 2,
+        "en": 2,
+    }
     installed = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions={"999": (evolution,)})
     before = load_casilla_values(locales)
     with pytest.raises(CollapseVerificationError, match="continuity evolution"):
@@ -454,9 +499,9 @@ def test_a_translation_keeps_the_content_the_spanish_states(spanish: str, englis
 
 
 def test_keys_under_an_undeclared_revision_are_a_rename_never_an_orphan() -> None:
-    renamed = "modelo.schema.999.revision.2019.casilla.01.label"
-    removed = "modelo.schema.999.revision.2023.casilla.02.label"
-    catalogue = _catalogue({"es": {_OCC_2023: "Base imponible", renamed: "Base imponible", removed: "Retirada"}})
+    renamed = "modelo.schema.999.revision.zeroth-edition.casilla.01.label"
+    removed = f"modelo.schema.999.revision.{_FIRST}.casilla.02.label"
+    catalogue = _catalogue({"es": {_OCC_FIRST: "Base imponible", renamed: "Base imponible", removed: "Retirada"}})
 
     findings = catalogue.findings()
     plan = catalogue.collapse_plan().plan
@@ -470,14 +515,14 @@ def test_keys_under_an_undeclared_revision_are_a_rename_never_an_orphan() -> Non
 def test_a_translation_that_ignored_a_spanish_change_is_stale() -> None:
     catalogue = _catalogue(
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible ajustada"},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+            "es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base imponible ajustada"},
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Tax base"},
         }
     )
     faithful = _catalogue(
         {
-            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base Imponible."},
-            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+            "es": {_OCC_FIRST: "Base imponible", _OCC_SECOND: "Base Imponible."},
+            "en": {_OCC_FIRST: "Tax base", _OCC_SECOND: "Tax base"},
         }
     )
 
@@ -500,7 +545,7 @@ def test_a_translation_that_ignored_a_spanish_change_is_stale() -> None:
 )
 def test_a_label_splits_into_segments_only_where_it_composes_them(text: str, expected: tuple[str, ...]) -> None:
     """Subtraction of one box from another is arithmetic, not a composed segment."""
-    assert _segments(text) == expected
+    assert segments(text) == expected
 
 
 def test_one_spanish_segment_rendered_two_ways_is_reported() -> None:
@@ -508,13 +553,13 @@ def test_one_spanish_segment_rendered_two_ways_is_reported() -> None:
     catalogue = _catalogue(
         {
             "es": {
-                _OCC_2023: "Resultado de conversión: Abono - Navarra",
-                _OCC_2024: "Resultado de conversión: Abono - Estado",
+                _OCC_FIRST: "Resultado de conversión: Abono - Navarra",
+                _OCC_SECOND: "Resultado de conversión: Abono - Estado",
                 _LINEAGE: "Base imponible",
             },
             "en": {
-                _OCC_2023: "Conversion result: Credit - Navarre",
-                _OCC_2024: "Conversion result: Payment - State",
+                _OCC_FIRST: "Conversion result: Credit - Navarre",
+                _OCC_SECOND: "Conversion result: Payment - State",
                 _LINEAGE: "Tax base",
             },
         }
@@ -531,13 +576,13 @@ def test_one_rendering_standing_for_two_spanish_segments_is_reported() -> None:
     catalogue = _catalogue(
         {
             "es": {
-                _OCC_2023: "Tributación conjunta - Concierto económico - Bizkaia",
-                _OCC_2024: "Tributación conjunta - Convenio económico - Navarra",
+                _OCC_FIRST: "Tributación conjunta - Concierto económico - Bizkaia",
+                _OCC_SECOND: "Tributación conjunta - Convenio económico - Navarra",
                 _LINEAGE: "Base imponible",
             },
             "en": {
-                _OCC_2023: "Joint taxation - Economic Agreement - Bizkaia",
-                _OCC_2024: "Joint taxation - Economic Agreement - Navarre",
+                _OCC_FIRST: "Joint taxation - Economic Agreement - Bizkaia",
+                _OCC_SECOND: "Joint taxation - Economic Agreement - Navarre",
                 _LINEAGE: "Taxable base",
             },
         }
@@ -557,8 +602,8 @@ def test_an_abbreviated_official_wording_may_share_one_rendering(spanish: str, a
     """AEAT shortens a label by dropping its prepositions, which states the same thing."""
     catalogue = _catalogue(
         {
-            "es": {_OCC_2023: f"Casilla - {spanish}", _OCC_2024: f"Casilla - {abbreviated}"},
-            "en": {_OCC_2023: "Box - Deductible VAT", _OCC_2024: "Box - Deductible VAT"},
+            "es": {_OCC_FIRST: f"Casilla - {spanish}", _OCC_SECOND: f"Casilla - {abbreviated}"},
+            "en": {_OCC_FIRST: "Box - Deductible VAT", _OCC_SECOND: "Box - Deductible VAT"},
         }
     )
 

@@ -42,20 +42,20 @@ from cadrumo.application.filing.producer_snapshot_m360 import (
     Modelo360SolicitudEntry,
     Modelo360SolicitudFacts,
 )
-from cadrumo.application.modelo.action_errors import ModeloRefundAccountMissingError
-from cadrumo.application.modelo.export import (
+from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, ModeloRefundAccountMissingError
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import (
     ModeloExportAccountReference,
+    ModeloExportCasillaValueRefusedError,
     ModeloExportCommand,
     ModeloExportResult,
-    export_modelo_revision,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_error_message
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import RefundAccount
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.transactions.own_accounts import (
     OwnAccountHolding,
     OwnAccountRegister,
@@ -68,7 +68,7 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _YEAR = 2025
-_PERIOD = Period.from_year_and_code(_YEAR, "AD-HOC")
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _TAX_ID = "12345678Z"
 _SYNTHETIC_IBAN = "ES9121000418450200051332"
 _SYNTHETIC_BIC = "CAIXESBBXXX"
@@ -312,7 +312,12 @@ def test_a_second_operation_campo_without_its_numero_is_refused(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """An operation-2 campo with no número de operación would print an operation with no identity."""
+    """An operation-2 campo with no número de operación would print an operation with no identity.
+
+    The refusal's door states the número on the work unit, with the box bound;
+    the export knows the revision, not the work unit, so that and the value are
+    left for the operator.
+    """
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(
         bucket_id,
@@ -324,11 +329,25 @@ def test_a_second_operation_campo_without_its_numero_is_refused(
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(account=_register_own_account(bucket_id)))
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloExportCasillaValueRefusedError) as exc_info:
         _export(calculation_revision_id, output)
 
-    assert isinstance(exc_info.value.context, dict)
-    assert "block anchor 'decl.op2-numero'" in str(exc_info.value.context["cause"])
+    refused = exc_info.value
+    assert refused.translated_message == "application.filing.export.errors.block_anchor_unstated"
+    assert isinstance(refused.context, dict)
+    assert refused.context["casilla_id"] == "decl.op2-numero"
+    assert refused.context["field_casilla_id"] == "decl.op2-factura"
+    verdict = refused.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.set_value"
+    bound = {binding.argument_name: binding.value for binding in verdict.argument_bindings}
+    assert bound == {"casilla_id": "decl.op2-numero", "work_unit_id": None, "value": None}
+    assert set(verdict.missing_argument_names) == {"work_unit_id", "value"}
+    for locale in ("es", "ca", "en", "hu"):
+        message = resolve_error_message(refused, locale=locale)
+        assert "decl.op2-numero" in message
+        assert "%{" not in message
     assert not output.exists()
 
 
@@ -340,7 +359,7 @@ def test_an_undeclared_solicitud_is_refused_before_any_file_is_written(
     calculation_revision_id = _seed_360_revision(bucket_id)
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloProfileReadinessError) as exc_info:
         _export(calculation_revision_id, output)
 
     assert isinstance(exc_info.value.context, dict)
@@ -458,14 +477,14 @@ def test_a_solicitud_declared_for_another_period_does_not_answer_this_one(
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(bucket_id)
     other_year = Modelo360SolicitudEntry(
-        period=Period.from_year_and_code(_YEAR - 1, "AD-HOC"),
+        period=Period.from_year_and_code(_YEAR - 1, "0A"),
         facts=_facts(),
         account=_register_own_account(bucket_id),
     )
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(other_year)
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloProfileReadinessError) as exc_info:
         _export(calculation_revision_id, output)
 
     assert isinstance(exc_info.value.context, dict)

@@ -1,7 +1,7 @@
 """Real-behaviour conformance for the wrangling corrections layer.
 
 The raw-hit corrections are required to be TESTED CODE, not ad-hoc
-filtering. :func:`~dev.docs.terminology._wrangle.wrangle` takes the resolver's
+filtering. :func:`~dev.docs.terminology.wrangle.wrangle` takes the resolver's
 :class:`~dev.docs.terminology.resolution.ResolutionResult` and applies the four
 documented corrections -- score-floor + TOC-noise filtering, casilla-revision
 dedupe, locale-quadruplet collapse, directory-cluster reading -- emitting the
@@ -22,15 +22,8 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
-from .._wrangle import (
-    STRONG_SIGNAL_SCORE_FLOOR,
-    CollapseReason,
-    DirectoryCluster,
-    WrangledResult,
-    read_clusters,
-    wrangle,
-)
 from ..resolution import (
     ChunkHit,
     DroppedHit,
@@ -45,6 +38,14 @@ from ..unified_record import (
     SearchRecord,
     SearchRecordMetadata,
     to_search_record,
+)
+from ..wrangle import (
+    STRONG_SIGNAL_SCORE_FLOOR,
+    CollapseReason,
+    DirectoryCluster,
+    WrangledResult,
+    read_clusters,
+    wrangle,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -65,7 +66,8 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
 
     records = project_modelo_casillas(Modelo("303"))
     unified = to_search_record(records[index])
-    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/{index:04d}-casillas.part-001.toml"
+    oldest = authored_revisions("303")[0].id
+    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/{oldest}/casillas/{index:04d}-casillas.part-001.toml"
     return ResolvedTarget(surface=GroundingSurface.CASILLA, record=unified, source_hit=_hit(path, score))
 
 

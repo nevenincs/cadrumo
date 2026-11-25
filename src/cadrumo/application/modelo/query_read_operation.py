@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
@@ -41,8 +40,11 @@ from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
+    operation_disclosures,
     require_admitted_submission,
 )
 from ..operations.capabilities import (
@@ -53,7 +55,6 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -63,11 +64,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..state_projection import (
-    ModeloReadinessRequest,
-    ProjectionModeloReadiness,
-    build_modelo_readiness_reports,
-)
+from ..state_projection import build_modelo_readiness_reports
+from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_readiness import profile_resolvable_binding_ids
 from .data_inventory import data_inventory_checklist
@@ -89,6 +87,7 @@ from .registry_discovery import (
     registry_bindings_for_year,
     registry_modelo_codes,
 )
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict
 from .work_addressing import law_selected_revision_for_work_target
 
 MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID = "modelo.bindings.list"
@@ -181,9 +180,10 @@ def _listing_rows_for_report(
     )
 
 
-def _read_bindings_list(
+def read_bindings_list(
     payload: ModeloBindingsListRequest, *, operation: PinnedAuthorityOperation
 ) -> ModeloBindingsListProjection:
+    """Build the modelo bindings list projection for a request."""
     known_codes = registry_modelo_codes(operation=operation)
     if payload.catalogue_only:
         return ModeloBindingsListProjection(
@@ -203,6 +203,11 @@ def _read_bindings_list(
             f"modelo {payload.modelo!r} is not in the calculation registry; accepted: {', '.join(known_codes)}",
             translated_message="errors.error.error_calculations_registry_validation",
             context={"modelo": payload.modelo, "accepted": ", ".join(known_codes)},
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.MODELO_DECLARED,
+                facts={"declared_modelo_count": len(known_codes), "declared": False},
+                action_arguments={"year": payload.year, "period": payload.period_code},
+            ),
         )
     rows: list[ModeloBindingRowV1] = []
     for modelo in (payload.modelo,) if payload.modelo is not None else known_codes:
@@ -244,6 +249,15 @@ def read_modelo_bindings_resolve(
                 "unknown": ", ".join(unknown),
                 "accepted": accepted,
             },
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.BINDING_DECLARED,
+                facts={"modelo": report.code, "revision_id": report.revision, "unknown_binding_count": len(unknown)},
+                action_arguments={
+                    "modelo": report.code,
+                    "year": report.filing_year,
+                    "period": report.period,
+                },
+            ),
         )
     rows = tuple(
         ModeloBindingRowV1.from_report_row(report, row, override=overrides.get(row.binding_id)) for row in report.rows
@@ -334,9 +348,7 @@ class ModeloBindingsListExecutor:
         await context.events.phase(MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
-            result = await asyncio.to_thread(
-                _read_bindings_list, request.payload, operation=context.authority_operation
-            )
+            result = await asyncio.to_thread(read_bindings_list, request.payload, operation=context.authority_operation)
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return ref
@@ -427,11 +439,7 @@ def modelo_query_read_capabilities(*, sensitive: bool = False) -> OperationCapab
         deadline=OperationDeadline.ABSENT,
         replay=OperationReplayPolicy.NONE,
         baseline=OperationBaselinePolicy.NONE,
-        request_storage=(
-            OperationRequestStoragePolicy.SECURE_REFERENCE
-            if sensitive
-            else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-        ),
+        request_storage=(OperationRequestStoragePolicy.for_private_request(sensitive)),
         sensitive_input=(
             OperationSensitiveInputPolicy.SECURE_REFERENCE if sensitive else OperationSensitiveInputPolicy.NONE
         ),
@@ -510,7 +518,7 @@ def build_modelo_readiness_definition(factory: ModeloQueryReadPortsFactory) -> O
     )
 
 
-def _requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]:
+def requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]:
     """Return exact period, independence and all-period requirement."""
     if type(payload) is ModeloBindingsListRequest:
         if payload.year is not None and payload.period_code is not None:
@@ -561,7 +569,7 @@ def _authorized_query_scope(
     context: OperationAccessContext,
     definition_id: str,
 ) -> tuple[frozenset[Period], bool, bool]:
-    periods, period_independent, requires_all_periods = _requested_scope(payload)
+    periods, period_independent, requires_all_periods = requested_scope(payload)
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
         require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=definition_id)
@@ -570,28 +578,6 @@ def _authorized_query_scope(
     elif context.authority_operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return periods, period_independent, requires_all_periods
-
-
-def _query_disclosure(
-    context: OperationAccessContext, result_category: DisclosureCategory
-) -> DisclosurePermission | None:
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=result_category,
-        )
-    return disclosure
 
 
 def _query_access_request(
@@ -617,23 +603,13 @@ def _query_access_policy(
     periods: frozenset[Period],
     period_independent: bool,
     requires_all_periods: bool,
-    disclosure: DisclosurePermission | None,
+    disclosures: frozenset[DisclosurePermission],
 ) -> OperationAccessPolicy:
     return OperationAccessPolicy(
         definition_id=definition_id,
         definition_contract_digest=context.contract.definition_contract_digest,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+        actions=OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
         periods=periods,
         allow_period_independent=period_independent,
         requires_all_periods=requires_all_periods,
@@ -655,7 +631,12 @@ def resolve_modelo_query_read_access(
     """Resolve an exact modelo query scope and public result category."""
     payload = _validated_access_payload(request, context, definition_id=definition_id, payload_type=payload_type)
     periods, period_independent, requires_all_periods = _authorized_query_scope(payload, context, definition_id)
-    disclosure = _query_disclosure(context, result_category)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({result_category}),
+        result_schema_id=None,
+    )
     return ResolvedOperationAccess(
         request=_query_access_request(context, definition_id, periods, period_independent),
         policy=_query_access_policy(
@@ -664,7 +645,7 @@ def resolve_modelo_query_read_access(
             periods,
             period_independent,
             requires_all_periods,
-            disclosure,
+            disclosures,
         ),
     )
 

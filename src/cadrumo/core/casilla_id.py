@@ -23,16 +23,20 @@ is declared for a filing context.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
-from typing import Annotated
+from typing import Annotated, Final
 
-from pydantic import Field, TypeAdapter, ValidationError
+from pydantic import Field
 
 _CASILLA_RE = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+_CASILLA_MAX_LENGTH: Final = 64
 
-type CasillaId = Annotated[str, Field(min_length=1, max_length=64, pattern=_CASILLA_RE)]
+type CasillaId = Annotated[str, Field(min_length=1, max_length=_CASILLA_MAX_LENGTH, pattern=_CASILLA_RE)]
 
-_CASILLA_ID_ADAPTER: TypeAdapter[CasillaId] = TypeAdapter(CasillaId)
+# The same token rule as ``CasillaId``, checked without a validator call: a
+# calculation identity hashes tens of thousands of ids on every catalogue read.
+_CASILLA_TOKEN: Final = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]*")
 
 
 def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> CasillaId:
@@ -51,12 +55,9 @@ def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> Casil
         ValueError: When ``value`` is not a string or fails the canonical
             ``casilla.id`` shape.
     """
-    if not isinstance(value, str):
+    if not isinstance(value, str) or len(value) > _CASILLA_MAX_LENGTH or _CASILLA_TOKEN.fullmatch(value) is None:
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id")
-    try:
-        return _CASILLA_ID_ADAPTER.validate_python(value)
-    except ValidationError as exc:
-        raise ValueError(f"{surface} {value!r} is not a canonical casilla.id") from exc
+    return str.__str__(value)
 
 
 def validated_casilla_id_map[T](

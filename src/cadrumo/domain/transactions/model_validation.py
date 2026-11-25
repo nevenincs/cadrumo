@@ -2,16 +2,13 @@
 
 The transaction models keep their Pydantic validators on the boundary records,
 while this helper module owns the reusable parsing and invariant checks those
-validators call. It normalizes raw transactions, UTC timestamps, classifier
+validators call. It normalizes UTC timestamps, classifier
 provenance, confidence ranges, identifier tuples, lineage text, and non-negative
 tax amount fields without turning those rules into a separate public API.
 
 See Also:
     :class:`~domain.transactions.models.Transaction`
         Strict transaction record whose validators delegate to these helpers.
-    :class:`~domain.transactions.raw_transaction.RawTransaction`
-        Upstream row model accepted directly or coerced from JSON-compatible
-        payloads.
     :class:`~domain.transactions.enums.BusinessClassification`
         Classification enum coupled to ``business_pct`` by this module.
     :class:`~domain.transactions.errors.TransactionValidationError`
@@ -22,19 +19,22 @@ See Also:
 
 from __future__ import annotations
 
-import json
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import ValidationError
-
+from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_DERIVED_PREFIX, CLASSIFIED_BY_MANUAL
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
+from .classification_effects import fields_refused_by_classification
 from .enums import BusinessClassification, takes_business_share
-from .errors import TransactionValidationError
-from .raw_transaction import RawTransaction
+from .errors import (
+    TransactionFiguresWithoutBusinessError,
+    TransactionIvaRateNotFractionError,
+    TransactionValidationError,
+)
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
@@ -50,10 +50,6 @@ _NON_NEGATIVE_DECIMAL_HINTS = {
         "retailer, never a signed delta"
     ),
 }
-
-
-def _json_default(value: object) -> str:
-    return str(value)
 
 
 def require_aware_datetime(value: datetime) -> datetime:
@@ -73,7 +69,7 @@ def validate_classified_by_shape(value: str) -> str:
     normalized = value.strip()
     if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
         return normalized
-    for prefix in ("rule:", "llm:", "derived:"):
+    for prefix in ("rule:", "llm:", CLASSIFIED_BY_DERIVED_PREFIX):
         if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
             return normalized
     raise TransactionValidationError(
@@ -151,6 +147,42 @@ def validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
+def figures_without_business(state: BusinessClassification, values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return, sorted, the fields ``values`` carries that a row classified ``state`` may not.
+
+    WHICH fields a classification refuses is
+    :func:`~domain.transactions.classification_effects.fields_refused_by_classification`,
+    read here rather than listed, so the write paths that drop them and the
+    check that refuses them name one set.
+    """
+    return tuple(sorted(name for name in fields_refused_by_classification(state) if values.get(name) is not None))
+
+
+def refusable_figures_of(state: BusinessClassification, row: object) -> dict[str, object]:
+    """Return ``row``'s value for every field a row classified ``state`` may refuse.
+
+    ``row`` is a transaction or a command that writes one; both name these
+    fields alike.
+    """
+    return {name: getattr(row, name) for name in fields_refused_by_classification(state)}
+
+
+def validate_figures_without_business(state: BusinessClassification, values: Mapping[str, object]) -> None:
+    """Refuse business figures on a row decided to have no business component.
+
+    A personal row is wholly outside the business, so a spending category, a
+    taxable base, IVA or any other business figure on it states something the
+    classification denies. A write that changes the classification drops them;
+    a write that would keep or add one is refused here.
+    """
+    refused = figures_without_business(state, values)
+    if refused:
+        raise TransactionFiguresWithoutBusinessError(
+            f"a {state} row carries no business figures; refused: {', '.join(refused)}",
+            context={"business_classification": str(state), "fields": ",".join(refused)},
+        )
+
+
 def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     """Return the identifiers stripped, refusing blanks and duplicates."""
     normalized = tuple(item.strip() for item in value if item.strip())
@@ -180,6 +212,40 @@ def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime
     return require_aware_datetime(value)
 
 
+#: Upper bound for an IVA rate held as a decimal fraction. This is the unit
+#: boundary of a fraction, not a regulatory rate -- the highest Spanish IVA rate
+#: is well below it -- so it stays a local constant rather than a registry lookup
+#: and cannot drift with a filing year.
+_MAX_IVA_RATE_FRACTION = ONE
+
+
+def validate_iva_rate_is_fraction(value: Decimal | None) -> Decimal | None:
+    """Refuse an IVA rate that was supplied as a percentage.
+
+    This field is a fraction: 21% IVA is ``0.21``. The inventory and asset
+    ledgers take the same tax concept as a percentage bounded 0-100 and divide
+    by a hundred themselves, so an operator moving between those surfaces and
+    this one has two conventions under one option name and no signal telling
+    them which applies.
+
+    Left unbounded, ``21`` stored here is a 2100% rate: arithmetically valid,
+    silently accepted, and a hundredfold over-statement of the cuota on every
+    downstream aggregation that reads the row. No Spanish IVA rate exceeds 21%
+    (LIVA arts. 90-91), so no legitimate fraction is above 1 and the refusal
+    cannot reject a real filing. An unset rate stays unset.
+
+    The served sentence names the convention rather than the bound, because the
+    failure it catches is a unit mistake and ``must be <= 1`` does not tell the
+    operator that.
+    """
+    if value is not None and value > _MAX_IVA_RATE_FRACTION:
+        raise TransactionIvaRateNotFractionError(
+            f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
+            context={"value": str(value)},
+        )
+    return value
+
+
 def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
     """Return *value* if it is not negative, naming the field on refusal."""
     if value is not None and value < Decimal("0"):
@@ -187,13 +253,3 @@ def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> 
             _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
         )
     return value
-
-
-def coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Return *raw* as a RawTransaction, accepting the model or its payload."""
-    if isinstance(raw, RawTransaction):
-        return raw
-    try:
-        return RawTransaction.model_validate(raw, strict=False)
-    except ValidationError:
-        return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))

@@ -6,31 +6,6 @@ parameter_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 application_link_source_refs = ["aeat-modelo-714-procedure"]
 binding_source_refs = ["aeat-dr-714-2022"]
 formula_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 11 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -65,6 +40,18 @@ source_refs = [
 family_storage_baseline = "2021"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+[revisions."2022".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2022"]
+
+[revisions."2022".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2022"]
+
 [revisions."2022".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-714-fichero-aeat) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the \
@@ -82,13 +69,6 @@ source_refs = [
     "boe-modelo-714-layout",
     "aeat-dr-714-2022",
 ]
-
-[revisions."2022".family_dispositions.verification_predicates]
-reason = """
-A verification predicate asserts an implication between two figures. Modelo 714 offers none that holds, and the MINIMO EXENTO is why. Its base liquidable (casilla 27) is the base imponible less the exempt minimum of Ley 19/1991 art. 28, so a taxpayer with substantial declared patrimonio and a ZERO base liquidable and zero cuota is the ordinary lawful case, not a defect -- exactly the false-firing shape this campaign refused when choosing modelo 111 antecedent away from its threshold-scaled \
-trabajo block. The pairing that would not false-fire, base liquidable to cuota integra, is tautological instead: casilla 29 is COMPUTED from 27 by the art. 30 scale, so the implication holds by the arithmetic. Every candidate pair is therefore either unlawfully strict or vacuous, and the family has nothing to say on this revision."""
-legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [revisions."2022".family_dispositions.extraction_profiles]
 reason = """

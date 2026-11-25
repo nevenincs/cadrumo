@@ -15,7 +15,7 @@ from ..user_profile.access_contracts import ProfileAccessBinding
 from .models import OperationIdentity, OperationRequest
 
 if TYPE_CHECKING:
-    from .registry import OperationFrontendProjection
+    from ...core.operations import OperationFrontendProjection
 
 
 class OperationAdmissionProvenance(BaseModel):

@@ -18,29 +18,35 @@ is pinned as carrying one that agrees with its coordinates.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation
+from .authored_editions import authored_revisions, filing_year_envelope, newest_authored_edition
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
+# Modelo 036 changes design inside an exercise; the dates straddle that boundary.
+_M036_BOUNDARY = authored_revisions("036")[-1].valid_from
+_M036_EXERCISE = _M036_BOUNDARY.year
+_HORIZON = filing_year_envelope().horizon
+
 #: Revision coordinates addressed by a token that names no filing period.
 _ADMINISTRATIVE_COORDINATES: tuple[tuple[str, int, str, date | None], ...] = (
-    ("036", 2025, "alta", date(2025, 2, 2)),
-    ("036", 2025, "alta", date(2025, 2, 3)),
-    ("036", 2025, "modificacion", date(2025, 2, 3)),
-    ("036", 2025, "baja", date(2025, 2, 3)),
-    ("145", 2025, "comunicacion", None),
-    ("145", 2025, "variacion", None),
+    ("036", _M036_EXERCISE, "alta", _M036_BOUNDARY - timedelta(days=1)),
+    ("036", _M036_EXERCISE, "alta", _M036_BOUNDARY),
+    ("036", _M036_EXERCISE, "modificacion", _M036_BOUNDARY),
+    ("036", _M036_EXERCISE, "baja", _M036_BOUNDARY),
+    ("145", _HORIZON, "comunicacion", None),
+    ("145", _HORIZON, "variacion", None),
 )
 
 #: Coordinates addressed by a real filing period, as the positive control.
 _FILING_COORDINATES: tuple[tuple[str, int, str], ...] = (
-    ("303", 2025, "1T"),
-    ("100", 2024, "0A"),
+    ("303", _HORIZON, "1T"),
+    ("100", newest_authored_edition("100"), "0A"),
 )
 
 

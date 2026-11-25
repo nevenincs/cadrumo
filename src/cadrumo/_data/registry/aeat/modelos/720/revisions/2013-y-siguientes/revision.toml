@@ -4,28 +4,6 @@ casilla_source_refs = ["aeat-dr-720"]
 parameter_source_refs = ["aeat-modelo-720-procedure"]
 live_cross_reference_source_refs = ["aeat-modelo-720-procedure"]
 application_link_source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement: every casilla legal_ref and
-# source_ref resolves to the legal catalogue; every cited source's corpus file is
-# present; every enrolled schema family resolves; and both records of the layout
-# now cover all 500 positions their diseño declares, with NO design data position
-# left unaddressed -- the tails that were previously unwritten are the BLANCOS
-# runs the design states, now emitted as filler so the record goes out at the
-# length AEAT reads.
-#
-# The canonical source-pinned generator replaced the binding-derived layout on
-# 2026-10-04. Its committed manifest and current-target receipt prove fresh-render
-# reproduction; the existing agent review stamp does not claim operator review.
-# The formulas family is dispositioned inapplicable: the declaration reports
-# holdings and settles no tax, so there is no computed figure to check.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -55,6 +33,18 @@ source_refs = [
     "boe-modelo-720-2013-form",
 ]
 
+
+[revisions."2013-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-1", "orden-hap-72-2013:art-2", "orden-hap-72-2013:art-7", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure", "boe-modelo-720-2013-form"]
+
+[revisions."2013-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-1", "orden-hap-72-2013:art-2", "orden-hap-72-2013:art-7", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure", "boe-modelo-720-2013-form"]
 
 [revisions."2013-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN bienes y derechos situados en el extranjero. Any tax consequence of those assets arises in the IRPF or Impuesto sobre Sociedades return, never in this one: the form is a holdings inventory and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."

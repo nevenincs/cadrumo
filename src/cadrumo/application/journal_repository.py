@@ -52,6 +52,23 @@ moment the other side closes; a refusal that outlasts this window is not a
 race and propagates."""
 _CONTENTION_POLL_SECONDS: Final[float] = 0.02
 
+type _DirectoryIdentity = tuple[int, int, int]
+
+
+def _directory_identity(path: Path) -> _DirectoryIdentity | None:
+    """Return the device, file index and mode of the entry at ``path``, not following a link.
+
+    ``None`` means the entry is absent or its file system reports no file
+    index, so no identity can tell a replacement from the original.
+    """
+    try:
+        status = os.lstat(path)
+    except OSError:
+        return None
+    if status.st_ino == 0:
+        return None
+    return (status.st_dev, status.st_ino, status.st_mode)
+
 
 class JournalBusyError(CadrumoError):
     """A journal stayed held by another handle for the whole contention window.
@@ -143,6 +160,8 @@ class JournalRepositoryBase[T: JournalOperation]:
         self._corrupt_type = corrupt_type
         self._subject = subject
         self._id_subject = id_subject
+        self._prepared_root: _DirectoryIdentity | None = None
+        self._validated_root: _DirectoryIdentity | None = None
 
     @property
     def root(self) -> Path:
@@ -229,7 +248,15 @@ class JournalRepositoryBase[T: JournalOperation]:
         The directory receives mode ``0700``; journal files receive mode ``0600``
         in :meth:`_write`. Explicit mode assertions are POSIX-only and make no
         Windows ACL guarantee. A link-like journal root is refused.
+
+        Creation and the mode change run once per directory this instance
+        prepared. A later call that finds the same directory entry, with the
+        same mode, only repeats the location validation; a root that was
+        removed, replaced, relinked or re-moded is prepared again in full.
         """
+        prepared = self._prepared_root
+        if prepared is not None and _directory_identity(self._root) == prepared and self._validate_existing_root():
+            return
         self._storage_root.mkdir(parents=True, exist_ok=True)
         if os.path.lexists(self._root) and is_link_like(self._root):
             raise self._error_type(f"{self._subject} directory cannot be a symlink or junction")
@@ -241,14 +268,20 @@ class JournalRepositoryBase[T: JournalOperation]:
             os.chmod(self._root, _DIRECTORY_MODE)  # nosemgrep
         except OSError as exc:
             raise self._error_type(f"cannot restrict {self._subject} directory permissions") from exc
+        self._prepared_root = _directory_identity(self._root)
 
     def _validate_existing_root(self) -> bool:
         """Validate a real direct journal directory outside bucket storage.
 
         Link-like roots and redirected resolved locations are refused. This is a
         location check, not protection against malicious concurrent path
-        replacement.
+        replacement. Resolving runs once per directory entry this instance
+        validated: an entry with the same identity is the same directory, and a
+        removed, replaced or relinked one is validated in full.
         """
+        identity = _directory_identity(self._root)
+        if identity is not None and identity == self._validated_root:
+            return True
         if not os.path.lexists(self._root):
             return False
         if is_link_like(self._root):
@@ -263,6 +296,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         )
         if resolved_root == buckets_root or buckets_root in resolved_root.parents:
             raise self._error_type(f"{self._subject} repository must remain outside bucket directories")
+        self._validated_root = identity
         return True
 
     def _write(self, path: Path, operation: T) -> None:

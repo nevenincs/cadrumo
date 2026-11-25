@@ -14,12 +14,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
 from ......core.config import override_settings
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..ports import WorkbenchChangeKind
 from ..review import EditReviewScreen
@@ -28,11 +28,6 @@ from .editor_panel import open_panel
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _list_text(screen: ModeloWorkbenchScreen) -> str:
@@ -47,16 +42,16 @@ async def test_a_typed_value_is_read_back_then_staged_on_its_line() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             editor = open_panel(app.screen)
             assert editor is not None
             await pilot.press(*"300,50")
-            await _settle(pilot)
+            await settle(pilot)
             readback = str(editor.query_one("#editor-readback", Static).render())
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             listing = _list_text(screen)
             next_line = str(screen.query_one("#wb-next", Static).render())
 
@@ -73,13 +68,13 @@ async def test_an_unreadable_value_cannot_be_staged() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             editor = open_panel(app.screen)
             assert editor is not None
             await pilot.press(*"abc")
-            await _settle(pilot)
+            await settle(pilot)
             readback = str(editor.query_one("#editor-readback", Static).render())
             save_disabled = editor.query_one("#editor-save", Button).disabled
 
@@ -93,18 +88,18 @@ async def test_a_box_that_follows_the_records_says_why_it_cannot_be_typed_into()
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("left_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None
             read_only = panel.read_only
             inputs = len(panel.query(Input))
             reason = str(panel.query_one("#editor-can-change-text", Static).render())
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             back = app.screen is screen and open_panel(screen) is None and app.focused is screen.query_one(CasillaList)
 
     assert read_only
@@ -119,13 +114,13 @@ async def test_a_staged_change_can_be_reverted() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"10", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("u")
-            await _settle(pilot)
+            await settle(pilot)
             staged_line = next(line for line in _list_text(screen).splitlines() if "Retenciones" in line)
 
     assert "Δ" not in staged_line
@@ -140,16 +135,16 @@ async def test_leaving_with_staged_changes_asks_first_and_can_stay() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"10", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             asked = isinstance(app.screen, ConfirmScreen)
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             stayed = app.screen is screen
 
     assert asked
@@ -163,16 +158,16 @@ async def test_applying_submits_the_typed_changes_and_keeps_them_when_the_operat
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"1234,5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("R")
-            await _settle(pilot)
+            await settle(pilot)
             reviewing = isinstance(app.screen, EditReviewScreen)
             await pilot.press("a")
-            await _settle(pilot, 6)
+            await settle(pilot)
             notice = str(screen.query_one("#wb-notice", Static).render())
             still_staged = "Δ" in _list_text(screen)
 
@@ -194,9 +189,9 @@ async def test_the_next_step_key_runs_the_step_the_stepper_offers() -> None:
         screen = ModeloWorkbenchScreen(reader, actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("f8")
-            await _settle(pilot, 6)
+            await settle(pilot)
 
     assert actions.requested == ["calculate"]
 
@@ -207,9 +202,9 @@ async def test_without_an_edit_admission_the_editor_explains_itself() -> None:
         screen = ModeloWorkbenchScreen(FakeReader())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             notice = str(screen.query_one("#wb-notice", Static).render())
             focused_input = app.screen.query(Input)
 

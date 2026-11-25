@@ -21,11 +21,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventHistoryCatalogue
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -35,7 +37,6 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -51,7 +52,7 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -60,22 +61,24 @@ _T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 _INCOME: CasillaId = validated_casilla_id("01")
 _EXPENSE: CasillaId = validated_casilla_id("02")
-_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="amendment clock"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+# The baseline records casilla values only. Correcting casilla 01 reaches formulas whose
+# box sources the filing never recorded, and a historical correction never reads them
+# from today's profile or ledger, so the amendment states each one. The normal modality
+# keeps casilla 02 at the filed accumulated expenses.
+_UNRECORDED_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": "250",
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+    "irpf.previous_year_economic_activity_net_income": "20000.00",
+}
+_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X0001500M"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="amendment clock"),
+    )
 )
 
 
@@ -210,9 +213,10 @@ def _amend(baseline: _Baseline, *, clock: datetime) -> ModeloRecord:
             ports=build_amendment_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             from_filing_record_id=baseline.record.filing_record_id,
             overrides={_INCOME: Decimal("1100")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="synthetic under-reported turnover",
             actor="operator-A",
+            binding_overrides=_UNRECORDED_BINDINGS,
             clock=clock,
         )
 

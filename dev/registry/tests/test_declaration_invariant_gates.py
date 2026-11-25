@@ -42,6 +42,11 @@ from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    split_exercise_revisions,
+)
 from dev.quality.unread_inputs import report_unread
 
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
@@ -88,6 +93,59 @@ def authority() -> ValidatedRegistryAuthority:
 def modelo_ids() -> tuple[str, ...]:
     with bundled_indexed_authority().operation() as operation:
         return tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
+
+
+@pytest.fixture(scope="module")
+def own_screen_findings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[tuple[str, tuple[object, ...]], ...]:
+    """Every screen's own findings, computed once; the gates only read them."""
+    from ..analysis.screens import screen_findings
+
+    return screen_findings(authority, modelo_ids)
+
+
+@dataclasses.dataclass(frozen=True)
+class _ScreenCensus:
+    """Both runners' rows, with the shipped registry fingerprinted around the run."""
+
+    results: tuple[tuple[str, int, str], ...]
+    registry_before: dict[str, tuple[int, int]]
+    registry_after: dict[str, tuple[int, int]]
+
+
+def _registry_fingerprint() -> dict[str, tuple[int, int]]:
+    """Fingerprint path, size and modification time of every shipped registry file."""
+    import os
+
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    root = bundled_path("registry")
+    seen: dict[str, tuple[int, int]] = {}
+    for directory, _, names in os.walk(root):
+        for name in names:
+            path = os.path.join(directory, name)
+            stat = os.stat(path)
+            seen[path] = (stat.st_size, stat.st_mtime_ns)
+    return seen
+
+
+@pytest.fixture(scope="module")
+def screen_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> _ScreenCensus:
+    """Run both maintainer runners once over the whole corpus, between two fingerprints.
+
+    The full run is the slowest work in this module, and two gates need exactly
+    this one execution: that every screen completes, and that completing them
+    wrote nothing to the shipped registry.
+    """
+    from ..analysis.screens import run_corpus_screens, run_screens
+
+    before = _registry_fingerprint()
+    # The corpus screens read the same shipped tree - the design transcriptions
+    # live inside it - so leaving them out of this fingerprint left the half of
+    # the suite that touches those files unchecked for writes.
+    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    return _ScreenCensus(results=results, registry_before=before, registry_after=_registry_fingerprint())
 
 
 def _python_target_resolves(target: str) -> bool:
@@ -365,9 +423,7 @@ def test_every_screen_module_has_a_test_module() -> None:
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
 
 
-def test_every_enrolled_screen_runs_over_the_whole_corpus(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> None:
+def test_every_enrolled_screen_runs_over_the_whole_corpus(screen_census: _ScreenCensus) -> None:
     """No screen raises, and each reports a count and what that count means.
 
     The gates above check that a screen is enrolled, documented and tested, and
@@ -381,12 +437,12 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS, run_corpus_screens, run_screens
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     # Both runners. Asserting against the authority table alone left the corpus
     # screens unexercised by the gate whose whole purpose is that a screen
     # crashing on one input should not wait for someone to run it by hand.
-    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    results = screen_census.results
     assert len(results) == len(SCREENS) + len(CORPUS_SCREENS)
     for name, count, meaning in results:
         assert count >= 0, f"{name} returned a negative count"
@@ -473,9 +529,7 @@ def test_the_reassembly_gate_reads_syntax_not_text() -> None:
     assert not _reaches_binding_derivation(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
 
 
-def test_running_every_screen_leaves_the_shipped_registry_untouched(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> None:
+def test_running_every_screen_leaves_the_shipped_registry_untouched(screen_census: _ScreenCensus) -> None:
     """The screens read the registry and never write to it.
 
     Every screen is documented as reporting rather than gating, and none has any
@@ -489,30 +543,10 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     modification time rather than content, which is enough to catch a write and
     cheap enough to run over the whole tree.
     """
-    import os
-
-    from cadrumo.core.resources.bundled_data import bundled_path
-
-    from ..analysis.screens import run_corpus_screens, run_screens
-
-    def fingerprint() -> dict[str, tuple[int, int]]:
-        root = bundled_path("registry")
-        seen: dict[str, tuple[int, int]] = {}
-        for directory, _, names in os.walk(root):
-            for name in names:
-                path = os.path.join(directory, name)
-                stat = os.stat(path)
-                seen[path] = (stat.st_size, stat.st_mtime_ns)
-        return seen
-
-    before = fingerprint()
+    before = screen_census.registry_before
+    after = screen_census.registry_after
     assert before, "the shipped registry must contain files to fingerprint"
-    run_screens(authority, modelo_ids)
-    # The corpus screens read the same shipped tree - the design transcriptions
-    # live inside it - so leaving them out of this fingerprint left the half of
-    # the suite that touches those files unchecked for writes.
-    run_corpus_screens()
-    after = fingerprint()
+    assert screen_census.results, "no screen ran between the fingerprints, so this gate checked nothing"
 
     changed = sorted(path for path in before if path in after and before[path] != after[path])
     assert not changed, f"screens modified shipped registry files: {changed[:5]}"
@@ -520,7 +554,7 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
 
 
 def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A reader who sees ``kind=x`` in a screen's output can find x explained in that screen.
 
@@ -538,13 +572,13 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     would see. Kinds that occur only under a constructed defect are not covered
     here; they are covered by the detector test that constructs them.
     """
-    from ..analysis.screens import screen_findings, screen_module
+    from ..analysis.screens import screen_module
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
-    for name, findings in screen_findings(authority, modelo_ids):
+    for name, findings in own_screen_findings:
         module = screen_module(name)
         doc = module.__doc__ or ""
         for finding in findings:
@@ -560,7 +594,9 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
 
 
 def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A table entry may narrow its screen's findings; it may not invent them.
 
@@ -580,12 +616,12 @@ def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
     and is fixed at the reader: those gates call each screen's own entry point
     rather than the table.
     """
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_findings
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     def kinds_of(rows: tuple[object, ...]) -> set[str]:
         return {kind for row in rows if isinstance(kind := getattr(row, "kind", None), str)}
 
-    direct = {name: kinds_of(findings) for name, findings in screen_findings(authority, modelo_ids)}
+    direct = {name: kinds_of(findings) for name, findings in own_screen_findings}
     assert any(direct.values()), "no screen emitted a kind, so this gate checked nothing"
 
     invented: dict[str, list[str]] = {}
@@ -600,7 +636,7 @@ def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
 
 
 def test_a_derived_screen_reports_nothing_its_source_does_not(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A screen declaring a source may re-describe its findings, not exceed them.
 
@@ -617,7 +653,7 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
     built on the other, which is why the declaration is an author's and not
     inferred from this containment holding.
     """
-    from ..analysis.screens import SCREENS, screen_findings
+    from ..analysis.screens import SCREENS
 
     sources = {
         entry.name: entry.derives_from for entry in SCREENS if (entry.derives_from is not None and entry.derives_from)
@@ -626,7 +662,7 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
 
     populations = {
         name: {(getattr(f, "modelo", None), str(getattr(f, "revision", ""))) for f in findings}
-        for name, findings in screen_findings(authority, modelo_ids)
+        for name, findings in own_screen_findings
     }
     for derived, source in sources.items():
         assert source in populations, f"{derived} derives from {source!r}, which is not an enrolled screen"
@@ -851,7 +887,7 @@ def test_the_vault_citation_gate_catches_each_kind_it_claims_to() -> None:
     assert _vault_citations("recorded in .vault/audit/x.md") == ["vault path: .vault/"]
 
     for innocent in (
-        "revision 2025-y-siguientes narrows the window",
+        f"revision {open_ended_revision('303').id} narrows the window",
         "casilla DP200014:01033 carries the base",
         "orden HAC/1155/2024 art. 3 governs this",
         "the 2024-2025 span covers both ejercicios",
@@ -874,7 +910,7 @@ _NUMBER_WORDS: dict[str, int] = {
 
 
 def test_a_screen_that_counts_its_conditions_states_the_right_number(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A docstring claiming "N conditions are reported" must agree with what the screen emits.
 
@@ -893,9 +929,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     wrong: list[str] = []
     unstated_conditions: list[str] = []
     checked = 0
-    from ..analysis.screens import screen_findings, screen_module, screen_module_names
+    from ..analysis.screens import screen_module, screen_module_names
 
-    findings_by_name = dict(screen_findings(authority, modelo_ids))
+    findings_by_name = dict(own_screen_findings)
     for screen_name in sorted(screen_module_names()):
         module = screen_module(screen_name)
         doc = module.__doc__ or ""
@@ -1353,7 +1389,7 @@ def test_the_export_declaration_gates_detect_their_defects(
     tree, and asserted through the helpers the gates themselves call - a proof
     against a second implementation would prove the second implementation.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = authority.modelo("303").revisions[str(authored_revisions("303")[-1].id)]
     layout = next(item for item in revision.export_layouts if item.records)
     record = layout.records[0]
     field = record.fields[0]
@@ -1437,21 +1473,24 @@ def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
     """
     from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
 
+    early, late = split_exercise_revisions("303", early_period="2T", late_period="3T")
+    early_id, late_id = str(early.id), str(late.id)
+    exercise = early.valid_from.year
     split_year = (
-        ("2024-hasta-08-y-2t", 2024, "2T"),
-        ("2024-desde-09-y-3t", 2024, "3T"),
+        (early_id, exercise, "2T"),
+        (late_id, exercise, "3T"),
     )
     assert ambiguously_claimed_periods(split_year) == (), "a mid-year split is not ambiguity"
 
-    clash = (*split_year, ("2024-desde-09-y-3t", 2024, "2T"))
+    clash = (*split_year, (late_id, exercise, "2T"))
     reported = ambiguously_claimed_periods(clash)
     assert len(reported) == 1
     year, period, revisions = reported[0]
-    assert (year, period) == (2024, "2T")
-    assert revisions == ("2024-desde-09-y-3t", "2024-hasta-08-y-2t")
+    assert (year, period) == (exercise, "2T")
+    assert revisions == tuple(sorted((early_id, late_id)))
 
     assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
-    assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"
+    assert ambiguously_claimed_periods((("r", exercise, "2T"),)) == (), "one claimant is not two"
 
 
 def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
@@ -1492,7 +1531,7 @@ def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
 
 
 def test_every_declared_condition_has_a_live_member_or_a_written_proof(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A condition with neither stops reporting and nothing says so.
 
@@ -1513,10 +1552,9 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     import pathlib
 
     from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_module
-    from ..analysis.screens import screen_findings as _screen_findings
 
     live: dict[str, set[str]] = {}
-    for name, findings in _screen_findings(authority, modelo_ids):
+    for name, findings in own_screen_findings:
         kinds = {kind for finding in findings if isinstance(kind := getattr(finding, "kind", None), str)}
         live[name] = kinds
 

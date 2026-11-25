@@ -12,7 +12,7 @@ emit, before they are wrapped in
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -23,9 +23,9 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from .errors import TransactionValidationError
 
 
@@ -68,7 +68,7 @@ class RawProvenance(BaseModel):
             financial provider.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_path: Path
     source_sha256: ContentDigest
@@ -114,16 +114,6 @@ class RawProvenance(BaseModel):
         """
         return value.strip().lower() if isinstance(value, str) else value
 
-    @field_validator("ingested_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_aware_timestamp(cls, value: datetime) -> datetime:
-        """Reject naive timestamps; ingest must record UTC offsets."""
-        try:
-            return validate_utc_aware(value)
-        except CoreValidationError as exc:
-            raise TransactionValidationError(str(exc)) from exc
-
     @field_validator("provider_name")
     @classmethod
     @pydantic_validation_boundary
@@ -159,9 +149,16 @@ class RawTransaction(BaseModel):
         provenance: Per-row :class:`RawProvenance` metadata.
         raw_fields: Frozen mapping of original source columns to
             stringified values, preserved verbatim for audit.
+        statement_reference: The reference the bank statement printed for the
+            movement, trimmed; ``None`` when the statement printed none, for a
+            hand-entered row, or for a row stored before the reference was
+            recorded. It is never a synthesized, manual, split or merged
+            identifier, and it takes no part in the transaction id, duplicate
+            detection or any tax figure. Left out of the stored payload when
+            ``None``, so a row stored without it keeps its bytes and revision.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_transaction_id: str = Field(min_length=1)
     booked_date: date
@@ -172,6 +169,7 @@ class RawTransaction(BaseModel):
     description: str = Field(min_length=1)
     provenance: RawProvenance
     raw_fields: Mapping[str, str]
+    statement_reference: str | None = Field(default=None, min_length=1, exclude_if=lambda value: value is None)
 
     @field_validator("provider_transaction_id", "description")
     @classmethod
@@ -229,6 +227,15 @@ class RawTransaction(BaseModel):
             return None
         trimmed = value.strip()
         return trimmed or None
+
+    @field_validator("statement_reference", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _trim_statement_reference(cls, value: object) -> object:
+        """Trim the printed reference; a blank cell means the statement printed none."""
+        if not isinstance(value, str):
+            return value
+        return value.strip() or None
 
     @field_validator("raw_fields")
     @classmethod

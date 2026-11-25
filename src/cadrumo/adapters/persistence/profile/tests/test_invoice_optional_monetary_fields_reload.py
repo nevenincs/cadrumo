@@ -36,8 +36,9 @@ from pydantic import ValidationError
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import InvoiceKind
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import (
@@ -182,7 +183,7 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_p
     """
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _invoice_with_every_optional_monetary_field_populated()
@@ -190,7 +191,9 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_p
         repo = InvoiceCatalogueRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace)
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace
+        )
 
         def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
@@ -218,7 +221,7 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
     """
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _invoice_with_every_optional_monetary_field_populated()
@@ -226,7 +229,9 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
         repo = InvoiceCatalogueRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace)
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace
+        )
 
         def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]

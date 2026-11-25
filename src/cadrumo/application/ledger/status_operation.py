@@ -10,6 +10,7 @@ from pydantic import BaseModel, NonNegativeInt, field_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..modelo.filed_register_reader import filed_register_reader
 from ..modelo.verification_repository_ports import VerificationRepositoryBundleFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -23,9 +24,11 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import summarize_manual_transactions
+from .manual_read import require_summary_period_span, summarize_manual_transactions
 from .models import LedgerStatusReport
-from .readiness_query import LedgerReadinessIssueV1, read_ledger_readiness
+from .preflight import preflight_ledger_tax_readiness
+from .read_access import resolve_ledger_request_read_access
+from .readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 from .stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 
 LEDGER_STATUS_OPERATION_DEFINITION_ID = "ledger.status"
@@ -183,27 +186,43 @@ class LedgerStatusExecutor:
                 or ports.operation is not operation
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            transactions = ports.transaction_repository.load()
             period = payload.period.to_period() if payload.period is not None else None
-            report = summarize_manual_transactions(
-                bucket_id=bucket_id, period=period, ports=ports, catalogue=transactions
-            )
-            readiness = (
-                read_ledger_readiness(
+            # The money totals select rows by filing date, so a period without
+            # a date span is refused before the catalogue is decrypted.
+            require_summary_period_span(period)
+            # Counts and stale filings span the whole bucket, so the whole
+            # catalogue is read once; the period's preflight, its readiness
+            # facts and the summary all inspect that one snapshot.
+            transactions = ports.transaction_repository.load()
+            preflight = (
+                preflight_ledger_tax_readiness(
                     bucket_id=bucket_id,
                     period=period,
                     transaction_repository=ports.transaction_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                    invoice_reader=ports.invoice_repository,
                     operation=operation,
+                    catalogue=transactions,
                 )
                 if period is not None
-                else ()
+                else None
             )
+            report = summarize_manual_transactions(
+                bucket_id=bucket_id, period=period, ports=ports, catalogue=transactions, preflight=preflight
+            )
+            readiness = ledger_readiness_issues(preflight, transactions) if preflight is not None else ()
+            work_units = repositories.work_unit.load()
             stale = read_stale_ledger_filings(
                 bucket_id=bucket_id,
                 revisions=repositories.calculation.load(operation=operation).revisions,
-                work_units=repositories.work_unit.load(),
+                work_units=work_units,
                 transactions=transactions,
+                register_reader=filed_register_reader(
+                    bucket_id=bucket_id,
+                    work_units=work_units,
+                    ports=repositories.ledger_membership_ports,
+                    operation=operation,
+                ),
             )
             return LedgerStatusProjection.from_report(report, readiness_issues=readiness, stale_filings=stale)
 
@@ -229,12 +248,9 @@ def resolve_ledger_status_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require all-period permission even when money totals select one period."""
-    from .read_access import resolve_ledger_read_access
-
-    payload = request.payload
-    if request.definition_id != LEDGER_STATUS_OPERATION_DEFINITION_ID or not isinstance(payload, LedgerStatusRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_STATUS_OPERATION_DEFINITION_ID, request_type=LedgerStatusRequest
+    )
 
 
 def build_ledger_status_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

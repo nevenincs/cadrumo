@@ -1,46 +1,57 @@
-"""Encrypted inventory-ledger resolver for typed inventory binding projections."""
+"""Encrypted inventory-ledger resolver for typed inventory binding projections.
+
+It works with :class:`UserProfileRecord`.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import ClassVar, Protocol, get_args
 
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
-from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.user_profile.values import UserProfileRecord
+from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
+from .activity_applicability import profile_declares_no_activity_income
+from .inventory_claim_findings import inventory_claim_findings
+from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
+from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
-    CalculationSourceDiagnosticReason,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
 
 _SOURCE = BindingSourceKind.INVENTORY
+_ACTIVITIES_SECTION = "activities"
+_ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
 _OWNED_SOURCES = (_SOURCE,)
-_VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
+VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
     "complete_acquisition_cost": "complete_acquisition_total",
     "closing_minus_opening_positive": "variation_increase_value",
     "opening_minus_closing_positive": "variation_decrease_value",
 }
 _OPERATION_ANNOTATION = InventoryProvider.model_fields["row_field"].annotation
 _CANONICAL_OPERATIONS = get_args(getattr(_OPERATION_ANNOTATION, "__value__", _OPERATION_ANNOTATION))
-if set(_VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
+if set(VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
     raise InternalInvariantError("inventory projection operation adapter is not exhaustive")
 
 
@@ -56,27 +67,178 @@ def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefin
     return tuple(binding for binding in context.revision.bindings if binding.source is _SOURCE)
 
 
-def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
-    """Whether the filer's profile declares income categories that exclude an economic activity.
+def revision_carries_inventory_purchases(revision: ModeloRevision) -> bool:
+    """Whether the revision gives an inventory book's purchases a casilla of their own.
 
-    The Anexo D inventory rows belong to the rendimientos de actividades
-    economicas a filer carries on (LIRPF arts. 27 and 30): a filer who declares
-    only employment, capital or other non-activity income holds no activity
-    ledger because there is no activity to hold one for. Only that typed
-    declaration counts. A profile that declares no income category at all, or
-    a context with no profile, is unknown rather than inapplicable, and a
-    missing ledger is then still reported.
+    Only then may a ledger row a purchase claims leave the ledger expenses: the
+    book's acquisition-cost row reaches the casilla bound to it. An edition that
+    binds no such casilla declares the purchase through the ledger row.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
+    acquisition = {
+        binding.id
+        for binding in revision.bindings
+        if isinstance(binding.provider, InventoryProvider) and binding.provider.row_field == "complete_acquisition_cost"
+    }
+    return any(
+        casilla.input_kind == InputKind.BOUND and casilla.binding in acquisition for casilla in revision.casillas
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _DirectEstimationActivities:
+    """The activities the ejercicio holds in the direct-estimation activity block.
+
+    ``regime_undeclared`` means an activity is in force on a day the profile states no estimation
+    regime, so whether that activity belongs in the block is unknown and ``count`` is not final.
+    """
+
+    count: int
+    regime_undeclared: bool
+
+    @property
+    def none_in_direct_estimation(self) -> bool:
+        """Whether the profile states a regime on every day an activity is in force and none is direct.
+
+        The Anexo D rows belong to the rendimiento of an activity in estimacion directa (LIRPF arts. 28
+        and 30, RIRPF art. 30); an activity in estimacion objetiva states its rendimiento by modulos and
+        keeps no existencias for the return, so such a filer has no book to keep.
+        """
+        return self.count == 0 and not self.regime_undeclared
+
+
+def _direct_estimation_activities(context: CalculationSourceContext) -> _DirectEstimationActivities | None:
+    """Count the activities the ejercicio holds in the direct-estimation activity block.
+
+    The block (ActividadEstDirecta) holds only activities in estimacion directa, so an activity
+    counts on the days the profile's estimation regime is a direct-estimation one. Each activity
+    is identified by its row together with the identifying values the row holds that day, so a
+    row whose description or epigraph changes within the year counts once per identity: its two
+    halves are two activities, of which one book can describe only one. The year is read on its
+    first and last day and on each day a dated fact of the profile starts, or ends the day
+    before; between those days no fact changes. ``None`` means no profile was read.
+
+    Books are matched to these activities by count, not identity, because a book names its
+    activity by the operator's own free-text identifier: two books for one activity of two
+    still resolve here, and the export then refuses to choose between their two occurrences.
     """
     if context.profile is None:
-        return False
-    from ..user_profile.projections import projection_for_taxpayer
+        return None
+    record = context.profile.record
+    activities: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
+    regime_undeclared = False
+    for day in _fact_change_days(record, context.filing_year):
+        day_activities, day_undeclared = _direct_estimation_activities_on(record, day)
+        activities |= day_activities
+        regime_undeclared = regime_undeclared or day_undeclared
+    return _DirectEstimationActivities(count=len(activities), regime_undeclared=regime_undeclared)
 
-    taxpayer = projection_for_taxpayer(context.profile.record, schema=context.profile.profile_decode_context.schema)
-    return derive_taxpayer_files_economic_activity(taxpayer) is False
+
+def _fact_change_days(record: UserProfileRecord, filing_year: int) -> set[date]:
+    """Return the days the ejercicio is read on: its ends and each day a dated profile fact starts or stops."""
+    first, last = date(filing_year, 1, 1), date(filing_year, 12, 31)
+    days = {first, last}
+    for fact in record.facts:
+        if fact.valid_from is not None and first <= fact.valid_from <= last:
+            days.add(fact.valid_from)
+        if fact.valid_to is not None and first <= fact.valid_to < last:
+            days.add(fact.valid_to + timedelta(days=1))
+    return days
+
+
+def _direct_estimation_activities_on(
+    record: UserProfileRecord, day: date
+) -> tuple[set[tuple[str, tuple[tuple[str, str], ...]]], bool]:
+    """Return the direct-estimation activities in force on ``day`` and whether their regime is undeclared."""
+    from ...domain.calculations.registry.irpf_regimes import (
+        irpf_estimation_regime_directa_normal_token,
+        irpf_estimation_regime_directa_simplificada_token,
+        irpf_estimation_regime_tokens,
+    )
+    from ..user_profile.completeness import profile_section_rows, profile_value_is_present
+    from ..user_profile.profile_read_recorder import profile_values_under
+    from ..user_profile.projections import record_to_path_values
+
+    declared = {str(token) for token in irpf_estimation_regime_tokens()}
+    direct = {
+        str(irpf_estimation_regime_directa_normal_token()),
+        str(irpf_estimation_regime_directa_simplificada_token()),
+    }
+    values = record_to_path_values(record, as_of=day)
+    present = [
+        path
+        for path, value in profile_values_under(values, f"{_ACTIVITIES_SECTION}.").items()
+        if profile_value_is_present(value)
+    ]
+    rows = profile_section_rows(_ACTIVITIES_SECTION, present)
+    regime = values.get(_ESTIMATION_REGIME_PATH, "").strip()
+    regime_undeclared = bool(rows) and regime not in declared
+    activities: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
+    if regime not in direct:
+        return activities, regime_undeclared
+    for row, fields in rows.items():
+        prefix = f"{_ACTIVITIES_SECTION}.{row}" if row else _ACTIVITIES_SECTION
+        # Every populated field identifies the activity, so a later dated field that does not
+        # identify it still splits the row in two and refuses rather than mismatching a book.
+        activities.add((row, tuple(sorted((field, values[f"{prefix}.{field}"].strip()) for field in fields))))
+    return activities, regime_undeclared
+
+
+def _activity_books_refusal(
+    activities: _DirectEstimationActivities | None,
+    books: int,
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    if activities is not None and activities.regime_undeclared:
+        diagnostic = _diagnostic(
+            reason="source_domain_not_ready",
+            state="estimation_regime_undeclared",
+            message=(
+                f"{books} {filing_year} inventory activity books are kept and the profile states no estimation "
+                "regime on a day an activity is in force"
+            ),
+            remedy=(
+                "Declare in the profile the IRPF estimation regime of the activities for every day of the "
+                "ejercicio they are in force, so the Anexo D rows hold only activities in estimacion directa."
+            ),
+        )
+    else:
+        declared = (
+            "no profile was read"
+            if activities is None
+            else f"the profile declares {activities.count} activities in estimacion directa"
+        )
+        diagnostic = _diagnostic(
+            reason="source_domain_not_ready",
+            state="activity_books_do_not_match_activities",
+            message=f"{books} {filing_year} inventory activity books are kept and {declared} for the ejercicio",
+            remedy=(
+                "Keep one inventory book for each activity in estimacion directa in the ejercicio, a book "
+                "with no existencias included, and none for an activity in estimacion objetiva. Declare in "
+                "the profile the estimation regime and each such activity, with the dates an activity's "
+                "description or epigraph changed, so each Anexo D row is one activity's."
+            ),
+        )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(diagnostic,),
+    )
 
 
 def _diagnostic(
-    *, reason: CalculationSourceDiagnosticReason, state: str, message: str, remedy: str | None = None
+    *,
+    reason: CalculationSourceDiagnosticReason,
+    state: str,
+    message: str,
+    remedy: str | None = None,
+    fact: CalculationNoteFact | None = None,
 ) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=reason,
@@ -84,6 +246,7 @@ def _diagnostic(
         resolver_id=InventorySourceResolver.resolver_id,
         message=f"inventory source {state}: {message}",
         remedy=remedy,
+        fact=fact,
     )
 
 
@@ -114,7 +277,6 @@ def _resolve_inventory_binding_template(
     coordinate_refusal = _inventory_coordinate_refusal(
         typed_bindings,
         binding_ids=binding_ids,
-        filing_year=filing_year,
         resolver_id=resolver_id,
         owned_sources=owned_sources,
     )
@@ -161,14 +323,14 @@ def _inventory_coordinate_refusal(
     typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
     *,
     binding_ids: tuple[str, ...],
-    filing_year: int,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution | None:
     # The declaration carries no authored year: it states timeless intent and the
-    # filing context supplies the coordinate. The year guard is therefore a guard
-    # on the temporal selector -- an inventory row template must rest on the
-    # target's own filing coordinate rather than shifting off it.
+    # filing context supplies the coordinate. An inventory row template must rest
+    # on the target's own filing coordinate rather than shifting off it. Whether
+    # the rows apply at all is the selected edition's: it declares these bindings
+    # only where its design carries the Anexo D casillas.
     if any(not isinstance(selector.temporal, SameTargetContext) for _binding, selector in typed_bindings):
         return _template_refusal_resolution(
             binding_ids,
@@ -176,21 +338,7 @@ def _inventory_coordinate_refusal(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
-
-    # Refuse an inapplicable filing year here, before the encrypted ledger is
-    # read: the projection would refuse it anyway, but only after a load.
-    try:
-        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=filing_year)
-    except RegistryValidationError:
-        applicable_filing_year = None
-    if applicable_filing_year == filing_year:
-        return None
-    return _template_refusal_resolution(
-        binding_ids,
-        "inventory row template is not applicable for the filing year",
-        resolver_id=resolver_id,
-        owned_sources=owned_sources,
-    )
+    return None
 
 
 def _inventory_bindings_by_operation(
@@ -240,26 +388,95 @@ def _load_inventory_ledgers(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
-    ledgers = tuple(
-        sorted(
-            (item for item in document.ledgers if item.year == filing_year),
-            key=lambda item: item.actividad_id,
-        ),
+    selected = tuple(item for item in document.ledgers if item.year == filing_year)
+    return _ledgers_or_not_ready(
+        selected, binding_ids=binding_ids, filing_year=filing_year, resolver_id=resolver_id, owned_sources=owned_sources
     )
-    if not ledgers:
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="source_domain_not_ready",
-                    state="missing_activity_ledgers",
-                    message=f"no complete {filing_year} inventory activity ledger is available",
-                ),
+
+
+def _ledgers_or_not_ready(
+    selected: tuple[InventoryLedger, ...],
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> tuple[InventoryLedger, ...] | CalculationSourceResolution:
+    """Return the live ledgers sorted by activity, or the first reason the cohort is not ready."""
+    # A retired ledger with no stock facts has nothing to declare. One still
+    # holding facts refuses rather than dropping them from the Anexo D rows,
+    # because retirement is not proof that the stock never existed.
+    if any(item.leaves_year_unresolved for item in selected):
+        return _ledger_not_ready(
+            binding_ids,
+            resolver_id,
+            owned_sources,
+            state="retired_ledger_holds_stock_facts",
+            message=f"a retired {filing_year} inventory activity ledger still holds stock facts",
+        )
+    ledgers = tuple(sorted((item for item in selected if not item.is_retired), key=lambda item: item.actividad_id))
+    # The closing value is the operator's decision for the year, so a book that
+    # has none yet is unfinished rather than inconsistent: the existencias
+    # finales are unknown until it is recorded, and only then can the variation
+    # of casillas 0177 and 0182 be derived.
+    if any(item.closing_authority_record is None for item in ledgers):
+        return _ledger_not_ready(
+            binding_ids,
+            resolver_id,
+            owned_sources,
+            state="closing_value_not_recorded",
+            message=f"a {filing_year} inventory activity ledger has no recorded closing value",
+            remedy=(
+                "Record the year's closing value of each activity's inventory, the existencias finales "
+                "valued at acquisition price, so the stock variation can be derived."
             ),
         )
     return ledgers
+
+
+def _missing_books_refusal(
+    binding_ids: tuple[str, ...],
+    *,
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    """Refuse the rows of a filer who may hold an activity in estimacion directa and keeps no book.
+
+    A missing book is an unanswered question, not a statement that the activity held no existencias:
+    only a book closed at zero proves the zero rows.
+    """
+    return _ledger_not_ready(
+        binding_ids,
+        resolver_id,
+        owned_sources,
+        state="missing_activity_ledgers",
+        message=f"no complete {filing_year} inventory activity ledger is available",
+        remedy=(
+            "Open the inventory book of each activity in estimacion directa for the ejercicio and record "
+            "its closing value, the existencias finales valued at acquisition price. For an activity that "
+            "held no existencias, open the book with no stock and record its closing at zero, so the rows "
+            "read zero on that statement."
+        ),
+    )
+
+
+def _ledger_not_ready(
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    *,
+    state: str,
+    message: str,
+    remedy: str | None = None,
+) -> CalculationSourceResolution:
+    """Return the not-ready resolution that leaves every binding unresolved."""
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(_diagnostic(reason="source_domain_not_ready", state=state, message=message, remedy=remedy),),
+    )
 
 
 def _row_provenance(content_fingerprint: str) -> CalculationSourceProvenance:
@@ -286,15 +503,61 @@ def _row_provenance(content_fingerprint: str) -> CalculationSourceProvenance:
     )
 
 
+def _activity_casillas(
+    revision: ModeloRevision,
+    row_values: Mapping[tuple[str, int], Decimal | str],
+    *,
+    activity_count: int,
+    resolver_id: str,
+) -> tuple[dict[CasillaId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
+    """Give the return's activity casillas the one activity's Anexo D values, or name them unresolved.
+
+    Casillas 0177, 0181 and 0182 of the estimación directa block are the
+    activity's own, as 0171 and 0183 are, and the gastos total sums them. With
+    one activity its book's row is that activity's figure; with several, no row
+    is the return's one activity, so each casilla stays unresolved rather than
+    reading as a sum or a zero.
+    """
+    row_bindings = {binding_id for binding_id, _row in row_values}
+    bound = tuple(
+        (casilla, casilla.binding)
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND and casilla.binding in row_bindings
+    )
+    if activity_count == 1:
+        return {
+            casilla.id: value for casilla, binding in bound if isinstance(value := row_values[(binding, 1)], Decimal)
+        }, ()
+    return {}, tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=_SOURCE.value,
+            resolver_id=resolver_id,
+            binding_id=binding,
+            casilla_id=casilla.id,
+            message=(
+                f"casilla {casilla.id!r} is the one estimación directa activity's figure, and the profile "
+                f"declares {activity_count} activities with a book each, so no book's row is that figure"
+            ),
+            remedy=(
+                "Each activity's inventory row is kept in the Anexo D rows; the activity casilla needs the "
+                "declaration's per-activity blocks, which this calculation does not yet fill."
+            ),
+        )
+        for casilla, binding in bound
+    )
+
+
 def _resolve_inventory_rows(
     ledgers: tuple[InventoryLedger, ...],
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[str, ...],
     bindings_by_operation: Mapping[str, BindingDefinition],
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
-    """Project each activity into row values, identities, and physical evidence diagnostics."""
+    """Project each activity into row values, identities, its activity casillas, and physical evidence diagnostics."""
     row_values: dict[tuple[str, int], Decimal | str] = {}
     row_identities: dict[tuple[str, int], RowSourceIdentity] = {}
     provenance: list[CalculationSourceProvenance] = []
@@ -305,7 +568,7 @@ def _resolve_inventory_rows(
             content_fingerprint = content_hash_hex(projection.model_dump(mode="json"))
             for operation, binding in bindings_by_operation.items():
                 key = (binding.id, row_index)
-                row_values[key] = getattr(projection, _VALUE_ATTRIBUTE_BY_OPERATION[operation])
+                row_values[key] = getattr(projection, VALUE_ATTRIBUTE_BY_OPERATION[operation])
                 row_identities[key] = RowSourceIdentity(
                     source_kind=_SOURCE,
                     source_row_identity=projection.actividad_id,
@@ -331,13 +594,17 @@ def _resolve_inventory_rows(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
+    casillas, unresolved = _activity_casillas(
+        revision, row_values, activity_count=len(ledgers), resolver_id=resolver_id
+    )
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         row_binding_values=row_values,
         row_source_identities=row_identities,
+        bound_inputs_by_casilla_id=casillas,
         provenance=tuple(provenance),
-        diagnostics=tuple(diagnostics),
+        diagnostics=(*diagnostics, *unresolved),
     )
 
 
@@ -417,9 +684,20 @@ class InventorySourceResolver:
     resolver_id: ClassVar[str] = "inventory"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
-    def __init__(self, *, inventory_repository: InventoryLedgerRepositoryProtocol | None = None) -> None:
-        """Bind the optional repository used to read inventory facts."""
+    def __init__(
+        self,
+        *,
+        inventory_repository: InventoryLedgerRepositoryProtocol | None = None,
+        claim_reads: InventoryClaimLedgerReads | None = None,
+    ) -> None:
+        """Bind the optional repository used to read inventory facts.
+
+        ``claim_reads`` is the ledger and asset register the purchases' ledger
+        statements are checked against. Without it no statement is checked, so
+        only a caller that reads the projection, not one that files it, omits it.
+        """
         self._inventory_repository = inventory_repository
+        self._claim_reads = claim_reads
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve inventory bindings for the selected calculation context."""
@@ -436,13 +714,8 @@ class InventorySourceResolver:
         )
         if isinstance(template, CalculationSourceResolution):
             return template
-        if _profile_declares_no_activity_income(context):
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                unresolved_binding_ids=binding_ids,
-                inapplicable_binding_ids=binding_ids,
-            )
+        if profile_declares_no_activity_income(context):
+            return self._inapplicable(binding_ids)
         if self._inventory_repository is None:
             return self._storage_refusal(binding_ids)
         ledgers = _load_inventory_ledgers(
@@ -454,12 +727,103 @@ class InventorySourceResolver:
         )
         if isinstance(ledgers, CalculationSourceResolution):
             return ledgers
+        activities = _direct_estimation_activities(context)
+        if not ledgers:
+            return self._without_books(activities, binding_ids=binding_ids, filing_year=context.filing_year)
+        refusal = self._books_refusal(context, activities, ledgers, binding_ids=binding_ids)
+        if refusal is not None:
+            return refusal
         return _resolve_inventory_rows(
             ledgers,
+            revision=context.revision,
             binding_ids=binding_ids,
             bindings_by_operation=template.by_operation,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+        )
+
+    def _without_books(
+        self,
+        activities: _DirectEstimationActivities | None,
+        *,
+        binding_ids: tuple[str, ...],
+        filing_year: int,
+    ) -> CalculationSourceResolution:
+        """Resolve the rows of a filer who keeps no inventory book.
+
+        Only an activity in estimacion directa keeps a book for the rows. A book kept for an
+        activity outside the block still reaches the count check and is refused.
+        """
+        if activities is not None and activities.none_in_direct_estimation:
+            return self._inapplicable(binding_ids)
+        return _missing_books_refusal(
+            binding_ids,
+            filing_year=filing_year,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+
+    def _books_refusal(
+        self,
+        context: CalculationSourceContext,
+        activities: _DirectEstimationActivities | None,
+        ledgers: tuple[InventoryLedger, ...],
+        *,
+        binding_ids: tuple[str, ...],
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back unless every declared activity keeps its book and each purchase's statement stands.
+
+        Each row is one book and the activity block of the return is one activity, so a row is
+        an activity's only when every declared activity keeps its book. One book among several
+        activities would otherwise read as the return's one activity.
+        """
+        if activities is None or activities.regime_undeclared or activities.count != len(ledgers):
+            return _activity_books_refusal(
+                activities,
+                len(ledgers),
+                binding_ids=binding_ids,
+                filing_year=context.filing_year,
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+            )
+        return self._claim_refusal(ledgers, binding_ids=binding_ids, filing_year=context.filing_year)
+
+    def _claim_refusal(
+        self, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...], filing_year: int
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back while a purchase's ledger statement does not stand, or is missing."""
+        if self._claim_reads is None or self._inventory_repository is None:
+            return None
+        try:
+            findings = inventory_claim_findings(
+                self._inventory_repository.load(), ledgers, filing_year=filing_year, reads=self._claim_reads
+            )
+        except (InventoryLedgerError, *STORAGE_DEGRADATION_ERRORS):
+            return self._storage_refusal(binding_ids)
+        if not findings:
+            return None
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=tuple(
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state=finding.state,
+                    message=finding.message,
+                    remedy=finding.remedy,
+                    fact=finding.fact,
+                )
+                for finding in findings
+            ),
+        )
+
+    def _inapplicable(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            inapplicable_binding_ids=binding_ids,
         )
 
     def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
@@ -470,4 +834,4 @@ class InventorySourceResolver:
         )
 
 
-__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver"]
+__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver", "revision_carries_inventory_purchases"]

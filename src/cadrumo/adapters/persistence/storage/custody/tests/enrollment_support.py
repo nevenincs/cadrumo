@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copied_profile_world, sealed_profile_world
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
@@ -20,7 +21,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -131,19 +132,25 @@ def administration_subject(
     os_owner_id: str = "synthetic-owner",
     installation_id: UUID | None = None,
     profile_label: str = "Enrollment tests",
+    shared_native_store: bool = False,
 ) -> Generator[AdministrationSubject]:
     """Use a real encrypted profile; only native store and OS/transport observations are doubled."""
     create, decode = profile_authority_contexts()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        result = register_profile_with_credentials(
-            label=profile_label,
-            passphrase=PROFILE_INPUT,
-            profile_create_context=create,
-            profile_decode_context=decode,
-        )
-        material = load_committed_profile_password_material(UUID(result.profile_id))
+    world = sealed_profile_world(
+        ("administration subject", profile_label),
+        lambda: (
+            register_profile_with_credentials(
+                label=profile_label,
+                passphrase=PROFILE_INPUT,
+                profile_create_context=create,
+                profile_decode_context=decode,
+            ).profile_id
+        ),
+    )
+    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as (_, profile_id):
+        material = load_committed_profile_password_material(profile_id)
         binding = ProfileAccessBinding(
-            profile_id=UUID(result.profile_id),
+            profile_id=profile_id,
             installation_id=installation_id or uuid4(),
             os_owner_id=os_owner_id,
             custody_generation=material.envelope.password_generation,
@@ -203,7 +210,9 @@ def administration_subject(
             expires_at=NOW + timedelta(hours=1),
             issued_monotonic=10.0,
         )
-        native, client_native = MemoryNativePort(), MemoryNativePort()
+        native = MemoryNativePort()
+        # One OS account's credential store holds both custody and the client's key in production.
+        client_native = native if shared_native_store else MemoryNativePort()
         delivery = DeliveryFaults(NativeEnrollmentRecipient(requester=requester, secrets_store=client_native))
         owner = TestAdministrationOwner(
             AdministrationFacts(profile=profile, context=context, originating_login_id="test-login", session=session),
@@ -226,3 +235,26 @@ def administration_subject(
             yield AdministrationSubject(service, owner, store, native, client_native, proposal)
         finally:
             reset_test_profile_session()
+
+
+@contextmanager
+def registered_profile(
+    tmp_path: Path, *, owner_module: str, label: str, passphrase: str
+) -> Generator[tuple[Path, UUID]]:
+    """Open this test's own copy of a profile registered once per worker; it is born without recovery."""
+    create, decode = profile_authority_contexts()
+    world = sealed_profile_world(
+        (owner_module, label, passphrase),
+        lambda: (
+            register_profile_with_credentials(
+                label=label,
+                passphrase=passphrase,
+                profile_create_context=create,
+                profile_decode_context=decode,
+            ).profile_id
+        ),
+    )
+    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as registered:
+        # The world registered without a KDF child; a production registration's child leaves this scratch base.
+        prepare_temporary_directory()
+        yield registered

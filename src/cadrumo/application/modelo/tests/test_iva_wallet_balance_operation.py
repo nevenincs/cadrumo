@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -14,17 +13,20 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.iva_compensation.balance import IvaWalletBalanceReport
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_balance_operation import (
     MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
@@ -41,27 +43,11 @@ from ..iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_NEXT_EXPIRY_YEAR = _YEAR + 4
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
 _AUTHORITY = object()
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -92,7 +78,7 @@ class _Factory:
         )
 
 
-def _request(*, profile_id: UUID = _PROFILE, year: int = 2024):
+def _request(*, profile_id: UUID = _PROFILE, year: int = _YEAR):
     return OperationRequest[ModeloIvaWalletBalanceRequest](
         definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -121,23 +107,29 @@ def test_operation_has_credential_free_request_and_closed_result() -> None:
         "lot_count",
         "next_expiry_year",
         "unallocated_applied_amount",
+        "words_language",
+        "total_balance_words",
+        "active_balance_words",
+        "expired_balance_words",
+        "unallocated_applied_amount_words",
     }
     with pytest.raises(ValidationError):
-        ModeloIvaWalletBalanceProjection(
+        ModeloIvaWalletBalanceProjection.worded(
             profile_id=_PROFILE,
-            as_of_year=2024,
+            as_of_year=_YEAR,
             total_balance="-1",
             active_balance="0",
             expired_balance="0",
             lot_count=0,
             next_expiry_year=None,
             unallocated_applied_amount="0",
+            language=OutputLanguage.EN,
         )
 
 
 def test_access_is_bound_to_exact_profile_and_whole_history() -> None:
     _definition, registration = _definition_and_registration()
-    request = _request(year=2028)
+    request = _request(year=_NEXT_EXPIRY_YEAR)
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
@@ -178,7 +170,7 @@ def test_balance_read_is_admitted_on_the_external_client_frontend_without_a_comm
     assert AccessAction.COMMIT not in resolved.policy.actions
 
 
-def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:
+def _executor_context(events: RecordingEvents, operands: _Operands) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
         SimpleNamespace(
@@ -188,7 +180,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=_AUTHORITY,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -198,7 +190,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
 def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     repository = object()
     factory = _Factory(repository)
@@ -219,27 +211,27 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
             active_balance=Decimal("500.00"),
             expired_balance=Decimal("0.00"),
             lot_count=1,
-            next_expiry_year=2028,
+            next_expiry_year=_NEXT_EXPIRY_YEAR,
             unallocated_applied_amount=Decimal("0.00"),
         )
 
     monkeypatch.setattr("cadrumo.application.modelo.iva_wallet_balance_operation.query_iva_wallet_balance", query)
     executor = ModeloIvaWalletBalanceExecutor(cast(ModeloIvaWalletSeedPortsFactory, factory))
 
-    result_ref = asyncio.run(executor.execute(_request(year=2024), _executor_context(events, operands)))
+    result_ref = asyncio.run(executor.execute(_request(year=_YEAR), _executor_context(events, operands)))
 
     assert result_ref == "balance-reference"
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [_AUTHORITY]
-    assert seen == [(2024, repository, _AUTHORITY)]
+    assert seen == [(_YEAR, repository, _AUTHORITY)]
     assert events.phases == [f"{MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID}.read"]
     assert events.effects == [OperationEffect.NONE]
     report = cast(ModeloIvaWalletBalanceOperationReport, operands.values[0])
     projection = report.projection
     assert projection.profile_id == _PROFILE
-    assert projection.as_of_year == 2024
+    assert projection.as_of_year == _YEAR
     assert projection.total_balance == "500.00"
-    assert projection.next_expiry_year == 2028
+    assert projection.next_expiry_year == _NEXT_EXPIRY_YEAR
 
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
@@ -250,14 +242,14 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_balance_result(report, receipt) == projection
 
 
 def test_executor_refuses_a_factory_bundle_for_another_profile(monkeypatch: pytest.MonkeyPatch) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(object(), selected_bucket=str(_OTHER_PROFILE))
     monkeypatch.setattr(
@@ -274,3 +266,26 @@ def test_executor_refuses_a_factory_bundle_for_another_profile(monkeypatch: pyte
     assert factory.operations == [_AUTHORITY]
     assert events.effects == []
     assert operands.values == []
+
+
+def test_the_balance_serves_each_amount_in_words_and_refuses_words_that_say_another_amount() -> None:
+    projection = ModeloIvaWalletBalanceProjection.worded(
+        profile_id=_PROFILE,
+        as_of_year=_YEAR,
+        total_balance="1234.5",
+        active_balance="1234.5",
+        expired_balance="0",
+        lot_count=1,
+        next_expiry_year=None,
+        unallocated_applied_amount="0",
+        language=OutputLanguage.ES,
+    )
+    euro = chr(0xA0) + "€"
+
+    assert projection.words_language is OutputLanguage.ES
+    assert projection.total_balance_words == f"1.234,50{euro}"
+    assert projection.expired_balance_words == f"0,00{euro}"
+    with pytest.raises(ValidationError, match="total_balance_words does not say total_balance"):
+        ModeloIvaWalletBalanceProjection.model_validate(
+            projection.model_dump() | {"total_balance_words": f"1.000,00{euro}"}
+        )

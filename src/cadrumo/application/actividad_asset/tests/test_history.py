@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -15,7 +16,7 @@ from ....domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
+from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -30,12 +31,18 @@ from ..history import ActivityAssetHistory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST = filing_year_envelope().horizon
+
 
 def _revision(
     *,
     number: int = 1,
     supersedes_revision_id: str | None = None,
     evidence_marker: str = "a",
+    basis_amount: str = "1000",
+    opening_amount: str = "0",
+    in_service: date = date(_FIRST, 1, 1),
+    opening_through: int | None = None,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id="asset-history-test",
@@ -50,13 +57,15 @@ def _revision(
         asset_kind=AssetKind.MATERIAL,
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=Decimal("1000"),
+            basis_amount=Decimal(basis_amount),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed allocation record",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=in_service,
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
-            accumulated_amount=Decimal("0"),
+            accumulated_amount=Decimal(opening_amount),
+            covered_through_tax_year=(opening_through or in_service.year) if Decimal(opening_amount) else None,
         ),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -72,9 +81,9 @@ def _claim(revision: ActivityAssetRevision, **overrides: object) -> Amortization
         "asset_id": revision.asset_id,
         "asset_revision_id": revision.revision_id,
         "asset_kind": revision.asset_kind,
-        "tax_year": 2025,
-        "covered_from": date(2025, 1, 1),
-        "covered_until": date(2025, 4, 1),
+        "tax_year": _FIRST,
+        "covered_from": date(_FIRST, 1, 1),
+        "covered_until": date(_FIRST, 4, 1),
         "amount": Decimal("100.00"),
         "schedule_fingerprint": "c" * 64,
         "authority_generation": "2025.1",
@@ -114,7 +123,7 @@ def test_history_append_revision_accepts_only_the_current_successor() -> None:
     corrected = history.append_revision(winning)
 
     assert corrected.append_revision(winning) is corrected
-    with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_must_supersede_current"):
         corrected.append_revision(stale)
 
 
@@ -147,12 +156,116 @@ def test_reopen_replays_claims_and_refuses_malformed_overlap_or_supersession() -
     first = _claim(revision)
     overlapping = _claim(
         revision,
-        covered_from=date(2025, 3, 1),
-        covered_until=date(2025, 5, 1),
+        covered_from=date(_FIRST, 3, 1),
+        covered_until=date(_FIRST, 5, 1),
     )
     missing_superseded_claim = _claim(revision, supersedes_claim_id="d" * 64)
 
-    with pytest.raises(ValidationError, match="overlapping"):
+    with pytest.raises(ValidationError, match="claims_overlap"):
         ActivityAssetHistory(revisions=(revision,), claims=(first, overlapping))
-    with pytest.raises(ValidationError, match="absent"):
+    with pytest.raises(ValidationError, match="superseded_claim_absent"):
         ActivityAssetHistory(revisions=(revision,), claims=(missing_superseded_claim,))
+
+
+def _history_with_claim_of_400() -> tuple[ActivityAssetHistory, ActivityAssetRevision]:
+    initial = _revision()
+    claim = _claim(initial, amount=Decimal("400.00"))
+    return ActivityAssetHistory().append_revision(initial).record_claim(claim).history, initial
+
+
+def test_superseding_revision_with_basis_equal_to_effective_claims_is_accepted() -> None:
+    history, initial = _history_with_claim_of_400()
+    correction = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        basis_amount="400.00",
+    )
+
+    assert history.append_revision(correction).revisions[-1] == correction
+
+
+def test_superseding_revision_with_basis_one_cent_below_effective_claims_is_refused() -> None:
+    history, initial = _history_with_claim_of_400()
+    correction = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        basis_amount="399.99",
+    )
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
+        history.append_revision(correction)
+    assert len(history.revisions) == 1
+
+
+def test_superseding_revision_counts_its_opening_amount_with_effective_claims() -> None:
+    history, initial = _history_with_claim_of_400()
+    equal = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        basis_amount="500.00",
+        opening_amount="100.00",
+        in_service=date(_FIRST - 1, 1, 1),
+    )
+    one_cent_short = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="e",
+        basis_amount="499.99",
+        opening_amount="100.00",
+        in_service=date(_FIRST - 1, 1, 1),
+    )
+
+    assert history.append_revision(equal).revisions[-1] == equal
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
+        history.append_revision(one_cent_short)
+
+
+def test_a_claim_in_or_before_the_opening_year_is_refused_and_a_later_one_recorded() -> None:
+    opened = _revision(opening_amount="100.00", in_service=date(_FIRST - 1, 1, 1))
+    history = ActivityAssetHistory().append_revision(opened)
+
+    for covered_year in (_FIRST - 1, _FIRST - 2):
+        claim = _claim(
+            opened,
+            tax_year=covered_year,
+            covered_from=date(covered_year, 1, 1),
+            covered_until=date(covered_year, 4, 1),
+        )
+        with pytest.raises(ActividadAssetValidationError, match="claim_year_not_after_opening_year"):
+            history.record_claim(claim)
+
+    assert len(history.record_claim(_claim(opened)).history.claims) == 1
+
+
+def test_a_correction_whose_opening_year_reaches_a_recorded_claim_is_refused() -> None:
+    initial = _revision(in_service=date(_FIRST - 1, 1, 1))
+    history = ActivityAssetHistory().append_revision(initial).record_claim(_claim(initial)).history
+    reaching = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        opening_amount="100.00",
+        in_service=date(_FIRST - 1, 1, 1),
+        opening_through=_FIRST,
+    )
+
+    with pytest.raises(ActividadAssetValidationError, match="claim_year_not_after_opening_year"):
+        history.append_revision(reaching)
+
+
+def test_superseding_revision_ignores_superseded_claims() -> None:
+    history, initial = _history_with_claim_of_400()
+    original = history.claims[0]
+    replacement = _claim(initial, amount=Decimal("100.00"), supersedes_claim_id=original.claim_id)
+    history = history.record_claim(replacement).history
+    correction = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        basis_amount="100.00",
+    )
+
+    assert history.append_revision(correction).revisions[-1] == correction

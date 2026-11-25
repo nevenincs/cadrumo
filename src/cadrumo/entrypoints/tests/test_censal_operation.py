@@ -13,7 +13,7 @@ from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (
@@ -34,7 +34,6 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalOperationAcquisition,
     CensalOperationExecutor,
     CensalProfileBaseline,
-    CensalReviewedFieldIntent,
     CensalReviewedOperand,
     build_censal_operation_definition,
 )
@@ -46,33 +45,22 @@ from cadrumo.application.user_profile.cotejo_apply import (
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.tests.censal_intent_support import censal_field_intents
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
+from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    NOW as _NOW,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    RESPONSE_TOKEN as _RESPONSE_TOKEN,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    censal_request_payload as _payload,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    censal_supervisor as _supervisor,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    start as _start,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    subject as _subject,
-)
-from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
-    wait_for_phase as _wait_for_phase,
+    NOW,
+    RESPONSE_TOKEN,
+    censal_request_payload,
+    censal_supervisor,
+    start,
+    subject,
+    wait_for_phase,
 )
 from ...tests.aeat_literal_fixtures import (
     CENSO_CONSULTATION_URL_FIXTURE,
@@ -82,16 +70,21 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_PATHS = (
-    "contact.fiscal_address",
-    "contact.postcode",
-    "contact.fiscal_address_cadastral_reference",
-)
+# The captured page names a municipio ("28079 - MADRID") and an office ("28600 - OFICINA
+# EJEMPLO") but carries no actividades consultation, so the two activity-date paths
+# project no fact and are not part of the adopted/divergent set.
 _VALUES = {
-    "contact.fiscal_address": "CALLE NOMBRE VIA EJEMPLO NUM 1 7 9, 28001 28079 - MADRID MADRID",
+    "contact.fiscal_address": "CALLE NOMBRE VIA EJEMPLO NUM 1 7 9, 28001 MADRID MADRID",
     "contact.postcode": "28001",
     "contact.fiscal_address_cadastral_reference": "0000001AA0000A0001AA",
+    "contact.fiscal_address_province_code": "28",
+    "contact.fiscal_address_municipality_code": "28079",
+    "contact.fiscal_address_municipality_name": "MADRID",
+    "censo.aeat_delegacion_code": "28",
+    "censo.aeat_administracion_code": "600",
+    "censo.aeat_administracion_name": "OFICINA EJEMPLO",
 }
+_PATHS = tuple(_VALUES)
 
 
 def test_censal_review_contract_joins_the_tui_profile_edit_action() -> None:
@@ -184,16 +177,8 @@ class _PreEntryBoundary:
 
 
 def _request(profile_id: str, adopted_paths: frozenset[str]):
-    payload = _payload(profile_id).model_copy(
-        update={
-            "field_intents": tuple(
-                CensalReviewedFieldIntent(
-                    path=path,
-                    intent=CensalFieldIntent.ADOPT if path in adopted_paths else CensalFieldIntent.PRESERVE,
-                )
-                for path in _PATHS
-            )
-        }
+    payload = censal_request_payload(profile_id).model_copy(
+        update={"field_intents": censal_field_intents(dict.fromkeys(adopted_paths, CensalFieldIntent.ADOPT))}
     )
     return OperationRequest(
         definition_id=_test_censal_operation_definition_id(),
@@ -207,19 +192,19 @@ def _apply_response(operation_id: str, pending):
         interaction_id=pending.request.interaction_id,
         operation_id=operation_id,
         revision=pending.request.revision,
-        response_token=_RESPONSE_TOKEN,
+        response_token=RESPONSE_TOKEN,
         continuation_digest=pending.request.continuation_digest,
         reviewed_proposal_digest=pending.reviewed_proposal_digest,
         actor_ref="operator:s33-conformance",
-        responded_at=_NOW + timedelta(minutes=2),
+        responded_at=NOW + timedelta(minutes=2),
         baseline_digest=pending.baseline_digest,
         proposed_effect_digest=pending.proposed_effect_digest,
     )
 
 
 def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence(tmp_path: Path) -> None:
-    _profile_create_context_for_test, decode_context = _profile_contexts_for_test()
-    with _subject(tmp_path) as (profile_id, _objects, _session):
+    _profile_create_context_for_test, decode_context = profile_authority_contexts()
+    with subject(tmp_path) as (profile_id, _objects, _session):
         apply_cotejo(
             None,
             adopted=(UserProfileFact(path="contact.postcode", value="28001"),),
@@ -237,9 +222,7 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
         proposal = CensalReviewedOperand(
             observation=observation,
             baseline=CensalProfileBaseline.from_record(record),
-            field_intents=tuple(
-                CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.PRESERVE) for path in _PATHS
-            ),
+            field_intents=censal_field_intents(),
         )
 
         apply_cotejo(None, reviewed_proposal=proposal, profile_decode_context=decode_context)
@@ -249,15 +232,12 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
         divergences = open_censo_divergences(updated)
 
         assert record_to_path_values(updated)["contact.postcode"] == "28001"
-        assert tuple(row.axis for row in divergences) == (
-            "contact.fiscal_address",
-            "contact.fiscal_address_cadastral_reference",
-        )
+        assert tuple(row.axis for row in divergences) == tuple(path for path in _PATHS if path != "contact.postcode")
 
 
 def test_censal_operation_worker_preflight_refuses_before_any_remote_read(tmp_path: Path) -> None:
     """The composed provider preflight runs for the exact profile before acquisition."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisition = _LocalHttpCensalAcquisition()
     preflight_profile_ids: list[str] = []
 
@@ -265,12 +245,12 @@ def test_censal_operation_worker_preflight_refuses_before_any_remote_read(tmp_pa
         preflight_profile_ids.append(str(profile_id))
         raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
-        owner = _supervisor(
+        owner = censal_supervisor(
             root=tmp_path / "operations",
             objects=objects,
             executor=CensalOperationExecutor(
@@ -287,7 +267,7 @@ def test_censal_operation_worker_preflight_refuses_before_any_remote_read(tmp_pa
 
         async def run():
             operation_id = await owner.submit(_request(profile_id, frozenset(_PATHS)), operation_id="3" * 64)
-            return await _start(owner, operation_id)
+            return await start(owner, operation_id)
 
         settled = asyncio.run(run())
 
@@ -320,15 +300,15 @@ async def _settle_when_stopped(supervisor, operation_id: str, receipt: Operation
 @pytest.mark.parametrize(
     "adopted_paths",
     [*(frozenset({path}) for path in _PATHS), frozenset(_PATHS)],
-    ids=["address-only", "postcode-only", "cadastral-only", "apply-all"],
+    ids=[*(f"{path}-only" for path in _PATHS), "apply-all"],
 )
 def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
     tmp_path: Path,
     adopted_paths: frozenset[str],
 ) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisition = _LocalHttpCensalAcquisition()
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "operations"
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -342,7 +322,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
-        owner = _supervisor(
+        owner = censal_supervisor(
             root=durable_root,
             objects=objects,
             executor=executor,
@@ -353,7 +333,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
 
         async def run():
             operation_id = await owner.submit(request, operation_id="3" * 64)
-            waiting = await _start(owner, operation_id)
+            waiting = await start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             assert (
@@ -369,7 +349,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             assert pending is not None
             assert acquisition.calls == 1
             await owner.respond(_apply_response(operation_id, pending))
-            stopped = await _wait_for_phase(owner, operation_id, "censo.settlement")
+            stopped = await wait_for_phase(owner, operation_id, "censo.settlement")
             terminal = await _settle_when_stopped(
                 owner,
                 operation_id,
@@ -378,7 +358,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
                     revision=stopped.revision + 1,
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
-                    settled_at=_NOW,
+                    settled_at=NOW,
                     result_ref=operation_id,
                 ),
             )
@@ -393,7 +373,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
                     subject_ref=profile_id,
                 ),
                 operation_id,
-                observed_at=_NOW,
+                observed_at=NOW,
             )
             assert observed.current is None
 
@@ -424,16 +404,16 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
 
 
 def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisition = _LocalHttpCensalAcquisition()
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
 
         async def reject_run() -> None:
-            supervisor = _supervisor(
+            supervisor = censal_supervisor(
                 root=tmp_path / "reject",
                 objects=objects,
                 executor=CensalOperationExecutor(
@@ -448,7 +428,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 token="7" * 64,
             )
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="8" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -456,14 +436,14 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:s33-conformance",
-                    responded_at=_NOW,
+                    responded_at=NOW,
                 )
             )
-            stopped = await _wait_for_phase(supervisor, operation_id, "censo.settlement")
+            stopped = await wait_for_phase(supervisor, operation_id, "censo.settlement")
             terminal = await _settle_when_stopped(
                 supervisor,
                 operation_id,
@@ -472,7 +452,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     revision=stopped.revision + 1,
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=NOW,
                     result_ref=operation_id,
                 ),
             )
@@ -501,7 +481,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
             )
 
         async def stale_run() -> None:
-            supervisor = _supervisor(
+            supervisor = censal_supervisor(
                 root=tmp_path / "stale",
                 objects=objects,
                 executor=CensalOperationExecutor(
@@ -517,7 +497,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 token="a" * 64,
             )
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="b" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(_apply_response(operation_id, pending))
@@ -536,9 +516,9 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
 
 
 def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisition = _LocalHttpCensalAcquisition()
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "restart"
         history_before = ProfileRecordStore(session=session).history()
         executor = CensalOperationExecutor(
@@ -549,7 +529,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
-        owner = _supervisor(
+        owner = censal_supervisor(
             root=durable_root,
             objects=objects,
             executor=executor,
@@ -559,20 +539,20 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
 
         async def run() -> None:
             operation_id = await owner.submit(_request(profile_id, frozenset(_PATHS)), operation_id="c" * 64)
-            waiting = await _start(owner, operation_id)
+            waiting = await start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             assert acquisition.calls == 1
             assert all(resource.closed for resource in acquisition.resources)
             assert await owner.detach(operation_id) == waiting
 
-            replacement = _supervisor(
+            replacement = censal_supervisor(
                 root=durable_root,
                 objects=objects,
                 executor=executor,
                 owner="d" * 64,
                 token="e" * 64,
-                now=_NOW + timedelta(minutes=2),
+                now=NOW + timedelta(minutes=2),
             )
             recovered = await replacement.reconcile(operation_id)
             pending = recovered.pending_interaction
@@ -583,7 +563,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             assert acquisition.calls == 1
 
             await replacement.respond(_apply_response(operation_id, pending))
-            stopped = await _wait_for_phase(replacement, operation_id, "censo.settlement")
+            stopped = await wait_for_phase(replacement, operation_id, "censo.settlement")
             terminal = await _settle_when_stopped(
                 replacement,
                 operation_id,
@@ -592,7 +572,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
                     revision=stopped.revision + 1,
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
-                    settled_at=_NOW + timedelta(minutes=2),
+                    settled_at=NOW + timedelta(minutes=2),
                     result_ref=operation_id,
                 ),
             )
@@ -604,7 +584,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
                     subject_ref=profile_id,
                 ),
                 operation_id,
-                observed_at=_NOW + timedelta(minutes=2),
+                observed_at=NOW + timedelta(minutes=2),
             )
             assert observed.current is None
 
@@ -624,16 +604,16 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
 
 
 def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_without_effect(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisition = _LocalHttpCensalAcquisition()
     boundary = _PreEntryBoundary()
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "cancel"
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
-        supervisor = _supervisor(
+        supervisor = censal_supervisor(
             root=durable_root,
             objects=objects,
             executor=CensalOperationExecutor(
@@ -651,7 +631,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
 
         async def run() -> None:
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="e" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(_apply_response(operation_id, pending))
@@ -659,13 +639,14 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
             requested = await supervisor.request_cancel(operation_id)
             assert requested.effect is OperationEffect.NONE
             boundary.release.set()
-            for _ in range(100):
+            deadline = asyncio.get_running_loop().time() + 30
+            while True:
                 stopped = await supervisor.inspect(operation_id)
                 if stopped.cancellation_acknowledged_at is not None:
                     break
-                await asyncio.sleep(0)
-            else:
-                raise AssertionError("censal cancellation was not acknowledged")
+                if asyncio.get_running_loop().time() > deadline:
+                    raise AssertionError("censal cancellation was not acknowledged")
+                await asyncio.sleep(0.01)
             terminal = await _settle_when_stopped(
                 supervisor,
                 operation_id,
@@ -674,7 +655,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
                     revision=stopped.revision + 1,
                     condition=OperationTerminalCondition.CANCELLED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=NOW,
                 ),
             )
             assert terminal.effect is OperationEffect.NONE
@@ -685,7 +666,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
                     subject_ref=profile_id,
                 ),
                 operation_id,
-                observed_at=_NOW,
+                observed_at=NOW,
             )
             assert observed.current is None
 

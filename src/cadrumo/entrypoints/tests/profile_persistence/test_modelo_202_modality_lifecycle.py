@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -26,8 +27,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import (
+from ....domain.user_profile.values import create_user_profile_record
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_verification_repository_bundle,
@@ -46,8 +47,11 @@ from ....adapters.persistence.profile.tests.modelo_export_ports_support import m
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError
-from ....application.modelo.calculation_actions import calculate_modelo_revision
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import file_modelo_revision
@@ -76,6 +80,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
@@ -87,7 +92,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _BUCKET_ID = "69ba4fa8-427a-4853-8758-9ead443fb20c"
-_TAX_ID = "B12345674"
+_TAX_ID = "B00015016"
 _M202_RELATION_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 _M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
@@ -152,7 +157,7 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
-        new_entity_first_two_profit_periods=False,
+        regimen_entidades_navieras_tonelaje=False,
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),
@@ -165,37 +170,29 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
 
 
 def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
-    facts = [
+    stated = [
         UserProfileFact(path="identity.tax_id", value=_TAX_ID),
         UserProfileFact(path="identity.name", value="Ana"),
         UserProfileFact(path="identity.surnames", value="Sociedad Limitada"),
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.oss_enrolled", value=False),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-        UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
     ]
     if incn is not None:
-        facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
+        stated.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=tuple(facts),
+            facts=persona_facts_beneath(
+                stated,
+                without=() if incn is not None else ("taxpayer_type.incn_prior_12_months",),
+                persona_id="sociedad-limitada",
+            ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -267,6 +264,23 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
     )
 
 
+def _create_first_payment_work_unit(
+    work_repo: WorkUnitCatalogueRepository, operation: PinnedAuthorityOperation
+) -> WorkUnit:
+    """Create the 2026 first-payment-period modelo 202 work unit over ``work_repo``."""
+    snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
+    return create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="202",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1P"),
+        revision_id=snapshot.revision.id,
+        ports=_work_ports(work_repo),
+        clock=_CLOCK,
+        operation=operation,
+    )
+
+
 def _calculate_m202(
     *,
     bucket_id: str,
@@ -295,7 +309,7 @@ def _calculate_m202(
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-test",
@@ -305,7 +319,7 @@ def _calculate_m202(
                 _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
             },
             clock=_CLOCK,
-        )
+        ).revision
     refreshed_work_unit = work_repo.load().get(work_unit.work_unit_id)
     assert refreshed_work_unit is not None
     return refreshed_work_unit, revision, work_repo, calc_repo, filing_repo, verification_repo
@@ -314,6 +328,7 @@ def _calculate_m202(
 def _seed_legacy_zero_m202_revision(
     *,
     work_unit: WorkUnit,
+    work_unit_repository: WorkUnitCatalogueRepository,
     calculation_repository: CalculationRevisionCatalogueRepository,
     state: CalculationRevisionState,
 ) -> CalculationRevision:
@@ -324,6 +339,13 @@ def _seed_legacy_zero_m202_revision(
         casilla_values=_ZERO_M202_CASILLA_VALUES,
         filing_instance_evidence=None,
         source_provenance=(),
+    )
+    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
+    work_unit_repository.save(
+        upsert_work_unit(
+            work_unit_repository.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id}),
+        )
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -360,23 +382,13 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
 
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
             bundled_indexed_authority().operation() as operation,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",
@@ -389,10 +401,11 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
         assert context is not None
         missing_bindings = context["missing_bindings"]
         assert isinstance(missing_bindings, tuple)
+        # The first payment's prior-payments span is empty, so the bucket's
+        # previous-period prefill resolves it; only the operator facts are missing.
         assert set(missing_bindings) == {
             _M202_INCN_BINDING,
             _M202_RELATION_BINDING,
-            _M202_PRIOR_PAYMENTS_BINDING,
         }
         assert calc_repo.load().revisions == {}
         stored_work_unit = work_repo.load().get(work_unit.work_unit_id)
@@ -409,19 +422,10 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         calc_repo = CalculationRevisionCatalogueRepository()
         filing_repo = ModeloRecordCatalogueRepository()
         verification_repo = VerificationReportCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
         draft = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
+            work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             state=CalculationRevisionState.BORRADOR,
         )
@@ -461,6 +465,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
 
         verified = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
+            work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
@@ -493,7 +498,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert file_context is not None
         file_missing_bindings = file_context["missing_bindings"]
         assert isinstance(file_missing_bindings, tuple)
-        assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
+        assert _M202_INCN_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as export_error,
@@ -521,7 +526,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert export_context is not None
         export_missing_bindings = export_context["missing_bindings"]
         assert isinstance(export_missing_bindings, tuple)
-        assert _M202_PRIOR_PAYMENTS_BINDING in export_missing_bindings
+        assert _M202_INCN_BINDING in export_missing_bindings
         assert export_path.exists() is False
 
 
@@ -576,23 +581,13 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
         _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         work_repo = WorkUnitCatalogueRepository()
         CalculationRevisionCatalogueRepository()
-        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1P"),
-            revision_id=snapshot.revision.id,
-            ports=_work_ports(work_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
+        work_unit = _create_first_payment_work_unit(work_repo, operation)
 
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
             bundled_indexed_authority().operation() as operation,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",

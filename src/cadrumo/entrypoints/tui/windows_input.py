@@ -17,7 +17,7 @@ if sys.platform == "win32":
     import ctypes
     import math
     import threading
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
     from ctypes import byref, wintypes
     from typing import TYPE_CHECKING, Any, override
 
@@ -94,6 +94,21 @@ if sys.platform == "win32":
                 _close_handle(self.handle)
                 self.handle = None
 
+    def _console_records(records: Iterable[win32.INPUT_RECORD]) -> tuple[list[str], tuple[int, int] | None]:
+        keys: list[str] = []
+        new_size: tuple[int, int] | None = None
+        for record in records:
+            if record.EventType == _KEY_EVENT:
+                key_event = record.Event.KeyEvent
+                if key_event.bKeyDown:
+                    if key_event.dwControlKeyState and key_event.wVirtualKeyCode == 0:
+                        continue
+                    keys.append(key_event.uChar.UnicodeChar)
+            elif record.EventType == _WINDOW_BUFFER_SIZE_EVENT:
+                size = record.Event.WindowBufferSizeEvent.dwSize
+                new_size = (int(size.X), int(size.Y))
+        return keys, new_size
+
     class _InputMonitor(win32.EventMonitor):
         """Textual's console input loop, waiting on input or stop instead of a 100 ms tick."""
 
@@ -120,30 +135,17 @@ if sys.platform == "win32":
                 console = wintypes.HANDLE(win32.GetStdHandle(win32.STD_INPUT_HANDLE))
                 records = (win32.INPUT_RECORD * _MAXIMUM_EVENTS)()
                 handles = [console] if self._wake is None else [console, self._wake]
-                keys: list[str] = []
                 # Without a stop event, fall back to Textual's own interval so a stop is still seen.
                 timeout = _INFINITE if self._wake is not None else 100
                 while not exit_requested():
-                    for event in parser.tick():
-                        self._process(event)
+                    self._tick_parser(parser)
                     ready = win32.wait_for_handles(handles, timeout)
                     if ready is not console:
                         # A stop, or the escape wait elapsed: the loop rechecks both, then sleeps again.
                         timeout = _INFINITE if self._wake is not None else 100
                         continue
                     win32.KERNEL32.ReadConsoleInputW(console, byref(records), _MAXIMUM_EVENTS, byref(read_count))
-                    keys.clear()
-                    new_size: tuple[int, int] | None = None
-                    for record in records[: read_count.value]:
-                        if record.EventType == _KEY_EVENT:
-                            key_event = record.Event.KeyEvent
-                            if key_event.bKeyDown:
-                                if key_event.dwControlKeyState and key_event.wVirtualKeyCode == 0:
-                                    continue
-                                keys.append(key_event.uChar.UnicodeChar)
-                        elif record.EventType == _WINDOW_BUFFER_SIZE_EVENT:
-                            size = record.Event.WindowBufferSizeEvent.dwSize
-                            new_size = (int(size.X), int(size.Y))
+                    keys, new_size = _console_records(records[: read_count.value])
                     if keys:
                         # Round-trip through UTF-16 so surrogate pairs combine, as Textual does.
                         text = "".join(keys).encode("utf-16", "surrogatepass").decode("utf-16")
@@ -154,6 +156,10 @@ if sys.platform == "win32":
                     timeout = _ESCAPE_WAIT_MS
             except Exception as error:
                 self.app.log.error("EVENT MONITOR ERROR", error)
+
+        def _tick_parser(self, parser: XTermParser) -> None:
+            for event in parser.tick():
+                self._process(event)
 
     class QuietWindowsDriver(WindowsDriver):
         """Textual's Windows driver with an input loop that sleeps until input or stop."""

@@ -21,9 +21,8 @@ import pytest
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import registered_executor_case_support as conformance
 
@@ -42,6 +41,7 @@ _TYPED = "the label the request typed"
 _WRITES: tuple[tuple[str, str], ...] = (
     ("ledger.add", _TYPED),
     ("ledger.update", _TYPED),
+    ("ledger.update.batch", _TYPED),
     ("ledger.classify.single", _TYPED),
     ("ledger.allocate", _TYPED),
     ("ledger.merge", _TYPED),
@@ -74,7 +74,7 @@ def test_a_ledger_write_records_the_session_label_for_an_automation_and_the_pers
     frontend: OperationFrontendProjection,
 ) -> None:
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / definition_id,
             cleanup=conformance.OperationRuntimeCloseWitness(),

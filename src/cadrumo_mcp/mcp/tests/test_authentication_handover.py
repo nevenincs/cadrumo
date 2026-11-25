@@ -9,11 +9,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_mcp.mcp.access_scope import surface_scope
@@ -23,7 +24,7 @@ from .. import runtime_adapter as mcp_runtime
 from .. import runtime_admission as mcp_admission
 from ..operation_discovery import operation_summary
 from ..runtime_adapter import RuntimeMcpAdapter
-from .admitted_lease import public_descriptions
+from .admitted_lease import admitted_access_status, public_descriptions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -54,7 +55,7 @@ _STATUS_REFUSALS = (
 )
 
 
-class _Client:
+class Client:
     def __init__(
         self, profile_id: UUID, *, fail_status: bool = False, status_flaw: str | None = None, at: datetime | None = None
     ) -> None:
@@ -78,31 +79,11 @@ class _Client:
         self.status_calls += 1
         if self.fail_status:
             raise FrontendRefusedError("session_expired")
-        status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=self.profile_id,
-            session_id=self.session_id,
-            session_expires_at=self.session_expires_at,
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=self.session_expires_at,
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset({"auth.local-read"}),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        status = admitted_access_status(
+            self.profile_id,
+            self.session_id,
+            expires_at=self.session_expires_at,
+            operations=frozenset({"auth.local-read"}),
         )
         flaws = {
             "denial": {
@@ -163,9 +144,9 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
 ) -> None:
     monkeypatch.setattr(mcp_admission, "now", lambda: _AT)
     profile_id, reference = uuid4(), uuid4()
-    original = _Client(profile_id, at=_AT)
+    original = Client(profile_id, at=_AT)
     original_session = original.session_id
-    candidate = _Client(
+    candidate = Client(
         profile_id,
         fail_status=failure == "status",
         status_flaw=failure,
@@ -180,7 +161,7 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == original.profile_id
         assert credential_reference == reference
@@ -222,7 +203,7 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
     monkeypatch: pytest.MonkeyPatch, status_flaw: str | None, expected_code: str | None
 ) -> None:
     profile_id = uuid4()
-    client = _Client(profile_id, status_flaw=status_flaw, at=_AT)
+    client = Client(profile_id, status_flaw=status_flaw, at=_AT)
     samples: list[datetime] = []
 
     def sample_after_status() -> datetime:

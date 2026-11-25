@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import (
+    LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,
     OperationCancellation,
     OperationInteractionKind,
     OperationLifecycle,
@@ -69,15 +70,6 @@ from .registry import (
 
 _SUPPORTED_OBSERVATION_VERSION = 1
 _UNSUPPORTED_INTERACTION_CODE = "operation.interaction.unsupported"
-_CANCELLABLE_LIFECYCLES = frozenset(
-    {
-        OperationLifecycle.CREATED,
-        OperationLifecycle.QUEUED,
-        OperationLifecycle.RUNNING,
-        OperationLifecycle.WAITING_FOR_INTERACTION,
-        OperationLifecycle.WAITING_FOR_EXTERNAL,
-    }
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,7 +111,7 @@ class OperationObservationService:
                 OperationObservationRefusalCode.DEFINITION_CONTRACT_MISMATCH,
                 requested_version=1,
             )
-        except _DefinitionContractMismatchError:
+        except DefinitionContractMismatchError:
             return _refusal(
                 OperationObservationRefusalCode.DEFINITION_CONTRACT_MISMATCH,
                 requested_version=1,
@@ -146,7 +138,7 @@ class OperationObservationService:
         )
 
 
-class _DefinitionContractMismatchError(CadrumoError):
+class DefinitionContractMismatchError(CadrumoError):
     """Internal signal converted to the typed definition-contract refusal."""
 
 
@@ -169,10 +161,10 @@ def _validated_public_contract(
     """Return the registry contract anchored by ``snapshot`` or refuse its drift."""
     contract = registry.lookup_public_contract(snapshot.identity.definition_id)
     if snapshot.definition_contract_digest != contract.definition_contract_digest:
-        raise _DefinitionContractMismatchError
+        raise DefinitionContractMismatchError
     contract_set = registry.public_contract_set
     if contract not in contract_set.definitions:
-        raise _DefinitionContractMismatchError
+        raise DefinitionContractMismatchError
     return contract, contract_set
 
 
@@ -208,17 +200,7 @@ def _project_operation_projection(
         progress=progress,
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
-        cancellable_now=(
-            (
-                financial_pending
-                or (
-                    contract.cancellation is not OperationCancellation.UNSUPPORTED
-                    and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
-                )
-            )
-            and snapshot.cancellation_requested_at is None
-            and not snapshot.cancellation_deferred
-        ),
+        cancellable_now=_cancellable_now(snapshot, contract, financial_pending),
         financial_operand_pending=financial_pending,
         financial_operand_cancelled_before_delivery=(
             snapshot.financial_requirement is not None
@@ -234,6 +216,24 @@ def _project_operation_projection(
         refusal_ref=None if receipt is None else receipt.refusal_ref,
         failure_error_code=None if receipt is None else receipt.failure_error_code,
         diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
+    )
+
+
+def _cancellable_now(
+    snapshot: OperationPersistedSnapshot,
+    contract: OperationPublicDefinitionContractV1,
+    financial_pending: bool,
+) -> bool:
+    return (
+        (
+            financial_pending
+            or (
+                contract.cancellation is not OperationCancellation.UNSUPPORTED
+                and snapshot.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
+            )
+        )
+        and snapshot.cancellation_requested_at is None
+        and not snapshot.cancellation_deferred
     )
 
 
@@ -291,14 +291,14 @@ def _project_pending_interaction(
         return OperationNoPendingInteractionV1()
     request = pending.request
     if request.kind not in contract.interaction_kinds:
-        raise _DefinitionContractMismatchError
+        raise DefinitionContractMismatchError
     if request.kind is OperationInteractionKind.REVIEW:
         review_schema = contract.review_projection_schema
         response_schema = contract.interaction_response_schema
         if review_schema is None or response_schema is None:
-            raise _DefinitionContractMismatchError
+            raise DefinitionContractMismatchError
         if request.response_schema_ref != operation_public_schema_reference(response_schema):
-            raise _DefinitionContractMismatchError
+            raise DefinitionContractMismatchError
         reference = OperationReviewProjectionReferenceV1(
             operation_id=request.identity.operation_id,
             interaction_id=request.interaction_id,

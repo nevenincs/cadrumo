@@ -46,7 +46,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ..foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from ..foreign_asset_thresholds import foreign_asset_declaration_thresholds, modelo_720_declaration_date
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +59,7 @@ class _RedeclarationPosition:
 def _registry_valuation_casillas(
     modelo_revision: ModeloRevision,
     *,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> dict[ForeignAssetObligationGroup, CasillaId]:
     """Discover valuation casillas and their obligation groups from a revision."""
@@ -67,7 +68,7 @@ def _registry_valuation_casillas(
     # TODO(authority-owner): resolve the foreign-asset taxonomy from the same
     # operation.  The legacy catalogue adapter has not yet accepted
     # PinnedAuthorityOperation and must not be reopened here.
-    catalogue = resolve_foreign_asset_obligation_catalogue()
+    catalogue = resolve_foreign_asset_obligation_catalogue(effective_date=modelo_720_declaration_date(filing_year))
     for casilla in modelo_revision.casillas:
         parts = tuple(casilla.id.split("."))
         if len(parts) < 2 or parts[-1].casefold() != "valoracion":
@@ -131,6 +132,7 @@ def _modelo_720_asset_class(raw_code: object) -> ForeignAssetClass | None:
 def _obligation_group_for_valuation_casilla(
     casilla_id: CasillaId,
     *,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> ForeignAssetObligationGroup | None:
     """Infer the typed obligation group from a registry valuation casilla identity."""
@@ -139,7 +141,7 @@ def _obligation_group_for_valuation_casilla(
         return None
     namespace = parts[-2].replace("-", "_").casefold()
     del operation
-    catalogue = resolve_foreign_asset_obligation_catalogue()
+    catalogue = resolve_foreign_asset_obligation_catalogue(effective_date=modelo_720_declaration_date(filing_year))
     return next(
         (
             definition.token
@@ -232,7 +234,11 @@ def _modelo_720_positions(
 ) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
     totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     for item in observation.observations:
-        group = _obligation_group_for_valuation_casilla(item.casilla_id, operation=operation)
+        group = _obligation_group_for_valuation_casilla(
+            item.casilla_id,
+            filing_year=observation.filing_year,
+            operation=operation,
+        )
         if group is None:
             continue
         if not isinstance(item.value, Decimal):
@@ -293,7 +299,7 @@ def modelo_720_declared_observation(
             The independent valuation counterpart this declaration is tested
             against.
     """
-    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, filing_year=filing_year, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for casilla_id in valuation_casillas.values():
@@ -361,9 +367,14 @@ def modelo_720_evidence_observation(
         revision,
         class_binding=class_binding,
         valuation_binding=valuation_binding,
+        filing_year=filing_year,
+    )
+    observations = _modelo_720_evidence_observations(
+        totals,
+        modelo_revision=modelo_revision,
+        filing_year=filing_year,
         operation=operation,
     )
-    observations = _modelo_720_evidence_observations(totals, modelo_revision=modelo_revision, operation=operation)
     return RegistryModeloObservation(
         modelo=Modelo("720").value,
         filing_year=filing_year,
@@ -377,10 +388,11 @@ def _modelo_720_evidence_totals(
     *,
     class_binding: str | None,
     valuation_binding: str | None,
-    operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> dict[ForeignAssetObligationGroup, Decimal]:
     if class_binding is None or valuation_binding is None:
         return {}
+    catalogue = resolve_foreign_asset_obligation_catalogue(effective_date=modelo_720_declaration_date(filing_year))
     class_rows = revision.row_binding_values.get(class_binding, {})
     valuation_rows = revision.row_binding_values.get(valuation_binding, {})
     totals: dict[ForeignAssetObligationGroup, Decimal] = {}
@@ -389,7 +401,7 @@ def _modelo_720_evidence_totals(
         if row is None:
             continue
         asset_class, value = row
-        group = resolve_foreign_asset_obligation_catalogue().group_for_asset_class(asset_class)
+        group = catalogue.group_for_asset_class(asset_class)
         totals[group] = totals.get(group, Decimal("0")) + value
     return totals
 
@@ -411,9 +423,10 @@ def _modelo_720_evidence_observations(
     totals: Mapping[ForeignAssetObligationGroup, Decimal],
     *,
     modelo_revision: ModeloRevision,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CasillaObservation, ...]:
-    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, filing_year=filing_year, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for group, total in totals.items():
@@ -478,7 +491,7 @@ def modelo_720_prior_baseline_observation(
         operation: The caller-owned generation-pinned authority operation used
             for the selected foreign-asset declarations.
     """
-    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, filing_year=filing_year, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for binding in modelo_revision.bindings:

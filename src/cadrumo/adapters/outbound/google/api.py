@@ -11,6 +11,7 @@ instead of endpoint-specific ``HttpError`` strings.
 from __future__ import annotations
 
 from enum import StrEnum
+from http import HTTPStatus
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 
 from ....application.operator_actions.models import PreconditionVerdict
@@ -25,7 +26,7 @@ from ..storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from ._preconditions import google_terminal_refusal
+from .preconditions import google_terminal_refusal
 from .sign_in_state import ended_grant_refusal
 
 if TYPE_CHECKING:
@@ -112,7 +113,7 @@ def sheets_v4_service(credentials: Credentials, *, unavailable_condition_id: str
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-class _ExecutableRequest[ResponseBodyT](Protocol):
+class ExecutableRequest[ResponseBodyT](Protocol):
     """Structural type for google-api-python-client request objects.
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest`` class.
@@ -132,21 +133,23 @@ class _ExecutableRequest[ResponseBodyT](Protocol):
         self,
         http: httplib2.Http | HttpMock | None = ...,
         num_retries: int = ...,
-    ) -> ResponseBodyT: ...
+    ) -> ResponseBodyT:
+        """Execute with the declared transport and provider retry bound."""
+        ...
 
 
 class GoogleRequestExecutor(Protocol):
     """Typed Google request boundary that can bind fresh artifact admission."""
 
     def __call__[ResponseBodyT](
-        self, request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+        self, request: ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
     ) -> ResponseBodyT:
         """Execute one typed request under the supplied retry contract."""
         ...
 
 
 def execute_request[ResponseBodyT](
-    request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+    request: ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
 ) -> ResponseBodyT:
     """Execute a google-api-python-client request, translating failures.
 
@@ -226,7 +229,7 @@ def execute_request[ResponseBodyT](
         ) from exc
 
 
-def execute_media_request(request: _ExecutableRequest[bytes], *, action: str) -> bytes:
+def execute_media_request(request: ExecutableRequest[bytes], *, action: str) -> bytes:
     """Read admitted binary content once; transport failures never trigger hidden retries."""
     try:
         payload = request.execute(num_retries=0)
@@ -263,7 +266,7 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
         return
     status = google_http_status(exc)
     quota_marker = google_quota_marker(exc)
-    if status == 429 or (status == 403 and quota_marker is not None):
+    if status == HTTPStatus.TOO_MANY_REQUESTS or (status == HTTPStatus.FORBIDDEN and quota_marker is not None):
         raise OutboundStorageQuotaError(
             f"Google {action} exhausted quota (HTTP {status}): {exc}",
             context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
@@ -282,7 +285,7 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
             translated_message="adapters.google.calc_sheets.errors.api_call_refused",
             precondition_verdict=_external_verdict("google.api.permission_denied", action=action, status=status),
         ) from exc
-    if status == 404:
+    if status == HTTPStatus.NOT_FOUND:
         raise OutboundStorageNotFoundError(
             f"Google {action} target not found (HTTP 404): {exc}",
             context={"action": action},

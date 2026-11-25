@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#renta-region-deductibility'
 date: '2026-07-04'
-modified: '2026-10-03'
-body_hash: 'sha256:c0088ad432cd5fb50c106dea75d65a6f46e4f5458135d9c1526abc8be4e882a4'
+modified: '2026-11-08'
+body_hash: 'sha256:078626417378fe564e225723131b543b511b3e73b5d0a95400767375e5b8a71e'
 related:
   - '[[2026-07-04-autonomic-deduccion-framework-adr]]'
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'
@@ -71,11 +71,12 @@ of the art. 77 credit territory.
   calc engine (consumed by the autonomic-scale formulas 0133/0134 under
   `2026-05-08-renta-cuota-integra-autonomic-scale-adr`). A region field on the
   deductibility context must reuse this axis, not invent a parallel one.
-- `CCAA` is the closed `aeat.domain.contribuyente.CCAA` StrEnum: 15 ordinary
-  common-regime comunidades. Foral regimes (Pais Vasco, Navarra -- own IRPF, never in
-  Modelo 100) and the ciudades autonomas (Ceuta, Melilla -- art. 68.4 state cuota
-  deduction) are excluded by construction (`2026-04-28-ccaa-in-profile-adr`). Any
-  region key here is a value of that enum.
+- `CCAA` is the closed residence token projected from the residence catalogue: the 15
+  ordinary common-regime comunidades and, amended 2026-11-08 by
+  `2026-11-08-renta-ceuta-melilla-residence-adr`, the ciudades autonomas Ceuta and
+  Melilla (art. 65 escala under LIRPF DA 32, state minimo, art. 68.4 state cuota
+  deduction). Foral regimes (Pais Vasco, Navarra -- own IRPF, never in Modelo 100) stay
+  excluded. Any region key here is a value of that catalogue.
 - `aeat-architecture-boundaries` / `aeat-schema-central-config`: the region axis is a
   closed value set (the `CCAA` enum), and every regulatory deductibility value stays
   registry TOML, never a Python literal.

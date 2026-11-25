@@ -25,7 +25,7 @@ from ....core.json_contract import NoticeSeverity
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
-from ..ledger_business_invoice_commands import _simplificada_tax_id_notices
+from ..ledger_business_invoice_commands import simplificada_tax_id_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -70,7 +70,7 @@ def test_an_invoice_carrying_a_tax_id_is_never_advised() -> None:
     about, and answering that must not require resolving a profile -- otherwise
     every ordinary invoice pays for a storage read to be told nothing.
     """
-    assert _simplificada_tax_id_notices(_invoice(counterparty_tax_id="12345678Z")) == []
+    assert simplificada_tax_id_notices(_invoice(counterparty_tax_id="12345678Z")) == []
 
 
 def test_the_advisory_is_silent_when_no_profile_can_be_resolved() -> None:
@@ -82,7 +82,7 @@ def test_the_advisory_is_silent_when_no_profile_can_be_resolved() -> None:
     one. Running outside a profile context is the real shape of that: the
     builder returns nothing rather than guessing.
     """
-    assert _simplificada_tax_id_notices(_invoice()) == []
+    assert simplificada_tax_id_notices(_invoice()) == []
 
 
 def test_the_builder_consults_the_resolver_rather_than_reimplementing_it() -> None:
@@ -107,7 +107,7 @@ def test_the_builder_consults_the_resolver_rather_than_reimplementing_it() -> No
 
     from .. import ledger_business_invoice_commands as module
 
-    source = inspect.getsource(module._simplificada_tax_id_notices)
+    source = inspect.getsource(module.simplificada_tax_id_notices)
     tree = ast.parse(source.lstrip())
     called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert "resolve_simplificada_tax_id_advisory" in called, (
@@ -142,7 +142,7 @@ def test_the_advisory_is_a_warning_and_never_blocks_the_write() -> None:
 
     from .. import ledger_business_invoice_commands as module
 
-    source = inspect.getsource(module._simplificada_tax_id_notices)
+    source = inspect.getsource(module.simplificada_tax_id_notices)
     assert "NoticeSeverity.WARNING" in source, "case 3.o is advisory; it must not refuse the write"
     assert "NoticeSeverity.INFO" not in source, (
         "case 3.o is a real requirement the filer may be missing, so it outranks an "

@@ -8,31 +8,33 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.casilla_id import CasillaId
 from ..bindings import CasillaObservation
 from ..errors import RegistryValidationError
 from ..formula_initial_values import materialise_observations
 from ..formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._formula_runtime_support import (
-    _IVA_PRORRATA_PORCENTAJE_CASILLA,
-    _M130_AGRARIAN_VOLUME_CASILLA,
-    _M130_AGRARIAN_WITHHELD_CASILLA,
-    _M130_DIFERENCIA_ACTIVIDADES_CASILLA,
-    _M130_DIFERENCIA_AGRARIA_CASILLA,
-    _M130_DIFERENCIA_CASILLA,
-    _M130_DIFERENCIA_TOTAL_CASILLA,
-    _M130_GASTOS_CASILLA,
-    _M130_HOME_DEDUCTION_CASILLA,
-    _M130_INGRESOS_CASILLA,
-    _M130_MINORACION_CASILLA,
-    _M130_PAGO_FRACCIONADO_CASILLA,
-    _M130_PRIOR_RETURN_RESULT_CASILLA,
-    _M130_RESULTADO_FINAL_CASILLA,
-    _M130_RESULTADO_POSITIVO_CASILLA,
-    _M130_RESULTADO_PREVIO_CASILLA,
-    _M130_RETENCIONES_CASILLA,
-    _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
-    _PREVIOUS_YEAR_NET_INCOME_BINDING,
+from .formula_runtime_support import (
+    IVA_PRORRATA_PORCENTAJE_CASILLA,
+    M130_AGRARIAN_VOLUME_CASILLA,
+    M130_AGRARIAN_WITHHELD_CASILLA,
+    M130_DIFERENCIA_ACTIVIDADES_CASILLA,
+    M130_DIFERENCIA_AGRARIA_CASILLA,
+    M130_DIFERENCIA_CASILLA,
+    M130_DIFERENCIA_TOTAL_CASILLA,
+    M130_GASTOS_PREVIOS_CASILLA,
+    M130_HOME_DEDUCTION_CASILLA,
+    M130_INGRESOS_CASILLA,
+    M130_MINORACION_CASILLA,
+    M130_NORMAL_MODALITY,
+    M130_PAGO_FRACCIONADO_CASILLA,
+    M130_PRIOR_RETURN_RESULT_CASILLA,
+    M130_RESULTADO_FINAL_CASILLA,
+    M130_RESULTADO_POSITIVO_CASILLA,
+    M130_RESULTADO_PREVIO_CASILLA,
+    M130_RETENCIONES_CASILLA,
+    PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
+    PREVIOUS_YEAR_NET_INCOME_BINDING,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,14 +42,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_registry_calculation_result_refuses_ungrounded_observations() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
-        CasillaObservation.model_validate({"casilla_id": _M130_INGRESOS_CASILLA, "value": Decimal("100")})
+        CasillaObservation.model_validate({"casilla_id": M130_INGRESOS_CASILLA, "value": Decimal("100")})
 
 
 def test_registry_calculation_entry_rejects_blank_grounding_refs() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
         RegistryCalculationEntry(
             formula_id="modelo-130-test-formula",
-            target_casilla_id=_M130_RESULTADO_FINAL_CASILLA,
+            target_casilla_id=M130_RESULTADO_FINAL_CASILLA,
             op="add",
             operand_refs=(),
             operand_casilla_refs=(),
@@ -60,7 +62,7 @@ def test_registry_calculation_entry_rejects_blank_grounding_refs() -> None:
     with pytest.raises(ValidationError, match="source_refs"):
         RegistryCalculationEntry(
             formula_id="modelo-130-test-formula",
-            target_casilla_id=_M130_RESULTADO_FINAL_CASILLA,
+            target_casilla_id=M130_RESULTADO_FINAL_CASILLA,
             op="add",
             operand_refs=(),
             operand_casilla_refs=(),
@@ -74,7 +76,7 @@ def test_registry_calculation_entry_rejects_blank_grounding_refs() -> None:
 def test_materialise_observations_refuses_value_without_registry_casilla() -> None:
     with pytest.raises(RegistryValidationError, match="missing registry casilla definition"):
         materialise_observations(
-            values={_M130_INGRESOS_CASILLA: Decimal("100")},
+            values={M130_INGRESOS_CASILLA: Decimal("100")},
             computed_provenance={},
             casillas_by_id={},
         )
@@ -83,17 +85,27 @@ def test_materialise_observations_refuses_value_without_registry_casilla() -> No
 def test_materialise_observations_refuses_registry_casilla_without_grounding(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    casilla = next(
-        item for item in committed_modelo_130_snapshot.revision.casillas if item.id == _M130_INGRESOS_CASILLA
-    )
+    casilla = next(item for item in committed_modelo_130_snapshot.revision.casillas if item.id == M130_INGRESOS_CASILLA)
     ungrounded = casilla.model_copy(update={"legal_refs": (), "source_refs": ()})
 
     with pytest.raises(RegistryValidationError, match="missing legal_refs/source_refs"):
         materialise_observations(
-            values={_M130_INGRESOS_CASILLA: Decimal("100")},
+            values={M130_INGRESOS_CASILLA: Decimal("100")},
             computed_provenance={},
-            casillas_by_id={_M130_INGRESOS_CASILLA: ungrounded},
+            casillas_by_id={M130_INGRESOS_CASILLA: ungrounded},
         )
+
+
+def _ordinary_quarter_inputs() -> dict[CasillaId, Decimal]:
+    return {
+        M130_INGRESOS_CASILLA: Decimal("10000"),
+        M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
+        M130_RETENCIONES_CASILLA: Decimal("100"),
+        M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+        M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+        M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    }
 
 
 def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order(
@@ -101,19 +113,12 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
 ) -> None:
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
-        inputs={
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
-            _M130_RETENCIONES_CASILLA: Decimal("100"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
-        date_context={"filing_period": date(2026, 3, 31)},
+        inputs=_ordinary_quarter_inputs(),
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
-            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+            PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
             # C03 (rendimiento neto) is bound, not computed; supply the
             # actividad-economica cumulative binding value so the bound
             # casilla resolves.
@@ -124,19 +129,19 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
     # result.entries. Order assertions adjusted to exclude C03.
     order = {entry.target_casilla_id: index for index, entry in enumerate(result.entries)}
     assert (
-        order[_M130_PAGO_FRACCIONADO_CASILLA]
-        < order[_M130_DIFERENCIA_ACTIVIDADES_CASILLA]
-        < order[_M130_RESULTADO_POSITIVO_CASILLA]
-        < order[_M130_RESULTADO_PREVIO_CASILLA]
-        < order[_M130_DIFERENCIA_CASILLA]
-        < order[_M130_RESULTADO_FINAL_CASILLA]
+        order[M130_PAGO_FRACCIONADO_CASILLA]
+        < order[M130_DIFERENCIA_ACTIVIDADES_CASILLA]
+        < order[M130_RESULTADO_POSITIVO_CASILLA]
+        < order[M130_RESULTADO_PREVIO_CASILLA]
+        < order[M130_DIFERENCIA_CASILLA]
+        < order[M130_RESULTADO_FINAL_CASILLA]
     )
     assert (
-        order[_M130_DIFERENCIA_AGRARIA_CASILLA]
-        < order[_M130_DIFERENCIA_TOTAL_CASILLA]
-        < order[_M130_RESULTADO_POSITIVO_CASILLA]
+        order[M130_DIFERENCIA_AGRARIA_CASILLA]
+        < order[M130_DIFERENCIA_TOTAL_CASILLA]
+        < order[M130_RESULTADO_POSITIVO_CASILLA]
     )
-    assert _M130_RESULTADO_FINAL_CASILLA in result.values
+    assert M130_RESULTADO_FINAL_CASILLA in result.values
     assert "rd-439-2007:art-110" in result.entries[0].legal_refs
 
 
@@ -149,9 +154,10 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
-            inputs={_M130_PAGO_FRACCIONADO_CASILLA: Decimal("6000")},
-            date_context={"filing_period": date(2026, 3, 31)},
-            binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+            inputs={M130_PAGO_FRACCIONADO_CASILLA: Decimal("6000")},
+            date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
+            binding_values={PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
         )
 
 
@@ -175,7 +181,7 @@ def test_casilla_constraint_violation_message_interpolates_with_raise_site_conte
     # Mirror the context built at the raise site (keep in sync with
     # _formula_runtime.calculate_registry_snapshot).
     context = {
-        "casilla_id": _IVA_PRORRATA_PORCENTAJE_CASILLA,
+        "casilla_id": IVA_PRORRATA_PORCENTAJE_CASILLA,
         "display_number": "prorrata-porcentaje",
         "value": "200",
         "violation": "value 200 above max_value 100",
@@ -184,7 +190,7 @@ def test_casilla_constraint_violation_message_interpolates_with_raise_site_conte
         "source_refs": "aeat-modelo-303-procedure",
     }
     rendered = tr("errors.calc.casilla_constraint_violation", **context)
-    assert _IVA_PRORRATA_PORCENTAJE_CASILLA in rendered
+    assert IVA_PRORRATA_PORCENTAJE_CASILLA in rendered
     assert "value 200 above max_value 100" in rendered
     assert "{" not in rendered and "%{" not in rendered, rendered
 
@@ -224,24 +230,25 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs={
-            _M130_INGRESOS_CASILLA: Decimal("1000"),
-            _M130_GASTOS_CASILLA: Decimal("0"),
-            _M130_RETENCIONES_CASILLA: Decimal("300"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("100"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+            M130_INGRESOS_CASILLA: Decimal("1000"),
+            M130_GASTOS_PREVIOS_CASILLA: Decimal("0"),
+            M130_RETENCIONES_CASILLA: Decimal("300"),
+            M130_AGRARIAN_VOLUME_CASILLA: Decimal("100"),
+            M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+            M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
-            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+            PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
     )
 
-    assert result.values[_M130_DIFERENCIA_ACTIVIDADES_CASILLA] < Decimal("0")
-    assert result.values[_M130_DIFERENCIA_TOTAL_CASILLA] < Decimal("0")
-    assert result.values[_M130_RESULTADO_POSITIVO_CASILLA] >= Decimal("0")
+    assert result.values[M130_DIFERENCIA_ACTIVIDADES_CASILLA] < Decimal("0")
+    assert result.values[M130_DIFERENCIA_TOTAL_CASILLA] < Decimal("0")
+    assert result.values[M130_RESULTADO_POSITIVO_CASILLA] >= Decimal("0")
 
 
 def test_registry_formula_runtime_calculates_income_reduction_from_previous_year_binding(
@@ -249,22 +256,15 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
 ) -> None:
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
-        inputs={
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
-            _M130_RETENCIONES_CASILLA: Decimal("100"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
-        date_context={"filing_period": date(2026, 3, 31)},
+        inputs=_ordinary_quarter_inputs(),
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
-            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),
-            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+            PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),
+            PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
     )
 
-    assert {_M130_MINORACION_CASILLA, _M130_RESULTADO_FINAL_CASILLA} <= set(result.values)
+    assert {M130_MINORACION_CASILLA, M130_RESULTADO_FINAL_CASILLA} <= set(result.values)
     entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert _M130_MINORACION_CASILLA in entries and _M130_RESULTADO_FINAL_CASILLA in entries
+    assert M130_MINORACION_CASILLA in entries and M130_RESULTADO_FINAL_CASILLA in entries

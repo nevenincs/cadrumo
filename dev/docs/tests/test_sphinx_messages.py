@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from ..compile_slots import MARK, CompileSlots, Rendering, activate, deactivate
-from ..sphinx_messages import _catalogue, _mark_frozen_words, _MarkingTranslations
+from ..sphinx_messages import MarkingTranslations, catalogue, mark_frozen_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -44,15 +44,15 @@ def _write_catalogue(directory: Path, language: str, translations: Mapping[str, 
 
 
 @pytest.fixture
-def translations(tmp_path: Path) -> _MarkingTranslations:
+def translations(tmp_path: Path) -> MarkingTranslations:
     """Answer three languages from catalogues only two of them carry."""
     _write_catalogue(tmp_path, "es", {"Index": "Índice", "Toggle navigation of %s": "Conmutar %s"})
     _write_catalogue(tmp_path, "ca", {"Index": "Índex", "Toggle navigation of %s": "Commuta %s"})
-    return _MarkingTranslations([_catalogue(language, [tmp_path]) for language in _LANGUAGES], Rendering.PLAIN)
+    return MarkingTranslations([catalogue(language, [tmp_path]) for language in _LANGUAGES], Rendering.PLAIN)
 
 
 def test_a_word_every_language_reads_the_same_is_not_marked(
-    slots: CompileSlots, translations: _MarkingTranslations
+    slots: CompileSlots, translations: MarkingTranslations
 ) -> None:
     """A word no catalogue translates is the one string every build writes."""
     assert translations.gettext("Permalink") == "Permalink"
@@ -60,7 +60,7 @@ def test_a_word_every_language_reads_the_same_is_not_marked(
 
 
 def test_a_word_that_differs_is_the_mark_reading_every_language(
-    slots: CompileSlots, translations: _MarkingTranslations
+    slots: CompileSlots, translations: MarkingTranslations
 ) -> None:
     """The word a language has no translation for stays the message, as its build leaves it."""
     marked = translations.gettext("Index")
@@ -85,14 +85,14 @@ def test_a_word_resolved_before_the_compile_could_answer_it_is_marked_from_its_m
     _write_catalogue(tmp_path, "es", {"Python Module Index": "Índice de módulos Python"})
     _write_catalogue(tmp_path, "ca", {"Python Module Index": "Índex de mòduls de Python"})
     monkeypatch.setattr(PythonModuleIndex, "localname", "Python Module Index")
-    _mark_frozen_words([_catalogue(language, [tmp_path]) for language in _LANGUAGES])
+    mark_frozen_words([catalogue(language, [tmp_path]) for language in _LANGUAGES])
     assert MARK.fullmatch(PythonModuleIndex.localname) is not None
     assert slots.values == [("Python Module Index", "Índice de módulos Python", "Índex de mòduls de Python")]
     assert slots.renderings == [Rendering.PLAIN]
 
 
 def test_filling_a_word_builds_a_mark_from_every_language_filled(
-    slots: CompileSlots, translations: _MarkingTranslations
+    slots: CompileSlots, translations: MarkingTranslations
 ) -> None:
     """Filling the mark would throw it away, so each language's own word is filled instead."""
     title = slots.mark(Rendering.DOCUTILS, ["Ledger", "Libro", "Llibre"])
@@ -106,7 +106,7 @@ def test_filling_a_word_builds_a_mark_from_every_language_filled(
 
 
 def test_a_marked_word_comes_back_from_a_pickled_environment_still_fillable(
-    slots: CompileSlots, translations: _MarkingTranslations
+    slots: CompileSlots, translations: MarkingTranslations
 ) -> None:
     """A reader process hands its environment back pickled, with Sphinx's own words on it.
 

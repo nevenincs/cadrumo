@@ -27,24 +27,34 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import (
-    BindingDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
+_REVISION_130 = str(open_ended_revision("130").id)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -57,7 +67,7 @@ _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load the committed Modelo 130 modelo plus catalogues for the build path."""
-    return _committed_modelo("130")
+    return committed_modelo("130")
 
 
 def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) -> ModeloDefinition:
@@ -68,23 +78,33 @@ def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) ->
     tiers) satisfied so the only thing the build can reject is the lifted
     binding op/fact invariant.
     """
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_REVISION_130]
     bindings = tuple(replacement if item.id == revision.bindings[0].id else item for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
     return modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
+
+
+_FamilyCase = tuple[
+    str, str, dict[str, object], BindingAggregationOp | None, dict[str, object], BindingAggregationOp | None
+]
+"""One family: label, source, well-formed selector and op, malformed selector and op.
+
+An op of ``None`` states that the family's resolver never reads an aggregation, so
+none is authored.
+"""
 
 
 def _build_binding(
     *,
     source: str,
     selector: dict[str, object],
-    op: BindingAggregationOp,
+    op: BindingAggregationOp | None,
     base: BindingDefinition | None = None,
 ) -> BindingDefinition:
     """Build a binding of ``source`` reusing the first M130 binding's id and grounding."""
     if base is None:
         modelo, _catalogues = _committed_modelo_130()
-        base = modelo.revisions["2019-y-siguientes"].bindings[0]
+        base = modelo.revisions[_REVISION_130].bindings[0]
     # The provider member is built from the kind and its keys, so a malformed
     # key set that the member still admits reaches the family gate as authored.
     value = (
@@ -97,7 +117,7 @@ def _build_binding(
             "id": base.id,
             "provider": {"kind": source, **selector},
             "value": value,
-            "aggregation": BindingAggregation(op=op),
+            "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": base.legal_refs,
             "source_refs": base.source_refs,
             "source_citations": base.source_citations,
@@ -117,9 +137,7 @@ _ROW_GROUPING_BY_SOURCE: dict[str, str | None] = {
 # Per-family build-validation cases. Each case carries a well-formed selector
 # (must pass the dispatch gate) and a malformed selector with a bad op/fact
 # pairing or a missing required key (must be rejected at registry build).
-_FAMILY_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_FAMILY_CASES: tuple[_FamilyCase, ...] = (
     (
         "invoice (collectible)",
         "collectible_invoice",
@@ -209,9 +227,7 @@ _FAMILY_CASES: tuple[
 
 # Families whose provider member states the invariant itself: the malformed
 # declaration is refused as the member is built, so it never reaches the gate.
-_CONSTRUCTION_REFUSED_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_CONSTRUCTION_REFUSED_CASES: tuple[_FamilyCase, ...] = (
     (
         "m303_regimen_simplificado_annual_summary",
         "m303_regimen_simplificado_annual_summary",
@@ -221,40 +237,14 @@ _CONSTRUCTION_REFUSED_CASES: tuple[
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
             "temporal": {"kind": "filed_current_period", "source_period": "4T"},
         },
-        BindingAggregationOp.COPY,
+        None,
         {
             "source_modelo": "303",
             "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
             "temporal": {"kind": "filed_current_period", "source_period": "3T"},
         },
-        BindingAggregationOp.COPY,
-    ),
-    (
-        "inventory",
-        "inventory",
-        {
-            "modelo": "100",
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": "closing_minus_opening_positive",
-            "target_casilla_id": "0177",
-        },
-        BindingAggregationOp.ROWS,
-        # The operation-to-destination identity is closed: an inventory
-        # increase cannot be projected into the decrease casilla.
-        {
-            "modelo": "100",
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": "closing_minus_opening_positive",
-            "target_casilla_id": "0182",
-        },
-        BindingAggregationOp.ROWS,
+        None,
     ),
 )
 
@@ -263,12 +253,12 @@ _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
 def test_binding_family_build_gate_contract(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
+    case: _FamilyCase,
 ) -> None:
     """Each family accepts a good binding, constructs a bad one, and rejects it at build."""
     _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
     modelo, catalogues = _committed_modelo_130()
-    base = modelo.revisions["2019-y-siguientes"].bindings[0]
+    base = modelo.revisions[_REVISION_130].bindings[0]
 
     well_formed = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op, base=base)
     assert validate_binding_selector_shape(well_formed) == [], f"well-formed {source} binding must pass the build gate"
@@ -285,9 +275,7 @@ def test_binding_family_build_gate_contract(
     assert malformed.id in message
 
 
-_TYPED_FACT_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_TYPED_FACT_CASES: tuple[_FamilyCase, ...] = (
     (
         "ledger_renta_income_aggregation",
         "ledger_renta_income_aggregation",
@@ -319,7 +307,7 @@ _MEMBER_REFUSED_CASES = (*_CONSTRUCTION_REFUSED_CASES, *_TYPED_FACT_CASES)
 
 @pytest.mark.parametrize("case", _MEMBER_REFUSED_CASES, ids=tuple(case[0] for case in _MEMBER_REFUSED_CASES))
 def test_provider_member_refuses_a_malformed_declaration_at_construction(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
+    case: _FamilyCase,
 ) -> None:
     """A well-formed declaration passes the gate; the malformed one cannot be built."""
     _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
@@ -328,6 +316,26 @@ def test_provider_member_refuses_a_malformed_declaration_at_construction(
     assert validate_binding_selector_shape(well_formed) == []
     with pytest.raises(ValidationError, match=f"provider.{source}"):
         _build_binding(source=source, selector=malformed_selector, op=malformed_op)
+
+
+def test_the_build_gate_refuses_an_inventory_operation_on_another_casilla() -> None:
+    """An increase cannot be projected into the decrease casilla; the registry's row codes decide."""
+    selector = {
+        "modelo": "100",
+        "projection_grain": "taxpayer_year_activity",
+        "fact": "row_field",
+        "record": "inventory_activity",
+        "grouping": "per_inventory_activity",
+        "row_field": "closing_minus_opening_positive",
+    }
+    well_formed = _build_binding(
+        source="inventory", selector=selector | {"target_casilla_id": "0177"}, op=BindingAggregationOp.ROWS
+    )
+    assert validate_binding_selector_shape(well_formed) == []
+    malformed = _build_binding(
+        source="inventory", selector=selector | {"target_casilla_id": "0182"}, op=BindingAggregationOp.ROWS
+    )
+    assert any("must target casilla" in failure for failure in validate_binding_selector_shape(malformed))
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:
@@ -345,6 +353,6 @@ def test_isolated_revision_build_gate_runs_every_family() -> None:
         assert failures, f"malformed {source} binding must fail the dispatch gate"
         # Sanity: a one-binding revision carrying the malformed binding is still
         # a constructible ModeloRevision (the gate, not schema, rejects it).
-        revision = _committed_modelo_130()[0].revisions["2019-y-siguientes"]
+        revision = _committed_modelo_130()[0].revisions[_REVISION_130]
         one_binding = revision.model_copy(update={"bindings": (malformed,)})
         assert isinstance(one_binding, ModeloRevision)

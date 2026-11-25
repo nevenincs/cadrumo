@@ -8,9 +8,9 @@ related:
   - "[[2026-08-23-issue-620-external-pdf-signal-adr]]"
 supersedes:
   - '2026-08-23-issue-620-external-pdf-signal-adr'
-modified: '2026-08-23'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:23a4e0c23fd4bc99cd86bfd272b2eefdbc03ac437ec3f93dcaddc7901aa45a14'
+body_hash: 'sha256:151b1686e29c9459a250d55d05ce4c3ad8f7584c7cc963c9e94c2e8d89598153'
 ---
 # `issue-620-external-pdf-signal` adr: `authority adjudication` | (**status:** `accepted`)
 
@@ -87,4 +87,4 @@ from what remains impossible to claim. The schema and focused tests become more
 verbose, and future candidates must supply official comparison evidence rather
 than inheriting trust from a host or logo. M036 and M349 continue to test parser
 robustness but cannot count as current-form verification; M303 cannot count for
-2026.
+the current edition.

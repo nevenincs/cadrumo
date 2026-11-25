@@ -1,10 +1,11 @@
 <#
-Shared PowerShell mirror of cadrumo.core.storage_environment.
+Shared PowerShell storage root for the release-lane harnesses.
 
-Callers pass their own repository anchor because the release smoke copies this
-script set into a disposable harness. Relative category values resolve below
-the configured local/shared storage root; absolute values remain independent
-overrides.
+CADRUMO_STORAGE_ROOT is the only variable that places storage. Callers pass their
+own repository anchor because the release smoke copies this script set into a
+disposable harness; the harness keeps its evidence in the anchor's var/storage
+when the variable is unset. Relative harness values resolve below the root;
+absolute values remain independent overrides.
 #>
 
 function Get-CadrumoStorageRoot {
@@ -16,10 +17,7 @@ function Get-CadrumoStorageRoot {
             $anchor = $workingDirectory
         }
     }
-    $configuredRoot = ([string]$env:CADRUMO_LOCAL_STORAGE_ROOT).Trim()
-    if (-not $configuredRoot) {
-        $configuredRoot = ([string]$env:CADRUMO_STORAGE_ROOT).Trim()
-    }
+    $configuredRoot = ([string]$env:CADRUMO_STORAGE_ROOT).Trim()
     if (-not $configuredRoot) { $configuredRoot = "var/storage" }
     if ([System.IO.Path]::IsPathRooted($configuredRoot)) {
         return [System.IO.Path]::GetFullPath($configuredRoot)

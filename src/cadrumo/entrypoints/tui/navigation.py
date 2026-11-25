@@ -16,10 +16,12 @@ from typing import Final, Literal, Protocol, Self, cast, runtime_checkable
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
 
+from ...application.operator_actions.projection import ActionArgumentSnapshot
 from ...application.search.workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
     WorkbenchSearchResult,
+    require_admission_reason_matches_state,
 )
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
@@ -31,11 +33,12 @@ type TuiDestinationIdV1 = Literal[
     "workbench.home",
     "workbench.ledger",
     "workbench.withholding",
+    "workbench.censo",
+    "workbench.operaciones_vinculadas",
     "workbench.declarations",
     "workbench.aeat_sync",
     "workbench.operations",
     "workbench.installation",
-    "workbench.setup",
     "workbench.reference",
     "workbench.profile",
 ]
@@ -45,11 +48,12 @@ type TuiDestinationLabelKeyV1 = Literal[
     "tui.destination.home",
     "tui.destination.ledger",
     "tui.destination.withholding",
+    "tui.destination.censo",
+    "tui.destination.operaciones_vinculadas",
     "tui.destination.declarations",
     "tui.destination.aeat_sync",
     "tui.destination.operations",
     "tui.destination.installation",
-    "tui.destination.setup",
     "tui.destination.reference",
     "tui.destination.profile",
 ]
@@ -109,11 +113,7 @@ class TuiDestinationAdmissionV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _reason_matches_state(self) -> Self:
-        if self.state is WorkbenchDestinationAdmissionState.AVAILABLE:
-            if self.reason_code is not None:
-                raise ValueError("an available destination cannot carry an admission reason")
-        elif self.reason_code is None:
-            raise ValueError("a non-available destination requires an admission reason")
+        require_admission_reason_matches_state(self.state, self.reason_code)
         return self
 
     @classmethod
@@ -144,6 +144,8 @@ class TuiNavigationTargetV1(BaseModel):
     destination: TuiDestinationIdV1
     focus: TuiFocusIdentityV1
     action_candidate_id: NamespacedId | None = None
+    #: Arguments a served way out already holds, for the form the destination opens on.
+    request_prefill: tuple[ActionArgumentSnapshot, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -161,6 +163,8 @@ class TuiScreenContextV1(BaseModel):
     destination: TuiDestinationIdV1
     focus: TuiFocusIdentityV1 | None = None
     action_candidate_id: NamespacedId | None = None
+    #: Arguments a served way out already holds, for the form the destination opens on.
+    request_prefill: tuple[ActionArgumentSnapshot, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -176,6 +180,23 @@ class TuiScreenFactoryV1(Protocol):
 
     def __call__(self, context: TuiScreenContextV1, /) -> Screen[None]:
         """Return the screen for the already-admitted route."""
+        ...
+
+
+@runtime_checkable
+class TuiLeaveGuardV1(Protocol):
+    """A mounted screen that can refuse to be removed while it awaits work it must not abandon.
+
+    Removing a screen unmounts it, and unmounting cancels the workers it is
+    awaiting. A write cancelled after submission still settles, but nobody sees
+    how, and a retry may repeat it. So every root path that pops, replaces or
+    swaps the destination, or ends the session at the operator's request, asks
+    each screen it would remove first. Only an end the runtime forces, such as
+    an expired or lost session, is not asked: it cannot be refused.
+    """
+
+    def refuse_leaving(self) -> bool:
+        """Say on screen why it cannot be left yet and return ``True``, or return ``False`` when it can."""
         ...
 
 
@@ -239,6 +260,12 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     TuiDestinationDescriptorV1(
         destination="workbench.withholding", label_key="tui.destination.withholding", zone="primary"
     ),
+    TuiDestinationDescriptorV1(destination="workbench.censo", label_key="tui.destination.censo", zone="primary"),
+    TuiDestinationDescriptorV1(
+        destination="workbench.operaciones_vinculadas",
+        label_key="tui.destination.operaciones_vinculadas",
+        zone="primary",
+    ),
     TuiDestinationDescriptorV1(
         destination="workbench.declarations",
         label_key="tui.destination.declarations",
@@ -253,7 +280,6 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     TuiDestinationDescriptorV1(
         destination="workbench.installation", label_key="tui.destination.installation", zone="primary"
     ),
-    TuiDestinationDescriptorV1(destination="workbench.setup", label_key="tui.destination.setup", zone="primary"),
     TuiDestinationDescriptorV1(
         destination="workbench.reference", label_key="tui.destination.reference", zone="primary"
     ),
@@ -400,6 +426,7 @@ class TuiDestinationCatalogueV1:
             destination=target.destination,
             focus=target.focus,
             action_candidate_id=target.action_candidate_id,
+            request_prefill=target.request_prefill,
         )
         try:
             screen = factory(context)
@@ -468,6 +495,7 @@ __all__ = [
     "TuiDestinationRouteV1",
     "TuiDestinationZoneV1",
     "TuiFocusIdentityV1",
+    "TuiLeaveGuardV1",
     "TuiNavigationTargetV1",
     "TuiScreenContextV1",
     "TuiScreenFactoryV1",

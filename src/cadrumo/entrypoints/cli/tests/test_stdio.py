@@ -187,7 +187,7 @@ def test_console_help_invocation_renders_plain_text_with_full_flag_names(tmp_pat
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_SECRET_PASSPHRASE": "help-width-test-passphrase",
             "COLUMNS": "80",
         },
@@ -236,7 +236,8 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     are not run for propagated records. This test verifies the configured sink
     contract end-to-end.
     """
-    from ....core.logging import SecretScrubbingFilter, configure_logging
+    from ....core.log_scrubbing import SecretScrubbingFilter
+    from ....core.logging import configure_logging
 
     configure_logging()
     root_logger = logging.getLogger()
@@ -276,7 +277,8 @@ def test_stdio_logger_scrubbing_filter_present_on_root_after_configure() -> None
     Verifies the structural precondition that makes NIF scrubbing effective for
     stdlib loggers (including the _stdio module's logger) that propagate to root.
     """
-    from ....core.logging import SecretScrubbingFilter, configure_logging
+    from ....core.log_scrubbing import SecretScrubbingFilter
+    from ....core.logging import configure_logging
 
     configure_logging()
     root_logger = logging.getLogger()

@@ -75,7 +75,7 @@ class CapabilityDecision(BaseModel):
     reason: str
 
 
-def _parse_bool_fact(value: str | None) -> bool | None:
+def parse_bool_fact(value: str | None) -> bool | None:
     """Parse a string-rendered boolean profile fact, or ``None`` when unset/unknown.
 
     Delegates to the canonical parser the profile WRITE door already validates
@@ -137,8 +137,10 @@ def resolve_capability_from_values(
             reason=f"{capability.value} is barred in gestor mode: a gestor never transmits a client's document",
         )
     # llm_vision / google_export: profile fact, else the conservative default. No
-    # safety-floor bar — vision is on-host, google export is non-sensitive.
-    fact = _parse_bool_fact(profile_values.get(capability.schema_path))
+    # safety-floor bar: llm_vision does not decide where a read runs (an off-host
+    # read is gated by cloud_evidence_upload and consent), and google export is
+    # non-sensitive.
+    fact = parse_bool_fact(profile_values.get(capability.schema_path))
     if fact is not None:
         return CapabilityDecision(
             capability=capability,
@@ -205,9 +207,8 @@ def _active_profile_record() -> UserProfileRecord | None:
     """Return the active profile's record, or ``None`` when unavailable.
 
     Returns ``None`` — never raises — when there is no active session OR the secret
-    store cannot be opened (e.g. a locked store with no passphrase, as on a fresh
-    workstation running ``aeat config check``). A diagnostic/gate resolves to the
-    conservative global default rather than crashing when the profile is locked.
+    store cannot be opened (e.g. a locked store with no passphrase). A gate resolves
+    to the conservative global default rather than crashing when the profile is locked.
     """
     try:
         if profile_current_bucket_session() is None:

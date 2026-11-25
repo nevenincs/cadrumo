@@ -239,8 +239,8 @@ def _offline_service_setup(
         def require_live_read(self) -> None:
             return None
 
-    monkeypatch.setattr(iva_remote_state, "_load_settings", lambda: settings)
-    monkeypatch.setattr(iva_remote_state, "_AeatAccessGate", _AllowedLiveRead)
+    monkeypatch.setattr(iva_remote_state, "load_settings", lambda: settings)
+    monkeypatch.setattr(iva_remote_state, "AeatAccessGate", _AllowedLiveRead)
     trace: list[str] = []
     guard = _GuardProbe(trace)
     port = _SyntheticIvaRemoteStatePort(

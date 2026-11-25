@@ -23,13 +23,14 @@ from types import MappingProxyType
 
 import pytest
 
+from ....tests.log_records import delivered_records
 from ..categories import PortalCategory
 from ..codes import Portal
 from ..errors import PortalIntegrityError, UnknownPortalError
 from ..metadata import PortalMetadata
 from ..registry import (
     PORTAL_REGISTRY,
-    _finalise_registry,
+    finalise_registry,
     get_portal,
     portals_by_category,
     portals_for_modelo,
@@ -97,7 +98,7 @@ def test_duplicate_entry_rejected() -> None:
     """``_finalise_registry`` rejects a duplicate key."""
     duplicate = PORTAL_REGISTRY[Portal.PORTAL_SEDE_ROOT]
     with pytest.raises(PortalIntegrityError, match=r"portal|integrity"):
-        _finalise_registry((duplicate, duplicate))
+        finalise_registry((duplicate, duplicate))
 
 
 def test_get_portal_accepts_member() -> None:
@@ -178,10 +179,10 @@ def test_finalise_registry_logs_info_on_success(
     """``_finalise_registry`` keeps successful import-time logs at debug level."""
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger="cadrumo.domain.portals.registry"):
-        mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
+        mapping = finalise_registry(tuple(PORTAL_REGISTRY.values()))
     assert len(mapping) == 41
     debug_records = [
-        r for r in caplog.records if r.name == "cadrumo.domain.portals.registry" and r.levelno == logging.DEBUG
+        r for r in delivered_records(caplog, "cadrumo.domain.portals.registry") if r.levelno == logging.DEBUG
     ]
     assert len(debug_records) == 1
     assert "loaded 41 portal entries" in debug_records[0].getMessage()
@@ -190,7 +191,7 @@ def test_finalise_registry_logs_info_on_success(
 def test_registry_finalisation_does_not_write_to_stdio(capsys: pytest.CaptureFixture[str]) -> None:
     """The registry module reports through logging, not process stdio."""
 
-    mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
+    mapping = finalise_registry(tuple(PORTAL_REGISTRY.values()))
     captured = capsys.readouterr()
 
     assert len(mapping) == 41

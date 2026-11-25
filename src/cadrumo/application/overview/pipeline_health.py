@@ -6,7 +6,7 @@ operator-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
 
-* ledger health — :func:`~application.ledger.actions_manual.summarize_manual_transactions`
+* ledger health — :func:`~application.ledger.manual_read.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per
   :class:`~WorkUnit`
@@ -32,7 +32,7 @@ See Also:
         Sibling read-only overview builders (``status``, ``prepare``,
         ``calendar``, ``agenda``, ``backlog``, ``explain``) this module
         follows the same shape as.
-    :func:`~application.ledger.actions_manual.summarize_manual_transactions`
+    :func:`~application.ledger.manual_read.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
     :class:`~WorkUnit`
@@ -52,7 +52,7 @@ from pydantic import BaseModel, Field
 from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
@@ -112,7 +112,7 @@ class ModeloHealthRow(BaseModel):
             row already identifies.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     work_unit_id: WorkUnitId | None = None
@@ -152,7 +152,7 @@ class PipelineHealthReport(BaseModel):
             nothing to be ready about yet.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     filing_year: int

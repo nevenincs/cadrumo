@@ -1,17 +1,32 @@
 pub mod about;
+pub mod aeat_sync;
 pub mod agent_access;
+#[cfg(any(feature = "native-automation", test))]
+pub mod automation_nonce;
+#[cfg(any(feature = "native-automation", test))]
+mod automation_picker;
+pub mod background_tasks;
 pub mod channel;
 mod clipboard;
 mod external;
 mod interrupts;
 pub mod language;
-mod menu;
+pub mod ledger;
+pub mod modelo;
 pub mod navigation;
+mod picked_files;
 pub mod provider_settings;
+pub(crate) mod relay;
+#[cfg(all(test, windows))]
+mod scripted;
+pub mod sede_view;
+mod settle;
 pub mod setup;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;
+#[cfg(target_os = "macos")]
+pub mod traffic_lights;
 pub mod user_profile;
 #[cfg(windows)]
 pub mod webview;
@@ -25,7 +40,7 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Opera
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::{
-    AppHandle, Config, Manager, RunEvent, Runtime, State, Webview, WindowEvent,
+    AppHandle, Config, Manager, RunEvent, Runtime, State, WindowEvent,
     plugin::TauriPlugin,
     utils::config::{FrontendDist, WindowConfig},
 };
@@ -47,15 +62,6 @@ struct DesktopEnvironment {
 #[derive(Serialize)]
 struct ClipboardText {
     text: String,
-}
-
-#[derive(Serialize)]
-struct ContextMenuResult {
-    chosen: Option<String>,
-}
-
-fn unavailable() -> ApplicationError {
-    ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Webview)
 }
 
 /// Runs blocking host work off the async runtime's workers.
@@ -100,57 +106,6 @@ async fn shell_clipboard_write<R: Runtime>(app: AppHandle<R>, text: String) -> R
     blocking(move || clipboard::write(&app, text)).await
 }
 
-/// Resolves when the popup has closed. The popup blocks its thread until
-/// then, so the command is asynchronous and the wait runs off the workers.
-#[tauri::command]
-async fn shell_context_menu<R: Runtime>(
-    webview: Webview<R>,
-    items: Vec<serde_json::Value>,
-    x: Option<f64>,
-    y: Option<f64>,
-) -> Result<ContextMenuResult> {
-    let popups = webview
-        .try_state::<Arc<menu::Popups>>()
-        .ok_or_else(unavailable)?
-        .inner()
-        .clone();
-    let position = menu::position(x, y)?;
-    let claim = popups.claim()?;
-    let menu = menu::Menu::new(popups.next_sequence(), items)?;
-    let window = webview.window();
-    let chosen = blocking(move || {
-        let _claim = claim;
-        show(&window, &popups, &menu, position)
-    })
-    .await?;
-    Ok(ContextMenuResult { chosen })
-}
-
-#[cfg(windows)]
-fn show<R: Runtime>(
-    window: &tauri::Window<R>,
-    popups: &menu::Popups,
-    menu: &menu::Menu,
-    position: Option<tauri::LogicalPosition<f64>>,
-) -> Result<Option<String>> {
-    menu::show(window, popups, menu, position)
-}
-
-/// Elsewhere a native popup returns before the menu closes, so the choice
-/// cannot be awaited the same way.
-#[cfg(not(windows))]
-fn show<R: Runtime>(
-    _window: &tauri::Window<R>,
-    _popups: &menu::Popups,
-    _menu: &menu::Menu,
-    _position: Option<tauri::LogicalPosition<f64>>,
-) -> Result<Option<String>> {
-    Err(ApplicationError::new(
-        ErrorCode::UnsupportedPlatform,
-        Operation::Webview,
-    ))
-}
-
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let sign_in = Arc::new(sign_in::SignIn::new(launch));
     let output_language = launch.output_language.clone();
@@ -158,8 +113,6 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
     let about = Arc::new(about::About::new(launch));
-    let popups = Arc::new(menu::Popups::default());
-    let recorder = popups.clone();
     let activation = launch.diagnostics.clone();
     let window_states = Arc::new(window_state::WindowStates::open(
         &launch.webview,
@@ -179,10 +132,10 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
                 output_language,
             )));
             app.manage(sign_in);
-            app.manage(popups);
             app.manage(about.clone());
             app.manage(channel::Deliveries::default());
             app.manage(window_controls::Controls::default());
+            app.manage(window_controls::CloseGuard::default());
             Ok(())
         })
         .on_window_ready(move |window| {
@@ -190,8 +143,20 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             single_instance::attach(&window, activation.clone());
             window_controls::attach(&window);
         })
+        .on_page_load(|webview, payload| {
+            if !matches!(payload.event(), tauri::webview::PageLoadEvent::Started) {
+                return;
+            }
+            // A new top document has no channel to the view the old one held,
+            // and cannot ask for the frames the old one left waiting.
+            if let Some(view) = webview.try_state::<Arc<sede_view::SedeViewHost>>() {
+                view.page_replaced();
+            }
+            if let Some(deliveries) = webview.try_state::<channel::Deliveries>() {
+                deliveries.forget(webview.label());
+            }
+        })
         .on_event(move |app, event| match event {
-            RunEvent::MenuEvent(event) => recorder.record(&event.id().0),
             RunEvent::WindowEvent {
                 label,
                 event: WindowEvent::Destroyed,
@@ -230,8 +195,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         desktop_environment,
         open_external,
         shell_clipboard_read,
-        shell_clipboard_write,
-        shell_context_menu
+        shell_clipboard_write
     ]
 }
 
@@ -369,5 +333,32 @@ mod tests {
                 .is_none_or(|m| !m.contains("not allowed")),
             "{admitted:?}"
         );
+    }
+
+    /// The main window may listen for host events and stop listening; it emits
+    /// none, and no other window listens.
+    #[test]
+    fn only_the_main_window_listens_for_host_events() {
+        let app = tauri::test::mock_builder()
+            .build(tauri::generate_context!(test = true))
+            .unwrap();
+        let main = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        let other = tauri::WebviewWindowBuilder::new(&app, "startup", Default::default())
+            .build()
+            .unwrap();
+        let refused = |window: &tauri::WebviewWindow<tauri::test::MockRuntime>, cmd: &str| {
+            invoke(window, cmd)
+                .err()
+                .and_then(|m| m.as_str().map(|m| m.contains("not allowed")))
+                .unwrap_or(false)
+        };
+        for cmd in ["plugin:event|listen", "plugin:event|unlisten"] {
+            assert!(!refused(&main, cmd), "{cmd}");
+            assert!(refused(&other, cmd), "{cmd}");
+        }
+        assert!(refused(&main, "plugin:event|emit"));
+        assert!(refused(&main, "plugin:event|emit_to"));
     }
 }

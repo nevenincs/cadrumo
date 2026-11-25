@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....application.reference_catalogue_contracts import ModeloDescribeResult
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
 
@@ -138,8 +138,8 @@ def test_emitted_json_carries_the_grounding_fields() -> None:
     ("field", "value"),
     [
         ("filing_year", -1),
-        ("filing_year", FILING_YEAR_MAX + 1),
-        ("filing_year", FILING_YEAR_MIN - 1),
+        ("filing_year", FOUR_DIGIT_YEAR_LAST + 1),
+        ("filing_year", FOUR_DIGIT_YEAR_FIRST - 1),
         ("casilla_count", -2),
         ("manual_casilla_count", -1),
         ("bound_casilla_count", -1),
@@ -158,8 +158,8 @@ def test_canonical_report_refuses_out_of_range_values(field: str, value: int) ->
     ("field", "value"),
     [
         ("filing_year", -1),
-        ("filing_year", FILING_YEAR_MAX + 1),
-        ("filing_year", FILING_YEAR_MIN - 1),
+        ("filing_year", FOUR_DIGIT_YEAR_LAST + 1),
+        ("filing_year", FOUR_DIGIT_YEAR_FIRST - 1),
         ("casilla_count", -2),
         ("binding_count", -1),
     ],
@@ -179,6 +179,6 @@ def test_cli_payload_refuses_out_of_range_values(field: str, value: int) -> None
 
 def test_boundary_filing_years_remain_valid() -> None:
     """The bound refuses out-of-range values only, not the legitimate edges."""
-    assert _report(filing_year=FILING_YEAR_MIN).filing_year == FILING_YEAR_MIN
-    assert _report(filing_year=FILING_YEAR_MAX).filing_year == FILING_YEAR_MAX
+    assert _report(filing_year=FOUR_DIGIT_YEAR_FIRST).filing_year == FOUR_DIGIT_YEAR_FIRST
+    assert _report(filing_year=FOUR_DIGIT_YEAR_LAST).filing_year == FOUR_DIGIT_YEAR_LAST
     assert _report(filing_year=None).filing_year is None

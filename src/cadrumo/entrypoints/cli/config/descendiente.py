@@ -3,7 +3,7 @@
 The Art. 58/61 LIRPF minimo por descendientes engine
 (:meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.minimo_descendientes_estatal`,
 consumed at calculate time by
-:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) reads the
+:func:`~application.modelo.profile_derived_facts.inject_derived_minimo_descendientes_facts`) reads the
 active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, no
 production CLI surface wrote those facts: :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`
 and :func:`~domain.contribuyente.descendant_facts.descendant_facts_from_list` had zero non-test
@@ -31,24 +31,26 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import typer
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.meses_trabajo import serialise_meses_trabajo
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
-from ._profile_support import require_active_profile_pointer as _active_profile_pointer
+from .profile_support import require_active_profile_pointer
 
 if TYPE_CHECKING:
     from datetime import date
 
+    from ....application.user_profile.family_rows import ProfileViewFamilyGroupItem
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
 
@@ -61,6 +63,11 @@ def _tri(value: bool | None) -> str:
 def _iso_or_dash(value: date | None) -> str:
     """Render an optional entry-event date for the text row, or a dash when absent."""
     return value.isoformat() if value is not None else "-"
+
+
+def _euros_or_dash(value: Decimal | None) -> str:
+    """Render an optional euro figure for the text row, or a dash when it was never stated."""
+    return "-" if value is None else str(value)
 
 
 def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
@@ -92,7 +99,7 @@ def _offending_flag_key(error: CadrumoError) -> dict[str, str]:
     return {"key": key} if isinstance(key, str) and key else {}
 
 
-def _descendiente_refusal_key(error: CadrumoError) -> tuple[str, dict[str, str]]:
+def descendiente_refusal_key(error: CadrumoError) -> tuple[str, dict[str, str]]:
     """Map a ``--descendiente`` parse refusal to the translated key that states its cause.
 
     Only a refusal the parser attributes to ``NACIMIENTO`` may use the copy that
@@ -107,12 +114,12 @@ def _descendiente_refusal_key(error: CadrumoError) -> tuple[str, dict[str, str]]
     return _INVALID_ROW_LOCALE_KEY, context
 
 
-def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: int) -> tuple[int, ...]:
+def ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: int) -> tuple[int, ...]:
     """Indices, in the combined set, of newly-added rows this Step's advisory targets.
 
     Fires only for a row BOTH declaring real working months AND left at the
     unstated default relación — the same narrow conjunction
-    :func:`~application.modelo.calculate_input._ambiguous_relacion_hijo_ids`
+    :func:`~application.modelo.calculate_maternidad_advisory.ambiguous_relacion_hijo_ids`
     checks at calculate time. Checked here too, immediately at declaration,
     because an operator actively answering questions is better served by
     disclosure at the point they typed the figure than by discovering it only
@@ -136,8 +143,8 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
     )
 
 
-def _ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
-    """Advisory notice for :func:`_ambiguous_relacion_indices`.
+def ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
+    """Advisory notice for :func:`ambiguous_relacion_indices`.
 
     Routed through the locale catalogues, unlike the calculate-time sibling in
     ``_calculate_input.py``: every other operator-facing string this module
@@ -145,7 +152,7 @@ def _ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
     follows the surface it actually reaches rather than the diagnostic layer's
     own (deliberately untranslated) convention.
     """
-    from .._modelo_rendering import advisory_notice
+    from ..modelo_rendering import advisory_notice
 
     ids = ", ".join(str(index) for index in ambiguous_indices)
     return advisory_notice(
@@ -179,7 +186,9 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"segundo_ciclo_infantil_inicio_mes={descendant.segundo_ciclo_infantil_inicio_mes or '-'}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
+                    f"cotizaciones_ss_madre_euros={_euros_or_dash(descendant.cotizaciones_ss_madre_euros)}",
                     f"nif={descendant.nif or '-'}",
+                    f"apellidos_nombre={descendant.apellidos_nombre or '-'}",
                 ),
             ),
         )
@@ -190,9 +199,14 @@ def _emit_descendiente_list(
     ctx: typer.Context,
     pointer: ProfileBucketPointer,
     descendientes: tuple[DescendantInfo, ...],
+    group: ProfileViewFamilyGroupItem | None = None,
 ) -> None:
-    """Emit the active profile's declared descendant set as the list envelope."""
-    from .._config_descendiente_payloads import (
+    """Emit the active profile's declared descendant set as the list envelope.
+
+    ``group`` is the backend's reading of the household group when the verb read it; the
+    door, which reads no group, omits it and the envelope then carries no state.
+    """
+    from ..config_descendiente_payloads import (
         ConfigProfileDescendienteListResult,
         ProfileDescendientePayload,
     )
@@ -200,6 +214,8 @@ def _emit_descendiente_list(
     result = ConfigProfileDescendienteListResult(
         profile=pointer.label,
         total=len(descendientes),
+        state=group.state if group is not None else None,
+        stated_count=group.stated_count if group is not None else None,
         descendientes=[
             ProfileDescendientePayload(
                 index=index,
@@ -220,7 +236,9 @@ def _emit_descendiente_list(
                 segundo_ciclo_infantil_inicio_mes=descendant.segundo_ciclo_infantil_inicio_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=descendant.gastos_guarderia_mensuales,
+                cotizaciones_ss_madre_euros=descendant.cotizaciones_ss_madre_euros,
                 nif=descendant.nif,
+                apellidos_nombre=descendant.apellidos_nombre,
             )
             for index, descendant in enumerate(descendientes)
         ],
@@ -246,7 +264,7 @@ def descendiente_door(
     """
     if ctx.invoked_subcommand is not None:
         return
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     _run_descendant_door(ctx)
 
 
@@ -254,24 +272,62 @@ def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
     from .operation_descendant_door import run_descendant_door
 
-    pointer = _active_profile_pointer()
+    pointer = require_active_profile_pointer()
     rows = run_descendant_door(ctx)
     _emit_descendiente_list(ctx, pointer, rows)
 
 
+def _descendiente_none(ctx: typer.Context) -> None:
+    """State that the active profile has no descendants, as the stored count of zero.
+
+    The same registered replacement the flag rows use, with no rows. Refused while the
+    profile stores descendants or states a count, so a stated answer never overwrites
+    people the profile still holds.
+    """
+    from uuid import UUID
+
+    from cadrumo_client.commands.profile_binding import require_profile_client
+
+    from ....application.user_profile.descendant_rows import DESCENDANT_OBJECT_PATH
+    from ..config_descendiente_payloads import ConfigProfileDescendienteAddResult
+    from ..state_projection_support import authority_operation
+    from .operation_descendants import replace_descendants
+    from .operation_household import household_group, read_household_baseline, require_group_open_to_none
+    from .profile_mutation import mutation_deadline
+
+    pointer = require_active_profile_pointer()
+    authority = authority_operation(ctx)
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    deadline = mutation_deadline()
+    baseline = read_household_baseline(client, deadline=deadline)
+    require_group_open_to_none(household_group(baseline, group_key=DESCENDANT_OBJECT_PATH))
+    committed = replace_descendants(client, baseline=baseline, descendants=(), operation=authority, deadline=deadline)
+    emit_envelope(
+        ctx,
+        command="config.profile.descendiente.add",
+        result=ConfigProfileDescendienteAddResult(
+            profile=pointer.label, added=0, total=len(committed), none_declared=True
+        ),
+        lines=(f"profile	{pointer.label}", "added	0", f"total	{len(committed)}", "none_declared	true"),
+    )
+
+
 def descendiente_add(
     ctx: typer.Context,
-    descendiente: list[str],
+    descendiente: list[str] | None = None,
+    none: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Append one or more ``--descendiente`` rows to the active profile.
+    """Append one or more ``--descendiente`` rows to the active profile, or state ``--none``.
+
+    ``--none`` states that the taxpayer has no descendants; see :func:`_descendiente_none`.
 
     Each ``--descendiente`` flag is parsed by
     :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`; a malformed flag
     refuses instructively before any profile write. The new rows are appended after
     the existing declared descendants and the full set is rewritten so the
     Art. 58/61 LIRPF minimo por descendientes engine
-    (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) has
+    (:func:`~application.modelo.profile_derived_facts.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
 
     Parsing reads the registry's disability grades and relación default, and
@@ -287,11 +343,17 @@ def descendiente_add(
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
     from ..state_projection_support import authority_operation
-    from ._profile_mutation import mutation_deadline
     from .operation_descendants import read_descendants, replace_descendants
+    from .operation_household import require_rows_or_none
+    from .profile_mutation import mutation_deadline
 
-    _activate_subcommand_output_language(ctx, output_language)
-    pointer = _active_profile_pointer()
+    activate_subcommand_output_language(ctx, output_language)
+    flags = descendiente or []
+    require_rows_or_none(flag="--descendiente", supplied=len(flags), none=none)
+    if none:
+        _descendiente_none(ctx)
+        return
+    pointer = require_active_profile_pointer()
     # Stored rows and the flag's relationship and disability vocabularies are
     # governed facts, so reading and parsing need the command's pinned
     # authority, not only the write.
@@ -301,7 +363,7 @@ def descendiente_add(
     baseline, existing = read_descendants(client, operation=authority, deadline=deadline)
 
     new_rows: list[DescendantInfo] = []
-    for raw in descendiente:
+    for raw in flags:
         # BOTH refusal families, because this flag has two kinds of guard and
         # only one of them was reaching the operator intact. The parser's own
         # pre-validations raise the typed error; the canonical record's
@@ -326,13 +388,13 @@ def descendiente_add(
             # The mutually-exclusive guarderia spend forms are a known, safe
             # condition with a dedicated localised refusal. Other parser prose can
             # include the supplied value, so it stays behind the generic boundary.
-            translated_message, context = _descendiente_refusal_key(exc)
-            raise _CliRefusedBoundaryError(translated_message=translated_message, context=context) from exc
+            translated_message, context = descendiente_refusal_key(exc)
+            raise CliRefusedBoundaryError(translated_message=translated_message, context=context) from exc
         except ValidationError as exc:
             # Name the FIELDS that conflict, never the exception class. The class
             # name leaks "ValidationError" into the envelope the operator reads and
             # tells them nothing; the field paths are exactly what they can act on.
-            raise _CliRefusedBoundaryError(
+            raise CliRefusedBoundaryError(
                 translated_message=_INVALID_ROW_LOCALE_KEY,
                 context={
                     # The coherence rules are MODEL-level validators, so `loc` is
@@ -352,14 +414,14 @@ def descendiente_add(
         deadline=deadline,
     )
 
-    from .._config_descendiente_payloads import ConfigProfileDescendienteAddResult
+    from ..config_descendiente_payloads import ConfigProfileDescendienteAddResult
 
     result = ConfigProfileDescendienteAddResult(
         profile=pointer.label,
         added=len(new_rows),
         total=len(committed),
     )
-    ambiguous_indices = _ambiguous_relacion_indices(new_rows, index_offset=len(existing))
+    ambiguous_indices = ambiguous_relacion_indices(new_rows, index_offset=len(existing))
     emit_envelope(
         ctx,
         command="config.profile.descendiente.add",
@@ -370,7 +432,7 @@ def descendiente_add(
             f"total\t{len(committed)}",
             *_descendiente_row_lines(committed),
         ),
-        notices=[_ambiguous_relacion_notice(ambiguous_indices)] if ambiguous_indices else None,
+        notices=[ambiguous_relacion_notice(ambiguous_indices)] if ambiguous_indices else None,
     )
 
 
@@ -384,14 +446,17 @@ def descendiente_list(
 
     from cadrumo_client.commands.profile_binding import require_profile_client
 
+    from ....application.user_profile.descendant_rows import DESCENDANT_OBJECT_PATH
     from ..state_projection_support import authority_operation
-    from .operation_descendants import read_descendants
+    from .operation_descendants import decode_descendants
+    from .operation_household import household_group, read_household_baseline
 
-    _activate_subcommand_output_language(ctx, output_language)
-    pointer = _active_profile_pointer()
+    activate_subcommand_output_language(ctx, output_language)
+    pointer = require_active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
-    _baseline, rows = read_descendants(client, operation=authority_operation(ctx), deadline=monotonic() + 60)
-    _emit_descendiente_list(ctx, pointer, rows)
+    baseline = read_household_baseline(client, deadline=monotonic() + 60)
+    rows = decode_descendants(client, baseline, authority_operation(ctx))
+    _emit_descendiente_list(ctx, pointer, rows, household_group(baseline, group_key=DESCENDANT_OBJECT_PATH))
 
 
 def descendiente_remove(
@@ -404,13 +469,13 @@ def descendiente_remove(
 
     from cadrumo_client.commands.profile_binding import require_profile_client
 
-    from ._profile_mutation import mutation_deadline
     from .operation_descendants import read_descendants, replace_descendants
+    from .profile_mutation import mutation_deadline
 
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ..state_projection_support import authority_operation
 
-    pointer = _active_profile_pointer()
+    pointer = require_active_profile_pointer()
     # Stored rows validate against governed vocabularies, so decoding them needs
     # the command's pinned authority, not only the write.
     authority = authority_operation(ctx)
@@ -418,7 +483,7 @@ def descendiente_remove(
     deadline = mutation_deadline()
     baseline, existing = read_descendants(client, operation=authority, deadline=deadline)
     if index < 0 or index >= len(existing):
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.descendiente.index_out_of_range",
             context={"index": str(index), "total": str(len(existing))},
         )
@@ -431,7 +496,7 @@ def descendiente_remove(
         deadline=deadline,
     )
 
-    from .._config_descendiente_payloads import ConfigProfileDescendienteRemoveResult
+    from ..config_descendiente_payloads import ConfigProfileDescendienteRemoveResult
 
     result = ConfigProfileDescendienteRemoveResult(
         profile=pointer.label,

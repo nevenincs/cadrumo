@@ -48,13 +48,20 @@ from ....application.modelo.export_projection import ModeloExportPublicResultV3
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
-from ....application.modelo.operation_definitions import (
+from ....application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from ....application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
+)
+from ....application.modelo.work_amend_correction import ModeloAmendmentCorrectionContextV1
 from ....application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
@@ -71,8 +78,11 @@ from ....core.i18n.render import output_language
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.payment_election import PaymentElection
+from ....core.payment_instalment_election import PaymentInstalmentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
+from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ..operations.controller_port import OperationControllerPort
 
 _ACTOR_REF = "operator:tui-modelo"
@@ -106,6 +116,40 @@ class ModeloWorkspaceLifecycleDoor:
     read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV3]] | None = None
     profile_id: UUID | None = None
     read_review_result: Callable[[OperationPublicProjectionV1], Awaitable[CalculationReviewXlsxResult]] | None = None
+    #: Reads the correction the declaration's current filing offers, worded in the given language.
+    read_amendment_context: Callable[[OutputLanguage], Awaitable[ModeloAmendmentCorrectionContextV1]] | None = None
+
+    async def amendment_context(self, language: OutputLanguage) -> ModeloAmendmentCorrectionContextV1:
+        """Read what correcting the declaration recorded as filed offers, or refuse when it cannot be read here."""
+        read = self.read_amendment_context
+        if read is None:
+            raise ModeloLifecycleActionUnavailableError(translated_message="workspace.modelo.correction.unavailable")
+        return await read(language)
+
+    async def amend(
+        self,
+        *,
+        filing_record_id: str,
+        amendment_kind: FilingDeclarationKind,
+        overrides: tuple[ModeloWorkAmendOverride, ...],
+        reason: str,
+        m303_rectificativa_motive: M303RectificativaMotive | None,
+    ) -> OperationControllerPort:
+        """Record a local correction of the named filing; nothing is sent to the AEAT."""
+        return await self._submit(
+            OperationRequest(
+                definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
+                subject_ref=self.work_unit_id,
+                payload=ModeloWorkAmendRequest(
+                    baseline=ModeloWorkAmendBaseline(from_filing_record_id=filing_record_id),
+                    amendment_kind=amendment_kind,
+                    overrides=overrides,
+                    reason=reason,
+                    m303_rectificativa_motive=m303_rectificativa_motive,
+                    actor=_ACTOR_REF,
+                ),
+            )
+        )
 
     async def calculate(
         self,
@@ -191,7 +235,10 @@ class ModeloWorkspaceLifecycleDoor:
             OperationRequest(
                 definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
-                payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+                payload=ModeloEditOperatorInputV2(
+                    submission=ModeloEditApplySubmissionV1.from_submission(submission),
+                    output_language=OutputLanguage(output_language()),
+                ),
             )
         )
         return controller, renewal.baseline
@@ -248,6 +295,7 @@ class ModeloWorkspaceLifecycleDoor:
         artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
         charge_account_id: str | None = None,
         refund_account_id: str | None = None,
+        instalment_election: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE,
     ) -> OperationControllerPort:
         """Export the selected verified revision to the operator-selected path with the operator's choices.
 
@@ -283,6 +331,7 @@ class ModeloWorkspaceLifecycleDoor:
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    instalment_election=instalment_election,
                     charge_account_id=charge_account_id,
                     refund_account_id=refund_account_id,
                     replace_existing=replace_existing,
@@ -303,22 +352,7 @@ class ModeloWorkspaceLifecycleDoor:
         the facts the result would have carried.
         """
         if projection.definition_id == CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID:
-            if (
-                self.read_review_result is None
-                or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            ):
-                return None
-            try:
-                result = await self.read_review_result(projection)
-                if (
-                    result.calculation_revision_id != self.calculation_revision_id
-                    or result.work_unit_id != self.work_unit_id
-                    or result.profile_id != self.profile_id
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return result
-            except (RefusalError, FrontendRefusedError):
-                return None
+            return await self._settled_review_result(projection)
         if (
             self.read_export_result is None
             or projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
@@ -328,6 +362,23 @@ class ModeloWorkspaceLifecycleDoor:
             return None
         try:
             return await self.read_export_result(projection)
+        except (RefusalError, FrontendRefusedError):
+            return None
+
+    async def _settled_review_result(
+        self, projection: OperationPublicProjectionV1
+    ) -> CalculationReviewXlsxResult | None:
+        if self.read_review_result is None or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            return None
+        try:
+            result = await self.read_review_result(projection)
+            if (
+                result.calculation_revision_id != self.calculation_revision_id
+                or result.work_unit_id != self.work_unit_id
+                or result.profile_id != self.profile_id
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return result
         except (RefusalError, FrontendRefusedError):
             return None
 

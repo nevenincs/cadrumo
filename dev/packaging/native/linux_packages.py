@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from tempfile import NamedTemporaryFile
 from typing import Literal
@@ -74,7 +75,7 @@ def _path(raw: str) -> str:
 
 def deb_files(listing: str) -> set[str]:
     """Read dpkg-deb's native tar listing without extracting any package member."""
-    files = set()
+    files: set[str] = set()
     for row in listing.splitlines():
         fields = row.split(maxsplit=5)
         if len(fields) != 6 or fields[0][0] not in {"-", "d"}:
@@ -89,7 +90,7 @@ def deb_files(listing: str) -> set[str]:
 
 def rpm_files(listing: str) -> set[str]:
     """Classify native RPM file modes; symbolic links cannot bypass inventory checks."""
-    files = set()
+    files: set[str] = set()
     for row in listing.splitlines():
         mode, separator, name = row.partition(" ")
         if not separator:
@@ -103,6 +104,29 @@ def rpm_files(listing: str) -> set[str]:
                 raise ValueError("RPM payload owns a file more than once")
             files.add(path)
     return files
+
+
+def _desktop_requirements(
+    stage: Path, artifact: Path, package_format: PackageFormat, run: Callable[[list[str]], str]
+) -> str | None:
+    desktop_requirements: str | None = None
+    for manifest_file in stage.rglob("data/package-manifest.json"):
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        if validate_desktop_payload(manifest_file.parent.parent, manifest):
+            requirements = (
+                run(["--show", "--showformat=${Depends}", str(artifact)])
+                if package_format == "deb"
+                else run(["-qp", "--requires", str(artifact)])
+            )
+            verify_requirements(requirements, package_format)
+            desktop_requirements = requirements
+    return desktop_requirements
+
+
+def _require_owned_files(stage: Path, owned: set[str]) -> None:
+    expected_files = {"/" + path.relative_to(stage).as_posix() for path in stage.rglob("*") if path.is_file()}
+    if owned != expected_files:
+        raise ValueError("Native package ownership differs from verified installation staging")
 
 
 def inspect_artifact(
@@ -145,20 +169,8 @@ def inspect_artifact(
         raise ValueError("Native package identity differs from the CMake identity projection")
     if gate.strip() != PREINSTALL.strip():
         raise ValueError("Linux manager package lost its unconditional installation gate")
-    desktop_requirements: str | None = None
-    for manifest_file in stage.rglob("data/package-manifest.json"):
-        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-        if validate_desktop_payload(manifest_file.parent.parent, manifest):
-            requirements = (
-                run(["--show", "--showformat=${Depends}", str(artifact)])
-                if package_format == "deb"
-                else run(["-qp", "--requires", str(artifact)])
-            )
-            verify_requirements(requirements, package_format)
-            desktop_requirements = requirements
-    expected_files = {"/" + path.relative_to(stage).as_posix() for path in stage.rglob("*") if path.is_file()}
-    if owned != expected_files:
-        raise ValueError("Native package ownership differs from verified installation staging")
+    desktop_requirements = _desktop_requirements(stage, artifact, package_format, run)
+    _require_owned_files(stage, owned)
     if digest(artifact) != artifact_hash:
         raise ValueError("Native package changed during inspection")
     receipt.write_text(

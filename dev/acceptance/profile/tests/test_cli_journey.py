@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import CommandEvidence
 
 from .. import cli_journey as journey_module
@@ -30,7 +31,7 @@ class _PublicCliFixture:
         self._next_row = 1
         self._retired: set[str] = set()
         self._fields: set[str] = set()
-        self._cnae = ""
+        self._epigraph = ""
 
     def create_profile(self, *, year: int) -> None:
         self.commands.append(CommandEvidence("config profile create", 0, "success", ()))
@@ -52,11 +53,10 @@ class _PublicCliFixture:
             self._fields.update(
                 {
                     f"activities.{row}.description",
-                    f"activities.{row}.cnae",
                     f"activities.{row}.iae_epigraph",
                 }
             )
-            self._cnae = "6201"
+            self._epigraph = "765"
             result: dict[str, object] = {"row_index": int(row)}
             return self._record(command, 0, "success", result)
         if operation == "edit-row":
@@ -66,11 +66,11 @@ class _PublicCliFixture:
                     raise RuntimeError("retired row must be invoked with allow_error")
                 return self._record(command, 2, "error", {})
             if "--clear" in tokens:
-                self._fields.discard(f"activities.{row}.cnae")
+                self._fields.discard(f"activities.{row}.iae_epigraph")
                 return self._record(command, 0, "success", {"changed": True})
             value = tokens[-1].partition("=")[2]
-            changed = value != self._cnae
-            self._cnae = value
+            changed = value != self._epigraph
+            self._epigraph = value
             return self._record(command, 0, "success", {"changed": changed})
         if operation == "remove-row":
             row = tokens[4]
@@ -111,7 +111,7 @@ def test_cli_lifecycle_receipt_proves_clear_remove_reopen_and_retired_id_without
         storage_root=tmp_path / "storage",
         artifact_dir=tmp_path / "artifacts",
         passphrase=secret,
-        year=2025,
+        year=filing_year_envelope().horizon,
         scenario=build_profile_row_lifecycle_scenario(),
     )
 
@@ -139,7 +139,7 @@ def test_cli_driver_refuses_a_nonempty_caller_owned_store(tmp_path: Path) -> Non
             storage_root=store,
             artifact_dir=tmp_path / "artifacts",
             passphrase=secrets.token_urlsafe(24),
-            year=2025,
+            year=filing_year_envelope().horizon,
             scenario=build_profile_row_lifecycle_scenario(),
         )
 

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.buckets.event import BucketEventType
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -23,21 +24,25 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import get_manual_transaction, ledger_transaction_result_payload
 from .history_query import LedgerHistoryQuery, read_ledger_history
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
 from .list_query import LLM_DECISION_EVENT_TYPES
-from .read_access import resolve_ledger_read_access
+from .manual_read import get_manual_transaction, ledger_transaction_result_payload
+from .read_access import resolve_ledger_request_read_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_VIEW_OPERATION_DEFINITION_ID = "ledger.view"
 
 
 class LedgerViewRequest(CredentialFreeOperationRequest):
-    """An exact profile and a current or superseded transaction handle."""
+    """An exact profile and a current or superseded transaction handle.
+
+    ``output_language`` is the language the transaction's link fields are named in.
+    """
 
     profile_id: UUID
     transaction_prefix: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerViewRejectionProjection(BaseModel):
@@ -80,8 +85,10 @@ class LedgerViewExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
-            result = get_manual_transaction(bucket_id=bucket_id, transaction_id=selected, ports=ports)
+            selected, catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
+            result = get_manual_transaction(
+                bucket_id=bucket_id, transaction_id=selected, ports=ports, catalogue=catalogue
+            )
             canonical = ledger_transaction_result_payload(result)
             if canonical.bucket_id != bucket_id or canonical.transaction_id != selected:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -90,6 +97,7 @@ class LedgerViewExecutor:
                 bucket_id=bucket_id,
                 transaction_repository=ports.transaction_repository,
                 bucket_event_repository=ports.bucket_event_repository,
+                transaction_catalogue=catalogue,
             )
             decisions = tuple(event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES)
             rejection = None
@@ -101,7 +109,9 @@ class LedgerViewExecutor:
             return LedgerViewProjection(
                 profile_id=payload.profile_id,
                 transaction_prefix=payload.transaction_prefix,
-                transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+                transaction=LedgerTransactionProjection.from_payload(
+                    canonical.transaction, language=payload.output_language
+                ),
                 review_status=canonical.review_status,
                 latest_llm_rejection=rejection,
             )
@@ -135,8 +145,6 @@ def resolve_ledger_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Protect the complete transaction and its cross-period decision lineage."""
-    if request.definition_id != LEDGER_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerViewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_VIEW_OPERATION_DEFINITION_ID, request_type=LedgerViewRequest
+    )

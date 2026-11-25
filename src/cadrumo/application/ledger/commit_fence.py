@@ -13,7 +13,8 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import SecureObjectWrite
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ...domain.transactions.date_partition import LedgerDatePartition
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.owner import OperationExecutorContext
 from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import (
@@ -90,6 +91,15 @@ class LedgerCommitAttemptTracker:
         """Report any confirmed write or uncertain persistence outcome."""
         with self._lock:
             return self._uncertain_write or self._confirmed_write
+
+    def effect(self, *, incomplete: bool) -> OperationEffect:
+        """Report the operation effect these writes leave, keeping uncertainty ahead of confirmed writes.
+
+        ``incomplete`` says whether confirmed earlier writes stand while the work did not finish.
+        """
+        if self.has_uncertain_write:
+            return OperationEffect.UNKNOWN
+        return OperationEffect.of_confirmed_writes(wrote=self.confirmed_write, incomplete=incomplete)
 
     def listen_for_queued(self, listener: Callable[[], None] | None) -> None:
         """Call ``listener`` from the writer's thread whenever an attempt is queued."""

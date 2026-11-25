@@ -63,6 +63,7 @@ share. This module asserts the structural precondition that shape assumes.
 from __future__ import annotations
 
 import re
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -72,7 +73,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compile_validated_authority
-from ._revision_span_design_support import _CASILLA_TAG_RE
+from .revision_span_design_support import CASILLA_TAG_RE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,9 +87,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Measured, widening changes no verdict today: Modelo 200 declares no rate-keyed row at
 # either width and Modelo 390's 210 are identical. The value is removing a second
 # definition of one concept before it silently under-reads, not a boundary recovered.
-_RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?" + _CASILLA_TAG_RE.pattern)
+_RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?" + CASILLA_TAG_RE.pattern)
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 

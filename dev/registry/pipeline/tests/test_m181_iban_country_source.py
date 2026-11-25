@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_shared_catalogues
 from ..record_design_intermediate import load_record_design_intermediate
@@ -15,12 +16,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_m181_iban_country_text_is_bound_to_exact_official_row() -> None:
     root = Path("src/cadrumo/_data")
+    design_year = open_ended_revision("181").valid_from.year
     source = load_record_design_intermediate(
         root,
         load_shared_catalogues(root / "registry/aeat").sources,
         source_ref="aeat-dr-181-2022",
-        filing_year=2022,
-        design_epoch="2022",
+        filing_year=design_year,
+        design_epoch=str(design_year),
     )
     country = next(
         field

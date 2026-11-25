@@ -29,9 +29,9 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .action_cache import action_lock
 from .build_directory import require_enrolled_build
@@ -157,6 +157,26 @@ def display_version(version: str, build_id: str, kind: str) -> str:
     return f"{version}+{build_id}" + (".debug" if kind == "debug" else "")
 
 
+SOURCE_COMMIT_VARIABLE = "CADRUMO_SOURCE_COMMIT"
+"""The variable through which the builder names the commit a stage is built from."""
+
+_SOURCE_COMMIT = re.compile(r"[0-9a-f]{40}")
+
+
+def supplied_source_commit(environment: Mapping[str, str]) -> str | None:
+    """Return the full commit hash the builder supplied for this build, or None when none was.
+
+    The build never asks a version-control tool for it: the builder supplies it, so a build
+    from an exported tree or an archive records no commit rather than a guessed one.
+    """
+    value = environment.get(SOURCE_COMMIT_VARIABLE, "").strip()
+    if value == "":
+        return None
+    if not _SOURCE_COMMIT.fullmatch(value):
+        raise ValueError(f"{SOURCE_COMMIT_VARIABLE} must be a full lowercase 40-character commit hash: {value!r}")
+    return value
+
+
 def _validate(stamp: BuildStamp) -> BuildStamp:
     if not isinstance(stamp.build_id, str) or not _BUILD_ID.fullmatch(stamp.build_id):
         raise ValueError(f"Build id must be YYYYMMDD and a two-or-more-digit iteration: {stamp.build_id!r}")
@@ -220,6 +240,29 @@ def _stamp(entry: dict[str, str | int]) -> BuildStamp:
     return _validate(BuildStamp(str(entry["build_id"]), int(entry["build_sequence"]), str(entry["build_date"])))
 
 
+def _allocate_record(
+    registry: _Registry, directory: Path, content: str, freeze: Freeze, now: datetime | None
+) -> dict[str, str | int]:
+    built = _build_date(freeze.date, now)
+    day = built[:10].replace("-", "")
+    iteration = registry.iteration + 1 if registry.day == day else 1
+    sequence = registry.sequence + 1
+    if sequence > SEQUENCE_LIMIT:
+        if freeze.number is None:
+            raise ValueError(
+                f"The build sequence of {directory} reached {SEQUENCE_LIMIT}, the Windows FILEVERSION limit; "
+                "configure with -DCADRUMO_BUILD_NUMBER=<n> or build in a new binary directory"
+            )
+        sequence = SEQUENCE_LIMIT
+    registry.day, registry.iteration, registry.sequence = day, iteration, sequence
+    return {
+        "fingerprint": content,
+        "build_id": f"{day}{iteration:02d}",
+        "build_sequence": sequence,
+        "build_date": built,
+    }
+
+
 def allocate(
     directory: Path, key: str, content: str, *, freeze: Freeze | None = None, now: datetime | None = None
 ) -> BuildStamp:
@@ -240,24 +283,7 @@ def allocate(
         history = registry.identities.setdefault(key, [])
         recorded = next((entry for entry in history if entry["fingerprint"] == content), None)
         if recorded is None:
-            built = _build_date(freeze.date, now)
-            day = built[:10].replace("-", "")
-            iteration = registry.iteration + 1 if registry.day == day else 1
-            sequence = registry.sequence + 1
-            if sequence > SEQUENCE_LIMIT:
-                if freeze.number is None:
-                    raise ValueError(
-                        f"The build sequence of {directory} reached {SEQUENCE_LIMIT}, the Windows FILEVERSION limit; "
-                        "configure with -DCADRUMO_BUILD_NUMBER=<n> or build in a new binary directory"
-                    )
-                sequence = SEQUENCE_LIMIT
-            registry.day, registry.iteration, registry.sequence = day, iteration, sequence
-            recorded = {
-                "fingerprint": content,
-                "build_id": f"{day}{iteration:02d}",
-                "build_sequence": sequence,
-                "build_date": built,
-            }
+            recorded = _allocate_record(registry, directory, content, freeze, now)
         else:
             history.remove(recorded)
         # Most recently used last; the oldest fingerprints fall out of the history.
@@ -320,19 +346,24 @@ def resolve(
     configuration: str | None = None,
     now: datetime | None = None,
     root: Path = REPO_ROOT,
+    record: bool = True,
 ) -> dict[str, ComponentIdentity]:
     """Fingerprint the requested components and those they embed, and publish their identities.
 
     Each ``component-identity/<component>.json`` changes bytes only when the identity does,
-    so an unchanged component never invalidates what reads or embeds it. A changed
-    fingerprint also opens the component's build record.
+    so an unchanged component never invalidates what reads or embeds it. With ``record``, a
+    changed fingerprint also opens the build record of each requested component, whose images
+    the caller is about to build. A component resolved only because a requested one embeds
+    it, and every component of a caller that stages nothing (a test or lint target, passing
+    ``record=False``), keeps its record, which goes on describing the bytes last staged.
     """
     generated = build_paths(build)["generated"]
     freeze = read_freeze(build)
     version = _version(build)
+    requested = tuple(components)
     fingerprints: dict[str, str] = {}
     resolved: dict[str, ComponentIdentity] = {}
-    for name in resolution_order(tuple(components)):
+    for name in resolution_order(requested):
         entries = inventory(name, build, fingerprints, root=root)
         fingerprints[name] = inventory_fingerprint(entries)
         stamp = allocate(generated, name, fingerprints[name], freeze=freeze, now=now)
@@ -340,7 +371,8 @@ def resolve(
         path = identity_path(build, name, configuration)
         path.parent.mkdir(parents=True, exist_ok=True)
         write_text(path, json.dumps(identity.document(), indent=2) + "\n")
-        begin_record(build, identity, entries)
+        if record and name in requested:
+            begin_record(build, identity, entries)
         resolved[name] = identity
     return resolved
 
@@ -394,6 +426,13 @@ def read_record(build: Path, component: str) -> dict[str, Any] | None:
     return document if _is_record(document, component) else None
 
 
+def _valid_staged(staged: object) -> bool:
+    return isinstance(staged, dict) and all(
+        isinstance(entry, dict) and isinstance(cast(dict[str, object], entry).get("artifacts"), dict)
+        for entry in cast(dict[object, object], staged).values()
+    )
+
+
 def _is_record(document: object, component: str) -> bool:
     if not isinstance(document, dict) or document.get("schema") != RECORD_SCHEMA:
         return False
@@ -404,8 +443,7 @@ def _is_record(document: object, component: str) -> bool:
         and isinstance(document.get("fingerprint"), str)
         and _FINGERPRINT.fullmatch(document["fingerprint"]) is not None
         and isinstance(document.get("inputs"), str)
-        and isinstance(staged, dict)
-        and all(isinstance(entry, dict) and isinstance(entry.get("artifacts"), dict) for entry in staged.values())
+        and _valid_staged(staged)
     )
 
 
@@ -615,10 +653,17 @@ if __name__ == "__main__":
     parser.add_argument("--component", action="append", default=[], help="a component whose identity to publish")
     parser.add_argument("--settle-test-host", type=Path, help="the host.json the packaged test host build wrote")
     parser.add_argument("--config", choices=tuple(BUILD_TYPES), help="the CMake configuration being built")
+    parser.add_argument(
+        "--identity-only",
+        action="store_true",
+        help="publish the identities and open no build record: the target builds nothing it stages",
+    )
     args = parser.parse_args()
     if args.settle_test_host is not None:
         settle_test_host(args.build, args.settle_test_host)
-    for name, resolved_identity in resolve(args.build, args.component, configuration=args.config).items():
+    for name, resolved_identity in resolve(
+        args.build, args.component, configuration=args.config, record=not args.identity_only
+    ).items():
         BuildLog("build-stamp").status(
             f"{name}: build {resolved_identity.stamp.build_id}, sequence {resolved_identity.stamp.build_sequence}"
         )

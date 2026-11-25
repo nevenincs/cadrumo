@@ -14,7 +14,7 @@ from ....core.config import override_settings
 def isolated_review_storage(tmp_path: Path) -> Iterator[None]:
     """Keep review tests on an isolated test root."""
     with override_settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile=None,
         cadrumo_secret_passphrase=None,
     ):

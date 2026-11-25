@@ -21,14 +21,14 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....tests.cli_envelope import unwrap_cli_result as _json
+from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.cli_json_support import require_json_object
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import cli_surface_isolated_backend
 from .scenario_support import (
-    _active_bucket_id,
-    _invoke,
+    active_bucket_id,
     create_cli_surface_profile,
+    invoke,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -42,14 +42,14 @@ __all__ = ["cli_surface_isolated_backend"]
 
 
 def test_root_help_lists_config_and_app() -> None:
-    result = _invoke(["--help"])
+    result = invoke(["--help"])
     assert result.exit_code == 0
     assert "config" in result.output
     assert "app" in result.output
 
 
 def test_app_help_lists_singular_domains() -> None:
-    result = _invoke(["app", "--help"])
+    result = invoke(["app", "--help"])
     assert result.exit_code == 0
     for token in ("overview", "ledger", "live", "modelo", "review"):
         assert token in result.output
@@ -60,13 +60,13 @@ def test_app_help_lists_singular_domains() -> None:
 
 
 def test_top_level_auth_is_not_user_facing() -> None:
-    result = _invoke(["auth", "--help"])
+    result = invoke(["auth", "--help"])
     assert result.exit_code != 0
 
 
 def test_retired_invoice_declaration_and_archive_surfaces_are_not_user_facing() -> None:
     for command in (["app", "invoice"], ["app", "declaration"], ["app", "archive"]):
-        result = _invoke([*command, "--help"])
+        result = invoke([*command, "--help"])
         assert result.exit_code != 0, command
 
 
@@ -77,9 +77,9 @@ def test_retired_invoice_declaration_and_archive_surfaces_are_not_user_facing() 
 
 def test_app_overview_status_bare_renders_counts() -> None:
     create_cli_surface_profile()
-    result = _invoke(["--format", "json", "app", "overview", "status"])
+    result = invoke(["--format", "json", "app", "overview", "status"])
     assert result.exit_code == 0
-    payload = _json(result)
+    payload = unwrap_cli_result(result)
     assert payload["transactions"] == 0
     assert payload["invoices"] == 0
     assert payload["drafts"] == 0
@@ -93,24 +93,24 @@ def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
         "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    dry = _invoke(
+    dry = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"]
     )
     assert dry.exit_code == 0
-    result = _json(dry)
+    result = unwrap_cli_result(dry)
     assert result["dry_run"] is True
     # The dry run previews what a real import would add - one row here -
     # but persists nothing: the overview still reports zero transactions.
     assert result["imported"] == 1
-    after = _invoke(["--format", "json", "app", "overview", "status"])
-    assert _json(after)["transactions"] == 0
+    after = invoke(["--format", "json", "app", "overview", "status"])
+    assert unwrap_cli_result(after)["transactions"] == 0
 
 
 def _run_ledger_cli_json(args: list[str]) -> dict[str, Any]:
     """Invoke the CLI with ``--format json`` prefixed, assert exit-0, return parsed JSON."""
-    result = _invoke(["--format", "json", *args])
+    result = invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
-    return _json(result)
+    return unwrap_cli_result(result)
 
 
 def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
@@ -172,6 +172,12 @@ def _ledger_list_and_view(transaction_id: str, *, bucket_id: str) -> None:
     transaction = cast(dict[str, object], read["transaction"])
     assert transaction["description"] == "cash office supplies"
 
+    known = _run_ledger_cli_json(["app", "ledger", "known-values", "--kind", "description"])
+    assert bucket_id not in json.dumps(known, sort_keys=True)
+    assert [row["text"] for row in cast(list[dict[str, object]], known["descriptions"])] == ["cash office supplies"]
+    assert known["counterparties"] == []
+    assert known["truncated"] == []
+
 
 def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
     """Update the seed transaction's amount + description; assert the diff."""
@@ -227,14 +233,27 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     return require_json_object(classified)
 
 
-def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
-    """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
-    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+def _seed_usage_ratio_for_home_rent(bucket_id: str) -> None:
+    """Persist a usage-ratio profile so the next allocate verb can resolve ARRENDAMIENTO_VIVIENDA_AFECTO.
+
+    The category is a home-office share, so readiness checks the ratio against
+    the declared home-office area: 60 of 100 m² matches the saved 0.60.
+    """
+    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
+    from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
     from ....domain.categories.spending_category import SpendingCategory
     from ....domain.usage_ratios.model import UsageRatioProfile
+    from ....domain.user_profile.values import UserProfileFact
 
-    save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")}),
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("60")),
+        )
+    )
+    save_usage_ratios_with_secure_object_writes(
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60")}),
+        (),
         bucket_id=bucket_id,
     )
 
@@ -250,15 +269,15 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
             "--business-pct",
             "0.60",
             "--category-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
             "--usage-ratio-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
         ],
     )
     transaction = cast(dict[str, object], allocated["transaction"])
     assert transaction["business_classification"] == "MIXED"
     assert Decimal(cast(str, transaction["business_pct"])) == Decimal("0.60")
-    assert transaction["usage_ratio_id"] == "telefonia_movil"
+    assert transaction["usage_ratio_id"] == "arrendamiento_vivienda_afecto"
     return require_json_object(allocated)
 
 
@@ -321,7 +340,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     transaction-id and intermediate payloads threaded through.
     """
     create_cli_surface_profile(log_in=False)
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id()
 
     created = _ledger_add_manual_transaction(bucket_id)
     transaction_id = cast(str, created["transaction_id"])
@@ -336,7 +355,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     transaction_id = cast(str, edited["transaction_id"])
     classified = _ledger_classify_transaction(transaction_id)
     transaction_id = cast(str, classified["transaction_id"])
-    _seed_usage_ratio_for_telefonia(bucket_id=bucket_id)
+    _seed_usage_ratio_for_home_rent(bucket_id=bucket_id)
     allocated = _ledger_allocate_transaction(transaction_id)
     transaction_id = cast(str, allocated["transaction_id"])
     _assert_ledger_status_one_ready_row(bucket_id)
@@ -358,7 +377,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     the default.
     """
     create_cli_surface_profile(log_in=False)
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id()
     _ledger_add_manual_transaction(bucket_id)
 
     default_listed = _run_ledger_cli_json(["app", "ledger", "list"])
@@ -368,7 +387,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     with override_settings(cadrumo_cli_reveal_identifiers=True):
         revealed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert revealed.exit_code == 0, revealed.output
-    revealed_payload = _json(revealed)
+    revealed_payload = unwrap_cli_result(revealed)
     assert revealed_payload["bucket_id"] == bucket_id
     assert revealed_payload["bucket_id"] != CLI_BUCKET_ID_PLACEHOLDER
 
@@ -383,7 +402,7 @@ def test_config_profile_view_reveal_identifiers_opt_in_surfaces_real_profile_id(
     a multi-client gestor's automation can key on the addressed profile.
     """
     create_cli_surface_profile(log_in=False)
-    profile_id = _active_bucket_id()
+    profile_id = active_bucket_id()
 
     default_shown = _run_ledger_cli_json(["config", "profile", "view"])
     assert default_shown["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
@@ -392,7 +411,7 @@ def test_config_profile_view_reveal_identifiers_opt_in_surfaces_real_profile_id(
     with override_settings(cadrumo_cli_reveal_identifiers=True):
         revealed = invoke_cached_cli(["--format", "json", "config", "profile", "view"])
     assert revealed.exit_code == 0, revealed.output
-    revealed_payload = _json(revealed)
+    revealed_payload = unwrap_cli_result(revealed)
     assert revealed_payload["profile_id"] == profile_id
     assert revealed_payload["profile_id"] != CLI_PROFILE_ID_PLACEHOLDER
 
@@ -408,7 +427,7 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     """
     create_cli_surface_profile(log_in=False)
 
-    listed = _invoke(["app", "modelo", "filing-record", "list"])
+    listed = invoke(["app", "modelo", "filing-record", "list"])
     assert listed.exit_code == 0, listed.output
 
     header_line = (
@@ -425,13 +444,13 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
 def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
     create_cli_surface_profile(log_in=False)
 
-    text_result = _invoke(["app", "modelo", "filing-record", "list", "--modelo", "303"])
+    text_result = invoke(["app", "modelo", "filing-record", "list", "--modelo", "303"])
     assert text_result.exit_code == 0, text_result.output
     assert "modelo_filter\t303" in text_result.output
 
-    json_result = _invoke(["--format", "json", "app", "modelo", "filing-record", "list", "--modelo", "303"])
+    json_result = invoke(["--format", "json", "app", "modelo", "filing-record", "list", "--modelo", "303"])
     assert json_result.exit_code == 0, json_result.output
-    payload = _json(json_result)
+    payload = unwrap_cli_result(json_result)
     assert payload["modelo_filter"] == "303"
     assert payload["record_count"] == 0
 
@@ -445,41 +464,41 @@ def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> 
         "2026-04-16,SaaS Vendor,Subscription,-48.40,EUR,n26-002\n",
         encoding="utf-8",
     )
-    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    imported = invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0
-    imported_payload = _json(imported)
+    imported_payload = unwrap_cli_result(imported)
     assert imported_payload["rows"] == 2
     assert imported_payload["imported"] == 2
     assert imported_payload["skipped"] == 0
 
-    repeated = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    repeated = invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert repeated.exit_code == 0
-    repeated_payload = _json(repeated)
+    repeated_payload = unwrap_cli_result(repeated)
     assert repeated_payload["rows"] == 2
     assert repeated_payload["imported"] == 0
     assert repeated_payload["skipped"] == 2
 
-    review = _invoke(["--format", "json", "app", "ledger", "review"])
+    review = invoke(["--format", "json", "app", "ledger", "review"])
     assert review.exit_code == 0
-    payload = _json(review)
+    payload = unwrap_cli_result(review)
     rows_by_description = {row["description"]: row for row in payload["rows"]}
     assert set(rows_by_description) == {"Invoice 1", "Subscription"}
     assert {row["status"] for row in payload["rows"]} == {"pending"}
     vendor_id = rows_by_description["Subscription"]["id"]
 
-    reviewed = _invoke(["--format", "json", "app", "ledger", "review", vendor_id])
+    reviewed = invoke(["--format", "json", "app", "ledger", "review", vendor_id])
     assert reviewed.exit_code == 0, reviewed.output
-    reviewed_payload = _json(reviewed)
+    reviewed_payload = unwrap_cli_result(reviewed)
     assert reviewed_payload["id"] == vendor_id
     assert reviewed_payload["description"] == "Subscription"
 
 
 def test_app_ledger_review_filter_rejects_unknown_key() -> None:
-    result = _invoke(["app", "ledger", "review", "--filter", "kind=received"])
+    result = invoke(["app", "ledger", "review", "--filter", "kind=received"])
     assert result.exit_code != 0
 
 
 def test_set_ratio_is_not_a_ledger_verb() -> None:
     for command in ("set-ratio",):
-        result = _invoke(["app", "ledger", command, "--help"])
+        result = invoke(["app", "ledger", command, "--help"])
         assert result.exit_code != 0

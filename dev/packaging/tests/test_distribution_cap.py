@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from ..distribution_cap import built_distributions, oversize_distributions
+from ..distribution_limits import PYPI_FILE_CAP_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -31,6 +31,7 @@ from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
+from .settling import settle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,13 +60,11 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 
 async def _open(pilot: Pilot[None], screen: ModeloWorkbenchScreen, keys: tuple[str, ...]) -> None:
     """Wait for the form to be read, then reach the surface the way the filer does."""
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
     assert screen.form is not None, "the workbench never finished reading its declaration"
     if keys:
         await pilot.press(*keys)
-    await pilot.pause()
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio

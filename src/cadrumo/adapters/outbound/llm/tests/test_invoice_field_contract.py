@@ -31,19 +31,17 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
-from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
-from .....domain.iva import lookup as _iva_lookup_module
+from .....domain.iva import lookup
 from .....domain.iva.components import registry_category_projection
 from .....domain.iva.errors import IvaRateNotFoundError
 from .....domain.iva.rates import load_iva_rate_table
@@ -59,8 +57,8 @@ from ..invoice_field_contract import (
     role_evidence_key_for_field,
 )
 from ..invoice_field_grounding import (
-    _NUMERIC_GROUNDING_BY_FORM,
-    _TEXT_GROUNDING_BY_FORM,
+    NUMERIC_GROUNDING_BY_FORM,
+    TEXT_GROUNDING_BY_FORM,
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
@@ -68,6 +66,13 @@ from ..invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from .prompt_support import build_invoice_extraction_prompt
+from .transitional_rate_support import (
+    QUARTER_BEFORE_TRANSITIONAL_RATE,
+    TRANSITIONAL_RATE_ANNUAL,
+    TRANSITIONAL_RATE_QUARTER,
+)
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,16 +81,6 @@ _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 _HORIZON = _SUPPORT.horizon
 _HORIZON_ANNUAL = Period.from_year_and_code(_HORIZON, "0A")
-# RD-ley 4/2024 art. 1.Dos steps the transitional food rates from the start its second
-# clause prints, a fourth quarter whose law differs from the horizon's.
-_TRANSITIONAL_RATE_STEP = spanish_date(
-    *legal_text_match(
-        "real-decreto-ley-4-2024:art-1", r"dos\. con efectos desde el (\d{1,2}) de (\w+) de (\d{4})"
-    ).groups()
-)
-_TRANSITIONAL_RATE_QUARTER = Period.from_year_and_code(
-    _TRANSITIONAL_RATE_STEP.year, f"{(_TRANSITIONAL_RATE_STEP.month - 1) // 3 + 1}T"
-)
 
 
 def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _HORIZON_ANNUAL) -> str:
@@ -96,13 +91,13 @@ class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
     @pytest.mark.parametrize(
-        "period", [_HORIZON_ANNUAL, _TRANSITIONAL_RATE_QUARTER], ids=["horizon-annual", "transitional-rate-quarter"]
+        "period", [_HORIZON_ANNUAL, TRANSITIONAL_RATE_QUARTER], ids=["horizon-annual", "transitional-rate-quarter"]
     )
     def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(
         self, period: Period, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             compiled = build_invoice_extraction_prompt(period=period, operation=operation)
 
             expected_rates = {
@@ -146,13 +141,13 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         the 2024 Q4 prompt and not into the 2026 one, with nothing in this
         package changed between the two calls.
         """
-        annual_2026 = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
-        q4_2024 = build_invoice_extraction_prompt(period=_TRANSITIONAL_RATE_QUARTER, operation=operation)
+        horizon_annual = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
+        transitional_quarter = build_invoice_extraction_prompt(period=TRANSITIONAL_RATE_QUARTER, operation=operation)
 
-        assert Decimal("7.5") in q4_2024.iva_rate_pcts
-        assert Decimal("7.5") not in annual_2026.iva_rate_pcts
-        assert q4_2024.text != annual_2026.text
-        assert q4_2024.fingerprint != annual_2026.fingerprint
+        assert Decimal("7.5") in transitional_quarter.iva_rate_pcts
+        assert Decimal("7.5") not in horizon_annual.iva_rate_pcts
+        assert transitional_quarter.text != horizon_annual.text
+        assert transitional_quarter.fingerprint != horizon_annual.fingerprint
 
     def test_the_enumeration_is_a_hint_and_never_a_constraint(self, *, operation: PinnedAuthorityOperation) -> None:
         """Documents in scope are international; a foreign rate must not be coerced.
@@ -195,7 +190,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         )
         planted = Decimal("13.5")
         assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
-        original = _iva_lookup_module.coexisting_tier_rates
+        original = lookup.coexisting_tier_rates
 
         def with_planted_rate(
             member_state: EUMemberState,
@@ -206,13 +201,13 @@ class TestTheAntiDriftGateBitesInBothDirections:
         ) -> tuple[IvaRateRecord, ...]:
             rates = original(member_state, kind, on_date, operation=operation)
             try:
-                anchor = _iva_lookup_module.lookup_rate(member_state, kind, on_date, operation=operation)
+                anchor = lookup.lookup_rate(member_state, kind, on_date, operation=operation)
             except IvaRateNotFoundError:
                 return rates
             return (*rates, anchor.model_copy(update={"pct": planted}))
 
         # Patch the lookup the authority resolver reads.
-        with scoped_attribute(_iva_lookup_module, "coexisting_tier_rates", with_planted_rate):
+        with scoped_attribute(lookup, "coexisting_tier_rates", with_planted_rate):
             after = build_invoice_extraction_prompt(
                 period=Period.from_year_and_code(carried_year, "2T"), operation=operation
             )
@@ -246,7 +241,7 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
         self, category: IvaCategory, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Fixture anchor: pinned by member, so a rename cannot pass this vacuously."""
-        assert category in registry_category_projection("no_printed_tax")
+        assert category in registry_category_projection("no_printed_tax", effective_date=_ON_DATE)
         assert category.value.replace("_", " ") in _compiled(operation=operation)
 
     def test_the_line_enumerates_the_derived_set_exactly(self, *, operation: PinnedAuthorityOperation) -> None:
@@ -256,7 +251,7 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
         rendered = text[text.index(opening) + len(opening) : text.index(").")]
 
         assert set(rendered.split(", ")) == {
-            c.value.replace("_", " ") for c in registry_category_projection("no_printed_tax")
+            c.value.replace("_", " ") for c in registry_category_projection("no_printed_tax", effective_date=_ON_DATE)
         }
 
 
@@ -353,8 +348,8 @@ class TestContractParityAcrossBothDerivations:
 
     def test_every_declared_form_has_exactly_one_grounding_validator(self) -> None:
         """The two typed tables cover the form enum exactly and without overlap."""
-        text_forms = set(_TEXT_GROUNDING_BY_FORM)
-        numeric_forms = set(_NUMERIC_GROUNDING_BY_FORM)
+        text_forms = set(TEXT_GROUNDING_BY_FORM)
+        numeric_forms = set(NUMERIC_GROUNDING_BY_FORM)
         declared_forms = {contract.form for contract in INVOICE_FIELD_CONTRACTS}
 
         assert not text_forms & numeric_forms
@@ -365,7 +360,7 @@ class TestContractParityAcrossBothDerivations:
         """Every declared field reaches the draft; a field it cannot is caught here."""
         populated = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(
-                supplier_tax_id="B44531218",
+                supplier_tax_id="B00010124",
                 supplier_name="Ferretería Insular S.L.",
                 supplier_postal_code="35001",
                 supplier_country="España",
@@ -373,8 +368,8 @@ class TestContractParityAcrossBothDerivations:
                 customer_name="Talleres Mayor S.A.",
                 customer_postal_code="28013",
                 customer_country="Alemania",
-                invoice_number="2026-0142",
-                invoice_date="10/03/2026",
+                invoice_number=f"{_HORIZON}-0142",
+                invoice_date=f"10/03/{_HORIZON}",
                 taxable_base="100,00",
                 iva_rate="21",
                 iva_amount="21,00",
@@ -643,8 +638,8 @@ class TestTheDefaultPeriodIsDerivedNotGuessed:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """An annual span never omits a rate a mid-year statute introduced."""
-        annual = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "0A"), operation=operation)
-        q3 = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "3T"), operation=operation)
+        annual = build_invoice_extraction_prompt(period=TRANSITIONAL_RATE_ANNUAL, operation=operation)
+        q3 = build_invoice_extraction_prompt(period=QUARTER_BEFORE_TRANSITIONAL_RATE, operation=operation)
 
         assert set(q3.iva_rate_pcts) <= set(annual.iva_rate_pcts)
         assert Decimal("7.5") in annual.iva_rate_pcts

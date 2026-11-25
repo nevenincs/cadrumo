@@ -21,11 +21,14 @@ from dev.registry.form_layout.serialization import form_layout_fragment_path, re
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# A synthetic revision id: these tests exercise fragment synchronisation, not any authored edition.
+_EDITION = "synthetic-edition"
+
 
 def _layout() -> FormLayoutDefinition:
     return FormLayoutDefinition(
         id="form-layout",
-        revision_id="2025",
+        revision_id=_EDITION,
         seed_source=FormLayoutSeedSource.AUTHORED,
         generator_version=1,
         source_state_digest="0" * 64,
@@ -44,7 +47,7 @@ def test_fragment_header_distinguishes_authored_and_generated_ownership(authored
     layout = _layout().model_copy(
         update={"seed_source": FormLayoutSeedSource.AUTHORED if authored else FormLayoutSeedSource.CASILLA_NUMBER}
     )
-    text = render_form_layout_toml("2025", layout)
+    text = render_form_layout_toml(_EDITION, layout)
     assert text.startswith("# Authored" if authored else "# Generated")
     assert 'state = "generated"' in text
 
@@ -70,12 +73,12 @@ def test_check_reports_generated_bytes_without_writing_them(tmp_path: Path, monk
     registry_root, data_root = _synthetic_generation(
         monkeypatch,
         tmp_path,
-        LayoutGeneration("123", "2025", layout),
+        LayoutGeneration("123", _EDITION, layout),
     )
-    revision_root = registry_root / "modelos" / "123" / "revisions" / "2025"
+    revision_root = registry_root / "modelos" / "123" / "revisions" / _EDITION
     revision_root.mkdir(parents=True)
     path = form_layout_fragment_path(revision_root)
-    expected_text = render_form_layout_toml("2025", layout)
+    expected_text = render_form_layout_toml(_EDITION, layout)
 
     changed, undeclared = form_layout_cli.synchronise_form_layouts(registry_root, data_root, check=True)
 
@@ -96,22 +99,22 @@ def test_check_preserves_undeclared_fragment_and_write_removes_it(
     registry_root, data_root = _synthetic_generation(
         monkeypatch,
         tmp_path,
-        LayoutGeneration("123", "2025", None, failure="no official anchor"),
+        LayoutGeneration("123", _EDITION, None, failure="no official anchor"),
     )
-    path = form_layout_fragment_path(registry_root / "modelos" / "123" / "revisions" / "2025")
+    path = form_layout_fragment_path(registry_root / "modelos" / "123" / "revisions" / _EDITION)
     path.parent.mkdir(parents=True)
     path.write_text("stale generated fragment\n", encoding="utf-8")
 
     changed, undeclared = form_layout_cli.synchronise_form_layouts(registry_root, data_root, check=True)
 
     assert changed == [path.as_posix()]
-    assert undeclared == ["123 2025: no official anchor"]
+    assert undeclared == [f"123 {_EDITION}: no official anchor"]
     assert path.read_text(encoding="utf-8") == "stale generated fragment\n"
 
     changed, undeclared = form_layout_cli.synchronise_form_layouts(registry_root, data_root)
 
     assert changed == [path.as_posix()]
-    assert undeclared == ["123 2025: no official anchor"]
+    assert undeclared == [f"123 {_EDITION}: no official anchor"]
     assert not path.exists()
     assert not path.parent.exists()
 
@@ -120,18 +123,18 @@ def test_check_preserves_undeclared_fragment_and_write_removes_it(
 @pytest.mark.parametrize(
     "outcome",
     [
-        LayoutGeneration("123", "2025", _layout()),
-        LayoutGeneration("123", "2025", None, failure="no official anchor"),
+        LayoutGeneration("123", _EDITION, _layout()),
+        LayoutGeneration("123", _EDITION, None, failure="no official anchor"),
     ],
 )
 def test_a_fragment_the_generator_does_not_own_is_refused_before_any_write(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, outcome: LayoutGeneration, check: bool
 ) -> None:
     registry_root, data_root = _synthetic_generation(monkeypatch, tmp_path, outcome)
-    path = form_layout_fragment_path(registry_root / "modelos" / "123" / "revisions" / "2025")
+    path = form_layout_fragment_path(registry_root / "modelos" / "123" / "revisions" / _EDITION)
     path.parent.mkdir(parents=True)
     foreign = path.parent / "0001-complete-edition.toml"
-    foreign_text = render_form_layout_toml("2025", _layout())
+    foreign_text = render_form_layout_toml(_EDITION, _layout())
     foreign.write_text(foreign_text, encoding="utf-8", newline="\n")
 
     with pytest.raises(RegistryValidationError, match=r"0001-complete-edition\.toml"):
@@ -145,14 +148,14 @@ def test_selected_generation_refuses_authored_draft_before_reading_or_writing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     revision = SimpleNamespace(form_layouts=(_layout(),))
-    modelo = SimpleNamespace(id="123", revisions={"2025": revision})
+    modelo = SimpleNamespace(id="123", revisions={_EDITION: revision})
     monkeypatch.setattr(form_layout_cli, "load_registry_tree", lambda _root: ((modelo,), SimpleNamespace(sources={})))
     with pytest.raises(RegistryValidationError, match="requires one unreviewed generated layout"):
         form_layout_cli.synchronise_selected_form_layout(
             tmp_path,
             tmp_path,
             modelo_id="123",
-            revision_id="2025",
+            revision_id=_EDITION,
             expected_old_sha256="0" * 64,
             expected_new_sha256="0" * 64,
         )

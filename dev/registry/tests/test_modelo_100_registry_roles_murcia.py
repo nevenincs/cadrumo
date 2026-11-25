@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+
+from .authored_edition_support import newest_authored_edition, newest_authored_editions
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    modelo_100_revision,
+    modelo_100_snapshot,
 )
-from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,24 +42,30 @@ _LEGACY_MURCIA_GENERATED_PENDING_ROLES = frozenset(
         "irpf_deduccion_murcia_generado_2024_pendiente",
     }
 )
+
+
+def _casilla(number: int) -> CasillaId:
+    """Return the id of the casilla the official design numbers ``number``; a box number, not a year."""
+    return validated_casilla_id(f"{number:04d}", surface="casilla.id")
+
+
+_GENERADO_MU4_CASILLA, _PENDIENTE_MU4_CASILLA = _casilla(2038), _casilla(2039)
+_MU4_EDITIONS = newest_authored_editions("100", 2)
+_MU4_CASILLAS = {"1055", _GENERADO_MU4_CASILLA, _PENDIENTE_MU4_CASILLA}
 _EXPECTED_MURCIA_MU4_LABELS = {
-    2024: {
+    filing_year: {
         "1055": "Por inversión en instalaciones de recursos energéticos renovables",
-        "2038": "Importe generado en 2024",
-        "2039": "Importe generado en 2024 pendiente de aplicación",
-    },
-    2025: {
-        "1055": "Por inversión en instalaciones de recursos energéticos renovables",
-        "2038": "Importe generado en 2025",
-        "2039": "Importe generado en 2025 pendiente de aplicación",
-    },
+        _GENERADO_MU4_CASILLA: f"Importe generado en {filing_year}",
+        _PENDIENTE_MU4_CASILLA: f"Importe generado en {filing_year} pendiente de aplicación",
+    }
+    for filing_year in _MU4_EDITIONS
 }
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", _MU4_EDITIONS)
 def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(filing_year: int) -> None:
-    revision = _modelo_100_revision(filing_year)
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1055", "2038", "2039"}}
+    revision = modelo_100_revision(filing_year)
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _MU4_CASILLAS}
     legacy_roles = [
         casilla.semantic_role
         for casilla in casillas_by_id.values()
@@ -66,29 +74,36 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     expected_labels = _EXPECTED_MURCIA_MU4_LABELS[filing_year]
 
     assert not legacy_roles
-    assert set(casillas_by_id) == {"1055", "2038", "2039"}
+    assert set(casillas_by_id) == _MU4_CASILLAS
 
     parent = casillas_by_id["1055"]
     assert parent.label.startswith(expected_labels["1055"])
     assert tuple(parent.section) == _MURCIA_DEDUCTION_SECTION
     assert parent.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
-    generated = casillas_by_id["2038"]
-    assert generated.label == expected_labels["2038"]
+    generated = casillas_by_id[_GENERADO_MU4_CASILLA]
+    assert generated.label == expected_labels[_GENERADO_MU4_CASILLA]
     assert tuple(generated.section) == _MURCIA_DEDUCTION_SECTION
     assert generated.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
-    pending = casillas_by_id["2039"]
-    assert pending.label == expected_labels["2039"]
+    pending = casillas_by_id[_PENDIENTE_MU4_CASILLA]
+    assert pending.label == expected_labels[_PENDIENTE_MU4_CASILLA]
     assert tuple(pending.section) == _MURCIA_DEDUCTION_SECTION
     assert pending.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+
+
+def _assert_murcia_deduction_casilla(casilla, *, label: str, role: str) -> None:
+    assert casilla.label == label
+    assert tuple(casilla.section) == _MURCIA_DEDUCTION_SECTION
+    assert casilla.semantic_role == role
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_ids = {"2155", "2156", "2157", "2162", "2163", "2164", "2165", "2166"}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_ids}
     legacy_roles = [
@@ -100,50 +115,30 @@ def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() 
     assert not legacy_roles
     assert set(casillas_by_id) == expected_ids
 
-    mu4_previous = casillas_by_id["2163"]
-    assert mu4_previous.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
-    assert tuple(mu4_previous.section) == _MURCIA_DEDUCTION_SECTION
-    assert mu4_previous.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous.legal_refs
-
-    mu4_previous_extra = casillas_by_id["2166"]
-    assert mu4_previous_extra.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
-    assert tuple(mu4_previous_extra.section) == _MURCIA_DEDUCTION_SECTION
-    assert mu4_previous_extra.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous_extra.legal_refs
-
-    vehicle_amount = casillas_by_id["2155"]
-    assert vehicle_amount.label == "Importe de la deducción"
-    assert tuple(vehicle_amount.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_amount.semantic_role == _MURCIA_VEHICULO_IMPORTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_amount.legal_refs
-
-    vehicle_generated = casillas_by_id["2156"]
-    assert vehicle_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(vehicle_generated.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_generated.semantic_role == _MURCIA_VEHICULO_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_generated.legal_refs
-
-    vehicle_pending = casillas_by_id["2164"]
-    assert vehicle_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(vehicle_pending.section) == _MURCIA_DEDUCTION_SECTION
-    assert vehicle_pending.semantic_role == _MURCIA_VEHICULO_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_pending.legal_refs
-
-    infrastructure = casillas_by_id["2157"]
-    assert infrastructure.label == "Por gastos en la instalación de infraestructuras de recarga de vehículos eléctricos"
-    assert tuple(infrastructure.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure.semantic_role == _MURCIA_INFRAESTRUCTURAS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure.legal_refs
-
-    infrastructure_generated = casillas_by_id["2162"]
-    assert infrastructure_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(infrastructure_generated.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure_generated.semantic_role == _MURCIA_INFRAESTRUCTURAS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_generated.legal_refs
-
-    infrastructure_pending = casillas_by_id["2165"]
-    assert infrastructure_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(infrastructure_pending.section) == _MURCIA_DEDUCTION_SECTION
-    assert infrastructure_pending.semantic_role == _MURCIA_INFRAESTRUCTURAS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_pending.legal_refs
+    previous_pending_label = f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
+    generated_label = f"Importe generado en {_REVIEWED_EDITION}"
+    pending_label = f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2163"], label=previous_pending_label, role=_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2166"],
+        label=previous_pending_label,
+        role=_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE,
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2155"], label="Importe de la deducción", role=_MURCIA_VEHICULO_IMPORTE_ROLE
+    )
+    _assert_murcia_deduction_casilla(casillas_by_id["2156"], label=generated_label, role=_MURCIA_VEHICULO_GENERADO_ROLE)
+    _assert_murcia_deduction_casilla(casillas_by_id["2164"], label=pending_label, role=_MURCIA_VEHICULO_PENDIENTE_ROLE)
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2157"],
+        label="Por gastos en la instalación de infraestructuras de recarga de vehículos eléctricos",
+        role=_MURCIA_INFRAESTRUCTURAS_ROLE,
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2162"], label=generated_label, role=_MURCIA_INFRAESTRUCTURAS_GENERADO_ROLE
+    )
+    _assert_murcia_deduction_casilla(
+        casillas_by_id["2165"], label=pending_label, role=_MURCIA_INFRAESTRUCTURAS_PENDIENTE_ROLE
+    )

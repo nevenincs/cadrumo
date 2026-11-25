@@ -19,7 +19,12 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenial
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations import profile_guard
@@ -27,22 +32,38 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
 from ...operations.public_scalar import PublicDecimal
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
 from .. import borrador_100_contracts as contracts
 from .. import borrador_100_operation as module
-from ..borrador_100 import Borrador100Snapshot, Borrador100SnapshotService, BorradorSnapshotNotFoundError
+from ..borrador_100 import (
+    Borrador100ObservationGrade,
+    Borrador100Snapshot,
+    Borrador100SnapshotService,
+    BorradorSnapshotNotFoundError,
+)
 from ..borrador_100_import import prepare_borrador_100_import
 from ..borrador_100_operation_ports import Borrador100OperationPorts
 from ..errors import LiveApplicationInputError
 from ..snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
-from .borrador_100_operation_support import CAPTURED_AT, PROFILE_ID, Subject, policy_decision
-from .test_borrador_100 import _InMemoryBorradorRepository
+from .borrador_100_operation_support import (
+    CAPTURED_AT,
+    OTHER_TAX_ID,
+    PROFILE_ID,
+    PROFILE_TAX_ID,
+    Subject,
+    policy_decision,
+)
+from .test_borrador_100 import InMemoryBorradorRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _PERIOD = Period.from_year_and_code(2023, "0A")
 _HUMAN_SOURCE = "file-import:sha256:" + "a" * 64
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
+# The 2023 borrador profile prints casillas 0505, 0545, 0546, 0585 and 0586. All
+# five are computed in that revision, so no admitted binding owns any of them.
+_PROFILE_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
 
 def _read_request(*, query: bool = False, **selectors: object) -> OperationRequest[contracts.Borrador100ReadRequest]:
@@ -68,14 +89,20 @@ def _import_request(path: Path) -> OperationRequest[contracts.Borrador100ImportR
     )
 
 
-def _snapshot(operation: PinnedAuthorityOperation, *, minute: int = 0) -> Borrador100Snapshot:
-    repository = _InMemoryBorradorRepository(bucket_id=str(PROFILE_ID))
+def _snapshot(
+    operation: PinnedAuthorityOperation,
+    *,
+    minute: int = 0,
+    period: Period = _PERIOD,
+    values: dict[str, Decimal | str] | None = None,
+) -> Borrador100Snapshot:
+    repository = InMemoryBorradorRepository(bucket_id=str(PROFILE_ID))
     return Borrador100SnapshotService(bucket_id=str(PROFILE_ID), repository=repository).capture(
-        filing_year=_PERIOD.filing_year,
-        period=_PERIOD,
+        filing_year=period.filing_year,
+        period=period,
         captured_at=CAPTURED_AT + timedelta(minutes=minute),
         source_url=_HUMAN_SOURCE,
-        binding_values={"casilla.0550": Decimal("0.00"), "casilla.0699": ""},
+        binding_values={_CERTIFICATE: Decimal(f"{minute}.00")} if values is None else values,
         operation=operation,
     )
 
@@ -118,7 +145,13 @@ def test_real_registration_compiles_distinct_closed_human_query_and_import_schem
 
 @pytest.mark.asyncio
 async def test_shared_canonical_view_preserves_scalars_and_withholds_query_provenance(subject: Subject) -> None:
-    snapshot = _snapshot(subject.operation)
+    # 2025 admits a decimal and a text binding to the borrador, so both scalar kinds are read back.
+    period = Period.from_year_and_code(2025, "0A")
+    snapshot = _snapshot(
+        subject.operation,
+        period=period,
+        values={_CERTIFICATE: Decimal("0.00"), "renta-profile-tax-residence-ccaa": "madrid"},
+    )
     subject.repository.seed(snapshot)
     for query in (False, True):
         request = _read_request(query=query, kind="view", snapshot_id=snapshot.snapshot_id[:16])
@@ -130,9 +163,9 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
     assert human.snapshot is not None and safe.snapshot is not None
     assert human.snapshot.source_url == snapshot.source_url
     assert human.snapshot.binding_map() == safe.snapshot.binding_map() == dict(snapshot.binding_values)
-    assert safe.snapshot.binding_values[0].value == PublicDecimal(decimal="0.00")
-    assert safe.snapshot.binding_values[1].value == ""
-    assert safe.snapshot.period.to_period() == _PERIOD
+    values = {binding.key: binding.value for binding in safe.snapshot.binding_values}
+    assert values == {_CERTIFICATE: PublicDecimal(decimal="0.00"), "renta-profile-tax-residence-ccaa": "madrid"}
+    assert safe.snapshot.period.to_period() == period
     assert _HUMAN_SOURCE not in safe.model_dump_json() and "source_url" not in safe.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 0
     assert subject.parser.calls == 0 and set(subject.events.effects) == {OperationEffect.NONE}
@@ -224,15 +257,26 @@ async def test_import_reads_once_preserves_blank_zero_warnings_and_noop_dedup(
     receipt = subject.parser.receipt
     assert receipt is not None
     assert result.source_pdf_sha256 == receipt.source_pdf_sha256
-    assert result.blank_casillas == (receipt.values[0].casilla_id,)
+    assert result.blank_casillas == (_PROFILE_CASILLAS[0],)
+    assert result.observed_casillas == _PROFILE_CASILLAS
+    assert result.unowned_casillas == ()
     assert result.warnings == receipt.warnings and result.extraction_coverage.decimal == "1"
     snapshot = subject.repository.load(result.snapshot.snapshot_id)
-    assert "casilla." + receipt.values[0].casilla_id not in snapshot.binding_values
-    assert snapshot.binding_values["casilla." + receipt.values[1].casilla_id] == Decimal("0.00")
+    assert dict(snapshot.binding_values) == {}
+    assert result.snapshot.binding_count == 0
+    # The computed boxes are kept for comparison only: the blank box stays blank and a printed zero stays zero.
+    printed = {row.casilla_id: row.value for row in snapshot.printed_observations}
+    assert printed == {_PROFILE_CASILLAS[0]: None, **dict.fromkeys(_PROFILE_CASILLAS[1:], Decimal("0.00"))}
+    assert all(row.grade is Borrador100ObservationGrade.AEAT_PRINTED_DRAFT for row in snapshot.printed_observations)
+    assert result.snapshot.printed_observation_count == len(_PROFILE_CASILLAS)
     assert subject.events.effects[-1] is OperationEffect.UPDATED
     assert all("synthetic source" not in phase and str(path) not in phase for phase in subject.events.phases)
     path.write_bytes(b"synthetic source capture")
+    monkeypatch.setattr(module, "now", lambda: CAPTURED_AT + timedelta(days=3))
     await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    again = cast(contracts.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
+    assert again.snapshot.snapshot_id == result.snapshot.snapshot_id
+    assert again.snapshot.captured_at == CAPTURED_AT
     assert subject.repository.writes == subject.fence.entries == 1
     assert subject.events.effects[-1] is OperationEffect.NONE
 
@@ -264,9 +308,51 @@ def test_prepare_refuses_bad_parser_receipt_before_commit(subject: Subject, tmp_
     path.write_bytes(b"source")
     with pytest.raises((LiveApplicationInputError, InternalInvariantError)):
         prepare_borrador_100_import(
-            path, filing_year=_PERIOD.filing_year, period=_PERIOD, operation=subject.operation, parser=subject.parser
+            path,
+            filing_year=_PERIOD.filing_year,
+            period=_PERIOD,
+            operation=subject.operation,
+            parser=subject.parser,
+            profile_tax_id=lambda: subject.profile_tax_id,
         )
     assert subject.repository.writes == subject.fence.entries == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "pdf_tax_id,profile_tax_id,key",
+    [
+        (OTHER_TAX_ID, PROFILE_TAX_ID, "import_tax_id_mismatch"),
+        (None, PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        ("   ", PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        ("12345678A", PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        (PROFILE_TAX_ID, None, "import_profile_tax_id_unusable"),
+        (PROFILE_TAX_ID, "  ", "import_profile_tax_id_unusable"),
+    ],
+)
+async def test_import_refuses_unconfirmed_document_owner_before_any_write(
+    subject: Subject, tmp_path: Path, pdf_tax_id: str | None, profile_tax_id: str | None, key: str
+) -> None:
+    subject.parser.change = {"tax_id": pdf_tax_id}
+    subject.profile_tax_id = profile_tax_id
+    path = tmp_path / "synthetic.pdf"
+    path.write_bytes(b"source")
+    request = _import_request(path)
+    with pytest.raises(LiveApplicationInputError) as refused:
+        await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    assert "cli.app.live.borrador." + key in str(refused.value)
+    assert subject.repository.writes == subject.fence.entries == 0
+
+
+@pytest.mark.asyncio
+async def test_import_matches_the_owner_through_canonical_spelling(subject: Subject, tmp_path: Path) -> None:
+    subject.parser.change = {"tax_id": " 12345678-z "}
+    subject.profile_tax_id = PROFILE_TAX_ID.lower()
+    path = tmp_path / "synthetic.pdf"
+    path.write_bytes(b"source")
+    request = _import_request(path)
+    await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    assert subject.repository.writes == subject.fence.entries == 1
 
 
 @pytest.mark.asyncio

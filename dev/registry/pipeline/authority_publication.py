@@ -61,7 +61,7 @@ from cadrumo.domain.calculations.registry.source_byte_availability import embedd
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
-from ..compiler.corpus_provenance import classify_normative_corpus_provenance
+from ..compiler.corpus_provenance import classify_normative_corpus_provenance, corpus_digest_pass
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
@@ -193,7 +193,7 @@ def validate_authority_candidate(
         profile_schema_path or resolved_source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
     ).resolve(strict=True)
     captured_profile = capture_profile_schema_source(resolved_profile_schema)
-    receipt_before = _capture_receipt(
+    receipt_before = capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=resolved_profile_schema,
@@ -212,12 +212,12 @@ def validate_authority_candidate(
         verify_evidence_bytes=True,
         complete_validation=True,
     )
-    evidence = _project_evidence(
+    evidence = project_evidence(
         authority.catalogues.legal,
         authority.catalogues.sources,
         source_root=resolved_source_root,
     )
-    receipt_after = _capture_receipt(
+    receipt_after = capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=resolved_profile_schema,
@@ -286,7 +286,7 @@ def prepare_authority_candidate(
     """
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
     resolved_profile_schema = profile_schema_path.resolve(strict=True)
-    receipt = _capture_receipt(
+    receipt = capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=resolved_profile_schema,
@@ -332,30 +332,32 @@ def prepare_authority_candidate(
     )
 
 
-def _project_evidence(
+def project_evidence(
     legal: Mapping[str, LegalReference],
     sources: Mapping[str, SourceReference],
     *,
     source_root: Path,
 ) -> AuthorityEvidenceProjection:
     """Capture all validated legal anchors as path-free runtime evidence."""
-    entries = tuple(
-        PublishedLegalEvidence(
-            legal_reference_id=str(reference_id),
-            anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
-            text_sha256=sha256_hex(text.encode("utf-8")),
-            provenance=classify_normative_corpus_provenance(source_root, reference.corpus_ref),
+    # Many references cite one corpus file; the pass hashes each file once.
+    with corpus_digest_pass():
+        entries = tuple(
+            PublishedLegalEvidence(
+                legal_reference_id=str(reference_id),
+                anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
+                text_sha256=sha256_hex(text.encode("utf-8")),
+                provenance=classify_normative_corpus_provenance(source_root, reference.corpus_ref),
+            )
+            for reference_id, reference in sorted(legal.items())
         )
-        for reference_id, reference in sorted(legal.items())
-    )
     source_entries = tuple(
-        _project_source_evidence(sources[source_id], source_root=source_root)
+        project_source_evidence(sources[source_id], source_root=source_root)
         for source_id in sorted(embedded_source_ids(sources))
     )
     return AuthorityEvidenceProjection(legal=entries, sources=source_entries)
 
 
-def _project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:
+def project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:
     """Copy one compiler-validated runtime source into the digest-checked artifact."""
     root = source_root.resolve()
     target = (root / reference.corpus_path).resolve()
@@ -384,7 +386,7 @@ def authority_source_identity(
     compilation.
     """
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
-    return _capture_receipt(
+    return capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=profile_schema_path,
@@ -405,7 +407,7 @@ def authority_database_currency(
     environment never makes a generation stale.
     """
     roots = canonical_authoring_root_pair(registry_root, source_root)
-    receipt = _capture_receipt(*roots, profile_schema_path=profile_schema_path)
+    receipt = capture_receipt(*roots, profile_schema_path=profile_schema_path)
     try:
         reader = SQLiteAuthorityReader(descriptor_path)
         try:
@@ -448,7 +450,7 @@ def _unknown_generation_currency(
     )
 
 
-def _capture_receipt(
+def capture_receipt(
     registry_root: Path,
     source_root: Path,
     *,
@@ -549,22 +551,23 @@ def publish_sqlite_authority_candidate(
             timeout=_PUBLICATION_LOCK_TIMEOUT,
             retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
         ):
-            _require_candidate_receipt(candidate)
+            require_candidate_receipt(candidate)
             if eager_baseline_path is not None and candidate.eager_baseline_path is not None:
                 with hardened_staged_publication(eager_baseline_path) as publication:
                     publication.path.write_bytes(candidate.eager_baseline_path.read_bytes())
                     publication.publish()
             staged = AuthorityDescriptor.read(candidate.descriptor_path)
-            return _install_authority_database(
+            return install_authority_database(
                 candidate.descriptor_path.parent / staged.database,
                 staged.logical_generation,
                 destination=resolved_destination,
-                require_current=lambda: _require_candidate_receipt(candidate),
+                require_current=lambda: require_candidate_receipt(candidate),
             )
 
 
-def _require_candidate_receipt(candidate: PreparedAuthorityCandidate) -> None:
-    current = _capture_receipt(
+def require_candidate_receipt(candidate: PreparedAuthorityCandidate) -> None:
+    """Require the candidate's registry and source roots to still match its captured receipt."""
+    current = capture_receipt(
         candidate.registry_root,
         candidate.source_root,
         profile_schema_path=candidate.profile_schema_path,
@@ -619,7 +622,7 @@ def _install_validated_authority_database(
     resolved_destination = destination.resolve()
     with TemporaryDirectory(prefix="authority-candidate-", dir=resolved_destination) as temporary:
         compiled = build_authority_database(Path(temporary) / "candidate.sqlite3", artifact)
-        return _install_authority_database(
+        return install_authority_database(
             compiled.path,
             compiled.logical_generation,
             destination=resolved_destination,
@@ -627,7 +630,7 @@ def _install_validated_authority_database(
         )
 
 
-def _install_authority_database(
+def install_authority_database(
     staged_database: Path,
     logical_generation: str,
     *,

@@ -11,6 +11,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
@@ -48,6 +49,7 @@ class ModeloVerificationResult(BaseModel):
     report: VerificationReport
     published: bool
     finding_preconditions: tuple[VerificationFindingPreconditionProjection, ...]
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -9,16 +9,21 @@ From the repository root, run `just dev`. It generates the shell's inputs in
 the host preset's repository build, `build/<preset>`, and starts the development
 display from that build at `http://localhost:15370/scenarios.html`.
 The fixed listener assignments live in `../development-server.json`: display
-15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
-An occupied port is an error; no server moves to another port.
+15370, product preview 15371, documentation fixture 15372, and Storybook 6006,
+and for the browser tests the scenario preview 15373, its documentation
+fixture 15374 and the hot-reload server 15375. The tests have ports of their
+own, so `just dev` can stay open while they run. An occupied port is an error;
+no server moves to another port.
 
 The packaged app's Logs tab starts at INFO. Set `CADRUMO_LOG_LEVEL` to `DEBUG`,
 `INFO`, `WARNING`, `ERROR`, or `CRITICAL` before launching it to select another
 initial level. The level selector changes the current view; Reset filters restores
 the environment-selected level. Internal stages and successful helper timings are
 DEBUG, operational state changes are INFO, recoverable degradation is WARNING,
-and failed operations are ERROR. Diagnostic files retain DEBUG by default;
-`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` govern Python capture separately.
+and failed operations are ERROR. Diagnostic files and the Python root logger
+default to INFO, so DEBUG records are not captured unless
+`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` select DEBUG; they govern
+Python capture separately.
 
 ## Prerequisites
 
@@ -43,6 +48,25 @@ nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-buil
 and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
 never configures or builds it.
 
+The stories, specs and development tools import the generated window
+projections through the `@fixtures` alias. They are build output of the
+selected build's own tree, the `window_fixtures` directory of its build-path
+manifest (`build/<preset>/fixtures/window`), never committed. The
+`desktop-window-fixtures` target seeds them through
+`python -m dev.fixture_projections seed --window` and reruns only when an input
+of theirs changes; `desktop-frontend-build`, `desktop-frontend-check` and
+`desktop-frontend-test` depend on it. `just fixtures-seed` seeds the host
+preset's tree. The seed records the projections and their digests in
+`.window-projections.json` beside them. The type check,
+`node scripts/typecheck.mjs`, which `npm run check` and `npm run build` run,
+binds the alias to the selected build's directory through
+`scripts/fixture-alias.mjs`, as Vite does, and refuses to start unless that
+directory holds the recorded set. Playwright reads the alias from a project file
+that module writes into the build's `desktop/testing` directory. The
+`@fixtures` list in `tsconfig.json`, one entry per configure preset, serves only
+tools that run outside a build, such as an editor or a bare `tsc`, which take
+the first tree that exists.
+
 The servers bind the address in `../development-server.json`. Another address
 is a configure option of the repository build, for example
 `cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports
@@ -64,7 +88,7 @@ export CADRUMO_CMAKE_BINARY_DIR='<absolute path to the build directory>'
 just dev
 ```
 
-The server offers two pages.
+The server offers three pages.
 
 - `/` is the production entry. Without a desktop host it uses the browser host,
   which fabricates nothing: every backend capability reports itself
@@ -72,6 +96,10 @@ The server offers two pages.
 - `/scenarios.html` is the development entry. It mounts the same application on
   the scenario host and shows a **Simulated host** control in the bottom
   corner for switching scenario and language.
+- `/primitives.html` mounts one primitive over made-up rows, for the browser
+  tests: the data grid (`?rows=10000`, `&grouped` for month sections) or the
+  plain table (`?harness=table`), or the sheet and filter chips
+  (`?harness=companions`), in either scheme (`&scheme=dark`).
 
 Edit a component and the open page updates in place.
 
@@ -99,13 +127,19 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
 | `tui-unavailable`     | Signed out, with sessions that cannot start: the TUI is not a way on     |
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
-| `no-views`            | Signed in on a host with no profile views, as the desktop host is today  |
+| `ledger`              | Signed in with a 2026 ledger and earlier years; 2026 1T is sealed        |
+| `no-views`            | Signed in on a host with no profile views                                |
 
 Every scenario but `no-views` offers the profile views (the filing calendar
 and the notification counts behind the Messages button) from a fixture;
 `empty` offers a calendar with nothing due and notifications never captured.
-The desktop host offers none yet, so the product shows no way into one: the
-views are design evidence until a host provides them.
+The same scenarios offer the ledger port from a made-up ledger held in the
+page's memory, which answers with the registered contracts' rules: the list's
+filter, sort, group and page order, ids that change with a movement's amount,
+description, date or account, refusals for sealed rows, idempotent adds, and
+a model review answered only with the digest the page read. In the console,
+`window.__scenarioLedger.drop(["extracto.csv"])` drops files on the window and
+`window.__scenarioLedger.changeReviews()` changes every pending review.
 
 Select one in the control or in the address:
 
@@ -113,15 +147,16 @@ Select one in the control or in the address:
 /scenarios.html?scenario=throttled&lang=es
 ```
 
-| Parameter  | Values                                  | Meaning                                                                                                                                                                             |
-| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scenario` | a name from the table                   | The scenario to start in                                                                                                                                                            |
-| `lang`     | `en`, `es`, `ca`, `hu`                  | The output language the host reports                                                                                                                                                |
-| `latency`  | milliseconds                            | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                 |
-| `bar`      | `off`                                   | Hide the scenario control, for a clean screenshot                                                                                                                                   |
-| `records`  | a count                                 | Fill the log with that many generated records, up to its ring size                                                                                                                  |
-| `feed`     | milliseconds                            | Keep the log growing: twenty more records at that interval                                                                                                                          |
-| `calendar` | `behind`, `ahead`, `straddling`, `busy` | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12) |
+| Parameter  | Values                                                        | Meaning                                                                                                                                                                                                                            |
+| ---------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scenario` | a name from the table                                         | The scenario to start in                                                                                                                                                                                                           |
+| `lang`     | `en`, `es`, `ca`, `hu`                                        | The output language the host reports                                                                                                                                                                                               |
+| `latency`  | milliseconds                                                  | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                                                                |
+| `bar`      | `off`                                                         | Hide the scenario control, for a clean screenshot                                                                                                                                                                                  |
+| `records`  | a count                                                       | Fill the log with that many generated records, up to its ring size                                                                                                                                                                 |
+| `feed`     | milliseconds                                                  | Keep the log growing: twenty more records at that interval                                                                                                                                                                         |
+| `calendar` | `behind`, `ahead`, `straddling`, `busy`                       | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12)                                                |
+| `ledger`   | `empty`, `refused`, `unknown`, `unavailable`, `slow`, `large` | How the made-up ledger answers: nothing recorded, every write refused, every write landing with an outcome that is not observed, nothing readable, every answer four seconds late, or five thousand more movements in October 2026 |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
@@ -136,7 +171,9 @@ cursor replies continue flowing while covered, and hiding the pane keeps its
 session.
 
 The documentation pane shows a stand-in documentation site. The development
-server starts it beside itself, on the same address and fixed port 15372.
+server starts it beside itself, on the same address and fixed port 15372; the
+preview server of the browser scenarios starts it on 15374 and hands the port
+to the built page it serves.
 The same host name with another port is a different origin, as
 the documentation is in the desktop window, and it is reachable from wherever
 the page is opened, another device included. Its pages load the real desktop
@@ -151,8 +188,7 @@ environment or from `.env.local`.
 ### What a scenario proves
 
 A scenario is design and test evidence only. The scenario host answers from
-data: a sign-in it accepts authenticated nothing, its menus are drawn by the
-shell because the native popup is not simulated, and its clipboard is a
+data: a sign-in it accepts authenticated nothing, and its clipboard is a
 variable. Nothing seen here verifies the Tauri host, the runtime, the packaged
 documentation or the `cadrumo-docs` scheme.
 
@@ -229,6 +265,24 @@ with rounded ends only where the window begins or ends. Colour, type and
 spacing come from the shared palette roles and tokens. Keyboard focus and
 selection keep their shared indicators.
 
+Lines are few. Where the chrome meets content, the change of surface is the
+edge: a pane header, the rail, the title bar and a toolbar draw no hairline.
+A raised or floating surface is edged once, by its elevation shadow, never by
+a border as well. A box that only groups or quotes, such as a plan entry, a
+package listing or a keycap, is a wash of ink (`bg-accent`) with no drawn
+rectangle. A border is kept for the edge of a control (a field, an outline
+button, a switch), for a state that must be told apart (a refused file, the
+chosen option, today), for rows in a scrolling list, and for the rules a
+document's own tables and quotes carry. A splitter rests in the divider
+colour and takes the focus colour only under the hand.
+
+The brand is one lockup, `Logo`: the documentation's coloured mark beside the
+configured product name set in the text face, in capitals, semibold and
+tracked. The mark's sizes are the `mark` tokens; the loading page draws the
+same lockup stacked. The documentation's display serif is not used for the
+name in the window: it is a display cut whose hairlines go faint at the sizes
+a title bar has.
+
 Public shell components use PascalCase filenames under `src/components/`.
 Feature internals live in `calendar/`, `account/` and `records/`, with a descriptive
 component per module. Generic primitives keep shadcn's kebab-case filenames
@@ -236,6 +290,17 @@ under `ui/`. Stories stay beside their component. Non-component helpers use
 camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
 Import the defining module directly; do not add barrel exports or forwarding
 components.
+
+Tables of records compose `ui/data-grid.tsx`. `DataGrid` is the windowed,
+editable grid: one tab stop with a roving active cell, rows by stable key,
+sticky header and edge columns, resizable and reorderable columns, row and
+cell-range selection, and editors that commit with Enter, Tab or Shift+Tab.
+It holds no words: the caller passes its accessible name, the position
+phrase it announces, row and cell descriptions, and the editors (a
+`DataGridTextEditor` or a `Combobox`). `DataTable` is the plain sortable
+table for short lists that are read and opened. Neither takes a shell chord,
+and controls inside a cell take `tabIndex={-1}`. A modal editor beside a
+table is a `Sheet`; a filter in force is a `FilterChip`.
 
 Pane placeholders compose `EmptyState` from `ui/empty.tsx`; product components
 do not reconstruct its icon, heading and description layout. Workspace headers
@@ -332,8 +397,12 @@ typed in `src/shell/views.ts`.
 
 - **A host without views is a complete host.** The shell then draws no
   button, action, chord or page for one, so nothing leads to a view that
-  cannot load. The desktop host offers none yet: in the product none of this
-  is on screen, and what the scenarios show of it is design evidence.
+  cannot load.
+- **The desktop host reads them over the signed-in person's relay**, as it
+  reads the profile: `profile_views_calendar` runs `overview.calendar` and
+  `profile_views_notifications` runs `live.notifications.latest`, then
+  `live.notifications.show` for that capture. The window names no operation,
+  and the host keeps nothing it reads.
 - **A view is read for a profile, when something shows it.** The calendar is
   read when its page is shown, and not again for being put away and brought
   back within half a minute; its Refresh always asks. A calendar on screen
@@ -351,13 +420,15 @@ typed in `src/shell/views.ts`.
   and tooltip.
 - **Withheld, a view says what the TUI pane says**, by the same component,
   `SignedOut`, with the same ways on.
-- **The types are what a host must return.** The calendar mirrors the result
-  of `app overview calendar`, entries and observed events, field for field,
-  and adds one field that command does not print today: `opens_on`, the day
-  an obligation's filing window opens. The product's own calendar model has
-  it; a host that cannot supply it returns null. The notification summary is
-  counts only: the rows it is counted from carry names and tax numbers, and
-  they do not reach the window.
+- **The types are what a host must return.** The calendar mirrors the
+  product's calendar read, entries and observed events, field for field,
+  including `opens_on`, the day an obligation's filing window opens; a host
+  that cannot supply it returns null. A warning is the product's own
+  sentence in the read's language, and a profile without a declared taxpayer
+  model is said as a warning rather than drawn as nothing due. The
+  notification summary is counts only: the rows it is counted from carry
+  names and tax numbers, and they do not reach the window. A row whose read
+  mark was not captured is not counted as unread.
 
 The calendar has two faces over the one read, in
 `src/components/FilingCalendar.tsx`:
@@ -418,6 +489,55 @@ A new view takes its type and method in `src/shell/views.ts`, a fixture and
 an answer in the scenario host, a hook in `src/shell/` that owns when it is
 read and dropped, and then its surface.
 
+### The Ledger page
+
+The rail's Ledger button, or its palette entry, shows the profile's ledger
+in the first pane, where the host offers the ledger port. The pane's header
+holds the page's sections (Movements, Invoices, Documents, and Rules,
+Registers and Health under Setup), its period and its actions.
+
+- **The period** is one dropdown with the previous and next period beside
+  it. Inside, the year moves by its own buttons, with no bound inside the
+  period grammar. Each year that has movements, read from the ledger, is a
+  button that moves the dropdown to that year. `PeriodSelector` also has a
+  year-only mode.
+- **A period is read whole** before anything is drawn from it. Reading, a
+  failed read (with its code, and a Retry the page never runs by itself),
+  an empty period and a withheld page are each said as such.
+- **Only presentation is kept**: the section, columns, density, grouping,
+  saved view and inspector, in the layout store. The period, every value
+  and anything staged stay in the page's memory and go with the profile.
+- **No shell chord** is the page's, and the documentation's Alt+Left and
+  Alt+Right are not taken while it is shown. No bare letter is a shortcut:
+  in the movements grid a typed character is typing. The page's actions
+  are in the palette.
+
+The Movements section, in `src/components/ledger/movements/`, draws the
+stored movements of the period on `DataGrid`; nothing staged changes what a
+cell, a count or a sum shows.
+
+- **The readiness strip** counts, as a glyph and a number, the movements
+  readiness found something on, those to classify and those with no euro
+  rate, each hidden at zero; with nothing left it is one tick, and a hollow
+  mark while nothing current was checked. Each pill, and each reason chip
+  ("Category 5"), filters the grid to exactly the movements it counts,
+  replaces the selection with the first of them, and leads to its column.
+- **The toolbar** has the search (every word on its own, months by name,
+  figures written with a dot or a comma, and a count of what other periods
+  hold), the filters with their chips, the saved views, grouping (with
+  each group's count and sums per currency and direction, and its quick
+  actions), sorting, the column chooser with its presets, and density.
+- **A period is refined here**; "All periods" is read in part, so only the
+  product's own sort axes and its group-label partition are offered there,
+  and the toolbar says how much of it is loaded. The account, import and
+  import-note filters are the product's own: the grid keeps the movements
+  their list reads return.
+- **Classifying** goes through one command, `classifySelection` in
+  `src/shell/ledgerCommands.ts`: Alt+B, Alt+P and Alt+M, the palette, the
+  group headers and the inspector all reach it. Business asks for a
+  category and Mixed for a share; a selection with hidden movements is
+  refused until the person shows them or keeps only the visible ones.
+
 ### Keyboard
 
 Every pointer path has a keyboard path through the same action.
@@ -435,6 +555,8 @@ Every pointer path has a keyboard path through the same action.
 | Alt+Home, Alt+Left, Alt+Right         | Documentation home, back and forward                                   |
 | Ctrl+=, Ctrl+-, Ctrl+0                | Documentation zoom                                                     |
 | Ctrl+Shift+C, Ctrl+Shift+V            | Copy and paste in a terminal                                           |
+| Alt+B, Alt+P, Alt+M                   | Ledger movements: classify the selection as Business, Personal, Mixed  |
+| F8, Shift+F8                          | Ledger movements: the next or previous readiness issue                 |
 
 On macOS the primary modifier is Command. The rail and the tab row are one tab
 stop each, moved through with the arrow keys. A splitter takes the arrow keys,
@@ -449,25 +571,52 @@ npm run check   # type check, lint and formatting
 npm test        # the browser tests, against a fresh production build
 ```
 
-The test run builds the production bundle itself, then runs two Playwright
-projects:
+The test run builds the production bundle and the scenario bundle itself, then
+runs three Playwright projects, each on a server of its own that the run starts
+and that must not already be running:
 
 - `product` drives the production build through `vite preview`, with no host or
-  with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
+  with a faked Tauri transport (`tests/desktop-*.spec.ts`), under the window's
   own content security policy, and checks the built output
   (`tests/bundle.spec.ts`).
-- `scenarios` drives `/scenarios.html` on the development server
-  (`tests/scenarios/`). It reuses a development server that is already running.
+- `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
+  `vite build --mode scenarios`, a minified build of the development entry with
+  the scenario host and the documentation fixture, written inside the run's own
+  directory under `desktop/test-results/runs/` (outside a run, to
+  `desktop/testing/scenarios`) so a concurrent run's build cannot empty the
+  page this run serves, and served by `vite preview --mode scenarios`. Nothing in it watches the source tree, so a
+  file saved while the tests run cannot reload a page in the middle of a test.
+  The build also carries `/primitives.html`, and a build has no module
+  addresses, so a spec that drives a product module directly gets it from
+  `window.__scenarioModules` (`src/dev/main.tsx`).
+- `hot-reload` (`tests/hot-reload/`) is the one spec that needs Vite's own
+  client: it checks that the development entry disposes its shell when Vite
+  hot-updates it. It runs on a development server started in
+  `--mode scenarios`, whose pages have their hot-update socket replaced by a
+  mock.
 
 | File in `tests/scenarios/` | Holds the shell to                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `scenarios.spec.ts`        | What each scenario presents, and the sign-in rules: one submission, no retry               |
+| `sign-in.spec.ts`          | The sign-in rules: one submission, no retry                                                |
+| `sign-in-focus.spec.ts`    | Where the keyboard goes around the sign-in dialog                                          |
+| `account-states.spec.ts`   | What each account scenario presents, the same in every element of the window               |
 | `accessibility.spec.ts`    | An axe audit of every major surface in both schemes                                        |
 | `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
 | `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |
 
-Run one project with `npm test -- --project=scenarios`. Both servers start for
-either project, and the build runs each time.
+Run one project with `npm test -- --project=scenarios`. All three servers start
+for any project, and the builds run each time. To run the scenarios alone,
+building only their bundle, use
+`npx playwright test -c playwright.scenarios.config.ts`.
+
+Each run writes its traces, screenshots and `results.json` to a directory of
+its own, `desktop/test-results/runs/<start>-<pid>` under the build directory,
+because Playwright empties its output directory when a run starts: two runs at
+once keep each other's results. A run removes the directories of earlier runs
+that started more than a day ago and are no longer running. `--last-failed` reads
+`desktop/test-results/last-run.json`, which the latest run to finish wrote.
+Two runs at once in one checkout still need the same fixed ports, so the
+second fails to start its servers.
 
 ### Speed and memory
 
@@ -483,7 +632,10 @@ fixture with nine windows open at once: how long it takes to be drawn, forty
 rounds of its faces, a month drawn whole and a choice, and a drag of the
 split out to where both faces fit and back; and forty rounds of the sign-in
 dialog, put aside and opened again, turned into the form that creates a
-profile and back, with another profile chosen. It writes `test-results/benchmark/benchmark.json`
+profile and back, with another profile chosen; and the Ledger page over a
+period of five thousand movements: how long the period takes to be read in
+pages and drawn, a scroll through it, every shown movement selected and a
+sort of the whole window. It writes `test-results/benchmark/benchmark.json`
 in the build directory. Each number has a loose budget in the script, and
 `--check` fails the run when one is exceeded. The numbers describe the machine
 they were taken on: compare runs, not hosts.
@@ -517,7 +669,15 @@ and in the calendar `.calendar-page`, `.calendar-head`,
 `.calendar-grid-today`, `.calendar-event` with `data-event`,
 `.calendar-more`, `.calendar-whole`,
 `.calendar-list`, `.calendar-aside`, `.calendar-observed`,
-`.calendar-today` and `.calendar-distance`.
+`.calendar-today` and `.calendar-distance`, and on the Ledger page
+`.ledger-page`, `[data-rail=ledger]`, `.ledger-period`, `.ledger-readiness`
+with `[data-readiness]`, `.ledger-movements`, `.ledger-empty`,
+`.ledger-failed` and `.ledger-loading`, and in its Movements section
+`.ledger-grid`, `.ledger-count`, `.ledger-toolbar`, `.ledger-search`,
+`.ledger-views`, `.ledger-filters`, `.ledger-columns`, `.ledger-chips`,
+`.ledger-reasons` with `[data-reason]`, `.ledger-group-actions`,
+`.ledger-hidden-selection`, `.ledger-elsewhere`, `.ledger-classify` and
+`.ledger-toast`.
 
 ## What only the desktop window can show
 
@@ -529,9 +689,6 @@ to be checked in a built desktop package, on an interactive desktop, with
   refusal is not retried, and the canonical refusal codes arrive as the shell
   expects them. The last packaged run failed here on the letter case of a code
   (see below); the browser tests cannot see the host's answer.
-- **Native menus.** The host draws context menus; the shell's own menu is the
-  stand-in the browser shows. The menu key on a log record sends the row's
-  position, which only the host can place.
 - **Content security policy and the `cadrumo-docs` scheme.** The browser test
   applies the policy from the configuration template to the production bundle;
   the window applies the generated one to the packaged documentation origin.
@@ -628,6 +785,7 @@ manager records have `source: "manager"` and scrubbed lifecycle facts in
 | `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product              |
 | `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port               |
 | `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                       |
+| `src/shell/ledger.ts`                           | The ledger port a host may offer: its admitted definitions and typed requests  |
 | `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                         |
 | `src/components/ui/`                            | The primitives                                                                 |
 | `src/components/`                               | Public shell components, feature internals and colocated stories               |

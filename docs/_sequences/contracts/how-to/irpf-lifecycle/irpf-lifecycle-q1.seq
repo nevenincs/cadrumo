@@ -1,7 +1,7 @@
-@step Record when the activity started so the quarter is a valid obligation.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Record when the activity started, the simplified direct estimation regime, and that 2026 income and expenses are imputed by cobros y pagos, so the quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-estimation-regime directa_simplificada --irpf-activity-income-imputation-criterion cobros_y_pagos --irpf-activity-income-imputation-year 2026 --no-irpf-codigo-comercio-accounting
 @step Register the supplier's purchase invoice, and take its supporting document reference from the output.
-aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105
+aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105 --idempotency-key irpf-q1-factura
 @capture evidence_id result.evidence_id
 @step Record the quarter's sale.
 aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
@@ -11,8 +11,15 @@ aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --descri
 aeat app modelo work create --modelo 130 --year 2026 --period 1T
 @step Calculate it with the three first-period carries passed as zeros.
 aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@expect result.casilla_values.03 == "500.00"
-@expect result.casilla_values.04 == "100.00"
+@expect result.casilla_values.02 == "525.00"
+@expect result.casilla_values["provisiones-gastos-dificil-justificacion"] == "25.00"
+@expect result.casilla_values.03 == "475.00"
+@expect result.casilla_values.04 == "95.00"
+@expect result.casilla_values.13 == "100.00"
+@expect result.casilla_values.14 == "-5.00"
+@expect result.casilla_values.17 == "-5.00"
+@expect result.casilla_values.19 == "-5.00"
+@expect result.casilla_values["saldo-negativo-fin-periodo"] == "5.00"
 @step Check the instalment before exporting it.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true

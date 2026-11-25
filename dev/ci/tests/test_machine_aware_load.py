@@ -21,14 +21,14 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 from dev.test_runs.logging import collect_only_listing
 
 from ..lane_contracts import Lane
 from ..lane_marker_inventory import expression_selects, marker_sets_in
 from ..lane_reachability import declared_lanes
-from ..lane_recipe_commands import _JUST_CALL
+from ..lane_recipe_commands import JUST_CALL
 from ..workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -172,7 +172,7 @@ def _pytest_lines(
                 if re.search(r"(?:^|\s)pytest(?:\s|$)", line):
                     lines.append(line)
                     continue
-                match = _JUST_CALL.search(line)
+                match = JUST_CALL.search(line)
                 if match is None:
                     continue
                 recipe = match.group("recipe")

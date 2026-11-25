@@ -122,12 +122,11 @@ def test_kernel_is_immutable_and_derives_paths_from_edges() -> None:
     assert type(graph).__dataclass_params__.frozen
 
 
-@pytest.mark.parametrize("field", ["click_type", "parser"])
-def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
+def test_value_contract_refuses_competing_choice_authority() -> None:
     target = DeferredTarget("builtins", "str")
 
     with pytest.raises(ValueError, match="choices cannot be combined"):
-        ValueContract(target, choices=("on", "off"), **{field: target})  # type: ignore[arg-type]
+        ValueContract(target, choices=("on", "off"), parser=target)
 
 
 @pytest.mark.parametrize(

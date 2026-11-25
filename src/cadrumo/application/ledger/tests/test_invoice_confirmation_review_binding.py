@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="A58818501",
+        supplier_tax_id="B00010157",
         invoice_number="F-1",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
@@ -45,10 +45,10 @@ def test_stale_review_refuses_before_candidate_or_persistence(monkeypatch: pytes
     preparation = type("Preparation", (), {"attachment_id": source_sha256, "draft": draft})()
     candidate_calls: list[str] = []
 
-    monkeypatch.setattr(confirmation, "_prepare_invoice_confirmation", lambda **_kwargs: preparation)
+    monkeypatch.setattr(confirmation, "prepare_invoice_confirmation", lambda **_kwargs: preparation)
     monkeypatch.setattr(
         confirmation,
-        "_build_confirmed_invoice_candidate",
+        "build_confirmed_invoice_candidate",
         lambda **_kwargs: candidate_calls.append("built"),
     )
     expected_source = "b" * 64 if stale_part == "source" else source_sha256

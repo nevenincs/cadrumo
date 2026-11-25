@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: L'import, sense signe, dels resultats negatius de les teves autoliquidacions
+            anteriors del model 131 d'aquest exercici que encara no hagis deduït.
+          label: Resultats negatius de trimestres anteriors de l'exercici pendents
+            de deduir · casella 11
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Domiciliació: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
@@ -92,8 +97,6 @@ modelo:
             o rehabilitar l'habitatge habitual. Si l'activitat va començar durant
             l'exercici, es pren el trimestre en què es va iniciar.
           label: 'Deducció per habitatge (agrària): dies d''activitat al primer trimestre'
-        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
-          label: Declaració complementària
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
           help: 'Només en el cas excepcional que al trimestre hagis de presentar també
             el Model 130 de pagament fraccionat: indica la quantitat que aquest model
@@ -202,8 +205,7 @@ modelo:
           irpf-pf-modulos-volumen-sin-datos-base:
             label: Volum de vendes o ingressos sense dades-base
           irpf-pf-saldo-negativo-fin-periodo:
-            label: Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella
-              10)
+            label: Saldo negatiu traslladable a períodes posteriors
           minoracion-rendimientos-actividades-economicas:
             label: Minoració per rendiments nets d'activitats econòmiques
           pago-fraccionado-previo:

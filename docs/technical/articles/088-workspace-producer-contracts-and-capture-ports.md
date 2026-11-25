@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-088` · **Topic:** [Modelo work and revision lifecycle, part 2: verification, workbench and workspace](../topics/modelo-work-and-revision-lifecycle-part-2.md)
+**Topic:** [Modelo work and revision lifecycle: verification, workbench and workspace](../topics/modelo-work-verification-and-workspace.md)
 
 <!-- preserved:article -->
 **Scope:** `src/cadrumo/application/modelo/workspace_producers.py`, all 864 lines, 37,346 bytes and 7,320 measured `o200k_base` proxy tokens. Both bounded-reader pages were read completely. Static inspection only; no application execution or tests were run.

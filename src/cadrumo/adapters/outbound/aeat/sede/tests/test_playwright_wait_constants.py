@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._browser_constants import (
+from ..browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED,
     PLAYWRIGHT_WAIT_NETWORKIDLE,
 )

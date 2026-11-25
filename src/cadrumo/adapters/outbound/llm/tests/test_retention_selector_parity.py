@@ -29,13 +29,16 @@ from decimal import Decimal
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord
 from ..models import CachedEntry, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CUTOFF = datetime(2026, 6, 1, tzinfo=UTC)
+_CUTOFF = datetime(_FILING_YEAR, 6, 1, tzinfo=UTC)
 _PROVIDER = LLMProvider.AGENT
 _MODEL = "claude-sonnet-4-6"
 
@@ -112,7 +115,7 @@ def _ages(*offsets_days: int) -> list[datetime]:
 # ---------------------------------------------------------------------------
 
 
-def test_age_cutoff_is_exclusive_so_a_record_exactly_at_cutoff_is_retained() -> None:
+def test_age_timeout_is_exclusive_so_a_record_exactly_at_timeout_is_retained() -> None:
     """A record strictly older than the cutoff goes; one exactly at it stays.
 
     DISCRIMINATING. Fails when the cutoff comparison is made inclusive
@@ -146,7 +149,7 @@ def test_count_cap_evicts_the_oldest_survivors_first() -> None:
     assert removed == ["r0", "r1", "r2"]
 
 
-def test_count_cap_is_applied_only_to_records_surviving_the_age_cutoff() -> None:
+def test_count_cap_is_applied_only_to_records_surviving_the_age_timeout() -> None:
     """Age-expired records must not consume the retention budget.
 
     DISCRIMINATING. Fails when the cap is measured over all rows rather than
@@ -242,17 +245,15 @@ def test_each_store_prune_reaches_the_canonical_selector() -> None:
     """
     import inspect
 
-    from ....persistence.llm import cache as _cache
-    from ....persistence.llm import run_records as _run_record
-    from ....persistence.llm import usage as _usage
+    from ....persistence.llm import cache, run_records, usage
 
-    for module in (_cache, _usage, _run_record):
+    for module in (cache, usage, run_records):
         assert module.select_retention_removal_keys is select_retention_removal_keys, module.__name__
 
     for source_owner, prune in (
-        (_cache.LLMCache, _cache.LLMCache.prune),
-        (_usage.UsageRecorder, _usage.UsageRecorder.prune),
-        (_run_record.LLMRunRecorder, _run_record.LLMRunRecorder.prune),
+        (cache.LLMCache, cache.LLMCache.prune),
+        (usage.UsageRecorder, usage.UsageRecorder.prune),
+        (run_records.LLMRunRecorder, run_records.LLMRunRecorder.prune),
     ):
         source = inspect.getsource(prune)
         assert "select_retention_removal_keys(" in source, source_owner.__name__

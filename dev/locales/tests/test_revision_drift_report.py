@@ -13,16 +13,21 @@ from __future__ import annotations
 
 import pytest
 
-from .._revision_drift import classify_revision_moves
-from ..cli import _echo_file_audit
-from ..locale_audit import _audit_locale_file
+from ..cli import echo_file_audit
+from ..locale_audit import audit_locale_file
+from ..revision_drift import classify_revision_moves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: A revision-scoped key the generic parity audit judges; casilla leaves are judged by the
 #: delta-keyed casilla catalogue instead, so they never appear in this report.
-_OLD = "modelo.schema.347.revision.2008-2024.field"
-_NEW = "modelo.schema.347.revision.2011-2024.field"
+_OLD_REVISION = "early-edition"
+_NEW_REVISION = "late-edition"
+_SPAN = "span-edition"
+_SPLIT_EARLY = "split-a-edition"
+_SPLIT_LATE = "split-b-edition"
+_OLD = f"modelo.schema.347.revision.{_OLD_REVISION}.field"
+_NEW = f"modelo.schema.347.revision.{_NEW_REVISION}.field"
 
 
 def test_a_rename_is_one_move_carrying_both_halves_of_the_drift() -> None:
@@ -31,29 +36,29 @@ def test_a_rename_is_one_move_carrying_both_halves_of_the_drift() -> None:
 
     (candidate,) = report.candidates
     assert candidate.modelo == "347"
-    assert candidate.source_revision == "2008-2024"
-    assert candidate.destination_revisions == ("2011-2024",)
+    assert candidate.source_revision == _OLD_REVISION
+    assert candidate.destination_revisions == (_NEW_REVISION,)
     assert candidate.key_count == 2
-    assert candidate.invocation == "python -m dev.locales move-revision 347 2008-2024 2011-2024"
+    assert candidate.invocation == f"python -m dev.locales move-revision 347 {_OLD_REVISION} {_NEW_REVISION}"
     assert report.accounted_missing == {f"{_NEW}.label", f"{_NEW}.help"}
     assert report.accounted_extra == {f"{_OLD}.label", f"{_OLD}.help"}
 
 
 def test_a_split_is_one_move_naming_every_destination_revision() -> None:
     """One source revision feeding two new ones renders as a single invocation."""
-    source = "modelo.schema.322.revision.2008-2023.casilla"
+    source = f"modelo.schema.322.revision.{_SPAN}.casilla"
     report = classify_revision_moves(
         "es.yml",
         [
-            "modelo.schema.322.revision.2023.casilla.01.label",
-            "modelo.schema.322.revision.2008-2022.casilla.02.label",
+            f"modelo.schema.322.revision.{_SPLIT_LATE}.casilla.01.label",
+            f"modelo.schema.322.revision.{_SPLIT_EARLY}.casilla.02.label",
         ],
         [f"{source}.01.label", f"{source}.02.label"],
     )
 
     (candidate,) = report.candidates
-    assert candidate.destination_revisions == ("2008-2022", "2023")
-    assert candidate.invocation == "python -m dev.locales move-revision 322 2008-2023 2008-2022 2023"
+    assert candidate.destination_revisions == (_SPLIT_EARLY, _SPLIT_LATE)
+    assert candidate.invocation == f"python -m dev.locales move-revision 322 {_SPAN} {_SPLIT_EARLY} {_SPLIT_LATE}"
     assert "split" in candidate.render()
 
 
@@ -67,12 +72,12 @@ def test_genuine_additions_and_removals_are_not_read_as_a_move() -> None:
     report = classify_revision_moves(
         "es.yml",
         [
-            "modelo.schema.347.revision.2011-2024.casilla.99.label",
-            "modelo.schema.303.revision.2023.casilla.01.label",
+            f"modelo.schema.347.revision.{_NEW_REVISION}.casilla.99.label",
+            f"modelo.schema.303.revision.{_NEW_REVISION}.casilla.01.label",
             "cli.config.profile.help",
         ],
         [
-            "modelo.schema.347.revision.2008-2024.casilla.01.label",
+            f"modelo.schema.347.revision.{_OLD_REVISION}.casilla.01.label",
             "cli.config.retired.help",
         ],
     )
@@ -88,7 +93,7 @@ def test_the_rendered_report_prints_the_move_once_instead_of_two_key_rows(
     """The operator reads one relocation row, not the same key twice as unrelated work."""
     codebase_keys = {f"{_NEW}.label", "cli.config.profile.help"}
     catalogue_keys = {f"{_OLD}.label", "cli.config.retired.help"}
-    file_result = _audit_locale_file(
+    file_result = audit_locale_file(
         "es.yml",
         dict.fromkeys(catalogue_keys, "value"),
         set(catalogue_keys),
@@ -97,11 +102,11 @@ def test_the_rendered_report_prints_the_move_once_instead_of_two_key_rows(
         namespace_prefixes=(),
     )
 
-    _echo_file_audit(file_result)
+    echo_file_audit(file_result)
     printed = capsys.readouterr().out
 
     assert "moves=1" in printed
-    assert "run: python -m dev.locales move-revision 347 2008-2024 2011-2024" in printed
+    assert f"run: python -m dev.locales move-revision 347 {_OLD_REVISION} {_NEW_REVISION}" in printed
     assert f"  missing {_NEW}.label" not in printed
     assert f"  extra {_OLD}.label" not in printed
     assert "  missing cli.config.profile.help" in printed
@@ -115,7 +120,7 @@ def test_a_rename_still_leaves_the_catalogue_not_ok() -> None:
     verdict to green would retire the only signal that the keys have not been
     carried yet.
     """
-    file_result = _audit_locale_file(
+    file_result = audit_locale_file(
         "es.yml",
         {f"{_OLD}.label": "value"},
         {f"{_OLD}.label"},

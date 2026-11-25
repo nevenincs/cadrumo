@@ -9,7 +9,7 @@ the owning
 ``SensitivityClass`` literals in the session store.
 
 This is a write-path proof: it drives each production save function and reads
-the raw :class:`SecureObjectRow` back from the encrypted SQL backend, asserting
+the raw ``secure_objects`` row back from the encrypted SQL backend, asserting
 the persisted classification and schema_version equal what the registry def
 declares. The SECRET namespace (token) and the two FINANCIAL
 namespaces (metadata, drive config) are each checked against
@@ -24,23 +24,25 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
+from ....persistence.storage.sql.tables import secure_objects_table
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "c638b552-05ee-427e-82e4-21e5f4936157"  # was 'google-session-namespace-binding'
 _PROFILE = _BUCKET_ID
-_ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
+_ISSUED_AT = datetime(_YEAR, 5, 26, 9, 0, 0, tzinfo=UTC)
 
 
 def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> None:
@@ -62,7 +64,7 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
         session_store.save_session(_PROFILE, token, metadata, drive_config)
 
         with session_scope(profile.repository._engine) as session:
-            rows = {row.namespace: row for row in session.execute(select(SecureObjectRow)).scalars().all()}
+            rows = {row.namespace: row for row in session.execute(select(secure_objects_table)).all()}
 
     expected: dict[str, SecureObjectNamespaceDefinition] = {
         GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace: GOOGLE_OAUTH_TOKEN_NAMESPACE,

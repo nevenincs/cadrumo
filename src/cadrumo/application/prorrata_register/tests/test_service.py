@@ -9,7 +9,7 @@ with the profile-persistence adapter tests.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
@@ -17,9 +17,10 @@ import pytest
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.core.secure_object_write import SecureObjectWrite
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -100,6 +101,12 @@ class _InMemoryProrrataRegisterRepository:
     ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
         raise AssertionError("sector settlement is outside these policy tests")
 
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        raise AssertionError("operator gross declarations are outside these policy tests")
+
     def commit_whole_carried_seed(
         self,
         register: ProrrataRegister,
@@ -109,12 +116,6 @@ class _InMemoryProrrataRegisterRepository:
         source_snapshot: ProrrataPriorSettlementSourceSnapshot,
     ) -> None:
         raise AssertionError("source-fenced carry is outside these policy tests")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _service(operation: PinnedAuthorityOperation) -> ProrrataRegisterService:

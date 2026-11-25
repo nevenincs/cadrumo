@@ -14,6 +14,8 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from .controller import AgentHostError, AgentHostRefusal
 
 
@@ -26,15 +28,24 @@ class AgentLauncherRefusal(StrEnum):
     SERVICE_INCOMPATIBLE = "agent_service_incompatible"
     PROVIDER_CREDENTIAL_MISSING = "agent_provider_credential_missing"
     SERVICE_FAILED = "agent_service_failed"
+    TIMEOUT = "agent_timeout"
 
 
 # Hosting-protocol refusal codes that mean this agent build does not speak the
 # contract the service offered; every other agent refusal is a failure to serve.
 _INCOMPATIBLE_AGENT_CODES: Final = frozenset({"frame_malformed", "frame_too_large", "provider_unsupported"})
 
+# Runtime transport refusals that mean no runtime is there to serve the service yet;
+# every other runtime refusal, including an untrusted endpoint or peer, is a failure.
+_RUNTIME_UNAVAILABLE_CODES: Final = frozenset(
+    {RefusalCode.UNAVAILABLE, RefusalCode.ENDPOINT_NOT_READY, RefusalCode.DRAINING}
+)
+
 
 def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
     """Map a hosting-protocol refusal onto the launcher protocol's closed codes."""
+    if error.reason is AgentHostRefusal.TIMEOUT:
+        return AgentLauncherRefusal.TIMEOUT
     if error.reason is AgentHostRefusal.SIGNED_OUT or error.reason is AgentHostRefusal.STALE_GENERATION:
         return AgentLauncherRefusal.SIGNED_OUT
     if error.reason in {AgentHostRefusal.CREDENTIALS_UNAVAILABLE, AgentHostRefusal.CREDENTIALS_INVALID}:
@@ -46,3 +57,10 @@ def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
         return AgentLauncherRefusal.SERVICE_INCOMPATIBLE
     # Includes the native host's launch-profile refusal and every store step that did not reach current stores.
     return AgentLauncherRefusal.SERVICE_FAILED
+
+
+def runtime_launcher_refusal_for(error: RefusalError) -> AgentLauncherRefusal | None:
+    """Retain timeout or runtime unavailability; other runtime refusals have no launcher mapping."""
+    if error.reason is RefusalCode.TIMEOUT:
+        return AgentLauncherRefusal.TIMEOUT
+    return AgentLauncherRefusal.RUNTIME_UNAVAILABLE if error.reason in _RUNTIME_UNAVAILABLE_CODES else None

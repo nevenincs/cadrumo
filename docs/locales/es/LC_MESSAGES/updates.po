@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-11-01 03:00+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -31,9 +31,9 @@ msgid ""
 msgstr ""
 "Usa esta página como punto central del proyecto para las notas de "
 "versión, los avisos críticos, los enlaces de descarga, las notas de "
-"eventos y las vías de soporte. El banner y el pie de página remiten aquí,"
-" de modo que el estado importante del proyecto esté disponible desde "
-"cualquier página de la documentación."
+"eventos y las vías de soporte. La franja de avisos y el pie de página "
+"remiten aquí, de modo que el estado importante del proyecto esté "
+"disponible desde cualquier página de la documentación."
 
 #: ../../updates.md:8
 msgid ""
@@ -53,11 +53,11 @@ msgstr "Obtén Cadrumo"
 
 #: ../../updates.md:23
 msgid ""
-"Install the latest release with pip or uv. Record the installed version "
-"before preparing any filing records."
+"Install the latest release with `pip` or `uv`. Record the installed "
+"version before preparing any filing records."
 msgstr ""
-"Instala la última versión con pip o uv. Anota la versión instalada antes "
-"de preparar cualquier registro de presentación."
+"Instala la última versión con `pip` o `uv`. Anota la versión instalada "
+"antes de preparar cualquier registro de presentación."
 
 #: ../../updates.md:27 ../../updates.md:64
 msgid "Critical updates"
@@ -125,8 +125,8 @@ msgid ""
 " a change."
 msgstr ""
 "Las actualizaciones críticas se publican en las notas de versión y se "
-"destacan mediante el banner del sitio cuando la documentación necesita "
-"llamar la atención sobre un cambio."
+"destacan mediante la franja de avisos del sitio cuando la documentación "
+"necesita llamar la atención sobre un cambio."
 
 #: ../../updates.md:69
 msgid "Check this section when you need to know whether a release affects:"
@@ -209,7 +209,7 @@ msgstr ""
 
 #: ../../updates.md:102
 msgid "the site banner for short-lived notices;"
-msgstr "el banner del sitio para avisos de corta duración;"
+msgstr "la franja de avisos del sitio para alertas temporales;"
 
 #: ../../updates.md:103
 msgid "this page for durable update and download routes;"
@@ -224,4 +224,3 @@ msgid "issues for open defects, regressions, and documentation gaps."
 msgstr ""
 "las incidencias para los defectos abiertos, las regresiones y las "
 "carencias de documentación."
-

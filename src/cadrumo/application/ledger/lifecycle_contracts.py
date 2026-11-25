@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -37,11 +38,11 @@ LEDGER_LIFECYCLE_MAX_VALIDATION_MESSAGE_LENGTH = 2048
 
 LEDGER_LIFECYCLE_MAX_RECOVERY_TRANSACTION_IDS = 256
 
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 
-_Reason = Annotated[str, Field(max_length=500)]
+_Reason = Annotated[str, Field(max_length=512)]
 
 _EventIds = Annotated[tuple[Hex64Str, ...], Field(min_length=1, max_length=1)]
 
@@ -61,6 +62,8 @@ class LedgerLifecycleMutationRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -69,6 +72,7 @@ class LedgerLifecycleMutationRequest(BaseModel):
     transaction_id: _TransactionPrefix
     actor: _Actor | None = None
     reason: _Reason = ""
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerLifecycleBlockerProjection(BaseModel):
@@ -132,7 +136,7 @@ class LedgerLifecycleReplacedStateProjection(BaseModel):
     business_classification: BusinessClassification
     business_pct: str | None
     classified_by: str
-    reversed_by: Annotated[tuple[LedgerLifecycleReversalOperationId, ...], Field(min_length=1, max_length=2)]
+    reversed_by: Annotated[tuple[LedgerLifecycleReversalOperationId, ...], Field(min_length=1, max_length=16)]
 
 
 class LedgerLifecycleMutationProjection(BaseModel):

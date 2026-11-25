@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    seed_modelo_ready_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import (
@@ -127,7 +127,7 @@ def test_a_period_before_the_last_authors_without_the_exemption_question(
     """Quarterly and monthly periods before the last carry no exemption evidence and no annual-volume answer."""
     period = Period.from_year_and_code(filing_year, code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             if period.kind is PeriodKind.MONTHLY:
                 _settle_monthly(profiles)
@@ -153,7 +153,7 @@ def test_the_last_period_authors_the_attested_exemption(
 ) -> None:
     period = Period.from_year_and_code(filing_year, code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             if period.kind is PeriodKind.MONTHLY:
                 _settle_monthly(profiles)
@@ -175,7 +175,7 @@ def test_the_last_period_authors_the_attested_exemption(
 
 def test_the_last_period_refuses_without_an_attestation(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised:
             author_ordinary_m303_filing_instance_evidence(
                 work_unit=_work_unit(operation, _LAST_QUARTER),
@@ -194,7 +194,7 @@ def test_an_attestation_outside_the_last_period_is_refused_before_custody(
 ) -> None:
     """A supplied attestation is refused rather than ignored, and custody is never read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised:
             author_ordinary_m303_filing_instance_evidence(
                 work_unit=_work_unit(operation, _FIRST_QUARTER),
@@ -213,7 +213,7 @@ def test_an_incomplete_attestation_identity_refuses_at_the_shared_entry(
 ) -> None:
     """Every entrypoint passes the two public identifiers; one without the other is refused."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303Exonerado390AttestationUnadmissibleError):
             author_ordinary_m303_evidence_for_work(
                 work_unit=_work_unit(operation, _LAST_QUARTER),
@@ -229,7 +229,7 @@ def test_refuses_an_unresolved_secure_applicability_reference(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303Exonerado390AttestationUnadmissibleError):
             author_ordinary_m303_filing_instance_evidence(
                 work_unit=_work_unit(operation, _LAST_QUARTER),
@@ -254,7 +254,7 @@ def test_refuses_a_simplified_scope_profile_before_using_the_ordinary_branch(
     operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             current = profiles.load(_BUCKET_ID)
             profiles.apply_fact_changes(
@@ -290,7 +290,7 @@ def test_a_period_outside_the_profile_filing_schedule_is_refused(
     """RD 1624/1992 art. 71 settles REDEME and large-company filers monthly and everyone else quarterly."""
     period = Period.from_year_and_code(2025, code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             if monthly_filer:
                 _settle_monthly(profiles)

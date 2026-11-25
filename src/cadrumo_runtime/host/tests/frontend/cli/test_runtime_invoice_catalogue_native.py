@@ -28,8 +28,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -71,7 +72,7 @@ def _invoice(profile_id: UUID, invoice_number: str, authority: PinnedAuthorityOp
                 "issued_at": "2025-05-01",
                 "counterparty_name": "Native catalogue supplier",
                 "notes": "Original invoice note kept by a partial update.",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("100.00"),
                 "iva_total": Decimal("21.00"),

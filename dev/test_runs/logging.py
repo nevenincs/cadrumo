@@ -1,4 +1,4 @@
-"""Development-owned per-invocation pytest logs under ``.logs``."""
+"""Development-owned per-invocation pytest logs under ``.tmp/logs``."""
 
 from __future__ import annotations
 
@@ -6,24 +6,29 @@ import atexit
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
+from collections.abc import Generator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import IO, Any, Final
-from uuid import uuid4
 
 import pytest
 
-from cadrumo.core.storage_environment import resolve_storage_path
+from cadrumo.tests.env_loader import bridge_env_file_into_environ
+from dev.paths import REPO_ROOT
+from dev.temporary_output import resolve_temporary_output
 
 from .paths import (
     ScratchAllocation,
     ScratchOwnershipError,
+    allocate_run_directory,
     allocate_scratch_directory,
     remove_scratch_directory,
     scratch_base,
     scratch_environment,
+    test_log_root,
 )
 from .reaper import sweep_scratch_directories
 
@@ -34,20 +39,74 @@ _collection_errors = 0
 _ACTIVE: RunLog | None = None
 _INHERITED_RUN = False
 """Whether this process joined a run another process started, rather than minting one."""
+_RESERVED_RUN_ROOT: Path | None = None
+_COVERAGE_ENABLED = False
 _RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
+_COVERAGE_SELECTED_ENV: Final = "CADRUMO_TEST_COVERAGE_FILE"
+_COVERAGE_WORKER_PID_ENV: Final = "CADRUMO_TEST_COVERAGE_WORKER_PID"
 
 
-def _product_log_directory(root: Path) -> Path:
-    """Preserve an explicit product log override and isolate the default per process."""
-    configured = os.environ.get("CADRUMO_LOG_DIR", "").strip()
-    if configured:
-        candidate = resolve_storage_path(configured)
-        run_default = (root / "artifacts" / "product-logs").resolve()
-        try:
-            candidate.relative_to(run_default)
-        except ValueError:
-            return candidate
-    return root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
+def _coverage_destination(value: str) -> Path:
+    """Admit the complete coverage file path before any collector can open it."""
+    candidate = Path(value)
+    if not candidate.is_absolute():
+        candidate = REPO_ROOT / candidate
+    try:
+        admitted = resolve_temporary_output(override=candidate)
+    except ValueError as error:
+        raise pytest.UsageError(f"invalid COVERAGE_FILE destination {candidate}: {error}") from error
+    if admitted != candidate or admitted.is_dir():
+        raise pytest.UsageError(f"COVERAGE_FILE must name a file inside admitted temporary output: {candidate}")
+    return admitted
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_load_initial_conftests(early_config: pytest.Config) -> Generator[None]:
+    """Choose coverage output before pytest-cov starts the controller collector."""
+    options = early_config.known_args_namespace
+    global _COVERAGE_ENABLED, _RESERVED_RUN_ROOT
+    if getattr(options, "cov_source", None) and not getattr(options, "no_cov", False):
+        _COVERAGE_ENABLED = True
+        bridge_env_file_into_environ(REPO_ROOT / "env" / ".env")
+        configured = os.environ.get("COVERAGE_FILE", "").strip()
+        inherited = configured == os.environ.get(_COVERAGE_SELECTED_ENV)
+        worker = os.environ.get(_COVERAGE_WORKER_PID_ENV) == str(os.getpid())
+        if inherited and not worker:
+            configured = ""
+        if configured:
+            destination = _coverage_destination(configured)
+        else:
+            root = allocate_run_directory(test_log_root(), family="test-runs", label="pytest")
+            destination = _coverage_destination(str(root / "artifacts" / ".coverage"))
+            root.mkdir(parents=True, exist_ok=False)
+            _RESERVED_RUN_ROOT = root
+        os.environ["COVERAGE_FILE"] = str(destination)
+        os.environ[_COVERAGE_SELECTED_ENV] = str(destination)
+    try:
+        yield
+    except BaseException as error:
+        root, _RESERVED_RUN_ROOT = _RESERVED_RUN_ROOT, None
+        if root is not None:
+            try:
+                if resolve_temporary_output(override=root) != root:
+                    raise ValueError(f"reserved pytest root is no longer admitted: {root}")
+                shutil.rmtree(root)
+            except (OSError, ValueError) as cleanup_error:
+                message = f"pytest bootstrap directory remains at {root}: {cleanup_error}"
+                error.add_note(message)
+                print(message, file=sys.stderr)
+        raise
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_configure_node(node: Any) -> None:
+    """Bind a shared coverage destination to the actual worker process, excluding nested controllers."""
+    if not _COVERAGE_ENABLED:
+        return
+    channel = node.gateway.remote_exec(
+        f"import os\nos.environ[{_COVERAGE_WORKER_PID_ENV!r}] = str(os.getpid())\nchannel.send(None)\n"
+    )
+    channel.receive()
 
 
 class RunLog:
@@ -66,13 +125,14 @@ class RunLog:
         """
         now = datetime.now(UTC)
         repository = repository.resolve()
-        marker = f"{now:%Y%m%dT%H%M%S.%fZ}-pytest-{os.getpid()}-{uuid4().hex[:8]}"
-        self.root = repository / ".logs" / "test-runs" / f"{now:%Y-%m-%d}" / marker
-        self.root.mkdir(parents=True, exist_ok=False)
+        global _RESERVED_RUN_ROOT
+        reserved, _RESERVED_RUN_ROOT = _RESERVED_RUN_ROOT, None
+        self.root = reserved or allocate_run_directory(repository, family="test-runs", label="pytest", now=now)
+        self.root.mkdir(parents=True, exist_ok=reserved is not None)
         self.artifacts = self.root / "artifacts"
         self.cache = self.root / "cache"
         for path in (self.artifacts, self.cache):
-            path.mkdir()
+            path.mkdir(exist_ok=reserved is not None)
         sweep_scratch_directories(scratch_base())
         self.scratch = allocate_scratch_directory() if scratch is None else scratch
         self.scratch_allocation = ScratchAllocation.record(self.scratch)
@@ -83,9 +143,6 @@ class RunLog:
         self.exit_status: int | None = None
         self.stream: IO[str] = self.path.open("x", encoding="utf-8", newline="\n")
         _apply_run_environment(self.root, self.scratch)
-        product_logs = _product_log_directory(self.root)
-        product_logs.mkdir(parents=True, exist_ok=True)
-        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         os.environ["CADRUMO_TEST_RUN_ROOT"] = str(self.root)
         self.write(f"START {now.isoformat()} pid={os.getpid()}")
         self.write(f"COMMAND {' '.join(sys.argv)}")
@@ -144,21 +201,21 @@ class RunLog:
 def prepare_environment(repository: Path) -> None:
     """Mint the controller run before any production import can bind logging."""
     global _ACTIVE
+    if _RESERVED_RUN_ROOT is not None:
+        _ACTIVE = RunLog(repository)
+        return
     inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
     if inherited_root is not None and inherited_root:
         root = Path(inherited_root).resolve()
         global _INHERITED_RUN
         _INHERITED_RUN = True
         _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
-        product_logs = _product_log_directory(root)
-        product_logs.mkdir(parents=True, exist_ok=True)
-        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         return
     _ACTIVE = RunLog(repository)
 
 
 def _apply_run_environment(root: Path, scratch: Path) -> None:
-    """Confine generic temporary, coverage, and pytest scratch paths.
+    """Confine temporary and pytest scratch paths, preserving the early coverage destination.
 
     Logs, artifacts and pytest's own cache live in the run directory; temporary
     files live in the run's short scratch, which the run directory is too deep
@@ -170,8 +227,13 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
     for path in (artifacts, cache):
         path.mkdir(parents=True, exist_ok=True)
     os.environ["CADRUMO_TEST_RUN_ROOT"] = str(root)
+    # Run artifacts are keyed by their inputs' content, so one persistent root
+    # lets every lane, worker and later run reuse a publication instead of
+    # repeating it; an explicit override still wins.
+    from dev.cache_root import dev_cache_dir
+
+    os.environ.setdefault("CADRUMO_RUN_ARTIFACT_ROOT", str(dev_cache_dir("run-artifacts")))
     os.environ[_RUN_SCRATCH_ENV] = str(scratch)
-    os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
     os.environ.update(scratch_environment(scratch))
     tempfile.tempdir = str(scratch)
@@ -224,7 +286,7 @@ def _announce(config: pytest.Config, message: str) -> None:
         print(message, flush=True)
 
 
-def _redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
+def redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
     """Send the collect-only listing to the persistent run transcript.
 
     The listing is the bulk of a collect-only run and belongs with the other
@@ -267,7 +329,7 @@ def configure(config: pytest.Config) -> None:
         run_log = RunLog(test_log_root(), scratch=own_scratch)
         _ACTIVE = run_log
     config.stash[_STATE_KEY] = run_log
-    silent_collection = _redirect_collection_output(config, run_log)
+    silent_collection = redirect_collection_output(config, run_log)
     config.stash[_SILENT_COLLECTION_KEY] = silent_collection
     notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={scratch})"
     if silent_collection:
@@ -366,10 +428,39 @@ def restate(config: pytest.Config) -> None:
             flush=True,
         )
         return
+    if run_log.exit_status == _NO_TESTS_COLLECTED:
+        for line in no_tests_diagnosis(config.args, config.invocation_params.dir):
+            print(line, flush=True)
     print(
         f"test run log: {run_log.path} (exit={run_log.exit_status}, metadata={run_log.metadata_path})",
         flush=True,
     )
+
+
+_NO_TESTS_COLLECTED: Final = 5
+
+
+def no_tests_diagnosis(args: Sequence[str], base: Path) -> tuple[str, ...]:
+    """Name the requested paths and node IDs that exit status 5 would otherwise hide.
+
+    Under xdist the workers collect and the controller only learns that nothing
+    was selected, so pytest's own ``not found`` error never reaches the
+    transcript (a plain run reports it and exits 4). The controller can still
+    see whether a requested file exists. It cannot see whether a function
+    inside an existing file does, and says so rather than guessing.
+    """
+    lines: list[str] = []
+    for argument in args:
+        path_text = argument.partition("::")[0]
+        if not (base / path_text).exists():
+            lines.append(f"ERROR: file or directory not found: {path_text} (requested as {argument!r})")
+        elif "::" in argument:
+            lines.append(
+                f"NOTE: {argument!r} names a file that exists; whether its node ID resolves cannot be "
+                "checked under xdist. Re-run with -n 0 to see pytest's own 'not found' error, "
+                "or pass -m '' if a marker deselected it."
+            )
+    return tuple(lines)
 
 
 #: The collect-only summary this module prints, read back by the gates that

@@ -15,12 +15,11 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.classification import (
     CustomerTaxStatus,
     TransactionKind,
@@ -38,6 +37,8 @@ from ..classification_assembly import (
 )
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -93,7 +94,7 @@ def _assemble_with_declared(
         return assemble_classification_criteria(declared=declared, **kwargs)
     # The assembly resolves governed facts, so it runs under the same pinned
     # registry operation production opens around it.
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return assemble_classification_criteria(declared=declared, operation=operation, **kwargs)
 
 
@@ -214,7 +215,7 @@ def test_a_domestic_operation_is_never_asked_for_the_supply_nature() -> None:
     operator a question with no answer that could change anything — on every
     domestic invoice.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete(
             supply_nature=None,
             customer_country_code=None,
@@ -254,7 +255,7 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
     the identical category. If the branch ever starts forking on nature, this
     reds and the laziness above becomes a defect rather than a convenience.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         verdicts = set()
         for nature in (SupplyNature.GOODS, SupplyNature.SERVICES):
             assembly = _complete(
@@ -273,7 +274,7 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
 
 def test_the_probe_forks_only_for_cross_territorial_scope() -> None:
     """The classification probe forks only when territorial scope makes nature material."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for scopes, expect_forks in (
             (
                 (IvaTerritorialScope.from_registry("es_mainland"), IvaTerritorialScope.from_registry("es_mainland")),
@@ -360,7 +361,7 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
     could never assemble anything — which is exactly the failure mode this test
     guards against, since the criteria record was constructed nowhere in production.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete()
 
         assert assembly.assembled
@@ -372,7 +373,7 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
 
 def test_an_unassembled_criteria_set_never_reaches_the_table() -> None:
     """The refusal must stop the classification, not merely annotate it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete(supply_nature=None)
 
         assert classify_from_assembled_criteria(assembly, operation=_authority_operation_for_test) is None
@@ -398,7 +399,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
     subject here IS the attribution: the same value settles the assembly only
     when someone is recorded as having claimed it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         goods = DeclaredFact(value=SupplyNature.GOODS, source=ClassifierInputSource.OPERATOR_ASSERTION)
         without = assemble_classification_criteria(
             transaction_date=_DATE,
@@ -518,7 +519,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
     directions, which is what stops the two drifting into a demand the model
     does not make or a silence where it does.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for kind in (
             TransactionKind("construction_reverse_charge"),
             TransactionKind("waste_reverse_charge"),
@@ -529,6 +530,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
                 customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                 kind=kind,
                 operation=_authority_operation_for_test,
+                transaction_date=_ON_DATE,
             ), kind
         # Immovable property is not a reverse-charge kind: a consumer's supply is
         # routed to the exempt row, while a business recipient reaches the
@@ -539,6 +541,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
             kind=TransactionKind("immovable_property"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -546,18 +549,21 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
             kind=TransactionKind("immovable_property"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             kind=TransactionKind("goods"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert not domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             kind=TransactionKind("goods"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
 
 
@@ -649,7 +655,7 @@ def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
 #: that this identifier is genuinely, verifiably Spanish and still establishes
 #: nothing about establishment. A malformed value would be refused for the wrong
 #: reason and would prove nothing.
-_DOMESTIC_B_CIF = "B84333723"
+_DOMESTIC_B_CIF = "B00010108"
 
 
 def test_a_bare_spanish_company_identifier_never_reaches_the_peninsula() -> None:
@@ -871,7 +877,7 @@ def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None
     assemble and would still be wrong, so the placeholder's verdict is compared
     against every substantive status the customer could actually have.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         placeholder = classify_from_assembled_criteria(
             _domestic(asserted_customer_tax_status=None, supply_nature=None), operation=_authority_operation_for_test
         )

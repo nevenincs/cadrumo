@@ -7,22 +7,25 @@ compensación-pendiente slot is fed.
 
 The exemption is a REVISION-EXACT binding coordinate, never a globally-owned
 binding name: the same identifier appearing in another modelo or another
-revision does not inherit the carve-out.
+revision does not inherit the carve-out;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from ....core.modelo import Modelo
-from .ids import BindingId, ModeloId, RevisionId
+from .form_codes import form_for_role
+from .ids import BindingId, RevisionId
+
+if TYPE_CHECKING:
+    from .schema import ModeloRevision
 
 __all__ = [
-    "IVA_WALLET_OWNED_CARRY_TARGETS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
-    "IvaWalletCarryTarget",
     "is_iva_wallet_owned_carry_target",
     "iva_wallet_owned_binding_ids_for_revision",
+    "revision_offers_iva_wallet",
 ]
 
 #: The single M303 compensación-pendiente binding id, owned by the iva-wallet
@@ -32,26 +35,7 @@ __all__ = [
 #: literal. It rides down here in the registry domain so both the domain and
 #: the application orchestrator (application -> domain) read one source of
 #: truth.
-MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
-
-type IvaWalletCarryTarget = tuple[ModeloId, RevisionId, BindingId]
-
-#: The exact revision coordinates the carve-out covers. Every M303 revision
-#: that declares the compensación-pendiente carry is listed; a revision absent
-#: from this set is governed by the ordinary fold rules even if it declares a
-#: binding of the same name.
-IVA_WALLET_OWNED_CARRY_TARGETS: frozenset[IvaWalletCarryTarget] = frozenset(
-    (Modelo("303").value, revision_id, MODELO_303_IVA_COMPENSATION_BINDING_ID)
-    for revision_id in (
-        "2022",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-hasta-01-y-1t",
-        "2026-y-siguientes",
-    )
-)
+MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[BindingId] = "modelo-303-compensacion-pendiente-anteriores"
 
 
 def is_iva_wallet_owned_carry_target(
@@ -61,7 +45,8 @@ def is_iva_wallet_owned_carry_target(
     binding_id: str,
 ) -> bool:
     """Return whether one exact binding coordinate belongs to the wallet."""
-    return (modelo_id, revision_id, binding_id) in IVA_WALLET_OWNED_CARRY_TARGETS
+    del revision_id  # the carry keeps its binding id in every edition that declares it
+    return modelo_id == form_for_role("iva.periodic") and binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID
 
 
 def iva_wallet_owned_binding_ids_for_revision(
@@ -70,8 +55,20 @@ def iva_wallet_owned_binding_ids_for_revision(
     revision_id: RevisionId,
 ) -> frozenset[BindingId]:
     """Return wallet-owned binding ids within one exact revision coordinate."""
-    return frozenset(
-        binding_id
-        for owned_modelo, owned_revision, binding_id in IVA_WALLET_OWNED_CARRY_TARGETS
-        if owned_modelo == modelo_id and owned_revision == revision_id
-    )
+    del revision_id  # the carry keeps its binding id in every edition that declares it
+    if modelo_id != form_for_role("iva.periodic"):
+        return frozenset[BindingId]()
+    return frozenset((MODELO_303_IVA_COMPENSATION_BINDING_ID,))
+
+
+def revision_offers_iva_wallet(*, modelo_id: str, revision: ModeloRevision) -> bool:
+    """Return whether ``revision`` declares a binding the iva-wallet decision owns.
+
+    The answer follows the revision's own bindings: a revision that carries the
+    compensación-pendiente slot reads the profile's wallet, and one that does not
+    has no wallet to offer, whatever its modelo number.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    owned = iva_wallet_owned_binding_ids_for_revision(modelo_id=modelo_id, revision_id=revision.id)
+    return any(binding.id in owned for binding in revision.bindings)

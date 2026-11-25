@@ -33,7 +33,7 @@ from ...application.modelo.query_read_operation import (
     MODELO_READINESS_OPERATION_DEFINITION_ID,
     MODELO_REQUIRES_OPERATION_DEFINITION_ID,
 )
-from ...application.state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
+from ...application.state_projection_models import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
 from ...core.aggregation import BindingSourceKind
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

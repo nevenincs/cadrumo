@@ -9,12 +9,13 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -29,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 #: separately; until it exists, this constant pins the shape under test and
 #: claims nothing about what production stamps.
 _SHAPE_UNDER_TEST = 3
-_INSTANT = datetime(2026, 6, 30, 10, 0, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 6, 30, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 _OBJECT_KEY = "catalogue"
 _BINARY_PAYLOAD = b"\x00not-json\xffattachment-bytes"
@@ -38,21 +39,21 @@ _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
 def _export(**fields: object) -> UserProfilePortableExport:
     """Build a bundle the way export does: under the pinned profile context."""
-    return UserProfilePortableExport.model_validate(fields, context=_profile_creation_context_for_test())
+    return UserProfilePortableExport.model_validate(fields, context=leased_profile_create_context())
 
 
 def _reload(payload: str) -> UserProfilePortableExport:
-    return UserProfilePortableExport.model_validate_json(payload, context=_profile_creation_context_for_test())
+    return UserProfilePortableExport.model_validate_json(payload, context=leased_profile_create_context())
 
 
 def _profile() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_INSTANT,
         updated_at=_INSTANT,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -70,7 +71,7 @@ def _campaign_record() -> UserProfileRecord:
     ``source`` and a real effective-dated window) so a save-drops-field
     regression would break the strict equality the roundtrip asserts.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_BUCKET_ID,
         setup_state=ProfileSetupState.INCOMPLETE,
         facts=(
@@ -79,8 +80,8 @@ def _campaign_record() -> UserProfileRecord:
                 path="censo.divergencia.0.axis",
                 value="activities.description",
                 source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
-                valid_from=date(2026, 1, 1),
-                valid_to=date(2026, 12, 31),
+                valid_from=date(filing_year_envelope().horizon, 1, 1),
+                valid_to=date(filing_year_envelope().horizon, 12, 31),
             ),
             UserProfileFact(
                 path="censo.divergencia.0.artefact_value",
@@ -92,13 +93,13 @@ def _campaign_record() -> UserProfileRecord:
                 value=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                 source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
             ),
-            UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2020-01-15"),
+            UserProfileFact(path="renta_family.descendiente.0.birth_date", value=date(1990, 1, 15).isoformat()),
             UserProfileFact(path="renta_family.descendiente.0.custodia_compartida", value="true"),
             UserProfileFact(path="renta_family.descendiente.0.discapacidad", value="65"),
         ),
         created_at=_INSTANT,
         updated_at=_INSTANT,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

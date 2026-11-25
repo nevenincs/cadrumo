@@ -19,7 +19,7 @@ from ...application.modelo.filing_selection_operation import (
     ModeloWorkFilingRecordProjection,
     ModeloWorkFilingRecordRequest,
 )
-from ...application.modelo.operation_definitions import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
+from ...application.modelo.operation_shared import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ...core.operations import OperationEffect, profile_operation_subject
 

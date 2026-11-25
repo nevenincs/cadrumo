@@ -8,13 +8,13 @@ from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_common import save_transaction_catalogue_and_events
@@ -34,20 +34,22 @@ from ....application.operations import profile_guard
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.owner import OperationExecutorContext
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....application.operations.registry_schema_validation import strict_model_json_schema
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_rule import LedgerClassificationRule
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,
@@ -63,7 +65,7 @@ from ..rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
     LedgerRuleApplyExecutor,
-    _TrackedRuleRepository,
+    TrackedRuleRepository,
     build_ledger_rule_add_definition,
     build_ledger_rule_add_registration,
     build_ledger_rule_apply_definition,
@@ -72,6 +74,7 @@ from ..rule_operation import (
     build_ledger_rule_list_registration,
 )
 from ..rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -136,6 +139,9 @@ class _EmptyRuleRepository:
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         self.list_calls += 1
         return ()
+
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"dry-run must not delete a rule: {identifier}")
 
 
 def _executor_ports(
@@ -227,13 +233,8 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+    return registration_access_context(
+        registration, profile_id=profile_id, action=AccessAction.SUBMIT, frontend=frontend
     )
 
 
@@ -631,13 +632,16 @@ class _RuleRepositoryProbe:
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(self.saved)
 
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"adding a rule must not delete one: {identifier}")
+
 
 def test_rule_add_save_uses_the_same_precise_writer_fence() -> None:
     fence = _FenceProbe()
     events = _EffectProbe()
     repository = _RuleRepositoryProbe(fence)
     tracker = LedgerCommitAttemptTracker()
-    tracked_repository = _TrackedRuleRepository(repository, tracker)
+    tracked_repository = TrackedRuleRepository(repository, tracker)
     context = cast(
         OperationExecutorContext,
         SimpleNamespace(cancellation=fence, events=events),

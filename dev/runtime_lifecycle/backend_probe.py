@@ -37,14 +37,14 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.errors.failure_report import failure_chain
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root
 
 from .agent_service_session import agent_service_session
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, consumer_environment, require
 from .proof_support import create_profile, identify_profile, login_profile
-from .session_holder import WindowsRuntimeSessionHolder
+from .windows_holder import WindowsRuntimeSessionHolder
 
 _COMMAND_SECONDS = 120
 # The runtime renews sibling human leases only after this much quiet time.
@@ -141,10 +141,9 @@ def source_programs() -> Programs:
 
 def signed_in_phase(probe: Probe, programs: Programs, scratch: Path, *, source: bool) -> None:
     """Sign in on a fresh root and make the desktop's post-sign-in calls."""
-    root, secrets = scratch / "storage", scratch / "secrets"
+    root = scratch / "storage"
     root.mkdir(parents=True)
-    secrets.mkdir(parents=True)
-    environment = consumer_environment(root, secrets)
+    environment = consumer_environment(root)
     if source:
         # A package carries its own published authority; a checkout uses the one the justfile pins.
         environment.update(_DEVELOPMENT_SESSION, CADRUMO_AUTHORITY_ROOT=str(REPO_ROOT / ".authority"))
@@ -228,7 +227,7 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment; no agent phase.")
     parser.add_argument("--skip-agent", action="store_true", help="Probe sign-in and activity only.")
     options = parser.parse_args(arguments)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-probe-", dir=prepare_temporary_directory()) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-probe-", dir=prepare_temp_root()) as temporary:
         scratch = Path(temporary)
         probe = Probe()
         if options.source:

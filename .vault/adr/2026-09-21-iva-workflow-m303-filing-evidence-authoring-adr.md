@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-24'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3d17f7ad4f038c788a5a8273fb9f4c5311dfe64c046162e66df70b11db9a535'
+body_hash: 'sha256:ffbfeda51852ba40ff6bdefa8756764c3421137184371e245a838551daeeb7ef'
 related:
   - "[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-reference]]"
   - "[[2026-09-21-iva-workflow-adr]]"
@@ -77,7 +77,7 @@ does not echo the request and returns only sanitized revision identity and
 diagnostics. The request is not persisted separately. The validated envelope is
 durable only inside the encrypted calculation revision.
 
-The first slice supports the ordinary 2025 Modelo 303 path. Insolvency gains a
+The first slice supports the ordinary Modelo 303 path. Insolvency gains a
 mandatory secure evidence identity before it can be enabled. Exemption and
 simplified-regime branches are enabled separately only after every assertion and
 reference in that branch has an existing secure owner and a complete refusal
@@ -145,11 +145,11 @@ intermediate JSON file.
 
 ## Amendment 2 — Registry-selected ordinary coordinates
 
-Accepted 2026-09-23 under the IVA implementation authorization, refining the first-slice scope rather than reversing it. The ordinary evidence envelope carries three operator-declared header facts: the joint self-assessment election, the non-zero annual volume answer and the Modelo 390 exemption applicability. A filing coordinate admits ordinary authoring and applicability attestation only when it is quarterly and the law-selected Modelo 303 revision for that quarter declares all three facts in its official record design (producer keys `m303.joint_return_elected`, `m303.annual_volume_nonzero` and `m303.exonerado_390_applicable`). Support therefore follows the registry instead of a year constant. Every authored revision from 2022 through `2026-y-siguientes` declares the three facts, so 2026 quarters are no longer refused. The 2026 design's new hydrocarbon-deposit header fact is profile-owned and does not enter the operator evidence. Monthly coordinates and coordinates outside the registry envelope still refuse before custody is touched. Grounding for the per-revision declarations is the registry record design cited by each revision's export layout; no new authority generation or publication is implied.
+Accepted 2026-09-23 under the IVA implementation authorization, refining the first-slice scope rather than reversing it. The ordinary evidence envelope carries three operator-declared header facts: the joint self-assessment election, the non-zero annual volume answer and the Modelo 390 exemption applicability. A filing coordinate admits ordinary authoring and applicability attestation only when it is quarterly and the law-selected Modelo 303 revision for that quarter declares all three facts in its official record design (producer keys `m303.joint_return_elected`, `m303.annual_volume_nonzero` and `m303.exonerado_390_applicable`). Support therefore follows the registry instead of a year constant. Every authored revision, through the open `2026-y-siguientes` revision, declares the three facts, so quarters of the open revision are no longer refused. The open revision's design's new hydrocarbon-deposit header fact is profile-owned and does not enter the operator evidence. Monthly coordinates and coordinates outside the registry envelope still refuse before custody is touched. Grounding for the per-revision declarations is the registry record design cited by each revision's export layout; no new authority generation or publication is implied.
 
 ## Amendment 3 — Period-scoped ordinary evidence and monthly coordinates
 
-Accepted 2026-09-23 under the IVA implementation authorization, refining Amendment 2. Every bundled Modelo 303 record design from 2022 through `2026-y-siguientes` (DP30301, fields 14, 23 and 24 with Notas 3, 4 and 5) scopes the three operator header facts by settlement period, and Orden EHA/3786/2008 art. 7 establishes monthly and quarterly settlement periods alike, each with a last period of the year. The first slice asked for every fact in every period and printed the annual-volume answer where the design forbids it; that wrong output is corrected separately and this amendment aligns the evidence contract with the same rule.
+Accepted 2026-09-23 under the IVA implementation authorization, refining Amendment 2. Every bundled Modelo 303 record design, from the earliest authored edition through the open `2026-y-siguientes` edition (DP30301, fields 14, 23 and 24 with Notas 3, 4 and 5) scopes the three operator header facts by settlement period, and Orden EHA/3786/2008 art. 7 establishes monthly and quarterly settlement periods alike, each with a last period of the year. The first slice asked for every fact in every period and printed the annual-volume answer where the design forbids it; that wrong output is corrected separately and this amendment aligns the evidence contract with the same rule.
 
 - Coordinates: ordinary evidence is admitted for any quarterly (1T–4T) or monthly (01–12) Modelo 303 period whose law-selected revision declares the three producer keys and whose filing schedule applies to the taxpayer profile. The revision's schedules carry RD 1624/1992 art. 71 (REDEME-registered and large-company filers settle monthly, every other filer quarterly) and are evaluated by the canonical schedule evaluator; the evidence neither asserts nor infers the cadence itself, and a period outside the applicable schedule refuses.
 - Joint self-assessment election (field 14): required in every period.

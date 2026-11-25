@@ -77,6 +77,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, NamedTuple
 
@@ -86,19 +87,22 @@ from ...core.spanish_postcode import is_spanish_postcode
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
-from . import country_vocabulary as _country_vocabulary
+from . import country_vocabulary
 from .classification import require_iva_territorial_scope, territorial_scope_alias
 from .schema import IvaTerritorialScope
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.runtime_catalogues import TerritoryCarveOut
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",
     "StatedCountryCodeStatus",
+    "catalogued_country_codes",
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
     "country_code_for_stated_country_code",
+    "is_iso_3166_user_assigned_alpha2",
     "record_country_code_status",
     "stated_country_code_status",
     "territorial_scope_for_country",
@@ -119,11 +123,17 @@ twice is the drift this codebase keeps closing.
 """
 
 
-def _eu_member_codes(*, operation: PinnedAuthorityOperation) -> frozenset[str]:
-    """Return non-Spanish EU codes projected from fact 0131."""
+def _eu_member_codes(*, effective_date: date | None, operation: PinnedAuthorityOperation) -> frozenset[str]:
+    """Return non-Spanish EU codes projected from fact 0131.
+
+    A date selects the catalogue in force on it, which is the only reading that may
+    decide a party's territorial scope: membership changes over time. ``None``
+    reads the vocabulary across the support envelope and answers only whether a
+    token is catalogued, never whether a state was a member on a day.
+    """
     return frozenset(
         str(member).upper()
-        for member in resolve_eu_member_state_catalogue(authority=operation).all_states
+        for member in resolve_eu_member_state_catalogue(effective_date=effective_date, authority=operation).all_states
         if str(member).upper() != SPAIN_COUNTRY_CODE
     )
 
@@ -242,22 +252,8 @@ class _CarveOut(NamedTuple):
     establishes_nothing: bool
 
 
-def _territory_carve_outs(
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[str, _CarveOut]:
-    """Return every territory whose IVA treatment its country code does not give.
-
-    Read from the published runtime authority, where the compiler has already
-    verified the legal grounding and disposition invariants.
-
-    Returns:
-        Each alpha-2 code mapped to its disposition.
-
-    Raises:
-        IvaCatalogueError: When a published scope cannot be adapted into the
-            operational closed set.
-    """
+def _territory_carve_out_records(*, operation: PinnedAuthorityOperation) -> list[tuple[str, TerritoryCarveOut]]:
+    """Return the published carve-out rows without adapting their scope tokens."""
     from ..calculations.registry.runtime_catalogues import TerritoryCarveOut
 
     loaded = operation.runtime_catalogue("territory_carve_outs")
@@ -272,20 +268,39 @@ def _territory_carve_outs(
 
             raise IvaCatalogueError("indexed authority territory component has an invalid shape")
         records.append((code, record))
+    return records
 
+
+def _territory_carve_outs(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, _CarveOut]:
+    """Return every territory whose IVA treatment its country code does not give.
+
+    Read from the published runtime authority, where the compiler has already
+    verified the legal grounding and disposition invariants.
+
+    Returns:
+        Each alpha-2 code mapped to its disposition.
+
+    Raises:
+        IvaCatalogueError: When a published scope cannot be adapted into the
+            operational closed set.
+    """
     return {
         code: _CarveOut(
             assimilated_to=record.assimilated_to,
-            scope=require_iva_territorial_scope(record.scope, operation=operation)
+            scope=require_iva_territorial_scope(record.scope, effective_date=effective_date, operation=operation)
             if record.scope is not None
             else None,
             establishes_nothing=record.establishes_nothing,
         )
-        for code, record in records
+        for code, record in _territory_carve_out_records(operation=operation)
     }
 
 
-def _catalogued_country_codes(
+def catalogued_country_codes(
     *,
     operation: PinnedAuthorityOperation,
 ) -> frozenset[str]:
@@ -313,11 +328,22 @@ def _catalogued_country_codes(
             its one-name-one-country invariant.
     """
     return (
-        frozenset(_country_vocabulary.country_codes_by_printed_name(operation=operation).values())
-        | _eu_member_codes(operation=operation)
+        frozenset(country_vocabulary.country_codes_by_printed_name(operation=operation).values())
+        | _eu_member_codes(effective_date=None, operation=operation)
         | {SPAIN_COUNTRY_CODE}
-        | frozenset(_territory_carve_outs(operation=operation))
+        | frozenset(code for code, _ in _territory_carve_out_records(operation=operation))
     )
+
+
+def is_iso_3166_user_assigned_alpha2(code: str) -> bool:
+    """Return whether *code* is an alpha-2 pair ISO 3166-1 reserves for private use.
+
+    Such a pair denotes no country by construction. It matters here because a
+    jurisdiction code the tax vocabularies carry for their own purposes, such as
+    Northern Ireland's ``XI`` IVA prefix, sits inside a reserved range and must
+    never be served where an ISO country is expected.
+    """
+    return code.strip().upper() in _USER_ASSIGNED_ALPHA2
 
 
 def stated_country_code_status(
@@ -353,7 +379,7 @@ def stated_country_code_status(
     candidate = stated_code.strip().upper()
     if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
         return None
-    if candidate in _catalogued_country_codes(operation=operation):
+    if candidate in catalogued_country_codes(operation=operation):
         return StatedCountryCodeStatus.CATALOGUED
     if candidate in _USER_ASSIGNED_ALPHA2:
         return StatedCountryCodeStatus.UNASSIGNED
@@ -373,6 +399,7 @@ def _normalise_country_code_for_scope(country_code: str | None) -> str | None:
 def _scope_for_carve_out(
     carve_out: _CarveOut,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Resolve one carve-out's direct scope, refusal, or assimilation parent."""
@@ -384,28 +411,30 @@ def _scope_for_carve_out(
     # rather than reading a scope off the row. The article fixes what a territory
     # is treated as and never what that parent establishes, so following the
     # pointer keeps the answer true as the parent's own status changes.
-    return territorial_scope_for_country(carve_out.assimilated_to, operation=operation)
+    return territorial_scope_for_country(carve_out.assimilated_to, effective_date=effective_date, operation=operation)
 
 
 def _scope_for_catalogued_country(
     country_code: str,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Return the scope for a known code, applying statutory carve-outs first."""
-    carve_out = _territory_carve_outs(operation=operation).get(country_code)
+    carve_out = _territory_carve_outs(effective_date=effective_date, operation=operation).get(country_code)
     if carve_out is not None:
-        return _scope_for_carve_out(carve_out, operation=operation)
+        return _scope_for_carve_out(carve_out, effective_date=effective_date, operation=operation)
     if country_code == SPAIN_COUNTRY_CODE:
         return None
-    if country_code in _eu_member_codes(operation=operation):
-        return territorial_scope_alias("eu_member", operation=operation)
-    return territorial_scope_alias("third_country", operation=operation)
+    if country_code in _eu_member_codes(effective_date=effective_date, operation=operation):
+        return territorial_scope_alias("eu_member", effective_date=effective_date, operation=operation)
+    return territorial_scope_alias("third_country", effective_date=effective_date, operation=operation)
 
 
 def territorial_scope_for_country(
     country_code: str | None,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Return the territorial scope a country code establishes, via the closed vocabulary.
@@ -452,6 +481,7 @@ def territorial_scope_for_country(
             therefore checked before that validator is consulted, so the
             validator stays the single authority on what a well-formed code is
             without an exception being used for ordinary control flow.
+        effective_date: The date whose territorial vocabulary governs the lookup.
         operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
@@ -476,9 +506,9 @@ def territorial_scope_for_country(
             a corrupt bundled table is a defect, not an unestablished party.
     """
     normalised = _normalise_country_code_for_scope(country_code)
-    if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
+    if normalised is None or normalised not in catalogued_country_codes(operation=operation):
         return None
-    return _scope_for_catalogued_country(normalised, operation=operation)
+    return _scope_for_catalogued_country(normalised, effective_date=effective_date, operation=operation)
 
 
 def country_code_for_printed_tax_identifier(
@@ -545,6 +575,7 @@ _POSTAL_PREFIX_LENGTH: Final[int] = 2
 
 def _excluded_territories_by_prefix(
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> dict[str, IvaTerritorialScope]:
     """Return the postal prefixes that name a territory OUTSIDE the TAI.
@@ -578,12 +609,16 @@ def _excluded_territories_by_prefix(
             raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
         records.append((prefix, record))
 
-    return {prefix: require_iva_territorial_scope(record.scope, operation=operation) for prefix, record in records}
+    return {
+        prefix: require_iva_territorial_scope(record.scope, effective_date=effective_date, operation=operation)
+        for prefix, record in records
+    }
 
 
 def territorial_scope_for_spanish_postal_code(
     postal_code: str | None,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Return the Spanish IVA territory a printed postal code establishes.
@@ -599,6 +634,7 @@ def territorial_scope_for_spanish_postal_code(
             (five ASCII digits led by a province code in 01..52) is treated as absent
             rather than coerced, because a document prints what it prints and
             unreadable evidence is a normal outcome of reading.
+        effective_date: The date whose territorial vocabulary governs the lookup.
         operation: The pinned authority operation supplying the territorial registry.
 
     Returns:
@@ -624,10 +660,10 @@ def territorial_scope_for_spanish_postal_code(
     # evidence rather than a mainland code.
     if not is_spanish_postcode(candidate):
         return None
-    excluded = _excluded_territories_by_prefix(operation=operation)
+    excluded = _excluded_territories_by_prefix(effective_date=effective_date, operation=operation)
     return excluded.get(
         candidate[:_POSTAL_PREFIX_LENGTH],
-        territorial_scope_alias("mainland", operation=operation),
+        territorial_scope_alias("mainland", effective_date=effective_date, operation=operation),
     )
 
 
@@ -705,11 +741,11 @@ def country_code_for_stated_country_code(
         # is asked separately so the two questions stay separable and neither
         # authority is asked for the other's answer.
         normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
-        if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
+        if normalised is None or normalised not in catalogued_country_codes(operation=operation):
             return None
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
-        return _country_vocabulary.country_codes_by_alpha3(operation=operation).get(candidate)
+        return country_vocabulary.country_codes_by_alpha3(operation=operation).get(candidate)
     return None
 
 
@@ -851,7 +887,7 @@ def country_code_for_printed_country_name(
     """
     if printed_name is None:
         return None
-    candidate = _country_vocabulary.normalise_printed_country_name(printed_name)
+    candidate = country_vocabulary.normalise_printed_country_name(printed_name)
     if not candidate:
         return None
-    return _country_vocabulary.country_codes_by_printed_name(operation=operation).get(candidate)
+    return country_vocabulary.country_codes_by_printed_name(operation=operation).get(candidate)

@@ -13,14 +13,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from .casilla_lineage_seed_design import (
     DesignOracle,
 )
-from .casilla_lineage_seed_modelo_planner import _ModeloPlanner
+from .casilla_lineage_seed_modelo_planner import ModeloPlanner
 from .casilla_lineage_seed_types import (
     EXCLUDED_MODELOS,
     LineagePlan,
     LineageRefusalCategory,
     PartialStamping,
     Ruling,
-    _partial_stamping_error,
+    partial_stamping_error,
 )
 
 
@@ -40,13 +40,13 @@ def plan_modelo(
     """
     forbidden: frozenset[str] = frozenset[str]()
     while True:
-        planner = _ModeloPlanner(modelo_id, modelo, oracle, rulings.get(modelo_id, []), forbidden)
+        planner = ModeloPlanner(modelo_id, modelo, oracle, rulings.get(modelo_id, []), forbidden)
         plan = planner.run()
         unsettled = planner.settle_partial_stamps()
         if not unsettled:
             return plan
         if unsettled <= forbidden:
-            raise _partial_stamping_error(modelo_id, planner.partial_stamp_records(unsettled))
+            raise partial_stamping_error(modelo_id, planner.partial_stamp_records(unsettled))
         forbidden |= unsettled
 
 

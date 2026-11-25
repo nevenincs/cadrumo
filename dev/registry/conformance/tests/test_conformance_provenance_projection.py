@@ -13,7 +13,7 @@ from ...maintenance_support import (
     revision_selection_coordinates,
 )
 from ..profile import RegistryConformanceProfile
-from ._conformance_profile_fixtures import degraded_profile, validated_profile
+from .conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 

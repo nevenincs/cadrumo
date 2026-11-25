@@ -22,14 +22,15 @@ from cadrumo_client.contracts.login import LoginInventory
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ...adapters.windows_process import WindowsOwnedProcess
 from .. import main
 from ..arguments import parse_runtime_arguments
 from ..profile_connections import RuntimeProfileConnections
-from .test_profile_connections import LoginObservation, connect, login
+from .served_runtime import connect_verified
+from .test_profile_connections import LoginObservation, login
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -178,7 +179,7 @@ def test_login_witness_loss_drains_real_worker_without_revoking_grants(tmp_path:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                api, human = connect(endpoint), connect(endpoint)
+                api, human = connect_verified(endpoint), connect_verified(endpoint)
                 clients.extend((api, human))
                 admitted = login(api, profile, "api_key", secret.get_secret_value())
                 assert isinstance(admitted, ProfileStatus) and admitted.status.denial is None

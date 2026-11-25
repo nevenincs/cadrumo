@@ -1,0 +1,340 @@
+//! The ledger definitions the window may name: closed and owned by the host.
+//! These are the `ledger.*` operations reached by `aeat app ledger` and by
+//! the TUI ledger workspace. Any other definition is refused before it
+//! reaches the relay.
+//!
+//! Each one carries where its subject comes from, read from the registered
+//! contract by `relay_contracts.py` and pinned by the tests below.
+
+use super::super::settle::Settling;
+
+/// What settling an admitted definition can mean for the profile's records.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Kind {
+    /// Declares no effect that changes records.
+    Read,
+    /// May change records: an outcome that was not observed is unknown.
+    Write,
+    /// May change records, after the person answers its review.
+    Review,
+}
+
+/// The form a definition's subject reference takes in its contract.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Subject {
+    /// The signed-in profile.
+    Profile,
+    /// The value of one request field, outermost name first.
+    Field(&'static [&'static str]),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct Definition {
+    pub(super) id: &'static str,
+    pub(super) kind: Kind,
+    pub(super) subject: Subject,
+}
+impl Definition {
+    pub(super) fn mutation(self) -> bool {
+        self.kind != Kind::Read
+    }
+    /// Runs as long as its work lasts: submitted under the serial lock and
+    /// followed without it, so other ledger writes go on meanwhile.
+    pub(super) fn background(self) -> bool {
+        BACKGROUND.contains(&self.id)
+    }
+    pub(super) fn settling(self) -> Settling {
+        Settling {
+            id: self.id,
+            mutation: self.mutation(),
+            result_paths: &super::RESULT_PATH_KEYS,
+        }
+    }
+}
+
+use Kind::{Read, Review, Write};
+
+/// The definitions whose subject is not the profile: a classification review
+/// holds only the movement it asks about.
+const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["transaction_id"])];
+
+/// The definitions whose run can outlast any wait the window makes: a
+/// classification job's run asks a model about each of its movements.
+const BACKGROUND: [&str; 1] = ["ledger.classify.job.run"];
+
+const ADMITTED: &[(&str, Kind)] = &[
+    ("ledger.actividad-asset.acquisition-candidates", Read),
+    ("ledger.actividad-asset.claim", Write),
+    ("ledger.actividad-asset.correct", Write),
+    ("ledger.actividad-asset.create", Write),
+    ("ledger.actividad-asset.describe", Write),
+    ("ledger.actividad-asset.disposal-calculate", Read),
+    ("ledger.actividad-asset.dispose", Write),
+    ("ledger.actividad-asset.filing-handoff", Read),
+    ("ledger.actividad-asset.forecast", Read),
+    ("ledger.actividad-asset.form-options", Read),
+    ("ledger.actividad-asset.inspect", Read),
+    ("ledger.actividad-asset.list", Read),
+    ("ledger.actividad-asset.plan", Read),
+    ("ledger.actividad-asset.timeline", Read),
+    ("ledger.add", Write),
+    ("ledger.allocate", Write),
+    ("ledger.archive", Write),
+    ("ledger.attach", Write),
+    ("ledger.bienes_inversion.declare", Write),
+    ("ledger.bienes_inversion.list", Read),
+    ("ledger.check", Read),
+    ("ledger.classify.bulk", Write),
+    ("ledger.classify.iva-derive", Write),
+    ("ledger.classify.job.apply", Write),
+    ("ledger.classify.job.authorise", Write),
+    ("ledger.classify.job.cancel", Write),
+    ("ledger.classify.job.dismiss", Write),
+    ("ledger.classify.job.enqueue", Write),
+    ("ledger.classify.job.list", Read),
+    ("ledger.classify.job.read", Read),
+    ("ledger.classify.job.retry", Write),
+    ("ledger.classify.job.revoke-consent", Write),
+    ("ledger.classify.job.run", Write),
+    ("ledger.classify.review", Review),
+    ("ledger.classify.single", Write),
+    ("ledger.counterparty", Write),
+    ("ledger.detach", Write),
+    ("ledger.entry-options", Read),
+    ("ledger.evidence.add", Write),
+    ("ledger.evidence.attachment_queue", Read),
+    ("ledger.evidence.attachment_view", Read),
+    ("ledger.evidence.batch", Write),
+    ("ledger.evidence.confirm", Write),
+    ("ledger.evidence.consent.list", Read),
+    ("ledger.evidence.extract", Write),
+    ("ledger.evidence.list", Read),
+    ("ledger.evidence.page", Read),
+    ("ledger.evidence.probe", Read),
+    ("ledger.evidence.query", Read),
+    ("ledger.evidence.remove", Write),
+    ("ledger.evidence.review.list", Read),
+    ("ledger.evidence.review.summary", Read),
+    ("ledger.evidence.review.view", Read),
+    ("ledger.evidence.update", Write),
+    ("ledger.evidence.verify", Write),
+    ("ledger.evidence.view", Read),
+    ("ledger.exclude", Write),
+    ("ledger.export", Write),
+    ("ledger.history", Read),
+    ("ledger.history.typed", Read),
+    ("ledger.import", Write),
+    ("ledger.inventory.closing-authority.record", Write),
+    ("ledger.inventory.closing-value.record", Write),
+    ("ledger.inventory.correct", Write),
+    ("ledger.inventory.create", Write),
+    ("ledger.inventory.describe", Write),
+    ("ledger.inventory.evidence.add", Write),
+    ("ledger.inventory.inspect", Read),
+    ("ledger.inventory.list", Read),
+    ("ledger.inventory.movement.add", Write),
+    ("ledger.inventory.movement.claim", Write),
+    ("ledger.inventory.movement.claim-candidates", Read),
+    ("ledger.inventory.movement.correct", Write),
+    ("ledger.inventory.movement.reverse", Write),
+    ("ledger.inventory.options", Read),
+    ("ledger.inventory.restore", Write),
+    ("ledger.inventory.retire", Write),
+    ("ledger.inventory.valuation.preview", Write),
+    ("ledger.invoice.add", Write),
+    ("ledger.invoice.attach_document", Write),
+    ("ledger.invoice.duplicate", Read),
+    ("ledger.invoice.import", Write),
+    ("ledger.invoice.list", Read),
+    ("ledger.invoice.match", Read),
+    ("ledger.invoice.preview", Read),
+    ("ledger.invoice.remove", Write),
+    ("ledger.invoice.update", Write),
+    ("ledger.invoice.view", Read),
+    ("ledger.invoice.wizard", Write),
+    ("ledger.known-values", Read),
+    ("ledger.link", Write),
+    ("ledger.list", Read),
+    ("ledger.llm-diagnostics", Read),
+    ("ledger.merge", Write),
+    ("ledger.operaciones_vinculadas.list", Read),
+    ("ledger.operaciones_vinculadas.state_none", Write),
+    ("ledger.operaciones_vinculadas.state_operation", Write),
+    ("ledger.operaciones_vinculadas.state_turnover", Write),
+    ("ledger.operaciones_vinculadas.withdraw_none", Write),
+    ("ledger.operaciones_vinculadas.withdraw_operation", Write),
+    ("ledger.operaciones_vinculadas.withdraw_turnover", Write),
+    ("ledger.own_account", Write),
+    ("ledger.participation", Read),
+    ("ledger.participation.rebuild", Write),
+    ("ledger.preflight", Read),
+    ("ledger.prevision_social.list", Read),
+    ("ledger.prevision_social.record", Write),
+    ("ledger.prevision_social.remove", Write),
+    ("ledger.prorrata.declare_gross", Write),
+    ("ledger.prorrata.declare_sector", Write),
+    ("ledger.prorrata.elect_especial", Write),
+    ("ledger.prorrata.elect_general", Write),
+    ("ledger.prorrata.list", Read),
+    ("ledger.prorrata.remove_gross", Write),
+    ("ledger.prorrata.revoke_especial", Write),
+    ("ledger.prorrata.seed", Write),
+    ("ledger.prorrata.seed_sector", Write),
+    ("ledger.prorrata.settle_sector", Write),
+    ("ledger.purchase_evidence.release", Write),
+    ("ledger.ratios.eligible", Read),
+    ("ledger.ratios.list", Read),
+    ("ledger.ratios.set", Write),
+    ("ledger.ratios.unset", Write),
+    ("ledger.ratios.validate", Read),
+    ("ledger.remove", Write),
+    ("ledger.reset", Write),
+    ("ledger.restore", Write),
+    ("ledger.retencion_soportada.attest_absence", Write),
+    ("ledger.retencion_soportada.list", Read),
+    ("ledger.retencion_soportada.list_absences", Read),
+    ("ledger.retencion_soportada.record", Write),
+    ("ledger.retencion_soportada.remove", Write),
+    ("ledger.retencion_soportada.withdraw_absence", Write),
+    ("ledger.review", Read),
+    ("ledger.rule.add", Write),
+    ("ledger.rule.apply", Write),
+    ("ledger.rule.list", Read),
+    ("ledger.rule.remove", Write),
+    ("ledger.rule.trial", Read),
+    ("ledger.sealed.read", Read),
+    ("ledger.split.check", Read),
+    ("ledger.split.manual", Write),
+    ("ledger.split.review", Review),
+    ("ledger.staged.check", Read),
+    ("ledger.stash", Write),
+    ("ledger.status", Read),
+    ("ledger.track", Read),
+    ("ledger.unlink", Write),
+    ("ledger.update", Write),
+    ("ledger.update.batch", Write),
+    ("ledger.update.batch.preview", Read),
+    ("ledger.view", Read),
+];
+
+/// The admitted definition named `id`, if the window may name it.
+pub(super) fn admitted(id: &str) -> Option<Definition> {
+    ADMITTED
+        .binary_search_by(|(admitted, _)| admitted.cmp(&id))
+        .ok()
+        .map(|at| {
+            let id = ADMITTED[at].0;
+            let subject = FIELD_SUBJECTS
+                .iter()
+                .find(|(named, _)| *named == id)
+                .map_or(Subject::Profile, |(_, path)| Subject::Field(path));
+            Definition {
+                id,
+                kind: ADMITTED[at].1,
+                subject,
+            }
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::Value;
+
+    /// The shipped manifest's ledger family, produced by `relay_contracts.py`
+    /// and checked against its source by its `--check` before these tests run.
+    fn contracts() -> Value {
+        serde_json::from_str(include_str!("relay_contracts.json")).unwrap()
+    }
+
+    #[test]
+    fn the_admitted_list_is_the_ledger_family_of_the_shipped_manifest() {
+        let contracts = contracts();
+        let shipped = contracts["operations"].as_object().unwrap();
+        let admitted: Vec<&str> = ADMITTED.iter().map(|(id, _)| *id).collect();
+        let mut sorted = admitted.clone();
+        sorted.sort_unstable();
+        sorted.dedup();
+        assert_eq!(admitted, sorted, "the list is sorted and has no repeat");
+        assert!(admitted.iter().all(|id| id.starts_with("ledger.")));
+        let missing: Vec<_> = admitted
+            .iter()
+            .filter(|id| !shipped.contains_key(**id))
+            .collect();
+        assert!(missing.is_empty(), "admitted but not shipped: {missing:?}");
+        let unadmitted: Vec<_> = shipped
+            .keys()
+            .filter(|id| !admitted.contains(&id.as_str()))
+            .collect();
+        assert!(
+            unadmitted.is_empty(),
+            "shipped but neither admitted nor refused here: {unadmitted:?}"
+        );
+        for (id, kind) in ADMITTED.iter().copied() {
+            let facts = &shipped[id];
+            let expected = match (facts["review"] == true, facts["may_write"] == true) {
+                (true, true) => Review,
+                (false, true) => Write,
+                (false, false) => Read,
+                (true, false) => panic!("{id} pauses for a review but writes nothing"),
+            };
+            assert_eq!(kind, expected, "{id}");
+            let (subject, path): (&str, &[&str]) = match super::admitted(id).unwrap().subject {
+                Subject::Profile => ("profile", &[]),
+                Subject::Field(path) => ("payload_field", path),
+            };
+            assert_eq!(
+                facts["subject"],
+                serde_json::json!({"kind": subject, "path": path}),
+                "{id}"
+            );
+        }
+        assert!(
+            FIELD_SUBJECTS
+                .iter()
+                .all(|(id, _)| ADMITTED.iter().any(|(admitted, _)| admitted == id)),
+            "a field subject names an admitted definition"
+        );
+    }
+
+    #[test]
+    fn only_a_classification_job_run_is_followed_in_the_background() {
+        let background: Vec<&str> = ADMITTED
+            .iter()
+            .filter(|(id, _)| super::admitted(id).unwrap().background())
+            .map(|(id, _)| *id)
+            .collect();
+        assert_eq!(background, ["ledger.classify.job.run"]);
+        let run = super::admitted("ledger.classify.job.run").unwrap();
+        assert_eq!((run.kind, run.subject), (Write, Subject::Profile));
+        for id in [
+            "ledger.classify.job.cancel",
+            "ledger.classify.review",
+            "ledger.update",
+        ] {
+            assert!(!super::admitted(id).unwrap().background(), "{id}");
+        }
+    }
+
+    #[test]
+    fn only_an_admitted_definition_is_found() {
+        let found = admitted("ledger.classify.review").unwrap();
+        assert_eq!(found.kind, Review);
+        assert!(found.mutation());
+        assert_eq!(found.subject, Subject::Field(&["transaction_id"]));
+        assert_eq!(
+            admitted("ledger.split.review").unwrap().subject,
+            Subject::Profile
+        );
+        assert!(!admitted("ledger.list").unwrap().mutation());
+        for refused in [
+            "",
+            "ledger",
+            "ledger.list ",
+            "user-profile.view",
+            "auth.local-read",
+        ] {
+            assert!(admitted(refused).is_none(), "{refused:?}");
+        }
+    }
+}

@@ -44,6 +44,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
     PublishedIvaPlaceOfSupplyRule,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule
 from dev.registry.conformance.iva_regulation_catalogue import resolve_catalogue
@@ -131,7 +132,7 @@ def _narrow_by_rewriting_citation_windows(source: Path, year: int) -> None:
         from_year = int(match["from_year"])
         to_year = int(match["to_year"])
         if from_year == year and to_year == year:
-            from_year = to_year = 1900
+            from_year = to_year = filing_year_envelope().floor - 1
         elif to_year == year:
             to_year = year - 1
         elif from_year == year:

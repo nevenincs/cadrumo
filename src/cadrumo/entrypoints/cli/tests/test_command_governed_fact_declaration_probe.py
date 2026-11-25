@@ -91,6 +91,7 @@ from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, Enrollm
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....adapters.persistence.storage.custody.tests.enrollment_support import changed
 from ....application.user_profile import automation_administration_service
+from ....core.storage_environment import TEMPORARY_VARIABLES
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     require_governed_fact_authority,
@@ -106,6 +107,14 @@ __all__ = ["offline_guard_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
+@pytest.fixture(autouse=True)
+def _restore_browser_driver_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return browser startup's process pins after the offline seal refuses its child."""
+    for name in ("PLAYWRIGHT_BROWSERS_PATH", *TEMPORARY_VARIABLES):
+        monkeypatch.setenv(name, os.environ[name])
+
+
 _MISSING_SCOPE_WORDING: Final = (
     "explicit authority operation or scope",
     "generation-pinned governed-fact scope",
@@ -117,9 +126,7 @@ _EXEMPTIONS: Final[dict[str, str]] = {}
 
 #: Optional parameters a command's own handler requires one of, which the
 #: required-parameter derivation alone would leave the handler to refuse.
-_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
-    "config_provision_remove": ("role",),
-}
+_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {}
 
 
 # --- raise-site discovery -------------------------------------------------
@@ -245,7 +252,7 @@ def missing_scope_raise_sites() -> frozenset[RaiseSite]:
 def observe_automation_proposal_validation() -> Generator[list[bool]]:
     """Observe the real operand validator's result without replacing its implementation."""
     results: list[bool] = []
-    code = automation_administration_service._proposal_is_allowed.__code__
+    code = automation_administration_service.proposal_is_allowed.__code__
     tool = free_monitoring_tool()
     sys.monitoring.use_tool_id(tool, "automation-proposal-proof")
 
@@ -354,7 +361,7 @@ def test_the_raise_site_inventory_covers_the_refusal_family() -> None:
     scope_module = os.path.normcase(
         str(Path(cadrumo.__file__).resolve().parent / "domain/calculations/registry/governed_fact_scope.py")
     )
-    m296 = os.path.normcase(str(Path(cadrumo.__file__).resolve().parent / "application/filing/_m296_projection.py"))
+    m296 = os.path.normcase(str(Path(cadrumo.__file__).resolve().parent / "application/filing/m296_projection.py"))
 
     assert any(site.path == scope_module for site in sites)
     assert any(site.path == m296 for site in sites), "the absence-test derivation found no site"

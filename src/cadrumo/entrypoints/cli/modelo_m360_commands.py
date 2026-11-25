@@ -27,7 +27,7 @@ from cadrumo_client.commands.secure_input import (
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ...application.filing.producer_snapshot_m360 import Modelo360ProfileFacts
+from ...application.modelo.m360_solicitud_input import Modelo360ProfileInput
 from ...application.modelo.m360_solicitud_operation import (
     MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
     Modelo360RepresentanteAccountInput,
@@ -40,12 +40,13 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.own_accounts import OwnAccountId
-from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .common import bad, emit_envelope
 from .modelo_m360_results import (
     Modelo360SolicitudChangeResult,
     Modelo360SolicitudListResult,
     Modelo360SolicitudPayload,
 )
+from .profile_bound_clients import active_profile_id
 
 
 class Modelo360SolicitudSecrets(MachineSecretPayload):
@@ -59,9 +60,28 @@ class _SolicitudDocument(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    facts: Modelo360ProfileFacts
+    facts: Modelo360ProfileInput
     own_account_id: OwnAccountId | None = None
     representante_account: Modelo360RepresentanteAccountInput | None = None
+
+
+def _require_solicitud_completion(
+    completed: RegisteredOperationCompletion[Modelo360SolicitudResult],
+    request: Modelo360SolicitudRequest,
+    profile_id: UUID,
+) -> None:
+    result = completed.projection
+    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
+    if (
+        result.profile_id != profile_id
+        or result.action != request.action
+        or result.filing_year != request.filing_year
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or (request.action == "list" and result.changed)
+    ):
+        raise invalid_completion_error(completed)
 
 
 def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360SolicitudResult:
@@ -80,29 +100,15 @@ def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360Sol
         timeout=120,
     )
     result = completed.projection
-    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
-    if (
-        result.profile_id != client.profile_id
-        or result.action != request.action
-        or result.filing_year != request.filing_year
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or (request.action == "list" and result.changed)
-    ):
-        raise invalid_completion_error(completed)
+    _require_solicitud_completion(completed, request, client.profile_id)
     return result
-
-
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
 
 
 def _line(solicitud: Modelo360SolicitudProjection) -> str:
     account = solicitud.own_account_id or solicitud.masked_iban or "-"
     return (
-        f"{solicitud.filing_year}\t{solicitud.pais_destino}\t{solicitud.causa_presentacion.value}"
-        f"\t{solicitud.titular_en_calidad_de.value}\t{account}"
+        f"{solicitud.filing_year}\t{solicitud.pais_destino}\t{solicitud.causa_presentacion}"
+        f"\t{solicitud.titular_en_calidad_de}\t{account}"
     )
 
 
@@ -131,7 +137,7 @@ def m360_declare(
     secrets_fd: int | None = None,
 ) -> None:
     """Declare the solicitud for a filing year; its document arrives only through the secret channel."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         raise bad(tr("cli.modelo.m360.errors.secret_channel_required"))
@@ -155,7 +161,7 @@ def m360_declare(
 
 def m360_list(ctx: typer.Context) -> None:
     """List every declared solicitud by year, destination, holder and masked account."""
-    result = _run(ctx, Modelo360SolicitudRequest(profile_id=_profile_id(), action="list"))
+    result = _run(ctx, Modelo360SolicitudRequest(profile_id=active_profile_id(), action="list"))
     lines = [_line(item) for item in result.solicitudes]
     if not result.solicitudes:
         lines.append(tr("cli.modelo.m360.none"))
@@ -171,7 +177,7 @@ def m360_remove(ctx: typer.Context, filing_year: int) -> None:
     """Remove the solicitud declared for a filing year."""
     result = _run(
         ctx,
-        Modelo360SolicitudRequest(profile_id=_profile_id(), action="remove", filing_year=filing_year),
+        Modelo360SolicitudRequest(profile_id=active_profile_id(), action="remove", filing_year=filing_year),
     )
     _emit_change(ctx, "modelo.m360.remove", filing_year, result)
 

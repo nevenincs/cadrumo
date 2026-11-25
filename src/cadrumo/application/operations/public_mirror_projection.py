@@ -1,0 +1,190 @@
+"""Private transforms for strict public operation mirrors."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from dataclasses import is_dataclass
+from datetime import date
+from decimal import Decimal
+from types import UnionType
+from typing import Union, get_args, get_origin
+
+from pydantic import BaseModel
+
+from ...core.type_guards import is_object_mapping, is_object_tuple
+from . import public_mirror
+from .dataclass_fields import dataclass_instance_fields, dataclass_type_hints
+
+
+def _scalar(value: object) -> public_mirror.PublicScalarValueV1:
+    if value is None:
+        return public_mirror.PublicScalarValueV1(kind="null", text="")
+    if isinstance(value, bool):
+        return public_mirror.PublicScalarValueV1(kind="boolean", text="true" if value else "false")
+    if isinstance(value, int):
+        return public_mirror.PublicScalarValueV1(kind="integer", text=str(value))
+    if isinstance(value, Decimal):
+        return public_mirror.PublicScalarValueV1(kind="decimal", text=str(value))
+    if isinstance(value, date):
+        return public_mirror.PublicScalarValueV1(kind="date", text=value.isoformat())
+    if isinstance(value, str):
+        return public_mirror.PublicScalarValueV1(kind="string", text=value)
+    raise TypeError("unsupported public-mirror scalar")
+
+
+def _fact_entry(key: str, value: object) -> public_mirror.PublicFactEntryV1:
+    scalar = _scalar(value)
+    if scalar.kind == "date":
+        raise TypeError("fact maps cannot contain dates")
+    return public_mirror.PublicFactEntryV1(key=key, kind=scalar.kind, text=scalar.text)
+
+
+def _mapping_key(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("public-mirror mapping key must be text")
+    return value
+
+
+def _mapping_text(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("public-mirror mapping value must be text")
+    return value
+
+
+def _public_model_type(annotation: object, value: object) -> type[BaseModel] | None:
+    annotation = public_mirror.bare_annotation(annotation)
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation
+    origin = get_origin(annotation)
+    if origin in (Union, UnionType):
+        for choice in get_args(annotation):
+            candidate = public_mirror.bare_annotation(choice)
+            if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
+                continue
+            if value is None:
+                continue
+            # Distinct union arms retain their canonical class-name suffix.
+            if candidate.__name__.removeprefix("Public") == type(value).__name__:
+                return candidate
+    return None
+
+
+def _project_mapping(value: Mapping[object, object], public: object) -> object:
+    if not isinstance(public, type) and get_origin(public) is tuple:
+        item = get_args(public)[0]
+        if item is public_mirror.PublicFactEntryV1:
+            return tuple(_fact_entry(_mapping_key(key), fact) for key, fact in value.items())
+        if item is public_mirror.PublicTextEntryV1:
+            return tuple(
+                public_mirror.PublicTextEntryV1(key=_mapping_key(key), value=_mapping_text(fact))
+                for key, fact in value.items()
+            )
+    raise TypeError("unsupported public-mirror mapping")
+
+
+type MirrorServing = Mapping[type[BaseModel], Callable[[BaseModel], BaseModel]]
+"""Per canonical model, the transport-time completion applied to each node of that model before it is mirrored."""
+
+
+def _project_tuple(
+    value: tuple[object, ...],
+    canonical: object,
+    public: object,
+    omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
+) -> tuple[object, ...]:
+    canonical_args = get_args(canonical)
+    public_args = get_args(public)
+    if get_origin(public) is not tuple or not public_args:
+        raise TypeError("public-mirror tuple changed its public shape")
+    if len(public_args) == 2 and public_args[1] is Ellipsis:
+        canonical_item = canonical_args[0] if canonical_args else object
+        return tuple(project_public_value(item, canonical_item, public_args[0], omissions, served) for item in value)
+    if len(value) != len(public_args):
+        raise ValueError("public-mirror fixed tuple changed arity")
+    return tuple(
+        project_public_value(item, canonical_args[index], public_args[index], omissions, served)
+        for index, item in enumerate(value)
+    )
+
+
+def _served_value(value: BaseModel | object, served: MirrorServing) -> BaseModel | object:
+    if isinstance(value, BaseModel) and (serve := served.get(type(value))) is not None:
+        return serve(value)
+    return value
+
+
+def _source_annotations(value: BaseModel | object) -> Mapping[str, object]:
+    """Each canonical field of ``value`` with its annotation, for a model or a dataclass node.
+
+    A canonical model's computed fields are values it decides and serves; its
+    public mirror stores them, so they project like stored fields.
+    """
+    if isinstance(value, BaseModel):
+        model_type = type(value)
+        return {
+            **{name: field.annotation for name, field in model_type.model_fields.items()},
+            **{name: field.return_type for name, field in model_type.model_computed_fields.items()},
+        }
+    hints = dataclass_type_hints(type(value))
+    return {field.name: hints[field.name] for field in dataclass_instance_fields(value)}
+
+
+def _project_model(
+    value: BaseModel | object,
+    public: object,
+    omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
+) -> object:
+    value = _served_value(value, served)
+    target = _public_model_type(public, value)
+    if target is None:
+        raise TypeError("public-mirror model arm is unavailable")
+    if isinstance(value, BaseModel) and target is type(value):
+        return target.model_validate_json(value.model_dump_json(), strict=True)
+    target.model_rebuild()
+    target_fields = target.model_fields
+    source_annotations = _source_annotations(value)
+    allowed_missing = omissions.get(target, frozenset())
+    if frozenset(set(source_annotations) - set(target_fields)) != allowed_missing or set(target_fields) - set(
+        source_annotations
+    ):
+        raise ValueError("public-mirror model field inventory drifted")
+    return target.model_validate(
+        {
+            name: project_public_value(
+                getattr(value, name),
+                source_annotations[name],
+                field.annotation,
+                omissions,
+                served,
+            )
+            for name, field in target_fields.items()
+        }
+    )
+
+
+def project_public_value(
+    value: object,
+    canonical: object,
+    public: object,
+    omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
+) -> object:
+    """Project a canonical value onto its public mirror annotation, recursing through mappings, tuples and models."""
+    canonical, public = public_mirror.bare_annotation(canonical), public_mirror.bare_annotation(public)
+    if public is public_mirror.PublicScalarValueV1:
+        return _scalar(value)
+    if value is None:
+        return None
+    if is_object_mapping(value):
+        return _project_mapping(value, public)
+    if is_object_tuple(value):
+        return _project_tuple(value, canonical, public, omissions, served)
+    if isinstance(value, BaseModel) or is_dataclass(value):
+        return _project_model(value, public, omissions, served)
+    if isinstance(value, Decimal):
+        return str(value)
+    if public is str and isinstance(value, str):
+        return str(value)
+    return value

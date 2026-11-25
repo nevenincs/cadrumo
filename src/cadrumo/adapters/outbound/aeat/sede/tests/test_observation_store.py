@@ -15,6 +15,7 @@ from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -33,6 +34,9 @@ _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
+_YEAR = filing_year_envelope().horizon
+_EXPEDIENTE_ID = f"{_YEAR}10013522222A"
+
 active_storage = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="active_storage")
 
 
@@ -42,19 +46,19 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
 ) -> None:
     root = tmp_path / "observations"
     store = FiledDeclaracionObservationStore(root)
-    body = b"1302026-1T-submitted-file"
+    body = f"130{_YEAR}-1T-submitted-file".encode()
     artefact = _artefact(kind="submitted_file", body=body, content_type="text/plain")
 
     stored = store.persist_artefact(
-        ("130", 2026, Period.from_year_and_code(2026, "1T"), "202610013522222A"), artefact, body
+        ("130", _YEAR, Period.from_year_and_code(_YEAR, "1T"), _EXPEDIENTE_ID), artefact, body
     )
     observation = FiledDeclaracionObservation(
         modelo="130",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="202610013522222A",
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        expediente_id=_EXPEDIENTE_ID,
         status="ALTA",
-        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(stored,),
         casillas=(
@@ -68,7 +72,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=published_snapshot("130", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("130", filing_year=_YEAR, period="1T").snapshot_ref,
     )
 
     manifest_path = store.persist_observation(observation)
@@ -83,20 +87,20 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert body not in persisted_bytes
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
-    assert b"202610013522222A" not in persisted_bytes
+    assert _EXPEDIENTE_ID.encode() not in persisted_bytes
     from .....persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(active_storage.paths.database_file)
     assert body not in database_bytes
     assert b"12345678Z" not in database_bytes
     assert b"12.34" not in database_bytes
-    assert b"202610013522222A" not in database_bytes
+    assert _EXPEDIENTE_ID.encode() not in database_bytes
     persisted_paths = "\n".join(
         str(path.relative_to(root).as_posix()) for path in scan_directory(root, pattern="*", recursive=True)
     )
     assert "12345678Z" not in persisted_paths
-    assert "202610013522222A" not in persisted_paths
-    assert "130/2026/1T" not in persisted_paths
+    assert _EXPEDIENTE_ID not in persisted_paths
+    assert f"130/{_YEAR}/1T" not in persisted_paths
 
 
 def test_store_rejects_artefact_body_that_does_not_match_metadata(
@@ -109,7 +113,7 @@ def test_store_rejects_artefact_body_that_does_not_match_metadata(
 
     with pytest.raises(SedeValidationError, match="byte count"):
         store.persist_artefact(
-            ("130", 2026, Period.from_year_and_code(2026, "1T"), "202610013522222A"), artefact, b"abcd"
+            ("130", _YEAR, Period.from_year_and_code(_YEAR, "1T"), _EXPEDIENTE_ID), artefact, b"abcd"
         )
 
 
@@ -119,15 +123,15 @@ def test_store_rejects_observation_with_printed_number_casilla_reference(
 ) -> None:
     del active_storage
     store = FiledDeclaracionObservationStore(tmp_path / "observations")
-    body = b"3032024-4T-submitted-file"
+    body = f"303{_YEAR}-4T-submitted-file".encode()
     artefact = _artefact(kind="submitted_file", body=body, content_type="text/plain")
     observation = FiledDeclaracionObservation(
         modelo="303",
-        ejercicio=2024,
-        period=Period.from_year_and_code(2024, "4T"),
-        expediente_id="202410013522222A",
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
+        expediente_id=_EXPEDIENTE_ID,
         status="ALTA",
-        presented_at=datetime(2025, 1, 20, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR + 1, 1, 20, 10, 0, 0, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
         casillas=(
@@ -141,7 +145,7 @@ def test_store_rejects_observation_with_printed_number_casilla_reference(
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=published_snapshot("303", filing_year=2024, period="4T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=_YEAR, period="4T").snapshot_ref,
     )
 
     with pytest.raises(SedeValidationError, match=r"canonical casilla\.id"):
@@ -160,5 +164,5 @@ def _artefact(
         content_type=content_type,
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
     )

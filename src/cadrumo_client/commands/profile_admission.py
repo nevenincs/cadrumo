@@ -8,7 +8,6 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.profile_preconditions import (
     profile_password_channel_failure_verdict,
     profile_session_failure_verdict,
@@ -16,6 +15,7 @@ from cadrumo.application.profile_preconditions import (
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
@@ -43,9 +43,10 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installed_client import open_installed_client
 
 
-def _password(
+def password(
     client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
 ) -> None:
+    """Read the profile passphrase from a protected channel or prompt and submit it."""
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
     if selection is None:
@@ -128,7 +129,7 @@ def authenticate_profile_client(
         _api_key(client, selection=root_selection)
         return
     if root_selection is not None:
-        _password(client, selection=root_selection, not_persisted=not_persisted)
+        password(client, selection=root_selection, not_persisted=not_persisted)
         return
     # A live sign-in on this OS login admits every client, attached to a terminal or not.
     try:
@@ -142,7 +143,7 @@ def authenticate_profile_client(
         refusal = error.reason
         if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
             if terminal_can_prompt_for_secrets():
-                _password(client, selection=None, not_persisted=not_persisted)
+                password(client, selection=None, not_persisted=not_persisted)
                 return
             raise attach_cli_policy_verdict(
                 CliRefusedBoundaryError(
@@ -178,11 +179,7 @@ def activate_profile(
         if root_selection is not None or credential_reference is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
-    profile_label = target_profile_label
-    if profile_label is None and credential_reference is None:
-        target = profile_selection.runtime_login_target(bucket_id)
-        if target is not None:
-            profile_label = target.label
+    profile_label = _target_profile_label(bucket_id, target_profile_label, credential_reference)
     if credential_reference is not None:
         client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method, ctx)
     else:
@@ -203,6 +200,18 @@ def activate_profile(
     except BaseException:
         client.close()
         raise
+
+
+def _target_profile_label(
+    bucket_id: str, target_profile_label: str | None, credential_reference: UUID | None
+) -> str | None:
+    """Resolve only an absent human-login label; a credential reference supplies no human identity."""
+    profile_label = target_profile_label
+    if profile_label is None and credential_reference is None:
+        target = profile_selection.runtime_login_target(bucket_id)
+        if target is not None:
+            profile_label = target.label
+    return profile_label
 
 
 def _open_profile_credential_client(

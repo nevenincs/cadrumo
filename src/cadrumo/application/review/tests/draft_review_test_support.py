@@ -8,33 +8,26 @@ tests and are bound only from composition roots.
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.ids import RevisionId
 from ....domain.filing.schema import ModeloDraft
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.models import (
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...calculations.observations_repository import (
     CalculationObservationStorageProtocol,
     ObservationEnvelopePayload,
-    ObservationLayers,
-    ObservationOverride,
-    ObservationSourceKind,
-    PriorDomiciliationElectionProjection,
-    ResultDispositionProjection,
 )
+from ...calculations.tests.observation_repository_stubs import ObservationRepositoryStubs
 from ...filing.draft_review_ports import DraftReviewPorts
 
 
@@ -179,7 +172,7 @@ class _InMemoryObservationStorage:
         return self
 
 
-class InMemoryObservationRepository:
+class InMemoryObservationRepository(ObservationRepositoryStubs):
     """Empty prior-filing observation capability for queue tests."""
 
     def __init__(self) -> None:
@@ -202,72 +195,6 @@ class InMemoryObservationRepository:
     def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
         return iter(self._records)
 
-    def load_observation_layers(
-        self,
-        modelo: str,
-        period: Period,
-        *,
-        member_nif: str | None = None,
-    ) -> ObservationLayers:
-        return ObservationLayers(
-            modelo=modelo,
-            filing_year=period.filing_year,
-            period=period.registry_token,
-            member_nif=member_nif,
-        )
-
-    def promote_pending_local(
-        self,
-        modelo: str,
-        period: Period,
-        *,
-        member_nif: str | None = None,
-        source_kind: ObservationSourceKind,
-        source_metadata: Mapping[str, str],
-        captured_at: datetime,
-    ) -> tuple[SecureObjectWrite, ...]:
-        del modelo, period, member_nif, source_kind, source_metadata, captured_at
-        return ()
-
-    def clear_pending_local(
-        self,
-        modelo: str,
-        period: Period,
-        *,
-        member_nif: str | None = None,
-        replacement_official: ObservationEnvelopePayload | None = None,
-    ) -> tuple[SecureObjectWrite, ...]:
-        del modelo, period, member_nif, replacement_official
-        return ()
-
-    def prepare_observation_envelope(
-        self,
-        observation: RegistryModeloObservation,
-        *,
-        source_kind: ObservationSourceKind | str,
-        stamped_revision_id: RevisionId,
-        captured_at: datetime | None = None,
-        member_nif: str | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-        source_headers: tuple[object, ...] = (),
-        result_disposition: ResultDispositionProjection | None = None,
-        prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        override: ObservationOverride | None = None,
-    ) -> ObservationEnvelopePayload:
-        del (
-            observation,
-            source_kind,
-            stamped_revision_id,
-            captured_at,
-            member_nif,
-            source_metadata,
-            source_headers,
-            result_disposition,
-            prior_domiciliation_election,
-            override,
-        )
-        raise AssertionError("review observation fake does not prepare envelopes")
-
     def save(self, payload: ObservationEnvelopePayload) -> None:
         self._records.append(payload)
 
@@ -283,11 +210,19 @@ class InMemoryObservationRepository:
 class InMemoryProfileRepository:
     """Stable profile projection used by approval-basis calculations."""
 
-    def __init__(self, values: Mapping[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        values: Mapping[str, str] | None = None,
+        *,
+        error: Exception | None = None,
+    ) -> None:
         self._values = values if values is not None else {"identity.tax_id": "00000000T"}
+        self._error = error
 
     def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
         del bucket_id
+        if self._error is not None:
+            raise self._error
         return self._values
 
 
@@ -299,6 +234,8 @@ def draft_review_ports(
     transaction_error: Exception | None = None,
     invoice_error: Exception | None = None,
     draft_error: Exception | None = None,
+    profile_values: Mapping[str, str] | None = None,
+    profile_error: Exception | None = None,
 ) -> DraftReviewPorts:
     """Build the complete required application port bundle for a test."""
     return DraftReviewPorts(
@@ -311,6 +248,6 @@ def draft_review_ports(
             error=invoice_error,
         ),
         observation_repository=InMemoryObservationRepository(),
-        profile_repository=InMemoryProfileRepository(),
+        profile_repository=InMemoryProfileRepository(profile_values, error=profile_error),
         draft_repository=InMemoryDraftRepository(drafts, error=draft_error),
     )

@@ -8,7 +8,6 @@ from uuid import UUID
 import pytest
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.censal_file_import_operation import (
     CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
     CensalFileImportFact,
@@ -17,7 +16,12 @@ from cadrumo.application.user_profile.censal_file_import_operation import (
     CensalFileImportProvenance,
 )
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.config import operation_censal_file_import
 from cadrumo_client.commands.errors import CliRefusedBoundaryError

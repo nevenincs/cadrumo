@@ -6,10 +6,11 @@ from pydantic import BaseModel, field_validator
 
 from ...core.action_argument_resolution import ActionArgumentResolution
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionArgumentStatus
 from ...core.precondition_action_invariants import (
     PreconditionActionIdentity,
+    PreconditionAlternativeAction,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
@@ -27,15 +28,20 @@ class ActionArgumentBinding(ActionArgumentResolution):
     """One recovery-action argument and the verdict data that can supply it."""
 
 
+class AlternativeRecoveryAction(PreconditionAlternativeAction[ActionReference, ActionArgumentBinding]):
+    """One further catalogue action that clears the same failed condition as the verdict's primary action."""
+
+
 class PreconditionVerdict(
-    PreconditionOutcomeInvariant[ConditionEvidence, ActionReference, ActionArgumentBinding],
+    PreconditionOutcomeInvariant[ConditionEvidence, ActionReference, ActionArgumentBinding, AlternativeRecoveryAction],
 ):
     """Application-owned outcome for one failed precondition.
 
     The record identifies the rejected condition and evidence, then carries
-    exactly one actionable recovery reference or an explicit closed
-    no-recovery outcome.  It neither resolves an action catalogue nor embeds
-    presentation text or an executable command.
+    either one primary recovery reference followed by its ordered
+    alternatives, or an explicit closed no-recovery outcome.  It neither
+    resolves an action catalogue nor embeds presentation text or an
+    executable command.
     """
 
 
@@ -59,7 +65,7 @@ class DeclaredNextAction(BaseModel):
     the tree in the first place.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     action: ActionReference
     argument_bindings: tuple[ActionArgumentBinding, ...] = ()
@@ -83,6 +89,7 @@ class DeclaredNextAction(BaseModel):
 __all__ = [
     "ActionArgumentBinding",
     "ActionReference",
+    "AlternativeRecoveryAction",
     "ConditionEvidence",
     "DeclaredNextAction",
     "PreconditionVerdict",

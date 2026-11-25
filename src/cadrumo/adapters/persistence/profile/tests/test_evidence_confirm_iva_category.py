@@ -31,24 +31,24 @@ from cadrumo.core.config import Settings
 from cadrumo.domain.iva.schema import IvaCategory
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 # UNTDID 5305 code AE on a 2.000,00 base with a 0,00 cuota.
-_REVERSE_CHARGE_FIXTURE = _EVIDENCE_CORPUS / "en16931_ubl_reverse_charge_invoice.xml"
+_REVERSE_CHARGE_FIXTURE = EVIDENCE_CORPUS / "en16931_ubl_reverse_charge_invoice.xml"
 
 _PRINTED_BASE = Decimal("2000.00")
 
@@ -67,15 +67,15 @@ def _confirm_the_reverse_charge_document(
     """
     source = tmp_path / "en16931_ubl_reverse_charge_invoice.xml"
     source.write_bytes(_REVERSE_CHARGE_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 
@@ -122,17 +122,17 @@ def test_an_operator_supplied_category_still_wins(
     """
     source = tmp_path / "en16931_ubl_reverse_charge_invoice.xml"
     source.write_bytes(_REVERSE_CHARGE_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
 
     result = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         iva_category=IvaCategory("domestic_exempt"),
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert result.invoice.iva_category == IvaCategory("domestic_exempt")
@@ -140,7 +140,7 @@ def test_an_operator_supplied_category_still_wins(
 
 # UNTDID 5305 code G (export outside the Community, LIVA art. 21) on a 2.000,00
 # base with a 0,00 cuota, printing NO counterparty country at all.
-_EXPORT_NO_COUNTRY_FIXTURE = _EVIDENCE_CORPUS / "en16931_ubl_export_third_country_invoice.xml"
+_EXPORT_NO_COUNTRY_FIXTURE = EVIDENCE_CORPUS / "en16931_ubl_export_third_country_invoice.xml"
 
 
 def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
@@ -176,12 +176,12 @@ def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
     """
     source = tmp_path / _EXPORT_NO_COUNTRY_FIXTURE.name
     source.write_bytes(_EXPORT_NO_COUNTRY_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
 
     result = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         # The document prints no name for this party, which is ordinary and is
@@ -189,7 +189,7 @@ def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
         # classification rather than refusing earlier for an unrelated reason.
         counterparty_name="Exportadora Peninsular SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert result.draft.iva_category == IvaCategory("export_third_country_zero_rated").value, (

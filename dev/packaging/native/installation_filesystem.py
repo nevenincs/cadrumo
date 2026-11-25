@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import os
 import stat
+from collections.abc import Callable
 from pathlib import Path
 from uuid import uuid4
 
@@ -39,6 +40,36 @@ def _parent_still_bound(path: Path, descriptor: int) -> bool:
     return (current.st_dev, current.st_ino) == (held.st_dev, held.st_ino)
 
 
+def _remove_unchanged_claim(
+    path: Path, checksum: str, expected: tuple[int, int], parent_fd: int, held: int, mark_removed: Callable[[], None]
+) -> bool:
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    nonblock = getattr(os, "O_NONBLOCK", 0)
+    if not nofollow or not nonblock:
+        raise ValueError("No-follow nonblocking installation file reads are unavailable")
+    descriptor = os.open("owned", os.O_RDONLY | nofollow | nonblock, dir_fd=held)
+    with os.fdopen(descriptor, "rb") as stream:
+        metadata = os.fstat(stream.fileno())
+        unchanged = (
+            stat.S_ISREG(metadata.st_mode)
+            and (metadata.st_dev, metadata.st_ino) == expected
+            and hashlib.file_digest(stream, "sha256").hexdigest() == checksum
+            and _parent_still_bound(path, parent_fd)
+        )
+        after = os.fstat(stream.fileno())
+        unchanged = unchanged and (metadata.st_size, metadata.st_mtime_ns, metadata.st_ctime_ns) == (
+            after.st_size,
+            after.st_mtime_ns,
+            after.st_ctime_ns,
+        )
+        current = os.stat("owned", dir_fd=held, follow_symlinks=False)
+        if not unchanged or (current.st_dev, current.st_ino) != expected:
+            return False
+        os.unlink("owned", dir_fd=held)
+        mark_removed()
+        return True
+
+
 def _remove_posix(path: Path, checksum: str, expected: tuple[int, int]) -> bool:
     with posix_directory_fd(path.parent) as parent_fd:
         if not _parent_still_bound(path, parent_fd):
@@ -50,6 +81,11 @@ def _remove_posix(path: Path, checksum: str, expected: tuple[int, int]) -> bool:
         quarantine = ".cadrumo-uninstall-" + uuid4().hex
         held = posix_mkdir_child_directory(parent_fd, quarantine)
         claimed = False
+
+        def mark_removed() -> None:
+            nonlocal claimed
+            claimed = False
+
         try:
             try:
                 rename_noreplace_at(
@@ -58,31 +94,7 @@ def _remove_posix(path: Path, checksum: str, expected: tuple[int, int]) -> bool:
             except FileNotFoundError:
                 return True
             claimed = True
-            nofollow = getattr(os, "O_NOFOLLOW", 0)
-            nonblock = getattr(os, "O_NONBLOCK", 0)
-            if not nofollow or not nonblock:
-                raise ValueError("No-follow nonblocking installation file reads are unavailable")
-            descriptor = os.open("owned", os.O_RDONLY | nofollow | nonblock, dir_fd=held)
-            with os.fdopen(descriptor, "rb") as stream:
-                metadata = os.fstat(stream.fileno())
-                unchanged = (
-                    stat.S_ISREG(metadata.st_mode)
-                    and (metadata.st_dev, metadata.st_ino) == expected
-                    and hashlib.file_digest(stream, "sha256").hexdigest() == checksum
-                    and _parent_still_bound(path, parent_fd)
-                )
-                after = os.fstat(stream.fileno())
-                unchanged = unchanged and (metadata.st_size, metadata.st_mtime_ns, metadata.st_ctime_ns) == (
-                    after.st_size,
-                    after.st_mtime_ns,
-                    after.st_ctime_ns,
-                )
-                current = os.stat("owned", dir_fd=held, follow_symlinks=False)
-                if not unchanged or (current.st_dev, current.st_ino) != expected:
-                    return False
-                os.unlink("owned", dir_fd=held)
-                claimed = False
-                return True
+            return _remove_unchanged_claim(path, checksum, expected, parent_fd, held, mark_removed)
         finally:
             try:
                 if claimed:

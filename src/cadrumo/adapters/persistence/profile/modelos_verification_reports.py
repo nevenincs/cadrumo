@@ -46,7 +46,7 @@ from ....domain.modelos.verification_report import VerificationReportCatalogue
 from ....domain.modelos.verification_repository import VerificationReportPersistenceError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ....core.secure_object_write import SecureObjectWrite
@@ -66,7 +66,7 @@ class VerificationReportCatalogueRepository:
 
     The write path (``to_secure_object_write`` / ``save`` / ``exists``)
     composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because it translates a classification or schema-version mismatch
     into :class:`VerificationReportPersistenceError` via

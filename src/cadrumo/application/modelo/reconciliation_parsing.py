@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -82,6 +83,11 @@ class ReconciliationDeclaracionObservation(Protocol):
         """Return whether the selected extraction profile is provisional."""
         ...
 
+    @property
+    def source_pdf_sha256(self) -> str:
+        """Return the lowercase hex SHA-256 of the PDF bytes that were parsed."""
+        ...
+
 
 class ReconciliationEvidenceParserPort(Protocol):
     """Inbound parsing capabilities required by reconciliation."""
@@ -112,9 +118,12 @@ class ReconciliationEvidenceParserPort(Protocol):
         modelo: str,
         filing_year: int,
         period: str,
-        registry_snapshot: RegistrySnapshot,
+        registry_snapshot: RegistrySnapshot | None,
     ) -> ReconciliationDeclaracionObservation:
-        """Parse decrypted declaration bytes against a validated snapshot.
+        """Parse declaration bytes against a validated snapshot.
+
+        Without a snapshot, the parser selects the registry design from the
+        addressed modelo, filing year and period, as the path entry does.
 
         Core types:
         :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
@@ -144,7 +153,10 @@ def reconciliation_evidence_parser() -> ReconciliationEvidenceParserPort:
     try:
         return _BOUND_RECONCILIATION_EVIDENCE_PARSER.get()
     except LookupError as error:
-        raise InternalInvariantError("reconciliation evidence parsing has not been composed") from error
+        raise InternalInvariantError(
+            "reconciliation evidence parsing has not been composed",
+            precondition_verdict=internal_invariant_verdict("reconciliation_evidence_parser.composed"),
+        ) from error
 
 
 __all__ = [

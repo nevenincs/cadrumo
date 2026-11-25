@@ -10,13 +10,14 @@ from cadrumo.domain.calculations.registry.export_field_casilla import (
     derive_casilla_export_refs,
     export_field_casilla_id,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ...form_layout.reconciliation import reconcile_export_casilla_splits
 from ...form_layout.tests.member_scalar_history import scalar_member_history
-from .._export_tree import render_complete_export_tree
-from ..render_check import _revision_render_inputs
+from ..export_tree import render_complete_export_tree
+from ..render_check import build_revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,15 +38,15 @@ def _with_exports(revision, layouts):
 def pair(tmp_path_factory):
     root = Path("src/cadrumo/_data")
     modelo = load_modelo_directory(root / "registry/aeat/modelos/156")
-    revision = scalar_member_history(modelo.revisions["2003-y-siguientes"])
-    inputs = _revision_render_inputs(
+    revision = scalar_member_history(modelo.revisions[str(open_ended_revision("156").id)])
+    inputs = build_revision_render_inputs(
         modelo,
         load_shared_catalogues(root / "registry/aeat"),
         modelo="156",
         revision=str(revision.id),
         source_ref="enrolled-modelo-156-layout",
         bootstrap_transport=None,
-        filing_year=2025,
+        filing_year=filing_year_envelope().horizon,
         period="0A",
         source_root=root,
     )

@@ -80,7 +80,7 @@ legal_refs = [
 source_refs = ["aeat-dr-131-2026-late"]
 
 [[revisions.2026-3t-4t.export_layouts.records.fields]]
-id = "modelo-131-dpa-complementaria-indicator"
+id = "modelo-131-dpa-pagina-complementaria-indicator"
 offset = 12
 length = 1
 kind = "computed"

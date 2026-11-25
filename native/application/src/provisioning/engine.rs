@@ -1,0 +1,2280 @@
+//! The component engine: status, setup, verify and remove for every setup item, composed
+//! from the item modules. The desktop links it in process.
+//!
+//! A setup reads every item's quick state, plans the items the request names, or by
+//! default every item whose row offers the person an action, and checks the planned
+//! items' hosts and the storage volume's free space before it asks for anything. The
+//! person's approval binds the plan's digest: a request that already carries a digest
+//! proceeds only while the plan still has it, and an approval given in answer to a review
+//! is checked against a plan computed again after the answer, so a plan that changed in
+//! between refuses as `plan_changed` and is never set up on an old approval. A Resume
+//! after an interruption therefore needs no second review while its plan is unchanged.
+//!
+//! The items then run one at a time, in setup order, each under its writer lock, and the
+//! setup stops at the first item that does not finish. Each step is recorded before it is
+//! reported as a phase. Progress is throttled to one report per item every 500 ms and
+//! only on a change of at least 1 %, with the first and the last always reported.
+//!
+//! A setup stops between transfer chunks when its cancellation is set, by its owner or by
+//! a cancel request another process leaves beside the item's lock: the request is looked
+//! for at every chunk, so no timer runs.
+//!
+//! A setup of an item another engine is already setting up follows that setup instead of
+//! starting its own: it plans nothing, asks for no review and downloads nothing. It
+//! reports a `Following` event with the digest of the plan the other setup was approved
+//! under, then the other setup's steps, byte progress, retries and server wait as that
+//! setup publishes them in the item's activity record, and ends with the result that setup
+//! reached for the item, read from the end it leaves beside the record. When the follower
+//! is cancelled it stops following and ends `Busy`; the setup it followed goes on. A run
+//! takes the writer locks of all its items before the first one starts, so a follower sees
+//! the whole run as running, follows each of its items in turn, and learns where the run
+//! stopped from the items it never reached.
+//!
+//! The engine never runs the local AI server: the runtime manager runs the one server of
+//! the selected local engine on that engine's fixed address while its program is set up.
+//! The owner hands the engine the same selection with [`Engine::select_local_engine`].
+//!
+//! With Ollama selected, a local AI setup installs the Ollama program, which waits for
+//! the manager to stop any server it runs from the old version, and records the program
+//! with the fixed address. With llama.cpp selected there is no program to download,
+//! install or record: the package carries the llama-server, and the local AI is set up
+//! exactly when the package carries it. Either setup then fetches each selected model
+//! into the store itself, through this engine's own network and only from the hosts the
+//! approved plan names, with no server running for it. The check that follows reads the
+//! files alone: each selected model stored whole, and with llama.cpp selected one the
+//! router can present. It neither starts, waits for nor asks a server, which runs only
+//! while the agent service reads a document; a demanded start that failed is what reads
+//! the program as `program_not_running`. With llama.cpp selected nothing asks for or
+//! records the Ollama program or its server.
+//!
+//! The owner hands the engine the person's local model selection with
+//! [`Engine::select_local_models`]: role, model artefact and download size, as the
+//! selected catalogue entries state them. The engine names no model itself, so with an
+//! empty selection the local AI has no model to run and is not ready: with Ollama selected
+//! its program alone can be set up, and with llama.cpp selected nothing can.
+
+use super::{
+    activity::{
+        ActivityStore, Bytes, EndedOutcome, ItemWriter, Published, Reservation, Retry, RunMark,
+        RunStop, Watched,
+    },
+    browser::{self, BrowserLayout, DriverManifest, LaunchContext},
+    connection::Network,
+    failure::{FailureCategory, TransferFailure},
+    follow::{self, Changes},
+    items::{Destination, ItemId, Locations, PROGRAM_PART},
+    local_ai::{
+        self, LocalAiError, LocalEngine, NotRunningCause, Placement, StartFailureKind,
+        hardware::Hardware,
+        llama_server::{LlamaServer, LlamaServerUnavailable},
+        models::{LocalModels, ModelName, Models},
+        program::Program,
+        supervision::EngineProgram,
+    },
+    network::{self, HOST_TIMEOUT, Reachability},
+    pins::{ComponentPins, Platform, ProgramIdentity},
+    plan::{PlanEntry, PlanPart, SetupPlan},
+    receipts::{ReceiptReading, ReceiptStore},
+    state::{
+        self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, SetupStep,
+        StatusRow,
+    },
+    transfer::{RetryPolicy, SystemPacing, Transfer, TransferEvent},
+};
+use crate::{
+    component::Cancellation,
+    error::Error,
+    filesystem,
+    value::{HostName, Sha256Digest},
+};
+use serde::Serialize;
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet},
+    ffi::OsString,
+    fs,
+    hash::{BuildHasher, Hasher},
+    net::SocketAddr,
+    path::{Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::{Duration, Instant, SystemTime},
+};
+
+/// The shortest interval between two progress reports of one item.
+pub const PROGRESS_INTERVAL: Duration = Duration::from_millis(500);
+
+/// What the engine reports while it works.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Event {
+    /// The setup follows another engine's setup of `item`, approved under `plan_digest`,
+    /// instead of setting the item up itself; reported once per item, before its steps.
+    Following {
+        item: ItemId,
+        plan_digest: Sha256Digest,
+    },
+    /// `item` reached `step`; its phase code is [`SetupStep::phase_code`].
+    Phase { item: ItemId, step: SetupStep },
+    /// Bytes held so far out of the item's whole known download.
+    Progress {
+        item: ItemId,
+        completed: u64,
+        total: u64,
+    },
+    /// A transient failure is retried as `attempt` after `delay`; reported before waiting.
+    Retrying {
+        item: ItemId,
+        attempt: u32,
+        delay: Duration,
+    },
+    /// A part of `item`'s plan reached `step`: its program, or the part pulling `model`.
+    /// A part whose model an earlier part already pulled reports nothing.
+    Part {
+        item: ItemId,
+        part: String,
+        model: Option<String>,
+        step: SetupStep,
+    },
+    /// Bytes `part` holds so far out of that part's own known download, reported with the
+    /// item's [`Event::Progress`].
+    PartProgress {
+        item: ItemId,
+        part: String,
+        completed: u64,
+        total: u64,
+    },
+}
+
+/// How a command ended, as one closed code.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Outcome {
+    /// A status, plan or verify answered.
+    Ok,
+    /// Every requested item is already set up, or none can be.
+    NothingToDo,
+    /// Every planned item was set up.
+    Completed,
+    /// The person did not approve the plan.
+    NeedsApproval,
+    /// The plan is not the one approved; it is reported for a new approval.
+    PlanChanged,
+    /// Another setup or removal is changing the item, and this command did not follow it
+    /// to its end.
+    Busy,
+    /// The setup was refused before anything changed, for `failure`.
+    Refused,
+    /// An item's setup or removal did not finish, for `failure`.
+    Failed,
+    /// The setup stopped because it was asked to.
+    Cancelled,
+    /// The requested items were removed.
+    Removed,
+}
+
+impl Outcome {
+    /// Whether the command did what was asked.
+    pub fn succeeded(self) -> bool {
+        matches!(
+            self,
+            Self::Ok | Self::NothingToDo | Self::Completed | Self::Removed
+        )
+    }
+}
+
+/// What one command found and did. `rows` is every item's state after the command;
+/// `plan` is the plan a setup reports; `item` and `failure` name the item and the
+/// category a refusal or failure is for, `failure_cause` what ran out or broke when
+/// the local AI server did not come up or answer (`program_not_running`, or
+/// `engine_program_unusable` for a program the system refused), and `download_failure` the facts of a
+/// download that ended the item, both for diagnostics only; `items` are the items a
+/// removal removed, or the items another engine is changing.
+#[derive(Clone, Debug)]
+pub struct Report {
+    pub outcome: Outcome,
+    pub mode: CheckMode,
+    pub rows: Vec<StatusRow>,
+    pub plan: Option<SetupPlan>,
+    pub item: Option<ItemId>,
+    pub failure: Option<FailureCategory>,
+    pub failure_cause: Option<Box<NotRunningCause>>,
+    pub download_failure: Option<Box<TransferFailure>>,
+    pub items: Vec<ItemId>,
+}
+
+impl Report {
+    fn new(outcome: Outcome, rows: Vec<StatusRow>) -> Self {
+        Self {
+            outcome,
+            mode: CheckMode::Quick,
+            rows,
+            plan: None,
+            item: None,
+            failure: None,
+            failure_cause: None,
+            download_failure: None,
+            items: Vec::new(),
+        }
+    }
+
+    fn for_item(mut self, item: ItemId, failure: Option<FailureCategory>) -> Self {
+        self.item = Some(item);
+        self.failure = failure;
+        self
+    }
+
+    fn with_cause(mut self, cause: Option<NotRunningCause>) -> Self {
+        self.failure_cause = cause.map(Box::new);
+        self
+    }
+
+    fn with_download_failure(mut self, failure: Option<TransferFailure>) -> Self {
+        self.download_failure = failure.map(Box::new);
+        self
+    }
+
+    fn with_plan(mut self, plan: SetupPlan) -> Self {
+        self.plan = Some(plan);
+        self
+    }
+
+    /// The digest an approval of the reported plan binds.
+    pub fn plan_digest(&self) -> Option<Sha256Digest> {
+        self.plan.as_ref().map(SetupPlan::digest)
+    }
+}
+
+/// What a setup is asked to do.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct SetupRequest {
+    /// The items to set up; `None` is every item whose row offers an action.
+    pub items: Option<Vec<ItemId>>,
+    /// The digest of a plan the person already approved, such as the one a Resume
+    /// repeats. A setup that carries one asks for no review.
+    pub approved: Option<Sha256Digest>,
+    /// Installs the local AI's downloaded program afresh even where its files match
+    /// their receipt, for a program the system refused to start. The models are set up
+    /// as any setup sets them up and none is removed. The packaged llama-server runs
+    /// from the package, which no setup changes, so a reinstall with llama.cpp selected
+    /// is refused as `engine_package_damaged`.
+    pub reinstall: bool,
+}
+
+/// The person's answer to a plan's review.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Answer {
+    /// Approves the plan with this digest.
+    Approve(Sha256Digest),
+    Decline,
+}
+
+/// Reads one setting of the engine's own environment.
+pub type Ambient = dyn Fn(&str) -> Option<OsString> + Send + Sync;
+
+/// The bytes free on the volume holding a path, or `None` when it cannot be read.
+pub type FreeSpace = dyn Fn(&Path) -> Option<u64> + Send + Sync;
+
+/// Everything the owner resolves for the engine: where components live, which pins and
+/// driver this build carries, how to reach publishers, and the host facts the engine
+/// does not measure itself.
+pub struct EngineConfig {
+    /// The installation's storage root, whose volume the free-space rule measures.
+    pub storage_root: PathBuf,
+    pub locations: Locations,
+    pub pins: ComponentPins,
+    /// The bundled browser driver's manifest; `None` when this build carries no driver.
+    pub driver: Option<DriverManifest>,
+    /// This computer's platform; `None` when no pin can name it.
+    pub platform: Option<Platform>,
+    pub network: Network,
+    /// The engine's own environment, for the operating system settings its children
+    /// need.
+    pub ambient: Box<Ambient>,
+    /// The fixed loopback address the manager's Ollama server answers on, recorded for
+    /// the programs that use it.
+    pub local_ai_address: SocketAddr,
+    /// The package's folder for the llama-server it carries; a package without the
+    /// program there has no local AI while llama.cpp is selected.
+    pub llama_server_folder: PathBuf,
+    /// The llama.cpp build tag the package pins its llama-server at.
+    pub llama_server_build: String,
+    /// Where the llama-server runs a model, as the person selected it. The component
+    /// engine never runs the server, so this only completes the program it checks.
+    pub placement: Placement,
+    /// The complete environment a browser check launches the browser with.
+    pub browser_environment: BTreeMap<OsString, OsString>,
+    /// The owner's temporary folder; a browser check's throwaway profile lives inside it.
+    pub scratch: PathBuf,
+    /// The bytes free on the volume holding a path, or `None` when it cannot be read.
+    pub free_space: Box<FreeSpace>,
+    /// This computer's memory when the owner measured it; full checks and setup
+    /// measure it otherwise. Quick status uses only an existing measurement.
+    pub hardware: Option<Hardware>,
+    pub policy: RetryPolicy,
+}
+
+/// The component engine of one installation.
+/// What the selected engine's server does, as a catalogue read is served it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServedServer {
+    /// No server runs and no demanded start failed: it starts when a document is read.
+    Dormant,
+    /// The server runs.
+    Running,
+    /// A demanded start failed, and no server runs.
+    StartFailed,
+}
+
+/// The selected local engine's served facts: its server, and whether each selected
+/// model, by its role, is stored on this computer.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalAiServed {
+    pub engine: LocalEngine,
+    pub server: ServedServer,
+    pub stored: Vec<(String, bool)>,
+}
+
+pub struct Engine {
+    config: EngineConfig,
+    activity: ActivityStore,
+    receipts: ReceiptStore,
+    /// The person's local model selection; empty plans the local AI's program alone.
+    local_models: LocalModels,
+    /// The local engine whose program and server every later command plans, checks and
+    /// removes; the same selection the runtime manager runs the server of.
+    local_engine: LocalEngine,
+    /// Arguments a test's stand-in browser is launched with.
+    #[cfg(test)]
+    pub(crate) browser_leading: Vec<OsString>,
+}
+
+/// Why this build has no program of the selected local engine to check or set up.
+enum NoProgram {
+    /// No program of the selected engine is pinned or packaged for this computer.
+    NotInThisBuild,
+    /// Its pins or its package could not be read.
+    Unreadable(Error),
+}
+
+/// What one quick look at an item found, with what a setup of it would plan.
+struct Survey {
+    reading: Reading,
+    entry: Option<PlanEntry>,
+    /// The local AI's program part read present, whatever its models read; never set for
+    /// another item.
+    program_ready: bool,
+}
+
+/// Why one item's setup or removal did not finish.
+enum Stop {
+    Busy,
+    Failed(FailureCategory),
+    /// Failed as the cause's category (`program_not_running`, or `engine_program_unusable` for a
+    /// program the operating system refused), for the cause it keeps.
+    NotRunning(NotRunningCause),
+    /// A download failed, as its category, for the facts it keeps.
+    Download(TransferFailure),
+}
+
+impl Stop {
+    /// The category this stop fails with, and the cause it keeps for diagnostics.
+    fn failure(self) -> Option<(FailureCategory, Option<NotRunningCause>)> {
+        match self {
+            Self::Busy => None,
+            Self::Failed(category) => Some((category, None)),
+            Self::NotRunning(cause) => Some((cause.category(), Some(cause))),
+            Self::Download(failure) => Some((failure.category, None)),
+        }
+    }
+
+    /// The facts of the download this stop failed in, for diagnostics.
+    fn download_failure(&self) -> Option<TransferFailure> {
+        match self {
+            Self::Download(failure) => Some(failure.clone()),
+            _ => None,
+        }
+    }
+}
+
+/// How following another engine's setup of one item ended.
+enum Followed {
+    /// The item was set up.
+    Completed,
+    /// The followed run did not set the item up: it stopped at `item` for `outcome`.
+    Stopped(RunStop),
+    /// The follower's own cancellation stopped it following; the followed setup goes on.
+    Abandoned,
+    /// What changes the item publishes no setup to follow, as a removal.
+    Unfollowable,
+}
+
+/// One planned item of a run: its writer lock is this run's, another engine's setup holds
+/// it, or taking it failed.
+enum Slot<'a> {
+    Own(ItemWriter<'a>),
+    Follow,
+    Failed(FailureCategory),
+}
+
+impl From<Error> for Stop {
+    fn from(error: Error) -> Self {
+        match error {
+            Error::Busy => Self::Busy,
+            Error::Download(failure) => Self::Download(failure),
+            error => Self::Failed(browser::failure_category(&error)),
+        }
+    }
+}
+
+impl From<LocalAiError> for Stop {
+    fn from(error: LocalAiError) -> Self {
+        match error {
+            LocalAiError::Engine(Error::Busy) => Self::Busy,
+            LocalAiError::Engine(Error::Download(failure)) => Self::Download(failure),
+            LocalAiError::NotRunning(cause) => Self::NotRunning(cause),
+            error => Self::Failed(error.category()),
+        }
+    }
+}
+
+/// The engine's event sink, shared by the steps and the transfers of one command. A phase
+/// is reported when an item's step changes, so a step recorded again is not repeated.
+struct Sink<'e> {
+    events: RefCell<&'e mut dyn FnMut(Event)>,
+    steps: RefCell<BTreeMap<ItemId, SetupStep>>,
+}
+
+impl<'e> Sink<'e> {
+    fn new(events: &'e mut dyn FnMut(Event)) -> Self {
+        Self {
+            events: RefCell::new(events),
+            steps: RefCell::default(),
+        }
+    }
+
+    fn emit(&self, event: Event) {
+        if let Event::Phase { item, step } = event
+            && self.steps.borrow_mut().insert(item, step) == Some(step)
+        {
+            return;
+        }
+        (self.events.borrow_mut())(event);
+    }
+}
+
+/// Turns one item's transfer events into the engine's: progress over the whole item,
+/// throttled, and retry notices; and looks for a cancel request at every chunk.
+struct Reporter<'s, 'e> {
+    sink: &'s Sink<'e>,
+    writer: &'s ItemWriter<'s>,
+    item: ItemId,
+    cancel_request: PathBuf,
+    cancellation: &'s Cancellation,
+    /// Bytes of the item's earlier parts, counted before this part's.
+    offset: u64,
+    /// The item's whole known download, when it is more than one part's.
+    total: Option<u64>,
+    /// The part whose bytes move now, for an item planned in parts.
+    part: Option<String>,
+    last: Option<(Instant, u64)>,
+}
+
+impl Reporter<'_, '_> {
+    fn transfer(&mut self, event: TransferEvent) {
+        match event {
+            TransferEvent::Progress {
+                completed: held,
+                total: whole,
+            } => {
+                if fs::symlink_metadata(&self.cancel_request).is_ok() {
+                    self.cancellation.cancel();
+                }
+                let completed = self.offset.saturating_add(held);
+                let total = self.total.unwrap_or(whole).max(completed);
+                // A part's last bytes are reported even inside the interval, so a part
+                // that finished never reads as unfinished.
+                let part_done = self.part.is_some()
+                    && held >= whole
+                    && self.last.is_none_or(|(_, reported)| reported != completed);
+                if self.due(completed, total) || part_done {
+                    self.last = Some((Instant::now(), completed));
+                    // Published for followers on a best effort: a record that cannot be
+                    // replaced leaves them the previous figure, and the setup goes on.
+                    let _ = self.writer.progress(completed, total);
+                    self.sink.emit(Event::Progress {
+                        item: self.item,
+                        completed,
+                        total,
+                    });
+                    if let Some(part) = self.part.as_ref().filter(|_| whole > 0) {
+                        self.sink.emit(Event::PartProgress {
+                            item: self.item,
+                            part: part.clone(),
+                            completed: held.min(whole),
+                            total: whole,
+                        });
+                    }
+                }
+            }
+            TransferEvent::Retrying { attempt, delay } => {
+                // Best effort, as the progress figure.
+                let _ = self.writer.retrying(attempt, delay);
+                self.sink.emit(Event::Retrying {
+                    item: self.item,
+                    attempt,
+                    delay,
+                });
+            }
+        }
+    }
+
+    /// The first report, the last, and otherwise one at most every interval that moved
+    /// at least 1 % of the total.
+    fn due(&self, completed: u64, total: u64) -> bool {
+        let Some((at, reported)) = self.last else {
+            return true;
+        };
+        if completed == reported {
+            return false;
+        }
+        completed == total
+            || (at.elapsed() >= PROGRESS_INTERVAL
+                && u128::from(completed.abs_diff(reported)) * 100 >= u128::from(total))
+    }
+}
+
+/// The category a reading that is not usable reports for a setup that ends with it.
+fn failure_of(observation: Observation) -> FailureCategory {
+    match observation {
+        Observation::Failed(category) => category,
+        Observation::Blocked(BlockedReason::Offline) => FailureCategory::Offline,
+        Observation::Blocked(BlockedReason::Hardware) => FailureCategory::NotEnoughMemory,
+        Observation::Blocked(BlockedReason::NotInThisBuild) => FailureCategory::NotInThisBuild,
+        Observation::Absent => FailureCategory::DamagedDownload,
+        _ => FailureCategory::Unexpected,
+    }
+}
+
+/// An id no other run of this installation has: two independently keyed hashes of this
+/// moment and process.
+fn run_id() -> String {
+    let state = std::collections::hash_map::RandomState::new();
+    let moment = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_or(0, |since| since.as_nanos());
+    (0u8..2)
+        .map(|part| {
+            let mut hasher = state.build_hasher();
+            hasher.write_u8(part);
+            hasher.write_u128(moment);
+            hasher.write_u32(std::process::id());
+            format!("{:016x}", hasher.finish())
+        })
+        .collect()
+}
+
+fn ended_outcome(outcome: EndedOutcome) -> Outcome {
+    match outcome {
+        EndedOutcome::Completed => Outcome::Completed,
+        EndedOutcome::Failed => Outcome::Failed,
+        EndedOutcome::Cancelled => Outcome::Cancelled,
+        EndedOutcome::Busy => Outcome::Busy,
+    }
+}
+
+/// What a follower has already relayed of one item's published record.
+#[derive(Default)]
+struct Relayed {
+    steps: usize,
+    progress: Option<Bytes>,
+    retry: Option<Retry>,
+}
+
+impl Relayed {
+    /// Reports what `published` holds that was not reported yet: each step reached since,
+    /// then a changed byte figure and a new retry.
+    fn relay(&mut self, item: ItemId, published: &Published, sink: &Sink<'_>) {
+        for step in published.steps.iter().skip(self.steps) {
+            sink.emit(Event::Phase { item, step: *step });
+        }
+        self.steps = self.steps.max(published.steps.len());
+        if published.progress != self.progress {
+            self.progress = published.progress;
+            if let Some(Bytes { completed, total }) = published.progress
+                && total > 0
+            {
+                sink.emit(Event::Progress {
+                    item,
+                    completed: completed.min(total),
+                    total,
+                });
+            }
+        }
+        if published.retry != self.retry {
+            self.retry = published.retry;
+            if let Some(Retry { attempt, delay_ms }) = published.retry {
+                sink.emit(Event::Retrying {
+                    item,
+                    attempt,
+                    delay: Duration::from_millis(delay_ms),
+                });
+            }
+        }
+    }
+}
+
+/// The category a failure of the packaged llama-server reads as: it runs in place from
+/// Cadrumo's package, so a program of it the system refused is the package's damage, which
+/// no setup here replaces.
+fn packaged(category: FailureCategory) -> FailureCategory {
+    match category {
+        FailureCategory::EngineProgramUnusable => FailureCategory::EnginePackageDamaged,
+        other => other,
+    }
+}
+
+/// The nearest folder of `path` that exists, whose volume holds `path` once it is made.
+fn existing_ancestor(path: &Path) -> &Path {
+    path.ancestors()
+        .find(|ancestor| ancestor.is_dir())
+        .unwrap_or(path)
+}
+
+impl Engine {
+    pub fn new(config: EngineConfig) -> Result<Self, Error> {
+        Ok(Self {
+            activity: ActivityStore::new(config.locations.activity.clone())?,
+            receipts: ReceiptStore::new(config.locations.receipts.clone())?,
+            local_models: LocalModels::default(),
+            // Until the person's choice is selected, the default follows what the
+            // package carries.
+            local_engine: local_ai::llama_server_folder_default(&config.llama_server_folder),
+            config,
+            #[cfg(test)]
+            browser_leading: Vec::new(),
+        })
+    }
+
+    pub fn locations(&self) -> &Locations {
+        &self.config.locations
+    }
+
+    /// Selects the local models every later command plans, pulls, checks and removes: the
+    /// person's selection, as the desktop read it. It replaces any earlier selection.
+    pub fn select_local_models(&mut self, models: LocalModels) {
+        self.local_models = models;
+    }
+
+    /// Selects the local engine every later command plans, sets up, checks and removes
+    /// the local AI for: the person's selection, the one the runtime manager runs the
+    /// server of. It replaces any earlier selection; until then the engine is the package's
+    /// default, as `local_ai::package_default_engine` reads it.
+    pub fn select_local_engine(&mut self, engine: LocalEngine) {
+        self.local_engine = engine;
+    }
+
+    /// Every item's state. A quick check reads local facts only; a full check also runs
+    /// each item's network preflight and exercises it: one headless browser launch, and
+    /// one generated token for each selected model.
+    pub fn status(
+        &mut self,
+        mode: CheckMode,
+        items: &[ItemId],
+        events: &mut dyn FnMut(Event),
+        cancellation: &Cancellation,
+    ) -> Report {
+        let rows = match mode {
+            CheckMode::Quick => self.quick_rows(items),
+            CheckMode::Full => self.full_rows(items, &Sink::new(events), cancellation),
+        };
+        Report {
+            mode,
+            ..Report::new(Outcome::Ok, rows)
+        }
+    }
+
+    /// A full check of `items`, every item when empty.
+    pub fn verify(
+        &mut self,
+        items: &[ItemId],
+        events: &mut dyn FnMut(Event),
+        cancellation: &Cancellation,
+    ) -> Report {
+        let items = if items.is_empty() {
+            &ItemId::ALL[..]
+        } else {
+            items
+        };
+        self.status(CheckMode::Full, items, events, cancellation)
+    }
+
+    /// Sets up the requested items under an approval of their plan's digest. Without an
+    /// approved digest in `request`, `review` is asked once, with the plan.
+    pub fn setup(
+        &mut self,
+        request: &SetupRequest,
+        review: &mut dyn FnMut(&SetupPlan) -> Answer,
+        events: &mut dyn FnMut(Event),
+        cancellation: &Cancellation,
+    ) -> Report {
+        let sink = Sink::new(events);
+        let items = request.items.as_deref();
+        let reinstall = request.reinstall;
+        let (rows, plan) = match self.planned(items, reinstall) {
+            Ok((rows, Some(plan))) => (rows, plan),
+            Ok((rows, None)) => return Report::new(Outcome::NothingToDo, rows),
+            Err(report) if report.outcome == Outcome::Busy => {
+                return self.follow_only(&report.items, &sink, cancellation);
+            }
+            Err(report) => return *report,
+        };
+        for entry in &plan.entries {
+            sink.emit(Event::Phase {
+                item: entry.item,
+                step: SetupStep::Plan,
+            });
+        }
+        if let Some(refusal) = self.preflight(&plan, &sink, cancellation) {
+            let outcome = if refusal.1 == FailureCategory::Cancelled {
+                Outcome::Cancelled
+            } else {
+                Outcome::Refused
+            };
+            return Report::new(outcome, rows)
+                .for_item(refusal.0, Some(refusal.1))
+                .with_plan(plan);
+        }
+        if !plan.space.sufficient() {
+            return Report::new(Outcome::Refused, rows)
+                .with_plan(plan)
+                .disk_full();
+        }
+        let digest = plan.digest();
+        let mut plan = match &request.approved {
+            Some(approved) if *approved == digest => plan,
+            Some(_) => return Report::new(Outcome::PlanChanged, rows).with_plan(plan),
+            None => match review(&plan) {
+                Answer::Decline => {
+                    return Report::new(Outcome::NeedsApproval, rows).with_plan(plan);
+                }
+                Answer::Approve(approved) => match self.planned(items, reinstall) {
+                    Ok((_, Some(again))) if again.digest() == approved => again,
+                    Ok((rows, Some(again))) => {
+                        return Report::new(Outcome::PlanChanged, rows).with_plan(again);
+                    }
+                    Ok((rows, None)) => return Report::new(Outcome::NothingToDo, rows),
+                    Err(report) if report.outcome == Outcome::Busy => {
+                        return self.follow_only(&report.items, &sink, cancellation);
+                    }
+                    Err(report) => return *report,
+                },
+            },
+        };
+        // Held until this run's writers publish what they reserve, so a setup of another
+        // item checking its space meanwhile waits and then counts them.
+        let reservation = match self.activity.reservation() {
+            Ok(reservation) => reservation,
+            Err(error) => {
+                let rows = self.quick_rows(&ItemId::ALL);
+                return Report {
+                    failure: Some(browser::failure_category(&error)),
+                    ..Report::new(Outcome::Failed, rows)
+                }
+                .with_plan(plan);
+            }
+        };
+        plan.remeasure(self.free_bytes(), self.reserved_elsewhere(&plan));
+        if !plan.space.sufficient() {
+            drop(reservation);
+            let rows = self.quick_rows(&ItemId::ALL);
+            return Report::new(Outcome::Refused, rows)
+                .with_plan(plan)
+                .disk_full();
+        }
+        let stopped = self.run_plan(&plan, reservation, &sink, cancellation, reinstall);
+        let rows = self.quick_rows(&ItemId::ALL);
+        let report = stopped.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
+        Report { rows, ..report }.with_plan(plan)
+    }
+
+    /// Removes `items`, each under its writer lock, with its receipt and recorded
+    /// activity: the browser's builds, and the whole local AI, which is its program and
+    /// the selected models. A model the person keeps beside them stays. An item a setup
+    /// holds is not removed: the report is `Busy` and names it.
+    pub fn remove(&mut self, items: &[ItemId], events: &mut dyn FnMut(Event)) -> Report {
+        self.removal(items, true, events)
+    }
+
+    /// Removes the local AI's program alone, under the local AI's writer lock: every
+    /// installed version, with the manager's server stopped first, and the item's receipt.
+    /// Every model stays in the models folder, and so does the selection. A local AI a
+    /// setup holds is not removed: the report is `Busy`. The report's `items` hold the
+    /// local AI once it is removed.
+    pub fn remove_program(&mut self, events: &mut dyn FnMut(Event)) -> Report {
+        self.removal(&[ItemId::LocalAi], false, events)
+    }
+
+    /// [`Self::remove`], with the local AI's selected models going with its program or not.
+    fn removal(
+        &mut self,
+        items: &[ItemId],
+        with_models: bool,
+        events: &mut dyn FnMut(Event),
+    ) -> Report {
+        let sink = Sink::new(events);
+        let mut removed = Vec::new();
+        for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
+            let report =
+                |outcome, failure| Report::new(outcome, Vec::new()).for_item(item, failure);
+            let stopped = match self.remove_item(item, with_models, &sink) {
+                Ok(()) => {
+                    removed.push(item);
+                    continue;
+                }
+                Err(stop) => {
+                    let download = stop.download_failure();
+                    match stop.failure() {
+                        None => report(Outcome::Busy, None),
+                        Some((category, cause)) => report(Outcome::Failed, Some(category))
+                            .with_cause(cause)
+                            .with_download_failure(download),
+                    }
+                }
+            };
+            return Report {
+                rows: self.quick_rows(&ItemId::ALL),
+                items: removed,
+                ..stopped
+            };
+        }
+        Report {
+            items: removed,
+            ..Report::new(Outcome::Removed, self.quick_rows(&ItemId::ALL))
+        }
+    }
+
+    /// Removes the local model `name` alone, under the local AI's writer lock: its
+    /// manifest and each layer no other stored model uses, keeping the program, its
+    /// receipt and every other model. The desktop clears the roles that selected it
+    /// first, so the local AI's row then reads from the remaining selection.
+    pub fn remove_model(&mut self, name: &ModelName, events: &mut dyn FnMut(Event)) -> Report {
+        let item = ItemId::LocalAi;
+        let sink = Sink::new(events);
+        let observer = |step| sink.emit(Event::Phase { item, step });
+        let removed = self
+            .activity
+            .begin_observed(item, SetupStep::Cleanup, &observer)
+            .map_err(Stop::from)
+            .and_then(|writer| {
+                let models =
+                    Models::new(LocalModels::default(), self.config.locations.models.clone());
+                let outcome = models.remove_named(name).map_err(Stop::from);
+                finish(writer, outcome)
+            });
+        let rows = self.quick_rows(&ItemId::ALL);
+        match removed {
+            Ok(()) => Report {
+                items: vec![item],
+                ..Report::new(Outcome::Removed, rows)
+            },
+            Err(stop) => {
+                let download = stop.download_failure();
+                match stop.failure() {
+                    None => Report::new(Outcome::Busy, rows).for_item(item, None),
+                    Some((category, cause)) => Report::new(Outcome::Failed, rows)
+                        .for_item(item, Some(category))
+                        .with_cause(cause)
+                        .with_download_failure(download),
+                }
+            }
+        }
+    }
+
+    /// Leaves a cancel request beside each of `items` a setup is running, reading nothing
+    /// else, and returns the items asked. The setup stops at its next transfer chunk.
+    pub fn ask_to_stop(&self, items: &[ItemId]) -> Vec<ItemId> {
+        let mut asked = Vec::new();
+        for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
+            if !matches!(self.activity.activity(item), Ok(Activity::Running(_))) {
+                continue;
+            }
+            let written = filesystem::refuse_links(&self.config.locations.activity)
+                .and_then(|()| Ok(fs::write(self.cancel_request(item), b"")?));
+            if written.is_ok() {
+                asked.push(item);
+            }
+        }
+        asked
+    }
+
+    fn cancel_request(&self, item: ItemId) -> PathBuf {
+        self.config
+            .locations
+            .activity
+            .join(format!("{item}.cancel"))
+    }
+
+    /// Withdraws a cancel request meant for an earlier setup of `item`; called once the
+    /// item's writer lock is held, so only a request made from now on stops this setup.
+    fn clear_cancel_request(&self, item: ItemId) -> Result<(), Error> {
+        match fs::remove_file(self.cancel_request(item)) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error.into()),
+            _ => Ok(()),
+        }
+    }
+
+    fn free_bytes(&self) -> Option<u64> {
+        (self.config.free_space)(existing_ancestor(&self.config.storage_root))
+    }
+
+    /// What the setups of items outside `plan` running now have yet to download under
+    /// this installation's storage root, the volume `plan` is measured on.
+    fn reserved_elsewhere(&self, plan: &SetupPlan) -> u64 {
+        let items: Vec<ItemId> = plan.entries.iter().map(|entry| entry.item).collect();
+        self.activity.reserved_except(&items)
+    }
+
+    fn hardware(&mut self) -> Hardware {
+        match self.config.hardware {
+            Some(hardware) => hardware,
+            None => {
+                let hardware = Hardware::measure(&*self.config.ambient);
+                self.config.hardware = Some(hardware);
+                hardware
+            }
+        }
+    }
+
+    fn browser_layout(&self) -> Option<Result<BrowserLayout, Error>> {
+        let driver = self.config.driver.as_ref()?;
+        let platform = self.config.platform?;
+        Some(BrowserLayout::new(
+            self.config.locations.browsers.clone(),
+            driver,
+            self.config.pins.browser.as_ref(),
+            platform,
+        ))
+    }
+
+    /// The selected local engine's program and the selected models: the Ollama program
+    /// when this build pins it for this platform, or the llama-server when the package
+    /// carries it. The other engine's program is never built.
+    /// Whether the selected engine's server is dormant: no server of it runs and no
+    /// demanded start of it failed, so it starts when a document is read. Files and the
+    /// recorded address only; nothing is started.
+    fn local_ai_dormant(&self) -> bool {
+        match self.local_ai_parts() {
+            Ok((EngineProgram::Ollama(program), _)) => {
+                program.running_server().is_none() && program.latest_start_failure().is_none()
+            }
+            Ok((EngineProgram::LlamaCpp(router), _)) => {
+                router.running_server().is_none() && router.latest_start_failure().is_none()
+            }
+            Err(_) => false,
+        }
+    }
+
+    /// What the manager serves of the selected engine's local AI for a catalogue read:
+    /// whether its server sleeps, runs or failed a demanded start, and whether each
+    /// selected model, by its role, is stored on this computer. Files and the recorded
+    /// address only; nothing is started and no hardware is measured. `None` where the
+    /// engine's program cannot be read in this build.
+    pub fn local_ai_served(&self) -> Option<LocalAiServed> {
+        let (program, models) = self.local_ai_parts().ok()?;
+        let (running, failed) = match &program {
+            EngineProgram::Ollama(program) => (
+                program.running_server().is_some(),
+                program.latest_start_failure().is_some(),
+            ),
+            EngineProgram::LlamaCpp(router) => (
+                router.running_server().is_some(),
+                router.latest_start_failure().is_some(),
+            ),
+        };
+        let server = match (running, failed) {
+            (true, _) => ServedServer::Running,
+            (false, true) => ServedServer::StartFailed,
+            (false, false) => ServedServer::Dormant,
+        };
+        // An unmeasured capacity must not invent a hardware shortfall.
+        let hardware = Hardware::default();
+        let stored = models
+            .selection()
+            .as_slice()
+            .iter()
+            .map(|model| {
+                let present = models.observe_quick(model, &hardware) == Observation::Present;
+                (model.role.clone(), present)
+            })
+            .collect();
+        Some(LocalAiServed {
+            engine: self.local_engine,
+            server,
+            stored,
+        })
+    }
+
+    fn local_ai_parts(&self) -> Result<(EngineProgram, Models), NoProgram> {
+        let program = EngineProgram::select(
+            self.local_engine,
+            || -> Result<Program, NoProgram> {
+                let platform = self.config.platform.ok_or(NoProgram::NotInThisBuild)?;
+                let pins = self
+                    .config
+                    .pins
+                    .program(ProgramIdentity::Ollama)
+                    .ok_or(NoProgram::NotInThisBuild)?;
+                Program::new(pins, platform, self.config.locations.clone())
+                    .map_err(NoProgram::Unreadable)?
+                    .ok_or(NoProgram::NotInThisBuild)
+            },
+            || {
+                LlamaServer::packaged(
+                    &self.config.llama_server_folder,
+                    &self.config.llama_server_build,
+                    &self.config.locations,
+                    self.config.placement,
+                )
+                .map_err(|reason| match reason {
+                    LlamaServerUnavailable::NotPackaged => NoProgram::NotInThisBuild,
+                    LlamaServerUnavailable::Invalid => {
+                        NoProgram::Unreadable(Error::Invalid("packaged llama-server".into()))
+                    }
+                })
+            },
+        )?;
+        let models = Models::new(
+            self.local_models.clone(),
+            self.config.locations.models.clone(),
+        );
+        Ok((program, models))
+    }
+
+    /// The hosts the local AI downloads from under the selected engine: the Ollama
+    /// program's pinned hosts and the selected models' with Ollama selected, and the
+    /// selected models' alone with llama.cpp selected; `None` when there is none.
+    fn local_ai_hosts(&self) -> Option<BTreeSet<HostName>> {
+        match self.local_engine {
+            LocalEngine::Ollama => {
+                let mut hosts = network::item_hosts(&self.config.pins, ItemId::LocalAi.as_str())?;
+                hosts.extend(self.local_models.hosts());
+                Some(hosts)
+            }
+            LocalEngine::LlamaCpp => {
+                Some(self.local_models.hosts()).filter(|hosts| !hosts.is_empty())
+            }
+        }
+    }
+
+    /// One quick look at `item`; with `reinstall` the local AI's plan names its
+    /// downloaded program even where its files match their receipt.
+    fn survey(&mut self, item: ItemId, reinstall: bool) -> Survey {
+        match item {
+            ItemId::Browser => self.survey_browser(),
+            ItemId::LocalAi => self.survey_local_ai(reinstall),
+        }
+    }
+
+    fn survey_browser(&self) -> Survey {
+        let layout = match self.browser_layout() {
+            None => return Survey::not_in_this_build(),
+            Some(Err(_)) => return Survey::unreadable(),
+            Some(Ok(layout)) => layout,
+        };
+        let receipt = self.receipts.read(ItemId::Browser);
+        let reading = layout.quick_check(&receipt);
+        let entry = self.config.pins.browser.as_ref().and_then(|pins| {
+            PlanEntry::whole(
+                ItemId::Browser,
+                layout.pending_download_bytes(&receipt),
+                pins.hosts.iter().cloned().collect(),
+                Destination::PlaywrightBrowsers,
+                Some(layout.version().to_owned()),
+            )
+            .ok()
+            .filter(|_| layout.pinned())
+        });
+        Survey {
+            reading,
+            entry,
+            program_ready: false,
+        }
+    }
+
+    fn survey_local_ai(&mut self, reinstall: bool) -> Survey {
+        // Quick status reads local facts only. Hardware discovery can launch slow
+        // driver queries; full checks and setup own that work and retain its result.
+        // An unmeasured capacity must not invent a hardware shortfall.
+        let hardware = self.config.hardware.unwrap_or_default();
+        let (program, models) = match self.local_ai_parts() {
+            Err(NoProgram::NotInThisBuild) => return Survey::not_in_this_build(),
+            Err(NoProgram::Unreadable(_)) => return Survey::unreadable(),
+            Ok(parts) => parts,
+        };
+        let present = Observation::Present;
+        let selected = models.selection().as_slice();
+        let stored: Vec<Observation> = selected
+            .iter()
+            .map(|model| models.observe_quick(model, &hardware))
+            .collect();
+        let mut parts = Vec::new();
+        let (program_observation, version, model_observations) = match &program {
+            EngineProgram::Ollama(program) => {
+                let observation = program.observe_quick();
+                if observation != present || reinstall {
+                    parts.push(program.plan_part());
+                }
+                (observation, program.version().to_owned(), stored.clone())
+            }
+            // The package carries the program: it is there to read, and never planned.
+            EngineProgram::LlamaCpp(router) => {
+                let observed: Vec<Observation> = selected
+                    .iter()
+                    .map(|model| models.observe_presented(model, &hardware, router.folder()))
+                    .collect();
+                (present, router.build().to_owned(), observed)
+            }
+        };
+        let reading = local_ai::reading(
+            CheckMode::Quick,
+            program_observation,
+            Some(version),
+            &model_observations,
+            selected.is_empty() && models.holds_any(program.engine() == LocalEngine::LlamaCpp),
+        );
+        for ((part, in_store), observed) in models
+            .plan_parts()
+            .into_iter()
+            .zip(&stored)
+            .zip(&model_observations)
+        {
+            if *observed == present {
+                continue;
+            }
+            // A model stored whole that the running router does not present yet downloads
+            // nothing: its setup waits for the router to present it, and checks it.
+            parts.push(if *in_store == present {
+                PlanPart {
+                    download_bytes: Some(0),
+                    ..part
+                }
+            } else {
+                part
+            });
+        }
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).ok();
+        Survey {
+            program_ready: program_observation == present,
+            reading,
+            entry,
+        }
+    }
+
+    /// The row a reading gives `item`, with its running or interrupted setup and the
+    /// category its last setup recorded. An activity record that cannot be read leaves
+    /// the item unknown.
+    fn row(&self, item: ItemId, survey: &Survey) -> StatusRow {
+        let declaration = item.declaration();
+        let mut row = match self.activity.activity(item) {
+            Ok(activity) => state::derive_row(
+                declaration,
+                &survey.reading,
+                activity,
+                self.activity.last_failure(item),
+            ),
+            Err(_) => state::derive_row(
+                declaration,
+                &Reading {
+                    observation: Observation::Unreadable,
+                    ..survey.reading.clone()
+                },
+                Activity::Idle,
+                None,
+            ),
+        };
+        if item == ItemId::LocalAi && row.state == ItemState::Ready {
+            row.dormant = self.local_ai_dormant();
+        }
+        // A local AI absent with nothing to plan has no model selected: nothing here sets
+        // it up, and the person's model list beside it offers the download.
+        if item == ItemId::LocalAi && row.state == ItemState::Absent && survey.entry.is_none() {
+            row.recovery = None;
+        }
+        // Absent while its program reads present, the local AI lacks only a model: the
+        // program is set up, and a model downloaded from the person's list is what remains.
+        row.awaits_model =
+            item == ItemId::LocalAi && row.state == ItemState::Absent && survey.program_ready;
+        // An unknown item is checked again, not set up, so it states no download.
+        if !matches!(row.state, ItemState::Ready | ItemState::Unknown) {
+            // An entry that totals only the parts whose size is known would state too little,
+            // or nothing at all as zero, so its size is unknown instead.
+            row.size_estimate_bytes = survey
+                .entry
+                .as_ref()
+                .filter(|entry| !entry.has_unknown_size())
+                .and_then(|entry| entry.download_bytes);
+        }
+        row
+    }
+
+    fn quick_rows(&mut self, items: &[ItemId]) -> Vec<StatusRow> {
+        ItemId::ALL
+            .into_iter()
+            .filter(|item| items.contains(item))
+            .map(|item| {
+                let survey = self.survey(item, false);
+                self.row(item, &survey)
+            })
+            .collect()
+    }
+
+    fn full_rows(
+        &mut self,
+        items: &[ItemId],
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Vec<StatusRow> {
+        ItemId::ALL
+            .into_iter()
+            .filter(|item| items.contains(item))
+            .map(|item| {
+                sink.emit(Event::Phase {
+                    item,
+                    step: SetupStep::Verify,
+                });
+                let mut survey = self.survey(item, false);
+                let full = match item {
+                    ItemId::Browser => self
+                        .full_browser(cancellation)
+                        .map(|reading| (reading, false)),
+                    ItemId::LocalAi => self.full_local_ai(),
+                };
+                (survey.reading, survey.program_ready) = full.unwrap_or((
+                    Reading {
+                        mode: CheckMode::Full,
+                        ..survey.reading.clone()
+                    },
+                    survey.program_ready,
+                ));
+                let hosts = match item {
+                    ItemId::Browser => network::item_hosts(&self.config.pins, item.as_str()),
+                    ItemId::LocalAi => self.local_ai_hosts(),
+                };
+                if let Some(hosts) = hosts {
+                    let hosts: Vec<HostName> = hosts.into_iter().collect();
+                    let report = network::preflight(
+                        &self.config.network,
+                        &hosts,
+                        HOST_TIMEOUT,
+                        cancellation,
+                    );
+                    // A check cut short by a cancellation found nothing about the hosts.
+                    if !cancellation.is_cancelled() {
+                        survey.reading = survey.reading.held_by_network(&report);
+                    }
+                }
+                self.row(item, &survey)
+            })
+            .collect()
+    }
+
+    #[cfg(not(test))]
+    fn launch_context(&self) -> LaunchContext<'_> {
+        LaunchContext::new(&self.config.browser_environment, &self.config.scratch)
+    }
+
+    /// The production context, launching the test's stand-in browser.
+    #[cfg(test)]
+    fn launch_context(&self) -> LaunchContext<'_> {
+        let mut context =
+            LaunchContext::new(&self.config.browser_environment, &self.config.scratch);
+        context.leading = self.browser_leading.clone();
+        context
+    }
+
+    /// The browser's full check, or `None` when this build cannot read its layout.
+    /// Pinned builds already in place that no receipt of this layout records, as an
+    /// earlier installer left them, are recorded once their launch passes, so the next
+    /// quick check reads them from a current receipt.
+    fn full_browser(&self, cancellation: &Cancellation) -> Option<Reading> {
+        let layout = self.browser_layout()?.ok()?;
+        let receipt = self.receipts.read(ItemId::Browser);
+        let check = layout.full_check(&receipt, &self.launch_context(), cancellation);
+        match check.verified {
+            Some(verified) if layout.pinned() && layout.unrecorded(&receipt) => {
+                Some(self.record_browser(&layout, verified, check.reading))
+            }
+            _ => Some(check.reading),
+        }
+    }
+
+    /// Records builds a full check verified, under the browser's writer lock. A setup or
+    /// removal holding the lock changes the builds itself, so the reading stands
+    /// unrecorded; a receipt another writer recorded meanwhile is kept.
+    fn record_browser(
+        &self,
+        layout: &BrowserLayout,
+        verified: browser::Verified,
+        reading: Reading,
+    ) -> Reading {
+        let item = ItemId::Browser;
+        let Ok(writer) = self.activity.begin(item, SetupStep::Verify) else {
+            return reading;
+        };
+        if !layout.unrecorded(&self.receipts.read(item)) {
+            let _ = writer.held();
+            return reading;
+        }
+        let hosts = self
+            .config
+            .pins
+            .browser
+            .as_ref()
+            .map(|pins| pins.hosts.iter().cloned().collect())
+            .unwrap_or_default();
+        let recorded = layout
+            .record(verified, &self.receipts, hosts, SystemTime::now())
+            .map_err(|error| browser::failure_category(&error));
+        let ended = match recorded {
+            Ok(()) => writer
+                .finished()
+                .map_err(|error| browser::failure_category(&error)),
+            Err(category) => {
+                let _ = writer.failed(category);
+                Err(category)
+            }
+        };
+        match ended {
+            Ok(()) => reading,
+            Err(category) => Reading {
+                observation: Observation::Failed(category),
+                ..reading
+            },
+        }
+    }
+
+    /// The local AI's full check on the selected engine's server. With Ollama: the
+    /// program's files and the manager's server answering for it, then one generated
+    /// token for each selected model on that server. With llama.cpp: the manager's router
+    /// answering ready as the packaged build, then for each selected model the router's
+    /// list, a load, one generated token and the unload. Without a running server the
+    /// server is dormant: the program reads present unless its latest demanded start
+    /// failed, and each model only as its quick check says. With the reading, whether the
+    /// program part read present.
+    fn full_local_ai(&mut self) -> Option<(Reading, bool)> {
+        let hardware = self.hardware();
+        let (program, models) = self.local_ai_parts().ok()?;
+        let present = Observation::Present;
+        let selected = models.selection().as_slice();
+        let (program_observation, version, models_observed) = match &program {
+            EngineProgram::Ollama(program) => {
+                let program_observation = program.observe_full();
+                let models_observed: Vec<Observation> = match program.running_server() {
+                    Some(server) if program_observation == present => selected
+                        .iter()
+                        .map(|model| models.observe_full(&server, model, &hardware))
+                        .collect(),
+                    _ => selected
+                        .iter()
+                        .map(|model| models.observe_quick(model, &hardware))
+                        .collect(),
+                };
+                (
+                    program_observation,
+                    program.version().to_owned(),
+                    models_observed,
+                )
+            }
+            EngineProgram::LlamaCpp(router) => {
+                let folder = router.folder();
+                let running = router.running_server().is_some();
+                let models_observed: Vec<Observation> = selected
+                    .iter()
+                    .map(|model| {
+                        if running {
+                            models.observe_full_on_router(folder, model, &hardware)
+                        } else {
+                            models.observe_presented(model, &hardware, folder)
+                        }
+                    })
+                    .collect();
+                let program_observation = if running {
+                    present
+                } else {
+                    match StartFailureKind::observation_without_server(
+                        router.latest_start_failure(),
+                    ) {
+                        Observation::Failed(category) => Observation::Failed(packaged(category)),
+                        dormant => dormant,
+                    }
+                };
+                (
+                    program_observation,
+                    router.build().to_owned(),
+                    models_observed,
+                )
+            }
+        };
+        let holds_model =
+            selected.is_empty() && models.holds_any(program.engine() == LocalEngine::LlamaCpp);
+        Some((
+            local_ai::reading(
+                CheckMode::Full,
+                program_observation,
+                Some(version),
+                &models_observed,
+                holds_model,
+            ),
+            program_observation == present,
+        ))
+    }
+
+    /// Every item's quick row, and the plan for the requested items, or by default for
+    /// every item whose row offers an action. When any requested item, or by default any
+    /// item, is being set up or removed elsewhere, the answer is busy with those items, for a
+    /// setup to follow. A requested item this computer or build cannot hold refuses; one
+    /// already set up is left out.
+    /// With `reinstall`, the local AI is planned whatever its row reads, its downloaded
+    /// program among its parts; with llama.cpp selected that is refused as
+    /// `engine_package_damaged`.
+    fn planned(
+        &mut self,
+        items: Option<&[ItemId]>,
+        reinstall: bool,
+    ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Box<Report>> {
+        let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
+            .into_iter()
+            .map(|item| (item, self.survey(item, reinstall)))
+            .collect();
+        let rows: Vec<StatusRow> = surveys
+            .iter()
+            .map(|(item, survey)| self.row(*item, survey))
+            .collect();
+        let running: Vec<ItemId> = rows
+            .iter()
+            .filter(|row| match items {
+                None => true,
+                Some(requested) => requested.contains(&row.item),
+            })
+            .filter(|row| matches!(row.state, ItemState::Provisioning | ItemState::Verifying))
+            .map(|row| row.item)
+            .collect();
+        if let Some(first) = running.first() {
+            return Err(Box::new(Report {
+                items: running.clone(),
+                ..Report::new(Outcome::Busy, rows.clone()).for_item(*first, None)
+            }));
+        }
+        let reinstalls_local_ai =
+            reinstall && items.is_none_or(|requested| requested.contains(&ItemId::LocalAi));
+        if reinstalls_local_ai && self.local_engine == LocalEngine::LlamaCpp {
+            return Err(Box::new(Report::new(Outcome::Refused, rows).for_item(
+                ItemId::LocalAi,
+                Some(FailureCategory::EnginePackageDamaged),
+            )));
+        }
+        let chosen: Vec<ItemId> = match items {
+            None => {
+                let mut chosen = state::items_to_set_up(&rows);
+                if reinstalls_local_ai && !chosen.contains(&ItemId::LocalAi) {
+                    chosen.push(ItemId::LocalAi);
+                }
+                chosen
+            }
+            Some(requested) => {
+                let mut chosen = Vec::new();
+                for row in rows.iter().filter(|row| requested.contains(&row.item)) {
+                    let refusal = match row.state {
+                        ItemState::Ready if !(reinstall && row.item == ItemId::LocalAi) => {
+                            continue;
+                        }
+                        ItemState::Blocked(BlockedReason::NotInThisBuild)
+                        | ItemState::Failed(FailureCategory::NotInThisBuild) => {
+                            Some(FailureCategory::NotInThisBuild)
+                        }
+                        ItemState::Blocked(BlockedReason::Hardware)
+                        | ItemState::Failed(FailureCategory::NotEnoughMemory) => {
+                            Some(FailureCategory::NotEnoughMemory)
+                        }
+                        _ => None,
+                    };
+                    if let Some(category) = refusal {
+                        return Err(Box::new(
+                            Report::new(Outcome::Refused, rows.clone())
+                                .for_item(row.item, Some(category)),
+                        ));
+                    }
+                    chosen.push(row.item);
+                }
+                chosen
+            }
+        };
+        let entries: Vec<PlanEntry> = surveys
+            .iter_mut()
+            .filter(|(item, _)| chosen.contains(item))
+            .filter_map(|(_, survey)| survey.entry.take())
+            .collect();
+        if entries.is_empty() {
+            return Ok((rows, None));
+        }
+        let reserved = self.activity.reserved_except(&chosen);
+        let plan = SetupPlan::new(entries, self.free_bytes(), reserved).map_err(|_| Report {
+            failure: Some(FailureCategory::Unexpected),
+            ..Report::new(Outcome::Failed, rows.clone())
+        })?;
+        Ok((rows, Some(plan)))
+    }
+
+    /// Checks the hosts of every planned item that downloads anything; the first item
+    /// whose hosts cannot be reached refuses the setup with its category. A cancellation
+    /// ends the check at once, as the cancelled category.
+    fn preflight(
+        &self,
+        plan: &SetupPlan,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Option<(ItemId, FailureCategory)> {
+        for entry in &plan.entries {
+            if entry.download_bytes == Some(0) {
+                continue;
+            }
+            sink.emit(Event::Phase {
+                item: entry.item,
+                step: SetupStep::Preflight,
+            });
+            let report = network::preflight(
+                &self.config.network,
+                &entry.source_hosts,
+                HOST_TIMEOUT,
+                cancellation,
+            );
+            if cancellation.is_cancelled() {
+                return Some((entry.item, FailureCategory::Cancelled));
+            }
+            if report.outcome() != Reachability::Reachable {
+                return Some((
+                    entry.item,
+                    report
+                        .failure_category()
+                        .unwrap_or(FailureCategory::Unexpected),
+                ));
+            }
+        }
+        None
+    }
+
+    /// Runs the approved plan's items in setup order under one run. Every item's writer
+    /// lock is taken first, so the whole run reads as running from its start; an item
+    /// another engine holds is followed in its turn instead. The first item that does not
+    /// finish stops the run, and the items after it are released as they were, each naming
+    /// where the run stopped.
+    fn run_plan(
+        &mut self,
+        plan: &SetupPlan,
+        reservation: Reservation,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+        reinstall: bool,
+    ) -> Option<Report> {
+        let hardware = self.hardware();
+        let run = RunMark {
+            id: run_id(),
+            plan_digest: plan.digest(),
+        };
+        let observers: Vec<Box<dyn Fn(SetupStep) + '_>> = plan
+            .entries
+            .iter()
+            .map(|entry| {
+                let item = entry.item;
+                Box::new(move |step| sink.emit(Event::Phase { item, step }))
+                    as Box<dyn Fn(SetupStep) + '_>
+            })
+            .collect();
+        let slots: Vec<Slot<'_>> = plan
+            .entries
+            .iter()
+            .zip(&observers)
+            .map(|(entry, observer)| {
+                let reserved = entry.download_bytes.unwrap_or(0);
+                match self
+                    .activity
+                    .queue(entry.item, &run, reserved, observer.as_ref())
+                {
+                    Ok(writer) => match self.clear_cancel_request(entry.item) {
+                        Ok(()) => Slot::Own(writer),
+                        Err(error) => {
+                            let category = browser::failure_category(&error);
+                            match writer.failed(category) {
+                                Ok(()) => Slot::Failed(category),
+                                Err(error) => Slot::Failed(browser::failure_category(&error)),
+                            }
+                        }
+                    },
+                    Err(Error::Busy) => Slot::Follow,
+                    Err(error) => Slot::Failed(browser::failure_category(&error)),
+                }
+            })
+            .collect();
+        drop(reservation);
+        let mut slots = slots.into_iter();
+        let mut stopped = None;
+        let mut failure_cause = None;
+        let mut download_failure = None;
+        for (entry, slot) in plan.entries.iter().zip(&mut slots) {
+            let item = entry.item;
+            let done = match slot {
+                Slot::Own(writer) => match item {
+                    ItemId::Browser => self.set_up_browser(entry, writer, sink, cancellation),
+                    ItemId::LocalAi => {
+                        self.set_up_local_ai(entry, writer, hardware, sink, cancellation, reinstall)
+                    }
+                },
+                Slot::Follow => match self.follow_item(item, sink, cancellation) {
+                    Followed::Completed => Ok(()),
+                    Followed::Stopped(RunStop {
+                        outcome: EndedOutcome::Busy,
+                        ..
+                    })
+                    | Followed::Unfollowable => Err(Stop::Busy),
+                    Followed::Stopped(stop) => Err(Stop::Failed(
+                        stop.failure.unwrap_or(FailureCategory::Unexpected),
+                    )),
+                    Followed::Abandoned => Err(Stop::Failed(FailureCategory::Cancelled)),
+                },
+                Slot::Failed(category) => Err(Stop::Failed(category)),
+            };
+            let download = done.as_ref().err().and_then(Stop::download_failure);
+            let (outcome, failure) = match done.map_err(Stop::failure) {
+                Ok(()) => continue,
+                Err(None) => (Outcome::Busy, None),
+                Err(Some((FailureCategory::Cancelled, _))) => {
+                    (Outcome::Cancelled, Some(FailureCategory::Cancelled))
+                }
+                Err(Some((category, cause))) => {
+                    failure_cause = cause;
+                    download_failure = download;
+                    (Outcome::Failed, Some(category))
+                }
+            };
+            stopped = Some(RunStop {
+                outcome: match outcome {
+                    Outcome::Busy => EndedOutcome::Busy,
+                    Outcome::Cancelled => EndedOutcome::Cancelled,
+                    _ => EndedOutcome::Failed,
+                },
+                item,
+                failure,
+            });
+            break;
+        }
+        let stop = stopped?;
+        for slot in slots {
+            if let Slot::Own(writer) = slot {
+                // The item is left as it was; a record that cannot be removed reads as an
+                // interrupted setup, which offers the person Resume.
+                let _ = writer.not_reached(stop);
+            }
+        }
+        Some(
+            Report::new(ended_outcome(stop.outcome), Vec::new())
+                .for_item(stop.item, stop.failure)
+                .with_cause(failure_cause)
+                .with_download_failure(download_failure),
+        )
+    }
+
+    /// A setup that found `items` being set up by other engines follows each of them in
+    /// setup order and reports the result they reached: completed when every one was set
+    /// up, otherwise how and where the first that was not set up stopped.
+    fn follow_only(
+        &mut self,
+        items: &[ItemId],
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Report {
+        let mut report = None;
+        for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
+            let stopped = match self.follow_item(item, sink, cancellation) {
+                Followed::Completed => continue,
+                Followed::Stopped(stop) => Report::new(ended_outcome(stop.outcome), Vec::new())
+                    .for_item(stop.item, stop.failure),
+                Followed::Abandoned | Followed::Unfollowable => {
+                    Report::new(Outcome::Busy, Vec::new()).for_item(item, None)
+                }
+            };
+            report = Some(stopped);
+            break;
+        }
+        let rows = self.quick_rows(&ItemId::ALL);
+        let report = report.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
+        Report { rows, ..report }
+    }
+
+    /// Follows another engine's setup of `item` until it is done with the item: relays what
+    /// it publishes and returns how it ended. The wait between two looks ends on a change
+    /// in the activity folder, on the writer letting go of the item's lock, or on this
+    /// setup's cancellation.
+    fn follow_item(&self, item: ItemId, sink: &Sink<'_>, cancellation: &Cancellation) -> Followed {
+        let mut changes = Changes::new(self.activity.root().to_path_buf());
+        let wake = changes.waker();
+        let _hook = cancellation.on_cancel(wake.clone());
+        let bound = (!follow::wake_on_release(self.activity.lock_path(item), wake))
+            .then_some(follow::OBSERVATION);
+        let mut followed: Option<RunMark> = None;
+        let mut relayed = Relayed::default();
+        loop {
+            if cancellation.is_cancelled() {
+                return Followed::Abandoned;
+            }
+            match self.activity.watch(item) {
+                Ok(Watched::Running(Some(published))) => {
+                    match &followed {
+                        None => {
+                            sink.emit(Event::Following {
+                                item,
+                                plan_digest: published.run.plan_digest.clone(),
+                            });
+                            followed = Some(published.run.clone());
+                        }
+                        // Another run holds the item now, so the one followed is done with it.
+                        Some(run) if run.id != published.run.id => break,
+                        Some(_) => {}
+                    }
+                    relayed.relay(item, &published, sink);
+                }
+                Ok(Watched::Running(None)) if followed.is_none() => return Followed::Unfollowable,
+                Ok(Watched::Running(None) | Watched::Idle) => break,
+                Ok(Watched::Interrupted) => {
+                    return Followed::Stopped(RunStop {
+                        outcome: EndedOutcome::Failed,
+                        item,
+                        failure: Some(FailureCategory::Interrupted),
+                    });
+                }
+                Err(error) => {
+                    let Some(run) = followed.as_ref() else {
+                        return Followed::Unfollowable;
+                    };
+                    match recover_activity_after_release(
+                        &self.activity,
+                        item,
+                        run,
+                        &error,
+                        &mut changes,
+                        cancellation,
+                        || self.activity.watch(item),
+                    ) {
+                        Some(Watched::Idle) => break,
+                        Some(Watched::Interrupted) => {
+                            return Followed::Stopped(RunStop {
+                                outcome: EndedOutcome::Failed,
+                                item,
+                                failure: Some(FailureCategory::Interrupted),
+                            });
+                        }
+                        _ if cancellation.is_cancelled() => return Followed::Abandoned,
+                        _ => return Followed::Unfollowable,
+                    }
+                }
+            }
+            changes.wait(bound);
+        }
+        match self.activity.ended(item) {
+            Some(ended) if followed.as_ref().is_none_or(|run| run.id == ended.run) => {
+                match (ended.outcome, ended.stopped_at) {
+                    (EndedOutcome::Completed, _) => Followed::Completed,
+                    (outcome, stopped_at) => Followed::Stopped(RunStop {
+                        outcome,
+                        item: stopped_at.unwrap_or(item),
+                        failure: ended.failure,
+                    }),
+                }
+            }
+            _ => Followed::Unfollowable,
+        }
+    }
+
+    fn set_up_browser(
+        &self,
+        entry: &PlanEntry,
+        writer: ItemWriter<'_>,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Result<(), Stop> {
+        let item = ItemId::Browser;
+        // Builds already in place with nothing to fetch are adopted: the full check below
+        // launches them, and only a passing check records them, so no download is announced.
+        let first = if entry.download_bytes == Some(0) {
+            SetupStep::Verify
+        } else {
+            SetupStep::Download
+        };
+        let hosts: BTreeSet<HostName> = entry.source_hosts.iter().cloned().collect();
+        let outcome = (|| -> Result<(), Stop> {
+            let layout = match self.browser_layout() {
+                Some(Ok(layout)) => layout,
+                Some(Err(error)) => return Err(error.into()),
+                None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
+            };
+            writer.step(first)?;
+            let receipt = self.receipts.read(item);
+            let mut reporter = Reporter {
+                sink,
+                writer: &writer,
+                item,
+                cancel_request: self.cancel_request(item),
+                cancellation,
+                offset: 0,
+                total: None,
+                part: None,
+                last: None,
+            };
+            let mut pacing = SystemPacing::default();
+            let mut on_event = |event| reporter.transfer(event);
+            let mut transfer = Transfer {
+                network: &self.config.network,
+                hosts: &hosts,
+                policy: self.config.policy,
+                pacing: &mut pacing,
+                events: &mut on_event,
+                cancellation,
+            };
+            layout.install(&mut transfer, &writer, &receipt)?;
+            writer.step(SetupStep::Verify)?;
+            let receipt = self.receipts.read(item);
+            let check = layout.full_check(&receipt, &self.launch_context(), cancellation);
+            let Some(verified) = check.verified else {
+                return Err(Stop::Failed(failure_of(check.reading.observation)));
+            };
+            writer.step(SetupStep::Cleanup)?;
+            layout.settle(
+                verified,
+                &self.receipts,
+                entry.source_hosts.clone(),
+                SystemTime::now(),
+            )?;
+            Ok(())
+        })();
+        finish(writer, outcome)
+    }
+
+    fn set_up_local_ai(
+        &self,
+        entry: &PlanEntry,
+        writer: ItemWriter<'_>,
+        hardware: Hardware,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+        reinstall: bool,
+    ) -> Result<(), Stop> {
+        let item = ItemId::LocalAi;
+        let present = Observation::Present;
+        let mut reporter = Reporter {
+            sink,
+            writer: &writer,
+            item,
+            cancel_request: self.cancel_request(item),
+            cancellation,
+            offset: 0,
+            total: entry.download_bytes,
+            part: None,
+            last: None,
+        };
+        let mut pacing = SystemPacing::default();
+        let outcome = (|| -> Result<(), Stop> {
+            let (mut program, models) = match self.local_ai_parts() {
+                Ok(parts) => parts,
+                Err(NoProgram::Unreadable(error)) => return Err(error.into()),
+                Err(NoProgram::NotInThisBuild) => {
+                    return Err(Stop::Failed(FailureCategory::NotInThisBuild));
+                }
+            };
+            writer.step(SetupStep::Download)?;
+            // Only the Ollama program is downloaded, installed and recorded; the package
+            // carries the llama-server, which no plan names.
+            if let EngineProgram::Ollama(program) = &mut program {
+                let program_part = entry.parts.iter().find(|part| part.part_id == PROGRAM_PART);
+                if let Some(part) = program_part {
+                    let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
+                    let step = |step| Event::Part {
+                        item,
+                        part: PROGRAM_PART.to_owned(),
+                        model: None,
+                        step,
+                    };
+                    sink.emit(step(SetupStep::Download));
+                    reporter.part = Some(PROGRAM_PART.to_owned());
+                    let mut on_event = |event| reporter.transfer(event);
+                    let mut transfer = Transfer {
+                        network: &self.config.network,
+                        hosts: &hosts,
+                        policy: self.config.policy,
+                        pacing: &mut pacing,
+                        events: &mut on_event,
+                        cancellation,
+                    };
+                    // Waits for the manager to stop a server running the old version, or
+                    // running the refused files a reinstall replaces.
+                    if reinstall {
+                        program.reinstall(&self.receipts, &mut transfer)?;
+                    } else {
+                        program.install(&mut transfer)?;
+                    }
+                    reporter.offset += part.download_bytes.unwrap_or(0);
+                    reporter.part = None;
+                    writer.step(SetupStep::Install)?;
+                    sink.emit(step(SetupStep::Install));
+                    if program.observe_quick() != present {
+                        return Err(Stop::Failed(FailureCategory::DamagedDownload));
+                    }
+                    program.prune()?;
+                }
+                if program.observe_quick() != present {
+                    return Err(Stop::Failed(FailureCategory::DamagedDownload));
+                }
+                let recorded = matches!(self.receipts.read(item), ReceiptReading::Present(_));
+                if program_part.is_some() || !recorded {
+                    program.settle(
+                        &self.receipts,
+                        self.config.local_ai_address,
+                        SystemTime::now(),
+                    )?;
+                }
+            }
+            writer.step(SetupStep::Download)?;
+            let mut pulled = BTreeSet::new();
+            for part in &entry.parts {
+                let Some(model) = models.selection().for_role(&part.part_id) else {
+                    continue;
+                };
+                if !pulled.insert(model.name().to_string()) {
+                    continue;
+                }
+                sink.emit(Event::Part {
+                    item,
+                    part: part.part_id.clone(),
+                    model: Some(model.name().to_string()),
+                    step: SetupStep::Download,
+                });
+                reporter.part = Some(part.part_id.clone());
+                // The model is fetched only from the hosts the person approved for it.
+                let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
+                let mut on_event = |event| reporter.transfer(event);
+                let pulled = models.pull(
+                    model,
+                    &mut Transfer {
+                        network: &self.config.network,
+                        hosts: &hosts,
+                        policy: self.config.policy,
+                        pacing: &mut pacing,
+                        events: &mut on_event,
+                        cancellation,
+                    },
+                )?;
+                if !pulled.observation.usable() {
+                    return Err(Stop::Failed(failure_of(pulled.observation)));
+                }
+                // The offset advances by the total the pull reported its progress against,
+                // never by a size a catalogue stated, which the fetched manifest may
+                // exceed; so the overall figure never goes back. A part planned as already
+                // stored downloads nothing, whatever its size.
+                reporter.offset += if part.download_bytes == Some(0) {
+                    0
+                } else {
+                    pulled.bytes
+                };
+            }
+            reporter.part = None;
+            writer.step(SetupStep::Verify)?;
+            // From the files alone: no server is started, waited for or asked. The server
+            // runs only while a document is read, and a demanded start that fails is what
+            // reads the program as not running.
+            let llama_cpp = matches!(program, EngineProgram::LlamaCpp(_));
+            for model in models.selection().as_slice() {
+                if llama_cpp && !models.presentable(model) {
+                    return Err(Stop::Failed(FailureCategory::NotInThisBuild));
+                }
+                let observation = models.observe_quick(model, &hardware);
+                if !observation.usable() {
+                    return Err(Stop::Failed(failure_of(observation)));
+                }
+            }
+            writer.step(SetupStep::Cleanup)?;
+            Ok(())
+        })();
+        finish(writer, outcome)
+    }
+
+    fn remove_item(
+        &mut self,
+        item: ItemId,
+        with_models: bool,
+        sink: &Sink<'_>,
+    ) -> Result<(), Stop> {
+        let layout = match item {
+            ItemId::Browser => self.browser_layout(),
+            ItemId::LocalAi => None,
+        };
+        let parts = match item {
+            ItemId::Browser => None,
+            ItemId::LocalAi => Some(self.local_ai_parts()),
+        };
+        let observer = |step| sink.emit(Event::Phase { item, step });
+        let writer = self
+            .activity
+            .begin_observed(item, SetupStep::Cleanup, &observer)?;
+        let receipts = &self.receipts;
+        let outcome = (|| -> Result<(), Stop> {
+            if let Some(layout) = layout {
+                layout?.remove(&writer, receipts)?;
+            }
+            match parts {
+                Some(Ok((EngineProgram::Ollama(mut program), models))) => {
+                    // Waits for the manager to stop its server first.
+                    program.remove()?;
+                    if with_models {
+                        models.remove()?;
+                    }
+                }
+                // The llama-server is the package's and is never removed; nor is the
+                // Ollama program, which is not the selected engine's.
+                Some(Ok((EngineProgram::LlamaCpp(_), models))) => {
+                    if with_models {
+                        models.remove()?;
+                    }
+                }
+                Some(Err(NoProgram::Unreadable(error))) => return Err(error.into()),
+                Some(Err(NoProgram::NotInThisBuild)) | None => {}
+            }
+            receipts.remove(item)?;
+            Ok(())
+        })();
+        finish(writer, outcome)
+    }
+}
+
+/// Re-observes one activity access failure only after its known run has published an end
+/// and released the writer lock. An enduring access failure remains unfollowable.
+fn recover_activity_after_release(
+    activity: &ActivityStore,
+    item: ItemId,
+    run: &RunMark,
+    error: &Error,
+    changes: &mut Changes,
+    cancellation: &Cancellation,
+    reobserve: impl FnOnce() -> Result<Watched, Error>,
+) -> Option<Watched> {
+    if !matches!(error, Error::Io(error) if error.kind() == std::io::ErrorKind::PermissionDenied) {
+        return None;
+    }
+    if activity.ended(item).is_none_or(|ended| ended.run != run.id) {
+        return None;
+    }
+    let released = Arc::new(AtomicBool::new(false));
+    let release_flag = released.clone();
+    let wake = changes.waker();
+    if !follow::wake_on_release(
+        activity.lock_path(item),
+        Arc::new(move || {
+            release_flag.store(true, Ordering::Release);
+            wake();
+        }),
+    ) {
+        return None;
+    }
+    while !released.load(Ordering::Acquire) {
+        if cancellation.is_cancelled() {
+            return None;
+        }
+        changes.wait(None);
+    }
+    if cancellation.is_cancelled() {
+        return None;
+    }
+    reobserve().ok()
+}
+
+/// Records how an item's work ended: finished, or failed with its category. A part held
+/// busy by another engine is no failure of this item, so it records none.
+fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop> {
+    match outcome {
+        Ok(()) => Ok(writer.finished()?),
+        Err(Stop::Failed(category)) => {
+            writer.failed(category)?;
+            Err(Stop::Failed(category))
+        }
+        Err(Stop::NotRunning(cause)) => {
+            writer.failed(cause.category())?;
+            Err(Stop::NotRunning(cause))
+        }
+        Err(Stop::Download(failure)) => {
+            writer.failed(failure.category)?;
+            Err(Stop::Download(failure))
+        }
+        Err(Stop::Busy) => {
+            writer.held()?;
+            Err(Stop::Busy)
+        }
+    }
+}
+
+impl Survey {
+    fn not_in_this_build() -> Self {
+        Self {
+            reading: Reading::new(
+                CheckMode::Quick,
+                Observation::Blocked(BlockedReason::NotInThisBuild),
+            ),
+            entry: None,
+            program_ready: false,
+        }
+    }
+
+    fn unreadable() -> Self {
+        Self {
+            reading: Reading::new(CheckMode::Quick, Observation::Unreadable),
+            entry: None,
+            program_ready: false,
+        }
+    }
+}
+
+impl Report {
+    fn disk_full(self) -> Self {
+        Self {
+            failure: Some(FailureCategory::DiskFull),
+            ..self
+        }
+    }
+}
+
+#[cfg(test)]
+mod follower_access_tests {
+    use super::*;
+    use std::sync::mpsc;
+
+    #[test]
+    fn activity_access_recovery_requires_matching_end_release_and_one_observation() {
+        let directory = tempfile::tempdir().unwrap();
+        let activity = ActivityStore::new(directory.path().join("activity")).unwrap();
+        let item = ItemId::Browser;
+        let run = RunMark {
+            id: "finished-run".into(),
+            plan_digest: Sha256Digest::of(b"plan"),
+        };
+        let observer = |_| {};
+        activity
+            .queue(item, &run, 0, &observer)
+            .unwrap()
+            .failed(FailureCategory::Cancelled)
+            .unwrap();
+        let permission = Error::Io(std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+        let cancellation = Cancellation::default();
+        let mut changes = Changes::new(activity.root().to_path_buf());
+        let other = RunMark {
+            id: "another-run".into(),
+            ..run.clone()
+        };
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &other,
+                &permission,
+                &mut changes,
+                &cancellation,
+                || panic!("an unrelated run must not be observed"),
+            ),
+            None
+        );
+        let other_error = Error::Io(std::io::Error::from(std::io::ErrorKind::InvalidData));
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &other_error,
+                &mut changes,
+                &cancellation,
+                || panic!("other failures must not be retried"),
+            ),
+            None
+        );
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &permission,
+                &mut changes,
+                &cancellation,
+                || Err(Error::Io(std::io::Error::from(
+                    std::io::ErrorKind::PermissionDenied
+                ))),
+            ),
+            None,
+            "a persistent denial is not ignored"
+        );
+        let cancelled = Cancellation::default();
+        cancelled.cancel();
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &permission,
+                &mut changes,
+                &cancelled,
+                || panic!("a cancelled follow must not be observed"),
+            ),
+            None
+        );
+
+        // Hold the real writer lock so the re-observation cannot run before release.
+        let lock = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(activity.lock_path(item))
+            .unwrap();
+        lock.try_lock().unwrap();
+        let (ready_tx, ready_rx) = mpsc::channel();
+        let (observed_tx, observed_rx) = mpsc::channel();
+        std::thread::scope(|scope| {
+            let task = scope.spawn(|| {
+                let mut changes = Changes::new(activity.root().to_path_buf());
+                ready_tx.send(()).unwrap();
+                recover_activity_after_release(
+                    &activity,
+                    item,
+                    &run,
+                    &permission,
+                    &mut changes,
+                    &cancellation,
+                    || {
+                        observed_tx.send(()).unwrap();
+                        activity.watch(item)
+                    },
+                )
+            });
+            ready_rx.recv().unwrap();
+            assert!(observed_rx.try_recv().is_err());
+            lock.unlock().unwrap();
+            assert_eq!(task.join().unwrap(), Some(Watched::Idle));
+        });
+        observed_rx.recv().unwrap();
+        let ended = activity.ended(item).unwrap();
+        assert_eq!(
+            (ended.run, ended.outcome, ended.failure),
+            (
+                run.id,
+                EndedOutcome::Cancelled,
+                Some(FailureCategory::Cancelled)
+            )
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests;

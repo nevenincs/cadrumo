@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ..aggregation.counterpart import CounterpartObservation
 from ..aggregation.foreign_assets import ForeignAssetIngestObservation
 from ..aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
@@ -47,8 +48,8 @@ class PublicCounterpartObservation(BaseModel):
 
     source_kind: str = Field(min_length=1, max_length=64)
     source_object_id: str = Field(min_length=1)
-    counterparty_nif: str = Field(min_length=1, max_length=20)
-    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_nif: str = Field(min_length=1, max_length=32)
+    counterparty_name: str = Field(default="", max_length=256)
     counterparty_country: CountryCodeAlpha2 = Field(pattern=COUNTRY_CODE_ALPHA2_PATTERN)
     operation_kind: str = Field(min_length=1)
     operation_period: str = Field(min_length=1, max_length=16)
@@ -93,10 +94,10 @@ class PublicForeignAssetObservation(BaseModel):
     asset_ref: str = Field(min_length=1, max_length=64)
     asset_class: str = Field(min_length=1, max_length=64)
     asset_external_id: str = Field(min_length=1, max_length=128)
-    country: str = Field(pattern=r"^[A-Z]{2}$")
-    issuer_or_institution: str = Field(default="", max_length=200)
+    country: str = Field(pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
+    issuer_or_institution: str = Field(default="", max_length=256)
     valuation_amount: PublicDecimal
-    currency_code: str = Field(pattern=r"^[A-Z]{3}$")
+    currency_code: IsoCurrencyCodeText
     valuation_event: str = Field(min_length=1, max_length=32)
     valuation_event_date: date | None = None
     acquisition_date: date
@@ -154,7 +155,7 @@ class PublicLedgerPaymentEvidenceRequest(BaseModel):
     supersedes_generation_id: str | None = None
     modelo_190_detail: PublicAnnualRecipientDetail | None = None
     perceptor_nif: str | None = Field(default=None, min_length=1, max_length=16)
-    perceptor_name: str | None = Field(default=None, max_length=200)
+    perceptor_name: str | None = Field(default=None, max_length=256)
     exigibility_event_id: str | None = Field(default=None, min_length=1, max_length=128)
     exigibility_occurred_on: date | None = None
     modelo_193_pending_payment: PublicModelo193PendingPayment | None = None

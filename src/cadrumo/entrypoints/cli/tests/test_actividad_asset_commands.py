@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
+from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetClaimState,
+    ActivityAssetPlanRow,
+)
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
+from cadrumo.application.operations.public_scalar import PublicDecimal
+from cadrumo.core.config import override_settings
+from cadrumo.core.i18n.render import tr
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -28,7 +37,13 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from cadrumo.entrypoints.cli.actividad_asset_commands import (
+    correction_revision,
+    minimum_amortization_fields,
+    stated_disposal,
+)
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
+from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
 from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 
@@ -43,6 +58,71 @@ def test_activity_asset_group_exposes_the_shared_operation_set() -> None:
     assert result.exit_code == 0
     for token in ("create", "inspect", "correct", "forecast", "claim", "filing-handoff"):
         assert token in result.output
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["describe", "list", "plan", "timeline", "form-options", "acquisition-candidates"],
+)
+def test_activity_asset_read_and_describe_commands_are_registered_to_their_operations(command: str) -> None:
+    group = invoke_cached_cli(["app", "ledger", "actividad-asset", "--help"])
+    assert group.exit_code == 0
+    assert command in group.output
+
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", command, "--help"])
+    assert result.exit_code == 0
+
+    assert dict(COMMAND_OPERATION_ROWS)[("app", "ledger", "actividad-asset", command)] == (
+        f"ledger.actividad-asset.{command}"
+    )
+
+
+def test_activity_asset_read_and_describe_commands_resolve_registered_output_schemas() -> None:
+    expected = {
+        "describe": "ActivityAssetHistoryPayload",
+        "list": "ActivityAssetReadPayload",
+        "plan": "ActivityAssetReadPayload",
+        "timeline": "ActivityAssetReadPayload",
+        "form_options": "ActivityAssetReadPayload",
+        "acquisition_candidates": "ActivityAssetReadPayload",
+    }
+
+    for command, schema_name in expected.items():
+        assert command_schema_type(f"ledger.actividad_asset.{command}").__name__ == schema_name
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["describe", "asset-1", "--name", "Portatil"],
+        ["list"],
+        ["plan", "asset-1"],
+        ["timeline", "asset-1"],
+        ["form-options", "--asset-kind", "material", "--tax-year", "2025"],
+        ["acquisition-candidates"],
+    ],
+)
+def test_activity_asset_read_and_describe_commands_refuse_without_an_active_profile(argv: list[str]) -> None:
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", *argv])
+
+    assert result.exit_code != 0
+    assert "No hay un perfil activo" in result.output
+
+
+@pytest.mark.parametrize("command", ["plan", "timeline", "describe"])
+def test_activity_asset_asset_commands_require_the_positional_asset_id(command: str) -> None:
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", command])
+
+    assert result.exit_code != 0
+    assert "No hay un perfil activo" not in result.output
+
+
+def test_activity_asset_form_options_refuses_an_unknown_asset_kind() -> None:
+    result = invoke_cached_cli(
+        ["app", "ledger", "actividad-asset", "form-options", "--asset-kind", "vehicle-fleet", "--tax-year", "2025"]
+    )
+
+    assert result.exit_code != 0
 
 
 def test_activity_asset_commands_resolve_strict_registered_output_schemas() -> None:
@@ -74,6 +154,7 @@ def _revision() -> ActivityAssetRevision:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("300.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="test allocation",
         ),
         in_service_date=date(2025, 1, 1),
@@ -95,6 +176,16 @@ def test_activity_asset_inspection_payload_names_each_revision_a_correction_can_
 
     assert [revision["revision_id"] for revision in payload.revisions] == [first.revision_id, correction.revision_id]
     assert payload.revisions[1]["supersedes_revision_id"] == first.revision_id
+
+
+def test_a_correction_json_that_leaves_the_baja_out_is_refused_while_null_removes_it() -> None:
+    stated = json.loads(_revision().model_dump_json())
+    assert stated["disposal"] is None
+
+    assert correction_revision(json.dumps(stated)).disposal is None
+    del stated["disposal"]
+    with pytest.raises(ValidationError, match="disposal"):
+        correction_revision(json.dumps(stated))
 
 
 def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_identity() -> None:
@@ -148,6 +239,21 @@ def test_an_undeclared_vehicle_refusal_names_the_live_correct_command() -> None:
     assert resolved.evidence[0].values["asset_id"] == "car-1"
 
 
+def test_a_disposal_preview_states_its_proceeds_and_costs_or_is_refused() -> None:
+    stated = stated_disposal("2026-03-01", "sale", "1200.50", "10.25", None, None, None)
+
+    assert stated is not None
+    assert stated.proceeds == PublicDecimal(decimal="1200.50")
+    assert stated.transmission_costs == PublicDecimal(decimal="10.25")
+    assert stated_disposal(None, None, None, None, None, None, None) is None
+    with pytest.raises(ValidationError) as refused:
+        stated_disposal("2026-03-01", "sale", None, "10.25", None, None, None)
+    assert [error["loc"] for error in refused.value.errors()] == [("proceeds",)]
+    with pytest.raises(ValidationError) as refused_both:
+        stated_disposal("2026-03-01", "sale", None, None, None, None, None)
+    assert [error["loc"] for error in refused_both.value.errors()] == [("proceeds",), ("transmission_costs",)]
+
+
 def test_activity_asset_inspect_dispatches_to_profile_resolution() -> None:
     result = invoke_cached_cli(["app", "ledger", "actividad-asset", "inspect", "missing-asset"])
 
@@ -184,3 +290,38 @@ def test_activity_asset_forecast_exposes_only_the_optional_free_depreciation_amo
     assert result.exit_code == 0
     assert "--free-depreciation-amount" in result.output
     assert "--selection-json" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("language", "served", "complete"),
+    [
+        ("en", "130.00", True),
+        ("en", "130.00", False),
+        ("en", None, False),
+        ("es", "130.00", False),
+    ],
+)
+def test_activity_asset_plan_lines_label_the_served_minimum_and_flag_an_incomplete_one(
+    language: str,
+    served: str | None,
+    complete: bool,
+) -> None:
+    row = ActivityAssetPlanRow(
+        tax_year=2025,
+        method=AmortizationMethod.LINEAR,
+        claimed=PublicDecimal(decimal="0.00"),
+        claim_state=ActivityAssetClaimState.NOT_DUE,
+        minimum_through=None if served is None else PublicDecimal(decimal=served),
+        minimum_complete=complete,
+    )
+
+    with override_settings(cadrumo_output_language=language):
+        # The label is read through the catalogue so a spelling change there cannot break the assertion.
+        expected = "	".join(
+            [
+                tr("cli.ledger.actividad_asset.plan_minimum"),
+                served or "",
+                *([] if complete else [tr("cli.ledger.actividad_asset.plan_minimum_incomplete")]),
+            ]
+        )
+        assert minimum_amortization_fields(row) == expected

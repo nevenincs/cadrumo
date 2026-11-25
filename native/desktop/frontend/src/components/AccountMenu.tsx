@@ -5,6 +5,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuList,
+  DropdownMenuNote,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -59,6 +61,8 @@ export function AccountMenu({
           ? "desktop.account.no_profile"
           : (label ?? "desktop.account.unknown"),
     );
+  // The state in words, where the profile's name leaves it unsaid.
+  const status = label && profile ? t(label) : null;
   const choices =
     account.offering && account.profiles?.complete
       ? account.profiles.profiles
@@ -90,23 +94,25 @@ export function AccountMenu({
             {t("desktop.titlebar.profile_menu")}:{" "}
           </span>
           <Icon name="user" />
+          {/* One label: the profile, or the state where there is none. A
+              named profile's state is its dot, and the menu says it in words. */}
+          {status && (
+            <span
+              className={`profile-status ${signedIn ? "signed-in" : "signed-out"}`}
+              aria-hidden="true"
+            />
+          )}
           <span className="profile-name" title={profile ?? undefined}>
             {profileText}
           </span>
-          {label && (
-            <span
-              className={`profile-status ${signedIn ? "signed-in" : "signed-out"}`}
-            >
-              <span aria-hidden="true" />
-              {t(label)}
-            </span>
-          )}
+          {status && <span className="sr-only">, {status}</span>}
           <Icon name="chevronDown" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="account-menu"
+        // Unstyled: the scenarios find the menu by it.
+        className="account-menu max-w-palette-max"
         role="dialog"
         aria-orientation={undefined}
         aria-label={t("desktop.titlebar.profile_menu")}
@@ -115,103 +121,110 @@ export function AccountMenu({
           transferredFocus.current = false;
         }}
       >
-        <div className="profile-menu-heading">
-          <span>{t("desktop.signin.profile")}</span>
-          <strong title={profile ?? undefined}>{profileText}</strong>
-          {label && <span>{t(label)}</span>}
+        <div className="grid gap-1 px-2.5 py-2 wrap-anywhere">
+          <span className="text-xs text-muted-foreground">
+            {t("desktop.signin.profile")}
+          </span>
+          <strong className="truncate" title={profile ?? undefined}>
+            {profileText}
+          </strong>
+          {status && (
+            <span className="text-xs text-muted-foreground">{status}</span>
+          )}
         </div>
         <DropdownMenuSeparator />
-        <div
-          role={hasActions ? "menu" : undefined}
-          aria-label={
-            hasActions ? t("desktop.titlebar.profile_menu") : undefined
-          }
-        >
-          {signedIn ? (
-            <>
-              {onProfile && (
-                <DropdownMenuItem onSelect={() => transfer(onProfile)}>
-                  <Icon name="user" />
-                  {t("desktop.profile.title")}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                disabled={account.busy}
-                onSelect={(event) => {
-                  event.preventDefault();
-                  onSignOut();
-                }}
-              >
-                <Icon name="signOut" />
-                {t("desktop.account.sign_out")}
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              {choices.map((choice) => (
+        {hasActions && (
+          <DropdownMenuList aria-label={t("desktop.titlebar.profile_menu")}>
+            {signedIn ? (
+              <>
+                {onProfile && (
+                  <DropdownMenuItem
+                    icon="user"
+                    onSelect={() => transfer(onProfile)}
+                  >
+                    {t("desktop.profile.title")}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
-                  key={choice.name}
-                  disabled={
-                    account.busy || (!choice.active && !nameable(choice.name))
-                  }
-                  onSelect={() => {
-                    account.choose(choice.name);
-                    transfer(onSignIn);
+                  icon="signOut"
+                  disabled={account.busy}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    onSignOut();
                   }}
                 >
-                  <Icon name={profile === choice.name ? "check" : "user"} />
-                  <span className="min-w-0 break-words">{choice.name}</span>
+                  {t("desktop.account.sign_out")}
                 </DropdownMenuItem>
-              ))}
-              {choices.length > 0 && <DropdownMenuSeparator />}
-              {account.canSignIn && (
-                <DropdownMenuItem
-                  disabled={account.busy}
-                  onSelect={() => transfer(onSignIn)}
-                >
-                  <Icon name="lock" />
-                  {t("desktop.signin.submit")}
-                </DropdownMenuItem>
-              )}
-              {account.offering && account.canCreate && (
-                <DropdownMenuItem
-                  disabled={account.busy}
-                  onSelect={() => transfer(onCreate)}
-                >
-                  <Icon name="userAdd" />
-                  {t("desktop.account.new_profile")}
-                </DropdownMenuItem>
-              )}
-            </>
-          )}
-          {onManage && (
-            <DropdownMenuItem
-              disabled={account.busy}
-              onSelect={() => transfer(onManage)}
-            >
-              <Icon name="user" />
-              {t("desktop.account.manage.title")}
-            </DropdownMenuItem>
-          )}
-          {onAbout && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => transfer(onAbout)}>
-                <Icon name="info" />
-                {t("desktop.about.open")}
+              </>
+            ) : (
+              <>
+                {choices.map((choice) => (
+                  <DropdownMenuItem
+                    key={choice.name}
+                    icon={profile === choice.name ? "check" : "user"}
+                    disabled={
+                      account.busy || (!choice.active && !nameable(choice.name))
+                    }
+                    onSelect={() => {
+                      account.choose(choice.name);
+                      transfer(onSignIn);
+                    }}
+                  >
+                    <span className="min-w-0 break-words">{choice.name}</span>
+                  </DropdownMenuItem>
+                ))}
+                {choices.length > 0 && <DropdownMenuSeparator />}
+                {account.canSignIn && (
+                  <DropdownMenuItem
+                    icon="lock"
+                    disabled={account.busy}
+                    onSelect={() => transfer(onSignIn)}
+                  >
+                    {t("desktop.signin.submit")}
+                  </DropdownMenuItem>
+                )}
+                {account.offering && account.canCreate && (
+                  <DropdownMenuItem
+                    icon="userAdd"
+                    disabled={account.busy}
+                    onSelect={() => transfer(onCreate)}
+                  >
+                    {t("desktop.account.new_profile")}
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+            {onManage && (
+              <DropdownMenuItem
+                icon="user"
+                disabled={account.busy}
+                onSelect={() => transfer(onManage)}
+              >
+                {t("desktop.account.manage.title")}
               </DropdownMenuItem>
-            </>
-          )}
-        </div>
+            )}
+            {onAbout && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  icon="info"
+                  onSelect={() => transfer(onAbout)}
+                >
+                  {t("desktop.about.open")}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuList>
+        )}
         {signedIn && (
           <>
-            <p className="profile-menu-hint">
+            <DropdownMenuNote className="max-w-dialog">
               {t("desktop.account.sign_out_hint")}
-            </p>
+            </DropdownMenuNote>
             {account.canCreate && (
-              <p className="profile-menu-hint">
+              <DropdownMenuNote className="max-w-dialog">
                 {t("desktop.account.switch_hint")}
-              </p>
+              </DropdownMenuNote>
             )}
           </>
         )}

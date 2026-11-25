@@ -42,7 +42,7 @@ jobs:
           tool: just@1.38.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           prune-cache: false
           version: "0.11.29"
@@ -51,7 +51,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just setup
+        run: just setup-checkout
 
       - name: Run code-health report (text)
         # Informational only: a failed diagnostic verdict must not fail this job.

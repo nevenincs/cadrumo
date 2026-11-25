@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from dev.registry.compiler.loader import load_modelo_directory
+
+# Authored Modelo 100 editions, oldest first: formulas are pinned per edition by ordinal, and a later edition appends.
+_E = tuple(str(revision.id) for revision in authored_revisions("100"))
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,14 +23,14 @@ def modelo100():
 @pytest.mark.parametrize(
     ("year", "target", "expected"),
     [
-        ("2020", "0288", ("0282", "0286")),
-        ("2020", "0297", ("0292", "0296")),
-        ("2020", "0306", ("0299", "0300", "0301", "0302", "0303", "0304")),
-        ("2021", "0288", ("0282", "0286")),
-        ("2021", "0297", ("0292", "0296")),
-        ("2021", "0306", ("0299", "0300", "0301", "0302", "0303", "0304", "0266", "0279")),
-        ("2025", "0288", ("0282", "0286", "0360")),
-        ("2025", "0297", ("0292", "0296", "0361")),
+        (_E[0], "0288", ("0282", "0286")),
+        (_E[0], "0297", ("0292", "0296")),
+        (_E[0], "0306", ("0299", "0300", "0301", "0302", "0303", "0304")),
+        (_E[1], "0288", ("0282", "0286")),
+        (_E[1], "0297", ("0292", "0296")),
+        (_E[1], "0306", ("0299", "0300", "0301", "0302", "0303", "0304", "0266", "0279")),
+        (_E[5], "0288", ("0282", "0286", "0360")),
+        (_E[5], "0297", ("0292", "0296", "0361")),
     ],
 )
 def test_historical_gain_sums_follow_their_own_official_form(modelo100, year, target, expected):
@@ -40,12 +44,12 @@ def test_historical_gain_sums_follow_their_own_official_form(modelo100, year, ta
 @pytest.mark.parametrize(
     ("year", "expected"),
     [
-        ("2020", "subtract(1548,1549)"),
-        ("2021", "subtract(1548,1549)"),
-        ("2022", "sum(1548,negate(1549),negate(0160))"),
-        ("2023", "sum(1548,negate(1549),negate(0160))"),
-        ("2024", "sum(1548,negate(1549),negate(0162),negate(0160))"),
-        ("2025", "subtract(1548,1549)"),
+        (_E[0], "subtract(1548,1549)"),
+        (_E[1], "subtract(1548,1549)"),
+        (_E[2], "sum(1548,negate(1549),negate(0160))"),
+        (_E[3], "sum(1548,negate(1549),negate(0160))"),
+        (_E[4], "sum(1548,negate(1549),negate(0162),negate(0160))"),
+        (_E[5], "subtract(1548,1549)"),
     ],
 )
 def test_agricultural_reductions_follow_temporary_edition_scope(modelo100, year, expected):

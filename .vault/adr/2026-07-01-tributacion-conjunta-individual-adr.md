@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#tributacion-conjunta-individual'
 date: '2026-07-01'
-modified: '2026-08-10'
-body_hash: 'sha256:139b1bcf9339eefa704f4612366b45af015a5488a62ef5bb844dd9785bed3c1e'
+modified: '2026-11-04'
+body_hash: 'sha256:e832b07a76f4737a5a082c90fe307bdacf04acec6157a0ea4db8e378dd1b05b4'
 related:
   - "[[2026-06-30-tributacion-conjunta-individual-research]]"
 ---
@@ -17,7 +17,7 @@ Issue #547 (P1, NEEDS-DESIGN) reports that no surface computes a Modelo 100 fili
 ## Considerations
 
 - Modalidad axis exists: binding `renta-2025-profile-declaration-type` (profile key `renta_filing.declaration_type`, `TIPOTRIBUTACION`), values 1/2. Its existing `RentaDeclaracionType` is publicly owned by `cadrumo.core` because the axis crosses profile, registry, calculation, comparator, and XML layers; no second modality enum or axis is permitted.
-- Reduccion Art. 84 exists: formula `0179-renta-2025-reduccion-art-84-conjunta` targets casilla 0461, emitting 3.400 EUR (modalidad 1, Art. 82.1.1) or 2.150 EUR (modalidad 2 monoparental, Art. 82.1.2) when `declaration_type==2`, gated by `family-minor-children-in-unit`. Figures match the bundled AEAT Renta manuals 2022..2025; legal_refs cite ley-35-2006 art-82/83/84.
+- Reduccion Art. 84 exists: formula `0179-renta-2025-reduccion-art-84-conjunta` targets casilla 0461, emitting 3.400 EUR (modalidad 1, Art. 82.1.1) or 2.150 EUR (modalidad 2 monoparental, Art. 82.1.2) when `declaration_type==2`, gated by `family-minor-children-in-unit`. Figures match the bundled AEAT Renta manuals; legal_refs cite ley-35-2006 art-82/83/84.
 - Spouse identity axes exist (tax_id, name, birth_date, sex, disability, non-resident, EU/EEA) and marriage/family axes exist; spouse INCOME does not.
 - The comparator reuses the shared engine core (`calculate_registry_snapshot`) so formula arithmetic is single-sourced, but the work-unit entry point assembles inputs on a locally-built path that mirrors the calculate path rather than sharing it.
 - Constraints in force: `aeat-safety-legal-gates` (advisory/calc-only, no live submission), `aeat-architecture-boundaries` (two-root CLI, closed sets are core StrEnums), `cli-notices-are-the-only-diagnostic-channel` (cross-surface nudges ride the typed Notice channel), `one-aggregation-path-pull-equals-calculate` (one input-assembly path).
@@ -46,7 +46,7 @@ Decision 4 - bounded first slice vs full unidad-familiar matrix:
 - Spouse-income axis dependency: the two-earner individual comparison (Decision 3B / slice two) cannot begin until the profile carries per-spouse attributable income and the comparator can run a second individual return. This is a blocking precondition for the full matrix; the first slice does not depend on it.
 - Input-assembly parallelism: `compare_taxation_for_work_unit` builds resolved inputs on a path that mirrors, rather than shares, the live calculate path. Consolidating both onto one input-assembly helper is required by `one-aggregation-path-pull-equals-calculate` before the comparator is trusted as authoritative; until then a calculate-path change can silently drift the comparator.
 - Legal-figure finishing step: the 3.400/2.150 figures are grounded in the bundled AEAT manuals and the formula source_citations but carry agent-prepared reviewed_by; an operator cross-check against consolidated BOE Art. 84 (per legal-grounding-verifies-bundled-authoritative-corpus) is the finishing step before the reduccion is treated as filing-grade authority.
-- Multi-year: the axis and formula exist for 2024 and 2025 revisions; earlier revisions are out of scope for the first slice.
+- Multi-year: the axis and formula exist for the editions authored so far; editions without them are out of scope for the first slice.
 
 ## Implementation
 
@@ -72,4 +72,4 @@ Positive: single-earner unidad familiar couples get a correct, corpus-grounded c
 
 Negative / accepted cost: two-earner couples receive only a directional single-return answer until slice two lands, and the result must explicitly disclaim that limit rather than silently present a partial figure as complete. The overview must gain a married-profile detection signal. The reduccion figures remain agent-reviewed pending an operator BOE cross-check.
 
-Neutral: opens a clearly-scoped second slice (spouse-income axis plus two-return aggregation) with its own grounding, and leaves the 2024/2025 revision coverage as the supported range with earlier years explicitly out of scope.
+Neutral: opens a clearly-scoped second slice (spouse-income axis plus two-return aggregation) with its own grounding, and leaves the revision coverage as the supported range, with editions that lack the axis explicitly out of scope.

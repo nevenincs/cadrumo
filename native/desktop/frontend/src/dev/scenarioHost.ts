@@ -7,45 +7,95 @@
 // nothing, and a menu or clipboard it serves says nothing about the native
 // one: its answers are design and test evidence only.
 
+import type { DocsLanguage, DesktopLanguage } from "../ipc/environment";
+import type { LocalEngine } from "../shell/localModelsContract";
 import type {
-  DocsLanguage,
-  DesktopLanguage,
   HostFailure,
   LogBatch,
-  ManagerStatus,
-  SignInSignal,
-  SignInStatus,
+  LogLevel,
+  WindowAction,
 } from "../ipc/contract";
+import type { ManagerStatus, SignInSignal, SignInStatus } from "../ipc/account";
 import { censoFixture } from "./censoFixture";
-import { userProfileFixture } from "./userProfileFixture";
-import type { Host } from "../shell/host";
+import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
+import {
+  backgroundTasksFixture,
+  type JobShape,
+} from "./backgroundTasksFixture";
+import { borradorFixture, type BorradorScenario } from "./borradorFixture";
+import { modeloFixture, type ModeloShape } from "./modeloFixture";
+import { translator } from "../shell/strings";
+import { sedeViewFixture } from "./sedeViewFixture";
+import { SCENARIO_PASSWORD } from "./fixtures/password";
+import { householdFixture, type HouseholdScenario } from "./householdFixture";
+import {
+  imputationElectionFixture,
+  type ElectionScenario,
+} from "./imputationElectionFixture";
+import { userProfileFixture, type ProfileFixture } from "./userProfileFixture";
+import { aeatSyncFixture } from "./aeatSyncFixture";
+import { aeatSyncPrepareFixture } from "./aeatSyncPrepareFixture";
+import { aeatSyncResultsFixture } from "./aeatSyncResultsFixture";
+import { aeatSyncRunFixture } from "./aeatSyncRunFixture";
+import type { ConsoleEnvironmentChange, Host } from "../shell/host";
+import { parseConsoleEnvironmentChange } from "../shell/consoleEnvironment";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
 import {
-  fixtureAgent,
-  type FixtureAsks,
-  type FixtureCatalog,
-  type FixtureDocuments,
-  type FixtureStream,
-} from "./agentFixtureHost";
+  EMPTY_HOME,
+  FIXTURE_HOME,
+  HOME_SHAPES,
+  type HomeShape,
+} from "./fixtures/home";
+import { operationsFixture } from "./fixtures/operations";
+import { referenceFixture } from "./fixtures/reference";
+import { fixtureAgent } from "./agentFixtureHost";
+import type {
+  FixtureAsks,
+  FixtureDocuments,
+  FixtureEngineChoices,
+  FixtureLocalModels,
+  FixtureStream,
+} from "./agentFixtureOptions";
+import type {
+  FixtureCatalog,
+  FixtureEngineHealth,
+} from "./fixtures/agentCatalog";
 import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
+  UNANSWERED_IVA_CALENDAR,
+  UNDECLARED_TAXPAYER_CALENDAR,
+} from "./fixtures/calendarSuppressed";
+import {
   providerSettingsFixture,
   type ProviderSignInFixtureControls,
 } from "./providerSettingsFixture";
 import {
+  ADVISED_CALENDAR,
+  ADVICE_ONLY_CALENDAR,
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
+  calendarWarning,
+  CLOSE_UNKNOWN_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
   STRADDLING_CALENDAR,
   FIXTURE_NOTIFICATIONS,
   NEVER_CAPTURED,
 } from "./fixtures/calendar";
+import {
+  ABOVE_CEILING_CALENDAR,
+  BELOW_FLOOR_CALENDAR,
+  BOUNDED_CALENDAR,
+  PARTIAL_BOUNDED_CALENDAR,
+  PARTIAL_CALENDAR,
+  PROJECTED_CALENDAR,
+  SUPPORTED_CALENDAR,
+} from "./fixtures/calendarSupport";
 import {
   AVAILABLE,
   FIXTURE_DROPPED,
@@ -57,6 +107,10 @@ import {
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
+import {
+  fixtureModelPresence,
+  type FixtureModelPresence,
+} from "./fixtures/agentCatalog";
 import { openFixtureTerminal } from "./fixtures/terminal";
 import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
@@ -78,13 +132,21 @@ export type ScenarioHostOptions = {
   latencyMs: number;
   /** Replace the fixture records with this many generated ones. */
   logRecords?: number;
+  /** Refuse initial attachments after a partial backlog has arrived. */
+  logAttachFailures?: number;
+  logReplayGap?: boolean;
   /** Keep the log growing: a batch of records every this many milliseconds
    * after the backlog, as a process writing its log sends them. */
   logFeedMs?: number;
+  /** The default minimum level reported by the host environment. */
+  logLevel?: LogLevel;
   /** Another shape of the fixture calendar: everything behind the day it
    * was evaluated on, everything ahead, that day inside a month, or the
    * turn of a year with many windows open at once. */
   calendar?: CalendarShape | null;
+  /** Another shape of Home: every zone empty, zones in each standing that is
+   * not showing data, or the whole of Home unavailable. */
+  home?: HomeShape | null;
   /** How the agent's reply streams: in order, or with a piece missing. */
   agentStream?: FixtureStream;
   /** What every agent reply stops to ask the person, if anything. */
@@ -95,18 +157,77 @@ export type ScenarioHostOptions = {
   agentSkills?: FixtureSkills;
   /** How the service answers the agent's catalog. */
   agentCatalog?: FixtureCatalog;
+  /** Which of the local lanes' models the made-up computer holds, where not
+   * as the fixture catalog writes it. */
+  localModels?: FixtureLocalModels;
+  /** What the made-up agent states of each local engine, where not every
+   * engine running. */
+  engineHealth?: FixtureEngineHealth;
+  /** The engines and placements the made-up agent offers, where not all it
+   * knows. */
+  engineChoices?: FixtureEngineChoices;
+  /** The local engine the made-up agent's stored record names at the start;
+   * where left out, the bundled llama.cpp. */
+  localEngine?: LocalEngine;
+  /** The installed model the made-up service serves as the one documents
+   * are read with while no choice is stored; where left out, none. */
+  readingDefault?: { lane: string; model: string };
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
+  /** How the made-up ledger answers, over the scenario's own shape. */
+  ledger?: LedgerShape | null;
+  /** The background classification jobs the made-up profile holds. */
+  jobs?: readonly JobShape[];
+  /** How the made-up declarations answer. */
+  modelo?: ModeloShape | null;
+  /** What the made-up profile states for the imputation election; where it
+   * is left out, nothing is stated. */
+  election?: ElectionScenario | null;
+  /** The stage the made-up profile's AEAT draft and calculation are at; where
+   * it is left out, the host offers no drafts and no comparison with one. */
+  borrador?: BorradorScenario | null;
+  /** What the made-up profile states for the household; where it is left
+   * out, nothing is stated. */
+  household?: HouseholdScenario | null;
+  /** Offer a made-up window port whose close is guarded as the native
+   * host guards it, so a close the system raised can be played. */
+  window?: boolean;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
 
+const EVIDENCE_CALENDAR: typeof FIXTURE_CALENDAR = {
+  ...FIXTURE_CALENDAR,
+  warnings: [
+    calendarWarning(
+      "filing.justificante_unverified",
+      "The filing receipt has not been verified.",
+      ["111"],
+    ),
+  ],
+};
 export const CALENDAR_SHAPES = {
+  advice: ADVISED_CALENDAR,
+  advice_only: ADVICE_ONLY_CALENDAR,
   behind: BEHIND_CALENDAR,
   ahead: AHEAD_CALENDAR,
   straddling: STRADDLING_CALENDAR,
   busy: BUSY_CALENDAR,
+  evidence: EVIDENCE_CALENDAR,
+  close_unknown: CLOSE_UNKNOWN_CALENDAR,
+  // The IVA block claimed with its four yes/no questions unanswered.
+  unanswered_iva: UNANSWERED_IVA_CALENDAR,
+  // Neither the entity type nor the income categories stated.
+  undeclared_taxpayer: UNDECLARED_TAXPAYER_CALENDAR,
+  // The filing-year envelope the read was served under, in each state.
+  support_supported: SUPPORTED_CALENDAR,
+  support_bounded: BOUNDED_CALENDAR,
+  support_projected: PROJECTED_CALENDAR,
+  support_partial: PARTIAL_CALENDAR,
+  support_partial_bounded: PARTIAL_BOUNDED_CALENDAR,
+  support_below_floor: BELOW_FLOOR_CALENDAR,
+  support_above_ceiling: ABOVE_CEILING_CALENDAR,
 } as const;
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 
@@ -115,6 +236,7 @@ const never = <T>() => new Promise<T>(() => undefined);
 /** External runtime events and delayed transport answers for browser scenarios. */
 declare global {
   interface Window {
+    __scenarioLoginRead?: { complete(): void; timeout(): void };
     __scenarioLanguage?: {
       publish(state: DesktopLanguage): void;
       switchAccount(profile: string, language: string): void;
@@ -128,7 +250,146 @@ declare global {
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
+    /** Holds the fixture's agent access answers until released, as a slow
+     * service would. */
+    __scenarioAgentAccessHold?: { hold(): void; release(): void };
+    /** Holds every agent read but the provider settings status (the agent's
+     * status and its watch, its catalog, its local models and engine, its
+     * skills and the access keys) until released, as a service slow
+     * everywhere but the settings would. */
+    __scenarioAgentReadsHold?: { hold(): void; release(): void };
+    /** Holds the agent's status reads and its status watch until released,
+     * each logged as held when it is asked, as a service slow to answer only
+     * where it is would. */
+    __scenarioAgentStatusHold?: { hold(): void; release(): void };
+    /** Holds the agent's catalog reads until released, each logged as held
+     * when it is asked, as a service slow to answer only its catalog would. */
+    __scenarioAgentCatalogHold?: { hold(): void; release(): void };
+    /** Commits a change to the fixture agent's local model list elsewhere. */
+    __scenarioLocalModelsChangeElsewhere?: () => void;
+    /** Which models the made-up computer holds, changed behind the window's
+     * back: the window learns of it only when it reads the catalog again. */
+    __scenarioModelPresence?: FixtureModelPresence;
+    /** The next password change is answered as unconfirmed. */
+    __scenarioPassword?: { uncertain(): void; changes(): number };
+    /** The made-up window port, where the scenario offers one. */
+    __scenarioWindow?: ScenarioWindowControls;
+    /** The filing calendar read is refused while this is true. */
+    __scenarioCalendarRefused?: boolean;
+    /** The filing calendar read is refused with these served words while
+     * they are set, as the product's refusal of the read would be. */
+    __scenarioCalendarRefusalWords?: string;
+    /** The Home read is refused while this is true. */
+    __scenarioHomeRefused?: boolean;
+    /** The Reference search is refused while this is true. */
+    __scenarioReferenceRefused?: boolean;
+    /** The Reference search stays in flight while this is true. */
+    __scenarioReferenceHeld?: boolean;
+    /** The operation history is refused while this is true. */
+    __scenarioOperationsRefused?: boolean;
+    /** Only a request for more runs is refused while this is true. */
+    __scenarioOperationsMoreRefused?: boolean;
+    /** The operation history stays in flight while this is true. */
+    __scenarioOperationsHeld?: boolean;
+    /** The history says that records could not be read or attributed. */
+    __scenarioOperationsDamaged?: boolean;
+    /** The first run names a lifecycle the window has no word for. */
+    __scenarioOperationsUnrecognised?: boolean;
+    /** The signed-in profile's runtime stops answering, or answers again. */
+    __scenarioRuntime?: { lose(): void; restore(): void };
+    /** Plays the host's console environment event with this payload, as
+     * a sign-in, a sign-out or a change of profile emits it. */
+    __scenarioConsoleEnvironment?: { emit(payload: unknown): void };
   }
+}
+
+/** Plays the system's close on the made-up window and reads its answers. */
+export type ScenarioWindowControls = {
+  /** A close the system raised, as the window's own close or Alt+F4. */
+  systemClose(): void;
+  /** Every action the page sent, in order. */
+  actions(): WindowAction[];
+  /** Whether the window has closed. */
+  closed(): boolean;
+};
+
+// One made-up window per page, whichever host instance answers: a scenario
+// may build its host more than once.
+let windowPage: (() => void) | null = null;
+let windowAsked = false;
+let windowReleasing = false;
+let windowClosed = false;
+const windowActions: WindowAction[] = [];
+
+/** A close of the made-up window, held as the native host holds it. */
+function closeWindow() {
+  if (windowClosed) return;
+  if (windowReleasing || windowAsked || windowPage === null) {
+    windowClosed = true;
+    return;
+  }
+  windowAsked = true;
+  windowPage();
+}
+
+/**
+ * A window port that holds a close the system raised as the native host
+ * does: while the page listens the first close asks it, a second close
+ * while it has not answered closes, `close_now` closes without asking
+ * again and `keep_open` lets the next close ask again. Nothing closes:
+ * `closed` only says the native window would have.
+ */
+function windowFixture(): NonNullable<Host["window"]> {
+  let fullscreen = false;
+  let changed:
+    | ((state: {
+        maximized: boolean;
+        fullscreen: boolean;
+        chrome: "custom";
+        nativeControls: null;
+      }) => void)
+    | null = null;
+  const presentation = () => ({
+    maximized: false,
+    fullscreen,
+    chrome: "custom" as const,
+    nativeControls: null,
+  });
+  window.__scenarioWindow = {
+    systemClose: closeWindow,
+    actions: () => [...windowActions],
+    closed: () => windowClosed,
+  };
+  return {
+    action(action) {
+      windowActions.push(action);
+      if (action === "toggle_fullscreen" || action === "leave_fullscreen") {
+        fullscreen = action === "toggle_fullscreen" ? !fullscreen : false;
+        changed?.(presentation());
+      }
+      // `close` raises the same close the system does.
+      if (action === "close") closeWindow();
+      else if (action === "close_now") {
+        windowReleasing = true;
+        windowClosed = true;
+      } else if (action === "keep_open") windowAsked = false;
+      return Promise.resolve();
+    },
+    observe(listener) {
+      changed = listener;
+      listener(presentation());
+      return Promise.resolve(() => {
+        if (changed === listener) changed = null;
+      });
+    },
+    guardClose(asking) {
+      const listener = () => asking();
+      windowPage = listener;
+      return Promise.resolve(() => {
+        if (windowPage === listener) windowPage = null;
+      });
+    },
+  };
 }
 
 const wait = (ms: number) =>
@@ -141,15 +402,40 @@ function failure(
   return { code, operation, message: `${SCENARIO_HOST_MARKER}: ${code}` };
 }
 
+// One set of password-change controls per page, whichever host instance
+// answers: a scenario may build its host more than once.
+let passwordChanges = 0;
+let passwordUncertain = false;
+window.__scenarioPassword = {
+  uncertain() {
+    passwordUncertain = true;
+  },
+  changes: () => passwordChanges,
+};
+
 export function scenarioHost(
   scenario: Scenario,
   options: ScenarioHostOptions,
 ): Host {
   const say = (call: string) => options.onCall?.(call);
+  // The host's event reaches the window through the same parser the Tauri
+  // host applies, so a malformed payload is refused here too.
+  const consoleEnvironmentListeners = new Set<
+    (change: ConsoleEnvironmentChange) => void
+  >();
+  window.__scenarioConsoleEnvironment = {
+    emit(payload) {
+      const change = parseConsoleEnvironmentChange(payload);
+      if (!change) return;
+      for (const listener of consoleEnvironmentListeners) listener(change);
+    },
+  };
+  let logAttachFailures = options.logAttachFailures ?? 0;
   let presence = scenario.signIn.status.state;
   let runtimeAvailable = scenario.signIn.status.runtimeAvailable;
+  // The session waits for a fresh proof until a sign-in or a sign-out ends it.
+  let reconnecting = scenario.signIn.status.reconnecting;
   let managerDispatched = scenario.manager?.autoDispatched ?? false;
-  let managerReads = 0;
   let clipboard = "";
   const supervision = scenario.supervision;
   let observedManager: ManagerStatus | undefined = supervision?.initial;
@@ -183,9 +469,67 @@ export function scenarioHost(
     state: presence,
     active_profile: active,
     runtimeAvailable,
+    reconnecting,
   });
 
   const manager = scenario.manager;
+  let pendingStatus: {
+    resolve(value: SignInStatus): void;
+    reject(error: unknown): void;
+  } | null = null;
+  let statusPending = scenario.signIn.statusPending === true;
+  let readinessTimer: number | undefined;
+  let signInRevision = 0;
+  window.__scenarioLoginRead = {
+    complete() {
+      statusPending = false;
+      runtimeAvailable = true;
+      presence = "absent";
+      pendingStatus?.resolve(status());
+      pendingStatus = null;
+    },
+    timeout() {
+      statusPending = false;
+      pendingStatus?.reject({ code: "runtime_timeout" });
+      pendingStatus = null;
+    },
+  };
+  const runtimeAnswers = (answers: boolean) => {
+    runtimeAvailable = answers;
+    signInListener?.({
+      kind: "sign-in-state",
+      revision: ++signInRevision,
+      status: status(),
+    });
+    // The setup host reads again on the session's cue.
+    window.__scenarioSetup?.reread();
+  };
+  window.__scenarioRuntime = {
+    lose: () => runtimeAnswers(false),
+    restore: () => runtimeAnswers(true),
+  };
+  const scheduleReadiness = () => {
+    if (
+      supervision ||
+      !managerDispatched ||
+      manager?.readyAfterReads === undefined ||
+      !signInListener
+    )
+      return;
+    window.clearTimeout(readinessTimer);
+    readinessTimer = window.setTimeout(
+      () => {
+        runtimeAvailable = true;
+        presence = "absent";
+        signInListener?.({
+          kind: "sign-in-state",
+          revision: ++signInRevision,
+          status: status(),
+        });
+      },
+      (manager.readyAfterReads - 1) * 1_000 + (manager.readyReadDelayMs ?? 0),
+    );
+  };
   const managerCommand: Pick<Host, "startManager"> = manager
     ? {
         async startManager() {
@@ -196,7 +540,7 @@ export function scenarioHost(
             throw failure(manager.result.code, "launch");
           if (manager.result === "dispatched") {
             managerDispatched = true;
-            managerReads = 0;
+            scheduleReadiness();
           }
           return manager.result;
         },
@@ -204,6 +548,32 @@ export function scenarioHost(
     : {};
 
   const profiles: ProfileAccounts = {
+    async changePassword(passwords) {
+      say("changePassword");
+      await wait(options.latencyMs);
+      passwordChanges += 1;
+      if (presence !== "present")
+        return {
+          kind: "refused",
+          code: "not_signed_in",
+          retryAfterSeconds: null,
+        };
+      if (passwordUncertain) {
+        passwordUncertain = false;
+        return { kind: "unknown" };
+      }
+      const sent = JSON.parse(new TextDecoder().decode(passwords)) as Record<
+        string,
+        string
+      >;
+      return sent.current_passphrase === SCENARIO_PASSWORD
+        ? { kind: "changed" }
+        : {
+            kind: "refused",
+            code: "CREDENTIAL_REJECTED",
+            retryAfterSeconds: null,
+          };
+    },
     async reviewDelete(name) {
       say("reviewProfileDelete");
       await wait(options.latencyMs);
@@ -294,18 +664,92 @@ export function scenarioHost(
     async filingCalendar(range) {
       say(`filingCalendar ${range.from} ${range.to}`);
       await wait(options.latencyMs);
-      if (!readable()) throw failure("timed_out", "cli");
+      if (!readable() || window.__scenarioCalendarRefused)
+        throw failure("timed_out", "cli");
+      if (window.__scenarioCalendarRefusalWords)
+        return Promise.reject({
+          code: "refused",
+          operation_id: null,
+          refusal_words: window.__scenarioCalendarRefusalWords,
+        });
       if (scenario.views === "empty") return EMPTY_CALENDAR;
       return options.calendar
         ? CALENDAR_SHAPES[options.calendar]
         : FIXTURE_CALENDAR;
     },
+    async home(language) {
+      say(`home ${language}`);
+      await wait(options.latencyMs);
+      if (!readable() || window.__scenarioHomeRefused)
+        throw failure("timed_out", "cli");
+      if (options.home) return HOME_SHAPES[options.home];
+      return scenario.views === "empty" ? EMPTY_HOME : FIXTURE_HOME;
+    },
+    async reference(query, limit, language) {
+      say(`reference ${language} ${limit} ${query}`);
+      await wait(options.latencyMs);
+      while (window.__scenarioReferenceHeld) await wait(20);
+      if (!readable() || window.__scenarioReferenceRefused)
+        throw failure("timed_out", "cli");
+      return referenceFixture(query);
+    },
+    async operations(limit, after) {
+      say(`operations ${limit} ${after === null ? "-" : after.operation_id}`);
+      await wait(options.latencyMs);
+      while (window.__scenarioOperationsHeld) await wait(20);
+      if (
+        !readable() ||
+        window.__scenarioOperationsRefused ||
+        (after !== null && window.__scenarioOperationsMoreRefused)
+      )
+        throw failure("timed_out", "cli");
+      return operationsFixture(limit, after, {
+        empty: scenario.views === "empty",
+        damaged: window.__scenarioOperationsDamaged,
+        unrecognised: window.__scenarioOperationsUnrecognised,
+      });
+    },
   };
 
+  // The profile's background jobs, answered through its ledger's job
+  // definitions and cued on their own channel.
+  const jobs = backgroundTasksFixture({
+    say,
+    signedIn,
+    shapes: options.jobs ?? [],
+  });
+  // The profile's ledger goes with its views, as the agent does.
+  const ledger = ledgerFixture({
+    jobs,
+    say,
+    wait: () => wait(options.latencyMs),
+    signedIn,
+    shape: options.ledger ?? scenario.ledger ?? "fixture",
+    language: options.language,
+  });
+  const modelo = modeloFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    signedIn,
+    shape: options.modelo ?? "fixture",
+    translate: translator,
+  });
+
+  // The models this made-up computer holds: setup downloads and removes
+  // them, and the agent's catalog reports them.
+  const modelPresence = fixtureModelPresence();
+  window.__scenarioModelPresence = modelPresence;
+  // The engine the agent's record selects is the agent's to say, and the
+  // agent is made after the settings that name its turned-off lanes.
+  let agentEngine: () => string = () => options.localEngine ?? "llamacpp";
+  // The agent's host republishes its status on the service's settle cue.
+  let republish: () => void = () => {};
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
+    selectedEngine: () => agentEngine(),
+    settled: () => republish(),
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -313,11 +757,15 @@ export function scenarioHost(
   // profile's too.
   const {
     agent,
-    session: agentSession,
+    session: servedSession,
     publishStatus,
+    republishStatus,
+    changeListElsewhere,
+    selectedEngine,
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
+    models: modelPresence,
     signedIn,
     readable,
     empty: scenario.views === "empty",
@@ -328,20 +776,160 @@ export function scenarioHost(
     documents: options.agentDocuments ?? "stored",
     skills: options.agentSkills ?? "bundled",
     catalog: options.agentCatalog ?? "served",
+    ...(options.localModels ? { localModels: options.localModels } : {}),
+    ...(options.engineHealth ? { engineHealth: options.engineHealth } : {}),
+    ...(options.engineChoices ? { engineChoices: options.engineChoices } : {}),
+    ...(options.localEngine ? { localEngine: options.localEngine } : {}),
+    ...(options.readingDefault
+      ? { readingDefault: options.readingDefault }
+      : {}),
+    // A movement is handed over as the ledger's movement read serves it,
+    // refused with the words that read served where it refuses.
+    readMovement: async (transactionId) => {
+      const outcome = await ledger.submit("ledger.view", {
+        transaction_prefix: transactionId,
+      });
+      if (outcome.kind === "settled") return outcome.result;
+      const words =
+        outcome.kind === "refused" ? outcome.detail?.refusal_words : undefined;
+      throw Object.assign(new Error("agent_movement_unreadable"), {
+        code: "agent_movement_unreadable",
+        ...(typeof words === "string" ? { refusal_words: words } : {}),
+      });
+    },
   });
+  agentEngine = selectedEngine;
+  republish = republishStatus;
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
   window.__scenarioAgentPublishStatus = (status) => {
     publishedBefore?.(status);
     publishStatus(status);
   };
+  const changedBefore = window.__scenarioLocalModelsChangeElsewhere;
+  window.__scenarioLocalModelsChangeElsewhere = () => {
+    changedBefore?.();
+    changeListElsewhere();
+  };
 
   const providerSettings = providerFixture.settings;
   window.__scenarioProviderSignIn = providerFixture.signInControls;
 
+  let accessHeld: Promise<void> | null = null;
+  let releaseAccess = () => {};
+  window.__scenarioAgentAccessHold = {
+    hold() {
+      accessHeld = new Promise((release) => {
+        releaseAccess = release;
+      });
+    },
+    release() {
+      accessHeld = null;
+      releaseAccess();
+    },
+  };
+  let readsHeld: Promise<void> | null = null;
+  let releaseReads = () => {};
+  window.__scenarioAgentReadsHold = {
+    hold() {
+      readsHeld = new Promise((release) => {
+        releaseReads = release;
+      });
+    },
+    release() {
+      readsHeld = null;
+      releaseReads();
+    },
+  };
+  const afterReads = async () => {
+    if (readsHeld) await readsHeld;
+  };
+  let statusHeld: Promise<void> | null = null;
+  let releaseStatus = () => {};
+  window.__scenarioAgentStatusHold = {
+    hold() {
+      statusHeld = new Promise((release) => {
+        releaseStatus = release;
+      });
+    },
+    release() {
+      statusHeld = null;
+      releaseStatus();
+    },
+  };
+  const statusRead =
+    <Args extends unknown[], Result>(
+      call: string,
+      read: (...args: Args) => Promise<Result>,
+    ) =>
+    async (...args: Args) => {
+      if (statusHeld) {
+        say(`${call}Held`);
+        await statusHeld;
+      }
+      return read(...args);
+    };
+  let catalogHeld: Promise<void> | null = null;
+  let releaseCatalog = () => {};
+  window.__scenarioAgentCatalogHold = {
+    hold() {
+      catalogHeld = new Promise((release) => {
+        releaseCatalog = release;
+      });
+    },
+    release() {
+      catalogHeld = null;
+      releaseCatalog();
+    },
+  };
+  // The window calls the served session through this one, looking each method
+  // up when it is called: a spec that replaces a method of the served session
+  // (window.__fixtureAgentSession) is then the one the window calls.
+  const heldSession = <Args extends unknown[], Result>(
+    read: () => ((...args: Args) => Promise<Result>) | undefined,
+  ) =>
+    read() &&
+    (async (...args: Args) => {
+      await afterReads();
+      return read()!(...args);
+    });
+  const catalogRead =
+    <Args extends unknown[], Result>(
+      read: (...args: Args) => Promise<Result>,
+    ) =>
+    async (...args: Args) => {
+      if (catalogHeld) {
+        say("agentProviderCatalogHeld");
+        await catalogHeld;
+      }
+      return read(...args);
+    };
+  const agentSession: typeof servedSession = Object.assign(
+    Object.create(servedSession) as typeof servedSession,
+    {
+      status: statusRead(
+        "agentStatus",
+        heldSession(() => servedSession.status)!,
+      ),
+      observeStatus: statusRead(
+        "agentObserveStatus",
+        heldSession(() => servedSession.observeStatus)!,
+      ),
+      providerCatalog: catalogRead(
+        heldSession(() => servedSession.providerCatalog)!,
+      ),
+      localModels: heldSession(() => servedSession.localModels),
+      localEngine: heldSession(() => servedSession.localEngine),
+      skills: heldSession(() => servedSession.skills),
+    },
+  );
   const agentAccess = agentAccessFixture({
     say,
-    wait: () => wait(options.latencyMs),
+    wait: async () => {
+      await wait(options.latencyMs);
+      if (accessHeld) await accessHeld;
+      await afterReads();
+    },
     readable,
   });
 
@@ -352,8 +940,21 @@ export function scenarioHost(
         latencyMs: options.latencyMs,
         say,
         readable: () => presence === "present",
+        answers: () => runtimeAvailable,
+        models: modelPresence,
       })
     : undefined;
+
+  // The update from AEAT: its check reads the browser from the made-up
+  // setup, so installing it there is what lets the update go on.
+  const aeatUpdate = scenario.aeatUpdate ?? {};
+  let aeatBrowserReady = false;
+  void setup?.observe((state) => {
+    aeatBrowserReady =
+      state.snapshot?.rows.find((row) => row.kind === "browser")?.state ===
+      "ready";
+  });
+  const aeatSyncRun = aeatSyncRunFixture("idle", say);
 
   let languageRevision = 0;
   let outputLanguage = options.language;
@@ -410,7 +1011,33 @@ export function scenarioHost(
       completeLanguageSet = null;
     },
   };
-  const userProfile = userProfileFixture(scenario.censo);
+  const election = imputationElectionFixture(
+    options.election ?? "undeclared",
+    options.language,
+  );
+  // A Renta shape's filers live in Madrid, which the estimate takes from the
+  // profile.
+  const profile = userProfileFixture(
+    scenario.censo,
+    options.modelo?.startsWith("renta")
+      ? { "tax_residence.ccaa": "madrid" }
+      : undefined,
+  );
+  const household = householdFixture(
+    options.household ?? "unknown",
+    options.language,
+  );
+  // The election and the household have their own revision witnesses; every
+  // other edit is the profile fixture's.
+  const userProfile: ProfileFixture = {
+    ...profile,
+    change: (change) =>
+      change.edit.kind === "imputation_election"
+        ? election.change(change)
+        : household.takes(change.edit)
+          ? household.change(change)
+          : profile.change(change),
+  };
   return {
     language: {
       read: () => {
@@ -458,11 +1085,49 @@ export function scenarioHost(
       },
     },
     userProfile,
+    ...(options.borrador
+      ? { borrador: borradorFixture({ scenario: options.borrador, say }) }
+      : {}),
+    profileCompanions: {
+      household: household.reads.household,
+      householdDraft: household.reads.householdDraft,
+      imputationElection: election.reads.imputationElection,
+    },
     censo: censoFixture(userProfile, scenario.censo),
     available: true,
+    ...(options.window ? { window: windowFixture() } : {}),
     ...(scenario.views === "none"
       ? {}
-      : { views, agent, agentSession, providerSettings, agentAccess }),
+      : {
+          views,
+          ledger,
+          backgroundTasks: jobs.port,
+          modelo,
+          aeatSync: aeatSyncFixture(scenario.aeatSync ?? "mixed", say, () =>
+            aeatSyncRun.begin(aeatUpdate.run ?? "done"),
+          ),
+          aeatSyncRun,
+          aeatSyncResults: aeatSyncResultsFixture(
+            aeatUpdate.results ?? "mixed",
+            say,
+          ),
+          aeatSyncPrepare: aeatSyncPrepareFixture(
+            aeatUpdate.before ?? "ready",
+            {
+              browserReady: () => aeatBrowserReady,
+            },
+          ),
+          sedeView: sedeViewFixture({
+            say,
+            ...(scenario.sedeView === "browser_missing"
+              ? { needs: "operator.provision.browser" }
+              : {}),
+          }),
+          agent,
+          agentSession,
+          providerSettings,
+          agentAccess,
+        }),
     ...(setup ? { setup } : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
@@ -510,7 +1175,9 @@ export function scenarioHost(
       : {}),
     observeSignIn: ((listener) => {
       signInListener = listener;
+      scheduleReadiness();
       return Promise.resolve(() => {
+        window.clearTimeout(readinessTimer);
         if (signInListener === listener) signInListener = null;
       });
     }) satisfies NonNullable<Host["observeSignIn"]>,
@@ -524,13 +1191,20 @@ export function scenarioHost(
             if (typeof result === "object")
               throw failure(result.code, "installation");
             managerDispatched = true;
-            managerReads = 0;
+            scheduleReadiness();
             return result;
           },
         }
       : {}),
-    // The shell draws its own menu here; the native popup is not simulated.
-    nativeMenus: false,
+
+    // `?previous_close=interrupted`: the previous close ended a change unreported.
+    previousClose() {
+      say("previousClose");
+      const interrupted =
+        new URLSearchParams(window.location.search).get("previous_close") ===
+        "interrupted";
+      return Promise.resolve(interrupted ? 1 : 0);
+    },
 
     about() {
       say("about");
@@ -546,7 +1220,7 @@ export function scenarioHost(
         return Promise.reject(failure("environment_failed", "environment"));
       return Promise.resolve({
         outputLanguage: options.language,
-        logLevel: "INFO",
+        logLevel: options.logLevel ?? "INFO",
         docs:
           new URLSearchParams(window.location.search).get("docs") === "none"
             ? { state: "notBundled" }
@@ -573,7 +1247,10 @@ export function scenarioHost(
           return captured;
         });
       }
-      if (scenario.signIn.statusPending) return never();
+      if (statusPending)
+        return new Promise<SignInStatus>((resolve, reject) => {
+          pendingStatus = { resolve, reject };
+        });
       if (scenario.signIn.statusFailure)
         return Promise.reject(
           typeof scenario.signIn.statusFailure === "string"
@@ -585,21 +1262,6 @@ export function scenarioHost(
         return Promise.reject(
           failure(manager.statusFailureAfterDispatch, "cli"),
         );
-      }
-      if (
-        managerDispatched &&
-        manager?.readyAfterReads !== undefined &&
-        ++managerReads >= manager.readyAfterReads
-      ) {
-        runtimeAvailable = true;
-        presence = "absent";
-        if (manager.readyReadDelayMs !== undefined) {
-          const ready = status();
-          return wait(manager.readyReadDelayMs).then(() => {
-            say("managerReadinessResolved");
-            return ready;
-          });
-        }
       }
       return Promise.resolve(status());
     },
@@ -625,7 +1287,30 @@ export function scenarioHost(
       // A sign-in that is accepted is what selects the profile.
       if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
+      reconnecting = undefined;
       return { kind: "signed-in", status: acknowledged ?? status() };
+    },
+
+    async signOutWithPassword(_password, profile) {
+      say("signOutWithPassword");
+      const named = accounts.indexOf(profile);
+      say(`signOutWithPasswordProfile ${named + 1}`);
+      await wait(options.latencyMs);
+      if (named < 0) throw failure("invalid_arguments", "cli");
+      if (scenario.signIn.signOutFailure)
+        throw failure(scenario.signIn.signOutFailure, "cli");
+      presence = "absent";
+      reconnecting = undefined;
+      const access = scenario.signIn.signOutAccess;
+      return {
+        remainingAccess: {
+          automationEnabled: access ? access.automationEnabled : true,
+          automationAccessRemains: access
+            ? access.automationAccessRemains
+            : false,
+          automationRevoked: false,
+        },
+      };
     },
 
     async signOut() {
@@ -634,6 +1319,7 @@ export function scenarioHost(
       if (scenario.signIn.signOutFailure)
         throw failure(scenario.signIn.signOutFailure, "cli");
       presence = "absent";
+      reconnecting = undefined;
       // The product's reply: the saved setting, which a sign-out keeps, and
       // whether an issued key can still admit.
       const access = scenario.signIn.signOutAccess;
@@ -649,20 +1335,45 @@ export function scenarioHost(
     },
 
     openTerminal(kind, size, listener) {
-      say(
-        `openTerminal ${typeof kind === "string" ? kind : JSON.stringify(kind)} ${size.cols}x${size.rows}`,
-      );
+      say(`openTerminal ${kind} ${size.cols}x${size.rows}`);
       if (scenario.terminals === "pending") return never();
       if (scenario.terminals === "failed")
         return Promise.reject(failure("spawn_failed", "terminal"));
-      return Promise.resolve(
-        openFixtureTerminal(kind, size, listener, scenario.terminals),
+      const session = openFixtureTerminal(
+        kind,
+        size,
+        listener,
+        scenario.terminals,
       );
+      return Promise.resolve({
+        ...session,
+        close() {
+          say(`terminalClose ${kind}`);
+          return session.close();
+        },
+      });
+    },
+
+    observeConsoleEnvironment(listener) {
+      say("observeConsoleEnvironment");
+      consoleEnvironmentListeners.add(listener);
+      return Promise.resolve(() => {
+        consoleEnvironmentListeners.delete(listener);
+      });
     },
 
     subscribeLogs(listener) {
       say("subscribeLogs");
       if (scenario.logs === "pending") return never();
+      if (logAttachFailures > 0) {
+        logAttachFailures -= 1;
+        listener({
+          records: FIXTURE_RECORDS.slice(0, 1),
+          dropped: 0,
+          states: AVAILABLE,
+        });
+        return Promise.reject(failure("log_unavailable", "logging"));
+      }
       // The backlog arrives over two batches, the second reporting records
       // the ring had already dropped, as a large backlog does.
       const split = Math.ceil(FIXTURE_RECORDS.length / 2);
@@ -695,6 +1406,10 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
+      if (options.logReplayGap) {
+        for (const batch of batches)
+          batch.records = batch.records.filter((record) => record.seq >= 4);
+      }
       if (scenario.managerLog === "absent") {
         for (const batch of batches) {
           batch.states = { ...batch.states };
@@ -755,10 +1470,6 @@ export function scenarioHost(
         return Promise.reject(failure("invalid_arguments", "webview"));
       clipboard = text;
       return Promise.resolve();
-    },
-
-    showMenu() {
-      return Promise.reject(failure("unsupported_platform", "webview"));
     },
 
     openExternal(url) {

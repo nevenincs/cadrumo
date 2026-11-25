@@ -8,6 +8,7 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.aeat_literal_fixtures import manual_practicos_url
 
 from ..manual_section import (
@@ -25,7 +26,8 @@ from ..manual_section import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_RENTA_2025_MANUAL_URL = manual_practicos_url("IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf")
+_YEAR = filing_year_envelope().horizon
+_MANUAL_URL = manual_practicos_url(f"IRPF/IRPF-{_YEAR}/ManualRenta{_YEAR}Parte1_es_es.pdf")
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M130_CASILLA_01")
 
 
@@ -35,13 +37,13 @@ def _llm_provenance() -> LLMProvenance:
         model="test-model",
         prompt_id="manual_rule_extract_v1",
         cache_hit=False,
-        extracted_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
+        extracted_at=datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
     )
 
 
 def _rule_source() -> RuleSource:
     return RuleSource(
-        manual_url=AnyHttpUrl(_RENTA_2025_MANUAL_URL),
+        manual_url=AnyHttpUrl(_MANUAL_URL),
         page=142,
         paragraph=3,
     )
@@ -49,16 +51,16 @@ def _rule_source() -> RuleSource:
 
 def _section_source() -> SectionSource:
     return SectionSource(
-        manual_url=AnyHttpUrl(_RENTA_2025_MANUAL_URL),
+        manual_url=AnyHttpUrl(_MANUAL_URL),
         page=140,
     )
 
 
-def _rule(rule_id: str = "renta-2025-part1-cap5-sec2-rule0001", kind: RuleKind = "computation") -> Rule:
+def _rule(rule_id: str = f"renta-{_YEAR}-part1-cap5-sec2-rule0001", kind: RuleKind = "computation") -> Rule:
     return Rule(
         rule_id=rule_id,
         manual_id=ManualId.RENTA,
-        year=2025,
+        year=_YEAR,
         part=ManualPart.PARTE_1,
         chapter_id="cap5",
         section_id="sec2",
@@ -71,7 +73,7 @@ def _rule(rule_id: str = "renta-2025-part1-cap5-sec2-rule0001", kind: RuleKind =
         source=_rule_source(),
         extracted_by=_llm_provenance(),
         definition_reviewed_by="gw",
-        definition_reviewed_at=date(2026, 4, 12),
+        definition_reviewed_at=date(_YEAR, 4, 12),
     )
 
 
@@ -87,7 +89,7 @@ def _section(section_id: str = "sec2") -> Section:
         references_legal_acts=(),
         source=_section_source(),
         definition_reviewed_by="gw",
-        definition_reviewed_at=date(2026, 4, 12),
+        definition_reviewed_at=date(_YEAR, 4, 12),
     )
 
 
@@ -105,9 +107,9 @@ class TestStrictSchema:
         """A rule with an empty statement must fail validation."""
         with pytest.raises(ValidationError, match=r"Rule.statement: missing authoritative Spanish text"):
             Rule(
-                rule_id="renta-2025-part1-cap5-sec2-rule0002",
+                rule_id=f"renta-{_YEAR}-part1-cap5-sec2-rule0002",
                 manual_id=ManualId.RENTA,
-                year=2025,
+                year=_YEAR,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
@@ -120,16 +122,16 @@ class TestStrictSchema:
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
                 definition_reviewed_by="gw",
-                definition_reviewed_at=date(2026, 4, 12),
+                definition_reviewed_at=date(_YEAR, 4, 12),
             )
 
     def test_rule_rejects_blank_applies_when(self) -> None:
         """Optional applicability prose must not carry blank authoritative text."""
         with pytest.raises(ValidationError, match=r"Rule.applies_when: missing authoritative Spanish text"):
             Rule(
-                rule_id="renta-2025-part1-cap5-sec2-rule0003",
+                rule_id=f"renta-{_YEAR}-part1-cap5-sec2-rule0003",
                 manual_id=ManualId.RENTA,
-                year=2025,
+                year=_YEAR,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
@@ -142,7 +144,7 @@ class TestStrictSchema:
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
                 definition_reviewed_by="gw",
-                definition_reviewed_at=date(2026, 4, 12),
+                definition_reviewed_at=date(_YEAR, 4, 12),
             )
 
     def test_rule_rejects_legacy_scalar_casilla_reference(self) -> None:
@@ -150,9 +152,9 @@ class TestStrictSchema:
         with pytest.raises(ValidationError, match=r"references_casillas"):
             Rule.model_validate(
                 {
-                    "rule_id": "renta-2025-part1-cap5-sec2-rule0003",
+                    "rule_id": f"renta-{_YEAR}-part1-cap5-sec2-rule0003",
                     "manual_id": ManualId.RENTA,
-                    "year": 2025,
+                    "year": _YEAR,
                     "part": ManualPart.PARTE_1,
                     "chapter_id": "cap5",
                     "section_id": "sec2",
@@ -165,7 +167,7 @@ class TestStrictSchema:
                     "source": _rule_source(),
                     "extracted_by": _llm_provenance(),
                     "definition_reviewed_by": "gw",
-                    "definition_reviewed_at": date(2026, 4, 12),
+                    "definition_reviewed_at": date(_YEAR, 4, 12),
                 },
             )
 
@@ -178,9 +180,9 @@ class TestStrictSchema:
         """Reviewer metadata must be a non-empty trimmed string."""
         with pytest.raises(ValidationError, match=r"at least 1 character"):
             Rule(
-                rule_id="renta-2025-part1-cap5-sec2-rule0004",
+                rule_id=f"renta-{_YEAR}-part1-cap5-sec2-rule0004",
                 manual_id=ManualId.RENTA,
-                year=2025,
+                year=_YEAR,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
@@ -193,5 +195,5 @@ class TestStrictSchema:
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
                 definition_reviewed_by="   ",
-                definition_reviewed_at=date(2026, 4, 12),
+                definition_reviewed_at=date(_YEAR, 4, 12),
             )

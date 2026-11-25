@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 import ast
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from ....core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
 from ...overview.calendar_models import (
     OverviewAeatSubmissionState,
@@ -27,12 +26,14 @@ from ...overview.calendar_models import (
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
+    OverviewCalendarScope,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
 from ...overview.evidence import CalendarEvidenceProjection
 from ...overview.home import HomeAvailability, HomeZoneState
 from ...overview.next_actions import declare_next_action
+from ...workbench_generation_public_contracts import PublicDeclarationsCalendarEntryRefV1
 from ..declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionError,
@@ -43,8 +44,10 @@ from ..declarations_calendar import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
-_RANGE = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 9, 3, 10, tzinfo=UTC)
+_RANGE = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
 _WORK = cast("WorkUnitId", "a" * 64)
 _REVISION = cast("CalculationRevisionId", "b" * 64)
 _FILING = cast("FilingRecordId", "c" * 64)
@@ -82,7 +85,7 @@ def _filing_evidence(
     local: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE,
     aeat: OverviewAeatSubmissionState = OverviewAeatSubmissionState.NOT_OBSERVED,
 ) -> OverviewCalendarFilingEvidence:
-    resolved_period = period or Period.from_year_and_code(2026, "1T")
+    resolved_period = period or Period.from_year_and_code(_YEAR, "1T")
     verified = aeat is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     return OverviewCalendarFilingEvidence(
         modelo=modelo,
@@ -104,10 +107,10 @@ def _entry(
     *,
     modelo: str = "303",
     period: Period | None = None,
-    close: date = date(2026, 4, 20),
+    close: date = date(_YEAR, 4, 20),
     evidence: OverviewCalendarFilingEvidence | None = None,
 ) -> OverviewCalendarEntry:
-    resolved_period = period or Period.from_year_and_code(2026, "1T")
+    resolved_period = period or Period.from_year_and_code(_YEAR, "1T")
     return OverviewCalendarEntry(
         modelo=modelo,
         period=resolved_period,
@@ -116,7 +119,7 @@ def _entry(
         adjusted_closes_on=close,
         shift_reason="none",
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-        evaluated_on=date(2026, 1, 1),
+        evaluated_on=date(_YEAR, 1, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
         filing_year=resolved_period.filing_year,
@@ -144,13 +147,13 @@ def _recovery() -> Recovery:
 def _calendar(*entries: OverviewCalendarEntry) -> OverviewCalendar:
     return OverviewCalendar(
         range=_RANGE,
-        evaluated_on=date(2026, 1, 1),
+        evaluated_on=date(_YEAR, 1, 1),
         entries=entries,
         generated_at=_NOW,
         events=(
             OverviewCalendarEvent(
                 event_type=OverviewCalendarEventType.MESSAGE,
-                event_date=date(2026, 4, 21),
+                event_date=date(_YEAR, 4, 21),
                 source="private-source",
                 summary="Private event prose and taxpayer facts",
                 reference_id="private-event-reference",
@@ -178,12 +181,12 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
         aeat=OverviewAeatSubmissionState.ACCEPTED,
     )
     entry = _entry(evidence=evidence)
-    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period="1T")
     entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
     projection = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(evidence),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
 
@@ -193,14 +196,14 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
         (DeclarationsCalendarSource.AEAT_EVIDENCE, HomeAvailability.AVAILABLE, 1),
     )
     row = projection.entries[0]
-    assert row.semantic_key() == ("303", 2026, "1T")
+    assert row.semantic_key() == ("303", _YEAR, "1T")
     assert (row.opens_on, row.closes_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
-        date(2026, 4, 1),
-        date(2026, 4, 20),
-        date(2026, 4, 20),
+        date(_YEAR, 4, 1),
+        date(_YEAR, 4, 20),
+        date(_YEAR, 4, 20),
         None,
     )
-    assert row.evaluated_on == date(2026, 1, 1)
+    assert row.evaluated_on == date(_YEAR, 1, 1)
     assert row.days_overdue is None
     assert row.evidence_conflicted is False
     assert row.legal_status is ObligationStatus.UPCOMING
@@ -221,7 +224,7 @@ def test_exact_evidence_join_counts_only_the_matching_scheduled_address() -> Non
     projection = project_declarations_calendar(
         calendar=_calendar(_entry(evidence=evidence)),
         evidence=_provider(evidence),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
     assert tuple(source.item_count for source in projection.sources) == (1, 1, 1)
@@ -231,10 +234,10 @@ def test_exact_evidence_join_counts_only_the_matching_scheduled_address() -> Non
 
 def test_overdue_row_projects_only_conditional_unassessed_recargo_guidance() -> None:
     recovery = _recovery()
-    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period="1T")
     entry = _entry().model_copy(
         update={
-            "evaluated_on": date(2026, 5, 30),
+            "evaluated_on": date(_YEAR, 5, 30),
             "status": ObligationStatus.OVERDUE,
             "user_state": OverviewPeriodState.LATE,
             "days_overdue": 40,
@@ -246,7 +249,7 @@ def test_overdue_row_projects_only_conditional_unassessed_recargo_guidance() -> 
     projection = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(entry.filing_evidence),
-        as_of=date(2026, 5, 30),
+        as_of=date(_YEAR, 5, 30),
         schedule_observation=_schedule(),
     )
 
@@ -256,7 +259,7 @@ def test_overdue_row_projects_only_conditional_unassessed_recargo_guidance() -> 
     assert preview.surcharge_pct == Decimal("2")
     assert preview.interest_applies is False
     assert preview.legal_ref == "ley-58-2003:art-27.2"
-    assert preview.rate_reference_on == date(2026, 5, 30)
+    assert preview.rate_reference_on == date(_YEAR, 5, 30)
     assert preview.assessment_status == "unassessed"
     assert not hasattr(preview, "amount")
     assert not hasattr(preview, "liability")
@@ -270,7 +273,7 @@ def test_projection_strips_every_protected_identity_name_event_and_reference() -
     projection = project_declarations_calendar(
         calendar=_calendar(_entry(evidence=evidence)),
         evidence=_provider(evidence),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
     exposed = projection.model_dump_json() + repr(projection)
@@ -295,13 +298,13 @@ def test_known_not_observed_and_unobservable_aeat_are_distinct() -> None:
     known = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
     unknown = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(aeat=HomeAvailability.NEVER_CAPTURED),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
     assert known.entries[0].aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
@@ -315,20 +318,20 @@ def test_known_empty_unavailable_and_stale_are_not_conflated() -> None:
     known_empty = project_declarations_calendar(
         calendar=_calendar(),
         evidence=_provider(),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
     unavailable = project_declarations_calendar(
         calendar=_calendar(),
         evidence=_provider(local=HomeAvailability.UNAVAILABLE, aeat=HomeAvailability.LOCKED),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(HomeAvailability.UNAVAILABLE),
     )
     stale_evidence = _filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED)
     stale = project_declarations_calendar(
         calendar=_calendar(_entry(evidence=stale_evidence)),
         evidence=_provider(stale_evidence, aeat=HomeAvailability.STALE, observed_at=_NOW),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(HomeAvailability.STALE, observed_at=_NOW),
     )
     assert known_empty.sources[0].item_count == 0
@@ -364,18 +367,18 @@ def test_contradictory_inputs_fail_closed(case: str) -> None:
     provider = _provider(evidence)
     schedule = _schedule()
     if case == "calendar_year_disagreement":
-        calendar = _calendar(entry.model_copy(update={"filing_year": 2025}))
+        calendar = _calendar(entry.model_copy(update={"filing_year": _YEAR - 1}))
     elif case == "duplicate_entry":
         calendar = _calendar(entry, entry)
     elif case == "local_evidence_year_disagreement":
         mismatched = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE).model_copy(
-            update={"filing_year": 2025}
+            update={"filing_year": _YEAR - 1}
         )
         provider = _provider(mismatched)
         calendar = _calendar(_entry())
     elif case == "aeat_evidence_year_disagreement":
         mismatched = _filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED).model_copy(
-            update={"filing_year": 2025}
+            update={"filing_year": _YEAR - 1}
         )
         provider = _provider(mismatched)
         calendar = _calendar(_entry())
@@ -395,7 +398,7 @@ def test_contradictory_inputs_fail_closed(case: str) -> None:
     elif case == "aeat_authority_mismatch":
         provider = _provider(_filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE))
     elif case == "wrong_recovery_address":
-        action = declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+        action = declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         calendar = _calendar(entry.model_copy(update={"recovery": _recovery(), "recovery_action": action}))
     elif case == "unavailable_schedule_rows":
         schedule = _schedule(HomeAvailability.UNAVAILABLE)
@@ -403,34 +406,34 @@ def test_contradictory_inputs_fail_closed(case: str) -> None:
         project_declarations_calendar(
             calendar=calendar,
             evidence=provider,
-            as_of=date(2026, 3, 1),
+            as_of=date(_YEAR, 3, 1),
             schedule_observation=schedule,
         )
 
 
 def test_order_is_deterministic_by_deadline_then_natural_identity() -> None:
     rows = (
-        _entry(modelo="303", close=date(2026, 4, 20)),
-        _entry(modelo="130", close=date(2026, 4, 20)),
-        _entry(modelo="111", period=Period.from_year_and_code(2026, "01"), close=date(2026, 2, 20)),
+        _entry(modelo="303", close=date(_YEAR, 4, 20)),
+        _entry(modelo="130", close=date(_YEAR, 4, 20)),
+        _entry(modelo="111", period=Period.from_year_and_code(_YEAR, "01"), close=date(_YEAR, 2, 20)),
     )
     forward = project_declarations_calendar(
         calendar=_calendar(*rows),
         evidence=_provider(),
-        as_of=date(2026, 1, 1),
+        as_of=date(_YEAR, 1, 1),
         schedule_observation=_schedule(),
     )
     reverse = project_declarations_calendar(
         calendar=_calendar(*reversed(rows)),
         evidence=_provider(),
-        as_of=date(2026, 1, 1),
+        as_of=date(_YEAR, 1, 1),
         schedule_observation=_schedule(),
     )
     assert forward == reverse
     assert tuple(row.semantic_key() for row in forward.entries) == (
-        ("111", 2026, "01"),
-        ("130", 2026, "1T"),
-        ("303", 2026, "1T"),
+        ("111", _YEAR, "01"),
+        ("130", _YEAR, "1T"),
+        ("303", _YEAR, "1T"),
     )
 
 
@@ -453,15 +456,15 @@ def _entry_ref_payload() -> dict[str, object]:
     """One valid entry ref, taken from a real projection."""
     evidence = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE)
     entry = _entry(evidence=evidence)
-    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period="1T")
     entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
     projection = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(evidence),
-        as_of=date(2026, 3, 1),
+        as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
-    dumped = projection.entries[0].model_dump()
+    dumped = projection.entries[0].model_dump(exclude_computed_fields=True)
     # Rebuild rather than cast: model_dump() is dict[str, Any], and the
     # declared return promises object values, which this comprehension
     # actually produces instead of merely asserting.
@@ -493,44 +496,85 @@ def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() ->
     """
     payload = _entry_ref_payload()
     payload["recovery_action"] = declare_next_action(
-        "operator.modelo.work.create", modelo="100", year=1999, period="1T"
+        "operator.modelo.work.create", modelo="100", year=_YEAR - 1, period="1T"
     )
 
     with pytest.raises(ValidationError, match="contradicts its natural address"):
         DeclarationsCalendarEntryRefV1.model_validate(payload)
 
 
-def _territory_projection(operation: PinnedAuthorityOperation, territory: str) -> DeclarationsCalendarEntryRefV1:
-    """Project one row whose territory comes from the calendar CCAA catalogue."""
-    entry = _entry().model_copy(
-        update={
-            "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            "holiday_territory": resolve_calendar_ccaa_catalogue(authority=operation).require(territory),
-        }
+def _served_ref(*, aeat: OverviewAeatSubmissionState | None) -> DeclarationsCalendarEntryRefV1:
+    """An overdue row closed on the 20th and evaluated three days later."""
+    closes = date(_YEAR, 10, 20)
+    evaluated = date(_YEAR, 10, 23)
+    return DeclarationsCalendarEntryRefV1(
+        modelo="130",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        opens_on=date(_YEAR, 10, 1),
+        closes_on=closes,
+        adjusted_closes_on=closes,
+        shift_reason="fixture",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        evaluated_on=evaluated,
+        days_overdue=3,
+        legal_status=ObligationStatus.OVERDUE,
+        user_state=OverviewPeriodState.LATE,
+        local_filing_state=None if aeat is None else OverviewLocalFilingState.NOT_READY_TO_FILE,
+        aeat_submission_state=aeat,
+        justificante_verified=None if aeat is None else False,
+        evidence_conflicted=False,
+        source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
     )
-    projection = project_declarations_calendar(
-        calendar=_calendar(entry),
-        evidence=_provider(),
-        as_of=date(2026, 3, 1),
-        schedule_observation=_schedule(),
+
+
+def test_an_entry_ref_with_withheld_evidence_serves_its_decided_values() -> None:
+    served = _served_ref(aeat=None).model_dump(mode="json")
+    assert served["days_until_close"] == -3
+    assert served["filing_status"] == "overdue"
+    assert served["scopes"] == ["past", "overdue", "evidence_unknown"]
+
+
+def test_an_entry_ref_with_observed_evidence_is_not_evidence_unknown() -> None:
+    served = _served_ref(aeat=OverviewAeatSubmissionState.NOT_OBSERVED).model_dump(mode="json")
+    assert served["scopes"] == ["past", "overdue"]
+    assert served["filing_status"] == "overdue"
+
+
+def test_an_entry_ref_reads_back_without_its_computed_values() -> None:
+    entry = _served_ref(aeat=None)
+    assert (
+        DeclarationsCalendarEntryRefV1.model_validate_json(entry.model_dump_json(exclude_computed_fields=True)) == entry
     )
-    return projection.entries[0]
 
 
-def test_a_projected_holiday_territory_round_trips_through_json(operation: PinnedAuthorityOperation) -> None:
-    """A frontend decodes the row with no pinned authority, so the territory crosses as its text."""
-    row = _territory_projection(operation, "ES-MD")
+def test_a_public_entry_ref_stores_the_derivations_its_fields_decide() -> None:
+    payload = _public_ref_payload(_served_ref(aeat=None))
+    public = PublicDeclarationsCalendarEntryRefV1.model_validate_json(json.dumps(payload))
+    assert public.days_until_close == -3
+    assert public.scopes == (
+        OverviewCalendarScope.PAST,
+        OverviewCalendarScope.OVERDUE,
+        OverviewCalendarScope.EVIDENCE_UNKNOWN,
+    )
+    assert PublicDeclarationsCalendarEntryRefV1.model_validate_json(public.model_dump_json()) == public
 
-    decoded = DeclarationsCalendarEntryRefV1.model_validate_json(row.model_dump_json(), strict=True)
 
-    assert decoded == row
-    assert decoded.holiday_territory == "ES-MD"
-    assert type(decoded.holiday_territory) is str
+@pytest.mark.parametrize(
+    ("name", "foreign"),
+    [("filing_status", "submitted"), ("days_until_close", 3), ("scopes", ["past"])],
+)
+def test_a_public_entry_ref_refuses_a_derivation_it_does_not_decide(name: str, foreign: object) -> None:
+    payload = _public_ref_payload(_served_ref(aeat=None))
+    payload[name] = foreign
+    with pytest.raises(ValidationError, match="it does not decide"):
+        PublicDeclarationsCalendarEntryRefV1.model_validate_json(json.dumps(payload))
 
 
-def test_an_undeclared_holiday_territory_is_refused_before_projection(operation: PinnedAuthorityOperation) -> None:
-    """Membership is decided by the catalogue, and the token itself still refuses bare text."""
-    with pytest.raises(RegistryValidationError, match="not declared"):
-        _territory_projection(operation, "ES-ZZ")
-    with pytest.raises(ValidationError, match="registry-projected token"):
-        TypeAdapter(CalendarCCAA).validate_python("ES-MD")
+def _public_ref_payload(entry: DeclarationsCalendarEntryRefV1) -> dict[str, object]:
+    """The canonical row's served JSON, with its period as the public coordinates."""
+    payload: dict[str, object] = {str(key): value for key, value in json.loads(entry.model_dump_json()).items()}
+    payload["period"] = {"filing_year": entry.period.filing_year, "code": entry.period.registry_token}
+    for name in ("aeat_reference_id", "recovery_action", "conditional_recargo_preview"):
+        payload.setdefault(name, None)
+    return payload

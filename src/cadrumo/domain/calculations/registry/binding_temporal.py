@@ -24,6 +24,7 @@ make the row reproducible.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated, Literal
 
@@ -54,6 +55,7 @@ __all__ = [
     "NonCalculation",
     "NonCalculationReason",
     "PriorQuarterExpandingSpan",
+    "RelativeToFilingYear",
     "SameFilingYearPeriods",
     "SameTargetContext",
     "TargetPeriodOffset",
@@ -62,6 +64,16 @@ __all__ = [
     "temporal_max_year_delta",
     "temporal_period_anchors",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class RelativeToFilingYear:
+    """Mark a provider integer as a count of ejercicios before the one filed, never a year.
+
+    Carried as ``Annotated`` metadata on the field. The provider registration's
+    coordinate guard admits an integer so marked, because it moves with the
+    target filing context instead of pinning one.
+    """
 
 
 @pydantic_validation_boundary
@@ -83,7 +95,7 @@ _SourcePeriods = Annotated[
     BeforeValidator(_coerce_period_sequence),
     Field(min_length=1),
 ]
-_GeneratorToken = Annotated[str, Field(min_length=1, max_length=200)]
+_GeneratorToken = Annotated[str, Field(min_length=1, max_length=256)]
 
 
 def _reject_duplicate_periods(value: tuple[str, ...]) -> tuple[str, ...]:
@@ -293,6 +305,41 @@ def temporal_max_year_delta(temporal: BindingTemporalSelector) -> int | None:
     return None
 
 
+def temporal_year_reach(temporal: BindingTemporalSelector) -> int:
+    """Return the largest absolute filing-year distance a member declares.
+
+    Reads every authored year distance: the single offset, each per-target-period
+    offset and an explicit ``max_years`` bound. Members that name no year
+    distance reach ``0``.
+    """
+    if isinstance(temporal, FilingYearOffset):
+        return max(abs(temporal.years), temporal.max_years or 0)
+    if isinstance(temporal, FilingYearOffsetByTargetPeriod):
+        return max((abs(years) for years in temporal.offsets.values()), default=0)
+    return 0
+
+
+def temporal_reach_diagnostic(
+    temporal: BindingTemporalSelector,
+    *,
+    supported_year_span: int,
+) -> str | None:
+    """Return the refusal for a member reaching farther than the support envelope spans.
+
+    ``supported_year_span`` is the distance between the registry's first and
+    last supported filing year. A relative offset longer than that can never
+    land on a supported filing year, so it is an absolute year in disguise
+    (``years = 2024``) or a dead declaration rather than a relative coordinate.
+    """
+    reach = temporal_year_reach(temporal)
+    if reach <= supported_year_span:
+        return None
+    return (
+        f"temporal member {temporal.kind.value!r} reaches {reach} filing years, "
+        f"beyond the {supported_year_span}-year span of the supported filing years"
+    )
+
+
 def temporal_period_anchors(
     temporal: BindingTemporalSelector,
     *,
@@ -451,7 +498,7 @@ class NonCalculation(RegistryModel):
     kind: Literal[BindingApplicabilityKind.NON_CALCULATION] = BindingApplicabilityKind.NON_CALCULATION
     reason: NonCalculationReason
     box_retired_in: RevisionId | None = None
-    consumed_by: Annotated[str, Field(min_length=1, max_length=300)]
+    consumed_by: Annotated[str, Field(min_length=1, max_length=512)]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

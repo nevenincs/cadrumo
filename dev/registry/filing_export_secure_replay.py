@@ -29,7 +29,7 @@ from .filing_export_proof_contracts import (
     FilingExportSecureReplayEvidence,
     FilingExportSecureReplayReceipt,
 )
-from .filing_export_writer import _dictionary_mapping
+from .filing_export_writer import dictionary_mapping
 
 
 class FilingExportSecureReplayRequest(BaseModel):
@@ -145,7 +145,7 @@ def _export_to_consumer(
         proof_input.draft,
         payload_consumer=payload_consumer,
         producer_snapshot=proof_input.producer_snapshot,
-        dictionary_values=_dictionary_mapping(proof_input.dictionary_values),
+        dictionary_values=dictionary_mapping(proof_input.dictionary_values),
         prior_domiciliation_election=proof_input.prior_domiciliation_election,
         product_software_identity=proof_input.product_software_identity,
         schema_provider=schema_provider,

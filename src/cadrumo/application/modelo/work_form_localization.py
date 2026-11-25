@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
@@ -15,10 +15,23 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
-from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
+from ...core.type_guards import is_object_tuple
+from ...domain.calculations.registry.modelo_localization import (
+    render_rotating_year,
+    resolve_modelo_localization,
+    served_modelo_localization_text,
+)
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .printed_boxes import printed_box_number
-from .work_form_models import ModeloFormField, ModeloFormText, ModeloFormTextDisclosure, ModeloWorkForm
+from .work_form_field_vocabulary import (
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 
 _SPANISH: Final[str] = OutputLanguage.ES.value
 
@@ -51,11 +64,10 @@ _FIGURES: Final[str] = "[0-9-]+"
 
 def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFormText | None:
     """Resolve a modelo catalogue chain and say which language actually served it."""
-    source = modelo_localization_source(keys, locale=language.value)
-    text = resolve_modelo_localization(keys, locale=language.value)
-    if source is None or not (text is not None and text):
+    served = served_modelo_localization_text(keys, locale=language.value)
+    if served is None or not served[1]:
         return None
-    served_locale = source[1]
+    served_locale, text = served
     disclosure = (
         ModeloFormTextDisclosure.LOCALIZED
         if served_locale == language.value
@@ -64,13 +76,37 @@ def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFor
     return ModeloFormText(text=text, disclosure=disclosure)
 
 
-def localized_heading(key: str, official: str | None, technical: str, language: OutputLanguage) -> ModeloFormText:
-    """Resolve a layout heading: the translation, then Spanish, then the design's words, then a name."""
-    translated = lookup_translation(key, locale=language.value)
-    if translated is not None and translated:
+def localized_casilla_label(
+    casilla: CasillaDefinition, language: OutputLanguage, *, ejercicio: int | None
+) -> ModeloFormText | None:
+    """Resolve a casilla's label, naming a rotating slot's year for ``ejercicio``."""
+    label = localized_text(casilla.localization_keys, language)
+    if label is None:
+        return None
+    text = render_rotating_year(label.text, offset=casilla.rotating_year_offset, ejercicio=ejercicio)
+    return label.model_copy(update={"text": text})
+
+
+def localized_heading(
+    key: str,
+    official: str | None,
+    technical: str,
+    language: OutputLanguage,
+    *,
+    edition_key: str | None = None,
+) -> ModeloFormText:
+    """Resolve a layout heading: the translation, then Spanish, then the design's words, then a name.
+
+    ``edition_key`` is the heading one revision gives the part
+    (:func:`~cadrumo.domain.calculations.registry.modelo_localization.form_heading_edition_locale_key`);
+    in each language it is read before the modelo-wide ``key``.
+    """
+    keys = (key,) if edition_key is None else (edition_key, key)
+    translated = _first_translation(keys, language.value)
+    if translated is not None:
         return ModeloFormText(text=translated, disclosure=ModeloFormTextDisclosure.LOCALIZED)
-    spanish = lookup_translation(key, locale=_SPANISH)
-    if spanish is not None and spanish:
+    spanish = _first_translation(keys, _SPANISH)
+    if spanish is not None:
         disclosure = (
             ModeloFormTextDisclosure.LOCALIZED
             if language is OutputLanguage.ES
@@ -82,13 +118,24 @@ def localized_heading(key: str, official: str | None, technical: str, language: 
     return ModeloFormText(text=technical, disclosure=ModeloFormTextDisclosure.TECHNICAL)
 
 
+def _first_translation(keys: tuple[str, ...], locale: str) -> str | None:
+    for key in keys:
+        text = lookup_translation(key, locale=locale)
+        if text is not None and text:
+            return text
+    return None
+
+
 def unnamed_casilla_label(language: OutputLanguage) -> ModeloFormText:
     """The label of a box the form gives no name: plain words saying so, never its identifier."""
     text = lookup_translation(_UNNAMED_LOCALE_KEY, locale=language.value) or lookup_translation(
         _UNNAMED_LOCALE_KEY, locale=_SPANISH
     )
     if not (text is not None and text):
-        raise InternalInvariantError(f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}")
+        raise InternalInvariantError(
+            f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}",
+            precondition_verdict=internal_invariant_verdict("work_form_localization.unnamed_text_catalogued"),
+        )
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.UNNAMED)
 
 
@@ -107,16 +154,38 @@ def fed_box_label(binding_id: str, context: WorkFormContext) -> ModeloFormText |
     ):
         if bool(lookup_translation(_FEEDS_BOX_LOCALE_KEY, locale=locale)):
             return ModeloFormText(text=tr(_FEEDS_BOX_LOCALE_KEY, locale=locale, box=box), disclosure=disclosure)
-    raise InternalInvariantError(f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}")
+    raise InternalInvariantError(
+        f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}",
+        precondition_verdict=internal_invariant_verdict("work_form_localization.feeds_box_text_catalogued"),
+    )
 
 
 def casilla_help(casilla: CasillaDefinition, label: str, context: WorkFormContext) -> str | None:
     """Return the casilla's help unless it only restates the label or names the box."""
+    return casilla_help_text(
+        casilla,
+        label,
+        language=context.language,
+        box_locators=context.box_locators,
+        ejercicio=context.review.period.filing_year,
+    )
+
+
+def casilla_help_text(
+    casilla: CasillaDefinition,
+    label: str,
+    *,
+    language: OutputLanguage,
+    box_locators: tuple[re.Pattern[str], ...],
+    ejercicio: int | None,
+) -> str | None:
+    """Return the casilla's help in ``language`` unless it only restates ``label`` or names the box."""
     keys = tuple(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
-    text = resolve_modelo_localization(keys, locale=context.language.value)
+    text = resolve_modelo_localization(keys, locale=language.value)
     if not (text is not None and text):
         return None
-    if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, context.box_locators):
+    text = render_rotating_year(text, offset=casilla.rotating_year_offset, ejercicio=ejercicio)
+    if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, box_locators):
         return None
     return text
 
@@ -169,11 +238,9 @@ def _form_facts(value: object) -> object:
         return (
             type(value),
             tuple(
-                (name, _form_facts(cast(object, getattr(value, name))))
-                for name in type(value).model_fields
-                if name not in omitted
+                (name, _form_facts(getattr(value, name))) for name in type(value).model_fields if name not in omitted
             ),
         )
-    if isinstance(value, tuple):
-        return tuple(_form_facts(item) for item in cast(tuple[object, ...], value))
+    if is_object_tuple(value):
+        return tuple(_form_facts(item) for item in value)
     return value

@@ -16,7 +16,6 @@ from urllib.parse import urlsplit
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 from .hashing import sha256_path
@@ -74,27 +73,24 @@ def _download(wheel: LockedWheel, destination: Path) -> None:
         )
 
 
-def wheel_cache_dir() -> Path | None:
-    """Return the runner-local wheel cache directory, or ``None`` when disabled.
+def wheel_cache_dir() -> Path:
+    """Return the runner-local wheel cache directory.
 
-    Follows the proof cache's convention: an explicit
-    ``CADRUMO_RUNTIME_WHEEL_CACHE_DIR`` wins, otherwise the checkout's own
-    ``.cache/runtime-wheel-cache`` holds it.
-    Setting the variable to an empty value disables caching outright, which is
-    what a run that must prove it fetched from the index sets.
+    Follows the sibling development caches' convention: a non-blank
+    ``CADRUMO_RUNTIME_WHEEL_CACHE_DIR`` wins, otherwise the development cache
+    root's ``runtime-wheel-cache`` holds it. A blank value is unset, as the
+    environment template declares for every category override; it once
+    disabled the cache, and since the template exports it blank, every pytest
+    run that bridges that file built its cohort from the index.
 
     The cache is safe by construction rather than by policy: every entry is
     named for the SHA-256 the lock records, and is re-hashed against that name
     before it is served. There is no invalidation question to get wrong -- a
     lock change asks for a different digest, so it addresses a different entry.
     """
-    override = os.environ.get(_CACHE_DIR_ENV)
-    if override is not None:
-        return (
-            resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
-            if override.strip()
-            else None
-        )
+    override = os.environ.get(_CACHE_DIR_ENV, "")
+    if override.strip():
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("runtime-wheel-cache")
 
 
@@ -102,21 +98,29 @@ def _cache_entry(cache: Path, wheel: LockedWheel) -> Path:
     return cache / wheel.sha256
 
 
-def _serve_from_cache(cache: Path | None, wheel: LockedWheel, destination: Path) -> bool:
-    """Copy ``wheel`` out of ``cache`` when the cached bytes still prove out."""
+def cache_holds(cache: Path | None, wheel: LockedWheel) -> bool:
+    """Return whether ``cache`` holds ``wheel``'s exact lock-recorded size and SHA-256."""
     if cache is None:
         return False
     entry = _cache_entry(cache, wheel)
     try:
-        if entry.stat().st_size != wheel.size or sha256_path(entry) != wheel.sha256:
-            return False
-        shutil.copyfile(entry, destination)
+        return entry.stat().st_size == wheel.size and sha256_path(entry) == wheel.sha256
+    except OSError:
+        return False
+
+
+def _serve_from_cache(cache: Path | None, wheel: LockedWheel, destination: Path) -> bool:
+    """Copy ``wheel`` out of ``cache`` when the cached bytes still prove out."""
+    if cache is None or not cache_holds(cache, wheel):
+        return False
+    try:
+        shutil.copyfile(_cache_entry(cache, wheel), destination)
     except OSError:
         return False
     return True
 
 
-def _store_in_cache(cache: Path | None, wheel: LockedWheel, source: Path) -> None:
+def store_in_cache(cache: Path | None, wheel: LockedWheel, source: Path) -> None:
     """Publish verified bytes into the cache, tolerating any storage refusal.
 
     Written to a neighbour unique to this WRITE and moved into place, so a
@@ -150,7 +154,7 @@ def _acquire(wheel: LockedWheel, destination: Path, cache: Path | None) -> bool:
     if _serve_from_cache(cache, wheel, destination):
         return True
     _download(wheel, destination)
-    _store_in_cache(cache, wheel, destination)
+    store_in_cache(cache, wheel, destination)
     return False
 
 
@@ -176,19 +180,24 @@ def grouped_wheel_requests(
     return tuple((wheel, tuple(destinations)) for wheel, destinations in grouped.values())
 
 
-def _acquire_group(wheel: LockedWheel, destinations: Sequence[Path], cache: Path | None) -> None:
-    """Obtain one wheel's bytes once and place them in every runtime that selected it."""
+def _acquire_group(wheel: LockedWheel, destinations: Sequence[Path], cache: Path | None) -> bool:
+    """Obtain one wheel's bytes once and place them in every runtime that selected it.
+
+    Returns:
+        Whether the bytes came from the cache rather than the index.
+    """
     primary, *copies = destinations
-    _acquire(wheel, primary, cache)
+    served_from_cache = _acquire(wheel, primary, cache)
     for copy in copies:
         shutil.copyfile(primary, copy)
+    return served_from_cache
 
 
-def _acquire_all(
+def acquire_all(
     plans: Sequence[RuntimeWheelhousePlan],
     wheel_dir: Path,
     cache: Path | None,
-) -> None:
+) -> int:
     """Fetch every selected wheel for every runtime, in parallel and once each.
 
     Two distinct repetitions are removed here. Within one build the runtimes
@@ -206,8 +215,12 @@ def _acquire_all(
     Concurrency is deliberately modest. The index is a shared service and the
     work is entirely network-bound, so a small pool removes the round-trip
     stalls without turning a release build into a load generator.
+
+    Returns:
+        How many distinct wheels the cache served without reaching the index.
     """
     failures: list[BaseException] = []
+    served_from_cache = 0
     with ThreadPoolExecutor(max_workers=_DOWNLOAD_WORKERS) as pool:
         futures = [
             pool.submit(_acquire_group, wheel, tuple(wheel_dir / relative for relative in destinations), cache)
@@ -215,7 +228,7 @@ def _acquire_all(
         ]
         for future in as_completed(futures):
             try:
-                future.result()
+                served_from_cache += future.result()
             except BaseException as exc:
                 # Collected rather than raised here so every worker settles
                 # first: a raise inside the pool's context leaves the remaining
@@ -224,6 +237,7 @@ def _acquire_all(
                 failures.append(exc)
     if failures:
         raise failures[0]
+    return served_from_cache
 
 
 def prune_wheel_cache(cache: Path | None, *, limit_bytes: int | None = None) -> int:

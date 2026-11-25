@@ -2,17 +2,35 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.export_contracts import (
+    ModeloExportCommand,
+    ModeloExportResult,
+    ModeloIvaWalletDecisionProvenance,
+)
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
+from ....application.operations.error_detail import build_operation_error_detail
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from ....application.operations.operation_definition import OperationDefinition
 from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
+from ....core.errors.error_codes import (
+    ErrorCategory,
+    get_registered_error_code,
+    public_error_context,
+    resolve_error_message,
+)
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -20,11 +38,33 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
+from ....domain.filing.errors import (
+    FilingExportDeclaredPartyNameMissingError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ....domain.modelos.errors import (
+    ModeloExportDeclaredPartyNameError,
+    ModeloExportError,
+    ModeloExportValueOverflowError,
+)
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from ...filing.errors import ModeloApplicationError
+from ...filing.record_field_renderer import format_field
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
-from ..export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from ..export import export_write_failure
+from ..export_disclosure import ModeloExportDisclosedLimitation, ModeloExportDisclosure
+from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
 from ..export_ports import ModeloExportPorts
 from ..export_projection import (
     ModeloExportCompleteness,
@@ -32,11 +72,8 @@ from ..export_projection import (
     ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
-from ..operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from ..finding_message_text import finding_message_text
+from ..operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ..review_package_signing_ports import ReviewPackageSigningKeypairCapability
 from ..work_export_contracts import ModeloExportSettledResult
 
@@ -46,7 +83,172 @@ _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 _BASELINE_FILING_ID = "c" * 64
 _FILE_DIGEST = "d" * 64
-_AT = datetime(2026, 9, 26, 8, 30, tzinfo=UTC)
+_AT = datetime(1980, 9, 26, 8, 30, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_a_box_refusal_keeps_its_message_and_context_at_the_export_boundary(locale: str) -> None:
+    """The boundary preserves filing's refusal without replacing it by a disk error."""
+    context = {"box": "fixture-box", "limit": "3", "observed": 4}
+    refusal = ModeloApplicationError(
+        translated_message="application.filing.export.errors.xml_value_too_long", context=context
+    )
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = export_write_failure(command, refusal)
+
+    assert isinstance(failure, ModeloExportError)
+    assert failure.translated_message == refusal.translated_message
+    assert failure.context == {"calculation_revision_id": "revision-1", **context}
+    message = resolve_error_message(failure, locale=locale)
+    assert "fixture-box" in message
+    assert "3" in message
+    assert "xml_value" not in message
+    assert "cause" not in failure.context
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_a_shared_cell_refusal_reaches_the_operator_naming_its_boxes(locale: str) -> None:
+    context = {
+        "modelo": "fixture-modelo",
+        "casilla_ids": "fixture-box",
+        "target_cells": {"fixture-box": ["fixture-layout.sheet-a.f1", "fixture-layout.sheet-b.f2"]},
+    }
+    refusal = FilingExportValidationError(
+        translated_message="application.filing.export.errors.shared_casilla_cells_unadjudicated", context=context
+    )
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = export_write_failure(command, refusal)
+
+    assert failure.translated_message == refusal.translated_message
+    assert failure.context == {"calculation_revision_id": "revision-1", **context}
+    message = resolve_error_message(failure, locale=locale)
+    assert "fixture-box" in message
+    assert "shared_casilla_cells" not in message
+
+
+def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> None:
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = export_write_failure(command, ModeloApplicationError("a layout invariant broke"))
+
+    assert failure.translated_message == "application.modelo.errors.export_draft_write_failed"
+    assert failure.context == {"calculation_revision_id": "revision-1", "cause": "a layout invariant broke"}
+
+
+def _m347_declarado_record() -> ExportRecordDefinition:
+    """The shipped Modelo 347 counterparty record, as the published registry serves it."""
+    snapshot = published_snapshot("347", filing_year=_FILING_YEAR, period="0A")
+    records = [
+        record
+        for layout in snapshot.revision.export_layouts
+        for record in layout.records
+        if record.record_type == "declarado"
+    ]
+    assert len(records) == 1
+    return records[0]
+
+
+def _m347_declarado_field(record: ExportRecordDefinition, *, binding: str) -> ExportFieldDefinition:
+    fields = [field for field in record.fields if field.binding == binding]
+    assert len(fields) == 1
+    return fields[0]
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_a_counterparty_name_wider_than_its_record_slot_is_refused_naming_it(locale: str) -> None:
+    """DR347 type-2 record, positions 36-75: "APELLIDOS Y NOMBRE, RAZON SOCIAL O DENOMINACION DEL DECLARADO".
+
+    The design gives the name forty positions and states no abbreviation rule,
+    so a longer name is refused, never cut, and the refusal names it.
+    """
+    record = _m347_declarado_record()
+    field = _m347_declarado_field(record, binding="modelo-347-contraparte-row-nombre")
+    assert (field.offset, field.length) == (36, 40)
+    name = "Comunidad de Propietarios Calle Ficticia 12"
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    with pytest.raises(FilingExportValueOverflowError) as overflow:
+        format_field(field, name)
+    failure = export_write_failure(command, overflow.value.in_record(record.record_type))
+
+    assert isinstance(failure, ModeloExportValueOverflowError)
+    registered = get_registered_error_code(failure)
+    assert (registered.code, registered.category) == ("REFUSED_MODELO_EXPORT_VALUE_OVERFLOW", ErrorCategory.REFUSED)
+    message = resolve_error_message(failure, locale=locale)
+    for shown in (name, "36-75", "declarado", str(len(name)), "40"):
+        assert shown in message
+    detail = build_operation_error_detail(failure)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
+    assert detail.refusal_words is not None
+    assert name not in detail.refusal_words
+    assert "field_value" not in {entry.key for entry in detail.context}
+    for shown in (field.id, "40"):
+        assert shown in detail.refusal_words
+
+
+def test_an_amount_wider_than_its_record_slot_is_refused_by_its_slot_alone() -> None:
+    record = _m347_declarado_record()
+    money = next(field for field in record.fields if field.data_type == "money")
+    length = money.length
+    assert length is not None
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    with pytest.raises(FilingExportValueOverflowError) as overflow:
+        format_field(money, Decimal("1" + "0" * length))
+    failure = export_write_failure(command, overflow.value.in_record(record.record_type))
+
+    assert isinstance(failure, ModeloExportValueOverflowError)
+    assert get_registered_error_code(failure).code == "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
+    assert failure.context is not None
+    assert "field_value" not in failure.context
+    message = resolve_error_message(failure, locale="es")
+    assert money.id in message
+    assert str(length) in message
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_an_unnamed_party_slot_reaches_the_operator_with_its_door_and_keeps_the_nif_in_process(locale: str) -> None:
+    """The door binds the party's identifier and country; no kept record holds them."""
+    record = _m347_declarado_record()
+    field = _m347_declarado_field(record, binding="modelo-347-contraparte-row-nombre")
+    assert field.length is not None
+    party = "B11111112"
+    refusal = FilingExportDeclaredPartyNameMissingError(
+        modelo="347",
+        export_record_id=str(record.id),
+        export_field_id=str(field.id),
+        field_length=field.length,
+        door_action_id=DECLARED_PARTY_NAME_DOOR_ACTION_ID,
+        row_index=1,
+        tax_identifier=party,
+        country_code="ES",
+    )
+    assert party not in str(refusal.context)
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = export_write_failure(command, refusal)
+
+    assert isinstance(failure, ModeloExportDeclaredPartyNameError)
+    assert get_registered_error_code(failure).code == "REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME"
+    assert failure.context is not None
+    assert (failure.context["tax_identifier"], failure.context["country_code"]) == (party, "ES")
+    assert failure.context["door_action_id"] == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    kept = public_error_context(failure)
+    assert kept is not None
+    assert {"tax_identifier", "country_code"}.isdisjoint(kept)
+    assert party not in str(kept)
+    message = resolve_error_message(failure, locale=locale)
+    for shown in (str(field.id), str(field.length)):
+        assert shown in message
+    assert party not in message
+    detail = build_operation_error_detail(failure)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME"
+    assert {"tax_identifier", "country_code"}.isdisjoint({entry.key for entry in detail.context})
 
 
 def _canonical_receipt(
@@ -72,8 +274,8 @@ def _canonical_receipt(
             decision_ref=f"sha256:{'e' * 64}",
             selected_authority="official_observation",
             divergence="none",
-            target_year=2025,
-            target_period=Period.from_year_and_code(2025, "4T"),
+            target_year=_FILING_YEAR - 1,
+            target_period=Period.from_year_and_code(_FILING_YEAR - 1, "4T"),
             authority_source_kinds=("aeat_capture", "app_filing"),
             authority_source_refs=(f"sha256:{'f' * 64}",),
         )
@@ -85,8 +287,8 @@ def _canonical_receipt(
         work_unit_id=_WORK_UNIT_ID,
         bucket_id="5aa00000-0000-4000-8000-0000000000aa",
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         output_path=Path("C:/tax exports/modelo-303.fichero-boe"),
         byte_size=18_432,
         file_sha256=_FILE_DIGEST,
@@ -167,14 +369,20 @@ def test_fichero_boe_receipt_preserves_neutral_optional_provenance() -> None:
 
 
 def _unused_ports_factory(
-    *, bucket_id: str, m303_rectificativa_taxpayer_tax_id: SubjectTaxId, operation: PinnedAuthorityOperation
+    *,
+    bucket_id: str,
+    m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportPorts:
-    del bucket_id, m303_rectificativa_taxpayer_tax_id
+    del bucket_id, m303_rectificativa_taxpayer_tax_id, operation, mutation_writer
     raise AssertionError("registration must not construct export ports")
 
 
-def _unused_signing_keypair(*, bucket_id: str) -> ReviewPackageSigningKeypairCapability:
-    del bucket_id
+def _unused_signing_keypair(
+    *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+) -> ReviewPackageSigningKeypairCapability:
+    del bucket_id, mutation_writer
     raise AssertionError("registration must not open the signing key")
 
 
@@ -273,3 +481,77 @@ def test_export_public_result_refuses_a_receipt_that_does_not_match_its_artefact
                 "fichero_boe": ModeloFicheroBoePublicReceipt.from_result(canonical),
             }
         )
+
+
+def _terminal() -> OperationTerminalReceipt:
+    return OperationTerminalReceipt(
+        identity=OperationIdentity(
+            operation_id="e" * 64, definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID, subject_ref=_WORK_UNIT_ID
+        ),
+        revision=4,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=_AT,
+        result_ref="f" * 64,
+    )
+
+
+def _deduction_disclosure(language: OutputLanguage) -> ModeloExportDisclosure:
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
+        legal_refs=("ley-35-2006:art-19",),
+        disclosed_limitation=True,
+    )
+    return ModeloExportDisclosure(
+        lead_words=tr("application.modelo.export_disclosure.lead", locale=language.value),
+        limitations=(
+            ModeloExportDisclosedLimitation(
+                message_locale_key=finding.message_locale_key, words=finding_message_text(finding, language)
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_the_public_result_serves_the_disclosure_its_settled_receipt_carries(language: OutputLanguage) -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=False,
+        include_wallet_provenance=False,
+        include_elections=False,
+        completeness_unverified=False,
+    )
+    disclosure = _deduction_disclosure(language)
+    _, registration = _export_registration()
+    projector = registration.result_projector
+    assert projector is not None
+
+    projected = projector(ModeloExportSettledResult(fichero_boe=canonical, disclosure=disclosure), _terminal())
+
+    assert isinstance(projected, ModeloExportPublicResultV3)
+    restored = ModeloExportPublicResultV3.model_validate_json(projected.model_dump_json())
+    assert restored.disclosure == disclosure
+    assert restored.disclosure is not None
+    assert restored.disclosure.limitations[0].words == tr(
+        "application.modelo.findings.trabajo_deduction_not_computed", locale=language.value
+    )
+
+
+def test_a_result_without_a_disclosure_stays_as_it_was() -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=False,
+        include_wallet_provenance=False,
+        include_elections=False,
+        completeness_unverified=False,
+    )
+    _, registration = _export_registration()
+    projector = registration.result_projector
+    assert projector is not None
+
+    projected = projector(ModeloExportSettledResult(fichero_boe=canonical), _terminal())
+
+    assert isinstance(projected, ModeloExportPublicResultV3)
+    assert projected.disclosure is None
+    older = {key: value for key, value in projected.model_dump(mode="json").items() if key != "disclosure"}
+    assert ModeloExportPublicResultV3.model_validate_json(json.dumps(older)) == projected

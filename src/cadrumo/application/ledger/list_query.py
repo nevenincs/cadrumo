@@ -29,7 +29,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..review.filter import LedgerReviewFilterSpec
 from .actions_common import resolve_transaction_repository
-from .actions_manual import list_manual_transactions, query_ledger_review_rows
+from .manual_read import list_manual_transactions, query_ledger_review_rows
 from .models import ManualLedgerTransactionResult
 from .read_ports import LedgerReadPorts
 from .review_filter import ledger_review_query_for_spec
@@ -173,7 +173,7 @@ _SORT_FIELD_PROJECTORS: Final[dict[LedgerSortField, Callable[[Transaction], str]
 }
 
 
-def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
+def sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
     """Project one sort axis to a string so ordering can never raise."""
     return _SORT_FIELD_PROJECTORS.get(field, _classification_sort_value)(transaction)
 
@@ -193,7 +193,7 @@ def sort_ledger_results(
     descending = sort_order is LedgerSortOrder.DESC
 
     def composite_key(result: ManualLedgerTransactionResult) -> tuple[bool, object, str]:
-        value = _sort_field_value(result.transaction, sort_by)
+        value = sort_field_value(result.transaction, sort_by)
         primary: object = _DescendingKey(value) if descending else value
         return (not value, primary, result.transaction.transaction_id)
 
@@ -323,6 +323,34 @@ def _page_results(
     )
 
 
+def _listing_catalogue(
+    query: LedgerTransactionListQuery,
+    *,
+    bucket_id: str,
+    ports: LedgerReadPorts,
+) -> TransactionCatalogue:
+    """Read only the stored rows this listing's filters can select.
+
+    A period filter keys on the ledger filing date (value date, else booked
+    date), which is the date the plaintext routing index records. Asking the
+    repository for that window's date partition therefore decrypts only rows
+    that can match instead of every row in the bucket. The partition runs its
+    own completeness gate and falls back to a full scan when the index is
+    stale or partial, so a period page can be slow but never silently short.
+
+    The in-window half is a superset chosen by each row's eligible date span,
+    which can reach past its filing date; the review filter's period predicate
+    still narrows it to the filing date, so the page is the one a full scan
+    would select. Without a date-spanned period the whole catalogue is read,
+    leaving any refusal to the filter that owns it.
+    """
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    period = query.spec.period
+    if period is None or not period.has_date_span():
+        return repository.load()
+    return repository.partition_by_date_range(period.start_date, period.end_date).in_window
+
+
 def query_ledger_transaction_list(
     query: LedgerTransactionListQuery,
     *,
@@ -347,7 +375,7 @@ def query_ledger_transaction_list(
     """
     # One read serves both the listing and the review filter; loading twice
     # decrypted and validated every stored row a second time per filtered list.
-    catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository).load()
+    catalogue = _listing_catalogue(query, bucket_id=bucket_id, ports=ports)
     results = list_manual_transactions(bucket_id=bucket_id, ports=ports, catalogue=catalogue)
     results = _filter_by_review_spec(
         results,

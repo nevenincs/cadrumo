@@ -12,8 +12,8 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import MissingTranslationError, lookup_translation
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.type_guards import is_object_mapping
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
+from .toml_helpers import as_toml_table
 
 
 class ModeloLocalizationFieldKind(StrEnum):
@@ -62,6 +62,16 @@ def binding_locale_key(modelo_id: str, binding_id: str, field: Literal["label", 
     )
 
 
+def binding_label_text(modelo_id: str, binding_id: str, *, locale: str) -> str:
+    """The binding's own declared label in ``locale``, or Spanish where only that is declared, else its identifier.
+
+    A refusal that names an input reads it as the form does, so the filer sees
+    the same words beside the field they fill in.
+    """
+    served = served_modelo_localization_text((binding_locale_key(modelo_id, binding_id, "label"),), locale=locale)
+    return binding_id if served is None or not served[1] else served[1]
+
+
 def revision_locale_key(
     modelo_id: str,
     revision_id: RevisionId,
@@ -104,6 +114,23 @@ def construct_lineage_locale_key(
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.construct."
         f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
     )
+
+
+def form_heading_edition_locale_key(modelo_id: str, revision_id: RevisionId, heading_key: str) -> str | None:
+    """Derive the edition-scoped key a modelo's form-layout heading takes in one revision.
+
+    A layout heading key is modelo-wide: it names a part by the design's words or
+    by its position in the design, and a part named by position can be a
+    different part in another edition. The edition key states the heading one
+    revision gives the part, ahead of the modelo-wide key. A key that is not one
+    of this modelo's form keys (a shared column heading) has no edition key.
+    """
+    modelo = encode_modelo_locale_segment(modelo_id)
+    prefix = f"modelo.schema.{modelo}.form."
+    if not heading_key.startswith(prefix):
+        return None
+    edition = encode_modelo_locale_segment(revision_id)
+    return f"modelo.schema.{modelo}.revision.{edition}.form.{heading_key.removeprefix(prefix)}"
 
 
 def casilla_occurrence_locale_key(
@@ -173,7 +200,7 @@ def _localised_casilla_aliases(
         return None
     aliases: list[dict[str, object]] = []
     for alias_index, raw_alias in enumerate(aliases_array):
-        alias = _as_toml_table(raw_alias)
+        alias = as_toml_table(raw_alias)
         if alias is None:
             aliases.append(_passthrough_localization_row(raw_alias))
             continue
@@ -191,9 +218,9 @@ def _localised_casilla_aliases(
     return tuple(aliases)
 
 
-def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
+def localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one casilla with its derived locale keys attached."""
-    casilla = _as_toml_table(raw_casilla)
+    casilla = as_toml_table(raw_casilla)
     if casilla is None:
         return _passthrough_localization_row(raw_casilla)
     casilla_id = casilla.get("id")
@@ -217,7 +244,7 @@ def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: Revi
 
 def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one construct with its derived locale key attached."""
-    construct = _as_toml_table(raw_construct)
+    construct = as_toml_table(raw_construct)
     if construct is None:
         return _passthrough_localization_row(raw_construct)
     construct_id = construct.get("id")
@@ -254,8 +281,7 @@ def enroll_revision_localization(
     raw_casillas = as_toml_array(raw_revision.get("casillas"))
     if raw_casillas is not None:
         payload["casillas"] = tuple(
-            _localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id)
-            for raw_casilla in raw_casillas
+            localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id) for raw_casilla in raw_casillas
         )
     raw_constructs = as_toml_array(raw_revision.get("constructs"))
     if raw_constructs is not None:
@@ -327,6 +353,17 @@ def modelo_localization_source(
     return None if served is None else (served[0], served[1])
 
 
+def served_modelo_localization_text(keys: tuple[str, ...], *, locale: str) -> tuple[str, str] | None:
+    """Return the ``(locale, text)`` that serves a chain from one selection, or ``None``.
+
+    The locale is the one :func:`modelo_localization_source` reports and the
+    text is the one :func:`resolve_modelo_localization` returns without a year,
+    read once instead of selecting the chain twice.
+    """
+    served = _served_modelo_localization(keys, locale=locale)
+    return None if served is None else (served[1], served[2])
+
+
 def _served_modelo_localization(
     keys: tuple[str, ...],
     *,
@@ -340,7 +377,7 @@ def _served_modelo_localization(
     second time to obtain what the selection had just discarded -- one wasted
     catalogue read per resolved text, which is every label in the registry.
     """
-    read = _catalogue_lookup if lookup is None else lookup
+    read = catalogue_lookup if lookup is None else lookup
     spanish_tier: int | None = None
     spanish_value: str | None = None
     for index, key in enumerate(keys):
@@ -362,8 +399,31 @@ type LocalizationLookup = Callable[[str, str], str | None]
 """Read one authored value as ``lookup(key, locale)``; ``None`` means no text."""
 
 
-def _catalogue_lookup(key: str, locale: str) -> str | None:
+def catalogue_lookup(key: str, locale: str) -> str | None:
+    """Return the translation for a key in a locale, or None when missing."""
     return lookup_translation(key, locale=locale)
+
+
+_ROTATING_YEAR_PLACEHOLDER: Final[str] = "{year}"
+_RELATIVE_YEAR: Final[str] = "N"
+
+
+def render_rotating_year(text: str, *, offset: int | None, ejercicio: int | None) -> str:
+    """Render a rotating-slot caption's ``{year}`` placeholder for one ejercicio.
+
+    A rotating slot's caption names the year ``offset`` years before the
+    ejercicio, so the year comes from the ejercicio being filed, never from the
+    catalogue. With no ejercicio to count from, the placeholder becomes the
+    relative ``N``, ``N-<offset>`` or, for a later year, ``N+<years>``, so the
+    text never names a year it cannot know. Text without the placeholder, or a casilla without an offset, is
+    returned unchanged.
+    """
+    if offset is None or _ROTATING_YEAR_PLACEHOLDER not in text:
+        return text
+    if ejercicio is not None:
+        return text.replace(_ROTATING_YEAR_PLACEHOLDER, str(ejercicio - offset))
+    relative = _RELATIVE_YEAR if offset == 0 else f"{_RELATIVE_YEAR}{-offset:+d}"
+    return text.replace(_ROTATING_YEAR_PLACEHOLDER, relative)
 
 
 def _format_year(value: str, year: int | None) -> str:
@@ -401,9 +461,12 @@ __all__ = [
     "construct_lineage_locale_key",
     "construct_locale_key",
     "encode_modelo_locale_segment",
+    "form_heading_edition_locale_key",
     "modelo_locale_key",
     "modelo_localization_source",
+    "render_rotating_year",
     "require_modelo_localization",
     "resolve_modelo_localization",
     "revision_locale_key",
+    "served_modelo_localization_text",
 ]

@@ -174,7 +174,7 @@ from cadrumo.core.json_contract import Notice, NoticeSeverity, ResolvedActionArg
 from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from cadrumo.entrypoints.cli.command_schema import command_schema_refs
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.common import _action_text_lines, resolve_notice_action, resolve_notice_actions
+from cadrumo.entrypoints.cli.common import action_text_lines, resolve_notice_action, resolve_notice_actions
 
 action = resolve_notice_action(
     action=ActionReference(action_id="operator.profile.create"),
@@ -193,7 +193,7 @@ notices = resolve_notice_actions(
 )
 print(json.dumps({
     "cli_path": action.action.cli_path,
-    "text": _action_text_lines(notices),
+    "text": action_text_lines(notices),
     "loaded_families": sorted(
         {family.source.module for family in COMMAND_GRAPH.families if family.source.module in sys.modules}
     ),

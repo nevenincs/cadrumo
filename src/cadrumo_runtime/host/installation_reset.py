@@ -17,21 +17,10 @@ settings name.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.config_reset import (
-    config_reset_status,
-    latest_incomplete_config_reset_id,
-    normalise_retention_override,
-    require_config_reset_confirmation,
-    resume_config_reset,
-    start_config_reset,
-)
-from cadrumo.application.config_reset_documents import ConfigResetOperationPayload
-from cadrumo.application.config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
 from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo_client.contracts.installation_requests import (
@@ -43,8 +32,11 @@ from cadrumo_client.contracts.installation_requests import (
     ResetStatusRequest,
 )
 
-from .installation_composition import InstallationActRegistry
-from .installation_door import InstallationActExchange
+if TYPE_CHECKING:
+    from cadrumo.application.config_reset_models import ConfigResetOperation
+
+    from .installation_composition import InstallationActRegistry
+    from .installation_door import InstallationActExchange
 
 
 def _profiles_to_fence(exchange: InstallationActExchange, *, journalled: tuple[str, ...] = ()) -> frozenset[UUID]:
@@ -61,6 +53,15 @@ def _profiles_to_fence(exchange: InstallationActExchange, *, journalled: tuple[s
 
 
 def _serve_start(request: ResetStartRequest, exchange: InstallationActExchange) -> ResetStartReply:
+    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+    from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from cadrumo.application.config_reset import (
+        normalise_retention_override,
+        require_config_reset_confirmation,
+        start_config_reset,
+    )
+    from cadrumo.application.config_reset_documents import ConfigResetOperationPayload
+
     require_config_reset_confirmation(request.confirmed)
     override = normalise_retention_override(
         acknowledge_retention_override=request.acknowledge_retention_override,
@@ -87,6 +88,9 @@ def _serve_start(request: ResetStartRequest, exchange: InstallationActExchange) 
 
 
 def _serve_status(request: ResetStatusRequest, exchange: InstallationActExchange) -> ResetStatusReply:
+    from cadrumo.application.config_reset import config_reset_status
+    from cadrumo.application.config_reset_documents import ConfigResetOperationPayload
+
     with exchange.served_settings():
         journal = config_reset_status(request.operation_id)
     return exchange.reply(
@@ -97,6 +101,8 @@ def _serve_status(request: ResetStatusRequest, exchange: InstallationActExchange
 
 def _readable_journal(operation_id: str) -> ConfigResetOperation | None:
     """Read the named journal, or nothing when it cannot be read: the resume itself reports why."""
+    from cadrumo.application.config_reset import config_reset_status
+
     try:
         return config_reset_status(operation_id)
     except CadrumoError:
@@ -104,6 +110,17 @@ def _readable_journal(operation_id: str) -> ConfigResetOperation | None:
 
 
 def _serve_resume(request: ResetResumeRequest, exchange: InstallationActExchange) -> ResetResumeReply:
+    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+    from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from cadrumo.application.config_reset import (
+        latest_incomplete_config_reset_id,
+        normalise_retention_override,
+        require_config_reset_confirmation,
+        resume_config_reset,
+    )
+    from cadrumo.application.config_reset_documents import ConfigResetOperationPayload
+    from cadrumo.application.config_reset_models import ConfigResetOperationStatus
+
     require_config_reset_confirmation(request.confirmed)
     override = normalise_retention_override(
         acknowledge_retention_override=request.acknowledge_retention_override,

@@ -17,17 +17,20 @@ from decimal import Decimal
 import pytest
 
 from .....core.classification.policies import SensitivityClass
-from .....core.config_support import LLMProvider
+from .....core.config_support import RetiredLLMProvider
 from .....core.redaction.rules import (
     carries_redaction_placeholder,
     default_rules_for_class,
     redact_for_log,
     redact_structured,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..models import CachedEntry, LLMRequest, LLMResponse
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -51,13 +54,13 @@ def _request() -> LLMRequest:
 def _response(text: str) -> LLMResponse:
     return LLMResponse(
         text=text,
-        provider=LLMProvider.LOCAL,
+        provider=RetiredLLMProvider.LOCAL,
         model=_MODEL,
         input_tokens=10,
         output_tokens=20,
         cost_estimate_usd=Decimal("0"),
         cache_hit=False,
-        created_at=datetime(2026, 9, 1, 12, 0, tzinfo=UTC),
+        created_at=datetime(_FILING_YEAR, 9, 1, 12, 0, tzinfo=UTC),
         request_id="req-legacy",
     )
 
@@ -108,10 +111,10 @@ def test_a_row_carrying_a_redaction_placeholder_is_evicted_and_never_returned() 
     object_key = _seed_legacy_row(cache, request, _response(f'{{"supplier_tax_id": "{_NIF}"}}'))
     assert _stored(object_key), "the seed must reach the real store for the eviction to mean anything"
 
-    assert cache.read(request, LLMProvider.LOCAL, _MODEL) is None
+    assert cache.read(request, RetiredLLMProvider.LOCAL, _MODEL) is None
     assert not _stored(object_key), "the replayable row must be gone, not merely skipped"
     # A second read is an ordinary miss: nothing was reinstated.
-    assert cache.read(request, LLMProvider.LOCAL, _MODEL) is None
+    assert cache.read(request, RetiredLLMProvider.LOCAL, _MODEL) is None
 
 
 def test_a_clean_row_is_still_served() -> None:
@@ -120,7 +123,7 @@ def test_a_clean_row_is_still_served() -> None:
     request = _request()
     object_key = _seed_legacy_row(cache, request, _response('{"supplier_name": "Hardware Profesional Sur SL"}'))
 
-    served = cache.read(request, LLMProvider.LOCAL, _MODEL)
+    served = cache.read(request, RetiredLLMProvider.LOCAL, _MODEL)
 
     assert served is not None
     assert served.text == '{"supplier_name": "Hardware Profesional Sur SL"}'

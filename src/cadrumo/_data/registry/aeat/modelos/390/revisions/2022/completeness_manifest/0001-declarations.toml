@@ -997,3 +997,103 @@ number = "100"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "iva.anual.volumen.total"
 number = "108"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-1.codigo-cnae"
+number = "iva.anual.prorrata.actividad-1.codigo-cnae"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-1.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-1.importe-con-derecho"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-1.importe-operaciones"
+number = "iva.anual.prorrata.actividad-1.importe-operaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-1.porcentaje"
+number = "iva.anual.prorrata.actividad-1.porcentaje"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-1.tipo"
+number = "iva.anual.prorrata.actividad-1.tipo"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-2.codigo-cnae"
+number = "iva.anual.prorrata.actividad-2.codigo-cnae"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-2.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-2.importe-con-derecho"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-2.importe-operaciones"
+number = "iva.anual.prorrata.actividad-2.importe-operaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-2.porcentaje"
+number = "iva.anual.prorrata.actividad-2.porcentaje"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-2.tipo"
+number = "iva.anual.prorrata.actividad-2.tipo"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-3.codigo-cnae"
+number = "iva.anual.prorrata.actividad-3.codigo-cnae"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-3.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-3.importe-con-derecho"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-3.importe-operaciones"
+number = "iva.anual.prorrata.actividad-3.importe-operaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-3.porcentaje"
+number = "iva.anual.prorrata.actividad-3.porcentaje"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-3.tipo"
+number = "iva.anual.prorrata.actividad-3.tipo"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-4.codigo-cnae"
+number = "iva.anual.prorrata.actividad-4.codigo-cnae"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-4.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-4.importe-con-derecho"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-4.importe-operaciones"
+number = "iva.anual.prorrata.actividad-4.importe-operaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-4.porcentaje"
+number = "iva.anual.prorrata.actividad-4.porcentaje"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-4.tipo"
+number = "iva.anual.prorrata.actividad-4.tipo"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-5.codigo-cnae"
+number = "iva.anual.prorrata.actividad-5.codigo-cnae"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-5.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-5.importe-con-derecho"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-5.importe-operaciones"
+number = "iva.anual.prorrata.actividad-5.importe-operaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-5.porcentaje"
+number = "iva.anual.prorrata.actividad-5.porcentaje"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.prorrata.actividad-5.tipo"
+number = "iva.anual.prorrata.actividad-5.tipo"

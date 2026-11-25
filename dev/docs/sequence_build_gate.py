@@ -160,35 +160,27 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
     except SequenceEngineError as exc:
         raise SphinxError(str(exc)) from exc
 
+    # Each sequence whose exact inputs carry a recorded clean verdict is reused
+    # (and reported); every other sequence executes. A full build shards the
+    # pages across a BOUNDED pool of child interpreters (each sequence keeps its
+    # own fresh hermetic sandbox, so execution is unchanged — only the
+    # scheduling is). Two page workers bound simultaneous cold runtime imports
+    # while preserving each frame's assertions and operation deadlines.
     problems: list[str] = []
-    if pages is None:
-        from .sequences.verdict_cache import check_reusing_verdict, published_verdict_key
-
-        # A full build checks every enrolled page; shard the pages across a
-        # BOUNDED pool of child interpreters (each sequence keeps its own fresh
-        # hermetic sandbox, so execution is unchanged — only the scheduling
-        # is). Two page workers bound simultaneous cold runtime imports while
-        # preserving each frame's assertions and operation deadlines.
-        try:
-            full_problems, reused = check_reusing_verdict(
-                lambda: published_verdict_key(docs_root=docs_root, goldens_root=goldens_root),
-                lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2),
-            )
-        except SequenceEngineError as exc:
-            raise SphinxError(str(exc)) from exc
-        if reused is not None:
-            print(f"cli-sequence goldens: clean ({reused})", flush=True)
-            return
-        problems.extend(full_problems)
-    else:
-        for page in pages:
-            problems.extend(
-                check_sequences_in_subprocess(
-                    docs_root=docs_root,
-                    goldens_root=goldens_root,
-                    page=page,
-                ),
-            )
+    try:
+        if pages is None:
+            problems.extend(check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2))
+        else:
+            for page in pages:
+                problems.extend(
+                    check_sequences_in_subprocess(
+                        docs_root=docs_root,
+                        goldens_root=goldens_root,
+                        page=page,
+                    ),
+                )
+    except SequenceEngineError as exc:
+        raise SphinxError(str(exc)) from exc
 
     if problems:
         detail = "\n".join(problems)

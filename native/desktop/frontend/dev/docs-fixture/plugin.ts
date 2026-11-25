@@ -1,14 +1,17 @@
 // A stand-in documentation site for browser development, served only while
-// the Vite development server runs. Its pages load the real desktop bridge
+// the Vite development server runs, or the preview server of the built
+// scenarios (`--mode scenarios`). Its pages load the real desktop bridge
 // script, so the shell talks to them exactly as it talks to the packaged
 // documentation: across origins, through postMessage.
 //
-// It listens on a port of its own beside the development server, on the same
-// address. The same host name with another port is another origin, and it is
-// reachable from wherever the development server is, so the fixture works on
-// the machine itself and from another device alike. The fixed port comes from
-// the development server contract and is handed to the development entry through the
-// `virtual:docs-fixture` module.
+// It listens on a port of its own beside the server, on the same address. The
+// same host name with another port is another origin, and it is reachable
+// from wherever the server is, so the fixture works on the machine itself and
+// from another device alike. The fixed port comes from the development server
+// contract and is handed to the development entry through the
+// `virtual:docs-fixture` module. The development server writes it into that
+// module; a built page is static, so the preview server hands it the port in
+// the page it serves and an entry served any other way gets none.
 //
 // It is a fixture: a few static pages and a search that answers from a fixed
 // list. It carries no documentation content and proves nothing about the
@@ -20,6 +23,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../../scripts/build-paths.mjs";
 import { server as serverConfiguration } from "../../../scripts/configuration.mjs";
+import { testRunPorts } from "../../scripts/test-run-directory.mjs";
 import type { Plugin } from "vite";
 
 export const DOCS_FIXTURE_LANGUAGES = ["en", "es", "ca", "hu"] as const;
@@ -29,6 +33,8 @@ type PageName = "index" | "guide" | "glossary";
 
 const MODULE = "virtual:docs-fixture";
 const RESOLVED = `\0${MODULE}`;
+// Where a built entry finds the fixture's port, set by the page that carries it.
+const PAGE_PORT = "__docsFixturePort";
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -137,13 +143,26 @@ function resolvePage(path: string): string | null {
   return name ? page(language, name as PageName) : null;
 }
 
-function answer(path: string): { type: string; body: string } | null {
+// A test run's files do not change under it, and its server is one thread that
+// every browser of the run waits on, so a run reads each once. A development
+// server reads each request, to serve what was last saved.
+const held = new Map<string, string>();
+
+function read(file: string, hold: boolean): string {
+  if (!hold) return readFileSync(file, "utf8");
+  const body = held.get(file) ?? readFileSync(file, "utf8");
+  held.set(file, body);
+  return body;
+}
+
+function answer(
+  path: string,
+  hold: boolean,
+): { type: string; body: string } | null {
   const asset = /^\/_static\/([\w.-]+)$/.exec(path)?.[1];
   if (asset) {
     const entry = STATIC.get(asset);
-    return entry
-      ? { type: entry.type, body: readFileSync(entry.file, "utf8") }
-      : null;
+    return entry ? { type: entry.type, body: read(entry.file, hold) } : null;
   }
   const body = resolvePage(path);
   return body === null ? null : { type: "text/html", body };
@@ -152,14 +171,22 @@ function answer(path: string): { type: string; body: string } | null {
 function listen(
   host: string | undefined,
   fixedPort: number,
+  owner?: string,
 ): {
   server: Server;
   port: Promise<number>;
 } {
   const server = createServer((request, response) => {
+    if (owner && request.url === "/__cadrumo_test_owner") {
+      response.writeHead(200, { "Cache-Control": "no-store" }).end(owner);
+      return;
+    }
     const found =
       request.method === "GET" || request.method === "HEAD"
-        ? answer(new URL(request.url ?? "/", "http://fixture").pathname)
+        ? answer(
+            new URL(request.url ?? "/", "http://fixture").pathname,
+            !!owner,
+          )
         : null;
     if (!found) {
       response.writeHead(404).end();
@@ -182,11 +209,17 @@ function listen(
 
 export function docsFixture(): Plugin {
   let port: Promise<number> | null = null;
+  let building = false;
   return {
     name: "development-docs-fixture",
-    // The fixture exists only beside a development server. A build of the
-    // development entry gets no port, and so no documentation.
+    configResolved(config) {
+      building = config.command === "build";
+    },
+    // The fixture exists only beside a development server or the preview
+    // server of the built scenarios. The test server that exercises Vite's hot
+    // reload (mode scenarios) needs no documentation, so it has none.
     async configureServer(vite) {
+      if (vite.config.mode === "scenarios") return;
       const configured = vite.config.server.host;
       const fixture = listen(
         typeof configured === "string" ? configured : undefined,
@@ -196,11 +229,56 @@ export function docsFixture(): Plugin {
       vite.httpServer?.once("close", () => fixture.server.close());
       await port;
     },
+    // The built scenario page is static, so the server that runs the fixture
+    // hands the page its port. Any other host of the build, such as the
+    // benchmark's, serves the page as it is and the shell has no documentation.
+    async configurePreviewServer(preview) {
+      if (preview.config.mode !== "scenarios") return;
+      const configured = preview.config.preview.host;
+      const testPorts = testRunPorts(buildPath("desktop_results"));
+      const fixture = listen(
+        typeof configured === "string" ? configured : undefined,
+        (testPorts ?? serverConfiguration()).scenariosDocsPort,
+        testPorts?.token,
+      );
+      preview.httpServer.once("close", () => fixture.server.close());
+      const fixturePort = await fixture.port;
+      const entry = resolve(preview.config.build.outDir, "scenarios.html");
+      preview.middlewares.use((request, response, next) => {
+        const path = new URL(request.url ?? "/", "http://preview").pathname;
+        const method = request.method ?? "";
+        if (path !== "/scenarios.html" || !["GET", "HEAD"].includes(method)) {
+          next();
+          return;
+        }
+        try {
+          const page = read(entry, !!testPorts);
+          if (!page.includes("</head>"))
+            throw new Error("The built scenario page has no head to extend.");
+          response.writeHead(200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store",
+          });
+          response.end(
+            method === "HEAD"
+              ? undefined
+              : page.replace(
+                  "</head>",
+                  `<script>globalThis.${PAGE_PORT}=${fixturePort}</script></head>`,
+                ),
+          );
+        } catch (error) {
+          next(error);
+        }
+      });
+    },
     resolveId(id) {
       if (id === MODULE) return RESOLVED;
     },
     async load(id) {
       if (id !== RESOLVED) return;
+      if (building)
+        return `export const port = globalThis.${PAGE_PORT} ?? null;`;
       return `export const port = ${port ? await port : null};`;
     },
   };

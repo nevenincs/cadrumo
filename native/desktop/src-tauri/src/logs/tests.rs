@@ -6,7 +6,7 @@ use super::{
     tail::{self, LINE_BYTES, RETRY as TICK, SETTLE, Tail},
 };
 use cadrumo_application::{
-    diagnostics::Diagnostics,
+    diagnostics::{Diagnostics, delivery_wait::delivered},
     error::application::{ErrorCode, Operation},
     process::status::{ProcessPhase, ProcessRole, Stream},
 };
@@ -505,6 +505,8 @@ fn native_loss_and_persistence_health_reach_the_real_log_channel() {
     for _ in 0..600 {
         diagnostics.event(EventKind::HostStarted, None, None);
     }
+    // Persistence health is published by the writer after it attempts the file.
+    delivered(&diagnostics);
     let (hub, mut poller) = hub(scratch.log(), diagnostics.clone());
     let (_, frames) = subscribe(&hub);
     let now = Instant::now();
@@ -525,6 +527,7 @@ fn native_loss_and_persistence_health_reach_the_real_log_channel() {
     }
     fs::remove_file(&blocked).unwrap();
     diagnostics.event(EventKind::HostStarted, None, None);
+    delivered(&diagnostics);
     poller.tick(now + TICK);
     let frames = frames.lock().unwrap();
     assert_eq!(
@@ -1312,11 +1315,22 @@ mod live {
 
     const PRELUDE: &str = r#"
 import logging, logging.handlers, sys
-from cadrumo.core.logging import configure_logging, default_log_file_path
+from cadrumo.core.logging import (AsyncDiagnosticHandler, configure_logging,
+                                  default_log_file_path, flush_logging)
+# Configuration and every record are delivered on background workers; the
+# root logger holds the workers' handlers, each wrapping its sink.
 configure_logging()
-handler = next(h for h in logging.getLogger().handlers
-               if isinstance(h, logging.handlers.RotatingFileHandler))
+assert flush_logging(timeout=60.0), "logging was never configured"
+handler = next(h.sink for h in logging.getLogger().handlers
+               if isinstance(h, AsyncDiagnosticHandler)
+               and isinstance(h.sink, logging.handlers.RotatingFileHandler))
 print(default_log_file_path(), flush=True)
+"#;
+
+    /// Records reach the file on a background worker, so a script delivers
+    /// what it logged before it exits.
+    const DELIVER: &str = r#"
+assert flush_logging(timeout=60.0), "records were not delivered"
 "#;
 
     struct Package {
@@ -1360,7 +1374,7 @@ print(default_log_file_path(), flush=True)
             let mut command = Command::new(&self.executable);
             command
                 .arg("-c")
-                .arg(format!("{PRELUDE}\n{script}"))
+                .arg(format!("{PRELUDE}\n{script}\n{DELIVER}"))
                 .env_clear()
                 .envs(self.environment.iter().map(|(k, v)| (k, v)))
                 .current_dir(directory)
@@ -1401,7 +1415,9 @@ except KeyError:
 record = logging.LogRecord("cadrumo.s06.probe", logging.WARNING, "probe", 1,
                            "bad \udcff byte", None, None)
 # The handler closes its stream after every record. Inject malformed bytes
-# directly while respecting the same process lock as a normal append.
+# directly while respecting the same process lock as a normal append, after
+# the records logged so far have reached the file.
+assert flush_logging(timeout=60.0)
 from pathlib import Path
 from cadrumo.core.locks import exclusive_file_lock
 with exclusive_file_lock(Path(handler.baseFilename), timeout=5.0, log_events=False):
@@ -1468,6 +1484,7 @@ log.info("holder-start")
 # Normal handlers release the file between appends. Keep an explicit foreign
 # writer open to exercise Windows rotation refusal until this handle closes.
 with open(handler.baseFilename, "a", encoding="utf-8") as foreign_writer:
+    assert flush_logging(timeout=60.0)
     print("holding", flush=True)
     sys.stdin.read()
 log.info("holder-end")
@@ -1526,7 +1543,11 @@ for index in range(total):
         let log = reported_log(reported.as_bytes(), &scratch.0);
         let mut holding = String::new();
         holder_out.read_line(&mut holding).unwrap();
-        assert_eq!(holding.trim(), "holding", "foreign writer never held the log");
+        assert_eq!(
+            holding.trim(),
+            "holding",
+            "foreign writer never held the log"
+        );
         let deadline = Instant::now() + Duration::from_secs(30);
         while !fs::read_to_string(&log).is_ok_and(|text| text.contains("holder-start")) {
             assert!(Instant::now() < deadline, "holder never logged");

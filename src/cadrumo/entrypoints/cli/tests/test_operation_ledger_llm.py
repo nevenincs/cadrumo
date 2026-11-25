@@ -42,14 +42,22 @@ from ....application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
+from ....application.ledger.view_operation import (
+    LEDGER_VIEW_OPERATION_DEFINITION_ID,
+    LedgerViewProjection,
+    LedgerViewRequest,
+)
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.review.filter import LedgerReviewStatus
+from ....core.errors.error_codes import get_registered_error_code
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.iva.schema import IvaCategory
-from .. import _ledger_llm_cli as classify
+from ....domain.transactions.errors import TransactionIdPrefixError
 from .. import ledger_lifecycle_cli as lifecycle
+from .. import ledger_llm_cli
 from .. import operation_ledger_classify as operator_bridge
+from .. import operation_ledger_prefix_read as prefix_read
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -127,6 +135,8 @@ def _classified(*, profile: UUID = _PROFILE, transaction_id: str = _TRANSACTION)
         notes="",
         lifecycle_state="active",
         classified_by=_PROVENANCE,
+        classification_decided_by=_PROVENANCE,
+        figures_derived=False,
         classified_at="2026-01-01T00:00:00Z",
         classification_reason="Reviewed invoice",
         classification_confidence="0.9",
@@ -183,6 +193,7 @@ class _ReviewPort:
     settled: LedgerLlmOperationResult | None = None
     effect: OperationEffect = OperationEffect.UPDATED
     requests: list[LedgerLlmReviewRequest] = field(default_factory=list)
+    viewed: list[str] = field(default_factory=list)
     decisions: list[str | None] = field(default_factory=list)
     output: list[dict[str, object]] = field(default_factory=list)
     completion_override: (
@@ -203,7 +214,12 @@ class _ReviewPort:
         ):
             assert bound is client
             assert kwargs["definition_id"] == definition_id
-            assert kwargs["subject_ref"] == profile_operation_subject(str(_PROFILE))
+            # A classification review holds its movement; a split review the profile.
+            assert kwargs["subject_ref"] == (
+                request.transaction_id
+                if definition_id == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+                else profile_operation_subject(str(_PROFILE))
+            )
             assert kwargs["result_type"] is LedgerLlmOperationResult
             assert kwargs["request_version"] == kwargs["result_version"] == 1
             handler = cast(RegisteredOperationReviewHandler[LedgerLlmReviewProjection], kwargs["review"])
@@ -229,7 +245,25 @@ class _ReviewPort:
         def emit(_ctx: object, *, command: str, result: BaseModel, **kwargs: object) -> None:
             self.output.append({"command": command, "result": result.model_dump(mode="json"), **kwargs})
 
+        def view(
+            bound: object, request: LedgerViewRequest, **kwargs: object
+        ) -> RegisteredOperationCompletion[BaseModel]:
+            # The operator's handle is resolved by the profile's ledger view
+            # before any review is asked.
+            assert bound is client
+            assert kwargs["definition_id"] == LEDGER_VIEW_OPERATION_DEFINITION_ID
+            self.viewed.append(request.transaction_prefix)
+            viewed = LedgerViewProjection(
+                profile_id=_PROFILE,
+                transaction_prefix=request.transaction_prefix,
+                transaction=_classified().transaction,
+                review_status=LedgerReviewStatus.PENDING,
+                latest_llm_rejection=None,
+            )
+            return RegisteredOperationCompletion(_OPERATION, viewed, OperationEffect.NONE)
+
         monkeypatch.setattr(module, "run_registered_operation", submit)
+        monkeypatch.setattr(prefix_read, "run_registered_operation", view)
         monkeypatch.setattr(module, "emit_envelope", emit)
 
 
@@ -244,11 +278,10 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             yes=action == "apply",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
             reason="Operator review",
         )
     elif mode == "auto_split":
-        classify.dispatch_autosplit(
+        ledger_llm_cli.dispatch_autosplit(
             ctx,
             transaction_id=_TRANSACTION[:12],
             classification=None,
@@ -257,11 +290,10 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             reject=action == "reject",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
             reason="Operator review",
         )
     else:
-        handler = classify.ledger_saturate_llm if mode == "saturated" else classify.ledger_classify_llm
+        handler = ledger_llm_cli.ledger_saturate_llm if mode == "saturated" else ledger_llm_cli.ledger_classify_llm
         handler(
             ctx,
             transaction_id=_TRANSACTION[:12],
@@ -272,9 +304,30 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             reject=action == "reject",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
             reason="Operator review",
         )
+
+
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+def test_a_handle_the_ledger_cannot_resolve_is_refused_before_any_review_is_asked(
+    monkeypatch: pytest.MonkeyPatch, mode: _Mode
+) -> None:
+    """An unknown or ambiguous handle is refused in the words the ledger view uses."""
+    port = _ReviewPort(_review(mode))
+    definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
+    code = get_registered_error_code(TransactionIdPrefixError).code
+    refusal = CliRefusedBoundaryError(code, context={"reason": code})
+
+    def ambiguous(*_args: object, **_options: object) -> RegisteredOperationCompletion[BaseModel]:
+        raise refusal
+
+    monkeypatch.setattr(prefix_read, "run_registered_operation", ambiguous)
+    with pytest.raises(CliRefusedBoundaryError) as raised:
+        _invoke(mode, "apply")
+    assert raised.value is refusal
+    assert raised.value.context is not None and raised.value.context["reason"] == code
+    assert port.requests == [], "no review is asked about a handle that names no one movement"
 
 
 @pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
@@ -284,7 +337,7 @@ def test_review_routes_bind_exact_profile_options_and_render_worker_facts(
 ) -> None:
     port = _ReviewPort(_review(mode))
     definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
-    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
     _invoke(mode, action)
 
     origins = {
@@ -293,17 +346,17 @@ def test_review_routes_bind_exact_profile_options_and_render_worker_facts(
         "auto_split": LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
         "split": LlmReviewInvocationOrigin.SPLIT_LLM,
     }
+    assert port.viewed == [_TRANSACTION[:12]]
     assert port.requests == [
         LedgerLlmReviewRequest(
             profile_id=_PROFILE,
-            transaction_id=_TRANSACTION[:12],
+            transaction_id=_TRANSACTION,
             mode=mode,
             origin=origins[mode],
             preview=action == "preview",
             business_pct="0.25" if action == "apply" and mode in {"classification", "saturated"} else None,
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
             reason="Operator review",
         )
     ]
@@ -340,7 +393,7 @@ def test_terminal_preview_never_requests_response_and_later_apply_reviews_fresh_
 ) -> None:
     port = _ReviewPort(_review(mode))
     definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
-    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
     _invoke(mode, "preview")
     assert port.requests[0].preview is True
     assert port.decisions == []
@@ -372,7 +425,7 @@ def test_terminal_preview_refuses_misbound_projection_before_rendering(
     port = _ReviewPort(review)
     port.completion_override = RegisteredOperationCompletion(_OPERATION, malformed, OperationEffect.NONE)
     definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
-    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke(mode, "preview")
     assert refused.value.context is not None
@@ -405,7 +458,7 @@ def test_preview_refuses_mutating_unsettled_or_detached_completion(
         )
     )
     definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
-    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke(mode, "preview")
     assert refused.value.context is not None
@@ -421,7 +474,7 @@ def test_explicit_rejection_renders_settled_audit_without_claiming_row_persisten
     monkeypatch: pytest.MonkeyPatch, mode: _Mode
 ) -> None:
     port = _ReviewPort(_review(mode))
-    port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    port.bind(monkeypatch, ledger_llm_cli, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
     _invoke(mode, "reject")
     assert port.decisions == ["reject"]
     assert port.requests[0].origin is LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT
@@ -440,7 +493,7 @@ def test_invalid_share_refuses_before_submitting_review(
     monkeypatch: pytest.MonkeyPatch, mode: _Mode, business_pct: str
 ) -> None:
     port = _ReviewPort(_review(mode))
-    port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    port.bind(monkeypatch, ledger_llm_cli, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
     with pytest.raises(typer.BadParameter):
         _invoke(mode, "apply", business_pct=business_pct)
     assert port.requests == []
@@ -451,7 +504,7 @@ def test_invalid_share_refuses_before_submitting_review(
 @pytest.mark.parametrize("mode", ["classification", "saturated"])
 def test_share_with_trailing_zeros_reaches_the_request_normalised(monkeypatch: pytest.MonkeyPatch, mode: _Mode) -> None:
     port = _ReviewPort(_review(mode))
-    port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    port.bind(monkeypatch, ledger_llm_cli, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
     _invoke(mode, "apply", business_pct="0.2500")
     assert [request.business_pct for request in port.requests] == ["0.25"]
 
@@ -461,7 +514,7 @@ def test_autosplit_lone_child_keeps_single_classification_payload(
     monkeypatch: pytest.MonkeyPatch, action: _Action
 ) -> None:
     port = _ReviewPort(_review("auto_split", children=1))
-    port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    port.bind(monkeypatch, ledger_llm_cli, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
     _invoke("auto_split", action)
     assert port.output[0]["command"] == "ledger.classify"
     payload = cast(dict[str, object], port.output[0]["result"])
@@ -498,7 +551,7 @@ def test_misbound_settled_result_refuses_with_operation_id_and_known_effect(
     effect = OperationEffect.NONE if mismatch == "effect" else OperationEffect.UPDATED
     port = _ReviewPort(review, LedgerLlmOperationResult.model_validate(data), effect)
     definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
-    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+    port.bind(monkeypatch, lifecycle if mode == "split" else ledger_llm_cli, definition_id=definition)
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke(mode, "apply")
     assert refused.value.context is not None
@@ -547,10 +600,10 @@ def test_operator_iva_public_handler_uses_exact_profile_runtime_result(
         output.append(result)
 
     monkeypatch.setattr(operator_bridge, "run_registered_operation", submit)
-    monkeypatch.setattr(classify, "emit_envelope", emit)
+    monkeypatch.setattr(ledger_llm_cli, "emit_envelope", emit)
 
     def invoke() -> None:
-        classify.ledger_operator_iva_derive(
+        ledger_llm_cli.ledger_operator_iva_derive(
             cast(typer.Context, cast(object, None)),
             transaction_id=_TRANSACTION[:12],
             classification=None,

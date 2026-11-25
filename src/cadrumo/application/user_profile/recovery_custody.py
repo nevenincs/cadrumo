@@ -31,9 +31,10 @@ from hmac import compare_digest
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.bootstrap import ProfilePassphraseResetOutcome
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
 
 from ...core.credentials import assess_profile_password
@@ -41,7 +42,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
-from ...core.time.clock import now as _now
+from ...core.time.clock import wall_now
 from .authentication import ProfilePasswordProofOperation
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
@@ -52,6 +53,7 @@ from .custody_ports import (
     map_profile_authentication_proof_failure,
     profile_custody_recovery_envelope_path,
     remove_profile_recovery_envelope,
+    resolve_profile_custody_password_replacement,
     unlock_profile_custody_password,
     unlock_profile_custody_recovery,
 )
@@ -66,12 +68,8 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-    from .custody_ports import (
-        ProfileCustodyPasswordMaterialPort,
-        ProfileCustodyRecoveryEnvelopePort,
-        ProfileCustodyUnlockPort,
-        ProfileRecoveryKeyPort,
-    )
+    from .custody_ports import ProfileCustodyUnlockPort, ProfileRecoveryKeyPort
+    from .custody_record_ports import ProfileCustodyPasswordMaterialPort, ProfileCustodyRecoveryEnvelopePort
 
 
 class ProfileRecoveryError(CadrumoError):
@@ -127,17 +125,6 @@ class ProfileRecoveryEnrollmentOutcome(BaseModel):
     profile_id: ProfileId
     enrolled: bool
     changed: bool
-
-
-class ProfilePassphraseResetOutcome(BaseModel):
-    """Non-secret result of one passphrase reset proved by the recovery code."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: ProfileId
-    password_generation: int = Field(ge=2)
-    dek_epoch_preserved: bool
-    recovery_enrollment_retained: bool
 
 
 def profile_recovery_status(*, profile_id: UUID, root: Path | None = None) -> ProfileRecoveryStatus:
@@ -300,10 +287,11 @@ def reset_profile_passphrase_with_recovery(
         # Evaluated under the custody lock so concurrent resets for this
         # profile queue behind one another rather than all passing the gate
         # before any of them has recorded its failure.
-        instant = _now()
+        instant = wall_now()
         evaluation = sessions.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=instant)
         if evaluation.throttled:
             raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+        resolve_profile_custody_password_replacement(profile_id, root=storage_root)
         password = load_profile_custody_password_material(profile_id, root=storage_root)
         if expected_envelope_digest is not None and password.envelope.self_digest != expected_envelope_digest:
             # A prepared bootstrap invocation can replace this exact predecessor
@@ -372,7 +360,6 @@ def _unlock_with_passphrase(
 
 
 __all__ = [
-    "ProfilePassphraseResetOutcome",
     "ProfileRecoveryEnrollment",
     "ProfileRecoveryEnrollmentOutcome",
     "ProfileRecoveryError",

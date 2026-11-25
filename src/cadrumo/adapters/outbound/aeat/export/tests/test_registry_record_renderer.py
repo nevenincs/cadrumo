@@ -29,10 +29,12 @@ from ......domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportRecordDefinition,
 )
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.errors import ModeloExportError
 from ..registry_record_renderer import RegistryFixedWidthRecordRenderer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _LITERAL = "145"
 _NIF = "12345678Z"
@@ -355,7 +357,7 @@ def test_the_renderer_refuses_a_record_with_no_renderable_fields() -> None:
     [
         (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "", b"0"),
         (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "1", b"1"),
-        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, "2026", b"26"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, str(_YEAR), str(_YEAR)[-2:].encode()),
     ],
 )
 def test_registry_renderer_reuses_the_canonical_value_policy_projector(
@@ -390,8 +392,8 @@ def test_registry_renderer_reuses_the_canonical_value_policy_projector(
     [
         (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "X"),
         (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "2"),
-        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, "26"),
-        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, " 2026"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, str(_YEAR)[-2:]),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, f" {_YEAR}"),
     ],
 )
 def test_registry_renderer_refuses_invalid_policy_inputs(

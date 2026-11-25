@@ -1,4 +1,4 @@
-"""Tripwires for the paired 2025 activity-asset amortization authority."""
+"""Tripwires for the paired activity-asset amortization authority."""
 
 from __future__ import annotations
 
@@ -9,18 +9,23 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: The newest authored edition and the one exercise it governs.
+_EXERCISE = newest_authored_edition("100")
+_EDITION = str(revision_covering("100", _EXERCISE).id)
+
 
 def _parameters() -> dict[str, ParameterDefinition]:
-    revision = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions["2025"]
+    revision = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions[_EDITION]
     return {parameter.id: parameter for parameter in revision.parameters}
 
 
-def test_linear_authority_tables_are_paired_and_in_force_for_2025() -> None:
+def test_linear_authority_tables_are_paired_and_in_force_for_the_newest_edition() -> None:
     """Both linear tables state the same asset classes, each row in force across the whole of 2025.
 
     The tables run open from the first edition stating them, so a row may begin
@@ -38,8 +43,8 @@ def test_linear_authority_tables_are_paired_and_in_force_for_2025() -> None:
         assert coefficient_rows
         for row in (*coefficient_rows.values(), *period_rows.values()):
             assert row.valid_from is not None
-            assert row.valid_from <= date(2025, 1, 1)
-            assert row.valid_to is None or row.valid_to >= date(2025, 12, 31)
+            assert row.valid_from <= date(_EXERCISE, 1, 1)
+            assert row.valid_to is None or row.valid_to >= date(_EXERCISE, 12, 31)
 
 
 def test_material_and_intangible_authority_remain_distinct_and_grounded() -> None:

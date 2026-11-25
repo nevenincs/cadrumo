@@ -2,7 +2,7 @@
 
 import pytest
 
-from .._key import CorpusKey, load_corpus_key
+from ..key import CorpusKey, load_corpus_key
 
 
 @pytest.fixture(scope="module")

@@ -1,0 +1,904 @@
+//! Named read-only views of the signed-in profile: the filing calendar, the
+//! counts of the last notifications capture, Home, the bundled reference
+//! corpus and the profile's operation history. Each runs fixed registered reads over the held person's relay; the
+//! window names no operation. Nothing
+//! read here is kept, logged or written: it is passed on and dropped. The
+//! calendar is passed on as the product served it, under the product's names,
+//! so the window's types are generated from the product's schema alone; the
+//! one thing the host takes out is where an observed event was read from.
+use super::{Failure, PROFILE_READ_LIMIT, ProfileHost, Result, protocol};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
+
+#[derive(Debug, Serialize)]
+pub struct NotificationsSummary {
+    captured_at: Option<String>,
+    row_count: u64,
+    unread: u64,
+}
+
+#[derive(Deserialize)]
+struct Latest {
+    snapshot_id: Option<String>,
+    captured_at: Option<String>,
+    row_count: Option<u64>,
+}
+#[derive(Deserialize)]
+struct Shown {
+    snapshot_id: String,
+    captured_at: String,
+    row_count: u64,
+    rows: Vec<Row>,
+}
+// The rows also carry names and tax numbers. Only whether each was read is
+// taken from them.
+#[derive(Deserialize)]
+struct Row {
+    leida: Option<bool>,
+}
+
+// Only what the host checks before passing the calendar on: whose it is,
+// which read it is, and that it covers exactly the requested range. The
+// snapshot itself stays the product's value.
+#[derive(Deserialize)]
+struct Range {
+    from_date: String,
+    to_date: String,
+}
+#[derive(Deserialize)]
+struct CalendarRead {
+    kind: String,
+    calendar: Option<Value>,
+}
+#[derive(Deserialize)]
+struct Projection {
+    profile_id: String,
+    payload: CalendarRead,
+}
+
+/// The calendar snapshot of the product's `overview.calendar` read, unchanged.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct FilingCalendar(Value);
+
+// Only what the host checks before passing Home on: whose generation it is
+// and that its `home` state is a state. The rest of the generation, which
+// carries the declarations, ledger, AEAT sync and search states, is read
+// into this and dropped; the window is never sent it.
+#[derive(Deserialize)]
+struct GenerationRead {
+    profile_id: String,
+    generation: HomeGeneration,
+}
+#[derive(Deserialize)]
+struct HomeGeneration {
+    home: Value,
+}
+
+/// The `home` state of the product's `workbench.generation` read, unchanged:
+/// its availability, observed time, refusal and Home projection.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct HomeState(Value);
+
+// Only what the host checks before passing a corpus answer on: whose it is,
+// in which language it was written, and that it holds a retrieval and the
+// terminology hits. The answer itself stays the product's value.
+#[derive(Deserialize)]
+struct CorpusAnswer {
+    profile_id: String,
+    output_language: String,
+    retrieval: Retrieval,
+    terminology: Vec<Value>,
+}
+#[derive(Deserialize)]
+struct Retrieval {
+    hits: Vec<Value>,
+}
+
+/// What the bundled corpus answered, as the product served it: ranked
+/// passages or one resolved citation, and the terminology the query names.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct ReferenceAnswer(Value);
+
+// Only what the host checks before passing the history page on: whose it is,
+// that its runs are a list no longer than was asked for, and that the
+// continuation is absent or an object. The page itself stays the product's
+// value.
+#[derive(Deserialize)]
+struct HistoryPage {
+    profile_id: String,
+    runs: Vec<Value>,
+    next_cursor: Option<Value>,
+}
+
+/// One page of the operation history, as the product served it: the runs
+/// newest first, what the scan could not account for and the continuation.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct OperationsPage(Value);
+
+/// A calendar day as the product writes it, `YYYY-MM-DD`, as its year.
+fn iso_year(day: &str) -> Option<u32> {
+    let bytes = day.as_bytes();
+    let digits = |range: std::ops::Range<usize>| bytes[range].iter().all(u8::is_ascii_digit);
+    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {
+        return None;
+    }
+    if !digits(0..4) || !digits(5..7) || !digits(8..10) {
+        return None;
+    }
+    let month: u32 = day[5..7].parse().ok()?;
+    let date: u32 = day[8..10].parse().ok()?;
+    if !(1..=12).contains(&month) || !(1..=31).contains(&date) {
+        return None;
+    }
+    day[..4].parse().ok()
+}
+
+/// The window asks for about a year around today; a longer range is refused
+/// rather than read, so the answer stays bounded.
+fn admit_range(from: &str, to: &str) -> Result<()> {
+    match (iso_year(from), iso_year(to)) {
+        (Some(start), Some(end)) if from <= to && end - start <= 1 => Ok(()),
+        _ => Err(Failure::new("refused")),
+    }
+}
+
+fn notifications_summary(latest: Value, shown: Option<Value>) -> Result<NotificationsSummary> {
+    let latest: Latest = serde_json::from_value(latest).map_err(|_| protocol())?;
+    let Some(snapshot_id) = latest.snapshot_id else {
+        // Never captured: not the same as nothing unread.
+        return Ok(NotificationsSummary {
+            captured_at: None,
+            row_count: 0,
+            unread: 0,
+        });
+    };
+    let shown: Shown =
+        serde_json::from_value(shown.ok_or_else(protocol)?).map_err(|_| protocol())?;
+    if shown.snapshot_id != snapshot_id
+        || Some(&shown.captured_at) != latest.captured_at.as_ref()
+        || Some(shown.row_count) != latest.row_count
+        || shown.rows.len() as u64 != shown.row_count
+    {
+        return Err(protocol());
+    }
+    Ok(NotificationsSummary {
+        captured_at: Some(shown.captured_at),
+        row_count: shown.row_count,
+        // A row whose read mark was not captured is not counted as unread.
+        unread: shown
+            .rows
+            .iter()
+            .filter(|row| row.leida == Some(false))
+            .count() as u64,
+    })
+}
+
+fn filing_calendar(
+    projection: Value,
+    profile: &str,
+    from: &str,
+    to: &str,
+) -> Result<FilingCalendar> {
+    let projection: Projection = serde_json::from_value(projection).map_err(|_| protocol())?;
+    let calendar = match projection.payload {
+        CalendarRead {
+            kind,
+            calendar: Some(calendar),
+        } if kind == "calendar" && projection.profile_id == profile => calendar,
+        _ => return Err(protocol()),
+    };
+    let range = calendar
+        .get("range")
+        .and_then(|range| Range::deserialize(range).ok())
+        .ok_or_else(protocol)?;
+    if range.from_date != from || range.to_date != to {
+        return Err(protocol());
+    }
+    Ok(FilingCalendar(without_event_sources(calendar)))
+}
+
+/// The host's own disclosure policy: an observed event reaches the window
+/// without the address it was read from.
+fn without_event_sources(mut calendar: Value) -> Value {
+    if let Some(events) = calendar.get_mut("events").and_then(Value::as_array_mut) {
+        for event in events.iter_mut().filter_map(Value::as_object_mut) {
+            event.remove("source_url");
+        }
+    }
+    calendar
+}
+
+/// The registered read Home comes from. It serves the whole workbench
+/// generation; only its `home` state is passed on.
+pub(super) const HOME_DEFINITION: &str = "workbench.generation";
+
+/// The generation read, for the held profile and the language the window
+/// shows its words in: nothing else is asked.
+fn home_request(profile: &str, language: &str) -> Value {
+    json!({"profile_id":profile, "output_language":language})
+}
+
+/// Passes on only the `home` state of a generation read for `profile`. A
+/// generation naming another profile, or a `home` that is not a state with
+/// an availability, is refused rather than shown.
+fn home_state(projection: Value, profile: &str) -> Result<HomeState> {
+    let read: GenerationRead = serde_json::from_value(projection).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read
+            .generation
+            .home
+            .get("availability")
+            .and_then(Value::as_str)
+            .is_none()
+    {
+        return Err(protocol());
+    }
+    Ok(HomeState(read.generation.home))
+}
+
+/// The registered read the bundled reference corpus is searched through.
+pub(super) const REFERENCE_DEFINITION: &str = "reference.corpus.search";
+
+/// The longest query and the most results the product's read accepts. The
+/// host refuses what it would refuse, before submitting anything.
+const REFERENCE_QUERY_MAX_CHARS: usize = 200;
+const REFERENCE_LIMIT_MAX: u32 = 25;
+
+/// The text the person typed, as the product reads it: without the white
+/// space around it, between one and 200 characters. Nothing else of it is
+/// changed.
+fn admit_reference_query(query: &str) -> Result<&str> {
+    let query = query.trim();
+    match query.chars().count() {
+        1..=REFERENCE_QUERY_MAX_CHARS => Ok(query),
+        _ => Err(Failure::new("refused")),
+    }
+}
+
+fn admit_reference_limit(limit: u32) -> Result<u32> {
+    if (1..=REFERENCE_LIMIT_MAX).contains(&limit) {
+        Ok(limit)
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The search for the held profile, the typed query and limit and the
+/// language the window shows its words in: nothing else is asked.
+fn reference_request(profile: &str, query: &str, language: &str, limit: u32) -> Value {
+    json!({"profile_id":profile, "query":query, "output_language":language, "limit":limit})
+}
+
+/// Passes on a corpus answer only if it is the held profile's, in the language
+/// asked for, and holds no more passages than were asked for.
+fn reference_answer(
+    answer: Value,
+    profile: &str,
+    language: &str,
+    limit: u32,
+) -> Result<ReferenceAnswer> {
+    let read: CorpusAnswer = serde_json::from_value(answer.clone()).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read.output_language != language
+        || read.retrieval.hits.len() as u64 > u64::from(limit)
+        || read.terminology.len() as u64 > u64::from(limit)
+    {
+        return Err(protocol());
+    }
+    Ok(ReferenceAnswer(answer))
+}
+
+/// The registered read the profile's operation history is listed through.
+pub(super) const OPERATIONS_DEFINITION: &str = "operations.history.list";
+
+/// The most runs a page of the product's history read holds.
+const OPERATIONS_LIMIT_MAX: u32 = 100;
+/// The longest a cursor field can be: a timestamp and a UUID are far shorter.
+const OPERATIONS_CURSOR_FIELD_MAX_CHARS: usize = 64;
+
+fn admit_operations_limit(limit: u32) -> Result<u32> {
+    if (1..=OPERATIONS_LIMIT_MAX).contains(&limit) {
+        Ok(limit)
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The continuation the window passes back is the one the product served and
+/// is not read further here: it must be absent or an object of exactly the
+/// two bounded text fields the product writes, and goes on unchanged.
+fn admit_operations_cursor(after: Option<Value>) -> Result<Option<Value>> {
+    let Some(cursor) = after else {
+        return Ok(None);
+    };
+    let fields = cursor.as_object().ok_or_else(|| Failure::new("refused"))?;
+    let bounded = |name: &str| {
+        fields
+            .get(name)
+            .and_then(Value::as_str)
+            .is_some_and(|text| {
+                !text.is_empty() && text.chars().count() <= OPERATIONS_CURSOR_FIELD_MAX_CHARS
+            })
+    };
+    if fields.len() == 2 && bounded("started_at") && bounded("operation_id") {
+        Ok(Some(cursor))
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The history read for the held profile, the validated limit and the
+/// continuation, when there is one: nothing else is asked.
+fn operations_request(profile: &str, limit: u32, after: Option<&Value>) -> Value {
+    match after {
+        Some(cursor) => json!({"profile_id":profile, "limit":limit, "after":cursor}),
+        None => json!({"profile_id":profile, "limit":limit}),
+    }
+}
+
+/// Passes on a history page only if it is the held profile's, lists runs, and
+/// holds no more of them than were asked for.
+fn operations_page(page: Value, profile: &str, limit: u32) -> Result<OperationsPage> {
+    let read: HistoryPage = serde_json::from_value(page.clone()).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read.runs.len() as u64 > u64::from(limit)
+        || read
+            .next_cursor
+            .as_ref()
+            .is_some_and(|cursor| !cursor.is_object())
+    {
+        return Err(protocol());
+    }
+    Ok(OperationsPage(page))
+}
+
+/// The registered read the record groups come from.
+pub(super) const RECORD_GROUPS_DEFINITION: &str = "user-profile.record-groups";
+
+fn names_profile(value: &Value, profile: &str) -> bool {
+    value
+        .as_object()
+        .and_then(|fields| fields.get("profile_id"))
+        .and_then(Value::as_str)
+        == Some(profile)
+}
+
+/// The request goes to the product unchanged, but only for the held profile.
+fn admit_record_groups_request(request: &Value, profile: &str) -> Result<()> {
+    if names_profile(request, profile) {
+        Ok(())
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The page comes back unchanged, but only if it is the held profile's.
+fn admit_record_groups_result(result: Value, profile: &str) -> Result<Value> {
+    if names_profile(&result, profile) {
+        Ok(result)
+    } else {
+        Err(protocol())
+    }
+}
+
+/// The overview calendar read, which also asks for the rows it holds off the
+/// schedule so the window can say what it left out.
+fn calendar_request(profile: &str, language: &str, from: &str, to: &str) -> Value {
+    json!({"profile_id":profile, "kind":"calendar", "output_language":language,
+        "from_date":from, "to_date":to, "show_suppressed":true})
+}
+
+impl ProfileHost {
+    pub(super) async fn profile_of(person: &crate::agent::person::HeldPerson) -> Result<String> {
+        Ok(Self::identity(person).await?["profile_id"]
+            .as_str()
+            .ok_or_else(protocol)?
+            .to_owned())
+    }
+    /// Rejects an answer read while the window's account changed underneath.
+    pub(super) async fn still_held(
+        &self,
+        person: &crate::agent::person::HeldPerson,
+        profile: &str,
+    ) -> Result<()> {
+        let current = self.person(Some(profile)).await?;
+        if Self::identity(&current).await? != Self::identity(person).await? {
+            return Err(Failure::new("not_signed_in"));
+        }
+        Ok(())
+    }
+    pub(super) async fn notifications(&self) -> Result<NotificationsSummary> {
+        let (latest, shown) = self.notifications_read(None).await?;
+        notifications_summary(latest, shown)
+    }
+    /// The latest notifications capture and, where there is one, its shown
+    /// rows, for exactly `profile` or the signed-in one. It reads under the
+    /// serial lock within the read limit, and refuses an answer read while
+    /// the window's account changed underneath.
+    pub(crate) async fn notifications_read(
+        &self,
+        profile: Option<&str>,
+    ) -> Result<(Value, Option<Value>)> {
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(profile).await?;
+            let profile = Self::profile_of(&person).await?;
+            let latest = self
+                .run(
+                    &person,
+                    "live.notifications.latest",
+                    json!({"profile_id":profile}),
+                    false,
+                )
+                .await?;
+            let shown = match latest["snapshot_id"].as_str() {
+                Some(snapshot_id) => Some(
+                    self.run(
+                        &person,
+                        "live.notifications.show",
+                        json!({"profile_id":profile, "snapshot_id":snapshot_id}),
+                        false,
+                    )
+                    .await?,
+                ),
+                None => None,
+            };
+            self.still_held(&person, &profile).await?;
+            Ok((latest, shown))
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// One page of the record groups, relayed as the product serialises its
+    /// request and result. The request is refused before submission where it
+    /// names another profile than the one held; so is a result that does.
+    pub(super) async fn record_groups(&self, request: Value) -> Result<Value> {
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            admit_record_groups_request(&request, &profile)?;
+            let result = self
+                .run(&person, RECORD_GROUPS_DEFINITION, request, false)
+                .await?;
+            self.still_held(&person, &profile).await?;
+            admit_record_groups_result(result, &profile)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Home for the signed-in profile: one `workbench.generation` read, of
+    /// which only its `home` state is returned. The read is local to the
+    /// profile and never reaches the tax agency.
+    pub(super) async fn home(&self, language: String) -> Result<HomeState> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let projection = self
+                .run(
+                    &person,
+                    HOME_DEFINITION,
+                    home_request(&profile, &language),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            home_state(projection, &profile)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Searches the bundled reference corpus for the signed-in profile: one
+    /// `reference.corpus.search` read of the typed query. It reads no profile
+    /// data and never reaches the network, and the host keeps nothing of it:
+    /// the query and the answer are passed on and dropped, and neither is
+    /// logged.
+    pub(super) async fn reference_search(
+        &self,
+        query: String,
+        limit: u32,
+        language: String,
+    ) -> Result<ReferenceAnswer> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        let query = admit_reference_query(&query)?;
+        let limit = admit_reference_limit(limit)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let answer = self
+                .run(
+                    &person,
+                    REFERENCE_DEFINITION,
+                    reference_request(&profile, query, &language, limit),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            reference_answer(answer, &profile, &language, limit)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Lists the signed-in profile's operation history: one
+    /// `operations.history.list` read of the validated limit and the opaque
+    /// continuation. The read is ephemeral and never enters the journal, and
+    /// the host runs, retries and cancels nothing: the page is passed on and
+    /// dropped, and none of it is logged.
+    pub(super) async fn operations_history(
+        &self,
+        limit: u32,
+        after: Option<Value>,
+    ) -> Result<OperationsPage> {
+        let limit = admit_operations_limit(limit)?;
+        let after = admit_operations_cursor(after)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let page = self
+                .run(
+                    &person,
+                    OPERATIONS_DEFINITION,
+                    operations_request(&profile, limit, after.as_ref()),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            operations_page(page, &profile, limit)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    pub(super) async fn filing_calendar(
+        &self,
+        from: String,
+        to: String,
+        language: String,
+    ) -> Result<FilingCalendar> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        admit_range(&from, &to)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let projection = self
+                .run(
+                    &person,
+                    "overview.calendar",
+                    calendar_request(&profile, &language, &from, &to),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            filing_calendar(projection, &profile, &from, &to)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+}
+
+#[cfg(test)]
+#[path = "views_calendar_contract_tests.rs"]
+mod calendar_contract_tests;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PROFILE: &str = "0b4f6c2e-8f0a-4a8e-9a43-5b1a6e0d7c11";
+
+    #[test]
+    fn only_a_bounded_range_of_real_days_is_read() {
+        assert!(admit_range("2026-07-01", "2027-06-30").is_ok());
+        for (from, to) in [
+            ("2027-06-30", "2026-07-01"),
+            ("2026-07-01", "2028-01-01"),
+            ("2026-13-01", "2027-01-01"),
+            ("2026-7-01", "2027-01-01"),
+            ("2026-07-01", "2027-06-30; drop"),
+        ] {
+            assert_eq!(admit_range(from, to).unwrap_err().code, "refused");
+        }
+    }
+
+    #[test]
+    fn notifications_reach_the_window_as_counts_only() {
+        let latest = json!({"bucket_id":PROFILE, "snapshot_id":"ab", "captured_at":"2026-10-20T09:00:00Z",
+            "source_url":"https://example.invalid", "row_count":3});
+        let row =
+            |leida: Value| json!({"titular_nif":"00000000T","titular_nombre":"Name","leida":leida});
+        let shown = json!({"bucket_id":PROFILE, "snapshot_id":"ab", "captured_at":"2026-10-20T09:00:00Z",
+            "source_url":"https://example.invalid", "row_count":3,
+            "rows":[row(json!(false)), row(json!(true)), row(Value::Null)]});
+        let summary = notifications_summary(latest.clone(), Some(shown.clone())).unwrap();
+        let sent = serde_json::to_value(&summary).unwrap();
+        assert_eq!(
+            sent,
+            json!({"captured_at":"2026-10-20T09:00:00Z","row_count":3,"unread":1})
+        );
+        let mut other = shown;
+        other["snapshot_id"] = json!("cd");
+        assert!(notifications_summary(latest.clone(), Some(other)).is_err());
+        assert!(notifications_summary(latest, None).is_err());
+    }
+
+    #[test]
+    fn never_captured_notifications_are_not_none_unread() {
+        let summary =
+            notifications_summary(json!({"bucket_id":PROFILE, "snapshot_id":null}), None).unwrap();
+        assert_eq!(summary.captured_at, None);
+    }
+
+    fn generation(profile: &str, home: Value) -> Value {
+        json!({"profile_id":profile,
+            "generation":{"contract_version":1, "assembled_at":"2026-10-20T09:00:00Z",
+                "home":home,
+                "ledger":{"availability":"available", "projection":{"bucket_id":profile}},
+                "declarations":{"availability":"available", "projection":{"bucket_id":profile}},
+                "aeat_sync":{"availability":"available", "projection":{"notifications":[{"titular_nif":"00000000T"}]}},
+                "search":{"availability":"available"}}})
+    }
+
+    #[test]
+    fn home_asks_for_the_held_profile_and_the_language_and_nothing_else() {
+        assert_eq!(HOME_DEFINITION, "workbench.generation");
+        assert_eq!(
+            home_request(PROFILE, "hu"),
+            json!({"profile_id":PROFILE, "output_language":"hu"})
+        );
+    }
+
+    #[test]
+    fn only_the_home_state_of_the_generation_reaches_the_window() {
+        let home = json!({"availability":"available", "observed_at":"2026-10-20T09:00:00Z",
+            "refusal":null, "projection":{"actions":[], "agenda":[]}});
+        let sent =
+            serde_json::to_value(home_state(generation(PROFILE, home.clone()), PROFILE).unwrap())
+                .unwrap();
+        assert_eq!(sent, home);
+        for withheld in [
+            "ledger",
+            "declarations",
+            "aeat_sync",
+            "search",
+            "bucket_id",
+            "00000000T",
+        ] {
+            assert!(
+                !sent.to_string().contains(withheld),
+                "{withheld} was passed on"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unavailable_or_refused_home_is_passed_on_as_the_product_served_it() {
+        let refused = json!({"availability":"unavailable", "observed_at":null,
+            "refusal":"workbench.home.unavailable", "projection":null});
+        let sent = serde_json::to_value(
+            home_state(generation(PROFILE, refused.clone()), PROFILE).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(sent, refused);
+    }
+
+    #[test]
+    fn a_generation_of_another_profile_or_without_a_home_state_is_refused() {
+        let home = json!({"availability":"available", "projection":null});
+        assert!(home_state(generation("another", home.clone()), PROFILE).is_err());
+        assert!(home_state(generation(PROFILE, json!({"projection":null})), PROFILE).is_err());
+        assert!(home_state(generation(PROFILE, json!("available")), PROFILE).is_err());
+        let mut headless = generation(PROFILE, home.clone());
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(home_state(headless, PROFILE).is_err());
+        let mut homeless = generation(PROFILE, home);
+        homeless["generation"]
+            .as_object_mut()
+            .unwrap()
+            .remove("home");
+        assert!(home_state(homeless, PROFILE).is_err());
+        assert!(home_state(json!(null), PROFILE).is_err());
+    }
+
+    fn corpus_answer(profile: &str, language: &str, hits: usize) -> Value {
+        json!({"result_version":1, "profile_id":profile, "output_language":language,
+            "authority_generation":"sha256:00",
+            "retrieval":{"query":"synthetic", "mode":"lexical_only",
+                "hits":vec![json!({"chunk_id":"c", "corpus_ref":"r", "doc_title":"Synthetic",
+                    "text":"Synthetic passage", "score":1.0, "rank":0, "lexical_rank":0}); hits],
+                "citation":null},
+            "terminology":[]})
+    }
+
+    #[test]
+    fn reference_asks_for_the_held_profile_the_typed_query_and_nothing_else() {
+        assert_eq!(REFERENCE_DEFINITION, "reference.corpus.search");
+        assert_eq!(
+            reference_request(PROFILE, "synthetic query", "hu", 8),
+            json!({"profile_id":PROFILE, "query":"synthetic query",
+                "output_language":"hu", "limit":8})
+        );
+    }
+
+    #[test]
+    fn only_a_query_of_one_to_two_hundred_characters_and_a_bounded_limit_are_read() {
+        assert_eq!(admit_reference_query("  a  ").unwrap(), "a");
+        assert_eq!(
+            admit_reference_query(&"ñ".repeat(200))
+                .unwrap()
+                .chars()
+                .count(),
+            200
+        );
+        for refused in ["", "   ", "\t\n"] {
+            assert_eq!(admit_reference_query(refused).unwrap_err().code, "refused");
+        }
+        assert_eq!(
+            admit_reference_query(&"a".repeat(201)).unwrap_err().code,
+            "refused"
+        );
+        assert_eq!(admit_reference_limit(1).unwrap(), 1);
+        assert_eq!(admit_reference_limit(25).unwrap(), 25);
+        for refused in [0, 26, u32::MAX] {
+            assert_eq!(admit_reference_limit(refused).unwrap_err().code, "refused");
+        }
+    }
+
+    #[test]
+    fn a_corpus_answer_is_passed_on_as_the_product_served_it() {
+        let served = corpus_answer(PROFILE, "es", 2);
+        let sent =
+            serde_json::to_value(reference_answer(served.clone(), PROFILE, "es", 8).unwrap())
+                .unwrap();
+        assert_eq!(sent, served);
+    }
+
+    #[test]
+    fn a_corpus_answer_of_another_profile_or_language_or_of_too_many_passages_is_refused() {
+        assert!(reference_answer(corpus_answer("another", "es", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "en", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "es", 3), PROFILE, "es", 2).is_err());
+        let mut headless = corpus_answer(PROFILE, "es", 1);
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(reference_answer(headless, PROFILE, "es", 8).is_err());
+        let mut unranked = corpus_answer(PROFILE, "es", 1);
+        unranked.as_object_mut().unwrap().remove("retrieval");
+        assert!(reference_answer(unranked, PROFILE, "es", 8).is_err());
+        assert!(reference_answer(json!(null), PROFILE, "es", 8).is_err());
+    }
+
+    fn history_page(profile: &str, runs: usize, next: Value) -> Value {
+        json!({"result_version":1, "profile_id":profile, "observed_at":"2026-11-20T09:00:00Z",
+            "runs":vec![json!({"operation_id":"synthetic-run", "definition_id":"synthetic.read",
+                "register_page":null, "lifecycle":"settling", "effect":"unknown",
+                "cancellation_requested":false, "receipt":null}); runs],
+            "run_count":runs, "next_cursor":next,
+            "unreadable_records":0, "unverifiable_records":0})
+    }
+
+    #[test]
+    fn the_history_asks_for_the_held_profile_the_limit_and_the_continuation_and_nothing_else() {
+        assert_eq!(OPERATIONS_DEFINITION, "operations.history.list");
+        assert_eq!(
+            operations_request(PROFILE, 25, None),
+            json!({"profile_id":PROFILE, "limit":25})
+        );
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        assert_eq!(
+            operations_request(PROFILE, 10, Some(&cursor)),
+            json!({"profile_id":PROFILE, "limit":10, "after":cursor})
+        );
+    }
+
+    #[test]
+    fn only_a_bounded_limit_and_a_continuation_of_the_two_served_fields_are_read() {
+        assert_eq!(admit_operations_limit(1).unwrap(), 1);
+        assert_eq!(admit_operations_limit(100).unwrap(), 100);
+        for refused in [0, 101, u32::MAX] {
+            assert_eq!(admit_operations_limit(refused).unwrap_err().code, "refused");
+        }
+        assert_eq!(admit_operations_cursor(None).unwrap(), None);
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        assert_eq!(
+            admit_operations_cursor(Some(cursor.clone())).unwrap(),
+            Some(cursor)
+        );
+        for refused in [
+            json!(null),
+            json!("text"),
+            json!([]),
+            json!({}),
+            json!({"started_at":"2026-11-20T09:00:00Z"}),
+            json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":""}),
+            json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":7}),
+            json!({"started_at":"x", "operation_id":"y", "extra":"z"}),
+            json!({"started_at":"x".repeat(65), "operation_id":"y"}),
+        ] {
+            assert_eq!(
+                admit_operations_cursor(Some(refused)).unwrap_err().code,
+                "refused"
+            );
+        }
+    }
+
+    #[test]
+    fn a_history_page_is_passed_on_as_the_product_served_it() {
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        for served in [
+            history_page(PROFILE, 2, cursor),
+            history_page(PROFILE, 0, json!(null)),
+        ] {
+            let sent =
+                serde_json::to_value(operations_page(served.clone(), PROFILE, 2).unwrap()).unwrap();
+            assert_eq!(sent, served);
+        }
+    }
+
+    #[test]
+    fn a_history_page_of_another_profile_or_of_too_many_runs_or_malformed_is_refused() {
+        assert!(operations_page(history_page("another", 1, json!(null)), PROFILE, 5).is_err());
+        assert!(operations_page(history_page(PROFILE, 3, json!(null)), PROFILE, 2).is_err());
+        assert!(operations_page(history_page(PROFILE, 1, json!("later")), PROFILE, 5).is_err());
+        let mut headless = history_page(PROFILE, 1, json!(null));
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(operations_page(headless, PROFILE, 5).is_err());
+        let mut unlisted = history_page(PROFILE, 1, json!(null));
+        unlisted.as_object_mut().unwrap().remove("runs");
+        assert!(operations_page(unlisted, PROFILE, 5).is_err());
+        assert!(operations_page(json!(null), PROFILE, 5).is_err());
+    }
+
+    #[test]
+    fn a_record_groups_request_for_the_held_profile_goes_unchanged() {
+        assert_eq!(RECORD_GROUPS_DEFINITION, "user-profile.record-groups");
+        let request = json!({"profile_id":PROFILE, "group_kind":"rental_property", "cursor":0,
+            "limit":128, "expected_revision":null, "expected_content_digest":null,
+            "expected_ledger_digest":null, "output_language":"es"});
+        assert!(admit_record_groups_request(&request, PROFILE).is_ok());
+        assert_eq!(request["limit"], 128);
+        assert_eq!(request["group_kind"], "rental_property");
+    }
+
+    #[test]
+    fn a_record_groups_request_for_another_profile_is_refused_before_submission() {
+        let foreign = json!({"profile_id":"another", "group_kind":"rental_property"});
+        assert_eq!(
+            admit_record_groups_request(&foreign, PROFILE)
+                .unwrap_err()
+                .code,
+            "refused"
+        );
+        for bad in [
+            json!({"group_kind":"rental_property"}),
+            json!("x"),
+            json!(null),
+        ] {
+            assert!(admit_record_groups_request(&bad, PROFILE).is_err());
+        }
+    }
+
+    #[test]
+    fn a_record_groups_result_for_another_profile_is_refused() {
+        let page = json!({"profile_id":PROFILE, "outcome":"page", "items":[{"kind":"future"}]});
+        assert_eq!(
+            admit_record_groups_result(page.clone(), PROFILE).unwrap(),
+            page
+        );
+        let other = json!({"profile_id":"another", "outcome":"page"});
+        assert!(admit_record_groups_result(other, PROFILE).is_err());
+        assert!(admit_record_groups_result(json!({"outcome":"page"}), PROFILE).is_err());
+    }
+}

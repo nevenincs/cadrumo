@@ -30,22 +30,28 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
-from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.adapters.linux_worker_process import LinuxProcessScope
 from cadrumo_runtime.adapters.login_policy import compose_runtime_login_policy
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
@@ -221,6 +227,49 @@ class NativeApiCliSession[Prepared]:
         if str(self.credential_reference) in result.output:
             pytest.fail("API credential reference appeared in CLI output", pytrace=False)
         return result
+
+
+def operation_lifecycle_scope(operation_ids: frozenset[str]) -> Callable[[UUID], AccessScope]:
+    """Scope builder granting the full submit-to-result lifecycle of exactly these operations."""
+
+    def build(client_id: UUID) -> AccessScope:
+        return AccessScope(
+            operations=operation_ids,
+            actions=frozenset(
+                {
+                    AccessAction.SUBMIT,
+                    AccessAction.START,
+                    AccessAction.RESUME,
+                    AccessAction.OBSERVE,
+                    AccessAction.RESULT,
+                    AccessAction.COMMIT,
+                    AccessAction.CANCEL,
+                    AccessAction.DETACH,
+                }
+            ),
+            disclosures=frozenset(
+                {
+                    DisclosurePermission(
+                        destination_id=client_id,
+                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                        category=DisclosureCategory.OPERATION_METADATA,
+                    ),
+                    *(
+                        DisclosurePermission(
+                            destination_id=client_id,
+                            projection_id=f"{definition_id}.result",
+                            category=DisclosureCategory.TAX_VALUES,
+                        )
+                        for definition_id in operation_ids
+                    ),
+                }
+            ),
+            periods=None,
+            allow_period_independent=True,
+            allow_delegation=False,
+        )
+
+    return build
 
 
 @contextmanager

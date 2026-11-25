@@ -14,6 +14,7 @@ number = "tipo1.ejercicio"
 section = ["identificacion_declaracion"]
 data_type = "year"
 semantic_role = "filing_year"
+input_kind = "informational"
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5"]
 
 [[revisions."2022".casillas]]

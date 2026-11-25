@@ -37,9 +37,7 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -55,27 +53,28 @@ from ....domain.calculations.registry.ledger_impatriado_bindings import (
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import TransactionCatalogue
 from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,
     ImpatriadoIncomeLedgerAggregationIssueReason,
     aggregate_impatriado_income_ledger,
 )
-from ..renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssueReason,
-    aggregate_renta_m100_income_ledger,
-)
+from ..renta_income_ledger import aggregate_renta_m100_income_ledger
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
+from .impatriado_income_ledger_support import impatriado_transaction
 from .renta_income_aggregation_support import (
-    _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+    M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
+_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _M151_MODELO = Modelo("151").value
 _BASE_CASILLA: CasillaId = validated_casilla_id("impatriado.base-liquidable-general")
 _M151_SOURCE_JURISDICTIONS = frozenset({"ES"})
@@ -97,55 +96,6 @@ def _m151_revision_for(period: Period) -> ModeloRevision:
     ).revision
 
 
-def _impatriado_transaction(
-    provider_id: str,
-    *,
-    amount: Decimal,
-    source_jurisdiction: str | None,
-    irpf_category: str | None = "trabajo",
-    direction: TransactionDirection = TransactionDirection.INCOMING,
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    taxable_base: Decimal | None = None,
-    iva_amount: Decimal | None = None,
-    value_date: date = date(2024, 3, 1),
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                provider_transaction_id=provider_id,
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency="EUR",
-                counterparty="Empleador SA",
-                description=f"impatriado income {provider_id}",
-                provenance=RawProvenance(
-                    source_path=Path(__file__),
-                    source_sha256="a" * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-                    provider_name="CSV provider",
-                ),
-                raw_fields={"Concepto": provider_id},
-            ),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": source_jurisdiction,
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "taxable_base": taxable_base,
-            "iva_amount": iva_amount,
-            "irpf_category": irpf_category,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
 def _base_total(aggregation: ImpatriadoIncomeLedgerAggregation) -> Decimal:
     values = aggregation.casilla_aggregation.casilla_values
     return next((v for c, v in values.items() if str(c) == _BASE_CASILLA), Decimal("0"))
@@ -153,13 +103,13 @@ def _base_total(aggregation: ImpatriadoIncomeLedgerAggregation) -> Decimal:
 
 def test_es_source_income_folds_into_impatriado_base() -> None:
     """An ES-source trabajo row enters the impatriado base liquidable general."""
-    tx = _impatriado_transaction("es-001", amount=Decimal("50000.00"), source_jurisdiction="ES")
+    tx = impatriado_transaction("es-001", amount=Decimal("50000.00"), source_jurisdiction="ES")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
     result = aggregate_impatriado_income_ledger(
         catalogue,
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -181,13 +131,13 @@ def test_foreign_source_row_is_segregated_and_excluded() -> None:
     mutating only the jurisdiction to a foreign code drops it from the base and
     fires the BECKHAM_FOREIGN_SOURCE_SEGREGATED issue carrying the rejected code.
     """
-    es_row = _impatriado_transaction("row-es", amount=Decimal("40000.00"), source_jurisdiction="ES")
-    fr_row = _impatriado_transaction("row-fr", amount=Decimal("40000.00"), source_jurisdiction="FR")
+    es_row = impatriado_transaction("row-es", amount=Decimal("40000.00"), source_jurisdiction="ES")
+    fr_row = impatriado_transaction("row-fr", amount=Decimal("40000.00"), source_jurisdiction="FR")
 
     admitted = aggregate_impatriado_income_ledger(
         TransactionCatalogue.from_transactions((es_row,)),
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -196,7 +146,7 @@ def test_foreign_source_row_is_segregated_and_excluded() -> None:
     segregated = aggregate_impatriado_income_ledger(
         TransactionCatalogue.from_transactions((fr_row,)),
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -220,13 +170,13 @@ def test_none_jurisdiction_fails_loud_never_silently_es() -> None:
     This is the load-bearing no-silent-under-declaration safeguard: an
     unresolved jurisdiction must NOT be coerced to ES and silently admitted.
     """
-    tx = _impatriado_transaction("unresolved-001", amount=Decimal("70000.00"), source_jurisdiction=None)
+    tx = impatriado_transaction("unresolved-001", amount=Decimal("70000.00"), source_jurisdiction=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
     result = aggregate_impatriado_income_ledger(
         catalogue,
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -250,7 +200,7 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
     income class the M130 actividad-económica pipeline routes OUT via
     TRABAJO_INCOME. This proves the two pipelines are complementary.
     """
-    nomina = _impatriado_transaction(
+    nomina = impatriado_transaction(
         "nomina-001",
         amount=Decimal("90000.00"),
         source_jurisdiction="ES",
@@ -261,7 +211,7 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
     m151 = aggregate_impatriado_income_ledger(
         catalogue,
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -274,9 +224,9 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
     m130 = aggregate_renta_m100_income_ledger(
         catalogue,
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=Modelo("100").value,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
     )
@@ -286,7 +236,7 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
 
 def test_outgoing_row_is_not_owned_by_the_impatriado_base_pipeline() -> None:
     """An OUTGOING row is out of scope for the base and produces neither obs nor issue."""
-    outgoing = _impatriado_transaction(
+    outgoing = impatriado_transaction(
         "out-001",
         amount=Decimal("500.00"),
         source_jurisdiction="ES",
@@ -295,7 +245,7 @@ def test_outgoing_row_is_not_owned_by_the_impatriado_base_pipeline() -> None:
     result = aggregate_impatriado_income_ledger(
         TransactionCatalogue.from_transactions((outgoing,)),
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -313,15 +263,15 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
     binding), aggregates a mixed ES/foreign catalogue, and asserts the binding
     value equals the ES-source total — segregated foreign income never reaches it.
     """
-    revision = _m151_revision_for(_ANNUAL_2024)
-    es_row = _impatriado_transaction("bind-es", amount=Decimal("120000.00"), source_jurisdiction="ES")
-    foreign_row = _impatriado_transaction("bind-de", amount=Decimal("55000.00"), source_jurisdiction="DE")
+    revision = _m151_revision_for(_ANNUAL)
+    es_row = impatriado_transaction("bind-es", amount=Decimal("120000.00"), source_jurisdiction="ES")
+    foreign_row = impatriado_transaction("bind-de", amount=Decimal("55000.00"), source_jurisdiction="DE")
     catalogue = TransactionCatalogue.from_transactions((es_row, foreign_row))
 
     aggregation = aggregate_impatriado_income_ledger(
         catalogue,
         bucket_id="test",
-        period=_ANNUAL_2024,
+        period=_ANNUAL,
         modelo=_M151_MODELO,
         target_casilla_id=_BASE_CASILLA,
         source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -340,14 +290,14 @@ def _mixed_and_business_binding_values() -> tuple[Decimal, Decimal]:
     :class:`~domain.transactions.Transaction` through the real aggregation and
     the real registry binding, so nothing under test is hand-built.
     """
-    revision = _m151_revision_for(_ANNUAL_2024)
+    revision = _m151_revision_for(_ANNUAL)
     binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
     resolved: list[Decimal] = []
     for classification, pct in (
         (BusinessClassification.BUSINESS, None),
         (BusinessClassification.MIXED, Decimal("0.5")),
     ):
-        row = _impatriado_transaction(
+        row = impatriado_transaction(
             "affectation-row",
             # 2000 base + 420 IVA on one Spanish-source activity receipt.
             amount=Decimal("2420.00"),
@@ -361,7 +311,7 @@ def _mixed_and_business_binding_values() -> tuple[Decimal, Decimal]:
         aggregation = aggregate_impatriado_income_ledger(
             TransactionCatalogue.from_transactions((row,)),
             bucket_id="test",
-            period=_ANNUAL_2024,
+            period=_ANNUAL,
             modelo=_M151_MODELO,
             target_casilla_id=_BASE_CASILLA,
             source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -398,7 +348,7 @@ def test_partial_affectation_never_divides_the_impatriado_base() -> None:
 
 def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> None:
     """The build-time validator accepts the shipped binding and rejects an off-target one."""
-    revision = _m151_revision_for(_ANNUAL_2024)
+    revision = _m151_revision_for(_ANNUAL)
     binding = next(b for b in revision.bindings if b.id == "modelo-151-impatriado-base-liquidable-general")
     # Shipped binding validates.
     validate_ledger_impatriado_income_aggregation_binding_definition(binding)

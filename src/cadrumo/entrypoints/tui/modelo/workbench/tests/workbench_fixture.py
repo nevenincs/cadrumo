@@ -10,6 +10,7 @@ test can prove the screen read off the event loop exactly as often as it should.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
@@ -18,11 +19,26 @@ from ......application.modelo.calculation_report import CalculationReportRowRole
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form import build_modelo_work_form
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection, ModeloFormYearProjection
+from ......application.modelo.work_form_export_offer import (
+    ModeloExportRequestField,
+    ModeloFormElection,
+    ModeloFormElectionChoice,
+    ModeloFormElectionQuestion,
+)
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBinding,
     ModeloFormCasillaAddressV1,
-    ModeloFormCounts,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from ......application.modelo.work_form_header import ModeloFormResultState, ModeloFormResultView
+from ......application.modelo.work_form_models import (
+    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -30,25 +46,35 @@ from ......application.modelo.work_form_models import (
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
-from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
-from ......application.modelo.work_review import ModeloWorkProgress
+from ......application.modelo.work_form_outline import form_outline
+from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot, modelo_work_form_load
+from ......application.modelo.work_review import (
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    ModeloWorkReviewCasilla,
+    build_modelo_work_review_casillas,
+)
 from ......core.aggregation import BindingSourceKind
-from ......core.casilla_id import CasillaId
+from ......core.authority_grade import RegistryAuthorityGrade
+from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.errors.hierarchy import CadrumoError
 from ......core.external_constants import OutputLanguage
 from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
+from ......domain.calculations.registry.schema_references import TemporalProjectionDirection
+from ......domain.modelos.calculation_revision import CalculationRevisionState
+from ......domain.modelos.codes import ModeloCode
+from ......domain.modelos.verification_report import ModeloVerificationFinding
 from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
-from ..header import ResultView, StatusLine
+from ..header import HeaderResult, StatusLine
 from ..ports import (
     WorkbenchCalculationEvidence,
     WorkbenchChange,
@@ -59,6 +85,7 @@ from ..ports import (
     WorkbenchPreflight,
     WorkbenchRefused,
 )
+from ..progress import WorkbenchProgress, workbench_progress
 
 if TYPE_CHECKING:
     from ......application.modelo.export_projection import ModeloExportPublicResultV3
@@ -66,7 +93,7 @@ if TYPE_CHECKING:
     from ....operations.controller_port import OperationControllerPort
 
 
-def _text(text: str) -> ModeloFormText:
+def form_text(text: str) -> ModeloFormText:
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
@@ -90,7 +117,7 @@ def form_field(
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=box),
         box=box,
-        label=_text(label),
+        label=form_text(label),
         help=help_text,
         data_type="money",
         value=value,
@@ -102,7 +129,7 @@ def form_field(
     )
 
 
-def _counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
+def form_counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
     def count(origin: ModeloFormOrigin) -> int:
         return sum(1 for item in fields if item.origin is origin)
 
@@ -116,13 +143,98 @@ def _counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
         default_to_confirm=count(ModeloFormOrigin.DEFAULT_TO_CONFIRM),
         not_applicable=count(ModeloFormOrigin.NOT_APPLICABLE),
         blocked=sum(1 for item in fields if item.blockers),
+        needs_you=sum(1 for item in fields if item.standing is ModeloFormStanding.NEEDS_YOU),
+        could_not_calculate=count(ModeloFormOrigin.CALCULATION_FAILED),
     )
 
 
-def _section(section_id: str, heading: str, fields: list[ModeloFormField]) -> ModeloFormSection:
+def form_section(section_id: str, heading: str, fields: list[ModeloFormField]) -> ModeloFormSection:
     blocks = tuple(ModeloFormFieldBlock(id=f"f{item.box}", field=item) for item in fields)
     return ModeloFormSection(
-        id=section_id, heading=_text(heading), official_heading=None, blocks=blocks, counts=_counts(fields)
+        id=section_id,
+        heading=form_text(heading),
+        official_heading=None,
+        blocks=blocks,
+        counts=form_counts(fields),
+        applies=True,
+    )
+
+
+def registry_form_of(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    year: int,
+    code: str,
+    bucket_id: str,
+    work_unit_id: str,
+    findings: tuple[ModeloVerificationFinding, ...] = (),
+    lifecycle_state: CalculationRevisionState | None = None,
+    hold: Callable[[RegistrySnapshot, tuple[ModeloWorkReviewCasilla, ...]], tuple[ModeloWorkReviewCasilla, ...]]
+    | None = None,
+) -> ModeloWorkForm:
+    """Build the form of one real published registry revision with no work calculated yet.
+
+    ``hold`` may rewrite the review rows from the snapshot, so a caller can make chosen casillas hold a figure.
+    """
+    period = Period.from_year_and_code(year, code)
+    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
+    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
+    review = ModeloWorkReview(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=None,
+        lifecycle_state=lifecycle_state,
+        verification_outcome=None,
+        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+        casillas=rows if hold is None else hold(snapshot, rows),
+        findings=findings,
+        blockers=(),
+    )
+    return build_modelo_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=operation.form_layout(modelo, snapshot.revision.id),
+        revision=None,
+        permitted_surface=None,
+        entered_casilla_ids=None,
+        overridden_binding_ids=None,
+        language=OutputLanguage.EN,
+    )
+
+
+def registry_form(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    year: int,
+    code: str,
+    findings: tuple[ModeloVerificationFinding, ...],
+) -> ModeloWorkForm:
+    """Build the form of one real published registry revision, carrying ``findings`` and no work yet."""
+    return registry_form_of(
+        operation,
+        modelo=modelo,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000349",
+        work_unit_id="e" * 64,
+        findings=findings,
+    )
+
+
+def authored_year_projection(period: Period) -> ModeloFormYearProjection:
+    """Return the projection of a synthetic form whose edition authors its own filing year."""
+    return ModeloFormYearProjection(
+        direction=TemporalProjectionDirection.AUTHORED,
+        authored_filing_year=period.filing_year,
+        reachable_grade=RegistryAuthorityGrade.FILING,
+        reachable_grade_words="Synthetic filing grade words",
     )
 
 
@@ -184,14 +296,14 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
     grid = ModeloFormGridBlock(
         id="grid",
         columns=(
-            ModeloFormGridColumn(key="base", heading=_text("Base imponible")),
-            ModeloFormGridColumn(key="tipo", heading=_text("Tipo %")),
-            ModeloFormGridColumn(key="cuota", heading=_text("Cuota")),
+            ModeloFormGridColumn(key="base", heading=form_text("Base imponible")),
+            ModeloFormGridColumn(key="tipo", heading=form_text("Tipo %")),
+            ModeloFormGridColumn(key="cuota", heading=form_text("Cuota")),
         ),
         rows=(
             ModeloFormGridRow(
                 key="r21",
-                heading=_text("Régimen general 21 %"),
+                heading=form_text("Régimen general 21 %"),
                 cells=(
                     ModeloFormGridCell(kind=FormCellKind.CASILLA, field=base),
                     ModeloFormGridCell(kind=FormCellKind.DESIGN_CONSTANT, literal="21,00"),
@@ -200,49 +312,101 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
             ),
         ),
     )
-    first_section = _section("p1.s1", "I. Actividades económicas", [income, expenses, net])
+    first_section = form_section("p1.s1", "I. Actividades económicas", [income, expenses, net])
     grid_section = ModeloFormSection(
-        id="p1.s2", heading=_text("IVA devengado"), official_heading=None, blocks=(grid,), counts=_counts([base, quota])
+        id="p1.s2",
+        heading=form_text("IVA devengado"),
+        official_heading=None,
+        blocks=(grid,),
+        counts=form_counts([base, quota]),
+        applies=True,
     )
-    second_section = _section("p2.s1", "III. Total liquidación", [withholding, result])
+    second_section = form_section("p2.s1", "III. Total liquidación", [withholding, result])
     pages = (
         ModeloFormPage(
             id="p1",
-            heading=_text("Liquidación"),
+            heading=form_text("Liquidación"),
             official_ref="DR13001",
             condition=FormPageCondition.ALWAYS,
             applies=True,
             sections=(first_section, grid_section),
-            counts=_counts([income, expenses, net, base, quota]),
+            counts=form_counts([income, expenses, net, base, quota]),
         ),
         ModeloFormPage(
             id="p2",
-            heading=_text("Resultado"),
+            heading=form_text("Resultado"),
             official_ref="DR13002",
             condition=FormPageCondition.ALWAYS,
             applies=True,
             sections=(second_section,),
-            counts=_counts([withholding, result]),
+            counts=form_counts([withholding, result]),
         ),
     )
     every = [income, expenses, net, base, quota, withholding, result, working]
+    period = Period.from_year_and_code(2026, "1T")
     return ModeloWorkForm(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=period.filing_year,
+        period=period,
         registry_revision_id="2019-y-siguientes",
+        year_projection=authored_year_projection(period),
         work_unit_id="a" * 64,
         calculation_revision_id=("b" * 64) if calculated else None,
         language=OutputLanguage.ES,
         layout_provenance=ModeloFormLayoutProvenance.GENERATED,
         pages=pages,
+        outline=form_outline((), pages, OutputLanguage.ES, filed=False, working_figures=(working,)),
         working_figures=(working,),
         result_addresses=("19",),
-        counts=_counts(every),
+        counts=form_counts(every),
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
         operator_entries_known=True,
         edit_admitted=True,
     )
+
+
+def with_pages(form: ModeloWorkForm, pages: tuple[ModeloFormPage, ...], **update: object) -> ModeloWorkForm:
+    """The form showing ``pages`` instead, its outline grouping their sections page by page."""
+    paged = form.model_copy(update={**update, "pages": pages})
+    outline = form_outline(
+        (), pages, form.language, filed=False, unplaced=paged.unplaced, working_figures=paged.working_figures
+    )
+    return paged.model_copy(update={"outline": outline})
+
+
+def served_elections() -> tuple[ModeloFormElectionQuestion, ...]:
+    """The three settlement questions a read serves, each answerable and at its neutral default; the words are synthetic."""
+
+    def question(
+        election: ModeloFormElection, request_field: ModeloExportRequestField, default: str, *others: str
+    ) -> ModeloFormElectionQuestion:
+        return ModeloFormElectionQuestion(
+            election=election,
+            request_field=request_field,
+            words=f"Synthetic question {election.value}",
+            default=default,
+            choices=tuple(
+                ModeloFormElectionChoice(value=value, words=f"Synthetic answer {value}") for value in (default, *others)
+            ),
+        )
+
+    return (
+        question(ModeloFormElection.REFUND, "refund_election", "compensar", "devolver"),
+        question(ModeloFormElection.PAYMENT, "payment_election", "ingreso", "domiciliacion", "cuenta_corriente"),
+        question(ModeloFormElection.PRIOR_DOMICILIATION, "prior_domiciliation_election", "keep", "cancel_or_modify"),
+    )
+
+
+def served_load(form: ModeloWorkForm, *, verified: bool = False, filed: bool = False) -> ModeloWorkFormLoadV1:
+    """The load the application serves for ``form``, with the journey it places the declaration on."""
+    return modelo_work_form_load(form, verified=verified, filed=filed)
+
+
+def served_progress(
+    form: ModeloWorkForm, *, staged: int = 0, verified: bool = False, filed: bool = False
+) -> WorkbenchProgress:
+    """The progress the workbench draws for ``form``, from the journey the application serves with it."""
+    return workbench_progress(served_load(form, verified=verified, filed=filed), staged=staged)
 
 
 @dataclass
@@ -259,7 +423,7 @@ class FakeReader:
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         """Return the fixed form."""
         self.loads += 1
-        return ModeloWorkFormLoadV1(form=self.form, verified=self.verified, filed=self.filed)
+        return modelo_work_form_load(self.form, verified=self.verified, filed=self.filed)
 
     def help_card(self, casilla_id: CasillaId, language: OutputLanguage) -> ModeloCasillaHelpCardV1:
         """Return a card whose formula names the casilla, and record the request."""
@@ -281,7 +445,17 @@ class FakeReader:
 
 def status_line_of(text: str) -> StatusLine:
     """The header's result line saying ``text``, with no chip, as a dialog repeats it."""
-    return StatusLine(ResultView(text=text, short_text=text, stale=None, failed=False, help=()), chips=())
+    served = ModeloFormResultView(
+        state=ModeloFormResultState.STATED,
+        casilla_id=validated_casilla_id("19"),
+        box=None,
+        settles=False,
+        direction=ModeloFormResultDirection.UNKNOWN,
+        text=text,
+        short_text=text,
+        brief_text=text,
+    )
+    return StatusLine(HeaderResult(served, None), chips=())
 
 
 @dataclass
@@ -353,7 +527,11 @@ class FakeActions:
 
     def export_offer(self) -> WorkbenchExportOffer:
         """Offer the filing file, and the payment elections when the test asks for them."""
-        return WorkbenchExportOffer(artefacts=self.export_artefacts, asks_elections=self.asks_elections)
+        return WorkbenchExportOffer(
+            artefacts=self.export_artefacts,
+            asks_elections=self.asks_elections,
+            elections=served_elections() if self.asks_elections else (),
+        )
 
     async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Record an export request."""

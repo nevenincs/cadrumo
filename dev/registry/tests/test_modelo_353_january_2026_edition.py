@@ -18,21 +18,22 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import (
     revision_temporal_resolution,
     select_revision,
     select_revision_for_year,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_OUTGOING = "2021-hasta-2026-01"
-_INCOMING = "2026-desde-02"
+_OUTGOING, _INCOMING = (str(revision.id) for revision in authored_revisions("353"))
 _MONTHS = {"enero": 1, "febrero": 2, "marzo": 3}
 _JANUARY = "01"
 

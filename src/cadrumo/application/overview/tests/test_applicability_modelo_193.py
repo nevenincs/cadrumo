@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 
@@ -13,15 +15,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         pays_capital_income_with_retencion=True,
     )
 
-    quarterly = derive_modelo_applicability(profile, "123")
-    annual = derive_modelo_applicability(profile, "193")
+    quarterly = derive_modelo_applicability(profile, "123", reference_date=latest_period_end())
+    annual = derive_modelo_applicability(profile, "193", reference_date=latest_period_end())
 
     assert quarterly.verdict is ApplicabilityVerdict.APPLICABLE
     assert annual.verdict is ApplicabilityVerdict.APPLICABLE
@@ -38,12 +40,12 @@ def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
 
 def test_modelo_193_is_incomplete_when_capital_income_payer_fact_is_undeclared() -> None:
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
     )
 
-    result = derive_modelo_applicability(profile, "193")
+    result = derive_modelo_applicability(profile, "193", reference_date=latest_period_end())
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE

@@ -34,7 +34,7 @@ import pytest
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime
 
-from ._m210_snapshot_fixture import m210_snapshot
+from .m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
@@ -46,12 +46,11 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding as _build_lob_advisory
+from ..m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TIPO_RENTA = validated_casilla_id("tipo_renta", surface="test_m210_convenio_lob_advisory")
-_DEVENGO_DATE = date(2025, 12, 31)
 
 
 def _m210_convenio_lob_advisory_finding(
@@ -60,17 +59,17 @@ def _m210_convenio_lob_advisory_finding(
     input_values_by_casilla_id: Mapping[CasillaId, str],
 ) -> ModeloVerificationFinding | None:
     """Call the application advisory with the explicit test devengo coordinate."""
-    return _build_lob_advisory(
+    return m210_convenio_lob_advisory_finding(
         snapshot,
         profile,
         input_values_by_casilla_id,
-        devengo_date=_DEVENGO_DATE,
+        devengo_date=date(snapshot.filing_year, 12, 31),
     )
 
 
 def _irnr_profile(country_code: str) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
@@ -81,7 +80,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
 
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )

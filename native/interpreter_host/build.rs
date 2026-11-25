@@ -1,4 +1,4 @@
-//! Compile the Windows interpreter host into this crate, so the Cadrumo binary runs a
+//! Compile the platform's interpreter host into this crate, so the Cadrumo binary runs a
 //! console entrypoint role in its own process instead of starting a separate host image.
 //!
 //! The source and compile policy are the ones the standalone hosts use; the generated
@@ -12,7 +12,8 @@ use std::{env, path::PathBuf};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    if env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
+    let windows = env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows");
+    if !windows && env::var("CARGO_CFG_TARGET_FAMILY").as_deref() != Ok("unix") {
         return;
     }
     let contract = PathBuf::from(
@@ -29,7 +30,8 @@ fn main() {
         .expect("the crate sits in the native directory")
         .to_path_buf();
     let interpreter = native.join("interpreter");
-    let source = interpreter.join("windows").join("host.c");
+    let host = interpreter.join(if windows { "windows" } else { "posix" });
+    let source = host.join("host.c");
     for input in [
         source.clone(),
         interpreter.join("launch_guard.h"),
@@ -42,14 +44,15 @@ fn main() {
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("Cargo sets OUT_DIR"));
     std::fs::write(out_dir.join("build_metadata.h"), identity_header())
         .expect("write the linking image's build identity header");
-    cc::Build::new()
+    let mut build = cc::Build::new();
+    build
         .file(&source)
         .include(&out_dir)
         .include(&generated)
         .include(native.join("platform").join("include"))
         .include(native.join("launch_guard").join("include"))
         .include(&interpreter)
-        .include(interpreter.join("windows"))
+        .include(&host)
         .define("CADRUMO_LINKED_HOST", None)
         // Cargo's profile directory is the build type, as the CMake configuration is for the C hosts.
         .define(
@@ -60,14 +63,24 @@ fn main() {
                 "0"
             },
         )
-        .define("WINVER", "0x0A00")
-        .define("_WIN32_WINNT", "0x0A00")
         .std("c17")
-        .flag("/W4")
-        .flag("/sdl")
-        .flag("/guard:cf")
-        .warnings_into_errors(true)
-        .compile("cadrumo_interpreter_host");
+        .warnings_into_errors(true);
+    // The compile policy the standalone hosts take from CompilePolicy.cmake.
+    if windows {
+        build
+            .define("WINVER", "0x0A00")
+            .define("_WIN32_WINNT", "0x0A00")
+            .flag("/W4")
+            .flag("/sdl")
+            .flag("/guard:cf");
+    } else {
+        build
+            .flag("-Wall")
+            .flag("-Wextra")
+            .flag("-Wformat=2")
+            .flag("-fstack-protector-strong");
+    }
+    build.compile("cadrumo_interpreter_host");
 }
 
 fn projected(name: &str) -> String {

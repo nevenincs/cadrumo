@@ -23,9 +23,11 @@ from .....adapters.outbound.storage.mirror_manifest import (
 from .....adapters.outbound.storage.records import RemoteMirrorNamespaceManifest
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.path_obstruction import obstructed_path
-from ..mirror_push import AdmittedMirrorStorageProvider
-from ..mirror_push import push_secure_object_mirror_rows as _push_secure_object_mirror_rows
+from ..mirror_push import AdmittedMirrorStorageProvider, push_secure_object_mirror_rows
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -56,13 +58,13 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
                 object_key=f"natural-key-{namespace_key}",
                 classification=namespace_definition.sensitivity,
                 schema_version=1,
-                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
                 payload=plaintext,
             )
         raw_rows = tuple(repository.iter_all_records_raw())
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -109,7 +111,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
             object_key="natural-key",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"partial-upload-plaintext",
         )
         raw_row = _row_in(repository, namespace)
@@ -125,7 +127,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         put_remote_mirror_namespace_manifest(provider, remote_manifest)
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -151,7 +153,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
             object_key="natural-key",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"partial-download-plaintext",
         )
         raw_row = _row_in(repository, namespace)
@@ -159,7 +161,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         put_remote_mirror_namespace_manifest(provider, manifest)
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -185,7 +187,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
             object_key="natural-key",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"first-stale-plaintext",
         )
         first_raw_row = _row_in(repository, namespace)
@@ -206,12 +208,12 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
             object_key="natural-key",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 1, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 1, tzinfo=UTC),
             payload=b"second-stale-plaintext",
         )
         latest_raw_row = _row_in(repository, namespace)
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -240,7 +242,7 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
             object_key="natural-key",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"local-conflict-plaintext",
         )
         raw_row = _row_in(repository, namespace)
@@ -271,7 +273,7 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
         )
         put_remote_mirror_namespace_manifest(provider, remote_manifest)
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -343,7 +345,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
             object_key="natural-key",
             classification=tampered_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"tampered-lineage-plaintext",
         )
         clean_definition = lookup_namespace_definition("google_drive_config")
@@ -353,13 +355,13 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
             object_key="natural-key",
             classification=clean_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"untouched-sibling-plaintext",
         )
         _tamper_stored_column(repository, namespace=tampered_namespace, column="payload_hash", value="f" * 64)
 
         provider = LocalFileSystemProvider(tmp_path / "mirror")
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -412,7 +414,7 @@ def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tm
                 object_key=f"natural-key-{namespace_key}",
                 classification=namespace_definition.sensitivity,
                 schema_version=1,
-                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
                 payload=plaintext,
             )
         raw_rows = tuple(repository.iter_all_records_raw())
@@ -430,7 +432,7 @@ def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tm
 
         provider = AdmittedMirrorStorageProvider(provider_factory, before_handoff)
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=None,
@@ -502,7 +504,7 @@ def test_mirror_push_requires_a_complete_manifest_for_live_limits(tmp_path: Path
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="d2d31750-1392-4b93-b021-95b2cadcbba5") as profile:
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         with pytest.raises(OutboundStorageValidationError) as refused:
-            _push_secure_object_mirror_rows(
+            push_secure_object_mirror_rows(
                 provider=provider,
                 repository=profile.repository,
                 namespace_filter=None,
@@ -528,14 +530,14 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
                 object_key=f"natural-key-{namespace_key}",
                 classification=namespace_definition.sensitivity,
                 schema_version=1,
-                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
                 payload=plaintext,
             )
         target_namespace = lookup_namespace_definition("google_drive_config").namespace
         other_namespace = lookup_namespace_definition("google_oauth_token").namespace
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 
-        result = _push_secure_object_mirror_rows(
+        result = push_secure_object_mirror_rows(
             provider=provider,
             repository=repository,
             namespace_filter=target_namespace,
@@ -570,7 +572,7 @@ def test_google_sync_push_retains_objects_when_a_later_upload_fails(tmp_path: Pa
                 object_key=object_key,
                 classification=namespace_definition.sensitivity,
                 schema_version=1,
-                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                written_at=datetime(_FILING_YEAR, 5, 28, 12, 0, tzinfo=UTC),
                 payload=payload,
             )
         raw_rows = sorted(
@@ -602,7 +604,7 @@ def test_google_sync_push_retains_objects_when_a_later_upload_fails(tmp_path: Pa
         second_target = provider.root / namespace / f"{second_hmac[:8]}--{second_label}.bin"
 
         with obstructed_path(second_target):
-            result = _push_secure_object_mirror_rows(
+            result = push_secure_object_mirror_rows(
                 provider=provider,
                 repository=repository,
                 namespace_filter=None,

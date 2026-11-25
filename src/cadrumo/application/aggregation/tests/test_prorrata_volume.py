@@ -18,7 +18,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue
 from ..iva_ledger import aggregate_iva_ledger_observations
 from ..prorrata_volume import project_prorrata_declared_volume_rollup
-from .test_iva_cash_accounting import _transaction
+from .iva_cash_accounting_support import cash_accounting_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +28,7 @@ def test_cash_payment_fragments_never_duplicate_annual_output_volume(operation: 
         effective_date=date(2026, 1, 1),
         authority=operation,
     ).require("taxpayer_regime")
-    sale = _transaction(
+    sale = cash_accounting_transaction(
         "cash-sale",
         direction=TransactionDirection.INCOMING,
         booked_date=date(2026, 3, 10),

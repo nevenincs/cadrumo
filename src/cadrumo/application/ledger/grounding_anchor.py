@@ -77,7 +77,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
@@ -136,6 +136,10 @@ _NUMBER_CONTINUATION = frozenset("0123456789.,")
 #: Unit markers a document prints AFTER a rate. Stripped from the anchor before
 #: the decimal parse, exactly one, mirroring the reader-side rule.
 _TRAILING_UNIT_MARKERS = ("%", "percent", "pct")
+
+#: One printed figure inside a cited span: digits with their separators,
+#: starting and ending on a digit, and not running on into more of a number.
+_PRINTED_FIGURE = re.compile(r"(?<![0-9.,])[0-9](?:[0-9.,]*[0-9])?(?![0-9])")
 
 
 def strip_printed_unit(anchor: str, currency_unit: str | None = None) -> str:
@@ -517,14 +521,7 @@ def _evaluate_anchor_against(
 
     parsed = coerce_finite_european_decimal(strip_printed_unit(anchor, currency_unit))
     if parsed is None:
-        return AnchorEvaluation(
-            outcome=FieldGroundingOutcome.CONTRADICTED,
-            anchor_found=True,
-            detail=(
-                f"the anchor {anchor!r} occurs in the document but does not parse to a decimal "
-                f"under the extraction contract, so it cannot support the value {value}"
-            ),
-        )
+        return _evaluate_cited_span(value=value, anchor=anchor)
 
     if parsed != value:
         return AnchorEvaluation(
@@ -540,6 +537,63 @@ def _evaluate_anchor_against(
         parsed_anchor=parsed,
         parse_was_vacuous=normalise_for_anchor_search(str(value)) == needle,
         detail=f"anchored to {anchor!r}, which parses to {parsed}",
+    )
+
+
+def _evaluate_cited_span(*, value: Decimal, anchor: str) -> AnchorEvaluation:
+    """Judge a found anchor that is a printed SPAN rather than one figure.
+
+    Readers cite the line a figure is printed on -- ``Base imponible 766,30``,
+    ``TOTAL 890,00 EUR`` -- and the span does not parse as a decimal because of
+    its words. That is not the document disagreeing with the value, so it must
+    not read as CONTRADICTED: a wrong verdict forecloses the review an absent
+    one prompts. The span is judged by the figures printed in it, each parsed
+    under the same extraction contract as a bare anchor.
+
+    One figure: the span is that figure's label, and the figure decides exactly
+    as a bare anchor would. Several figures, one of them the value: the span
+    carries the value but does not say which figure the reader took, so the
+    field stays unsettled with its anchor kept. No figure equal to the value:
+    the cited text does not support it, which is a contradiction.
+    """
+    figures = [
+        figure
+        for figure in (coerce_finite_european_decimal(token) for token in _PRINTED_FIGURE.findall(anchor))
+        if figure is not None
+    ]
+    if len(figures) == 1:
+        figure = figures[0]
+        if figure == value:
+            return AnchorEvaluation(
+                outcome=FieldGroundingOutcome.ANCHORED,
+                anchor_found=True,
+                parsed_anchor=figure,
+                detail=f"anchored to the one figure printed in {anchor!r}, which parses to {figure}",
+            )
+        return AnchorEvaluation(
+            outcome=FieldGroundingOutcome.CONTRADICTED,
+            anchor_found=True,
+            parsed_anchor=figure,
+            detail=(
+                f"the one figure printed in {anchor!r} parses to {figure}, which is not the proposed value {value}"
+            ),
+        )
+    if value in figures:
+        return AnchorEvaluation(
+            outcome=FieldGroundingOutcome.UNANCHORED,
+            anchor_found=True,
+            detail=(
+                f"the anchor {anchor!r} occurs in the document and prints {value} among several figures, "
+                f"so it does not say which figure the value was read from"
+            ),
+        )
+    return AnchorEvaluation(
+        outcome=FieldGroundingOutcome.CONTRADICTED,
+        anchor_found=True,
+        detail=(
+            f"the anchor {anchor!r} occurs in the document but no figure printed in it parses to "
+            f"the value {value} under the extraction contract, so it cannot support that value"
+        ),
     )
 
 
@@ -700,10 +754,25 @@ _STRUCTURED_ENVELOPE_FIELDS: Final = (
     "iva_amount",
     "grand_total",
     "recargo_amount",
+    "retencion_rate",
+    "retencion_amount",
     "regime_legend",
 )
 
 _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
+    "iva_rate": {
+        DocumentShape.XML_FACTURAE: "TaxesOutputs/Tax/TaxRate",
+        DocumentShape.XML_UBL: "cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+        DocumentShape.XML_CII: "ram:ApplicableHeaderTradeSettlement/ram:ApplicableTradeTax/ram:RateApplicablePercent",
+    },
+    "retencion_rate": {
+        DocumentShape.XML_FACTURAE: "TaxesWithheld/Tax/TaxRate",
+        DocumentShape.XML_UBL: "cac:WithholdingTaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+    },
+    "retencion_amount": {
+        DocumentShape.XML_FACTURAE: "TaxesWithheld/Tax/TaxAmount/TotalAmount",
+        DocumentShape.XML_UBL: "cac:WithholdingTaxTotal/cac:TaxSubtotal/cbc:TaxAmount",
+    },
     "supplier_postal_code": {
         DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/PostCode",
         DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",
@@ -776,6 +845,16 @@ def structured_provenance(
                 source_text=source_text,
             ),
         )
+    sole_rate = sole_stated_iva_rate(parsed.iva_breakdown)
+    if sole_rate is not None:
+        envelopes.append(
+            ground_structured_value(
+                field="iva_rate",
+                value=sole_rate,
+                element_path=_structured_element_path("iva_rate", record=parsed),
+                source_text=source_text,
+            ),
+        )
     for stated_field, resolved_field in _STATED_COUNTRY_FIELDS:
         stated = getattr(parsed, resolved_field, None)
         if stated is None or not stated.strip():
@@ -803,6 +882,28 @@ def structured_provenance(
             ),
         )
     return tuple(envelopes)
+
+
+def sole_stated_iva_rate(
+    iva_breakdown: Sequence[tuple[Decimal | None, Decimal | None, Decimal | None]],
+) -> Decimal | None:
+    """Return the one IVA rate a structured record's breakdown states, or ``None``.
+
+    The invoice-level rate exists only where one rate describes the whole
+    invoice. A record stating two rates has no single rate, and choosing one --
+    by size, by order -- would put part of the base under a rate it was not
+    charged at, so the scalar stays unset and the per-rate breakdown carries the
+    answer. A breakdown entry that states no rate leaves the answer open for the
+    same reason: the unstated part might be charged at another one.
+
+    Rates compare by value, so a record repeating ``21`` and ``21.00`` across two
+    tax subtotals still states one rate.
+    """
+    rates = [rate for rate, _base, _cuota in iva_breakdown]
+    first = rates[0] if rates else None
+    if first is None or any(rate != first for rate in rates):
+        return None
+    return first
 
 
 def resolved_country_code(

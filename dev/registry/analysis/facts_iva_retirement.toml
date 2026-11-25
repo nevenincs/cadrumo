@@ -3,7 +3,7 @@ classification = "governed_fact_provider_retirement"
 
 [[remaining_structured_tables]]
 data_path = "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
-row_count = 21
+row_count = 22
 classification = "needs_typed_schema_and_fact_migration"
 decision = "retain_until_lossless_replacement"
 reason = "Operative category rules carry per-citation quotation, grounding disposition, legal window, and exemption semantics. Existing scalar, mapping, and event facts cannot retain nested citation-level evidence or the unresolved domestic_zero refusal."
@@ -12,7 +12,7 @@ safe_next_scope = "Introduce a typed regulation fact family with citation-level 
 
 [[remaining_structured_tables]]
 data_path = "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml"
-row_count = 22
+row_count = 23
 classification = "needs_typed_schema_and_fact_migration"
 decision = "retain_until_lossless_replacement"
 reason = "Each classification-rule key carries a closed temporal legal basis, an establishing provision, optional supply nature, and a legal-basis-exempt sentinel. Existing generic facts cannot encode the row-level legal-reference ordering and exempt-versus-silent distinction."
@@ -67,7 +67,7 @@ destination_family = "dated_mapping"
 destination_id = "iva-recargo-by-applied-rate"
 delete_symbols = ["_load_recargo_rate_table_cached", "_hydrate_row", "_coerce_legal_refs", "_reject_overlapping_windows"]
 retain_symbols = ["RecargoRateRecord", "load_recargo_rate_table", "recargo_rate_for_applied_rate", "LivaArt161RecargoRates", "load_recargo_rates"]
-callers = ["src/cadrumo/domain/iva/recargo_equivalencia.py:recargo_rate_for_applied_rate", "src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py:_recargo_rate_divergence"]
+callers = ["src/cadrumo/domain/iva/recargo_equivalencia.py:recargo_rate_for_applied_rate", "src/cadrumo/application/aggregation/modelo_bindings_invoice_iva.py:_recargo_rate_divergence"]
 destination = "registered facts provider owns applied-rate/date selection, typed rows, overlap refusal, evidence, fingerprints and invalidation; public record and lookup remain provider projections until callers migrate"
 data_disposition = "normalize into src/cadrumo/_data/registry/aeat/facts then delete old TOML path"
 closure = "closed: authored provider resolves every pairing with provenance; aggregation caller uses authority or retained projection; raw parser, cache, registration, tests and recargo-rates.toml path are deleted"

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-04'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:91d7a0e3f2f1a8fcc7fa952a1601d27236ae51b1197a01a9a4e45e2fee03c066'
+body_hash: 'sha256:691bfeb319ecc050b9fc7e3a1eea3e46f370c021a028c407970a1c872eae7ed1'
 related:
   - '[[2026-10-02-duplication-remediation-audit]]'
-  - '[[2026-10-02-duplication-remediation-ledger]]'
-  - '[[2026-10-02-duplication-remediation-plan]]'
   - '[[2026-10-02-duplication-remediation-reference]]'
   - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
   - '[[2026-10-03-duplication-remediation-m200-stock-verification-adr]]'
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#duplication-remediation`.
 ### audit
 
 - `2026-10-02-duplication-remediation-audit` - `duplication-remediation` audit: `Duplication remediation integrated review`
-
-### exec
-
-- `2026-10-02-duplication-remediation-ledger` - `duplication-remediation` ledger
-
-### plan
-
-- `2026-10-02-duplication-remediation-plan` - `duplication-remediation` plan
 
 ### reference
 

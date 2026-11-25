@@ -39,6 +39,10 @@ modelo:
           gasto-importe-anual:
             label: Importe de gastos
           gastos-total-declarante:
+            help: Suma de los importes de gastos (posiciones 195 a 207) de los registros
+              de relación de gastos que declaras. Si consignas «S» en NATURALEZA DEL
+              DECLARANTE, escribe ceros y no incluyas registros de gastos (Orden HAC/56/2024,
+              registro de tipo 1, posiciones 220 a 234).
             label: Gastos deducibles (art. 26.1.a Ley 35/2006)
           payee-base-retenciones-193:
             label: Base de retenciones e ingresos a cuenta

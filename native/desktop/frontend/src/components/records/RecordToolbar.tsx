@@ -29,6 +29,7 @@ export function RecordToolbar({
   filters,
   defaultFilters,
   setFilters,
+  onLevelChange,
   filterInput,
   follow,
   onFollow,
@@ -42,6 +43,7 @@ export function RecordToolbar({
   filters: RecordFilters;
   defaultFilters: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
+  onLevelChange: (minLevel: number) => void;
   filterInput: RefObject<HTMLInputElement | null>;
   follow: boolean;
   onFollow: () => void;
@@ -69,7 +71,7 @@ export function RecordToolbar({
     filters.hiddenSources.length > 0 ||
     filters.minLevel !== defaultFilters.minLevel;
   return (
-    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 border-b bg-chrome py-1 pr-1.5 pl-3">
+    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 bg-chrome py-1 pr-1.5 pl-3">
       <div
         data-log-group="filters"
         className="flex min-w-40 flex-1 basis-field items-center gap-1 panel-short:basis-0"
@@ -135,12 +137,7 @@ export function RecordToolbar({
               <NativeSelect
                 aria-label={t("desktop.logs.minimum_level")}
                 value={filters.minLevel}
-                onChange={(event) =>
-                  setFilters({
-                    ...filters,
-                    minLevel: Number(event.target.value),
-                  })
-                }
+                onChange={(event) => onLevelChange(Number(event.target.value))}
               >
                 <option value={levelRank("DEBUG")}>
                   {t("desktop.logs.level_all")}
@@ -210,17 +207,17 @@ export function RecordToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
+                  icon="copy"
                   disabled={!visible.length}
                   onSelect={() => onCopy(recordsText(visible))}
                 >
-                  <Icon name="copy" />
                   {t("desktop.menu.copy_visible")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  icon="copyAll"
                   disabled={!all.length}
                   onSelect={() => onCopy(recordsText(all))}
                 >
-                  <Icon name="copyAll" />
                   {t("desktop.logs.copy_all")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -241,17 +238,17 @@ export function RecordToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
+                  icon="download"
                   disabled={!visible.length}
                   onSelect={() => onExport(recordsText(visible))}
                 >
-                  <Icon name="download" />
                   {t("desktop.logs.export_visible")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  icon="downloadAll"
                   disabled={!all.length}
                   onSelect={() => onExport(recordsText(all))}
                 >
-                  <Icon name="downloadAll" />
                   {t("desktop.logs.export_all")}
                 </DropdownMenuItem>
               </DropdownMenuContent>

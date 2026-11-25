@@ -1,0 +1,265 @@
+# The Modelo 100 casilla each Modelo 345 clave and subclave reaches, for the
+# reduction for contributions to social-welfare systems (LIRPF arts. 51 and 52).
+#
+# No official text maps a Modelo 345 clave to a Modelo 100 casilla. A row places
+# a casilla only where the subclave wording of the Modelo 345 design for the
+# ejercicio (Orden HFP/823/2022, anexo, which is the ejercicio-2022 design) and
+# the casilla wording of the Modelo 100 dictionary name the same instrument and
+# payer; both texts are quoted. A pair that fits a casilla only by analogy is
+# declared indirect_match, and a pair no text places is declared unplaced_clave:
+# both reach no casilla and the operator enters the box. Line locators are to
+# orden-hfp-823-2022.html.extracted.md (design) and to the 2022 dictionary
+# 06-100-diccionario-declaracion-individual-ejercicio-2022 (casillas).
+#
+# Clave J subclave 01 reaches 0426 when the employer contributed to the same
+# plan de prevision social empresarial (0426 names that plan and that condition)
+# and 0465 otherwise, so it takes one row per answer.
+
+# Design :365; dictionary :738 (0465 RGAP).
+[[revisions."2022".prevision_social_placements]]
+id = "a-01"
+clave = "A"
+subclave = "01"
+casilla_id = "0465"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones de los partícipes a planes de pensiones de cualquier modalidad, que no sean los referidos en la subclave 02"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0465][Aportaciones del trabajador, salvo las consignadas en [0438] y [0426]]"] }
+
+# Design :366; dictionary :740 (0426 RGATEM).
+[[revisions."2022".prevision_social_placements]]
+id = "a-02"
+clave = "A"
+subclave = "02"
+casilla_id = "0426"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones de los trabajadores, al mismo plan de pensiones del sistema de empleo, al que la empresa realiza las contribuciones con carácter general"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0426][Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión social o plan de previsión social empresarial, siempre que se hayan efectuado contribuciones empresariales]"] }
+
+# Design :332. Clave B takes no subclave, so its imputed and non-imputable
+# contributions cannot be told apart; 0427 fits the imputed part only by analogy.
+[[revisions."2022".prevision_social_placements]]
+id = "b"
+clave = "B"
+refusal = "indirect_match"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["Contribuciones de los promotores. Se relacionarán con esta clave las contribuciones que los promotores, en los planes de empleo, hayan efectuado y se imputen fiscalmente a los partícipes"] }
+
+# Design :368; dictionary :741 (0427 RGCONT).
+[[revisions."2022".prevision_social_placements]]
+id = "c-01"
+clave = "C"
+subclave = "01"
+casilla_id = "0427"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones de los promotores de Planes de Pensiones del sistema de empleo que sean fiscalmente deducibles en sus impuestos personales y se imputen fiscalmente a los partícipes"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0427][Contribuciones empresariales a sistemas de previsión social, excepto las realizadas a seguros colectivos de dependencia y las aportaciones de empresarios individuales a sistemas de previsión social]"] }
+
+# Design :369; dictionary :742 (0499 RGAPEI).
+[[revisions."2022".prevision_social_placements]]
+id = "c-02"
+clave = "C"
+subclave = "02"
+casilla_id = "0499"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones propias que el empresario individual realice a planes de pensiones de empleo de los que, a su vez, sea promotor y, además partícipe"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0499][Aportaciones de empresarios individuales a planes de pensiones de empleo o a mutualidades de previsión social, de los que sea promotor y además partícipe o mutualista"] }
+
+# Design :370; dictionary :739 (0438 RGEDT).
+[[revisions."2022".prevision_social_placements]]
+id = "c-03"
+clave = "C"
+subclave = "03"
+casilla_id = "0438"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones al plan de pensiones del sistema de empleo que deriven de una decisión del trabajador y que constituyan retribuciones en especie para el mismo"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0438][Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador]"] }
+
+# Design :371. Not imputable to the participant; no casilla text names it.
+[[revisions."2022".prevision_social_placements]]
+id = "c-04"
+clave = "C"
+subclave = "04"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones empresariales, no imputables fiscalmente a los partícipes o beneficiarios, realizadas excepcionalmente"] }
+
+# Design :374. Not imputed to the workers; no reduction casilla.
+[[revisions."2022".prevision_social_placements]]
+id = "d-01"
+clave = "D"
+subclave = "01"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones empresariales a sistemas alternativos que no sean deducibles en el impuesto personal del promotor y que no se hayan imputado fiscalmente a los trabajadores"] }
+
+# Design :375. Not imputable to the workers; no reduction casilla.
+[[revisions."2022".prevision_social_placements]]
+id = "d-02"
+clave = "D"
+subclave = "02"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones empresariales a contratos de seguro, no imputables fiscalmente a los trabajadores"] }
+
+# Design :376. Not imputable to the beneficiaries; no reduction casilla.
+[[revisions."2022".prevision_social_placements]]
+id = "d-03"
+clave = "D"
+subclave = "03"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones empresariales, no imputables fiscalmente a los beneficiarios, para la exteriorización de compromisos por pensiones ya asumidos"] }
+
+# Design :378; dictionary :742 (0499 RGAPEI, mutualidades de las que sea promotor y mutualista).
+[[revisions."2022".prevision_social_placements]]
+id = "e-01"
+clave = "E"
+subclave = "01"
+casilla_id = "0499"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones propias que el empresario individual realice a la Mutualidad de Previsión Social, de la que, a su vez, sea promotor y además mutualista"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0499][Aportaciones de empresarios individuales a planes de pensiones de empleo o a mutualidades de previsión social, de los que sea promotor y además partícipe o mutualista"] }
+
+# Design :379. Mixed payers (professionals, spouses, relatives, the mutualidad's
+# workers); no text splits them across casillas.
+[[revisions."2022".prevision_social_placements]]
+id = "e-02"
+clave = "E"
+subclave = "02"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["cantidades abonadas por profesionales o empresarios individuales que puedan dar derecho a reducción, que no sean los referidos en la subclave 01"] }
+
+# Design :381; dictionary :738 (0465 RGAP).
+[[revisions."2022".prevision_social_placements]]
+id = "f-01"
+clave = "F"
+subclave = "01"
+casilla_id = "0465"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["cantidades abonadas a Mutualidades de Previsión Social, que actúen como sistemas alternativos de previsión social a Planes de Pensiones por trabajadores por cuenta ajena o socios trabajadores"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0465][Aportaciones del trabajador, salvo las consignadas en [0438] y [0426]]"] }
+
+# Design :382; dictionary :740 (0426 RGATEM).
+[[revisions."2022".prevision_social_placements]]
+id = "f-02"
+clave = "F"
+subclave = "02"
+casilla_id = "0426"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones de los trabajadores a la misma Mutualidad de Previsión Social a la que la empresa realiza las contribuciones con carácter general"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0426][Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión social o plan de previsión social empresarial, siempre que se hayan efectuado contribuciones empresariales]"] }
+
+# Design :384; dictionary :741 (0427 RGCONT).
+[[revisions."2022".prevision_social_placements]]
+id = "g-01"
+clave = "G"
+subclave = "01"
+casilla_id = "0427"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["cantidades abonadas por el promotor que le hubiesen sido imputadas fiscalmente al trabajador en concepto de rendimientos del trabajo con derecho a reducción"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0427][Contribuciones empresariales a sistemas de previsión social, excepto las realizadas a seguros colectivos de dependencia y las aportaciones de empresarios individuales a sistemas de previsión social]"] }
+
+# Design :385; dictionary :739 (0438 RGEDT).
+[[revisions."2022".prevision_social_placements]]
+id = "g-02"
+clave = "G"
+subclave = "02"
+casilla_id = "0438"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["cantidades abonadas por el promotor que deriven de una decisión del trabajador y que constituyan retribuciones en especie para el mismo"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0438][Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador]"] }
+
+# Design :346. No casilla text names planes de prevision asegurados; 0465 fits
+# only by analogy with the worker's own contributions.
+[[revisions."2022".prevision_social_placements]]
+id = "h"
+clave = "H"
+refusal = "indirect_match"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["Se relacionarán en esta clave las primas satisfechas a planes de previsión asegurados"] }
+
+# Design :387. Planes individuales de ahorro sistemático give no reduction.
+[[revisions."2022".prevision_social_placements]]
+id = "i-01"
+clave = "I"
+subclave = "01"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones satisfechas por los tomadores a los planes de ahorro sistemático a que se refiere la disposición adicional tercera"] }
+
+# Design :388. As I.01.
+[[revisions."2022".prevision_social_placements]]
+id = "i-02"
+clave = "I"
+subclave = "02"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones satisfechas por los tomadores a los contratos de seguros que se transformen en planes de ahorro sistemático"] }
+
+# Design :390; dictionary :738 (0465 RGAP) when the employer did not contribute
+# to the same plan de prevision social empresarial.
+[[revisions."2022".prevision_social_placements]]
+id = "j-01-no-employer-same-plan"
+clave = "J"
+subclave = "01"
+employer_contributed_to_same_plan = false
+casilla_id = "0465"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones satisfechas por los asegurados de los planes de previsión social empresarial a que se refiere el artículo 51.4"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0465][Aportaciones del trabajador, salvo las consignadas en [0438] y [0426]]"] }
+
+# Design :390; dictionary :740 (0426 RGATEM names the plan de prevision social
+# empresarial and requires employer contributions).
+[[revisions."2022".prevision_social_placements]]
+id = "j-01-employer-same-plan"
+clave = "J"
+subclave = "01"
+employer_contributed_to_same_plan = true
+casilla_id = "0426"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones satisfechas por los asegurados de los planes de previsión social empresarial a que se refiere el artículo 51.4"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0426][Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión social o plan de previsión social empresarial, siempre que se hayan efectuado contribuciones empresariales]"] }
+
+# Design :391; dictionary :739 (0438 RGEDT).
+[[revisions."2022".prevision_social_placements]]
+id = "j-02"
+clave = "J"
+subclave = "02"
+casilla_id = "0438"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones realizadas por la empresa que deriven de una decisión del trabajador y que constituyan retribuciones en especie para el mismo"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0438][Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador]"] }
+
+# Design :392; dictionary :741 (0427 RGCONT).
+[[revisions."2022".prevision_social_placements]]
+id = "j-03"
+clave = "J"
+subclave = "03"
+casilla_id = "0427"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["contribuciones satisfechas por los tomadores a los planes de previsión social empresarial a que se refiere el artículo 51.4 de la Ley del Impuesto sobre la Renta de las Personas Físicas, que se imputen fiscalmente a los partícipes"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0427][Contribuciones empresariales a sistemas de previsión social, excepto las realizadas a seguros colectivos de dependencia y las aportaciones de empresarios individuales a sistemas de previsión social]"] }
+
+# Design :393; dictionary :742 (0499 RGAPEI, planes de prevision social
+# empresarial de los que sea tomador y asegurado).
+[[revisions."2022".prevision_social_placements]]
+id = "j-04"
+clave = "J"
+subclave = "04"
+casilla_id = "0499"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones propias que el empresario individual realice a un plan de previsión social empresarial a que se refiere el artículo 51.4 de la Ley del Impuesto sobre la Renta de las Personas Físicas, de los que, a su vez, sea tomador y asegurado"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["o a planes de previsión social empresarial o seguros colectivos de dependencia de los que sea tomador y asegurado]"] }
+
+# Design :355. Private dependency insurance has its own limit and no casilla of
+# its own; 0465 fits only by analogy.
+[[revisions."2022".prevision_social_placements]]
+id = "k"
+clave = "K"
+refusal = "indirect_match"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["Primas satisfechas por los tomadores a los seguros privados que cubran exclusivamente el riesgo de dependencia severa o de gran dependencia"] }
+
+# Design :396; dictionary :743 (0466 SPPRIMA).
+[[revisions."2022".prevision_social_placements]]
+id = "l-01"
+clave = "L"
+subclave = "01"
+casilla_id = "0466"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["primas satisfechas por la empresa a seguros colectivos de dependencia a que se refiere el penúltimo párrafo del artículo 51.5"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["[0466][Contribuciones a seguros colectivos de dependencia]"] }
+
+# Design :397; dictionary :742 (0499 RGAPEI, seguros colectivos de dependencia
+# de los que sea tomador y asegurado).
+[[revisions."2022".prevision_social_placements]]
+id = "l-02"
+clave = "L"
+subclave = "02"
+casilla_id = "0499"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["aportaciones propias del empresario individual a seguros colectivos de dependencia de los que, a su vez, sea tomador y asegurado"] }
+casilla_citation = { source_ref = "aeat-dr-100-2022-dictionary", required_text = ["o a planes de previsión social empresarial o seguros colectivos de dependencia de los que sea tomador y asegurado]"] }
+
+# Design :398. Both 0466 (collective dependency insurance) and 0438 (employer,
+# worker's decision) fit; no text chooses.
+[[revisions."2022".prevision_social_placements]]
+id = "l-03"
+clave = "L"
+subclave = "03"
+refusal = "unplaced_clave"
+design_citation = { source_ref = "boe-modelo-345-base-order", required_text = ["primas satisfechas por la empresa que deriven de una decisión del trabajador"] }

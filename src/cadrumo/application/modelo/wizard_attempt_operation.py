@@ -37,14 +37,14 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
-from .metadata_projection import ModeloWorkMetadataSnapshot
-from .operation_definitions import (
+from .calculation_bucket_actions import refuse_blocked_ledger_preflight
+from .calculation_operation import (
     calculate_prepared_modelo_work,
-    calculation_public_result,
+    calculation_public_result_replacing,
     prepare_modelo_work_calculation,
-    replaced_calculation_head,
 )
-from .work_calculation_contracts import ModeloWorkCalculatePublicResultV2, ModeloWorkCalculateRequest
+from .metadata_projection import ModeloWorkMetadataSnapshot
+from .work_calculation_contracts import ModeloWorkCalculatePublicResultV3, ModeloWorkCalculateRequest
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .work_missing_input import ModeloWorkMissingInputError
@@ -77,7 +77,7 @@ class ModeloWorkWizardAttemptCalculated(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["calculated"] = "calculated"
-    result: ModeloWorkCalculatePublicResultV2
+    result: ModeloWorkCalculatePublicResultV3
 
 
 class ModeloWorkWizardAttemptNeedsInput(BaseModel):
@@ -162,6 +162,18 @@ class ModeloWorkWizardAttemptExecutor:
         if prepared.work_unit.bucket_id != str(payload.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
+        # A blocked ledger is a refusal with nothing written, so it is checked
+        # before publication declares that records may change. The calculation
+        # reads the profile this preflight checked rather than decrypting it again.
+        profile = await await_cancellation_complete(
+            asyncio.to_thread(
+                refuse_blocked_ledger_preflight,
+                prepared.work_unit.work_unit_id,
+                ports=prepared.ports,
+            ),
+            task_name="modelo-work-wizard-ledger-preflight",
+        )
+
         async def publish() -> str:
             async with context.cancellation.irreversible_section():
                 # Preparation inside the service may already write migrations or
@@ -172,6 +184,7 @@ class ModeloWorkWizardAttemptExecutor:
                         calculate_prepared_modelo_work,
                         prepared,
                         actor=actor,
+                        profile=profile,
                     )
                 except ModeloWorkMissingInputError as error:
                     missing_error = error
@@ -208,10 +221,11 @@ class ModeloWorkWizardAttemptExecutor:
                     if result.revision_published:
                         await context.events.effect(OperationEffect.UPDATED)
                     public_result = await asyncio.to_thread(
-                        calculation_public_result,
+                        calculation_public_result_replacing,
                         result,
+                        prepared=prepared,
+                        payload=payload.calculation,
                         operation=context.authority_operation,
-                        replaced_head=replaced_calculation_head(prepared, payload.calculation, result.work_unit),
                     )
                     projection = ModeloWorkWizardAttemptProjection(
                         profile_id=payload.profile_id,

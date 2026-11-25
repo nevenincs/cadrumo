@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock
 
@@ -81,7 +81,9 @@ def test_imports_include_northern_ireland_without_netting_french_refund(revision
 
 @pytest.mark.parametrize("country", ["US", "GB", "xi", "", None])
 def test_invalid_import_country_cannot_disappear_from_total(revision, country):
-    with pytest.raises(RegistryValidationError):
+    # A malformed country is refused; a missing one is an unknown fact, so the total stays unresolved.
+    expected = UnresolvedFormulaDependencyError if country is None else RegistryValidationError
+    with pytest.raises(expected):
         _scenario(revision, country=country)
 
 

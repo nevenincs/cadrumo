@@ -55,7 +55,7 @@ def _stage_retired_custody_member(*, bucket_id: str) -> None:
     Writing a stub is therefore more truthful than reconstructing a schema that
     nothing reads any more.
     """
-    root = load_settings().cadrumo_local_storage_root
+    root = load_settings().cadrumo_storage_root
     assert root is not None
     paths = provision_bucket_directory(root, bucket_id)
     (paths.bucket_dir / "manifest.toml").write_text(
@@ -97,7 +97,6 @@ def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None
         "--to",
         "2026-03-31",
         "--all-profiles",
-        "--allow-incomplete",
     )
     # Admit the fixture's runtime while custody is valid, so the later refusal
     # crosses the command boundary rather than the fixture's initial join.

@@ -14,6 +14,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.tests.process_support import runtime_namespace_base
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import SessionRequest
@@ -21,7 +22,6 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
 
-from .process_support import runtime_namespace_base
 from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
@@ -82,10 +82,16 @@ def test_connection_identity_and_disconnect_are_independent(server) -> None:
             "sign_in",
             "request_faults",
             "holder_operation_id",
+            "recovery_remaining_seconds",
+            "effect",
+            "operation_id",
         }
         assert again.sign_in is None
         assert again.request_faults == ()
         assert again.holder_operation_id is None
+        assert again.recovery_remaining_seconds is None
+        assert again.effect is None
+        assert again.operation_id is None
     finally:
         first.close()
         second.close()

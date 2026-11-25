@@ -45,7 +45,7 @@ _EXPECTED_MANIFEST: dict[str, object] = {
     "modelo": {
         "id": "036",
         "tax_domain": "censo",
-        "cadence": "ad_hoc",
+        "cadence": "event",
         "jurisdiction": "ES-AEAT",
         "output_sensitivity": "identity",
         "legal_refs": [

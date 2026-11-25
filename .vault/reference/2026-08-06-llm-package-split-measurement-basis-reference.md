@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-10-29'
 body_schema: 'body-v1'
 body_hash: 'sha256:0b54cd06e33e86d3df736275579d28d409cb82d6515e7a438c4ffc927a55c186'
-related:
-  - "[[2026-08-06-llm-package-split-adr]]"
+related: []
 ---
 
 # `llm-package-split` reference: `Measurement basis: every quantitative claim with its key, sample size and provenance`

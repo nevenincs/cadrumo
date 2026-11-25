@@ -115,6 +115,16 @@ test("generated identity, server settings and artifact paths have no product fal
     assert.equal(config.version, product.version);
     assert.equal(config.app.windows[0].title, product.name);
     assert.equal(config.app.windows[0].create, false);
+    assert.equal(config.app.windows[0].devtools, false);
+    assert.equal(config.app.windows[0].devtools, false);
+    // The configuration is compiled into the host, so its icons are named relative to it.
+    assert.deepEqual(
+      config.bundle.icon.map((icon) =>
+        resolve(root, "host/desktop/src-tauri", icon),
+      ),
+      [resolve(root, "icons", "icon.ico"), resolve(root, "icons", "icon.png")],
+    );
+    assert.ok(config.bundle.icon.every((icon) => !isAbsolute(icon)));
     const ports = developmentServer();
     writeFileSync(
       resolve(root, "generated/desktop-server.json"),
@@ -216,6 +226,38 @@ test("the shell policy frames only the documentation origin of the target platfo
       /must frame nothing/,
     );
   }
+});
+
+test("the macOS deployment floor reaches the Tauri bundle configuration", () => {
+  const template = JSON.parse(
+    readFileSync(
+      new URL("../src-tauri/tauri.conf.json.in", import.meta.url),
+      "utf8",
+    ),
+  );
+  const product = {
+    name: "Configured application",
+    application_id: "example.configured",
+    version: "1.2.3",
+  };
+  const locations = {
+    configDirectory: resolve(sep, "host", "src-tauri"),
+    frontend: resolve(sep, "host", "assets"),
+    icons: resolve(sep, "host", "icons"),
+  };
+  assert.equal(
+    tauriConfig(template, product, locations, "darwin", "14.0").bundle.macOS
+      .minimumSystemVersion,
+    "14.0",
+  );
+  assert.equal(
+    tauriConfig(template, product, locations, "darwin", undefined).bundle.macOS,
+    undefined,
+  );
+  assert.equal(
+    tauriConfig(template, product, locations, "win32", "14.0").bundle.macOS,
+    undefined,
+  );
 });
 
 // Tauri reads frontendDist as a URL before a path; a drive path such as

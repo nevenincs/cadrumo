@@ -11,13 +11,14 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from .. import ratios_contracts as contracts
 from .. import ratios_operation as ratios
@@ -276,9 +277,9 @@ def test_list_censo_mismatch_requires_registered_refusal_receipt() -> None:
         refusal_code=contracts.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
     )
 
-    assert ratios._project_list_result(result, refusal).outcome == "censo_mismatch"
+    assert ratios.project_list_result(result, refusal).outcome == "censo_mismatch"
     with pytest.raises(ValueError):
-        ratios._project_list_result(
+        ratios.project_list_result(
             result,
             refusal.model_copy(update={"effect": OperationEffect.UPDATED}),
         )
@@ -299,9 +300,9 @@ def test_unset_no_override_projects_only_with_the_registered_refusal_receipt() -
         refusal_code=contracts.LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE,
     )
 
-    assert ratios._project_unset_result(result, refusal).requested_category == "vehicle-alias"
+    assert ratios.project_unset_result(result, refusal).requested_category == "vehicle-alias"
     with pytest.raises(ValueError):
-        ratios._project_unset_result(
+        ratios.project_unset_result(
             result,
             refusal.model_copy(update={"refusal_ref": contracts.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE}),
         )
@@ -316,7 +317,7 @@ def test_set_result_retains_the_raw_category_token_for_bridge_correlation() -> N
         prior_ratio=None,
     )
 
-    projection = ratios._project_set_result(
+    projection = ratios.project_set_result(
         result,
         _receipt(
             contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,

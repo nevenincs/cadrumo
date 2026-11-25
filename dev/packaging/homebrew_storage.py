@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from cadrumo.core.storage_environment import storage_directory
+from dev.tool_storage import storage_directory
 
 
 def require_homebrew_installation_prefix(actual_prefix: str) -> Path:

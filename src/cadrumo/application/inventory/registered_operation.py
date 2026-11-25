@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, cast
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..ledger.read_access import resolve_ledger_exact_request_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+    OperationCapabilities,
+)
 from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -20,7 +21,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ports import InventoryServicePortsFactory
 
 if TYPE_CHECKING:
@@ -33,44 +33,53 @@ from .registered_executor import InventoryOperationExecutor
 from .registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryListProjection,
     InventoryMovementAddProjection,
     InventoryValuationOperationProjection,
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCreateRequest,
+    InventoryInspectRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
     InventoryValuationPreviewRequest,
 )
 from .registered_result_projection import (
     project_inventory_closing_authority_result,
+    project_inventory_closing_value_result,
     project_inventory_create_result,
+    project_inventory_inspect_result,
+    project_inventory_ledger_change_result,
     project_inventory_list_result,
     project_inventory_movement_add_result,
     project_inventory_valuation_result,
 )
-from .registered_specs import INVENTORY_OPERATION_SHAPES
-
-
-class _InventoryProfileScopedRequest(Protocol):
-    profile_id: UUID
-
+from .registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES, INVENTORY_OPERATION_SHAPES
 
 _MUTATING_IDS = frozenset(
     {
+        INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
         INVENTORY_CREATE_OPERATION_DEFINITION_ID,
         INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
         INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
         INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+        *INVENTORY_LEDGER_CHANGE_REQUEST_TYPES,
     },
 )
+
+
+_REQUEST_TYPES = {definition_id: shape.request_type for definition_id, shape in INVENTORY_OPERATION_SHAPES.items()}
 
 
 def resolve_inventory_operation_access(
@@ -79,15 +88,12 @@ def resolve_inventory_operation_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind inventory disclosure and mutation authority to the exact profile."""
-    shape = INVENTORY_OPERATION_SHAPES.get(request.definition_id)
-    payload = request.payload
-    if shape is None or type(payload) is not shape.request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = cast(_InventoryProfileScopedRequest, payload).profile_id
-    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
-    if request.definition_id not in _MUTATING_IDS:
-        return resolved
-    return with_commit_action(resolved)
+    return resolve_ledger_exact_request_access(
+        request,
+        context,
+        request_types=_REQUEST_TYPES,
+        commit_definition_ids=_MUTATING_IDS,
+    )
 
 
 def _definition(
@@ -95,6 +101,8 @@ def _definition(
     request_type: type[BaseModel],
     ports_factory: InventoryServicePortsFactory,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
+    *,
+    capabilities: OperationCapabilities = RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
 ) -> OperationDefinition:
     shape = INVENTORY_OPERATION_SHAPES[definition_id]
     if shape.request_type is not request_type:
@@ -108,7 +116,7 @@ def _definition(
         build=lambda: InventoryOperationExecutor(
             ports_factory, definition_id=definition_id, execution_caller_reader=execution_caller_reader
         ),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        capabilities=capabilities,
         refusal_detail_codes=shape.refusal_codes,
     )
 
@@ -133,7 +141,12 @@ def _registration(
 
 def build_inventory_list_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
     """Build the exact-profile inventory-list worker definition."""
-    return _definition(INVENTORY_LIST_OPERATION_DEFINITION_ID, InventoryListRequest, ports_factory)
+    return _definition(
+        INVENTORY_LIST_OPERATION_DEFINITION_ID,
+        InventoryListRequest,
+        ports_factory,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    )
 
 
 def build_inventory_create_definition(
@@ -189,6 +202,50 @@ def build_inventory_closing_authority_record_definition(
         InventoryClosingAuthorityRecordRequest,
         ports_factory,
         execution_caller_reader,
+    )
+
+
+def build_inventory_inspect_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+    """Build the exact-profile read of one ledger with its retained history."""
+    return _definition(
+        INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+        InventoryInspectRequest,
+        ports_factory,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    )
+
+
+def build_inventory_ledger_change_definitions(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> tuple[OperationDefinition, ...]:
+    """Build the guarded edit, rectification, retirement and restoration definitions."""
+    return tuple(
+        _definition(definition_id, request_type, ports_factory, execution_caller_reader)
+        for definition_id, request_type in INVENTORY_LEDGER_CHANGE_REQUEST_TYPES.items()
+    )
+
+
+def build_inventory_inspect_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the redacted ledger read and its not-found refusal."""
+    return _registration(
+        definition,
+        request_type=InventoryInspectRequest,
+        projection_type=InventoryInspectProjection,
+        projector=project_inventory_inspect_result,
+    )
+
+
+def build_inventory_ledger_change_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind one change operation to the shared applied, replayed or refused projection."""
+    return _registration(
+        definition,
+        request_type=INVENTORY_LEDGER_CHANGE_REQUEST_TYPES[definition.definition_id],
+        projection_type=InventoryLedgerChangeProjection,
+        projector=project_inventory_ledger_change_result,
     )
 
 
@@ -248,11 +305,43 @@ def build_inventory_closing_authority_record_registration(
     )
 
 
+def build_inventory_closing_value_record_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Build the guarded write of a closing value derived from plain facts."""
+    return _definition(
+        INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+        InventoryClosingValueRecordRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
+
+
+def build_inventory_closing_value_record_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind fingerprint-only closing results and typed refusals."""
+    return _registration(
+        definition,
+        request_type=InventoryClosingValueRecordRequest,
+        projection_type=InventoryClosingAuthorityOperationProjection,
+        projector=project_inventory_closing_value_result,
+    )
+
+
 __all__ = [
     "build_inventory_closing_authority_record_definition",
     "build_inventory_closing_authority_record_registration",
+    "build_inventory_closing_value_record_definition",
+    "build_inventory_closing_value_record_registration",
     "build_inventory_create_definition",
     "build_inventory_create_registration",
+    "build_inventory_inspect_definition",
+    "build_inventory_inspect_registration",
+    "build_inventory_ledger_change_definitions",
+    "build_inventory_ledger_change_registration",
     "build_inventory_list_definition",
     "build_inventory_list_registration",
     "build_inventory_movement_add_definition",

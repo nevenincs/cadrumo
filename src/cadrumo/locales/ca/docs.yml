@@ -1,10 +1,14 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Guany, pèrdua o excés d'una baixa del registre d'elements
+        de l'activitat, sumat a la casella que li dona aquesta edició
       afiliado_cotizacion: des del calendari de quotes d'afiliats que vas aportar
       atribucion_member: des dels membres en atribució de rendes
       bienes_inversion_regularizacion: des de la regularització de béns d'inversió
       borrador: des de les dades de l'AEAT (el borrador)
+      capital_mobiliario_position: des de les files del llibre vinculades a les teves
+        posicions d'estalvi i els certificats dels teus pagadors
       collectible_invoice: des de les factures emeses
       design_constant: des d'una constant fixada pel disseny de registre de l'AEAT
       foreign_asset: des dels teus béns a l'estranger
@@ -30,16 +34,23 @@ docs:
       manual_input: des d'un valor que aportes tu
       payable_invoice: des de les factures rebudes
       previous_filing: des de la teva declaració anterior
+      prevision_social_contribution: des de les aportacions que informen els teus
+        certificats d'aportacions a sistemes de previsió social
       profile: des del teu perfil de contribuent
+      prorrata_register_activity: des de les activitats del teu registre de prorrata
       prorrata_regularizacion: des de la regularització de prorrata
       purchase_invoice_evidence: des dels justificants de les teves factures rebudes
       relation_prefill: des del resultat d'un model relacionat
+      renta_inmueble: des dels teus immobles arrendats, els seus contractes i els
+        moviments del llibre vinculats
+      retencion_soportada: des de les retencions que informen els certificats dels
+        teus pagadors
       retenciones_aggregation: des de les retencions registrades
       withholding: des de les retencions suportades
       withholding296: des de les retencions per perceptor del model 296
     cadence:
-      ad_hoc: Es presenta quan es produeix el fet
       annual: Es presenta anualment
+      event: Es presenta quan es produeix el fet
       monthly: Es presenta mensualment
       profile_based: Es presenta segons el teu perfil
       quarterly: Es presenta trimestralment
@@ -353,25 +364,26 @@ docs:
       show_output: Mostrar la sortida
   terminology:
     cli:
-      authority: Autoritat de la font quan el camp és «source».
+      authority: Autoritat de la font quan el camp és `source`.
       check: Informa de desviacions sense escriure; retorna un codi diferent de zero
         si n'hi ha.
       concept_id: Identificador del concepte que s'ha de gestionar.
       domain: 'IATE: conjunt permès de camps temàtics (es pot repetir).'
       dry_run: Informa del que se sembraria sense escriure.
       export_path: Camí del fitxer d'exportació de la font baixat.
-      field_name: short_description | definition | scope_note | source | term.
-      field_value: Valor del camp (citació per a «source»; etiqueta per a «term»).
+      field_name: '`short_description` | `definition` | `scope_note` | `source` |
+        `term`.'
+      field_value: Valor del camp (citació per a `source`; etiqueta per a `term`).
       help: Manteniment del manual de terminologia.
       language: Codi de la secció lingüística.
       min_reliability: 'IATE: codi mínim de fiabilitat que s''ha de conservar (>=
         3).'
-      relation_kind: broader | related.
+      relation_kind: '`broader` | `related`.'
       relation_source: Identificador del concepte d'origen de la relació.
       relation_target: Identificador del concepte de destinació.
       remove_relation: Elimina la relació en lloc d'afegir-la.
       remove_term_label: Etiqueta exacta del terme que s'ha d'eliminar.
       replaced_by: Identificador del concepte successor (obligatori).
       retire_concept: Identificador del concepte que s'ha de retirar.
-      seed_source: 'Font de nivell A: iate | ubterm (eurovoc un cop verificat).'
-      term_status: Estat del terme quan el camp és «term».
+      seed_source: 'Font de nivell A: `iate` | `ubterm` (`eurovoc` un cop verificat).'
+      term_status: Estat del terme quan el camp és `term`.

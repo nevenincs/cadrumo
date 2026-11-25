@@ -36,6 +36,7 @@ from typing import NoReturn
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.percentage import fraction_of_percentage
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.invoices.enums import (
     InvoiceClass,
@@ -46,6 +47,7 @@ from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
 from ...domain.iva.schema import IvaRateKind, spanish_eu_member_state
 from ..invoices.catalogue_creation import resolve_iva_rate_slot
+from .closure_findings import retention_figures_disagree
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .invoice_draft_records import InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -158,6 +160,43 @@ def resolve_invoice_class(
     if declared_class is not None and declared_class.kind is StructuredInvoiceClassificationKind.CORRECTIVE:
         return invoice_class_rectificativa()
     return invoice_class_rectificativa() if rectifies_invoice_number is not None else invoice_class_ordinaria()
+
+
+def confirmed_retention(
+    draft: InvoiceDraft,
+    *,
+    stated_rate: Decimal | None,
+    stated_amount: Decimal | None,
+) -> tuple[Decimal | None, Decimal | None]:
+    """Return the retention rate as a fraction and its amount, statement over reading.
+
+    Each figure layers like any sibling. The draft reads a rate in points and the
+    invoice holds a fraction, so the crossing goes through the one owner of it and
+    normalises, leaving a printed ``15.00`` and a stated ``15`` the same value.
+
+    A reading whose own figures disagree has been answered at the review gate to
+    reach this point. With no statement of the operator's, the invoice keeps what
+    the document says was withheld and leaves out the rate its amount contradicts.
+    Disagreement arising from a base the operator restated is not that case: it
+    reaches the invoice's own refusal rather than quietly losing the rate.
+    """
+    read_rate = draft.retencion_rate
+    read_fraction = None if read_rate is None else fraction_of_percentage(read_rate).normalize()
+    amount = operator_value_or_reading(stated_amount, draft.retencion_amount)
+    rate = operator_value_or_reading(stated_rate, read_fraction)
+    reading_disagrees = (
+        stated_rate is None
+        and stated_amount is None
+        and read_rate is not None
+        and draft.retencion_amount is not None
+        and draft.taxable_base is not None
+        and retention_figures_disagree(
+            rate_points=read_rate,
+            amount=draft.retencion_amount,
+            base=draft.taxable_base,
+        )
+    )
+    return (None if reading_disagrees else rate), amount
 
 
 def operator_restated_the_amounts(
@@ -337,13 +376,14 @@ def confirmed_lines_from_the_document(
 
     The per-rate breakdown is used whenever the document states one, at ANY
     length. A single entry is not the harmless case it looks like: the
-    structured readers populate the breakdown and never the draft's flat
-    ``iva_rate``, so a one-rate structured document reached the writer with no
-    rate at all and resolved to the base-only EXEMPT slot -- minting a
-    zero-cuota invoice out of a document that plainly charged one. Reading the
-    breakdown at length one is what recovers that rate; reading it at length two
-    or more is additionally what preserves WHICH part of the base carried which
-    rate, since Modelo 303 sums cuota devengada per tier.
+    breakdown is the document's own per-rate statement, and the draft's flat
+    ``iva_rate`` is only a convenience copy of it that a several-rate document
+    leaves unset. A one-rate document read without its breakdown would reach the
+    writer with no rate at all and resolve to the base-only EXEMPT slot --
+    minting a zero-cuota invoice out of a document that plainly charged one.
+    Reading the breakdown at length one recovers that rate; reading it at length
+    two or more is additionally what preserves WHICH part of the base carried
+    which rate, since Modelo 303 sums cuota devengada per tier.
 
     Args:
         draft: The re-run extraction being confirmed.

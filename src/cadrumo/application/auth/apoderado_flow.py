@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ..flows.definition import locale_copy_ref as _locale_ref
+from ..flows.definition import locale_copy_ref
 
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
@@ -131,16 +131,16 @@ def build_apoderado_flow_definition(catalogue: ApoderamientosCatalogue) -> FlowD
     scope_choices = tuple(
         FlowChoice(
             value=scope.code,
-            label=_locale_ref(f"cli.config.auth.apoderado.scope.{scope.code.lower()}"),
+            label=locale_copy_ref(f"cli.config.auth.apoderado.scope.{scope.code.lower()}"),
         )
         for scope in catalogue.scopes
     )
     represented_nif_page = FlowPage(
         id=REPRESENTED_NIF_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
-        prompt=_locale_ref(_REPRESENTED_NIF_PROMPT_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_TAX_ID_LOCALE_KEY),
-        failure_modes=(_locale_ref(_NIF_INVALID_LOCALE_KEY),),
+        prompt=locale_copy_ref(_REPRESENTED_NIF_PROMPT_LOCALE_KEY),
+        format_hint=locale_copy_ref(_FORMAT_TAX_ID_LOCALE_KEY),
+        failure_modes=(locale_copy_ref(_NIF_INVALID_LOCALE_KEY),),
         required=True,
         answer_type=str,
         domain_key=None,
@@ -149,7 +149,7 @@ def build_apoderado_flow_definition(catalogue: ApoderamientosCatalogue) -> FlowD
     scopes_page = FlowPage(
         id=SCOPES_PAGE_ID,
         widget=FlowWidgetKind.CHECKBOX,
-        prompt=_locale_ref(_SCOPES_PROMPT_LOCALE_KEY),
+        prompt=locale_copy_ref(_SCOPES_PROMPT_LOCALE_KEY),
         choices=scope_choices,
         required=True,
         answer_type=str,
@@ -157,13 +157,13 @@ def build_apoderado_flow_definition(catalogue: ApoderamientosCatalogue) -> FlowD
     )
     section = FlowSection(
         id=_APODERADO_SECTION_ID,
-        title=_locale_ref(_FLOW_TITLE_LOCALE_KEY),
+        title=locale_copy_ref(_FLOW_TITLE_LOCALE_KEY),
         items=(represented_nif_page, scopes_page),
     )
     return FlowDefinition(
         id=APODERADO_FLOW_ID,
-        title=_locale_ref(_FLOW_TITLE_LOCALE_KEY),
-        description=_locale_ref(_FLOW_DESCRIPTION_LOCALE_KEY),
+        title=locale_copy_ref(_FLOW_TITLE_LOCALE_KEY),
+        description=locale_copy_ref(_FLOW_DESCRIPTION_LOCALE_KEY),
         sections=(section,),
         answers_model=ApoderadoFlowAnswers,
         checkpoint={

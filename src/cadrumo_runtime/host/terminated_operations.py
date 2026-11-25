@@ -7,6 +7,7 @@ from pathlib import Path
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.persistence.journal import OperationRecoveryInventoryDisposition
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.terminated_owner import settle_terminated_operation
@@ -46,3 +47,32 @@ async def settle_terminated_worker_operations(
         if not page.has_more:
             return
         cursor = page.next_cursor
+
+
+async def settle_drained_worker_operations(
+    *,
+    root: Path,
+    identity: ProfileWorkerIdentity,
+    registry: OperationRegistry,
+    operation_ids: tuple[OperationId, ...],
+    deadline: float,
+) -> None:
+    """Settle the work a drained worker reported unfinished, once its containment is confirmed.
+
+    The worker's own drain receipt names these operations, so no journal scan
+    is needed. Each keeps its last effect: work whose executor was entered
+    ends with an unknown effect. A record another owner leases is untouched.
+    """
+    journal = OperationJournalRepository(storage_root=root)
+    leases = OperationLeaseFilesystemRepository(storage_root=root)
+    for operation_id in operation_ids:
+        if time.monotonic() >= deadline:
+            raise TimeoutError("drained worker settlement budget exhausted")
+        await settle_terminated_operation(
+            operation_id=operation_id,
+            terminated_owner_id=identity.operation_owner_id,
+            journal=journal,
+            leases=leases,
+            registry=registry,
+            observed_at=now(),
+        )

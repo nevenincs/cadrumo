@@ -14,17 +14,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.storage_taxonomy import StorageCustodyProfile
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import (
-    CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
-)
-from .storage_path_definitions import (
-    StoragePathDefinition,
 )
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
@@ -38,7 +33,7 @@ SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 
 
-def _pydantic_namespace_validator[ValidationResultT](
+def pydantic_namespace_validator[ValidationResultT](
     function: Callable[..., ValidationResultT],
 ) -> Callable[..., ValidationResultT]:
     """Translate the registered namespace refusal at Pydantic's callback edge."""
@@ -61,7 +56,7 @@ def is_former_product_namespace(namespace: str) -> bool:
 class SecureObjectNamespaceDefinition(BaseModel):
     """Contract for one encrypted SQL secure-object namespace."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1)
     namespace: str = Field(min_length=1, max_length=128)
@@ -94,7 +89,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("key")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
@@ -105,7 +100,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("namespace")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _namespace_is_sql_safe(cls, value: str) -> str:
         if value != value.strip():
@@ -116,7 +111,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("default_object_key")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _default_key_is_repository_safe(cls, value: str | None) -> str | None:
         if value is None:
@@ -186,7 +181,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
             )
 
     @model_validator(mode="after")
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _singleton_default_key_matches_grammar(self) -> SecureObjectNamespaceDefinition:
         """Keep a singleton namespace's default key equal to its declared grammar.
@@ -205,7 +200,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
@@ -222,52 +217,6 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if self.default_object_key is None:
             raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
-
-
-class StorageHierarchyRegistry(BaseModel):
-    """Registry carrying the known secure-storage hierarchy contracts."""
-
-    model_config = _STRICT_FROZEN
-
-    namespaces: tuple[SecureObjectNamespaceDefinition, ...]
-    paths: tuple[StoragePathDefinition, ...]
-
-    @model_validator(mode="after")
-    @_pydantic_namespace_validator
-    @pydantic_validation_boundary
-    def _reject_duplicate_keys_and_namespaces(self) -> StorageHierarchyRegistry:
-        namespace_keys = [item.key for item in self.namespaces]
-        namespace_values = [item.namespace for item in self.namespaces]
-        path_keys = [item.key for item in self.paths]
-        if len(namespace_keys) != len(set(namespace_keys)):
-            raise NamespaceRegistryError("duplicate secure-object namespace registry key")
-        if len(namespace_values) != len(set(namespace_values)):
-            raise NamespaceRegistryError("duplicate secure-object namespace value")
-        if len(path_keys) != len(set(path_keys)):
-            raise NamespaceRegistryError("duplicate storage path registry key")
-        return self
-
-    def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
-        """Return a :class:`SecureObjectNamespaceDefinition` by persisted namespace value."""
-        for namespace in self.namespaces:
-            if namespace.namespace == value:
-                return namespace
-        raise KeyError(value)
-
-    def path_by_key(self, key: str) -> StoragePathDefinition:
-        """Return a :class:`StoragePathDefinition` by registry key."""
-        for path in self.paths:
-            if path.key == key:
-                return path
-        raise KeyError(key)
-
-    def namespaces_for_custody_profile(
-        self,
-        profile: StorageCustodyProfile,
-    ) -> tuple[SecureObjectNamespaceDefinition, ...]:
-        """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
-        dispositions = CUSTODY_PROFILE_DISPOSITIONS[profile]
-        return tuple(namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions)
 
 
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -476,6 +425,64 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# Withholding the taxpayer SUFFERED, one row per payer, income class and
+# ejercicio, read by the annual Renta credit casillas. FINANCIAL: each row holds a
+# payer's tax identifier and the figures of its certificate.
+#
+# The payer segment is ``payer_ref``, an HMAC-SHA256 under a labelled sub-key of
+# the profile's own key, never the NIF and never its unkeyed sha256: the NIF
+# space is small enough to recover from an unkeyed digest, and a natural key can
+# surface in a row-identity error. A corrected or replacement certificate
+# overwrites its row under the row's expected revision. The ``absence:`` form
+# holds an operator's attestation that a class had no payer.
+RETENCION_SOPORTADA_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="retencion_soportada_records",
+    namespace="cadrumo.renta.retencion_soportada.records",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{ejercicio}:{income_class}:{payer_ref}|absence:{ejercicio}:{income_class}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+# The taxpayer's own statement of its Modelo 232 related-party and tax-haven
+# operations per ejercicio, the "none" statements and the turnover statements the
+# art. 2.3 ground compares against, and one guard row per ejercicio that
+# serialises their writes. FINANCIAL: an operation row holds a
+# counterparty's tax identifier, name and the amount dealt. The row key carries
+# only the ejercicio and a random id, never a counterparty.
+MODELO_232_RELATED_PARTY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_232_related_party_records",
+    namespace="cadrumo.modelo.m232.related_party",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar=(
+        "operation:{ejercicio}:{operation_id}|none:{ejercicio}:{statement_id}"
+        "|turnover:{ejercicio}:{statement_id}|year:{ejercicio}"
+    ),
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+# Contributions to social-welfare systems, one row per certificate line: the
+# ejercicio, the issuer, the plan and the Modelo 345 clave and subclave, read by
+# the annual Renta contribution casillas. FINANCIAL: each row holds the issuer's
+# and the plan's tax identifiers and the certified amount.
+#
+# The issuer and plan segments are HMAC-SHA256 digests under labelled sub-keys of
+# the profile's own key, never the NIFs and never their unkeyed sha256. A plan
+# without a NIF of its own takes ``-``. A corrected or replacement certificate
+# overwrites its row under the row's expected revision.
+PREVISION_SOCIAL_CONTRIBUTION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="prevision_social_contribution_records",
+    namespace="cadrumo.renta.prevision_social_contribution.records",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{ejercicio}:{issuer_ref}:{plan_ref|-}:{clave}:{subclave|-}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_workflow",
     namespace="cadrumo.withholding.workflow",
@@ -526,6 +533,23 @@ MODELO_RECONCILIATION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     # still produce a report, and an identity-header reconcile needs no revision
     # at all; a revision-derived key could not store those runs.
     object_key_grammar="modelo-reconciliation:{work_unit_id}:{bucket_event_id}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+# An operator's acceptance of one disputed Modelo figure. The row restates the
+# amounts the calculation disagreed on, so it is FINANCIAL. The key carries the
+# finding key, the digest of every source's value, the registry revision and the
+# compared declaration, and neither the calculation revision nor the authority
+# generation: a recalculation that reproduces the same amounts keeps the row, and
+# any changed amount names another finding that no row covers. Revocation
+# overwrites the row under its expected revision.
+MODELO_CREDIT_RESOLUTION_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_credit_resolutions",
+    namespace="cadrumo.modelo.credit_resolution.records",
+    owner="cadrumo.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="credit-resolution:{modelo}:{filing_year}:{period}:{finding_key}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
@@ -659,6 +683,21 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# A classification job names the profile's movements and holds a model's typed
+# proposal for each, which discloses how the taxpayer's spending is classified,
+# so it is FINANCIAL. It is working state of one bucket's queue, kept only in
+# full custody: a structured export carries the applied classifications, not
+# the proposals still awaiting review.
+LEDGER_CLASSIFICATION_JOBS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_classification_jobs",
+    namespace="cadrumo.application.ledger.classification_jobs",
+    owner="cadrumo.application.ledger",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="classification-job:{bucket_id}:{job_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 # The taxpayer's own bank accounts and their modelo charge and refund designations.
 # FINANCIAL: every account carries an IBAN and possibly a BIC and bank block, so the
 # register is ciphertext at rest under a fixed key; no account material or derived
@@ -679,7 +718,7 @@ LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     namespace="cadrumo.application.live.borrador_100_snapshot",
     owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V2,
     object_key_grammar="modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
@@ -703,58 +742,6 @@ M145_COMMUNICATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="m145-communication:{bucket_id}:{communication_record_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-)
-TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="test_snapshot_base_probe",
-    namespace="cadrumo.application.live.test_snapshot_base_probe",
-    owner="cadrumo.application.live",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="snapshot-base-probe:{bucket_id}:{snapshot_id}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
-    remote_mirror_requires_revision=False,
-    remote_mirror_requires_integrity_manifest=False,
-)
-TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="test_session_lifecycle",
-    namespace="cadrumo-test.session.lifecycle",
-    owner="cadrumo.entrypoints.cli.tests.test_session_lifecycle_roundtrip",
-    sensitivity=SensitivityClass.OPERATIONAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="roundtrip-row",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
-    remote_mirror_requires_revision=False,
-    remote_mirror_requires_integrity_manifest=False,
-)
-TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="test_secure_bound_contract",
-    namespace="cadrumo-test.envelope.secure_bound_contract",
-    owner="cadrumo.adapters.persistence.storage.envelope.tests.test_secure_bound_repository_contract",
-    sensitivity=SensitivityClass.AUDIT,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{id}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
-    remote_mirror_requires_revision=False,
-    remote_mirror_requires_integrity_manifest=False,
-)
-TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="test_runtime_profile",
-    namespace="cadrumo-tests.runtime.profile",
-    owner="cadrumo.adapters.persistence.storage.tests.test_secure_sql",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="runtime-row",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
-    remote_mirror_requires_revision=False,
-    remote_mirror_requires_integrity_manifest=False,
 )
 LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_expedientes_snapshot",
@@ -913,6 +900,54 @@ EXTENSION_SETTINGS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     # Opaque extension secrets remain process-local and never mirror remotely.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
+# The models the person added to a local lane's model list, held apart from the
+# provider records so a list change never moves the provider-settings records
+# generation. The key and namespace are the identities the stored records were
+# written under. It carries no secret but keeps the provider records' custody:
+# it names models on this machine, so it stays process-local and never mirrors
+# remotely.
+LOCAL_MODEL_LIST_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="model_role_selections",
+    namespace="cadrumo.model_role_selections",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
+# The person's remembered decisions to let an agent lane read a conversation
+# attachment, and the record of every release made under them. Each names a
+# document's digest beside a provider, so neither mirrors remotely.
+ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="attachment_disclosure_grants",
+    namespace="cadrumo.attachment_disclosure_grants",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
+ATTACHMENT_RELEASE_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="attachment_release_ledger",
+    namespace="cadrumo.attachment_release_ledger",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
@@ -1173,6 +1208,22 @@ MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinitio
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    # A saved revision's rendering is either embedded whole or held as a
+    # discriminated reference to one row of the rendering-snapshot namespace.
+    record_formats=("calculation_revision_rendering_reference",),
+)
+MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_calculation_rendering_snapshot",
+    namespace="cadrumo.domain.modelos.calculation_rendering_snapshots",
+    owner="cadrumo.domain.modelos",
+    # The body is public registry content, but which bodies a profile holds
+    # shows which modelo, year and period its taxpayer calculated.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{rendering_digest}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    record_formats=("calculation_rendering_snapshot_body",),
 )
 TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_participation_index",
@@ -1201,5 +1252,17 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
     MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE,
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
+)
+#: Namespaces whose rows are readable only together. The calculation-revision
+#: catalogue refers to rendering-snapshot rows by digest and refuses to load
+#: without them, so a ciphertext mirror publishes or withholds both as one unit.
+CO_READABLE_NAMESPACE_UNITS: tuple[frozenset[str], ...] = (
+    frozenset(
+        {
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE.namespace,
+        }
+    ),
 )

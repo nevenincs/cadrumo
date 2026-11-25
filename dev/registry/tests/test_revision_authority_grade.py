@@ -33,12 +33,11 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import load_revision as _shared_load_revision
-from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..conformance.loader_directory_mode_support import STANDARD_REVISION_ID, load_revision, write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_REVISION_ID = STANDARD_REVISION_ID
 _LEGAL_REF = "ley-58-2003:art-29"
 _MANIFEST_HOME_REFUSAL = "must be declared in the revision's revision.toml"
 
@@ -53,7 +52,7 @@ source_refs = ["aeat-manual"]
 
 
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -63,7 +62,7 @@ def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str =
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 @pytest.mark.parametrize("grade", list(RegistryAuthorityGrade))

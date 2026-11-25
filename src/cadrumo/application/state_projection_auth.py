@@ -16,7 +16,7 @@ from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.models import STRICT_FROZEN_CONFIG
 from .auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .auth.credentials import project_active_certificate_credentials
 from .auth.operator_probe_ports import OperatorProbePorts
@@ -40,7 +40,7 @@ class ProjectionAuthReadiness(BaseModel):
     configuration and supplies only the health and probe fields.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str = ""
     configured: bool = False

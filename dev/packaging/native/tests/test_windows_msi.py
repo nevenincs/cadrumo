@@ -18,33 +18,42 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import DistributionIdentity
-from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
-from dev.packaging.native.windows_msi_build import (
-    bootstrap_kit,
-    compile_products,
-    maintenance_plan,
-    verify_database,
-    verify_products,
-)
-from dev.packaging.native.windows_msi_database import verify_admission_order, verify_feature_ownership
+from dev.packaging.native.windows_msi import author, reject_combined_manager_msi
+from dev.packaging.native.windows_msi_build import compile_products, maintenance_plan, verify_products
+from dev.packaging.native.windows_msi_contract import MAINTENANCE_GATE
+from dev.packaging.native.windows_msi_database import verify_feature_ownership
 from dev.packaging.native.windows_msi_identity import msi_identity
-from dev.packaging.native.windows_msi_paths import source_path as _source_path
+from dev.packaging.native.windows_msi_paths import source_path
+from dev.packaging.native.windows_msi_verify import verify_database
 from dev.packaging.tests.test_native_installation import payload_fixture
 
+from .windows_msi_support import (
+    NS,
+    assert_changed_artifact_is_refused,
+    assert_compiled_ownership_tables,
+    assert_conditional_owner_is_refused,
+    assert_maintenance_plan_refusals,
+    assert_manager_components,
+    assert_modified_stage_is_refused,
+    assert_package_attributes,
+    assert_scope_registration,
+    change_database,
+    feature_ownership,
+)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
 
 
 @pytest.mark.parametrize("count", [1600, 1601, 3201])
 def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_path: Path, count: int) -> None:
     from xml.etree.ElementTree import Element, SubElement, tostring
 
-    from dev.packaging.native.windows_msi import _partition_features, _source
+    from dev.packaging.native.windows_msi_source import msi_source, partition_features
 
-    _, identity = _prepared(tmp_path)
+    _, identity = prepared(tmp_path)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
     files = {f"versions/{value.version}/payload/{index}.dll": "0" * 64 for index in range(count)}
-    source = _source(
+    source = msi_source(
         tmp_path,
         files,
         value,
@@ -78,14 +87,14 @@ def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_pat
     ordered = [SubElement(feature, "ComponentRef", Id=f"C_{index}") for index in range(count)]
     existing = Element("Feature", Id="ExistingFeature")
     feature.insert(1, existing)
-    _partition_features(feature)
+    partition_features(feature)
     assert list(feature)[:2] == [ordered[0], existing]
     assert feature.findall("ComponentRef") == ordered[:1600]
     assert [
         reference for child in feature.findall("Feature") for reference in child.findall("ComponentRef")
     ] == ordered[1600:]
     grouped = tostring(feature)
-    _partition_features(feature)
+    partition_features(feature)
     assert tostring(feature) == grouped
 
 
@@ -93,9 +102,9 @@ def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_pat
 def test_version_data_components_preserve_directory_inventory_and_binary_ownership(
     tmp_path: Path, scope: Literal["user", "machine"]
 ) -> None:
-    from dev.packaging.native.windows_msi import _source
+    from dev.packaging.native.windows_msi_source import msi_source
 
-    _, identity = _prepared(tmp_path)
+    _, identity = prepared(tmp_path)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
     names = (
         "data/a.json",
@@ -112,7 +121,7 @@ def test_version_data_components_preserve_directory_inventory_and_binary_ownersh
     members = {f"versions/{value.version}/{name}": "0" * 64 for name in names}
 
     def components(files: dict[str, str]) -> list[Element]:
-        source = _source(
+        source = msi_source(
             tmp_path,
             files,
             value,
@@ -169,23 +178,23 @@ def test_version_data_components_preserve_directory_inventory_and_binary_ownersh
 
 @pytest.mark.parametrize("count", [32767, 32768])
 def test_msi_component_costing_budget_accounts_for_registry_expansion(count: int) -> None:
-    from dev.packaging.native.windows_msi_database import _verify_component_rows
+    from dev.packaging.native.windows_msi_database import verify_component_rows
 
     components: list[tuple[str, ...]] = [(f"C_{index}", "260", f"R_{index}") for index in range(count)]
     registry: list[tuple[str, ...]] = [(f"R_{index}", "1", f"C_{index}") for index in range(count)]
     if count == 32767:
         components.append(("C_File", "256", "F_File"))
-        _verify_component_rows(components, registry)
+        verify_component_rows(components, registry)
     else:
         with pytest.raises(ValueError, match="component costing budget"):
-            _verify_component_rows(components, registry)
+            verify_component_rows(components, registry)
 
 
 @pytest.mark.parametrize(
     "fault", ["oversized", "detached", "unknown", "repeated", "cycle", "parent", "disabled", "advertised"]
 )
 def test_msi_feature_table_inventory_refuses_invalid_or_unselected_ownership(fault: str) -> None:
-    from dev.packaging.native.windows_msi_database import _verify_feature_rows
+    from dev.packaging.native.windows_msi_database import verify_feature_rows
 
     features: list[tuple[str, ...]] = [
         ("ProductFeature", "", "0", "1", "24"),
@@ -196,7 +205,7 @@ def test_msi_feature_table_inventory_refuses_invalid_or_unselected_ownership(fau
         ("ProductFeature" if index < 1600 else "PayloadFeature0001", component[0])
         for index, component in enumerate(components)
     ]
-    _verify_feature_rows(features, components, links)
+    verify_feature_rows(features, components, links)
     if fault == "oversized":
         links[-1] = ("ProductFeature", components[-1][0])
     elif fault == "detached":
@@ -216,7 +225,7 @@ def test_msi_feature_table_inventory_refuses_invalid_or_unselected_ownership(fau
             "22" if fault == "advertised" else "26",
         )
     with pytest.raises(ValueError, match=r"MSI feature|MSI components"):
-        _verify_feature_rows(features, components, links)
+        verify_feature_rows(features, components, links)
 
 
 @pytest.mark.parametrize("unicode_name", [False, True])
@@ -245,7 +254,7 @@ def test_msi_authoring_refuses_default_destination_before_writing(
 ) -> None:
     from dev.packaging.native import windows_msi
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     directory = build / "installation/metadata/wix"
     oversized = PureWindowsPath("C:/" + "a" * 245)
     monkeypatch.setattr(windows_msi, "default_installation_prefixes", lambda _: (oversized, oversized))
@@ -259,7 +268,7 @@ def test_msi_maintenance_plan_refuses_selected_destination_before_writing(
 ) -> None:
     from dev.packaging.native import windows_msi_build
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     author(build, identity, "cadrumo")
     owned = build / "installation/metadata/wix"
     before = {path.name: path.read_bytes() for path in owned.iterdir() if path.is_file()}
@@ -268,11 +277,10 @@ def test_msi_maintenance_plan_refuses_selected_destination_before_writing(
         raise AssertionError("Artifact verification may author files and must follow destination admission")
 
     monkeypatch.setattr(windows_msi_build, "verify_products", not_entered)
-    prefix = tmp_path / ("a" * 245)
+    prefix = PureWindowsPath("C:/" + "a" * 245)
     with pytest.raises(ValueError, match="259 UTF-16"):
         maintenance_plan(build, identity, "user", prefix, "cadrumo")
     assert not (build / "installation/metadata/maintenance-user.json").exists()
-    assert not prefix.exists()
     assert before == {path.name: path.read_bytes() for path in owned.iterdir() if path.is_file()}
 
 
@@ -512,7 +520,7 @@ def test_lifecycle_event_history_refuses_fabricated_or_nonterminal_driver_failur
 def test_wix_source_paths_preserve_native_local_unc_and_existing_extended_paths(
     source: PureWindowsPath | PurePosixPath, expected: str
 ) -> None:
-    assert _source_path(source) == expected
+    assert source_path(source) == expected
 
 
 @pytest.mark.parametrize(
@@ -528,12 +536,12 @@ def test_wix_source_paths_preserve_native_local_unc_and_existing_extended_paths(
 )
 def test_wix_source_paths_refuse_ambiguous_or_interpreted_paths(source: str) -> None:
     with pytest.raises(ValueError):
-        _source_path(PureWindowsPath(source))
+        source_path(PureWindowsPath(source))
 
 
 @pytest.mark.parametrize("desktop", [True, False])
 def test_registration_description_matches_authored_resources(tmp_path: Path, desktop: bool) -> None:
-    build, identity = _prepared(tmp_path, desktop=desktop)
+    build, identity = prepared(tmp_path, desktop=desktop)
     outputs = author(build, identity, "cadrumo" if desktop else None)
     tree = ElementTree.parse(outputs["application.wxs"])
     shared = tree.find(".//w:Feature[@Id='SharedRegistration']", NS)
@@ -541,48 +549,14 @@ def test_registration_description_matches_authored_resources(tmp_path: Path, des
     references = {node.attrib["Id"] for node in shared.findall(".//w:ComponentRef", NS)}
     shared_components = [node for node in tree.findall(".//w:Component", NS) if node.attrib["Id"] in references]
     for scope in ("user", "machine"):
-        property_node = tree.find(f".//w:Property[@Id='CadrumoRegistration{scope.title()}']", NS)
-        assert property_node is not None
-        description = json.loads(property_node.attrib["Value"])
-        assert description["scope"] == scope
-        assert description["schema"] == 2
-        assert len(description["services"]) == int(scope == "machine")
-        components = [
-            node
-            for node in shared_components
-            if node.attrib.get("Condition", "") != ('ALLUSERS = "1"' if scope == "user" else "NOT ALLUSERS")
-        ]
-        assert set(description["components"]) == {item.attrib["Guid"] for item in components}
-        actual_registry = [
-            {
-                "component": component.attrib["Guid"],
-                **{key.lower(): entry.attrib[key] for key in ("Key", "Name", "Type", "Value")},
-            }
-            for component in components
-            for entry in component.findall("w:RegistryValue", NS)
-        ]
-        assert len(description["registry"]) == len(actual_registry)
-        assert {json.dumps(row, sort_keys=True) for row in description["registry"]} == {
-            json.dumps(row, sort_keys=True) for row in actual_registry
-        }
-        assert len(description["files"]) == 4
-        for component in components:
-            for file in component.findall("w:File", NS):
-                assert digest(Path(file.attrib["Source"])) in description["files"].values()
-        marker = next(name for name in description["files"] if name.endswith("installation.json"))
-        assert description["files"][marker] == digest(build / "installation/metadata/wix/native-installation.json")
-        assert bool(description["shortcuts"]) == desktop
-        assert bool(description["absent_shortcuts"]) != desktop
-        assert {entry["name"] for entry in description["absent_registry"]} == (
-            set() if desktop else {"DesktopRegistered", "DesktopAnchorVersion"}
-        )
+        assert_scope_registration(tree, shared_components, scope, build, desktop=desktop)
     assert tree.find(".//w:Property[@Id='CadrumoRegistration']", NS) is None
 
 
-def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> tuple[Path, Path]:
+def prepared(tmp_path: Path, *, desktop: bool = True) -> tuple[Path, Path]:
     temporary = tmp_path / "relocated ü space"
     temporary.mkdir()
-    payload, identity = payload_fixture(temporary, "windows-x86-64", manager=manager)
+    payload, identity = payload_fixture(temporary, "windows-x86-64")
     build = temporary / "build"
     build.mkdir()
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}
@@ -593,7 +567,7 @@ def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> 
 
 @pytest.mark.parametrize("desktop", [True, False])
 def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Path, desktop: bool) -> None:
-    build, identity = _prepared(tmp_path, desktop=desktop)
+    build, identity = prepared(tmp_path, desktop=desktop)
     outputs = author(build, identity, "cadrumo" if desktop else None)
     assert set(outputs) == {"application.wxs"}
     stage = build / "installation/stage"
@@ -602,40 +576,9 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
     root = ElementTree.parse(outputs["application.wxs"])
     package = root.find("w:Package", NS)
     assert package is not None
-    assert package.attrib["Scope"] == "perUserOrMachine"
-    assert package.attrib["Version"] == value["version"]
-    assert package.attrib["UpgradeStrategy"] == "none"
-    assert root.find(".//w:MajorUpgrade", NS) is None
-    assert root.find(".//w:RemoveExistingProducts", NS) is None
-    launch = package.find("w:Launch", NS)
-    assert launch is not None and launch.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE}
-    properties = {node.attrib["Id"]: node.attrib.get("Value") for node in package.findall("w:Property", NS)}
-    assert properties["MSIRESTARTMANAGERCONTROL"] == "Disable"
-    assert properties["REBOOT"] == "ReallySuppress"
-    ownership_property = properties["CadrumoPackage"]
-    assert ownership_property is not None
-    assert json.loads(ownership_property)["role"] == "application"
+    assert_package_attributes(root, package, value["version"])
     components = {node.attrib["Id"]: node for node in root.findall(".//w:Component", NS)}
-    ownership = {}
-    component_sets = {}
-    for role in ("VersionFiles", "SharedRegistration"):
-        feature = package.find(f"w:Feature[@Id='{role}']", NS)
-        assert feature is not None and feature.attrib["AllowAbsent"] == "yes"
-        references = {node.attrib["Id"] for node in feature.findall(".//w:ComponentRef", NS)}
-        component_sets[role] = references
-        members = set()
-        for key in references:
-            for file in components[key].findall("w:File", NS):
-                source = Path(file.attrib["Source"])
-                relative = (
-                    "data/installation.json"
-                    if source.name == "native-installation.json"
-                    else source.relative_to(Path(_source_path(stage))).as_posix()
-                )
-                if source.name != "native-installation.json":
-                    assert digest(source) == owned[relative]
-                members.add(relative)
-        ownership[role] = members
+    ownership, component_sets = feature_ownership(package, components, stage, owned)
     assert component_sets["VersionFiles"].isdisjoint(component_sets["SharedRegistration"])
     assert component_sets["VersionFiles"] | component_sets["SharedRegistration"] == set(components)
     prefix = f"versions/{value['version']}/"
@@ -643,27 +586,7 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
     assert ownership["VersionFiles"].isdisjoint(ownership["SharedRegistration"])
     assert ownership["VersionFiles"] | ownership["SharedRegistration"] == set(owned)
     assert all(node.attrib["Root"] == "HKMU" for node in root.findall(".//w:RegistryValue", NS))
-    manager_components = [
-        node
-        for key, node in components.items()
-        if key in component_sets["SharedRegistration"]
-        if any(file.attrib["Name"] == "cadrumo-manager" for file in node.findall("w:File", NS))
-    ]
-    # One stable destination has mutually exclusive scope-specific ownership.
-    assert {node.attrib["Condition"] for node in manager_components} == {"NOT ALLUSERS", 'ALLUSERS = "1"'}
-    for component in manager_components:
-        machine = component.attrib["Condition"] != "NOT ALLUSERS"
-        services = component.findall("w:ServiceInstall", NS)
-        assert len(services) == int(machine)
-        if machine:
-            assert services[0].attrib["Name"] == value["manager_id"]
-            assert services[0].attrib["Account"] == "LocalSystem"
-            assert services[0].attrib["Start"] == "auto"
-            assert services[0].attrib["Arguments"] == "--service"
-            control = component.find("w:ServiceControl", NS)
-            assert control is not None and control.attrib["Stop"] == "both" and control.attrib["Remove"] == "uninstall"
-        file = component.find("w:File", NS)
-        assert file is not None and file.attrib["KeyPath"] == ("yes" if machine else "no")
+    assert_manager_components(root, components, component_sets["SharedRegistration"], value["manager_id"])
     assert bool(root.findall(".//w:Shortcut", NS)) == desktop
     descriptor = json.loads((build / "installation/metadata/wix/authoring.json").read_text(encoding="utf-8"))
     assert descriptor["installable"] is False
@@ -671,18 +594,14 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
     assert descriptor["maintenance"]["products"] == {"application": package.attrib["ProductCode"]}
 
 
-@pytest.mark.parametrize("manager", [False, True])
-def test_legacy_msi_guard_refuses_only_manager_payloads(tmp_path: Path, manager: bool) -> None:
-    build, _ = _prepared(tmp_path, manager=manager)
-    if manager:
-        with pytest.raises(ValueError, match="authenticated release MSI"):
-            reject_combined_manager_msi(build)
-    else:
+def test_cpack_msi_guard_refuses_manager_payloads(tmp_path: Path) -> None:
+    build, _ = prepared(tmp_path)
+    with pytest.raises(ValueError, match="authenticated release MSI"):
         reject_combined_manager_msi(build)
 
 
 def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     receipt = build / "installation/metadata/installation.json"
     before = receipt.read_bytes()
     outputs = author(build, identity, "cadrumo")
@@ -695,7 +614,7 @@ def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
 def test_cached_owner_protocol_binds_native_identity_and_publication_for_owned_installation(tmp_path: Path) -> None:
     from dev.packaging.native.windows_msi_identity import release_identity
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     adapter, runner = tmp_path / "installer.dll", tmp_path / "maintenance.exe"
     adapter.write_bytes(b"authoring fixture")
     runner.write_bytes(b"authoring fixture, never executed")
@@ -729,7 +648,7 @@ def test_cached_owner_protocol_binds_native_identity_and_publication_for_owned_i
 def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_installation(tmp_path: Path) -> None:
     from dev.packaging.native.windows_msi_identity import release_identity
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     adapter.write_bytes(b"authoring fixture; not a native acceptance payload")
     outputs = author(build, identity, "cadrumo", adapter)
@@ -766,7 +685,7 @@ def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_inst
 
 @pytest.mark.parametrize("defect", ["blocked", "missing-owner", "conditional-owner", "ignore-failure"])
 def test_database_verifier_refuses_broken_native_owner_admission(tmp_path: Path, defect: str) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     runner = tmp_path / "maintenance.exe"
     adapter.write_bytes(b"authoring fixture")
@@ -800,7 +719,7 @@ def test_database_verifier_refuses_broken_native_owner_admission(tmp_path: Path,
 
 @pytest.mark.parametrize("defect", ["data", "action", "impersonation", "ignore-failure"])
 def test_database_verifier_detects_native_admission_changes(tmp_path: Path, defect: str) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     adapter.write_bytes(b"authoring fixture")
     source = author(build, identity, "cadrumo", adapter)["application.wxs"]
@@ -835,20 +754,20 @@ def test_native_admission_dll_is_embedded_once_in_the_verified_scope_aware_produ
     shutil.copyfile(Path(configured), adapter)
     runner = Path(configured).with_name("cadrumo-msi-maintenance.exe")
     assert runner.is_file(), "Build the native maintenance runner alongside its DLL"
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     paths = build / "build-paths.json"
     document = json.loads(paths.read_text(encoding="utf-8"))
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
     compiler_calls = []
-    run_wix = windows_msi_build._run
+    run_wix = windows_msi_build.run_wix
 
     def counted(wix: Path, arguments: list[str], directory: Path) -> str:
         if arguments[0] == "build":
             compiler_calls.append(tuple(arguments))
         return run_wix(wix, arguments, directory)
 
-    monkeypatch.setattr(windows_msi_build, "_run", counted)
+    monkeypatch.setattr(windows_msi_build, "run_wix", counted)
     compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
     assert len(compiler_calls) == 1
     compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
@@ -857,137 +776,19 @@ def test_native_admission_dll_is_embedded_once_in_the_verified_scope_aware_produ
     receipt = json.loads((build / "packages/msi/compiled.json").read_text(encoding="utf-8"))
     assert receipt["installable"] is False
     assert set(receipt["artifacts"]) == {"application.msi"}
-    from dev.packaging.native.windows_msi_database import _table_rows
-
-    for name in receipt["artifacts"]:
-        compiled = build / "packages/msi" / name
-        file_rows = _table_rows(compiled, "SELECT `File`, `Component_` FROM `File`", 2)
-        component_rows = _table_rows(compiled, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
-        assert len(file_rows) == len({row[0] for row in file_rows})
-        counts = {row[0]: sum(file[1] == row[0] for file in file_rows) for row in component_rows}
-        assert max(counts.values()) > 1
-        keys = {
-            row[0]: row[1:]
-            for row in _table_rows(compiled, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
-        }
-        files = {row[0]: row[1] for row in file_rows}
-        for component, attributes, keypath in component_rows:
-            if int(attributes) & 4:
-                assert keys[keypath] == ("-1", component)
-            else:
-                assert files[keypath] == component
+    assert_compiled_ownership_tables(build, receipt)
     artifact = build / "packages/msi/application.msi"
     # Alter the real compiled feature table, without installing or recompiling.
     # Artifact hash checks alone cannot prove mandatory component selection.
-    import ctypes
-
     disabled = tmp_path / "disabled-feature.msi"
     shutil.copyfile(artifact, disabled)
-    assert sys.platform == "win32"
-    msi = ctypes.WinDLL("msi.dll", winmode=0x00000800)
-    handle = ctypes.c_uint32
-    for name, arguments in {
-        "MsiOpenDatabaseW": [ctypes.c_wchar_p, ctypes.c_void_p, ctypes.POINTER(handle)],
-        "MsiDatabaseOpenViewW": [handle, ctypes.c_wchar_p, ctypes.POINTER(handle)],
-        "MsiViewExecute": [handle, handle],
-        "MsiDatabaseCommit": [handle],
-        "MsiCloseHandle": [handle],
-    }.items():
-        function = getattr(msi, name)
-        function.argtypes = arguments
-        function.restype = handle
-
-    def change_database(artifact: Path, statement: str) -> None:
-        database, view = handle(), handle()
-        assert msi.MsiOpenDatabaseW(str(artifact), ctypes.c_void_p(1), ctypes.byref(database)) == 0
-        try:
-            assert msi.MsiDatabaseOpenViewW(database, statement, ctypes.byref(view)) == 0
-            try:
-                assert msi.MsiViewExecute(view, 0) == 0
-            finally:
-                msi.MsiCloseHandle(view)
-            assert msi.MsiDatabaseCommit(database) == 0
-        finally:
-            msi.MsiCloseHandle(database)
-
     change_database(disabled, "UPDATE `Feature` SET `Level` = 0 WHERE `Feature` = 'VersionFiles'")
     with pytest.raises(ValueError, match="can be deselected"):
         verify_feature_ownership(disabled)
-    original = artifact.read_bytes()
-    unpublished = tmp_path / "unpublished"
-    artifact.write_bytes(original + b"changed")
-    try:
-        with pytest.raises(ValueError, match=r"MSI artifact has changed: application\.msi"):
-            bootstrap_kit(build, identity, unpublished / "app", "cadrumo", adapter, runner)
-        assert not unpublished.exists()
-    finally:
-        artifact.write_bytes(original)
-    published = {
-        path: path.read_bytes()
-        for directory in (build / "packages/msi", build / "installation/metadata/wix")
-        for path in directory.iterdir()
-        if path.is_file()
-    }
-    manager = build / "installation/stage/cadrumo-manager"
-    original_manager = manager.read_bytes()
-
-    def compiler_not_entered(wix: Path, arguments: list[str], cwd: Path) -> str:
-        raise AssertionError("WiX must not run for a modified installation stage")
-
-    manager.write_bytes(original_manager + b"changed")
-    try:
-        with monkeypatch.context() as patch:
-            patch.setattr(windows_msi_build, "_run", compiler_not_entered)
-            with pytest.raises(ValueError, match=r"^Staged installation file has changed: cadrumo-manager$"):
-                compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
-        assert {path: path.read_bytes() for path in published} == published
-    finally:
-        manager.write_bytes(original_manager)
-    prefix = tmp_path / "never installed"
-    plan = maintenance_plan(build, identity, "user", prefix, "cadrumo", adapter, runner)
-
-    def run_plan(operation: str = "install", *arguments: str) -> str:
-        result = run_command([str(runner), operation, "--plan", str(plan), *arguments], cwd=build)
-        assert result.returncode != 0
-        assert not prefix.exists()
-        code = json.loads(result.stdout)["code"]
-        assert isinstance(code, str)
-        return code
-
-    # Valid plans are installation-capable now. This development-host lane
-    # invokes only requests that are refused before any native mutation.
-    assert run_plan("remove-version", "--version", "../escape") == "invalid_release"
-    # The plan is rewritten through its place in the build's own layout; the
-    # runner location read from the environment never names a write target.
-    published_plan = build / "installation/metadata/maintenance-user.json"
-    assert published_plan.resolve() == plan.resolve()
-    request = json.loads(published_plan.read_text(encoding="utf-8"))
-    original_product = request["version_product"]["product_code"]
-    request["version_product"]["product_code"] = "00000000-0000-0000-0000-000000000000"
-    published_plan.write_text(json.dumps(request), encoding="utf-8")
-    assert run_plan() == "invalid_plan"
-    assert run_plan("unregister") == "invalid_plan"
-    assert run_plan("remove-version", "--version", "0.5.1") == "invalid_plan"
-    request["registration_product"]["product_code"] = request["version_product"]["product_code"]
-    published_plan.write_text(json.dumps(request), encoding="utf-8")
-    assert run_plan() == "artifact_or_owner_refused"
-    assert run_plan("unregister") == "artifact_or_owner_refused"
-    assert run_plan("remove-version", "--version", "0.5.1") == "artifact_or_owner_refused"
-    request["version_product"]["product_code"] = original_product
-    request["registration_product"]["product_code"] = original_product
-    request["contract"]["installation_identity"]["channel"] = "another-channel"
-    published_plan.write_text(json.dumps(request), encoding="utf-8")
-    assert run_plan() == "artifact_or_owner_refused"
-    # Alter the actual action table without a second compilation or install session.
-    conditional_msi = tmp_path / "conditional.msi"
-    shutil.copyfile(artifact, conditional_msi)
-    change_database(
-        conditional_msi,
-        "UPDATE `InstallExecuteSequence` SET `Condition` = 'NOT SKIP_OWNER' "
-        "WHERE `Action` = 'CadrumoAuthenticateOwnerMachine'",
-    )
-    with pytest.raises(ValueError, match="owner authentication can be bypassed"):
-        verify_admission_order(conditional_msi, owner_required=True)
+    assert_changed_artifact_is_refused(build, identity, artifact, tmp_path / "unpublished", adapter, runner)
+    assert_modified_stage_is_refused(monkeypatch, build, identity, Path(wix), adapter, runner)
+    assert_maintenance_plan_refusals(build, identity, tmp_path / "never installed", adapter, runner)
+    assert_conditional_owner_is_refused(artifact, tmp_path / "conditional.msi")
     assert len(compiler_calls) == 1
     adapter.write_bytes(adapter.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="stale payload identity"):
@@ -996,7 +797,7 @@ def test_native_admission_dll_is_embedded_once_in_the_verified_scope_aware_produ
 
 @pytest.mark.parametrize("operation", ["author", "guard"])
 def test_modified_stage_is_refused_before_authoring_or_packaging(tmp_path: Path, operation: str) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     version = json.loads(identity.read_text(encoding="utf-8"))["version"]
     (build / f"installation/stage/versions/{version}/cadrumo").write_text("modified", encoding="utf-8")
     with pytest.raises(ValueError, match="has changed"):
@@ -1008,7 +809,7 @@ def test_modified_stage_is_refused_before_authoring_or_packaging(tmp_path: Path,
 
 
 def test_shared_manager_must_match_the_version_owner(tmp_path: Path) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     manager = build / "installation/stage/cadrumo-manager"
     manager.write_bytes(b"different manager bytes")
     receipt = build / "installation/metadata/installation.json"
@@ -1021,7 +822,7 @@ def test_shared_manager_must_match_the_version_owner(tmp_path: Path) -> None:
 
 
 def test_wix_preprocessor_metadata_is_refused_before_any_output(tmp_path: Path) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     value = json.loads(identity.read_text(encoding="utf-8"))
     value["publisher"] = "$(env.UNKNOWN)"
     identity.write_text(json.dumps(value), encoding="utf-8")
@@ -1031,7 +832,7 @@ def test_wix_preprocessor_metadata_is_refused_before_any_output(tmp_path: Path) 
 
 
 def test_stage_receipt_and_package_identity_must_agree(tmp_path: Path) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     receipt = build / "installation/metadata/installation.json"
     value = json.loads(receipt.read_text(encoding="utf-8"))
     value["application_id"] = "another.application"
@@ -1058,7 +859,7 @@ def test_stage_receipt_and_package_identity_must_agree(tmp_path: Path) -> None:
 def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect: str) -> None:
     from xml.etree.ElementTree import SubElement
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     source = author(build, identity, "cadrumo")["application.wxs"]
     database = tmp_path / "database.wxs"
     tree = ElementTree.parse(source)
@@ -1104,7 +905,7 @@ def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect:
 def test_database_verifier_refuses_missing_or_altered_machine_service(
     tmp_path: Path, defect: str, replacement: str
 ) -> None:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     source = author(build, identity, "cadrumo")["application.wxs"]
     database = tmp_path / "machine.wxs"
     content = source.read_text(encoding="utf-8")
@@ -1122,7 +923,7 @@ def test_native_wix_cabinets_preserve_long_source_bytes_and_install_destinations
     assert wix is not None, "Put a configured WiX 5 or newer tool on PATH for the native compiler lane"
     source_root = tmp_path.joinpath(*(["long-source-directory" * 2] * 4))
     source_root.mkdir(parents=True)
-    build, identity = _prepared(source_root)
+    build, identity = prepared(source_root)
     payload = identity.parent / "payload"
     relative = "cabinet/complete-inventory-member.bin"
     original = payload / relative
@@ -1171,20 +972,20 @@ def test_native_wix_compiles_one_scope_aware_product_without_warnings(
 
     wix = shutil.which("wix")
     assert wix is not None, "Put a configured WiX 5 or newer tool on PATH for the native compiler lane"
-    build, identity = _prepared(tmp_path, desktop=desktop)
+    build, identity = prepared(tmp_path, desktop=desktop)
     paths = build / "build-paths.json"
     document = json.loads(paths.read_text(encoding="utf-8"))
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
     compiler_calls = []
-    run_wix = windows_msi_build._run
+    run_wix = windows_msi_build.run_wix
 
     def counted(wix: Path, arguments: list[str], directory: Path) -> str:
         if arguments[0] == "build":
             compiler_calls.append(tuple(arguments))
         return run_wix(wix, arguments, directory)
 
-    monkeypatch.setattr(windows_msi_build, "_run", counted)
+    monkeypatch.setattr(windows_msi_build, "run_wix", counted)
     compile_products(build, identity, Path(wix), "cadrumo" if desktop else None)
     assert len(compiler_calls) == 1
     artifact = build / "packages/msi/application.msi"

@@ -8,6 +8,7 @@ from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
 )
+from cadrumo.adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from cadrumo.adapters.outbound.aeat.sede.errors import (
     SedeFailureMode,
     SedeNavigationError,
@@ -113,3 +114,37 @@ def test_sede_failure_exposes_application_mode(
 ) -> None:
     """The Sede adapter translates its local taxonomy before handoff."""
     assert failure.live_iva_failure_mode is expected
+
+
+@pytest.mark.parametrize(
+    ("failure_mode", "context", "expected"),
+    (
+        (SedeFailureMode.SESSION_ENDED, {}, LiveIvaAcquisitionFailureMode.SESSION_ENDED),
+        (
+            SedeFailureMode.AUTH_GATE_DETECTED,
+            {"refusal": "session_not_accepted"},
+            LiveIvaAcquisitionFailureMode.SESSION_ENDED,
+        ),
+        (SedeFailureMode.AUTH_GATE_DETECTED, {}, LiveIvaAcquisitionFailureMode.AEAT_403),
+        (
+            SedeFailureMode.AUTH_GATE_DETECTED,
+            {"required_auth_provider": "certificate", "refusal": "session_not_accepted"},
+            LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED,
+        ),
+        (SedeFailureMode.LIVE_NAVIGATION_FAILED, {}, LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED),
+    ),
+)
+def test_sede_failure_separates_an_ended_session_from_other_gates(
+    failure_mode: SedeFailureMode,
+    context: dict[str, object],
+    expected: LiveIvaAcquisitionFailureMode,
+) -> None:
+    """Only a session AEAT stopped accepting maps to the session-ended mode."""
+    error = SedeNavigationError("synthetic", failure_mode=failure_mode, context=context)
+
+    assert error.live_iva_failure_mode is expected
+
+
+def test_idle_session_expiry_exposes_the_session_ended_mode() -> None:
+    """The authenticator's idle-deadline refusal reaches live captures as an ended session."""
+    assert AeatSessionExpiredError("synthetic").live_iva_failure_mode is LiveIvaAcquisitionFailureMode.SESSION_ENDED

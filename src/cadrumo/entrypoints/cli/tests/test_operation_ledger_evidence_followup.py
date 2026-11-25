@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
 import typer
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from typer.core import TyperCommand
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
+from ....application.ledger.confirmation_block_words import served_block_reason_words
 from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
@@ -40,8 +39,11 @@ from ....application.ledger.evidence_followup_contracts import (
 )
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
-from ....application.operations.models import OperationId
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....application.operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
+from ....core.config import override_settings
+from ....core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
+from ....core.external_constants import OutputLanguage
+from ....core.operations import OperationEffect
 from ....domain.attachments.enums import AttachmentSource
 from .. import operation_ledger_evidence_followup as bridge
 from ..ledger_business_payloads import (
@@ -49,7 +51,9 @@ from ..ledger_business_payloads import (
     AttachmentReviewViewResult,
     EvidenceConsentListResult,
     EvidenceReviewListResult,
+    EvidenceReviewRowPayload,
 )
+from .operation_bridge_support import bind_exact_profile_read
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -174,36 +178,16 @@ def _bind(
     projection: BaseModel,
     submitted: list[BaseModel],
 ) -> None:
-    client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(profile_id))
-
-    def bound_client(_ctx: typer.Context, *, expected_profile_id: UUID) -> FrontendClient:
-        assert expected_profile_id == profile_id
-        return client
-
-    monkeypatch.setattr(bridge, "require_profile_client", bound_client)
-
-    def submit(
-        actual_client: FrontendClient,
-        request: BaseModel,
-        **kwargs: object,
-    ) -> RegisteredOperationCompletion[BaseModel]:
-        submitted.append(request)
-        assert actual_client is client
-        assert kwargs["definition_id"] == definition_id
-        assert kwargs["subject_ref"] == profile_operation_subject(str(profile_id))
-        assert kwargs["result_type"] is type(projection)
-        assert kwargs["request_version"] == 1
-        assert kwargs["result_version"] == _RESULT_VERSIONS[definition_id]
-        assert kwargs["timeout"] == 120
-        return RegisteredOperationCompletion(
-            operation_id=cast("OperationId", _OPERATION_ID),
-            projection=projection,
-            effect=OperationEffect.NONE,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    bind_exact_profile_read(
+        monkeypatch,
+        bridge=bridge,
+        definition_id=definition_id,
+        profile_id=profile_id,
+        projection=projection,
+        submitted=submitted,
+        result_version=_RESULT_VERSIONS[definition_id],
+        operation_id=_OPERATION_ID,
+    )
 
 
 @pytest.mark.parametrize(
@@ -247,6 +231,10 @@ def test_each_bridge_submits_its_exact_profile_request_and_preserves_complete_re
         assert result.cloud_derived_artefacts[0].transport == "openai"
     elif isinstance(result, EvidenceReviewListResult):
         assert result.rows[0].evidence_reference == _EVIDENCE_REFERENCE
+        assert result.rows[0].reason_words == []
+        assert result.rows[0].reason_words_language is None
+        assert isinstance(projection, LedgerEvidenceReviewListProjection)
+        assert result.rows[0].model_dump(mode="json") == projection.rows[0].model_dump(mode="json")
     else:
         assert isinstance(result, LedgerEvidenceReviewViewProjection)
         assert isinstance(projection, LedgerEvidenceReviewViewProjection)
@@ -288,3 +276,109 @@ def test_each_bridge_refuses_a_foreign_profile_projection_with_the_submitted_rec
         "effect": OperationEffect.NONE.value,
         "terminal_condition": "succeeded",
     }
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_review_list_preserves_every_populated_row_field_and_its_served_words(
+    monkeypatch: pytest.MonkeyPatch, language: OutputLanguage
+) -> None:
+    reasons = (ConfirmationBlockReason.CLOSURE_DISCREPANCY, ConfirmationBlockReason.UNRESOLVED_DIRECTION)
+    with override_settings(cadrumo_output_language=language.value):
+        served = tuple(served_block_reason_words(reason) for reason in reasons)
+    words = tuple(sentence for sentence, _language in served)
+    row = EvidenceReviewQueueRowProjection(
+        evidence_reference=_EVIDENCE_REFERENCE,
+        extractor="fixture-reader",
+        drafted_at=_CAPTURED_AT,
+        blocking_count=len(reasons),
+        reasons=reasons,
+        reason_words=words,
+        reason_words_language=language,
+        advisory_count=1,
+        advisories=(ReviewAdvisoryKind.PARTY_ATTRIBUTION,),
+    )
+    projection = LedgerEvidenceReviewListProjection(profile_id=_PROFILE, filters=("blocking_only",), rows=(row,))
+    submitted: list[BaseModel] = []
+    _bind(
+        monkeypatch,
+        definition_id=LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
+        profile_id=_PROFILE,
+        projection=projection,
+        submitted=submitted,
+    )
+
+    result = bridge.run_ledger_evidence_review_list(typer.Context(TyperCommand("review-list")), blocking_only=True)
+
+    assert submitted == [LedgerEvidenceReviewListRequest(profile_id=_PROFILE, blocking_only=True)]
+    assert result.bucket_id == str(_PROFILE)
+    assert result.filters == ["blocking_only"]
+    assert len(result.rows) == 1
+    assert result.rows[0].model_dump(mode="json") == row.model_dump(mode="json")
+    assert result.rows[0].reasons == [reason.value for reason in reasons]
+    assert result.rows[0].reason_words == list(words)
+    assert result.rows[0].reason_words_language == language.value
+    assert result.rows[0].advisories == [ReviewAdvisoryKind.PARTY_ATTRIBUTION.value]
+
+
+def _review_row_wire(**changes: object) -> dict[str, object]:
+    return {
+        "evidence_reference": _EVIDENCE_REFERENCE,
+        "extractor": "fixture-reader",
+        "drafted_at": _CAPTURED_AT.isoformat(),
+        "blocking_count": 1,
+        "reasons": [ConfirmationBlockReason.CLOSURE_DISCREPANCY.value],
+        "reason_words": ["Read the document's figures before confirming."],
+        "reason_words_language": OutputLanguage.EN.value,
+        "advisory_count": 0,
+        "advisories": [],
+        **changes,
+    }
+
+
+@pytest.mark.parametrize("length", [1, MAX_OPERATION_ERROR_WORDS_LENGTH])
+def test_review_row_accepts_the_producers_sentence_length_boundaries(length: int) -> None:
+    sentence = "x" * length
+    payload = EvidenceReviewRowPayload.model_validate(_review_row_wire(reason_words=[sentence]))
+
+    assert payload.reason_words == [sentence]
+    assert payload.reason_words_language == OutputLanguage.EN.value
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error_type"),
+    [
+        ("reason_words", None, "list_type"),
+        ("reason_words", "not a list", "list_type"),
+        ("reason_words", ("a sentence",), "list_type"),
+        ("reason_words", [1], "string_type"),
+        ("reason_words", [True], "string_type"),
+        ("reason_words", [None], "string_type"),
+        ("reason_words", [b"a sentence"], "string_type"),
+        ("reason_words", [{}], "string_type"),
+        ("reason_words", [""], "string_too_short"),
+        ("reason_words", ["x" * (MAX_OPERATION_ERROR_WORDS_LENGTH + 1)], "string_too_long"),
+        ("reason_words", ["a sentence"] * 65, "too_long"),
+        ("reason_words_language", 1, "string_type"),
+        ("reason_words_language", True, "string_type"),
+        ("reason_words_language", b"en", "string_type"),
+        ("reason_words_language", [], "string_type"),
+        ("reason_words_language", {}, "string_type"),
+        ("reason_words_language", "", "value_error"),
+        ("reason_words_language", "EN", "value_error"),
+        ("reason_words_language", "de", "value_error"),
+    ],
+)
+def test_review_row_refuses_wrong_word_shapes_and_languages(field: str, value: object, error_type: str) -> None:
+    with pytest.raises(ValidationError) as refused:
+        EvidenceReviewRowPayload.model_validate(_review_row_wire(**{field: value}))
+
+    assert [(error["loc"][0], error["type"]) for error in refused.value.errors()] == [(field, error_type)]
+
+
+def test_review_row_still_refuses_undeclared_fields() -> None:
+    with pytest.raises(ValidationError) as refused:
+        EvidenceReviewRowPayload.model_validate(_review_row_wire(undeclared_words="extra"))
+
+    assert [(error["loc"], error["type"]) for error in refused.value.errors()] == [
+        (("undeclared_words",), "extra_forbidden")
+    ]

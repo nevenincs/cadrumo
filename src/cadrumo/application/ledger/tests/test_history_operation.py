@@ -12,7 +12,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.hashing import canonical_json_bytes
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.buckets.event import (
     BucketEvent,
     BucketEventObjectType,
@@ -23,11 +23,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...bucket_event_projection import BucketEventProjection
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..history_operation import (
@@ -43,6 +39,7 @@ from ..history_operation import (
     build_ledger_history_typed_definition,
     build_ledger_history_typed_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,14 +87,7 @@ def _access_context(
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
     """Build a result-disclosure context for the exact registered contract."""
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.RESULT)
 
 
 def _event(

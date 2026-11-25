@@ -16,19 +16,28 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.login_session import resolve_login_target
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -57,19 +66,12 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
         profile.register(
             label="native-modelo-history-project-compare",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.name": "Native",
                 "identity.surnames": "Projection",
                 "activities.description": "consulting",
                 "censo.activity_start_date": "2025-01-01",
-                "tax_residence.jurisdiction_scope": "common_regime",
                 "tax_residence.ccaa": "madrid",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         assert profile.label is not None
@@ -90,26 +92,24 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
             operation=authority_operation,
         )
         with bundled_indexed_authority().operation() as calculation_operation:
-            calculated = calculate_modelo_revision(
+            calculated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=calculation_operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 casilla_inputs={},
                 binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-            )
+            ).revision
         revision_2026 = str(calculated.calculation_revision_id)
         seed_test_profile_record(
             create_user_profile_record(
                 context=profile_authority_contexts()[0],
                 profile_id=bucket_id,
                 setup_state=ProfileSetupState.COMPLETE,
-                facts=(
-                    *MODELO_READY_PROFILE_FACTS,
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+                facts=persona_facts_beneath(
+                    (
+                        COLEGIO_CONCERTADO_ATTESTATION,
+                        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+                    )
                 ),
             )
         )
@@ -129,7 +129,7 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
         assert projected["quarters_filed"] == 1 and projected["quarters_available"] == ["1T"]
         assert projected["is_extrapolated"] is True
         assert projected["casilla_observations"]
-        assert projected["m100_projection"]["base_liquidable_general_0505"] is not None
+        assert projected["m100_projection"]["base_liquidable_general"] is not None
 
         compared = _invoke(profile, "app", "modelo", "compare", "--modelo", "130", "--year", "2025", "--year", "2026")
         assert compared.exit_code == 0, compared.output

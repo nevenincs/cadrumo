@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -31,7 +32,11 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import (
+    CalculationOperatorLayer,
+    RowCarryAttestation,
+    ValueAttestation,
+)
 from ...domain.modelos.row_models import ModeloDetailRow
 from .calculate_input import resolve_binding_overrides
 
@@ -106,7 +111,7 @@ class CallerContextCalculationInputs:
     """A caller context projected onto the calculation boundary's own input channels.
 
     Every field maps one-to-one onto a keyword of
-    :func:`~cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
+    :func:`~cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
     a replaying caller passes each of them and sets ``record_operator_layer``,
     so the revision it produces records the same operator layer it replayed.
     """
@@ -116,6 +121,10 @@ class CallerContextCalculationInputs:
     cleared_casilla_ids: tuple[CasillaId, ...]
     binding_values: dict[BindingId, Decimal]
     enum_binding_values: dict[BindingId, str]
+    attested_binding_ids: tuple[BindingId, ...]
+    value_attestations: Mapping[BindingId, ValueAttestation]
+    income_family_entry_digests: Mapping[str, str]
+    row_attestations: tuple[RowCarryAttestation, ...]
     detail_rows: tuple[ModeloDetailRow, ...]
     filing_instance_evidence: FilingInstanceEvidence | None
     m210_official_tipo_renta_code: str | None
@@ -148,6 +157,10 @@ def caller_context_calculation_inputs(
         cleared_casilla_ids=context.cleared_casilla_ids,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
+        attested_binding_ids=layer.attested_binding_ids,
+        value_attestations=layer.value_attestations,
+        income_family_entry_digests=layer.income_family_entry_digests,
+        row_attestations=layer.row_attestations,
         detail_rows=context.detail_rows,
         filing_instance_evidence=context.filing_instance_evidence,
         m210_official_tipo_renta_code=context.m210_official_tipo_renta_code,

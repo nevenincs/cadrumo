@@ -11,7 +11,8 @@ from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from dev.registry.conformance.registry_schema_support import committed_registry_tree
 
 from .profile_schema_support import committed_registry_validator

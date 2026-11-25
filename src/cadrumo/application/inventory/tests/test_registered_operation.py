@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import cast
+from typing import cast, get_args
 from uuid import UUID
 
 import pytest
@@ -16,6 +16,10 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.contribuyente.inventory.corrections import (
+    INVENTORY_CORRECTION_REFUSAL_REASONS,
+    inventory_refusal_key,
+)
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -30,16 +34,21 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts
 from ..registered_execution_result import InventoryOperationExecutionResult, InventoryOperationRefusalDetail
-from ..registered_executor import InventoryOperationExecutor
+from ..registered_executor import SERVICE_INPUT_REASONS, InventoryOperationExecutor
 from ..registered_operation import (
     build_inventory_closing_authority_record_definition,
     build_inventory_closing_authority_record_registration,
     build_inventory_create_definition,
     build_inventory_create_registration,
+    build_inventory_inspect_definition,
+    build_inventory_inspect_registration,
+    build_inventory_ledger_change_definitions,
+    build_inventory_ledger_change_registration,
     build_inventory_list_definition,
     build_inventory_list_registration,
     build_inventory_movement_add_definition,
@@ -51,10 +60,13 @@ from ..registered_requests import (
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_VALIDATION_REFUSAL_CODE,
     InventoryAcquisitionCostRequest,
+    InventoryClosingAuthorityDecisionRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryCreateRequest,
+    InventoryRefusalReason,
 )
 from ..registered_result_projection import project_inventory_create_result
+from ..registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ..service import InventoryLedgerResult
 from .registered_operation_conformance_support import build_inventory_conformance_closing_authority_record
 
@@ -127,6 +139,43 @@ def test_closing_authority_request_round_trips_the_existing_canonical_record() -
     request = build_inventory_conformance_closing_authority_record("inventory-closing-seed")
 
     assert InventoryClosingAuthorityRecordInput.from_domain(request.to_domain()) == request
+
+
+@pytest.mark.parametrize(
+    "actor",
+    [
+        "automation:installed-service.attended.5aa00000-0000-4000-8000-0000000000cc",
+        "a" * 128,
+    ],
+    ids=["automation-session-label", "at-bound"],
+)
+def test_closing_authority_request_round_trips_a_stored_actor_longer_than_64(actor: str) -> None:
+    stored = build_inventory_conformance_closing_authority_record("inventory-closing-seed").to_domain(actor=actor)
+
+    request = InventoryClosingAuthorityRecordInput.from_domain(stored)
+
+    assert len(actor) > 64
+    assert request.decision.actor == actor
+    assert request.to_domain() == stored
+
+
+def test_closing_authority_request_refuses_a_non_utc_decision_instant() -> None:
+    decision = build_inventory_conformance_closing_authority_record("inventory-closing-seed").decision
+    offset = datetime(2026, 3, 1, 12, 0, tzinfo=timezone(timedelta(hours=2)))
+
+    with pytest.raises(ValidationError) as refused:
+        InventoryClosingAuthorityDecisionRequest.model_validate({**dict(decision), "decided_at": offset})
+
+    assert [error["loc"] for error in refused.value.errors()] == [("decided_at",)]
+
+
+def test_closing_authority_request_refuses_an_actor_over_128() -> None:
+    decision = build_inventory_conformance_closing_authority_record("inventory-closing-seed").decision
+
+    with pytest.raises(ValidationError) as refused:
+        InventoryClosingAuthorityDecisionRequest.model_validate({**dict(decision), "actor": "a" * 129})
+
+    assert [(error["loc"], error["type"]) for error in refused.value.errors()] == [(("actor",), "string_too_long")]
 
 
 def _receipt(
@@ -256,16 +305,39 @@ def test_inventory_registry_binds_all_five_closed_secure_request_and_result_sche
     assert all(item.result_projector is not None for item in registrations)
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
+def test_inventory_registry_binds_the_inspect_and_every_ledger_change_operation() -> None:
+    def ports_factory(*, bucket_id: str):
+        raise AssertionError(f"ports should be bound only inside the profile worker: {bucket_id}")
 
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
+    changes = build_inventory_ledger_change_definitions(ports_factory)
+    inspect = build_inventory_inspect_definition(ports_factory)
 
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
+    assert {item.definition_id for item in changes} == set(INVENTORY_LEDGER_CHANGE_REQUEST_TYPES)
+    assert {item.definition_id for item in changes} == {
+        "ledger.inventory.describe",
+        "ledger.inventory.correct",
+        "ledger.inventory.movement.correct",
+        "ledger.inventory.movement.reverse",
+        "ledger.inventory.movement.claim",
+        "ledger.inventory.retire",
+        "ledger.inventory.restore",
+    }
+    assert inspect.definition_id == "ledger.inventory.inspect"
+    registrations = (
+        build_inventory_inspect_registration(inspect),
+        *(build_inventory_ledger_change_registration(item) for item in changes),
+    )
+    assert all(item.result_projector is not None for item in registrations)
+    assert all(item.capabilities.sensitive_input.value == "secure_reference" for item in (inspect, *changes))
+
+
+def test_every_correction_refusal_reason_is_a_public_reason_with_a_catalogue_key() -> None:
+    public = set(get_args(InventoryRefusalReason))
+    assert set(INVENTORY_CORRECTION_REFUSAL_REASONS) <= public
+    assert all(
+        SERVICE_INPUT_REASONS[inventory_refusal_key(reason)] == reason
+        for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
+    )
 
 
 class _Cancellation:
@@ -300,7 +372,7 @@ class _Context:
             definition_id=INVENTORY_CREATE_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         )
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
 

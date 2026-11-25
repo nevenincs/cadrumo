@@ -1,9 +1,9 @@
 """Every production request states its evidence posture; none inherits it from a default.
 
 The off-host consent gate's first line reads
-``if not request.evidence_derived or not provider_reads_off_host(provider)``,
+``if not request.evidence_derived or not lane.reads_off_host``,
 so ``evidence_derived`` is the whole load-bearing bit: an unmarked request is
-dispatched to a hosted provider with no consent token AND -- because the gate
+dispatched to a hosted lane with no consent token AND -- because the gate
 returns before the ledger append -- with no record, leaving it invisible to the
 withdrawal survey that tells an operator what left their machine.
 
@@ -88,6 +88,7 @@ def test_the_scan_finds_the_known_request_builders() -> None:
         "adapters/outbound/llm/column_role_mapping.py",
         "adapters/outbound/llm/evidence_draft_text.py",
         "adapters/outbound/llm/evidence_draft_vision.py",
+        "adapters/outbound/llm/statement_reading.py",
         "adapters/outbound/llm/text_classifier.py",
         "adapters/outbound/llm/vision_classifier.py",
     ):

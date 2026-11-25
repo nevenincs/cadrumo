@@ -6,12 +6,11 @@ import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.credentials import assess_profile_password
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -26,7 +25,8 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
 
-from .runtime_access_management import RecoveryClientOpener, RuntimeAccessManagementScreen
+from .runtime_access_management import RuntimeAccessManagementScreen
+from .runtime_recovery_client import RecoveryClientOpener
 
 if TYPE_CHECKING:
     from cadrumo_client.transport.frontend_client import FrontendClient
@@ -85,8 +85,8 @@ def compose_runtime_account_factories(
     def password() -> PassphraseScreen:
         require_binding()
 
-        async def open_fresh() -> FrontendClient:
-            return await open_recovery_client()
+        async def open_fresh(timeout: float) -> FrontendClient:
+            return await open_recovery_client(timeout=timeout)
 
         def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:
             require_binding()
@@ -96,7 +96,7 @@ def compose_runtime_account_factories(
                     current_passphrase=bytearray(current, "utf-8"),
                     new_passphrase=bytearray(replacement, "utf-8"),
                     new_passphrase_confirmation=bytearray(confirmation, "utf-8"),
-                    fresh_client=lambda: asyncio.run(open_fresh()),
+                    fresh_client=lambda timeout: asyncio.run(open_fresh(timeout)),
                 )
             except ProfileMutationRunError as error:
                 if (

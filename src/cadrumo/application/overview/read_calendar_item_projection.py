@@ -6,17 +6,20 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Self
 
-from pydantic import BaseModel, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
+from ...core.i18n.render import tr
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.period import Period
 from ...core.post_filing_event import PostFilingEventKind
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH, served_words_language
 from ..operations.public_scalar import PublicDecimal
 from .calendar_models import (
     CalendarWarning,
@@ -27,12 +30,20 @@ from .calendar_models import (
     OverviewCalendarEvent,
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
+    OverviewCalendarScope,
     OverviewCensoEnrolmentState,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
     SuppressedCalendarEntry,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
+    require_decided_derivations,
 )
+from .filing_status_words import filing_status_words
 from .pipeline_projection import PipelineNextActionSnapshot
+from .suppressed_verdict_words import suppressed_verdict_words
 
 
 def _period(value: str) -> Period:
@@ -154,7 +165,6 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     holiday_refs: tuple[str, ...]
     jurisdictions: tuple[HolidayJurisdiction, ...]
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: str | None
     payment_cutoff_on: date | None
     evaluated_on: date
     days_overdue: NonNegativeInt | None
@@ -171,6 +181,37 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     local_work_unit_revision_id: str | None
     profile_confirmation_required: bool = False
     missing_profile_information: tuple[str, ...] = ()
+    filing_status_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    filing_status_words_language: OutputLanguage
+
+    days_until_close: int | None
+    filing_status: OverviewFilingStatus
+    scopes: tuple[OverviewCalendarScope, ...]
+
+    @model_validator(mode="after")
+    def _derivations_are_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "days_until_close": days_until_close(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    holiday_coverage=self.holiday_coverage,
+                ),
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.filing_evidence.aeat_submission_state,
+                    local_filing_state=self.filing_evidence.local_filing_state,
+                    period_state=self.user_state,
+                ),
+                "scopes": deadline_scopes(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    status=self.status,
+                    user_state=self.user_state,
+                ),
+            },
+        )
+        return self
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
@@ -186,11 +227,22 @@ class OverviewCalendarEntrySnapshot(BaseModel):
         missing_profile_information: tuple[str, ...] = (),
     ) -> Self:
         """Copy the canonical row while replacing its custom period and actions."""
-        data = value.model_dump(mode="python", exclude={"period", "filing_evidence", "recovery", "recovery_action"})
+        data = value.model_dump(
+            mode="python",
+            exclude={
+                "period",
+                "filing_evidence",
+                "recovery",
+                "recovery_action",
+            },
+        )
+        language = served_words_language()
         return cls.model_validate(
             data
             | {
                 "period": str(value.period),
+                "filing_status_words": filing_status_words(value.filing_status, language),
+                "filing_status_words_language": language,
                 "profile_confirmation_required": profile_confirmation_required,
                 "missing_profile_information": missing_profile_information,
                 "filing_evidence": OverviewFilingEvidenceSnapshot.from_evidence(value.filing_evidence),
@@ -213,6 +265,11 @@ class OverviewCalendarEntrySnapshot(BaseModel):
                     "recovery_action",
                     "profile_confirmation_required",
                     "missing_profile_information",
+                    "filing_status_words",
+                    "filing_status_words_language",
+                    "days_until_close",
+                    "filing_status",
+                    "scopes",
                 },
             )
             | {
@@ -277,6 +334,9 @@ class OverviewCalendarWarningSnapshot(BaseModel):
     message: str
     fix_action: PipelineNextActionSnapshot
     affected_modelos: tuple[str, ...]
+    # ``message`` is a locale key. A client that cannot render product keys
+    # reads this sentence, rendered in the read's output language.
+    text: str | None = None
 
     @classmethod
     def from_warning(cls, value: CalendarWarning) -> Self:
@@ -286,6 +346,7 @@ class OverviewCalendarWarningSnapshot(BaseModel):
             message=value.message,
             fix_action=PipelineNextActionSnapshot.from_action(value.fix_action),
             affected_modelos=value.affected_modelos,
+            text=tr(value.message),
         )
 
     def to_warning(self) -> CalendarWarning:
@@ -299,24 +360,56 @@ class OverviewCalendarWarningSnapshot(BaseModel):
 
 
 class OverviewSuppressedEntrySnapshot(BaseModel):
-    """One explicitly requested non-applicable obligation row."""
+    """One explicitly requested row the calendar holds off its schedule.
+
+    ``verdict_words`` is what the verdict means for the taxpayer, rendered by the
+    worker in ``verdict_words_language``: a frontend shows it instead of wording
+    a tax meaning of its own. ``reason`` is the registry's own wording and claims
+    no language. An ``INCOMPLETE`` row says the calendar could not decide the
+    obligation from the stored facts, which is neither owed nor excluded.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     modelo: str
     period: str
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
     verdict: ApplicabilityVerdict
+    verdict_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    verdict_words_language: OutputLanguage
     reason: str
+    actions: tuple[PipelineNextActionSnapshot, ...] = ()
 
     @classmethod
     def from_entry(cls, value: SuppressedCalendarEntry) -> Self:
-        """Copy the registry-derived suppression verdict."""
-        return cls(modelo=value.modelo, period=str(value.period), verdict=value.verdict, reason=value.reason)
+        """Copy the registry-derived suppression verdict and its doors, worded in the worker's language."""
+        language = served_words_language()
+        return cls(
+            modelo=value.modelo,
+            period=str(value.period),
+            opens_on=value.opens_on,
+            closes_on=value.closes_on,
+            adjusted_closes_on=value.adjusted_closes_on,
+            verdict=value.verdict,
+            verdict_words=suppressed_verdict_words(value.verdict, language),
+            verdict_words_language=language,
+            reason=value.reason,
+            actions=tuple(PipelineNextActionSnapshot.from_action(action) for action in value.actions),
+        )
 
     def to_entry(self) -> SuppressedCalendarEntry:
-        """Revalidate the canonical suppressed obligation."""
+        """Revalidate the canonical suppressed obligation; the served words are presentation, not state."""
         return SuppressedCalendarEntry(
-            modelo=self.modelo, period=_period(self.period), verdict=self.verdict, reason=self.reason
+            modelo=self.modelo,
+            period=_period(self.period),
+            opens_on=self.opens_on,
+            closes_on=self.closes_on,
+            adjusted_closes_on=self.adjusted_closes_on,
+            verdict=self.verdict,
+            reason=self.reason,
+            actions=tuple(action.to_action() for action in self.actions),
         )
 
 

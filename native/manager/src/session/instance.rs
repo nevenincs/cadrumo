@@ -1,9 +1,11 @@
-//! One manager per logon session: the per-session single-instance lock.
+//! One manager per logon session and storage root: the per-session single-instance lock.
 //!
-//! The lock name joins the manager's component identifier, `{application_id}.manager`
-//! from the identity projection, with the user and the session. Neither the image path nor
-//! the installation scope enters it, so every installed version and scope of one channel
-//! contends for the same lock in a session.
+//! The lock name joins the manager's component identifier with the user and the session.
+//! The identifier is `{application_id}.manager` from the identity projection scoped to the
+//! managed storage root ([`manager_id`]), so supervisors of one root contend for one lock
+//! and supervisors of different roots never meet. Neither the image path nor the
+//! installation scope enters it, so every installed version and scope of one channel
+//! contends for the same lock of a root in a session.
 //!
 //! - *Windows:* a named mutex in the session's `Local\` namespace, owned by the user with
 //!   the only access entry. An object of that name that another account owns, that this
@@ -16,7 +18,15 @@
 //!   transport namespace. Session ownership and IPC share one acquired capability.
 
 use std::io;
+use std::path::Path;
 use std::time::Duration;
+
+/// The manager component identifier for the storage root at `root`: the session lock
+/// and IPC name that every supervisor of that root shares, whether a standalone manager
+/// or a desktop hosting the manager core.
+pub fn manager_id(root: &Path) -> io::Result<String> {
+    cadrumo_application::instance_scope::scoped_to_root(crate::identity::MANAGER_ID, root)
+}
 
 /// A held per-session lock. On macOS the IPC listener shares its capability;
 /// the lock releases only after the final session/listener owner drops it.
@@ -80,6 +90,20 @@ pub fn session_lock_name(manager_id: &str, _user: &str, session: &str) -> io::Re
 /// `Ok(None)` means another manager in this session holds it.
 pub fn claim_session(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
     claim_platform(manager_id, patience)
+}
+
+/// Claim the lock in a Darwin transport namespace the caller owns beneath `base`, in
+/// place of the account's, so a fixture never contends with an installed manager.
+#[cfg(all(target_os = "macos", feature = "fixture-test-mode"))]
+pub fn claim_session_beneath(
+    manager_id: &str,
+    patience: Duration,
+    base: &Path,
+) -> io::Result<Option<SessionLock>> {
+    Ok(
+        crate::macos::ipc::SessionClaim::acquire_beneath(base, validated(manager_id)?, patience)?
+            .map(|claim| SessionLock { claim }),
+    )
 }
 
 #[cfg(windows)]

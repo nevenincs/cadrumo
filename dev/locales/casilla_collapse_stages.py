@@ -14,11 +14,11 @@ from .casilla_catalogue_models import (
     Values,
 )
 from .casilla_text_comparison import (
-    _is_derived_help,
+    is_derived_help,
 )
 
 
-def _remove_casilla_structural_leaf(
+def remove_casilla_structural_leaf(
     self: ModeloCasillaCatalogue, locale: str, key: str, value: str | None, working: Values, plan: CollapsePlan
 ) -> None:
     """Remove casilla structural leaf."""
@@ -28,14 +28,14 @@ def _remove_casilla_structural_leaf(
         plan.remove(locale, key, "orphan")
     elif value is None:
         plan.remove(locale, key, "null")
-    elif _is_derived_help(key, value):
+    elif is_derived_help(key, value):
         plan.remove(locale, key, "derived-help")
     else:
         return
     del working[locale][key]
 
 
-def _lift_casilla_lineage_key(
+def lift_casilla_lineage_key(
     self: ModeloCasillaCatalogue,
     working: Values,
     baseline: Mapping[Coordinate, str | None],

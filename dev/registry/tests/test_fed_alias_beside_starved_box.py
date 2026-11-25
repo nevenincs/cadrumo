@@ -14,10 +14,16 @@ from functools import cache
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    revision_covering,
+    supported_authored_exercises,
+)
 
 from ..compiler.authority import compile_validated_authority
 
@@ -33,7 +39,15 @@ _AGGREGATE_IDS = frozenset(
         "iva.anual.repercutido.recargo.super-reducido",
     }
 )
-_REVISIONS_WITH_RATE_QUOTA_EXPORTS = frozenset({"2022", "2023", "2024", "2025"})
+#: The supported editions that reach filing grade, which are the ones that publish export layouts.
+_REVISIONS_WITH_RATE_QUOTA_EXPORTS = frozenset(
+    str(revision.id)
+    for revision in authored_revisions_where(
+        _MODELO_ID, lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+    )
+    if str(revision.id)
+    in {str(revision_covering(_MODELO_ID, exercise).id) for exercise in supported_authored_exercises(_MODELO_ID)}
+)
 
 
 @cache

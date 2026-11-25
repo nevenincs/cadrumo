@@ -7,7 +7,7 @@ import pytest
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ..prior_payment_advisory import _PriorPaymentDeclaration, _selected_registry_declaration
+from ..prior_payment_advisory import PriorPaymentDeclaration, selected_registry_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -24,7 +24,7 @@ def test_non_m130_work_does_not_apply_the_m130_declaration(operation: PinnedAuth
     ).revision
 
     assert (
-        _selected_registry_declaration(
+        selected_registry_declaration(
             revision,
             modelo="200",
             filing_year=2024,
@@ -42,7 +42,7 @@ def test_m130_work_uses_its_filing_year_scoped_period_query(operation: PinnedAut
         period=_FIRST_QUARTER,
     ).revision
 
-    resolved = _selected_registry_declaration(
+    resolved = selected_registry_declaration(
         revision,
         modelo="130",
         filing_year=2024,
@@ -50,7 +50,7 @@ def test_m130_work_uses_its_filing_year_scoped_period_query(operation: PinnedAut
         operation=operation,
     )
 
-    assert isinstance(resolved, _PriorPaymentDeclaration)
+    assert isinstance(resolved, PriorPaymentDeclaration)
     assert resolved.modelo == "130"
     assert (
         len(

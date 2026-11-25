@@ -64,8 +64,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -74,7 +75,7 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -86,11 +87,10 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -110,11 +110,12 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M200 = "200"
 _M202 = "202"
 
-# The same-year M202 pagos-fraccionados c34 output the M200 cuota-diferencial
-# formula folds via relation ``modelo-200-pagos-fraccionados-anuales``
-# (filing_year_delta = 0). That relation is consumed DIRECTLY by a formula operand
-# (the cuota-diferencial subtraction), so an absent value RAISES on the live path
-# rather than resolving present-or-zero. It is NOT the cross-year
+# The same-year M202 pagos-fraccionados c34 output the M200 pago-fraccionado
+# formulas (casillas 00601, 00603, 00605, then the cuota diferencial) fold through
+# one relation per instalment, ``modelo-200-pago-fraccionado-<ordinal>-40-3``
+# (filing_year_delta = 0). Those relations are consumed DIRECTLY by formula operands,
+# so an absent value leaves the cuota diferencial unresolved rather than resolving
+# present-or-zero. It is NOT the cross-year
 # carry under test, so seed it as zero (no instalments this scenario) to keep the
 # live calculate focused on the BIN / dotaciones self-carries.
 _M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
@@ -123,7 +124,10 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
-_M202_PAGO_RELATION = "modelo-200-pagos-fraccionados-anuales"
+_M202_PAGO_RELATIONS = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-3"
+    for period, ordinal in zip(_M202_PAGO_PERIODS, ("primero", "segundo", "tercero"), strict=True)
+}
 _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     "DP200014B:00611",
     surface="_CASILLA_CUOTA_DIFERENCIAL",
@@ -170,6 +174,10 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
 _PRIOR_BIN_STOCK = Decimal("30000.00")
 _PRIOR_DOTACIONES_NO_CUMPLIDO = Decimal("8000.00")
 _PRIOR_DOTACIONES_CUMPLIDO = Decimal("5000.00")
+# A filed prior return states its net turnover, which the current rate reads.
+_PRIOR_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_PRIOR_TURNOVER")
+_PRIOR_TURNOVER_AMOUNT = Decimal("500000")
+_PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The three cross-year self-carries whose absence declares a zero opening stock.
@@ -195,34 +203,26 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
     ``isolated_runtime_profile`` manifest label so the loaded
     :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
-            UserProfileFact(path="activities.description", value="software consultancy"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            *(
-                (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
-                if activity_start_date is not None
-                else ()
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
+                UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
+                UserProfileFact(path="activities.description", value="software consultancy"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                *(
+                    (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
+                    if activity_start_date is not None
+                    else ()
+                ),
             ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -236,93 +236,58 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
     historical filing the ``filing_year_delta = -1`` carries fold into the current
     ejercicio.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M200,
+            filing_year=_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=_M200,
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=_M200,
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
-                        _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
-                        _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
-                    },
-                    grade=RegistryAuthorityGrade.CALCULATION,
-                ),
+                casilla_values={
+                    _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
+                    _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
+                    _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
+                    _PRIOR_TURNOVER: _PRIOR_TURNOVER_AMOUNT,
+                },
+                grade=RegistryAuthorityGrade.CALCULATION,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M200,
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo=_M200,
-                        filing_year=_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
-                            _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
-                            _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
-                        },
-                        grade=RegistryAuthorityGrade.CALCULATION,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
     """Seed same-year M202 instalments as zero c34 so the pagos relation resolves.
 
-    The M200 cuota-diferencial formula folds ``modelo-200-pagos-fraccionados-anuales``
-    (a same-year M202 pagos relation) as a DIRECT formula operand, which raises if
-    unsupplied. This scenario declares no instalments, so each period's c34 is filed
+    The M200 pago-fraccionado formulas fold one same-year M202 relation per
+    instalment as a DIRECT formula operand, which leaves the cuota diferencial
+    unresolved if unsupplied. This scenario declares no instalments, so each period's c34 is filed
     zero — the relation resolves to zero and the live calculate proceeds, leaving
     the cross-year BIN / dotaciones carries the sole subject of the assertions.
     """
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo=_M202,
                     filing_year=_FILING_YEAR,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: Decimal("0"),
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo=_M202,
-                            filing_year=_FILING_YEAR,
-                            period=period,
-                            casilla_values={
-                                _M202_PAGO_OUTPUT: Decimal("0"),
-                                _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                            },
-                        ),
-                    )
-                ),
-            )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
         )
 
 
@@ -473,7 +438,21 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
         f"each absent self-carry must be advised; missing {_M200_SELF_CARRY_RELATIONS - advised}"
     )
     for diagnostic in result.source_diagnostics:
-        assert diagnostic.reason == "source_issue"
+        if diagnostic.source_kind == _RELATION_PREFILL_SOURCE:
+            assert diagnostic.reason == "source_issue"
+    # The rate reads the preceding period's turnover, which nothing held states
+    # and no declared fact replaces, so it stays unresolved rather than zero.
+    unresolved = {
+        diagnostic.binding_id
+        for diagnostic in result.source_diagnostics
+        if diagnostic.source_kind != _RELATION_PREFILL_SOURCE
+    }
+    assert unresolved == {_PRECEDING_TURNOVER_CARRY}
+    assert all(
+        diagnostic.reason == "unresolved_binding"
+        for diagnostic in result.source_diagnostics
+        if diagnostic.binding_id == _PRECEDING_TURNOVER_CARRY
+    )
 
 
 def test_m200_first_ejercicio_filer_carries_zero_without_an_advisory(
@@ -533,13 +512,16 @@ def test_m200_missing_m202_relation_becomes_unresolved_advisory_on_live_calculat
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0")
     assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == Decimal("0")
 
-    diagnostics = tuple(diag for diag in result.source_diagnostics if diag.relation_id == _M202_PAGO_RELATION)
-    assert len(diagnostics) == 1
-    diagnostic = diagnostics[0]
-    assert diagnostic.reason == "source_issue"
-    assert diagnostic.source_kind == _RELATION_PREFILL_SOURCE
-    assert diagnostic.resolver_id == _RELATION_PREFILL_SOURCE
-    assert "modelo 202" in diagnostic.message
-    assert str(_FILING_YEAR) in diagnostic.message
-    for period in _M202_PAGO_PERIODS:
+    for period, relation in _M202_PAGO_RELATIONS.items():
+        # Both modalidad readings of one instalment share its absent filing, so one advisory names them.
+        relations = {relation, relation.removesuffix("-40-3") + "-40-2"}
+        diagnostics = tuple(diag for diag in result.source_diagnostics if relation in diag.relation_ids)
+        assert len(diagnostics) == 1
+        assert relations <= set(diagnostics[0].relation_ids)
+        diagnostic = diagnostics[0]
+        assert diagnostic.reason == "source_issue"
+        assert diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        assert diagnostic.resolver_id == _RELATION_PREFILL_SOURCE
+        assert "modelo 202" in diagnostic.message
+        assert str(_FILING_YEAR) in diagnostic.message
         assert period in diagnostic.message

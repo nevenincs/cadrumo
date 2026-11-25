@@ -9,7 +9,7 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.identity.bucket import canonical_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import build_state_projection_read_ports
+from .adapter_composition_work_ports import build_state_projection_read_ports
 
 
 def build_modelo_query_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloQueryReadPorts:

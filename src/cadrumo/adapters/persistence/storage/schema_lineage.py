@@ -25,7 +25,7 @@ by the schema-lineage boundary regardless of their domain-specific refusal
 type or message.
 
 See Also:
-    :func:`~adapters.persistence.storage.sql._secure_object_row_codec.secure_object_record_from_row`
+    :func:`~adapters.persistence.storage.sql.secure_object_row_codec.secure_object_record_from_row`
         Row decode path that applies this policy before returning a record.
 """
 

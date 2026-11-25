@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.quality.unread_inputs import format_unread_notice
 
-from .unreachable_memo import _walked
-from .unreachable_policy import _COMMAND_TOKEN, _DATA_TOKEN, _DOTTED_SPEC
+from .unreachable_memo import walked
+from .unreachable_policy import COMMAND_TOKEN, DATA_TOKEN, DOTTED_SPEC
 from .unreachable_tree import ShippedTreeSpec
 
 # ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ def _skip_export_declarations(tree: ast.Module, skipped: set[int]) -> None:
 def _assembled_handler_prefixes(tree: ast.Module) -> set[str]:
     """Assembled handler prefixes."""
     prefixes: set[str] = set()
-    for node in _walked(tree):
+    for node in walked(tree):
         if not isinstance(node, ast.JoinedStr) or not node.values:
             continue
         head = node.values[0]
@@ -49,7 +49,7 @@ def _assembled_handler_prefixes(tree: ast.Module) -> set[str]:
 def _assembled_handler_strippers(tree: ast.Module) -> list[tuple[str, str]]:
     """Assembled handler strippers."""
     strippers: list[tuple[str, str]] = []
-    for node in _walked(tree):
+    for node in walked(tree):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         if node.func.attr not in {"removeprefix", "removesuffix"} or len(node.args) != 1:
@@ -80,7 +80,7 @@ def non_reference_nodes(tree: ast.Module) -> set[int]:
     """
     skipped: set[int] = set()
     _skip_export_declarations(tree, skipped)
-    for node in _walked(tree):
+    for node in walked(tree):
         # A bare string expression statement is a docstring or commented-out
         # prose; it is never an expression whose value anything consumes.
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
@@ -90,7 +90,7 @@ def non_reference_nodes(tree: ast.Module) -> set[int]:
 
 def string_reference_names(value: str) -> Iterator[str]:
     """Identifiers a string literal may address dynamically (``"mod:attr"``, ``"a.b"``)."""
-    if _DOTTED_SPEC.match(value):
+    if DOTTED_SPEC.match(value):
         for part in re.split(r"[.:]", value):
             if isinstance(part, str) and part:
                 yield part
@@ -126,8 +126,8 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
         return
     tokens = {
         node.value
-        for node in _walked(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and _COMMAND_TOKEN.fullmatch(node.value)
+        for node in walked(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and COMMAND_TOKEN.fullmatch(node.value)
     }
     for prefix in prefixes:
         for token in tokens:
@@ -181,7 +181,7 @@ def _type_position_strings(tree: ast.Module) -> Iterator[str]:
     Two positions are unambiguous: the first argument of a ``cast`` call, and
     an annotation written as a string literal.
     """
-    for node in _walked(tree):
+    for node in walked(tree):
         yield from _cast_type_reference_strings(node)
         annotations: list[ast.expr | None] = []
         if isinstance(node, (ast.AnnAssign, ast.arg)):
@@ -193,11 +193,11 @@ def _type_position_strings(tree: ast.Module) -> Iterator[str]:
                 yield annotation.value
 
 
-def _references(tree: ast.Module) -> set[str]:
+def source_references(tree: ast.Module) -> set[str]:
     """Every bare identifier the module loads, accesses, keywords, imports, or spells."""
     skipped = non_reference_nodes(tree)
     names: set[str] = set()
-    for node in _walked(tree):
+    for node in walked(tree):
         if id(node) in skipped:
             continue
         _read_reference_node(node, names)
@@ -206,7 +206,7 @@ def _references(tree: ast.Module) -> set[str]:
     return names
 
 
-def _string_tokens(tree: ast.Module) -> set[str]:
+def string_tokens(tree: ast.Module) -> set[str]:
     """Identifiers spelled inside string literals, the only dynamic reach left.
 
     Docstrings and ``__all__`` are excluded for the reason
@@ -214,7 +214,7 @@ def _string_tokens(tree: ast.Module) -> set[str]:
     """
     skipped = non_reference_nodes(tree)
     tokens: set[str] = set()
-    for node in _walked(tree):
+    for node in walked(tree):
         if id(node) in skipped:
             continue
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -222,14 +222,14 @@ def _string_tokens(tree: ast.Module) -> set[str]:
     return tokens
 
 
-def _data_paths(spec: ShippedTreeSpec) -> Iterator[Path]:
+def data_paths(spec: ShippedTreeSpec) -> Iterator[Path]:
     """Every shipped payload file the data globs select under an audited package root."""
     for root in spec.package_roots:
         for glob in spec.data_globs:
             yield from (path for path in root.glob(glob) if path.is_file())
 
 
-def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
+def unreachable_references_data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """Identifier tokens in the shipped non-Python payloads.
 
     Registry declarations and locale catalogues address fields and enum values
@@ -238,7 +238,7 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """
     tokens: set[str] = set()
     unread: list[str] = []
-    for path in _data_paths(spec):
+    for path in data_paths(spec):
         try:
             text = path.read_text(encoding=UTF_8)
         except (OSError, UnicodeDecodeError) as error:
@@ -250,13 +250,13 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
             # never matches, with nothing said either way.
             unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
-        tokens.update(_DATA_TOKEN.findall(text))
+        tokens.update(DATA_TOKEN.findall(text))
     if unread:
         raise OSError(format_unread_notice("unreachable-code data tokens", "coverage is unproven", unread).rstrip())
     return frozenset(tokens)
 
 
-def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
+def declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     """Mapping keys and COMPLETE string values in the shipped declarations.
 
     Deliberately stricter than :func:`_data_tokens`, and separate from it so
@@ -274,7 +274,7 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     values: set[str] = set()
     unread: list[str] = []
 
-    for path in _data_paths(spec):
+    for path in data_paths(spec):
         try:
             text = path.read_text(encoding=UTF_8)
             parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)

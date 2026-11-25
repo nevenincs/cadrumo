@@ -25,7 +25,7 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
+from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
 from ..state_projection_ports import StateProjectionReadPorts
 from .work_review import ModeloWorkReview
 from .work_selection import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
@@ -493,7 +493,7 @@ class ModeloWorkspaceWorkPortV1:
 
     def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkResolution]:
         """Atomically capture one work resolution and stamp it with its epoch."""
-        from .work_addressing import capture_modelo_work_resolution
+        from .work_capture import capture_modelo_work_resolution
 
         capture = capture_modelo_work_resolution(
             self._request,
@@ -509,7 +509,7 @@ class ModeloWorkspaceWorkPortV1:
 
     def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
         """Read the work catalogue's current coordinate as this contributor's epoch."""
-        from .work_addressing import read_modelo_work_current_coordinate
+        from .work_capture import read_modelo_work_current_coordinate
 
         current = read_modelo_work_current_coordinate(self._request, catalogue_repository=self._catalogue_repository)
         return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)

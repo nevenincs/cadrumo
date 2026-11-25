@@ -8,7 +8,6 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from .acquisition_lock import (
     AuthAcquisitionLockState,
     clear_auth_acquisition_lock,
@@ -24,6 +23,7 @@ from .models import (
     AuthState,
     CertificateSourceRecord,
 )
+from .mutation import AuthBucketEventSpec
 from .operator_results import AuthOperationScopeConflictError
 from .sessions import delete_persisted_session, persisted_session_exists
 
@@ -125,14 +125,15 @@ def delete_certificate_source_secrets(
     return sum(backend.remove(name) for name in names)
 
 
-def assert_logout_request_matches(
+def assert_auth_cleanup_request_matches(
     intent: AuthCleanupIntent,
     *,
+    operation_kind: AuthCleanupOperationKind,
     provider: str | None,
     all_providers: bool,
 ) -> None:
-    """Refuse when a durable logout intent differs from the current request."""
-    if intent.operation_kind is not AuthCleanupOperationKind.LOGOUT:
+    """Refuse when a durable cleanup intent differs from the requested kind or scope."""
+    if intent.operation_kind is not operation_kind:
         matches = False
     elif all_providers:
         matches = intent.all_providers
@@ -157,27 +158,6 @@ def auth_cleanup_intent_has_effects(intent: AuthCleanupIntent) -> bool:
         or intent.certificate_sources
         or intent.secret_source_names
     )
-
-
-def assert_reset_request_matches(
-    intent: AuthCleanupIntent,
-    *,
-    provider: str | None,
-    all_providers: bool,
-) -> None:
-    """Refuse when a durable reset intent differs from the current request."""
-    if intent.operation_kind is not AuthCleanupOperationKind.RESET:
-        matches = False
-    elif all_providers:
-        matches = intent.all_providers
-    elif provider is not None:
-        matches = not intent.all_providers and intent.provider_ids == (get_auth_provider(provider).id,)
-    else:
-        matches = not intent.all_providers
-    if not matches:
-        raise AuthOperationScopeConflictError(
-            translated_message="application.auth.operator.errors.scope_conflict",
-        )
 
 
 def _certificate_source_witnesses(
@@ -485,14 +465,14 @@ def auth_cleanup_bucket_events(
     intent: AuthCleanupIntent,
     provider_ids: tuple[str, ...],
     certificate_names: tuple[str, ...],
-) -> tuple[_BucketEventSpec, ...]:
+) -> tuple[AuthBucketEventSpec, ...]:
     """Project durable bucket events for one completed auth cleanup intent."""
     from ...domain.buckets.event import BucketEventType
 
     common = {"operation": "reset", "operation_id": intent.operation_id}
-    events: list[_BucketEventSpec] = []
+    events: list[AuthBucketEventSpec] = []
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_PROVIDER_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -501,7 +481,7 @@ def auth_cleanup_bucket_events(
         for provider_id in provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_SESSION_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -510,7 +490,7 @@ def auth_cleanup_bucket_events(
         for provider_id in intent.session_provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_LOCK_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -519,7 +499,7 @@ def auth_cleanup_bucket_events(
         for provider_id in intent.lock_provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_CERTIFICATE_SOURCE_REMOVED,
             name,
             {**common, "name": name},
@@ -528,7 +508,7 @@ def auth_cleanup_bucket_events(
         for name in certificate_names
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
             name,
             {**common, "name": name},
@@ -551,8 +531,7 @@ def _certificate_source_secret_exists(
 
 __all__ = [
     "apply_auth_cleanup_intent",
-    "assert_logout_request_matches",
-    "assert_reset_request_matches",
+    "assert_auth_cleanup_request_matches",
     "auth_cleanup_bucket_events",
     "auth_cleanup_intent_has_effects",
     "clear_operator_auth_acquisition_locks",

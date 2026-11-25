@@ -66,6 +66,7 @@ impl HostEvents {
                 notice.status = None;
                 notice.role = None;
                 notice.process = None;
+                notice.terminal_session = None;
                 notice.stage = None;
                 notice.lifecycle = None;
                 notice.service = None;
@@ -75,6 +76,7 @@ impl HostEvents {
                 notice.outcome = None;
                 notice.host_exit_code = None;
                 notice.panic = None;
+                notice.desktop_diagnostic = None;
                 fresh.push(entry(&notice));
             }
             self.write_failure = failure;
@@ -129,6 +131,9 @@ pub(super) fn entry(event: &Event) -> Entry {
         ("process_id".to_owned(), Value::from(process.pid)),
         ("process_role".to_owned(), Value::from(process.role.clone())),
     ]);
+    if let Some(session) = event.terminal_session {
+        context.insert("terminal_session".into(), Value::from(session));
+    }
     if let Some(stage) = event.stage {
         context.insert("stage".into(), Value::from(token(stage)));
     }
@@ -228,8 +233,16 @@ pub(super) fn entry(event: &Event) -> Entry {
             let name = match key.as_str() {
                 "gatewayPort" => "gateway_port",
                 "delayMs" => "delay_ms",
-                "prepareMs" => "prepare_ms",
+                "commandMs" => "command_ms",
+                "personMs" => "person_ms",
                 "spawnMs" => "spawn_ms",
+                "queueMs" => "queue_ms",
+                "creationLockMs" => "creation_lock_ms",
+                "createMs" => "create_ms",
+                "containMs" => "contain_ms",
+                "elapsedMs" => "elapsed_ms",
+                "observeMs" => "observe_ms",
+                "outcomeMs" => "outcome_ms",
                 "packageAbi" => "package_abi",
                 "logLevel" => "log_level",
                 "logLevelOverridden" => "log_level_overridden",
@@ -248,6 +261,9 @@ pub(super) fn entry(event: &Event) -> Entry {
         }
     }
     let mut message = token(event.kind);
+    if let Some(fact) = event.webview_failure {
+        message.push_str(&webview_message(fact));
+    }
     if let Some(fact) = &event.panic {
         message.push_str(&format!(": {}", token(fact.category)));
         if let (Some(file), Some(line)) = (&fact.file, fact.line) {
@@ -269,14 +285,66 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
         }
         if let cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
-            prepare_ms,
+            command_ms,
             spawn_ms,
+            queue_ms,
+            creation_lock_ms,
+            create_ms,
+            contain_ms,
+            person_ms,
             ..
         } = fact
         {
             message.push_str(&format!(
-                ": preparation {prepare_ms} ms, process launch {spawn_ms} ms"
+                ": command {command_ms} ms, process launch {spawn_ms} ms (queue {queue_ms} ms, creation lock {creation_lock_ms} ms, create {create_ms} ms, contain {contain_ms} ms), person session {person_ms} ms"
             ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
+            admitted,
+            elapsed_ms,
+            ..
+        } = fact
+        {
+            message.push_str(&if admitted {
+                format!(": admitted in {elapsed_ms} ms")
+            } else {
+                format!(": refused after {elapsed_ms} ms")
+            });
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::SetupAdmissionRead {
+            read,
+            outcome,
+            elapsed_ms,
+        } = fact
+        {
+            message.push_str(&format!(
+                ": {} read {} in {elapsed_ms} ms",
+                token(read),
+                token(outcome)
+            ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::OperationSettle {
+            end,
+            wake,
+            observes,
+            cues,
+            observe_ms,
+            outcome_ms,
+            elapsed_ms,
+        } = fact
+        {
+            message.push_str(&format!(
+                ": {} in {elapsed_ms} ms, {observes} observes ({cues} cued, last woken by {}) {observe_ms} ms, outcome read {outcome_ms} ms",
+                token(end),
+                token(wake)
+            ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::PersonRestore {
+            cause,
+            outcome,
+        } = fact
+        {
+            message.push_str(&format!(": {} -> {}", token(cause), token(outcome)));
         }
     }
     if let Some(fact) = event.lifecycle {
@@ -319,13 +387,61 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(" [{chain}]"));
         }
     }
+    if let Some(fact) = &event.desktop_diagnostic {
+        message = format!("{}_{}", token(fact.origin), token(fact.event));
+        context.insert("diagnostic_event".into(), Value::from(token(fact.event)));
+        context.insert("diagnostic_origin".into(), Value::from(token(fact.origin)));
+        if let Some(logger) = &fact.logger {
+            context.insert("native_logger".into(), Value::from(logger.clone()));
+            message.push_str(&format!(": {logger}"));
+        }
+        if fact.dropped != 0 {
+            context.insert("dropped_reports".into(), Value::from(fact.dropped));
+        }
+        for (name, value) in [("line", fact.line), ("column", fact.column)] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value));
+            }
+        }
+        if let Some(command) = &fact.command {
+            message.push_str(&format!(": {command}"));
+            context.insert("command".into(), Value::from(command.clone()));
+        }
+        if let Some(code) = fact.code.as_ref() {
+            message.push_str(&format!(": {}", token(code)));
+            context.insert("reason_code".into(), Value::from(token(code)));
+        }
+        if let Some(reason) = &fact.reason {
+            message.push_str(&format!(" ({})", reason.as_str()));
+            context.insert("backend_code".into(), Value::from(reason.as_str()));
+        }
+        if let Some(summary) = &fact.summary {
+            if let Some(template) = &summary.template {
+                message.push_str(&format!(": {template}"));
+                context.insert("template".into(), Value::from(template.clone()));
+            }
+            if let Some(module) = &summary.module {
+                message.push_str(&format!(" at {module}"));
+                context.insert("module".into(), Value::from(module.clone()));
+                if let (Some(line), Some(column)) = (fact.line, fact.column) {
+                    message.push_str(&format!(":{line}:{column}"));
+                }
+            }
+        }
+    }
     let level = super::severity::level(event);
     Entry {
         source,
         timestamp: utc(event.timestamp_ms),
         timestamp_ms: Some(event.timestamp_ms),
         level: Some(level),
-        logger: Some(logger.to_owned()),
+        logger: Some(
+            event
+                .desktop_diagnostic
+                .as_ref()
+                .map_or(logger, |fact| fact.logger.as_deref().unwrap_or("frontend"))
+                .to_owned(),
+        ),
         message,
         detail: None,
         process: Some(process),
@@ -361,6 +477,7 @@ fn webview_context(
     use cadrumo_application::diagnostics::webview::WebviewFailure;
     match fact {
         WebviewFailure::ProcessFailed {
+            webview,
             kind,
             kind_code,
             reason,
@@ -368,6 +485,7 @@ fn webview_context(
             exit_code,
             read_failures,
         } => {
+            context.insert("webview_identity".into(), Value::from(token(webview)));
             context.insert("webview_event".into(), Value::from("process_failed"));
             if let Some(kind) = kind {
                 context.insert("webview_process_kind".into(), Value::from(token(kind)));
@@ -390,7 +508,12 @@ fn webview_context(
                 }
             }
         }
-        WebviewFailure::MonitorUnavailable { operation, hresult } => {
+        WebviewFailure::MonitorUnavailable {
+            webview,
+            operation,
+            hresult,
+        } => {
+            context.insert("webview_identity".into(), Value::from(token(webview)));
             context.insert("webview_event".into(), Value::from("monitor_unavailable"));
             context.insert(
                 "webview_monitor_operation".into(),
@@ -399,6 +522,51 @@ fn webview_context(
             if let Some(hresult) = hresult {
                 context.insert("webview_hresult".into(), Value::from(hresult));
             }
+        }
+    }
+}
+
+fn webview_message(fact: cadrumo_application::diagnostics::webview::WebviewFailure) -> String {
+    use cadrumo_application::diagnostics::webview::WebviewFailure;
+    match fact {
+        WebviewFailure::ProcessFailed {
+            webview,
+            kind,
+            kind_code,
+            reason,
+            reason_code,
+            exit_code,
+            ..
+        } => {
+            let label = |name, code| match (name, code) {
+                (Some(name), Some(code)) => format!("{name} ({code})"),
+                _ => "unavailable".to_owned(),
+            };
+            let exit = exit_code.map_or_else(
+                || "unavailable".to_owned(),
+                |code| format!("{code} (0x{:08X})", code as u32),
+            );
+            format!(
+                ": webview {}, kind {}, reason {}, exit code {exit}",
+                token(webview),
+                label(kind.map(token), kind_code),
+                label(reason.map(token), reason_code),
+            )
+        }
+        WebviewFailure::MonitorUnavailable {
+            webview,
+            operation,
+            hresult,
+        } => {
+            let result = hresult.map_or_else(
+                || "unavailable".to_owned(),
+                |code| format!("{code} (0x{:08X})", code as u32),
+            );
+            format!(
+                ": webview {}, monitor {}, HRESULT {result}",
+                token(webview),
+                token(operation)
+            )
         }
     }
 }
@@ -428,6 +596,82 @@ fn utc(epoch_ms: u64) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn terminal_identity_reaches_the_view_but_not_a_log_failure_notice() {
+        use super::HostEvents;
+        use cadrumo_application::{
+            diagnostics::Diagnostics,
+            error::application::{ApplicationError, ErrorCode, Operation},
+            process::status::ProcessRole,
+        };
+        let diagnostics = Diagnostics::default();
+        let process = diagnostics.start(123, ProcessRole::Console);
+        diagnostics.failure(ApplicationError::new(
+            ErrorCode::LogUnavailable,
+            Operation::Logging,
+        ));
+        diagnostics.failure_for_terminal(
+            process,
+            37,
+            ApplicationError::new(ErrorCode::InvalidArguments, Operation::Terminal),
+        );
+        let records = HostEvents::default().poll(&diagnostics);
+        let terminal = records
+            .iter()
+            .find(|record| {
+                record
+                    .context
+                    .get("reason_code")
+                    .is_some_and(|code| code == "invalid_arguments")
+            })
+            .unwrap();
+        assert_eq!(terminal.context["terminal_session"], 37);
+        let notice = records.last().unwrap();
+        assert_eq!(notice.context["reason_code"], "log_unavailable");
+        assert!(!notice.context.contains_key("terminal_session"));
+    }
+
+    #[test]
+    fn frontend_severities_and_command_context_reach_the_normal_log_view() {
+        use super::{HostEvents, Level};
+        use cadrumo_application::diagnostics::{
+            Diagnostics,
+            desktop::{DesktopDiagnostic, DesktopEvent},
+        };
+        let diagnostics = Diagnostics::default();
+        for level in [Level::Debug, Level::Info, Level::Warning, Level::Error] {
+            diagnostics.desktop_diagnostic(DesktopDiagnostic {
+                origin: cadrumo_application::diagnostics::desktop::DiagnosticOrigin::Frontend,
+                logger: None,
+                event: DesktopEvent::CommandRejected,
+                level,
+                command: Some("shell_window_action".into()),
+                code: Some(
+                    cadrumo_application::error::application::ErrorCode::WebviewFailed.into(),
+                ),
+                dropped: 2,
+                line: Some(12),
+                column: Some(7),
+                reason: None,
+                summary: None,
+            });
+        }
+        let records = HostEvents::default().poll(&diagnostics);
+        assert_eq!(
+            records
+                .iter()
+                .map(|record| record.level.unwrap())
+                .collect::<Vec<_>>(),
+            [Level::Debug, Level::Info, Level::Warning, Level::Error]
+        );
+        for record in records {
+            assert_eq!(record.context["command"], "shell_window_action");
+            assert_eq!(record.context["reason_code"], "webview_failed");
+            assert_eq!(record.context["dropped_reports"], 2);
+            assert_eq!(record.context["line"], 12);
+            assert!(record.message.contains("shell_window_action"));
+        }
+    }
     use super::*;
     use cadrumo_application::{
         diagnostics::EventKind,
@@ -440,7 +684,10 @@ mod tests {
     #[test]
     fn helper_envelope_failure_reaches_persisted_logs_and_view_without_private_payloads() {
         use crate::shell::sign_in::process::Children;
-        use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
+        use cadrumo_application::diagnostics::{
+            delivery_wait::delivered,
+            helper::{HelperExecutable, HelperIdentity},
+        };
         use std::sync::Arc;
         let identity = HelperIdentity {
             command: "config.login",
@@ -488,6 +735,8 @@ mod tests {
             "[Console]::Out.Write('PRIVATE-STDOUT-CANARY'); [Console]::Error.Write('{envelope}'); exit 1"
         );
         let output = children.run(identity, powershell(&script), None).unwrap();
+        // The file is written by the diagnostics writer, not by the recording call.
+        delivered(&diagnostics);
         let snapshot = diagnostics.snapshot(0);
         let event = snapshot
             .events
@@ -618,6 +867,7 @@ mod tests {
             .unwrap();
         assert_eq!(record.context["reason_code"], "session_unavailable");
         assert_eq!(record.context["envelope_decode"], "unavailable");
+        delivered(&diagnostics);
         let persisted =
             std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
         assert!(!persisted.contains("CANARY"));
@@ -631,18 +881,137 @@ mod tests {
             None,
             cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
                 generation: 2,
-                prepare_ms: 2400,
+                command_ms: 4,
                 spawn_ms: 350,
+                queue_ms: 3,
+                creation_lock_ms: 120,
+                create_ms: 180,
+                contain_ms: 45,
+                person_ms: 2400,
             },
         );
         let entries = HostEvents::default().poll(&diagnostics);
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].message,
-            "agent_startup_timing: preparation 2400 ms, process launch 350 ms"
+            "agent_startup_timing: command 4 ms, process launch 350 ms (queue 3 ms, creation lock 120 ms, create 180 ms, contain 45 ms), person session 2400 ms"
         );
-        assert_eq!(entries[0].context["service_prepare_ms"], 2400);
+        assert_eq!(entries[0].context["service_command_ms"], 4);
         assert_eq!(entries[0].context["service_spawn_ms"], 350);
+        assert_eq!(entries[0].context["service_queue_ms"], 3);
+        assert_eq!(entries[0].context["service_creation_lock_ms"], 120);
+        assert_eq!(entries[0].context["service_create_ms"], 180);
+        assert_eq!(entries[0].context["service_contain_ms"], 45);
+        assert_eq!(entries[0].context["service_person_ms"], 2400);
+    }
+
+    #[test]
+    fn agent_admission_duration_is_visible_and_projects_as_closed_scalars() {
+        let diagnostics = Diagnostics::default();
+        for (admitted, elapsed_ms) in [(true, 1310), (false, 20_000)] {
+            diagnostics.service(
+                None,
+                cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
+                    generation: 3,
+                    admitted,
+                    elapsed_ms,
+                },
+            );
+        }
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 2);
+        assert_eq!(
+            entries[0].message,
+            "agent_admission_timing: admitted in 1310 ms"
+        );
+        assert_eq!(entries[0].context["service_admitted"], true);
+        assert_eq!(entries[0].context["service_elapsed_ms"], 1310);
+        assert_eq!(
+            entries[1].message,
+            "agent_admission_timing: refused after 20000 ms"
+        );
+        assert_eq!(entries[1].context["service_admitted"], false);
+    }
+
+    #[test]
+    fn setup_admission_read_times_are_visible_and_project_as_closed_scalars() {
+        use cadrumo_application::diagnostics::service::{
+            AdmissionRead, AdmissionReadOutcome, ServiceFact,
+        };
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::SetupAdmissionRead {
+                read: AdmissionRead::LocalModels,
+                outcome: AdmissionReadOutcome::Unanswered,
+                elapsed_ms: 21_000,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "setup_admission_read: local_models read unanswered in 21000 ms"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_read"], "local_models");
+        assert_eq!(entries[0].context["service_outcome"], "unanswered");
+        assert_eq!(entries[0].context["service_elapsed_ms"], 21_000);
+    }
+
+    #[test]
+    fn an_operation_settle_is_visible_with_its_wake_and_times_as_closed_scalars() {
+        use cadrumo_application::diagnostics::service::{ServiceFact, SettleEnd, SettleWake};
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::OperationSettle {
+                end: SettleEnd::Settled,
+                wake: SettleWake::Recheck,
+                observes: 4,
+                cues: 1,
+                observe_ms: 120,
+                outcome_ms: 35,
+                elapsed_ms: 2_400,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "operation_settle: settled in 2400 ms, 4 observes (1 cued, last woken by recheck) 120 ms, outcome read 35 ms"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_end"], "settled");
+        assert_eq!(entries[0].context["service_wake"], "recheck");
+        assert_eq!(entries[0].context["service_observes"], 4);
+        assert_eq!(entries[0].context["service_observe_ms"], 120);
+        assert_eq!(entries[0].context["service_outcome_ms"], 35);
+        assert_eq!(entries[0].context["service_elapsed_ms"], 2_400);
+    }
+
+    #[test]
+    fn a_stored_sign_in_presentation_is_visible_with_its_cause_and_outcome() {
+        use cadrumo_application::diagnostics::service::{
+            PersonRestoreCause, PersonRestoreOutcome, ServiceFact,
+        };
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::PersonRestore {
+                cause: PersonRestoreCause::HeldSessionEnded,
+                outcome: PersonRestoreOutcome::Refused,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "person_restore: held_session_ended -> refused"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_cause"], "held_session_ended");
+        assert_eq!(entries[0].context["service_outcome"], "refused");
     }
 
     #[test]
@@ -817,16 +1186,18 @@ mod tests {
     #[test]
     fn webview_failure_context_keeps_numeric_telemetry_and_host_attribution() {
         use cadrumo_application::diagnostics::webview::{
-            MonitorOperation, ReadFailures, WebviewFailure,
+            MonitorOperation, ReadFailures, WebviewFailure, WebviewIdentity,
         };
         let diagnostics = Diagnostics::default();
         diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Main,
             Some(2),
             Some(1),
             Some(259),
             ReadFailures::default(),
         ));
         diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Main,
             Some(104),
             Some(-9),
             None,
@@ -836,9 +1207,17 @@ mod tests {
             },
         ));
         diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+            webview: WebviewIdentity::Startup,
             operation: MonitorOperation::Register,
             hresult: Some(-2_147_467_259),
         });
+        diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Startup,
+            Some(0),
+            Some(0),
+            Some(-2_147_483_645),
+            ReadFailures::default(),
+        ));
         let mut host = HostEvents::default();
         let entries = host.poll(&diagnostics);
         assert_eq!(
@@ -846,16 +1225,26 @@ mod tests {
             "render_process_unresponsive"
         );
         assert_eq!(entries[0].context["webview_exit_code"], 259);
+        assert_eq!(entries[0].context["webview_identity"], "main");
+        assert!(entries[0].message.contains("exit code 259 (0x00000103)"));
         assert!(!entries[0].context.contains_key("exit_code"));
         assert_eq!(entries[1].context["webview_process_kind"], "unrecognized");
         assert_eq!(entries[1].context["webview_process_kind_code"], 104);
         assert_eq!(entries[1].context["webview_reason_code"], -9);
+        assert!(
+            entries[1].message.contains(
+                "kind unrecognized (104), reason unrecognized (-9), exit code unavailable"
+            )
+        );
         assert_eq!(
             entries[1].context["webview_exit_code_hresult"],
             -2_147_467_259_i32
         );
         assert_eq!(entries[2].context["webview_monitor_operation"], "register");
         assert_eq!(entries[2].context["webview_hresult"], -2_147_467_259_i32);
+        assert_eq!(entries[2].context["webview_identity"], "startup");
+        assert_eq!(entries[3].context["webview_identity"], "startup");
+        assert!(entries[3].message.contains("webview startup, kind browser_process_exited (0), reason unexpected (0), exit code -2147483645 (0x80000003)"));
         assert!(host.poll(&diagnostics).is_empty());
         for entry in entries {
             assert_eq!(entry.level, Some(Level::Error));

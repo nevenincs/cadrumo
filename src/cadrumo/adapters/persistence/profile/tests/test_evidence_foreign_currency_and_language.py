@@ -40,23 +40,23 @@ from cadrumo.core.external_constants import DEFAULT_CURRENCY
 from .....domain.currency.models import EurRateLookup
 from .....domain.currency.tests.fx_lookup import eur_rate_lookup
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs_with_catalogue,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
-_FIXTURE = _EVIDENCE_CORPUS / "en16931_ubl_intracom_german_sek_invoice.xml"
+_FIXTURE = EVIDENCE_CORPUS / "en16931_ubl_intracom_german_sek_invoice.xml"
 
 # <cbc:DocumentCurrencyCode>SEK -- deliberately not the euro.
 _PRINTED_CURRENCY = "SEK"
@@ -72,7 +72,7 @@ _PRINTED_SUPPLIER_NAME = "Nordiska Verkstad AB"
 _PRINTED_SUPPLIER_IVA = "SE556677889901"
 # <cac:AccountingCustomerParty> ... the party billed.
 _PRINTED_CUSTOMER_NAME = "Talleres Peninsulares SL"
-_PRINTED_CUSTOMER_IVA = "ESB12345674"
+_PRINTED_CUSTOMER_IVA = "ESB00015016"
 # <cbc:Note> -- the statutory mention, in the issuer's own language.
 _PRINTED_LEGEND = "Steuerfreie innergemeinschaftliche Lieferung"
 
@@ -119,17 +119,18 @@ def _confirm_the_foreign_document(
     """
     source = tmp_path / _FIXTURE.name
     source.write_bytes(_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
-    base_catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
+    base_catalogue_ports = build_catalogue_creation_ports(bucket_id=BUCKET_ID)
     catalogue_ports = CatalogueCreationPorts(
         invoice_repository=base_catalogue_ports.invoice_repository,
         event_repository=base_catalogue_ports.event_repository,
         audit_commit=base_catalogue_ports.audit_commit,
         rate_provider=_AlwaysSilentRateProvider(),
+        documents=base_catalogue_ports.documents,
     )
     return confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="SE",
         evidence_id=record.evidence_id,
@@ -141,7 +142,7 @@ def _confirm_the_foreign_document(
         operation_type=IntracomOperationType.E,
         settings=isolated_settings,
         **invoice_confirmation_kwargs_with_catalogue(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             catalogue_creation_ports=catalogue_ports,
             authority=authority,
         ),

@@ -4,42 +4,29 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
-from typing import cast, override
-from uuid import UUID, uuid4
+from datetime import UTC, datetime
+from typing import override
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, DisclosurePermission
+from cadrumo_client.contracts.access_vocabulary import DisclosurePermission
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessEvaluationContext,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessBinding,
-    ProfileAccessState,
-    SessionKind,
-    SessionState,
-)
+from ...tests.access_authority_support import scoped_policy_decision
+from ...tests.operation_host_fakes import executor_context
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.operation_access_policy import evaluate_operation_access
 from ..m036_lifecycle import M036DeclarationAmbiguousError, M036DeclarationNotFoundError, M036DeclarationResult
 from ..m036_lifecycle_ports import M036LifecyclePorts
 from ..m036_operation_ports import M036OperationPorts
-from .test_m036_lifecycle_service import _DeclarationRepository, _EventRepository
+from .test_m036_lifecycle_service import M036LifecycleServiceDeclarationRepository, M036LifecycleServiceEventRepository
 
 PROFILE_ID = UUID("32323232-3232-4232-8232-323232323232")
 INSTANT = datetime(2026, 10, 1, 12, tzinfo=UTC)
@@ -65,7 +52,7 @@ class CommitFence:
             self.active = False
 
 
-class EventRepository(_EventRepository):
+class EventRepository(M036LifecycleServiceEventRepository):
     """The established revisioned audit fixture with a preparation detector."""
 
     def __init__(self, fence: CommitFence) -> None:
@@ -88,7 +75,7 @@ class EventRepository(_EventRepository):
         return super().to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
 
-class DeclarationRepository(_DeclarationRepository):
+class DeclarationRepository(M036LifecycleServiceDeclarationRepository):
     """Atomic declaration/event fixture detecting legacy unfenced writes."""
 
     def __init__(self, events: EventRepository, fence: CommitFence) -> None:
@@ -177,17 +164,13 @@ class Subject:
         return self.ports
 
     def context(self, definition_id: str) -> OperationExecutorContext:
-        return cast(
-            OperationExecutorContext,
-            SimpleNamespace(
-                identity=SimpleNamespace(
-                    definition_id=definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID))
-                ),
-                authority_operation=self.operation,
-                cancellation=self.fence,
-                events=self.events,
-                operands=self.operands,
-            ),
+        return executor_context(
+            definition_id,
+            profile_id=str(PROFILE_ID),
+            operation=self.operation,
+            cancellation=self.fence,
+            events=self.events,
+            operands=self.operands,
         )
 
 
@@ -201,96 +184,13 @@ def policy_decision(
     operations: frozenset[str] | None = None,
 ) -> AccessAllowed | AccessDenied:
     """Exercise the actual evaluator with coherent explicit login/grant facts."""
-    scope = AccessScope(
-        operations=operations if operations is not None else frozenset({resolved.request.definition_id}),
-        actions=frozenset({resolved.request.action}),
-        disclosures=disclosures,
-        periods=None if all_periods else frozenset(),
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    binding = ProfileAccessBinding(
+    return scoped_policy_decision(
+        resolved,
+        registry,
         profile_id=PROFILE_ID,
-        installation_id=uuid4(),
-        os_owner_id="synthetic-owner",
-        custody_generation=1,
-        dek_epoch=uuid4(),
-    )
-    grant = AutomationGrant(
-        grant_id=uuid4(),
-        binding=binding,
-        client_id=uuid4(),
-        generation=1,
-        profile_lock_generation=0,
-        state=AuthorityState.ACTIVE,
-        scope=scope,
-        valid_from=INSTANT - timedelta(days=1),
-        expires_at=INSTANT + timedelta(days=1),
-        unattended=True,
-        allow_os_lock=False,
-    )
-    key = ApiKeyRecord(
-        key_id=uuid4(),
-        grant_id=grant.grant_id,
-        binding=binding,
-        generation=1,
-        state=AuthorityState.ACTIVE,
-        valid_from=grant.valid_from,
-        expires_at=grant.expires_at,
-    )
-    session = AccessSession(
-        session_id=uuid4(),
-        binding=binding,
-        profile_lock_generation=0,
-        runtime_boot_id=uuid4(),
-        connection_id=uuid4(),
-        client_id=grant.client_id,
-        kind=SessionKind.HUMAN if human else SessionKind.API_KEY,
-        originating_login_id="synthetic-login" if human else None,
-        state=SessionState.ACTIVE,
-        scope=scope,
-        grant_id=None if human else grant.grant_id,
-        grant_generation=None if human else grant.generation,
-        key_id=None if human else key.key_id,
-        key_generation=None if human else key.generation,
-        issued_at=INSTANT,
-        expires_at=INSTANT + timedelta(minutes=2),
-        issued_monotonic=100.0,
-    )
-    return evaluate_operation_access(
-        request=resolved.request,
-        policy=resolved.policy,
-        registry=registry,
-        session=session,
-        ancestors=(),
-        grant=None if human else grant,
-        key=None if human else key,
-        profile=ProfileAccessState(
-            binding=binding,
-            lock_generation=0,
-            globally_locked=False,
-            automation_enabled=True,
-            scope=scope,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-        ),
-        context=AccessEvaluationContext(
-            now=INSTANT,
-            monotonic_now=100.0,
-            clock_rollback_detected=False,
-            runtime_boot_id=session.runtime_boot_id,
-            connection_id=session.connection_id,
-            authenticated_client_id=grant.client_id,
-            login_contexts=(
-                OsLoginContext(
-                    login_id="synthetic-login",
-                    os_owner_id=binding.os_owner_id,
-                    active=True,
-                    lock_state=OsLockState.UNLOCKED,
-                    unattended=LoginEligibility.ELIGIBLE,
-                    credential_facilities=Availability.AVAILABLE,
-                ),
-            ),
-            private_work_available=True,
-        ),
+        now=INSTANT,
+        disclosures=disclosures,
+        all_periods=all_periods,
+        operations=operations,
+        human=human,
     )

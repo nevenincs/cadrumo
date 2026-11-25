@@ -72,22 +72,22 @@ _KIND_CONFIDENCE: Final[dict[SymbolKind, Confidence]] = {
 
 
 # Weakest-wins ordering, so a composite finding inherits its softest evidence.
-_CONFIDENCE_ORDER: Final[dict[Confidence, int]] = {
+CONFIDENCE_ORDER: Final[dict[Confidence, int]] = {
     Confidence.EXACT: 0,
     Confidence.NAME_MATCH: 1,
     Confidence.NAME_MATCH_DATA: 2,
 }
 
 
-_CONFIDENCE_BY_ORDER: Final[dict[int, Confidence]] = {rank: tier for tier, rank in _CONFIDENCE_ORDER.items()}
+CONFIDENCE_BY_ORDER: Final[dict[int, Confidence]] = {rank: tier for tier, rank in CONFIDENCE_ORDER.items()}
 
 
-_TOP_LEVEL_KINDS: Final[frozenset[SymbolKind]] = frozenset(
+TOP_LEVEL_KINDS: Final[frozenset[SymbolKind]] = frozenset(
     {SymbolKind.FUNCTION, SymbolKind.CLASS, SymbolKind.CONSTANT},
 )
 
 
-_DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
+DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
     {SymbolKind.ATTRIBUTE, SymbolKind.ENUM_MEMBER},
 )
 
@@ -192,6 +192,7 @@ class UnreachableCodeResult:
     tests: tuple[TestFinding, ...] = ()
     data_cleared: int = 0
     dev_cleared: int = 0
+    registry_cleared: int = 0
     reason: str = ""
 
     def __post_init__(self) -> None:
@@ -225,6 +226,7 @@ class UnreachableCodeResult:
         packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
+        registry_cleared: int = 0,
     ) -> UnreachableCodeResult:
         """A complete scan with no findings in its reported population."""
         return cls(
@@ -235,6 +237,7 @@ class UnreachableCodeResult:
             reachable_modules=reachable_modules,
             data_cleared=data_cleared,
             dev_cleared=dev_cleared,
+            registry_cleared=registry_cleared,
         )
 
     @classmethod
@@ -250,6 +253,7 @@ class UnreachableCodeResult:
         packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
+        registry_cleared: int = 0,
     ) -> UnreachableCodeResult:
         """A scan that found unreachable modules, unused symbols, or orphaned tests."""
         if not modules and not symbols:
@@ -266,6 +270,7 @@ class UnreachableCodeResult:
             tests=tests,
             data_cleared=data_cleared,
             dev_cleared=dev_cleared,
+            registry_cleared=registry_cleared,
         )
 
     @classmethod
@@ -279,9 +284,9 @@ class UnreachableCodeResult:
         return self.outcome is UnreachableCodeOutcome.CLEAN
 
     @property
-    def exact_findings(self) -> tuple[_Finding, ...]:
+    def exact_findings(self) -> tuple[ReachabilityFinding, ...]:
         """Every finding resolved through the import graph, safe to act on first."""
-        ordered: tuple[_Finding, ...] = self.modules + self.tests + self.symbols
+        ordered: tuple[ReachabilityFinding, ...] = self.modules + self.tests + self.symbols
         return tuple(finding for finding in ordered if finding.confidence is Confidence.EXACT)
 
     @property
@@ -331,7 +336,9 @@ class ShippedModule:
 
 
 @dataclass(frozen=True)
-class _Definition:
+class Definition:
+    """A source definition considered by reachability analysis."""
+
     name: str
     qualname: str
     line: int
@@ -349,13 +356,15 @@ class _Definition:
 
 
 @dataclass
-class _OutsideUse:
+class OutsideUse:
+    """Collect references from non-shipped source trees."""
+
     names: dict[str, set[str]] = field(default_factory=dict)
     modules: dict[str, set[str]] = field(default_factory=dict)
     resolved: dict[tuple[str, str], set[str]] = field(default_factory=dict)
     """Corpus labels keyed by the ``(defining module, symbol)`` pair they reach.
 
-    ``names`` is a bare-token index: :func:`_references` harvests attribute
+    ``names`` is a bare-token index: :func:`source_references` harvests attribute
     names, keyword-argument names and identifiers spelled inside strings, none
     of which say which module defined the name. That looseness is harmless
     while a label only ANNOTATES a finding, and unacceptable once a label
@@ -376,9 +385,11 @@ class _OutsideUse:
     """
 
     def labels_for_name(self, name: str) -> tuple[str, ...]:
+        """Return outside source labels for a referenced name."""
         return tuple(sorted(self.names.get(name, ())))
 
     def labels_for_module(self, name: str) -> tuple[str, ...]:
+        """Return outside source labels for a referenced module."""
         return tuple(sorted(self.modules.get(name, ())))
 
     def resolved_labels(self, module: str, name: str) -> tuple[str, ...]:
@@ -386,4 +397,4 @@ class _OutsideUse:
         return tuple(sorted(self.resolved.get((module, name), ())))
 
 
-type _Finding = ModuleFinding | SymbolFinding | TestFinding
+type ReachabilityFinding = ModuleFinding | SymbolFinding | TestFinding

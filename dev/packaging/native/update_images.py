@@ -8,17 +8,20 @@ import json
 import os
 import shutil
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 from packaging.utils import canonicalize_name
 from pydantic import JsonValue, TypeAdapter
 
-from .assemble import image_artifact, named_application_images, package_binaries, record_staging, stamp_package
+from .assembly_identity import package_binaries, record_staging, stamp_package
+from .assembly_images import image_artifact, named_application_images
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .build_stamp import build_type
 from .hashing import digest
-from .layout import bundled_image_files, entrypoint_files, load_layout
+from .layout import ApplicationImage, bundled_image_files, entrypoint_files, load_layout
 from .process_quiescence import quiesce
 from .service_descriptors import refresh_service_image_digests, stage_service_descriptors
 
@@ -54,11 +57,8 @@ def recover(root: Path, contract: dict[str, JsonValue], artifacts: dict[str, Pat
     )
     if build["layout_abi"] != contract["abi"]:
         raise ValueError("Staged layout ABI differs from the configured contract")
-    for member in strings.validate_python(native["modules"], strict=True).values():
-        path = root / member
-        if not path.resolve(strict=True).is_relative_to(root) or not path.is_file():
-            raise ValueError(f"Staged native module is unavailable: {member}")
-    distributions = {
+    _require_recovery_modules(root, strings.validate_python(native["modules"], strict=True))
+    distributions: dict[str, str] = {
         canonicalize_name(dist.metadata["Name"]): dist.version
         for dist in importlib.metadata.distributions(path=[str(root / layout["packages"])])
     }
@@ -77,18 +77,8 @@ def recover(root: Path, contract: dict[str, JsonValue], artifacts: dict[str, Pat
         f"{layout['native']}/{files['runtime']}",
     ]
     startup.append(stage_service_descriptors(root, contract, named_application_images(contract, artifacts)))
-    for member in startup:
-        if not (root / member).is_file():
-            raise ValueError(f"Staged startup file is missing: {member}")
-    inventory = {}
-    manifest_name = files["package_manifest"]
-    for path in root.rglob("*"):
-        if path.is_symlink() or path.is_junction():
-            raise ValueError(f"Linked member in interrupted stage: {path}")
-        if path.is_file():
-            relative = path.relative_to(root).as_posix()
-            if relative != manifest_name:
-                inventory[relative] = digest(path)
+    _require_recovery_startup(root, startup)
+    inventory = _recovery_inventory(root, files["package_manifest"])
     docs = f"{layout['docs']}/{docs_directory}"
     if (root / docs).exists():
         raise ValueError("Interrupted documentation inventory requires normal release assembly")
@@ -109,6 +99,31 @@ def recover(root: Path, contract: dict[str, JsonValue], artifacts: dict[str, Pat
     )
 
 
+def _require_recovery_startup(root: Path, startup: list[str]) -> None:
+    for member in startup:
+        if not (root / member).is_file():
+            raise ValueError(f"Staged startup file is missing: {member}")
+
+
+def _recovery_inventory(root: Path, manifest_name: str) -> dict[str, str]:
+    inventory: dict[str, str] = {}
+    for path in root.rglob("*"):
+        if path.is_symlink() or path.is_junction():
+            raise ValueError(f"Linked member in interrupted stage: {path}")
+        if path.is_file():
+            relative = path.relative_to(root).as_posix()
+            if relative != manifest_name:
+                inventory[relative] = digest(path)
+    return inventory
+
+
+def _require_recovery_modules(root: Path, modules: dict[str, str]) -> None:
+    for member in modules.values():
+        path = root / member
+        if not path.resolve(strict=True).is_relative_to(root) or not path.is_file():
+            raise ValueError(f"Staged native module is unavailable: {member}")
+
+
 def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bool = False) -> None:
     """Replace changed native images and update only their inventory entries."""
     build = build.resolve(strict=True)
@@ -120,45 +135,15 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
         raise ValueError("Package must belong to this CMake binary directory")
     manifest_path = root / contract["files"]["package_manifest"]
     images = named_application_images(contract, artifacts)
-    if set(artifacts) != {image.file for image in images}:
-        raise ValueError("Undeclared native image")
-    replacements = {}
-    for image in images:
-        source = artifacts[image.file].resolve(strict=True)
-        destination = root / image.package_path
-        if not source.is_relative_to(build) or not destination.resolve().is_relative_to(root):
-            raise ValueError("Native image escapes its CMake package")
-        replacements[image.package_path] = source
-    # C/interpreter hosts are also native outputs, not Python source payloads.
-    for member in [
-        contract["paths"]["executable"],
-        *entrypoint_files(contract).values(),
-        *bundled_image_files(contract).values(),
-        f"{contract['paths']['native']}/{contract['files']['bridge']}",
-        contract["files"]["development_executable"],
-    ]:
-        source = paths["bin"] / config / Path(member).name
-        staged = member != contract["files"]["development_executable"] or (root / member).is_file()
-        if source.is_file() and staged:
-            replacements[member] = source
-    if manifest_path.is_file():
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest["layout"] != contract:
-            raise ValueError("Native update cannot change the packaged layout")
-    elif recovery:
-        manifest = recover(root, contract, artifacts)
-    else:
-        raise ValueError("Package manifest missing; explicitly recover the interrupted stage first")
+    replacements = _image_replacements(build, root, artifacts, images)
+    _add_host_replacements(replacements, paths["bin"], config, root, contract)
+    manifest = _load_update_manifest(manifest_path, root, contract, artifacts, recovery)
     inventory = TypeAdapter(dict[str, JsonValue]).validate_python(manifest["files"], strict=True)
     manifest["files"] = inventory
     descriptor_member = contract["files"]["service_descriptors"]
     if inventory.get(descriptor_member) != digest(root / descriptor_member):
         raise ValueError("Staged service descriptors differ from the package manifest")
-    changed = {
-        member: (source, digest(source))
-        for member, source in replacements.items()
-        if not (root / member).is_file() or digest(source) != digest(root / member)
-    }
+    changed = _changed_image_replacements(root, replacements)
     if changed:
         quiesce(build, target)
         for member, (source, expected) in changed.items():
@@ -173,9 +158,7 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
     # start, and the package's own identity, keyed on the staged content and the components.
     shared = json.loads((paths["generated"] / config / "build.json").read_text(encoding="utf-8"))
     staged = TypeAdapter(dict[str, JsonValue]).validate_python(manifest["build"], strict=True)
-    for key in ("version", "target", "layout_abi", "python"):
-        if shared[key] != staged[key]:
-            raise ValueError(f"Native update cannot change the package {key}; build app-payload")
+    _require_unchanged_build_inputs(shared, staged)
     build_member = contract["files"]["build_metadata"]
     binaries = package_binaries(
         contract,
@@ -203,6 +186,69 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
     publish(manifest_path, manifest)
     record_staging(build, staged_records)
     print(f"Native images updated: {len(changed)}; Python payload preserved", flush=True)
+
+
+def _load_update_manifest(
+    manifest_path: Path, root: Path, contract: dict[str, JsonValue], artifacts: dict[str, Path], recovery: bool
+) -> dict[str, JsonValue]:
+    if manifest_path.is_file():
+        manifest = cast("dict[str, JsonValue]", json.loads(manifest_path.read_text(encoding="utf-8")))
+        if manifest["layout"] != contract:
+            raise ValueError("Native update cannot change the packaged layout")
+    elif recovery:
+        manifest = recover(root, contract, artifacts)
+    else:
+        raise ValueError("Package manifest missing; explicitly recover the interrupted stage first")
+    return manifest
+
+
+def _require_unchanged_build_inputs(shared: Mapping[str, object], staged: Mapping[str, JsonValue]) -> None:
+    for key in ("version", "target", "layout_abi", "python"):
+        if shared[key] != staged[key]:
+            raise ValueError(f"Native update cannot change the package {key}; build app-payload")
+
+
+def _changed_image_replacements(root: Path, replacements: Mapping[str, Path]) -> dict[str, tuple[Path, str]]:
+    changed = {
+        member: (source, digest(source))
+        for member, source in replacements.items()
+        if not (root / member).is_file() or digest(source) != digest(root / member)
+    }
+    return changed
+
+
+def _add_host_replacements(
+    replacements: dict[str, Path], binary_root: Path, config: str, root: Path, contract: dict[str, JsonValue]
+) -> None:
+    paths = cast("Mapping[str, str]", cast("object", contract["paths"]))
+    files = cast("Mapping[str, str]", cast("object", contract["files"]))
+    # C/interpreter hosts are also native outputs, not Python source payloads.
+    for member in [
+        paths["executable"],
+        *entrypoint_files(contract).values(),
+        *bundled_image_files(contract).values(),
+        f"{paths['native']}/{files['bridge']}",
+        files["development_executable"],
+    ]:
+        source = binary_root / config / Path(member).name
+        staged = member != files["development_executable"] or (root / member).is_file()
+        if source.is_file() and staged:
+            replacements[member] = source
+
+
+def _image_replacements(
+    build: Path, root: Path, artifacts: Mapping[str, Path], images: tuple[ApplicationImage, ...]
+) -> dict[str, Path]:
+    if set(artifacts) != {image.file for image in images}:
+        raise ValueError("Undeclared native image")
+    replacements: dict[str, Path] = {}
+    for image in images:
+        source = artifacts[image.file].resolve(strict=True)
+        destination = root / image.package_path
+        if not source.is_relative_to(build) or not destination.resolve().is_relative_to(root):
+            raise ValueError("Native image escapes its CMake package")
+        replacements[image.package_path] = source
+    return replacements
 
 
 def main() -> None:

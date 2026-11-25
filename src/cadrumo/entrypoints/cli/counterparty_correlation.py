@@ -9,6 +9,7 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
+    CounterpartyFilingNameProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
 )
@@ -101,6 +102,27 @@ def counterparty_withdrawal_invalid(
     return invalid
 
 
+def counterparty_filing_name_withdrawal_invalid(
+    invalid: bool, request: LedgerCounterpartyRequest, result: LedgerCounterpartyResult
+) -> bool:
+    """Correlate a filing-name withdrawal: a write only if a name was removed, and the remaining record on the key."""
+    invalid = invalid or any(
+        (
+            result.withdrawn is None,
+            result.filing_name is not None,
+            result.resolution is not None,
+            result.recorded is not None,
+            result.conflict_context is not None,
+            result.changed != result.withdrawn,
+        )
+    )
+    facts = result.facts
+    if facts is None:
+        return invalid
+    expected_key = confirmed_counterparty_facts_key(request.tax_identifier, country_code=request.country_code)
+    return invalid or facts.counterparty_key != expected_key
+
+
 def counterparty_resolution_invalid(
     invalid: bool, request: LedgerCounterpartyRequest, result: LedgerCounterpartyResult
 ) -> bool:
@@ -136,3 +158,43 @@ def counterparty_confirmed_facts_invalid(
     invalid = invalid or (result.recorded is True and not result.changed)
     invalid = counterparty_recorded_fact_invalid(invalid, result, request, facts)
     return invalid
+
+
+def _stated_parts_differ(request: LedgerCounterpartyRequest, stated: CounterpartyFilingNameProjection) -> bool:
+    """Whether the stored name is not the one this request stated."""
+    return (
+        stated.party_kind != request.party_kind
+        or stated.primer_apellido != request.primer_apellido
+        or stated.segundo_apellido != request.segundo_apellido
+        or stated.no_second_surname != request.no_second_surname
+        or stated.nombre != request.nombre
+        or stated.razon_social != request.razon_social
+        or stated.renderings != request.renderings
+    )
+
+
+def counterparty_filing_name_invalid(
+    invalid: bool, request: LedgerCounterpartyRequest, result: LedgerCounterpartyResult
+) -> bool:
+    """Correlate a filing-name statement: the stored name is the stated one, on the requested record."""
+    stated = result.filing_name
+    facts = result.facts
+    invalid = invalid or any(
+        (
+            stated is None,
+            facts is None,
+            result.resolution is not None,
+            result.withdrawn is not None,
+            result.conflict_context is not None,
+            result.recorded != result.changed,
+        )
+    )
+    if stated is None or facts is None:
+        return invalid
+    expected_key = confirmed_counterparty_facts_key(request.tax_identifier, country_code=request.country_code)
+    return (
+        invalid
+        or facts.counterparty_key != expected_key
+        or _stated_parts_differ(request, stated)
+        or (result.changed and stated.asserted_by != request.asserted_by)
+    )

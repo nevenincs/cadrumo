@@ -5,29 +5,69 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 import tomllib
 from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION, isolated_interpreter_command
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
+from dev.paths import REPO_ROOT
 
-from ..application_environment import (
-    DECLARATION,
-    ApplicationEnvironmentError,
-    LaunchRefusedError,
-    compile_section,
-    load_for_build,
-    parse,
-    reference_define,
-    reference_select,
-)
+from ..application_environment import load_for_build, parse
+from ..environment_compile import compile_section
+from ..environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
+from ..environment_reference import LaunchRefusedError, reference_define, reference_select
 from ..generate import generate
 from ..layout import load_layout
+from .google_identity import PUBLISHER_CLIENT_JSON
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
+
+
+def _declared_kdf_child_module() -> str:
+    """Return the module the declaration's POSIX child invocations launch with ``-m``."""
+    modules: set[str] = set()
+    for invocation in tomllib.loads(_SOURCE)["invocations"]:
+        if invocation["profile"] != "kdf-child" or invocation["platform"] != "posix":
+            continue
+        arguments = invocation["arguments"]
+        for position, argument in enumerate(arguments):
+            if argument == {"literal": "-m"}:
+                module = arguments[position + 1]["literal"]
+                assert isinstance(module, str)
+                modules.add(module)
+    assert len(modules) == 1
+    return modules.pop()
+
+
+def test_hosted_posix_kdf_command_selects_only_the_exact_child_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "_xoptions", {ROLE_IMAGE_OPTION: "/package/cadrumo"}, raising=False)
+    command = isolated_interpreter_command()
+    assert command == ("/package/cadrumo", "--role", "python", "-S")
+    arguments = (
+        *command[3:],
+        "-m",
+        _declared_kdf_child_module(),
+        "--request-fd",
+        "3",
+        "--result-fd",
+        "4",
+        "--descriptor-bound",
+        "1024",
+    )
+    declaration = load_for_build(REPO_ROOT)
+    assert reference_select(declaration, "posix", "python", arguments) == "kdf-child"
+    for invalid in (
+        (*arguments[:4], "2", *arguments[5:]),
+        (*arguments[:6], "3", *arguments[7:]),
+        (*arguments[:8], "not-a-number"),
+        (*arguments, "--extra"),
+    ):
+        assert reference_select(declaration, "posix", "python", invalid) == "python"
 
 
 @pytest.mark.parametrize("family,target", [("windows", "windows-x86-64"), ("posix", "linux-x86-64")])
@@ -79,13 +119,45 @@ def test_publisher_identity_is_compiled_for_every_profile_and_ignores_ambient_ov
         assert "case-folded-override" not in defined.values()
     # Each admission is planted into a profile that declares no list of that kind yet.
     for profile, admitted in (
-        ("aeat", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
+        ("cadrumo-mcp", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
         ("cadrumo-runtime", 'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]'),
     ):
         header = f"[profiles.{profile}]\n"
         planted = _SOURCE.replace(header, header + admitted + "\n", 1)
         with pytest.raises(ApplicationEnvironmentError, match="package_fixed"):
             parse(planted)
+
+
+@pytest.mark.parametrize("family,target", [("windows", "windows-x86-64"), ("posix", "linux-x86-64")])
+def test_the_deployments_evidence_posture_reaches_the_programs_that_decide_off_host_reads(
+    family: str, target: str
+) -> None:
+    posture = {"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED": "true", "CADRUMO_EVIDENCE_GESTOR_MODE": "true"}
+    declaration = load_for_build(REPO_ROOT)
+    layout = load_layout(target)
+    package = "C:/package" if family == "windows" else "/package"
+    root = "C:/state" if family == "windows" else "/state"
+    ambient = {"SYSTEMROOT": "C:/Windows", "HOME": "/home/test", **posture}
+
+    def received(profile: str) -> dict[str, str | None]:
+        defined = reference_define(
+            declaration,
+            family,
+            profile,
+            ambient,
+            package=package,
+            root=root,
+            layout_paths=layout["paths"],
+            suffix=layout["entrypoint_suffix"],
+        )
+        return {name: defined.get(name) for name in posture}
+
+    # The runtime and the agent service start under the deployment's environment, and the runtime's
+    # profile workers (the python image) decide every off-host evidence read and grant.
+    for profile in ("cadrumo-runtime", "python", "cadrumo-agent-service"):
+        assert received(profile) == posture
+    for profile in ("aeat", "cadrumo-mcp"):
+        assert received(profile) == dict.fromkeys(posture)
 
 
 def test_build_settings_are_reserved_for_package_fixed_values() -> None:
@@ -108,6 +180,20 @@ def test_operator_sign_in_accepts_metadata_but_not_flags_or_paths(family: str) -
             reference_select(declaration, family, "cadrumo-agent", (*prefix, invalid))
     with pytest.raises(LaunchRefusedError):
         reference_select(declaration, family, "cadrumo-agent", prefix)
+
+
+@pytest.mark.parametrize("family", ("windows", "posix"))
+def test_browser_code_connect_is_exact_and_uses_the_profile_auth_environment(family: str) -> None:
+    declaration = load_for_build(REPO_ROOT)
+    prefix = ("-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider")
+    suffix = ("--method", "browser-code", "--timeout", "300", "--causes")
+    assert reference_select(declaration, family, "cadrumo-agent", (*prefix, "antigravity", *suffix)) == "agent-auth"
+    for provider in ("", "../other", "--help", "a/b", "A", "a" * 65):
+        with pytest.raises(LaunchRefusedError):
+            reference_select(declaration, family, "cadrumo-agent", (*prefix, provider, *suffix))
+    for bad in (suffix[:-2], (*suffix[:-1], "301"), (*suffix, "--extra"), ("--method", "browser_code", *suffix[2:])):
+        with pytest.raises(LaunchRefusedError):
+            reference_select(declaration, family, "cadrumo-agent", (*prefix, "antigravity", *bad))
 
 
 def test_the_declaration_validates_and_covers_every_built_image() -> None:
@@ -252,6 +338,7 @@ def _source_tree(tmp_path: Path, declaration: str) -> Path:
         ".python-version",
         "dev/packaging/release-python-version",
         "native/package-layout.json",
+        "native/llamacpp-pins.json",
         "native/platforms",
     ):
         source, destination = REPO_ROOT / relative, root / relative
@@ -272,6 +359,50 @@ def test_generation_fails_on_a_malformed_declaration(tmp_path: Path) -> None:
     with pytest.raises(ApplicationEnvironmentError):
         generate(bad, tmp_path / "bad-out", target="windows-x86-64")
     assert not (tmp_path / "bad-out" / "contract.rs").exists()
+
+
+def _package_fixed_line(contract_rs: str) -> str:
+    (line,) = (line for line in contract_rs.splitlines() if line.startswith("pub const LAUNCH_PACKAGE_FIXED:"))
+    return line
+
+
+def test_only_the_package_contract_requires_publisher_provisioning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The source tree has no env/.env and no embedded client, and the build environment none.
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV, raising=False)
+    root = _source_tree(tmp_path, _SOURCE)
+    assert not (root / "env/.env").exists()
+    unprovisioned = tmp_path / "unprovisioned"
+    generate(root, unprovisioned, target="windows-x86-64", provisioned=False)
+    contract = json.loads((unprovisioned / "contract.json").read_text(encoding="utf-8"))
+    assert contract["application_environment"]["package_fixed"] == {}
+    rust = (unprovisioned / "contract.rs").read_text(encoding="utf-8")
+    assert _package_fixed_line(rust) == "pub const LAUNCH_PACKAGE_FIXED: &[(&str, &str)] = &[];"
+    package = tmp_path / "package"
+    with pytest.raises(
+        ValueError, match=f"Set {GOOGLE_OAUTH_ENV} in the build environment or env/.env before packaging"
+    ):
+        generate(root, package, target="windows-x86-64")
+    assert not package.exists()
+
+
+def test_the_unprovisioned_contract_binds_no_value_even_where_provisioning_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A source tree of its own, so only the synthetic client can be selected.
+    monkeypatch.setenv(GOOGLE_OAUTH_ENV, PUBLISHER_CLIENT_JSON)
+    root = _source_tree(tmp_path, _SOURCE)
+    unprovisioned, package = tmp_path / "unprovisioned", tmp_path / "package"
+    generate(root, unprovisioned, target="windows-x86-64", provisioned=False)
+    generate(root, package, target="windows-x86-64")
+    bound = json.loads((package / "contract.json").read_text(encoding="utf-8"))["application_environment"]
+    assert bound["package_fixed"] == {GOOGLE_OAUTH_ENV: PUBLISHER_CLIENT_JSON}
+    client_id = json.loads(PUBLISHER_CLIENT_JSON)["installed"]["client_id"]
+    assert client_id in (package / "contract.rs").read_text(encoding="utf-8")
+    for name in ("contract.json", "contract.rs", "contract_vectors.rs"):
+        assert client_id not in (unprovisioned / name).read_text(encoding="utf-8"), name
+    assert (unprovisioned / "contract.h").read_bytes() == (package / "contract.h").read_bytes()
 
 
 _PROFILE_LINE = re.compile(r'^    LaunchProfile \{ name: "([^"]+)", image: "([^"]+)", (.*) \},$')

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from dev.packaging.native import product
+from dev.packaging.native import product, product_snapshot
 from dev.source_tree import normalised_content, repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -44,7 +44,7 @@ def _product_tree(root: Path) -> tuple[Path, Path]:
     unrelated.write_text("export const value = 1;\n", encoding="utf-8")
 
     inputs = root.parent / "inputs-product.txt"
-    roots = product._product_source_roots(root)
+    roots = product_snapshot.product_source_roots(root)
     enrolled = (*repository_files(root, under=roots), "pyproject.toml", "uv.lock")
     inputs.write_text("\n".join(str(root / name) for name in enrolled) + "\n", encoding="utf-8")
     return inputs, package_file
@@ -65,8 +65,8 @@ def _capture(
         if after_snapshot is not None:
             after_snapshot(root_arg)
 
-    monkeypatch.setattr(product, "snapshot", capture)
-    product._capture_product_source_snapshot(root, destination, inputs)
+    monkeypatch.setattr(product_snapshot, "snapshot", capture)
+    product_snapshot.capture_product_source_snapshot(root, destination, inputs)
     return destination
 
 
@@ -98,10 +98,10 @@ def test_product_source_snapshot_rejects_content_changed_during_copy(
         snapshot(root_arg, files, destination)
         package_file.write_text(original, encoding="utf-8")
 
-    monkeypatch.setattr(product, "snapshot", restore_after_capture)
+    monkeypatch.setattr(product_snapshot, "snapshot", restore_after_capture)
 
     with pytest.raises(RuntimeError, match="Enrolled product source content changed"):
-        product._capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
+        product_snapshot.capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
 
     # The attempted snapshot is intentionally discarded by the caller on refusal.
     assert package_file.read_text(encoding="utf-8") == original
@@ -118,13 +118,13 @@ def test_product_source_snapshot_checks_explicit_root_uv_lock(tmp_path: Path, mo
         snapshot(root_arg, files, destination)
         lock.write_text(original, encoding="utf-8")
 
-    monkeypatch.setattr(product, "snapshot", change_and_restore)
+    monkeypatch.setattr(product_snapshot, "snapshot", change_and_restore)
 
     with pytest.raises(RuntimeError, match="Enrolled product source content changed"):
-        product._capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
+        product_snapshot.capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
 
 
-def test_product_source_snapshot_rejects_new_module_missing_from_cmake_census(
+def test_product_source_snapshot_rejects_new_module_added_during_the_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     root = tmp_path / "checkout"
@@ -135,8 +135,28 @@ def test_product_source_snapshot_rejects_new_module_missing_from_cmake_census(
         new_module.parent.mkdir(parents=True)
         new_module.write_text("language = 'en'\n", encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match=r"CONFIGURE_DEPENDS refreshes inputs-product.txt"):
+    with pytest.raises(RuntimeError, match=r"Product source membership changed"):
         _capture(root, inputs, monkeypatch, after_snapshot=add_module)
+
+
+def test_product_source_snapshot_enrolls_a_module_added_after_the_manifest_was_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "checkout"
+    _product_tree(root)
+    inputs = root.parent / "inputs-trees.txt"
+    entries = [f"tree\tproduct\t{root}\t{name}" for name in product_snapshot.product_source_roots(root)]
+    entries.extend((str(root / "pyproject.toml"), str(root / "uv.lock")))
+    inputs.write_text("\n".join(entries) + "\n", encoding="utf-8")
+    new_module = root / "src/cadrumo_client/transport/profile_language.py"
+    new_module.parent.mkdir(parents=True)
+    new_module.write_text("language = 'en'\n", encoding="utf-8")
+
+    captured = _capture(root, inputs, monkeypatch)
+
+    assert (captured / "src/cadrumo_client/transport/profile_language.py").read_text(encoding="utf-8") == (
+        "language = 'en'\n"
+    )
 
 
 def test_product_source_snapshot_allows_unrelated_frontend_churn(
@@ -167,7 +187,7 @@ def test_product_snapshot_preserves_unchanged_files_and_removes_deleted_members(
     original_mtime = stable.stat().st_mtime_ns
     removed.unlink()
 
-    product._capture_product_source_snapshot(root, captured, inputs)
+    product_snapshot.capture_product_source_snapshot(root, captured, inputs)
 
     assert stable.stat().st_mtime_ns == original_mtime
     assert not (captured / removed.relative_to(root)).exists()
@@ -185,12 +205,12 @@ def test_companion_wheel_identity_uses_its_actual_hook_owned_payload(tmp_path: P
     unrelated.parent.mkdir(parents=True)
     unrelated.write_text("value = 1\n", encoding="utf-8")
 
-    before = product._wheel_input_digest(project, toolchain=None)
+    before = product.distribution_input_digest(project, toolchain=None)
     unrelated.write_text("value = 2\n", encoding="utf-8")
-    assert product._wheel_input_digest(project, toolchain=None) == before
+    assert product.distribution_input_digest(project, toolchain=None) == before
     new_owned = owned.with_name("new.pdf")
     new_owned.write_bytes(b"new official corpus")
-    assert product._wheel_input_digest(project, toolchain=None) != before
+    assert product.distribution_input_digest(project, toolchain=None) != before
 
 
 def test_product_build_reuses_companion_wheels_and_installed_files_on_python_edit(
@@ -276,9 +296,7 @@ def test_product_build_reuses_companion_wheels_and_installed_files_on_python_edi
     assert companion.stat().st_mtime_ns == installed_mtime
 
 
-def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def _staged_old_authority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path, Path, list[Path], Path]:
     authoring = tmp_path / "authoring"
     authoring.mkdir()
     descriptor = authoring / "authority.current.json"
@@ -289,16 +307,23 @@ def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
     monkeypatch.setattr(product, "selected_published_authority", lambda _: (descriptor, current[0]))
     source = tmp_path / "snapshot"
     source.mkdir()
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
+    return authoring, descriptor, old, current, source
+
+
+def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    authoring, descriptor, old, current, source = _staged_old_authority(tmp_path, monkeypatch)
     unchanged_mtime = (source / ".authority" / old.name).stat().st_mtime_ns
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
     assert (source / ".authority" / old.name).stat().st_mtime_ns == unchanged_mtime
 
     new = authoring / "authority-new.sqlite3"
     new.write_bytes(b"new authority")
     current[0] = new
     descriptor.write_text(new.name, encoding="utf-8")
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
 
     assert {path.name for path in (source / ".authority").iterdir()} == {descriptor.name, new.name}
     assert (source / ".authority" / new.name).read_bytes() == b"new authority"
@@ -308,17 +333,7 @@ def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
 def test_product_authority_capture_failure_preserves_previous_selected_pair(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    authoring = tmp_path / "authoring"
-    authoring.mkdir()
-    descriptor = authoring / "authority.current.json"
-    old = authoring / "authority-old.sqlite3"
-    old.write_bytes(b"old authority")
-    descriptor.write_text(old.name, encoding="utf-8")
-    current = [old]
-    monkeypatch.setattr(product, "selected_published_authority", lambda _: (descriptor, current[0]))
-    source = tmp_path / "snapshot"
-    source.mkdir()
-    product._stage_product_authority(authoring, source)
+    authoring, descriptor, old, current, source = _staged_old_authority(tmp_path, monkeypatch)
     new = authoring / "authority-new.sqlite3"
     new.write_bytes(b"new authority")
     current[0] = new
@@ -333,7 +348,7 @@ def test_product_authority_capture_failure_preserves_previous_selected_pair(
 
     monkeypatch.setattr(product.shutil, "copy2", mutate_after_capture)
     with pytest.raises(RuntimeError, match="authority changed"):
-        product._stage_product_authority(authoring, source)
+        product.stage_product_authority(authoring, source)
     assert {path.name for path in (source / ".authority").iterdir()} == {descriptor.name, old.name}
     assert (source / ".authority" / descriptor.name).read_text(encoding="utf-8") == old.name
     assert not list(source.glob(".authority-capture-*"))

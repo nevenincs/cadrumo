@@ -14,7 +14,7 @@ from ..view_operation import (
     ProfileViewPageKind,
     ProfileViewRefusalCode,
 )
-from ..view_reader import _paginate_source, _ProfileViewCommon
+from ..view_reader import ProfileViewCommon, paginate_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 @pytest.mark.parametrize("size,count", [(1, 0), (1, 128), (400, 128), (21_000, 1), (9_000, 3)])
 def test_page_is_maximal_within_the_byte_ceiling(size: int, count: int) -> None:
     request = ProfileViewOperationRequest(profile_id=uuid4(), page_kind=ProfileViewPageKind.FACTS)
-    common: _ProfileViewCommon = {
+    common: ProfileViewCommon = {
         "profile_id": request.profile_id,
         "page_kind": request.page_kind,
         "record_revision": 1,
@@ -33,7 +33,7 @@ def test_page_is_maximal_within_the_byte_ceiling(size: int, count: int) -> None:
         "cursor": 0,
     }
     source = tuple(ProfileViewFactItem(path=f"example.field_{i}", value="ñ" * size) for i in range(count))
-    page = _paginate_source(request, common, source)
+    page = paginate_source(request, common, source)
     if size > 20_000:
         assert page.refusal_code is ProfileViewRefusalCode.ITEM_TOO_LARGE
         return

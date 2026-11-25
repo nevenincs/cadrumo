@@ -6,34 +6,45 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
+    from .work_form_facts import ModeloFormFieldFactsLike
 
 import re
+from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 from typing import Final
 
+from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition, FormPageDefinition
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
-from .work_form_models import (
+from .work_form_field_vocabulary import (
+    ORIGINS_WITHOUT_A_VALUE,
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
-    ModeloFormGridCell,
-    ModeloFormGridRow,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
     ModeloFormRate,
-    ModeloFormRepeatingBlock,
     ModeloFormScalar,
-    ModeloFormSection,
-    section_fields,
 )
+from .work_form_models import (
+    ModeloFormField,
+    ModeloFormGridCell,
+    ModeloFormGridColumn,
+    ModeloFormGridRow,
+)
+from .work_form_scalar_values import holds_zero
+from .work_form_wording import holds_nothing
 
 _PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*%\s*")
 
 """A design literal that states a percentage outright, such as ``21 %`` or ``1,75%``."""
 
 _DIGIT_LITERAL: Final[re.Pattern[str]] = re.compile(r"[0-9]+")
+
+_VALUE_HOLDING_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.ENTERED, ModeloFormOrigin.IMPORTED, ModeloFormOrigin.OVERRIDES_SOURCE}
+)
+"""The origins of a box holding a value someone gave it, which shows a page the data cannot settle applies."""
 
 
 def parse_form_number(value: ModeloFormScalar) -> Decimal | None:
@@ -51,36 +62,31 @@ def parse_form_number(value: ModeloFormScalar) -> Decimal | None:
 
 
 def page_applies_for_values(
-    page: FormPageDefinition, context: WorkFormContext, sections: tuple[ModeloFormSection, ...]
+    page: FormPageDefinition,
+    context: WorkFormContext,
+    fields: Iterable[ModeloFormFieldFactsLike],
+    *,
+    has_records: bool,
 ) -> bool | None:
-    """Decide from declared facts alone whether a page applies; ``None`` when the data cannot say."""
+    """Decide from declared facts alone whether a page applies; ``None`` when the data cannot say.
+
+    ``fields`` are the boxes the page's sections show and ``has_records`` says
+    whether any table of records on it holds a saved row.
+    """
     if page.condition is FormPageCondition.ALWAYS:
         return True
     if page.condition is FormPageCondition.PERIOD_RESTRICTED:
         return context.review.period.registry_token in page.condition_periods
     if page.condition is FormPageCondition.REQUIRES_POSITIVE_CASILLA and page.condition_casilla_id is not None:
         return _positive_casilla_page_applies(page.condition_casilla_id, context)
-    return _page_has_value_or_records(sections)
+    has_value = any(field.origin in _VALUE_HOLDING_ORIGINS for field in fields)
+    return True if has_value or has_records else None
 
 
 def _positive_casilla_page_applies(casilla_id: str, context: WorkFormContext) -> bool | None:
     row = context.rows.get(casilla_id)
     amount = None if row is None else parse_form_number(row.value)
     return None if amount is None else amount > 0
-
-
-def _page_has_value_or_records(sections: tuple[ModeloFormSection, ...]) -> bool | None:
-    has_value = any(
-        field.origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.IMPORTED, ModeloFormOrigin.OVERRIDES_SOURCE}
-        for section in sections
-        for field in section_fields(section)
-    )
-    has_records = any(
-        isinstance(block, ModeloFormRepeatingBlock) and bool(block.rows)
-        for section in sections
-        for block in section.blocks
-    )
-    return True if has_value or has_records else None
 
 
 def _grounded_rate(field: ModeloFormField, context: WorkFormContext) -> ModeloFormRate | None:
@@ -98,14 +104,26 @@ def _grounded_rate(field: ModeloFormField, context: WorkFormContext) -> ModeloFo
     binding_ids = tuple(item for item in (casilla.binding, *casilla.alternate_bindings) if item is not None)
     rates: set[Decimal] = set()
     for binding_id in binding_ids:
-        binding = context.bindings.get(binding_id)
-        provider = None if binding is None else binding.provider
-        if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
+        binding_rates = _binding_rates(context, binding_id)
+        if binding_rates is None:
             return None
-        rates.update(provider.applied_rates)
+        rates.update(binding_rates)
     if len(rates) != 1:
         return None
     return ModeloFormRate(ratio=rates.pop(), binding_id=binding_ids[0])
+
+
+def _binding_rates(context: WorkFormContext, binding_id: str) -> tuple[Decimal, ...] | None:
+    """The rates a rate-specific IVA ledger binding states for the base it fills, or ``None``."""
+    binding = context.bindings.get(binding_id)
+    provider = None if binding is None else binding.provider
+    if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
+        return None
+    if provider.fact == LedgerIvaFact.RECARGO_AMOUNT_SUM:
+        # applied_rates picks the IVA rate of the lines a recargo sum adds up; the recargo's own
+        # rate is a different one the binding does not state, so no rate is claimed from it.
+        return None
+    return tuple(provider.applied_rates)
 
 
 def with_grounded_grid_rates(
@@ -115,11 +133,14 @@ def with_grounded_grid_rates(
 
     The row must print exactly one rate box, and its other boxes must be
     grounded on exactly one rate between them; any other row is left as it is,
-    with no rate claimed for its rate box.
+    with no rate claimed for its rate box. A rate box the design fixes keeps its
+    printed literal: the base's applied rate is the rate of the tax the base
+    carries, which is not the rate the row applies to it (a recargo row's base
+    is an IVA base, its rate the recargo).
     """
     rate_index = _rate_cell_index(cells)
-    if rate_index is None or _placeholder_literal(cells[rate_index]):
-        # The design prints zeros where this row's rate would stand: it prints no rate, so none is claimed.
+    if rate_index is None or _rate_literal(cells[rate_index]) is not None:
+        # A rate the design fixes, or zeros where it prints none, is the design's own: no rate is grounded over it.
         return cells
     grounded = _grounded_rates(cells, rate_index, context)
     if len(grounded) != 1:
@@ -227,6 +248,53 @@ def with_printed_row_rates(rows: tuple[ModeloFormGridRow, ...]) -> tuple[ModeloF
             field = cell.field.model_copy(update={"printed_rate": printed})
             cells.append(cell.model_copy(update={"field": field}))
         updated.append(row.model_copy(update={"cells": tuple(cells)}))
+    return tuple(updated)
+
+
+_RATE_BASE_COLUMN_KEYS: Final[frozenset[str]] = frozenset({"base_imponible", "base", "precio"})
+"""The grid column keys whose official headings name the amount a row's rate applies to.
+
+"Base imponible", "Base", "Base de retenciones e ingresos a cuenta", "Importe de las
+operaciones" and, in Modelo 308, the transport's "Precio" taxed at the row's "Tipo".
+A column such as "Tipo de prorrata" beside a percentage is no base.
+"""
+
+
+def _row_rate_cell(row: ModeloFormGridRow) -> int | None:
+    rates = [
+        index
+        for index, cell in enumerate(row.cells)
+        if cell.field is not None and cell.field.data_type == CasillaDataType.RATIO.value
+    ]
+    return rates[0] if len(rates) == 1 else None
+
+
+def _holds_an_amount(field: ModeloFormField) -> bool:
+    """Whether a box holds an amount other than zero: a figure, never nothing, a held zero or a yes-or-no."""
+    value = field.value
+    if field.origin in ORIGINS_WITHOUT_A_VALUE or holds_nothing(value) or holds_zero(value) or isinstance(value, bool):
+        return False
+    return isinstance(value, Decimal | int)
+
+
+def with_row_rate_bases(
+    columns: tuple[ModeloFormGridColumn, ...], rows: tuple[ModeloFormGridRow, ...]
+) -> tuple[ModeloFormGridRow, ...]:
+    """Name each row's one rate box and say whether the amount it applies to, in the declared base column, is empty."""
+    bases = [index for index, column in enumerate(columns) if column.key in _RATE_BASE_COLUMN_KEYS]
+    base_column = bases[0] if len(bases) == 1 else None
+    updated: list[ModeloFormGridRow] = []
+    for row in rows:
+        rate_cell = _row_rate_cell(row)
+        base = row.cells[base_column].field if rate_cell is not None and base_column is not None else None
+        updated.append(
+            row.model_copy(
+                update={
+                    "rate_cell": rate_cell,
+                    "rate_base_empty": None if base is None else not _holds_an_amount(base),
+                }
+            )
+        )
     return tuple(updated)
 
 

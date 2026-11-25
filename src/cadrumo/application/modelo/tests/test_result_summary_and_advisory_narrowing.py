@@ -20,6 +20,8 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.schema_verification import VerificationPredicateOperator
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,32 +29,37 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..action_errors import WorkUnitRevisionDivergenceError
-from ..verification_predicates import evaluate_advisory_predicate_fires
+from ..action_errors import ModeloVerificationPredicateMalformedError, WorkUnitRevisionDivergenceError
+from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
+    evaluate_advisory_predicate_fires,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _WORK_UNIT_BUCKET = "result-summary-narrowing-test"
-_WORK_UNIT_REVISION = "2026-y-siguientes"
-_WORK_UNIT_NOW = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_WORK_UNIT_REVISION = str(revision_serving_period("303", _YEAR, "2T").id)
+_WORK_UNIT_NOW = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_WORK_UNIT_BUCKET,
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=_WORK_UNIT_REVISION,
         ),
         bucket_id=_WORK_UNIT_BUCKET,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=_WORK_UNIT_REVISION,
-        name="303-2026-2T",
+        name=f"303-{_YEAR}-2T",
         created_at=_WORK_UNIT_NOW,
         updated_at=_WORK_UNIT_NOW,
     )
@@ -64,7 +71,7 @@ def _work_unit() -> WorkUnit:
 
 
 class TestAdvisoryPredicateDecimalNarrowing:
-    """evaluate_advisory_predicate_fires only catches InvalidOperation on threshold parse."""
+    """evaluate_advisory_predicate_fires reads a registry threshold or refuses it as a typed error."""
 
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
@@ -72,12 +79,6 @@ class TestAdvisoryPredicateDecimalNarrowing:
     @pytest.mark.parametrize(
         ("expression", "values", "expected"),
         (
-            pytest.param(
-                _INVALID_THR_EXPR,
-                {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
-                False,
-                id="invalid-threshold",
-            ),
             pytest.param(
                 _VALID_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
@@ -101,6 +102,18 @@ class TestAdvisoryPredicateDecimalNarrowing:
         result = evaluate_advisory_predicate_fires(expression, values)
         assert result is expected, expression
 
+    def test_a_non_numeric_threshold_is_refused_not_read_as_silent(self) -> None:
+        values = {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")}
+        for _ in range(3):
+            with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
+                evaluate_advisory_predicate_fires(self._INVALID_THR_EXPR, values)
+            assert raised.value.context == {
+                "predicate_expression_recognised": False,
+                "predicate_operator": VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE.value,
+                "predicate_refusal": VerificationPredicateRefusal.LITERAL.value,
+                "predicate_route": VerificationPredicateRoute.ADVISORY.value,
+            }
+
 
 class TestResultSummaryNarrowing:
     """calculation_result_summary returns None on typed errors, propagates unexpected ones."""
@@ -120,15 +133,15 @@ class TestResultSummaryNarrowing:
             work_unit_id=work_unit_id,
             registry_snapshot_ref=RegistrySnapshotRef(
                 modelo="303",
-                revision_id="2026-y-siguientes",
-                modelo_year=2026,
+                revision_id=_WORK_UNIT_REVISION,
+                modelo_year=_YEAR,
                 period="2T",
             ),
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={},
             casilla_values={},
-            created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
-            updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+            created_at=_WORK_UNIT_NOW,
+            updated_at=_WORK_UNIT_NOW,
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -169,7 +182,7 @@ class TestResultSummaryNarrowing:
             observed.append(grade)
             raise CadrumoError("stop after observing the requested grade")
 
-        monkeypatch.setattr(result_summary, "_resolve_registry_snapshot_for_work_unit", _capture_grade)
+        monkeypatch.setattr(result_summary, "resolve_registry_snapshot_for_work_unit", _capture_grade)
 
         assert (
             result_summary.calculation_result_summary(

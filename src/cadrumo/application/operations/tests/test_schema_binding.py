@@ -10,7 +10,7 @@ from pydantic import BaseModel, ValidationError, create_model, field_validator, 
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from .. import registry, schema_identity
-from ..registry import OperationSchemaBindingV1, _SchemaBindingIdentitySeed
+from ..registry import OperationSchemaBindingV1, SchemaBindingIdentitySeed
 from ..registry_schema_validation import operation_schema_compilation_scope, strict_model_json_schema
 from ..schema_identity import OperationSchemaIdentityV1
 
@@ -57,7 +57,7 @@ def test_arbitrary_constructor_refuses_forged_fingerprint() -> None:
 
 
 def test_private_seed_subclass_is_not_admitted_as_derivation_metadata() -> None:
-    class SeedSubclass(_SchemaBindingIdentitySeed):
+    class SeedSubclass(SchemaBindingIdentitySeed):
         pass
 
     with pytest.raises(ValidationError):

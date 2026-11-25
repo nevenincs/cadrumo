@@ -8,20 +8,23 @@ from pydantic import ValidationError
 from ..binding_temporal import SameFilingYearPeriods
 from ..bindings_previous_filing import PreviousFilingProvider
 from ..schema_references import PeriodSelector, RegistrySnapshotRef
+from .authored_editions import authored_revisions, filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_registry_period_boundaries_normalize_administrative_tokens() -> None:
     """Modelo 036 event coordinates remain valid alongside filing-period codes."""
     snapshot = RegistrySnapshotRef(
         modelo="036",
-        revision_id="2025-02-03-y-siguientes",
-        modelo_year=2025,
+        revision_id=str(authored_revisions("036")[-1].id),
+        modelo_year=_YEAR,
         period="alta",
     )
     selector = PeriodSelector(
-        year_from=2025,
+        year_from=_YEAR,
         periods=("alta", "modificacion", "baja", "comunicacion", "variacion"),
     )
     previous_filing = PreviousFilingProvider(
@@ -34,18 +37,18 @@ def test_registry_period_boundaries_normalize_administrative_tokens() -> None:
     assert previous_filing.required_periods == ("modificacion",)
 
 
-@pytest.mark.parametrize("invalid_period", ("BOGUS", "2025 1T"))
+@pytest.mark.parametrize("invalid_period", ("BOGUS", f"{_YEAR} 1T"))
 def test_registry_period_boundaries_refuse_unknown_or_display_tokens(invalid_period: str) -> None:
     """All audited boundaries reject non-canonical raw and combined period forms."""
     with pytest.raises(ValidationError):
         RegistrySnapshotRef(
             modelo="303",
-            revision_id="2025-y-siguientes",
-            modelo_year=2025,
+            revision_id=str(authored_revisions("303")[-1].id),
+            modelo_year=_YEAR,
             period=invalid_period,
         )
     with pytest.raises(ValidationError):
-        PeriodSelector(years=(2025,), periods=(invalid_period,))
+        PeriodSelector(years=(_YEAR,), periods=(invalid_period,))
     with pytest.raises(ValidationError):
         PreviousFilingProvider(
             source_modelo="303",

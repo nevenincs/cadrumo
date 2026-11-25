@@ -36,12 +36,14 @@ from typing import Final, cast
 
 import psutil
 
-from cadrumo.core.storage_environment import prepare_temporary_directory, resolve_storage_path
-from dev._paths import REPO_ROOT, UTF_8
+from cadrumo.core.storage_environment import resolve_storage_path
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
+from dev.paths import REPO_ROOT, UTF_8
+from dev.temporary_output import prepare_temp_root
 
 from .import_authority import read_authority
 from .import_check_models import Authority, CheckResult, Finding, ImportOccurrence
+from .import_consumer_trees import consumer_source_files
 from .import_diagnostics import has_architectural_warning
 from .import_health import build_import_health
 from .import_health_rendering import render_import_health, unavailable_import_health
@@ -50,7 +52,7 @@ _ROOT_ENV: Final[str] = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
 _CHECKER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_CHECKER"
 _FORCE_CHECKER_EXCEPTION_ENV: Final[str] = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
-_CHECKER_PATH: Final[Path] = Path(__file__).with_name("import_checker.py").resolve()
+_CHECKER_MODULE: Final[str] = "dev.quality.import_checker"
 _LOAD_PROBE_MODULE: Final[str] = "dev.quality.import_load_probe"
 _LOAD_HARNESS_PACKAGES: Final[tuple[str, ...]] = ("dev", "cadrumo")
 
@@ -211,8 +213,8 @@ def run_within_budget(
             f"has no work budget ({budget.cpu_seconds:g} CPU-s, {budget.stall_seconds:g} s stall limit)"
         )
     with (
-        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stdout_file,
-        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stderr_file,
+        tempfile.TemporaryFile(dir=prepare_temp_root()) as stdout_file,
+        tempfile.TemporaryFile(dir=prepare_temp_root()) as stderr_file,
     ):
         returncode, cpu_seconds = asyncio.run(
             _supervise(
@@ -343,13 +345,7 @@ def run_import_linter(
         )
     step_budget = budget or step_budget_for(authority)
 
-    environment = os.environ.copy()
-    import_paths = [str(root.source_root) for root in authority.roots]
-    existing = environment.get("PYTHONPATH")
-    if existing is not None and existing:
-        import_paths.append(existing)
-    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
-    environment["PYTHONIOENCODING"] = UTF_8
+    environment = _import_environment([str(root.source_root) for root in authority.roots])
     command = (
         resolved,
         "--config",
@@ -403,13 +399,13 @@ def run_subordinate(
                 CheckResult((), 0),
             )
         environment = _subordinate_environment()
-        with tempfile.TemporaryDirectory(
-            prefix="cadrumo-import-checker-", dir=prepare_temporary_directory()
-        ) as temporary:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-import-checker-", dir=prepare_temp_root()) as temporary:
             report_path = Path(temporary) / "checker.json"
             command = (
                 resolved,
-                str(_CHECKER_PATH),
+                "-P",
+                "-m",
+                _CHECKER_MODULE,
                 "--internal",
                 "--root",
                 str(authority.repository),
@@ -468,24 +464,12 @@ def run_loadability(
     # The harness is tool code and must resolve from the tool tree; the audited
     # targets are imported by the probe's own isolated worker, so no audited
     # source root belongs on this path.
-    environment = os.environ.copy()
-    import_paths = list(harness_roots)
-    existing = environment.get("PYTHONPATH")
-    if existing is not None and existing:
-        import_paths.append(existing)
-    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
-    environment["PYTHONIOENCODING"] = UTF_8
+    environment = _import_environment(list(harness_roots))
 
     artifact_directory = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     try:
-        with tempfile.TemporaryDirectory(
-            prefix="cadrumo-import-loadability-", dir=prepare_temporary_directory()
-        ) as temporary:
-            if artifact_directory is not None and artifact_directory:
-                report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
-                report_path.parent.mkdir(parents=True, exist_ok=True)
-            else:
-                report_path = Path(temporary) / "import-loadability.json"
+        with tempfile.TemporaryDirectory(prefix="cadrumo-import-loadability-", dir=prepare_temp_root()) as temporary:
+            report_path = _loadability_report_path(artifact_directory, temporary)
             command = (
                 sys.executable,
                 "-P",
@@ -532,6 +516,24 @@ def run_loadability(
     return ComponentResult("loadability", TOOL_BROKEN, _combined_output(output, diagnostic), cpu_seconds), payload
 
 
+def _import_environment(import_paths: list[str]) -> dict[str, str]:
+    environment = os.environ.copy()
+    existing = environment.get("PYTHONPATH")
+    if existing is not None and existing:
+        import_paths.append(existing)
+    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
+    environment["PYTHONIOENCODING"] = UTF_8
+    return environment
+
+
+def _loadability_report_path(artifact_directory: str | None, temporary: str) -> Path:
+    if artifact_directory is not None and artifact_directory:
+        report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        return report_path
+    return Path(temporary) / "import-loadability.json"
+
+
 def _load_harness_import_roots() -> tuple[str, ...] | str:
     """Return the tool-tree directories providing the probe's own packages, or a refusal."""
     roots: list[str] = []
@@ -551,7 +553,7 @@ def _read_checker_report(path: Path, authority: Authority) -> CheckResult:
     """Load the complete child evidence or fail closed when it is unusable."""
     try:
         payload = json.loads(path.read_text(encoding=UTF_8))
-        if payload.get("schema_version") != 2:
+        if payload.get("schema_version") != 3:
             raise ValueError("unsupported checker report schema")
         findings = tuple(
             Finding(
@@ -579,12 +581,13 @@ def _read_checker_report(path: Path, authority: Authority) -> CheckResult:
             for item in payload.get("occurrences", ())
         )
         files_scanned = int(payload["files_scanned"])
+        consumer_files_scanned = int(payload["consumer_files_scanned"])
     except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         return CheckResult(
             (Finding("INTERNAL_CHECKER", f"checker evidence report is unusable: {exc}", fatal=True),),
             0,
         )
-    return CheckResult(findings, files_scanned, occurrences)
+    return CheckResult(findings, files_scanned, occurrences, consumer_files_scanned)
 
 
 def run_import_gate(
@@ -665,6 +668,7 @@ def run_import_gate(
         load_returncode=load_component.returncode,
         source_snapshot_before=source_snapshot_before.digest,
         source_snapshot_after=source_snapshot_after.digest,
+        moved_sources=_moved_sources(source_snapshot_before, source_snapshot_after),
         component_durations={
             "import_linter": linter_seconds,
             "loadability": load_seconds,
@@ -689,15 +693,18 @@ class _SourceSnapshot:
 
     digest: str
     governed_bytes: int
+    stamps: dict[str, tuple[int, int]]
 
 
 def _source_snapshot(authority: Authority) -> _SourceSnapshot:
     """Fingerprint the governed inputs so concurrent mutation fails closed."""
     digest = hashlib.sha256()
     governed_bytes = 0
+    stamps: dict[str, tuple[int, int]] = {}
     paths: set[Path] = {authority.config_path}
     for root in authority.roots:
         paths.update(root.path.rglob("*.py"))
+    paths.update(authority.repository / relative for relative in consumer_source_files(authority))
     ratchet = authority.repository / "dev" / "quality" / "metadata" / "import_boundary_ratchet.json"
     if ratchet.is_file():
         paths.add(ratchet)
@@ -712,9 +719,21 @@ def _source_snapshot(authority: Authority) -> _SourceSnapshot:
             digest.update(f"unavailable:{path}:{exc}".encode(UTF_8))
             continue
         digest.update(f"{relative}\0{stat.st_size}\0{stat.st_mtime_ns}\n".encode(UTF_8))
+        stamps[relative] = (stat.st_size, stat.st_mtime_ns)
         if path.suffix == ".py":
             governed_bytes += stat.st_size
-    return _SourceSnapshot(digest.hexdigest(), governed_bytes)
+    return _SourceSnapshot(digest.hexdigest(), governed_bytes, stamps)
+
+
+def _moved_sources(before: _SourceSnapshot, after: _SourceSnapshot) -> tuple[str, ...]:
+    """Name the governed files that appeared, vanished or changed between two snapshots."""
+    return tuple(
+        sorted(
+            relative
+            for relative in before.stamps.keys() | after.stamps.keys()
+            if before.stamps.get(relative) != after.stamps.get(relative)
+        )
+    )
 
 
 def _emit_failure(components: list[ComponentResult]) -> None:

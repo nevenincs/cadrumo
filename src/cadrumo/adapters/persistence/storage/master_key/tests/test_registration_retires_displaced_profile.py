@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
@@ -25,10 +25,10 @@ from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo.tests.process_results import receive_process_result
 
 from .profile_process_support import (
-    _child_settings,
-    _close_child_login,
-    _login_in_separate_process,
-    _probe_resumable_session,
+    child_settings,
+    close_child_login,
+    login_in_separate_process,
+    probe_resumable_session,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -55,8 +55,8 @@ def _register_in_separate_process_child(
     result_queue: Queue[_ChildRegistrationResult],
 ) -> None:
     """Create one profile the way an operator invocation does: a fresh process."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    settings, token, composition = _child_settings(storage_root)
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    settings, token, composition = child_settings(storage_root)
     _ = settings
     try:
         outcome = register_profile_with_credentials(
@@ -67,7 +67,7 @@ def _register_in_separate_process_child(
         )
         result_queue.put({"profile_id": outcome.profile_id, "label": outcome.label})
     finally:
-        _close_child_login(token, composition)
+        close_child_login(token, composition)
 
 
 def _register_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRegistrationResult:
@@ -98,8 +98,8 @@ def _attempt_registration_in_separate_process_child(
     result_queue: Queue[_ChildRefusalResult],
 ) -> None:
     """Report whatever the registration door tells the operator, refusal included."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    settings, token, composition = _child_settings(storage_root)
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    settings, token, composition = child_settings(storage_root)
     _ = settings
     try:
         try:
@@ -120,7 +120,7 @@ def _attempt_registration_in_separate_process_child(
         else:
             result_queue.put({"refused": False, "translated_message": None, "cause": None})
     finally:
-        _close_child_login(token, composition)
+        close_child_login(token, composition)
 
 
 def _attempt_registration_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRefusalResult:
@@ -151,7 +151,7 @@ def test_registration_preserves_the_displaced_profiles_signed_in_receipt(
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Displacement One", _CREDENTIAL_DISPLACED)["profile_id"]
-        opened = _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
+        opened = login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
         assert opened["bucket_id"] == displaced
         receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(displaced))
         saved = receipt.read_bytes()
@@ -162,7 +162,7 @@ def test_registration_preserves_the_displaced_profiles_signed_in_receipt(
         assert selected.bucket_id == entering, "creation is expected to select the new capsule"
 
         assert receipt.read_bytes() == saved
-        probe = _probe_resumable_session(storage_root, displaced)
+        probe = probe_resumable_session(storage_root, displaced)
         assert probe["resumed"] is True
         assert probe["dek_length"] == 32
         assert probe["refusal"] is None
@@ -176,9 +176,9 @@ def test_a_selected_profiles_saved_sign_in_is_resumable(
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         selected = _register_in_separate_process(storage_root, "Resumable One", _CREDENTIAL_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, selected, _CREDENTIAL_DISPLACED)
+        login_in_separate_process(storage_root, selected, _CREDENTIAL_DISPLACED)
 
-        probe = _probe_resumable_session(storage_root, selected)
+        probe = probe_resumable_session(storage_root, selected)
 
         assert probe["resumed"] is True
         assert probe["dek_length"] == 32, "a selected profile's own receipt must still resume its session"
@@ -198,7 +198,7 @@ def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
         assert selected.bucket_id == first["profile_id"]
         assert first["label"] == "Unopposed One"
 
-        opened = _login_in_separate_process(storage_root, first["profile_id"], _CREDENTIAL_DISPLACED)
+        opened = login_in_separate_process(storage_root, first["profile_id"], _CREDENTIAL_DISPLACED)
         assert opened["bucket_id"] == first["profile_id"]
 
 
@@ -210,13 +210,13 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Survivor One", _CREDENTIAL_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
+        login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
 
         entering = _register_in_separate_process(storage_root, "Survivor Two", _CREDENTIAL_ENTERING)["profile_id"]
-        opened = _login_in_separate_process(storage_root, entering, _CREDENTIAL_ENTERING)
+        opened = login_in_separate_process(storage_root, entering, _CREDENTIAL_ENTERING)
         assert opened["bucket_id"] == entering
 
-        probe = _probe_resumable_session(storage_root, entering)
+        probe = probe_resumable_session(storage_root, entering)
         assert probe["resumed"] is True
         assert probe["dek_length"] == 32
 

@@ -20,18 +20,18 @@ from ..row_models import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ._row_model_support import (
-    _assert_validation_error,
-    _BooleanCase,
-    _CountryContextCase,
-    _ValidationErrorCase,
+from .row_model_support import (
+    BooleanCase,
+    CountryContextCase,
+    ValidationErrorCase,
+    assert_validation_error,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _M349_INVALID_ROW_CASES = (
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "missing-razon-social",
         lambda: Modelo349OperadorRow.model_validate(
             {
@@ -43,7 +43,7 @@ _M349_INVALID_ROW_CASES = (
         ),
         "razon_social",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "blank-razon-social",
         lambda: Modelo349OperadorRow(
             codigo_pais="DE",
@@ -54,7 +54,7 @@ _M349_INVALID_ROW_CASES = (
         ),
         "razon_social",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "negative-importe",
         lambda: Modelo349OperadorRow(
             codigo_pais="DE",
@@ -65,7 +65,7 @@ _M349_INVALID_ROW_CASES = (
         ),
         "non-negative",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "lowercase-country",
         lambda: Modelo349OperadorRow(
             codigo_pais="de",
@@ -78,7 +78,7 @@ _M349_INVALID_ROW_CASES = (
 )
 
 _M349_INVALID_RECTIFICATION_ROW_CASES = (
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "negative-base-rectificada",
         lambda: Modelo349RectificacionRow(
             codigo_pais="DE",
@@ -92,7 +92,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
         ),
         "non-negative",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "negative-base-anterior",
         lambda: Modelo349RectificacionRow(
             codigo_pais="DE",
@@ -106,7 +106,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
         ),
         "non-negative",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "invalid-ejercicio",
         lambda: Modelo349RectificacionRow(
             codigo_pais="DE",
@@ -120,7 +120,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
         ),
         "four-digit year",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "invalid-periodo",
         lambda: Modelo349RectificacionRow.model_validate(
             {
@@ -138,43 +138,43 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
 )
 
 _M349_NIF_FORMAT_CASES = (
-    _BooleanCase("valid-de", "DE123456789", "DE", True),
-    _BooleanCase("de-too-short", "DE12345678", "DE", False),
-    _BooleanCase("valid-fr", "FR12345678901", "FR", True),
-    _BooleanCase("valid-it", "IT12345678901", "IT", True),
-    _BooleanCase("valid-nl", "NL123456789B01", "NL", True),
-    _BooleanCase("valid-el", "EL123456789", "EL", True),
-    _BooleanCase("valid-xi", "XI123456789", "XI", True),
-    _BooleanCase("unknown-country", "XX12345", "XX", False),
-    _BooleanCase("unknown-country-badvat", "BADVAT", "ZZ", False),
-    _BooleanCase("supported-country-too-short", "EL1", "EL", False),
-    _BooleanCase("de-rejects-fr-shape", "FR12345678901", "DE", False),
+    BooleanCase("valid-de", "DE123456789", "DE", True),
+    BooleanCase("de-too-short", "DE12345678", "DE", False),
+    BooleanCase("valid-fr", "FR12345678901", "FR", True),
+    BooleanCase("valid-it", "IT12345678901", "IT", True),
+    BooleanCase("valid-nl", "NL123456789B01", "NL", True),
+    BooleanCase("valid-el", "EL123456789", "EL", True),
+    BooleanCase("valid-xi", "XI123456789", "XI", True),
+    BooleanCase("unknown-country", "XX12345", "XX", False),
+    BooleanCase("unknown-country-badvat", "BADVAT", "ZZ", False),
+    BooleanCase("supported-country-too-short", "EL1", "EL", False),
+    BooleanCase("de-rejects-fr-shape", "FR12345678901", "DE", False),
     # Belgium accepts both the historical '0' lead digit and the '1' lead digit
     # used for newer registrations since 2007 (VIES structure rule), routed
     # through the canonical core NIF_IVA_FORMATS authority.
-    _BooleanCase("valid-be-legacy-zero-lead", "BE0123456789", "BE", True),
-    _BooleanCase("valid-be-modern-one-lead", "BE1234567890", "BE", True),
-    _BooleanCase("be-rejects-other-lead-digit", "BE9123456789", "BE", False),
+    BooleanCase("valid-be-legacy-zero-lead", "BE0123456789", "BE", True),
+    BooleanCase("valid-be-modern-one-lead", "BE1234567890", "BE", True),
+    BooleanCase("be-rejects-other-lead-digit", "BE9123456789", "BE", False),
     # Ireland accepts the two-letter suffix form and the '+'/'*' second-block
     # variants documented by VIES, routed through the core authority.
-    _BooleanCase("valid-ie-two-letter-suffix", "IE1234567TW", "IE", True),
-    _BooleanCase("valid-ie-plus-block", "IE1+23456W", "IE", True),
+    BooleanCase("valid-ie-two-letter-suffix", "IE1234567TW", "IE", True),
+    BooleanCase("valid-ie-plus-block", "IE1+23456W", "IE", True),
     # Cyprus is 8 digits + 1 trailing letter per the VIES structure rule; the
     # core authority enforces this exact shape (a bare 9-character alphanumeric
     # body, as the pre-migration Modelo 349 pattern allowed, is not a valid
     # Cypriot NIF-IVA and must be rejected).
-    _BooleanCase("valid-cy", "CY12345678L", "CY", True),
-    _BooleanCase("cy-rejects-all-digit-body", "CY123456789", "CY", False),
-    _BooleanCase("cy-rejects-non-terminal-letter", "CY1234567L8", "CY", False),
+    BooleanCase("valid-cy", "CY12345678L", "CY", True),
+    BooleanCase("cy-rejects-all-digit-body", "CY123456789", "CY", False),
+    BooleanCase("cy-rejects-non-terminal-letter", "CY1234567L8", "CY", False),
     # GB retains its own Modelo 349 Brexit-transition pattern (post-Brexit UK
     # carries no entry in the general EU NIF-IVA authority).
-    _BooleanCase("valid-gb-nine-digit", "GB123456789", "GB", True),
-    _BooleanCase("valid-gb-government-department", "GBGD001", "GB", True),
-    _BooleanCase("gb-rejects-bad-shape", "GB12345", "GB", False),
+    BooleanCase("valid-gb-nine-digit", "GB123456789", "GB", True),
+    BooleanCase("valid-gb-government-department", "GBGD001", "GB", True),
+    BooleanCase("gb-rejects-bad-shape", "GB12345", "GB", False),
 )
 
 _M349_CONTEXT_ALLOWED_CASES = (
-    _CountryContextCase(
+    CountryContextCase(
         "xi-goods-2025",
         lambda: validate_m349_country_prefix_context(
             country_code="XI",
@@ -183,7 +183,7 @@ _M349_CONTEXT_ALLOWED_CASES = (
             period="4T",
         ),
     ),
-    _CountryContextCase(
+    CountryContextCase(
         "gb-pre-2021-rectification",
         lambda: validate_m349_country_prefix_context(
             country_code="GB",
@@ -198,7 +198,7 @@ _M349_CONTEXT_ALLOWED_CASES = (
 )
 
 _M349_CONTEXT_REJECTED_CASES = (
-    _CountryContextCase(
+    CountryContextCase(
         "xi-services",
         lambda: validate_m349_country_prefix_context(
             country_code="XI",
@@ -208,7 +208,7 @@ _M349_CONTEXT_REJECTED_CASES = (
         ),
         "service keys",
     ),
-    _CountryContextCase(
+    CountryContextCase(
         "gb-ordinary-2025",
         lambda: validate_m349_country_prefix_context(
             country_code="GB",
@@ -272,7 +272,7 @@ class TestModelo349OperadorRow:
 
     def test_invalid_operador_rows_rejected(self) -> None:
         for case in _M349_INVALID_ROW_CASES:
-            _assert_validation_error(case)
+            assert_validation_error(case)
 
     def test_frozen_model_immutable(self) -> None:
         row = Modelo349OperadorRow(
@@ -368,7 +368,7 @@ class TestModelo349RectificacionRow:
 
     def test_invalid_rectification_rows_rejected(self) -> None:
         for case in _M349_INVALID_RECTIFICATION_ROW_CASES:
-            _assert_validation_error(case)
+            assert_validation_error(case)
 
 
 class TestValidateM349NifFormat:

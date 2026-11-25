@@ -23,7 +23,6 @@ from cadrumo.application.diagnostics_repair_documents import (
 )
 from cadrumo.application.operations.error_detail import build_operation_error_detail
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.documents import (
     ConfigStorageCheckResult,
     ConfigStorageInitResult,
@@ -43,6 +42,7 @@ from cadrumo.application.storage_management.models import (
 )
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 

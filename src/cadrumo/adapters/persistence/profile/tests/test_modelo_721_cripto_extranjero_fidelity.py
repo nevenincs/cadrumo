@@ -55,23 +55,30 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
+from cadrumo.adapters.persistence.profile.tests.multi_year_roundtrip_support import (
+    assert_omitted_casilla_is_detected,
+    assert_two_ejercicio_round_trip,
+)
+from cadrumo.adapters.persistence.profile.tests.observation_lookup_support import (
+    find_observation,
+    save_app_filing_observation,
+    saved_two_ejercicios,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observation_rows,
-    revision_id_for_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -89,7 +96,7 @@ _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annua
 
 #: Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
 #: as 720: €50,000 aggregate value at 31 December through a third-party custodian).
-with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+with bundled_indexed_authority().operation() as _module_authority_operation_for_test:
     _MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
@@ -347,6 +354,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     assert btc_n != btc_n1, "BTC saldo bled between year-N and year-N+1"
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_token_identity_persists_across_both_annual_cycles(tmp_path: Path) -> None:
     """Token and custodian identifiers survive the roundtrip unchanged across both cycles.
 
@@ -358,30 +376,10 @@ def test_token_identity_persists_across_both_annual_cycles(tmp_path: Path) -> No
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         # BTC token identity: clave-token=1 must survive unchanged in both cycles.
         token_ids_n = _values_for(loaded_n.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
         token_ids_n1 = _values_for(loaded_n1.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
@@ -406,14 +404,7 @@ def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _year_n_observation(),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(_year_n_observation()),
-            )
-        )
+        save_app_filing_observation(repo, _year_n_observation(), captured_at=_CLOCK_N)
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
@@ -438,70 +429,25 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         val_n = _values_for(loaded_n.observation, _MONEDA_SALDO_CASILLA)[0]
         val_n1 = _values_for(loaded_n1.observation, _MONEDA_SALDO_CASILLA)[0]
 
         delta = val_n1 - val_n
         assert delta > _REDECLARATION_DELTA_EUR, (
-            f"year-N+1 minus year-N BTC delta ({delta}) must exceed €{_REDECLARATION_DELTA_EUR} "
+            f"year-N+1 minus year-N BTC delta ({delta}) must exceed {_REDECLARATION_DELTA_EUR} € "
             f"to satisfy art. 42-quater re-declaration trigger condition"
         )
 
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: omitting the saldo-31-diciembre casilla produces strict inequality."""
-    obs_n = _year_n_observation()
-    obs_n_no_saldo = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id not in _SALDO_31_DICIEMBRE_CASILLAS),
+    assert_omitted_casilla_is_detected(
+        tmp_path, _year_n_observation(), omitted=_SALDO_31_DICIEMBRE_CASILLAS, captured_at=_CLOCK_N
     )
-
-    assert obs_n != obs_n_no_saldo, "the full observation and the saldo-omitted observation must be strictly unequal"
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation != obs_n_no_saldo, (
-            "loaded observation equals the saldo-omitted stub — "
-            "the roundtrip silently dropped btc/eth saldo-31-diciembre casillas"
-        )
-        assert loaded.observation == obs_n
 
 
 def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_manifest(
@@ -522,35 +468,17 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-
-        # --- Year N (2023) ---------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+1 (2024) -------------------------------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        assert loaded_n1 is not None
-        assert loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=obs_n,
+        obs_n_plus_1=obs_n1,
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
     # --- Enrollment recording (outside the profile context) ------------------

@@ -34,7 +34,7 @@ from ....core.operations import (
 )
 from ....core.period import Period
 from .. import operation_modelo_local_observation as bridge
-from .._filing_chain_payloads import ObservationLayersPayload
+from ..filing_chain_payloads import ObservationLayersPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -15,19 +15,23 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ._ledger_validation_support import (
-    _PROFILE_LABEL,
-    _add_eligible_mixed_expense,
-    _assert_pipeline_managed_state_refusal,
-    _declare_general_regime_iva_profile,
-    _flatten_box,
-    _invoke,
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.domain.user_profile.values import UserProfileFact
+
+from .ledger_validation_support import (
+    PROFILE_LABEL,
+    add_eligible_mixed_expense,
+    assert_pipeline_managed_state_refusal,
+    declare_general_regime_iva_profile,
+    flatten_box,
     import_validation_transaction,
+    invoke,
 )
 from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
 
@@ -48,15 +52,15 @@ def _assert_negative_amount_refusal(result: Result) -> None:
 #: its ledger. Seeding once and handing each test a filesystem copy keeps the
 #: isolation exactly as it was -- every test still gets its own storage root,
 #: and the cases that import or add rows cannot reach each other.
-_seeded_bucket_origin, _open_bucket_session = runtime_seeded_profile_backend_fixture(
-    seed=lambda *, invoke_cli: _declare_general_regime_iva_profile(),
-    label=_PROFILE_LABEL,
+_seeded_bucket_origin, open_bucket_session = runtime_seeded_profile_backend_fixture(
+    seed=lambda *, invoke_cli: declare_general_regime_iva_profile(),
+    label=PROFILE_LABEL,
     settings_overrides={"cadrumo_output_language": "en"},
-    name="_open_bucket_session",
+    name="open_bucket_session",
     origin_name="_seeded_bucket_origin",
 )
 
-__all__ = ["_open_bucket_session", "_seeded_bucket_origin"]
+__all__ = ["_seeded_bucket_origin", "open_bucket_session"]
 
 # ---------------------------------------------------------------------------
 # contract.1  ledger add — business_pct set without MIXED classification
@@ -72,7 +76,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
     MIXED".  ``ledger_validation_bad`` must route this through the CLI
     refusal rather than letting it bubble to the generic boundary."""
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -107,7 +111,7 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
     ``aeat-architecture-boundaries`` instructive-refusal rule — never a bare
     "value invalid".
     """
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -140,7 +144,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     whole ``RawTransaction(...)`` repr (~30 lines). The CLI handler must catch it
     and route the human-readable validator message through ``ledger_validation_bad``.
     """
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -191,7 +195,7 @@ def test_ledger_add_gross_mismatch_above_substrate_hints_recargo_amount(
     (LIVA art. 161) charges the surcharge on top of the cuota, so the cash the
     operator recorded can legitimately exceed base+IVA alone.
     """
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -235,7 +239,7 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     classifies it with the invoice substrate. The production CLI path must
     persist those facts so Modelo 303 and Renta aggregation can read them.
     """
-    added = _invoke(
+    added = invoke(
         [
             "--format",
             "json",
@@ -255,7 +259,7 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     assert added.exit_code == 0, added.output
     transaction_id = json.loads(added.output)["result"]["transaction_id"]
 
-    classified = _invoke(
+    classified = invoke(
         [
             "app",
             "ledger",
@@ -276,7 +280,7 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     )
     assert classified.exit_code == 0, classified.output
 
-    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    viewed = invoke(["--format", "json", "app", "ledger", "view", transaction_id])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
 
@@ -291,7 +295,7 @@ def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_siz
     tmp_path: Path,
 ) -> None:
     """A base-only professional cash receipt must not persist as IVA-sized retencion."""
-    added = _invoke(
+    added = invoke(
         [
             "--format",
             "json",
@@ -311,7 +315,7 @@ def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_siz
     assert added.exit_code == 0, added.output
     transaction_id = json.loads(added.output)["result"]["transaction_id"]
 
-    classified = _invoke(
+    classified = invoke(
         [
             "app",
             "ledger",
@@ -344,7 +348,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     paid. The CLI path must not rewrite cash to 1210.00 and must persist the
     category axes that explain the net payment.
     """
-    added = _invoke(
+    added = invoke(
         [
             "--format",
             "json",
@@ -364,7 +368,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     assert added.exit_code == 0, added.output
     transaction_id = json.loads(added.output)["result"]["transaction_id"]
 
-    classified = _invoke(
+    classified = invoke(
         [
             "app",
             "ledger",
@@ -391,7 +395,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     )
     assert classified.exit_code == 0, classified.output
 
-    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    viewed = invoke(["--format", "json", "app", "ledger", "view", transaction_id])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
 
@@ -405,16 +409,9 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     assert transaction["irpf_category"] == "actividad_economica"
 
 
-def test_ledger_classify_persists_rent_paid_net_of_withholding(
-    tmp_path: Path,
-) -> None:
-    """A rent bank payment net of withholding can keep full invoice IVA facts.
-
-    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
-    The CLI path must persist the full rent invoice substrate so Modelo 303 can
-    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
-    """
-    added = _invoke(
+def _add_net_rent_payment() -> str:
+    """Add the bank payment of a rent invoice net of its withholding and return its transaction id."""
+    added = invoke(
         [
             "--format",
             "json",
@@ -433,35 +430,53 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
     )
     assert added.exit_code == 0, added.output
     transaction_id = json.loads(added.output)["result"]["transaction_id"]
+    assert isinstance(transaction_id, str), transaction_id
+    return transaction_id
 
-    classified = _invoke(
-        [
-            "app",
-            "ledger",
-            "classify",
-            transaction_id,
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "arrendamiento_local",
-            "--taxable-base",
-            "2700.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "567.00",
-            "--iva-category",
-            "domestic_general",
-            "--irpf-category",
-            "arrendamiento_local",
-            "--actor",
-            "Javier",
-        ],
+
+def _classify_net_rent_arguments(transaction_id: str, irpf_category: str, *tail: str) -> list[str]:
+    """Classify the net rent payment as business rent with the full invoice IVA facts."""
+    return [
+        "app",
+        "ledger",
+        "classify",
+        transaction_id,
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "arrendamiento_local",
+        "--taxable-base",
+        "2700.00",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "567.00",
+        "--iva-category",
+        "domestic_general",
+        "--irpf-category",
+        irpf_category,
+        *tail,
+    ]
+
+
+def test_ledger_classify_persists_rent_paid_net_of_withholding(
+    tmp_path: Path,
+) -> None:
+    """A rent bank payment net of withholding can keep full invoice IVA facts.
+
+    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
+    The CLI path must persist the full rent invoice substrate so Modelo 303 can
+    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
+    """
+    transaction_id = _add_net_rent_payment()
+
+    classified = invoke(
+        _classify_net_rent_arguments(transaction_id, "arrendamiento_local", "--actor", "Javier"),
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
 
-    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    viewed = invoke(["--format", "json", "app", "ledger", "view", transaction_id])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
 
@@ -479,47 +494,10 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
     tmp_path: Path,
 ) -> None:
     """A guessed rent withholding id is refused with discoverable accepted ids."""
-    added = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2025-04-05",
-            "--amount",
-            "2754.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "Alquiler local neto de retencion",
-        ],
-    )
-    assert added.exit_code == 0, added.output
-    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+    transaction_id = _add_net_rent_payment()
 
-    classified = _invoke(
-        [
-            "app",
-            "ledger",
-            "classify",
-            transaction_id,
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "arrendamiento_local",
-            "--taxable-base",
-            "2700.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "567.00",
-            "--iva-category",
-            "domestic_general",
-            "--irpf-category",
-            "rental_withholding",
-        ],
+    classified = invoke(
+        _classify_net_rent_arguments(transaction_id, "rental_withholding"),
         env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
     )
 
@@ -532,7 +510,7 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -570,7 +548,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(
+    result = invoke(
         ["app", "ledger", "update", txn_id],
     )
 
@@ -584,7 +562,7 @@ def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: 
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -603,10 +581,10 @@ def test_ledger_update_refuses_to_blank_the_description(tmp_path: Path) -> None:
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(["app", "ledger", "update", txn_id, "--description", "   "])
+    result = invoke(["app", "ledger", "update", txn_id, "--description", "   "])
 
     assert result.exit_code != 0, result.output
-    assert "cannot clear description" in _flatten_box(result.output or ""), result.output
+    assert "cannot clear description" in flatten_box(result.output or ""), result.output
 
 
 # ---------------------------------------------------------------------------
@@ -624,7 +602,7 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -658,7 +636,7 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -700,7 +678,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
     txn_id = import_validation_transaction(tmp_path)
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -749,10 +727,10 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         # The language is chosen through the CLI's own flag: an environment
         # value is ignored while an in-process settings override is active,
         # so it depended on what earlier tests in the worker had resolved.
-        result = _invoke(args, env={"COLUMNS": "260"})
+        result = invoke(args, env={"COLUMNS": "260"})
 
         assert result.exit_code == 0, result.output
-        flat = _flatten_box(result.output or "")
+        flat = flatten_box(result.output or "")
         assert "--usage-ratio-id" in flat, result.output
         assert "category-id" in flat, result.output
         assert "configured ratios" in flat, result.output
@@ -763,14 +741,14 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
             for phrase in ("Not arbitrary prose", "No es texto libre", "No és text lliure", "Nem tetszőleges szöveg")
         ), result.output
 
-    listed = _invoke(
+    listed = invoke(
         ["app", "ledger", "ratios", "list"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert listed.exit_code == 0, listed.output
     assert "count" in listed.output, listed.output
 
-    eligible = _invoke(
+    eligible = invoke(
         ["app", "ledger", "ratios", "eligible"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
@@ -786,10 +764,10 @@ def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> 
         ["app", "ledger", "classify", "--help"],
         ["app", "ledger", "allocate", "--help"],
     ):
-        result = _invoke(args, env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+        result = invoke(args, env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
 
         assert result.exit_code == 0, result.output
-        flat = _flatten_box(result.output or "")
+        flat = flatten_box(result.output or "")
         assert "--business-pct" in flat, result.output
         assert "MIXED" in flat, result.output
         assert "BUSINESS" in flat, result.output
@@ -806,9 +784,9 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     no ``usage_ratio_id``. This pins the design the doc must describe: a bare
     percentage is not enough for a MIXED row to be ready.
     """
-    txn_id = _add_eligible_mixed_expense()
+    txn_id = add_eligible_mixed_expense()
 
-    classified = _invoke(
+    classified = invoke(
         [
             "app",
             "ledger",
@@ -825,7 +803,7 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     )
     assert classified.exit_code == 0, classified.output
 
-    preflight = _invoke(
+    preflight = invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
@@ -844,17 +822,26 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     Mirrors the corrected ``docs/how-to/classify-transactions.md`` mixed-use
     steps end to end: save a category ratio, then allocate the row naming the
     same category id for both ``--usage-ratio-id`` and ``--category-id``.
-    Preflight must then report zero issues and ready=true.
+    Every ratio-eligible category is a home-office share, so preflight also
+    checks the saved ratio against the declared home-office area: half the
+    home here, matching the 0.5 the flow saves. Preflight must then report
+    zero issues and ready=true.
     """
-    txn_id = _add_eligible_mixed_expense()
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
+        )
+    )
+    txn_id = add_eligible_mixed_expense()
 
-    ratios_set = _invoke(
-        ["app", "ledger", "ratios", "set", "telefonia_movil", "0.5"],
+    ratios_set = invoke(
+        ["app", "ledger", "ratios", "set", "arrendamiento_vivienda_afecto", "0.5"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert ratios_set.exit_code == 0, ratios_set.output
 
-    allocate = _invoke(
+    allocate = invoke(
         [
             "app",
             "ledger",
@@ -863,15 +850,15 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
             "--business-pct",
             "0.5",
             "--usage-ratio-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
             "--category-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
         ],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert allocate.exit_code == 0, allocate.output
 
-    preflight = _invoke(
+    preflight = invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
@@ -894,22 +881,22 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
 @pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_ledger_classify_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
     """``ledger classify`` refuses a pipeline-managed state with an instructive error."""
-    txn_id = _add_eligible_mixed_expense()
+    txn_id = add_eligible_mixed_expense()
 
-    result = _invoke(
+    result = invoke(
         ["app", "ledger", "classify", txn_id, "--classification", system_state],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
-    flat = _flatten_box(result.output or "")
-    _assert_pipeline_managed_state_refusal(flat, result.output)
+    flat = flatten_box(result.output or "")
+    assert_pipeline_managed_state_refusal(flat, result.output)
 
 
 @pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
     """``ledger add --classification <system state>`` is refused instructively."""
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -929,8 +916,8 @@ def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state:
     )
 
     assert result.exit_code != 0, result.output
-    flat = _flatten_box(result.output or "")
-    _assert_pipeline_managed_state_refusal(flat, result.output)
+    flat = flatten_box(result.output or "")
+    assert_pipeline_managed_state_refusal(flat, result.output)
     assert "omit --classification" in flat, result.output
 
 
@@ -941,7 +928,7 @@ def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
     truly-internal states (PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE /
     FAILED_VALIDATION) are blocked.
     """
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",

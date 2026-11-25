@@ -10,6 +10,7 @@ class DependencyFailureCategory(StrEnum):
 
     OFFLINE = "offline"
     HOST_UNREACHABLE = "host_unreachable"
+    SERVER_ERROR = "server_error"
     SECURE_CONNECTION_FAILED = "secure_connection_failed"
     BLOCKED_BY_NETWORK = "blocked_by_network"
     DISK_FULL = "disk_full"
@@ -19,6 +20,8 @@ class DependencyFailureCategory(StrEnum):
     MEMORY_BUSY = "memory_busy"
     PROGRAM_MISSING = "program_missing"
     PROGRAM_NOT_RUNNING = "program_not_running"
+    ENGINE_PROGRAM_UNUSABLE = "engine_program_unusable"
+    ENGINE_PACKAGE_DAMAGED = "engine_package_damaged"
     INTERRUPTED = "interrupted"
     NEEDS_SIGN_IN = "needs_sign_in"
     NOT_IN_THIS_BUILD = "not_in_this_build"

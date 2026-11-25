@@ -1,0 +1,320 @@
+format = 1
+
+[persona]
+id = "sociedad-limitada"
+title = "Sociedad limitada de desarrollo web"
+summary = """
+Talleres Digitales Olmo, S.L., con domicilio en Valladolid, desarrolla y mantiene
+plataformas web para un cliente hostelero y alquila equipos y licencias a un
+proveedor. Su administradora no cobra retribución. Presenta IVA trimestral y el
+resumen anual, la declaración de operaciones con terceros y el Impuesto sobre
+Sociedades.
+"""
+taxpayer = "sociedad.titular"
+fiscal_year = "horizon-1"
+modelos = ["303", "390", "347", "200", "202"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "legal_entity"
+"fiscal-residency" = "resident_irpf"
+"legal-entity-form" = "sl"
+"tax-id" = { identity = "sociedad.titular" }
+"legal-name" = { identity = "sociedad.titular", field = "legal_name" }
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "castilla_y_leon"
+"address-postcode" = "47002"
+"activity-start-date" = { year = "horizon-6", month = 1, day = 15 }
+"incn-prior-12-months" = "28500.00"
+"new-entity-first-two-profit-periods" = false
+"iva-regime" = "GENERAL"
+"iva-m303-regime-composition" = "general"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-group-member-enrolled" = false
+"iva-group-dominant-entity-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"iva-intracommunity-operations-exceed-50000-eur" = false
+"enrollment-large-company" = false
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = false
+"pays-capital-income-with-retencion" = false
+"does-intracomunitario" = false
+"third-party-transactions-above-347-threshold" = true
+
+# Domiciled in Valladolid with a turnover far below 12 million euros, the
+# company falls under neither the Concierto Económico (Ley 12/2002 art. 15) nor
+# the Convenio Económico (Ley 28/1990 art. 19): the State levies its whole
+# Impuesto sobre Sociedades.
+#
+# Entity facts the Modelo 202 page 01 states (synthetic). The company closes its ejercicio on
+# 31 December (a calendar-year período impositivo, LIS art. 27.1). It was constituted on 2 January of
+# horizon-6, thirteen days before its activity began (activity-start-date), so its first período
+# impositivo is horizon-6 and none began before it. Its principal activity is the web development of
+# its epigraph, CNAE-2009 code 6201 (programación informática). It holds none of the special régimenes
+# (Ley 49/2002, SOCIMI, entidad de capital riesgo, navieras en tonelaje), is not a cooperativa
+# fiscalmente protegida, and has no art. 101 LIS reduced-size rate or instrumental mark. Its modalidad
+# is the art. 40.2 election stated above.
+[fields]
+"taxpayer_type.tributacion_estado_porcentaje" = "100"
+"taxpayer_type.pago_fraccionado_art_40_3_elected" = "false"
+"taxpayer_type.fecha_constitucion" = "2020-01-02"
+"taxpayer_type.cierre_ejercicio_dia" = "31"
+"taxpayer_type.cierre_ejercicio_mes" = "12"
+"taxpayer_type.principal_cnae" = "6201"
+"taxpayer_type.principal_cnae_classification" = "cnae-2009"
+"taxpayer_type.regimen_ley_49_2002" = "false"
+"taxpayer_type.regimen_socimi" = "false"
+"taxpayer_type.regimen_entidad_capital_riesgo" = "false"
+"taxpayer_type.regimen_entidades_navieras_tonelaje" = "false"
+"taxpayer_type.erd_tipo_gravamen_especifico" = "false"
+"taxpayer_type.cooperativa_fiscalmente_protegida" = "false"
+"taxpayer_type.marca_instrumental" = "false"
+# Page 2 of its Modelo 200 (apartados B, G, D and E): its one socio is listed in B.2; its sole
+# administrator is its legal representative in G (the Sociedades manual requires at least one
+# representante there), it has no secretario del consejo (no board), holds no stake in another entity,
+# has no permanent establishment abroad and no SICAV socio.
+"m200_relaciones.has_participacion_socio" = "true"
+"m200_relaciones.has_representante_legal" = "true"
+"m200_relaciones.has_secretario_consejo" = "false"
+"m200_relaciones.has_participacion_directa" = "false"
+"m200_relaciones.has_establecimiento_permanente" = "false"
+"m200_relaciones.has_socio_sicav_disolucion" = "false"
+
+[[activities]]
+description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
+iae_epigraph = "845"
+
+[[officers]]
+identity = "sociedad.administrador"
+role = "administrador_unico"
+remunerated = false
+
+# Page 2, apartado A of its Modelo 200: the sole administrator, a natural person (F/J column F)
+# who represents no legal-person administrator.
+[[profile_rows]]
+section = "m200_administrador"
+values = { nif = { identity = "sociedad.administrador" }, apellidos_nombre_razon_social = { identity = "sociedad.administrador", field = "full_name" }, forma_juridica = "F", representante = false }
+
+# Apartado B.2: the administrator holds the whole share capital, the 3000.00 minimum of an SL constituted
+# before Ley 18/2022, and lives in Valladolid (province 47) like the company.
+[[profile_rows]]
+section = "m200_participacion_socio"
+values = { nif = { identity = "sociedad.administrador" }, apellidos_nombre_razon_social = { identity = "sociedad.administrador", field = "full_name" }, forma_juridica = "F", codigo_provincia_pais = "47", nominal = "3000.00", porcentaje_participacion = "100" }
+
+# Page 2 bis, apartado G: the administrator represents the company under her appointment in the
+# escritura de constitución, executed before a Valladolid notary days before activity began (synthetic).
+[[profile_rows]]
+section = "m200_representante_legal"
+values = { apellidos_y_nombre = { identity = "sociedad.administrador", field = "full_name" }, nif = { identity = "sociedad.administrador" }, fecha_poder = { year = "horizon-6", month = 1, day = 10 }, notaria_otros = "VALLADOLID" }
+
+# The company's earlier Modelo 200 returns, which the application does not hold (synthetic history).
+# It began on horizon-6-01-15 and lost money while it built its first platforms: bases imponibles
+# negativas of 34000.00 (horizon-6), 20000.00 (horizon-5) and 4000.00 (horizon-4), 58000.00 in all.
+# In horizon-3 (base previa 20600.00) it compensated 18600.00 and kept a base imponible of 2000.00:
+# compensation is its option (LIS art. 26.1, "podrán ser compensadas"), and any amount up to 1000000.00
+# is admitted. That was its first period with a positive base imponible, so as an entidad de nueva
+# creación it paid 15 % (LIS art. 29.1, último párrafo): cuota íntegra 300.00 and, with no deducciones,
+# bonificaciones, retenciones or ingresos a cuenta, casilla 00599 of 300.00. In horizon-2 (base previa
+# 23100.00: its INCN of 28500.00, the profile's incn-prior-12-months, less the same 5400.00 of equipment
+# and licence rent it pays every year) it compensated the whole base: base imponible and cuota 0.00, its
+# second 15 % period whatever the base. 58000.00 - 18600.00 - 23100.00 = 16300.00 stayed pending at the
+# close of horizon-2 (casilla 00671). Horizon-1 is its third period with a positive base, so the general
+# rate applies (new-entity-first-two-profit-periods = false). Its own pagos fraccionados: horizon-3's
+# read loss years and were 0.00; horizon-2's October and December instalments were 18 % of 300.00 = 54.00
+# each, so its Modelo 200 returned 108.00. It never recorded a deterioro de créditos (its one client has
+# paid every invoice).
+[[attested_prior_values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+binding = "modelo-200-bin-pendiente-ejercicios-anteriores"
+value = "16300.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Casilla 00671 (bases imponibles negativas pendientes de aplicación en períodos futuros) de su Modelo 200 del ejercicio anterior. Pérdidas de los tres primeros ejercicios 34000.00 + 20000.00 + 4000.00 = 58000.00; compensadas 18600.00 en horizon-3 (opción del art. 26.1 LIS, que deja una base de 2000.00) y 23100.00 en horizon-2 (toda su base previa), dentro del límite de 1000000.00 del art. 26.1 LIS; quedan 58000.00 - 18600.00 - 23100.00 = 16300.00."
+legal_ref = ["ley-27-2014:art-26"]
+
+[[attested_prior_values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+binding = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Casilla 01498 del Modelo 200 del ejercicio anterior: la sociedad nunca dotó un deterioro de créditos, porque su único cliente ha pagado todas sus facturas; no queda saldo pendiente que no cumpla las condiciones del art. 13.1 LIS."
+legal_ref = ["ley-27-2014:art-13"]
+
+[[attested_prior_values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+binding = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Casilla 01499 del Modelo 200 del ejercicio anterior: sin dotación por deterioro de créditos en ningún ejercicio, no queda saldo pendiente que cumpla las condiciones del art. 13.1 LIS."
+legal_ref = ["ley-27-2014:art-13"]
+
+# The reduced rate of LIS art. 29.1 reads the importe neto de la cifra de negocios of the immediately
+# preceding tax period: casilla 00255 of the horizon-2 Modelo 200. The persona holds no prior Modelo 200
+# return (synthetic history), so no held 00255 competes and the operator states it. Horizon-2 was a
+# twelve-month period, so its INCN is the profile's incn-prior-12-months and no disagreement arises.
+[[attested_prior_values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+binding = "modelo-200-incn-periodo-impositivo-anterior"
+value = "28500.00"
+where_declared = true
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Casilla 00255 (importe neto de la cifra de negocios) del Modelo 200 del período impositivo inmediato anterior, el de horizon-2: el operador declara 28500.00 (historia sintética: la persona no conserva ningún Modelo 200 anterior, así que ninguna casilla 00255 conservada compite). Horizon-2 fue un período de doce meses, por lo que coincide con el importe neto de la cifra de negocios de los doce meses anteriores del perfil. La casilla 00255 de 30800.00 que la sociedad consigna en [[work_inputs]] es la del propio período declarado (horizon-1), no la del anterior."
+legal_ref = ["ley-27-2014:art-29"]
+
+# Each art. 40.2 instalment (casilla 03 of the 202) is 18 % of the cuota íntegra, less deducciones,
+# bonificaciones, retenciones e ingresos a cuenta, of the last return whose deadline had passed on the
+# first day of the payment month: horizon-3 for April (300.00), horizon-2 for October and December (0.00).
+# The replay files each 202 of horizon-1, so its Modelo 200 reads casillas 00601, 00603 and 00605 from those
+# instalments. The three instalments read Modelo 200 returns the application does not hold, so the company
+# states each base on its 202 work unit (LIS art. 40.2; manual práctico de Sociedades, "Casilla 01. Base del
+# pago fraccionado"). The 15 % of horizon-3 is the nueva creación rate, which no general or reduced rate of
+# any supported year undercuts, so the figure holds in every replay year.
+[[attested_prior_values]]
+modelo = "202"
+period = "1P"
+year = "horizon-1"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "300.00"
+sources = [{ modelo = "200", year = "horizon-3", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de abril de horizon-1: el de horizon-3 (vencido el 25 de julio de horizon-2). Base imponible 20600.00 - 18600.00 = 2000.00, primera base positiva de una entidad de nueva creación, al 15 % (art. 29.1 LIS): cuota íntegra 300.00, sin deducciones, bonificaciones, retenciones ni ingresos a cuenta; casilla 00599 = 300.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-29"]
+
+[[attested_prior_values]]
+modelo = "202"
+period = "2P"
+year = "horizon-1"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de octubre de horizon-1: el de horizon-2 (vencido el 25 de julio de horizon-1). Compensó toda su base previa de 23100.00: base imponible y cuota 0.00; casilla 00599 = 0.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-26"]
+
+[[attested_prior_values]]
+modelo = "202"
+period = "3P"
+year = "horizon-1"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de diciembre de horizon-1: el de horizon-2, cuya cuota fue 0.00 al compensar toda su base previa de 23100.00; casilla 00599 = 0.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-26"]
+
+# The April instalment of the current year (art. 40.2 LIS) is 18 % of the cuota of the last Modelo 200
+# whose deadline had passed on 1 April: that of horizon-2, whose cuota was 0.00 (history above). The company
+# never elected the art. 40.3 modality (casilla 34 of the 202), stated as false in [fields], and an INCN below
+# 6000000.00 does not impose it.
+[[attested_prior_values]]
+modelo = "202"
+period = "1P"
+year = "horizon"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "La cuota del Modelo 200 de horizon-2 fue 0.00 al compensar toda la base con bases imponibles negativas, así que el pago fraccionado de abril (18 % de esa cuota, art. 40.2 LIS) es 0.00."
+legal_ref = ["ley-27-2014:art-40"]
+
+# At the clock every quarterly IVA return of the fiscal year is past its window,
+# so the company has filed each one. Every quarter was to pay, so no compensation was
+# pending before the first quarter.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"
+
+# The Modelo 200 starts from the accounting result before the Impuesto sobre
+# Sociedades, casilla 00501 of page DP200012 (Manual práctico de Sociedades 2023,
+# corpus manuals/sociedades/2023 source.pdf.extracted.md:91-92: "Resultado de la
+# cuenta de pérdidas y ganancias antes del Impuesto sobre Sociedades (casilla
+# 00501)"). No record the application holds produces it, so the company enters it
+# as the closed accounts give it. No closing entry is authored here: each one the
+# accounts could carry is stated below as absent, with the persona fact behind it.
+#
+# The same closed accounts fill the cuenta de pérdidas y ganancias of pages 7 and 8
+# (Manual práctico de Sociedades 2024, corpus manuals/sociedades/2024
+# source.pdf.extracted.md:5032-5056; 2025 :5095-5119), each line by the PGC accounts
+# the manual assigns it. A line the accounts leave empty stays absent. A gasto is a
+# negative partida, entered with the minus sign: "Cualquier partida de estados
+# contables que sea negativa ... deberá de consignarse precedida del signo menos (-)"
+# (2024 :5055-5056; 2025 :5118-5119), the parenthesised accounts being Debe accounts
+# (2024 :5386; 2025 :5449), and the subtotals add their lines with that sign
+# (00296 = 00255 + ... + 00279 + ..., 2024 :5235-5249; 00325 = 00296 + 00324,
+# 2024 :5358; 2025 :5298, :5421). The record design types these boxes N, the signed
+# type ("signo igual a Cta. de Pérd. y Gan.", aeat-dr-200-2024 DP200020, design
+# :3240), not the unsigned Num.
+[[work_inputs]]
+modelo = "200"
+year = "horizon-1"
+period = "0A"
+reason = "El resultado contable antes del Impuesto sobre Sociedades y la cuenta de pérdidas y ganancias salen de las cuentas cerradas del ejercicio, que ningún registro de la aplicación produce; la sociedad los consigna en la casilla 00501 y en las páginas 7 y 8."
+[work_inputs.roles]
+"is-liquidacion-i-importe" = "25400.00"
+"is-liquidacion-iii-compensacion-bin-aplicada" = "16300.00"
+"is-pyg-continuadas-importe-neto-de-la-cifra-de-negocios" = "30800.00"
+"is-pyg-continuadas-prestaciones-de-servicios" = "30800.00"
+"is-pyg-continuadas-otros-gastos-de-explotacion" = "-5400.00"
+"is-pyg-continuadas-servicios-exteriores" = "-5400.00"
+"is-pyg-importe" = "-5400.00"
+"is-pyg-continuadas-resultado-de-explotacion" = "25400.00"
+"is-pyg-continuadas-resultado-antes-de-impuestos" = "25400.00"
+[work_inputs.sources]
+"is-pyg-continuadas-importe-neto-de-la-cifra-de-negocios" = """
+Casilla 00255, importe neto de la cifra de negocios (cuentas 700 a 705, manual 2024 :5062-5064; 2025 :5125-5127): \
+las ocho ventas del extracto, SOC-VTA-1..8, 30800.00 de base imponible sin IVA, todas prestaciones de servicios \
+(cuenta 705). Es la suma de 00256 ventas (ausente: la sociedad no vende bienes) y 00257 prestaciones de servicios."""
+"is-pyg-continuadas-prestaciones-de-servicios" = """
+Casilla 00257, prestaciones de servicios (cuenta 705, manual 2024 :5068; 2025 :5131): los desarrollos y \
+mantenimientos de software facturados en SOC-VTA-1..8, 30800.00."""
+"is-pyg-continuadas-otros-gastos-de-explotacion" = """
+Casilla 00279, otros gastos de explotación (cuentas (62), (631), (634), 636, 639, (65), (694), (695), 794, 7954; \
+manual 2024 :5173-5175; 2025 :5236-5238): solo los servicios exteriores de 00280, -5400.00. Sin tributos (00281), \
+pérdidas por operaciones comerciales (00282) ni otros gastos de gestión corriente (00283): el extracto no tiene \
+ninguna de esas filas. Gasto del Debe, con signo menos."""
+"is-pyg-continuadas-servicios-exteriores" = """
+Casilla 00280, servicios exteriores (cuenta (62), manual 2024 :5176; 2025 :5239): el alquiler trimestral de \
+equipos y licencias, SOC-ALQ-1..4, 4 x 1350.00 = 5400.00 de base sin IVA (el IVA soportado es deducible en su \
+totalidad), -5400.00. Es la suma de 00253 servicios profesionales independientes (cuenta 623, ausente: ningún \
+profesional factura a la sociedad) y 00254 resto."""
+"is-pyg-importe" = """
+Casilla 00254, servicios exteriores - resto (cuentas (620), (621), (622), (624) a (629), manual 2024 :5179-5181; \
+2025 :5242-5244): el alquiler de equipos y la cesión de licencias son arrendamientos y cánones, cuenta 621, \
+SOC-ALQ-1..4, -5400.00."""
+"is-pyg-continuadas-resultado-de-explotacion" = """
+Casilla 00296, resultado de explotación = 00255 + 00258 + 00259 + 00260 + 00265 + 00270 + 00279 + 00284 + 00285 + \
+00286 + 00287 + 00294 + 00295 (manual 2024 :5235-5249; 2025 :5298-5312) = 30800.00 + (-5400.00) = 25400.00; las \
+demás partidas están ausentes (sin existencias, aprovisionamientos, otros ingresos, personal, amortización ni \
+inmovilizado, como dice la fuente de is-liquidacion-i-importe)."""
+"is-pyg-continuadas-resultado-antes-de-impuestos" = """
+Casilla 00325, resultado antes de impuestos = 00296 + 00324 (manual 2024 :5358; 2025 :5421). El resultado \
+financiero 00324 está ausente: el extracto no tiene ingresos ni gastos financieros. 25400.00 + 0 = 25400.00, el \
+mismo resultado contable antes del Impuesto sobre Sociedades que la sociedad consigna en 00501."""
+"is-liquidacion-i-importe" = """
+Cuenta de pérdidas y ganancias del ejercicio con las filas del extracto (ledger.csv, base imponible sin IVA, \
+deducible en su totalidad). Ingresos: SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00 + SOC-VTA-3 6400.00 + \
+SOC-VTA-4 1800.00 + SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00 + SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00 = 30800.00. \
+Gastos: SOC-ALQ-1 1350.00 + SOC-ALQ-2 1350.00 + SOC-ALQ-3 1350.00 + SOC-ALQ-4 1350.00 = 5400.00. \
+No hay otra fila de pérdidas y ganancias en el extracto. Resultado: 30800.00 - 5400.00 = 25400.00. \
+Asientos de cierre: amortización ausente, la sociedad no posee inmovilizado y alquila los equipos y licencias \
+(persona.toml línea 8; filas SOC-ALQ-1..4); retribución de administradores ausente, la administradora única no \
+cobra retribución (persona.toml línea 9 y [[officers]] remunerated = false, línea 67); periodificaciones \
+ausentes, todas las filas se devengan dentro del ejercicio: cada alquiler trimestral pagado el 15 de enero, \
+abril, julio y octubre (SOC-ALQ-1..4) cubre su propio trimestre, y cada venta (SOC-VTA-1..8, del 30 de enero al \
+19 de diciembre) factura un desarrollo o un mantenimiento prestado en el ejercicio."""
+"is-liquidacion-iii-compensacion-bin-aplicada" = """
+La sociedad compensa todo el saldo pendiente de bases imponibles negativas, 16300.00 (casilla 00671 de su declaración del ejercicio anterior, consignada en [[attested_prior_values]]). La compensación es una opción de la sociedad (LIS art. 26.1, "podrán ser compensadas"). Límite del art. 26.1 LIS: 70 por ciento de la base imponible previa 25400.00 = 17780.00, y en todo caso 1000000.00; 16300.00 cabe en ambos."""

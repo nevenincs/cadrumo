@@ -5,7 +5,8 @@ import pytest
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .. import work_addressing
-from ..work_addressing import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_target
+from ..work_address_errors import ModeloWorkPeriodTokenError
+from ..work_addressing import modelo_work_address_from_operator_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

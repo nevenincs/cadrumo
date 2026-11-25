@@ -1,0 +1,87 @@
+schema_version = 1
+fragment_id = "singletons-004"
+width_17_rules = []
+
+[design_identity]
+modelo = "200"
+design_epoch = "2022"
+source_ref = "aeat-dr-200-2022"
+source_sha256 = "a69d73692c40f8be07005e2df8add251f9949a2d6780f3816189372bdd98f69d"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E18"
+expected_normalized_statement = "Período Impositivo fin - Día"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 18, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E19"
+expected_normalized_statement = "Período Impositivo fin - Mes"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 19, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_last_two_digits"
+value_policy = "four-digit-year-final-two-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2022-dp200did-r0020"
+decision_statement = "DP200DID source row 20: encode the final two digits of the four-digit year."
+justification = "Reviewed exact-anchor policy, not official-source text, for DP200DID source row 20. No official text of the DR200-2022 design states which digits this length-2 'Año' field carries: DP200DID!E20 gives only its label and its Contenido cell is empty, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200DID"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200DID"

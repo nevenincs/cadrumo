@@ -9,7 +9,7 @@ these builders do not contact AEAT and do not mutate storage.
 ``overview status`` delegates to
 :func:`application.state_projection.build_operator_state_projection`
 and projects the canonical
-:class:`application.state_projection.OperatorStateProjection` through
+:class:`application.state_projection_models.OperatorStateProjection` through
 :func:`overview_status_report_from_projection` into
 :class:`OverviewStatusReport`. ``overview calendar`` composes the existing
 :class:`domain.deadlines.engine.DeadlineEngine` over the requested year
@@ -28,7 +28,7 @@ deadline-engine defaults are visible rather than silent.
 
 See Also:
     :mod:`application.state_projection`
-        Canonical producer for the :class:`application.state_projection.OperatorStateProjection`
+        Canonical producer for the :class:`application.state_projection_models.OperatorStateProjection`
         consumed by ``overview status``.
     :mod:`domain.deadlines`
         Deadline engine and :class:`domain.deadlines.models.Schedule` authority

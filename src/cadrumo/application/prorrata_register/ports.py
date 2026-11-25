@@ -17,6 +17,7 @@ from typing import Protocol, override
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -58,6 +59,13 @@ class ProrrataRegisterServiceRepositoryProtocol(ProrrataRegisterRepositoryProtoc
         """Derive definitive sector values from each current CAS candidate."""
         ...
 
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Replace the gross declarations derived from each current CAS candidate."""
+        ...
+
     @override
     def load_revisioned(self) -> tuple[ProrrataRegister, str]:
         """Read the register and the exact revision used for a source-fenced seed."""
@@ -96,7 +104,7 @@ class ProrrataPriorSettlementSourceSnapshot:
 class ProrrataPriorSettlementSnapshotRepositoryProtocol(Protocol):
     """Load finite whole-entity 303 settlement sources with their row revisions."""
 
-    def load_prior_m303_settlement_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
+    def load_prior_definitiva_source_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
         """Read unmembered prior-year terminal quarter/month rows and revisions."""
         ...
 

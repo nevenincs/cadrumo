@@ -9,6 +9,7 @@ from contextlib import suppress
 from threading import BoundedSemaphore
 from uuid import uuid4
 
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
@@ -20,7 +21,8 @@ from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from .operation_projection import validate_operation_release
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 
 def stream_operation_submission(
@@ -32,7 +34,7 @@ def stream_operation_submission(
     slots: BoundedSemaphore,
     require_session: Callable[[], None],
     deadline: float,
-) -> tuple[OperationSubmitted, WorkerAuthorityRequest]:
+) -> tuple[OperationSubmitted, WorkerAuthorityRequest, OperationId | None]:
     """Admit finite staging, then use canonical submission and its fresh release.
 
     The upload identity is generated here and never crosses to the frontend.
@@ -108,6 +110,7 @@ def stream_operation_submission(
                 receipt=submitted.receipt,
             ),
             submitted.release,
+            submitted.receipt.operation_id if submitted.newly_admitted else None,
         )
     except BaseException:
         if receiving:

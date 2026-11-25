@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.modelos.codes import ModeloCodeText
 from ..operations.public_period import PublicPeriod
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer, WorkbookPlanBuilder
 from .modelo_spreadsheet_operation_projections import ModeloSpreadsheetExportProjection, ModeloSpreadsheetProjection
@@ -26,7 +27,7 @@ class ModeloSpreadsheetRequest(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
 
 

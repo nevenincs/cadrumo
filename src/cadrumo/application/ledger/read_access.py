@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, Set
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -20,7 +21,7 @@ from ..operations.access_resolution import (
     with_commit_action,
 )
 from ..operations.models import OperationRequest
-from ..operations.profile_guard import require_access_request_payload
+from ..operations.profile_guard import ProfileAccessPayload, require_access_request_payload
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 
@@ -50,10 +51,16 @@ def resolve_ledger_read_access(
     *,
     profile_id: UUID,
     periods: frozenset[Period],
+    subject_ref: str | None = None,
 ) -> ResolvedOperationAccess:
-    """Bind a canonical immutable query scope, with empty scope meaning all periods."""
+    """Bind a canonical immutable query scope, with empty scope meaning all periods.
+
+    The request subject is the profile's unless the operation declares a narrower
+    one, which the caller then names in ``subject_ref``.
+    """
     independent = not periods
-    if profile_id != context.profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
+    expected_subject = profile_operation_subject(str(profile_id)) if subject_ref is None else subject_ref
+    if profile_id != context.profile_id or request.subject_ref != expected_subject:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     if request.definition_id != context.contract.definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -101,3 +108,53 @@ def resolve_ledger_request_read_access(
     if not isinstance(profile_id, UUID):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+
+
+def resolve_ledger_request_access[PayloadT: ProfileAccessPayload](
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    definition_id: str,
+    request_type: type[PayloadT],
+    commits: Callable[[PayloadT], bool],
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for ``request_type``, adding COMMIT when ``commits`` holds for its payload."""
+    payload = require_access_request_payload(request, definition_id=definition_id, payload_type=request_type)
+    resolve = resolve_ledger_commit_access if commits(payload) else resolve_ledger_read_access
+    return resolve(request, context, profile_id=payload.profile_id, periods=frozenset())
+
+
+def resolve_ledger_exact_request_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    request_types: Mapping[str, type[BaseModel]],
+    commit_definition_ids: Set[str] = frozenset(),
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for the payload class registered under the request's definition.
+
+    The payload must be exactly the registered class, not a subclass. The COMMIT door is added
+    only for the definitions named in ``commit_definition_ids``.
+    """
+    request_type = request_types.get(request.definition_id)
+    profile_id = getattr(request.payload, "profile_id", None)
+    if request_type is None or type(request.payload) is not request_type or not isinstance(profile_id, UUID):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+    return with_commit_action(resolved) if request.definition_id in commit_definition_ids else resolved
+
+
+def resolve_ledger_request_commit_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    definition_id: str,
+    request_type: type[BaseModel],
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for exactly ``request_type`` under ``definition_id`` and add COMMIT."""
+    return with_commit_action(
+        resolve_ledger_request_read_access(request, context, definition_id=definition_id, request_type=request_type)
+    )

@@ -147,6 +147,7 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
 extensions = [
     "sphinx.ext.autodoc",
     "dev.docs.apidocs.attribute_types",
+    "dev.docs.python_xref_index",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
@@ -490,9 +491,23 @@ html_css_files = [
     "cadrumo-casilla-reference.css",
     "cadrumo-legal-reference.css",
 ]
+if _DESKTOP_FLAVOR:
+    html_css_files.append("cadrumo-desktop.css")
 # The desktop bridge goes first, so its capture-phase key listener exists
-# before ``cadrumo-docs.js`` registers its own.
-html_js_files = ["cadrumo-desktop-bridge.js", "cadrumo-docs.js"] if _DESKTOP_FLAVOR else ["cadrumo-docs.js"]
+# before ``cadrumo-docs.js`` registers its own. The desktop window refuses to
+# turn a string into code, which Sphinx's ``doctools.js`` does to read a
+# language's plural-form expression; the plural evaluator replaces that one
+# function and so loads between ``doctools.js`` (200) and the language's
+# ``translations.js`` (500), which calls it as it loads.
+html_js_files = (
+    [
+        ("cadrumo-plural-expression.js", {"priority": 300}),
+        "cadrumo-desktop-bridge.js",
+        "cadrumo-docs.js",
+    ]
+    if _DESKTOP_FLAVOR
+    else ["cadrumo-docs.js"]
+)
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {
@@ -845,6 +860,10 @@ myst_fence_as_directive = ["mermaid"]
 # baseline is curated alongside autodoc_mock_imports - adding a mock import
 # without its ignore entry is incomplete.
 nitpick_ignore_regex = [
+    # ``ThreadPoolExecutor`` is documented under ``concurrent.futures`` in the
+    # stdlib inventory; autodoc renders an annotation by the class's defining
+    # module, ``concurrent.futures.thread``, which the inventory does not carry.
+    (r"py:class", r"^concurrent\.futures\.thread\.ThreadPoolExecutor$"),
     # Heavy native deps are replaced by autodoc mocks, and ReportLab ships no
     # inventory; their types have no cross-reference target.
     (
@@ -864,7 +883,7 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
-        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
+        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|AllowInfNan|_PydanticGeneralMetadata)$",
     ),
     # pydantic's ``JsonValue`` is a recursive type alias, not a class, and
     # autodoc renders it by its BARE name wherever a signature carries it, so
@@ -937,7 +956,7 @@ nitpick_ignore_regex = [
         r"LocaleNode|ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
         r"PlaywrightStorageState|ProviderSessionMetadata|RegisteredSchema|"
-        r"ReviewedSuggestion|SourceEvidenceFingerprint|UserProfileFactValue)$",
+        r"ReviewedSuggestion|RowBindingValue|SourceEvidenceFingerprint|UserProfileFactValue)$",
     ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
@@ -972,7 +991,7 @@ nitpick_ignore_regex = [
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
         r"rich|yaml|rtoml|tomli|cryptography|jinja2|markupsafe|numpy|"
         r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
-        r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
+        r"_pytest|playwright|_schema|_orm|annotated_types|httplib2)(\..*)?$",
     ),
     # Test modules are excluded from the documented API surface (see
     # ApiStubManager exclusions), so references into them have no stub target.
@@ -983,11 +1002,21 @@ nitpick_ignore_regex = [
     # anchors such as ``89ab``), never real documentable objects.
     (r"py:.*", r"^([0-9][0-9a-fA-F]*|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
     # Playwright SDK classes referenced bare (``:class:`Page```, ``BrowserContext``,
-    # ``Locator``, ``Response``, ``Playwright``) from the browser/sede adapters.
+    # ``Locator``, ``Response``, ``Playwright``, ``CDPSession``, ``Download``) from
+    # the browser/sede adapters.
     # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
     # dotted ignore above does not cover these short forms; the names are
     # playwright-owned in this codebase (no project class shares them).
-    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
+    #
+    # The import-safe alias module ``adapters.outbound.aeat.playwright`` declares
+    # ``type Playwright = Any`` and the like, and autodoc renders a subscripted or
+    # inherited reference to one by that module's qualified path, which names an
+    # alias for a mocked class rather than a documentable object.
+    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response|CDPSession|Download)$"),
+    (
+        r"py:class",
+        r"^cadrumo\.adapters\.outbound\.aeat\.playwright\.(Playwright|Page|BrowserContext|Locator|Response)$",
+    ),
     # Project anchors referenced by bare short name (per the docstring-anchor
     # convention; qualifying a bare anchor is barred by
     # aeat-documentation) whose short name the auto short-reference
@@ -1022,8 +1051,18 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(Ed25519PrivateKey|Ed25519PublicKey|X25519PrivateKey|X25519PublicKey|"
-        r"SupportsAllComparisons|model_dump_json|model_validate_json)$",
+        r"SupportsAllComparisons|model_dump_json|model_validate_json|"
+        # ``google_auth_oauthlib`` (annotated under ``TYPE_CHECKING`` in the OAuth
+        # flow), pydantic-core's compiled serializer, and pywin32's security
+        # descriptor in the Windows permission helpers, and pydantic's ``ConfigDict``
+        # (annotating the shared model-config constants): none ships an inventory
+        # offline, and no project symbol shares these names.
+        r"OAuthCredentials|SchemaSerializer|PySECURITY_DESCRIPTOR|ConfigDict)$",
     ),
+    # The builtin mapping view types a ``Mapping`` subclass's ``keys``/``items``/
+    # ``values`` return; Python's inventory documents them only as prose, not as
+    # ``py:class`` targets.
+    (r"py:class", r"^(dict_keys|dict_items|dict_values)$"),
     # Project short references the bare/unrooted resolver cannot uniquely map.
     # Two shapes: (1) an AMBIGUOUS bare helper name with two or more documented
     # definitions across modules (``write_manifest`` x4; ``project_answers`` /
@@ -1055,13 +1094,10 @@ nitpick_ignore_regex = [
     # mask a missing class. The underscored-constant pattern above covers the
     # multi-word members; this covers the single-word ones.
     (r"py:attr", r"^(?:[A-Za-z_][\w.]*\.)?[A-Z][A-Z0-9]*$"),
-    # Members reached through a class whose own definition lives in a private
-    # module: ``SecureObjectRepository`` is public, but ``apply_batch`` is
-    # defined on the write-operations base in
-    # ``sql/_secure_object_writes.py``, which is excluded from the documented
-    # surface, so the inherited member has no object to link to. The private
-    # dotted patterns above match a private segment in the reference path, and
-    # this reference names only public segments.
+    # Members reached through ``SecureObjectRepository`` that it inherits from
+    # the write-operations base in ``sql/secure_object_writes.py``: the
+    # repository's own page does not list inherited members, so a reference
+    # written through the subclass has no object to link to.
     (
         r"py:meth",
         r"^(?:cadrumo\.)?adapters\.persistence\.storage\.sql\.secure_objects\."
@@ -1110,7 +1146,7 @@ nitpick_ignore_regex = [
     # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
     # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
     # inventory carries the qualified targets, unreachable from the short form.
-    (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
+    (r"py:class", r"^(Screen|Style|AutopilotCallbackType|OptionListContent)$"),
     # The same, for what the profile and workbench screens annotate: Textual's
     # ``App`` and its visual types, Rich's ``RenderableType``, and the message
     # classes Textual nests in a widget (``Button.Pressed``), which autodoc
@@ -1120,9 +1156,9 @@ nitpick_ignore_regex = [
         r"^(App|VisualType|ContentText|RenderableType|"
         r"Button\.Pressed|DataTable\.RowHighlighted|Worker\.StateChanged)$",
     ),
-    # ``TYPE_CHECKING``-only aliases of googleapiclient stub types; the Google
-    # API client ships no inventory, and the aliases are not project classes.
-    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource)$"),
+    # ``TYPE_CHECKING``-only aliases and imports of googleapiclient stub types;
+    # the Google API client ships no inventory, and none is a project class.
+    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource|HttpMock)$"),
     # Project objects written by a path that omits the ``cadrumo.`` root and
     # whose package is excluded from the documented surface (``entrypoints.cli``
     # has no stubs) or whose bare name the resolver cannot reach
@@ -1195,7 +1231,7 @@ nitpick_ignore_regex = [
         # Period-token regex fragments (``Q``, ``annual`` from a
         # StringConstraints ``^(Q[1-4]|...|annual)$`` pattern) that autodoc
         # mis-renders as bare class targets.
-        r"Q|annual)$",
+        r"Q|annual|AB)$",
     ),
     # Bound-method references on external (stdlib / pydantic) types, written
     # ``datetime.now`` / ``date.today``; the owning type resolves via inventory
@@ -1765,9 +1801,9 @@ def setup(app):
     # Sphinx's own words come from one translator the build language settles.
     # They are replaced here, before the builder captures one for its
     # templates, so the one compile can answer them for every language.
-    from dev.docs.sphinx_messages import register as _register_sphinx_messages
+    from dev.docs.sphinx_messages import register
 
-    _register_sphinx_messages(app)
+    register(app)
 
     def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
         """Keep private/generated typing objects out of public object indexing."""
@@ -1816,7 +1852,7 @@ def setup(app):
         from cadrumo.application import diagnostics
         from cadrumo.core.errors.error_codes import ErrorEnvelope, complete_error_envelope_model
 
-        diagnostics._ensure_models_rebuilt()
+        diagnostics.ensure_models_rebuilt()
         complete_error_envelope_model()
         if not ErrorEnvelope.__pydantic_complete__:
             raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")
@@ -2210,32 +2246,32 @@ def setup(app):
 
     # Register the cli-sequence directive: server-rendered executed-CLI frames
     # plus one inline JSON payload per sequence.
-    from dev.docs.sequence_directive import register as _register_cli_sequence
+    from dev.docs.sequence_directive import register
 
-    _register_cli_sequence(app)
+    register(app)
 
     # Each page's sidebar is the collapsed toctree rather than the whole site
     # tree, which the theme would otherwise recompute and embed on every page.
-    from dev.docs.navigation import register as _register_collapsed_navigation
+    from dev.docs.navigation import register
 
-    _register_collapsed_navigation(app)
+    register(app)
 
     # A generated page's heading is written in the reader's language, so the
     # anchor its section would be named after is too. Each such heading names
     # its own anchor instead, the same one in every language root.
-    from dev.docs.section_anchors import register as _register_section_anchors
+    from dev.docs.section_anchors import register
 
-    _register_section_anchors(app)
+    register(app)
 
     # The theme variables and the chrome strings are one file per site root
     # rather than a block in every page's head.
-    from dev.docs.shared_page_assets import register as _register_shared_page_assets
+    from dev.docs.shared_page_assets import register
 
-    _register_shared_page_assets(app)
+    register(app)
 
     # Sphinx's own interface strings are one script per language, which the one
     # compile writes for every language rather than for the build's own.
-    from dev.docs.translations_js import register as _register_translations_js
+    from dev.docs.translations_js import register
 
-    _register_translations_js(app)
+    register(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

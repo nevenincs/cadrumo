@@ -11,7 +11,6 @@ around an untested call.
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -20,20 +19,19 @@ from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.google_credentials import unused_google_credentials
 from ....persistence.profile.buckets import BucketEventHistoryRepository
 from ....persistence.profile.sync_runs import SyncRunRecordRepository
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan
+from ._calc_sheets_support import modelo_130_first_quarter_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-    return build_export_plan(snapshot)
+    return build_export_plan(modelo_130_first_quarter_snapshot())
 
 
 def test_a_failed_apply_still_persists_a_sync_run_record_and_reraises(tmp_path: Path) -> None:

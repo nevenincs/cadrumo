@@ -14,7 +14,8 @@ keeping a value there moves the list on and refills the panel for the next
 box; on a terminal too short for both, the panel opens as a centred dialog
 instead. ``/`` searches every page, ``g`` goes to a box by number, and ``?``
 names the symbols on screen, then opens every symbol and key. ``b`` confirms the assumed values of the section
-under the cursor, or of the page, together; never the whole declaration at once.
+under the cursor, or of the page, together; never the whole declaration at once. ``a`` offers every statement
+the form serves, in its words, to stage several together for one review.
 
 A page that does not apply this period is dimmed, says so and asks nothing of
 the filer. A declaration recorded as filed says so wherever a box is explained,
@@ -44,13 +45,18 @@ from textual.screen import Screen
 from textual.widgets import Button, OptionList, Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloWorkForm,
     address_key,
+)
+from .....application.modelo.work_form_header import form_recorded
+from .....application.modelo.work_form_models import (
+    ModeloWorkForm,
     section_fields,
 )
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....application.modelo.work_form_wording import does_not_apply_words
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
@@ -58,6 +64,10 @@ from ...components.account_chrome import AccountChromeScreen
 from ...components.language import localized
 from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
+from ..disagreements import ModeloDisagreementsDoorV1
+from ..disagreements_workbench import WorkbenchDisagreementsMixin
+from ..wallet import IvaWalletOpeningV1, ModeloIvaWalletDoorV1
+from ..wallet_workbench import WALLET_DOOR_ID, WorkbenchWalletMixin
 from .casilla_list import (
     CasillaList,
 )
@@ -70,15 +80,10 @@ from .editor import (
     CasillaEditorPanel,
 )
 from .legend import first_open_text, mark_for_glyph
-from .navigator import (
-    NavigatorState,
-    inapplicable_pages,
-    presented_form,
-)
+from .navigator import NavigatorState, presented_form
 from .page_items import (
     WorkbenchFilter,
     WorkbenchPage,
-    page_items,
     page_of,
     workbench_pages,
 )
@@ -88,9 +93,11 @@ from .ports import (
     ModeloWorkbenchReaderV1,
     WorkbenchApplyPrerequisite,
 )
+from .screen_amendment import WorkbenchAmendmentMixin
 from .screen_confirmation import WorkbenchConfirmationMixin
 from .screen_constants import (
-    _GREETED,
+    GREETED,
+    NEXT_KEYS,
 )
 from .screen_editor import WorkbenchEditorMixin
 from .screen_footer import WorkbenchFooterMixin
@@ -101,6 +108,8 @@ from .screen_next_step import WorkbenchNextStepMixin
 from .screen_operation import WorkbenchOperationMixin
 from .screen_presentation import WorkbenchPresentationMixin
 from .screen_review import WorkbenchReviewMixin
+from .screen_statements import WorkbenchStatementsMixin
+from .screen_taxation import WorkbenchTaxationMixin
 from .screen_widgets import NoticeLine, SymbolsPanel
 from .search import WorkbenchSearchPanel
 from .session import StagedChange, WorkbenchEditSession
@@ -110,7 +119,6 @@ from .vocabulary import (
     HERE_MARK,
     WorkbenchMark,
 )
-from .wording import does_not_apply_text
 
 
 class ModeloWorkbenchScreen(
@@ -121,6 +129,11 @@ class ModeloWorkbenchScreen(
     WorkbenchNavigationMixin,
     WorkbenchEditorMixin,
     WorkbenchConfirmationMixin,
+    WorkbenchStatementsMixin,
+    WorkbenchTaxationMixin,
+    WorkbenchDisagreementsMixin,
+    WorkbenchWalletMixin,
+    WorkbenchAmendmentMixin,
     WorkbenchReviewMixin,
     WorkbenchNextStepMixin,
     WorkbenchOperationMixin,
@@ -185,6 +198,10 @@ class ModeloWorkbenchScreen(
         }
         ModeloWorkbenchScreen .wb-line {
             height: auto;
+        }
+        ModeloWorkbenchScreen #wb-projection {
+            height: auto;
+            color: $warning;
         }
         ModeloWorkbenchScreen #wb-result {
             width: auto;
@@ -365,6 +382,11 @@ class ModeloWorkbenchScreen(
         Binding("e", "export", "", show=False),
         Binding("i", "issues", "", show=False),
         Binding("b", "bulk_confirm", "", show=False),
+        Binding("a", "statements", "", show=False),
+        Binding("t", "compare_taxation", "", show=False),
+        Binding("D", "disagreements", "", show=False),
+        Binding("w", "wallet", "", show=False),
+        Binding("m", "amend", "", show=False),
         Binding("slash", "search", "", show=False),
         Binding("g", "go_to", "", show=False),
         Binding("left", "fold(0)", "", show=False),
@@ -385,6 +407,8 @@ class ModeloWorkbenchScreen(
         actions: ModeloWorkbenchActionsV1 | None = None,
         navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
         native_review: Callable[[str], Screen[None]] | None = None,
+        disagreements: ModeloDisagreementsDoorV1 | None = None,
+        wallet: ModeloIvaWalletDoorV1 | None = None,
         id: str | None = None,
     ) -> None:
         """Hold the ports this workbench reads and acts through, and how it opens another product area.
@@ -397,11 +421,13 @@ class ModeloWorkbenchScreen(
         self._actions = actions
         self._navigate = navigate
         self._native_review = native_review
+        self._disagreements = disagreements
+        self._wallet = wallet
+        self._wallet_door: IvaWalletOpeningV1 | None = None
         self._operation_in_flight = False
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
-        self._inapplicable: frozenset[str] = frozenset()
         self._density_chosen: Density | None = None
         self._explained: CasillaListEntry | None = None
         self._page_index = 0
@@ -420,12 +446,16 @@ class ModeloWorkbenchScreen(
     # ── composition ─────────────────────────────────────────────────────
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Open native review consent for the retained calculation the operator is viewing."""
+        """Open the balance a refusal served as its door, or native review consent for the retained calculation."""
+        if event.button.id == WALLET_DOOR_ID:
+            event.stop()
+            self._take_wallet_door()
+            return
         if event.button.id != "wb-google-review" or self._native_review is None:
             return
         load = self._load
         if load is None or load.form.calculation_revision_id is None:
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if self._session.dirty:
             self._filing_withheld()
@@ -438,6 +468,7 @@ class ModeloWorkbenchScreen(
             yield Static(id="wb-header", markup=False)
             yield Static(id="wb-deadline", markup=False)
         with Vertical(id="wb-status"):
+            yield Static(id="wb-projection", markup=False)
             with Horizontal(id="wb-outcome", classes="wb-line"):
                 yield Static(id="wb-result", markup=False)
                 with Horizontal(id="wb-marks", classes="wb-line"):
@@ -463,8 +494,8 @@ class ModeloWorkbenchScreen(
                 yield Static(id="wb-crumb", markup=False)
                 yield Static(id="wb-page", markup=False)
                 yield localized(
-                    Static(tr("tui.modelo.workbench.loading"), id="wb-loading", markup=False),
-                    "tui.modelo.workbench.loading",
+                    Static(tr("workspace.modelo.loading"), id="wb-loading", markup=False),
+                    "workspace.modelo.loading",
                 )
                 yield WorkbenchSearchPanel(id="wb-search")
                 yield CasillaList(language=self._language, id="wb-list")
@@ -491,8 +522,8 @@ class ModeloWorkbenchScreen(
                 if translated is not None:
                     self._load = translated
                     self._pages = workbench_pages(presented_form(translated.form, recorded=self.recorded))
-                    self._inapplicable = inapplicable_pages(translated.form)
-        self._session.refresh_language(self._language)
+        served = () if self._load is None else self._load.form.carry_attestations
+        self._session.refresh_language(self._language, served)
         self._help_generation += 1
         self._cards.clear()
         self._render_all()
@@ -549,7 +580,7 @@ class ModeloWorkbenchScreen(
     def recorded(self) -> bool:
         """Whether the declaration is recorded as filed, so it is only read here."""
         load = self._load
-        return load is not None and (load.filed or load.form.filing is not None)
+        return load is not None and form_recorded(load.form, filed=load.filed)
 
     @property
     def pages_shown(self) -> tuple[WorkbenchPage, ...]:
@@ -578,16 +609,24 @@ class ModeloWorkbenchScreen(
             marks.append(HERE_MARK)
         return tuple(marks)
 
-    async def _read(self) -> None:
+    async def _read(self) -> bool:
+        """Read the declaration and show it; say so when it cannot be read, and report whether it was shown."""
         try:
             load = await asyncio.to_thread(self._reader.load, self._language)
         except Exception as failure:
             get_logger(__name__).error(
                 "modelo workbench could not read its declaration: %s", type(failure).__qualname__, exc_info=True
             )
-            self.query_one("#wb-loading", Static).update(tr("tui.modelo.workbench.read_failed"))
-            return
+            # The first successful read removes the loading line; a later read that fails keeps the form held
+            # and says so on the notice line instead.
+            loading = self.query("#wb-loading")
+            if loading:
+                loading.first(Static).update(tr("workspace.modelo.read_failed"))
+            else:
+                self._notice(tr("workspace.modelo.read_failed"))
+            return False
         self.show_load(load)
+        return True
 
     def show_load(self, load: ModeloWorkFormLoadV1) -> None:
         """Show a fresh read, keeping the page and the casilla under the cursor where they still exist."""
@@ -596,7 +635,6 @@ class ModeloWorkbenchScreen(
         self._cards.clear()
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
-        self._inapplicable = inapplicable_pages(load.form)
         page_ids = [page.id for page in self._pages]
         if previous_page in page_ids:
             self._page_index = page_ids.index(previous_page)
@@ -619,24 +657,24 @@ class ModeloWorkbenchScreen(
 
     def _applies(self, index: int) -> bool:
         """Whether the page at ``index`` applies this period; the calculation details always do."""
-        return self._pages[index].id not in self._inapplicable
+        return self._pages[index].applies
 
     def _not_applying_text(self) -> str:
         form = self.form
-        return "" if form is None else does_not_apply_text(form.period)
+        return "" if form is None else does_not_apply_words(form.period, self._language)
 
     def _first_attention(self) -> tuple[int, AddressKey] | None:
-        """The first box that needs the filer, on a page that applies this period; none once recorded as filed."""
-        if self.recorded:
+        """The page and box the form serves as the first that needs the filer; none once recorded as filed."""
+        load = self._load
+        served = None if load is None else load.journey.first_attention
+        if served is None:
             return None
-        staged = self._session.display()
-        for index, page in enumerate(self._pages):
-            if not self._applies(index):
-                continue
-            for item in page_items(page, staged=staged):
-                if isinstance(item, CasillaListEntry) and item.needs_filer:
-                    return index, item.key
-        return None
+        key = address_key(served.address)
+        if served.page_id is None:
+            index = page_of(self._pages, key)
+        else:
+            index = next((i for i, page in enumerate(self._pages) if page.id == served.page_id), None)
+        return None if index is None else (index, key)
 
     def _greet(self) -> None:
         """Say once per session, on the notice line, where to find what the symbols mean.
@@ -645,9 +683,9 @@ class ModeloWorkbenchScreen(
         what each symbol means.
         """
         app = self.app
-        if app in _GREETED or self.has_class("-short"):
+        if app in GREETED or self.has_class("-short"):
             return
-        _GREETED.add(app)
+        GREETED.add(app)
         notice = self.query_one("#wb-notice", Static)
         if not str(notice.render()):
             notice.update(first_open_text())

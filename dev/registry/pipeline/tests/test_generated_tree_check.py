@@ -27,12 +27,6 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from .._tree_check import (
-    GeneratedExportTreeCheckContext,
-    check_generated_export_tree,
-    refuse_repeat_the_candidate_would_drop,
-)
-from .._tree_validation import ValidatedGeneratedExportTree
 from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
@@ -41,7 +35,13 @@ from ..export_fragment_provenance_projection import normalised_loader_semantics
 from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign
 from ..semantic_map import SemanticMap
-from ._generated_tree_test_support import (
+from ..tree_check import (
+    GeneratedExportTreeCheckContext,
+    check_generated_export_tree,
+    refuse_repeat_the_candidate_would_drop,
+)
+from ..tree_validation import ValidatedGeneratedExportTree
+from .generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_authorities,
     isolated_authority,

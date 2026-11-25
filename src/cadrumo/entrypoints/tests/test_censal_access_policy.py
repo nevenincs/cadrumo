@@ -15,7 +15,7 @@ from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCert
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -28,6 +28,7 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -36,6 +37,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
+
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -74,13 +77,11 @@ def _context(
     action: AccessAction,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return operation_access_context(
+        registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
-        published_authority=Availability.AVAILABLE,
     )
 
 

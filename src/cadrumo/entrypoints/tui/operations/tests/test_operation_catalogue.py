@@ -13,7 +13,7 @@ import pytest
 
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ..catalogue import OperationCatalogueSourceV1, OperationCatalogueV1, build_operation_catalogue
 from ..destination import OPERATION_FOCUS_KEY, OPERATIONS_DESTINATION
 from ..palette import operation_navigation_target
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @lru_cache(maxsize=1)
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return production_operation_registry()
 
 
 @lru_cache(maxsize=1)

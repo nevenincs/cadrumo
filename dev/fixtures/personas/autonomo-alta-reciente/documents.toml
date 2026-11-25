@@ -1,0 +1,10 @@
+format = 1
+persona = "autonomo-alta-reciente"
+
+[[documents]]
+id = "factura-alt-mat-01"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ALT-MAT-01"]
+relation = "source"
+note = "The office-material invoice C-0087 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

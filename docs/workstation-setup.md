@@ -6,9 +6,10 @@ machine yet, start at [Get Cadrumo](download.md) for the install channels.
 Configuration and first use start in the [quickstart](how-to/quickstart.md)
 once the install checks pass.
 
-Cadrumo works without any optional service. Google export, on-host LLM vision,
-and cloud LLM upload are all optional, and so is connecting an AI assistant. The
-core filing workflow runs with none of them.
+Cadrumo works without any optional service. Google export, reading scanned or
+image documents with a model you select, and cloud LLM upload are all optional,
+and so is connecting an AI assistant. The core filing workflow runs with none of
+them.
 
 ## Before you start
 
@@ -39,19 +40,46 @@ uv run aeat --version
 
 ## Confirm the install
 
-No taxpayer profile is needed for these checks; you create one with
-`aeat config profile create` after installing. See
+The version check needs no taxpayer profile. Create a profile with
+`aeat config profile create` when you are ready to use Cadrumo. See
 [Set up a profile](how-to/profile-setup.md).
 
-Confirm the command is on your path and the capability posture is readable.
-Then run the workstation check on your own machine. Its dependency and
-platform rows intentionally reflect that workstation, including tools on
-your path, installed browser assets, and operating-system settings. Use the
-machine-readable form for scripted setup checks (`--format json` is a global
-flag, so it goes before the command):
+Confirm the command is on your path:
 
-```{cli-sequence} install-confirm
+```bash
+aeat --version
 ```
+
+## Open the macOS app
+
+The macOS app, `Cadrumo.app`, is not notarized by Apple. Cadrumo is an
+open-source project with no Apple Developer ID, and it will not get one, so every
+copy carries only an ad-hoc signature. That signature lets macOS check that the
+app has not changed since it was built. It does not tell macOS who built it.
+
+If you build the app yourself from a source checkout, macOS opens it without a
+warning. The native build and its prerequisites are described in
+`native/CONTRACT.md` in the source repository.
+
+macOS quarantines a copy that you download as a disk image (DMG) or ZIP, and
+refuses to open it the first time. Drag `Cadrumo.app` to your Applications
+folder, then do one of the following:
+
+- Open the app once and choose **Done** in the warning. Go to
+  **System Settings** > **Privacy & Security**, choose **Open Anyway** next to
+  the message about Cadrumo, and confirm with your password.
+- Remove the quarantine in Terminal:
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Cadrumo.app
+  ```
+
+Do this only for a copy that comes from Cadrumo's own release channel. After
+the first run, the app opens normally.
+
+When the app runs from an Applications folder, its background manager starts
+when you sign in to your Mac, and macOS lists it under Login Items. To stop
+that, turn off **Start at sign-in** in the manager's menu bar item.
 
 ## Install optional extras
 
@@ -60,7 +88,6 @@ The core install is lean. Each optional extra adds one capability:
 - `google` - Google Drive and Sheets export.
 - `browser` - live AEAT reads through browser automation.
 - `ofx` - OFX and QFX bank-statement import.
-- `llm` - on-host document reading with a local model runtime.
 - `pdf` - writing the calculation-summary PDF. Reading and verifying a summary
   needs no extra.
 - `all` - every extra in this list.
@@ -70,56 +97,8 @@ write the package as `cadrumo[google,browser]` instead of `cadrumo`. Extras
 install into the same environment as Cadrumo, so use the channel you installed
 with. In a source checkout, add extras with `uv sync --extra google --extra browser`.
 
-`aeat config check` reports each extra as `extra:<name>` available or missing.
-Install a missing one by repeating your channel's install command with that
+Install a missing extra by repeating your channel's install command with that
 extra named.
-
-Two extras need a further provisioning step after the install:
-
-- The `browser` extra drives a Chromium build for live AEAT reads. Download
-  the exact build the installed extra launches with:
-
-  ```{cli-sequence} provision-browser
-  ```
-
-  It does nothing when that build is already present. With the browser
-  channel set to `chromium`, a browser read that finds the build missing
-  refuses and names this command.
-
-- On-host invoice reading uses a local model runtime (Ollama) with one model
-  for each reader role: vision transcription, text extraction, tabular
-  mapping, and supply-nature proposal. Run `aeat config provision status` to
-  see where you stand: whether the runtime is installed, whether it answers,
-  and which reader models are present.
-
-  To close every gap in one run, use `aeat config provision setup`. It
-  installs the runtime, starts it, downloads every role's model, loads the
-  models, and verifies them. Steps that are already done report unchanged,
-  and the first step that fails stops the run. Setup installs the runtime
-  only when you pass `--confirm`.
-
-  To set up only the local AI, run `aeat config provision pull`. The local AI
-  is one component: the runtime and every reader role's model. The command
-  installs the runtime when it is missing, through `winget` on Windows or
-  Homebrew on macOS, starts it, and downloads the models that are not ready
-  yet, a few GB in total. `--model` names one catalogue model to use instead
-  of the ones Cadrumo chooses. On Linux, install Ollama with its upstream
-  installer, which needs root. `aeat config provision start` starts an
-  installed runtime that is not answering, and does nothing when it already
-  answers. `aeat config provision verify --item local_ai` confirms the runtime
-  answers and each model loads and answers.
-
-  The commands work with or without a signed-in profile and with or without a
-  running Cadrumo. The same work is also available as the registered operations
-  `local-reader.provision`, `local-reader.status` and `local-reader.report`, and
-  the browser build as `browser-runtime.provision`. The full-screen app lists
-  them under **Operations** and an agent runs them with `execute`.
-
-LLM classification runs only on this local reader; no cloud provider is
-involved. See
-[Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-the-local-reader).
-
-Run `aeat config check` again after each change to confirm the gap is closed.
 
 ## Connect an AI assistant
 

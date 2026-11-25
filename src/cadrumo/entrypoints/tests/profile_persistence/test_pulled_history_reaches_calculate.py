@@ -39,16 +39,12 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
-
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
@@ -61,15 +57,16 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -82,12 +79,11 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...live_state_composition import compose_filed_observation_persistence_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -111,17 +107,14 @@ _PULLED_C19_BY_QUARTER: dict[str, Decimal] = {
 _PULLED_C19_TOTAL = Decimal("1416.00")
 
 _M130_SOURCE_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA")
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA")
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
-_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
-    "1391",
-    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+_M100_ANEXO_C_CARRY_CASILLAS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_M100_ANEXO_C_CARRY_CASILLAS") for box in ("1384", "1387", "1390", "1391")
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
-_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-certificado-trabajo-retenciones"},
-)
-_SYNTHETIC_TAX_ID = "12345678Z"
+_SYNTHETIC_TAX_ID = ready_profile_tax_id()
 
 
 def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
@@ -162,6 +155,15 @@ def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
                 source_locator=f"submitted-file:{_M130_SOURCE_CASILLA}",
                 confidence=1.0,
             ),
+            # An original autoliquidación's submitted file carries casilla 18 as zero.
+            ObservedCasillaValue(
+                casilla_id=_M130_PRIOR_RESULT_CASILLA,
+                value="0",
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator=f"submitted-file:{_M130_PRIOR_RESULT_CASILLA}",
+                confidence=1.0,
+            ),
         ),
         extraction_coverage={"submitted_file": 1.0},
         registry_snapshot_ref=published_authority_operation()
@@ -193,81 +195,26 @@ def _pull_the_m130_history(
     )
 
 
-def _seed_taxpayer_profile(*, bucket_id: str) -> None:
-    """Seed the declared profile facts the annual M100 revision's profile bindings need."""
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=bucket_id,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_SYNTHETIC_TAX_ID),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
     """Zero the prior-year negative-base carry both poles share.
 
     Seeded identically on both poles, so it cannot be the thing they differ on.
     """
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=secure_objects),
+        RegistryModeloObservation(
+            modelo=Modelo("100").value,
+            filing_year=_YEAR - 1,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo=Modelo("100").value,
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo=Modelo("100").value,
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                ),
+                casilla_values=dict.fromkeys(_M100_ANEXO_C_CARRY_CASILLAS, Decimal("0")),
             ),
-            source_kind=ObservationSourceKind.APP_FILING,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=Modelo("100").value,
-                    filing_year=_YEAR - 1,
-                    period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo=Modelo("100").value,
-                        filing_year=_YEAR - 1,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=ObservationSourceKind.APP_FILING,
+        captured_at=_T0,
     )
 
 
@@ -287,7 +234,6 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
@@ -298,6 +244,8 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
+            *BUCKET_AGGREGATION_LOCK_SOURCES,
         )
     }
 
@@ -311,7 +259,7 @@ def _calculate_m100_annual(
     authority and passed to work-unit creation, which asserts rather than selects
     on it, so the law determines which revision computes.
     """
-    _seed_taxpayer_profile(bucket_id=bucket_id)
+    seed_persona_profile("autonomo-fontanero", bucket_id=bucket_id, at=_T0)
     _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)

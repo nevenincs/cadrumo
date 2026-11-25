@@ -16,6 +16,13 @@ from pathlib import Path
 import pytest
 import rtoml
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
+
+from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...pipeline.generated_tree_dispositions import disposition_ledger_from_path
 from ..generated_tree_state import GeneratedTreeState
@@ -23,27 +30,32 @@ from ..registry_status import (
     GeneratedTreeDispositionRow,
     ProjectedTargets,
     RegistryStatus,
-    _payload,
     project_target_states,
+    registry_status_payload,
 )
+from ..registry_target_classification import declared_revision_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SOURCE_REF = "aeat-dr-232-2016"
 _SOURCE_SHA256 = "a" * 64
-_FLOOR = 2022
-_REVISION_YEARS = (2016, 2017)
+# A revision whose every declared filing year lies below the support floor.
+_FLOOR = filing_year_envelope().floor
+_FIRST_YEAR = _FLOOR - 6
+_LAST_YEAR = _FLOOR - 5
+_REVISION = f"{_FIRST_YEAR}-{_LAST_YEAR}"
+_REVISION_YEARS = (_FIRST_YEAR, _LAST_YEAR)
 
 
 def _below_floor_row(**overrides: object) -> dict[str, object]:
     row: dict[str, object] = {
         "kind": "below_floor",
         "modelo": "232",
-        "revision": "2016-2017",
+        "revision": _REVISION,
         "source_ref": _SOURCE_REF,
         "source_sha256": _SOURCE_SHA256,
         "supported_filing_years_floor": _FLOOR,
-        "revision_last_filing_year": 2017,
+        "revision_last_filing_year": _LAST_YEAR,
         "reason": "every declared filing year lies below the floor",
         "reconsideration_condition": "the floor is lowered or the revision is retired",
     }
@@ -55,7 +67,7 @@ def _record_drift_row(**overrides: object) -> dict[str, object]:
     row: dict[str, object] = {
         "kind": "record_drift",
         "modelo": "232",
-        "revision": "2016-2017",
+        "revision": _REVISION,
         "source_ref": _SOURCE_REF,
         "source_sha256": _SOURCE_SHA256,
         "remedy": "repair_inputs",
@@ -77,7 +89,7 @@ def _ledger(tmp_path: Path, *rows: dict[str, object]) -> tuple[GeneratedTreeDisp
 def _drifting(**overrides: object) -> GeneratedTreeState:
     base = GeneratedTreeState(
         modelo="232",
-        revision="2016-2017",
+        revision=_REVISION,
         state="record_drift",
         differing=("0002-dr23201.toml", "0003-dr23202.toml", EXPORT_FRAGMENT_PROVENANCE_FILENAME),
         serialization_only=(),
@@ -115,11 +127,10 @@ def _currentness(projected: ProjectedTargets) -> str:
         authority_recorded_digest=None,
         authority_candidate_digest=None,
         loadable=True,
-        unreferenced_bindings=(),
         informational_bindings=(),
         details=projected.details,
     )
-    lanes = _payload(status, blocking=True)["lanes"]
+    lanes = registry_status_payload(status, blocking=True)["lanes"]
     assert isinstance(lanes, dict)
     return str(lanes["target_currentness"])
 
@@ -136,8 +147,8 @@ def test_below_floor_row_explains_the_drift_of_its_own_target(tmp_path: Path) ->
     assert counts["drifted"] == 0
     assert _currentness(projected) == "passed"
     explained = dict(projected.findings)["explained"]
-    assert [(modelo, revision) for modelo, revision, _ in explained] == [("232", "2016-2017")]
-    assert "below the supported floor 2022" in explained[0][2]
+    assert [(modelo, revision) for modelo, revision, _ in explained] == [("232", _REVISION)]
+    assert f"below the supported floor {_FLOOR}" in explained[0][2]
 
 
 def test_the_same_drift_without_a_row_fails(tmp_path: Path) -> None:
@@ -149,7 +160,7 @@ def test_the_same_drift_without_a_row_fails(tmp_path: Path) -> None:
 
 
 def test_a_row_keyed_to_another_target_explains_nothing(tmp_path: Path) -> None:
-    other = _below_floor_row(revision="2015", revision_last_filing_year=2015)
+    other = _below_floor_row(revision=str(_FIRST_YEAR - 1), revision_last_filing_year=_FIRST_YEAR - 1)
     projected = _project(_drifting(), _ledger(tmp_path, other), floor=_floor_never_read)
 
     assert dict(projected.counts)["drifted"] == 1
@@ -162,8 +173,8 @@ def test_a_row_keyed_to_another_target_explains_nothing(tmp_path: Path) -> None:
         ({"committed_source": (_SOURCE_REF, "b" * 64)}, _FLOOR, _REVISION_YEARS, "committed tree attests"),
         ({"committed_source": None}, _FLOOR, _REVISION_YEARS, "no loadable manifest"),
         ({"provenance_fields": ("source_sha256",)}, _FLOOR, _REVISION_YEARS, "fresh render moved source_sha256"),
-        ({}, 2021, _REVISION_YEARS, "the registry declares 2021"),
-        ({}, _FLOOR, (2016, 2018), "revision declares [2016, 2018]"),
+        ({}, _FLOOR - 1, _REVISION_YEARS, f"the registry declares {_FLOOR - 1}"),
+        ({}, _FLOOR, (_FIRST_YEAR, _LAST_YEAR + 1), f"revision declares [{_FIRST_YEAR}, {_LAST_YEAR + 1}]"),
         ({}, _FLOOR, (), "revision declares []"),
     ],
     ids=[
@@ -226,7 +237,7 @@ def test_a_record_drift_row_does_not_explain_manifest_only_staleness(tmp_path: P
         {
             "kind": "render_refusal",
             "modelo": "232",
-            "revision": "2016-2017",
+            "revision": _REVISION,
             "source_ref": _SOURCE_REF,
             "source_sha256": _SOURCE_SHA256,
             "refusal_marker": "no revision for year",
@@ -236,7 +247,7 @@ def test_a_record_drift_row_does_not_explain_manifest_only_staleness(tmp_path: P
         {
             "kind": "type_column_contradiction",
             "modelo": "232",
-            "revision": "2016-2017",
+            "revision": _REVISION,
             "source_ref": _SOURCE_REF,
             "source_sha256": _SOURCE_SHA256,
             "derivation_code": "literal-exact-v1",
@@ -252,3 +263,17 @@ def test_classes_that_describe_no_drift_do_not_explain_one(tmp_path: Path, row: 
 
     assert dict(projected.counts)["drifted"] == 1
     assert _currentness(projected) == "failed"
+
+
+def test_a_revision_declared_as_a_year_range_reports_the_end_of_its_range() -> None:
+    """A range selector lists no years, yet its last declared year decides whether it is below the floor."""
+    modelo = compiled_bundled_authority().modelo("341")
+
+    ranged = next(
+        revision
+        for revision in authored_revisions("341")
+        if revision.valid_to is not None and revision.valid_from.year != revision.valid_to.year
+    )
+    assert ranged.valid_to is not None
+    assert declared_revision_filing_years(modelo, ranged.id) == (ranged.valid_to.year,)
+    assert declared_revision_filing_years(modelo, open_ended_revision("341").id) == ()

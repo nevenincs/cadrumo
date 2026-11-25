@@ -29,19 +29,19 @@ from __future__ import annotations
 
 import pytest
 
-from ..locale_nodes import _MODELO_SCHEMA_PREFIX, LocaleNode
-from ..locale_tree import _collect_required_leaves
+from ..locale_nodes import MODELO_SCHEMA_PREFIX, LocaleNode
+from ..locale_tree import collect_required_leaves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EXISTING: dict[str, LocaleNode] = {"cli": {"known": "a real translation", "namespace": {"child": "another"}}}
 
 _GENERIC_KEY = "cli.app.ledger.a_key_nobody_has_valued"
-_MODELO_KEY = f"{_MODELO_SCHEMA_PREFIX}390.casilla.continuidad.filing-year.label"
+_MODELO_KEY = f"{MODELO_SCHEMA_PREFIX}390.casilla.continuidad.filing-year.label"
 
 
 def _admit(*keys: str) -> dict[str, LocaleNode]:
-    return _collect_required_leaves(set(keys), _EXISTING)
+    return collect_required_leaves(set(keys), _EXISTING)
 
 
 def test_an_existing_translation_is_carried_through_untouched() -> None:

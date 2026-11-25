@@ -3,31 +3,21 @@
 // key is ever part of it; the section can say whether a key is there, never
 // what it is.
 
-/** How a provider is reached: by a key, a key and a gateway's address, or
- * only the provider's own sign-in. */
-export type ProviderAuthKind =
-  "api_key" | "api_key_with_base_url" | "provider_sign_in_only";
-
-/** What the profile holds for a provider. */
-export type ProviderMode =
-  "key" | "oauth_token" | "provider_sign_in" | "disabled" | "unset";
-
-/** Whether the provider can be used now, and if not, why. */
-export type ProviderReadiness =
-  | "ready"
-  | "not_verified"
-  | "missing"
-  | "disabled"
-  | "sign_in_required"
-  | "unusable";
-
-/** Where the provider's credential comes from. */
-export type ProviderSource = "profile" | "environment" | "none";
-
-/** How Cadrumo reaches a provider: its web API, or its own command-line
- * app on this computer. One provider can be reached both ways, and each way
- * is set up on its own. */
-export type ProviderTransport = "api" | "cli";
+import type {
+  AuthKind,
+  ProviderTransport,
+} from "../../shell/agentCatalogContract";
+import type {
+  ProviderCredentialSource,
+  ProviderReadiness,
+  ProviderSettingsMode,
+  ProviderStatusReason,
+} from "../../shell/providerSettingsContract";
+import type {
+  CliStateCause,
+  NextStep,
+  SignInCause,
+} from "../../shell/providerSignInWords";
 
 /** Where a command-line app stands on this computer. */
 export type CliState =
@@ -43,26 +33,47 @@ export type ProviderStatus = {
   /** The provider's own name, the same in every language and on each way. */
   name: string;
   transport: ProviderTransport;
-  authKind: ProviderAuthKind;
-  mode: ProviderMode;
+  authKind: AuthKind;
+  mode: ProviderSettingsMode;
   readiness: ProviderReadiness;
-  source: ProviderSource;
+  /** Whether the service can resolve a credential or sign-in for the lane
+   * now, as it serves it: a stored key, a signed-in app, a keyless lane. */
+  available: boolean;
+  source: ProviderCredentialSource;
   /** Where the app stands, for a command-line way. */
   cliState?: CliState;
+  /** Why the app's state is not established, as a closed word the service
+   * serves; only a command-line way has one. */
+  cliStateCause?: CliStateCause;
+  /** What the person can do about `cliStateCause`. */
+  nextStep?: NextStep;
   /** A key is stored for it, kept while it is turned off. */
   credentialSaved?: boolean;
   /** Why it is not ready, as a stable code, where it says. */
-  reason?: string;
+  reason?: ProviderStatusReason;
   /** The gateway address the person stored, if any. */
   baseUrl?: string;
   /** The gateway address used when none is stored, if there is one. */
   defaultBaseUrl?: string;
+  /** Whether a conversation on it leaves this computer, as the service
+   * serves the agent's declaration; absent where it serves none. */
+  readsOffHost?: boolean;
+  /** The service can sign the lane out: served, never worked out here. */
+  signOutAvailable?: boolean;
 };
 
 /** How the last change to a provider ended, as the section says it. */
 export type ProviderOutcome =
   /** Saved, but its status could not be read back: refresh to see it. */
-  { kind: "saved_unread" } | { kind: "refused"; code: string };
+  | { kind: "saved_unread" }
+  | {
+      kind: "refused";
+      code: string;
+      /** Why, as the service's closed word, where it served one. */
+      cause?: SignInCause;
+      /** The reference of the log line that records it, where served. */
+      logRef?: string;
+    };
 
 /** A key or token on its way to be saved, read once from its field. */
 export type ProviderSecret = {

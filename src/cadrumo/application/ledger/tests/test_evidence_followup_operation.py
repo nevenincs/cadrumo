@@ -15,9 +15,9 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.confirmation_gate import confirmation_blockers
+from ....application.ledger.confirmation_record_repository import ConfirmationRecordRepositoryFactory
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
 from ....application.ledger.evidence_followup_contracts import (
-    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -44,7 +44,6 @@ from ....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
     LedgerEvidenceReviewSummaryExecutionResult,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
@@ -54,24 +53,16 @@ from ....application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_registrations,
     build_ledger_evidence_review_summary_definition,
     build_ledger_evidence_review_summary_registration,
+    project_attachment_queue_result,
+    project_attachment_view_result,
+    project_consent_list_result,
+    project_review_list_result,
+    project_review_summary_result,
+    project_review_view_result,
 )
-from ....application.ledger.evidence_followup_registration import (
-    project_attachment_queue_result as _project_attachment_queue,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_attachment_view_result as _project_attachment_view,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_consent_list_result as _project_consent_list,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_list_result as _project_review_list,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_summary_result as _project_review_summary,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_view_result as _project_review_view,
+from ....application.ledger.evidence_review_summaries import (
+    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
+    LedgerEvidenceReviewSummaryProjection,
 )
 from ....application.ledger.extraction_draft_repository import ExtractionDraftRepositoryFactory
 from ....application.ledger.invoice_draft_records import (
@@ -87,19 +78,21 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 )
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationId, OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.config import Settings, load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.attachments.enums import AttachmentSource
+from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -233,7 +226,15 @@ def _unused_draft_store(*, bucket_id: str, settings: Settings):
     raise AssertionError((bucket_id, settings))
 
 
+def _unused_confirmation_records(*, bucket_id: str, settings: Settings | None):
+    raise AssertionError((bucket_id, settings))
+
+
 def _unused_consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
+    raise AssertionError(bucket_id)
+
+
+def _unused_off_host_read_askable(*, bucket_id: str) -> bool:
     raise AssertionError(bucket_id)
 
 
@@ -242,7 +243,9 @@ def _unopened_ports() -> LedgerEvidenceFollowupOperationPorts:
         settings=load_settings(),
         attachment_store_factory=cast(AttachmentStoreFactory, _unused_attachment_store),
         extraction_draft_repository_factory=cast(ExtractionDraftRepositoryFactory, _unused_draft_store),
+        confirmation_record_repository_factory=cast(ConfirmationRecordRepositoryFactory, _unused_confirmation_records),
         consent_entries_factory=cast(EvidenceConsentEntriesFactory, _unused_consent_entries),
+        off_host_read_askable=_unused_off_host_read_askable,
     )
 
 
@@ -334,14 +337,14 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceAttachmentQueueExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_attachment_queue,
+            project_attachment_queue_result,
         )
     if definition_id == LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceAttachmentViewProjection(profile_id=_PROFILE, item=_sample_attachment())
         return (
             LedgerEvidenceAttachmentViewExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_attachment_view,
+            project_attachment_view_result,
         )
     if definition_id == LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceConsentListProjection(
@@ -351,14 +354,14 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceConsentListExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_consent_list,
+            project_consent_list_result,
         )
     if definition_id == LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceReviewListProjection(profile_id=_PROFILE)
         return (
             LedgerEvidenceReviewListExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_review_list,
+            project_review_list_result,
         )
     if definition_id == LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceReviewViewProjection(
@@ -371,7 +374,7 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_review_view,
+            project_review_view_result,
         )
     raise AssertionError(definition_id)
 
@@ -471,7 +474,8 @@ _EXTERNAL_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
         ),
     },
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID: {
-        "LedgerEvidenceReviewListProjection": frozenset({"profile_id", "filters", "rows"}),
+        "LedgerEvidenceReviewListProjection": frozenset({"profile_id", "filters", "rows", "confirm_precondition"}),
+        "EvidenceConfirmPreconditionProjection": frozenset({"condition", "words", "words_language", "next_step"}),
         "EvidenceReviewQueueRowProjection": frozenset(
             {
                 "evidence_reference",
@@ -479,6 +483,8 @@ _EXTERNAL_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
                 "drafted_at",
                 "blocking_count",
                 "reasons",
+                "reason_words",
+                "reason_words_language",
                 "advisory_count",
                 "advisories",
             }
@@ -657,15 +663,7 @@ def test_the_review_summary_is_admitted_alike_on_every_frontend_without_a_commit
         for frontend in OperationFrontendProjection
     }
 
-    assert len({answer.policy for answer in resolved.values()}) == 1
-    for frontend, answer in resolved.items():
-        assert answer.request.frontend is frontend
-        assert answer.request.profile_id == _PROFILE
-        assert answer.request.period_independent is True
-        # A session under the person's sign-in and one under an enrolled key differ
-        # in kind alone, and only a human-only policy tells the two apart.
-        assert answer.policy.requires_human is False
-        assert AccessAction.COMMIT not in answer.policy.actions
+    assert_admitted_alike_without_commit_door(resolved, _PROFILE)
 
 
 def test_the_review_summary_keeps_every_finding_and_figure_and_no_text_from_the_document() -> None:
@@ -736,21 +734,21 @@ def test_the_summary_projector_releases_the_summary_and_the_view_projector_still
     summary = LedgerEvidenceReviewSummaryProjection.from_review_view(view)
     summary_receipt = _receipt(LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID)
 
-    released = _project_review_summary(
+    released = project_review_summary_result(
         LedgerEvidenceReviewSummaryExecutionResult(profile_id=_PROFILE, result=summary), summary_receipt
     )
 
     assert released == summary
     with pytest.raises(ValueError):
-        _project_review_summary(
+        project_review_summary_result(
             LedgerEvidenceReviewSummaryExecutionResult(profile_id=_PROFILE, result=summary),
             _receipt(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID),
         )
     with pytest.raises(ValueError):
-        _project_review_summary(
+        project_review_summary_result(
             LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=view), summary_receipt
         )
-    person_view = _project_review_view(
+    person_view = project_review_view_result(
         LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=view),
         _receipt(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID),
     )
@@ -858,10 +856,27 @@ def test_the_review_summary_declares_only_the_fields_read_for_document_text() ->
         ),
         "EvidenceReviewDiscrepancySummary": frozenset({"kind", "field", "expected", "observed", "detail_withheld"}),
         "EvidenceReviewBlockerSummary": frozenset(
-            {"blocker_id", "reason", "field", "candidate_count", "detail_withheld"}
+            {
+                "blocker_id",
+                "reason",
+                "field",
+                "candidate_count",
+                "detail_withheld",
+                "reason_words",
+                "reason_words_language",
+            }
         ),
         "LabelReadingFallbackProjectionV1": frozenset(
-            {"cause", "unread_fields", "reader_error_type", "failed_condition_id"}
+            {
+                "cause",
+                "unread_fields",
+                "reader_error_type",
+                "failed_condition_id",
+                "refusal_code",
+                "refusal_words",
+                "refusal_words_language",
+                "next_step",
+            }
         ),
         "PartyAttributionAdvisoryProjection": frozenset({"parties"}),
         "PartyAttributionWarningProjection": frozenset({"role", "fields", "scope_if_attributed"}),

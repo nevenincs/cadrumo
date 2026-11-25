@@ -1,0 +1,193 @@
+name: Cadrumo Native
+
+on:
+  # Advisory on a pull request, and only when it touches the native tree or
+  # this lane; the merge verdict belongs to the headless gate alone.
+  pull_request:
+    branches: [feature/tui, main]
+    types: [opened, reopened, synchronize]
+    paths:
+      - native/**
+      - CMakeLists.txt
+      - CMakePresets.json
+      - .github/workflows/native.yml
+      - .github/actions/setup/**
+  workflow_dispatch:
+  # The release proof calls this lane, where every job is mandatory. A caller
+  # that already published the registry authority names its artifact here.
+  workflow_call:
+    inputs:
+      authority-artifact:
+        description: This run's published-authority artifact; empty publishes locally.
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
+  # A newer push supersedes a pull request's run. A dispatched or called run is
+  # proving a commit and is never cancelled by another.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The native lane: everything that needs a compiler toolchain, a desktop
+# session or Windows. Every job runs on a self-hosted runner, which keeps state
+# between jobs, so each one admits a pull request only from this repository and
+# from an owner, a collaborator or the release App. Any other pull request
+# starts no job here.
+jobs:
+  desktop:
+    name: "Check: Frontend and Rust (Linux)"
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+    # The host preset configures the desktop targets only with the payload,
+    # and the payload needs the runner's cadrumo-agent checkout.
+    env:
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_LINUX }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require the repository agent-source variable
+        shell: bash
+        run: |
+          if [ -z "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR// /}" ]; then
+            echo "Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_LINUX must name the cadrumo-agent project directory on the Linux runner." >&2
+            exit 1
+          fi
+
+      # The recipes below seed the fixture projections themselves, and the
+      # producers read the registry authority, so this job restores it. The
+      # window's specs launch the frontend's own Playwright browser, provisioned
+      # below, not the Python Playwright's.
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
+
+      # Every native tool is provisioned here rather than taken from whatever
+      # the runner holds; Rust and CMake follow native/toolchain.json.
+      - name: Read the native toolchain pins
+        id: pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "rust=$(jq -er .rust native/toolchain.json)" >> "$GITHUB_OUTPUT"
+          echo "cmake=$(jq -er .cmake native/toolchain.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Set up CMake and Ninja
+        uses: lukka/get-cmake@f86dd60acae0d132056913e248bdabf0e0580b7a # v4.4.5
+        with:
+          cmakeVersion: ${{ steps.pins.outputs.cmake }}
+
+      - name: Set up Rust
+        shell: bash
+        env:
+          RUST_PIN: ${{ steps.pins.outputs.rust }}
+        run: |
+          set -euo pipefail
+          rustup toolchain install "$RUST_PIN" --profile minimal --component rustfmt,clippy
+          echo "RUSTUP_TOOLCHAIN=$RUST_PIN" >> "$GITHUB_ENV"
+
+      - name: Configure the native build with the agent checkout
+        id: configure
+        shell: bash
+        run: just configure-native-agent "$CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
+
+      - name: Frontend packages and browser
+        id: frontend-browser
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
+        shell: bash
+        run: just setup-desktop-browser
+
+      - name: Frontend checks and specs
+        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
+        shell: bash
+        run: just test-frontend
+
+      - name: Native Rust tests
+        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
+        shell: bash
+        run: just test-native
+
+  # The Windows runner is a shared workstation, so the two Windows jobs run for
+  # a dispatch and for the release proof, and never for a pull request.
+  windows-contracts:
+    name: "Test: Windows-only contracts (Windows)"
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && github.event_name != 'pull_request' }}
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 106
+    # The agent-service contracts start the real cadrumo-agent from the
+    # runner's synced checkout, the one the package job bundles.
+    env:
+      CADRUMO_DEV_AGENT_CHECKOUT: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
+
+      - name: Require the repository agent-source variable
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_DEV_AGENT_CHECKOUT)) {
+            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS must name the cadrumo-agent project directory on the Windows runner.'
+          }
+
+      # The agent refuses a root with a Git checkout at or above it, so its
+      # test roots sit under the runner's temporary directory, which lies
+      # beside the workspace and not inside it.
+      - name: Windows-only contracts
+        env:
+          CADRUMO_DEV_AGENT_HOSTED_ROOT: ${{ runner.temp }}/cadrumo-agent-hosted
+        run: just test-windows
+
+      - name: PowerShell action literals
+        if: ${{ !cancelled() }}
+        run: just test-powershell-literal
+
+  native-package:
+    name: "Test: Native package verification (Windows)"
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && github.event_name != 'pull_request' }}
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 150
+    env:
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
+
+      - name: Require the repository agent-source variable
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR)) {
+            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS must name the cadrumo-agent project directory on the Windows runner.'
+          }
+
+      - name: Native package verification
+        shell: pwsh
+        run: |
+          just test-native-ci "$env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

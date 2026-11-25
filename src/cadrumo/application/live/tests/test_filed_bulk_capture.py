@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -17,23 +17,37 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
+from ...auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...auth.operator_scope_ports import OperatorScopePorts
+from ...auth.protocols import BrowserSessionFactoryPort
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
+from ..errors import (
+    LiveAeatSessionEndedError,
+    LiveApplicationError,
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaSurfaceTimeoutError,
+)
+from ..filed_bulk_capture_operation import bulk_capture_effect
+from ..filed_capture_accumulator import FiledCaptureAccumulator
+from ..filed_capture_queries import (
+    await_filed_register_walk,
+    filed_data_capture_failure_row,
+    list_filed_data_bulk,
+    walk_or_failure_row,
+)
+from ..filed_data import BulkFiledDataListingReport
 from ..filed_data_capture import (
-    FiledCaptureAccumulator,
-    _absorb_declarations,
-    _await_filed_register_walk,
-    _walk_or_failure_row,
+    absorb_declarations,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
-    filed_data_capture_failure_row,
-    list_filed_data_bulk,
 )
 from ..filed_data_ports import (
     FiledDataCapturePort,
@@ -47,8 +61,10 @@ from ..filed_history_discovery import (
     FiledHistoryOnboardingRun,
     expected_but_not_found_notice,
 )
-from ..filed_history_pull import _filed_history_pair_outcomes
+from ..filed_history_pull import filed_history_pair_outcomes, pull_filed_history
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
+from ..iva_remote_state_ports import IvaRemoteStatePort
+from ..notification_ports import NotificationsPorts
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledCapturePairOutcome,
@@ -84,6 +100,33 @@ def _declaration() -> FiledRegisterDeclarationProtocol:
     return _Declaration()
 
 
+def _assert_unsupported_surface_failures(report: BulkFiledDataCaptureReport | BulkFiledDataListingReport) -> None:
+    """Both modelos without an authenticated filed-declarations read surface fail for 2024."""
+    failures = {failure.modelo: failure for failure in report.failures}
+    assert set(failures) == {"151", "721"}
+    assert failures["151"].year == 2024
+    assert failures["151"].error_type == "LiveApplicationInputError"
+    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
+    assert failures["721"].year == 2024
+    assert failures["721"].error_type == "LiveApplicationInputError"
+    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+
+
+def _denied_guard(events: list[str]) -> type:
+    """An effect guard that records its entry and refuses it as an inactive grant."""
+
+    class DeniedGuard:
+        async def __aenter__(self) -> None:
+            events.append("guard")
+            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    return DeniedGuard
+
+
 def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_path: Path) -> None:
     class Staged:
         persisted = False
@@ -116,7 +159,7 @@ def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_
         accumulator = FiledCaptureAccumulator(operation=operation)
         with pytest.raises(ProfileAccessRefusedError) as refusal:
             asyncio.run(
-                _absorb_declarations(
+                absorb_declarations(
                     (_declaration(),),
                     opened_register=cast(FiledDataRegisterPort, Register(staged)),
                     accumulator=accumulator,
@@ -174,18 +217,11 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
             on_session_write: SessionWriteReporter | None = None,
         ) -> AsyncGenerator[Register]:
             assert operation == "live-filed-read"
-            assert effect_guard is DeniedGuard
+            assert effect_guard is denied_guard
             assert on_session_write is None
             yield Register()
 
-    class DeniedGuard:
-        async def __aenter__(self) -> None:
-            events.append("guard")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-
-        async def __aexit__(self, exc_type, exc, traceback) -> bool:
-            del exc_type, exc, traceback
-            return False
+    denied_guard = _denied_guard(events)
 
     bundle = in_memory_filed_observation_test_bundle()
     with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
@@ -196,7 +232,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
                 year=2025,
                 output_root=tmp_path,
                 ports=bundle.ports,
-                effect_guard=DeniedGuard,
+                effect_guard=denied_guard,
                 operation=operation,
             )
         )
@@ -232,19 +268,12 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
         ):
             del revision
             assert (filing_year, period, operation) == (2025, Period.from_year_and_code(2025, "1T"), "live-filed-read")
-            assert effect_guard is DeniedGuard
+            assert effect_guard is denied_guard
             assert on_session_write is None
             events.append("remote")
             return Staged()
 
-    class DeniedGuard:
-        async def __aenter__(self) -> None:
-            events.append("guard")
-            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
-
-        async def __aexit__(self, exc_type, exc, traceback) -> bool:
-            del exc_type, exc, traceback
-            return False
+    denied_guard = _denied_guard(events)
 
     bundle = in_memory_filed_observation_test_bundle()
     with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
@@ -256,7 +285,7 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
                 period=Period.from_year_and_code(2025, "1T"),
                 output_root=tmp_path,
                 ports=bundle.ports,
-                effect_guard=DeniedGuard,
+                effect_guard=denied_guard,
                 operation=operation,
             )
         )
@@ -347,7 +376,7 @@ def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: 
     failures: list[FiledDataCaptureFailureRow] = []
     with pytest.raises(type(refusal)):
         asyncio.run(
-            _walk_or_failure_row(
+            walk_or_failure_row(
                 revoked(),
                 modelo="303",
                 year=2025,
@@ -355,6 +384,26 @@ def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: 
                 failures=failures,
             )
         )
+    assert failures == []
+
+
+class _AdapterSessionEndedError(Exception):
+    """An adapter failure that reports itself to live captures through the application protocol."""
+
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        return LiveIvaAcquisitionFailureMode.SESSION_ENDED
+
+
+def test_ended_aeat_session_stops_pair_walk_without_a_failure_row() -> None:
+    """An ended session aborts the sweep as its own refusal instead of failing every remaining pair."""
+
+    async def login_wall() -> tuple[FiledRegisterDeclarationProtocol, ...]:
+        raise _AdapterSessionEndedError
+
+    failures: list[FiledDataCaptureFailureRow] = []
+    with pytest.raises(LiveAeatSessionEndedError):
+        asyncio.run(walk_or_failure_row(login_wall(), modelo="303", year=2025, timeout_ms=1000, failures=failures))
     assert failures == []
 
 
@@ -379,7 +428,7 @@ def test_bulk_failure_row_preserves_declaration_coordinates() -> None:
 def test_filed_register_walk_timeout_reports_modelo_year_context() -> None:
     with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
         asyncio.run(
-            _await_filed_register_walk(
+            await_filed_register_walk(
                 _slow_empty_declarations(),
                 modelo="303",
                 year=2026,
@@ -461,14 +510,7 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
     assert report.captured_count == 0
     assert report.dry_run is dry_run
     assert report.failed_count == 2
-    failures = {failure.modelo: failure for failure in report.failures}
-    assert set(failures) == {"151", "721"}
-    assert failures["151"].year == 2024
-    assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
-    assert failures["721"].year == 2024
-    assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+    _assert_unsupported_surface_failures(report)
 
 
 def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path) -> None:
@@ -532,14 +574,7 @@ def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries()
     assert report.modelos == ("151", "721")
     assert report.row_count == 0
     assert report.failed_count == 2
-    failures = {failure.modelo: failure for failure in report.failures}
-    assert set(failures) == {"151", "721"}
-    assert failures["151"].year == 2024
-    assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
-    assert failures["721"].year == 2024
-    assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
+    _assert_unsupported_surface_failures(report)
 
 
 def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
@@ -608,7 +643,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
     failures: list[FiledDataCaptureFailureRow] = []
 
     refused = asyncio.run(
-        _walk_or_failure_row(
+        walk_or_failure_row(
             _refusing_walk(),
             modelo="100",
             year=2026,
@@ -623,7 +658,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
     assert "declares 8 in total" in failures[0].message
 
     healthy = asyncio.run(
-        _walk_or_failure_row(
+        walk_or_failure_row(
             _one_declaration_walk(),
             modelo="303",
             year=2025,
@@ -646,11 +681,12 @@ class _AccountingObservation:
     expediente_id: str
     presented_at: datetime
     status: str = "ALTA"
-    authenticated_identity: str = "X1234567L"
+    authenticated_identity: str = "X0001500M"
     artefacts: tuple[FiledObservationArtefactProtocol, ...] = ()
     casillas: tuple[FiledObservedCasillaProtocol, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
     metadata: Mapping[str, str] = field(default_factory=dict)
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
 
     @property
     def registry_snapshot_ref(self) -> RegistrySnapshotRef:
@@ -781,7 +817,7 @@ def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
             ),
         )
     )
-    pairs = _filed_history_pair_outcomes(discovery, report)
+    pairs = filed_history_pair_outcomes(discovery, report)
     run = FiledHistoryOnboardingRun(
         pairs=pairs, dry_run=dry_run, reached_count=report.reached_count, captured_count=report.captured_count
     )
@@ -837,7 +873,7 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
             ),
         )
     )
-    (history_pair,) = _filed_history_pair_outcomes(discovery, report)
+    (history_pair,) = filed_history_pair_outcomes(discovery, report)
     assert history_pair.row_count == 2
     assert history_pair.captured_count == (1 if failed_capture else 2)
     assert history_pair.reached_count == report.reached_count
@@ -892,3 +928,184 @@ def test_bulk_capture_refuses_duplicate_coordinates_before_register_contact(tmp_
         )
     assert register.opened == 0
     assert register.walks == []
+
+
+def _ragged_grid() -> tuple[tuple[str, int], ...]:
+    """Modelo 130 for two years and modelo 100 for one year inside 130's span, in walk order."""
+    last = datetime.now(UTC).year - 1
+    return (("130", last), ("100", last - 1), ("130", last - 2))
+
+
+@pytest.mark.parametrize("dry_run", [False, True], ids=["persisted", "preview"])
+def test_exact_pair_capture_reads_only_the_nominated_pairs_in_walk_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, dry_run: bool
+) -> None:
+    """A ragged grid is not widened to its modelos-by-years rectangle."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    year = grid[0][1]
+    register = _AccountingRegister({("100", year - 1): (_annual_declaration(year - 1, "1"),)})
+    repository = _AccountingRunRepository()
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            pairs=grid,
+            output_root=tmp_path,
+            dry_run=dry_run,
+            sync_run_repository=repository,
+        )
+    )
+    report.require_consistent()
+    assert register.walks == list(grid)
+    assert register.opened == 1
+    assert report.modelos == ("130", "100")
+    assert (report.year_from, report.year_to) == (year - 2, year)
+    walked = {(pair.modelo, pair.year) for pair in report.pair_outcomes if pair.walk_attempted}
+    assert walked == set(grid)
+    unwalked = [pair for pair in report.pair_outcomes if not pair.walk_attempted]
+    assert {(pair.modelo, pair.year) for pair in unwalked} == {("130", year - 1), ("100", year), ("100", year - 2)}
+    assert all(not pair.walk_completed and pair.row_count == 0 for pair in unwalked)
+    if dry_run:
+        assert report.dry_run
+        assert report.captured_count == 0
+        assert report.observation_paths == ()
+        assert repository.records == []
+    else:
+        assert report.captured_count == 1
+        assert len(repository.records) == 1
+
+
+def test_exact_pair_capture_reports_a_refusal_on_each_nominated_pair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    register = _AccountingRegister({}, fail_walk=True)
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            pairs=grid,
+            output_root=tmp_path,
+            dry_run=True,
+        )
+    )
+    report.require_consistent()
+    assert register.walks == list(grid)
+    assert [(failure.modelo, failure.year) for failure in report.failures] == list(grid)
+    assert report.failed_count == len(grid)
+
+
+@pytest.mark.parametrize(
+    "scope",
+    [{"modelos": ("100",)}, {"year_from": 1}, {"year_to": 1}],
+    ids=["modelos", "year_from", "year_to"],
+)
+def test_exact_pair_capture_is_exclusive_with_the_rectangle(tmp_path: Path, scope: dict[str, object]) -> None:
+    register = _AccountingRegister({})
+    with pytest.raises(ValueError, match="either exact pairs"):
+        asyncio.run(
+            capture_filed_data_bulk(
+                filed_data_port=cast(FiledDataCapturePort, register),
+                ports=in_memory_filed_observation_test_bundle().ports,
+                pairs=_ragged_grid(),
+                output_root=tmp_path,
+                dry_run=True,
+                **cast(dict[str, Any], scope),
+            )
+        )
+    assert register.opened == 0
+
+
+def test_exact_pair_capture_refuses_duplicate_or_empty_pairs(tmp_path: Path) -> None:
+    register = _AccountingRegister({})
+    grid = _ragged_grid()
+    for pairs in ((grid[0], grid[0]), ()):
+        with pytest.raises(ValueError, match=r"unique modelo/year|at least one"):
+            asyncio.run(
+                capture_filed_data_bulk(
+                    filed_data_port=cast(FiledDataCapturePort, register),
+                    ports=in_memory_filed_observation_test_bundle().ports,
+                    pairs=pairs,
+                    output_root=tmp_path,
+                    dry_run=True,
+                )
+            )
+    assert register.opened == 0
+
+
+# A dry run with injected discovery never opens a session, scope or remote read port.
+_UNREACHED_PORT: object = object()
+
+
+def test_pull_filed_history_walks_only_what_discovery_nominated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Discovery's ragged grid reaches the register as exactly its pairs, with no rectangle refusals."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    signal = (FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+    discovery = FiledHistoryDiscoveryReport(
+        pairs=tuple(FiledHistoryDiscoveryPair(modelo=modelo, ejercicio=year, signals=signal) for modelo, year in grid)
+    )
+    register = _AccountingRegister({})
+
+    async def discover(**_kwargs: object) -> FiledHistoryDiscoveryReport:
+        return discovery
+
+    run = asyncio.run(
+        pull_filed_history(
+            certificate_secret_backend_factory=cast(CertificateSecretBackendFactory, _UNREACHED_PORT),
+            browser_session_factory=cast(BrowserSessionFactoryPort, _UNREACHED_PORT),
+            operator_scope_ports=cast(OperatorScopePorts, _UNREACHED_PORT),
+            filed_data_port=cast(FiledDataCapturePort, register),
+            iva_remote_state_port=cast(IvaRemoteStatePort, _UNREACHED_PORT),
+            notifications_ports=cast(NotificationsPorts, _UNREACHED_PORT),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            output_root=tmp_path,
+            dry_run=True,
+            discover=discover,
+        )
+    )
+    assert register.walks == list(grid)
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == list(grid)
+    assert all(pair.walk_completed and not pair.refused for pair in run.pairs)
+    assert run.stage_failures == ()
+
+
+@pytest.mark.parametrize(
+    ("sync_run_ref", "effect"),
+    [
+        (None, OperationEffect.NONE),
+        ("sync-run:filed_declarations:" + "a" * 64, OperationEffect.UPDATED),
+    ],
+    ids=["no-sync-run", "recorded-sync-run"],
+)
+def test_bulk_capture_effect_is_an_update_only_when_a_sync_run_was_recorded(
+    sync_run_ref: str | None, effect: OperationEffect
+) -> None:
+    report = BulkFiledDataCaptureReport(
+        output_root="var/aeat/filed-declarations",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        captured_count=0,
+        reached_count=0,
+        failed_count=0,
+        pair_outcomes=(),
+        observation_paths=(),
+        artefact_refs=(),
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=(),
+        sync_run_ref=sync_run_ref,
+    )
+
+    assert bulk_capture_effect(report) is effect

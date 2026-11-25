@@ -1,38 +1,29 @@
-"""MCP attendance and local-model support for built-package development proofs."""
+"""MCP attendance support for built-package development proofs."""
 
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import os
-import shutil
-import subprocess
 import time
-from collections.abc import AsyncGenerator, Callable, Generator, Mapping, Sequence
+from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import anyio
-import httpx
-import psutil
 from anyio.abc import ObjectReceiveStream, ObjectSendStream
 from mcp import ClientSession
 from mcp.shared.message import SessionMessage
 from mcp.types import JSONRPCMessage
 from pydantic import TypeAdapter
 
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_path
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError, Programs, Receipt, require
 from dev.runtime_lifecycle.session_holder import AsyncRuntimeSessionHolder
 
 from .proof_support import ProcessIdentity, verified_relay
 
 _CALL_SECONDS = 150
-_OLLAMA_URL = "http://127.0.0.1:11434"
-_LOCAL_TEXT_MODEL = "qwen3:1.7b"
 _JSONRPC_MESSAGE_ADAPTER = TypeAdapter(JSONRPCMessage)
 
 
@@ -168,13 +159,7 @@ async def ask_and_decide(
             candidates = inventory.get("candidates")
             if not isinstance(candidates, list):
                 raise AcceptanceError("runtime attendance inventory has no candidate list")
-            owned = [
-                item
-                for item in candidates
-                if isinstance(item, dict)
-                and type(item.get("process_id")) is int
-                and verified_relay(item["process_id"], session.relay_image, session.invocation)
-            ]
+            owned = _owned_relay_candidates(cast(list[object], candidates), session)
             require(len(owned) <= 1, "multiple owned relays ask on one proof connection")
             if owned:
                 ask = owned[0]
@@ -206,65 +191,17 @@ async def ask_and_decide(
                 await call
 
 
-def model_store(chosen: Path | None) -> Path:
-    """Return the Ollama model store to read: the chosen one, else Cadrumo's own.
-
-    Cadrumo's Ollama processes keep their weights in the storage root's
-    model member, so that member is the store this proof reads by default.
-    """
-    return chosen if chosen is not None else storage_path(StorageCategory.OLLAMA_MODELS)
-
-
-@contextlib.contextmanager
-def local_model(scratch: Path, models: Path) -> Generator[bool]:
-    """Serve the local text model on the loopback port for the block; say whether it is available.
-
-    A server this harness did not start is never used or stopped. Ollama's
-    pruning of blobs it does not recognise is switched off, so an existing
-    model store is only read.
-    """
-    try:
-        httpx.get(f"{_OLLAMA_URL}/api/tags", timeout=1)
-    except httpx.HTTPError:
-        pass
-    else:
-        raise AcceptanceError("a model server already listens on the loopback port; this run uses only its own")
-    found = shutil.which("ollama") or str(
-        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Ollama" / "ollama.exe"
-    )
-    if not Path(found).is_file() or not models.is_dir():
-        yield False
-        return
-    environment = {**os.environ, "OLLAMA_MODELS": str(models), "OLLAMA_HOST": "127.0.0.1:11434", "OLLAMA_NOPRUNE": "1"}
-    with (scratch / "ollama.log").open("wb") as output:
-        server = subprocess.Popen(  # noqa: S603 -- the installed local model server; no shell.
-            [found, "serve"], env=environment, stdout=output, stderr=subprocess.STDOUT
-        )
-        try:
-            deadline = time.monotonic() + 60
-            tags = None
-            while tags is None and time.monotonic() < deadline:
-                require(server.poll() is None, "the owned local model server exited before readiness")
-                with contextlib.suppress(httpx.HTTPError, ValueError):
-                    tags = httpx.get(f"{_OLLAMA_URL}/api/tags", timeout=1).json()
-                time.sleep(0.5)
-            if not isinstance(tags, dict):
-                raise AcceptanceError("the owned local model server did not reach readiness")
-            names = {item.get("name") for item in tags.get("models", []) if isinstance(item, dict)}
-            yield _LOCAL_TEXT_MODEL in names
-        finally:
-            # The server starts a model runner per loaded model; stopping only the server leaves it running.
-            with suppress(psutil.Error):
-                tree = [psutil.Process(server.pid), *psutil.Process(server.pid).children(recursive=True)]
-                for process in tree:
-                    with suppress(psutil.Error):
-                        process.terminate()
-                _gone, alive = psutil.wait_procs(tree, timeout=30)
-                for process in alive:
-                    with suppress(psutil.Error):
-                        process.kill()
-                psutil.wait_procs(alive, timeout=30)
-            server.wait(timeout=30)
+def _owned_relay_candidates(candidates: list[object], session: McpSession) -> list[dict[str, object]]:
+    """Select asks belonging to the verified relay for this connection."""
+    owned: list[dict[str, object]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        item = cast(dict[str, object], candidate)
+        process_id = item.get("process_id")
+        if type(process_id) is int and verified_relay(process_id, session.relay_image, session.invocation):
+            owned.append(item)
+    return owned
 
 
 async def observe(session: McpSession, operation_id: str) -> dict[str, Any]:

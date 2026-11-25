@@ -569,7 +569,7 @@ def _run_child(
         request_path.chmod(0o600)
         env_extra = {
             **dict(extra_env or {}),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
         }
         started = time.perf_counter()

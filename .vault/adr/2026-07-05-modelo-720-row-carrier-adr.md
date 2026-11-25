@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-10-03'
-body_hash: 'sha256:9d87c2a2a6e5fd206de560beea0773185ad618630bbce53ac0a5c0b6200cf8c2'
+modified: '2026-11-04'
+body_hash: 'sha256:8b592131eecae01f6b77dea4c9e28c87591bddc3c0c6d96e776cd6ba7e74d84b'
 related:
   - "[[2026-07-05-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
@@ -214,11 +214,11 @@ We will assemble each Modelo 720 type 2 record from one joined row family keyed 
   - 475 is used only for `B`.
   - 447-461 is used only for `C` with origin `A` or `M`, or for `B` with origin `C`.
 - The compiler refuses a route table that is not total over the five codes, a target outside the record, or two routes reaching one slot. The renderer fills a `design_blank` slot with the design's empty fill: zeros for numeric fields, spaces for alphanumeric ones.
-- Valuation 1 carries a typed valuation basis per class and subclave, declared in the registry, with an edition for the ejercicio 2023+ insurance text (Orden HFP/1180/2023). The bases are:
+- Valuation 1 carries a typed valuation basis per class and subclave, declared in the registry, with an edition for the insurance text introduced by Orden HFP/1180/2023. The bases are:
   - C: balance at 31 December, or at cessation.
   - V: balance or value at 31 December, or at extinction.
   - I: valor liquidativo.
-  - S1: rescate, or provisión matemática from 2023.
+  - S1: rescate, or provisión matemática from the edition introduced by Orden HFP/1180/2023.
   - S2: capitalización, or rescate when the rent comes from a life policy.
   - B1: acquisition value including taxes.
   - B2-4: value at 31 December under Ley 19/1991.

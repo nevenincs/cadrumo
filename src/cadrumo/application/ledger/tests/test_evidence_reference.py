@@ -20,8 +20,9 @@ from pydantic import ValidationError
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
 from ..evidence_reference import (
@@ -66,7 +67,7 @@ def _invoice(
             "invoice_number": invoice_number,
             "issued_at": date(2026, 2, 5),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

@@ -15,10 +15,11 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
     derive_modelo_applicability,
+    hydrate_applicability_rule,
     iter_modelo_applicability_rules,
 )
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     PayerFactDeclaration,
     PayerFactLedgerSource,
@@ -27,6 +28,7 @@ from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     resolve_payer_fact,
     resolve_payer_fact_catalogue,
 )
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as CompiledAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import (
@@ -39,14 +41,26 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from cadrumo.domain.calculations.registry.schema_revision_members import (
+    ApplicabilityExclusionDefinition,
+    ApplicabilityRuleDefinition,
+)
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    supported_authored_exercises,
+)
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
 from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.validate_applicability_section import validate_applicability_section
 
+from .referential_integrity_support import REFERENCE_LEGAL_ID
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_TODAY = date(2025, 6, 30)
+_YEAR = filing_year_envelope().horizon
+_TODAY = date(_YEAR, 6, 30)
+_M136_EXERCISE_DATES = tuple(date(year, 6, 30) for year in supported_authored_exercises("136"))
 _PAYER_FACT_ID = "modelo-payer-applicability-facts"
 _M136_FACT = "premio_loteria_gravamen_especial_sin_retencion"
 _SII_FACT = "iva_books_kept_through_sii"
@@ -57,18 +71,23 @@ class _Case:
     modelo: str
     field: str
     yes_extras: tuple[tuple[str, frozenset[str]], ...] = ()
-    declares_iva_block: bool = False
-    """Whether a yes also needs a declared IVA block, as Modelo 347's SII exclusion reads it."""
+    answers_the_sii_exclusion: bool = False
+    """Whether a yes also needs the facts Modelo 347's SII exclusion reads answered.
+
+    Those are the five IVA enrolments of a declared block and the
+    large-company condition; every one is three-state, so an unanswered one
+    leaves the exclusion undetermined and the modelo incomplete.
+    """
 
 
 _THREE_STATE_CASES = (
-    _Case("347", "third_party_transactions_above_347_threshold", declares_iva_block=True),
+    _Case("347", "third_party_transactions_above_347_threshold", answers_the_sii_exclusion=True),
     _Case("720", "bienes_extranjero_above_threshold"),
     _Case("721", "monedas_virtuales_extranjero_above_threshold"),
     _Case(
         "136",
         "premio_loteria_gravamen_especial_sin_retencion",
-        (("premio_loteria_gravamen_especial_trimestres", frozenset({"2025-1T"})),),
+        (("premio_loteria_gravamen_especial_trimestres", frozenset({f"{_YEAR}-1T"})),),
     ),
 )
 
@@ -76,7 +95,7 @@ _THREE_STATE_CASES = (
 def _natural_person(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "X1234567L",
+            "tax_id": "X0001500M",
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset({require_irpf_income_category("actividad_economica")}),
             "iva_regime": require_iva_regime("GENERAL"),
@@ -86,10 +105,21 @@ def _natural_person(**facts: object) -> TaxpayerProfile:
 
 
 def _iva_block(**facts: bool) -> ModeloIVAProfile:
+    """An IVA block that answers every enrolment question, as a no unless overridden.
+
+    Each enrolment is three-state, so omitting one states nothing about it and
+    leaves every fact derived over the block unanswered rather than no.
+    """
     return ModeloIVAProfile.model_validate(
         {
             "tax_territory": "common_regime",
             "regime_composition": "general",
+            "roi_enrolled": False,
+            "oss_enrolled": False,
+            "group_member_enrolled": False,
+            "group_dominant_entity_enrolled": False,
+            "intracommunity_operations_exceed_50000_eur": False,
+            "sii_enrolled": False,
             "redeme_enrolled": False,
             "cash_accounting_regime_enrolled": False,
             "voluntary_sii_enrolled": False,
@@ -99,6 +129,14 @@ def _iva_block(**facts: bool) -> ModeloIVAProfile:
     )
 
 
+_NOT_A_LARGE_COMPANY = ModeloEnrollment(large_company=False)
+"""The volumen de operaciones condition answered as a no.
+
+The SII fact is derived over it as well as over the IVA block, so a stated no
+on every enrolment still leaves the fact unanswered until this is stated too.
+"""
+
+
 def _rule_not_applicable_reason(modelo: str) -> str:
     return next(rule.not_applicable_reason for rule in iter_modelo_applicability_rules() if rule.modelo == modelo)
 
@@ -106,7 +144,7 @@ def _rule_not_applicable_reason(modelo: str) -> str:
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_unanswered_payer_fact_is_incomplete(case: _Case) -> None:
-    result = derive_modelo_applicability(_natural_person(), case.modelo, today=_TODAY)
+    result = derive_modelo_applicability(_natural_person(), case.modelo, reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Hecho requerido para este modelo" in result.reason
@@ -115,7 +153,7 @@ def test_unanswered_payer_fact_is_incomplete(case: _Case) -> None:
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_declared_no_is_not_applicable_with_the_rule_reason(case: _Case) -> None:
-    result = derive_modelo_applicability(_natural_person(**{case.field: False}), case.modelo, today=_TODAY)
+    result = derive_modelo_applicability(_natural_person(**{case.field: False}), case.modelo, reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.reason == _rule_not_applicable_reason(case.modelo)
@@ -124,10 +162,13 @@ def test_declared_no_is_not_applicable_with_the_rule_reason(case: _Case) -> None
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_declared_yes_is_applicable(case: _Case) -> None:
-    iva_block = {"iva": _iva_block()} if case.declares_iva_block else {}
-    profile = _natural_person(**{case.field: True, **dict(case.yes_extras), **iva_block})
+    sii_answers = {"iva": _iva_block(), "enrollment": _NOT_A_LARGE_COMPANY} if case.answers_the_sii_exclusion else {}
+    profile = _natural_person(**{case.field: True, **dict(case.yes_extras), **sii_answers})
 
-    assert derive_modelo_applicability(profile, case.modelo, today=_TODAY).verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, case.modelo, reference_date=_TODAY).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -140,7 +181,7 @@ def test_modelo_136_yes_without_quarters_is_incomplete_and_names_the_quarters(
         premio_loteria_gravamen_especial_trimestres=quarters,
     )
 
-    result = derive_modelo_applicability(profile, "136", today=_TODAY)
+    result = derive_modelo_applicability(profile, "136", reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Periodos sin declarar: trimestres naturales en que se cobraron esos premios." in result.reason
@@ -150,39 +191,60 @@ def test_modelo_136_yes_without_quarters_is_incomplete_and_names_the_quarters(
 def test_modelo_136_is_not_applicable_to_a_legal_entity_whatever_the_fact_says() -> None:
     profile = TaxpayerProfile.model_validate(
         {
-            "tax_id": "B12345674",
+            "tax_id": "B00015016",
             "entity_type": require_entity_type("legal_entity"),
             "iva_regime": require_iva_regime("GENERAL"),
             "premio_loteria_gravamen_especial_sin_retencion": True,
-            "premio_loteria_gravamen_especial_trimestres": frozenset({"2025-1T"}),
+            "premio_loteria_gravamen_especial_trimestres": frozenset({f"{_YEAR}-1T"}),
         },
     )
 
-    assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, "136", reference_date=_TODAY).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_modelo_136_undeclared_is_incomplete_across_its_revisions() -> None:
-    for today in (date(2022, 6, 30), date(2026, 6, 30)):
-        result = derive_modelo_applicability(_natural_person(), "136", today=today)
+    for today in _M136_EXERCISE_DATES:
+        result = derive_modelo_applicability(_natural_person(), "136", reference_date=today)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, today
         assert "orden-hap-70-2013:art-6" in result.legal_refs, today
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_a_plain_boolean_payer_fact_keeps_its_two_state_reading() -> None:
+@pytest.mark.parametrize(
+    ("answer", "declaration", "verdict"),
+    (
+        (None, PayerFactDeclaration.UNDECLARED, ApplicabilityVerdict.INCOMPLETE),
+        (False, PayerFactDeclaration.DECLARED_NO, ApplicabilityVerdict.NOT_APPLICABLE),
+        (True, PayerFactDeclaration.DECLARED_YES, ApplicabilityVerdict.APPLICABLE),
+    ),
+)
+def test_the_capital_income_fact_reads_three_states_from_its_optional_profile_field(
+    answer: bool | None,
+    declaration: PayerFactDeclaration,
+    verdict: ApplicabilityVerdict,
+) -> None:
+    """The registry declares no ``three_state`` key; it derives the reading from ``bool | None``.
+
+    While the profile field was a plain ``bool`` defaulting to ``False`` this
+    fact was two-state, so the taxpayer's own no could not be told apart from
+    an unanswered question and Modelo 193 stayed INCOMPLETE either way.
+    """
     fact = resolve_payer_fact("pays_capital_income_with_retencion", effective_date=_TODAY)
     assert isinstance(fact, PayerFactProjection)
-    assert fact.three_state is False
+    assert fact.three_state is True
 
-    unanswered = _natural_person(pays_capital_income_with_retencion=False)
+    profile = _natural_person(pays_capital_income_with_retencion=answer)
 
-    assert payer_fact_declaration(unanswered, fact) is PayerFactDeclaration.UNDECLARED
-    assert derive_modelo_applicability(unanswered, "193", today=_TODAY).verdict is ApplicabilityVerdict.INCOMPLETE
+    assert payer_fact_declaration(profile, fact) is declaration
+    assert derive_modelo_applicability(profile, "193", reference_date=_TODAY).verdict is verdict
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-@pytest.mark.parametrize("effective_date", (date(2022, 6, 30), date(2025, 6, 30)))
+@pytest.mark.parametrize("effective_date", _M136_EXERCISE_DATES)
 def test_modelo_136_fact_is_dated_three_state_with_a_quarter_companion(effective_date: date) -> None:
     fact = resolve_payer_fact(_M136_FACT, effective_date=effective_date)
 
@@ -302,11 +364,14 @@ def test_the_sii_fact_reads_any_yes_unanswered_without_the_block_and_no_only_whe
     fact = resolve_payer_fact(_SII_FACT, effective_date=_TODAY)
 
     without_block = _natural_person()
-    all_no = _natural_person(iva=_iva_block())
+    block_without_the_cadence_condition = _natural_person(iva=_iva_block())
+    all_no = _natural_person(iva=_iva_block(), enrollment=_NOT_A_LARGE_COMPANY)
     voluntary = _natural_person(iva=_iva_block(voluntary_sii_enrolled=True))
     large_company_without_block = _natural_person(enrollment=ModeloEnrollment(large_company=True))
 
     assert payer_fact_declaration(without_block, fact) is PayerFactDeclaration.UNDECLARED
+    # The condition is one of the fact's keys, so a complete block is not a complete answer.
+    assert payer_fact_declaration(block_without_the_cadence_condition, fact) is PayerFactDeclaration.UNDECLARED
     assert payer_fact_declaration(all_no, fact) is PayerFactDeclaration.DECLARED_NO
     assert payer_fact_declaration(voluntary, fact) is PayerFactDeclaration.DECLARED_YES
     assert payer_fact_declaration(large_company_without_block, fact) is PayerFactDeclaration.DECLARED_YES
@@ -382,3 +447,111 @@ def test_a_malformed_ledger_source_is_refused_at_hydration(key: str, value: str,
         pytest.raises(RegistryValidationError, match=message),
     ):
         resolve_payer_fact_catalogue(effective_date=_TODAY)
+
+
+_TWO_STATE_PROFILE_KEY = "enrollment.public_administration_budget_gt_6000000"
+"""A plain boolean in a required profile section, so its ``False`` is two-state.
+
+Every fact the bundled catalogue authors is three-state, which is why the
+refusal below has to serve a fact of its own: the shape the guard exists for is
+a projection whose field cannot hold an unanswered answer, not a named fact.
+"""
+
+
+def _declared_no_exclusion_rule(payer_fact: str) -> ApplicabilityRuleDefinition:
+    return ApplicabilityRuleDefinition(
+        id="m999-seed",
+        applicable_entity_types=("natural_person",),
+        applicable_reason="applies",
+        not_applicable_reason="does not apply",
+        exclusions=(
+            ApplicabilityExclusionDefinition(
+                id="m999-excluded",
+                payer_fact=payer_fact,
+                payer_fact_declared=False,
+                reason="excluded",
+                legal_refs=(REFERENCE_LEGAL_ID,),
+            ),
+        ),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+    )
+
+
+def test_an_exclusion_reading_the_declared_no_of_a_two_state_fact_is_refused_at_hydration() -> None:
+    """A field that cannot hold an unanswered answer gives the exclusion nothing to read.
+
+    Its ``False`` is both the taxpayer's no and a question nobody asked, so an
+    exclusion keyed on the no would fire for every silent profile.
+    """
+    override = _OverriddenPayerFacts(
+        f"payer_fact.{_M136_FACT}.profile_key",
+        _TWO_STATE_PROFILE_KEY,
+    )
+
+    with (
+        validating_governed_facts(override),
+        pytest.raises(RegistryValidationError, match="cannot tell a declared no"),
+    ):
+        hydrate_applicability_rule(Modelo("136"), _declared_no_exclusion_rule(_M136_FACT))
+
+
+def test_the_same_exclusion_over_the_authored_three_state_fact_hydrates() -> None:
+    """The refusal above is the field's shape, not the exclusion's own declaration."""
+    with validating_governed_facts(compiled_bundled_authority()):
+        rule = hydrate_applicability_rule(Modelo("136"), _declared_no_exclusion_rule(_M136_FACT))
+
+    assert [exclusion.id for exclusion in rule.exclusions] == ["m999-excluded"]
+
+
+_SUPPORTED_YEARS = filing_year_envelope().years
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize("modelo", ("216", "296"))
+def test_resident_withholding_alone_does_not_open_the_irnr_modelos(
+    registry_authority: CompiledAuthority, modelo: str, year: int
+) -> None:
+    """An employer or payer of professional fees withholds IRPF (Modelo 111), not IRNR.
+
+    TRLIRNR art. 31 binds the payer of income subject to IRNR, so 216 and 296 turn on
+    paying non-residents, which only the taxpayer can state.
+    """
+    profile = _natural_person(has_employees=True, pays_professionals_with_retencion=True)
+
+    result = derive_modelo_applicability(
+        profile, modelo, reference_date=date(int(year), 6, 30), authority=registry_authority
+    )
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "trlirnr-rdleg-5-2004:art-31" in result.legal_refs
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize(
+    ("modelo", "field"),
+    (
+        ("216", "pays_non_resident_income_with_retencion"),
+        ("296", "pays_non_resident_income_with_retencion"),
+        ("714", "patrimonio_declaration_threshold_met"),
+    ),
+)
+def test_the_new_payer_facts_decide_their_modelos_in_every_supported_year(
+    registry_authority: CompiledAuthority, modelo: str, field: str, year: int
+) -> None:
+    """Unanswered is undetermined, a no excludes and a yes obliges, in every supported year.
+
+    Read through the authority compiled from the authored registry, so the proof does
+    not wait on a publish.
+    """
+    today = date(int(year), 6, 30)
+
+    def verdict(**facts: object) -> ApplicabilityVerdict:
+        return derive_modelo_applicability(
+            _natural_person(**facts), modelo, reference_date=today, authority=registry_authority
+        ).verdict
+
+    assert verdict() is ApplicabilityVerdict.INCOMPLETE
+    assert verdict(**{field: False}) is ApplicabilityVerdict.NOT_APPLICABLE
+    assert verdict(**{field: True}) is ApplicabilityVerdict.APPLICABLE

@@ -11,8 +11,10 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...command_execution import run_command
-from ..assemble import logical_inventory, package_fingerprint, stamp_package
+from ..assembly_identity import logical_inventory, package_fingerprint, stamp_package
 from ..build_fingerprint import (
     COMPONENTS,
     FILE_API_QUERY,
@@ -38,12 +40,13 @@ from ..build_stamp import (
     resolve,
     settle_record,
 )
+from ..cmake_build import builds_images
 from ..hashing import digest
 from ..stdlib import bytecode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-DAY = datetime(2026, 10, 19, 8, 30, tzinfo=UTC)
+DAY = datetime(filing_year_envelope().horizon, 10, 19, 8, 30, tzinfo=UTC)
 
 # A checkout reduced to the crates and sources the components declare, as pure input data.
 CRATES = {
@@ -117,11 +120,46 @@ def test_the_crate_closure_follows_path_dependencies_of_every_target_but_not_tes
     ]
 
 
+def test_path_patches_and_their_dependencies_move_the_desktop_identity(build: Path, checkout: Path) -> None:
+    manifest = checkout / "native/desktop/src-tauri/Cargo.toml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + '\n[patch.crates-io]\nwry = { path = "../../vendor/wry" }\n'
+        + 'registry-only = "1.0"\nother-registry = { version = "2.0" }\n',
+        encoding="utf-8",
+    )
+    _write(checkout / "native/vendor/wry/Cargo.toml", '[dependencies]\nhelper = { path = "../helper" }\n')
+    _write(checkout / "native/vendor/wry/src/lib.rs", "// wry\n")
+    _write(checkout / "native/vendor/helper/Cargo.toml", "[dependencies]\n")
+    _write(checkout / "native/vendor/helper/src/lib.rs", "// helper\n")
+    closure = crate_closure(("native/desktop/src-tauri",), root=checkout)
+    assert "native/vendor/wry" in closure
+    assert "native/vendor/helper" in closure
+
+    before = _ids(build, checkout)
+    _write(checkout / "native/vendor/wry/src/lib.rs", "// changed wry\n")
+    after_patch = _ids(build, checkout)
+    assert after_patch["desktop"] != before["desktop"]
+    assert {name: after_patch[name] for name in ("interpreter", "manager", "installer")} == {
+        name: before[name] for name in ("interpreter", "manager", "installer")
+    }
+    _write(checkout / "native/vendor/helper/src/lib.rs", "// changed helper\n")
+    assert _ids(build, checkout)["desktop"] != after_patch["desktop"]
+
+
 def test_embedded_components_resolve_first() -> None:
     assert resolution_order(["desktop"]) == ["desktop"]
     assert resolution_order(["manager"]) == ["manager"]
     assert resolution_order(["desktop-test-host"]) == ["desktop", "desktop-test-host"]
     assert set(COMPONENTS) == {"interpreter", "installer", "manager", "desktop", "desktop-test-host"}
+
+
+def test_test_host_identity_includes_only_the_isolated_automation_features() -> None:
+    assert COMPONENTS["desktop"].features == ()
+    assert set(COMPONENTS["desktop-test-host"].features) == {
+        "webview2-remote-debugging",
+        "native-automation",
+    }
 
 
 def test_an_unchanged_checkout_keeps_every_identity_and_identity_file(build: Path, checkout: Path) -> None:
@@ -289,9 +327,12 @@ def test_compiler_read_logs_and_the_desktop_snapshot_map_back_to_the_checkout(bu
     _write(header, "#define EXTRA 1\n")
     log = build / "native/cadrumo_python.dir/Debug/cadrumo_python.tlog/CL.read.1.tlog"
     log.parent.mkdir(parents=True)
+    # MSBuild logs upper-case every path it records, and only a case-folding
+    # host maps that back; elsewhere paths keep the case the checkout has.
+    shout = str.upper if os.name == "nt" else str
     lines = [
-        f"^{str(checkout / 'native/interpreter/windows/host.c').upper()}",
-        str(header).upper(),
+        f"^{shout(str(checkout / 'native/interpreter/windows/host.c'))}",
+        shout(str(header)),
         "C:\\SDK\\WINDOWS.H",
     ]
     log.write_bytes(("\ufeff" + "\r\n".join(lines) + "\r\n").encode("utf-16-le"))
@@ -362,7 +403,7 @@ def test_the_cmake_file_api_names_each_targets_defines_and_flags(tmp_path: Path)
 
 
 def test_logical_package_content_ignores_relinked_bytes_but_not_their_component(tmp_path: Path) -> None:
-    stamp = BuildStamp("2026101901", 1, "2026-10-19T08:30:00Z")
+    stamp = BuildStamp(f"{DAY.year}101901", 1, f"{DAY.year}-10-19T08:30:00Z")
     identities = {"manager": ComponentIdentity("manager", "1" * 64, "0.6.0", stamp)}
 
     def stage(binary_digest: str) -> dict[str, str]:
@@ -436,6 +477,71 @@ def test_a_build_record_opens_on_change_settles_and_names_what_changed(build: Pa
     assert reopened is not None and reopened["state"] == BUILDING and reopened["staged"] == {}
 
 
+def _stage_desktop(build: Path, checkout: Path, now: datetime) -> dict[str, Any]:
+    """Build the desktop for Release as its producer does, then settle the stage of its image."""
+    resolve(build, ["desktop"], configuration="Release", now=now, root=checkout)
+    settled = native_settled(build, ["desktop"], configuration="Release", root=checkout)["desktop"]
+    settle_record(
+        build,
+        "desktop",
+        settled=settled,
+        configuration="Release",
+        package="stage/Release/app",
+        artifacts={"cadrumo.exe": "d" * 64},
+    )
+    record = read_record(build, "desktop")
+    assert record is not None and record["state"] == SETTLED
+    return record
+
+
+def test_a_verification_only_resolution_keeps_the_settled_record_of_the_staged_build(
+    build: Path, checkout: Path
+) -> None:
+    staged = _stage_desktop(build, checkout, DAY)
+    # A source edit, then a Debug unit-test run on a later day: a new fingerprint and identity.
+    _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
+    later = DAY.replace(day=DAY.day + 1)
+    verified = resolve(build, ["desktop"], configuration="Debug", now=later, root=checkout, record=False)["desktop"]
+    assert verified.fingerprint != staged["fingerprint"]
+    assert verified.stamp.build_id != staged["build_id"]
+    # The test compiles against the new identity, and the record still names the staged build.
+    compiled = json.loads(identity_path(build, "desktop", "Debug").read_text(encoding="utf-8"))
+    assert compiled["fingerprint"] == verified.fingerprint
+    assert read_record(build, "desktop") == staged
+    assert changed_inputs(build, "desktop", root=checkout) == ["native/desktop/src-tauri/src/lib.rs"]
+    # Building the packaged test host resolves the desktop it embeds without rebuilding the desktop.
+    resolve(build, ["desktop-test-host"], configuration="Debug", now=later, root=checkout)
+    assert read_record(build, "desktop") == staged
+    test_host = read_record(build, "desktop-test-host")
+    assert test_host is not None and test_host["state"] == BUILDING
+
+
+def test_a_producing_resolution_still_opens_the_record_and_its_stage_settles_it(build: Path, checkout: Path) -> None:
+    staged = _stage_desktop(build, checkout, DAY)
+    _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
+    later = DAY.replace(day=DAY.day + 1)
+    produced = resolve(build, ["desktop"], configuration="Release", now=later, root=checkout)["desktop"]
+    opened = read_record(build, "desktop")
+    assert opened is not None and opened["state"] == BUILDING and opened["staged"] == {}
+    assert (opened["fingerprint"], opened["build_id"], opened["build_sequence"]) == (
+        produced.fingerprint,
+        produced.stamp.build_id,
+        produced.stamp.build_sequence,
+    )
+    assert opened["build_id"] != staged["build_id"] and opened["build_sequence"] != staged["build_sequence"]
+    restaged = _stage_desktop(build, checkout, later)
+    assert restaged["build_id"] == produced.stamp.build_id
+    assert restaged["staged"]["Release"]["artifacts"] == {"cadrumo.exe": "d" * 64}
+
+
+def test_only_a_cargo_build_opens_and_closes_its_component_record() -> None:
+    assert builds_images(["cargo", "build", "--locked"])
+    assert builds_images(["cargo", "rustc", "--locked"])
+    assert not builds_images(["cargo", "clippy", "--locked", "--", "-D", "warnings"])
+    assert not builds_images(["cargo", "test", "--locked"])
+    assert not builds_images(["cargo"])
+
+
 def test_a_reused_image_needs_the_same_fingerprint_command_and_bytes(build: Path, checkout: Path) -> None:
     resolve(build, ["desktop"], configuration="Debug", now=DAY, root=checkout)
     image = build / "cargo/desktop/debug/cadrumo.exe"
@@ -488,7 +594,7 @@ def test_the_package_identity_moves_only_with_what_the_stage_ships(build: Path, 
         return str(record["build_id"])
 
     def payload(content: str) -> None:
-        stamp = BuildStamp("2026101901", 1, "2026-10-19T08:30:00Z")
+        stamp = BuildStamp(f"{DAY.year}101901", 1, f"{DAY.year}-10-19T08:30:00Z")
         begin_record(build, ComponentIdentity("app-payload", content * 64, "0.6.0", stamp), {"src/x.py": content})
 
     payload("a")
@@ -496,7 +602,7 @@ def test_the_package_identity_moves_only_with_what_the_stage_ships(build: Path, 
     # A checkout edit that changes no staged byte moves the payload's input fingerprint, not the package.
     payload("b")
     assert package(staged(b"VALUE = 1\n")) == first
-    # Touching a staged source without changing it keeps its checked-hash bytecode, and the package.
+    # Touching a staged source without changing it keeps its unchecked-hash bytecode, and the package.
     os.utime(stage / "lib/mod.py", ns=(1_600_000_000_000_000_000, 1_600_000_000_000_000_000))
     assert package(staged(b"VALUE = 1\n")) == first
     # A changed staged byte moves the package; reverting it restores the identity even after

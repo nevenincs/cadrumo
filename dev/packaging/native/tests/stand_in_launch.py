@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..generate import generate
 from ..layout import load_layout
@@ -25,11 +25,16 @@ import json, os, subprocess, sys
 from dataclasses import replace
 from pathlib import Path
 
+ambient = dict(os.environ)
 sys.path.insert(0, {root!r})
-from dev.packaging.native.application_environment import (
-    DECLARATION, LaunchRefusedError, parse, reference_define, reference_select,
-)
+from dev.packaging.native.application_environment import parse
+from dev.packaging.native.environment_declaration_primitives import DECLARATION
+from dev.packaging.native.environment_reference import LaunchRefusedError, reference_define, reference_select
 from dev.packaging.native.layout import load_layout
+
+# Developer imports seed checkout defaults; the simulated host must see only its caller's environment.
+os.environ.clear()
+os.environ.update(ambient)
 
 here = Path(__file__).resolve().parent
 faults = json.loads((here / "faults.json").read_text(encoding="utf-8"))
@@ -66,7 +71,7 @@ except LaunchRefusedError as error:
     refuse(error.code, error.subject)
 root = lookup(declaration.root["variable"])
 if not root:
-    platform = {{"nt": "windows"}}.get(os.name, "linux")
+    platform = {{"win32": "windows", "darwin": "macos"}}.get(sys.platform, "linux")
     rule = next(item for item in declaration.root["installed_defaults"] if item["platform"] == platform)
     for candidate in rule["candidates"]:
         value = lookup(candidate["variable"])

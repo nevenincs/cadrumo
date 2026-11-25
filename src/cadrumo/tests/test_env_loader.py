@@ -87,11 +87,11 @@ class TestBridgeEnvFileIntoEnviron:
     def test_a_real_ambient_environment_variable_wins_over_the_dotfile(self, tmp_path: Path) -> None:
         """``setdefault`` semantics: an already-set env var is never overridden."""
         env_file = tmp_path / ".env"
-        env_file.write_text("CADRUMO_CLAVE_MOVIL_DNI_NIE=99999999R\n", encoding="utf-8")
-        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "11111111H"):
+        env_file.write_text("CADRUMO_CLAVE_MOVIL_DNI_NIE=00001506B\n", encoding="utf-8")
+        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "00001500M"):
             applied = bridge_env_file_into_environ(env_file)
-            assert applied == {"CADRUMO_CLAVE_MOVIL_DNI_NIE": "99999999R"}
-            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "11111111H"
+            assert applied == {"CADRUMO_CLAVE_MOVIL_DNI_NIE": "00001506B"}
+            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "00001500M"
             settings = Settings()
             assert settings.cadrumo_clave_movil_dni_nie is not None
-            assert settings.cadrumo_clave_movil_dni_nie.get_secret_value() == "11111111H"
+            assert settings.cadrumo_clave_movil_dni_nie.get_secret_value() == "00001500M"

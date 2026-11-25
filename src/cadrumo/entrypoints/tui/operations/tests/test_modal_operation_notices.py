@@ -14,8 +14,9 @@ from .....application.operations.frontend_requests import (
 )
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.i18n.render import tr
+from ...tests.settling import settle_until
 from ..modal import OperationModal
-from .test_access_loss import _NOW, _OPERATION_ID, _Controller, _Host, _until
+from .test_access_loss import NOW, OPERATION_ID, Controller, Host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -26,7 +27,7 @@ def _notice(
     return OperationPublicNoticeEventV1(
         revision=revision,
         sequence=sequence,
-        timestamp=_NOW,
+        timestamp=NOW,
         code=notice_code,
         notice_code=notice_code,
         display_code=display_code,
@@ -45,7 +46,7 @@ def _with_notices(observation: OperationObservationSuccessV1) -> OperationObserv
     return OperationObservationSuccessV1(
         projection=projection,
         event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
+            operation_id=OPERATION_ID,
             anchor_cursor=4,
             requested_cursor=0,
             status=OperationReplayStatus.PAGE,
@@ -58,11 +59,16 @@ def _with_notices(observation: OperationObservationSuccessV1) -> OperationObserv
 
 def test_clave_notices_render_the_localized_prompt_and_unknown_codes_render_as_before() -> None:
     async def run() -> None:
-        controller = _Controller(failing_action="observe")
+        controller = Controller(failing_action="observe")
         controller.observation = _with_notices(controller.observation)
-        host = _Host(controller)
+        host = Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
-            await _until(pilot, lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None)
+            await settle_until(
+                pilot,
+                lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None,
+                "the operation modal to show its first view",
+                workers=False,
+            )
             modal = host.screen
             assert isinstance(modal, OperationModal)
             lines = str(modal.query_one("#operation-modal-log", Static).content).split("\n")

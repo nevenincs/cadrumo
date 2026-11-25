@@ -3,6 +3,25 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--iva-roi-enrolled",
+        "--does-intracomunitario"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "app",
         "ledger",
         "invoice",
@@ -10,9 +29,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "DE811569869",
+        "DE000000001",
         "--counterparty-name",
-        "Muenchner Handels GmbH",
+        "Nordlicht Plattformen GmbH",
         "--invoice-number",
         "F-2026-IC-01",
         "--invoice-date",
@@ -44,9 +63,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "FR40123456824",
+        "FR15000000001",
         "--counterparty-name",
-        "Lyon Services SARL",
+        "Atelier Numérique Garonne SARL",
         "--invoice-number",
         "F-2026-IC-02",
         "--invoice-date",
@@ -59,6 +78,52 @@
         "FR",
         "--operation-type",
         "S"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "counterparty",
+        "filing-name",
+        "DE000000001",
+        "--kind",
+        "entity",
+        "--razon-social",
+        "Nordlicht Plattformen GmbH",
+        "--country-code",
+        "DE"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "counterparty",
+        "filing-name",
+        "FR15000000001",
+        "--kind",
+        "entity",
+        "--razon-social",
+        "Atelier Numérique Garonne SARL",
+        "--country-code",
+        "FR"
       ],
       "captures": [],
       "envelope": null,
@@ -157,7 +222,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "ded8600ee1883be0fb40ad1b69b7a659b1adf22323ccf8e4b12eac40d7c2f759"
+          "value": "ad262bb9474716ff9bc6ce3c1dbe0342eaf803cf16baa35f01a7493698568e9a"
         }
       ],
       "envelope": {
@@ -180,7 +245,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "ded8600ee1883be0fb40ad1b69b7a659b1adf22323ccf8e4b12eac40d7c2f759",
+          "calculation_revision_id": "ad262bb9474716ff9bc6ce3c1dbe0342eaf803cf16baa35f01a7493698568e9a",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -202,8 +267,8 @@
                 "clave_operacion": "E",
                 "codigo_pais": "DE",
                 "importe": "5000.00",
-                "nif_comunitario": "sha256:6b01ecdf",
-                "razon_social": "Muenchner Handels GmbH"
+                "nif_comunitario": "sha256:7509d350",
+                "razon_social": "Nordlicht Plattformen GmbH"
               },
               "index": 1,
               "row_type": "operador"
@@ -213,8 +278,8 @@
                 "clave_operacion": "S",
                 "codigo_pais": "FR",
                 "importe": "3000.00",
-                "nif_comunitario": "sha256:61b42bb2",
-                "razon_social": "Lyon Services SARL"
+                "nif_comunitario": "sha256:85e2f12e",
+                "razon_social": "Atelier Numérique Garonne SARL"
               },
               "index": 2,
               "row_type": "operador"
@@ -331,36 +396,39 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision ded8600ee1883be0fb40ad1b69b7a659b1adf22323ccf8e4b12eac40d7c2f759 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision ad262bb9474716ff9bc6ce3c1dbe0342eaf803cf16baa35f01a7493698568e9a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:d373c3393acc77a4d68c995c1e55d6baebcb20129143076cd1296cfa13859af4",
+              "fingerprint": "sha256:1fbc35fbcbe2fc1b0bd7a4fa26f6bd8cd2e872bc657314a47d1e69e6c9d010eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
+              "source_ref": "collectible_invoice:c96ab1e8dc03abdef2d8825aa7782984dd0498175918d53f9bb7fcbcfc8c759f"
             },
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:dc60742da05b347039624e6de6c1b5de1b73d2a501c68c1a4eb8bf8325aeea91",
+              "fingerprint": "sha256:1f1b8d33d1357375654bf96050debafc0bd1e40f1618f6dd127c32c16a63d80c",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
+              "source_ref": "collectible_invoice:ef5d6f88d2357cf987332fd31e112fd59374a9b75dd412ca291341e6a2c3b8fd"
             }
           ],
           "state": "borrador",
           "superseded_at": null,
+          "unresolved_bindings": [],
+          "unresolved_casillas": [],
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
+          "words_language": "en",
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
@@ -381,7 +449,7 @@
         "modelo",
         "work",
         "verify",
-        "ded8600ee1883be0fb40ad1b69b7a659b1adf22323ccf8e4b12eac40d7c2f759"
+        "ad262bb9474716ff9bc6ce3c1dbe0342eaf803cf16baa35f01a7493698568e9a"
       ],
       "captures": [],
       "envelope": {
@@ -397,7 +465,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "ded8600ee1883be0fb40ad1b69b7a659b1adf22323ccf8e4b12eac40d7c2f759",
+          "calculation_revision_id": "ad262bb9474716ff9bc6ce3c1dbe0342eaf803cf16baa35f01a7493698568e9a",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -421,7 +489,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "0a27649fd3c875bcf38bb93a7badea15bf9e3fd4185b5c172d7885174058e4ae",
+          "verification_report_id": "fad2666767ab6497557b741beb0151017cde7cb55a050799b76f2cdf4e8858e2",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

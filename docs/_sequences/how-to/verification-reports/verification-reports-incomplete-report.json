@@ -10,7 +10,8 @@
         "--quiet",
         "--accept-defaults",
         "--activity-start-date",
-        "2026-01-01"
+        "2026-01-01",
+        "--does-intracomunitario"
       ],
       "captures": [],
       "envelope": null,
@@ -62,7 +63,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 349 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tdecl.numero-operadores\t0\tTotal number of intra-Community operators\nkey_figure\tdecl.importe-operaciones\t0\tAmount of intra-Community transactions\ncasilla\tdecl.importe-operaciones\t0\ncasilla\tdecl.importe-rectificaciones\t0\ncasilla\tdecl.numero-operadores\t0\ncasilla\tdecl.numero-rectificaciones\t0\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nSaved as draft calculation revision 327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8 (state: draft). It is persisted and can be resumed later.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 349 1T 2026\nrole\tcasilla\tvalue\tlabel\nkey_figure\tdecl.numero-operadores\t0\tTotal number of intra-Community operators\nkey_figure\tdecl.importe-operaciones\t0\tAmount of intra-Community transactions\ncasilla\tdecl.importe-operaciones\t0\ncasilla\tdecl.importe-rectificaciones\t0\ncasilla\tdecl.numero-operadores\t0\ncasilla\tdecl.numero-rectificaciones\t0\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nSaved as draft calculation revision 9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507 (state: draft). It is persisted and can be resumed later.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -159,7 +160,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+          "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
           "completeness_status": "incomplete",
           "findings": [
             {
@@ -173,7 +174,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+                      "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
                       "casilla_id": "op.codigo-pais",
                       "modelo": "349",
                       "period": "1T",
@@ -184,7 +185,9 @@
                 ],
                 "failed_condition_id": "modelo.work.verify.required_casillas.complete",
                 "missing_argument_names": [],
-                "no_recovery_outcome": "operator_decision"
+                "no_recovery_outcome": "operator_decision",
+                "no_recovery_words": "This needs your own decision; no action can take it for you.",
+                "no_recovery_words_language": "en"
               },
               "casilla_id": "op.codigo-pais",
               "expectation_id": null,
@@ -211,7 +214,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+                      "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
                       "casilla_id": "op.nif-comunitario",
                       "modelo": "349",
                       "period": "1T",
@@ -222,7 +225,9 @@
                 ],
                 "failed_condition_id": "modelo.work.verify.required_casillas.complete",
                 "missing_argument_names": [],
-                "no_recovery_outcome": "operator_decision"
+                "no_recovery_outcome": "operator_decision",
+                "no_recovery_words": "This needs your own decision; no action can take it for you.",
+                "no_recovery_words_language": "en"
               },
               "casilla_id": "op.nif-comunitario",
               "expectation_id": null,
@@ -249,7 +254,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+                      "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
                       "casilla_id": "op.apellidos-razon-social",
                       "modelo": "349",
                       "period": "1T",
@@ -260,7 +265,9 @@
                 ],
                 "failed_condition_id": "modelo.work.verify.required_casillas.complete",
                 "missing_argument_names": [],
-                "no_recovery_outcome": "operator_decision"
+                "no_recovery_outcome": "operator_decision",
+                "no_recovery_words": "This needs your own decision; no action can take it for you.",
+                "no_recovery_words_language": "en"
               },
               "casilla_id": "op.apellidos-razon-social",
               "expectation_id": null,
@@ -287,7 +294,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+                      "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
                       "casilla_id": "op.clave-operacion",
                       "modelo": "349",
                       "period": "1T",
@@ -298,7 +305,9 @@
                 ],
                 "failed_condition_id": "modelo.work.verify.required_casillas.complete",
                 "missing_argument_names": [],
-                "no_recovery_outcome": "operator_decision"
+                "no_recovery_outcome": "operator_decision",
+                "no_recovery_words": "This needs your own decision; no action can take it for you.",
+                "no_recovery_words_language": "en"
               },
               "casilla_id": "op.clave-operacion",
               "expectation_id": null,
@@ -325,7 +334,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "327b47b345a89a3db63ee5c747f6e9b07523256b16915f9d88c1bd0f89172ef8",
+                      "calculation_revision_id": "9c8b147258c7908b024e13876b5c57dfb5c4a62f3b48ad5084a1b8abc1014507",
                       "casilla_id": "op.base-imponible",
                       "modelo": "349",
                       "period": "1T",
@@ -336,7 +345,9 @@
                 ],
                 "failed_condition_id": "modelo.work.verify.required_casillas.complete",
                 "missing_argument_names": [],
-                "no_recovery_outcome": "operator_decision"
+                "no_recovery_outcome": "operator_decision",
+                "no_recovery_words": "This needs your own decision; no action can take it for you.",
+                "no_recovery_words_language": "en"
               },
               "casilla_id": "op.base-imponible",
               "expectation_id": null,
@@ -375,7 +386,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "521a0ec92eef93b59781a28b1ce3f5c9820ebb33ac4aead3a8360073d4aec791",
+          "verification_report_id": "83dc29ce712db9c4d5b81490379bb826c91cc6c23d9a6fdf553c91b649387ed6",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

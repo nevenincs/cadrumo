@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.iva.schema import IvaCategory
@@ -17,7 +17,7 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preflight import (
     LedgerPreflightIssue,
-    _issues_for_transaction,
+    issues_for_transaction,
 )
 from ..preflight import (
     LedgerPreflightIssueReason as R,
@@ -96,7 +96,7 @@ def _assert_single_issue(
 
 
 def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         cases: tuple[tuple[str, Transaction, R, tuple[str, ...], tuple[str, ...]], ...] = (
             (
                 "outgoing-recargo",
@@ -136,7 +136,7 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
         for label, transaction, expected_reason, present_detail, absent_detail in cases:
             _assert_single_issue(
                 label,
-                _issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
+                issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
                 expected_reason,
                 present_detail=present_detail,
                 absent_detail=absent_detail,
@@ -144,7 +144,7 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
 
 
 def test_foreign_currency_preflight_separates_converted_and_unconverted_rows() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         cases: tuple[tuple[str, Transaction, R, tuple[str, ...]], ...] = (
             (
                 "converted",
@@ -163,7 +163,7 @@ def test_foreign_currency_preflight_separates_converted_and_unconverted_rows() -
         for label, transaction, expected_reason, present_detail in cases:
             _assert_single_issue(
                 label,
-                _issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
+                issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
                 expected_reason,
                 present_detail=present_detail,
             )

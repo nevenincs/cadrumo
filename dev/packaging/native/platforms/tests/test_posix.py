@@ -15,7 +15,7 @@ import pytest
 
 from dev.packaging.native import layout as native_layout
 from dev.packaging.native.hashing import digest
-from dev.packaging.native.platforms import linux, macos, posix
+from dev.packaging.native.platforms import linux, macos, macos_macho, posix, posix_assembly, posix_sdk_download
 from dev.packaging.native.platforms.posix import acquire_sdk, dependencies_by_name, relative_loader_path
 from dev.packaging.native.tests.binary_fixtures import elf_image
 
@@ -92,13 +92,13 @@ def _macho(path: Path, *, cpu: int = 0x0100000C, subtype: int = 0, minimum: int 
 
 def test_macho_requires_arm64_and_explicit_deployment_floor(tmp_path: Path) -> None:
     image = _macho(tmp_path / "image")
-    assert macos.inspect(image).minimum == (14, 0, 0)
+    assert macos_macho.inspect_macho(image).minimum == (14, 0, 0)
     _macho(image, cpu=0x01000007)
     with pytest.raises(ValueError, match="ARM64"):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
     image.write_bytes(struct.pack("<8I", 0xFEEDFACF, 0x0100000C, 0, 6, 0, 0, 0, 0))
     with pytest.raises(ValueError, match="deployment floor"):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
 
 
 @pytest.mark.parametrize("subtype", [1, 2, 0x80000002, 0x81000002, 0xFFFFFFFF])
@@ -124,7 +124,7 @@ def test_universal_arm64e_refuses_before_thinning(tmp_path: Path, wide: bool, su
     image = tmp_path / "universal-arm64e.so"
     image.write_bytes(data)
     with pytest.raises(ValueError, match="ARM64 CPU subtype"):
-        macos._select_arm64(image)
+        macos_macho.select_arm64(image)
     assert image.read_bytes() == data
 
 
@@ -142,9 +142,9 @@ def test_universal_macho_selects_only_the_declared_arm64_slice(tmp_path: Path, e
     data[128:184], data[256:312] = x86, arm64
     universal = tmp_path / "universal.so"
     universal.write_bytes(data)
-    macos._select_arm64(universal)
+    macos_macho.select_arm64(universal)
     assert universal.read_bytes() == arm64
-    assert macos.inspect(universal).minimum == (14, 0, 0)
+    assert macos_macho.inspect_macho(universal).minimum == (14, 0, 0)
 
 
 @pytest.mark.parametrize(
@@ -160,7 +160,7 @@ def test_universal_macho_invalid_target_or_bounds_refuse_without_mutation(
     image = tmp_path / "invalid-universal.so"
     image.write_bytes(data)
     with pytest.raises(ValueError, match=r"universal|Universal"):
-        macos._select_arm64(image)
+        macos_macho.select_arm64(image)
     assert image.read_bytes() == data
 
 
@@ -169,7 +169,7 @@ def test_macho_truncation_is_refused(tmp_path: Path, length: int) -> None:
     image = _macho(tmp_path / "truncated")
     image.write_bytes(image.read_bytes()[:length])
     with pytest.raises(ValueError):
-        macos.inspect(image)
+        macos_macho.inspect_macho(image)
 
 
 def test_macho_newer_deployment_refused_before_native_tools(tmp_path: Path) -> None:
@@ -182,6 +182,36 @@ def test_macho_newer_deployment_refused_before_native_tools(tmp_path: Path) -> N
     }
     with pytest.raises(ValueError, match="deployment floor"):
         macos.relocate([image], tmp_path, contract)
+
+
+def _macho_library(path: Path, install_name: str | None, payload: bytes) -> Path:
+    """An ARM64 Mach-O whose only optional command is an LC_ID_DYLIB install name."""
+    commands = struct.pack("<6I", 0x32, 24, 1, 14 << 16, 0, 0)
+    count = 1
+    if install_name is not None:
+        name = install_name.encode() + b"\0"
+        name += b"\0" * (-(24 + len(name)) % 8)
+        commands += struct.pack("<6I", 0xD, 24 + len(name), 24, 0, 0, 0) + name
+        count = 2
+    filetype = 6 if install_name is not None else 2
+    header = struct.pack("<8I", 0xFEEDFACF, 0x0100000C, 0, filetype, count, len(commands), 0, 0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(header + commands + payload)
+    return path
+
+
+def test_macho_load_targets_ignore_equally_named_programs(tmp_path: Path) -> None:
+    first = _macho_library(tmp_path / "playwright/driver/node", None, b"one")
+    second = _macho_library(tmp_path / "agent/node/bin/node", None, b"two")
+    library = _macho_library(tmp_path / "bin/libshared.dylib", "@rpath/libshared.dylib", b"lib")
+    assert macos.load_targets([first, second, library]) == {"libshared.dylib": library}
+
+
+def test_macho_load_targets_refuse_conflicting_libraries(tmp_path: Path) -> None:
+    first = _macho_library(tmp_path / "one/libshared.dylib", "@rpath/libshared.dylib", b"one")
+    second = _macho_library(tmp_path / "two/libshared.dylib", "@rpath/libshared.dylib", b"two")
+    with pytest.raises(ValueError, match="Ambiguous"):
+        macos.load_targets([first, second])
 
 
 def test_conflicting_native_basenames_are_refused(tmp_path: Path) -> None:
@@ -240,6 +270,31 @@ def test_sdk_result_is_the_declared_destination_after_archive_root_move(tmp_path
     assert (tmp_path / "sdk-provenance.json").is_file()
 
 
+def test_sdk_rebuild_replaces_derived_state_and_build_tool_output_directories(tmp_path: Path) -> None:
+    contract = {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "selected/python"}}
+    tools = _sdk_archive(tmp_path)
+    (tmp_path / "selected/python/install/lib").mkdir(parents=True)
+    first = acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    (first / "stale.txt").write_text("previous build", encoding="utf-8")
+    second = acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    assert second == first
+    assert (second / "include/patchlevel.h").is_file()
+    assert not (second / "stale.txt").exists()
+    assert not (second / "install").exists()
+
+
+def test_sdk_rebuild_refuses_symlinked_derived_state(tmp_path: Path) -> None:
+    contract = {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "sdk"}}
+    tools = _sdk_archive(tmp_path)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("outside", encoding="utf-8")
+    (tmp_path / "sdk").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="must not be a symlink"):
+        acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    assert (outside / "keep.txt").is_file()
+
+
 @pytest.mark.parametrize("selected", ["sdk-extraction", "sdk-extraction/python", "sdk-extraction/python/nested"])
 def test_sdk_move_rejects_overlapping_archive_and_destination_roots(tmp_path: Path, selected: str) -> None:
     with pytest.raises(ValueError, match="must not overlap"):
@@ -271,7 +326,7 @@ def test_sdk_download_follows_only_bounded_github_https_asset_redirects(
         return httpx.Response(200, content=content)
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         selected = acquire_sdk(
             tmp_path, "3.13.11", tools, {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "sdk"}}
         )
@@ -300,9 +355,9 @@ def test_sdk_download_rejects_redirect_before_contacting_unadmitted_origin(
 
     archive = tmp_path / "sdk.tar"
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="admitted HTTPS"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert len(requests) == 1
@@ -317,9 +372,9 @@ def test_sdk_redirect_loop_is_bounded(tmp_path: Path, monkeypatch: pytest.Monkey
         return httpx.Response(307, headers={"location": str(request.url)})
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="redirect limit"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk",
                 tmp_path / "sdk.tar",
             )
@@ -331,9 +386,9 @@ def test_failed_download_preserves_an_existing_partial_file(tmp_path: Path, monk
     partial = tmp_path / "sdk.tar.partial"
     partial.write_bytes(b"existing owner data")
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"new"))) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(FileExistsError):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert partial.read_bytes() == b"existing owner data"
@@ -342,11 +397,11 @@ def test_failed_download_preserves_an_existing_partial_file(tmp_path: Path, monk
 
 def test_sdk_download_size_limit_removes_only_its_partial_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     archive = tmp_path / "sdk.tar"
-    monkeypatch.setattr(posix, "_SDK_DOWNLOAD_LIMIT", 3)
+    monkeypatch.setattr(posix_sdk_download, "SDK_DOWNLOAD_LIMIT", 3)
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"four"))) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="size limit"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert not archive.exists()
@@ -437,7 +492,7 @@ def test_sdk_extensions_follow_declared_exclusions_with_recorded_reasons(tmp_pat
             ],
         }
     }
-    result = posix.assemble(sdk, packages, native, root, contract, lambda *_: None)
+    result = posix_assembly.assemble(sdk, packages, native, root, contract, lambda *_: None)
     assert result["modules"] == {"_sqlite3": "native/_sqlite3" + suffix}
     assert {path.name for path in native.iterdir()} == {"runtime.so", "_sqlite3" + suffix}
     assert {entry["reasons"][0] for entry in result["sdk_extension_exclusions"]} == {
@@ -458,7 +513,7 @@ def test_sdk_decoder_rejects_invalid_source_provenance(tmp_path: Path, source: s
     decoder = tmp_path / "zstd"
     decoder.write_bytes(b"decoder fixture")
     with pytest.raises(ValueError, match="decoder"):
-        posix._archive_decoder(
+        posix.locate_archive_decoder(
             {
                 "cpython_archive_decoder": {
                     "executable": str(decoder),

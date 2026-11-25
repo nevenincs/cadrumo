@@ -4,20 +4,17 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
 from cadrumo.application.live.filed_data_ports import (
@@ -46,17 +43,12 @@ from cadrumo.application.live.filed_single_capture_operation import (
 from cadrumo.application.live.remote_state_models import FiledDataCaptureReport
 from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -66,13 +58,24 @@ from cadrumo.core.operations import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from .supervised_operation_rig import (
+    ProcessResourceScope,
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "0A")
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
 _EXPEDIENTE_ID = "202510013522222A"
 _DECLARATION_BODY = b"synthetic filed declaration"
 
@@ -82,7 +85,7 @@ class _Declaration:
     """One synthetic register row accepted by the real capture service."""
 
     modelo: str = "100"
-    ejercicio: int = 2025
+    ejercicio: int = _FILING_YEAR
     period: Period = field(default_factory=lambda: _PERIOD)
     expediente_id: str = _EXPEDIENTE_ID
     estado: str = "ALTA"
@@ -129,7 +132,7 @@ class _SyntheticRegister:
         self.remote_capture_count = 0
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[FiledRegisterDeclarationProtocol, ...]:
-        assert (modelo, ejercicio) == ("100", 2025)
+        assert (modelo, ejercicio) == ("100", _FILING_YEAR)
         return (self._declaration,)
 
     async def capture_observation_deferred(
@@ -209,23 +212,6 @@ class _Composition:
     filed_data_port: FiledDataCapturePort
 
 
-class _ResourceScope:
-    def __init__(self) -> None:
-        self.closed = False
-
-    @contextmanager
-    def activate(self):
-        yield
-
-    async def close(self) -> None:
-        self.closed = True
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_accounting(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -233,10 +219,10 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
     """A real supervisor records one synthetic capture under its exact profile fence."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
-        snapshot = authority.snapshot("100", filing_year=2025, period="0A")
+        snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
         observation = FiledDeclaracionObservation(
             modelo="100",
-            ejercicio=2025,
+            ejercicio=_FILING_YEAR,
             period=_PERIOD,
             expediente_id=_EXPEDIENTE_ID,
             status="ALTA",
@@ -265,7 +251,7 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
         bundle = in_memory_filed_observation_test_bundle()
         register = _SyntheticRegister(declaration, observation, is_guarded)
         filed_port = _SyntheticFiledPort(register)
-        resource_scope = _ResourceScope()
+        resource_scope = ProcessResourceScope()
 
         observation_persistence = bundle.ports.observation_persistence
         persist_artefact = observation_persistence.persist_artefact
@@ -371,78 +357,35 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
                 profile_id=profile_id,
                 output_root=tmp_path / "filed-output",
                 modelo="100",
-                year=2025,
+                year=_FILING_YEAR,
                 period="0A",
                 expediente_id=_EXPEDIENTE_ID,
                 limit=1,
             ),
         )
 
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-        )
+        access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
         assert admitted.request.period_independent
         assert admitted.request.periods == frozenset()
         assert admitted.policy.requires_all_periods
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        foreign_profile_id = uuid4()
-        assert foreign_profile_id != profile_id
-        foreign_request = request.model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-            }
-        )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(
-                registry=registry,
-                request=foreign_request,
-                context=access_context,
-            )
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
-        async def run():
-            operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
-            contract = registry.lookup_public_contract(definition.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
+        terminal, projected = asyncio.run(
+            settle_and_project(
+                supervisor,
+                result_service,
+                registry,
+                request,
                 FiledSingleCapturePublicResultV1,
             )
-            return terminal, projected
-
-        terminal, projected = asyncio.run(run())
+        )
 
     assert definition.definition_id == "live.filed-capture.single"
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
@@ -452,13 +395,13 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
     assert isinstance(projected.projection, FiledSingleCapturePublicResultV1)
     result = projected.projection
     assert result.output_root == str(tmp_path / "filed-output")
-    assert (result.modelo, result.year) == ("100", 2025)
+    assert (result.modelo, result.year) == ("100", _FILING_YEAR)
     assert (result.captured_count, result.reached_count) == (1, 1)
     assert result.observation_paths == (str(Path("memory-observations") / "1" / "manifest.json"),)
     assert result.artefact_refs == ("memory-artefact:1",)
     assert result.casilla_count == 0
     assert result.calculation_observation_count == 1
-    assert result.calculation_observation_keys == ("100:2025:0A",)
+    assert result.calculation_observation_keys == (f"100:{_FILING_YEAR}:0A",)
     assert result.justificante_metadata_count == 0
     assert result.filing_evidence_stamped_count == 0
     assert result.filing_evidence_conflict_count == 0

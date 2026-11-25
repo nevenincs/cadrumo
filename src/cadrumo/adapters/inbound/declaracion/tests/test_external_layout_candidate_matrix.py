@@ -16,6 +16,12 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.modelo import Modelo
+from .....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_before_first_declaring,
+    split_exercise_revisions,
+)
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.fixtures.external_layout_candidates.models import (
     ExternalLayoutCandidate,
@@ -25,15 +31,15 @@ from .....tests.fixtures.external_layout_candidates.models import (
 )
 from .....tests.inventory import FIXTURES_DIR
 from ...pdf.extracted_casilla import ExtractedCasilla
-from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
-    _classify_target,
-    _load_pages_words,
-    _numeric_casilla_anchors,
-    _partition_target_outcomes,
-    _printed_box_numbers,
-    _select_extraction_profile,
+    classify_target,
+    load_pages_words,
+    numeric_casilla_anchors,
+    parser_printed_box_numbers,
+    partition_target_outcomes,
+    select_extraction_profile,
 )
+from ..parsers.pdfplumber_backend import extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -151,7 +157,7 @@ def _out_of_revision_exercises_for_both_variants(
         _OutOfRevisionParserExercise(
             modelo=modelo,
             candidate_kind=candidate_kind,
-            parser_exercise_filing_year=2026,
+            parser_exercise_filing_year=filing_year_envelope().horizon,
             parser_exercise_period=parser_exercise_period,
             expected=expected,
         )
@@ -160,20 +166,26 @@ def _out_of_revision_exercises_for_both_variants(
     return plain_case, fillable_case
 
 
+# Modelo 130 has one open-ended design, Modelo 131 splits its newest exercise across two, and the
+# Modelo 303 candidate prints the design that predates the first one with box 112.
+_M130_CURRENT = open_ended_revision("130")
+_M131_CURRENT = split_exercise_revisions("131", early_period="2T", late_period="3T")[0]
+_M303_PRIOR = revision_before_first_declaring("303", "112")
+
 _MATRIX = (
     *_registry_aligned_cases_for_both_variants(
         Modelo("130"),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="1T",
-        revision_id="2019-y-siguientes",
+        revision_id=str(_M130_CURRENT.id),
         applicability_verdict="current_authored_revision",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M130_MISSING),
     ),
     *_registry_aligned_cases_for_both_variants(
         Modelo("131"),
-        filing_year=2026,
+        filing_year=_M131_CURRENT.valid_from.year,
         period="1T",
-        revision_id="2026",
+        revision_id=str(_M131_CURRENT.id),
         applicability_verdict="current_authored_revision",
         expected=_MeasuredOutcome(
             kind=_OutcomeKind.UNSUPPORTED_LAYOUT,
@@ -183,9 +195,9 @@ _MATRIX = (
     ),
     *_registry_aligned_cases_for_both_variants(
         Modelo("303"),
-        filing_year=2025,
+        filing_year=_M303_PRIOR.valid_from.year,
         period="1T",
-        revision_id="2025",
+        revision_id=str(_M303_PRIOR.id),
         applicability_verdict="historical_authored_revision",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M303_MISSING),
     ),
@@ -235,16 +247,16 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
             grade=RegistryAuthorityGrade.APPLICABILITY,
         )
 
-    profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
+    profile = select_extraction_profile(snapshot, extraction_profile_id=None)
     pages = extract_pages_text(candidate_path)
-    pages_words = _load_pages_words(profile, source_pdf_path=candidate_path, pdf_bytes=None)
-    outcomes = _partition_target_outcomes(
-        _classify_target(
+    pages_words = load_pages_words(profile, source_pdf_path=candidate_path, pdf_bytes=None)
+    outcomes = partition_target_outcomes(
+        classify_target(
             target,
             pages=pages,
             pages_words=pages_words,
-            numeric_anchors=_numeric_casilla_anchors(profile, snapshot.revision),
-            printed_box_numbers=_printed_box_numbers(profile, snapshot.revision),
+            numeric_anchors=numeric_casilla_anchors(profile, snapshot.revision),
+            printed_box_numbers=parser_printed_box_numbers(profile, snapshot.revision),
         )
         for target in profile.target_casillas
     )

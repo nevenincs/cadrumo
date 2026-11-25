@@ -23,8 +23,12 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -53,9 +57,23 @@ _PROFILE_IDENTITY: dict[str, str] = {
 #: is compared through the artefact only.
 _REDACTED_IN_ENVELOPE = frozenset({"DPNIF_D"})
 _CALCULATE_FLAGS: tuple[str, ...] = (
-    "--casilla", "0003=24000",
-    "--binding", "renta-certificado-trabajo-retenciones=2400",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
+    # The four work-income boxes no payer certificate states: the filer states each as none.
+    "--binding", "renta-trabajo-contribucion-empresarial-prevision=0",
+    "--binding", "renta-trabajo-contribucion-empresarial-seguro-dependencia=0",
+    "--binding", "renta-trabajo-aportacion-patrimonio-protegido=0",
+    "--binding", "renta-trabajo-aportacion-empresa-decision-trabajador=0",
 )  # fmt: skip
 
 
@@ -69,29 +87,34 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = create_user_profile_record(
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="ANA"),
-            UserProfileFact(path="identity.surnames", value="PEREZ GIL"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="activities.description", value="salaried employment"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("4")),
-            UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="ANA"),
+                UserProfileFact(path="identity.surnames", value="PEREZ GIL"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="activities.description", value="salaried employment"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("4")),
+                UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+            ),
+            without=("irpf.estimation_regime", "censo.activity_start_date"),
         ),
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+    # The profile declares only salary income, so 0596 is the one certificate of its payer
+    # and the other two credit classes are proven zero by the declared categories.
+    seed_payer_certificate(
+        operation=published_authority_operation(),
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_FILING_YEAR,
+        payer_tax_id="B00010082",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("2400"),
+        importe_integro_dinerario=Decimal("24000"),
+    )
 
 
 def _cli_json(*args: str) -> dict[str, Any]:

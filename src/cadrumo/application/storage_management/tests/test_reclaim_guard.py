@@ -31,7 +31,7 @@ class TestDurableAreasRefuse:
             for member, location in STORAGE_TAXONOMY.items()
             if location.grouping.value == area.value and location.scope is StorageScope.ROOT
         )
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(category)
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "operator-data.bin"
@@ -50,7 +50,7 @@ class TestRegenerableAreasProceed:
     def test_confirmed_reclaim_empties_every_derived_target(self, area: StorageArea, tmp_path) -> None:
         targets = _area_targets(area)
         assert targets, "the positive control needs at least one taxonomy-derived target"
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             markers = []
             for index, category in enumerate(targets):
                 target = storage_path(category)
@@ -71,7 +71,7 @@ class TestRegenerableAreasProceed:
             for category, location in STORAGE_TAXONOMY.items()
             if location.grouping.value == StorageArea.CACHE.value and location.lifecycle not in RECLAIMABLE_LIFECYCLES
         )
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(durable)
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "durable.bin"
@@ -83,7 +83,7 @@ class TestRegenerableAreasProceed:
 
     def test_unconfirmed_area_reclaim_deletes_nothing(self, tmp_path) -> None:
         category = _area_targets(StorageArea.LOGS)[0]
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(category)
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "diagnostic.log"

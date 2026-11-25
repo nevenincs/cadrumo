@@ -8,40 +8,39 @@ from rich.cells import cell_len
 from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
 
-from .....application.modelo.work_form_models import (
-    ModeloFormLayoutProvenance,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-)
+from .....application.modelo.work_form_declaration_facts import ModeloFormResultDirection
+from .....application.modelo.work_form_header import ModeloFormDeadlineView, ModeloFormFileView
+from .....application.modelo.work_form_header import deadline_view as form_deadline_view
+from .....application.modelo.work_form_header import file_view as form_file_view
+from .....application.modelo.work_form_models import ModeloFormLayoutProvenance, ModeloWorkForm
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, CasillaListNote
 from .grid import CasillaListRecords
 from .header import (
-    DeadlineView,
-    FileView,
+    HeaderResult,
     ResultLine,
-    ResultView,
     attention_chips,
-    deadline_view,
-    file_view,
+    deadline_text,
+    file_text,
     fit_identity,
     fit_result_line,
-    result_view,
+    header_result,
 )
 from .navigator import NavigatorRow, breadcrumb, checked_boxes, navigator_rows, section_of
 from .page_items import WorkbenchFilter, page_items, page_of
-from .progress import NextAction, fit_next_line, next_action_text, stepper_marks, stepper_text
+from .progress import fit_next_line, next_action_text, stepper_marks, stepper_text
 from .screen_constants import (
-    _CRUMB_SEPARATOR,
-    _DEADLINE_TONE_CLASSES,
-    _EMPTY_LOCALE_KEY,
-    _EMPTY_NEXT_LOCALE_KEY,
-    _FINDINGS_KEY,
-    _GUTTERS,
-    _NAV_MIN_LABEL,
-    _NEXT_GAP,
-    _NEXT_KEYS,
+    CRUMB_SEPARATOR,
+    DEADLINE_TONE_CLASSES,
+    EMPTY_LOCALE_KEY,
+    EMPTY_NEXT_LOCALE_KEY,
+    FINDINGS_KEY,
+    GUTTERS,
+    NAV_MIN_LABEL,
+    NEXT_GAP,
+    NEXT_KEYS,
 )
 from .sorting import SORT_LOCALE_KEYS, SortOrder, sorted_items
 
@@ -62,31 +61,49 @@ class WorkbenchPresentationMixin:
         form = self.form
         if form is None:
             return
-        width = max(self._width() - _GUTTERS, 1)
+        width = max(self._width() - GUTTERS, 1)
         recorded = self.recorded
-        deadline = deadline_view(form, self._language, recorded=recorded, width=width)
-        identity = fit_identity(form, self._language, deadline, width)
+        deadline = form_deadline_view(form, self._language, recorded=recorded)
+        words = None if deadline is None else deadline_text(form, self._language, deadline, width)
+        identity = fit_identity(form, self._language, words, width)
         self.set_class(identity.stacked, "-identity-stacked")
         self.query_one("#wb-header", Static).update(identity.text)
-        self._render_deadline(deadline)
+        self._render_deadline(deadline, words)
+        self._render_projection(form)
         self._render_header_result(form, width, recorded)
 
-    def _render_deadline(self: ModeloWorkbenchScreen, deadline: DeadlineView | None) -> None:
+    def _render_projection(self: ModeloWorkbenchScreen, form: ModeloWorkForm) -> None:
+        # The grade the year reaches is always said in the words the form serves; a
+        # year carried from another edition, or authored below filing grade, also
+        # says why it cannot be filed yet, before any check.
+        projection = self.query_one("#wb-projection", Static)
+        grade = self.query("#wb-grade").first(Static) if self.query("#wb-grade") else None
+        if grade is None:
+            grade = Static(id="wb-grade", markup=False)
+            self.query_one("#wb-status").mount(grade, before=projection)
+        grade.update(form.year_projection.reachable_grade_words)
+        words = form.year_projection.words
+        projection.update(words or "")
+        projection.display = words is not None
+
+    def _render_deadline(
+        self: ModeloWorkbenchScreen, deadline: ModeloFormDeadlineView | None, words: str | None
+    ) -> None:
         deadline_widget = self.query_one("#wb-deadline", Static)
         deadline_widget.display = deadline is not None
-        deadline_widget.update("" if deadline is None else deadline.text)
-        for tone, css_class in _DEADLINE_TONE_CLASSES.items():
+        deadline_widget.update(words or "")
+        for tone, css_class in DEADLINE_TONE_CLASSES.items():
             deadline_widget.set_class(deadline is not None and deadline.tone is tone, css_class)
 
     def _render_header_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm, width: int, recorded: bool) -> None:
-        view = result_view(form, self._language, staged=len(self._session.changes), recorded=recorded)
+        view = header_result(form, self._language, staged=len(self._session.changes), recorded=recorded)
         chips = attention_chips(form, recorded=recorded)
-        file = file_view(form, self._language, recorded=recorded)
-        file_text = None if file is None else file.text
+        file = form_file_view(form, self._language, recorded=recorded)
+        file_words = None if file is None else file_text(file)
         line = (
-            ResultLine("", None, chips, file=file_text)
+            ResultLine("", None, chips, file=file_words)
             if view is None
-            else fit_result_line(view, chips, width, file=file_text)
+            else fit_result_line(view, chips, width, file=file_words)
         )
         self._render_result_text(form, line, recorded)
         self._render_result_marks(view, line, file)
@@ -104,7 +121,7 @@ class WorkbenchPresentationMixin:
         result.set_class(to_pay and form.deadline is not None and form.deadline.days_overdue is not None, "-overdue")
 
     def _render_result_marks(
-        self: ModeloWorkbenchScreen, view: ResultView | None, line: ResultLine, file: FileView | None
+        self: ModeloWorkbenchScreen, view: HeaderResult | None, line: ResultLine, file: ModeloFormFileView | None
     ) -> None:
         stale = self.query_one("#wb-stale", Static)
         stale.update(line.stale or "")
@@ -113,7 +130,7 @@ class WorkbenchPresentationMixin:
         file_widget.update(line.file or "")
         file_widget.display = line.file is not None
         # A file made from an earlier calculation must not be uploaded: it reads as a warning.
-        file_widget.set_class(file is not None and file.out_of_date, "-out-of-date")
+        file_widget.set_class(file is not None and not file.current, "-out-of-date")
         chips_widget = self.query_one("#wb-chips", Static)
         chips_widget.update(line.chips_content())
         chips_widget.display = bool(line.chips)
@@ -141,21 +158,21 @@ class WorkbenchPresentationMixin:
         stepper = stepper_text(progress)
         self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
-        key = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
+        key = FINDINGS_KEY if progress.findings_lead else NEXT_KEYS[progress.next_action]
         action = (
-            tr("tui.modelo.workbench.apply_prerequisite.next")
+            tr("workspace.modelo.apply_prerequisite.next")
             if self._active_apply_prerequisite() is not None
             else next_action_text(progress, self._language)
         )
         self._next_words = f"{action} [{key}]" if key else action
-        width = max(self._width() - _GUTTERS, 1)
+        width = max(self._width() - GUTTERS, 1)
         line = fit_next_line(action, key, width)
         # Beside the stepper when it fits there, else on a line of its own: never wrapped.
-        self.set_class(cell_len(line) > width - cell_len(stepper.plain) - _NEXT_GAP, "-next-below")
+        self.set_class(cell_len(line) > width - cell_len(stepper.plain) - NEXT_GAP, "-next-below")
         next_widget = self.query_one("#wb-next", Static)
         next_widget.update(line)
-        next_widget.set_class(progress.next_action is NextAction.CONFIRM, "-confirm")
-        next_widget.set_class(progress.next_action is NextAction.RESOLVE, "-resolve")
+        next_widget.set_class(progress.next_action is ModeloFormNextAction.CONFIRM, "-confirm")
+        next_widget.set_class(progress.next_action is ModeloFormNextAction.RESOLVE, "-resolve")
         # The footer keeps the key the line now names.
         self._describe_keys()
 
@@ -169,7 +186,7 @@ class WorkbenchPresentationMixin:
         navigator = self.query_one("#wb-sections", OptionList)
         highlighted = navigator.highlighted
         kept = None if highlighted is None else navigator.get_option_at_index(highlighted).id
-        label_width = max(navigator.scrollable_content_region.width, _NAV_MIN_LABEL)
+        label_width = max(navigator.scrollable_content_region.width, NAV_MIN_LABEL)
         rows = navigator_rows(
             self._pages,
             current=self._page_index,
@@ -177,7 +194,6 @@ class WorkbenchPresentationMixin:
             checked=checked_boxes(form),
             width=label_width,
             show_attention=not self.recorded,
-            inapplicable=self._inapplicable,
             not_applying=self._not_applying_text(),
         )
         self._replace_navigator_rows(navigator, rows, kept)
@@ -215,7 +231,7 @@ class WorkbenchPresentationMixin:
         )
         # The page title line is hidden here, so the crumb names a filter or an order that is not the default.
         for note in self._listing_notes(name_every_filter=False):
-            line.append(f"{_CRUMB_SEPARATOR}{note}")
+            line.append(f"{CRUMB_SEPARATOR}{note}")
         self.query_one("#wb-crumb", Static).update(line)
         self._drawn["navigator"] = marks
 
@@ -229,7 +245,7 @@ class WorkbenchPresentationMixin:
         if self._sort is not SortOrder.FORM:
             notes.append(tr(SORT_LOCALE_KEYS[self._sort]))
         if name_every_filter or self._filter is not WorkbenchFilter.ALL:
-            notes.append(tr(f"tui.modelo.workbench.filter.{self._filter.value}"))
+            notes.append(tr(f"workspace.modelo.filter.{self._filter.value}"))
         empty = self._empty_listing_note()
         if empty is not None:
             notes.append(empty)
@@ -250,8 +266,8 @@ class WorkbenchPresentationMixin:
                 index = (self._page_index + step) % count
                 items = page_items(self._pages[index], staged=staged, mode=self._filter)
                 if any(isinstance(item, CasillaListEntry) for item in items):
-                    return tr(_EMPTY_NEXT_LOCALE_KEY, page=self._pages[index].heading.text)
-        return tr(_EMPTY_LOCALE_KEY)
+                    return tr(EMPTY_NEXT_LOCALE_KEY, page=self._pages[index].heading.text)
+        return tr(EMPTY_LOCALE_KEY)
 
     def _render_page(self: ModeloWorkbenchScreen) -> None:
         if not self._pages:
@@ -263,17 +279,17 @@ class WorkbenchPresentationMixin:
         if self._sort is SortOrder.FORM:
             page = self._pages[self._page_index]
             title = page.heading.text
-            notes.append(tr("tui.modelo.workbench.page_position", current=self._page_index + 1, total=len(self._pages)))
+            notes.append(tr("workspace.modelo.page_position", current=self._page_index + 1, total=len(self._pages)))
             if not self._applies(self._page_index):
                 notes.append(self._not_applying_text())
             casilla_list.set_items(page_items(page, staged=staged, mode=self._filter), language=self._language)
         else:
-            title = tr("tui.modelo.workbench.sort.all_pages")
+            title = tr("workspace.modelo.sort.all_pages")
             items = sorted_items(self._pages, order=self._sort, staged=staged, mode=self._filter)
             casilla_list.set_items(items, language=self._language)
         notes.extend(self._listing_notes(name_every_filter=True))
         if form is not None and form.layout_provenance is not ModeloFormLayoutProvenance.REVIEWED:
-            notes.append(tr(f"tui.modelo.workbench.layout.{form.layout_provenance.value}"))
+            notes.append(tr(f"workspace.modelo.layout.{form.layout_provenance.value}"))
         self.query_one("#wb-page", Static).update(f"{title}   " + " · ".join(notes))
         self._render_breadcrumb()
         if casilla_list.highlighted is None:

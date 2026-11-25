@@ -6,14 +6,13 @@ import asyncio
 import threading
 import time
 from collections.abc import Callable, Generator
-from logging import DEBUG, Handler, LogRecord
+from logging import DEBUG, Handler, Logger, LogRecord
 from typing import override
 from uuid import uuid4
 
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo.core.logging import get_logger
 
 from ...contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from .. import startup
@@ -138,11 +137,11 @@ async def test_startup_adaptation_retains_transitive_owners_through_duplicates_a
     timeout.__cause__ = cancellation
     primary: BaseException = cancellation
     if deadline_mapping:
-        primary = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        primary = RefusalError(RefusalCode.TIMEOUT)
         primary.__cause__ = timeout
     original_cause = primary.__cause__
 
-    startup._carry_cleanup_owner(primary, cancellation)
+    startup.carry_cleanup_owner(primary, cancellation)
 
     with pytest.raises(type(primary)) as caught:
         raise primary
@@ -153,7 +152,7 @@ async def test_startup_adaptation_retains_transitive_owners_through_duplicates_a
     assert cancellation.__dict__["cleanup_error"] is body
     assert body.reason is RefusalCode.VERSION_MISMATCH
     if isinstance(primary, RefusalError):
-        assert primary.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert primary.reason is RefusalCode.TIMEOUT
     else:
         assert primary.args == ("first cancellation",)
     cleanup = _cleanup(primary)
@@ -251,7 +250,7 @@ async def test_deadline_mapping_preserves_cause_and_retryable_late_connection_ow
     try:
         with pytest.raises(RefusalError) as caught:
             await _door(channel).open(timeout=0.05)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert isinstance(caught.value.__cause__, TimeoutError)
         cancellation = caught.value.__cause__.__cause__
         assert isinstance(cancellation, asyncio.CancelledError)
@@ -302,10 +301,14 @@ type _FaultHandlerFactory = Callable[[BaseException, Callable[[], bool]], _Diagn
 
 @pytest.fixture
 def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFactory]:
-    """Keep handler faults local to this module-boundary port, never root logging."""
-    logger = get_logger("cadrumo.tests.launch_door_diagnostic_fault")
-    previous_level, previous_propagate = logger.level, logger.propagate
-    logger.setLevel(DEBUG)
+    """Keep handler faults local to this module-boundary port, never root logging.
+
+    The fault must surface on the calling thread, as a keyboard interrupt in a
+    diagnostic call does. A registered project logger hands its records to the
+    background dispatch, which contains every handler fault by design, so this
+    port uses a logger outside that dispatch.
+    """
+    logger = Logger("cadrumo.tests.launch_door_diagnostic_fault", level=DEBUG)
     logger.propagate = False
     handlers: list[_DiagnosticFailureHandler] = []
 
@@ -315,15 +318,13 @@ def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFac
         logger.addHandler(handler)
         return handler
 
-    monkeypatch.setattr(startup, "_LOGGER", logger)
+    monkeypatch.setattr(startup, "LOGGER", logger)
     try:
         yield install
     finally:
         for handler in handlers:
             logger.removeHandler(handler)
             handler.close()
-        logger.setLevel(previous_level)
-        logger.propagate = previous_propagate
 
 
 @pytest.mark.asyncio

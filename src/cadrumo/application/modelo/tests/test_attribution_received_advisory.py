@@ -15,15 +15,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.modelos.codes import ModeloCode
@@ -34,17 +33,17 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
+from ..attribution_received_advisory import attribution_received_omission_advisory_findings
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
+_CLOCK = datetime(1980, 7, 9, tzinfo=UTC)
 _CASILLA_1577 = "1577"
 _BASE = Decimal("58100.00")
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
 _M100_CODE = ModeloCode(Modelo("100").value)
 
 
@@ -77,13 +76,13 @@ def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YE
 
 
 def _profile(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -105,7 +104,7 @@ def _run(
     casilla_1577: Decimal | None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     casilla_values = {} if casilla_1577 is None else {_CASILLA_1577: casilla_1577}
-    return _attribution_received_omission_advisory_findings(
+    return attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values=casilla_values,
@@ -161,13 +160,13 @@ def test_both_absent_is_silent(snapshot: RegistrySnapshot, operation: PinnedAuth
 
 
 def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
-    # Facts stamped for 2023 must not satisfy a 2024 verification: casilla empty +
-    # no 2024 facts is the clean "not a member this year" state, not an omission.
-    assert _run(snapshot, operation=operation, facts=_received_facts(year=2023), casilla_1577=None) == ()
+    # Facts stamped for the prior year must not satisfy this year's verification: casilla empty +
+    # no facts for this year is the clean "not a member this year" state, not an omission.
+    assert _run(snapshot, operation=operation, facts=_received_facts(year=_FILING_YEAR - 1), casilla_1577=None) == ()
 
 
 def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
-    findings = _attribution_received_omission_advisory_findings(
+    findings = attribution_received_omission_advisory_findings(
         work_unit=_work_unit(ModeloCode(Modelo("130").value)),
         snapshot=snapshot,
         casilla_values={},

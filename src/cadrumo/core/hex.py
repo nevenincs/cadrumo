@@ -33,6 +33,9 @@ HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 The shape of a SHA-256 digest and of a raw Ed25519 or X25519 key.
 """
 
+HEX_PATTERN_12 = r"^[0-9a-f]{12}$"
+"""Exactly 12 lowercase hex characters: the operator-quotable prefix or suffix of a work-unit id."""
+
 HEX_PATTERN_16 = r"^[0-9a-f]{16}$"
 """Exactly 16 lowercase hex characters: a SHA-256 digest truncated to 8 bytes.
 
@@ -55,7 +58,7 @@ length check is needed at the pydantic boundary.
 
 Hex16Str = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16),
+    StringConstraints(strip_whitespace=True, pattern=HEX_PATTERN_16),
 ]
 """The canonical hex-16 constrained shape (lowercase, exactly 16 hex chars).
 

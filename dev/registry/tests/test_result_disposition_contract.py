@@ -2,28 +2,38 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import (
-    ResultDisposition,
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.result_casillas import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_ANY_PERIOD = Period.from_year_and_code(2025, "1T")
+@pytest.fixture(autouse=True)
+def _pinned_generation() -> Iterator[None]:
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield
+
+
+_ANY_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 """A positive result pays in every period, so the period this contract derives it in does not matter."""
 
 
 def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -> None:
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
 
     checked_revisions: list[str] = []
     offences: list[str] = []

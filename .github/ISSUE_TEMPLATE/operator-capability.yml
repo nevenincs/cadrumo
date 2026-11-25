@@ -8,7 +8,7 @@ body:
       value: |
         Every issue answers one question: **what can Kent do at the end of this issue that he could not do at the start?**
 
-        Kent is our target user — a Spanish autónomo who needs to file his tax returns. See [Kent journey audit](../blob/main/.vault/audit/2026-04-17-kent-ux-journey-audit.md).
+        Kent is our target user — a Spanish autónomo who needs to file his tax returns. See [Kent journey audit](../blob/feature/tui/.vault/audit/2026-04-17-kent-ux-journey-audit.md).
 
   - type: input
     id: success-moment

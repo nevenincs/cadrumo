@@ -16,7 +16,6 @@ here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,8 +23,10 @@ from pathlib import Path
 import pytest
 
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
+from ....domain.transactions.import_fingerprints import derive_import_fingerprint
+from ....domain.transactions.models import TransactionCatalogue, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...tests.parsed_ledger_row_support import ParsedLedgerRowFake
 from ...transactions.import_diagnostics import import_ledger_with_diagnostics
 from ..actions_import import evaluate_import_rows
 from ..protocols import ParsedLedgerRowProtocol
@@ -56,17 +57,8 @@ def _raw(provider_id: str, *, description: str) -> RawTransaction:
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _ParsedLedgerRowFake:
-    """Application-owned parsed-row double for the import classification seam."""
-
-    raw: RawTransaction
-    direction: TransactionDirection
-    own_account_id: str | None = None
-
-
 def _parsed(raw: RawTransaction) -> ParsedLedgerRowProtocol:
-    return _ParsedLedgerRowFake(raw=raw, direction=TransactionDirection.OUTGOING)
+    return ParsedLedgerRowFake(raw=raw, direction=TransactionDirection.OUTGOING)
 
 
 def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:
@@ -85,6 +77,19 @@ def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:
         parsed_rows=parsed_rows,
     )
     return (verify.imported_count, verify.skipped_count, len(plan.imported), len(plan.skipped_refs))
+
+
+def test_an_imported_row_keeps_the_operation_date_its_source_states_and_invents_none() -> None:
+    raws = (_raw("stated", description="venta uno"), _raw("silent", description="venta dos"))
+    plan = evaluate_import_rows(
+        bucket_id="preview",
+        catalogue=TransactionCatalogue(),
+        parsed_rows=(
+            ParsedLedgerRowFake(raw=raws[0], direction=TransactionDirection.OUTGOING, operation_date=date(2026, 3, 30)),
+            ParsedLedgerRowFake(raw=raws[1], direction=TransactionDirection.OUTGOING),
+        ),
+    )
+    assert sorted(row.operation_date is None for row in plan.imported) == [False, True]
 
 
 def test_the_fixture_rows_share_a_signature_without_colliding_on_the_key() -> None:

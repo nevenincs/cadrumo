@@ -30,7 +30,7 @@ from pydantic import BaseModel
 
 from ....core.i18n.translatable import Translatable as tr
 from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from ..persistence import _canonicalise, _resolve_canonical, parse_canonical
+from ..persistence import canonicalise, parse_canonical, resolve_canonical
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -82,34 +82,34 @@ def _flow(question: WizardQuestion) -> WizardFlow:
 
 def test_canonicalise_none_returns_empty_string() -> None:
     question = _question(answer_type=str)
-    assert _canonicalise(question, None) == ""
+    assert canonicalise(question, None) == ""
 
 
 def test_canonicalise_bool_returns_lowercase_token() -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
     for value, expected in ((True, "true"), (False, "false")):
-        assert _canonicalise(question, value) == expected
+        assert canonicalise(question, value) == expected
 
 
 def test_canonicalise_path_returns_str_form() -> None:
     question = _question(answer_type=Path, widget=WizardWidget.PATH)
     path_value = Path("project/data/example.txt")
-    assert _canonicalise(question, path_value) == str(path_value)
+    assert canonicalise(question, path_value) == str(path_value)
 
 
 def test_canonicalise_int_returns_decimal_string() -> None:
     question = _question(answer_type=int, widget=WizardWidget.INTEGER)
-    assert _canonicalise(question, 42) == "42"
+    assert canonicalise(question, 42) == "42"
 
 
 def test_canonicalise_str_passes_through_unchanged() -> None:
     question = _question(answer_type=str)
-    assert _canonicalise(question, "madrid") == "madrid"
+    assert canonicalise(question, "madrid") == "madrid"
 
 
 def test_canonicalise_empty_string_passes_through_as_empty() -> None:
     question = _question(answer_type=str)
-    assert _canonicalise(question, "") == ""
+    assert canonicalise(question, "") == ""
 
 
 # ---------------------------------------------------------------------------
@@ -178,7 +178,7 @@ def test_resolve_canonical_returns_values_entry_when_profile_key_matches() -> No
     question = _question(answer_type=str, profile_key="tax.residence.ccaa", default="madrid")
     values = {"tax.residence.ccaa": "cataluna"}
 
-    assert _resolve_canonical(question, values) == "cataluna"
+    assert resolve_canonical(question, values) == "cataluna"
 
 
 def test_resolve_canonical_falls_back_to_descriptor_default_when_key_absent() -> None:
@@ -186,7 +186,7 @@ def test_resolve_canonical_falls_back_to_descriptor_default_when_key_absent() ->
     question = _question(answer_type=str, profile_key="tax.residence.ccaa", default="madrid")
     values = {"unrelated.key": "value"}
 
-    assert _resolve_canonical(question, values) == "madrid"
+    assert resolve_canonical(question, values) == "madrid"
 
 
 def test_resolve_canonical_falls_back_to_descriptor_default_when_profile_key_none() -> None:
@@ -195,14 +195,14 @@ def test_resolve_canonical_falls_back_to_descriptor_default_when_profile_key_non
     question = _question(answer_type=str, profile_key=None, default="madrid")
     values = {"any.key": "value"}
 
-    assert _resolve_canonical(question, values) == "madrid"
+    assert resolve_canonical(question, values) == "madrid"
 
 
 def test_resolve_canonical_returns_none_when_no_profile_key_and_no_default() -> None:
     """profile_key=None + default=None → returns None (no projection)."""
     question = _question(answer_type=str, profile_key=None, default=None)
 
-    assert _resolve_canonical(question, {}) is None
+    assert resolve_canonical(question, {}) is None
 
 
 # ---------------------------------------------------------------------------
@@ -264,4 +264,4 @@ def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:
         required=False,
         answer_type=bool,
     )
-    assert _canonicalise(question, "") == ""
+    assert canonicalise(question, "") == ""

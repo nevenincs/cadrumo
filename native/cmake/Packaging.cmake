@@ -11,10 +11,15 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready" "${CADRUMO_PATH_AGENT}/ready"
   "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json")
 list(JOIN product_inputs "\n" input_lines)
-file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
+# Tree lines are not files: the build action expands them, so they never reach DEPENDS.
+list(JOIN product_inputs_trees "\n" tree_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n${tree_lines}\n")
 cadrumo_build_step(step_comment python_product GROUP dependencies
   SUMMARY "build and install the product wheels from this checkout" OUTPUTS "${CADRUMO_PATH_PRODUCT}")
 add_custom_target(python_product
+  # Native packages must reject stale public operation contracts before either
+  # building wheels or reusing cached ones, just like build-distributions.
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.operation_contract_manifest.generate --check
   # Always run the Python admission check: it loads env/.env or inherited CI
   # credentials and binds cache reuse to their digest without CMake variables.
   COMMAND ${CADRUMO_HELPER} product --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-product.txt"
@@ -139,7 +144,7 @@ include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
 cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}")
 set(assembly_inputs "${CADRUMO_PATH_RUNTIME}/runtime-inputs.json" "${CADRUMO_PATH_PYTHON_SDK}" ${assembly_product_inputs}
-  "${CADRUMO_PATH_AGENT}/runtime"
+  "${CADRUMO_PATH_AGENT}/runtime" "${CADRUMO_PATH_LLAMA_SERVER}"
   "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
   ${staged_identities} "${package_bootstrap}" ${contract_inputs})
 foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
@@ -154,15 +159,18 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing agent_runtime build_stamp build_fingerprint)
+foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage docs_scan docs_errors cmake_build cached_command build_timing agent_runtime agent_runtime_archive agent_runtime_inventory agent_runtime_validation build_stamp build_fingerprint llama_server msvc_redist)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 list(APPEND assembly_inputs ${assembly_backend_inputs})
+# The staged llama-server is checked against its committed pin again at assembly.
+list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/llamacpp-pins.json" "${PROJECT_SOURCE_DIR}/dev/env/llamacpp_pins.py")
+# The component engine's pin tables are staged whole beside the authority.
+file(GLOB component_pin_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/native/component-pins/*.toml")
+list(APPEND assembly_inputs ${component_pin_inputs})
 if(WIN32)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py")
-else()
-  list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/posix.py")
 endif()
 list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py")
 list(APPEND assembly_inputs "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json")
@@ -172,8 +180,10 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
     dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
 endforeach()
+# The builder-supplied commit is part of the staged build record, so a new one restages it.
 cadrumo_cached_command(assembly_command app-payload INPUTS ${assembly_inputs}
-  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
+  ENVIRONMENT CADRUMO_SOURCE_COMMIT)
 cadrumo_build_step(step_comment native-process-quiesce GROUP assembly
   SUMMARY "stop Cadrumo processes running from this build before its images are replaced")
 add_custom_target(native-process-quiesce
@@ -199,7 +209,7 @@ add_custom_target(app-payload
   COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
-    python_product ${user_docs_dependencies}
+    python_product llama_server ${user_docs_dependencies}
     ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"
@@ -271,6 +281,11 @@ cadrumo_register_clean(TARGET app-distro DEPENDS bundle)
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
+# The host tests' live cases open the configuration's staged package, so a fresh or pruned tree
+# assembles it first; an operator-selected existing package is used as it stands.
+if(TARGET desktop-host-test AND NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
+  add_dependencies(desktop-host-test app-payload)
+endif()
 if(BUILD_TESTING)
   add_test(NAME bundle.agent COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
@@ -289,6 +304,12 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
+  # A release package carries no development storage rule and no trace of the checkout it was built in.
+  add_test(NAME bundle.release-image-scan CONFIGURATIONS Release COMMAND "${CADRUMO_DEV_PYTHON}" -B -m
+    dev.packaging.native.release_image_scan --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+    --checkout "${PROJECT_SOURCE_DIR}")
+  set_tests_properties(bundle.release-image-scan PROPERTIES RESOURCE_LOCK package_inventory
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 900)
   # The package declaration is the reference: ask the assembled package's own interpreter what the installed
   # command line, runtime and bundled agent declare, and fail on any disagreement with it.
   add_test(NAME bundle.environment-conformance COMMAND "${CMAKE_COMMAND}" -E env
@@ -322,7 +343,7 @@ if(BUILD_TESTING AND WIN32)
     --junitxml "${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle.xml" -o junit_family=legacy)
   set_tests_properties(bundle.runtime-lifecycle PROPERTIES RESOURCE_LOCK package_inventory
     RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS external_tool
-    ENVIRONMENT "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle-storage;CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle-storage;CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/test-logs;CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_TESTING}/$<CONFIG>/scratch;CADRUMO_TEMP_DIR=${CADRUMO_PATH_TESTING}/$<CONFIG>/temporary;CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/cache")
+    ENVIRONMENT "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle-storage;CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/test-logs;CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_TESTING}/$<CONFIG>/scratch;CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/cache")
   if(desktop_image_staged)
     set_tests_properties(bundle.runtime-lifecycle PROPERTIES FIXTURES_REQUIRED "desktop_package_ready;desktop_runtime_ready")
   endif()

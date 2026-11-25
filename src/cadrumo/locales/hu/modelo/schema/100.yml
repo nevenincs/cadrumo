@@ -2,9 +2,18 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Az ingatlan négy előző adóévből levonásra váró kamatai és javítási
+            és karbantartási kiadásai
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
           label: A közvetlen becslés normál módozatát alkalmazza?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'A 0604. rovat része: amit az idei 130-as bevallásaiddal befizettél.'
+          label: Az évben befizetett előlegek · 130-as nyomtatvány
+        renta-modelo-131-pagos-fraccionados:
+          help: 'A 0604. rovat része: amit az idei 131-es bevallásaiddal befizettél.'
+          label: Az évben befizetett előlegek · 131-es nyomtatvány
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -640,6 +649,21 @@ modelo:
           irpf-anexo-b-vivienda-reinversion-aplicado:
             label: A 2021-ben és/vagy 2022-ben kifizetett, az adóévben alkalmazott
               összeg
+          irpf-anexo-c-base-liq-neg-base-positiva-compensable:
+            label: Korábbi negatív adóalapokkal kompenzálható pozitív általános nettó
+              adóalap (az LIRPF 50.3. cikke) [belső]
+          irpf-anexo-c-base-liq-neg-em1-aplicada-maxima:
+            label: 'Negatív általános nettó adóalap az előző évből: alkalmazható maximális
+              kompenzáció (az LIRPF 50.3. cikke) [belső]'
+          irpf-anexo-c-base-liq-neg-em2-aplicada-maxima:
+            label: 'Negatív általános nettó adóalap a második megelőző évből: alkalmazható
+              maximális kompenzáció (az LIRPF 50.3. cikke) [belső]'
+          irpf-anexo-c-base-liq-neg-em3-aplicada-maxima:
+            label: 'Negatív általános nettó adóalap a harmadik megelőző évből: alkalmazható
+              maximális kompenzáció (az LIRPF 50.3. cikke) [belső]'
+          irpf-anexo-c-base-liq-neg-em4-aplicada-maxima:
+            label: 'Negatív általános nettó adóalap a negyedik megelőző évből: alkalmazható
+              maximális kompenzáció (az LIRPF 50.3. cikke) [belső]'
           irpf-anexo-c-base-liq-neg-generado:
             label: A 2020-as negatív általános nettó adóalap, amely a következő 4
               adóévben kompenzálandó
@@ -700,6 +724,118 @@ modelo:
             label: Hozzárendelésre váró összeg
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Állami támogatás típusa
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel szembeni maximális kompenzáció
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a másik pozitív egyenleg 25%-ával szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel való kompenzáció után fennmaradó
+              összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség függő negatív egyenlegei:
+              a saját pozitív egyenleggel szembeni kompenzációs keret (az LIRPF 49.
+              cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség függő negatív egyenlegei:
+              a másik pozitív egyenleg 25%-ával szembeni kompenzációs keret (az LIRPF
+              49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel szembeni maximális kompenzáció
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a másik pozitív egyenleg 25%-ával szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel való kompenzáció után fennmaradó
+              összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem függő negatív
+              egyenlegei: a saját pozitív egyenleggel szembeni kompenzációs keret
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem függő negatív
+              egyenlegei: a másik pozitív egyenleg 25%-ával szembeni kompenzációs
+              keret (az LIRPF 49. cikke) [belső]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: '1. Gyermek (*): megfizetett tartásdíj összege'
           irpf-anualidades-alimentos-hijo-1-nif:
@@ -3425,10 +3561,6 @@ modelo:
           irpf-red-prevision-social-aportaciones-empresa-decision-trabajador:
             label: A vállalat által teljesített befizetések, amelyek a munkavállaló
               döntéséből erednek
-          irpf-red-prevision-social-aportaciones-individuales:
-            label: Egyéni befizetések és munkáltatói hozzájárulások (kivéve a munkáltatói
-              kollektív ápolási biztosítási hozzájárulásokból eredőket (töltse ki
-              a C.3 mellékletet)
           irpf-red-prevision-social-aportaciones-trabajador:
             label: A munkavállaló hozzájárulásai, a [0438] és [0426] rovatban feltüntetettek
               kivételével
@@ -3444,6 +3576,10 @@ modelo:
             label: Csoportos gondozási-szükségleti biztosításokhoz fizetett hozzájárulások
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             label: Ha nincs adóazonosító száma, jelöld meg "X"-szel
+          irpf-red-prevision-social-exceso-ejercicios-anteriores:
+            label: Egyéni befizetések és munkáltatói hozzájárulások (kivéve a munkáltatói
+              kollektív ápolási biztosítási hozzájárulásokból eredőket (töltsd ki
+              a C.3 mellékletet)
           irpf-red-prevision-social-exceso-scd:
             label: A csoportos gondozási-szükségleti biztosításokhoz fizetett vállalati
               hozzájárulásokból eredő túllépések (Töltse ki a C.3 mellékletet)
@@ -3639,6 +3775,9 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Átlagos adókulcsok ( [0534] = [0532] x 100 / [0505] ); ( [0535]
               = [0533] x 100 / [0505] ): autonóm közösségi rész'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: A munkából származó jövedelemtől eltérő jövedelmek (a 20. cikk
+              szerinti határ) [belső]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: A hozzárendelést teljesítő adózó
           irpf-vehiculo-electrico-instalador-nif:
@@ -3666,6 +3805,10 @@ modelo:
           field:
             title: 'Modelo 100 nyomtatvány: C melléklet negatív általános nettó adóalap
               carry-forward'
+        renta-anexo-c-saldos-negativos-ahorro:
+          field:
+            title: 'Modelo 100 nyomtatvány: C melléklet megtakarítási adóalap kompenzálandó
+              negatív egyenlegei'
         renta-cuota-chain:
           field:
             title: 'Modelo 100 nyomtatvány: az IRPF-kvóta számítási lánca'
@@ -3676,10 +3819,18 @@ modelo:
         renta-final-settlement:
           field:
             title: 'Modelo 100 nyomtatvány: vég settlement result'
+        renta-mini-model-deduccion-madrid-cuidado-ascendientes:
+          field:
+            title: 'Modelo 100 nyomtatvány: Madridi autonóm közösség levonása a felmenők
+              gondozása után'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: 'Modelo 100 nyomtatvány 2025: Madridi autonóm közösség születési/örökbefogadási
               levonása (1039. rovat)'
+        renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas:
+          field:
+            title: 'Modelo 100 nyomtatvány: a felmenők utáni személyi minimum és az
+              autonóm közösségi levonások'
         renta-movable-capital:
           field:
             title: 'Modelo 100 nyomtatvány: az ingó tőkétől való függőség bizonyítékai'
@@ -3706,10 +3857,152 @@ modelo:
         official_name: Modelo 100. A magánszemélyek jövedelemadójának (IRPF) bevallása.
         title: IRPF éves bevallás
       form:
+        outline:
+          activities:
+            heading: Gazdasági tevékenységből származó jövedelem
+          attributed-income:
+            heading: Hozzárendelt és betudott jövedelmek
+          capital-gains:
+            heading: Vagyoni nyereségek és veszteségek
+          employment:
+            heading: Munkaviszonyból származó jövedelem
+          family-minimum:
+            heading: Személyi és családi minimum
+          general-deductions:
+            heading: Általános adókedvezmények (A melléklet)
+          household:
+            heading: Leszármazottak és felmenők
+          identification:
+            heading: Bevalló és házastárs
+          income-holders:
+            heading: A jövedelmek jogosultjai
+          movable-capital:
+            heading: Ingó tőkéből származó jövedelem
+          other-information:
+            heading: Áthozott tételek és egyéb információk (C melléklet)
+          real-estate:
+            heading: Ingatlanból származó és betudott ingatlanjövedelem
+          regional-deductions:
+            heading: Autonóm közösségi adókedvezmények (B melléklet)
+          result:
+            heading: A bevallás eredménye
+          tax-bases:
+            heading: Adóalap, csökkentések és adóköteles alap
+          tax-calculation:
+            heading: Az adó kiszámítása
+        page:
+          datoseconomicos:
+            heading: A jövedelmek jogosultjai
+            section:
+              general:
+                heading: Az egyes jövedelmek jogosult adózója
+          datoseconomicos-resultados:
+            heading: A bevallás összesítése és számítása
+          datoseconomicos-tomadatosampliada:
+            heading: Jövedelmek és kedvezmények részletes adatai
+          datosidentificativos:
+            heading: Azonosító adatok
+            section:
+              general:
+                heading: Nem rezidens és IRPF-adózónak nem minősülő házastárs
+          datosidentificativos-ascendientes:
+            heading: Felmenők
+          datosidentificativos-conyuge:
+            heading: Házastárs
+            section:
+              general:
+                heading: A házastárs személyes adatai és EU- vagy EGT-beli lakóhelye
+          datosidentificativos-declarante:
+            heading: Bevalló
+            section:
+              general:
+                heading: A bevalló személyes adatai
+          datosidentificativos-hijos:
+            heading: Gyermekek és más leszármazottak
+            section:
+              general:
+                heading: EU- vagy EGT-beli lakóhelyű, nem rezidens leszármazottak
+          declaracion:
+            heading: Bevallás
+            section:
+              general:
+                heading: Autonóm közösség és választott adózási opció
         section:
+          anexoa:
+            heading: Lakások energetikai korszerűsítése, elektromos járművek és töltőpontok
+              (A melléklet)
+          anexoares:
+            heading: Kedvezmény a lakóingatlanba történő befektetésért (A melléklet)
+          anexoares-10:
+            heading: Vállalkozási beruházásösztönző kedvezmények (A melléklet)
+          anexoares-2:
+            heading: A lakóingatlan adatai és befektetés új vagy nemrég alapított
+              vállalkozásokba (A melléklet)
+          anexoares-3:
+            heading: Kedvezmény a lakóingatlan bérléséért (A melléklet)
+          anexoares-4:
+            heading: Adományok és egyéb hozzájárulások utáni kedvezmények (A melléklet)
+          anexoares-5:
+            heading: Ceutában vagy Melillában szerzett jövedelem utáni kedvezmény
+              (A melléklet)
+          anexoares-6:
+            heading: La Palma szigetén való szokásos és tényleges tartózkodás utáni
+              kedvezmény (A melléklet)
+          anexoares-7:
+            heading: Kulturális értékű javakra fordított befektetések és kiadások
+              utáni kedvezmény (A melléklet)
+          anexoares-8:
+            heading: Energiahatékonysági felújítások, elektromos járművek és töltőpontok
+              utáni kedvezmények (A melléklet)
+          anexoares-9:
+            heading: Kanári- és Baleár-szigeteki beruházási tartalék és az Európai
+              Unióban illetőségű adózók kedvezménye (A melléklet)
+          anexocres:
+            heading: Áthozott tételek és egyéb információk (C melléklet)
+          ascendiente:
+            heading: Az egyes felmenők adatai
+          baseimponibleres:
+            heading: Az ingó tőkéből származó jövedelem pozitív nettó egyenlege a
+              megtakarítási adóalapban
+          baseimponibleres-2:
+            heading: Általános adóalap és megtakarítási adóalap
+          baseliquidableres:
+            heading: Általános és megtakarítási adóköteles alap
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
               félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          calculoimpuestores:
+            heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+              forrásadók és adóelőlegek
+          calculoimpuestores-2:
+            heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+              (UTE) által betudott forrásadók és adóelőlegek
+          calculoimpuestores-3:
+            heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
+          calculoimpuestores-4:
+            heading: A lakóingatlan bérléséért járó kedvezmény összege
+          calculoimpuestores-5:
+            heading: Vállalkozási beruházásösztönző kedvezmények összesen
+          calculoimpuestores-6:
+            heading: Vállalkozási beruházásösztönző kedvezmények összesen
+          calculoimpuestores-7:
+            heading: A helyesbítésből esetleg eredő visszatérítés
+          compensacionconyugesres:
+            heading: Befizetés felfüggesztése és visszatérítésről való lemondás a
+              házastársak között
+          datosadicionalesanexob:
+            heading: Az autonóm közösségi kedvezmények kiegészítő adatai (B melléklet)
+          datosadicionalesanexob-2:
+            heading: 'Baleár-szigeteki születési és örökbefogadási kedvezmények: előleg
+              (B melléklet)'
+          datosadicionalesres:
+            heading: Az adókulcsnál figyelembe vett mentes jövedelmek és a gyermekek
+              javára fizetett tartásdíj
+          deduccionautonomicares:
+            heading: Autonóm közösségi adókedvezmények (B melléklet)
+          dt9:
+            heading: A kilencedik átmeneti rendelkezés szerint halmozott átruházási
+              érték
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Vagyoni nyereségek a spanyol területen kívülre történő lakóhely-változás
               miatt (a törvény 95 bis. cikke)
@@ -3725,6 +4018,127 @@ modelo:
             heading: Tőzsdén jegyzett alapok (ETF) befektetési jegyeinek és tőzsdén
               jegyzett index SICAV-ok részvényeinek átruházásából eredő nyereségek
               és veszteségek
+          gcambioresidenciaextres:
+            heading: A spanyol területen kívülre történő lakóhely-változás miatti
+              vagyoni nyereségek összesítése
+          gpaccionesres:
+            heading: Forgalmazott részvények átruházásának összesítése
+          gpderechosres:
+            heading: Jegyzési jogok átruházásának összesítése
+          gpfondoscotires:
+            heading: Tőzsdén jegyzett alapok (ETF) és jegyzett index SICAV-részvények
+              átruházásának összesítése
+          gpfondosres:
+            heading: Kollektív befektetési formák részvényei vagy befektetési jegyei
+              átruházásának összesítése
+          gpotrasganancias:
+            heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek
+          gpotrasgananciasejerant:
+            heading: Korábbi évek átruházásaiból eredő, erre az adóévre betudható
+              nyereségek és veszteségek
+          gpotrasgananciasejerantres:
+            heading: Korábbi évek átruházásaiból eredő, erre az adóévre betudható
+              nyereségek és veszteségek összesítése
+          gpotrasgananciasres:
+            heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek összesítése
+          gpotroscriptomonedasres:
+            heading: Virtuális pénznemek átruházásának összesítése
+          gpotroselementos:
+            heading: Egyéb vagyonelemek átruházása
+          gpotroselementos-2:
+            heading: 'Halasztott vételárú egyéb vagyonelem-átruházások: még betudandó
+              nyereségek és veszteségek'
+          gpotroselementosres:
+            heading: Egyéb vagyonelemek átruházásának összesítése
+          gpotrosinmuebles:
+            heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházása
+          gpotrosinmuebles-2:
+            heading: 'Halasztott vételárú ingatlan-átruházások: még betudandó nyereségek'
+          gpotrosinmuebles-3:
+            heading: Lakóingatlanba történő újrabefektetés miatti mentesség
+          gpotrosinmueblesres:
+            heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházásának
+              összesítése
+          gppremios:
+            heading: 'Nem átruházásból eredő vagyoni nyereségek és veszteségek: szerencsejáték,
+              nyeremények és egyebek'
+          gppremiosres:
+            heading: Nem átruházásból eredő vagyoni nyereségek és veszteségek összesítése
+          gpreinversion:
+            heading: Újrabefektetés miatt halasztott, erre az adóévre betudható nyereségek
+          gpreinversionres:
+            heading: Újrabefektetés miatt halasztott, erre az adóévre betudható nyereségek
+              összesítése
+          hijo:
+            heading: Az egyes leszármazottak adatai
+          ingresodevolucionres:
+            heading: Befizetendő vagy visszajáró összeg
+          inmuebles:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmuebles-2:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmuebles-3:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmueblesres:
+            heading: Ingatlanból származó és betudott ingatlanjövedelem összesítése
+          integracionres:
+            heading: Vagyoni nyereségek és veszteségek összevonása és beszámítása
+          integracionres-2:
+            heading: Az ingó tőkéből származó jövedelem negatív nettó egyenlege a
+              megtakarítási adóalapban
+          irpfccaares:
+            heading: A lakóhely szerinti autonóm közösséget megillető személyi jövedelemadó
+          minimoperfamres:
+            heading: Személyi és családi minimum
+          rdtocapitalmobiliario:
+            heading: Ingó tőkéből származó jövedelem
+          rdtocapitalmobiliariores:
+            heading: Ingó tőkéből származó jövedelem összesítése
+          rdtotrabajores:
+            heading: Munkaviszonyból származó jövedelem összesítése
+          redbaseimponible:
+            heading: 'Adóalap-csökkentések: nyugdíj-előtakarékosság, fogyatékosság,
+              védett vagyon, kompenzációs járadék és sportolók'
+          redbaseimponibleres:
+            heading: Az adóalap csökkentései
+          regestimadirecta:
+            heading: Gazdasági tevékenységek (közvetlen jövedelemmeghatározás)
+          regestimadirectares:
+            heading: Gazdasági tevékenységek összesítése (közvetlen jövedelemmeghatározás)
+          regestimaobj:
+            heading: Gazdasági tevékenységek (objektív jövedelemmeghatározás, a mező-,
+              állat- és erdőgazdálkodás kivételével)
+          regestimaobjagricola:
+            heading: Mező-, állat- és erdőgazdálkodási tevékenységek (objektív jövedelemmeghatározás)
+          regestimaobjagricolares:
+            heading: Mező-, állat- és erdőgazdálkodási tevékenységek összesítése (objektív
+              jövedelemmeghatározás)
+          regestimaobjres:
+            heading: Gazdasági tevékenységek összesítése (objektív jövedelemmeghatározás,
+              a mező-, állat- és erdőgazdálkodás kivételével)
+          regimenesespeciales:
+            heading: 'Jövedelmek hozzárendelése és betudása: hozzárendelési rendszerű
+              jogalanyok, gazdasági érdekcsoportok és UTE-k, nemzetközi adóátláthatóság,
+              képmáshoz fűződő jogok és adóparadicsomi kollektív befektetések'
+          regimenesespecialesres:
+            heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+              jövedelmek összesítése
+          regimenesespecialesres-2:
+            heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+              (UTE) által betudott adóalapok összesítése
+          regimenesespecialesres-3:
+            heading: Nemzetközi adóátláthatóság, képmáshoz fűződő jogok és adóparadicsomi
+              kollektív befektetések miatti betudások összesítése
+          regimenespecial:
+            heading: Fúzió, szétválás vagy részesedéscsere által érintett külföldi
+              illetőségű jogalanyok tagjai
+          regimenespecial-2:
+            heading: Egyesülés, szétválás, eszközátruházás és részesedéscsere
+          regularizacionres:
+            heading: Korábbi önadózás vagy hatósági adómegállapítás rendezése
           rendimientos-de-trabajo:
             heading: Munkaviszonyból származó jövedelem
           transmision-de-acciones-negociadas:
@@ -8317,6 +8731,9 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
+            trabajo-mar-renta-exenta:
+              label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
+                vagy 19/1994. törvény) [belső]
           construct:
             renta-dependent-modelos:
               field:
@@ -14563,7 +14980,8 @@ modelo:
               help: Add meg azt az adózót, aki az entitás tagja, közös tulajdonosa
                 vagy résztvevője.
             '1562':
-              help: Add meg a jövedelemattribúciós rendszer alá tartozó entitás NIF-jét.
+              help: Add meg a jövedelem-hozzárendelési rendszer alá tartozó entitás
+                NIF-jét.
             '1563':
               help: Jelöljön "X"-et, ha a [1562] mezőben más országbeli NIF-et adott
                 meg.
@@ -14605,7 +15023,7 @@ modelo:
               help: Írjon be egy "X"-et, ha a jövedelmek időbeli elszámolásához a
                 pénzforgalmi szemléletet választja.
             '1577':
-              help: Add meg a jövedelemattribúciós rendszer alá tartozó entitások
+              help: Add meg a jövedelem-hozzárendelési rendszer alá tartozó entitások
                 által hozzárendelt gazdasági tevékenység nettó hozamát.
             '1578':
               help: Add meg az alkalmazható csökkentéseket.
@@ -14739,7 +15157,7 @@ modelo:
             '1620':
               help: Add meg a kataszteri hivatkozást.
             '1621':
-              help: Add meg a jövedelemattribúciós entitás NIF-jét, vagy nem rezidens
+              help: Add meg a jövedelem-hozzárendelési entitás NIF-jét, vagy nem rezidens
                 entitások esetén a lakóhely szerinti ország azonosító számát.
             '1622':
               help: Jelöljön "X"-et, ha a [1562] mezőben más országbeli NIF-et adott
@@ -15859,6 +16277,20 @@ modelo:
                   adatai'
           field:
             label: Adóév 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Eltérés a hatósági értelmezéstől
+              calculoimpuestores-2:
+                heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+                  forrásadók és adóelőlegek
+              calculoimpuestores-3:
+                heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+                  (UTE) által betudott forrásadók és adóelőlegek
+              calculoimpuestores-4:
+                heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
+              calculoimpuestores-5:
+                heading: A lakóingatlan bérléséért járó kedvezmény összege
         '2025':
           casilla:
             '0003':
@@ -18099,12 +18531,6 @@ modelo:
               label: A bevallás autonóm közössége
             ZRUE2:
               label: Házastárs EU- vagy EGT-tagállami lakóhelye
-            base-liq-neg-general-2024-aplicada-maxima:
-              label: '2024-es negatív általános nettó adóalap: alkalmazható maximális
-                kompenzáció (az LIRPF 50.3. cikke szerinti korlát) [belső]'
-            trabajo-mar-renta-exenta:
-              label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
-                vagy 19/1994. törvény) [belső]
           construct:
             renta-dependent-modelos:
               field:
@@ -18134,3 +18560,17 @@ modelo:
                   jövedelmek aggregators'
           field:
             label: Adóév 2025
+          form:
+            section:
+              calculoimpuestores:
+                heading: Eltérés a hatósági értelmezéstől
+              calculoimpuestores-2:
+                heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+                  forrásadók és adóelőlegek
+              calculoimpuestores-3:
+                heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+                  (UTE) által betudott forrásadók és adóelőlegek
+              calculoimpuestores-4:
+                heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
+              calculoimpuestores-5:
+                heading: A lakóingatlan bérléséért járó kedvezmény összege

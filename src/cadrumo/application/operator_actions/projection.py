@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import (
@@ -15,6 +16,8 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...core.precondition_action_invariants import ServedActionWords, ServedNoRecoveryWords
+from ..operations.error_detail import served_words_language
 from ..operations.public_scalar import (
     PublicNamedScalar,
     PublicScalar,
@@ -23,7 +26,14 @@ from ..operations.public_scalar import (
     restore_facts,
     restore_scalar,
 )
-from .models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .models import (
+    ActionArgumentBinding,
+    ActionReference,
+    AlternativeRecoveryAction,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
+from .served_actions import serve_precondition_verdict
 
 
 class ConditionEvidenceSnapshot(BaseModel):
@@ -100,8 +110,52 @@ class ActionArgumentSnapshot(BaseModel):
         return self
 
 
-class PreconditionVerdictSnapshot(BaseModel):
-    """Typed action evidence needed by the existing CLI action resolver."""
+class AlternativeActionSnapshot(ServedActionWords):
+    """One further recovery action of a verdict, in the order it is offered, with its served words and routing."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action_id: NamespacedId
+    argument_bindings: tuple[ActionArgumentSnapshot, ...] = ()
+    missing_argument_names: tuple[str, ...] = ()
+    conditionality: ActionConditionality
+
+    @classmethod
+    def from_alternative(cls, alternative: AlternativeRecoveryAction) -> Self:
+        """Copy one canonical alternative and its arguments."""
+        return cls(
+            action_id=alternative.action.action_id,
+            argument_bindings=tuple(
+                ActionArgumentSnapshot.from_argument(item) for item in alternative.argument_bindings
+            ),
+            missing_argument_names=alternative.missing_argument_names,
+            conditionality=alternative.conditionality,
+            action_words=alternative.action_words,
+            action_words_language=alternative.action_words_language,
+            target_operation_ids=alternative.target_operation_ids,
+        )
+
+    def to_alternative(self) -> AlternativeRecoveryAction:
+        """Restore the canonical alternative and its derived conditionality."""
+        return AlternativeRecoveryAction(
+            action=ActionReference(action_id=self.action_id),
+            argument_bindings=tuple(item.to_argument() for item in self.argument_bindings),
+            missing_argument_names=self.missing_argument_names,
+            conditionality=self.conditionality,
+            action_words=self.action_words,
+            action_words_language=self.action_words_language,
+            target_operation_ids=self.target_operation_ids,
+        )
+
+
+class PreconditionVerdictSnapshot(ServedActionWords, ServedNoRecoveryWords):
+    """Typed action evidence needed by the existing CLI action resolver.
+
+    ``alternative_actions`` is left out of the serialized snapshot when empty,
+    so a verdict without alternatives keeps the bytes it was stored with. The
+    snapshot is the verdict as it crosses a process boundary, so it carries the
+    words and routing served for the primary action, or the sentence served for
+    a refusal with no way out, in the language of the process that projected it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     failed_condition_id: NamespacedId
@@ -111,10 +165,16 @@ class PreconditionVerdictSnapshot(BaseModel):
     missing_argument_names: tuple[str, ...] = ()
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None = None
+    alternative_actions: tuple[AlternativeActionSnapshot, ...] = Field(default=(), exclude_if=lambda value: not value)
 
     @classmethod
-    def from_verdict(cls, verdict: PreconditionVerdict) -> Self:
-        """Copy one canonical verdict without its mapping serializer."""
+    def from_verdict(cls, verdict: PreconditionVerdict, language: OutputLanguage | None = None) -> Self:
+        """Copy one canonical verdict without its mapping serializer, serving its action words.
+
+        The words are served in ``language`` where the caller states the language
+        its own document is said in, else in the language of this process.
+        """
+        verdict = serve_precondition_verdict(verdict, served_words_language() if language is None else language)
         return cls(
             failed_condition_id=verdict.failed_condition_id,
             evidence=tuple(ConditionEvidenceSnapshot.from_evidence(item) for item in verdict.evidence),
@@ -123,6 +183,14 @@ class PreconditionVerdictSnapshot(BaseModel):
             missing_argument_names=verdict.missing_argument_names,
             conditionality=verdict.conditionality,
             no_recovery_outcome=verdict.no_recovery_outcome,
+            alternative_actions=tuple(
+                AlternativeActionSnapshot.from_alternative(item) for item in verdict.alternative_actions
+            ),
+            action_words=verdict.action_words,
+            action_words_language=verdict.action_words_language,
+            target_operation_ids=verdict.target_operation_ids,
+            no_recovery_words=verdict.no_recovery_words,
+            no_recovery_words_language=verdict.no_recovery_words_language,
         )
 
     def to_verdict(self) -> PreconditionVerdict:
@@ -135,6 +203,12 @@ class PreconditionVerdictSnapshot(BaseModel):
             missing_argument_names=self.missing_argument_names,
             conditionality=self.conditionality,
             no_recovery_outcome=self.no_recovery_outcome,
+            alternative_actions=tuple(item.to_alternative() for item in self.alternative_actions),
+            action_words=self.action_words,
+            action_words_language=self.action_words_language,
+            target_operation_ids=self.target_operation_ids,
+            no_recovery_words=self.no_recovery_words,
+            no_recovery_words_language=self.no_recovery_words_language,
         )
 
     @model_validator(mode="after")

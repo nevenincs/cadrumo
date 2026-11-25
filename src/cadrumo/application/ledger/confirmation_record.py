@@ -41,6 +41,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex16Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import InvoiceId
@@ -169,7 +170,7 @@ class InvoiceConfirmationRecord(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    confirmation_id: str = Field(min_length=16, max_length=16)
+    confirmation_id: Hex16Str
     bucket_id: BucketId
     invoice_id: InvoiceId
     evidence_reference: str = Field(min_length=1)

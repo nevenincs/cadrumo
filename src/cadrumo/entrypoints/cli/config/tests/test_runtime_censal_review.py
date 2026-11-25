@@ -34,11 +34,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.interactions import OperationResponseIntent
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -55,7 +51,12 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.entrypoints.cli.config.operation_censal_review import review_censal_operation
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -79,7 +80,7 @@ _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "c" * 64
 _INTERACTION_ID = "d" * 64
-_NOW = datetime(2026, 9, 29, tzinfo=UTC)
+_NOW = datetime(1980, 9, 29, tzinfo=UTC)
 _RESULT_DIGEST = "e" * 64
 _REVIEW_DIGEST = "f" * 64
 _BOOT_ID = UUID("cc000000-0000-4000-8000-0000000000cc")

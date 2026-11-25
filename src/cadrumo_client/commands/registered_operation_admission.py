@@ -10,14 +10,17 @@ from pydantic import BaseModel
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo_client.commands.errors import CliOperationContractStaleError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationReviewHandler
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_timeout
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
+    OperationFinancialInput,
     OperationReply,
     OperationRequest,
+    OperationSubmit,
     OperationSubmitted,
 )
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
@@ -30,32 +33,48 @@ def require_registered_definition_contract(
     expected_request: OperationSchemaIdentityV1,
     expected_result: OperationSchemaIdentityV1,
     secret: bytearray | None,
+    *,
+    financial_input: bool = False,
 ) -> None:
-    """Require exact payload, result and secret admission contracts."""
-    if (
-        contract.definition_id != definition_id
-        or contract.request_schema != expected_request
-        or contract.result_schema != expected_result
-        or contract.ephemeral_secret_required is not (secret is not None)
-    ):
+    """Require exact payload, result, secret and transient financial operand admission contracts.
+
+    A contract answered for another operation is a malformed reply. A contract
+    for this operation that differs from the command's typed models is a stale
+    contract on one side, refused as such with the first differing field.
+    """
+    if contract.definition_id != definition_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
+    differing = (
+        ("request_schema", contract.request_schema != expected_request),
+        ("result_schema", contract.result_schema != expected_result),
+        ("ephemeral_secret_required", contract.ephemeral_secret_required is not (secret is not None)),
+        ("transient_financial_operand", (contract.transient_financial_operand is not None) is not financial_input),
+    )
+    for field, differs in differing:
+        if differs:
+            raise CliOperationContractStaleError(definition_id=definition_id, field=field)
 
 
 def require_registered_review_contract[ReviewT: BaseModel](
     contract: OperationPublicDefinitionContractV1, review: RegisteredOperationReviewHandler[ReviewT] | None
 ) -> None:
     """Require the declared review and response schemas to match the typed handler."""
-    if review is not None and (
-        contract.review_projection_schema != review.review_schema
-        or contract.interaction_response_schema != review.response_schema
-        or review.review_schema
-        != OperationSchemaIdentityV1.from_model(
-            schema_id=review.review_schema.schema_id,
-            schema_version=review.review_schema.schema_version,
-            model_type=review.review_type,
-        )
+    if review is None:
+        return
+    if review.review_schema != OperationSchemaIdentityV1.from_model(
+        schema_id=review.review_schema.schema_id,
+        schema_version=review.review_schema.schema_version,
+        model_type=review.review_type,
     ):
+        # The handler disagrees with its own model: a command defect, not a runtime answer.
         raise RefusalError(RefusalCode.INVALID_FRAME)
+    differing = (
+        ("review_projection_schema", contract.review_projection_schema != review.review_schema),
+        ("interaction_response_schema", contract.interaction_response_schema != review.response_schema),
+    )
+    for field, differs in differing:
+        if differs:
+            raise CliOperationContractStaleError(definition_id=contract.definition_id, field=field)
 
 
 def encode_registered_payload(payload: BaseModel) -> str:
@@ -69,6 +88,40 @@ def encode_registered_payload(payload: BaseModel) -> str:
         # Refuse before Pydantic can retain a long private row in its error.
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return payload_json
+
+
+def registered_submission(
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    definition_id: str,
+    subject_ref: str,
+    payload_json: str,
+    financial_input: bool,
+) -> OperationSubmit | OperationFinancialInput:
+    """Frame one submission: volatile operator input for a financial-operand contract, else the request itself.
+
+    Financial input is converted into the amount-free registered request by the
+    worker, so it travels apart from an ordinary submission and carries no
+    idempotency key.
+    """
+    if financial_input:
+        return OperationFinancialInput(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=session_id,
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            payload_json=payload_json,
+        )
+    return OperationSubmit(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=session_id,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        payload_json=payload_json,
+    )
 
 
 def submit_registered_secret(

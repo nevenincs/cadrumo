@@ -62,6 +62,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_absence_attestation
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -69,21 +70,25 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_catalogues
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_note_gate import blocking_calculation_issues
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -92,10 +97,14 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -112,6 +121,7 @@ def bucket_id() -> str:
 
 
 _TAX_ID = "12345678Z"
+_M100_SUFFERED_WITHHOLDING_CREDIT_CASILLAS = ("0596", "0597", "0603")
 _YEAR = 2024
 _PRIOR_YEAR = _YEAR - 1
 _T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
@@ -190,15 +200,16 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479", 
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553", surface="test casilla id")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577", surface="test casilla id")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id("1391", surface="test casilla id")
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero: this persona files no other income and has no
 # prior-year M130 result to net.
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("06", surface="test casilla id"): Decimal("0"),
-    validated_casilla_id("08", surface="test casilla id"): Decimal("0"),
-    validated_casilla_id("10", surface="test casilla id"): Decimal("0"),
     validated_casilla_id("16", surface="test casilla id"): Decimal("0"),
     validated_casilla_id("18", surface="test casilla id"): Decimal("0"),
 }
@@ -230,34 +241,24 @@ def _seed_taxpayer_profile() -> None:
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Marta"),
-                UserProfileFact(path="identity.surnames", value="Invoice Life"),
-                UserProfileFact(path="activities.description", value="design services"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 1)),
-                UserProfileFact(path="renta_taxpayer.sex", value="M"),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-                UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-                UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Marta"),
+                    UserProfileFact(path="identity.surnames", value="Invoice Life"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 1)),
+                    UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                    UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+                    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,
@@ -321,7 +322,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Cliente SA",
-            counterparty_tax_id="B58818501",
+            counterparty_tax_id="B00010181",
             counterparty_country="ES",
             invoice_number=f"FAC-{_YEAR}-{period}",
             issued_at=date(_YEAR, _QUARTER_MONTH[period], 15),
@@ -366,6 +367,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
                         _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                         _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
                         _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                        **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
                     },
                 ),
             ),
@@ -551,13 +553,18 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
+            *BUCKET_AGGREGATION_LOCK_SOURCES,
         )
     }
-    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 
 def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
+    # The persona held no existencias: its activity's book opens with no stock and closes at zero.
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(_YEAR),))
+    )
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -595,6 +602,13 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
     _seed_taxpayer_profile()
     _persist_invoice_life(secure_objects)
     _seed_prior_year_m100(secure_objects)
+    # The declared activity records no IAE epigraph, so an urban rental carried on as an activity is not
+    # excluded; its credit, casilla 0598, is read through the operator's attestation that no payer withheld.
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=_YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
 
     computed_m303: dict[str, Decimal] = {}
     computed_m130: dict[str, Decimal] = {}
@@ -628,6 +642,16 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
 
     annual_390 = _calculate_m390_annual(secure_objects)
     annual_100 = _calculate_m100_annual(secure_objects)
+    # The suffered-withholding credits belong to the payer-record source. The profile declares only
+    # activity income, so no work, capital or gain credit can exist and the source proves each of
+    # them zero; nothing here supplies them, and none may stay unresolved.
+    assert not [
+        issue
+        for issue in blocking_calculation_issues(annual_100)
+        if issue.binding_source is BindingSourceKind.RETENCION_SOPORTADA
+    ]
+    for credit_casilla in _M100_SUFFERED_WITHHOLDING_CREDIT_CASILLAS:
+        assert Decimal(annual_100.casilla_values[credit_casilla]) == Decimal("0"), credit_casilla
 
     # Transport invariant: M390's annual reconciliation folds the SUM of the
     # four engine-computed M303 quarters.
@@ -654,3 +678,9 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
     # base total, not a re-summed engine figure.
     assert Decimal(annual_100.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_ANNUAL_BASE
     assert Decimal(annual_100.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_ANNUAL_BASE
+
+    # No payer record, and a profile declaring only activity income: a proven zero, not a caller's.
+    for credit in ("0596", "0597", "0603"):
+        assert Decimal(annual_100.casilla_values[validated_casilla_id(credit, surface="test casilla id")]) == Decimal(
+            "0"
+        )

@@ -8,7 +8,7 @@ See Also:
     :class:`~application.aggregation.CalculationSourceResolution`
         Source-mesh result envelope whose owned sources, binding values, and
         diagnostics are asserted by this enrollment gate.
-    :func:`~application.modelo.calculation_actions.resolve_bucket_source_mesh`
+    :func:`~application.modelo.calculation_source_mesh_actions.resolve_bucket_source_mesh`
         Calculate-path mesh entry point that enrolls the bienes-inversión
         resolver.
     :mod:`~application.calculations._bienes_inversion_regularizacion`
@@ -30,10 +30,15 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.prevision_social_contribution_records import (
+    PrevisionSocialContributionRecordRepositoryAdapter,
+)
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -41,11 +46,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
-from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
+from cadrumo.application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -57,7 +64,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
@@ -102,6 +109,7 @@ def _source_mesh_ports(
         work_unit_repository=ports.work_unit_repository,
         work_lifecycle_ports=ports.work_lifecycle_ports,
         calculation_repository=ports.calculation_repository,
+        verification_repository=ports.verification_repository,
         bucket_event_repository=ports.bucket_event_repository,
         transaction_repository=transaction_repository,
         activity_asset_history_repository=ports.activity_asset_history_repository,
@@ -125,6 +133,11 @@ def _source_mesh_ports(
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
+        retencion_soportada_ports=RetencionSoportadaPorts(
+            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+        ),
+        prevision_social_contribution_repository=PrevisionSocialContributionRecordRepositoryAdapter(objects=objects),
+        credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
         iva_compensation_history_repository=ports.iva_compensation_history_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
         borrador_snapshot_repository=ports.borrador_snapshot_repository,
@@ -132,21 +145,21 @@ def _source_mesh_ports(
     )
 
 
-def _work_unit(*, revision_id: str) -> WorkUnit:
+def _work_unit(*, revision_id: str, modelo: str = "303", period: Period = _PERIOD) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo=ModeloCode("303"),
+            modelo=ModeloCode(modelo),
             filing_year=_FILING_YEAR,
-            period=_PERIOD,
+            period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
-        modelo=ModeloCode("303"),
+        modelo=ModeloCode(modelo),
         filing_year=_FILING_YEAR,
-        period=_PERIOD,
+        period=period,
         revision_id=revision_id,
-        name=f"303-{_FILING_YEAR}-{_PERIOD.registry_token}",
+        name=f"{modelo}-{_FILING_YEAR}-{period.registry_token}",
         created_at=_CREATED_AT,
         updated_at=_CREATED_AT,
     )
@@ -168,21 +181,14 @@ def _seed_taxpayer_profile(*, setup_state: ProfileSetupState) -> None:
     """Publish a canonical profile with explicit facts relevant to Modelo 303."""
     authority = published_authority_operation()
     context = authority.profile_create_context()
-    explicit_facts = (
-        UserProfileFact(path="identity.tax_id", value="12345678Z"),
-        UserProfileFact(path="identity.name", value="Asset IVA Test"),
-        UserProfileFact(path="identity.surnames", value="Operator"),
-        UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    explicit_facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Asset IVA Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        )
     )
     seed_test_profile_record(
         create_user_profile_record(
@@ -240,11 +246,17 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
 
 
 def test_source_mesh_refuses_incomplete_taxpayer_profile(tmp_path: Path) -> None:
-    """The real M303 resolver refuses setup-incomplete profile state."""
+    """The real mesh refuses setup-incomplete profile state where the revision declares the annual IVA summary.
+
+    Modelo 390 declares the simplified-regime annual summary source; Modelo 303 does not, so only the
+    annual return reads the profile through the mesh.
+    """
     authority = published_authority_operation()
-    snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = authority.snapshot("390", filing_year=_FILING_YEAR, period="0A")
     assert snapshot.filing_period is not None
-    work_unit = _work_unit(revision_id=snapshot.revision.id)
+    work_unit = _work_unit(
+        revision_id=snapshot.revision.id, modelo="390", period=Period.from_year_and_code(_FILING_YEAR, "0A")
+    )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_taxpayer_profile(setup_state=ProfileSetupState.INCOMPLETE)

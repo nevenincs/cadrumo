@@ -24,7 +24,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -219,6 +219,112 @@ def _module_aliases(tree: ast.Module) -> tuple[dict[str, str], dict[str, str], d
     return modules, symbols, _string_constants(tree)
 
 
+def _literal_origins(
+    item: ast.AST,
+    *,
+    names: dict[str, frozenset[str]],
+    path_literals: set[ast.AST],
+    constants: dict[str, str],
+) -> set[str]:
+    if isinstance(item, ast.Name) and item.id in names:
+        return set(names[item.id])
+    if isinstance(item, ast.Name) and item in path_literals:
+        origin = _literal_external_origin(constants.get(item.id, ""))
+        return set() if origin is None else {origin}
+    if isinstance(item, ast.Constant) and isinstance(item.value, str) and item in path_literals:
+        origin = _literal_external_origin(item.value)
+        return set() if origin is None else {origin}
+    return set()
+
+
+def _is_home_lookup(item: ast.Call, path: tuple[str, ...]) -> bool:
+    if path[-2:] == ("Path", "home"):
+        return True
+    return (
+        path[-1:] == ("expanduser",)
+        and isinstance(item.func, ast.Attribute)
+        and any(
+            isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith("~")
+            for part in ast.walk(item.func.value)
+        )
+    )
+
+
+def _expands_outside_operator_root(
+    item: ast.Call,
+    *,
+    modules: dict[str, str],
+    symbols: dict[str, str],
+    constants: dict[str, str],
+    temp_controlled: bool,
+    controlled_transports: frozenset[str],
+) -> bool:
+    """Report an ``os.path.expanduser`` whose subject is not a CADRUMO_ override."""
+    subject = item.args[0] if item.args else None
+    if subject is None:
+        return True
+    for part in ast.walk(subject):
+        environment_key = _environment_key(part, constants, modules, symbols)
+        origin = _environment_origin(
+            environment_key, temp_controlled=temp_controlled, controlled_transports=controlled_transports
+        )
+        if origin is None and environment_key is not None and environment_key.startswith("CADRUMO_"):
+            return False
+    return True
+
+
+def _is_tempfile_constructor(path: tuple[str, ...], symbols: dict[str, str]) -> bool:
+    return (
+        bool(path[-1:])
+        and path[-1] in _TEMP_APIS
+        and ("tempfile" in path or symbols.get(path[-1], "").startswith("tempfile."))
+    )
+
+
+def _unqualified_temp_constructor(item: ast.Call, path: tuple[str, ...]) -> bool:
+    directory = next((kw.value for kw in item.keywords if kw.arg == "dir"), None)
+    if directory is None and len(item.args) > _TEMP_DIR_POSITION[path[-1]]:
+        directory = item.args[_TEMP_DIR_POSITION[path[-1]]]
+    return directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
+
+
+def _call_origins(
+    item: ast.Call,
+    *,
+    modules: dict[str, str],
+    symbols: dict[str, str],
+    constants: dict[str, str],
+    temp_controlled: bool,
+    controlled_transports: frozenset[str],
+) -> set[str]:
+    path = _call_path(item, modules, symbols)
+    if _is_home_lookup(item, path):
+        return {"home"}
+    if path[-3:] == ("os", "path", "expanduser"):
+        if _expands_outside_operator_root(
+            item,
+            modules=modules,
+            symbols=symbols,
+            constants=constants,
+            temp_controlled=temp_controlled,
+            controlled_transports=controlled_transports,
+        ):
+            return {"home"}
+        return set()
+    if _is_tempfile_constructor(path, symbols):
+        return {"ambient-temp"} if _unqualified_temp_constructor(item, path) and not temp_controlled else set()
+    if path[-1:] in {("gettempdir",), ("gettempdirb",)} and "tempfile" in path and not temp_controlled:
+        return {"ambient-temp"}
+    return set()
+
+
+def _tempdir_attribute_origins(item: ast.Attribute, modules: dict[str, str], *, temp_controlled: bool) -> set[str]:
+    path = _attribute_path(item)
+    if path and modules.get(path[0], path[0]) == "tempfile" and path[-1:] == ("tempdir",) and not temp_controlled:
+        return {"ambient-temp"}
+    return set()
+
+
 def _path_origin(
     node: ast.AST,
     *,
@@ -236,71 +342,31 @@ def _path_origin(
         if isinstance(attribute, ast.Attribute) and attribute.attr == "name"
         for part in ast.walk(attribute.value)
     }
+    selectors = {
+        part for expression in ast.walk(node) if isinstance(expression, ast.IfExp) for part in ast.walk(expression.test)
+    }
     path_literals = _path_literal_contexts(node, modules, symbols)
     for item in ast.walk(node):
-        if item in path_components:
+        if item in path_components or item in selectors:
             continue
-        if isinstance(item, ast.Name) and item.id in names:
-            found.update(names[item.id])
-        elif isinstance(item, ast.Name) and item in path_literals:
-            origin = _literal_external_origin(constants.get(item.id, ""))
-            if origin is not None:
-                found.add(origin)
-        elif isinstance(item, ast.Constant) and isinstance(item.value, str) and item in path_literals:
-            origin = _literal_external_origin(item.value)
-            if origin is not None:
-                found.add(origin)
+        found.update(_literal_origins(item, names=names, path_literals=path_literals, constants=constants))
         key = _environment_key(item, constants, modules, symbols)
         origin = _environment_origin(key, temp_controlled=temp_controlled, controlled_transports=controlled_transports)
         if origin is not None:
             found.add(origin)
         if isinstance(item, ast.Call):
-            path = _call_path(item, modules, symbols)
-            if path[-2:] == ("Path", "home") or (
-                path[-1:] == ("expanduser",)
-                and isinstance(item.func, ast.Attribute)
-                and any(
-                    isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith("~")
-                    for part in ast.walk(item.func.value)
+            found.update(
+                _call_origins(
+                    item,
+                    modules=modules,
+                    symbols=symbols,
+                    constants=constants,
+                    temp_controlled=temp_controlled,
+                    controlled_transports=controlled_transports,
                 )
-            ):
-                found.add("home")
-            elif path[-3:] == ("os", "path", "expanduser"):
-                subject = item.args[0] if item.args else None
-                if subject is None or not any(
-                    _environment_origin(
-                        _environment_key(part, constants, modules, symbols),
-                        temp_controlled=temp_controlled,
-                        controlled_transports=controlled_transports,
-                    )
-                    is None
-                    and (environment_key := _environment_key(part, constants, modules, symbols)) is not None
-                    and environment_key.startswith("CADRUMO_")
-                    for part in ast.walk(subject)
-                ):
-                    found.add("home")
-            elif (
-                path[-1:]
-                and path[-1] in _TEMP_APIS
-                and ("tempfile" in path or symbols.get(path[-1], "").startswith("tempfile."))
-            ):
-                directory = next((kw.value for kw in item.keywords if kw.arg == "dir"), None)
-                if directory is None and len(item.args) > _TEMP_DIR_POSITION[path[-1]]:
-                    directory = item.args[_TEMP_DIR_POSITION[path[-1]]]
-                no_directory = directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
-                if no_directory and not temp_controlled:
-                    found.add("ambient-temp")
-            elif path[-1:] in {("gettempdir",), ("gettempdirb",)} and "tempfile" in path and not temp_controlled:
-                found.add("ambient-temp")
+            )
         elif isinstance(item, ast.Attribute) and item.attr == "tempdir":
-            path = _attribute_path(item)
-            if (
-                path
-                and modules.get(path[0], path[0]) == "tempfile"
-                and path[-1:] == ("tempdir",)
-                and not temp_controlled
-            ):
-                found.add("ambient-temp")
+            found.update(_tempdir_attribute_origins(item, modules, temp_controlled=temp_controlled))
     return found
 
 
@@ -312,41 +378,82 @@ def _assigned_names(target: ast.expr) -> tuple[str, ...]:
     return ()
 
 
-def _write_targets(
-    call: ast.Call, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]
-) -> tuple[ast.AST, ...]:
-    path = _call_path(call, modules, symbols)
-    name = path[-1] if path else ""
-    owner = path[-2] if len(path) > 1 else ""
-    if name in _TEMP_APIS and ("tempfile" in path or symbols.get(name, "").startswith("tempfile.")):
-        directory = next((kw.value for kw in call.keywords if kw.arg == "dir"), None)
-        if directory is None and len(call.args) > _TEMP_DIR_POSITION[name]:
-            directory = call.args[_TEMP_DIR_POSITION[name]]
-        return (
-            (call,)
-            if directory is None or (isinstance(directory, ast.Constant) and directory.value is None)
-            else (directory,)
-        )
-    if name in {"write_text", "write_bytes", "mkdir", "makedirs", "touch", "unlink", "remove", "rmdir"} and isinstance(
-        call.func, ast.Attribute
-    ):
+_MUTATING_METHODS: Final[frozenset[str]] = frozenset(
+    {"write_text", "write_bytes", "mkdir", "makedirs", "touch", "unlink", "remove", "rmdir"}
+)
+_LOG_HANDLERS: Final[frozenset[str]] = frozenset(
+    {"FileHandler", "RotatingFileHandler", "TimedRotatingFileHandler", "WatchedFileHandler"}
+)
+
+
+def _mode_argument(call: ast.Call, position: int) -> ast.AST | None:
+    if len(call.args) > position:
+        return call.args[position]
+    return next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
+
+
+def _name_and_owner(path: tuple[str, ...]) -> tuple[str, str]:
+    return (path[-1] if path else ""), (path[-2] if len(path) > 1 else "")
+
+
+def _tempfile_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, _ = _name_and_owner(path)
+    if not (name in _TEMP_APIS and ("tempfile" in path or symbols.get(name, "").startswith("tempfile."))):
+        return None
+    directory = next((kw.value for kw in call.keywords if kw.arg == "dir"), None)
+    if directory is None and len(call.args) > _TEMP_DIR_POSITION[name]:
+        directory = call.args[_TEMP_DIR_POSITION[name]]
+    if directory is None or (isinstance(directory, ast.Constant) and directory.value is None):
+        return (call,)
+    return (directory,)
+
+
+def _method_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, _ = _name_and_owner(path)
+    if not isinstance(call.func, ast.Attribute):
+        return None
+    if name in _MUTATING_METHODS:
         return (call.func.value,)
-    if name == "open" and isinstance(call.func, ast.Attribute):
-        mode = call.args[0] if call.args else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        if _write_mode(mode, constants):
-            return (call.func.value,)
-    if name in {"open", "fdopen"} and owner in {"", "io"}:
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if call.args and _write_mode(mode, constants):
-            return (call.args[0],)
+    if name == "open" and _write_mode(_mode_argument(call, 0), constants):
+        return (call.func.value,)
+    return None
+
+
+def _builtin_open_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
+    if (
+        name in {"open", "fdopen"}
+        and owner in {"", "io"}
+        and call.args
+        and _write_mode(_mode_argument(call, 1), constants)
+    ):
+        return (call.args[0],)
+    return None
+
+
+def _os_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
     if owner == "os" and name in {"mkdir", "makedirs", "unlink", "remove", "rmdir"}:
         return tuple(call.args[:1])
     if owner == "os" and name in {"replace", "rename"}:
         return tuple(call.args[:2])
     if owner == "shutil" and name in {"copy", "copy2", "copyfile", "copytree", "move"}:
         return (call.args[1],) if len(call.args) > 1 else ()
+    return None
+
+
+def _database_and_log_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
     if (
         owner in {"sqlite3", "apsw"}
         and name == "connect"
@@ -354,20 +461,39 @@ def _write_targets(
         and not (isinstance(call.args[0], ast.Constant) and call.args[0].value == ":memory:")
     ):
         return (call.args[0],)
-    if name in {"FileHandler", "RotatingFileHandler", "TimedRotatingFileHandler", "WatchedFileHandler"}:
+    if name in _LOG_HANDLERS:
         return (call.args[0],) if call.args else tuple(kw.value for kw in call.keywords if kw.arg == "filename")
-    if owner == "zipfile" and name == "ZipFile":
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if _write_mode(mode, constants) and call.args:
-            return (call.args[0],)
-    if owner == "tarfile" and name == "open":
-        mode = (
-            call.args[1] if len(call.args) > 1 else next((kw.value for kw in call.keywords if kw.arg == "mode"), None)
-        )
-        if _write_mode(mode, constants) and call.args:
-            return (call.args[0],)
+    return None
+
+
+def _archive_targets(
+    call: ast.Call, path: tuple[str, ...], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...] | None:
+    name, owner = _name_and_owner(path)
+    archive_open = (owner == "zipfile" and name == "ZipFile") or (owner == "tarfile" and name == "open")
+    if archive_open and _write_mode(_mode_argument(call, 1), constants) and call.args:
+        return (call.args[0],)
+    return None
+
+
+_TARGET_RESOLVERS: Final = (
+    _tempfile_targets,
+    _method_targets,
+    _builtin_open_targets,
+    _os_targets,
+    _database_and_log_targets,
+    _archive_targets,
+)
+
+
+def _write_targets(
+    call: ast.Call, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]
+) -> tuple[ast.AST, ...]:
+    path = _call_path(call, modules, symbols)
+    for resolve in _TARGET_RESOLVERS:
+        targets = resolve(call, path, symbols, constants)
+        if targets is not None:
+            return targets
     return ()
 
 
@@ -570,38 +696,78 @@ def _assigned_names_for_statement(statement: ast.stmt) -> tuple[str, ...]:
     return ()
 
 
-def _storage_pinner_is_rooted(tree: ast.Module, modules: dict[str, str], symbols: dict[str, str]) -> bool:
-    base_is_canonical = any(
-        isinstance(statement, (ast.Assign, ast.AnnAssign))
-        and "_BASE_STORAGE_ROOT" in _assigned_names_for_statement(statement)
-        and isinstance(statement.value, ast.Call)
-        and _call_path(statement.value, modules, symbols)[-1:] == ("configured_storage_root",)
-        for statement in tree.body
-    )
-    pinner = next(
-        (node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_pin_storage_override"),
-        None,
-    )
-    if not base_is_canonical or pinner is None:
-        return False
-    rooted_values = {
-        name
-        for statement in pinner.body
-        if isinstance(statement, (ast.Assign, ast.AnnAssign))
-        and isinstance(statement.value, ast.Call)
-        and _call_path(statement.value, modules, symbols)[-1:] == ("storage_directory",)
-        and any(
-            keyword.arg == "root" and isinstance(keyword.value, ast.Name) and keyword.value.id == "_BASE_STORAGE_ROOT"
-            for keyword in statement.value.keywords
+class _TempBootstrap:
+    """Facts a conftest statement sequence establishes about temp-root pinning."""
+
+    def __init__(self, modules: dict[str, str], symbols: dict[str, str], constants: dict[str, str]) -> None:
+        self.modules = modules
+        self.symbols = symbols
+        self.constants = constants
+        self.roots: set[str] = set()
+        self.root_lines: list[int] = []
+        self.configured_env: set[str] = set()
+        self.configured_lines: list[int] = []
+        self.tempfile_is_configured = False
+
+    def uses_temp_root(self, value: ast.AST) -> bool:
+        return any(isinstance(part, ast.Name) and part.id in self.roots for part in ast.walk(value))
+
+    def record_root(self, statement: ast.stmt, call: tuple[str, ...], targets: list[ast.expr]) -> None:
+        if call[-1:] == ("prepare_temporary_directory",) or call == ("dev", "temporary_output", "prepare_temp_root"):
+            self.roots.update(name for target in targets for name in _assigned_names(target))
+            self.root_lines.append(statement.lineno)
+
+    def record_environ_update(self, statement: ast.stmt, value: ast.Call, call: tuple[str, ...]) -> None:
+        if not (call[-1:] == ("update",) and isinstance(value.func, ast.Attribute) and value.args):
+            return
+        receiver = value.func.value
+        is_environ = (
+            isinstance(receiver, ast.Attribute)
+            and receiver.attr == "environ"
+            and isinstance(receiver.value, ast.Name)
+            and self.modules.get(receiver.value.id, receiver.value.id) == "os"
         )
-        for name in _assigned_names_for_statement(statement)
-    }
-    return any(
-        isinstance(statement, ast.Return)
-        and isinstance(statement.value, ast.Name)
-        and statement.value.id in rooted_values
-        for statement in pinner.body
-    )
+        mapping = value.args[0]
+        if not (is_environ and isinstance(mapping, ast.Dict)):
+            return
+        for key, item_value in zip(mapping.keys, mapping.values, strict=False):
+            name = _literal(key, self.constants)
+            if name in _TEMP_ENV and self.uses_temp_root(item_value):
+                self.configured_env.add(name)
+                self.configured_lines.append(statement.lineno)
+
+    def record_tempdir(self, statement: ast.stmt, value: ast.expr, targets: list[ast.expr]) -> None:
+        for target in targets:
+            target_path = _attribute_path(target)
+            if (
+                target_path
+                and self.modules.get(target_path[0], target_path[0]) == "tempfile"
+                and target_path[-1:] == ("tempdir",)
+                and self.uses_temp_root(value)
+            ):
+                self.tempfile_is_configured = True
+                self.configured_lines.append(statement.lineno)
+
+    def record(self, statement: ast.stmt) -> None:
+        value: ast.expr | None
+        targets: list[ast.expr] = []
+        if isinstance(statement, ast.Assign):
+            value = statement.value
+            targets.extend(statement.targets)
+        elif isinstance(statement, ast.AnnAssign):
+            value = statement.value
+            targets.append(statement.target)
+        elif isinstance(statement, ast.Expr):
+            value = statement.value
+        else:
+            return
+        if value is None:
+            return
+        if isinstance(value, ast.Call):
+            call = _call_path(value, self.modules, self.symbols)
+            self.record_root(statement, call, targets)
+            self.record_environ_update(statement, value, call)
+        self.record_tempdir(statement, value, targets)
 
 
 def _pytest_temp_bootstrap(root: Path) -> bool:
@@ -611,76 +777,15 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
     except (OSError, UnicodeDecodeError, SyntaxError):
         return False
     modules, symbols = _imports(tree)
-    constants = _string_constants(tree)
-    pinner_is_rooted = _storage_pinner_is_rooted(tree, modules, symbols)
-    roots: set[str] = set()
-    root_lines: list[int] = []
-    configured_env: set[str] = set()
-    configured_lines: list[int] = []
-    tempfile_is_configured = False
-
-    def uses_temp_root(value: ast.AST) -> bool:
-        return any(isinstance(part, ast.Name) and part.id in roots for part in ast.walk(value))
-
+    scan = _TempBootstrap(modules, symbols, _string_constants(tree))
     for statement in tree.body:
-        if isinstance(statement, ast.Assign):
-            value = statement.value
-            targets = statement.targets
-        elif isinstance(statement, ast.AnnAssign):
-            value = statement.value
-            targets = [statement.target]
-        elif isinstance(statement, ast.Expr):
-            value = statement.value
-            targets = []
-        else:
-            continue
-        if value is None:
-            continue
-        if isinstance(value, ast.Call):
-            call = _call_path(value, modules, symbols)
-            if call[-1:] in {("_pin_storage_override",), ("storage_directory",)} and value.args:
-                if _literal(value.args[0], constants) == "CADRUMO_TEMP_DIR" and (
-                    call[-1:] != ("_pin_storage_override",) or pinner_is_rooted
-                ):
-                    roots.update(name for target in targets for name in _assigned_names(target))
-                    root_lines.append(statement.lineno)
-            elif call[-1:] == ("prepare_temporary_directory",):
-                roots.update(name for target in targets for name in _assigned_names(target))
-                root_lines.append(statement.lineno)
-
-            if call[-1:] == ("update",) and isinstance(value.func, ast.Attribute) and value.args:
-                receiver = value.func.value
-                is_environ = (
-                    isinstance(receiver, ast.Attribute)
-                    and receiver.attr == "environ"
-                    and isinstance(receiver.value, ast.Name)
-                    and modules.get(receiver.value.id, receiver.value.id) == "os"
-                )
-                mapping = value.args[0]
-                if is_environ and isinstance(mapping, ast.Dict):
-                    for key, item_value in zip(mapping.keys, mapping.values, strict=False):
-                        name = _literal(key, constants)
-                        if name in _TEMP_ENV and uses_temp_root(item_value):
-                            configured_env.add(name)
-                            configured_lines.append(statement.lineno)
-
-        for target in targets:
-            target_path = _attribute_path(target) if isinstance(target, ast.expr) else ()
-            if (
-                target_path
-                and modules.get(target_path[0], target_path[0]) == "tempfile"
-                and target_path[-1:] == ("tempdir",)
-                and uses_temp_root(value)
-            ):
-                tempfile_is_configured = True
-                configured_lines.append(statement.lineno)
-
+        scan.record(statement)
     first_temp_use = _first_temp_use(tree)
-    last_binding = max((*root_lines, *configured_lines), default=0)
+    last_binding = max((*scan.root_lines, *scan.configured_lines), default=0)
     return (
-        bool(roots)
-        and _TEMP_ENV.issubset(configured_env)
-        and tempfile_is_configured
+        bool(scan.roots)
+        and _TEMP_ENV.issubset(scan.configured_env)
+        and scan.tempfile_is_configured
         and first_temp_use is not None
         and last_binding < first_temp_use
     )
@@ -736,8 +841,8 @@ def test_no_filesystem_write_uses_an_uncontrolled_external_root() -> None:
 
     assert examined > 100 and not unreadable, "the source scan was incomplete"
     assert findings == (), (
-        "route writes through CADRUMO_STORAGE_ROOT / a refined storage variable, "
-        "or initialize CADRUMO_TEMP_DIR before using process temp:\n  " + "\n  ".join(findings)
+        "route writes through the storage root (CADRUMO_STORAGE_ROOT), "
+        "or pin the temporary directory before using process temp:\n  " + "\n  ".join(findings)
     )
 
 
@@ -814,12 +919,10 @@ def test_an_explicit_hard_coded_temp_directory_is_reported(tmp_path: Path) -> No
     assert findings == ("fixture.py:2 (hardcoded-external)",)
 
 
-def test_documented_storage_roots_include_canonical_and_refined_temp_controls() -> None:
+def test_documented_storage_roots_include_the_canonical_root_and_scratch_base() -> None:
     """The gate follows the operator-facing names rather than suffix guesses."""
     assert {
         "CADRUMO_STORAGE_ROOT",
-        "CADRUMO_LOCAL_STORAGE_ROOT",
-        "CADRUMO_TEMP_DIR",
         "CADRUMO_SCRATCH_BASE",
     }.issubset(_documented_storage_overrides())
 
@@ -882,6 +985,37 @@ def test_a_source_paths_basename_does_not_taint_a_controlled_copy_destination(tm
     assert findings == ()
 
 
+def test_an_environment_selector_does_not_taint_controlled_path_branches(tmp_path: Path) -> None:
+    """A worker flag chooses a path but contributes none of its components."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "base = Path('controlled')\n"
+        "root = base.parent if bool(os.environ.get('PYTEST_XDIST_WORKER')) else base\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ()
+
+
+def test_an_environment_path_branch_is_reported_despite_a_selector(tmp_path: Path) -> None:
+    """Either branch can supply the actual destination of a conditional write."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "root = Path(os.environ['HOME']) if os.environ.get('FLAG') else Path('controlled')\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ("fixture.py:4 (home)",)
+
+
+def test_a_conditional_selector_still_reports_its_own_write(tmp_path: Path) -> None:
+    """Ignoring selector provenance must preserve its independent side effects."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "root = Path('one') if Path(os.environ['HOME']).mkdir() else Path('two')\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ("fixture.py:3 (home)",)
+
+
 @pytest.mark.parametrize("device", ("/dev/null", "/dev/tty", "NUL", "CONOUT$"))
 def test_console_and_null_devices_are_not_storage_paths(tmp_path: Path, device: str) -> None:
     """Intentional terminal output does not create application storage."""
@@ -906,7 +1040,7 @@ def test_storage_roots_and_explicit_temp_directory_are_accepted(tmp_path: Path) 
         "import os\nimport tempfile\nfrom pathlib import Path\n"
         "storage = Path(os.environ['CADRUMO_STORAGE_ROOT']) / 'profiles'\n"
         "storage.mkdir(parents=True, exist_ok=True)\n"
-        "with tempfile.TemporaryDirectory(dir=os.environ['CADRUMO_TEMP_DIR']):\n    pass\n",
+        "with tempfile.TemporaryDirectory(dir=os.environ['CADRUMO_SCRATCH_BASE']):\n    pass\n",
     )
 
     assert findings == ()
@@ -919,17 +1053,12 @@ def test_an_unscoped_temp_constructor_is_allowed_only_after_bootstrap(tmp_path: 
     assert _fixture_scan(tmp_path, source, temp_controlled=True) == ()
 
 
-def test_pytest_temp_bootstrap_requires_rooted_and_early_os_and_stdlib_bindings(tmp_path: Path) -> None:
+def test_pytest_temp_bootstrap_requires_early_os_and_stdlib_bindings(tmp_path: Path) -> None:
     """A test-only allowance cannot be copied without the real root assignments."""
     base = (
         "import os\nimport tempfile\n"
-        "from cadrumo.core.storage_environment import configured_storage_root, storage_directory\n"
-        "_BASE_STORAGE_ROOT = configured_storage_root()\n"
-        "def _pin_storage_override(name, default):\n"
-        "    resolved = storage_directory(name, default, root=_BASE_STORAGE_ROOT)\n"
-        "    os.environ[name] = str(resolved)\n"
-        "    return resolved\n"
-        "_TEMP_BASE = _pin_storage_override('CADRUMO_TEMP_DIR', 'tmp')\n"
+        "from dev.temporary_output import prepare_temp_root\n"
+        "_TEMP_BASE = prepare_temp_root()\n"
     )
     bindings = (
         "os.environ.update({'TEMP': str(_TEMP_BASE), 'TMP': str(_TEMP_BASE), 'TMPDIR': str(_TEMP_BASE)})\n"
@@ -946,12 +1075,26 @@ def test_pytest_temp_bootstrap_requires_rooted_and_early_os_and_stdlib_bindings(
     (tmp_path / "conftest.py").write_text(late_binding, encoding=UTF_8)
     assert not _pytest_temp_bootstrap(tmp_path)
 
-    unrooted = base.replace(
-        "resolved = storage_directory(name, default, root=_BASE_STORAGE_ROOT)",
-        "resolved = Path.home() / default",
+
+@pytest.mark.parametrize(
+    ("module", "accepted"),
+    [("dev.temporary_output", True), ("dev.paths", False), ("unrelated", False)],
+)
+def test_pytest_temp_bootstrap_recognizes_only_the_current_temp_root_authority(
+    tmp_path: Path, module: str, *, accepted: bool
+) -> None:
+    """The developer root helper is trusted by its defining module, not its name."""
+    source = (
+        "import os\nimport tempfile\n"
+        f"from {module} import prepare_temp_root\n"
+        "_TEMP_BASE = prepare_temp_root()\n"
+        "os.environ.update({'TEMP': str(_TEMP_BASE), 'TMP': str(_TEMP_BASE), 'TMPDIR': str(_TEMP_BASE)})\n"
+        "tempfile.tempdir = str(_TEMP_BASE)\n"
+        "tempfile.gettempdir()\n"
     )
-    (tmp_path / "conftest.py").write_text(unrooted + bindings, encoding=UTF_8)
-    assert not _pytest_temp_bootstrap(tmp_path)
+    (tmp_path / "conftest.py").write_text(source, encoding=UTF_8)
+
+    assert _pytest_temp_bootstrap(tmp_path) is accepted
 
 
 def test_reading_a_platform_setting_without_writing_is_not_reported(tmp_path: Path) -> None:

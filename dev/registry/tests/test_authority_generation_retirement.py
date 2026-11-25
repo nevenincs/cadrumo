@@ -18,7 +18,7 @@ from ..pipeline.authority_publication import (
     install_validated_authority_database,
     promote_accepted_authority_database,
 )
-from ._authority_generation_support import publishable_artifact
+from .authority_generation_support import publishable_artifact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

@@ -40,11 +40,11 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.aggregation.ledger_filing_snapshot import row_fingerprint
 from cadrumo.application.aggregation.ledger_membership import LedgerSourceMembership, query_ledger_membership
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -64,7 +64,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_ledger_evidence_ports,
     build_ledger_membership_ports,
     build_verification_repository_bundle,
@@ -72,6 +72,7 @@ from cadrumo.entrypoints.adapter_composition import (
 from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import (
     BUCKET_ID,
     TAX_ID,
+    calculate_irene,
     calculate_irene_revision,
     workflow_profile,
 )
@@ -81,6 +82,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....tests.pdf_fixtures import text_pdf_bytes
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -144,26 +146,25 @@ def _row(tx_repo: TransactionCatalogueRepository, transaction_id: str) -> Transa
 
 def _write_invoice(tmp_path: Path) -> Path:
     invoice = tmp_path / "supplier-invoice.pdf"
-    invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+    invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
     return invoice
 
 
-def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) -> None:
-    """Attach is value-neutral, measured rather than assumed.
+def test_attaching_evidence_moves_only_the_field_set_that_watches_evidence(tmp_path: Path) -> None:
+    """A draft recalculates after an attach; an older anchor stays as quiet as it was.
 
-    The drift gate anchors on this fingerprint, so if an attach moved it the
-    gate would refuse the very recovery the deductible-evidence promotion tells
-    the operator to perform. The fingerprint covers tax facts only, but
-    ``lifecycle_state`` IS one of them, so whether the real attach path
-    transitions it is a behavioural question that reading the field list cannot
-    settle. This drives the production attach path end to end.
+    Evidence decides what a recalculation admits, so the current field set sees
+    it. ``lifecycle_state`` is in every set, so whether the real attach path
+    transitions it is a behavioural question the older set answers.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
             _revision, _sale, purchase, _wu, _cr, _fr, _vr, event_repo, tx_repo = calculate_irene_revision(
                 profile.repository, operation=operation
             )
-        before = row_fingerprint(_row(tx_repo, purchase.transaction_id))
+        stored = _row(tx_repo, purchase.transaction_id)
+        before = row_fingerprint(stored)
+        before_v3 = row_fingerprint(stored, field_set_version=3)
 
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
@@ -180,9 +181,9 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
 
         attached = _transaction(tx_repo, purchase.transaction_id)
         assert attached is not None
-        # The attach really happened; the fingerprint is unmoved anyway.
         assert attached.purchase_invoice_evidence_id == evidence.record.evidence_id
-        assert row_fingerprint(attached) == before
+        assert row_fingerprint(attached) != before
+        assert row_fingerprint(attached, field_set_version=3) == before_v3
 
 
 def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
@@ -190,8 +191,7 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
 
     The counterpart to the test above: the anchor is only useful if it moves
     for the change that invalidates the stored casilla values. Together the two
-    establish the discrimination the gate needs — catch the reclassify, ignore
-    the attach.
+    establish what the gate sees under each field set.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
@@ -329,8 +329,8 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
 
     Guards the obvious over-block: if the anchor were recorded wrongly, or the
     comparison were against the wrong rows, every ledger-derived verify would
-    refuse. Here the invoice is attached and nothing else moves, so the verify
-    must reach its grant exactly as it did before the gate existed.
+    refuse. Here the invoice is attached and the draft recalculated, so its
+    anchor is current and the verify must reach its grant.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
@@ -351,6 +351,9 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
                 ports=ports,
                 occurred_at=_AT,
             )
+        work_unit = wu_repo.load().get(revision.work_unit_id)
+        assert work_unit is not None
+        assert calculate_irene(work_unit).revision.calculation_revision_id == revision.calculation_revision_id
 
         granted = _verify(revision.calculation_revision_id, repos)
 
@@ -431,7 +434,15 @@ def _add_transaction(
     direction: TransactionDirection = TransactionDirection.INCOMING,
     currency: str = "EUR",
 ) -> Transaction:
-    """Add through the real ledger action after the persisted calculation."""
+    """Add through the real ledger action after the persisted calculation.
+
+    A personal row has no business component, so it is written without the IVA figures
+    the business rows carry.
+    """
+    personal = business is BusinessClassification.PERSONAL
+    taxable_base = None if personal else Decimal("300.00")
+    iva_rate = None if personal else Decimal("0.21")
+    iva_amount = None if personal else Decimal("63.00")
     with _ledger_ports(objects, repos[-1], repos[-2]) as ports:
         return create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -443,9 +454,9 @@ def _add_transaction(
                 description="New transaction after calculation",
                 counterparty="New customer or supplier",
                 business_classification=business,
-                taxable_base=Decimal("300.00"),
-                iva_rate=Decimal("0.21"),
-                iva_amount=Decimal("63.00"),
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
                 actor="operator",
             ),
             ports=ports,

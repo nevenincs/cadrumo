@@ -97,4 +97,11 @@ if(BUILD_TESTING)
       --target-dir "${CADRUMO_PATH_CARGO}/manager-fixture" --manifest-path "${manager_cargo_manifest}"
       --target "${CADRUMO_PIN_rust_target}" -- --test-threads=1)
   set_tests_properties(manager.supervision PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
+  cadrumo_rust_quality(manager MANIFEST "${manager_cargo_manifest}"
+    CLIPPY_CARGO manager_cargo CLIPPY_ARGS --profile "${manager_profile}")
+  # Fixture mode is refused in release builds, so this lint always runs the dev profile, in the
+  # directory the supervision tests build.
+  cadrumo_rust_clippy(manager.fixture MANIFEST "${manager_cargo_manifest}" CARGO manager_cargo
+    ARGS --features fixture-test-mode,live-package-tests --profile dev
+      --target-dir "${CADRUMO_PATH_CARGO}/manager-fixture")
 endif()

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 import pytest
 
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
@@ -9,22 +11,25 @@ from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 
-from .._app_ledger_command_specs import LEDGER_COMMAND_SPECS
-from .._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
-from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from .._app_ledger_rule_ratio_command_spec_support import (
-    _LEDGER_RULE_RATIO_LEAF_INVOCATION,
-    _RATIOS_OUTPUT_LANGUAGE_OPTION,
-    _RATIOS_YEAR_OPTION,
-    _RULE_ACTOR_OPTION,
+from ..app_ledger_command_specs import LEDGER_COMMAND_SPECS
+from ..app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
+from ..app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
+from ..app_ledger_rule_ratio_command_spec_support import (
+    LEDGER_RULE_RATIO_LEAF_INVOCATION,
+    RATIOS_OUTPUT_LANGUAGE_OPTION,
+    RATIOS_YEAR_OPTION,
+    RULE_ACTOR_OPTION,
 )
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_STDIN_CHANNEL: Final = "stdin"
+_FD_CHANNEL: Final = "file-descriptor"
+
 _DEFAULT_CONSTRAINT = (None, None, False, True, False, True, True, False, True, False, False)
 _NO_TRANSPORT = ("none", "not_applicable", "not_applicable")
-_NO_VALUE_HOOKS = (None, None, None, None, ())
+_NO_VALUE_HOOKS = (None, None, None, ())
 
 
 def _value_contract(parameter: ArgumentSpec | OptionSpec) -> tuple[object, ...]:
@@ -33,7 +38,7 @@ def _value_contract(parameter: ArgumentSpec | OptionSpec) -> tuple[object, ...]:
         value.annotation.identity,
         *(
             target.identity if target is not None else None
-            for target in (value.click_type, value.parser, value.completion, value.callback)
+            for target in (value.parser, value.completion, value.callback)
         ),
         value.choices,
     )
@@ -221,6 +226,8 @@ def _option(
     *,
     is_flag: bool = False,
     flag_value: object = None,
+    multiple: bool = False,
+    machine_secret_channel: str | None = None,
 ) -> tuple[object, ...]:
     return (
         "option",
@@ -237,13 +244,13 @@ def _option(
         (declaration,),
         is_flag,
         flag_value,
-        False,
+        multiple,
         False,
         None,
         None,
         (),
         False,
-        None,
+        machine_secret_channel,
         None,
     )
 
@@ -403,6 +410,81 @@ _EXPECTED_LEAF_CONTRACTS = {
         "cadrumo.entrypoints.cli.ledger_rule_results:RuleListResult",
         "ledger.rule.list",
     ),
+    "app_ledger_rule_remove": (
+        "app_ledger_rule",
+        "remove",
+        "leaf",
+        _LEAF_INVOCATION_CONTRACT,
+        "cli.app.ledger.rule.remove_help",
+        None,
+        (
+            _option(
+                "rule_id",
+                "--rule-id",
+                "builtins:str",
+                "required",
+                None,
+                "cli.app.ledger.rule.remove_rule_id_help",
+            ),
+            _option(
+                "created_at",
+                "--created-at",
+                "builtins:str",
+                "required",
+                None,
+                "cli.app.ledger.rule.remove_created_at_help",
+            ),
+        ),
+        _POLICY_4_CONTRACT,
+        "cadrumo.entrypoints.cli.ledger_rules_commands:rule_remove",
+        "target",
+        "cadrumo.entrypoints.cli.ledger_rule_results:RuleRemoveResult",
+        "ledger.rule.remove",
+    ),
+    "app_ledger_rule_trial": (
+        "app_ledger_rule",
+        "trial",
+        "leaf",
+        _LEAF_INVOCATION_CONTRACT,
+        "cli.app.ledger.rule.trial_help",
+        None,
+        (
+            _option(
+                "transaction_id",
+                "--transaction-id",
+                "builtins:str",
+                "literal",
+                (),
+                "cli.app.ledger.rule.trial_transaction_id_help",
+                multiple=True,
+            ),
+            _option(
+                "secrets_stdin",
+                "--secrets-stdin",
+                "builtins:bool",
+                "literal",
+                False,
+                "cli.config.custody.secrets_stdin_help",
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=_STDIN_CHANNEL,
+            ),
+            _option(
+                "secrets_fd",
+                "--secrets-fd",
+                "builtins:int",
+                "literal",
+                None,
+                "cli.config.custody.secrets_fd_help",
+                machine_secret_channel=_FD_CHANNEL,
+            ),
+        ),
+        _POLICY_5_CONTRACT,
+        "cadrumo.entrypoints.cli.rule_trial_commands:rule_trial",
+        "target",
+        "cadrumo.entrypoints.cli.ledger_results:LedgerRuleTrialEnvelope",
+        "ledger.rule.trial",
+    ),
     "app_ledger_ratios_eligible": (
         "app_ledger_ratios",
         "eligible",
@@ -500,17 +582,17 @@ def test_rule_and_ratios_leaves_match_the_independent_literal_contract() -> None
 
 
 def test_shared_facts_have_their_literal_contract_and_only_identical_placements() -> None:
-    assert _parameter_contract(_RULE_ACTOR_OPTION) == _OPTIONAL_ACTOR
-    assert _parameter_contract(_RATIOS_YEAR_OPTION) == _OPTIONAL_YEAR
-    assert _parameter_contract(_RATIOS_OUTPUT_LANGUAGE_OPTION) == _OPTIONAL_OUTPUT_LANGUAGE
+    assert _parameter_contract(RULE_ACTOR_OPTION) == _OPTIONAL_ACTOR
+    assert _parameter_contract(RATIOS_YEAR_OPTION) == _OPTIONAL_YEAR
+    assert _parameter_contract(RATIOS_OUTPUT_LANGUAGE_OPTION) == _OPTIONAL_OUTPUT_LANGUAGE
 
     rules = {spec.token: spec for spec in LEDGER_RULE_COMMAND_SPECS}
     ratios = {spec.token: spec for spec in LEDGER_RATIOS_COMMAND_SPECS}
-    assert rules["add"].parameters[-1] is _RULE_ACTOR_OPTION
-    assert rules["apply"].parameters[-1] is _RULE_ACTOR_OPTION
-    assert all(spec.invocation is _LEDGER_RULE_RATIO_LEAF_INVOCATION for spec in (*rules.values(), *ratios.values()))
-    assert all(ratios[token].parameters[0] is _RATIOS_YEAR_OPTION for token in ("eligible", "list", "set"))
-    assert all(spec.parameters[-1] is _RATIOS_OUTPUT_LANGUAGE_OPTION for spec in ratios.values())
+    assert rules["add"].parameters[-1] is RULE_ACTOR_OPTION
+    assert rules["apply"].parameters[-1] is RULE_ACTOR_OPTION
+    assert all(spec.invocation is LEDGER_RULE_RATIO_LEAF_INVOCATION for spec in (*rules.values(), *ratios.values()))
+    assert all(ratios[token].parameters[0] is RATIOS_YEAR_OPTION for token in ("eligible", "list", "set"))
+    assert all(spec.parameters[-1] is RATIOS_OUTPUT_LANGUAGE_OPTION for spec in ratios.values())
 
 
 def test_rule_and_ratios_paths_resolve_from_the_complete_ledger_graph() -> None:
@@ -519,6 +601,7 @@ def test_rule_and_ratios_paths_resolve_from_the_complete_ledger_graph() -> None:
         ("aeat", "app", "ledger", "rule", "add"): "app_ledger_rule_add",
         ("aeat", "app", "ledger", "rule", "apply"): "app_ledger_rule_apply",
         ("aeat", "app", "ledger", "rule", "list"): "app_ledger_rule_list",
+        ("aeat", "app", "ledger", "rule", "remove"): "app_ledger_rule_remove",
         ("aeat", "app", "ledger", "ratios", "eligible"): "app_ledger_ratios_eligible",
         ("aeat", "app", "ledger", "ratios", "list"): "app_ledger_ratios_list",
         ("aeat", "app", "ledger", "ratios", "set"): "app_ledger_ratios_set",

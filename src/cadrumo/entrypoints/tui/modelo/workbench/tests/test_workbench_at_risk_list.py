@@ -15,39 +15,23 @@ import re
 import pytest
 from rich.console import Console
 from rich.text import Text
-from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import ModeloWorkForm
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
 from ......core.config import override_settings
-from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
-from ......domain.modelos.codes import ModeloCode
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..review import UnattributedBoxes, unattributed_words
 from ..screen import ModeloWorkbenchScreen
 from ..sources import BOX_LIST_LINES
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader
+from .workbench_fixture import FakeActions, FakeReader, registry_form_of
 
 _CONSOLE = Console(width=200)
 _SECTION_COUNT = re.compile(r"\((\d+)\)")
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _boxes(count: int, sections: tuple[str, ...] = ("Section",)) -> UnattributedBoxes:
@@ -84,34 +68,13 @@ def test_past_twenty_boxes_the_sections_are_named_with_their_counts() -> None:
 
 
 def _modelo_100(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
-    modelo, year, code = "100", 2025, "0A"
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
+    return registry_form_of(
+        operation,
+        modelo="100",
+        year=2025,
+        code="0A",
         bucket_id="13000000-0000-4000-8000-000000000100",
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
         work_unit_id="d" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
     )
 
 
@@ -132,17 +95,15 @@ async def test_a_modelo_100_whose_values_nobody_typed_names_sections_with_counts
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot, 8)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             dialog = app.screen
             message = (
                 str(dialog.query_one("#confirm-message", Static).render()) if isinstance(dialog, ConfirmScreen) else ""
             )
             app.exit(None)
-        lead = tr("tui.modelo.workbench.calculate.operator_entries_at_risk", count=total, boxes="\u0000").split(
-            "\u0000"
-        )
+        lead = tr("workspace.modelo.calculate.operator_entries_at_risk", count=total, boxes="\u0000").split("\u0000")
 
     assert isinstance(dialog, ConfirmScreen)
     listed = message.removeprefix(lead[0]).removesuffix(lead[1])

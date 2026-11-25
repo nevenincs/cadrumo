@@ -17,18 +17,18 @@ from dev.acceptance.income_tax.installed_tui_child import (
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .filing_year import require_journey_year, require_m303_developer_header_positions
-from .m303_evidence_child import _run_child
+from .m303_evidence_child import run_child
 from .m303_evidence_contracts import (
-    _COORDINATES,
-    _FIRST_QUARTER,
-    _MONTH,
-    _PERIOD,
-    _SCHEMA_VERSION,
+    COORDINATES,
+    FIRST_QUARTER,
+    MONTH,
+    PERIOD,
+    SCHEMA_VERSION,
     IvaInstalledM303Error,
     JourneyReceipt,
 )
-from .m303_evidence_identity import _authority, _installed_identity
-from .m303_evidence_stores import _continuation_store, _first_quarter_store, _monthly_store, _tui_led_store
+from .m303_evidence_identity import authority, installed_identity
+from .m303_evidence_stores import continuation_store, first_quarter_store, monthly_store, tui_led_store
 
 if TYPE_CHECKING:
     pass
@@ -43,26 +43,26 @@ def run_journey(args: argparse.Namespace) -> JourneyReceipt:
             in any exercised period, or the year's 4T record design is not one
             whose developer-header positions the journey holds.
     """
-    journey_year = require_journey_year(authority_root=args.authority_root, year=args.year, coordinates=_COORDINATES)
-    export_positions = require_m303_developer_header_positions(journey_year, period=_PERIOD)
+    journey_year = require_journey_year(authority_root=args.authority_root, year=args.year, coordinates=COORDINATES)
+    export_positions = require_m303_developer_header_positions(journey_year, period=PERIOD)
     args.output_root.mkdir(parents=True, exist_ok=True)
     if any(args.output_root.iterdir()):
         raise IvaInstalledM303Error("output root must be empty")
-    version, init_path, init_sha256, bundled_generation = _installed_identity(args.python)
-    generation, descriptor_sha256 = _authority(args.authority_root)
+    version, init_path, init_sha256, bundled_generation = installed_identity(args.python)
+    generation, descriptor_sha256 = authority(args.authority_root)
     if generation != bundled_generation:
         raise IvaInstalledM303Error("supplied authority generation differs from the one the installed wheel bundles")
     stores = (
-        _tui_led_store(args, journey_year, export_positions),
-        _continuation_store(args, journey_year),
-        _monthly_store(args, journey_year),
-        _first_quarter_store(args, journey_year),
+        tui_led_store(args, journey_year, export_positions),
+        continuation_store(args, journey_year),
+        monthly_store(args, journey_year),
+        first_quarter_store(args, journey_year),
     )
     return JourneyReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         filing_year=journey_year.year,
-        periods=(_PERIOD, _MONTH, _FIRST_QUARTER),
+        periods=(PERIOD, MONTH, FIRST_QUARTER),
         source_commit=args.source_commit,
         wheel_filename=args.wheel.name,
         wheel_sha256=sha256_hex(args.wheel.read_bytes()),
@@ -120,9 +120,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         fault_log = args.receipt.with_suffix(".fault.txt").open("w", encoding="utf-8")
         faulthandler.enable(fault_log)
         try:
-            receipt = _run_child(args, passphrase=read_passphrase_from_stdin())
+            receipt = run_child(args, passphrase=read_passphrase_from_stdin())
         except InstalledTuiChildError as error:
-            write_installed_tui_failure_receipt(path=args.receipt, schema_version=_SCHEMA_VERSION, error=error)
+            write_installed_tui_failure_receipt(path=args.receipt, schema_version=SCHEMA_VERSION, error=error)
             return 2
         except KeyboardInterrupt:
             raise
@@ -134,7 +134,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             ]
             write_installed_tui_failure_receipt(
                 path=args.receipt,
-                schema_version=_SCHEMA_VERSION,
+                schema_version=SCHEMA_VERSION,
                 error=InstalledTuiChildError(f"{type(error).__name__}: {error!s:.300} at {frames[-6:]}"),
             )
             return 3

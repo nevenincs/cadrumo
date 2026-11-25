@@ -20,6 +20,10 @@ from __future__ import annotations
 
 from typing import override
 
+from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+
 from ...host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -28,14 +32,21 @@ from ...host.controller import (
     ResolvedAgentCredentials,
 )
 from ...host.credential_frame import AgentCredential, wipe
-from ..domain.catalog import ProviderConsumer
-from .ports import ProviderCatalogSource, ProviderCatalogUnavailableError, ProviderSettingsStore
+from ..domain.catalog import ProviderCatalog, ProviderConsumer
+from .ports import (
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
+    ProviderCatalogUnavailableReason,
+    ProviderSettingsStore,
+)
 from .resolution import (
     ProviderCredentialResolver,
     ProviderCredentialUnavailable,
     ProviderCredentialUnavailableReason,
     ResolvedDirectCredential,
 )
+
+_LOGGER = get_logger(__name__)
 
 _SIGNED_OUT_REASONS = frozenset(
     {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED},
@@ -71,22 +82,20 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         self._catalog_source = catalog_source
 
     @override
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         """Return fresh credential buffers under the generations they were resolved at.
 
         Raises:
             AgentHostError: ``SIGNED_OUT`` when the profile is not usable,
                 ``CREDENTIALS_UNAVAILABLE`` on a store failure, and
                 ``STALE_GENERATION`` when a sign-in or settings change raced
-                the resolution.
+                the resolution. An unusable agent catalog refuses as
+                ``AGENT_INCOMPATIBLE`` or ``LAUNCH_FAILED``.
         """
-        before = self.current_generations()
+        before = self.current_generations(deadline=deadline)
         if before is None:
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
-        try:
-            catalog = self._catalog_source.catalog()
-        except ProviderCatalogUnavailableError as error:
-            raise AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE) from error
+        catalog = self._agent_catalog(deadline)
         agent_lanes = tuple(
             (entry.id, entry.agent_credential_id)
             for entry in catalog.providers
@@ -95,7 +104,7 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         credentials: dict[str, AgentCredential] = {}
         try:
             for lane_id, credential_id in agent_lanes:
-                resolution = self._resolver.resolve(lane_id, ProviderConsumer.ASSISTANT)
+                resolution = self._resolver.resolve(lane_id, ProviderConsumer.ASSISTANT, deadline=deadline)
                 if isinstance(resolution, ResolvedDirectCredential):
                     credentials[credential_id] = AgentCredential(
                         secret=bytearray(resolution.secret.get_secret_value().encode("utf-8")),
@@ -103,21 +112,54 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
                     )
                 elif isinstance(resolution, ProviderCredentialUnavailable):
                     _refuse_unless_skippable(resolution.reason)
-            if self.current_generations() != before:
+            if self.current_generations(deadline=deadline) != before:
                 raise AgentHostError(AgentHostRefusal.STALE_GENERATION)
-        except BaseException:
-            for credential in credentials.values():
-                wipe(credential.secret)
+        except BaseException as error:
+            _wipe_credentials(credentials)
+            _raise_if_timeout(error)
             raise
         return ResolvedAgentCredentials(generations=before, credentials=credentials)
 
+    def _agent_catalog(self, deadline: TimeoutDeadline | None) -> ProviderCatalog:
+        try:
+            return (
+                self._catalog_source.catalog() if deadline is None else self._catalog_source.catalog(deadline=deadline)
+            )
+        except ProviderCatalogUnavailableError as error:
+            _LOGGER.warning("agent provider catalog unavailable reason=%s", error.reason.value)
+            refusal = (
+                AgentHostRefusal.AGENT_INCOMPATIBLE
+                if error.reason is ProviderCatalogUnavailableReason.CATALOG_MALFORMED
+                else AgentHostRefusal.LAUNCH_FAILED
+            )
+            raise AgentHostError(refusal) from error
+
     @override
-    def current_generations(self) -> AgentGenerations | None:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
         """Return the sign-in and provider-settings generations without refreshing idle time."""
-        observed = self._store.observe_generations()
+        try:
+            observed = (
+                self._store.observe_generations()
+                if deadline is None
+                else self._store.observe_generations(deadline=deadline)
+            )
+        except RefusalError as error:
+            if error.reason is RefusalCode.TIMEOUT:
+                raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
+            raise
         if observed is None:
             return None
         return AgentGenerations(sign_in=observed.sign_in, provider_settings=observed.provider_settings)
+
+
+def _wipe_credentials(credentials: dict[str, AgentCredential]) -> None:
+    for credential in credentials.values():
+        wipe(credential.secret)
+
+
+def _raise_if_timeout(error: BaseException) -> None:
+    if isinstance(error, RefusalError) and error.reason is RefusalCode.TIMEOUT:
+        raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
 
 
 def _refuse_unless_skippable(reason: ProviderCredentialUnavailableReason) -> None:

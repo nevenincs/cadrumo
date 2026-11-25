@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing
 from datetime import date
+from pathlib import Path
 from typing import Literal, TypedDict
 
 import pytest
@@ -11,22 +12,24 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.authority import compiled_bundled_authority
 from ...export_proof import FilingExportProofAssessment
 from ...filing_export_proof_contracts import FilingExportProofCoordinate
 from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
-from ..authorities import RegistryClosureAuthorities
+from .. import authorities as authorities_module
+from ..authorities import RegistryClosureAuthorities, canonical_live_registry_closure_authorities
 from ..cli import app
 from ..closure import (
-    _TEMPORAL_WORK_ITEMS,
+    TEMPORAL_WORK_ITEMS,
     RegistryClosurePredicateRefusal,
     RegistryClosurePredicateRefusalReason,
     RegistryClosureReport,
-    _render_filing_channels,
     build_registry_closure_report,
     check_registry_closure_release,
     load_registry_closure_report,
+    render_filing_channels,
     render_registry_closure_report,
 )
 from ..closure_models import (
@@ -40,7 +43,43 @@ from ..filing_export_coverage import FilingExportCoverageReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_AS_OF = date(2026, 8, 24)
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(_YEAR)
+_AS_OF = date(_YEAR, 8, 24)
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+
+
+@pytest.fixture(scope="module")
+def live_closure_authorities() -> RegistryClosureAuthorities:
+    """The canonical live composition, run once for the committed tree.
+
+    Composing the two-channel filing proof costs tens of seconds and every live
+    ``closure`` invocation below would repeat it over identical inputs. The
+    composition is immutable, so each CLI run is handed this genuine result.
+    """
+    return canonical_live_registry_closure_authorities(_REPOSITORY_ROOT)
+
+
+@pytest.fixture
+def composed_once(
+    monkeypatch: pytest.MonkeyPatch,
+    live_closure_authorities: RegistryClosureAuthorities,
+) -> list[Path]:
+    """Route the command's canonical composer to the shared live composition.
+
+    The command still selects its authorities through the canonical composer;
+    the returned list records each repository root it asked for, so a command
+    that stopped consulting the composer (or took authority from its context
+    instead) is observable.
+    """
+    requested: list[Path] = []
+
+    def composer(repository_root: Path) -> RegistryClosureAuthorities:
+        requested.append(repository_root.resolve())
+        return live_closure_authorities
+
+    monkeypatch.setattr(authorities_module, "canonical_live_registry_closure_authorities", composer)
+    return requested
 
 
 class _HostileFilingExportAuthority:
@@ -65,12 +104,12 @@ class _TemporalCoverageBase(TypedDict):
     declared_authority_grade: RegistryAuthorityGrade
 
 
-def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
+def _temporal(*, modelo: str = "303", revision: str = _REVISION, refused: bool = False) -> TemporalRevisionCoverage:
     """Build one exact temporal limb fixture without weakening its model contract."""
     base: _TemporalCoverageBase = {
         "modelo": modelo,
         "revision": revision,
-        "filing_year": 2026,
+        "filing_year": _YEAR,
         "period": "1T",
         "selected_revision": revision,
         "declared_authority_grade": RegistryAuthorityGrade.FILING,
@@ -88,7 +127,7 @@ def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = Fa
 def _limb(
     *,
     modelo: str = "303",
-    revision: str = "2026",
+    revision: str = _REVISION,
     name: Literal["filing_export"],
 ) -> RegistryClosureLimb:
     """Build one real satisfied app-limb shape for deterministic join tests."""
@@ -129,19 +168,19 @@ def test_exact_temporal_and_filing_join_satisfies_the_blocking_release_predicate
     assert report.refused_revision_count == 0
     rendered = render_registry_closure_report(report)
     assert "release_eligible=true" in rendered
-    assert "closure_row modelo=303 revision=2026 predicate_outcome=satisfied" in rendered
+    assert f"closure_row modelo=303 revision={_REVISION} predicate_outcome=satisfied" in rendered
 
 
 def test_renderer_revision_denominator_follows_its_temporal_rows() -> None:
     """A second temporal coordinate must change the rendered revision denominator."""
     report = _report(
         temporal=(
-            _temporal(modelo="303", revision="2026"),
-            _temporal(modelo="304", revision="2026"),
+            _temporal(modelo="303", revision=_REVISION),
+            _temporal(modelo="304", revision=_REVISION),
         ),
         filing=(
-            _limb(modelo="303", revision="2026", name="filing_export"),
-            _limb(modelo="304", revision="2026", name="filing_export"),
+            _limb(modelo="303", revision=_REVISION, name="filing_export"),
+            _limb(modelo="304", revision=_REVISION, name="filing_export"),
         ),
     )
 
@@ -191,8 +230,8 @@ def test_missing_and_extra_filing_coordinates_remain_visible_as_join_disagreemen
     assert row.predicate_outcome == "refused"
     assert row.refusals[0].reason == "cross_limb_disagreement"
     assert [(item.modelo, item.revision, item.limb, item.kind) for item in report.join_disagreements] == [
-        ("100", "2026", "filing_export", "unexpected_limb_coordinate"),
-        ("999", "2026", "filing_export", "missing_from_limb"),
+        ("100", _REVISION, "filing_export", "unexpected_limb_coordinate"),
+        ("999", _REVISION, "filing_export", "missing_from_limb"),
     ]
     assert not report.release_eligible
 
@@ -246,12 +285,15 @@ def _assert_stdout_is_only_closure_report_lines(stdout: str) -> None:
     assert not unexpected, f"stdout carries lines outside the closure report's own tags: {unexpected!r}"
 
 
-def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof() -> None:
+def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof(
+    composed_once: list[Path],
+) -> None:
     """Live canonical loading explicitly refuses unavailable encrypted replay."""
     canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=compiled_bundled_authority())
 
     result = CliRunner().invoke(app, ["closure", "--check"])
 
+    assert composed_once == [_REPOSITORY_ROOT], "live mode must compose through the canonical composer"
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
     _assert_stdout_is_only_closure_report_lines(result.stdout)
@@ -276,7 +318,7 @@ def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
     assert "secure_replay:authority_unavailable" not in result.stdout
 
 
-def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
+def test_actual_cli_ignores_a_precomposed_eligible_context_claim(composed_once: list[Path]) -> None:
     """A canned typed claim cannot bypass canonical live proof composition."""
     canned_claim = _report(
         temporal=(_temporal(),),
@@ -289,6 +331,7 @@ def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
         obj=canned_claim,
     )
 
+    assert composed_once == [_REPOSITORY_ROOT]
     assert canned_claim.release_eligible
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
@@ -297,7 +340,7 @@ def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
     assert "registry_validated=true release_eligible=false" in result.stdout
 
 
-def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
+def test_actual_cli_ignores_exact_hostile_authority_context(composed_once: list[Path]) -> None:
     """Only canonical live authorities may compose the public closure command.
 
     The context has the precise ``RegistryClosureAuthorities`` shape accepted
@@ -318,6 +361,7 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
         obj=hostile,
     )
 
+    assert composed_once == [_REPOSITORY_ROOT]
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
     _assert_stdout_is_only_closure_report_lines(result.stdout)
@@ -377,8 +421,8 @@ def test_every_locally_owned_reason_carries_a_work_item() -> None:
     application = set(typing.get_args(RegistryClosureRefusalReason.__value__))
     local = _predicate_reason_values() - application
 
-    assert local <= set(_TEMPORAL_WORK_ITEMS), (
-        f"local refusal reasons with no work item: {sorted(local - set(_TEMPORAL_WORK_ITEMS))}"
+    assert local <= set(TEMPORAL_WORK_ITEMS), (
+        f"local refusal reasons with no work item: {sorted(local - set(TEMPORAL_WORK_ITEMS))}"
     )
 
 
@@ -425,7 +469,7 @@ def test_a_populated_filing_channel_refusal_renders_both_channels_structurally()
         ),
     )
 
-    assert _render_filing_channels(refusal) == (
+    assert render_filing_channels(refusal) == (
         "conformance:proof_validation_failed,secure_replay:authority_unavailable"
     )
 
@@ -445,7 +489,7 @@ def test_a_refusal_without_channels_renders_not_measured_rather_than_a_value() -
         ),
     )
 
-    assert _render_filing_channels(refusal) == "n/a"
+    assert render_filing_channels(refusal) == "n/a"
 
 
 def test_only_a_filing_export_refusal_may_carry_per_channel_state() -> None:

@@ -45,17 +45,23 @@ from pydantic import BaseModel, Field
 from ....application.ledger.evidence_errors import (
     PurchaseInvoiceEvidenceReaderError,
 )
-from ....application.ledger.invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from ....application.ledger.invoice_draft_records import (
+    DraftDiscrepancyFinding,
+    FieldProvenance,
+    FindingWords,
+    InvoiceDraft,
+)
 from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.decimal.printed_units import without_currency_unit
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
 from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.money.rounding import CENT
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
@@ -506,10 +512,21 @@ def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decima
     The earlier note on :func:`_grounded_percentage` -- that a percent sign on
     an AMOUNT is a misread rather than a unit -- still holds: ``21%`` is not a
     currency unit, so it is not removed here and still drops.
+
+    An amount is held to the cent, the precision every invoice amount is kept
+    and rounded at, and it is never quantized there silently. Zeros beyond the
+    cent are the printed figure written long and normalize to it; any other
+    digit beyond the cent (a float's representation error carried in a quoted
+    string, ``145.2000000000000111``) is one no printed document holds, so the
+    amount is not grounded and the person is asked for it.
     """
     if raw is None:
         return None
-    return _grounded_decimal(without_currency_unit(raw, currency_unit))
+    amount = _grounded_decimal(without_currency_unit(raw, currency_unit))
+    if amount is None:
+        return None
+    at_the_cent = amount.quantize(CENT)
+    return at_the_cent if at_the_cent == amount else None
 
 
 def _grounded_currency(raw: str | None) -> str | None:
@@ -529,7 +546,7 @@ def _grounded_currency(raw: str | None) -> str | None:
         return None
 
 
-_TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
+TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
     InvoiceFieldForm.TAX_IDENTIFIER: _grounded_tax_id,
     InvoiceFieldForm.FREE_TEXT: _grounded_free_text,
     InvoiceFieldForm.CALENDAR_DATE: _grounded_date,
@@ -537,13 +554,13 @@ _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | 
 }
 """Validators for the declared forms whose grounded value stays a string."""
 
-_NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str | None], Decimal | None]] = {
+NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str | None], Decimal | None]] = {
     InvoiceFieldForm.MONETARY_AMOUNT: _grounded_money,
     InvoiceFieldForm.PERCENTAGE_RATE: _grounded_percentage,
 }
 """Validators for the declared forms whose grounded value becomes a Decimal.
 
-Split from :data:`_TEXT_GROUNDING_BY_FORM` by RETURN TYPE, not by convenience:
+Split from :data:`TEXT_GROUNDING_BY_FORM` by RETURN TYPE, not by convenience:
 one table would have to be typed as a union and every call site would need a
 runtime narrow, trading a static guarantee for a dead branch. Together the two
 tables must cover :class:`~llm.invoice_field_contract.InvoiceFieldForm`
@@ -559,7 +576,7 @@ def _ground_text(raw: str | None, field_name: str) -> str | None:
         KeyError: When the field's declared form has no string-valued validator,
             which is a declaration error the parity gate exists to catch.
     """
-    return _TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
+    return TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
 
 
 def _ground_numeric(raw: str | None, field_name: str, currency_unit: str | None = None) -> Decimal | None:
@@ -573,7 +590,7 @@ def _ground_numeric(raw: str | None, field_name: str, currency_unit: str | None 
         KeyError: When the field's declared form has no numeric validator, which
             is a declaration error the parity gate exists to catch.
     """
-    return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw, currency_unit)
+    return NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw, currency_unit)
 
 
 def _read_provenance(
@@ -672,10 +689,7 @@ def _unverified_identity_findings(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
                 field=contract.field_name,
-                detail=(
-                    f"the document prints {transcribed.strip()!r} as this party's tax identifier, but it "
-                    f"fails its control-character check, so it was not accepted as a verified identity"
-                ),
+                words=FindingWords.of(DraftFindingWording.TAX_ID_FAILS_CHECK, printed=transcribed.strip()),
             ),
         )
     return tuple(findings)

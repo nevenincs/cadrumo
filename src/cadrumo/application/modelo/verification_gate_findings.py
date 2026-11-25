@@ -16,10 +16,12 @@ from cadrumo.application.calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+from ...domain.calculations.registry.binding_selector_utils import provider_member
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
@@ -27,14 +29,18 @@ from ...domain.calculations.registry.casilla_membership import (
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
+from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.models import Invoice
 from ...domain.iva.components import registry_category_projection
+from ...domain.iva.flow import IvaFlowDirection, is_deducible_flow, is_devengada_flow
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
 )
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -46,27 +52,53 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
+    MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
     calculation_revision_claims_ledger_iva,
     missing_evidence_advisory_observations,
 )
-from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
+from ..aggregation.invoice_iva_source import (
+    documented_invoice_ids,
+    invoices_missing_source_document,
+    issued_invoices_missing_source_document,
+    rectification_evidence_grounding_invoices,
+)
+from ..aggregation.ledger_membership import (
+    LedgerMembershipPorts,
+    observe_renta_inmueble_rows,
+    query_ledger_membership,
+)
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
-from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
-from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
-from ._ledger_drift_gate import ledger_drift_findings
-from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from .iva_wallet_gate import (
-    require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
+from ..calculations.cross_period_models import (
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodExpectedMemberSet,
+    operator_value_attestations,
 )
-from .preconditions import ModeloPreconditionFailure
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from .imputation_filings import imputation_filings_from_repositories
+from .incn_periodo_anterior_finding import incn_periodo_anterior_disagreement_finding
+from .invoice_drift_gate import invoice_drift_findings
+from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
+from .ledger_drift_gate import (
+    ledger_drift_findings,
+    renta_inmueble_drift_finding,
+    undetermined_mixed_use_contributor_finding,
+)
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .profile_drift_gate import profile_drift_findings
 from .verification_cross_period import (
+    CrossPeriodDoor,
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
+    cross_period_door_operator_arguments,
+    cross_period_door_reader,
     cross_period_expected_member_sets_from_profile,
     registry_modality_finding,
     zero_value_previous_filing_binding_ids,
@@ -83,8 +115,11 @@ from .verification_preconditions import (
 from .verification_revision_findings import collect_revision_verification_findings
 
 if TYPE_CHECKING:
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+    from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from .work_profile import ModeloWorkProfile
 
 
@@ -140,14 +175,16 @@ def cuota_less_without_base_findings(
     catalogue = transaction_repository.load()
     registry_source_refs = optional_observation_refs(target.observations, "source_refs")
 
-    cuota_less_categories = registry_category_projection("cuota_less_m303")
     findings: list[ModeloVerificationFinding] = []
     for transaction_id in sorted(target.source_transaction_ids):
         transaction = catalogue.get(transaction_id)
         if transaction is None:
             continue
         category = transaction.iva_category
-        if category is None or category not in cuota_less_categories:
+        if category is None or category not in registry_category_projection(
+            "cuota_less_m303",
+            effective_date=transaction_operation_date(transaction),
+        ):
             continue
         if transaction.taxable_base is not None:
             continue
@@ -254,108 +291,16 @@ def missing_evidence_findings(
     return findings
 
 
-def collect_verification_gate_findings(
-    *,
-    work_unit: WorkUnit,
-    target: CalculationRevision,
+def _append_cross_period_findings(
+    clean_state_verdict: CrossPeriodCleanStateVerdict | None,
+    iva_compensation_decision: IvaCompensationReconciliationDecision | None,
     workflow_profile: TaxpayerProfile,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    justificante_repository: JustificanteRepositoryProtocol,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol,
-    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
-    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
-    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
-    operation: PinnedAuthorityOperation,
-    work_profile: ModeloWorkProfile,
-    ledger_membership_ports: LedgerMembershipPorts,
-    evaluated_at: datetime | None = None,
-    calculation_catalogue: CalculationRevisionCatalogue | None = None,
-) -> tuple[
-    list[ModeloVerificationFinding],
-    list[CasillaId],
-    list[CasillaId],
-    dict[int, ModeloPreconditionFailure],
-]:
-    """Compose :class:`CalculationRevision` findings against a :class:`TaxpayerProfile`.
-
-    Pin registry, ledger, and cross-period evidence before publication.
-    """
-    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
-        collect_revision_verification_findings(
-            work_unit=work_unit,
-            target=target,
-            profile=workflow_profile,
-            transaction_repository=transaction_repository,
-            invoice_repository=invoice_repository,
-            operation=operation,
-            work_profile=work_profile,
-        )
-    )
-    incomplete_modality_finding = registry_modality_finding(
-        work_unit=work_unit,
-        profile=workflow_profile,
-    )
-    if incomplete_modality_finding is not None:
-        findings.append(incomplete_modality_finding)
-        failures_by_finding_id[id(incomplete_modality_finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.m202.modality.complete",
-            scenario_id="modelo.work.verify.m202.modality.incomplete",
-            evidence_id="modelo.work.verify.m202.modality",
-            evidence_values={
-                "modelo": str(work_unit.modelo),
-                "year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
-                "modality_code": "incomplete",
-            },
-            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-        )
-    iva_compensation_decision = None
-    try:
-        iva_compensation_decision = _require_iva_compensation_revision_match(
-            work_unit,
-            target,
-            repository=iva_compensation_decision_repository,
-            observation_repository=observation_repository,
-            history_repository=iva_compensation_history_repository,
-            operation=operation,
-            subject_leaf_key="modelo.work.verify",
-            evaluated_at=evaluated_at,
-        )
-    except ModeloIvaWalletReconciliationBlocked as exc:
-        finding = iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)
-        findings.append(finding)
-        failures_by_finding_id[id(finding)] = exc.precondition_failure
-    clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
-        work_unit,
-        observation_repository=observation_repository,
-        filing_repository=filing_repository,
-        calculation_repository=calculation_repository,
-        calculation_catalogue=calculation_catalogue,
-        verification_repository=verification_repository,
-        justificante_repository=justificante_repository,
-        expected_member_sets=cross_period_expected_member_sets_from_profile(
-            workflow_profile,
-            cross_period_expected_member_sets,
-        ),
-        taxpayer_tax_id=workflow_profile.tax_id,
-        activity_start_date=workflow_profile.activity_start_date,
-        modelo_202_modality=derive_modelo_202_modality(
-            workflow_profile,
-            effective_date=date(work_unit.filing_year, 12, 31),
-        ).modality,
-        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-        workflow_profile=workflow_profile,
-        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
-        operation=operation,
-    )
-
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    door_of: Callable[[CrossPeriodDependencyEvidence], CrossPeriodDoor],
+) -> None:
     def _observe_cross_period_finding(
         finding: ModeloVerificationFinding,
         evidence: CrossPeriodDependencyEvidence | None,
@@ -375,13 +320,14 @@ def collect_verification_gate_findings(
             )
             return
         requirement = evidence.requirement
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.cross_period_dependency.clean",
-            scenario_id="modelo.work.verify.cross_period_dependency.unclean",
+        door = door_of(evidence)
+        failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.verify",
+            scenario_id=f"modelo.work.verify.cross_period_dependency.{door.scenario}",
             evidence_id="modelo.work.verify.cross_period_dependency",
             evidence_values={
+                "calculation_revision_id": target.calculation_revision_id,
+                "work_unit_id": target.work_unit_id,
                 "source_modelo": requirement.source_modelo,
                 "year": requirement.filing_year,
                 "period": requirement.period.registry_token,
@@ -390,6 +336,9 @@ def collect_verification_gate_findings(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            action_argument_values=door.action_argument_values,
+            missing_action_arguments=cross_period_door_operator_arguments(door.scenario),
+            alternative_actions=door.alternative_actions,
         )
 
     findings.extend(
@@ -400,6 +349,162 @@ def collect_verification_gate_findings(
             blocking_finding_observer=_observe_cross_period_finding,
         ),
     )
+
+
+def invoice_source_document_findings(
+    *,
+    target: CalculationRevision,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    registry_revision: ModeloRevision,
+) -> list[ModeloVerificationFinding]:
+    """Block a deduction a declared received invoice claims without its factura.
+
+    The invoices are the ones the revision declared, by its invoice fingerprint
+    rows. LIVA art. 97 grants the deduction on the factura itself, so a received
+    invoice with a cuota needs its document stored with it, or a paying movement
+    carrying registered purchase-invoice evidence. Each finding names the invoice,
+    so the form can open it to attach the document.
+
+    Only a return that deducts input IVA is held: a revision whose registry
+    declares no deductible IVA binding (a Modelo 347 reads invoices for its
+    counterpart totals) claims no deduction the factura must grant. A return
+    that accrues output IVA warns, without blocking, on each declared issued
+    invoice charging a cuota whose copy the records do not hold (RD 1619/2012
+    art. 2): the cuota is owed on the operation whether or not the copy is kept.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    fingerprint = target.invoice_fingerprint
+    revision_date = registry_revision.valid_from
+    deducts = _declares_iva_flow(registry_revision, lambda flow: is_deducible_flow(flow, effective_date=revision_date))
+    accrues = _declares_iva_flow(registry_revision, lambda flow: is_devengada_flow(flow, effective_date=revision_date))
+    if fingerprint is None or not fingerprint.rows or not (deducts or accrues):
+        return []
+    catalogue = invoice_repository.load()
+    declared = tuple(invoice for row in fingerprint.rows if (invoice := catalogue.get(row.invoice_id)) is not None)
+    documented = documented_invoice_ids(attachment_store)
+    window = transaction_repository.load()
+    received = _when(deducts, lambda: invoices_missing_source_document(declared, documented=documented, window=window))
+    issued = _when(
+        accrues, lambda: issued_invoices_missing_source_document(declared, documented=documented, window=window)
+    )
+    return [
+        *(_received_invoice_document_finding(invoice) for invoice in received),
+        *(_issued_invoice_document_finding(invoice) for invoice in issued),
+    ]
+
+
+def rectification_evidence_is_recordable(
+    *,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+) -> bool:
+    """Whether the records hold a factura rectificativa grounding ``rectification_evidence``.
+
+    Fact 0085 requires that authority of a rectificación de deducciones. A
+    received rectificativa holding its own document is its production writer, so
+    while the catalogue holds one the refusal on a rectification row is the
+    general, recoverable one rather than the terminal "file another way".
+    """
+    return bool(
+        rectification_evidence_grounding_invoices(
+            tuple(invoice_repository.load().invoices.values()),
+            documented=documented_invoice_ids(attachment_store),
+            window=transaction_repository.load(),
+        )
+    )
+
+
+def _when(applies: bool, select: Callable[[], tuple[Invoice, ...]]) -> tuple[Invoice, ...]:
+    """The invoices ``select`` finds missing their document, or none when the return does not declare that flow."""
+    return select() if applies else ()
+
+
+def _received_invoice_document_finding(invoice: Invoice) -> ModeloVerificationFinding:
+    """The blocking finding for a received invoice deducting without its factura."""
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.invoice_source_document_missing",
+        message_facts={"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number},
+        legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
+    )
+
+
+def _issued_invoice_document_finding(invoice: Invoice) -> ModeloVerificationFinding:
+    """The advisory for an issued invoice charging a cuota whose copy is not stored."""
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.transaction_evidence_missing_output",
+        message_facts={
+            "diagnostic_reason_code": "missing_transaction_evidence",
+            "source_kind_code": MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
+            "binding_id": invoice.invoice_id,
+            "invoice_id": invoice.invoice_id,
+            "invoice_number": invoice.invoice_number,
+        },
+        legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
+    )
+
+
+def _declares_iva_flow(registry_revision: ModeloRevision, flow_test: Callable[[IvaFlowDirection], bool]) -> bool:
+    """Whether a binding of this registry revision sums IVA of the flow ``flow_test`` admits."""
+    return any(
+        flow_test(provider_member(binding, LedgerIvaProvider).flow_direction)
+        for binding in registry_revision.bindings
+        if binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    )
+
+
+def _append_invoice_source_document_findings(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    for finding in invoice_source_document_findings(
+        target=target,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        attachment_store=attachment_store,
+        registry_revision=operation.reading_snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ).revision,
+    ):
+        findings.append(finding)
+        if finding.kind is not ModeloVerificationFindingKind.BLOCKING_RULE:
+            continue
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.invoice_source_document.present",
+            scenario_id="modelo.work.verify.invoice_source_document.missing",
+            evidence_id="modelo.work.verify.invoice_source_document",
+            evidence_values={"invoice_id": str(finding.message_facts["invoice_id"])},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        )
+
+
+def _append_ledger_evidence_findings(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
     evidence_findings = missing_evidence_findings(
         target=target,
         work_unit=work_unit,
@@ -450,11 +555,51 @@ def collect_verification_gate_findings(
         ),
     )
     findings.extend(cuota_less_findings)
-    # Runs beside the evidence gate, not inside it: that gate reads the live
-    # ledger while the casilla values come from the stored draft, and this is
-    # what refuses the case where those two views have drifted apart.
-    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
-        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
+
+
+def _append_modality_finding(
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    incomplete_modality_finding = registry_modality_finding(
+        work_unit=work_unit,
+        profile=workflow_profile,
+    )
+    if incomplete_modality_finding is not None:
+        findings.append(incomplete_modality_finding)
+        failures_by_finding_id[id(incomplete_modality_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m202.modality.complete",
+            scenario_id="modelo.work.verify.m202.modality.incomplete",
+            evidence_id="modelo.work.verify.m202.modality",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+                "modality_code": "incomplete",
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
+
+def _ledger_snapshot_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> list[ModeloVerificationFinding]:
+    """Compare the live ledger membership with the stored calculation snapshot."""
     current_membership = query_ledger_membership(
         target=target,
         work_unit=work_unit,
@@ -496,8 +641,390 @@ def collect_verification_gate_findings(
                 ),
             )
         ),
+        asset_register_drift_observer=lambda finding, recorded, current: failures_by_finding_id.__setitem__(
+            id(finding),
+            build_verification_precondition_failure(
+                calculation_revision_id=target.calculation_revision_id,
+                work_unit_id=target.work_unit_id,
+                condition_id="modelo.work.verify.ledger_snapshot.current",
+                scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+                evidence_id="modelo.work.verify.ledger_snapshot",
+                evidence_values={
+                    "snapshot_anchored": target.ledger_filing_snapshot is not None,
+                    "recorded_claim_ids": "|".join(recorded.claim_ids),
+                    "current_claim_ids": "|".join(current.claim_ids),
+                    "recorded_schedule_fingerprints": "|".join(recorded.schedule_fingerprints),
+                    "current_schedule_fingerprints": "|".join(current.schedule_fingerprints),
+                    "membership_available": True,
+                },
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        ),
     )
-    findings.extend(drift_findings)
+    undetermined_mixed_use = undetermined_mixed_use_contributor_finding(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        operation=operation,
+        source_refs=optional_observation_refs(target.observations, "source_refs"),
+    )
+    renta_inmueble_drift = _renta_inmueble_drift_findings(
+        target=target,
+        work_unit=work_unit,
+        operation=operation,
+        work_profile=work_profile,
+        ledger_membership_ports=ledger_membership_ports,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    return [
+        *drift_findings,
+        *renta_inmueble_drift,
+        *(() if undetermined_mixed_use is None else (undetermined_mixed_use,)),
+        *invoice_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            revision=operation.revision(work_unit.modelo, work_unit.revision_id),
+            ports=ledger_membership_ports.invoice_catalogue_read_ports,
+            profile=work_profile,
+            source_refs=optional_observation_refs(target.observations, "source_refs"),
+            filings=imputation_filings_from_repositories(
+                bucket_id=work_unit.bucket_id,
+                year=work_unit.filing_year,
+                observation_repository=observation_repository,
+                filing_repository=filing_repository,
+                authority=operation,
+            ),
+            narrower_scope_observer=lambda finding: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.invoice_fingerprint.current",
+                    scenario_id="modelo.work.verify.invoice_fingerprint.scope_narrower",
+                    evidence_id="modelo.work.verify.invoice_fingerprint",
+                    evidence_values={
+                        "catalogue_available": True,
+                        "changed_invoice_ids": "",
+                        "removed_invoice_ids": "",
+                        "added_invoice_ids": "",
+                    },
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
+            ),
+            blocking_finding_observer=lambda finding, verdict: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.invoice_fingerprint.current",
+                    scenario_id=(
+                        "modelo.work.verify.invoice_fingerprint.catalogue_unavailable"
+                        if verdict is None
+                        else "modelo.work.verify.invoice_fingerprint.drift_detected"
+                    ),
+                    evidence_id="modelo.work.verify.invoice_fingerprint",
+                    evidence_values={
+                        "catalogue_available": verdict is not None,
+                        "changed_invoice_ids": "" if verdict is None else "|".join(verdict.changed),
+                        "removed_invoice_ids": "" if verdict is None else "|".join(verdict.removed),
+                        "added_invoice_ids": "" if verdict is None else "|".join(verdict.added),
+                    },
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
+            ),
+        ),
+    ]
+
+
+def _renta_inmueble_drift_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> tuple[ModeloVerificationFinding, ...]:
+    """Compare each let property's recorded rows with the rows its records now resolve to."""
+    revision = operation.revision(work_unit.modelo, work_unit.revision_id)
+    if not any(binding.source is BindingSourceKind.RENTA_INMUEBLE for binding in revision.bindings):
+        return ()
+    current = observe_renta_inmueble_rows(
+        target=target,
+        work_unit=work_unit,
+        revision=revision,
+        profile=work_profile,
+        ports=ledger_membership_ports,
+        operation=operation,
+    )
+    finding = renta_inmueble_drift_finding(
+        target=target,
+        work_unit=work_unit,
+        current=current,
+        source_refs=optional_observation_refs(target.observations, "source_refs"),
+    )
+    if finding is None:
+        return ()
+    scenario = "drift_detected" if current is not None else "unavailable"
+    scenario_id = f"modelo.work.verify.renta_inmueble_rows.{scenario}"
+    failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.verify",
+        scenario_id=scenario_id,
+        evidence_id="modelo.work.verify.renta_inmueble_rows",
+        evidence_values={
+            "calculation_revision_id": target.calculation_revision_id,
+            "work_unit_id": target.work_unit_id,
+            "rows_available": current is not None,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": target.work_unit_id} if current is not None else None,
+    )
+    return (finding,)
+
+
+def _append_incn_periodo_anterior_finding(
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+) -> None:
+    """Append the preceding-turnover disagreement finding, with its precondition failure, when there is one."""
+    turnover_finding = incn_periodo_anterior_disagreement_finding(
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        operation=operation,
+        observation_repository=observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+    )
+    if turnover_finding is not None:
+        findings.append(turnover_finding)
+        failures_by_finding_id[id(turnover_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m200.incn_periodo_anterior.agrees",
+            scenario_id="modelo.work.verify.m200.incn_periodo_anterior.disagrees",
+            evidence_id="modelo.work.verify.m200.incn_periodo_anterior",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
+
+def _append_stored_draft_gate_findings(
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+) -> None:
+    """Append the gates that compare the stored draft with the invoices, ledger and profile it was calculated from."""
+    _append_invoice_source_document_findings(
+        target,
+        work_unit,
+        operation,
+        invoice_repository,
+        transaction_repository,
+        attachment_store,
+        findings,
+        failures_by_finding_id,
+    )
+    # Runs beside the evidence gate, not inside it: that gate reads the live
+    # ledger while the casilla values come from the stored draft, and this is
+    # what refuses the case where those two views have drifted apart.
+    findings.extend(
+        _ledger_snapshot_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+            observation_repository=observation_repository,
+            filing_repository=filing_repository,
+            operation=operation,
+            work_profile=work_profile,
+            ledger_membership_ports=ledger_membership_ports,
+            failures_by_finding_id=failures_by_finding_id,
+        ),
+    )
+    # The profile counterpart of the ledger comparison above: a profile fact the
+    # draft read was edited after it was calculated.
+    findings.extend(
+        profile_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            profile_record=work_profile.record,
+            operation=operation,
+            source_refs=optional_observation_refs(target.observations, "source_refs"),
+            failure_observer=lambda finding, failure: failures_by_finding_id.__setitem__(id(finding), failure),
+        ),
+    )
+
+
+def collect_verification_gate_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    justificante_repository: JustificanteRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+    evaluated_at: datetime | None = None,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+) -> tuple[
+    list[ModeloVerificationFinding],
+    list[CasillaId],
+    list[CasillaId],
+    dict[int, ModeloPreconditionFailure],
+]:
+    """Compose :class:`CalculationRevision` findings against a :class:`TaxpayerProfile`.
+
+    Pin registry, ledger, and cross-period evidence before publication.
+    """
+    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
+        collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=target,
+            profile=workflow_profile,
+            transaction_repository=transaction_repository,
+            invoice_repository=invoice_repository,
+            rectification_evidence_recordable=rectification_evidence_is_recordable(
+                invoice_repository=invoice_repository,
+                transaction_repository=transaction_repository,
+                attachment_store=attachment_store,
+            ),
+            operation=operation,
+            work_profile=work_profile,
+        )
+    )
+    _append_modality_finding(work_unit, workflow_profile, target, findings, failures_by_finding_id)
+    iva_compensation_decision = None
+    try:
+        iva_compensation_decision = require_persisted_iva_compensation_decision_matches_revision(
+            work_unit,
+            target,
+            repository=iva_compensation_decision_repository,
+            observation_repository=observation_repository,
+            history_repository=iva_compensation_history_repository,
+            operation=operation,
+            subject_leaf_key="modelo.work.verify",
+            evaluated_at=evaluated_at,
+        )
+    except ModeloIvaWalletReconciliationBlocked as exc:
+        finding = iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = exc.precondition_failure
+    clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
+        work_unit,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        calculation_catalogue=calculation_catalogue,
+        verification_repository=verification_repository,
+        justificante_repository=justificante_repository,
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
+        taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(
+            workflow_profile,
+            effective_date=date(work_unit.filing_year, 12, 31),
+        ).modality,
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
+        operator_value_attestations=operator_value_attestations(target),
+        work_unit_repository=work_unit_repository,
+        operation=operation,
+        transaction_repository=transaction_repository,
+        target_casilla_values=target.casilla_values,
+    )
+
+    _append_cross_period_findings(
+        clean_state_verdict,
+        iva_compensation_decision,
+        workflow_profile,
+        target,
+        work_unit,
+        findings,
+        failures_by_finding_id,
+        cross_period_door_reader(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            calculation_catalogue=calculation_catalogue,
+            operation=operation,
+            target=work_unit,
+        ),
+    )
+    _append_ledger_evidence_findings(
+        target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
+    )
+    _append_incn_periodo_anterior_finding(
+        findings,
+        failures_by_finding_id,
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        operation=operation,
+        observation_repository=observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+    )
+    # A refused registry snapshot is the verdict: the gates below read that same
+    # snapshot, so they would only raise the refusal again instead of reporting it.
+    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
+    _append_stored_draft_gate_findings(
+        findings,
+        failures_by_finding_id,
+        target=target,
+        work_unit=work_unit,
+        operation=operation,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        attachment_store=attachment_store,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        work_profile=work_profile,
+        ledger_membership_ports=ledger_membership_ports,
+    )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 
@@ -510,7 +1037,7 @@ def iva_wallet_error_verification_finding(
     # The block concerns the carried-compensation casilla, so its provenance is
     # that casilla's own registry grounding for the work unit's revision.
     """Project a retained wallet refusal into its grounded verification finding."""
-    snapshot = operation.snapshot(
+    snapshot = operation.reading_snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -519,6 +1046,8 @@ def iva_wallet_error_verification_finding(
     if casilla_def is None or not casilla_def.legal_refs or not casilla_def.source_refs:
         raise ModeloValidationError(
             "IVA wallet finding requires the compensation casilla's legal_refs/source_refs provenance",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,

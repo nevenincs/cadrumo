@@ -15,10 +15,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_types import RentaAscendantProfile, RentaDescendantProfile, coerce_iso_date_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 
 # ── coerce_iso_date_field unit contract ──────────────────────────────────────
@@ -30,32 +33,32 @@ def test_coerce_iso_date_field_none_passthrough() -> None:
 
 
 def test_coerce_iso_date_field_parses_iso_string() -> None:
-    result = coerce_iso_date_field("2024-03-15")
-    assert result == date(2024, 3, 15)
+    result = coerce_iso_date_field(date(EXERCISE, 3, 15).isoformat())
+    assert result == date(EXERCISE, 3, 15)
 
 
 def test_coerce_iso_date_field_passes_through_date_object() -> None:
-    d = date(2023, 1, 1)
+    d = date(EXERCISE - 1, 1, 1)
     result = coerce_iso_date_field(d)
     assert result is d
 
 
 def test_coerce_iso_date_field_raises_on_bad_format() -> None:
     with pytest.raises(ValueError, match="not a valid ISO-8601 date"):
-        coerce_iso_date_field("15/03/2024")
+        coerce_iso_date_field(date(EXERCISE, 3, 15).strftime("%d/%m/%Y"))
 
 
 # ── DescendantInfo: birth_date and entry-event date fields ────────────────────
 
 
 def test_descendant_info_birth_date_from_iso_string() -> None:
-    info = DescendantInfo.model_validate({"birth_date": "2020-06-01"})
-    assert info.birth_date == date(2020, 6, 1)
+    info = DescendantInfo.model_validate({"birth_date": date(EXERCISE - 4, 6, 1).isoformat()})
+    assert info.birth_date == date(EXERCISE - 4, 6, 1)
 
 
 def test_descendant_info_entry_event_dates_none_passthrough() -> None:
     info = DescendantInfo(
-        birth_date=date(2020, 1, 1),
+        birth_date=date(EXERCISE - 4, 1, 1),
         inscripcion_registro_civil_date=None,
         acogimiento_resolucion_date=None,
     )
@@ -65,32 +68,37 @@ def test_descendant_info_entry_event_dates_none_passthrough() -> None:
 
 def test_descendant_info_inscripcion_date_from_iso_string() -> None:
     info = DescendantInfo.model_validate(
-        {"birth_date": date(2020, 1, 1), "inscripcion_registro_civil_date": "2021-05-10"},
+        {
+            "birth_date": date(EXERCISE - 4, 1, 1),
+            "inscripcion_registro_civil_date": date(EXERCISE - 3, 5, 10).isoformat(),
+        },
     )
-    assert info.inscripcion_registro_civil_date == date(2021, 5, 10)
+    assert info.inscripcion_registro_civil_date == date(EXERCISE - 3, 5, 10)
 
 
 def test_descendant_info_acogimiento_date_from_iso_string() -> None:
     info = DescendantInfo.model_validate(
         {
-            "birth_date": date(2020, 1, 1),
+            "birth_date": date(EXERCISE - 4, 1, 1),
             "relacion": DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
-            "acogimiento_resolucion_date": "2021-05-10",
+            "acogimiento_resolucion_date": date(EXERCISE - 3, 5, 10).isoformat(),
         },
     )
-    assert info.acogimiento_resolucion_date == date(2021, 5, 10)
+    assert info.acogimiento_resolucion_date == date(EXERCISE - 3, 5, 10)
 
 
 def test_descendant_info_entry_date_bad_format_raises() -> None:
     """The ISO coercion covers both new date fields, not only birth_date."""
     for field in ("inscripcion_registro_civil_date", "acogimiento_resolucion_date"):
         with pytest.raises(ValidationError):
-            DescendantInfo.model_validate({"birth_date": date(2020, 1, 1), field: "10-05-2021"})
+            DescendantInfo.model_validate(
+                {"birth_date": date(EXERCISE - 4, 1, 1), field: date(EXERCISE - 3, 5, 10).strftime("%d-%m-%Y")}
+            )
 
 
 def test_descendant_info_birth_date_bad_format_raises() -> None:
     with pytest.raises(ValidationError):
-        DescendantInfo.model_validate({"birth_date": "01-06-2020"})
+        DescendantInfo.model_validate({"birth_date": date(EXERCISE - 4, 6, 1).strftime("%d-%m-%Y")})
 
 
 # ── RentaDescendantProfile: birth_date and death_date fields ─────────────────
@@ -107,8 +115,10 @@ def test_renta_descendant_death_date_none_passthrough() -> None:
 
 
 def test_renta_descendant_death_date_from_iso_string() -> None:
-    p = RentaDescendantProfile.model_validate({"birth_date": date(1990, 1, 1), "death_date": "2023-07-04"})
-    assert p.death_date == date(2023, 7, 4)
+    p = RentaDescendantProfile.model_validate(
+        {"birth_date": date(1990, 1, 1), "death_date": date(EXERCISE - 1, 7, 4).isoformat()}
+    )
+    assert p.death_date == date(EXERCISE - 1, 7, 4)
 
 
 def test_renta_descendant_birth_date_bad_format_raises() -> None:
@@ -130,8 +140,10 @@ def test_renta_ascendant_death_date_none_passthrough() -> None:
 
 
 def test_renta_ascendant_death_date_from_iso_string() -> None:
-    p = RentaAscendantProfile.model_validate({"birth_date": date(1955, 1, 1), "death_date": "2022-12-31"})
-    assert p.death_date == date(2022, 12, 31)
+    p = RentaAscendantProfile.model_validate(
+        {"birth_date": date(1955, 1, 1), "death_date": date(EXERCISE - 2, 12, 31).isoformat()}
+    )
+    assert p.death_date == date(EXERCISE - 2, 12, 31)
 
 
 def test_renta_ascendant_birth_date_bad_format_raises() -> None:

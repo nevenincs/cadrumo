@@ -59,6 +59,19 @@ def _file_type(path: str) -> str:
     return ntpath.splitext(normalized)[1] or "<no suffix>"
 
 
+def _account_file_result(event: Mapping[str, str], totals: Counter[str]) -> None:
+    """Retain successful byte counts and open failures independently for one file."""
+    operation, result = event["Operation"], event["Result"]
+    if operation == "ReadFile" and result == "SUCCESS":
+        length = _LENGTH.search(event["Detail"])
+        if length is None:
+            raise ValueError("successful ReadFile lacks a reported length")
+        totals["successful_reads"] += 1
+        totals["reported_read_bytes"] += int(length[1].replace(",", "").replace(".", ""))
+    if operation == "CreateFile":
+        totals["successful_opens" if result == "SUCCESS" else "unsuccessful_opens"] += 1
+
+
 def summarize_file_events(events: Iterable[Mapping[str, str]], *, pids: set[int]) -> dict[str, object]:
     """Account only selected processes, preserving failures and EOF separately."""
     operations: Counter[str] = Counter()
@@ -74,14 +87,7 @@ def summarize_file_events(events: Iterable[Mapping[str, str]], *, pids: set[int]
         totals = files.setdefault(path, Counter())
         totals["events"] += 1
         totals[operation] += 1
-        if operation == "ReadFile" and result == "SUCCESS":
-            length = _LENGTH.search(event["Detail"])
-            if length is None:
-                raise ValueError("successful ReadFile lacks a reported length")
-            totals["successful_reads"] += 1
-            totals["reported_read_bytes"] += int(length[1].replace(",", "").replace(".", ""))
-        if operation == "CreateFile":
-            totals["successful_opens" if result == "SUCCESS" else "unsuccessful_opens"] += 1
+        _account_file_result(event, totals)
     types: dict[str, Counter[str]] = {}
     for path, totals in files.items():
         type_totals = types.setdefault(_file_type(path), Counter())
@@ -167,7 +173,8 @@ class FileOpenTrace:
         }
 
 
-def _scenario(name: str, arguments: list[str]) -> dict[str, object]:
+def scenario(name: str, arguments: list[str]) -> dict[str, object]:
+    """Run the named runtime file-access scenario and return its result document."""
     if name == "registry":
         from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
@@ -218,7 +225,7 @@ def main() -> None:
     details: dict[str, object] = {}
     try:
         with trace:
-            details = _scenario(
+            details = scenario(
                 options.scenario, options.arguments[1:] if options.arguments[:1] == ["--"] else options.arguments
             )
     except BaseException as error:

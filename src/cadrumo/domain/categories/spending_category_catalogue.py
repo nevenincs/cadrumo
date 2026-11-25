@@ -29,6 +29,7 @@ _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="spending_category_catalogue")
 _ORDER_KEY = "spending_category.order"
 _FAMILY_PREFIX = "spending_category.family."
+_AMORTIZABLE_KEY = "spending_category.amortizable"
 
 
 def _runtime_object(value: object) -> object:
@@ -42,6 +43,12 @@ class SpendingCategoryCatalogue:
 
     categories: tuple[SpendingCategory, ...]
     family_members: Mapping[SpendingCategoryFamily, tuple[SpendingCategory, ...]]
+    amortizable: tuple[SpendingCategory, ...]
+    """The categories whose rows are acquisition evidence of an amortizable element.
+
+    The activity-asset register is the only route to their deduction, so a row in
+    one of them routes no deductible amount to any casilla.
+    """
 
     @property
     def all_categories(self) -> frozenset[SpendingCategory]:
@@ -111,7 +118,21 @@ def resolve_spending_category_catalogue(
     return SpendingCategoryCatalogue(
         categories=categories,
         family_members=MappingProxyType(family_members),
+        amortizable=_amortizable_categories(entries, categories),
     )
+
+
+def _amortizable_categories(
+    entries: Mapping[str, str], categories: tuple[SpendingCategory, ...]
+) -> tuple[SpendingCategory, ...]:
+    category_by_value = {category.value: category for category in categories}
+    raw_members = unique_mapping_tokens(entries, _AMORTIZABLE_KEY, subject=_ENTRY_SUBJECT)
+    try:
+        return tuple(category_by_value[raw] for raw in raw_members)
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"spending category catalogue names an undeclared amortizable category {exc.args[0]!r}",
+        ) from exc
 
 
 def _spending_categories(entries: Mapping[str, str]) -> tuple[SpendingCategory, ...]:
@@ -159,6 +180,18 @@ def require_spending_category(
     ).require(value)
 
 
+def amortizable_spending_categories(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> tuple[SpendingCategory, ...]:
+    """Return the categories whose deduction only the activity-asset register carries."""
+    return resolve_spending_category_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).amortizable
+
+
 def spending_category_tokens(
     *,
     effective_date: date | None = None,
@@ -173,6 +206,7 @@ def spending_category_tokens(
 
 __all__ = [
     "SpendingCategoryCatalogue",
+    "amortizable_spending_categories",
     "require_spending_category",
     "resolve_spending_category_catalogue",
     "spending_category_tokens",

@@ -21,7 +21,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:7a828de5\namount\t0\nprovenance\toperator_seed\nregister_status\t\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [

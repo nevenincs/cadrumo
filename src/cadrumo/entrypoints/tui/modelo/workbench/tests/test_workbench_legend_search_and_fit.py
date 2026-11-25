@@ -16,24 +16,26 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Footer, Input, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
-from ..header import result_view
+from ..header import header_result
 from ..legend import on_screen_text
 from ..navigator import section_title
 from ..page_items import workbench_pages
@@ -42,16 +44,11 @@ from ..search import search, search_entries
 from ..vocabulary import CONFIRM_MARK, DONE_MARK, HERE_MARK, ORIGIN_MARKS
 from .declaration_states import with_result
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form, with_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _NBSP = "\u00a0"
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _numbered_form(boxes: tuple[str, ...]) -> ModeloWorkForm:
@@ -65,6 +62,7 @@ def _numbered_form(boxes: tuple[str, ...]) -> ModeloWorkForm:
         official_heading=None,
         blocks=tuple(ModeloFormFieldBlock(id=f"n{field.box}", field=field) for field in fields),
         counts=page.counts,
+        applies=True,
     )
     first = page.model_copy(update={"sections": (*page.sections, section)})
     return form.model_copy(update={"pages": (first, *form.pages[1:])})
@@ -93,16 +91,18 @@ async def test_while_the_symbols_panel_is_open_the_footer_offers_only_its_own_ke
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
-            await _settle(pilot)
-            await pilot.press("question_mark", "question_mark")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
             open_keys = [
                 str(key.render())
                 for key in screen.query_one(Footer).query("FooterKey")
                 if not key.has_class("-command-palette")
             ]
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             closed_keys = [str(key.render()) for key in screen.query_one(Footer).query("FooterKey")]
             app.exit(None)
 
@@ -146,11 +146,11 @@ async def test_the_first_hit_is_selected_and_the_help_band_explains_it() -> None
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("slash")
-            await _settle(pilot)
+            await settle(pilot)
             screen.query_one("#wb-search-input", Input).value = "retencion"
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render()).splitlines()
             app.exit(None)
 
@@ -168,7 +168,7 @@ def _many_boxes() -> ModeloWorkForm:
     section = page.sections[0].model_copy(
         update={"blocks": tuple(ModeloFormFieldBlock(id=f"m{field.box}", field=field) for field in fields)}
     )
-    return form.model_copy(update={"pages": (page.model_copy(update={"sections": (section,)}), *form.pages[1:])})
+    return with_pages(form, (page.model_copy(update={"sections": (section,)}), *form.pages[1:]))
 
 
 @pytest.mark.asyncio
@@ -177,13 +177,13 @@ async def test_an_80_by_24_terminal_shows_ten_boxes_or_more() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=_many_boxes()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
             rows = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
             help_rows = screen.query_one("#wb-help", Static).size.height
             page_title = screen.query_one("#wb-page", Static).display
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             expanded_rows = screen.query_one("#wb-help", Static).size.height
             app.exit(None)
 
@@ -198,7 +198,7 @@ def test_a_settlement_result_reads_as_money_whatever_type_its_box_declares() -> 
     form = replace_fields(synthetic_form(), {"19": {"data_type": "decimal"}})
     form = with_result(form, ModeloFormResultDirection.TO_PAY, Decimal("1106.69"))
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, OutputLanguage.EN, staged=0, recorded=False)
+        view = header_result(form, OutputLanguage.EN, staged=0, recorded=False)
 
     assert view is not None
     assert view.text == f"To pay  1,106.69{_NBSP}€  [19]"
@@ -216,6 +216,7 @@ def test_a_section_named_like_an_identifier_is_named_by_its_boxes_or_else_its_pl
             official_heading=None,
             blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
             counts=synthetic_form().counts,
+            applies=True,
         )
 
     titles = {}

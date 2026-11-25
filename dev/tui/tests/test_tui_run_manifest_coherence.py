@@ -19,9 +19,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
-from .._artifacts import (
+from ..artifacts import (
     Manifest,
     ManifestVersionError,
     RenderedFrame,
@@ -34,7 +34,7 @@ from .._artifacts import (
     write_index,
     write_manifest,
 )
-from .._viewports import resolve as resolve_viewport
+from ..viewports import resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -46,14 +46,14 @@ def _manifest(frames: tuple[RenderedFrame, ...] = ()) -> Manifest:
     return Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
         frames=frames,
     )
 
 
 def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
-    shape = resolve_viewport(viewport)
+    shape = resolve(viewport)
     return RenderedFrame(
         surface=surface,
         viewport=shape.name,
@@ -126,7 +126,7 @@ def test_a_manifest_whose_run_spanned_a_source_change_says_so() -> None:
     coherent = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
     )
     assert not coherent.spans_a_source_change
@@ -134,7 +134,7 @@ def test_a_manifest_whose_run_spanned_a_source_change_says_so() -> None:
     split = Manifest(
         source_revision=_REVISION,
         source_revision_at_end="b" * 64,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
     )
     assert split.spans_a_source_change, (
@@ -220,7 +220,7 @@ def test_a_partly_repainted_run_records_the_height_each_frame_is_actually_at(tmp
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=14,
         frames=(kept, repainted),
     )
@@ -269,7 +269,7 @@ def test_a_coherent_run_still_reports_one_cell_height(tmp_path: Path) -> None:
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
         frames=(frame,),
     )
@@ -420,11 +420,11 @@ def test_the_diff_compares_two_runs_that_still_hold_what_they_claim(
     """
     import typer
 
-    from .. import _artifacts
+    from .. import artifacts
     from ..cli import diff_command
 
     runs = tmp_path / "runs"
-    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    monkeypatch.setattr(artifacts, "RUNS_DIR", runs)
     _written_run(runs, "baseline", "before")
     _written_run(runs, "current", "after")
 
@@ -447,11 +447,11 @@ def test_the_diff_refuses_a_run_whose_manifest_outlives_its_frames(
     """
     import typer
 
-    from .. import _artifacts
+    from .. import artifacts
     from ..cli import diff_command
 
     runs = tmp_path / "runs"
-    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    monkeypatch.setattr(artifacts, "RUNS_DIR", runs)
     baseline = _written_run(runs, "baseline", "before")
     _written_run(runs, "current", "after")
     lost = baseline / read_manifest(baseline).frames[0].text

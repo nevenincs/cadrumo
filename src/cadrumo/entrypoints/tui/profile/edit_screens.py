@@ -16,25 +16,21 @@ from ....application.user_profile.presentation import profile_field_shape_hint
 from ....core.i18n.render import tr
 from ..components.language import localized, refresh_localized_widgets
 from ..components.widgets import ContentScroll, DisclosureGroup
-from .overview_contracts import _EDIT_DIALOG_CSS, _REQUIRED_MARK
+from .overview_contracts import EDIT_DIALOG_CSS, REQUIRED_MARK
 
 if TYPE_CHECKING:
     from ....application.user_profile.overview import ProfileFieldView, ProfileSectionView
 
 
 def field_help_text(field: ProfileFieldView) -> str:
-    """Explain one field: what it is, why it is asked, where to find it.
+    """Explain one field in the words the backend serves for it.
 
-    A field without catalogue help is explained by its schema description,
-    so no question is ever asked without saying what it is about.
+    A field the setup wizard asks about shows the wizard's own copy, one
+    paragraph per line. A field without it is explained by its schema
+    description, so no question is ever asked without saying what it is about.
     """
     if field.help is not None and field.help:
-        headings = (
-            tr("flows.manager.help.what"),
-            tr("flows.manager.help.why"),
-            tr("flows.manager.help.where"),
-        )
-        return "\n".join(f"{heading} {part}" for heading, part in zip(headings, field.help, strict=True))
+        return "\n".join(field.help)
     if field.about:
         return f"{tr('flows.manager.help.about')} {field.about}"
     return ""
@@ -43,7 +39,7 @@ def field_help_text(field: ProfileFieldView) -> str:
 class FieldEditScreen(ModalScreen[str | None]):
     """Edit one projected profile field without owning profile policy."""
 
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    DEFAULT_CSS = EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(
@@ -192,7 +188,7 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     for required fields, value shape, and relationship rules.
     """
 
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    DEFAULT_CSS = EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(self, section: ProfileSectionView) -> None:
@@ -212,16 +208,19 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield localized(Label(tr("flows.manager.rows.add"), id="edit-label"), "flows.manager.rows.add")
-            for index, field in enumerate(self._fields):
-                yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}", id=f"row-label-{index}")
-                if field.choices:
-                    yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
-                else:
-                    yield Input(
-                        placeholder=profile_field_shape_hint(field.field_type) or "",
-                        id=f"row-input-{index}",
-                    )
+            # The boxes scroll inside the dialog, so Save and Cancel stay on a short terminal however
+            # many boxes or choices the row declares.
+            with ContentScroll(id="edit-body"):
+                yield localized(Label(tr("flows.manager.rows.add"), id="edit-label"), "flows.manager.rows.add")
+                for index, field in enumerate(self._fields):
+                    yield Label(f"{field.label}{REQUIRED_MARK if field.required else ''}", id=f"row-label-{index}")
+                    if field.choices:
+                        yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
+                    else:
+                        yield Input(
+                            placeholder=profile_field_shape_hint(field.field_type) or "",
+                            id=f"row-input-{index}",
+                        )
             with Horizontal(id="edit-actions"):
                 yield localized(
                     Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel"), "flows.manager.edit.cancel"
@@ -270,7 +269,7 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
         self._fields = tuple(relocalize_profile_field(field) for field in self._fields)
         for index, field in enumerate(self._fields):
             self.query_one(f"#row-label-{index}", Label).update(
-                f"{field.label}{_REQUIRED_MARK if field.required else ''}"
+                f"{field.label}{REQUIRED_MARK if field.required else ''}"
             )
             if field.choices:
                 options = self.query_one(f"#row-option-{index}", OptionList)
@@ -281,7 +280,7 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
 class RepeatableRowRemoveScreen(ModalScreen[bool]):
     """Require an explicit confirmation before clearing an identified row."""
 
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    DEFAULT_CSS = EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(self, section_key: str, row_key: str) -> None:

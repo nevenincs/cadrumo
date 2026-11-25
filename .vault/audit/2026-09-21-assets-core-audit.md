@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e454ef892a81e7847bf288a278b90910177397152cda24dc8cc27ffbb8acd0f4'
+body_hash: 'sha256:21dcb2b1ed5e3b70aac0dde056699527bfd296308d5061ba9cb81004a07fb6af'
 related:
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
@@ -189,3 +189,202 @@ For P03, resolve authority rows through the registry-backed provider rather
 than accepting a caller-invented rate, preserve the single M130 casilla-02
 owner, and displace the proven unsafe transaction-ledger 0208 route only within
 the scoped acquisition/depreciation collision.
+
+## Integrated review, 2026-10-30
+
+Verdict: revision required. Step S14 of the 2026-10-30 plan, over S01 to S13 and S11, S15, S16 as extended. All findings are new with the asset work except the manifest entry. Executed means run against the real domain; every other entry rests on source reading.
+
+### money | high | Removing or redating a baja leaves its zero claim effective and loses the year's deduction
+Executed. `_baja_supersessions` in `application/actividad_asset/operations.py`, `uncovered_claim_intervals` in `domain/renta/actividad_asset/claims.py`.
+
+### money | high | Sub-cent basis puts a fully amortized element in permanent conflict
+Executed: basis 1234.57 at 35 percent and 50 percent allocation gives 432.0995 against charges of 432.10. `schedule.py` compares unrounded; `history.py` compares at cents.
+
+### never-blocks | high | Incomplete opening history blocks Modelo 100 and 130, even for a withdrawal
+`disposal_calculation.py`, `application/aggregation/modelo_bindings_actividad_assets.py`.
+
+### staleness | high | Modelo 130 fingerprint omits accumulated history, so a stale filed figure can pass unseen
+`schedule.py` fingerprint against `_constant_percentage_amount`.
+
+### boxes | high | A baja with a non-zero result blocks Modelo 100 with no route to clear it
+0179, 0306, 0307, 0385, 0387, 1844, 1846 and 1478 had no bindings; clave 1626 and agrarian excess unestablished.
+
+### never-blocks | high | Second instalments and ancillary rows in amortizable categories block with reclassification as the only remedy
+`_validate_primary_purchase` in the ledger lifecycle, `ledger_amortization_row_unregistered`.
+
+### staleness | medium | A new generation or later baja falsely flags consumers, and a disposal-only revision marks claims stale
+`ScheduleAuthority.fingerprint`, `_matches_current_schedule` in `register_reads.py`.
+
+### staleness | medium | Filed staleness cost grows with sealed revisions and elements on every status read
+`stale_filed_revisions` in `ledger_filing_snapshot.py`. Not measured by the review.
+
+### data-bounds | medium | Years run to 2075, future claims are accepted, and forecast and walk filter claims differently
+`register_reads.py`, `operations.py`.
+
+### money | medium | Pre-floor years understate the minimum, the opening span hides claim gaps, and pending display departs from the formula
+`disposal_calculation.py`, `domain/renta/actividad_asset/disposal.py`, `register_reads.py`.
+
+### territory | medium | Residence is read from the current profile, so a later move to foral territory blocks earlier periods
+`_territory_refusal` in `modelo_bindings_actividad_assets.py`.
+
+### manifest | medium | A stale contract manifest kills the worker and surfaces as custody_recovering
+Pre-existing. `contract_manifest.py`, `worker_operation_requests.py`. The manifest check is in no packaging or merge recipe.
+
+### mcp | medium | No asset refusal is run through the MCP server
+`test_refusal_reaches_frontends.py` covers MCP at schema level only.
+
+### replay | medium | An identical retry of dispose or create is refused where record_claim replays
+`operations.py`.
+
+### tests | medium | Test support diverges from production and some tests prove little
+`register_support.py` disposal bounds, `test_opening_coverage.py`, and `test_ledger_income_chain_aeat_exempt_worked_example.py`, which types 0208 by hand and is no amortization oracle.
+
+### decision | low | later_affectation_on is justified by LIRPF art. 28.3 but unnamed in the disposal ADR
+Named by amendment on 2026-10-30.
+
+### law | low | The RIS art. 4.3 group paragraph is unresolved for an individual buyer
+Letter a could over-deduct if it applies; no fact records the seller relationship. Under research.
+
+## Tax literals outside the asset code, 2026-10-30
+
+Read-only sweep of `domain/` and `application/`, using the classifier in `dev/quality/tests/test_activity_asset_tax_literals.py` over 1,894 files. About 85 percent of 2,120 findings were technical. Letter claves were only grepped, and 65 `domain/calculations/registry` files were sampled.
+
+### registry-owned-facts | high | Tax facts remain in code outside the asset code
+Pre-existing, and against the operator's rule of 2026-10-30. Families: a threshold duplicating the registry at `application/modelo/dt12_advisory.py:28`; box lists at `application/modelo/projection.py:80`, `application/calculations/m303_regimen_simplificado_annual_summary.py:56`, `domain/calculations/registry/ledger_renta_income_bindings.py:146`; claves at `application/filing/export_producer.py:1022`, `domain/foreign_assets/register.py:94`, `domain/contribuyente/renta_codes.py:36`, `application/wizard/command_parameters.py:90`, `domain/calculations/registry/withholding_bindings.py:279`, `application/filing/producer_snapshot_m360.py:68`; modelo routing at `application/aggregation/withholding_filing_cadence.py:43`, `domain/calculations/registry/applicability.py:379`, `domain/deadlines/festivos.py:243`; layout offsets at `application/filing/m190_context_validation.py:17`, `application/filing/m280_context_validation.py:17`; period rules at `domain/period.py:66`, `domain/renta/maritime_exemption.py:67`.
+
+### registry-owned-facts | medium | The literal gate cannot see every form of a fact
+`Field(ge=, le=)` bounds hide claves, modelo ids look like box ids, and letter claves aren't detected.
+
+## Integrated re-review, 2026-10-30
+
+Verdict: revision required, no critical findings. Findings from the first review are resolved except where repeated here. Installed journeys and real CLI and TUI launches did not run. The MCP refusal entry reported as open is closed by `dev/mcp_eval/tests/test_asset_refusal_through_mcp.py`, which the review did not look in.
+
+### head-integrity | high | HEAD could not import the asset subsystem
+`disposal.py:453` had a syntax error, with consumers importing names from a split module left uncommitted. Repaired in `04ae81174d`.
+
+### never-blocks | high | An unowned amortizable row with no base or in foreign currency blocks Modelo 130
+`modelo_bindings_renta_expenses.py:570`. Executed.
+
+### staleness | high | A late claim for an earlier year changes the baja result with no drift
+Executed: box 1654 moves from 897.53 to 1,200.00 with equal consumption. `disposal_calculation.py:115`.
+
+### visibility | high | Non-durable findings disappear at reopen, and the form never shows their specifics
+`calculation_bucket_actions.py:742`, `work_form_issue_lines.py:389`. Decision: persist them with the calculation revision.
+
+### never-blocks | high | Any amortization note replaces Verify with Fill
+Executed. `work_form_next_step.py:269`.
+
+### tests | high | Three work-form gate parametrizations fail
+`test_work_form_gate_agreement.py:174`, the same inconsistency.
+
+### baja-correction | medium | Omitting disposal silently removes a baja
+`operation_dtos.py:392`. Executed.
+
+### refusal-rendering | medium | Plan refusal keys travel without their facts
+`operations.py:806`.
+
+### identical-flagged | medium | A correction to evidence alone marks every claim stale
+`lifecycle.py:469`. Executed.
+
+### tests | medium | Register test support departs from production
+`register_support.py`.
+
+### claim-replay | low | A fresh forecast under a new generation reads as a conflict
+`claims.py:97`. No dead end.
+
+### boxes | low | Several sales in one year collapse into one row
+`actividad_asset_disposal_bindings.py:139`.
+
+### outside-ledger | low | The remedy for a later row on an outside-ledger element cannot be carried out
+`revision_validation.py:58`.
+
+### m131 | low | An uncalculable excess says nothing on Modelo 131
+`modelo_bindings_actividad_assets.py:630`.
+
+## Modelo 184 clave A reduction
+
+### Reduction citation | info | The block on clave A lifted once the design's citation was explained as a stale renumbering
+
+The socio record of the Modelo 184 design cites LIRPF art. 24.2, which does not fit Ley 35/2006, whose art. 24 has no apartado 2. RDLeg 3/2004 art. 24 (BOE-A-2004-4347) is the old number: its apartado 2 reduced income of more than two years' generation. The current rule is LIRPF art. 26.2, reducing the net income of art. 25.4, which is the socio record's clave A subclave 02. The entity record of the same design cites art. 26.2 itself. `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` allowed the block to lift on this explanation. The fact key `reduccion.bearing` now reads `A:02,C,D`; clave A without 02 and clave E refuse. No filing-grade example has confirmed the reading.
+
+## Third integrated review
+
+Reviewed through `b49f3e2399` against the assets core and registry-owned facts plans. The plan sum above pending (9,000 against 7,000) is not a defect: a past unclaimed row states that year's own figure, rows from today stay within pending, and claim writes cap at the excess.
+
+### boxes | high | Two sales export as one summed element with no warning
+`application/filing/_export_xml_dictionary.py:224,606-612`, `application/aggregation/activity_asset_disposal_projection.py:315-323`. No filing module reads `row_binding_values`, and the shared-row finding is gone.
+
+### boxes | high | Box 1633 carries the sale price before costs
+`domain/renta/actividad_asset/disposal.py:309-317`. The Renta manual defines the value net of costs; with sale 5,000, costs 100, net value 3,000 the boxes imply 2,000 where 1654 states 1,900.
+
+### boxes | medium | Sale rows omit boxes and a zero-result sale leaves no trace
+`_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml:763-823`, `activity_asset_disposal_projection.py:466`. Boxes 1632, 1612, 1613, 1638, 1640 are unbound.
+
+### boxes | medium | The sale row's identity ignores costs and date
+`activity_asset_disposal_projection.py:180-189`.
+
+### literal-sweep | medium | The sweep misses whole classes of tax literal and stops at domain and application
+`dev/quality/tests/test_tax_literal_sweep.py`. Missed shapes include `StringConstraints`, `Field(pattern=)`, `Decimal` values, bare thresholds, box names, `match` cases and date literals.
+
+### registry-facts | medium | Literal bounds duplicate facts that now own the values
+`domain/modelos/row_models.py:72,244`, `application/modelo/edit_apply_row_contracts.py:127`, `application/filing/producer_snapshot.py:68-69`, `core/filing_projection_ref.py:159-213`.
+
+### registry-facts | medium | The M180 municipality regex probably disagrees with its five-position field
+`application/aggregation/retenciones.py:74`.
+
+### parity | medium | The TUI asset reads omit what other surfaces state
+`entrypoints/tui/ledger/actividad_asset.py:256-269,519-552`.
+
+### registry-readers | low | The leased reader is an implicit fallback outside validation scope
+`domain/calculations/registry/form_codes.py:701-729`.
+
+### notes | low | Notes stored in one development window fail to render
+`application/modelo/calculation_notes.py:263-269`. Test data only; no migration.
+
+### registry-facts | low | Stale comment and remaining literals
+`domain/modelos/row_models.py:262`, `application/actividad_asset/operations.py:207,211`, `_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml:740-745`.
+
+### xml-export | high | Modelo 100 XML writes values past the official length and verification reports a match
+`application/filing/_export_xml_dictionary_values.py:160-183`. Rows `C1ICRC`, `IDENTCCVH1`, `GFCNIF1` and `DP_APENOM_D` exceed their XSD lengths; `verify_export` returned `match`. Recommendation: refuse from the XSD the renderer already loads, at render and at verify.
+
+### literal-gate | high | The literal gate misses most non-trivial positions of a tax number
+`dev/quality/tests/test_tax_literal_sweep.py:419-435,948`. 43 of 56 representative shapes pass: arithmetic, `min`/`max`, defaults, class attributes, collections, dates, year sets, form-code comparisons.
+
+### registry-facts | high | The borrador year table freezes the support envelope in code and disagrees with it
+`adapters/inbound/borrador/_extractors/selection.py:35-41`, `parser.py:54,90,121`, `modelo_100_summary_v2025.py:68`. Year 2026 refuses although the registry declares it; 2021 is accepted below the floor.
+
+### literal-gate | medium | Name exemptions match substrings and name equal-to-calendar values
+`dev/quality/tests/test_tax_literal_sweep.py:94-100,136,442`. `SOLIDARITY_SURCHARGE_THRESHOLD` passes through `ARITY`; the width rule covers two module name patterns only (`:105`).
+
+### named-values | medium | Two arity names hold counts from the Orden
+`formula_runtime_m100.py:323`, `_formula_runtime_m131.py:73`.
+
+### tui-door | medium | TUI asset refusals show raw unlocalized text
+`entrypoints/tui/ledger/actividad_asset.py:268-270,393,411,429,530,549`, `actividad_asset_inputs.py:67`.
+
+### tui-parity | medium | TUI handoff drops the Modelo 100 gaps and requires a quarter
+`entrypoints/tui/ledger/actividad_asset.py:429,438-446`.
+
+### export-envelope | medium | Export uses the validator-only reader and skips its check outside a scope
+`application/filing/export_envelope.py:185-187,230-231`.
+
+### asset-findings | low | Unbound-box finding is over-broad and contradicts the handoff
+`modelo_bindings_actividad_assets.py:789-791,828`, `application/actividad_asset/operations.py:766-770`. Not reachable today.
+
+### registry-facts | high | Two form codes remain in code past the gate
+`application/modelo/withholding_detail_gate.py:143,265`, `domain/modelos/perceptor_clave_scope.py:41`.
+
+### literal-gate | high | Sweep misses most fresh shapes and fact words lose to unit words
+`dev/quality/tests/test_tax_literal_sweep.py:380,649-656,1067-1074,1157`. 105 of 112 fresh probes passed.
+
+### tui-door | medium | An expired session shows a refusal with no reason
+`entrypoints/tui/ledger/actividad_asset.py:181`.
+
+### profile-bound | medium | Registry schema holds a copy of a code capacity
+`_data/registry/cadrumo/user_profile/schema.toml`, `application/filing/producer_snapshot.py:68`.
+
+### xml-export | low | Capitalizing can turn a character into a code letter
+`canonical_xml_text`: `ı` to `I` on `tipo_TIA`.
+
+### resolution | low | Findings above resolved; stated gate limits remain
+All high and medium findings above are fixed in commits through `e89af9ea3d` and verified by the suites named in the plan ledgers. The literal gate cannot judge every shape: `dev/quality/tests/test_tax_literal_sweep.py` lists and pins what it cannot see. Not repeated by an independent reviewer after the last fix round.

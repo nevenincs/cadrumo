@@ -13,10 +13,10 @@ from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_graph import module_edges, resolved_symbol_uses
 from .unreachable_memo import parse_module
-from .unreachable_models import ShippedModule, _OutsideUse
+from .unreachable_models import OutsideUse, ShippedModule
 from .unreachable_receiver_types import ReceiverTypes, receiver_types
 from .unreachable_records import record_member_uses
-from .unreachable_references import _references
+from .unreachable_references import source_references
 from .unreachable_tree import ShippedTreeSpec, iter_python_files
 
 
@@ -33,14 +33,7 @@ def _outside_module_name(path: Path, spec: ShippedTreeSpec) -> str:
     return module_name_for(path, src_root=root)
 
 
-def _outside_use(
-    spec: ShippedTreeSpec,
-    known: frozenset[str],
-    receivers: ReceiverTypes | None = None,
-    *,
-    modules: Mapping[str, ShippedModule] | None = None,
-) -> _OutsideUse:
-    use = _OutsideUse()
+def _outside_probes(spec: ShippedTreeSpec, use: OutsideUse) -> list[tuple[ShippedModule, str]]:
     probes: list[tuple[ShippedModule, str]] = []
     for corpus in spec.outside:
         for path in iter_python_files(corpus.root):
@@ -54,7 +47,7 @@ def _outside_use(
                 use.unreadable.append(f"{path}: {type(error).__name__}: {error}")
                 continue
             label = "tests" if is_test_source(path, root=spec.repo_root) else corpus.label
-            for name in _references(tree):
+            for name in source_references(tree):
                 use.names.setdefault(name, set()).add(label)
             probe = ShippedModule(
                 name=_outside_module_name(path, spec),
@@ -63,6 +56,19 @@ def _outside_use(
                 tree=tree,
             )
             probes.append((probe, label))
+    return probes
+
+
+def outside_use(
+    spec: ShippedTreeSpec,
+    known: frozenset[str],
+    receivers: ReceiverTypes | None = None,
+    *,
+    modules: Mapping[str, ShippedModule] | None = None,
+) -> OutsideUse:
+    """Collect outside references and refuse unreadable inputs."""
+    use = OutsideUse()
+    probes = _outside_probes(spec, use)
     outside_receivers = receiver_types(
         {probe.name: probe for probe, _ in probes}, known_classes=receivers.classes if receivers else frozenset()
     )
@@ -75,18 +81,7 @@ def _outside_use(
             {**receivers.contexts, **outside_receivers.contexts},
             {**receivers.iterables, **outside_receivers.iterables},
         )
-    for probe, label in probes:
-        runtime, type_only = module_edges(probe, known)
-        for target in runtime | type_only:
-            use.modules.setdefault(target, set()).add(label)
-        for pair in resolved_symbol_uses(probe, known, receivers):
-            use.resolved.setdefault(pair, set()).add(label)
-    if modules is not None:
-        combined = {**modules, **{probe.name: probe for probe, _label in probes}}
-        for label in {label for _probe, label in probes} - {"tests"}:
-            consumers = frozenset(probe.name for probe, owner in probes if owner == label)
-            for pair in record_member_uses(combined, consumers):
-                use.resolved.setdefault(pair, set()).add(label)
+    _resolve_outside_uses(probes, known, receivers, modules, use)
     if use.unreadable:
         raise OSError(
             format_unread_notice(
@@ -96,3 +91,30 @@ def _outside_use(
             ).rstrip()
         )
     return use
+
+
+def _resolve_outside_uses(
+    probes: list[tuple[ShippedModule, str]],
+    known: frozenset[str],
+    receivers: ReceiverTypes | None,
+    modules: Mapping[str, ShippedModule] | None,
+    use: OutsideUse,
+) -> None:
+    for probe, label in probes:
+        runtime, type_only = module_edges(probe, known)
+        for target in runtime | type_only:
+            use.modules.setdefault(target, set()).add(label)
+        for pair in resolved_symbol_uses(probe, known, receivers):
+            use.resolved.setdefault(pair, set()).add(label)
+    if modules is not None:
+        _record_outside_uses(probes, modules, use)
+
+
+def _record_outside_uses(
+    probes: list[tuple[ShippedModule, str]], modules: Mapping[str, ShippedModule], use: OutsideUse
+) -> None:
+    combined = {**modules, **{probe.name: probe for probe, _label in probes}}
+    for label in {label for _probe, label in probes} - {"tests"}:
+        consumers = frozenset(probe.name for probe, owner in probes if owner == label)
+        for pair in record_member_uses(combined, consumers):
+            use.resolved.setdefault(pair, set()).add(label)

@@ -98,7 +98,7 @@ _UNNUMBERED = re.compile(r"^\s*\|?\s*notas?\s*[:.]\s*(.*)$", re.IGNORECASE)
 #: Any line opening a note, in every marking the corpus uses. Used only to
 #: END an unnumbered note's text, so it deliberately matches more than the
 #: patterns that START one.
-_ANY_NOTE = re.compile(r"^\s*\|?\s*notas?", re.IGNORECASE)
+_ANY_NOTE = re.compile(r"^\s*\|?\s*notas?\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)

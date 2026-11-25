@@ -16,7 +16,7 @@ def _row(*, supported: bool, status: str, guidance: str | None) -> ModeloRowPayl
     return ModeloRowPayload(
         code="600",
         title="Synthetic modelo",
-        cadence="ad_hoc",
+        cadence="event",
         tax_domain="itp",
         revision_count=1,
         local_work_supported=supported,

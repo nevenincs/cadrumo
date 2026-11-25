@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-31 22:16+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -51,8 +51,8 @@ msgid ""
 "receipt from the AEAT sede (read-only), stores an encrypted copy in your "
 "profile, and reconciles in one step."
 msgstr ""
-"**Obtén-lo de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de"
-" la sede de l'AEAT (només lectura), en desa una còpia xifrada al teu "
+"**Obté'l de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de "
+"la sede de l'AEAT (només lectura), en desa una còpia xifrada al teu "
 "perfil i concilia en un sol pas."
 
 #: ../../how-to/reconcile.md:16
@@ -272,9 +272,9 @@ msgid "Both routes report one of two verdicts:"
 msgstr "Totes dues vies informen d'un de dos veredictes:"
 
 #: ../../how-to/reconcile.md:109
-msgid "**matches** - every compared field agrees with the local filing record."
+msgid "**`matches`** - every compared field agrees with the local filing record."
 msgstr ""
-"**matches** - tots els camps comparats coincideixen amb el registre de "
+"**`matches`** - tots els camps comparats coincideixen amb el registre de "
 "presentació local."
 
 #: ../../how-to/reconcile.md:110
@@ -375,11 +375,11 @@ msgstr ""
 
 #: ../../how-to/reconcile.md:141
 msgid ""
-"If the AEAT receipt itself appears wrong, contact your asesor or AEAT "
+"If the AEAT receipt itself appears wrong, contact your adviser or AEAT "
 "directly."
 msgstr ""
 "Si el mateix justificant de l'AEAT sembla incorrecte, contacta amb el teu"
-" asesor o amb l'AEAT directament."
+" assessor o amb l'AEAT directament."
 
 #: ../../how-to/reconcile.md:144
 msgid "If a box value looks wrong"

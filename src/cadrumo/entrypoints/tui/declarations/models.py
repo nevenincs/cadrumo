@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import Literal, Protocol
 
 from pydantic import BaseModel
@@ -33,17 +32,6 @@ type DeclarationsDestinationIdV1 = Literal[
     "declarations.calendar",
     "declarations.modelo_workspace",
 ]
-
-
-class DeclarationsCalendarScopeV1(StrEnum):
-    """Closed, presentation-only calendar scopes."""
-
-    ALL = "all"
-    PAST = "past"
-    UPCOMING = "upcoming"
-    OVERDUE = "overdue"
-    FILED = "filed"
-    EVIDENCE_UNKNOWN = "evidence_unknown"
 
 
 class DeclarationsRouteTargetV1(BaseModel):
@@ -122,6 +110,7 @@ class DeclarationsWorkspaceWiringV1:
     modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None
     revision_handoff: RevisionHandoffV1 | None = None
     filing_handoff: FilingHandoffV1 | None = None
+    filing_view_factory: Callable[[DeclarationsWorkspaceFilingRefV1], Screen[None]] | None = None
     filing_export_factory: Callable[[DeclarationsWorkspaceFilingRefV1], Screen[None]] | None = None
     filing_google_review_factory: Callable[[DeclarationsWorkspaceFilingRefV1], Screen[None]] | None = None
     reconciliation_export_factory: Callable[[DeclarationsWorkspaceFilingRefV1], Screen[None]] | None = None
@@ -139,7 +128,6 @@ class DeclarationsWorkspaceWiringV1:
 __all__ = [
     "CalendarEntryHandoffV1",
     "CalendarRecoveryHandoffV1",
-    "DeclarationsCalendarScopeV1",
     "DeclarationsDestinationIdV1",
     "DeclarationsRouteTargetV1",
     "DeclarationsWorkspaceWiringV1",

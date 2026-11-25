@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -10,45 +11,54 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....application.modelo.action_errors import ModeloProfileReadinessError
 from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
+from .....application.operator_actions.preconditions import profile_setup_incomplete_verdict
+from .....application.overview.calendar_models import OverviewCalendarScope
+from .....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.period import Period, StandardPeriodCode
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..calendar import DeclarationsCalendarScreen
 from ..controller import calendar_address_focus_key, calendar_focus_key
-from ..models import DeclarationsCalendarScopeV1
 from .calendar_fixtures import calendar_controller, calendar_projection
+
+_YEAR = filing_year_envelope().horizon
+"""The exercise the calendar fixture is built for."""
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.mark.parametrize(
     "token",
-    [*(code.value for code in StandardPeriodCode), "AD-HOC", "EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T", "EVENT-3"],
+    [*(code.value for code in StandardPeriodCode), "EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T", "EVENT-3"],
 )
 def test_calendar_focus_accepts_all_filing_period_families_and_resolves_exact_row(token: str) -> None:
     projection = calendar_projection()
     target = projection.entries[0].model_copy(
-        update={"period": Period.from_year_and_code(2026, token), "recovery_action": None}
+        update={"period": Period.from_year_and_code(_YEAR, token), "recovery_action": None}
     )
     projection = projection.model_copy(update={"entries": (*projection.entries[1:], target)})
     focus = TuiFocusIdentityV1(
         destination="workbench.declarations",
-        semantic_key=calendar_address_focus_key("130", 2026, token),
+        semantic_key=calendar_address_focus_key("130", _YEAR, token),
     )
     controller = calendar_controller(
         projection, context=TuiScreenContextV1(destination="workbench.declarations", focus=focus)
     )
-    assert controller.context_identity() == f"130|2026|{token}"
+    assert controller.context_identity() == f"130|{_YEAR}|{token}"
     assert calendar_focus_key(target) == focus.semantic_key
 
 
@@ -95,32 +105,81 @@ def _rendered(screen: DeclarationsCalendarScreen) -> str:
     return "\n".join(values)
 
 
-def test_exact_scope_overlap_and_evidence_unknown_uses_source_observability() -> None:
+def test_exact_scope_overlap_and_evidence_unknown_is_served_per_row() -> None:
     controller = calendar_controller(calendar_projection())
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "")] == [
+    assert [row.modelo for row in controller.visible_entries(None, "")] == [
         "130",
         "303",
         "111",
     ]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.PAST, "")] == [
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.PAST, "")] == [
         "130",
         "303",
     ]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.OVERDUE, "")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.FILED, "")] == ["303"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.UPCOMING, "")] == ["111"]
-    assert controller.visible_entries(DeclarationsCalendarScopeV1.EVIDENCE_UNKNOWN, "") == ()
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.OVERDUE, "")] == ["130"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.FILED, "")] == ["303"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.UPCOMING, "")] == ["111"]
+    assert controller.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "") == ()
     unknown = calendar_controller(calendar_projection(evidence_unobservable=True))
-    assert len(unknown.visible_entries(DeclarationsCalendarScopeV1.EVIDENCE_UNKNOWN, "")) == 3
+    assert len(unknown.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "")) == 3
+
+
+def _served_against_the_day() -> DeclarationsCalendarProjectionV1:
+    """A projection whose rows serve scopes that its own day and sources would not give them.
+
+    Its rows were evaluated on an earlier day than the projection's, so by the
+    projection's day the upcoming close has already passed; and the upcoming
+    row alone withholds its AEAT evidence although the AEAT source is observable.
+    """
+    base = calendar_projection()
+    overdue, filed, upcoming = base.entries
+    withheld = upcoming.model_copy(update={"aeat_submission_state": None, "justificante_verified": None})
+    served = base.model_copy(
+        update={"entries": (overdue, filed, withheld), "as_of": upcoming.adjusted_closes_on + timedelta(days=1)}
+    )
+    assert calendar_controller(served).source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability.is_observable
+    assert all(row.adjusted_closes_on < served.as_of for row in served.entries)
+    return served
+
+
+def test_scope_keeps_exactly_the_entries_the_projection_serves_in_it_whatever_the_day() -> None:
+    """The agenda filters by each row's served membership, in served order, and decides none of it itself."""
+    projection = _served_against_the_day()
+    controller = calendar_controller(projection)
+    for scope in OverviewCalendarScope:
+        expected = tuple(row for row in projection.entries if scope in row.scopes)
+        assert controller.visible_entries(scope, "") == expected, scope
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.PAST, "")] == ["130", "303"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.UPCOMING, "")] == ["111"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "")] == ["111"]
+    assert len(controller.visible_entries(None, "")) == len(projection.entries)
+
+
+@pytest.mark.asyncio
+async def test_scope_picker_offers_all_then_each_served_scope_and_filters_by_served_membership() -> None:
+    projection = _served_against_the_day()
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        scope = screen.query_one("#declarations-calendar-scope", Select)
+        table = screen.query_one("#declarations-calendar-agenda", DataTable)
+        assert table.row_count == len(projection.entries)
+        # A value the picker does not offer is refused by Select itself.
+        for item in OverviewCalendarScope:
+            scope.value = item.value
+            await settle(pilot)
+            assert table.row_count == sum(item in row.scopes for row in projection.entries), item
+        scope.value = "all"
+        await settle(pilot)
+        assert table.row_count == len(projection.entries)
 
 
 def test_unicode_and_search_uses_only_safe_localized_fields() -> None:
     controller = calendar_controller(calendar_projection())
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "VENCIDA 130")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20/10/2026 111")] == [
-        "111"
-    ]
-    assert controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "private-work-name nif-token") == ()
+    assert [row.modelo for row in controller.visible_entries(None, "VENCIDA 130")] == ["130"]
+    assert [row.modelo for row in controller.visible_entries(None, "20 oct 2026 111")] == ["111"]
+    assert controller.visible_entries(None, "private-work-name nif-token") == ()
 
 
 def test_recovery_action_must_match_catalogue_and_natural_address() -> None:
@@ -132,7 +191,7 @@ def test_recovery_action_must_match_catalogue_and_natural_address() -> None:
         calendar_controller(base.model_copy(update={"entries": (wrong_action, *base.entries[1:])}))
     wrong_address = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period="1T")
         }
     )
     with pytest.raises(ValueError, match="natural address"):
@@ -145,26 +204,28 @@ async def test_three_control_focus_chain_semantic_restore_callback_and_geometry(
     screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection(), handoff=selected.append))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         search = screen.query_one("#declarations-calendar-search", Input)
         scope = screen.query_one("#declarations-calendar-scope", Select)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         assert app.focused is search
         await pilot.press("tab")
+        await settle(pilot)
         assert app.focused is scope
         await pilot.press("tab")
+        await settle(pilot)
         assert app.focused is table
         table.move_cursor(row=1)
         chosen_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
         search.value = "303"
-        await pilot.pause()
+        await settle(pilot)
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen_key
         search.value = ""
-        await pilot.pause()
+        await settle(pilot)
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen_key
         table.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert selected == [calendar_projection().entries[1]]
         assert geometry_band(app, 80) == []
         assert table.max_scroll_x == 0
@@ -182,14 +243,15 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
     screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         await pilot.press("enter")
+        await settle(pilot)
         notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-        assert notice == tr("tui.declarations.refusal.handoff")
+        assert notice == tr("workspace.declarations.refusal.handoff")
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert app.return_value is None
 
 
@@ -198,7 +260,7 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -213,40 +275,75 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = _rendered(screen)
         assert "Crear o recuperar esta declaración" in rendered
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         table.move_cursor(row=0)
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == []
 
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == []
         assert app.screen.query_one("#confirm-title")
 
         await pilot.click("#btn-confirm-accept")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == [(recovery_row.recovery_action, recovery_row)]
 
         await pilot.press("y")
-        await pilot.pause()
+        await settle(pilot)
         assert recovered == [(recovery_row.recovery_action, recovery_row)]
 
     refused = DeclarationsCalendarScreen(calendar_controller(projection, handoff=ordinary.append))
     refused_app = ScreenHostApp[None](refused)
     async with refused_app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         refused.query_one("#declarations-calendar-agenda", DataTable).focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert str(refused.query_one("#declarations-calendar-notice", Static).render())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", list(OutputLanguage))
+async def test_a_recovery_refused_for_an_incomplete_profile_setup_shows_the_applications_own_words(
+    language: OutputLanguage,
+) -> None:
+    base = calendar_projection()
+    recovery_row = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
+        }
+    )
+    projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
+
+    def refuse(_action: object, _row: object) -> None:
+        raise ModeloProfileReadinessError(
+            translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
+            context={"bucket_id": "synthetic-profile", "modelo": "130"},
+            profile_precondition_verdict=profile_setup_incomplete_verdict(modelo="130", missing_required_field_count=0),
+        )
+
+    screen = DeclarationsCalendarScreen(calendar_controller(projection, recovery_handoff=refuse))
+    with override_settings(cadrumo_output_language=language.value):
+        async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+            await settle(pilot)
+            screen.query_one("#declarations-calendar-agenda", DataTable).focus()
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.click("#btn-confirm-accept")
+            await settle(pilot)
+            await settle(pilot)
+            shown = str(screen.query_one("#declarations-calendar-notice", Static).render())
+
+        assert shown == tr("application.modelo.errors.profile_readiness_setup_incomplete", locale=language.value)
 
 
 @pytest.mark.asyncio
@@ -254,7 +351,7 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -264,12 +361,12 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#declarations-calendar-agenda", DataTable).focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is screen
         assert recovered == []
 
@@ -280,7 +377,7 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -292,21 +389,21 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
         screen = DeclarationsCalendarScreen(calendar_controller(projection, recovery_handoff=fail_recovery))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#declarations-calendar-agenda", DataTable).focus()
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             modal = app.screen
             assert str(modal.query_one("#btn-confirm-accept", Button).label) == tr(
-                "tui.declarations.calendar.recovery.confirm"
+                "workspace.declarations.calendar.recovery.confirm"
             )
             assert str(modal.query_one("#btn-confirm-cancel", Button).label) == tr(
-                "tui.declarations.calendar.recovery.cancel"
+                "workspace.declarations.calendar.recovery.cancel"
             )
             await pilot.click("#btn-confirm-accept")
-            await pilot.pause()
+            await settle(pilot)
             notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-            assert tr("tui.declarations.calendar.recovery.failure") in notice
+            assert tr("workspace.declarations.calendar.recovery.failure") in notice
             assert "host-secret" not in notice
 
 
@@ -320,7 +417,7 @@ async def test_available_without_timestamp_is_not_rendered_as_never_observed() -
     screen = DeclarationsCalendarScreen(calendar_controller(base.model_copy(update={"sources": sources})))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = _rendered(screen)
         assert "Actual y disponible; hora de observación no registrada" in rendered
         assert "Nunca observado" not in rendered
@@ -340,23 +437,23 @@ async def test_context_focus_hidden_filter_reorder_resize_and_child_return_resto
     screen = DeclarationsCalendarScreen(calendar_controller(projection, context=context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 18)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         assert app.focused is table
-        target_key = "303|2026|2T"
+        target_key = f"303|{_YEAR}|2T"
         assert table.ordered_rows[table.cursor_row].key.value == target_key
 
         screen.query_one("#declarations-calendar-search", Input).value = "111"
-        await pilot.pause()
-        assert table.ordered_rows[table.cursor_row].key.value == "111|2026|3T"
+        await settle(pilot)
+        assert table.ordered_rows[table.cursor_row].key.value == f"111|{_YEAR}|3T"
         screen.query_one("#declarations-calendar-search", Input).value = ""
-        await pilot.pause()
+        await settle(pilot)
         assert table.ordered_rows[table.cursor_row].key.value == target_key
 
         reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
         screen.replace_projection(reordered)
         await pilot.resize_terminal(100, 22)
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == target_key
         assert table.scroll_offset.y <= table.cursor_row
@@ -365,7 +462,7 @@ async def test_context_focus_hidden_filter_reorder_resize_and_child_return_resto
         child = Screen[None]()
         await app.push_screen(child)
         child.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is screen
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == target_key
@@ -378,15 +475,15 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
         screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection()))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _rendered(screen)
             for expected in _EXPECTED[locale]:
                 assert expected in rendered
-            from ...modelo.workbench.wording import period_words
+            from .....application.modelo.work_form_wording import period_words
 
             assert "Modelo 130 · " + period_words(screen.controller.projection.entries[0].period) in rendered
-            assert tr("tui.declarations.list.not_openable.help") in rendered
-            assert "tui.declarations" not in rendered
+            assert tr("workspace.declarations.list.not_openable.help") in rendered
+            assert "workspace.declarations" not in rendered
             assert "not_observed" not in rendered
 
 
@@ -416,9 +513,48 @@ async def test_unavailable_holiday_calendar_is_visible_in_words_not_tokens() -> 
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         detail = str(screen.query_one("#declarations-calendar-detail", Static).render())
 
     assert "Ajuste: Calendario no disponible" in detail
     assert "Festivos: calendario de festivos no disponible; el plazo original no se ha comprobado" in detail
     assert "calendar_unavailable" not in detail
+
+
+@pytest.mark.asyncio
+async def test_an_agenda_with_unscoped_obligations_says_they_are_unknown_not_that_nothing_is_due() -> None:
+    advised = ObligationCoverageReport(
+        advised=(
+            AdvisedObligation(modelo="347", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),
+            AdvisedObligation(modelo="190", reason=CoverageAdviceReason.APPLICABLE_WINDOW_MISSING),
+        ),
+    )
+    projection = calendar_projection().model_copy(update={"entries": (), "coverage": advised})
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        coverage = str(screen.query_one("#declarations-calendar-coverage", Static).render())
+
+    assert notice == tr("workspace.declarations.calendar.coverage.no_dates")
+    assert notice != tr("workspace.declarations.calendar.empty.known")
+    assert coverage.splitlines() == [
+        tr("workspace.declarations.calendar.coverage.applicable_window_missing", modelos="190"),
+        tr("workspace.declarations.calendar.coverage.applicability_undetermined", modelos="347"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_positively_known_empty_agenda_stays_distinct_from_an_unknown_one() -> None:
+    known = ObligationCoverageReport(surfaced=("303",), out_of_scope=("720",))
+    projection = calendar_projection().model_copy(update={"entries": (), "coverage": known})
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        coverage = str(screen.query_one("#declarations-calendar-coverage", Static).render())
+
+    assert notice == tr("workspace.declarations.calendar.empty.known")
+    assert coverage == ""

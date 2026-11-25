@@ -8,7 +8,8 @@ from .record_design_intermediate import RecordDesignIntermediateField
 from .render_profile_model_base import RenderProfileAnchor
 
 
-def _field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
+def field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
+    """Build a render profile anchor from a parsed design field, deriving ordinal absence."""
     # ``ordinal_absent`` is DERIVED here rather than authored: this anchor is
     # built from the parser field itself, so a missing ordinal is an observed
     # fact about the design and not an authoring claim. The authored side keeps
@@ -24,7 +25,8 @@ def _field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
     )
 
 
-def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
+def render_profile_validation_duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
+    """Return the sorted values that occur more than once."""
     seen: set[T] = set()
     duplicates: set[T] = set()
     for value in values:
@@ -34,7 +36,7 @@ def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
     return tuple(sorted(duplicates, key=repr))
 
 
-def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str, str]:
+def anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str, str]:
     """Return a deterministic, total sort key -- presentation order, not AEAT order.
 
     Plain string ordering on ``ordinal`` is fine here: every use is a stable,
@@ -51,7 +53,8 @@ def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str, s
     )
 
 
-def _anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str, int | None]:
+def anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str, int | None]:
+    """Return the tuple of anchor fields used to compare anchors."""
     return (
         anchor.sheet,
         anchor.source_row,

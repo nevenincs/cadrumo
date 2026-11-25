@@ -37,10 +37,14 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    revision_before_first_declaring,
+)
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
+from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -63,6 +67,11 @@ _TEMPORARY_RATE_PREFIX = "real-decreto-ley-"
 _OUTLIER_SECTION = '["operaciones_regimen_general", "recargo_equivalencia"]'
 _BLOCK_SECTION_SOURCE = '["iva", "anual", "devengado"]'
 _TIPO_0_BASE = "iva.anual.repercutido.recargo.tipo-0.base"
+# The edition that first declares the recargo block, and the edition that follows it and inherits the block.
+_AUTHORED_390 = authored_revisions("390")
+_FIRST_DECLARING_INDEX = _AUTHORED_390.index(revision_before_first_declaring("390", _TIPO_0_BASE)) + 1
+_DECLARING_ID = str(_AUTHORED_390[_FIRST_DECLARING_INDEX].id)
+_INHERITING_ID = str(_AUTHORED_390[_FIRST_DECLARING_INDEX + 1].id)
 
 
 def _bundled_definition() -> ModeloDefinition:
@@ -86,7 +95,7 @@ def _editions_declaring_the_block(definition: ModeloDefinition) -> tuple[ModeloR
 
 def _design_boxes(revision: ModeloRevision) -> set[str]:
     """The recargo rate boxes this edition's own diseño de registro prints."""
-    refs = revision.casilla_source_refs or revision.source_refs
+    refs = _cited_refs(revision)
     sources = compiled_bundled_authority().catalogues.sources
     printed: set[str] = set()
     for ref in refs:
@@ -99,12 +108,18 @@ def _design_boxes(revision: ModeloRevision) -> set[str]:
     return printed
 
 
+def _cited_refs(revision: ModeloRevision) -> tuple[str, ...]:
+    """The edition's own casilla and binding source defaults, or its revision sources when it states neither."""
+    own = (*(revision.casilla_source_refs or ()), *(revision.binding_source_refs or ()))
+    return tuple(str(ref) for ref in own or revision.source_refs)
+
+
 def _cites_a_record_design(revision: ModeloRevision) -> bool:
-    """Whether the edition's casillas cite a diseño de registro rather than only the approving form."""
+    """Whether the edition's casillas or bindings cite a diseño de registro rather than only the approving form."""
     sources = compiled_bundled_authority().catalogues.sources
     return any(
-        (source := sources.get(str(ref))) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
-        for ref in revision.casilla_source_refs or revision.source_refs
+        (source := sources.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
+        for ref in _cited_refs(revision)
     )
 
 
@@ -192,7 +207,7 @@ def test_mutating_one_rate_rows_section_splits_the_block_and_reds_the_gate(tmp_p
     scratch_root = scratch_registry_tree(tmp_path, "390")
     mutate_declaration(
         scratch_root / "modelos" / "390",
-        revision_id="2024",
+        revision_id=_INHERITING_ID,
         section="casillas",
         member=f'id = "{_TIPO_0_BASE}"',
         find=f"section = {_BLOCK_SECTION_SOURCE}",
@@ -214,10 +229,10 @@ def test_mutating_one_rate_rows_section_splits_the_block_and_reds_the_gate(tmp_p
 def test_reintroducing_a_per_year_section_override_reds_the_cross_edition_gate(tmp_path: Path) -> None:
     """The removed defect: a later edition re-sections rows it inherits unchanged."""
     scratch_root = scratch_registry_tree(tmp_path, "390")
-    manifest = scratch_root / "modelos" / "390" / "revisions" / "2024" / "revision.toml"
+    manifest = scratch_root / "modelos" / "390" / "revisions" / _INHERITING_ID / "revision.toml"
     overrides = "\n".join(
-        f'\n[[revisions."2024".casilla_overrides]]\n'
-        f'selector = {{ revision = "2023", id = "{casilla_id}" }}\n'
+        f'\n[[revisions."{_INHERITING_ID}".casilla_overrides]]\n'
+        f'selector = {{ revision = "{_DECLARING_ID}", id = "{casilla_id}" }}\n'
         f"fields = {{ section = {_OUTLIER_SECTION} }}\n"
         f"removed_fields = []\n"
         for casilla_id in (

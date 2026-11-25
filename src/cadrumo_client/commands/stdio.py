@@ -63,7 +63,7 @@ def disable_rich_cli_rendering() -> None:
     typer.core.HAS_RICH = False
 
 
-def _set_windows_console_utf8() -> None:
+def set_windows_console_utf8() -> None:
     """Switch the Windows console input/output code page to UTF-8 (65001).
 
     On Windows, the default console code page is cp850 or cp1252
@@ -161,7 +161,7 @@ def configure_stdio_for_utf8(
     against a synthetic stream pass it in directly instead of
     monkeypatching ``sys``.
     """
-    _set_windows_console_utf8()
+    set_windows_console_utf8()
     _reconfigure_stream(sys.stdout if stdout is None else stdout)
     _reconfigure_stream(sys.stderr if stderr is None else stderr)
 

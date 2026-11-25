@@ -197,6 +197,9 @@ continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/
 number = "151-155"
 section = ["declarante", "entidad_extranjera"]
 data_type = "ratio"
+# The design prints positions 151-155 as "PORCENTAJE DE RENTA ATRIBUIBLE A MIEMBROS RESIDENTES", a
+# percentage in three integer and two decimal digits.
+constraints = { min_value = "0", max_value = "100", source_refs = ["boe-dr-184-2015", "aeat-dr-184-2023-2024"] }
 semantic_role = "porcentaje_renta_atribuible_residentes"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 [[revisions."2022".casillas]]
@@ -397,6 +400,9 @@ number = "191-195"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
 data_type = "ratio"
+# The design prints positions 191-195 as "PORCENTAJE DE REDUCCIÓN", a percentage in three integer
+# and two decimal digits.
+constraints = { min_value = "0", max_value = "100", source_refs = ["boe-dr-184-2015", "aeat-dr-184-2023-2024"] }
 semantic_role = "porcentaje_reduccion_renta_atribuible"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-184-2015-form"]
@@ -840,6 +846,9 @@ number = "86-92"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
 data_type = "ratio"
+# The design prints positions 86-92 as "PORCENTAJE DE PARTICIPACIÓN", a percentage in three integer
+# and four decimal digits.
+constraints = { min_value = "0", max_value = "100", source_refs = ["boe-dr-184-2015", "aeat-dr-184-2023-2024"] }
 semantic_role = "porcentaje_participacion"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-184-2015-form"]
@@ -969,6 +978,9 @@ number = "195-199"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
 data_type = "ratio"
+# The design prints positions 195-199 as "PORCENTAJE DE TITULARIDAD DEL INMUEBLE", a percentage in
+# three integer and two decimal digits.
+constraints = { min_value = "0", max_value = "100", source_refs = ["boe-dr-184-2016-2018", "aeat-dr-184-2023-2024"] }
 semantic_role = "porcentaje_titularidad_inmueble"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-184-2015-form"]

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from .. import profile_summary
-from ..custody_ports import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
+from ..custody_crypto_contracts import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
 from ..profile_summary import summary_inventory, summary_inventory_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

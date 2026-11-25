@@ -1,14 +1,19 @@
 import type {
+  AttachmentPolicyResponse,
+  ProviderCondition,
+  ThreadStatus,
+} from "../../shell/agentGatewayContract";
+import type { AgentStreamToolCall } from "../../shell/agentSession";
+import type {
   AgentConversationRecord,
   AgentDocumentRecord,
+} from "../../shell/agentViews";
+import type {
   AgentDocumentReference,
-  AgentProviderCondition,
   AgentRanWith,
-  AgentRunStatus,
-  AgentToolCall,
   AgentTurnRecord,
   AgentUsage,
-} from "../../shell/agentViews";
+} from "../../shell/agentSnapshotContract";
 
 // The agent column's conversations in the shapes a host answers with, for the
 // scenario host. A conversation is a chain of cadrumo-agent runs, and the
@@ -38,18 +43,24 @@ export type FixtureMessage = {
   attachments?: AgentDocumentReference[];
   /** The skills a person's message loaded. */
   skills?: string[];
+  /** The run whose conversation the message was carried from. */
+  carried_from_run_id?: string;
 };
+
+/** A tool call of a run as the agent keeps it: as its stream reports it, with
+ * what its history says of it, where it says anything. */
+export type FixtureToolCall = AgentStreamToolCall & { details?: string[] };
 
 /** One run as the agent keeps it. */
 export type FixtureRun = {
   id: string;
-  status: AgentRunStatus;
+  status: ThreadStatus;
   /** What its checkpoint holds, in order. A run that continues another
    * opens with the last of its predecessor's messages, under ids of their
    * own. */
   messages: FixtureMessage[];
-  tools: AgentToolCall[];
-  provider_condition?: AgentProviderCondition;
+  tools: FixtureToolCall[];
+  provider_condition?: ProviderCondition;
   failure_reason?: string;
   queued_messages?: number;
   selection?: AgentRanWith;
@@ -86,6 +97,9 @@ export function seeded(
   ];
 }
 
+const carried = ({ carried_from_run_id }: FixtureMessage) =>
+  carried_from_run_id ? { carried_from_run_id } : {};
+
 /**
  * A conversation's records as the desktop host composes them from its runs:
  * each message once, the reply's tool calls just before its first agent
@@ -105,10 +119,11 @@ export function conversationRecords(
     );
     const firstAgent = own.findIndex((message) => message.role === "assistant");
     const tools = () =>
-      run.tools.map((tool): AgentTurnRecord => ({
+      run.tools.map(({ details, ...tool }): AgentTurnRecord => ({
         kind: "tool",
         reply_id: run.id,
         ...tool,
+        details: details ?? [],
       }));
     own.forEach((message, at) => {
       if (at === firstAgent) records.push(...tools());
@@ -121,12 +136,17 @@ export function conversationRecords(
               reply_id: run.id,
               text: message.text,
               sent_at: message.sent_at ?? null,
-              ...(message.attachments?.length
-                ? { attachments: message.attachments }
-                : {}),
-              ...(message.skills?.length ? { skills: message.skills } : {}),
+              attachments: message.attachments ?? [],
+              skills: message.skills ?? [],
+              ...carried(message),
             }
-          : { kind: "agent", id, reply_id: run.id, text: message.text },
+          : {
+              kind: "agent",
+              id,
+              reply_id: run.id,
+              text: message.text,
+              ...carried(message),
+            },
       );
     });
     if (firstAgent < 0) records.push(...tools());
@@ -134,13 +154,11 @@ export function conversationRecords(
       kind: "reply",
       id: run.id,
       status: run.status,
-      ...(run.provider_condition
-        ? { provider_condition: run.provider_condition }
-        : {}),
-      ...(run.failure_reason ? { failure_reason: run.failure_reason } : {}),
-      ...(run.queued_messages ? { queued_messages: run.queued_messages } : {}),
-      ...(run.selection ? { selection: run.selection } : {}),
-      ...(run.usage ? { usage: run.usage } : {}),
+      provider_condition: run.provider_condition ?? null,
+      failure_reason: run.failure_reason ?? null,
+      queued_messages: run.queued_messages ?? 0,
+      selection: run.selection ?? null,
+      usage: run.usage ?? null,
     });
   });
   return records;
@@ -196,6 +214,12 @@ export const FIXTURE_CONVERSATIONS: AgentConversationRecord[] = [
     archived: false,
   },
   {
+    id: "c-trasladada",
+    title: "Turnos trasladados",
+    last_active_at: ago(40 * DAY),
+    archived: false,
+  },
+  {
     id: "c-renta-2025",
     title: "Borrador de la renta 2025",
     last_active_at: ago(140 * DAY),
@@ -210,7 +234,7 @@ export const FIXTURE_CONVERSATIONS: AgentConversationRecord[] = [
 ];
 
 const ALPHA_API: AgentRanWith = {
-  provider: "alpha",
+  provider: "kimi",
   transport: "api",
   provider_display_name: "Example Alpha",
   model: "fixture-deep",
@@ -342,6 +366,14 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
               sha256: fixtureDigest("contrato-renting.pdf"),
               media_type: "application/pdf",
             },
+            ...Array.from({ length: 7 }, (_, at) => {
+              const name = `anexo-${at + 1}-${"documentacion-".repeat(9)}vehiculo.pdf`;
+              return {
+                name,
+                sha256: fixtureDigest(name),
+                media_type: "application/pdf",
+              };
+            }),
           ],
         },
         agent(
@@ -376,6 +408,43 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
         user("Lista las facturas de septiembre.", ago(26 * DAY + HOUR)),
       ],
       tools: [],
+    },
+  ],
+  // Turns carried from two earlier conversations, one the window lists and one
+  // it does not, each keeping the time it was first said; and a tool that
+  // failed and said why.
+  "c-trasladada": [
+    {
+      id: "c-trasladada",
+      status: "completed",
+      messages: [
+        {
+          ...user("Pregunta de antes del traslado.", ago(60 * DAY)),
+          carried_from_run_id: "c-iva-t3",
+        },
+        {
+          ...agent("Respuesta de antes del traslado."),
+          carried_from_run_id: "c-iva-t3",
+        },
+        {
+          ...user("Otra pregunta de otra conversación.", ago(59 * DAY)),
+          carried_from_run_id: "r-desaparecida",
+        },
+        user("Y ahora, en esta conversación.", ago(40 * DAY)),
+        agent("Seguimos aquí."),
+      ],
+      tools: [
+        {
+          id: "t-trasladada-1",
+          title: "mcp__cadrumo__status",
+          tool_kind: "read",
+          status: "failed",
+          tool_server: "cadrumo",
+          tool_name: "status",
+          tool_reach: "local_read",
+          failure: { message: "The session is not signed in to a profile." },
+        },
+      ],
     },
   ],
   "c-por-reparar": [
@@ -444,3 +513,42 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
     },
   ],
 };
+
+/** The attachment policy the scenario host serves, shaped as the agent's own
+ * answer; the bounds are the fixture's. */
+export const FIXTURE_ATTACHMENT_POLICY: AttachmentPolicyResponse = {
+  max_file_bytes: 100_000_000,
+  max_files_per_conversation: 64,
+  max_total_bytes_per_conversation: 1_000_000_000,
+  formats: [
+    { media_type: "application/pdf", extensions: [".pdf"] },
+    { media_type: "image/png", extensions: [".png"] },
+    { media_type: "image/jpeg", extensions: [".jpg", ".jpeg"] },
+    {
+      media_type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      extensions: [".xlsx"],
+    },
+    { media_type: "text/csv", extensions: [".csv"] },
+    { media_type: "application/xml", extensions: [".xml"] },
+    { media_type: "text/plain", extensions: [".txt"] },
+    { media_type: "application/json", extensions: [".json"] },
+  ],
+};
+
+declare global {
+  interface Window {
+    /** The file the picker's second pick is, and why the host refuses it
+     * before sending anything, in place of the archive it refuses for its
+     * format. */
+    __fixtureAttachRefusal?: { name: string; size_bytes: number; code: string };
+  }
+}
+
+/** What the host refuses of the picker's second pick, before sending it. */
+export const pickedRefusal = () =>
+  window.__fixtureAttachRefusal ?? {
+    name: "copias.zip",
+    size_bytes: 9_000,
+    code: "agent_attachment_format_refused",
+  };

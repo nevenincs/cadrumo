@@ -21,7 +21,8 @@ from cadrumo.entrypoints.tests.ledger_corpus_support import match_corpus_rule
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
-from .ledger_ux_support import _invoke_exact_profile
+from ...native_profile_facts import native_general_iva_facts
+from .ledger_ux_support import invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -68,26 +69,13 @@ def test_classify_fixture_applies_through_bulk_classify(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(
             label="native-ledger-classify-fixture",
-            facts={
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Native",
-                "identity.surnames": "Classify fixture",
-                "activities.description": "design",
-                "censo.activity_start_date": "2025-01-01",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
+            facts=native_general_iva_facts(),
         )
-        imported = _invoke_exact_profile(
+        imported = invoke_exact_profile(
             profile, ["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"]
         )
         assert imported.exit_code == 0, imported.output
-        result = _invoke_exact_profile(
+        result = invoke_exact_profile(
             profile, ["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)]
         )
         assert result.exit_code == 0, result.output

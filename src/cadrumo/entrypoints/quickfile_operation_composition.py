@@ -22,11 +22,9 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.wizard.status import taxpayer_profile_from_record
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import (
+from .adapter_composition_ports import build_diagnostics_ports, build_modelo_export_ports, build_operator_probe_ports
+from .adapter_composition_work_ports import (
     build_calculation_action_ports,
-    build_diagnostics_ports,
-    build_modelo_export_ports,
-    build_operator_probe_ports,
     build_state_projection_read_ports,
     build_verification_repository_bundle,
 )

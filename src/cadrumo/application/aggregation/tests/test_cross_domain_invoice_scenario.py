@@ -31,7 +31,6 @@ invoice. What the gates below pin is that neither half happens silently.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -43,18 +42,17 @@ from cadrumo.domain.iva.schema import IvaCategory
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
-from ..iva_ledger import (
-    IvaLedgerAggregationIssueReason,
-    resolve_iva_ledger_binding_values,
-)
+from ..iva_ledger import IvaLedgerAggregationIssueReason
+from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import (
@@ -65,14 +63,9 @@ from .renta_income_aggregation_support import (
     raw_transaction,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across the invoice binding comparisons."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # The invoice, stated once. Derived from the two cited rates and the canonical
@@ -84,8 +77,8 @@ _TOTAL = _BASE + _CUOTA
 _CASH = _TOTAL - _RETENCION
 
 _BUCKET = "cc3c6664-c25c-49c0-8f90-2d33f2b3dfa4"  # was 'bucket-cross-domain'
-_VALUE_DATE = date(2024, 2, 15)
-_PERIOD = Period.from_year_and_code(2024, "1T")
+_VALUE_DATE = date(_YEAR, 2, 15)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
@@ -147,7 +140,7 @@ def _invoice_transaction(
         "business_classification": BusinessClassification.BUSINESS,
         "irpf_category": "actividad_economica",
         "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if with_substrate:
@@ -481,7 +474,7 @@ def _modelo_130_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("130").value,
-        filing_year=2024,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 
@@ -555,7 +548,7 @@ def _modelo_303_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("303").value,
-        filing_year=2024,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 

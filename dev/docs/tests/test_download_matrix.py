@@ -15,19 +15,20 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.packaging.cohort_manifest import ArtifactKind
+from dev.paths import REPO_ROOT
 
 from ..download_matrix import (
-    _ZONE_BEGIN,
-    _ZONE_END,
+    ZONE_BEGIN,
+    ZONE_END,
     DownloadDescriptor,
-    _run_generate,
     build_download_latest,
     download_page_path,
     load_descriptor,
     main,
     render_page,
+    run_generate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -81,9 +82,9 @@ def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
 def test_generated_zone_present_in_download_page() -> None:
     """docs/download.md carries the generated marker zone."""
     page_text = download_page_path().read_text(encoding="utf-8")
-    assert _ZONE_BEGIN in page_text
-    assert _ZONE_END in page_text
-    assert page_text.index(_ZONE_BEGIN) < page_text.index(_ZONE_END)
+    assert ZONE_BEGIN in page_text
+    assert ZONE_END in page_text
+    assert page_text.index(ZONE_BEGIN) < page_text.index(ZONE_END)
     assert "data-cadrumo-downloads" in page_text, "Tier-2 mount element must be present in the generated zone"
 
 
@@ -111,14 +112,14 @@ def test_check_fires_on_a_terminator_translated_page(tmp_path: Path) -> None:
 
     page = tmp_path / "download.md"
     page.write_bytes(canonical)
-    assert _run_generate(check=True, page=page) == 0, "the untouched copy must read fresh"
+    assert run_generate(check=True, page=page) == 0, "the untouched copy must read fresh"
 
     page.write_bytes(canonical.replace(b"\n", b"\r\n"))
     assert page.read_text(encoding="utf-8") == canonical.decode("utf-8"), (
         "the planted page must still decode to the canonical text, or this proves "
         "nothing about the comparison that normalised terminators away"
     )
-    assert _run_generate(check=True, page=page) == 1, "a CRLF-translated page must read as drift"
+    assert run_generate(check=True, page=page) == 1, "a CRLF-translated page must read as drift"
 
 
 def test_check_fails_on_mutated_zone() -> None:
@@ -127,7 +128,7 @@ def test_check_fails_on_mutated_zone() -> None:
     page_text = download_page_path().read_text(encoding="utf-8")
     fresh = render_page(descriptor, page_text)
     # Corrupt the zone body between the markers.
-    begin = fresh.index(_ZONE_BEGIN) + len(_ZONE_BEGIN)
+    begin = fresh.index(ZONE_BEGIN) + len(ZONE_BEGIN)
     mutated = fresh[:begin] + "\nMUTATED DRIFT LINE\n" + fresh[begin:]
     assert mutated != fresh
     # A re-render of the mutated page restores the canonical zone, proving the
@@ -157,7 +158,7 @@ def _write_cohort_manifest(directory: Path) -> Path:
         root=directory,
         version="9.9.9",
         source=SourceIdentity(source_digest="a" * 64),
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        created_at=datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",
             format_version=1,

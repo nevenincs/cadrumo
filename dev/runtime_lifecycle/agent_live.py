@@ -25,9 +25,11 @@ The exchange directory holds JSON files written whole, each by one side:
 
 - ``handoff.json`` (this driver): the package, the storage root, the profile,
   the relay and the scenario;
-- ``driver-profile-owner.json`` (this driver): a nonce, its live process
-  identity, the one public synthetic profile inventory and the held session's
-  public identity coordinates; it contains no profile credential;
+- ``driver-profile-owner.json`` (this driver): its live process identity, an
+  ``owner_token`` that is only a digest of that identity and the storage root,
+  the storage and secret-store paths, the one public synthetic profile inventory
+  and the held session's public identity coordinates; it contains no profile
+  credential and nothing a reader could present as authority;
 - ``gateway.json`` (runner): the gateway's process id, its URL, its home and its
   workspace;
 - ``requests/<n>.json`` (runner): a pending permission, as the gateway's run
@@ -50,7 +52,6 @@ import ctypes
 import hashlib
 import json
 import os
-import secrets
 import shutil
 import sys
 import tempfile
@@ -58,8 +59,10 @@ import time
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
+from datetime import date
+from functools import cache
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import psutil
 
@@ -84,6 +87,7 @@ from .proof_support import (
     package_identity,
     started_processes,
     state_taxpayer,
+    supported_filing_year,
     verified_relay,
 )
 from .session_holder import AsyncRuntimeSessionHolder
@@ -91,13 +95,19 @@ from .session_holder import AsyncRuntimeSessionHolder
 _PROFILE: Final = "agent-live-acceptance"
 _PROTOCOL: Final = 1
 _DRIVER_PROFILE_FILE: Final = "driver-profile-owner.json"
-_SCENARIO: Final[dict[str, Any]] = {
-    "taxpayer": "Daniel Persona",
-    "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
-}
 
 
-def _driver_process_start_identity(pid: int) -> str | None:
+@cache
+def _scenario() -> dict[str, Any]:
+    """The synthetic taxpayer and ledger row, booked in the year the published authority treats as current."""
+    booked = date(supported_filing_year(), 1, 15).isoformat()
+    return {
+        "taxpayer": "Daniel Persona",
+        "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": booked},
+    }
+
+
+def driver_process_start_identity(pid: int) -> str | None:
     """Read a clock-independent process start stamp for the package handoff."""
     if pid <= 0:
         return None
@@ -281,7 +291,7 @@ class Exchange:
 
 
 @asynccontextmanager
-async def _attending(
+async def attending(
     holder: AsyncRuntimeSessionHolder, relay: Path, gateway: Mapping[str, ProcessIdentity | None]
 ) -> AsyncGenerator[list[int]]:
     """Approve, for the life of the block, each attendance ask from the announced gateway's relay."""
@@ -292,30 +302,14 @@ async def _attending(
     async def attend() -> None:
         while not stop.is_set():
             try:
-                inventory = await holder.command("attendance_inventory")
-                require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
-                candidates = inventory.get("candidates")
-                if not isinstance(candidates, list):
-                    raise AcceptanceError("runtime attendance inventory has no candidate list")
+                candidates = await _attendance_candidates(holder)
                 if stop.is_set():
                     return
                 for ask in candidates:
                     if stop.is_set():
                         return
-                    require(isinstance(ask, dict), "runtime attendance candidate is not an object")
-                    require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
-                    process_id = ask.get("process_id")
-                    relay_ask = type(process_id) is int and is_announced_relay(
-                        process_id, relay, gateway.get("identity")
-                    )
-                    decision = await holder.command(
-                        "attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask
-                    )
-                    require(
-                        decision.get("kind") == "attendance_decided" and decision.get("approved") is relay_ask,
-                        "runtime attendance decision differs from the person's answer",
-                    )
-                    if relay_ask:
+                    process_id = await _decide_attendance(holder, ask, relay, gateway)
+                    if process_id is not None:
                         approved.append(process_id)
             except (AcceptanceError, OSError, ValueError) as refusal:
                 failures.append(str(refusal))
@@ -332,6 +326,36 @@ async def _attending(
     require(not failures, f"attendance: {failures}")
 
 
+async def _attendance_candidates(holder: AsyncRuntimeSessionHolder) -> list[object]:
+    """Read the runtime's candidate list before making attendance decisions."""
+    inventory = await holder.command("attendance_inventory")
+    require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
+    candidates = inventory.get("candidates")
+    if not isinstance(candidates, list):
+        raise AcceptanceError("runtime attendance inventory has no candidate list")
+    return cast(list[object], candidates)
+
+
+async def _decide_attendance(
+    holder: AsyncRuntimeSessionHolder,
+    candidate: object,
+    relay: Path,
+    gateway: Mapping[str, ProcessIdentity | None],
+) -> int | None:
+    """Decide one candidate and retain only the verified relay identity."""
+    require(isinstance(candidate, dict), "runtime attendance candidate is not an object")
+    ask = cast(dict[str, object], candidate)
+    require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
+    process_id = ask.get("process_id")
+    relay_ask = type(process_id) is int and is_announced_relay(process_id, relay, gateway.get("identity"))
+    decision = await holder.command("attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask)
+    require(
+        decision.get("kind") == "attendance_decided" and decision.get("approved") is relay_ask,
+        "runtime attendance decision differs from the person's answer",
+    )
+    return process_id if relay_ask and type(process_id) is int else None
+
+
 def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Profile) -> str:
     code, envelope = run_cli(
         programs,
@@ -346,17 +370,27 @@ def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Pr
     return json.dumps(envelope.get("result"), ensure_ascii=False)
 
 
-def _driver_profile_evidence(
+def owner_binding(owner_pid: int, owner_start_identity: str, storage_root: Path) -> str:
+    """Return the value the runner's ``owner_token`` field carries for this invocation.
+
+    The runner only needs it to differ between driver invocations: it checks its
+    shape and compares the marker against its own copy. A digest of public
+    coordinates already in the same document meets that, so it is not a secret
+    and possessing it grants nothing.
+    """
+    material = json.dumps([owner_pid, owner_start_identity, str(storage_root)])
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()[:48]
+
+
+def driver_profile_evidence(
     profile: Profile,
     held_session: Mapping[str, Any],
     *,
     storage_root: Path,
-    secret_store: Path,
     relay: Path,
     scenario: Mapping[str, Any],
     owner_pid: int,
     owner_start_identity: str,
-    owner_token: str,
 ) -> dict[str, Any]:
     """Record bounded public provenance after the exact profile is held."""
     require(profile.profile_id is not None, "created profile has no verified identity")
@@ -377,9 +411,8 @@ def _driver_profile_evidence(
         "version": 1,
         "owner_pid": owner_pid,
         "owner_start_identity": owner_start_identity,
-        "owner_token": owner_token,
+        "owner_token": owner_binding(owner_pid, owner_start_identity, storage_root),
         "storage_root": str(storage_root),
-        "secret_store_dir": str(secret_store),
         "profile_id": profile_id,
         "profile_inventory": [
             {"name": name, "bucket_id": identity, "active": active} for name, identity, active in profile.inventory
@@ -431,11 +464,11 @@ def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: st
     """Check the runner's receipt against what this driver saw; return the facts worth keeping."""
     require(receipt.get("storage_root_passed") == str(root), f"the runner passed another root: {receipt}")
     replies = " ".join(str(run.get("reply", "")) for run in receipt.get("runs", ()) if isinstance(run, Mapping))
-    require(_SCENARIO["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
+    require(_scenario()["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
     disagreements = stored_answers_disagree(exchange.given, list(receipt.get("permissions", ())))
     require(not disagreements, f"the gateway stored other answers than were given: {disagreements}")
     require(bool(exchange.given), "the agent asked no permission, so no relay call was approved")
-    description = _SCENARIO["ledger"]["description"]
+    description = _scenario()["ledger"]["description"]
     require(after.count(description) == 1, f"the ledger holds the scenario row {after.count(description)} times")
     return {
         "runs": [run.get("run_id") for run in receipt.get("runs", ()) if isinstance(run, Mapping)],
@@ -459,11 +492,10 @@ async def run(package: Path, scratch: Path) -> Receipt:
     )
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
-    root, secret_store, directory = scratch / "storage", scratch / "secrets", scratch / "exchange"
-    secret_store.mkdir(parents=True)
+    root, directory = scratch / "storage", scratch / "exchange"
     directory.mkdir()
     exchange = Exchange(directory)
-    environment = consumer_environment(root, secret_store)
+    environment = consumer_environment(root)
     root.mkdir()
     mark_development_root(root)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
@@ -477,7 +509,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
         profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         before = _ledger_text(programs, environment, profile)
-        require(_SCENARIO["ledger"]["description"] not in before, "the ledger already holds the scenario row")
+        require(_scenario()["ledger"]["description"] not in before, "the ledger already holds the scenario row")
         if profile.profile_id is None:
             raise AcceptanceError("created profile has no verified identity")
         holder = await AsyncRuntimeSessionHolder.start(
@@ -489,23 +521,21 @@ async def run(package: Path, scratch: Path) -> Receipt:
         )
         try:
             receipt.record("signed_in_and_held")
-            owner_start = _driver_process_start_identity(os.getpid())
+            owner_start = driver_process_start_identity(os.getpid())
             if owner_start is None:
                 raise AcceptanceError("driver process identity unavailable")
-            evidence = _driver_profile_evidence(
+            evidence = driver_profile_evidence(
                 profile,
                 holder.identity,
                 storage_root=root,
-                secret_store=secret_store,
                 relay=programs.mcp,
-                scenario=_SCENARIO,
+                scenario=_scenario(),
                 owner_pid=os.getpid(),
                 owner_start_identity=owner_start,
-                owner_token=secrets.token_hex(24),
             )
             write_whole(directory / _DRIVER_PROFILE_FILE, evidence)
             gateway: dict[str, ProcessIdentity | None] = {"identity": None}
-            async with _attending(holder, programs.mcp, gateway) as approved:
+            async with attending(holder, programs.mcp, gateway) as approved:
                 write_whole(
                     directory / "handoff.json",
                     {
@@ -514,7 +544,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
                         "storage_root": str(root),
                         "profile": str(profile.profile_id),
                         "relay": str(programs.mcp),
-                        "scenario": _SCENARIO,
+                        "scenario": _scenario(),
                     },
                 )
                 receipt.record("exchange_ready", exchange=str(directory))
@@ -549,13 +579,17 @@ def main(arguments: list[str] | None = None) -> int:
     parser.add_argument(
         "--scratch-parent",
         type=Path,
-        help="Parent for disposable data; choose a directory outside repositories for CLI provider proofs.",
+        help="Parent below the worktree .tmp or an admitted native build temporary directory.",
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    if options.scratch_parent is not None:
-        options.scratch_parent.mkdir(parents=True, exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=options.scratch_parent))
+    from dev.temporary_output import prepare_temp_root
+
+    requested_parent = options.scratch_parent.resolve() if options.scratch_parent is not None else None
+    scratch_parent = prepare_temp_root(override=requested_parent)
+    if requested_parent is not None and scratch_parent != requested_parent:
+        parser.error("--scratch-parent must stay in controlled worktree temporary storage")
+    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=scratch_parent))
     try:
         asyncio.run(run(package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:

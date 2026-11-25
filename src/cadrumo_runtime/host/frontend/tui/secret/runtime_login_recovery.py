@@ -9,9 +9,9 @@ from uuid import UUID
 
 from textual.widgets import Input, Select
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient

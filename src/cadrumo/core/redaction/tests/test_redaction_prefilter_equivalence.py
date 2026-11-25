@@ -13,15 +13,15 @@ from ... import tests as core_tests_package
 from ...classification.policies import RedactionRule, SensitivityClass, default_policy_for
 from ...errors.hierarchy import RedactionError
 from ..rules import (
-    _CLI_STRING_CACHE_MAX_LENGTH,
-    _REDACTION_KEY_SEPARATOR_RE,
-    _apply_one,
-    _redact_cli_string_uncached,
+    CLI_STRING_CACHE_MAX_LENGTH,
+    REDACTION_KEY_SEPARATOR_RE,
+    apply_one,
     default_rules_for,
     default_rules_for_class,
     is_sensitive_redaction_key,
     normalise_redaction_key,
     redact,
+    redact_cli_string_uncached,
     redact_for_cli_output,
 )
 
@@ -30,10 +30,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Shapes every rule arm reacts to, including the spans the identity arms
 #: exempt, so the corpus exercises matches, gated refusals and exemptions.
 _SHAPES = (
-    "B12345674",
+    "B00015016",
     "12345678Z",
     "B.1234567.4",
-    "ESB12345674 y",
+    "ESB00015016 y",
     "de SE556677889901",
     "FR XX 999999999",
     "ES91 2100 0418 4502 0005 1332",
@@ -68,7 +68,7 @@ def _corpus() -> tuple[str, ...]:
 
 def _unfiltered(value: str, rules: tuple[RedactionRule, ...]) -> str:
     for rule in rules:
-        value = _apply_one(rule, value)
+        value = apply_one(rule, value)
     return value
 
 
@@ -85,7 +85,7 @@ def _rule_sets() -> list[tuple[RedactionRule, ...]]:
 def test_the_corpus_reaches_every_rule() -> None:
     """FIXTURE ANCHOR: every declared rule matches something, so skipping is really exercised."""
     rules = {rule.name: rule for rules in _rule_sets() for rule in rules}
-    unmatched = [name for name, rule in rules.items() if all(_apply_one(rule, value) == value for value in _corpus())]
+    unmatched = [name for name, rule in rules.items() if all(apply_one(rule, value) == value for value in _corpus())]
 
     assert len(_corpus()) >= 300
     assert unmatched == []
@@ -114,7 +114,7 @@ def test_a_repeated_cli_string_redacts_as_a_fresh_one(reveal_identifiers: bool) 
         for value in _corpus()
         for _ in range(2)
         if redact_for_cli_output(value, reveal_identifiers=reveal_identifiers)
-        != _redact_cli_string_uncached(value, reveal_identifiers)
+        != redact_cli_string_uncached(value, reveal_identifiers)
     ]
 
     assert mismatches == []
@@ -132,10 +132,10 @@ def test_the_reveal_flag_is_part_of_what_is_reused() -> None:
 
 
 def test_a_long_string_is_redacted_without_reuse() -> None:
-    long_text = "B12345674 " * (_CLI_STRING_CACHE_MAX_LENGTH // 5)
-    assert len(long_text) > _CLI_STRING_CACHE_MAX_LENGTH
+    long_text = "B00015016 " * (CLI_STRING_CACHE_MAX_LENGTH // 5)
+    assert len(long_text) > CLI_STRING_CACHE_MAX_LENGTH
 
-    assert redact_for_cli_output(long_text) == _redact_cli_string_uncached(long_text, False)
+    assert redact_for_cli_output(long_text) == redact_cli_string_uncached(long_text, False)
 
 
 @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ def test_a_long_string_is_redacted_without_reuse() -> None:
     ["tax_id", "Tax-ID", "  bucket id ", "ACTIVE.PROFILE", "Straße_Nr", "__", "", 7, None, ("tax", "id")],
 )
 def test_a_reused_key_fold_equals_a_fresh_one(key: object) -> None:
-    expected = "" if key is None else _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
+    expected = "" if key is None else REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
 
     assert normalise_redaction_key(key) == expected
     assert normalise_redaction_key(key) == expected

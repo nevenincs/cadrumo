@@ -20,6 +20,7 @@ import re
 from collections.abc import Iterator
 
 import pytest
+from textual.screen import Screen
 
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
@@ -32,6 +33,7 @@ from ..components.theme import (
 from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
+from .settling import settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,27 +63,27 @@ async def _observe(
     on the screen after layout and clipping, which is what a filer reads.
     Animation is off so a scroll never lands mid-way and differs by timing.
     """
-    app = ScreenHostApp(ModeloWorkbenchScreen(workbench, actions=workbench))
+    # The host carries an empty screen, not a second workbench: the first-open
+    # greeting is said once per application, by whichever workbench finishes
+    # reading first, so a hidden workbench racing the observed one would take
+    # it in one theme and leave it to the observed one in the other.
+    app = ScreenHostApp(Screen[None]())
     app.animation_level = "none"
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-        # The theme is set, then a fresh workbench is pushed, so its mount runs
+        # The theme is set, then the workbench is pushed, so its mount runs
         # under that theme rather than re-applying CSS to one mounted under the
         # default appearance -- which would make both observations identical.
         app.theme = theme
-        await pilot.pause()
+        await settle(pilot)
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
         await app.push_screen(screen)
-        for _ in range(200):
-            await pilot.pause()
-            if screen.form is not None:
-                break
+        await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
         assert screen.form is not None
         if keys:
             await pilot.press(*keys)
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         await pilot.wait_for_scheduled_animations()
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         glyphs = tuple(str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot()))
         focus_ids: list[str | None] = []
         for widget in app.screen.focus_chain:

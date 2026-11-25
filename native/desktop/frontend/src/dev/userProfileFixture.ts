@@ -1,4 +1,6 @@
-import fixtures from "./fixtures/userProfile.json";
+import fixtures from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
+import type { CensoMode } from "./censoFixture";
+import type { CensoReadiness } from "../shell/profileCenso";
 import type {
   ProfileChange,
   UserProfile,
@@ -11,38 +13,78 @@ declare global {
       update(value: string): void;
       refuse(): void;
       uncertain(): void;
+      conflict(): void;
       deferRead(): void;
       releaseRead(): void;
-      rejectRead(): void;
+      rejectRead(
+        code?:
+          "unavailable" | "refused" | "not_signed_in" | "unknown" | "conflict",
+      ): void;
       reads(): number;
       writes(): number;
       burst(): void;
+      complete(): void;
+      completeWithMissing(): void;
+      /** Every required detail filled and valid, the setup not yet
+       * declared complete: what the completion action waits for. */
+      readyToComplete(): void;
+      changeIdentity(): void;
+      /** The profile states no taxpayer name, and the product heads it with
+       * `name`, the name it was created under. */
+      servedName(name: string): void;
+      /** The providers whose passphrase or password was saved. */
+      credentials(): string[];
+      /** How many times a credential save was sent, whatever came of it. */
+      credentialAttempts(): number;
+      /** The next credential save is refused, or ends unconfirmed. */
+      failCredential(outcome: CredentialFailure): void;
+      /** The next file dialog picks a file that is not a certificate. */
+      failPick(): void;
+      /** The certificate file the profile was configured with, by name. */
+      certificate(): string | null;
+      /** How many times the file dialog was opened. */
+      picks(): number;
     };
   }
 }
 
+/** How a credential save may end other than saved, as the host words it. */
+type CredentialFailure = "refused" | "unknown" | "saved_unread" | "unavailable";
+
+export type ProfileFixture = UserProfilePort & {
+  /** What the saved profile and credentials satisfy, as the product reads
+   * them for a Censo sync: never a call to AEAT. */
+  readiness(profile: string): Promise<CensoReadiness>;
+};
+
+/** The facts of the authentication section the host takes as field edits. */
+const AUTH_FACTS = ["auth.numero_soporte", "auth.fecha_validez"];
+
+/** The certificate file the scenario's dialog picks. */
+const PICKED = { token: "c".repeat(64), name: "firma-ana-soler.p12" };
+
 /** Synthetic values, but the complete production schema and localized projection.
  * Regenerate with dev.desktop_profile_fixture; never invent fields here. */
 export function userProfileFixture(
-  censoSetup?: "ready" | "nie" | "uncertain",
-): UserProfilePort {
+  censoSetup?: CensoMode,
+  /** Facts the made-up profile states, by path: where a scenario needs one
+   * the production fixture leaves unstated. */
+  stated: Record<string, string> = {},
+): ProfileFixture {
   const data = structuredClone(fixtures.en) as UserProfile;
+  for (const field of data.sections.flatMap((section) => section.fields))
+    if (field.path in stated) field.value = stated[field.path]!;
   if (censoSetup) {
     const values: Record<string, string> = {
       "identity.tax_id": "X1234567L",
       "auth.provider": "clave_movil",
       "auth.clave_movil_route": "app_request",
-      "auth.dni_nie": "••••",
       ...(censoSetup === "nie" ? {} : { "auth.numero_soporte": "••••" }),
     };
     for (const field of data.sections.flatMap((section) => section.fields)) {
       if (field.path in values) {
         field.value = values[field.path]!;
-        if (
-          field.path === "auth.dni_nie" ||
-          field.path === "auth.numero_soporte"
-        )
-          field.masked = true;
+        if (field.path === "auth.numero_soporte") field.masked = true;
       }
     }
     data.missing_required = data.missing_required.filter(
@@ -52,11 +94,33 @@ export function userProfileFixture(
   const listeners = new Set<() => void>();
   let reads = 0,
     writes = 0;
-  let refuse: "refused" | "unknown" | null = null;
+  let refuse: "refused" | "unknown" | "conflict" | null = null;
   let deferred = false;
   let release: (() => void) | undefined;
-  let reject: (() => void) | undefined;
+  let reject: ((code: string) => void) | undefined;
+  const credentials = new Set<string>();
+  let certificate: string | null = null;
+  let picks = 0;
+  let attempts = 0;
+  let credentialFailure: CredentialFailure | null = null;
+  let pickFailure = false;
+  const fieldOf = (path: string) =>
+    data.sections
+      .flatMap((section) => section.fields)
+      .find((entry) => entry.path === path);
+  // The name the profile was created under, which heads it while it states
+  // no taxpayer name.
+  let created = "";
+  // What the product heads the profile with after a change, as its overview
+  // names it: given name and surnames, else legal name, else `created`.
+  const served = () =>
+    [fieldOf("identity.name")?.value, fieldOf("identity.surnames")?.value]
+      .filter(Boolean)
+      .join(" ") ||
+    fieldOf("identity.legal_name")?.value ||
+    created;
   const changed = () => {
+    data.name = served();
     data.record_revision++;
     data.content_digest = String(data.record_revision).padStart(64, "0");
     data.missing_required = data.sections
@@ -66,6 +130,38 @@ export function userProfileFixture(
     listeners.forEach((listener) => listener());
   };
   const controls = {
+    changeIdentity() {
+      data.profile_id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+      listeners.forEach((listener) => listener());
+    },
+    servedName(name: string) {
+      for (const path of [
+        "identity.name",
+        "identity.surnames",
+        "identity.legal_name",
+      ])
+        fieldOf(path)!.value = null;
+      created = name;
+      changed();
+    },
+    completeWithMissing() {
+      data.setup_state = "complete";
+      data.valid = true;
+      listeners.forEach((listener) => listener());
+    },
+    readyToComplete() {
+      data.setup_state = "incomplete";
+      data.valid = true;
+      data.missing_required = [];
+      listeners.forEach((listener) => listener());
+    },
+    complete() {
+      data.setup_state = "complete";
+      data.valid = true;
+      data.missing_required = [];
+      data.notices = [];
+      listeners.forEach((listener) => listener());
+    },
     update(value: string) {
       data.sections
         .flatMap((section) => section.fields)
@@ -78,15 +174,30 @@ export function userProfileFixture(
     uncertain() {
       refuse = "unknown";
     },
+    conflict() {
+      data.record_revision++;
+      data.content_digest = String(data.record_revision).padStart(64, "0");
+      refuse = "conflict";
+    },
     deferRead() {
       deferred = true;
     },
     releaseRead() {
       release?.();
     },
-    rejectRead() {
-      reject?.();
+    rejectRead(code = "unavailable") {
+      reject?.(code);
     },
+    credentials: () => [...credentials],
+    credentialAttempts: () => attempts,
+    failCredential(outcome: CredentialFailure) {
+      credentialFailure = outcome;
+    },
+    failPick() {
+      pickFailure = true;
+    },
+    certificate: () => certificate,
+    picks: () => picks,
     reads: () => reads,
     writes: () => writes,
     burst() {
@@ -129,7 +240,7 @@ export function userProfileFixture(
         deferred = false;
         await new Promise<void>((resolve, refused) => {
           release = resolve;
-          reject = () => refused({ code: "unavailable" });
+          reject = (code) => refused({ code });
         });
       }
       await new Promise((resolve) => setTimeout(resolve, 40));
@@ -156,13 +267,56 @@ export function userProfileFixture(
         throw { code: "conflict" };
       const edit = change.edit;
       if (edit.kind === "field") {
+        const target = fieldOf(edit.path);
+        // The host takes the method only as one sign-in method: of the
+        // authentication section, only its facts are field edits.
+        if (
+          !target ||
+          (edit.path.startsWith("auth.") && !AUTH_FACTS.includes(edit.path))
+        )
+          throw { code: "refused" };
+        // A masked detail is read back masked, as the host reads it.
+        target.value = edit.value
+          ? target.masked
+            ? "••••"
+            : edit.value
+          : null;
+      } else if (edit.kind === "ejercicio_answer") {
+        const [stated, year] = edit.values;
         const target = data.sections
           .flatMap((section) => section.fields)
-          .find((entry) => entry.path === edit.path);
-        if (!target) throw { code: "refused" };
-        target.value = edit.value || null;
+          .find(
+            (field) =>
+              field.ejercicio_answer?.question_id === stated?.question_id,
+          );
+        if (!target?.ejercicio_answer || !stated || !year)
+          throw { code: "refused" };
+        const ejercicio = Number(year.value);
+        target.ejercicio_answer.statements = [
+          ...target.ejercicio_answer.statements.filter(
+            (item) => item.ejercicio !== ejercicio,
+          ),
+          { ejercicio, value: stated.value },
+        ].sort((a, b) => a.ejercicio - b.ejercicio);
+      } else if (edit.kind === "auth_method") {
+        const provider = fieldOf("auth.provider")!;
+        if (
+          !provider.choices.some((choice) => choice.value === edit.provider) ||
+          (edit.certificate !== null && edit.certificate !== PICKED.token)
+        )
+          throw { code: "refused" };
+        provider.value = edit.provider;
+        fieldOf("auth.clave_movil_route")!.value = edit.clave_movil_route;
+        if (edit.certificate !== null) certificate = PICKED.name;
       } else if (edit.kind === "complete") data.setup_state = "complete";
-      else {
+      else if (
+        edit.kind === "descendants" ||
+        edit.kind === "ascendants" ||
+        edit.kind === "imputation_election"
+      ) {
+        // The profile fixture serves no household or election to edit.
+        throw { code: "refused" };
+      } else {
         const section = data.sections.find(
           (item) => item.key === edit.section_key,
         )!;
@@ -209,6 +363,104 @@ export function userProfileFixture(
         }
       }
       changed();
+    },
+    aeat: {
+      async pickCertificate() {
+        window.__scenarioProfile = controls;
+        picks++;
+        if (pickFailure) {
+          pickFailure = false;
+          throw { code: "invalid" };
+        }
+        return { ...PICKED };
+      },
+      async saveCredential(credential) {
+        attempts++;
+        if (credentialFailure) {
+          const code = credentialFailure;
+          credentialFailure = null;
+          throw { code };
+        }
+        if (credential.profile_id !== data.profile_id || !credential.password)
+          throw { code: "refused" };
+        credentials.add(credential.provider);
+      },
+    },
+    async readiness(profile) {
+      if (profile !== data.profile_id) throw { code: "refused" };
+      const value = (path: string) => fieldOf(path)?.value ?? "";
+      const provider = value("auth.provider");
+      const route =
+        provider === "clave_movil"
+          ? value("auth.clave_movil_route") || "app_request"
+          : "";
+      const need = (
+        field: string,
+        satisfied: boolean,
+        reason: string,
+        secret = false,
+      ) => ({ field, satisfied, reason, secret });
+      const requirements = [
+        need(
+          "identity.tax_id",
+          !!value("identity.tax_id"),
+          "profile_tax_id_required",
+        ),
+        need("auth.provider", !!provider, "auth_method_required"),
+      ];
+      if (provider === "certificate")
+        requirements.push(
+          need(
+            "certificate.file",
+            certificate !== null,
+            "certificate_file_required",
+          ),
+          need(
+            "certificate.passphrase",
+            credentials.has("certificate"),
+            "certificate_passphrase_required",
+            true,
+          ),
+        );
+      else if (provider === "clave_movil" || provider === "clave_permanente") {
+        // As the product reads it: the Cl@ve identity is the profile's NIF/NIE,
+        // whose absence is already required above.
+        if (value("identity.tax_id"))
+          requirements.push(
+            need("identity.tax_id", true, "clave_identity_required"),
+          );
+        if (route === "app_request") {
+          const nie = /^[XYZ]/i.test(value("identity.tax_id"));
+          requirements.push(
+            nie
+              ? need(
+                  "auth.numero_soporte",
+                  !!value("auth.numero_soporte"),
+                  "nie_support_required",
+                )
+              : need(
+                  "auth.fecha_validez",
+                  !!value("auth.fecha_validez"),
+                  "dni_validity_required",
+                ),
+          );
+        }
+        if (provider === "clave_permanente")
+          requirements.push(
+            need(
+              "auth.password",
+              credentials.has("clave_permanente"),
+              "clave_password_required",
+              true,
+            ),
+          );
+      }
+      return {
+        provider,
+        route,
+        ready: requirements.every((item) => item.satisfied),
+        requirements,
+      };
     },
   };
 }

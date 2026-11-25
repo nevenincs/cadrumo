@@ -8,8 +8,8 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from .._formula_operator_contracts import FORMULA_OPERATOR_ARITIES
 from ..errors import RegistryValidationError
+from ..formula_operator_contracts import FORMULA_OPERATOR_ARITIES
 from ..formula_runtime_ops import evaluate_args_op
 from ..schema_base import FormulaOperator
 from ..schema_formula import FormulaExpression
@@ -52,7 +52,7 @@ def test_formula_schema_refuses_runtime_invalid_operator_arity(
         pytest.param("subtract", 2, id="binary"),
         pytest.param("clamp", 3, id="ternary"),
         pytest.param("add", 13, id="variadic"),
-        pytest.param("m100_resolve_renta_inmobiliaria_imputada", 9, id="domain-op"),
+        pytest.param("m210_resolve_base_imponible", 12, id="domain-op"),
     ],
 )
 def test_formula_schema_accepts_runtime_valid_operator_arity(op: FormulaOperator, arg_count: int) -> None:

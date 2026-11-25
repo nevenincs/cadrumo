@@ -27,6 +27,7 @@ from dev.registry.compiler.cross_revision_divergence import (
 from .cross_revision_divergence import covered_fields
 from .validate_cross_revision_evolution import strict_continuity_evolution_failures
 from .validate_cross_revision_lineage_origin import role_exempt_occurrences
+from .validation_memoization import ModeloIdentityMemo
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,
@@ -173,6 +174,63 @@ def _role_is_unique_in_revisions(
     return all(role_counts[revision_id][semantic_role] == 1 for revision_id in revision_ids)
 
 
+type _DivergenceKey = tuple[str, CasillaId, str, str]
+type _KeyedDivergences = tuple[tuple[_DivergenceKey, CrossRevisionCasillaDivergence], ...]
+
+
+def _divergence_key(divergence: CrossRevisionCasillaDivergence) -> _DivergenceKey:
+    return (
+        divergence.modelo_id,
+        divergence.casilla_id,
+        divergence.left_revision_id,
+        divergence.right_revision_id,
+    )
+
+
+def _coexisting_divergences(modelo: ModeloDefinition) -> _KeyedDivergences:
+    """Return one modelo's divergences between coexisting revisions, in detection order."""
+    keyed: list[tuple[_DivergenceKey, CrossRevisionCasillaDivergence]] = []
+    for divergence in iter_cross_revision_casilla_divergences((modelo,)):
+        left_revision = modelo.revisions[divergence.left_revision_id]
+        right_revision = modelo.revisions[divergence.right_revision_id]
+        if not revisions_coexist(left_revision, right_revision):
+            continue
+        keyed.append((_divergence_key(divergence), divergence))
+    return tuple(keyed)
+
+
+def _strict_continuity(modelo: ModeloDefinition) -> tuple[tuple[str, ...], _KeyedDivergences]:
+    """Return one modelo's evolution failures and uncovered strict drift, in detection order."""
+    transitive_coverage: dict[_CoverageKey, dict[_CoverageNode, int]] = {}
+    semantic_failures = strict_continuity_evolution_failures(modelo)
+    keyed: list[tuple[_DivergenceKey, CrossRevisionCasillaDivergence]] = []
+    for divergence in iter_cross_revision_casilla_divergences((modelo,)):
+        left_revision = modelo.revisions[divergence.left_revision_id]
+        right_revision = modelo.revisions[divergence.right_revision_id]
+        if revisions_coexist(left_revision, right_revision):
+            continue
+        if left_revision.continuidad_validation != "strict" and right_revision.continuidad_validation != "strict":
+            continue
+        if not _has_declared_continuity_surface(divergence):
+            continue
+        if divergence.evolution_covers_field or _transitive_evolution_covers_field(
+            modelo,
+            divergence,
+            cache=transitive_coverage,
+        ):
+            continue
+        keyed.append((_divergence_key(divergence), divergence))
+    return tuple(semantic_failures), tuple(keyed)
+
+
+# Both policies are pure folds of one per-modelo projection. The fold replays
+# each modelo's keyed divergences in order into one tree-wide grouping, so the
+# result is exactly the single-pass one, duplicate modelo ids included, while
+# every unchanged modelo object is projected once per process.
+_COEXISTING_DIVERGENCES: ModeloIdentityMemo[_KeyedDivergences] = ModeloIdentityMemo()
+_STRICT_CONTINUITY: ModeloIdentityMemo[tuple[tuple[str, ...], _KeyedDivergences]] = ModeloIdentityMemo()
+
+
 def cross_revision_casilla_consistency_failures(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
@@ -187,20 +245,10 @@ def cross_revision_casilla_consistency_failures(
     reconcile-to-canonical-form), never silent acceptance.
     """
     modelo_by_id = {modelo.id: modelo for modelo in modelos}
-    failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
-    for divergence in iter_cross_revision_casilla_divergences(modelo_by_id.values()):
-        modelo = modelo_by_id[divergence.modelo_id]
-        left_revision = modelo.revisions[divergence.left_revision_id]
-        right_revision = modelo.revisions[divergence.right_revision_id]
-        if not revisions_coexist(left_revision, right_revision):
-            continue
-        key = (
-            divergence.modelo_id,
-            divergence.casilla_id,
-            divergence.left_revision_id,
-            divergence.right_revision_id,
-        )
-        failures[key].append(divergence)
+    failures: dict[_DivergenceKey, list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    for modelo in modelo_by_id.values():
+        for key, divergence in _COEXISTING_DIVERGENCES.get_or_compute(modelo, _coexisting_divergences):
+            failures[key].append(divergence)
     return tuple(
         _format_cross_revision_failure(modelo_id, casilla_id, left_revision_id, divergences)
         for (
@@ -216,32 +264,12 @@ def strict_cross_revision_casilla_continuity_failures(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
     """Enforce explicit continuity decisions for opted-in declared surfaces."""
-    failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    failures: dict[_DivergenceKey, list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     semantic_failures: list[str] = []
     for modelo in modelos:
-        transitive_coverage: dict[_CoverageKey, dict[_CoverageNode, int]] = {}
-        semantic_failures.extend(strict_continuity_evolution_failures(modelo))
-        for divergence in iter_cross_revision_casilla_divergences((modelo,)):
-            left_revision = modelo.revisions[divergence.left_revision_id]
-            right_revision = modelo.revisions[divergence.right_revision_id]
-            if revisions_coexist(left_revision, right_revision):
-                continue
-            if left_revision.continuidad_validation != "strict" and right_revision.continuidad_validation != "strict":
-                continue
-            if not _has_declared_continuity_surface(divergence):
-                continue
-            if divergence.evolution_covers_field or _transitive_evolution_covers_field(
-                modelo,
-                divergence,
-                cache=transitive_coverage,
-            ):
-                continue
-            key = (
-                divergence.modelo_id,
-                divergence.casilla_id,
-                divergence.left_revision_id,
-                divergence.right_revision_id,
-            )
+        modelo_semantic_failures, modelo_drift = _STRICT_CONTINUITY.get_or_compute(modelo, _strict_continuity)
+        semantic_failures.extend(modelo_semantic_failures)
+        for key, divergence in modelo_drift:
             failures[key].append(divergence)
     drift_failures = tuple(
         _format_strict_continuity_failure(modelo_id, casilla_id, left_revision_id, right_revision_id, divergences)

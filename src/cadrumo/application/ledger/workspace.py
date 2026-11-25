@@ -27,7 +27,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.service import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -36,12 +36,12 @@ from ...domain.invoices.service import (
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
+from ...domain.modelos.ledger_filing_snapshot import FiledRegisterState, LedgerFilingStalenessVerdict
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
-from .actions_manual import ledger_transaction_review_payload
+from .manual_read import ledger_transaction_review_payload
 from .models import LedgerReviewQueryResult, LedgerStatusReport, LedgerTransactionReviewPayload
 from .preflight import LedgerPreflightReport
 
@@ -200,14 +200,16 @@ class LedgerAffectedDeclarationRefV1(BaseModel):
     calculation_revision_id: CalculationRevisionId
     changed_count: NonNegativeInt
     removed_count: NonNegativeInt
+    register_state: FiledRegisterState = FiledRegisterState.CURRENT
+    register_change_count: NonNegativeInt = 0
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _period_matches_year(self) -> LedgerAffectedDeclarationRefV1:
         if self.period.filing_year != self.filing_year:
             raise ValueError("affected declaration period must match its filing year")
-        if self.changed_count + self.removed_count == 0:
-            raise ValueError("an affected declaration must carry Ledger drift")
+        if self.changed_count + self.removed_count == 0 and self.register_state is FiledRegisterState.CURRENT:
+            raise ValueError("an affected declaration must carry Ledger or register drift")
         return self
 
 
@@ -274,24 +276,13 @@ class LedgerLinkConsistencyReaderProtocol(Protocol):
         ...
 
 
-def _canonical_filing_staleness_reader(
-    *,
-    revisions: Mapping[str, CalculationRevision],
-    catalogue: TransactionCatalogue,
-) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
-    """Reach the existing pure implementation behind this public door."""
-    from ..aggregation.ledger_filing_snapshot import stale_filed_revisions
-
-    return stale_filed_revisions(revisions=revisions, catalogue=catalogue)
-
-
 def project_affected_declaration_reconciliations(
     *,
     bucket_id: str,
     revisions: Mapping[str, CalculationRevision],
     transactions: TransactionCatalogue,
     work_units: WorkUnitCatalogue,
-    staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
+    staleness_reader: LedgerFilingStalenessReaderProtocol,
 ) -> tuple[LedgerAffectedDeclarationRefV1, ...]:
     """Project local Ledger drift onto natural declaration addresses.
 
@@ -317,6 +308,8 @@ def project_affected_declaration_reconciliations(
                 calculation_revision_id=revision.calculation_revision_id,
                 changed_count=len(verdict.changed),
                 removed_count=len(verdict.removed),
+                register_state=verdict.register_state,
+                register_change_count=verdict.register_change_count,
             )
         )
     return tuple(
@@ -406,7 +399,7 @@ def _project_reconciliation_facts(
     return suggestions, inconsistencies, affected
 
 
-def _project_workspace_areas(
+def project_workspace_areas(
     *,
     entries: tuple[LedgerWorkspaceEntryRefV1, ...],
     review_ids: tuple[TransactionId, ...],
@@ -446,7 +439,7 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.IMPORT,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
-            status=_import_status(last_import_count),
+            status=import_status(last_import_count),
             item_count=last_import_count or 0,
         ),
         LedgerWorkspaceAreaStateV1(
@@ -458,7 +451,7 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.EVIDENCE,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_INVOICES),
-            status=_evidence_status(evidence_pending_review),
+            status=evidence_status(evidence_pending_review),
             item_count=evidence_pending_review or 0,
         ),
         LedgerWorkspaceAreaStateV1(
@@ -483,7 +476,7 @@ def _review_area_status(*, review_ids: tuple[TransactionId, ...], pending: int) 
     return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending else LedgerWorkspaceStatus.READY
 
 
-def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
+def evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
     """Classify the evidence area from its measured review queue.
 
     ``None`` means the caller did not measure the queue, which stays
@@ -498,7 +491,7 @@ def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
     return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending_review else LedgerWorkspaceStatus.EMPTY
 
 
-def _import_status(last_import_count: int | None) -> LedgerWorkspaceStatus:
+def import_status(last_import_count: int | None) -> LedgerWorkspaceStatus:
     """Classify the import area from the size of the most recent import batch.
 
     ``None`` is an unmeasured history; a profile that never imported is
@@ -522,15 +515,15 @@ def project_ledger_workspace(
     work_units: WorkUnitCatalogue,
     evidence_pending_review: int | None,
     last_import_count: int | None,
+    filing_staleness_reader: LedgerFilingStalenessReaderProtocol,
     invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
     link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
-    filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
 ) -> LedgerWorkspaceProjectionV1:
     """Build one deterministic, frontend-neutral snapshot from canonical facts.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     bucket_id = summary.bucket_id
@@ -554,7 +547,7 @@ def project_ledger_workspace(
         link_consistency_reader=link_consistency_reader,
         filing_staleness_reader=filing_staleness_reader,
     )
-    areas = _project_workspace_areas(
+    areas = project_workspace_areas(
         entries=entries,
         review_ids=review_ids,
         pending=summary.pending_review_count,

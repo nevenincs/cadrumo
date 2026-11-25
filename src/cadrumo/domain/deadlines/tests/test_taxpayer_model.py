@@ -23,6 +23,7 @@ from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -47,6 +48,11 @@ from ..models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
+_ON = date(_YEAR, 12, 31)
+_ELECTION_DATE = date(filing_year_envelope().floor, 1, 15)
+"""The day an impatriado election starts: any date inside the envelope serves the window arithmetic."""
+
 
 def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
@@ -64,7 +70,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         declaration_roles=frozenset({ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}),
         legal_entity_form=LegalEntityForm.from_registry("cooperativa"),
@@ -94,9 +100,9 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         cross_period_group_member_rosters=(
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "12"),
-                member_nifs=("B00000000", "A00000000"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "12"),
+                member_nifs=("B00010082", "A00010009"),
             ),
         ),
     )
@@ -133,9 +139,9 @@ class TestTaxpayerModelRoundTrip:
         assert restored.cross_period_group_member_rosters == (
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "12"),
-                member_nifs=("A00000000", "B00000000"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "12"),
+                member_nifs=("A00010009", "B00010082"),
             ),
         )
 
@@ -143,7 +149,7 @@ class TestTaxpayerModelRoundTrip:
         """An OBJETIVA regime survives without a derived boolean side channel."""
 
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("SIMPLIFICADO"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         )
@@ -157,7 +163,7 @@ class TestObjectiveEstimationRegimeAxis:
 
     def test_objetiva_regime_is_the_current_objective_estimation_signal(self) -> None:
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         )
@@ -165,7 +171,7 @@ class TestObjectiveEstimationRegimeAxis:
 
     def test_directa_regime_is_not_objective_estimation(self) -> None:
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         )
@@ -177,7 +183,7 @@ class TestObjectiveEstimationRegimeAxis:
         with pytest.raises(ValidationError, match=r"uses_objective_estimation_irpf"):
             TaxpayerProfile.model_validate(
                 {
-                    "tax_id": "X1234567L",
+                    "tax_id": "X0001500M",
                     "iva_regime": IVARegime("GENERAL"),
                     "uses_objective_estimation_irpf": True,
                 },
@@ -187,7 +193,7 @@ class TestObjectiveEstimationRegimeAxis:
 class TestTaxpayerModelAntiTautology:
     """Mutating or dropping a new field in the payload surfaces on reload."""
 
-    def test_dropped_enrolment_field_re_defaults_and_surfaces_inequality(self) -> None:
+    def test_dropped_enrolment_field_re_reads_as_unanswered_and_surfaces_inequality(self) -> None:
         """Deleting sii_enrolled from the payload makes the reload differ.
 
         If this test passed with the field deleted, the roundtrip would
@@ -199,10 +205,11 @@ class TestTaxpayerModelAntiTautology:
         payload = json.loads(original.model_dump_json())
         del payload["iva"]["sii_enrolled"]
         reloaded = TaxpayerProfile.model_validate_json(json.dumps(payload))
-        # The dropped field silently re-defaults to False.
+        # The enrolment is three-state, so the dropped field re-reads as
+        # unanswered rather than as the taxpayer's own no.
         iva = reloaded.iva
         assert iva is not None
-        assert iva.sii_enrolled is False
+        assert iva.sii_enrolled is None
         # Strict equality therefore breaks — the proof the roundtrip bites.
         assert reloaded != original
 
@@ -249,7 +256,7 @@ class TestImpatriado:
 
         with pytest.raises(ValidationError, match=r"special_regime_start_date is required"):
             TaxpayerProfile(
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 entity_type=EntityType.from_registry("natural_person"),
                 iva_regime=IVARegime("GENERAL"),
                 irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
@@ -259,24 +266,22 @@ class TestImpatriado:
     def test_impatriado_with_start_date_is_accepted(self) -> None:
         """IMPATRIADO with a start date is a valid profile."""
 
-        from datetime import date
-
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         assert profile.irpf_special_regime == IrpfSpecialRegime.from_registry("impatriado")
-        assert profile.special_regime_start_date == date(2023, 1, 15)
+        assert profile.special_regime_start_date == _ELECTION_DATE
 
     def test_general_regime_without_start_date_is_accepted(self) -> None:
         """General-regime profile with no start date is fine — the validator
         only fires for IMPATRIADO."""
 
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
         )
@@ -286,7 +291,7 @@ class TestImpatriado:
         """A profile with no special-regime declaration accepts no start date."""
 
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
         )
         assert profile.irpf_special_regime is None
@@ -304,14 +309,12 @@ class TestImpatriado:
         ISO strings for date fields.
         """
 
-        from datetime import date
-
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         restored = TaxpayerProfile.model_validate(original.model_dump())
         assert restored == original
@@ -324,14 +327,12 @@ class TestImpatriado:
         but no start_date, which is the exact regression the guard prevents.
         """
 
-        from datetime import date
-
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         payload = original.model_dump()
         del payload["special_regime_start_date"]
@@ -344,25 +345,25 @@ class TestBeckhamWindow:
     """WINDOW-001: beckham_window_active oracle tests (RIRPF Art. 116.1).
 
     Window = start_date.year <= today.year <= start_date.year + 5.
-    Election year 2023 → window 2023-2028 inclusive; 2029 is year 7 = expired.
+    The election year opens a six-year window, inclusive; the seventh year is expired.
     """
 
     def _impatriado(self) -> TaxpayerProfile:
         return TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
 
     def test_impatriado_window_boundaries(self) -> None:
         cases = (
-            (date(2023, 6, 1), True),
-            (date(2027, 12, 31), True),
-            (date(2028, 12, 31), True),
-            (date(2029, 1, 1), False),
-            (date(2022, 12, 31), False),
+            (date(_ELECTION_DATE.year, 6, 1), True),
+            (date(_ELECTION_DATE.year + 4, 12, 31), True),
+            (date(_ELECTION_DATE.year + 5, 12, 31), True),
+            (date(_ELECTION_DATE.year + 6, 1, 1), False),
+            (date(_ELECTION_DATE.year - 1, 12, 31), False),
         )
         profile = self._impatriado()
         for today, expected in cases:
@@ -372,30 +373,30 @@ class TestBeckhamWindow:
         from datetime import date
 
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
         )
-        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+        assert profile.beckham_window_active(date(_YEAR, 5, 27)) is False
 
     def test_profile_without_special_regime_is_always_outside_window(self) -> None:
         from datetime import date
 
-        profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
-        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+        profile = TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
+        assert profile.beckham_window_active(date(_YEAR, 5, 27)) is False
 
 
 class TestNonResidentAxis:
     """IRNR-001: fiscal_residency / country_of_fiscal_residence axis.
 
     TRLIRNR RDLeg 5/2004 Art. 2 defines non-residency; this class asserts
-    the validator, the ue_eee_status property, and the roundtrip contract.
+    the validator, the dated ue_eee_status_on reading, and the roundtrip contract.
     """
 
     def test_non_resident_without_country_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"country_of_fiscal_residence is required"):
             TaxpayerProfile(
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence=None,
@@ -404,7 +405,7 @@ class TestNonResidentAxis:
     def test_non_resident_with_country_is_accepted(self) -> None:
         # GB is post-Brexit non-EU/EEA; representante fiscal required.
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
@@ -416,32 +417,32 @@ class TestNonResidentAxis:
 
     def test_ue_eee_status_true_for_eu_member(self) -> None:
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="FR",
         )
-        assert profile.ue_eee_status is True
+        assert profile.ue_eee_status_on(_ON) is True
 
     def test_ue_eee_status_false_for_gb_post_brexit(self) -> None:
         # GB left the EU/EEA on 2020-12-31; representante is required.
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
             representante_fiscal_nif="12345678Z",
             representante_fiscal_nombre="Test Representative",
         )
-        assert profile.ue_eee_status is False
+        assert profile.ue_eee_status_on(_ON) is False
 
     def test_ue_eee_status_false_when_country_none(self) -> None:
         profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
-        assert profile.ue_eee_status is False
+        assert profile.ue_eee_status_on(_ON) is False
 
     def test_non_resident_roundtrip_preserves_fiscal_residency_and_country(self) -> None:
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="DE",
@@ -453,7 +454,7 @@ class TestNonResidentAxis:
         # Verify the anti-tautology contract: removing country_of_fiscal_residence
         # from a NON_RESIDENT_IRNR payload must surface as a ValidationError.
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="IT",
@@ -476,7 +477,7 @@ class TestRepresentanteFiscalAxis:
         # GB is outside EU/EEA post-Brexit; representative required.
         with pytest.raises(ValidationError, match=r"representante_fiscal_nif and representante_fiscal_nombre required"):
             TaxpayerProfile(
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence="GB",
@@ -487,7 +488,7 @@ class TestRepresentanteFiscalAxis:
     def test_non_eu_non_resident_with_partial_representante_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"representante_fiscal_nombre required"):
             TaxpayerProfile(
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence="GB",
@@ -497,7 +498,7 @@ class TestRepresentanteFiscalAxis:
 
     def test_non_eu_non_resident_with_full_representante_is_accepted(self) -> None:
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
@@ -510,7 +511,7 @@ class TestRepresentanteFiscalAxis:
     def test_eu_non_resident_does_not_require_representante(self) -> None:
         # FR is EU — representative not required.
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="FR",
@@ -525,7 +526,7 @@ class TestRepresentanteFiscalAxis:
 
     def test_representante_roundtrip_preserves_fields(self) -> None:
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="US",
@@ -537,7 +538,7 @@ class TestRepresentanteFiscalAxis:
 
     def test_anti_tautology_dropping_representante_nif_breaks_non_eu_non_resident(self) -> None:
         original = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="US",
@@ -576,34 +577,14 @@ class TestMultiplePagadoresObligation:
                     pagadores_count,
                     secondary_income,
                     None,
-                    filing_year=2024,
-                    facts=_deadline_facts(2024),
+                    filing_year=_YEAR,
+                    facts=_deadline_facts(_YEAR),
                 )
                 is expected
             ), (
                 pagadores_count,
                 secondary_income,
             )
-
-    def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
-        # TaxpayerProfile must carry the pagadores axes through construction unchanged.
-        profile = TaxpayerProfile(
-            tax_id="12345678Z",
-            iva_regime=IVARegime("GENERAL"),
-            irpf_pagadores_count=3,
-            irpf_pagadores_secondary_income=Decimal("2000"),
-            irpf_pagadores_total_work_income=Decimal("19000"),
-        )
-        assert profile.irpf_pagadores_count == 3
-        assert profile.irpf_pagadores_secondary_income == Decimal("2000")
-        assert profile.irpf_pagadores_total_work_income == Decimal("19000")
-
-    def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
-        # Existing profiles without pagadores fields must load cleanly.
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
-        assert profile.irpf_pagadores_count is None
-        assert profile.irpf_pagadores_secondary_income is None
-        assert profile.irpf_pagadores_total_work_income is None
 
 
 class TestMultiplePagadoresReducedLimitSchedule:
@@ -640,9 +621,9 @@ class TestMultiplePagadoresReducedLimitSchedule:
             resolve_multiple_pagadores_reduced_limit(filing_year, facts=_deadline_facts(filing_year))
 
     def test_reduced_limit_resolution_retains_mapping_provenance(self) -> None:
-        resolved = _deadline_facts(2024).resolved_mapping("lirpf-work-income-multiple-pagadores-reduced-limit")
+        resolved = _deadline_facts(_YEAR).resolved_mapping("lirpf-work-income-multiple-pagadores-reduced-limit")
         assert resolved.date_axis is DateAxis.FILING_PERIOD
-        assert resolved.effective_date == date(2024, 12, 31)
+        assert resolved.effective_date == date(_YEAR, 12, 31)
         assert resolved.legal_refs == ("ley-35-2006:art-96",)
         assert resolved.source_refs
 
@@ -699,18 +680,18 @@ class TestThirdPartyDeclarationRoleOrthogonality:
 
     def test_every_role_combination_leaves_the_legal_entity_tax_route_unchanged(self) -> None:
         baseline = TaxpayerProfile(
-            tax_id="B12345674",
+            tax_id="B00015016",
             entity_type=EntityType.from_registry("legal_entity"),
             iva_regime=IVARegime("GENERAL"),
         )
         assert derive_tax_route(baseline) is TaxRoute.IMPUESTO_SOCIEDADES
 
-        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        role_choices = third_party_declaration_role_choices(effective_date=date(_YEAR, 12, 31))
         all_roles = frozenset(role_choices)
         for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})
             colegio_profesional = TaxpayerProfile(
-                tax_id="B12345674",
+                tax_id="B00015016",
                 entity_type=EntityType.from_registry("legal_entity"),
                 iva_regime=IVARegime("GENERAL"),
                 declaration_roles=roles,
@@ -720,7 +701,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
 
     def test_every_role_combination_leaves_the_natural_person_tax_route_unchanged(self) -> None:
         """The same proof for IRPF, so the axis is orthogonal on both routes it could distort."""
-        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        role_choices = third_party_declaration_role_choices(effective_date=date(_YEAR, 12, 31))
         all_roles = frozenset(role_choices)
         for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})

@@ -14,14 +14,14 @@ from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
 from .authored_edition_support import authored_revisions, source_reference
-from .catalogue_verification_support import _catalogues, registry_tree
+from .catalogue_verification_support import catalogue_verification_catalogues, registry_tree
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     checked: list[str] = []
 
     for source in catalogues.sources.values():
@@ -93,7 +93,7 @@ def test_no_non_record_design_source_points_at_a_binary_design_under_disenos_reg
     silently passed: this test's own binary-extension scope cannot catch it,
     so it must not be allowed to look covered.
     """
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     offending: list[str] = []
     for source in catalogues.sources.values():
         if source.kind == "record_design":
@@ -228,7 +228,7 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
 
 
 def test_modelo_202_active_record_design_is_latest_manifested_revision() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     source = catalogues.sources["aeat-dr-202-2025"]
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_202", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -246,7 +246,7 @@ def test_modelo_202_active_record_design_is_latest_manifested_revision() -> None
 
 
 def test_modelo_100_record_design_sources_match_manifest() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
@@ -377,7 +377,7 @@ def test_modelo_100_forestal_0302_prefers_manual_year_over_dictionary_drift() ->
 
 
 def test_renta_manual_sources_match_manifest() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
     renta_root = bundled_path("corpus", "manuals", "renta")
     manifest_paths = sorted(

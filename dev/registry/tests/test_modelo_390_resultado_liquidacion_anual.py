@@ -23,22 +23,23 @@ from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalcula
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import (
-    _calculate_303_from_observations,
-    _calculate_390_from_observations_and_303_filings,
-    _deduction_kind,
-    _flow,
-    _observation,
+    calculate_303_from_observations,
+    calculate_390_from_observations_and_303_filings,
+    deduction_kind,
+    ledger_iva_aggregation_flow,
+    ledger_iva_aggregation_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SURFACE = "test_modelo_390_resultado_liquidacion_anual"
-_SUPPORTED_YEARS = (2022, 2023, 2024, 2025)
+_SUPPORTED_YEARS = filing_grade_exercises("390")
 _RATE = Decimal("0.21")
 _QUARTER_MONTH = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
@@ -92,7 +93,7 @@ class _AnnualFiling:
 
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
@@ -106,21 +107,21 @@ def _quarter_rows(year: int, period: str, quarter: _Quarter) -> tuple[IvaLedgerO
     sale_date = date(year, month, 10)
     purchase_date = date(year, month, 11)
     return (
-        _observation(
+        ledger_iva_aggregation_observation(
             ledger_id=f"{year}-{period}-sale",
             txn_date=sale_date,
             base=quarter.sales_base,
             iva=(quarter.sales_base * _RATE).quantize(Decimal("0.01")),
             applied_rate=_RATE,
         ),
-        _observation(
+        ledger_iva_aggregation_observation(
             ledger_id=f"{year}-{period}-purchase",
             txn_date=purchase_date,
-            flow=_flow("soportado", effective_date=purchase_date),
+            flow=ledger_iva_aggregation_flow("soportado", effective_date=purchase_date),
             base=quarter.purchases_base,
             iva=(quarter.purchases_base * _RATE).quantize(Decimal("0.01")),
             applied_rate=_RATE,
-            deduction_fact_kind=_deduction_kind("domestic_current", effective_date=purchase_date),
+            deduction_fact_kind=deduction_kind("domestic_current", effective_date=purchase_date),
         ),
     )
 
@@ -139,7 +140,7 @@ def _file_year(
     for period, quarter in quarters.items():
         rows = _quarter_rows(year, period, quarter)
         observations += rows
-        result = _calculate_303_from_observations(
+        result = calculate_303_from_observations(
             filing_year=year,
             period=period,
             observations=rows,
@@ -148,7 +149,7 @@ def _file_year(
         )
         results[period] = result
         pending = result.values[_M303_PENDIENTE_FIN_PERIODO]
-    annual = _calculate_390_from_observations_and_303_filings(
+    annual = calculate_390_from_observations_and_303_filings(
         filing_year=year,
         observations=observations,
         quarterly_results=results,
@@ -297,7 +298,7 @@ def test_no_apartado_7_result_box_is_operator_input(filing_year: int) -> None:
 
 
 def test_an_apartado_7_result_box_turned_into_operator_input_is_caught() -> None:
-    revision = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
+    revision = compiled_bundled_authority().snapshot("390", filing_year=_SUPPORTED_YEARS[-1], period="0A").revision
     defective = revision.model_copy(
         update={
             "casillas": tuple(

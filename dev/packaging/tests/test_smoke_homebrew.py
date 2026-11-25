@@ -16,14 +16,14 @@ from .. import acquire_homebrew, smoke_homebrew
 from ..homebrew_storage import require_homebrew_installation_prefix
 from ..smoke_homebrew import (
     CLEANUP_STATE_NAME,
-    _assert_oracle_evidence,
-    _homebrew_storage_environment,
-    _new_run_root,
-    _parser,
-    _require_valid_tap_name,
+    assert_oracle_evidence,
     cleanup_state_document,
+    homebrew_storage_environment,
     localize_formula,
     main,
+    new_run_root,
+    parser,
+    require_valid_tap_name,
     run_deferred_cleanup,
 )
 
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.parametrize("override", [None, "packages/brew", "absolute"])
 def test_homebrew_installation_target_is_controlled(tmp_path: Path, monkeypatch, override) -> None:
     root = tmp_path / "storage"
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
     monkeypatch.delenv("CADRUMO_HOMEBREW_PREFIX", raising=False)
     expected = root / "development/packages/homebrew"
     if override == "absolute":
@@ -63,8 +63,8 @@ def test_deferred_cleanup_refuses_an_unselected_installation(tmp_path: Path, mon
 @pytest.mark.parametrize(
     ("resolver", "volume_check"),
     [
-        (_homebrew_storage_environment, smoke_homebrew._require_homebrew_temp_volume),
-        (acquire_homebrew._homebrew_storage_environment, acquire_homebrew._require_homebrew_temp_volume),
+        (homebrew_storage_environment, smoke_homebrew.require_homebrew_temp_volume),
+        (acquire_homebrew.homebrew_storage_environment, acquire_homebrew.require_homebrew_temp_volume),
     ],
 )
 def test_homebrew_storage_controls_resolve_refinements_under_the_local_root(
@@ -80,8 +80,7 @@ def test_homebrew_storage_controls_resolve_refinements_under_the_local_root(
     cache_relative = "development/cache/brew-custom"
     log_absolute = tmp_path / "external-homebrew-logs"
     temp_relative = "scratch/brew"
-    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "shared-storage"))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
     monkeypatch.setenv("CADRUMO_HOMEBREW_CACHE_DIR", cache_relative)
     monkeypatch.setenv("CADRUMO_HOMEBREW_LOGS_DIR", str(log_absolute))
     monkeypatch.setenv("CADRUMO_HOMEBREW_TEMP_DIR", temp_relative)
@@ -114,11 +113,10 @@ def test_homebrew_temp_refuses_a_different_filesystem(
 
     monkeypatch.setattr(Path, "stat", stat_with_different_prefix_device)
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     monkeypatch.delenv("CADRUMO_HOMEBREW_TEMP_DIR", raising=False)
-    environment = _homebrew_storage_environment()
+    environment = homebrew_storage_environment()
     with pytest.raises((SystemExit, acquire_homebrew.AcquisitionError), match="share a filesystem"):
-        smoke_homebrew._require_homebrew_temp_volume(environment=environment, brew_prefix=prefix)
+        smoke_homebrew.require_homebrew_temp_volume(environment=environment, brew_prefix=prefix)
 
 
 def test_homebrew_smoke_relative_evidence_is_stored_under_configured_root(
@@ -127,9 +125,8 @@ def test_homebrew_smoke_relative_evidence_is_stored_under_configured_root(
 ) -> None:
     root = tmp_path / "storage"
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
 
-    run_root = _new_run_root(Path("development/releases/homebrew/evidence"))
+    run_root = new_run_root(Path("development/releases/homebrew/evidence"))
 
     assert run_root.is_relative_to(root)
 
@@ -283,14 +280,14 @@ def test_smoke_parser_accepts_retain_install() -> None:
         "--evidence-dir",
         "evidence",
     ]
-    assert _parser().parse_args(base).retain_install is False
-    assert _parser().parse_args([*base, "--retain-install"]).retain_install is True
+    assert parser().parse_args(base).retain_install is False
+    assert parser().parse_args([*base, "--retain-install"]).retain_install is True
 
 
 def test_tap_name_accepts_the_underscored_architecture_matrix_id() -> None:
     """The linux-x86_64 matrix tap must pass, matching Homebrew's own tap grammar."""
-    _require_valid_tap_name("cadrumo-smoke/linux-x86_64")
-    _require_valid_tap_name("cadrumo-smoke/macos-arm64")
+    require_valid_tap_name("cadrumo-smoke/linux-x86_64")
+    require_valid_tap_name("cadrumo-smoke/macos-arm64")
 
 
 @pytest.mark.parametrize(
@@ -306,7 +303,7 @@ def test_tap_name_accepts_the_underscored_architecture_matrix_id() -> None:
 def test_tap_name_rejects_a_malformed_pair(tap_name: str) -> None:
     """A non-lowercase or non-``user/repository`` tap name is still refused."""
     with pytest.raises(SystemExit, match="one lowercase user/repository pair"):
-        _require_valid_tap_name(tap_name)
+        require_valid_tap_name(tap_name)
 
 
 def test_localization_changes_only_the_four_cohort_acquisition_urls(tmp_path: Path) -> None:
@@ -438,4 +435,4 @@ def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
 def test_oracle_evidence_refuses_a_keg_whose_cli_misses_the_expected_figure() -> None:
     """The installed CLI must reproduce the oracle figure, not merely run."""
     with pytest.raises(SystemExit, match="installed CLI oracle returned unexpected evidence"):
-        _assert_oracle_evidence(tax_document={"target_value": "22999.99"})
+        assert_oracle_evidence(tax_document={"target_value": "22999.99"})

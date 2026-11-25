@@ -1,0 +1,244 @@
+import type {
+  CatalogueInvoiceSnapshot,
+  LedgerTransactionProjection,
+} from "../../src/shell/ledgerInvoiceContract";
+import type {
+  JsonObject,
+  LedgerDecision,
+  LedgerDefinitionId,
+  LedgerFailure,
+  LedgerOutcome,
+  LedgerPort,
+} from "../../src/shell/ledger";
+import type { LedgerTransactionReviewProjection } from "../../src/shell/ledgerReadContract";
+
+/** A synthetic movement: an active, unclassified outgoing payment unless
+ * `facts` says otherwise. Every value is invented. */
+export function movement(
+  id: string,
+  facts: Partial<LedgerTransactionProjection> = {},
+  group: string | null = null,
+  account: string | null = null,
+): LedgerTransactionReviewProjection {
+  const transaction: LedgerTransactionProjection = {
+    transaction_id: id,
+    date: "2026-10-05",
+    booked_date: "2026-10-05",
+    value_date: null,
+    operation_date: null,
+    accrual_date: null,
+    amount: "36.30",
+    currency: "EUR",
+    direction: "OUTGOING",
+    counterparty: "Papelería Trazo",
+    description: "PAPELERIA TRAZO 0045",
+    business_classification: "NOT_YET_PROCESSED",
+    business_pct: null,
+    category_id: null,
+    taxable_base: null,
+    iva_rate: null,
+    iva_amount: null,
+    recargo_amount: null,
+    iva_category: null,
+    deduction_fact_kind: null,
+    investment_asset_id: null,
+    counterparty_country: null,
+    counterparty_identification_state: null,
+    irpf_category: null,
+    m210_income_classification: null,
+    usage_ratio_id: null,
+    prorrata_reference: null,
+    arrendamiento_ref: null,
+    inmueble_ref: null,
+    gasto_capital_inmobiliario: null,
+    link_fields: [],
+    purchase_invoice_evidence_id: null,
+    invoice_id: null,
+    attachment_ids: [],
+    notes: "",
+    lifecycle_state: "ACTIVE",
+    classified_by: "",
+    classification_decided_by: "",
+    figures_derived: false,
+    classified_at: null,
+    classification_reason: "",
+    classification_confidence: null,
+    source_jurisdiction: null,
+    statement_reference: null,
+    value_in_eur: null,
+    fx_rate: null,
+    created_at: "2026-10-05T08:00:00Z",
+    modified_at: "2026-10-05T08:00:00Z",
+    ...facts,
+  };
+  const status =
+    transaction.business_classification === "NOT_YET_PROCESSED"
+      ? "pending"
+      : "reviewed";
+  return {
+    transaction,
+    review_status: status,
+    group_label: group,
+    own_account_id: account,
+    // A synthetic reason is the person's own words, or none.
+    classification_reason_source:
+      transaction.classification_reason === "" ? "none" : "stated",
+    classification_reason_words: "",
+    classification_reason_words_language: null,
+    withholding: [],
+    gasto_capital_inmobiliario_words: null,
+    gasto_capital_inmobiliario_words_language: null,
+  };
+}
+
+/** A synthetic catalogue invoice: received, 36.30 settled, open and unlinked
+ * unless `facts` says otherwise. Every value is invented. */
+export function catalogueInvoice(
+  number: string,
+  facts: Partial<CatalogueInvoiceSnapshot> = {},
+): CatalogueInvoiceSnapshot {
+  return {
+    invoice_id: hexId(`inv-${number}`),
+    bucket_id: null,
+    kind: "received",
+    invoice_number: number,
+    issued_at: "2026-10-01",
+    counterparty_name: "Papelería Trazo SL",
+    counterparty_tax_id: "B12000045",
+    counterparty_country: "ES",
+    base_total: { decimal: "30.00" },
+    iva_total: { decimal: "6.30" },
+    grand_total: { decimal: "36.30" },
+    currency: "EUR",
+    payment_status: "PENDING",
+    linked_transaction_ids: [],
+    source_filename: null,
+    source_sha256: null,
+    source_row_index: null,
+    notes: "",
+    retention_rate: null,
+    retention_amount: null,
+    recargo_amount: null,
+    operation_type: null,
+    lines: [],
+    invoice_class: "ORDINARIA",
+    series: null,
+    operation_date: null,
+    operation_date_role: null,
+    iva_category: null,
+    rectifies_invoice_number: null,
+    rectification_method: null,
+    rectification_cause: null,
+    rectification_direction: null,
+    document_received_on: null,
+    issuer_increase_election: null,
+    issuer_minoracion_election: null,
+    issuer_minoracion_regularisation_period: null,
+    recipient_increase_period: null,
+    art_80_tres_obligations_attested: null,
+    exercised_deduction_period: null,
+    fx_rate: null,
+    fx_rate_date: null,
+    fx_rate_source: null,
+    base_total_eur: null,
+    iva_total_eur: null,
+    grand_total_eur: null,
+    referencia_catastral: null,
+    settlement_amount: { decimal: "36.30" },
+    documents: [],
+    ...facts,
+  };
+}
+
+/** A 64-hex-digit id made from a short name, shaped like the product's. */
+export const hexId = (name: string) =>
+  Array.from(name)
+    .map((char) => char.charCodeAt(0).toString(16).padStart(2, "0"))
+    .join("")
+    .padEnd(64, "0")
+    .slice(0, 64);
+
+export type Call =
+  | { kind: "submit"; definition: LedgerDefinitionId; payload: JsonObject }
+  | {
+      kind: "answer";
+      operation: string;
+      digest: string;
+      decision: LedgerDecision;
+    };
+
+/** What the fake port does for one call: settle with a result, settle as
+ * refused, or reject as the host would. */
+export type FakeAnswer =
+  | { settle: JsonObject }
+  | { refuse: string }
+  | { fail: LedgerFailure }
+  | { outcome: LedgerOutcome };
+
+/** A ledger port that answers each call from `answer` and records it. Only
+ * the calls the models make are answered; the rest are not used. */
+export function fakePort(answer: (call: Call, at: number) => FakeAnswer): {
+  port: LedgerPort;
+  calls: Call[];
+} {
+  const calls: Call[] = [];
+  let operations = 0;
+  const settle = async (call: Call): Promise<LedgerOutcome> => {
+    calls.push(call);
+    const found = answer(call, calls.length - 1);
+    operations += 1;
+    const operation_id = `op-${operations}`;
+    if ("fail" in found) throw found.fail;
+    if ("outcome" in found) return found.outcome;
+    if ("refuse" in found)
+      return {
+        kind: "refused",
+        operation_id,
+        revision: 3,
+        reason: found.refuse,
+        detail: null,
+      };
+    return { kind: "settled", operation_id, revision: 3, result: found.settle };
+  };
+  const unused = () => Promise.reject(new Error("not used by the models"));
+  const port: LedgerPort = {
+    submit: (definition, payload) =>
+      settle({
+        kind: "submit",
+        definition,
+        payload: payload as JsonObject,
+      }) as never,
+    answer: (operation, digest, decision) =>
+      settle({ kind: "answer", operation, digest, decision }),
+    observe: unused,
+    review: unused,
+    cancel: unused,
+    pickFiles: unused,
+    saveFile: unused,
+    revealFile: unused,
+    forgetFiles: unused,
+    observeDrops: unused,
+    changeOwnAccount: unused,
+  };
+  return { port, calls };
+}
+
+export const PROFILE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+/** A list page as `ledger.list` answers it for `rows` of `total`. */
+export function listPage(
+  rows: LedgerTransactionReviewProjection[],
+  total: number,
+  offset: number,
+  limit: number,
+): JsonObject {
+  return {
+    profile_id: PROFILE,
+    rows: rows as unknown as JsonObject[],
+    total,
+    truncated: offset > 0 || offset + limit < total,
+    offset,
+    limit,
+    by_group: false,
+  };
+}

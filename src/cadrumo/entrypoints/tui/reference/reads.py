@@ -16,16 +16,11 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ....application import reference_catalogue as catalogue
-from ....application.modelo.registry_discovery import (
-    registry_bindings,
-    registry_bindings_for_scope,
-    registry_bindings_for_year,
-)
 from ....application.operator_output.result_document import printed_result_document
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, CoreValidationError
 from ....core.modelo import Modelo
-from ....core.period import Period, PeriodError
+from ....core.period import PeriodError
 from ....core.tax_domain import TaxDomain
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryError
@@ -110,33 +105,13 @@ def _required(value: str | None, coordinate: str) -> str:
 
 def _bindings(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
     """Read the bindings of one modelo revision, scoped as every other registry read is scoped."""
-    modelo = _required(query.modelo, "modelo")
-    if query.year is None:
-        return registry_bindings(modelo, period=query.period, as_of=query.as_of, operation=operation)
-    if query.period is None or not query.period.strip():
-        return registry_bindings_for_year(modelo, filing_year=query.year, as_of=query.as_of, operation=operation)
-    return registry_bindings_for_scope(
-        modelo,
-        period=Period.from_year_and_code(query.year, query.period.strip()),
-        as_of=query.as_of,
-        operation=operation,
+    return catalogue.list_bindings(
+        _required(query.modelo, "modelo"), year=query.year, period=query.period, as_of=query.as_of, operation=operation
     )
 
 
-def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
+def _pinned_modelo(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
     read = query.read
-    if read is ReferenceRead.MODELOS:
-        domain = TaxDomain(query.domain) if (query.domain is not None and query.domain) else None
-        return catalogue.list_modelos(year=query.year, domain=domain, operation=operation)
-    if read is ReferenceRead.SUPPORT_MATRIX:
-        return catalogue.read_support_matrix(operation=operation)
-    if read is ReferenceRead.APODERADO_SCOPES:
-        return catalogue.list_apoderado_scopes(operation=operation)
-    if read is ReferenceRead.CATEGORIES:
-        # The category vocabularies are governed facts, read under the pin.
-        return catalogue.read_ledger_categories()
-    if read is ReferenceRead.BINDINGS:
-        return _bindings(query, operation)
     modelo = _required(query.modelo, "modelo")
     year, period, as_of = query.year, query.period, query.as_of
     if read is ReferenceRead.DESCRIBE:
@@ -158,6 +133,23 @@ def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseM
             modelo, _required(query.casilla, "casilla"), year=year, period=period, as_of=as_of, operation=operation
         )
     return catalogue.list_formulas(modelo, year=year, period=period, as_of=as_of, operation=operation)
+
+
+def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
+    read = query.read
+    if read is ReferenceRead.MODELOS:
+        domain = TaxDomain(query.domain) if (query.domain is not None and query.domain) else None
+        return catalogue.list_modelos(year=query.year, domain=domain, operation=operation)
+    if read is ReferenceRead.SUPPORT_MATRIX:
+        return catalogue.read_support_matrix(operation=operation)
+    if read is ReferenceRead.APODERADO_SCOPES:
+        return catalogue.list_apoderado_scopes(operation=operation)
+    if read is ReferenceRead.CATEGORIES:
+        # The category vocabularies are governed facts, read under the pin.
+        return catalogue.read_ledger_categories()
+    if read is ReferenceRead.BINDINGS:
+        return _bindings(query, operation)
+    return _pinned_modelo(query, operation)
 
 
 def _unpinned(query: ReferenceQuery) -> BaseModel:

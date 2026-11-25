@@ -13,16 +13,22 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunLane,
     ModelRunOutput,
     ModelRunRefusal,
+    ModelRunTaskKind,
 )
 
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ..model_runs import current_model_run_port, operation_model_run_port, run_with_model_runs
 from ..models import OperationIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="ledger.evidence.extract", subject_ref="profile:x")
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="m")
+_LANE = ModelRunLane(
+    provider_id="example",
+    transport="cli",
+    model="m",
+    reads_off_host=True,
+)
 
 
 class _Authority:
@@ -31,8 +37,11 @@ class _Authority:
     def __init__(self) -> None:
         self.calls: list[tuple[str, OperationIdentity, int]] = []
 
-    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
-        self.calls.append(("lookup:" + role, identity, threading.get_ident()))
+    async def model_run_lookup(
+        self, identity: OperationIdentity, role: str, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
+        kind = "" if task_kind is None else ":" + task_kind.value
+        self.calls.append(("lookup:" + role + kind, identity, threading.get_ident()))
         return _LANE
 
     async def model_run(
@@ -68,6 +77,22 @@ def test_the_port_is_bound_for_the_executor_and_gone_afterwards() -> None:
 
     asyncio.run(scenario())
     assert [(name, identity) for name, identity, _ in authority.calls] == [("lookup:text_extraction", _IDENTITY)]
+
+
+def test_a_lookup_carries_its_task_kind_to_the_authority() -> None:
+    authority = _Authority()
+
+    async def executor() -> ModelRunLane | ModelRunRefusal:
+        port = current_model_run_port()
+        assert port is not None
+        return await port.lookup(ModelRole.TEXT_EXTRACTION, task_kind=ModelRunTaskKind.CLASSIFICATION)
+
+    async def scenario() -> None:
+        port = operation_model_run_port(authority, _IDENTITY)
+        assert await run_with_model_runs(port, executor()) == _LANE
+
+    asyncio.run(scenario())
+    assert [name for name, _, _ in authority.calls] == ["lookup:text_extraction:classification"]
 
 
 def test_work_on_another_loop_in_a_worker_thread_is_answered_on_the_operations_loop() -> None:

@@ -15,6 +15,10 @@ from ..schema_references import LegalReference, SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# Synthetic provenance instants: no filing exercise depends on them.
+_EFFECTIVE_FROM = date(1980, 1, 1)
+_REVIEWED_AT = date(1980, 8, 1)
+
 
 def _legal_reference_payload() -> dict[str, object]:
     return {
@@ -25,7 +29,7 @@ def _legal_reference_payload() -> dict[str, object]:
         "corpus_ref": "corpus/normatives/html/ley-58-2003.html#a1",
         "document_id": "BOE-A-2003-23186",
         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a1",
-        "effective_from": date(2004, 1, 1),
+        "effective_from": _EFFECTIVE_FROM,
         "required_text": ("Artículo 1",),
     }
 
@@ -33,7 +37,7 @@ def _legal_reference_payload() -> dict[str, object]:
 def test_pending_legal_reference_refuses_review_claims() -> None:
     payload = _legal_reference_payload() | {
         "review_status": "pending_review",
-        "reviewed_at": date(2026, 8, 1),
+        "reviewed_at": _REVIEWED_AT,
         "reviewed_by": "pending operator re-stamp",
     }
 
@@ -66,7 +70,7 @@ def test_automation_review_supplies_filing_grade_authority() -> None:
         _legal_reference_payload()
         | {
             "review_status": "agent_reviewed",
-            "reviewed_at": date(2026, 8, 1),
+            "reviewed_at": _REVIEWED_AT,
             "reviewed_by": "automation-review",
         },
     )
@@ -98,9 +102,9 @@ def test_legal_reference_preserves_https_permalink_fragment() -> None:
         corpus_ref="corpus/normatives/html/ley-58-2003.html#a1",
         document_id="BOE-A-2003-23186",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a1",
-        effective_from=date(2004, 1, 1),
+        effective_from=_EFFECTIVE_FROM,
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 8, 1),
+        reviewed_at=_REVIEWED_AT,
         reviewed_by="registry reviewer",
         required_text=("Artículo 1",),
     )
@@ -119,9 +123,9 @@ def test_legal_reference_refuses_noncanonical_permalink(permalink: str) -> None:
             corpus_ref="corpus/normatives/html/ley-58-2003.html#a1",
             document_id="BOE-A-2003-23186",
             permalink=permalink,
-            effective_from=date(2004, 1, 1),
+            effective_from=_EFFECTIVE_FROM,
             review_status="operator_reviewed",
-            reviewed_at=date(2026, 8, 1),
+            reviewed_at=_REVIEWED_AT,
             reviewed_by="registry reviewer",
             required_text=("Artículo 1",),
         )
@@ -138,7 +142,7 @@ def test_source_reference_refuses_noncanonical_source_url(source_url: str) -> No
             corpus_path="aeat/manuals/manual-2025.pdf",
             sha256="a" * 64,
             bytes=1,
-            retrieved_at=date(2026, 8, 1),
+            retrieved_at=_REVIEWED_AT,
             source_url=source_url,
             review_status="pending_review",
         )

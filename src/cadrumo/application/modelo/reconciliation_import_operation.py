@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Final, Literal, override
@@ -15,8 +16,10 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
-from ...core.hashing import canonical_json_bytes
+from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hex import HEX_PATTERN_12
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -25,8 +28,8 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.modelos.codes import ModeloCode
-from ..ledger.read_access import resolve_ledger_commit_access
+from ...domain.modelos.codes import ModeloCode, ModeloCodeText
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -38,7 +41,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -46,6 +49,7 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import CalculationRevisionNotFoundError
+from .lifecycle_view_refusal_doors import work_address_absent_verdict
 from .reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
@@ -63,7 +67,7 @@ from .reconciliation_parsing import (
 )
 from .reconciliation_records import ModeloReconciliationAdvisory, ModeloReconciliationDiff, ModeloReconciliationVerdict
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
-from .work_addressing import ModeloWorkAddressNotFoundError
+from .work_address_errors import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_unit_repository import work_unit_catalogue_repository
 
@@ -75,7 +79,7 @@ MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID = "modelo.reconcile.import"
 
 # The same ceiling the financial document readers apply to a supplied file.
 MAX_MODELO_RECONCILIATION_SOURCE_BYTES: Final = 64 * 1024 * 1024
-_SOURCE_CHANGED_REASON: Final = "changed_while_read"
+_PARSED_DIGEST_MISMATCH_REASON: Final = "parsed_digest_mismatch"
 _PHASES = (
     "modelo-reconcile-import.prepare",
     "modelo-reconcile-import.persist",
@@ -98,7 +102,7 @@ _WorkUnitLookupId = Annotated[
     str,
     Field(min_length=12, max_length=64, pattern=r"^(?:[0-9a-fA-F]{12}|[0-9a-fA-F]{64})$"),
 ]
-_ModeloSelector = Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+_ModeloSelector = ModeloCodeText
 _PeriodToken = Annotated[str, Field(min_length=1, max_length=16, pattern=r"\S")]
 _RevisionSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
 _BucketSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
@@ -169,6 +173,7 @@ class ModeloReconciliationImportProjection(BaseModel):
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     registry_snapshot_ref: ModeloVerificationRegistrySnapshotProjection | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
@@ -190,6 +195,7 @@ class ModeloReconciliationImportProjection(BaseModel):
             bucket_id=report.bucket_id,
             source_kind=report.source_kind,
             source_path=report.source_path,
+            source_pdf_sha256=report.source_pdf_sha256,
             verdict=report.verdict,
             diffs=report.diffs,
             advisories=tuple(
@@ -215,6 +221,7 @@ class ModeloReconciliationImportProjection(BaseModel):
             bucket_id=self.bucket_id,
             source_kind=self.source_kind,
             source_path=self.source_path,
+            source_pdf_sha256=self.source_pdf_sha256,
             verdict=self.verdict,
             diffs=self.diffs,
             advisories=tuple(
@@ -269,7 +276,9 @@ def _reconciliation_import_work_selector(payload: ModeloReconciliationImportRequ
     return ModeloWorkSelectorRequest(
         work_unit_id=(work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None),
         operator_work_unit_id=(
-            work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
+            work_unit_lookup
+            if work_unit_lookup is not None and re.fullmatch(HEX_PATTERN_12, work_unit_lookup)
+            else None
         ),
         modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
         filing_year=payload.filing_year,
@@ -295,12 +304,11 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
     here: it must be absolute, a regular file that is not a link out of its
     own directory, in a plain path form, and within the size ceiling.
 
-    A justificante is then parsed from the bytes read through that verified
-    handle, so replacing the path afterwards cannot change what is parsed. A
-    declaración has no path-free entry that selects its own registry design,
-    so it is parsed from the path while the verified handle stays open, and
-    the file is read through a fresh verified handle afterwards; a file that
-    no longer holds the same bytes is refused before anything is compared.
+    Both evidence kinds are then parsed from the bytes read through that
+    verified handle and never from the path again, so replacing the path
+    afterwards cannot change what is parsed. The parsed evidence must carry
+    the digest of exactly those bytes before anything is compared, and that
+    digest is retained so the caller can require the report to record it.
     """
 
     def __init__(
@@ -312,6 +320,7 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
         """Wrap the composed parser and bind the size ceiling of one source file."""
         self._parser = parser
         self._max_bytes = max_bytes
+        self.verified_sha256: str | None = None
 
     def _verified_bytes(self, source: Path) -> bytes:
         """Read ``source`` through a verified handle or raise its typed refusal."""
@@ -321,10 +330,20 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
             raise _source_refusal(content.value)
         return content
 
+    def _bind_parsed_digest(self, content: bytes, parsed_sha256: str) -> None:
+        """Refuse a parse that does not describe ``content``; otherwise retain its digest."""
+        digest = sha256_hex(content)
+        if parsed_sha256 != digest:
+            raise _source_refusal(_PARSED_DIGEST_MISMATCH_REASON)
+        self.verified_sha256 = digest
+
     @override
     def parse_justificante(self, source: Path) -> Justificante:
-        """Parse the justificante from the bytes of its verified handle."""
-        return self._parser.parse_justificante_bytes(self._verified_bytes(source))
+        """Parse the justificante from the bytes of its verified handle and bind their digest."""
+        content = self._verified_bytes(source)
+        justificante = self._parser.parse_justificante_bytes(content)
+        self._bind_parsed_digest(content, justificante.source_pdf_sha256)
+        return justificante
 
     @override
     def parse_justificante_bytes(self, source: bytes) -> Justificante:
@@ -340,19 +359,16 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
         filing_year: int,
         period: str,
     ) -> ReconciliationDeclaracionObservation:
-        """Parse the declaración between two verified reads that must agree."""
-        with opened_confined_file(source, max_bytes=self._max_bytes) as opened:
-            before = opened if isinstance(opened, HostPathRefusal) else opened.read_bytes()
-            if isinstance(before, HostPathRefusal):
-                raise _source_refusal(before.value)
-            observation = self._parser.parse_declaracion(
-                source,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-            )
-            if self._verified_bytes(source) != before:
-                raise _source_refusal(_SOURCE_CHANGED_REASON)
+        """Parse the declaración from the bytes of its verified handle and bind their digest."""
+        content = self._verified_bytes(source)
+        observation = self._parser.parse_declaracion_bytes(
+            content,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            registry_snapshot=None,
+        )
+        self._bind_parsed_digest(content, observation.source_pdf_sha256)
         return observation
 
     @override
@@ -363,7 +379,7 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
         modelo: str,
         filing_year: int,
         period: str,
-        registry_snapshot: RegistrySnapshot,
+        registry_snapshot: RegistrySnapshot | None,
     ) -> ReconciliationDeclaracionObservation:
         """Parse bytes against a :class:`RegistrySnapshot` without naming a host path."""
         return self._parser.parse_declaracion_bytes(
@@ -373,6 +389,30 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
             period=period,
             registry_snapshot=registry_snapshot,
         )
+
+
+def _require_import_projection(
+    payload: ModeloReconciliationImportRequest,
+    report: ModeloReconciliationImportProjection,
+    profile_id: str,
+    command: ModeloReconciliationCommand,
+    prepared: PreparedModeloReconciliation,
+    verified_parser: HandleVerifiedEvidenceParser,
+) -> None:
+    if (
+        report.bucket_id != profile_id
+        or report.work_unit_id != command.work_unit_id
+        or (
+            payload.calculation_revision_id is not None
+            and report.calculation_revision_id != payload.calculation_revision_id
+        )
+        or report.source_kind is not payload.source_kind
+        or report.source_path != str(command.source_path)
+        or verified_parser.verified_sha256 is None
+        or report.source_pdf_sha256 != verified_parser.verified_sha256
+        or prepared.record.source_pdf_sha256 != verified_parser.verified_sha256
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 class ModeloReconciliationImportExecutor:
@@ -397,6 +437,8 @@ class ModeloReconciliationImportExecutor:
         await context.events.phase(_PHASES[0])
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
+        verified_parser = HandleVerifiedEvidenceParser(reconciliation_evidence_parser())
+
         def prepare() -> tuple[ModeloReconciliationCommand, PreparedModeloReconciliation]:
             if require_active_bucket_id() != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -412,6 +454,11 @@ class ModeloReconciliationImportExecutor:
                 raise ModeloWorkAddressNotFoundError(
                     translated_message="errors.error.modelo_work_address_not_found",
                     context={"work_unit_present": False},
+                    precondition_verdict=work_address_absent_verdict(
+                        modelo=None if selector.modelo is None else str(selector.modelo),
+                        filing_year=selector.filing_year,
+                        unit_id_stated=selector.work_unit_id is not None or selector.operator_work_unit_id is not None,
+                    ),
                 )
             if selected_work_unit.bucket_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -424,30 +471,25 @@ class ModeloReconciliationImportExecutor:
             )
             with (
                 validating_governed_facts(context.authority_operation),
-                bind_reconciliation_evidence_parser(HandleVerifiedEvidenceParser(reconciliation_evidence_parser())),
+                bind_reconciliation_evidence_parser(verified_parser),
             ):
                 prepared = prepare_modelo_reconcile(command, operation=context.authority_operation)
             return command, prepared
 
         try:
-            command, prepared = await await_cancellation_complete(
+            outcome = await await_cancellation_complete(
                 asyncio.to_thread(prepare),
                 task_name="modelo-reconciliation-import-prepare",
             )
-        except CalculationRevisionNotFoundError as exc:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
+        except CalculationRevisionNotFoundError:
+            outcome = None
+        if outcome is None:
+            # Raised outside the handler: the denial must not chain to the lookup's
+            # served door, which would tell the caller the revision is not stored.
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        command, prepared = outcome
         report = ModeloReconciliationImportProjection.from_report(prepared.report)
-        if (
-            report.bucket_id != profile_id
-            or report.work_unit_id != command.work_unit_id
-            or (
-                payload.calculation_revision_id is not None
-                and report.calculation_revision_id != payload.calculation_revision_id
-            )
-            or report.source_kind is not payload.source_kind
-            or report.source_path != str(command.source_path)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        _require_import_projection(payload, report, profile_id, command, prepared, verified_parser)
         if len(canonical_json_bytes(report.model_dump(mode="json"))) > _MAX_RESULT_DOCUMENT_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
@@ -496,13 +538,12 @@ def resolve_modelo_reconciliation_import_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorize the local commit."""
-    payload = require_access_request_profile_payload(
+    return resolve_ledger_request_commit_access(
         request,
+        context,
         definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
-        payload_type=ModeloReconciliationImportRequest,
-        access_profile_id=context.profile_id,
+        request_type=ModeloReconciliationImportRequest,
     )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_import_registration(

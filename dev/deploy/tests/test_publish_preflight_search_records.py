@@ -14,7 +14,8 @@ The build-time parity gate now covers the property in CI. This module covers
 the OTHER instrument on the OTHER path: the preflight that runs at publish, the
 last check before bytes leave the machine.
 
-Every index here is written by REAL Pagefind over REAL built pages. The
+Every index here is written by REAL Pagefind over REAL built pages, taken from the
+English root of the run's shared documentation compile. The
 pages-only case is not simulated -- it is a genuine no-injection build, exactly
 what the misconfigured deploy produced. Hand-writing fragment bytes would have
 repeated a sibling defect from the same day, where a gate that claimed to read
@@ -35,8 +36,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
-from dev.docs.build_paths import docs_html_root
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     InjectCallback,
@@ -44,34 +44,42 @@ from dev.docs.pagefind_index import (
     build_shared_search_index,
     injected_record_kinds_in_index,
 )
+from dev.docs.tests.built_site import built_documentation_site
+from dev.paths import UTF_8
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_site_build import _write_apex_sitemap, indexed_roots
-from ..docs_site_languages import _language_site_url, _write_language_entry, localized_languages
-from ..docs_site_preflight import _require_search_index, _validate_built_site, _validate_language_roots
+from ..docs_site_build import indexed_roots, write_apex_sitemap
+from ..docs_site_languages import language_site_url, localized_languages, write_language_entry
+from ..docs_site_preflight import require_search_index, validate_built_site, validate_language_roots
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-# dev/deploy/tests -> parents[3] is the repo root.
-_REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _UTF_8 = UTF_8
 
 _PAGES = 3
 
 
+def _first_built_pages(built: Path | None = None) -> list[Path]:
+    """Return the first few pages of ``built``, the run's English root unless one is given.
+
+    A root that is absent or holds too few pages is reported as such, before an
+    empty or short corpus can masquerade as a defect in what is built from it.
+    """
+    if built is None:
+        built = built_documentation_site().language_root(OutputLanguage.EN.value)
+    if not built.is_dir():
+        pytest.fail(f"no built documentation HTML at {built}; this preflight reads a real artefact.")
+    pages = sorted(scan_directory(built, pattern="*.html"), key=lambda path: path.name)[:_PAGES]
+    if len(pages) < _PAGES:
+        pytest.fail(f"need {_PAGES} built pages under {built} to assemble a site corpus.")
+    return pages
+
+
 def _page_corpus(tmp_path: Path, name: str) -> Path:
     """Copy a few real built pages into ``name``."""
-    if not _BUILT_HTML.is_dir():
-        pytest.fail(
-            f"no built documentation HTML at {_BUILT_HTML}; this preflight reads a real "
-            "artefact, so it needs a real build to read. Run the docs build first.",
-        )
-    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]
-    if len(pages) < _PAGES:
-        pytest.fail(f"need {_PAGES} built pages under {_BUILT_HTML} to assemble a site corpus.")
+    pages = _first_built_pages()
     site = tmp_path / name
     site.mkdir(parents=True)
     for source in pages:
@@ -152,7 +160,7 @@ def test_the_pages_only_index_is_the_shape_the_old_check_waved_through(pages_onl
 def test_publish_refuses_a_pages_only_index(pages_only_site: Path) -> None:
     """The preflight REFUSES the real pages-only artefact, naming every missing kind."""
     with pytest.raises(SystemExit) as excinfo:
-        _require_search_index(pages_only_site, root_label="Docs build")
+        require_search_index(pages_only_site, root_label="Docs build")
 
     message = str(excinfo.value)
     for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
@@ -164,7 +172,7 @@ def test_publish_accepts_a_record_bearing_index(record_bearing_site: Path) -> No
     """The other half of the mutation: a correct artefact passes, unchanged."""
     assert injected_record_kinds_in_index(record_bearing_site) == DECIDED_INJECTED_RECORD_KINDS
 
-    _require_search_index(record_bearing_site, root_label="Docs build")
+    require_search_index(record_bearing_site, root_label="Docs build")
 
 
 def test_an_empty_index_is_still_refused(tmp_path: Path) -> None:
@@ -177,7 +185,7 @@ def test_an_empty_index_is_still_refused(tmp_path: Path) -> None:
     (site / "pagefind" / "index").mkdir(parents=True)
 
     with pytest.raises(SystemExit) as excinfo:
-        _require_search_index(site, root_label="Docs build")
+        require_search_index(site, root_label="Docs build")
 
     assert "no substantive generated index data" in str(excinfo.value)
 
@@ -202,7 +210,7 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
         root.mkdir(parents=True)
         (root / "index.html").write_text("<html lang='x'><body>root</body></html>", encoding="utf-8")
         (root / "404.html").write_text("<html lang='x'><body>not found</body></html>", encoding="utf-8")
-        canonical_root = f"{_language_site_url(language)}/"
+        canonical_root = f"{language_site_url(language)}/"
         (root / "sitemap.xml").write_text(
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -210,21 +218,21 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
             "</urlset>\n",
             encoding="utf-8",
         )
-    _write_language_entry(html_root)
-    _write_apex_sitemap(html_root)
+    write_language_entry(html_root)
+    write_apex_sitemap(html_root)
     (html_root / "404.html").write_text("<html lang='en'><body>not found</body></html>", encoding="utf-8")
 
-    _validate_language_roots(html_root)  # the roots themselves are complete
+    validate_language_roots(html_root)  # the roots themselves are complete
 
     with pytest.raises(SystemExit) as excinfo:
-        _validate_built_site(html_root)
+        validate_built_site(html_root)
 
     message = str(excinfo.value)
     assert "documentation site" in message, message
     assert "concept" in message
 
 
-def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = "") -> Path:
+def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = "", built: Path | None = None) -> Path:
     """Copy real built pages into ``apex/<language>``, rendered in that language.
 
     The built pages are English, and the index pass refuses a page whose
@@ -234,12 +242,14 @@ def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = ""
     the prose stays English, and prose is not the property under test here.
 
     ``subdirectory`` places the pages deeper inside the root, which is how the
-    English full-scope root carries its API reference tree.
+    English full-scope root carries its API reference tree. ``built`` replaces the
+    run's English root as the source of the pages.
     """
+    pages = _first_built_pages(built)
     root = apex / language
     destination = root / subdirectory if subdirectory else root
     destination.mkdir(parents=True, exist_ok=True)
-    for source in scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]:
+    for source in pages:
         text = source.read_text(encoding=_UTF_8, errors="replace")
         retargeted, replaced = re.subn(r'(<html[^>]*?)\blang="[^"]*"', rf'\1lang="{language}"', text, count=1)
         assert replaced == 1, f"built page {source.name} carries no <html lang> attribute to retarget"
@@ -261,6 +271,21 @@ def _indexed_pages(apex: Path) -> dict[str, set[str]]:
         for value in payload.get("filters", {}).get("language", []):
             pages.setdefault(value, set()).add(payload["url"])
     return pages
+
+
+@pytest.mark.parametrize("built_pages", [None, 0, _PAGES - 1])
+def test_a_missing_or_incomplete_build_cannot_supply_the_language_index_corpus(
+    tmp_path: Path, built_pages: int | None
+) -> None:
+    """Report a missing build before an empty index can masquerade as a filter defect."""
+    built = tmp_path / "built"
+    if built_pages is not None:
+        built.mkdir()
+        for number in range(built_pages):
+            (built / f"{number}.html").write_text("not a complete corpus", encoding=_UTF_8)
+    with pytest.raises(pytest.fail.Exception, match=r"built documentation HTML|built pages"):
+        _retargeted_page_corpus(tmp_path / "site", "en", built=built)
+    assert not (tmp_path / "site").exists()
 
 
 def test_the_site_index_addresses_every_root_by_the_directory_it_is_served_from(tmp_path: Path) -> None:
@@ -307,7 +332,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     Equality rather than a superset, because a floor cannot see an ADDITION.
     ``>=`` held for every member the enum could ever gain, so a sixth kind
     would land in a remainder no gate measures: not required by
-    ``_require_search_index``, not held out by name, and so free to be absent
+    ``require_search_index``, not held out by name, and so free to be absent
     from a published index while the preflight stayed green -- the pages-only
     shape this set exists to reject, one surface narrower.
     """
@@ -316,7 +341,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     held_out = {SearchRecordKind.PAGE.value}
     assert {kind.value for kind in SearchRecordKind} == DECIDED_INJECTED_RECORD_KINDS | held_out, (
         "every SearchRecordKind member must be either required in a published index or held out by "
-        "name here. A member in neither set is measured by nothing: _require_search_index would not "
+        "name here. A member in neither set is measured by nothing: require_search_index would not "
         "demand it, so a site carrying no record of that kind publishes green. Add the kind to "
         "DECIDED_INJECTED_RECORD_KINDS, or hold it out above with the reason it cannot be required."
     )

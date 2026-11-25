@@ -11,10 +11,12 @@ from pydantic import ValidationError
 
 from ..formula_runtime_ops import resolve_parameter
 from ..schema_formula import DatedValue, ParameterDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ScalarParameterType = Literal["decimal", "money", "integer", "ratio", "text", "boolean"]
+_YEAR = filing_year_envelope().horizon
 _LEGAL_REF = "ley-35-2006:art-63"
 _SOURCE_REF = "aeat-renta-2024-manual-parte1"
 
@@ -45,10 +47,10 @@ def test_populated_scalar_parameter_resolves_through_the_runtime_contract() -> N
             DatedValue(
                 value=Decimal("19"),
                 date_axis="devengo_date",
-                valid_from=date(2025, 1, 1),
-                valid_to=date(2025, 12, 31),
+                valid_from=date(_YEAR, 1, 1),
+                valid_to=date(_YEAR, 12, 31),
             ),
         ),
     )
 
-    assert resolve_parameter(parameter, {"devengo_date": date(2025, 6, 30)}) == Decimal("19")
+    assert resolve_parameter(parameter, {"devengo_date": date(_YEAR, 6, 30)}) == Decimal("19")

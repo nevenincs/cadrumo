@@ -40,8 +40,6 @@ modelo:
           dr303-11:
             label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
               ÁFA - adóösszeg
-          dr303-111:
-            label: Helyesbítő bevallás - helyesbítés összege
           dr303-112:
             help: Az államnak betudott, benzin, gázolaj és bioüzemanyag értékesítése
               utáni elszámolt előleg
@@ -223,9 +221,6 @@ modelo:
             label: Közös adózás éves korrekciós eredménye
           dr303-70:
             label: Ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek
-          dr303-71:
-            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-              véve.
           dr303-74:
             label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések adóalapja
           dr303-75:
@@ -256,6 +251,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Az ingatlanfejlesztő önfogyasztásának adóalapja szupercsökkentett
               kulccsal (4%) (a hivatalos 01. rovat része)
+          iva-base-autorepercutida-interior-devengado:
+            label: Keletkezett fordított adózású ÁFA adóalapja belföldi ügyleteknél
+              (LIVA 84. cikk Uno.2.; hivatalos 12. rovat)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
               adóalapot.
@@ -273,6 +271,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-jának
               adóalapja (a hivatalos 30. rovat része)
+          iva-base-modificacion-bases-cuotas:
+            label: Az időszak helyesbítő számláiból eredő módosítás adóalapja (LIVA
+              80. és 89. cikk; hivatalos 14. rovat)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Az általad megadott módosítás adóalapja, arra, amihez a katalógusban
+              nincs dokumentum (hivatalos 14. rovat)
           iva-base-repercutida-general:
             label: Felszámított ÁFA adóalapja általános kulccsal (21%) (a hivatalos
               07. rovat része)
@@ -326,6 +330,18 @@ modelo:
               önfogyasztásával együtt (hivatalos 03. rovat)
           iva-cuota-devengada-total:
             label: Összes keletkezett ÁFA összeg
+          iva-cuota-modificacion-bases-cuotas:
+            label: Az időszak helyesbítő számláiból eredő módosítás adója (LIVA 80.
+              és 89. cikk; hivatalos 15. rovat)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Az általad megadott módosítás adója, arra, amihez a katalógusban
+              nincs dokumentum (hivatalos 15. rovat)
+          iva-cuota-modificacion-recargo:
+            label: Az időszak helyesbítő számláiból eredő egyenértékűségi felár-módosítás
+              összege (LIVA 80. és 161. cikk; hivatalos 26. rovat)
+          iva-cuota-modificacion-recargo-operador:
+            label: Az általad megadott egyenértékűségi felár-módosítás összege, arra,
+              amihez a katalógusban nincs dokumentum (hivatalos 26. rovat)
           iva-cuota-repercutida-general:
             help: A 21%-os általános kulccsal számított felszámított IVA teljes összege.
             label: Felszámított ÁFA összeg általános kulccsal (21%)
@@ -351,6 +367,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-ja
               (a hivatalos 31. rovat része)
+          iva-importe-rectificacion:
+            label: Helyesbítő bevallás - helyesbítés összege
           iva-prorrata-porcentaje:
             label: Általános levonási hányad százaléka (levonásra jogosító volumen
               / teljes volumen × 100)
@@ -358,6 +376,10 @@ modelo:
             label: Levonási jogot keletkeztető éves ügyletvolumen
           iva-prorrata-volumen-total:
             label: Az ügyletek éves teljes volumene
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Átmeneti egyenértékűségi felár a csökkentett kulcs után - adóösszeg
+          iva-recargo-equivalencia-super-reducido:
+            label: Egyenértékűségi felár a szupercsökkentett 4%-os kulcs után - adóösszeg
           iva-rectificacion-deducciones-importaciones-base:
             label: Importok levonásainak helyesbítése - Adóalap (a hivatalos 40. rovat
               része)
@@ -379,6 +401,9 @@ modelo:
           iva-regularizacion-inversiones:
             label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-resultado-autoliquidacion:
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
+          iva-resultado-final:
             help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           iva-resultado-regimen-general:
@@ -820,6 +845,8 @@ modelo:
             heading: Befizetés, visszatérítés és bankszámla
           pais-banco:
             heading: Országkód
+          prorrata-especial-no:
+            heading: Nem / ebben az időszakban nincs ilyen kérdés
           reagp:
             heading: Mezőgazdasági, állattenyésztési és halászati rendszer kompenzációja
           rectificacion-devolucion:

@@ -306,7 +306,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         The caller hands the returned
         :class:`~core.secure_object_write.SecureObjectWrite` to
-        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+        :meth:`adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         (or ``apply_batch``) alongside a sibling repository's write, so both
         land in ONE SQL unit of work and a crash between them is impossible.
         That is the same co-emit shape the filing path already uses to keep the
@@ -336,7 +336,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         The deletion counterpart of :meth:`to_secure_object_write`, so a caller
         that must remove some rows and write others can hand both to
-        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+        :meth:`adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
         and land the whole change in ONE SQL unit of work.
         :class:`adapters.persistence.storage.sql.secure_object_records.SecureObjectDeletion` addresses a
         row by its stored HMAC digest, so the natural id is bound here with the
@@ -372,13 +372,27 @@ class SecureBoundRepository[T: BaseModel]:
     # Enumeration
     # ------------------------------------------------------------------
 
+    def _holds_row(self, stored_payload: bytes) -> bool:
+        """Return whether one decrypted row of the namespace belongs to this repository.
+
+        Every row belongs to the repository unless two payload types share one
+        namespace. Such a repository narrows the scan here, never by replacing
+        :meth:`_iter_validated_rows`, so each row it keeps still passes the
+        shared classification and version gate. A row it declines is never
+        decoded as this repository's payload.
+        """
+        del stored_payload
+        return True
+
     def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[T]]]:
-        """Yield each stored row beside its classification/version-validated envelope."""
+        """Yield each stored row this repository holds beside its classification/version-validated envelope."""
         for record in self._objects.list_records(
             self.namespace,
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
+            if not self._holds_row(record.payload):
+                continue
             yield record, self._validate_envelope(record.payload, subject=f"{self.namespace} iterator row")
 
     def _iter_identified_payloads(self) -> Iterator[tuple[str, T]]:

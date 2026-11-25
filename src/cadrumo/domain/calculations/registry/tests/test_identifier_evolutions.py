@@ -11,16 +11,18 @@ from ..identifier_evolutions import (
     RetiredIdentifierEvolution,
 )
 from ..schema import ModeloRevision
+from .authored_editions import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISION = str(authored_revisions("100")[-1].id)
 _ADAPTER = TypeAdapter(IdentifierEvolution)
 _REFS = {"legal_refs": ("ley-35-2006:art-50",), "source_refs": ("aeat-manual",)}
 
 
 def test_retired_round_trips_through_discriminator() -> None:
     evolution = _ADAPTER.validate_python(
-        {"kind": "retired", "family": "bindings", "identifier": "renta-anterior", "to_revision": "2025", **_REFS}
+        {"kind": "retired", "family": "bindings", "identifier": "renta-anterior", "to_revision": _REVISION, **_REFS}
     )
     assert isinstance(evolution, RetiredIdentifierEvolution)
     assert _ADAPTER.validate_python(evolution.model_dump()) == evolution
@@ -33,7 +35,7 @@ def test_replaced_names_both_identifiers() -> None:
             "family": "formulas",
             "identifier": "old",
             "replaced_by": "new",
-            "to_revision": "2025",
+            "to_revision": _REVISION,
             **_REFS,
         },
     )
@@ -47,7 +49,7 @@ def test_replacement_by_itself_is_refused() -> None:
             family="bindings",
             identifier="same",
             replaced_by="same",
-            to_revision="2025",
+            to_revision=_REVISION,
             legal_refs=_REFS["legal_refs"],
             source_refs=_REFS["source_refs"],
         )
@@ -56,7 +58,7 @@ def test_replacement_by_itself_is_refused() -> None:
 def test_unknown_kind_is_refused() -> None:
     with pytest.raises(ValidationError):
         _ADAPTER.validate_python(
-            {"kind": "renamed", "family": "bindings", "identifier": "x", "to_revision": "2025", **_REFS}
+            {"kind": "renamed", "family": "bindings", "identifier": "x", "to_revision": _REVISION, **_REFS}
         )
 
 
@@ -71,7 +73,7 @@ def test_family_name_is_a_collection_token() -> None:
         RetiredIdentifierEvolution(
             family="Bindings!",
             identifier="x",
-            to_revision="2025",
+            to_revision=_REVISION,
             legal_refs=_REFS["legal_refs"],
             source_refs=_REFS["source_refs"],
         )

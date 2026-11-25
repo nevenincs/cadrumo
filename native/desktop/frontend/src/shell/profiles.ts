@@ -5,11 +5,12 @@
 // profile the status names and sends everything else to the TUI.
 
 import type {
+  PasswordChangeResult,
   ProfileChoice,
   ProfileCreateResult,
   ProfileList,
   ProfileDeleteReview,
-} from "../ipc/contract";
+} from "../ipc/account";
 
 export interface ProfileAccounts {
   list(): Promise<ProfileList>;
@@ -22,6 +23,24 @@ export interface ProfileAccounts {
     confirmation: string,
     acknowledged: boolean,
   ): Promise<void>;
+  /** Changes the signed-in profile's password. The passwords are consumed,
+   * and zeroed, by this one call; nothing retries it. */
+  changePassword?(passwords: Uint8Array): Promise<PasswordChangeResult>;
+}
+
+/** The one document a password change sends, as UTF-8 bytes for the host. */
+export function passwordChange(
+  current: string,
+  next: string,
+  confirmation: string,
+): Uint8Array {
+  return new TextEncoder().encode(
+    JSON.stringify({
+      current_passphrase: current,
+      new_passphrase: next,
+      new_passphrase_confirmation: confirmation,
+    }),
+  );
 }
 
 /** The product's own bounds, so that what it would refuse is said before

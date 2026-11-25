@@ -7,17 +7,17 @@ from typing import TYPE_CHECKING
 from textual.actions import SkipAction
 from textual.widgets import OptionList
 
+from .....application.modelo.work_form_wording import aeat_imported_on
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, Density
 from .navigator import checked_boxes, page_counts
 from .page_items import page_items
 from .screen_constants import (
-    _FILTER_ORDER,
+    FILTER_ORDER,
 )
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
 from .sorting import SortOrder, next_order
-from .vocabulary import aeat_imported_on
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -40,8 +40,8 @@ class WorkbenchNavigationMixin:
 
     def action_cycle_filter(self: ModeloWorkbenchScreen) -> None:
         """Show all fields, then only what needs attention, then only the filer's own values."""
-        position = _FILTER_ORDER.index(self._filter)
-        self._filter = _FILTER_ORDER[(position + 1) % len(_FILTER_ORDER)]
+        position = FILTER_ORDER.index(self._filter)
+        self._filter = FILTER_ORDER[(position + 1) % len(FILTER_ORDER)]
         self._render_page()
 
     def action_cycle_sort(self: ModeloWorkbenchScreen) -> None:
@@ -101,7 +101,7 @@ class WorkbenchNavigationMixin:
         if self._sort is SortOrder.FORM and self._pages and self._advance_to_page_attention(casilla_list, direction):
             return
         if direction > 0:
-            self._notice(tr("tui.modelo.workbench.browse.last_to_do", action=self._next_words))
+            self._notice(tr("workspace.modelo.browse.last_to_do", action=self._next_words))
 
     def _advance_to_page_attention(self: ModeloWorkbenchScreen, casilla_list: CasillaList, direction: int) -> bool:
         for index in self._attention_page_indices(direction):

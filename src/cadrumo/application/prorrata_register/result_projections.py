@@ -10,26 +10,24 @@ from pydantic import BaseModel
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..operations.models import OperationTerminalReceipt
-from . import operation_requests as _requests
-from . import result_contracts as _contracts
+from . import operation_requests, result_contracts
 from .projection_contracts import (
-    ProrrataEntryProjection as _ProrrataEntryProjection,
-)
-from .projection_contracts import (
-    ProrrataListProjection as _ProrrataListProjection,
-)
-from .projection_contracts import (
-    ProrrataMutationProjection as _ProrrataMutationProjection,
-)
-from .projection_contracts import (
-    ProrrataSectorDefinitionProjection as _ProrrataSectorDefinitionProjection,
+    GROSS_DECLARATION_OPERATION_IDS,
+    ProrrataEntryProjection,
+    ProrrataGrossDeclarationProjection,
+    ProrrataListedEntryProjection,
+    ProrrataListProjection,
+    ProrrataMutationProjection,
+    ProrrataSectorDefinitionProjection,
 )
 
 
-def _copy_private_result(result: BaseModel) -> _contracts.ProrrataOperationExecutionResult:
-    if type(result) is not _contracts.ProrrataOperationExecutionResult:
+def _copy_private_result(result: BaseModel) -> result_contracts.ProrrataOperationExecutionResult:
+    if type(result) is not result_contracts.ProrrataOperationExecutionResult:
         raise ValueError("prorrata execution result has an incompatible type")
-    return _contracts.ProrrataOperationExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
+    return result_contracts.ProrrataOperationExecutionResult.model_validate(
+        result.model_dump(mode="python"), strict=True
+    )
 
 
 def _profile_id_from_receipt(receipt: OperationTerminalReceipt, *, definition_id: str) -> UUID:
@@ -51,7 +49,7 @@ def _receipt_matches(
     definition_id: str,
     profile_id: UUID,
     outcome: Literal["success", "refused"],
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     refusal_code: str | None = None,
 ) -> None:
     refused = outcome == "refused"
@@ -102,7 +100,7 @@ def _receipt_outcome_matches(
 
 
 def _require_list_result(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     *,
     profile_id: UUID,
 ) -> None:
@@ -111,19 +109,20 @@ def _require_list_result(
 
 
 def _list_result_identity_matches(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     profile_id: UUID,
 ) -> bool:
     return private.operation_id == "list" and private.profile_id == profile_id and private.outcome == "success"
 
 
-def _list_result_payload_is_closed(private: _contracts.ProrrataOperationExecutionResult) -> bool:
+def _list_result_payload_is_closed(private: result_contracts.ProrrataOperationExecutionResult) -> bool:
     register = private.register_snapshot
     return (
         register is not None
         and private.count == len(register.entries)
         and private.entry is None
         and private.sector_definition is None
+        and private.gross_declaration is None
         and private.seed_source is None
         and not private.findings
         and private.refusal is None
@@ -134,14 +133,16 @@ def project_prorrata_list_result(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
     /,
-) -> _ProrrataListProjection:
+) -> ProrrataListProjection:
     """Project every persisted entry and sector from an exact-profile list result."""
     private = _copy_private_result(result)
-    profile_id = _profile_id_from_receipt(receipt, definition_id=_requests.PRORRATA_LIST_OPERATION_DEFINITION_ID)
+    profile_id = _profile_id_from_receipt(
+        receipt, definition_id=operation_requests.PRORRATA_LIST_OPERATION_DEFINITION_ID
+    )
     _require_list_result(private, profile_id=profile_id)
     _receipt_matches(
         receipt,
-        definition_id=_requests.PRORRATA_LIST_OPERATION_DEFINITION_ID,
+        definition_id=operation_requests.PRORRATA_LIST_OPERATION_DEFINITION_ID,
         profile_id=profile_id,
         outcome="success",
         operation_id="list",
@@ -149,22 +150,33 @@ def project_prorrata_list_result(
     register = private.register_snapshot
     if register is None:
         raise ValueError("prorrata list result has an incompatible payload")
-    return _ProrrataListProjection(
+    return ProrrataListProjection(
         profile_id=profile_id,
-        entries=tuple(_ProrrataEntryProjection.from_entry(entry) for entry in register.entries),
+        entries=tuple(
+            ProrrataListedEntryProjection(
+                **dict(ProrrataEntryProjection.from_entry(entry)),
+                reference_id=reference.reference_id if reference is not None else None,
+                reference_kind=reference.kind if reference is not None else None,
+            )
+            for entry, reference in zip(register.entries, private.listed_references, strict=True)
+        ),
         sectors=tuple(
-            _ProrrataSectorDefinitionProjection.from_definition(sector) for sector in register.sector_definitions
+            ProrrataSectorDefinitionProjection.from_definition(sector) for sector in register.sector_definitions
+        ),
+        gross_declarations=tuple(
+            ProrrataGrossDeclarationProjection.from_declaration(declaration)
+            for declaration in register.gross_declarations
         ),
         count=len(register.entries),
     )
 
 
 def _mutation_identity(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     receipt: OperationTerminalReceipt,
-) -> tuple[str, UUID, _requests.ProrrataOperationId]:
+) -> tuple[str, UUID, operation_requests.ProrrataOperationId]:
     definition_id = receipt.identity.definition_id
-    contract = _contracts.prorrata_operation_contract(definition_id)
+    contract = result_contracts.prorrata_operation_contract(definition_id)
     if contract is None or contract.operation_id == "list":
         raise ValueError("prorrata mutation result has an unknown operation definition")
     operation_id = contract.operation_id
@@ -175,15 +187,15 @@ def _mutation_identity(
 
 
 def _refused_mutation_projection(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     receipt: OperationTerminalReceipt,
     *,
     definition_id: str,
     profile_id: UUID,
-    operation_id: _requests.ProrrataOperationId,
-) -> _ProrrataMutationProjection:
+    operation_id: operation_requests.ProrrataOperationId,
+) -> ProrrataMutationProjection:
     refusal = private.refusal
-    contract = _contracts.prorrata_operation_contract(definition_id)
+    contract = result_contracts.prorrata_operation_contract(definition_id)
     if contract is None or refusal is None or refusal.code not in contract.refusal_codes:
         raise ValueError("prorrata refusal result has an unregistered code")
     _receipt_matches(
@@ -194,7 +206,7 @@ def _refused_mutation_projection(
         operation_id=operation_id,
         refusal_code=refusal.code,
     )
-    return _ProrrataMutationProjection(
+    return ProrrataMutationProjection(
         operation_id=operation_id,
         profile_id=profile_id,
         outcome="refused",
@@ -203,12 +215,12 @@ def _refused_mutation_projection(
 
 
 def _require_success_mutation_result(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     receipt: OperationTerminalReceipt,
     *,
     definition_id: str,
     profile_id: UUID,
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
 ) -> tuple[ProrrataRegister, int]:
     _receipt_matches(
         receipt,
@@ -223,12 +235,12 @@ def _require_success_mutation_result(
 
 
 def _project_sector_declaration_result(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     *,
     profile_id: UUID,
     register: ProrrataRegister,
     count: int,
-) -> _ProrrataMutationProjection:
+) -> ProrrataMutationProjection:
     sector = private.sector_definition
     if (
         sector is None
@@ -237,23 +249,47 @@ def _project_sector_declaration_result(
         or not any(row == sector for row in register.sector_definitions)
     ):
         raise ValueError("prorrata sector result contradicts the committed register")
-    return _ProrrataMutationProjection(
+    return ProrrataMutationProjection(
         operation_id="declare_sector",
         profile_id=profile_id,
         outcome="success",
-        sector_definition=_ProrrataSectorDefinitionProjection.from_definition(sector),
+        sector_definition=ProrrataSectorDefinitionProjection.from_definition(sector),
+        count=count,
+    )
+
+
+def _project_gross_declaration_result(
+    private: result_contracts.ProrrataOperationExecutionResult,
+    *,
+    profile_id: UUID,
+    operation_id: operation_requests.ProrrataOperationId,
+    register: ProrrataRegister,
+    count: int,
+) -> ProrrataMutationProjection:
+    declaration = private.gross_declaration
+    if declaration is None or private.entry is not None or private.sector_definition is not None:
+        raise ValueError("prorrata gross declaration result has an incompatible payload")
+    held = register.gross_declaration_for(declaration.period, sector_id=declaration.sector_id)
+    committed = held == declaration if operation_id == "declare_gross" else held is None
+    if count != len(register.gross_declarations) or not committed:
+        raise ValueError("prorrata gross declaration result contradicts the committed register")
+    return ProrrataMutationProjection(
+        operation_id=operation_id,
+        profile_id=profile_id,
+        outcome="success",
+        gross_declaration=ProrrataGrossDeclarationProjection.from_declaration(declaration),
         count=count,
     )
 
 
 def _project_entry_mutation_result(
-    private: _contracts.ProrrataOperationExecutionResult,
+    private: result_contracts.ProrrataOperationExecutionResult,
     *,
     profile_id: UUID,
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     register: ProrrataRegister,
     count: int,
-) -> _ProrrataMutationProjection:
+) -> ProrrataMutationProjection:
     entry = private.entry
     if (
         entry is None
@@ -266,11 +302,11 @@ def _project_entry_mutation_result(
         raise ValueError("whole-entity prorrata seed omitted source identity")
     if operation_id != "seed" and private.seed_source is not None:
         raise ValueError("non-seed prorrata result contains source identity")
-    return _ProrrataMutationProjection(
+    return ProrrataMutationProjection(
         operation_id=operation_id,
         profile_id=profile_id,
         outcome="success",
-        entry=_ProrrataEntryProjection.from_entry(entry),
+        entry=ProrrataEntryProjection.from_entry(entry),
         seed_source=private.seed_source,
         findings=private.findings,
         prior_ejercicio=private.prior_ejercicio,
@@ -282,7 +318,7 @@ def project_prorrata_mutation_result(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
     /,
-) -> _ProrrataMutationProjection:
+) -> ProrrataMutationProjection:
     """Project one complete mutation result or its accurate NONE-effect refusal."""
     private = _copy_private_result(result)
     definition_id, profile_id, operation_id = _mutation_identity(private, receipt)
@@ -301,6 +337,14 @@ def project_prorrata_mutation_result(
         profile_id=profile_id,
         operation_id=operation_id,
     )
+    if operation_id in GROSS_DECLARATION_OPERATION_IDS:
+        return _project_gross_declaration_result(
+            private,
+            profile_id=profile_id,
+            operation_id=operation_id,
+            register=register,
+            count=count,
+        )
     if operation_id == "declare_sector":
         return _project_sector_declaration_result(
             private,

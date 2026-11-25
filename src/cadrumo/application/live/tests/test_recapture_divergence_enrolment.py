@@ -19,7 +19,7 @@ import inspect
 
 import pytest
 
-from ..filed_data_capture import FiledCaptureAccumulator
+from ..filed_capture_accumulator import FiledCaptureAccumulator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,7 +62,10 @@ class TestTheDivergenceIsReadBeforeThePersist:
         module = importlib.import_module("..filed_data_capture", package=__package__)
         assert module.__file__ is not None
         source = Path(module.__file__).read_text(encoding="utf-8")
-        assert source.count(".persist_observation(") == 1, (
+        accumulator_module = importlib.import_module("..filed_capture_accumulator", package=__package__)
+        assert accumulator_module.__file__ is not None
+        accumulator_source = Path(accumulator_module.__file__).read_text(encoding="utf-8")
+        assert (source + accumulator_source).count(".persist_observation(") == 1, (
             "persist_observation is called outside the accumulator funnel; that "
             "path upserts without reading the divergence first"
         )

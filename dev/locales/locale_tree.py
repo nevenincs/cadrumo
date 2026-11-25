@@ -5,17 +5,17 @@ from collections.abc import Mapping, Sequence
 from cadrumo.core.product_identity import normalise_product_identity_references
 
 from .errors import LocaleError
-from .locale_nodes import _MISSING_LOCALE_LEAF, _MODELO_SCHEMA_PREFIX, LocaleNode, _MissingLocaleLeaf
+from .locale_nodes import MISSING_LOCALE_LEAF, MODELO_SCHEMA_PREFIX, LocaleNode, MissingLocaleLeaf
 
 
-def _apply_mapping_edits(
+def apply_mapping_edits(
     data: dict[str, LocaleNode],
     edits: Mapping[str, str | None],
     removals: Sequence[str],
 ) -> None:
     """Set every edit and delete every removal inside one parsed catalogue mapping."""
     for dotted_key, value in sorted(edits.items()):
-        _set_nested_leaf(data, dotted_key, value)
+        set_nested_leaf(data, dotted_key, value)
     for dotted_key in sorted(removals):
         parts = dotted_key.split(".")
         cursor: LocaleNode = data
@@ -25,12 +25,12 @@ def _apply_mapping_edits(
             cursor = cursor[part]
         else:
             if not isinstance(cursor, dict):
-                parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+                parent = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
                 del parent[parts[-1]]
                 _prune_empty_namespaces(data, parts[:-1])
 
 
-def _collect_required_leaves(
+def collect_required_leaves(
     keys: set[str],
     existing_data: dict[str, LocaleNode],
 ) -> dict[str, LocaleNode]:
@@ -68,21 +68,21 @@ def _collect_required_leaves(
     resolved: dict[str, LocaleNode] = {}
     for key in keys:
         leaf = _resolve_leaf(existing_data, key.split("."))
-        if leaf is not _MISSING_LOCALE_LEAF:
+        if leaf is not MISSING_LOCALE_LEAF:
             resolved[key] = leaf
-        elif key.startswith(_MODELO_SCHEMA_PREFIX):
+        elif key.startswith(MODELO_SCHEMA_PREFIX):
             resolved[key] = None
     return resolved
 
 
-def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | _MissingLocaleLeaf:
+def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | MissingLocaleLeaf:
     """Walk ``parts`` and distinguish an authored null from a missing leaf."""
     curr: LocaleNode = existing_data
     for part in parts:
         if not isinstance(curr, dict) or part not in curr:
-            return _MISSING_LOCALE_LEAF
+            return MISSING_LOCALE_LEAF
         curr = curr[part]
-    return _MISSING_LOCALE_LEAF if isinstance(curr, dict) else curr
+    return MISSING_LOCALE_LEAF if isinstance(curr, dict) else curr
 
 
 def _prune_empty_namespaces(root: dict[str, LocaleNode], parts: list[str]) -> None:
@@ -107,7 +107,7 @@ def _prune_empty_namespaces(root: dict[str, LocaleNode], parts: list[str]) -> No
         del cursor[parts[depth - 1]]
 
 
-def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
+def set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
     """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
     parts = dotted_key.split(".")
     curr: dict[str, LocaleNode] = root
@@ -120,7 +120,7 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
     curr[parts[-1]] = value
 
 
-def _resolve_leaf_parent(
+def resolve_leaf_parent(
     data: dict[str, LocaleNode],
     parts: list[str],
     *,
@@ -163,41 +163,41 @@ def _resolve_leaf_parent(
 def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
     """Recursively normalize stale human-command references."""
     if isinstance(value, dict):
-        return _normalise_product_identity_mapping(value)
+        return normalise_product_identity_mapping(value)
     if isinstance(value, str):
         return normalise_product_identity_references(value)
     return value
 
 
-def _normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[str, LocaleNode]:
+def normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[str, LocaleNode]:
     """Normalize a locale mapping while preserving its mapping type."""
     return {key: _normalise_product_identity_node(child) for key, child in value.items()}
 
 
-def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str | None]:
+def flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str | None]:
     """Return leaf locale values keyed by dotted path."""
     flattened: dict[str, str | None] = {}
     for key, value in mapping.items():
         path = f"{prefix}.{key}" if prefix else str(key)
         if isinstance(value, dict):
-            flattened.update(_flatten_leaf_values(value, path))
+            flattened.update(flatten_leaf_values(value, path))
         else:
             flattened[path] = value
     return flattened
 
 
-def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, object]:
+def flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, object]:
     """Flatten parsed YAML without coercing invalid scalar types to strings."""
     if isinstance(value, dict):
         flattened: dict[str, object] = {}
         for key, child in value.items():
             path = f"{prefix}.{key}" if prefix else str(key)
-            flattened.update(_flatten_raw_locale_leaves(child, path))
+            flattened.update(flatten_raw_locale_leaves(child, path))
         return flattened
     return {prefix or "<root>": value}
 
 
-def _set_locale_mapping_value(data: dict[str, LocaleNode], dotted_key: str, raw_value: str | None) -> None:
+def set_locale_mapping_value(data: dict[str, LocaleNode], dotted_key: str, raw_value: str | None) -> None:
     """Set locale mapping value."""
     parts = dotted_key.split(".")
     if not dotted_key or any(not part for part in parts):
@@ -210,10 +210,10 @@ def _set_locale_mapping_value(data: dict[str, LocaleNode], dotted_key: str, raw_
         if not raw_value.strip():
             raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
         value = normalise_product_identity_references(raw_value)
-    _set_nested_leaf(data, dotted_key, value)
+    set_nested_leaf(data, dotted_key, value)
 
 
-def _remove_existing_locale_leaf(data: dict[str, LocaleNode], parts: list[str], dotted_key: str) -> None:
+def remove_existing_locale_leaf(data: dict[str, LocaleNode], parts: list[str], dotted_key: str) -> None:
     """Remove existing locale leaf."""
     cursor: LocaleNode = data
     for part in parts:
@@ -223,12 +223,12 @@ def _remove_existing_locale_leaf(data: dict[str, LocaleNode], parts: list[str], 
     if isinstance(cursor, dict):
         raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
 
-    parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+    parent = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
     del parent[parts[-1]]
     _prune_empty_namespaces(data, parts[:-1])
 
 
-def _remove_optional_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -> None:
+def remove_optional_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -> None:
     """Remove optional locale leaf."""
     parts = dotted_key.split(".")
     cursor: LocaleNode = data
@@ -238,12 +238,12 @@ def _remove_optional_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -
         cursor = cursor[part]
     else:
         if not isinstance(cursor, dict):
-            parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+            parent = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
             del parent[parts[-1]]
             _prune_empty_namespaces(data, parts[:-1])
 
 
-def _remove_required_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -> None:
+def remove_required_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -> None:
     """Remove required locale leaf."""
     parts = dotted_key.split(".")
     if not dotted_key or any(not part for part in parts):
@@ -256,6 +256,6 @@ def _remove_required_locale_leaf(data: dict[str, LocaleNode], dotted_key: str) -
     if isinstance(cursor, dict):
         raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
 
-    parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+    parent = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
     del parent[parts[-1]]
     _prune_empty_namespaces(data, parts[:-1])

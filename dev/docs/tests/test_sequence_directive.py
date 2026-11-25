@@ -29,6 +29,8 @@ from typing import Any
 import pytest
 from sphinx.application import Sphinx
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..sequence_directive import (
     build_sequence_payload,
     inline_sequence_payload,
@@ -43,16 +45,17 @@ from ..sequences.tokeniser import TokenKind, tokenise_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
+_YEAR = str(filing_year_envelope().horizon)
 _SEQUENCE_ID = "modelo-303-first-quarter"
 _PAGE = "index"
 
 _DIRECTIVE_BODY = """:verify: Verify the calculation before exporting.
 @setup aeat app ledger import --file fixtures/x.csv
-aeat app modelo work create 303 --year 2026 --period 1T
+aeat app modelo work create 303 --year @YEAR@ --period 1T
 @capture work_unit_id result.work_unit_id
 aeat app modelo work calculate {work_unit_id}
 @result aeat app modelo work verify {work_unit_id}
-@expect result.status == "verified_complete\""""
+@expect result.status == "verified_complete\"""".replace("@YEAR@", _YEAR)
 
 
 def _parsed_sequence() -> ParsedSequence:
@@ -81,7 +84,7 @@ def _golden() -> SequenceGolden:
             ),
             GoldenFrame(
                 kind=FrameKind.COMMAND,
-                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
+                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"),
                 exit_code=0,
                 envelope={
                     "schema_version": 1,
@@ -401,16 +404,16 @@ def _build(root: Path, *, warningiserror: bool) -> tuple[str, str]:
     return html, warning.getvalue()
 
 
-from ._sequence_storage_fixtures import _isolated_sequence_storage
+from .sequence_storage_fixtures import isolated_sequence_storage
 
-__all__ = ["_isolated_sequence_storage"]
+__all__ = ["isolated_sequence_storage"]
 
 _INDEX_WITH_DIRECTIVE = (
     f"# Modelo 303\n\n```{{cli-sequence}} {_SEQUENCE_ID}\n:verify: Verify the calculation before exporting.\n```\n"
 )
 
 
-def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_directive_build_renders_frames_and_payload(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """A real Sphinx build renders the static frames plus one inline payload, no-JS complete."""
     site = tmp_path / "site"
     site.mkdir()
@@ -457,7 +460,7 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     assert "verified_complete" in html.partition('class="cadrumo-sequence-payload"')[0]
 
 
-def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """A directive with no committed golden fails the build naming the refresh command."""
     site = tmp_path / "site"
     site.mkdir()
@@ -483,7 +486,7 @@ _INDEX_LIVE_AEAT = "# Pull\n\n```{cli-sequence} live-pull-demo\n:verify: Confirm
 _CONTRACT_LIVE_AEAT = "@result aeat app live justificante pull\n@expect exit_code == 0"
 
 
-def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """A live-AEAT command in an EXECUTED frame is refused at build time.
 
     The refusal fires statically, before any golden is read, so an ``app live``
@@ -514,14 +517,12 @@ _INDEX_PAYLOAD_LESS = "# List\n\n```{cli-sequence} payload-less-demo\n:verify: C
 _CONTRACT_PAYLOAD_LESS = "@result aeat app modelo work list\n@expect exit_code == 0"
 
 
-def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """An enrolled @result frame asserting only exit_code is refused at build time.
 
     This proves the WIRING, not just the refusal: the editorial payload contract
     is only worth anything if the directive — the boundary that admits a sequence
-    as published documentation — actually calls it. The contract previously lived
-    only in a predicate whose sole caller was a test reading a committed baseline,
-    so when that baseline was deleted it stopped protecting anything silently.
+    as published documentation — actually calls it.
 
     Like the live-AEAT refusal above, it fires before the golden lookup, so the
     author sees the real fault rather than a missing-golden error.
@@ -553,7 +554,7 @@ def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, _isolated
 
 def test_short_command_is_not_wrapped() -> None:
     """A command that fits in the width budget renders on a single line."""
-    tokens = ["aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"]
+    tokens = ["aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"]
     lines = wrap_token_lines(tokens)
     assert lines == [list(range(len(tokens)))]
 
@@ -570,7 +571,7 @@ def test_long_command_wraps_at_token_boundaries_and_reassembles() -> None:
         "--provider",
         "caixabank",
         "--year",
-        "2026",
+        _YEAR,
         "--period",
         "1T",
         "--verbose",
@@ -622,7 +623,7 @@ def _wrapping_golden(sequence_id: str) -> SequenceGolden:
 
 _LONG_BODY = (
     "@result aeat app ledger import --file fixtures/2026-first-quarter-bank-statement.csv "
-    "--provider caixabank --year 2026 --period 1T --verbose\n"
+    f"--provider caixabank --year {_YEAR} --period 1T --verbose\n"
     "@expect exit_code == 0"
 )
 
@@ -700,7 +701,7 @@ _INDEX_UNKNOWN_SHELL = "# Bad shell\n\n```{cli-sequence} bad-shell-demo\n:verify
 _CONTRACT_UNKNOWN_SHELL = ":shells: fish\n@result aeat app modelo work verify wu\n@expect exit_code == 0"
 
 
-def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_directive_refuses_unknown_shell(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """An unknown :shells: value fails the build with the accepted set named."""
     site = tmp_path / "site"
     site.mkdir()
@@ -788,7 +789,7 @@ _CONTRACT_ALL_STATIC = (
 )
 
 
-def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, isolated_sequence_storage: None) -> None:
     """An all-@static sequence renders from the parse alone: no golden, no verify caption.
 
     A live-AEAT page shows its commands as @static frames (execution is
@@ -845,7 +846,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
         sequence_id="file-303",
         options={"verify": "Confirm the draft is verified before uploading."},
         body=(
-            "aeat app modelo work create 303 --year 2026 --period 1T\n"
+            f"aeat app modelo work create 303 --year {_YEAR} --period 1T\n"
             "@result aeat app modelo work verify wu\n"
             '@expect result.status == "ok"\n'
             "@step Upload the exported file at the AEAT portal yourself.\n"
@@ -858,7 +859,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
         frames=(
             GoldenFrame(
                 kind=FrameKind.COMMAND,
-                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
+                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"),
                 exit_code=0,
                 envelope={"schema_version": 1, "command": "c", "status": "ok", "notices": [], "result": {}},
                 envelope_source="stdout",

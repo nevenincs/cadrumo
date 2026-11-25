@@ -8,35 +8,79 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from ...application.inventory.registered_claim_candidates_operation import InventoryClaimCandidatesRequest
+from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
+from ...application.inventory.registered_options_operation import InventoryOptionsRequest
+from ...application.inventory.registered_projections import (
+    InventoryLedgerProjection,
+    InventoryListRowProjection,
+    public_or_none,
+)
 from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import (
-    InventoryAcquisitionCost,
+    InventoryCorrectionReason,
+    InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
+    ValuationMethod,
+    load_inventory_acquisition_cost,
 )
-from ._date_parsing import _parse_iso_date
-from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from .common import active_bucket_id_or_refuse as _inventory_bucket_id
-from .common import emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .date_parsing import parse_iso_date
+from .decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from .ledger_business_payloads import InventoryClosingAuthorityRecordResult
 from .operation_ledger_inventory import (
+    add_inventory_evidence,
     add_inventory_movement,
+    apply_inventory_ledger_change,
     create_inventory_ledger,
+    inspect_inventory_ledger,
     preview_inventory_valuation,
     read_inventory_catalogue,
+    read_inventory_claim_candidates,
+    read_inventory_options,
     record_inventory_closing_authority,
+    record_inventory_closing_value,
 )
+
+
+def inventory_notices(ledger: InventoryLedgerProjection | InventoryListRowProjection | None) -> list[Notice]:
+    """Present worker-owned inventory advisories on the shared diagnostic channel."""
+    if ledger is None:
+        raise InternalInvariantError("inventory completion returned no canonical ledger")
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=f"ledger.inventory.{item.code}",
+            message=tr(item.key, year=item.year),
+            context={"actividad_id": ledger.actividad_id, "year": str(item.year)},
+        )
+        for item in ledger.advisories
+    ]
 
 
 def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequest | None:
@@ -45,7 +89,7 @@ def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequ
         return None
     value = typer.get_text_stream("stdin").read()
     try:
-        acquisition = InventoryAcquisitionCost.model_validate_json(value)
+        acquisition = load_inventory_acquisition_cost(value)
         return InventoryAcquisitionCostRequest.from_domain(acquisition)
     except ValidationError as exc:
         details = "; ".join(f"{'.'.join(str(item) for item in error['loc'])}: {error['msg']}" for error in exc.errors())
@@ -63,9 +107,16 @@ def inventory_list(ctx: typer.Context) -> None:
     for row in completion.projection.rows:
         lines.append(
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
-            f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}",
+            f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}"
+            f"\tcorrections={row.correction_count}\tretired={row.retired}",
         )
-    emit_envelope(ctx, command="ledger.inventory.list", result=payload, lines=lines)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.list",
+        result=payload,
+        lines=lines,
+        notices=[notice for row in completion.projection.rows for notice in inventory_notices(row)],
+    )
 
 
 def inventory_create(
@@ -76,7 +127,7 @@ def inventory_create(
     opening_stock: str = "0",
 ) -> None:
     """Create one ledger through the selected profile's authenticated worker."""
-    bucket_id = _inventory_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     request = InventoryCreateRequest(
         profile_id=UUID(bucket_id),
         actividad_id=actividad_id,
@@ -92,6 +143,7 @@ def inventory_create(
         ctx,
         command="ledger.inventory.create",
         result=payload,
+        notices=inventory_notices(ledger),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
@@ -116,7 +168,7 @@ def inventory_movement_add(
     acquisition_cost_stdin: bool = False,
 ) -> None:
     """Append one typed movement through the selected profile's worker."""
-    bucket_id = _inventory_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     unit_cost_amount = parse_optional_decimal_amount(unit_cost, label="unit-cost")
     taxable_base_amount = parse_optional_decimal_amount(taxable_base, label="taxable-base")
     request = InventoryMovementAddRequest(
@@ -124,18 +176,19 @@ def inventory_movement_add(
         actividad_id=actividad_id,
         year=year,
         movement_id=movement_id,
-        movement_date=_parse_iso_date(movement_date, label="--date"),
+        movement_date=parse_iso_date(movement_date, label="--date"),
         kind=kind,
         quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
-        unit_cost=PublicDecimal(decimal=str(unit_cost_amount)) if unit_cost_amount is not None else None,
-        taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
+        unit_cost=public_or_none(unit_cost_amount),
+        taxable_base=public_or_none(taxable_base_amount),
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
-    _completion, payload = add_inventory_movement(ctx, request=request)
+    completion, payload = add_inventory_movement(ctx, request=request)
     emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
         result=payload,
+        notices=inventory_notices(completion.projection.ledger),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{payload.actividad_id}",
@@ -146,13 +199,262 @@ def inventory_movement_add(
     )
 
 
+def emit_ledger_change(ctx: typer.Context, *, command: str, request: InventoryLedgerChangeRequest) -> None:
+    """Submit one change and report the worker's own outcome and resulting state."""
+    completion, payload = apply_inventory_ledger_change(ctx, request=request)
+    emit_envelope(
+        ctx,
+        command=command,
+        result=payload,
+        notices=inventory_notices(completion.projection.ledger),
+        lines=(
+            f"outcome\t{payload.outcome}",
+            f"actividad_id\t{payload.actividad_id}",
+            f"year\t{payload.year}",
+            f"movements\t{len(payload.period_movements)}",
+            f"corrections\t{len(payload.history)}",
+            f"retired\t{payload.retired}",
+            f"bucket_event_ids\t{','.join(payload.bucket_event_ids)}",
+        ),
+    )
+
+
+def inventory_inspect(ctx: typer.Context, actividad_id: str, year: int) -> None:
+    """Show one ledger with its effective movements and retained history."""
+    request = InventoryInspectRequest(
+        profile_id=UUID(active_bucket_id_or_refuse()), actividad_id=actividad_id, year=year
+    )
+    completion, payload = inspect_inventory_ledger(ctx, request=request)
+    lines = [
+        f"actividad_id\t{payload.actividad_id}",
+        f"year\t{payload.year}",
+        f"valuation_method\t{payload.valuation_method}",
+        f"opening_stock\t{payload.opening_stock}",
+        f"retired\t{payload.retired}",
+    ]
+    lines.extend(
+        f"movement\t{item.movement_id}\t{item.movement_date}\t{item.kind}\t{item.quantity}"
+        for item in payload.period_movements
+    )
+    lines.extend(f"history\t{item.correction_id}\t{item.kind}\t{item.recorded_at}" for item in payload.history)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.inspect",
+        result=payload,
+        lines=lines,
+        notices=inventory_notices(completion.projection.ledger),
+    )
+
+
+def inventory_describe(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    label: str,
+    description: str | None = None,
+) -> None:
+    """Replace the inventory's descriptive facts."""
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.describe",
+        request=InventoryDescribeRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            label=label,
+            description=description,
+        ),
+    )
+
+
+def inventory_correct(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    reason: InventoryCorrectionReason,
+    opening_stock: str | None = None,
+    valuation_method: ValuationMethod | None = None,
+) -> None:
+    """Rectify the opening value or valuation method, retaining what they displace."""
+    amount = parse_optional_decimal_amount(opening_stock, label="opening-stock")
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.correct",
+        request=InventoryCorrectRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            reason=reason,
+            opening_stock=public_or_none(amount),
+            valuation_method=valuation_method,
+        ),
+    )
+
+
+def inventory_movement_correct(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    target_movement_id: str,
+    reason: InventoryCorrectionReason,
+    movement_id: str,
+    movement_date: str,
+    kind: MovementKind,
+    quantity: str,
+    unit_cost: str | None = None,
+    taxable_base: str | None = None,
+    acquisition_cost_stdin: bool = False,
+) -> None:
+    """Supersede one movement with a replacement, retaining the movement it displaces."""
+    unit_cost_amount = parse_optional_decimal_amount(unit_cost, label="unit-cost")
+    taxable_base_amount = parse_optional_decimal_amount(taxable_base, label="taxable-base")
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.movement.correct",
+        request=InventoryMovementCorrectRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            target_movement_id=target_movement_id,
+            reason=reason,
+            movement_id=movement_id,
+            movement_date=parse_iso_date(movement_date, label="--date"),
+            kind=kind,
+            quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
+            unit_cost=public_or_none(unit_cost_amount),
+            taxable_base=public_or_none(taxable_base_amount),
+            acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
+        ),
+    )
+
+
+def inventory_movement_claim(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    movement_id: str,
+    ledger_row: PurchaseLedgerRow,
+    transaction_id: str | None = None,
+) -> None:
+    """State which ledger transaction books a purchase, that none does, or clear the statement."""
+    if (ledger_row is PurchaseLedgerRow.CLAIMED) != (transaction_id is not None):
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.claim_transaction_mismatch"),
+            param_hint="--transaction-id",
+        )
+    try:
+        request = InventoryMovementClaimRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            movement_id=movement_id,
+            ledger_row=ledger_row,
+            claimed_transaction_id=transaction_id,
+        )
+    except ValidationError as exc:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.claim_transaction_mismatch"),
+            param_hint="--transaction-id",
+        ) from exc
+    emit_ledger_change(ctx, command="ledger.inventory.movement.claim", request=request)
+
+
+def inventory_movement_claim_candidates(ctx: typer.Context, actividad_id: str, year: int, movement_id: str) -> None:
+    """List the ledger transactions one purchase may claim, which are the ones the claim accepts."""
+    result = read_inventory_claim_candidates(
+        ctx,
+        request=InventoryClaimCandidatesRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            movement_id=movement_id,
+        ),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.movement.claim-candidates",
+        result=result,
+        lines=tuple(
+            f"candidate\t{item.transaction_id}\t{item.booked_date}\t{item.currency}"
+            f"\t{item.taxable_base}\t{item.iva_amount}\t{item.recargo_amount}\t{item.description}"
+            for item in result.candidates
+        ),
+    )
+
+
+def inventory_movement_reverse(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    target_movement_id: str,
+    reason: InventoryCorrectionReason,
+) -> None:
+    """Take one movement out of the effective set, retaining it as evidence."""
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.movement.reverse",
+        request=InventoryMovementReverseRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            target_movement_id=target_movement_id,
+            reason=reason,
+        ),
+    )
+
+
+def inventory_retire(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    reason: InventoryRetirementReason,
+) -> None:
+    """Take the inventory out of the active register with every fact retained."""
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.retire",
+        request=InventoryRetireRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            reason=reason,
+        ),
+    )
+
+
+def inventory_restore(ctx: typer.Context, actividad_id: str, year: int, correction_id: str) -> None:
+    """Bring a retired inventory back to the active register."""
+    emit_ledger_change(
+        ctx,
+        command="ledger.inventory.restore",
+        request=InventoryRestoreRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+        ),
+    )
+
+
 def inventory_valuation_preview(
     ctx: typer.Context,
     actividad_id: str,
     year: int,
 ) -> None:
     """Preview the canonical valuation through the selected profile worker."""
-    bucket_id = _inventory_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     request = InventoryValuationPreviewRequest(
         profile_id=UUID(bucket_id),
         actividad_id=actividad_id,
@@ -182,7 +484,7 @@ def inventory_closing_authority_record(
     file: Path,
 ) -> None:
     """Read one typed authority DTO, then persist it in the profile worker."""
-    bucket_id = _inventory_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     try:
         authority = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
         authority_record = InventoryClosingAuthorityRecordInput.from_domain(authority)
@@ -211,10 +513,89 @@ def inventory_closing_authority_record(
     )
 
 
+def inventory_options(ctx: typer.Context) -> None:
+    """Show the closed vocabularies an inventory form offers, each value with its word."""
+    result = read_inventory_options(ctx, request=InventoryOptionsRequest(profile_id=UUID(active_bucket_id_or_refuse())))
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.options",
+        result=result,
+        lines=tuple(
+            f"{family.family}\t{option.value}\t{tr(option.label_key)}"
+            for family in result.families
+            for option in family.options
+        ),
+    )
+
+
+def inventory_evidence_add(ctx: typer.Context, source_path: str) -> None:
+    """Store one purchase document in the profile's custody and print the identity a purchase names it by."""
+    result = add_inventory_evidence(
+        ctx,
+        request=InventoryEvidenceAddRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            source_path=source_path,
+            source_directory=str(Path.cwd()),
+        ),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.evidence.add",
+        result=result,
+        lines=(f"reference\t{result.reference}", f"content_digest\t{result.content_digest}"),
+    )
+
+
+def inventory_closing_value_record(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    file: Path,
+) -> None:
+    """Read the plain facts of one closing value, then record it in the profile worker."""
+    bucket_id = active_bucket_id_or_refuse()
+    try:
+        facts = InventoryClosingValueFactsInput.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, ValidationError) as exc:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.closing_value_file_invalid"),
+            param_hint="--file",
+        ) from exc
+    request = InventoryClosingValueRecordRequest(
+        profile_id=UUID(bucket_id),
+        actividad_id=actividad_id,
+        year=year,
+        facts=facts,
+    )
+    _completion, result = record_inventory_closing_value(ctx, request=request)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.closing-value.record",
+        result=result,
+        lines=(
+            f"actividad_id\t{result.actividad_id}",
+            f"year\t{result.year}",
+            f"authority_record_fingerprint\t{result.authority_record_fingerprint}",
+        ),
+    )
+
+
 __all__ = [
     "inventory_closing_authority_record",
+    "inventory_closing_value_record",
+    "inventory_correct",
     "inventory_create",
+    "inventory_describe",
+    "inventory_evidence_add",
+    "inventory_inspect",
     "inventory_list",
     "inventory_movement_add",
+    "inventory_movement_claim",
+    "inventory_movement_claim_candidates",
+    "inventory_movement_correct",
+    "inventory_movement_reverse",
+    "inventory_options",
+    "inventory_restore",
+    "inventory_retire",
     "inventory_valuation_preview",
 ]

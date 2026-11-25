@@ -10,13 +10,13 @@ from uuid import UUID
 import typer
 
 from cadrumo.application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import clear_output_language_cache, tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod
@@ -150,7 +150,7 @@ def _root_profile_source(
     return source.selection, source.method, source.credential_reference
 
 
-def _profile_id(ctx: typer.Context, *, through_runtime: bool = False) -> tuple[UUID, str | None]:
+def profile_admission_profile_id(ctx: typer.Context, *, through_runtime: bool = False) -> tuple[UUID, str | None]:
     """Return the profile the root ``--profile`` names, or the selected one.
 
     ``through_runtime`` asks the running runtime to resolve a named profile
@@ -272,7 +272,8 @@ def _open_authenticated_profile(
         raise
 
 
-def _open_recovery_profile(ctx: typer.Context, profile_id: UUID) -> None:
+def open_recovery_profile(ctx: typer.Context, profile_id: UUID) -> None:
+    """Open an installed runtime client for recovery and bind it to the profile."""
     from cadrumo_client.commands.profile_binding import bind_profile_client
     from cadrumo_client.transport.installed_client import open_installed_client
 
@@ -289,27 +290,10 @@ def _root_profile_options_are_supplied(ctx: typer.Context) -> bool:
     return runtime_root_context(ctx).profile_source.supplied
 
 
-def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: dict[str, object]) -> None:
-    """Bind a command's exact profile before its handler starts, using the declared posture."""
-    if spec.kind.value != "leaf":
-        return
-    selection, method, credential_reference = _root_profile_source(ctx)
-    if spec.key == "config_profile_automation_change" and (
-        method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None
-    ):
-        _refuse("automation_change_credential_ref_required")
-    if spec.key in {"config_auth_providers", "config_auth_apoderado_scopes_list", "config_sign_in_status"}:
-        if _root_profile_options_are_supplied(ctx):
-            _refuse("profile_secrets_inapplicable")
-        return
-    posture = spec.profile_authentication
-    target_is_self_authenticating = posture is ProfileAuthenticationPosture.SELF_AUTHENTICATING
-    if spec.key == "config_profile_resume":
-        if selection is not None or credential_reference is not None:
-            _refuse("profile_secrets_inapplicable")
-        profile_id, _ = _profile_id(ctx, through_runtime=True)
-        _open_recovery_profile(ctx, profile_id)
-        return
+def _validate_machine_secret(
+    spec: CommandSpec, arguments: dict[str, object], selection: ProfileSecretSelection | None
+) -> None:
+    """Keep machine and profile input channels distinct before reading either."""
     if spec.machine_secret is not None:
         from cadrumo_client.commands.secure_input import MachineSecretChannel, select_machine_secret_channel
 
@@ -325,23 +309,73 @@ def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: 
             leaf_descriptor = 0 if leaf.channel is MachineSecretChannel.STDIN else leaf.descriptor
             if root_descriptor == leaf_descriptor:
                 _refuse("profile_secrets_stdin_collision" if root_descriptor == 0 else "profile_secrets_fd_collision")
-    if target_is_self_authenticating:
+
+
+def _bind_sessionless_target(ctx: typer.Context, spec: CommandSpec, posture: ProfileAuthenticationPosture) -> bool:
+    """Complete self-authenticating or custody-free admission without a profile session."""
+    if posture is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         if _root_profile_options_are_supplied(ctx):
             _refuse("profile_secrets_inapplicable")
         if runtime_root_context(ctx).profile is not None:
-            profile_id, _ = _profile_id(ctx)
+            profile_id, _ = profile_admission_profile_id(ctx, through_runtime=spec.key == "config_passphrase_change")
             _bind_target(ctx, profile_id)
-        return
+        elif spec.key == "config_passphrase_change":
+            from cadrumo_client.commands.profile_selection import command_profile_id
+
+            active = command_profile_id()
+            if active is None:
+                raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
+            _bind_target(ctx, UUID(active))
+        return True
     profile_required = bool(spec.policy.capabilities & {"profile-custody", "encrypted-facts"})
     if not profile_required:
         if _root_profile_options_are_supplied(ctx):
             _refuse("profile_secrets_inapplicable")
+        return True
+    return False
+
+
+def _early_profile_preflight(
+    ctx: typer.Context,
+    spec: CommandSpec,
+    selection: ProfileSecretSelection | None,
+    method: ProfileAuthenticationMethod,
+    credential_reference: UUID | None,
+) -> bool:
+    """Handle special command boundaries before ordinary secret preflight."""
+    if spec.key == "config_profile_automation_change" and (
+        method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None
+    ):
+        _refuse("automation_change_credential_ref_required")
+    if spec.key in {"config_auth_providers", "config_auth_apoderado_scopes_list", "config_sign_in_status"}:
+        if _root_profile_options_are_supplied(ctx):
+            _refuse("profile_secrets_inapplicable")
+        return True
+    if spec.key == "config_profile_resume":
+        if selection is not None or credential_reference is not None:
+            _refuse("profile_secrets_inapplicable")
+        profile_id, _ = profile_admission_profile_id(ctx, through_runtime=True)
+        open_recovery_profile(ctx, profile_id)
+        return True
+    return False
+
+
+def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: dict[str, object]) -> None:
+    """Bind a command's exact profile before its handler starts, using the declared posture."""
+    if spec.kind.value != "leaf":
+        return
+    selection, method, credential_reference = _root_profile_source(ctx)
+    if _early_profile_preflight(ctx, spec, selection, method, credential_reference):
+        return
+    posture = spec.profile_authentication
+    _validate_machine_secret(spec, arguments, selection)
+    if _bind_sessionless_target(ctx, spec, posture):
         return
     if method is ProfileAuthenticationMethod.API_KEY and selection is None and credential_reference is None:
         _refuse("profile_secrets_api_key_requires_channel")
     if credential_reference is not None and posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
         _refuse("profile_credential_ref_inapplicable")
-    profile_id, _label = _profile_id(ctx, through_runtime=True)
+    profile_id, _label = profile_admission_profile_id(ctx, through_runtime=True)
     _open_authenticated_profile(
         ctx,
         profile_id,

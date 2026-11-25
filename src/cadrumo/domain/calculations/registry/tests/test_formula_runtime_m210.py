@@ -2,24 +2,37 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
-from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args, _m210_allows_art_24_6_expenses
+from .....core.time.clock import frozen_clock
+from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
+from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+from ..formula_expression import EvalContext
 from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime_irnr import (
+    evaluate_m210_resolve_base_imponible,
+    irnr_resolve_tipo_gravamen_args,
+    m210_allows_art_24_6_expenses,
+)
 from ..formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     resolve_keyed_bracket,
 )
+from ..governed_fact_scope import validating_governed_facts
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue, tipo_renta_ue_residente_token
 from ..schema import FormulaDefinition, RegistrySnapshot
 from ..schema_formula import FormulaExpression
+from ..schema_references import TemporalSupportEnvelope
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _M210_TIPO_RENTA_CASILLA = "tipo_renta"
@@ -30,7 +43,7 @@ _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 
 
 def _current_m210_snapshot() -> RegistrySnapshot:
-    return published_snapshot("210", filing_year=2025, period="EVENT-1")
+    return published_snapshot("210", filing_year=_YEAR, period="EVENT-1")
 
 
 def _current_m210_rate_formula() -> FormulaDefinition:
@@ -48,7 +61,7 @@ def _current_m210_rate_expression() -> FormulaExpression:
 
 
 def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> None:
-    effective_date = date(2025, 1, 1)
+    effective_date = date(_YEAR, 1, 1)
     resident_token = tipo_renta_ue_residente_token(effective_date=effective_date)
     other_token = next(
         token
@@ -56,20 +69,85 @@ def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> 
         if token != resident_token
     )
 
-    assert _m210_allows_art_24_6_expenses(
+    assert m210_allows_art_24_6_expenses(
         tipo_renta=resident_token,
         country_code="ZW",
         effective_date=effective_date,
     )
-    assert not _m210_allows_art_24_6_expenses(
+    assert not m210_allows_art_24_6_expenses(
         tipo_renta=other_token,
         country_code="ZW",
         effective_date=effective_date,
     )
 
 
+class _DateRecordingSource:
+    """Delegate every governed-fact read to the pinned operation, keeping the date each one asked for."""
+
+    def __init__(self, inner: PinnedAuthorityOperation) -> None:
+        self._inner = inner
+        self.asked: list[date] = []
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.asked.append(query.effective_date)
+        return self._inner.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._inner.supported_filing_years()
+
+
+def test_art_24_6_expense_branch_reads_eu_eea_membership_at_the_devengo_not_the_run_date(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    devengo = date(_YEAR, 3, 1)
+    other_token = next(
+        token
+        for token in resolve_tipo_renta_irnr_catalogue(effective_date=devengo).all_tokens
+        if token != tipo_renta_ue_residente_token(effective_date=devengo)
+    )
+    recorder = _DateRecordingSource(operation)
+    outside_the_envelope = datetime(filing_year_envelope().floor - 3, 6, 15, 12, tzinfo=UTC)
+
+    with frozen_clock(outside_the_envelope), validating_governed_facts(recorder):
+        allows_eu = m210_allows_art_24_6_expenses(tipo_renta=other_token, country_code="FR", effective_date=devengo)
+        allows_third_country = m210_allows_art_24_6_expenses(
+            tipo_renta=other_token, country_code="ZW", effective_date=devengo
+        )
+
+    assert allows_eu
+    assert not allows_third_country
+    assert recorder.asked
+    assert set(recorder.asked) == {devengo}
+
+
+def test_m210_base_imponible_without_a_devengo_date_is_refused() -> None:
+    expression = next(
+        formula.expression
+        for formula in _current_m210_snapshot().revision.formulas
+        if formula.expression.op == "m210_resolve_base_imponible"
+    )
+    context = EvalContext(
+        values={},
+        binding_values={},
+        parameters={},
+        date_context={},
+        relation_values={},
+        unresolved_relation_ids=frozenset(),
+        unresolved_casilla_ids=set(),
+        operand_refs=[],
+        operand_casilla_refs=[],
+        operand_values=[],
+        enum_binding_values={},
+        date_binding_values={},
+        filing_year=_YEAR,
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"^M210 base imponible requires a filing_period devengo date$"):
+        evaluate_m210_resolve_base_imponible(expression, context)
+
+
 def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> None:
-    args = _irnr_resolve_tipo_gravamen_args(_current_m210_rate_expression())
+    args = irnr_resolve_tipo_gravamen_args(_current_m210_rate_expression())
 
     assert args.tipo_casilla_id == "tipo_renta"
     assert args.base_casilla_id == "base_imponible"
@@ -101,7 +179,7 @@ def test_irnr_resolve_tipo_gravamen_args_rejects_retired_convenio_parameter_cont
     )
 
     with pytest.raises(RegistryValidationError, match=r"expects 5 args, got 6"):
-        _irnr_resolve_tipo_gravamen_args(retired_expression)
+        irnr_resolve_tipo_gravamen_args(retired_expression)
 
 
 def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -> None:
@@ -116,7 +194,7 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
         },
         enum_binding_values={_M210_COUNTRY_BINDING: "ZW"},
         text_inputs={_M210_TIPO_RENTA_CASILLA: "general"},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
     )
 
     assert _M210_TIPO_GRAVAMEN_CASILLA not in result.values
@@ -160,7 +238,7 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
         },
         enum_binding_values={},
         text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
     )
 
     assert result.unresolved_outcomes == ()
@@ -181,7 +259,7 @@ def test_irnr_resolve_tipo_gravamen_retains_selected_treaty_fact_provenance() ->
         },
         enum_binding_values={_M210_COUNTRY_BINDING: "BE"},
         text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
     )
 
     assert result.values[_M210_TIPO_GRAVAMEN_CASILLA] == Decimal("0.15")
@@ -195,22 +273,22 @@ def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows
     parameter = next(parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen")
     dividend = next(entry for entry in parameter.keyed_brackets if entry.key == "dividend")
 
-    assert resolve_keyed_bracket(parameter, key="dividend", filing_year=2025) == Decimal("0.19")
+    assert resolve_keyed_bracket(parameter, key="dividend", filing_year=_YEAR) == Decimal("0.19")
 
     overlapping = parameter.model_copy(
         update={
             "keyed_brackets": (
                 *parameter.keyed_brackets,
-                dividend.model_copy(update={"value": Decimal("0.24"), "valid_from": date(2025, 6, 1)}),
+                dividend.model_copy(update={"value": Decimal("0.24"), "valid_from": date(_YEAR, 6, 1)}),
             )
         }
     )
     with pytest.raises(RegistryValidationError, match="expected exactly one keyed bracket") as exc_info:
-        resolve_keyed_bracket(overlapping, key="dividend", filing_year=2025)
+        resolve_keyed_bracket(overlapping, key="dividend", filing_year=_YEAR)
 
     assert exc_info.value.context == {
         "parameter_id": "m210-tipo-gravamen",
         "key": "dividend",
-        "filing_year": "2025",
+        "filing_year": str(_YEAR),
         "match_count": "2",
     }

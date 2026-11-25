@@ -21,55 +21,85 @@ because DR360 campo 114 lets it belong to the representante.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, override
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import RegistryCodedEnum, require_form_fit, require_form_width
 from ...domain.deadlines.models import RefundAccount
 from ...domain.transactions.own_accounts import OwnAccountId
 
-
-def _text(max_length: int) -> StringConstraints:
-    return StringConstraints(strip_whitespace=True, min_length=1, max_length=max_length)
-
-
-_Text2 = Annotated[str, _text(2)]
-_Text3 = Annotated[str, _text(3)]
-_Text5 = Annotated[str, _text(5)]
-_Text15 = Annotated[str, _text(15)]
-_Text16 = Annotated[str, _text(16)]
-_Text25 = Annotated[str, _text(25)]
-_Text30 = Annotated[str, _text(30)]
-_Text40 = Annotated[str, _text(40)]
-_Text50 = Annotated[str, _text(50)]
-_Text125 = Annotated[str, _text(125)]
-_Text148 = Annotated[str, _text(148)]
-#: DR360 types the número de casa and the códigos postales ``Num``, and the published layout
+#: A field's design length comes from the registry through its model's validator; these bound the wire.
+_Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+#: DR360 types the numero de casa and the codigos postales ``Num``, and the published layout
 #: renders them as full-width digit identifiers, so the fact carries every digit.
-_Digits5 = Annotated[str, StringConstraints(pattern=r"^\d{5}$")]
-_Digits10 = Annotated[str, StringConstraints(pattern=r"^\d{10}$")]
-_Email = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100, pattern=r"^[^@\s]+@[^@\s]+$")]
-_CurrencyCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
+_Digits = Annotated[str, StringConstraints(pattern=r"^\d+$", max_length=16)]
+_Email = Annotated[str, StringConstraints(strip_whitespace=True, max_length=128, pattern=r"^[^@\s]+@[^@\s]+$")]
+_CurrencyCode = IsoCurrencyCodeText
+
+#: Each field and the design length the registry declares for it.
+_ADDRESS_FITS = {
+    "tipo_via": "m360.address.street_type_max",
+    "nombre_via": "m360.address.street_name_max",
+    "tipo_numeracion": "m360.address.number_type_max",
+    "calificador_numero": "m360.address.number_qualifier_max",
+    "bloque": "m360.address.block_max",
+    "portal": "m360.address.portal_max",
+    "escalera": "m360.address.staircase_max",
+    "planta": "m360.address.floor_max",
+    "puerta": "m360.address.door_max",
+    "datos_complementarios": "m360.address.complement_max",
+    "localidad": "m360.address.locality_max",
+    "nombre_municipio": "m360.address.municipality_max",
+    "provincia": "m360.address.province_max",
+}
+_PO_BOX_FITS = {key: _ADDRESS_FITS[key] for key in ("localidad", "nombre_municipio", "provincia")}
+_FOREIGN_ADDRESS_FITS = {
+    "street": "m360.foreign_address.street_max",
+    "city": "m360.foreign_address.city_max",
+    "postal_code": "m360.foreign_address.postal_code_max",
+    "region": "m360.foreign_address.region_max",
+}
+_SOLICITANTE_FITS = {"email": "m360.email_max", "phone": "m360.phone_max"}
+_REPRESENTANTE_FITS = {
+    "full_name": "m360.full_name_max",
+    "email": "m360.email_max",
+    "phone": "m360.phone_max",
+}
+
+
+def _fit(value: str | None, info: ValidationInfo, fits: dict[str, str]) -> str | None:
+    return require_form_fit(value, fits[str(info.field_name)])
+
 
 #: DR360 Nota 3: Greece is written ``EL`` in these positions, never its ISO ``GR``.
 _GREECE_ISO_CODE = "GR"
 _SPAIN = "ES"
 
 
-class M360NivelCalidadDatos(StrEnum):
+_M360_FORM_CODES_FACT = "modelo-360-page-one-form-codes"
+
+
+class M360NivelCalidadDatos(RegistryCodedEnum):
     """DR360 página 1 campo 5, Nota 2."""
 
-    MEDIA = "1"
-    MAXIMA = "2"
+    MEDIA = "media"
+    MAXIMA = "maxima"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "nivel_calidad"
 
 
-class M360CausaPresentacion(StrEnum):
+class M360CausaPresentacion(RegistryCodedEnum):
     """DR360 página 1 campo 8, Nota 4.
 
     The design's third value, a blank for a communication of the prorrata definitiva on
@@ -77,8 +107,13 @@ class M360CausaPresentacion(StrEnum):
     be emitted, and a contract admitting it would only refuse later.
     """
 
-    INICIAL = "0"
-    MODIFICACION = "1"
+    INICIAL = "inicial"
+    MODIFICACION = "modificacion"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "causa"
 
 
 class M360AmbitoEstablecimiento(StrEnum):
@@ -89,29 +124,44 @@ class M360AmbitoEstablecimiento(StrEnum):
     CANARIAS_CEUTA_MELILLA = "canarias_ceuta_melilla"
 
 
-class M360HaciendaForal(StrEnum):
+class M360HaciendaForal(RegistryCodedEnum):
     """DR360 página 1 campo 42, Nota 7."""
 
-    ALAVA = "01"
-    GIPUZKOA = "20"
-    NAVARRA = "31"
-    BIZKAIA = "48"
+    ALAVA = "alava"
+    GIPUZKOA = "gipuzkoa"
+    NAVARRA = "navarra"
+    BIZKAIA = "bizkaia"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "hacienda_foral"
 
 
-class M360DelegacionCanariasCeutaMelilla(StrEnum):
+class M360DelegacionCanariasCeutaMelilla(RegistryCodedEnum):
     """DR360 página 1 campo 43, Nota 8."""
 
-    LAS_PALMAS = "35"
-    TENERIFE = "38"
-    CEUTA = "55"
-    MELILLA = "56"
+    LAS_PALMAS = "las_palmas"
+    TENERIFE = "tenerife"
+    CEUTA = "ceuta"
+    MELILLA = "melilla"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "delegacion"
 
 
-class M360TitularEnCalidadDe(StrEnum):
+class M360TitularEnCalidadDe(RegistryCodedEnum):
     """DR360 página 1 campo 114: whose account the refund is paid into."""
 
-    SOLICITANTE = "A"
-    REPRESENTANTE = "R"
+    SOLICITANTE = "solicitante"
+    REPRESENTANTE = "representante"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "titular"
 
 
 class Modelo360SolicitudFacts(BaseModel):
@@ -124,7 +174,7 @@ class Modelo360SolicitudFacts(BaseModel):
     pais_destino: CountryCodeAlpha2 = Field(pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
     causa_presentacion: M360CausaPresentacion
     #: Required exactly when the solicitud modifies an earlier one (Nota 4).
-    numero_registro_declaracion_anterior: _Text16 | None = None
+    numero_registro_declaracion_anterior: _Text | None = None
     #: Nota 5. Absent writes a blank; ``False`` is the design's explicit "0".
     comunicacion_prorrata_definitiva: bool | None = None
     #: Nota 1. ``True`` asks AEAT only to validate the file; absent writes a blank.
@@ -146,28 +196,52 @@ class Modelo360SolicitudFacts(BaseModel):
             raise ValueError("DR360 Nota 5 admits the prorrata definitiva communication only with causa 1")
         return self
 
+    @field_validator("numero_registro_declaracion_anterior")
+    @classmethod
+    @pydantic_validation_boundary
+    def _previous_number_fits_the_design(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "m360.numero_registro_anterior_max")
+
 
 class Modelo360DomicilioEspana(BaseModel):
     """A Spanish street address in DR360's shape: página 1 campos 16-30, and 78-92."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    tipo_via: _Text5 | None = None
-    nombre_via: _Text50 | None = None
-    tipo_numeracion: _Text3 | None = None
-    numero_casa: _Digits5 | None = None
-    calificador_numero: _Text3 | None = None
-    bloque: _Text3 | None = None
-    portal: _Text3 | None = None
-    escalera: _Text3 | None = None
-    planta: _Text3 | None = None
-    puerta: _Text3 | None = None
-    datos_complementarios: _Text40 | None = None
+    tipo_via: _Text | None = None
+    nombre_via: _Text | None = None
+    tipo_numeracion: _Text | None = None
+    numero_casa: _Digits | None = None
+    calificador_numero: _Text | None = None
+    bloque: _Text | None = None
+    portal: _Text | None = None
+    escalera: _Text | None = None
+    planta: _Text | None = None
+    puerta: _Text | None = None
+    datos_complementarios: _Text | None = None
     #: Only when it differs from the municipio, as the design says.
-    localidad: _Text30 | None = None
-    codigo_postal: _Digits5 | None = None
-    nombre_municipio: _Text30 | None = None
-    provincia: _Text2 | None = None
+    localidad: _Text | None = None
+    codigo_postal: _Digits | None = None
+    nombre_municipio: _Text | None = None
+    provincia: _Text | None = None
+
+    @field_validator(*_ADDRESS_FITS)
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _ADDRESS_FITS)
+
+    @field_validator("numero_casa")
+    @classmethod
+    @pydantic_validation_boundary
+    def _house_number_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m360.address.house_number_digits")
+
+    @field_validator("codigo_postal")
+    @classmethod
+    @pydantic_validation_boundary
+    def _postal_code_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m360.address.postal_code_digits")
 
 
 class Modelo360ApartadoCorreos(BaseModel):
@@ -175,11 +249,29 @@ class Modelo360ApartadoCorreos(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    numero: _Digits10
-    localidad: _Text30 | None = None
-    codigo_postal: _Digits5 | None = None
-    nombre_municipio: _Text30 | None = None
-    provincia: _Text2 | None = None
+    numero: _Digits
+    localidad: _Text | None = None
+    codigo_postal: _Digits | None = None
+    nombre_municipio: _Text | None = None
+    provincia: _Text | None = None
+
+    @field_validator(*_PO_BOX_FITS)
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _PO_BOX_FITS)
+
+    @field_validator("numero")
+    @classmethod
+    @pydantic_validation_boundary
+    def _number_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m360.po_box.number_digits")
+
+    @field_validator("codigo_postal")
+    @classmethod
+    @pydantic_validation_boundary
+    def _postal_code_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m360.address.postal_code_digits")
 
 
 class Modelo360DireccionExtranjero(BaseModel):
@@ -190,10 +282,10 @@ class Modelo360DireccionExtranjero(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    street: _Text148 | None = None
-    city: _Text30 | None = None
-    postal_code: Annotated[str, _text(10)] | None = None
-    region: _Text30 | None = None
+    street: _Text | None = None
+    city: _Text | None = None
+    postal_code: _Text | None = None
+    region: _Text | None = None
     country_code: CountryCodeAlpha2 | None = Field(default=None, pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
     @model_validator(mode="after")
@@ -202,6 +294,12 @@ class Modelo360DireccionExtranjero(BaseModel):
         if self.country_code == _GREECE_ISO_CODE:
             raise ValueError('modelo 360 writes Greece as "EL", never "GR" (DR360 Nota 3)')
         return self
+
+    @field_validator(*_FOREIGN_ADDRESS_FITS)
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _FOREIGN_ADDRESS_FITS)
 
 
 class Modelo360EstablecimientoFacts(BaseModel):
@@ -244,9 +342,15 @@ class Modelo360SolicitanteFacts(BaseModel):
 
     email: _Email
     establecimiento: Modelo360EstablecimientoFacts
-    phone: _Text15 | None = None
+    phone: _Text | None = None
     domicilio: Modelo360DomicilioEspana | None = None
     apartado_correos: Modelo360ApartadoCorreos | None = None
+
+    @field_validator(*_SOLICITANTE_FITS)
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _SOLICITANTE_FITS)
 
 
 class Modelo360RepresentanteFacts(BaseModel):
@@ -259,12 +363,18 @@ class Modelo360RepresentanteFacts(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_id: SubjectTaxId
-    full_name: _Text125
+    full_name: _Text
     email: _Email | None = None
-    phone: _Text15 | None = None
+    phone: _Text | None = None
     domicilio: Modelo360DomicilioEspana | None = None
     foreign_address: Modelo360DireccionExtranjero | None = None
     apartado_correos: Modelo360ApartadoCorreos | None = None
+
+    @field_validator(*_REPRESENTANTE_FITS)
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _REPRESENTANTE_FITS)
 
 
 class Modelo360CuentaTitularFacts(BaseModel):
@@ -275,11 +385,17 @@ class Modelo360CuentaTitularFacts(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    titular_nombre: _Text25
+    titular_nombre: _Text
     titular_en_calidad_de: M360TitularEnCalidadDe
     #: ISO 4217. The design's "por defecto EUR" is not applied here: the account's own
     #: currency is a fact about the account, so it is declared rather than assumed.
     divisa: _CurrencyCode
+
+    @field_validator("titular_nombre")
+    @classmethod
+    @pydantic_validation_boundary
+    def _holder_fits_the_design(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "m360.account.holder_name_max")
 
 
 class Modelo360ProfileFacts(BaseModel):
@@ -392,7 +508,7 @@ class Modelo360SolicitudRegister(BaseModel):
     """Encrypted register document: every declared modelo 360 solicitud, one per period.
 
     The work unit addresses a solicitud by its filing year and the revision's single
-    ``AD-HOC`` period, so the period is the entry's identity and a second declaration for
+    ``0A`` period, so the period is the entry's identity and a second declaration for
     it replaces the first. A period with no entry has declared nothing, which the export
     refuses; it never resolves to an empty or default solicitud.
     """

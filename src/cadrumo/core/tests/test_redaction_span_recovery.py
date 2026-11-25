@@ -17,11 +17,11 @@ def _digest(value: str) -> str:
 @pytest.mark.parametrize(
     ("prefix", "spans", "separator", "suffix"),
     [
-        ("before ", ("ESB12345674",), "", " after"),
+        ("before ", ("ESB00015016",), "", " after"),
         ("", ("first", "second"), "", ""),
         ("", ("a repeated delimiter", "mañana"), " ", " final"),
-        ("x" * 508_000, ("ESB12345674",), "", ""),
-        (_digest("preexisting") * 9_230, ("ESB12345674",), "", ""),
+        ("x" * 508_000, ("ESB00015016",), "", ""),
+        (_digest("preexisting") * 9_230, ("ESB00015016",), "", ""),
         ("", ("x" * 508_000,), "", " trailing"),
     ],
     ids=[

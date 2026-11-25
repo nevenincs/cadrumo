@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
 from pathlib import Path
-from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
@@ -20,9 +20,10 @@ from ....application.live.iva_wallet_history_capture_operation import (
     IvaWalletHistoryCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import app_live_commands as handler
+from .. import app_live_iva_commands as handler
 from .. import operation_iva_history_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
+from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,36 +49,12 @@ def _projection() -> IvaWalletHistoryCapturePublicResultV1:
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projection: IvaWalletHistoryCapturePublicResultV1,
-    *,
-    effect: OperationEffect,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[IvaWalletHistoryCaptureRequest, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID) -> SimpleNamespace:
-        bound_profiles.append(expected_profile_id)
-        return SimpleNamespace(profile_id=expected_profile_id)
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[IvaWalletHistoryCaptureRequest, dict[str, object]]] = []
-
-    def submit(_client: object, request: IvaWalletHistoryCaptureRequest, **kwargs: object):
-        submitted.append((request, kwargs))
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projection,
-            effect=effect,
-            terminal_condition=condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+)
 
 
 def _read() -> bridge.IvaWalletHistoryCaptureRead:
@@ -112,6 +89,21 @@ def test_registered_history_capture_uses_exact_profile_and_preserves_accounting(
     assert options["result_type"] is IvaWalletHistoryCapturePublicResultV1
     assert options["request_version"] == 1
     assert options["result_version"] == 1
+
+
+def test_history_capture_without_a_named_root_leaves_the_default_to_the_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    submitted, _bound_profiles = _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
+
+    read = bridge.read_iva_wallet_history_capture_for_cli(
+        cast(typer.Context, cast(object, None)), year_from=2023, year_to=2025, output_root=None
+    )
+
+    request = submitted[0][0]
+    assert isinstance(request, IvaWalletHistoryCaptureRequest)
+    assert request.output_root is None
+    assert read.projection.output_root == str(_OUTPUT_ROOT)
 
 
 @pytest.mark.parametrize("mismatch", ["output_root", "year_range", "effect", "terminal", "refusal"])

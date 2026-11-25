@@ -58,7 +58,6 @@ from .....application.calculations.relation_prefill import resolve_relations_fro
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
-from .....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -69,6 +68,7 @@ from .....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from .....domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance

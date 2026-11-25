@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from ..maintenance_support import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
@@ -52,7 +52,7 @@ RENTA_WEB_OPEN_ORACLE_ID = "modelo-100-renta-web-open"
 
 
 def _committed_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return modelos
 
 

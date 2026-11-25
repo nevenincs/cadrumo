@@ -34,10 +34,11 @@ from .schema import (
 from .schema_base import CorpusTierField, RegistryModel, RegistrySourceKind
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
+from .schema_live_verification import LiveCrossReferenceDecision
 from .schema_overrides import SchemaFamilyDispositionDeclaration
 from .schema_references import SourceReference, source_window_applies_across
 from .schema_surfaces import CasillaDefinition
-from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from .schema_verification import WorkbookParityReference
 
 __all__ = [
     "GeneratedArtifactSource",
@@ -276,7 +277,7 @@ class RegistryRevisionInspection(RegistryModel):
         # target is legible to a reader and to static analysis alike: the
         # deferral is what breaks the cycle, and naming the module through an
         # f-string bought nothing while hiding where the call actually lands.
-        from .snapshot import collect_snapshot_ref_ids
+        from .snapshot_references import collect_snapshot_ref_ids
 
         selected_legal_ids, selected_source_ids = collect_snapshot_ref_ids(modelo, revision)
         missing_legal_refs = selected_legal_ids.difference(legal_ref_ids)

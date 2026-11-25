@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-declaration-hardening'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:08cdc3250351a6f36088814f7b35424ac1ffecaa09fcef1842505163cc7b81d7'
+body_hash: 'sha256:ae483a04df55c265bcaf54846719d4c7e15a9b82124471f7f7db1e70e0ba8e85'
 related:
   - "[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]"
   - "[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]"
@@ -74,7 +74,7 @@ check to a refusal and extend the name-window agreement in both directions. This
 option and it closes the fourteen lying names. It does nothing about open-ended assertion,
 nothing about the scheme axis, and nothing about the twenty-seven revisions that declare no
 deadline window, because none of those is a disagreement between two statements. It leaves the
-registry able to claim validity for 2035 on a 2019 design with nowhere to record that nobody has
+registry able to claim validity for a distant future year on an old design with nowhere to record that nobody has
 checked.
 
 **Declare the window once, derive the selector from it, evidence each claimed year, and give the

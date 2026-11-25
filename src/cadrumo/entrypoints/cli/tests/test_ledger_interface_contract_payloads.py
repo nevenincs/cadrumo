@@ -20,11 +20,6 @@ from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
-from .._ledger_llm_payloads import (
-    LedgerClassifyLlmRejectResult,
-    LedgerClassifyLlmSaturateResult,
-    LedgerClassifyLlmSuggestResult,
-)
 from ..ledger_business_payloads import (
     EvidenceListResult,
     EvidenceRecordPayload,
@@ -37,6 +32,17 @@ from ..ledger_catalogue_invoice_results import (
     CatalogueInvoiceListResult,
     CatalogueInvoiceRecordPayload,
 )
+from ..ledger_diagnostic_results import LedgerPeriodPayload, LedgerPreflightIssuePayload, LedgerPreflightResult
+from ..ledger_interchange_results import (
+    LedgerExportPayload,
+    LedgerExportRowPayload,
+    LedgerImportTransactionRefPayload,
+)
+from ..ledger_llm_payloads import (
+    LedgerClassifyLlmRejectResult,
+    LedgerClassifyLlmSaturateResult,
+    LedgerClassifyLlmSuggestResult,
+)
 from ..ledger_ratios_results import (
     RatiosEligibleResult,
     RatiosEligibleRowPayload,
@@ -47,21 +53,15 @@ from ..ledger_results import (
     LedgerAddResult,
     LedgerClassifyBulkResult,
     LedgerClassifySingleResult,
-    LedgerExportPayload,
-    LedgerExportRowPayload,
     LedgerHistoryEventPayload,
     LedgerHistoryResult,
-    LedgerImportTransactionRefPayload,
     LedgerLinkResult,
     LedgerListRowPayload,
-    LedgerPeriodPayload,
-    LedgerPreflightIssuePayload,
-    LedgerPreflightResult,
+    LedgerMutationResult,
     TransactionPayload,
-    _LedgerMutationResult,
 )
 from ..ledger_rule_results import RuleApplyAppliedPayload, RuleApplyResult
-from ..modelo_results import LedgerIssuePayload
+from ..modelo_query_results import LedgerIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -78,6 +78,8 @@ def _transaction_payload(**overrides: object) -> dict[str, object]:
         "business_classification": "BUSINESS",
         "lifecycle_state": "ACTIVE",
         "classified_by": "manual",
+        "classification_decided_by": "manual",
+        "figures_derived": False,
         "created_at": "2024-04-10T09:30:00+00:00",
         "modified_at": "2024-06-01T16:45:00+00:00",
     }
@@ -121,8 +123,8 @@ def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
 
 
 def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> None:
-    """LedgerAddResult is a _LedgerMutationResult and carries review_status."""
-    assert issubclass(LedgerAddResult, _LedgerMutationResult)
+    """LedgerAddResult is a LedgerMutationResult and carries review_status."""
+    assert issubclass(LedgerAddResult, LedgerMutationResult)
     result = LedgerAddResult.model_validate(
         {
             "bucket_id": "default",
@@ -141,7 +143,7 @@ def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> N
 
 def test_classify_single_result_is_the_mutation_quintet() -> None:
     """The single-transaction classify path returns the mutation quintet."""
-    assert issubclass(LedgerClassifySingleResult, _LedgerMutationResult)
+    assert issubclass(LedgerClassifySingleResult, LedgerMutationResult)
     result = LedgerClassifySingleResult.model_validate(
         {
             "bucket_id": "default",
@@ -245,6 +247,8 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
             "lifecycle_state": "ACTIVE",
             "review_status": "pending",
             "classified_by": "manual",
+            "classification_decided_by": "manual",
+            "figures_derived": False,
             "created_at": "2024-04-10T09:30:00+00:00",
             "modified_at": "2024-06-01T16:45:00+00:00",
             "group_label": "Proyecto Acme",
@@ -397,8 +401,9 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "rows": [
                 {
                     "category": "vehiculo_combustible",
+                    "label": "Vehicle fuel",
+                    "notes": "Deductible on proof of exclusive business use.",
                     "proportionality_kind": "usage_ratio_personal",
-                    "default_ratio": None,
                     "override_present": False,
                 },
             ],
@@ -441,11 +446,12 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "invoice_number": "F-001",
                     "issued_at": date(2026, 4, 5),
                     "counterparty_name": "Proveedor SL",
-                    "counterparty_tax_id": "B12345674",
+                    "counterparty_tax_id": "B00015016",
                     "counterparty_country": "ES",
                     "base_total": Decimal("100.00"),
                     "iva_total": Decimal("21.00"),
                     "grand_total": Decimal("121.00"),
+                    "settlement_amount": Decimal("121.00"),
                     "currency": "EUR",
                     "payment_status": PaymentStatus.PENDING,
                     "invoice_class": InvoiceClass.from_registry("ORDINARIA"),
@@ -602,3 +608,31 @@ def test_ledger_add_result_accepts_a_valid_mutation_quintet_round_trip() -> None
 
     assert result.transaction.transaction_id == "a" * 64
     assert LedgerAddResult.model_validate_json(result.model_dump_json()) == result
+
+
+def test_preflight_issue_payload_declares_every_application_issue_field() -> None:
+    """The strict CLI payload forbids extras, so it must mirror every issue field the report dumps."""
+    from ....application.ledger.preflight import LedgerPreflightIssue
+    from ..modelo_query_results import LedgerIssuePayload
+
+    assert set(LedgerPreflightIssuePayload.model_fields) == set(LedgerPreflightIssue.model_fields)
+    assert set(LedgerIssuePayload.model_fields) == set(LedgerPreflightIssue.model_fields)
+
+
+def test_a_rectificativa_preflight_issue_reaches_the_cli_payload() -> None:
+    """A held rectificativa's missing facts and signed figures survive the JSON projection."""
+    from ....application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
+
+    issue = LedgerPreflightIssue(
+        transaction_id="a" * 64,
+        reason=LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT,
+        detail="the rectificativa needs its period election",
+        missing_facts=("issuer_minoracion_election",),
+        derived_modification_base=Decimal("-100.00"),
+        derived_modification_cuota=Decimal("-21.00"),
+    )
+    payload = LedgerPreflightIssuePayload.model_validate(issue.model_dump(mode="json"))
+    assert payload.missing_facts == ["issuer_minoracion_election"]
+    assert payload.derived_modification_base == "-100.00"
+    assert payload.derived_modification_cuota == "-21.00"
+    assert payload.derived_modification_recargo is None

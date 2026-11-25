@@ -17,15 +17,15 @@ from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 from dev.source_tree import content_digest, repository_files
 
 from .runtime_probe_contracts import CompatibilityProbeError
-from .runtime_probe_identity import _builder_pin, _cohort_lock_digest, _read_lock_digest
+from .runtime_probe_identity import builder_pin, cohort_lock_digest, read_lock_digest
 
 
-def _cohort_digests(cohort: PythonCohort) -> dict[str, str]:
+def cohort_digests(cohort: PythonCohort) -> dict[str, str]:
     """Return the sealed digest of each distribution the cohort publishes."""
     return {name: cohort.sha256[name] for name in PRODUCT_IDENTITY.cohort_distributions}
 
 
-def _load_binary_artifacts(
+def load_binary_artifacts(
     cohort_dir: Path,
     *,
     repo_root: Path,
@@ -37,7 +37,7 @@ def _load_binary_artifacts(
     # lets us validate the wrapper's exact builder identity when it is present.
     python_dir = resolved / "python" if (resolved / "python" / "python-cohort.json").is_file() else resolved
     cohort = load_python_cohort(python_dir)
-    lock_sha256 = _cohort_lock_digest(cohort)
+    lock_sha256 = cohort_lock_digest(cohort)
     builder_python: str | None = None
     release_manifest = resolved / "release-cohort.json"
     if release_manifest.is_file():
@@ -45,7 +45,7 @@ def _load_binary_artifacts(
 
         release = load_release_cohort(resolved)
         builder_python = release.manifest.builder.python
-        expected = _builder_pin(repo_root)
+        expected = builder_pin(repo_root)
         if builder_python != expected:
             raise CompatibilityProbeError(
                 f"sealed release cohort builder drifted: expected {expected!r}, got {builder_python!r}",
@@ -58,10 +58,10 @@ def _load_binary_artifacts(
             strict=True,
         )
     )
-    return cohort, artifacts, lock_sha256, artifact_map_digest(_cohort_digests(cohort)), builder_python
+    return cohort, artifacts, lock_sha256, artifact_map_digest(cohort_digests(cohort)), builder_python
 
 
-def _source_artifacts(
+def source_artifacts(
     repo_root: Path,
     work_dir: Path,
 ) -> tuple[tuple[tuple[str, Path], ...], str, dict[str, str], str | None]:
@@ -74,4 +74,4 @@ def _source_artifacts(
     # The snapshot is a private, per-probe copy nobody else writes to, so its
     # content digest names exactly the bytes the builders above consumed.
     source_digest = content_digest(build_root, repository_files(build_root))
-    return artifacts, _read_lock_digest(build_root / "uv.lock"), digests, source_digest
+    return artifacts, read_lock_digest(build_root / "uv.lock"), digests, source_digest

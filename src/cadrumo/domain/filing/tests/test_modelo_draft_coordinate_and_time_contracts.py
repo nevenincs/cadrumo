@@ -32,14 +32,18 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.period import Period
 from ....core.time.utc import validate_utc_aware
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ...submission.models import ModeloDraftStatus
 from ..schema import ModeloBindingValue, ModeloDraft, ModeloValue, ModeloValueKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_UTC_INSTANT = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
-_NAIVE_INSTANT = datetime(2026, 5, 3, 12, 0)
-_OFFSET_INSTANT = datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1)))
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("130").id)
+
+_UTC_INSTANT = datetime(_YEAR, 5, 3, 12, 0, tzinfo=UTC)
+_NAIVE_INSTANT = datetime(_YEAR, 5, 3, 12, 0)
+_OFFSET_INSTANT = datetime(_YEAR, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1)))
 _NIF = "12345678Z"
 
 
@@ -66,7 +70,7 @@ def _binding_value(binding_id: str, *, row_index: int | None = None) -> ModeloBi
 
 def _draft(**overrides: object) -> ModeloDraft:
     """Build the coherent draft the production builder emits, with overrides."""
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     kwargs: dict[str, object] = {
         "draft_id": "draft-coordinate-test",
         "modelo": "130",
@@ -75,7 +79,7 @@ def _draft(**overrides: object) -> ModeloDraft:
         "subject_tax_id": _NIF,
         "snapshot_ref": RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
+            revision_id=_REVISION_ID,
             modelo_year=period.filing_year,
             period=period.registry_token,
         ),
@@ -83,7 +87,7 @@ def _draft(**overrides: object) -> ModeloDraft:
         "values": (_value(),),
         "created_at": _UTC_INSTANT,
         "updated_at": _UTC_INSTANT,
-        "schema_version": "registry:130:2019-y-siguientes",
+        "schema_version": f"registry:130:{_REVISION_ID}",
     }
     kwargs.update(overrides)
     return ModeloDraft.model_validate(kwargs)
@@ -146,14 +150,14 @@ def test_approved_at_stays_optional() -> None:
 
 
 def test_draft_refuses_a_snapshot_year_that_is_not_its_filing_year() -> None:
-    """A 2026 draft cannot carry a 2025 snapshot reference."""
-    period = Period.from_year_and_code(2026, "1T")
+    """A draft cannot carry a snapshot reference of the previous year."""
+    period = Period.from_year_and_code(_YEAR, "1T")
     with pytest.raises(ValidationError, match="filing year"):
         _draft(
             snapshot_ref=RegistrySnapshotRef(
                 modelo="130",
-                revision_id="2019-y-siguientes",
-                modelo_year=2025,
+                revision_id=_REVISION_ID,
+                modelo_year=_YEAR - 1,
                 period=period.registry_token,
             ),
         )
@@ -165,8 +169,8 @@ def test_draft_refuses_a_snapshot_period_token_that_is_not_its_period() -> None:
         _draft(
             snapshot_ref=RegistrySnapshotRef(
                 modelo="130",
-                revision_id="2019-y-siguientes",
-                modelo_year=2026,
+                revision_id=_REVISION_ID,
+                modelo_year=_YEAR,
                 period="4T",
             ),
         )
@@ -178,12 +182,12 @@ def test_the_modelo_axis_refusal_is_unchanged() -> None:
     Guards against the year/token additions accidentally replacing rather than
     completing the coordinate contract.
     """
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     with pytest.raises(ValidationError, match="snapshot_ref modelo"):
         _draft(
             snapshot_ref=RegistrySnapshotRef(
                 modelo="100",
-                revision_id="2019-y-siguientes",
+                revision_id=_REVISION_ID,
                 modelo_year=period.filing_year,
                 period=period.registry_token,
             ),

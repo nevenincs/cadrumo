@@ -1,11 +1,11 @@
 """Shared collection-time process-private storage-root derivation.
 
 Both the repo-root ``conftest.py`` and ``src/cadrumo/conftest.py`` point
-``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private directory before imports
+``CADRUMO_STORAGE_ROOT`` at a process-private directory before imports
 resolve ``Settings``. That prevents collection-time imports from resolving an
 operator's application state. The collection root and frozen authority
-snapshot are siblings under ``CADRUMO_TEMP_DIR`` (defaulting below the
-configured Cadrumo storage root); this module provides their paths and a
+snapshot are siblings under the run's temporary directory
+(:func:`tempfile.gettempdir`); this module provides their paths and a
 best-effort cleanup so per-invocation directories do not accumulate.
 
 Pure-stdlib on purpose: importing this module must never resolve Settings,
@@ -22,13 +22,13 @@ import logging
 import os
 import shutil
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 from ..core.directory_scan import scan_directory
-from ..core.storage_environment import prepare_temporary_directory
 
-_STEM = "cadrumo-pytest-"
+STEM = "cadrumo-pytest-"
 
 SETTINGS_STEM = "cadrumo-settings-"
 """Prefix for the temporary storage roots ``env_scope`` mints per call.
@@ -87,7 +87,7 @@ bound. That is not left to reviewer memory: a gate discovers every
 finalized at its own call site.
 """
 
-_SWEPT_STEMS = (_STEM, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, *SWEPT_SCRATCH_STEMS)
+_SWEPT_STEMS = (STEM, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, *SWEPT_SCRATCH_STEMS)
 """Every prefix the staleness sweep reclaims.
 
 The first two families leak by the same mechanism -- a process that is killed
@@ -100,7 +100,7 @@ structurally cannot. :data:`SWEPT_SCRATCH_STEMS` extends the same reclaim to
 the scratch families that carry no owner in their names.
 """
 
-_STALE_AFTER_SECONDS = 24 * 60 * 60
+STALE_AFTER_SECONDS = 24 * 60 * 60
 """Generous staleness threshold for a sibling root: long enough to never
 race a slow CI run or a long-idle interactive session sharing the same
 temp directory, short enough that crashed/killed prior invocations do not
@@ -112,11 +112,11 @@ session that has simply not written for a while is indistinguishable from
 an abandoned one -- so where mtime is the only available signal the
 threshold has to out-wait the slowest plausible quiet period. The
 ``cadrumo-pytest-<pid>`` family carries a second, direct signal on top of
-it (see :data:`_ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
+it (see :data:`ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
 family, whose names carry no owner, has only this one.
 """
 
-_ABANDONED_AFTER_SECONDS = 10 * 60
+ABANDONED_AFTER_SECONDS = 10 * 60
 """Grace period applied only AFTER the owning process is confirmed gone.
 
 A ``cadrumo-pytest-<pid>`` directory names its owner in its own filename,
@@ -124,7 +124,7 @@ so for that family liveness is directly observable rather than inferred
 from mtime. Once the owning PID no longer resolves to a running process,
 no live session can be using the directory -- that path is derived from
 ``os.getpid()`` and nothing else ever opens it -- so the slow-CI-run case
-:data:`_STALE_AFTER_SECONDS` guards against cannot apply: a slow run's
+:data:`STALE_AFTER_SECONDS` guards against cannot apply: a slow run's
 process is alive by definition and is spared however long it idles.
 
 The grace is therefore not a staleness estimate but a margin for the
@@ -161,7 +161,7 @@ def process_is_live(pid: int) -> bool:
 
     PID reuse is the known unsoundness, and it lands on the safe side too: a
     recycled identifier makes an abandoned directory look owned, which costs
-    one more day of retention before :data:`_STALE_AFTER_SECONDS` reclaims it
+    one more day of retention before :data:`STALE_AFTER_SECONDS` reclaims it
     anyway. It cannot make a live directory look abandoned.
 
     Ordering matters and is satisfied structurally by querying per directory
@@ -225,7 +225,7 @@ def _windows_process_is_live(pid: int) -> bool:
 
 def _owning_pid(sibling: Path, stem: str) -> int | None:
     """Return the PID encoded in ``sibling``'s name, or ``None`` if it carries none."""
-    if stem not in {_STEM, AUTHORITY_SNAPSHOT_STEM}:
+    if stem not in {STEM, AUTHORITY_SNAPSHOT_STEM}:
         return None
     suffix = sibling.name[len(stem) :]
     if not suffix.isdigit():
@@ -241,18 +241,18 @@ def _is_reclaimable(sibling: Path, stem: str, reference: float) -> bool:
 
     Two independent grounds, either sufficient:
 
-    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), the only rule that
+    * the mtime ceiling (:data:`STALE_AFTER_SECONDS`), the only rule that
       applies to a family whose names carry no owner; and
     * the owning process is confirmed gone and the short abandonment grace
-      (:data:`_ABANDONED_AFTER_SECONDS`) has elapsed.
+      (:data:`ABANDONED_AFTER_SECONDS`) has elapsed.
 
     The second is strictly additive: it reclaims sooner where a direct
     liveness answer exists, and never widens what the first alone would take.
     """
     age = reference - sibling.stat().st_mtime
-    if age > _STALE_AFTER_SECONDS:
+    if age > STALE_AFTER_SECONDS:
         return True
-    if age <= _ABANDONED_AFTER_SECONDS:
+    if age <= ABANDONED_AFTER_SECONDS:
         return False
     pid = _owning_pid(sibling, stem)
     return pid is not None and not process_is_live(pid)
@@ -320,7 +320,7 @@ it, which survives whenever that removal is interrupted. Both carry the same
 ``.lock`` file naming the same kind of owner, so both reclaim under one rule.
 """
 
-_LOCK_NAME = ".lock"
+LOCK_NAME = ".lock"
 """pytest's per-numbered-directory lock file (``_pytest.pathlib.get_lock_path``).
 
 Created once with ``O_EXCL`` at directory creation, holding the owning
@@ -345,7 +345,7 @@ def pytest_numbered_dir_root(temproot: Path | None = None) -> Path:
         user: str | None = getpass.getuser()
     except (OSError, ImportError, KeyError):
         user = None
-    root = temproot if temproot is not None else prepare_temporary_directory()
+    root = temproot if temproot is not None else Path(tempfile.gettempdir())
     return root / f"pytest-of-{user or 'unknown'}"
 
 
@@ -359,7 +359,7 @@ def _numbered_dir_owner_pid(directory: Path) -> int | None:
     pytest creates the numbered directory and writes the lock in two separate
     steps and a directory observed between them has no lock yet.
     """
-    lock = directory / _LOCK_NAME
+    lock = directory / LOCK_NAME
     try:
         if not lock.is_file():
             return None
@@ -381,9 +381,9 @@ def _numbered_dir_is_reclaimable(directory: Path, reference: float) -> bool:
     storage roots, reading the owner from the lock file's contents rather than
     from the directory's own name:
 
-    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), which is the only rule
+    * the mtime ceiling (:data:`STALE_AFTER_SECONDS`), which is the only rule
       available when the lock is absent or unreadable; and
-    * the owning process is confirmed gone and :data:`_ABANDONED_AFTER_SECONDS`
+    * the owning process is confirmed gone and :data:`ABANDONED_AFTER_SECONDS`
       has elapsed.
 
     The second ground is what pytest structurally cannot apply itself.
@@ -397,9 +397,9 @@ def _numbered_dir_is_reclaimable(directory: Path, reference: float) -> bool:
     approximating, and answers it in minutes instead of days.
     """
     age = reference - directory.stat().st_mtime
-    if age > _STALE_AFTER_SECONDS:
+    if age > STALE_AFTER_SECONDS:
         return True
-    if age <= _ABANDONED_AFTER_SECONDS:
+    if age <= ABANDONED_AFTER_SECONDS:
         return False
     pid = _numbered_dir_owner_pid(directory)
     return pid is not None and not process_is_live(pid)
@@ -465,23 +465,64 @@ def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tup
 def collection_storage_root() -> Path:
     """Return this process's private collection-time storage root.
 
-    ``<CADRUMO_TEMP_DIR>/cadrumo-pytest-<pid>`` and process-private by construction
+    ``<gettempdir()>/cadrumo-pytest-<pid>`` and process-private by construction
     (keyed on the current PID), so concurrent pytest invocations, including
     parallel delegated clients sharing this worktree, never collide.
     """
-    return prepare_temporary_directory() / f"{_STEM}{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"{STEM}{os.getpid()}"
 
 
 def authority_snapshot_root() -> Path:
     """Return this process's private directory for the frozen registry authority.
 
-    ``<CADRUMO_TEMP_DIR>/cadrumo-frozen-authority-<pid>``, beside the collection storage
+    ``<gettempdir()>/cadrumo-frozen-authority-<pid>``, beside the collection storage
     root and never inside it; :data:`AUTHORITY_SNAPSHOT_STEM` records why.
     """
-    return prepare_temporary_directory() / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
 
 
-def _release_log_handlers_under(root: Path) -> None:
+_LINKED_COMPONENTS: list[Path] = []
+"""Links this process created inside private roots; each is removed before its root is."""
+
+
+def link_installed_component(root: Path, member: str, installed: Path) -> None:
+    """Expose an installed component tree inside a private test root, best effort.
+
+    The storage root is the only control over where the product looks, so a
+    test root that needs the real browser build must contain it. The link
+    points at the operator's installed tree and is removed, never followed,
+    when the root is removed. Nothing happens when the installed tree is
+    absent, the member already exists, or the platform refuses the link.
+    """
+    if not installed.is_dir():
+        return
+    link = root / member
+    if link.exists() or link.is_symlink():
+        return
+    try:
+        link.parent.mkdir(parents=True, exist_ok=True)
+        if sys.platform == "win32":
+            import _winapi
+
+            _winapi.CreateJunction(str(installed), str(link))
+        else:
+            link.symlink_to(installed, target_is_directory=True)
+    except OSError:
+        return
+    _LINKED_COMPONENTS.append(link)
+
+
+def _unlink_components() -> None:
+    for link in _LINKED_COMPONENTS:
+        with contextlib.suppress(OSError):
+            if sys.platform == "win32":
+                link.rmdir()
+            else:
+                link.unlink()
+    _LINKED_COMPONENTS.clear()
+
+
+def release_log_handlers_under(root: Path) -> None:
     """Close and detach any root-logger file handler writing under ``root``.
 
     ``configure_logging`` (``cadrumo.core.logging``) attaches a
@@ -566,7 +607,8 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
         reap_abandoned_numbered_dirs(pytest_numbered_dir_root(root.parent))
 
     def _cleanup() -> None:
-        _release_log_handlers_under(root)
+        _unlink_components()
+        release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
         shutil.rmtree(authority_snapshot_root(), ignore_errors=True)
         sweep_stale_roots(root.parent, exclude=root)
@@ -588,7 +630,7 @@ def apply_collection_storage_root(*, overwrite: bool = False) -> Path:
 
     Args:
         overwrite: When ``True``, unconditionally overwrite
-            ``CADRUMO_LOCAL_STORAGE_ROOT`` (``src/cadrumo/conftest.py``'s
+            ``CADRUMO_STORAGE_ROOT`` (``src/cadrumo/conftest.py``'s
             historical behaviour). When ``False`` (default), only set it if
             unset (the repo-root ``conftest.py``'s historical
             ``os.environ.setdefault`` behaviour, since the root conftest loads
@@ -597,8 +639,8 @@ def apply_collection_storage_root(*, overwrite: bool = False) -> Path:
     """
     root = collection_storage_root()
     if overwrite:
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ["CADRUMO_STORAGE_ROOT"] = str(root)
     else:
-        os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+        os.environ.setdefault("CADRUMO_STORAGE_ROOT", str(root))
     register_collection_storage_root_cleanup(root)
     return root

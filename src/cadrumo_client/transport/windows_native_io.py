@@ -143,25 +143,55 @@ def finish_windows_io(
 ) -> int:
     """Join cancellation on the owning thread before releasing native I/O state.
 
-    A set wake ends the wait as an unmet deadline does; without a deadline,
-    only completion or a wake ends it.
+    A set wake or handled console interrupt ends the wait as an unmet
+    deadline does. A raised signal handler propagates after I/O settles.
     """
+    import _winapi
+
     import pywintypes
     import win32event
     import win32file
 
     try:
         waited = win32event.INFINITE if deadline is None else windows_deadline_milliseconds(deadline)
-        elapsed = win32event.WaitForMultipleObjects(
-            [overlapped.hEvent, *(wake.waitable for wake in wakes)], False, waited
-        )
+        try:
+            # CPython adds its SIGINT event on the main thread. A raw native
+            # wait can otherwise park forever before Python runs our handler
+            # and sets the runtime's stop wake.
+            elapsed = native_windows_call(
+                _winapi,
+                "WaitForMultipleObjects",
+                [int(overlapped.hEvent), *(wake.waitable for wake in wakes)],
+                False,
+                waited,
+            )
+        except InterruptedError:
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         if elapsed != win32event.WAIT_OBJECT_0:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return win32file.GetOverlappedResult(int(handle), overlapped, False)
-    except RefusalError:
+    except BaseException:
         # Cancellation must complete before releasing the OVERLAPPED/read buffer.
         # The operation and CancelIo run on the same thread.
-        win32file.CancelIo(int(handle))
+        with contextlib.suppress(pywintypes.error):
+            win32file.CancelIo(int(handle))
         with contextlib.suppress(pywintypes.error):
             win32file.GetOverlappedResult(int(handle), overlapped, True)
         raise
+
+
+def cancel_windows_io(handle: int) -> None:
+    """Request cancellation across threads while the caller retains the pipe."""
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    cancel = kernel.CancelIoEx
+    cancel.argtypes = (wintypes.HANDLE, ctypes.c_void_p)
+    cancel.restype = wintypes.BOOL
+    if not cancel(handle, None):
+        error = ctypes.get_last_error()
+        # No pending operation remains when completion wins the race.
+        if error != 1168:
+            raise ctypes.WinError(error)

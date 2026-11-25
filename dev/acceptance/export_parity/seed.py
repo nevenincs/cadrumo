@@ -16,7 +16,7 @@ from .scenario import (
     SCENARIO_VERSION,
     YEARS,
 )
-from .seed_campaign import _Seeder
+from .seed_campaign import Seeder
 from .seed_contracts import (
     SeedError,
     SeedReceipt,
@@ -74,7 +74,7 @@ def run_seed(
         raise SeedError("authority generation changed since this store was seeded; seed a fresh store")
     if receipt.carry_evidence != carry_evidence:
         raise SeedError(f"this store was seeded with carry evidence {receipt.carry_evidence!r}; seed a fresh store")
-    seeder = _Seeder(
+    seeder = Seeder(
         cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=run_dir / "evidence", first_year=min(years)
     )
     seeder.profile()

@@ -14,7 +14,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, asynccontextmanager, nullcontext
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -28,9 +28,6 @@ from ...adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -68,14 +65,18 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -85,7 +86,8 @@ from ..justificante_composition import build_justificante_capture_service, load_
 from ..live_state_composition import compose_filed_observation_persistence_ports
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
-from .test_modelo_reconciliation_frontend_parity import _JUSTIFICANTE_FIXTURE, _session_host
+from .supervised_operation_rig import build_supervised_operation
+from .test_modelo_reconciliation_frontend_parity import session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -301,24 +303,10 @@ def test_a_client_captures_then_reconciles_with_the_identifier_the_capture_retur
                 build_modelo_reconciliation_pull_registration(pull_definition),
             ),
         )
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        run = _Run(
-            supervisor, registry, OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
-        )
+        run = _Run(supervisor, registry, result_service)
 
         async def sequence():
             captured_terminal, captured = await run.execute(
@@ -379,22 +367,12 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
         cleanup=conformance.OperationRuntimeCloseWitness(),
-        execution_caller_reader=_session_host(frontend),
+        execution_caller_reader=session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))
         with override_settings(cadrumo_active_profile=str(profile_id)):
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-            pdf = _JUSTIFICANTE_FIXTURE.read_bytes()
-            snapshot = build_justificante_capture_service(str(profile_id)).capture(
-                modelo=str(unit.modelo),
-                filing_year=unit.filing_year,
-                period=unit.period,
-                expediente_id="202413000000001Z",
-                csv="ABCD1234EFGH",
-                pdf_bytes=pdf,
-                pdf_sha256=sha256_hex(pdf),
-                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-            )
+            snapshot = modelo_operation_test_support.captured_justificante_snapshot(profile_id, unit)
             before = tuple(ModeloReconciliationPersistence().iter_records())
             submitted, observed = asyncio.run(
                 driver.run(
@@ -426,7 +404,7 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
             unchanged = tuple(ModeloReconciliationPersistence().iter_records())
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observed.projection.effect is OperationEffect.UPDATED
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,

@@ -12,7 +12,7 @@ lookup need no model, no vectors, and no network. The service has no degraded
 mode because it has no optional half to degrade from.
 
 See Also:
-    :func:`~application.corpus_search._retrieval.run_retrieval`
+    :func:`~application.corpus_search.retrieval.run_retrieval`
         Retrieval primitive this runtime service provisions and calls.
 """
 
@@ -30,20 +30,17 @@ from ...core.directory_scan import scan_directory
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
-from ._retrieval import run_retrieval
+from ...core.storage_taxonomy_locations import storage_location, storage_path
 from .citation_lookup import bundled_citation_lookup
 from .lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
 from .models import RetrievalResponse
+from .retrieval import run_retrieval
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Bare filename, read off the taxonomy rather than an untethered string
-# literal. Still joined onto ``cadrumo_corpus_search_cache_dir`` exactly as
-# before -- the member carries no ``settings_field`` and is not safe to
-# resolve directly, because ``CORPUS_SEARCH_CACHE`` is operator-overridable
-# (see the member's declaration in ``core.storage_taxonomy``).
+# literal, joined onto the corpus-search cache directory.
 _INDEX_FILENAME = Path(storage_location(StorageCategory.CORPUS_SEARCH_INDEX).subpath).name
 
 _DEFAULT_LIMIT = 8
@@ -60,15 +57,11 @@ _METADATA_KEY = "corpus_identity"
 def corpus_search_dir(settings: Settings | None = None) -> Path:
     """Return the app-controlled corpus-search cache directory.
 
-    Read from the settings field rather than joined onto the storage root
-    here. A module-local subdirectory literal is invisible to the taxonomy:
-    no environment override could reach it, the tree materialiser could not
-    pre-create it, and a root override in a test would not redirect it -- so
-    this module carried its own ``mkdir`` to compensate for a directory
-    nothing else knew about.
+    Resolved through the taxonomy rather than joined onto the storage root
+    here, so the tree materialiser knows the directory and a root override
+    redirects it.
     """
-    resolved = settings or load_settings()
-    return resolved.cadrumo_corpus_search_cache_dir
+    return storage_path(StorageCategory.CORPUS_SEARCH_CACHE, settings=settings or load_settings())
 
 
 def corpus_index_path(settings: Settings | None = None) -> Path:
@@ -88,13 +81,13 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     database_path.parent.mkdir(parents=True, exist_ok=True)
     corpus_root = bundled_corpus_html_root()
     with exclusive_file_lock(database_path):
-        source_identity = _corpus_identity(corpus_root)
-        if _stored_identity(database_path) == source_identity:
+        source_identity = corpus_identity(corpus_root)
+        if stored_identity(database_path) == source_identity:
             return database_path
         staging_path = _staging_database_path(database_path)
         try:
             build_lexical_index(staging_path, iter_corpus_chunks(corpus_root))
-            if _corpus_identity(corpus_root) != source_identity:
+            if corpus_identity(corpus_root) != source_identity:
                 raise InternalInvariantError("corpus sources changed while the lexical index was being built")
             _store_identity(staging_path, source_identity)
             os.replace(staging_path, database_path)
@@ -103,7 +96,8 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     return database_path
 
 
-def _corpus_identity(corpus_root: Path) -> str:
+def corpus_identity(corpus_root: Path) -> str:
+    """Compute the content identity of the corpus from its schema versions and files."""
     digest = hashlib.sha256()
     for token in (_INDEX_SCHEMA_VERSION, _EXTRACTOR_SCHEMA_VERSION):
         encoded = token.encode("utf-8")
@@ -119,7 +113,8 @@ def _corpus_identity(corpus_root: Path) -> str:
     return digest.hexdigest()
 
 
-def _stored_identity(database_path: Path) -> str | None:
+def stored_identity(database_path: Path) -> str | None:
+    """Read the corpus identity stored in the index database, or None when it is absent."""
     if not database_path.is_file():
         return None
     try:

@@ -44,6 +44,9 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..test_service_records import ControlledServiceVerifier
+from .admitted_model_run_service import ModelRunAnswers, admitted_model_run_service, model_run_service_descriptor
+
 __all__ = [
     "NativeCliProfileFixture",
     "RuntimeFailureObservation",
@@ -159,7 +162,7 @@ def observe_native_runtime_failures(
     original_failed_set = server._failed.set
     original_exchange = ProfileWorkerProcess._exchange
     original_operation = profiles.operation
-    original_held_body = WorkerAuthorizationServer._held_body
+    original_held_body = WorkerAuthorizationServer.held_body
     original_close = ProfileWorkerProcess.close
     guard = Lock()
 
@@ -298,12 +301,12 @@ def observe_native_runtime_failures(
         exchange_patch.setattr(ProfileWorkerProcess, "_exchange", observe_worker_exchange)
         cast(Any, server._failed).set = observe_failed_set
         cast(Any, profiles).operation = observe_profile_operation
-        cast(Any, WorkerAuthorizationServer)._held_body = observe_held_body
+        cast(Any, WorkerAuthorizationServer).held_body = observe_held_body
         cast(Any, ProfileWorkerProcess).close = observe_worker_close
         yield
     finally:
         cast(Any, ProfileWorkerProcess).close = original_close
-        cast(Any, WorkerAuthorizationServer)._held_body = original_held_body
+        cast(Any, WorkerAuthorizationServer).held_body = original_held_body
         cast(Any, profiles).operation = original_operation
         cast(Any, server._failed).set = original_failed_set
         exchange_patch.undo()
@@ -314,12 +317,20 @@ def native_cli_profile_server(
     storage_root: Path,
     *,
     failure_observer: Callable[[RuntimeFailureObservation], None] | None = None,
+    model_runs: tuple[UUID, str, ModelRunAnswers] | None = None,
 ) -> Generator[None]:
-    """Serve a real worker with explicit development session admission and a synthetic native store."""
+    """Serve a real worker with explicit development session admission and a synthetic native store.
+
+    ``model_runs``, when given, names a profile, its passphrase and the answers
+    of an agent service admitted under that person's session, so the worker's
+    model runs reach a service; without it no service is admitted and every run
+    is refused ``service_unavailable``.
+    """
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
+    storage_root.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=storage_root)
-    stop, boot, native = Event(), uuid4(), MemoryNativePort()
+    stop, boot, native, verifier = Event(), uuid4(), MemoryNativePort(), ControlledServiceVerifier()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=15)
     primary: BaseException | None = None
     try:
@@ -336,6 +347,8 @@ def native_cli_profile_server(
             capture_login=login_policy.capture,
             login_inventory=login_policy.inventory,
             secret_store=lambda: native,
+            service_descriptors=None if model_runs is None else (model_run_service_descriptor(),),
+            service_verifier=None if model_runs is None else verifier,
         )
         profiles.prepare_registry()
         server = RetainedRuntimeTransportServer(
@@ -348,17 +361,28 @@ def native_cli_profile_server(
         owner.running = running
         owner.server = server
         assert server.ready.wait(3)
-        if failure_observer is None:
+        with ExitStack() as serving:
+            if failure_observer is not None:
+
+                def observe(observation: RuntimeFailureObservation) -> None:
+                    failure_observations.append(observation)
+                    del failure_observations[:-32]
+                    failure_observer(observation)
+
+                serving.enter_context(observe_native_runtime_failures(server, profiles, failure_observer=observe))
+            if model_runs is not None:
+                profile_id, passphrase, answers = model_runs
+                serving.enter_context(
+                    admitted_model_run_service(
+                        endpoint,
+                        product_version=version("cadrumo"),
+                        verifier=verifier,
+                        profile_id=profile_id,
+                        passphrase=passphrase,
+                        answers=answers,
+                    )
+                )
             yield
-        else:
-
-            def observe(observation: RuntimeFailureObservation) -> None:
-                failure_observations.append(observation)
-                del failure_observations[:-32]
-                failure_observer(observation)
-
-            with observe_native_runtime_failures(server, profiles, failure_observer=observe):
-                yield
     except BaseException as error:
         primary = error
         raise
@@ -383,12 +407,23 @@ class NativeCliProfileFixture:
     def passphrase(self) -> str:
         return load_settings().cadrumo_dev_test_database_password.get_secret_value()
 
-    def register(self, *, label: str, facts: Mapping[str, str]) -> None:
+    def register(self, *, label: str, facts: Mapping[str, str], model_runs: ModelRunAnswers | None = None) -> None:
+        """Register the profile and serve it; ``model_runs`` admits an agent service answering its runs."""
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
         if self.label is not None:
             raise AssertionError("the native CLI fixture registers exactly one profile")
-        register_cli_profile(label=label, facts=facts, log_in=False)
+        profile_id = register_cli_profile(label=label, facts=facts, log_in=False)
+        service = None if model_runs is None else (UUID(profile_id), self.passphrase, model_runs)
+        self.scope.enter_context(
+            native_cli_profile_server(self.storage_root, failure_observer=self.failure_observer, model_runs=service)
+        )
+        self.label = label
+
+    def serve_copied(self, *, label: str) -> None:
+        """Serve the one profile a copied world already holds."""
+        if self.label is not None:
+            raise AssertionError("the native CLI fixture registers exactly one profile")
         self.scope.enter_context(native_cli_profile_server(self.storage_root, failure_observer=self.failure_observer))
         self.label = label
 

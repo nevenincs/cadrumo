@@ -10,13 +10,13 @@ from .frontend_contract import (
     InvoiceObservation,
     TransactionObservation,
 )
-from .installed_tui_cli_transport import _cli_command, _decimal, _result, _text
+from .installed_tui_cli_transport import cli_command, decimal, installed_tui_cli_transport_result, text
 from .installed_tui_contracts import (
-    _INVOICE_BASE,
-    _INVOICE_IVA,
-    _INVOICE_TOTAL,
-    _TUI_IMPORTED_TRANSACTION_AMOUNT,
-    _TUI_IMPORTED_TRANSACTION_DIRECTION,
+    INVOICE_BASE,
+    INVOICE_IVA,
+    INVOICE_TOTAL,
+    TUI_IMPORTED_TRANSACTION_AMOUNT,
+    TUI_IMPORTED_TRANSACTION_DIRECTION,
     LedgerInstalledTuiError,
 )
 
@@ -41,16 +41,16 @@ def _assert_tui_only_invoice_readback(
 ) -> None:
     """Tui only invoice readback."""
     if (
-        _text(invoice_payload.get("invoice_id"), stage="TUI-only CLI oracle invoice readback") != invoice.invoice_id
+        text(invoice_payload.get("invoice_id"), stage="TUI-only CLI oracle invoice readback") != invoice.invoice_id
         or invoice_payload.get("invoice_number") != invoice_number
         or invoice_payload.get("notes") != updated_notes
     ):
         raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve canonical invoice identity or metadata")
     if (
-        _decimal(invoice_payload.get("base_total"), stage="TUI-only CLI oracle invoice readback"),
-        _decimal(invoice_payload.get("iva_total"), stage="TUI-only CLI oracle invoice readback"),
-        _decimal(invoice_payload.get("grand_total"), stage="TUI-only CLI oracle invoice readback"),
-    ) != (_INVOICE_BASE, _INVOICE_IVA, _INVOICE_TOTAL):
+        decimal(invoice_payload.get("base_total"), stage="TUI-only CLI oracle invoice readback"),
+        decimal(invoice_payload.get("iva_total"), stage="TUI-only CLI oracle invoice readback"),
+        decimal(invoice_payload.get("grand_total"), stage="TUI-only CLI oracle invoice readback"),
+    ) != (INVOICE_BASE, INVOICE_IVA, INVOICE_TOTAL):
         raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve canonical invoice totals")
     if invoice_payload.get("linked_transaction_ids") != []:
         raise LedgerInstalledTuiError("TUI-only CLI oracle invoice unexpectedly acquired a transaction link")
@@ -58,8 +58,8 @@ def _assert_tui_only_invoice_readback(
 
 def _tui_only_transaction_identity(cli: InstalledCli, updated_description: str) -> str:
     """Tui only transaction identity."""
-    listing = _result(
-        _cli_command(
+    listing = installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "list"),
             stage="TUI-only CLI oracle transaction discovery",
@@ -74,11 +74,11 @@ def _tui_only_transaction_identity(cli: InstalledCli, updated_description: str) 
     if len(matches) != 1:
         raise LedgerInstalledTuiError("TUI-only CLI oracle did not expose exactly one imported transaction")
     transaction_row = cast("dict[str, Any]", matches[0])
-    transaction_id = _text(transaction_row.get("transaction_id"), stage="TUI-only CLI oracle transaction readback")
+    transaction_id = text(transaction_row.get("transaction_id"), stage="TUI-only CLI oracle transaction readback")
     if (
-        _decimal(transaction_row.get("amount"), stage="TUI-only CLI oracle transaction readback")
-        != _TUI_IMPORTED_TRANSACTION_AMOUNT
-        or transaction_row.get("direction") != _TUI_IMPORTED_TRANSACTION_DIRECTION
+        decimal(transaction_row.get("amount"), stage="TUI-only CLI oracle transaction readback")
+        != TUI_IMPORTED_TRANSACTION_AMOUNT
+        or transaction_row.get("direction") != TUI_IMPORTED_TRANSACTION_DIRECTION
         or transaction_row.get("invoice_id") is not None
     ):
         raise LedgerInstalledTuiError(
@@ -91,22 +91,22 @@ def _assert_tui_only_transaction_tracking(
     tracking_payload: dict[str, Any], transaction_id: str, updated_description: str
 ) -> None:
     """Tui only transaction tracking."""
-    tracked = _transaction_observation(tracking_payload, stage="TUI-only CLI oracle transaction lineage")
+    tracked = transaction_observation(tracking_payload, stage="TUI-only CLI oracle transaction lineage")
     transaction = tracking_payload.get("transaction")
     if (
         not isinstance(transaction, dict)
         or tracked.transaction_id != transaction_id
         or tracked.description != updated_description
-        or tracked.amount != _TUI_IMPORTED_TRANSACTION_AMOUNT
+        or tracked.amount != TUI_IMPORTED_TRANSACTION_AMOUNT
         or tracked.invoice_id is not None
-        or transaction.get("direction") != _TUI_IMPORTED_TRANSACTION_DIRECTION
+        or transaction.get("direction") != TUI_IMPORTED_TRANSACTION_DIRECTION
     ):
         raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve tracked transaction state")
     if not tracked.predecessor_ids or transaction_id in tracked.predecessor_ids:
         raise LedgerInstalledTuiError("TUI-only CLI oracle did not expose supported edit lineage")
 
 
-def _invoice_observation(payload: dict[str, Any], *, stage: str) -> InvoiceObservation:
+def invoice_observation(payload: dict[str, Any], *, stage: str) -> InvoiceObservation:
     """Project a public invoice envelope into the shared continuation contract."""
     links = payload.get("linked_transaction_ids")
     if not isinstance(links, list) or not all(isinstance(link, str) and link for link in links):
@@ -115,15 +115,15 @@ def _invoice_observation(payload: dict[str, Any], *, stage: str) -> InvoiceObser
     if not isinstance(notes, str):
         raise LedgerInstalledTuiError(f"{stage} exposed invalid invoice notes")
     return InvoiceObservation(
-        bucket_id=_text(payload.get("bucket_id"), stage=stage),
-        invoice_id=_text(payload.get("invoice_id"), stage=stage),
+        bucket_id=text(payload.get("bucket_id"), stage=stage),
+        invoice_id=text(payload.get("invoice_id"), stage=stage),
         notes=notes,
-        grand_total=_decimal(payload.get("grand_total"), stage=stage),
+        grand_total=decimal(payload.get("grand_total"), stage=stage),
         linked_transaction_ids=tuple(sorted(links)),
     )
 
 
-def _transaction_observation(payload: dict[str, Any], *, stage: str) -> TransactionObservation:
+def transaction_observation(payload: dict[str, Any], *, stage: str) -> TransactionObservation:
     """Project a public tracking envelope into the shared continuation contract."""
     transaction = payload.get("transaction")
     tracking = payload.get("tracking")
@@ -135,20 +135,20 @@ def _transaction_observation(payload: dict[str, Any], *, stage: str) -> Transact
     if invoice_id is not None and (not isinstance(invoice_id, str) or not invoice_id):
         raise LedgerInstalledTuiError(f"{stage} exposed invalid transaction invoice association")
     return TransactionObservation(
-        bucket_id=_text(payload.get("bucket_id"), stage=stage),
-        transaction_id=_text(transaction.get("transaction_id"), stage=stage),
-        description=_text(transaction.get("description"), stage=stage),
-        amount=_decimal(transaction.get("amount"), stage=stage),
+        bucket_id=text(payload.get("bucket_id"), stage=stage),
+        transaction_id=text(transaction.get("transaction_id"), stage=stage),
+        description=text(transaction.get("description"), stage=stage),
+        amount=decimal(transaction.get("amount"), stage=stage),
         invoice_id=invoice_id,
         predecessor_ids=tuple(predecessors),
     )
 
 
-def _read_invoice(cli: InstalledCli, invoice_id: str, *, stage: str) -> InvoiceObservation:
+def read_invoice(cli: InstalledCli, invoice_id: str, *, stage: str) -> InvoiceObservation:
     """Read one canonical invoice through the installed public CLI."""
-    return _invoice_observation(
-        _result(
-            _cli_command(
+    return invoice_observation(
+        installed_tui_cli_transport_result(
+            cli_command(
                 cli,
                 ("app", "ledger", "invoice", "view", invoice_id),
                 stage=stage,
@@ -160,11 +160,11 @@ def _read_invoice(cli: InstalledCli, invoice_id: str, *, stage: str) -> InvoiceO
     )
 
 
-def _read_transaction(cli: InstalledCli, transaction_id: str, *, stage: str) -> TransactionObservation:
+def read_transaction(cli: InstalledCli, transaction_id: str, *, stage: str) -> TransactionObservation:
     """Read one transaction and its public edit lineage through ``ledger track``."""
-    return _transaction_observation(
-        _result(
-            _cli_command(
+    return transaction_observation(
+        installed_tui_cli_transport_result(
+            cli_command(
                 cli,
                 ("app", "ledger", "track", transaction_id),
                 stage=stage,
@@ -176,10 +176,10 @@ def _read_transaction(cli: InstalledCli, transaction_id: str, *, stage: str) -> 
     )
 
 
-def _find_invoice_by_number(cli: InstalledCli, invoice_number: str, *, stage: str) -> InvoiceObservation:
+def find_invoice_by_number(cli: InstalledCli, invoice_number: str, *, stage: str) -> InvoiceObservation:
     """Resolve a public invoice identity only from the canonical list surface."""
-    listing = _result(
-        _cli_command(
+    listing = installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "invoice", "list"),
             stage=stage,
@@ -193,10 +193,10 @@ def _find_invoice_by_number(cli: InstalledCli, invoice_number: str, *, stage: st
     matches = [row for row in rows if isinstance(row, dict) and row.get("invoice_number") == invoice_number]
     if len(matches) != 1:
         raise LedgerInstalledTuiError(f"{stage} did not expose exactly one matching public invoice")
-    return _invoice_observation(cast("dict[str, Any]", matches[0]), stage=stage)
+    return invoice_observation(cast("dict[str, Any]", matches[0]), stage=stage)
 
 
-def _assert_tui_only_cli_oracle(
+def assert_tui_only_cli_oracle(
     cli: InstalledCli,
     *,
     invoice_number: str,
@@ -210,13 +210,13 @@ def _assert_tui_only_cli_oracle(
     for ``ledger track``, so this oracle confines itself to the values and
     lineage the typed JSON surfaces actually expose.
     """
-    invoice = _find_invoice_by_number(
+    invoice = find_invoice_by_number(
         cli,
         invoice_number,
         stage="TUI-only CLI oracle invoice discovery",
     )
-    invoice_payload = _result(
-        _cli_command(
+    invoice_payload = installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "invoice", "view", invoice.invoice_id),
             stage="TUI-only CLI oracle invoice readback",
@@ -228,8 +228,8 @@ def _assert_tui_only_cli_oracle(
 
     transaction_id = _tui_only_transaction_identity(cli, updated_description)
 
-    tracking_payload = _result(
-        _cli_command(
+    tracking_payload = installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "track", transaction_id),
             stage="TUI-only CLI oracle transaction lineage",

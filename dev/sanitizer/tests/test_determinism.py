@@ -1,4 +1,4 @@
-"""Determinism tests for :mod:`dev.sanitizer._determinism`.
+"""Determinism tests for :mod:`dev.sanitizer.determinism`.
 
 The byte-stable save flag set is the load-bearing primitive for
 fixture diff review: without it, two runs against the same source
@@ -16,7 +16,7 @@ import pikepdf
 import pytest
 from pikepdf import ObjectStreamMode
 
-from .._determinism import deterministic_save_flags, save_with_deterministic_flags
+from ..determinism import deterministic_save_flags, save_with_deterministic_flags
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

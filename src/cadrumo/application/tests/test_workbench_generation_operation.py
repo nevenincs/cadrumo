@@ -44,7 +44,6 @@ from cadrumo.application.modelo.work_review import (
     ModeloWorkReview,
     build_modelo_work_review_casillas,
 )
-from cadrumo.application.modelo.workspace import resolve_static_inspection_result
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceExactWorkUnitTargetV1,
@@ -55,6 +54,7 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
+from cadrumo.application.modelo.workspace_schema import resolve_static_inspection_result
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
@@ -64,7 +64,7 @@ from cadrumo.application.operations.public_mirror import (
     project_public_mirror,
     restore_public_mirror,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.overview.calendar_models import (
     OverviewCalendarEntrySource,
     OverviewCalendarRange,
@@ -89,12 +89,12 @@ from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
 )
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.application.workbench_generation_modelo_contracts import (
     PublicBlockerRef,
     PublicModeloWorkConditionalRecargoPreview,
 )
 from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationExecutor,
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,
@@ -110,7 +110,7 @@ from cadrumo.application.workbench_generation_reader import SecureProfileWorkben
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
-from cadrumo.core.operations import OperationEffect, profile_operation_subject
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -817,7 +817,7 @@ async def test_executor_stores_actual_generation_and_none_effect_only_after_read
     generated = _generation()
     calls: list[object] = []
     loop = asyncio.get_running_loop()
-    validate = generation_operation_module._require_pageable_result
+    validate = generation_operation_module.require_pageable_result
 
     def responsive_validation(projection: WorkbenchGenerationOperationProjection) -> None:
         heartbeat = Event()
@@ -825,7 +825,7 @@ async def test_executor_stores_actual_generation_and_none_effect_only_after_read
         assert heartbeat.wait(2), "projection validation blocked runtime observations and lease renewal"
         validate(projection)
 
-    monkeypatch.setattr(generation_operation_module, "_require_pageable_result", responsive_validation)
+    monkeypatch.setattr(generation_operation_module, "require_pageable_result", responsive_validation)
 
     async def reader(
         identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest

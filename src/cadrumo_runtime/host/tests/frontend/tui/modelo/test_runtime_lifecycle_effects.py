@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -16,6 +17,7 @@ from cadrumo.application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
 )
+from cadrumo.application.modelo.export_operation import build_modelo_export_definition, build_modelo_export_registration
 from cadrumo.application.modelo.export_projection import (
     ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
@@ -27,11 +29,7 @@ from cadrumo.application.modelo.m303_attestation_operation import (
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -45,6 +43,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -184,15 +183,15 @@ def _terminal_refused_observation() -> OperationObservationSuccessV1:
     return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
+@dataclass
 class _AttestationController:
     operation_id = _OPERATION_ID
+    start_error: RefusalError | None = None
+    started: bool = False
+    observation: OperationObservationSuccessV1 = field(default_factory=_terminal_refused_observation)
     # The client it was submitted through, as the real controller keeps it.
-    client: SimpleNamespace
-
-    def __init__(self, *, start_error: RefusalError | None = None) -> None:
-        self.start_error = start_error
-        self.started = False
-        self.observation = _terminal_refused_observation()
+    client: SimpleNamespace = field(default_factory=SimpleNamespace)
+    deadline: float | None = None
 
     async def start(self) -> None:
         self.started = True
@@ -231,7 +230,7 @@ def test_attestation_start_transport_failure_retains_canonical_reason_and_unknow
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
-            runtime_lifecycle._admit_attestation(
+            runtime_lifecycle.admit_attestation(
                 cast(FrontendClient, client),
                 lifecycle,
                 _NOW,
@@ -257,7 +256,7 @@ def test_attestation_terminal_refusal_uses_registered_refusal_code_and_observed_
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
-            runtime_lifecycle._admit_attestation(
+            runtime_lifecycle.admit_attestation(
                 cast(FrontendClient, client),
                 lifecycle,
                 _NOW,
@@ -392,3 +391,19 @@ def test_settled_export_result_is_absent_without_a_readable_success() -> None:
     assert asyncio.run(door(refusing_reader).settled_export_result(succeeded)) is None
     assert asyncio.run(door(unreachable_reader).settled_export_result(refused)) is None
     assert asyncio.run(door(None).settled_export_result(succeeded)) is None
+
+
+@pytest.mark.parametrize("modelo", ["303", "100"])
+def test_lifecycle_door_binds_attestation_admission_for_any_modelo(modelo: str) -> None:
+    client = SimpleNamespace(frontend=OperationFrontendProjection.TUI, profile_id=uuid4(), session_id=uuid4())
+    declaration = SimpleNamespace(work_unit_id=_WORK_UNIT_ID, modelo=modelo)
+
+    door = runtime_lifecycle.compose_runtime_modelo_lifecycle_door(
+        cast(FrontendClient, client),
+        cast(Any, declaration),
+        calculation_revision_id=None,
+        verification_report_id=None,
+        asks_modelo_390=False,
+    )
+
+    assert door.m303_exonerado_390_attestation_admission is not None

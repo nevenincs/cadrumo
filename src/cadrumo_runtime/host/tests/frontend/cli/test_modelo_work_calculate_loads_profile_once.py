@@ -54,14 +54,13 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 )
 from cadrumo.application.modelo.m303_attestation_operation import MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.profile_readiness_gate import (
     load_modelo_work_profile,
     require_profile_ready_for_work_unit,
 )
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.capsule_record import LoadedProfileRecord, ProfileRecordStore
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
@@ -69,21 +68,20 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
     operator_profile_facts,
 )
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
+from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import (
+    NativeApiCliSession,
+    native_api_cli_session,
+    operation_lifecycle_scope,
 )
-from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
     pytest.mark.integration,
@@ -120,43 +118,16 @@ def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return decrypts
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the work lifecycle and the evidence captures these commands submit."""
-    return AccessScope(
-        operations=_OPERATIONS,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in _OPERATIONS
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+# The operator pays an employee and a rented workshop with retencion, so the
+# payer modelos 111 and 115 apply to the profile.
+_PAYER_FACTS: dict[str, str] = {
+    "withholding.has_employees": "true",
+    "withholding.pays_rent_with_retencion": "true",
+}
+_PAYER_PROFILE_FACTS = (
+    UserProfileFact(path="withholding.has_employees", value=True),
+    UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+)
 
 
 @contextmanager
@@ -168,7 +139,10 @@ def _operator_session(
     def prepare(profile_id: UUID, root: Path) -> None:
         facts = complete_profile_facts(
             authority_operation.profile_schema(),
-            tuple(UserProfileFact(path=path, value=value) for path, value in operator_profile_facts().items()),
+            tuple(
+                UserProfileFact(path=path, value=value)
+                for path, value in {**operator_profile_facts(), **_PAYER_FACTS}.items()
+            ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
         with bound_test_profile_record(profile_id, root=root) as repository:
@@ -180,7 +154,10 @@ def _operator_session(
         assert ready.setup_state is ProfileSetupState.COMPLETE
 
     with native_api_cli_session(
-        tmp_path, scope_for_destination=_scope, prepare_profile=prepare, invoke_cli=run_cadrumo_cli
+        tmp_path,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
+        prepare_profile=prepare,
+        invoke_cli=run_cadrumo_cli,
     ) as session:
         yield session
 
@@ -207,7 +184,10 @@ def _create_work_unit(
 
 
 def _capture_m111_invoice_withholding(session: NativeApiCliSession[None]) -> None:
-    """Record one received professional invoice's paid retención, so Modelo 111 is not an all-blank quarter."""
+    """Record one received professional invoice's paid retención in the scenario year's first quarter.
+
+    Modelo 111 is then not an all-blank quarter.
+    """
     exit_code, output = _invoke(session, *m111_withholding_invoice_arguments())
     assert exit_code == 0, output
     invoice_id = unwrap_schema_envelope(output)["invoice_id"]
@@ -228,7 +208,7 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
         "app", "ledger", "invoice", "add",
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
-        "--counterparty-nif", "B12345674",
+        "--counterparty-nif", "B00015016",
         "--invoice-number", "M115-RENT-2025-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
@@ -258,7 +238,7 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
             cadastral_reference="1234567VK4713C0001XY",
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",
@@ -292,7 +272,8 @@ def test_m111_calculate_succeeds_through_its_worker_without_a_client_decrypt(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli, profile_decrypts: list[str]
 ) -> None:
     with _operator_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
-        work_unit_id = _create_work_unit(session, modelo="111", year=2025, period="1T", revision="2019-y-siguientes")
+        # The captured retención is dated in the scenario year's first quarter, so the work is too.
+        work_unit_id = _create_work_unit(session, modelo="111", year=SCENARIO_FILING_YEAR, period="1T")
         _capture_m111_invoice_withholding(session)
 
         exit_code, output = _calculate(session, profile_decrypts, work_unit_id)
@@ -325,8 +306,6 @@ def test_m100_calculate_reaches_its_outcome_without_a_client_decrypt(
             session,
             profile_decrypts,
             work_unit_id,
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
         )
 
     envelope = json.loads(output)
@@ -382,7 +361,7 @@ def _store_one_m111_retencion(bucket_id: str, period: Period) -> None:
             RetencionObservation(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_object_id="a" * 64,
-                perceptor_nif="B12345674",
+                perceptor_nif="B00015016",
                 perceptor_name="Asesoria Profesional SL",
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("1000.00"),
@@ -402,7 +381,9 @@ def test_the_hosted_calculate_executor_decrypts_the_profile_once(
     tmp_path: Path, profile_decrypts: list[str], modelo: str, filing_year: int, period_code: str
 ) -> None:
     """The production executor the worker hosts reads one decrypted record for the whole calculation."""
-    with seeded_operator_work(tmp_path, modelo=modelo, filing_year=filing_year, period_code=period_code) as work:
+    with seeded_operator_work(
+        tmp_path, modelo=modelo, filing_year=filing_year, period_code=period_code, extra_facts=_PAYER_PROFILE_FACTS
+    ) as work:
         if modelo == "111":
             _store_one_m111_retencion(work.work_unit.bucket_id, work.work_unit.period)
         profile_decrypts.clear()
@@ -414,7 +395,9 @@ def test_the_hosted_calculate_executor_decrypts_the_profile_once(
 
 def test_the_readiness_gate_hands_back_the_profile_it_checked(tmp_path: Path) -> None:
     """Consumers downstream of the gate read the very record the gate refused or admitted."""
-    with seeded_operator_work(tmp_path, modelo="111", filing_year=2025, period_code="1T") as work:
+    with seeded_operator_work(
+        tmp_path, modelo="111", filing_year=2025, period_code="1T", extra_facts=_PAYER_PROFILE_FACTS
+    ) as work:
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None
         operation = work.operation

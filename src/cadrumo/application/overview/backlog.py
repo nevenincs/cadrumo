@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now, today_madrid
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import TaxpayerProfile
@@ -76,7 +76,7 @@ class OverviewBacklog(BaseModel):
             present only when ``taxpayer_model_declared`` is ``False``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     range: OverviewCalendarRange
     as_of: date

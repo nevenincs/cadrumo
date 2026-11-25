@@ -101,3 +101,256 @@ closes_on = 2023-01-20
 payment_cutoff_on = 2023-01-15
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+# The monthly cadence of RIRPF art. 108.1, paragraph two: the gran-empresa
+# retenedor declares "en los veinte primeros dias naturales de cada mes, en
+# relacion con las cantidades retenidas y los ingresos a cuenta que correspondan
+# por el mes inmediato anterior". Each close below is READ from the bundled
+# Calendario del Contribuyente of the year it falls in, never derived from that
+# rule: the published day moves for weekends and holidays. The calendar names
+# this modelo in the monthly population every month -- "<mes> <ejercicio>.
+# grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216, 230" -- under its own
+# "Hasta el <dia> de <mes>" heading, which is the close taken here.
+#
+# payment_cutoff_on is not authored: the governed
+# deadlines.domiciliation-cutoff-clause fact declares this modelo's monthly
+# Anexo II day, so the cutoff is derived rather than restated per month.
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-21
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-21
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-22
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-21
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-22
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-08-21
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-09-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2023-12-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-22
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2024"]

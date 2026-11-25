@@ -44,7 +44,8 @@ from ...core.tabular import (
     detect_tabular_delimiter,
 )
 from ...core.workbook import first_formula_cell_column
-from .action_errors import ModeloLocalObservationError
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import local_observation_refusal
 
 _CASILLA_CODE_HEADER_ALIASES: Final[frozenset[str]] = frozenset(
     {"casilla_code", "casilla", "casilla_id", "code", "id", "box", "casilla.id"},
@@ -83,14 +84,16 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
             ``(casilla_code, Decimal)`` pair.
     """
     if not path.exists() or not path.is_file():
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
     suffix = path.suffix.lower()
     rows = _read_xlsx_rows(path) if suffix == XLSX_EXTENSION else _read_csv_rows(path)
     if not rows:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
@@ -98,7 +101,8 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
     code_index, value_index, data_rows = _locate_columns(rows)
     values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
     if malformed:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="application.modelo.errors.local_observation_spreadsheet_malformed_rows",
             context={
                 "path": str(path),
@@ -109,7 +113,8 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
             },
         )
     if not values:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
@@ -124,20 +129,23 @@ def parse_casilla_lexical_spreadsheet(path: Path) -> dict[str, str]:
     byte-for-text exactly as decoded, while casilla ids remain trimmed identifiers.
     """
     if not path.exists() or not path.is_file():
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
     rows = _read_xlsx_rows(path) if path.suffix.lower() == XLSX_EXTENSION else _read_csv_rows(path)
     if not rows:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
     code_index, value_index, data_rows = _locate_columns(rows)
     decimal_values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
     if malformed or not decimal_values:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path), "malformed_rows": " | ".join(malformed)},
         )
@@ -269,7 +277,8 @@ def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
     try:
         text, _, _ = decode_tabular_bytes(source_bytes)
     except TabularSourceError as exc:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         ) from exc
@@ -282,7 +291,8 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
     try:
         workbook = load_workbook(filename=path, read_only=True, data_only=False)
     except Exception as exc:  # openpyxl raises multiple unrelated types (OSError/KeyError/...) on a bad workbook
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.SOURCE_FILE,
             translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         ) from exc
@@ -292,7 +302,8 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
         for row_index, cells in enumerate(worksheet.iter_rows(), start=1):
             column_index = first_formula_cell_column(cells)
             if column_index is not None:
-                raise ModeloLocalObservationError(
+                raise local_observation_refusal(
+                    FilingImportRefusalCause.SOURCE_FILE,
                     translated_message="errors.error.error_modelos",
                     context={
                         "path": str(path),

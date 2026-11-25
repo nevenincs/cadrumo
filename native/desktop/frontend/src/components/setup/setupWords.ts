@@ -1,18 +1,180 @@
 import type {
   GoogleAccount,
+  SetupBlockedReason,
+  SetupFailureCategory,
+  SetupItemId,
+  SetupItemKind,
   SetupOutcome,
+  SetupRecovery,
+  SetupRetry,
   SetupRow,
-  SetupRun,
+  SetupStaleReason,
+  SetupState,
   SetupStep,
-} from "../../ipc/contract";
+} from "../../ipc/componentSetup";
 import type { Translate } from "../../shell/strings";
 
-// The window's own words for setup and the Google account. Each item's name,
-// state sentence, note and button come from the host already in the
-// profile's language, and the sentence is the one place a row's state is
-// said; what is worded here is only what the shell itself says: a step, an
-// outcome, a refusal and the Google account's line. No closed value is ever
-// shown as it is.
+// The window's words for setup and the Google account. The host sends codes
+// only, and every one is worded here from the setup strings: an item's name,
+// the one sentence that states a row's state and its button, a
+// failure, a retry notice and a plan part, and what the shell itself says of
+// a step, an outcome, a refusal and the Google account.
+// A row's sentence is the one place its state is said. No closed value is
+// ever shown as it is.
+//
+// Every key is written whole, in a table keyed by the closed value's type, so
+// the compiler requires a key for each member and the shell's key check sees
+// each one. A value the host sends that the table lacks is a newer host's:
+// it is said by the general sentence beside its table, never as a raw key.
+
+/** One catalogue key, written whole. */
+type Key = string;
+
+/** The words for `value`, or those for the general case when the table does
+ * not hold it. The own-property test keeps an inherited name such as
+ * `constructor` from reading as a member. */
+function wordsFor<Member extends string>(
+  t: Translate,
+  table: Readonly<Record<Member, Key>>,
+  value: string,
+  general: Key,
+): string {
+  return t(Object.hasOwn(table, value) ? table[value as Member] : general);
+}
+
+const ITEM_NAME: Readonly<Record<SetupItemKind, Key>> = {
+  browser: "desktop.setup.item.browser",
+  local_ai: "desktop.setup.item.local_ai",
+};
+
+const STATE_SENTENCE: Readonly<Record<SetupState, Key>> = {
+  absent: "desktop.setup.state.absent",
+  provisioning: "desktop.setup.state.provisioning",
+  verifying: "desktop.setup.state.verifying",
+  ready: "desktop.setup.state.ready",
+  stale: "desktop.setup.state.stale",
+  failed: "desktop.setup.state.failed",
+  blocked: "desktop.setup.state.blocked",
+  unknown: "desktop.setup.state.unknown",
+};
+
+const STALE_SENTENCE: Readonly<Record<SetupStaleReason, Key>> = {
+  older_revision: "desktop.setup.stale.older_revision",
+  program_too_old: "desktop.setup.stale.program_too_old",
+};
+
+const BLOCKED_SENTENCE: Readonly<Record<SetupBlockedReason, Key>> = {
+  offline: "desktop.setup.blocked.offline",
+  needs_person: "desktop.setup.blocked.needs_person",
+  hardware: "desktop.setup.blocked.hardware",
+  not_in_this_build: "desktop.setup.blocked.not_in_this_build",
+};
+
+const ACTION_WORDS: Readonly<Record<SetupRecovery, Key>> = {
+  set_up: "desktop.setup.action.set_up",
+  update: "desktop.setup.action.update",
+  try_again: "desktop.setup.action.try_again",
+  resume: "desktop.setup.action.resume",
+  check_again: "desktop.setup.action.check_again",
+  reinstall_engine_program: "desktop.setup.action.reinstall_engine_program",
+};
+
+const FAILURE_SENTENCE: Readonly<Record<SetupFailureCategory, Key>> = {
+  offline: "desktop.setup.failure.offline",
+  host_unreachable: "desktop.setup.failure.host_unreachable",
+  server_error: "desktop.setup.failure.server_error",
+  secure_connection_failed: "desktop.setup.failure.secure_connection_failed",
+  blocked_by_network: "desktop.setup.failure.blocked_by_network",
+  disk_full: "desktop.setup.failure.disk_full",
+  no_permission: "desktop.setup.failure.no_permission",
+  damaged_download: "desktop.setup.failure.damaged_download",
+  not_enough_memory: "desktop.setup.failure.not_enough_memory",
+  memory_busy: "desktop.setup.failure.memory_busy",
+  program_missing: "desktop.setup.failure.program_missing",
+  program_not_running: "desktop.setup.failure.program_not_running",
+  engine_program_unusable: "desktop.setup.failure.engine_program_unusable",
+  engine_package_damaged: "desktop.setup.failure.engine_package_damaged",
+  interrupted: "desktop.setup.failure.interrupted",
+  needs_sign_in: "desktop.setup.failure.needs_sign_in",
+  not_in_this_build: "desktop.setup.failure.not_in_this_build",
+  cancelled: "desktop.setup.failure.cancelled",
+  unexpected: "desktop.setup.failure.unexpected",
+};
+
+/** An item's plain name, such as "Local AI", keyed by the row's item. An
+ * item this window does not know is named by the setup's own title. */
+export function itemName(t: Translate, item: SetupItemId): string {
+  return wordsFor(t, ITEM_NAME, item, "desktop.setup.title");
+}
+
+/** A row's download size as the engine states it: unknown until the
+ * download starts, nothing at all when its files are already here, else
+ * the size. */
+export function rowSizeWords(
+  t: Translate,
+  bytes: number | null,
+  format: (bytes: number) => string,
+): string {
+  if (bytes === null) return t("desktop.setup.size_unknown");
+  return bytes === 0 ? t("desktop.setup.plan_nothing") : format(bytes);
+}
+
+/** The one sentence stating a row's state and its reason. A reason this
+ * window does not know leaves the state's own sentence, and a state it does
+ * not know says the state is unknown. */
+export function rowSentence(t: Translate, row: SetupRow): string {
+  if (row.state === "stale" && row.stale_reason)
+    return wordsFor(t, STALE_SENTENCE, row.stale_reason, STATE_SENTENCE.stale);
+  if (row.state === "blocked" && row.blocked_reason)
+    return wordsFor(
+      t,
+      BLOCKED_SENTENCE,
+      row.blocked_reason,
+      STATE_SENTENCE.blocked,
+    );
+  if (row.state === "failed" && row.failure)
+    return failureWords(t, row.failure);
+  if (row.state === "ready" && row.server === "dormant")
+    return t("desktop.setup.ready_dormant");
+  if (row.state === "absent" && row.awaits === "model")
+    return t("desktop.setup.awaits_model");
+  return wordsFor(t, STATE_SENTENCE, row.state, STATE_SENTENCE.unknown);
+}
+
+/** The words of a row's one button; null when it offers none, which is also
+ * what a button this window has no words for gets. */
+export function actionWords(
+  t: Translate,
+  recovery: SetupRecovery | null,
+): string | null {
+  return recovery !== null && Object.hasOwn(ACTION_WORDS, recovery)
+    ? t(ACTION_WORDS[recovery])
+    : null;
+}
+
+/** The one sentence a failure is told by; a failure this window does not
+ * know is told as an unexpected one. */
+export function failureWords(
+  t: Translate,
+  failure: SetupFailureCategory,
+): string {
+  return wordsFor(t, FAILURE_SENTENCE, failure, FAILURE_SENTENCE.unexpected);
+}
+
+/** The notice shown before a retry's wait. */
+export function retryWords(t: Translate, retry: SetupRetry): string {
+  return t("desktop.setup.retry", {
+    attempt: retry.attempt,
+    seconds: retry.delay_s,
+  });
+}
+
+/** One part of the local AI's plan: its program, or the one model being downloaded. */
+export function partName(t: Translate, part: string): string {
+  return part === "program"
+    ? t("desktop.setup.part_program")
+    : t("desktop.setup.part_download");
+}
 
 /** How a row's state is marked beside its sentence, which says it in words. */
 export type RowTone = "ready" | "working" | "attention";
@@ -28,6 +190,16 @@ export function rowTone(row: SetupRow): RowTone {
     default:
       return "attention";
   }
+}
+
+/** What a setup is doing while it works out its plan, before it asks for an
+ * answer. Until the engine reports its first step the host is still
+ * checking the request, such as a model with the agent service, which can
+ * take long; that step is the plan itself, worded as such. */
+export function planningWords(t: Translate, step: SetupStep | null): string {
+  return step === null
+    ? t("desktop.setup.step_checking")
+    : t("desktop.setup.planning");
 }
 
 export function stepWords(t: Translate, step: SetupStep | null): string {
@@ -48,24 +220,11 @@ export function stepWords(t: Translate, step: SetupStep | null): string {
   }
 }
 
-/** How far a setup has come over every item it planned, from 0 to 1: a
- * finished item counts whole, the running one by its bytes where known. */
-export function overallShare(run: SetupRun): number {
-  if (run.items.length === 0) return 0;
-  const done = run.items.reduce((sum, item) => {
-    if (item.result) return sum + 1;
-    if (item.completed !== null && item.total !== null && item.total > 0)
-      return sum + item.completed / item.total;
-    return sum;
-  }, 0);
-  return Math.min(1, done / run.items.length);
-}
-
-/** What a settled setup came to, said once in the dialog. */
+/** What a settled setup came to. */
 export function outcomeWords(
   t: Translate,
   outcome: SetupOutcome,
-  failureSentence: string | null,
+  failure: SetupFailureCategory | null,
 ): string {
   switch (outcome) {
     case "completed":
@@ -83,7 +242,9 @@ export function outcomeWords(
     case "cancelled":
       return t("desktop.setup.outcome_cancelled");
     case "failed":
-      return failureSentence ?? t("desktop.setup.outcome_failed");
+      return failure
+        ? failureWords(t, failure)
+        : t("desktop.setup.outcome_failed");
   }
 }
 
@@ -125,17 +286,24 @@ export function refusalWords(t: Translate, code: string): string {
       return t("desktop.setup.refused_not_cancellable");
     case "unavailable":
       return t("desktop.setup.refused_unavailable");
+    case "model_selection_unusable":
+      return t("desktop.setup.refused_model_selection_unusable");
+    case "browser_not_removed":
+      return t("desktop.setup.refused_browser_not_removed");
+    case "local_ai_not_removed":
+      return t("desktop.setup.refused_local_ai_not_removed");
     default:
       return t("desktop.setup.refused_other");
   }
 }
 
 /** The Google account's one line: what is happening now, else how the
- * profile's sign-in reads. A failed act says its own sentence instead. */
+ * profile's sign-in reads. A failed act says its failure instead. */
 export function googleWords(t: Translate, google: GoogleAccount): string {
   if (google.stage === "signing_in") return t("desktop.google.waiting");
   if (google.stage === "signing_out") return t("desktop.google.signing_out");
-  if (google.stage === "failed" && google.sentence) return google.sentence;
+  if (google.stage === "failed" && google.failure)
+    return failureWords(t, google.failure);
   switch (google.state) {
     case null:
       return t("desktop.google.checking");

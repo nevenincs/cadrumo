@@ -1,6 +1,9 @@
+# A solicitud is filed only for a period in which the refundable operations
+# happened, so the schedule is event-triggered; its periods are the codes the
+# record design admits. aeat-dr-308-2009 admits only the quarters.
 [[revisions."2009-2011-junio".filing_schedules]]
-id = "modelo-308-ad-hoc"
-period_kind = "ad_hoc"
-periods = ["AD-HOC"]
+id = "modelo-308-devolucion"
+period_kind = "event"
+periods = ["1T", "2T", "3T", "4T"]
 legal_refs = ["orden-eha-3786-2008:art-11"]
 source_refs = ["boe-modelo-308-2008-form", "aeat-modelo-308-procedure"]

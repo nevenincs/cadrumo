@@ -11,6 +11,7 @@ from cadrumo.application.calculations.observations_repository import (
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
 )
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -21,17 +22,22 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
-from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
-from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
-from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
+from .assumed_value_gate import assumed_value_verification_findings, unconfirmed_assumed_fields
 from .m193_settled_row_gate import modelo_193_settled_row_verification_finding
+from .m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
+from .m303_m349_reconcile import m303_m349_intracom_reconcile_findings
+from .m390_prorrata_apartado_gate import modelo_390_prorrata_apartado_verification_finding
+from .m720_redeclaration_gate import modelo_720_redeclaration_findings
 from .preconditions import ModeloPreconditionFailure
+from .prorrata_seed_gate import prorrata_seed_verification_findings
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .verification_finding_contracts import REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS
 from .verification_preconditions import (
     build_verification_precondition_failure,
 )
 from .verification_repository_ports import VerificationRepositoryBundle
+from .withholding_count_reconciliation import append_withholding_count_reconciliation_findings
+from .withholding_total_reconciliation import withholding_total_reconciliation_finding
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -100,9 +106,19 @@ def append_model_specific_findings(
     )
     # Non-blocking and without a precondition failure: filing and export refuse
     # the revision themselves, and this tells the operator before they try.
-    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target)
+    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target, operation=operation)
     if settled_row_finding is not None:
         findings.append(settled_row_finding)
+    # A warning without a precondition failure: the summary keeps its records' sum, and a
+    # complementaria can leave the periodic returns legitimately apart from it.
+    withholding_total_finding = withholding_total_reconciliation_finding(
+        work_unit=work_unit,
+        target=target,
+        observation_repository=observation_repository,
+        operation=operation,
+    )
+    if withholding_total_finding is not None:
+        findings.append(withholding_total_finding)
 
 
 def append_readable_model_findings(
@@ -112,15 +128,68 @@ def append_readable_model_findings(
     target: CalculationRevision,
     repos: VerificationRepositoryBundle,
     operation: PinnedAuthorityOperation,
+    *,
+    calculation_catalogue: CalculationRevisionCatalogue,
 ) -> None:
     """Skip model checks only after an explicit registry-snapshot refusal.
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
+    # Keyed on the pinned revision's own casillas, not its snapshot: a calculation-grade
+    # edition is refused a snapshot, and that is exactly when the apartado is missing.
+    prorrata_apartado = modelo_390_prorrata_apartado_verification_finding(
+        work_unit,
+        registry_revision_id=target.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=repos.prorrata_register,
+        operation=operation,
+    )
+    if prorrata_apartado is not None:
+        prorrata_finding, prorrata_failure = prorrata_apartado
+        findings.append(prorrata_finding)
+        failures_by_finding_id[id(prorrata_finding)] = prorrata_failure
+    for seed_finding in prorrata_seed_verification_findings(
+        work_unit=work_unit,
+        target=target,
+        prorrata_register_repository=repos.prorrata_register,
+        observation_repository=repos.observation,
+        operation=operation,
+    ):
+        findings.append(seed_finding.finding)
+        if seed_finding.failure is not None:
+            failures_by_finding_id[id(seed_finding.finding)] = seed_finding.failure
     registry_snapshot_refused = any(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )
     if not registry_snapshot_refused:
+        for assumed_finding, assumed_failure in assumed_value_verification_findings(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=repos.work_unit,
+                calculation_repository=repos.calculation,
+                verification_repository=repos.verification,
+                credit_resolutions=repos.credit_resolution,
+                operation=operation,
+                calculation_catalogue=calculation_catalogue,
+            ),
+        ):
+            findings.append(assumed_finding)
+            failures_by_finding_id[id(assumed_finding)] = assumed_failure
+        append_withholding_count_reconciliation_findings(
+            work_unit=work_unit,
+            target_calculation_revision_id=target.calculation_revision_id,
+            target_work_unit_id=target.work_unit_id,
+            snapshot=operation.snapshot(
+                work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+            observation_repository=repos.observation,
+            percepcion_repository=repos.percepcion_observation_ports.repository,
+            operation=operation,
+            findings=findings,
+            failures_by_finding_id=failures_by_finding_id,
+        )
         append_model_specific_findings(
             findings,
             failures_by_finding_id=failures_by_finding_id,

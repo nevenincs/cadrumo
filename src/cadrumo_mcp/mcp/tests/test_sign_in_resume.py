@@ -8,7 +8,6 @@ decision and is proven against the real runtime where that runtime lives.
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import timedelta
@@ -21,9 +20,9 @@ import pytest
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.attachment_mutation_operation import LEDGER_ATTACH_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
-from cadrumo.core import logging as cadrumo_logging
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, EffectiveScopeSummary
@@ -35,7 +34,6 @@ from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .. import main as mcp_main
 from .. import runtime_adapter as mcp_runtime
 from .. import runtime_admission as mcp_admission
 from .. import server as mcp_server
@@ -47,6 +45,7 @@ from ..runtime_admission import McpAdmission, require_exact_admitted_status, sel
 from ..server import build_server
 from ..surfaces import MCP_SURFACES, McpSurface, McpSurfaceName
 from .admitted_lease import public_descriptions
+from .entry_point_support import run_entry_point
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -68,7 +67,7 @@ def _installation_selection() -> ActiveProfileReply:
 @pytest.fixture(autouse=True)
 def _runtime_answers_the_selection(monkeypatch: pytest.MonkeyPatch) -> None:
     """The runtime is a double here, so its selection answer is the one the test selected."""
-    monkeypatch.setattr(mcp_admission, "_runtime_selection", _installation_selection)
+    monkeypatch.setattr(mcp_admission, "runtime_active_profile", _installation_selection)
 
 
 _FULL = MCP_SURFACES[McpSurfaceName.FULL]
@@ -230,7 +229,7 @@ def _adapter(profile_id: UUID | None = None, surface: McpSurface = _FULL) -> Run
 def _selection(root: Path, profile_id: UUID | None) -> AbstractContextManager[Settings]:
     """Select ``profile_id`` for this installation, or nothing, over an empty storage root."""
     selected = None if profile_id is None else str(profile_id)
-    return override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=selected)
+    return override_settings(cadrumo_storage_root=root, cadrumo_active_profile=selected)
 
 
 def _told(code: str) -> dict[str, object]:
@@ -551,26 +550,14 @@ def test_a_narrowing_surface_reports_only_the_scope_it_leaves() -> None:
     assert narrowed.model_copy(update={"effective_scope": whole.effective_scope}) == whole
 
 
-def _run_entry_point(monkeypatch: pytest.MonkeyPatch, arguments: list[str]) -> list[dict[str, object]]:
-    """Run the installed entry point on these arguments and return what it asked to be served."""
-    served: list[dict[str, object]] = []
-    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    monkeypatch.delenv("CADRUMO_MCP_REQUIRED_VERSION", raising=False)
-    monkeypatch.setattr(sys, "argv", ["cadrumo-mcp", *arguments])
-    monkeypatch.setattr(cadrumo_logging, "configure_logging", lambda: None)
-    monkeypatch.setattr(mcp_server, "serve", lambda **options: served.append(options))
-    mcp_main.main()
-    return served
-
-
 def test_the_entry_point_names_no_profile_when_it_is_given_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    assert _run_entry_point(monkeypatch, []) == [{"profile_id": None, "credential_reference": None, "surface": _FULL}]
+    assert run_entry_point(monkeypatch, []) == [{"profile_id": None, "credential_reference": None, "surface": _FULL}]
 
 
 def test_the_entry_point_reads_an_empty_credential_reference_as_none(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id = uuid4()
 
-    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", ""])
+    served = run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", ""])
 
     assert served == [{"profile_id": profile_id, "credential_reference": None, "surface": _FULL}]
 
@@ -579,7 +566,7 @@ def test_the_entry_point_refuses_a_credential_reference_that_names_no_profile(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     with pytest.raises(SystemExit) as stopped:
-        _run_entry_point(monkeypatch, ["--credential-reference", str(uuid4())])
+        run_entry_point(monkeypatch, ["--credential-reference", str(uuid4())])
 
     assert stopped.value.code == 2
     assert "names the key of one profile" in capsys.readouterr().err

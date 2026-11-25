@@ -105,6 +105,7 @@ def _invoke(*, attachment_ids: Sequence[str] = ()) -> LedgerAddOperationResult:
         iva_category=None,
         deduction_fact_kind=None,
         investment_asset_id=None,
+        iva_vehicle_use=None,
         counterparty_country=None,
         counterparty_identification_state=None,
         recargo_amount=None,

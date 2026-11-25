@@ -23,8 +23,9 @@ from pathlib import Path
 import pytest
 
 from .....core.classification.policies import SensitivityClass
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository
@@ -51,7 +52,7 @@ def _french_identified_invoice() -> Invoice:
             "invoice_number": "F-2026-0417",
             "issued_at": date(2026, 5, 12),
             "counterparty_name": "Établissement Client",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "counterparty_identification_state": EUMemberState.from_registry("fr"),
             "base_total": Decimal("500.00"),

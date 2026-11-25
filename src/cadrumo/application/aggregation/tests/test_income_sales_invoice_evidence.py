@@ -29,35 +29,39 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
-from .._renta_income_evidence import (
+from ..renta_income_evidence import (
     SalesInvoiceEvidenceRefusal,
     income_withheld_amount,
     sales_invoice_evidence_payload,
 )
-from .._retencion_rate_advisory import (
-    _conforms_to_fixed_rate,
+from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
+from ..retencion_rate_advisory import (
+    conforms_to_fixed_rate,
     inferred_actividad_retencion_rate_advisory_observations,
 )
-from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _OTHER_BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-_QUARTER = Period.from_year_and_code(2024, "1T")
-_ANNUAL = Period.from_year_and_code(2024, "0A")
+_QUARTER = Period.from_year_and_code(_YEAR, "1T")
+_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 M130_INGRESOS_CASILLA = validated_casilla_id("01")
 _M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
 _is_activity_income = m130_activity_category_matcher
@@ -68,8 +72,8 @@ _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 3, 15),
-        value_date=date(2024, 3, 15),
+        booked_date=date(_YEAR, 3, 15),
+        value_date=date(_YEAR, 3, 15),
         amount=Decimal(cash),
         currency="EUR",
         counterparty="Cliente SL",
@@ -79,7 +83,7 @@ def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={},
@@ -93,7 +97,7 @@ def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -109,7 +113,7 @@ def _invoice(
     number: str = "F-2024-001",
     iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -123,9 +127,9 @@ def _invoice(
         {
             "kind": kind,
             "invoice_number": number,
-            "issued_at": date(2024, 3, 15),
+            "issued_at": date(_YEAR, 3, 15),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": bucket_id,
             "base_total": Decimal("1000.00"),
@@ -256,7 +260,7 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
     )
     assert observations[0].taxable_base_amount == Decimal("1000.00")
     assert not any(
-        _conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
+        conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
         for rate in statutory_activity_retencion_rates(effective_date=_QUARTER.end_date)
     ), "the figure must match no statutory rate, or the silence below proves nothing"
 
@@ -402,10 +406,16 @@ def test_an_invoice_from_another_bucket_is_refused() -> None:
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
-def test_a_one_directional_link_is_refused() -> None:
-    """The invoice must name the transaction back, or the pairing is unconfirmed."""
+def test_a_link_held_on_the_movement_alone_still_pairs_the_receipt() -> None:
+    """A link is one fact on two records, read from either side.
+
+    The movement names its invoice while the invoice does not yet list the
+    movement back, as a record written before both sides were kept together.
+    The receipt is still that invoice's payment, so its stated base grounds
+    casilla 01: hand-derived, 1000.00 rather than the 1060.00 cash.
+    """
     transaction = _transaction(cash="1060.00")
-    invoice = _invoice(linked_transaction_ids=("f" * 64,))
+    invoice = _invoice(linked_transaction_ids=())
     transactions = link_invoice(
         TransactionCatalogue.from_transactions((transaction,)),
         transaction.transaction_id,
@@ -423,8 +433,8 @@ def test_a_one_directional_link_is_refused() -> None:
         employment_category_matcher=_is_employment_income,
     )
 
-    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
-    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
+    assert aggregation.observations[0].sales_invoice_refusal is None
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
 
 
 def test_an_invoice_spanning_several_transactions_is_refused() -> None:
@@ -563,24 +573,49 @@ def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
         assert aggregation.casilla_aggregation.casilla_values["01"] > Decimal("0")
 
 
-def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly() -> None:
-    """Linkage and coherence are different questions, and passing one is not passing the other.
+def test_an_uncategorised_invoice_grounds_its_irpf_base_and_retencion() -> None:
+    """An undeclared IVA treatment is an IVA defect, not an IRPF one.
 
     This invoice satisfies every linkage guard: same bucket, ISSUED, reciprocal
-    single link, and a credit matching its total net of retención exactly. What
-    it does not do is declare an IVA treatment, so its base is ambiguous between
-    untagged and exempt — the distinction the grounding contract exists to
-    preserve, and one no amount reconciliation can settle.
-
-    Before the coherence check, this row folded its 1000.00 base into casilla 01
-    with no diagnostic at all, which is the grounding contract's own D1 rule
-    being bypassed by the path that reads invoices.
+    single link, and a credit matching its total net of retención exactly. It
+    declares no IVA treatment, which keeps it out of the IVA source, but the
+    base it states and the retención it says the client practised are IRPF
+    facts that treatment does not change. Hand-derived: base 1000.00 enters
+    casilla 01 and the stated 150.00 is a declared retención.
     """
     transactions, invoices = _linked(iva_category=None)
 
     result = aggregate_renta_income_ledger(
         transactions,
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        bucket_id=_BUCKET,
+        invoices=invoices,
+        modelo="130",
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
+
+    (observation,) = result.observations
+    assert observation.sales_invoice_refusal is None
+    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
+    assert observation.grounding is LedgerIncomeGrounding.SUBSTRATE_DECLARED
+    assert observation.withheld_amount == Decimal("150.00")
+    assert observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+
+
+def test_a_category_that_contradicts_its_cuota_is_still_refused() -> None:
+    """The IRPF reading admits only the undeclared treatment, not every defect.
+
+    An exempt category carries no cuota by law, so this invoice's 21 per cent
+    cuota contradicts it: the record is not interpretable and the row degrades
+    to its cash with the refusal named.
+    """
+    transactions, invoices = _linked(iva_category=IvaCategory("domestic_exempt"))
+
+    result = aggregate_renta_income_ledger(
+        transactions,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",
@@ -591,8 +626,6 @@ def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly
 
     (observation,) = result.observations
     assert observation.sales_invoice_refusal is SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
-    # Degraded, not dropped: the income is still declared, on its cash.
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
     assert observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK
 
 
@@ -607,7 +640,7 @@ def test_a_categorised_invoice_still_grounds_on_its_base() -> None:
 
     result = aggregate_renta_income_ledger(
         transactions,
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",

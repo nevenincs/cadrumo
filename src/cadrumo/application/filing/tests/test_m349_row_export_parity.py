@@ -10,6 +10,7 @@ import pytest
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportError
 from ..draft_construction import build_draft
 from ..export_parity import assert_export_mirrors_manifest
@@ -19,9 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m349_draft(*, operation: PinnedAuthorityOperation):
-    period = Period.from_year_and_code(2026, "1T")
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "1T")
     schema_provider = build_runtime_schema_provider(
-        filing_year=2026,
+        filing_year=year,
         period=period,
         modelos=("349",),
         operation=operation,

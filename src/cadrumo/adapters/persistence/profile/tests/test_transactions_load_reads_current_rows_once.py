@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 from sqlalchemy import update
@@ -21,9 +21,9 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from .....domain.transactions.repository import transaction_object_key
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
-from ...storage.sql import orm as _orm
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
@@ -95,6 +95,36 @@ def test_loading_current_rows_runs_no_migration_read(tmp_path: Path, monkeypatch
     assert sorted(loaded.transactions) == sorted(saved.transactions)
 
 
+@pytest.mark.parametrize("fully_validated", (False, True))
+def test_catalogue_order_does_not_depend_on_index_set_iteration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fully_validated: bool
+) -> None:
+    """The same encrypted rows retain their canonical order across index permutations."""
+
+    class IndexIds(set[str]):
+        def __init__(self, order: tuple[str, ...]) -> None:
+            super().__init__(order)
+            self._iteration_order = order
+
+        @override
+        def __iter__(self) -> Iterator[str]:
+            return iter(self._iteration_order)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        saved = TransactionCatalogue.from_transactions([_transaction(f"row-{index}") for index in range(3)])
+        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repository.save(saved)
+        expected = tuple(sorted(saved.transactions))
+        observed: list[tuple[str, ...]] = []
+        for order in (expected, tuple(reversed(expected))):
+            index_ids = IndexIds(order)
+            monkeypatch.setattr(repository, "_load_index_ids", lambda selected=index_ids: selected)
+            loaded = repository.load_fully_validated() if fully_validated else repository.load()
+            observed.append(tuple(loaded.transactions))
+
+    assert observed == [expected, expected]
+
+
 def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
     """TEETH: a row below the current schema is never read as if it were current."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -105,10 +135,10 @@ def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
         stored_key = secure_object_key_digest(transaction_object_key(profile.bucket_id, stale.transaction_id))
         with session_scope(profile.repository.engine) as session:
             session.execute(
-                update(_orm.SecureObjectRow)
+                update(secure_objects_table)
                 .where(
-                    _orm.SecureObjectRow.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                    _orm.SecureObjectRow.object_key == stored_key,
+                    secure_objects_table.c.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                    secure_objects_table.c.object_key == stored_key,
                 )
                 .values(schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version - 1),
             )
@@ -117,8 +147,10 @@ def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
 
-def test_a_load_still_proves_every_stored_row(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A read from storage re-derives each row's id; appends trusting members never reach here."""
+def test_the_explicit_revalidation_read_proves_every_stored_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An ordinary read trusts the store's binding for each row's id; the explicit re-validation re-derives it."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
             TransactionCatalogue.from_transactions([_transaction(f"row-{index}") for index in range(3)]),
@@ -132,12 +164,15 @@ def test_a_load_still_proves_every_stored_row(tmp_path: Path, monkeypatch: pytes
 
         monkeypatch.setattr(transaction_models, "derive_transaction_id", counting)
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        ordinary = len(derivations)
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_fully_validated()
 
+    assert ordinary == 0
     assert len(derivations) >= 3
 
 
-def test_a_tampered_stored_row_is_refused_on_load(tmp_path: Path) -> None:
-    """TEETH: a stored row whose body no longer derives its id does not load."""
+def test_a_tampered_stored_row_is_refused_by_the_explicit_revalidation(tmp_path: Path) -> None:
+    """TEETH: a stored row whose body no longer derives its id fails the explicit re-validation read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         target = _transaction("row-tampered")
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
@@ -163,4 +198,4 @@ def test_a_tampered_stored_row_is_refused_on_load(tmp_path: Path) -> None:
         )
 
         with pytest.raises(StoredTransactionDriftError):
-            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_fully_validated()

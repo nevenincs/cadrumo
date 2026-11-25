@@ -16,6 +16,7 @@ from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
@@ -27,7 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
 )
@@ -40,21 +41,26 @@ from cadrumo.application.modelo.work_change_contracts import (
 )
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
+    OperationCancellationRequestV1,
+    OperationDetachRequestV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
+    OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
+    OperationResponseRejectRequestV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.request_faults import RequestFault
+from cadrumo.core.time.clock import now
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendancePending
@@ -65,6 +71,8 @@ from cadrumo_client.contracts.operation_access import (
     OperationContractReply,
     OperationControl,
     OperationManage,
+    OperationManaged,
+    OperationManagementRequest,
     OperationObserve,
     OperationObserved,
     OperationPage,
@@ -87,8 +95,9 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, admit_session
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_modelo_metadata import _admit, _connect, _LoginObservation, _seed_periods, _submit
+from .test_modelo_metadata import connect, seed_periods, submit
 
 pytestmark = [
     pytest.mark.integration,
@@ -129,14 +138,14 @@ class _Session:
         )
 
     def settled(self, operation_id: OperationId) -> OperationObservationSuccessV1:
-        deadline = time.monotonic() + 30
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while True:
             observed = self.observe(operation_id)
             assert isinstance(observed, OperationObserved), observed
             assert isinstance(observed.observation, OperationObservationSuccessV1), observed
             if observed.observation.projection.terminal_condition is not None:
                 return observed.observation
-            assert time.monotonic() < deadline
+            assert time.monotonic() < deadline, "the operation never settled"
             time.sleep(0.05)
 
     def reads(
@@ -174,6 +183,31 @@ class _Session:
             "result_page": lambda: self.ask(OperationResultPage, result=result, page=ProjectionPageRequest()),
             "review": lambda: self.ask(OperationReview, review=review),
             "inspect": lambda: self.ask(OperationManage, management=inspection),
+        }
+
+    def mutations(self, operation_id: OperationId, revision: int) -> dict[str, Callable[[], _Answer]]:
+        """Return each management request that acts on an operation, which `reads` leaves out."""
+        actor_ref, responded_at = f"session:{self.session_id}", now()
+        requests: dict[str, OperationManagementRequest] = {
+            "apply": OperationResponseApplyRequestV1(
+                operation_id=operation_id,
+                interaction_id=_NO_INTERACTION,
+                revision=revision,
+                actor_ref=actor_ref,
+                responded_at=responded_at,
+            ),
+            "reject": OperationResponseRejectRequestV1(
+                operation_id=operation_id,
+                interaction_id=_NO_INTERACTION,
+                revision=revision,
+                actor_ref=actor_ref,
+                responded_at=responded_at,
+            ),
+            "cancel": OperationCancellationRequestV1(operation_id=operation_id, expected_revision=revision),
+            "detach": OperationDetachRequestV1(operation_id=operation_id, expected_revision=revision),
+        }
+        return {
+            name: partial(self.ask, OperationManage, management=management) for name, management in requests.items()
         }
 
 
@@ -258,6 +292,14 @@ async def test_a_read_of_an_operation_that_does_not_exist_or_is_another_sessions
         for name, read in other.reads(submitted.receipt.operation_id, contract, 0).items():
             foreign[name] = read()
             other.contract(definition_id)
+        unknown_mutations: dict[str, _Answer] = {}
+        for name, manage in owner.mutations(_UNKNOWN_OPERATION, 0).items():
+            unknown_mutations[name] = manage()
+            owner.contract(definition_id)
+        foreign_mutations: dict[str, _Answer] = {}
+        for name, manage in other.mutations(submitted.receipt.operation_id, 0).items():
+            foreign_mutations[name] = manage()
+            other.contract(definition_id)
 
     assert _refusal_codes(unknown) == {
         "observe": AccessDenialCode.OPERATION_UNAVAILABLE,
@@ -274,6 +316,23 @@ async def test_a_read_of_an_operation_that_does_not_exist_or_is_another_sessions
         "review": AccessDenialCode.OPERATION_DENIED,
         "inspect": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
     }
+    # A response without a submission this host holds is refused for authority alone, so it tells
+    # nothing about whether the operation exists; cancellation and detach carry no response proof
+    # and take the ordinary release, which does.
+    assert _refusal_codes(unknown_mutations) == {
+        "apply": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "reject": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "cancel": AccessDenialCode.OPERATION_UNAVAILABLE,
+        "detach": AccessDenialCode.OPERATION_UNAVAILABLE,
+    }
+    # Only the submitting session holds the response capability; sessions of one profile may still
+    # cancel or detach what another submitted.
+    assert _refusal_codes(foreign_mutations) == {
+        "apply": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "reject": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "cancel": OperationManaged.__name__,
+        "detach": OperationManaged.__name__,
+    }
 
 
 @dataclass(slots=True)
@@ -286,7 +345,7 @@ class _ServedUnits:
     remove_every_unit: Callable[[], None]
 
     def rename(self, unit: WorkUnit, new_name: str) -> OperationId:
-        submitted = _submit(
+        submitted = submit(
             self.session.connection,
             self.session.profile_id,
             self.session.session_id,
@@ -324,7 +383,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
             tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
         ) as subject:
             profile_id = subject.store.binding.profile_id
-            first, second = _seed_periods(profile_id)
+            first, second = seed_periods(profile_id)
             # This process keeps its own view of the store open, to write it behind the worker later.
             catalogue = WorkUnitCatalogueRepository(
                 bucket_id=str(profile_id), objects=secure_object_repository_for_active_bucket()
@@ -340,7 +399,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
                 storage_identity=endpoint.storage_identity,
                 runtime_boot_id=boot,
                 stop=stop,
-                capture_login=lambda _channel: _LoginObservation(),
+                capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
                 secret_store=lambda: subject.native,
             )
             profiles.prepare_registry()
@@ -350,10 +409,12 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
-                    assert server.ready.wait(3)
-                    connection = _connect(endpoint)
+                    assert server.ready.wait(HANG_GUARD_SECONDS)
+                    connection = connect(endpoint)
                     try:
-                        session_id = _admit(connection, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                        session_id = admit_session(
+                            connection, profile_id, method="password", proof=PROFILE_INPUT.encode()
+                        )
                         yield _ServedUnits(
                             _Session(connection, profile_id, session_id), first, second, remove_every_unit
                         )
@@ -364,7 +425,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
                     close_active_bucket_session()
                     stop.set()
                     try:
-                        running.result(timeout=20)
+                        running.result(timeout=HANG_GUARD_SECONDS)
                     except Exception:
                         if primary is None:
                             raise
@@ -386,7 +447,7 @@ def test_a_read_after_its_work_unit_was_discarded_is_served_because_a_discard_ke
             .model_validate_json(json.dumps(result.document))
             .projection.unit
         )
-        discarded = _submit(
+        discarded = submit(
             session.connection,
             session.profile_id,
             session.session_id,

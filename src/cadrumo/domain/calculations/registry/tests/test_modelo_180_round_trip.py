@@ -22,6 +22,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope, open_ended_revision
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
@@ -32,7 +33,7 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     """M180 relation formulas cover money only; perceptor count is a bound distinct-NIF fact."""
 
     modelo, catalogues = bundled_modelo_components("180")
-    revision = next(rev for rev in modelo.revisions.values() if rev.id == "2023-y-siguientes")
+    revision = next(rev for rev in modelo.revisions.values() if rev.id == open_ended_revision("180").id)
 
     # Graph-wiring assertions — each output casilla must declare an
     # op=copy formula sourcing the matching 115 relation. A declaration
@@ -66,7 +67,9 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # distinct so a swapped-wiring regression (e.g., base-total threaded
     # with the retenciones value) fails loudly. The bound perceptor fixture is
     # separate so the test also proves the count is not relation-fed.
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="0A")
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=filing_year_envelope().horizon, period="0A"
+    )
     relation_values = {
         "modelo-180-115-base-anual": Decimal("2149.75"),
         "modelo-180-115-retenciones-anual": Decimal("418.00"),
@@ -75,7 +78,7 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2026, 1, 31)},
+        date_context={"filing_period": date(filing_year_envelope().horizon, 1, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )

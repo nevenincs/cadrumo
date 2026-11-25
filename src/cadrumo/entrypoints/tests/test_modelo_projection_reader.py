@@ -17,6 +17,8 @@ from typing import cast
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -34,30 +36,24 @@ from ...domain.calculations.registry.authority import (
     RegistryAuthorityCurrentCoordinate,
     bundled_indexed_authority,
 )
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ..workbench_generation_composition import MODELO_WORKSPACE_READ_ATTEMPTS, modelo_workspace_projection_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
-_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Workspace"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+_T0 = datetime(_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Test Operator"),
+        UserProfileFact(path="identity.surnames", value="Workspace"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 
@@ -79,14 +75,14 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        period = Period.from_year_and_code(2026, "1T")
+        period = Period.from_year_and_code(_YEAR, "1T")
         create_work_unit(
             bucket_id=profile.bucket_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=law_selected_revision_for_work_target(
-                modelo="130", filing_year=2026, period=period, operation=operation
+                modelo="130", filing_year=_YEAR, period=period, operation=operation
             ),
             ports=WorkLifecyclePorts(
                 work_unit_repository=repository,

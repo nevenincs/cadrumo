@@ -16,10 +16,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from functools import partial
 from types import MappingProxyType
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
@@ -31,6 +32,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ..calculations.registry.authority_artifact import AuthorityComponentCodecError
+from ..calculations.registry.form_codes import form_for_role, form_role_validator
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
 from ..categories.proportionality import (
@@ -40,10 +43,10 @@ from ..categories.proportionality import (
     StatutoryCapVariant,
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
-from ..categories.spending_category_catalogue import require_spending_category, spending_category_tokens
+from ..categories.spending_category_catalogue import require_spending_category, resolve_spending_category_catalogue
 from ..contribuyente.ccaa import CCAA
-from ._first_slice_routing import resolve_first_slice_expense_routing
 from .errors import RentaValidationError
+from .first_slice_routing import resolve_first_slice_expense_routing
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
 
@@ -61,6 +64,20 @@ class RentaDeductibilityStatus(StrEnum):
 
     ELIGIBLE = "eligible"
     INELIGIBLE = "ineligible"
+
+
+class RentaDeductibilityRefusal(StrEnum):
+    """Why a category rule refused a row, for refusals that ask the operator for something.
+
+    Attributes:
+        EXCLUSIVE_USE_REQUIRED: The category deducts only an element used
+            exclusively for the activity, and the row states shared use.
+        MISSING_OWNERSHIP_SHARE: The category deducts the owned part of the
+            dwelling, and no source states the ownership share.
+    """
+
+    EXCLUSIVE_USE_REQUIRED = "exclusive_use_required"
+    MISSING_OWNERSHIP_SHARE = "missing_ownership_share"
 
 
 class RentaInvoiceEvidenceStatus(StrEnum):
@@ -101,7 +118,20 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     the lower limb to everybody -- which understates the allowance for exactly the
     people the higher limb exists for.
     """
-    exclusive_use_confirmed: bool = False
+    ownership_share: UnitProportion | None = None
+    """The taxpayer's ownership share of the partly affected dwelling.
+
+    A usage-ratio rule that declares ``requires_ownership_share`` deducts the
+    area ratio of the owned part only. ``None`` means no source states the
+    share, and such a rule refuses rather than assume sole ownership.
+    """
+    register_owned_transaction_ids: frozenset[str] = frozenset()
+    """Ledger rows the activity-asset register declares as an asset's acquisition.
+
+    The register deducts such a purchase through its amortization schedule and
+    withholds the row from the expense total, so the row never counts against a
+    statutory cap that several rows share.
+    """
     iva_deduction_ratio: UnitProportion | None = None
     """Fraction of the fact's input IVA the activity affords a right to deduct (LIVA arts. 94/104).
 
@@ -119,16 +149,13 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     especial) makes ``1 - iva_deduction_ratio`` of ``iva_amount`` join the
     deductible base. See :func:`evaluate_renta_deductibility`.
 
-    Populated by :func:`~application.aggregation.renta_ledger.aggregate_renta_ledger_expenses_from_repositories`
-    for the M100 annual first slice, via
-    ``application.aggregation.renta_ledger.resolve_iva_deduction_ratio``: a
-    wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
+    Populated by :func:`~application.aggregation.renta_ledger.resolve_category_deduction_rules`:
+    a wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
     otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
-    whole-entity entry for the ejercicio contributes its in-force provisional
-    percentage under ``GENERAL`` or ``ESPECIAL``. The M130 quarterly pagos
-    fraccionados gasto path (``application.aggregation.renta_gasto_ledger``)
-    does not construct a :class:`RentaDeductibilityContext` at all and is not
-    wired to this axis -- a named follow-up, not silently covered here.
+    whole-entity entry for the ejercicio contributes, under ``GENERAL`` or
+    ``ESPECIAL``, its definitive percentage for the M100 annual return
+    (``resolve_annual_iva_deduction``) and its in-force provisional percentage for
+    the M130 quarterly path (``resolve_iva_deduction_ratio``).
     """
     residence_ccaa: CCAA | None = None
     """Optional residence axis consumed by the governed territorial policy."""
@@ -171,12 +198,21 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     gross_amount: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
+    """The recargo de equivalencia the supplier surcharged, which no regime lets the payer deduct."""
     currency: Literal["EUR"] = EUR_CURRENCY
     direction: RentaExpenseDirection = RentaExpenseDirection.OUTGOING_EXPENSE
     category: SpendingCategory
     activity_key: str = Field(default="default", min_length=1, max_length=128)
+    exclusive_business_use: bool = False
+    """Whether the row states the element is used only for the activity.
 
-    @field_validator("gross_amount", "taxable_base", "iva_amount")
+    Produced from the row's own classification: a whole-business row states
+    exclusive use, a MIXED row states shared use. A category whose rule
+    requires exclusive use deducts nothing for shared use.
+    """
+
+    @field_validator("gross_amount", "taxable_base", "iva_amount", "recargo_amount")
     @classmethod
     @pydantic_validation_boundary
     def _amounts_are_finite_decimals(cls, value: Decimal | None) -> Decimal | None:
@@ -224,6 +260,7 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
     proportionality_kind: ProportionalityKind
     status: RentaDeductibilityStatus
     reason: str = Field(min_length=1, max_length=256)
+    refusal: RentaDeductibilityRefusal | None = None
     gross_amount: Decimal
     deductible_amount: Decimal
     non_deductible_amount: Decimal
@@ -256,11 +293,34 @@ class _RentaDeductibilityDecision:
     deductible_amount: Decimal
     applied_ratio: Decimal | None
     statutory_cap_applied: Decimal | None
+    refusal: RentaDeductibilityRefusal | None = None
+
+
+def _refused(reason: str, refusal: RentaDeductibilityRefusal | None = None) -> _RentaDeductibilityDecision:
+    """Return an ineligible decision that deducts nothing."""
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.INELIGIBLE,
+        reason=reason,
+        deductible_amount=Decimal("0"),
+        applied_ratio=None,
+        statutory_cap_applied=None,
+        refusal=refusal,
+    )
 
 
 def _validated_first_slice_casilla(value: object) -> CasillaId:
     """Validate a target token received from the first-slice facts mapping."""
     return validated_casilla_id(value, surface="first-slice expense routing target")
+
+
+def _routable_category_tokens(
+    selected_authority: GovernedFactSource,
+    coordinate: date,
+) -> tuple[SpendingCategory, ...]:
+    """Return the categories the first slice routes, which excludes the amortizable ones."""
+    catalogue = resolve_spending_category_catalogue(effective_date=coordinate, authority=selected_authority)
+    amortizable = frozenset(catalogue.amortizable)
+    return tuple(category for category in catalogue.categories if category not in amortizable)
 
 
 def renta_first_slice_expense_routing(
@@ -276,10 +336,7 @@ def renta_first_slice_expense_routing(
     try:
         routing = resolve_first_slice_expense_routing(
             category_type=SpendingCategory,
-            category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
-                effective_date=coordinate,
-                authority=selected_authority,
-            ),
+            category_tokens=_routable_category_tokens,
             casilla_factory=_validated_first_slice_casilla,
             model_code=Modelo("100").value,
             fact_id="modelo-100-first-slice-expense-routing-mapping",
@@ -295,11 +352,13 @@ def renta_first_slice_expense_routing(
 class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     """Binding-ready Renta expense observation for the first Modelo 100 slice."""
 
-    observation_id: str = Field(min_length=1, max_length=160)
+    observation_id: str = Field(min_length=1, max_length=256)
     source_kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
-    modelo: Literal["100"] = "100"
+    modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))] = Field(
+        default_factory=partial(form_for_role, "renta.annual")
+    )
     period: Literal["0A"] = "0A"
     tax_year: FilingYear
     activity_key: str = Field(min_length=1, max_length=128)
@@ -479,15 +538,20 @@ def _evaluate_usage_ratio_rule(
     context: RentaDeductibilityContext,
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
-    ratio = context.usage_ratios.get(fact.category, rule.default_ratio)
+    ratio = context.usage_ratios.get(fact.category)
     if ratio is None:
-        return _RentaDeductibilityDecision(
-            status=RentaDeductibilityStatus.INELIGIBLE,
-            reason="missing usage ratio",
-            deductible_amount=Decimal("0"),
-            applied_ratio=None,
-            statutory_cap_applied=None,
-        )
+        return _refused("missing usage ratio")
+    if rule.requires_ownership_share:
+        # Manual práctico Renta: the expenses of a partly affected dwelling are
+        # deductible in proportion to the affected part AND to the taxpayer's
+        # ownership share of it. Assuming sole ownership would deduct the
+        # co-owners' part.
+        if context.ownership_share is None:
+            return _refused(
+                "missing ownership share of the partly affected dwelling",
+                RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE,
+            )
+        ratio *= context.ownership_share
     return _RentaDeductibilityDecision(
         status=RentaDeductibilityStatus.ELIGIBLE,
         reason="deductible",
@@ -503,15 +567,9 @@ def _evaluate_statutory_cap_rule(
     context: RentaDeductibilityContext,
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
-    cap_applied = _resolve_statutory_cap(rule=rule, context=context)
+    cap_applied = resolve_statutory_cap(rule=rule, context=context)
     if cap_applied is None:
-        return _RentaDeductibilityDecision(
-            status=RentaDeductibilityStatus.INELIGIBLE,
-            reason="missing statutory cap context",
-            deductible_amount=Decimal("0"),
-            applied_ratio=None,
-            statutory_cap_applied=None,
-        )
+        return _refused("missing statutory cap context")
     deductible_amount = min(deductible_basis, cap_applied)
     applied_ratio = Decimal("0") if deductible_basis == Decimal("0") else deductible_amount / deductible_basis
     return _RentaDeductibilityDecision(
@@ -539,13 +597,13 @@ def _evaluate_non_deductible_rule(
 
 
 def _evaluate_exclusive_use_rule(
-    _fact: RentaDeductibleExpenseFact,
+    fact: RentaDeductibleExpenseFact,
     _rule: ProportionalityRule,
-    context: RentaDeductibilityContext,
+    _context: RentaDeductibilityContext,
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
-    if context.exclusive_use_confirmed:
-        # Confirmation gates whether the cost is deductible, never what the
+    if fact.exclusive_business_use:
+        # Exclusive use gates whether the cost is deductible, never what the
         # deductible cost is.  The basis excludes recoverable input IVA and
         # includes only the non-recoverable share (PGC NRV 12.ª).
         return _RentaDeductibilityDecision(
@@ -555,12 +613,11 @@ def _evaluate_exclusive_use_rule(
             applied_ratio=Decimal("1"),
             statutory_cap_applied=None,
         )
-    return _RentaDeductibilityDecision(
-        status=RentaDeductibilityStatus.INELIGIBLE,
-        reason="exclusive use not confirmed",
-        deductible_amount=Decimal("0"),
-        applied_ratio=None,
-        statutory_cap_applied=None,
+    # An indivisible element admits no partial affectation (RIRPF art. 22.3),
+    # so a shared-use row deducts nothing rather than its stated share.
+    return _refused(
+        "exclusive use not confirmed: the element is not affected when it also serves private needs",
+        RentaDeductibilityRefusal.EXCLUSIVE_USE_REQUIRED,
     )
 
 
@@ -623,6 +680,7 @@ def evaluate_renta_deductibility(
         proportionality_kind=rule.kind,
         status=decision.status,
         reason=decision.reason,
+        refusal=decision.refusal,
         gross_amount=fact.gross_amount * fact.sign,
         deductible_amount=signed_deductible,
         non_deductible_amount=signed_non_deductible,
@@ -645,6 +703,8 @@ def _deductible_basis_amount(fact: RentaDeductibleExpenseFact, context: RentaDed
     the historic behaviour.
     """
     base = fact.taxable_base if fact.taxable_base is not None else fact.gross_amount
+    if fact.taxable_base is not None:
+        base += fact.recargo_amount or Decimal("0")
     if fact.taxable_base is None or fact.iva_amount is None or context.iva_deduction_ratio is None:
         return base
     non_deductible_iva = fact.iva_amount * (Decimal("1") - context.iva_deduction_ratio)
@@ -656,8 +716,12 @@ def build_renta_deductible_expense_observation(
     result: RentaDeductibilityResult,
     *,
     tax_year: int,
+    imputed_on: date | None = None,
 ) -> RentaDeductibleExpenseObservation:
     """Build a first-slice Modelo 100 observation from an eligible result.
+
+    ``imputed_on`` is the date the taxpayer's imputation criterion places the
+    fact on, when it was consulted; otherwise the fact's own filing date stands.
 
     Returns:
         A :class:`RentaDeductibleExpenseObservation` ready for filing assembly.
@@ -666,9 +730,10 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category != result.category:
         raise RentaValidationError("fact and result categories must match")
-    if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
+    filing_date = fact.filing_date if imputed_on is None else imputed_on
+    if not Period.from_year_and_code(tax_year, "0A").contains(filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
-    target_casilla_id = renta_first_slice_expense_routing(effective_date=fact.filing_date).get(fact.category)
+    target_casilla_id = renta_first_slice_expense_routing(effective_date=filing_date).get(fact.category)
     if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     invoice_status = (
@@ -691,7 +756,7 @@ def build_renta_deductible_expense_observation(
         invoice_issue_date=fact.invoice_issue_date,
         posting_date=fact.posting_date,
         payment_date=fact.payment_date,
-        filing_date=fact.filing_date,
+        filing_date=filing_date,
         gross_amount=result.gross_amount,
         taxable_base=fact.taxable_base * fact.sign if fact.taxable_base is not None else None,
         iva_amount=fact.iva_amount * fact.sign if fact.iva_amount is not None else None,
@@ -710,11 +775,12 @@ def build_renta_deductible_expense_observation(
     )
 
 
-def _resolve_statutory_cap(
+def resolve_statutory_cap(
     *,
     rule: ProportionalityRule,
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
+    """Resolve the statutory cap of a proportionality rule, or None when none applies."""
     if rule.statutory_cap_eur is not None or rule.statutory_cap_schedule:
         return _resolve_fixed_statutory_cap(rule, context=context)
     if rule.statutory_cap_eur_per_day is not None:
@@ -743,10 +809,37 @@ def _resolve_daily_statutory_cap(
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
     amount = rule.statutory_cap_eur_per_day
-    days = context.statutory_cap_days
-    if amount is None or days is None:
+    if amount is None:
         return None
-    return amount * days
+    return amount * _statutory_cap_days(context)
+
+
+def _statutory_cap_days(context: RentaDeductibilityContext) -> Decimal:
+    """Return the days a daily cap covers; one ledger row is one day's expense when no caller says otherwise.
+
+    A dieta is an expense of one day, so a row the ledger records on one date
+    claims that date's limit. :func:`statutory_cap_trims` then holds every row
+    of the same date to one day's limit together.
+    """
+    return context.statutory_cap_days if context.statutory_cap_days is not None else Decimal("1")
+
+
+def _daily_variant_amount(rule: ProportionalityRule, context: RentaDeductibilityContext) -> Decimal | None:
+    """Return the per-day amount of the selected daily variant, or of the lowest one when none is selected.
+
+    The ledger records no fact that tells a meal with an overnight stay from one
+    without. The lower limb is what the regulation grants absent that fact, so
+    an unselected variant deducts the lower daily amount rather than refusing
+    every row or assuming the higher one.
+    """
+    daily = {
+        variant.id: variant.statutory_cap_eur_per_day
+        for variant in rule.statutory_cap_variants
+        if variant.statutory_cap_eur_per_day is not None
+    }
+    if context.statutory_cap_variant_id is not None:
+        return daily.get(context.statutory_cap_variant_id)
+    return min(daily.values(), default=None)
 
 
 def _resolve_variant_statutory_cap(
@@ -757,15 +850,10 @@ def _resolve_variant_statutory_cap(
     annual = [variant for variant in rule.statutory_cap_variants if not variant.is_per_day]
     if annual:
         return _resolve_annual_variant_cap(annual, context=context)
-    if context.statutory_cap_variant_id is None or context.statutory_cap_days is None:
+    per_day = _daily_variant_amount(rule, context)
+    if per_day is None:
         return None
-    for variant in rule.statutory_cap_variants:
-        if variant.id == context.statutory_cap_variant_id:
-            per_day = variant.statutory_cap_eur_per_day
-            if per_day is None:
-                return None
-            return per_day * context.statutory_cap_days
-    return None
+    return per_day * _statutory_cap_days(context)
 
 
 def _resolve_annual_variant_cap(
@@ -815,6 +903,98 @@ def _resolve_annual_variant_cap(
     return total
 
 
+@dataclass(frozen=True, slots=True)
+class StatutoryCapClaim:
+    """One evaluated row's claim on a statutory cap that binds several rows together.
+
+    Attributes:
+        claim_id: The caller's identity for the row, returned by
+            :func:`statutory_cap_trims`.
+        transaction_id: The ledger transaction the row comes from.
+        category: The row's spending category.
+        imputed_on: The date the taxpayer's imputation criterion places the row on,
+            which decides the ejercicio an annual cap counts it in.
+        incurred_on: The day the expense happened, which decides the day a daily
+            cap counts it on whenever it was paid or imputed.
+        deductible_amount: The signed amount the row's own rule deducted.
+    """
+
+    claim_id: str
+    transaction_id: str
+    category: SpendingCategory
+    imputed_on: date
+    incurred_on: date
+    deductible_amount: Decimal
+
+
+def statutory_cap_trims(
+    claims: Sequence[StatutoryCapClaim],
+    *,
+    profiles: Mapping[SpendingCategory, CategoryProfile],
+    context: RentaDeductibilityContext,
+) -> Mapping[str, Decimal]:
+    """Hold rows that share one statutory cap to that cap together.
+
+    :func:`evaluate_renta_deductibility` caps each row on its own, but the law
+    caps a total: the seguro de enfermedad and mutualidad limits per year and the
+    dieta limits per day. Several rows each below the cap can exceed
+    it together, so the rows of each cap are summed in date order and the
+    excess is removed from the latest rows first.
+
+    Args:
+        claims: The eligible rows of categories whose rule carries a cap.
+            Rows of other categories are ignored.
+        profiles: The category profiles of the filing year.
+        context: The deductibility context the rows were evaluated under.
+
+    Returns:
+        The reduced deductible amount of each row the cap trims, keyed by
+        :attr:`StatutoryCapClaim.claim_id`. A row the cap leaves whole is absent.
+    """
+    groups: dict[tuple[str, int | date], list[StatutoryCapClaim]] = {}
+    limits: dict[tuple[str, int | date], Decimal] = {}
+    for claim in claims:
+        profile = profiles.get(claim.category)
+        if profile is None or claim.transaction_id in context.register_owned_transaction_ids:
+            continue
+        keyed = _statutory_cap_group(profile.proportionality, claim, context=context)
+        if keyed is None:
+            continue
+        key, limit = keyed
+        groups.setdefault(key, []).append(claim)
+        limits[key] = limit
+    trims: dict[str, Decimal] = {}
+    for key, members in groups.items():
+        ordered = sorted(members, key=lambda member: (member.imputed_on, member.claim_id))
+        excess = sum((member.deductible_amount for member in ordered), Decimal("0")) - limits[key]
+        for member in reversed(ordered):
+            if excess <= Decimal("0"):
+                break
+            if member.deductible_amount <= Decimal("0"):
+                continue
+            cut = min(member.deductible_amount, excess)
+            trims[member.claim_id] = member.deductible_amount - cut
+            excess -= cut
+    return MappingProxyType(trims)
+
+
+def _statutory_cap_group(
+    rule: ProportionalityRule,
+    claim: StatutoryCapClaim,
+    *,
+    context: RentaDeductibilityContext,
+) -> tuple[tuple[str, int | date], Decimal] | None:
+    """Return the cap a row's claim counts against, and that cap's limit."""
+    if not rule.kind.is_statutory_cap:
+        return None
+    one_day = context.model_copy(update={"statutory_cap_days": None})
+    if rule.statutory_cap_eur_per_day is not None or any(variant.is_per_day for variant in rule.statutory_cap_variants):
+        daily = resolve_statutory_cap(rule=rule, context=one_day)
+        return None if daily is None else ((claim.category.value, claim.incurred_on), daily)
+    annual = resolve_statutory_cap(rule=rule, context=context)
+    return None if annual is None else ((claim.category.value, claim.imputed_on.year), annual)
+
+
 def _observation_id(fact: RentaDeductibleExpenseFact) -> str:
     if fact.invoice_id is None:
         return f"renta-expense:{fact.catalogue_id}:{fact.transaction_id}"
@@ -828,6 +1008,7 @@ def _require_decimal(value: object, field_name: str) -> None:
 
 __all__ = [
     "RentaDeductibilityContext",
+    "RentaDeductibilityRefusal",
     "RentaDeductibilityResult",
     "RentaDeductibilityStatus",
     "RentaDeductibleExpenseFact",
@@ -835,10 +1016,12 @@ __all__ = [
     "RentaExpenseDirection",
     "RentaInvoiceEvidenceStatus",
     "RentaReconciliationStatus",
+    "StatutoryCapClaim",
     "build_renta_deductible_expense_observation",
     "evaluate_renta_deductibility",
     "normalize_spending_category",
     "renta_first_slice_expense_routing",
     "resolve_region_category_profiles",
     "select_deductibility_profile",
+    "statutory_cap_trims",
 ]

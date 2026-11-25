@@ -12,12 +12,12 @@ from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionDescriptionV1,
 )
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
@@ -33,7 +33,7 @@ from ..contracts.operation_access import (
 from ..contracts.profile_access import AccessRefusal
 from ..contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES, ProjectionPage, ProjectionPageRequest
 from .framing import VerifiedConnection
-from .frontend_client_contracts import FrontendRefusedError
+from .frontend_client_contracts import FrontendRefusedError, frontend_refusal
 
 
 class OperationFrontend:
@@ -92,11 +92,14 @@ class OperationFrontend:
         """Keep runtime failure provenance distinct from an authoritative access denial."""
         if isinstance(reply.code, RefusalCode):
             raise RefusalError(reply.code)
-        raise FrontendRefusedError(
+        raise frontend_refusal(
             reply.code.value,
             sign_in=reply.sign_in,
             request_faults=reply.request_faults,
             holder_operation_id=reply.holder_operation_id,
+            recovery_remaining_seconds=reply.recovery_remaining_seconds,
+            effect=reply.effect,
+            operation_id=None if reply.operation_id is None else str(reply.operation_id),
         )
 
     @staticmethod
@@ -174,18 +177,21 @@ class OperationFrontend:
         return released
 
     def read_result_document(
-        self, result: OperationResultProjectionRequestV1, *, timeout: float = 60, deadline: float | None = None
+        self,
+        result: OperationResultProjectionRequestV1,
+        *,
+        timeout: float = 60,
+        deadline: float | None = None,
+        page_timeout: float | None = None,
     ) -> dict[str, JsonValue]:
         """Collect one canonical settled result with fresh consent for every page.
 
         The runtime applies the registered projector and current disclosure
         guard on every request. No cache, reference or digest grants access.
         A refusal, changed document or total deadline discards partial output.
+        When supplied, ``page_timeout`` also bounds each individual exchange.
         """
-        timeout_deadline = deadline_after(timeout)
-        if deadline is not None and not math.isfinite(deadline):
-            raise ValueError("result deadline must be finite")
-        deadline = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
+        deadline = _result_deadline(timeout, deadline, page_timeout)
         collected = bytearray()
         digest: ContentDigest | None = None
         total: int | None = None
@@ -193,7 +199,9 @@ class OperationFrontend:
             while total is None or len(collected) < total:
                 remaining_budget(deadline)
                 page = self.read_result_page(
-                    result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=deadline
+                    result,
+                    ProjectionPageRequest(offset=len(collected), expected_digest=digest),
+                    deadline=_result_page_deadline(deadline, page_timeout),
                 )
                 if total is not None and page.total_bytes != total:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -208,6 +216,22 @@ class OperationFrontend:
 
 
 _RESULT_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+
+
+def _result_page_deadline(deadline: float, page_timeout: float | None) -> float:
+    """Bound the next exchange by its own timeout and the whole document's budget."""
+    return deadline if page_timeout is None else min(deadline, deadline_after(page_timeout))
+
+
+def _result_deadline(timeout: float, deadline: float | None, page_timeout: float | None) -> float:
+    timeout_deadline = deadline_after(timeout)
+    if deadline is not None and not math.isfinite(deadline):
+        raise ValueError("result deadline must be finite")
+    effective = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
+    if page_timeout is not None:
+        # Validate before any page is requested, including for an empty budget.
+        deadline_after(page_timeout)
+    return effective
 
 
 def _validated_result_document(

@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -24,7 +23,7 @@ from .facts.string_mapping import (
     StringMappingPolicy,
     unique_mapping_legal_refs,
 )
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA flow catalogue"
@@ -268,14 +267,14 @@ def _flow_pointer(
 
 
 def _require_distinct_flow_pointers(catalogue: IvaFlowDirectionCatalogue) -> None:
-    pointers = {
+    pointers = (
         catalogue.issued_token,
         catalogue.received_token,
         catalogue.recipient_reverse_charge_token,
         catalogue.supplier_reverse_charge_token,
-    }
-    if len(pointers) < 4:
-        raise RegistryValidationError("IVA flow catalogue pointers must identify four distinct flow directions")
+    )
+    if len(set(pointers)) != len(pointers):
+        raise RegistryValidationError("IVA flow catalogue pointers must identify distinct flow directions")
 
 
 def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
@@ -307,7 +306,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
 
 def resolve_iva_flow_direction_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirectionCatalogue:
     """Resolve the dated IVA flow and settlement vocabulary from fact 0083."""
@@ -317,7 +316,7 @@ def resolve_iva_flow_direction_catalogue(
 def require_iva_flow_direction(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirection:
     """Return a flow token only when the selected registry declares it."""
@@ -327,28 +326,10 @@ def require_iva_flow_direction(
     ).require(value)
 
 
-def require_registry_declared_iva_flow_direction(value: object) -> IvaFlowDirection:
-    """Return one flow token declared by the facts a validation is validating.
-
-    Like the rate-kind check, a registry validator resolves this vocabulary from
-    the candidate in scope and refuses when none is: reading the published bundle
-    while that bundle is being decoded is the deadlock this avoids.
-    """
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA flow validation requires the governed facts being validated to be in "
-            "scope; registry validation must not resolve a flow direction through the "
-            "published authority artifact",
-        )
-    return resolve_iva_flow_direction_catalogue(effective_date=today_madrid(), authority=authority).require(value)
-
-
 __all__ = [
     "IvaFlowDirectionCatalogue",
     "IvaFlowDirectionDefinition",
     "IvaSettlementSideDefinition",
     "require_iva_flow_direction",
-    "require_registry_declared_iva_flow_direction",
     "resolve_iva_flow_direction_catalogue",
 ]

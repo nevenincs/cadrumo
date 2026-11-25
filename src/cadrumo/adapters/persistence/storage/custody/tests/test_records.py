@@ -21,7 +21,6 @@ from ......core.credentials import (
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from .. import records
-from .._profile_password_codec import decode_profile_password, encode_profile_password
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -30,6 +29,7 @@ from ..errors import (
     ProfileCustodyRefusedError,
 )
 from ..paths import profile_custody_path
+from ..profile_password_codec import decode_profile_password, encode_profile_password
 from ..records import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
@@ -239,7 +239,10 @@ def test_refusal_taxonomy_carries_the_hard_cutover_and_supervision_outcomes() ->
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         ProfileCustodyRefusal.DEK_ROTATION_UNSUPPORTED,
         ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
+        ProfileCustodyRefusal.KDF_RESOURCE_BUSY,
+        ProfileCustodyRefusal.KDF_SUPERVISION_BUSY,
         ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
+        ProfileCustodyRefusal.KDF_TIMEOUT,
     }
     assert tuple(ProfileCustodyRecoveryGuidance) == (
         ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,

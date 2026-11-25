@@ -1,6 +1,6 @@
 """Localised refusal-payload tests for the shared amount / date parsers.
 
-Drives the real :func:`parse_decimal_amount` and :func:`_parse_iso_date`
+Drives the real :func:`parse_decimal_amount` and :func:`parse_iso_date`
 helpers in :mod:`cadrumo.entrypoints.cli.common` once under each of the four
 target locales (``en``, ``es``, ``ca``, ``hu``) and asserts the rendered
 refusal payload carries the field label, the raw operator value, and — for the
@@ -14,6 +14,7 @@ exercised end to end.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Iterator
 from typing import cast, override
 
@@ -23,9 +24,9 @@ import typer
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import clear_output_language_cache
-from .._date_parsing import _parse_iso_date
-from .._decimal_parsing import parse_decimal_amount
-from .._terminal_errors import _render_click_exception_text
+from ..date_parsing import parse_iso_date
+from ..decimal_parsing import parse_decimal_amount
+from ..terminal_errors import render_click_exception_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,7 +49,7 @@ def _render_date_refusal(locale: OutputLanguage, raw: str) -> str:
     with override_settings(cadrumo_output_language=locale.value):
         clear_output_language_cache()
         with pytest.raises(typer.BadParameter) as excinfo:
-            _parse_iso_date(raw, label="invoice-date")
+            parse_iso_date(raw, label="invoice-date")
         return excinfo.value.message
 
 
@@ -108,8 +109,10 @@ def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_b
         def __init__(self) -> None:
             self.rendered = False
 
-        def show(self) -> None:
+        def show(self, file: io.StringIO | None = None) -> None:
             self.rendered = True
+            if file is not None:
+                file.write("Error: rendered\n")
 
         @override
         def __str__(self) -> str:
@@ -117,9 +120,25 @@ def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_b
 
     exception = _Recording()
 
-    _render_click_exception_text(cast("BaseException", exception))
+    render_click_exception_text(cast("BaseException", exception))
 
     assert exception.rendered, (
         "the funnel wrote the bare message instead of calling the exception's renderer, so "
         "every parse refusal loses its prefix, usage block, hint, and parameter name"
     )
+
+
+def test_a_parse_refusal_quoting_terminal_controls_reaches_stderr_inert(capsys: pytest.CaptureFixture[str]) -> None:
+    """The rejected value a refusal echoes is rendered with its controls visibly escaped."""
+    escape, bell, override_mark = chr(0x1B), chr(0x07), chr(0x202E)
+    with override_settings(cadrumo_output_language=OutputLanguage.EN.value):
+        clear_output_language_cache()
+        with pytest.raises(typer.BadParameter) as excinfo:
+            parse_decimal_amount(f"1{escape}]52;c;eA=={bell}{override_mark}", label="taxable-base", signed=False)
+
+        render_click_exception_text(excinfo.value)
+
+    written = capsys.readouterr().err
+    assert not {escape, bell, override_mark} & set(written)
+    assert "taxable-base" in written
+    assert "1\\u001b]52;c;eA==\\u0007\\u202e" in written

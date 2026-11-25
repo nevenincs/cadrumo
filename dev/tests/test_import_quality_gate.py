@@ -1,14 +1,22 @@
 """Planted-defect proofs for the single import-quality gate.
 
-Every policy proof below writes only to ``tmp_path`` and invokes the real
-``just check-import-boundaries`` recipe.  The temporary authority is copied from the
-live ``.importlinter`` file; its roots and layer declarations are materialised
-by reading that file, so this test contains no second dependency matrix.
+Every policy proof below writes only to ``tmp_path`` and runs the real gate:
+``run_import_gate``, the function the ``just check-import-boundaries`` recipe
+reaches, with its Import Linter, loadability and subordinate steps launched as
+real subprocesses.  A few proofs launch the recipe itself end to end; the
+rest call the gate in-process because the recipe's ``just``/``uv`` wrapper
+adds launch cost without adding policy.  Defect kinds that share a verdict
+share one fixture and one gate run, each still attributed to its own module.
+The temporary authority is copied from the live ``.importlinter`` file; its
+roots and layer declarations are materialised by reading that file, so this
+test contains no second dependency matrix.
 """
 
 from __future__ import annotations
 
 import configparser
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -20,9 +28,9 @@ from pathlib import Path
 import psutil
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.import_authority import read_authority
 from dev.quality.import_candidate_inventory import module_is_test_scoped
 from dev.quality.import_check_models import Authority, RootPackage
@@ -36,6 +44,7 @@ from dev.quality.import_gate import (
     run_import_linter,
     run_subordinate,
     run_within_budget,
+    step_budget_for,
 )
 from dev.quality.import_health import build_import_health
 from dev.quality.import_health_rendering import render_import_health
@@ -89,8 +98,16 @@ def _write_module(root: Path, dotted: str, source: str) -> None:
     path.write_text(source, encoding=UTF_8, newline="\n")
 
 
+def _write_consumer(root: Path, declared: str, source: str) -> Path:
+    """Write a consumer-only file at a declared module path, or inside a declared directory."""
+    path = root / declared if declared.endswith(".py") else root / declared / "consumer.py"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(source, encoding=UTF_8, newline="\n")
+    return path
+
+
 def _layer_names(value: str) -> tuple[str, ...]:
-    return tuple(token.strip().strip("()") for token in value.replace("\n", " ").split(":") if token.strip())
+    return tuple(token.strip().strip("()") for line in value.splitlines() for token in line.split(":") if token.strip())
 
 
 def _words(value: str) -> tuple[str, ...]:
@@ -132,6 +149,14 @@ def _fixture_root(tmp_path: Path) -> Path:
                 if prefix and prefix.replace("_", "a").replace(".", "a").isalnum():
                     _write_package(tmp_path, prefix)
 
+    # Declared consumer trees and the consumer paths bound to contracts must
+    # hold Python; materialise one empty consumer file for each.
+    for name in config.sections():
+        if name != "import-gate:consumer-trees" and not name.startswith("import-gate:consumer-contract:"):
+            continue
+        for declared in config[name]:
+            _write_consumer(tmp_path, declared, "")
+
     # The loadability worker reads its finite target set through the audited
     # tree's own inventory loader, as the live repository provides it.
     inventory = tmp_path / "src" / "cadrumo" / "tests" / _INVENTORY_MODULE.name
@@ -156,6 +181,24 @@ def _run_real_gate(root: Path, **updates: str) -> tuple[int, str]:
     """Compile the fixture's load-target metadata, then run the real recipe."""
     _compile_load_targets(root)
     return _run_gate_recipe(root, **updates)
+
+
+def _run_gate(root: Path, *, compile_targets: bool = True, updates: dict[str, str] | None = None) -> tuple[int, str]:
+    """Run the real gate in-process against ``root`` with ``updates`` in the environment.
+
+    The recipe's ``main`` reads only the root and the linter override from the
+    environment before calling ``run_import_gate``; every other override is
+    read inside the gate, so setting the environment here is the recipe's path.
+    """
+    if compile_targets:
+        _compile_load_targets(root)
+    updates = {} if updates is None else updates
+    buffer = io.StringIO()
+    with pytest.MonkeyPatch.context() as patch, contextlib.redirect_stdout(buffer):
+        for key, value in updates.items():
+            patch.setenv(key, value)
+        returncode = run_import_gate(root, lint_executable=updates.get(_LINTER_ENV))
+    return returncode, buffer.getvalue()
 
 
 def _run_gate_recipe(root: Path, **updates: str) -> tuple[int, str]:
@@ -241,37 +284,16 @@ def _assert_blocking_detection(returncode: int, output: str, payload: dict[str, 
     assert isinstance(attempted, int) and attempted > 0, output
 
 
-def _assert_graph_detection(root: Path, module: str) -> None:
-    returncode, output = _run_real_gate(root)
-    payload = _health_payload(output)
-    _assert_blocking_detection(returncode, output, payload)
-    broken = _section(payload, "graph_authority")["contracts_broken"]
-    assert isinstance(broken, int) and broken >= 1, output
-    assert f"{module} -> " in _component_block(output, "GRAPH_AUTHORITY"), output
-
-
-def _assert_subordinate_detection(root: Path, category: str) -> None:
-    returncode, output = _run_real_gate(root)
-    payload = _health_payload(output)
-    _assert_blocking_detection(returncode, output, payload)
-    by_code = _section(payload, "hard_findings")["by_code"]
-    assert isinstance(by_code, dict) and category in by_code, output
-    assert f"[{category}]" in _component_block(output, "SUBORDINATE_CHECKER"), output
-
-
-def _assert_operational_refusal(root: Path, category: str, reason: str) -> None:
-    """Require a fail-closed refusal whose operational reason names the specific cause."""
-    returncode, output = _run_real_gate(root)
+def _assert_operational_refusals(returncode: int, output: str, expected: tuple[tuple[str, str], ...]) -> None:
+    """Require a fail-closed refusal whose operational reasons name each (category, cause)."""
     payload = _health_payload(output)
     assert returncode == TOOL_BROKEN, output
     assert payload["classification"] == "tool_failure", output
-    assert f"[{category}]" in output, output
     reasons = _section(payload, "graph_authority")["operational_reasons"]
-    assert isinstance(reasons, list) and any(reason in str(item) for item in reasons), output
-
-
-def _assert_authority_refusal(root: Path, category: str) -> None:
-    _assert_operational_refusal(root, category, f"[{category}]")
+    assert isinstance(reasons, list), output
+    for category, reason in expected:
+        assert f"[{category}]" in output, (category, output)
+        assert any(reason in str(item) for item in reasons), (category, reason, output)
 
 
 def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
@@ -289,405 +311,442 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
     assert "[INTERNAL_CHECKER]" in (result.stdout + result.stderr)
 
 
-@pytest.mark.parametrize(
-    ("name", "module", "source", "targets"),
+_GRAPH_DEFECTS = (
     (
-        (
-            "tax-cli-to-runtime-direct",
-            "cadrumo.entrypoints.cli.bad",
-            "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "tax-cli-to-runtime-function-local",
-            "cadrumo.entrypoints.cli.bad",
-            "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "tax-cli-to-runtime-type-checking",
-            "cadrumo.entrypoints.cli.bad",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
-            "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "source-to-dev-production",
-            "cadrumo.core.bad",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-test-module",
-            "cadrumo.core.tests.test_bad",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-conftest",
-            "cadrumo.conftest",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-function-local",
-            "cadrumo.domain.tests.test_bad",
-            "def load():\n    import dev.exit_codes\n\n    return dev.exit_codes\n",
-            (),
-        ),
-        (
-            "core-to-domain",
-            "cadrumo.core.bad",
-            "from ..domain.module import VALUE\n",
-            ("cadrumo.domain.module",),
-        ),
-        (
-            "core-to-application",
-            "cadrumo.core.bad",
-            "from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "core-to-adapter",
-            "cadrumo.core.bad",
-            "from ..adapters.module import VALUE\n",
-            ("cadrumo.adapters.module",),
-        ),
-        (
-            "core-to-entrypoint",
-            "cadrumo.core.bad",
-            "from ..entrypoints.module import VALUE\n",
-            ("cadrumo.entrypoints.module",),
-        ),
-        (
-            "harness-to-product-entrypoint",
-            "cadrumo_mcp.mcp.bad",
-            "import cadrumo.entrypoints.module\n",
-            ("cadrumo.entrypoints.module",),
-        ),
-        (
-            "domain-to-application",
-            "cadrumo.domain.bad",
-            "from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "domain-to-adapter",
-            "cadrumo.domain.bad",
-            "from ..adapters.module import VALUE\n",
-            ("cadrumo.adapters.module",),
-        ),
-        (
-            "application-to-concrete-adapter",
-            "cadrumo.application.bad",
-            "from ..adapters.concrete import VALUE\n",
-            ("cadrumo.adapters.concrete",),
-        ),
-        (
-            "adapter-to-harness",
-            "cadrumo.adapters.inbound.bad",
-            "import cadrumo_mcp.mcp.module\n",
-            ("cadrumo_mcp.mcp.module",),
-        ),
-        (
-            "non-entrypoint-to-entrypoint",
-            "cadrumo.adapters.bad",
-            "from ..entrypoints.feature import VALUE\n",
-            ("cadrumo.entrypoints.feature",),
-        ),
-        (
-            "cli-to-tui",
-            "cadrumo.entrypoints.cli.bad",
-            "from cadrumo.entrypoints.tui.feature import VALUE\n",
-            ("cadrumo.entrypoints.tui.feature",),
-        ),
-        (
-            "tui-to-cli",
-            "cadrumo.entrypoints.tui.bad",
-            "from cadrumo.entrypoints.cli.feature import VALUE\n",
-            ("cadrumo.entrypoints.cli.feature",),
-        ),
-        (
-            "owner-test-to-forbidden-layer",
-            "cadrumo.domain.tests.test_bad",
-            "from ...application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "function-local-forbidden-import",
-            "cadrumo.domain.bad",
-            "def load():\n    from ..application.module import VALUE\n    return VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "type-checking-forbidden-import",
-            "cadrumo.domain.bad",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
+        "tax-cli-to-runtime-direct",
+        "cadrumo.entrypoints.cli.bad",
+        "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "tax-cli-to-runtime-function-local",
+        "cadrumo.entrypoints.cli.bad",
+        "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "tax-cli-to-runtime-type-checking",
+        "cadrumo.entrypoints.cli.bad",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
+        "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "source-to-dev-production",
+        "cadrumo.core.bad",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-test-module",
+        "cadrumo.core.tests.test_bad",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-conftest",
+        "cadrumo.conftest",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-function-local",
+        "cadrumo.domain.tests.test_bad",
+        "def load():\n    import dev.exit_codes\n\n    return dev.exit_codes\n",
+        (),
+    ),
+    (
+        "core-to-domain",
+        "cadrumo.core.bad",
+        "from ..domain.module import VALUE\n",
+        ("cadrumo.domain.module",),
+    ),
+    (
+        "core-to-application",
+        "cadrumo.core.bad",
+        "from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "core-to-adapter",
+        "cadrumo.core.bad",
+        "from ..adapters.module import VALUE\n",
+        ("cadrumo.adapters.module",),
+    ),
+    (
+        "core-to-entrypoint",
+        "cadrumo.core.bad",
+        "from ..entrypoints.module import VALUE\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "harness-to-product-entrypoint",
+        "cadrumo_mcp.mcp.bad",
+        "import cadrumo.entrypoints.module\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "agent-service-to-runtime-host",
+        "cadrumo_agent_service.host.bad",
+        "from cadrumo_runtime.host.module import VALUE\n",
+        ("cadrumo_runtime.host.module",),
+    ),
+    (
+        "agent-service-to-runtime-adapter",
+        "cadrumo_agent_service.adapters.bad",
+        "from cadrumo_runtime.adapters.module import VALUE\n",
+        ("cadrumo_runtime.adapters.module",),
+    ),
+    (
+        "agent-service-to-tax-entrypoint-function-local",
+        "cadrumo_agent_service.adapters.bad",
+        "def load():\n    import cadrumo.entrypoints.module\n\n    return cadrumo.entrypoints.module\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "mcp-to-agent-service",
+        "cadrumo_mcp.mcp.bad",
+        "from cadrumo_agent_service.host.module import VALUE\n",
+        ("cadrumo_agent_service.host.module",),
+    ),
+    (
+        "domain-to-application",
+        "cadrumo.domain.bad",
+        "from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "domain-to-adapter",
+        "cadrumo.domain.bad",
+        "from ..adapters.module import VALUE\n",
+        ("cadrumo.adapters.module",),
+    ),
+    (
+        "application-to-concrete-adapter",
+        "cadrumo.application.bad",
+        "from ..adapters.concrete import VALUE\n",
+        ("cadrumo.adapters.concrete",),
+    ),
+    (
+        "adapter-to-harness",
+        "cadrumo.adapters.inbound.bad",
+        "import cadrumo_mcp.mcp.module\n",
+        ("cadrumo_mcp.mcp.module",),
+    ),
+    (
+        "non-entrypoint-to-entrypoint",
+        "cadrumo.adapters.bad",
+        "from ..entrypoints.feature import VALUE\n",
+        ("cadrumo.entrypoints.feature",),
+    ),
+    (
+        "cli-to-tui",
+        "cadrumo.entrypoints.cli.bad",
+        "from cadrumo.entrypoints.tui.feature import VALUE\n",
+        ("cadrumo.entrypoints.tui.feature",),
+    ),
+    (
+        "tui-to-cli",
+        "cadrumo.entrypoints.tui.bad",
+        "from cadrumo.entrypoints.cli.feature import VALUE\n",
+        ("cadrumo.entrypoints.cli.feature",),
+    ),
+    (
+        "owner-test-to-forbidden-layer",
+        "cadrumo.domain.tests.test_bad",
+        "from ...application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "function-local-forbidden-import",
+        "cadrumo.domain.bad",
+        "def load():\n    from ..application.module import VALUE\n    return VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "type-checking-forbidden-import",
+        "cadrumo.domain.bad",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
     ),
 )
-def test_graph_defect_fails_through_real_gate(
-    tmp_path: Path,
-    name: str,
-    module: str,
-    source: str,
-    targets: tuple[str, ...],
-) -> None:
-    del name
-    root = _fixture_root(tmp_path)
-    for target in targets:
-        _write_module(root, target, "VALUE = 1\n")
-    _write_module(root, module, source)
-    _assert_graph_detection(root, module)
 
 
-def test_tax_runtime_transitive_import_fails_through_real_gate(tmp_path: Path) -> None:
+def test_every_graph_defect_fails_through_one_real_gate(tmp_path: Path) -> None:
+    """Plant every forbidden-edge kind under its own module and launch the real gate once.
+
+    The gate's cost is dominated by its launch, so the defect kinds share one
+    fixture; each must still appear as its own reported edge.  This is also the
+    end-to-end recipe launch for a blocking verdict, so it carries the
+    transitive tax-to-runtime chain and the advisory absolute spellings too.
+    """
     root = _fixture_root(tmp_path)
-    _write_module(root, "cadrumo_runtime.host.frontend.cli.bootstrap", "VALUE = 1\n")
+    planted: list[str] = []
+    for index, (_name, module, source, targets) in enumerate(_GRAPH_DEFECTS):
+        for target in targets:
+            _write_module(root, target, "VALUE = 1\n")
+        # A conftest module is recognised by its exact name, so it cannot take a suffix.
+        unique = module if module.endswith(".conftest") else f"{module}_{index}"
+        _write_module(root, unique, source)
+        planted.append(unique)
+    # A transitive chain through the client package is still a tax-to-runtime edge.
     _write_module(
         root,
         "cadrumo_client.commands.bridge",
         "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
     )
-    _write_module(root, "cadrumo.entrypoints.cli.bad", "from cadrumo_client.commands.bridge import VALUE\n")
+    _write_module(root, "cadrumo.entrypoints.cli.transitive", "from cadrumo_client.commands.bridge import VALUE\n")
+    # An absolute spelling of a forbidden edge is advisory for the checker and blocking for the graph.
+    _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
+    advisory_sources = (
+        "import cadrumo.domain.module\n",
+        "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
+    )
+    advisory = [f"cadrumo.core.absolute_{index}" for index in range(len(advisory_sources))]
+    for module, source in zip(advisory, advisory_sources, strict=True):
+        _write_module(root, module, source)
+
     returncode, output = _run_real_gate(root)
     payload = _health_payload(output)
     _assert_blocking_detection(returncode, output, payload)
+    broken = _section(payload, "graph_authority")["contracts_broken"]
+    assert isinstance(broken, int) and broken >= 1, output
     graph_output = _component_block(output, "GRAPH_AUTHORITY")
-    assert "cadrumo.entrypoints.cli.bad -> cadrumo_client.commands.bridge" in graph_output, output
+    for module in planted:
+        assert f"{module} -> " in graph_output, (module, output)
+    assert "cadrumo.entrypoints.cli.transitive -> cadrumo_client.commands.bridge" in graph_output, output
     assert "cadrumo_client.commands.bridge -> cadrumo_runtime.host.frontend.cli.bootstrap" in graph_output, output
+    advisory_lines = [line for line in output.splitlines() if "[ADVISORY:CANONICAL_IMPORT_SPELLING]" in line]
+    for module in advisory:
+        assert any(module.rsplit(".", 1)[-1] in line for line in advisory_lines), (module, output)
 
 
-def test_undeclared_source_root_fails_authority_preflight(tmp_path: Path) -> None:
+#: Authority defects that read_authority reports together, each with its own cause.
+_AUTHORITY_DEFECTS = (
+    ("undeclared-source-root", "UNCLASSIFIED_ROOT", "Python root 'undeclared_root' is absent"),
+    ("undeclared-source-module", "UNCLASSIFIED_ROOT", "Python root 'stray' is absent"),
+    ("declared-source-module-collision", "AUTHORITY_CONFIG", "source module 'cadrumo' collides"),
+    ("undeclared-source-package", "UNCLASSIFIED_PACKAGE", "child 'unclassified_package' is absent"),
+    ("type-checking-edges-excluded", "AUTHORITY_CONFIG", "excludes TYPE_CHECKING imports"),
+    ("undeclared-repository-tree", "UNCLASSIFIED_ROOT", "repository tree 'tools' holds Python"),
+)
+
+
+def _plant_authority_defect(root: Path, name: str) -> None:
+    if name == "undeclared-source-root":
+        _write_package(root, "undeclared_root")
+    elif name == "undeclared-source-module":
+        (root / "src" / "stray.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    elif name == "declared-source-module-collision":
+        (root / "src" / "cadrumo.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    elif name == "undeclared-source-package":
+        _write_package(root, "cadrumo.unclassified_package")
+    elif name == "type-checking-edges-excluded":
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(root / ".importlinter", encoding=UTF_8)
+        config["importlinter"]["exclude_type_checking_imports"] = "True"
+        with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
+            config.write(stream)
+    elif name == "undeclared-repository-tree":
+        (root / "tools").mkdir()
+        (root / "tools" / "script.py").write_text("import cadrumo\n", encoding=UTF_8, newline="\n")
+    else:
+        raise AssertionError(f"unknown authority defect {name!r}")
+
+
+@pytest.mark.parametrize(("name", "category", "reason"), _AUTHORITY_DEFECTS, ids=[row[0] for row in _AUTHORITY_DEFECTS])
+def test_each_authority_defect_is_its_own_preflight_finding(
+    tmp_path: Path, name: str, category: str, reason: str
+) -> None:
     root = _fixture_root(tmp_path)
-    _write_package(root, "undeclared_root")
-    _assert_authority_refusal(root, "UNCLASSIFIED_ROOT")
+    assert _authority_findings(root) == ()
+    _plant_authority_defect(root, name)
+
+    findings = _authority_findings(root)
+
+    assert any(item.startswith(f"[{category}]") and reason in item for item in findings), findings
 
 
-def test_undeclared_source_module_fails_authority_preflight(tmp_path: Path) -> None:
+def test_every_authority_defect_fails_preflight_through_one_real_gate(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
-    (root / "src" / "stray.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
-    _assert_authority_refusal(root, "UNCLASSIFIED_ROOT")
+    for name, _category, _reason in _AUTHORITY_DEFECTS:
+        _plant_authority_defect(root, name)
 
+    returncode, output = _run_gate(root)
 
-def test_declared_source_module_collision_fails_authority_preflight(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    (root / "src" / "cadrumo.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
-    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
-
-
-def test_undeclared_source_package_fails_authority_preflight(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_package(root, "cadrumo.unclassified_package")
-    _assert_authority_refusal(root, "UNCLASSIFIED_PACKAGE")
-
-
-def test_authority_must_include_type_checking_edges(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    config = configparser.ConfigParser(interpolation=None)
-    config.read(root / ".importlinter", encoding=UTF_8)
-    config["importlinter"]["exclude_type_checking_imports"] = "True"
-    with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
-        config.write(stream)
-
-    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
+    _assert_operational_refusals(
+        returncode, output, tuple((category, reason) for _name, category, reason in _AUTHORITY_DEFECTS)
+    )
 
 
 def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     (root / ".importlinter").write_text("[importlinter\n", encoding=UTF_8, newline="\n")
-    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
+    returncode, output = _run_gate(root)
+    _assert_operational_refusals(returncode, output, (("AUTHORITY_CONFIG", "[AUTHORITY_CONFIG]"),))
 
 
-@pytest.mark.parametrize(
-    ("name", "module", "source", "target", "category"),
+_SUBORDINATE_DEFECTS = (
     (
-        (
-            "static-first-party-target-missing",
-            "dev.quality.consumer",
-            "import cadrumo.domain.missing\n",
-            "",
-            "STATIC_TARGET_UNRESOLVED",
-        ),
-        (
-            "unsupported-first-party-wildcard",
-            "dev.quality.consumer",
-            "from . import *\n",
-            "",
-            "UNSUPPORTED_IMPORT",
-        ),
-        (
-            "unsupported-relative-escape",
-            "cadrumo.core.consumer",
-            "from .... import VALUE\n",
-            "",
-            "UNSUPPORTED_IMPORT",
-        ),
-        (
-            "unsupported-dynamic-call",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module()\n",
-            "",
-            "UNSUPPORTED_DYNAMIC",
-        ),
-        (
-            "dunder-init-submodule",
-            "dev.quality.consumer",
-            "import cadrumo.domain.module.__init__\n",
-            "",
-            "DUNDER_INIT_SUBMODULE",
-        ),
-        (
-            "dunder-init-from-submodule",
-            "dev.quality.consumer",
-            "from cadrumo.domain.module.__init__ import VALUE\n",
-            "",
-            "DUNDER_INIT_SUBMODULE",
-        ),
-        (
-            "package-facade",
-            "dev.quality.consumer",
-            "from . import VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
-        (
-            "forwarding-module",
-            "dev.quality.consumer",
-            "from .forward import VALUE\n",
-            "dev.quality.forward",
-            "FORWARDING_MODULE",
-        ),
-        (
-            "reexport-or-alias",
-            "dev.quality.consumer",
-            "from .reexport import VALUE_ALIAS\n",
-            "dev.quality.reexport",
-            "REEXPORT_OR_ALIAS",
-        ),
-        (
-            "active-package-initializer",
-            "dev.quality.consumer",
-            "from .module import VALUE\n",
-            "dev.quality.module",
-            "ACTIVE_INITIALIZER",
-        ),
-        (
-            "private-cross-package",
-            "dev.audit.consumer",
-            "from ..quality._private import VALUE\n",
-            "dev.quality._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "literal-dynamic-private-target",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module('cadrumo.domain._private')\n",
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "finite-computed-dynamic-private-target",
-            "dev.quality.consumer",
-            (
-                "import importlib\n"
-                "target = 'cadrumo.domain._private' if True else 'third.party'\n"
-                "importlib.import_module(target)\n"
-            ),
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "unresolved-computed-dynamic-target",
-            "dev.quality.consumer",
-            "import importlib\nimport os\ntarget = os.environ['MODULE']\nimportlib.import_module(target)\n",
-            "",
-            "UNRESOLVED_DYNAMIC_TARGET",
-        ),
-        (
-            "raw-first-party-import",
-            "dev.quality.consumer",
-            "__import__('cadrumo.domain.module')\n",
-            "cadrumo.domain.module",
-            "RAW_FIRST_PARTY_IMPORT",
-        ),
-        (
-            "literal-dynamic-first-party-target-missing",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module('cadrumo.domain.missing')\n",
-            "",
-            "DYNAMIC_TARGET_UNRESOLVED",
-        ),
-        (
-            "local-package-facade",
-            "dev.quality.consumer",
-            "def load():\n    from . import VALUE\n    return VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
-        (
-            "type-checking-package-facade",
-            "dev.quality.consumer",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from . import VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
+        "static-first-party-target-missing",
+        "dev.quality.consumer",
+        "import cadrumo.domain.missing\n",
+        "",
+        "STATIC_TARGET_UNRESOLVED",
     ),
-)
-def test_subordinate_defect_fails_through_real_gate(
-    tmp_path: Path,
-    name: str,
-    module: str,
-    source: str,
-    target: str,
-    category: str,
-) -> None:
-    del name
-    root = _fixture_root(tmp_path)
-    if target:
-        _write_module(root, target, "VALUE = 1\n")
-    if category == "FORWARDING_MODULE":
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-        _write_module(root, "dev.quality.forward", "from .module import VALUE\n")
-    elif category == "REEXPORT_OR_ALIAS":
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-        _write_module(
-            root,
-            "dev.quality.reexport",
-            "from .module import VALUE\ndef local():\n    return VALUE\nVALUE_ALIAS = VALUE\n",
-        )
-    elif category == "ACTIVE_INITIALIZER":
-        _write_package(root, "dev.quality", "from .module import VALUE\n")
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-    _write_module(root, module, source)
-    _assert_subordinate_detection(root, category)
-
-
-@pytest.mark.parametrize(
-    "source",
     (
-        "import cadrumo.domain.module\n",
-        "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
+        "unsupported-first-party-wildcard",
+        "dev.quality.consumer",
+        "from . import *\n",
+        "",
+        "UNSUPPORTED_IMPORT",
     ),
-)
-def test_absolute_canonical_import_spelling_is_advisory_but_graph_edges_are_blocking(
-    tmp_path: Path, source: str
-) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
-    _write_module(root, "cadrumo.core.consumer", source)
-
-    returncode, output = _run_real_gate(root)
-
-    assert returncode == FAILED, output
-    assert "[ADVISORY:CANONICAL_IMPORT_SPELLING]" in output
-
-
-def test_finite_iterable_dynamic_target_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+    (
+        "unsupported-relative-escape",
+        "cadrumo.core.consumer",
+        "from .... import VALUE\n",
+        "",
+        "UNSUPPORTED_IMPORT",
+    ),
+    (
+        "unsupported-dynamic-call",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module()\n",
+        "",
+        "UNSUPPORTED_DYNAMIC",
+    ),
+    (
+        "dunder-init-submodule",
+        "dev.quality.consumer",
+        "import cadrumo.domain.module.__init__\n",
+        "",
+        "DUNDER_INIT_SUBMODULE",
+    ),
+    (
+        "dunder-init-from-submodule",
+        "dev.quality.consumer",
+        "from cadrumo.domain.module.__init__ import VALUE\n",
+        "",
+        "DUNDER_INIT_SUBMODULE",
+    ),
+    (
+        "package-facade",
+        "dev.quality.consumer",
+        "from . import VALUE\n",
+        "",
+        "PACKAGE_FACADE",
+    ),
+    (
+        "forwarding-module",
+        "dev.quality.consumer",
+        "from .forward import VALUE\n",
+        "dev.quality.forward",
+        "FORWARDING_MODULE",
+    ),
+    (
+        "reexport-or-alias",
+        "dev.quality.consumer",
+        "from .reexport import VALUE_ALIAS\n",
+        "dev.quality.reexport",
+        "REEXPORT_OR_ALIAS",
+    ),
+    (
+        "active-package-initializer",
+        "dev.quality.consumer",
+        "from .module import VALUE\n",
+        "dev.quality.module",
+        "ACTIVE_INITIALIZER",
+    ),
+    (
+        "private-cross-package",
+        "dev.audit.consumer",
+        "from ..quality._private import VALUE\n",
+        "dev.quality._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "literal-dynamic-private-target",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "finite-computed-dynamic-private-target",
+        "dev.quality.consumer",
+        (
+            "import importlib\n"
+            "target = 'cadrumo.domain._private' if True else 'third.party'\n"
+            "importlib.import_module(target)\n"
+        ),
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "unresolved-computed-dynamic-target",
+        "dev.quality.consumer",
+        "import importlib\nimport os\ntarget = os.environ['MODULE']\nimportlib.import_module(target)\n",
+        "",
+        "UNRESOLVED_DYNAMIC_TARGET",
+    ),
+    (
+        "raw-first-party-import",
+        "dev.quality.consumer",
+        "__import__('cadrumo.domain.module')\n",
+        "cadrumo.domain.module",
+        "RAW_FIRST_PARTY_IMPORT",
+    ),
+    (
+        "raw-first-party-import-followed-by-another-call",
+        "dev.quality.consumer",
+        "value = __import__('cadrumo.domain.module')\nprint(value)\n",
+        "cadrumo.domain.module",
+        "RAW_FIRST_PARTY_IMPORT",
+    ),
+    (
+        "interpreter-code-payload-private-target",
+        "dev.quality.consumer",
+        "import subprocess, sys\nsubprocess.run([sys.executable, '-c', 'import cadrumo.domain._private'])\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "interpreter-module-payload-missing-target",
+        "dev.quality.consumer",
+        "import subprocess, sys\nsubprocess.run([sys.executable, '-m', 'cadrumo.domain.missing'])\n",
+        "",
+        "STATIC_TARGET_UNRESOLVED",
+    ),
+    (
+        "run-module-private-target",
+        "dev.quality.consumer",
+        "import runpy\nrunpy.run_module('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "literal-dynamic-first-party-target-missing",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module('cadrumo.domain.missing')\n",
+        "",
+        "DYNAMIC_TARGET_UNRESOLVED",
+    ),
+    (
+        "local-package-facade",
+        "dev.quality.consumer",
+        "def load():\n    from . import VALUE\n    return VALUE\n",
+        "",
+        "PACKAGE_FACADE",
+    ),
+    (
+        "type-checking-package-facade",
+        "dev.quality.consumer",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from . import VALUE\n",
+        "",
+        "PACKAGE_FACADE",
+    ),
+    (
+        "finite-iterable-dynamic-private-target",
         "dev.quality.consumer",
         (
             "import importlib\n"
@@ -695,66 +754,32 @@ def test_finite_iterable_dynamic_target_is_resolved_by_the_subordinate_checker(t
             "for target in targets:\n"
             "    importlib.import_module(target)\n"
         ),
-    )
-    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
-
-    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
-
-
-def test_aliased_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "aliased-dynamic-loader",
         "dev.quality.consumer",
-        ("from importlib import import_module as load_module\nload_module('cadrumo.domain._private')\n"),
-    )
-    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
-
-    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
-
-
-def test_module_alias_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+        "from importlib import import_module as load_module\nload_module('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "module-alias-dynamic-loader",
         "dev.quality.consumer",
-        ("import importlib as il\nloader = il.import_module\nloader('cadrumo.domain._private')\n"),
-    )
-    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
-
-    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
-
-
-def test_dotted_dynamic_loader_alias_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+        "import importlib as il\nloader = il.import_module\nloader('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "dotted-dynamic-loader-alias",
         "dev.quality.consumer",
-        ("import importlib.import_module as loader\nloader('cadrumo.domain._private')\n"),
-    )
-    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
-
-    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
-
-
-def test_relative_dynamic_target_uses_the_importing_package(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
-        "cadrumo.core.consumer",
-        "import importlib\nimportlib.import_module('.dynamic', __package__)\n",
-    )
-    _write_module(root, "cadrumo.core.dynamic", "VALUE = 1\n")
-
-    returncode, output = _run_real_gate(root)
-
-    assert returncode == 0, output
-
-
-def test_finite_object_module_projection_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+        "import importlib.import_module as loader\nloader('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "finite-object-module-projection",
         "dev.quality.consumer",
         (
             "from dataclasses import dataclass\n"
@@ -765,92 +790,98 @@ def test_finite_object_module_projection_is_resolved_by_the_subordinate_checker(
             "target = Target('cadrumo.domain._private')\n"
             "importlib.import_module(target.module)\n"
         ),
-    )
-    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
-
-    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
-
-
-def test_relative_object_module_projection_uses_its_explicit_package_anchor(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
-        "cadrumo.core.consumer",
-        (
-            "from dataclasses import dataclass\n"
-            "import importlib\n\n"
-            "@dataclass(frozen=True)\n"
-            "class Target:\n"
-            "    module: str\n"
-            "    qualname: str\n"
-            "    package: str | None = None\n\n"
-            "target = Target('.dynamic', 'VALUE', __package__)\n"
-            "importlib.import_module(target.module, target.package)\n"
-        ),
-    )
-    _write_module(root, "cadrumo.core.dynamic", "VALUE = 1\n")
-
-    returncode, output = _run_real_gate(root)
-
-    assert returncode == 0, output
-
-
-def test_unknown_object_module_projection_fails_closed(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
-    _write_module(
-        root,
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "unknown-object-module-projection",
         "dev.quality.consumer",
         "import importlib\n\nclass Target: pass\ntarget = Target()\nimportlib.import_module(target.module)\n",
-    )
+        "",
+        "UNRESOLVED_DYNAMIC_TARGET",
+    ),
+)
 
-    _assert_subordinate_detection(root, "UNRESOLVED_DYNAMIC_TARGET")
+
+def _plant_subordinate_defects(root: Path) -> dict[tuple[str, str], str]:
+    """Plant every subordinate defect kind under its own consumer module.
+
+    Returns the planted module for each (case name, category).
+    """
+    one = "VALUE = 1\n"
+    planted: dict[tuple[str, str], str] = {}
+    for index, (name, module, source, target, category) in enumerate(_SUBORDINATE_DEFECTS):
+        if target:
+            _write_module(root, target, one)
+        if category == "FORWARDING_MODULE":
+            _write_module(root, "dev.quality.module", one)
+            _write_module(root, "dev.quality.forward", "from .module import VALUE\n")
+        elif category == "REEXPORT_OR_ALIAS":
+            _write_module(root, "dev.quality.module", one)
+            _write_module(
+                root,
+                "dev.quality.reexport",
+                "from .module import VALUE\ndef local():\n    return VALUE\nVALUE_ALIAS = VALUE\n",
+            )
+        elif category == "ACTIVE_INITIALIZER":
+            _write_package(root, "dev.quality", "from .module import VALUE\n")
+            _write_module(root, "dev.quality.module", one)
+        unique = f"{module}_{index}"
+        _write_module(root, unique, source)
+        planted[(name, category)] = unique
+    return planted
 
 
-def test_harness_package_keeps_absolute_product_imports(tmp_path: Path) -> None:
+def test_every_subordinate_defect_fails_through_one_real_gate(tmp_path: Path) -> None:
+    """Run the real gate once over a fixture holding every subordinate defect kind.
+
+    Each case sits in its own module so the reported findings stay attributable;
+    a consumer-only file reaching a private module rides along under its own path.
+    """
     root = _fixture_root(tmp_path)
-    _write_module(
-        root,
-        "cadrumo_mcp.mcp.consumer",
-        "from cadrumo.core.module import VALUE\n",
-    )
-    _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
+    planted = _plant_subordinate_defects(root)
+    _write_module(root, "dev.quality._private", "VALUE = 1\n")
+    _, repository_only = _declared_consumer_paths(root)
+    consumer = _write_consumer(root, repository_only, "from dev.quality._private import VALUE\n")
+    returncode, output = _run_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    by_code = _section(payload, "hard_findings")["by_code"]
+    block = _component_block(output, "SUBORDINATE_CHECKER")
+    assert isinstance(by_code, dict)
+    for (name, category), module in planted.items():
+        assert category in by_code, (name, output)
+        assert f"[{category}]" in block, (name, output)
+        # The initializer finding is reported at the package, not at the importer.
+        location = "dev/quality/__init__.py" if category == "ACTIVE_INITIALIZER" else module.rsplit(".", 1)[-1]
+        assert any(f"[{category}]" in line and location in line for line in block.splitlines()), (name, output)
+    consumer_location = consumer.relative_to(root).as_posix()
+    assert any("[PRIVATE_CROSS_PACKAGE]" in line and consumer_location in line for line in block.splitlines()), output
 
-    returncode, output = _run_real_gate(root)
 
-    assert returncode == 0, output
-    assert "CANONICAL_IMPORT_SPELLING" not in output
-
-
-def test_invalid_utf8_in_governed_file_fails_closed(tmp_path: Path) -> None:
+def test_every_unreadable_governed_file_fails_closed_through_one_real_gate(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
-    path = root / "src" / "dev" / "quality" / "unreadable.py"
-    path.write_bytes(b"\xff\xfe\xfd")
-    _assert_operational_refusal(root, "READ_FAILURE", "cannot read governed file")
-
-
-def test_syntax_failure_in_governed_file_fails_closed(tmp_path: Path) -> None:
-    root = _fixture_root(tmp_path)
+    (root / "src" / "dev" / "quality" / "unreadable.py").write_bytes(b"\xff\xfe\xfd")
     _write_module(root, "dev.quality.unparseable", "def broken(:\n")
-    _assert_operational_refusal(root, "PARSE_FAILURE", "cannot parse governed file")
+
+    returncode, output = _run_gate(root)
+
+    _assert_operational_refusals(
+        returncode,
+        output,
+        (
+            ("READ_FAILURE", "cannot read governed file"),
+            ("PARSE_FAILURE", "cannot parse governed file"),
+        ),
+    )
+    assert "unreadable.py" in output and "unparseable.py" in output, output
 
 
-def test_missing_import_linter_executable_is_nonzero_through_real_recipe(tmp_path: Path) -> None:
+def test_missing_subordinate_checker_executable_is_tool_broken(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
-    returncode, output = _run_real_gate(root, **{_LINTER_ENV: "cadrumo-import-linter-does-not-exist"})
-    assert returncode != 0, output
+    returncode, output = _run_gate(root, updates={_CHECKER_ENV: "cadrumo-import-checker-does-not-exist"})
+    assert returncode == TOOL_BROKEN, output
     assert "[TOOL_MISSING]" in output
-    assert run_import_gate(root, lint_executable="cadrumo-import-linter-does-not-exist") == TOOL_BROKEN
-
-
-def test_missing_subordinate_checker_executable_is_nonzero_through_real_recipe(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    root = _fixture_root(tmp_path)
-    returncode, output = _run_real_gate(root, **{_CHECKER_ENV: "cadrumo-import-checker-does-not-exist"})
-    assert returncode != 0, output
-    assert "[TOOL_MISSING]" in output
-    monkeypatch.setenv(_CHECKER_ENV, "cadrumo-import-checker-does-not-exist")
-    assert run_import_gate(root) == TOOL_BROKEN
 
 
 def test_abnormal_import_linter_status_is_tool_broken(tmp_path: Path) -> None:
@@ -886,15 +917,11 @@ def test_import_linter_exception_is_tool_broken(tmp_path: Path, monkeypatch: pyt
     assert "[TOOL_BROKEN]" in component.output
 
 
-def test_forced_checker_exception_is_nonzero_through_real_recipe(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_forced_checker_exception_is_tool_broken(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
-    returncode, output = _run_real_gate(root, **{_FORCE_CHECKER_ENV: "1"})
-    assert returncode != 0, output
+    returncode, output = _run_gate(root, updates={_FORCE_CHECKER_ENV: "1"})
+    assert returncode == TOOL_BROKEN, output
     assert "[INTERNAL_CHECKER]" in output
-    monkeypatch.setenv(_FORCE_CHECKER_ENV, "1")
-    assert run_import_gate(root) == TOOL_BROKEN
 
 
 def test_subordinate_without_a_work_budget_is_tool_broken(tmp_path: Path) -> None:
@@ -948,22 +975,6 @@ def test_a_gate_whose_steps_overrun_their_budget_is_unavailable_never_green(
     assert payload["step_budget"] == _OVERRUN_BUDGET.as_dict()
 
 
-def test_a_clean_gate_reports_the_cpu_each_step_consumed_inside_its_budget(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    root = _fixture_root(tmp_path)
-    _compile_load_targets(root)
-
-    assert run_import_gate(root) == 0
-
-    payload = _health_payload(capsys.readouterr().out)
-    budget = _section(payload, "step_budget")
-    cpu = _section(payload, "component_cpu_seconds")
-    assert set(cpu) == {"import_linter", "loadability", "subordinate_checker"}, payload
-    for step, consumed in cpu.items():
-        assert isinstance(consumed, float) and 0 < consumed <= float(str(budget["cpu_seconds"])), step
-
-
 def test_a_runaway_step_is_killed_with_its_whole_process_tree(tmp_path: Path) -> None:
     # The child spins inside a grandchild so the budget must count, and the
     # kill must reach, the process the root started rather than the root alone.
@@ -1006,11 +1017,12 @@ def test_a_step_inside_its_budget_returns_its_output_and_status(tmp_path: Path) 
     assert (run.returncode, run.stdout, run.stderr) == (3, "out\n", "err")
 
 
-def test_component_failures_run_in_authority_then_subordinate_order(tmp_path: Path) -> None:
+def test_component_failures_run_in_authority_then_subordinate_order_through_real_recipe(tmp_path: Path) -> None:
+    """A missing linter named through the recipe's environment is a tool failure, reported in order."""
     root = _fixture_root(tmp_path)
     _write_module(root, "dev.quality.consumer", "from . import *\n")
     returncode, output = _run_real_gate(root, **{_LINTER_ENV: "cadrumo-import-linter-does-not-exist"})
-    assert returncode != 0, output
+    assert returncode == TOOL_BROKEN, output
     assert "[TOOL_MISSING]" in output
     assert "[UNSUPPORTED_IMPORT]" in output
     assert "[SUBORDINATE_CHECKER]" in output
@@ -1060,9 +1072,40 @@ def test_zero_status_with_a_native_warning_fails_the_graph_component(
 
 
 def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_path: Path) -> None:
+    """The end-to-end recipe launch for a clean verdict.
+
+    The fixture also holds the import forms that must stay clean: relative
+    dynamic targets anchored on the importing package, an object projection
+    with an explicit package anchor, and a harness package's absolute product
+    import.  Each is clean on its own, so any finding here names its file.
+    """
     root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo.core.dynamic", "VALUE = 1\n")
+    _write_module(
+        root,
+        "cadrumo.core.relative_dynamic",
+        "import importlib\nimportlib.import_module('.dynamic', __package__)\n",
+    )
+    _write_module(
+        root,
+        "cadrumo.core.relative_projection",
+        (
+            "from dataclasses import dataclass\n"
+            "import importlib\n\n"
+            "@dataclass(frozen=True)\n"
+            "class Target:\n"
+            "    module: str\n"
+            "    qualname: str\n"
+            "    package: str | None = None\n\n"
+            "target = Target('.dynamic', 'VALUE', __package__)\n"
+            "importlib.import_module(target.module, target.package)\n"
+        ),
+    )
+    _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo_mcp.mcp.consumer", "from cadrumo.core.module import VALUE\n")
     returncode, output = _run_real_gate(root)
     assert returncode == 0, output
+    assert "CANONICAL_IMPORT_SPELLING" not in output
     assert "VERDICT: clean" in output
     assert "import-checker: scanned " in output
     payload = _health_payload(output)
@@ -1072,6 +1115,11 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     assert isinstance(attempted, int) and attempted > 0, output
     assert loadability["status"] == "loaded", output
     assert loadability["loaded"] == attempted and loadability["failed"] == 0, output
+    budget = _section(payload, "step_budget")
+    cpu = _section(payload, "component_cpu_seconds")
+    assert set(cpu) == {"import_linter", "loadability", "subordinate_checker"}, payload
+    for step, consumed in cpu.items():
+        assert isinstance(consumed, float) and 0 < consumed <= float(str(budget["cpu_seconds"])), step
 
 
 def test_the_subordinate_checker_does_not_import_the_audited_support_modules(
@@ -1097,7 +1145,7 @@ def test_the_isolated_worker_imports_the_audited_tree_rather_than_the_tool_tree(
     # the audited copy raises, so this failure proves which tree was imported.
     _write_module(root, "cadrumo.core.config", "raise RuntimeError('planted import-time failure')\n")
 
-    returncode, output = _run_real_gate(root)
+    returncode, output = _run_gate(root)
     payload = _health_payload(output)
 
     _assert_blocking_detection(returncode, output, payload)
@@ -1120,7 +1168,7 @@ def test_a_loadability_setup_failure_is_not_detection_of_a_planted_defect(tmp_pa
     _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
     _write_module(root, "cadrumo.core.bad", "from ..domain.module import VALUE\n")
 
-    returncode, output = _run_gate_recipe(root)
+    returncode, output = _run_gate(root, compile_targets=False)
     payload = _health_payload(output)
 
     # The planted edge is still reported, so a nonzero-exit oracle would accept this run.
@@ -1233,8 +1281,7 @@ _BROKEN_LINE = "Some other contract name BROKEN"
 #: What the linter prints when an exhaustive contract names a layer the tree no
 #: longer has. It exits 1 -- the same status a broken contract produces -- and
 #: prints no contract lines at all. That collision is the defect these cases
-#: exist for: `dev/containers` was deleted, this was the entire output, and the
-#: gate reported `status: "authoritative"` over an empty graph.
+#: exist for: the gate would report `status: "authoritative"` over an empty graph.
 _ABORTED_OUTPUT = "Missing layer in container 'dev': module dev.containers does not exist."
 
 
@@ -1270,9 +1317,8 @@ def test_a_linter_that_evaluated_no_contracts_is_unavailable_not_authoritative(t
 def test_a_broken_contract_is_counted_and_attributed_not_merely_carried(tmp_path: Path) -> None:
     """Four broken contracts must not read identically to none.
 
-    The verdict here is ``failed``, and that is PRE-EXISTING behaviour rather
-    than anything this change added: a broken contract with no attributable
-    direct occurrence is unexplained, and the gate has always escalated that.
+    The verdict here is ``failed``: a broken contract with no attributable
+    direct occurrence is unexplained, and the gate escalates that.
     This fixture declares no occurrences, so the rule fires. In the live tree
     the same four contracts are attributable to 207 ratchet-approved,
     entirely test-scoped occurrences, so the verdict is ``passing_with_debt``
@@ -1280,9 +1326,7 @@ def test_a_broken_contract_is_counted_and_attributed_not_merely_carried(tmp_path
     question this case deliberately does not answer.
 
     What it does pin is that the graph half reports the four: authoritative,
-    counted, and named. Before this change a run that evaluated nothing
-    reported the same ``authoritative`` with zero counted, and nothing
-    separated them.
+    counted, and named.
     """
     exit_status, output = _health_for_graph(tmp_path, _graph_states()["four_broken"], linter_returncode=1)
     payload = json.loads(output.rsplit("\n", 1)[1])
@@ -1316,10 +1360,8 @@ def test_an_all_kept_graph_still_passes_and_says_nothing_about_broken_contracts(
 def test_the_three_states_do_not_share_a_verdict(tmp_path: Path) -> None:
     """The finding, asserted as one proposition rather than three.
 
-    Before this change all three produced exit 0, verdict ``passing_with_debt``
-    and ``status: "authoritative"``. A future change that collapsed any two of
-    them again would pass the individual cases above only if it also passed
-    this one.
+    A change that collapsed any two of them would pass the individual cases
+    above only if it also passed this one.
     """
     verdicts = {
         name: _health_for_graph(tmp_path, output, linter_returncode=0 if name == "all_kept" else 1)
@@ -1453,3 +1495,257 @@ def test_a_dynamic_shipped_import_of_a_repository_only_root_fails_the_verdict(tm
     root_boundary = counts["root_boundary"]
     assert isinstance(root_boundary, int) and root_boundary >= 1, output
     assert "src/cadrumo/domain/tests/test_dynamic_reach.py:3 imports dev.exit_codes" in output
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import subprocess, sys\n\nsubprocess.run([sys.executable, '-c', 'from dev.exit_codes import FAILED'])\n",
+        "import subprocess, sys\n\nsubprocess.run([sys.executable, '-m', 'dev.exit_codes'])\n",
+        "import runpy\n\nrunpy.run_module('dev.exit_codes')\n",
+        "import importlib\n\ndef probe(module=importlib.import_module('dev.exit_codes')):\n    return module\n",
+    ],
+    ids=["interpreter-code", "interpreter-module", "run-module", "definition-default"],
+)
+def test_a_hidden_shipped_import_of_a_repository_only_root_fails_the_verdict(tmp_path: Path, source: str) -> None:
+    """A string payload, ``runpy`` or definition header does not change the dependency."""
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.exit_codes", "FAILED = 1\n")
+    _write_module(root, "cadrumo.domain.tests.test_hidden_reach", source)
+
+    exit_status, output = _health_verdict(root)
+
+    assert exit_status == 1, output
+    counts, _ = _ratchet_report(output)
+    root_boundary = counts["root_boundary"]
+    assert isinstance(root_boundary, int) and root_boundary >= 1, output
+    assert "src/cadrumo/domain/tests/test_hidden_reach.py:3 imports dev.exit_codes" in output
+
+
+def _append_authority(root: Path, text: str) -> None:
+    """Merge gate section entries into the fixture's copy of the live authority."""
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(root / ".importlinter", encoding=UTF_8)
+    addition = configparser.ConfigParser(interpolation=None)
+    addition.read_string(text)
+    for name in addition.sections():
+        if not config.has_section(name):
+            config.add_section(name)
+        for key, value in addition.items(name):
+            config[name][key] = value
+    with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
+        config.write(stream)
+
+
+def _authority_findings(root: Path) -> tuple[str, ...]:
+    read = read_authority(root)
+    assert read.authority is not None, read.findings
+    return read.findings
+
+
+@pytest.mark.parametrize(
+    ("relative", "label"),
+    (
+        ("tools/script.py", "tools"),
+        ("tools/nested/deep/probe.py", "tools"),
+        ("stray_root.py", "stray_root.py"),
+    ),
+)
+def test_a_repository_tree_holding_python_outside_every_declaration_is_unclassified(
+    tmp_path: Path, relative: str, label: str
+) -> None:
+    root = _fixture_root(tmp_path)
+    assert _authority_findings(root) == ()
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+
+    findings = _authority_findings(root)
+
+    assert any(f"[UNCLASSIFIED_ROOT] repository tree {label!r} holds Python" in item for item in findings), findings
+
+
+def test_ignored_and_non_python_repository_trees_stay_outside_the_census(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / ".gitignore").write_text("scratch/\n*.log\n", encoding=UTF_8, newline="\n")
+    (root / "scratch" / "probe").mkdir(parents=True)
+    (root / "scratch" / "probe" / "run.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    (root / "notes").mkdir()
+    (root / "notes" / "readme.md").write_text("# notes\n", encoding=UTF_8, newline="\n")
+
+    assert _authority_findings(root) == ()
+
+
+def test_a_documented_exclusion_is_the_only_way_to_leave_a_tree_outside_the_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "script.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    assert any("'tools' holds Python" in item for item in _authority_findings(root))
+
+    _append_authority(root, "[import-gate:excluded-trees]\ntools = Vendored generator kept identical to upstream.\n")
+
+    assert _authority_findings(root) == ()
+
+
+@pytest.mark.parametrize(
+    ("section", "expected"),
+    (
+        ("[import-gate:excluded-trees]\ntools =\n", "'tools' states no reason"),
+        ("[import-gate:consumer-trees]\nempty = A tree that holds no Python.\n", "'empty' holds no repository Python"),
+        ("[import-gate:consumer-trees]\ntools/script.py = Nested.\n", "is not one repository-root entry"),
+        ("[import-gate:consumer-trees]\nsrc = Source container.\n", "'src' is already owned by a declared root"),
+        (
+            "[import-gate:consumer-trees]\ntools = Scripts.\n[import-gate:excluded-trees]\ntools = Scripts.\n",
+            "declared both a consumer and an exclusion",
+        ),
+        ("[import-gate:consumer-tree]\ntools = Misspelt section.\n", "unknown import-gate section"),
+        ("[import-gate:consumer-contract:no-such-contract]\ntools = Scripts.\n", "names no forbidden Import Linter"),
+        (
+            "[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]\ntools = Not a consumer.\n",
+            "'tools' lies outside every consumer tree",
+        ),
+    ),
+)
+def test_a_malformed_tree_declaration_fails_authority_preflight(tmp_path: Path, section: str, expected: str) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "script.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    (root / "empty").mkdir()
+    (root / "empty" / "notes.md").write_text("# empty\n", encoding=UTF_8, newline="\n")
+    _append_authority(root, section)
+
+    findings = _authority_findings(root)
+
+    assert any(item.startswith("[AUTHORITY_CONFIG]") and expected in item for item in findings), findings
+
+
+def _declared_consumer_paths(root: Path) -> tuple[str, str]:
+    """Return a consumer path held to the shipped contract and one that is not."""
+    read = read_authority(root)
+    assert read.authority is not None and read.findings == (), read.findings
+    shipped = next(
+        scope.paths[0]
+        for scope in read.authority.consumer_contracts
+        if scope.contract.key == "shipped-code-never-reaches-repository-only"
+    )
+    repository_only = next(
+        tree.path
+        for tree in read.authority.consumer_trees
+        if not tree.path.endswith(".py") and not shipped.startswith(f"{tree.path}/")
+    )
+    return shipped, repository_only
+
+
+def _consumer_findings(root: Path, declared: str, source: str) -> tuple[list[str], int, int]:
+    """Plant one consumer file and run the real subordinate checker over the fixture."""
+    path = _write_consumer(root, declared, source)
+    read = read_authority(root)
+    assert read.authority is not None and read.findings == (), read.findings
+    result = check_authority(read.authority)
+    relative = path.relative_to(root).as_posix()
+    rendered = [finding.render(root) for finding in result.findings if not finding.advisory]
+    return [item for item in rendered if relative in item], result.files_scanned, result.consumer_files_scanned
+
+
+@pytest.mark.parametrize(
+    ("name", "source", "category"),
+    (
+        ("private-module", "from dev.quality._private import VALUE\n", "PRIVATE_CROSS_PACKAGE"),
+        ("private-symbol", "from dev.quality.module import _HIDDEN\n", "PRIVATE_CROSS_PACKAGE"),
+        ("missing-target", "import cadrumo.domain.missing\n", "STATIC_TARGET_UNRESOLVED"),
+        ("package-facade", "from dev.quality import VALUE\n", "PACKAGE_FACADE"),
+        ("reexport", "from dev.quality.reexport import VALUE\n", "REEXPORT_OR_ALIAS"),
+        (
+            "function-local-private-module",
+            "def load():\n    from dev.quality._private import VALUE\n    return VALUE\n",
+            "PRIVATE_CROSS_PACKAGE",
+        ),
+        (
+            "dynamic-missing-target",
+            "import importlib\nimportlib.import_module('cadrumo.tests.missing_hook')\n",
+            "DYNAMIC_TARGET_UNRESOLVED",
+        ),
+        (
+            "dynamic-private-target",
+            "from importlib import import_module\nimport_module('dev.quality._private')\n",
+            "PRIVATE_CROSS_PACKAGE",
+        ),
+        (
+            "dynamic-unresolved-target",
+            "import importlib\nimport os\nimportlib.import_module(os.environ['MODULE'])\n",
+            "UNRESOLVED_DYNAMIC_TARGET",
+        ),
+    ),
+)
+def test_consumer_only_python_is_held_to_the_import_rules(
+    tmp_path: Path, name: str, source: str, category: str
+) -> None:
+    del name
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality._private", "VALUE = 1\n")
+    _write_module(root, "dev.quality.module", "VALUE = 1\n_HIDDEN = 2\n")
+    _write_module(root, "dev.quality.reexport", "from .module import VALUE\n\ndef local():\n    return VALUE\n")
+    _, repository_only = _declared_consumer_paths(root)
+
+    for declared in (repository_only, "conftest.py"):
+        findings, _, _ = _consumer_findings(root, declared, source)
+        assert any(f"[{category}]" in item for item in findings), (declared, findings)
+
+
+def test_a_clean_consumer_is_scanned_without_findings_and_counted_apart_from_the_graph(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
+    read = read_authority(root)
+    assert read.authority is not None
+    graphed_before = check_authority(read.authority).files_scanned
+    shipped, repository_only = _declared_consumer_paths(root)
+    _write_consumer(root, shipped, "from cadrumo.core.module import VALUE\n")
+    findings, graphed, consumers = _consumer_findings(
+        root,
+        repository_only,
+        (
+            "import importlib\n"
+            "from packaging.requirements import Requirement\n"
+            "from dev.quality.module import VALUE\n"
+            "importlib.import_module('cadrumo.core.module')\n"
+        ),
+    )
+
+    assert findings == []
+    assert graphed == graphed_before
+    declared_trees = len(read.authority.consumer_trees)
+    assert consumers >= declared_trees
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        "import dev.quality.module\n",
+        "def load():\n    from dev.quality.module import VALUE\n    return VALUE\n",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from docs.conf.module import VALUE\n",
+        "import importlib\nimportlib.import_module('dev.quality.module')\n",
+    ),
+)
+def test_a_shipped_consumer_never_reaches_a_repository_only_root(tmp_path: Path, source: str) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality.module", "VALUE = 1\n")
+    _write_module(root, "docs.conf.module", "VALUE = 1\n")
+    shipped, repository_only = _declared_consumer_paths(root)
+
+    shipped_findings, _, _ = _consumer_findings(root, shipped, source)
+    repository_findings, _, _ = _consumer_findings(root, repository_only, source)
+
+    assert any("[CONSUMER_CONTRACT]" in item for item in shipped_findings), shipped_findings
+    assert not any("[CONSUMER_CONTRACT]" in item for item in repository_findings), repository_findings
+
+
+def test_consumer_sources_are_part_of_the_governed_work_measure(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    read = read_authority(root)
+    assert read.authority is not None
+    before = step_budget_for(read.authority).cpu_seconds
+    _, repository_only = _declared_consumer_paths(root)
+    _write_consumer(root, repository_only, "VALUE = 1\n" + "# padding\n" * 200_000)
+
+    assert step_budget_for(read.authority).cpu_seconds > before

@@ -52,6 +52,7 @@ def test_add_and_remove_preserve_envelope_notice_and_reindexed_encrypted_facts(t
                 "profile": "Descendant operator",
                 "added": 2,
                 "total": 2,
+                "none_declared": False,
             }
             notice = [
                 item

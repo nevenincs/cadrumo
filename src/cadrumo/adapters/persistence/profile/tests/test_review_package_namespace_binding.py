@@ -9,8 +9,8 @@ from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -28,7 +28,7 @@ def test_signing_key_row_carries_registry_declared_metadata(tmp_path: Path) -> N
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace
             ]
 

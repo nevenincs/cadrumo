@@ -5,14 +5,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from .closure_findings import within_rounding_allowance
+from .closure_findings import retention_figures_disagree, within_rounding_allowance
 from .invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    FindingWords,
     InvoiceDraft,
     InvoiceDraftRateBreakdown,
 )
@@ -134,9 +135,13 @@ def _tier_reconciles(tier: InvoiceLabelTier, assembly: InvoiceLabelAssembly) -> 
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
                     field="iva_rate" if label == "iva" else "recargo_amount",
-                    detail=(
-                        f"the printed {label} {amount.anchor!r} is not {rate.anchor} of the printed base "
-                        f"{base.anchor!r}; the figures were left empty rather than one of them chosen"
+                    words=FindingWords.of(
+                        DraftFindingWording.PRINTED_IVA_NOT_RATE_OF_BASE
+                        if label == "iva"
+                        else DraftFindingWording.PRINTED_RECARGO_NOT_RATE_OF_BASE,
+                        amount=amount.anchor,
+                        rate=rate.anchor,
+                        base=base.anchor,
                     ),
                     expected=expected,
                     observed=amount.value,
@@ -271,7 +276,9 @@ def _record_breakdown_total(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
                     field=name,
-                    detail=f"the per-rate figures sum to {total} while the document prints {printed.anchor!r}",
+                    words=FindingWords.of(
+                        DraftFindingWording.PRINTED_BREAKDOWN_DISAGREES, summed=total, printed=printed.anchor
+                    ),
                     expected=total,
                     observed=printed.value,
                 ),
@@ -293,14 +300,13 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
         "suplidos_amount", (a for a, _ in collected.amounts.get(InvoiceLabelKind.SUPLIDOS, [])), assembly
     )
     assembly.put("suplidos_amount", suplidos)
-    base = assembly.value("taxable_base")
-    grand_total = _check_grand_total(grand_total, base, assembly)
-    if base is not None:
-        # A total with no base has nothing to be checked against.
-        assembly.put("grand_total", grand_total)
-
     retention_entries = collected.amounts.get(InvoiceLabelKind.RETENCION, [])
     retention = single_consensus("retencion_amount", (a for a, _ in retention_entries), assembly)
+    payable = single_consensus(
+        "grand_total", (a for a, _ in collected.amounts.get(InvoiceLabelKind.PAYABLE, [])), assembly
+    )
+    _settle_grand_total(grand_total, payable, retention, assembly)
+
     retention = _match_retention_sign(retention, assembly.value("grand_total"))
     retention_rate = single_consensus(
         "retencion_rate",
@@ -309,13 +315,46 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
     )
     base = assembly.value("taxable_base")
     retention, retention_rate = _check_retention_rate(retention, retention_rate, base, assembly)
-    payable = single_consensus(
-        "grand_total", (a for a, _ in collected.amounts.get(InvoiceLabelKind.PAYABLE, [])), assembly
-    )
     total = assembly.value("grand_total")
     retention, retention_rate = _check_payable(payable, total, retention, retention_rate, assembly)
     assembly.put("retencion_amount", retention)
     assembly.put("retencion_rate", retention_rate)
+
+
+def _settle_grand_total(
+    grand_total: PrintedValue[Decimal] | None,
+    payable: PrintedValue[Decimal] | None,
+    retention: PrintedValue[Decimal] | None,
+    assembly: InvoiceLabelAssembly,
+) -> None:
+    """Derive the total from the payable where only that is printed, check it, and record it."""
+    derived_from_payable = grand_total is None and payable is not None and retention is not None
+    if grand_total is None and payable is not None:
+        grand_total = _total_from_payable(payable, retention)
+    base = assembly.value("taxable_base")
+    grand_total = _check_grand_total(grand_total, base, assembly)
+    if base is not None and grand_total is not None and derived_from_payable:
+        assembly.values["grand_total"] = grand_total.value
+        assembly.derived["grand_total"] = ("payable", "retencion_amount")
+    elif base is not None:
+        # A total with no base has nothing to be checked against.
+        assembly.put("grand_total", grand_total)
+
+
+def _total_from_payable(
+    payable: PrintedValue[Decimal],
+    retention: PrintedValue[Decimal] | None,
+) -> PrintedValue[Decimal]:
+    """The total an invoice that prints only its amount payable states: that amount plus the retención.
+
+    The amount payable is the total less the retención withheld from it, so with
+    no retención printed it is the total itself, as printed. Its sign follows the
+    payable, so a rectificativa's negative payable gives a negative total.
+    """
+    if retention is None:
+        return payable
+    withheld = abs(retention.value) if payable.value >= 0 else -abs(retention.value)
+    return PrintedValue(payable.value + withheld, payable.anchor)
 
 
 def _check_grand_total(
@@ -334,9 +373,8 @@ def _check_grand_total(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
             field="grand_total",
-            detail=(
-                f"the printed total {grand_total.anchor!r} is not base plus cuota plus recargo plus "
-                f"suplidos ({computed}); the figures were left empty rather than one of them chosen"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_TOTAL_NOT_CLOSED, total=grand_total.anchor, computed=computed
             ),
             expected=computed,
             observed=grand_total.value,
@@ -367,22 +405,26 @@ def _check_retention_rate(
 ) -> tuple[PrintedValue[Decimal] | None, PrintedValue[Decimal] | None]:
     if retention is None or retention_rate is None or base is None:
         return retention, retention_rate
-    expected = base * retention_rate.value / HUNDRED
-    if within_rounding_allowance(retention.value - expected, term_count=2):
+    if not retention_figures_disagree(rate_points=retention_rate.value, amount=retention.value, base=base):
         return retention, retention_rate
+    expected = base * retention_rate.value / HUNDRED
     assembly.findings.append(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
             field="retencion_amount",
-            detail=(
-                f"the printed retención {retention.anchor!r} is not {retention_rate.anchor} of the "
-                f"taxable base ({expected}); both were left empty"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_RETENTION_NOT_RATE_OF_BASE,
+                retention=retention.anchor,
+                rate=retention_rate.anchor,
+                expected=expected,
             ),
             expected=expected,
             observed=retention.value,
         ),
     )
-    return None, None
+    # The amount stays: it is what the page says was withheld, and an answered
+    # finding keeps it the way a structured reading's disagreement does.
+    return retention, None
 
 
 def _check_payable(
@@ -402,9 +444,8 @@ def _check_payable(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
             field="retencion_amount",
-            detail=(
-                f"the printed amount payable {payable.anchor!r} is not the total less the retención "
-                f"({expected}); the retención was left empty"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_PAYABLE_NOT_CLOSED, payable=payable.anchor, expected=expected
             ),
             expected=expected,
             observed=payable.value,
@@ -437,6 +478,12 @@ def record_ambiguous_amounts(collected: InvoiceLabelCollection, assembly: Invoic
         )
 
 
+_DERIVATION_NOTES: dict[tuple[str, ...], str] = {
+    ("iva_breakdown",): "summed from the per-rate figures the document prints",
+    ("payable", "retencion_amount"): "the amount payable the document prints plus the retención it prints",
+}
+
+
 def field_provenance(assembly: InvoiceLabelAssembly) -> tuple[FieldProvenance, ...]:
     """Build provenance envelopes for observed, derived, and ambiguous fields."""
     envelopes: list[FieldProvenance] = []
@@ -448,7 +495,7 @@ def field_provenance(assembly: InvoiceLabelAssembly) -> tuple[FieldProvenance, .
                     origin=FieldOrigin.DERIVED,
                     grounding=FieldGroundingOutcome.RECONCILED,
                     derived_from=assembly.derived[name],
-                    note="summed from the per-rate figures the document prints",
+                    note=_DERIVATION_NOTES[assembly.derived[name]],
                 ),
             )
         elif name == "iva_breakdown" and name in assembly.values:

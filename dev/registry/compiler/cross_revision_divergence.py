@@ -16,14 +16,16 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.i18n.render import MissingTranslationError
+from cadrumo.domain.calculations.registry import revision_order
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.revision_order import revisions_overlap as _revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
     CasillaEvolutionKind,
 )
+
+from .validation_memoization import ModeloIdentityMemo
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",
@@ -108,7 +110,7 @@ def _pair_field_divergences(
     right_sig: tuple[object, ...],
     evolutions: _EvolutionsByLineage,
 ) -> Iterator[CrossRevisionCasillaDivergence]:
-    revisions_overlap = _revisions_overlap(left_revision, right_revision)
+    revisions_overlap = revision_order.revisions_overlap(left_revision, right_revision)
     for field, left_value, right_value in zip(
         _CROSS_REVISION_CASILLA_FIELDS,
         left_sig,
@@ -166,13 +168,24 @@ def iter_cross_revision_casilla_divergences(
     """Compare repeated casillas while retaining their field-specific attestations."""
     divergences: list[CrossRevisionCasillaDivergence] = []
     for modelo in modelos:
-        by_id = _group_casillas_by_id(modelo)
-        evolutions = _evolutions_by_lineage(modelo)
-        for casilla_id, occurrences in by_id.items():
-            if len(occurrences) < 2:
-                continue
-            divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences, evolutions))
+        divergences.extend(_MODELO_DIVERGENCES.get_or_compute(modelo, _modelo_divergences))
     return tuple(divergences)
+
+
+def _modelo_divergences(modelo: ModeloDefinition) -> tuple[CrossRevisionCasillaDivergence, ...]:
+    by_id = _group_casillas_by_id(modelo)
+    evolutions = _evolutions_by_lineage(modelo)
+    divergences: list[CrossRevisionCasillaDivergence] = []
+    for casilla_id, occurrences in by_id.items():
+        if len(occurrences) < 2:
+            continue
+        divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences, evolutions))
+    return tuple(divergences)
+
+
+# Divergences depend only on one modelo's own revisions, so every scope that
+# carries an unchanged modelo object reuses them instead of re-comparing it.
+_MODELO_DIVERGENCES: ModeloIdentityMemo[tuple[CrossRevisionCasillaDivergence, ...]] = ModeloIdentityMemo()
 
 
 def _matching_evolution(

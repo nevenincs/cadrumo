@@ -16,16 +16,16 @@ from dev.acceptance.installed_cli import InstalledCliError
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .installed_tui_child_runs import run_installed_tui_child
-from .installed_tui_continuations import _run_cli_to_tui, _run_tui_only, _run_tui_to_cli
+from .installed_tui_continuations import run_cli_to_tui, run_tui_only, run_tui_to_cli
 from .installed_tui_contracts import (
-    _SCHEMA_VERSION,
-    _YEAR,
+    SCHEMA_VERSION,
+    YEAR,
     ChildMode,
     InstalledLedgerTuiReceipt,
     LedgerInstalledTuiError,
     TuiOnlyCliOracleReceipt,
 )
-from .installed_tui_storage import _require_empty_directory
+from .installed_tui_storage import require_empty_directory
 
 
 def run_installed_ledger_tui_journey(
@@ -36,7 +36,7 @@ def run_installed_ledger_tui_journey(
     authority_root: Path,
     output_root: Path,
     package_identity: str,
-    year: int = _YEAR,
+    year: int = YEAR,
 ) -> InstalledLedgerTuiReceipt:
     """Run installed TUI-only and both direction continuations against fresh secure stores."""
     workspace = workspace_root.resolve(strict=True)
@@ -47,28 +47,28 @@ def run_installed_ledger_tui_journey(
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:
         raise LedgerInstalledTuiError("installed Ledger journey requires the exact built wheel identity")
-    root = _require_empty_directory(output_root, label="LEDGER installed-TUI output root")
-    tui_only_run = _run_tui_only(
+    root = require_empty_directory(output_root, label="LEDGER installed-TUI output root")
+    tui_only_run = run_tui_only(
         python_executable=python,
         workspace_root=workspace,
         authority_root=authority,
-        output_root=_require_empty_directory(root / "tui-only", label="TUI-only Ledger output root"),
+        output_root=require_empty_directory(root / "tui-only", label="TUI-only Ledger output root"),
         year=year,
     )
-    cli_to_tui, cli_to_tui_child = _run_cli_to_tui(
+    cli_to_tui, cli_to_tui_child = run_cli_to_tui(
         cli_executable=cli,
         python_executable=python,
         workspace_root=workspace,
         authority_root=authority,
-        output_root=_require_empty_directory(root / "cli-to-tui", label="CLI-to-TUI Ledger output root"),
+        output_root=require_empty_directory(root / "cli-to-tui", label="CLI-to-TUI Ledger output root"),
         year=year,
     )
-    tui_to_cli, tui_to_cli_child = _run_tui_to_cli(
+    tui_to_cli, tui_to_cli_child = run_tui_to_cli(
         cli_executable=cli,
         python_executable=python,
         workspace_root=workspace,
         authority_root=authority,
-        output_root=_require_empty_directory(root / "tui-to-cli", label="TUI-to-CLI Ledger output root"),
+        output_root=require_empty_directory(root / "tui-to-cli", label="TUI-to-CLI Ledger output root"),
         year=year,
     )
     product_hashes = {
@@ -79,7 +79,7 @@ def run_installed_ledger_tui_journey(
     if len(product_hashes) != 1:
         raise LedgerInstalledTuiError("installed Ledger journeys used different product package identities")
     return InstalledLedgerTuiReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         package_identity=package_identity,
         year=year,
@@ -99,7 +99,7 @@ def run_installed_tui_only_cli_oracle(
     authority_root: Path,
     output_root: Path,
     package_identity: str,
-    year: int = _YEAR,
+    year: int = YEAR,
 ) -> TuiOnlyCliOracleReceipt:
     """Run only the independent TUI path plus read-only installed CLI proof."""
     workspace = workspace_root.resolve(strict=True)
@@ -110,19 +110,19 @@ def run_installed_tui_only_cli_oracle(
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:
         raise LedgerInstalledTuiError("installed Ledger journey requires the exact built wheel identity")
-    root = _require_empty_directory(output_root, label="LEDGER supplemental installed-TUI output root")
-    tui_only = _run_tui_only(
+    root = require_empty_directory(output_root, label="LEDGER supplemental installed-TUI output root")
+    tui_only = run_tui_only(
         python_executable=python,
         workspace_root=workspace,
         authority_root=authority,
-        output_root=_require_empty_directory(root / "tui-only", label="supplemental TUI-only Ledger output root"),
+        output_root=require_empty_directory(root / "tui-only", label="supplemental TUI-only Ledger output root"),
         year=year,
         cli_executable=cli,
     )
     if not tui_only.cli_oracle_observations:
         raise LedgerInstalledTuiError("supplemental TUI-only CLI oracle recorded no public observations")
     return TuiOnlyCliOracleReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         journey="tui_only_cli_oracle",
         package_identity=package_identity,
@@ -145,7 +145,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--package-identity")
     parser.add_argument("--supplemental-tui-only", action="store_true")
     parser.add_argument("--receipt", required=True, type=Path)
-    parser.add_argument("--year", type=int, default=_YEAR)
+    parser.add_argument("--year", type=int, default=YEAR)
     parser.add_argument(
         "--mode",
         choices=(
@@ -223,7 +223,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write_receipt(
             args.receipt,
             {
-                "schema_version": _SCHEMA_VERSION,
+                "schema_version": SCHEMA_VERSION,
                 "status": "failed",
                 "error_type": type(error).__name__,
                 "diagnostic": (
@@ -236,7 +236,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write_receipt(
             args.receipt,
             {
-                "schema_version": _SCHEMA_VERSION,
+                "schema_version": SCHEMA_VERSION,
                 "status": "failed",
                 "error_type": type(error).__name__,
                 "diagnostic": "unexpected installed Ledger journey failure",

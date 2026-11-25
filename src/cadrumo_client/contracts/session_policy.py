@@ -20,11 +20,12 @@ from .access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, Ac
 from .access_vocabulary import AuthorityState, Availability
 
 
-def _session_refusal(
+def session_refusal(
     session: AccessSession,
     profile: ProfileAccessState,
     context: AccessEvaluationContext,
 ) -> AccessDenialCode | None:
+    """Refuse one lease on its own terms: profile custody, runtime, state and time, but not lineage or grant."""
     binding_refusal = _session_binding_refusal(session, profile, context)
     if binding_refusal is not None:
         return binding_refusal
@@ -278,7 +279,7 @@ def _lineage_member_refusal(
     context: AccessEvaluationContext,
 ) -> AccessDenialCode | None:
     """Validate one lease and its relationship to its immediate parent."""
-    refusal = _session_refusal(item, profile, context)
+    refusal = session_refusal(item, profile, context)
     if refusal is not None:
         return refusal
     if session_requires_grant(item):

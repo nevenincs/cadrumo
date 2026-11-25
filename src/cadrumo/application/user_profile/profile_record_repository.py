@@ -23,10 +23,14 @@ from uuid import UUID
 
 from ...core.paths import effective_storage_root
 from ...core.process_binding import ProcessScopedBinding
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.schema_migration import pending_cleared_payer_fact_paths
+from ...domain.user_profile.schema_migration import (
+    ascendant_disability_rows_pending,
+    pending_cleared_payer_fact_paths,
+    rental_tier_finding_pending,
+)
 from ...domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -52,7 +56,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class _ProfileRecordAuthority:
+class ProfileRecordAuthority:
     """The current record authority together with how it became current.
 
     The two ways an authority becomes current are not the same kind of fact.
@@ -77,7 +81,7 @@ class _ProfileRecordAuthority:
     session_derived: bool
 
 
-_ACTIVE_RECORD_AUTHORITY: ProcessScopedBinding[_ProfileRecordAuthority] = ProcessScopedBinding(
+ACTIVE_RECORD_AUTHORITY: ProcessScopedBinding[ProfileRecordAuthority] = ProcessScopedBinding(
     "active_profile_record_authority"
 )
 """The authenticated record authority this PROCESS currently holds.
@@ -131,7 +135,7 @@ def take_invocation_profile_record(profile_id: str | UUID) -> UserProfileRecord 
 
 def _active_record_session() -> ProfileRecordSession | None:
     """Return the currently installed record session, whatever installed it."""
-    authority = _ACTIVE_RECORD_AUTHORITY.get()
+    authority = ACTIVE_RECORD_AUTHORITY.get()
     return None if authority is None else authority.session
 
 
@@ -146,7 +150,7 @@ def activate_profile_record_session(session: ProfileRecordSession) -> None:
     previous = active_profile_record_session()
     if previous is not None and previous is not session:
         previous.close()
-    _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
+    ACTIVE_RECORD_AUTHORITY.bind(ProfileRecordAuthority(session=session, session_derived=True))
 
 
 def bind_active_profile_record_session(session: ProfileRecordSession) -> ProfileRecordSession | None:
@@ -159,7 +163,7 @@ def bind_active_profile_record_session(session: ProfileRecordSession) -> Profile
     previous = active_profile_record_session()
     # A session-derived authority remains readable only while the matching
     # custody session is live, as with the activating door.
-    _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
+    ACTIVE_RECORD_AUTHORITY.bind(ProfileRecordAuthority(session=session, session_derived=True))
     return previous
 
 
@@ -173,7 +177,7 @@ def close_active_profile_record_session() -> None:
     session = active_profile_record_session()
     if session is not None:
         session.close()
-    _ACTIVE_RECORD_AUTHORITY.bind(None)
+    ACTIVE_RECORD_AUTHORITY.bind(None)
 
 
 def profile_record_session_if_authenticated(
@@ -247,7 +251,7 @@ def profile_record_session_if_authenticated(
         identity = UUID(str(profile_id))
     except ValueError as exc:
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
-    authority = _ACTIVE_RECORD_AUTHORITY.get()
+    authority = ACTIVE_RECORD_AUTHORITY.get()
     if authority is not None and authority.session.profile_id == identity and not authority.session.closed:
         session = authority.session
         if profile_decode_context != session.profile_decode_context:
@@ -366,6 +370,18 @@ class ProfileRecordRepository:
         migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
         return pending_cleared_payer_fact_paths(record, migrations)
 
+    def rental_tier_finding_pending(self, profile_id: str | UUID) -> bool:
+        """Report whether a migration cleared a stored reduction tier that no recorded lease has replaced."""
+        record = self.load(profile_id)
+        migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
+        return rental_tier_finding_pending(record, migrations)
+
+    def ascendant_disability_rows_pending(self, profile_id: str | UUID) -> tuple[str, ...]:
+        """Return the ascendant rows whose stored disability key a migration cleared and that still owe its facts."""
+        record = self.load(profile_id)
+        migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
+        return ascendant_disability_rows_pending(record, migrations)
+
     def complete_setup(
         self,
         profile_id: str | UUID,
@@ -415,7 +431,7 @@ class ProfileRecordRepository:
             require_complete=True,
             schema=profile_context.schema,
         )
-        occurred_at = (now or _utc_now()).astimezone(UTC)
+        occurred_at = (now or clock_utc_now()).astimezone(UTC)
         replacement = create_user_profile_record(
             context=self.session.create_context(),
             profile_id=current.profile_id,
@@ -428,9 +444,9 @@ class ProfileRecordRepository:
         )
         from .lifecycle import ProfileCapsuleLifecycle
 
-        # The lifecycle names this deliberate repository-only collaboration private;
+        # The lifecycle serves this record replacement only to profile commands;
         # this explicit command owner is its sole cross-class caller.
-        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+        ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,
             record_session=self.session,
             replacement=replacement,
@@ -482,7 +498,7 @@ class ProfileRecordRepository:
         current = self.load(identity)
         if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
-        occurred_at = (now or _utc_now()).astimezone(UTC)
+        occurred_at = (now or clock_utc_now()).astimezone(UTC)
         replacement = create_user_profile_record(
             context=self.session.create_context(),
             profile_id=current.profile_id,
@@ -495,9 +511,9 @@ class ProfileRecordRepository:
         )
         from .lifecycle import ProfileCapsuleLifecycle
 
-        # The lifecycle names this deliberate repository-only collaboration private;
+        # The lifecycle serves this record replacement only to profile commands;
         # this explicit command owner is its sole cross-class caller.
-        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+        ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,
             record_session=self.session,
             replacement=replacement,

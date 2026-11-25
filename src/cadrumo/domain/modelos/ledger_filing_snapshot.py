@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
@@ -25,10 +26,11 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.utc import UtcInstant
 from ...core.unit_proportion import UnitProportion
+from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 
 
@@ -42,7 +44,7 @@ class LedgerRowFingerprint(BaseModel):
             capture helper.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     fingerprint: SnapshotId
@@ -70,7 +72,7 @@ class LedgerFilingSnapshot(BaseModel):
             under a wider set and reported stale.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: tuple[LedgerRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
@@ -78,11 +80,24 @@ class LedgerFilingSnapshot(BaseModel):
     fingerprint_field_set_version: int = 1
 
 
+class FiledRegisterState(StrEnum):
+    """How a sealed revision's recorded asset-register state compares with the register now.
+
+    ``UNAVAILABLE`` means the comparison could not run, which proves neither drift
+    nor currency.
+    """
+
+    CURRENT = "current"
+    CHANGED = "changed"
+    UNAVAILABLE = "unavailable"
+
+
 class LedgerFilingStalenessVerdict(BaseModel):
-    """Drift between a filed snapshot and the current ledger state.
+    """Drift between a filed snapshot and the current ledger and asset-register state.
 
     Attributes:
-        is_stale: True when any contributor changed or was removed.
+        is_stale: True when any contributor changed or was removed, or the
+            asset register no longer yields what the revision recorded.
         changed: Contributor ids whose live fingerprint differs from the snapshot.
         removed: Contributor ids absent from the live catalogue.
         unchanged: Contributor ids whose live fingerprint matches the snapshot.
@@ -95,15 +110,21 @@ class LedgerFilingStalenessVerdict(BaseModel):
             from ``is_stale`` and non-blocking -- a narrow comparison is not
             evidence of drift, and reporting it as drift would restate every
             historical filing at once.
+        register_state: The asset-register comparison, read as a state: the
+            sealed revision itself never changes.
+        register_change_count: Claims, schedules and bajas that differ between
+            the revision's record and the register now.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     is_stale: bool
     changed: tuple[TransactionId, ...] = ()
     removed: tuple[TransactionId, ...] = ()
     unchanged: tuple[TransactionId, ...] = ()
     covers_current_fact_set: bool = True
+    register_state: FiledRegisterState = FiledRegisterState.CURRENT
+    register_change_count: NonNegativeInt = 0
 
 
 def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> SnapshotId:
@@ -170,7 +191,11 @@ class LedgerEvidenceRow(BaseModel):
 
     A row bundled under version 1 carries them as ``None``, which is honest
     rather than lossy: that capture genuinely did not record them, and
-    ``fingerprint_field_set_version`` on the owning bundle says so.
+    ``fingerprint_field_set_version`` on the owning bundle says so. The same
+    holds for ``investment_asset_id`` and ``counterparty_identification_state``,
+    which version 3 adds and which rows bundled under versions 1 and 2 carry as
+    ``None``. ``operation_date`` and ``deduction_evidence_digest`` arrive with
+    version 5 on the same terms.
 
     Enum-valued facts are stored as their canonical string ``value`` (and dates as
     ISO-8601 strings) so the record roundtrips cleanly through the strict
@@ -179,7 +204,7 @@ class LedgerEvidenceRow(BaseModel):
     primitive shape.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     fingerprint: SnapshotId
@@ -210,6 +235,8 @@ class LedgerEvidenceRow(BaseModel):
     # deducted under. Stored as canonical string values like the other enums.
     usage_ratio_id: str | None = None
     deduction_fact_kind: str | None = None
+    iva_vehicle_use: str | None = None
+    exemption_article: str | None = None
     art_104_tres_exclusion: str | None = None
     input_classification: str | None = None
     prorrata_sector_id: str | None = None
@@ -217,13 +244,24 @@ class LedgerEvidenceRow(BaseModel):
     category_id: str | None = None
     irpf_category: str | None = None
     source_jurisdiction: CountryCodeAlpha2 | None = None
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     m210_applicable_rate: UnitProportion | None = None
     m210_payer_mode: str | None = None
     m210_payer_id: str | None = None
     m210_asset_or_right_id: str | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
+    # Admission facts added under field-set version 3: the bienes de inversion
+    # link the deduction admission reconciles, and the Member State that
+    # identified the customer of an intra-community supply (its registry token
+    # text). Optional so a row bundled before version 3 loads unchanged.
+    investment_asset_id: str | None = None
+    counterparty_identification_state: str | None = None
+    operation_date: str | None = None
+    # The operator-stated LIRPF art. 14 accrual date, present from field-set
+    # version 7; a row bundled earlier carries ``None`` and loads unchanged.
+    accrual_date: str | None = None
+    deduction_evidence_digest: str | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     lifecycle_state: str = Field(min_length=1)
@@ -260,6 +298,12 @@ class LedgerEvidenceRow(BaseModel):
             raise ValueError("ledger evidence amount must be a non-negative magnitude; flow is carried by direction")
         return value
 
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
+
 
 class ManualFactBasisEntry(BaseModel):
     """One operator-entered fact behind a revision that is not ledger-derived.
@@ -270,7 +314,7 @@ class ManualFactBasisEntry(BaseModel):
     rendered canonical string of the operator-entered value.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: str = Field(min_length=1)
@@ -292,7 +336,7 @@ class LedgerFilingEvidence(BaseModel):
     evidence).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_fingerprint: SnapshotId
     rows: tuple[LedgerEvidenceRow, ...] = ()

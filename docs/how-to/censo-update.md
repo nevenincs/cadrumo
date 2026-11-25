@@ -119,9 +119,16 @@ declared yourself stays yours.
 
 ### What the pull cannot fill
 
-The pull fills your fiscal address, postcode, and cadastral reference. It
-reports these as the fields `contact.fiscal_address`, `contact.postcode`, and
-`contact.fiscal_address_cadastral_reference`.
+The pull fills your fiscal address, postcode, cadastral reference, province
+code, municipality code, municipality name, AEAT delegation code, AEAT
+administration code, AEAT administration name, activity start date, and
+activity end date. It reports these as the fields `contact.fiscal_address`,
+`contact.postcode`, `contact.fiscal_address_cadastral_reference`,
+`contact.fiscal_address_province_code`,
+`contact.fiscal_address_municipality_code`,
+`contact.fiscal_address_municipality_name`, `censo.aeat_delegacion_code`,
+`censo.aeat_administracion_code`, `censo.aeat_administracion_name`,
+`censo.activity_start_date`, and `censo.activity_end_date`.
 
 It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
 AEAT returned is yours, and never writes it.
@@ -141,9 +148,9 @@ is not a disagreement to weigh.
 (import-certificado-situacion-censal)=
 ## Import a Certificado de Situación Censal
 
-The sede issues a *Certificado de Situación Censal* (procedure G313) that
+The AEAT e-office issues a *Certificado de Situación Censal* (procedure G313) that
 states your census facts as AEAT holds them. Download it yourself from the
-sede, then read it into your profile from the file. The first step previews;
+AEAT online portal, then read it into your profile from the file. The first step previews;
 the second records:
 
 ```{cli-sequence} censo-update-certificado-file
@@ -173,7 +180,7 @@ unchanged once reading activates.
 
 ## Record a Modelo 036 filing done outside Cadrumo
 
-If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, record
+If you file a Modelo 036 registration, amendment, or deregistration in AEAT's online portal, record
 that fact locally so later filings can rely on it.
 [Record a Modelo 036 declaration you filed at AEAT](modelo-036.md) owns the
 commands, the success output, and what the record does and does not change.

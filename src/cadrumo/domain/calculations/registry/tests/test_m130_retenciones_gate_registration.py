@@ -60,6 +60,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
 
     result = _run_python(
         f"""
+        from datetime import date
         import sys
 
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -75,11 +76,11 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         assert "{_RETENCIONES_MODULE}" not in sys.modules, (
             "the retenciones check module must not be loaded before the build"
         )
-        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
+        assert vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain check may be registered before the build"
         )
 
-        snapshot = _published_snapshot("130", filing_year=2025, period="1T")
+        snapshot = _published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 3, 31))
         assert snapshot.modelo.id == "130"
         assert not [name for name in sys.modules if name.startswith("cadrumo.application.aggregation")], (
             "building the snapshot must not pull in aggregation either"
@@ -87,7 +88,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
 
         registered = {{
             (check.__module__, check.__name__): check
-            for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+            for check in vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"]
         }}
         key = ("{_RETENCIONES_MODULE}", "check_m130_retenciones_output_casilla")
         assert key in registered, (
@@ -97,13 +98,15 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         check = registered[key]
 
         from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+        from datetime import date
+
         from cadrumo.domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 
         casilla_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
         binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
         with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
             # The route is registry data; read it from the same published authority.
-            route = resolve_m130_retenciones_route()
+            route = resolve_m130_retenciones_route(effective_date=date(2025, 12, 31))
             assert route.binding_id in binding_ids, (
                 "the committed M130 revision must declare the retenciones binding, or "
                 "the failure case below asserts nothing"
@@ -138,9 +141,10 @@ def test_m130_refuses_when_only_the_m100_gate_is_registered() -> None:
 
     result = _run_python(
         f"""
+        from datetime import date
         import cadrumo.domain.calculations.registry.snapshot as internals
 
-        internals._CROSS_DOMAIN_CHECK_MODULES = ({_FIRST_SLICE_MODULE!r},)
+        internals.CROSS_DOMAIN_CHECK_MODULES = ({_FIRST_SLICE_MODULE!r},)
 
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -150,7 +154,7 @@ def test_m130_refuses_when_only_the_m100_gate_is_registered() -> None:
         from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
         try:
-            _published_snapshot("130", filing_year=2025, period="1T")
+            _published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 3, 31))
         except RegistryValidationError as error:
             print("REFUSED")
             print(error)

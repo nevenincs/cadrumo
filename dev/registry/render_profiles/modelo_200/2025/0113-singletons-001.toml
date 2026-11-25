@@ -16,7 +16,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 14
 source_cell = "A14"
-ordinal = 9
+ordinal = "9"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -40,7 +40,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 16
 source_cell = "A16"
-ordinal = 11
+ordinal = "11"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -64,7 +64,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 17
 source_cell = "A17"
-ordinal = 12
+ordinal = "12"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -88,7 +88,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 18
 source_cell = "A18"
-ordinal = 13
+ordinal = "13"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -112,7 +112,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -136,7 +136,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -160,7 +160,7 @@ allowed_values = []
 sheet = "DP200001"
 source_row = 21
 source_cell = "A21"
-ordinal = 16
+ordinal = "16"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
@@ -184,7 +184,7 @@ allowed_values = ["1", "2", "3"]
 sheet = "DP200001"
 source_row = 22
 source_cell = "A22"
-ordinal = 17
+ordinal = "17"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]

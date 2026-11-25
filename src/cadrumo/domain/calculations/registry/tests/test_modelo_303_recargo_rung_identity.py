@@ -42,11 +42,13 @@ import pytest
 
 from ..schema import ModeloRevision
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import split_exercise_revisions
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION = "2024-desde-09-y-3t"
+# The late design of the one exercise Modelo 303 splits between its second and third quarters.
+_REVISION = str(split_exercise_revisions("303", early_period="2T", late_period="3T")[1].id)
 
 # Rung cuota box -> the binding AEAT's published Tipo % constant requires there.
 # Read from the bundled 2024-late design: [157] "00175", [20] "00140",

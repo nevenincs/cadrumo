@@ -1,0 +1,1333 @@
+[[revisions.2026.export_layouts]]
+id = "generated-modelo-390-2026-fichero"
+
+[[revisions.2026.export_layouts.records]]
+id = "modelo-390-page-01"
+record_type = "page_01"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-13"
+offset = 13
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-tax-id"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-surnames"
+offset = 23
+length = 60
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-name"
+offset = 83
+length = 20
+kind = "header"
+producer_key = "taxpayer.given_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+required_for = "natural_person"
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "four-digit-year"
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-107"
+offset = 107
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-registro-de-devolucion-mensual"
+offset = 109
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-116",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-30",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+offset = 110
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-quinquies",
+    "ley-37-1992:art-163-sexies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-numero-de-grupo"
+offset = 111
+length = 7
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-numero-de-grupo"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-nonies",
+    "ley-37-1992:art-163-quinquies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-dominante"
+offset = 118
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-dominante"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-nonies",
+    "ley-37-1992:art-163-quinquies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-dependiente"
+offset = 119
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-dependiente"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-nonies",
+    "ley-37-1992:art-163-quinquies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+offset = 120
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-sexies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-nif-entidad-dominante"
+offset = 121
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-nif-entidad-dominante"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-163-nonies",
+    "ley-37-1992:art-163-quinquies",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-concurso-acreedores"
+offset = 130
+length = 1
+kind = "header"
+producer_key = "m303.insolvency.declared"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-criterio-caja-enrolled"
+offset = 131
+length = 1
+kind = "header"
+producer_key = "m303.cash_accounting_regime_enrolled"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-criterio-caja-destinatario"
+offset = 132
+length = 1
+kind = "header"
+producer_key = "m303.recipient_of_cash_accounting_operations"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-sujeto-pasivo-derecho-deducir-pago-a-cuenta-carburantes"
+offset = 133
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.sujeto-pasivo-con-derecho-a-deducir-pago-a-cuenta-de-entregas-de-gasolinas-gasoleos-y-biocarburantes"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "orden-hac-27-2026:art-tercero",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-devengo-sustitutiva"
+offset = 134
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.devengo-sustitutiva"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-devengo-sustitutiva-por-rectificacion-de-cuotas"
+offset = 135
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.devengo-sustitutiva-por-rectificacion-de-cuotas"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-justificante-anterior"
+offset = 136
+length = 13
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-principal"
+offset = 149
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-principal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-principal"
+offset = 189
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-principal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-principal"
+offset = 192
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-principal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-otras-1a"
+offset = 196
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-1a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-otras-1a"
+offset = 236
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-1a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+offset = 239
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-otras-2a"
+offset = 243
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-2a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-otras-2a"
+offset = 283
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-2a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+offset = 286
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-otras-3a"
+offset = 290
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-3a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-otras-3a"
+offset = 330
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-3a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+offset = 333
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-otras-4a"
+offset = 337
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-4a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-otras-4a"
+offset = 377
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-4a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+offset = 380
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-a-actividades-otras-5a"
+offset = 384
+length = 40
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-5a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-b-codigo-de-actividad-otras-5a"
+offset = 424
+length = 3
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-5a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+offset = 427
+length = 4
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+offset = 431
+length = 1
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1065-2007:art-31",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-declaracion-conjunta-nif"
+offset = 432
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1065-2007:art-31",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-datos-estadisticos-declaracion-conjunta-razon-social"
+offset = 441
+length = 37
+kind = "binding"
+binding = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-razon-social"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1065-2007:art-31",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-nif"
+offset = 478
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+offset = 487
+length = 80
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+offset = 567
+length = 2
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+offset = 569
+length = 17
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-numero"
+offset = 586
+length = 5
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-numero"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-esc"
+offset = 591
+length = 2
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-esc"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-piso"
+offset = 593
+length = 2
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-piso"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-prta"
+offset = 595
+length = 2
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-prta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-telefono"
+offset = 597
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-telefono"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-municipio"
+offset = 606
+length = 20
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-municipio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-provincia"
+offset = 626
+length = 15
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-provincia"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+offset = 641
+length = 5
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-1-nombre-y-apellidos"
+offset = 646
+length = 80
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-1-nombre-y-apellidos"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-1-nif"
+offset = 726
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-1-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+offset = 735
+length = 8
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+data_type = "date"
+required = false
+padding = "none"
+justification = "none"
+date_format = "ddmmaaaa"
+signed = false
+value_policy = "ddmmyyyy"
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-1-notaria"
+offset = 743
+length = 12
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-1-notaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-2-nombre-y-apellidos"
+offset = 755
+length = 80
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-2-nombre-y-apellidos"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-2-nif"
+offset = 835
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-2-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+offset = 844
+length = 8
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+data_type = "date"
+required = false
+padding = "none"
+justification = "none"
+date_format = "ddmmaaaa"
+signed = false
+value_policy = "ddmmyyyy"
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-2-notaria"
+offset = 852
+length = 12
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-2-notaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-3-nombre-y-apellidos"
+offset = 864
+length = 80
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-3-nombre-y-apellidos"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-3-nif"
+offset = 944
+length = 9
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-3-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+offset = 953
+length = 8
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+data_type = "date"
+required = false
+padding = "none"
+justification = "none"
+date_format = "ddmmaaaa"
+signed = false
+value_policy = "ddmmyyyy"
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-declared-representante-personas-juridicas-represent-3-notaria"
+offset = 961
+length = 12
+kind = "binding"
+binding = "modelo-390.page_1.representante-personas-juridicas-represent-3-notaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-37-1992:art-164",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-972"
+offset = 973
+length = 21
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-993"
+offset = 994
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-1006"
+offset = 1007
+length = 20
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-reserved-1026"
+offset = 1027
+length = 150
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2026"]
+
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-390-page-01-close"
+offset = 1177
+length = 12
+kind = "literal"
+literal = "</T39001000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2026"]
+
+[revisions.2026.export_layouts.records.row_field_casilla_ids]

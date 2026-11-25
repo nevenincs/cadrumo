@@ -19,29 +19,33 @@ from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preconditions import ModeloPreconditionFailure
 from ..verification_iva_evidence import append_iva_selected_scope_evidence_finding
-from ..work_form_models import finding_action_locale_key
+from ..work_form_findings import finding_action_locale_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(2026, 4, 2, 12, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(revision_serving_period("303", _YEAR, "1T").id)
+_NOW = datetime(_YEAR, 4, 2, 12, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 @dataclass
-class _Transactions:
+class Transactions:
     """Read-only typed unit fixture; a finding must never write the ledger."""
 
     bucket_id: str
@@ -73,7 +77,7 @@ def _transaction(provider_id: str, kind: str | None, category: str | None, *, cu
         {
             "raw": RawTransaction(
                 provider_transaction_id=provider_id,
-                booked_date=date(2026, 2, 15),
+                booked_date=date(_YEAR, 2, 15),
                 amount=Decimal("242.125"),
                 currency=currency,
                 description="A real native description containing spaces",
@@ -105,19 +109,17 @@ def _issue(transaction_id: str | None) -> CalculationSourceIssue:
     )
 
 
-def _work_and_target(
-    bucket_id: str, issues: tuple[CalculationSourceIssue, ...]
-) -> tuple[WorkUnit, CalculationRevision]:
+def work_and_target(bucket_id: str, issues: tuple[CalculationSourceIssue, ...]) -> tuple[WorkUnit, CalculationRevision]:
     work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
+        bucket_id=bucket_id, modelo="303", filing_year=_YEAR, period=_PERIOD, revision_id=_REVISION
     )
     work = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION,
         name="Document evidence proof",
         created_at=_NOW,
         updated_at=_NOW,
@@ -134,9 +136,7 @@ def _work_and_target(
     target = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1T"
-        ),
+        registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id=_REVISION, modelo_year=_YEAR, period="1T"),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},
@@ -150,18 +150,23 @@ def _work_and_target(
 
 
 def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_its_general_refusal() -> None:
-    """Repeated issue refs deduplicate; missing rows and unknown deductions remain blocked."""
+    """Repeated issue refs deduplicate; missing rows and unknown deductions remain blocked.
+
+    An intra-EU acquisition's deduction is substantiated by the supplier's invoice
+    under the self-assessment authority, a document the operator can record, so
+    its issue keeps the general refusal rather than a separate unrecordable one.
+    """
     transactions = (
-        _transaction("intra-one", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
-        _transaction("intra-two", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
         _transaction("customs", "import_current", "import_third_country", currency="USD"),
         _transaction("reagp", "reagp_compensation", "reagp_compensation"),
         _transaction("rectification", "rectification", "domestic_general"),
+        _transaction("intra-one", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
+        _transaction("intra-two", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
         _transaction("domestic", "domestic_current", "domestic_general"),
         _transaction("unknown", None, None),
         _transaction("register-owned", "investment_goods_regularisation", "domestic_general"),
     )
-    repository = _Transactions(
+    repository = Transactions(
         bucket_id="13000000-0000-4000-8000-000000000303",
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
@@ -171,24 +176,25 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         _issue("f" * 64),
         _issue(None),
     )
-    work, target = _work_and_target(repository.bucket_id, issues)
+    work, target = work_and_target(repository.bucket_id, issues)
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
     append_iva_selected_scope_evidence_finding(
         work_unit=work,
         target=target,
         transaction_repository=repository,
+        rectification_evidence_recordable=False,
         findings=findings,
         failures_by_finding_id=failures,
     )
-    assert len(findings) == 6
+    assert len(findings) == 4
     separate = {
         finding.message_facts["transaction_ids"]: finding
         for finding in findings
         if "transaction_ids" in finding.message_facts
     }
-    assert set(separate) == {transaction.transaction_id for transaction in transactions[:5]}
-    for transaction in transactions[:5]:
+    assert set(separate) == {transaction.transaction_id for transaction in transactions[:3]}
+    for transaction in transactions[:3]:
         finding = separate[transaction.transaction_id]
         assert finding.message_facts["transaction_count"] == 1
         assert finding.message_facts["transaction_date"] == "2026-02-15"
@@ -198,14 +204,52 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         assert failures[id(finding)].verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
         assert failures[id(finding)].verdict.action is None
         assert "description" not in finding.message_facts
-    assert separate[transactions[2].transaction_id].message_facts["transaction_currency"] == "USD"
+    assert separate[transactions[0].transaction_id].message_facts["transaction_currency"] == "USD"
     general = next(finding for finding in findings if "source_ref_ids" in finding.message_facts)
-    assert general.message_facts["source_ref_count"] == 4
+    assert general.message_facts["source_ref_count"] == 6
     assert general.message_facts["unidentified_source_count"] == 1
     refs = str(general.message_facts["source_ref_ids"]).split("|")
-    assert set(refs) == {f"transaction:{transaction.transaction_id}" for transaction in transactions[5:]} | {
+    assert set(refs) == {f"transaction:{transaction.transaction_id}" for transaction in transactions[3:]} | {
         f"transaction:{'f' * 64}"
     }
     assert failures[id(general)].verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
     assert finding_action_locale_key(general) == "application.modelo.work_form.finding_action.correct_and_recalculate"
+
+
+def test_a_rectification_row_keeps_the_recoverable_finding_once_a_rectificativa_grounds_its_authority() -> None:
+    """A recorded factura rectificativa is the writer of the authority fact 0085 asks for.
+
+    The import and the REAGP receipt stay terminal: no record this application
+    writes establishes either. The rectification row's document now exists, so
+    its refusal is the general one, whose remedy is to correct the row.
+    """
+    transactions = (
+        _transaction("customs", "import_current", "import_third_country"),
+        _transaction("rectification", "rectification", "domestic_general"),
+    )
+    repository = Transactions(
+        bucket_id="13000000-0000-4000-8000-000000000303",
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
+    issues = tuple(_issue(transaction.transaction_id) for transaction in transactions)
+    work, target = work_and_target(repository.bucket_id, issues)
+    findings: list[ModeloVerificationFinding] = []
+    failures: dict[int, ModeloPreconditionFailure] = {}
+    append_iva_selected_scope_evidence_finding(
+        work_unit=work,
+        target=target,
+        transaction_repository=repository,
+        rectification_evidence_recordable=True,
+        findings=findings,
+        failures_by_finding_id=failures,
+    )
+    terminal = {
+        finding.message_facts["transaction_ids"]: finding
+        for finding in findings
+        if "transaction_ids" in finding.message_facts
+    }
+    assert set(terminal) == {transactions[0].transaction_id}
+    general = next(finding for finding in findings if "source_ref_ids" in finding.message_facts)
+    assert general.message_facts["source_ref_ids"] == f"transaction:{transactions[1].transaction_id}"
+    assert failures[id(general)].verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION

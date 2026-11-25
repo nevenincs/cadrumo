@@ -27,7 +27,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    prior_303_observation as _prior_303_observation,
+    prior_303_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.live.filed_observation_persistence import filed_observation_source_metadata
@@ -74,7 +74,7 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
     """The end the bug was at: persisted, then read back, with provenance intact."""
     from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
 
-    observation = _prior_303_observation(
+    observation = prior_303_observation(
         pending_compensation=Decimal("0.00"),
         result=Decimal("-1.00"),
     ).model_copy(
@@ -125,7 +125,7 @@ def test_the_metadata_projection_still_does_not_carry_headers(tmp_path: Path) ->
     keeps "it arrived" from being satisfiable by the shape we moved away from.
     """
     del tmp_path
-    observation = _prior_303_observation(
+    observation = prior_303_observation(
         pending_compensation=Decimal("0.00"),
         result=Decimal("-1.00"),
     ).model_copy(

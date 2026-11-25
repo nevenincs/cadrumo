@@ -23,10 +23,10 @@ import pytest
 from click.testing import Result
 
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
-from .profile_world_fixtures import recorded_fx_isolated_backend as _isolated_backend
+from .ledger_cli import list_ledger_rows_via_cli
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -81,7 +81,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
         )
         assert stashed.exit_code == 0, stashed.output
 
-    by_state = {row["transaction_id"]: row["lifecycle_state"] for row in _list_rows()}
+    by_state = {row["transaction_id"]: row["lifecycle_state"] for row in list_ledger_rows_via_cli()}
     assert all(by_state[transaction_id] == "STASHED" for transaction_id in added_ids), by_state
 
     # Restore every row to active -- the recovery the audit said did not exist.
@@ -106,7 +106,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
         restored_event_ids.extend(payload.get("bucket_event_ids", []))
 
     # The ledger is whole again: every row is active, and no reset was run.
-    by_state_after = {row["transaction_id"]: row["lifecycle_state"] for row in _list_rows()}
+    by_state_after = {row["transaction_id"]: row["lifecycle_state"] for row in list_ledger_rows_via_cli()}
     assert {by_state_after[transaction_id] for transaction_id in added_ids} == {"ACTIVE"}, by_state_after
     assert len(by_state_after) == len(_ROWS)
     assert all(event_id for event_id in restored_event_ids)

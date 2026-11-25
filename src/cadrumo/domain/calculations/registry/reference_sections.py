@@ -99,6 +99,11 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
                 record.requires_positive_casilla_id,
                 checker.casilla_ids,
             )
+            checker.chk_opt(
+                f"{rcp}.alphanumeric_text_source_ref",
+                record.alphanumeric_text_source_ref,
+                checker.source_ids,
+            )
             for row_field, casilla_id in record.row_field_casilla_ids.items():
                 checker.chk(f"{rcp}.row_field_casilla_ids.{row_field}", casilla_id, checker.casilla_ids)
             for field in record.fields:

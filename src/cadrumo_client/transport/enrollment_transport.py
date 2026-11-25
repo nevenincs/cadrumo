@@ -32,20 +32,15 @@ class EnrollmentTransport(ProfileTransport):
 
     def enrollment_prepare(self, request: EnrollmentPrepare, *, deadline: float) -> EnrollmentPrepared | AccessRefusal:
         """Mint a request only on this verified native connection."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, EnrollmentPrepared | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, EnrollmentPrepared) and reply.profile_binding.profile_id != request.profile_id:
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (EnrollmentPrepared, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: (
+                not isinstance(reply, EnrollmentPrepared) or reply.profile_binding.profile_id == request.profile_id
+            ),
+        )
 
     def enrollment_submit(
         self, request: EnrollmentSubmit, proposal: bytearray, *, deadline: float
@@ -76,23 +71,19 @@ class EnrollmentTransport(ProfileTransport):
         self, request: EnrollmentInspect | EnrollmentReconcile, *, deadline: float
     ) -> EnrollmentRecorded | EnrollmentIdle | AccessRefusal:
         """Read an exact receipt through its live offer or fresh root admission."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, EnrollmentRecorded | EnrollmentIdle | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, EnrollmentRecorded) and (
-                    reply.receipt.request_id != request.enrollment_request_id
-                    or reply.receipt.profile_id != request.profile_id
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (EnrollmentRecorded, EnrollmentIdle, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: (
+                not isinstance(reply, EnrollmentRecorded)
+                or (
+                    reply.receipt.request_id == request.enrollment_request_id
+                    and reply.receipt.profile_id == request.profile_id
+                )
+            ),
+        )
 
     def enrollment_poll(
         self,

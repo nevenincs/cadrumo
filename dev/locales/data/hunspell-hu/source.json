@@ -1,0 +1,8 @@
+{
+  "upstream": "https://github.com/LibreOffice/dictionaries/tree/e573224f171c003384b986cb5072e56d3d645114/hu_HU",
+  "revision": "e573224f171c003384b986cb5072e56d3d645114",
+  "version": "Magyar Ispell 1.8 (May 2023)",
+  "aff_sha256": "0de3872251cd546fe9d15a49e6d065760168ff8ccbd0fca697ca85481fbaa1ad",
+  "dic_sha256": "36e12a1274a0a3fcd0528c23091c5bcada097c2851bd0435fb81249a6c2367c2",
+  "license": "MPL-2.0 OR LGPL-3.0-or-later"
+}

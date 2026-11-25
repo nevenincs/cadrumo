@@ -3,7 +3,7 @@
 :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision` starts from a current, externally evidenced
 :class:`ModeloRecord`, builds a corrected
 :class:`CalculationRevision` with an explicit
-:class:`CalculationRevisionAmendmentKind`, supersedes the
+:class:`FilingDeclarationKind`, supersedes the
 baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
@@ -24,13 +24,13 @@ casillas.
 See Also:
     :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
         Creates the AEAT-attested baseline that this module amends.
-    :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
+    :func:`~cadrumo.application.modelo.calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
     :class:`ExternalEvidence`:
         Filing-record evidence marker required before this amendment path can run.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_override_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_unknown_override_casillas`:
         Canonicalizes amendment override casilla ids against the registry.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_incomplete_amendment_casillas`:
         Reuses the registry completeness gate before the amendment is filed.
 
 Core types:
@@ -49,13 +49,17 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -69,7 +73,6 @@ from ...domain.modelos.calculation_revision_aggregate import (
 )
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
@@ -93,16 +96,6 @@ from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_snapshot,
 )
-from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
-from ._amendment_kind_resolution import (
-    assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
-)
-from ._calculation_helpers import amendment_observations as _amendment_observations
-from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
-from ._calculation_modelo_adjustments import detail_row_declaration_modelos
-from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
-from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from .action_errors import (
     AmendmentDetailRowsRequiredError,
     AmendmentEvidenceMissingError,
@@ -112,20 +105,42 @@ from .action_errors import (
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
+    amendment_evidence_missing_precondition,
 )
 from .amendment_action_ports import AmendmentActionPorts
+from .amendment_kind_resolution import (
+    assert_amendment_kind_permitted,
+    assert_complementaria_liability_direction_permitted,
+)
+from .calculate_input import resolve_binding_overrides
+from .calculation_helpers import (
+    AmendmentCalculation,
+    amendment_prior_paid_values,
+    calculate_amendment,
+    resolve_registry_snapshot_for_work_unit,
+)
+from .calculation_input_refusal_doors import (
+    amendment_baseline_record_verdict,
+    amendment_choice_verdict,
+    amendment_evidence_missing_verdict,
+)
+from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
+from .filing_revision_persistence import filed_calculation_revision, supersede_filed_revision
+from .ledger_anchor_capture import capture_revision_ledger_evidence
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     amendment_ordering_instants,
     require_lifecycle_clock_not_before,
 )
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from .modelo_bucket_events import build_modelo_bucket_event
 from .profile_export_binding import resolve_export_identity
+from .registry_helpers import reject_incomplete_amendment_casillas, reject_unknown_override_casillas
 from .result_disposition_resolution import base_modelo_result_disposition
-from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
-from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
+from .work_lifecycle_refusal_failures import amendment_duplicate_failure, amendment_unchanged_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +173,7 @@ def _load_amendment_baseline[CasillaKey](
         raise ModeloRecordNotFoundError(
             translated_message="application.modelo.errors.filing_record_not_found",
             context={"filing_record_id": from_filing_record_id},
+            precondition_verdict=amendment_baseline_record_verdict("absent"),
         )
     if in_force.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
@@ -166,6 +182,7 @@ def _load_amendment_baseline[CasillaKey](
                 "filing_record_id": from_filing_record_id,
                 "record_status": in_force.status.value,
             },
+            precondition_verdict=amendment_baseline_record_verdict("not_in_force"),
         )
     baseline = filing_catalogue.latest_confirmed_for(
         bucket_id=in_force.bucket_id,
@@ -176,11 +193,17 @@ def _load_amendment_baseline[CasillaKey](
     )
     if baseline is None or baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={
+                "work_unit_id": in_force.work_unit_id,
                 "filing_record_id": from_filing_record_id,
                 "external_evidence_present": False,
             },
+            precondition_failure=amendment_evidence_missing_precondition(
+                subject_leaf_key="modelo.work.amend",
+                work_unit_id=in_force.work_unit_id,
+                filing_record_id=from_filing_record_id,
+            ),
         )
 
     work_units, work_units_revision = ports.work_unit_repository.load_revisioned()
@@ -205,17 +228,18 @@ def _load_amendment_baseline[CasillaKey](
     # Both revisions contribute stored inputs to the correction, so neither may
     # carry a scalar a detail-row casilla cannot hold.
     for stored_revision in (source_revision, baseline_revision):
-        _refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
-    if work_unit.modelo == Modelo("303").value and source_revision.filing_instance_evidence is None:
+        refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
+    if work_unit.modelo == form_for_role("iva.periodic") and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={
                 "filing_record_id": from_filing_record_id,
                 "filing_instance_evidence_present": False,
             },
+            precondition_verdict=amendment_evidence_missing_verdict(work_unit),
         )
 
-    canonical_overrides = _reject_unknown_override_casillas(
+    canonical_overrides = reject_unknown_override_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
@@ -257,7 +281,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
     *,
     work_unit: WorkUnit,
     baseline_revision: CalculationRevision,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     supplied: M303RectificativaMotive | None,
     operation: PinnedAuthorityOperation,
 ) -> M303RectificativaMotive | None:
@@ -268,7 +292,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
         operation=operation,
     )
     requires_motive = (
-        work_unit.modelo == Modelo("303").value and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        work_unit.modelo == form_for_role("iva.periodic") and amendment_kind is FilingDeclarationKind.RECTIFICATIVA
     )
     if (requires_motive and applicable and supplied is not None) or (not requires_motive and supplied is None):
         return supplied
@@ -282,6 +306,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
             "motive_present": supplied is not None,
             "motive_applicable": applicable,
         },
+        precondition_verdict=amendment_choice_verdict("m303_rectificativa_motive"),
     )
 
 
@@ -291,13 +316,14 @@ def _m303_rectificativa_motive_is_applicable(
     baseline_revision: CalculationRevision,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    if work_unit.modelo != Modelo("303").value:
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return False
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={"work_unit_id": work_unit.work_unit_id, "filing_instance_evidence_present": False},
+            precondition_verdict=amendment_evidence_missing_verdict(work_unit),
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
     snapshot = operation.snapshot(
@@ -339,11 +365,137 @@ def _m303_rectificativa_evidence_matches_coordinate(
     )
 
 
+def _prepare_amendment_identity(
+    *,
+    baseline: ModeloRecord,
+    baseline_revision: CalculationRevision,
+    source_revision: CalculationRevision,
+    work_unit: WorkUnit,
+    in_force: ModeloRecord,
+    revisions: CalculationRevisionCatalogue,
+    corrected_values: Mapping[CasillaId, Decimal],
+    calculation: AmendmentCalculation,
+    registry_snapshot: RegistrySnapshot,
+    overrides: Mapping[CasillaId, Decimal],
+    amendment_kind: FilingDeclarationKind,
+    m303_rectificativa_motive: M303RectificativaMotive | None,
+    detail_rows: Sequence[ModeloDetailRow] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalculationRevisionId, CalculationRevisionAmendmentIdentity, tuple[ModeloDetailRow, ...]]:
+    # Period-aware amendment-kind routing: refuse a requested kind the
+    # resolved (modelo, period) does not legally permit (e.g. rectificativa
+    # requested for a pre-adoption period, or complementaria requested where
+    # rectificativa has replaced it), and — for a pre-rectificativa period —
+    # refuse a complementaria that would decrease the taxpayer's declared
+    # liability (that correction is a solicitud de rectificación, LGT
+    # art. 120.3, not a complementaria, LGT art. 122.2). Both guards run
+    # before any amendment state is persisted.
+    assert_amendment_kind_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+    )
+    assert_complementaria_liability_direction_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+        baseline_casilla_values=baseline_revision.casilla_values,
+        corrected_casilla_values=corrected_values,
+        prior_paid_casilla_ids=tuple(
+            casilla.id for casilla in registry_snapshot.revision.casillas if casilla.complementaria_only is not None
+        ),
+    )
+
+    m303_rectificativa_motive = _resolve_m303_rectificativa_motive_before_identity(
+        work_unit=work_unit,
+        baseline_revision=baseline_revision,
+        amendment_kind=amendment_kind,
+        supplied=m303_rectificativa_motive,
+        operation=operation,
+    )
+
+    amendment_identity = CalculationRevisionAmendmentIdentity(
+        kind=amendment_kind,
+        amends_filing_record_id=baseline.filing_record_id,
+        m303_rectificativa_motive=m303_rectificativa_motive,
+    )
+    amendment_detail_rows = require_amendment_detail_rows(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        supplied=detail_rows,
+    )
+    if (
+        all(source_revision.casilla_values.get(key) == value for key, value in overrides.items())
+        and amendment_detail_rows == source_revision.detail_rows
+    ):
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={
+                "calculation_revision_id": source_revision.calculation_revision_id,
+                "state": "no_op_amendment",
+            },
+            precondition_failure=amendment_unchanged_failure(),
+        )
+    new_revision_id = derive_calculation_revision_id(
+        work_unit_id=in_force.work_unit_id,
+        input_values_by_casilla_id=calculation.input_values_by_casilla_id,
+        binding_overrides=calculation.binding_overrides,
+        operator_layer=calculation.operator_layer,
+        relation_overrides=source_revision.relation_overrides,
+        casilla_values=corrected_values,
+        source_transaction_ids=source_revision.source_transaction_ids,
+        borrador_snapshot_id=source_revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=source_revision.bindings_sourced_from_borrador,
+        source_provenance=source_revision.source_provenance,
+        filing_instance_evidence=source_revision.filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=None,
+        amendment_identity=amendment_identity,
+        detail_rows=amendment_detail_rows,
+    )
+    if new_revision_id in revisions:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
+            precondition_failure=amendment_duplicate_failure(),
+        )
+
+    return new_revision_id, amendment_identity, amendment_detail_rows
+
+
+def _amendment_aggregate_context(
+    work_units: WorkUnitCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+    ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
+    taxpayer_tax_id: str | None,
+) -> CalculationRevisionAggregateContext:
+    justificantes = tuple(ports.justificante_repository.iter_justificantes())
+    aggregate_context = CalculationRevisionAggregateContext(
+        work_units=work_units,
+        filing_records=filing_catalogue,
+        justificantes=justificantes,
+        # The upsert revalidates every stored rectificativa, not only this
+        # period's, so each Modelo 303 work unit needs its own snapshot.
+        registry_snapshots={
+            unit.work_unit_id: operation.snapshot(
+                Modelo("303").value,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+            for unit in work_units.values()
+            if unit.modelo == form_for_role("iva.periodic")
+        },
+        expected_taxpayer_tax_id=taxpayer_tax_id,
+    )
+
+    return aggregate_context
+
+
 def amend_modelo_revision[CasillaKey](
     *,
     from_filing_record_id: str,
     overrides: Mapping[CasillaKey, Decimal],
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
     detail_rows: Sequence[ModeloDetailRow] | None = None,
     reason: str,
@@ -352,46 +504,17 @@ def amend_modelo_revision[CasillaKey](
     clock: datetime | None = None,
     operation: PinnedAuthorityOperation | None = None,
     result_disposition: ResultDisposition | None = None,
+    binding_overrides: Mapping[BindingId, str] | None = None,
 ) -> ModeloRecord:
-    """Build and file an amendment of the period's latest AEAT-confirmed declaration.
+    """Amend a current filing against its latest AEAT-confirmed baseline.
 
-    ``from_filing_record_id`` must identify the in-force
-    :class:`ModeloRecord` of the period, confirmed or still pending. Its
-    :class:`CalculationRevision` supplies the full casilla map; ``overrides``
-    replace only corrected casillas after registry validation, while unchanged
-    casillas are inherited. The amendment references the latest confirmed
-    declaration; a pending in-force entry is marked ``DESCARTADA``, and with no
-    confirmed declaration the amendment is refused. The resulting revision records the
-    requested :class:`CalculationRevisionAmendmentKind`,
-    stores the stripped ``reason``, receives registry-grounded observations,
-    transitions through ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes
-    the current filed revision for the :class:`WorkUnit`.
-
-    The confirmed baseline is linked to the new current amendment record. The
-    new filing record is an internal filing envelope: the record stays
-    ``PENDIENTE``, ``external_evidence`` is cleared, and
-    ``amends_filing_record_id`` points back to the baseline. The amendment's
-    observations are written to the pending-local layer, and a
-    ``modelo.amended`` bucket event records the amendment kind, override count,
-    work-unit id, amended baseline id and any discarded entry, all in one unit
-    of work. ``result_disposition`` is the Modelo 303 declaration disposition of
-    the correction; when omitted, the period's effective recorded disposition
-    is kept.
-
-    Returns:
-        The new current :class:`ModeloRecord` for the
-        amended return.
-
-    See Also:
-        ``aeat app modelo work amend``:
-            CLI command that validates ``--from-filing-record``, ``--kind``,
-            ``--reason``, and ``--set`` before calling this service.
-        :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
-            Production import path that creates accepted external-evidence
-            baselines.
-        :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
-            Builds the :class:`CasillaObservation`
-            rows persisted on the amendment revision.
+    Canonical overrides recompute dependent formulas from the saved source;
+    unchanged evidence and provenance remain tied to that revision. The
+    amendment kind, motive and detail rows are validated before deriving the
+    revision identity. The corrected draft is checked, verified and filed, then
+    its record, observations and lifecycle event are committed together. A
+    pending prior filing is discarded; the new local envelope remains pending
+    and never fabricates external acceptance.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -407,6 +530,7 @@ def amend_modelo_revision[CasillaKey](
                 clock=clock,
                 operation=indexed_operation,
                 result_disposition=result_disposition,
+                binding_overrides=binding_overrides,
             )
     (
         filing_catalogue,
@@ -427,98 +551,44 @@ def amend_modelo_revision[CasillaKey](
         operation=operation,
     )
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.AMEND,
         instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
     )
-    corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
-    corrected_values.update(canonical_overrides)
-
-    # Period-aware amendment-kind routing: refuse a requested kind the
-    # resolved (modelo, period) does not legally permit (e.g. rectificativa
-    # requested for a pre-adoption period, or complementaria requested where
-    # rectificativa has replaced it), and — for a pre-rectificativa period —
-    # refuse a complementaria that would decrease the taxpayer's declared
-    # liability (that correction is a solicitud de rectificación, LGT
-    # art. 120.3, not a complementaria, LGT art. 122.2). Both guards run
-    # before any amendment state is persisted.
-    _assert_amendment_kind_permitted(
-        modelo=str(baseline.modelo),
-        period=baseline.period,
-        amendment_kind=amendment_kind,
+    registry_snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
+    calculation = calculate_amendment(
+        source_revision=source_revision,
+        overrides=canonical_overrides,
+        prior_paid_values=amendment_prior_paid_values(
+            baseline_revision=baseline_revision,
+            snapshot=registry_snapshot,
+            amendment_kind=amendment_kind,
+        ),
+        snapshot=registry_snapshot,
+        binding_overrides=_stated_amendment_bindings(binding_overrides, registry_snapshot, work_unit),
     )
-    _assert_complementaria_liability_direction_permitted(
-        modelo=str(baseline.modelo),
-        period=baseline.period,
-        amendment_kind=amendment_kind,
-        baseline_casilla_values=baseline_revision.casilla_values,
-        corrected_casilla_values=corrected_values,
-    )
+    corrected_values = calculation.casilla_values
 
-    m303_rectificativa_motive = _resolve_m303_rectificativa_motive_before_identity(
-        work_unit=work_unit,
+    new_revision_id, amendment_identity, amendment_detail_rows = _prepare_amendment_identity(
+        baseline=baseline,
         baseline_revision=baseline_revision,
+        source_revision=source_revision,
+        work_unit=work_unit,
+        in_force=in_force,
+        revisions=revisions,
+        corrected_values=corrected_values,
+        calculation=calculation,
+        registry_snapshot=registry_snapshot,
+        overrides=canonical_overrides,
         amendment_kind=amendment_kind,
-        supplied=m303_rectificativa_motive,
+        m303_rectificativa_motive=m303_rectificativa_motive,
+        detail_rows=detail_rows,
         operation=operation,
     )
 
-    amendment_identity = CalculationRevisionAmendmentIdentity(
-        kind=amendment_kind,
-        amends_filing_record_id=baseline.filing_record_id,
-        m303_rectificativa_motive=m303_rectificativa_motive,
-    )
-    amendment_detail_rows = _require_amendment_detail_rows(
-        modelo=str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        supplied=detail_rows,
-    )
-    if (
-        corrected_values == dict(source_revision.casilla_values)
-        and amendment_detail_rows == source_revision.detail_rows
-    ):
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={
-                "calculation_revision_id": source_revision.calculation_revision_id,
-                "state": "no_op_amendment",
-            },
-        )
-    new_revision_id = derive_calculation_revision_id(
-        work_unit_id=in_force.work_unit_id,
-        input_values_by_casilla_id=source_revision.input_values_by_casilla_id,
-        binding_overrides=source_revision.binding_overrides,
-        relation_overrides=source_revision.relation_overrides,
-        casilla_values=corrected_values,
-        source_transaction_ids=source_revision.source_transaction_ids,
-        borrador_snapshot_id=source_revision.borrador_snapshot_id,
-        bindings_sourced_from_borrador=source_revision.bindings_sourced_from_borrador,
-        source_provenance=source_revision.source_provenance,
-        filing_instance_evidence=source_revision.filing_instance_evidence,
-        m303_regimen_simplificado_annual_summary_handoff=None,
-        amendment_identity=amendment_identity,
-        detail_rows=amendment_detail_rows,
-    )
-    if new_revision_id in revisions:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
-        )
-
-    # Carry regulatory grounding onto the amendment: build typed
-    # CasillaObservation rows for the corrected casilla map so the
-    # persisted amendment revision and its CLI emit preserve
-    # legal_refs / source_refs (and baseline formula provenance for
-    # non-overridden casillas) instead of an empty observations tuple.
-    registry_snapshot = _resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
-    amendment_observations = _amendment_observations(
-        corrected_values=corrected_values,
-        overrides=canonical_overrides,
-        baseline_revision=source_revision,
-        snapshot=registry_snapshot,
-    )
+    amendment_observations = calculation.observations
     filing_instance_evidence = validate_m303_filing_instance_evidence_for_revision(
         work_unit=work_unit,
         registry_snapshot=registry_snapshot,
@@ -527,24 +597,7 @@ def amend_modelo_revision[CasillaKey](
         observations=amendment_observations,
         operation=operation,
     )
-    justificantes = tuple(ports.justificante_repository.iter_justificantes())
-    aggregate_context = CalculationRevisionAggregateContext(
-        work_units=work_units,
-        filing_records=filing_catalogue,
-        justificantes=justificantes,
-        # The upsert revalidates every stored rectificativa, not only this
-        # period's, so each Modelo 303 work unit needs its own snapshot.
-        registry_snapshots={
-            unit.work_unit_id: operation.snapshot(
-                Modelo("303").value,
-                filing_year=unit.filing_year,
-                period=unit.period.registry_token,
-            )
-            for unit in work_units.values()
-            if unit.modelo == Modelo("303").value
-        },
-        expected_taxpayer_tax_id=taxpayer_tax_id,
-    )
+    aggregate_context = _amendment_aggregate_context(work_units, filing_catalogue, ports, operation, taxpayer_tax_id)
 
     amendment_draft = _build_amendment_draft_revision(
         new_revision_id=new_revision_id,
@@ -552,6 +605,7 @@ def amend_modelo_revision[CasillaKey](
         baseline=in_force,
         baseline_revision=source_revision,
         corrected_values=corrected_values,
+        calculation=calculation,
         amendment_observations=amendment_observations,
         amendment_identity=amendment_identity,
         detail_rows=amendment_detail_rows,
@@ -562,11 +616,75 @@ def amend_modelo_revision[CasillaKey](
     )
     revisions = upsert_calculation_revision(revisions, amendment_draft, aggregate_context=aggregate_context)
 
+    return _finalize_amendment(
+        revisions=revisions,
+        amendment_draft=amendment_draft,
+        work_unit=work_unit,
+        ports=ports,
+        operation=operation,
+        now=now,
+        actor=actor,
+        aggregate_context=aggregate_context,
+        baseline=baseline,
+        corrected_values=corrected_values,
+        in_force=in_force,
+        filing_catalogue=filing_catalogue,
+        new_revision_id=new_revision_id,
+        amendment_kind=amendment_kind,
+        result_disposition=result_disposition,
+        catalogue_revisions=catalogue_revisions,
+        work_units=work_units,
+        canonical_overrides=canonical_overrides,
+    )
+
+
+def _stated_amendment_bindings(
+    binding_overrides: Mapping[BindingId, str] | None,
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+) -> dict[BindingId, str]:
+    """Admit stated bindings by calculation's own rules and carry each as its canonical token.
+
+    An amendment states a binding through the same channel a first calculation
+    does, so an unknown id, a date- or profile-derived value, or malformed
+    numeric text refuses here exactly as it refuses there, before any
+    recalculation reads it.
+    """
+    if binding_overrides is None or not binding_overrides:
+        return {}
+    decimal_values, enum_values = resolve_binding_overrides(binding_overrides, snapshot.revision, work_unit=work_unit)
+    return {
+        key: canonical_decimal_string(decimal_values[key]) if key in decimal_values else enum_values[key]
+        for key in binding_overrides
+    }
+
+
+def _finalize_amendment(
+    *,
+    revisions: CalculationRevisionCatalogue,
+    amendment_draft: CalculationRevision,
+    work_unit: WorkUnit,
+    ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
+    now: datetime,
+    actor: str,
+    aggregate_context: CalculationRevisionAggregateContext,
+    baseline: ModeloRecord,
+    corrected_values: Mapping[CasillaId, Decimal],
+    in_force: ModeloRecord,
+    filing_catalogue: ModeloRecordCatalogue,
+    new_revision_id: CalculationRevisionId,
+    amendment_kind: FilingDeclarationKind,
+    result_disposition: ResultDisposition | None,
+    catalogue_revisions: _AmendmentCatalogueRevisions,
+    work_units: WorkUnitCatalogue,
+    canonical_overrides: Mapping[CasillaId, Decimal],
+) -> ModeloRecord:
     # Verify the corrected casilla map against the registry's
     # required-manual-input contract before transitioning. The amend
     # path mirrors the standard verify gate so a complementaria
     # cannot be filed with a missing required casilla.
-    _reject_incomplete_amendment_casillas(
+    reject_incomplete_amendment_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
@@ -575,7 +693,7 @@ def amend_modelo_revision[CasillaKey](
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
-    ledger_snapshot, ledger_evidence = _amendment_ledger_anchor(
+    ledger_snapshot, ledger_evidence = amendment_ledger_anchor(
         amendment_draft=amendment_draft,
         work_unit=work_unit,
         transaction_repository=ports.transaction_repository,
@@ -595,13 +713,18 @@ def amend_modelo_revision[CasillaKey](
         in_force=in_force,
         filing_catalogue=filing_catalogue,
         new_revision_id=new_revision_id,
-        declaration_kind=FilingDeclarationKind(amendment_kind.value),
+        declaration_kind=amendment_kind,
         actor=actor,
         now=now,
+        operation=operation,
     )
 
-    filed_amendment = _filed_amendment_revision(verified_amendment, actor=actor, now=now)
+    filed_amendment = filed_calculation_revision(target=verified_amendment, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_amendment, aggregate_context=aggregate_context)
+    # Each record the correction takes out of force keeps its calculation paired with it.
+    for superseded in {baseline.filing_record_id: baseline, in_force.filing_record_id: in_force}.values():
+        if updated_filing_catalogue.records[superseded.filing_record_id].status is ModeloRecordStatus.SUPERSEDIDO:
+            revisions = supersede_filed_revision(revisions, superseded, now=now)
     prepared_observation = prepare_filed_revision_observation(
         revision=filed_amendment,
         work_unit=work_unit,
@@ -658,7 +781,7 @@ def _amendment_result_disposition(
     kept, and with none recorded the disposition the corrected result implies
     before any refund or payment election is used.
     """
-    if supplied is not None or work_unit.modelo != Modelo("303").value:
+    if supplied is not None or work_unit.modelo != form_for_role("iva.periodic"):
         return supplied
     recorded = ports.observation_repository.load_observation(work_unit.modelo, work_unit.period)
     if recorded is not None and recorded.result_disposition is not None:
@@ -671,7 +794,7 @@ def _amendment_result_disposition(
     )
 
 
-def _require_amendment_detail_rows(
+def require_amendment_detail_rows(
     *,
     modelo: str,
     filing_year: int,
@@ -694,6 +817,7 @@ def _require_amendment_detail_rows(
         raise AmendmentDetailRowsRequiredError(
             translated_message="errors.refused.refused_modelo_amendment_detail_rows_required",
             context={"modelo": modelo, "reason": "amendment_detail_rows_required"},
+            precondition_verdict=amendment_choice_verdict("detail_rows_required"),
         )
     return tuple(supplied)
 
@@ -705,6 +829,7 @@ def _build_amendment_draft_revision(
     baseline: ModeloRecord,
     baseline_revision: CalculationRevision,
     corrected_values: dict[CasillaId, Decimal],
+    calculation: AmendmentCalculation,
     amendment_observations: tuple[CasillaObservation, ...],
     amendment_identity: CalculationRevisionAmendmentIdentity,
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -720,8 +845,8 @@ def _build_amendment_draft_revision(
     not inherit the baseline's.
 
     ``detail_rows`` arrives already resolved, from
-    :func:`_require_amendment_detail_rows`. Neither
-    :func:`_verified_amendment_revision` nor :func:`_filed_amendment_revision`
+    :func:`require_amendment_detail_rows`. Neither
+    :func:`_verified_amendment_revision` nor :func:`.filing_revision_persistence.filed_calculation_revision`
     recomputes anything — both are pure state transitions — so whatever is set
     here is what an amended M347, M349, M184 or M232 declares. Defaulting it
     silently filed those declaring no counterparties at all; inheriting the
@@ -737,7 +862,7 @@ def _build_amendment_draft_revision(
     overwrite whatever already sat at that address.
 
     ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are absent on the
-    DRAFT and supplied by :func:`_amendment_ledger_anchor` at the verify
+    DRAFT and supplied by :func:`amendment_ledger_anchor` at the verify
     transition, which is where the verify path captures them too.
     """
     return CalculationRevision.model_validate(
@@ -746,8 +871,9 @@ def _build_amendment_draft_revision(
             "work_unit_id": baseline.work_unit_id,
             "registry_snapshot_ref": registry_snapshot_ref,
             "state": CalculationRevisionState.BORRADOR,
-            "input_values_by_casilla_id": baseline_revision.input_values_by_casilla_id,
-            "binding_overrides": baseline_revision.binding_overrides,
+            "input_values_by_casilla_id": calculation.input_values_by_casilla_id,
+            "binding_overrides": calculation.binding_overrides,
+            "operator_layer": calculation.operator_layer,
             "relation_overrides": baseline_revision.relation_overrides,
             "source_transaction_ids": baseline_revision.source_transaction_ids,
             "borrador_snapshot_id": baseline_revision.borrador_snapshot_id,
@@ -776,6 +902,7 @@ def _build_amendment_filing_updates(
     declaration_kind: FilingDeclarationKind,
     actor: str,
     now: datetime,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
     new_filing_id = derive_filing_record_id(
         work_unit_id=in_force.work_unit_id,
@@ -791,6 +918,7 @@ def _build_amendment_filing_updates(
         declaration_kind=declaration_kind,
         filed_at=now,
         filed_by=actor.strip(),
+        operation=operation,
     )
     updated_filing_catalogue = filing_catalogue
     if in_force.filing_record_id != baseline.filing_record_id:
@@ -816,7 +944,7 @@ def _build_amendment_filing_updates(
     return new_filing_id, new_filing, updated_filing_catalogue
 
 
-def _amendment_ledger_anchor(
+def amendment_ledger_anchor(
     *,
     amendment_draft: CalculationRevision,
     work_unit: WorkUnit,
@@ -840,6 +968,8 @@ def _amendment_ledger_anchor(
     A revision with no contributing rows anchors to nothing, and says so with
     ``None`` rather than an empty snapshot that would read as "checked, and
     the ledger was empty".
+
+    ``amendment_draft`` is a :class:`CalculationRevision`.
     """
     if not amendment_draft.source_transaction_ids:
         return (None, None)
@@ -879,22 +1009,6 @@ def _verified_amendment_revision(
     )
 
 
-def _filed_amendment_revision(
-    verified_amendment: CalculationRevision,
-    *,
-    actor: str,
-    now: datetime,
-) -> CalculationRevision:
-    return verified_amendment.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
-
-
 def _build_amendment_filing_record(
     *,
     filing_record_id: str,
@@ -904,8 +1018,17 @@ def _build_amendment_filing_record(
     declaration_kind: FilingDeclarationKind,
     filed_at: datetime,
     filed_by: str,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRecord:
-    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``."""
+    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``.
+
+    The amendment decides its own plazo posture at its own presentation date,
+    against the same period's filing window: Ley 58/2003 art. 122.1 gives a
+    complementaria or sustitutiva presented after that window closed "el
+    carácter de extemporáneas". A kind the official text does not time against
+    the window keeps an unknown posture. The amendment is a new presentation,
+    so it never inherits the posture of the record it supersedes.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=in_force.work_unit_id,
@@ -921,6 +1044,14 @@ def _build_amendment_filing_record(
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=declaration_kind,
+        filing_timeliness=decide_filing_timeliness(
+            modelo=str(in_force.modelo),
+            filing_year=in_force.filing_year,
+            period=in_force.period,
+            filed_at=filed_at,
+            operation=operation,
+            declaration_kind=declaration_kind,
+        ),
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,
@@ -939,7 +1070,7 @@ def _persist_amendment_side_effects(
     discarded: ModeloRecord | None,
     new_revision_id: CalculationRevisionId,
     new_filing_id: str,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     override_count: int,
     observation_writes: tuple[SecureObjectWrite, ...],
     actor: str,
@@ -964,7 +1095,7 @@ def _persist_amendment_side_effects(
             },
         ),
     )
-    amended_event = _build_bucket_event(
+    amended_event = build_modelo_bucket_event(
         bucket_id=baseline.bucket_id,
         event_type=BucketEventType.MODELO_AMENDED,
         occurred_at=now,
@@ -983,17 +1114,19 @@ def _persist_amendment_side_effects(
             "discarded_filing_record_id": discarded.filing_record_id if discarded is not None else "",
         },
     )
+    revisions_unit = ports.calculation_repository.to_secure_object_write_unit(
+        revisions, expected_revision_id=catalogue_revisions.calculation
+    )
     ports.filing_repository.save_with_secure_object_writes(
         filing_catalogue,
         (
-            ports.calculation_repository.to_secure_object_write(
-                revisions, expected_revision_id=catalogue_revisions.calculation
-            ),
+            *revisions_unit.writes,
             ports.work_unit_repository.to_secure_object_write(
                 advanced_work_units, expected_revision_id=catalogue_revisions.work_units
             ),
-            _bucket_event_write(ports.bucket_event_repository, (amended_event,)),
+            bucket_event_history_write(ports.bucket_event_repository, (amended_event,)),
             *observation_writes,
         ),
         expected_revision_id=catalogue_revisions.filing,
+        assertions=revisions_unit.assertions,
     )

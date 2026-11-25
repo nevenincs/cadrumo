@@ -1,0 +1,23 @@
+[fact]
+fact_id = "rebeca-eligible-vessel-registries"
+family = "mapping"
+
+# The vessel registers that open the REBECA exemption: the special register itself, a REBECA
+# company's vessel in another EU or EEA register, and a scheduled Canary Islands route.
+[[fact.variants]]
+variant_id = "rebeca-eligible-vessel-registries:design"
+date_axis = "filing_period"
+legal_refs = ["ley-19-1994:art-75"]
+source_refs = ["boe-ley-19-1994-art-75-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-19-1994-art-75-statutory-facts"
+required_text = ["renta exenta el 50 por 100"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "registries", value = "REBECA,rebeca_eu_eea,scheduled_canary_route" },
+]

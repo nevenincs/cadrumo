@@ -69,15 +69,15 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli.tests.live_command_validation import (
     command_option_names,
 )
-from dev._paths import REPO_ROOT
 from dev.locales.locale_nodes import LocaleNode
 from dev.locales.locale_yaml import locale_catalogue_source
 from dev.locales.manager import LocaleManager
-from dev.mcp_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
-from dev.mcp_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
-from dev.mcp_eval._runner import check_exit_code_scenario
+from dev.mcp_eval.action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
+from dev.mcp_eval.models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
+from dev.mcp_eval.runner import check_exit_code_scenario
+from dev.paths import REPO_ROOT
 
-from ._real_cli_support import command_program_path, program_root_command
+from .real_cli_support import command_program_path, program_root_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -541,9 +541,20 @@ def _precondition_observed_from_live_profile(
     come from the resolved catalogue declaration, so this gate contains no
     scenario-owned action identifier, recovery command, or binding schema.
     """
+    from cadrumo.application.modelo.precondition_action_bindings import AlternativeActionArguments
     from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure_for_scenario
 
     resolved_action = coverage.profile.resolved_action
+    alternative_actions = tuple(
+        AlternativeActionArguments(
+            action_id=alternative.declaration.action_id,
+            action_argument_values={
+                specification.argument_name: f"s45-observation-{specification.argument_name}"
+                for specification in alternative.declaration.argument_specifications
+            },
+        )
+        for alternative in coverage.profile.resolved_alternative_actions
+    )
     action_argument_values = (
         None
         if resolved_action is None
@@ -559,6 +570,7 @@ def _precondition_observed_from_live_profile(
         evidence_values={"scenario": coverage.scenario_id},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         action_argument_values=action_argument_values,
+        alternative_actions=alternative_actions,
     ).verdict
     return observe_production_action(coverage, verdict)
 

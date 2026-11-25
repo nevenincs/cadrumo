@@ -40,6 +40,7 @@ from ...core.identity.documents import IdentityError
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_entitling_tokens,
@@ -47,6 +48,7 @@ from ...domain.calculations.registry.descendant_relacion_catalogue import (
 )
 from ...domain.calculations.registry.entity_type import entity_type_natural_person_token
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
+from ...domain.contribuyente.household_person_name import collapsed_person_name, household_person_name_limit_in_scope
 from ..flows.definition import (
     FlowChoice,
     FlowCondition,
@@ -55,17 +57,17 @@ from ..flows.definition import (
     FlowRepeatingGroup,
     FlowSection,
     FlowVisibility,
+    locale_copy_ref,
 )
-from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
-from ._format_hints import (
+from .catalogue import FAMILIA_SECTION_ID
+from .format_hints import (
     FORMAT_AMOUNT_LOCALE_KEY,
     FORMAT_DATE_LOCALE_KEY,
     FORMAT_TAX_ID_LOCALE_KEY,
     FORMAT_UNITS_LOCALE_KEY,
     NIF_INVALID_LOCALE_KEY,
 )
-from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
 if TYPE_CHECKING:
     from datetime import date
@@ -98,6 +100,7 @@ _ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID = "alta-posterior-nacimiento-mes"
 _GASTOS_GUARDERIA_PAGE_ID = "gastos-guarderia"
 _GASTOS_GUARDERIA_MENSUALES_PAGE_ID = "gastos-guarderia-mensuales"
 _NIF_PAGE_ID = "nif"
+_APELLIDOS_NOMBRE_PAGE_ID = "apellidos-nombre"
 
 #: Per-descendant page ids in walk order (consumed by the fact projection).
 DESCENDANT_PAGE_IDS: tuple[str, ...] = (
@@ -118,10 +121,14 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _GASTOS_GUARDERIA_PAGE_ID,
     _GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
     _NIF_PAGE_ID,
+    _APELLIDOS_NOMBRE_PAGE_ID,
 )
 
 #: Registered id of the per-answer descendant-NIF validator.
 DESCENDANT_NIF_VALIDATOR_ID = "descendant-nif"
+
+#: Registered id of the per-answer descendant surnames-and-name length validator.
+DESCENDANT_NAME_VALIDATOR_ID = "descendant-apellidos-nombre"
 
 #: Registered id of the per-answer descendant meses-madre-trabajo range validator.
 DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
@@ -184,9 +191,6 @@ _INSCRIPCION_HELP_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-
 _ACOGIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.prompt"
 _ACOGIMIENTO_HELP_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.help"
 _DISCAPACIDAD_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.prompt"
-_DISCAPACIDAD_CHOICE_0_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.0.label"
-_DISCAPACIDAD_CHOICE_33_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.33.label"
-_DISCAPACIDAD_CHOICE_65_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.65.label"
 _CONVIVENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.convivencia.prompt"
 _DEPENDENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.prompt"
 _DEPENDENCIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.help"
@@ -212,19 +216,21 @@ _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia
 _GASTOS_MENSUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.prompt"
 _GASTOS_MENSUALES_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.help"
 _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
+_APELLIDOS_NOMBRE_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.apellidos-nombre.prompt"
+NAME_TOO_LONG_LOCALE_KEY = "wizard.setup.descendientes.apellidos-nombre.too_long"
 
 # Verdict message keys minted for the constraint guards below (the range,
 # sign, and entry-event refusals). Reused generic keys were checked
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
-_MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
-_ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
-_RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
-_GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
-_GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
-_GASTOS_BOTH_DECLARED_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.both_declared"
-_ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
-_ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
+MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
+ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
+RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
+GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
+GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
+GASTOS_BOTH_DECLARED_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.both_declared"
+ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
+ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
 _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.relacion_mismatch"
 
 # Format hints reuse the shared wizard.setup.format.* keys already shipped
@@ -238,7 +244,7 @@ _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.re
 # (`domain.contribuyente._descendant_facts`). Two keys for one refusal would
 # drift, and the operator would meet different words depending on which door
 # they came through.
-_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
+RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
 
 
 def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdict:
@@ -264,6 +270,24 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
 register_answer_validator(DESCENDANT_NIF_VALIDATOR_ID, _validate_descendant_nif)
 
 
+def _validate_descendant_name(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Hold a stated surnames and name to the length the declaration's design admits.
+
+    The name is optional at entry, so a blank answer passes; the declaration's own
+    check names a counted descendant without one. The length is measured after the
+    whitespace collapse the official type applies, and the verdict carries only the
+    page id and the bound, never the typed name.
+    """
+    collapsed = collapsed_person_name(canonical)
+    limit = household_person_name_limit_in_scope()
+    if collapsed is None or limit is None or len(collapsed) <= limit:
+        return ValidationVerdict.passed()
+    return ValidationVerdict.failed(NAME_TOO_LONG_LOCALE_KEY, page_id=page.id, limit=limit)
+
+
+register_answer_validator(DESCENDANT_NAME_VALIDATOR_ID, _validate_descendant_name)
+
+
 def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
     """Refuse a months-worked answer that is not a well-formed month set.
 
@@ -286,7 +310,7 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
         parse_meses_trabajo(canonical, field=page.id)
     except ProfileAnswerTypeError:
         return ValidationVerdict.failed(
-            _MESES_INVALID_RANGE_LOCALE_KEY,
+            MESES_INVALID_RANGE_LOCALE_KEY,
             page_id=page.id,
             minimum=_MESES_MIN,
             maximum=_MESES_MAX,
@@ -301,7 +325,7 @@ def _validate_alta_posterior_month(page: FlowPage, canonical: str) -> Validation
     if is_calendar_month(int(canonical)):
         return ValidationVerdict.passed()
     return ValidationVerdict.failed(
-        _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
+        ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
         page_id=page.id,
         minimum=CALENDAR_MONTH_MIN,
         maximum=CALENDAR_MONTH_MAX,
@@ -317,7 +341,7 @@ def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     if not canonical:
         return ValidationVerdict.passed()
     if int(canonical) < 0:
-        return ValidationVerdict.failed(_GASTOS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(GASTOS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -347,9 +371,9 @@ def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
         return ValidationVerdict.passed()
     value = try_parse_canonical_decimal(canonical, max_fraction_digits=2)
     if value is None:
-        return ValidationVerdict.failed(_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY, page_id=page.id)
     if value < 0:
-        return ValidationVerdict.failed(_RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -377,7 +401,7 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
     try:
         parse_guarderia_mensual(canonical, field=page.id)
     except ProfileAnswerTypeError:
-        return ValidationVerdict.failed(_GASTOS_MENSUALES_INVALID_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(GASTOS_MENSUALES_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -405,7 +429,7 @@ def _validate_descendant_guarderia_spend(answers: Mapping[str, str]) -> tuple[Va
     prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
     verdicts = [
         ValidationVerdict.failed(
-            _GASTOS_BOTH_DECLARED_LOCALE_KEY,
+            GASTOS_BOTH_DECLARED_LOCALE_KEY,
             instance=instance,
             page=_GASTOS_GUARDERIA_PAGE_ID,
         )
@@ -494,9 +518,9 @@ def _entry_event_page_verdicts(
     # against the birth, so the operator is told the one thing wrong with the
     # value rather than two overlapping refusals.
     if entry > today:
-        verdicts.append(ValidationVerdict.failed(_ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
+        verdicts.append(ValidationVerdict.failed(ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
     elif birth is not None and entry < birth:
-        verdicts.append(ValidationVerdict.failed(_ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
+        verdicts.append(ValidationVerdict.failed(ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
     # An UNSTATED relación is not judged: an inscription date alone reads as
     # an adoption (the canonical record infers it), so refusing here would
     # block the shape the model accepts.
@@ -551,24 +575,28 @@ register_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, _validate_de
 #: yes can assimilate. An explicit no is offered so the operator can record that
 #: the question was put and declined.
 _DEPENDENCIA_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="true", label=_locale_ref(_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY)),
-    FlowChoice(value="false", label=_locale_ref(_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY)),
+    FlowChoice(value="true", label=locale_copy_ref(_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=locale_copy_ref(_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY)),
 )
 
 
-_DISCAPACIDAD_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="0", label=_locale_ref(_DISCAPACIDAD_CHOICE_0_LOCALE_KEY)),
-    FlowChoice(value="33", label=_locale_ref(_DISCAPACIDAD_CHOICE_33_LOCALE_KEY)),
-    FlowChoice(value="65", label=_locale_ref(_DISCAPACIDAD_CHOICE_65_LOCALE_KEY)),
-)
+def _discapacidad_choices(operation: PinnedAuthorityOperation) -> tuple[FlowChoice, ...]:
+    """Offer each grade the pinned catalogue accepts, in ascending order."""
+    return tuple(
+        FlowChoice(
+            value=str(grade),
+            label=locale_copy_ref(f"wizard.setup.descendientes.discapacidad.choices.{grade}.label"),
+        )
+        for grade in sorted(accepted_descendant_disability_grades(authority=operation))
+    )
 
 
 #: Art. 61 norma 1a answers. Left unanswered the engine derives the answer
 #: from marital status, spouse record and declaration type, and raises a
 #: visible advisory saying so; an explicit answer always wins over that.
 _PRORRATA_MINIMO_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="true", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY)),
-    FlowChoice(value="false", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY)),
+    FlowChoice(value="true", label=locale_copy_ref(_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=locale_copy_ref(_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY)),
 )
 
 
@@ -580,7 +608,7 @@ def _build_descendant_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPa
     relation_choices = tuple(
         FlowChoice(
             value=token.value,
-            label=_locale_ref(f"wizard.setup.descendientes.relacion.choices.{token.value}.label"),
+            label=locale_copy_ref(f"wizard.setup.descendientes.relacion.choices.{token.value}.label"),
         )
         for token in relation_tokens
     )
@@ -591,210 +619,9 @@ def _build_descendant_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPa
         ),
     )
     return (
-        FlowPage(
-            id=_BIRTH_DATE_PAGE_ID,
-            widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_BIRTH_DATE_PROMPT_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
-            required=True,
-            answer_type=str,
-        ),
-        FlowPage(
-            id=_RELACION_PAGE_ID,
-            widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_RELACION_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_RELACION_HELP_LOCALE_KEY),
-            choices=relation_choices,
-            # Optional with no default: leaving it unanswered means an ordinary
-            # descendant, which is both the record's own default and the
-            # overwhelming case, so the majority of walks answer nothing here.
-            required=False,
-            answer_type=str,
-        ),
-        # Both entry-date pages are GATED on the relación answer rather than shown
-        # unconditionally. The gate is per-instance -- the engine resolves a clause
-        # against `<group>#<index>.<page-id>` before the bare id -- so each
-        # descendant's dates follow that descendant's own relación. Gating is what
-        # keeps a tutela guardian or a temporal acogimiento carer from ever seeing a
-        # field the statute gives them no entitling value for; the cross-field
-        # verdict and the model validator then hold the same line for a scripted or
-        # resumed answer map, where visibility alone proves nothing.
-        FlowPage(
-            id=_INSCRIPCION_PAGE_ID,
-            widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_INSCRIPCION_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            visible_when=FlowCondition(
-                page_id=_RELACION_PAGE_ID,
-                equals=adoption_token.value,
-            ),
-        ),
-        FlowPage(
-            id=_ACOGIMIENTO_PAGE_ID,
-            widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            # Shown for an adoptado record too, and that is the cap-not-restart rule
-            # made reachable: a fostered-then-adopted child's window is measured
-            # from the earlier placement, so without this page the operator could
-            # only record the later event and the engine would grant three fresh
-            # periods on top of the ones already run.
-            visible_when=acogimiento_visibility,
-        ),
-        FlowPage(
-            id=_DISCAPACIDAD_PAGE_ID,
-            widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_DISCAPACIDAD_PROMPT_LOCALE_KEY),
-            choices=_DISCAPACIDAD_CHOICES,
-            required=False,
-            answer_type=str,
-        ),
-        FlowPage(
-            id=_FALLECIMIENTO_PAGE_ID,
-            widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-        ),
-        FlowPage(
-            id=_CONVIVENCIA_PAGE_ID,
-            widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_CONVIVENCIA_PROMPT_LOCALE_KEY),
-            default="true",
-            required=False,
-            answer_type=bool,
-        ),
-        FlowPage(
-            # SELECT with an explicit no rather than CONFIRM, because this axis is
-            # genuinely tri-state and a CONFIRM cannot express "unanswered". Unset
-            # never assimilates; only an explicit yes does. Gated on a NON-cohabiting
-            # answer, since the question only arises when cohabitation fails - a
-            # cohabiting descendant already qualifies and asking would invite an
-            # answer that changes nothing.
-            id=_DEPENDENCIA_PAGE_ID,
-            widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_DEPENDENCIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_DEPENDENCIA_HELP_LOCALE_KEY),
-            choices=_DEPENDENCIA_CHOICES,
-            required=False,
-            answer_type=str,
-            visible_when=FlowCondition(page_id=_CONVIVENCIA_PAGE_ID, equals="false"),
-        ),
-        FlowPage(
-            id=_CUSTODIA_COMPARTIDA_PAGE_ID,
-            widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY),
-            default="false",
-            required=False,
-            answer_type=bool,
-        ),
-        FlowPage(
-            # DECIMAL, not INTEGER: the domain field is genuinely Decimal (Art.
-            # 58.1's strict-`>` ceiling comparison makes cents legally
-            # significant), and the CLI `--descendiente RENTAS=` flag and the
-            # checkpoint-persistence re-projection already carry two-decimal
-            # precision for this exact field. DECIMAL-widget pages keep
-            # `answer_type=str`, per the widget's own canonicalisation contract
-            # (the parsed amount rides as its `str(Decimal)` form, mirroring the
-            # invoice wizard's `_validate_taxable_base`).
-            id=_RENTAS_ANUALES_PAGE_ID,
-            widget=FlowWidgetKind.DECIMAL,
-            prompt=_locale_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
-        ),
-        FlowPage(
-            id=_DECLARACION_PROPIA_PAGE_ID,
-            widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_DECLARACION_PROPIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_DECLARACION_PROPIA_HELP_LOCALE_KEY),
-            default="false",
-            required=False,
-            answer_type=bool,
-        ),
-        FlowPage(
-            id=_PRORRATA_MINIMO_PAGE_ID,
-            widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_PRORRATA_MINIMO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_PRORRATA_MINIMO_HELP_LOCALE_KEY),
-            choices=_PRORRATA_MINIMO_CHOICES,
-            required=False,
-            answer_type=str,
-        ),
-        FlowPage(
-            id=_MESES_MADRE_TRABAJO_PAGE_ID,
-            # TEXT rather than INTEGER: the answer names WHICH months qualified, so
-            # the same month grammar the guarderia map below uses carries it.
-            widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_MESES_MADRE_TRABAJO_HELP_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
-        ),
-        FlowPage(
-            id=_ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID,
-            widget=FlowWidgetKind.INTEGER,
-            prompt=_locale_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
-            required=False,
-            answer_type=int,
-            answer_validator_ids=(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID,),
-        ),
-        FlowPage(
-            id=_GASTOS_GUARDERIA_PAGE_ID,
-            widget=FlowWidgetKind.INTEGER,
-            prompt=_locale_ref(_GASTOS_GUARDERIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_GASTOS_GUARDERIA_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
-            required=False,
-            answer_type=int,
-            answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
-        ),
-        FlowPage(
-            # TEXT, and one page for the WHOLE map. The natural shape would be a
-            # month sub-question repeated inside the per-descendant instance, but
-            # that is a repeating group nested in a repeating group and this
-            # substrate has no primitive for it. So the map is flattened onto one
-            # answer carrying the shared `MM:AMOUNT` grammar, and
-            # DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID carries the structure the
-            # widget cannot.
-            #
-            # Shown unconditionally rather than gated on the child's age. The page
-            # that needs it most is the period a child turns three, which is
-            # computable from the birth date on a sibling page -- but the increase
-            # also reaches a child under three all year, whose spend is equally
-            # expressible here, and a gate would tell the operator this question
-            # does not apply to them in a year where it does.
-            id=_GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
-            widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_GASTOS_MENSUALES_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_GASTOS_MENSUALES_HELP_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            answer_validator_ids=(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID,),
-        ),
-        FlowPage(
-            id=_NIF_PAGE_ID,
-            widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_NIF_PROMPT_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_TAX_ID_LOCALE_KEY),
-            required=False,
-            answer_type=str,
-            answer_validator_ids=(DESCENDANT_NIF_VALIDATOR_ID,),
-        ),
+        *_descendant_identity_pages(relation_choices, adoption_token.value, acogimiento_visibility),
+        *_descendant_circumstance_pages(operation),
+        *_descendant_maternity_pages(),
     )
 
 
@@ -804,9 +631,9 @@ def build_descendant_count_page(operation: PinnedAuthorityOperation) -> FlowPage
     return FlowPage(
         id=DESCENDANTS_COUNT_PAGE_ID,
         widget=FlowWidgetKind.INTEGER,
-        prompt=_locale_ref(_COUNT_PROMPT_LOCALE_KEY),
-        help=_locale_ref(_COUNT_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
+        prompt=locale_copy_ref(_COUNT_PROMPT_LOCALE_KEY),
+        help=locale_copy_ref(_COUNT_HELP_LOCALE_KEY),
+        format_hint=locale_copy_ref(FORMAT_UNITS_LOCALE_KEY),
         # Optional with an explicit zero default: a natural-person walk that never
         # mentions descendants declares zero (the correct tax semantics and the
         # interactive prefill), and the scripted driver fills the page from this
@@ -822,7 +649,7 @@ def build_descendant_group(operation: PinnedAuthorityOperation) -> FlowRepeating
     """Build the relationship-aware descendant group under a pinned operation."""
     return FlowRepeatingGroup(
         id=DESCENDANTS_GROUP_ID,
-        title=_locale_ref(_GROUP_TITLE_LOCALE_KEY),
+        title=locale_copy_ref(_GROUP_TITLE_LOCALE_KEY),
         count_from=DESCENDANTS_COUNT_PAGE_ID,
         pages=_build_descendant_pages(operation),
     )
@@ -849,7 +676,7 @@ def attach_descendant_group(
     sections: list[FlowSection] = []
     attached = False
     for section in definition.sections:
-        if section.id == _FAMILIA_SECTION_ID:
+        if section.id == FAMILIA_SECTION_ID:
             sections.append(
                 section.model_copy(
                     update={"items": (*section.items, count_page, descendant_group)},
@@ -860,7 +687,7 @@ def attach_descendant_group(
             sections.append(section)
     if not attached:
         raise ValueError(
-            f"attach_descendant_group: definition {definition.id!r} has no {_FAMILIA_SECTION_ID!r} section",
+            f"attach_descendant_group: definition {definition.id!r} has no {FAMILIA_SECTION_ID!r} section",
         )
     flow_validator_ids = definition.flow_validator_ids
     for validator_id in (DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID):
@@ -879,9 +706,239 @@ __all__ = [
     "DESCENDANT_GASTOS_VALIDATOR_ID",
     "DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID",
     "DESCENDANT_MESES_VALIDATOR_ID",
+    "DESCENDANT_NAME_VALIDATOR_ID",
     "DESCENDANT_NIF_VALIDATOR_ID",
     "DESCENDANT_PAGE_IDS",
     "attach_descendant_group",
     "build_descendant_count_page",
     "build_descendant_group",
 ]
+
+
+def _descendant_identity_pages(
+    relation_choices: tuple[FlowChoice, ...], adoption_value: str, acogimiento_visibility: FlowVisibility
+) -> tuple[FlowPage, ...]:
+    return (
+        FlowPage(
+            id=_BIRTH_DATE_PAGE_ID,
+            widget=FlowWidgetKind.DATE,
+            prompt=locale_copy_ref(_BIRTH_DATE_PROMPT_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
+            required=True,
+            answer_type=str,
+        ),
+        FlowPage(
+            id=_RELACION_PAGE_ID,
+            widget=FlowWidgetKind.SELECT,
+            prompt=locale_copy_ref(_RELACION_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_RELACION_HELP_LOCALE_KEY),
+            choices=relation_choices,
+            # Optional with no default: leaving it unanswered means an ordinary
+            # descendant, which is both the record's own default and the
+            # overwhelming case, so the majority of walks answer nothing here.
+            required=False,
+            answer_type=str,
+        ),
+        # Both entry-date pages are GATED on the relación answer rather than shown
+        # unconditionally. The gate is per-instance -- the engine resolves a clause
+        # against `<group>#<index>.<page-id>` before the bare id -- so each
+        # descendant's dates follow that descendant's own relación. Gating is what
+        # keeps a tutela guardian or a temporal acogimiento carer from ever seeing a
+        # field the statute gives them no entitling value for; the cross-field
+        # verdict and the model validator then hold the same line for a scripted or
+        # resumed answer map, where visibility alone proves nothing.
+        FlowPage(
+            id=_INSCRIPCION_PAGE_ID,
+            widget=FlowWidgetKind.DATE,
+            prompt=locale_copy_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_INSCRIPCION_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            visible_when=FlowCondition(
+                page_id=_RELACION_PAGE_ID,
+                equals=adoption_value,
+            ),
+        ),
+        FlowPage(
+            id=_ACOGIMIENTO_PAGE_ID,
+            widget=FlowWidgetKind.DATE,
+            prompt=locale_copy_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            # Shown for an adoptado record too, and that is the cap-not-restart rule
+            # made reachable: a fostered-then-adopted child's window is measured
+            # from the earlier placement, so without this page the operator could
+            # only record the later event and the engine would grant three fresh
+            # periods on top of the ones already run.
+            visible_when=acogimiento_visibility,
+        ),
+    )
+
+
+def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPage, ...]:
+    return (
+        FlowPage(
+            id=_DISCAPACIDAD_PAGE_ID,
+            widget=FlowWidgetKind.SELECT,
+            prompt=locale_copy_ref(_DISCAPACIDAD_PROMPT_LOCALE_KEY),
+            choices=_discapacidad_choices(operation),
+            required=False,
+            answer_type=str,
+        ),
+        FlowPage(
+            id=_FALLECIMIENTO_PAGE_ID,
+            widget=FlowWidgetKind.DATE,
+            prompt=locale_copy_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+        ),
+        FlowPage(
+            id=_CONVIVENCIA_PAGE_ID,
+            widget=FlowWidgetKind.CONFIRM,
+            prompt=locale_copy_ref(_CONVIVENCIA_PROMPT_LOCALE_KEY),
+            default="true",
+            required=False,
+            answer_type=bool,
+        ),
+        FlowPage(
+            # SELECT with an explicit no rather than CONFIRM, because this axis is
+            # genuinely tri-state and a CONFIRM cannot express "unanswered". Unset
+            # never assimilates; only an explicit yes does. Gated on a NON-cohabiting
+            # answer, since the question only arises when cohabitation fails - a
+            # cohabiting descendant already qualifies and asking would invite an
+            # answer that changes nothing.
+            id=_DEPENDENCIA_PAGE_ID,
+            widget=FlowWidgetKind.SELECT,
+            prompt=locale_copy_ref(_DEPENDENCIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_DEPENDENCIA_HELP_LOCALE_KEY),
+            choices=_DEPENDENCIA_CHOICES,
+            required=False,
+            answer_type=str,
+            visible_when=FlowCondition(page_id=_CONVIVENCIA_PAGE_ID, equals="false"),
+        ),
+        FlowPage(
+            id=_CUSTODIA_COMPARTIDA_PAGE_ID,
+            widget=FlowWidgetKind.CONFIRM,
+            prompt=locale_copy_ref(_CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY),
+            default="false",
+            required=False,
+            answer_type=bool,
+        ),
+        FlowPage(
+            # DECIMAL, not INTEGER: the domain field is genuinely Decimal (Art.
+            # 58.1's strict-`>` ceiling comparison makes cents legally
+            # significant), and the CLI `--descendiente RENTAS=` flag and the
+            # checkpoint-persistence re-projection already carry two-decimal
+            # precision for this exact field. DECIMAL-widget pages keep
+            # `answer_type=str`, per the widget's own canonicalisation contract
+            # (the parsed amount rides as its `str(Decimal)` form, mirroring the
+            # invoice wizard's `_validate_taxable_base`).
+            id=_RENTAS_ANUALES_PAGE_ID,
+            widget=FlowWidgetKind.DECIMAL,
+            prompt=locale_copy_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_AMOUNT_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_DECLARACION_PROPIA_PAGE_ID,
+            widget=FlowWidgetKind.CONFIRM,
+            prompt=locale_copy_ref(_DECLARACION_PROPIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_DECLARACION_PROPIA_HELP_LOCALE_KEY),
+            default="false",
+            required=False,
+            answer_type=bool,
+        ),
+        FlowPage(
+            id=_PRORRATA_MINIMO_PAGE_ID,
+            widget=FlowWidgetKind.SELECT,
+            prompt=locale_copy_ref(_PRORRATA_MINIMO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_PRORRATA_MINIMO_HELP_LOCALE_KEY),
+            choices=_PRORRATA_MINIMO_CHOICES,
+            required=False,
+            answer_type=str,
+        ),
+    )
+
+
+def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
+    return (
+        FlowPage(
+            id=_MESES_MADRE_TRABAJO_PAGE_ID,
+            # TEXT rather than INTEGER: the answer names WHICH months qualified, so
+            # the same month grammar the guarderia map below uses carries it.
+            widget=FlowWidgetKind.TEXT,
+            prompt=locale_copy_ref(_MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_MESES_MADRE_TRABAJO_HELP_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID,
+            widget=FlowWidgetKind.INTEGER,
+            prompt=locale_copy_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_UNITS_LOCALE_KEY),
+            required=False,
+            answer_type=int,
+            answer_validator_ids=(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_GASTOS_GUARDERIA_PAGE_ID,
+            widget=FlowWidgetKind.INTEGER,
+            prompt=locale_copy_ref(_GASTOS_GUARDERIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_GASTOS_GUARDERIA_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_AMOUNT_LOCALE_KEY),
+            required=False,
+            answer_type=int,
+            answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            # TEXT, and one page for the WHOLE map. The natural shape would be a
+            # month sub-question repeated inside the per-descendant instance, but
+            # that is a repeating group nested in a repeating group and this
+            # substrate has no primitive for it. So the map is flattened onto one
+            # answer carrying the shared `MM:AMOUNT` grammar, and
+            # DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID carries the structure the
+            # widget cannot.
+            #
+            # Shown unconditionally rather than gated on the child's age. The page
+            # that needs it most is the period a child turns three, which is
+            # computable from the birth date on a sibling page -- but the increase
+            # also reaches a child under three all year, whose spend is equally
+            # expressible here, and a gate would tell the operator this question
+            # does not apply to them in a year where it does.
+            id=_GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
+            widget=FlowWidgetKind.TEXT,
+            prompt=locale_copy_ref(_GASTOS_MENSUALES_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_GASTOS_MENSUALES_HELP_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_NIF_PAGE_ID,
+            widget=FlowWidgetKind.TEXT,
+            prompt=locale_copy_ref(_NIF_PROMPT_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_TAX_ID_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_NIF_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_APELLIDOS_NOMBRE_PAGE_ID,
+            widget=FlowWidgetKind.TEXT,
+            prompt=locale_copy_ref(_APELLIDOS_NOMBRE_PROMPT_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_NAME_VALIDATOR_ID,),
+        ),
+    )

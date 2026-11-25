@@ -27,8 +27,8 @@ from ...core.operations import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    profile_operation_subject,
 )
-from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -62,7 +62,6 @@ from .credential_operations import (
     AuthCredentialSaveResult,
     resolve_auth_credential_access,
 )
-from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
 from .operator_scope_ports import OperatorScopePorts
@@ -139,7 +138,7 @@ class _PassphraseRotationSecret(BaseModel):
 
 
 def _require_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
-    if request.subject_ref != _profile_subject(str(profile_id)):
+    if request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("auth operation subject does not match its exact profile")
 
 
@@ -149,7 +148,7 @@ def _require_active_profile_subject[PayloadT: BaseModel](request: OperationReque
         profile_id = UUID(request.subject_ref.removeprefix("profile:"))
     except ValueError as error:
         raise ValueError("auth operation subject is not a canonical profile reference") from error
-    if request.subject_ref != _profile_subject(str(profile_id)):
+    if request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("auth operation subject is not a canonical profile reference")
     if require_active_bucket_id() != str(profile_id):
         raise ValueError("auth operation requires its profile to be active")
@@ -254,8 +253,12 @@ class AuthConfigureOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
+        configure: Callable[..., AuthConfigureResult] | None = None,
     ) -> None:
+        if configure is None:
+            from .operator import configure_operator_auth
+
+            configure = configure_operator_auth
         self._ports = ports
         self._configure = configure
 
@@ -299,8 +302,12 @@ class AuthSessionAcquireOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
+        acquire: Callable[..., Awaitable[AuthLoginResult]] | None = None,
     ) -> None:
+        if acquire is None:
+            from .operator import login_operator_auth
+
+            acquire = login_operator_auth
         self._ports = ports
         self._acquire = acquire
 
@@ -356,8 +363,12 @@ class AuthLogoutOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
+        logout: Callable[..., AuthLogoutResult] | None = None,
     ) -> None:
+        if logout is None:
+            from .operator_revocation import logout_operator_auth
+
+            logout = logout_operator_auth
         self._ports = ports
         self._logout = logout
 
@@ -397,8 +408,12 @@ class AuthResetOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        reset: Callable[..., AuthResetResult] = reset_operator_auth,
+        reset: Callable[..., AuthResetResult] | None = None,
     ) -> None:
+        if reset is None:
+            from .operator_revocation import reset_operator_auth
+
+            reset = reset_operator_auth
         self._ports = ports
         self._reset = reset
 
@@ -505,12 +520,23 @@ def build_auth_operation_definitions(
     ports: AuthOperationPorts,
     rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
     finalize_rotation: ProfileRotationFinalizer | None = None,
-    configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
-    acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
-    logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
-    reset: Callable[..., AuthResetResult] = reset_operator_auth,
+    configure: Callable[..., AuthConfigureResult] | None = None,
+    acquire: Callable[..., Awaitable[AuthLoginResult]] | None = None,
+    logout: Callable[..., AuthLogoutResult] | None = None,
+    reset: Callable[..., AuthResetResult] | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Build the owner registrations over the composed outer authority ports."""
+    # The runtime and clients import these request schemas and identities too.
+    # Only composing auth execution needs the operator's service graph; resolve
+    # it here, before an executor enters any operation effect or storage lock.
+    if configure is None or acquire is None or logout is None or reset is None:
+        from .operator import configure_operator_auth, login_operator_auth
+        from .operator_revocation import logout_operator_auth, reset_operator_auth
+
+        configure = configure_operator_auth if configure is None else configure
+        acquire = login_operator_auth if acquire is None else acquire
+        logout = logout_operator_auth if logout is None else logout
+        reset = reset_operator_auth if reset is None else reset
     return (
         _definition(
             definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
@@ -599,76 +625,74 @@ def build_auth_operation_registrations(
     )
     from .teardown_operation_access import resolve_auth_teardown_access
 
+    def registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+        if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=definition.request_type,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=PROFILE_ROTATION_RESULT_SCHEMA_ID,
+                    schema_version=1,
+                    model_type=ProfilePassphraseRotationResultProjection,
+                ),
+                result_projector=project_profile_rotation_result,
+                access_resolver=resolve_profile_rotation_access,
+            )
+        if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=AuthConfigureOperationRequest,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID, schema_version=2, model_type=AuthConfigurePublicResultV2
+                ),
+                result_projector=project_auth_configure_result,
+                access_resolver=resolve_auth_configure_access,
+            )
+        if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=AuthSessionAcquireOperationRequest,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+                    schema_version=1,
+                    model_type=AuthSessionAcquireOperationProjection,
+                ),
+                result_projector=project_auth_session_acquire_result,
+                access_resolver=resolve_auth_session_acquire_access,
+            )
+        if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}:
+            return OperationPublicDefinitionRegistrationV1.compose_request_result(
+                definition=definition,
+                public_result_type=AuthLogoutResult
+                if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
+                else AuthResetResult,
+                access_resolver=resolve_auth_teardown_access,
+            )
+        if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose_request_result(
+                definition=definition,
+                public_result_type=AuthCredentialSaveResult,
+                access_resolver=resolve_auth_credential_access,
+            )
+        return OperationPublicDefinitionRegistrationV1.compose_request_only(
+            definition=definition, request_schema_id=f"{definition.definition_id}.request"
+        )
+
     return tuple(
         sorted(
-            (
-                OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=definition.request_type,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=PROFILE_ROTATION_RESULT_SCHEMA_ID,
-                        schema_version=1,
-                        model_type=ProfilePassphraseRotationResultProjection,
-                    ),
-                    result_projector=project_profile_rotation_result,
-                    access_resolver=resolve_profile_rotation_access,
-                )
-                if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=AuthConfigureOperationRequest,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID,
-                        schema_version=2,
-                        model_type=AuthConfigurePublicResultV2,
-                    ),
-                    result_projector=project_auth_configure_result,
-                    access_resolver=resolve_auth_configure_access,
-                )
-                if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=AuthSessionAcquireOperationRequest,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
-                        schema_version=1,
-                        model_type=AuthSessionAcquireOperationProjection,
-                    ),
-                    result_projector=project_auth_session_acquire_result,
-                    access_resolver=resolve_auth_session_acquire_access,
-                )
-                if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose_request_result(
-                    definition=definition,
-                    public_result_type=AuthLogoutResult
-                    if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
-                    else AuthResetResult,
-                    access_resolver=resolve_auth_teardown_access,
-                )
-                if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}
-                else OperationPublicDefinitionRegistrationV1.compose_request_result(
-                    definition=definition,
-                    public_result_type=AuthCredentialSaveResult,
-                    access_resolver=resolve_auth_credential_access,
-                )
-                if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose_request_only(
-                    definition=definition, request_schema_id=f"{definition.definition_id}.request"
-                )
-                for definition in definitions
-            ),
+            (registration(definition) for definition in definitions),
             key=lambda item: item.contract.definition_id,
         )
     )

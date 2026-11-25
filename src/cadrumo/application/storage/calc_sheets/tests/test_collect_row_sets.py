@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.schema import BindingDefinition
-from ..engine import collect_row_sets
+from ..row_sets import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

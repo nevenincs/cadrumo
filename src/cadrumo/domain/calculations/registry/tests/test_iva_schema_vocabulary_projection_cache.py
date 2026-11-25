@@ -12,15 +12,16 @@ from ..authority import PinnedAuthorityOperation
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..iva_cash_accounting_vocabulary import resolve_iva_cash_accounting_catalogue
 from ..iva_schema_vocabulary_source import (
-    _BY_AUTHORITY,
-    _PROJECTIONS,
+    BY_AUTHORITY,
+    PROJECTIONS,
 )
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
+from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2026, 3, 10)
+_ON = date(filing_year_envelope().horizon, 3, 10)
 
 
 @dataclass
@@ -89,12 +90,12 @@ def test_a_collected_fact_releases_its_projections(operation: PinnedAuthorityOpe
     resolve_iva_cash_accounting_catalogue(
         effective_date=_ON, authority=_FixedFact(changed, operation.supported_filing_years())
     )
-    assert key in _PROJECTIONS
+    assert key in PROJECTIONS
 
     del changed
     gc.collect()
 
-    assert key not in _PROJECTIONS
+    assert key not in PROJECTIONS
 
 
 def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAuthorityOperation) -> None:
@@ -102,18 +103,18 @@ def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAut
     authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
-    resolve_iva_cash_accounting_catalogue(effective_date=date(2025, 6, 1), authority=authority)
+    resolve_iva_cash_accounting_catalogue(effective_date=date(_ON.year, 6, 1), authority=authority)
 
-    assert [query.effective_date for query in authority.queries] == [_ON, date(2025, 6, 1)]
+    assert [query.effective_date for query in authority.queries] == [_ON, date(_ON.year, 6, 1)]
 
 
 def test_a_collected_authority_releases_its_coordinates(operation: PinnedAuthorityOperation) -> None:
     authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     key = (id(authority), _ON)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
-    assert key in _BY_AUTHORITY
+    assert key in BY_AUTHORITY
 
     del authority
     gc.collect()
 
-    assert key not in _BY_AUTHORITY
+    assert key not in BY_AUTHORITY

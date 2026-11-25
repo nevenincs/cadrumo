@@ -6,16 +6,17 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
 from typing import IO
 
 import pytest
+from coverage import CoverageData
 
-from dev._paths import REPO_ROOT
-from dev.test_runs.logging import RunLog, _redirect_collection_output
+from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
+from dev.test_runs.logging import RunLog, redirect_collection_output
 from dev.test_runs.paths import (
     SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
@@ -66,20 +67,250 @@ class _FinishedRunLog(RunLog):
 def _top_level_environment() -> dict[str, str]:
     """Return an environment in which a child pytest mints its own run rather than joining this one."""
     environment = os.environ.copy()
-    run_root = environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
     environment.pop("CADRUMO_TEST_RUN_SCRATCH", None)
-    configured_logs = environment.get("CADRUMO_LOG_DIR", "").strip()
-    if (run_root is not None and run_root) and configured_logs:
-        # The parent logger exports its generated per-process product-log path.
-        # Drop that derived value with the run-root binding so an independent
-        # child can mint a fresh run; explicit overrides remain untouched.
-        generated_logs = Path(run_root) / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
-        if Path(configured_logs).resolve() == generated_logs.resolve():
-            environment.pop("CADRUMO_LOG_DIR", None)
     return environment
 
 
-def _child_run_log(result: subprocess.CompletedProcess[str]) -> Path:
+def _coverage_environment(log_root: Path) -> dict[str, str]:
+    """Give an independent configured pytest no injected module search path or inherited collector."""
+    environment = _top_level_environment()
+    for name in ("PYTHONPATH", "COVERAGE_FILE", "CADRUMO_TEST_COVERAGE_FILE", "CADRUMO_TEST_COVERAGE_WORKER_PID"):
+        environment.pop(name, None)
+    environment["CADRUMO_TEST_LOG_ROOT"] = str(log_root)
+    return environment
+
+
+def _coverage_probe(directory: Path, records: Path) -> Path:
+    directory.mkdir()
+    subject = directory / "coverage_subject.py"
+    subject.write_text(
+        'def choose(worker):\n    if worker == "gw0":\n        return 11\n    return 29\n', encoding="utf-8"
+    )
+    (directory / "test_coverage_probe.py").write_text(
+        "import json, os\n"
+        "from pathlib import Path\n"
+        "import pytest\n"
+        "from coverage_subject import choose\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_probe():\n"
+        "    worker = os.environ['PYTEST_XDIST_WORKER']\n"
+        "    assert choose(worker) in (11, 29)\n"
+        f"    (Path({str(records)!r}) / (worker + '.json')).write_text(json.dumps({{\n"
+        "        'coverage': os.environ['COVERAGE_FILE'],\n"
+        "        'run_root': os.environ['CADRUMO_TEST_RUN_ROOT'],\n"
+        "    }))\n",
+        encoding="utf-8",
+    )
+    return subject
+
+
+@pytest.mark.parametrize("invocation", ["console", "configured-temporary-cwd"])
+@pytest.mark.parametrize("explicit_destination", [False, True], ids=["default", "explicit"])
+def test_coverage_controller_combines_both_workers_in_one_admitted_file(
+    tmp_path: Path, invocation: str, explicit_destination: bool
+) -> None:
+    records = tmp_path / "records"
+    records.mkdir()
+    fixture = tmp_path / "fixture"
+    subject = _coverage_probe(fixture, records)
+    report = tmp_path / "coverage.json"
+    environment = _coverage_environment(tmp_path / "logs")
+    explicit = tmp_path / "explicit" / ".coverage"
+    if explicit_destination:
+        environment["COVERAGE_FILE"] = str(explicit)
+    if invocation == "console":
+        uv = shutil.which("uv")
+        assert uv is not None
+        command = [uv, "run", "--no-sync", "pytest"]
+        cwd = REPO_ROOT
+    else:
+        command = [sys.executable, "-m", "pytest", "-c", str(REPO_ROOT / "pyproject.toml")]
+        cwd = fixture
+    result = run_command(
+        [
+            *command,
+            "-q",
+            "-n2",
+            "--dist=each",
+            f"--cov={fixture}",
+            f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+            f"--cov-report=json:{report}",
+            "--cov-fail-under=100",
+            str(fixture),
+        ],
+        cwd=cwd,
+        environment=environment,
+        errors="replace",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    observed = {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in records.glob("*.json")}
+    assert set(observed) == {"gw0", "gw1"}
+    destinations = {Path(record["coverage"]) for record in observed.values()}
+    assert len(destinations) == 1
+    (destination,) = destinations
+    if explicit_destination:
+        assert destination == explicit
+    else:
+        (run_root,) = {Path(record["run_root"]) for record in observed.values()}
+        assert destination == run_root / "artifacts" / ".coverage"
+    assert list(destination.parent.glob(destination.name + ".*")) == []
+    data = CoverageData(basename=str(destination))
+    data.read()
+    assert set(data.lines(str(subject)) or ()) == {1, 2, 3, 4}
+    assert {(2, 3), (2, 4)} <= set(data.arcs(str(subject)) or ())
+    totals = json.loads(report.read_text(encoding="utf-8"))["totals"]
+    assert totals["percent_covered"] == 100
+    assert totals["covered_branches"] == totals["num_branches"] == 2
+
+
+def test_nested_coverage_gets_its_own_destination_without_replacing_its_parent(tmp_path: Path) -> None:
+    parent = tmp_path / "parent"
+    child = tmp_path / "child"
+    parent.mkdir()
+    child.mkdir()
+    subject = parent / "parent_subject.py"
+    subject.write_text("def before():\n    return 11\n\ndef after():\n    return 29\n", encoding="utf-8")
+    child_subject = child / "child_subject.py"
+    child_subject.write_text("def value():\n    return 7\n", encoding="utf-8")
+    child_file = tmp_path / "child-file.txt"
+    child_report = tmp_path / "child-report.json"
+    child_probe = child / "test_child_probe.py"
+    child_probe.write_text(
+        "import os\nfrom pathlib import Path\nimport pytest\nfrom child_subject import value\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_child():\n    assert value() == 7\n"
+        f"    Path({str(child_file)!r}).write_text(os.environ['COVERAGE_FILE'])\n",
+        encoding="utf-8",
+    )
+    child_arguments = [
+        "-m",
+        "pytest",
+        "-c",
+        str(REPO_ROOT / "pyproject.toml"),
+        "-q",
+        "-n0",
+        f"--cov={child}",
+        f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+        f"--cov-report=json:{child_report}",
+        "--cov-fail-under=100",
+        str(child_probe),
+    ]
+    parent_file = tmp_path / "parent-file.txt"
+    (parent / "test_parent_probe.py").write_text(
+        "import os, subprocess, sys\nfrom pathlib import Path\nimport pytest\n"
+        "from parent_subject import before, after\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_parent():\n    assert before() == 11\n"
+        f"    Path({str(parent_file)!r}).write_text(os.environ['COVERAGE_FILE'])\n"
+        f"    result = subprocess.run([sys.executable, *{child_arguments!r}], cwd={str(child)!r}, "
+        "capture_output=True, text=True, check=False)\n"
+        "    assert result.returncode == 0, result.stdout + result.stderr\n"
+        "    assert after() == 29\n",
+        encoding="utf-8",
+    )
+    parent_report = tmp_path / "parent-report.json"
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-q",
+            "-n1",
+            f"--cov={parent}",
+            f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+            f"--cov-report=json:{parent_report}",
+            "--cov-fail-under=100",
+            str(parent),
+        ],
+        cwd=parent,
+        environment=_coverage_environment(tmp_path / "logs"),
+        errors="replace",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    parent_destination = Path(parent_file.read_text(encoding="utf-8"))
+    child_destination = Path(child_file.read_text(encoding="utf-8"))
+    assert parent_destination != child_destination
+    for destination, measured, expected in (
+        (parent_destination, subject, {1, 2, 4, 5}),
+        (child_destination, child_subject, {1, 2}),
+    ):
+        data = CoverageData(basename=str(destination))
+        data.read()
+        assert set(data.lines(str(measured)) or ()) == expected
+        assert set(data.measured_files()) == {str(measured)}
+        assert list(destination.parent.glob(destination.name + ".*")) == []
+
+
+def test_coverage_startup_failure_releases_its_reserved_run_directory(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "conftest.py").write_text('raise RuntimeError("coverage bootstrap probe failure")\n', encoding="utf-8")
+    logs = tmp_path / "logs"
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-n0",
+            f"--confcutdir={fixture}",
+            f"--cov={fixture}",
+            str(fixture),
+        ],
+        cwd=fixture,
+        environment=_coverage_environment(logs),
+        errors="replace",
+    )
+
+    assert result.returncode == pytest.ExitCode.USAGE_ERROR, result.stdout + result.stderr
+    assert "coverage bootstrap probe failure" in result.stderr
+    assert list(logs.rglob("*-pytest-*")) == []
+
+
+def test_coverage_refuses_output_outside_the_admitted_temporary_tree(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    environment = _coverage_environment(tmp_path / "logs")
+    refused = REPO_ROOT / "coverage-refused-output" / ".coverage"
+    assert not refused.parent.exists()
+    environment["COVERAGE_FILE"] = str(refused)
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-n0",
+            f"--cov={fixture}",
+            str(fixture),
+        ],
+        cwd=fixture,
+        environment=environment,
+        errors="replace",
+    )
+
+    assert result.returncode == pytest.ExitCode.USAGE_ERROR, result.stdout + result.stderr
+    assert "COVERAGE_FILE" in result.stderr
+    assert not refused.parent.exists()
+
+
+def _run_child_pytest(*pytest_arguments: str, env: dict[str, str]) -> CommandResult:
+    return run_command(
+        [sys.executable, "-m", "pytest", *pytest_arguments],
+        cwd=REPO_ROOT,
+        environment=env,
+        errors="replace",
+    )
+
+
+def _child_run_log(result: CommandResult) -> Path:
     """Return the run log a finished child pytest controller announced."""
     match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
     assert match is not None, result.stdout + result.stderr
@@ -123,36 +354,28 @@ def test_a_refused_removal_is_recorded_in_the_run_log_and_never_raised(tmp_path:
 
 
 def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/setup_skip_probe.py",
         env=_top_level_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
     assert result.returncode == pytest.ExitCode.OK, output
     scratch = _scratch_of(run_log)
     assert not scratch.exists(), f"a passing run left its scratch behind: {scratch}"
-    # The run's own logs sit under `.logs/test-runs`, not in the scratch, and survive it.
+    # The run's own logs sit under `.tmp/logs/test-runs`, not in the scratch, and survive it.
     assert run_log.with_name("run.json").is_file()
     assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
 
 
 def test_a_failing_run_removes_its_scratch() -> None:
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/failing_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/failing_probe.py",
         env=_top_level_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -177,15 +400,11 @@ def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
 
     Released at session end, the snapshot and the scratch around it go with the run.
     """
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -195,17 +414,37 @@ def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
     assert not scratch.exists()
 
 
+def test_deselected_prorrata_suite_does_not_retain_authority_at_collection() -> None:
+    """A collected but deselected suite never starts its authority lease lifetime."""
+    result = _run_child_pytest(
+        "--collect-only",
+        "-q",
+        "-n0",
+        "-m",
+        "serial",
+        "src/cadrumo/adapters/persistence/profile/tests/test_prorrata_lifecycle_atomic_sources.py",
+        env=_registry_reading_environment(),
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.NO_TESTS_COLLECTED, output
+        assert "the shared registry authority stayed open" not in output, output
+        assert "was created in a different Context" not in output, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+        assert not scratch.exists()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
     """Workers read the controller's snapshot and are gone before the controller removes it."""
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n", "2", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n",
+        "2",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
 
@@ -216,23 +455,12 @@ def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
 
 
 def test_a_failing_run_that_read_the_registry_removes_its_scratch() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "dev/test_runs/tests/authority_probe.py",
-            "dev/test_runs/tests/failing_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
+        "dev/test_runs/tests/failing_probe.py",
         env=_registry_reading_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
     scratch = _scratch_of(run_log)
@@ -246,15 +474,11 @@ def test_a_failing_run_that_read_the_registry_removes_its_scratch() -> None:
 
 def test_a_lease_left_open_is_reported_and_leaves_the_runs_verdict_alone() -> None:
     """A release refused under a live lease is reported, never raised, and the run still passes."""
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/authority_probe.py",
         env=_registry_reading_environment(leak_lease=True),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
     output, run_log = result.stdout + result.stderr, _child_run_log(result)
     scratch = _scratch_of(run_log)
@@ -276,7 +500,7 @@ def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Pat
     config.option.collectonly = True
     run_log = _FakeRunLog(transcript)
 
-    assert _redirect_collection_output(config, run_log)
+    assert redirect_collection_output(config, run_log)
     terminal._tw._file.write("<Module noisy_collection.py>\n")
     transcript.close()
 
@@ -287,24 +511,13 @@ def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Pat
 def test_real_child_pytest_persists_internal_error_traceback() -> None:
     environment = _top_level_environment()
     environment["CADRUMO_INTERNAL_ERROR_PROBE"] = "1"
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "-p",
-            "dev.test_runs.tests.internal_error_probe",
-            "dev/test_runs/tests/path_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "-p",
+        "dev.test_runs.tests.internal_error_probe",
+        "dev/test_runs/tests/path_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == pytest.ExitCode.INTERNAL_ERROR, result.stdout + result.stderr
@@ -318,15 +531,11 @@ def test_real_child_pytest_persists_internal_error_traceback() -> None:
 def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
     """A test skipped before its body still ends its ``RUN`` line with a verdict."""
     environment = _top_level_environment()
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/setup_skip_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == pytest.ExitCode.OK, result.stdout + result.stderr
@@ -347,25 +556,12 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     environment["CADRUMO_PYTEST_PATH_PROBE"] = str(report)
     environment["XDG_CACHE_HOME"] = str(ambient_cache)
     configured_storage = tmp_path / "configured-storage"
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = ""
     environment["CADRUMO_STORAGE_ROOT"] = str(configured_storage)
-    environment["CADRUMO_LOG_DIR"] = "diagnostic-logs"
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "dev/test_runs/tests/path_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n0",
+        "dev/test_runs/tests/path_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
@@ -375,11 +571,10 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
     # The child inherits machine-managed tool paths unchanged.
     assert paths["tool_cache_home"] == str(ambient_cache)
-    assert paths["log_dir"] == str(configured_storage / "diagnostic-logs")
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch
     storage_root = Path(paths["storage_root"]).resolve()
-    assert storage_root.parent == Path(paths["storage_temp_root"]).resolve()
+    assert storage_root.parent == Path(paths["stdlib_temp"]).resolve()
     assert Path(json.loads((run_root / "run.json").read_text(encoding="utf-8"))["scratch"]).resolve() == scratch
 
 
@@ -396,28 +591,17 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
     records.mkdir()
     environment = _top_level_environment()
     environment["CADRUMO_WORKER_BASETEMP_PROBE"] = str(records)
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n",
-            "2",
-            # `each` rather than the default `load`: the probe's tests are fast
-            # enough that load-balancing hands every one of them to the first
-            # free worker, which proves nothing about two workers at once.
-            "--dist",
-            "each",
-            "dev/test_runs/tests/worker_basetemp_probe.py",
-        ],
-        cwd=REPO_ROOT,
+    result = _run_child_pytest(
+        "-q",
+        "-n",
+        "2",
+        # `each` rather than the default `load`: the probe's tests are fast
+        # enough that load-balancing hands every one of them to the first
+        # free worker, which proves nothing about two workers at once.
+        "--dist",
+        "each",
+        "dev/test_runs/tests/worker_basetemp_probe.py",
         env=environment,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr

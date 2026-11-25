@@ -21,6 +21,7 @@ from datetime import date
 import pytest
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -31,6 +32,8 @@ from ..family_types import GuarderiaMonthSpend
 from ..guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 _FIELD = "probe"
 
@@ -156,7 +159,9 @@ class TestFlagDoor:
     """The ``--descendiente GASTOS_GUARDERIA_MENSUAL=`` key."""
 
     def test_the_flag_carries_the_map_onto_the_record(self) -> None:
-        parsed = parse_descendiente_flag("NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180")
+        parsed = parse_descendiente_flag(
+            f"NACIMIENTO={date(EXERCISE - 3, 4, 15).isoformat()},GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180"
+        )
         assert parsed.gastos_guarderia_mensuales == (
             GuarderiaMonthSpend(month=1, amount_euros=180),
             GuarderiaMonthSpend(month=9, amount_euros=210),
@@ -174,13 +179,13 @@ class TestFlagDoor:
         """
         with pytest.raises(ProfileAnswerTypeError, match="GASTOS_GUARDERIA_MENSUAL"):
             parse_descendiente_flag(
-                "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=900,GASTOS_GUARDERIA_MENSUAL=1:100",
+                f"NACIMIENTO={date(EXERCISE - 3, 4, 15).isoformat()},GASTOS_GUARDERIA=900,GASTOS_GUARDERIA_MENSUAL=1:100",
             )
 
     def test_a_zero_annual_figure_does_not_collide_with_a_map(self) -> None:
         """Zero states no annual spend, so it contradicts nothing."""
         parsed = parse_descendiente_flag(
-            "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=0,GASTOS_GUARDERIA_MENSUAL=1:100",
+            f"NACIMIENTO={date(EXERCISE - 3, 4, 15).isoformat()},GASTOS_GUARDERIA=0,GASTOS_GUARDERIA_MENSUAL=1:100",
         )
         assert parsed.gastos_guarderia_euros == 0
         assert parsed.gastos_guarderia_mensuales == (GuarderiaMonthSpend(month=1, amount_euros=100),)
@@ -188,7 +193,9 @@ class TestFlagDoor:
     def test_an_unknown_neighbouring_key_is_still_refused(self) -> None:
         """The new key must not have widened the accepted set by accident."""
         with pytest.raises(ProfileAnswerTypeError, match="GASTOS_GUARDERIA_MENSUALES"):
-            parse_descendiente_flag("NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUALES=1:100")
+            parse_descendiente_flag(
+                f"NACIMIENTO={date(EXERCISE - 3, 4, 15).isoformat()},GASTOS_GUARDERIA_MENSUALES=1:100"
+            )
 
 
 class TestFactRoundTrip:
@@ -202,7 +209,7 @@ class TestFactRoundTrip:
     ) -> DescendantInfo:
         """Typed rather than ``**kwargs: object``, so the checker sees the real fields."""
         return DescendantInfo(
-            birth_date=date(2021, 4, 15),
+            birth_date=date(EXERCISE - 3, 4, 15),
             gastos_guarderia_euros=gastos_guarderia_euros,
             gastos_guarderia_mensuales=gastos_guarderia_mensuales,
         )
@@ -246,7 +253,7 @@ class TestFactRoundTrip:
         """
         first = self._child(gastos_guarderia_mensuales=parse_guarderia_mensual("1:100", field=_FIELD))
         second = DescendantInfo(
-            birth_date=date(2019, 2, 2),
+            birth_date=date(EXERCISE - 5, 2, 2),
             gastos_guarderia_mensuales=parse_guarderia_mensual("6:300;7:300", field=_FIELD),
         )
 
@@ -287,7 +294,7 @@ class TestStoredValueAntiTautology:
     ) -> None:
         facts = dict(
             descendant_facts_from_list(
-                [DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_mensuales=())],
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_mensuales=())],
             ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia_mensuales"] = corrupted
@@ -321,7 +328,9 @@ class TestStoredValueAntiTautology:
         test proving it works passes, so nothing signals the hole.
         """
         facts = dict(
-            descendant_facts_from_list([DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=900)]),
+            descendant_facts_from_list(
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_euros=900)]
+            ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia"] = corrupted
 
@@ -337,7 +346,9 @@ class TestStoredValueAntiTautology:
         traded that diagnostic for an untranslated ``ValueError`` naming nothing.
         """
         facts = dict(
-            descendant_facts_from_list([DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=900)]),
+            descendant_facts_from_list(
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_euros=900)]
+            ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia"] = "nine hundred"
 

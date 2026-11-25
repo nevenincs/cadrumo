@@ -10,6 +10,7 @@ direction is a credential.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Event
 from typing import TYPE_CHECKING
@@ -27,21 +28,33 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRequested,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
-from cadrumo_client.contracts.service_access import ServiceCapability
+from cadrumo_client.contracts.service_access import ServiceCapability, ServiceLease
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_runtime.contracts.worker_authorization import WorkerModelRun
 
 if TYPE_CHECKING:
-    from .profile_connection_services import ServiceConnection
     from .profile_connections import RuntimeProfileConnections
+    from .service_connection_records import ServiceConnection
 
 _LOOKUP_ANSWER_SECONDS = 30.0
 """How long a lane lookup waits for the service; it reads settings and runs nothing."""
 
-_ANSWER_MARGIN_SECONDS = 20.0
-"""Time beyond a run's own deadline for the service to report the outcome it reached."""
+_ANSWER_MARGIN_SECONDS = 120.0
+"""Time beyond a run's own deadline for the service to start the run and report the outcome it reached.
+
+Starting a run on a lane whose model runs on this computer loads the model
+first, which the service allows 90 s; the run's deadline counts from its start.
+"""
+
+_TRANSFER_SECONDS = 10
+"""How long a request's frames may take, counted from when they are due, never from dispatch.
+
+Waiting for the guards and the peer recheck is the runtime's queueing, not the service's time.
+"""
+
+_REPLY_WRITE_SECONDS = 5
 
 
 @dataclass
@@ -50,6 +63,7 @@ class PendingModelRun:
 
     profile_id: UUID
     connection_id: UUID
+    lease_id: UUID
     command: WorkerModelRun
     body: bytearray = field(repr=False)
     answered: Event = field(default_factory=Event)
@@ -85,7 +99,11 @@ class ProfileConnectionModelRunsMixin:
                 body[:] = bytes(len(body))
                 return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
             pending = PendingModelRun(
-                profile_id=profile_id, connection_id=service.lease.connection_id, command=command, body=body
+                profile_id=profile_id,
+                connection_id=service.lease.connection_id,
+                lease_id=service.lease.lease_id,
+                command=command,
+                body=body,
             )
             self._model_runs[run_id] = pending
         self._events.publish(
@@ -99,7 +117,7 @@ class ProfileConnectionModelRunsMixin:
         wait = _LOOKUP_ANSWER_SECONDS if command.header is None else command.header.deadline_seconds
         try:
             if not pending.answered.wait(wait + (0 if command.header is None else _ANSWER_MARGIN_SECONDS)):
-                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.DEADLINE_EXCEEDED))
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.TIMEOUT))
         finally:
             with self._guard:
                 self._model_runs.pop(run_id, None)
@@ -114,38 +132,95 @@ class ProfileConnectionModelRunsMixin:
         for run in waiting:
             run.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
 
+    def _withdraw_lease(self: RuntimeProfileConnections, service: ServiceConnection) -> None:
+        """Withdraw the service's lease once no disclosure admitted under it is still being written.
+
+        Called under ``self._guard``. Once the lease is cleared no fetch can claim
+        it; a fetch already writing finishes its bounded output first. Every run
+        bound to the withdrawn lease is then failed, so no retirement is published
+        while a disclosure under that lease is in flight, and none follows it.
+        """
+        lease = service.lease
+        service.lease = None
+        while service.disclosing:
+            self._disclosures.wait()
+        if lease is None:
+            return
+        for run in self._model_runs.values():
+            if run.lease_id == lease.lease_id:
+                run.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+
     def model_run_fetch(
         self: RuntimeProfileConnections,
         context: ConnectionContext,
         channel: ByteChannel,
         request: ModelRunFetchRequest,
     ) -> None:
-        """Hand the waiting request to the service it was announced to, once."""
-        deadline = time.monotonic() + 10
+        """Hand the waiting request to the service it was announced to, once.
+
+        The lease the run was announced under fences the disclosure: it must still
+        be the service's exact lease after the profile and peer are rechecked, and
+        its withdrawal waits until the bounded header and body writes end. When
+        the recheck finds only the service's attended session lapsed, nothing is
+        disclosed and the run keeps waiting: the person's approval stands, and
+        the service fetches again under the session its claim issues anew.
+        """
         with self._guard:
             pending = self._model_runs.get(request.run_id)
-            admitted = _admitted_lease(self, context, request)
-            if pending is None or not admitted or pending.connection_id != context.connection_id or pending.fetched:
+            service = self._services.get(context.connection_id)
+            lease = None if service is None else service.lease
+            if (
+                pending is None
+                or service is None
+                or lease is None
+                or not _admitted_lease(self, context, request)
+                or not fetch_pending_matches(pending, context, lease)
+            ):
                 return _refuse(self, context, channel, request.request_id)
             pending.fetched = True
-        if not _service_still_admitted(self, context, channel, request):
-            pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
-            return _refuse(self, context, channel, request.request_id)
-        command = pending.command
-        write_document(
-            channel,
-            ModelRunFetched(
-                request_id=request.request_id,
-                runtime_boot_id=self.boot,
-                connection_id=context.connection_id,
-                run_id=request.run_id,
-                role=command.role,
-                header=command.header,
-                body_byte_count=len(pending.body),
-            ),
-            deadline=deadline,
-        )
-        write_secret_chunks(channel, pending.body, deadline=deadline)
+        if not service_still_admitted(self, context, channel, request):
+            with self._guard:
+                lapsed = session_lapsed_under_standing_lease(self, context, service, lease, request.run_id, pending)
+                if lapsed:
+                    # Only the service's short attended session ended; the person's approval stands. The run
+                    # waits for the fetch the service makes again once a claim has issued that session anew.
+                    pending.fetched = False
+            if not lapsed:
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+            return _refuse(
+                self,
+                context,
+                channel,
+                request.request_id,
+                code=AccessDenialCode.SESSION_INACTIVE if lapsed else AccessDenialCode.OPERATION_DENIED,
+            )
+        with self._guard:
+            if service.lease is not lease:
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+                return _refuse(self, context, channel, request.request_id)
+            service.disclosing += 1
+        try:
+            command = pending.command
+            deadline = time.monotonic() + _TRANSFER_SECONDS
+            write_document(
+                channel,
+                ModelRunFetched(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    run_id=request.run_id,
+                    role=command.role,
+                    task_kind=command.task_kind,
+                    header=command.header,
+                    body_byte_count=len(pending.body),
+                ),
+                deadline=deadline,
+            )
+            write_secret_chunks(channel, pending.body, deadline=deadline)
+        finally:
+            with self._guard:
+                service.disclosing -= 1
+                self._disclosures.notify_all()
 
     def model_run_complete(
         self: RuntimeProfileConnections,
@@ -153,16 +228,24 @@ class ProfileConnectionModelRunsMixin:
         channel: ByteChannel,
         request: ModelRunCompleteRequest,
     ) -> None:
-        """Take the service's answer to a request it fetched and wake the worker that waits for it."""
-        deadline = time.monotonic() + 10
+        """Take the service's answer to a request it fetched and wake the worker that waits for it.
+
+        The service controls how long the answer's text takes to arrive, so the
+        admission seen before it is read grants nothing afterwards: the profile,
+        the peer and the exact lease are checked again once it is in, and the
+        answer is recorded under the guard that a lease withdrawal holds.
+        """
         with self._guard:
             pending = self._model_runs.get(request.run_id)
+            service = self._services.get(context.connection_id)
+            lease = None if service is None else service.lease
             admitted = _admitted_lease(self, context, request)
         outcome = request.outcome
-        if not admitted or not _service_still_admitted(self, context, channel, request):
+        if not admitted or not service_still_admitted(self, context, channel, request):
             return _refuse(self, context, channel, request.request_id)
         text = bytearray()
         if outcome.text_byte_count:
+            deadline = time.monotonic() + _TRANSFER_SECONDS
             write_document(
                 channel,
                 SecretReady(
@@ -174,13 +257,21 @@ class ProfileConnectionModelRunsMixin:
         accepted = False
         if (
             pending is not None
-            and pending.connection_id == context.connection_id
-            and pending.fetched
-            and _answers_its_phase(pending.command, outcome)
+            and completion_pending_matches(pending, context, request)
+            and service_still_admitted(self, context, channel, request)
         ):
-            pending.answer(outcome, text)
-            accepted = True
-        else:
+            with self._guard:
+                if completion_is_current(
+                    service,
+                    lease,
+                    self._services.get(context.connection_id),
+                    self._model_runs.get(request.run_id),
+                    pending,
+                    lambda: _admitted_lease(self, context, request),
+                ):
+                    pending.answer(outcome, text)
+                    accepted = True
+        if not accepted:
             text[:] = bytes(len(text))
         write_document(
             channel,
@@ -191,8 +282,72 @@ class ProfileConnectionModelRunsMixin:
                 run_id=request.run_id,
                 accepted=accepted,
             ),
-            deadline=deadline,
+            deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
         )
+
+
+def fetch_pending_matches(pending: PendingModelRun, context: ConnectionContext, lease: ServiceLease) -> bool:
+    """Allow only the announced service to fetch a request once."""
+    return pending.connection_id == context.connection_id and pending.lease_id == lease.lease_id and not pending.fetched
+
+
+def session_lapsed_under_standing_lease(
+    connections: RuntimeProfileConnections,
+    context: ConnectionContext,
+    service: ServiceConnection,
+    lease: ServiceLease,
+    run_id: UUID,
+    pending: PendingModelRun,
+) -> bool:
+    """Whether a failed recheck found only the service's own session ended, under the same unwithdrawn lease.
+
+    The caller holds the guard. The status read clears the connection's session
+    when that session has ended; an ended person's session withdraws the lease,
+    and a failed peer recheck leaves the session in place, so neither counts.
+    """
+    connection = connections._connections.get(context.connection_id)
+    return (
+        connections._services.get(context.connection_id) is service
+        and service.lease is lease
+        and connection is not None
+        and connection.session_id is None
+        and connections._model_runs.get(run_id) is pending
+        and not pending.answered.is_set()
+    )
+
+
+def completion_pending_matches(
+    pending: PendingModelRun | None, context: ConnectionContext, request: ModelRunCompleteRequest
+) -> bool:
+    """Match the fetched proof owner and answer to the announced phase."""
+    return (
+        pending is not None
+        and pending.connection_id == context.connection_id
+        and pending.lease_id == request.lease_id
+        and pending.fetched
+        and _answers_its_phase(pending.command, request.outcome)
+    )
+
+
+def completion_is_current(
+    service: ServiceConnection | None,
+    lease: ServiceLease | None,
+    current_service: ServiceConnection | None,
+    current_pending: PendingModelRun | None,
+    pending: PendingModelRun | None,
+    admitted: Callable[[], bool],
+) -> bool:
+    """Recheck the same lease and unanswered owner while holding the guard."""
+    return (
+        service is not None
+        and lease is not None
+        and service.lease is lease
+        and current_service is service
+        and pending is not None
+        and current_pending is pending
+        and admitted()
+        and not pending.answered.is_set()
+    )
 
 
 def _model_run_service(connections: RuntimeProfileConnections, profile_id: UUID) -> ServiceConnection | None:
@@ -240,7 +395,7 @@ def _admitted_lease(
     )
 
 
-def _service_still_admitted(
+def service_still_admitted(
     connections: RuntimeProfileConnections,
     context: ConnectionContext,
     channel: ByteChannel,
@@ -261,14 +416,24 @@ def _service_still_admitted(
 
 
 def _answers_its_phase(command: WorkerModelRun, outcome: ModelRunOutcome) -> bool:
-    """A lookup is answered by a lane or a refusal, a run by a served run or a refusal."""
+    """A lookup is answered by a lane, a run by a served run.
+
+    Each may instead be answered by a refusal.
+    """
     if outcome.refusal is not None:
         return True
-    return outcome.lane is not None if command.header is None else outcome.served is not None
+    if command.header is not None:
+        return outcome.served is not None
+    return outcome.lane is not None
 
 
 def _refuse(
-    connections: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request_id: UUID
+    connections: RuntimeProfileConnections,
+    context: ConnectionContext,
+    channel: ByteChannel,
+    request_id: UUID,
+    *,
+    code: AccessDenialCode = AccessDenialCode.OPERATION_DENIED,
 ) -> None:
     write_document(
         channel,
@@ -276,9 +441,9 @@ def _refuse(
             request_id=request_id,
             runtime_boot_id=connections.boot,
             connection_id=context.connection_id,
-            code=AccessDenialCode.OPERATION_DENIED,
+            code=code,
         ),
-        deadline=time.monotonic() + 5,
+        deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
     )
 
 

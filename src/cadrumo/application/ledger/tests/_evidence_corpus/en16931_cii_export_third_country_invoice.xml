@@ -82,7 +82,7 @@
           <ram:CountryID>ES</ram:CountryID>
         </ram:PostalTradeAddress>
         <ram:SpecifiedTaxRegistration>
-          <ram:ID schemeID="VA">ESB12345674</ram:ID>
+          <ram:ID schemeID="VA">ESB00015016</ram:ID>
         </ram:SpecifiedTaxRegistration>
       </ram:SellerTradeParty>
       <ram:BuyerTradeParty>

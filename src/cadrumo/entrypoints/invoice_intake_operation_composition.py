@@ -16,9 +16,9 @@ from ..application.invoices.catalogue_intake_operation_ports import (
     InvoiceIntakePorts,
     InvoiceIntakeProviderAdmission,
 )
+from ..application.ledger.column_roles import ColumnRoleReaderUnavailable
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
-from ..core.errors.hierarchy import CadrumoError
 from ..core.field_role import FieldRole
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.currency.models import EurRateLookup
@@ -60,16 +60,17 @@ def build_invoice_intake_ports(
 
     reasons: list[str] = []
 
-    def mapper(headers: Sequence[str]) -> Sequence[FieldRole] | None:
+    # A reader that could not be asked is returned as such, so the book refuses
+    # with the verdict naming its setup instead of claiming missing columns.
+    def mapper(headers: Sequence[str]) -> Sequence[FieldRole] | ColumnRoleReaderUnavailable | None:
         admit_provider()
         try:
-            from ..adapters.outbound.llm.column_role_mapping import map_column_roles
+            from ..adapters.outbound.llm.column_role_mapping import resolve_header_roles
         except ImportError:
             return None
-        try:
-            proposal = map_column_roles(headers)
-        except CadrumoError:
-            return None
+        proposal = resolve_header_roles(headers)
+        if proposal is None or isinstance(proposal, ColumnRoleReaderUnavailable):
+            return proposal
         reasons.extend(
             f"column {item.column_index} {item.header!r}: proposed role {item.proposed_role!r} is not a permitted role"
             for item in proposal.rejected_role_proposals

@@ -60,13 +60,13 @@ class GuardedCalculationRevisionMigration:
     ) -> None:
         """Refuse a concurrent legacy addition without running a hidden write."""
         from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-        from .calculation_revision_override_migration import _MIGRATION_MESSAGE, rekey_calculation_revision_overrides
+        from .calculation_revision_override_migration import MIGRATION_MESSAGE, rekey_calculation_revision_overrides
 
         catalogue = repository.load(operation=operation)
         if rekey_calculation_revision_overrides(catalogue, operation=operation).changed:
             raise CalculationRevisionPersistenceError(
                 "calculation revisions changed after migration preparation",
-                translated_message=_MIGRATION_MESSAGE,
+                translated_message=MIGRATION_MESSAGE,
                 context={"reason": "relation_override_migration_required_after_preparation"},
             )
 

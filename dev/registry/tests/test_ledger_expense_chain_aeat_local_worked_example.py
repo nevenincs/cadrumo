@@ -6,7 +6,7 @@ other half: it drives the example's described PURCHASE facts through the
 production expense aggregation and the registry's own expense bindings, and
 checks the figures the manual prints.
 
-The example (Manual practico de Renta 2024, Parte 1, Cap. 7, caso practico of
+The example (Manual practico de Renta, Parte 1, Cap. 7, caso practico of
 the medico radiologo, extracted markdown L19807-L19965). Its gastos, quoted::
 
     RETA del titular de la actividad             3.300   (L19829)
@@ -54,10 +54,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation.renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    aggregate_renta_ledger_expenses,
-)
+from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses
+from cadrumo.application.aggregation.renta_ledger_models import RentaLedgerAggregationIssueReason
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -65,18 +63,20 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_FILING_YEAR = 2024
+#: Every bundled Renta manual edition prints the example, so the newest of them is the one it is built from.
+_FILING_YEAR = max(manual_editions_printing("renta", "un local adquirido por el matrimonio"))
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
 _BUCKET = "8c2f817f-ca4d-4527-97f0-9e71dee6589f"  # was 'bucket-aeat-local-gasto-worked-example'
 
@@ -130,7 +130,7 @@ _OTHER_ROWS: tuple[tuple[str, Decimal, SpendingCategory], ...] = (
 
 def _modelo_100_revision() -> ModeloRevision:
     """The committed Modelo 100 revision the expense bindings resolve against."""
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     return build_snapshot(
         modelo,
         catalogues,

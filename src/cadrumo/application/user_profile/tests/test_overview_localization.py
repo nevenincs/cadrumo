@@ -19,13 +19,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.config import override_settings
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
@@ -42,11 +42,11 @@ _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 def _record() -> UserProfileRecord:
     """A minimal record; the walk is schema-driven so facts are incidental."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -177,4 +177,14 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
         overview = build_profile_overview(record, schema=schema)
     projected = {field.path for section in overview.sections for field in section.fields}
 
-    assert projected == (set(schema.field_paths) - namespaces) | {instance_path}
+    # The record states no taxpayer entity type, so a field that concerns only
+    # one type is not offered; that rule has its own test.
+    restricted = {
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if schema.entity_types_of(section.key, field.key)
+    }
+    assert restricted, "no field is restricted to an entity type, which would make the carve-out vacuous"
+
+    assert projected == (set(schema.field_paths) - namespaces - restricted) | {instance_path}

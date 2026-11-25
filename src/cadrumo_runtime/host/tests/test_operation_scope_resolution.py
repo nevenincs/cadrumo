@@ -10,8 +10,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -39,11 +39,7 @@ from cadrumo.application.operations.models import (
 )
 from cadrumo.application.operations.operation_definition import build_single_phase_definition
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
@@ -52,19 +48,24 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from .. import operation_authority
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -100,8 +101,8 @@ class _CustodyWitness(ProfileWorkerCustody):
             return self.session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    @asynccontextmanager
+    async def section_off_loop(self, session_id: UUID) -> AsyncGenerator[None]:
         self.require(session_id)
         self.section_tasks.append(asyncio.current_task())
         yield
@@ -130,14 +131,18 @@ class _PermitWitness(WorkerAuthorizationClient):
         self.released = 0
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         self.requests.append(request)
         self.tasks.append(asyncio.current_task())
         try:
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield WorkerAuthorizationLease(connections=self.connections, request=request)
         finally:
             self.released += 1
 
@@ -274,9 +279,11 @@ def harness(authority_operation: PinnedAuthorityOperation, tmp_path: Path) -> _H
     operation_identity = OperationIdentity(
         operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=request.subject_ref
     )
-    authority.bind(
-        operation_identity.operation_id,
-        WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request),
+    asyncio.run(
+        authority.bind(
+            operation_identity.operation_id,
+            WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request),
+        )
     )
     return _Harness(authority, custody, client, reader, operation_identity, request)
 
@@ -364,7 +371,7 @@ async def test_every_action_and_held_require_resolves_freshly_without_lending_pe
     harness: _Harness, action: AccessAction
 ) -> None:
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
     caller = asyncio.current_task()
     async with harness.authority.guard(harness.identity, action):
         await harness.authority.require(identity=harness.identity, request=harness.request, action=action)
@@ -400,7 +407,7 @@ async def test_an_unregistered_fault_of_a_fresh_submissions_resolver_refuses_the
 
     assert (refused.value.reason, refused.value.request_faults) == (AutomationCustodyCode.INVALID, ())
     assert refused.value.__cause__ is None and refused.value.__suppress_context__
-    logged = [record.getMessage() for record in caplog.records]
+    logged = [record.getMessage() for record in delivered_records(caplog, operation_authority.__name__)]
     assert logged == [f"fresh submission stopped by an unexpected fault exception_type={fault_type.__name__}"]
     assert not harness.client.requests and not harness.custody.section_tasks
 
@@ -429,7 +436,7 @@ async def test_a_fault_of_an_admitted_operations_resolver_is_not_answered_as_a_r
 ) -> None:
     """Once admitted, an act may already have taken effect, so its fault is never turned into a refusal here."""
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
     harness.reader.stopped_by = fault
 
     with pytest.raises(type(fault)) as raised:
@@ -451,9 +458,11 @@ def test_the_execution_caller_is_the_frontend_and_live_session_that_admitted_the
     agent_identity = OperationIdentity(
         operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=harness.request.subject_ref
     )
-    harness.authority.bind(
-        agent_identity.operation_id,
-        WorkerOperationBinding(session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, harness.request),
+    asyncio.run(
+        harness.authority.bind(
+            agent_identity.operation_id,
+            WorkerOperationBinding(session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, harness.request),
+        )
     )
 
     assert harness.authority.execution_caller(agent_identity) == OperationExecutionCaller(
@@ -480,3 +489,32 @@ def test_the_execution_caller_refuses_an_invocation_this_worker_did_not_admit(ha
     with pytest.raises(AutomationCustodyError) as retired:
         harness.authority.execution_caller(harness.identity)
     assert retired.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
+
+
+def test_the_sede_view_stream_binds_only_to_the_desktop_session_that_admitted_the_view(harness: _Harness) -> None:
+    """The view stream follows the person's desktop session; any other admission gets no stream."""
+    session = harness.custody.session
+    request = harness.request.model_copy(update={"definition_id": SEDE_VIEW_DEFINITION_ID})
+
+    def bound(frontend: OperationFrontendProjection) -> OperationIdentity:
+        identity = OperationIdentity(
+            operation_id=new_operation_id(), definition_id=SEDE_VIEW_DEFINITION_ID, subject_ref=request.subject_ref
+        )
+        asyncio.run(
+            harness.authority.bind(identity.operation_id, WorkerOperationBinding(session.session_id, frontend, request))
+        )
+        return identity
+
+    assert harness.authority.sede_view_session(bound(OperationFrontendProjection.DESKTOP)) == session.session_id
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.EXTERNAL_CLIENT):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            harness.authority.sede_view_session(bound(frontend))
+        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    # An invocation of another definition, or one this worker never bound, opens no view stream.
+    with pytest.raises(ProfileAccessRefusedError):
+        harness.authority.sede_view_session(harness.identity)
+    unbound = OperationIdentity(
+        operation_id=new_operation_id(), definition_id=SEDE_VIEW_DEFINITION_ID, subject_ref=request.subject_ref
+    )
+    with pytest.raises(ProfileAccessRefusedError):
+        harness.authority.sede_view_session(unbound)

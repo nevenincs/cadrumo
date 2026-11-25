@@ -33,8 +33,6 @@ modelo:
           dr303-11:
             label: Accrued VAT on intra-Community acquisitions of goods and services
               - Tax amount
-          dr303-111:
-            label: Corrective return - correction amount
           dr303-112:
             help: Payment on account for supplies of petrol, diesel and biofuels attributed
               to the State
@@ -214,8 +212,6 @@ modelo:
           dr303-70:
             label: Result - Amounts payable from previous self-assessments of the
               tax year and period
-          dr303-71:
-            help: Data declared in modelo 303, taken from the official record design.
           dr303-74:
             label: Additional information - Acquisitions under the cash accounting
               scheme - Taxable base
@@ -244,6 +240,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Tax base of the property developer's self-supply at the super-reduced
               rate (4%) (part of official box 01)
+          iva-base-autorepercutida-interior-devengado:
+            label: Taxable base of accrued reverse-charge VAT on domestic transactions
+              (LIVA art. 84.Uno.2; official box 12)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Add up the self-charged taxable base accrued on intra-Community
               acquisitions.
@@ -261,6 +260,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Taxable base of input VAT on domestic capital-goods transactions
               (part of official box 30)
+          iva-base-modificacion-bases-cuotas:
+            label: Taxable base of the modification the period's rectification invoices
+              make (LIVA art. 80 and art. 89; official box 14)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Taxable base of the modification you state yourself, for what the
+              catalogue holds no document for (official box 14)
           iva-base-repercutida-general:
             label: Taxable base of output VAT at the standard rate (21%) (part of
               official box 07)
@@ -311,6 +316,19 @@ modelo:
               property developer's self-supply (official box 03)
           iva-cuota-devengada-total:
             label: Total accrued VAT amount
+          iva-cuota-modificacion-bases-cuotas:
+            label: Tax amount of the modification the period's rectification invoices
+              make (LIVA art. 80 and art. 89; official box 15)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Tax amount of the modification you state yourself, for what the
+              catalogue holds no document for (official box 15)
+          iva-cuota-modificacion-recargo:
+            label: Recargo de equivalencia amount of the modification the period's
+              rectification invoices make (LIVA art. 80 and art. 161; official box
+              26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Recargo de equivalencia amount of the modification you state yourself,
+              for what the catalogue holds no document for (official box 26)
           iva-cuota-repercutida-general:
             help: Total output VAT calculated at the standard 21% rate.
             label: Output VAT amount at the standard rate (21%)
@@ -334,6 +352,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Input VAT on domestic capital-goods transactions (part of official
               box 31)
+          iva-importe-rectificacion:
+            label: Corrective return - correction amount
           iva-prorrata-porcentaje:
             label: General pro rata percentage (eligible turnover / total turnover
               × 100)
@@ -341,6 +361,10 @@ modelo:
             label: Annual turnover giving deduction rights
           iva-prorrata-volumen-total:
             label: Total annual turnover
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Transitional equivalence surcharge on the reduced rate - Tax amount
+          iva-recargo-equivalencia-super-reducido:
+            label: Equivalence surcharge on the super-reduced 4% rate - Tax amount
           iva-rectificacion-deducciones-importaciones-base:
             label: Adjustment of deductions on imports - Base (part of official box
               40)
@@ -362,6 +386,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Data declared in modelo 303, taken from the official record design.
+          iva-resultado-final:
             help: Data declared in modelo 303, taken from the official record design.
           iva-resultado-regimen-general:
             label: General regime result
@@ -809,6 +835,8 @@ modelo:
             heading: Payment, refund and bank account
           pais-banco:
             heading: Country code
+          prorrata-especial-no:
+            heading: No / not asked in this period
           reagp:
             heading: Agriculture, livestock and fishing scheme compensation
           rectificacion-devolucion:

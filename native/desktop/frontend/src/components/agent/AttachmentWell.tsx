@@ -3,7 +3,7 @@ import { readPx } from "../../shell/metrics";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { AttachmentTile } from "./AttachmentTile";
-import { formatSize } from "./files";
+import { formatSize } from "../../shared/numbers";
 import type { StagedAttachment } from "./types";
 
 /** The rows of tiles the well shows before it folds the rest away. */
@@ -35,6 +35,7 @@ export function AttachmentWell({
   onRemove,
   onRemoveAll,
   onShowAll,
+  expanded = false,
 }: {
   attachments: readonly StagedAttachment[];
   locale: string;
@@ -42,6 +43,8 @@ export function AttachmentWell({
   onRemoveAll?: () => void;
   /** Open the full list of staged files. */
   onShowAll?: () => void;
+  /** Shows every staged file in the full-list dialog. */
+  expanded?: boolean;
 }) {
   const t = useStrings();
   const list = useRef<HTMLUListElement>(null);
@@ -61,10 +64,13 @@ export function AttachmentWell({
   if (empty) return null;
 
   const capacity = columns * ROWS;
-  const folds = attachments.length > capacity;
+  const folds = !expanded && attachments.length > capacity;
   const shown = folds ? attachments.slice(0, capacity - 1) : attachments;
   const hidden = attachments.length - shown.length;
-  const total = attachments.reduce((sum, file) => sum + file.sizeBytes, 0);
+  // What the next message would carry: a refused file is counted on its own
+  // line and adds to neither the count nor the size.
+  const accepted = attachments.filter((file) => file.state !== "refused");
+  const total = accepted.reduce((sum, file) => sum + file.sizeBytes, 0);
   const uploading = attachments.filter(
     (file) => file.state === "uploading" || file.state === "queued",
   ).length;
@@ -73,7 +79,7 @@ export function AttachmentWell({
   return (
     <section
       aria-label={t("desktop.agent.attachments")}
-      className="grid gap-2 border-t px-2 pt-2 pb-2"
+      className="grid gap-2 px-2 pt-2 pb-2"
     >
       <ul
         ref={list}
@@ -103,7 +109,7 @@ export function AttachmentWell({
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         <span>
           {t("desktop.agent.files_summary", {
-            count: attachments.length,
+            count: accepted.length,
             size: formatSize(locale, total),
           })}
         </span>

@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.flows import FlowMode
 from ....core.i18n.render import tr
@@ -32,9 +32,9 @@ from ...flows.engine import FlowState, answer, first_unanswered_key, jump_to, ne
 from ...flows.errors import FlowSubmitError
 from ...flows.review import ReviewProjection, review
 from ...flows.scripted import run_scripted_flow
-from ..commands import _project_scripted_answers, setup_flow_definition
+from ..commands import project_scripted_answers, setup_flow_definition
 from ..flow_validators import TAXPAYER_PROJECTION_VALIDATOR_ID
-from .test_setup_runtime import _default_tokens, _individual_declaration_canonical
+from .test_setup_runtime import default_tokens, individual_declaration_canonical
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,7 +44,7 @@ _REPRESENTANTE_KEY = "wizard.setup.verifier.non_resident_requires_representante"
 
 def _canonical(**overrides: str) -> dict[str, str]:
     """Return the shared individual-declaration answer set with overrides applied."""
-    canonical = _individual_declaration_canonical()
+    canonical = individual_declaration_canonical()
     canonical.update(overrides)
     return canonical
 
@@ -57,9 +57,9 @@ def _walk(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> t
     commit) but stops short of the submit assertion, so the review
     projection can be inspected for a blocked run as well as a passing one.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         definition = setup_flow_definition(registry_setup_flow, operation=operation)
-    _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    _tokens, intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     state = start_flow(definition, mode=FlowMode.CREATE)
     while True:
         target = first_unanswered_key(definition, state)
@@ -77,12 +77,12 @@ def _review(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) ->
 
 def _submit_refusal(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> FlowSubmitError:
     """Drive the production scripted path and return its submit refusal."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         definition = setup_flow_definition(registry_setup_flow, operation=operation)
-    tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    tokens, _intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     with pytest.raises(FlowSubmitError) as caught:
         run_scripted_flow(
-            definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens(registry_setup_flow=registry_setup_flow)
+            definition, tokens, mode=FlowMode.CREATE, defaults=default_tokens(registry_setup_flow=registry_setup_flow)
         )
     return caught.value
 
@@ -97,7 +97,7 @@ def _blocking_keys(projection: ReviewProjection) -> set[str]:
 
 def test_setup_definition_names_the_taxpayer_projection_validator(*, registry_setup_flow: WizardFlow) -> None:
     """The composed definition carries the flow-scope validator id."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
         assert TAXPAYER_PROJECTION_VALIDATOR_ID in definition.flow_validator_ids
 
@@ -143,7 +143,7 @@ def test_legally_complete_profiles_still_reach_submit(*, registry_setup_flow: Wi
     construct cleanly, so the review surface stays submit-eligible and the
     production scripted path completes.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         valid_sets = (
             _canonical(),
             _canonical(**{"irpf-special-regime": "impatriado", "irpf-special-regime-start-date": "2024-01-15"}),
@@ -160,12 +160,12 @@ def test_legally_complete_profiles_still_reach_submit(*, registry_setup_flow: Wi
             projection = _review(canonical, registry_setup_flow=registry_setup_flow)
             assert projection.submit_eligible, sorted(_blocking_keys(projection))
             definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
-            tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+            tokens, _intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
             run_scripted_flow(
                 definition,
                 tokens,
                 mode=FlowMode.CREATE,
-                defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+                defaults=default_tokens(registry_setup_flow=registry_setup_flow),
             )
 
 

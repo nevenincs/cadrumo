@@ -289,6 +289,8 @@ continuidad_evidence = "Liquidacion [3]: tipo. El anexo I de Orden EHA/1981/2005
 number = "35"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints the rate at position 1121 as "Liquidación. Tipo %." at 3 enteros y 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-576-2008"] }
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2008-y-siguientes".casillas]]

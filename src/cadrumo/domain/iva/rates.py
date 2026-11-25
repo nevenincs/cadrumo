@@ -86,15 +86,16 @@ def rate_record_from_fact(
     """Project an authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
     payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    vocabulary_date = authority.supported_filing_years().date_envelope().clamp_coordinate(resolved.effective_date)
     return IvaRateRecord(
         member_state=require_eu_member_state(
             str(selectors["member_state"]),
-            effective_date=resolved.effective_date,
+            effective_date=vocabulary_date,
             authority=authority,
         ),
         kind=require_iva_rate_kind(
             str(selectors["kind"]),
-            effective_date=resolved.effective_date,
+            effective_date=vocabulary_date,
             authority=authority,
         ),
         pct=Decimal(str(payload["pct"])),
@@ -102,6 +103,8 @@ def rate_record_from_fact(
         effective_until=resolved.valid_to,
         legal_refs=resolved.legal_refs,
         source_refs=resolved.source_refs,
+        published_on_date=resolved.published_on_date,
+        projected_from_date=resolved.projected_from_date,
         supersedes_tier_default=bool(payload["supersedes_tier_default"]),
     )
 

@@ -15,9 +15,10 @@ import pytest
 
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.tests.delegating_channel import DelegatingChannel
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...host.profile_connections import RuntimeProfileConnections
@@ -31,24 +32,15 @@ pytestmark = [
 ]
 
 
-class _Counted:
+class _Counted(DelegatingChannel):
     """An accepted channel, recording each readiness wait its connection loop starts and how it ended."""
 
     def __init__(self, channel: ByteChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.waits = 0
         self.endings: list[bool | RefusalCode] = []
 
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
-
+    @override
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
         try:
@@ -58,12 +50,6 @@ class _Counted:
             raise
         self.endings.append(ready)
         return ready
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        self.channel.write_all(payload, deadline=deadline)
-
-    def close(self) -> None:
-        self.channel.close()
 
 
 class _Listener:
@@ -118,8 +104,9 @@ def test_an_idle_connection_waits_once_and_stop_ends_it_promptly(tmp_path: Path)
                 stop.set()
                 serving.result(timeout=10)
                 assert time.monotonic() - stopping < server.DRAIN_SECONDS / 3
-                # The stop itself ended the wait; it was not left to the drain's close.
-                assert listener.accepted[0].endings == [False]
+                # Shutdown signals the stop wake and closes owned channels. Either
+                # may win; both must end the one idle wait without a timer retry.
+                assert listener.accepted[0].endings in ([False], [RefusalCode.CONNECTION_CLOSED])
             finally:
                 client.close()
         finally:

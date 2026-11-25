@@ -12,11 +12,18 @@ from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, m
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessAllowed, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy, OperationAccessRequest
-from cadrumo_client.contracts.model_runs import MODEL_RUN_MAX_BODY_BYTES, ModelRunHeader, ModelRunOutcome
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_MAX_BODY_BYTES,
+    ModelRunHeader,
+    ModelRunOutcome,
+    ModelRunTaskKind,
+    require_run_carries_a_body,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal
 
 from .worker_enrollment import (
@@ -27,8 +34,11 @@ from .worker_enrollment import (
     WorkerApprovalRequest,
 )
 
-WORKER_AUTOMATION_INVENTORY_MAX_BYTES = 32 * 1024
-"""Conservative complete-inventory IPC limit, below the native 64 KiB frame."""
+WORKER_AUTOMATION_INVENTORY_MAX_BYTES = 1024 * 1024
+"""Largest complete inventory the runtime releases; its permit travels in bounded chunks."""
+
+WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES = WORKER_AUTOMATION_INVENTORY_MAX_BYTES + 1024
+"""Largest inventory permit: the inventory plus its fixed permit fields."""
 
 
 class WorkerAuthorizationRequest(BaseModel):
@@ -103,6 +113,14 @@ class WorkerOperationsAdvanced(BaseModel):
     request_id: UUID
     operation_ids: Annotated[tuple[OperationId, ...], Field(min_length=1, max_length=WORKER_OPERATIONS_ADVANCED_MAX)]
     records_changed: bool = False
+    # Those whose settlement committed, so the runtime's cue diagnostics keep their lines.
+    settled: Annotated[tuple[OperationId, ...], Field(max_length=WORKER_OPERATIONS_ADVANCED_MAX)] = ()
+
+    @model_validator(mode="after")
+    def _settled_are_reported(self) -> WorkerOperationsAdvanced:
+        if not set(self.settled) <= set(self.operation_ids):
+            raise ValueError("a settled operation is one of the reported operations")
+        return self
 
 
 type WorkerAuthorityRequest = Annotated[
@@ -110,12 +128,32 @@ type WorkerAuthorityRequest = Annotated[
 ]
 
 
+class WorkerAuthorityCheck(BaseModel):
+    """Ask whether one stage is admitted now, for a caller that runs no body under the answer.
+
+    The runtime evaluates admission and answers at once. It holds no fence and
+    issues no permit, so a COMMIT, whose fence is what it asks for, is never
+    checked this way.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["check"] = "check"
+    authority: WorkerAuthorityRequest
+
+    @model_validator(mode="after")
+    def _refuse_commit(self) -> WorkerAuthorityCheck:
+        if self.authority.request.action is AccessAction.COMMIT:
+            raise ValueError("a COMMIT holds its fence and is never only checked")
+        return self
+
+
 type WorkerAuthorityEnvelopeRequest = Annotated[
     WorkerAuthorizationRequest
     | WorkerResponseScopeRequest
     | WorkerAutomationInventoryRequest
     | WorkerApprovalRequest
-    | WorkerOperationsAdvanced,
+    | WorkerOperationsAdvanced
+    | WorkerAuthorityCheck,
     Field(discriminator="kind"),
 ]
 
@@ -146,6 +184,16 @@ class WorkerResponseScopePermit(BaseModel):
     expires_at: UtcInstant
 
 
+class WorkerAuthorityChecked(BaseModel):
+    """Admission held when the runtime answered; nothing is held once this is sent."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["checked"] = "checked"
+    request_id: UUID
+    runtime_boot_id: UUID
+    expires_at: UtcInstant
+
+
 class WorkerAutomationInventoryPermit(BaseModel):
     """Human inventory released only while this native authorization is held."""
 
@@ -156,6 +204,22 @@ class WorkerAutomationInventoryPermit(BaseModel):
     permit_id: UUID
     expires_at: UtcInstant
     inventory: AutomationInventory
+
+
+class WorkerAutomationInventoryTransfer(BaseModel):
+    """Announce one inventory permit, which follows as ordered chunks of its canonical JSON.
+
+    The worker accepts the permit only when the chunks reproduce this byte
+    count and digest and the permit names this request, boot and permit.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["automation_inventory_transfer"] = "automation_inventory_transfer"
+    request_id: UUID
+    runtime_boot_id: UUID
+    permit_id: UUID
+    byte_count: Annotated[int, Field(ge=2, le=WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES)]
+    payload_digest: ContentDigest
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,38 +248,11 @@ class WorkerAuthorizationReleased(BaseModel):
     permit_id: UUID
 
 
-class WorkerServerStart(BaseModel):
-    """Ask the runtime to start the model runtime's server under one held COMMIT fence.
-
-    The worker is contained, so a server it started itself would end with it.
-    The instruction names no program and no environment: the runtime resolves
-    both from its own settings.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["start_runtime_server"] = "start_runtime_server"
-    request_id: UUID
-    permit_id: UUID
-    command_id: UUID
-
-
-class WorkerServerStarted(BaseModel):
-    """Answer one start instruction; ``process_id`` is absent when the runtime started nothing."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["runtime_server_started"] = "runtime_server_started"
-    request_id: UUID
-    permit_id: UUID
-    command_id: UUID
-    runtime_boot_id: UUID
-    process_id: NonNegativeInt | None = None
-
-
 class WorkerModelRun(BaseModel):
     """Ask the runtime to have the profile's agent service answer one lookup or run.
 
-    Sent under a held START permit. A lookup carries no header and no body; a
-    run's body follows on secret frames. Nothing here, and nothing in the
+    Sent under a held START permit. A lookup names its role and task kind and carries no
+    header and no body; a run's body follows on secret frames. Nothing here, and nothing in the
     reply, is a credential.
     """
 
@@ -225,13 +262,15 @@ class WorkerModelRun(BaseModel):
     permit_id: UUID
     command_id: UUID
     role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    task_kind: ModelRunTaskKind | None = None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> WorkerModelRun:
-        if (self.header is None) != (self.body_byte_count == 0):
-            raise ValueError("a run carries a body and a lookup carries none")
+        require_run_carries_a_body(
+            header=self.header, role=self.role, task_kind=self.task_kind, body_byte_count=self.body_byte_count
+        )
         return self
 
 
@@ -250,12 +289,12 @@ class WorkerModelRunResult(BaseModel):
 class WorkerAuthorizationInstruction(
     RootModel[
         Annotated[
-            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerServerStart | WorkerModelRun,
+            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerModelRun,
             Field(discriminator="kind"),
         ]
     ]
 ):
-    """Only explicit release, an approval phase, a runtime server start or a model run may use a held fence."""
+    """Only explicit release, an approval phase or a model run may use a held fence."""
 
 
 class WorkerAuthorizationAcknowledgement(BaseModel):
@@ -271,7 +310,8 @@ class WorkerAuthorizationReply(
         Annotated[
             WorkerAuthorizationPermit
             | WorkerResponseScopePermit
-            | WorkerAutomationInventoryPermit
+            | WorkerAutomationInventoryTransfer
+            | WorkerAuthorityChecked
             | WorkerAuthorizationReleased
             | WorkerApprovalReady
             | WorkerApprovalPhaseResult
@@ -299,8 +339,17 @@ class WorkerAuthorizationOwner(Protocol):
         """Read inventory for the original human session while its fence is held."""
         ...
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
-        """Cue the connections observing these operations of the worker's profile; never blocks."""
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
+        """Cue the connections observing these operations of the worker's profile; never blocks.
+
+        ``settled`` names those whose settlement committed, for diagnostics only.
+        """
         ...
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:

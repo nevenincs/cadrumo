@@ -14,7 +14,11 @@ from cadrumo.application.auth.operation_definitions import (
 from cadrumo.application.auth.operator_results import AuthLoginResult
 from cadrumo.application.auth.session_acquire_operation_access import AuthSessionAcquireOperationProjection
 from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_client.commands.errors import (
     CliRecordedOperationError,
     CliRefusedBoundaryError,
@@ -102,5 +106,5 @@ def _auth_login_receipt_invalid(
         or (provider_kind is not None and projection.result.provider != provider_kind.value)
         or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
         or (completed.refusal_code is not None)
-        or (completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED})
+        or (completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT)
     )

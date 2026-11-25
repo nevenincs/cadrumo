@@ -22,7 +22,7 @@ from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileRecord
 from ..operator_actions.models import DeclaredNextAction
 from ..state_projection_auth import build_auth_readiness_without_live_backend
-from ..user_profile.completeness import iva_regime_required
+from ..user_profile.completeness import IVA_REGIME_PATH, schema_requirement_applies
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
@@ -32,7 +32,7 @@ from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_v
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-_ENROLMENT_KEY = "iva.regime"
+_ENROLMENT_KEY = IVA_REGIME_PATH
 """Profile key whose presence flips an IVA-liable operator profile into
 ``ready-to-file``.
 
@@ -98,7 +98,7 @@ def build_wizard_status(
         missing_required = validation.missing_required
         profile_present_keys = validation.present_keys
         profile_total_keys = validation.total_keys
-        enrolment_required = iva_regime_required(values)
+        enrolment_required = schema_requirement_applies(_ENROLMENT_KEY, values)
         enrolment_value = (values.get(_ENROLMENT_KEY) or "").strip()
         enrolment_ready = not enrolment_required or bool(enrolment_value)
         if enrolment_required and not enrolment_ready:
@@ -135,7 +135,7 @@ def build_wizard_status(
         profile_total_keys=profile_total_keys,
         auth_provider=auth_provider,
         login_ready=login_ready,
-        next_action=_next_wizard_action(
+        next_action=next_wizard_action(
             has_profile=record is not None,
             missing_required=missing_required,
             missing_enrolment=missing_enrolment,
@@ -145,7 +145,7 @@ def build_wizard_status(
     )
 
 
-def _next_wizard_action(
+def next_wizard_action(
     *,
     has_profile: bool,
     missing_required: tuple[str, ...],
@@ -227,19 +227,19 @@ def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSc
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     values: dict[str, str] = dict(record_to_path_values(record))
-    if not bool(values.get(_TAX_ID_PATH)):
-        _require_active_profile_tax_id(
+    if not bool(values.get(TAX_ID_PATH)):
+        require_active_profile_tax_id(
             values,
             active_profile=record.profile_id,
-            requirement=_grounded_tax_id_requirement(schema=schema),
+            requirement=grounded_tax_id_requirement(schema=schema),
         )
     return projection_for_taxpayer(record, schema=schema)
 
 
-_TAX_ID_PATH = "identity.tax_id"
+TAX_ID_PATH = "identity.tax_id"
 
 
-def _require_active_profile_tax_id(
+def require_active_profile_tax_id(
     values: Mapping[str, str],
     *,
     active_profile: str | None,
@@ -251,7 +251,7 @@ def _require_active_profile_tax_id(
     owners; this deterministic precondition owns the terminal refusal they
     feed and can be exercised from resolved facts alone.
     """
-    if bool(values.get(_TAX_ID_PATH)):
+    if bool(values.get(TAX_ID_PATH)):
         return
     raise WizardStatusError(
         translated_message="application.wizard.status.errors.missing_tax_id",
@@ -268,20 +268,17 @@ def _require_active_profile_tax_id(
     )
 
 
-def _grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
+def grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
     """Render the tax-identifier field as its operator label with legal grounding.
 
-    The refusal previously named the field by baking a selector token into its
-    sentence, which meant the operator read an identifier that appears nowhere
-    in the profile editor and that no translator could keep in step with the
-    schema. Reading the label from the schema is also what every other missing
-    profile fact refusal in this codebase does.
+    Reading the label from the schema, as every other missing profile fact
+    refusal does, keeps the name in step with the profile editor.
     """
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
-            _TAX_ID_PATH,
+            TAX_ID_PATH,
             schema=schema,
         ),
     )

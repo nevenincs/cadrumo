@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterator, Sequence
-from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -18,36 +17,27 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    profile_authority_contexts,
-    seed_test_profile_record,
-)
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-from .. import _runner as evaluation_runner
-from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
-from .._models import ExitCodeScenario
-from .._runner import check_exit_code_scenario
+from .. import runner
+from ..action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
+from ..models import ExitCodeScenario
+from ..runner import check_exit_code_scenario
+from .real_cli_support import seed_natural_person_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 
@@ -60,10 +50,10 @@ def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> I
             label="Exit-code golden-eval test profile",
         ) as profile,
     ):
-        original_invoker = evaluation_runner._invoke_canonical_cli
+        original_invoker = runner.invoke_canonical_cli
 
         def invoke_as_operator(argv: Sequence[str]) -> object:
-            program, path = evaluation_runner._command_program_path(tuple(argv))
+            program, path = runner.command_program_path(tuple(argv))
             if program is CommandProgram.AEAT:
                 return invoke_cached_cli(["--format", "json", *path])
             return original_invoker(argv)
@@ -71,38 +61,8 @@ def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> I
         # The evaluator still chooses and validates every command. Only this
         # fixture's Tax invocations inherit its real enrolled operator context.
         with pytest.MonkeyPatch.context() as invocation_context:
-            invocation_context.setattr(evaluation_runner, "_invoke_canonical_cli", invoke_as_operator)
+            invocation_context.setattr(runner, "invoke_canonical_cli", invoke_as_operator)
             yield profile
-
-
-def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
-    seed_test_profile_record(
-        create_user_profile_record(
-            context=profile_authority_contexts()[0],
-            profile_id=runtime_profile.bucket_id,
-            setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Exit Code Operator"),
-                UserProfileFact(path="identity.surnames", value="Golden Eval"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
-            ),
-        ),
-        root=runtime_profile.storage_root,
-        label="Exit-code golden-eval test profile",
-    )
 
 
 def _recovery_coverage() -> LeafConditionScenario:
@@ -131,12 +91,12 @@ def _dispatch_unprepared_m347_verify(runtime_profile: TestRuntimeProfile) -> tup
     This is the safe recovery chain: the declared recovery action calculates the
     exact work unit, and the runner retries the original verify leaf afterwards.
     """
-    _seed_natural_person_profile(runtime_profile)
+    seed_natural_person_profile(runtime_profile, name="Exit Code Operator", label="Exit-code golden-eval test profile")
     created = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "347", "--year", "2024", "--period", "0A",
+            "--modelo", "347", "--year", str(_FILING_YEAR), "--period", "0A",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -159,7 +119,7 @@ def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str
         evidence_values={
             "work_unit_id": work_unit_id,
             "modelo": "347",
-            "year": 2024,
+            "year": _FILING_YEAR,
             "period": "0A",
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
@@ -168,60 +128,10 @@ def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str
     ).verdict
 
 
-def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
-    """Seed one real actividad-economica income row for source-bound M130 casilla 01."""
-    # Transactions validate against registry facts, as they do under a CLI invocation's lease.
-    with bundled_indexed_authority().operation():
-        bucket_id = resolve_active_bucket_id()
-        assert bucket_id is not None, "test profile must install an active bucket pointer"
-        value_date = date(filing_year, 2, 15)
-        income = Transaction.model_validate(
-            {
-                "raw": RawTransaction(
-                    provider_transaction_id=f"exit-code-golden-income-{filing_year}",
-                    booked_date=value_date,
-                    value_date=value_date,
-                    amount=amount,
-                    currency="EUR",
-                    counterparty="Cliente SA",
-                    description="exit-code golden eval income",
-                    provenance=RawProvenance(
-                        source_path=Path(__file__),
-                        source_sha256="f" * 64,
-                        source_row_index=1,
-                        source_format=SourceFormat.MANUAL,
-                        ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
-                        provider_name="manual-ledger",
-                    ),
-                    raw_fields={"source_kind": "m130_exit_code_golden_income", "source_key": "exit-code-golden"},
-                ),
-                "direction": TransactionDirection.INCOMING,
-                "group_label": None,
-                "business_classification": BusinessClassification.BUSINESS,
-                "source_jurisdiction": "ES",
-                "business_pct": None,
-                "category_id": None,
-                "taxable_base": amount,
-                "iva_rate": None,
-                "iva_amount": None,
-                "irpf_category": "actividad_economica",
-                "purchase_invoice_evidence_id": None,
-                "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
-                "classified_by": "manual",
-            },
-        )
-        with open_test_profile_session(bucket_id):
-            existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            transactions = (*tuple(existing.transactions.values()), income)
-            TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions(transactions),
-            )
-
-
 def _dispatch_m130_verify_with_cross_period_finding(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any]]:
     """Dispatch a real M130 verify that reaches an explicit operator-decision outcome."""
-    _seed_natural_person_profile(runtime_profile)
-    _seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR)
+    seed_natural_person_profile(runtime_profile, name="Exit Code Operator", label="Exit-code golden-eval test profile")
+    seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR, source_key="exit-code-golden")
     created = invoke_cached_cli(
         [
             "--format", "json",

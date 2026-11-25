@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 6
 source_cell = "A6"
-ordinal = 1
+ordinal = "1"
 record_identity = "DP30303"
 
 [[entries]]
@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 7
 source_cell = "A7"
-ordinal = 2
+ordinal = "2"
 record_identity = "DP30303"
 
 [[entries]]
@@ -40,7 +40,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 8
 source_cell = "A8"
-ordinal = 3
+ordinal = "3"
 record_identity = "DP30303"
 
 [[entries]]
@@ -53,7 +53,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 9
 source_cell = "A9"
-ordinal = 4
+ordinal = "4"
 record_identity = "DP30303"
 
 [[entries]]
@@ -66,7 +66,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 10
 source_cell = "A10"
-ordinal = 5
+ordinal = "5"
 record_identity = "DP30303"
 
 [[entries]]
@@ -79,7 +79,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 11
 source_cell = "A11"
-ordinal = 6
+ordinal = "6"
 record_identity = "DP30303"
 
 [[entries]]
@@ -92,7 +92,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 12
 source_cell = "A12"
-ordinal = 7
+ordinal = "7"
 record_identity = "DP30303"
 
 [[entries]]
@@ -105,7 +105,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 13
 source_cell = "A13"
-ordinal = 8
+ordinal = "8"
 record_identity = "DP30303"
 
 [[entries]]
@@ -118,7 +118,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 14
 source_cell = "A14"
-ordinal = 9
+ordinal = "9"
 record_identity = "DP30303"
 
 [[entries]]
@@ -131,7 +131,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 15
 source_cell = "A15"
-ordinal = 10
+ordinal = "10"
 record_identity = "DP30303"
 
 [[entries]]
@@ -144,7 +144,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 16
 source_cell = "A16"
-ordinal = 11
+ordinal = "11"
 record_identity = "DP30303"
 
 [[entries]]
@@ -157,7 +157,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 17
 source_cell = "A17"
-ordinal = 12
+ordinal = "12"
 record_identity = "DP30303"
 
 [[entries]]
@@ -170,7 +170,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 18
 source_cell = "A18"
-ordinal = 13
+ordinal = "13"
 record_identity = "DP30303"
 
 [[entries]]
@@ -183,7 +183,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP30303"
 
 [[entries]]
@@ -196,7 +196,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "DP30303"
 
 [[entries]]
@@ -209,7 +209,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 21
 source_cell = "A21"
-ordinal = 16
+ordinal = "16"
 record_identity = "DP30303"
 
 [[entries]]
@@ -222,7 +222,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 22
 source_cell = "A22"
-ordinal = 17
+ordinal = "17"
 record_identity = "DP30303"
 
 [[entries]]
@@ -235,7 +235,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 23
 source_cell = "A23"
-ordinal = 18
+ordinal = "18"
 record_identity = "DP30303"
 
 [[entries]]
@@ -248,7 +248,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 24
 source_cell = "A24"
-ordinal = 19
+ordinal = "19"
 record_identity = "DP30303"
 
 [[entries]]
@@ -261,7 +261,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 25
 source_cell = "A25"
-ordinal = 20
+ordinal = "20"
 record_identity = "DP30303"
 
 [[entries]]
@@ -274,7 +274,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 26
 source_cell = "A26"
-ordinal = 21
+ordinal = "21"
 record_identity = "DP30303"
 
 [[entries]]
@@ -287,7 +287,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 27
 source_cell = "A27"
-ordinal = 22
+ordinal = "22"
 record_identity = "DP30303"
 
 [[entries]]
@@ -300,7 +300,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 28
 source_cell = "A28"
-ordinal = 23
+ordinal = "23"
 record_identity = "DP30303"
 
 [[entries]]
@@ -313,7 +313,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 29
 source_cell = "A29"
-ordinal = 24
+ordinal = "24"
 record_identity = "DP30303"
 
 [[entries]]
@@ -326,7 +326,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 30
 source_cell = "A30"
-ordinal = 25
+ordinal = "25"
 record_identity = "DP30303"
 
 [[entries]]
@@ -339,7 +339,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 31
 source_cell = "A31"
-ordinal = 26
+ordinal = "26"
 record_identity = "DP30303"
 
 [[entries]]
@@ -352,7 +352,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 32
 source_cell = "A32"
-ordinal = 27
+ordinal = "27"
 record_identity = "DP30303"
 
 [[entries]]
@@ -365,7 +365,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 33
 source_cell = "A33"
-ordinal = 28
+ordinal = "28"
 record_identity = "DP30303"
 
 [[entries]]
@@ -378,7 +378,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 34
 source_cell = "A34"
-ordinal = 29
+ordinal = "29"
 record_identity = "DP30303"
 
 [[entries]]
@@ -391,7 +391,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 35
 source_cell = "A35"
-ordinal = 30
+ordinal = "30"
 record_identity = "DP30303"
 
 [[entries]]
@@ -403,7 +403,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 36
 source_cell = "A36"
-ordinal = 31
+ordinal = "31"
 record_identity = "DP30303"
 
 [[entries]]
@@ -415,7 +415,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 37
 source_cell = "A37"
-ordinal = 32
+ordinal = "32"
 record_identity = "DP30303"
 
 [[entries]]
@@ -427,7 +427,7 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 38
 source_cell = "A38"
-ordinal = 33
+ordinal = "33"
 record_identity = "DP30303"
 
 [[entries]]
@@ -440,5 +440,5 @@ source_refs = ["aeat-dr-303-2024-early"]
 sheet = "DP30303"
 source_row = 39
 source_cell = "A39"
-ordinal = 34
+ordinal = "34"
 record_identity = "DP30303"

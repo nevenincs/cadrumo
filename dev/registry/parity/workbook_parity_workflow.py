@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from .workbook_parity_execution import _execution_runner_availability, detect_workbook_runner
+from .workbook_parity_execution import detect_workbook_runner, execution_runner_availability
 from .workbook_parity_libreoffice import run_workbook_with_libreoffice
 from .workbook_parity_models import (
     SyntheticInputSet,
@@ -33,16 +33,16 @@ from .workbook_parity_models import (
     WorkbookRunnerAvailability,
 )
 from .workbook_parity_output_ids import (
-    _missing_or_empty_output_refs,
-    _raise_output_id_mismatch,
-    _require_matching_output_ids,
-    _workbook_output_id_set,
+    missing_or_empty_output_refs,
+    raise_output_id_mismatch,
+    require_matching_output_ids,
+    workbook_output_id_set,
 )
 from .workbook_parity_scanning import (
-    _CELL_REF_VALUE_PATTERN,
+    CELL_REF_VALUE_PATTERN,
     WorkbookScanOptions,
-    _build_modelo_coverage,
     assert_workbook_scan_clean,
+    build_modelo_coverage,
     discover_workbooks,
     inventory_workbook_coverage,
 )
@@ -102,7 +102,7 @@ def run_registry_workbook_parity(
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle",
         )
-    _require_matching_output_ids("workbook output_cells", output_cells, "registry_outputs", registry_outputs)
+    require_matching_output_ids("workbook output_cells", output_cells, "registry_outputs", registry_outputs)
     workbook_inputs, registry_inputs, registry_binding_values = _collect_synthetic_inputs(snapshot, synthetic_input)
 
     workbook_values = run_workbook_with_libreoffice(
@@ -125,7 +125,7 @@ def run_registry_workbook_parity(
         output_id: registry_result.values[casilla_id] for output_id, casilla_id in registry_outputs.items()
     }
     legal_refs, source_refs = _registry_output_references(snapshot, registry_outputs)
-    runner = _execution_runner_availability(executable)
+    runner = execution_runner_availability(executable)
     return compare_registry_to_workbook(
         synthetic_input=synthetic_input,
         workbook=workbook,
@@ -200,7 +200,7 @@ def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> 
     Returns:
         The parsed :class:`WorkbookCellRef` with sheet and coordinate fields.
     """
-    match = _CELL_REF_VALUE_PATTERN.match(value)
+    match = CELL_REF_VALUE_PATTERN.match(value)
     if not match:
         raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
     raw_sheet = match.group("sheet")
@@ -270,24 +270,24 @@ def _validate_comparison_inputs(
     Mapping[WorkbookOutputId, tuple[LegalRefId, ...]],
     Mapping[WorkbookOutputId, tuple[SourceRefId, ...]],
 ]:
-    expected_ids = _workbook_output_id_set("expected workbook values", expected_workbook_values)
-    actual_ids = _workbook_output_id_set("actual registry values", actual_registry_values)
+    expected_ids = workbook_output_id_set("expected workbook values", expected_workbook_values)
+    actual_ids = workbook_output_id_set("actual registry values", actual_registry_values)
     if expected_ids != actual_ids:
-        _raise_output_id_mismatch(
+        raise_output_id_mismatch(
             "expected workbook values",
             expected_ids,
             "actual registry values",
             actual_ids,
         )
-    cell_ids = _workbook_output_id_set("workbook output cells", output_cells)
+    cell_ids = workbook_output_id_set("workbook output cells", output_cells)
     if cell_ids != expected_ids:
-        _raise_output_id_mismatch("workbook output cells", cell_ids, "compared output values", expected_ids)
+        raise_output_id_mismatch("workbook output cells", cell_ids, "compared output values", expected_ids)
     empty_legal_refs: dict[WorkbookOutputId, tuple[LegalRefId, ...]] = {}
     empty_source_refs: dict[WorkbookOutputId, tuple[SourceRefId, ...]] = {}
     legal_ref_map = legal_refs if (legal_refs is not None and legal_refs) else empty_legal_refs
     source_ref_map = source_refs if (source_refs is not None and source_refs) else empty_source_refs
-    missing_legal_refs = _missing_or_empty_output_refs(expected_ids, legal_ref_map)
-    missing_source_refs = _missing_or_empty_output_refs(expected_ids, source_ref_map)
+    missing_legal_refs = missing_or_empty_output_refs(expected_ids, legal_ref_map)
+    missing_source_refs = missing_or_empty_output_refs(expected_ids, source_ref_map)
     if missing_legal_refs:
         raise RegistryValidationError(
             f"workbook parity comparison missing legal_refs for outputs: {missing_legal_refs!r}",
@@ -361,7 +361,7 @@ def verify_workbook_backend(
         failed_count=failed_count,
         runner=runner,
         reports=reports,
-        modelo_coverage=_build_modelo_coverage(reports),
+        modelo_coverage=build_modelo_coverage(reports),
     )
     if fail_on_scan_error:
         assert_workbook_scan_clean(report)

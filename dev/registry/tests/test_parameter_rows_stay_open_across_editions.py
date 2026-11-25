@@ -38,6 +38,7 @@ from cadrumo.domain.calculations.registry.schema_formula import (
     KeyedBracketEntry,
     ParameterDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering, split_exercise_revisions
 
 from ..compiler.loader import load_modelo_declarations, load_modelo_directory
 
@@ -205,11 +206,13 @@ def _edition_pairs() -> Iterable[tuple[str, ModeloRevision, ModeloRevision]]:
                 yield str(modelo.id), earlier, later
 
 
-def test_parameter_audits_follow_declared_predecessors_across_2026_period_split() -> None:
+def test_parameter_audits_follow_declared_predecessors_across_the_period_split() -> None:
     pairs = {(modelo_id, str(earlier.id), str(later.id)) for modelo_id, earlier, later in _edition_pairs()}
+    early, late = split_exercise_revisions("303", early_period="1T", late_period="2T")
+    predecessor = revision_covering("303", early.valid_from.year - 1)
 
-    assert ("303", "2025", "2026-y-siguientes") in pairs
-    assert ("303", "2026-hasta-01-y-1t", "2026-y-siguientes") not in pairs
+    assert ("303", str(predecessor.id), str(late.id)) in pairs
+    assert ("303", str(early.id), str(late.id)) not in pairs
 
 
 def test_no_edition_restates_an_unchanged_row_its_predecessor_closed() -> None:

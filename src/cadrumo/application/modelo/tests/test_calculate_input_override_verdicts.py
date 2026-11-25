@@ -24,34 +24,33 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     row_field_template_records_by_casilla,
 )
-from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operator_actions.models import PreconditionVerdict
-from ..calculate_input import (
+from ..calculate_input import resolve_binding_overrides, resolve_casilla_overrides
+from ..calculate_input_validation import (
     ModeloCalculateBindingInputError,
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
-    _resolve_casilla_overrides,
-    _validated_binding_input_channel,
-    resolve_binding_overrides,
+    validated_binding_input_channel,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "calculate-override-verdict-bucket"
-_CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
+_CLOCK = datetime(1980, 1, 10, tzinfo=UTC)
 _WORK_UNIT_REVISION_ID = "b" * 64
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition("100")
 _PERIOD_CODE = "0A"
 _LEAF = "modelo.work.calculate"
 _UNDECLARED_CASILLA_KEY = "99999"
@@ -164,45 +163,13 @@ def test_unknown_binding_refusal_carries_its_bindings_list_verdict() -> None:
 
     # A caller that is not the calculate verb names no calculate target and gets no verdict.
     with pytest.raises(ModeloCalculateBindingInputError) as untargeted:
-        _validated_binding_input_channel(
+        validated_binding_input_channel(
             "no-such-binding-id",
             revision,
             known,
             enum_consumed_binding_ids(revision),
         )
     assert untargeted.value.precondition_failure is None
-
-
-def test_boolean_binding_encoding_refusal_carries_its_bindings_list_verdict() -> None:
-    work_unit = _work_unit("100")
-    revision = _revision("100")
-    enum_ids = enum_consumed_binding_ids(revision)
-    date_ids = revision_date_binding_ids(revision)
-    boolean_decimal_bindings = [
-        binding
-        for binding in revision.bindings
-        if boolean_binding_encoded_values(binding) and binding.id not in enum_ids and binding.id not in date_ids
-    ]
-    assert boolean_decimal_bindings, "the published revision no longer declares a decimal-encoded boolean binding"
-    binding = boolean_decimal_bindings[0]
-    accepted = ", ".join(option.encoded_value for option in boolean_binding_encoded_values(binding))
-
-    with pytest.raises(ModeloCalculateDecimalInputError) as exc_info:
-        resolve_binding_overrides({binding.id: "false"}, revision, work_unit=work_unit)
-
-    error = exc_info.value
-    assert error.translated_message == "application.modelo.errors.calculate_boolean_binding_encoding_invalid"
-    assert error.context is not None
-    assert set(error.context) == {"flag", "key", "value", "accepted", "mapping"}
-    verdict = _assert_verdict(
-        error,
-        work_unit=work_unit,
-        scenario_id="modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
-        condition_id="modelo.work.calculate.caller_overrides.binding_encoding_valid",
-        evidence_id="modelo.work.calculate.binding_override",
-        facts={"binding_id": binding.id, "accepted_encoded_values": accepted},
-    )
-    _assert_registry_listing_action(verdict, action_id="operator.modelo.bindings.list", modelo="100")
 
 
 def test_unknown_casilla_refusal_carries_its_casillas_verdict(*, operation: PinnedAuthorityOperation) -> None:
@@ -213,7 +180,7 @@ def test_unknown_casilla_refusal_carries_its_casillas_verdict(*, operation: Pinn
     assert not casilla_noncanonical_reference_targets(revision, _UNDECLARED_CASILLA_KEY)
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {_UNDECLARED_CASILLA_KEY: "1.00"},
             revision,
             operation=operation,
@@ -253,7 +220,7 @@ def test_a_row_field_casilla_is_refused_as_one_before_its_value_is_parsed(
     records = row_field_template_records_by_casilla(revision)[_ROW_FIELD_CASILLA_KEY]
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {_ROW_FIELD_CASILLA_KEY: "B12345678"},
             revision,
             operation=operation,
@@ -281,7 +248,7 @@ def test_a_former_detail_alias_is_an_undeclared_casilla(*, operation: PinnedAuth
     revision = _revision("180")
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {"perceptor.nif": "B12345678"},
             revision,
             operation=operation,

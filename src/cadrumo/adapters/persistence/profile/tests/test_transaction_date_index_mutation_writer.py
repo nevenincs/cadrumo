@@ -13,18 +13,18 @@ from sqlalchemy import delete
 from .....core.time.clock import now
 from .....domain.transactions.models import TransactionCatalogue
 from ...storage.errors import SecureObjectRevisionConflictError
-from ...storage.sql.orm import TransactionDateIndexRow
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.sql.tables import transaction_date_index_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
-from .test_transaction_date_index import _transaction
+from .test_transaction_date_index import dated_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 _BUCKET = "44444444-4444-4444-8444-444444444444"
 
 
 def _catalogue() -> TransactionCatalogue:
-    row = _transaction(
+    row = dated_transaction(
         provider_id="admitted-index",
         filing_date=date(2026, 2, 10),
         amount=Decimal("12.00"),
@@ -42,7 +42,9 @@ def test_non_routing_edit_preserves_index_state_and_reads_the_updated_row(tmp_pa
         current = next(iter(catalogue.values()))
         if not index_present:
             with profile.repository.guarded_session_scope() as session:
-                session.execute(delete(TransactionDateIndexRow).where(TransactionDateIndexRow.bucket_id == _BUCKET))
+                session.execute(
+                    delete(transaction_date_index_table).where(transaction_date_index_table.c.bucket_id == _BUCKET)
+                )
         replacement = current.model_copy(update={"group_label": "Reviewed", "modified_at": now()})
 
         repository.replace_if_current_with_secure_object_writes(
@@ -67,7 +69,9 @@ def test_lazy_index_rebuild_is_admitted_once_and_unchanged_sync_is_a_noop(tmp_pa
         catalogue = _catalogue()
         ordinary.save(catalogue)
         with profile.repository.guarded_session_scope() as session:
-            session.execute(delete(TransactionDateIndexRow).where(TransactionDateIndexRow.bucket_id == _BUCKET))
+            session.execute(
+                delete(transaction_date_index_table).where(transaction_date_index_table.c.bucket_id == _BUCKET)
+            )
         objects = SecureObjectRepository(
             engine=profile.repository.engine,
             namespace_registry=profile.repository.namespace_registry,
@@ -97,7 +101,9 @@ def test_concurrent_convergence_rejects_prepared_baseline_then_reloads_without_a
         catalogue = _catalogue()
         ordinary.save(catalogue)
         with profile.repository.guarded_session_scope() as session:
-            session.execute(delete(TransactionDateIndexRow).where(TransactionDateIndexRow.bucket_id == _BUCKET))
+            session.execute(
+                delete(transaction_date_index_table).where(transaction_date_index_table.c.bucket_id == _BUCKET)
+            )
 
         def admitted(write: Callable[[], None]) -> None:
             nonlocal admissions, confirmed

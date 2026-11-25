@@ -13,13 +13,13 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_compiled_registry_sources_are_typed_enum_members() -> None:
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     assert all(
         isinstance(binding.source, BindingSourceKind)
         for modelo in modelos

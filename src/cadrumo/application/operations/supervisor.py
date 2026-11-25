@@ -21,16 +21,10 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from . import supervisor_context as _supervisor_context
-from ._execution_context import DefinitionBoundContext
-from ._supervisor_drain import SupervisorDrainMixin, require_positive_duration
-from ._supervisor_execution import SupervisorExecutionMixin
-from ._supervisor_lease import OperationSupervisorLeaseMixin
-from ._supervisor_reconciliation import SupervisorReconciliationMixin
-from ._supervisor_settlement import SupervisorSettlementMixin
-from ._supervisor_submission import SupervisorSubmissionMixin
+from . import supervisor_context
 from .authorization import OperationExecutionAuthority
 from .event_replay import OperationEventCursor
+from .execution_context import DefinitionBoundContext
 from .financial_operand_contract import (
     CredentialFreeFinancialOperationRequest,
     OperationFinancialOperandRefusalCode,
@@ -81,6 +75,13 @@ from .secret_submission import (
     OperationSecretRequirement,
     zeroize_secret_buffer,
 )
+from .supervisor_drain import SupervisorDrainMixin, require_positive_duration
+from .supervisor_execution import SupervisorExecutionMixin
+from .supervisor_lease import OperationSupervisorLeaseMixin
+from .supervisor_reconciliation import SupervisorReconciliationMixin
+from .supervisor_settlement import SupervisorSettlementMixin
+from .supervisor_snapshot import SnapshotAdvance
+from .supervisor_submission import SupervisorSubmissionMixin
 from .typed_financial_operand_submission import OperationTypedFinancialOperandBroker
 
 if TYPE_CHECKING:
@@ -130,15 +131,20 @@ class OperationSupervisor(
         execution_timeout: timedelta | None = None,
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
-        response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
+        response_token_factory: Callable[[], str] = supervisor_context.new_response_token,
         execution_authority: OperationExecutionAuthority | None = None,
         typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
         ephemeral: OperationEphemeralRouting | None = None,
+        fixed_clock_instant: datetime | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner.
 
         ``ephemeral`` keeps operations declared ``EPHEMERAL`` in process
         memory; without it they are journaled durably like every other.
+        ``fixed_clock_instant`` is a profile worker's admitted test-host fixed
+        clock: each executor's application work runs at that instant, while
+        every journal, lease and receipt stamp this supervisor writes reads
+        ``clock`` outside that scope.
         """
         self.registry = registry
         self._execution_authority = execution_authority
@@ -151,6 +157,7 @@ class OperationSupervisor(
         self._owner_id = owner_id
         self._lease_token = lease_token_factory()
         self._clock = clock
+        self._fixed_clock_instant = fixed_clock_instant
         self._lease_duration = lease_duration
         self._execution_timeout = execution_timeout
         self._cleanup_timeout = cleanup_timeout
@@ -200,12 +207,12 @@ class OperationSupervisor(
         return await SupervisorSettlementMixin._acknowledge_cancellation(self, context_snapshot)
 
     @override
-    async def _set_cancellation_deferred(
+    async def set_cancellation_deferred(
         self,
         context_snapshot: OperationPersistedSnapshot,
         deferred: bool,
     ) -> OperationPersistedSnapshot:
-        return await SupervisorSettlementMixin._set_cancellation_deferred(self, context_snapshot, deferred)
+        return await SupervisorSettlementMixin.set_cancellation_deferred(self, context_snapshot, deferred)
 
     @override
     @staticmethod
@@ -439,7 +446,7 @@ class OperationSupervisor(
         return await self._admit(response.operation_id, lambda: SupervisorExecutionMixin.respond(self, response))
 
     @override
-    def _schedule_continuation(
+    def schedule_continuation(
         self,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,
@@ -447,7 +454,7 @@ class OperationSupervisor(
     ) -> None:
         if not self._accepting_admissions:
             raise ValueError("operation owner is draining")
-        SupervisorExecutionMixin._schedule_continuation(self, snapshot, definition, continuation)
+        SupervisorExecutionMixin.schedule_continuation(self, snapshot, definition, continuation)
 
     @override
     async def submit_ephemeral_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
@@ -657,11 +664,13 @@ class OperationSupervisor(
         )
         acknowledged = await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.SETTLING,
-            events=(event,),
-            cleanup_deadline=requested_at + self._lease_duration,
-            cancellation_requested_at=requested_at,
-            cancellation_acknowledged_at=requested_at,
+            SnapshotAdvance(
+                lifecycle=OperationLifecycle.SETTLING,
+                events=(event,),
+                cleanup_deadline=requested_at + self._lease_duration,
+                cancellation_requested_at=requested_at,
+                cancellation_acknowledged_at=requested_at,
+            ),
             discard_ephemeral_secret=True,
         )
         return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)

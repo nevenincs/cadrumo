@@ -28,6 +28,14 @@ from ..perceptor_clave_scope import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
 _DESCENDANTS = validated_casilla_id("perc.descendientes-menores-3-total")
 _CONTRACT = validated_casilla_id("perc.contrato-relacion")
 _UNSCOPED = validated_casilla_id("perc.percepcion-dineraria")

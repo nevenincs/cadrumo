@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -22,10 +23,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.modelo_export_support import (
-    seed_profile as _seed_profile,
-)
-from ....adapters.persistence.profile.tests.modelo_export_support import (
-    synthetic_valid_nif as _synthetic_valid_nif,
+    seed_profile,
+    synthetic_valid_nif,
 )
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -33,7 +32,6 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -71,8 +69,12 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import VerificationReport
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
+from .m303_annual_ledger_support import M303_LEDGER_CUOTA, seed_m303_period_cuotas
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+#: The quarterly Modelo 303 schedule needs the gran empresa condition (LIVA
+#: art. 121, RIVA art. 71) stated; these synthetic filers state it as a no.
+QUARTERLY_303_FILER_FACTS: dict[str, str] = {"censo.large_company": "false"}
 
 
 def external_filing_observations(*, casilla_values, snapshot):
@@ -107,7 +109,7 @@ def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
     return published_authority_operation().snapshot("303", filing_year=2026, period=period).snapshot_ref
 
 
-def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
+def blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
     now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
     source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
@@ -148,7 +150,7 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     )
 
 
-def _filed_history_only_wallet_decision(
+def filed_history_only_wallet_decision(
     *,
     taxpayer_nif: str,
     period: str = "2T",
@@ -218,14 +220,8 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
 
 
 def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-    }
+    """The operator-owned binding a Modelo 303 calculation takes; the cuotas come from the ledger."""
+    return {"modelo-303-profile-state-attribution-ratio": Decimal("100")}
 
 
 #: Manual, formula-operand "resultado" casillas the fichero-BOE completeness
@@ -239,7 +235,7 @@ def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
 #: rendered per the fichero-BOE parity gate
 #: (``modelo-export-mirrors-official-structure``) rather than silently
 #: omitting them.
-_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
+MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
     "18": Decimal("0.00"),
     "58": Decimal("0.00"),
     "68": Decimal("0.00"),
@@ -250,7 +246,7 @@ _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 }
 
 
-def _seed_modelo_303_1t_clean_state(
+def seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
     taxpayer_tax_id: str,
@@ -430,7 +426,7 @@ def _seed_modelo_303_1t_clean_state(
 
 
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
-    settings = Settings(cadrumo_local_storage_root=sidecar_root, cadrumo_active_profile="operator")
+    settings = Settings(cadrumo_storage_root=sidecar_root, cadrumo_active_profile="operator")
     objects = inspect_bucket_storage_runtime("operator", settings).secure_object_repository()
     return IvaWalletDecisionRepository(objects=objects), settings
 
@@ -457,10 +453,10 @@ def calculate_and_verify_modelo_303_revision(
     the revision is reloaded after verification so it carries the state the
     gate left it in.
     """
-    taxpayer_nif = _synthetic_valid_nif(12_345_678)
-    bucket_id = _seed_profile(
+    taxpayer_nif = synthetic_valid_nif(12_345_678)
+    bucket_id = seed_profile(
         tax_id=taxpayer_nif,
-        profile_overrides={"identity.surnames": "Test Surnames"},
+        profile_overrides={"identity.surnames": "Test Surnames", **QUARTERLY_303_FILER_FACTS},
     )
     snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     work_repo = WorkUnitCatalogueRepository()
@@ -480,20 +476,21 @@ def calculate_and_verify_modelo_303_revision(
         operation=operation,
     )
     binding_values = _modelo_303_engine_inputs()
-    if positive_result:
-        # The wallet-only decision applies EUR 1,200 of prior compensation.
-        # This deliberately exceeds that carry so public payment-election
-        # paths exercise a genuinely positive M303 result.
-        binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
-    if negative_result:
-        binding_values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("2000.00")
+    # The quarter's cuotas are ledger rows. The wallet-only decision applies
+    # EUR 1,200 of prior compensation; a positive result deliberately exceeds
+    # that carry so public payment-election paths see a genuinely positive M303.
+    seed_m303_period_cuotas(
+        work_unit.work_unit_id,
+        repercutido=Decimal("2400.00") if positive_result else M303_LEDGER_CUOTA,
+        soportado=Decimal("2000.00") if negative_result else Decimal("0.00"),
+    )
     if autoconsumo_promotor_base is not None:
         binding_values["modelo-303-autoconsumo-promotor-base"] = autoconsumo_promotor_base
 
     casilla_inputs = {
         "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
         "iva.prorrata-volumen-total": Decimal("100.00"),
-        **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
+        **MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
     }
     if casilla_111 is not None:
         casilla_inputs["111"] = casilla_111
@@ -503,7 +500,7 @@ def calculate_and_verify_modelo_303_revision(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     ) as _calculation_ports_481:
-        revision = calculate_modelo_revision(
+        revision = calculate_as_filer_enters(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs=casilla_inputs,
@@ -517,8 +514,8 @@ def calculate_and_verify_modelo_303_revision(
             filing_period_date=date(2026, 6, 30),
             ports=_calculation_ports_481,
             clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
-        )
-    _seed_modelo_303_1t_clean_state(
+        ).revision
+    seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,
         available_compensation=Decimal("1200.00"),

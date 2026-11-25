@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-27'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e643c12a23fde546c793e3b5b08db7d38d518473a2a93f6718dae46c209f7894'
+body_hash: 'sha256:22c4274bacf2de50054461c1062cf7375b05bf55f48436236a59f103fb36133a'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -19,7 +19,7 @@ related:
 
 ## Problem Statement
 
-The accepted 2025 activity-amortization authority requires an atomic validated
+The accepted activity-amortization authority requires an atomic validated
 schedule but leaves four implementation-defining contracts open: asset identity
 and acquisition linkage, forecast versus recorded history, Modelo 130
 projection, and mixed-use-home allocation. Those commitments must be fixed
@@ -67,7 +67,7 @@ blocks competing depreciation deductions without deleting acquisition evidence.
 
 ## Constraints
 
-- The complete 2025 material/intangible source must land atomically under
+- The complete material/intangible source must land atomically under
   `2026-08-23-amortization-casilla-mapping-adr`.
 - IVA identity and regularization remain governed by
   `2026-07-01-iva-bienes-inversion-regularizacion-adr`.
@@ -75,9 +75,9 @@ blocks competing depreciation deductions without deleting acquisition evidence.
 - Unknown opening history, missing allocation, unsupported authority, and
   collision are explicit incomplete states, never zero.
 - No frontend owns depreciation arithmetic or imports the other frontend.
-- Initial filing-grade support is tax year 2025, common-regime direct normal or
+- Initial filing-grade support is the first grounded tax year, common-regime direct normal or
   simplified estimation, and material and intangible activity assets. Other
-  years and regimes remain unsupported until separately grounded and enrolled.
+  regimes remain unsupported until separately grounded and enrolled.
 
 ## Implementation
 
@@ -186,5 +186,24 @@ and typed home components preserve the allocation facts required by
 
 Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
 
-- Initial filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022, for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
+- Initial filing-grade support extends from that first grounded tax year to every year of the registry support envelope for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
 - Asset forecasts select the Modelo 100 edition canonically in every frontend; a year beyond the newest authored edition is served by projection and keeps that edition's capability limits.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes and a settled legal basis, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body and earlier amendment are preserved; where they differ, this section governs.
+
+- Modelo 130: casilla 02 carries the amortization accrued from 1 January to the quarter's end under RIRPF art. 110.1.a, computed read-only from the element's schedule with the cumulative function below, so it needs no recorded claim and creates none. An element on a free method has no computable accrual, so it contributes its effective claims whose covered interval ends within the span.
+- Agrarian activities: casilla 02 excludes the elements of an agrarian activity, whose instalment is 2% of ingresos under RIRPF art. 110.1.c in every determination method. The filter is by activity, not by taxpayer. Modelo 100 is unaffected.
+- Modelo 100: casillas 0208 and 0227 carry effective claims only. An element in service with lawful base remaining and no contiguous effective claims through 31 December carries a non-blocking finding naming the element, the uncovered interval and the accrued amount. The deduction is not invented and the return is not refused, because a gap reduces a deduction without invalidating the return. Calculate, preview, verify and export still create no charges.
+- Earlier years: each year's deduction stays within that year's maximum, so a gap is never caught up above it and never blocks a later year. The minimum amortization still reduces cost under RIRPF art. 40. An ordinary amortization may be corrected for its own year within prescription, recorded locally and never submitted by the product.
+- Acquisition base: the basis is price plus the non-deductible IVA at acquisition, with that component taken from the acquisition. A later LIVA art. 107 to 110 regularization changes neither the basis nor the schedule. An inspection correcting a wrong deduction does restate them.
+- Later afectación: the base is the value under RIRPF art. 23.1 with no deemed amortization for private years, and amortization starts at afectación.
+- Leasing: an element under a financial lease has no register entry until the option is exercised; its cuotas follow LIS art. 106.
+- Rounding: for every method charged by time, an emitted amount is the difference of the rounded cumulative charge of the tax year at the interval's two ends, so contiguous amounts sum exactly to the annual figure.
+- Collision: the same-asset and same-year scope of the collision rule is replaced by the unconditional route in the 2026-10-30 amendment of `2026-08-23-amortization-casilla-mapping-adr`.
+- Consumption: a claim does not carry the calculation or filing revision that consumes it, because claim identity hashes its content and cannot change afterwards. The calculation revision records the effective claim IDs and, for Modelo 130, the schedule fingerprints it consumed, and the existing drift gate treats a change to that set as staleness. The two unused fields leave the claim; there is no released compatibility floor.
+- Corrections: a superseding revision is refused while effective claims exceed its amortizable basis. The operator supersedes the affected claims in the same correction flow.
+- One projection: the selection of effective claims has one defining function, used by calculation and filing handoff.
+- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 and Modelo 130 of the AEAT do not apply to them. Disposal: `2026-10-30-assets-core-disposal-adr` governs the baja record, its boundary and gain or loss. `out_of_service_date` exists only as that record's derived boundary, and a superseding claim may shorten its interval only to that boundary.
+- Elements acquired outside the ledger: an element may be registered with a declared acquisition date, cost and evidence reference and no ledger row, under its own acquisition shape, because no law makes this ledger a precondition for the libro registro and the operator directed that assets can be added. Where this differs from the statement that the first supported shape is one primary purchase with canonical evidence, this governs. Further acquisition rows on a registered element are owned by that element. Financial leases stay refused until the option is exercised. Authorized by the same direction of 2026-10-30.

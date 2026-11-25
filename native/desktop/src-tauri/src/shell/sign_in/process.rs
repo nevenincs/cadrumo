@@ -1,4 +1,4 @@
-use super::failure;
+use super::{closing, failure};
 use cadrumo_application::{
     diagnostics::{
         Diagnostics,
@@ -6,7 +6,9 @@ use cadrumo_application::{
     },
     error::application::{ApplicationError, ErrorCode, Result},
     process::status::{ProcessPhase, ProcessRole},
+    shutdown::is_host_closing,
 };
+use cadrumo_platform::process_exit::ProcessExitWatch;
 use std::{
     io::{Read, Write},
     process::{Child, Command, ExitStatus, Stdio},
@@ -20,14 +22,8 @@ use std::{
 use zeroize::Zeroizing;
 
 const OUTPUT_LIMIT: usize = 64 * 1024;
-const DEADLINE: Duration = Duration::from_secs(30);
-/// Profile enrollment includes calibration and storage work. Its separate
-/// deadline preserves the existing handling of an indeterminate outcome when
-/// a child stops part-way. Command performance is measured separately.
-pub const CREATION_DEADLINE: Duration = Duration::from_secs(300);
-/// Existing admission bound for reads waiting behind another read.
-/// A child's own deadline starts when it does.
-const SLOT_WAIT: Duration = Duration::from_secs(330);
+pub const TIMEOUT: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
 const PENDING_READERS: usize = 8;
 
 fn milliseconds(duration: Duration) -> u64 {
@@ -81,8 +77,8 @@ impl Drop for PhaseTimer<'_> {
     }
 }
 
-/// The time a read's turn and a child's own deadline are measured in. Only a
-/// test can hold it still and move it on.
+/// The monotonic clock for one timeout across admission, spawn and execution.
+/// Tests can move it while producer notifications wake the waiters.
 #[derive(Default)]
 struct Clock {
     #[cfg(test)]
@@ -104,6 +100,8 @@ struct Active {
     pending_readers: usize,
     child: Option<Child>,
     process: Option<u64>,
+    /// What the running child was started for, while it runs.
+    identity: Option<HelperIdentity>,
 }
 
 #[derive(Default)]
@@ -116,6 +114,8 @@ struct Lane {
 pub struct Children {
     // The same gate fences both lanes and excludes publication of a late child.
     closed: Mutex<bool>,
+    /// Set when the host begins to close: no further change starts, reads go on.
+    changes_closed: AtomicBool,
     read: Lane,
     mutation: Lane,
     diagnostics: Arc<Diagnostics>,
@@ -177,6 +177,29 @@ impl Children {
             Err(error) => Err(error),
         }
     }
+    /// Refuses every further change, then waits until the change already running, if any,
+    /// ends by itself or `deadline` passes. Reads are untouched. Returns what the change
+    /// still running at `deadline` was started for; [`Children::stop`] then ends it, and
+    /// its effect is unknown to this host.
+    pub fn settle(&self, deadline: Instant) -> Option<HelperIdentity> {
+        self.changes_closed.store(true, Ordering::Release);
+        let lane = &self.mutation;
+        let mut active = lane.active.lock().unwrap_or_else(|e| e.into_inner());
+        // A child that has exited wakes the lane through its exit watch.
+        while active.busy {
+            let remaining = deadline.saturating_duration_since(self.clock.now());
+            if remaining.is_zero() {
+                return active.identity;
+            }
+            active = lane
+                .changed
+                .wait_timeout(active, remaining)
+                .unwrap_or_else(|e| e.into_inner())
+                .0;
+        }
+        None
+    }
+
     /// Permanently fence both lanes, then kill and reap each owned child.
     pub fn stop(&self) -> Result<()> {
         self.close_with(|active| self.settle_active(active))
@@ -222,14 +245,7 @@ impl Children {
         command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<Output> {
-        self.execute(
-            identity,
-            command,
-            secret,
-            HelperKind::Mutation,
-            Duration::ZERO,
-            DEADLINE,
-        )
+        self.execute(identity, command, secret, HelperKind::Mutation, TIMEOUT)
     }
 
     /// Run a mutation under the caller's existing command-specific deadline.
@@ -240,30 +256,15 @@ impl Children {
         secret: Option<Zeroizing<Vec<u8>>>,
         deadline: Duration,
     ) -> Result<Output> {
-        self.execute(
-            identity,
-            command,
-            secret,
-            HelperKind::Mutation,
-            Duration::ZERO,
-            deadline,
-        )
+        self.execute(identity, command, secret, HelperKind::Mutation, deadline)
     }
 
     /// Read-only commands wait only for another read, independently of mutations.
     pub fn read(&self, identity: HelperIdentity, command: Command) -> Result<Output> {
-        self.execute(
-            identity,
-            command,
-            None,
-            HelperKind::Read,
-            SLOT_WAIT,
-            DEADLINE,
-        )
+        self.execute(identity, command, None, HelperKind::Read, TIMEOUT)
     }
 
-    fn admit(&self, kind: HelperKind, slot_wait: Duration) -> Result<MutexGuard<'_, Active>> {
-        let asked = self.clock.now();
+    fn admit(&self, kind: HelperKind, deadline: Instant) -> Result<MutexGuard<'_, Active>> {
         let lane = self.lane(kind);
         let mut active = lane
             .active
@@ -279,15 +280,17 @@ impl Children {
                     return Err(error);
                 }
             };
-            if closed {
+            if closed
+                || (kind == HelperKind::Mutation && self.changes_closed.load(Ordering::Acquire))
+            {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
-            if pending && self.clock.now().saturating_duration_since(asked) >= slot_wait {
+            if self.clock.now() >= deadline {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
-                return Err(failure(ErrorCode::CliWaitTimedOut));
+                return Err(failure(ErrorCode::TimedOut).with_reason("runtime_timeout"));
             }
             if !active.busy {
                 Self::release_pending(&mut active, &mut pending);
@@ -305,12 +308,11 @@ impl Children {
                 pending = true;
                 lane.changed.notify_all();
             }
-            let remaining =
-                slot_wait.saturating_sub(self.clock.now().saturating_duration_since(asked));
+            let remaining = deadline.saturating_duration_since(self.clock.now());
             if remaining.is_zero() {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
-                return Err(failure(ErrorCode::CliWaitTimedOut));
+                return Err(failure(ErrorCode::TimedOut).with_reason("runtime_timeout"));
             }
             match lane.changed.wait_timeout(active, remaining) {
                 Ok((next, _)) => active = next,
@@ -337,12 +339,12 @@ impl Children {
         command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         kind: HelperKind,
-        slot_wait: Duration,
-        deadline: Duration,
+        timeout: Duration,
     ) -> Result<Output> {
+        let deadline = self.clock.now() + timeout;
         let mut measurement = Measurement::new(kind);
         let outcome =
-            self.execute_measured(command, secret, kind, slot_wait, deadline, &mut measurement);
+            self.execute_measured(identity, command, secret, kind, deadline, &mut measurement);
         {
             let mut fact = match &outcome {
                 Ok(output) => {
@@ -362,12 +364,19 @@ impl Children {
                 outcome.as_ref().err().cloned(),
             );
         }
-        if let Ok(output) = &outcome {
-            measurement.timing.outcome = if output.success {
-                HelperOutcome::Completed
-            } else {
-                HelperOutcome::NonzeroExit
-            };
+        match &outcome {
+            Ok(output) => {
+                measurement.timing.outcome = if output.success {
+                    HelperOutcome::Completed
+                } else {
+                    HelperOutcome::NonzeroExit
+                };
+            }
+            // Refused or ended because the host is closing: an expected outcome.
+            Err(error) if is_host_closing(error) => {
+                measurement.timing.outcome = HelperOutcome::Interrupted;
+            }
+            Err(_) => {}
         }
         measurement.timing.total_ms = milliseconds(measurement.started.elapsed());
         self.diagnostics
@@ -377,11 +386,11 @@ impl Children {
 
     fn execute_measured(
         &self,
+        identity: HelperIdentity,
         mut command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         kind: HelperKind,
-        slot_wait: Duration,
-        deadline: Duration,
+        deadline: Instant,
         measurement: &mut Measurement,
     ) -> Result<Output> {
         let lane = self.lane(kind);
@@ -398,9 +407,9 @@ impl Children {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let (process, stdin, stdout, stderr, start, began) = {
+        let (process, stdin, stdout, stderr, start, watch, watch_error) = {
             let admission_started = Instant::now();
-            let admission = self.admit(kind, slot_wait);
+            let admission = self.admit(kind, deadline);
             let mut active = match admission {
                 Ok(active) => active,
                 Err(error) => {
@@ -408,7 +417,10 @@ impl Children {
                         milliseconds(admission_started.elapsed());
                     // No OS spawn was attempted. Only the closed admission
                     // refusal leaves this boundary, never command or password.
-                    self.diagnostics.failure(error.clone());
+                    // A closing host's refusal is its timing row, not a failure.
+                    if !is_host_closing(&error) {
+                        self.diagnostics.failure(error.clone());
+                    }
                     return Err(error);
                 }
             };
@@ -428,15 +440,18 @@ impl Children {
             measurement.timing.admission_wait_ms = milliseconds(admission_started.elapsed());
             if *fence {
                 drop(fence);
-                let error = failure(ErrorCode::SessionUnavailable);
-                self.diagnostics.failure(error.clone());
-                return Err(error);
+                return Err(closing());
             }
             measurement.timing.outcome = HelperOutcome::SpawnFailed;
             let spawn_started = Instant::now();
+            // The window's process scope holds the child and what it starts.
+            #[cfg(unix)]
+            let spawned = cadrumo_application::process::group::place(&mut command)
+                .and_then(|()| cadrumo_application::process::creation::run(|| command.spawn()));
+            #[cfg(windows)]
             let spawned = cadrumo_application::process::creation::run(|| command.spawn());
             measurement.timing.spawn_ms = Some(milliseconds(spawn_started.elapsed()));
-            let child = match spawned {
+            let mut child = match spawned {
                 Ok(child) => child,
                 Err(cause) => {
                     drop(fence);
@@ -448,10 +463,18 @@ impl Children {
                 }
             };
             let start = Instant::now();
-            let began = self.clock.now();
+            // Register while this exact child is retained and before it is published or reaped.
+            let (watch, watch_error) = match ProcessExitWatch::for_child(&child) {
+                Ok(watch) => (Some(watch), None),
+                Err(error) => match child.try_wait() {
+                    Ok(Some(_)) => (None, None),
+                    _ => (None, Some(error)),
+                },
+            };
             let pid = child.id();
             active.busy = true;
             active.child = Some(child);
+            active.identity = Some(identity);
             drop(fence);
             let child = active.child.as_mut().unwrap();
             let pipes = (
@@ -464,13 +487,39 @@ impl Children {
             measurement.timing.outcome = HelperOutcome::ExecutionFailed;
             active.process = Some(process);
             lane.changed.notify_all();
-            (process, pipes.0, pipes.1, pipes.2, start, began)
+            (
+                process,
+                pipes.0,
+                pipes.1,
+                pipes.2,
+                start,
+                watch,
+                watch_error,
+            )
         };
-        // The child's own time, from its start: not the wait for its turn.
+        // Admission and execution consume the same absolute owner timeout.
         let overflow = AtomicBool::new(false);
         let stdout_bytes = AtomicU64::new(0);
         let stderr_bytes = AtomicU64::new(0);
+        let observed_error = Mutex::new(watch_error);
         let outcome: Result<Output> = thread::scope(|scope| {
+            // Drop before scoped-thread joins on every return path, including failed cleanup.
+            let _observation = WatchOwner(watch.as_ref());
+            if let Some(watch) = watch.as_ref() {
+                let observed_error = &observed_error;
+                scope.spawn(move || {
+                    if let Err(error) = watch.wait() {
+                        *observed_error
+                            .lock()
+                            .unwrap_or_else(|error| error.into_inner()) = Some(error);
+                    }
+                    let _active = lane
+                        .active
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    lane.changed.notify_all();
+                });
+            }
             let writer = scope.spawn(move || -> Result<()> {
                 if let (Some(mut stdin), Some(secret)) = (stdin, secret) {
                     // Exactly one payload, followed by EOF; never retry login.
@@ -480,9 +529,24 @@ impl Children {
                 }
                 Ok(())
             });
-            let out = scope.spawn(|| read(stdout, &overflow, &stdout_bytes));
-            let err = scope.spawn(|| read(stderr, &overflow, &stderr_bytes));
-            let status = self.wait(lane, &overflow, began, deadline);
+            let wake = || {
+                let _active = lane
+                    .active
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner());
+                lane.changed.notify_all();
+            };
+            let out = {
+                let overflow = &overflow;
+                let bytes = &stdout_bytes;
+                scope.spawn(move || read(stdout, overflow, bytes, wake))
+            };
+            let err = {
+                let overflow = &overflow;
+                let bytes = &stderr_bytes;
+                scope.spawn(move || read(stderr, overflow, bytes, wake))
+            };
+            let status = self.wait(lane, &overflow, &observed_error, deadline);
             measurement.timing.execution_ms = Some(milliseconds(start.elapsed()));
             // Always terminate/reap before joining pipe threads, including limit,
             // timeout and window-close paths. No child bytes enter diagnostics.
@@ -494,6 +558,7 @@ impl Children {
                     .map_err(|_| failure(ErrorCode::LockPoisoned))?;
                 self.settle_active(&mut active)
             };
+            drop(_observation);
             let (written, stdout, stderr) = {
                 let _timer = PhaseTimer::new(&mut measurement.timing.output_join_ms);
                 let written = writer.join().map_err(|_| failure(ErrorCode::Panic))?;
@@ -532,10 +597,13 @@ impl Children {
                     .finish_helper(process, status.code(), ProcessPhase::Exited);
             }
             active.child = None;
+            active.identity = None;
             active.busy = false;
             lane.changed.notify_all();
         }
-        if let Err(error) = &outcome {
+        if let Err(error) = &outcome
+            && !is_host_closing(error)
+        {
             self.diagnostics.failure_for(process, error.clone());
         }
         outcome
@@ -545,21 +613,21 @@ impl Children {
         &self,
         lane: &Lane,
         overflow: &AtomicBool,
-        began: Instant,
-        deadline: Duration,
+        observed_error: &Mutex<Option<std::io::Error>>,
+        deadline: Instant,
     ) -> Result<ExitStatus> {
+        let mut active = lane
+            .active
+            .lock()
+            .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         loop {
-            // Release the fence before acquiring a lane, also on shutdown.
             if self.is_closed()? {
-                return Err(failure(ErrorCode::SessionUnavailable));
+                return Err(closing());
             }
-            let mut active = lane
-                .active
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?;
             if overflow.load(Ordering::Acquire) {
                 return Err(failure(ErrorCode::OutputLimit));
             }
+            // A snapshot follows a producer wake; this is never a periodic process poll.
             if let Some(status) = active
                 .child
                 .as_mut()
@@ -569,11 +637,31 @@ impl Children {
             {
                 return Ok(status);
             }
-            if self.clock.now().saturating_duration_since(began) >= deadline {
-                return Err(failure(ErrorCode::TimedOut));
+            if let Some(error) = observed_error
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .take()
+            {
+                return Err(failure(ErrorCode::ReadFailed).caused_by(error));
             }
-            drop(active);
-            thread::sleep(Duration::from_millis(10));
+            let remaining = deadline.saturating_duration_since(self.clock.now());
+            if remaining.is_zero() {
+                return Err(failure(ErrorCode::TimedOut).with_reason("runtime_timeout"));
+            }
+            active = lane
+                .changed
+                .wait_timeout(active, remaining)
+                .map_err(|_| failure(ErrorCode::LockPoisoned))?
+                .0;
+        }
+    }
+}
+
+struct WatchOwner<'a>(Option<&'a ProcessExitWatch>);
+impl Drop for WatchOwner<'_> {
+    fn drop(&mut self) {
+        if let Some(watch) = self.0 {
+            let _ = watch.cancel();
         }
     }
 }
@@ -605,6 +693,7 @@ fn read(
     mut pipe: impl Read,
     overflow: &AtomicBool,
     bytes: &AtomicU64,
+    notify: impl Fn(),
 ) -> Result<Zeroizing<Vec<u8>>> {
     let mut output = Zeroizing::new(Vec::with_capacity(OUTPUT_LIMIT));
     let mut buffer = Zeroizing::new([0u8; 4096]);
@@ -618,6 +707,7 @@ fn read(
         }
         if output.len() + count > OUTPUT_LIMIT {
             overflow.store(true, Ordering::Release);
+            notify();
             return Err(failure(ErrorCode::OutputLimit));
         }
         output.extend_from_slice(&buffer[..count]);
@@ -627,6 +717,7 @@ fn read(
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    #[cfg(windows)]
     pub(super) const TEST_IDENTITY: HelperIdentity = HelperIdentity {
         command: "config.login",
         executable: cadrumo_application::diagnostics::helper::HelperExecutable::Cli,
@@ -650,22 +741,161 @@ pub(crate) mod tests {
     fn bounded_reader_refuses_output_above_the_limit() {
         let overflow = AtomicBool::new(false);
         assert_eq!(
-            read(&vec![0; OUTPUT_LIMIT][..], &overflow, &AtomicU64::new(0))
-                .unwrap()
-                .len(),
+            read(
+                &vec![0; OUTPUT_LIMIT][..],
+                &overflow,
+                &AtomicU64::new(0),
+                || {}
+            )
+            .unwrap()
+            .len(),
             OUTPUT_LIMIT
         );
         assert_eq!(
             read(
                 &vec![0; OUTPUT_LIMIT + 1][..],
                 &overflow,
-                &AtomicU64::new(0)
+                &AtomicU64::new(0),
+                || {}
             )
             .unwrap_err()
             .code,
             ErrorCode::OutputLimit
         );
         assert!(overflow.load(Ordering::Acquire));
+    }
+
+    #[cfg(unix)]
+    const CHANGE: HelperIdentity = HelperIdentity {
+        command: "config.profile.create",
+        executable: cadrumo_application::diagnostics::helper::HelperExecutable::Cli,
+    };
+
+    #[cfg(unix)]
+    fn shell(script: &str) -> Command {
+        let mut command = Command::new("/bin/sh");
+        command.args(["-c", script]);
+        command
+    }
+
+    /// Returns once the change lane has published its running child.
+    #[cfg(unix)]
+    fn until_a_change_runs(children: &Children) {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while children.mutation.active.lock().unwrap().child.is_none() {
+            assert!(Instant::now() < deadline, "the change never started");
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    #[cfg(unix)]
+    fn failures(children: &Children) -> Vec<ApplicationError> {
+        children
+            .diagnostics
+            .snapshot(0)
+            .events
+            .into_iter()
+            .filter(|event| {
+                matches!(
+                    event.kind,
+                    cadrumo_application::diagnostics::EventKind::Failure
+                )
+            })
+            .filter_map(|event| event.failure)
+            .collect()
+    }
+
+    #[cfg(unix)]
+    fn timings(children: &Children) -> Vec<HelperTiming> {
+        children
+            .diagnostics
+            .snapshot(0)
+            .events
+            .into_iter()
+            .filter_map(|event| event.helper_timing)
+            .collect()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_change_that_ends_within_the_settle_window_reports_its_own_outcome() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let running =
+                scope.spawn(|| children.run(CHANGE, shell("sleep 0.3; printf done"), None));
+            until_a_change_runs(&children);
+            let started = Instant::now();
+            assert!(
+                children
+                    .settle(Instant::now() + Duration::from_secs(20))
+                    .is_none()
+            );
+            // The window ended when the change did, not at its bound.
+            assert!(started.elapsed() < Duration::from_secs(10));
+            let output = running.join().unwrap().unwrap();
+            assert!(output.success);
+            assert_eq!(&output.stdout[..], b"done");
+        });
+        children.stop().unwrap();
+        assert!(failures(&children).is_empty());
+        assert_eq!(timings(&children)[0].outcome, HelperOutcome::Completed);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_change_still_running_after_the_settle_window_is_ended_as_an_expected_interruption() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let running = scope.spawn(|| children.run(CHANGE, shell("sleep 60"), None));
+            until_a_change_runs(&children);
+            let settled = children.settle(Instant::now() + Duration::from_millis(200));
+            assert_eq!(
+                settled.map(|identity| identity.command),
+                Some(CHANGE.command)
+            );
+            let started = Instant::now();
+            children.stop().unwrap();
+            let ended = running.join().unwrap().err().unwrap();
+            assert!(is_host_closing(&ended));
+            assert!(started.elapsed() < Duration::from_secs(10));
+        });
+        assert!(failures(&children).is_empty(), "a close is not a failure");
+        let timing = timings(&children)[0];
+        assert_eq!(timing.helper_kind, HelperKind::Mutation);
+        assert_eq!(timing.outcome, HelperOutcome::Interrupted);
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_settling_window_refuses_new_changes_but_still_answers_reads() {
+        let children = Children::default();
+        assert!(children.settle(Instant::now()).is_none());
+        let refused = children.run(CHANGE, shell("exit 0"), None).err().unwrap();
+        assert!(is_host_closing(&refused));
+        assert!(
+            children
+                .read(CHANGE, shell("printf status"))
+                .unwrap()
+                .success
+        );
+        children.stop().unwrap();
+        let after = children.read(CHANGE, shell("exit 0")).err().unwrap();
+        assert!(is_host_closing(&after));
+        assert!(failures(&children).is_empty());
+        let outcomes: Vec<_> = timings(&children)
+            .into_iter()
+            .map(|timing| timing.outcome)
+            .collect();
+        assert_eq!(
+            outcomes,
+            [
+                HelperOutcome::Interrupted,
+                HelperOutcome::Completed,
+                HelperOutcome::Interrupted
+            ]
+        );
     }
 
     /// Bounds only a fixture that never arrives; arriving is the event awaited.
@@ -970,7 +1200,7 @@ pub(crate) mod tests {
 
     #[cfg(windows)]
     #[test]
-    fn a_child_is_given_its_own_deadline_and_reaped_when_it_passes() {
+    fn a_helper_timeout_contains_the_child_and_preserves_diagnostics() {
         let children = Children::default();
         // Longer than the one it is given: stopped, reaped, and said so.
         let start = Instant::now();
@@ -996,7 +1226,7 @@ pub(crate) mod tests {
         assert_eq!(timed.process, Some(snapshot.processes[0].id));
         let timing = timed.helper_timing.unwrap();
         assert_eq!(timing.outcome, HelperOutcome::ExecutionFailed);
-        assert!(timing.execution_ms.unwrap() >= 400);
+        assert!(timing.total_ms >= 400);
         assert!(timing.cleanup_ms.is_some() && timing.output_join_ms.is_some());
         // Within the one it is given: it runs to its end.
         let output = children
@@ -1012,59 +1242,56 @@ pub(crate) mod tests {
 
     #[cfg(windows)]
     #[test]
-    fn a_queued_read_waits_for_another_read_and_then_has_its_whole_deadline() {
+    fn queued_read_and_execution_consume_the_same_timeout() {
         let children = Children::default();
-        // Time passes only when the test moves it, whatever the machine's speed.
         children.hold_clock();
         let mut gate = Gate::new();
-        let script = format!(
-            "{}Wait-Gate 'running'; [Console]::Out.Write('made')",
-            gate.script()
-        );
+        let mut executing = Gate::new();
+        let script = format!("{}Wait-Gate 'running'", gate.script());
+        let queued_script = format!("{}Wait-Gate 'executing'", executing.script());
         thread::scope(|scope| {
             let slow = scope.spawn(|| children.read(TEST_IDENTITY, powershell(&script)));
             gate.reached("running");
             let queued = scope.spawn(|| {
                 children.execute(
                     TEST_IDENTITY,
-                    powershell("[Console]::Out.Write('status')"),
+                    powershell(&queued_script),
                     None,
                     HelperKind::Read,
-                    Duration::from_secs(60),
-                    Duration::from_secs(3),
+                    Duration::from_secs(8),
                 )
             });
             children.until_a_read_queues();
-            // Its deadline is shorter than the wait for its turn.
             children.advance(&children.read, Duration::from_secs(4));
             gate.go();
-            assert_eq!(&*queued.join().unwrap().unwrap().stdout, b"status");
-            assert_eq!(&*slow.join().unwrap().unwrap().stdout, b"made");
+            executing.reached("executing");
+            // Four seconds spent awaiting capacity leave four for execution.
+            children.advance(&children.read, Duration::from_secs(4));
+            let error = queued.join().unwrap().err().unwrap();
+            assert_eq!(error.code, ErrorCode::TimedOut);
+            assert_eq!(error.reason.as_deref(), Some("runtime_timeout"));
+            assert!(slow.join().unwrap().is_ok());
         });
-        // And it does not wait for its turn beyond the bound it was given.
+        assert!(children.read.active.lock().unwrap().child.is_none());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_read_waits_past_the_former_slot_limit_for_the_capacity_signal() {
+        let children = Children::default();
+        children.hold_clock();
         let mut gate = Gate::new();
         let script = format!("{}Wait-Gate 'running'", gate.script());
         thread::scope(|scope| {
             let slow = scope.spawn(|| children.read(TEST_IDENTITY, powershell(&script)));
             gate.reached("running");
             let queued = scope.spawn(|| {
-                children.execute(
-                    TEST_IDENTITY,
-                    powershell("[Console]::Out.Write('status')"),
-                    None,
-                    HelperKind::Read,
-                    Duration::from_millis(300),
-                    Duration::from_secs(30),
-                )
+                children.read(TEST_IDENTITY, powershell("[Console]::Out.Write('status')"))
             });
             children.until_a_read_queues();
-            // The bound passes while the other read still holds the lane.
-            children.advance(&children.read, Duration::from_millis(300));
-            assert_eq!(
-                queued.join().unwrap().err().unwrap().code,
-                ErrorCode::CliWaitTimedOut
-            );
+            children.advance(&children.read, Duration::from_secs(331));
             gate.go();
+            assert_eq!(&*queued.join().unwrap().unwrap().stdout, b"status");
             assert!(slow.join().unwrap().is_ok());
         });
         assert!(children.read.active.lock().unwrap().child.is_none());

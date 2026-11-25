@@ -24,7 +24,8 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..ledger.read_access import resolve_ledger_commit_access
+from ..export.terminal_result_validation import terminal_receipt_has_result_only
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import (
     CredentialFreeOperationRequest,
@@ -207,12 +208,12 @@ def build_reconciliation_export_xlsx_definition(factory: ReconciliationExportXls
 def _resolve_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    payload = require_access_request_payload(
+    return resolve_ledger_request_commit_access(
         request,
+        context,
         definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
-        payload_type=ReconciliationExportXlsxRequest,
+        request_type=ReconciliationExportXlsxRequest,
     )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def _project_result(value: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -224,11 +225,7 @@ def _project_result(value: BaseModel, receipt: OperationTerminalReceipt, /) -> B
         or receipt.identity.subject_ref != profile_operation_subject(str(value.profile_id))
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        or not terminal_receipt_has_result_only(receipt)
     ):
         raise ValueError("reconciliation export result differs from its terminal receipt")
     return ReconciliationExportXlsxProjection.model_validate(

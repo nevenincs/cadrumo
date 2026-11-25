@@ -2,24 +2,29 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import replace
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.field_origin import FieldOrigin
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.filing.protocols import ModeloInputValue
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..producer_snapshot import (
@@ -35,16 +40,16 @@ from ..producer_snapshot import (
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _HEX_DIGEST = "a" * 64
-_PERIOD = Period.from_year_and_code(2026, "1T")
+EXPORT_PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
 _SCHEMA_PROVIDER_CACHE: dict[tuple[int, str, tuple[str, ...]], RegistrySchemaAccessor] = {}
 
 
-def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
+def typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
     amendment = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )
@@ -61,7 +66,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
             full_name="Ana Prueba",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,
@@ -75,9 +80,29 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
     )
 
 
-def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+def filer_with_nothing_else(
+    provider: RegistrySchemaAccessor, extra_facts: Mapping[str, ModeloInputValue] | None = None
+) -> dict[str, ModeloInputValue]:
+    """State every fact the Modelo 100 revision reads as absent, for a Madrid filer, plus any ``extra_facts``."""
+    inputs: dict[str, ModeloInputValue] = {
+        "renta-profile-tax-residence-ccaa": "madrid",
+        "renta-profile-taxpayer-birth-date": "1975-06-15",
+        **(extra_facts or {}),
+    }
+    for binding_id, binding in revision_bindings_by_id(provider.get_snapshot("100").revision).items():
+        if binding.value.channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
+            inputs[str(binding_id)] = Decimal("0")
+        elif binding.value.channel is BindingValueChannel.BOOLEAN:
+            inputs[str(binding_id)] = False
+    inputs["renta-profile-declaration-type"] = Decimal("1")
+    inputs["renta-modelo-100-estimacion-directa-es-normal"] = True
+    return inputs
+
+
+def general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
+    """Producer facts for a general-profile ingreso filing by the standard test taxpayer."""
     return build_filing_producer_snapshot(
-        modelo=Modelo("131"),
+        modelo=Modelo(modelo),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -98,6 +123,10 @@ def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
         refund_account=None,
         charge_account=None,
     )
+
+
+def typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+    return general_ingreso_producer_snapshot("131")
 
 
 _M111_RETENCIONES_TOTAL_CASILLA, _M111_RESULTADO_CASILLA = (
@@ -123,9 +152,9 @@ _M115_RETENCIONES_CASILLA, _M115_PREVIOUS_RESULT_CASILLA = (
     validated_casilla_id("04", surface="test_export.casilla"),
 )
 _M115_RESULTADO_CASILLA = validated_casilla_id("05", surface="test_export.casilla")
-_M130_INGRESOS_CASILLA, _M130_GASTOS_CASILLA = (
+_M130_INGRESOS_CASILLA, _M130_GASTOS_PREVIOS_CASILLA = (
     validated_casilla_id("01", surface="test_export.casilla"),
-    validated_casilla_id("02", surface="test_export.casilla"),
+    validated_casilla_id("gastos-deducibles-previos", surface="test_export.casilla"),
 )
 _M130_PREVIOUS_PAYMENTS_CASILLA, _M130_RETENCIONES_CASILLA = (
     validated_casilla_id("05", surface="test_export.casilla"),
@@ -249,7 +278,7 @@ def _narrative() -> str:
     return narrative
 
 
-def _schema_provider(
+def export_schema_provider(
     *,
     filing_year: int,
     period: str,
@@ -311,17 +340,18 @@ def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
 
 
 @cache
-def _approved_registry_draft():
+def approved_registry_draft():
     draft = build_draft(
         modelo="130",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("100"),
-            _M130_GASTOS_CASILLA: Decimal("25"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("25"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
@@ -332,7 +362,7 @@ def _approved_registry_draft():
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
-        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T"),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T"),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -341,7 +371,7 @@ def _approved_registry_draft():
 def _approved_modelo_131_registry_draft():
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -355,7 +385,7 @@ def _approved_modelo_131_registry_draft():
             "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -364,7 +394,7 @@ def _approved_modelo_131_registry_draft():
 def _approved_modelo_131_registry_draft_without_direct_debit():
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -377,7 +407,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
             "modelo-131.dpa.epigrafe-iae": ["722"],
             "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -386,7 +416,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
 def _approved_modelo_131_zero_payable_direct_debit_draft():
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -396,7 +426,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
             _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -419,14 +449,14 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
             f"{binding_prefix}.dpa.031-032.vehiculos-afectos": {"1": "2"},
             f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 @cache
-def _approved_modelo_131_historical_registry_draft():
-    provider = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
+def approved_modelo_131_historical_registry_draft():
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
         period=Period.from_year_and_code(2023, "4T"),
@@ -451,10 +481,10 @@ def _approved_modelo_131_historical_registry_draft():
 
 
 @cache
-def _approved_modelo_111_registry_draft():
+def approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -471,7 +501,7 @@ def _approved_modelo_111_registry_draft():
             _M111_IMAGEN_RETENCIONES_CASILLA: Decimal("9.00"),
             _M111_PREVIOUS_RESULT_CASILLA: Decimal("40.00"),
         },
-        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("111",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("111",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -480,7 +510,7 @@ def _approved_modelo_111_registry_draft():
 def _approved_modelo_115_registry_draft():
     draft = build_draft(
         modelo="115",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -490,7 +520,7 @@ def _approved_modelo_115_registry_draft():
             _M115_BASE_CASILLA: Decimal("1250.50"),
             _M115_PREVIOUS_RESULT_CASILLA: Decimal("10.00"),
         },
-        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("115",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("115",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -499,7 +529,7 @@ def _approved_modelo_115_registry_draft():
 def _approved_modelo_123_registry_draft():
     draft = build_draft(
         modelo="123",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -515,14 +545,14 @@ def _approved_modelo_123_registry_draft():
             _M123_INGRESOS_CUENTA_INPUT_CASILLA: Decimal("7.50"),
             _M123_MINORACION_CASILLA: Decimal("12.25"),
         },
-        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("123",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("123",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 @cache
 def _approved_modelo_123_2019_registry_draft():
-    provider = _schema_provider(filing_year=2023, period="4T", modelos=("123",))
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("123",))
     draft = build_draft(
         modelo="123",
         period=Period.from_year_and_code(2023, "4T"),
@@ -551,7 +581,7 @@ def _approved_modelo_390_registry_draft():
     # schema provider, so build_draft falls through to the direct casilla
     # overrides below (mirrors the M130/M200 previous_filing/relation-bound
     # override precedent in this module).
-    provider = _schema_provider(filing_year=2025, period="0A", modelos=("390",))
+    provider = export_schema_provider(filing_year=2025, period="0A", modelos=("390",))
     draft = build_draft(
         modelo="390",
         period=Period.from_year_and_code(2025, "0A"),
@@ -600,7 +630,7 @@ def _field_slice_in_record(record: ExportRecordDefinition, field_id: str, cursor
     return slice(start, start + field.length)
 
 
-def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
+def field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
     cursor = 0
     for record in sorted(layout.records, key=lambda item: item.order):
         record_length = _record_wire_length(record)
@@ -612,28 +642,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
 
 def m151_producer_snapshot() -> FilingProducerSnapshot:
     """Producer facts for the Modelo 151 export coordinate."""
-    return build_filing_producer_snapshot(
-        modelo=Modelo("151"),
-        taxpayer_tax_id="12345678Z",
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name="Ana",
-            surnames="Prueba",
-            full_name="Ana Prueba",
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.INGRESO,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        m303_filing_facts=None,
-        refund_account=None,
-        charge_account=None,
-    )
+    return general_ingreso_producer_snapshot("151")
 
 
 @cache
@@ -653,5 +662,5 @@ def modelo_151_export_coordinate_draft():
         period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Emilio Export Test"),
         inputs={},
-        schema_provider=_schema_provider(filing_year=2025, period="0A", modelos=("151",)),
+        schema_provider=export_schema_provider(filing_year=2025, period="0A", modelos=("151",)),
     )

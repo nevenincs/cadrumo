@@ -5,9 +5,9 @@ and read :class:`BucketEventHistoryRepository` events for history and
 review-derived filters.
 
 List and view commands delegate row projection to
-:func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
+:func:`~cadrumo.entrypoints.cli.ledger_list.project_ledger_list` and emit typed
 payloads such as :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerViewResult`
-and :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerTrackResult`.
+and :class:`~cadrumo.entrypoints.cli.ledger_participation_results.LedgerTrackResult`.
 """
 
 from __future__ import annotations
@@ -37,19 +37,19 @@ if TYPE_CHECKING:
 
 
 def ledger_llm_diagnostics(
-    ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
+    ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: str = "0.5"
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
-    from ...core.decimal.coercion import coerce_decimal_strict
+    from ...core.decimal.grammar import try_parse_canonical_decimal
     from ...core.i18n.render import tr
     from ...core.unit_proportion import is_unit_proportion
     from .common import bad, emit_envelope
     from .operation_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
-    threshold = coerce_decimal_strict(low_confidence_below)
-    if not is_unit_proportion(threshold):
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
+    threshold = try_parse_canonical_decimal(low_confidence_below)
+    if threshold is None or not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
     report = read_ledger_llm_diagnostics_for_cli(
         ctx,
@@ -106,7 +106,7 @@ def _llm_usage_provider_payload(row: LlmUsageCostProviderMetrics) -> dict[str, o
 
 
 def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[str, object]:
-    from ._decimal_parsing import optional_decimal_text
+    from .decimal_parsing import optional_decimal_text
 
     return {
         "provider": row.provider,
@@ -123,7 +123,7 @@ def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[
 def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[list[str], list[Notice]]:
     from ...core.i18n.render import tr
     from ...core.json_contract import Notice, NoticeSeverity
-    from ._decimal_parsing import optional_decimal_text
+    from .decimal_parsing import optional_decimal_text
 
     lines = [
         f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
@@ -147,12 +147,13 @@ def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[li
     return [*lines, notice.message], [notice]
 
 
-def _parse_iso_date(value: str | None, option: str) -> date | None:
+def parse_iso_date(value: str | None, option: str) -> date | None:
+    """Parse an optional ISO date for a ledger diagnostics option."""
     if value is None:
         return None
-    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
+    from .date_parsing import parse_iso_date
 
-    return _parse_required_iso_date(
+    return parse_iso_date(
         value,
         label=option,
         translation_key="cli.ledger.llm_diagnostics.bad_date",
@@ -168,6 +169,14 @@ def _irpf_purpose_label(purpose: str) -> str:
         return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
     if purpose == "employment_income":
         return tr("cli.ledger.categories.irpf_purpose_employment_income")
+    if purpose == "rental_property_income":
+        return tr("cli.ledger.categories.irpf_purpose_rental_property_income")
+    if purpose == "capital_mobiliario_yield":
+        return tr("cli.ledger.categories.irpf_purpose_capital_mobiliario_yield")
+    if purpose == "capital_gain":
+        return tr("cli.ledger.categories.irpf_purpose_capital_gain")
+    if purpose == "prize_payment_withholding":
+        return tr("cli.ledger.categories.irpf_purpose_prize_payment_withholding")
     return purpose
 
 
@@ -281,13 +290,13 @@ def ledger_check(
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
     from .common import emit_envelope
-    from .ledger_results import LedgerCheckResult, LedgerLinkInconsistencyPayload
+    from .ledger_diagnostic_results import LedgerCheckResult, LedgerLinkInconsistencyPayload
     from .operation_ledger_check import read_ledger_check_for_cli
-    from .period_parsing import _optional_canonical_period
+    from .period_parsing import optional_canonical_period
 
     check = read_ledger_check_for_cli(
         ctx,
-        period=_optional_canonical_period(period, year=year),
+        period=optional_canonical_period(period, year=year),
         bucket_id_option=bucket_id_option,
     ).to_check()
     link_rows = [
@@ -337,9 +346,9 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     from ...core.json_contract import Notice, NoticeSeverity
     from .common import emit_envelope
     from .operation_ledger_preflight import read_ledger_preflight_for_cli
-    from .period_parsing import _canonical_period
+    from .period_parsing import period_parsing_canonical_period
 
-    canonical = _canonical_period(period, year=year)
+    canonical = period_parsing_canonical_period(period, year=year)
     report = read_ledger_preflight_for_cli(ctx, period=canonical).to_report()
     payload = report.model_dump(mode="json")
     lines = [
@@ -363,7 +372,7 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
         lines.append(f"advisory\tempty_ledger\t{message}")
     for issue in report.issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    from .ledger_results import LedgerPreflightResult
+    from .ledger_diagnostic_results import LedgerPreflightResult
 
     emit_envelope(
         ctx,
@@ -422,12 +431,12 @@ def ledger_list(
     hide_llm_rejected: bool = False,
     account: str | None = None,
 ) -> None:
-    """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
+    """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli.ledger_list.project_ledger_list`."""
     from ...application.review.errors import FilterParseError
     from ...application.review.filter import LedgerReviewFilterSpec
-    from ._ledger_list import project_ledger_list
-    from ._ledger_support import ledger_cli_no_recovery
     from .common import emit_envelope
+    from .ledger_list import project_ledger_list
+    from .ledger_support import ledger_cli_no_recovery
     from .operation_ledger_list import read_ledger_list_for_cli
 
     resolved_filters = list(filters)
@@ -485,12 +494,16 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     Emits a :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerViewResult`.
     """
     from ...core.i18n.render import tr
+    from ...core.terminal_encoding import encode_terminal_field
     from .common import emit_envelope
     from .operation_ledger_view import read_ledger_view_for_cli
 
     projection = read_ledger_view_for_cli(ctx, transaction_id=transaction_id)
     transaction_payload = projection.transaction
     review_status = projection.review_status
+    # The printed reference is imported text: escape it so it cannot forge a line.
+    statement_reference = transaction_payload.statement_reference
+    printed_reference = encode_terminal_field(statement_reference) if statement_reference is not None else None
 
     def _field(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
@@ -499,11 +512,14 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
         f"{tr('cli.ledger.labels.id')}\t{transaction_payload.transaction_id}",
         f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
         f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
+        f"{tr('cli.ledger.labels.operation_date')}\t{_field(transaction_payload.operation_date)}",
+        f"{tr('cli.ledger.labels.accrual_date')}\t{_field(transaction_payload.accrual_date)}",
         f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
         f"{tr('cli.ledger.labels.currency')}\t{_field(transaction_payload.currency)}",
         f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",
         f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
         f"{tr('cli.ledger.labels.counterparty')}\t{_field(transaction_payload.counterparty)}",
+        f"{tr('cli.ledger.labels.statement_reference')}\t{_field(printed_reference)}",
         f"{tr('cli.ledger.labels.business_classification')}\t{_field(transaction_payload.business_classification)}",
         f"{tr('cli.ledger.labels.business_pct')}\t{_field(transaction_payload.business_pct)}",
         f"{tr('cli.ledger.labels.category_id')}\t{_field(transaction_payload.category_id)}",
@@ -556,9 +572,9 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
     from ...core.json_contract import strict_round_trip
     from .common import active_profile_label, emit_envelope
     from .operation_ledger_status import read_ledger_status_for_cli
-    from .period_parsing import _optional_canonical_period
+    from .period_parsing import optional_canonical_period
 
-    projection = read_ledger_status_for_cli(ctx, period=_optional_canonical_period(period, year=year))
+    projection = read_ledger_status_for_cli(ctx, period=optional_canonical_period(period, year=year))
     report = projection.to_report()
     lines = [
         f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",
@@ -600,6 +616,8 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 # was sound but narrower than today's fact set, not that
                 # anything additional drifted.
                 f"covers_current_fact_set={str(finding.covers_current_fact_set).lower()}",
+                f"register={finding.register_state.value}",
+                f"register_changes={finding.register_change_count}",
             )
         )
         for finding in stale_filings
@@ -623,7 +641,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     """Render admitted audit lineage without opening frontend profile custody."""
     from .common import emit_envelope
-    from .ledger_results import LedgerTrackResult
+    from .ledger_participation_results import LedgerTrackResult
     from .operation_ledger_track import read_ledger_track_for_cli
 
     projection = read_ledger_track_for_cli(ctx, transaction_id=transaction_id)

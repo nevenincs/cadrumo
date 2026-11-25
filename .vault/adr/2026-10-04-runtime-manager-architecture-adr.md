@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-21'
+modified: '2026-11-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e8a1fff37d925d629ebaf506d9af7560a4a3421010fdf6e3d54f761ecfdc578'
+body_hash: 'sha256:b7f93b2c4c642e9d64bfb7dcb40cac41b4b01da5d4cc65e4dcb09ff5231a3e52'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -81,7 +81,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - It runs as the signed-in user in that user's interactive session.
 - It refuses a full UAC-elevated token, session 0 and non-interactive logons.
 - It does not run inside a job it does not own. It tries one escape and otherwise refuses visibly.
-- It launches the runtime with an allow-list environment that has no `CADRUMO_*` overrides. It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged.
+- It launches the runtime with an allow-list environment that has no `CADRUMO_*` overrides, except the fixed-clock launch slot that only a manager core compiled with the `native-automation` feature fills (`2026-11-13-desktop-test-host-clock-adr`). It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged.
 
 **Lifecycle ownership.**
 - The runtime starts when the manager starts.
@@ -348,3 +348,69 @@ Accepted 2026-10-08 under the user's advance authorization to fix defects and co
 ## 2026-10-17 amendment: the manager is a role of the one Cadrumo binary
 
 Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the operator approved. The manager is no longer a separate `cadrumo-manager` image: it runs as the `cadrumo` binary in its manager role, and the runtime it supervises runs as the same binary in its runtime role. Wherever this record identifies the manager or runtime by image (startup items, quiescence, termination targeting, adoption and diagnostics), identification is by the digest-verified image plus the role argument and exact invocation. Supervision, the session lock, IPC endpoints, login startup, logs and the cutover protocol are unchanged. The machine lifecycle broker service is the same binary in its broker role, so an installed runtime runs in a Cadrumo tree of broker, manager and runtime. The runtime host is only ever started by a manager role or by the supervision core embedded in a running desktop; it never runs outside a Cadrumo tree.
+
+## The manager supervises the local AI server
+
+Under `2026-10-24-rust-component-provisioning-adr` (constraint 12), the manager also supervises the local AI server that the Rust component engine installs: it keeps the server dormant while the local AI is set up and starts it only when the agent service demands it through an admitted manager IPC verb, restarts it after a crash while it is demanded, stops it after 5 minutes holding no model, stops it on exit, at session end and before the engine replaces or removes the program, and contains it so nothing outlives the manager. The server binds one fixed Cadrumo loopback address from the canonical environment definition. The manager still holds no profile or credential authority; the local AI server is installation-wide, public software outside custody.
+
+(Amended 2026-11-11 under `2026-11-07-local-inference-engine-adr`, amendment 2026-11-11, accepted by the coordinator under delegated design authority; before that this read: "it starts it while the local AI is set up, restarts it after a crash, stops it on exit".)
+
+## Amendment 2026-10-31 - the manager manages the environment-selected root
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+What changed:
+
+- The manager manages the storage root its environment selects: an absolute `CADRUMO_STORAGE_ROOT` when set, otherwise the per-user default for its channel. `ManagedLocations` (`native/manager/src/supervision/environment.rs`) accepts that root and records whether it is the installed default. It still requires an installed package, proven by its package manifest, and still refuses an authority override. The runtime still starts under the `strict` profile, which pins the resolved root and passes no other override.
+- No image is classified as Development or Installed. A Debug manager starts against an environment-selected root in the same way as a release manager. The native `Package` type only locates package files and proves an installed package; it never picks a root.
+- On macOS and Linux the supervised runtime starts in a process group of its own, apart from terminal job control, held by a guardian that kills the group when the supervising process ends however it ends. The supervisor releases the group once it has observed the runtime's exit, so a clean drain is unchanged. Windows keeps its job-based containment.
+
+Superseded sentences:
+
+- Identity and privilege: "It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged." now reads: "It manages the root its environment selects, through an installed package. An authority override is refused."
+- Sessions: "Only the managed default root is supervised. Developer and test roots stay developer-owned." now reads: "The supervised root is the environment-selected root. One runtime per OS user and storage root still holds."
+- Placement and adoption, on macOS and Linux only: "A manager crash does not kill it." now reads: "A supervisor that ends without a drain takes the runtime's process group with it; the next supervisor starts a new runtime." The runtime is still never a descendant of a frontend's job and never in a job the manager does not own.
+- 2026-10-08 Darwin section: "For default socket endpoints in installed Darwin mode" now reads "For socket endpoints on Darwin". "Development roots remain root-relative and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots keep root-derived endpoint identities." now reads: "Every root uses the shared transient directory and keeps its root-derived endpoint identity. A caller that injects an explicit namespace, such as a fixture, keeps that isolation. No environment variable selects a socket directory."
+
+Still open, plan Step `S12` of `2026-10-30-macos-platform-plan`:
+
+- The session lock and the manager IPC identifier are not yet scoped by storage root. A standalone manager and a desktop host on the same override root do not yet recognise each other, and two managers on different roots in one session contend for one lock.
+- Windows entry dispatch still refuses an override root (`native/manager/src/installation.rs`), because the strict successor environment clears the root variable. Until `S12` lands, an installed Windows manager reached through entry dispatch manages only the installed default root.
+
+## Amendment 2026-10-31 - session lock and IPC name scoped by storage root
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S12`, which closes both items left open by the previous amendment. Implemented in commit a91d83dd6a.
+
+What changed:
+
+- The manager component identifier that names the session lock and the manager IPC endpoint is scoped to the managed storage root: `<application-id>.manager.root.<storage identity>`, where the storage identity is the 64-digit hex digest of the root's physical identity that already names the root's runtime and that the runtime reports in its handshake. The grammar and shared vectors are declared once in `src/cadrumo/core/connection_transport.py` and projected into the native contract. `native/manager/src/session/instance.rs` (`manager_id`) derives the identifier from the root for every supervisor: the standalone manager on macOS and Windows, the desktop-hosted core on macOS and Windows, and the Windows cutover coordinator. The root is created owner-only when absent so that a first start has an identity to claim under.
+- Supervisors of one root in one session therefore share one owner whichever path names the root, so a standalone manager and a desktop host on the same root recognise each other. Supervisors of different roots in one session never contend. On macOS the compact manager socket name keeps its digest grammar over the scoped identifier; the Windows session mutex and pipe take the scoped identifier directly. Stable and preview stay separate through the channel-qualified identifier. The Windows desktop host's earlier default-versus-override branch is removed: the default root is scoped like any other.
+- Windows entry dispatch admits an operator-selected root. The successor and the cutover child receive the strict host environment plus the root variable when the environment selected the root (`native/platform/src/storage.rs`, `successor_host_environment`); an installed default is still left for the successor to resolve.
+
+Superseded sentences:
+
+- Sessions: "The session lock and the manager IPC name do not depend on image or scope." now reads: "The session lock and the manager IPC name depend on the managed storage root's identity, and not on image or scope."
+- Sessions: "There is one runtime per OS user and storage root, and one manager per logon session." now reads: "There is one runtime per OS user and storage root, and one supervising owner per logon session and storage root."
+- Amendment 2026-10-31, "Still open": both items are resolved by this amendment.
+
+Unchanged: the per-root start claim under `.runtime/`, the Quit and failed-version markers, peer admission at exact package images, the strict runtime environment and the refusal of an authority override. A caller-owned `--configured-root` runtime takes no manager session lock; single-owner endpoint convergence still keeps a second runtime off its root (`2026-10-12-runtime-manager-architecture-caller-owned-root-adr`). Windows dispatch, cutover and the Windows hosts were changed without being built or run on Windows in this Step.
+
+## Amendment 2026-10-31 - permanent ad-hoc signing and macOS login start
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+Implemented in commits 42c502037f (manager login start) and 74ac6a6943 (contract and release wording).
+
+What changed:
+
+- Login start on macOS is decided on its own merits under rule 04, which gives user installation unprivileged login startup. The current macOS delivery is one bundle dragged into an Applications folder, with no installer to register anything. The installed manager therefore registers the bundle's own Aqua agent, `SMAppService.agent` with the bundled `Contents/Library/LaunchAgents/<manager_id>.plist` of the plist profile above, for its own user (`native/manager/src/macos/login_start.rs`).
+- Registration is admitted only when the bundle lies directly in `/Applications` or `~/Applications`, the manager runs on the default storage root, the bundle holds exactly one agent declaration and the system provides `SMAppService`. The default root is required because launchd starts the agent without the operator's environment, so it can only reach the default root. Development, test and CI images never meet these conditions, and tests reach no native registration.
+- Start is on by default. Each manager start reconciles registration with the per-user preference: an unregistered agent is registered while start is on, and the agent is removed once the user turns start off. An agent the user disabled in the system's login items is not registered again. The menu's Start at sign-in row is enabled only where registration is admitted. Turning it on registers before storing the preference, so a refusal changes nothing. Turning it off stores the opt-out first, and that alone stops a sign-in start. A refused registration never stops supervision. Removing the bundle takes its registration with it, which is uninstall for this delivery.
+
+Superseded sentences:
+
+- Versions: "A version is complete only once its package manifest verifies, and, when signing exists, its signature too." now reads: "A version is complete only once its package manifest verifies and, on macOS, its bundle seal verifies." No publisher signature is checked.
+- Platform placement, macOS: "No login start until signing exists. The desktop app opens the manager through LaunchServices." now reads: "The installed manager registers the bundled agent for its own user as the 2026-10-31 amendment describes. The desktop app opens the manager through LaunchServices."
+- Accepted costs: "One more signed binary." now reads "One more sealed binary." "macOS ships without login start until signing exists, and Linux waits for the POSIX platform crate." now reads "Linux waits for the POSIX platform crate."
+
+Unchanged: installed-scope login defaults, the per-user opt-out under the user data root, that installers never write it, and that development builds never register login start. "`SMAppService` proves unworkable for unsigned or ad-hoc builds" stays under Reconsider if, now as an open acceptance question: registration of an ad-hoc sealed agent has not been observed on a disposable Mac. If it fails there, the fallback is a per-user agent under `~/Library/LaunchAgents`, as `2026-10-08-application-distribution-darwin-versioned-installation-adr` proposes, not a wait for signing. Disposable-host acceptance of registration, the first sign-in start, opt-out and bundle removal is still outstanding.

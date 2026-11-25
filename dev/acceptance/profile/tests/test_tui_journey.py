@@ -7,13 +7,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildProcessEvidence
 
 from ..tui_journey import (
     ProfileInstalledAcceptanceError,
     ProfileInstalledAcceptanceEvidence,
     ProfileInstalledAcceptanceFailure,
-    _parse_tui_child_evidence,
+    parse_tui_child_evidence,
     write_profile_installed_receipt,
 )
 
@@ -38,7 +39,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
     receipt.write_text(
         json.dumps(
             {
-                "schema_version": "profile-01-installed-tui-row-child-v1",
+                "schema_version": "profile-01-installed-tui-row-child-v2",
                 "status": "proven",
                 "operation": "assert-clear",
                 "product_origin": "site-packages",
@@ -46,18 +47,18 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
                 "row_key": "4",
                 "row_visible": True,
                 "clear_visible_absent": True,
-                "selector_fact_visible": True,
+                "required_fact_visible": True,
                 "no_op_observed": False,
             }
         ),
         encoding="utf-8",
     )
 
-    evidence = _parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="assert-clear")
+    evidence = parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="assert-clear")
 
     assert evidence.row_key == "4"
     assert evidence.clear_visible_absent is True
-    assert evidence.selector_fact_visible is True
+    assert evidence.required_fact_visible is True
     assert evidence.no_op_observed is False
 
 
@@ -67,7 +68,7 @@ def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
     receipt.write_text(
         json.dumps(
             {
-                "schema_version": "profile-01-installed-tui-row-child-v1",
+                "schema_version": "profile-01-installed-tui-row-child-v2",
                 "status": "proven",
                 "operation": "no-op",
                 "product_origin": "site-packages",
@@ -75,14 +76,14 @@ def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
                 "row_key": "4",
                 "row_visible": True,
                 "clear_visible_absent": False,
-                "selector_fact_visible": True,
+                "required_fact_visible": True,
                 "no_op_observed": True,
             }
         ),
         encoding="utf-8",
     )
 
-    evidence = _parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="no-op")
+    evidence = parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="no-op")
 
     assert evidence.operation == "no-op"
     assert evidence.no_op_observed is True
@@ -98,7 +99,7 @@ def test_top_level_receipt_makes_no_op_observation_auditable() -> None:
         brief_id="PROFILE-01",
         brief_revision="0.1",
         scenario="fixture",
-        year=2026,
+        year=filing_year_envelope().horizon,
         source_identity="fixture-source",
         package_identity="fixture-package",
         cli_executable="fixture-cli",
@@ -122,7 +123,7 @@ def test_tui_child_failure_is_not_promoted_to_acceptance(tmp_path: Path) -> None
     receipt.write_text('{"status":"failed","failure_code":"safe"}', encoding="utf-8")
 
     with pytest.raises(ProfileInstalledAcceptanceError) as raised:
-        _parse_tui_child_evidence(outer=_outer(status="failed", returncode=2), receipt_path=receipt, operation="remove")
+        parse_tui_child_evidence(outer=_outer(status="failed", returncode=2), receipt_path=receipt, operation="remove")
 
     assert raised.value.diagnostic_code == "TUI_CHILD_NOT_PROVEN"
 

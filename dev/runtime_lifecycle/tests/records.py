@@ -3,6 +3,6 @@
 from typing import cast
 
 
-def _record(value: object) -> dict[str, object]:
+def record(value: object) -> dict[str, object]:
     assert isinstance(value, dict)
     return cast("dict[str, object]", value)

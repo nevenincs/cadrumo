@@ -9,22 +9,18 @@ import pytest
 
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
 
-from .._check_command_specs import CONFIG_CHECK_COMMAND_SPECS
-from .._collab_command_specs import CONFIG_COLLAB_COMMAND_SPECS
-from .._custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS
-from .._profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
-from .._provision_command_specs import CONFIG_PROVISION_COMMAND_SPECS
-from .._reset_command_specs import CONFIG_RESET_COMMAND_SPECS
-from .._storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
+from ..collab_command_specs import CONFIG_COLLAB_COMMAND_SPECS
+from ..custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS
+from ..profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
+from ..reset_command_specs import CONFIG_RESET_COMMAND_SPECS
+from ..storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SPECS = (
-    *CONFIG_CHECK_COMMAND_SPECS,
     *CONFIG_COLLAB_COMMAND_SPECS,
     *CONFIG_CUSTODY_COMMAND_SPECS,
     *PROFILE_INVENTORY_COMMAND_SPECS,
-    *CONFIG_PROVISION_COMMAND_SPECS,
     *CONFIG_RESET_COMMAND_SPECS,
     *CONFIG_STORAGE_COMMAND_SPECS,
 )

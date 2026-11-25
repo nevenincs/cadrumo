@@ -1,0 +1,137 @@
+import { useState, type RefObject } from "react";
+import type { CalendarMemory } from "../components/FilingCalendar";
+import type { LedgerMemory } from "../components/ledger/LedgerPage";
+import type { DeclarationsMemory } from "../components/modelo/declarations/DeclarationsPage";
+import type { WorkspaceView } from "../components/modelo/workspace/Workspace";
+import type { AccountPhase } from "./signIn";
+
+/** The phases that come and go while the same profile stays signed in: a
+ * status read that was refused or failed, a manager restarting. */
+const TRANSIENT: ReadonlySet<AccountPhase> = new Set([
+  "checking",
+  "unknown",
+  "starting",
+  "services-down",
+]);
+
+/** What the pages keep of themselves while they are put away, for one
+ * profile and one sign-in, in memory only. */
+export function usePageMemories({
+  reader,
+  phase,
+  activeProfile,
+  browserOn,
+  wantsDeclarations,
+}: {
+  reader: string | null;
+  phase: AccountPhase;
+  /** The profile the account's status names, null while it names none. */
+  activeProfile: string | null;
+  browserOn: boolean;
+  wantsDeclarations: RefObject<boolean>;
+}) {
+  // The browser's view goes on while its page is put aside: the page stays
+  // mounted, hidden, for the profile that opened it, until the person closes
+  // it or that profile is no longer the one signed in. A transient account
+  // phase that does not name another profile is not that: the host ends a
+  // view whose person session is lost, and the page says so.
+  const [browserKeptFor, setBrowserKeptFor] = useState<string | null>(null);
+  const survivesBlip =
+    reader === null &&
+    browserKeptFor !== null &&
+    TRANSIENT.has(phase) &&
+    (activeProfile === null || activeProfile === browserKeptFor);
+  const browserReader = survivesBlip
+    ? browserKeptFor
+    : browserOn
+      ? reader
+      : reader === browserKeptFor
+        ? browserKeptFor
+        : null;
+  if (browserReader !== browserKeptFor) setBrowserKeptFor(browserReader);
+  const browserMounted = browserOn || browserReader !== null;
+  // Raised to send an open view to its home page, the Sede.
+  const [browserHome, setBrowserHome] = useState(0);
+  // What the reader has made of the calendar, kept while its page is away:
+  // the page is taken down when it is put away, and comes back as it was.
+  // A calendar belongs to its profile, and so does what was made of it: a
+  // new memory for each profile, and for each time one is signed in.
+  const [calendarKept, setCalendarKept] = useState(() => ({
+    reader,
+    memory: { current: {} as CalendarMemory },
+  }));
+  if (calendarKept.reader !== reader)
+    setCalendarKept({ reader, memory: { current: {} } });
+  const calendarMemory = calendarKept.memory;
+  // The ledger's period, kept while its page is away, for one profile and
+  // one sign-in, in memory only.
+  const [ledgerKept, setLedgerKept] = useState(() => ({
+    reader,
+    memory: { current: {} as LedgerMemory },
+  }));
+  if (ledgerKept.reader !== reader)
+    setLedgerKept({ reader, memory: { current: {} } });
+  // The declaration open in the workspace, and what the list keeps of
+  // itself meanwhile, for one profile and one sign-in, in memory only; no
+  // declaration shows the list. Its view is the tab the viewer is on, null
+  // for the one it opens on.
+  const [openDeclaration, setOpenDeclaration] = useState(() => ({
+    reader,
+    workUnitId: null as string | null,
+    view: null as WorkspaceView | null,
+    arrival: 0,
+    memory: { current: {} as DeclarationsMemory },
+  }));
+  if (openDeclaration.reader !== reader)
+    setOpenDeclaration({
+      reader,
+      workUnitId: null,
+      view: null,
+      arrival: 0,
+      memory: { current: {} },
+    });
+  // A declaration opened, or the list, or a place the window's back and
+  // forward return to: the declaration on the view the viewer was on.
+  const showDeclaration = (
+    workUnitId: string | null,
+    view: WorkspaceView | null,
+  ) => {
+    wantsDeclarations.current = true;
+    setOpenDeclaration((held) => ({ ...held, workUnitId, view }));
+  };
+  const openWorkUnit = (workUnitId: string | null) =>
+    showDeclaration(workUnitId, null);
+  const showDeclarationView = (view: WorkspaceView) =>
+    setOpenDeclaration((held) =>
+      held.view === view ? held : { ...held, view },
+    );
+  // The list, looked at as the caller says: every view, narrowed to the words
+  // given. The page is read anew from its memory.
+  const showDeclarationList = (query: string) => {
+    wantsDeclarations.current = true;
+    setOpenDeclaration((held) => {
+      held.memory.current.view = "all";
+      held.memory.current.query = query;
+      return {
+        ...held,
+        workUnitId: null,
+        view: null,
+        arrival: held.arrival + 1,
+      };
+    });
+  };
+  return {
+    showDeclarationList,
+    setBrowserKeptFor,
+    browserMounted,
+    browserReader,
+    browserHome,
+    setBrowserHome,
+    calendarMemory,
+    ledgerMemory: ledgerKept.memory,
+    openDeclaration,
+    openWorkUnit,
+    showDeclaration,
+    showDeclarationView,
+  };
+}

@@ -34,9 +34,11 @@ wizard:
       pontot tizedeselválasztóként.'
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
-      A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
+      A spanyol irányítószám 5 jegyű (01-52 tartománykód, majd három számjegy).'
     invalid_tax_id: 'Érvénytelen NIF/CIF/DNI/NIE a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
+    invalid_year: 'Érvénytelen adóév ennél: %{prompt_key}: %{raw}. Négy számjegyet
+      használj (ÉÉÉÉ).'
     select_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
       Érvényes lehetőségek: %{choices}.'
     select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
@@ -51,7 +53,7 @@ wizard:
       1. Futtasd újra a parancsot interaktív terminálból az irányított beállítás használatához:
       aeat config profile create NAME
 
-      2. Vagy hozz létre resident IRPF természetes személy profilt egyetlen lépéssel,
+      2. Vagy hozz létre rezidens IRPF természetes személy profilt egyetlen lépéssel,
       a szükséges adatokat kapcsolókként megadva: aeat config profile create NAME
       --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
       actividad_economica --tax-residence-ccaa madrid --name KERESZTNÉV --surnames
@@ -82,11 +84,12 @@ wizard:
       google-export:
         prompt: Engedélyezi a Google Sheets exportálást?
       llm-vision:
-        prompt: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+        prompt: Engedélyezed a beolvasott vagy kép alapú dokumentumok olvasását az
+          általad kiválasztott képolvasó modellel?
       title: Szolgáltatási képességek
     certificate:
       path:
-        prompt: Add meg a digitális tanúsítvány elérési útját (.p12, .pfx)
+        prompt: Add meg a digitális tanúsítvány elérési útját (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:
@@ -94,7 +97,8 @@ wizard:
             description: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.
             label: Fogyatékossági fokozat 33%-tól 64%-ig
           65-plus:
-            description: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.
+            description: Elismert 65%-os vagy nagyobb fogyatékosság - a személyi minimum
+              nagyobb mértékű növelése.
             label: Fogyatékossági fokozat 65% vagy magasabb
           assistance-or-reduced-mobility:
             description: Igazolt harmadik személy segítségének szükségessége vagy
@@ -125,7 +129,7 @@ wizard:
     descendientes:
       acogimiento-resolucion:
         help: 'Az első örökbefogadás előtti vagy tartós nevelésbe vételi határozat
-          dátuma. Akkor is add meg, ha a gyermeket később örökbefogadták: a hároméves
+          dátuma. Akkor is add meg, ha a gyermeket később örökbe fogadták: a hároméves
           kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
           át tart, és az örökbefogadás nem indítja újra.'
         prompt: Az első nevelésbe vételi határozat dátuma
@@ -136,6 +140,9 @@ wizard:
         invalid_range: A hónapnak %{minimum} és %{maximum} között kell lennie.
         prompt: Az a hónap, amikor az anya a születés után teljesítette a 30 járulékfizetési
           napot
+      apellidos-nombre:
+        prompt: A leszármazott vezeték- és utóneve (elöl a vezetéknév)
+        too_long: Legfeljebb %{limit} karakterben add meg a vezeték- és utónevet.
       birth-date:
         prompt: Születési dátum
       convivencia:
@@ -272,6 +279,14 @@ wizard:
     familia:
       title: Családi helyzet
     family:
+      family-convive-con-otro-progenitor:
+        help: Az szja-törvény (LIRPF) 84. cikkének 2. bekezdés 4. pontja kizárja a
+          közös adózás szerinti csökkentést az egyszülős családi egységnél, ha az
+          adózó az egységhez tartozó valamelyik gyermek apjával vagy anyjával él együtt.
+          Ha nem tudod, hagyd megválaszolatlanul; ilyenkor a Cadrumo nem tudja kiszámolni
+          ezt a csökkentést.
+        prompt: Együtt élsz a családi egységedhez tartozó valamelyik gyermek apjával
+          vagy anyjával?
       family-descendants-eu-eea-deduction:
         prompt: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
@@ -304,7 +319,8 @@ wizard:
         help: Modelo 347 bevallói szerepkör; add meg a --declaration-roles kapcsolót
           szerepkörönként egyszer
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,COTIZACIONES_SS_MADRE=N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<vezeték-
+          és utónév>]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:
@@ -312,7 +328,10 @@ wizard:
       enrollment-public-administration-budget-gt-6000000:
         help: Közigazgatási költségvetés meghaladja a 6 000 000-t
       entity-type:
-        help: Természetes személy, jogi személy vagy jövedelemattribúciós szervezet
+        help: Természetes személy, jogi személy vagy jövedelem-hozzárendelési szervezet
+      family-convive-con-otro-progenitor:
+        help: 'Egyszülős egység: együtt élsz-e a családi egységhez tartozó gyermek
+          apjával vagy anyjával (LIRPF 84. cikk 2.4)'
       family-descendants-eu-eea-deduction:
         help: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
@@ -329,6 +348,18 @@ wizard:
         help: Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban,
           euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti
           módozatot írja elő; alatta mindkét módozat választható. Opcionális.
+      irpf-activity-income-imputation-criterion:
+        help: 'Az RIRPF 7. cikke szerinti elv a tevékenységi bevételekhez és kiadásokhoz
+          a --irpf-activity-income-imputation-year által megadott adóévben: `devengo`
+          (a szokásos) vagy `cobros_y_pagos` (három évig köt; Código de Comercio szerinti
+          könyvvitel mellett nem).'
+      irpf-activity-income-imputation-year:
+        help: Négyjegyű adóév (`ejercicio`), amelyre az elszámolási elv és a Código
+          de Comercio-válasz vonatkozik. Bármelyikhez kötelező; a többi adóév válasza
+          megmarad.
+      irpf-codigo-comercio-accounting:
+        help: Add meg, hogy vezetsz-e Código de Comercio szerinti könyvvitelt a --irpf-activity-income-imputation-year
+          által megadott adóévben.
       irpf-estimation-regime:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
           hogy a Modelo 130 vagy a Modelo 131 alkalmazandó-e
@@ -336,13 +367,13 @@ wizard:
         help: IRPF jövedelemkategória; add meg a --irpf-income-categories kapcsolót
           kategóriánként egyszer
       irpf-special-regime:
-        help: IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado"
+        help: IRPF különleges adózási rend. `general` a legtöbb adózó számára. `impatriado`
           Spanyolországba áthelyezett és a Beckham-törvény szerinti adózást (LIRPF
           93. cikkely) választó munkavállalók számára, az áthelyezés utáni első 6
           évre.
       irpf-special-regime-start-date:
         help: A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak
-          akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely.
+          akkor, ha az irpf-special-regime értéke `impatriado`. RIRPF 116. cikkely.
           Az adózási rend a 6. naptári év végén jár le.
       iva-cash-accounting-regime-enrolled:
         help: Az IVA pénzforgalmi különös szabályozásába való bejelentkezés megadása.
@@ -373,20 +404,9 @@ wizard:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
-      ley-49-2002-option-date:
-        help: Rögzíti a Modelo 036 653-as mezőjének dátumát a Ley 49/2002 II. címe
-          szerinti választáshoz.
-      ley-49-2002-option-declared:
-        help: Rögzíti, hogy a Modelo 036 651-es mezője bejelenti-e a Ley 49/2002 II.
-          címe szerinti választást.
-      ley-49-2002-renunciation-date:
-        help: Rögzíti a Modelo 036 654-es mezőjének dátumát a Ley 49/2002 II. címe
-          szerinti lemondáshoz.
-      ley-49-2002-renunciation-declared:
-        help: Rögzíti, hogy a Modelo 036 652-es mezője bejelenti-e a Ley 49/2002 II.
-          címe szerinti rendszerről való lemondást.
       llm-vision:
-        help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
+        help: Beolvasott vagy kép alapú dokumentumok olvasásának engedélyezése a kiválasztott
+          képolvasó modellel.
       modelo-111-no-retenciones-periods:
         help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
           formátumban (például 2025:2T,2025:3T). Csak akkor használd, ha nem történt
@@ -404,28 +424,21 @@ wizard:
           adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs
           igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs
           érvényes.
-      notes:
-        help: Megjegyzések saját nyilvántartáshoz (opcionális)
-      objective-estimation-modulos-iae-epigraph:
-        help: IAE epigrafus objektív becslési modulokhoz, például 972.
-      objective-estimation-modulos-module-1-units:
-        help: Az 1. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-2-units:
-        help: A 2. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-3-units:
-        help: A 3. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-4-units:
-        help: A 4. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-5-units:
-        help: Az 5. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-6-units:
-        help: A 6. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-7-units:
-        help: A 7. modul éves egységei objektív becsléshez.
       output-language:
         help: CLI kimeneti nyelv ehhez a profilhoz
+      pago-fraccionado-art-40-3-elected:
+        help: Megadja, hogy a társaság a cégbejelentésében (declaración censal) élt-e
+          az LIS 40.3. cikkely szerinti választással (részletfizetés az első 3, 9
+          vagy 11 hónap adóalapja után); a tagadó alak azt rögzíti, hogy nem élt vele,
+          vagy lemondott róla. Opcionális; megadás nélkül egyik válasz sem feltételezett.
+      patrimonio-declaration-threshold-met:
+        help: Az Impuesto sobre el Patrimonio szerinti adód fizetendő, vagy ha nem,
+          a vagyonod és jogaid értéke meghaladja a 2 000 000 eurót
       pays-capital-income-with-retencion:
         help: Forrásadóval terhelt tőkejövedelmet fizet
+      pays-non-resident-income-with-retencion:
+        help: IRNR-forrásadó alá eső jövedelmet fizetsz állandó telephely nélküli
+          külföldi illetőségűeknek
       pays-professionals-with-retencion:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -436,8 +449,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Negyedévek, amelyekben a nyereményt felvették, |-jellel elválasztott
           ÉÉÉÉ-nT tokenekként (például 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       representante-fiscal-nif:
         help: A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n
           kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg
@@ -489,8 +500,8 @@ wizard:
       tax-id:
         help: Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz
       tax-residence-ccaa:
-        help: Az adóügyi illetőség autonóm közössége, közös területi rendszerben.
-          Ha az érték nem ismerhető fel, a hibaüzenet felsorolja az elfogadott közösségeket.
+        help: Az adóügyi illetőség autonóm közössége vagy városa, közös területi rendszerben.
+          Ha az érték nem ismerhető fel, a hiba felsorolja az elfogadott területeket.
       tax-residence-jurisdiction-scope:
         help: 'Nyilatkozott területi rendszer: közös terület vagy még nem támogatott
           forális terület.'
@@ -509,8 +520,8 @@ wizard:
           4 = különváltan élő vagy elvált, 5 = bejegyzett élettársi kapcsolat.'
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
-          = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
-          82. cikk LIRPF).
+          = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (a házasság időtartama
+          az adóév folyamán, 82. cikk LIRPF).
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
@@ -567,10 +578,6 @@ wizard:
             label: Csak egyszerűsített rendszer
         prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       title: IVA
-    notes:
-      notes:
-        prompt: Megjegyzések saját nyilvántartáshoz (opcionális)
-      title: Megjegyzések saját nyilvántartáshoz
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti
@@ -581,6 +588,32 @@ wizard:
         prompt: Végez intraközösségi ügyleteket
       has-employees:
         prompt: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Csak akkor, ha a bevallásodban ezt választottad, és nem vezetsz
+              a Código de Comercio szerinti könyvvitelt; legalább három évre köt.
+            label: Pénzforgalmi (cobros y pagos)
+          devengo:
+            description: 'A szokásos: a bevétel és a kiadás abban az adóévben számít,
+              amelyben keletkezik, a fizetés időpontjától függetlenül.'
+            label: Teljesítés szerint (devengo)
+        help: 'A teljesítés szerinti elszámolás (devengo) a szokásos: a bevétel és
+          a kiadás abba az adóévbe tartozik, amelyben keletkezik, a fizetés időpontjától
+          függetlenül. A pénzforgalmi elv (cobros y pagos) választható lehetőség,
+          amelyet csak akkor használhatsz, ha nem vezetsz a Código de Comercio szerinti
+          könyvvitelt (RIRPF 7. cikk 2. pont); legalább három évre köt, és az adóbevallásban
+          jelzed. Ha nem vagy biztos benne, hagyd üresen: a tevékenységi rovatok addig
+          feloldatlanok maradnak, amíg meg nem adod.'
+        prompt: Melyik elv szerint rendeled az adóévekhez a vállalkozói tevékenységed
+          bevételeit és kiadásait? A szokásos a teljesítés szerinti elszámolás (devengo).
+      irpf-activity-income-imputation-year:
+        help: Az elvet adóévenként választod, ezért a válasz csak arra az adóévre
+          kerül mentésre, a többi adóév válasza nem változik.
+        prompt: Melyik adóévre vonatkozik ez a válasz? Négy számjegyet írj.
+      irpf-codigo-comercio-accounting:
+        prompt: Vezetsz ebben az adóévben a Código de Comercio szerinti könyvvitelt
+          (kötelezően vagy önként)? Ha igen, a pénzforgalmi elv nem áll rendelkezésedre.
       irpf-estimation-regime:
         choices:
           directa-normal:
@@ -606,7 +639,8 @@ wizard:
           impatriado:
             description: A LIRPF 93. cikke szerinti különleges rendszert választottad
               (Modelo 151).
-            label: Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)
+            label: Beérkező, Spanyolországba áthelyezett munkavállaló – Beckham-törvény
+              (LIRPF 93. cikk)
         help: A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első
           6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.
         prompt: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
@@ -615,8 +649,8 @@ wizard:
           cikkely). Az adózási rend a 6. naptári év végén jár le.
         prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
       modelo-111-no-retenciones-periods:
-        help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
-          cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.
+        help: ÉÉÉÉ:IDŐSZAK azon időszakokhoz, amikor nem történt adólevonás vagy adóelőleg-jóváírás
+          alá eső kifizetés, ezért nem kell üres Modelo 111-et benyújtani.
         prompt: Modelo 111 forrásadó nélküli időszakok
       modelo-115-no-relevant-payment-periods:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles
@@ -624,30 +658,14 @@ wizard:
         prompt: Modelo 115 releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
-      objective-estimation-modulos-iae-epigraph:
-        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a nyomtatványdefiníciókban
-          maradnak.
-        prompt: IAE epigrafus objektív becslési modulokhoz
-      objective-estimation-modulos-module-1-units:
-        prompt: Az 1. modul éves egységei
-      objective-estimation-modulos-module-2-units:
-        prompt: A 2. modul éves egységei
-      objective-estimation-modulos-module-3-units:
-        prompt: A 3. modul éves egységei
-      objective-estimation-modulos-module-4-units:
-        prompt: A 4. modul éves egységei
-      objective-estimation-modulos-module-5-units:
-        prompt: Az 5. modul éves egységei
-      objective-estimation-modulos-module-6-units:
-        prompt: A 6. modul éves egységei
-      objective-estimation-modulos-module-7-units:
-        prompt: A 7. modul éves egységei
-      objective-estimation-modulos-module-units:
-        help: Stabil éves egységszám ehhez a modulhelyhez. A kiválasztott IAE epigrafus
-          határozza meg, hogy alkalmazottat, üzlethelyiség-területet, villamosenergia-fogyasztást
-          vagy más hivatalos modult jelent.
+      patrimonio-declaration-threshold-met:
+        prompt: Az Impuesto sobre el Patrimonio szerinti adód fizetendő, vagy a vagyonod
+          és jogaid értéke meghaladja a 2 000 000 eurót
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
+      pays-non-resident-income-with-retencion:
+        prompt: Forrásadó-köteles jövedelmet fizetsz állandó telephely nélküli külföldi
+          illetőségűeknek
       pays-professionals-with-retencion:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -659,8 +677,6 @@ wizard:
         help: Naptári negyedévenként egy ÉÉÉÉ-nT token, |-jellel elválasztva (például
           2025-1T|2025-3T). Minden negyedév külön 136-os bevallást nyit.
         prompt: Negyedévek, amelyekben a nyereményt felvették
-      professional-income-withholding-ge-70pct:
-        prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
         prompt: A Modelo 347 által lefedett naptári évben meghaladták-e az ugyanazzal
           a személlyel vagy szervezettel folytatott ügyleteid a 3 005,06 EUR-t (a
@@ -759,6 +775,8 @@ wizard:
             label: Kasztília és León
           cataluna:
             label: Katalónia
+          ceuta:
+            label: Ceuta (autonóm város)
           comunidad_valenciana:
             label: Valenciai Közösség
           extremadura:
@@ -769,6 +787,8 @@ wizard:
             label: La Rioja
           madrid:
             label: Madrid
+          melilla:
+            label: Melilla (autonóm város)
           murcia:
             label: Murcia
       country-of-fiscal-residence:
@@ -791,7 +811,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
-        prompt: Adóügyi illetékességi autonóm közösség
+        prompt: Adóügyi illetékességi autonóm közösség vagy város
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:
@@ -913,7 +933,7 @@ wizard:
           attribution-entity:
             description: 'Jövedelem-hozzárendelési entitás (comunidad de bienes, sociedad
               civil): a jövedelem a tagoknak tulajdonítható.'
-            label: Jövedelemattribúciós szervezet
+            label: Jövedelem-hozzárendelő szervezet
           legal-entity:
             description: Társaság vagy szervezet (SL, SA, egyesület…), amely társasági
               adó (IS) szerint adózik.
@@ -923,7 +943,7 @@ wizard:
               szerint adózik.
             label: Természetes személy
         help: Természetes személy (IRPF), jogi személy (Impuesto sobre Sociedades)
-          vagy jövedelemattribúciós szervezet
+          vagy jövedelem-hozzárendelési szervezet
         prompt: Entitástípus
       incn-prior-12-months:
         help: Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az
@@ -944,7 +964,7 @@ wizard:
             label: Ingóvagyon-jövedelem
           ganancias-patrimoniales:
             description: Eszközértékesítésből származó nyereség vagy veszteség (részvény,
-              ingatlan, kripto).
+              ingatlan, kriptoeszköz).
             label: Tőkenyereség
           pension:
             description: Nyugdíj - az IRPF-ben munkajövedelemként adózik.
@@ -971,42 +991,31 @@ wizard:
               kérdezett különös adószabályozást.'
             label: Nonprofit szervezet
           sl:
-            description: 'Sociedad Limitada: a szokásos kisvállalati forma, minimum
-              tőke 3000 EUR.'
+            description: 'Korlátolt felelősségű társaság: a szokásos kisvállalati
+              forma, minimum 3000 EUR törzstőkével.'
             label: Korlátolt felelősségű társaság (S.L.)
           sll:
             label: Munkavállalói tulajdonú korlátolt felelősségű társaság (S.L.L.)
           sociedad-civil-mercantil:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
-      ley-49-2002-option-date:
-        help: A Modelo 036 653-as mezőjéhez tartozó ISO dátumot használd.
-        prompt: A Ley 49/2002 szerinti különleges rendszer választásának bejelentett
-          dátuma
-      ley-49-2002-option-declared:
-        help: A Modelo 036 651-es mezőjében szereplő bejelentési tényt használd; a
-          jogi alkalmazás továbbra is a törvényi feltételektől és a lemondás hiányától
-          függ.
-        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
-          különleges adózási rendszer választását?
-      ley-49-2002-renunciation-date:
-        help: A Modelo 036 654-es mezőjéhez tartozó ISO dátumot használd.
-        prompt: A Ley 49/2002 szerinti különleges rendszerről való lemondás bejelentett
-          dátuma
-      ley-49-2002-renunciation-declared:
-        help: A Modelo 036 652-es mezőjében szereplő bejelentési tényt használd.
-        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
-          különleges adózási rendszerről való lemondást?
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.
         prompt: Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának
           egyikében?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Csak jogi személyekre vonatkozik. Ha a nettó árbevétel a 40.3. cikkely
+          küszöbértéke alatt van, ettől a választástól függ, hogy a Modelo 202 egyes
+          részletei után keletkezik-e befizetés. Ha nem tudod, hagyd megválaszolatlanul:
+          egyik válasz sem feltételezett.'
+        prompt: Élt-e a társaság a cégbejelentésében (declaración censal) az LIS 40.3.
+          cikkely szerinti választással a részletfizetésre?
       title: Adózói típus
     title: Beállítási varázsló
     verifier:
-      impatriado_requires_start_date: 'Impatrióta rendszer: a különleges rendszer
-        kezdő dátuma kötelező. Add meg a kezdő dátumot.'
+      impatriado_requires_start_date: A beköltözők különleges rendszeréhez kezdő dátum
+        szükséges. Add meg a kezdő dátumot.
       monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
         egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
         igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem

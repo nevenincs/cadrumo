@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -14,6 +15,7 @@ from .....core.filing_projection_ref import (
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ....filing_evidence import FilingEvidenceReference
 from ....modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
@@ -23,6 +25,13 @@ from ....modelos.calculation_revision_m303_evidence import (
 from ..m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _reference() -> FilingEvidenceReference:

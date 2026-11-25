@@ -11,6 +11,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.rate_box_partition import derive_rate_box_partitions
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
 from ..errors import ModeloApplicationError
@@ -19,7 +20,7 @@ from ..export_parity import assert_rate_boxes_account_for_total
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("year", (2022, 2023, 2024, 2025))
+@pytest.mark.parametrize("year", filing_grade_exercises("390"))
 @pytest.mark.parametrize("unallocated", (False, True))
 def test_committed_recargo_coverage_controls_export(
     operation: PinnedAuthorityOperation, year: int, unallocated: bool
@@ -30,7 +31,7 @@ def test_committed_recargo_coverage_controls_export(
     assert len(recargo) == 1, "the committed recargo control must remain visible to export"
     partition = recargo[0]
     assert "iva.anual.repercutido.recargo.tipo-1-4.cuota" in partition.box_casilla_ids
-    stamped = datetime(2026, 10, 7, tzinfo=UTC)
+    stamped = datetime(1980, 1, 1, tzinfo=UTC)
     draft = ModeloDraft(
         draft_id="recargo-coverage-proof",
         modelo="390",

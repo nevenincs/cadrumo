@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { useEscapeLayer } from "@/components/ui/escapeLayers";
 import { revealFocused } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
@@ -38,65 +39,124 @@ function DialogOverlay({
   );
 }
 
+/** Whether a dialog or sheet that holds the window is open in `root`: one
+ * marked `data-modal-layer`, as each is unless it opts out. One that is
+ * closing no longer holds it. */
+function modalLayerOpen(root: ParentNode = document): boolean {
+  return root.querySelector('[data-modal-layer][data-state="open"]') !== null;
+}
+
 /**
  * The dialog surface, portalled to the document body over a scrim. Focus is
  * trapped inside while it is open and returns to the opener when it closes.
  * `closeLabel` names the corner close button; leave it out for a dialog that
  * offers its own way out.
  *
- * Escape closes it at the first press. The foundation gives the key to the
- * topmost layer only, so a tooltip open on a focused button inside the
- * dialog would otherwise take the first press and leave the dialog up.
+ * While open it holds the window (see `modalLayerOpen`). `modalLayer={false}`
+ * is for a surface that must not: one that hands on the very choice it asks
+ * for, such as a palette or a question about leaving, or an editor that
+ * weighs its own unsaved work.
+ *
+ * Escape closes it while it is the topmost layer still open (see
+ * `useEscapeLayer`), by way of `onOpenChange`: a dialog that may not close yet
+ * says so there.
  */
 function DialogContent({
   className,
   children,
   closeLabel,
   placement = "center",
+  modalLayer = true,
   onFocusCapture,
+  ref,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   closeLabel?: string;
   /** `top` suits a surface whose height changes as it is used. */
   placement?: "center" | "top";
+  /** False for a surface that does not hold the window while open. */
+  modalLayer?: boolean;
 }) {
-  const dismiss = React.useRef<HTMLButtonElement>(null);
+  const { ref: layer } = useEscapeLayer();
+  const [surface, setSurface] = React.useState<HTMLDivElement | null>(null);
+  const holdSurface = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setSurface(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  // A dialog's own footer often offers the same way out under the same name
+  // ("Cancel"). The corner button then stays for the pointer but leaves the
+  // accessibility tree and the tab order, so the name is offered once. It is
+  // marked on the element, and again whenever the content changes, because
+  // the footer is the caller's own and the surface mounts after this renders.
+  React.useLayoutEffect(() => {
+    if (!surface || !closeLabel) return;
+    const mark = () => {
+      const corner = surface.querySelector<HTMLElement>(
+        '[data-slot="dialog-corner-close"]',
+      );
+      if (!corner) return;
+      const twin = [...surface.querySelectorAll("button")].some(
+        (button) =>
+          button !== corner &&
+          !button.hidden &&
+          (button.getAttribute("aria-label") ?? button.textContent)?.trim() ===
+            closeLabel,
+      );
+      if (twin) {
+        corner.setAttribute("aria-hidden", "true");
+        corner.tabIndex = -1;
+      } else {
+        corner.removeAttribute("aria-hidden");
+        corner.removeAttribute("tabindex");
+      }
+    };
+    mark();
+    const watch = new MutationObserver(mark);
+    watch.observe(surface, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["aria-label", "hidden"],
+    });
+    return () => watch.disconnect();
+  }, [surface, closeLabel]);
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={holdSurface}
         data-slot="dialog-content"
+        data-modal-layer={modalLayer ? "" : undefined}
         // Tall content scrolls inside: what takes focus is brought into view.
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
           revealFocused(event);
         }}
-        onKeyDownCapture={(event) => {
-          // A layer portalled out of the dialog keeps its own Escape.
-          if (
-            event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
-            event.currentTarget.contains(event.target as Node)
-          )
-            dismiss.current?.click();
-        }}
         className={cn(
-          "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-var(--overlay-gutter))] grid-cols-1 -translate-x-1/2 gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-overlay outline-none",
+          "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-var(--overlay-gutter))] grid-cols-1 -translate-x-1/2 gap-4 rounded-xl bg-card p-5 text-card-foreground shadow-overlay outline-none",
+          // Where colours are forced the shadow is dropped: an edge stands in.
+          "forced-colors:border forced-colors:border-[CanvasText]",
           placement === "center"
             ? "top-1/2 max-h-[calc(100%-var(--overlay-gutter))] -translate-y-1/2 overflow-y-auto"
-            : "top-(--overlay-top) max-h-[calc(100dvh-2*var(--overlay-top))]",
+            : "top-(--overlay-top) max-h-[calc(100dvh-2*var(--overlay-top))] overflow-y-auto",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+        <DialogPrimitive.Close ref={layer} hidden tabIndex={-1} />
         {closeLabel && (
           <DialogPrimitive.Close asChild>
             <IconButton
               label={closeLabel}
               size="sm"
+              data-slot="dialog-corner-close"
               className="absolute top-3 right-3"
             >
               <Icon name="close" />
@@ -118,11 +178,27 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * The dialog's actions. `sticky` keeps them in view at the foot of a
+ * dialog whose content scrolls inside it, over an edge the content passes
+ * under; a dialog that fits shows them as it would without.
+ */
+function DialogFooter({
+  className,
+  sticky = false,
+  ...props
+}: React.ComponentProps<"div"> & { sticky?: boolean }) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-wrap items-center justify-end gap-2", className)}
+      data-sticky={sticky || undefined}
+      className={cn(
+        "flex flex-wrap items-center justify-end gap-2",
+        // The surface's own padding is taken back so the bar meets its edges.
+        sticky &&
+          "sticky -bottom-5 -mx-5 -mb-5 rounded-b-xl border-t border-border bg-card px-5 pt-3 pb-5",
+        className,
+      )}
       {...props}
     />
   );
@@ -155,6 +231,7 @@ function DialogDescription({
 }
 
 export {
+  modalLayerOpen,
   Dialog,
   DialogClose,
   DialogContent,

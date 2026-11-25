@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, SecretBytes
 
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+
 from .....application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
@@ -24,6 +26,11 @@ from .automation_records import (
     ProtectedControlAnchor,
     StoredAutomationGrant,
 )
+
+GRANT_STATES_WITHOUT_WRAPPED_KEY: frozenset[AuthorityState] = frozenset(
+    {AuthorityState.SUSPENDED, AuthorityState.REVOKED}
+)
+"""Grant states that keep no wrapped profile key, so custody publication carries none forward."""
 
 
 def changed_control_model[T: BaseModel](value: T, **changes: object) -> T:

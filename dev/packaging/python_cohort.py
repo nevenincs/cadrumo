@@ -8,10 +8,12 @@ import hashlib
 import json
 import re
 import shutil
+import sys
 import tarfile
 import zipfile
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
+from email.message import Message
 from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
@@ -20,32 +22,35 @@ from packaging.requirements import Requirement
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import build_client_json, stage_build_client
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import member_content_digest, repository_files, snapshot
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
-from ._distribution_limits import PYPI_FILE_CAP_BYTES
-from ._distribution_names import normalise_distribution_name
 from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
+    remove_source_snapshot,
     require_build_path,
-    sweep_build_scratch,
+    sweep_var_scratch,
     var_scratch_name,
 )
 from .build_storage import build_storage
 from .command_spec_attestation import (
-    _cached_artifact_command_projection,
-    _forbidden_command_artifacts,
-    _projection_digest,
-    _validate_command_spec_attestation,
     attest_command_specs,
+    cached_artifact_command_projection,
+    forbidden_command_artifacts,
+    projection_digest,
+    validate_command_spec_attestation,
 )
+from .distribution_limits import PYPI_FILE_CAP_BYTES
+from .distribution_names import normalise_distribution_name
 from .hashing import sha256_path
 from .proof_ledger import record_proof
 from .runtime_wheelhouse import build_runtime_wheelhouse
+from .runtime_wheelhouse_contract import RuntimeWheelhouse
 from .runtime_wheelhouse_reader import load_runtime_wheelhouse
 from .wheel_metadata import read_wheel_metadata
 
@@ -159,18 +164,23 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
     )
 
 
+def _read_sdist_metadata(sdist: Path) -> Message:
+    with tarfile.open(sdist, mode="r:gz") as archive:
+        metadata_names = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
+        if len(metadata_names) != 1:
+            raise SystemExit(
+                f"expected one PKG-INFO member in {sdist}; got {[member.name for member in metadata_names]!r}",
+            )
+        handle = archive.extractfile(metadata_names[0])
+        if handle is None:
+            raise SystemExit(f"could not read PKG-INFO from {sdist}")
+        metadata = Parser().parsestr(handle.read().decode(_UTF_8))
+    return metadata
+
+
 def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     try:
-        with tarfile.open(sdist, mode="r:gz") as archive:
-            metadata_names = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
-            if len(metadata_names) != 1:
-                raise SystemExit(
-                    f"expected one PKG-INFO member in {sdist}; got {[member.name for member in metadata_names]!r}",
-                )
-            handle = archive.extractfile(metadata_names[0])
-            if handle is None:
-                raise SystemExit(f"could not read PKG-INFO from {sdist}")
-            metadata = Parser().parsestr(handle.read().decode(_UTF_8))
+        metadata = _read_sdist_metadata(sdist)
     except (tarfile.TarError, UnicodeDecodeError) as exc:
         raise SystemExit(f"invalid source distribution {sdist}: {exc}") from exc
     name = metadata.get("Name")
@@ -184,12 +194,13 @@ def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     )
 
 
-def _validate_companion_pins(
+def validate_companion_pins(
     requirements: tuple[str, ...],
     *,
     version: str,
     artifact_kind: str,
 ) -> None:
+    """Require the companion requirements to pin the cohort version exactly."""
     parsed = tuple(Requirement(row) for row in requirements)
     for companion in _DISTRIBUTIONS[1:]:
         matches = tuple(
@@ -207,12 +218,13 @@ def _validate_companion_pins(
             )
 
 
-def _validate_wheel_contract(
+def validate_wheel_contract(
     root_wheel: Path,
     manuals_wheel: Path,
     official_wheel: Path,
     normatives_wheel: Path,
 ) -> str:
+    """Validate that the four wheels share one version and pins, returning that version."""
     root_name, version, requirements = _wheel_identity(root_wheel)
     manuals_name, manuals_version, _ = _wheel_identity(manuals_wheel)
     official_name, official_version, _ = _wheel_identity(official_wheel)
@@ -228,7 +240,7 @@ def _validate_wheel_contract(
             "Python cohort distribution identities or versions drifted: "
             f"expected {{name: {version!r} for name in {_DISTRIBUTIONS!r}}}, got {observed!r}",
         )
-    _validate_companion_pins(
+    validate_companion_pins(
         requirements,
         version=version,
         artifact_kind="wheel",
@@ -241,7 +253,7 @@ def _validate_wheel_contract(
     return version
 
 
-def _validate_sdist_contract(
+def validate_sdist_contract(
     root_sdist: Path,
     manuals_sdist: Path,
     official_sdist: Path,
@@ -249,6 +261,7 @@ def _validate_sdist_contract(
     *,
     expected_version: str,
 ) -> None:
+    """Validate the four source distributions against the expected version and pins."""
     root_name, root_version, requirements = _sdist_identity(root_sdist)
     manuals_name, manuals_version, _ = _sdist_identity(manuals_sdist)
     official_name, official_version, _ = _sdist_identity(official_sdist)
@@ -264,7 +277,7 @@ def _validate_sdist_contract(
         raise SystemExit(
             f"Python cohort sdist identities or versions drifted: expected {expected!r}, got {observed!r}",
         )
-    _validate_companion_pins(
+    validate_companion_pins(
         requirements,
         version=expected_version,
         artifact_kind="sdist",
@@ -290,7 +303,7 @@ def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved.mkdir(parents=True)
 
 
-def _archive_source_snapshot(
+def archive_source_snapshot(
     build_root: Path, files: Sequence[str], destination: Path, *, expected_source_digest: str
 ) -> Path:
     """Archive an already-extracted source snapshot into one flat-member zip.
@@ -376,18 +389,19 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
     output = output.absolute()
-    scratch_root = (root / "build").resolve()
-    scratch_root.mkdir(parents=True, exist_ok=True)
+    scratch_root = prepare_temp_root()
     with contextlib.suppress(OSError):
-        sweep_build_scratch(scratch_root)
-    build_root = scratch_root / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
+        sweep_var_scratch(scratch_root)
+    build_root = resolve_temporary_output(
+        override=scratch_root / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
+    )
     if build_root.exists():
-        shutil.rmtree(build_root)
+        remove_source_snapshot(resolve_temporary_output(override=build_root))
     try:
         snapshot(root, source_files, build_root)
         source_digest = member_content_digest(source_files, lambda relative: (build_root / relative).read_bytes())
-        with build_storage(build_root / "build-work", repo_root=root):
-            return _build_python_cohort_from_snapshot(
+        with build_storage(output.parent / "work", repo_root=root):
+            return build_python_cohort_from_snapshot(
                 build_root=build_root,
                 output=output,
                 source_files=source_files,
@@ -396,9 +410,9 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 scratch_root=scratch_root,
                 remove_build_root=True,
             )
-    except BaseException:
+    except BaseException as error:
         if build_root.exists():
-            shutil.rmtree(build_root)
+            remove_source_snapshot(resolve_temporary_output(override=build_root), primary_error=error)
         raise
 
 
@@ -420,12 +434,9 @@ def build_python_cohort_from_clean_snapshot(
     output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
     output = output.absolute()
-    scratch_root = (root / "build").resolve()
-    scratch_root.mkdir(parents=True, exist_ok=True)
-    with contextlib.suppress(OSError):
-        sweep_build_scratch(scratch_root)
-    with build_storage(scratch_root / "cohort-work", repo_root=root):
-        return _build_python_cohort_from_snapshot(
+    scratch_root = prepare_temp_root()
+    with build_storage(root / "build" / "cohort-work", repo_root=root):
+        return build_python_cohort_from_snapshot(
             build_root=root,
             output=output,
             source_files=source_files,
@@ -436,7 +447,83 @@ def build_python_cohort_from_clean_snapshot(
         )
 
 
-def _build_python_cohort_from_snapshot(
+def _produce_cohort_artifacts(
+    build_root: Path,
+    output: Path,
+    source_files: Sequence[str],
+    source_digest: str,
+    authority_source_root: Path | None,
+    archive: Path,
+    retained_source_archive: Path,
+) -> RuntimeWheelhouse:
+    # The ordinary builder made this snapshot just before entering here;
+    # the release builder has already verified its clean snapshot. The
+    # retained archive is written from those same normalized source bytes.
+    archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
+    stage_build_client(build_root, build_client_json(authority_source_root or build_root))
+    if authority_source_root is not None:
+        # The published authority is absent from the source archive but is
+        # staged into the private build root after that archive is sealed.
+        stage_published_authority(authority_source_root, build_root)
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit("uv is required to build the Python cohort")
+    _run([uv, "build", "--wheel", "--sdist", "--out-dir", str(output)], cwd=build_root)
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_manuals"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    wheelhouse = build_runtime_wheelhouse(
+        build_root,
+        output / "cadrumo-runtime-wheelhouse.zip",
+    )
+    shutil.move(archive, retained_source_archive)
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_official"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_normatives"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
+    # artifact, not a release artifact, and the release-cohort completeness
+    # check refuses any file the manifest does not declare.
+    uv_gitignore = output / ".gitignore"
+    if uv_gitignore.exists():
+        uv_gitignore.unlink()
+
+    return wheelhouse
+
+
+def build_python_cohort_from_snapshot(
     *,
     build_root: Path,
     output: Path,
@@ -452,69 +539,9 @@ def _build_python_cohort_from_snapshot(
         archive.unlink()
     retained_source_archive = output / f"cadrumo-source-{source_digest}.zip"
     try:
-        # The ordinary builder made this snapshot just before entering here;
-        # the release builder has already verified its clean snapshot. The
-        # retained archive is written from those same normalized source bytes.
-        _archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
-        stage_build_client(build_root, build_client_json(authority_source_root or build_root))
-        if authority_source_root is not None:
-            # The published authority is absent from the source archive but is
-            # staged into the private build root after that archive is sealed.
-            stage_published_authority(authority_source_root, build_root)
-        uv = shutil.which("uv")
-        if uv is None:
-            raise SystemExit("uv is required to build the Python cohort")
-        _run([uv, "build", "--wheel", "--sdist", "--out-dir", str(output)], cwd=build_root)
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_manuals"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
+        wheelhouse = _produce_cohort_artifacts(
+            build_root, output, source_files, source_digest, authority_source_root, archive, retained_source_archive
         )
-        wheelhouse = build_runtime_wheelhouse(
-            build_root,
-            output / "cadrumo-runtime-wheelhouse.zip",
-        )
-        shutil.move(archive, retained_source_archive)
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_official"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
-        )
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_normatives"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
-        )
-        # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
-        # artifact, not a release artifact, and the release-cohort completeness
-        # check refuses any file the manifest does not declare.
-        uv_gitignore = output / ".gitignore"
-        if uv_gitignore.exists():
-            uv_gitignore.unlink()
 
         root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
         root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
@@ -553,13 +580,13 @@ def _build_python_cohort_from_snapshot(
             "cadrumo_data_normatives-*.tar.gz",
             label="normatives sdist",
         )
-        version = _validate_wheel_contract(
+        version = validate_wheel_contract(
             root_wheel,
             manuals_wheel,
             official_wheel,
             normatives_wheel,
         )
-        _validate_sdist_contract(
+        validate_sdist_contract(
             root_sdist,
             manuals_sdist,
             official_sdist,
@@ -596,7 +623,7 @@ def _build_python_cohort_from_snapshot(
         if archive.exists():
             archive.unlink()
         if remove_build_root and build_root.exists():
-            shutil.rmtree(build_root)
+            remove_source_snapshot(resolve_temporary_output(override=build_root), primary_error=sys.exception())
 
     manifest = output / _MANIFEST_NAME
     manifest.write_text(
@@ -708,22 +735,22 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     root_wheel_digest = str(sha256["cadrumo"])
     root_sdist_digest = str(sha256["cadrumo-sdist"])
     source_archive_digest = str(sha256["source-archive"])
-    command_spec_attestation = _validate_command_spec_attestation(
+    command_spec_attestation = validate_command_spec_attestation(
         command_spec_attestation_value,
         expected_source_digest=source_digest,
         expected_root_wheel_sha256=root_wheel_digest,
         expected_root_sdist_sha256=root_sdist_digest,
         expected_source_archive_sha256=source_archive_digest,
     )
-    projection = _cached_artifact_command_projection(
+    projection = cached_artifact_command_projection(
         resolved["cadrumo"],
         resolved["cadrumo-sdist"],
         resolved["source-archive"],
         digests=(root_wheel_digest, root_sdist_digest, source_archive_digest),
     )
-    if command_spec_attestation["artifact_members_sha256"] != _projection_digest(projection):
+    if command_spec_attestation["artifact_members_sha256"] != projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
-    forbidden_members = _forbidden_command_artifacts(projection)
+    forbidden_members = forbidden_command_artifacts(projection)
     if forbidden_members:
         raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")
 
@@ -732,7 +759,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         expected_lock_sha256=_sealed_lock_digest(resolved["source-archive"]),
     )
 
-    observed_version = _validate_wheel_contract(
+    observed_version = validate_wheel_contract(
         resolved["cadrumo"],
         resolved["cadrumo-data-manuals"],
         resolved["cadrumo-data-official"],
@@ -742,7 +769,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         raise SystemExit(
             f"cohort manifest version {version!r} != wheel version {observed_version!r}",
         )
-    _validate_sdist_contract(
+    validate_sdist_contract(
         resolved["cadrumo-sdist"],
         resolved["cadrumo-data-manuals-sdist"],
         resolved["cadrumo-data-official-sdist"],
@@ -866,7 +893,7 @@ def _installed_artifact_digest(cohort: PythonCohort, name: str, artifact: Path) 
     return cohort.sha256[name]
 
 
-def _verify_direct_urls(
+def verify_direct_urls(
     direct_urls: object,
     cohort: PythonCohort,
     root_artifact: Path,
@@ -940,7 +967,7 @@ def assert_installed_cohort(
         raise SystemExit(
             f"installed root metadata lost companion pins: {requirements!r}",
         )
-    _verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
+    verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
     record_proof("all installed origins and digests match the supplied cohort")
     record_proof("root metadata declares all exact mandatory companion requirements")
     record_proof("all four installed distributions share one version")

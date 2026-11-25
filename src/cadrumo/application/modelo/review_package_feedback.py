@@ -56,18 +56,19 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .recipient_encryption import (
     RecipientDecryptedPackage,
     RecipientEncryptedPackage,
     RecipientEncryptionCapability,
 )
+from .refusal_door_verdicts import operator_choice_verdict, safety_stop_verdict
 from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
 from .review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
@@ -80,7 +81,7 @@ from .review_package_text import ReviewFeedbackNote
 _FEEDBACK_PACKAGE_VERSION = 1
 
 
-class ReviewPackageFeedbackError(CadrumoError):
+class ReviewPackageFeedbackError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package feedback round-trip failures."""
 
 
@@ -115,7 +116,7 @@ class FeedbackPackage(BaseModel):
     written to disk by the caller.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     feedback_version: int = Field(default=_FEEDBACK_PACKAGE_VERSION, ge=1)
     bucket_id: BucketId
@@ -163,7 +164,7 @@ def build_feedback_package(
         calculation_revision_id=calculation_revision_id,
         note=note,
         counter_signed_receipt=counter_signed_receipt,
-        submitted_at=submitted_at or _utc_now(),
+        submitted_at=submitted_at or now(),
         submitted_by=submitted_by,
     )
 
@@ -204,7 +205,7 @@ def encrypt_feedback_package_for_originator(
         issued_at: Optional override for the envelope's ``issued_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    feedback_bytes = feedback.model_dump_json().encode(_UTF_8_ENCODING)
+    feedback_bytes = feedback.model_dump_json().encode(UTF_8_ENCODING)
     return encrypt_review_package_for_recipient(
         feedback_bytes,
         recipient_public_key_hex=originator_public_key_hex,
@@ -262,6 +263,7 @@ def decrypt_feedback_package_from_originator_envelope(
         raise ReviewPackageFeedbackError(
             "recovered feedback envelope did not contain a well-formed feedback package",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=operator_choice_verdict("feedback_package_malformed"),
         ) from exc
 
 
@@ -275,7 +277,7 @@ class ImportedFeedback(BaseModel):
     from "a sign-off was offered and it verified/failed".
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     feedback: FeedbackPackage
     counter_signature_verified: bool | None
@@ -356,6 +358,7 @@ def import_feedback_package(
             "feedback carries a counter-signed receipt but no counter_signer_public_key_hex "
             "was supplied to verify it against",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=operator_choice_verdict("counter_signer_key_required"),
         )
 
     verified = verify_counter_signed_receipt(
@@ -370,6 +373,7 @@ def import_feedback_package(
             "the archive, the original signature, the note, or the counter-signature "
             "no longer match",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=safety_stop_verdict("feedback_counter_signature"),
             context={
                 "calculation_revision_id": feedback.calculation_revision_id,
                 "work_unit_id": feedback.work_unit_id,

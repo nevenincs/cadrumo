@@ -7,7 +7,8 @@ import pytest
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _governing_redaction, _loaded_registry
+from .authored_edition_support import authored_revisions
+from .modelo_100_registry_support import governing_redaction, loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -21,15 +22,20 @@ _OBJECTIVE_ESTIMATION_LEGAL_REFS = (
 )
 
 
+_M100_EDITIONS = tuple(revision.valid_from.year for revision in authored_revisions("100"))
+# The sixth authored edition adds the mussel-raft corrector casilla to the agrarian index family.
+_BATEA_CORRECTOR_FROM = _M100_EDITIONS[5]
+
+
 def _objective_estimation_legal_refs(revision: ModeloRevision) -> set[str]:
-    return {_governing_redaction(reference_id, revision) for reference_id in _OBJECTIVE_ESTIMATION_LEGAL_REFS}
+    return {governing_redaction(reference_id, revision) for reference_id in _OBJECTIVE_ESTIMATION_LEGAL_REFS}
 
 
 def test_modelo_100_eo_module_units_are_decimal() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _M100_EDITIONS:
         revision = modelo.revisions[str(filing_year)]
         for casilla_id in ("1445", "1448", "1451", "1454", "1457", "1460", "1463"):
             casilla = next(
@@ -53,7 +59,7 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
 
 
 def test_modelo_100_eo_correction_indices_are_decimal() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_roles = {
         "1469": "irpf_eo_indice_corrector_especial",
@@ -63,7 +69,7 @@ def test_modelo_100_eo_correction_indices_are_decimal() -> None:
         "1473": "irpf_eo_indice_corrector_inicio",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _M100_EDITIONS:
         revision = modelo.revisions[str(filing_year)]
         casillas_by_id = {
             casilla.id: casilla
@@ -97,10 +103,10 @@ def test_modelo_100_eo_correction_indices_are_decimal() -> None:
 
 
 def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _M100_EDITIONS:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -123,7 +129,7 @@ def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
 
 
 def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_ids = {
         validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
@@ -147,10 +153,10 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
         )
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _M100_EDITIONS:
         revision = modelo.revisions[str(filing_year)]
         ids_for_year = set(expected_ids)
-        if filing_year == 2025:
+        if filing_year >= _BATEA_CORRECTOR_FROM:
             ids_for_year.add(validated_casilla_id("0158", surface="test_modelo_100_registry.casilla"))
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_eo_agr_indice"
@@ -175,7 +181,7 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
 
 
 def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_roles = {
         "1540": "irpf_eo_agr_indice_medios_ajenos",
@@ -187,10 +193,10 @@ def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
         "1547": "irpf_eo_agr_indice_forestal",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _M100_EDITIONS:
         revision = modelo.revisions[str(filing_year)]
         roles_for_year = dict(expected_roles)
-        if filing_year == 2025:
+        if filing_year >= _BATEA_CORRECTOR_FROM:
             roles_for_year["0160"] = "irpf_eo_agr_indice_corrector_mejillon_batea"
 
         casillas_by_id = {

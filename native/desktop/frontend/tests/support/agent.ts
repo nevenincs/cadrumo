@@ -1,11 +1,13 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
 } from "../../src/shell/agentSession";
 import { label } from "./strings";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+} from "../../src/shell/agentSnapshotContract";
 
 // The agent column as a person finds it: by its roles and its words, never
 // by how a host makes it. The same helpers drive the scenario host and the
@@ -30,6 +32,74 @@ export const worded = (key: string) =>
   new RegExp(`^${escaped(label(key)).replace(/\\\{\w+\\\}/g, ".+")}$`);
 
 export const agentColumn = (target: Page) => target.locator(".pane-agent");
+
+/** Opens the composer's model picker and answers it once shown. */
+export async function openModelPicker(target: Page): Promise<Locator> {
+  await agentColumn(target)
+    .getByRole("button", {
+      name: new RegExp(
+        `^${escaped(label("desktop.agent.settings_label", { current: "" }))}`,
+      ),
+    })
+    .first()
+    .click();
+  const picker = target.getByRole("dialog", {
+    name: label("desktop.agent.settings_title"),
+  });
+  await expect(picker).toBeVisible();
+  return picker;
+}
+
+/** The heading row of the lane `way` in an open model matrix. */
+export const matrixLane = (scope: Locator, way: string) =>
+  scope.locator(`tr[data-slot=model-matrix-lane][data-way="${way}"]`);
+
+/** The rows of the lane `way`'s models in an open model matrix. */
+export const matrixRows = (scope: Locator, way: string) =>
+  scope.locator(`tr[data-slot=model-matrix-row][data-way="${way}"]`);
+
+/** How many models a lane that cannot be chosen yet has, said under its
+ * heading in place of its rows, in either of its words. */
+export const laneModelsNote = (scope: Locator, way: string) =>
+  matrixLane(scope, way).locator("[data-slot=model-matrix-lane-models]");
+export const laneModelsWords = new RegExp(
+  [
+    "desktop.agent.model_matrix_lane_models",
+    "desktop.agent.model_matrix_lane_models_one",
+  ]
+    .map((key) => worded(key).source)
+    .join("|"),
+);
+
+/** The cell of `model` on the lane `way` for `effort`, or for the
+ * provider's default where none is named. */
+export const matrixCell = (
+  scope: Locator,
+  way: string,
+  model: string,
+  effort = "default",
+) =>
+  matrixRows(scope, way)
+    .and(scope.locator(`[data-model="${model}"]`))
+    .locator(`[role=radio][data-column="${effort}"]`);
+
+/** Picks the provider way `way` in an open model picker, starting on the
+ * model its catalog recommends, else its first model that can be chosen, at
+ * the provider's default effort. */
+export async function pickWay(_target: Page, picker: Locator, way: string) {
+  const rows = matrixRows(picker, way).and(
+    picker.locator(":not([aria-disabled])"),
+  );
+  const recommended = rows.and(picker.locator("[data-recommended]"));
+  const row = (await recommended.count()) > 0 ? recommended : rows.first();
+  await row.locator('[role=radio][data-column="default"]').click();
+}
+
+/** The model ids an open model picker offers for the way `way`. */
+export const offeredModels = (picker: Locator, way: string) =>
+  matrixRows(picker, way).evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-model") ?? ""),
+  );
 
 export const messageField = (target: Page) =>
   agentColumn(target).getByRole("textbox", {
@@ -89,16 +159,9 @@ export const questionsPrompt = (target: Page) =>
     name: label("desktop.agent.questions_title"),
   });
 
-export const approvalPrompt = (
-  target: Page,
-  source: "agent_tool" | "cadrumo_review" = "agent_tool",
-) =>
+export const approvalPrompt = (target: Page) =>
   agentColumn(target).getByRole("region", {
-    name: label(
-      source === "agent_tool"
-        ? "desktop.agent.approval_tool_title"
-        : "desktop.agent.approval_review_title",
-    ),
+    name: label("desktop.agent.approval_tool_title"),
   });
 
 /** Writes `text` in the message field and presses Enter. */
@@ -231,7 +294,7 @@ export async function refusalOfSend(
         conversation_id,
         text,
         selection: {
-          provider: "alpha",
+          provider: "kimi",
           transport: "api",
           model: "fixture-deep",
         },

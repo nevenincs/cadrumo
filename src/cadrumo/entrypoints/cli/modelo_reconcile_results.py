@@ -19,16 +19,17 @@ from datetime import datetime
 
 from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_records import ModeloReconciliationDiffKind, ModeloReconciliationVerdict
-from ...application.modelo.taxation_comparison import TaxationRecommendation
+from ...application.modelo.taxation_comparison import TaxationRecommendation, TaxationRecommendationReason
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):
@@ -73,7 +74,8 @@ class ModeloReconcileResult(OutputSchema):
     :class:`ModeloReconciliationReport` from
     :func:`prepare_modelo_reconcile` or :func:`prepare_modelo_reconcile_bytes`: a work-unit-level
     :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
-    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
+    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference, the
+    digest of the PDF bytes that were compared when the evidence is a PDF,
     :class:`ModeloReconciliationDiffPayload` list, an aware ``reconciled_at``
     timestamp, and optional narrative. Non-blocking reconciliation advisories
     ride the shared envelope ``notices`` channel exclusively
@@ -87,6 +89,7 @@ class ModeloReconcileResult(OutputSchema):
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
     reconciled_at: datetime
@@ -115,7 +118,8 @@ class WorkCompareTaxationResult(OutputSchema):
     individual_resultado: DecimalWireText
     delta_resultado: DecimalWireText
     recommendation: TaxationRecommendation
-    recommendation_reason: NonEmptyStr
+    recommendation_reason: TaxationRecommendationReason
+    recommendation_reason_words: NonEmptyStr
 
     # Scope of the individual branch, not an incidental diagnostic: it states
     # which households the figure above is valid for, so a machine consumer

@@ -17,7 +17,7 @@ from ..application.wizard.status import taxpayer_profile_from_record
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .adapter_composition import build_modelo_export_ports
+from .adapter_composition_ports import build_modelo_export_ports
 
 
 def build_modelo_calculation_report_verification_ports(

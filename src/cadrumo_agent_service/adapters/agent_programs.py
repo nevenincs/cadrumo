@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
-from cadrumo.core.storage_environment import StorageMode, storage_mode
-
 from ..host.launcher_protocol import AgentLauncherRefusal
 
 AGENT_DIRECTORY: Final = "agent"
@@ -73,12 +71,12 @@ class AgentImage:
 
 
 def _located_program(variable: str, checkout_program: Path | None, received: Mapping[str, str] | None) -> Path:
-    """Return the absolute program a package variable names, or the checkout's own; refuse any other install."""
+    """Return the absolute program a package variable names, or the one beside this interpreter."""
     environment = os.environ if received is None else received
     declared = environment.get(variable)
     if declared is not None:
         program = Path(declared)
-    elif storage_mode().mode is StorageMode.DEVELOPMENT and checkout_program is not None:
+    elif checkout_program is not None:
         program = checkout_program
     else:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
@@ -164,10 +162,31 @@ def profile_agent_root(storage_root: Path, profile_id: UUID) -> Path:
     """
     base = storage_root / AGENT_DIRECTORY
     base.mkdir(exist_ok=True)
-    opaque = hmac.new(_root_key(base), b"cadrumo.agent-root.v1\0" + profile_id.bytes, hashlib.sha256).hexdigest()
-    root = base / opaque[:32]
+    root = base / _opaque_name(_root_key(base), profile_id)
     root.mkdir(exist_ok=True)
     return root
+
+
+def provider_login_notice(agent_root: Path) -> Path:
+    """The change notice for this opaque root, outside the provider's home."""
+    return agent_root.parent / "login-notices" / agent_root.name
+
+
+def existing_profile_agent_root(storage_root: Path, profile_id: UUID) -> Path | None:
+    """Return the profile's agent directory when the service already made it, else ``None``; creates nothing."""
+    base = storage_root / AGENT_DIRECTORY
+    key_path = base / _ROOT_KEY_NAME
+    if not key_path.is_file():
+        return None
+    key = key_path.read_bytes()
+    if len(key) != _ROOT_KEY_BYTES:
+        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
+    root = base / _opaque_name(key, profile_id)
+    return root if root.is_dir() else None
+
+
+def _opaque_name(key: bytes, profile_id: UUID) -> str:
+    return hmac.new(key, b"cadrumo.agent-root.v1\0" + profile_id.bytes, hashlib.sha256).hexdigest()[:32]
 
 
 def profile_agent_workspace(agent_root: Path) -> Path:
@@ -183,14 +202,26 @@ def profile_agent_workspace(agent_root: Path) -> Path:
 
 
 def _root_key(base: Path) -> bytes:
+    """Return the storage root's key, making it once; a reader on another thread never sees it half written.
+
+    The key is written whole under a name of this attempt's own and published by a hard link,
+    which never replaces a key another attempt published first; the loser reads the winner's.
+    """
     path = base / _ROOT_KEY_NAME
-    try:
-        with path.open("xb") as handle:
-            key = secrets.token_bytes(_ROOT_KEY_BYTES)
-            handle.write(key)
+    if not path.exists():
+        key = secrets.token_bytes(_ROOT_KEY_BYTES)
+        staged = base / f"{_ROOT_KEY_NAME}.{secrets.token_hex(8)}.partial"
+        try:
+            with staged.open("xb") as handle:
+                handle.write(key)
+            os.link(staged, path)
+        except FileExistsError:
+            pass
+        else:
             return key
-    except FileExistsError:
-        key = path.read_bytes()
+        finally:
+            staged.unlink(missing_ok=True)
+    key = path.read_bytes()
     if len(key) != _ROOT_KEY_BYTES:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
     return key

@@ -19,7 +19,11 @@ from ...application.modelo.projection_operation import (
     ModeloProjectOperationProjection,
     ModeloProjectOperationRequest,
 )
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from .common import active_bucket_id_or_refuse
 
 
@@ -42,7 +46,7 @@ def run_modelo_project(ctx: typer.Context, request: ModeloProjectOperationReques
     result = completed.projection
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or completed.refusal_code is not None
         or result.profile_id != profile_id
         or result.year != request.year
@@ -71,7 +75,7 @@ def run_modelo_compare(ctx: typer.Context, request: ModeloCompareOperationReques
     result = completed.projection
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or completed.refusal_code is not None
         or result.profile_id != profile_id
         or result.modelo != request.modelo

@@ -5,13 +5,12 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_registry_tree as _committed_registry_tree,
+    committed_modelo,
+    committed_registry_tree,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -30,7 +29,7 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
     modelo_id: str,
     procedure_code: str,
 ) -> None:
-    modelo, catalogues = _committed_modelo(modelo_id)
+    modelo, catalogues = committed_modelo(modelo_id)
     procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
 
@@ -64,11 +63,69 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
 
 
 def test_deenrolled_modelo_198_has_no_registry_sources() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
 
     assert all(modelo.id != "198" for modelo in modelos)
     assert "aeat-modelo-198-procedure" not in catalogues.sources
     assert "boe-modelo-198-form-layout" not in catalogues.sources
+
+
+def _assert_autoliquidacion_sources(modelo, catalogues, modelo_id: str, procedure_code: str, annex_ref: str) -> None:
+    procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
+    text_ref = f"boe-modelo-{modelo_id}-form-text"
+    layout_ref = f"boe-modelo-{modelo_id}-form-layout"
+    stale_prefix = f"enrolled-modelo-{modelo_id}-"
+
+    procedure = catalogues.sources[procedure_ref]
+    text = catalogues.sources[text_ref]
+    layout = catalogues.sources[layout_ref]
+    legal = catalogues.legal[annex_ref]
+
+    assert procedure_ref in modelo.source_refs
+    assert text_ref in modelo.source_refs
+    assert layout_ref in modelo.source_refs
+    assert not any(source_ref.startswith(stale_prefix) for source_ref in modelo.source_refs)
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert procedure.authority == "aeat"
+    assert procedure.kind == "instructions"
+    assert procedure.corpus_path == (
+        f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/modelo-{modelo_id}-procedure.html"
+    )
+    assert (bundled_path() / procedure.corpus_path).is_file()
+    assert procedure.source_url.endswith(f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{procedure_code}.shtml")
+    assert text.evidence_tier == "official_source_guidance"
+    assert text.authority == "boe"
+    assert text.kind == "form_spec"
+    assert (bundled_path() / text.corpus_path).is_file()
+    assert layout.evidence_tier == "layout_authority"
+    assert layout.authority == "boe"
+    assert layout.kind == "form_spec"
+    assert "BOE-A-2007-20485" in layout.source_url
+    assert legal.document_id == "BOE-A-2007-20485"
+
+
+def _assert_autoliquidacion_formulas(
+    revision,
+    catalogues,
+    modelo_id: str,
+    formula_specs: dict[str, tuple[str, str, tuple[str, ...]]],
+) -> None:
+    procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
+    text_ref = f"boe-modelo-{modelo_id}-form-text"
+    text = catalogues.sources[text_ref]
+    formulas = {formula.id: formula for formula in revision.formulas}
+    assert set(formula_specs) == set(formulas)
+    source_text = (bundled_path() / text.corpus_path).read_text(encoding="utf-8")
+    for formula_id, (target, op, operands) in formula_specs.items():
+        formula = formulas[formula_id]
+        assert formula.target_casilla_id == target
+        assert formula.expression.op == op
+        assert tuple(arg.casilla_id for arg in formula.expression.args) == operands
+        assert text_ref in formula.source_refs
+        assert procedure_ref not in formula.source_refs
+        assert tuple(citation.source_ref for citation in formula.source_citations) == (text_ref,)
+        for citation in formula.source_citations:
+            assert all(required_text in source_text for required_text in citation.required_text)
 
 
 @pytest.mark.parametrize(
@@ -118,60 +175,20 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
     formula_specs: dict[str, tuple[str, str, tuple[str, ...]]],
     closure_casillas: tuple[str, ...],
 ) -> None:
-    modelo, catalogues = _committed_modelo(modelo_id)
-    procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
-    text_ref = f"boe-modelo-{modelo_id}-form-text"
+    modelo, catalogues = committed_modelo(modelo_id)
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
+    text_ref = f"boe-modelo-{modelo_id}-form-text"
     stale_prefix = f"enrolled-modelo-{modelo_id}-"
 
     committed_registry_validator(catalogues).validate_modelo(modelo)
+    _assert_autoliquidacion_sources(modelo, catalogues, modelo_id, procedure_code, annex_ref)
 
-    procedure = catalogues.sources[procedure_ref]
-    text = catalogues.sources[text_ref]
-    layout = catalogues.sources[layout_ref]
-    legal = catalogues.legal[annex_ref]
-
-    assert procedure_ref in modelo.source_refs
-    assert text_ref in modelo.source_refs
-    assert layout_ref in modelo.source_refs
-    assert not any(source_ref.startswith(stale_prefix) for source_ref in modelo.source_refs)
-    assert procedure.evidence_tier == "official_source_guidance"
-    assert procedure.authority == "aeat"
-    assert procedure.kind == "instructions"
-    assert procedure.corpus_path == (
-        f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/modelo-{modelo_id}-procedure.html"
-    )
-    assert (bundled_path() / procedure.corpus_path).is_file()
-    assert procedure.source_url.endswith(f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{procedure_code}.shtml")
-    assert text.evidence_tier == "official_source_guidance"
-    assert text.authority == "boe"
-    assert text.kind == "form_spec"
-    assert (bundled_path() / text.corpus_path).is_file()
-    assert layout.evidence_tier == "layout_authority"
-    assert layout.authority == "boe"
-    assert layout.kind == "form_spec"
-    assert "BOE-A-2007-20485" in layout.source_url
-    assert legal.document_id == "BOE-A-2007-20485"
-
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision(modelo_id).id)]
     assert annex_ref in revision.orden_aplicabilidad
     assert annex_ref in revision.legal_refs
     assert "orden-eha-3435-2007:anexo-ii" not in revision.legal_refs
     assert not any(source_ref.startswith(stale_prefix) for source_ref in _revision_source_refs(revision))
-
-    formulas = {formula.id: formula for formula in revision.formulas}
-    assert set(formula_specs) == set(formulas)
-    source_text = (bundled_path() / text.corpus_path).read_text(encoding="utf-8")
-    for formula_id, (target, op, operands) in formula_specs.items():
-        formula = formulas[formula_id]
-        assert formula.target_casilla_id == target
-        assert formula.expression.op == op
-        assert tuple(arg.casilla_id for arg in formula.expression.args) == operands
-        assert text_ref in formula.source_refs
-        assert procedure_ref not in formula.source_refs
-        assert tuple(citation.source_ref for citation in formula.source_citations) == (text_ref,)
-        for citation in formula.source_citations:
-            assert all(required_text in source_text for required_text in citation.required_text)
+    _assert_autoliquidacion_formulas(revision, catalogues, modelo_id, formula_specs)
 
     assert revision.completeness_manifest is not None
     manifest = revision.completeness_manifest

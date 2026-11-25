@@ -35,6 +35,8 @@ _REGIME_REAGP_KEY = "iva_regime.reagp_token"
 
 _REGIME_EXENTO_KEY = "iva_regime.exento_token"
 
+_REGIME_RECARGO_EQUIVALENCIA_KEY = "iva_regime.recargo_equivalencia_token"
+
 _REGIME_PREFIX = "iva_regime."
 
 
@@ -131,7 +133,12 @@ def resolve_iva_regime_catalogue(
         raise RegistryValidationError("IVA NO_APLICA regime is not declared in the regime order")
     if not catalogue.self_assessment_tokens.issubset(catalogue.all_regimes):
         raise RegistryValidationError("IVA self-assessment regimes must be declared in the regime order")
-    for semantic_key in (_REGIME_SIMPLIFICADO_KEY, _REGIME_REAGP_KEY, _REGIME_EXENTO_KEY):
+    for semantic_key in (
+        _REGIME_SIMPLIFICADO_KEY,
+        _REGIME_REAGP_KEY,
+        _REGIME_EXENTO_KEY,
+        _REGIME_RECARGO_EQUIVALENCIA_KEY,
+    ):
         semantic_token = IVARegime(required_mapping_entry(entries, semantic_key, subject=SCHEMA_VOCABULARY_SUBJECT))
         if semantic_token not in catalogue.all_regimes:
             raise RegistryValidationError(f"IVA regime semantic token {semantic_key!r} is not declared")
@@ -187,18 +194,6 @@ def iva_regime_no_aplica_token(
     ).no_aplica_token
 
 
-def iva_regime_self_assessment_tokens(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> frozenset[IVARegime]:
-    """Return IVA regimes marked for self-assessment by the registry."""
-    return resolve_iva_regime_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).self_assessment_tokens
-
-
 def _iva_regime_semantic_token(
     key: str,
     *,
@@ -221,6 +216,19 @@ def iva_regime_simplificado_token(
     """Return the registry-declared simplified IVA regime token."""
     return _iva_regime_semantic_token(
         _REGIME_SIMPLIFICADO_KEY,
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
+def iva_regime_recargo_equivalencia_token(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> IVARegime:
+    """Return the recargo de equivalencia regime token, refusing a vocabulary that lacks it."""
+    return _iva_regime_semantic_token(
+        _REGIME_RECARGO_EQUIVALENCIA_KEY,
         effective_date=effective_date,
         authority=authority,
     )
@@ -260,7 +268,7 @@ __all__ = [
     "iva_regime_exento_token",
     "iva_regime_no_aplica_token",
     "iva_regime_reagp_token",
-    "iva_regime_self_assessment_tokens",
+    "iva_regime_recargo_equivalencia_token",
     "iva_regime_simplificado_token",
     "require_iva_regime",
     "resolve_iva_regime_catalogue",

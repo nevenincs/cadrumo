@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE, profile_root
 from cadrumo.core.storage_environment import STORAGE_ROOT
 
+from ...providers.domain.record import LocalEngine
 from ..launch_environment import FORWARD_VARIABLE, GATEWAY_SLOTS, agent_launch_environment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,6 +27,7 @@ def _launch(tmp_path: Path, profile_id: UUID | None, received: dict[str, str] | 
         aeat=None,
         python=None,
         received=received or {},
+        local_engine=LocalEngine.LLAMACPP,
         profile_id=profile_id,
     )
 

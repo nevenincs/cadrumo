@@ -10,10 +10,11 @@ from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
-from .._export_tree import render_complete_export_tree
-from ..export_field_numeric_derivation import _numbered_line_enumeration_values, _numeric_derivation
+from ..export_field_numeric_derivation import numbered_line_enumeration_values, numeric_derivation
+from ..export_tree import render_complete_export_tree
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 from ..render_profile import validate_render_profile
 
@@ -25,7 +26,7 @@ def inputs():
     return revision_render_inputs(
         compiled_bundled_authority(),
         modelo="309",
-        revision="2023-y-siguientes",
+        revision=str(open_ended_revision("309").id),
         source_ref="aeat-dr-309-2023",
         bootstrap_transport=GeneratedExportBootstrapTransport(
             layout_id="modelo-309-fichero-boe",
@@ -34,8 +35,8 @@ def inputs():
             source_sha256="a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
             supersedes_layout_id="modelo-309-fichero-boe",
         ),
-        filing_year=2023,
-        period="AD-HOC",
+        filing_year=open_ended_revision("309").valid_from.year,
+        period="0A",
         source_root=bundled_path(),
     )
 
@@ -73,14 +74,14 @@ def test_missing_numeric_anchor_is_refused_against_the_actual_design(inputs) -> 
 
 
 def test_numbered_source_codes_do_not_admit_prose_or_unlabelled_continuations() -> None:
-    assert _numbered_line_enumeration_values("1. Label with 9 digits\n2. Other label") == ("1", "2")
+    assert numbered_line_enumeration_values("1. Label with 9 digits\n2. Other label") == ("1", "2")
     for ambiguous in (
         "Codes:\n1. First\n2. Second",
         "1. First\ncontinued prose\n2. Second",
         "1. First 2. Second",
         "1.\n2. Other",
     ):
-        assert _numbered_line_enumeration_values(ambiguous) is None
+        assert numbered_line_enumeration_values(ambiguous) is None
 
 
 def test_duplicate_numbered_codes_are_refused_before_generation(inputs) -> None:
@@ -89,4 +90,4 @@ def test_duplicate_numbered_codes_are_refused_before_generation(inputs) -> None:
         update={"parser_field": joined.parser_field.model_copy(update={"content": "1. First\n1. Duplicate"})}
     )
     with pytest.raises(RegistryValidationError, match="duplicate values"):
-        _numeric_derivation(duplicate, export_record_id="modelo-309-page-01")
+        numeric_derivation(duplicate, export_record_id="modelo-309-page-01")

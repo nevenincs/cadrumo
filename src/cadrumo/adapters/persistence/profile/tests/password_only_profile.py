@@ -36,7 +36,7 @@ def register_password_only_profile(
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
     with (
-        override_settings(cadrumo_local_storage_root=storage_root),
+        override_settings(cadrumo_storage_root=storage_root),
         bundled_indexed_authority().operation() as operation,
     ):
         outcome = register_profile_with_credentials(

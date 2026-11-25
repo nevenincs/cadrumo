@@ -24,6 +24,21 @@ overridden to raise, mirroring
 call fails loudly rather than minting a consent record that outlives the
 invocation.
 
+**A classification job reads under a recorded grant.** The person grants a
+job's off-host reads once for that job, for the agent session, or until
+revoked, and the consent ledger records the grant. The grant is the person's
+acknowledgement; it is not a token. Each read the grant still covers mints a
+fresh token bound to the movement it reads, through
+:func:`mint_granted_consent_token`, so the dispatch point and its ledger
+append are the same as for any other off-host read.
+
+**An agent dispatch decides from its lane.** The agent service resolves the
+lane a role runs on, and the lane carries its catalogue entry's typed
+``reads_off_host`` declaration. That flag alone says whether the gate applies:
+a lane that stays on this computer needs no token, and a token is bound to the
+resolved lane only when the lane reads off-host, so the service can refuse a
+run that would now reach another lane. See :func:`agent_consent_binding`.
+
 See Also:
     :class:`~core.config.Settings`
         Carries the deployment half of the posture (the gestor bar and the
@@ -37,6 +52,8 @@ from typing import Never, Self, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
+from cadrumo_client.contracts.model_runs import ModelRunConsentBinding, ModelRunLane
+
 from ....core.config import Settings
 from ....core.config_support import LLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
@@ -48,24 +65,42 @@ from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 __all__ = [
     "EvidenceConsentToken",
     "OffHostEvidenceReadOutcome",
+    "agent_consent_binding",
     "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
-    "provider_reads_off_host",
+    "mint_granted_consent_token",
+    "off_host_evidence_read_askable",
 ]
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
 
 
-def provider_reads_off_host(provider: LLMProvider) -> bool:
-    """Whether dispatching at ``provider`` removes the request from this host.
+def agent_consent_binding(lane: ModelRunLane, token: EvidenceConsentToken | None) -> ModelRunConsentBinding | None:
+    """Bind ``token`` to the resolved agent ``lane``, or return ``None`` when the lane needs no consent.
 
-    Derived from the enum rather than listed, so a provider added later is
-    off-host by construction: a new member is a new vendor until someone
-    deliberately makes it local, and the failure of a hand-kept cloud list is
-    that the newest transport is the one missing from it.
+    The lane's ``reads_off_host`` flag is the only input: no provider id,
+    transport or endpoint stands in for it. A lane that stays on this computer
+    carries no consent, so a token minted before the lane was known is neither
+    sent nor recorded against it. A lane that reads off-host carries the token
+    bound to its provider, transport and model, which the service compares with
+    the lane it resolves at run time; a run without one is refused there.
+
+    Args:
+        lane: The lane the agent service resolved for the request's role.
+        token: The per-invocation consent the dispatch gate honoured, if any.
+
+    Returns:
+        The binding to carry with the run, or ``None``.
     """
-    return provider is not LLMProvider.LOCAL
+    if not lane.reads_off_host or token is None:
+        return None
+    return ModelRunConsentBinding(
+        evidence_content_address=token.evidence_content_address,
+        provider_id=lane.provider_id,
+        transport=lane.transport,
+        model=lane.model,
+    )
 
 
 class OffHostEvidenceReadOutcome(StrEnum):
@@ -75,14 +110,12 @@ class OffHostEvidenceReadOutcome(StrEnum):
     handles the refusals rather than falling through them.
     """
 
-    #: Neither half supplied: the on-host default, and no token.
+    #: Neither half supplied: no off-host read is asked for, and no token.
     ON_HOST_DEFAULT = "on_host_default"
     #: Both halves supplied against an off-host provider: mint a token.
     OFF_HOST_CONSENTED = "off_host_consented"
     #: An acknowledgement was taken but no provider named.
     ACKNOWLEDGEMENT_WITHOUT_PROVIDER = "acknowledgement_without_provider"
-    #: A provider that never leaves this host was named for an off-host read.
-    PROVIDER_READS_ON_HOST = "provider_reads_on_host"
     #: An off-host provider was named with no acknowledgement of the read.
     PROVIDER_WITHOUT_ACKNOWLEDGEMENT = "provider_without_acknowledgement"
 
@@ -100,16 +133,10 @@ def classify_off_host_evidence_read(
     then changes nothing, which is worse than not asking because it trains an
     operator to believe the prompt is meaningless.
 
-    Naming an on-host provider is refused for that second reason. The
-    dispatch-point gate only inspects a token when
-    :func:`provider_reads_off_host` is true, so a token minted against a local
-    provider is silently ignored -- the acknowledgement is taken, recorded
-    against a surface, and covers a read that never leaves the host.
-
     This lives beside :func:`mint_evidence_consent_token` rather than in the
-    surface that asks, because the minting path never sees the provider: it
-    cannot itself refuse a token bound to an on-host read, and a second
-    frontend re-deciding the pairing would be re-deciding it from scratch.
+    surface that asks, because the minting path never sees the provider, and
+    a second frontend re-deciding the pairing would be re-deciding it from
+    scratch.
 
     Args:
         provider: The provider the operator named, or ``None``.
@@ -125,21 +152,46 @@ def classify_off_host_evidence_read(
         if acknowledged:
             return OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER
         return OffHostEvidenceReadOutcome.ON_HOST_DEFAULT
-    # Asked through the predicate the dispatch gate itself uses, so a second
-    # on-host transport added later is refused here without being listed.
-    if not provider_reads_off_host(provider):
-        return OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST
     if not acknowledged:
         return OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT
     return OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED
 
 
+def off_host_evidence_read_askable(settings: Settings, *, profile_eligible: bool) -> bool:
+    """Whether a surface may ask the operator to acknowledge an off-host read at all.
+
+    The standing half of :func:`cloud_evidence_read_permitted`: every condition
+    except the per-invocation acknowledgement. A surface offers the consent gate
+    only while this holds, because a gate it offered while this is ``False``
+    would take an acknowledgement that mints nothing. Asking is never the same
+    as permitting: the read still needs the operator's acknowledgement of that
+    one call, and :func:`mint_evidence_consent_token` decides it again then.
+
+    ``profile_eligible`` is a REQUIRED keyword with no default for the same
+    reason as on :func:`cloud_evidence_read_permitted`.
+
+    Args:
+        settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: Whether the active profile's standing eligibility bar
+            is on.
+
+    Returns:
+        ``True`` only when gestor mode is off, the deployment has opted in and
+        the profile is eligible.
+    """
+    if settings.cadrumo_evidence_gestor_mode:
+        return False
+    if not settings.cadrumo_evidence_cloud_upload_permitted:
+        return False
+    return profile_eligible
+
+
 def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:
     """Whether an off-host read of taxpayer evidence is permitted for THIS invocation.
 
-    On-host reading is always permitted and is the default; this gate governs
-    only the off-host exception. Permitted only when every one of the following
-    holds:
+    A lane that reads on this computer needs no permission; this gate governs
+    only a read the selected lane sends off it (the lane's ``reads_off_host``).
+    Permitted only when every one of the following holds:
 
     1. Gestor/professional mode is OFF (``settings.cadrumo_evidence_gestor_mode``
        is ``False``). An absolute, categorical bar: a gestor deployment never
@@ -153,8 +205,9 @@ def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool,
        machine can serve several taxpayers, and one of them permitting an
        off-host read must not decide it for the others.
     4. The operator acknowledged this specific invocation (``acknowledged`` is
-       ``True``). The acknowledgement is never sticky; it must be re-affirmed at
-       every call.
+       ``True``). The acknowledgement is never assumed: either the operator
+       gives it for this call, or a grant the person recorded still covers
+       this call when it is made.
 
     ``profile_eligible`` is a REQUIRED keyword with no default, deliberately: a
     defaulted bar is one a caller can forget, and forgetting this one would
@@ -171,13 +224,7 @@ def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool,
     Returns:
         ``True`` only when all four conditions above hold.
     """
-    if settings.cadrumo_evidence_gestor_mode:
-        return False
-    if not settings.cadrumo_evidence_cloud_upload_permitted:
-        return False
-    if not profile_eligible:
-        return False
-    return acknowledged
+    return off_host_evidence_read_askable(settings, profile_eligible=profile_eligible) and acknowledged
 
 
 class EvidenceConsentToken(BaseModel):
@@ -313,6 +360,45 @@ def mint_evidence_consent_token(
             ),
         )
     return EvidenceConsentToken(surface=surface, evidence_content_address=evidence_content_address)
+
+
+def mint_granted_consent_token(
+    *,
+    settings: Settings,
+    profile_eligible: bool,
+    grant_covers_read: bool,
+    surface: str,
+    evidence_content_address: str,
+) -> EvidenceConsentToken:
+    """Mint a token for one off-host read that a person's recorded grant covers, or refuse.
+
+    The grant stands in for the per-call acknowledgement only while it still
+    covers this read: the caller checks it against the consent ledger just
+    before the read, and every standing bar is decided again here. The token
+    is bound to the content address of what this one read sends.
+
+    Args:
+        settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: The active profile's standing eligibility bar.
+        grant_covers_read: Whether the recorded grant covers this read now:
+            not revoked, in scope, and for the lane and task kind the read uses.
+        surface: The operator surface the grant was given on.
+        evidence_content_address: SHA-256 content address of what this read sends.
+
+    Returns:
+        A token satisfying the dispatch-point gate for this one read.
+
+    Raises:
+        LLMConsentError: When the grant no longer covers the read, or a
+            standing bar refuses it.
+    """
+    return mint_evidence_consent_token(
+        settings=settings,
+        profile_eligible=profile_eligible,
+        acknowledged=grant_covers_read,
+        surface=surface,
+        evidence_content_address=evidence_content_address,
+    )
 
 
 def _token_serialization_refusal() -> LLMConsentError:

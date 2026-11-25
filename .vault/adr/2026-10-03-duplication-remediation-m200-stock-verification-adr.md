@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#duplication-remediation'
 date: '2026-10-03'
-modified: '2026-10-13'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d0aaa23016a64c124271549deed61f4ebec593df706f4ce527543e63ba8de5f'
+body_hash: 'sha256:a65b2553df107c58d4eb53a3084c563c51afe40be30e230db208468912cf007a'
 related:
   - "[[2026-10-02-duplication-remediation-reference]]"
   - "[[2026-10-02-duplication-remediation-audit]]"
@@ -23,7 +23,7 @@ The S07 public-profile regression found that a positive M200 compensation did no
 
 ## Considerations
 
-The 2024 and 2025 AEAT Sociedades manuals distinguish the amount elected for application from pending opening stock and describe applying part or all of the available prior balance. The official source locators and ordinary-case limits are retained in 2026-10-02-duplication-remediation-reference and the S07 proposal evidence. Other modelos intentionally use the existing positive-ceiling operator. Neither source cleanliness nor nonnegative stock is guaranteed by the present numeric DTO alone. Internal computed casillas participate in calculation snapshots and revision identity even when not exported.
+The AEAT Sociedades manuals of the editions that carry the election distinguish the amount elected for application from pending opening stock and describe applying part or all of the available prior balance. The official source locators and ordinary-case limits are retained in 2026-10-02-duplication-remediation-reference and the S07 proposal evidence. Other modelos intentionally use the existing positive-ceiling operator. Neither source cleanliness nor nonnegative stock is guaranteed by the present numeric DTO alone. Internal computed casillas participate in calculation snapshots and revision identity even when not exported.
 
 ## Considered options
 
@@ -48,7 +48,7 @@ Leave the accepted BIN-continuity and internal-casilla-exemption decisions uncha
 
 Select one typed operator in the existing canonical VerificationPredicateOperator/specification/evaluator ownership, using CASILLA_LIST with exactly two numeric casilla references. Authoring must reject wrong arity, unknown references and incompatible operand kinds through its existing validator path. The first Temp proposal's separate CASILLA_PAIR syntax bypassed that dispatch and is rejected; no new grammar family or parser is needed.
 
-Replace only the authored M200 2024 opening-stock predicate and verify inherited 2025 source meaning through the owning source-authoring gates. Keep the existing positive/zero public-profile regression intact. Require independent truth-table boundaries, real generic BLOCKING findings and authoring-gate refusal tests before a validated source result. A changed published authority must be explicitly authorized and pinned before claiming the public workflow defect is corrected at runtime. These implementation details may adapt within the stated constraints.
+Replace only the authored M200 opening-stock predicate at the edition that authors it and verify inherited later-edition source meaning through the owning source-authoring gates. Keep the existing positive/zero public-profile regression intact. Require independent truth-table boundaries, real generic BLOCKING findings and authoring-gate refusal tests before a validated source result. A changed published authority must be explicitly authorized and pinned before claiming the public workflow defect is corrected at runtime. These implementation details may adapt within the stated constraints.
 
 ## Rationale
 

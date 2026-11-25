@@ -32,7 +32,8 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, render_fixed_width_export_field
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
@@ -44,17 +45,17 @@ from ...analysis.m303_semantic_census import (
     resolve_semantic_home,
 )
 from ...compiler.loader import load_registry_tree
-from .._export_tree import _render_records, render_complete_export_tree
 from ..export_field_derivation import (
-    _DECIMAL_CONTENT_RE,
-    _INTEGER_CONTENT_RE,
-    _OFFICIAL_LITERAL_RE,
-    _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
-    _QUOTED_NUMERIC_ENUMERATION_RE,
-    _TRAILING_NOTE_REFERENCE_RE,
+    DECIMAL_CONTENT_RE,
+    INTEGER_CONTENT_RE,
+    OFFICIAL_LITERAL_RE,
+    QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
+    QUOTED_NUMERIC_ENUMERATION_RE,
+    TRAILING_NOTE_REFERENCE_RE,
 )
-from ..export_field_note_references import _split_official_note_references
+from ..export_field_note_references import split_official_note_references
 from ..export_fragment_provenance_projection import semantic_map_digest
+from ..export_tree import render_complete_export_tree, render_records
 from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
@@ -224,8 +225,18 @@ def _simplified_fact_home(cohort: str, fact: str, slot: int, sub_index: int | No
     return f"projection:m303_regimen_simplificado_fact({payload})"
 
 
+def _discovered_design_epochs() -> tuple[str, ...]:
+    """Return every authored mapping epoch, in stable lexical order."""
+    return tuple(sorted(path.name for path in scan_directory(_MAPPING_ROOT, select=DirectoryEntryKind.DIRECTORIES)))
+
+
+_DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
+
+
+#: The reviewed expectations, keyed by the design epoch found at the same position
+#: in the oldest-first discovery order, so the table names no year.
 _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
-    "2022": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[0]: _EpochSurfaceExpectation(
         # The 2022 semantic map was authored without a surface expectation, so
         # every epoch-scoped case refused with "no reviewed surface expectation".
         # 2022 precedes 2023, so it -- not 2023 -- is the root of the chain.
@@ -245,7 +256,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         introduced_homes=(),
         retired_homes=(),
     ),
-    "2023": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[1]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
@@ -261,7 +272,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         #  - the REGIMEN SIMPLIFICADO actividad modules arrive on DP30302: 62 of
         #    the 82 introduced homes are simplified-regime projections, which is
         #    also why 2022 declares no pure-integer DP30302 slot at all.
-        predecessor="2022",
+        predecessor=_DESIGN_EPOCHS[0],
         introduced_homes=(
             ("DP30301", "25", "casilla:150"),
             ("DP30301", "26", "literal:'00000'@DP30301"),
@@ -602,11 +613,11 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30301", "47", "casilla:23"),
         ),
     ),
-    "2024-early": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[2]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
-        predecessor="2023",
+        predecessor=_DESIGN_EPOCHS[1],
         # The 2024-early design is anchor-identical to 2023 and introduces no
         # new home at all: it only reserves four simplified-regime slots the
         # 2023 design carried as payload.
@@ -618,11 +629,11 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30302", "122", _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 2)),
         ),
     ),
-    "2024-late": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[3]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=_M303_RECTIFICATIVA_EVIDENCE,
         general_rate_allowed_values=None,
-        predecessor="2024-early",
+        predecessor=_DESIGN_EPOCHS[2],
         introduced_homes=(
             # DP30301: the RDL 4/2024 transitional super-reducido rung -- base,
             # tipo and cuota -- and its recargo de equivalencia companion. The
@@ -649,7 +660,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         ),
         retired_homes=(("DP30303", "29", "computed:m303_complementaria_marker"),),
     ),
-    "2025": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[4]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         # DP30303 is anchor-identical to 2024-late and every one of its homes
         # carries over, so the rectificativa block is re-asserted here rather
@@ -658,7 +669,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         # Ordinal 50 stops enumerating: the 2025 design mandates a plain
         # Constante there, so the slot states no closed domain of its own.
         general_rate_allowed_values=None,
-        predecessor="2024-late",
+        predecessor=_DESIGN_EPOCHS[3],
         introduced_homes=tuple(
             ("DP30302", str(ordinal), _simplified_fact_home(cohort, fact, slot, sub_index))
             for ordinal, cohort, fact, slot, sub_index in _M303_2025_SUPERFICIE_ADDITIONS
@@ -693,7 +704,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30302", "153", _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 2)),
         ),
     ),
-    "2026": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[5]: _EpochSurfaceExpectation(
         # DP30303 is re-laid out rather than re-vocabularised: box [112] is
         # inserted into the resultado block and [108] moves to its head, so
         # every later ordinal shifts. The block is re-derived from the 2026
@@ -711,7 +722,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         ),
         general_rate_allowed_values=None,
         no_activity_marker_ordinal="30",
-        predecessor="2025",
+        predecessor=_DESIGN_EPOCHS[4],
         introduced_homes=(
             # Entitlement to deduct the advance payment on fuel deliveries
             # after the non-customs deposit regime ends. The producer key was
@@ -780,14 +791,6 @@ class _EpochAuthorities:
             line_ending="crlf",
             serializer_convention="rtoml-pretty-v1",
         )
-
-
-def _discovered_design_epochs() -> tuple[str, ...]:
-    """Return every authored mapping epoch, in stable lexical order."""
-    return tuple(sorted(path.name for path in scan_directory(_MAPPING_ROOT, select=DirectoryEntryKind.DIRECTORIES)))
-
-
-_DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
 
 
 #: These proofs verify AUTHORING artefacts -- semantic maps and render profiles --
@@ -1072,7 +1075,7 @@ def test_simplified_projections_cover_exactly_the_declared_anchor_set(epoch: _Ep
 
 def test_real_static_compiler_normalizes_the_complete_map(epoch: _EpochAuthorities) -> None:
     """The static compiler resolves every sourced field without filing-instance inputs."""
-    records, derivations = _render_records(epoch.joined.records, epoch.transport(), epoch.profile)
+    records, derivations = render_records(epoch.joined.records, epoch.transport(), epoch.profile)
 
     # Body records in official order, but only the ones THIS design lays out.
     # `_RECORD_IDS` is the full official sequence; the 2022 design carries five
@@ -1271,12 +1274,12 @@ def test_the_note_form_sweep_reaches_every_bundled_design_and_all_three_shapes()
     assert _DESIGN_EPOCHS and set(_DESIGN_EPOCHS) <= swept_epochs
     assert any(form.notes_are_all_parenthesised for form in forms), "no parenthesised note form was swept"
     assert any(
-        not form.notes_are_all_parenthesised and not _split_official_note_references(form.content)[0] for form in forms
+        not form.notes_are_all_parenthesised and not split_official_note_references(form.content)[0] for form in forms
     ), "no note-only form was swept"
     assert any(
-        not form.notes_are_all_parenthesised and _split_official_note_references(form.content)[0] for form in forms
+        not form.notes_are_all_parenthesised and split_official_note_references(form.content)[0] for form in forms
     ), "no annotated-value form was swept"
-    assert any(len(_split_official_note_references(form.content)[1]) > 2 for form in forms), (
+    assert any(len(split_official_note_references(form.content)[1]) > 2 for form in forms), (
         "no form carrying more than two chained notes was swept"
     )
 
@@ -1303,8 +1306,8 @@ def test_a_bare_trailing_period_is_the_value_grammar_s_business_not_the_note_pee
     since there is no note to remove and a peel that silently ate the period
     would mutate a stem while accounting for nothing.
     """
-    assert _split_official_note_references(content) == (content, ())
-    pattern = {"decimal": _DECIMAL_CONTENT_RE, "integer": _INTEGER_CONTENT_RE}[grammar]
+    assert split_official_note_references(content) == (content, ())
+    pattern = {"decimal": DECIMAL_CONTENT_RE, "integer": INTEGER_CONTENT_RE}[grammar]
     assert pattern.fullmatch(content) is not None
 
 
@@ -1323,9 +1326,9 @@ def test_a_bare_trailing_period_is_the_value_grammar_s_business_not_the_note_pee
 )
 def test_the_trailing_period_tolerance_did_not_loosen_the_numeric_grammars(content: str) -> None:
     """The fix must admit one terminator and nothing else."""
-    stem, _notes = _split_official_note_references(content)
-    assert _DECIMAL_CONTENT_RE.fullmatch(stem) is None
-    assert _INTEGER_CONTENT_RE.fullmatch(stem) is None
+    stem, _notes = split_official_note_references(content)
+    assert DECIMAL_CONTENT_RE.fullmatch(stem) is None
+    assert INTEGER_CONTENT_RE.fullmatch(stem) is None
 
 
 def test_note_reference_peeling_only_ever_removes_a_trailing_annotation() -> None:
@@ -1337,14 +1340,14 @@ def test_note_reference_peeling_only_ever_removes_a_trailing_annotation() -> Non
     """
     failures: list[str] = []
     for form in _bundled_design_note_forms():
-        stem, notes = _split_official_note_references(form.content)
+        stem, notes = split_official_note_references(form.content)
         tail = form.content[len(stem) :] if form.content.startswith(stem) else None
         if tail is None:
             failures.append(f"{form.content!r}: peeled stem {stem!r} is not a prefix of the official content")
             continue
-        if _TRAILING_NOTE_REFERENCE_RE.search(stem) is not None:
+        if TRAILING_NOTE_REFERENCE_RE.search(stem) is not None:
             failures.append(f"{form.content!r}: stem {stem!r} still ends in a note reference")
-        if _split_official_note_references(stem) != (stem, ()):
+        if split_official_note_references(stem) != (stem, ()):
             failures.append(f"{form.content!r}: peeling stem {stem!r} is not a fixed point")
         removed = tuple(int(number) for number in _NOTE_REFERENCE.findall(tail))
         if removed != notes:
@@ -1371,7 +1374,7 @@ def test_a_parenthesised_note_reference_is_peeled_only_from_the_tail() -> None:
     parenthesised = tuple(form for form in _bundled_design_note_forms() if form.notes_are_all_parenthesised)
     assert parenthesised, "the corpus no longer exercises a parenthesised note reference"
     for form in parenthesised:
-        stem, notes = _split_official_note_references(form.content)
+        stem, notes = split_official_note_references(form.content)
         # Only a TAIL may be removed: the stem must be a leading slice of the
         # content, and everything dropped must be note text and punctuation.
         assert form.content.startswith(stem), form.content
@@ -1383,7 +1386,7 @@ def test_a_parenthesised_note_reference_is_peeled_only_from_the_tail() -> None:
     # An INTERIOR reference is part of the value and stays untouched, which is
     # what keeps the peel from truncating an enumeration mid-way.
     interior = '"1" (Nota 3) o "2"'
-    assert _split_official_note_references(interior) == (interior, ())
+    assert split_official_note_references(interior) == (interior, ())
 
 
 def test_every_numeric_note_bearing_form_peels_to_one_readable_value_grammar() -> None:
@@ -1396,18 +1399,18 @@ def test_every_numeric_note_bearing_form_peels_to_one_readable_value_grammar() -
     content never reaches the numeric derivation at all.
     """
     grammars = {
-        "integer": _INTEGER_CONTENT_RE,
-        "decimal": _DECIMAL_CONTENT_RE,
-        "enumeration": _QUOTED_NUMERIC_ENUMERATION_RE,
-        "boolean-enumeration": _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
-        "constant": _OFFICIAL_LITERAL_RE,
+        "integer": INTEGER_CONTENT_RE,
+        "decimal": DECIMAL_CONTENT_RE,
+        "enumeration": QUOTED_NUMERIC_ENUMERATION_RE,
+        "boolean-enumeration": QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
+        "constant": OFFICIAL_LITERAL_RE,
     }
     numeric = tuple(form for form in _bundled_design_note_forms() if form.is_numeric)
     assert numeric, "the corpus no longer exercises a numeric note-bearing form"
 
     failures: list[str] = []
     for form in numeric:
-        stem, notes = _split_official_note_references(form.content)
+        stem, notes = split_official_note_references(form.content)
         if not stem:
             if not notes:
                 failures.append(f"{form.content!r}: peeled to nothing at all")
@@ -1465,12 +1468,12 @@ def test_each_epoch_carries_its_own_map_and_render_profile_identity() -> None:
 
 
 def test_reviewed_literal_scales_preserve_the_exact_official_wire_bytes(epoch: _EpochAuthorities) -> None:
-    records, _derivations = _render_records(epoch.joined.records, epoch.transport(), epoch.profile)
+    records, _derivations = render_records(epoch.joined.records, epoch.transport(), epoch.profile)
     by_id = {field.id: field for record in records for field in record.fields}
     joined_by_anchor = {
         (field.parser_field.sheet, field.parser_field.source_row): field for field in epoch.joined.fields
     }
-    assert len(epoch.profile.literal_numeric_rules) == (0 if epoch.design_epoch == "2022" else 6)
+    assert len(epoch.profile.literal_numeric_rules) == (0 if epoch.design_epoch == _DESIGN_EPOCHS[0] else 6)
     assert all(rule.literal != "00000" for rule in epoch.profile.literal_numeric_rules)
     for rule in epoch.profile.literal_numeric_rules:
         joined = joined_by_anchor[(rule.anchor.sheet, rule.anchor.source_row)]
@@ -1534,7 +1537,7 @@ def test_a_literal_scale_cannot_survive_a_drifted_official_anchor(defect: str) -
     profile = RenderProfile.model_validate(profile.model_dump())
     with pytest.raises(RegistryValidationError):
         validate_render_profile(profile, joined, epoch.source_evidence)
-        _render_records(joined.records, epoch.transport(), profile)
+        render_records(joined.records, epoch.transport(), profile)
 
 
 def _homes_by_anchor(semantic_map: SemanticMap) -> dict[str, tuple[str, str | None]]:
@@ -1705,4 +1708,4 @@ def _render_with_integer_content(epoch: _EpochAuthorities, *, field_id: str, con
         )
         for record in epoch.joined.records
     )
-    _render_records(records, epoch.transport(), epoch.profile)
+    render_records(records, epoch.transport(), epoch.profile)

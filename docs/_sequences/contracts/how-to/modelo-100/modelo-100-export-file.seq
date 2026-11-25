@@ -1,9 +1,17 @@
-:seed: renta-2025
+:seed: renta-2025-retencion
 @setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
-@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-certificado-trabajo-retenciones=2400 --binding renta-base-liquidable-negativa-general-anterior=0
-@setup aeat --format json app modelo work verify --modelo 100 --year 2025 --period 0A
-@step Export the checked declaration to a local file; it is labelled as not an AEAT receipt.
-@result aeat --format json app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
+@capture work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0
+@setup aeat --format json app modelo work attest-work-income {work_unit_id} --yes
+@capture checked_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {checked_revision_id}
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0
+@step After a recalculation, state the work income again: the content matches the checked calculation, so the result names that checked calculation and its state, and the recalculated draft stays current.
+aeat --format json app modelo work attest-work-income {work_unit_id} --yes
+@capture stated_revision_id result.calculation_revision_id
+@expect notices[0].code == "modelo.work.attest_work_income.reused_sealed_revision"
+@step Export the checked declaration to a local file by the calculation the notice names; it is labelled as not an AEAT receipt.
+@result aeat --format json app modelo export {work_unit_id} --revision {stated_revision_id} --output ./modelo-100.boe
 @expect exit_code == 0
 @expect result.modelo == "100"
 @step After you upload at the portal, record the filing in Cadrumo.

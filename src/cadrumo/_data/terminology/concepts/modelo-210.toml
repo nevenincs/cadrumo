@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Autoliquidacion del IRNR sin establecimiento permanente."
-definition = "Autoliquidacion del Impuesto sobre la Renta de no Residentes para rentas obtenidas en Espana sin establecimiento permanente."
+short_description = "Autoliquidación del IRNR sin establecimiento permanente."
+definition = "Autoliquidación del Impuesto sobre la Renta de no Residentes para rentas obtenidas en España sin establecimiento permanente."
 
 [language.es.source]
 citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."

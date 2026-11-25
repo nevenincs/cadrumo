@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e5176532fc8d0bf5607a12f1e39e00cef0c4f1a8bab781fef3d6353542ee10b'
+body_hash: 'sha256:5abd8b0f6c9449a802caa19a0a57a540c590a6fb688c2b7a7e21491e1393ca29'
 related:
   - "[[2026-08-10-casilla-schema-research]]"
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
@@ -38,7 +38,7 @@ Three registry-derivation questions are answered in many places with divergent p
 ## Constraints
 
 - Each landing is one atomic relocation commit: canonical site plus every consumer retarget plus facade export together, clean `--collect-only` before commit.
-- The official-box classifier is truthful on M720 and M100 2024+ only after the A-01/A-02 registry corrections land; those are plan preconditions, not part of this decision.
+- The official-box classifier is truthful on M720 and the later Modelo 100 editions only after the A-01/A-02 registry corrections land; those are plan preconditions, not part of this decision.
 - `CasillaProducerInventory` is a different grain and is left untouched.
 
 ## Implementation

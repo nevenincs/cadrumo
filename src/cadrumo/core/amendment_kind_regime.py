@@ -13,7 +13,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -47,6 +47,14 @@ class AmendmentLiabilityDirection(StrEnum):
 
 
 @dataclass(frozen=True)
+class AmendmentKindRestriction:
+    """Dated intersection supplied by the validated registry policy."""
+
+    effective_from: date
+    permitted_kinds: frozenset[str]
+
+
+@dataclass(frozen=True)
 class AmendmentRegimePolicy:
     """Registry-projected amendment policy consumed by core mechanics.
 
@@ -60,6 +68,14 @@ class AmendmentRegimePolicy:
     rectificativa_effective_from: Mapping[str, date]
     pre_rectificativa_kinds: frozenset[str]
     post_rectificativa_kinds: frozenset[str]
+    later_period_adjustment_from: Mapping[str, date] = field(default_factory=dict[str, date])
+    """Modelos whose filed return can never be amended, from the date their adjustment rule applies.
+
+    Their corrections belong to a later period's return, so no amendment kind exists.
+    """
+    kind_restrictions: Mapping[str, AmendmentKindRestriction] = field(
+        default_factory=dict[str, AmendmentKindRestriction]
+    )
 
 
 @dataclass(frozen=True)
@@ -68,15 +84,13 @@ class AmendmentKindRegime:
 
     Attributes:
         permitted_kinds: The closed set of
-            :class:`~CalculationRevisionAmendmentKind`
+            :class:`~FilingDeclarationKind`
             string values legally available for this modelo and period.
-            ``"sustitutiva"`` is always permitted (a material restatement is
-            never barred by the rectificativa timeline); ``"rectificativa"``
-            is permitted only once the modelo's own effective period is
-            reached; ``"complementaria"`` is permitted only before that
-            point (once rectificativa applies, it *replaces* complementaria
-            for the modelo's ordinary corrective filings — see
-            ``CalculationRevisionAmendmentKind.RECTIFICATIVA``'s docstring).
+            Empty when the modelo adjusts a filed period only through a later
+            period's return. Otherwise the registry's pre/post vocabulary is
+            intersected with any effective restriction for this modelo.
+            A restriction can remove kinds but cannot grant a procedure
+            absent from the selected regime.
         rectificativa_effective: Whether the resolved period is within the
             modelo's rectificativa-supported window (``True``) or the
             pre-rectificativa dual regime still applies (``False``).
@@ -96,10 +110,11 @@ def resolve_amendment_kind_regime(
     """Resolve the codified amendment-kind regime for ``modelo`` at ``period``.
 
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
-    :class:`~CalculationRevisionAmendmentKind` string
+    :class:`~FilingDeclarationKind` string
     values for this ``(modelo, period)`` pair. A modelo with no registry-
-    declared boundary always resolves to the projected pre-rectificativa pair;
-    the core never invents rectificativa support.
+    declared boundary selects the projected pre-rectificativa vocabulary.
+    Effective restrictions only narrow the selected vocabulary; the core
+    never invents procedure support.
 
     For a period with no calendar date span (an instalment clave or an
     extended/ad-hoc form), the resolution falls back to
@@ -111,30 +126,28 @@ def resolve_amendment_kind_regime(
     caller that has already projected an alternate boundary mapping; it does
     not provide a default policy or a fallback vocabulary.
     """
+    adjustment_boundary = policy.later_period_adjustment_from.get(modelo)
+    if adjustment_boundary is not None and _period_reaches(period, adjustment_boundary):
+        return AmendmentKindRegime(permitted_kinds=frozenset(), rectificativa_effective=False)
     table = (
         policy.rectificativa_effective_from if rectificativa_effective_from is None else rectificativa_effective_from
     )
     boundary = table.get(modelo)
-    if boundary is None:
-        return AmendmentKindRegime(
-            permitted_kinds=policy.pre_rectificativa_kinds,
-            rectificativa_effective=False,
-        )
-
-    if period.has_date_span():
-        rectificativa_effective = period.end_date >= boundary
-    else:
-        rectificativa_effective = period.filing_year >= boundary.year
-
-    if rectificativa_effective:
-        return AmendmentKindRegime(
-            permitted_kinds=policy.post_rectificativa_kinds,
-            rectificativa_effective=True,
-        )
+    rectificativa_effective = boundary is not None and _period_reaches(period, boundary)
+    permitted_kinds = policy.post_rectificativa_kinds if rectificativa_effective else policy.pre_rectificativa_kinds
+    restriction = policy.kind_restrictions.get(modelo)
+    if restriction is not None and _period_reaches(period, restriction.effective_from):
+        permitted_kinds = permitted_kinds & restriction.permitted_kinds
     return AmendmentKindRegime(
-        permitted_kinds=policy.pre_rectificativa_kinds,
-        rectificativa_effective=False,
+        permitted_kinds=permitted_kinds,
+        rectificativa_effective=rectificativa_effective,
     )
+
+
+def _period_reaches(period: Period, boundary: date) -> bool:
+    if period.has_date_span():
+        return period.end_date >= boundary
+    return period.filing_year >= boundary.year
 
 
 def classify_amendment_liability_direction(
@@ -167,6 +180,7 @@ def classify_amendment_liability_direction(
 
 __all__ = [
     "AmendmentKindRegime",
+    "AmendmentKindRestriction",
     "AmendmentLiabilityDirection",
     "AmendmentRegimePolicy",
     "classify_amendment_liability_direction",

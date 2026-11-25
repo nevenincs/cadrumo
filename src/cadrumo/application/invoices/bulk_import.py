@@ -35,6 +35,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -43,31 +44,45 @@ from typing import Any
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
+from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
+from ...core.field_role import FieldRole
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
-from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.percentage import fraction_of_percentage
+from ...core.period import Period, PeriodError
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...core.xls_workbook import read_xls_workbook
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.invoice_legal_classification import (
+    resolve_invoice_legal_classification_catalogue,
+)
+from ...domain.invoices.enums import InvoiceClass, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.iva.schema import InvoiceKind
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
-from ._bulk_import_columns import (
+from ..ledger.import_ports import LedgerImportReaderUnavailableError
+from ..reader_refusal_wording import column_reader_refusal_reason
+from .bulk_import_columns import (
     BulkImportColumnResolution,
     ColumnRoleMapper,
     resolve_bulk_import_columns,
 )
+from .catalogue_add_operation import declared_invoice_category
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_ports import CatalogueCreationPorts
+from .source_observations import iva_category_for_operation_type
 
 __all__ = [
     "BULK_INVOICE_IMPORT_EXTENSIONS",
@@ -161,6 +176,9 @@ class BulkInvoiceImportRow(BaseModel):
     retencion_amount: Decimal | None = None
     retencion_rate: Decimal | None = None
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
+    # The exchange rate the book states for a foreign row. It wins over the
+    # published rate, and a euro row stating one is refused.
+    fx_rate: Decimal | None = None
     # Required, and deliberately not defaulted to Spain. The counterparty's
     # country decides whether the invoice is treated as domestic or as an
     # intra-community operation, so inferring ES for a row that never stated
@@ -171,6 +189,37 @@ class BulkInvoiceImportRow(BaseModel):
     # silent.
     country_code: CountryCodeAlpha2
     notes: str = ""
+    # The IVA treatment and Modelo 349 clave the book states, read as the add
+    # verb reads them. Without them an intra-community supply or an export
+    # falls back to the domestic treatment its rate implies.
+    iva_category: IvaCategory | None = None
+    operation_type: IntracomOperationType | None = None
+    # The recargo de equivalencia the invoice charged (LIVA art. 161). It rides
+    # inside the total, so the invoice checks it against the cuota.
+    recargo_amount: Decimal | None = None
+    # The RD 1619/2012 class axis and the facts a factura rectificativa states.
+    # They arrive together because they are refused apart: the rectification
+    # facts only apply to a rectificativa, and a rectificativa needs its own
+    # series (art. 6.1.a.2.º) and the number it corrects (LIVA art. 89). A row
+    # stating only some of the facts imports and is blocked where the Modelo
+    # 303 would declare it, which is the point: nothing is defaulted.
+    invoice_class: InvoiceClass | None = None
+    series: str | None = None
+    rectifies_invoice_number: str | None = None
+    rectification_method: str | None = None
+    rectification_cause: str | None = None
+    rectification_direction: str | None = None
+    document_received_on: date | None = None
+    # The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    # art. 80.Tres leave the taxpayer. A book may state them and a book may
+    # not; a rectificativa whose row states none imports and is held where the
+    # Modelo 303 would place it, naming the election it still needs.
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
 
 
 class BulkInvoiceImportRowFailure(BaseModel):
@@ -207,9 +256,9 @@ def _parse_row_date(raw: str, *, row_number: int, field: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
+        raise RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
     if value is None:
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
+        raise RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
     return value
 
 
@@ -252,7 +301,7 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
     else:
         numeric = try_parse_canonical_decimal(coerce_cell_text(raw), max_fraction_digits=2)
     if numeric is None or not numeric.is_finite():
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field=field,
             reason=(
@@ -266,7 +315,7 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
     return numeric
 
 
-class _RowParseError(CadrumoError):
+class RowParseError(CadrumoError):
     """Internal control-flow exception carrying one row's failure detail."""
 
     def __init__(self, *, row_number: int, field: str, reason: str) -> None:
@@ -300,7 +349,7 @@ def _canonicalise_amount_text(raw: object, *, decimal_separator: DecimalSeparato
 def _assert_bulk_row_fields_present(raw_row: Mapping[str, object], *, row_number: int) -> None:
     missing = [column for column in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS if not coerce_cell_text(raw_row.get(column))]
     if missing:
-        raise _RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
+        raise RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
 
 
 def _parse_optional_row_decimal(
@@ -356,7 +405,9 @@ def _parse_bulk_row_retention_rate(
     """Return the row's retención rate as a fraction, or ``None``.
 
     A book prints the rate either as a percentage (``15``) or as a fraction
-    (``0.15``); a value above one is read as a percentage. A rate is only
+    (``0.15``); a value above one is read as a percentage, and a ``%`` suffix
+    marks points whatever the value. A bare ``1`` is one per cent or the whole,
+    so it is refused rather than guessed. A rate is only
     accepted beside the amount it produced: the amount is what the document
     states, and the importer never computes it from the rate. A zero rate with
     no amount is a book saying nothing was withheld, and is read as no
@@ -371,18 +422,290 @@ def _parse_bulk_row_retention_rate(
     if rate is None or (rate == 0 and retencion_amount is None):
         return None
     if retencion_amount is None:
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field="retencion_amount",
             reason="retencion_amount is required when retencion_rate is given; the amount is never derived",
         )
-    return rate / 100 if rate > 1 else rate
+    marked_as_percentage = coerce_cell_text(raw_row.get("retencion_rate")).rstrip().endswith("%")
+    if rate == 1 and not marked_as_percentage:
+        raise RowParseError(
+            row_number=row_number,
+            field="retencion_rate",
+            reason="a bare retencion_rate of 1 is ambiguous between one per cent and the whole; write 1% or 0.01",
+        )
+    return fraction_of_percentage(rate) if rate > 1 or marked_as_percentage else rate
+
+
+def _parse_bulk_row_fx_rate(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    decimal_separator: DecimalSeparatorValue,
+) -> Decimal | None:
+    """Return the exchange rate a row states, or ``None`` when its cell is blank.
+
+    A rate is not a euro amount: ``0.9250`` carries four decimals, so the
+    two-decimal cap that refuses the Spanish thousands shape in an amount does
+    not apply. The file's detected decimal convention still converts the text,
+    and the bare thousands shape ``1.234`` is still refused rather than guessed.
+    Whether the rate is above zero and the row is foreign is the invoice
+    builder's refusal, not the parser's.
+    """
+    raw = raw_row.get("fx_rate")
+    if not coerce_cell_text(raw):
+        return None
+    canonical = _canonicalise_amount_text(raw, decimal_separator=decimal_separator)
+    if not isinstance(canonical, str):
+        return _parse_row_decimal(canonical, row_number=row_number, field="fx_rate")
+    rate = try_parse_canonical_decimal(canonical)
+    if rate is None or not rate.is_finite():
+        raise RowParseError(
+            row_number=row_number,
+            field="fx_rate",
+            reason=(
+                f"invalid exchange rate: {coerce_cell_text(raw)!r} — write the euro value of one unit of the "
+                "row's currency with a dot as the decimal separator, so ninety-two and a half cents is '0.9250'"
+            ),
+        )
+    return rate
+
+
+def _parse_bulk_row_operation_type(raw_row: Mapping[str, object], *, row_number: int) -> IntracomOperationType | None:
+    """Return the Modelo 349 clave a row states, read as the invoice reads it, or ``None`` when blank."""
+    text = coerce_cell_text(raw_row.get("operation_type")).strip()
+    if not text:
+        return None
+    try:
+        return IntracomOperationType(text.upper())
+    except ValueError as exc:
+        accepted = ", ".join(member.value for member in IntracomOperationType)
+        raise RowParseError(
+            row_number=row_number,
+            field="operation_type",
+            reason=f"unknown Modelo 349 operation type {text!r}; accepted: {accepted}",
+        ) from exc
+
+
+def _parse_bulk_row_iva_treatment(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCategory | None, IntracomOperationType | None]:
+    """Return the IVA category and Modelo 349 clave a row states.
+
+    The category is admitted exactly as the add verb admits it: a token the
+    registry declares for the invoice date, or the row is refused. A row that
+    states only the clave takes the category that clave declares, as the add
+    verb and the wizard do; a stated category always wins over that fallback.
+    Whether an entrega intracomunitaria states its clave is the invoice
+    builder's refusal, not the parser's.
+    """
+    operation_type = _parse_bulk_row_operation_type(raw_row, row_number=row_number)
+    category_text = coerce_cell_text(raw_row.get("iva_category")).strip()
+    with validating_governed_facts(operation):
+        try:
+            category = declared_invoice_category(
+                category_text or None,
+                effective_date=invoice_date,
+                authority_operation=operation,
+            )
+        except InvoiceValidationError as exc:
+            raise RowParseError(
+                row_number=row_number,
+                field="iva_category",
+                reason=f"IVA category {category_text!r} is not declared by the registry for {invoice_date.isoformat()}",
+            ) from exc
+        if category is None and operation_type is not None:
+            category = iva_category_for_operation_type(operation_type, effective_date=invoice_date)
+    return category, operation_type
+
+
+def _parse_bulk_row_invoice_class(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceClass | None:
+    """Return the RD 1619/2012 class a row states, or ``None`` when it states none.
+
+    A blank cell leaves the class to the record's own default, exactly as an
+    omitted column does. A stated class must be one fact 0141 declares for the
+    invoice's date, so a book cannot import a class the registry does not carry.
+    """
+    text = coerce_cell_text(raw_row.get("invoice_class")).strip()
+    if not text:
+        return None
+    with validating_governed_facts(operation):
+        try:
+            return require_invoice_class(text, effective_date=invoice_date)
+        except (RegistryValidationError, InvoiceValidationError, ValueError) as exc:
+            raise RowParseError(
+                row_number=row_number,
+                field="invoice_class",
+                reason=f"invoice class {text!r} is not declared by the registry for {invoice_date.isoformat()}",
+            ) from exc
+
+
+def _parse_bulk_row_rectification_facts(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str | None, str | None, str | None, date | None]:
+    """Return the rectification facts a row states, each admitted by the served vocabulary.
+
+    The three token facts are checked against fact 0141's own choices for the
+    invoice's date, so the importer holds no method, cause or direction list
+    and a refusal names what the registry does accept. They are returned as
+    text because the record projects them again on its own ``issued_at``.
+    """
+    with validating_governed_facts(operation):
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=invoice_date)
+        method = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_method",
+            row_number=row_number,
+            choices=catalogue.rectification_method_choices,
+        )
+        cause = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_cause",
+            row_number=row_number,
+            choices=catalogue.rectification_cause_choices,
+        )
+        direction = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_direction",
+            row_number=row_number,
+            choices=catalogue.rectification_direction_choices,
+        )
+    received_raw = coerce_cell_text(raw_row.get("document_received_on")).strip()
+    received_on = (
+        None if not received_raw else _parse_row_date(received_raw, row_number=row_number, field="document_received_on")
+    )
+    return method, cause, direction, received_on
+
+
+#: The cell texts a book may state an attestation with. A blank cell is neither:
+#: it is the unanswered state that holds an art. 80.Tres modification, which is
+#: why "false" cannot be the default for an absent column.
+_ROW_ATTESTATION_TRUE: frozenset[str] = frozenset({"true", "yes", "si", "sí", "1"})
+_ROW_ATTESTATION_FALSE: frozenset[str] = frozenset({"false", "no", "0"})
+
+
+@dataclass(frozen=True, slots=True)
+class _RowRectificationElections:
+    """The elections and attestation one import row states, each as given."""
+
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
+
+
+def _parse_bulk_row_rectification_elections(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> _RowRectificationElections:
+    """Return the elections a row states, each admitted by its own vocabulary or grammar.
+
+    The two election tokens come from fact 0141's choices for the invoice's
+    date, as the method, cause and direction do. Each elected
+    declaración-liquidación is read from the canonical display form, a filing
+    year and a bare registry period code, so a calendar cell refuses under its
+    own column rather than selecting a period nobody stated. The attestation is
+    the one tri-state cell: blank holds the modification, false refuses it.
+    """
+    with validating_governed_facts(operation):
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=invoice_date)
+        increase_election = _bulk_row_declared_token(
+            raw_row,
+            field="issuer_increase_election",
+            row_number=row_number,
+            choices=catalogue.issuer_increase_election_choices,
+        )
+        minoracion_election = _bulk_row_declared_token(
+            raw_row,
+            field="issuer_minoracion_election",
+            row_number=row_number,
+            choices=catalogue.issuer_minoracion_election_choices,
+        )
+    return _RowRectificationElections(
+        issuer_increase_election=increase_election,
+        issuer_minoracion_election=minoracion_election,
+        issuer_minoracion_regularisation_period=_parse_row_elected_period(
+            raw_row, field="issuer_minoracion_regularisation_period", row_number=row_number
+        ),
+        recipient_increase_period=_parse_row_elected_period(
+            raw_row, field="recipient_increase_period", row_number=row_number
+        ),
+        art_80_tres_obligations_attested=_parse_row_attestation(
+            raw_row, field="art_80_tres_obligations_attested", row_number=row_number
+        ),
+        exercised_deduction_period=_parse_row_elected_period(
+            raw_row, field="exercised_deduction_period", row_number=row_number
+        ),
+    )
+
+
+def _parse_row_elected_period(raw_row: Mapping[str, object], *, field: str, row_number: int) -> Period | None:
+    """Read one elected declaración-liquidación from its canonical display form, or ``None``."""
+    text = coerce_cell_text(raw_row.get(field)).strip()
+    if not text:
+        return None
+    try:
+        return Period.from_string(text)
+    except PeriodError as exc:
+        raise RowParseError(
+            row_number=row_number,
+            field=field,
+            reason="must be a filing year and a registry period code, such as a year followed by 1T",
+        ) from exc
+
+
+def _parse_row_attestation(raw_row: Mapping[str, object], *, field: str, row_number: int) -> bool | None:
+    """Read one stated attestation, keeping a blank cell apart from a stated denial."""
+    text = coerce_cell_text(raw_row.get(field)).strip().lower()
+    if not text:
+        return None
+    if text in _ROW_ATTESTATION_TRUE:
+        return True
+    if text in _ROW_ATTESTATION_FALSE:
+        return False
+    accepted = ", ".join(sorted(_ROW_ATTESTATION_TRUE | _ROW_ATTESTATION_FALSE))
+    raise RowParseError(row_number=row_number, field=field, reason=f"must be one of: {accepted}")
+
+
+def _bulk_row_declared_token(
+    raw_row: Mapping[str, object],
+    *,
+    field: str,
+    row_number: int,
+    choices: tuple[str, ...],
+) -> str | None:
+    text = coerce_cell_text(raw_row.get(field)).strip()
+    if not text:
+        return None
+    if text not in {str(choice) for choice in choices}:
+        accepted = ", ".join(str(choice) for choice in choices)
+        raise RowParseError(row_number=row_number, field=field, reason=f"must be one of: {accepted}")
+    return text
 
 
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field="country_code",
             reason="counterparty country is missing or blank; state it in the row or declare one for the import",
@@ -399,7 +722,17 @@ def _build_bulk_invoice_row(
     iva_rate: Decimal | None,
     retencion_amount: Decimal | None,
     retencion_rate: Decimal | None,
+    fx_rate: Decimal | None,
     country_code: str,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+    recargo_amount: Decimal | None,
+    invoice_class: InvoiceClass | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: date | None,
+    elections: _RowRectificationElections,
 ) -> BulkInvoiceImportRow:
     try:
         return BulkInvoiceImportRow(
@@ -412,23 +745,41 @@ def _build_bulk_invoice_row(
             retencion_amount=retencion_amount,
             retencion_rate=retencion_rate,
             currency=coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY,
+            fx_rate=fx_rate,
             country_code=country_code,
             notes=coerce_cell_text(raw_row.get("notes")),
+            iva_category=iva_category,
+            operation_type=operation_type,
+            recargo_amount=recargo_amount,
+            invoice_class=invoice_class,
+            series=coerce_cell_text(raw_row.get("series")).strip() or None,
+            rectifies_invoice_number=coerce_cell_text(raw_row.get("rectifies_invoice_number")).strip() or None,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
+            issuer_increase_election=elections.issuer_increase_election,
+            issuer_minoracion_election=elections.issuer_minoracion_election,
+            issuer_minoracion_regularisation_period=elections.issuer_minoracion_regularisation_period,
+            recipient_increase_period=elections.recipient_increase_period,
+            art_80_tres_obligations_attested=elections.art_80_tres_obligations_attested,
+            exercised_deduction_period=elections.exercised_deduction_period,
         )
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
         field = str(first["loc"][0]) if bool(first.get("loc")) else "row"
-        raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
+        raise RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
 
 
 def _parse_bulk_invoice_row(
     raw_row: Mapping[str, object],
     *,
     row_number: int,
+    operation: PinnedAuthorityOperation,
     decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD,
     declared_country: str | None = None,
 ) -> BulkInvoiceImportRow:
-    """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`_RowParseError`.
+    """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`RowParseError`.
 
     Every field failure is attributed to its originating column name so a
     refusal names both the row number and the field that failed
@@ -459,7 +810,38 @@ def _parse_bulk_invoice_row(
         decimal_separator=decimal_separator,
         retencion_amount=retencion_amount,
     )
+    fx_rate = _parse_bulk_row_fx_rate(raw_row, row_number=row_number, decimal_separator=decimal_separator)
+    recargo_amount = _parse_optional_row_decimal(
+        raw_row,
+        field="recargo_amount",
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+    )
     country_code = _bulk_row_country_code(raw_row, declared_country=declared_country, row_number=row_number)
+    iva_category, operation_type = _parse_bulk_row_iva_treatment(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
+    invoice_class = _parse_bulk_row_invoice_class(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
+    method, cause, direction, received_on = _parse_bulk_row_rectification_facts(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
+    elections = _parse_bulk_row_rectification_elections(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
     return _build_bulk_invoice_row(
         raw_row,
         row_number=row_number,
@@ -468,7 +850,17 @@ def _parse_bulk_invoice_row(
         iva_rate=iva_rate,
         retencion_amount=retencion_amount,
         retencion_rate=retencion_rate,
+        fx_rate=fx_rate,
         country_code=country_code,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        rectification_method=method,
+        rectification_cause=cause,
+        rectification_direction=direction,
+        document_received_on=received_on,
+        elections=elections,
     )
 
 
@@ -480,10 +872,26 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
     still imports, but a book carrying no taxable base at all has no row to
     create. The refusal names the fields, and lists what the file did carry, so
     the operator can see whether a column was simply not recognised.
+
+    A book whose own column names only the mapping lane could read, and whose
+    mapping model could not be asked, was never read. It refuses with the
+    reader's verdict rather than claiming the book lacks the columns.
+
+    Raises:
+        LedgerImportReaderUnavailableError: The mapping lane was needed and
+            its reader could not be asked.
+        InvoiceValidationError: No column supplies a required field.
     """
     missing = BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - resolution.fields_present
     if not missing:
         return
+    verdict = resolution.reader_unavailable_verdict
+    if verdict is not None:
+        raise LedgerImportReaderUnavailableError(
+            translated_message="errors.transaction.ledger_import_failed",
+            context={"reason": column_reader_refusal_reason()},
+            precondition_verdict=verdict,
+        )
     raise InvoiceValidationError(
         "bulk invoice import file supplies no column for required field(s): " + ", ".join(sorted(missing)),
         translated_message="application.invoices.bulk_import.errors.missing_columns",
@@ -544,6 +952,8 @@ def _read_delimited_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
@@ -558,9 +968,13 @@ def _read_delimited_source(
             context={"path_name": path.name, "detail": str(exc)},
         ) from exc
     resolution = resolve_bulk_import_columns(
-        table.headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+        table.headers,
+        mapper=mapper,
+        required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+        operator_roles=operator_roles,
     )
-    _assert_required_fields_present(resolution)
+    if not preview:
+        _assert_required_fields_present(resolution)
     field_by_index = resolution.field_by_index
     rows = tuple(
         BulkImportSourceRow(
@@ -581,12 +995,15 @@ def _read_delimited_source(
     # ``1.234`` there is genuinely ambiguous and must refuse rather than be
     # guessed at. Only a book the mapping lane had to interpret -- foreign
     # headers, its own conventions -- is read under its detected separator,
-    # where the whole file's evidence settles what a comma means.
+    # where the whole file's evidence settles what a comma means. Columns the
+    # operator assigned are a book the product's own names did not read either.
     return BulkInvoiceImportSource(
         rows=rows,
         resolution=resolution,
         decimal_separator=(
-            table.dialect.decimal_separator if resolution.consulted_mapping_lane else DecimalSeparator.PERIOD
+            table.dialect.decimal_separator
+            if resolution.consulted_mapping_lane or resolution.operator_assigned
+            else DecimalSeparator.PERIOD
         ),
         source_sha256=source_sha256,
     )
@@ -645,6 +1062,8 @@ def _workbook_source_from_rows(
     *,
     path: Path,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_sha256: str,
     source_format: SourceFormat,
     ingested_at: datetime,
@@ -658,9 +1077,13 @@ def _workbook_source_from_rows(
     _refuse_formula_cells(header_cells, path=path, row_number=1)
     headers = [coerce_cell_text(cell.value) for cell in header_cells]
     resolution = resolve_bulk_import_columns(
-        headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+        headers,
+        mapper=mapper,
+        required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+        operator_roles=operator_roles,
     )
-    _assert_required_fields_present(resolution)
+    if not preview:
+        _assert_required_fields_present(resolution)
     return BulkInvoiceImportSource(
         rows=_workbook_source_rows(
             rows_iter,
@@ -679,6 +1102,8 @@ def _read_workbook_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
@@ -713,6 +1138,8 @@ def _read_workbook_source(
             rows_iter,
             path=path,
             mapper=mapper,
+            operator_roles=operator_roles,
+            preview=preview,
             source_sha256=source_sha256,
             source_format=SourceFormat.XLSX,
             ingested_at=ingested_at,
@@ -721,22 +1148,24 @@ def _read_workbook_source(
         workbook.close()
 
 
-def _read_legacy_workbook_source(
+def _read_xls_workbook_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
 ) -> BulkInvoiceImportSource:
     """Read a legacy Excel 97-2003 invoice book exactly as :func:`_read_workbook_source` reads ``.xlsx``.
 
-    :func:`~core.legacy_workbook.read_legacy_workbook` marks each formula cell
+    :func:`~core.xls_workbook.read_xls_workbook` marks each formula cell
     the way ``openpyxl`` does, so the same first worksheet is read under the
     same formula refusal, header resolution and row numbering.
     """
     try:
-        worksheets = read_legacy_workbook(source_bytes)
+        worksheets = read_xls_workbook(source_bytes)
     except TabularSourceError as exc:
         raise InvoiceValidationError(
             "bulk invoice import file carries no readable table",
@@ -747,6 +1176,8 @@ def _read_legacy_workbook_source(
         iter(worksheets[0].rows if worksheets else ()),
         path=path,
         mapper=mapper,
+        operator_roles=operator_roles,
+        preview=preview,
         source_sha256=source_sha256,
         source_format=SourceFormat.XLS,
         ingested_at=ingested_at,
@@ -758,8 +1189,10 @@ def read_bulk_invoice_import_source(
     *,
     mapper: ColumnRoleMapper | None = None,
     expected_sha256: str | None = None,
+    operator_roles: Mapping[int, FieldRole] | None = None,
+    preview: bool = False,
 ) -> BulkInvoiceImportSource:
-    """Read a CSV, TSV, XLSX/XLSM or legacy XLS invoice book into rows keyed by importer field.
+    """Read a CSV, TSV, XLSX/XLSM or XLS invoice book into rows keyed by importer field.
 
     A column whose header already names an importer field binds to it outright.
     Anything left over is put to ``mapper`` once for the whole file, and a column
@@ -772,18 +1205,27 @@ def read_bulk_invoice_import_source(
 
     Args:
         path: The invoice book to read.
-        mapper: Establishes roles for columns exact matching did not resolve.
+        mapper: Establishes roles for columns neither the operator nor exact
+            matching resolved.
         expected_sha256: Optional submitted source digest, checked against the
             single read before parsing or consulting the mapping lane. Without
             one the digest of that same read is computed and returned on the
             source.
+        operator_roles: The role the operator assigned to a column, by its
+            zero-based index; these bind before exact names and the mapper.
+        preview: Report a required field no column supplies on the returned
+            resolution instead of refusing the book. The source is then for
+            inspection, not for applying.
 
     Returns:
         The resolved source, ready to apply.
 
     Raises:
         InvoiceValidationError: The extension is unsupported, the file cannot be
-            read, or no column supplies a required field.
+            read, a stated role is invalid for the file, or (unless ``preview``)
+            no column supplies a required field.
+        LedgerImportReaderUnavailableError: Only the mapping lane could read
+            the book's columns, and its model could not be asked.
     """
     suffix = path.suffix.lower()
     if suffix not in BULK_INVOICE_IMPORT_EXTENSIONS:
@@ -808,14 +1250,18 @@ def read_bulk_invoice_import_source(
         return _read_delimited_source(
             path,
             mapper=mapper,
+            operator_roles=operator_roles,
+            preview=preview,
             source_bytes=source_bytes,
             source_sha256=source_sha256,
             ingested_at=ingested_at,
         )
-    read_workbook = _read_legacy_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
+    read_workbook = _read_xls_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
     return read_workbook(
         path,
         mapper=mapper,
+        operator_roles=operator_roles,
+        preview=preview,
         source_bytes=source_bytes,
         source_sha256=source_sha256,
         ingested_at=ingested_at,
@@ -856,7 +1302,20 @@ def import_invoices_from_rows(
     a source that carries the column ignores it row by row: an operator whose
     book cannot express the fact declares it once and consciously, rather than
     having Spain inferred for a foreign counterparty.
+
+    Without ``operation`` the bundled published authority is leased once for
+    the whole import, so every row is read and built under one generation.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return import_invoices_from_rows(
+                source,
+                bucket_id=bucket_id,
+                kind=kind,
+                declared_country=declared_country,
+                ports=ports,
+                operation=indexed_operation,
+            )
     _assert_country_is_answerable(source.resolution, declared_country=declared_country)
     catalogue = ports.invoice_repository.load()
     existing_ids = set(catalogue.invoices)
@@ -872,10 +1331,11 @@ def import_invoices_from_rows(
             parsed = _parse_bulk_invoice_row(
                 source_row.values,
                 row_number=row_number,
+                operation=operation,
                 decimal_separator=source.decimal_separator,
                 declared_country=declared_country,
             )
-        except _RowParseError as exc:
+        except RowParseError as exc:
             refused.append(BulkInvoiceImportRowFailure(row_number=exc.row_number, field=exc.field, reason=exc.reason))
             continue
 
@@ -894,6 +1354,23 @@ def import_invoices_from_rows(
                 retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
+                iva_category=parsed.iva_category,
+                operation_type=parsed.operation_type,
+                recargo_amount=parsed.recargo_amount,
+                invoice_class=parsed.invoice_class,
+                series=parsed.series,
+                rectifies_invoice_number=parsed.rectifies_invoice_number,
+                rectification_method=parsed.rectification_method,
+                rectification_cause=parsed.rectification_cause,
+                rectification_direction=parsed.rectification_direction,
+                document_received_on=parsed.document_received_on,
+                issuer_increase_election=parsed.issuer_increase_election,
+                issuer_minoracion_election=parsed.issuer_minoracion_election,
+                issuer_minoracion_regularisation_period=parsed.issuer_minoracion_regularisation_period,
+                recipient_increase_period=parsed.recipient_increase_period,
+                art_80_tres_obligations_attested=parsed.art_80_tres_obligations_attested,
+                exercised_deduction_period=parsed.exercised_deduction_period,
+                declared_fx_rate=parsed.fx_rate,
                 rate_provider=ports.rate_provider,
                 operation=operation,
             )

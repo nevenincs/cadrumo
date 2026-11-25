@@ -1,34 +1,55 @@
-"""Nonselecting human-proof candidates for an immutable profile worker."""
+"""Nonselecting human-proof candidates for an immutable profile worker.
+
+A profile whose password envelope holds the fixed fallback KDF point is
+strengthened here, at a person's password sign-in. After one such sign-in the
+worker measures a stronger point in the background, with no secret, and holds it
+for its own lifetime. A later password sign-in with no other live session
+re-wraps the same data key under that point with the password the attempt
+already holds, then refuses the attempt as custody changed, so the runtime
+follows it onto the successor generation and proves it again there.
+"""
 
 from __future__ import annotations
 
+import contextvars
+import logging
 import time
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from datetime import timedelta
-from threading import RLock
+from threading import Lock, RLock, Thread
 from typing import Final
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import refresh_profile_session_with_key
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from cadrumo.adapters.persistence.storage.custody.kdf_strengthening import ProfileKdfPointRefusedError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
+from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
 from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, authenticate_profile_candidate
+from cadrumo.application.user_profile.passphrase_rotation import (
+    measure_profile_custody_stronger_password_kdf,
+    strengthen_profile_password_kdf,
+)
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.errors.failure_report import log_boundary_failure
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError
 from cadrumo_client.contracts.sign_in_outcomes import (
     ProfileLoginOutcome,
     ProfileLoginThrottledError,
@@ -51,9 +72,28 @@ _RECEIPT_DENIALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
 
 
 _KDF_UNAVAILABLE: Final = frozenset(
-    {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE}
+    {ProfileCustodyRefusal.KDF_RESOURCE_BUSY, ProfileCustodyRefusal.KDF_SUPERVISION_BUSY}
 )
-"""Derivation refusals that say nothing about the password: the permit or the child was not available in time."""
+"""Derivation refusals that say nothing about the password: the permit, the child or the derivation was late.
+
+A child that could not be started, contained or verified at all, and a host
+that cannot supply the processors or memory a derivation needs, are not among
+them: calling those "unavailable for now" would tell the person to try again
+against a host that will refuse the same way.
+"""
+
+
+def custody_sign_in_refusal(error: ProfileCustodyRefusedError) -> Exception | None:
+    """Return what a custody refusal of a password sign-in becomes, or ``None`` when it is raised as itself.
+
+    The owner's own deadline is a timeout, a refusal load alone caused is
+    unavailable for now, and every other refusal keeps its typed reason.
+    """
+    if error.refusal is ProfileCustodyRefusal.KDF_TIMEOUT:
+        return OrchestrationTimeoutError("profile_kdf_timeout")
+    if error.refusal in _KDF_UNAVAILABLE:
+        return AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    return None
 
 
 @dataclass(slots=True)
@@ -69,6 +109,23 @@ class _PendingReceipt:
     lifetime: ExitStack = field(repr=False)
 
 
+def require_human_binding(
+    lease: AccessSession, outcome: ProfileLoginOutcome, resumed_login: str | None, binding: ProfileAccessBinding
+) -> str:
+    """Reject a lease that cannot be bound to the exact candidate and deadlines."""
+    login_id = lease.originating_login_id
+    if (
+        lease.kind is not SessionKind.HUMAN
+        or login_id is None
+        or (resumed_login is not None and login_id != resumed_login)
+        or lease.binding != binding
+        or lease.issued_at < outcome.authenticated_at
+        or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
+    ):
+        raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+    return login_id
+
+
 class ProfileWorkerHumanLogin:
     """Retain at most one short-lived candidate under the runtime's admission guard.
 
@@ -82,6 +139,9 @@ class ProfileWorkerHumanLogin:
         """Bind an exact worker and its pinned authority; do not open custody."""
         self.custody, self.decode = custody, decode
         self._lock = RLock()
+        self._attempt_lock = RLock()
+        self._attempts: dict[UUID, ProfileProofCancellation] = {}
+        self._candidate_attempt: UUID | None = None
         self._candidate: tuple[UUID, ProfileLoginCandidate, UtcInstant, float] | None = None
         self._resumed_login: str | None = None
         self._candidate_sealing_key: bytearray | None = None
@@ -93,22 +153,44 @@ class ProfileWorkerHumanLogin:
         # person's sign-in.
         self._kdf_prewarm = ProfileKdfPrewarm()
         self._kdf_prewarm.refill()
+        # A measured point carries no secret and names no profile; it lives
+        # only as long as this worker and is spent by one strengthening attempt.
+        self._kdf_measurement_lock = Lock()
+        self._kdf_strength: ProfileKdfStrength | None = None
+        self._kdf_measuring = False
+        self._kdf_closed = False
 
-    def authenticate(self, password: bytearray) -> tuple[UUID, ProfileLoginOutcome]:
+    def authenticate(
+        self, password: bytearray, *, timeout_deadline: float | None = None, attempt_id: UUID | None = None
+    ) -> tuple[UUID, ProfileLoginOutcome]:
         """Prove the exact password without disturbing another admitted lease."""
+        cancellation = self.require_attempt(attempt_id) if attempt_id is not None else ProfileProofCancellation()
+        cancellation.raise_if_cancelled()
         with self._lock:
             self.cancel()
             try:
+                cancellation.raise_if_cancelled()
                 with self._kdf_prewarm.bound():
                     candidate = self._lifetime.enter_context(
                         authenticate_profile_candidate(
                             bucket_id=self.custody.identity.binding.profile_id,
                             passphrase_callback=lambda: password.decode("utf-8"),
                             profile_decode_context=self.decode(),
+                            timeout_deadline=timeout_deadline,
+                            cancellation=cancellation,
                         )
                     )
+                cancellation.raise_if_cancelled()
+                if self._strengthened(candidate, password):
+                    # The proof opened the envelope this attempt just replaced.
+                    # The runtime retires this worker's binding and proves the
+                    # same attempt again on the successor generation.
+                    self.cancel()
+                    raise ProfileAccessRefusedError(AccessDenialCode.CUSTODY_CHANGED)
                 identity = uuid4()
-                self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate = identity, candidate, wall_now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate_attempt = attempt_id
+                self._measure_stronger_kdf_later(candidate)
                 return identity, candidate.outcome
             except ProfileLoginThrottledError as error:
                 self.cancel()
@@ -123,16 +205,130 @@ class ProfileWorkerHumanLogin:
                 ) from None
             except ProfileCustodyRefusedError as error:
                 self.cancel()
-                if error.refusal not in _KDF_UNAVAILABLE:
+                refusal = custody_sign_in_refusal(error)
+                if refusal is None:
                     raise
-                # The installation's one KDF permit stayed taken, or no derivation child attested: this
-                # sign-in is refused as unavailable for now, and the worker keeps serving its other sessions.
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+                # A load-driven refusal leaves the worker serving its other sessions.
+                raise refusal from None
             except BaseException:
                 self.cancel()
                 raise
 
-    def resume(self, receipt_key: bytearray, *, login_id: str | None) -> tuple[UUID, ProfileLoginOutcome]:
+    def _strengthened(self, candidate: ProfileLoginCandidate, password: bytearray) -> bool:
+        """Spend a held stronger point on this proven password; report whether custody may have changed.
+
+        Strengthening ends every session on the old generation, so it waits for
+        a sign-in with no other live session. A point the mint refuses changes
+        nothing. Any other failure may have left a replacement in flight, which
+        the next unlock settles, so it is reported as a change and the attempt
+        is proved again rather than bound to a generation that may be gone.
+        """
+        with self._kdf_measurement_lock:
+            strength, digest = self._kdf_strength, candidate.proven_envelope_digest
+            if strength is None or digest is None:
+                return False
+        if self.custody.live_sessions() or self._pending:
+            return False
+        with self._kdf_measurement_lock:
+            self._kdf_strength = None
+        profile_id = self.custody.identity.binding.profile_id
+        try:
+            return strengthen_profile_password_kdf(
+                profile_id=profile_id,
+                password=password.decode("utf-8"),
+                dek=candidate.session.dek,
+                proven_envelope_digest=digest,
+                strength=strength,
+                profile_decode_context=self.decode(),
+                root=self.custody.root,
+            )
+        except ProfileKdfPointRefusedError as error:
+            log_boundary_failure(_log, "profile_kdf_strengthening_refused", error, level=logging.WARNING)
+            return False
+        except (CadrumoError, OSError) as error:
+            log_boundary_failure(_log, "profile_kdf_strengthening_failed", error, level=logging.WARNING)
+            return True
+
+    def _measure_stronger_kdf_later(self, candidate: ProfileLoginCandidate) -> None:
+        """After a password proof, measure a stronger point in the background unless one is held or running."""
+        if candidate.proven_envelope_digest is None:
+            return
+        with self._kdf_measurement_lock:
+            if self._kdf_closed or self._kdf_measuring or self._kdf_strength is not None:
+                return
+            self._kdf_measuring = True
+        # The measurement reaches custody through the adapters composed for this
+        # worker, which a bare thread does not inherit.
+        context = contextvars.copy_context()
+        Thread(
+            target=context.run, args=(self._measure_stronger_kdf,), name="profile-kdf-measurement", daemon=True
+        ).start()
+
+    def _measure_stronger_kdf(self) -> None:
+        strength: ProfileKdfStrength | None = None
+        try:
+            strength = measure_profile_custody_stronger_password_kdf(
+                self.custody.identity.binding.profile_id, root=self.custody.root
+            )
+        except (CadrumoError, OSError) as error:
+            log_boundary_failure(_log, "profile_kdf_measurement_failed", error, level=logging.WARNING)
+        finally:
+            with self._kdf_measurement_lock:
+                self._kdf_measuring = False
+                if not self._kdf_closed:
+                    self._kdf_strength = strength
+        if strength is not None:
+            diagnostic_event(
+                _log,
+                "profile_kdf_stronger_point_held",
+                fields={
+                    "memory_mib": strength.memory_mib,
+                    "iterations": strength.iterations,
+                    "parallelism": strength.parallelism,
+                },
+            )
+
+    def register_attempt(self, attempt_id: UUID) -> None:
+        """Install at most one exact proof owner before its protected frame is sent."""
+        with self._attempt_lock:
+            if attempt_id in self._attempts:
+                return
+            if self._attempts:
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+            self._attempts[attempt_id] = ProfileProofCancellation()
+
+    def require_attempt(self, attempt_id: UUID) -> ProfileProofCancellation:
+        """Resolve only the pre-registered attempt; unknown identities grant nothing."""
+        with self._attempt_lock:
+            token = self._attempts.get(attempt_id)
+        if token is None:
+            raise ProfileProofCancelledError("profile proof attempt is no longer owned")
+        return token
+
+    def cancel_attempt(self, attempt_id: UUID) -> None:
+        """Wake this exact proof without waiting for the proof/session mutex."""
+        with self._attempt_lock:
+            token = self._attempts.get(attempt_id)
+        if token is not None:
+            token.cancel()
+
+    def finish_attempt(self, attempt_id: UUID) -> None:
+        """Retire only this attempt's signal after its proof context is released."""
+        with self._attempt_lock:
+            token = self._attempts.pop(attempt_id, None)
+        if token is not None:
+            token.cancel()
+
+    def cancel_all_attempts(self) -> None:
+        """Wake retained proofs when their private verified owner channel closes."""
+        with self._attempt_lock:
+            attempts = tuple(self._attempts.values())
+        for token in attempts:
+            token.cancel()
+
+    def resume(
+        self, receipt_key: bytearray, *, login_id: str | None, attempt_id: UUID | None = None
+    ) -> tuple[UUID, ProfileLoginOutcome]:
         """Verify supplied human receipt proof without looking up a secret for the caller.
 
         ``login_id`` is the originating OS login the runtime captured for the
@@ -142,9 +338,12 @@ class ProfileWorkerHumanLogin:
         receipt refused only for the login is deleted likewise, but only when
         the supplied proof unwraps it; a wrong proof deletes nothing.
         """
+        cancellation = self.require_attempt(attempt_id) if attempt_id is not None else ProfileProofCancellation()
+        cancellation.raise_if_cancelled()
         with self._lock:
             self.cancel()
             try:
+                cancellation.raise_if_cancelled()
                 if len(receipt_key) != 32 or not (login_id is not None and login_id):
                     raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
                 candidate = self._lifetime.enter_context(
@@ -156,8 +355,10 @@ class ProfileWorkerHumanLogin:
                         sign_in_binding=self.custody.identity.binding,
                     )
                 )
+                cancellation.raise_if_cancelled()
                 identity = uuid4()
-                self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate = identity, candidate, wall_now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate_attempt = attempt_id
                 self._resumed_login = login_id
                 self._candidate_sealing_key = bytearray(receipt_key)
                 return identity, candidate.outcome
@@ -185,18 +386,11 @@ class ProfileWorkerHumanLogin:
             current = self._candidate
             if current is None or current[0] != candidate_id:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+            if self._candidate_attempt is not None:
+                self.require_attempt(self._candidate_attempt).raise_if_cancelled()
             _, candidate, deadline, monotonic_deadline = current
             outcome = candidate.outcome
-            login_id = lease.originating_login_id
-            if (
-                lease.kind is not SessionKind.HUMAN
-                or login_id is None
-                or (self._resumed_login is not None and login_id != self._resumed_login)
-                or lease.binding != self.custody.identity.binding
-                or lease.issued_at < outcome.authenticated_at
-                or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+            login_id = require_human_binding(lease, outcome, self._resumed_login, self.custody.identity.binding)
             material = bytearray(candidate.session.dek)
             try:
                 self.custody.install(lease, material)
@@ -323,7 +517,7 @@ class ProfileWorkerHumanLogin:
                 held.append(self._candidate[1:])
         if not held:
             return None
-        instant, elapsed = now(), time.monotonic()
+        instant, elapsed = wall_now(), time.monotonic()
         return max(
             0.0,
             min(
@@ -341,6 +535,7 @@ class ProfileWorkerHumanLogin:
         """Release the unbound candidate; pending receipts of bound sessions stay."""
         with self._lock:
             self._candidate = None
+            self._candidate_attempt = None
             self._resumed_login = None
             if self._candidate_sealing_key is not None:
                 self._candidate_sealing_key[:] = bytes(len(self._candidate_sealing_key))
@@ -349,6 +544,9 @@ class ProfileWorkerHumanLogin:
 
     def close(self) -> None:
         """Release all candidate and pending-receipt proof without closing admitted leases."""
+        with self._kdf_measurement_lock:
+            self._kdf_closed, self._kdf_strength = True, None
+        self.cancel_all_attempts()
         with self._lock:
             for session_id in tuple(self._sealing_keys):
                 self.discard(session_id)
@@ -361,7 +559,7 @@ class ProfileWorkerHumanLogin:
 
 
 def _abandoned(candidate: ProfileLoginCandidate, deadline: UtcInstant, monotonic_deadline: float) -> bool:
-    instant = now()
+    instant = wall_now()
     return (
         instant < candidate.outcome.authenticated_at
         or instant >= min(deadline, candidate.outcome.idle_deadline, candidate.outcome.absolute_deadline)

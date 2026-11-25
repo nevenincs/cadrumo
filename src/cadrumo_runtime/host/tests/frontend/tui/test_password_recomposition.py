@@ -24,6 +24,7 @@ from cadrumo.entrypoints.tui.account import (
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -49,7 +50,7 @@ async def test_expiry_hides_private_screen_but_waits_for_rotation_result(complet
 
     def rotate(_current: str, _replacement: str, _confirmation: str) -> PassphraseChangeAttempt:
         started.set()
-        if not release.wait(5):
+        if not release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test rotation was not released")
         finished.set()
         if completion == "success":
@@ -89,19 +90,22 @@ async def test_expiry_hides_private_screen_but_waits_for_rotation_result(complet
     async with app.run_test(size=(100, 36)) as pilot:
         app._account_session = initial
         app.run_account_action(AccountActionV1.PASSWORD)
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert app.screen is screen
         screen.query_one("#field-current", Input).value = _CURRENT
         screen.query_one("#field-new", Input).value = _NEW
         screen.query_one("#field-confirm", Input).value = _NEW
         await pilot.click("#btn-change")
-        assert await asyncio.to_thread(started.wait, 5)
+        assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
         assert all(field.value == "" for field in screen.query(Input))
 
         app._watch_account_session()
-        async with asyncio.timeout(5):
-            while app._account_factories is not None:
-                await pilot.pause(0.02)
+        await settle_until(
+            pilot,
+            lambda: not app._account_factories is not None,
+            "not app._account_factories is not None",
+            workers=False,
+        )
         assert reads == 1
         assert app.account_session is None
         assert app._read_account_session is None
@@ -109,14 +113,12 @@ async def test_expiry_hides_private_screen_but_waits_for_rotation_result(complet
         assert not screen.display
         assert app.return_value is None
         app._watch_account_session()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert reads == 1
         assert not finished.is_set()
 
         release.set()
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "app.return_value is not None", workers=False)
         assert finished.is_set()
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=(

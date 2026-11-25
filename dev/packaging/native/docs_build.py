@@ -14,17 +14,17 @@ from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.core.storage_environment import STORAGE_ROOT
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
-from .action_cache import action_lock, completed, current, fingerprint
+from .action_cache import action_lock, changed_inputs, completed, current, digests_fingerprint, input_digests
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
+from .docs_errors import DocsPackagingError
 from .docs_input_identity import shared_docs_inputs
-from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
+from .docs_stage import declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
 
@@ -38,6 +38,9 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 #: opposite contract -- they must index nothing -- and the two values only make
 #: sense read together.
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
+
+#: How many changed inputs a refusal names before it only counts the rest.
+NAMED_CHANGED_INPUTS = 10
 
 #: A reusable site owned by this binary directory's documentation work target.
 SHARED_SITE_CACHE = "user-docs"
@@ -59,10 +62,8 @@ def compile_environment(storage: Path) -> dict[str, str]:
     temporary.mkdir(parents=True, exist_ok=True)
     environment.update(
         {
-            STORAGE_ROOT.variable: str(storage),
-            "CADRUMO_LOG_DIR": str(storage / "logs"),
+            "CADRUMO_STORAGE_ROOT": str(storage),
             "CADRUMO_DEV_CACHE_ROOT": str(storage.parent / "cache"),
-            "CADRUMO_TEMP_DIR": str(temporary),
             "TEMP": str(temporary),
             "TMP": str(temporary),
             "TMPDIR": str(temporary),
@@ -70,7 +71,6 @@ def compile_environment(storage: Path) -> dict[str, str]:
             "PYTHONIOENCODING": "utf-8",
         }
     )
-    environment[STORAGE_ROOT.development_variable] = str(storage)
     for name in (
         "CADRUMO_REGISTRY_DISK_CACHE_DIR",
         "CADRUMO_RECORD_DESIGN_CACHE_DIR",
@@ -139,17 +139,19 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
     build_root = paths["user_docs_build"]
     with action_lock(build, "user-docs"):
         authority = selected_published_authority(REPO_ROOT)
-        input_identity = fingerprint(inputs, authority)
+        digests = input_digests(inputs, authority)
+        input_identity = digests_fingerprint(digests)
         shared_inputs = shared_docs_inputs(inputs, authority, source=REPO_ROOT, build=build)
 
         def validate_inputs() -> None:
             selected = selected_published_authority(REPO_ROOT)
+            observed = input_digests(inputs, selected)
             if (
                 selected != authority
-                or fingerprint(inputs, selected) != input_identity
+                or digests_fingerprint(observed) != input_identity
                 or shared_docs_inputs(inputs, selected, source=REPO_ROOT, build=build) != shared_inputs
             ):
-                raise DocsPackagingError("Documentation inputs changed during the build; retry from stable sources")
+                raise DocsPackagingError(inputs_changed_message(changed_inputs(digests, observed)))
 
         validate_inputs()
         if current(build_root, input_identity):
@@ -160,8 +162,8 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
         languages = declared_languages(layout)
 
         def produce(destination: Path) -> None:
-            _compile_roots(destination, paths["user_docs_work"], languages)
-            _index_site(destination, languages, paths["user_docs_work"])
+            compile_roots(destination, paths["user_docs_work"], languages)
+            index_site(destination, languages, paths["user_docs_work"])
 
         built = take_shared_site(
             build_root,
@@ -175,6 +177,22 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
             _log().status("reusing the documentation work target's site from the same inputs")
         validate_inputs()
         completed(build_root, input_identity)
+
+
+def inputs_changed_message(changed: list[Path]) -> str:
+    """Refuse a build whose inputs changed, naming them so the writer can be found.
+
+    The site was compiled from the checkout as it was being edited, so it may
+    mix both states; naming the files tells an operator whether another writer
+    of the checkout or the build itself changed them.
+    """
+    if changed:
+        named = ", ".join(display_path(path) for path in changed[:NAMED_CHANGED_INPUTS])
+        unnamed = len(changed) - NAMED_CHANGED_INPUTS
+        detail = f"{len(changed)} changed: {named}" + (f" and {unnamed} more" if unnamed > 0 else "")
+    else:
+        detail = "none differs from the start of the build any more, so one changed and was restored"
+    return f"Documentation inputs changed during the build ({detail}); retry from stable sources"
 
 
 def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ...]) -> str:
@@ -225,18 +243,18 @@ def take_shared_site(
     with action_lock(shared.parent, shared.name):
         if current(shared, identity):
             validate_inputs()
-            _copy_site(shared, build_root)
+            copy_site(shared, build_root)
             validate_inputs()
             return False
         produce(build_root)
         validate_inputs()
-        _copy_site(build_root, shared)
+        copy_site(build_root, shared)
         validate_inputs()
         completed(shared, identity)
         return True
 
 
-def _copy_site(source: Path, destination: Path) -> None:
+def copy_site(source: Path, destination: Path) -> None:
     """Replace *destination* with the site in *source*, leaving completion to the caller.
 
     The completion marker binds a directory's inventory to the identity its own
@@ -251,7 +269,16 @@ def _copy_site(source: Path, destination: Path) -> None:
     )
 
 
-def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
+def _raise_compile_failure(log: Path, returncode: int) -> None:
+    lines = log.read_text(encoding="utf-8").splitlines()
+    _log().error(f"the documentation compile failed with exit status {returncode}; log: {display_path(log)}")
+    _log().notice("\n".join(lines[-25:]))
+    causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
+    _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
+    raise SystemExit(f"User documentation compile failed: exit {returncode}")
+
+
+def compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
     """Write every declared language root from ONE compile of the documentation.
 
     One compile replaces one Sphinx build per language, so the staged site costs
@@ -264,7 +291,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     work.mkdir(parents=True, exist_ok=True)
     for root in roots.values():
         # The search index is written over every root once they exist
-        # (:func:`_index_site`). Removing it first means a failed or partial
+        # (:func:`index_site`). Removing it first means a failed or partial
         # compile can never pass staging with an old index.
         index = root / "pagefind"
         if index.exists():
@@ -287,12 +314,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     log.write_text(result.stdout + result.stderr, encoding="utf-8")
     _log().verbose(f"documentation compile exited with status {result.returncode} in {result.duration_seconds:.0f} s")
     if result.returncode:
-        lines = log.read_text(encoding="utf-8").splitlines()
-        _log().error(f"the documentation compile failed with exit status {result.returncode}; log: {display_path(log)}")
-        _log().notice("\n".join(lines[-25:]))
-        causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
-        _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
-        raise SystemExit(f"User documentation compile failed: exit {result.returncode}")
+        _raise_compile_failure(log, result.returncode)
     absent = sorted(language for language, root in roots.items() if not root.is_dir())
     if absent:
         raise DocsPackagingError(
@@ -301,7 +323,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         )
 
 
-def _index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
+def index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
     """Build the site's ONE search index over every built root.
 
     Runs after every root has built, because the index spans all of them: each

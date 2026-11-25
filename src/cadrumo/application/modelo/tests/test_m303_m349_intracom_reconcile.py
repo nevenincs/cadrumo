@@ -27,8 +27,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.i18n.render import tr
 from ....core.period import Period
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    revision_first_exercise,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -44,12 +48,25 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...calculations.tests.filing_evidence import general_m303_filing_evidence
-from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
+from ..m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000349"
-_CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
+#: The newest authored 303 edition that declares the 349 reconciliation: a later edition
+#: that omits it has nothing to reconcile, so the exercise follows the registry, not the horizon.
+_YEAR = revision_first_exercise(
+    "303",
+    str(
+        authored_revisions_where(
+            "303",
+            lambda revision: any(
+                expectation.id == "modelo-303-m349-reconciliation" for expectation in revision.verification_expectations
+            ),
+        )[-1].id
+    ),
+)
+_CLOCK = datetime(_YEAR, 4, 15, tzinfo=UTC)
 _REPOSITORY_REVISION_ID = "0" * 64
 _M303_ADQUISICIONES: CasillaId = validated_casilla_id("10", surface="test")
 _M303_ENTREGAS: CasillaId = validated_casilla_id("59", surface="test")
@@ -140,6 +157,9 @@ class _InMemoryCalculationRevisionRepository:
     def exists(self) -> bool:
         return bool(self._catalogue.revisions)
 
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        return False
+
     def load_revisioned(
         self, *, operation: PinnedAuthorityOperation | None = None
     ) -> tuple[CalculationRevisionCatalogue, str]:
@@ -148,17 +168,21 @@ class _InMemoryCalculationRevisionRepository:
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         self._catalogue = catalogue
 
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        return _secure_write(
-            namespace="application-test-calculation-revisions",
-            object_key="m303-m349-reconcile",
-            payload=catalogue.model_dump_json().encode("utf-8"),
-            expected_revision_id=expected_revision_id,
+    ) -> SecureObjectWriteUnit:
+        return SecureObjectWriteUnit(
+            writes=(
+                _secure_write(
+                    namespace="application-test-calculation-revisions",
+                    object_key="m303-m349-reconcile",
+                    payload=catalogue.model_dump_json().encode("utf-8"),
+                    expected_revision_id=expected_revision_id,
+                ),
+            )
         )
 
     def save_with_secure_object_writes(
@@ -287,26 +311,35 @@ def _reconcile(
     )
 
 
-def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
+def _reconcile_against_m349_resumen(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
-    *,
     operation: PinnedAuthorityOperation,
-) -> None:
+    *,
+    m349_importe: Decimal,
+):
+    """Reconcile a 303 declaring 6000 + 4000 intracommunity against a 349 resumen of ``m349_importe``."""
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
-    _persist_revision(m349, _m349_values(importe=Decimal("8000")), calculation_repository, operation=operation)
-
-    findings = _reconcile(
+    _persist_revision(m349, _m349_values(importe=m349_importe), calculation_repository, operation=operation)
+    return _reconcile(
         m303,
         target,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         operation=operation,
     )
+
+
+def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    findings = _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("8000"))
 
     assert len(findings) == 1
     finding = findings[0]
@@ -325,24 +358,7 @@ def test_advisory_silent_when_totals_reconcile(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
-    target = _build_revision(
-        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
-    )
-    _persist_revision(m349, _m349_values(importe=Decimal("10000")), calculation_repository, operation=operation)
-
-    assert (
-        _reconcile(
-            m303,
-            target,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            operation=operation,
-        )
-        == []
-    )
+    assert _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("10000")) == []
 
 
 def test_advisory_fires_when_verifying_the_m349_side(
@@ -351,8 +367,8 @@ def test_advisory_fires_when_verifying_the_m349_side(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=work_unit_repository)
     _persist_revision(
         m303,
         _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")),
@@ -381,7 +397,7 @@ def test_no_finding_when_sibling_declaration_absent(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
@@ -403,25 +419,8 @@ def test_within_de_minimis_gap_is_silent(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
-    target = _build_revision(
-        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
-    )
     # gap of 0.50 EUR <= 1.00 de-minimis tolerance -> no advisory.
-    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")), calculation_repository, operation=operation)
-
-    assert (
-        _reconcile(
-            m303,
-            target,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            operation=operation,
-        )
-        == []
-    )
+    assert _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("9999.50")) == []
 
 
 def test_no_finding_when_nothing_intracommunity_declared(
@@ -430,8 +429,8 @@ def test_no_finding_when_nothing_intracommunity_declared(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
     _persist_revision(m349, _m349_values(importe=Decimal("0")), calculation_repository, operation=operation)
 
@@ -453,7 +452,7 @@ def test_reconcile_skipped_for_unrelated_modelo(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m130 = _seed_work_unit(modelo="130", filing_year=2024, period="1T", repository=work_unit_repository)
+    m130 = _seed_work_unit(modelo="130", filing_year=_YEAR - 1, period="1T", repository=work_unit_repository)
     # The reconcile short-circuits before reading any casilla for a non-303/349
     # modelo, so an empty-values draft (no grounded observations required) suffices.
     target = _build_revision(m130, {}, operation=operation)
@@ -473,8 +472,8 @@ def test_reconcile_skipped_for_unrelated_modelo(
 @pytest.mark.parametrize("missing_side", ["local", "sibling", "both"])
 def test_missing_operands_are_incomplete_instead_of_zero(repositories, operation, missing_side):
     units, revisions = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=units)
     own = _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0"))
     sibling = _m349_values(importe=Decimal("0"))
     if missing_side in {"local", "both"}:
@@ -498,9 +497,9 @@ def test_missing_operands_are_incomplete_instead_of_zero(repositories, operation
 @pytest.mark.parametrize("pointer", ["filed_calculation_revision_id", "current_calculation_revision_id"])
 def test_sibling_pointer_cannot_select_another_period_calculation(repositories, operation, pointer):
     units, revisions = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
-    other = _seed_work_unit(modelo="349", filing_year=2025, period="2T", repository=units)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=units)
+    other = _seed_work_unit(modelo="349", filing_year=_YEAR, period="2T", repository=units)
     foreign = _persist_revision(other, _m349_values(importe=Decimal("0")), revisions, operation=operation)
     units.save(upsert_work_unit(units.load(), m349.model_copy(update={pointer: foreign.calculation_revision_id})))
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
@@ -510,8 +509,8 @@ def test_sibling_pointer_cannot_select_another_period_calculation(repositories, 
 
 def test_stale_sibling_registry_coordinate_refuses_comparison(repositories, operation):
     units, revisions = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=units)
     sibling = _build_revision(m349, _m349_values(importe=Decimal("0")), operation=operation)
     stale = sibling.model_copy(
         update={
@@ -526,8 +525,8 @@ def test_stale_sibling_registry_coordinate_refuses_comparison(repositories, oper
 
 def test_existing_sibling_without_calculation_is_incomplete(repositories, operation):
     units, revisions = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
-    _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    m303 = _seed_work_unit(modelo="303", filing_year=_YEAR, period="1T", repository=units)
+    _seed_work_unit(modelo="349", filing_year=_YEAR, period="1T", repository=units)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
     findings = _reconcile(
         m303, target, work_unit_repository=units, calculation_repository=revisions, operation=operation
@@ -546,10 +545,10 @@ def test_incomplete_comparison_renders_its_counts_in_every_locale(locale):
         modelo="303",
         sibling_modelo="349",
         period_code="1T",
-        filing_year=2025,
+        filing_year=_YEAR,
         own_missing_count=2,
         sibling_missing_count=1,
     )
     assert key not in text
     assert "%{" not in text and "{" not in text
-    assert all(token in text for token in ("303", "349", "1T", "2025", "2", "1"))
+    assert all(token in text for token in ("303", "349", "1T", str(_YEAR), "2", "1"))

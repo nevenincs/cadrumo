@@ -59,9 +59,9 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     withholding_producer,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
@@ -82,11 +82,12 @@ from cadrumo.application.aggregation.tests.withholding_filer_profile_support imp
     withholding_work_profile,
 )
 from cadrumo.application.aggregation.withholding_source import WithholdingSourceResolver
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -107,6 +108,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.identifiers import canonical_decimal_string
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
@@ -146,7 +148,11 @@ def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthority
     """Open an isolated bucket with a quarterly filer's profile and one Modelo 193 work unit."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects: SecureObjectRepository = profile.repository
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_T0)
+        seed_modelo_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=_T0,
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
         snapshot = operation.snapshot("193", filing_year=filing_year, period="0A")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

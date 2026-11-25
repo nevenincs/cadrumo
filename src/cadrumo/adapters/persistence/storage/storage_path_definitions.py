@@ -13,7 +13,7 @@ prefix, an outbound namespace, a per-run id) that cannot be enumerable
 :data:`STORAGE_PATH_DEFINITIONS` is consumed by
 ``namespace_registry.STORAGE_NAMESPACE_REGISTRY``, which combines it with
 the SQL namespace definitions into one
-:class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry`. Nothing
+:class:`~adapters.persistence.storage.storage_hierarchy_registry.StorageHierarchyRegistry`. Nothing
 here reaches back into ``namespace_registry.py``, so there is no cycle.
 """
 
@@ -25,9 +25,13 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.observability.store import ENVELOPE_FILENAME, EVENTS_FILENAME, TRACE_FILENAME
-from ....core.storage_taxonomy import StorageCategory
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.storage_taxonomy import (
+    RUN_ENVELOPE_FILENAME,
+    RUN_EVENTS_FILENAME,
+    RUN_TRACE_FILENAME,
+    StorageCategory,
+)
 from ....core.storage_taxonomy_locations import storage_location
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import StoragePathAnchor, StoragePathKind
@@ -56,6 +60,9 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 #: derived from the receipt above at the call site, which is why the name is
 #: declared once in the taxonomy and read here rather than typed at the writer.
 PROFILE_SESSION_RETIREMENT_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT).subpath
+#: The receipt's sibling naming the session ids this root minted, so a pruning
+#: pass deletes only keychain entries this root itself created.
+PROFILE_SESSION_MINTED_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_MINTED).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 SIGN_IN_GENERATION_FILENAME = storage_location(StorageCategory.KEYSTORE_SIGN_IN_GENERATION).subpath
 #: The three owner directories below the hold-evidence root, each the home of one
@@ -113,7 +120,7 @@ def _pydantic_namespace_validator[ValidationResultT](
 class StoragePathDefinition(BaseModel):
     """Contract for one storage hierarchy path or logical marker."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1)
     kind: StoragePathKind
@@ -319,6 +326,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         segment=PROFILE_SESSION_RETIREMENT_FILENAME,
     ),
     StoragePathDefinition(
+        key="profile_session_minted_record",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{PROFILE_SESSION_MINTED_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=PROFILE_SESSION_MINTED_FILENAME,
+    ),
+    StoragePathDefinition(
         key="login_throttle",
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{LOGIN_THROTTLE_FILENAME}",
@@ -364,13 +379,10 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
-        # Was ``<cadrumo_secret_store_dir>/index.json`` -- a placeholder token
-        # with no declared regex fragment, so any test pinning this key failed
-        # with the grammar compiler's own tooling error rather than a
-        # conformance result. ``cadrumo_secret_store_dir`` resolves to
-        # ``<root>/secrets`` (the ``SECRETS`` taxonomy member), so spelling
-        # that out directly makes the grammar both compilable and consistent
-        # with every other ``<root>``-anchored entry here.
+        # The secret store resolves to ``<root>/secrets`` (the ``SECRETS``
+        # taxonomy member), so spelling that out directly makes the grammar
+        # both compilable and consistent with every other ``<root>``-anchored
+        # entry here.
         key="secret_index",
         kind=StoragePathKind.FILE,
         grammar=f"<root>/secrets/{INDEX_FILENAME}",
@@ -463,21 +475,21 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # promoted to a declared shape until now.
         key="run_trace",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{TRACE_FILENAME}",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{RUN_TRACE_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_events",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{EVENTS_FILENAME}",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{RUN_EVENTS_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_envelope",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{ENVELOPE_FILENAME}",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{RUN_ENVELOPE_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),

@@ -13,8 +13,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..pipeline.joined_record_design import JoinedRecordDesignField, design_view, join_record_design_semantics
@@ -23,6 +29,14 @@ from ..pipeline.semantic_map import SemanticMapEntry, load_semantic_map
 from ..pipeline.semantic_map_validation import validate_declared_parts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
 
 
 @pytest.fixture(scope="module")
@@ -35,15 +49,15 @@ def m347_split_cell() -> tuple[tuple[JoinedRecordDesignField, ...], tuple[Semant
         root,
         dict(catalogues.sources),
         source_ref=semantic.source_ref,
-        filing_year=2025,
-        design_epoch="2025",
+        filing_year=newest_authored_edition("347"),
+        design_epoch=semantic.design_epoch,
     )
     joined = join_record_design_semantics(
         semantic,
         intermediate,
         RegistryRevisionInspection.from_revision(
             modelo=definition,
-            revision=definition.revisions["2025-y-siguientes"],
+            revision=definition.revisions[str(revision_covering("347", newest_authored_edition("347")).id)],
             source_root=root,
             sources=catalogues.sources,
             legal_ref_ids=frozenset(catalogues.legal),
@@ -117,8 +131,8 @@ def m349_rectification_parts():
         root,
         load_shared_catalogues(root / "registry/aeat").sources,
         source_ref="aeat-dr-349-2020-current",
-        filing_year=2024,
-        design_epoch="2020",
+        filing_year=filing_year_envelope().horizon,
+        design_epoch=_design_epoch("aeat-dr-349-2020-current"),
     )
     sheet = next(
         sheet for sheet in intermediate.sheets if sheet.record_identity == "Tipo 2 - Registro De Retificaciones"
@@ -177,8 +191,8 @@ def m193_single_position_parts():
         root,
         load_shared_catalogues(root / "registry/aeat").sources,
         source_ref=source_ref,
-        filing_year=2025,
-        design_epoch="2025",
+        filing_year=filing_year_envelope().horizon,
+        design_epoch=_design_epoch(source_ref),
     )
     field = next(
         field for sheet in intermediate.sheets for field in sheet.fields if field.offset == 121 and field.length == 2

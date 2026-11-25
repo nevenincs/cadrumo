@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from ...adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.ledger.actions_common import blocking_modelo_references, build_manual_ledger_result
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence, ledger_transaction_result_payload
 from ...application.ledger.attachment_mutation_operation import (
     LEDGER_ATTACH_OPERATION_DEFINITION_ID,
     LEDGER_DETACH_OPERATION_DEFINITION_ID,
@@ -23,6 +22,8 @@ from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachRequest,
     LedgerDetachRequest,
 )
+from ...application.ledger.manual_read import ledger_transaction_result_payload
+from ...application.ledger.manual_update import attach_manual_transaction_evidence
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
@@ -166,34 +167,19 @@ def prepare_ledger_attachment_operation_conformance_case(
     )
 
 
-def assert_ledger_attachment_operation_conformance_result(
-    case: LedgerAttachmentOperationConformanceCase,
-    projection: BaseModel,
-    *,
-    operation_run_id: str,
-) -> None:
-    """Compare the complete public result, append-only events, and encrypted links."""
-    assert len(operation_run_id) == 64
-    assert all(character in "0123456789abcdef" for character in operation_run_id)
-    assert isinstance(projection, LedgerAttachmentProjection)
-    assert projection.profile_id == case.profile_id
-    assert projection.operation_id == case.definition_id
+def _assert_attachment_manifest_after(case, ports):
+    attachment = ports.attachment_store.load_manifest(case.attachment_id)
+    if case.action == "attach":
+        assert attachment.linked_transaction_ids == (case.transaction_id,)
+        assert attachment.linked_transaction_ids != case.attachment_before.linked_transaction_ids
+    else:
+        # Detach removes only the transaction-side pointer. The append-only
+        # manifest preserves its historical back-reference and secure bytes.
+        assert attachment == case.attachment_before
+        assert ports.attachment_store.read_bytes(case.attachment_id) == _ATTACHMENT_BYTES
 
-    bucket_id = str(case.profile_id)
-    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=case.operation)
-    transaction = ports.transaction_repository.load().get(case.transaction_id)
-    assert transaction is not None
-    assert transaction.transaction_id == case.transaction_id
-    expected_transaction_attachments = (case.attachment_id,) if case.action == "attach" else ()
-    assert transaction.attachment_ids == expected_transaction_attachments
 
-    history_after = ports.bucket_event_repository.load()
-    assert all(history_after.events.get(event_id) == event for event_id, event in case.history_before.events.items())
-    new_events = tuple(
-        event for event_id, event in history_after.events.items() if event_id not in case.history_before.events
-    )
-    assert len(new_events) == 1
-    event = new_events[0]
+def _assert_attachment_event(case, bucket_id, event):
     expected_event_type = (
         BucketEventType.ATTACHMENT_LINKED if case.action == "attach" else BucketEventType.ATTACHMENT_REMOVED
     )
@@ -214,19 +200,45 @@ def assert_ledger_attachment_operation_conformance_result(
         "source_command": "aeat app ledger attach" if linked else "aeat app ledger detach",
         "transaction_id": case.transaction_id,
     }
+
+
+def _assert_operation_run_id(operation_run_id):
+    assert len(operation_run_id) == 64
+    assert all(character in "0123456789abcdef" for character in operation_run_id)
+
+
+def assert_ledger_attachment_operation_conformance_result(
+    case: LedgerAttachmentOperationConformanceCase,
+    projection: BaseModel,
+    *,
+    operation_run_id: str,
+) -> None:
+    """Compare the complete public result, append-only events, and encrypted links."""
+    _assert_operation_run_id(operation_run_id)
+    assert isinstance(projection, LedgerAttachmentProjection)
+    assert projection.profile_id == case.profile_id
+    assert projection.operation_id == case.definition_id
+
+    bucket_id = str(case.profile_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=case.operation)
+    transaction = ports.transaction_repository.load().get(case.transaction_id)
+    assert transaction is not None
+    assert transaction.transaction_id == case.transaction_id
+    expected_transaction_attachments = (case.attachment_id,) if case.action == "attach" else ()
+    assert transaction.attachment_ids == expected_transaction_attachments
+
+    history_after = ports.bucket_event_repository.load()
+    assert all(history_after.events.get(event_id) == event for event_id, event in case.history_before.events.items())
+    new_events = tuple(
+        event for event_id, event in history_after.events.items() if event_id not in case.history_before.events
+    )
+    assert len(new_events) == 1
+    event = new_events[0]
+    _assert_attachment_event(case, bucket_id, event)
     event_ids = (event.event_id,)
     assert projection.bucket_event_ids == event_ids
 
-    attachment = ports.attachment_store.load_manifest(case.attachment_id)
-    if case.action == "attach":
-        assert attachment.linked_transaction_ids == (case.transaction_id,)
-        assert attachment.linked_transaction_ids != case.attachment_before.linked_transaction_ids
-    else:
-        # Detach removes only the transaction-side pointer. The append-only
-        # manifest preserves its historical back-reference and secure bytes.
-        assert attachment == case.attachment_before
-        assert ports.attachment_store.read_bytes(case.attachment_id) == _ATTACHMENT_BYTES
-
+    _assert_attachment_manifest_after(case, ports)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=(case.transaction_id,),

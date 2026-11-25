@@ -17,7 +17,11 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from .....application.modelo.work_form_models import ModeloFormField, ModeloFormOrigin, address_key, section_fields
+from .....application.modelo.work_form_field_vocabulary import address_key
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    section_fields,
+)
 from .casilla_list_models import AddressKey, CasillaListEntry, CasillaListHeading
 from .casilla_list_values import description_text
 from .navigator import readable_text
@@ -35,27 +39,16 @@ class SortOrder(StrEnum):
 
 SORT_LOCALE_KEYS: Final[Mapping[SortOrder, str]] = MappingProxyType(
     {
-        SortOrder.FORM: "tui.modelo.workbench.sort.form",
-        SortOrder.BOX: "tui.modelo.workbench.sort.box",
-        SortOrder.AMOUNT: "tui.modelo.workbench.sort.amount",
-        SortOrder.ATTENTION: "tui.modelo.workbench.sort.attention",
+        SortOrder.FORM: "workspace.modelo.sort.form",
+        SortOrder.BOX: "workspace.modelo.sort.box",
+        SortOrder.AMOUNT: "workspace.modelo.sort.amount",
+        SortOrder.ATTENTION: "workspace.modelo.sort.attention",
     }
 )
 """The words naming each order on the page title line; total over the orders."""
 
 _BOX_DIGITS: Final[re.Pattern[str]] = re.compile(r"(\d+)(.*)")
 _SEPARATOR: Final[str] = " · "
-_ATTENTION_RANKS: Final[Mapping[ModeloFormOrigin, int]] = MappingProxyType(
-    {
-        ModeloFormOrigin.NEEDS_INPUT: 1,
-        ModeloFormOrigin.CALCULATION_FAILED: 1,
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM: 2,
-        ModeloFormOrigin.NOT_IMPORTED_YET: 3,
-    }
-)
-_BLOCKED_RANK: Final[int] = 0
-_STAGED_RANK: Final[int] = 4
-_SETTLED_RANK: Final[int] = 5
 
 
 def next_order(order: SortOrder) -> SortOrder:
@@ -81,13 +74,9 @@ def _amount(field: ModeloFormField) -> Decimal | None:
     return abs(Decimal(value))
 
 
-def _attention_rank(entry: CasillaListEntry) -> int:
-    if entry.field.blockers:
-        return _BLOCKED_RANK
-    rank = _ATTENTION_RANKS.get(entry.field.origin)
-    if rank is not None:
-        return rank
-    return _STAGED_RANK if entry.staged_text is not None else _SETTLED_RANK
+def _attention_key(entry: CasillaListEntry) -> tuple[int, int]:
+    """The form's served rank, a staged change ahead of an unstaged box of the same rank."""
+    return (entry.field.attention_rank, 0 if entry.staged_text is not None else 1)
 
 
 def _unit_key(unit: list[CasillaListEntry], order: SortOrder) -> tuple[object, ...]:
@@ -97,7 +86,7 @@ def _unit_key(unit: list[CasillaListEntry], order: SortOrder) -> tuple[object, .
         amounts = [amount for entry in unit if (amount := _amount(entry.field)) is not None]
         return (0, -max(amounts)) if amounts else (1, Decimal(0))
     if order is SortOrder.ATTENTION:
-        return (min(_attention_rank(entry) for entry in unit),)
+        return min(_attention_key(entry) for entry in unit)
     return ()
 
 

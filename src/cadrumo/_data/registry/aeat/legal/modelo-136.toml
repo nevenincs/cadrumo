@@ -12,7 +12,7 @@ consolidated_as_of = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
-notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
+notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and self-assessment duty when no withholding or payment on account applies."
 required_text = [
     "Gravamen especial sobre los premios de determinadas loterías y apuestas",
     "premios cuyo importe íntegro sea igual o inferior a 40.000 euros",
@@ -136,7 +136,7 @@ effective_from = 2013-02-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
-notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
+notes = "Artículo 12 grounds the banking and direct-debit payment fields used by Modelo 136."
 required_text = [
     "Artículo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliación bancaria",
     "presenten el modelo 136 por vía telemática por Internet",
@@ -176,7 +176,7 @@ effective_from = 2018-07-19
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
-notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."
+notes = "Final provisión: the new Modelo 136 applies to 2018 Q3 and later self-assessments."
 required_text = [
     "Disposición final única. Entrada en vigor",
     "El nuevo modelo 136",
@@ -214,9 +214,9 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/ley-35-2006.html"
-sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
-bytes = 1921157
-retrieved_at = 2026-05-06
+sha256 = "931aa9c5e55e61c2b52b85f553e39416177f0188541dc1ddfa5c8936cfe75e9a"
+bytes = 2036413
+retrieved_at = 2026-11-13
 published_at = 2006-11-29
 applies_from = 2020-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimatercera"

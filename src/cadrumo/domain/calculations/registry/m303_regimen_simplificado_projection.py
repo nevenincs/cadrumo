@@ -5,8 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_projection_ref import (
     FilingProjectionRef,
     M303RegimenSimplificadoActivityField,
@@ -28,6 +29,7 @@ from ...iva.regimen_simplificado_rows import (
     validate_regimen_simplificado_rows,
 )
 from .errors import RegistryValidationError
+from .form_codes import exceeds_form_bound, resolve_form_codes
 
 if TYPE_CHECKING:
     from ...modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
@@ -55,10 +57,6 @@ _MESA_FACTS = frozenset(
         M303RegimenSimplificadoFact.MESAS_NUMERO,
     },
 )
-_MESA_SUB_INDICES = frozenset({1, 2, 3, 4})
-_REPEATING_FACT_SUB_INDICES = frozenset({1, 2, 3, 4})
-_EARLY_DP30302_EPOCHS = frozenset({"2022", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"})
-_LATE_DP30302_EPOCHS = frozenset({"2025", "2026-hasta-01-y-1t", "2026-y-siguientes"})
 _HORNO_DIAS = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE
 _HORNO_SUPERFICIE = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE
 
@@ -88,13 +86,15 @@ _SINGLE_PAGE_FACTS = frozenset(
 
 
 def _validate_m303_regimen_simplificado_revision_epoch(revision_id: str) -> bool:
-    if revision_id not in _EARLY_DP30302_EPOCHS | _LATE_DP30302_EPOCHS:
+    row_codes = resolve_form_codes("form-row-codes")
+    early = row_codes.codes("m303.dp30302.early_epochs")
+    if revision_id not in early | row_codes.codes("m303.dp30302.late_epochs"):
         raise RegistryValidationError(f"unknown DP30302 simplified-regime revision {revision_id!r}")
-    return revision_id in _EARLY_DP30302_EPOCHS
+    return revision_id in early
 
 
 def _validate_mesa_fact_epoch(ref: M303RegimenSimplificadoFactProjectionRef) -> None:
-    if ref.fact in _MESA_FACTS and ref.sub_index not in _MESA_SUB_INDICES:
+    if ref.fact in _MESA_FACTS and ref.sub_index not in _sub_indices():
         raise RegistryValidationError("Mesa DP30302 facts require sub_index 1..4")
 
 
@@ -106,7 +106,7 @@ def _validate_horno_days_fact_epoch(
 ) -> None:
     if ref.fact is not _HORNO_DIAS:
         return
-    expected = {None} if early_epoch else _REPEATING_FACT_SUB_INDICES
+    expected = {None} if early_epoch else _sub_indices()
     if ref.sub_index not in expected:
         raise RegistryValidationError(f"horno-days fact is not admitted by revision {revision_id!r}")
 
@@ -117,7 +117,7 @@ def _validate_horno_surface_fact_epoch(
     revision_id: str,
     early_epoch: bool,
 ) -> None:
-    if ref.fact is _HORNO_SUPERFICIE and (early_epoch or ref.sub_index not in _REPEATING_FACT_SUB_INDICES):
+    if ref.fact is _HORNO_SUPERFICIE and (early_epoch or ref.sub_index not in _sub_indices()):
         raise RegistryValidationError(f"horno-surface fact is not admitted by revision {revision_id!r}")
 
 
@@ -126,11 +126,12 @@ def validate_m303_regimen_simplificado_endpoint_epoch(
 ) -> None:
     """Refuse simplified fact multiplicity that the selected record-design epoch never admits."""
     early_epoch = _validate_m303_regimen_simplificado_revision_epoch(revision_id)
+    single_page_epochs = resolve_form_codes("form-row-codes").codes("m303.dp30302.single_page_epochs")
     for ref in refs:
         if not isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
             continue
-        if revision_id == "2022" and (ref.fact not in _SINGLE_PAGE_FACTS or ref.sub_index is not None):
-            raise RegistryValidationError("fact is not admitted by the single-page 2022 record")
+        if revision_id in single_page_epochs and (ref.fact not in _SINGLE_PAGE_FACTS or ref.sub_index is not None):
+            raise RegistryValidationError(f"fact is not admitted by the single-page {revision_id} record")
         _validate_mesa_fact_epoch(ref)
         _validate_horno_days_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
         _validate_horno_surface_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
@@ -145,13 +146,26 @@ class M303RegimenSimplificadoFieldProjection(BaseModel):
     value: str | Decimal | None
 
 
+def _sub_indices() -> frozenset[int]:
+    codes = resolve_form_codes("form-row-codes").codes("m303.dp30302.sub_indices")
+    return frozenset(int(code) for code in codes)
+
+
 class M303RegimenSimplificadoRecordProjection(BaseModel):
     """All typed simplified-regime fields for one DP30302 occurrence."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    record: int = Field(ge=1, le=3)
+    record: int = Field(ge=1)
     fields: tuple[M303RegimenSimplificadoFieldProjection, ...] = Field(min_length=1)
+
+    @field_validator("record")
+    @classmethod
+    @pydantic_validation_boundary
+    def _record_is_a_declared_page(cls, record: int) -> int:
+        if exceeds_form_bound(record, "m303.dp30302.records"):
+            raise RegistryValidationError(f"DP30302 record {record} is past the form's declared pages")
+        return record
 
 
 def project_m303_regimen_simplificado_rows(
@@ -278,9 +292,10 @@ def m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
 
 
 def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
+    row_codes = resolve_form_codes("form-row-codes")
     return (
-        len(whole) == 3
-        and len(fractional) == 1
+        len(whole) == int(row_codes.code("m303.dp30302.iae_whole_digits"))
+        and len(fractional) == int(row_codes.code("m303.dp30302.iae_fractional_digits"))
         and whole.isascii()
         and fractional.isascii()
         and whole.isdecimal()
@@ -289,7 +304,8 @@ def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
 
 
 def _is_canonical_plain_iae_epigraph(value: str) -> bool:
-    return len(value) == 3 and value.isascii() and value.isdecimal()
+    whole_digits = int(resolve_form_codes("form-row-codes").code("m303.dp30302.iae_whole_digits"))
+    return len(value) == whole_digits and value.isascii() and value.isdecimal()
 
 
 def _project_fact_ref(

@@ -6,12 +6,15 @@ eager validated authority the development compiler builds from authored source.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from cadrumo.domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     calculate_art_7p_exemption,
@@ -22,10 +25,22 @@ from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_DEVENGO_DATE = latest_period_end()
+_FILING_PERIOD = latest_period_end()
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 def _registry_target_for(observation: CasillaObservation) -> str:
     rows = (
-        RegistryQueryService(compiled_bundled_authority()).formulas_for_scope("100", filing_year=2025, period="0A").rows
+        RegistryQueryService(compiled_bundled_authority())
+        .formulas_for_scope("100", filing_year=filing_year_envelope().horizon, period="0A")
+        .rows
     )
     targets = {
         row.target_casilla_id
@@ -51,6 +66,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.casilla_id == _registry_target_for(obs)
 
@@ -67,5 +83,6 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.casilla_id == _registry_target_for(obs)

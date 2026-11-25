@@ -40,8 +40,8 @@ from ......core.classification.policies import SensitivityClass
 from ...errors import SecureObjectUnreadableError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_crypto import derive_revision_id
-from ._secure_objects_support import (
-    _repo_at,
+from .secure_objects_support import (
+    repo_at,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -125,7 +125,7 @@ def _seed(db_path: Path) -> None:
     a non-empty ``revision_ancestor_ids``; tampering an ancestry chain that is
     still ``[]`` would not exercise the case the chain exists for.
     """
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         for index in (1, 2):
             repo.save(
                 namespace=_NAMESPACE,
@@ -156,7 +156,7 @@ def _tamper(db_path: Path, column: str, value: str) -> None:
 
 
 def _load(db_path: Path) -> object | None:
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         return repo.load(
             namespace=_NAMESPACE,
             object_key=_KEY,

@@ -42,8 +42,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
+    seed_m130_expense_transaction,
+    seed_m130_income_transaction,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -52,10 +53,12 @@ from ....adapters.persistence.profile.iva_compensation_history import IvaCompens
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -63,12 +66,10 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -122,50 +123,18 @@ _EXPECTED_MINORACION = Decimal("100.00")
 
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 
-#: A representative first-quarter input scenario, identical in shape across both
-#: renta years: a modest actividad-económica result. The numeric result is
-#: _produced by the real engine; the test asserts the cross-renta minoración
+#: A representative first-quarter scenario, identical in shape across both renta
+#: years: a modest actividad-económica result recorded as ledger rows, since
+#: casillas 01, 02 and 06 are year-to-date ledger totals. The numeric result is
+#: produced by the real engine; the test asserts the cross-renta minoración
 #: wiring, not a hand-computed liquidation.
+_Q1_INCOME = Decimal("6000")
+_Q1_EXPENSE = Decimal("2000")
 _Q1_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_INGRESOS_CASILLA: Decimal("6000"),
-    _M130_GASTOS_CASILLA: Decimal("2000"),
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
-    _M130_RETENCIONES_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
-
-
-def _seed_ready_profile() -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_PROFILE_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-            ),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 @pytest.fixture
@@ -173,7 +142,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -190,12 +159,18 @@ def _calculate_quarter(
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
 ) -> CalculationRevision:
-    """Run the REAL M130 calculation for one renta year quarter.
+    """Run the REAL M130 calculation for one renta year quarter over its ledger rows.
 
     Returns the persisted :class:`CalculationRevision`-derived result whose
     ``casilla_values`` mapping the enrollment records as _produced-value
     evidence.
     """
+    seed_m130_income_transaction(
+        amount=_Q1_INCOME, filing_year=filing_year, source_key="cross-year-q1-income", bucket_id=_BUCKET_ID
+    )
+    seed_m130_expense_transaction(
+        amount=_Q1_EXPENSE, filing_year=filing_year, source_key="cross-year-q1-expense", bucket_id=_BUCKET_ID
+    )
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -207,13 +182,13 @@ def _calculate_quarter(
             operation=operation,
             clock=_CLOCK,
         )
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             casilla_inputs=casilla_inputs,
             binding_values=binding_values,
             clock=_CLOCK,
-        )
+        ).revision
 
 
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_year: int) -> None:
@@ -224,35 +199,21 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
     records net income in 0224 and explicit zeros for its non-applicable
     rendimiento sources; resolver completeness is tested separately.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="100",
-                filing_year=filing_year,
-                period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo="100",
-                    filing_year=filing_year,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo="100",
+            filing_year=filing_year,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
 
@@ -294,10 +255,10 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     # that feeds renta year N+1's minoración.
     _seed_prior_year_m100(obs_repo, filing_year=_YEAR_N)
 
-    # Renta year N+1 (1T): resolve the previous_filing minoración binding from
-    # the local store — it auto-pulls renta year N's M100 net income — then run
-    # a real calculation with it. Nothing about the prior-year income is
-    # re-keyed by hand.
+    # Renta year N+1 (1T): the local store resolves the previous_filing
+    # minoración binding to renta year N's M100 net income, and the real
+    # calculation resolves it the same way. Nothing about the prior-year income
+    # is re-keyed by hand.
     snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     with bundled_indexed_authority().operation() as operation:
         resolved = resolve_bindings_from_local_store(
@@ -313,10 +274,7 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
         filing_year=_YEAR_N_PLUS_1,
         period="1T",
         casilla_inputs=_Q1_INPUTS,
-        binding_values={
-            _PREV_YEAR_BINDING: resolved[_PREV_YEAR_BINDING],
-            _CARRY_FORWARD_BINDING: Decimal("0"),
-        },
+        binding_values={_CARRY_FORWARD_BINDING: Decimal("0")},
     )
 
     # Cross-renta wiring invariant: renta year N+1's casilla 13 is selected by

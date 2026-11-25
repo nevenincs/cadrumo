@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import secrets
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from threading import Lock, RLock
-from typing import override
+from threading import Lock
+from typing import Final
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -21,38 +19,33 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     inspect_profile_session,
     revoke_profile_sign_in,
 )
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_matches
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
-from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
+from cadrumo.adapters.persistence.storage.custody.automation_profile import CommittedProfileBindingWatch
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import StorageError
+from cadrumo.adapters.persistence.storage.master_key.timed_lock import TimedRLock
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationId, OperationIdentity
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
     OperationRegistry,
 )
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
-    LoginEligibility,
+    AccessSession,
     OsLockState,
+    ProfileAccessBinding,
     ProfileAccessState,
+    SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_administration import (
-    enrollment_review_digest,
     inspect_automation_inventory,
 )
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_enrollment import (
-    AdministrationFacts,
-    EnrollmentCustodyPort,
     EnrollmentRequester,
     EnrollmentTransition,
     ProtectedEnrollmentRecipient,
@@ -65,16 +58,13 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
-from cadrumo.core.time.clock import now
-from cadrumo.entrypoints.local_reader_operation_composition import start_owned_runtime_server
+from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     Availability,
-    DisclosureCategory,
-    DisclosureCategoryGrant,
-    DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError, ShutdownIncompleteError
@@ -82,7 +72,6 @@ from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.session_events import SessionEvent
-from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
@@ -102,108 +91,15 @@ from ..application.approval_binding import RuntimeApprovalBinding
 from ..application.approval_sessions import RuntimeApprovalSessions
 from ..application.session_authority import ProfileSessionAuthority
 from ..application.session_authority_contracts import SessionAuthorityFacts
+from ..application.session_authority_core import CustodyRecoveryPolicy
+from .automation_owner import RuntimeAutomationAdministrationOwner, RuntimeAutomationInventoryOwner
+from .profile_connection import ProfileConnection
+from .profile_lock_observation import locked_login_ids
+from .profile_scope import delegated_profile_scope, person_profile_scope
 from .session_owner import ProfileWorkerSessionOwner
 
-
-@dataclass
-class ProfileConnection:
-    """Host-owned connection state, excluded from all wire and persisted documents."""
-
-    context: ConnectionContext
-    login: LoginEvidence
-    client_id: UUID
-    profile_id: UUID
-    frontend: OperationFrontendProjection
-    session_id: UUID | None = None
-    method: str = "password"
-    human_secret: bytearray | None = field(default=None, repr=False)
-    persist_human_receipt: bool = False
-    recovery_generation: int | None = None
-    bootstrap_digest: str | None = None
-    requested_scope: AccessScope | None = None
-    owner_scope: tuple[OperationPublicContractSetV1, UUID, AccessScope] | None = field(
-        default=None, repr=False, compare=False
-    )
-
-
-@dataclass(frozen=True)
-class RuntimeAutomationInventoryOwner:
-    """A live authority binding supplied by the authenticated runtime callback."""
-
-    authority: ProfileSessionAuthority
-    connection_id: UUID
-    session_id: UUID
-
-    def facts(self) -> AdministrationFacts:
-        """Reobserve this exact session and its originating native login."""
-        return self.authority.human_administration_facts(connection_id=self.connection_id, session_id=self.session_id)
-
-    @contextmanager
-    def administration_guard(self) -> Generator[None]:
-        """Share the same lifecycle fence as operation execution and disclosure."""
-        with self.authority.owner.admission_guard():
-            yield
-
-
-@dataclass(frozen=True)
-class RuntimeAutomationAdministrationOwner(RuntimeAutomationInventoryOwner):
-    """Bind canonical approval to human facts and a separately owned recipient."""
-
-    recipient_lookup: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient]
-    approval_binding: RuntimeApprovalBinding
-    custody: EnrollmentCustodyPort
-
-    @override
-    def facts(self) -> AdministrationFacts:
-        """Apply the owner's delegation ceiling to this exact reviewed recipient.
-
-        Ordinary human operation authority keeps its original destination. Only
-        this request-bound administration view may delegate its registered
-        projection permissions to the recipient whose consent digest was reviewed.
-        No permission is copied from the proposal itself.
-        """
-        with self.administration_guard():
-            current = super().facts()
-            state = self.custody.enrollment_state()
-            record = next(
-                (item for item in state.requests if item.request_id == self.approval_binding.enrollment_request_id),
-                None,
-            )
-            if (
-                state.binding != self.approval_binding.profile_binding
-                or record is None
-                or record.binding != state.binding
-                or not secrets.compare_digest(enrollment_review_digest(record), self.approval_binding.review_digest)
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-            permissions = frozenset(
-                permission.model_copy(update={"destination_id": record.requester.destination_id})
-                for permission in current.profile.scope.disclosures
-                if permission.destination_id == current.context.authenticated_client_id
-            )
-            categories = frozenset(
-                grant.model_copy(update={"destination_id": record.requester.destination_id})
-                for grant in current.profile.scope.disclosure_categories
-                if grant.destination_id == current.context.authenticated_client_id
-            )
-            scope = current.profile.scope.model_copy(
-                update={"disclosures": permissions, "disclosure_categories": categories}
-            )
-            return current.model_copy(update={"profile": current.profile.model_copy(update={"scope": scope})})
-
-    def requester(self) -> EnrollmentRequester:
-        """Derive requester coordinates from the original live human connection."""
-        facts = self.facts()
-        return EnrollmentRequester(
-            runtime_boot_id=facts.context.runtime_boot_id,
-            connection_id=self.connection_id,
-            client_id=facts.context.authenticated_client_id,
-            destination_id=facts.context.authenticated_client_id,
-        )
-
-    def recipient(self, requester: EnrollmentRequester) -> ProtectedEnrollmentRecipient:
-        """Resolve the exact original requesting client through protected transport."""
-        return self.recipient_lookup(requester)
+GUARD_SLOW_SECONDS: Final = 1.0
+"""A wait for, or a hold of, the profile guard this long is reported with the code that entered it."""
 
 
 class RuntimeProfileHost:
@@ -220,19 +116,36 @@ class RuntimeProfileHost:
         admitting: Callable[[], bool],
         recipient: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient] | None = None,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
-        retired: Callable[[SessionEvent], None] | None = None,
-        operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
+        wall_clock: Callable[[], datetime] = wall_now,
+        retired: Callable[[SessionEvent, SessionKind], None] | None = None,
+        operations_advanced: Callable[[tuple[OperationId, ...], bool, tuple[OperationId, ...]], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
+        suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        recovery: CustodyRecoveryPolicy | None = None,
+        worker_lost: Callable[[], None] | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
-        """Compose existing authorities without opening keys or selecting a profile."""
+        """Compose existing authorities without opening keys or selecting a profile.
+
+        A positive worker loss suspends this profile's leases under a fresh
+        worker owner; ``suspended`` and ``rebound`` hear which leases wait and
+        which returned after a fresh proof. ``worker_lost`` hears a loss
+        established outside any request, which a lifecycle pass then sweeps.
+        """
         self.store, self._registry = store, registry
         self._contracts = registry.public_contract_set
         self._connected, self._logins, self._admitting = connected, logins, admitting
         self._recipient = recipient
         self._wall_clock = wall_clock
-        self.guard = RLock()
+        self.guard = TimedRLock(slow_seconds=GUARD_SLOW_SECONDS, event="profile_guard_slow")
         self._replacement_retirement_guard = Lock()
+        self._committed_binding = CommittedProfileBindingWatch(
+            profile_id=store.binding.profile_id,
+            installation_id=store.binding.installation_id,
+            os_owner_id=store.binding.os_owner_id,
+            root=store.root,
+        )
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
         self._locked_logins: set[str] = set()
@@ -241,26 +154,75 @@ class RuntimeProfileHost:
         self._model_runs = model_runs
         self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
-        self.owner = ProfileWorkerSessionOwner(
-            ProfileWorkerIdentity(worker_id=uuid4(), runtime_boot_id=runtime_boot_id, binding=store.binding),
-            storage_root=store.root,
+        self._runtime_boot_id, self._worker_script = runtime_boot_id, worker_script
+        self._worker_lost = worker_lost
+        self._fixed_clock = fixed_clock
+        # Owners of lost workers, kept until their containment and callbacks settle.
+        self._lost_owners: list[ProfileWorkerSessionOwner] = []
+        self._owner = self._new_owner()
+        self.authority = ProfileSessionAuthority(
+            binding=store.binding,
+            runtime_boot_id=runtime_boot_id,
+            owner=self._owner,
+            custody=store,
+            issuer=self.issuer,
+            retired=self._session_retired,
+            replace_lost_owner=self._replace_lost_owner,
+            suspended=suspended,
+            rebound=rebound,
+            recovery=recovery,
+        )
+        self.approvals = RuntimeApprovalSessions(worker=self._owner.identity, service=self._approval_service)
+
+    @property
+    def owner(self) -> ProfileWorkerSessionOwner:
+        """The owner of this profile's current worker incarnation."""
+        return self._owner
+
+    def _new_owner(self) -> ProfileWorkerSessionOwner:
+        return ProfileWorkerSessionOwner(
+            ProfileWorkerIdentity(worker_id=uuid4(), runtime_boot_id=self._runtime_boot_id, binding=self.store.binding),
+            storage_root=self.store.root,
             observe=self.facts,
             human_secret=self._human_proof,
             guard=self.guard,
             authorization=self,
-            worker_script=worker_script,
-            wall_clock=wall_clock,
-            runtime_server_starter=start_owned_runtime_server,
+            worker_script=self._worker_script,
+            wall_clock=self._wall_clock,
+            lost=self._worker_lost,
+            fixed_clock=self._fixed_clock,
         )
-        self.authority = ProfileSessionAuthority(
-            binding=store.binding,
-            runtime_boot_id=runtime_boot_id,
-            owner=self.owner,
-            custody=store,
-            issuer=self.issuer,
-            retired=self._session_retired,
+
+    def _replace_lost_owner(self) -> ProfileWorkerSessionOwner:
+        """Start a fresh, empty worker incarnation after a positive worker loss; the caller holds the guard.
+
+        Approval proof of the lost worker is fenced: work in flight at the
+        loss never resumes under the replacement.
+        """
+        self._lost_owners.append(self._owner)
+        self._owner = self._new_owner()
+        lost_approvals, self.approvals = (
+            self.approvals,
+            RuntimeApprovalSessions(worker=self._owner.identity, service=self._approval_service),
         )
-        self.approvals = RuntimeApprovalSessions(worker=self.owner.identity, service=self._approval_service)
+        lost_approvals.close()
+        return self._owner
+
+    def settle_lost_owners(self, *, deadline: float) -> None:
+        """Prove containment of lost worker incarnations; one that cannot settle yet is kept for a later pass."""
+        with self.guard:
+            lost = tuple(self._lost_owners)
+        failures: list[Exception] = []
+        for owner in lost:
+            try:
+                owner.settle(deadline=deadline)
+            except Exception as error:
+                failures.append(error)
+            else:
+                with self.guard:
+                    self._lost_owners.remove(owner)
+        if failures:
+            raise ExceptionGroup("lost worker settlement failed", failures)
 
     def _session_retired(self, retirement: SessionRetirement) -> None:
         """Publish committed retirement metadata; the queue never performs transport I/O."""
@@ -277,7 +239,8 @@ class RuntimeProfileHost:
                 reason=retirement.reason,
                 generation_lineage=None if generation is None else generation.lineage,
                 generation=None if generation is None else generation.generation,
-            )
+            ),
+            retirement.session_kind,
         )
 
     def _require_approval_binding(self, binding: RuntimeApprovalBinding) -> None:
@@ -304,10 +267,16 @@ class RuntimeProfileHost:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return self._recipient(requester)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         """Hand the worker's report of committed operations to whoever cues their observers."""
         if self._operations_advanced is not None:
-            self._operations_advanced(operation_ids, records_changed)
+            self._operations_advanced(operation_ids, records_changed, settled)
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         """Validate the exact worker and current human before any password frame."""
@@ -480,72 +449,43 @@ class RuntimeProfileHost:
             # current locks, custody, logins and availability at every boundary;
             # delegated scopes always reread their live grants below.
             return cached[2]
-        categories = frozenset[DisclosureCategoryGrant]()
-        registered = frozenset(str(item.definition_id) for item in self._contracts.definitions)
-        operations = registered
         if connection.method == "api_key":
-            snapshot = self.store.snapshot()
-            grants = tuple(grant for grant in snapshot.grants if grant.client_id == connection.client_id)
-            # A category grant is resolved against the operations registered now,
-            # so the lease lists every projection the category covers today.
-            projections = registered_disclosure_projections(self._contracts) | {OPERATION_OBSERVATION_PROJECTION_ID}
-            permissions = frozenset(
-                permission for grant in grants for permission in grant.scope.disclosures
-            ) | frozenset(
-                DisclosurePermission(
-                    destination_id=item.destination_id, projection_id=projection, category=item.category
-                )
-                for grant in grants
-                for item in grant.scope.disclosure_categories
-                for projection in projections
-            )
-            operations = registered & frozenset(item for grant in grants for item in grant.scope.operations)
+            scope = delegated_profile_scope(self._contracts, self.store.snapshot(), connection.client_id)
         else:
-            permissions = frozenset(
-                DisclosurePermission(destination_id=connection.client_id, projection_id=projection, category=category)
-                for projection in registered_disclosure_projections(self._contracts)
-                for category in DisclosureCategory
-            )
-            categories = frozenset(
-                DisclosureCategoryGrant(destination_id=connection.client_id, category=category)
-                for category in DisclosureCategory
-            )
-            permissions |= frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=connection.client_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        scope = AccessScope(
-            operations=operations,
-            actions=frozenset(AccessAction),
-            disclosures=permissions,
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=True,
-            disclosure_categories=categories,
-        )
+            scope = person_profile_scope(self._contracts, connection.client_id)
         if connection.method != "api_key":
             connection.owner_scope = (self._contracts, connection.client_id, scope)
         return scope
 
+    def may_change_records(self, definition_id: str) -> bool:
+        """Whether the registered definition may leave records changed; an unregistered one is never said to."""
+        try:
+            return self._registry.lookup_public_contract(definition_id).may_change_records()
+        except KeyError:
+            return False
+
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
-        """Observe committed profile fencing and current native dependencies per call."""
+        """Observe committed profile fencing and native dependencies as their OS-invalidated observations stand."""
         connection = self._connected(connection_id)
+        if connection.disconnecting:
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
         if connection.profile_id != self.store.binding.profile_id:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        lock = self.profile_lock_state()
         available, enabled = Availability.UNAVAILABLE, False
         try:
-            snapshot = self.store.enrollment_state()
+            committed, snapshot = self.store.observed_access_state()
             available, enabled = Availability.AVAILABLE, snapshot.automation_enabled
         except AutomationCustodyError:
-            # Password admission remains independent of the optional subsystem.
-            if connection.method == "api_key":
-                raise
+            # Read apart, as before observation: the lock still refuses, and
+            # password admission remains independent of the optional subsystem.
+            committed = self.store.profile_lock_state()
+            try:
+                enabled = self.store.enrollment_state().automation_enabled
+                available = Availability.AVAILABLE
+            except AutomationCustodyError:
+                if connection.method == "api_key":
+                    raise
+        lock = self._fenced(committed)
         scope = self.scope(connection)
         logins = self._logins()
         return SessionAuthorityFacts(
@@ -573,7 +513,10 @@ class RuntimeProfileHost:
     def profile_lock_state(self) -> ProfileGlobalLockState:
         """Retain a denial fence even if durable publication fails after live retirement."""
         with self.guard:
-            current = self.store.profile_lock_state()
+            return self._fenced(self.store.profile_lock_state())
+
+    def _fenced(self, current: ProfileGlobalLockState) -> ProfileGlobalLockState:
+        with self.guard:
             fence = self._lock_fence
             if fence is not None and fence.generation >= current.generation and fence.globally_locked:
                 return fence
@@ -625,19 +568,7 @@ class RuntimeProfileHost:
                 )
             except (OSError, ValueError, StorageError, ProfileCustodyRecordError):
                 receipt = None
-            positive = {
-                login.login_id
-                for login in observed
-                if login.os_owner_id == self.store.binding.os_owner_id
-                and (
-                    login.login_id in relevant
-                    or (receipt is not None and profile_session_login_matches(record=receipt, login_id=login.login_id))
-                )
-                and (
-                    login.lock_state is OsLockState.LOCKED
-                    or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
-                )
-            }
+            positive = locked_login_ids(observed, relevant, self.store.binding.os_owner_id, receipt)
             unlocked = {login.login_id for login in observed if login.active and login.unlocked}
             self._locked_logins.difference_update(unlocked)
             if positive <= self._locked_logins:
@@ -661,6 +592,9 @@ class RuntimeProfileHost:
             secret=connection.human_secret,
             originating_login_id=connection.login.login_id,
             persist_receipt=connection.persist_human_receipt,
+            timeout_deadline=connection.human_admission_deadline,
+            attempt_id=connection.human_proof_attempt_id,
+            cancellation=connection.human_proof_cancellation,
         )
 
     def close(self) -> None:
@@ -674,8 +608,12 @@ class RuntimeProfileHost:
             finally:
                 try:
                     self.owner.settle()
+                    for lost in tuple(self._lost_owners):
+                        lost.settle()
+                        self._lost_owners.remove(lost)
                 finally:
                     self.approvals.close()
+                    self.store.custody_witness.close()
 
     def lifecycle_due(self) -> float | None:
         """Return the monotonic instant this profile must be observed again even if nothing happens."""
@@ -685,6 +623,25 @@ class RuntimeProfileHost:
         )
         return min((instant for instant in instants if instant is not None), default=None)
 
+    def _fence_successor_sign_in(self, current: ProfileAccessBinding | None) -> bool:
+        """Fence and clean the obsolete receipt against proven successor custody.
+
+        The mutation's commit guard has been released. An unreadable binding
+        never authorizes destructive cleanup, so ``None`` fences nothing.
+        ``False`` means custody was replaced again after ``current`` was read:
+        fencing a superseded successor proves nothing, so retirement looks
+        again against the newer one.
+        """
+        if current is None:
+            return True
+        sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
+        try:
+            revoke_profile_sign_in(sign_in)
+        except AutomationCustodyError:
+            return False
+        self._sign_in_generation = sign_in.observe().current
+        return True
+
     def retire_replaced_binding(self, *, deadline: float) -> bool | None:
         """Drain an obsolete incarnation before permitting a fresh profile owner.
 
@@ -693,9 +650,10 @@ class RuntimeProfileHost:
         Once the body releases its guard, remove live admission first and let
         the canonical supervisor settle before containing the worker. Neither
         this retirement nor a drain receipt establishes a domain outcome.
-        ``None`` means a held fence prevented this observation; polling must
-        leave that invocation alone. An unreadable binding also retires access
-        without claiming that a successor was committed.
+        ``None`` means a held fence prevented this observation, or custody was
+        replaced again while it was being observed; polling must leave that
+        invocation alone and look again. An unreadable binding also retires
+        access without claiming that a successor was committed.
         """
         # Only one caller may prove retirement. Another admission must not
         # mistake the denial fence for completed process containment.
@@ -707,23 +665,13 @@ class RuntimeProfileHost:
             try:
                 binding = self.store.binding
                 try:
-                    current = current_automation_profile_binding(
-                        profile_id=binding.profile_id,
-                        installation_id=binding.installation_id,
-                        os_owner_id=binding.os_owner_id,
-                        root=self.store.root,
-                    )
+                    current = self._committed_binding.current()
                 except AutomationCustodyError:
                     current = None
                 if current == binding:
                     return False
-                if current is not None:
-                    # The mutation's commit guard has been released. Fence and
-                    # clean the obsolete receipt against proven successor custody;
-                    # an unreadable binding never authorizes destructive cleanup.
-                    sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
-                    revoke_profile_sign_in(sign_in)
-                    self._sign_in_generation = sign_in.observe().current
+                if not self._fence_successor_sign_in(current):
+                    return None
                 worker = self.owner.begin_drain()
             finally:
                 self.guard.release()

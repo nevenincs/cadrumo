@@ -22,10 +22,7 @@ from cadrumo.application.filing.export import render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from cadrumo.application.filing.projection import project_filing_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
-from cadrumo.application.filing.tests.test_producer_snapshot import (
-    m303_bienes_inversion_parameters,
-    m303_exonerado_390_evidence,
-)
+from cadrumo.application.filing.tests.producer_snapshot_support import m303_exonerado_390_evidence
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
@@ -42,6 +39,7 @@ from cadrumo.core.prorrata_register import (
 )
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.bienes_inversion.tests.explicit_parameters import params_for
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -74,10 +72,6 @@ from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILEN
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.supplementary_orden import compile_supplementary_ordenes
 from ...tests.authored_edition_support import authored_revisions_where
-from .._export_tree import render_complete_export_tree
-from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from .._tree_validation import GeneratedExportTreeValidationContext
-from ..cli import stage_published_modelo
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
@@ -85,9 +79,13 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
 )
 from ..export_fragment_provenance_projection import normalised_loader_semantics
+from ..export_tree import render_complete_export_tree
 from ..generated_tree_inventory import generated_export_trees
+from ..published_edition_staging import stage_published_modelo
 from ..render_check import parsed_tree_file
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
+from ..tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
+from ..tree_validation import GeneratedExportTreeValidationContext
+from .generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -221,7 +219,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.
-    bienes_parameters = m303_bienes_inversion_parameters(filing_year)
+    bienes_parameters = params_for(filing_year)
     facts = m303_did.M303FilingFacts(
         bienes_parameters=bienes_parameters,
         joint_return_elected=False,
@@ -238,6 +236,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         ),
         prorrata_transition=m303_did.M303ProrrataTransitionArrival(
             period=period,
+            is_applicable=False,
             transition=None,
             register_evidence=(),
         ),
@@ -254,7 +253,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
             parameters_provenance=bienes_parameters.provenance,
         ),
     )
-    taxpayer = m303_did._taxpayer_profile()
+    taxpayer = m303_did.taxpayer_profile()
     assert taxpayer.iva is not None
     producer = m303_did.build_filing_producer_snapshot(
         modelo=m303_did.Modelo("303"),
@@ -267,10 +266,10 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         ),
         presenter=m303_did.PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
         model_profile=taxpayer.iva,
-        elections=m303_did._elections(ResultDisposition.DEVOLUCION),
+        elections=m303_did.elections(ResultDisposition.DEVOLUCION),
         amendment_evidence=None,
-        refund_account=m303_did._REFUND_ACCOUNT,
-        charge_account=m303_did._CHARGE_ACCOUNT,
+        refund_account=m303_did.REFUND_ACCOUNT,
+        charge_account=m303_did.CHARGE_ACCOUNT,
         m303_filing_facts=facts,
     )
     return snapshot, producer
@@ -395,10 +394,10 @@ def _m303_real_envelope(_m303_authority_operation: PinnedAuthorityOperation):
         request = FilingEnvelopeRenderRequest(
             registry_snapshot=snapshot,
             layout=layout,
-            draft=m303_did._draft(),
+            draft=m303_did.draft(),
             producer_snapshot=producer,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=m303_did._product_software_identity(),
+            product_software_identity=m303_did.product_software_identity(),
         )
         yield request, render_filing_envelope(request)
 
@@ -516,63 +515,46 @@ def test_m303_generated_publication_is_twice_reproducible_and_check_mode_is_non_
         published_modelo_root = stage_published_modelo(check_root, modelo=tree.modelo, revision=tree.revision)
         joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
         before = _committed_tree_hashes(tree)
+
         # While the revision is drift-pinned, check mode REFUSES rather than
         # agreeing: the shipped manifest attests digests the corrected generator
         # no longer produces. Non-mutation is the property this half is named
         # for and it is asserted in both branches, because a refusal that
         # scribbled on the committed tree on its way out would be the worse bug.
+        def run_check() -> CheckedGeneratedExportTree:
+            return check_generated_export_tree(
+                context=GeneratedExportTreeCheckContext(
+                    validation=GeneratedExportTreeValidationContext(
+                        registry_root=check_registry_root,
+                        source_root=bundled_path(),
+                        target=ExportFragmentTarget(
+                            modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch
+                        ),
+                        filing_year=tree.filing_year,
+                        period=tree.period,
+                        supporting_modelos=supporting_modelos(tree),
+                        continuity_metadata_modelo_root=metadata_root,
+                    ),
+                    temporary_root=check_root,
+                    target_registry_root=bundled_path("registry", "aeat"),
+                    target_export_root=tree.committed,
+                    published_modelo_root=published_modelo_root,
+                ),
+                joined=joined,
+                semantic_map=semantic_map,
+                transport_profile=transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+            )
+
         if subject in drifting:
             with pytest.raises(RegistryValidationError, match="do not match generated tree"):
-                check_generated_export_tree(
-                    context=GeneratedExportTreeCheckContext(
-                        validation=GeneratedExportTreeValidationContext(
-                            registry_root=check_registry_root,
-                            source_root=bundled_path(),
-                            target=ExportFragmentTarget(
-                                modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch
-                            ),
-                            filing_year=tree.filing_year,
-                            period=tree.period,
-                            supporting_modelos=supporting_modelos(tree),
-                            continuity_metadata_modelo_root=metadata_root,
-                        ),
-                        temporary_root=check_root,
-                        target_registry_root=bundled_path("registry", "aeat"),
-                        target_export_root=tree.committed,
-                        published_modelo_root=published_modelo_root,
-                    ),
-                    joined=joined,
-                    semantic_map=semantic_map,
-                    transport_profile=transport,
-                    render_profile=render_profile,
-                    render_profile_source_evidence=evidence,
-                )
+                run_check()
             assert _committed_tree_hashes(tree) == before
             assert transport.encoding is ExportEncoding.ISO_8859_1
             return
 
-        checked = check_generated_export_tree(
-            context=GeneratedExportTreeCheckContext(
-                validation=GeneratedExportTreeValidationContext(
-                    registry_root=check_registry_root,
-                    source_root=bundled_path(),
-                    target=ExportFragmentTarget(modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch),
-                    filing_year=tree.filing_year,
-                    period=tree.period,
-                    supporting_modelos=supporting_modelos(tree),
-                    continuity_metadata_modelo_root=metadata_root,
-                ),
-                temporary_root=check_root,
-                target_registry_root=bundled_path("registry", "aeat"),
-                target_export_root=tree.committed,
-                published_modelo_root=published_modelo_root,
-            ),
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=transport,
-            render_profile=render_profile,
-            render_profile_source_evidence=evidence,
-        )
+        checked = run_check()
         assert _committed_tree_hashes(tree) == before
         assert checked.published_manifest == checked.candidate.provenance_manifest
         assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(
@@ -658,7 +640,7 @@ def test_m303_untouched_generated_layout_renders_official_6919_f022(
         + (b" " * 70)
         + b"C303"
         + (b" " * 4)
-        + b"Y0000001S"
+        + b"Y0001006P"
         + (b" " * 213)
         + b"</AUX>"
     )

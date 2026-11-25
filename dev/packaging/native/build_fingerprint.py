@@ -32,14 +32,15 @@ import re
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest, digest_cache
+from .macos_info import DESKTOP_INFO_PLIST_NAME
 
 EXCLUDED_DIRECTORIES = frozenset({"target", "node_modules", "tests", "__pycache__", "test-results", "dist", ".vite"})
 """Build outputs, installed packages and test-only trees never reach a shipped image."""
@@ -100,7 +101,13 @@ _RUST_PROFILES = ("debug", "release")
 
 
 def _cargo_records(directory: str, *names: str) -> tuple[str, ...]:
-    return tuple(f"{directory}/{profile}/{name}.d" for profile in _RUST_PROFILES for name in names)
+    # A library's dependency record carries the platform's library prefix, `lib` outside Windows.
+    return tuple(
+        f"{directory}/{profile}/{prefix}{name}.d"
+        for profile in _RUST_PROFILES
+        for name in names
+        for prefix in ("", "lib")
+    )
 
 
 _NATIVE_CARGO = "cargo/native/*"
@@ -171,10 +178,16 @@ COMPONENTS: Mapping[str, Component] = {
             "native/interpreter/launch_guard.h",
             "native/interpreter/launch_profile.h",
             "native/interpreter/windows/host.c",
+            "native/interpreter/posix/host.c",
             "native/interpreter/windows/host.manifest",
         ),
         # The linked host compiles the shared layout header under the desktop's own identity.
-        outputs=(*_CONTRACT, ("generated", "build_layout.h"), ("desktop_frontend", "")),
+        outputs=(
+            *_CONTRACT,
+            ("generated", "build_layout.h"),
+            ("generated", DESKTOP_INFO_PLIST_NAME),
+            ("desktop_frontend", ""),
+        ),
         records=tuple(f"cargo/desktop/{profile}/cadrumo.d" for profile in _RUST_PROFILES),
         desktop_tools=True,
         snapshots=("desktop/host",),
@@ -183,8 +196,8 @@ COMPONENTS: Mapping[str, Component] = {
 _DESKTOP = COMPONENTS["desktop"]
 COMPONENTS = {
     **COMPONENTS,
-    # The remote-debugging desktop the packaged end-to-end tests drive: the desktop's sources
-    # and identity built with one more feature into its own testing directory, never shipped.
+    # The automation desktop for packaged tests: the desktop's sources and identity built
+    # with test-only features into its own testing directory, never shipped.
     "desktop-test-host": Component(
         crates=_DESKTOP.crates,
         files=(*_DESKTOP.files, "native/desktop/tests/packaged/host.mjs"),
@@ -193,13 +206,13 @@ COMPONENTS = {
         records=tuple(f"desktop/testing/*/cargo/{profile}/cadrumo.d" for profile in _RUST_PROFILES),
         desktop_tools=True,
         snapshots=("desktop/testing/*/host",),
-        features=("webview2-remote-debugging",),
+        features=("webview2-remote-debugging", "native-automation"),
     ),
 }
 
 
 def crate_closure(crates: tuple[str, ...], *, root: Path = REPO_ROOT) -> list[str]:
-    """Return each crate directory and every path dependency it builds or links, for any target."""
+    """Return each crate and its local path dependencies and patches, for any target."""
     pending = [(root / crate).resolve() for crate in crates]
     seen: dict[Path, None] = {}
     while pending:
@@ -207,15 +220,25 @@ def crate_closure(crates: tuple[str, ...], *, root: Path = REPO_ROOT) -> list[st
         if crate in seen:
             continue
         seen[crate] = None
-        manifest = parse_toml((crate / "Cargo.toml").read_text(encoding="utf-8"))
-        tables = [manifest.get(name, {}) for name in _DEPENDENCY_TABLES]
-        for platform in manifest.get("target", {}).values():
-            tables += [platform.get(name, {}) for name in _DEPENDENCY_TABLES]
-        for table in tables:
-            for dependency in table.values():
-                if isinstance(dependency, dict) and isinstance(dependency.get("path"), str):
-                    pending.append((crate / dependency["path"]).resolve())
+        pending.extend(_crate_dependencies(crate))
     return sorted(path.relative_to(root.resolve()).as_posix() for path in seen)
+
+
+def _crate_dependencies(crate: Path) -> list[Path]:
+    found: list[Path] = []
+    manifest = parse_toml((crate / "Cargo.toml").read_text(encoding="utf-8"))
+    tables = [manifest.get(name, {}) for name in _DEPENDENCY_TABLES]
+    for platform in manifest.get("target", {}).values():
+        tables += [platform.get(name, {}) for name in _DEPENDENCY_TABLES]
+    tables.extend(manifest.get("patch", {}).values())
+    for table in tables:
+        for dependency in table.values():
+            if isinstance(dependency, dict):
+                dependency_map = cast("dict[str, object]", dependency)
+                dependency_path = dependency_map.get("path")
+                if isinstance(dependency_path, str):
+                    found.append((crate / dependency_path).resolve())
+    return found
 
 
 def binary_sources(crate: Path) -> tuple[str, ...]:
@@ -319,39 +342,59 @@ def consumed_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[s
     excluded = (build_text, os.path.join(root_text, "build"))
     consumed: dict[str, Path] = {}
     seen: set[str] = set()
+    context = _ConsumedContext(root, resolved_root, root_text, excluded, snapshots, seen)
     for pattern in component.records:
         for record in sorted(build.glob(pattern)):
             for listed in dependency_record_paths(_read_record(record), record=record):
-                text = os.path.normpath(str(listed))
-                folded = os.path.normcase(text)
-                for base, length in snapshots:
-                    if _under(folded, base):
-                        text = os.path.join(str(root), "native", text[length:].lstrip(r"\/"))
-                        folded = os.path.normcase(text)
-                        break
-                if folded in seen:
-                    continue
-                seen.add(folded)
-                # A file only the snapshot holds was generated there, and a file since removed
-                # is no longer read; neither is a checkout input.
-                if (
-                    not os.path.isabs(text)
-                    or not _under(folded, root_text)
-                    or any(_under(folded, base) for base in excluded)
-                    or not os.path.isfile(text)
-                ):
-                    continue
-                # Only the few survivors resolve, which restores the on-disk case that compiler
-                # read logs fold away.
-                path = Path(text)
-                try:
-                    relative = path.resolve().relative_to(resolved_root)
-                except ValueError:
-                    continue
-                if relative.parts and relative.parts[0] == "build":
-                    continue
-                consumed[relative.as_posix()] = path
+                _record_consumed_input(listed, context, consumed)
     return consumed
+
+
+@dataclass(frozen=True)
+class _ConsumedContext:
+    root: Path
+    resolved_root: Path
+    root_text: str
+    excluded: tuple[str, str]
+    snapshots: list[tuple[str, int]]
+    seen: set[str]
+
+
+def _record_consumed_input(listed: Path, context: _ConsumedContext, consumed: dict[str, Path]) -> None:
+    text = os.path.normpath(str(listed))
+    folded = os.path.normcase(text)
+    text, folded = _map_snapshot_input(text, folded, context)
+    if folded in context.seen:
+        return
+    context.seen.add(folded)
+    if not _is_checkout_input(text, folded, context):
+        return
+    path = Path(text)
+    try:
+        relative = path.resolve().relative_to(context.resolved_root)
+    except ValueError:
+        return
+    if relative.parts and relative.parts[0] == "build":
+        return
+    consumed[relative.as_posix()] = path
+
+
+def _is_checkout_input(text: str, folded: str, context: _ConsumedContext) -> bool:
+    return (
+        os.path.isabs(text)
+        and _under(folded, context.root_text)
+        and not any(_under(folded, base) for base in context.excluded)
+        and os.path.isfile(text)
+    )
+
+
+def _map_snapshot_input(text: str, folded: str, context: _ConsumedContext) -> tuple[str, str]:
+    for base, length in context.snapshots:
+        if _under(folded, base):
+            text = os.path.join(str(context.root), "native", text[length:].lstrip(r"\/"))
+            folded = os.path.normcase(text)
+            break
+    return text, folded
 
 
 def uncovered_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> list[str]:
@@ -424,8 +467,15 @@ def toolchain_identity(name: str, build: Path) -> dict[str, Any]:
     }
     if desktop:
         tools = configured.get("desktop_tools", {})
-        identity["desktop_tools"] = {key: tools.get(key) for key in ("npm_version",) if isinstance(tools, dict)}
+        identity["desktop_tools"] = _desktop_tool_identity(tools)
     return identity
+
+
+def _desktop_tool_identity(tools: object) -> dict[str, object]:
+    if not isinstance(tools, dict):
+        return {}
+    values = cast("dict[str, object]", tools)
+    return {key: values.get(key) for key in ("npm_version",)}
 
 
 def _matches(target: str, patterns: Iterable[str]) -> bool:
@@ -470,28 +520,39 @@ def target_settings(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[s
             if not _matches(reference["name"], patterns):
                 continue
             target = _json(reply / reference["jsonFile"])
-            sources = [source.get("path", "") for source in target.get("sources", [])]
-            settings[f"{configuration['name']}/{reference['name']}"] = {
-                "type": target.get("type"),
-                "name_on_disk": target.get("nameOnDisk"),
-                "compile": [
-                    {
-                        "language": group.get("language"),
-                        "fragments": [
-                            fragment.get("fragment") for fragment in group.get("compileCommandFragments", [])
-                        ],
-                        "defines": [define.get("define") for define in group.get("defines", [])],
-                        "includes": [_portable(include.get("path", ""), root) for include in group.get("includes", [])],
-                        "sources": [_portable(sources[index], root) for index in group.get("sourceIndexes", [])],
-                    }
-                    for group in target.get("compileGroups", [])
-                ],
-                "link": [
-                    {"role": fragment.get("role"), "fragment": fragment.get("fragment")}
-                    for fragment in target.get("link", {}).get("commandFragments", [])
-                ],
-            }
+            settings[f"{configuration['name']}/{reference['name']}"] = _target_compilation(target, root)
     return settings
+
+
+def _target_compilation(target: dict[str, object], root: Path) -> dict[str, object]:
+    sources = [source.get("path", "") for source in cast("list[dict[str, str]]", target.get("sources", []))]
+    groups = cast("list[dict[str, object]]", target.get("compileGroups", []))
+    link = cast("dict[str, object]", target.get("link", {}))
+    return {
+        "type": target.get("type"),
+        "name_on_disk": target.get("nameOnDisk"),
+        "compile": [_compile_group(group, sources, root) for group in groups],
+        "link": [
+            {"role": fragment.get("role"), "fragment": fragment.get("fragment")}
+            for fragment in cast("list[dict[str, object]]", link.get("commandFragments", []))
+        ],
+    }
+
+
+def _compile_group(group: dict[str, object], sources: list[str], root: Path) -> dict[str, object]:
+    return {
+        "language": group.get("language"),
+        "fragments": [
+            fragment.get("fragment")
+            for fragment in cast("list[dict[str, object]]", group.get("compileCommandFragments", []))
+        ],
+        "defines": [define.get("define") for define in cast("list[dict[str, object]]", group.get("defines", []))],
+        "includes": [
+            _portable(include.get("path", ""), root)
+            for include in cast("list[dict[str, str]]", group.get("includes", []))
+        ],
+        "sources": [_portable(sources[index], root) for index in cast("list[int]", group.get("sourceIndexes", []))],
+    }
 
 
 def rust_settings(build: Path) -> Any:
@@ -566,16 +627,19 @@ def resolution_order(names: list[str] | tuple[str, ...]) -> list[str]:
     return ordered
 
 
-SHIPPED = ("interpreter", "installer", "manager", "desktop")
-"""Components every complete native build compiles; the test host is built on request."""
+def coverage_failures(build: Path, required: Iterable[str], *, root: Path = REPO_ROOT) -> dict[str, list[str]]:
+    """Return each built component's undeclared consumed files; refuse a required one never built.
 
-
-def coverage_failures(build: Path, *, root: Path = REPO_ROOT) -> dict[str, list[str]]:
-    """Return each built component's undeclared consumed files; refuse a shipped one never built."""
+    ``required`` names the components the configured graph compiles; the test host is built on
+    request and is never required.
+    """
+    required = frozenset(required)
+    if unknown := required - COMPONENTS.keys():
+        raise ValueError(f"Unknown native component {sorted(unknown)!r}; known: {', '.join(sorted(COMPONENTS))}")
     failures: dict[str, list[str]] = {}
     for name, component in COMPONENTS.items():
         if not any(path for pattern in component.records for path in build.glob(pattern)):
-            if name in SHIPPED:
+            if name in required:
                 raise FileNotFoundError(f"No dependency records for the {name} component under {build}; build it first")
             continue
         failures[name] = uncovered_inputs(name, build, root=root)
@@ -585,8 +649,9 @@ def coverage_failures(build: Path, *, root: Path = REPO_ROOT) -> dict[str, list[
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check that every component declares the files its last build read.")
     parser.add_argument("--build", type=require_enrolled_build, required=True)
+    parser.add_argument("--require", action="append", default=[], help="A component the configured graph compiles.")
     args = parser.parse_args()
-    found = coverage_failures(args.build)
+    found = coverage_failures(args.build, args.require)
     for name, uncovered in found.items():
         for path in uncovered:
             print(f"{name}: {path} is compiled in but not declared in dev/packaging/native/build_fingerprint.py")

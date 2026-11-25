@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ....core.filing_producer_key import FilingProducerKey
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ParsedExportPolicyValue,
@@ -35,16 +34,10 @@ def parse_fixed_width_export_field(
     length = require_length(field)
     _require_raw_width(field, raw, length)
     kind = str(getattr(field.kind, "value", field.kind))
-    if (
-        raw == " "
-        and kind == "header"
-        and field.data_type == "text"
-        and getattr(field, "producer_key", None) is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-        and "aeat-dr-369-2021" in field.source_refs
-    ):
-        # DR369's complementaria indicator carries C or a space. The latter
-        # is a populated, source-owned negative answer, even when required;
-        # trimming it would turn a valid declaration into absent evidence.
+    if raw == " " and field.presence_marker is not None:
+        # A presence marker's blank is a populated, source-owned negative answer,
+        # even when required; trimming it would turn a valid declaration into
+        # absent evidence.
         require_allowed_value(field, raw)
         return raw
     if _is_inactive_binding_slot(field, raw, length, kind):
@@ -166,29 +159,37 @@ def _parse_scaled_numeric(field: ExportField, raw: str, *, scale: int) -> Decima
 
 
 def _split_numeric_wire(field: ExportField, raw: str) -> tuple[bool, str]:
+    negative, digits = _split_sign(field, raw)
+    if not digits or not digits.isascii() or not digits.isdigit():
+        raise RegistryValidationError(f"numeric export field {field.id!r} must contain only ASCII digits")
+    return negative, digits
+
+
+def _split_sign(field: ExportField, raw: str) -> tuple[bool, str]:
     if field.sign_position is ExportSignPosition.BLANK_OR_N:
         if raw[:1] not in {"N", " "}:
             raise RegistryValidationError(f"export field {field.id!r} sign position must hold 'N' or a space")
-        negative, digits = raw[:1] == "N", raw[1:]
-    elif field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
+        return raw[:1] == "N", raw[1:]
+    if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
         # The constant 'N' carries no direction: the value is the magnitude.
         # An all-zero slot is the design's empty case; the canonical re-render
         # in the caller refuses an 'N' in front of a zero magnitude.
-        negative, digits = False, raw[1:] if raw[:1] == "N" else raw
-    elif field.signed:
+        return False, raw[1:] if raw[:1] == "N" else raw
+    if field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT:
+        return _split_leading_marker(raw, "-")
+    if field.signed:
         # The mirror of the render rule above: a negative slot is 'N' followed by
         # its digits, and a non-negative slot is digits all the way. Refusing a
         # digit in the leading position would refuse a correctly formed AEAT
         # record, because that is exactly what AEAT specifies a non-negative
         # amount looks like.
-        negative = raw[:1] == "N"
-        digits = raw[1:] if negative else raw
-    else:
-        negative = False
-        digits = _unpad(field, raw)
-    if not digits or not digits.isascii() or not digits.isdigit():
-        raise RegistryValidationError(f"numeric export field {field.id!r} must contain only ASCII digits")
-    return negative, digits
+        return _split_leading_marker(raw, "N")
+    return False, _unpad(field, raw)
+
+
+def _split_leading_marker(raw: str, marker: str) -> tuple[bool, str]:
+    negative = raw[:1] == marker
+    return negative, raw[1:] if negative else raw
 
 
 def _unpad(field: ExportField, raw: str) -> str:

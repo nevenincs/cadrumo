@@ -1,0 +1,612 @@
+// The scenario ledger's imports: the statements, invoice books and
+// documents it reads from the made-up computer's files, and what each
+// import adds. Everything it answers is synthetic.
+
+import type { FilePurpose, JsonObject, JsonValue } from "../shell/ledger";
+import type { PublicPeriod } from "../shell/ledgerInvoiceContract";
+import {
+  type FixtureLedger,
+  type FixtureMovement,
+  hex64,
+  LEDGER_FIXTURE_PROFILE_ID,
+  money,
+  movementId,
+  readableFile,
+} from "./fixtures/ledger";
+import {
+  BOOK_REFUSALS,
+  BOOK_ROLES,
+  BOOKS,
+  fixtureTemplate,
+  STATEMENT,
+  STATEMENTS,
+} from "./ledgerFileFixture";
+import { compare, periodSpan, Stopped } from "./ledgerQueryFixture";
+import { InvoiceStopped } from "./ledgerInvoiceFixture";
+import { invalid, text } from "./ledgerRequestFixture";
+import { fixtureDay, fixtureYear } from "@/dev/fixtureDates";
+
+/** The scenario ledger's import answers over its movements. */
+export function importOperations(
+  ledger: FixtureLedger,
+  tools: {
+    now: () => string;
+    events: () => string[];
+    bytesOf: (name: string) => string;
+    fileOf: (
+      token: JsonValue | undefined,
+      purpose: FilePurpose,
+    ) => { name: string };
+    transactionOf: (id: string) => FixtureMovement | undefined;
+    /** The local AI's program is not set up. */
+    readerMissing: boolean;
+    /** The step served where the reading role has no picked model, or null
+     * where a model is picked. */
+    readingStep: JsonObject | null;
+  },
+) {
+  const {
+    now,
+    events,
+    bytesOf,
+    fileOf,
+    transactionOf,
+    readerMissing,
+    readingStep,
+  } = tools;
+  /** The movements already in the ledger that a statement's first rows fall
+   * on the day and amount of, chosen once from October 2026. */
+  let duplicateTargets: FixtureMovement[] | null = null;
+  const targets = () =>
+    (duplicateTargets ??= ledger.movements
+      .filter(
+        (movement) =>
+          movement.transaction.date.startsWith(`${fixtureYear}-10-`) &&
+          movement.transaction.lifecycle_state === "ACTIVE",
+      )
+      .sort((left, right) =>
+        compare(left.transaction.date, right.transaction.date),
+      )
+      .slice(0, 4));
+
+  /** One statement's rows as the product reads them, each bound to `bound`. */
+  function statementRows(name: string, bound: string | null) {
+    const spec = STATEMENTS[name] ?? STATEMENT;
+    const stem = name.replace(/\.[a-z0-9]+$/i, "").toUpperCase();
+    return Array.from({ length: spec.rows }, (_, at) => {
+      const target = at < spec.duplicates ? targets()[at] : undefined;
+      const dayOfMonth = spec.gap && at > 3 ? 18 + (at % 9) : 1 + (at % 9);
+      const date = target
+        ? target.transaction.date
+        : fixtureDay(10, dayOfMonth);
+      const amount = target
+        ? target.transaction.amount
+        : money(1500 + at * 731 + stem.length * 13);
+      const description = `${target ? "CARGO" : "MOVIMIENTO"} ${stem.slice(0, 18)} ${String(at + 1).padStart(2, "0")}`;
+      const direction = target
+        ? target.transaction.direction
+        : at % 4 === 0
+          ? "INCOMING"
+          : "OUTGOING";
+      return {
+        id: movementId({
+          date,
+          amount,
+          description,
+          own_account_id: bound,
+          salt: name,
+        }),
+        date,
+        amount,
+        description,
+        direction,
+      };
+    });
+  }
+
+  /** A bank statement import, as the product's public result tells it: a
+   * row already in the ledger is skipped, a row on the day and amount of
+   * another is imported and listed as a likely duplicate, and each file
+   * read names its digest by its place in the request. */
+  function importStatement(request: JsonObject): JsonObject {
+    const tokens = request.files;
+    if (!Array.isArray(tokens) || tokens.length === 0) return invalid();
+    const chosen = tokens.map((token) => fileOf(token, "bank_statements"));
+    const expected = request.expected_source_sha256 ?? null;
+    if (
+      expected !== null &&
+      (!Array.isArray(expected) || expected.length !== chosen.length)
+    )
+      return invalid();
+    const account = text(request.own_account_id);
+    if (
+      account !== null &&
+      !ledger.accounts.some((known) => known.own_account_id === account)
+    )
+      throw new Stopped("ERROR_TRANSACTION_VALIDATION");
+    const period = (request.period ?? null) as PublicPeriod | null;
+    const span = period ? periodSpan(period.filing_year, period.code) : null;
+    if (period && !span) return invalid();
+    const dryRun = request.dry_run === true;
+    const verify = request.verify === true;
+    // The label and holding to register the statement's own account with: only
+    // an import of one file, with no account chosen. A dry run registers
+    // nothing and binds the rows to the id the account would be given.
+    const registration = (request.register_statement_account ??
+      null) as JsonObject | null;
+    if (registration !== null && (account !== null || chosen.length !== 1))
+      return invalid();
+    let registered: string | null = null;
+    const statements: JsonObject[] = [];
+    const profile = LEDGER_FIXTURE_PROFILE_ID;
+    const ref = (id: string): JsonObject => ({
+      bucket_id: profile,
+      transaction_id: id,
+    });
+    const refused: JsonObject[] = [];
+    const digests: JsonObject[] = [];
+    const imported: JsonObject[] = [];
+    const skipped: JsonObject[] = [];
+    const duplicates: JsonObject[] = [];
+    const diagnostics: JsonObject[] = [];
+    const validations: JsonObject[] = [];
+    const batches: string[] = [];
+    let rows = 0;
+    chosen.forEach((file, index) => {
+      const spec = STATEMENTS[file.name] ?? STATEMENT;
+      const sha = bytesOf(file.name);
+      // Apply takes exactly the files the preview read, unchanged since.
+      if (Array.isArray(expected) && expected[index] !== sha) {
+        refused.push({ file_name: file.name, reason_code: "source_changed" });
+        return;
+      }
+      if (spec.stops) throw new Stopped(spec.stops);
+      // The format's reader is not part of this installation.
+      if (spec.installed === false) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "format_not_installed",
+        });
+        return;
+      }
+      // Where the local AI is not set up, or no model is picked to read
+      // with, a PDF statement, which only the local AI reads, is refused for
+      // it; a missing choice serves the step that leads to it.
+      if ((readerMissing || readingStep) && file.name.endsWith(".pdf")) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "reader_unavailable",
+          ...(readingStep && !readerMissing ? { next_step: readingStep } : {}),
+        });
+        return;
+      }
+      if (!spec.readable) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "transaction_validation",
+        });
+        return;
+      }
+      // The own account the statement names, if one is registered, and the
+      // mask of the account it names, by which only a mask is ever shown.
+      let held = ledger.accounts.find(
+        (known) =>
+          known.own_account_id === spec.names ||
+          (spec.mask !== undefined && known.masked_iban === spec.mask),
+      );
+      const mask = held?.masked_iban ?? spec.mask ?? null;
+      // A chosen account that the file's own rows contradict refuses it.
+      if (
+        account !== null &&
+        mask !== null &&
+        held?.own_account_id !== account
+      ) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "own_account_mismatch",
+        });
+        return;
+      }
+      if (registration !== null && mask === null) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "statement_account_missing",
+        });
+        return;
+      }
+      const nextId = `acc-${String(ledger.accounts.length + 1).padStart(2, "0")}`;
+      let provisional: string | null = null;
+      if (registration !== null && held === undefined && dryRun)
+        provisional = nextId;
+      else if (registration !== null && held === undefined) {
+        held = {
+          own_account_id: nextId,
+          label: text(registration.label) ?? mask!,
+          holding:
+            registration.holding === "cotitular" ? "cotitular" : "titular",
+          masked_iban: mask!,
+          country_code: mask!.slice(0, 2),
+          sepa_marca: "1",
+          has_swift_bic: false,
+          has_bank_block: false,
+          currency: "EUR",
+          opened_on: null,
+          closed_on: null,
+        };
+        ledger.accounts.push(held);
+        registered = held.own_account_id;
+      }
+      // Read against the register as it stands after any registration.
+      if (mask !== null)
+        statements.push({
+          file_index: index,
+          masked_iban: mask,
+          own_account_id: held?.own_account_id ?? null,
+          registrable: held === undefined,
+        });
+      const bound = account ?? held?.own_account_id ?? provisional;
+      const read = statementRows(file.name, bound).filter(
+        (row) => !span || (row.date >= span[0] && row.date <= span[1]),
+      );
+      digests.push({ file_index: index, sha256: sha });
+      validations.push({ valid: true, warning_count: 0, encoding: "utf-8" });
+      rows += read.length;
+      const days = new Set<string>();
+      const fresh: string[] = [];
+      let stored = 0;
+      for (const row of read) {
+        const day = `${row.date}:${row.amount}`;
+        if (transactionOf(row.id)) {
+          skipped.push(ref(row.id));
+          stored += 1;
+          continue;
+        }
+        const likely =
+          days.has(day) ||
+          ledger.movements.some(
+            (movement) =>
+              `${movement.transaction.date}:${movement.transaction.amount}` ===
+              day,
+          );
+        days.add(day);
+        imported.push(ref(row.id));
+        fresh.push(row.id);
+        if (likely) duplicates.push(ref(row.id));
+        if (dryRun) continue;
+        const created = now();
+        ledger.movements.push({
+          transaction: {
+            ...fixtureTemplate(),
+            transaction_id: row.id,
+            date: row.date,
+            booked_date: row.date,
+            value_date: row.date,
+            amount: row.amount,
+            direction: row.direction,
+            description: row.description,
+            created_at: created,
+            modified_at: created,
+          },
+          group_label: null,
+          own_account_id: bound,
+          import_batch_id: null,
+          issue: likely ? "duplicate" : null,
+          sealed: false,
+          llm_rejected: false,
+          idempotency_key: null,
+          withholding: [],
+        });
+      }
+      // The rows already stored are named once, as the application does.
+      if (verify && stored > 0)
+        diagnostics.push({
+          kind: "duplicate",
+          severity: "info",
+          message:
+            stored === read.length
+              ? "transactions.import.all_rows_already_in_ledger"
+              : "transactions.import.some_rows_already_in_ledger",
+          affected_transaction_ids: [],
+        });
+      if (verify && spec.gap && read.length > 0)
+        diagnostics.push({
+          kind: "gap",
+          severity: "warning",
+          message: "transactions.import.message_829073",
+          affected_transaction_ids: [],
+        });
+      if (!dryRun && fresh.length > 0) {
+        const batch = hex64(`batch:${fresh.join(",")}`);
+        batches.push(batch);
+        for (const id of fresh) transactionOf(id)!.import_batch_id = batch;
+      }
+    });
+    return {
+      profile_id: profile,
+      rows,
+      imported: imported.length,
+      skipped: skipped.length,
+      likely_duplicates: duplicates.length,
+      dry_run: dryRun,
+      verify,
+      period: period as unknown as JsonValue,
+      bucket_id: profile,
+      // Files that each import have no single batch between them.
+      import_batch_id: batches.length === 1 ? batches[0]! : null,
+      bucket_event_ids: dryRun || imported.length === 0 ? [] : events(),
+      imported_transaction_refs: imported,
+      skipped_transaction_refs: skipped,
+      likely_duplicate_transaction_refs: duplicates,
+      validations,
+      sources: chosen.map(() => ({ requested: false, sha256: null })),
+      diagnostics,
+      refused_files: refused,
+      source_digests: digests,
+      statement_accounts: statements,
+      registered_own_account_id: registered,
+    };
+  }
+
+  /** The registered refusal of an invoice book, with the sentence the
+   * product serves for it and the columns it names. */
+  const bookRefusal = (
+    code: string,
+    words: string,
+    context: { key: string; value: string }[] = [],
+  ) =>
+    new InvoiceStopped(code, {
+      detail_version: 1,
+      kind: "registered_error",
+      error_code: code,
+      message_key: null,
+      context,
+      context_entries_omitted: 0,
+      precondition_verdict_json: null,
+      refusal_words: words,
+      refusal_words_language: "en",
+    });
+
+  /** An invoice book: read in a preview that writes nothing, which says what
+   * each column means and who settled it, then imported row by row with the
+   * meanings it was sent. A refused row leaves the others, and a row the
+   * catalogue already holds is skipped. */
+  function importInvoiceBook(request: JsonObject): JsonObject {
+    const file = fileOf(request.source_path, "invoice_books");
+    const kind = request.kind;
+    if (kind !== "issued" && kind !== "received") return invalid();
+    const country = text(request.country);
+    if (country !== null && !/^[A-Z]{2}$/.test(country)) return invalid();
+    const sha = bytesOf(file.name);
+    const expected = text(request.source_sha256);
+    if (expected !== null && expected !== sha)
+      throw bookRefusal(
+        "ERROR_INVOICE_IMPORT_SOURCE_CHANGED",
+        "The file changed after the preview. Preview it again.",
+      );
+    const book = BOOKS[file.name] ?? BOOKS["libro-facturas-emitidas-2026.csv"]!;
+    const sent = request.column_roles ?? null;
+    // The roles the person set win over the book's own names and the local
+    // AI; each meaning but "not used" belongs to one column.
+    const roles = book.columns.map((column) => column.role);
+    const origins = book.columns.map((column) => column.source as string);
+    if (sent !== null) {
+      if (!Array.isArray(sent)) return invalid();
+      const held = new Set<string>();
+      for (const item of sent as JsonObject[]) {
+        const at = item.column_index;
+        const role = item.role;
+        if (
+          typeof at !== "number" ||
+          !Number.isInteger(at) ||
+          at < 0 ||
+          at >= roles.length ||
+          typeof role !== "string" ||
+          (role !== "unmapped" &&
+            !BOOK_ROLES.some((known) => known.role === role)) ||
+          (role !== "unmapped" && held.has(role))
+        )
+          return invalid();
+        if (role !== "unmapped") held.add(role);
+        roles[at] = role;
+        origins[at] = "operator";
+      }
+    }
+    const missing = BOOK_ROLES.filter(
+      (known) => known.required && !roles.includes(known.role),
+    ).map((known) => known.field);
+    if (request.preview === true)
+      return {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        source_sha256: sha,
+        rows: book.rows,
+        created: 0,
+        skipped_duplicate: 0,
+        refused: [],
+        created_invoice_ids: [],
+        unmapped_column_headers: [],
+        mapping_reasons: [],
+        preview: true,
+        row_count: book.rows,
+        columns: book.columns.map((column, at) => ({
+          column_index: at,
+          header: column.header,
+          role: roles[at]!,
+          source: origins[at]!,
+        })),
+        missing_fields: missing,
+        assignable_roles: BOOK_ROLES as unknown as JsonValue,
+        reader_unavailable_verdict: book.readerUnavailable
+          ? { cause: "reader_unavailable" }
+          : null,
+      };
+    if (missing.length > 0)
+      throw bookRefusal(
+        "ERROR_INVOICE_IMPORT_COLUMNS_MISSING",
+        `The book supplies no column for: ${missing.join(", ")}.`,
+        [
+          { key: "missing_columns", value: missing.join(", ") },
+          {
+            key: "unmapped_columns",
+            value: book.columns
+              .filter((_, at) => roles[at] === "unmapped")
+              .map((column) => column.header)
+              .join(", "),
+          },
+        ],
+      );
+    if (book.rows === 0)
+      throw bookRefusal(
+        "ERROR_INVOICE_IMPORT_NO_ROWS",
+        `The book holds no invoice rows under its columns: ${book.columns
+          .map((column) => column.header)
+          .join(", ")}.`,
+        [
+          { key: "missing_columns", value: "" },
+          { key: "unmapped_columns", value: "none" },
+        ],
+      );
+    const refusals = BOOK_REFUSALS[file.name] ?? [];
+    const rows = book.rows;
+    const created: string[] = [];
+    let skippedDuplicate = 0;
+    const template = ledger.invoices.find((invoice) => invoice.kind === kind);
+    for (let row = 2; row < rows + 2; row += 1) {
+      if (refusals.some((refusal) => refusal.row_number === row)) continue;
+      // The book's first row repeats an invoice the catalogue holds.
+      const id =
+        row === 2 && template
+          ? template.invoice_id
+          : hex64(`book:${file.name}:${kind}:${row}`);
+      if (ledger.invoices.some((invoice) => invoice.invoice_id === id)) {
+        skippedDuplicate += 1;
+        continue;
+      }
+      const baseCents = 4000 + row * 1250;
+      const ivaCents = Math.round(baseCents * 0.21);
+      const issued = `${fixtureYear}-${String(1 + (row % 9)).padStart(2, "0")}-1${row % 9}`;
+      ledger.invoices.push({
+        ...(template ?? ledger.invoices[0]!),
+        invoice_id: id,
+        kind,
+        invoice_number: `LIB-${fixtureYear}-${String(row).padStart(3, "0")}`,
+        issued_at: issued,
+        operation_date: issued,
+        counterparty_name: `Proveedor del libro ${row}, S.L.`,
+        counterparty_tax_id: `B0000${String(row).padStart(4, "0")}`,
+        counterparty_country: country ?? "ES",
+        base_total: { decimal: money(baseCents) },
+        iva_total: { decimal: money(ivaCents) },
+        grand_total: { decimal: money(baseCents + ivaCents) },
+        payment_status: "PENDING",
+        linked_transaction_ids: [],
+        source_filename: file.name,
+        source_sha256: sha,
+        source_row_index: row,
+        lines: [],
+      });
+      created.push(id);
+    }
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      source_sha256: sha,
+      rows,
+      created: created.length,
+      skipped_duplicate: skippedDuplicate,
+      refused: refusals as unknown as JsonValue,
+      created_invoice_ids: created,
+      unmapped_column_headers: book.columns
+        .filter((_, at) => roles[at] === "unmapped")
+        .map((column) => column.header),
+      mapping_reasons: [],
+    };
+  }
+
+  /** Documents added as evidence: a PDF or an XML is read at once, an image
+   * waits for its reading, and a document already held is left as it is.
+   * Where the local AI is not set up, an image cannot be read: it is paused,
+   * and the run's pause names the local AI's setup. */
+  function addDocuments(request: JsonObject): JsonObject {
+    const sources = request.sources;
+    const direction = request.direction;
+    if (!Array.isArray(sources) || sources.length === 0) return invalid();
+    if (direction !== "issued" && direction !== "received") return invalid();
+    const items: JsonObject[] = [];
+    let writes = 0;
+    let paused = false;
+    for (const token of sources) {
+      const file = fileOf(token, "documents");
+      const address = hex64(`document:${bytesOf(file.name)}`);
+      const kind = file.name.split(".").pop()?.toLowerCase() ?? "";
+      const image = kind !== "pdf" && kind !== "xml";
+      const held = ledger.evidence.some(
+        (record) => record.source_sha256 === address,
+      );
+      if (image && !held && readerMissing) {
+        paused = true;
+        items.push({
+          content_address: address,
+          identity: `${address}:${direction}`,
+          direction,
+          source_name: file.name,
+          status: "paused",
+          refusal_code: null,
+          refusal_verdict: null,
+          needed_inference: true,
+          label_reading_fallback: null,
+        });
+        continue;
+      }
+      if (!held) {
+        writes += 1;
+        const at = now();
+        ledger.evidence.push({
+          evidence_id: hex64(`evidence:${address}`),
+          bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+          source_sha256: address,
+          attachment_id: address,
+          media_kind: image ? "image" : "pdf",
+          supplier: null,
+          invoice_number: null,
+          invoice_date: null,
+          taxable_base: null,
+          iva_rate: null,
+          iva_amount: null,
+          notes: "",
+          created_at: at,
+          updated_at: at,
+          ...readableFile(image ? "image" : "pdf", at),
+          source_path: file.name,
+        });
+      }
+      items.push({
+        content_address: address,
+        identity: `${address}:${direction}`,
+        direction,
+        source_name: file.name,
+        status: held ? "no_op" : image ? "pending_review" : "ingested",
+        refusal_code: null,
+        refusal_verdict: null,
+        needed_inference: image,
+        label_reading_fallback: null,
+      });
+    }
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      write_count: writes,
+      effect: writes > 0 ? "updated" : "none",
+      direction,
+      run: {
+        items,
+        unresolved: [],
+        inference_pause: paused ? readerPause() : null,
+      },
+    };
+  }
+
+  /** The pause a batch reports when the local AI's program is not set up. */
+  function readerPause(): JsonObject {
+    return { facts: [{ name: "local_ai_state", value: "absent" }] };
+  }
+
+  return { importStatement, importInvoiceBook, addDocuments };
+}

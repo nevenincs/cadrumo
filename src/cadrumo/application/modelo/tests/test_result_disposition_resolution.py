@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.errors.hierarchy import CoreValidationError
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
@@ -23,6 +22,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..result_disposition_resolution import resolve_modelo_result_disposition
 
@@ -74,7 +74,9 @@ def _work_unit(*, modelo: str, filing_year: int, period_code: str, revision_id: 
     )
 
 
-def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+def _verified_revision_with(
+    work_unit: WorkUnit, values: dict[CasillaId, Decimal], observations: tuple[CasillaObservation, ...]
+) -> CalculationRevision:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -94,12 +96,7 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         casilla_values=values,
-        observations=registry_grounded_observations(
-            modelo=str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-            casilla_values=values,
-        ),
+        observations=observations,
         created_at=_NOW,
         updated_at=_NOW,
         verified_at=_NOW,
@@ -109,27 +106,24 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
     )
 
 
-def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=values,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=work_unit.modelo,
-            revision_id=work_unit.revision_id,
-            modelo_year=work_unit.filing_year,
+def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+    return _verified_revision_with(
+        work_unit,
+        values,
+        registry_grounded_observations(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
+            casilla_values=values,
         ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        casilla_values=values,
-        observations=tuple(
+    )
+
+
+def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+    return _verified_revision_with(
+        work_unit,
+        values,
+        tuple(
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=value,
@@ -138,12 +132,6 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
             )
             for casilla_id, value in values.items()
         ),
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        filing_instance_evidence=None,
-        source_provenance=(),
     )
 
 
@@ -187,7 +175,7 @@ def test_m123_result_disposition_uses_revision_specific_canonical_result_casilla
         revision_id=revision_id,
     )
     revision = _verified_revision(work_unit, {result_casilla: Decimal("223.44")})
-    profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    profile = TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
     disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
@@ -212,11 +200,11 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
         {_M200_PRINTED_RESULT_NUMBER: Decimal("5000.00")},
     )
 
-    with pytest.raises(CoreValidationError) as exc_info:
+    with pytest.raises(ModeloValidationError) as exc_info:
         resolve_modelo_result_disposition(
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
+            workflow_profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
             period=work_unit.period,
         )
 
@@ -241,11 +229,11 @@ def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_meta
         {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("5000.00")},
     )
 
-    with pytest.raises(CoreValidationError) as exc_info:
+    with pytest.raises(ModeloValidationError) as exc_info:
         resolve_modelo_result_disposition(
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
+            workflow_profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
             period=work_unit.period,
         )
 

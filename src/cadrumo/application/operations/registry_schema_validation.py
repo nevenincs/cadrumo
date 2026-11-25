@@ -21,8 +21,8 @@ from pydantic.json_schema import DefsRef, GenerateJsonSchema, JsonRef
 
 from ...core.hex import HEX_PATTERN_64
 from ...core.type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_str_keyed_dict
-from ._dataclass_fields import dataclass_instance_fields
-from ._model_contract import require_strict_frozen_operation_model_graph
+from .dataclass_fields import dataclass_instance_fields
+from .model_contract import require_strict_frozen_operation_model_graph
 
 #: Field-name tokens a credential-free journal request may not carry.
 #:
@@ -103,7 +103,7 @@ _SCHEMA_COMPILATION_MEMO: ContextVar[_SchemaCompilationMemo | None] = ContextVar
 _SCHEMA_ATOMIC_TYPES = frozenset((str, int, float, bool, bytes, type(None)))
 
 
-class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
+class UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
     """Avoid definition deduplication only when every preferred name is unique.
 
     Pydantic's naming fixed point hashes each definition under multiple aliases.
@@ -120,11 +120,7 @@ class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
             alternatives = choices.get(original)
             if not (alternatives is not None and alternatives):
                 return super()._build_definitions_remapping()
-            for alternative in alternatives:
-                if alternative in owners and owners[alternative] != original:
-                    owners[alternative] = None
-                else:
-                    owners[alternative] = original
+            _register_alternative_owners(original, alternatives, owners)
         if any(owners[choices[original][0]] != original for original in self.definitions):
             return super()._build_definitions_remapping()
         definitions: dict[DefsRef, DefsRef] = {}
@@ -142,6 +138,18 @@ class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
         remapping.defs_remapping.update(definitions)
         remapping.json_remapping.update(references)
         return remapping
+
+
+def _register_alternative_owners(
+    original: DefsRef,
+    alternatives: list[DefsRef],
+    owners: dict[DefsRef, DefsRef | None],
+) -> None:
+    for alternative in alternatives:
+        if alternative in owners and owners[alternative] != original:
+            owners[alternative] = None
+        else:
+            owners[alternative] = original
 
 
 @contextmanager
@@ -214,10 +222,7 @@ def _model_schema_graph_state(
         elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
             if annotation in graph:
                 return
-            if not annotation.__pydantic_complete__:
-                annotation.model_rebuild()
-                if rebuilt_models is not None:
-                    rebuilt_models.add(annotation)
+            _complete_graph_model(annotation, rebuilt_models)
             graph[annotation] = (
                 _schema_state(annotation.model_config, snapshots),
                 annotation.model_json_schema,
@@ -231,6 +236,13 @@ def _model_schema_graph_state(
 
     visit(model_type)
     return graph
+
+
+def _complete_graph_model(annotation: type[BaseModel], rebuilt_models: set[type[BaseModel]] | None) -> None:
+    if not annotation.__pydantic_complete__:
+        annotation.model_rebuild()
+        if rebuilt_models is not None:
+            rebuilt_models.add(annotation)
 
 
 def _field_schema_state(field: FieldInfo, snapshots: dict[int, tuple[object, object]]) -> object:
@@ -491,7 +503,7 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     original_core_schemas = (
         {nested: nested.__pydantic_core_schema__ for nested in model_graph} if model_graph is not None else {}
     )
-    closed_schema = _generate_closed_model_schema(model_type)
+    closed_schema = generate_closed_model_schema(model_type)
     _remember_compiled_model_schema(
         memo,
         model_type,
@@ -500,6 +512,28 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
         original_core_schemas,
     )
     return closed_schema
+
+
+def strict_model_input_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
+    """Return the closed schema of a typed input a frontend sends, after enforcing the public model baseline.
+
+    A transient input is validated and never serialized back to a client, so
+    its contract is the validation shape alone. A field the model keeps out of
+    every dump, such as an entry as the filer typed it, is part of what the
+    frontend sends while appearing in no serialization; requiring both shapes
+    to agree would refuse exactly the inputs that withhold such a value.
+    """
+    require_strict_frozen_operation_model_graph(model_type, path="input schema")
+    try:
+        schema: object = model_type.model_json_schema(
+            mode="validation", schema_generator=UnambiguousDefinitionsSchemaGenerator
+        )
+    except PydanticInvalidForJsonSchema as error:
+        raise ValueError("typed input schema model must have a closed JSON schema") from error
+    if not is_str_keyed_dict(schema):
+        raise ValueError("typed input schema model must have a closed JSON schema")
+    validate_closed_json_schema(schema, path=model_type.__name__)
+    return schema
 
 
 def _active_schema_compilation_memo() -> _SchemaCompilationMemo | None:
@@ -524,7 +558,7 @@ def _cached_model_schema(
     return _copy_model_schema(compiled.schema)
 
 
-def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, object]:
+def generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Generate both public schema modes and validate their closed shape."""
     validation_schema: object
     serialization_schema: object
@@ -533,10 +567,10 @@ def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, obje
             BaseModel.model_json_schema, "__func__", None
         ):
             validation_schema = model_type.model_json_schema(
-                mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+                mode="validation", schema_generator=UnambiguousDefinitionsSchemaGenerator
             )
             serialization_schema = model_type.model_json_schema(
-                mode="serialization", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+                mode="serialization", schema_generator=UnambiguousDefinitionsSchemaGenerator
             )
         else:
             # An overridden or decorated model method remains authoritative.
@@ -693,6 +727,7 @@ __all__ = [
     "is_hex64_string_schema",
     "operation_schema_compilation_scope",
     "reject_secret_capable_schema_branch",
+    "strict_model_input_json_schema",
     "strict_model_json_schema",
     "validate_closed_array_schema",
     "validate_closed_json_schema",

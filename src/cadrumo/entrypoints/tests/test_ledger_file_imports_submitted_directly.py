@@ -53,13 +53,13 @@ _LATER_STATEMENT = (
 _NOT_A_STATEMENT = "colonna_a,colonna_b\nvalore,altro\n"
 _INVOICE_BOOK = (
     b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,currency,country_code\n"
-    b"B12345674,Synthetic Supplier,BOOK-2025-001,2025-02-03,100.00,21,EUR,ES\n"
-    b"B12345674,Synthetic Supplier,BOOK-2025-002,2025-02-10,200.00,21,EUR,ES\n"
+    b"B00015016,Synthetic Supplier,BOOK-2025-001,2025-02-03,100.00,21,EUR,ES\n"
+    b"B00015016,Synthetic Supplier,BOOK-2025-002,2025-02-10,200.00,21,EUR,ES\n"
 )
 
 
 def _submit(
-    driver: conformance._ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> OperationObservationSuccessV1:
     async def run() -> OperationObservationSuccessV1:
         submitted, _observed = await driver.run(
@@ -71,7 +71,7 @@ def _submit(
 
 
 def _statement_import(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     profile_id: UUID,
     *,
@@ -87,7 +87,7 @@ def _statement_import(
         ),
     )
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, observed.projection
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -178,7 +178,7 @@ def test_a_directory_with_nothing_to_import_and_an_over_long_plan_are_refused_by
 
 
 def _invoice_import(
-    driver: conformance._ExecutionDriver, profile_id: UUID, book: Path, *, digest: str | None
+    driver: conformance.ExecutionDriver, profile_id: UUID, book: Path, *, digest: str | None
 ) -> OperationObservationSuccessV1:
     return _submit(
         driver,
@@ -197,7 +197,7 @@ def test_an_invoice_book_submitted_with_no_digest_is_imported_and_its_digest_ret
     book = tmp_path / "invoice-book.csv"
     book.write_bytes(_INVOICE_BOOK)
     with (
-        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.family_environment_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
         ) as (
@@ -210,7 +210,7 @@ def test_an_invoice_book_submitted_with_no_digest_is_imported_and_its_digest_ret
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, observed.projection
         assert observed.projection.effect is OperationEffect.UPDATED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -237,7 +237,7 @@ def test_an_invoice_book_is_held_to_the_digest_a_caller_supplies(
     book.write_bytes(_INVOICE_BOOK)
     matches = supplied == "the-files-own"
     with (
-        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.family_environment_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
         ) as (
@@ -256,7 +256,7 @@ def test_an_invoice_book_is_held_to_the_digest_a_caller_supplies(
             assert stored == {}
             return
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, observed.projection
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=INVOICE_IMPORT_OPERATION_DEFINITION_ID,

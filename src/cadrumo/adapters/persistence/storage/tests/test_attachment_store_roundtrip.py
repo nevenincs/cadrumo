@@ -22,18 +22,26 @@ as a strict ``bytes`` / pydantic inequality.
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import Row, select, update
 
 from .....core.config import override_settings
 from .....core.errors.error_codes import build_error_envelope, resolve_error_message
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError
 from .....domain.attachments.models import Attachment
+from .....domain.attachments.service import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
+    add_attachment,
+    link_attachment_invoice,
+    link_attachment_transaction,
+)
 from ..attachment import AttachmentStore
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
@@ -42,8 +50,8 @@ from ..crypto.encrypted_columns import (
 )
 from ..secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE, ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
-from ..sql.orm import SecureObjectRow
 from ..sql.session import session_scope
+from ..sql.tables import secure_objects_table
 from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -73,7 +81,7 @@ _MALFORMED_MANIFEST_PAYLOAD_CASES: tuple[_MalformedManifestPayloadCase, ...] = (
 )
 
 
-def _row_payload_aad(row: SecureObjectRow) -> bytes:
+def _row_payload_aad(row: Row[Any]) -> bytes:
     """Reconstruct the row's payload AEAD associated data for corruption probes.
 
     The secure-object payload is encrypted with the row identity bound into the
@@ -84,25 +92,29 @@ def _row_payload_aad(row: SecureObjectRow) -> bytes:
     return secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
 
 
-def _decrypt_row_content(row: SecureObjectRow) -> bytes:
+def _decrypt_row_content(row: Row[Any]) -> bytes:
     return decrypt_secure_object_payload(bytes(row.payload), associated_data=_row_payload_aad(row))
 
 
-def _encrypt_row_content(row: SecureObjectRow, content: bytes) -> bytes:
+def _encrypt_row_content(row: Row[Any], content: bytes) -> bytes:
     return encrypt_secure_object_payload(content, associated_data=_row_payload_aad(row))
 
 
 def _manifest_row_statement(attachment_id: str) -> Any:
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
-        SecureObjectRow.object_key == attachment_id,
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == attachment_id,
     )
 
 
 def _replace_manifest_row_payload(engine: Any, attachment_id: str, payload: bytes) -> None:
     with session_scope(engine) as session:
-        row = session.execute(_manifest_row_statement(attachment_id)).scalar_one()
-        row.payload = _encrypt_row_content(row, payload)
+        row = session.execute(_manifest_row_statement(attachment_id)).one()
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(payload=_encrypt_row_content(row, payload)),
+        )
 
 
 def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
@@ -245,7 +257,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
     sha256 is mutated post-save (without also rewriting
     attachment_id) must fail load via the model_validator.
 
-    Persists a manifest, reaches into ``SecureObjectRow`` via
+    Persists a manifest, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically flips the sha256 field to a
     different digest while leaving attachment_id intact, and asserts
     the load path catches the drift.
@@ -359,3 +371,64 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
                     "surface": "attachment_store",
                     "violation": "manifest_payload",
                 }, f"{case_label}:{read_path}"
+
+
+class _RecordCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+def test_attachment_ingest_and_link_logs_omit_digests_and_relations(tmp_path: Path) -> None:
+    """Plaintext diagnostics must not carry content digests or protected record relations."""
+
+    invoice_id = "inv-log-canary-7f3a"
+    transaction_id = "tx-log-canary-91c2"
+    payload = b"%PDF-1.4\n%attachment-log-redaction-canary\n" + b"\x00" * 32
+    digest = hashlib.sha256(payload).hexdigest()
+    collector = _RecordCollector()
+    loggers = [
+        logging.getLogger("cadrumo.adapters.persistence.storage.attachment"),
+        logging.getLogger("cadrumo.domain.attachments.service"),
+    ]
+    previous_levels = [logger.level for logger in loggers]
+    for logger in loggers:
+        logger.addHandler(collector)
+        logger.setLevel(logging.DEBUG)
+    try:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+            store = AttachmentStore()
+            request = AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="invoice.pdf",
+                mime_type="application/pdf",
+                captured_at=_CAPTURED_AT,
+                bucket_id=_BUCKET_ID,
+            )
+            attachment = add_attachment(store, content=AttachmentBytesContent(data=payload), request=request)
+            add_attachment(store, content=AttachmentBytesContent(data=payload), request=request)
+            link_attachment_invoice(store, attachment_id=attachment.attachment_id, invoice_id=invoice_id)
+            linked = link_attachment_transaction(
+                store, attachment_id=attachment.attachment_id, transaction_id=transaction_id
+            )
+    finally:
+        for logger, level in zip(loggers, previous_levels, strict=True):
+            logger.removeHandler(collector)
+            logger.setLevel(level)
+
+    assert attachment.attachment_id == digest
+    assert linked.linked_invoice_ids == (invoice_id,)
+    assert linked.linked_transaction_ids == (transaction_id,)
+    messages = [record.getMessage() for record in collector.records]
+    assert f"stored attachment object bytes={len(payload)}" in messages
+    assert "reusing existing attachment object" in messages
+    assert "linked attachment to invoice" in messages
+    assert "linked attachment to transaction" in messages
+    for message in messages:
+        for protected in (digest, digest[:12], invoice_id, transaction_id):
+            assert protected not in message, message

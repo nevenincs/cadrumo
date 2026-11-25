@@ -39,6 +39,37 @@ test.beforeEach(() => {
   scenarioOnly("the stored documents are the scenario host's");
 });
 
+test("every sent filename is readable and the remainder opens by keyboard", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openConversation(target, "¿Puedo deducir los gastos del coche?");
+  const turn = personTurns(target).filter({ hasText: "Uso el coche" });
+  const more = turn.locator("summary");
+  await expect(more).toHaveText(
+    label("desktop.agent.more_files", { count: 2 }),
+  );
+  const names = Array.from(
+    { length: 7 },
+    (_, at) => `anexo-${at + 1}-${"documentacion-".repeat(9)}vehiculo.pdf`,
+  );
+  await expect(turn.getByText(names[6]!, { exact: true })).toBeHidden();
+  await more.focus();
+  await more.press("Enter");
+  for (const name of names) {
+    const text = turn.getByText(name, { exact: true });
+    await expect(text).toBeVisible();
+    expect(
+      await text.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+    ).toBe(true);
+  }
+  await more.press("Tab");
+  await expect(turn.locator("details ul")).toBeFocused();
+  await more.focus();
+  await more.press("Space");
+  await expect(turn.getByText(names[6]!, { exact: true })).toBeHidden();
+});
+
 test("an @ lists every stored document above the composer, and the list scrolls", async ({
   page: target,
 }) => {
@@ -47,10 +78,13 @@ test("an @ lists every stored document above the composer, and the list scrolls"
   await field(target).click();
   await field(target).pressSequentially("@");
   await expect(options(target)).toHaveCount(244);
-  // Every page was read, one after another.
+  // The header reads every page for its count; each new @ reads them again.
   expect(
     (await calls(target)).filter((call) => call.startsWith("agentDocuments")),
   ).toEqual([
+    "agentDocuments c-iva-t3",
+    "agentDocuments c-iva-t3 after factura-2026-099.pdf",
+    "agentDocuments c-iva-t3 after factura-2026-199.pdf",
     "agentDocuments c-iva-t3",
     "agentDocuments c-iva-t3 after factura-2026-099.pdf",
     "agentDocuments c-iva-t3 after factura-2026-199.pdf",
@@ -168,7 +202,7 @@ test("a chosen document goes with the message by reference and is shown with it"
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api attachments factura-2026-031.pdf"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments factura-2026-031.pdf"]);
   expect(
     (await calls(target)).filter((call) => /upload|register/i.test(call)),
   ).toEqual([]);
@@ -206,7 +240,7 @@ test("a removed document does not go with the message", async ({
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api"]);
 });
 
 test("the documents a message named are shown with it when the conversation is read again", async ({
@@ -300,7 +334,7 @@ test("attached files are stored in the conversation, then named like any stored 
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api attachments recibo-luz.pdf"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments recibo-luz.pdf"]);
 });
 
 test("attaching to a conversation not started yet reserves it first", async ({

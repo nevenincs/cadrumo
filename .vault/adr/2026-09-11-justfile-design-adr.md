@@ -8,9 +8,9 @@ related:
 supersedes:
   - '2026-06-04-just-tooling-bootstrap-adr'
   - '2026-06-09-justfile-redesign-adr'
-modified: '2026-10-02'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:27782bd9b5c7ebb603c918c21f920b9ff9be23a94f2807221a953b953901b4d6'
+body_hash: 'sha256:ea4c101265ec6432a17321efe98377810aefc26426cc32fab3142ac542bb0dd1'
 ---
 # `justfile-design` adr: `Operator-intent command and tooling boundaries` | (**status:** `accepted`)
 
@@ -73,7 +73,7 @@ Within `dev/`, each primitive fact has one semantic owner. Alternate implementat
 
 ### Required public surface
 
-The setup surface is `init`, minimal `setup`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. `init` is the canonical repository initialization command. Its Python and tooling phases use the same owners as the bounded provisioning operations. Diagnosis is `doctor-product` and `doctor-browser`. The 2026-10-02 operator instruction removes the separate `setup-python`, `doctor-dev`, and `doctor-python` commands and the unused developer-toolchain doctor implementation. Remediation for stale Python dependencies points to `just init`; host requirements remain the initializer's preflight responsibility.
+The setup surface is `init`, minimal `setup`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. `init` is the canonical repository initialization command. Its Python and tooling phases use the same owners as the bounded provisioning operations. Diagnosis is `doctor-browser`, a developer recipe for the test lanes' managed browser. The 2026-10-02 operator instruction removes the separate `setup-python`, `doctor-dev`, and `doctor-python` commands and the unused developer-toolchain doctor implementation. Remediation for stale Python dependencies points to `just init`; host requirements remain the initializer's preflight responsibility.
 
 Blocking subjects are `check-code`, `check-registry`, and `check-repository`, with `check-hooks` retained only as non-aggregated hook replay and dependency vulnerabilities exposed as an explicit blocking security check. Registry leaves distinguish validity, oracle bindings, per-target currentness, authority currency, and exact artifact-backed runtime loadability.
 

@@ -61,7 +61,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 #: Private-use characters delimiting a mark's number inside a compiled page.
 #: Adjacent to, and deliberately distinct from, the stored form's slot
@@ -159,17 +159,17 @@ def mark_number(mark: str) -> int:
     return int(matched.group(1), len(_DIGITS))
 
 
-def _docutils_text(value: str) -> str:
+def docutils_text(value: str) -> str:
     """Return one string as a docutils writer writes it into a text node."""
     return value.translate(_DOCUTILS_SPECIAL)
 
 
-def _docutils_attribute(value: str) -> str:
+def docutils_attribute(value: str) -> str:
     """Return one string as a docutils writer writes it into an attribute value."""
     return _ATTRIBUTE_WHITESPACE.sub(" ", value).translate(_DOCUTILS_SPECIAL)
 
 
-def _jinja(value: str) -> str:
+def jinja(value: str) -> str:
     """Return one string as Jinja escapes it into a template's output.
 
     ``markupsafe`` escapes ``&``, ``<`` and ``>`` like docutils does, leaves
@@ -178,7 +178,7 @@ def _jinja(value: str) -> str:
     return html.escape(value, quote=False).replace('"', "&#34;").replace("'", "&#39;")
 
 
-def _template_title(value: str) -> str:
+def template_title(value: str) -> str:
     """Return one string as the theme's ``<title>`` carries it.
 
     The template is handed the title already written as HTML, then strips its
@@ -187,7 +187,7 @@ def _template_title(value: str) -> str:
     page is the plain string, whitespace folded, escaped the way
     ``markupsafe`` escapes rather than the way docutils does.
     """
-    return _jinja(" ".join(value.split()))
+    return jinja(" ".join(value.split()))
 
 
 #: What the docutils smart-quotes transform is asked to educate: quotation
@@ -196,7 +196,7 @@ def _template_title(value: str) -> str:
 _SMARTQUOTES_ACTION: Final[str] = "qDe"
 
 
-def _educated(value: str, language: str) -> str:
+def compile_slots_educated(value: str, language: str) -> str:
     """Return one string with the typography the language's own build gives it.
 
     Sphinx educates quotation marks, dashes and ellipses in every text block
@@ -216,7 +216,7 @@ def _educated(value: str, language: str) -> str:
     return "".join(str(piece) for piece in educated)
 
 
-def _minimal(value: str) -> str:
+def compile_slots_minimal(value: str) -> str:
     """Return one string as BeautifulSoup's minimal formatter writes it.
 
     ``&``, ``<`` and ``>`` and nothing else, in text and in an attribute value
@@ -225,7 +225,7 @@ def _minimal(value: str) -> str:
     return html.escape(value, quote=False)
 
 
-def _resouped(markup: str) -> str:
+def resouped(markup: str) -> str:
     """Return one stretch of markup as BeautifulSoup writes it back.
 
     Furo hands the writer's toctree markup to BeautifulSoup and writes
@@ -269,14 +269,14 @@ def _message_written(position: Position, markup: str, plain: str) -> str:
     if position is Position.MARKUP:
         raise CompileSlotsError(f"a message reached page markup rather than text or an attribute: {plain!r}")
     if position is Position.TITLE:
-        return _template_title(plain)
+        return template_title(plain)
     if position is Position.NAVIGATION_TEXT:
-        return _resouped(markup)
+        return resouped(markup)
     if position is Position.NAVIGATION_ATTRIBUTE:
-        return _minimal(plain)
+        return compile_slots_minimal(plain)
     if position is Position.ENTRY_TEXT:
-        return _docutils_text(plain)
-    return _docutils_attribute(plain)
+        return docutils_text(plain)
+    return docutils_attribute(plain)
 
 
 def _plain_written(position: Position, value: str) -> str:
@@ -287,13 +287,13 @@ def _plain_written(position: Position, value: str) -> str:
     or a word of Sphinx's own that the writer put into a finished page.
     """
     if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
-        return _minimal(value)
+        return compile_slots_minimal(value)
     if position in {Position.TEXT, Position.ENTRY_TEXT}:
-        return _docutils_text(value)
+        return docutils_text(value)
     if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
-        return _docutils_attribute(value)
+        return docutils_attribute(value)
     if position is Position.TITLE:
-        return _template_title(value)
+        return template_title(value)
     raise CompileSlotsError(f"an uneducated string reached page markup rather than text or an attribute: {value!r}")
 
 
@@ -309,7 +309,7 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
         return _message_written(position, value, plain)
     if rendering is Rendering.TEMPLATE:
         if position is Position.TITLE:
-            return _template_title(value)
+            return template_title(value)
         if position in {Position.TEXT, Position.ATTRIBUTE}:
             # Sphinx renders the theme's templates in an environment that does
             # not autoescape, so a chrome string a template interpolates reaches
@@ -320,15 +320,19 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
             f"a mark whose strings a Jinja template owns reached {position.value} markup: {value!r}. "
             "Only text and attribute values a template writes can be recorded that way."
         )
-    educated = _educated(value, language)
+    return _docutils_written(position, value, language)
+
+
+def _docutils_written(position: Position, value: str, language: str) -> str:
+    educated = compile_slots_educated(value, language)
     if position in {Position.TEXT, Position.ENTRY_TEXT}:
-        return _docutils_text(educated)
+        return docutils_text(educated)
     if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
-        return _docutils_attribute(educated)
+        return docutils_attribute(educated)
     if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
-        return _minimal(educated)
+        return compile_slots_minimal(educated)
     if position is Position.TITLE:
-        return _template_title(educated)
+        return template_title(educated)
     raise CompileSlotsError(
         f"a mark whose strings docutils owns reached page markup rather than text: {value!r}. "
         "A creation site writing markup itself must record its strings verbatim."
@@ -549,7 +553,7 @@ class CompileSlots:
             if plain is not None:
                 return plain[language]
             if rendering is Rendering.DOCUTILS:
-                return _educated(values[language], self.languages[language])
+                return compile_slots_educated(values[language], self.languages[language])
             return values[language]
 
         return MARK.sub(read, value)
@@ -620,30 +624,42 @@ def read_slots(path: Path) -> CompileSlots:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise CompileSlotsError(f"no readable compile marks at {path}: {error}") from None
-    if not isinstance(document, dict) or document.get("schema") != SLOTS_SCHEMA:
+    if not isinstance(document, dict):
+        raise CompileSlotsError(f"{path} is not a schema {SLOTS_SCHEMA} mark record")
+    document = cast("dict[str, object]", document)
+    if document.get("schema") != SLOTS_SCHEMA:
         raise CompileSlotsError(f"{path} is not a schema {SLOTS_SCHEMA} mark record")
     languages = document.get("languages")
     marks = document.get("marks")
-    if not isinstance(languages, list) or not all(isinstance(item, str) for item in languages):
+    if not isinstance(languages, list) or not all(isinstance(item, str) for item in cast("list[object]", languages)):
         raise CompileSlotsError(f"{path} must declare its languages")
     if not isinstance(marks, list):
         raise CompileSlotsError(f"{path} must declare its marks")
+    languages = cast("list[str]", languages)
+    marks = cast("list[object]", marks)
     slots = CompileSlots(tuple(str(language) for language in languages))
     for entry in marks:
-        if not isinstance(entry, dict) or not isinstance(entry.get("values"), list):
-            raise CompileSlotsError(f"{path} holds a mark with no strings")
-        rendering = Rendering(entry.get("rendering"))
-        values = [str(value) for value in entry["values"]]
-        recorded = entry.get("plain")
-        if recorded is None:
-            slots.mark(rendering, values)
-            continue
-        if not isinstance(recorded, list):
-            raise CompileSlotsError(f"{path} holds a mark whose plain form is not a list of strings")
-        # A message mark is read back as it was reserved, because two marks
-        # reading the same rendering can still be two messages.
-        slots.supply(slots.reserve(rendering), values, [str(value) for value in recorded])
+        _read_slot_entry(slots, entry, path)
     return slots
+
+
+def _read_slot_entry(slots: CompileSlots, entry: object, path: Path) -> None:
+    if not isinstance(entry, dict):
+        raise CompileSlotsError(f"{path} holds a mark with no strings")
+    entry = cast("dict[str, object]", entry)
+    if not isinstance(entry.get("values"), list):
+        raise CompileSlotsError(f"{path} holds a mark with no strings")
+    rendering = Rendering(entry.get("rendering"))
+    values = [str(value) for value in cast("list[object]", entry["values"])]
+    recorded = entry.get("plain")
+    if recorded is None:
+        slots.mark(rendering, values)
+        return
+    if not isinstance(recorded, list):
+        raise CompileSlotsError(f"{path} holds a mark whose plain form is not a list of strings")
+    # A message mark is read back as it was reserved, because two marks
+    # reading the same rendering can still be two messages.
+    slots.supply(slots.reserve(rendering), values, [str(value) for value in cast("list[object]", recorded)])
 
 
 # ── The compile's one active record ──────────────────────────────────────────
@@ -686,8 +702,8 @@ def language_text(
 
     The primitive for a creation site that can already say what every language
     reads and needs no rendering of its own:
-    :func:`~dev.docs._locale_chrome.docs_chrome` for a catalogue string,
-    :func:`~dev.docs._locale_chrome.docs_fragment` where the markup itself
+    :func:`~dev.docs.locale_chrome.docs_chrome` for a catalogue string,
+    :func:`~dev.docs.locale_chrome.docs_fragment` where the markup itself
     differs, and this where the value is simply looked up per language.
 
     Args:
@@ -877,27 +893,38 @@ def mark_positions(page: str) -> list[tuple[re.Match[str], Position]]:
         closing = text.startswith("</")
         if tag == "title":
             in_title = not closing
-        if region is None:
-            # Both regions are written as a div, which is what makes the nesting
-            # of divs enough to find where each one ends.
-            region = _region_entered(text) if tag == "div" and not closing else None
-            depth = 1 if region is not None else 0
-        elif tag == "div":
-            # The region ends with the element that opened it, so the nesting of
-            # its own kind of element is what says where that is.
-            depth += -1 if closing else 1
-            if depth == 0:
-                region = None
-        spans = [
-            (piece.start() + attribute.start(2), piece.start() + attribute.end(2))
-            for attribute in _ATTRIBUTE.finditer(text)
-        ]
-        for mark in MARK.finditer(page, piece.start(), piece.end()):
-            inside = any(start <= mark.start() and mark.end() <= end for start, end in spans)
-            if not inside:
-                found.append((mark, Position.MARKUP))
-            else:
-                found.append((mark, Position.ATTRIBUTE if region is None else region[1]))
+        region, depth = _advance_region(text, tag, closing, region, depth)
+        found.extend(_tag_mark_positions(page, piece, text, region))
+    return found
+
+
+def _advance_region(
+    text: str, tag: str, closing: bool, region: tuple[Position, Position] | None, depth: int
+) -> tuple[tuple[Position, Position] | None, int]:
+    if region is None:
+        region = _region_entered(text) if tag == "div" and not closing else None
+        return region, 1 if region is not None else 0
+    if tag == "div":
+        depth += -1 if closing else 1
+        if depth == 0:
+            region = None
+    return region, depth
+
+
+def _tag_mark_positions(
+    page: str, piece: re.Match[str], text: str, region: tuple[Position, Position] | None
+) -> list[tuple[re.Match[str], Position]]:
+    found: list[tuple[re.Match[str], Position]] = []
+    spans = [
+        (piece.start() + attribute.start(2), piece.start() + attribute.end(2))
+        for attribute in _ATTRIBUTE.finditer(text)
+    ]
+    for mark in MARK.finditer(page, piece.start(), piece.end()):
+        inside = any(start <= mark.start() and mark.end() <= end for start, end in spans)
+        if not inside:
+            found.append((mark, Position.MARKUP))
+        else:
+            found.append((mark, Position.ATTRIBUTE if region is None else region[1]))
     return found
 
 

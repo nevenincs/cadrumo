@@ -9,6 +9,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
+from ....tests.log_records import delivered_records
 from .. import language_resolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,7 +27,7 @@ def _fail_with_private_message(*_args: object, **_kwargs: object) -> None:
 
 
 def _safe_records(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
-    records = [record for record in caplog.records if record.name == _LOGGER]
+    records = delivered_records(caplog, _LOGGER)
     assert records
     assert all(record.exc_info is None for record in records)
     assert all(_PRIVATE_SENTINEL not in record.getMessage() for record in records)
@@ -56,7 +57,7 @@ def test_failed_language_hint_mirror_only_logs_error_class(
 ) -> None:
     monkeypatch.setattr(language_resolver, "write_profile_output_language_hint", _fail_with_private_message)
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path),
+        override_settings(cadrumo_storage_root=tmp_path),
         caplog.at_level(logging.DEBUG, logger=_LOGGER),
     ):
         language_resolver.mirror_profile_output_language_hint("a" * 32, OutputLanguage.CA)

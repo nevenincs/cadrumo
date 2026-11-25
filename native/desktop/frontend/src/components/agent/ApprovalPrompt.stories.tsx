@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
-import type { AgentApprovalOption } from "../../shell/agentSession";
+import { answersStayInView } from "@/dev/catalogue/plays";
 import { ApprovalPrompt } from "./ApprovalPrompt";
 import { APPEARANCE_NOTE, NOOP } from "./Composer.stories";
+import type { AgentApprovalOption } from "../../shell/agentSnapshotContract";
 
 // Appearance only: a decision a reply waits on. Choosing an option does
 // nothing here.
@@ -66,7 +67,7 @@ export const UnnamedOptions: Story = {
     description: null,
     options: [
       { option_id: "a", name: "", kind: "allow_once" },
-      { option_id: "b", kind: "reject_once" },
+      { option_id: "b", name: null, kind: "reject_once" },
       { option_id: "c", name: null, kind: "allow_once" },
       { option_id: "d", name: "   ", kind: "reject_once" },
     ],
@@ -87,38 +88,7 @@ export const LongNames: Story = {
       { option_id: "reject-once-2", name: "No", kind: "reject_once" },
     ],
   },
-};
-
-export const OnlyRememberedOffered: Story = {
-  name: "Only options that would be remembered",
-  args: {
-    options: [
-      {
-        option_id: "allow-always",
-        name: "Allow reads of the ledger from now on",
-        kind: "allow_always",
-      },
-      {
-        option_id: "reject-always",
-        name: "Never read the ledger",
-        kind: "reject_always",
-      },
-    ],
-  },
-};
-
-export const RememberedLeftOut: Story = {
-  name: "Remembered options beside others are left out",
-  args: {
-    options: [
-      ...EVERY_OPTION,
-      {
-        option_id: "allow-always",
-        name: "Allow reads of the ledger from now on",
-        kind: "allow_always",
-      },
-    ],
-  },
+  play: ({ canvasElement }) => answersStayInView(canvasElement),
 };
 
 export const Unavailable: Story = {

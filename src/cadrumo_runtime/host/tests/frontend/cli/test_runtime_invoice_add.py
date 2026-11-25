@@ -26,7 +26,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -36,6 +36,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
@@ -99,20 +100,7 @@ def _scope(
     )
 
 
-_LEDGER_ADD_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Add",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _prepare_profile(
@@ -202,7 +190,7 @@ def _add_arguments(*, number: str) -> tuple[str, ...]:
         "--kind",
         "received",
         "--counterparty-nif",
-        "A58818501",
+        "B00010157",
         "--counterparty-name",
         "Runtime supplier SL",
         "--invoice-number",

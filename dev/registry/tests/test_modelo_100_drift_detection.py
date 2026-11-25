@@ -17,21 +17,24 @@ elements) but catch:
 from __future__ import annotations
 
 import ast
+import re
 from functools import cache
+from typing import Final
 
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import ACTIVITY_ASSET_PARAMETER_IDS
+from cadrumo.domain.calculations.registry.actividad_asset_parameters import ACTIVITY_ASSET_PARAMETER_IDS
 from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_parameter_refs,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.modelo_projections import projected_parameter_ids
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,11 +68,11 @@ _TOP_LEVEL_CHAIN_TARGETS: frozenset[CasillaId] = frozenset(
     )
 )
 
-_SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
+_SUPPORTED_REVISIONS: tuple[str, ...] = tuple(str(revision.id) for revision in authored_revisions("100"))
 
 
 def _modelo_100():
-    return _committed_modelo("100")
+    return committed_modelo("100")
 
 
 def test_top_level_cuota_chain_targets_present_in_every_supported_revision() -> None:
@@ -167,6 +170,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         referenced: set[str] = set()
         for formula in revision.formulas:
             referenced.update(expression_parameter_refs(formula.expression))
+            referenced |= _enrolment_axis_parameter_ids(formula)
         referenced |= cross_module_refs
         referenced |= ACTIVITY_ASSET_PARAMETER_IDS
         referenced |= projected_parameter_ids("100")
@@ -175,6 +179,37 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan parameter {orphan!r}")
     assert not offences, "orphan parameters detected:\n  " + "\n  ".join(offences)
+
+
+def test_a_parameter_read_through_a_module_level_name_counts_as_read() -> None:
+    """Planted: a reader's named id counts once loaded; an unused name or a non-reader does not."""
+    reader = ast.parse(
+        'RATE: Final = "rate-id"\nUNUSED = "unused-id"\n'
+        "def f(revision):\n    return read_parameter('100', revision, read(RATE))\n"
+    )
+    scanner = ast.parse(
+        'WINDOW = "window-id"\n'
+        "def f(revision):\n    return [item for item in revision.parameters if item.id == WINDOW]\n"
+    )
+    bystander = ast.parse('NAME = "name-id"\ndef f():\n    return NAME\n')
+    assert _named_parameter_reads(reader) == {"rate-id"}
+    assert _named_parameter_reads(scanner) == {"window-id"}
+    assert _named_parameter_reads(bystander) == frozenset()
+
+
+def _enrolment_axis_parameter_ids(formula: object) -> set[str]:
+    """Return the parameters an autonomic deducción enrolment names on its eligibility axis.
+
+    The dispatch resolves them from the enrolment rather than from the formula
+    expression, so the expression walk does not see them.
+    """
+    enrolment = getattr(formula, "autonomic_deduccion", None)
+    eligibility = getattr(enrolment, "eligibility", None)
+    return {
+        str(parameter_id)
+        for field in ("minimum_age", "minimum_discapacidad_grado")
+        if (parameter_id := getattr(eligibility, field, None)) is not None
+    }
 
 
 #: Parameters that are declared in the registry with authoritative tax
@@ -229,16 +264,9 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # today. They stay on disk rather than being deleted: the values are
         # official and re-entering them later would re-open the grounding work.
         # Each entry leaves this list when its consuming formula or reader lands.
-        "renta-rental-reduccion-rate-tier-50",
-        "renta-rental-reduccion-rate-tier-60",
-        "renta-rental-reduccion-rate-tier-70",
-        "renta-rental-reduccion-rate-tier-90",
         "renta-rental-amortizacion-rate",
-        "renta-rental-ejercicio-amendment-year",
         "renta-rental-joven-tenant-age-max",
         "renta-rental-joven-tenant-age-min",
-        "renta-rental-prior-rent-rebaja-threshold",
-        "renta-rental-rehab-lookback-years",
         "renta-gastos-carry-forward-anos",
         "renta-minimo-custodia-compartida-prorrata",
         "renta-minimo-descendiente-edad-maxima",
@@ -312,7 +340,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # ever will.
         #
         # CONSUMED, not pending. Resolved by the SAME out-of-formula pattern as
-        # the Madrid tranches above: ``_resolved_minimo_descendientes_thresholds``
+        # the Madrid tranches above: ``resolved_minimo_descendientes_thresholds``
         # (``src/cadrumo/application/modelo/profile_binding.py``) reads them by
         # iterating ``snapshot.revision.parameters`` rather than calling
         # ``read_parameter(...)``, and lives under ``src/cadrumo/application/``
@@ -324,6 +352,17 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # ``test_minimo_descendientes_eligibility.py``.
         "renta-minimo-descendientes-rentas-anuales-limite",
         "renta-minimo-descendientes-declaracion-propia-rentas-limite",
+        # The ascendant counterparts. ``profile_minimo_ascendientes`` (under
+        # ``src/cadrumo/application/``, outside this gate's AST scan) names each
+        # id in its state and autonomic parameter maps and resolves it from
+        # ``snapshot.revision.parameters``: the autonomic 65 and 75 amounts, the
+        # death amount and the two eligibility thresholds (art. 59 and art. 61
+        # norma 2.a LIRPF).
+        "renta-minimo-ascendientes-mayor-65-autonomico",
+        "renta-minimo-ascendientes-mayor-75-autonomico",
+        "renta-minimo-ascendientes-fallecimiento",
+        "renta-minimo-ascendientes-rentas-anuales-limite",
+        "renta-minimo-ascendientes-declaracion-propia-rentas-limite",
     },
 )
 
@@ -339,9 +378,13 @@ def test_every_relation_prefill_binding_has_a_typed_source_coordinate() -> None:
             provider = binding.provider
             source_modelo = getattr(provider, "source_modelo", None)
             source_casillas = getattr(provider, "declared_source_casilla_ids", ())
-            if not source_modelo or len(source_casillas) != 1:
+            aggregation = getattr(binding, "aggregation", None)
+            # Each quarter paid is casilla 18 plus the positive part of 19 (Modelo 131:
+            # 14 plus the positive part of 15), so that fold names two source casillas.
+            expected_sources = 2 if getattr(aggregation, "op", None) == "pagos_fraccionados_ingresados" else 1
+            if not source_modelo or len(source_casillas) != expected_sources:
                 offences.append(
-                    f"{revision_id}: relation-prefill binding {binding.id!r} has no singular typed source",
+                    f"{revision_id}: relation-prefill binding {binding.id!r} has no typed source coordinate",
                 )
     assert not offences, "relation-prefill bindings with incomplete source coordinates:\n  " + "\n  ".join(offences)
 
@@ -415,7 +458,75 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
             continue
         for param_arg in _iter_read_parameter_arg_nodes(tree, modelo_id=modelo_id):
             refs.update(_expand_parameter_id_node(param_arg))
+    for root in _PARAMETER_READER_ROOTS:
+        for path in scan_directory(root, pattern="*.py", recursive=True):
+            if "tests" in path.parts:
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            except (SyntaxError, OSError):
+                continue
+            refs.update(_named_parameter_reads(tree))
+    refs.update(_fact_named_parameter_ids())
     return frozenset(refs)
+
+
+_PARAMETER_READER_ROOTS: Final = (
+    REPO_ROOT / "src" / "cadrumo" / "domain",
+    REPO_ROOT / "src" / "cadrumo" / "application",
+)
+
+
+def _named_parameter_reads(tree: ast.Module) -> frozenset[str]:
+    """Return the parameter ids a module reads through a module-level name.
+
+    A resolver that reads ``read_parameter(..., read(_RATE))`` or scans
+    ``revision.parameters`` for ``item.id == CARRY_YEARS`` names the id once
+    at module scope and reads it through that name. A module counts as a
+    parameter reader when it calls ``read_parameter`` or reads a
+    ``.parameters`` attribute; its module-level string constants count as
+    read only where the module loads the name again.
+    """
+    reads_parameters = any(
+        (isinstance(node, ast.Call) and _callee_name(node) == "read_parameter")
+        or (isinstance(node, ast.Attribute) and node.attr == "parameters")
+        for node in ast.walk(tree)
+    )
+    if not reads_parameters:
+        return frozenset[str]()
+    constants: dict[str, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.AnnAssign | ast.Assign):
+            targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+            value = statement.value
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                constants.update({target.id: value.value for target in targets if isinstance(target, ast.Name)})
+    loaded = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
+    return frozenset(value for name, value in constants.items() if name in loaded)
+
+
+def _callee_name(node: ast.Call) -> str | None:
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return None
+
+
+_FACT_PARAMETER_ENTRY = re.compile(r'key = "[^"]*parameter_id", value = "([^"]+)"')
+
+
+def _fact_named_parameter_ids() -> frozenset[str]:
+    """Return the parameter ids a governed fact entry names for a reader to resolve.
+
+    The rental reduction reads each tier's rate through the parameter id its
+    catalogue fact states, so no Python literal or formula names it.
+    """
+    facts_root = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "facts"
+    ids: set[str] = set()
+    for path in scan_directory(facts_root, pattern="*.toml", recursive=True):
+        ids.update(str(match) for match in _FACT_PARAMETER_ENTRY.findall(path.read_text(encoding="utf-8")))
+    return frozenset(ids)
 
 
 def _iter_read_parameter_arg_nodes(tree: ast.AST, *, modelo_id: str) -> tuple[ast.expr, ...]:
@@ -444,7 +555,12 @@ def _read_parameter_matches(node: ast.Call, *, modelo_id: str) -> bool:
         return False
     if func_name != "read_parameter" or len(node.args) < 3:
         return False
-    return _modelo_arg_code(node.args[0]) == modelo_id
+    first = node.args[0]
+    if isinstance(first, ast.Name):
+        # A caller that receives its modelo as a parameter reads for every modelo;
+        # the tax-literal sweep keeps modelo identifiers out of domain code.
+        return True
+    return _modelo_arg_code(first) == modelo_id
 
 
 def _modelo_arg_code(node: ast.expr) -> str | None:
@@ -553,6 +669,8 @@ def _render_segments(static_segments: list[str], combo: tuple[str, ...]) -> str:
 #: small closed set of Python locals; new placeholder names that appear
 #: in future ``read_parameter`` calls must be registered here.
 _FSTRING_PLACEHOLDER_VALUES: dict[str, tuple[str, ...]] = {
-    "period_year": tuple(str(year) for year in range(2020, 2031)),
+    "period_year": tuple(
+        str(year) for year in range(authored_revisions("100")[0].valid_from.year, filing_year_envelope().horizon + 1)
+    ),
     "tier_id": ("tier-50", "tier-60", "tier-70", "tier-90"),
 }

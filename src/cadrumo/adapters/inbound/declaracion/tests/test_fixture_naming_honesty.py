@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 
 from .....tests.inventory import FIXTURES_DIR
-from . import _parser_boundary_support
+from . import parser_boundary_support
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -58,8 +58,8 @@ def _fixture_constants() -> list[tuple[str, Path]]:
     """Every module-level constant naming a justificante fixture PDF."""
     justificantes = FIXTURES_DIR / "justificantes"
     found: list[tuple[str, Path]] = []
-    for name in dir(_parser_boundary_support):
-        value = getattr(_parser_boundary_support, name)
+    for name in dir(parser_boundary_support):
+        value = getattr(parser_boundary_support, name)
         if not isinstance(value, Path) or value.suffix != ".pdf":
             continue
         if justificantes not in value.parents:

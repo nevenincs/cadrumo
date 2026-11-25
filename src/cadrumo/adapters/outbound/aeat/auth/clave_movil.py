@@ -19,8 +19,10 @@ Design summary:
   app request was accepted; diagnostics record that transition directly
   and never ask the operator to restate it.
 * The provider opens a headed Playwright window on fresh login so the
-  operator can scan the QR visually. Resume-from-storage-state runs
-  headlessly because no human interaction is required.
+  operator can scan the QR visually, unless its login runs inside the
+  person's Sede view, whose headless page the person already watches.
+  Resume-from-storage-state runs headlessly because no human interaction
+  is required.
 * The persisted session stores Playwright state and provider metadata
   together in the encrypted session object. Kind-namespaced logical
   storage keys keep the Cl@ve and certificate sessions separate. Each
@@ -50,6 +52,7 @@ from .....application.auth.protocols import (
     BrowserPagePort,
     BrowserSessionFactoryPort,
     BrowserSessionPort,
+    ViewLoginSessionFactoryPort,
 )
 from .....application.auth.session_types import (
     AeatLoginAssertion,
@@ -60,49 +63,48 @@ from .....application.auth.session_types import (
 )
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.authentication_links import aeat_authentication_url
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n.render import tr
-from .....core.identity.tax_id import same_tax_identifier, tax_id_identity_token
+from .....core.identity.tax_id import tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
-from .._playwright import PlaywrightTimeoutError
 from ..browser.desktop import interactive_desktop_available
-from . import session_store as session_store
-from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
-from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
-from ._clave_provider_common import (
+from ..playwright import PlaywrightTimeoutError
+from . import session_store
+from .authenticator import AEAT_SESSION_IDLE_TTL
+from .browser_lifecycle import CloseIntentBarrier
+from .clave_movil_metadata import ClaveMovilSessionMetadata
+from .clave_movil_page_flow import ClaveMovilPageFlowMixin
+from .clave_movil_salvage import ClaveMovilSessionSalvageMixin
+from .clave_movil_state import ClaveMovilPageState
+from .clave_movil_support import (
+    ClaveMovilApprovalNotReceivedError,
+    ClaveMovilApprovalTimeoutError,
+    ClaveMovilConfigurationError,
+    ClaveMovilFailureMode,
+    classify_identity,
+    diagnostic_fingerprint,
+    render_progress_banner,
+    url_diagnostic,
+)
+from .clave_profile_diagnostics import (
+    active_profile_context_defaults,
+    profile_identity_alignment,
+    unavailable_active_profile_context,
+)
+from .clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
     is_authenticated_clave_landing,
     verification_probe_url,
 )
-from ._session_probe import run_authenticated_landing_probe
-from .authenticator import AEAT_SESSION_IDLE_TTL
-from .browser_lifecycle import CloseIntentBarrier
-from .clave_movil_metadata import ClaveMovilSessionMetadata
-from .clave_movil_state import ClaveMovilPageState
-from .clave_movil_support import (
-    ClaveMovilApprovalTimeoutError,
-    ClaveMovilConfigurationError,
-    ClaveMovilFailureMode,
-)
-from .clave_movil_support import (
-    classify_identity as _classify_identity,
-)
-from .clave_movil_support import (
-    diagnostic_fingerprint as _diagnostic_fingerprint,
-)
-from .clave_movil_support import (
-    render_progress_banner as _render_progress_banner,
-)
-from .clave_movil_support import (
-    url_diagnostic as _url_diagnostic,
-)
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .session_probe import run_authenticated_landing_probe
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -111,60 +113,14 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
 
 
-def _active_profile_context_defaults(
-    bucket_id: str | None,
-    *,
-    profile_label_present: bool,
-    profile_registered: bool,
-) -> dict[str, object]:
-    """Build the redacted context shared by every profile-read outcome."""
-    return {
-        "active_profile_id": "",
-        "active_profile_ref": _diagnostic_fingerprint(bucket_id),
-        "active_profile_label": "",
-        "active_profile_label_present": profile_label_present,
-        "active_profile_registered": profile_registered,
-        "profile_record_present": False,
-        "profile_tax_id_present": False,
-        "profile_tax_id_fingerprint": "",
-        "identity_alignment": "profile_tax_id_missing",
-    }
-
-
-def _unavailable_active_profile_context() -> dict[str, object]:
-    """Return the fail-closed context when profile diagnostics cannot be read."""
-    return {
-        "active_profile_id": "",
-        "active_profile_ref": "",
-        "active_profile_label": "",
-        "active_profile_label_present": False,
-        "active_profile_registered": False,
-        "profile_record_present": False,
-        "profile_tax_id_present": False,
-        "profile_tax_id_fingerprint": "",
-        "identity_alignment": "profile_context_unavailable",
-    }
-
-
-def _profile_identity_alignment(provider_identity: str, profile_identity: str) -> str:
-    """Classify the redacted provider/profile identity relationship."""
-    if not provider_identity:
-        return "clave_identity_missing"
-    if not profile_identity:
-        return "profile_tax_id_missing"
-    if same_tax_identifier(profile_identity, provider_identity):
-        return "matches"
-    return "mismatch"
-
-
-class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvageMixin):
+class ClaveMovilAuthProvider(ClaveMovilPageFlowMixin, ClaveMovilSessionSalvageMixin):
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
     Constructed by :func:`adapters.outbound.aeat.auth.provider_selection.select_provider` when
@@ -172,8 +128,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
     configured non-QR confirmation flow or the alternate QR flow;
     resume runs headlessly because the stored cookies are sufficient.
 
-    The provider owns the lifecycle contract; :class:`_ClaveMovilPageFlowMixin`
-    supplies page-driving helpers, :class:`_ClaveMovilSessionSalvageMixin`
+    The provider owns the lifecycle contract; :class:`ClaveMovilPageFlowMixin`
+    supplies page-driving helpers, :class:`ClaveMovilSessionSalvageMixin`
     supplies the post-failure session-salvage helpers, and this class turns
     those browser outcomes into :class:`AeatSession`, :class:`AeatLoginAssertion`,
     and :class:`AuthProviderDescription` records.
@@ -339,6 +295,52 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 self.active_session = None
                 raise
 
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this identity's session and prove it.
+
+        The person signed in inside the view, by any Cl@ve route. The capture is
+        written with the configured DNI/NIE and the default authenticated Sede
+        page as its landing, anchored at the capture instant, and then resumed
+        exactly as a stored session is, in a browser of this provider's own.
+        The proof navigates to that landing only: it never clicks through the
+        Cl@ve selector, so verifying a capture never sends a request to the
+        person's phone. The taxpayer AEAT shows to the capture must then be the
+        configured DNI/NIE. The caller stages the writes and publishes them only
+        after this returns; a refusal raises :class:`AeatLoginAssertionError`.
+        """
+        async with self._lifecycle.work():
+            if self.active_session is not None:
+                raise AeatLoginAssertionError(
+                    "ClaveMovilAuthProvider already has an active session; call close() first",
+                    translated_message="adapters.auth.clave_movil.errors.already_active",
+                )
+            if self._context is not None or self._browser_session is not None:
+                raise AuthProviderCleanupError(
+                    "ClaveMovilAuthProvider retained browser resources after close",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
+            dni_nie = self._require_identity()
+            path = self._storage_state_path()
+            captured_at = now()
+            self._persist_session(
+                path,
+                storage_state=storage_state,
+                metadata=ClaveMovilSessionMetadata(
+                    identity_nif=dni_nie,
+                    authenticated_at=captured_at,
+                    idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                    storage_state_sha256=session_store.storage_state_sha256(storage_state),
+                    used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
+                    landing_url=self._default_target_url(),
+                ),
+            )
+            session = await self._resume_locked(path, target_url=None, dispatch_selector=False)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError("a resumed view capture left no context to read its taxpayer in")
+            await require_signed_in_taxpayer(context, expected_nif=dni_nie)
+            return session
+
     def _finalize_probe_result(
         self,
         session: AeatSession,
@@ -420,8 +422,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         session: AeatSession,
         *,
         target_url: str | None,
+        dispatch_selector: bool = True,
     ) -> AeatLoginAssertion:
-        """Verify a session while the caller holds the provider work lease."""
+        """Verify a session while the caller holds the provider work lease.
+
+        With ``dispatch_selector`` off, a probe that lands on the Cl@ve selector
+        stays there and fails rather than requesting a new Cl@ve Movil login.
+        """
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
@@ -460,7 +467,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             target_path=target_path,
             navigation_timeout_ms=self._navigation_timeout_ms,
             is_authenticated_landing=self._authenticated_landing_predicate,
-            on_landing=self._dispatch_clave_selector_on_landing,
+            on_landing=self._dispatch_clave_selector_on_landing if dispatch_selector else None,
             log_label="ClaveMovilAuthProvider.verify",
         )
         is_valid = outcome.session_cookie_present and bool(session.identity_nif)
@@ -518,7 +525,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 health_summary=tr("application.auth.clave_movil.health.identity_unset"),
             )
         try:
-            _classify_identity(dni_nie)
+            classify_identity(dni_nie)
         except ClaveMovilConfigurationError as exc:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -565,7 +572,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 "before running `cadrumo-runtime config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
-        _classify_identity(raw)
+        classify_identity(raw)
         return raw.strip().upper()
 
     def _default_target_url(self) -> str:
@@ -615,7 +622,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         fresh_login_settings = self._fresh_login_settings()
         identity = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie).strip()
         try:
-            identity_kind = _classify_identity(identity)
+            identity_kind = classify_identity(identity)
         except ClaveMovilConfigurationError:
             identity_kind = "invalid_or_missing"
         auth_mode = "non_qr" if self._settings.cadrumo_clave_prefer_non_qr else "qr"
@@ -627,13 +634,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             "auth_route": auth_route,
             "identity_kind": identity_kind,
             "clave_identity_configured": bool(identity),
-            "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
+            "clave_identity_fingerprint": diagnostic_fingerprint(identity),
             "dni_fecha_configured": bool((self._settings.cadrumo_clave_movil_dni_fecha or "").strip()),
-            "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_dni_fecha),
+            "dni_fecha_fingerprint": diagnostic_fingerprint(self._settings.cadrumo_clave_movil_dni_fecha),
             "nie_soporte_configured": bool(
                 unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip(),
             ),
-            "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
+            "nie_soporte_fingerprint": diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
             "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
             "headless": fresh_login_settings.cadrumo_browser_headless,
             "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
@@ -646,7 +653,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             return self._build_active_profile_diagnostic_context(provider_identity)
         except (ImportError, KeyError, AttributeError, UserProfileError) as exc:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
-            return _unavailable_active_profile_context()
+            return unavailable_active_profile_context()
 
     def _build_active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         """Read the current profile only through its own live session."""
@@ -660,7 +667,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
         bucket_id = resolve_active_bucket_id()
         pointer = read_profile_bucket_by_id(bucket_id) if (bucket_id is not None and bucket_id) else None
-        context = _active_profile_context_defaults(
+        context = active_profile_context_defaults(
             bucket_id,
             profile_label_present=bool(pointer is not None and pointer.label),
             profile_registered=pointer is not None,
@@ -699,20 +706,31 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
         context["profile_record_present"] = True
         context["profile_tax_id_present"] = bool(profile_identity)
-        context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
-        context["identity_alignment"] = _profile_identity_alignment(provider_identity, profile_identity)
+        context["profile_tax_id_fingerprint"] = diagnostic_fingerprint(profile_identity)
+        context["identity_alignment"] = profile_identity_alignment(provider_identity, profile_identity)
         return context
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
+
+    def _lends_view(self) -> bool:
+        """Whether this provider's login runs inside the person's Sede view."""
+        factory = self._browser_session_factory
+        return isinstance(factory, ViewLoginSessionFactoryPort) and factory.lends_view
 
     def _fresh_login_settings(self) -> Settings:
         """Return browser settings suitable for operator-mediated authentication.
 
         The QR branch needs a visible page for scanning. The non-QR branch
         uses the configured identity and contrast data, so it can keep the
-        operator's headless setting while waiting for phone approval.
+        operator's headless setting while waiting for phone approval. A login
+        the Sede view lends its page to keeps the view's headless browser: the
+        person sees the QR in the panel.
         """
-        if self._settings.cadrumo_clave_prefer_non_qr or not self._settings.cadrumo_browser_headless:
+        if (
+            self._settings.cadrumo_clave_prefer_non_qr
+            or not self._settings.cadrumo_browser_headless
+            or self._lends_view()
+        ):
             return self._settings
         return self._settings.model_copy(update={"cadrumo_browser_headless": False})
 
@@ -831,7 +849,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
-        if not self._settings.cadrumo_clave_prefer_non_qr and not interactive_desktop_available():
+        if (
+            not self._settings.cadrumo_clave_prefer_non_qr
+            and not self._lends_view()
+            and not interactive_desktop_available()
+        ):
             # Publish only the public entry point, never a live challenge URL,
             # cookies, target query parameters, or a claimed authenticated state.
             authentication_url = aeat_authentication_url()
@@ -971,7 +993,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 context={
                     "timeout_ms": self._navigation_timeout_ms,
                     "target_path": target_path,
-                    "selector_url": _url_diagnostic(selector_url),
+                    "selector_url": url_diagnostic(selector_url),
                     **attempt_context,
                 },
             ) from exc
@@ -1011,7 +1033,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
 
         timeout_ms = int(self._settings.cadrumo_clave_movil_timeout_ms)
-        await _render_progress_banner(
+        await render_progress_banner(
             verification_code=verification_code,
             timeout_seconds=timeout_ms // 1000,
             used_non_qr_fallback=use_non_qr,
@@ -1023,14 +1045,14 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             diagnostic_id = await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
             await self._cancel_pending_auth_request(page)
             current_url = getattr(page, "url", "") or ""
-            raise ClaveMovilApprovalTimeoutError(
+            raise ClaveMovilApprovalNotReceivedError(
                 f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
                 "The driver observed the AEAT browser page but cannot infer the phone/app state.",
                 translated_message="adapters.auth.clave_movil.errors.approval_timeout",
                 failure_mode=ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT,
                 context={
                     "timeout_ms": timeout_ms,
-                    "current_url": _url_diagnostic(current_url),
+                    "current_url": url_diagnostic(current_url),
                     "target_path": target_path,
                     "diagnostic_id": diagnostic_id,
                     "phone_state": "unknown",
@@ -1094,6 +1116,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         storage_state_path: Path,
         *,
         target_url: str | None,
+        dispatch_selector: bool = True,
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
@@ -1133,7 +1156,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             self._context = context
             self.active_session = session
 
-            assertion = await self._verify_in_work(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url, dispatch_selector=dispatch_selector)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "

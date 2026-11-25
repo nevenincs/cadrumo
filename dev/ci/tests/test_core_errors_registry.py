@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.outbound.aeat.browser.errors import BrowserError
 from cadrumo.application.modelo.action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError
 from cadrumo.core.access_gate.errors import LiveSubmitForbiddenError
 from cadrumo.core.errors.error_codes import (
@@ -17,8 +16,8 @@ from cadrumo.core.errors.error_codes import (
     render_error_json,
     render_error_text,
 )
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.observability.errors import RunContextMissingError, RunTracePersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,8 +94,8 @@ def test_core_error_prefixes_are_grep_stable() -> None:
 
     for error_factory, expected_category in (
         (LiveSubmitForbiddenError, ErrorCategory.LOCKED),
-        (RunContextMissingError, ErrorCategory.INTERNAL),
-        (lambda: RunTracePersistenceError(operation="test", path=Path("runs")), ErrorCategory.FAIL),
+        (InternalInvariantError, ErrorCategory.INTERNAL),
+        (BrowserError, ErrorCategory.FAIL),
     ):
         error = error_factory()
         assert error.code.category is expected_category

@@ -7,13 +7,12 @@ self-evidencing asset. The raw oracle captures carry machine identifiers of
 the runner that produced them — the operator's hostname, the account username
 inside home-directory paths (``C:\\Users\\<name>``, ``/home/<name>``,
 ``/Users/<name>``), and workspace paths. None of that is evidence; all of it
-is operator-machine metadata that must not ship (operator ruling 2026-07-20).
+is operator-machine metadata that must not ship.
 
 The scrub runs at emit time, before the row is first written, so exactly one
 tamper-evident identity exists: the row's ``evidence_id`` is recomputed over
 the scrubbed content through the same canonical-identifier path every consumer
-validates. The transport below the readiness gate is unchanged — a scrubbed
-row is an ordinary, fully valid ``DistributionEvidence``.
+validates. A scrubbed row is an ordinary, fully valid ``DistributionEvidence``.
 
 Fail-closed posture: normalization rewrites the three sanctioned leak shapes
 (home-directory user segments, the runner's CI workspace root, and the

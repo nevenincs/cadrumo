@@ -53,6 +53,17 @@ _NO_ELEMENT_PATHS: Final[Mapping[str, str]] = MappingProxyType[str, str]({})
 
 
 @dataclass(frozen=True, slots=True)
+class StructuredWithheldTax:
+    """One withholding a structured record states, and whether it names IRPF."""
+
+    stated_type: str | None
+    is_irpf: bool
+    rate: Decimal | None
+    base: Decimal | None
+    amount: Decimal | None
+
+
+@dataclass(frozen=True, slots=True)
 class StructuredInvoiceRecord:
     """The structured-record facts consumed by ledger extraction."""
 
@@ -88,6 +99,13 @@ class StructuredInvoiceRecord:
     #: provenance falls back to the per-shape location otherwise. An absent entry
     #: therefore means "the usual place", never "unknown".
     element_paths: Mapping[str, str] = _NO_ELEMENT_PATHS
+    #: In points, as the record prints it, and only where one rate on the invoice's
+    #: own base describes the withholding.
+    retencion_rate: Decimal | None = None
+    #: Everything the record states as withheld, read as a retencion or not.
+    withheld_taxes: tuple[StructuredWithheldTax, ...] = ()
+    #: The record's own stated total of what was withheld.
+    withheld_total: Decimal | None = None
 
 
 class StructuredInvoiceReader(Protocol):
@@ -104,4 +122,5 @@ __all__ = [
     "StructuredInvoiceLine",
     "StructuredInvoiceReader",
     "StructuredInvoiceRecord",
+    "StructuredWithheldTax",
 ]

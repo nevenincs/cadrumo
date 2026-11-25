@@ -17,7 +17,7 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
-from ..data_inventory import _collect_inventory_buckets
+from ..data_inventory import collect_inventory_buckets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,7 +49,7 @@ def _with_alternate(revision: ModeloRevision, target: int, donor: int) -> Modelo
 
 def _relation_rows(revision: ModeloRevision) -> set[tuple[str, str | None]]:
     bindings = {binding.id: binding for binding in revision.bindings}
-    buckets = _collect_inventory_buckets(revision, bindings)
+    buckets = collect_inventory_buckets(revision, bindings)
     return {(entry.casilla_id, entry.binding_id) for entry in buckets.relation_prefill}
 
 

@@ -16,6 +16,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloWorkForm,
+    revised_field,
 )
 
 
@@ -24,7 +25,7 @@ def replace_fields(form: ModeloWorkForm, changes: Mapping[str, Mapping[str, obje
 
     def changed(field: ModeloFormField) -> ModeloFormField:
         update = changes.get(field.box or "")
-        return field if update is None else field.model_copy(update=dict(update))
+        return field if update is None else revised_field(field, **update)
 
     def block_changed(block: ModeloFormBlock) -> ModeloFormBlock:
         if isinstance(block, ModeloFormFieldBlock):

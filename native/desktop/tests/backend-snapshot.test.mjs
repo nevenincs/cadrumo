@@ -46,7 +46,9 @@ function pathDependencies(crate) {
 }
 
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-backend-snapshot-"));
+  const root = mkdtempSync(
+    join(realpathSync(tmpdir()), "cadrumo-backend-snapshot-"),
+  );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const source = join(root, "source");
   const build = join(root, "build");
@@ -137,6 +139,7 @@ function crates(t) {
     "manager",
     "launch_guard",
     "interpreter_host",
+    "vendor/wry",
     "desktop/src-tauri",
   ]) {
     mkdirSync(join(native, crate, "src"), { recursive: true });
@@ -146,9 +149,11 @@ function crates(t) {
   for (const entry of ["Cargo.lock", "build.rs"])
     writeFileSync(join(native, "desktop/src-tauri", entry), entry);
   mkdirSync(join(native, "interpreter/windows"), { recursive: true });
+  mkdirSync(join(native, "interpreter/posix"), { recursive: true });
   for (const source of [
     "interpreter/windows/host.manifest",
     "interpreter/windows/host.c",
+    "interpreter/posix/host.c",
     "interpreter/launch_guard.h",
     "interpreter/launch_profile.h",
   ])
@@ -167,6 +172,7 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
     "manager",
     "launch_guard",
     "interpreter_host",
+    "vendor/wry",
     "desktop/src-tauri",
   ])
     renameSync(

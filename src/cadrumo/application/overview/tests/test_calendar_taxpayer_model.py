@@ -6,19 +6,26 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
-from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
+from ..calendar import build_overview_calendar
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
-from .calendar_test_support import BUCKET_ID as _BUCKET_ID
-from .calendar_test_support import SOURCE_URL as _SOURCE_URL
-from .calendar_test_support import profile as _profile
+from .calendar_test_support import BUCKET_ID, SOURCE_URL, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -31,7 +38,7 @@ def _landlord_profile() -> TaxpayerProfile:
     """A pure landlord: rendimientos del capital inmobiliario only."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
@@ -41,7 +48,7 @@ def _landlord_profile() -> TaxpayerProfile:
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def test_calendar_landlord_never_shows_modelo_130(authority_operation: PinnedAuthorityOperation) -> None:
@@ -61,7 +68,7 @@ def test_calendar_autonomo_still_shows_modelo_130(authority_operation: PinnedAut
     """The autónomo persona is unchanged: Modelo 130 still appears."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" in modelos
 
@@ -78,10 +85,17 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
+        # The RIRPF arts. 109.2 to 109.4 coverage fact is three-state, and the subject
+        # here is the estimation-regime axis alone: this autónomo states that
+        # the exception does not hold, so an unanswered coverage fact cannot
+        # be what decides Modelo 130.
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -133,7 +147,7 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
         date(2026, 4, 20),
         date(2026, 7, 20),
         date(2026, 10, 20),
-        date(2027, 1, 30),
+        date(2027, 2, 1),
     ]
     # The business-day-adjusted close is never earlier than the legal close.
     for entry in m130_entries:
@@ -186,9 +200,9 @@ def test_calendar_undeclared_profile_preserves_observed_events(
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 declarations=(
                     ExpedientesDeclaration(
                         modelo="303",
@@ -229,7 +243,7 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -255,11 +269,13 @@ def _objetiva_autonomo() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -276,7 +292,8 @@ def test_calendar_excludes_non_applicable_modelos(
     ``NOT_APPLICABLE`` row shown as confidently due is the regression defect.
     """
 
-    from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+    from ....domain.calculations.registry.applicability import derive_modelo_applicability
+    from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
@@ -284,23 +301,25 @@ def test_calendar_excludes_non_applicable_modelos(
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
-    assert derive_modelo_applicability(profile, "130").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
+    assert derive_modelo_applicability(profile, "130", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
     # ...and therefore absent from the calendar.
     assert "130" not in calendar_modelos
     # Modelo 131 is the objetiva pago fraccionado — it must be present.
     assert "131" in calendar_modelos
     # Every surfaced row is a positively APPLICABLE seed-ruled modelo.
     for entry in cal.entries:
-        assert derive_modelo_applicability(profile, entry.modelo).verdict is (ApplicabilityVerdict.APPLICABLE), (
-            entry.modelo
-        )
+        assert derive_modelo_applicability(profile, entry.modelo, reference_date=latest_period_end()).verdict is (
+            ApplicabilityVerdict.APPLICABLE
+        ), entry.modelo
 
 
 def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
     """Agenda and backlog compose the calendar, so the non-applicable
     exclusion must reach them too — neither may leak the NOT_APPLICABLE
     Modelo 130 as a confident due / late row for an objetiva autónomo."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..agenda import build_overview_agenda
         from ..backlog import build_overview_backlog
 
@@ -422,7 +441,7 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     operator error. The agenda must answer instead — every cohort is a
     valid tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..agenda import build_overview_agenda
 
         profile = _fully_enrolled_autonomo()
@@ -449,7 +468,7 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     spans into 2026. The backlog must answer rather than crash on the
     uncovered 2027 year.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..backlog import build_overview_backlog
 
         profile = _fully_enrolled_autonomo()
@@ -468,39 +487,58 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_undeclared_profile_message_resolves_to_real_localised_text(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """The undeclared-profile guidance must be a shipped locale string,
-    not the raw translation key.
+_ENTITY_TYPE_REASON = "application.overview.calendar.taxpayer_model_undeclared.entity_type"
+_CATEGORIES_REASON = "application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories"
 
-    ``build_overview_calendar`` populates ``incomplete_reason`` via
-    ``tr("cli.overview.taxpayer_model_undeclared")``. python-i18n
-    returns the literal key when no catalogue entry exists, so the
-    contract here is: the rendered text differs from the key, is
-    non-trivially long, and resolves to genuine guidance in every
-    supported language (es / en / ca / hu).
-    """
+
+@pytest.mark.parametrize(
+    ("natural_person", "facts", "keys"),
+    [
+        pytest.param(
+            False,
+            ("taxpayer_type.entity_type", "taxpayer_type.irpf_income_categories"),
+            (_ENTITY_TYPE_REASON, _CATEGORIES_REASON),
+            id="no-entity-type",
+        ),
+        pytest.param(
+            True,
+            ("taxpayer_type.irpf_income_categories",),
+            (_CATEGORIES_REASON,),
+            id="natural-person-without-categories",
+        ),
+    ],
+)
+def test_undeclared_profile_names_every_missing_fact_at_once_in_every_locale(
+    authority_operation: PinnedAuthorityOperation,
+    natural_person: bool,
+    facts: tuple[str, ...],
+    keys: tuple[str, ...],
+) -> None:
+    """The reason is served to the window as well as the CLI, so it names the
+    profile facts that are missing rather than a command-line remedy, every one
+    of them at once (an unstated entity type leaves the income categories owed
+    too), each with the profile path that answers it, and it is shipped text in
+    every supported language rather than the raw key."""
 
     from ....core.i18n.render import tr
 
-    key = "cli.overview.taxpayer_model_undeclared"
-    for locale in ("es", "en", "ca", "hu"):
-        rendered = tr(key, locale=locale)
-        # Not the raw key, not the python-i18n "[missing translation]" stub.
-        assert rendered != key, locale
-        assert "[missing" not in rendered.lower(), locale
-        assert "translation" not in rendered.lower() or len(rendered) > 40, locale
-        # Real operator guidance — a full sentence, not a one-token stub.
-        assert len(rendered) > 30, (locale, rendered)
-        assert " " in rendered.strip(), (locale, rendered)
+    for key in keys:
+        for locale in ("es", "en", "ca", "hu"):
+            rendered = tr(key, locale=locale)
+            assert rendered != key, locale
+            assert "[missing" not in rendered.lower(), locale
+            assert len(rendered) > 30, (locale, rendered)
 
-    # The calendar surface delivers exactly that resolved text.
+    profile = TaxpayerProfile(
+        tax_id="X0001500M",
+        iva_regime=IVARegime("GENERAL"),
+        entity_type=EntityType.from_registry("natural_person") if natural_person else None,
+    )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
-    assert cal.incomplete_reason == tr(key)
-    assert cal.incomplete_reason is not None
-    assert cal.incomplete_reason != key
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
+    assert cal.taxpayer_model_declared is False
+    assert tuple(fact.value for fact in cal.undeclared_profile_facts) == facts
+    assert cal.incomplete_reason == " ".join(tr(key) for key in keys)
 
 
 # ---------------------------------------------------------------------
@@ -514,7 +552,7 @@ def _legal_entity() -> TaxpayerProfile:
     from ....domain.contribuyente.entity_type import LegalEntityForm
 
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -525,7 +563,7 @@ def _attribution_entity() -> TaxpayerProfile:
     """An attribution entity — comunidad de bienes / sociedad civil."""
 
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         iva_regime=IVARegime("GENERAL"),
     )
@@ -562,7 +600,7 @@ def test_calendar_natural_person_shows_irpf_not_corporate(
     Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "130" in surfaced
@@ -582,7 +620,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
     for declared, expected_verdict in ((False, "not_applicable"), (None, "incomplete")):
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
             iva_regime=IVARegime("GENERAL"),

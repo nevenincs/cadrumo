@@ -2,7 +2,7 @@
 
 The operator-facing ``aeat app ledger invoice add`` verb mints a **linkable**
 invoice directly: the :class:`~domain.invoices.models.Invoice` in the
-:class:`~domain.invoices.models.InvoiceCatalogue` is the only invoice record, and it
+:class:`~domain.invoices.catalogue.InvoiceCatalogue` is the only invoice record, and it
 carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
@@ -31,9 +31,11 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from ...core.aggregation import IntracomOperationType
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import build_bucket_event
@@ -41,8 +43,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
-from ...domain.currency.service import resolve_fx_conversion_stamp
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
+from ...domain.currency.models import FxConversionStamp
+from ...domain.currency.service import declared_fx_conversion_stamp, resolve_fx_conversion_stamp
 from ...domain.invoices.business_premises import BusinessPremisesLease
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import (
     InvoiceClass,
     IvaRate,
@@ -54,10 +59,16 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.figures import (
+    computed_grand_total,
+    computed_line_iva,
+    rounded_line_totals,
+)
+from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
+from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ..aggregation.counterpart import counterpart_operation_catalogue_entries
+from ..aggregation.counterpart import counterpart_catalogue_entry, counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
     CatalogueInvoiceRateProviderPort,
@@ -140,33 +151,31 @@ def build_catalogue_invoice_event(
     )
 
 
-def _registry_m349_operation_type_requirement(
+def registry_m349_operation_type_requirement(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaCategory, tuple[IntracomOperationType, ...]]:
     """Resolve the M349 category/clave ambiguity from registry data."""
-    directory = operation.modelo_directory("349")
-    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-        raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
+    select_revision_metadata_for_year(
+        operation.modelo_directory("349"),
+        filing_year=effective_date.year,
+        on=effective_date,
+    )
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
-
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise ValueError(f"counterpart registry mapping is missing {key!r}")
-        return value.strip()
 
     try:
         category = require_iva_category(
-            required("modelo.349.operation_type_required_category"),
+            counterpart_catalogue_entry(entries, "modelo.349.operation_type_required_category"),
             effective_date=effective_date,
             authority=operation,
         )
     except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
-        token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip()
+        token.strip()
+        for token in counterpart_catalogue_entry(entries, "modelo.349.operation_type_candidates").split(",")
+        if token.strip()
     )
     if not tokens or len(set(tokens)) != len(tokens):
         raise ValueError("counterpart registry declares an empty or duplicate operation-type candidate set")
@@ -206,7 +215,10 @@ def _require_operation_type_where_the_category_cannot_settle_it(
             the refusal tells the operator what to state rather than only that
             something is missing.
     """
-    required_category, candidates = _registry_m349_operation_type_requirement(
+    if effective_date < operation.supported_filing_years().date_envelope().floor:
+        # No Modelo 349 is filed for a date older than the filing years, so no clave is owed to one.
+        return
+    required_category, candidates = registry_m349_operation_type_requirement(
         effective_date,
         operation=operation,
     )
@@ -217,7 +229,11 @@ def _require_operation_type_where_the_category_cannot_settle_it(
         "an intra-community supply must state its Modelo 349 operation type: the category alone "
         f"cannot distinguish among {candidate_labels}, because all candidates carry this same IVA category",
         translated_message="application.invoices.creation.errors.intracom_operation_type_required",
-        context={"iva_category": required_category.value},
+        context={
+            "iva_category": required_category.value,
+            "rule_finding_code": InvoiceRuleFindingCode.OPERATION_TYPE_REQUIRED.value,
+            "fields": ("operation_type", "iva_category"),
+        },
     )
 
 
@@ -270,7 +286,7 @@ def _resolve_invoice_line_totals(
     if taxable_base is None:
         raise InvoiceValidationError("taxable_base is required when lines are not supplied")
     base_total = round_to_cents(taxable_base)
-    iva_amount = Decimal("0") if iva_percentage is None else round_to_cents(taxable_base * iva_percentage)
+    iva_amount = computed_line_iva(taxable_base, iva_percentage)
     return (
         base_total,
         iva_amount,
@@ -294,8 +310,10 @@ def _totals_from_supplied_invoice_lines(
         raise InvoiceValidationError("lines must not be empty")
     if not all(isinstance(item, InvoiceLine) for item in lines):
         raise InvoiceValidationError("lines must be InvoiceLine records")
-    base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
-    iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+    base_total, iva_total = rounded_line_totals(
+        [item.subtotal for item in lines],
+        [item.iva_amount for item in lines],
+    )
     return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
 
@@ -304,7 +322,18 @@ def _apply_operator_asserted_invoice_facts(
     *,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: date | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_period: Period | None,
+    recipient_increase_period: Period | None,
+    art_80_tres_obligations_attested: bool | None,
+    exercised_deduction_period: Period | None,
     recargo_amount: Decimal | None,
+    suplido_amount: Decimal | None,
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     operation_date: date | None,
@@ -317,8 +346,42 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["series"] = series
     if rectifies_invoice_number is not None:
         invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
+    # The rectification facts travel as the tokens the operator stated; the
+    # record's own deserialisation boundary projects each through fact 0141 and
+    # refuses one the registry does not declare for this date, so no second
+    # vocabulary check lives here. Each is applied only when stated: a
+    # rectificativa missing one is admitted and blocked at declaration.
+    if rectification_method is not None:
+        invoice_payload["rectification_method"] = rectification_method
+    if rectification_cause is not None:
+        invoice_payload["rectification_cause"] = rectification_cause
+    if rectification_direction is not None:
+        invoice_payload["rectification_direction"] = rectification_direction
+    if document_received_on is not None:
+        invoice_payload["document_received_on"] = document_received_on.isoformat()
+    # The elections travel the same way, each applied only when stated: the
+    # record's boundary projects the two tokens through fact 0141 and checks
+    # every elected period against the window the law gives its route, so no
+    # second rule lives here. A rectificativa whose election is still
+    # unrecorded is admitted and held at declaration, naming it.
+    if issuer_increase_election is not None:
+        invoice_payload["issuer_increase_election"] = issuer_increase_election
+    if issuer_minoracion_election is not None:
+        invoice_payload["issuer_minoracion_election"] = issuer_minoracion_election
+    if issuer_minoracion_regularisation_period is not None:
+        invoice_payload["issuer_minoracion_regularisation_period"] = issuer_minoracion_regularisation_period.model_dump(
+            mode="json",
+        )
+    if recipient_increase_period is not None:
+        invoice_payload["recipient_increase_period"] = recipient_increase_period.model_dump(mode="json")
+    if art_80_tres_obligations_attested is not None:
+        invoice_payload["art_80_tres_obligations_attested"] = art_80_tres_obligations_attested
+    if exercised_deduction_period is not None:
+        invoice_payload["exercised_deduction_period"] = exercised_deduction_period.model_dump(mode="json")
     if recargo_amount is not None:
         invoice_payload["recargo_amount"] = format(recargo_amount, "f")
+    if suplido_amount is not None:
+        invoice_payload["suplido_amount"] = format(suplido_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
     _require_operation_type_where_the_category_cannot_settle_it(
@@ -342,24 +405,76 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["retention_amount"] = format(retention_amount, "f")
 
 
+def require_declarable_fx_rate(*, currency: str, declared_fx_rate: Decimal) -> None:
+    """Refuse an exchange rate the operator cannot state for this invoice.
+
+    A euro invoice converts nothing, so a rate on it would assert a conversion
+    that never happened. A rate must be strictly positive: the stored euro
+    figure is ``amount * rate``, and a zero or negative rate would erase or
+    reverse the operation.
+
+    Raises:
+        InvoiceValidationError: For a euro invoice or a rate that is not above zero.
+    """
+    if currency == DEFAULT_CURRENCY:
+        raise InvoiceValidationError(
+            "a EUR invoice takes no exchange rate",
+            translated_message="application.invoices.creation.errors.declared_fx_rate_on_euro_invoice",
+            context={"fx_rate": format(declared_fx_rate, "f")},
+        )
+    if not declared_fx_rate.is_finite() or declared_fx_rate <= Decimal(0):
+        raise InvoiceValidationError(
+            "the declared exchange rate must be greater than zero",
+            translated_message="application.invoices.creation.errors.declared_fx_rate_not_positive",
+            context={"fx_rate": format(declared_fx_rate, "f")},
+        )
+
+
+def _fx_stamp_fields(fx_stamp: FxConversionStamp) -> dict[str, object]:
+    return {
+        "fx_rate": format(fx_stamp.rate, "f"),
+        "fx_rate_date": fx_stamp.rate_date.isoformat(),
+        "fx_rate_source": fx_stamp.source,
+        "fx_rate_observation_date": (
+            None if fx_stamp.observation_date is None else fx_stamp.observation_date.isoformat()
+        ),
+    }
+
+
+def declared_fx_conversion_fields(*, currency: str, devengo_date: date, declared_fx_rate: Decimal) -> dict[str, object]:
+    """Return the invoice fields that stamp an operator-declared exchange rate.
+
+    ``devengo_date`` is the date the operator's statement answers for -- the
+    LIVA art. 75 devengo date, which is the date the provider policy reads a
+    published rate at -- and the stamp names the operator as its source. Every
+    stamp field is returned, the empty observation date included, so applying
+    them to a stored record replaces any earlier stamp whole.
+
+    Raises:
+        InvoiceValidationError: For a euro invoice or a rate that is not above zero.
+    """
+    require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
+    return _fx_stamp_fields(declared_fx_conversion_stamp(rate=declared_fx_rate, on_date=devengo_date))
+
+
 def _apply_fx_conversion_stamp(
     invoice_payload: dict[str, object],
     *,
     currency: str,
-    issued_at: date,
+    devengo_date: date,
     rate_provider: CatalogueInvoiceRateProviderPort,
+    declared_fx_rate: Decimal | None,
 ) -> None:
+    if declared_fx_rate is not None:
+        require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
     fx_stamp = resolve_fx_conversion_stamp(
         currency=currency,
-        on_date=issued_at,
+        on_date=devengo_date,
         rate_provider=rate_provider,
+        declared_rate=declared_fx_rate,
     )
     if fx_stamp is not None:
-        invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
-        invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
-        invoice_payload["fx_rate_source"] = fx_stamp.source
-        if fx_stamp.observation_date is not None:
-            invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
+        invoice_payload.update(_fx_stamp_fields(fx_stamp))
 
 
 def build_catalogue_invoice(
@@ -384,9 +499,21 @@ def build_catalogue_invoice(
     invoice_class: InvoiceClass | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: date | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_period: Period | None = None,
+    recipient_increase_period: Period | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
+    exercised_deduction_period: Period | None = None,
     recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
+    declared_fx_rate: Decimal | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation | None = None,
 ) -> Invoice:
@@ -421,6 +548,18 @@ def build_catalogue_invoice(
     amount whenever a rate is supplied, and refuses either that does not
     match the invoice's ``base_total``.
 
+    ``rectification_method``, ``rectification_cause``,
+    ``rectification_direction`` and ``document_received_on`` carry the facts a
+    factura rectificativa states and no other invoice does. Each is the
+    operator's own statement: the method decides whether the stated figures ARE
+    the modification or the post-rectification figures (RD 1619/2012
+    art. 15.5), the cause places it in a period (LIVA art. 89.Cinco and
+    art. 114.Dos), the direction carries its sense while the totals stay
+    magnitudes, and the reception date is the recipient's. None is derived from
+    the class, the dates or an amount, and a rectificativa stating none of them
+    is written as it stands -- the Modelo 303 declaration refuses, naming the
+    gaps.
+
     ``invoice_class``, ``series``, ``rectifies_invoice_number`` and
     ``recargo_amount`` reach axes the aggregate has always modelled and no
     write path could set. Until they existed here every canonically-written
@@ -429,17 +568,24 @@ def build_catalogue_invoice(
     vocabulary the writer could not speak.
 
     The recargo rides INSIDE ``grand_total`` (LIVA art. 161) while a retención
-    is settled outside it, which is why only the recargo enters the totals
-    identity. The model re-checks that identity exactly, so a stated recargo
+    is settled outside it, which is why only the recargo and the suplido enter
+    the totals identity. A suplido (LIVA art. 78.Tres.3.º) is carried in the
+    total but is no part of the base or the cuota. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
 
     ``business_premises_lease`` states that an issued invoice documents the
     lease of a local de negocio and, when known, the premises' situación and
     referencia catastral (RD 1065/2007 art. 34.1.d), which Modelo 347 relates
     in its own declarado and inmueble records.
-    """
-    from ...domain.invoices.enums import iva_rate_percentage
 
+    ``declared_fx_rate`` is the euro value of one unit of a foreign
+    ``currency`` that the operator states was in force at the devengo -- the
+    ``operation_date`` where one is recorded and ``issued_at`` otherwise, since
+    LIVA art. 79.Once applies the rate "vigente en el momento del devengo". It
+    wins over ``rate_provider`` and is stamped with the operator-declared
+    source; it is refused for a euro invoice and for a rate that is not above
+    zero.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return build_catalogue_invoice(
@@ -463,12 +609,108 @@ def build_catalogue_invoice(
                 invoice_class=invoice_class,
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
+                rectification_method=rectification_method,
+                rectification_cause=rectification_cause,
+                rectification_direction=rectification_direction,
+                document_received_on=document_received_on,
+                issuer_increase_election=issuer_increase_election,
+                issuer_minoracion_election=issuer_minoracion_election,
+                issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+                recipient_increase_period=recipient_increase_period,
+                art_80_tres_obligations_attested=art_80_tres_obligations_attested,
+                exercised_deduction_period=exercised_deduction_period,
                 recargo_amount=recargo_amount,
+                suplido_amount=suplido_amount,
                 business_premises_lease=business_premises_lease,
                 lines=lines,
+                declared_fx_rate=declared_fx_rate,
                 rate_provider=rate_provider,
                 operation=indexed_operation,
             )
+
+    return _build_pinned_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_name=counterparty_name,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        currency=currency,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        payment_status=payment_status,
+        notes=notes,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+        recipient_increase_period=recipient_increase_period,
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
+        exercised_deduction_period=exercised_deduction_period,
+        recargo_amount=recargo_amount,
+        suplido_amount=suplido_amount,
+        business_premises_lease=business_premises_lease,
+        lines=lines,
+        declared_fx_rate=declared_fx_rate,
+        rate_provider=rate_provider,
+        operation=operation,
+    )
+
+
+def _build_pinned_catalogue_invoice(
+    *,
+    bucket_id: str | None,
+    kind: InvoiceKind,
+    counterparty_name: str,
+    counterparty_tax_id: str | None,
+    counterparty_country: str,
+    invoice_number: str,
+    issued_at: date,
+    currency: str,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    payment_status: PaymentStatus = PaymentStatus.PENDING,
+    notes: str = "",
+    iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: date | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_period: Period | None = None,
+    recipient_increase_period: Period | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
+    exercised_deduction_period: Period | None = None,
+    recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
+    business_premises_lease: BusinessPremisesLease | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
+    declared_fx_rate: Decimal | None = None,
+    rate_provider: CatalogueInvoiceRateProviderPort,
+    operation: PinnedAuthorityOperation,
+) -> Invoice:
+    """Construct and validate the invoice inside its exact supplied authority operation."""
+    from ...domain.invoices.enums import iva_rate_percentage
 
     # Every governed fact this construction reads -- the rate slot, the invoice
     # class default, the Modelo 349 clave rule, the devengo role and the final
@@ -509,8 +751,7 @@ def build_catalogue_invoice(
         # while a retencion is settled outside it, which is why only the recargo
         # appears here. The model re-checks this identity exactly, so a caller that
         # states a recargo the lines do not support is refused rather than balanced.
-        recargo = recargo_amount or Decimal("0")
-        grand_total = base_total + iva_total + recargo
+        grand_total = computed_grand_total(base_total, iva_total, recargo_amount) + (suplido_amount or Decimal(0))
         invoice_payload: dict[str, object] = {
             "bucket_id": bucket_id,
             "kind": kind.value,
@@ -532,7 +773,18 @@ def build_catalogue_invoice(
             invoice_payload,
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
+            issuer_increase_election=issuer_increase_election,
+            issuer_minoracion_election=issuer_minoracion_election,
+            issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+            recipient_increase_period=recipient_increase_period,
+            art_80_tres_obligations_attested=art_80_tres_obligations_attested,
+            exercised_deduction_period=exercised_deduction_period,
             recargo_amount=recargo_amount,
+            suplido_amount=suplido_amount,
             iva_category=iva_category,
             operation_type=operation_type,
             operation_date=operation_date,
@@ -542,18 +794,22 @@ def build_catalogue_invoice(
             operation=operation,
         )
         invoice_payload["business_premises_lease"] = business_premises_lease
-        # The euro-conversion stamp. ``currency`` is already the canonical uppercase
+        # The euro-conversion stamp, taken at the devengo date resolved above --
+        # the same date this construction already reads every other dated
+        # authority fact at, because LIVA art. 79.Once reads the rate "vigente en
+        # el momento del devengo". ``currency`` is already the canonical uppercase
         # ISO 4217 token (normalised once above), so the provider is queried with the
-        # same token the record stores. WHICH date the rate is taken at, and when a
-        # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
-        # answer -- this only writes the result into the payload shape.
+        # same token the record stores. Whether a record is deliberately left
+        # unstamped is resolve_fx_conversion_stamp's to answer -- this only writes
+        # the result into the payload shape.
         _apply_fx_conversion_stamp(
             invoice_payload,
             currency=currency,
-            issued_at=issued_at,
+            devengo_date=devengo_date,
             rate_provider=rate_provider,
+            declared_fx_rate=declared_fx_rate,
         )
-        return Invoice.model_validate(invoice_payload)
+        return Invoice.model_validate(invoice_payload, context=INVOICE_WRITE_ADMISSION)
 
 
 def create_catalogue_invoice(
@@ -609,4 +865,6 @@ __all__ = [
     "build_catalogue_invoice",
     "build_catalogue_invoice_event",
     "create_catalogue_invoice",
+    "declared_fx_conversion_fields",
+    "require_declarable_fx_rate",
 ]

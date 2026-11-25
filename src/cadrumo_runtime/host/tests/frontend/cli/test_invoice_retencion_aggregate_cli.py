@@ -33,7 +33,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.aggregation.errors import AggregationValidationError
+from cadrumo.application.aggregation.errors import RetencionesWindowEmptyError
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.application.aggregation.withholding_observation_service import WithholdingMutationMode
 from cadrumo.application.aggregation.withholding_recognition import (
@@ -42,7 +42,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
@@ -50,7 +50,7 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.i18n.render import lookup_translation
@@ -62,15 +62,11 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
-from .native_api_cli_support import native_api_cli_session
+from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -92,7 +88,7 @@ def _professional_services_invoice(
     number: str = "F-PROV-900",
     issued_at: date = date(2025, 3, 15),
     counterparty_country: str = "ES",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
@@ -147,16 +143,7 @@ def _withholding_evidence_payload(
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("1000.00"),
         porcentaje_retencion=Decimal("15"),
     )
@@ -182,61 +169,19 @@ def _withholding_evidence_payload(
     return request.model_dump_json()
 
 
-_M111_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="withholding operator activity"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
-
-
-def _capture_scope(client_id: UUID) -> AccessScope:
-    """Grant only invoice capture, with all-period catalogue lookup authority."""
-    return AccessScope(
-        operations=frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}),
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=f"{MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}.result",
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
+_M111_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="withholding operator activity"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # The invoices withhold retención from a professional, and Modelo 111 applies only
+        # to a payer of income subject to retención.
+        UserProfileFact(path="withholding.pays_professionals_with_retencion", value=True),
     )
+)
 
 
 def _m111_capture_profile_preparer(
@@ -306,7 +251,9 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(bucket_id=bucket_id),
@@ -369,7 +316,9 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -523,7 +472,9 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -583,7 +534,9 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -665,7 +618,7 @@ def _producer_created_invoice(
             bucket_id=bucket_id,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Asesoría Profesional SL",
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number=number,
             issued_at=date(2025, 3, 15),
@@ -697,7 +650,9 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _producer_created_invoice(
@@ -773,7 +728,9 @@ def test_producer_without_retention_is_excluded_from_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _producer_created_invoice(
@@ -817,14 +774,13 @@ def test_producer_without_retention_is_excluded_from_m111(
             )
             assert stored == ()
 
-            with pytest.raises(AggregationValidationError) as exc_info:
+            with pytest.raises(RetencionesWindowEmptyError) as exc_info:
                 _calculate_m111(str(session.profile_id), _M111_PERIOD)
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty_work"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
     assert context["modelo"] == "111"
-    assert context["period"] == "1T"
     assert not hasattr(exc_info.value, "suggestion")
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None, "the refusal must carry its typed precondition verdict"

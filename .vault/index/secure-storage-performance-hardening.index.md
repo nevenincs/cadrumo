@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c80ade1142707652ee356d50e2ce442fb112a6251a8dc811a29bfddc0a53fd7'
+body_hash: 'sha256:0c22070df6d7100079eb6b505b9e2a3f1cf25dba0dbe228cb707ec9464a33ffa'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-08-27-secure-storage-performance-hardening-eight-axis-structural-sweep-audit]]'
   - '[[2026-08-27-secure-storage-performance-hardening-measured-outcomes-reference]]'
   - '[[2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit]]'
+  - '[[2026-10-28-secure-storage-performance-hardening-workbench-capture-memory-measurement-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -102,6 +103,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-27-secure-storage-performance-hardening-closure-honesty-review-audit` - `secure-storage-performance-hardening` audit: closure honesty review
 - `2026-08-27-secure-storage-performance-hardening-eight-axis-structural-sweep-audit` - `secure-storage-performance-hardening` audit: eight-axis structural sweep
 - `2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit` - `secure-storage-performance-hardening` audit: W02 demand-loading residue
+- `2026-10-28-secure-storage-performance-hardening-workbench-capture-memory-measurement-audit` - `secure-storage-performance-hardening` audit: `Workbench capture memory: measurement and no-go`
 
 ### reference
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..modelo_100_properties import (
     MODELO_100_PROPERTIES_EXTRACTOR_ID,

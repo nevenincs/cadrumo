@@ -1,14 +1,10 @@
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
+import { formatPercent, formatSize } from "../../shared/numbers";
+import { facts, listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction } from "./AgentAction";
-import {
-  clampShare,
-  extensionLabel,
-  formatPercent,
-  formatSize,
-  KIND_GLYPH,
-} from "./files";
+import { clampShare, extensionLabel, KIND_GLYPH } from "./files";
 import type { StagedAttachment } from "./types";
 
 /** How much of an upload has gone, drawn as a ring with its percentage. */
@@ -23,6 +19,10 @@ function UploadRing({
 }) {
   const t = useStrings();
   const percent = Math.round(share * 100);
+  const shown = formatPercent(locale, share.toFixed(4), {
+    unit: "fraction",
+    maxFraction: 0,
+  });
   return (
     <div
       role="progressbar"
@@ -30,7 +30,7 @@ function UploadRing({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}
-      aria-valuetext={formatPercent(locale, share)}
+      aria-valuetext={shown}
       className="relative flex size-control-lg items-center justify-center"
     >
       <svg
@@ -61,7 +61,7 @@ function UploadRing({
         />
       </svg>
       <span className="text-2xs font-medium text-foreground tabular-nums">
-        {formatPercent(locale, share)}
+        {shown}
       </span>
     </div>
   );
@@ -104,10 +104,10 @@ export function AttachmentTile({
   return (
     <li
       data-state={state}
-      title={refused ? `${name} · ${reason}` : `${name} · ${size}`}
+      title={facts(t, [name, refused ? reason : size])}
       className={cn(
-        "group/tile relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg border bg-card",
-        refused && "border-destructive bg-destructive/5",
+        "group/tile relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg bg-accent",
+        refused && "bg-destructive/5 ring-1 ring-destructive ring-inset",
       )}
     >
       {preview ? (
@@ -163,7 +163,7 @@ export function AttachmentTile({
         )}
       </div>
       <span className="sr-only">
-        {[size, members, stateWords[state]].filter(Boolean).join(", ")}
+        {listed(t, [size, members, stateWords[state]], "plain")}
       </span>
       <AgentIconAction
         icon="close"

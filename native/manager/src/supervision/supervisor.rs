@@ -38,8 +38,8 @@ pub const EVENT_QUEUE: usize = 512;
 /// Timing bounds of the supervision core.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SupervisorConfig {
-    /// How long a live runtime may take to report `ready`, including first-run scanning.
-    pub readiness_ceiling: Duration,
+    /// Absolute last-resort timeout for a startup owner with no ready or exit signal.
+    pub startup_timeout: Duration,
     /// Interval between pings once the runtime is ready, while it reports work in flight or
     /// has not shown that it has none.
     pub heartbeat_interval: Duration,
@@ -65,13 +65,15 @@ pub struct SupervisorConfig {
 impl Default for SupervisorConfig {
     fn default() -> Self {
         Self {
-            readiness_ceiling: Duration::from_secs(180),
+            startup_timeout: Duration::from_secs(
+                cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS,
+            ),
             heartbeat_interval: Duration::from_secs(5),
             idle_heartbeat_interval: Duration::from_secs(60),
             heartbeat_staleness: Duration::from_secs(30),
             accept_tick_ceiling: Duration::from_secs(30),
             // The runtime drains for 15 s and its watchdog forces an exit 2 s later.
-            drain_bound: Duration::from_secs(25),
+            drain_bound: cadrumo_application::shutdown::RUNTIME_DRAIN_BOUND,
             session_end_bound: Duration::from_secs(3),
             termination_bound: Duration::from_secs(5),
             poll_interval: Duration::from_millis(100),
@@ -122,6 +124,10 @@ pub enum Effects {
 pub enum StandDownReason {
     RootMismatch,
     ElevatedTokenRefused,
+    /// The runtime image's native host refused to start the role before readiness.
+    /// The refusal is a property of the image and its launch arguments, so a relaunch
+    /// would be refused the same way.
+    LaunchRefused,
     /// The runtime still reported VERSION_MISMATCH after one re-probe and relaunch.
     VersionMismatch,
 }
@@ -153,8 +159,10 @@ pub enum Outcome {
 pub enum StopCause {
     /// The runtime announced an identity other than the one launched.
     Defect,
-    /// No readiness within the ceiling, or a stale heartbeat.
+    /// A stale heartbeat after readiness.
     Hang,
+    /// Startup exhausted the last-resort timeout without a readiness or exit signal.
+    Timeout,
     /// The runtime accepted a `stop-if-idle`.
     IdleRequested,
     /// The manager asked to stop.
@@ -341,7 +349,10 @@ impl Ended {
             ) | RuntimeExit::Zero
                 | RuntimeExit::ControlC
         );
-        if drained && !self.terminated && self.cause != Some(StopCause::Hang) {
+        if drained
+            && !self.terminated
+            && !matches!(self.cause, Some(StopCause::Hang | StopCause::Timeout))
+        {
             Effects::Settled
         } else {
             Effects::Unknown
@@ -362,7 +373,12 @@ enum Decision {
 
 fn decide(exit: RuntimeExit, cause: Option<StopCause>) -> Decision {
     match cause {
-        Some(StopCause::Requested | StopCause::IdleRequested | StopCause::SessionEnd) => {
+        Some(
+            StopCause::Requested
+            | StopCause::IdleRequested
+            | StopCause::SessionEnd
+            | StopCause::Timeout,
+        ) => {
             return Decision::Stopped;
         }
         Some(StopCause::Hang) => return Decision::Restart(RestartClass::Hang),
@@ -382,6 +398,7 @@ fn decide(exit: RuntimeExit, cause: Option<StopCause>) -> Decision {
         }
         RuntimeExit::Reason(ExitReason::VersionMismatch) => Decision::VersionMismatch,
         RuntimeExit::Reason(ExitReason::LoginWitnessLoss) => Decision::WitnessLoss,
+        exit if exit.is_launch_refusal() => Decision::StandDown(StandDownReason::LaunchRefused),
         RuntimeExit::LaunchFailure(_) => Decision::Restart(RestartClass::LaunchFailure),
         RuntimeExit::Reason(
             ExitReason::SupervisorStop
@@ -628,7 +645,7 @@ impl Supervisor {
                 match self.adopt() {
                     Ok(opened) => {
                         self.restart_permit = None;
-                        self.watch(RuntimeProcess::Adopted(opened), None)
+                        self.watch(RuntimeProcess::Adopted(opened), None, None)
                     }
                     Err(reason) => {
                         self.emit(Event::Foreign(reason));
@@ -810,13 +827,20 @@ impl Supervisor {
             }
             self.target.spawn()
         };
-        let mut child = match launched {
-            Ok(child) => child,
+        let super::launch::Launched {
+            mut child,
+            containment,
+        } = match launched {
+            Ok(launched) => launched,
             Err(error) => {
                 self.emit(Event::LaunchFailed { kind: error.kind() });
                 return None;
             }
         };
+        // The startup budget is the runtime's: creation waits for the launch gate, for
+        // every other process holding the creation step and for the system's scan of the
+        // image, none of which the runtime spends.
+        let startup_deadline = Instant::now() + self.config.startup_timeout;
         self.generation += 1;
         let pid = child.id();
         self.emit(Event::Launched {
@@ -835,7 +859,14 @@ impl Supervisor {
             commands,
             announcements_open,
         };
-        Some(self.watch(RuntimeProcess::Launched(child), Some(channel)))
+        let ended = self.watch(
+            RuntimeProcess::Launched(child),
+            Some(channel),
+            Some(startup_deadline),
+        );
+        // The runtime's exit is observed; nothing it left in its group outlives it.
+        drop(containment);
+        Some(ended)
     }
 
     fn adopt(&mut self) -> Result<OpenedProcess, ForeignReason> {
@@ -863,14 +894,14 @@ impl Supervisor {
         Ok(opened)
     }
 
-    fn watch(&mut self, runtime: RuntimeProcess, channel: Option<Channel>) -> Ended {
-        let phase = if channel.is_some() {
-            Phase::Starting {
-                deadline: Instant::now() + self.config.readiness_ceiling,
-            }
-        } else {
-            Phase::Unmonitored
-        };
+    fn watch(
+        &mut self,
+        runtime: RuntimeProcess,
+        channel: Option<Channel>,
+        startup_deadline: Option<Instant>,
+    ) -> Ended {
+        let phase =
+            startup_deadline.map_or(Phase::Unmonitored, |deadline| Phase::Starting { deadline });
         let mut watch = Watch {
             pid: runtime.pid(),
             runtime,
@@ -884,7 +915,7 @@ impl Supervisor {
             announced: None,
             exit_watched: false,
         };
-        watch.exit_watched = self.watch_exit(&watch.runtime);
+        watch.exit_watched = self.watch_exit(&mut watch.runtime);
         loop {
             if self.session_ending.load(Ordering::SeqCst) {
                 self.begin_stop(&mut watch, StopCause::SessionEnd);
@@ -966,13 +997,18 @@ impl Supervisor {
         }
     }
 
-    /// Readiness ceiling, pings and staleness, unless a stop is already in progress.
+    /// Last-resort startup termination, or ordinary ready-state heartbeat supervision.
     fn advance(&mut self, watch: &mut Watch, now: Instant) {
         if watch.stop_deadline.is_some() {
             return;
         }
+        if matches!(watch.phase, Phase::Starting { deadline } if now >= deadline) {
+            self.begin_stop(watch, StopCause::Timeout);
+            self.terminate(watch);
+            return;
+        }
         let hung = match &mut watch.phase {
-            Phase::Starting { deadline } => (now >= *deadline).then_some(false),
+            Phase::Starting { .. } => None,
             Phase::Ready {
                 sent,
                 stale_at,
@@ -1006,7 +1042,7 @@ impl Supervisor {
 
     /// Arm a thread that blocks on the process's exit and reports it as an
     /// input; false when the platform cannot watch it, so exit is polled.
-    fn watch_exit(&self, runtime: &RuntimeProcess) -> bool {
+    fn watch_exit(&self, runtime: &mut RuntimeProcess) -> bool {
         let watch = match runtime.exit_watch() {
             Ok(Some(watch)) => watch,
             // Already ended: the next exit check observes it at once.
@@ -1203,7 +1239,9 @@ impl Supervisor {
                 Err(error) => StopPath::Undelivered(error),
             }
         };
-        let bound = if cause == StopCause::SessionEnd {
+        let bound = if cause == StopCause::Timeout {
+            Duration::ZERO
+        } else if cause == StopCause::SessionEnd {
             self.config.session_end_bound
         } else {
             self.config.drain_bound
@@ -1453,6 +1491,27 @@ mod tests {
     }
 
     #[test]
+    fn startup_timeout_is_terminal_and_never_proves_settlement() {
+        assert_eq!(
+            SupervisorConfig::default().startup_timeout,
+            Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS)
+        );
+        for exit in [code(64), RuntimeExit::Terminated, code(71)] {
+            assert_eq!(decide(exit, Some(StopCause::Timeout)), Decision::Stopped);
+            assert_eq!(
+                Ended {
+                    pid: 1,
+                    exit,
+                    cause: Some(StopCause::Timeout),
+                    terminated: false,
+                }
+                .effects(),
+                Effects::Unknown
+            );
+        }
+    }
+
+    #[test]
     fn reason_codes_select_their_class() {
         assert_eq!(decide(code(67), None), Decision::Adopt);
         assert_eq!(
@@ -1478,6 +1537,11 @@ mod tests {
                 Decision::Restart(RestartClass::LaunchFailure)
             );
         }
+        // A declared native-host refusal is deterministic: it is never retried.
+        assert_eq!(
+            decide(code(crate::contract::LAUNCH_PROFILE_REFUSED_EXIT), None),
+            Decision::StandDown(StandDownReason::LaunchRefused)
+        );
     }
 
     #[test]

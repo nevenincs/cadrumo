@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-197` · **Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
+**Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -41,7 +41,7 @@ The strong local qualities are broad primary-source coverage, article-level orga
 
 ## Complete assigned-file coverage
 
-All files in the assigned manifest are linked below. The list is generated directly from `map/chunks/STAGE-2-197.json`; it is complete inventory coverage, not a claim that every document was semantically read.
+All files in the assigned manifest are linked below. The list is complete inventory coverage, not a claim that every document was semantically read.
 
 - `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html` — 6,119 bytes
 - `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html.extracted.json` — 4,179 bytes

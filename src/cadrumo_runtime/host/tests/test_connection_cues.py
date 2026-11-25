@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from threading import Event
 from typing import cast
@@ -15,10 +18,15 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+    SessionKind,
+)
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
-from cadrumo.core.operations import OperationLifecycle
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
 from cadrumo_client.contracts.contracts import ByteChannel, Peer
@@ -35,9 +43,10 @@ from cadrumo_client.contracts.session_events import (
 )
 from cadrumo_client.contracts.transport import ConnectionContext
 
-from ..profile_connection_services import ServiceConnection
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
+from ..profile_host import RuntimeProfileHost
+from ..service_connection_records import ServiceConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -98,27 +107,54 @@ def _person(profiles: RuntimeProfileConnections, profile_id: UUID) -> Connection
     return context
 
 
+def _ended(profiles: RuntimeProfileConnections) -> SessionEvent:
+    return SessionEvent(
+        runtime_boot_id=profiles.boot,
+        connection_id=uuid4(),
+        profile_id=uuid4(),
+        session_id=uuid4(),
+        event=SessionRetirementKind.REVOKED,
+        reason=AccessDenialCode.SESSION_INACTIVE,
+    )
+
+
 def test_sign_in_watchers_hear_one_cue_per_pending_change_and_nothing_once_gone(tmp_path: Path) -> None:
     profiles = _runtime(tmp_path)
     watcher, bystander = _connected(profiles), _connected(profiles)
     profiles.watch_sign_in(watcher)
 
-    profiles._retired(())
-    assert profiles.take_events(watcher) == ()
-    profiles._retired((uuid4(),))
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     (cue,) = profiles.take_events(watcher)
     assert cue == SignInChanged(runtime_boot_id=profiles.boot, connection_id=watcher.connection_id)
     assert profiles.take_events(bystander) == ()
 
     # Once taken, a later change queues a fresh cue.
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     assert profiles.take_events(watcher) == (cue,)
 
     profiles.disconnect(watcher)
     assert watcher.connection_id not in profiles._sign_in_watchers
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     assert profiles.take_events(bystander) == ()
+
+
+@pytest.mark.parametrize("kind", [SessionKind.ATTENDED, SessionKind.API_KEY])
+def test_a_delegated_lease_ending_leaves_sign_in_watchers_alone(tmp_path: Path, kind: SessionKind) -> None:
+    # A service's attended lease is retired and renewed on a short cycle; the
+    # person's sign-in did not move, so no watcher is sent to read it again.
+    profiles = _runtime(tmp_path)
+    watcher = _connected(profiles)
+    profiles.watch_sign_in(watcher)
+
+    profiles._publish_retirement(_ended(profiles), kind)
+    profiles._retired((uuid4(),))
+    assert profiles.take_events(watcher) == ()
+
+    # ANTI-VACUITY: the same watcher hears a person's lease ending.
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
+    (cue,) = profiles.take_events(watcher)
+    assert isinstance(cue, SignInChanged)
 
 
 def test_os_lock_changes_cue_watchers_and_unchanged_logins_do_not(tmp_path: Path) -> None:
@@ -191,7 +227,7 @@ def test_retiring_the_parent_session_withdraws_the_service_lease_and_cues_only_t
         reason=AccessDenialCode.AUTHENTICATION_REQUIRED,
     )
 
-    profiles._publish_retirement(retirement)
+    profiles._publish_retirement(retirement, SessionKind.HUMAN)
 
     assert profiles._services[service.connection_id].lease is None
     assert profiles.take_events(holder) == (retirement,)
@@ -290,6 +326,119 @@ def test_operation_cues_reach_only_connections_still_observing_a_reported_operat
     profiles.disconnect(watcher)
     profiles._operations_advanced(profile_id, (operation,))
     assert watcher.connection_id not in profiles._operation_watches
+
+
+@pytest.mark.parametrize("advanced_after_watch", [False, True])
+def test_observation_covers_a_terminal_commit_on_either_side_of_watch_installation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, advanced_after_watch: bool
+) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id, operation_id = uuid4(), "a" * 64
+    context = _person(profiles, profile_id)
+    connection = profiles._connections[context.connection_id]
+    assert connection.session_id is not None
+    request = OperationObserve(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=connection.session_id,
+        observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
+    )
+    held = False
+    reads = 0
+
+    @contextmanager
+    def authorized_output() -> Generator[None]:
+        nonlocal held
+        assert not held, "worker callbacks must not run under an earlier output fence"
+        held = True
+        try:
+            yield
+        finally:
+            held = False
+
+    def worker_reply(*_args: object, release_guard: ExitStack) -> tuple[OperationObserved, datetime | None]:
+        nonlocal reads
+        assert not held, "each worker snapshot needs callbacks on the profile guard"
+        reads += 1
+        lifecycle = (
+            OperationLifecycle.TERMINAL if reads == 2 and not advanced_after_watch else OperationLifecycle.RUNNING
+        )
+        snapshot = OperationObservationSuccessV1.model_construct(
+            projection=OperationPublicProjectionV1.model_construct(lifecycle=lifecycle)
+        )
+        # Reproduce the production race: the worker has captured RUNNING,
+        # then its final committed progress reaches the parent before the
+        # authorized snapshot has installed its watch. No later cue arrives.
+        if reads == (2 if advanced_after_watch else 1):
+            profiles._operations_advanced(profile_id, (operation_id,))
+        release_guard.enter_context(authorized_output())
+        return OperationObserved.model_construct(observation=snapshot), None
+
+    monkeypatch.setattr(profiles, "_operation_reply", worker_reply)
+    with ExitStack() as guard:
+        result, _expires = profiles._observe_and_watch_operation(
+            connection,
+            cast(RuntimeProfileHost, object()),
+            context,
+            cast(ByteChannel, object()),
+            request,
+            release_guard=guard,
+        )
+        assert held, "the final snapshot retains its output fence through disclosure"
+        assert isinstance(result, OperationObserved)
+        assert isinstance(result.observation, OperationObservationSuccessV1)
+        assert result.observation.projection.lifecycle is (
+            OperationLifecycle.RUNNING if advanced_after_watch else OperationLifecycle.TERMINAL
+        )
+    assert reads == 2
+    assert not held
+    if advanced_after_watch:
+        assert profiles._operation_watches[context.connection_id] == {operation_id: connection.session_id}
+    else:
+        assert context.connection_id not in profiles._operation_watches
+    assert len(profiles.take_events(context)) == int(advanced_after_watch)
+
+
+@pytest.mark.parametrize("refuse_read", [1, 2])
+def test_refused_observation_never_installs_a_watch_and_a_refused_reread_removes_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refuse_read: int
+) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id, operation_id = uuid4(), "a" * 64
+    context = _person(profiles, profile_id)
+    connection = profiles._connections[context.connection_id]
+    assert connection.session_id is not None
+    request = OperationObserve(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=connection.session_id,
+        observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
+    )
+    reads = 0
+
+    def worker_reply(*_args: object, release_guard: ExitStack) -> tuple[OperationObserved, datetime | None]:
+        nonlocal reads
+        reads += 1
+        if reads == refuse_read:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        snapshot = OperationObservationSuccessV1.model_construct(
+            projection=OperationPublicProjectionV1.model_construct(lifecycle=OperationLifecycle.RUNNING)
+        )
+        return OperationObserved.model_construct(observation=snapshot), None
+
+    monkeypatch.setattr(profiles, "_operation_reply", worker_reply)
+    with ExitStack() as guard, pytest.raises(ProfileAccessRefusedError):
+        profiles._observe_and_watch_operation(
+            connection,
+            cast(RuntimeProfileHost, object()),
+            context,
+            cast(ByteChannel, object()),
+            request,
+            release_guard=guard,
+        )
+    profiles._operations_advanced(profile_id, (operation_id,))
+    assert context.connection_id not in profiles._operation_watches
+    assert profiles.take_events(context) == ()
 
 
 def test_record_effect_cues_other_editors_once_without_values_or_operation_watches(tmp_path: Path) -> None:

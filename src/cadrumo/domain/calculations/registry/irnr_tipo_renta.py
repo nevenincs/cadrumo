@@ -204,8 +204,8 @@ def _m210_code_definition(
     projection_codes: tuple[str, ...],
     code: str,
 ) -> M210TipoRentaCodeDefinition:
-    if len(code) != 2 or not code.isdecimal():
-        raise RegistryValidationError(f"official tipo-renta code {code!r} must be a two-digit decimal token")
+    if not code.isdecimal():
+        raise RegistryValidationError(f"official tipo-renta code {code!r} must be a decimal token")
     prefix = f"{_PREFIX}code.{code}"
     if code in catalogue.fetch_gated_codes:
         return _fetch_gated_m210_code(entries, prefix, code)

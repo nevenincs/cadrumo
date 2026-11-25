@@ -13,6 +13,7 @@ from cadrumo_client.contracts.session_events import (
     LifecycleNotice,
     OperationChanged,
     ProfileRecordsChanged,
+    ServiceAdmissionChanged,
     ServiceLeaseChanged,
     SignInChanged,
 )
@@ -24,6 +25,7 @@ SESSION_EVENT_QUEUE_LIMIT = 64
 type InvalidationCue = (
     SignInChanged
     | ServiceLeaseChanged
+    | ServiceAdmissionChanged
     | AttendanceChanged
     | AttendanceAnswered
     | OperationChanged
@@ -39,17 +41,26 @@ class _Stream:
     overflowed: Event
     queued: NativeWake | None
 
-    def put(self, event: ConnectionEvent) -> bool:
-        """Queue for the writer and wake it; an overflow closes the stream at its next turn."""
+    def enqueue(self, event: ConnectionEvent) -> bool:
+        """Retain an event or latch overflow before signalling the writer."""
         try:
             self.events.put_nowait(event)
         except Full:
             self.overflowed.set()
             return False
-        finally:
-            if self.queued is not None:
-                self.queued.set()
         return True
+
+    def wake(self) -> None:
+        """Signal the writer, including a retry after a failed native signal."""
+        if self.queued is not None:
+            self.queued.set()
+
+    def put(self, event: ConnectionEvent) -> bool:
+        """Queue for the writer and wake it even when overflow requires closure."""
+        try:
+            return self.enqueue(event)
+        finally:
+            self.wake()
 
 
 class RuntimeSessionEvents:
@@ -82,13 +93,17 @@ class RuntimeSessionEvents:
         """
         with self._guard:
             target = self._queues.get(cue.connection_id)
-            if target is None or target.overflowed.is_set():
+            if target is None:
+                return
+            if target.overflowed.is_set():
+                # A failed overflow wake still needs a retry so the writer can close.
+                target.wake()
                 return
             pending = self._pending_cues.setdefault(cue.connection_id, set())
-            if cue.kind in pending:
-                return
-            if target.put(cue):
+            if cue.kind not in pending and target.enqueue(cue):
+                # Queue membership survives a failed wake, so its retry cannot duplicate it.
                 pending.add(cue.kind)
+            target.wake()
 
     def publish(self, event: ConnectionEvent) -> None:
         """Enqueue after authority removal without waiting for a client to read."""

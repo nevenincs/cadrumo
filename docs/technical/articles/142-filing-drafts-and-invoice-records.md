@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-142` · **Topic:** [Business and taxpayer domain](../topics/business-and-taxpayer-domain.md)
+**Topic:** [Business and taxpayer domain](../topics/business-and-taxpayer-domain.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -68,7 +68,7 @@ Synthesis should trace the filing builder and draft repository to verify content
 - filing/software_identity.py (`src/cadrumo/domain/filing/software_identity.py`)
 - filing/validator.py (`src/cadrumo/domain/filing/validator.py`)
 - invoices/__init__.py (`src/cadrumo/domain/invoices/__init__.py`)
-- invoices/_payload_normalisation.py (`src/cadrumo/domain/invoices/_payload_normalisation.py`)
+- invoices/_payload_normalisation.py (`src/cadrumo/domain/invoices/payload_normalisation.py`)
 - invoices/decomposition.py (`src/cadrumo/domain/invoices/decomposition.py`)
 - invoices/enums.py (`src/cadrumo/domain/invoices/enums.py`)
 - invoices/errors.py (`src/cadrumo/domain/invoices/errors.py`)

@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.validate_revision_id_window_agreement import (
@@ -22,6 +23,8 @@ from ..compiler.validate_revision_id_window_agreement import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ENVELOPE = filing_year_envelope()
 
 _YEAR_KEYED_REVISION_ID = re.compile(r"^\d{4}(?P<tail>.*)$")
 
@@ -109,10 +112,11 @@ def test_the_marker_recognises_every_open_ended_id_the_tree_carries() -> None:
 
 def test_a_mid_year_split_id_is_not_read_as_an_open_ended_claim() -> None:
     """``-desde-09-y-3t`` contains ``y`` as a separator and asserts no open window."""
-    assert not revision_id_claims_open_window("2024-desde-09-y-3t")
-    assert not revision_id_claims_open_window("2024-hasta-08-y-2t")
-    assert revision_id_claims_open_window("2021-y-siguientes")
-    assert revision_id_claims_open_window("2025-02-03-y-siguientes")
+    year = _ENVELOPE.horizon
+    assert not revision_id_claims_open_window(f"{year}-desde-09-y-3t")
+    assert not revision_id_claims_open_window(f"{year}-hasta-08-y-2t")
+    assert revision_id_claims_open_window(f"{year}-y-siguientes")
+    assert revision_id_claims_open_window(f"{year}-02-03-y-siguientes")
 
 
 def test_unknown_year_keyed_tails_are_classified_from_their_declared_windows() -> None:
@@ -122,11 +126,12 @@ def test_unknown_year_keyed_tails_are_classified_from_their_declared_windows() -
         for _modelo_id, revision in _committed_revisions()
         if revision_id_claims_open_window(str(revision.id)) and not revision_window_closures(revision)
     )
-    unknown_open = genuinely_open.model_copy(update={"id": "2097-en-adelante"})
+    unknown_year = _ENVELOPE.horizon + 1
+    unknown_open = genuinely_open.model_copy(update={"id": f"{unknown_year}-en-adelante"})
     unknown_bounded = genuinely_open.model_copy(
         update={
-            "id": "2097-unknown-subyear",
-            "valid_to": date(2097, 9, 30),
+            "id": f"{unknown_year}-unknown-subyear",
+            "valid_to": date(unknown_year, 9, 30),
         }
     )
 
@@ -138,11 +143,11 @@ def test_an_uninformative_id_is_neither_refused_nor_cleared() -> None:
     """A revision naming no window makes no claim, so there is no contradiction to find.
 
     Asserted explicitly so the gate cannot drift into a naming-convention linter:
-    a closed revision named ``2025`` is correct and must stay silent here.
+    a closed revision named for its one year is correct and must stay silent here.
     """
     failures: list[str] = []
     for modelo_id, revision in _committed_revisions():
-        if str(revision.id) == "2025" and revision.valid_to is not None:
+        if re.fullmatch(r"\d{4}", str(revision.id)) and revision.valid_to is not None:
             failures.extend(validate_revision_id_window_agreement(prefix=f"modelo {modelo_id}", revision=revision))
     assert failures == []
 
@@ -186,7 +191,8 @@ def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin()
     passing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=genuinely_open)
     assert passing == [], f"a genuinely open-ended revision was refused: {genuinely_open.id}"
 
-    closed = genuinely_open.model_copy(update={"valid_to": date(2025, 12, 31)})
+    closing_date = date(_ENVELOPE.horizon, 12, 31)
+    closed = genuinely_open.model_copy(update={"valid_to": closing_date})
     refusing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=closed)
 
     assert len(refusing) == 1
@@ -197,4 +203,4 @@ def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin()
     message = refusing[0]
     assert "open-ended" in message, "the refusal no longer says what the id claimed"
     assert "valid_to" in message, "the refusal does not name the axis that closed the window"
-    assert "2025-12-31" in message, "the refusal does not name the value the window closed at"
+    assert closing_date.isoformat() in message, "the refusal does not name the value the window closed at"

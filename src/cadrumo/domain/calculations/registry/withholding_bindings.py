@@ -12,33 +12,49 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     optional_uppercase_alpha_code,
     provider_member,
 )
 from .errors import RegistryValidationError
+from .form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
+from .invoice_row_materialization import invoice_party_reference
+from .party_name_rows import RowValues, file_party_names
+from .retencion_clave_catalogue import resolve_retencion_clave
 from .schema_exports import ExportFieldDataType
+from .tax_id_format import require_spanish_tax_id_width
+from .withholding_observation_codes import (
+    OBSERVATION_CODE_FIELDS,
+    WITHHOLDING_CATALOGUE_FACT,
+    validate_financial_asset_conditions,
+    validate_observation_form_codes,
+)
+from .withholding_party_rows import (
+    PARTY_FILING_NAME_ROW_FIELD,
+    PENDING_PERCEPTOR_NAME,
+    DeclaredWithholdingParty,
+    is_prescribed_pending_record,
+)
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
-    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingProvider",
-    "aggregate_withholding_by_clave",
-    "resolve_retencion_clave",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -48,6 +64,7 @@ __all__ = [
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
+
 WithholdingGrouping = Literal[
     "per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo", "per_source_allocation"
 ]
@@ -125,114 +142,8 @@ did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held
 while someone maintained both. It is now one declaration and two views of it."""
 
 
-_RETENCION_CLAVE_FACT_ID: Final[str] = "m111-m115-m123-withholding-scheme-catalogue"
-
-
-def _retencion_clave_declarations(
-    effective_date: date,
-    *,
-    authority: GovernedFactSource | None = None,
-) -> dict[str, str]:
-    """Resolve the complete clave vocabulary and projections from the catalogue."""
-    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-    from .schema_base import DateAxis
-
-    selected_authority = require_governed_fact_authority(authority, subject="retencion clave catalogue")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_RETENCION_CLAVE_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("retencion clave catalogue must resolve as a mapping fact")
-    declarations: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("retencion clave catalogue entries must be string mappings")
-        if entry.key in declarations:
-            raise RegistryValidationError(f"duplicate retencion clave declaration {entry.key!r}")
-        declarations[entry.key] = entry.value
-    return declarations
-
-
-def resolve_retencion_clave(
-    value: str,
-    effective_date: date,
-    *,
-    modelo: str | None = None,
-    authority: GovernedFactSource | None = None,
-) -> RetencionClave:
-    """Project one raw clave through the selected registry vocabulary.
-
-    Membership, canonical value, and model applicability are all authored in
-    the withholding catalogue.  The projection intentionally fails closed when
-    any declaration is missing or inconsistent; it never turns an unknown raw
-    token into a core value.
-    """
-    if not isinstance(value, str) or not value:
-        raise RegistryValidationError("retencion clave must be a non-empty string")
-    if not isinstance(effective_date, date):
-        raise RegistryValidationError("retencion clave requires a filing-period date")
-
-    declarations = _retencion_clave_declarations(effective_date, authority=authority)
-    order = _retencion_clave_order(declarations)
-    if value not in order:
-        raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
-    applicable_models = _retencion_clave_models_for_order(value, order, declarations)
-    if modelo is not None and modelo not in applicable_models:
-        raise RegistryValidationError(
-            f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
-        )
-    return RetencionClave.from_registry(value)
-
-
-def _retencion_clave_order(declarations: Mapping[str, str]) -> tuple[str, ...]:
-    order_text = declarations.get("clave_order")
-    if order_text is None:
-        raise RegistryValidationError("retencion clave catalogue is missing clave_order")
-    order = tuple(token.strip() for token in order_text.split(",") if token.strip())
-    if not order or len(order) != len(set(order)):
-        raise RegistryValidationError("retencion clave catalogue has an invalid clave_order")
-    return order
-
-
-def _retencion_clave_models_for_order(
-    selected_value: str,
-    order: tuple[str, ...],
-    declarations: Mapping[str, str],
-) -> tuple[str, ...]:
-    applicable_models: tuple[str, ...] = ()
-    for token in order:
-        models = _retencion_clave_declared_models(token, declarations)
-        if token == selected_value:
-            applicable_models = models
-    return applicable_models
-
-
-def _retencion_clave_declared_models(token: str, declarations: Mapping[str, str]) -> tuple[str, ...]:
-    declared_value = declarations.get(f"clave.{token}.value")
-    if declared_value != token:
-        raise RegistryValidationError(f"retencion clave {token!r} has no matching canonical value declaration")
-    model_text = declarations.get(f"clave.{token}.modelos")
-    models = tuple(item.strip() for item in (model_text or "").split(",") if item.strip())
-    if not models or len(models) != len(set(models)):
-        raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
-    return models
-
-
 class WithholdingObservation(BaseModel):
-    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193.
-
-    ``perceptor_tax_id`` is normalised to its canonical identity token on
-    construction, so the identity the clave/subclave aggregations count is the
-    identity the encrypted percepciones store keys by. Holding the raw
-    declaration here split the two: the repository trimmed and uppercased the
-    tax ID before hashing it into the object key, so two canonically-equal
-    declarations were counted as two distinct percepciones while sharing one
-    stored row, and the later write overwrote the earlier evidence.
-    """
+    """Per-perceptor withholding observation with a canonical tax identity token."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -245,7 +156,7 @@ class WithholdingObservation(BaseModel):
     remain traceable without becoming duplicate type-2 records.
     """
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
-    perceptor_legal_name: str = Field(default="", max_length=200)
+    perceptor_legal_name: str = Field(default="", max_length=256)
     country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
@@ -260,7 +171,7 @@ class WithholdingObservation(BaseModel):
     default replaced."""
     transaction_date: date
     clave: RetencionClave
-    subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
+    subclave: str = Field(default="", max_length=16, pattern=r"^[0-9]*$")
     percibido_dinerario: Decimal = Decimal("0")
     """The NON-incapacidad part of the row's dineraria percepciones: the design's
     campo 11 excludes the incapacidad-laboral prestaciones, which file in their
@@ -268,7 +179,7 @@ class WithholdingObservation(BaseModel):
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
-    province_code: str | None = Field(default=None, pattern=r"^\d{2}$")
+    province_code: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Perceptor domicilio province code (01-52, 53 La Palma), or 98 for a Spanish IRPF
     contributor resident abroad, per the Modelo 190 record design's own list.
 
@@ -276,40 +187,40 @@ class WithholdingObservation(BaseModel):
     province a fabricated residence. Absence propagates as an ABSENT KEY in the
     built row, so a binding that needs the province refuses with the shipped
     not-produced error naming itself."""
-    territorial_deduction_clave: int | None = Field(default=None, ge=0, le=2)
+    territorial_deduction_clave: int | None = None
     """Modelo 190 CEUTA O MELILLA clave: 1 when the payer applied the art. 68.4
     deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional
     deduction, 0 otherwise. A retention-rate determination fact the payer's own
     data carries; never derived from the province code."""
-    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=2100)
+    perceptor_birth_year: FourDigitYear | None = None
     """Perceptor birth year, only declared by the design for claves A, B (subclaves
     01, 03, 04, 99) and C."""
-    perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
+    perceptor_situacion_familiar: int | None = None
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
-    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """NIF of the perceptor's legal representative, declared by the design only when
     the perceptor is under 14; every other row writes the design's own spaces."""
-    spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
     unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
-    disability_clave: int | None = Field(default=None, ge=0, le=3)
+    disability_clave: int | None = None
     """Perceptor disability degree clave (0 none/<33%, 1 33-65%, 2 33-65% needing
     third-party help or reduced mobility, 3 >=65%), declared for claves A, B
     (subclaves 01, 03, 04, 99) and C."""
-    contract_relation_clave: int | None = Field(default=None, ge=1, le=4)
+    contract_relation_clave: int | None = None
     """Contract-or-relation type clave (1 general, 2 under-a-year/artists, 3 other
     special dependent relations, 4 sporadic peonadas), declared for clave A only."""
-    unit_convivencia_titular_clave: int | None = Field(default=None, ge=1, le=2)
+    unit_convivencia_titular_clave: int | None = None
     """Whether the perceptor is the unidad de convivencia's titular (1 yes, 2 no),
     declared for clave L.29 only."""
-    geographic_mobility_clave: int | None = Field(default=None, ge=0, le=1)
+    geographic_mobility_clave: int | None = None
     """Art. 19.2.f) geographic-mobility deduction flag (1 entitled, 0 not),
     declared for clave A only."""
     ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
     """Ingresos a cuenta efectuados on non-incapacidad especie payments that the
     payer repercutido to the perceptor (design positions 135-147)."""
-    accrual_year: int | None = Field(default=None, ge=1900, le=2100)
+    accrual_year: FourDigitYear | None = None
     """Ejercicio de devengo (design positions 148-151), declared only for atrasos
     devengados in earlier exercises or reintegros of earlier-exercise amounts;
     every other row writes the design's own zeros."""
@@ -325,57 +236,57 @@ class WithholdingObservation(BaseModel):
     anualidades_alimentos: Decimal = Decimal("0")
     """Annual food annuities to children by judicial decision (design positions
     210-222); the design's own zeros when none."""
-    descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
+    descendants_under_3_total: int | None = None
     """Descendants under 3 (design position 223), counted per art. 58 mínimo por
     descendientes rules; the design's own zero when none."""
-    descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
+    descendants_under_3_whole: int | None = None
     """Of the position-223 descendants, those computed por entero (design 224)."""
-    descendants_rest_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_rest_total: int | None = None
     """Remaining descendants (design positions 225-226)."""
-    descendants_rest_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_rest_whole: int | None = None
     """Of the position 225-226 descendants, those computed por entero (227-228)."""
-    descendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_33_65_total: int | None = None
     """Disabled descendants 33-65% (design positions 229-230, art. 60.2)."""
-    descendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_33_65_whole: int | None = None
     """Of the 229-230 descendants, those computed por entero (231-232)."""
-    descendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_mobility_total: int | None = None
     """Disabled 33-65% descendants with reduced mobility or third-party help need
     (design positions 233-234)."""
-    descendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_mobility_whole: int | None = None
     """Of the 233-234 descendants, those computed por entero (235-236)."""
-    descendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_65_plus_total: int | None = None
     """Disabled descendants at 65% or more (design positions 237-238)."""
-    descendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_65_plus_whole: int | None = None
     """Of the 237-238 descendants, those computed por entero (239-240)."""
-    ascendants_under_75_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_under_75_total: int | None = None
     """Ascendants under 75 (design position 241, art. 59)."""
-    ascendants_under_75_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_under_75_whole: int | None = None
     """Of the position-241 ascendants, those computed por entero (242)."""
-    ascendants_75_plus_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_75_plus_total: int | None = None
     """Ascendants at 75 or more (design position 243)."""
-    ascendants_75_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_75_plus_whole: int | None = None
     """Of the position-243 ascendants, those computed por entero (244)."""
-    ascendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_33_65_total: int | None = None
     """Disabled ascendants 33-65% (design position 245)."""
-    ascendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_33_65_whole: int | None = None
     """Of the position-245 ascendants, those computed por entero (246)."""
-    ascendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_mobility_total: int | None = None
     """Disabled 33-65% ascendants with reduced mobility or third-party help need
     (design position 247)."""
-    ascendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_mobility_whole: int | None = None
     """Of the position-247 ascendants, those computed por entero (248)."""
-    ascendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_65_plus_total: int | None = None
     """Disabled ascendants at 65% or more (design position 249)."""
-    ascendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_65_plus_whole: int | None = None
     """Of the position-249 ascendants, those computed por entero (250)."""
-    first_child_compute: int | None = Field(default=None, ge=1, le=2)
+    first_child_compute: int | None = None
     """How the first child was computed for the retention rate (design position
     251): 1 por entero, 2 por mitad."""
-    second_child_compute: int | None = Field(default=None, ge=1, le=2)
+    second_child_compute: int | None = None
     """How the second child was computed (design position 252)."""
-    third_child_compute: int | None = Field(default=None, ge=1, le=2)
+    third_child_compute: int | None = None
     """How the third child was computed (design position 253)."""
-    housing_loan_communication_clave: int | None = Field(default=None, ge=0, le=1)
+    housing_loan_communication_clave: int | None = None
     """Whether the perceptor communicated vivienda-habitual loan amounts at some
     point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
     clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
@@ -384,7 +295,7 @@ class WithholdingObservation(BaseModel):
     incapacity_kind_value: Decimal
     incapacity_kind_ingreso_a_cuenta: Decimal
     incapacity_kind_repercutido: Decimal
-    complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
+    complemento_infancia_clave: int | None = None
     """Whether any mensualidad of the L.29 prestacion included the IMV complemento
     de ayuda para la infancia (design position 322): clave 1 included, 2 not --
     both are recorded facts, never defaults."""
@@ -393,54 +304,54 @@ class WithholdingObservation(BaseModel):
     foral_retention_araba: Decimal
     foral_retention_gipuzkoa: Decimal
     foral_retention_bizkaia: Decimal
-    emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
+    emerging_stock_excess_clave: int | None = None
     """Whether the row's in-kind percepciones include emerging-company stock over
     the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
     of the in-kind retributions -- both recorded facts, declared only for clave A
     and only when the especie block has content."""
-    startup_fund_rendimientos_clave: int | None = Field(default=None, ge=0, le=1)
+    startup_fund_rendimientos_clave: int | None = None
     """Whether the row's payments include D.A. 53a fund-management rendimientos
     del trabajo (2025-edition design position 389): clave 1 yes, 0 the rest. The
     cumplimentacion trigger is the payer's own composition judgment, so the clave
     is recorded-when-applicable: spaces when absent, refused outside clave A."""
-    pension_prestacion_jubilacion: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_jubilacion: int | None = None
     """Whether the clave B.01 prestaciones include jubilacion (2025-edition
     design position 390): each type's 0/1 flag is always recorded for B.01."""
-    pension_prestacion_viudedad: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_viudedad: int | None = None
     """Whether the clave B.01 prestaciones include viudedad (position 391)."""
-    pension_prestacion_incapacidad: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_incapacidad: int | None = None
     """Whether the clave B.01 prestaciones include incapacidad permanente total o
     parcial (position 392)."""
-    pension_prestacion_no_contributiva: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_no_contributiva: int | None = None
     """Whether the clave B.01 prestaciones include pensiones no contributivas por
     invalidez o jubilacion (position 393)."""
-    pension_prestacion_resto: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_resto: int | None = None
     """Whether the clave B.01 prestaciones include the remaining non-exempt
     art. 17.2.a).1a prestaciones (position 394)."""
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 76) marking a perceptor that is itself a
     mediator entity paying by proxy, declared only for claves A, B and D."""
-    clave_codigo: int | None = Field(default=None, ge=1, le=4)
+    clave_codigo: int | None = None
     """Modelo 193 clave codigo (position 79) identifying what the codigo emisor
     and ISIN fields carry, always recorded for claves A, B and D (clave 4 is
     the general case)."""
-    codigo_emisor: str | None = Field(default=None, max_length=12)
+    codigo_emisor: str | None = Field(default=None, max_length=16)
     """Modelo 193 codigo emisor (positions 80-91), declared only for claves A,
     B and D: the issuer's NIF for clave codigo 1/4, empty for 2, ZXX country
     code for 3."""
-    naturaleza: str | None = Field(default=None, pattern=r"^\d{2}$")
+    naturaleza: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 naturaleza (positions 93-94): the two-digit subclave of the
     clave de percepcion, always recorded."""
-    pago: int | None = Field(default=None, ge=1, le=5)
+    pago: int | None = None
     """Modelo 193 pago (position 95): who paid, always recorded for claves A,
     B and D (1 emisor, 2/3/4 mediador, 5 other mediation)."""
-    tipo_codigo: str | None = Field(default=None, pattern=r"^[COP]$")
+    tipo_codigo: str | None = None
     """Modelo 193 tipo codigo (position 96): what the codigo cuenta field
     holds, always recorded for claves A, B and D."""
-    codigo_cuenta: str | None = Field(default=None, max_length=20)
+    codigo_cuenta: str | None = Field(default=None, max_length=32)
     """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
     97-116), recorded only when a financial entity manages the valores."""
-    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    financial_asset_origin: str | None = None
     """Modelo 194 origin at position 78, supplied by the transaction evidence.
 
     A transfer, B redemption, C exchange/conversion, D the specified pre-coupon
@@ -460,12 +371,12 @@ class WithholdingObservation(BaseModel):
     This is supplied independently from acquisition value and the declared tax
     base. The source's special cases preclude inferring one from the other two.
     """
-    financial_asset_related_entity: Literal["V", ""] | None = None
+    financial_asset_related_entity: str | None = None
     """Modelo 194 related-entity indicator at 187: V, explicitly blank, or unknown."""
     pendiente_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 117) marking percepciones devengadas but
     not yet paid because the holder did not claim them."""
-    tipo_percepcion: int | None = Field(default=None, ge=1, le=2)
+    tipo_percepcion: int | None = None
     """Modelo 193 tipo de percepcion (position 122): 1 dinerarias, 2 en
     especie, always recorded."""
     reducciones: Decimal = Decimal("0")
@@ -479,17 +390,17 @@ class WithholdingObservation(BaseModel):
     penalizaciones: Decimal = Decimal("0")
     """Modelo 193 penalizaciones (positions 182-192), declared only for claves
     B and D; the design's own zeros when none."""
-    isin_code: str | None = Field(default=None, max_length=12)
+    isin_code: str | None = Field(default=None, max_length=16)
     """Modelo 193 codigo ISIN (positions 193-204, 2025 edition), recorded when
     clave codigo is 2 or 4."""
     naturaleza_declarante: str | None = Field(default=None, max_length=1)
     """Modelo 193 perceptor-record naturaleza del declarante (position 208):
     'S' when the declarante is outside the design's categories, blank
     otherwise -- recorded-when-applicable."""
-    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de inicio del prestamo (positions 209-216, AAAAMMDD),
     declared only when tipo codigo is 'P'."""
-    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de vencimiento del prestamo (positions 217-224,
     AAAAMMDD), declared only when tipo codigo is 'P'."""
     compensaciones: Decimal = Decimal("0")
@@ -498,17 +409,17 @@ class WithholdingObservation(BaseModel):
     garantias: Decimal = Decimal("0")
     """Modelo 193 garantias (positions 237-248), declared only for prestamo de
     valores rows; the design's own zeros when none."""
-    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """Modelo 193 NIF of the immediately previous payer in the payment chain
     (positions 322-330), obligatory when pago is 2-5 except where the previous
     payer is foreign without a Spanish NIF -- recorded-when-applicable."""
-    fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_devengo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de devengo (positions 331-338, DDMMAAAA), declared only
     for clave A."""
-    clave_mercado: str | None = Field(default=None, pattern=r"^[A-D]$")
+    clave_mercado: str | None = None
     """Modelo 193 clave de mercado (position 339), always recorded for claves
     A, B and D."""
-    numero_orden: int | None = Field(default=None, ge=1, le=9999999)
+    numero_orden: int | None = Field(default=None, ge=1)
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -576,15 +487,67 @@ class WithholdingObservation(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _declared_form_codes(self) -> WithholdingObservation:
+        """Refuse a code or count the published record design does not declare."""
+        populated = {name: getattr(self, name) for name in OBSERVATION_CODE_FIELDS}
+        validate_observation_form_codes(populated, self.financial_asset_origin, self.clave_codigo)
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _financial_asset_conditions(self) -> WithholdingObservation:
         """Preserve the source design's absent amounts and negative-base rule."""
-        if self.financial_asset_origin == "D" and (
-            self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None
-        ):
-            raise RegistryValidationError("financial-asset origin D requires absent acquisition and disposal values")
-        if self.financial_asset_origin is not None and self.base_retenciones < 0 and self.retencion_practicada != 0:
-            raise RegistryValidationError("a negative financial-asset withholding base requires zero withholding")
+        validate_financial_asset_conditions(
+            self.financial_asset_origin,
+            self.financial_asset_acquisition_value,
+            self.financial_asset_disposal_value,
+            self.base_retenciones,
+            self.retencion_practicada,
+        )
         return self
+
+    @field_validator("naturaleza")
+    @classmethod
+    @pydantic_validation_boundary
+    def _naturaleza_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.naturaleza_digits")
+
+    @field_validator("fecha_inicio_prestamo", "fecha_vencimiento_prestamo", "fecha_devengo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _date_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.date_digits")
+
+    @field_validator("numero_orden")
+    @classmethod
+    def _numero_orden_fits_the_design(cls, value: int | None) -> int | None:
+        if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
+            raise ValueError("numero_orden is past the bound the record design declares")
+        return value
+
+    @field_validator("representative_tax_id", "spouse_or_unit_titular_tax_id", "nif_pagador_anterior")
+    @classmethod
+    @pydantic_validation_boundary
+    def _tax_id_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_spanish_tax_id_width(value)
+
+    @field_validator("codigo_emisor")
+    @classmethod
+    @pydantic_validation_boundary
+    def _emisor_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.codigo_emisor_max")
+
+    @field_validator("subclave")
+    @classmethod
+    @pydantic_validation_boundary
+    def _subclave_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.subclave_max")
+
+    @field_validator("province_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _province_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.province_digits")
 
 
 class WithholdingProvider(BaseModel):
@@ -792,7 +755,7 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     )
 
 
-def _withholding_role_declarations(
+def withholding_role_declarations(
     effective_date: date,
     *,
     authority: GovernedFactSource | None = None,
@@ -804,7 +767,7 @@ def _withholding_role_declarations(
     selected_authority = require_governed_fact_authority(authority, subject="withholding role catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="modelo-190-193-withholding-binding-catalogue",
+            fact_id=WITHHOLDING_CATALOGUE_FACT,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),
@@ -946,7 +909,7 @@ def _resolve_scalar_withholding_fact(
         return _grouped_row_sum(selector, observations), role_declarations
     if selector.fact == "retenciones_ingresadas_sum":
         if role_declarations is None:
-            role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
+            role_declarations = withholding_role_declarations(revision.valid_from, authority=authority)
         return (
             _retenciones_ingresadas_total(
                 observations,
@@ -1148,9 +1111,69 @@ def _grouped_row_sum(
     return total
 
 
+def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the withholding bindings whose rows file a perceptor's name."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.WITHHOLDING
+        and _validated_withholding_selector(binding).row_field == PARTY_FILING_NAME_ROW_FIELD
+    )
+
+
+def _party_reference(row_observations: tuple[WithholdingObservation, ...]) -> str:
+    """Return the reference one annual row carries in its name cell until the name is composed."""
+    country = _resolve_withholding_row_field(row_observations, row_field="country_code")
+    tax_id = _resolve_withholding_row_field(row_observations, row_field="perceptor_tax_id")
+    return invoice_party_reference("" if country is None else str(country), str(tax_id))
+
+
+def _binding_row_field(binding: BindingDefinition, selector: WithholdingProvider) -> str:
+    """Return the row field a withholding row binding projects."""
+    if selector.row_field is None:  # pragma: no cover - protected by selector validation
+        raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
+    return selector.row_field
+
+
+def _stage_party_name_cells(
+    binding_id: BindingId,
+    rows: tuple[tuple[WithholdingObservation, ...], ...],
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool],
+    party_references: RowValues,
+) -> None:
+    """Fix the prescribed pending record's name; leave every other row's name to be composed."""
+    for row_index, row_observations in enumerate(rows, start=1):
+        if is_prescribed_pending_record(row_observations):
+            # The design fixes this record's name to a literal that names no party.
+            resolved[(binding_id, row_index)] = PENDING_PERCEPTOR_NAME
+        else:
+            party_references[(binding_id, row_index)] = _party_reference(row_observations)
+
+
+def _resolve_plain_row_cells(
+    binding: BindingDefinition,
+    row_field: str,
+    rows: tuple[tuple[WithholdingObservation, ...], ...],
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool],
+) -> None:
+    """Project one observation field into each annual row, leaving unset facts absent."""
+    if row_field not in WithholdingObservation.model_fields:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
+        )
+    for row_index, row_observations in enumerate(rows, start=1):
+        value = _resolve_withholding_row_field(row_observations, row_field=row_field)
+        if value is None or _withholding_row_value_is_absent(value):
+            continue
+        resolved[(binding.id, row_index)] = value
+
+
 def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
+    *,
+    parties: Iterable[DeclaredWithholdingParty] = (),
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
     """Resolve withholding row bindings through their declared annual grouping.
 
@@ -1164,86 +1187,35 @@ def resolve_withholding_binding_row_values(
     Unset facts remain absent.  Conflicting non-additive facts refuse before an
     export can choose a first or last observation arbitrarily.
 
+    A ``party_filing_name`` cell holds the name declared for the row's perceptor
+    among ``parties``, composed by the rule and width of the layout field that
+    files it; a perceptor with no such name leaves the cell absent, never blank
+    and never a name a source printed. ``party_name_refusals`` receives each
+    cell left without content.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    party_references: RowValues = {}
     for (grouping, _claves), members in _withholding_row_cohorts(revision).items():
         _sample_binding, sample_selector = members[0]
         scoped = tuple(_filter_withholding_observations(available, sample_selector))
         rows = _group_withholding_observations(grouping, scoped)
         for binding, selector in members:
-            row_field = selector.row_field
-            if row_field is None:  # pragma: no cover - protected by selector validation
-                raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
-            if row_field not in WithholdingObservation.model_fields:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
-                )
-            for row_index, row_observations in enumerate(rows, start=1):
-                value = _resolve_withholding_row_field(row_observations, row_field=row_field)
-                if value is None or _withholding_row_value_is_absent(value):
-                    continue
-                resolved[(binding.id, row_index)] = value
-    return resolved
-
-
-class WithholdingClaveBreakdown(BaseModel):
-    """One per-clave row of an annual withholding summary's reconciliation breakdown.
-
-    Groups the per-perceptor-clave rows an annual summary's calculation reads
-    (the type-2 perceptor records of the AEAT Diseño de Registros, as for
-    Modelos 190 and 193) by their ``clave`` and carries that clave's
-    distinct percepción count and percibido / retención magnitudes. The figures
-    reuse the scalar withholding-fact arithmetic
-    (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
-    distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
-    ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
-    ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same
-    rows the percepciones resolver materialises for that calculation, so the
-    operator can reconcile the annual totals clave by clave against the periodic
-    filings and captured allocations they were composed from.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    clave: RetencionClave
-    percepcion_count: NonNegativeInt
-    percibido_total: Decimal = Field(ge=Decimal("0"))
-    retencion_total: Decimal = Field(ge=Decimal("0"))
-
-
-def aggregate_withholding_by_clave(
-    observations: Iterable[WithholdingObservation],
-) -> tuple[WithholdingClaveBreakdown, ...]:
-    """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
-
-    Pure function: identical observations in any order yield the same tuple,
-    sorted by ``clave``. No new aggregation is introduced — each magnitude is
-    produced by the same :func:`distinct_percepcion_keys` /
-    :func:`percibido_total` / :func:`retencion_total` helper that
-    :func:`resolve_withholding_binding_values` uses for the corresponding bound
-    fact, so the breakdown cannot drift from the facts that feed the
-    calculation. The clave is the grouping axis here and part of the key there;
-    grouping first and counting the clave-bearing key within each group gives
-    the same per-clave totals.
-
-    That sentence used to be a claim rather than a guarantee: this function
-    re-implemented all three formulas inline. An operator reconciles the annual
-    Modelo 190 against the four quarterly Modelo 111 filings from this
-    breakdown, so a formula changed in the resolver alone would have shown up
-    as a reconciliation mismatch with nothing pointing at the cause.
-    """
-    by_clave: dict[RetencionClave, list[WithholdingObservation]] = {}
-    for observation in observations:
-        by_clave.setdefault(observation.clave, []).append(observation)
-    return tuple(
-        WithholdingClaveBreakdown(
-            clave=clave,
-            percepcion_count=len(distinct_percepcion_keys(group)),
-            percibido_total=percibido_total(group),
-            retencion_total=retencion_total(group),
-        )
-        for clave, group in sorted(by_clave.items())
+            row_field = _binding_row_field(binding, selector)
+            if row_field == PARTY_FILING_NAME_ROW_FIELD:
+                _stage_party_name_cells(binding.id, rows, resolved, party_references)
+            else:
+                _resolve_plain_row_cells(binding, row_field, rows, resolved)
+    resolved.update(
+        file_party_names(
+            revision,
+            party_references,
+            tuple(parties),
+            name_bindings=_party_name_bindings(revision),
+            refusals=party_name_refusals,
+        ),
     )
+    return resolved

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -13,7 +13,7 @@ from .document_transcription import DocumentTranscription
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_textlayer import text_layer_transcriber_identity
 from .evidence_textlayer_ports import EvidenceTextLayerPorts
-from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, FindingWords, InvoiceDraft
 from .invoice_label_assembly import (
     ARITHMETIC_FINDING_KINDS,
     assemble_tax_figures,
@@ -123,10 +123,7 @@ def read_invoice_fields_by_labels(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
                 field=role,
-                detail=(
-                    f"the document prints {printed!r} as this party's tax identifier, but it fails its "
-                    f"control-character check, so it was not accepted as a verified identity"
-                ),
+                words=FindingWords.of(DraftFindingWording.TAX_ID_FAILS_CHECK, printed=printed),
             ),
         )
     assemble_tax_figures(collected, assembly)

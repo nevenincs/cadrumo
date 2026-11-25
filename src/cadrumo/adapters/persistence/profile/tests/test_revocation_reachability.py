@@ -22,16 +22,16 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 # The subject is whether a custody session is open, so the real session probe answers it.
@@ -54,12 +54,12 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         from cadrumo.application.auth.certificate_source_operations import (
             register_operator_certificate_source,
             set_operator_certificate_source_secret,
         )
-        from cadrumo.application.auth.operator import reset_operator_auth
+        from cadrumo.application.auth.operator_revocation import reset_operator_auth
         from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
 
         with isolated_profile_storage_root(tmp_path=tmp_path) as root:
@@ -132,9 +132,9 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
     protecting against nothing.
     """
     from cadrumo.application.auth.acquisition_lock import clear_auth_acquisition_lock
-    from cadrumo.application.auth.operator import reset_operator_auth
     from cadrumo.application.auth.operator_cleanup import clear_operator_auth_acquisition_locks
     from cadrumo.application.auth.operator_results import AuthOperationRequiresCustodySessionError
+    from cadrumo.application.auth.operator_revocation import reset_operator_auth
     from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:

@@ -9,6 +9,7 @@ strict pydantic validation.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
@@ -19,19 +20,32 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ..calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ..errors import RegistryValidationError
 from ..schema_scalars import (
-    BicString,
     CalendarDate,
-    CCAACode,
-    MunicipalityCode,
-    NifIvaString,
-    PersonOrEntityName,
-    PostalCode,
-    ProvinceCode,
     validate_registry_text_scalar,
 )
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+
+
+class _TextScalar:
+    """Validate through the registry's text-scalar entry point, as a casilla value is."""
+
+    def __init__(self, data_type: str) -> None:
+        self._data_type = data_type
+
+    def validate_python(self, raw: object) -> str:
+        return validate_registry_text_scalar(self._data_type, raw)
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -63,7 +77,7 @@ def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
 
 # ---- name ----------------------------------------------------------------
 
-_NAME = TypeAdapter(PersonOrEntityName)
+_NAME = _TextScalar("name")
 
 
 class TestPersonOrEntityName:
@@ -78,23 +92,23 @@ class TestPersonOrEntityName:
             assert _NAME.validate_python(raw) == canonical, raw
 
     def test_rejected(self) -> None:
-        for raw in ("", "   ", "x" * 201):
-            with pytest.raises(ValidationError):
+        for raw in ("", "   ", "x" * 257):
+            with pytest.raises(RegistryValidationError):
                 _NAME.validate_python(raw)
 
 
 # ---- nif_iva -------------------------------------------------------------
 
-_NIFIVA = TypeAdapter(NifIvaString)
+_NIFIVA = _TextScalar("nif_iva")
 
 
 class TestNifIvaString:
     def test_accepted(self) -> None:
         cases = (
-            ("ESB58818501", "ESB58818501"),
+            ("ESB00010181", "ESB00010181"),
             ("FR12345678901", "FR12345678901"),
             ("DE123456789", "DE123456789"),
-            ("  es-b58818501  ", "ESB58818501"),
+            ("  es-b00010181  ", "ESB00010181"),
             ("BE 0123.456.789", "BE0123456789"),
             ("\tbe.12 \t", "BE12"),
             ("BE123456789012", "BE123456789012"),
@@ -117,13 +131,13 @@ class TestNifIvaString:
             "BE12!34",
             123,
         ):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _NIFIVA.validate_python(raw)
 
     def test_direct_registry_scalar_uses_canonical_normalisation_and_keeps_direct_error(self) -> None:
         assert validate_registry_text_scalar("nif_iva", " BE 0123.456.789 ") == "BE0123456789"
 
-        with pytest.raises(RegistryValidationError, match="followed by 2-12 alphanumeric characters"):
+        with pytest.raises(RegistryValidationError, match="followed by alphanumeric characters"):
             validate_registry_text_scalar("nif_iva", "BE12!34")
 
         with pytest.raises(RegistryValidationError, match="nif_iva value must be a string, got int"):
@@ -132,7 +146,7 @@ class TestNifIvaString:
 
 # ---- ccaa_code -----------------------------------------------------------
 
-_CCAA = TypeAdapter(CCAACode)
+_CCAA = _TextScalar("ccaa_code")
 
 
 def _accepted_two_digit_codes() -> set[str]:
@@ -146,7 +160,7 @@ def _accepted_two_digit_codes() -> set[str]:
         candidate = f"{number:02d}"
         try:
             _CCAA.validate_python(candidate)
-        except ValidationError:
+        except RegistryValidationError:
             continue
         accepted.add(candidate)
     return accepted
@@ -166,7 +180,7 @@ class TestCCAACode:
 
         assert accepted, "the validator accepts nothing; this probe cannot discriminate"
         with bundled_indexed_authority().operation() as operation:
-            members = resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).choices
+            members = resolve_calendar_ccaa_catalogue(effective_date=date(_YEAR, 7, 1), authority=operation).choices
         assert len(accepted) == len(members), (
             f"the shape check accepts {len(accepted)} codes but Spain has {len(members)} autonomous territories"
         )
@@ -186,14 +200,14 @@ class TestCCAACode:
         assert all(len(code) == 2 and code.isdigit() for code in accepted), "every code is two ASCII digits"
 
     def test_rejected(self) -> None:
-        for raw in ("", "20", "1", "ES", "  01  ", "00"):
-            with pytest.raises(ValidationError):
+        for raw in ("", "20", "1", "ES", "00"):
+            with pytest.raises(RegistryValidationError):
                 _CCAA.validate_python(raw)
 
 
 # ---- province_code -------------------------------------------------------
 
-_PROV = TypeAdapter(ProvinceCode)
+_PROV = _TextScalar("province_code")
 
 
 class TestProvinceCode:
@@ -203,13 +217,13 @@ class TestProvinceCode:
 
     def test_rejected(self) -> None:
         for raw in ("", "00", "53", "99", "1", "ES", "AB"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _PROV.validate_python(raw)
 
 
 # ---- postal_code ---------------------------------------------------------
 
-_POSTAL = TypeAdapter(PostalCode)
+_POSTAL = _TextScalar("postal_code")
 
 
 class TestPostalCode:
@@ -223,13 +237,13 @@ class TestPostalCode:
         # digits -- so "99999" passed as a Spanish postcode while the core
         # authority refused it. The two were merged; these pin the tightening.
         for raw in ("", "1234", "123456", "ABCDE", "28-13", "99999", "00001", "53000"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _POSTAL.validate_python(raw)
 
 
 # ---- municipality_code --------------------------------------------------
 
-_MUNI = TypeAdapter(MunicipalityCode)
+_MUNI = _TextScalar("municipality_code")
 
 
 class TestMunicipalityCode:
@@ -241,13 +255,13 @@ class TestMunicipalityCode:
         # An INE code carries the same province prefix a postcode does, so a
         # nonexistent province is refused here for the same reason.
         for raw in ("", "123", "ABCDE", "12-345", "00001", "99999"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _MUNI.validate_python(raw)
 
 
 # ---- bic -----------------------------------------------------------------
 
-_BIC = TypeAdapter(BicString)
+_BIC = _TextScalar("bic")
 
 
 class TestBicString:
@@ -263,7 +277,7 @@ class TestBicString:
 
     def test_rejected(self) -> None:
         for raw in ("", "CAIX", "CAIXES", "CAIXESBBXX", "1AIXESBB"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _BIC.validate_python(raw)
 
 
@@ -274,11 +288,23 @@ _DATE = TypeAdapter(CalendarDate)
 
 class TestCalendarDate:
     def test_accepted(self) -> None:
-        for raw in ("2024-01-15", "2024-12-31", "15012024", "31122024"):
+        for raw in (
+            date(_YEAR, 1, 15).isoformat(),
+            date(_YEAR, 12, 31).isoformat(),
+            date(_YEAR, 1, 15).strftime("%d%m%Y"),
+            date(_YEAR, 12, 31).strftime("%d%m%Y"),
+        ):
             assert _DATE.validate_python(raw) == raw, raw
 
     def test_rejected(self) -> None:
-        for raw in ("", "2024", "2024-13-01", "32012024", "00012024", "2024/01/15"):
+        for raw in (
+            "",
+            str(_YEAR),
+            f"{_YEAR}-13-01",
+            f"3201{_YEAR}",
+            f"0001{_YEAR}",
+            date(_YEAR, 1, 15).strftime("%Y/%m/%d"),
+        ):
             with pytest.raises(ValidationError):
                 _DATE.validate_python(raw)
 

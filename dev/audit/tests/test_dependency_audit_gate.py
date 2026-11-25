@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .. import dependency_audit as da
 
 if TYPE_CHECKING:
@@ -26,7 +28,19 @@ if TYPE_CHECKING:
 #: repository tooling, so it sits with the cross-cutting core.
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-TODAY = dt.date(2026, 9, 8)
+
+def _today() -> dt.date:
+    return dt.date(filing_year_envelope().horizon, 9, 8)
+
+
+def _far_future() -> dt.date:
+    return _today() + dt.timedelta(days=3650)
+
+
+def _lapsed() -> dt.date:
+    return dt.date(_today().year, 1, 1)
+
+
 COORD = da.Coordinate("PyPI", "jinja2", "3.1.4", "uv.lock")
 HIT = {"GHSA-q2x7-8rv6-6q7h": {COORD}}
 
@@ -40,7 +54,7 @@ def _describe(_identifier: str) -> dict[str, object]:
 
 
 def _report(suppressions: list[da.Suppression], hits: dict[str, set[da.Coordinate]] = HIT) -> da.Report:
-    return da.build_report([COORD], hits, suppressions, today=TODAY, describe_fn=_describe)
+    return da.build_report([COORD], hits, suppressions, today=_today(), describe_fn=_describe)
 
 
 def test_a_finding_fails_the_gate() -> None:
@@ -56,7 +70,7 @@ def test_a_clean_tree_passes() -> None:
 
 
 def test_a_live_suppression_accepts_the_finding_visibly() -> None:
-    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "no upstream fix", dt.date(2099, 1, 1))
+    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "no upstream fix", _far_future())
     report = _report([live])
     assert report.exit_code == da.EXIT_OK
     assert report.findings[0].suppressed_by is live
@@ -64,20 +78,37 @@ def test_a_live_suppression_accepts_the_finding_visibly() -> None:
 
 
 def test_a_suppression_matches_an_alias() -> None:
-    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1))
+    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", _far_future())
     assert _report([live]).exit_code == da.EXIT_OK
+
+
+def test_scoped_suppression_requires_every_affected_coordinate_to_match() -> None:
+    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "specific version", _far_future(), "PyPI", "jinja2", "3.1.4")
+    assert _report([live]).exit_code == da.EXIT_OK
+    newer = da.Coordinate("PyPI", "jinja2", "3.1.5", "uv.lock")
+    assert _report([live], {"GHSA-q2x7-8rv6-6q7h": {COORD, newer}}).exit_code == da.EXIT_FINDINGS
+
+
+def test_partial_suppression_scope_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "allowlist.toml"
+    path.write_text(
+        f'[[suppression]]\nid = "X"\nreason = "y"\nexpires = {_far_future().isoformat()}\npackage = "example"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(da.AuditError, match="ecosystem, package and version together"):
+        da.load_suppressions(path)
 
 
 def test_an_expired_suppression_fails_even_with_no_finding() -> None:
     """An acceptance that lapsed is a decision nobody has retaken."""
-    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", dt.date(2026, 1, 1))
+    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", _lapsed())
     report = _report([stale], hits={})
     assert report.exit_code == da.EXIT_FINDINGS
     assert "EXPIRED" in da.render(report)
 
 
 def test_an_expired_suppression_does_not_cover_its_finding() -> None:
-    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", dt.date(2026, 1, 1))
+    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", _lapsed())
     report = _report([stale])
     assert report.blocking
     assert report.exit_code == da.EXIT_FINDINGS
@@ -93,7 +124,7 @@ def test_a_suppression_without_an_expiry_is_rejected(tmp_path: Path) -> None:
 def test_a_suppression_without_a_reason_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "allowlist.toml"
     path.write_text(
-        '[[suppression]]\nid = "X"\nreason = "  "\nexpires = 2099-01-01\n',
+        f'[[suppression]]\nid = "X"\nreason = "  "\nexpires = {_far_future().isoformat()}\n',
         encoding="utf-8",
     )
     with pytest.raises(da.AuditError, match="empty reason"):
@@ -116,7 +147,7 @@ def test_no_artifact_without_a_destination() -> None:
 
     The destination is passed as a value rather than patched into the
     environment, so this asserts the behaviour itself and not the plumbing
-    that reads ``VAULTSPEC_CI_REPORTS``.
+    that reads ``CADRUMO_CI_REPORTS_DIR``.
     """
     assert da.write_artifact(_report([]), "") is None
 
@@ -129,3 +160,99 @@ def test_the_json_report_is_machine_readable(tmp_path: Path) -> None:
     assert body["gating"] is True
     assert body["exit_code"] == da.EXIT_FINDINGS
     assert body["findings"][0]["id"] == "GHSA-q2x7-8rv6-6q7h"
+
+
+_LOCAL_NAMES = (
+    "fixture-own-project",
+    "fixture-own-data",
+    "fixture-own-crate",
+    "fixture-git-crate",
+    "fixture-npm-workspace",
+    "fixture-npm-file",
+    "fixture-npm-legacy-file",
+)
+_REGISTRY_NAMES = ("jinja2", "serde", "left-pad", "is-number")
+
+
+def _write_lockfiles(root: Path) -> None:
+    """Lay out one lockfile per ecosystem mixing registry and local packages."""
+    (root / "uv.lock").write_text(
+        "version = 1\n"
+        '[[package]]\nname = "jinja2"\nversion = "3.1.4"\nsource = { registry = "https://pypi.org/simple" }\n'
+        '[[package]]\nname = "fixture-own-project"\nversion = "0.1.0"\nsource = { editable = "." }\n'
+        '[[package]]\nname = "fixture-own-data"\nversion = "0.1.0"\nsource = { directory = "data" }\n',
+        encoding="utf-8",
+    )
+    crate = root / "native"
+    crate.mkdir()
+    (crate / "Cargo.lock").write_text(
+        "version = 3\n"
+        '[[package]]\nname = "serde"\nversion = "1.0.210"\n'
+        'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+        '[[package]]\nname = "fixture-own-crate"\nversion = "0.1.0"\n'
+        '[[package]]\nname = "fixture-git-crate"\nversion = "0.2.0"\nsource = "git+https://example.invalid/crate#abc"\n',
+        encoding="utf-8",
+    )
+    web = root / "web"
+    web.mkdir()
+    (web / "package-lock.json").write_text(
+        json.dumps(
+            {
+                "lockfileVersion": 3,
+                "packages": {
+                    "": {"name": "root"},
+                    "node_modules/left-pad": {
+                        "version": "1.3.0",
+                        "resolved": "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz",
+                    },
+                    "packages/fixture-npm-workspace": {"name": "fixture-npm-workspace", "version": "0.1.0"},
+                    "node_modules/fixture-npm-workspace": {"resolved": "packages/fixture-npm-workspace", "link": True},
+                    "node_modules/fixture-npm-file": {
+                        "version": "0.1.0",
+                        "resolved": "file:../vendor/fixture-npm-file",
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    legacy = root / "legacy"
+    legacy.mkdir()
+    (legacy / "package-lock.json").write_text(
+        json.dumps(
+            {
+                "lockfileVersion": 1,
+                "dependencies": {
+                    "is-number": {"version": "7.0.0"},
+                    "fixture-npm-legacy-file": {"version": "file:../vendor/legacy"},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_only_registry_packages_leave_the_machine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The advisory query names public packages only, never the repository's own.
+
+    The lockfiles are read by the real readers and the payload is captured at
+    the HTTPS seam, so a reader that forwards a local, path, file or git package
+    fails here before any name reaches the advisory service.
+    """
+    _write_lockfiles(tmp_path)
+    sent: list[str] = []
+
+    def capture(url: str, payload: dict[str, object]) -> dict[str, object]:
+        sent.append(json.dumps(payload))
+        return {"results": []}
+
+    monkeypatch.setattr(da, "_post_json", capture)
+    coordinates = [c for c in da.collect_coordinates(tmp_path) if c.source != da.BINARIES_PATH.name]
+
+    assert da.query_osv(coordinates) == {}
+    body = "\n".join(sent)
+    assert {c.name for c in coordinates} == set(_REGISTRY_NAMES)
+    for name in _REGISTRY_NAMES:
+        assert f'"{name}"' in body
+    for name in _LOCAL_NAMES:
+        assert name not in body

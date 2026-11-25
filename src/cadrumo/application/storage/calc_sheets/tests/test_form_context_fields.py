@@ -15,10 +15,10 @@ from ..form_workbook import add_form_workbook
 from ..records import TabName
 from .test_form_workbook import form_source as form_source
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-def _with_context(snapshot, *, producer=None, draft=None):
+def with_context(snapshot, *, producer=None, draft=None):
     layout, record, field = next(
         (layout, record, field)
         for layout in derive_export_layouts_from_bindings(snapshot.revision)
@@ -46,7 +46,7 @@ def _with_context(snapshot, *, producer=None, draft=None):
 
 def test_year_comes_from_bound_snapshot_and_is_read_only(form_source):
     snapshot, _ = form_source
-    snapshot, _ = _with_context(snapshot, draft=ExportDraftAttribute.FILING_YEAR)
+    snapshot, _ = with_context(snapshot, draft=ExportDraftAttribute.FILING_YEAR)
     result = add_form_workbook(build_export_plan(snapshot), snapshot)
     label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "Dato declarado")
     value = next(
@@ -62,7 +62,7 @@ def test_year_comes_from_bound_snapshot_and_is_read_only(form_source):
 
 def test_absent_taxpayer_is_unknown_and_not_invented(form_source):
     snapshot, _ = form_source
-    snapshot, _ = _with_context(snapshot, producer=FilingProducerKey.TAXPAYER_TAX_ID)
+    snapshot, _ = with_context(snapshot, producer=FilingProducerKey.TAXPAYER_TAX_ID)
     result = add_form_workbook(build_export_plan(snapshot), snapshot)
     label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "Dato declarado")
     assert (
@@ -77,7 +77,7 @@ def test_absent_taxpayer_is_unknown_and_not_invented(form_source):
 
 def test_unknown_context_export_reference_is_refused(form_source):
     snapshot, _ = form_source
-    snapshot, block = _with_context(snapshot, producer=FilingProducerKey.TAXPAYER_TAX_ID)
+    snapshot, block = with_context(snapshot, producer=FilingProducerKey.TAXPAYER_TAX_ID)
     form = snapshot.revision.form_layouts[0]
     page = form.pages[0]
     section = page.sections[0].model_copy(
@@ -89,7 +89,7 @@ def test_unknown_context_export_reference_is_refused(form_source):
         add_form_workbook(build_export_plan(snapshot), snapshot)
 
 
-def _producer(modelo="130"):
+def producer(modelo="130"):
     from cadrumo.application.filing.producer_snapshot import (
         FilingElectionFacts,
         FilingProducerSnapshot,
@@ -135,8 +135,8 @@ def test_explicit_producer_text_remains_literal(form_source):
             FilingProducerKey.TAXPAYER_SURNAMES,
         }
     )
-    snapshot, _ = _with_context(snapshot, producer=producer_key)
-    result = add_form_workbook(build_export_plan(snapshot), snapshot, producer_snapshot=_producer())
+    snapshot, _ = with_context(snapshot, producer=producer_key)
+    result = add_form_workbook(build_export_plan(snapshot), snapshot, producer_snapshot=producer())
     cell = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "=1+1")
     assert not any(c.address == cell.address for c in result.formula_cells)
     assert any(f.address == cell.address and f.pattern == "@" for f in result.number_formats)
@@ -145,9 +145,9 @@ def test_explicit_producer_text_remains_literal(form_source):
 @pytest.mark.usefixtures("operation")
 def test_other_model_producer_refused_even_for_year(form_source):
     snapshot, _ = form_source
-    snapshot, _ = _with_context(snapshot, draft=ExportDraftAttribute.FILING_YEAR)
+    snapshot, _ = with_context(snapshot, draft=ExportDraftAttribute.FILING_YEAR)
     with pytest.raises(RegistryValidationError, match="another modelo"):
-        add_form_workbook(build_export_plan(snapshot), snapshot, producer_snapshot=_producer("131"))
+        add_form_workbook(build_export_plan(snapshot), snapshot, producer_snapshot=producer("131"))
 
 
 def snapshot_with_binding_context(snapshot, *, wire_policy=None, unused=False):
@@ -248,7 +248,7 @@ def test_summary_rejects_row_set_binding(form_source):
 @pytest.mark.parametrize("wire_policy", [None, "integer-part", "fractional-digits"])
 @pytest.mark.parametrize("value", [None, Decimal("0"), Decimal("-125.37")])
 def test_summary_preserves_backing_scalar_and_live_reference(form_source, value, wire_policy):
-    from ..form_workbook import _binding_addresses
+    from ..form_authority import form_binding_addresses
 
     snapshot, _ = form_source
     from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
@@ -257,7 +257,7 @@ def test_summary_preserves_backing_scalar_and_live_reference(form_source, value,
         snapshot, wire_policy=ExportValuePolicy(wire_policy) if wire_policy else None
     )
     plan = build_export_plan(snapshot)
-    address = _binding_addresses(plan, snapshot.revision)[str(binding.id)]
+    address = form_binding_addresses(plan, snapshot.revision)[str(binding.id)]
     plan = plan.model_copy(
         update={
             "value_cells": tuple(

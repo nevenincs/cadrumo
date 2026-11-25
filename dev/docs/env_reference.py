@@ -37,19 +37,18 @@ from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, UTF_8
-from dev.packaging.native.application_environment import (
-    BASE_GROUPS,
-    NAME_ROLES,
+from dev.packaging.native.application_environment import load
+from dev.packaging.native.environment_declaration_constants import BASE_GROUPS, NAME_ROLES
+from dev.packaging.native.environment_models import (
     ApplicationEnvironment,
     ExternalPathDefault,
     Invocation,
     InvocationArgument,
-    load,
 )
+from dev.paths import REPO_ROOT, UTF_8
 
-from ._locale_chrome import docs_chrome
 from .build import docs_build_language
+from .locale_chrome import docs_chrome
 
 _UTF_8: Final[str] = UTF_8
 
@@ -70,12 +69,12 @@ and development configuration: every user workflow works without them through
 prompts, command flags, and `aeat config` commands. Set an override only when
 you administer a deployment and know why the default does not fit.
 
-An annotated template with the same variables lives at `env/.env.example` in
-the repository. The application itself reads only the process environment;
-`env/.env` is not a production source. For local development and the test
-suite, the repository's `conftest.py` bridges `env/.env` into the process
-environment before tests run, filling only variables not already set; a
-value already present in your shell always wins.
+The application reads only the process environment. `CADRUMO_STORAGE_ROOT`, an
+absolute path, is the one variable that controls where it stores anything:
+every other location is a relative path beneath it. When it is unset or empty,
+the per-user default applies: `%LOCALAPPDATA%\\cadrumo` on Windows,
+`$XDG_DATA_HOME/cadrumo` or `~/.local/share/cadrumo` on Linux, and
+`~/Library/Application Support/cadrumo` on macOS.
 
 | Variable | Type | Default | What it controls |
 | --- | --- | --- | --- |
@@ -167,10 +166,7 @@ def _started_with(declaration: ApplicationEnvironment, profile_name: str) -> str
 
 def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> str:
     """Say what a profile takes from its caller: whole groups first, then the names left over."""
-    operator = set(profile["operator"])
-    groups = [group for group, members in declaration.groups.items() if members and set(members) <= operator]
-    covered = {name for group in groups for name in declaration.groups[group]}
-    singles = [name for name in profile["operator"] if name not in covered] + list(profile["pass"])
+    groups, singles = _passed_groups(declaration, profile["operator"], profile["pass"])
     parts = []
     if groups:
         parts.append(f"the name groups {_list_in_words([f'`{group}`' for group in groups])}")
@@ -180,6 +176,16 @@ def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]
         refused = _list_in_words([f"`{name}`" for name in profile["prefix_refused"]])
         parts.append(f"every name that starts with `{profile['prefix']}` except {refused}")
     return " and ".join(parts) if parts else "nothing beyond its operating-system groups"
+
+
+def _passed_groups(
+    declaration: ApplicationEnvironment, operator_names: Sequence[str], passed_names: Sequence[str]
+) -> tuple[list[str], list[str]]:
+    operator = set(operator_names)
+    groups = [group for group, members in declaration.groups.items() if members and set(members) <= operator]
+    covered = {name for group in groups for name in declaration.groups[group]}
+    singles = [name for name in operator_names if name not in covered] + list(passed_names)
+    return groups, singles
 
 
 def _fixed_text(source: str, value: str) -> str:
@@ -253,6 +259,16 @@ def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str,
     return "set by the package to " + "; ".join(parts) + ", in that order"
 
 
+_PROFILE_NOTES = {
+    "agent-auth": (
+        "To sign in by hand when the desktop application's sign-in fails, run "
+        "`cadrumo-agent-service provider-login --provider <provider>`; see "
+        "[Sign in to an AI provider by hand](../how-to/sign-in-to-an-ai-provider-by-hand.md)."
+    ),
+}
+"""A sentence a profile's section adds after its declared facts, keyed by profile name."""
+
+
 def _profile_section(declaration: ApplicationEnvironment, name: str, profile: Mapping[str, Any]) -> list[str]:
     """Render one launch profile as a heading and a list of what it passes, accepts and sets."""
     if profile["inherit"]:
@@ -276,6 +292,8 @@ def _profile_section(declaration: ApplicationEnvironment, name: str, profile: Ma
     sets = _sets_text(declaration, profile)
     lines.append(f"- **Sets itself:** {_list_in_words(sets)}" if sets else "- **Sets itself:** nothing")
     lines.append(f"- **Search path (`PATH`):** {_search_path_text(declaration, profile)}")
+    if name in _PROFILE_NOTES:
+        lines.extend(["", _PROFILE_NOTES[name]])
     return lines
 
 
@@ -358,6 +376,12 @@ def render_installed_package(declaration: ApplicationEnvironment, settings_names
         for name, entry in sorted(declaration.names.items())
         if name not in known
     )
+    lines += _refused_launches(declaration)
+    return "\n".join(lines) + "\n"
+
+
+def _refused_launches(declaration: ApplicationEnvironment) -> list[str]:
+    lines: list[str] = []
     native_host = declaration.native_host
     defaulted = {profile["image"] for profile in declaration.profiles.values() if not profile["invoked"]}
     refusing = sorted({profile["image"] for profile in declaration.profiles.values()} - defaulted)
@@ -379,7 +403,7 @@ def render_installed_package(declaration: ApplicationEnvironment, settings_names
             f"{_list_in_words([f'`{image}`' for image in refusing])} accepts only the invocations its profiles "
             "list above and refuses every other, so it does not serve as a general interpreter.",
         ]
-    return "\n".join(lines) + "\n"
+    return lines
 
 
 def render_environment_reference(declaration: ApplicationEnvironment | None = None) -> str:
@@ -399,10 +423,6 @@ def render_environment_reference(declaration: ApplicationEnvironment | None = No
         rows.append(
             f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field, language)} | {_escape(description)} |",
         )
-    rows.append(
-        "| `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's "
-        "var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |"
-    )
     rows.sort()
     footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
     package = render_installed_package(load(REPO_ROOT) if declaration is None else declaration, environment_names)

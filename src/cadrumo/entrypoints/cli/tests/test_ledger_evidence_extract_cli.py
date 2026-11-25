@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from ....application.ledger.closure_findings import closure_findings
 from ....application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ....application.ledger.invoice_draft_records import (
     FieldProvenance,
@@ -26,9 +27,9 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.operations import OperationEffect
 from ..ledger_evidence_commands import (
-    _evidence_extract_lines,
-    _evidence_extract_payload,
-    _require_exact_evidence_reference,
+    evidence_extract_lines,
+    evidence_extract_payload,
+    require_exact_evidence_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -103,14 +104,14 @@ def test_extract_preflight_requires_exactly_one_reference(
     attachment_id: str | None,
 ) -> None:
     with pytest.raises(typer.BadParameter):
-        _require_exact_evidence_reference(evidence_id, attachment_id)
+        require_exact_evidence_reference(evidence_id, attachment_id)
 
 
 def test_extract_payload_keeps_full_structured_draft_and_both_review_addresses() -> None:
     projection = _projection()
 
     result = EvidenceExtractResult.model_validate_json(
-        json.dumps(_evidence_extract_payload(bucket_id=str(_PROFILE), projection=projection)),
+        json.dumps(evidence_extract_payload(bucket_id=str(_PROFILE), projection=projection)),
     )
 
     assert result.evidence_id == _EVIDENCE_ID
@@ -129,7 +130,28 @@ def test_extract_payload_keeps_full_structured_draft_and_both_review_addresses()
     assert result.facturae_invoice_class is not None
     assert result.facturae_invoice_class.source_code == "OO"
 
-    lines = _evidence_extract_lines(str(_PROFILE), projection)
+    lines = evidence_extract_lines(str(_PROFILE), projection)
     assert f"source_sha256\t{_SOURCE_SHA256}" in lines
     assert f"draft_review_sha256\t{_DRAFT_SHA256}" in lines
     assert "consent_audit_effect\tnone" in lines
+
+
+def test_extract_lines_name_each_finding_the_draft_carries() -> None:
+    """A reading that counts findings also names them, kind, field and figures."""
+    figures = InvoiceDraft(
+        taxable_base=Decimal("766.30"),
+        iva_rate=Decimal("1"),
+        iva_amount=Decimal("766.30"),
+        grand_total=Decimal("766.30"),
+        currency="EUR",
+    )
+    draft = figures.model_copy(update={"discrepancies": closure_findings(figures)})
+    projection = _projection().model_copy(update={"draft": InvoiceDraftProjectionV1.from_draft(draft)})
+
+    lines = evidence_extract_lines(str(_PROFILE), projection)
+
+    assert "discrepancies\t2" in lines
+    assert [line for line in lines if line.startswith("discrepancy\t")] == [
+        "discrepancy\tarithmetic_closure\tgrand_total\t1532.60\t766.30",
+        "discrepancy\trate_inconsistent\tiva_rate\t7.663\t766.30",
+    ]

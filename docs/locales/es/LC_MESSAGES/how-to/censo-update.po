@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-11-22 14:35+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -185,9 +185,9 @@ msgid ""
 "profile name, the edit applies to the active profile:"
 msgstr ""
 "El asistente recorre los campos del perfil, incluidos los que proceden "
-"del censo. Para una actualización mediante script, pasa las opciones de "
-"campo con `--quiet`. Si no indicas el nombre de un perfil, la "
-"modificación se aplica al perfil activo:"
+"del censo. Para una actualización mediante una secuencia de comandos, "
+"pasa las opciones de campo con `--quiet`. Si no indicas el nombre de un "
+"perfil, la modificación se aplica al perfil activo:"
 
 #: ../../how-to/censo-update.md:77
 msgid ""
@@ -296,16 +296,32 @@ msgstr "Qué no puede completar la obtención"
 
 #: ../../how-to/censo-update.md:122
 msgid ""
-"The pull fills your fiscal address, postcode, and cadastral reference. It"
-" reports these as the fields `contact.fiscal_address`, "
-"`contact.postcode`, and `contact.fiscal_address_cadastral_reference`."
+"The pull fills your fiscal address, postcode, cadastral reference, "
+"province code, municipality code, municipality name, AEAT delegation "
+"code, AEAT administration code, AEAT administration name, activity start "
+"date, and activity end date. It reports these as the fields "
+"`contact.fiscal_address`, `contact.postcode`, "
+"`contact.fiscal_address_cadastral_reference`, "
+"`contact.fiscal_address_province_code`, "
+"`contact.fiscal_address_municipality_code`, "
+"`contact.fiscal_address_municipality_name`, `censo.aeat_delegacion_code`,"
+" `censo.aeat_administracion_code`, `censo.aeat_administracion_name`, "
+"`censo.activity_start_date`, and `censo.activity_end_date`."
 msgstr ""
-"La obtención completa tu dirección fiscal, el código postal y la "
-"referencia catastral. Los informa como los campos "
-"`contact.fiscal_address`, `contact.postcode` y "
-"`contact.fiscal_address_cadastral_reference`."
+"La obtención completa tu dirección fiscal, el código postal, la "
+"referencia catastral, el código de provincia, el código de municipio, el "
+"nombre del municipio, el código de la delegación de la AEAT, el código de"
+" la administración de la AEAT, el nombre de la administración de la AEAT,"
+" la fecha de inicio de actividad y la fecha de fin de actividad. Los "
+"informa como los campos `contact.fiscal_address`, `contact.postcode`, "
+"`contact.fiscal_address_cadastral_reference`, "
+"`contact.fiscal_address_province_code`, "
+"`contact.fiscal_address_municipality_code`, "
+"`contact.fiscal_address_municipality_name`, `censo.aeat_delegacion_code`,"
+" `censo.aeat_administracion_code`, `censo.aeat_administracion_name`, "
+"`censo.activity_start_date` y `censo.activity_end_date`."
 
-#: ../../how-to/censo-update.md:126
+#: ../../how-to/censo-update.md:133
 msgid ""
 "It does not fill your fiscal ID. It reads your fiscal ID to confirm the "
 "record AEAT returned is yours, and never writes it."
@@ -314,7 +330,7 @@ msgstr ""
 "confirmar que el registro devuelto por la AEAT es tuyo, pero nunca lo "
 "escribe."
 
-#: ../../how-to/censo-update.md:129
+#: ../../how-to/censo-update.md:136
 msgid ""
 "It does not fill your regime facts: activity, tax regime, VAT regime, "
 "enrollment. AEAT publishes no read-only surface that carries them. Enter "
@@ -326,7 +342,7 @@ msgstr ""
 "contenga. Introdúcelos a mano como se describe en [Introducir o corregir "
 "datos censales](#enter-or-correct-census-facts)."
 
-#: ../../how-to/censo-update.md:133
+#: ../../how-to/censo-update.md:140
 msgid ""
 "It does not split your name. AEAT returns surnames and given names as one"
 " string, and a wrong split is worse than a blank field, so the pull "
@@ -336,7 +352,7 @@ msgstr ""
 "cadena, y una separación incorrecta es peor que un campo vacío, así que "
 "la obtención deja ambos sin cambios."
 
-#: ../../how-to/censo-update.md:137
+#: ../../how-to/censo-update.md:144
 msgid ""
 "If a pull returns a record whose fiscal ID is not your profile's, it "
 "refuses outright rather than reporting a difference. A read of someone "
@@ -347,23 +363,23 @@ msgstr ""
 "informar de una diferencia. Leer el censo de otra persona no es un "
 "desacuerdo que se pueda valorar."
 
-#: ../../how-to/censo-update.md:142
+#: ../../how-to/censo-update.md:149
 msgid "Import a Certificado de Situación Censal"
 msgstr "Importar un Certificado de Situación Censal"
 
-#: ../../how-to/censo-update.md:144
+#: ../../how-to/censo-update.md:151
 msgid ""
-"The sede issues a *Certificado de Situación Censal* (procedure G313) that"
-" states your census facts as AEAT holds them. Download it yourself from "
-"the sede, then read it into your profile from the file. The first step "
-"previews; the second records:"
+"The AEAT e-office issues a *Certificado de Situación Censal* (procedure "
+"G313) that states your census facts as AEAT holds them. Download it "
+"yourself from the AEAT online portal, then read it into your profile from"
+" the file. The first step previews; the second records:"
 msgstr ""
 "La sede emite un *Certificado de Situación Censal* (procedimiento G313) "
 "que indica tus datos censales tal como los conserva la AEAT. Descárgalo "
 "tú mismo de la sede y luego léelo desde el fichero para incorporarlo a tu"
 " perfil. El primer paso muestra una vista previa; el segundo lo registra:"
 
-#: ../../how-to/censo-update.md:152
+#: ../../how-to/censo-update.md:159
 msgid ""
 "The command previews the census facts the certificate carries without "
 "writing anything. Add `--apply` to record them onto the active profile. "
@@ -379,7 +395,7 @@ msgstr ""
 "pantalla completa enumera en **Operaciones** y que un agente ejecuta con "
 "`execute`; indícale la ruta absoluta del certificado."
 
-#: ../../how-to/censo-update.md:159
+#: ../../how-to/censo-update.md:166
 msgid ""
 "Facts recorded this way carry a marker saying they are not official AEAT "
 "data: they came from a document you supplied, not from an AEAT-confirmed "
@@ -398,7 +414,7 @@ msgstr ""
 "configuración, el perfil conserva un registro de la divergencia y `aeat "
 "config profile view` te avisa hasta que la resuelvas."
 
-#: ../../how-to/censo-update.md:167
+#: ../../how-to/censo-update.md:174
 msgid ""
 "Reading the certificate's contents is not yet active: the command "
 "currently refuses every document while layout coverage for AEAT-issued "
@@ -415,18 +431,18 @@ msgstr ""
 "La interfaz del comando es estable y esta página se aplicará sin cambios "
 "cuando se active la lectura."
 
-#: ../../how-to/censo-update.md:174
+#: ../../how-to/censo-update.md:181
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "Registrar una presentación del Modelo 036 hecha fuera de Cadrumo"
 
-#: ../../how-to/censo-update.md:176
+#: ../../how-to/censo-update.md:183
 msgid ""
-"If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
-"record that fact locally so later filings can rely on it. [Record a "
-"Modelo 036 declaration you filed at AEAT](modelo-036.md) owns the "
-"commands, the success output, and what the record does and does not "
-"change. After you record a filing, update the profile fields the filing "
-"changed."
+"If you file a Modelo 036 registration, amendment, or deregistration in "
+"AEAT's online portal, record that fact locally so later filings can rely "
+"on it. [Record a Modelo 036 declaration you filed at AEAT](modelo-036.md)"
+" owns the commands, the success output, and what the record does and does"
+" not change. After you record a filing, update the profile fields the "
+"filing changed."
 msgstr ""
 "Si presentas un alta, una modificación o una baja del Modelo 036 en la "
 "sede de la AEAT, registra ese hecho localmente para que las "
@@ -436,27 +452,27 @@ msgstr ""
 "cambia y no cambia. Después de registrar una presentación, actualiza los "
 "campos del perfil que la presentación haya cambiado."
 
-#: ../../how-to/censo-update.md:182
+#: ../../how-to/censo-update.md:189
 msgid "Check the profile afterwards"
 msgstr "Comprobar el perfil después"
 
-#: ../../how-to/censo-update.md:184
+#: ../../how-to/censo-update.md:191
 msgid "Check the active profile after editing census facts:"
 msgstr "Comprueba el perfil activo tras editar los datos censales:"
 
-#: ../../how-to/censo-update.md:190
+#: ../../how-to/censo-update.md:197
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
 "Si el perfil sigue informando de datos que faltan, edita esos campos "
 "directamente:"
 
-#: ../../how-to/censo-update.md:195
+#: ../../how-to/censo-update.md:202
 msgid "For modelo-specific readiness, use modelo readiness:"
 msgstr ""
 "Para comprobar la preparación de un modelo concreto, usa la comprobación "
 "de preparación del modelo:"
 
-#: ../../how-to/censo-update.md:201
+#: ../../how-to/censo-update.md:208
 msgid ""
 "The command exits with status 2 while the modelo is not ready. "
 "`profile_ready` covers profile facts only, so read `missing_bindings` for"
@@ -466,17 +482,17 @@ msgstr ""
 "`profile_ready` solo abarca los datos del perfil, así que consulta "
 "`missing_bindings` para ver las entradas de origen que aún faltan."
 
-#: ../../how-to/censo-update.md:205
+#: ../../how-to/censo-update.md:212
 msgid "Keep the facts current"
 msgstr "Mantén los datos al día"
 
-#: ../../how-to/censo-update.md:207
+#: ../../how-to/censo-update.md:214
 msgid "Your AEAT census can change: a new activity, a regime change, a baja."
 msgstr ""
 "Tu censo en la AEAT puede cambiar: una nueva actividad, un cambio de "
 "régimen o una baja."
 
-#: ../../how-to/censo-update.md:209
+#: ../../how-to/censo-update.md:216
 msgid ""
 "Pull again to catch changes in your address. The pull reports anything "
 "AEAT now holds that your profile does not."
@@ -485,7 +501,7 @@ msgstr ""
 "obtención informa de cualquier dato que la AEAT conserve ahora y que no "
 "esté en tu perfil."
 
-#: ../../how-to/censo-update.md:212
+#: ../../how-to/censo-update.md:219
 msgid ""
 "The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
@@ -496,22 +512,22 @@ msgstr ""
 "presentes un cambio en el censo y antes de planificar un nuevo año de "
 "presentaciones."
 
-#: ../../how-to/censo-update.md:216
+#: ../../how-to/censo-update.md:223
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/censo-update.md:218
+#: ../../how-to/censo-update.md:225
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:219
+#: ../../how-to/censo-update.md:226
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:220
+#: ../../how-to/censo-update.md:227
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:221
+#: ../../how-to/censo-update.md:228
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"

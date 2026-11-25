@@ -26,11 +26,11 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.custody.tests.support import forge_colliding_capsule_label
 
 from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from ...tests.cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -68,7 +68,7 @@ def _provision_casefold_collision() -> None:
     # profile reusing the first tax id. Control letters per AEAT mod-23 table:
     # 0 -> "T", 1 -> "R".
     alpha = _create_profile("ambig-alpha", "00000000T")
-    beta = _create_profile("ambig-beta", "00000001R")
+    beta = _create_profile("ambig-beta", "00001005Q")
 
     # "Ambig" and "ambig" compare equal under ``str.casefold`` but are
     # distinct strings, which is the ambiguity the reader must refuse.

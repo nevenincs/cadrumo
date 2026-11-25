@@ -13,42 +13,25 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.aggregation import AggregationCaptureKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
-    invoice_ledger_screen_binding_ids,
-)
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.flow import derive_flow_for_classification
-from ....domain.iva.schema import (
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
-from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
-from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
-from .. import _preconditions as preconditions_module
+from ....tests.terminal_precondition_ast import call_name, fact_expressions
 from .. import errors as errors_module
+from .. import modelo_bindings_invoice_iva, preconditions
 from .. import modelo_bindings_retenciones as modelo_bindings_retenciones_module
 from .. import service as service_module
-from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iva_would_be_silent
-from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
-from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
+from ..errors import AggregationError, AggregationUnsupportedModeloError, RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
-from ..service import _supported_per_modelo_modelos, provider_for_modelo
+from ..service import provider_for_modelo, supported_per_modelo_modelos
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -106,42 +89,20 @@ def _contract(
     )
 
 
-# Complete source-level contract for the two dispatch, two IVA-ledger, and one
-# retenciones terminal attachments.  Fact values are AST expressions rather
-# than just keys, so a dynamic calculation or boolean polarity cannot drift.
+# Complete source-level contract for the dispatch and retenciones terminal
+# attachments.  Fact values are AST expressions rather than just keys, so a
+# dynamic calculation or boolean polarity cannot drift.
 _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "service:provider_for_modelo:1": _contract(
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
-    "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
-        AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
-        (
-            ("modelo", "str(context.modelo)"),
-            ("filing_year", "str(context.filing_year)"),
-            ("period", "context.period.registry_token"),
-            ("source_kind", "'ledger_iva_aggregation'"),
-            ("invoice_count", "len(missing_invoice_ids)"),
-            ("missing_binding_count", "0"),
-        ),
-    ),
-    "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
-        AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
-        (
-            ("modelo", "str(context.modelo)"),
-            ("filing_year", "str(context.filing_year)"),
-            ("period", "context.period.registry_token"),
-            ("source_kind", "'ledger_iva_aggregation'"),
-            ("invoice_count", "len(screened.invoice_ids)"),
-            ("missing_binding_count", "len(missing_binding_values)"),
-        ),
-    ),
-    "modelo_bindings_retenciones:RetencionesAggregationSourceResolver.resolve:1": _contract(
+    "modelo_bindings_retenciones:_refusal_with_words:1": _contract(
         AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
         (
-            ("modelo", "str(context.modelo)"),
-            ("filing_year", "str(context.filing_year)"),
-            ("period", "context.period.registry_token"),
+            ("modelo", "str(source.modelo)"),
+            ("filing_year", "str(source.filing_year)"),
+            ("period", "source.period.registry_token"),
             ("source_kind", "'retenciones_aggregation'"),
         ),
     ),
@@ -149,18 +110,9 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 
 _ATTACHMENT_MODULES: tuple[ModuleType, ...] = (
     service_module,
-    modelo_bindings_module,
-    modelo_bindings_refusal_module,
+    modelo_bindings_invoice_iva,
     modelo_bindings_retenciones_module,
 )
-
-
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
 
 
 def _aggregation_carriers() -> dict[str, ast.Call]:
@@ -197,7 +149,11 @@ def _aggregation_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                if _call_name(node.func) in {"AggregationUnsupportedModeloError", "AggregationValidationError"}:
+                if call_name(node.func) in {
+                    "AggregationUnsupportedModeloError",
+                    "AggregationValidationError",
+                    "RetencionesWindowEmptyError",
+                }:
                     verdict = next(
                         (keyword.value for keyword in node.keywords if keyword.arg == "precondition_verdict"),
                         None,
@@ -222,7 +178,7 @@ def _keyword(call: ast.Call, name: str) -> ast.expr | None:
 def _precondition(call: ast.Call) -> ast.Call:
     value = _keyword(call, "precondition_verdict")
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "aggregation_no_recovery_verdict"
+    assert call_name(value.func) == "aggregation_no_recovery_verdict"
     return value
 
 
@@ -231,16 +187,6 @@ def _condition(precondition: ast.Call) -> AggregationPreconditionCondition:
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "AggregationPreconditionCondition"
     return AggregationPreconditionCondition[value.attr]
-
-
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
 
 
 def _normalized_outcome(precondition: ast.Call) -> NoRecoveryOutcome:
@@ -255,11 +201,11 @@ def _normalized_outcome(precondition: ast.Call) -> NoRecoveryOutcome:
 
 
 def _helper_provenance() -> ActionEvidenceProvenance:
-    tree = ast.parse(inspect.getsource(preconditions_module))
+    tree = ast.parse(inspect.getsource(preconditions))
     calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert len(calls) == 1
     value = _keyword(calls[0], "provenance")
@@ -299,20 +245,20 @@ def test_aggregation_terminal_attachment_totality_is_exact_and_mutation_sensitiv
         expected = _AGGREGATION_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _helper_provenance() is expected.provenance
         assert _normalized_outcome(precondition) is expected.outcome
 
 
 def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_constructor() -> None:
     assert issubclass(AggregationError, TerminalPreconditionErrorMixin)
-    modules = (*_ATTACHMENT_MODULES, preconditions_module, errors_module)
+    modules = (*_ATTACHMENT_MODULES, preconditions, errors_module)
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 
@@ -320,13 +266,13 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
         module.__name__
         for module in modules
         for node in ast.walk(ast.parse(inspect.getsource(module)))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
-    assert delegates == [preconditions_module.__name__]
+    assert delegates == [preconditions.__name__]
 
 
 def test_unsupported_modelo_has_an_exact_application_state_operator_decision_verdict() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(AggregationUnsupportedModeloError) as raised:
             provider_for_modelo(" 347 ", operation=_authority_operation_for_test)
 
@@ -335,107 +281,9 @@ def test_unsupported_modelo_has_an_exact_application_state_operator_decision_ver
             condition=AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
             facts={
                 "modelo": " 347 ",
-                "supported_modelos": "|".join(_supported_per_modelo_modelos(operation=_authority_operation_for_test)),
+                "supported_modelos": "|".join(supported_per_modelo_modelos(operation=_authority_operation_for_test)),
             },
         )
-
-
-@pytest.mark.parametrize("refusal", ["uncovered_deduction", "unmatched_ledger"])
-def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_verdicts(
-    refusal: str,
-) -> None:
-    context = CalculationSourceContext(
-        bucket_id="operator",
-        modelo="303",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        revision=published_snapshot("303", filing_year=2025, period="1T").revision,
-    )
-    expected_facts: dict[str, str | int | bool | Decimal]
-    if refusal == "uncovered_deduction":
-        invoice = Invoice.model_validate(
-            {
-                "kind": InvoiceKind.RECEIVED,
-                "invoice_number": "INV-UNLINKED",
-                "issued_at": date(2025, 4, 1),
-                "counterparty_name": "Proveedor SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100.00"),
-                "iva_total": Decimal("21.00"),
-                "grand_total": Decimal("121.00"),
-                "currency": "EUR",
-                "lines": (
-                    InvoiceLine(
-                        description="Servicios profesionales",
-                        quantity=Decimal("1"),
-                        unit_price=Decimal("100.00"),
-                        subtotal=Decimal("100.00"),
-                        iva_rate=IvaRate.from_registry("RATE_21"),
-                        iva_amount=Decimal("21.00"),
-                    ),
-                ),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
-        screened = modelo_bindings_module.ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
-        expected_facts = {
-            "modelo": "303",
-            "filing_year": "2025",
-            "period": "1T",
-            "source_kind": "ledger_iva_aggregation",
-            "invoice_count": 1,
-            "missing_binding_count": 0,
-        }
-    else:
-        screened = modelo_bindings_module.ScreenedInvoiceIva(
-            observations=(
-                IvaLedgerObservation(
-                    ledger_id="invoice-unmatched",
-                    transaction_date=date(2025, 4, 1),
-                    category=IvaCategory("domestic_general"),
-                    rate_kind=IvaRateKind("general"),
-                    flow_direction=derive_flow_for_classification(
-                        category=IvaCategory("domestic_general"),
-                        invoice_direction=InvoiceKind.ISSUED,
-                    ),
-                    cash_accounting_treatment=IvaCashAccountingTreatment("none"),
-                    base_amount=Decimal("100.00"),
-                    iva_amount=Decimal("21.00"),
-                    observation_role=IvaLedgerObservationRole.SETTLEMENT,
-                ),
-            ),
-            invoice_ids=("invoice-unmatched",),
-        )
-        expected_facts = {
-            "modelo": "303",
-            "filing_year": "2025",
-            "period": "1T",
-            "source_kind": "ledger_iva_aggregation",
-            "invoice_count": 1,
-            "missing_binding_count": 1,
-        }
-    with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        pytest.raises(AggregationValidationError) as raised,
-    ):
-        _raise_if_screened_invoice_iva_would_be_silent(
-            context=context,
-            screened_bindings=invoice_ledger_screen_binding_ids(
-                context.revision,
-                modelo=context.modelo,
-            ),
-            screened=screened,
-            transaction_binding_values={},
-            prorrata_apportionment=None,
-            operation=_authority_operation_for_test,
-        )
-
-    _assert_terminal_contract(
-        raised.value,
-        condition=AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
-        facts=expected_facts,
-    )
 
 
 def test_missing_retenciones_observations_has_an_exact_application_state_operator_decision_verdict() -> None:
@@ -469,7 +317,7 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
         ),
     )
 
-    with pytest.raises(AggregationValidationError) as raised:
+    with pytest.raises(RetencionesWindowEmptyError) as raised:
         RetencionesAggregationSourceResolver(
             ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
         ).resolve(context)

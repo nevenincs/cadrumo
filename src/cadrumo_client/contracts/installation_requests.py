@@ -50,7 +50,6 @@ from cadrumo.application.config_reset_documents import ConfigResetOperationPaylo
 from cadrumo.application.diagnostics_repair_documents import RepairProfileDocument, RepairReportDocument
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.documents import StorageAreaIssuePayload, StorageAreaPayload
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.filing_year import FilingYear
@@ -61,10 +60,12 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from cadrumo.core.identity.profile import ProfileId
 from cadrumo.core.identity.profile_label import ProfileLabel
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.core.text_bounds import NonEmptyStr
 
 from .automation_codes import AutomationCustodyCode
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 #: Largest reply one act may return across its bounded transfer.
 INSTALLATION_REPLY_MAX_BYTES: Final[int] = 4_194_304
@@ -673,7 +674,7 @@ class InstallationReplyTransfer(_InstallationReply):
     """Announce a reply too large for one frame, correlated before its chunks are read."""
 
     kind: Literal["installation_reply_transfer"] = "installation_reply_transfer"
-    byte_count: Annotated[int, Field(ge=2, le=INSTALLATION_REPLY_MAX_BYTES)]
+    byte_count: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=INSTALLATION_REPLY_MAX_BYTES)]
     payload_digest: ContentDigest
 
 

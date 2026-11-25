@@ -47,9 +47,9 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.censo_modelos import censo_ownership_refusing_work_units
 from ...domain.calculations.registry.ids import RevisionId
@@ -59,7 +59,6 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence
-from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,
@@ -71,8 +70,9 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
     work_unit_ordering_instants,
 )
+from .modelo_bucket_events import build_modelo_bucket_event
 from .preconditions import build_modelo_precondition_failure_for_scenario
-from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
@@ -358,6 +358,46 @@ def reject_superseded_censo_modelo(*, modelo: str, operation: PinnedAuthorityOpe
     )
 
 
+def _require_matching_creation_year(modelo: str, filing_year: int, period: Period, revision_id: RevisionId) -> None:
+    if period.filing_year != filing_year:
+        evidence_values = {
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period_year": period.filing_year,
+            "period": period.registry_token,
+            "revision_id": revision_id,
+            "filing_year_matches_period": False,
+        }
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_filing_year_period_mismatch",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.create",
+                scenario_id="modelo.work.create.period.filing_year.mismatch",
+                evidence_id="modelo.work.create.period.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
+        )
+
+
+def _require_existing_creation_unit(existing: WorkUnit) -> WorkUnit:
+    if existing.state is WorkUnitState.DESCARTADO:
+        evidence_values = _work_unit_lifecycle_facts(existing)
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_create_discarded",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.create",
+                scenario_id="modelo.work.create.lifecycle.target_discarded",
+                evidence_id="modelo.work.create.lifecycle.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        )
+    return existing
+
+
 def create_work_unit(
     *,
     bucket_id: str,
@@ -402,26 +442,7 @@ def create_work_unit(
     not exist yet.
     """
     reject_superseded_censo_modelo(modelo=modelo, operation=operation)
-    if period.filing_year != filing_year:
-        evidence_values = {
-            "modelo": modelo,
-            "filing_year": filing_year,
-            "period_year": period.filing_year,
-            "period": period.registry_token,
-            "revision_id": revision_id,
-            "filing_year_matches_period": False,
-        }
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_filing_year_period_mismatch",
-            context=evidence_values,
-            precondition_failure=build_modelo_precondition_failure_for_scenario(
-                subject_leaf_key="modelo.work.create",
-                scenario_id="modelo.work.create.period.filing_year.mismatch",
-                evidence_id="modelo.work.create.period.observation",
-                evidence_values=evidence_values,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            ),
-        )
+    _require_matching_creation_year(modelo, filing_year, period, revision_id)
     from .profile_readiness_gate import (
         require_existing_profile_baseline_ready_for_modelo_work,
         require_profile_ready_for_modelo_work,
@@ -477,21 +498,8 @@ def create_work_unit(
     )
     existing = catalogue.get(work_unit_id)
     if existing is not None:
-        if existing.state is WorkUnitState.DESCARTADO:
-            evidence_values = _work_unit_lifecycle_facts(existing)
-            raise WorkUnitMutationRefusedError(
-                translated_message="application.modelo.errors.work_unit_create_discarded",
-                context=evidence_values,
-                precondition_failure=build_modelo_precondition_failure_for_scenario(
-                    subject_leaf_key="modelo.work.create",
-                    scenario_id="modelo.work.create.lifecycle.target_discarded",
-                    evidence_id="modelo.work.create.lifecycle.observation",
-                    evidence_values=evidence_values,
-                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-                ),
-            )
-        return existing
-    now = clock or _utc_now()
+        return _require_existing_creation_unit(existing)
+    now = clock or clock_utc_now()
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -509,7 +517,7 @@ def create_work_unit(
     # One unit of work: the new work unit and MODELO_WORK_UNIT_CREATED. Emitted
     # through a separate write, an event-storage failure left the unit durable
     # while the history had no record that it was ever created.
-    created_event = _build_bucket_event(
+    created_event = build_modelo_bucket_event(
         bucket_id=unit.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
         occurred_at=now,
@@ -526,7 +534,7 @@ def create_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, unit),
-        (_bucket_event_write(bv_repo, (created_event,)),),
+        (bucket_event_history_write(bv_repo, (created_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return unit
@@ -744,7 +752,7 @@ def rename_work_unit(
                 provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.RENAME,
@@ -754,7 +762,7 @@ def rename_work_unit(
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
     # One unit of work: the renamed unit and MODELO_WORK_UNIT_RENAMED.
-    renamed_event = _build_bucket_event(
+    renamed_event = build_modelo_bucket_event(
         bucket_id=renamed.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_RENAMED,
         occurred_at=now,
@@ -771,7 +779,7 @@ def rename_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, renamed),
-        (_bucket_event_write(bv_repo, (renamed_event,)),),
+        (bucket_event_history_write(bv_repo, (renamed_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return renamed
@@ -823,7 +831,7 @@ def discard_work_unit(
                 provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.DISCARD,
@@ -839,7 +847,7 @@ def discard_work_unit(
         },
     )
     # One unit of work: the discarded unit and MODELO_WORK_UNIT_DISCARDED.
-    discarded_event = _build_bucket_event(
+    discarded_event = build_modelo_bucket_event(
         bucket_id=discarded.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
         occurred_at=now,
@@ -855,7 +863,7 @@ def discard_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, discarded),
-        (_bucket_event_write(bv_repo, (discarded_event,)),),
+        (bucket_event_history_write(bv_repo, (discarded_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return discarded

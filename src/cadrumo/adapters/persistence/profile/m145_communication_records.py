@@ -32,7 +32,7 @@ from .snapshots import SecureSnapshotRepository
 from .translated_bucket_event_history import TranslatedBucketEventHistoryRepository
 
 
-class _M145AdapterInputError(CadrumoError):
+class M145AdapterInputError(CadrumoError):
     """Adapter-only invariant error consumed by the translation boundary."""
 
 
@@ -133,7 +133,7 @@ def build_m145_communication_records_ports(*, bucket_id: str) -> M145Communicati
                 not_found_factory=_record_not_found,
                 ambiguous_prefix_factory=_record_ambiguous,
                 domain_label="m145_communication_record",
-                input_error_cls=_M145AdapterInputError,
+                input_error_cls=M145AdapterInputError,
                 objects=objects,
             ),
         ),

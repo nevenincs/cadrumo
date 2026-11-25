@@ -1,15 +1,28 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
-import { agentColumn as column, ask, settled } from "../support/agent";
+import { catalogsUnderEngine } from "../../src/dev/fixtures/agentCatalog";
+import { settingsLanesUnderEngine } from "../../src/dev/providerSettingsFixture";
+import {
+  agentColumn as column,
+  ask,
+  matrixCell,
+  matrixLane,
+  matrixRows,
+  messageField,
+  offeredModels,
+  pickWay,
+  settled,
+  worded,
+} from "../support/agent";
+import { bundledMark, connectionLabel } from "../support/connection";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
-// The agent's provider list: a list of lanes, each with its provider's own
+// The agent's model matrix: a heading for each lane, with its provider's own
 // mark and the name cadrumo-agent's catalog gives it, and nothing that lets a
 // person pick "how" a provider is reached. A provider the catalog serves two
-// lanes for (Example Alpha and Example Beta) is two entries; the one chosen is
-// the lane the next message runs on, and its models and efforts are that
-// lane's own.
+// lanes for (Example Alpha and Example Beta) is two headings; the lane of the
+// cell chosen is the one the next message runs on, and the models and efforts
+// under each heading are that lane's own.
 
 // The smallest side a control may have under a finger, less the rounding of a
 // rem length to device pixels.
@@ -17,9 +30,10 @@ const FINGER = 44 - 1;
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** What the fixture catalog holds, read straight from it: every check below
- * compares the column with this, and none restates a provider. */
-const lanes = FIXTURE_CATALOG.providers ?? [];
+/** What the fixture catalog holds under the default engine, read straight
+ * from it: every check below compares the column with this, and none restates
+ * a provider. */
+const lanes = catalogsUnderEngine(SERVED_ENGINE).served.providers ?? [];
 const wayOf = (served: { provider_id: string; transport: string }) =>
   `${served.provider_id}/${served.transport}`;
 const laneOf = (way: string) => {
@@ -65,24 +79,74 @@ async function openSettings(target: Page) {
   return settings;
 }
 
-const providerBox = (settings: Locator) =>
-  settings.getByRole("button", { name: label("desktop.agent.provider") });
-const modelBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.model") });
-const effortBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.effort") });
-const pickerList = (target: Page) => target.getByRole("listbox");
-const pickerOptions = (target: Page) => pickerList(target).getByRole("option");
+/** The heading rows of every lane the open matrix shows. */
+const laneHeadings = (settings: Locator) =>
+  settings.locator("tr[data-slot=model-matrix-lane]");
+const searchField = (settings: Locator) =>
+  settings.getByRole("searchbox", {
+    name: label("desktop.agent.model_matrix_search_label"),
+  });
+/** The choice `name` of the filter `axis`: a lane's state in the provider
+ * settings, or whether it can be chosen now. */
+const filter = (
+  settings: Locator,
+  axis: "state" | "availability",
+  name: "all" | "on" | "off" | "ready" | "setup",
+) => settings.locator(`[data-filter-axis=${axis}] [data-filter=${name}]`);
+/** The filter `axis` as the one labelled choice it is. */
+const filterGroup = (settings: Locator, axis: "state" | "availability") =>
+  settings.getByRole("radiogroup", {
+    name: label(
+      axis === "state"
+        ? "desktop.agent.model_matrix_state"
+        : "desktop.agent.model_matrix_availability",
+    ),
+  });
 
-/** The entry of the list for the lane `way`, once the list is open. */
-const entry = (target: Page, way: string) =>
-  target.locator(`[role=option][data-way="${way}"]`);
+/** The model row whose cell is the one chosen. */
+const chosenRow = (settings: Locator) =>
+  settings.locator(
+    "tr[data-slot=model-matrix-row]:has([role=radio][aria-checked=true])",
+  );
 
-/** Opens the list and chooses the lane `way` in it. */
-async function chooseLane(target: Page, settings: Locator, way: string) {
-  await providerBox(settings).click();
-  await entry(target, way).click();
-}
+/** The columns of the cells the row of `model` on the lane `way` has, in
+ * order: the provider's default, then each effort the model takes. */
+const cellsOf = (settings: Locator, way: string, model: string) =>
+  matrixRows(settings, way)
+    .and(settings.locator(`[data-model="${model}"]`))
+    .locator("[role=radio]")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-column")),
+    );
+
+/** The names of a row's effort cells, the provider's default left out. */
+const effortCellNames = (settings: Locator, way: string, model: string) =>
+  matrixRows(settings, way)
+    .and(settings.locator(`[data-model="${model}"]`))
+    .locator('[role=radio]:not([data-column="default"])')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("aria-label")),
+    );
+
+/** The cell names a row of `name` has for `efforts`, in the words a screen
+ * reader hears. */
+const namedCells = (name: string, efforts: readonly string[]) =>
+  effortWords(efforts).map((effort) =>
+    label("desktop.agent.model_matrix_cell", { model: name, effort }),
+  );
+
+/** The model ids the catalog lists for the lane `way`, in its order. */
+const catalogModels = (way: string) =>
+  laneOf(way).catalog.models?.map((model) => model.entry_id) ?? [];
+
+/** Waits out the transitions of a popover that is arriving: it grows as it
+ * opens, so what is measured of it is only real once they have ended. */
+const arrived = (popover: Locator) =>
+  popover.evaluate(async (node) => {
+    await Promise.all(
+      node.getAnimations({ subtree: true }).map((motion) => motion.finished),
+    );
+  });
 
 /** Every selection the column has handed to the agent with a message, in
  * order. Only the scenario host can say: it is read off the session the
@@ -102,43 +166,52 @@ test.beforeEach(async ({ page: target }) => {
   });
 });
 
-test("the searchable list has one entry for each connection, with its provider's own mark", async ({
+test("the searchable matrix has one heading for each connection, with its provider's own mark", async ({
   page: target,
 }) => {
   await open(target);
   const settings = await openSettings(target);
 
   // Nothing offers a way to choose how a provider is reached: a person
-  // chooses from one list.
-  await expect(settings.getByRole("radiogroup")).toHaveCount(0);
-  await expect(settings.getByRole("radio")).toHaveCount(0);
+  // chooses a cell of one matrix, and every choice is one of its cells. The
+  // only other choices are the matrix's two filters.
+  await expect(settings.getByRole("radiogroup")).toHaveCount(2);
+  await expect(filterGroup(settings, "state")).toHaveAttribute(
+    "data-filter-axis",
+    "state",
+  );
+  await expect(filterGroup(settings, "availability")).toHaveAttribute(
+    "data-filter-axis",
+    "availability",
+  );
+  await expect(
+    settings.locator("[role=radio]:not([data-matrix-cell]):not([data-filter])"),
+  ).toHaveCount(0);
   await expect(settings.getByRole("switch")).toHaveCount(0);
   await expect(settings.getByRole("tablist")).toHaveCount(0);
-  await expect(settings.getByRole("combobox")).toHaveCount(2);
+  await expect(settings.getByRole("combobox")).toHaveCount(0);
 
-  await providerBox(settings).click();
-  const controls = await providerBox(settings).getAttribute("aria-controls");
-  expect(controls).toBeTruthy();
-  const popup = target.locator(`[id="${controls}"]`);
-  await expect(popup).toHaveAttribute("role", "dialog");
-  await expect(popup).toHaveAccessibleName(label("desktop.agent.provider"));
-  const list = pickerList(target);
-  await expect(list).toHaveAccessibleName(
-    label("desktop.providers.search_label"),
-  );
-  const search = target.getByRole("combobox", {
-    name: label("desktop.providers.search_label"),
+  // The search names what it searches.
+  const grid = settings.getByRole("grid", {
+    name: label("desktop.agent.model_matrix_label"),
   });
-  await expect(search).toHaveAccessibleName(
-    label("desktop.providers.search_label"),
+  await expect(grid).toBeVisible();
+  const gridId = await grid.getAttribute("id");
+  expect(gridId).toBeTruthy();
+  await expect(searchField(settings)).toHaveAttribute(
+    "aria-controls",
+    gridId ?? "",
   );
-  const options = pickerOptions(target);
-  await expect(options).toHaveCount(lanes.length);
-  const rows = await options.evaluateAll((nodes) =>
+  const headings = laneHeadings(settings);
+  await expect(headings).toHaveCount(lanes.length);
+  const rows = await headings.evaluateAll((nodes) =>
     nodes.map((node) => ({
       way: node.getAttribute("data-way"),
       text: node.textContent ?? "",
-      disabled: node.getAttribute("aria-disabled") === "true",
+      standing: node.getAttribute("data-standing"),
+      words:
+        node.querySelector("[data-slot=model-matrix-lane-words]")
+          ?.textContent ?? null,
       marks: [...node.querySelectorAll("[data-slot=provider-mark]")].map(
         (mark) => ({
           provider: mark.getAttribute("data-provider"),
@@ -148,34 +221,103 @@ test("the searchable list has one entry for each connection, with its provider's
       ),
     })),
   );
-  // One row for each lane, in catalog order, with the provider name, the
-  // connection type and any plain availability explanation.
-  expect(rows.map((row) => row.way)).toEqual(lanes.map(wayOf));
+  // Each lane the catalog serves is one heading.
+  expect(rows.map((row) => row.way).sort()).toEqual(lanes.map(wayOf).sort());
   for (const served of lanes) {
     const row = rows.find((held) => held.way === wayOf(served));
     const why = heldBy(served);
     expect(row?.text, wayOf(served)).toContain(served.display_name);
-    expect(row?.text, wayOf(served)).toContain(
-      label(
-        served.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ),
-    );
-    if (why) expect(row?.text, wayOf(served)).toContain(why);
-    expect(row?.disabled, wayOf(served)).toBe(why !== null);
+    expect(row?.text, wayOf(served)).toContain(connectionLabel(served));
+    if (why) expect(row?.words, wayOf(served)).toBe(why);
+    expect(row?.standing, wayOf(served)).toBe(why === null ? "ready" : "setup");
     expect(row?.marks, wayOf(served)).toEqual([
-      // The made-up fixture provider has no bundled mark, so it uses fallback.
-      { provider: served.provider_id, kind: "none", tag: "span" },
+      // A provider the agent ships no artwork for wears the generic mark.
+      {
+        provider: served.provider_id,
+        kind: bundledMark(served.provider_id) ? "mono" : "generic",
+        tag: "span",
+      },
     ]);
   }
   // Example Alpha and Example Beta each have two distinguishable choices.
   for (const name of ["Example Alpha", "Example Beta"])
-    expect(rows.filter((row) => row.text.startsWith(name))).toHaveLength(2);
-  // Those the catalog holds back stay in the list, disabled.
-  await expect(list.locator("[role=option][aria-disabled=true]")).toHaveCount(
-    lanes.filter((served) => !served.health.selectable).length,
+    expect(rows.filter((row) => row.text.includes(name))).toHaveLength(2);
+  // Those the catalog holds back stay in the matrix, needing setup.
+  const held = lanes.filter((served) => !served.health.selectable);
+  await expect(
+    settings.locator("tr[data-slot=model-matrix-lane][data-standing=setup]"),
+  ).toHaveCount(held.length);
+
+  // The lanes that are on are shown to start with, ready or not; the second
+  // filter sets the ready ones apart from those that need setting up.
+  await expect(filter(settings, "state", "on")).toHaveAttribute(
+    "aria-checked",
+    "true",
   );
+  await expect(filter(settings, "availability", "all")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  // What is shown is counted, in words a screen reader hears as it changes.
+  const count = settings
+    .getByRole("status")
+    .and(settings.locator("[data-slot=model-matrix-count]"));
+  await expect(count).toHaveText(
+    new RegExp(
+      [
+        "desktop.agent.model_matrix_count",
+        "desktop.agent.model_matrix_count_one",
+      ]
+        .map((key) => worded(key).source)
+        .join("|"),
+    ),
+  );
+  const shownAtFirst = (await count.textContent()) ?? "";
+  await filter(settings, "availability", "ready").click();
+  await expect(filter(settings, "availability", "ready")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(filter(settings, "availability", "all")).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
+  await expect(headings).toHaveCount(lanes.length - held.length);
+  await expect(
+    settings.locator(
+      "tr[data-slot=model-matrix-lane]:not([data-standing=ready])",
+    ),
+  ).toHaveCount(0);
+  // All leaves none out.
+  await filter(settings, "availability", "all").click();
+  await expect(headings).toHaveCount(lanes.length);
+  await expect(count).toHaveText(shownAtFirst);
+  await filter(settings, "availability", "setup").click();
+  await expect(headings).toHaveCount(held.length);
+  await expect(
+    settings.locator(
+      "tr[data-slot=model-matrix-lane]:not([data-standing=setup])",
+    ),
+  ).toHaveCount(0);
+  // A lane held back shows no models to choose, only how many it has.
+  await expect(settings.locator("tr[data-slot=model-matrix-row]")).toHaveCount(
+    0,
+  );
+  // The two filters meet: needing setup, a lane turned off is among them,
+  // and the state filter keeps only those, or both.
+  await filter(settings, "state", "off").click();
+  await expect(
+    settings.locator(
+      "tr[data-slot=model-matrix-lane]:not([data-standing=off])",
+    ),
+  ).toHaveCount(0);
+  const off = await headings.count();
+  await filter(settings, "state", "all").click();
+  await expect(headings).toHaveCount(held.length + off);
+  // No lane turned off is ready.
+  await filter(settings, "state", "off").click();
+  await filter(settings, "availability", "ready").click();
+  await expect(headings).toHaveCount(0);
 });
 
 test("search filters connection types and reports no matches", async ({
@@ -183,29 +325,78 @@ test("search filters connection types and reports no matches", async ({
 }) => {
   await open(target);
   const settings = await openSettings(target);
-  await providerBox(settings).click();
-  const search = target.getByRole("combobox", {
-    name: label("desktop.providers.search_label"),
-  });
+  const search = searchField(settings);
+  const headings = laneHeadings(settings);
 
   await search.fill(label("desktop.providers.connection_api"));
-  await expect(pickerOptions(target)).toHaveCount(
-    lanes.filter((served) => served.transport === "api").length,
+  const reachedBy = (key: string) =>
+    lanes.filter((served) => connectionLabel(served) === label(key));
+  await expect(headings).toHaveCount(
+    reachedBy("desktop.providers.connection_api").length,
   );
-  for (const option of await pickerOptions(target).all())
-    await expect(option).toContainText(
+  for (const heading of await headings.all())
+    await expect(heading).toContainText(
       label("desktop.providers.connection_api"),
     );
 
   await search.fill(label("desktop.providers.connection_app"));
-  await expect(pickerOptions(target)).toHaveCount(
-    lanes.filter((served) => served.transport === "cli").length,
+  await expect(headings).toHaveCount(
+    reachedBy("desktop.providers.connection_app").length,
+  );
+  await search.fill(label("desktop.providers.connection_local"));
+  await expect(headings).toHaveCount(
+    reachedBy("desktop.providers.connection_local").length,
   );
   await search.fill("no matching provider");
-  await expect(pickerOptions(target)).toHaveCount(0);
+  await expect(headings).toHaveCount(0);
   await expect(
-    target.getByText(label("desktop.providers.search_empty")),
-  ).toBeVisible();
+    settings.locator("[data-slot=model-matrix-empty]"),
+  ).toContainText(label("desktop.agent.model_matrix_search_empty"));
+});
+
+test("a lane the catalogue serves as needing no key is worded as on this computer, and a keyed lane by how it is reached", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  const keyless = lanes.filter((served) => served.auth_kind === "none");
+  const keyed = lanes.filter((served) => served.auth_kind !== "none");
+  // The scenario catalogue serves both kinds, and the selected local
+  // engine's lane alone.
+  expect(keyless.map(wayOf)).toContain(`${SERVED_ENGINE}/api`);
+  expect(keyless.map((served) => served.provider_id)).not.toContain(
+    SERVED_ENGINE === "llamacpp" ? "ollama" : "llamacpp",
+  );
+  expect(keyed.length).toBeGreaterThan(0);
+  for (const served of keyless) {
+    const row = matrixLane(settings, wayOf(served));
+    await expect(row).toContainText(
+      label("desktop.providers.connection_local"),
+    );
+    await expect(row).not.toContainText(
+      label("desktop.providers.connection_api"),
+    );
+  }
+  for (const served of keyed) {
+    const row = matrixLane(settings, wayOf(served));
+    await expect(row).toContainText(connectionLabel(served));
+    await expect(row).not.toContainText(
+      label("desktop.providers.connection_local"),
+    );
+  }
+  // An API-transport keyed lane says key; the same transport keyless does not.
+  await expect(matrixLane(settings, "kimi/api")).toContainText(
+    label("desktop.providers.connection_api"),
+  );
+  await expect(matrixLane(settings, "llamacpp/api")).not.toContainText(
+    label("desktop.providers.connection_api"),
+  );
+  // The lane chosen is the one worded as on this computer.
+  await pickWay(target, settings, "llamacpp/api");
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", "llamacpp/api");
+  await expect(matrixLane(settings, "llamacpp/api")).toContainText(
+    `${laneOf("llamacpp/api").display_name}, ${label("desktop.providers.connection_local")}`,
+  );
 });
 
 test("search keeps duplicate provider connections distinct for keyboard choice", async ({
@@ -213,25 +404,42 @@ test("search keeps duplicate provider connections distinct for keyboard choice",
 }) => {
   await open(target);
   const settings = await openSettings(target);
-  await providerBox(settings).click();
-  const search = target.getByRole("combobox", {
-    name: label("desktop.providers.search_label"),
-  });
+  const search = searchField(settings);
   await search.fill("Example Beta");
-  await expect(pickerOptions(target)).toHaveCount(2);
+  await expect(laneHeadings(settings)).toHaveCount(2);
+  // Every word typed has to match: the name and how it is reached narrow it
+  // to one.
+  await search.fill(
+    `Example Beta ${label("desktop.providers.connection_app")}`,
+  );
+  await expect(laneHeadings(settings)).toHaveCount(1);
+  await expect(matrixLane(settings, "qwen/cli")).toHaveCount(1);
+  await search.fill("Example Beta");
+  await expect(laneHeadings(settings)).toHaveCount(2);
 
-  await search.press("ArrowDown");
-  await search.press("Enter");
-  await expect(providerBox(settings)).toContainText("Example Beta");
-  await expect(providerBox(settings)).toContainText(
-    label("desktop.providers.connection_app"),
+  const [first = "", second = ""] = await laneHeadings(settings).evaluateAll(
+    (nodes) => nodes.map((node) => node.getAttribute("data-way") ?? ""),
   );
-  await expect(providerBox(settings)).toHaveAccessibleName(
-    `${label("desktop.agent.provider")}: Example Beta, ${label("desktop.providers.connection_app")}`,
+  expect([first, second].sort()).toEqual(["qwen/api", "qwen/cli"]);
+
+  // The keyboard starts on the first cell shown, the first lane's, and a page
+  // down goes to the next lane, the other connection of the same name.
+  await settings.locator('[data-matrix-cell][tabindex="0"]').focus();
+  await expect(
+    matrixCell(settings, first, catalogModels(first)[0] ?? ""),
+  ).toBeFocused();
+  await target.keyboard.press("PageDown");
+  const next = matrixCell(settings, second, catalogModels(second)[0] ?? "");
+  await expect(next).toBeFocused();
+  await target.keyboard.press("Enter");
+  await expect(next).toHaveAttribute("aria-checked", "true");
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", second);
+  await expect(composerButton(target)).toHaveAccessibleName(
+    new RegExp(
+      `^${escaped(label("desktop.agent.settings_label", { current: "Example Beta" }))}`,
+    ),
   );
-  await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/cli").catalog.models?.map((model) => model.display_name) ?? [],
-  );
+  expect(await offeredModels(settings, second)).toEqual(catalogModels(second));
 });
 
 test("choosing an entry chooses its lane, and a message goes with that lane's transport", async ({
@@ -287,60 +495,139 @@ test("choosing an entry chooses its lane, and a message goes with that lane's tr
   // The program entry of Example Beta: its own models, and a message goes by the
   // transport the catalog gives that lane.
   let settings = await openSettings(target);
-  await chooseLane(target, settings, "beta/cli");
-  await expect(providerBox(settings)).toContainText("Example Beta");
-  await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ?? [],
+  await pickWay(target, settings, "qwen/cli");
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", "qwen/cli");
+  expect(await offeredModels(settings, "qwen/cli")).toEqual(
+    catalogModels("qwen/cli"),
   );
   await target.keyboard.press("Escape");
   await ask(target, "Primera");
   await expect.poll(() => sentSelections(target)).toHaveLength(1);
-  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/cli"));
-  expect(startsWith("beta/cli").transport).toBe("cli");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("qwen/cli"));
+  expect(startsWith("qwen/cli").transport).toBe("cli");
   await settled(target);
 
   // The other entry of the same name: another lane, with models of its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "beta/api");
-  await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/api").catalog.models?.map((held) => held.display_name) ?? [],
+  await pickWay(target, settings, "qwen/api");
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", "qwen/api");
+  expect(await offeredModels(settings, "qwen/api")).toEqual(
+    catalogModels("qwen/api"),
   );
   await target.keyboard.press("Escape");
   await ask(target, "Segunda");
   await expect.poll(() => sentSelections(target)).toHaveLength(2);
-  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/api"));
-  expect(startsWith("beta/api").transport).toBe("api");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("qwen/api"));
+  expect(startsWith("qwen/api").transport).toBe("api");
   await settled(target);
 
   // The entry the column starts on goes by its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "alpha/api");
+  await pickWay(target, settings, "kimi/api");
   await target.keyboard.press("Escape");
   await ask(target, "Tercera");
   await expect.poll(() => sentSelections(target)).toHaveLength(3);
-  expect((await sentSelections(target)).at(-1)).toEqual(
-    startsWith("alpha/api"),
-  );
-  expect(startsWith("alpha/api").transport).toBe("api");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("kimi/api"));
+  expect(startsWith("kimi/api").transport).toBe("api");
 });
 
-test("a held entry cannot be chosen, and says why", async ({
+test("Escape straight after a choice closes the settings", async ({
   page: target,
 }) => {
   await open(target);
   const settings = await openSettings(target);
-  await providerBox(settings).click();
+  await pickWay(target, settings, "qwen/api");
+  // The choice is made, and the settings stay open for the next.
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", "qwen/api");
+  await expect(settings).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
+test("the arrow keys move inside the matrix, and Escape from it closes the settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  // The keyboard starts on the cell chosen, and an arrow moves along its row
+  // without choosing.
+  const chosen = matrixCell(settings, "kimi/api", "fixture-deep");
+  await settings.locator('[data-matrix-cell][tabindex="0"]').focus();
+  await expect(chosen).toBeFocused();
+  await target.keyboard.press("ArrowRight");
+  const moved = matrixCell(settings, "kimi/api", "fixture-deep", "low");
+  await expect(moved).toBeFocused();
+  await expect(moved).toHaveAttribute("aria-checked", "false");
+  await expect(chosen).toHaveAttribute("aria-checked", "true");
+  await expect(settings).toBeVisible();
+
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
+test("a rapid double Escape from the matrix closes the settings and goes no further", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await settings.locator('[data-matrix-cell][tabindex="0"]').focus();
+
+  await target.keyboard.press("Escape");
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(composerButton(target)).toBeFocused();
+});
+
+test("the message box taking focus after a choice closes the settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await pickWay(target, settings, "qwen/api");
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", "qwen/api");
+  // Focus moves out of the settings without a press on them.
+  await messageField(target).focus();
+  await expect(settings).toHaveCount(0);
+  await expect(messageField(target)).toBeFocused();
+});
+
+test("a held lane cannot be chosen, and says why", async ({ page: target }) => {
+  await open(target);
+  const settings = await openSettings(target);
   for (const served of lanes) {
     const why = heldBy(served);
     if (why === null) continue;
-    const held = entry(target, wayOf(served));
-    await expect(held).toHaveAttribute("aria-disabled", "true");
-    await expect(held).toContainText(why);
+    const held = matrixLane(settings, wayOf(served));
+    await expect(held).toHaveAttribute("data-standing", "setup");
+    await expect(
+      held.locator("[data-slot=model-matrix-lane-words]"),
+    ).toHaveText(why);
+    // It offers no model to choose, only how many it has.
+    await expect(matrixRows(settings, wayOf(served))).toHaveCount(0);
+    await expect(held.locator("[role=radio]")).toHaveCount(0);
   }
-  // Closing the list leaves the lane in use as it was.
-  await target.keyboard.press("Escape");
-  await expect(providerBox(settings)).toContainText("Example Alpha");
-  await expect(modelBox(settings)).toHaveValue("fixture-deep");
+  // A model this computer lacks is listed, and cannot be chosen either: its
+  // row has no cell to press.
+  const lacking = matrixRows(settings, "llamacpp/api").and(
+    settings.locator("[data-held=false]"),
+  );
+  await expect(lacking).toHaveCount(1);
+  await expect(lacking).toHaveAttribute("aria-disabled", "true");
+  await expect(lacking.getByRole("rowheader")).toHaveText(
+    worded("desktop.agent.model_not_installed"),
+  );
+  await expect(lacking.locator("[role=radio]")).toHaveCount(0);
+  // The lane in use stays as it was.
+  await expect(
+    matrixCell(settings, "kimi/api", "fixture-deep"),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(composerButton(target)).toHaveAccessibleName(
+    new RegExp(
+      `^${escaped(label("desktop.agent.settings_label", { current: "Example Alpha" }))}`,
+    ),
+  );
 });
 
 test("the efforts offered follow the model of the lane chosen", async ({
@@ -348,37 +635,45 @@ test("the efforts offered follow the model of the lane chosen", async ({
 }) => {
   await open(target);
   const settings = await openSettings(target);
-  const efforts = effortBox(settings).locator("option");
   const takes = (way: string, model: string) =>
     laneOf(way).catalog.models?.find((held) => held.entry_id === model)
       ?.efforts ?? [];
 
-  // Example Beta by its program: the lane's recommended model takes its efforts.
-  await chooseLane(target, settings, "beta/cli");
-  await expect(modelBox(settings)).toHaveValue("fixture-ultra");
-  await expect(efforts).toHaveText(
-    effortWords(takes("beta/cli", "fixture-ultra")),
-  );
-  await modelBox(settings).selectOption("fixture-tiered");
-  await expect(efforts).toHaveText(
-    effortWords(takes("beta/cli", "fixture-tiered")),
-  );
-  // The same name by its other entry: its models take none.
-  await chooseLane(target, settings, "beta/api");
-  await expect(effortBox(settings)).toHaveCount(0);
-  // Example Alpha's models take their own, and one of them none.
-  await chooseLane(target, settings, "alpha/api");
-  await expect(modelBox(settings)).toHaveValue("fixture-deep");
-  await expect(efforts).toHaveText([
-    label("desktop.agent.effort_default"),
-    ...effortWords(takes("alpha/api", "fixture-deep")),
+  // Example Beta by its program: the lane's recommended model takes its
+  // efforts, each a cell beside the provider's default.
+  await pickWay(target, settings, "qwen/cli");
+  await expect(
+    matrixCell(settings, "qwen/cli", "fixture-ultra"),
+  ).toHaveAttribute("aria-checked", "true");
+  expect(await cellsOf(settings, "qwen/cli", "fixture-ultra")).toEqual([
+    "default",
+    ...takes("qwen/cli", "fixture-ultra"),
   ]);
-  await modelBox(settings).selectOption("fixture-quick");
-  await expect(efforts).toHaveText(
-    effortWords(takes("alpha/api", "fixture-quick")),
+  expect(await effortCellNames(settings, "qwen/cli", "fixture-ultra")).toEqual(
+    namedCells("Fixture Ultra", takes("qwen/cli", "fixture-ultra")),
   );
-  await modelBox(settings).selectOption("fixture-plain");
-  await expect(effortBox(settings)).toHaveCount(0);
+  expect(await cellsOf(settings, "qwen/cli", "fixture-tiered")).toEqual([
+    "default",
+    ...takes("qwen/cli", "fixture-tiered"),
+  ]);
+  // The same name by its other connection: its models take none.
+  for (const model of catalogModels("qwen/api"))
+    expect(await cellsOf(settings, "qwen/api", model)).toEqual(["default"]);
+  // Example Alpha's models take their own, and one of them none.
+  expect(await cellsOf(settings, "kimi/api", "fixture-deep")).toEqual([
+    "default",
+    ...takes("kimi/api", "fixture-deep"),
+  ]);
+  expect(await effortCellNames(settings, "kimi/api", "fixture-deep")).toEqual(
+    namedCells("Fixture Deep", takes("kimi/api", "fixture-deep")),
+  );
+  expect(await cellsOf(settings, "kimi/api", "fixture-quick")).toEqual([
+    "default",
+    ...takes("kimi/api", "fixture-quick"),
+  ]);
+  expect(await cellsOf(settings, "kimi/api", "fixture-plain")).toEqual([
+    "default",
+  ]);
 });
 
 /** Everything in `scope` a screen reader or a pointer could meet that says
@@ -394,23 +689,21 @@ const wording = (scope: Locator) =>
     return [(node as HTMLElement).innerText, ...names].filter(Boolean);
   });
 
-test("no “CLI” appears in the agent column, the list or the settings", async ({
+test("no “CLI” appears in the agent column, the model matrix or the settings", async ({
   page: target,
 }) => {
   await open(target);
   const settings = await openSettings(target);
   // The lane that runs a program: the very one the old wording was for.
-  await chooseLane(target, settings, "beta/cli");
+  await pickWay(target, settings, "qwen/cli");
   const said = [
     ...(await wording(settings)),
     ...(await column(target).evaluate((node) => [
       (node as HTMLElement).innerText,
     ])),
   ];
-  await providerBox(settings).click();
-  said.push(...(await wording(target.getByRole("listbox"))));
   await target.keyboard.press("Escape");
-  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
 
   await column(target)
     .getByRole("button", { name: label("desktop.agent.settings"), exact: true })
@@ -420,7 +713,7 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   });
   await expect(providers).toBeVisible();
   await expect(providers.locator("[data-lane]")).toHaveCount(
-    FIXTURE_SETTINGS_LANES.length,
+    settingsLanesUnderEngine(SERVED_ENGINE).length,
   );
   said.push(...(await wording(providers)));
 
@@ -431,7 +724,8 @@ test("no “CLI” appears in the agent column, the list or the settings", async
     label("desktop.providers.title"),
     label("desktop.providers.status_setup_needed"),
     label("desktop.agent.lane_not_configured"),
-    label("desktop.agent.effort"),
+    label("desktop.agent.model_matrix_label"),
+    label("desktop.agent.effort_ultra"),
   ])
     expect(everything).toContain(shown);
   for (const text of said) {
@@ -458,7 +752,7 @@ function luminance(colour: string): number {
 }
 
 for (const mode of ["light", "dark", "forced colours"] as const) {
-  test(`a mark follows the text colour of the list (${mode})`, async ({
+  test(`a mark follows the text colour of the matrix (${mode})`, async ({
     page: target,
   }) => {
     await target.emulateMedia({
@@ -467,26 +761,31 @@ for (const mode of ["light", "dark", "forced colours"] as const) {
     });
     await open(target);
     const settings = await openSettings(target);
-    await providerBox(settings).click();
-    await expect(pickerOptions(target)).toHaveCount(lanes.length);
-    const marks = await pickerOptions(target).evaluateAll((nodes) =>
+    await expect(laneHeadings(settings)).toHaveCount(lanes.length);
+    const marks = await laneHeadings(settings).evaluateAll((nodes) =>
       nodes.map((node) => {
         const mark = node.querySelector("[data-slot=provider-mark]");
         return {
           provider: mark?.getAttribute("data-provider") ?? "",
           text: mark ? getComputedStyle(mark).color : "",
-          fills: [...(mark?.querySelectorAll("path") ?? [])].map(
-            (piece) => getComputedStyle(piece).fill,
-          ),
+          pieces: [...(mark?.querySelectorAll("path") ?? [])].map((piece) => ({
+            fill: getComputedStyle(piece).fill,
+            stroke: getComputedStyle(piece).stroke,
+          })),
         };
       }),
     );
     expect(marks).toHaveLength(lanes.length);
-    // The ring has no drawn pieces, so nothing carries a colour of its own.
-    for (const mark of marks) expect(mark.fills, mark.provider).toEqual([]);
-    // The text colour is the theme's: dark ink on the light list, light on
+    // Mask marks have no SVG paths; generic outlines inherit the text colour.
+    for (const mark of marks) {
+      for (const piece of mark.pieces) {
+        expect(piece.fill, mark.provider).toBe("none");
+        expect(piece.stroke, mark.provider).toBe(mark.text);
+      }
+    }
+    // The text colour is the theme's: dark ink on the light matrix, light on
     // the dark one, so a mark drawn in it can be seen on either.
-    const plain = marks.find((mark) => mark.provider === "beta");
+    const plain = marks.find((mark) => mark.provider === "qwen");
     if (mode === "light")
       expect(luminance(plain?.text ?? ""), mode).toBeLessThan(0.3);
     if (mode === "dark")
@@ -514,7 +813,7 @@ for (const width of [390, 520]) {
       await expect(composerButton(target)).toBeVisible();
     }
 
-    test("the settings and the list fit, the list scrolls inside itself, and each entry is finger sized", async ({
+    test("the settings and the matrix fit, the matrix scrolls inside itself, and each cell is finger sized", async ({
       page: target,
     }) => {
       await showAgent(target);
@@ -530,81 +829,114 @@ for (const width of [390, 520]) {
           return box ? box.x >= 0 && box.x + box.width <= width : false;
         })
         .toBe(true);
+      await arrived(settings);
       expect(await overflowing(target)).toBe(false);
       expect(
         await settings.evaluate((node) => node.scrollWidth > node.clientWidth),
       ).toBe(false);
-      // Every field of it is a fingertip.
-      for (const field of await settings.getByRole("combobox").all()) {
+      // Every field and filter of it is a fingertip.
+      for (const field of [
+        searchField(settings),
+        ...(await settings.locator("[data-filter]").all()),
+      ]) {
         const box = await field.boundingBox();
         expect(box?.height ?? 0).toBeGreaterThanOrEqual(FINGER);
         expect((box?.x ?? -1) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
       }
 
-      await providerBox(settings).tap();
-      const list = target.getByRole("listbox");
-      await expect(list).toBeVisible();
-      await expect(pickerOptions(target)).toHaveCount(lanes.length);
-      const edge = (await list.boundingBox())!;
+      const grid = settings.getByRole("grid", {
+        name: label("desktop.agent.model_matrix_label"),
+      });
+      await expect(laneHeadings(settings)).toHaveCount(lanes.length);
+      // What scrolls the matrix is the box around its grid, and nothing else
+      // of the settings scrolls.
+      const scroller = settings.locator("[data-slot=model-matrix-scroller]");
+      await expect(grid.locator("xpath=..")).toHaveAttribute(
+        "data-slot",
+        "model-matrix-scroller",
+      );
+      expect(
+        await settings.evaluate(
+          (node) => node.scrollHeight > node.clientHeight,
+        ),
+      ).toBe(false);
+      const edge = (await scroller.boundingBox())!;
       expect(edge.x).toBeGreaterThanOrEqual(0);
       expect(edge.x + edge.width).toBeLessThanOrEqual(width);
       expect(edge.y).toBeGreaterThanOrEqual(0);
       expect(edge.y + edge.height).toBeLessThanOrEqual(844);
       expect(await overflowing(target)).toBe(false);
+      // A window this narrow lays each model out on lines of its own, its
+      // efforts wrapping under its name: nothing of the matrix scrolls or
+      // is cut sideways, the page nor the box around the grid.
+      expect(
+        await scroller.evaluate((node) => node.scrollWidth > node.clientWidth),
+      ).toBe(false);
+      const cut = await grid.evaluate((table) => {
+        const box = table.getBoundingClientRect();
+        // The column headings are left to a screen reader here, so only
+        // what is drawn is measured.
+        return [...table.querySelectorAll("tbody [role=radio], tbody th")]
+          .filter((node) => {
+            const at = node.getBoundingClientRect();
+            return at.right > box.right + 1 || at.left < box.left - 1;
+          })
+          .map((node) => node.textContent ?? "");
+      });
+      expect(cut).toEqual([]);
+      // Each choice names its effort where no column heading stands over it.
+      await expect(
+        matrixCell(settings, "kimi/api", "fixture-deep", "low"),
+      ).toHaveText(label("desktop.agent.effort_low"));
 
-      // The entries are a fingertip each, and none is cut off sideways.
-      const rows = await pickerOptions(target).evaluateAll((nodes) =>
+      // The cells are a fingertip each.
+      const cells = await grid.locator("[role=radio]").evaluateAll((nodes) =>
         nodes.map((node) => {
           const box = node.getBoundingClientRect();
           return {
-            way: node.getAttribute("data-way"),
+            cell: `${node.closest("tr")?.getAttribute("data-way")} ${node.closest("tr")?.getAttribute("data-model")} ${node.getAttribute("data-column")}`,
             height: box.height,
             width: box.width,
-            clipped: node.scrollWidth > node.clientWidth,
           };
         }),
       );
-      for (const row of rows) {
-        expect(row.height, row.way ?? "").toBeGreaterThanOrEqual(FINGER);
-        expect(row.width, row.way ?? "").toBeGreaterThanOrEqual(FINGER);
-        expect(row.clipped, row.way ?? "").toBe(false);
+      expect(cells.length).toBeGreaterThan(0);
+      for (const cell of cells) {
+        expect(cell.height, cell.cell).toBeGreaterThanOrEqual(FINGER);
+        expect(cell.width, cell.cell).toBeGreaterThanOrEqual(FINGER);
       }
 
-      // More entries than fit: the list scrolls inside itself, down to its
-      // last entry, without the window moving or the list growing sideways.
-      const scroller = list;
-      const sizes = await scroller.evaluate((node) => ({
-        tall: node.scrollHeight > node.clientHeight,
-        wide: node.scrollWidth > node.clientWidth,
-      }));
-      expect(sizes).toEqual({ tall: true, wide: false });
+      // More rows than fit: the matrix scrolls inside itself, down to its
+      // last row, without the window moving.
+      expect(
+        await scroller.evaluate(
+          (node) => node.scrollHeight > node.clientHeight,
+        ),
+      ).toBe(true);
       await scroller.evaluate((node) => {
         node.scrollTop = node.scrollHeight;
       });
-      const last = lanes.map(wayOf).at(-1) ?? "";
       await expect
         .poll(() =>
-          scroller.evaluate((node, way) => {
+          scroller.evaluate((node) => {
             const inside = node.getBoundingClientRect();
             const row = node
-              .querySelector(`[data-way="${way}"]`)
+              .querySelector("tbody tr:last-child")
               ?.getBoundingClientRect();
             return row
               ? row.top >= inside.top - 1 && row.bottom <= inside.bottom + 1
               : false;
-          }, last),
+          }),
         )
         .toBe(true);
       expect(await overflowing(target)).toBe(false);
 
-      // A tap on an entry that can be chosen chooses it.
-      await entry(target, "beta/cli").scrollIntoViewIfNeeded();
-      await entry(target, "beta/cli").tap();
-      await expect(providerBox(settings)).toContainText("Example Beta");
-      await expect(modelBox(settings).locator("option")).toHaveText(
-        laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ??
-          [],
-      );
+      // A tap on a cell that can be chosen chooses it.
+      const cell = matrixCell(settings, "qwen/cli", "fixture-ultra");
+      await cell.scrollIntoViewIfNeeded();
+      await cell.tap();
+      await expect(cell).toHaveAttribute("aria-checked", "true");
+      await expect(chosenRow(settings)).toHaveAttribute("data-way", "qwen/cli");
       expect(await overflowing(target)).toBe(false);
     });
 

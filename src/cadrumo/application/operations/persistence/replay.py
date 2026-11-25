@@ -13,7 +13,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ..event_replay import OperationEventCursor
 from .events import OperationEvent
 
-type OperationReplayLimit = Annotated[int, Field(gt=0, le=1_000)]
+type OperationReplayLimit = Annotated[int, Field(gt=0, le=1024)]
 
 
 class OperationReplayStatus(StrEnum):

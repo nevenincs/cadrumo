@@ -16,12 +16,17 @@ from typing import Protocol
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_64
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 
-_RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 1
+RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 2
+"""The only envelope layout this release seals or opens.
+
+Version 2 authenticates every outer envelope field as AEAD associated data;
+version 1 envelopes authenticated only the recipient key and are refused.
+"""
 
 
 class RecipientEncryptionKeypair(BaseModel):
@@ -32,24 +37,33 @@ class RecipientEncryptionKeypair(BaseModel):
     does not expose a cryptography implementation type.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    private_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     created_at: UtcInstant
 
 
 class RecipientEncryptedPackage(BaseModel):
-    """Wire envelope for a review package sealed for one recipient."""
+    """Wire envelope for a review package sealed for one recipient.
 
-    model_config = _STRICT_FROZEN
+    Every field other than ``ciphertext`` is policy metadata that the sealing
+    adapter binds into the AEAD associated data, so an edited version, key,
+    replay nonce, timestamp or disposition fails authentication.
+    """
 
-    envelope_version: int = Field(default=_RECIPIENT_ENCRYPTION_ENVELOPE_VERSION, ge=1)
-    ephemeral_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    recipient_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    model_config = STRICT_FROZEN_CONFIG
+
+    envelope_version: int = Field(
+        default=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+        ge=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+        le=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+    )
+    ephemeral_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    recipient_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     ciphertext: bytes = Field(min_length=1)
-    envelope_nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
+    envelope_nonce_hex: str = Field(pattern=HEX_PATTERN_64)
     issued_at: UtcInstant
     valid_until: UtcInstant | None = Field(default=None)
     review_only: bool = Field(default=False)
@@ -77,7 +91,7 @@ class RecipientEncryptedPackage(BaseModel):
 class RecipientDecryptedPackage(BaseModel):
     """Recovered package bytes plus the envelope's disposition flag."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     package_bytes: bytes = Field(min_length=1)
     review_only: bool
@@ -132,6 +146,7 @@ class RecipientEncryptionCapabilityFactory(Protocol):
 
 
 __all__ = [
+    "RECIPIENT_ENCRYPTION_ENVELOPE_VERSION",
     "RecipientDecryptedPackage",
     "RecipientEncryptedPackage",
     "RecipientEncryptionCapability",

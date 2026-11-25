@@ -1,0 +1,1107 @@
+// The Ledger page's port to the ledger family's registered operations, as
+// the desktop host serves them over the signed-in person's session. The page
+// names one admitted definition and a JSON object of its registered request
+// without the profile; the host fills the profile and the runtime's contract
+// decides the rest. Files travel as tokens the host issued for the person's
+// own picks, never as paths, and an own account's number only as the raw
+// bytes of one call. Results and staged edits live in the page's memory
+// only: never in storage, a log line or an error message.
+
+import type { LedgerClassifyJobContracts } from "./ledgerClassificationJobContract";
+import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
+import type { LedgerReadContracts } from "./ledgerReadContract";
+import type {
+  OperationNextStepV1,
+  OperationOffHostConsentRemedyV1,
+  LedgerEvidenceAttachmentQueueProjection,
+  LedgerEvidenceAttachmentViewWindowRequest,
+  LedgerEvidenceAttachmentViewProjection,
+  LedgerEvidenceAddWindowRequest,
+  LedgerEvidenceBatchWindowRequest,
+  LedgerEvidenceBatchProjection,
+  LedgerEvidenceConsentListProjection,
+  LedgerEvidenceListProjection,
+  LedgerEvidencePageWindowRequest,
+  LedgerEvidencePageProjection,
+  LedgerEvidenceProbeWindowRequest,
+  LedgerEvidenceProbeProjection,
+  LedgerEvidenceAddProjection,
+  LedgerEvidenceRemoveWindowRequest,
+  LedgerEvidenceUpdateWindowRequest,
+  LedgerEvidenceViewWindowRequest,
+  LedgerEvidenceViewProjection,
+  LedgerEvidenceUpdateProjection,
+  LedgerEvidenceRemoveProjection,
+  LedgerEvidenceVerifyWindowRequest,
+  LedgerEvidenceVerifyProjection,
+} from "./ledgerDocumentContract";
+import type {
+  LedgerEvidenceConfirmWindowRequest,
+  LedgerEvidenceConfirmProjection,
+  LedgerEvidenceExtractWindowRequest,
+  LedgerEvidenceExtractProjection,
+  LedgerEvidenceReviewListWindowRequest,
+  LedgerEvidenceReviewListProjection,
+  LedgerEvidenceReviewViewWindowRequest,
+  LedgerEvidenceReviewViewProjection,
+} from "./ledgerDocumentReviewContract";
+import type {
+  InvoiceAddWindowRequest,
+  InvoiceAddResult,
+  InvoiceDocumentAttachWindowRequest,
+  InvoiceDocumentAttachProjection,
+  InvoiceListWindowRequest,
+  InvoiceListProjection,
+  InvoiceFiguresPreviewWindowRequest,
+  InvoiceFiguresPreviewResult,
+  InvoiceRemoveWindowRequest,
+  InvoiceRemoveResult,
+  InvoiceUpdateWindowRequest,
+  InvoiceUpdateResult,
+  InvoiceViewWindowRequest,
+  InvoiceViewProjection,
+  LedgerAttachWindowRequest,
+  LedgerAttachmentOperationResult,
+  LedgerCheckWindowRequest,
+  LedgerCheckProjection,
+  LedgerDetachWindowRequest,
+  LedgerInvoiceDuplicateWindowRequest,
+  LedgerInvoiceDuplicateResult,
+  LedgerInvoiceMatchWindowRequest,
+  LedgerInvoiceMatchResult,
+  LedgerLinkWindowRequest,
+  LedgerLinkOperationResult,
+  LedgerPurchaseEvidenceReleaseWindowRequest,
+  LedgerPurchaseEvidenceReleaseResult,
+} from "./ledgerInvoiceContract";
+import type {
+  InvoiceImportWindowRequest,
+  InvoiceImportProjection,
+} from "./ledgerInvoiceImportContract";
+import type {
+  LedgerUpdateWindowRequest,
+  LedgerUpdateOperationResult,
+  LedgerAddWindowRequest,
+  LedgerAddOperationResult,
+  LedgerAllocateWindowRequest,
+  LedgerAllocateOperationResult,
+  LedgerBulkClassifyWindowRequest,
+  LedgerBulkClassifyProjection,
+  LedgerClassifyWindowRequest,
+  LedgerClassifyOperationResult,
+  LedgerOperatorIvaWindowRequest,
+  LedgerOperatorIvaResult,
+  LedgerLifecycleMutationWindowRequest,
+  LedgerLifecycleOperationResult,
+  LedgerMergeWindowRequest,
+  LedgerMergeOperationResult,
+  LedgerRemoveWindowRequest,
+  LedgerRemoveOperationResult,
+  LedgerSplitWindowRequest,
+  LedgerSplitOperationResult,
+  LedgerUnlinkWindowRequest,
+  LedgerUnlinkResult,
+  LedgerBatchUpdatePreviewWindowRequest,
+  LedgerBatchUpdateWindowRequest,
+  LedgerBatchUpdateResult,
+} from "./ledgerMovementContract";
+import type {
+  LedgerTrackProjection,
+  LedgerHistoryWindowRequest,
+  LedgerHistoryTypedProjection,
+  LedgerLlmReviewWindowRequest,
+  LedgerRuleTrialWindowRequest,
+  LedgerRuleTrialResult,
+  LedgerSplitCheckWindowRequest,
+  LedgerSplitCheckResult,
+  LedgerStagedCheckWindowRequest,
+  LedgerStagedCheckResult,
+  LedgerTrackWindowRequest,
+  LedgerSealedReadWindowRequest,
+  LedgerSealedReadResult,
+} from "./ledgerMovementCheckContract";
+import type {
+  InventoryInspectWindowRequest,
+  InventoryLedgerChangeProjection,
+  InventoryClosingAuthorityRecordWindowRequest,
+  InventoryClosingAuthorityOperationProjection,
+  InventoryClosingValueRecordWindowRequest,
+  InventoryCorrectWindowRequest,
+  InventoryCreateWindowRequest,
+  InventoryCreateProjection,
+  InventoryDescribeWindowRequest,
+  InventoryEvidenceAddWindowRequest,
+  InventoryEvidenceAddProjection,
+  InventoryInspectProjection,
+  InventoryListProjection,
+  InventoryMovementAddWindowRequest,
+  InventoryMovementAddProjection,
+  InventoryMovementClaimWindowRequest,
+  InventoryMovementCorrectWindowRequest,
+  InventoryMovementReverseWindowRequest,
+  InventoryOptionsProjection,
+  InventoryRestoreWindowRequest,
+  InventoryRetireWindowRequest,
+  InventoryValuationOperationProjection,
+} from "./ledgerInventoryContract";
+import type {
+  LedgerEntryOptionsWindowRequest,
+  LedgerEntryOptionsProjection,
+  LedgerParticipationRebuildProjection,
+  LedgerResetWindowRequest,
+  LedgerResetOperationResult,
+} from "./ledgerEntryContract";
+import type {
+  ActivityAssetCreateProjection,
+  ActivityAssetClaimWindowRequest,
+  ActivityAssetClaimProjection,
+  ActivityAssetCorrectWindowRequest,
+  ActivityAssetCreateWindowRequest,
+  ActivityAssetDescribeWindowRequest,
+  ActivityAssetDisposeWindowRequest,
+  ActivityAssetForecastWindowRequest,
+  ActivityAssetForecastProjection,
+  ActivityAssetInspectWindowRequest,
+  ActivityAssetInspectProjection,
+} from "./ledgerActivityAssetContract";
+import type {
+  ActivityAssetAcquisitionCandidatesProjection,
+  ActivityAssetDisposalCalculateWindowRequest,
+  ActivityAssetDisposalCalculateProjection,
+  ActivityAssetFilingHandoffWindowRequest,
+  ActivityAssetFilingHandoffProjection,
+  ActivityAssetFormOptionsWindowRequest,
+  ActivityAssetFormOptionsProjection,
+  ActivityAssetListWindowRequest,
+  ActivityAssetListProjection,
+  ActivityAssetPlanWindowRequest,
+  ActivityAssetPlanProjection,
+  ActivityAssetTimelineWindowRequest,
+  ActivityAssetTimelineProjection,
+} from "./ledgerActivityAssetReadContract";
+import type { WithholdingRecordRequest } from "./ledgerRegisterOperations";
+import type { LedgerCapitalGoodsContracts } from "./ledgerCapitalGoodsContract";
+import type { LedgerOwnAccountContracts } from "./ledgerOwnAccountContract";
+import type {
+  ExportSerializationFormat,
+  LedgerTransferContracts,
+} from "./ledgerTransferContract";
+import type { LedgerWithholdingContracts } from "./ledgerWithholdingContract";
+import type {
+  LedgerCounterpartyWindowRequest,
+  LedgerCounterpartyResult,
+  LedgerLlmDiagnosticsWindowRequest,
+  LedgerLlmDiagnosticsProjection,
+  LedgerRatiosEligibleWindowRequest,
+  LedgerRatiosEligibleProjection,
+  LedgerRatiosListProjection,
+  LedgerRatiosSetWindowRequest,
+  LedgerRatiosSetProjection,
+  LedgerRatiosUnsetWindowRequest,
+  LedgerRatiosUnsetProjection,
+  LedgerRatiosValidateProjection,
+  LedgerRatiosListWindowRequest,
+  LedgerRuleAddWindowRequest,
+  LedgerRuleAddProjection,
+  LedgerRuleApplyWindowRequest,
+  LedgerRuleApplyProjection,
+  LedgerRuleListProjection,
+} from "./ledgerClassificationContract";
+
+/** The definitions the host admits, mirroring its closed list. */
+export const LEDGER_DEFINITIONS = [
+  "ledger.actividad-asset.acquisition-candidates",
+  "ledger.actividad-asset.claim",
+  "ledger.actividad-asset.correct",
+  "ledger.actividad-asset.create",
+  "ledger.actividad-asset.describe",
+  "ledger.actividad-asset.disposal-calculate",
+  "ledger.actividad-asset.dispose",
+  "ledger.actividad-asset.filing-handoff",
+  "ledger.actividad-asset.forecast",
+  "ledger.actividad-asset.form-options",
+  "ledger.actividad-asset.inspect",
+  "ledger.actividad-asset.list",
+  "ledger.actividad-asset.plan",
+  "ledger.actividad-asset.timeline",
+  "ledger.add",
+  "ledger.allocate",
+  "ledger.archive",
+  "ledger.attach",
+  "ledger.bienes_inversion.declare",
+  "ledger.bienes_inversion.list",
+  "ledger.check",
+  "ledger.classify.bulk",
+  "ledger.classify.iva-derive",
+  "ledger.classify.job.apply",
+  "ledger.classify.job.authorise",
+  "ledger.classify.job.cancel",
+  "ledger.classify.job.dismiss",
+  "ledger.classify.job.enqueue",
+  "ledger.classify.job.list",
+  "ledger.classify.job.read",
+  "ledger.classify.job.retry",
+  "ledger.classify.job.revoke-consent",
+  "ledger.classify.job.run",
+  "ledger.classify.review",
+  "ledger.classify.single",
+  "ledger.counterparty",
+  "ledger.detach",
+  "ledger.entry-options",
+  "ledger.evidence.add",
+  "ledger.evidence.attachment_queue",
+  "ledger.evidence.attachment_view",
+  "ledger.evidence.batch",
+  "ledger.evidence.confirm",
+  "ledger.evidence.consent.list",
+  "ledger.evidence.extract",
+  "ledger.evidence.list",
+  "ledger.evidence.page",
+  "ledger.evidence.probe",
+  "ledger.evidence.query",
+  "ledger.evidence.remove",
+  "ledger.evidence.review.list",
+  "ledger.evidence.review.summary",
+  "ledger.evidence.review.view",
+  "ledger.evidence.update",
+  "ledger.evidence.verify",
+  "ledger.evidence.view",
+  "ledger.exclude",
+  "ledger.export",
+  "ledger.history",
+  "ledger.history.typed",
+  "ledger.import",
+  "ledger.inventory.closing-authority.record",
+  "ledger.inventory.closing-value.record",
+  "ledger.inventory.correct",
+  "ledger.inventory.create",
+  "ledger.inventory.describe",
+  "ledger.inventory.evidence.add",
+  "ledger.inventory.inspect",
+  "ledger.inventory.list",
+  "ledger.inventory.movement.add",
+  "ledger.inventory.movement.claim",
+  "ledger.inventory.movement.claim-candidates",
+  "ledger.inventory.movement.correct",
+  "ledger.inventory.movement.reverse",
+  "ledger.inventory.options",
+  "ledger.inventory.restore",
+  "ledger.inventory.retire",
+  "ledger.inventory.valuation.preview",
+  "ledger.invoice.add",
+  "ledger.invoice.attach_document",
+  "ledger.invoice.duplicate",
+  "ledger.invoice.import",
+  "ledger.invoice.list",
+  "ledger.invoice.match",
+  "ledger.invoice.preview",
+  "ledger.invoice.remove",
+  "ledger.invoice.update",
+  "ledger.invoice.view",
+  "ledger.invoice.wizard",
+  "ledger.known-values",
+  "ledger.link",
+  "ledger.list",
+  "ledger.llm-diagnostics",
+  "ledger.merge",
+  "ledger.operaciones_vinculadas.list",
+  "ledger.operaciones_vinculadas.state_none",
+  "ledger.operaciones_vinculadas.state_operation",
+  "ledger.operaciones_vinculadas.state_turnover",
+  "ledger.operaciones_vinculadas.withdraw_none",
+  "ledger.operaciones_vinculadas.withdraw_operation",
+  "ledger.operaciones_vinculadas.withdraw_turnover",
+  "ledger.own_account",
+  "ledger.participation",
+  "ledger.participation.rebuild",
+  "ledger.preflight",
+  "ledger.prevision_social.list",
+  "ledger.prevision_social.record",
+  "ledger.prevision_social.remove",
+  "ledger.prorrata.declare_gross",
+  "ledger.prorrata.declare_sector",
+  "ledger.prorrata.elect_especial",
+  "ledger.prorrata.elect_general",
+  "ledger.prorrata.list",
+  "ledger.prorrata.remove_gross",
+  "ledger.prorrata.revoke_especial",
+  "ledger.prorrata.seed",
+  "ledger.prorrata.seed_sector",
+  "ledger.prorrata.settle_sector",
+  "ledger.purchase_evidence.release",
+  "ledger.ratios.eligible",
+  "ledger.ratios.list",
+  "ledger.ratios.set",
+  "ledger.ratios.unset",
+  "ledger.ratios.validate",
+  "ledger.remove",
+  "ledger.reset",
+  "ledger.restore",
+  "ledger.retencion_soportada.attest_absence",
+  "ledger.retencion_soportada.list",
+  "ledger.retencion_soportada.list_absences",
+  "ledger.retencion_soportada.record",
+  "ledger.retencion_soportada.remove",
+  "ledger.retencion_soportada.withdraw_absence",
+  "ledger.review",
+  "ledger.rule.add",
+  "ledger.rule.apply",
+  "ledger.rule.list",
+  "ledger.rule.remove",
+  "ledger.rule.trial",
+  "ledger.sealed.read",
+  "ledger.split.check",
+  "ledger.split.manual",
+  "ledger.split.review",
+  "ledger.staged.check",
+  "ledger.stash",
+  "ledger.status",
+  "ledger.track",
+  "ledger.unlink",
+  "ledger.update",
+  "ledger.update.batch",
+  "ledger.update.batch.preview",
+  "ledger.view",
+] as const;
+
+export type LedgerDefinitionId = (typeof LEDGER_DEFINITIONS)[number];
+
+export function isLedgerDefinition(id: string): id is LedgerDefinitionId {
+  return (LEDGER_DEFINITIONS as readonly string[]).includes(id);
+}
+
+export type JsonValue =
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+export type JsonObject = { [key: string]: JsonValue };
+
+/** Why a ledger call did not answer an outcome. `unknown` is a write whose
+ * settlement was not observed: it may have committed, is never sent again,
+ * and holds further writes until the page reads the ledger again. */
+export const LEDGER_FAILURE_CODES = [
+  "unavailable",
+  "not_signed_in",
+  "refused",
+  "unknown",
+  "saved_unread",
+  "review_changed",
+  "too_large",
+  "not_admitted",
+  "invalid",
+  "file_unavailable",
+] as const;
+
+export type LedgerFailureCode = (typeof LEDGER_FAILURE_CODES)[number];
+
+/** Native-observed terminal failure; execution stopped, effects unresolved.
+ * These words alone come from the definition's admitted error projection. */
+export type TerminalOperationFailure = {
+  operation_id: string;
+  definition_id: string;
+  effect: "unknown" | "partial" | "updated";
+  refusal_words: string | null;
+};
+
+export type LedgerFailure = {
+  code: LedgerFailureCode;
+  operation_id: string | null;
+  /** The runtime's closed refusal code, where it gave one. */
+  reason?: string;
+  terminal_failure?: TerminalOperationFailure;
+};
+
+/** The typed failure of a rejected ledger call. A rejection that is not the
+ * host's own answer never reached it, so nothing was sent. */
+export function ledgerFailure(error: unknown): LedgerFailure {
+  const found = error as {
+    code?: unknown;
+    operation_id?: unknown;
+    reason?: unknown;
+    terminal_failure?: unknown;
+  } | null;
+  const code = (LEDGER_FAILURE_CODES as readonly unknown[]).includes(
+    found?.code,
+  )
+    ? (found?.code as LedgerFailureCode)
+    : "unavailable";
+  const operationId =
+    typeof found?.operation_id === "string" ? found.operation_id : null;
+  const terminal =
+    found?.terminal_failure as Partial<TerminalOperationFailure> | null;
+  const terminalFailure =
+    code === "unknown" &&
+    terminal &&
+    terminal.operation_id === operationId &&
+    typeof operationId === "string" &&
+    /^[a-f0-9]{64}$/.test(operationId) &&
+    typeof terminal.definition_id === "string" &&
+    /^[a-z][a-z0-9_.-]{0,159}$/.test(terminal.definition_id) &&
+    (terminal.effect === "unknown" ||
+      terminal.effect === "partial" ||
+      terminal.effect === "updated") &&
+    (terminal.refusal_words === null ||
+      (typeof terminal.refusal_words === "string" &&
+        terminal.refusal_words.trim() !== "" &&
+        [...terminal.refusal_words].length <= 2048))
+      ? ({
+          operation_id: operationId,
+          definition_id: terminal.definition_id,
+          effect: terminal.effect,
+          refusal_words: terminal.refusal_words,
+        } satisfies TerminalOperationFailure)
+      : undefined;
+  return {
+    code,
+    operation_id: operationId,
+    ...(typeof found?.reason === "string" ? { reason: found.reason } : {}),
+    ...(terminalFailure ? { terminal_failure: terminalFailure } : {}),
+  };
+}
+
+/** The registered error detail a settled refusal carries, where its
+ * definition declares one. */
+export type LedgerErrorDetail = {
+  detail_version: 1;
+  kind: string;
+  error_code: string | null;
+  message_key: string | null;
+  context: { key: string; value: JsonValue }[];
+  context_entries_omitted: number;
+  precondition_verdict_json: string | null;
+  /** The finished sentence the backend served for this stop, and its
+   * language. Absent on a detail recorded before sentences were served. */
+  refusal_words?: string | null;
+  refusal_words_language?: string | null;
+  /** The registered operation the refusal names for putting it right, where
+   * it names one. */
+  next_step?: OperationNextStepV1 | null;
+};
+
+/** The steps the profile page answers, the two a readiness refusal serves. */
+export type LedgerProfileStep = Extract<
+  OperationNextStepV1,
+  { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
+>;
+
+/** The step a declaration's IVA balance answers, naming the declaration whose
+ * opening balance is missing. */
+export type LedgerIvaWalletStep = Extract<
+  OperationNextStepV1,
+  { kind: "open_iva_wallet_opening_balance" } | { kind: "open_iva_wallet" }
+>;
+
+/** The steps a declaration surface answers, each naming a declaration. */
+export type LedgerWorkStep = Extract<
+  OperationNextStepV1,
+  { kind: "create_work" } | { kind: "calculate_work" } | { kind: "open_work" }
+>;
+
+/** Whether a served step is one a declaration surface answers. */
+export const isWorkStep = (step: OperationNextStepV1): step is LedgerWorkStep =>
+  step.kind === "create_work" ||
+  step.kind === "calculate_work" ||
+  step.kind === "open_work";
+
+/** Whether a served step is one the profile page answers. */
+export const isProfileStep = (
+  step: OperationNextStepV1,
+): step is LedgerProfileStep =>
+  step.kind === "open_profile_field" || step.kind === "complete_profile_setup";
+
+/** The step the backend served on a refusal's detail; null when it served
+ * none, or one of a kind this window does not run. */
+export function servedNextStep(detail: unknown): OperationNextStepV1 | null {
+  if (typeof detail !== "object" || detail === null) return null;
+  const step = (detail as { next_step?: unknown }).next_step;
+  if (typeof step !== "object" || step === null) return null;
+  const served = step as Record<string, unknown>;
+  const text = (key: string) =>
+    typeof served[key] === "string" && served[key] !== ""
+      ? (served[key] as string)
+      : null;
+  const words = text("words");
+  if (words === null) return null;
+  if (served.kind === "create_work") {
+    const modelo = text("modelo");
+    const period = text("period_code");
+    const year = served.filing_year;
+    return modelo !== null && period !== null && typeof year === "number"
+      ? {
+          kind: "create_work",
+          modelo,
+          filing_year: year,
+          period_code: period,
+          words,
+        }
+      : null;
+  }
+  if (served.kind === "open_iva_wallet_opening_balance") {
+    const modelo = text("modelo");
+    const period = text("period_code");
+    const year = served.filing_year;
+    return modelo !== null && period !== null && typeof year === "number"
+      ? {
+          kind: "open_iva_wallet_opening_balance",
+          modelo,
+          filing_year: year,
+          period_code: period,
+          words,
+        }
+      : null;
+  }
+  if (served.kind === "open_movement") {
+    const movement = text("transaction_id");
+    return movement === null
+      ? null
+      : { kind: "open_movement", transaction_id: movement, words };
+  }
+  if (
+    served.kind === "calculate_work" ||
+    served.kind === "open_work" ||
+    served.kind === "open_iva_wallet"
+  ) {
+    const unit = text("work_unit_id");
+    return unit === null
+      ? null
+      : { kind: served.kind, work_unit_id: unit, words };
+  }
+  if (served.kind === "open_profile_field") {
+    const path = text("path");
+    return path === null ? null : { kind: "open_profile_field", path, words };
+  }
+  if (served.kind === "complete_profile_setup")
+    return { kind: "complete_profile_setup", words };
+  if (served.kind === "choose_reading_model")
+    return { kind: "choose_reading_model", words };
+  if (served.kind === "resolve_off_host_consent") {
+    const remedies = Array.isArray(served.remedies)
+      ? served.remedies.flatMap(
+          (remedy: unknown): OperationOffHostConsentRemedyV1[] => {
+            const found = remedy as Record<string, unknown> | null;
+            return found &&
+              (found.kind === "authorise_off_host" ||
+                found.kind === "switch_to_local_lane") &&
+              typeof found.words === "string" &&
+              found.words !== "" &&
+              typeof found.unavailable_words === "string" &&
+              found.unavailable_words !== ""
+              ? [
+                  {
+                    kind: found.kind,
+                    words: found.words,
+                    unavailable_words: found.unavailable_words,
+                  },
+                ]
+              : [];
+          },
+        )
+      : [];
+    return remedies.length === 0
+      ? null
+      : { kind: "resolve_off_host_consent", words, remedies };
+  }
+  return null;
+}
+
+/** The sentence the backend served for a refusal, read from whichever
+ * detail it settled with; null when it served none. The window shows it as
+ * served and never words a refusal from its code. */
+export function servedRefusalWords(detail: unknown): string | null {
+  if (typeof detail !== "object" || detail === null) return null;
+  const words = (detail as { refusal_words?: unknown }).refusal_words;
+  return typeof words === "string" && words.trim() !== "" ? words : null;
+}
+
+/** Where an operation the page submitted stands. */
+export type LedgerOutcome<Result = JsonObject> =
+  | {
+      kind: "settled";
+      operation_id: string;
+      revision: number;
+      result: Result;
+    }
+  | {
+      /** Settled without changing anything. */
+      kind: "refused";
+      operation_id: string;
+      revision: number;
+      reason: string | null;
+      detail: LedgerErrorDetail | null;
+    }
+  | {
+      /** Paused until the person answers the review it shows. */
+      kind: "review";
+      operation_id: string;
+      revision: number;
+      cancellable: boolean;
+    }
+  | {
+      kind: "running";
+      operation_id: string;
+      revision: number;
+      cancellable: boolean;
+    };
+
+/** The review a paused operation shows. An answer names its digest; a
+ * changed review is refused with `review_changed` and needs a new answer. */
+export type LedgerReview<Review = JsonObject> = {
+  operation_id: string;
+  revision: number;
+  review_digest: string;
+  expires_at: string | null;
+  review: Review;
+};
+
+export type LedgerDecision = "apply" | "reject";
+
+/** An opaque name for a file the person picked or dropped, valid only for
+ * the signed-in session that it was issued for. */
+export type FileToken = string & { readonly __fileToken: unique symbol };
+
+export type FilePurpose =
+  "bank_statements" | "invoice_books" | "documents" | "export";
+
+/** One file, several, or every file of the purpose's kinds in a folder. */
+export type FilePick = "file" | "files" | "folder";
+
+export type PickedFile = {
+  token: FileToken;
+  name: string;
+  bytes: number | null;
+};
+
+/** The files a dialog or a drop gave the page, and how many were not of the
+ * purpose's kinds. */
+export type FilePicks = { files: PickedFile[]; refused: number };
+
+export type LedgerDropSignal =
+  { kind: "over" } | { kind: "left" } | ({ kind: "dropped" } & FilePicks);
+
+// ---- Typed requests and results, by definition --------------------------
+// Field names are the registered Python contracts' own. A request omits the
+// profile, which the host fills.
+
+/** A classification job definition's registered request without the
+ * profile, and its result. */
+type LedgerClassifyJobRequests = {
+  [D in keyof LedgerClassifyJobContracts]: Omit<
+    LedgerClassifyJobContracts[D]["request"],
+    "profile_id"
+  >;
+};
+type LedgerClassifyJobResults = {
+  [
+    D in keyof LedgerClassifyJobContracts
+  ]: LedgerClassifyJobContracts[D]["result"];
+};
+
+export interface LedgerRequests extends LedgerClassifyJobRequests {
+  "ledger.known-values": Omit<
+    LedgerReadContracts["ledger.known-values"]["request"],
+    "profile_id"
+  >;
+  "ledger.list": Omit<
+    LedgerReadContracts["ledger.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.view": Omit<
+    LedgerReadContracts["ledger.view"]["request"],
+    "profile_id"
+  >;
+  "ledger.update": LedgerUpdateWindowRequest;
+  "ledger.update.batch.preview": LedgerBatchUpdatePreviewWindowRequest;
+  "ledger.update.batch": LedgerBatchUpdateWindowRequest;
+  "ledger.classify.single": LedgerClassifyWindowRequest;
+  "ledger.classify.bulk": LedgerBulkClassifyWindowRequest;
+  "ledger.classify.review": LedgerLlmReviewWindowRequest;
+  "ledger.add": LedgerAddWindowRequest;
+  "ledger.invoice.list": InvoiceListWindowRequest;
+  "ledger.invoice.view": InvoiceViewWindowRequest;
+  "ledger.invoice.add": InvoiceAddWindowRequest;
+  "ledger.invoice.preview": InvoiceFiguresPreviewWindowRequest;
+  "ledger.rule.trial": LedgerRuleTrialWindowRequest;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateWindowRequest;
+  "ledger.invoice.match": LedgerInvoiceMatchWindowRequest;
+  "ledger.split.check": LedgerSplitCheckWindowRequest;
+  "ledger.staged.check": LedgerStagedCheckWindowRequest;
+  "ledger.invoice.update": InvoiceUpdateWindowRequest;
+  "ledger.invoice.remove": InvoiceRemoveWindowRequest;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachWindowRequest;
+  "ledger.status": Omit<
+    LedgerReadContracts["ledger.status"]["request"],
+    "profile_id"
+  >;
+  "ledger.preflight": Omit<
+    LedgerReadContracts["ledger.preflight"]["request"],
+    "profile_id"
+  >;
+  "ledger.import": Omit<
+    LedgerTransferContracts["ledger.import"]["request"],
+    "profile_id"
+  >;
+  "ledger.export": Omit<
+    LedgerTransferContracts["ledger.export"]["request"],
+    "profile_id"
+  >;
+  "ledger.invoice.import": InvoiceImportWindowRequest;
+  "ledger.evidence.batch": LedgerEvidenceBatchWindowRequest;
+  "ledger.evidence.add": LedgerEvidenceAddWindowRequest;
+  "ledger.evidence.list": Record<string, never>;
+  "ledger.evidence.view": LedgerEvidenceViewWindowRequest;
+  "ledger.evidence.update": LedgerEvidenceUpdateWindowRequest;
+  "ledger.evidence.remove": LedgerEvidenceRemoveWindowRequest;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListWindowRequest;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewWindowRequest;
+  "ledger.evidence.extract": LedgerEvidenceExtractWindowRequest;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmWindowRequest;
+  "ledger.evidence.attachment_queue": Record<string, never>;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewWindowRequest;
+  "ledger.evidence.page": LedgerEvidencePageWindowRequest;
+  "ledger.evidence.probe": LedgerEvidenceProbeWindowRequest;
+  "ledger.evidence.consent.list": Record<string, never>;
+  "ledger.evidence.verify": LedgerEvidenceVerifyWindowRequest;
+  "ledger.link": LedgerLinkWindowRequest;
+  "ledger.unlink": LedgerUnlinkWindowRequest;
+  "ledger.attach": LedgerAttachWindowRequest;
+  "ledger.detach": LedgerDetachWindowRequest;
+  "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseWindowRequest;
+  "ledger.check": LedgerCheckWindowRequest;
+  "ledger.split.review": LedgerLlmReviewWindowRequest;
+  "ledger.track": LedgerTrackWindowRequest;
+  "ledger.sealed.read": LedgerSealedReadWindowRequest;
+  "ledger.history.typed": LedgerHistoryWindowRequest;
+  "ledger.remove": LedgerRemoveWindowRequest;
+  "ledger.archive": LedgerLifecycleMutationWindowRequest;
+  "ledger.stash": LedgerLifecycleMutationWindowRequest;
+  "ledger.restore": LedgerLifecycleMutationWindowRequest;
+  "ledger.exclude": LedgerLifecycleMutationWindowRequest;
+  "ledger.split.manual": LedgerSplitWindowRequest;
+  "ledger.merge": LedgerMergeWindowRequest;
+  "ledger.classify.iva-derive": LedgerOperatorIvaWindowRequest;
+  "ledger.allocate": LedgerAllocateWindowRequest;
+  "ledger.rule.list": Record<string, never>;
+  "ledger.rule.add": LedgerRuleAddWindowRequest;
+  "ledger.rule.apply": LedgerRuleApplyWindowRequest;
+  "ledger.ratios.list": LedgerRatiosListWindowRequest;
+  "ledger.ratios.eligible": LedgerRatiosEligibleWindowRequest;
+  "ledger.ratios.validate": Record<string, never>;
+  "ledger.ratios.set": LedgerRatiosSetWindowRequest;
+  "ledger.ratios.unset": LedgerRatiosUnsetWindowRequest;
+  "ledger.counterparty": LedgerCounterpartyWindowRequest;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsWindowRequest;
+  "ledger.own_account": Omit<
+    LedgerOwnAccountContracts["ledger.own_account"]["request"],
+    "profile_id" | OwnAccountSecret
+  >;
+  "ledger.prorrata.list": Omit<
+    LedgerProrrataContracts["ledger.prorrata.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_general": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_general"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.revoke_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.settle_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.settle_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_gross"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.remove_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.remove_gross"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.list": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.list_absences": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.list_absences"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.record": WithholdingRecordRequest;
+  "ledger.retencion_soportada.remove": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.remove"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.attest_absence": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.attest_absence"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.withdraw_absence": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.withdraw_absence"]["request"],
+    "profile_id"
+  >;
+  "ledger.bienes_inversion.list": Omit<
+    LedgerCapitalGoodsContracts["ledger.bienes_inversion.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.bienes_inversion.declare": Omit<
+    LedgerCapitalGoodsContracts["ledger.bienes_inversion.declare"]["request"],
+    "profile_id"
+  >;
+  "ledger.inventory.list": Record<string, never>;
+  "ledger.inventory.create": InventoryCreateWindowRequest;
+  "ledger.inventory.movement.add": InventoryMovementAddWindowRequest;
+  "ledger.inventory.valuation.preview": InventoryInspectWindowRequest;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRecordWindowRequest;
+  "ledger.inventory.closing-value.record": InventoryClosingValueRecordWindowRequest;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddWindowRequest;
+  "ledger.inventory.options": Record<string, never>;
+  "ledger.entry-options": LedgerEntryOptionsWindowRequest;
+  "ledger.inventory.inspect": InventoryInspectWindowRequest;
+  "ledger.inventory.describe": InventoryDescribeWindowRequest;
+  "ledger.inventory.correct": InventoryCorrectWindowRequest;
+  "ledger.inventory.movement.claim": InventoryMovementClaimWindowRequest;
+  "ledger.inventory.movement.correct": InventoryMovementCorrectWindowRequest;
+  "ledger.inventory.movement.reverse": InventoryMovementReverseWindowRequest;
+  "ledger.inventory.retire": InventoryRetireWindowRequest;
+  "ledger.inventory.restore": InventoryRestoreWindowRequest;
+  "ledger.actividad-asset.create": ActivityAssetCreateWindowRequest;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectWindowRequest;
+  "ledger.actividad-asset.correct": ActivityAssetCorrectWindowRequest;
+  "ledger.actividad-asset.list": ActivityAssetListWindowRequest;
+  "ledger.actividad-asset.plan": ActivityAssetPlanWindowRequest;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineWindowRequest;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsWindowRequest;
+  "ledger.actividad-asset.acquisition-candidates": Record<string, never>;
+  "ledger.actividad-asset.describe": ActivityAssetDescribeWindowRequest;
+  "ledger.actividad-asset.dispose": ActivityAssetDisposeWindowRequest;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateWindowRequest;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastWindowRequest;
+  "ledger.actividad-asset.claim": ActivityAssetClaimWindowRequest;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingHandoffWindowRequest;
+  "ledger.participation.rebuild": Record<string, never>;
+  "ledger.reset": LedgerResetWindowRequest;
+}
+
+export interface LedgerResults extends LedgerClassifyJobResults {
+  "ledger.known-values": LedgerReadContracts["ledger.known-values"]["result"];
+  "ledger.list": LedgerReadContracts["ledger.list"]["result"];
+  "ledger.view": LedgerReadContracts["ledger.view"]["result"];
+  "ledger.update": LedgerUpdateOperationResult;
+  "ledger.update.batch.preview": LedgerBatchUpdateResult;
+  "ledger.update.batch": LedgerBatchUpdateResult;
+  "ledger.classify.single": LedgerClassifyOperationResult;
+  "ledger.classify.bulk": LedgerBulkClassifyProjection;
+  "ledger.add": LedgerAddOperationResult;
+  "ledger.invoice.list": InvoiceListProjection;
+  "ledger.invoice.view": InvoiceViewProjection;
+  "ledger.invoice.add": InvoiceAddResult;
+  "ledger.invoice.preview": InvoiceFiguresPreviewResult;
+  "ledger.rule.trial": LedgerRuleTrialResult;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
+  "ledger.invoice.match": LedgerInvoiceMatchResult;
+  "ledger.split.check": LedgerSplitCheckResult;
+  "ledger.staged.check": LedgerStagedCheckResult;
+  "ledger.invoice.update": InvoiceUpdateResult;
+  "ledger.invoice.remove": InvoiceRemoveResult;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachProjection;
+  "ledger.status": LedgerReadContracts["ledger.status"]["result"];
+  "ledger.preflight": LedgerReadContracts["ledger.preflight"]["result"];
+  "ledger.import": LedgerTransferContracts["ledger.import"]["result"];
+  "ledger.export": LedgerTransferContracts["ledger.export"]["result"];
+  "ledger.invoice.import": InvoiceImportProjection;
+  "ledger.evidence.batch": LedgerEvidenceBatchProjection;
+  "ledger.evidence.add": LedgerEvidenceAddProjection;
+  "ledger.evidence.list": LedgerEvidenceListProjection;
+  "ledger.evidence.view": LedgerEvidenceViewProjection;
+  "ledger.evidence.update": LedgerEvidenceUpdateProjection;
+  "ledger.evidence.remove": LedgerEvidenceRemoveProjection;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListProjection;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewProjection;
+  "ledger.evidence.extract": LedgerEvidenceExtractProjection;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmProjection;
+  "ledger.evidence.attachment_queue": LedgerEvidenceAttachmentQueueProjection;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewProjection;
+  "ledger.evidence.page": LedgerEvidencePageProjection;
+  "ledger.evidence.probe": LedgerEvidenceProbeProjection;
+  "ledger.evidence.consent.list": LedgerEvidenceConsentListProjection;
+  "ledger.evidence.verify": LedgerEvidenceVerifyProjection;
+  "ledger.link": LedgerLinkOperationResult;
+  "ledger.unlink": LedgerUnlinkResult;
+  "ledger.attach": LedgerAttachmentOperationResult;
+  "ledger.detach": LedgerAttachmentOperationResult;
+  "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseResult;
+  "ledger.check": LedgerCheckProjection;
+  "ledger.track": LedgerTrackProjection;
+  "ledger.sealed.read": LedgerSealedReadResult;
+  "ledger.history.typed": LedgerHistoryTypedProjection;
+  "ledger.remove": LedgerRemoveOperationResult;
+  "ledger.archive": LedgerLifecycleOperationResult;
+  "ledger.stash": LedgerLifecycleOperationResult;
+  "ledger.restore": LedgerLifecycleOperationResult;
+  "ledger.exclude": LedgerLifecycleOperationResult;
+  "ledger.split.manual": LedgerSplitOperationResult;
+  "ledger.merge": LedgerMergeOperationResult;
+  "ledger.classify.iva-derive": LedgerOperatorIvaResult;
+  "ledger.allocate": LedgerAllocateOperationResult;
+  "ledger.rule.list": LedgerRuleListProjection;
+  "ledger.rule.add": LedgerRuleAddProjection;
+  "ledger.rule.apply": LedgerRuleApplyProjection;
+  "ledger.ratios.list": LedgerRatiosListProjection;
+  "ledger.ratios.eligible": LedgerRatiosEligibleProjection;
+  "ledger.ratios.validate": LedgerRatiosValidateProjection;
+  "ledger.ratios.set": LedgerRatiosSetProjection;
+  "ledger.ratios.unset": LedgerRatiosUnsetProjection;
+  "ledger.counterparty": LedgerCounterpartyResult;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsProjection;
+  "ledger.own_account": LedgerOwnAccountContracts["ledger.own_account"]["result"];
+  "ledger.prorrata.list": LedgerProrrataContracts["ledger.prorrata.list"]["result"];
+  "ledger.prorrata.seed": LedgerProrrataContracts["ledger.prorrata.seed"]["result"];
+  "ledger.prorrata.declare_sector": LedgerProrrataContracts["ledger.prorrata.declare_sector"]["result"];
+  "ledger.prorrata.elect_general": LedgerProrrataContracts["ledger.prorrata.elect_general"]["result"];
+  "ledger.prorrata.elect_especial": LedgerProrrataContracts["ledger.prorrata.elect_especial"]["result"];
+  "ledger.prorrata.revoke_especial": LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["result"];
+  "ledger.prorrata.seed_sector": LedgerProrrataContracts["ledger.prorrata.seed_sector"]["result"];
+  "ledger.prorrata.settle_sector": LedgerProrrataContracts["ledger.prorrata.settle_sector"]["result"];
+  "ledger.prorrata.declare_gross": LedgerProrrataContracts["ledger.prorrata.declare_gross"]["result"];
+  "ledger.prorrata.remove_gross": LedgerProrrataContracts["ledger.prorrata.remove_gross"]["result"];
+  "ledger.retencion_soportada.list": LedgerWithholdingContracts["ledger.retencion_soportada.list"]["result"];
+  "ledger.retencion_soportada.list_absences": LedgerWithholdingContracts["ledger.retencion_soportada.list_absences"]["result"];
+  "ledger.retencion_soportada.record": LedgerWithholdingContracts["ledger.retencion_soportada.record"]["result"];
+  "ledger.retencion_soportada.remove": LedgerWithholdingContracts["ledger.retencion_soportada.remove"]["result"];
+  "ledger.retencion_soportada.attest_absence": LedgerWithholdingContracts["ledger.retencion_soportada.attest_absence"]["result"];
+  "ledger.retencion_soportada.withdraw_absence": LedgerWithholdingContracts["ledger.retencion_soportada.withdraw_absence"]["result"];
+  "ledger.bienes_inversion.list": LedgerCapitalGoodsContracts["ledger.bienes_inversion.list"]["result"];
+  "ledger.bienes_inversion.declare": LedgerCapitalGoodsContracts["ledger.bienes_inversion.declare"]["result"];
+  "ledger.inventory.list": InventoryListProjection;
+  "ledger.inventory.create": InventoryCreateProjection;
+  "ledger.inventory.movement.add": InventoryMovementAddProjection;
+  "ledger.inventory.valuation.preview": InventoryValuationOperationProjection;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityOperationProjection;
+  "ledger.inventory.closing-value.record": InventoryClosingAuthorityOperationProjection;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddProjection;
+  "ledger.inventory.options": InventoryOptionsProjection;
+  "ledger.entry-options": LedgerEntryOptionsProjection;
+  "ledger.inventory.inspect": InventoryInspectProjection;
+  "ledger.inventory.describe": InventoryLedgerChangeProjection;
+  "ledger.inventory.correct": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.claim": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.correct": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.reverse": InventoryLedgerChangeProjection;
+  "ledger.inventory.retire": InventoryLedgerChangeProjection;
+  "ledger.inventory.restore": InventoryLedgerChangeProjection;
+  "ledger.actividad-asset.create": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectProjection;
+  "ledger.actividad-asset.correct": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.list": ActivityAssetListProjection;
+  "ledger.actividad-asset.plan": ActivityAssetPlanProjection;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineProjection;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsProjection;
+  "ledger.actividad-asset.acquisition-candidates": ActivityAssetAcquisitionCandidatesProjection;
+  "ledger.actividad-asset.describe": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.dispose": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateProjection;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastProjection;
+  "ledger.actividad-asset.claim": ActivityAssetClaimProjection;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingHandoffProjection;
+  "ledger.participation.rebuild": LedgerParticipationRebuildProjection;
+  "ledger.reset": LedgerResetOperationResult;
+}
+
+export type LedgerRequest<D extends LedgerDefinitionId> =
+  D extends keyof LedgerRequests ? LedgerRequests[D] : JsonObject;
+
+export type LedgerResult<D extends LedgerDefinitionId> =
+  D extends keyof LedgerResults ? LedgerResults[D] : JsonObject;
+
+/** An own account's number and bank block: private input the host refuses
+ * in an ordinary request, so it travels only in `changeOwnAccount`'s bytes. */
+type OwnAccountSecret =
+  | "iban"
+  | "swift_bic"
+  | "bank_name"
+  | "bank_address"
+  | "bank_city"
+  | "bank_country_code";
+
+type OwnAccountRequest =
+  LedgerOwnAccountContracts["ledger.own_account"]["request"];
+
+/** An own account added or changed, with its number or bank block. */
+export type OwnAccountChange = Omit<
+  OwnAccountRequest,
+  "profile_id" | "action" | "closed_on" | "role" | "modelo"
+> & { action: Extract<OwnAccountRequest["action"], "add" | "update"> };
+
+/** The one document an own account change sends, as UTF-8 bytes. */
+export function ownAccountChange(change: OwnAccountChange): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(change));
+}
+
+export type LedgerPort = {
+  /** Submits one admitted operation and follows it until it settles or
+   * waits on the person. One attempt: nothing is retried. */
+  submit<D extends LedgerDefinitionId>(
+    definition: D,
+    payload: LedgerRequest<D>,
+  ): Promise<LedgerOutcome<LedgerResult<D>>>;
+  /** Where an operation this page submitted stands now. */
+  observe(operation: string): Promise<LedgerOutcome>;
+  /** The review a paused operation shows, with its digest. */
+  review<Review = JsonObject>(operation: string): Promise<LedgerReview<Review>>;
+  /** Answers the review whose digest the page showed. */
+  answer(
+    operation: string,
+    reviewDigest: string,
+    decision: LedgerDecision,
+  ): Promise<LedgerOutcome>;
+  /** Asks to cancel at the revision the page observed. */
+  cancel(operation: string, revision: number): Promise<LedgerOutcome>;
+  /** Opens the native dialog for files of `purpose`; `filterLabel` names the
+   * kinds it offers in the page's language. `kinds` are the extensions, with
+   * no dot, the page asks the dialog to offer; the host offers only those it
+   * allows for the purpose, and null or absent leaves it its full list. */
+  pickFiles(
+    purpose: Exclude<FilePurpose, "export">,
+    pick: FilePick,
+    filterLabel: string,
+    kinds?: readonly string[] | null,
+  ): Promise<FilePicks>;
+  /** Opens the native save dialog for an export in `format`. */
+  saveFile(
+    format: ExportSerializationFormat,
+    filterLabel: string,
+    suggestedName?: string,
+  ): Promise<FilePicks>;
+  /** Shows an exported file selected in the system file manager, by the
+   * save token it was exported to; refused `file_unavailable` until the
+   * file is there, and `invalid` for a token picked to be read. */
+  revealFile(token: FileToken): Promise<void>;
+  /** Forgets tokens the page no longer shows. */
+  forgetFiles(tokens: FileToken[]): Promise<void>;
+  /** Calls `listener` as files of `purpose` are dragged over and dropped on
+   * the window, until the returned function stops it. `kinds` bound what a
+   * drop takes as for `pickFiles`. */
+  observeDrops(
+    purpose: Exclude<FilePurpose, "export">,
+    listener: (signal: LedgerDropSignal) => void,
+    kinds?: readonly string[] | null,
+  ): Promise<() => void>;
+  /** Adds an own account or changes its details with the bytes of
+   * `ownAccountChange`, which this one call consumes and zeroes. */
+  changeOwnAccount(change: Uint8Array): Promise<LedgerOutcome>;
+};

@@ -30,7 +30,7 @@ engine-produced saldo. Legal basis: Ley 37/1992 (LIVA) art. 116.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -40,8 +40,15 @@ from typing import Any
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
+)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -56,9 +63,6 @@ from ....adapters.persistence.profile.iva_compensation_history import IvaCompens
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -70,11 +74,13 @@ from ....application.calculations.iva_wallet_reconciliation import reconcile_mod
 from ....application.calculations.relation_prefill import resolve_relations_from_local_store
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import ModeloRefundElectionNotEligibleError
-from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
@@ -87,21 +93,23 @@ from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import (
+from ....domain.user_profile.values import ProfileSetupState
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,
 )
+from .general_iva_profile_facts_support import general_iva_profile_facts
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _BUCKET_ID = "30300000-0000-4000-8000-000000000033"
 _YEAR = 2025
 _LAST_PERIOD = "4T"
@@ -127,14 +135,6 @@ _SALDO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fi
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit
 #: that is refunded (election) or carried (compensar).
-_NEGATIVE_CREDIT_ENGINE_INPUTS = {
-    "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-soportado-interiores-cuota": Decimal("1000.00"),
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-    "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-}
 
 
 def _create_work_unit(**kwargs: Any) -> Any:
@@ -148,11 +148,11 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             **kwargs,
-        )
+        ).revision
 
 
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
@@ -168,14 +168,19 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         ).report
 
 
-def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+def _file_modelo_revision(
+    calculation_revision_id: str,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    **kwargs: Any,
+) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation, mutation_writer=mutation_writer),
             operation=operation,
             **kwargs,
         ).record
@@ -204,23 +209,9 @@ def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            facts=general_iva_profile_facts(
+                tax_id=_TAX_ID,
+                activity_start_date=activity_start_date,
             ),
             created_at=created_at,
             updated_at=created_at,
@@ -258,6 +249,7 @@ def workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> Tax
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         activity_start_date=activity_start_date,
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -341,12 +333,12 @@ def _calculate_negative_period(
         repository=work_repo,
         clock=decided_at,
     )
+    seed_m303_period_cuotas(work_unit.work_unit_id, soportado=M303_LEDGER_CUOTA)
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",
         casilla_inputs={},
         binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-        backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
         iva_compensation_decision=report.decision,
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period,
@@ -393,6 +385,7 @@ def _file_period(
     calculation_revision_id: str,
     redeme_enrolled: bool,
     refund_election: RefundElection,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ResultDisposition:
     """File the verified revision under ``refund_election`` and return its resolved disposition.
 
@@ -426,6 +419,7 @@ def _file_period(
             activity_start_date=_activity_start_date_for_period(work_unit.period.code),
         ),
         refund_election=refund_election,
+        mutation_writer=mutation_writer,
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -531,8 +525,15 @@ def test_non_redeme_mid_period_refund_election_is_refused(
     2T is not the year's last filing period, so a non-REDEME refund is not lawful
     (LIVA art. 116). Electing ``devolver`` raises the instructive refusal rather than
     silently downgrading to compensación (which would discard the operator's request)
-    or silently filing an unlawful refund.
+    or silently filing an unlawful refund. The refusal comes before the filing
+    writes anything, so the operation settles with no effect.
     """
+    admitted_writes: list[Callable[[], None]] = []
+
+    def admit(write: Callable[[], None]) -> None:
+        admitted_writes.append(write)
+        write()
+
     with _secure_backend(tmp_path):
         revision_id, saldo = _calculate_negative_period(
             period_token=_MID_PERIOD, redeme_enrolled=False, operation=operation
@@ -543,8 +544,10 @@ def test_non_redeme_mid_period_refund_election_is_refused(
                 calculation_revision_id=revision_id,
                 redeme_enrolled=False,
                 refund_election=RefundElection.DEVOLVER,
+                mutation_writer=admit,
             )
 
+    assert admitted_writes == []
     assert excinfo.value.context is not None
     assert excinfo.value.context["period"] == _MID_PERIOD
     assert excinfo.value.context["modelo"] == "303"

@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_the_default_verdict_store_is_in_the_configured_development_cache_bucket() -> None:
     """Without cache overrides, derived output follows the configured storage root."""
     with scoped_env_var(VERDICT_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, None):
-        storage_root = load_settings().cadrumo_local_storage_root
+        storage_root = load_settings().cadrumo_storage_root
         assert default_verdict_cache_dir() == storage_root / "development" / "cache" / "registry-verdict"
 
 

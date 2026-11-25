@@ -1,4 +1,4 @@
-import { dateFormats } from "../shared/dateFormats";
+import { dateFormats, formatTime } from "../shared/dateFormats";
 import { isoDay as day, localDay } from "../shared/dates";
 import { CalendarEntryRow } from "./calendar/CalendarEntryRow";
 import { CalendarTodayMarker } from "./calendar/CalendarTodayMarker";
@@ -31,12 +31,28 @@ import {
   evaluatedWord,
   type CalendarState,
 } from "../shell/calendar";
-import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
+import {
+  attentionStates,
+  entryKey,
+  listedMonths,
+} from "../shell/calendarEntries";
+import { factsGap, listed } from "../shell/compose";
+import { useScrolls } from "@/components/ui/useScrolls";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import type { CalendarEntry, CalendarEvent } from "../shell/views";
+import type { CoverageAdviceReason } from "../shell/calendarContract";
+import type { FilingCalendarServed } from "../shell/calendarContract";
+import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
+import {
+  CalendarSupportNote,
+  CalendarUnsupported,
+  outsideEnvelope,
+} from "./calendar/CalendarSupport";
+import { CalendarSuppressed } from "./calendar/CalendarSuppressed";
+import { CalendarYear } from "./calendar/CalendarYear";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
+import { ProfileCompletionNotice } from "./profile/ProfileCompletionNotice";
 
 /** A reader's place in a face: what is at the top of their view, by its
  * month or its obligation, and how far under the head it sits; or that
@@ -57,6 +73,10 @@ export type CalendarMemory = {
   /** Whether the chosen obligation was in view when the reader last moved. */
   chosenSeen?: boolean;
 };
+
+/** The wire token a served warning starts with when a covered year has no
+ * deadline windows; the year follows it. */
+const UNKNOWN_WINDOWS_CODE = "deadline.windows_unavailable";
 
 const markKey = (mark: HTMLElement) =>
   mark.dataset.month ?? mark.dataset.entry ?? "today";
@@ -84,7 +104,13 @@ export function FilingCalendarView({
   refreshing = false,
   page,
   onRefresh,
+  year = null,
+  yearFailed = false,
+  onYearStep,
+  onYearCurrent,
   onOpen,
+  profile = null,
+  onNavigate,
 }: {
   state: CalendarState;
   /** What stands in the page while the account withholds the calendar: the
@@ -109,9 +135,18 @@ export function FilingCalendarView({
   /** The page's own element, for whoever sends focus to it. */
   page?: RefObject<HTMLElement | null>;
   onRefresh: () => void;
+  /** The filing year on screen; null while it is the range around today.
+   * Left out with its handlers, the page offers no choice of year. */
+  year?: number | null;
+  /** The year asked for last could not be read; what is shown is unchanged. */
+  yearFailed?: boolean;
+  onYearStep?: (by: -1 | 1) => void;
+  onYearCurrent?: () => void;
   /** Take the person to where this obligation is worked on. Left out where
    * the window cannot: no row then offers a way it does not have. */
-  onOpen?: (entry: CalendarEntry) => void;
+  onOpen?: (entry: FilingCalendarServed["entries"][number]) => void;
+  profile?: UserProfile | null;
+  onNavigate?: (url: string) => void;
 }) {
   const t = useStrings();
   const heading = useId();
@@ -167,6 +202,23 @@ export function FilingCalendarView({
   const head = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLDivElement>(null);
+  // Each scroller is a Tab stop while it scrolls, so the Page and End keys
+  // reach it without the pointer.
+  const [pageEl, setPageEl] = useState<HTMLElement | null>(null);
+  const [asideEl, setAsideEl] = useState<HTMLDivElement | null>(null);
+  const pageScrolls = useScrolls(pageEl);
+  const asideScrolls = useScrolls(asideEl);
+  const takePage = useCallback(
+    (el: HTMLElement | null) => {
+      root.current = el;
+      setPageEl(el);
+    },
+    [root],
+  );
+  const takeAside = useCallback((el: HTMLDivElement | null) => {
+    aside.current = el;
+    setAsideEl(el);
+  }, []);
   // How much of the page's top the head keeps: all of it, or its controls.
   const kept = useCallback(
     () => head.current?.offsetHeight || bar.current?.offsetHeight || 0,
@@ -367,6 +419,7 @@ export function FilingCalendarView({
   );
   /** A scroll of one of the page's scrollers, as the reader's or not. */
   const scrolled = (scroller: HTMLElement, faces: ("months" | "list")[]) => {
+    checkToday();
     const el = root.current;
     // Reported while the page is a width its faces have not yet been put
     // back for: the new layout's doing, not the reader's.
@@ -502,9 +555,16 @@ export function FilingCalendarView({
   ]);
   // Back to where the calendar stands: the month of the evaluated day among
   // the months, and its mark in the list, each where a face first opens.
-  const toToday = () => {
+  // Where each shown face's scroller would have to be for that, kept within
+  // how far it can scroll.
+  const todayPlaces = useCallback(() => {
     const el = root.current;
-    if (!el || evaluatedOn === null) return;
+    const places: {
+      face: "months" | "list";
+      scroller: HTMLElement;
+      top: number;
+    }[] = [];
+    if (!el || evaluatedOn === null) return places;
     for (const [face, to, air] of [
       [
         "months",
@@ -517,10 +577,36 @@ export function FilingCalendarView({
     ] as const) {
       const at = frame(face);
       if (!at || !to) continue;
-      at.scroller.scrollTop += to.getBoundingClientRect().top - at.under - air;
+      const wanted =
+        at.scroller.scrollTop + to.getBoundingClientRect().top - at.under - air;
+      const furthest = at.scroller.scrollHeight - at.scroller.clientHeight;
+      places.push({
+        face,
+        scroller: at.scroller,
+        top: Math.max(0, Math.min(wanted, furthest)),
+      });
+    }
+    return places;
+  }, [root, evaluatedOn, frame]);
+  const toToday = () => {
+    for (const { face, scroller, top } of todayPlaces()) {
+      scroller.scrollTop = top;
       remember(face);
     }
   };
+  // Whether the way back to today would move anything: where today is
+  // already in place, the control has nothing to do and is not offered.
+  const [awayFromToday, setAwayFromToday] = useState(false);
+  const checkToday = useCallback(
+    () =>
+      setAwayFromToday(
+        todayPlaces().some(
+          ({ scroller, top }) => Math.abs(scroller.scrollTop - top) >= 1,
+        ),
+      ),
+    [todayPlaces],
+  );
+  useLayoutEffect(checkToday);
   // Just chosen, an obligation is in view: it was pressed, or is brought
   // into view below. Whether it still is, is the reader's scrolling to say.
   const selectedWas = useRef(selected);
@@ -564,54 +650,15 @@ export function FilingCalendarView({
 
   const months = useMemo(() => {
     const month = dateFormats(locale).month;
-    const groups = new Map<
-      string,
-      {
-        title: string;
-        entries: CalendarEntry[];
-        events: CalendarEvent[];
-        ahead: number;
-      }
-    >();
-    for (const entry of [...(calendar?.entries ?? [])].sort(
-      (a, b) =>
-        a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
-        a.modelo.localeCompare(b.modelo),
-    )) {
-      const key = entry.adjusted_closes_on.slice(0, 7);
-      const group = groups.get(key) ?? {
-        title: month.format(day(entry.adjusted_closes_on)),
-        entries: [],
-        events: [],
-        ahead: 0,
-      };
-      // How many of the month's obligations bind on or after the day the
-      // product evaluated: they are listed last, being sorted by date.
-      if (evaluatedOn !== null && entry.adjusted_closes_on >= evaluatedOn)
-        group.ahead += 1;
-      group.entries.push(entry);
-      groups.set(key, group);
-    }
-    // What was observed, in the month it happened, whether or not anything
-    // falls due in that month.
-    for (const event of [...(calendar?.events ?? [])].sort((a, b) =>
-      a.event_date.localeCompare(b.event_date),
-    )) {
-      const key = event.event_date.slice(0, 7);
-      const group = groups.get(key) ?? {
-        title: month.format(day(event.event_date)),
-        entries: [],
-        events: [],
-        ahead: 0,
-      };
-      group.events.push(event);
-      groups.set(key, group);
-    }
-    return [...groups].sort(([a], [b]) => a.localeCompare(b));
-  }, [calendar, locale, evaluatedOn]);
+    return listedMonths(
+      { entries: calendar?.entries ?? [], events: calendar?.events ?? [] },
+      (iso) => month.format(day(iso)),
+    );
+  }, [calendar, locale]);
   // The day the product worked the states out for, and the month in which
-  // the first obligation still ahead falls: the mark for today stands just
-  // before that obligation, or after the last one when none is ahead.
+  // the first obligation the product serves as ahead of it falls: the mark
+  // for today stands just before that obligation, or after the last one
+  // when none is ahead.
   const today = evaluatedOn;
   const turning = months.find(([, month]) => month.ahead > 0)?.[0] ?? null;
 
@@ -637,8 +684,14 @@ export function FilingCalendarView({
       <EmptyState
         icon="alert"
         description={
-          <span key={attempt} role="alert">
-            {t("desktop.calendar.failed")}
+          <span key={attempt} className="grid gap-1">
+            <span role="alert">{t("desktop.calendar.failed")}</span>
+            {/* Why, in the words the product served for its refusal; where
+                it served none, the stable code the host reported. */}
+            <span data-calendar-failure="" className="text-muted-foreground">
+              {state.words ??
+                t("desktop.operations.error_code", { code: state.code })}
+            </span>
           </span>
         }
       >
@@ -649,21 +702,53 @@ export function FilingCalendarView({
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
-    const asOf = generated_at
-      ? dateFormats(locale).dateTime.format(new Date(generated_at))
-      : "—";
-    // How the range stands, in the product's own four readings: counted,
-    // never combined into a verdict.
-    const standing = STATE_ORDER.map(
-      (kind) =>
-        [
-          kind,
-          state.calendar.entries.filter((entry) => entry.user_state === kind)
-            .length,
-        ] as const,
-    ).filter(([, count]) => count > 0);
+    // The served sentence of a warning is its `text`; its `message` is a
+    // locale key and never shown. A warning served without a sentence says
+    // nothing here rather than its key.
+    // A year the registry has no deadline windows for comes back as a warning
+    // with this code, not as rows: the range is unknown there, which an empty
+    // list must not be read as "nothing due".
+    const unknown = warnings.filter((warning) =>
+      warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
+    );
+    const sentences = (served: typeof warnings) =>
+      served.flatMap((warning) => (warning.text ? [warning.text] : []));
+    // Without the taxpayer's model the product places no obligation, and its
+    // reason says so first, in its own words, rather than an empty calendar.
+    const undeclared =
+      !state.calendar.taxpayer_model_declared &&
+      state.calendar.incomplete_reason
+        ? [state.calendar.incomplete_reason]
+        : [];
+    const profileEvidence = [
+      ...undeclared,
+      ...sentences(
+        warnings.filter(
+          (warning) => !warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
+        ),
+      ),
+    ];
+    const unknownWords = [...new Set(sentences(unknown))];
+    const asOf = formatTime(locale, generated_at);
+    // How the range stands, in the product's own four readings, in the order
+    // its attention order reaches them: counted, never combined into a
+    // verdict.
+    const standing = attentionStates(state.calendar)
+      .map(
+        (kind) =>
+          [
+            kind,
+            state.calendar.entries.filter((entry) => entry.user_state === kind)
+              .length,
+          ] as const,
+      )
+      .filter(([, count]) => count > 0);
     const short = dateFormats(locale).short;
-    const nothing = months.length === 0;
+    const { support } = state.calendar;
+    // A range wholly outside the supported years has no rows to draw, and
+    // is said so rather than drawn as an empty calendar.
+    const unsupported = outsideEnvelope(support);
+    const nothing = months.length === 0 || unsupported;
     const observedKinds = (["filing", "message"] as const).filter((kind) =>
       state.calendar.events.some((event) => event.event_type === kind),
     );
@@ -677,12 +762,10 @@ export function FilingCalendarView({
       <div className="calendar-list @container">
         {months.map(([key, month]) => (
           <section key={key} aria-labelledby={`${heading}-${key}`}>
-            {/* Before the month's heading where the whole month is ahead. */}
-            {today &&
-              key === turning &&
-              month.ahead === month.entries.length && (
-                <CalendarTodayMarker on={today} today={here} locale={locale} />
-              )}
+            {/* Before the month's heading where nothing of it is behind. */}
+            {today && key === turning && month.behind === 0 && (
+              <CalendarTodayMarker on={today} today={here} locale={locale} />
+            )}
             <h2
               id={`${heading}-${key}`}
               className={cn(
@@ -694,10 +777,10 @@ export function FilingCalendarView({
             </h2>
             {/* Within the month where today falls between its dates: the
                 month is then two lists with the mark between them. */}
-            {(today && key === turning && month.ahead < month.entries.length
+            {(today && key === turning && month.behind > 0
               ? [
-                  month.entries.slice(0, month.entries.length - month.ahead),
-                  month.entries.slice(month.entries.length - month.ahead),
+                  month.entries.slice(0, month.behind),
+                  month.entries.slice(month.behind),
                 ]
               : [month.entries]
             ).map((entries, part) => (
@@ -748,9 +831,9 @@ export function FilingCalendarView({
                       <time dateTime={event.event_date}>
                         {short.format(day(event.event_date))}
                       </time>
-                      {" · "}
+                      {factsGap(t)}
                       {t(`desktop.calendar.event.${event.event_type}`)}
-                      {" · "}
+                      {factsGap(t)}
                       <span className="text-foreground">{event.summary}</span>
                     </span>
                   </li>
@@ -764,12 +847,28 @@ export function FilingCalendarView({
         )}
       </div>
     );
+    const advice: Record<CoverageAdviceReason, string[]> = {
+      applicable_window_missing: [],
+      applicability_undetermined: [],
+      registry_unmodeled: [],
+    };
+    for (const { modelo, reason } of coverage.advised)
+      advice[reason].push(modelo);
     const note = coverage.advised.length > 0 && (
-      <p className="px-4 py-3 text-sm text-muted-foreground">
-        {t("desktop.calendar.undetermined", {
-          modelos: coverage.advised.map((item) => item.modelo).join(", "),
-        })}
-      </p>
+      <ul
+        role="list"
+        className="grid gap-1 px-4 py-3 text-sm text-muted-foreground"
+      >
+        {Object.entries(advice).map(([reason, modelos]) =>
+          modelos.length > 0 ? (
+            <li key={reason}>
+              {t(`desktop.calendar.coverage.${reason}`, {
+                modelos: listed(t, modelos),
+              })}
+            </li>
+          ) : null,
+        )}
+      </ul>
     );
     body = (
       <div
@@ -860,6 +959,15 @@ export function FilingCalendarView({
                     </SegmentedControlItem>
                   </SegmentedControl>
                 )}
+                {onYearStep && onYearCurrent && (
+                  <CalendarYear
+                    year={year}
+                    failed={yearFailed}
+                    support={support}
+                    onStep={onYearStep}
+                    onCurrent={onYearCurrent}
+                  />
+                )}
                 {/* The way back to where the calendar stands, from
                     wherever the reader has gone in it. */}
                 {!nothing && today && (
@@ -876,7 +984,12 @@ export function FilingCalendarView({
                             date: dateFormats(locale).medium.format(day(today)),
                           })
                     }
-                    onClick={toToday}
+                    // Kept in the Tab order where it has nothing to do, as
+                    // the year's own controls are.
+                    aria-disabled={awayFromToday ? undefined : true}
+                    onClick={() => {
+                      if (awayFromToday) toToday();
+                    }}
                   >
                     {evaluatedWord(today, here, locale)}
                   </Button>
@@ -896,27 +1009,41 @@ export function FilingCalendarView({
               </div>
             )}
           </div>
-          {warnings.length > 0 && (
+          <CalendarSupportNote support={support} />
+          {unknownWords.length > 0 && (
             <Alert
               tone="warning"
-              className="mx-4 mt-3 w-auto"
               icon={<Icon name="alert" />}
+              className="mx-4 mt-3 w-auto"
             >
-              <p>{t("desktop.calendar.warnings")}</p>
-              <ul className="mt-1 grid gap-0.5 text-sm">
-                {warnings.map((warning) => (
-                  <li key={warning.code + warning.affected_modelos.join()}>
-                    {warning.message}
-                  </li>
-                ))}
-              </ul>
+              {unknownWords.map((words) => (
+                <p key={words}>{words}</p>
+              ))}
             </Alert>
           )}
-          {nothing ? (
+          <ProfileCompletionNotice
+            key={profile?.profile_id ?? "unknown"}
+            profile={profile}
+            evidence={profileEvidence}
+            missingPaths={state.calendar.undeclared_profile_facts}
+            onNavigate={onNavigate}
+            className="mx-4 mt-3 w-auto"
+          />
+          {unsupported && support ? (
+            <CalendarUnsupported support={support} />
+          ) : nothing ? (
             <EmptyState
               role="status"
               icon="calendar"
-              description={t("desktop.calendar.empty")}
+              description={
+                unknownWords.length > 0
+                  ? unknownWords.join(" ")
+                  : t(
+                      coverage.advised.length > 0
+                        ? "desktop.calendar.coverage.no_dates"
+                        : "desktop.calendar.empty",
+                    )
+              }
             />
           ) : wide || view === "months" ? (
             <CalendarMonths
@@ -932,14 +1059,26 @@ export function FilingCalendarView({
             list
           )}
           {note}
+          <CalendarSuppressed
+            entries={state.calendar.suppressed_entries}
+            onNavigate={onNavigate}
+          />
         </div>
         {/* Beside the months where the page is wide: the list keeps its own
             place and scrolls by itself, as tall as the page. */}
         {wide && !nothing && (
           <div
-            ref={aside}
+            ref={takeAside}
+            tabIndex={asideScrolls ? 0 : undefined}
+            aria-label={
+              asideScrolls ? t("desktop.calendar.view_list") : undefined
+            }
             onScroll={(event) => scrolled(event.currentTarget, ["list"])}
-            className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:calc(var(--spacing)*0)]"
+            className={cn(
+              "calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:calc(var(--spacing)*0)]",
+              asideScrolls &&
+                "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+            )}
           >
             {list}
           </div>
@@ -950,8 +1089,8 @@ export function FilingCalendarView({
 
   return (
     <section
-      ref={root}
-      tabIndex={-1}
+      ref={takePage}
+      tabIndex={pageScrolls ? 0 : -1}
       aria-label={t("desktop.calendar.title")}
       aria-busy={refreshing || undefined}
       data-head={room.tall ? "whole" : "controls"}

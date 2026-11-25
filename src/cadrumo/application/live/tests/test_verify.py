@@ -32,6 +32,30 @@ def _service() -> VerifyService:
     return VerifyService(persistence=InMemoryVerifyObservationPersistence())
 
 
+def _record_de1(svc: VerifyService, verdict: IdentityCheckVerdict, checked_at: datetime) -> VerifyObservation:
+    return svc.record(
+        bucket_id=_BUCKET_ID,
+        surface=VerifySurface.NIF_IVA,
+        nif="DE1",
+        verdict=verdict,
+        checked_at=checked_at,
+    )
+
+
+def _service_with_one_nif_iva_and_one_tgvi_observation() -> VerifyService:
+    svc = _service()
+    ts = datetime(2025, 3, 15, tzinfo=UTC)
+    _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+    svc.record(
+        bucket_id=_BUCKET_ID,
+        surface=VerifySurface.TGVI,
+        nif="ES1",
+        verdict=IdentityCheckVerdict.VALID,
+        checked_at=ts,
+    )
+    return svc
+
+
 class TestRecord:
     def test_record_persists_observation(self) -> None:
         svc = _service()
@@ -75,20 +99,8 @@ class TestRecord:
     ) -> None:
         svc = _service()
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
-        a = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        b = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+        b = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
         assert a.observation_id == b.observation_id
         assert len(svc.list_observations(bucket_id=_BUCKET_ID)) == 1
 
@@ -97,61 +109,19 @@ class TestRecord:
     ) -> None:
         svc = _service()
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
-        a = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        b = svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.INVALID,
-            checked_at=ts,
-        )
+        a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
+        b = _record_de1(svc, IdentityCheckVerdict.INVALID, ts)
         assert a.observation_id != b.observation_id
 
 
 class TestListObservations:
     def test_list_returns_all_observations(self) -> None:
-        svc = _service()
-        ts = datetime(2025, 3, 15, tzinfo=UTC)
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.TGVI,
-            nif="ES1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        svc = _service_with_one_nif_iva_and_one_tgvi_observation()
         all_obs = svc.list_observations(bucket_id=_BUCKET_ID)
         assert len(all_obs) == 2
 
     def test_list_filters_by_surface(self) -> None:
-        svc = _service()
-        ts = datetime(2025, 3, 15, tzinfo=UTC)
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.NIF_IVA,
-            nif="DE1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
-        svc.record(
-            bucket_id=_BUCKET_ID,
-            surface=VerifySurface.TGVI,
-            nif="ES1",
-            verdict=IdentityCheckVerdict.VALID,
-            checked_at=ts,
-        )
+        svc = _service_with_one_nif_iva_and_one_tgvi_observation()
         nif_iva_obs = svc.list_observations(bucket_id=_BUCKET_ID, surface=VerifySurface.NIF_IVA)
         tgvi_obs = svc.list_observations(bucket_id=_BUCKET_ID, surface=VerifySurface.TGVI)
         assert len(nif_iva_obs) == 1
@@ -360,7 +330,7 @@ class TestObservationIdentityAndInstantContracts:
         recorded = svc.record(
             bucket_id=_BUCKET_ID,
             surface=VerifySurface.TGVI,
-            nif="ESB12345674",
+            nif="ESB00015016",
             verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )

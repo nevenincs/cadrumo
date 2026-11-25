@@ -34,12 +34,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...iva.errors import IvaRateNotFoundError
 from ...iva.lookup import rate_table_covers, rate_table_covers_any_positive_tier
 from ...iva.schema import EUMemberState, IvaRateKind
 from ..enums import IvaRate, iva_rate_percentage
+from ..figures import FigureFindingCode, rate_refusal_finding, rate_refusal_is_coverage_gap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
     """Resolve rate slots under the generation-pinned authority production uses."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -72,7 +73,7 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
     goes false, a tier has narrowed again and the refusal tests this module used
     to carry should be restored against the date that reopens.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         floor = _authority_operation_for_test.supported_filing_years().date_envelope().floor
         for kind in _POSITIVE_TIERS:
             assert rate_table_covers(
@@ -81,6 +82,32 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
                 f"{kind.value} no longer covers the supported floor {floor.isoformat()} -- a per-tier "
                 "coverage gap may have reopened; restore a refusal test pinned to the date that exposes it"
             )
+
+
+def test_no_spanish_date_publishes_one_positive_tier_without_the_others() -> None:
+    """Any-tier coverage answers for one tier only while the tiers start and end together.
+
+    Walks every edge of the Spanish positive tiers, which is where coverage can change.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        spain = EUMemberState.from_registry("es")
+        edges: set[date] = set()
+        for variant in operation.governed_fact("iva-rate-schedule").variants:
+            selectors = {selector.name: selector.value for selector in variant.selectors}
+            if selectors.get("member_state") != "es" or selectors.get("rate_role") != "ordinary":
+                continue
+            if variant.valid_from is not None:
+                edges |= {variant.valid_from - timedelta(days=1), variant.valid_from}
+            if variant.valid_to is not None:
+                edges |= {variant.valid_to, variant.valid_to + timedelta(days=1)}
+
+        partial = [
+            day
+            for day in sorted(edges)
+            if len({rate_table_covers(spain, day, kind, operation=operation) for kind in _POSITIVE_TIERS}) != 1
+        ]
+
+        assert partial == []
 
 
 @pytest.mark.parametrize("rate", (IvaRate.from_registry("RATE_21"), IvaRate.from_registry("RATE_10")))
@@ -93,7 +120,7 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     those windows to a later start would resurrect exactly the false-legality
     refusal this module exists to prevent, and would otherwise do it silently.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         on_date = date(2023, 6, 1)
         assert iva_rate_percentage(rate, on_date) is not None
         assert rate_table_covers(
@@ -130,6 +157,35 @@ def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> No
     assert context["on_date"] == _COVERED.isoformat()
 
 
+def test_a_refusal_on_a_covered_date_is_a_legality_finding_quoting_its_cause() -> None:
+    """The stored-read path passes the cause; its finding keeps the legal claim and code."""
+    rate = IvaRate.from_registry("RATE_2")
+    with pytest.raises(IvaRateNotFoundError) as caught:
+        iva_rate_percentage(rate, _COVERED)
+    assert rate_refusal_is_coverage_gap(caught.value) is False
+
+    finding = rate_refusal_finding(rate, _COVERED, coverage_gap=False, cause=caught.value)
+
+    assert finding.code is FigureFindingCode.LINE_RATE_NOT_IN_FORCE
+    assert finding.message == f"line rate RATE_2 was not in force on 2024-06-01: {caught.value}"
+    assert dict(finding.values) == {"slot": str(rate), "on_date": "2024-06-01"}
+
+
+def test_a_coverage_gap_finding_makes_no_claim_about_the_law() -> None:
+    """The preview path passes no cause; either way a gap never says "not in force"."""
+    rate = IvaRate.from_registry("RATE_21")
+    gap = IvaRateNotFoundError(
+        translated_message=_COVERAGE_GAP_KEY,
+        context={"rate_registry_covers_date": False},
+    )
+    assert rate_refusal_is_coverage_gap(gap) is True
+
+    finding = rate_refusal_finding(rate, _COVERED, coverage_gap=True)
+
+    assert finding.code is FigureFindingCode.LINE_RATE_COVERAGE_GAP
+    assert finding.message == "line rate RATE_21 is not covered by the rate registry on 2024-06-01"
+
+
 def test_a_covered_date_resolves_normally() -> None:
     """Guards against a refusal that fires for every date and looks like a fix."""
     assert iva_rate_percentage(IvaRate.from_registry("RATE_21"), _COVERED) == Decimal("0.21")
@@ -148,7 +204,7 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
     see :func:`test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date`,
     which is the test that will tell us when one can.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _authority_operation_for_test.supported_filing_years().years:
             for month in (1, 6, 12):
                 probe = date(year, month, 1)
@@ -180,7 +236,7 @@ def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
     outside the positive ones, this reds and says so, and a behavioural probe
     becomes possible again and should be restored.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         envelope = _authority_operation_for_test.supported_filing_years().date_envelope()
         day = envelope.floor
         separating: list[date] = []

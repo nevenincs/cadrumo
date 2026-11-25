@@ -25,29 +25,38 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, XmlDictionaryPathOverride
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_covering
 
-from ._modelo_100_registry_support import _loaded_registry, _source_root
+from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PH18_ATTRIBUTE_PATH = "/DatosIdentificativos/Hijos/@PH18"
+_EXTRA_MISPLACED_ROW = "EXTRA=[/OtraDeclaracion/EXTRA]"
+_MODELO_100_EXERCISES = tuple(revision.valid_from.year for revision in authored_revisions("100"))
+
+
+def _modelo_100_revision(filing_year: int) -> ModeloRevision:
+    modelos_by_id, _catalogues = loaded_registry()
+    return modelos_by_id["100"].revisions[str(revision_covering("100", filing_year).id)]
 
 
 def _modelo_100_layout(filing_year: int) -> ExportLayoutDefinition:
-    modelos_by_id, _catalogues = _loaded_registry()
-    return modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+    return _modelo_100_revision(filing_year).export_layouts[0]
 
 
 def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
-    _modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = loaded_registry()
     return xml_dictionary_entries(
         _modelo_100_layout(filing_year),
         sources=catalogues.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
+        casillas=_modelo_100_revision(filing_year).casillas,
     )
 
 
@@ -57,7 +66,7 @@ def _ph18(filing_year: int) -> XmlDictionaryEntry:
     return entry
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_ph18_resolves_to_the_attribute_form_the_xsd_declares(filing_year: int) -> None:
     """Every revision addresses PH18 as an attribute, as AEAT's schema declares."""
     entry = _ph18(filing_year)
@@ -66,7 +75,7 @@ def test_ph18_resolves_to_the_attribute_form_the_xsd_declares(filing_year: int) 
     assert entry.path.rsplit("/", 1)[-1].startswith("@"), "the writer keys attribute rendering off the @ leaf"
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     """The override is still needed, and the corpus is still untouched.
 
@@ -76,15 +85,15 @@ def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     there, this also fails -- which is the outcome we want, because that would
     destroy the provenance the corpus exists to carry.
     """
-    _modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = loaded_registry()
     layout = _modelo_100_layout(filing_year)
     source = catalogues.sources[str(layout.dictionary_source_ref)]
-    published = (_source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
+    published = (source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
 
     assert "PH18=[/DatosIdentificativos/Hijos/PH18]" in published
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_the_value_rendering_was_never_the_defect(filing_year: int) -> None:
     """Placement was wrong; the declared type was always right.
 
@@ -96,16 +105,22 @@ def test_the_value_rendering_was_never_the_defect(filing_year: int) -> None:
 
 
 def test_no_other_row_is_overridden() -> None:
-    """One declared exception, not a reconciliation layer.
+    """Declared exceptions, not a reconciliation layer.
 
-    A second override appearing without its own evidence is the drift this design
-    is meant to prevent, so the count is pinned rather than the mere presence of
-    PH18.
+    A further override appearing without its own evidence is the drift this design
+    is meant to prevent, so each edition's list is pinned rather than the mere
+    presence of PH18. EXTRA belongs to 2024 alone: the 2025 dictionary already
+    places that row where the XSD does.
     """
-    for filing_year in range(2020, 2026):
+    for filing_year in _MODELO_100_EXERCISES:
         layout = _modelo_100_layout(filing_year)
+        _modelos_by_id, catalogues = loaded_registry()
+        published = (source_root() / catalogues.sources[str(layout.dictionary_source_ref)].corpus_path).read_text(
+            encoding="iso-8859-1"
+        )
+        expected = ["PH18", "EXTRA"] if _EXTRA_MISPLACED_ROW in published else ["PH18"]
 
-        assert [override.field_id for override in layout.dictionary_path_overrides] == ["PH18"], filing_year
+        assert [override.field_id for override in layout.dictionary_path_overrides] == expected, filing_year
 
 
 def test_every_override_records_why_it_overrules_aeat() -> None:
@@ -116,7 +131,7 @@ def test_every_override_records_why_it_overrules_aeat() -> None:
     is a reviewed judgement about a specific row. The evidence therefore has to
     travel with the override rather than live in a commit message.
     """
-    for filing_year in range(2020, 2026):
+    for filing_year in _MODELO_100_EXERCISES:
         for override in _modelo_100_layout(filing_year).dictionary_path_overrides:
             assert len(override.reason) > 80, (filing_year, override.field_id)
             assert "XSD" in override.reason
@@ -128,8 +143,8 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
     Without this, a typo leaves the defect shipping while the registry carries a
     declaration that looks like the fix.
     """
-    _modelos_by_id, catalogues = _loaded_registry()
-    typo = _modelo_100_layout(2024).model_copy(
+    _modelos_by_id, catalogues = loaded_registry()
+    typo = _modelo_100_layout(_MODELO_100_EXERCISES[-1]).model_copy(
         update={
             "dictionary_path_overrides": (
                 XmlDictionaryPathOverride(
@@ -146,9 +161,10 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
             typo,
             sources=catalogues.sources,
             source_payloads={
-                str(source.id): (_source_root() / source.corpus_path).read_bytes()
+                str(source.id): (source_root() / source.corpus_path).read_bytes()
                 for source in catalogues.sources.values()
             },
+            casillas=_modelo_100_revision(_MODELO_100_EXERCISES[-1]).casillas,
         )
 
 
@@ -158,7 +174,7 @@ def test_a_fixed_width_layout_may_not_declare_an_override() -> None:
     The refusal is raised by a model validator, so pydantic re-wraps it; the
     registry message is what carries the reason and is matched here.
     """
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     layout = next(layout for revision in modelos_by_id["303"].revisions.values() for layout in revision.export_layouts)
 
     with pytest.raises(ValidationError, match="reads no dictionary"):

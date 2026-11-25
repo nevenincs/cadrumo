@@ -18,7 +18,8 @@ and `src/cadrumo/application/`.
 
 ## CI invocation
 
-`semgrep --config .semgrep/rules/ --error src/cadrumo/`
+`just check-security-full` runs the pinned Semgrep version with `--error --strict`,
+so findings and parser errors both fail the gate.
 
 Failing rules are gating. Justified exceptions must use inline rule-id +
 rationale comments (semgrep `# nosem:<rule-id> reason: <why>`).
@@ -28,12 +29,7 @@ duplicated as a Semgrep rule.
 
 ## Local dev
 
-`semgrep` requires the Unix `resource` module and does not run on Windows.
-Windows contributors should use the suppression inventory tool as a faster
-proxy: `uv run --no-sync python scratch/suppression_inventory.py`. The
-inventory script reports any new sites in disallowed categories.
-
-CI on Ubuntu/macOS runners executes the full semgrep rule set.
+Run `just check-security-full` locally or in CI to scan the full source tree.
 
 ## Adding new rules
 

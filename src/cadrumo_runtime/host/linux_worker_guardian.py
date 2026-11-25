@@ -10,17 +10,19 @@ import sys
 from pathlib import Path
 from typing import Protocol
 
+from cadrumo.core.package_interpreter import interpreter_command
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.linux_pidfd import open_linux_pidfd
 from ..adapters.linux_worker_process import linux_process_start_identity
-from ..adapters.worker_arguments import validated_worker_arguments
+from ..adapters.worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 
 
 class _ParentPoll(Protocol):
     """Kernel exit events consumed by the Linux guardian."""
 
-    def register(self, fd: int, eventmask: int = ..., /) -> None:
+    def register(self, fd: int, _eventmask: int = ..., /) -> None:
         """Add one process handle whose exit ends the wait."""
         ...
 
@@ -77,20 +79,21 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: _ParentP
         return False
 
 
-def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+def launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+    """Start the contained worker under the clean environment, or return None when it cannot start."""
     from ..adapters.worker_environment import worker_path_environment_names
 
     environment = {
         "PATH": "/usr/bin:/bin",
         "LANG": "C",
         "LC_ALL": "C",
-        "PYDANTIC_DISABLE_PLUGINS": "__all__",
+        PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
     }
     path_names = worker_path_environment_names()
     environment.update({name: value for name, value in os.environ.items() if name in path_names})
     try:
         return subprocess.Popen(  # noqa: S603 - fixed interpreter and verified worker arguments
-            (sys.executable, *worker_arguments),
+            (*interpreter_command(), *worker_arguments[len(worker_interpreter_arguments(worker_arguments)) :]),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -142,7 +145,7 @@ def _run_linux_guardian(options: argparse.Namespace) -> int:
         # Recheck identity while holding the exact kernel process handle.
         if not _is_same_parent(options, parent, watcher):
             return 2
-        worker = _launch_worker(worker_arguments)
+        worker = launch_worker(worker_arguments)
         return 2 if worker is None else _watch_worker(watcher, descriptor, worker)
     finally:
         os.close(descriptor)

@@ -21,11 +21,16 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ....core.errors.hierarchy import NoActiveProfileError
 from ....core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..verify import VerifyObservation, VerifySurface
 from ..verify_read_contracts import (
@@ -62,7 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 9, 29, 10, 30, tzinfo=UTC)
-_NIF = "B12345674"
+_NIF = "B00015016"
 
 
 def _observation(
@@ -104,18 +109,6 @@ class _MemoryPersistence:
 
     def save(self, observation: VerifyObservation) -> None:
         self.observations += (observation,)
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
 
 
 class _Operands:
@@ -298,14 +291,14 @@ def _executor_context(
     definition_id: str,
     *,
     identity_subject_ref: str | None = None,
-    events: _Events | None = None,
+    events: RecordingEvents | None = None,
 ) -> tuple[OperationExecutorContext, _Operands]:
     identity = OperationIdentity(
         operation_id="e" * 64,
         definition_id=definition_id,
         subject_ref=identity_subject_ref or profile_operation_subject(str(_PROFILE)),
     )
-    events = events or _Events()
+    events = events or RecordingEvents()
     operands = _Operands()
     context = cast(OperationExecutorContext, SimpleNamespace(identity=identity, events=events, operands=operands))
     return context, operands
@@ -363,7 +356,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 ) -> None:
     import cadrumo.application.live.verify_read_operation as operation
 
-    events = _Events()
+    events = RecordingEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         context_definition_id,
@@ -394,7 +387,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
     import cadrumo.application.live.verify_read_operation as operation
 
-    events = _Events()
+    events = RecordingEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         "live.verify.other",
@@ -430,7 +423,7 @@ def test_list_executor_refuses_overflow_without_truncating(monkeypatch: pytest.M
 
     persistence = _MemoryPersistence((_observation("a" * 64), _observation("b" * 64)))
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_MAX_VERIFY_LIST_ROWS", 1)
+    monkeypatch.setattr(operation, "MAX_VERIFY_LIST_ROWS", 1)
     context, operands = _executor_context(VERIFY_LIST_DEFINITION_ID)
 
     with pytest.raises(ProfileAccessRefusedError) as error:

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -126,17 +125,21 @@ def resolve_entity_vocabulary(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EntityVocabulary:
-    """Resolve and validate all entity types and legal forms from fact 0124."""
-    coordinate = effective_date or today_madrid()
+    """Resolve and validate all entity types and legal forms from fact 0124.
+
+    A dated read takes the vocabulary in force on ``effective_date``. Without a
+    date the run date is never substituted: the vocabulary admits every token
+    an edition inside the supported filing years declares.
+    """
     selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
-        return _scoped_entity_vocabulary(coordinate)
+        return _scoped_entity_vocabulary(effective_date)
     with validating_governed_facts(selected):
-        return _scoped_entity_vocabulary(coordinate)
+        return _scoped_entity_vocabulary(effective_date)
 
 
 @cache_governed_projection(maxsize=64)
-def _scoped_entity_vocabulary(effective_date: date) -> EntityVocabulary:
+def _scoped_entity_vocabulary(effective_date: date | None) -> EntityVocabulary:
     """Build the vocabulary once per scoped authority generation and coordinate."""
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     entity_types: list[EntityTypeDefinition] = []
@@ -280,18 +283,6 @@ def entity_type_attribution_entity_token(
     return _entity_type_token("attribution_entity", effective_date=effective_date, authority=authority)
 
 
-def legal_entity_form_sin_fines_lucrativos_token(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> LegalEntityForm:
-    """Return the registry-declared non-profit legal-form token."""
-    return resolve_entity_vocabulary(
-        effective_date=effective_date,
-        authority=authority,
-    ).require_legal_entity_form("sin_fines_lucrativos")
-
-
 __all__ = [
     "EntityTypeDefinition",
     "EntityVocabulary",
@@ -301,7 +292,6 @@ __all__ = [
     "entity_type_natural_person_token",
     "entity_type_tokens",
     "legal_entity_form_choice_description_tokens",
-    "legal_entity_form_sin_fines_lucrativos_token",
     "legal_entity_form_tokens",
     "require_entity_type",
     "require_legal_entity_form",

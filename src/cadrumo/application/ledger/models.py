@@ -17,24 +17,21 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.concepto_capital_mobiliario import ConceptoCapitalMobiliario
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
-
-# CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
-from ...core.external_constants import (
-    CLASSIFIED_BY_MANUAL as CLASSIFIED_BY_MANUAL,
-)
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.filing_year import FilingYear
+from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId, TransactionIdReference
 from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import (
     IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,
@@ -49,8 +46,9 @@ from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
-from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaExemptionArticle
+from ...domain.iva.vehicle_use import IvaVehicleUse
+from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -58,27 +56,25 @@ from ...domain.transactions.lineage_models import (
     TransactionLifecycleLineageEntry,
 )
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.model_validation import validate_business_pct_coupling
+from ...domain.transactions.model_validation import (
+    refusable_figures_of,
+    validate_business_pct_coupling,
+    validate_figures_without_business,
+    validate_iva_rate_is_fraction,
+)
 from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
 )
 from ...domain.transactions.own_accounts import OwnAccountId
+from ...domain.transactions.rental_link import validate_rental_link_category
 from ...domain.transactions.repository import ImportSummary
+from ...domain.transactions.savings_link import validate_savings_link_category
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
-_TRANSFER_ALLOWED_STATES = frozenset(
-    {
-        BusinessClassification.NOT_YET_PROCESSED,
-        BusinessClassification.PERSONAL,
-        BusinessClassification.PROCESSED_UNCLASSIFIED,
-        BusinessClassification.SKIPPED_BY_RULE,
-    },
-)
 
-
-def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
+def validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     """Validate and normalise an ISO 3166-1 alpha-2 field value.
 
     Shared by ``source_jurisdiction`` and ``counterparty_country``, which are
@@ -99,7 +95,7 @@ def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
 
     The shape policy itself is owned by
     :func:`~core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`, shared with
-    :meth:`domain.transactions.models.Transaction._validate_source_jurisdiction`, so
+    :meth:`domain.transactions.models.Transaction.validate_source_jurisdiction`, so
     the application and domain boundaries cannot drift apart on which
     jurisdiction tokens they accept. This wrapper exists only to keep the
     application-layer :class:`ValueError` boundary.
@@ -142,16 +138,16 @@ TypeError from eleven unrelated tests rather than as a message about this field.
 class _LedgerCountryCodeModel(BaseModel):
     """Canonical ISO-country normalization for ledger command and read models."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     @field_validator("source_jurisdiction", "counterparty_country", check_fields=False)
     @classmethod
     @pydantic_validation_boundary
     def _normalise_country_codes(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
+        return validate_iso_3166_jurisdiction(value)
 
 
-class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
+class ManualLedgerTransactionInput(_LedgerCountryCodeModel):
     """Canonical input normalization shared by manual-ledger create and patch DTOs."""
 
     @field_validator("currency", mode="before", check_fields=False)
@@ -201,12 +197,23 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
         return require_input_classification(value)
 
 
-class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
+class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     """Backend command for creating or updating one manual ledger transaction."""
 
     bucket_id: BucketId
     booked_date: date
     value_date: date | None = None
+    #: The LIVA art. 75 devengo date of what this row settles, as the operator
+    #: states it. Absent means the IVA placement falls back to the bank movement
+    #: date and says so. Never derived from a bank date.
+    operation_date: date | None = None
+    #: The LIRPF art. 14 / RIRPF art. 7 date on which this row's income or
+    #: expense accrues for Renta, as the operator states it. Never derived from
+    #: a bank date, an invoice or ``operation_date``. Distinct from
+    #: ``operation_date`` (the LIVA art. 75 IVA devengo) because the two can
+    #: differ: an advance moves IVA at payment while the income accrues on
+    #: delivery. It moves no IVA period.
+    accrual_date: date | None = None
     amount: Decimal
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
@@ -227,6 +234,10 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    #: The Ley 37/1992 art. 20.Uno exemption a DOMESTIC_EXEMPT row falls under, as
+    #: the operator states it. Whether the operation gives the right to deduct
+    #: depends on it, so it is never inferred from the category or the counterparty.
+    exemption_article: IvaExemptionArticle | None = None
     #: Operator-declared M303 deduction source. The taxonomy is documented as
     #: non-inferable, so it is carried from the operator rather than derived
     #: from the category, the direction, or the counterparty country.
@@ -238,8 +249,21 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     #: because the register record is declared separately, after the ledger row
     #: exists, and nothing in the movement itself identifies the asset.
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
+    #: The stored lease an income row of a let property belongs to, by row key.
+    arrendamiento_ref: _LedgerOptionalText = None
+    #: The stored property an expense row belongs to, by row key.
+    inmueble_ref: _LedgerOptionalText = None
+    #: Which kind of property expense the row is; the registry names the casilla it feeds.
+    gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
+    #: The stored savings position an income or expense row belongs to, by row key.
+    posicion_ref: _LedgerOptionalText = None
+    #: What the row is within its position; the registry names the Modelo 100 record it feeds.
+    concepto_capital_mobiliario: ConceptoCapitalMobiliario | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -280,6 +304,38 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _validate_figures_without_business(self) -> Self:
+        """Ask the domain whether this classification takes the business figures the command writes."""
+        validate_figures_without_business(
+            self.business_classification, refusable_figures_of(self.business_classification, self)
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_rental_link_category(self) -> Self:
+        """Ask the domain whether a linked row carries the rental income category."""
+        validate_rental_link_category(
+            arrendamiento_ref=self.arrendamiento_ref,
+            inmueble_ref=self.inmueble_ref,
+            classification=self.business_classification,
+            irpf_category=self.irpf_category,
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_savings_link_category(self) -> Self:
+        """Ask the domain whether a linked row carries the capital-mobiliario income category."""
+        validate_savings_link_category(
+            posicion_ref=self.posicion_ref,
+            classification=self.business_classification,
+            irpf_category=self.irpf_category,
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_direction_policy(self) -> Self:
         if self.amount < Decimal("0"):
             raise TransactionValidationError(
@@ -295,12 +351,24 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
         return self
 
     def _validate_internal_transfer_payload(self) -> None:
-        if self.business_classification not in _TRANSFER_ALLOWED_STATES:
+        if self.business_classification not in TRANSFER_ALLOWED_STATES:
             raise TransactionValidationError(
                 "INTERNAL_TRANSFER rows must not be classified as tax-relevant business rows",
             )
         forbidden = {
             "category_id": self.category_id,
+            "operation_date": self.operation_date,
+            "accrual_date": self.accrual_date,
+            "iva_category": self.iva_category,
+            "exemption_article": self.exemption_article,
+            "deduction_fact_kind": self.deduction_fact_kind,
+            "investment_asset_id": self.investment_asset_id,
+            "iva_vehicle_use": self.iva_vehicle_use,
+            "arrendamiento_ref": self.arrendamiento_ref,
+            "inmueble_ref": self.inmueble_ref,
+            "gasto_capital_inmobiliario": self.gasto_capital_inmobiliario,
+            "posicion_ref": self.posicion_ref,
+            "concepto_capital_mobiliario": self.concepto_capital_mobiliario,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
@@ -321,11 +389,13 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
 
-class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
+class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     """Typed partial update for one bucket-scoped ledger transaction."""
 
     booked_date: date | None = None
     value_date: date | None = None
+    operation_date: date | None = None
+    accrual_date: date | None = None
     amount: Decimal | None = None
     # The create command validates this and the patch did not, so an operator
     # could not CREATE a row with a malformed currency but could EDIT one into
@@ -349,13 +419,28 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] | None = None
     notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
+    exemption_article: IvaExemptionArticle | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
+    arrendamiento_ref: _LedgerOptionalText = None
+    inmueble_ref: _LedgerOptionalText = None
+    gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
+    posicion_ref: _LedgerOptionalText = None
+    concepto_capital_mobiliario: ConceptoCapitalMobiliario | None = None
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
     own_account_id: OwnAccountId | None = None
+
+    @field_validator("iva_rate")
+    @classmethod
+    @pydantic_validation_boundary
+    def _iva_rate_is_a_fraction(cls, value: Decimal | None) -> Decimal | None:
+        return validate_iva_rate_is_fraction(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -376,7 +461,7 @@ class ManualLedgerTransactionResult(BaseModel):
     caller to project into an operator notice, never a refusal.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     ref: BucketTransactionRef
     transaction: Transaction
@@ -384,7 +469,7 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
-IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
+IsoDateText = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 """A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
 
 DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]
@@ -404,30 +489,47 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     date: IsoDateText
     booked_date: IsoDateText
     value_date: str | None = None
+    operation_date: str | None = None
+    accrual_date: str | None = None
     amount: str = Field(min_length=1)
     currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
+    # The reference the bank statement printed for the movement; None when it printed none.
+    statement_reference: str | None = None
     business_classification: str = Field(min_length=1)
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
+    deduction_fact_kind: str | None = None
+    investment_asset_id: str | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: str | None = None
     irpf_category: str | None = None
     m210_income_classification: M210IncomeClassification | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    # The rental links the row stores: the stable key of the lease an income row belongs to, or of the
+    # property an expense row belongs to with the expense concept token it is routed by. Never row indexes.
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
+    # Whose decision the classification is, as opposed to ``classified_by``, the last write's stamp: a
+    # derivation of the IVA figures restamps the row without deciding anything.
+    classification_decided_by: str = Field(min_length=1)
+    # True when Cadrumo's derivation last wrote the row's base, rate and IVA.
+    figures_derived: bool
     # Decision-provenance fields: the "why" behind the active
     # classification decision, surfaced alongside `classified_by` so an
     # operator can answer "why was this classified as X" from one read.
@@ -460,7 +562,7 @@ class LedgerTransactionReviewPayload(LedgerTransactionPayload):
 class LedgerTransactionResultPayload(BaseModel):
     """Canonical projection for a single ledger mutation/read result."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -471,7 +573,7 @@ class LedgerTransactionResultPayload(BaseModel):
 class LedgerTransactionTrackingPayload(BaseModel):
     """Durable event lineage fields for one ledger transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     # Imported transactions carry no creation bucket-event id (it is set only
@@ -500,7 +602,7 @@ class SplitChildCommand(BaseModel):
             ``value_date``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal
     description: str = Field(min_length=1, max_length=1024)
@@ -530,7 +632,7 @@ class SplitChildCommand(BaseModel):
 class SplitTransactionResult(BaseModel):
     """Backend result of a successful N-way split."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     parent_transaction_id: TransactionId
@@ -544,7 +646,7 @@ class SplitTransactionResult(BaseModel):
 class MergeTransactionsResult(BaseModel):
     """Backend result of a successful split re-merge."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     split_group_id: Hex64Str
@@ -559,7 +661,7 @@ class MergeTransactionsResult(BaseModel):
 class LedgerImportOperationResult(BaseModel):
     """Backend result for an imported ledger transaction batch."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     summary: ImportSummary
     import_batch_id: Hex64Str | None = None
@@ -569,7 +671,7 @@ class LedgerImportOperationResult(BaseModel):
 class LedgerSourceValidationReport(BaseModel):
     """Backend read model for source-provider validation details."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     valid: bool
     warnings: tuple[str, ...] = ()
@@ -580,7 +682,7 @@ class LedgerSourceValidationReport(BaseModel):
 class LedgerSourceVerificationReport(BaseModel):
     """Backend read model for optional source-file verification."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     requested: bool
     path: str | None = None
@@ -590,7 +692,7 @@ class LedgerSourceVerificationReport(BaseModel):
 class LedgerImportDiagnosticReport(BaseModel):
     """Backend read model for one persisted or dry-run import diagnostic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: DiagnosticKind
     severity: DiagnosticSeverity
@@ -603,7 +705,7 @@ class LedgerImportDiagnosticReport(BaseModel):
 class LedgerSourceImportCommand(BaseModel):
     """Backend command for importing ledger rows from an operator source file."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId | None = Field(default=None)
     path: Path
@@ -631,7 +733,7 @@ class LedgerSourceImportCommand(BaseModel):
 class LedgerSourceImportResult(BaseModel):
     """Backend result for source-file import diagnostics and persistence."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: NonNegativeInt
     imported: NonNegativeInt
@@ -662,7 +764,7 @@ class LedgerSourceImportResult(BaseModel):
 class LedgerReviewQuery(BaseModel):
     """Backend query for operator review rows in one bucket ledger."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     period: Period | None = None
@@ -704,7 +806,7 @@ class LedgerReviewRow(BaseModel):
     the row, so an id that is the right length but not a digest names nothing.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: TransactionId
     date: IsoDateText
@@ -717,7 +819,7 @@ class LedgerReviewRow(BaseModel):
 class LedgerReviewQueryResult(BaseModel):
     """Backend result for operator ledger review queries."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     rows: tuple[LedgerReviewRow, ...]
@@ -727,7 +829,7 @@ class LedgerReviewQueryResult(BaseModel):
 class LedgerStatusReport(BaseModel):
     """Backend read model summarizing one bucket's ledger transaction state."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     # Money roll-up over active business/mixed rows (period-scoped when --period
@@ -759,7 +861,7 @@ class LedgerStatusReport(BaseModel):
 class LedgerRemovalBlocker(BaseModel):
     """Finalized modelo revision that prevents ledger transaction removal."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
@@ -772,7 +874,7 @@ class LedgerRemovalBlocker(BaseModel):
 class LedgerTransactionRemovalReport(BaseModel):
     """Backend report for one bucket-local ledger transaction removal."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -794,7 +896,7 @@ class LedgerTransactionRemovalReport(BaseModel):
 class LedgerCatalogueResetReport(BaseModel):
     """Backend report for a protected bucket-local ledger catalogue reset."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     removed_transaction_ids: tuple[str, ...] = ()
@@ -816,7 +918,7 @@ class LedgerCatalogueResetReport(BaseModel):
 class LedgerExportCommand(BaseModel):
     """Backend command for exporting one bucket's canonical ledger rows."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
@@ -846,7 +948,9 @@ class BulkClassifyRow(BaseModel):
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
     ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
-    ``irpf_category``, ``notes``. Blank optional cells preserve existing values.
+    ``irpf_category``, ``arrendamiento_ref``, ``inmueble_ref``,
+    ``gasto_capital_inmobiliario``, ``posicion_ref``, ``concepto_capital_mobiliario``,
+    ``notes``. Blank optional cells preserve existing values.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -854,7 +958,7 @@ class BulkClassifyRow(BaseModel):
     silently.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     #: What the operator typed, not a resolved id. A CSV names rows the way a
     #: terminal does -- by the short display id ``ledger list`` prints -- and
@@ -872,12 +976,17 @@ class BulkClassifyRow(BaseModel):
     iva_amount: Decimal | None = None
     iva_category: IvaCategory | None = None
     irpf_category: str | None = None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
+    posicion_ref: str | None = None
+    concepto_capital_mobiliario: str | None = None
 
 
 class BulkClassifyFailure(BaseModel):
     """One failed row from a ``ledger classify --file`` operation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     row_index: NonNegativeInt
     transaction_id: str
@@ -892,7 +1001,7 @@ class BulkClassifyResult(BaseModel):
     collected into ``failures`` and reported without aborting the batch.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     total: NonNegativeInt
     applied: NonNegativeInt
@@ -913,6 +1022,11 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "iva_amount",
         "iva_category",
         "irpf_category",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     },
 )
@@ -921,7 +1035,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
 class ApplyRulesAppliedRow(BaseModel):
     """One successfully rule-applied transaction from ``ledger rule apply``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     matched_rule_id: str = Field(min_length=1)
@@ -931,7 +1045,7 @@ class ApplyRulesAppliedRow(BaseModel):
 class ApplyRulesResult(BaseModel):
     """Aggregate result for a ``ledger rule apply`` operation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rules_evaluated: NonNegativeInt
     transactions_scanned: NonNegativeInt
@@ -945,7 +1059,7 @@ class ApplyRulesResult(BaseModel):
 class LedgerExportRow(BaseModel):
     """One serialized ledger transaction row exported from the canonical catalogue."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -953,6 +1067,8 @@ class LedgerExportRow(BaseModel):
     invoice_id: str = ""
     booked_date: IsoDateText
     value_date: str = ""
+    operation_date: str = ""
+    accrual_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
@@ -998,7 +1114,7 @@ class LedgerExportRow(BaseModel):
             raise ValueError("must be an ISO-8601 date")
         return value
 
-    @field_validator("value_date")
+    @field_validator("value_date", "operation_date", "accrual_date")
     @classmethod
     @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:
@@ -1028,7 +1144,7 @@ class LedgerExportRow(BaseModel):
 class LedgerExportResult(BaseModel):
     """Backend result for an exported canonical ledger transaction snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     export_id: Hex64Str

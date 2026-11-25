@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -19,13 +18,14 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_common import blocking_modelo_references
-from cadrumo.application.ledger.actions_manual import ledger_transaction_result_payload
 from cadrumo.application.ledger.attachment_mutation_operation import LedgerAttachmentStaleRevisionProjection
+from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
+from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.decimal.formatting import format_decimal
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import (
@@ -47,7 +47,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
+from .profile_cli_support import NATIVE_CLI_LANGUAGE, invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -56,44 +57,9 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Attachment",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
+_PROFILE_FACTS = native_general_iva_facts()
 _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    """Invoke one installed CLI command with the real test-profile secret."""
-    assert profile.label is not None
-    close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
-            (
-                "--language",
-                "en",
-                "--format",
-                "json",
-                "--profile",
-                profile.label,
-                "--profile-secrets-stdin",
-                *command,
-            ),
-            input=json.dumps({"profile_passphrase": profile.passphrase}),
-        )
-    assert profile.passphrase not in result.output
-    return result
 
 
 def _reauthenticate(
@@ -132,6 +98,10 @@ def _expected_result(
     payload = {
         **canonical.model_dump(mode="json"),
         "bucket_event_ids": list(event_ids),
+        # The result names the link fields in the language the command ran in, as ledger view does.
+        "transaction": LedgerTransactionProjection.from_payload(
+            canonical.transaction, language=OutputLanguage(NATIVE_CLI_LANGUAGE)
+        ).model_dump(mode="json"),
     }
     if result_type is LedgerAttachResult:
         result = LedgerAttachResult.model_validate(payload)
@@ -309,7 +279,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
         history_before_attach = ports.bucket_event_repository.load()
         close_active_bucket_session()
 
-        attached = _invoke(
+        attached = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",
@@ -363,7 +333,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
         assert linked_manifest != manifest_before
 
         close_active_bucket_session()
-        detached = _invoke(
+        detached = invoke_native_profile_revealing(
             profile,
             "app",
             "ledger",

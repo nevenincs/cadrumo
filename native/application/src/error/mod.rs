@@ -1,5 +1,6 @@
 pub mod application;
 
+use crate::provisioning::failure::TransferFailure;
 use std::{fmt, io};
 
 #[derive(Debug)]
@@ -13,7 +14,8 @@ pub enum Error {
     Busy,
     Cancelled,
     LimitExceeded,
-    Download,
+    /// A component download failed with this closed category.
+    Download(TransferFailure),
     TimedOut,
     ProbeFailed,
 }
@@ -30,7 +32,7 @@ impl fmt::Display for Error {
             Self::Busy => f.write_str("another component writer is active"),
             Self::Cancelled => f.write_str("provisioning cancelled"),
             Self::LimitExceeded => f.write_str("component resource limit exceeded"),
-            Self::Download => f.write_str("component download failed"),
+            Self::Download(failure) => write!(f, "component download failed: {failure}"),
             Self::TimedOut => f.write_str("interpreter probe timed out"),
             Self::ProbeFailed => f.write_str("interpreter probe failed"),
         }

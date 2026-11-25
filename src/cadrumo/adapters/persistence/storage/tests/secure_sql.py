@@ -5,14 +5,14 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 from uuid import UUID
 
 import pytest
-from sqlalchemy import Engine, Select
+from sqlalchemy import Engine, Select, event, update
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
@@ -20,9 +20,9 @@ from .....application.user_profile.profile_record_repository import close_active
 from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
-from .....core.storage_taxonomy import StorageCategory
+from .....core.logging import detach_diagnostic_files
+from .....core.storage_environment import STORAGE_ROOT
 from .....tests.env_scope import scoped_env_var
-from .....tests.storage_scope import storage_overrides
 from ..bucket.directory_layout import BucketPaths
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
@@ -36,9 +36,9 @@ from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime import StorageRuntime, inspect_storage_runtime
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import create_engine_from_settings, dispose_engine
-from ..sql.orm import Base, SecureObjectRow
 from ..sql.secure_objects import SecureObjectRepository
 from ..sql.session import session_scope
+from ..sql.tables import metadata, secure_objects_table
 from ..storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from .ephemeral_bucket_session import EphemeralBucketSession
 from .profile_capsule_runtime import provision_test_profile_bucket_session
@@ -46,6 +46,84 @@ from .profile_capsule_runtime import provision_test_profile_bucket_session
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
+
+def is_secure_object_select(statement: str) -> bool:
+    """Return whether one cursor statement reads the encrypted singleton table."""
+    normalized = " ".join(statement.split()).upper()
+    return normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} "
+
+
+@contextmanager
+def secure_object_select_log(engine: Engine) -> Generator[list[str]]:
+    """Observe live encrypted-SQL singleton reads without replacing a repository."""
+    selects: list[str] = []
+
+    def _record(
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        if is_secure_object_select(statement):
+            selects.append(statement)
+
+    event.listen(engine, "before_cursor_execute", _record)
+    try:
+        yield selects
+    finally:
+        event.remove(engine, "before_cursor_execute", _record)
+
+
+@dataclass
+class SingletonReadInterleave:
+    """What one interleaved singleton read observed."""
+
+    selects: list[str] = field(default_factory=list)
+    fired: bool = False
+
+
+@contextmanager
+def interleave_write_after_first_singleton_select(
+    engine: Engine, write: Callable[[], object]
+) -> Generator[SingletonReadInterleave]:
+    """Run ``write`` once, right after the first encrypted singleton read completes.
+
+    The write's own reads are not counted, so a caller can assert that the
+    observed load issued exactly one SELECT while a concurrent writer landed
+    between its read and its return.
+    """
+    state = SingletonReadInterleave()
+    writing = False
+
+    def _interleave(
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        nonlocal writing
+        if not is_secure_object_select(statement) or writing:
+            return
+        state.selects.append(statement)
+        if state.fired:
+            return
+        state.fired = True
+        writing = True
+        try:
+            write()
+        finally:
+            writing = False
+
+    event.listen(engine, "after_cursor_execute", _interleave)
+    try:
+        yield state
+    finally:
+        event.remove(engine, "after_cursor_execute", _interleave)
 
 
 def reap_profile_session_keys(storage_root: Path) -> None:
@@ -136,7 +214,7 @@ def read_db_at_rest_bytes(db_path: Path) -> bytes:
 def mutate_encrypted_secure_object_json(
     engine: Engine,
     *,
-    row_statement: Select[SecureObjectRow],
+    row_statement: Select[Any],
     mutate: Callable[[dict[str, Any]], None],
 ) -> None:
     """Mutate one real secure-object JSON document while preserving its AEAD binding.
@@ -148,7 +226,7 @@ def mutate_encrypted_secure_object_json(
     decoded JSON document, and re-encrypt it under that unchanged binding.
     """
     with session_scope(engine) as session:
-        row = session.execute(row_statement).scalar_one()
+        row = session.execute(row_statement).one()
         associated_data = secure_object_payload_aad(
             row.namespace,
             bytes(row.object_key),
@@ -162,9 +240,53 @@ def mutate_encrypted_secure_object_json(
         )
         assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
         mutate(document)
-        row.payload = encrypt_secure_object_payload(
-            json.dumps(document).encode("utf-8"),
-            associated_data=associated_data,
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(
+                payload=encrypt_secure_object_payload(
+                    json.dumps(document).encode("utf-8"),
+                    associated_data=associated_data,
+                ),
+            ),
+        )
+
+
+def restamp_secure_object_schema_version(
+    engine: Engine,
+    *,
+    row_statement: Select[Any],
+    schema_version: int,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    """Rewrite one real secure-object row as if an earlier or later build had written it.
+
+    Decrypts under the stored identity-bound associated data, applies the
+    caller's document mutation, then re-encrypts under associated data bound to
+    ``schema_version`` and stamps the row column with it. The result is a row
+    the current build cannot have written, produced without bypassing the AEAD.
+    """
+    with session_scope(engine) as session:
+        row = session.execute(row_statement).one()
+        object_key = bytes(row.object_key)
+        document = json.loads(
+            decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=secure_object_payload_aad(row.namespace, object_key, row.schema_version),
+            ).decode("utf-8"),
+        )
+        assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
+        mutate(document)
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(
+                payload=encrypt_secure_object_payload(
+                    json.dumps(document).encode("utf-8"),
+                    associated_data=secure_object_payload_aad(row.namespace, object_key, schema_version),
+                ),
+                schema_version=schema_version,
+            ),
         )
 
 
@@ -219,7 +341,7 @@ def isolated_injected_secure_object_repository(
 
     settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / database_name).as_posix()}")
     engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
+    metadata.create_all(engine)
     try:
         yield SecureObjectRepository(
             engine=engine,
@@ -264,7 +386,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Generator[Path]:
     """
 
     storage_root = tmp_path / "cadrumo-storage"
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield storage_root
@@ -279,7 +401,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
 
     Unlike :func:`isolated_sessionless_storage_root` (which nests the root
     under ``tmp_path / "cadrumo-storage"``), this fixture points
-    ``cadrumo_local_storage_root`` directly at ``tmp_path`` — the shape a
+    ``cadrumo_storage_root`` directly at ``tmp_path`` — the shape a
     cluster of lower-level repository and runtime test modules already relied
     on before this fixture was promoted as their single canonical source.
     Several of those modules also write ancillary fixture bytes (e.g. a
@@ -295,7 +417,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
         from ....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage
     """
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -318,21 +440,19 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     resolve a working credential. It no longer selects a process-wide key
     store: the shared-master backends are deleted, and the key a bucket
     opens under is its own, minted per profile by the custody package.
+
+    A diagnostic log file the process bound inside the root is detached as the
+    root ends, so nothing writes into the tree or holds it open afterwards: a
+    caller may seal, digest or rename it at once.
     """
 
     tmp_path.mkdir(parents=True, exist_ok=True)
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
-    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
-    for dependency in secret_overrides.values():
-        dependency.mkdir(parents=True, exist_ok=True)
-    socket_overrides = storage_overrides(storage_root, StorageCategory.CONNECTION_SOCKETS)
-    socket_field, socket_path = next(iter(socket_overrides.items()))
-    socket_path.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (
-        scoped_env_var(socket_field.upper(), str(socket_path)),
+        scoped_env_var(STORAGE_ROOT.variable, str(storage_root)),
         override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_active_profile=None,
             cadrumo_secret_passphrase=passphrase,
             # Enrolment calibrates the KDF grid by MEASURING real supervised
@@ -344,11 +464,6 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
             # band's floor, so the wrap does not weaken and every derivation is
             # still a real Argon2id through the same supervised worker.
             cadrumo_profile_kdf_measure_calibration=False,
-            # Anchored on ``tmp_path``, not on the storage root, so the secret
-            # substrate stays a sibling of the bucket tree rather than nesting
-            # inside it -- the production custody split.
-            **secret_overrides,
-            **socket_overrides,
         ) as settings,
     ):
         dispose_engine(settings)
@@ -357,6 +472,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
         finally:
             reap_profile_session_keys(storage_root)
             dispose_engine(settings)
+            detach_diagnostic_files(storage_root)
 
 
 def default_test_profile_label(bucket_id: str) -> str:
@@ -410,15 +526,8 @@ def isolated_runtime_profile(
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
-    # A relocated secrets directory is an operator-selected override, which the
-    # storage tree refuses to create on the operator's behalf; this helper is
-    # that operator, so it creates the location it declares.
-    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
-    for location in secret_overrides.values():
-        location.mkdir(parents=True, exist_ok=True)
-
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
@@ -427,7 +536,6 @@ def isolated_runtime_profile(
         # floor, so no wrap weakens and the derivation stays real.
         cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
-        **secret_overrides,
     ) as settings:
         dispose_engine(settings)
         session, paths = provision_test_profile_bucket_session(
@@ -529,7 +637,7 @@ def isolated_two_bucket_runtime(
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
@@ -538,10 +646,6 @@ def isolated_two_bucket_runtime(
         # floor, so no wrap weakens and the derivation stays real.
         cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
-        # One secret substrate for both buckets: the production shape is many
-        # buckets under one root sharing one master key, each with its own
-        # wrapped DEK.
-        **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
         primary_session, primary_paths = provision_test_profile_bucket_session(
@@ -604,48 +708,12 @@ def isolated_cli_runtime_profile(
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str | None = None,
 ) -> Generator[TestRuntimeProfile]:
-    """Create a real runtime profile with CLI-adjacent directories isolated.
-
-    CLI work-unit tests need the active bucket database plus the
-    filesystem directories read from settings for runs, drafts, tokens,
-    financial transactions, and invoices. Keep that setup on the central
-    settings surface instead of per-test environment mutation.
-
-    The five are named by category, so the settings field and the leaf
-    directory both come from the taxonomy. Spelled by hand, they had already
-    drifted: this block pinned ``cadrumo_financial_txs_dir`` to ``txs`` while
-    the declared subpath is ``financial/transactions``, and nothing caught it,
-    because a fixture that only round-trips its own override agrees with any
-    name it is given.
-    """
-
-    overrides = storage_overrides(
-        tmp_path,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.TOKENS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    )
-    # Each is an operator-selected override, which the storage tree refuses to
-    # create on the operator's behalf; this helper is that operator, so it
-    # creates every location it declares, as isolated_runtime_profile does.
-    for location in overrides.values():
-        location.mkdir(parents=True, exist_ok=True)
-
-    with (
-        override_settings(**overrides),
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id=bucket_id,
-            label=label if label is not None else default_test_profile_label(bucket_id),
-        ) as profile,
-    ):
-        # The active session opened by ``isolated_runtime_profile`` already
-        # owns a valid engine for this bucket; disposing it here would strand
-        # the session's registered handle. The added directory overrides do
-        # not change the database route, so the engine stays valid for the
-        # CLI test and is disposed on the session's close.
+    """Create a real runtime profile with every storage member beneath its root."""
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=bucket_id,
+        label=label if label is not None else default_test_profile_label(bucket_id),
+    ) as profile:
         yield profile
 
 
@@ -665,7 +733,7 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     run end to end, which is what most CLI-driven scenarios need.
 
     Every generated-output directory settings field derives its default from
-    ``cadrumo_local_storage_root`` (every root-derived member of
+    ``cadrumo_storage_root`` (every root-derived member of
     :data:`~core.STORAGE_TAXONOMY`), so isolating the root through
     :func:`isolated_profile_storage_root` alone relocates the whole family —
     tokens, drafts, runs, financial catalogues, and every sibling directory —
@@ -679,13 +747,12 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     Import it directly into a test module rather than re-declaring the
     override block locally, e.g.::
 
-        from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+        from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 
-    The re-bound name still carries ``autouse=True`` in the importing module
+    The imported name still carries ``autouse=True`` in the importing module
     because pytest resolves fixtures by the name bound in the requesting
     module's namespace, not by the module that originally defined the
-    function; this is the same pattern the entrypoints CLI test suite
-    already uses for its intra-package ``_isolated_cli_backend`` re-export.
+    function.
     A caller that wants the storage-root isolation WITHOUT autouse should
     call :func:`isolated_profile_storage_root` directly instead of importing
     this fixture — pytest does not support re-decorating an already-wrapped

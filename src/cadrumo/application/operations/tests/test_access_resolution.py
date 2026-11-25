@@ -18,6 +18,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..access_resolution import (
@@ -37,7 +38,6 @@ from ..access_resolution import (
     with_commit_action,
 )
 from ..frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..registry import OperationFrontendProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

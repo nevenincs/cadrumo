@@ -48,6 +48,8 @@ tomorrow.
 
 from __future__ import annotations
 
+from functools import cache
+
 # Development-only record-design corpus gate.
 from pathlib import Path
 
@@ -65,6 +67,7 @@ from ..compiler.record_design import extract_record_design
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 

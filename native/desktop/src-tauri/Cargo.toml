@@ -2,10 +2,13 @@
 name = "cadrumo-desktop"
 version = "0.0.0"
 edition = "2024"
+rust-version = "1.96"
 publish = false
 
 [features]
 live-package-tests = []
+# Only the isolated packaged test host enables a loopback WebDriver server.
+native-automation = ["dep:tauri-plugin-wdio-webdriver"]
 # Only for the packaged end-to-end test build: admits a single
 # --remote-debugging-port argument in WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
 # Never enabled for a distributed build.
@@ -20,22 +23,24 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
-cadrumo-application = { path = "../../application" }
+cadrumo-application = { path = "../../application", features = ["platform"] }
 cadrumo-platform = { path = "../../platform" }
 portable-pty = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+log = { version = "0.4", features = ["std"] }
 ctrlc = "3"
-getrandom = "0.3"
+getrandom = "0.4"
 zeroize = "1"
 tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros", "sync"] }
 # Rust APIs only: the shell reaches them through token-checked app commands
 # and grants the webview no plugin command.
-tauri-plugin-clipboard-manager = "2.4.1"
+tauri-plugin-clipboard-manager = "2.5"
 # The agent column's file picker, opened by the host for the files it uploads.
 tauri-plugin-dialog = "2"
+tauri-plugin-wdio-webdriver = { version = "=1.5.1", optional = true }
 # The digest an upload is sent with; already in the graph.
-sha2 = "0.10"
+sha2 = "0.11"
 opener = "0.9"
 # The agent host's loopback gateway client; already in the graph through
 # cadrumo-application.
@@ -43,16 +48,47 @@ ureq = { version = "3", default-features = false }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+# The instance-lock tests claim in a namespace of their own, never the account's.
+cadrumo-platform = { path = "../../platform", features = ["test-support"] }
+# The setup host's tests drive a real engine against the local servers the engine's own
+# tests use, and every test that reads the diagnostic log waits for its writer through the
+# helper the same feature exposes.
+cadrumo-application = { path = "../../application", features = ["platform", "test-support"] }
 tokio = { version = "1", features = ["test-util"] }
+# The schema of the conversation answers the host composes, which the window's
+# generated types are written from; already in the graph without its derive.
+schemars = { version = "1.2.3", default-features = false, features = ["derive", "std"] }
 
 [target.'cfg(windows)'.dependencies]
 cadrumo-manager = { path = "../../manager" }
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 cadrumo-installer = { path = "../../installer" }
+
+[target.'cfg(unix)'.dependencies]
+# A termination request ends the window through the same close as a quit.
+tokio = { version = "1", features = ["signal"] }
+
+[target.'cfg(any(windows, unix))'.dependencies]
+# Every role the binary runs is hosted by the platform's linked interpreter host.
 cadrumo-interpreter-host = { path = "../../interpreter_host" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# The graphical login session the window and its instance lock belong to,
+# admitted as the manager admits its own process.
+cadrumo-manager = { path = "../../manager" }
+# The Dock icon the desktop sets for itself.
+cadrumo-platform = { path = "../../platform", features = ["appkit"] }
+# The alert a launch that ends before any window shows, as a native modal panel.
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSAlert", "NSApplication", "NSResponder", "NSButton", "NSControl", "NSView", "objc2-core-foundation"] }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString"] }
 
 [lints.rust]
 unsafe_code = "forbid"
+
+# Wry 0.57.1 applies the top-level navigation policy to WKWebView subframes.
+# Keep the fix in the reproducible build until an upstream release includes it.
+[patch.crates-io]
+wry = { path = "../../vendor/wry" }
 
 [lints.clippy]
 all = "deny"

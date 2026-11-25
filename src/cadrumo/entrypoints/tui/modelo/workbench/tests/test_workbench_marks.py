@@ -13,8 +13,16 @@ from typing import Final, override
 import pytest
 from textual.app import App, ComposeResult
 
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
+    ORIGIN_STANDINGS,
     ModeloFormBlocker,
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -22,21 +30,21 @@ from ......application.modelo.work_form_models import (
     ModeloFormGridCell,
     ModeloFormGridColumn,
     ModeloFormGridRow,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
+    revised_field,
 )
+from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem
-from ..header import ChipLevel, attention_chips
+from ..header import attention_chips
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import (
     WorkbenchPage,
@@ -54,11 +62,8 @@ from ..vocabulary import (
     HERE_MARK,
     MISSING_MARK,
     ORIGIN_MARKS,
-    ORIGIN_STANDINGS,
     WORKBENCH_MARKS,
-    Standing,
     WorkbenchMark,
-    origin_words,
     require_one_meaning_per_glyph,
 )
 from .workbench_fixture import form_field, synthetic_form
@@ -70,12 +75,12 @@ def test_the_shipped_marks_give_each_glyph_one_meaning_and_each_meaning_one_glyp
     require_one_meaning_per_glyph(WORKBENCH_MARKS)
 
     # A glyph repeats across surfaces only as the same meaning: the row's blocker is the stepper's.
-    assert BLOCKS_MARK.translation_key == "tui.modelo.workbench.level.blocks"
+    assert BLOCKS_MARK.translation_key == "workspace.modelo.level.blocks"
     # The marks that used to mean two things now mean one.
     by_glyph = {mark.glyph: mark.translation_key for mark in WORKBENCH_MARKS}
-    assert by_glyph["●"] == "tui.modelo.workbench.origin.entered"
-    assert by_glyph["○"] == "tui.modelo.workbench.origin.optional_empty"
-    assert by_glyph["!"] == "tui.modelo.workbench.origin.needs_input"
+    assert by_glyph["●"] == "workspace.modelo.origin.entered"
+    assert by_glyph["○"] == "workspace.modelo.origin.optional_empty"
+    assert by_glyph["!"] == "workspace.modelo.origin.needs_input"
     assert HERE_MARK.glyph == "▸"
     assert CHECK_MARK.glyph == "◆"
 
@@ -88,7 +93,7 @@ def test_every_mark_has_words_in_every_language() -> None:
 
 def test_a_glyph_given_a_second_meaning_is_refused() -> None:
     entered = ORIGIN_MARKS[ModeloFormOrigin.ENTERED]
-    current_step = WorkbenchMark(entered.glyph, translation_key="tui.modelo.workbench.legend.name.here")
+    current_step = WorkbenchMark(entered.glyph, translation_key="workspace.modelo.legend.name.here")
 
     with pytest.raises(ValueError, match="means more than one thing"):
         require_one_meaning_per_glyph((*WORKBENCH_MARKS, current_step))
@@ -121,7 +126,10 @@ def _section(*fields: ModeloFormField) -> ModeloFormSection:
             default_to_confirm=sum(1 for item in fields if item.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM),
             not_applicable=0,
             blocked=sum(1 for item in fields if item.blockers),
+            needs_you=sum(1 for item in fields if item.standing is ModeloFormStanding.NEEDS_YOU),
+            could_not_calculate=sum(1 for item in fields if item.origin is ModeloFormOrigin.CALCULATION_FAILED),
         ),
+        applies=True,
     )
 
 
@@ -129,8 +137,9 @@ def test_a_section_shows_the_most_severe_thing_it_still_holds() -> None:
     entered = form_field("01", "Income", ModeloFormOrigin.ENTERED, Decimal("1"))
     assumed = form_field("02", "Expenses", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("0"))
     missing = form_field("03", "Withholdings", ModeloFormOrigin.NEEDS_INPUT)
-    blocked = form_field("04", "Payments", ModeloFormOrigin.ENTERED, Decimal("2")).model_copy(
-        update={"blockers": (ModeloFormBlocker(code="synthetic_blocker"),)}
+    blocked = revised_field(
+        form_field("04", "Payments", ModeloFormOrigin.ENTERED, Decimal("2")),
+        blockers=(ModeloFormBlocker(code="synthetic_blocker"),),
     )
 
     assert section_mark(_section(entered)) == DONE_MARK
@@ -262,7 +271,7 @@ async def test_the_navigator_the_list_a_grid_row_n_and_the_header_class_every_or
         chips = {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
         app = _GridHarness(page_items(grid_page, staged={}))
         async with app.run_test(size=(120, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             drawn = [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -282,12 +291,12 @@ async def test_the_navigator_the_list_a_grid_row_n_and_the_header_class_every_or
         assert row_line[1] == (" " if expected == DONE_MARK.glyph else expected), origin
         # "Needs your input" is only ever a missing value, and done never sits over a value not imported or calculated.
         assert (expected == MISSING_MARK.glyph) is (origin is ModeloFormOrigin.NEEDS_INPUT)
-        assert (expected == DONE_MARK.glyph) is (ORIGIN_STANDINGS[origin] is Standing.DONE)
+        assert (expected == DONE_MARK.glyph) is (ORIGIN_STANDINGS[origin] is ModeloFormStanding.DONE)
         # Only what the filer can act on counts as to do in the heading, and is where n goes.
         needs_you = origin in _ACTIONABLE
-        assert (ORIGIN_STANDINGS[origin] is Standing.NEEDS_YOU) is needs_you, origin
+        assert (ORIGIN_STANDINGS[origin] is ModeloFormStanding.NEEDS_YOU) is needs_you, origin
         assert entries[origin].needs_filer is needs_you, origin
         assert ("to do: 1" in heading.text) is needs_you, heading.text
     # The page reads as not done, and the header counts exactly what the list and the navigator call missing and assumed.
     assert DONE_MARK.glyph not in navigator[0].prompt.plain
-    assert chips == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
+    assert chips == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 1}

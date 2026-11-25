@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -26,10 +28,21 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
+from .bulk_import import (
+    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+    BulkInvoiceImportSource,
+    import_invoices_from_rows,
+    read_bulk_invoice_import_source,
+)
+from .bulk_import_columns import BULK_IMPORT_FIELD_BY_ROLE
 from .catalogue_intake_contracts import (
+    INVOICE_IMPORT_HEADER_MAX_CHARS,
+    INVOICE_IMPORT_MAX_COLUMNS,
     INVOICE_INTAKE_REQUEST_TYPES,
+    InvoiceImportAssignableRole,
+    InvoiceImportColumn,
     InvoiceImportProjection,
     InvoiceImportRequest,
     InvoiceImportRowFailure,
@@ -48,9 +61,9 @@ from .catalogue_intake_refusal import (
     InvoiceWizardFieldsValidationError,
     InvoiceWizardValidationRefusalProjection,
 )
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from .creation_wizard import create_invoice_via_wizard
-from .source_resolver import iva_category_for_operation_type
+from .source_observations import iva_category_for_operation_type
 
 _PERSON_FRONTEND_ACTOR = "cli"
 """The audit label of an invoice a person's frontend enters; an automation's is derived from its session."""
@@ -170,8 +183,14 @@ class _InvoiceIntakeRun:
         if not isinstance(self.payload, InvoiceImportRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         source = read_bulk_invoice_import_source(
-            Path(self.payload.source_path), mapper=ports.mapper, expected_sha256=self.payload.source_sha256
+            Path(self.payload.source_path),
+            mapper=ports.mapper,
+            expected_sha256=self.payload.source_sha256,
+            operator_roles=self.payload.operator_roles,
+            preview=self.payload.preview,
         )
+        if self.payload.preview:
+            return _import_preview(self.payload.profile_id, source, mapping_reasons=ports.mapping_reasons())
         outcome = import_invoices_from_rows(
             source,
             bucket_id=str(self.payload.profile_id),
@@ -205,7 +224,11 @@ class _InvoiceIntakeRun:
         if not isinstance(self.payload, InvoiceWizardRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         category = _resolve_wizard_category(self.payload, operation)
-        category = category or iva_category_for_operation_type(self.payload.operation_type)
+        if category is None and self.payload.operation_type is not None:
+            category = iva_category_for_operation_type(
+                self.payload.operation_type, effective_date=_wizard_governing_date(self.payload)
+            )
+        creation = ports.creation()
         outcome = create_invoice_via_wizard(
             bucket_id=str(self.payload.profile_id),
             kind=self.payload.kind,
@@ -226,17 +249,75 @@ class _InvoiceIntakeRun:
             invoice_class=self.payload.invoice_class,
             series=self.payload.series,
             rectifies_invoice_number=self.payload.rectifies_invoice_number,
+            rectification_method=self.payload.rectification_method,
+            rectification_cause=self.payload.rectification_cause,
+            rectification_direction=self.payload.rectification_direction,
+            document_received_on=self.payload.document_received_on,
+            issuer_increase_election=self.payload.issuer_increase_election,
+            issuer_minoracion_election=self.payload.issuer_minoracion_election,
+            issuer_minoracion_regularisation_period=self.payload.issuer_minoracion_regularisation_period,
+            recipient_increase_period=self.payload.recipient_increase_period,
+            exercised_deduction_period=self.payload.exercised_deduction_period,
+            art_80_tres_obligations_attested=self.payload.art_80_tres_obligations_attested,
             recargo_amount=self.payload.recargo_amount,
-            ports=ports.creation(),
+            ports=creation,
             operation=operation,
             actor=self.wizard_actor,
         )
         return InvoiceWizardProjection(
             profile_id=self.payload.profile_id,
-            invoice=CatalogueInvoiceSnapshot.from_invoice(outcome.invoice),
+            invoice=CatalogueInvoiceSnapshot.from_invoice(
+                outcome.invoice, documents=InvoiceDocumentIndex.read(creation.documents)
+            ),
             already_existed=outcome.already_existed,
             euro_value_pending=outcome.invoice.euro_value_pending,
         )
+
+
+def _import_preview(
+    profile_id: UUID, source: BulkInvoiceImportSource, *, mapping_reasons: tuple[str, ...]
+) -> InvoiceImportProjection:
+    """Report how the book's columns resolved, with nothing counted as imported."""
+    resolution = source.resolution
+    verdict = resolution.reader_unavailable_verdict
+    return InvoiceImportProjection(
+        profile_id=profile_id,
+        source_sha256=source.source_sha256,
+        rows=0,
+        created=0,
+        skipped_duplicate=0,
+        refused=(),
+        created_invoice_ids=(),
+        unmapped_column_headers=tuple(column.header for column in resolution.unmapped_columns),
+        mapping_reasons=mapping_reasons,
+        preview=True,
+        columns=tuple(
+            InvoiceImportColumn(
+                column_index=column.column_index,
+                header=column.header[:INVOICE_IMPORT_HEADER_MAX_CHARS],
+                role=column.role,
+                source=column.source,
+            )
+            for column in resolution.columns[:INVOICE_IMPORT_MAX_COLUMNS]
+        ),
+        columns_truncated=len(resolution.columns) > INVOICE_IMPORT_MAX_COLUMNS,
+        missing_fields=tuple(sorted(BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - resolution.fields_present)),
+        assignable_roles=tuple(
+            InvoiceImportAssignableRole(role=role, field=field, required=field in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS)
+            for role, field in BULK_IMPORT_FIELD_BY_ROLE.items()
+        ),
+        row_count=len(source.rows),
+        reader_unavailable_verdict=None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict),
+    )
+
+
+def _wizard_governing_date(payload: InvoiceWizardRequest) -> date:
+    """Return the operation date, else the issue date, that selects the IVA category vocabulary."""
+    stated = payload.operation_date or payload.invoice_date
+    try:
+        return date.fromisoformat(stated.strip())
+    except ValueError as exc:
+        raise InvoiceValidationError("the invoice dates must be ISO calendar dates") from exc
 
 
 def _resolve_wizard_category(
@@ -245,7 +326,7 @@ def _resolve_wizard_category(
 ) -> IvaCategory | None:
     if payload.iva_category is None:
         return None
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(effective_date=_wizard_governing_date(payload), authority=operation)
     category = next(
         (token for token in catalogue.all_categories if str(token) == payload.iva_category.strip()),
         None,

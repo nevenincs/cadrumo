@@ -30,9 +30,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 #: this layer cannot see; this claims nothing about what production stamps.
 _SHAPE_UNDER_TEST = 3
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
-_UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
-_NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
-_OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
+_UTC_INSTANT = datetime(1980, 1, 1, 10, 0, 0, tzinfo=UTC)
+_NAIVE_INSTANT = datetime(1980, 1, 1, 10, 0, 0)
+_OFFSET_INSTANT = datetime(1980, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _profile() -> UserProfileRecord:
@@ -64,7 +64,7 @@ def test_export_refuses_a_non_utc_outer_stamp(instant: datetime) -> None:
 def test_export_refuses_a_non_utc_outer_stamp_from_serialized_text() -> None:
     """The refusal has to hold on the import path, which is where a bundle arrives."""
     payload = _export(exported_at=_UTC_INSTANT).model_dump(mode="json")
-    payload["exported_at"] = "2026-01-01T10:00:00"
+    payload["exported_at"] = _NAIVE_INSTANT.isoformat()
 
     with pytest.raises(ValidationError):
         UserProfilePortableExport.model_validate(payload, context=leased_profile_create_context())

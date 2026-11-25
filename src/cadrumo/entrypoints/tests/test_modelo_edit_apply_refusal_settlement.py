@@ -19,7 +19,9 @@ import pytest
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -32,11 +34,12 @@ from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.edit_services import writable_scalar_entry
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import get_registered_error_code_by_code
+from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..adapter_composition import build_calculation_action_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports
 from .modelo_operation_test_support import (
     FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     MODELO_OPERATION_TEST_ACTOR,
@@ -62,7 +65,7 @@ def _recalculate_after_the_baseline(submission: ModeloEditSubmissionV1) -> Model
     """Change the declaration after its baseline was captured, leaving the submission itself unchanged."""
     baseline = submission.baseline
     with bundled_indexed_authority().operation() as operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             baseline.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=baseline.bucket_id, operation=operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
@@ -129,7 +132,7 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
         work_unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
         assert isinstance(wire, ModeloEditApplySubmissionV1)
         refused = ModeloEditApplySubmissionV1.from_submission(variant(wire.to_submission()))
-        payload = ModeloEditOperatorInputV2(submission=refused)
+        payload = ModeloEditOperatorInputV2(submission=refused, output_language=OutputLanguage.EN)
         catalogues_before = _catalogue_digests()
 
         _submitted, observed = asyncio.run(

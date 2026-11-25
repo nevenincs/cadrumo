@@ -27,7 +27,6 @@ from typing import TYPE_CHECKING, ClassVar, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Static
 from textual.worker import Worker
 
@@ -53,14 +52,15 @@ from ..components.widgets import (
     DisclosureGroup,
 )
 from .aeat_auth_setup import AeatAuthSetupPort, AeatAuthSetupScreen, readiness_text
+from .household import HouseholdPort
 from .overview_contracts import (
-    _COMPLETE_SETUP_ACTION,
-    _COMPLETE_SETUP_KEY,
-    _CONTINUE_BUTTON_ID,
-    _LANGUAGE_ACTION,
-    _LANGUAGE_KEY,
-    _REQUIRED_ONLY_ID,
-    _SEARCH_ID,
+    COMPLETE_SETUP_ACTION,
+    COMPLETE_SETUP_KEY,
+    CONTINUE_BUTTON_ID,
+    LANGUAGE_ACTION,
+    LANGUAGE_KEY,
+    REQUIRED_ONLY_ID,
+    SEARCH_ID,
 )
 from .overview_interactions import ProfileOverviewInteractionMixin
 from .overview_rendering import ProfileOverviewRenderingMixin
@@ -71,6 +71,7 @@ from .overview_setup import (
     ProfileOverviewSetupWalkMixin,
 )
 from .overview_writes import ProfileOverviewWriteMixin
+from .record_groups import RecordGroupsPort
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -80,12 +81,16 @@ if TYPE_CHECKING:
     from textual.timer import Timer
     from textual.widgets.data_table import ColumnKey
 
+    from ....application.user_profile.field_help import ProfileFieldEjercicioAnswer
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview
     from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 
 type ProfileFieldPersist = Callable[[str, str, int, str], ProfileOverview]
 """The one-field write door: path, value, and the revision and digest the edit was made against."""
+
+type ProfileEjercicioPersist = Callable[[ProfileFieldEjercicioAnswer, str, str, int, str], ProfileOverview]
+"""The dated write door: the field's questions, its answer, the ejercicio, and the edit's revision and digest."""
 
 
 """The profile field deciding what language this page is written in.
@@ -169,14 +174,15 @@ class ProfileManagerScreen(
         # written in a class body would be resolved once at import in
         # whichever language the process started in. Both are written by
         # :meth:`_offer_language_in_footer` on every render instead.
-        Binding(_LANGUAGE_KEY, _LANGUAGE_ACTION, "", show=True),
+        Binding(LANGUAGE_KEY, LANGUAGE_ACTION, "", show=True),
         # After the language key, so the footer reads in key order here as it
         # does on every other destination; described by the account chrome.
         Binding("f3", "toggle_appearance", "", show=False),
         # Named on its own button rather than in the footer, which has no
         # room left for it on an eighty-column terminal.
-        Binding(_COMPLETE_SETUP_KEY, _COMPLETE_SETUP_ACTION, "", show=False),
+        Binding(COMPLETE_SETUP_KEY, COMPLETE_SETUP_ACTION, "", show=False),
         Binding("slash", "focus_search", "", show=False),
+        Binding("f5", "refresh_profile", "", show=False),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -186,6 +192,7 @@ class ProfileManagerScreen(
         overview: ProfileOverview,
         *,
         persist: ProfileFieldPersist,
+        persist_ejercicio: ProfileEjercicioPersist | None = None,
         add_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
         update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
         remove_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
@@ -194,11 +201,12 @@ class ProfileManagerScreen(
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
         aeat_auth_setup: AeatAuthSetupPort | None = None,
-        open_document_reader: Callable[[], Screen[None]] | None = None,
         list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
         refresh_overview_language: Callable[[], ProfileOverview] | None = None,
+        household: HouseholdPort | None = None,
+        record_groups: RecordGroupsPort | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
@@ -206,8 +214,7 @@ class ProfileManagerScreen(
         self._refresh_overview_language = refresh_overview_language
         self._aeat_auth_setup = aeat_auth_setup
         self._auth_readiness: AuthSyncReadiness | None = None
-        self._open_document_reader = open_document_reader
-        """Builds the document reader page, or ``None`` when this host offers none."""
+        """Whether the page was opened to edit AEAT access, which opens once the page is up."""
         self._complete_setup = complete_setup
         """Declares setup complete and hands back the page as storage now holds it.
 
@@ -247,6 +254,8 @@ class ProfileManagerScreen(
         reloaded overview rather than ``None`` is what keeps the screen
         from ever displaying its own optimistic guess — whatever the store
         made of the value is what appears."""
+        self._persist_ejercicio = persist_ejercicio
+        """Writes one answer stated per ejercicio; a host supplying none refuses such an edit."""
         self._add_row = add_row
         self._update_row = update_row
         self._remove_row = remove_row
@@ -255,6 +264,14 @@ class ProfileManagerScreen(
         Calls carry the overview baseline captured when the dialog opened;
         completion never substitutes whichever profile happens to be visible.
         """
+        self._household = household
+        """The household's doors, bound by composition to one profile, or ``None``.
+
+        A host that supplies none offers no household destination."""
+        self._record_groups = record_groups
+        """The read of the profile's record groups, bound by composition to one profile, or ``None``.
+
+        A host that supplies none offers no record-group destination."""
         self._list_plantilla_media = list_plantilla_media
         self._set_plantilla_media = set_plantilla_media
         self._remove_plantilla_media = remove_plantilla_media
@@ -345,11 +362,11 @@ class ProfileManagerScreen(
                 yield ProgressLine(id="onboarding-progress")
                 with Horizontal(id="onboarding-actions"):
                     yield Button("", id="onboarding-previous", compact=True)
-                    yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
+                    yield Button("", id=CONTINUE_BUTTON_ID, classes="-primary", compact=True)
                     yield Static(id="onboarding-step", markup=False)
         with Horizontal(id="manager-tools"):
-            yield Input(id=_SEARCH_ID, compact=True)
-            yield Checkbox("", value=self._required_only, id=_REQUIRED_ONLY_ID, compact=True)
+            yield Input(id=SEARCH_ID, compact=True)
+            yield Checkbox("", value=self._required_only, id=REQUIRED_ONLY_ID, compact=True)
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._onboarding:
                 yield Static(id="onboarding-stage-title", markup=False)
@@ -388,7 +405,7 @@ class ProfileManagerScreen(
         install_cadrumo_themes(self.app)
         # The shared theme sizes every Input to the full row, which would push
         # the required-only switch beside the search box off the screen.
-        self.query_one(f"#{_SEARCH_ID}", Input).styles.width = "1fr"
+        self.query_one(f"#{SEARCH_ID}", Input).styles.width = "1fr"
         if self._onboarding:
             for stage in SETUP_STAGES:
                 button = self.query_one(f"#setup-stage-{stage.value}", Button)
@@ -397,9 +414,46 @@ class ProfileManagerScreen(
                 button.styles.border = ("none", "transparent")
                 button.styles.height = 1
         await self._redraw()
+        await self.reload_profile()
         if self._aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         self._finish_mount()
+
+    async def action_refresh_profile(self) -> None:
+        """Reload the current profile before opening another edit."""
+        if self._pending_write is None and self._pending_completion is None:
+            await self.reload_profile()
+
+    async def reload_profile(self) -> None:
+        """Replace a cached overview through the host's admitted reader.
+
+        Root factories retain an overview across visits. It is useful for the
+        initial paint, but an editor must not keep using it after another
+        frontend or an earlier visit has changed the record.
+        """
+        reader = self._refresh_overview_language
+        if reader is None:
+            return
+        self.disabled = True
+        try:
+            refreshed = await asyncio.to_thread(reader)
+            if not self.is_attached:
+                return
+            if refreshed.profile_id != self.overview.profile_id or (
+                refreshed.record_revision < self.overview.record_revision
+                or (
+                    refreshed.record_revision == self.overview.record_revision
+                    and refreshed.content_digest != self.overview.content_digest
+                )
+            ):
+                self._refuse(tr("flows.manager.edit.refresh_failed"))
+                return
+            await self.apply_overview(refreshed, refresh_auth=False)
+        except Exception:
+            if self.is_attached:
+                self._refuse(tr("flows.manager.edit.refresh_failed"))
+        finally:
+            self.disabled = False
 
     @override
     async def refresh_language(self) -> None:
@@ -472,7 +526,7 @@ class ProfileManagerScreen(
         if not self.is_attached:
             return
         if self._onboarding:
-            self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+            self.query_one(f"#{CONTINUE_BUTTON_ID}", Button).focus()
         # Whatever took focus while the page was building may have scrolled
         # the body; the page opens at its top.
         body = self.query_one("#manager-body", ContentScroll)
@@ -491,7 +545,7 @@ class ProfileManagerScreen(
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Hide the completion key once there is nothing to complete."""
-        if action == _COMPLETE_SETUP_ACTION:
+        if action == COMPLETE_SETUP_ACTION:
             return self._completion_offered
         return super().check_action(action, parameters)
 
@@ -516,6 +570,7 @@ class ProfileManagerScreen(
 
 
 __all__ = [
+    "ProfileEjercicioPersist",
     "ProfileFieldPersist",
     "ProfileManagerScreen",
 ]

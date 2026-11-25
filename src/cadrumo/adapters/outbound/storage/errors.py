@@ -98,7 +98,7 @@ class OutboundStorageIntegrityError(OutboundStorageError):
     """Raised when fetched provider data fails integrity checks.
 
     The shared hash comparison path is
-    :func:`adapters.outbound.storage._integrity.verify_content_hash`.
+    :func:`adapters.outbound.storage.integrity.verify_content_hash`.
     """
 
 
@@ -114,7 +114,7 @@ class StorageCorruptionError(TerminalPreconditionErrorMixin[PreconditionVerdict]
     ``byte_length``) carries a type that the runtime cannot coerce to the
     expected primitive. Unlike :class:`OutboundStorageIntegrityError`, which
     covers payload-byte hash mismatches from
-    :func:`adapters.outbound.storage._integrity.verify_content_hash`, this
+    :func:`adapters.outbound.storage.integrity.verify_content_hash`, this
     error surfaces schema-level violations in the sidecar metadata file itself.
     """
 

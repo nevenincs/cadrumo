@@ -23,6 +23,7 @@ from ....application.operations.subject_reference import (
     OperationSubjectReferenceV1,
     expected_operation_subject,
 )
+from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 
@@ -32,6 +33,8 @@ _SKELETON_DEPTH = 4
 _PROFILE_FIELD = "profile_id"
 _PATH_FORMATS = frozenset({"path", "file-path", "directory-path"})
 _TEXT_TYPES = frozenset({"string", "integer", "number"})
+_PUBLIC_DECIMAL_TITLE = "PublicDecimal"
+_PUBLIC_DECIMAL_KEY = "decimal"
 
 
 class RequestFieldKind(StrEnum):
@@ -70,11 +73,23 @@ class RequestFieldV1:
     choices: tuple[object, ...]
     initial: str
     session_fixed: bool
+    # A decimal the request carries as ``{"decimal": "<text>"}`` rather than as a bare string.
+    public_decimal: bool = False
 
     @property
     def choice_labels(self) -> tuple[str, ...]:
         """Return the text each enumerated value is offered and entered as."""
         return tuple(_scalar_text(choice) for choice in self.choices)
+
+    @property
+    def is_selection(self) -> bool:
+        """Whether the field is picked from a fixed list rather than typed."""
+        return self.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}
+
+    @property
+    def selection_labels(self) -> tuple[str, ...]:
+        """Return the entries a selection field offers; a boolean offers its two tokens."""
+        return ("true", "false") if self.kind is RequestFieldKind.BOOLEAN else self.choice_labels
 
 
 def _scalar_text(value: object) -> str:
@@ -155,6 +170,46 @@ def _classified(node: _Schema, definitions: _Schema) -> tuple[RequestFieldKind, 
     return RequestFieldKind.JSON, ()
 
 
+def _is_public_decimal(node: _Schema, definitions: _Schema) -> bool:
+    """Report whether the field is the explicit decimal object, optional or not, by its served shape."""
+    alternatives = _alternatives(node, definitions)
+    if len(alternatives) != 1:
+        return False
+    only = alternatives[0]
+    properties = only.get("properties")
+    if only.get("type") != "object" or only.get("title") != _PUBLIC_DECIMAL_TITLE:
+        return False
+    if not isinstance(properties, Mapping) or set(cast("_Schema", properties)) != {_PUBLIC_DECIMAL_KEY}:
+        return False
+    member = cast("_Schema", properties)[_PUBLIC_DECIMAL_KEY]
+    return isinstance(member, Mapping) and cast("_Schema", member).get("type") == "string"
+
+
+def _object_skeleton(resolved: _Schema, definitions: _Schema, depth: int) -> object:
+    properties = resolved.get("properties")
+    required = resolved.get("required")
+    if depth <= 0 or not isinstance(properties, Mapping) or not isinstance(required, list):
+        return {}
+    fields = cast("_Schema", properties)
+    return {
+        name: json_skeleton(fields.get(name), definitions, depth=depth - 1)
+        for name in cast("list[object]", required)
+        if isinstance(name, str)
+    }
+
+
+def _scalar_skeleton(kind: object) -> object:
+    if kind == "array":
+        return []
+    if kind == "string":
+        return ""
+    if kind in {"integer", "number"}:
+        return 0
+    if kind == "boolean":
+        return False
+    return None
+
+
 def json_skeleton(node: object, definitions: _Schema, *, depth: int = _SKELETON_DEPTH) -> object:
     """Return the smallest document shaped like ``node``, for a person to fill in."""
     resolved = _resolved(node, definitions)
@@ -173,25 +228,8 @@ def json_skeleton(node: object, definitions: _Schema, *, depth: int = _SKELETON_
         return json_skeleton(alternatives[0], definitions, depth=depth)
     kind = resolved.get("type")
     if kind == "object":
-        properties = resolved.get("properties")
-        required = resolved.get("required")
-        if depth <= 0 or not isinstance(properties, Mapping) or not isinstance(required, list):
-            return {}
-        fields = cast("_Schema", properties)
-        return {
-            name: json_skeleton(fields.get(name), definitions, depth=depth - 1)
-            for name in cast("list[object]", required)
-            if isinstance(name, str)
-        }
-    if kind == "array":
-        return []
-    if kind == "string":
-        return ""
-    if kind in {"integer", "number"}:
-        return 0
-    if kind == "boolean":
-        return False
-    return None
+        return _object_skeleton(resolved, definitions, depth)
+    return _scalar_skeleton(kind)
 
 
 def _initial_text(kind: RequestFieldKind, node: _Schema, definitions: _Schema, *, required: bool) -> str:
@@ -200,6 +238,15 @@ def _initial_text(kind: RequestFieldKind, node: _Schema, definitions: _Schema, *
             return json.dumps(node["default"], ensure_ascii=False, indent=2)
         return json.dumps(json_skeleton(node, definitions), ensure_ascii=False, indent=2) if required else ""
     return _scalar_text(node.get("default"))
+
+
+def _field_description(node: _Schema, definitions: _Schema) -> str:
+    description = node.get("description")
+    if not isinstance(description, str):
+        only = _alternatives(node, definitions)
+        nested = only[0].get("description") if len(only) == 1 else None
+        description = nested if isinstance(nested, str) else ""
+    return description
 
 
 def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1, ...]:
@@ -222,13 +269,12 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
     for name, raw in cast("_Schema", properties).items():
         node = _resolved(raw, definitions)
         kind, choices = _classified(node, definitions)
+        public_decimal = _is_public_decimal(node, definitions)
+        if public_decimal:
+            kind, choices = RequestFieldKind.DECIMAL, ()
         required = name in required_names
         session_fixed = name == _PROFILE_FIELD and kind is RequestFieldKind.UUID
-        description = node.get("description")
-        if not isinstance(description, str):
-            only = _alternatives(node, definitions)
-            nested = only[0].get("description") if len(only) == 1 else None
-            description = nested if isinstance(nested, str) else ""
+        description = _field_description(node, definitions)
         fields.append(
             RequestFieldV1(
                 name=name,
@@ -240,9 +286,34 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
                     str(profile_id) if session_fixed else _initial_text(kind, node, definitions, required=required)
                 ),
                 session_fixed=session_fixed,
+                public_decimal=public_decimal,
             )
         )
     return tuple(fields)
+
+
+def _number_value(stripped: str) -> object:
+    try:
+        number = json.loads(stripped)
+    except ValueError:
+        return RequestFieldProblem.NUMBER
+    if isinstance(number, bool) or not isinstance(number, (int, float)):
+        return RequestFieldProblem.NUMBER
+    return number
+
+
+def _enum_value(field: RequestFieldV1, stripped: str) -> object:
+    for choice, label in zip(field.choices, field.choice_labels, strict=True):
+        if label == stripped:
+            return choice
+    return RequestFieldProblem.CHOICE
+
+
+def _json_value(text: str) -> object:
+    try:
+        return json.loads(text)
+    except ValueError:
+        return RequestFieldProblem.JSON
 
 
 def _field_value(field: RequestFieldV1, text: str) -> object:
@@ -255,32 +326,31 @@ def _field_value(field: RequestFieldV1, text: str) -> object:
         except ValueError:
             return RequestFieldProblem.INTEGER
     if kind is RequestFieldKind.NUMBER:
-        try:
-            number = json.loads(stripped)
-        except ValueError:
-            return RequestFieldProblem.NUMBER
-        if isinstance(number, bool) or not isinstance(number, (int, float)):
-            return RequestFieldProblem.NUMBER
-        return number
+        return _number_value(stripped)
     if kind is RequestFieldKind.BOOLEAN:
         return stripped == "true" if stripped in {"true", "false"} else RequestFieldProblem.CHOICE
     if kind is RequestFieldKind.ENUM:
-        for choice, label in zip(field.choices, field.choice_labels, strict=True):
-            if label == stripped:
-                return choice
-        return RequestFieldProblem.CHOICE
+        return _enum_value(field, stripped)
     if kind is RequestFieldKind.JSON:
-        try:
-            return json.loads(text)
-        except ValueError:
-            return RequestFieldProblem.JSON
+        return _json_value(text)
     if kind is RequestFieldKind.PATH:
         # A relative path means what it means on the command line: relative to
         # where this process runs, which is not where the profile worker runs.
         return str(Path(stripped).expanduser().resolve())
     if kind is RequestFieldKind.TEXT:
         return text
+    if field.public_decimal:
+        return _public_decimal_value(stripped)
     return stripped
+
+
+def _public_decimal_value(stripped: str) -> object:
+    # The shared parser settles a comma or grouped token and refuses a bare dot-grouped one that could
+    # be thousands or decimals, so the operator is asked rather than guessed at.
+    parsed = coerce_finite_european_decimal(stripped)
+    if parsed is None:
+        return RequestFieldProblem.NUMBER
+    return {_PUBLIC_DECIMAL_KEY: str(parsed)}
 
 
 def request_document(
@@ -312,11 +382,22 @@ def field_texts(fields: tuple[RequestFieldV1, ...], document: Mapping[str, objec
     for field in fields:
         if field.name not in document:
             texts[field.name] = ""
+        elif field.public_decimal:
+            texts[field.name] = _public_decimal_text(document[field.name])
         elif field.kind is RequestFieldKind.JSON:
             texts[field.name] = json.dumps(document[field.name], ensure_ascii=False, indent=2)
         else:
             texts[field.name] = _scalar_text(document[field.name])
     return texts
+
+
+def _public_decimal_text(value: object) -> str:
+    if isinstance(value, Mapping):
+        inner = cast("_Schema", value).get(_PUBLIC_DECIMAL_KEY)
+        if isinstance(inner, str):
+            return inner
+        return json.dumps(value, ensure_ascii=False)
+    return _scalar_text(value)
 
 
 @dataclass(frozen=True, slots=True)

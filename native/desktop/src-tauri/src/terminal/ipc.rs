@@ -1,5 +1,6 @@
 use super::{
     Kind, TerminalState,
+    console_environment::ConsoleEnvironment,
     session::{INPUT_LIMIT, Sink, failure},
 };
 use crate::{app::Commands, shell::channel::Deliveries};
@@ -7,7 +8,7 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, Snapshot},
     error::application::{ErrorCode, Result},
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 use tauri::{
     Manager, Runtime, State, Webview,
@@ -39,13 +40,14 @@ fn record<T>(diagnostics: &Diagnostics, outcome: Result<T>) -> Result<T> {
 }
 
 /// Runs registry work off the async executor: settlement can block for its
-/// full bound while it holds the registry.
+/// full bound while it holds the registry. Registry admission and session work
+/// record their own failures, retaining the session's process identity.
 async fn blocking<T: Send + 'static>(
     state: &State<'_, Arc<TerminalState>>,
     work: impl FnOnce(&TerminalState) -> Result<T> + Send + 'static,
 ) -> Result<T> {
     let state = state.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || record(&state.launch.diagnostics, work(&state)))
+    tauri::async_runtime::spawn_blocking(move || work(&state))
         .await
         .map_err(|_| failure(ErrorCode::Panic))?
 }
@@ -89,25 +91,6 @@ pub fn frame_sink<R: Runtime>(webview: Webview<R>, frames: Channel) -> Sink {
 
 const OPEN: &str = "terminal_open";
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum Target {
-    Terminal(Kind),
-    Setup(SetupTarget),
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct SetupTarget {
-    aeat_setup: SetupProfile,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct SetupProfile {
-    profile_id: String,
-}
-
 /// `terminal_open{kind, cols, rows, frames}`. Written against the invoke
 /// itself rather than as a command function, because the requesting document
 /// must be read when the request arrives: a command function's body, and
@@ -130,29 +113,29 @@ fn terminal_open<R: Runtime>(invoke: Invoke<R>) -> bool {
         let state: State<'_, Arc<TerminalState>> = CommandArg::from_command(argument("state"))?;
         let state = state.inner().clone();
         let document = state.document();
-        let kind: Target = CommandArg::from_command(argument("kind"))?;
+        let kind: Kind = CommandArg::from_command(argument("kind"))?;
         let cols: u16 = CommandArg::from_command(argument("cols"))?;
         let rows: u16 = CommandArg::from_command(argument("rows"))?;
         let frames: Channel = CommandArg::from_command(argument("frames"))?;
         let sink = frame_sink(message.webview(), frames);
-        Ok((state, document, kind, cols, rows, sink))
+        let agent = message
+            .webview()
+            .try_state::<Arc<crate::agent::AgentHost>>()
+            .map(|host| host.inner().clone());
+        Ok((state, document, kind, cols, rows, sink, agent))
     })();
     match parsed {
-        Ok((state, document, kind, cols, rows, sink)) => {
+        Ok((state, document, kind, cols, rows, sink, agent)) => {
             resolver.respond_async(async move {
                 tauri::async_runtime::spawn_blocking(move || {
+                    // Read when the console starts, so it never carries an earlier profile's values.
+                    let console = match (kind, agent) {
+                        (Kind::Console, Some(agent)) => agent.console_environment(),
+                        _ => ConsoleEnvironment::base(),
+                    };
                     record(
                         &state.launch.diagnostics,
-                        match kind {
-                            Target::Terminal(kind) => state.open(kind, cols, rows, sink, document),
-                            Target::Setup(target) => state.open_aeat_setup(
-                                &target.aeat_setup.profile_id,
-                                cols,
-                                rows,
-                                sink,
-                                document,
-                            ),
-                        },
+                        state.open_with(kind, cols, rows, sink, document, &console),
                     )
                 })
                 .await

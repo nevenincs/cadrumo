@@ -1,0 +1,23 @@
+[fact]
+fact_id = "modelo-180-perceptor-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-180-perceptor-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-180-2023"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-180-2023"
+required_text = ["MODALIDAD", "SITUACIÓN DEL INMUEBLE", "situado en cualquier punto"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "situation.codes", value = "1,2,3,4" },
+  { key = "situation.with_cadastral_reference", value = "1,2,3" },
+  { key = "modality.codes", value = "1,2" },
+  { key = "withholding_percentage.maximum", value = "99.99" },
+]

@@ -12,6 +12,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -19,8 +20,12 @@ from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets.event import BucketEventId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.iva.prorrata import ProrrataReferenceText
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.model_validation import classification_for_business_share
+from ...domain.transactions.model_validation import (
+    classification_for_business_share,
+    validate_figures_without_business,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -34,31 +39,38 @@ from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal
-from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
+from .manual_update import update_manual_transaction_fields
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ALLOCATE_OPERATION_DEFINITION_ID = "ledger.allocate"
 LEDGER_ALLOCATE_PHASE = "ledger.allocate"
 _MAX_BUCKET_EVENT_IDS = 4096
+LEDGER_ALLOCATE_RATIO_ID_MAX = 128
+"""The longest usage-ratio category an allocation names."""
 _BusinessShareText = Annotated[str, Field(min_length=1, max_length=128)]
 _BucketEventIds = Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_BUCKET_EVENT_IDS)]
 
 
 class LedgerAllocateRequest(BaseModel):
-    """Private exact-profile request; ``transaction_id`` may be a CLI prefix."""
+    """Private exact-profile request; ``transaction_id`` may be a CLI prefix.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     business_pct: _BusinessShareText
     category_id: Annotated[str, Field(max_length=128)] | None = None
-    usage_ratio_id: Annotated[str, Field(max_length=128)] | None = None
-    prorrata_reference: Annotated[str, Field(max_length=256)] | None = None
+    usage_ratio_id: Annotated[str, Field(max_length=LEDGER_ALLOCATE_RATIO_ID_MAX)] | None = None
+    prorrata_reference: ProrrataReferenceText | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("business_pct")
     @classmethod
@@ -79,6 +91,43 @@ class LedgerAllocateOperationResult(BaseModel):
     transaction: LedgerTransactionProjection
     review_status: LedgerReviewStatus
     bucket_event_ids: _BucketEventIds = ()
+
+
+def allocation_patch(
+    payload: LedgerAllocateRequest, *, operation: PinnedAuthorityOperation
+) -> ManualLedgerTransactionPatch:
+    """Return the classification write an allocation request asks for.
+
+    The share decides the classification. A share of nothing is a personal row,
+    so a category, usage ratio or prorrata reference named with it is refused
+    rather than silently dropped.
+    """
+    share = try_parse_canonical_decimal(payload.business_pct, signed=False)
+    if share is None:
+        raise TransactionValidationError("business_pct must be canonical decimal text")
+    allocation_classification = classification_for_business_share(share)
+    validate_figures_without_business(
+        allocation_classification,
+        {
+            "category_id": payload.category_id,
+            "usage_ratio_id": payload.usage_ratio_id,
+            "prorrata_reference": payload.prorrata_reference,
+        },
+    )
+    category_id = payload.category_id
+    if category_id is not None:
+        category_id = require_spending_category(category_id.strip(), authority=operation).value
+    patch_values: dict[str, object] = {
+        "business_classification": allocation_classification,
+        "business_pct": share,
+    }
+    if category_id is not None:
+        patch_values["category_id"] = category_id
+    if payload.usage_ratio_id is not None:
+        patch_values["usage_ratio_id"] = payload.usage_ratio_id
+    if payload.prorrata_reference is not None:
+        patch_values["prorrata_reference"] = payload.prorrata_reference
+    return ManualLedgerTransactionPatch.model_validate(patch_values)
 
 
 class LedgerAllocateExecutor:
@@ -114,25 +163,7 @@ class LedgerAllocateExecutor:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
             require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
-            share = try_parse_canonical_decimal(payload.business_pct, signed=False)
-            if share is None:
-                raise TransactionValidationError("business_pct must be canonical decimal text")
-            allocation_classification = classification_for_business_share(share)
-            category_id = payload.category_id
-            if category_id is not None:
-                category_id = require_spending_category(category_id.strip(), authority=operation).value
-            patch_values: dict[str, object] = {
-                "business_classification": allocation_classification,
-                "business_pct": share,
-            }
-            if category_id is not None:
-                patch_values["category_id"] = category_id
-            if payload.usage_ratio_id is not None:
-                patch_values["usage_ratio_id"] = payload.usage_ratio_id
-            if payload.prorrata_reference is not None:
-                patch_values["prorrata_reference"] = payload.prorrata_reference
-            patch = ManualLedgerTransactionPatch.model_validate(patch_values)
-            return ports, patch
+            return ports, allocation_patch(payload, operation=operation)
 
         ports, patch = await asyncio.to_thread(prepare)
 
@@ -155,7 +186,7 @@ class LedgerAllocateExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(allocate)
-                projection = _operation_result(payload.profile_id, result)
+                projection = operation_result(payload.profile_id, result, language=payload.output_language)
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
@@ -181,7 +212,9 @@ def build_ledger_allocate_definition(
     )
 
 
-def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerAllocateOperationResult:
+def operation_result(
+    profile_id: UUID, result: ManualLedgerTransactionResult, *, language: OutputLanguage
+) -> LedgerAllocateOperationResult:
     """Validate the exact profile and preserve only the canonical result payload."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
     if (
@@ -192,7 +225,7 @@ def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return LedgerAllocateOperationResult(
         profile_id=profile_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
     )
@@ -202,11 +235,9 @@ def resolve_ledger_allocate_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and COMMIT for every allocation."""
-    if request.definition_id != LEDGER_ALLOCATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerAllocateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_ALLOCATE_OPERATION_DEFINITION_ID, request_type=LedgerAllocateRequest
+    )
 
 
 def build_ledger_allocate_registration(
@@ -226,6 +257,7 @@ __all__ = [
     "LedgerAllocateExecutor",
     "LedgerAllocateOperationResult",
     "LedgerAllocateRequest",
+    "allocation_patch",
     "build_ledger_allocate_definition",
     "build_ledger_allocate_registration",
     "resolve_ledger_allocate_access",

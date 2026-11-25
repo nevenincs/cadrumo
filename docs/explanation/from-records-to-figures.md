@@ -27,11 +27,13 @@ A record that has all of this is ready to feed into a calculation. To do this fo
 
 ## Splitting a mixed cost, and checking readiness
 
-Some costs serve both your business and your private life - a phone bill,
-home internet, a home office. Only the business share counts, and the split
+Some costs serve both your business and your private life - home internet,
+a home office. Only the business share counts, and the split
 can come from a percentage on the single record, a saved default for the
 whole category, or a ratio worked out from your registered facts - see
 [the mixed-use workflow](../how-to/classify-transactions.md#classify-mixed-use-transactions).
+A mobile line or a car is not split: for income tax it counts only when it
+serves the business alone.
 
 Before the tool adds anything up, a readiness check flags each record in the
 period that is still missing a decision, a category, a tax figure, a split

@@ -9,11 +9,13 @@ from pydantic import ValidationError
 
 from ....application.overview.agenda import OverviewAgenda
 from ....application.overview.backlog import OverviewBacklog
+from ....application.overview.calendar_envelope import OverviewCalendarSupport
 from ....application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ....application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
-from .._overview_rendering import (
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ..overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
     overview_calendar_output,
@@ -32,6 +34,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: A profile identifier is a UUIDv4 -- the shape production mints and the only
 #: shape the payload contract accepts.
 _PROFILE_ID = "44450001-0000-4000-8000-000000000001"
+
+
+def _support(calendar_range: OverviewCalendarRange) -> OverviewCalendarSupport:
+    return OverviewCalendarSupport.for_range(calendar_range, filing_year_envelope())
 
 
 def _coverage_payload(**overrides: object) -> dict[str, object]:
@@ -109,7 +115,9 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
         coverage=coverage,
     )
 
-    rendered, lines, notices = overview_calendar_output(calendar, calendar_range, evidence_notices=())
+    rendered, lines, notices = overview_calendar_output(
+        calendar, calendar_range, support=_support(calendar_range), evidence_notices=()
+    )
 
     assert rendered.coverage is not None
     assert rendered.coverage.model_dump(mode="json") == coverage.model_dump(mode="json")
@@ -162,7 +170,9 @@ def test_calendar_projection_resolves_the_history_pull_action() -> None:
         context={"observation_count": "0"},
     )
 
-    _, _, notices = overview_calendar_output(calendar, calendar_range, evidence_notices=(application_notice,))
+    _, _, notices = overview_calendar_output(
+        calendar, calendar_range, support=_support(calendar_range), evidence_notices=(application_notice,)
+    )
 
     assert len(notices) == 1
     notice_action = notices[0].action
@@ -189,6 +199,7 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
         bucket_id=_PROFILE_ID,
         label="Operator",
         cal=calendar,
+        support=_support(calendar_range),
     )
     agenda, _, _ = overview_agenda_output(
         OverviewAgenda(

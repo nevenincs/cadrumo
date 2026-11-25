@@ -52,7 +52,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ....core.hex import HEX_PATTERN_64
 from ....core.identity.bucket import BucketId
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.sync_surface import SyncSurface
 from ....core.time.utc import UtcInstant
 from ....domain.buckets.event import BucketEvent, BucketEventId
@@ -129,7 +129,7 @@ class SyncRunCoverage(BaseModel):
     nowhere to pass two unrelated numbers in.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     unit_count: NonNegativeInt
     divergence_count: NonNegativeInt
@@ -204,7 +204,7 @@ class SyncRunRecord(BaseModel):
         completed_at: UTC instant the run finished, successfully or not.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_event_id: BucketEventId
     bucket_id: BucketId

@@ -157,19 +157,18 @@ def test_a_stamp_built_here_is_readable_by_the_parser_that_classifies_it() -> No
     """Round-trip: what the constructor writes, the parser must classify.
 
     The two halves live in one module precisely so they cannot drift, and this
-    is the assertion that would notice if they did. Both directions are
-    covered, because a constructor that only ever produced on-host stamps would
-    satisfy a local-only check while being unable to express the case the whole
-    apparatus exists for.
+    is the assertion that would notice if they did. Both transports are
+    covered: the agent stamp the constructor writes today, and the on-host
+    stamp that records written before every read went through the agent still
+    carry, which a withdrawal must keep telling apart.
     """
-    from .....core.provenance_stamp import provenance_stamp_transport
+    from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
 
-    local = build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text-extract", model="m")
-    cloud = build_provenance_stamp(provider=LLMProvider.AGENT, reader="text-extract", model="example/api/m")
+    agent = build_provenance_stamp(provider=LLMProvider.AGENT, reader="text-extract", model="example/api/m")
+    recorded_on_host = f"llm:{LOCAL_TRANSPORT_LABEL}-text-extract:m"
 
-    assert provenance_stamp_transport(local) == "local"
-    assert provenance_stamp_transport(cloud) == "agent"
-    assert provenance_stamp_transport(local) != provenance_stamp_transport(cloud)
+    assert provenance_stamp_transport(agent) == "agent"
+    assert provenance_stamp_transport(recorded_on_host) == LOCAL_TRANSPORT_LABEL
 
 
 def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
@@ -189,15 +188,11 @@ def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     """
     from .....application.ledger.evidence_textlayer import text_layer_transcriber_identity
     from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-    from ..evidence_draft_vision import LocalVisionDocumentTranscriber
+    from ..evidence_draft_vision import VisionDocumentTranscriber
 
     identities = [
         text_layer_transcriber_identity(),
-        LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity,
-        LocalVisionDocumentTranscriber(
-            model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.AGENT,
-        ).transcriber_identity,
+        VisionDocumentTranscriber().transcriber_identity("nearby/api/synthetic-vision:1"),
     ]
 
     assert any(identity.transport != LOCAL_TRANSPORT_LABEL for identity in identities), (

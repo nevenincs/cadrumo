@@ -8,7 +8,7 @@ from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
     configured_path,
 )
-from .._adapter_utils import assert_landed_url_readable
+from ..adapter_utils import assert_landed_url_readable
 from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

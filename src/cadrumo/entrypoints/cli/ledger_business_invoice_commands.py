@@ -39,18 +39,21 @@ from ...application.invoices.catalogue_intake_contracts import (
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch
+from ...application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from ...application.invoices.simplificada_advisory import (
     SimplificadaTaxIdAdvisory,
     resolve_simplificada_tax_id_advisory,
     resolve_simplificada_tax_id_legal_refs,
 )
-from ...application.invoices.source_resolver import iva_category_for_operation_type
+from ...application.invoices.source_observations import iva_category_for_operation_type
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices.business_premises import business_premises_lease_from_inputs
+from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.period import Period
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -60,16 +63,18 @@ from ...domain.invoices.enums import (
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind
-from ._date_parsing import _parse_iso_date
-from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from ._ledger_support import ledger_cli_no_recovery, ledger_invoice_validation_no_recovery
 from .common import (
-    active_bucket_id_or_refuse as _business_invoice_bucket_id,
+    active_bucket_id_or_refuse,
+    bad,
+    emit_envelope,
 )
-from .common import bad, emit_envelope
+from .date_parsing import parse_iso_date
+from .decimal_parsing import parse_decimal_amount, parse_fraction, parse_optional_decimal_amount
 from .ledger_catalogue_invoice_results import (
     CatalogueInvoiceCreatePayload,
+    CatalogueInvoiceDocumentAttachPayload,
     CatalogueInvoiceImportResult,
     CatalogueInvoiceLinePayload,
     CatalogueInvoiceListResult,
@@ -79,17 +84,20 @@ from .ledger_catalogue_invoice_results import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
+from .ledger_support import ledger_cli_no_recovery, ledger_invoice_validation_no_recovery
 from .operation_invoice_catalogue import (
     add_invoice_catalogue,
+    attach_invoice_document,
     read_invoice_catalogue,
     remove_invoice_catalogue,
     update_invoice_catalogue,
     view_invoice_catalogue,
 )
 from .operation_invoice_intake import submit_invoice_import, submit_invoice_wizard
+from .period_parsing import optional_canonical_period
 
 
-def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
+def snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
     """Restore the output DTO's tokens from the worker's canonical projection.
 
     The authenticated result already captured registry values under its held
@@ -154,6 +162,7 @@ def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueIn
         base_total_eur=amount(snapshot.base_total_eur),
         iva_total_eur=amount(snapshot.iva_total_eur),
         grand_total_eur=amount(snapshot.grand_total_eur),
+        settlement_amount=Decimal(snapshot.settlement_amount.decimal),
     )
 
 
@@ -204,7 +213,7 @@ def _euro_value_pending_notices(
     ]
 
 
-def _simplificada_tax_id_notices(
+def simplificada_tax_id_notices(
     invoice: Invoice | CatalogueInvoiceRecordPayload, *, required: bool | None = None
 ) -> list[Notice]:
     """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
@@ -247,7 +256,8 @@ def _simplificada_tax_id_notices(
     ]
 
 
-def _catalogue_invoice_lines(invoice: Invoice | CatalogueInvoiceRecordPayload) -> list[str]:
+def catalogue_invoice_lines(invoice: Invoice | CatalogueInvoiceRecordPayload) -> list[str]:
+    """Render a catalogue invoice as tab-separated field lines."""
     return [
         f"invoice_id\t{invoice.invoice_id}",
         f"kind\t{invoice.kind.value}",
@@ -311,7 +321,21 @@ def invoice_add(
     counterparty_nif: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo: str | None = None,
+    fx_rate: str | None = None,
     iva_category: IvaCategory | None = None,
     arrendamiento_local_negocio: bool = False,
     situacion_inmueble: str | None = None,
@@ -333,14 +357,21 @@ def invoice_add(
     invoice as the lease of a local de negocio, with ``--situacion-inmueble``
     and ``--referencia-catastral`` locating the premises, which Modelo 347
     relates in its declarado and inmueble records (RD 1065/2007 art. 34.1.d).
+    ``--fx-rate`` states the exchange rate of a foreign invoice, which wins
+    over the published rate.
     """
-    bucket_id = _business_invoice_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     # An explicitly stated treatment WINS over the one derived from the M349
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
     # silently overriding a value the operator did state would be the reverse.
-    resolved_iva_category = iva_category or iva_category_for_operation_type(
-        operation_type,
+    resolved_iva_category = iva_category or (
+        None
+        if operation_type is None
+        else iva_category_for_operation_type(
+            operation_type,
+            effective_date=parse_iso_date(operation_date or invoice_date, label="invoice-date"),
+        )
     )
     try:
         request = _invoice_add_request(
@@ -362,7 +393,21 @@ def invoice_add(
             counterparty_nif=counterparty_nif,
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
+            issuer_increase_election=issuer_increase_election,
+            issuer_minoracion_election=issuer_minoracion_election,
+            issuer_minoracion_regularisation_year=issuer_minoracion_regularisation_year,
+            issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+            recipient_increase_year=recipient_increase_year,
+            recipient_increase_period=recipient_increase_period,
+            exercised_deduction_year=exercised_deduction_year,
+            exercised_deduction_period=exercised_deduction_period,
+            art_80_tres_obligations_attested=art_80_tres_obligations_attested,
             recargo=recargo,
+            fx_rate=fx_rate,
             arrendamiento_local_negocio=arrendamiento_local_negocio,
             situacion_inmueble=situacion_inmueble,
             referencia_catastral=referencia_catastral,
@@ -380,14 +425,14 @@ def invoice_add(
     try:
         if added.invoice is None:
             raise ValueError("created invoice result is missing its snapshot")
-        invoice = _snapshot_invoice_payload(added.invoice)
+        invoice = snapshot_invoice_payload(added.invoice)
         emit_envelope(
             ctx,
             command="ledger.invoice.add",
             result=CatalogueInvoiceCreatePayload.model_validate(invoice.model_dump(mode="python")),
-            lines=_catalogue_invoice_lines(invoice),
+            lines=catalogue_invoice_lines(invoice),
             notices=[
-                *_simplificada_tax_id_notices(invoice, required=added.simplificada_tax_id_advisory_required),
+                *simplificada_tax_id_notices(invoice, required=added.simplificada_tax_id_advisory_required),
                 *_euro_value_pending_notices(invoice, pending=added.euro_value_pending),
             ],
         )
@@ -421,6 +466,19 @@ def invoice_wizard(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
     notes: str = "",
@@ -460,13 +518,25 @@ def invoice_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=_elected_period_text(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        recipient_increase_period=_elected_period_text(recipient_increase_period, year=recipient_increase_year),
+        exercised_deduction_period=_elected_period_text(exercised_deduction_period, year=exercised_deduction_year),
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=recargo,
     )
-    invoice = _snapshot_invoice_payload(wizard_result.invoice)
+    invoice = snapshot_invoice_payload(wizard_result.invoice)
     payload = CatalogueInvoiceWizardResult.model_validate(
         {**invoice.model_dump(mode="python"), "already_existed": wizard_result.already_existed}
     )
-    lines = _catalogue_invoice_lines(invoice)
+    lines = catalogue_invoice_lines(invoice)
     lines.append(f"already_existed\t{wizard_result.already_existed}")
 
     notices: list[Notice] = []
@@ -495,7 +565,8 @@ def invoice_wizard(
     )
 
 
-def _invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjection) -> list[str]:
+def invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjection) -> list[str]:
+    """Render the row, creation and duplicate counts of an invoice import as lines."""
     return [
         f"bucket\t{bucket_id}",
         f"rows\t{result.rows}",
@@ -505,16 +576,18 @@ def _invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjectio
     ]
 
 
-def _invoice_import_refusal_lines(result: InvoiceImportProjection) -> list[str]:
+def invoice_import_refusal_lines(result: InvoiceImportProjection) -> list[str]:
+    """Render each refused import row with its row number, field and reason."""
     return [
         f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}"
         for failure in result.refused
     ]
 
 
-def _invoice_import_unmapped_report(
+def invoice_import_unmapped_report(
     unmapped_column_headers: tuple[str, ...],
 ) -> tuple[str, Notice] | None:
+    """Build the notice reporting unmapped column headers, or None when all are mapped."""
     if not unmapped_column_headers:
         return None
     headers = ", ".join(unmapped_column_headers)
@@ -533,7 +606,8 @@ def _invoice_import_unmapped_report(
     )
 
 
-def _invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[list[str], list[Notice]]:
+def invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[list[str], list[Notice]]:
+    """Build the lines and notices that report the positional column mapping reasons."""
     lines: list[str] = []
     notices: list[Notice] = []
     for index, reason in enumerate(mapping_reasons):
@@ -557,9 +631,10 @@ def _invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[lis
     return lines, notices
 
 
-def _invoice_import_all_refused_report(
+def invoice_import_all_refused_report(
     result: InvoiceImportProjection,
 ) -> tuple[str, Notice] | None:
+    """Build the report for an import where every row was refused, else None."""
     if not (result.rows > 0 and result.created == 0 and result.skipped_duplicate == 0 and bool(result.refused)):
         return None
     message = tr(
@@ -576,7 +651,8 @@ def _invoice_import_all_refused_report(
     )
 
 
-def _invoice_import_payload(result: InvoiceImportProjection) -> dict[str, object]:
+def invoice_import_payload(result: InvoiceImportProjection) -> dict[str, object]:
+    """Build the structured payload of an invoice import result."""
     return {
         "bucket_id": str(result.profile_id),
         "rows": result.rows,
@@ -607,17 +683,17 @@ def invoice_import(
     """
     result = submit_invoice_import(ctx, source_path=file, kind=kind, country=country)
     bucket_id = str(result.profile_id)
-    lines = _invoice_import_summary_lines(bucket_id, result)
-    lines.extend(_invoice_import_refusal_lines(result))
+    lines = invoice_import_summary_lines(bucket_id, result)
+    lines.extend(invoice_import_refusal_lines(result))
     notices: list[Notice] = []
-    if unmapped_report := _invoice_import_unmapped_report(result.unmapped_column_headers):
+    if unmapped_report := invoice_import_unmapped_report(result.unmapped_column_headers):
         unmapped_line, unmapped_notice = unmapped_report
         lines.append(unmapped_line)
         notices.append(unmapped_notice)
-    mapping_lines, mapping_notices = _invoice_import_mapping_reports(result.mapping_reasons)
+    mapping_lines, mapping_notices = invoice_import_mapping_reports(result.mapping_reasons)
     lines.extend(mapping_lines)
     notices.extend(mapping_notices)
-    all_refused_report = _invoice_import_all_refused_report(result)
+    all_refused_report = invoice_import_all_refused_report(result)
     if all_refused_report:
         all_refused_message, all_refused_notice = all_refused_report
         lines.insert(1, all_refused_message)
@@ -625,7 +701,7 @@ def invoice_import(
     emit_envelope(
         ctx,
         command="ledger.invoice.import",
-        result=CatalogueInvoiceImportResult.model_validate(_invoice_import_payload(result)),
+        result=CatalogueInvoiceImportResult.model_validate(invoice_import_payload(result)),
         lines=lines,
         notices=notices,
     )
@@ -644,7 +720,7 @@ def invoice_list(
     """List the rich reconciliation catalogue invoices for the active bucket."""
     read = read_invoice_catalogue(ctx, kind=kind)
     try:
-        rows = [_snapshot_invoice_payload(invoice) for invoice in read.invoices]
+        rows = [snapshot_invoice_payload(invoice) for invoice in read.invoices]
         bucket_id = str(read.completion.projection.profile_id)
         lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
         for invoice in rows:
@@ -685,12 +761,12 @@ def invoice_view(
     """
     read = view_invoice_catalogue(ctx, invoice_id=invoice_id)
     try:
-        invoice = _snapshot_invoice_payload(read.invoice)
+        invoice = snapshot_invoice_payload(read.invoice)
         emit_envelope(
             ctx,
             command="ledger.invoice.view",
             result=CatalogueInvoiceViewResult.model_validate(invoice.model_dump(mode="python")),
-            lines=_catalogue_invoice_lines(invoice),
+            lines=catalogue_invoice_lines(invoice),
         )
     except typer.Exit:
         raise
@@ -723,12 +799,12 @@ def invoice_remove(
         )
     completed, snapshot = remove_invoice_catalogue(ctx, invoice_id=invoice_id)
     try:
-        invoice = _snapshot_invoice_payload(snapshot)
+        invoice = snapshot_invoice_payload(snapshot)
         emit_envelope(
             ctx,
             command="ledger.invoice.remove",
             result=CatalogueInvoiceRemovePayload.model_validate(invoice.model_dump(mode="python")),
-            lines=_catalogue_invoice_lines(invoice),
+            lines=catalogue_invoice_lines(invoice),
         )
     except typer.Exit:
         raise
@@ -740,6 +816,28 @@ def invoice_remove(
             effect=completed.effect,
             refusal_code=completed.refusal_code,
         ) from None
+
+
+def invoice_attach_document(ctx: typer.Context, invoice_id: str, source_path: str) -> None:
+    """Keep one document as the source of an invoice, resolving a full id or unambiguous prefix."""
+    attached = attach_invoice_document(
+        ctx, invoice_id=invoice_id, source_path=source_path, source_directory=str(Path.cwd())
+    )
+    result = CatalogueInvoiceDocumentAttachPayload(
+        invoice_id=attached.invoice_id,
+        attachment_id=str(attached.attachment_id),
+        already_linked=attached.already_linked,
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.invoice.attach_document",
+        result=result,
+        lines=(
+            f"invoice_id\t{result.invoice_id}",
+            f"attachment_id\t{result.attachment_id}",
+            f"already_linked\t{str(result.already_linked).lower()}",
+        ),
+    )
 
 
 def invoice_update(
@@ -756,6 +854,20 @@ def invoice_update(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
+    fx_rate: str | None = None,
 ) -> None:
     """Correct one persisted invoice without re-keying it.
 
@@ -772,12 +884,33 @@ def invoice_update(
         "notes": notes,
         "iva_category": iva_category,
         "operation_type": operation_type,
-        "operation_date": None if operation_date is None else _parse_iso_date(operation_date, label="operation-date"),
+        "operation_date": None if operation_date is None else parse_iso_date(operation_date, label="operation-date"),
         "retention_rate": parse_optional_decimal_amount(retention_rate, label="retention-rate"),
         "retention_amount": parse_optional_decimal_amount(retention_amount, label="retention-amount"),
         "invoice_class": None if invoice_class is None else require_invoice_class(invoice_class),
         "series": series,
         "rectifies_invoice_number": rectifies_invoice_number,
+        # Passed as the stated token; the corrected record projects each
+        # through fact 0141 on its own issue date, as the lifecycle patch says.
+        "rectification_method": rectification_method,
+        "rectification_cause": rectification_cause,
+        "rectification_direction": rectification_direction,
+        "document_received_on": (
+            None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
+        ),
+        # The two election tokens travel as stated text, as the three facts
+        # above do. The three periods are parsed here, because the patch
+        # carries a typed period and a declaracion-liquidacion is a year and a
+        # registry code rather than a calendar string.
+        "issuer_increase_election": issuer_increase_election,
+        "issuer_minoracion_election": issuer_minoracion_election,
+        "issuer_minoracion_regularisation_period": _elected_period(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        "recipient_increase_period": _elected_period(recipient_increase_period, year=recipient_increase_year),
+        "exercised_deduction_period": _elected_period(exercised_deduction_period, year=exercised_deduction_year),
+        "art_80_tres_obligations_attested": art_80_tres_obligations_attested,
+        "declared_fx_rate": None if fx_rate is None else parse_fraction(fx_rate, label="fx-rate"),
     }
     patch = CatalogueInvoicePatch.model_validate(
         {key: value for key, value in patch_values.items() if value is not None}
@@ -797,10 +930,10 @@ def invoice_update(
     )
 
     try:
-        invoice = _snapshot_invoice_payload(result.invoice)
+        invoice = snapshot_invoice_payload(result.invoice)
         payload = invoice.model_dump(mode="python")
         payload["bucket_event_ids"] = list(result.bucket_event_ids)
-        lines = _catalogue_invoice_lines(invoice)
+        lines = catalogue_invoice_lines(invoice)
         lines.append(f"bucket_event_ids	{','.join(result.bucket_event_ids)}")
         emit_envelope(
             ctx,
@@ -818,6 +951,15 @@ def invoice_update(
             effect=completed.effect,
             refusal_code=completed.refusal_code,
         ) from None
+
+
+def _invoice_currency(raw: str) -> str:
+    """Fold a typed currency to its upper-case ISO 4217 code, or refuse it in the served words."""
+    try:
+        return normalise_iso_4217_currency(raw)
+    except CoreValidationError as error:
+        words = tr(f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}rule_finding.{InvoiceRuleFindingCode.CURRENCY_INVALID}")
+        raise bad(f"--currency {raw!r}: {words}") from error
 
 
 def _invoice_add_request(
@@ -840,7 +982,21 @@ def _invoice_add_request(
     counterparty_nif: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_year: int | None,
+    issuer_minoracion_regularisation_period: str | None,
+    recipient_increase_year: int | None,
+    recipient_increase_period: str | None,
+    exercised_deduction_year: int | None,
+    exercised_deduction_period: str | None,
+    art_80_tres_obligations_attested: bool | None,
     recargo: str | None,
+    fx_rate: str | None,
     arrendamiento_local_negocio: bool,
     situacion_inmueble: str | None,
     referencia_catastral: str | None,
@@ -862,30 +1018,67 @@ def _invoice_add_request(
         counterparty_tax_id=counterparty_nif,
         counterparty_country=country_code,
         invoice_number=invoice_number,
-        issued_at=_parse_iso_date(invoice_date, label="invoice-date"),
+        issued_at=parse_iso_date(invoice_date, label="invoice-date"),
         taxable_base=None if parsed_taxable_base is None else PublicDecimal(decimal=str(parsed_taxable_base)),
         iva_rate=None if parsed_iva_rate is None else PublicDecimal(decimal=str(parsed_iva_rate)),
-        currency=currency,
+        currency=_invoice_currency(currency),
         notes=notes,
         iva_category=None if resolved_iva_category is None else str(resolved_iva_category),
         operation_type=operation_type,
-        operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
+        operation_date=(None if operation_date is None else parse_iso_date(operation_date, label="operation-date")),
         retention_rate=public_amount(retention_rate, label="retention-rate"),
         retention_amount=public_amount(retention_amount, label="retention-amount"),
         invoice_class=str(default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)),
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=(
+            None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
+        ),
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=_elected_period_text(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        recipient_increase_period=_elected_period_text(recipient_increase_period, year=recipient_increase_year),
+        exercised_deduction_period=_elected_period_text(exercised_deduction_period, year=exercised_deduction_year),
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=public_amount(recargo, label="recargo"),
-        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
-            business_premises_lease_from_inputs(
-                lease_selected=arrendamiento_local_negocio,
-                situacion_inmueble=situacion_inmueble,
-                referencia_catastral=referencia_catastral,
-            )
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
+            lease_selected=arrendamiento_local_negocio,
+            situacion_inmueble=situacion_inmueble,
+            referencia_catastral=referencia_catastral,
         ),
         lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
+        declared_fx_rate=_declared_fx_rate(fx_rate),
     )
     return request
+
+
+def _elected_period(period: str | None, *, year: int | None) -> Period | None:
+    """One elected declaración-liquidación from its year and bare AEAT token, or ``None``.
+
+    The pair is read by the one CLI period grammar, so a calendar shape refuses
+    with the message naming the AEAT tokens, a token with no year refuses there,
+    and a year with no token refuses here rather than selecting a cadence the
+    operator did not state.
+    """
+    if period is None and year is not None:
+        raise bad(tr("cli.app.ledger.invoice.elected_year_without_period", year=str(year)))
+    return optional_canonical_period(period, year=year)
+
+
+def _elected_period_text(period: str | None, *, year: int | None) -> str | None:
+    """The same elected period as the display string the public request schema carries."""
+    resolved = _elected_period(period, year=year)
+    return None if resolved is None else str(resolved)
+
+
+def _declared_fx_rate(raw: str | None) -> PublicDecimal | None:
+    """Parse a stated exchange rate in the rate grammar; the worker refuses one not above zero."""
+    return None if raw is None else PublicDecimal(decimal=str(parse_fraction(raw, label="fx-rate")))
 
 
 def _invoice_add_base_and_rate(

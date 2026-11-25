@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { HouseholdPersonEdit } from "./profileHousehold";
 
 export type ProfileField = {
   path: string;
@@ -7,10 +8,19 @@ export type ProfileField = {
   masked: boolean;
   required: boolean;
   field_type: string;
+  /** The country codes offered; any code of the shape stays allowed. */
+  country_options?: string[];
   choices: { value: string; label: string }[];
   help: string[] | null;
   about: string;
   row_index: string | null;
+  /** Set on a detail stated per ejercicio: the wizard questions that answer
+   * it, and what each ejercicio states so far. */
+  ejercicio_answer?: {
+    question_id: string;
+    year_question_id: string;
+    statements: { ejercicio: number; value: string }[];
+  } | null;
 };
 export type ProfileSection = {
   key: string;
@@ -21,17 +31,40 @@ export type ProfileSection = {
 };
 export type UserProfile = {
   profile_id: string;
+  /** The name the page is headed with, as the product chose it: the
+   * taxpayer's, else the profile's own; empty when it has neither. */
+  name: string;
   record_revision: number;
   content_digest: string;
   setup_state: "complete" | "incomplete";
   valid: boolean;
   sections: ProfileSection[];
   missing_required: string[];
-  notices: { severity: string; message: string }[];
+  notices: ProfileNotice[];
   pages: number;
 };
+/** The catalogue action a served notice offers. The window runs only actions
+ * it maps to a door it already has; any other is shown as text alone. */
+export type ProfileNoticeAction = {
+  action_id: string;
+  target_command_key: string;
+};
+export type ProfileNotice = {
+  severity: string;
+  code: string;
+  message: string;
+  action: ProfileNoticeAction | null;
+};
+/** The catalogue action that opens the password-change door. */
+export const PASSWORD_CHANGE_ACTION_ID = "operator.profile.passphrase.change";
+/** The catalogue action that edits a profile fact: its door is the profile. */
+export const PROFILE_EDIT_ACTION_ID = "operator.profile.edit";
 export type ProfileEdit =
   | { kind: "field"; path: string; value: string }
+  | {
+      kind: "ejercicio_answer";
+      values: { question_id: string; value: string }[];
+    }
   | {
       kind: "add_row";
       section_key: string;
@@ -45,17 +78,72 @@ export type ProfileEdit =
       clear_fields: string[];
     }
   | { kind: "remove_row"; section_key: string; row_key: string }
-  | { kind: "complete" };
+  | { kind: "complete" }
+  /** A change of the descendants (`descendants`) or the ascendants
+   * (`ascendants`) against the revision the household was read at. */
+  | ({ kind: "descendants" } & HouseholdChange)
+  | ({ kind: "ascendants" } & HouseholdChange)
+  /** What one ejercicio's imputation election states. Each answer is the
+   * token a served choice carries: an empty token clears the ejercicio's
+   * statement and null leaves what the profile states. */
+  | {
+      kind: "imputation_election";
+      tax_year: number;
+      criterion: string | null;
+      codigo_comercio_accounting: string | null;
+    }
+  /** The sign-in method, the host's only way to change `auth.provider` and
+   * `auth.clave_movil_route`. `certificate` is a picker token, never a path. */
+  | {
+      kind: "auth_method";
+      provider: string;
+      clave_movil_route: string | null;
+      certificate: string | null;
+    };
+/** What a household change states, exactly one of three. `rows` is the
+ * whole set: every person and the count are replaced with exactly these
+ * people, so a person left out is removed and an empty set states that the
+ * group has none. `add_row` is one person added to the people stored at the
+ * expected revision, and `remove_row_index` takes out the person the
+ * household read served at that index; neither resends the people left
+ * alone, which the product composes. The product refuses more people than the
+ * declaration's design holds, and an index with no stored person, and serves
+ * the reason in the person's language. */
+export type HouseholdChange =
+  | { rows: HouseholdPersonEdit[] }
+  | { add_row: HouseholdPersonEdit }
+  | { remove_row_index: string };
 export type ProfileChange = {
   profile_id: string;
   expected_revision: number;
   expected_content_digest: string;
   edit: ProfileEdit;
 };
+/** A certificate file chosen in the native dialog: a token the host
+ * resolves, and the file's name; the path never reaches the window. */
+export type AeatCertificate = { token: string; name: string };
+/** The providers that keep a secret apart from the profile. */
+export type AeatCredentialProvider = "certificate" | "clave_permanente";
+export type AeatCredential = {
+  profile_id: string;
+  provider: AeatCredentialProvider;
+  password: string;
+};
+/** The profile's AEAT access beyond its plain facts. */
+export type AeatAccessPort = {
+  /** Null when the person closes the dialog without choosing; rejects with
+   * `{ code: "invalid" }` for a file that is not a PKCS#12 certificate. */
+  pickCertificate(): Promise<AeatCertificate | null>;
+  /** Saves the passphrase or password apart from the profile. A rejection
+   * is read by `credentialFailure`; nothing is retried after one that
+   * leaves the outcome unknown. */
+  saveCredential(credential: AeatCredential): Promise<void>;
+};
 export type UserProfilePort = {
   read(language: string): Promise<UserProfile>;
   change(change: ProfileChange): Promise<void>;
   observe(changed: () => void): Promise<() => void>;
+  readonly aeat: AeatAccessPort;
 };
 export type ProfileFailure =
   | "unavailable"
@@ -74,6 +162,27 @@ function failure(error: unknown): ProfileFailure {
     ? code
     : "unavailable";
 }
+/** Codes after which a credential save is known not to have happened. */
+const SETTLED_CREDENTIAL_FAILURES = [
+  "invalid",
+  "refused",
+  "conflict",
+  "not_signed_in",
+];
+
+/** How a rejected credential save is read. The host rejects with
+ * `{ code }`: after a settled code nothing happened; `unavailable` is the
+ * runtime being out of reach; any other code, `unknown` and `saved_unread`
+ * among them, leaves the outcome unconfirmed. */
+export function credentialFailure(
+  error: unknown,
+): "refused" | "unavailable" | "unconfirmed" {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (typeof code !== "string") return "unconfirmed";
+  if (SETTLED_CREDENTIAL_FAILURES.includes(code)) return "refused";
+  return code === "unavailable" ? "unavailable" : "unconfirmed";
+}
+
 type State = {
   data: UserProfile | null;
   loading: boolean;
@@ -89,8 +198,65 @@ const EMPTY: State = {
   saved: false,
 };
 
-/** One mounted profile reader. Pushes coalesce behind a single read; stale
- * responses are dropped and drafts keep the revision they were opened on. */
+/** What every reader of one port, reader and language shares while any of
+ * them is subscribed: the profile as last read, and whether a change cue (or
+ * no read yet) says it is out of date. A page that mounts again, or a reader
+ * that is shown again, renders this at once and reads only when it is stale. */
+type Shared = {
+  data: UserProfile | null;
+  stale: boolean;
+  /** Counts cues, so a read that a cue overtook leaves the data stale. */
+  epoch: number;
+  holders: number;
+  adopters: Set<(data: UserProfile | null) => void>;
+};
+const shared = new WeakMap<UserProfilePort, Map<string, Shared>>();
+const sharedKey = (reader: string, language: string) =>
+  `${reader}\u0000${language}`;
+function peek(
+  port: UserProfilePort | undefined,
+  reader: string | null,
+  language: string,
+): Shared | undefined {
+  if (!port || reader === null) return undefined;
+  return shared.get(port)?.get(sharedKey(reader, language));
+}
+function hold(port: UserProfilePort, reader: string, language: string) {
+  let entries = shared.get(port);
+  if (!entries) shared.set(port, (entries = new Map()));
+  const key = sharedKey(reader, language);
+  let entry = entries.get(key);
+  if (!entry) {
+    entry = {
+      data: null,
+      stale: true,
+      epoch: 0,
+      holders: 0,
+      adopters: new Set(),
+    };
+    entries.set(key, entry);
+  }
+  entry.holders += 1;
+  const held = entry;
+  return {
+    entry: held,
+    release() {
+      held.holders -= 1;
+      if (held.holders === 0 && entries.get(key) === held) entries.delete(key);
+    },
+  };
+}
+const seeded = (entry: Shared | undefined): State =>
+  entry?.data && !entry.stale
+    ? { ...EMPTY, data: entry.data, loading: false }
+    : EMPTY;
+
+/** One mounted profile reader. The subscription and the data belong to the
+ * port, reader and language, never to `shown`: the first read waits for the
+ * reader to be shown, a change cue while it is hidden only marks the data
+ * stale, and showing it again reads only if it never read or is stale.
+ * Pushes coalesce behind a single read; stale responses are dropped and
+ * drafts keep the revision they were opened on. */
 export function useUserProfile(
   port: UserProfilePort | undefined,
   reader: string | null,
@@ -98,73 +264,121 @@ export function useUserProfile(
   shown: boolean,
 ) {
   const identity = useMemo(
-    () => ({ port, reader, language, shown }),
-    [port, reader, language, shown],
+    () => ({ port, reader, language }),
+    [port, reader, language],
   );
-  const [stored, setStored] = useState({ identity, state: EMPTY });
+  const [stored, setStored] = useState(() => ({
+    identity,
+    state: seeded(peek(port, reader, language)),
+  }));
+  const shownNow = useRef(shown);
   const control = useRef<{
     refresh(): Promise<void>;
     save(base: UserProfile, edit: ProfileEdit): Promise<boolean>;
+    latest(): UserProfile | null;
+    wake(): void;
   } | null>(null);
   useEffect(() => {
     control.current = null;
-    if (!port || reader === null || !shown) return;
+    if (!port || reader === null) return;
+    const held = hold(port, reader, language);
+    const { entry } = held;
     let alive = true,
       reading = false,
       saving = false,
-      again = false;
+      again = false,
+      subscribed = false;
     let unsubscribe: (() => void) | undefined;
-    let state = EMPTY;
+    let readFinished = Promise.resolve();
+    let state = seeded(entry);
     const update = (patch: Partial<State>) => {
       if (!alive) return;
       state = { ...state, ...patch };
       setStored({ identity, state });
     };
-    const refresh = async () => {
+    // Another reader of the same profile read it: take what it read.
+    const adopt = (data: UserProfile | null) => {
+      if (!reading && !saving && state.data !== data)
+        update({ data, loading: false });
+    };
+    entry.adopters.add(adopt);
+    const refresh = async (saveReadback = false) => {
       if (!alive) return;
-      if (reading || saving) {
+      if (reading || (saving && !saveReadback)) {
         again = true;
         return;
       }
       reading = true;
+      let finishRead!: () => void;
+      readFinished = new Promise<void>((resolve) => {
+        finishRead = resolve;
+      });
       do {
         again = false;
+        const epoch = entry.epoch;
         update({ loading: true });
         try {
           const data = await port.read(language);
+          entry.data = data;
+          if (entry.epoch === epoch) entry.stale = false;
+          for (const other of entry.adopters) if (other !== adopt) other(data);
           update({ data, error: state.error === "unknown" ? "unknown" : null });
         } catch (error) {
-          update({ data: null, error: failure(error) });
+          const code = failure(error);
+          if (code === "not_signed_in") {
+            entry.data = null;
+            entry.stale = true;
+          }
+          update({
+            data: code === "not_signed_in" ? null : state.data,
+            error: state.error === "unknown" ? "unknown" : code,
+          });
         }
-      } while (alive && again && !saving);
+      } while (alive && again && (!saving || saveReadback));
       reading = false;
       update({ loading: false });
+      finishRead();
     };
     control.current = {
       refresh: async () => {
         update({ error: null, saved: false });
         await refresh();
       },
+      latest: () => state.data,
+      wake() {
+        if (!subscribed || reading) return;
+        if (entry.stale) void refresh();
+        else if (entry.data && state.data !== entry.data)
+          update({ data: entry.data, loading: false });
+      },
       async save(base, edit) {
-        if (
-          !alive ||
-          saving ||
-          reading ||
-          state.error === "unknown" ||
-          state.data?.profile_id !== base.profile_id
-        )
-          return false;
-        if (
-          base.record_revision !== state.data.record_revision ||
-          base.content_digest !== state.data.content_digest
-        ) {
-          update({ error: "conflict" });
+        // A save while another is held, or after one whose outcome is
+        // unknown, is not sent: the page shows that save, or that unknown
+        // outcome, as why. A base read for another profile is shown as one.
+        if (!alive || saving || state.error === "unknown") return false;
+        if (state.data?.profile_id !== base.profile_id) {
+          update({ error: state.data ? "conflict" : "not_signed_in" });
           return false;
         }
         saving = true;
         update({ saving: true, error: null, saved: false });
         let committed = false;
         try {
+          // Reserve the save before waiting, so observation pushes cannot
+          // repeatedly overtake the edit. The draft retains its original CAS.
+          await readFinished;
+          if (!alive) return false;
+          if (state.data?.profile_id !== base.profile_id) {
+            update({ error: "not_signed_in" });
+            return false;
+          }
+          if (
+            base.record_revision !== state.data.record_revision ||
+            base.content_digest !== state.data.content_digest
+          ) {
+            update({ error: "conflict" });
+            return false;
+          }
           await port.change({
             profile_id: base.profile_id,
             expected_revision: base.record_revision,
@@ -178,14 +392,22 @@ export function useUserProfile(
           committed = code === "saved_unread";
           update({ error: code, saved: committed });
         } finally {
-          saving = false;
-          update({ saving: false });
-          if (committed || again) {
-            const writeError = state.error;
-            await refresh();
-            if (committed && !state.data) update({ error: "saved_unread" });
-            else if (writeError && writeError !== "saved_unread")
-              update({ error: writeError });
+          try {
+            if (committed || again || state.error === "conflict") {
+              const writeError = state.error;
+              // Keep the save reserved, including its UI, until readback and
+              // coalesced observations settle. Only this read may bypass it.
+              await refresh(true);
+              // A failed readback cannot turn a confirmed write into a failed
+              // save, even when access was refused or the session expired.
+              if (committed && (!state.data || state.error !== null))
+                update({ error: "saved_unread" });
+              else if (writeError && writeError !== "saved_unread")
+                update({ error: writeError });
+            }
+          } finally {
+            saving = false;
+            update({ saving: false });
           }
         }
         return alive && committed;
@@ -193,7 +415,10 @@ export function useUserProfile(
     };
     void port
       .observe(() => {
-        void refresh();
+        entry.epoch += 1;
+        entry.stale = true;
+        // Hidden, a cue only marks the data stale; showing the reader reads.
+        if (shownNow.current) void refresh();
       })
       .then((stop) => {
         if (!alive) {
@@ -201,15 +426,23 @@ export function useUserProfile(
           return;
         }
         unsubscribe = stop;
-        void refresh();
+        subscribed = true;
+        // The first read waits until the reader is shown.
+        if (shownNow.current && entry.stale) void refresh();
       })
       .catch(() => update({ loading: false, error: "unavailable" }));
     return () => {
       alive = false;
       unsubscribe?.();
+      entry.adopters.delete(adopt);
+      held.release();
       control.current = null;
     };
-  }, [identity, port, reader, language, shown]);
+  }, [identity, port, reader, language]);
+  useEffect(() => {
+    shownNow.current = shown;
+    if (shown) control.current?.wake();
+  }, [shown, identity]);
   const refresh = useCallback(() => {
     void control.current?.refresh();
   }, []);
@@ -218,11 +451,16 @@ export function useUserProfile(
       control.current?.save(base, edit) ?? Promise.resolve(false),
     [],
   );
+  /** The profile as last read, which a render may not have drawn yet: the
+   * base of the next edit in a sequence of saves. */
+  const latest = useCallback(() => control.current?.latest() ?? null, []);
   const state =
-    stored.identity === identity && reader !== null && shown
-      ? stored.state
-      : EMPTY;
-  return { ...state, refresh, save };
+    reader === null
+      ? EMPTY
+      : stored.identity === identity
+        ? stored.state
+        : seeded(peek(port, reader, language));
+  return { ...state, refresh, save, latest };
 }
 
 export const profileText = (value: string) =>

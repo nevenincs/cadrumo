@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_A = "3aa00000-0000-4000-8000-0000000000aa"
 _BUCKET_B = "3bb00000-0000-4000-8000-0000000000bb"
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _CAPTURED_AT = datetime(2026, 4, 15, 12, 0, 0, tzinfo=UTC)
 _FILING_RECORD_ID = "filing-record-split-context"
 

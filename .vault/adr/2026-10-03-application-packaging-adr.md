@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9522378c4ba3005b8759ff031a09be7fb7d5b172d018649b7e420fab60f19c6'
+body_hash: 'sha256:61068c76f93171c16848978125ac31ebe81ef5ca7c1b26249d8491bcc1b56a4c'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
@@ -32,7 +32,7 @@ Tauri is **settled by the user's instruction on 2026-10-03**, not a provisional 
 
 - **Tauri application + controlled CPython + shared native foundation:** proposed; satisfies desktop, terminal and isolation requirements while retaining Python services.
 - **Ambient Python and host-installed dependencies:** rejected; cannot ensure the package's own interpreter, libraries and paths.
-- **Separate C/Rust/Python implementations of configuration and provisioning:** rejected; creates competing authorities.
+- **Separate implementations of configuration and provisioning across languages:** rejected; creates competing authorities.
 - **Machine service, on-demand user supervisor, or detached runtime:** resolved by `2026-10-04-runtime-manager-architecture-adr`. A per-session manager starts at sign-in and owns the runtime's lifecycle. The on-demand supervisor hypothesis is retired, and unsupervised detachment remains rejected.
 
 ## Constraints
@@ -111,7 +111,7 @@ C and Rust can reuse a DLL through a **versioned C ABI**. Use opaque handles, ex
 
 ### Provisioning and implementation order
 
-Prefer core installation followed by explicit first-run capability downloads, deferred to first use if skipped. Chromium is pinned to Playwright. Local AI provisions a managed engine and selected models, reusing Python admission controls. Google authorizes on Connect. CLI/MCP must return actionable missing-component status without silently starting large downloads.
+Prefer core installation followed by explicit first-run capability downloads in the desktop, deferred to first use if skipped. Chromium is pinned to Playwright. Local AI sets up a managed engine and selected models. Google authorizes on Connect.
 
 | Order | Exit evidence |
 | --- | --- |

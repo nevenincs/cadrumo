@@ -30,7 +30,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import tr
 
-from .._paths import SRC_DIR
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,27 +137,112 @@ def _facts_at_call_sites(module: ast.Module, function_name: str) -> set[str]:
     return guaranteed
 
 
+def _builder_facts(module: ast.Module, name: str) -> set[str]:
+    """Return the facts a module-level builder returns, as a dict literal or as the one local dict it fills.
+
+    Only the dict literal counts. A key the builder merges in afterwards is
+    conditional or at least not provable here, and a gate that guarantees fewer
+    facts than a producer supplies can only refuse a template, never pass a bad one.
+    """
+    for node in module.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            returns = [inner.value for inner in ast.walk(node) if isinstance(inner, ast.Return)]
+            if len(returns) != 1 or returns[0] is None:
+                raise _UnresolvedFactsError(f"{name} does not return one dict")
+            (returned,) = returns
+            if isinstance(returned, ast.Dict):
+                keys, splats = _dict_literal_keys(returned)
+                if splats:
+                    raise _UnresolvedFactsError(f"{name} splats {splats}")
+                return keys
+            if isinstance(returned, ast.Name):
+                return _local_dict_keys(node, returned.id) - _conditionally_assigned(node, returned.id)
+            raise _UnresolvedFactsError(f"{name} does not return a dict literal or one local dict")
+    raise _UnresolvedFactsError(f"no function {name} building a dict")
+
+
+def _bound_to_builder_call(function: ast.AST, name: str) -> bool:
+    """Whether the local ``name`` is assigned the result of a plain function call."""
+    return any(
+        isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id == name
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Name)
+        for node in ast.walk(function)
+    )
+
+
+def _local_builder_facts(module: ast.Module, function: ast.AST, name: str) -> set[str]:
+    """Return the facts of the builder call the local ``name`` is bound to in ``function``."""
+    for node in ast.walk(function):
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id == name
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+        ):
+            return _builder_facts(module, node.value.func.id)
+    raise _UnresolvedFactsError(f"splat {name} is not a parameter or a builder's result")
+
+
 def _guaranteed_facts(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]:
     """Resolve the facts this construction supplies on EVERY path that reaches it."""
     if isinstance(facts, ast.Name):
         function = _enclosing_function(module, call)
+        if _bound_to_builder_call(function, facts.id):
+            return _local_builder_facts(module, function, facts.id) - _conditionally_assigned(function, facts.id)
         return _local_dict_keys(function, facts.id) - _conditionally_assigned(function, facts.id)
+    if isinstance(facts, ast.Call) and isinstance(facts.func, ast.Name):
+        return _builder_facts(module, facts.func.id)
     keys, splats = _dict_literal_keys(facts)
     for splat in splats:
         function = _enclosing_function(module, call)
         parameters = {argument.arg for argument in [*function.args.args, *function.args.kwonlyargs]}
-        if splat not in parameters:
-            raise _UnresolvedFactsError(f"splat {splat} is not a parameter")
-        keys |= _facts_at_call_sites(module, function.name)
+        if splat in parameters:
+            keys |= _facts_at_call_sites(module, function.name)
+        else:
+            keys |= _local_builder_facts(module, function, splat)
     return keys
 
 
-def _literal_locale_keys(node: ast.expr | None) -> tuple[str, ...]:
-    """Inspect every conditional branch and refuse dynamically computed keys."""
+def _module_string_constant(module: ast.Module, name: str) -> str | None:
+    """The string literal a module-level constant of that name is bound to, when exactly one is."""
+    values = {
+        statement.value.value
+        for statement in module.body
+        if isinstance(statement, ast.Assign | ast.AnnAssign)
+        and isinstance(statement.value, ast.Constant)
+        and isinstance(statement.value.value, str)
+        and any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in (statement.targets if isinstance(statement, ast.Assign) else [statement.target])
+        )
+    }
+    return next(iter(values)) if len(values) == 1 else None
+
+
+def _literal_locale_keys(node: ast.expr | None, module: ast.Module | None = None) -> tuple[str, ...]:
+    """Inspect every conditional branch and refuse dynamically computed keys.
+
+    With the producing ``module``, a module-level string constant reads as its literal.
+    """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return (node.value,)
     if isinstance(node, ast.IfExp):
-        return tuple(dict.fromkeys((*_literal_locale_keys(node.body), *_literal_locale_keys(node.orelse))))
+        return tuple(
+            dict.fromkeys((*_literal_locale_keys(node.body, module), *_literal_locale_keys(node.orelse, module)))
+        )
+    if (
+        module is not None
+        and isinstance(node, ast.Name)
+        and (constant := _module_string_constant(module, node.id)) is not None
+        and constant != ""
+    ):
+        return (constant,)
     raise _UnresolvedFactsError("message_locale_key is not a literal string or conditional of literal strings")
 
 
@@ -180,7 +265,7 @@ def _producer_sites() -> list[tuple[str, set[str], str]]:
                     facts = keyword.value
             locator = f"{path.relative_to(SRC_DIR).as_posix()}:{node.lineno}"
             try:
-                locale_keys = _literal_locale_keys(locale_key_node)
+                locale_keys = _literal_locale_keys(locale_key_node, module)
                 guaranteed = set() if facts is None else _guaranteed_facts(module, node, facts)
             except _UnresolvedFactsError as exc:
                 pytest.fail(

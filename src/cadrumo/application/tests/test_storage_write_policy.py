@@ -33,7 +33,7 @@ def test_non_profile_routes_do_not_inspect_storage(
     decision = inspect_storage_write_policy(
         write_route,
         settings=Settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
         ),
     )
@@ -46,13 +46,13 @@ def test_non_profile_routes_do_not_inspect_storage(
 
 def test_unknown_write_route_fails_closed(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="unknown command write-route scope"):
-        inspect_storage_write_policy("future-route", settings=Settings(cadrumo_local_storage_root=tmp_path))
+        inspect_storage_write_policy("future-route", settings=Settings(cadrumo_storage_root=tmp_path))
 
 
 def test_profile_bound_route_refuses_root_fallback(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "profile-bound",
-        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN),
+        settings=Settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN),
     )
     assert decision.allowed is False
     assert decision.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK
@@ -65,7 +65,7 @@ def test_profile_bound_route_refuses_root_fallback(tmp_path: Path) -> None:
 
 def test_profile_bound_route_refuses_explicit_database(tmp_path: Path) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
     decision = inspect_storage_write_policy("profile-bound", settings=settings)
@@ -75,14 +75,14 @@ def test_profile_bound_route_refuses_explicit_database(tmp_path: Path) -> None:
     assert decision.verdict is not None
     evidence = decision.verdict.evidence[0].values
     assert evidence["explicit_route_setting"] == "CADRUMO_DATABASE_URL"
-    assert evidence["storage_root_setting"] == "CADRUMO_LOCAL_STORAGE_ROOT"
+    assert evidence["storage_root_setting"] == "CADRUMO_STORAGE_ROOT"
     assert settings.model_fields_set >= {"cadrumo_database_url", STORAGE_ROOT_SETTINGS_FIELD}
 
 
 def test_profile_bound_route_allows_active_bucket(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "profile-bound",
-        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
+        settings=Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile="operator"),
     )
     assert decision.allowed is True
     assert decision.code is StorageWritePolicyCode.ALLOWED_ACTIVE_BUCKET
@@ -91,7 +91,7 @@ def test_profile_bound_route_allows_active_bucket(tmp_path: Path) -> None:
 
 
 def test_profile_bound_route_uses_pointer_from_stale_settings(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
     write_pointer(tmp_path, BucketPointer.selected(bucket_id="operator", transition_revision=0))
     decision = inspect_storage_write_policy("profile-bound", settings=settings)
     assert decision.allowed is True

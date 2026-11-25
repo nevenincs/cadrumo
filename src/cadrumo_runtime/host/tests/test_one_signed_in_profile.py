@@ -23,14 +23,15 @@ from uuid import UUID, uuid4
 import pytest
 from keyring.errors import KeyringError, PasswordDeleteError
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
 from cadrumo_client.contracts.access_refusals import AccessDenied
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -38,11 +39,13 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installation import read_runtime_installation
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id
+from ...application.session_authority_contracts import HumanAdmissionControl
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 from ..sign_in_sweep import revoke_other_saved_sign_ins
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_runtime_password_rotation import _fresh_client, _native_runtime
+from .test_runtime_password_rotation import native_runtime, runtime_password_rotation_fresh_client
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,15 +58,15 @@ pytestmark = [
 
 def test_signing_in_to_another_profile_signs_the_first_out_everywhere_and_back_again(tmp_path: Path) -> None:
     with (
-        _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root),
-        _fresh_client(launch, first_id) as person,
-        _fresh_client(launch, first_id) as sibling,
+        native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root),
+        runtime_password_rotation_fresh_client(launch, first_id) as person,
+        runtime_password_rotation_fresh_client(launch, first_id) as sibling,
     ):
         person.login_password(bytearray(PROFILE_INPUT.encode()))
         sibling.login_password(bytearray(PROFILE_INPUT.encode()))
         assert person.status().status.connected and sibling.status().status.connected
 
-        with _fresh_client(launch, second_id) as other:
+        with runtime_password_rotation_fresh_client(launch, second_id) as other:
             other.login_password(bytearray(PROFILE_INPUT.encode()))
 
             # Every session of the first profile ended; the profile signed in to is the only one.
@@ -73,7 +76,7 @@ def test_signing_in_to_another_profile_signs_the_first_out_everywhere_and_back_a
             assert other.status().status.connected
             assert other.status().status.profile_id == second_id
 
-            with _fresh_client(launch, first_id) as returning:
+            with runtime_password_rotation_fresh_client(launch, first_id) as returning:
                 returning.login_password(bytearray(PROFILE_INPUT.encode()))
 
                 with pytest.raises(FrontendRefusedError):
@@ -116,10 +119,12 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
 ) -> None:
     """Finish A's receipt proof after B's handover, without letting A revoke B."""
     store = InMemoryKeyring()
-    monkeypatch.setattr(acceleration_receipt, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
     entered, release = Event(), Event()
     owners: list[RuntimeProfileConnections] = []
-    original = RuntimeProfileConnections._finish_login
+    original = RuntimeProfileConnections.finish_login
 
     def finish(
         self: RuntimeProfileConnections,
@@ -137,8 +142,8 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
             assert release.wait(90), "new profile handover did not complete"
         return result
 
-    monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
-    with _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, root):
+    monkeypatch.setattr(RuntimeProfileConnections, "finish_login", finish)
+    with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, root):
 
         def store_receipt(profile_id: UUID) -> None:
             binding = owners[0]._profiles[profile_id].store.binding
@@ -155,9 +160,9 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
                 )
 
         with (
-            _fresh_client(launch, first_id) as person,
-            _fresh_client(launch, first_id) as activity,
-            _fresh_client(launch, second_id) as other,
+            runtime_password_rotation_fresh_client(launch, first_id) as person,
+            runtime_password_rotation_fresh_client(launch, first_id) as activity,
+            runtime_password_rotation_fresh_client(launch, second_id) as other,
         ):
             person.login_password(bytearray(PROFILE_INPUT.encode()))
             store_receipt(first_id)
@@ -178,7 +183,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
                 activity.note_activity()
             assert other.status().status.connected
             # B's durable receipt also remains valid after the stale helper completes.
-            with _fresh_client(launch, second_id) as returning:
+            with runtime_password_rotation_fresh_client(launch, second_id) as returning:
                 assert returning.resume_receipt().status.connected
             assert other.status().status.connected
 
@@ -188,9 +193,9 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
 ) -> None:
     """A second admission cannot sweep after the first handover retired it."""
     first_finished, second_admitted, release = Event(), Event(), Event()
-    with _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root):
-        original_finish = RuntimeProfileConnections._finish_login
-        original_admit = RuntimeProfileConnections._admit_human_login
+    with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root):
+        original_finish = RuntimeProfileConnections.finish_login
+        original_admit = RuntimeProfileConnections.admit_human_login
 
         def finish(
             self: RuntimeProfileConnections,
@@ -212,18 +217,20 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
             host: RuntimeProfileHost,
             context: ConnectionContext,
             secret: bytearray,
+            control: HumanAdmissionControl,
+            deadline: TimeoutDeadline,
         ) -> AccessSession | AccessDenied:
-            result = original_admit(self, connection, host, context, secret)
+            result = original_admit(self, connection, host, context, secret, control, deadline)
             if host.store.binding.profile_id == second_id:
                 assert isinstance(result, AccessSession)
                 second_admitted.set()
             return result
 
-        monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
-        monkeypatch.setattr(RuntimeProfileConnections, "_admit_human_login", admit)
+        monkeypatch.setattr(RuntimeProfileConnections, "finish_login", finish)
+        monkeypatch.setattr(RuntimeProfileConnections, "admit_human_login", admit)
         with (
-            _fresh_client(launch, first_id) as first,
-            _fresh_client(launch, second_id) as second,
+            runtime_password_rotation_fresh_client(launch, first_id) as first,
+            runtime_password_rotation_fresh_client(launch, second_id) as second,
             ThreadPoolExecutor(max_workers=2) as pool,
         ):
             first_result = pool.submit(first.login_password, bytearray(PROFILE_INPUT.encode()))

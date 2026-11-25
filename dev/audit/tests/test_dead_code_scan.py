@@ -9,13 +9,16 @@ runner against a live process.
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import MCP_PACKAGE, SOURCE_PACKAGES
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from ..dead_code import (
     MINIMUM_OFFERED_MODULES,
@@ -45,7 +48,7 @@ def _expected_vulture_path(path: Path) -> str:
     current working directory (the repo root here, via ``cwd=_REPO_ROOT``)
     when it resolves under it, and falls back to the path exactly as given
     otherwise. The run harness confines pytest's basetemp under the
-    repository's own ``.logs`` tree, so ``tmp_path`` candidates land inside
+    repository's own ``.tmp/logs`` tree, so ``tmp_path`` candidates land inside
     the repo root and vulture reports them relative -- with the OS-native
     separator, not the POSIX form the repo-relative helpers elsewhere use.
     Mirroring the real contract keeps the assertion about vulture's actual
@@ -311,3 +314,52 @@ def test_a_module_vulture_cannot_parse_makes_the_scan_unavailable(tmp_path: Path
     assert partial.findings == ()
     assert "skipped 1 module(s)" in partial.reason
     assert "src/cadrumo/broken.py (invalid decimal literal" in partial.reason
+
+
+def test_the_shared_verdict_follows_an_edit_and_never_shares_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The run-wide verdict is keyed on what vulture is offered: an edit rescans, a tool error stays private."""
+    from dev.quality import shared_scan
+
+    from .. import dead_code
+
+    root = tmp_path.resolve()
+    package = _populated_tree(root)
+    cache = root / "run-cache"
+    monkeypatch.setattr(dead_code, "REPO_ROOT", root)
+    monkeypatch.setattr(shared_scan, "memo", {})
+    monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(cache))
+
+    def published() -> int:
+        return len(list((cache / "audit-dead-code-vulture").glob("*/result.pickle")))
+
+    first = run_dead_code_scan(root)
+    (package / "dead.py").write_text("import json\n", encoding="utf-8")
+    edited = run_dead_code_scan(root)
+
+    assert [finding.message for finding in first.findings] == ["unused import 'os'"]
+    assert [finding.message for finding in edited.findings] == ["unused import 'json'"]
+    assert published() == 2
+
+    (package / "broken.py").write_text("x = 1_\n", encoding="utf-8")
+
+    assert run_dead_code_scan(root).outcome is DeadCodeOutcome.ERROR
+    assert published() == 2, "a tool error says nothing about the tree and must not be served to the run"
+
+
+def test_the_module_entry_runs_a_complete_scan_and_reports_it() -> None:
+    """``python -m dev.audit.dead_code`` shares its result across processes without a pickle refusal."""
+    completed = subprocess.run(
+        [sys.executable, "-m", "dev.audit.dead_code", "--json"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=600,
+    )
+
+    assert completed.returncode == 0, completed.stderr[-2000:]
+    report = json.loads(completed.stdout)
+    assert report["outcome"] in {DeadCodeOutcome.CLEAN.value, DeadCodeOutcome.FINDINGS.value}, report["reason"]
+    assert report["modules_offered"] >= MINIMUM_OFFERED_MODULES

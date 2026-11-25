@@ -4,7 +4,7 @@
 #![windows_subsystem = "windows"]
 
 use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, panic};
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "macos"))]
 use cadrumo_application::diagnostics::{EventKind, HostOutcome, HostStage};
 use cadrumo_manager::{
     identity,
@@ -33,8 +33,6 @@ const BUILD_SEQUENCE: &str = env!(
     "CADRUMO_MANAGER_BUILD_SEQUENCE",
     "CADRUMO_MANAGER_BUILD_SEQUENCE must come from the manager component's build identity"
 );
-/// `debug` or `release`, from the Cargo profile that compiled this image.
-const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
 /// `{VERSION}+{BUILD_ID}`, with a `.debug` suffix for a debug build.
 const DISPLAY_VERSION: &str = env!("CADRUMO_DISPLAY_VERSION");
 const _: () = assert!(
@@ -77,12 +75,160 @@ fn start(
             ExitCode::from(STARTUP_FAILED)
         }
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        let _ = breakaway_attempted;
+        diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
+        // A cutover designation needs a versioned installation to hand over to.
+        if designation.is_some() {
+            diagnostics.host_outcome(HostStage::Admission, HostOutcome::Unavailable);
+            diagnostics.host_stopped(i32::from(STARTUP_FAILED));
+            let _ = writeln!(io::stderr(), "manager_cutover_unavailable");
+            return ExitCode::from(STARTUP_FAILED);
+        }
+        diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
+        match run_macos(intent, diagnostics.clone()) {
+            Ok(()) => {
+                diagnostics.host_stopped(0);
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                use cadrumo_application::error::application::{
+                    ApplicationError, ErrorCode, Operation,
+                };
+                diagnostics.failure(
+                    ApplicationError::new(ErrorCode::ManagerUnavailable, Operation::Manager)
+                        .caused_by(error),
+                );
+                diagnostics.host_stopped(i32::from(STARTUP_FAILED));
+                let _ = writeln!(io::stderr(), "manager_startup_failed");
+                ExitCode::from(STARTUP_FAILED)
+            }
+        }
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
     {
         let _ = (diagnostics, breakaway_attempted, intent, designation);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
+}
+
+/// How long a host whose event loop returned keeps polling its supervisor to settlement.
+#[cfg(target_os = "macos")]
+const SETTLEMENT_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
+
+#[cfg(target_os = "macos")]
+fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
+    use cadrumo_application::error::application::{ErrorCode, Operation};
+    use cadrumo_manager::{
+        background::Background,
+        diagnostics::{configure, inspection_failed, stage},
+        installed::InstalledRuntime,
+        macos::{
+            activity, ipc,
+            lifecycle::appkit::Host,
+            menu::{Controller, effects::PackageEffects},
+        },
+        preferences::Preferences,
+        session::{
+            ManagerSession,
+            instance::{claim_session, manager_id},
+            ownership::StartKind,
+        },
+        strings::Strings,
+        supervision::environment::ManagedLocations,
+    };
+    use objc2_foundation::MainThreadMarker;
+    let mtm =
+        MainThreadMarker::new().ok_or_else(|| io::Error::other("manager_main_thread_required"))?;
+    let executable = env::current_exe()?;
+    let locations = stage(
+        &diagnostics,
+        HostStage::Package,
+        ErrorCode::PackageUnavailable,
+        Operation::Manager,
+        || ManagedLocations::resolve(&executable),
+    )?;
+    let manager_id = stage(
+        &diagnostics,
+        HostStage::Storage,
+        ErrorCode::EnvironmentFailed,
+        Operation::Manager,
+        || manager_id(locations.storage_root()),
+    )?;
+    let Some(session_lock) = stage(
+        &diagnostics,
+        HostStage::Instance,
+        ErrorCode::InstanceLockForeign,
+        Operation::Manager,
+        || claim_session(&manager_id, std::time::Duration::ZERO),
+    )?
+    else {
+        diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
+        if let Some(request) = intent.existing_request() {
+            // The session's core may be hosted by this package's desktop instead.
+            let response = ipc::request_host(&manager_id, locations.package_root(), &request)?;
+            if intent == Intent::Retry
+                && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
+            {
+                return Err(io::ErrorKind::WouldBlock.into());
+            }
+        }
+        return Ok(());
+    };
+    configure(&locations, &diagnostics);
+    if intent == Intent::Retry {
+        // Only an admitted session owner may clear failures for a fresh launch.
+        // Existing owners receive Retry over their authenticated IPC instead.
+        cadrumo_manager::failed_versions::FailedVersions::retry(locations.storage_root())?;
+    }
+    let preferences = Preferences::read(locations.storage_root())?;
+    if matches!(intent, Intent::SignIn | Intent::Recovery) && !preferences.start_at_sign_in {
+        return Ok(());
+    }
+    let effects = PackageEffects::new(&locations)?;
+    // Login start is a convenience: a refused registration never stops supervision, and
+    // the menu row still reports the stored preference.
+    let _ = effects.reconcile_login(preferences);
+    let server = ipc::Server::bind_installed(locations.package_root(), &session_lock)?;
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
+    let installed = InstalledRuntime::inspect(&locations)
+        .map_err(|error| inspection_failed(&diagnostics, error))?;
+    diagnostics.host_outcome(HostStage::Package, HostOutcome::Ready);
+    let session = stage(
+        &diagnostics,
+        HostStage::Session,
+        ErrorCode::SessionUnavailable,
+        Operation::Manager,
+        ManagerSession::current,
+    )?;
+    let background = Background::new(
+        installed,
+        session,
+        activity::activity,
+        diagnostics.clone(),
+        match intent {
+            Intent::SignIn => StartKind::SignIn,
+            Intent::Recovery => StartKind::Recovery,
+            Intent::Manual | Intent::Retry => StartKind::Manual,
+        },
+    )?;
+    let menu = Controller::new(Strings::current()?, preferences, Box::new(effects));
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Window);
+    // AppKit ends the process itself once the host may finish; a return is a failure
+    // whose custody is settled before the session lock is released.
+    let failure = Host::new(background, session_lock, server, menu).run(mtm);
+    if !failure.host.settle(SETTLEMENT_BOUND) {
+        diagnostics.host_failure(
+            HostStage::Window,
+            cadrumo_application::error::application::ApplicationError::new(
+                ErrorCode::ManagerUnavailable,
+                Operation::Manager,
+            ),
+        );
+    }
+    Err(failure.error)
 }
 
 #[cfg(windows)]
@@ -98,7 +244,10 @@ fn run_windows(
         diagnostics::{configure, inspection_failed, stage},
         installation::DispatchOutcome,
         installed::InstalledRuntime,
-        session::{ManagerSession, instance::claim_session},
+        session::{
+            ManagerSession,
+            instance::{claim_session, manager_id},
+        },
         windows_lifecycle,
     };
     if stage(
@@ -133,12 +282,19 @@ fn run_windows(
         };
         (installation, None)
     };
+    let manager_id = stage(
+        &diagnostics,
+        HostStage::Storage,
+        ErrorCode::EnvironmentFailed,
+        Operation::Manager,
+        || manager_id(installation.locations().storage_root()),
+    )?;
     let Some(session_lock) = stage(
         &diagnostics,
         HostStage::Instance,
         ErrorCode::InstanceLockForeign,
         Operation::Manager,
-        || claim_session(identity::MANAGER_ID, std::time::Duration::ZERO),
+        || claim_session(&manager_id, std::time::Duration::ZERO),
     )?
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
@@ -146,7 +302,11 @@ fn run_windows(
             return Err(io::ErrorKind::WouldBlock.into());
         }
         if let Some(request) = intent.existing_request() {
-            let response = cadrumo_manager::ipc::windows::request(&env::current_exe()?, &request)?;
+            let response = cadrumo_manager::ipc::windows::request_host(
+                &manager_id,
+                &env::current_exe()?,
+                &request,
+            )?;
             if intent == Intent::Retry
                 && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
             {
@@ -155,8 +315,6 @@ fn run_windows(
         }
         return Ok(());
     };
-    diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
-    diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(installation.locations(), &diagnostics);
     if intent == Intent::Retry {
         // Only an admitted session owner may clear failures for a fresh launch.
@@ -174,6 +332,7 @@ fn run_windows(
         cadrumo_manager::windows_tray::Configuration::new(installation.locations(), preferences)?;
     let ipc = cadrumo_manager::ipc::windows::Server::bind_installed(
         installation.locations().package_root(),
+        &manager_id,
     )?;
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
     let selected = installation.selection().clone();
@@ -211,12 +370,16 @@ fn run_windows(
         HostStage::Window,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::run(background, ipc, tray, selected, session_lock),
+        || windows_lifecycle::run(background, ipc, tray, selected, session_lock, manager_id),
     )
 }
 
 fn main() -> ExitCode {
-    // First, so a panic on any thread is recorded once the log is configured,
+    // Before anything is created: an unusable program image must fail its creation, not
+    // raise a dialog nobody answers. Every start, the service included, enters here.
+    #[cfg(windows)]
+    cadrumo_platform::error_mode::suppress_dialogs_for_process();
+    // Next, so a panic on any thread is recorded once the log is configured,
     // and the default hook never prints a payload.
     let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     panic::install(diagnostics.clone());
@@ -279,6 +442,9 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `debug` or `release`, from the Cargo profile that compiled this image.
+    const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
 
     #[test]
     fn display_version_names_the_build_and_its_type() {

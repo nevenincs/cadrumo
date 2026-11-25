@@ -10,18 +10,21 @@ from typing import TYPE_CHECKING, ClassVar, Final, override
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.source_policy import SourceSurface
-from .....application.modelo.work_form_models import (
-    ModeloWorkForm,
-)
-from .....core.i18n.render import tr
+from .....application.modelo.work_form_findings import ModeloFormAttention
+from .....application.modelo.work_form_header import attention_counts, form_recorded
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
+from ...refusal.panel import RefusalPanel, RefusalSlot
+from ...refusal.served import ServedRefusalV1
 from .casilla_list_models import AddressKey
 from .dialog_width import fit_dialog_height, fit_dialog_width
 from .editor import area_words
@@ -36,59 +39,63 @@ from .issue_projection import issue_lines
 from .issue_scale import (
     CalculateAgain,
     ConfirmAssumedValues,
-    IssueLevel,
     IssueLine,
     IssuesChoice,
     UnenteredBoxes,
     UnenteredSection,
-    level_counts,
     levels_marked,
     title_text,
     unentered_levels,
     verdict_text,
 )
 from .issue_screen_components import (
-    _BOXES_SUFFIX,
-    _CONFIRM_SCOPE_KEY,
-    _ISSUE_ID_PREFIX,
-    _SECTION_INFIX,
-    _issue_prompt,
-    _IssueList,
+    BOXES_SUFFIX,
+    CONFIRM_SCOPE_KEY,
+    ISSUE_ID_PREFIX,
+    OPEN_COMPARED_KEY,
+    SECTION_INFIX,
+    IssueList,
     footer_keys_for_width,
+    issue_prompt,
     options_for_screen,
 )
 
 _ENTER_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "go": "tui.modelo.workbench.issues.go_to_box",
-        "records": "tui.modelo.workbench.issues.open_records",
-        "section": "tui.modelo.workbench.issues.open_section",
-        "more": "tui.modelo.workbench.issues.key.more",
-        "less": "tui.modelo.workbench.issues.key.less",
+        "go": "workspace.modelo.issues.go_to_box",
+        "records": "workspace.modelo.issues.open_records",
+        "section": "workspace.modelo.issues.open_section",
+        "more": "workspace.modelo.issues.key.more",
+        "less": "workspace.modelo.issues.key.less",
     }
 )
 
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "escape": "tui.modelo.workbench.key.back",
-        "t": "tui.modelo.workbench.issues.technical",
-        "b": "tui.modelo.workbench.key.confirm_section",
+        "escape": "workspace.modelo.key.back",
+        "t": "workspace.modelo.issues.technical",
+        "b": "workspace.modelo.key.confirm_section",
     }
 )
 
 
 """What ``b`` does, in full, where the list has room to say it; the footer says it in two words."""
 
-_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", _CONFIRM_SCOPE_KEY, "t")
+_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", OPEN_COMPARED_KEY, CONFIRM_SCOPE_KEY, "t")
 
 """The list's footer keys, most needed first; those that do not fit the width are left to the help."""
 
 _FOOTER_KEY_GAP: Final[int] = 1
 
-_OPEN_AREA_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.open_area"
+_OPEN_AREA_LOCALE_KEY: Final[str] = "workspace.modelo.issues.open_area"
 
 
 """Where a finding about the filer's records, rather than a box, sits: in those records."""
+
+
+def _note_words(box: str | None, message: str) -> str:
+    """A note's served sentence, led by the box it names where it names one."""
+    return message if box is None else f"[{box}] {message}"
 
 
 class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
@@ -139,6 +146,13 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             color: $foreground;
             text-style: bold;
         }
+        WorkbenchIssuesScreen #issues-recoveries {
+            height: auto;
+            max-height: $cadrumo-log-max-height;
+        }
+        WorkbenchIssuesScreen .issues-recovery-words {
+            color: $foreground;
+        }
         WorkbenchIssuesScreen #issues-actions {
             height: auto;
             margin-top: $cadrumo-stack;
@@ -152,48 +166,76 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         Binding("t", "technical", "", show=False),
         Binding("c", "calculate", "", show=False),
         Binding("a", "open_area", "", show=False),
+        Binding("o", "open_compared_area", "", show=False),
         Binding("b", "confirm_scope", "", show=False),
     ]
 
     def __init__(
         self,
-        form: ModeloWorkForm,
+        load: ModeloWorkFormLoadV1,
         *,
         status_line: StatusLine | None = None,
         additional_lines: tuple[IssueLine, ...] = (),
         changes_unapplied: bool = False,
     ) -> None:
-        """Hold the form whose findings and missing and assumed values are listed.
+        """Hold the served declaration whose findings and missing and assumed values are listed.
+
+        The verdict line says the check's verdict served with ``load``.
 
         ``status_line`` is shown above everything else when given, so the
         declaration's result and deadline stay in view while the dialog covers
         the workbench's header.
         """
         super().__init__()
+        form = load.form
         self._form = form
+        self._verdict = load.journey.verdict
         self._status_line = status_line
         self._changes_unapplied = changes_unapplied
-        self._recorded = form.filing is not None
+        self._recorded = form_recorded(form, filed=load.filed)
         self._lines = (*additional_lines, *issue_lines(form))
         self._unentered = {boxes.level: boxes for boxes in unentered_levels(form)}
         self._expanded: set[int] = set()
         self._technical: set[int] = set()
+        self._recoveries = tuple(
+            (
+                None if note.message is None else _note_words(note.box, note.message),
+                ServedRefusalV1(verdict=note.recovery),
+            )
+            for note in form.calculation_notes
+            if note.recovery is not None
+        )
 
     @override
     def compose(self) -> ComposeResult:
         with Container(id="issues-backdrop"), Vertical(id="issues-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="issues-status")
-            title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
+            title = title_text(
+                {
+                    count.level: count.count
+                    for count in attention_counts(
+                        self._form, OutputLanguage(output_language()), recorded=self._recorded
+                    )
+                }
+            )
             yield Static(levels_marked(title), id="issues-title", markup=False)
             yield Static(
-                verdict_text(self._form, changes_unapplied=self._changes_unapplied), id="issues-verdict", markup=False
+                verdict_text(self._verdict, changes_unapplied=self._changes_unapplied),
+                id="issues-verdict",
+                markup=False,
             )
-            yield _IssueList(*self._options(), id="issues-list")
+            yield IssueList(*self._options(), id="issues-list")
+            if self._recoveries:
+                with VerticalScroll(id="issues-recoveries"):
+                    for index, (words, refusal) in enumerate(self._recoveries):
+                        if words is not None:
+                            yield Static(words, classes="issues-recovery-words", markup=False)
+                        yield RefusalSlot(refusal, id=f"issues-recovery-{index}")
             with Horizontal(id="issues-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary"),
-                    "tui.modelo.workbench.result_diff.close",
+                    Button(tr("workspace.modelo.result_diff.close"), id="issues-close", variant="primary"),
+                    "workspace.modelo.result_diff.close",
                 )
         yield Footer(compact=True)
 
@@ -213,23 +255,23 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         fit_dialog_height(self, self.app.size.height)
         describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
         self.refresh_bindings()
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         issues.focus()
         self._describe_enter()
         # The first entry sits under its group heading: start at the top so the heading says what it is.
         self.call_after_refresh(issues.scroll_home, animate=False, immediate=True)
 
     def _issue_index(self, option_id: str | None) -> int | None:
-        if option_id is None or not option_id.startswith(_ISSUE_ID_PREFIX):
+        if option_id is None or not option_id.startswith(ISSUE_ID_PREFIX):
             return None
-        index = int(option_id.removeprefix(_ISSUE_ID_PREFIX))
+        index = int(option_id.removeprefix(ISSUE_ID_PREFIX))
         return index if index < len(self._lines) else None
 
     def _section(self, option_id: str | None) -> UnenteredSection | None:
         if option_id is None:
             return None
         for boxes in self._unentered.values():
-            prefix = f"{boxes.level.value}{_SECTION_INFIX}"
+            prefix = f"{boxes.level.value}{SECTION_INFIX}"
             if option_id.startswith(prefix):
                 index = int(option_id.removeprefix(prefix))
                 return boxes.sections[index] if index < len(boxes.sections) else None
@@ -238,12 +280,12 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     def _listed(self, option_id: str | None) -> UnenteredBoxes | None:
         """The missing or assumed boxes an entry lists by number, when it is that entry."""
         return next(
-            (boxes for boxes in self._unentered.values() if option_id == f"{boxes.level.value}{_BOXES_SUFFIX}"),
+            (boxes for boxes in self._unentered.values() if option_id == f"{boxes.level.value}{BOXES_SUFFIX}"),
             None,
         )
 
     def _highlighted_id(self) -> str | None:
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         if issues.highlighted is None:
             return None
         return issues.get_option_at_index(issues.highlighted).id
@@ -261,13 +303,14 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             choice = "less"
         else:
             choice = "more"
-        self.query_one(_IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
+        self.query_one(IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
         self._describe_open_area(None if index is None else self._lines[index].area)
+        self._describe_open_compared_area(None if index is None else self._lines[index].compared_area)
         self._fit_footer()
 
     def _fit_footer(self) -> None:
         """Show the keys that fit the footer side by side, most needed first, so none is cut at the edge."""
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         shown = footer_keys_for_width(
             _FOOTER_PRIORITY,
             self.app.size.width,
@@ -275,12 +318,13 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             self._bindings.key_to_bindings,
             self.app.get_key_display,
             has_open_area=self._highlighted_area() is not None,
+            has_compared_area=self._highlighted_compared_area() is not None,
             has_confirm_target=self._confirm_target() is not None,
             gap=_FOOTER_KEY_GAP,
         )
         issues.show_enter("enter" in shown)
         table = self._bindings.key_to_bindings
-        for key in ("escape", "a", "b", "t"):
+        for key in ("escape", "a", OPEN_COMPARED_KEY, "b", "t"):
             entries = table.get(key)
             if entries is not None and entries:
                 table[key] = [replace(binding, show=key in shown) for binding in entries]
@@ -295,6 +339,17 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
         self.refresh_bindings()
 
+    def _describe_open_compared_area(self, area: SourceSurface | None) -> None:
+        """Name the second area the finding under the cursor leads to, and show its key only when there is one."""
+        table = self._bindings.key_to_bindings
+        entries = table.get(OPEN_COMPARED_KEY)
+        if entries is not None and entries:
+            label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
+            table[OPEN_COMPARED_KEY] = [
+                replace(binding, description=label, show=area is not None) for binding in entries
+            ]
+        self.refresh_bindings()
+
     def _confirm_target(self) -> AddressKey | None:
         """A box in the part of the form whose assumed values ``b`` confirms, or ``None`` when none wait.
 
@@ -302,7 +357,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         or a section line names; a row with no box leads to the first assumed
         value's part.
         """
-        assumed = None if self._recorded else self._unentered.get(IssueLevel.CONFIRM)
+        assumed = None if self._recorded else self._unentered.get(ModeloFormAttention.CONFIRM)
         if assumed is None:
             return None
         option_id = self._highlighted_id()
@@ -321,11 +376,17 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         index = self._issue_index(self._highlighted_id())
         return None if index is None else self._lines[index].area
 
+    def _highlighted_compared_area(self) -> SourceSurface | None:
+        index = self._issue_index(self._highlighted_id())
+        return None if index is None else self._lines[index].compared_area
+
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Offer ``a`` only on a finding whose value an area owns, and ``b`` only while assumed values wait."""
         if action == "open_area":
             return self._highlighted_area() is not None
+        if action == "open_compared_area":
+            return self._highlighted_compared_area() is not None
         if action == "confirm_scope":
             return self._confirm_target() is not None
         if action == "calculate":
@@ -343,6 +404,12 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         if area is not None:
             self.dismiss(OpenSourceSurface(area))
 
+    def action_open_compared_area(self) -> None:
+        """Close the list asking the workbench to open the area that keeps what the selected finding compared."""
+        area = self._highlighted_compared_area()
+        if area is not None:
+            self.dismiss(OpenSourceSurface(area))
+
     def action_confirm_scope(self) -> None:
         """Close the list asking the workbench to confirm the assumed values of the selected row's part of the form."""
         target = self._confirm_target()
@@ -350,8 +417,8 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             self.dismiss(ConfirmAssumedValues(at=target))
 
     def _redraw(self, index: int) -> None:
-        prompt = _issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)
-        self.query_one(_IssueList).replace_option_prompt(f"{_ISSUE_ID_PREFIX}{index}", prompt)
+        prompt = issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)
+        self.query_one(IssueList).replace_option_prompt(f"{ISSUE_ID_PREFIX}{index}", prompt)
 
     def on_option_list_option_highlighted(self, _event: OptionList.OptionHighlighted) -> None:
         """Name what Enter does on the entry now under the cursor."""
@@ -386,6 +453,11 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             return
         self._technical.symmetric_difference_update({index})
         self._redraw(index)
+
+    def on_refusal_panel_action_chosen(self, message: RefusalPanel.ActionChosen) -> None:
+        """Leave the list for the destination a note's way out opens; the host opens it."""
+        del message
+        self.dismiss(None)
 
     def on_button_pressed(self, _event: Button.Pressed) -> None:
         """Return to the workbench."""

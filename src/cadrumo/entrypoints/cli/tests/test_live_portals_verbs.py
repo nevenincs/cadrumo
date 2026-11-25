@@ -11,11 +11,13 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
+from ....application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
 from ....core.i18n.render import tr
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_error
 from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import app_live_portals_commands as portals_cli_module
-from ..app_live_portals_commands import _project_portal_refusal
+from ..app_live_portals_commands import project_portal_refusal
 from ..common import cli_policy_refusal_projection
 from .cli_runner import invoke_cached_cli
 
@@ -30,6 +32,14 @@ def _call_name(node: ast.expr) -> str | None:
     if isinstance(node, ast.Attribute):
         return node.attr
     return None
+
+
+def _no_recovery_words(outcome: NoRecoveryOutcome) -> dict[str, str]:
+    """The no-way-out sentence a refusal serves in the CLI's default Spanish."""
+    return {
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[outcome], locale="es"),
+        "no_recovery_words_language": "es",
+    }
 
 
 def _invoke_portals(args: Sequence[str]) -> Result:
@@ -61,6 +71,7 @@ def _assert_exact_terminal_action(
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "operator_decision",
+        **_no_recovery_words(NoRecoveryOutcome.OPERATOR_DECISION),
     }
 
 
@@ -86,7 +97,7 @@ def test_portal_cli_projection_and_handlers_are_single_homed() -> None:
             isinstance(handler.type, ast.Name)
             and handler.type.id == "PortalRegistryError"
             and any(
-                isinstance(node, ast.Call) and _call_name(node.func) == "_project_portal_refusal"
+                isinstance(node, ast.Call) and _call_name(node.func) == "project_portal_refusal"
                 for node in ast.walk(handler)
             )
             for handler in ast.walk(callback)
@@ -201,7 +212,7 @@ def test_portal_integrity_refusal_reaches_the_cli_boundary_as_safety() -> None:
         facts={"portal": "portal_test", "entry_unique": False},
     )
 
-    projection = cli_policy_refusal_projection(_project_portal_refusal(error))
+    projection = cli_policy_refusal_projection(project_portal_refusal(error))
 
     assert projection is not None
     assert projection.precondition_action.model_dump(mode="json") == {
@@ -223,4 +234,5 @@ def test_portal_integrity_refusal_reaches_the_cli_boundary_as_safety() -> None:
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "safety",
+        **_no_recovery_words(NoRecoveryOutcome.SAFETY),
     }

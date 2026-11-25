@@ -18,10 +18,16 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -36,7 +42,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_errors import WorkUnitMutationRefusedError
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
@@ -54,9 +60,9 @@ from ..filing_record_import_contracts import (
     ModeloFilingRecordImportRequest,
 )
 from ..filing_record_import_operation import (
-    _project_filing_record_import,
     build_modelo_filing_record_import_definition,
     build_modelo_filing_record_import_registration,
+    project_filing_record_import,
 )
 from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 
@@ -65,13 +71,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _REFERENCE = "synthetic-expediente"
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=str(_PROFILE),
     modelo="303",
-    filing_year=2026,
-    period=Period.from_year_and_code(2026, "1T"),
+    filing_year=_FILING_YEAR,
+    period=Period.from_year_and_code(_FILING_YEAR, "1T"),
     revision_id="requested-revision",
 )
 
@@ -80,16 +87,16 @@ def _unit(*, revision_id: str = "requested-revision", created_at: datetime = _NO
     unit_id = derive_work_unit_id(
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id=revision_id,
     )
     return WorkUnit(
         work_unit_id=unit_id,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id=revision_id,
         name="Synthetic first quarter",
         created_at=created_at,
@@ -109,8 +116,8 @@ def _record(*, work_unit_id: str = _WORK_UNIT_ID) -> ModeloRecord:
         calculation_revision_id=_REVISION,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         filed_at=_NOW,
         filed_by="synthetic import actor",
         origin=FilingOrigin.AEAT,
@@ -131,8 +138,8 @@ def _reconciliation(record: ModeloRecord) -> FilingReconciliationResult:
         outcome=FilingReconciliationOutcome.APPENDED,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         member_nif=None,
         filing_record_id=record.filing_record_id,
         affected_filing_record_ids=(),
@@ -274,7 +281,7 @@ def test_secure_request_definition_and_commit_access_are_exact_profile() -> None
 
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert commit.request.periods == frozenset({Period.from_year_and_code(2026, "1T")})
+    assert commit.request.periods == frozenset({Period.from_year_and_code(_FILING_YEAR, "1T")})
     assert AccessAction.COMMIT in commit.policy.actions
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(
@@ -316,9 +323,9 @@ def test_public_result_omits_source_locators_settlement_and_transaction_ids() ->
     )
     report = ModeloFilingRecordImportOperationReport(projection=projection, local_write_performed=True)
 
-    assert _project_filing_record_import(report, receipt) == projection
+    assert project_filing_record_import(report, receipt) == projection
     with pytest.raises(ValueError):
-        _project_filing_record_import(
+        project_filing_record_import(
             report.model_copy(update={"local_write_performed": False}),
             receipt,
         )
@@ -346,7 +353,7 @@ def test_source_refuses_discarded_or_stale_exact_work_unit_before_import(
     # The discarded unit is the caller's own, so the refusal is its declared
     # terminal lifecycle verdict, the one every frontend renders, not a denial.
     with pytest.raises(WorkUnitMutationRefusedError) as inactive:
-        operation_module._selected_work_unit(
+        operation_module.selected_work_unit(
             cast(CalculationActionPorts, cast(object, ports)),
             cast(ModeloFilingRecordImportRequest, _request(source_path="C:/evidence.xlsx").payload),
         )
@@ -365,7 +372,7 @@ def test_source_refuses_discarded_or_stale_exact_work_unit_before_import(
         lambda **_kwargs: "different-law-revision",
     )
     with pytest.raises(ProfileAccessRefusedError) as stale:
-        operation_module._require_law_current_source_work_unit(
+        operation_module.require_law_current_source_work_unit(
             active,
             operation=cast(PinnedAuthorityOperation, object()),
         )

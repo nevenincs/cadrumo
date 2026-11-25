@@ -8,10 +8,15 @@ if(NOT WIN32)
 endif()
 set(CADRUMO_BUILD_HELPER "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py")
 set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build)
-file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
+# Helper modules only: their tests/ siblings never run inside an action, so a
+# new or edited test neither reconfigures nor reruns the distribution action.
+file(GLOB native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/*.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Contract.cmake")
 set(shared_inputs "${PROJECT_BINARY_DIR}/build-paths.json"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}" "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_selection.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_provision_helpers(provision_helper_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
@@ -29,8 +34,22 @@ set(provision_inputs ${shared_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
+# The pinned llama-server archive is a declared input: its pin file and the code that fetches,
+# verifies and unpacks it. The archive itself lives under the build tree, never under native/.
+set(llama_server_inputs ${shared_inputs}
+  "${PROJECT_SOURCE_DIR}/native/llamacpp-pins.json"
+  "${PROJECT_SOURCE_DIR}/dev/env/llamacpp_pins.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/llama_server.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/package_inventory.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/hashing.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/elf.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/macos_macho.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py")
 list(JOIN sdk_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-sdk.txt" CONTENT "${input_lines}\n")
+list(JOIN llama_server_inputs "\n" input_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-llama.txt" CONTENT "${input_lines}\n")
 list(JOIN provision_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-provision.txt" CONTENT "${input_lines}\n")
 set(tool_inputs ${shared_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py")
@@ -59,7 +78,15 @@ add_custom_target(python_dependencies
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(python_dependencies python_sdk agent_project)
+add_dependencies(python_dependencies python_sdk)
+cadrumo_build_step(step_comment llama_server GROUP dependencies
+  SUMMARY "fetch, verify and unpack the pinned llama-server archive for ${CADRUMO_TARGET}"
+  OUTPUTS "${CADRUMO_PATH_LLAMA_SERVER}")
+add_custom_target(llama_server
+  COMMAND ${CADRUMO_HELPER} llama --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-llama.txt"
+  DEPENDS ${llama_server_inputs} "${PROJECT_BINARY_DIR}/inputs-llama.txt"
+  BYPRODUCTS "${CADRUMO_PATH_LLAMA_SERVER}/ready"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment native_build_tools GROUP dependencies
   SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools
@@ -69,16 +96,21 @@ add_custom_target(native_build_tools
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_sdk PATHS "${CADRUMO_PATH_PYTHON_SDK}")
+  cadrumo_register_clean(TARGET llama_server PATHS "${CADRUMO_PATH_LLAMA_SERVER}")
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
   cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
 endif()
-include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
+if(CADRUMO_CONFIGURE_PAYLOAD)
+  include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
+  add_dependencies(python_dependencies agent_project)
+endif()
 set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
 set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
 set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_IDENTITY_DIR "${CADRUMO_BUILD_IDENTITY_DIR}" PARENT_SCOPE)
 include("${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake")
+include("${PROJECT_SOURCE_DIR}/native/cmake/RustQuality.cmake")
 set(metadata_inputs ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/metadata.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_stamp.py"
@@ -101,11 +133,39 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform DEPENDS rust_platform_static rust_platform_shared)
   cadrumo_register_clean(TARGET rust_platform_consumer PATHS "${platform_consumer}")
 endif()
+# The webview2 and appkit features are the desktop's view of the platform crate, on Windows
+# and macOS respectively.
+set(platform_manifest "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml")
+set(platform_clippy_arguments --profile "$<IF:$<CONFIG:Debug>,dev,release>")
+cadrumo_rust_quality(platform MANIFEST "${platform_manifest}"
+  CLIPPY_CARGO platform_cargo CLIPPY_ARGS ${platform_clippy_arguments})
+if(WIN32)
+  cadrumo_rust_clippy(platform.webview2 MANIFEST "${platform_manifest}" CARGO platform_cargo
+    ARGS ${platform_clippy_arguments} --features webview2)
+endif()
+if(APPLE)
+  cadrumo_rust_clippy(platform.appkit MANIFEST "${platform_manifest}" CARGO platform_cargo
+    ARGS ${platform_clippy_arguments} --features appkit)
+endif()
 add_subdirectory(application)
 include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")
+# The interpreter host crate is built only inside the desktop image: its build.rs compiles the
+# platform's C host with the desktop's identity, so it is linted with that identity and in a
+# target directory no build shares.
+cadrumo_cargo_command(interpreter_host_cargo --build-identity desktop
+  --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+  --env "CADRUMO_NATIVE_CONTRACT=${CONTRACT_DIR}/contract.json"
+  --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}")
+cadrumo_rust_quality(interpreter_host MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/interpreter_host/Cargo.toml"
+  CLIPPY_CARGO interpreter_host_cargo
+  CLIPPY_ARGS --target-dir "${CADRUMO_PATH_CARGO}/interpreter-host"
+    --profile "$<IF:$<CONFIG:Debug>,dev,release>")
+# The desktop's fmt and deny gates need only Cargo; its clippy gate drives the desktop build
+# targets and is registered with them, so a native-only configure (no payload) has no clippy for it.
+cadrumo_rust_quality(desktop MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/Cargo.toml")
 # Every Cargo command receives this target and environment; each component fingerprint hashes it
 # as the effective Rust build settings (dev/packaging/native/build_fingerprint.py).
 set(rust_environment "{}")
@@ -118,10 +178,24 @@ foreach(name IN LISTS CADRUMO_RUST_ENVIRONMENT_NAMES)
   string(JSON rust_environment SET "${rust_environment}" environment "${name}" "\"${value}\"")
 endforeach()
 file(CONFIGURE OUTPUT "${CONTRACT_DIR}/rust-environment.json" CONTENT "@rust_environment@\n" @ONLY)
+# Keep the raw settings above for fingerprints; command-line test wrappers
+# need configuration-resolved values, never literal generator expressions.
+file(GENERATE OUTPUT "${CONTRACT_DIR}/$<CONFIG>/rust-environment.json"
+  CONTENT "${rust_environment}\n")
 if(BUILD_TESTING)
   # Every file the last build compiled into a component must be among its declared inputs.
+  # A component this graph compiles must have been built; the installer exists only on
+  # Windows and the desktop only where the platform stages a desktop image.
+  set(coverage_required --require interpreter --require manager)
+  if(WIN32)
+    list(APPEND coverage_required --require installer)
+  endif()
+  # A generator expression always yields an argument; where no desktop is configured it
+  # repeats an already required component.
   add_test(NAME native.identity-coverage
-    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_fingerprint --build "${PROJECT_BINARY_DIR}")
+    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_fingerprint --build "${PROJECT_BINARY_DIR}"
+      ${coverage_required}
+      "$<IF:$<TARGET_EXISTS:desktop-host-build>,--require=desktop,--require=interpreter>")
   set_tests_properties(native.identity-coverage PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endif()
 set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}" PARENT_SCOPE)

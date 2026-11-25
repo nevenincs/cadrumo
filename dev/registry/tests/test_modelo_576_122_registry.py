@@ -35,17 +35,29 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+# The single-exercise legal-form revision of Modelo 576 and the open-ended one that carries the record design.
+_REVISIONS_576 = authored_revisions("576")
+_HISTORICAL_ID = str(_REVISIONS_576[0].id)
+_HISTORICAL_EXERCISE = _REVISIONS_576[0].valid_from.year
+_DESIGN_ID = str(open_ended_revision("576").id)
+_DESIGN_EXERCISE = open_ended_revision("576").valid_from.year
 
 # (modelo_id, revision, approval, plazo, doc, tax_domain)
 _MODELOS = [
     (
         "576",
-        "2008-y-siguientes",
+        str(open_ended_revision("576").id),
         "orden-eha-3851-2007:art-1",
         "orden-eha-3851-2007:art-1",
         "BOE-A-2007-22442",
@@ -53,7 +65,7 @@ _MODELOS = [
     ),
     (
         "122",
-        "2017-y-siguientes",
+        str(open_ended_revision("122").id),
         "orden-hfp-105-2017:art-5",
         "orden-hfp-105-2017:art-7",
         "BOE-A-2017-1334",
@@ -67,7 +79,7 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
     mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain
 ) -> None:
     """Each cadence-dependent tail modelo validates without fabricated deadline windows."""
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain == domain
     committed_registry_validator(catalogues).validate_modelo(modelo)
@@ -82,20 +94,20 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
 
 def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_design() -> None:
     """Historical corpus selection keeps the legal form separate from the later writer."""
-    modelo, _catalogues = _committed_modelo("576")
+    modelo, _catalogues = committed_modelo("576")
 
     historical = select_revision(
         modelo,
-        filing_year=2007,
+        filing_year=_HISTORICAL_EXERCISE,
         period="0A",
     )
     design_era = select_revision(
         modelo,
-        filing_year=2008,
+        filing_year=_DESIGN_EXERCISE,
         period="0A",
     )
 
-    assert historical.id == "2007"
+    assert historical.id == _HISTORICAL_ID
     assert historical.casillas[0].id == "decl.ejercicio"
     assert historical.constructs == ()
     assert historical.export_layouts == ()
@@ -113,7 +125,7 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
     assert not historical_capability.has_extractor
     assert historical_capability.extraction_profile_count == 0
 
-    assert design_era.id == "2008-y-siguientes"
+    assert design_era.id == _DESIGN_ID
     layout = design_era.export_layouts[0]
     fields = layout.records[0].fields
     assert len(design_era.casillas) == 42
@@ -130,14 +142,14 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
 
 def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal() -> None:
     """The historical revision still fails the generic writer-capability check."""
-    modelo, _catalogues = _committed_modelo("576")
-    historical = modelo.revisions["2007"]
+    modelo, _catalogues = committed_modelo("576")
+    historical = modelo.revisions[_HISTORICAL_ID]
     promoted = historical.model_copy(
         update={
             "authority_grade": RegistryAuthorityGrade.FILING,
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
             "reviewed_by": "operator",
-            "reviewed_at": date(2026, 8, 26),
+            "reviewed_at": date(filing_year_envelope().horizon, 8, 26),
         },
     )
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, promoted.id: promoted}})

@@ -41,7 +41,8 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.source_tree_support import SourceTree
 from cadrumo.tests.inventory import SRC_CADRUMO, production_python_files
-from dev.operation_contract_manifest.submission_flow import Submission, SubmissionFlow, Symbol
+from dev.operation_contract_manifest.submission_flow import SubmissionFlow
+from dev.operation_contract_manifest.submission_source import FlowValue, Submission, SubmissionReading, Symbol
 
 type CliPath = tuple[str, ...]
 """An executable command's operator path, without the executable's own name."""
@@ -162,53 +163,97 @@ def derive_command_operations(
     reached_by_commands = frozenset(flow.reach(entries))
     findings: list[str] = list(reading.untyped_receivers)
 
-    pending_selections: dict[CliPath, SelectedOperations] = {}
-    for selection in selections:
-        if selection.cli_path in pending_selections:
-            findings.append(f"{_spelled(selection.cli_path)}: more than one selection names this command")
-        pending_selections[selection.cli_path] = selection
+    pending_selections = _pending_selections(selections, findings)
 
     operations: dict[CliPath, frozenset[str]] = {}
     for cli_path in sorted(handlers):
-        handler = handlers[cli_path]
-        submitted: set[str] = set()
-        families: list[tuple[str, frozenset[str]]] = []
-        if handler is not None and not flow.defines(handler):
-            findings.append(
-                f"{_spelled(cli_path)}: handler {handler[0]}:{handler[1]} is not a function of the scanned packages"
-            )
-        for submission in () if handler is None else reading.submissions.get(handler, ()):
-            settled = _settle(submission, ids_by_type)
-            submitted |= settled.operation_ids
-            if settled.family is not None:
-                families.append((submission.site, settled.family))
-            elif not settled.operation_ids:
-                findings.append(f"{_spelled(cli_path)}: the submission at {submission.site} names no operation")
-        selection = pending_selections.pop(cli_path, None)
-        findings.extend(_selection_findings(cli_path, families, selection, registered))
-        if selection is not None and families:
-            submitted |= selection.operation_ids
-        findings.extend(
-            f"{_spelled(cli_path)}: {operation_id!r} is not a registered operation"
-            for operation_id in sorted(submitted - registered)
+        operations[cli_path] = _command_operations(
+            cli_path,
+            handlers[cli_path],
+            flow,
+            reading,
+            ids_by_type,
+            pending_selections.pop(cli_path, None),
+            registered,
+            findings,
         )
-        operations[cli_path] = frozenset(submitted)
 
     findings.extend(
         f"{_spelled(cli_path)}: a selection names a command the graph does not declare as executable"
         for cli_path in sorted(pending_selections)
     )
-    findings.extend(
-        f"{symbol[0]}:{symbol[1]} submits an operation and no command reaches it"
-        for symbol in accounted
-        if bool(reading.submissions.get(symbol)) and symbol not in reached_by_commands
-    )
+    findings.extend(_unreached_submission_findings(accounted, reading, reached_by_commands))
     return CommandOperationDerivation(
         operations=operations,
         operations_without_command=registered.difference(*operations.values()),
         reached_submitters=frozenset(symbol for symbol in reached_by_commands if bool(reading.submissions.get(symbol))),
         findings=tuple(sorted(set(findings))),
     )
+
+
+def _unreached_submission_findings(
+    accounted: tuple[Symbol, ...], reading: SubmissionReading, reached_by_commands: frozenset[Symbol]
+) -> list[str]:
+    """Report every command-line submission that no executable command reaches."""
+    return list(
+        f"{symbol[0]}:{symbol[1]} submits an operation and no command reaches it"
+        for symbol in accounted
+        if bool(reading.submissions.get(symbol)) and symbol not in reached_by_commands
+    )
+
+
+def _pending_selections(
+    selections: Iterable[SelectedOperations], findings: list[str]
+) -> dict[CliPath, SelectedOperations]:
+    """Index selections while reporting duplicate command claims before settlement."""
+    pending_selections: dict[CliPath, SelectedOperations] = {}
+    for selection in selections:
+        if selection.cli_path in pending_selections:
+            findings.append(f"{_spelled(selection.cli_path)}: more than one selection names this command")
+        pending_selections[selection.cli_path] = selection
+
+    return pending_selections
+
+
+def _command_operations(
+    cli_path: CliPath,
+    handler: Symbol | None,
+    flow: SubmissionFlow,
+    reading: SubmissionReading,
+    ids_by_type: Mapping[Symbol, set[str]],
+    selection: SelectedOperations | None,
+    registered: frozenset[str],
+    findings: list[str],
+) -> frozenset[str]:
+    """Resolve one handler's submissions and check its explicit ambiguous selections."""
+    submitted: set[str] = set()
+    families: list[tuple[str, frozenset[str]]] = []
+    if handler is not None and not flow.defines(handler):
+        findings.append(
+            f"{_spelled(cli_path)}: handler {handler[0]}:{handler[1]} is not a function of the scanned packages"
+        )
+    for submission in () if handler is None else reading.submissions.get(handler, ()):
+        settled = _settle(submission, ids_by_type)
+        submitted |= settled.operation_ids
+        if settled.family is not None:
+            families.append((submission.site, settled.family))
+        elif not settled.operation_ids:
+            findings.append(f"{_spelled(cli_path)}: the submission at {submission.site} names no operation")
+    findings.extend(_selection_findings(cli_path, families, selection, registered))
+    if selection is not None and families:
+        submitted |= selection.operation_ids
+    findings.extend(
+        f"{_spelled(cli_path)}: {operation_id!r} is not a registered operation"
+        for operation_id in sorted(submitted - registered)
+    )
+    return frozenset(submitted)
+
+
+def _payload_operation_ids(payload: FlowValue, ids_by_type: Mapping[Symbol, set[str]]) -> frozenset[str] | None:
+    """Keep opaque payload types unknown while resolving completely known payload classes."""
+    payload_is_known = not payload.opaque and not payload.parameters
+    by_type = frozenset[str]().union(*(ids_by_type.get(cls, ()) for cls in payload.types)) if payload_is_known else None
+    return by_type
 
 
 def _settle(submission: Submission, ids_by_type: Mapping[Symbol, set[str]]) -> _Settled:
@@ -222,8 +267,7 @@ def _settle(submission: Submission, ids_by_type: Mapping[Symbol, set[str]]) -> _
     """
     identity = submission.identity.settled()
     payload = submission.payload.settled()
-    payload_is_known = not payload.opaque and not payload.parameters
-    by_type = frozenset[str]().union(*(ids_by_type.get(cls, ()) for cls in payload.types)) if payload_is_known else None
+    by_type = _payload_operation_ids(payload, ids_by_type)
     if not identity.opaque and not identity.parameters:
         consistent = identity.constants & by_type if (by_type is not None and by_type) else frozenset[str]()
         return _Settled(operation_ids=consistent or identity.constants)
@@ -261,6 +305,17 @@ def _selection_findings(
         for site, family in families
         if family and not selection.operation_ids & family
     )
+    findings.extend(_outside_selection_findings(spelled, families, selection))
+    return findings
+
+
+def _outside_selection_findings(
+    spelled: str,
+    families: list[tuple[str, frozenset[str]]],
+    selection: SelectedOperations,
+) -> list[str]:
+    """Refuse selected ids outside every completely known candidate family."""
+    findings: list[str] = []
     if all(family for _site, family in families):
         outside = selection.operation_ids.difference(*(family for _site, family in families))
         findings.extend(
@@ -414,15 +469,25 @@ def _live_invocation_service_bindings(tree: SourceTree) -> dict[tuple[Symbol, st
             continue
         if origins.get(call.func.id) != service:
             continue
-        for argument in call.keywords:
-            target = origins.get(argument.value.id) if isinstance(argument.value, ast.Name) else None
-            if argument.arg is None or target is None:
-                raise ValueError("the CLI host's callable injection cannot be resolved from source")
-            key = (service, argument.arg)
-            if key in bindings and bindings[key] != target:
-                raise ValueError("the CLI host binds conflicting invocation services")
-            bindings[key] = target
+        _collect_service_bindings(call, service, origins, bindings)
     return bindings
+
+
+def _collect_service_bindings(
+    call: ast.Call,
+    service: Symbol,
+    origins: Mapping[str, Symbol],
+    bindings: dict[tuple[Symbol, str], Symbol],
+) -> None:
+    """Resolve concrete host injections and reject conflicting callable ownership."""
+    for argument in call.keywords:
+        target = origins.get(argument.value.id) if isinstance(argument.value, ast.Name) else None
+        if argument.arg is None or target is None:
+            raise ValueError("the CLI host's callable injection cannot be resolved from source")
+        key = (service, argument.arg)
+        if key in bindings and bindings[key] != target:
+            raise ValueError("the CLI host binds conflicting invocation services")
+        bindings[key] = target
 
 
 @cache

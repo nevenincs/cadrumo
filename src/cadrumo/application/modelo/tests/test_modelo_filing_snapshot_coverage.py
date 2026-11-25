@@ -87,13 +87,8 @@ def _tx(
     )
 
 
-def _revision(
-    modelo: str,
-    *,
-    source_ids: tuple[str, ...],
-    snapshot: LedgerFilingSnapshot | None,
-    operation: PinnedAuthorityOperation,
-) -> CalculationRevision:
+def _revision_identity(modelo: str, source_ids: tuple[str, ...], operation: PinnedAuthorityOperation):
+    """Derive the work unit id, calculation revision id and filing evidence both revision builders share."""
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     filing_instance_evidence = (
         general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage", operation=operation)
@@ -109,15 +104,30 @@ def _revision(
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
+    return wid, rid, filing_instance_evidence
+
+
+def _snapshot_ref(modelo: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id="r1",
+        modelo_year=2026,
+        period=_P_2026_1T.registry_token,
+    )
+
+
+def _revision(
+    modelo: str,
+    *,
+    source_ids: tuple[str, ...],
+    snapshot: LedgerFilingSnapshot | None,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    wid, rid, filing_instance_evidence = _revision_identity(modelo, source_ids, operation)
     return CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=wid,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=modelo,
-            revision_id="r1",
-            modelo_year=2026,
-            period=_P_2026_1T.registry_token,
-        ),
+        registry_snapshot_ref=_snapshot_ref(modelo),
         state=CalculationRevisionState.BORRADOR,
         source_transaction_ids=source_ids,
         ledger_filing_snapshot=snapshot,
@@ -179,30 +189,11 @@ def _verified_revision(
     snapshot: LedgerFilingSnapshot,
     operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
-    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
-    filing_instance_evidence = (
-        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage", operation=operation)
-        if modelo == "303"
-        else None
-    )
-    rid = derive_calculation_revision_id(
-        work_unit_id=wid,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        source_transaction_ids=source_ids,
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-    )
+    wid, rid, filing_instance_evidence = _revision_identity(modelo, source_ids, operation)
     return CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=wid,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=modelo,
-            revision_id="r1",
-            modelo_year=2026,
-            period=_P_2026_1T.registry_token,
-        ),
+        registry_snapshot_ref=_snapshot_ref(modelo),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         source_transaction_ids=source_ids,
         ledger_filing_snapshot=snapshot,
@@ -223,11 +214,18 @@ def test_stale_filed_revisions_flags_only_drifted_finalized_revisions(*, operati
     rev = _verified_revision("303", source_ids=ids, snapshot=snap, operation=operation)
     revisions = {rev.calculation_revision_id: rev}
     # Unchanged ledger -> nothing flagged.
-    assert stale_filed_revisions(revisions=revisions, catalogue=cat) == ()
+    assert (
+        stale_filed_revisions(
+            revisions=revisions, catalogue=cat, register_reader=lambda revision: revision.activity_asset_consumption
+        )
+        == ()
+    )
     # A material edit to a contributor -> the filed revision is flagged stale.
     edited = _tx("row-a", category_id="software")
     drifted = TransactionCatalogue.from_transactions((edited,))
-    flagged = stale_filed_revisions(revisions=revisions, catalogue=drifted)
+    flagged = stale_filed_revisions(
+        revisions=revisions, catalogue=drifted, register_reader=lambda revision: revision.activity_asset_consumption
+    )
     assert len(flagged) == 1
     assert flagged[0][0].calculation_revision_id == rev.calculation_revision_id
     assert flagged[0][1].changed == ids

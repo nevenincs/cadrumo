@@ -21,7 +21,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -36,6 +36,7 @@ __all__ = [
     "DraftDiscrepancyFinding",
     "FieldAmbiguityCandidate",
     "FieldProvenance",
+    "FindingWords",
     "InvoiceDraft",
     "InvoiceDraftIdentityDocumentFields",
     "InvoiceDraftLine",
@@ -342,6 +343,29 @@ class FieldProvenance(BaseModel):
         return self
 
 
+class FindingWords(BaseModel):
+    """The catalogue sentence explaining one finding, and the values it quotes.
+
+    A finding stores which sentence explains it and the figures and printed text
+    that sentence names, never the sentence itself, so each surface renders it in
+    the operator's language.
+
+    Attributes:
+        wording: The sentence, one per explanation a check can give.
+        params: The quoted values by placeholder name, sorted by name.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    wording: DraftFindingWording
+    params: tuple[tuple[str, str], ...] = ()
+
+    @classmethod
+    def of(cls, wording: DraftFindingWording, **params: object) -> Self:
+        """Return the words for *wording* quoting *params*, each as its printed text."""
+        return cls(wording=wording, params=tuple(sorted((name, str(value)) for name, value in params.items())))
+
+
 class DraftDiscrepancyFinding(BaseModel):
     """One deterministic check the read document failed.
 
@@ -355,7 +379,10 @@ class DraftDiscrepancyFinding(BaseModel):
         kind: Which identity failed.
         field: The draft field the finding is about, or ``None`` when the
             finding is about a relationship between several.
-        detail: Operator-facing explanation naming the figures involved.
+        detail: An explanation stored before findings carried their words; empty
+            on every finding read since.
+        words: The catalogue sentence explaining the finding and the values it
+            quotes.
         expected: What the identity required, when the check is arithmetic.
         observed: What the document stated instead.
     """
@@ -365,6 +392,7 @@ class DraftDiscrepancyFinding(BaseModel):
     kind: DraftDiscrepancyKind
     field: str | None = None
     detail: str = ""
+    words: FindingWords | None = None
     expected: Decimal | None = None
     observed: Decimal | None = None
 
@@ -383,9 +411,7 @@ def facturae_invoice_class_findings(
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
-                detail=(
-                    f"Facturae InvoiceClass {declared.source_code!r} declares recapitulativa, which is not modelled"
-                ),
+                words=FindingWords.of(DraftFindingWording.FACTURAE_SUMMARY_UNMODELLED, code=declared.source_code),
             ),
         )
 
@@ -395,9 +421,11 @@ def facturae_invoice_class_findings(
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED,
-                detail=(
-                    f"Facturae InvoiceClass {declared.source_code!r} and Corrective/InvoiceNumber "
-                    f"presence={carries_correction!r} disagree"
+                words=FindingWords.of(
+                    DraftFindingWording.FACTURAE_CORRECTIVE_WITHOUT_REFERENCE
+                    if declares_correction
+                    else DraftFindingWording.FACTURAE_REFERENCE_WITHOUT_CORRECTIVE,
+                    code=declared.source_code,
                 ),
             ),
         )
@@ -411,10 +439,7 @@ class LabelReadingFallbackCause(StrEnum):
     """The semantic reader, its optional extra or its on-host runtime could not be used."""
 
     LOAD_HEADROOM_REFUSED = "load_headroom_refused"
-    """Admission control refused to load the model: this machine showed no measured headroom for it."""
-
-    INFERENCE_SLOT_BUSY = "inference_slot_busy"
-    """Admission control refused the fill: every on-host inference slot was already held by another read."""
+    """The agent refused to load the model: it does not fit this machine's free memory."""
 
 
 class LabelReadingFallback(BaseModel):
@@ -437,9 +462,13 @@ class LabelReadingFallback(BaseModel):
             the model was to fill, in name order.
         reader_error_type: The class of the failure or refusal the reader raised.
         failed_condition_id: The refusal's failed precondition, when it carried
-            one; an admission refusal names which precondition failed, such as
-            unmeasurable free memory, a measured shortfall or an occupied
-            inference slot.
+            one; the agent's load refusal names the precondition it failed,
+            and an unavailable reader names what the reader probe found
+            missing, such as an unanswering runtime or an uninstalled model.
+        refusal_code: The agent service's own refusal code when it stated one,
+            such as ``no_selection`` for a role with no picked model. The
+            surfaces word and route that refusal from the code, so they do not
+            infer it from the cause.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -448,6 +477,7 @@ class LabelReadingFallback(BaseModel):
     unread_fields: tuple[str, ...] = Field(min_length=1)
     reader_error_type: str = Field(min_length=1)
     failed_condition_id: str | None = None
+    refusal_code: str | None = None
 
 
 class InvoiceDraftIdentityDocumentFields(BaseModel):
@@ -577,9 +607,11 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
         invoice_date: Day-first invoice date recovered from the text, or
             ``None``.
         taxable_base: Labelled "base imponible" amount, or ``None``.
-        iva_rate: IVA percentage recovered from a "IVA NN%" label, expressed
-            as a whole-number :class:`~decimal.Decimal` (e.g. ``21``), or
-            ``None``.
+        iva_rate: IVA percentage recovered from a "IVA NN%" label, or from a
+            structured record whose per-rate breakdown states exactly one rate,
+            expressed as a whole-number :class:`~decimal.Decimal` (e.g. ``21``),
+            or ``None``. A structured record stating several rates leaves it
+            ``None`` and carries them in ``iva_breakdown``.
         iva_amount: Labelled IVA cuota amount, or ``None``.
         grand_total: Labelled invoice total amount, or ``None``.
         regime_legend: The statutory mention the document prints to state that

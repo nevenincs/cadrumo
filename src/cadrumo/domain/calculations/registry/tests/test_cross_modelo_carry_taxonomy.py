@@ -54,6 +54,7 @@ from ..bindings_previous_filing import (
     is_direct_previous_filing_binding,
 )
 from ..schema import BindingDefinition, ModeloRevision
+from .authored_editions import authored_revisions, open_ended_revision
 from .registry_tree import bundled_registry_tree
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
@@ -65,6 +66,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CROSS_MEMBER_FAN_IN = "cross_member_fan_in"
 _DIRECT_CROSS_MODELO_CARRY = "direct_cross_modelo_carry"
 _UNOWNED = "unowned"
+_M130_REVISION = str(open_ended_revision("130").id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +99,7 @@ class _DirectCrossModeloCarry:
 _DIRECT_CROSS_MODELO_CARRIES: tuple[_DirectCrossModeloCarry, ...] = (
     _DirectCrossModeloCarry(
         modelo_id="130",
-        revision_id="2019-y-siguientes",
+        revision_id=_M130_REVISION,
         binding_id="irpf.previous_year_economic_activity_net_income",
         source_modelo="100",
         reason=(
@@ -296,7 +298,7 @@ def test_an_unenumerated_cross_modelo_carry_is_refused() -> None:
     )
 
     assert _cross_modelo_source(binding, owning_modelo="130") == "100"
-    assert _classify(binding, owning_modelo="130", revision_id="2019-y-siguientes") == _UNOWNED
+    assert _classify(binding, owning_modelo="130", revision_id=_M130_REVISION) == _UNOWNED
 
 
 def test_the_fan_in_row_is_recognised_by_its_grouping_axis() -> None:
@@ -314,4 +316,7 @@ def test_the_fan_in_row_is_recognised_by_its_grouping_axis() -> None:
         source_refs=("aeat-modelo-353-instructions",),
     )
 
-    assert _classify(binding, owning_modelo="353", revision_id="2008-2025") == _CROSS_MEMBER_FAN_IN
+    assert (
+        _classify(binding, owning_modelo="353", revision_id=str(authored_revisions("353")[-1].id))
+        == _CROSS_MEMBER_FAN_IN
+    )

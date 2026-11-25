@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     INVOICE_WIZARD_OPERATION_DEFINITION_ID,
@@ -16,7 +17,7 @@ from ...application.invoices.catalogue_intake_contracts import (
     InvoiceWizardOutcome,
     InvoiceWizardRequest,
 )
-from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
@@ -27,7 +28,7 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_COUNTERPARTY_NIF = "B12345674"
+_COUNTERPARTY_NIF = "B00015016"
 _COUNTERPARTY_NAME = "Conformance Supplier"
 _BOOK_HEADER = (
     "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,currency,country_code"
@@ -122,7 +123,8 @@ def _prepare_wizard(context: ConformanceFamilyContext) -> ConformancePreparation
             Decimal("52.50"),
             Decimal("302.50"),
         )
-        assert wizard.result.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice)
+        documents = InvoiceDocumentIndex.read(AttachmentStore(bucket_id=bucket_id))
+        assert wizard.result.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice, documents=documents)
 
     return ConformancePreparation(
         subject_ref=profile_operation_subject(bucket_id),
@@ -169,5 +171,4 @@ INVOICE_INTAKE_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
-    closes_model_runtime=True,
 )

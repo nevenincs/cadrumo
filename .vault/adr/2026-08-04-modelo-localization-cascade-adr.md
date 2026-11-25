@@ -14,9 +14,9 @@ related:
 supersedes:
   - '2026-06-08-registry-localization-backend-adr'
   - '2026-06-11-modelo-locales-cli-adr'
-modified: '2026-08-15'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2f29c73b480d72f9a3a8e1bf85feb1126a698c7feefe02b850feee5fac58da5'
+body_hash: 'sha256:d8c96b873e022de20272c65223156f99978bde7f1ffc738443bfc33432bfce9a'
 ---
 # `modelo-localization-cascade` adr: `shared locale-key schema with verified Modelo retirement` | (**status:** `accepted`)
 
@@ -115,7 +115,7 @@ effective(revision, locale) = base(locale) override applicable_variants(revision
 
 The right-biased union operates field by field and never persists another full revision catalogue.
 
-**Amendment (2026-08-05) -- year-parameterized values.** The corpus census measured 247 candidate chains whose Spanish label differs across revisions only by an embedded filing-year token (`Vivienda habitual en 2020` / `Vivienda habitual en 2021`). Representing that class as per-revision variants re-authors the same wording every filing year in every locale, permanently. A locale value may therefore declare a year placeholder resolved from the selected revision's filing year at render time -- one declaration per chain, field, and locale -- provided the rendered string reproduces the official per-revision text exactly and regulatory and export consumers continue to receive the rendered official form, never the template. The emitter and migration classifier treat the year-token class as its own representation, and parity comparison always evaluates the rendered value.
+**Amendment (2026-08-05) -- year-parameterized values.** The corpus census measured 247 candidate chains whose Spanish label differs across revisions only by an embedded filing-year token (`Vivienda habitual en <year>` across successive revisions). Representing that class as per-revision variants re-authors the same wording every filing year in every locale, permanently. A locale value may therefore declare a year placeholder resolved from the selected revision's filing year at render time -- one declaration per chain, field, and locale -- provided the rendered string reproduces the official per-revision text exactly and regulatory and export consumers continue to receive the rendered official form, never the template. The emitter and migration classifier treat the year-token class as its own representation, and parity comparison always evaluates the rendered value.
 
 ### D4 - Resolve identities, applicability, and fallbacks deterministically
 

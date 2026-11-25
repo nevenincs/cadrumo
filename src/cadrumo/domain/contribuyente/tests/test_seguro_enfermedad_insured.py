@@ -21,11 +21,14 @@ import pytest
 
 from ...calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..descendant import DescendantInfo
 from ..seguro_enfermedad_insured import count_seguro_enfermedad_insured
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 
 def _child(
@@ -46,7 +49,7 @@ def _child(
 
 
 def _counts(*children: DescendantInfo, **kwargs: object):
-    return count_seguro_enfermedad_insured(children, filing_year=2025, **kwargs)  # ty: ignore[invalid-argument-type]
+    return count_seguro_enfermedad_insured(children, filing_year=EXERCISE, **kwargs)  # ty: ignore[invalid-argument-type]
 
 
 def test_the_contribuyente_is_always_insured() -> None:
@@ -86,7 +89,7 @@ def test_the_art_72_threshold_partitions_the_limbs(grado: int | None, expected: 
     the ordinary limit absent the condition the higher one requires. Dropping them
     would cost the filer 500 euros of allowance for a person the article covers.
     """
-    counts = _counts(_child(born=date(2010, 1, 1), grado=grado))
+    counts = _counts(_child(born=date(EXERCISE - 15, 1, 1), grado=grado))
 
     assert counts.model_dump() == expected
 
@@ -96,7 +99,7 @@ def test_the_threshold_is_the_one_art_72_states() -> None:
         ScalarFactQuery(
             fact_id="rirpf-art-72-disability-minimum-grade",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
+            effective_date=date(EXERCISE, 12, 31),
         ),
     )
     assert isinstance(resolved, ResolvedScalarFact)
@@ -109,13 +112,13 @@ def test_a_child_who_does_not_cohabit_is_outside_the_article() -> None:
     Art. 58.1 would still admit this child on assimilated economic dependency;
     this article does not, and borrowing that limb would over-grant.
     """
-    assert _counts(_child(born=date(2010, 1, 1), convive=False)).total == 1
+    assert _counts(_child(born=date(EXERCISE - 15, 1, 1), convive=False)).total == 1
 
 
 def test_a_child_of_twenty_five_or_more_is_outside_the_article() -> None:
     """ "Hijos menores de veinticinco anos", measured at year-end."""
-    assert _counts(_child(born=date(2000, 1, 1))).total == 1
-    assert _counts(_child(born=date(2001, 6, 1))).total == 2
+    assert _counts(_child(born=date(EXERCISE - 25, 1, 1))).total == 1
+    assert _counts(_child(born=date(EXERCISE - 24, 6, 1))).total == 2
 
 
 def test_discapacidad_does_not_widen_membership_only_the_limit() -> None:
@@ -133,19 +136,19 @@ def test_discapacidad_does_not_widen_membership_only_the_limit() -> None:
 
 def test_a_child_who_died_before_the_filing_year_is_not_counted() -> None:
     """Birth date alone goes on satisfying the age limb indefinitely."""
-    assert _counts(_child(born=date(2010, 1, 1), died=date(2023, 5, 1))).total == 1
+    assert _counts(_child(born=date(EXERCISE - 15, 1, 1), died=date(EXERCISE - 2, 5, 1))).total == 1
 
 
 def test_a_child_who_died_during_the_filing_year_is_still_counted() -> None:
     """The premium was paid on cover the article allowed while they lived."""
-    assert _counts(_child(born=date(2010, 1, 1), died=date(2025, 5, 1))).total == 2
+    assert _counts(_child(born=date(EXERCISE - 15, 1, 1), died=date(EXERCISE, 5, 1))).total == 2
 
 
 def test_a_household_sums_both_limbs_across_every_insured_person() -> None:
     """The whole shape: the cap is a sum over two populations, not one times a count."""
     counts = _counts(
-        _child(born=date(2010, 1, 1)),
-        _child(born=date(2015, 1, 1), grado=65),
+        _child(born=date(EXERCISE - 15, 1, 1)),
+        _child(born=date(EXERCISE - 10, 1, 1), grado=65),
         has_spouse=True,
     )
 

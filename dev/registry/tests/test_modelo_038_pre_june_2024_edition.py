@@ -10,21 +10,24 @@ edition keys only its design, deadline windows and export source against it.
 from __future__ import annotations
 
 import calendar
-import json
 from datetime import date
 from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import committed_modelo
+from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The modelo's two oldest authored editions: the 2012 design up to the amendment, then the IRUS design from it.
+_OLD_EDITION, _NEW_EDITION = (str(revision.id) for revision in authored_revisions("038")[:2])
 _OLD_DESIGN = "aeat-dr-038-2012"
 _NEW_DESIGN = "aeat-dr-038-2024"
 
@@ -54,17 +57,6 @@ def _selected(year: int, period: str) -> ModeloRevision:
     return select_revision(modelo, filing_year=year, period=period, support=catalogues.supported_filing_years)
 
 
-def _corpus_text(source_id: str) -> str:
-    _, catalogues = _modelo()
-    corpus_path = catalogues.sources[source_id].corpus_path
-    assert corpus_path is not None
-    sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
-    sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-    assert isinstance(text, str)
-    return text
-
-
 def test_every_month_before_the_amendment_is_authored_on_the_2012_design() -> None:
     _, catalogues = _modelo()
     for year, period in _months_before_amendment():
@@ -72,7 +64,7 @@ def test_every_month_before_the_amendment_is_authored_on_the_2012_design() -> No
         resolution = revision_temporal_resolution(
             revision, filing_year=year, period=period, support=catalogues.supported_filing_years
         )
-        assert revision.id == "2022-hasta-2024-05", (year, period)
+        assert revision.id == _OLD_EDITION, (year, period)
         assert resolution.projection_direction is TemporalProjectionDirection.AUTHORED
         assert _OLD_DESIGN in revision.source_refs
         assert _NEW_DESIGN not in revision.source_refs
@@ -101,7 +93,7 @@ def test_june_2024_onward_keeps_the_irus_design_and_its_own_windows() -> None:
     first = catalogues.sources[_NEW_DESIGN].applies_from
     assert first is not None
     revision = _selected(first.year, f"{first.month:02d}")
-    assert revision.id == "2024-desde-06"
+    assert revision.id == _NEW_EDITION
     assert _NEW_DESIGN in revision.source_refs
     assert _OLD_DESIGN not in revision.source_refs
     (export_link,) = [link for link in revision.application_links if link.id == "modelo-038-export"]
@@ -116,8 +108,8 @@ def test_june_2024_onward_keeps_the_irus_design_and_its_own_windows() -> None:
 
 
 def test_the_2012_design_prints_every_2024_field_but_irus() -> None:
-    old = _corpus_text(_OLD_DESIGN)
-    new = _corpus_text(_NEW_DESIGN)
+    old = corpus_text(_modelo()[1], _OLD_DESIGN)
+    new = corpus_text(_modelo()[1], _NEW_DESIGN)
     assert "identificador registral unico de la sociedad (irus)" in new
     assert "irus" not in old
     for field in ("ejercicio", "dec. complementaria", "dec. sustitutiva", "n.i.f. de la entidad", "clave operacion"):

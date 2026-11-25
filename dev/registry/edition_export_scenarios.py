@@ -84,8 +84,8 @@ from cadrumo.application.aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
 )
 from cadrumo.application.aggregation.m303_arrivals import (
-    M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
 )
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (
@@ -95,11 +95,6 @@ from cadrumo.application.filing.producer_snapshot import (
     GeneralFilingProfileFacts,
     M303FilingFacts,
     Modelo222ProfileFacts,
-    Modelo296AnexoCertificadoRow,
-    Modelo296AnexoPagoRow,
-    Modelo296PerceptorInteresesRow,
-    Modelo296PerceptorRow,
-    Modelo296ProfileFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
@@ -122,6 +117,14 @@ from cadrumo.application.filing.producer_snapshot_m200 import (
     Modelo200SocioSicavDisolucionRow,
     Modelo200TransparenciaFiscalInternacionalRow,
 )
+from cadrumo.application.filing.producer_snapshot_m296 import (
+    Modelo296AnexoCertificadoRow,
+    Modelo296AnexoPagoRow,
+    Modelo296PerceptorInteresesRow,
+    Modelo296PerceptorRow,
+    Modelo296ProfileFacts,
+)
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.modelo import Modelo
@@ -130,6 +133,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
 )
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -150,12 +154,11 @@ from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
     prorrata_sector_letters,
+    require_prorrata_provenance,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistrySnapshot,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
@@ -168,13 +171,13 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import (
     ProrrataActivityRow,
     ProrrataRegister,
@@ -184,39 +187,41 @@ from cadrumo.domain.prorrata_register.register import (
 
 from .compiler.loader import load_modelo_directory, load_shared_catalogues
 from .edition_export_m347 import third_party_export_inputs
+from .edition_export_periods import (
+    M123_SCENARIO_PERIODS,
+    M131_SCENARIO_PERIODS,
+    M151_SCENARIO_PERIODS,
+    M165_SCENARIO_PERIODS,
+    M180_SCENARIO_PERIODS,
+    M184_SCENARIO_PERIODS,
+    M185_SCENARIO_PERIODS,
+    M189_SCENARIO_PERIODS,
+    M190_SCENARIO_PERIODS,
+    M193_SCENARIO_PERIODS,
+    M200_SCENARIO_PERIODS,
+    M202_SCENARIO_PERIODS,
+    M210_SCENARIO_PERIODS,
+    M222_SCENARIO_PERIODS,
+    M232_SCENARIO_PERIODS,
+    M270_SCENARIO_PERIODS,
+    M296_SCENARIO_PERIODS,
+    M303_SCENARIO_PERIODS,
+    M308_SCENARIO_PERIODS,
+    M309_SCENARIO_PERIODS,
+    M322_SCENARIO_PERIODS,
+    M341_SCENARIO_PERIODS,
+    M345_SCENARIO_PERIODS,
+    M347_SCENARIO_PERIODS,
+    M353_SCENARIO_PERIODS,
+    M390_SCENARIO_PERIODS,
+    M490_SCENARIO_PERIODS,
+    M576_SCENARIO_PERIODS,
+    M604_SCENARIO_PERIODS,
+    M714_SCENARIO_PERIODS,
+)
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
-    "M123_SCENARIO_PERIODS",
-    "M131_SCENARIO_PERIODS",
-    "M151_SCENARIO_PERIODS",
-    "M165_SCENARIO_PERIODS",
-    "M180_SCENARIO_PERIODS",
-    "M184_SCENARIO_PERIODS",
-    "M185_SCENARIO_PERIODS",
-    "M189_SCENARIO_PERIODS",
-    "M190_SCENARIO_PERIODS",
-    "M193_SCENARIO_PERIODS",
-    "M200_SCENARIO_PERIODS",
-    "M202_SCENARIO_PERIODS",
-    "M210_SCENARIO_PERIODS",
-    "M222_SCENARIO_PERIODS",
-    "M232_SCENARIO_PERIODS",
-    "M270_SCENARIO_PERIODS",
-    "M296_SCENARIO_PERIODS",
-    "M303_SCENARIO_PERIODS",
-    "M308_SCENARIO_PERIODS",
-    "M309_SCENARIO_PERIODS",
-    "M322_SCENARIO_PERIODS",
-    "M341_SCENARIO_PERIODS",
-    "M345_SCENARIO_PERIODS",
-    "M347_SCENARIO_PERIODS",
-    "M353_SCENARIO_PERIODS",
-    "M390_SCENARIO_PERIODS",
-    "M490_SCENARIO_PERIODS",
-    "M576_SCENARIO_PERIODS",
-    "M604_SCENARIO_PERIODS",
-    "M714_SCENARIO_PERIODS",
     "declared_row_total_inputs",
     "edition_export_scenarios",
     "general_export_scenario",
@@ -224,6 +229,7 @@ __all__ = [
     "m190_export_scenario",
     "m193_export_scenario",
     "m200_export_scenario",
+    "m200_one_row_per_family",
     "m222_export_scenario",
     "m296_export_scenario",
     "m303_export_scenario",
@@ -233,184 +239,6 @@ __all__ = [
     "m390_export_scenario",
     "supported_scenario_periods",
 ]
-
-#: The quarter each Modelo 303 edition is rendered for; each selects exactly that edition.
-M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2023": Period.from_year_and_code(2023, "1T"),
-    "2024-hasta-08-y-2t": Period.from_year_and_code(2024, "1T"),
-    "2024-desde-09-y-3t": Period.from_year_and_code(2024, "3T"),
-    "2025": Period.from_year_and_code(2025, "1T"),
-    "2026-hasta-01-y-1t": Period.from_year_and_code(2026, "1T"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "2T"),
-}
-#: The annual period each Modelo 189 edition is rendered for.
-M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 190 edition is rendered for.
-M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 193 edition is rendered for.
-M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 232 edition is rendered for.
-M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    # 2016-2017 is deliberately absent. It was declared here and then withdrawn
-    # on evidence: 140 of that edition's generated export fields reference
-    # binding ids carrying an offset segment
-    # (``modelo-232.page_02.2968-2968.paraiso-valor-12-tipo``) while every
-    # binding it declares is offset-free. All 140 resolve once the segment is
-    # stripped, and every embedded span agrees exactly with the binding's own
-    # declared offset and length, so the segment is pure redundancy -- and the
-    # sibling edition settles which spelling is canonical, carrying the same 140
-    # fields with none of them. The edition therefore cannot compile, so it
-    # cannot render, and its export tree is not regenerated because the edition
-    # sits below the supported-filing-years floor. Declaring it would name a
-    # render that will not happen.
-    "2018-y-siguientes": Period.from_year_and_code(2018, "0A"),
-}
-#: The annual period each Modelo 345 edition is rendered for.
-M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-M347_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2011-2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
-M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The quarter each Modelo 131 edition is rendered for.
-M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2023": Period.from_year_and_code(2023, "1T"),
-    "2024": Period.from_year_and_code(2024, "1T"),
-    "2025": Period.from_year_and_code(2025, "1T"),
-    "2026": Period.from_year_and_code(2026, "1T"),
-}
-#: The annual period each Modelo 714 edition is rendered for; 714 files only ``0A``.
-M714_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021": Period.from_year_and_code(2021, "0A"),
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The first filing year of Modelo 322's BOE fichero layout, which stamps no
-#: filing envelope where the editions before it do.
-_M322_BOE_LAYOUT_FROM_YEAR: Final = 2026
-#: The month each Modelo 322 edition is rendered for; 322 is a monthly group filer.
-M322_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2008-2022": Period.from_year_and_code(2022, "01"),
-    "2023": Period.from_year_and_code(2023, "01"),
-    "2024-2025": Period.from_year_and_code(2024, "01"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "01"),
-}
-#: The quarter each Modelo 490 edition is rendered for; the 2022 editions split at 2T.
-M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021": Period.from_year_and_code(2021, "1T"),
-    "2022-1t": Period.from_year_and_code(2022, "1T"),
-    "2022-2t-4t": Period.from_year_and_code(2022, "2T"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "1T"),
-}
-#: The ad-hoc period each Modelo 309 edition is rendered for; 309 is event-driven.
-M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2004-2015": Period.from_year_and_code(2004, "AD-HOC"),
-    "2016-2017": Period.from_year_and_code(2016, "AD-HOC"),
-    "2018-2022": Period.from_year_and_code(2022, "AD-HOC"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "AD-HOC"),
-}
-#: The ad-hoc period Modelo 308's one export-bearing edition is rendered for.
-M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-y-siguientes": Period.from_year_and_code(2022, "AD-HOC"),
-}
-#: The quarter each Modelo 123 edition is rendered for.
-M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2023": Period.from_year_and_code(2022, "1T"),
-    "2024-y-siguientes": Period.from_year_and_code(2024, "1T"),
-}
-#: The month each Modelo 604 edition is rendered for.
-M604_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-2023": Period.from_year_and_code(2022, "01"),
-    "2024-y-siguientes": Period.from_year_and_code(2024, "01"),
-}
-#: The annual period each Modelo 151 edition is rendered for.
-M151_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2015-2022": Period.from_year_and_code(2015, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 165 edition is rendered for.
-M165_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2016-2022": Period.from_year_and_code(2016, "0A"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
-}
-#: The annual period each Modelo 184 edition is rendered for.
-M184_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2023-2024": Period.from_year_and_code(2023, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period of Modelo 200's export-bearing successor.
-M200_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The payment period each Modelo 202 edition is rendered for; 202 files ``1P``-``3P``.
-M202_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2022": Period.from_year_and_code(2019, "1P"),
-    "2023-2024": Period.from_year_and_code(2023, "1P"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
-}
-#: The first payment period of Modelo 222's export-bearing edition.
-M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
-}
-#: The annual period of Modelo 296's five-record successor design.
-M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2024-2025": Period.from_year_and_code(2024, "0A"),
-}
-#: The annual period each Modelo 180 edition is rendered for.
-M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2022": Period.from_year_and_code(2019, "0A"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
-}
-#: The month Modelo 185's one export-bearing edition is rendered for.
-M185_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2026, "01"),
-}
-#: The annual period each Modelo 210 edition is rendered for.
-M210_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
-}
-#: The annual period each Modelo 270 edition is rendered for.
-M270_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2013-2022": Period.from_year_and_code(2013, "0A"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
-}
-#: The quarter each Modelo 341 edition is rendered for.
-M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2005-2015": Period.from_year_and_code(2005, "1T"),
-    "2016-y-siguientes": Period.from_year_and_code(2016, "1T"),
-}
-#: The month each Modelo 353 edition is rendered for; the 2026 edition starts at ``02``.
-M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-hasta-2026-01": Period.from_year_and_code(2021, "01"),
-    "2026-desde-02": Period.from_year_and_code(2026, "02"),
-}
-#: The annual period Modelo 576's one export-bearing edition is rendered for.
-M576_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2008-y-siguientes": Period.from_year_and_code(2008, "0A"),
-}
 
 
 @cache
@@ -436,7 +264,7 @@ def _m390_product_software_identity() -> AeatProductSoftwareIdentity:
     """Build Modelo 390's example software identity on first use; see :func:`_presenter`."""
     return AeatProductSoftwareIdentity(
         program_identifier="C390",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="edition-round-trip:m390-software", digest="b" * 64),),
     )
 
@@ -446,7 +274,7 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
     """Build Modelo 303's example software identity on first use; see :func:`_presenter`."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(reference="aeat-software-registration:edition-round-trip", digest="a" * 64),
         ),
@@ -660,6 +488,7 @@ def _m303_filing_facts(
     parameters = resolve_bienes_inversion_regularizacion_parameters(
         registry_snapshot.revision, modelo_id=str(Modelo("303")), filing_period_date=period.end_date
     )
+    prorrata_register = _m303_prorrata_register(period, operation=operation)
     return M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=False,
@@ -687,8 +516,10 @@ def _m303_filing_facts(
         supplier_regime=M303SupplierRegimeArrival(
             period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
         ),
-        prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
-        prorrata_register=_m303_prorrata_register(period, operation=operation),
+        prorrata_transition=resolve_m303_prorrata_transition_arrival(
+            period=period, prorrata_register=prorrata_register, operation=operation
+        ),
+        prorrata_register=prorrata_register,
         differentiated_contributions=_m303_differentiated_contributions(period=period, operation=operation),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(
@@ -770,11 +601,27 @@ def _m303_regimen_simplificado_evidence(
     )
 
 
+def _m303_prorrata_provisional_source(
+    period: Period, *, operation: PinnedAuthorityOperation
+) -> tuple[ProrrataProvisionalProvenance, str | None, tuple[RegistrySnapshotRef, ...]]:
+    """Where the provisional percentage comes from: the prior year, or a start-of-activity declaration.
+
+    The carried prior definitive stands on the prior year's fourth-quarter
+    snapshot. A prior year below the support floor has no snapshot the engine
+    admits, so, as the register does for an operator with no prior Modelo 303,
+    the percentage is elected under the start-of-activity provenance with its
+    document reference and no snapshot reference.
+    """
+    prior_year = period.filing_year - 1
+    if prior_year >= operation.supported_filing_years().floor:
+        prior_snapshot_ref = operation.snapshot(str(Modelo("303")), filing_year=prior_year, period="4T").snapshot_ref
+        return carried_prior_definitiva_prorrata_provenance(), None, (prior_snapshot_ref,)
+    return require_prorrata_provenance("inicio_actividad"), "edition-round-trip:prorrata:inicio-actividad", ()
+
+
 def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperation) -> ProrrataRegister:
     """A general-regime register carrying the prior year's definitive percentage for the common and both sectors."""
-    prior_snapshot_ref = operation.snapshot(
-        str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
-    ).snapshot_ref
+    provenance, reference, snapshot_refs = _m303_prorrata_provisional_source(period, operation=operation)
     return ProrrataRegister(
         sector_definitions=_m303_differentiated_sectors(),
         entries=tuple(
@@ -784,8 +631,9 @@ def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperati
                 regime=general_prorrata_register_regime(),
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
-                provisional_provenance=carried_prior_definitiva_prorrata_provenance(),
-                source_registry_snapshot_refs=(prior_snapshot_ref,),
+                provisional_provenance=provenance,
+                authorisation_reference=reference,
+                source_registry_snapshot_refs=snapshot_refs,
             )
             for sector_id in (None, *(sector.sector_id for sector in _m303_differentiated_sectors()))
         ),
@@ -1011,13 +859,16 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
     """Validate synthetic software evidence inside the candidate fact scope."""
     return AeatProductSoftwareIdentity(
         program_identifier=f"C{modelo_id}",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference=f"edition-round-trip:m{modelo_id}-software", digest="c" * 64),),
     )
 
 
 def m200_export_scenario(
-    period: Period, *, result_disposition: ResultDisposition = ResultDisposition.NEGATIVA
+    period: Period,
+    *,
+    result_disposition: ResultDisposition = ResultDisposition.NEGATIVA,
+    projection_rows: Modelo200ProjectionRows | None = None,
 ) -> EditionExportScenario:
     """A synthetic corporate draft with explicit envelope software evidence and its rate-dispatch profile bindings.
 
@@ -1033,7 +884,8 @@ def m200_export_scenario(
     every family it prints. The snapshot below supplies exactly one synthetic
     row per family, carrying the identity the row is about and leaving every
     monetary member absent, which is what AEAT's blancos rule prescribes for an
-    unsupplied alphanumeric field.
+    unsupplied alphanumeric field. A caller that exercises the families' slots passes
+    its own ``projection_rows`` instead.
     """
     return EditionExportScenario(
         period=period,
@@ -1045,21 +897,52 @@ def m200_export_scenario(
             # ganancias": the edition declares it required, and the base
             # determination starts from it, so no draft can omit it.
             "DP200012:00501": Decimal("0.00"),
+            **_m200_incn_prior_12_months_input(period),
         },
-        producer_snapshot=partial(_m200_producer_snapshot, result_disposition=result_disposition),
+        producer_snapshot=partial(
+            _m200_producer_snapshot,
+            result_disposition=result_disposition,
+            projection_rows=m200_one_row_per_family() if projection_rows is None else projection_rows,
+        ),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
     )
 
 
+#: The profile binding for the INCN of the twelve months before the period,
+#: which an edition declares while its formulas apply the DA 15ª LIS tramos.
+_M200_INCN_PRIOR_12_MONTHS_BINDING: Final = "modelo-200-profile-incn-prior-12-months"
+
+
+def _m200_incn_prior_12_months_input(period: Period) -> dict[str, Decimal]:
+    """The scenario's twelve-month INCN, stated only where the period's edition declares that binding.
+
+    The draft refuses an input key its edition does not declare, and an edition
+    that declares the binding can read it in its bases imponibles negativas
+    ceiling, so the edition's own snapshot decides. The zero is this synthetic
+    scenario's stated fact for its newly created entity, which had no turnover
+    in the twelve months before the period; it is not a default for an unknown
+    INCN.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(
+            str(Modelo("200")),
+            filing_year=period.filing_year,
+            period=period.registry_token,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
+    declared = any(str(binding.id) == _M200_INCN_PRIOR_12_MONTHS_BINDING for binding in snapshot.revision.bindings)
+    return {_M200_INCN_PRIOR_12_MONTHS_BINDING: Decimal("0")} if declared else {}
+
+
 #: The synthetic NIF every Modelo 200 projected party is identified by. Nine
 #: characters, the width the diseño gives each of those NIF fields.
-_M200_SYNTHETIC_NIF: Final = "B00000000"
+_M200_SYNTHETIC_NIF: Final = "B00010082"
 #: The synthetic country/province code the two-character ``codigo`` members take.
 _M200_SYNTHETIC_COUNTRY: Final = "ES"
 
 
-def _m200_projection_rows() -> Modelo200ProjectionRows:
+def m200_one_row_per_family() -> Modelo200ProjectionRows:
     """One synthetic row of every repeated family modelo 200's layout projects."""
     return Modelo200ProjectionRows(
         administrador=(Modelo200AdministradorRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),),
@@ -1114,14 +997,16 @@ def _m200_projection_rows() -> Modelo200ProjectionRows:
     )
 
 
-def _m200_producer_snapshot(*, result_disposition: ResultDisposition) -> FilingProducerSnapshot:
+def _m200_producer_snapshot(
+    *, result_disposition: ResultDisposition, projection_rows: Modelo200ProjectionRows
+) -> FilingProducerSnapshot:
     """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
     return build_filing_producer_snapshot(
         modelo=Modelo("200"),
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
         presenter=_presenter(),
-        model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
+        model_profile=Modelo200ProfileFacts(projection_rows=projection_rows),
         elections=FilingElectionFacts(
             result_disposition=result_disposition,
             payment=PaymentElection.INGRESO,
@@ -1153,7 +1038,7 @@ def _m222_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         presenter=_presenter(),
         model_profile=Modelo222ProfileFacts(
             numero_grupo="0001/25",
-            entidad_dominante_identificacion="B00000000",
+            entidad_dominante_identificacion="B00010082",
             entidad_dominante_razon_social="Grupo Prueba",
             representante_o_dominante="2",
             fecha_inicio_periodo_impositivo=f"0101{period.filing_year}",
@@ -1265,15 +1150,19 @@ def _general_producer_snapshot(
 def m322_export_scenario(period: Period) -> EditionExportScenario:
     """A synthetic complementaria carrying the envelope evidence only the editions that stamp one need.
 
-    The 2008-2022, 2023 and 2024-2025 editions render a filing envelope, which
-    the canonical export path refuses without BOTH an explicit
-    product/software identity and an explicit prior-domiciliation election. The
-    2026-y-siguientes edition replaces that layout with the BOE fichero, which
-    declares no envelope prefix, and the same path refuses a product/software
-    identity no layout stamps. The envelope facts therefore follow the layout,
-    not the modelo.
+    An edition whose layout declares a filing envelope is refused by the
+    canonical export path without BOTH an explicit product/software identity
+    and an explicit prior-domiciliation election, and the same path refuses a
+    product/software identity no layout stamps. The envelope facts therefore
+    follow the layout the selected edition declares, not the modelo or the year.
     """
-    stamps_envelope = period.filing_year < _M322_BOE_LAYOUT_FROM_YEAR
+    revision = select_revision(
+        _bundled_modelo("322"),
+        filing_year=period.filing_year,
+        period=period.registry_token,
+        support=_bundled_support(),
+    )
+    stamps_envelope = any(layout.filing_envelope is not None for layout in revision.export_layouts)
     return EditionExportScenario(
         period=period,
         inputs={},
@@ -1287,7 +1176,7 @@ def _m322_producer_snapshot() -> FilingProducerSnapshot:
     return _general_producer_snapshot(
         "322",
         amendment_evidence=AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="3220000000000",
         ),

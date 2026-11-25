@@ -283,6 +283,17 @@ def _frame_payload(
     return payload
 
 
+def _require_frame_kind(
+    sequence_id: str, source_index: int, parsed_frame: SequenceFrame, golden_frame: GoldenFrame
+) -> None:
+    """Refuse a stale golden before rendering the corresponding executed frame."""
+    if parsed_frame.kind is not golden_frame.kind:
+        raise ValueError(
+            f"frame {source_index} of {sequence_id!r} is {parsed_frame.kind.value!r} in the "
+            f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
+        )
+
+
 def build_sequence_payload(
     sequence: ParsedSequence,
     golden: SequenceGolden | None,
@@ -321,11 +332,7 @@ def build_sequence_payload(
             frames.append(_frame_payload(parsed_frame, None, len(frames), resolved_shells))
             continue
         golden_frame = golden_frames[golden_index]
-        if parsed_frame.kind is not golden_frame.kind:
-            raise ValueError(
-                f"frame {source_index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
-                f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
-            )
+        _require_frame_kind(sequence.sequence_id, source_index, parsed_frame, golden_frame)
         golden_index += 1
         if parsed_frame.kind.value == "setup":
             continue

@@ -1,0 +1,1595 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-renta'
+date: '2026-11-02'
+modified: '2026-11-04'
+body_schema: 'body-v2'
+body_hash: 'sha256:6aa097da04ba34e22676f2488fa5ca6275bcb555989b52bfaf51b6d462b38fe1'
+related:
+  - "[[2026-11-02-desktop-renta-plan]]"
+---
+
+# `desktop-renta` ledger
+
+## Changes
+
+- `S09` `A` `src/cadrumo/application/user_profile/family_rows.py`
+- `S09` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S09` `M` `src/cadrumo/application/user_profile/view_operation.py`
+- `S09` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_family_rows.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_family_rows.py`
+- `S09` `verify:` `pytest test_family_rows test_profile_view_family_rows` -> `pass`
+- `S09` `verify:` `ruff ty lint-imports` -> `pass`
+- `S09` `by:` `sonnet-high`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_contracts.py`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_service.py`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_operation.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/profile/tests/test_imputation_election_operation.py`
+- `S08` `M` `src/cadrumo/application/user_profile/question_view.py`
+- `S08` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S08` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py`
+- `S08` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S08` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/operation_composition_general.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_profile_support.py`
+- `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S08` `verify:` `pytest test_imputation_election_operation` -> `pass`
+- `S08` `verify:` `ruff ty lint-imports` -> `pass`
+- `S08` `verify:` `python -m dev.quality.types` -> `fail`
+- `S08` `by:` `opus-medium`
+- `S06` `A` `src/cadrumo/application/modelo/projection_words.py`
+- `S06` `A` `src/cadrumo/application/modelo/taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_projection_words.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/modelo_projection_commands.py`
+- `S06` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S06` `verify:` `pytest projection and comparison words` -> `pass`
+- `S06` `verify:` `relay_contracts.py --check` -> `pass`
+- `S06` `by:` `sonnet-high`
+- `S10` `A` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S10` `A` `src/cadrumo/application/live/borrador_100_comparison_operation.py`
+- `S10` `A` `src/cadrumo/application/live/tests/test_borrador_100_comparison_operation.py`
+- `S10` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_borrador_100_comparison.py`
+- `S10` `M` `src/cadrumo/entrypoints/live_borrador_operation_composition.py`
+- `S10` `M` `src/cadrumo/entrypoints/operation_composition_live.py`
+- `S10` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S10` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `M` `src/cadrumo/locales/en/application.yml`
+- `S10` `verify:` `pytest borrador comparison` -> `pass`
+- `S10` `verify:` `ruff ty basedpyright pyrefly lint-imports` -> `pass`
+- `S10` `by:` `opus-medium`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_resultado_ingresar_o_devolver.py`
+- `S04` `A` `src/cadrumo/application/modelo/tests/test_work_form_modelo_100_resultado.py`
+- `S04` `verify:` `pytest resultado ingresar o devolver and work form resultado` -> `pass`
+- `S04` `verify:` `dev.registry.conformance valid` -> `pass`
+- `S04` `by:` `sonnet-high`
+- `S01` `A` `dev/registry/form_layout/outline_groups.py`
+- `S01` `A` `dev/registry/form_layout/outline_groups.toml`
+- `S01` `M` `dev/registry/form_layout/generator.py`
+- `S01` `M` `dev/registry/form_layout/serialization.py`
+- `S01` `M` `dev/locales/_registry_scanner.py`
+- `S01` `A` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_counts.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_localization.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S01` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S01` `A` `src/cadrumo/application/modelo/tests/test_work_form_outline.py`
+- `S01` `A` `dev/registry/form_layout/tests/test_form_layout_outline_groups.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S01` `verify:` `pytest test_work_form_outline` -> `pass`
+- `S01` `verify:` `ruff ty` -> `pass`
+- `S01` `by:` `opus-medium`
+- `S07` `A` `src/cadrumo/core/payment_instalment_election.py`
+- `S07` `A` `src/cadrumo/application/modelo/export_settlement.py`
+- `S07` `M` `src/cadrumo/core/result_disposition.py`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/facts/0159-modelo-result-casillas.toml`
+- `S07` `M` `src/cadrumo/application/modelo/export.py`
+- `S07` `M` `src/cadrumo/application/modelo/export_accounts.py`
+- `S07` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S07` `M` `src/cadrumo/application/modelo/work_export_contracts.py`
+- `S07` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S07` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_export_settlement.py`
+- `S07` `A` `src/cadrumo/core/tests/test_payment_instalment_election.py`
+- `S07` `verify:` `pytest export settlement focused` -> `pass`
+- `S07` `verify:` `relay_contracts.py --check` -> `pass`
+- `S07` `by:` `opus-medium`
+- `S03` `A` `src/cadrumo/application/modelo/calculation_required_inputs.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_context.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_field_state.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_field_projection.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/formula_initial_values.py`
+- `S03` `A` `src/cadrumo/application/modelo/tests/test_work_form_calculation_required.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_work_form_descriptors.py`
+- `S03` `M` `dev/registry/form_layout/page_sections.py`
+- `S03` `M` `dev/registry/form_layout/outline_groups.py`
+- `S03` `verify:` `pytest test_work_form_calculation_required test_work_form_descriptors` -> `pass`
+- `S03` `verify:` `ruff ty lint-imports` -> `pass`
+- `S03` `by:` `sonnet-high`
+- `S05` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_work_form_withholding_correction.py`
+- `S05` `verify:` `pytest test_work_form_withholding_correction test_work_form_issue_lines` -> `pass`
+- `S05` `by:` `sonnet-high`
+- `S12` `A` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S12` `A` `native/desktop/src-tauri/src/shell/user_profile/election.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile/wire.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile/views.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S12` `A` `native/desktop/src-tauri/src/shell/aeat_sync/borrador.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S12` `A` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S12` `A` `native/desktop/frontend/src/shell/borrador.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/userProfile.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S12` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S12` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `pass`
+- `S12` `verify:` `relay_contracts.py --check` -> `pass`
+- `S12` `by:` `sonnet-high`
+- `S02` `A` `.vault/adr/2026-11-02-desktop-renta-renta-family-canonical-adr.md`
+- `S02` `A` `dev/registry/form_layout/official_repeats.py`
+- `S02` `M` `dev/registry/form_layout/page_sections.py`
+- `S02` `M` `dev/registry/form_layout/position_anchoring.py`
+- `S02` `M` `dev/registry/form_layout/official_headings.toml`
+- `S02` `M` `dev/registry/compiler/form_layout_integrity.py`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/profile_bindings.py`
+- `S02` `A` `src/cadrumo/application/modelo/profile_row_binding.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_records.py`
+- `S02` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_work_form_household_rows.py`
+- `S02` `verify:` `pytest household projection outline headings` -> `pass`
+- `S02` `verify:` `just check-registry-gate` -> `pass`
+- `S02` `by:` `opus-medium`
+- `S23` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S23` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S23` `by:` `sonnet-high`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/locales/en/application.yml`
+- `S06` `verify:` `pytest taxation comparison` -> `pass`
+- `S06` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S21` `M` `src/cadrumo/application/modelo/projection_words.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_resultado_ingresar_o_devolver.py`
+- `S21` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S21` `verify:` `pytest resultado and unresolved outcome` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
+- `S21` `by:` `sonnet-high`
+- `S18` `D` `native/desktop/frontend/src/dev/prototypes/renta`
+- `S18` `D` `dev/locales/desktop_renta_keys.py`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/quality/metadata/import_load_targets.json`
+- `S18` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S18` `verify:` `npm run storybook:build` -> `pass`
+- `S18` `by:` `sonnet-high`
+- `S11` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S11` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S11` `A` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S11` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S11` `verify:` `test_window_holds_no_tax_data.py` -> `pass`
+- `S11` `by:` `sonnet-high`
+- `S22` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_import.py`
+- `S22` `A` `src/cadrumo/adapters/inbound/borrador/tests/test_borrador_profile_years.py`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S22` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S22` `verify:` `pytest live borrador comparison and window guard` -> `pass`
+- `S22` `verify:` `test_registered_executor_conformance.py -k borrador` -> `fail`
+- `S22` `by:` `opus-medium`
+- `S02` `M` `src/cadrumo/application/modelo/profile_row_binding.py`
+- `S02` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S02` `M` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S02` `M` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_work_form_household_rows.py`
+- `S02` `verify:` `pytest household form family rows profile view` -> `pass`
+- `S02` `by:` `sonnet-high`
+- `S13` `A` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.stories.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/details/TodoRail.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/FieldRow.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/SectionView.tsx`
+- `S13` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S13` `M` `dev/locales/desktop_workspace_keys.py`
+- `S13` `verify:` `npm run storybook:build` -> `pass`
+- `S13` `verify:` `test_window_holds_no_tax_data.py` -> `pass`
+- `S13` `by:` `opus-medium`
+- `S24` `A` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S24` `A` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S24` `M` `src/cadrumo/application/user_profile/profile_operation_contracts.py`
+- `S24` `M` `src/cadrumo/application/user_profile/profile_operation_execution.py`
+- `S24` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S24` `M` `src/cadrumo_client/transport/profile_mutations.py`
+- `S24` `A` `src/cadrumo_runtime/host/tests/test_ascendants_operation.py`
+- `S24` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S24` `M` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S24` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S24` `verify:` `pytest test_ascendants_operation test_descendants_operation` -> `pass`
+- `S24` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `fail`
+- `S24` `by:` `sonnet-high`
+- `S05` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `verify:` `pytest declarations list and issue lines` -> `pass`
+- `S07` `A` `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`
+- `S07` `A` `src/cadrumo/domain/calculations/registry/payment_instalment_split.py`
+- `S07` `M` `src/cadrumo/core/payment_instalment_election.py`
+- `S07` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S07` `M` `src/cadrumo/application/modelo/settlement_casilla.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py`
+- `S07` `verify:` `pytest export settlement through export offer` -> `pass`
+- `S07` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ProfileCompanions.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.stories.tsx`
+- `S16` `A` `native/desktop/frontend/src/dev/imputationElectionFixture.ts`
+- `S16` `A` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S16` `A` `dev/desktop_imputation_election_fixture.py`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/imputation-election.spec.ts`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/workspace/SourcesView.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S16` `M` `native/desktop/frontend/src/App.tsx`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S16` `M` `dev/locales/desktop_workspace_keys.py`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `verify:` `tsc and eslint` -> `pass`
+- `S16` `verify:` `playwright scenarios imputation-election` -> `pass`
+- `S16` `verify:` `storybook:build` -> `pass`
+- `S16` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S16` `verify:` `test_desktop_chrome` -> `fail`
+- `S16` `by:` `sonnet-high`
+- `S22` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S22` `verify:` `test_registered_executor_conformance -k borrador` -> `pass`
+- `S22` `verify:` `desktop-host-unit-test` -> `pass`
+- `S22` `by:` `orchestrator`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Credits.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/BoxLabel.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S15` `A` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S15` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S15` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S15` `M` `native/desktop/frontend/src/shell/userProfile.ts`
+- `S15` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S15` `M` `native/desktop/frontend/src/App.tsx`
+- `S15` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S15` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S15` `M` `dev/locales/desktop_workspace_keys.py`
+- `S15` `verify:` `tsc and eslint` -> `pass`
+- `S15` `verify:` `playwright renta-credits and modelo-workspace` -> `pass`
+- `S15` `verify:` `storybook:build` -> `pass`
+- `S15` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S15` `verify:` `modelo_fixtures.py validate` -> `fail`
+- `S15` `verify:` `test_desktop_chrome` -> `fail`
+- `S15` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/facts/0159-modelo-result-casillas.toml`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/result_casillas.py`
+- `S25` `M` `src/cadrumo/application/modelo/settlement_casilla.py`
+- `S25` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S25` `M` `src/cadrumo/core/payment_instalment_election.py`
+- `S25` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S25` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_without_a_settled_box.py`
+- `S25` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S25` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S25` `verify:` `pytest split, settlement, offer, through-export, e2e` -> `pass`
+- `S25` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S25` `by:` `sonnet-high`
+- `S14` `A` `native/desktop/frontend/src/components/profile/Household.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/profile/HouseholdPersonDialog.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/profile/householdModel.ts`
+- `S14` `A` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/TodoRail.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S14` `A` `dev/desktop_household_fixture.py`
+- `S14` `A` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S14` `A` `native/desktop/frontend/src/dev/householdFixture.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S14` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S14` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/user_profile/wire.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S14` `M` `dev/locales/desktop_profile_interface_keys.py`
+- `S14` `verify:` `tsc and eslint` -> `pass`
+- `S14` `verify:` `playwright profile-household` -> `pass`
+- `S14` `verify:` `storybook:build` -> `pass`
+- `S14` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S14` `verify:` `pytest family_rows and ascendants` -> `pass`
+- `S14` `verify:` `cargo shell::user_profile` -> `pass`
+- `S14` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement_without_a_settled_box.py`
+- `S25` `verify:` `modelo export/settlement sweep -m ''` -> `pass`
+- `S25` `verify:` `four reported e2e/settlement tests` -> `pass`
+- `S25` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S25` `verify:` `test_desktop_chrome` -> `fail`
+- `S27` `M` `src/cadrumo/application/modelo/projection.py`
+- `S27` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/projection_words.py`
+- `S27` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S27` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S27` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S27` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S27` `M` `src/cadrumo/core/errors/registry/_application_modelo.py`
+- `S27` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S27` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S27` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S27` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S27` `verify:` `new projection region/remedy/label tests` -> `pass`
+- `S27` `verify:` `playwright renta-credits` -> `pass`
+- `S27` `verify:` `storybook:build` -> `pass`
+- `S27` `verify:` `relay_contracts --check` -> `pass`
+- `S27` `verify:` `manifest surface tests` -> `fail`
+- `S27` `by:` `sonnet-high`
+- `S26` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S26` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S26` `M` `src/cadrumo/application/user_profile/profile_operation_execution.py`
+- `S26` `M` `src/cadrumo/application/aggregation/renta_imputation.py`
+- `S26` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S26` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S26` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S26` `A` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S26` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_form_imputation_election.py`
+- `S26` `M` `src/cadrumo_runtime/host/tests/test_descendants_operation.py`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/SourcesView.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/ProfileCompanions.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/imputationElectionFixture.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/householdFixture.ts`
+- `S26` `M` `dev/desktop_household_fixture.py`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S26` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S26` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S26` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S26` `verify:` `pytest descendants and election flag` -> `pass`
+- `S26` `verify:` `playwright imputation-election and profile-household` -> `pass`
+- `S26` `verify:` `storybook:build` -> `pass`
+- `S26` `verify:` `tauri test-unit shell::user_profile` -> `pass`
+- `S26` `verify:` `test_desktop_chrome` -> `fail`
+- `S26` `by:` `sonnet-high`
+- `S30` `A` `src/cadrumo/application/user_profile/household_person_tax_id.py`
+- `S30` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S30` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S30` `M` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S30` `M` `src/cadrumo/locales/en/application.yml`
+- `S30` `M` `src/cadrumo/locales/es/application.yml`
+- `S30` `M` `src/cadrumo/locales/ca/application.yml`
+- `S30` `M` `src/cadrumo/locales/hu/application.yml`
+- `S30` `verify:` `pytest descendants, ascendants, family_rows, runtime descendants, window guard` -> `pass`
+- `S30` `verify:` `ruff, ty, lint-imports` -> `pass`
+- `S30` `verify:` `desktop_household_fixture --check` -> `pass`
+- `S30` `by:` `sonnet-high`
+- `S28` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_form_outline.py`
+- `S28` `M` `src/cadrumo/entrypoints/tui/modelo/tests/workbench_fixture.py`
+- `S28` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S28` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S28` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S28` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S28` `verify:` `pytest outline parity across 100/130/131/182/184/303/390` -> `pass`
+- `S28` `verify:` `playwright modelo-workspace` -> `pass`
+- `S28` `verify:` `storybook:build` -> `pass`
+- `S28` `verify:` `manifest generate --check and relay_contracts --check` -> `pass`
+- `S28` `by:` `sonnet-high`
+- `S29` `M` `src/cadrumo/application/modelo/projection.py`
+- `S29` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S29` `M` `src/cadrumo/core/errors/registry/_application_modelo.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S29` `M` `src/cadrumo/locales/en/errors.yml`
+- `S29` `M` `src/cadrumo/locales/es/errors.yml`
+- `S29` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S29` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S29` `verify:` `pytest projection region/remedies/declaration` -> `pass`
+- `S29` `verify:` `manifest, fixtures and relay --check` -> `pass`
+- `S29` `verify:` `test_desktop_chrome` -> `fail`
+- `S29` `by:` `sonnet-high`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/Settlement.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/Settlement.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S17` `A` `native/desktop/frontend/tests/scenarios/renta-settlement.spec.ts`
+- `S17` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S17` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S17` `M` `dev/locales/desktop_workspace_keys.py`
+- `S17` `verify:` `tsc and eslint` -> `pass`
+- `S17` `verify:` `playwright renta-settlement` -> `pass`
+- `S17` `verify:` `storybook:build` -> `pass`
+- `S17` `verify:` `modelo_fixtures validate` -> `pass`
+- `S17` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S17` `verify:` `test_desktop_chrome` -> `fail`
+- `S17` `by:` `sonnet-high`
+- `S31` `A` `src/cadrumo/application/operations/next_step.py`
+- `S31` `A` `src/cadrumo/application/modelo/projection_next_steps.py`
+- `S31` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S31` `M` `src/cadrumo/application/modelo/projection.py`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S31` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S31` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S31` `verify:` `pytest projection remedies and error detail` -> `pass`
+- `S31` `verify:` `playwright renta-credits and modelo-operation-run` -> `pass`
+- `S31` `verify:` `storybook:build` -> `pass`
+- `S31` `verify:` `lint-imports` -> `pass`
+- `S31` `verify:` `import_gate` -> `fail`
+- `S31` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S25` `M` `src/cadrumo/application/modelo/export.py`
+- `S25` `M` `src/cadrumo/application/modelo/export_accounts.py`
+- `S25` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_every_year_computing_the_settled_box.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_e2e_imputation_calculate_to_export.py`
+- `S25` `verify:` `export/settlement sweep -m ''` -> `pass`
+- `S25` `verify:` `registry result_casillas tests` -> `pass`
+- `S25` `verify:` `e2e imputation` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S33` `M` `src/cadrumo/application/modelo/verification_predicates.py`
+- `S33` `M` `src/cadrumo/domain/calculations/registry/schema_verification.py`
+- `S33` `M` `dev/registry/compiler/validate_verification_predicates.py`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S33` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_art_50_3_compensation_verification.py`
+- `S33` `M` `src/cadrumo/application/modelo/tests/test_verification_substance.py`
+- `S33` `M` `dev/registry/tests/test_verification_predicate_build_gate.py`
+- `S33` `verify:` `art. 50.3 real-run tests` -> `pass`
+- `S33` `verify:` `dev/registry schema and predicate gates` -> `pass`
+- `S33` `verify:` `modelo 100 verification sweep` -> `fail`
+- `S33` `by:` `opus-medium`
+- `S32` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S32` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S32` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S32` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S32` `M` `src/cadrumo/domain/user_profile/setup_answers.py`
+- `S32` `M` `src/cadrumo/application/user_profile/completeness.py`
+- `S32` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S32` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S32` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S32` `A` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S32` `verify:` `comparison, work-form, wizard, user_profile, live, registry-schema suites` -> `pass`
+- `S32` `verify:` `import_gate and lint-imports` -> `pass`
+- `S32` `verify:` `manifest, relay and modelo-fixtures --check` -> `pass`
+- `S32` `by:` `opus-medium`
+- `S36` `A` `src/cadrumo/application/modelo/projection_declaration.py`
+- `S36` `A` `src/cadrumo/application/modelo/projection_quarter_inputs.py`
+- `S36` `M` `src/cadrumo/application/modelo/projection.py`
+- `S36` `M` `src/cadrumo/application/operations/next_step.py`
+- `S36` `M` `src/cadrumo/application/modelo/projection_next_steps.py`
+- `S36` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_quarter_incomplete.py`
+- `S36` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S36` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S36` `verify:` `pytest projection quarter incomplete and related` -> `pass`
+- `S36` `verify:` `playwright renta-credits` -> `pass`
+- `S36` `verify:` `storybook:build` -> `pass`
+- `S36` `verify:` `lint-imports` -> `pass`
+- `S36` `by:` `sonnet-high`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/taxationComparisonRead.ts`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/BorradorComparison.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/borradorComparisonRead.ts`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/ComparisonView.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.stories.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/BorradorComparison.stories.tsx`
+- `S17` `A` `native/desktop/frontend/src/dev/borradorFixture.ts`
+- `S17` `A` `native/desktop/frontend/tests/scenarios/renta-comparison.spec.ts`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S17` `verify:` `tsc and eslint` -> `pass`
+- `S17` `verify:` `storybook plays 124/124` -> `pass`
+- `S17` `verify:` `playwright renta scenarios 119` -> `pass`
+- `S17` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S17` `verify:` `test_desktop_chrome` -> `fail`
+- `S34` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S34` `M` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S34` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S34` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S34` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S34` `M` `src/cadrumo/locales/en/common.yml`
+- `S34` `M` `src/cadrumo/locales/en/application.yml`
+- `S34` `M` `src/cadrumo/adapters/persistence/profile/tests/test_ascendants_operation.py`
+- `S34` `M` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S34` `verify:` `user_profile and settlement tests` -> `pass`
+- `S34` `verify:` `lint-imports` -> `pass`
+- `S34` `verify:` `check-import-boundaries` -> `fail`
+- `S34` `verify:` `test_desktop_chrome` -> `fail`
+- `S34` `by:` `sonnet-high`
+- `S37` `A` `src/cadrumo/application/user_profile/family_question.py`
+- `S37` `A` `src/cadrumo/application/wizard/tests/test_family_cohabitation_question.py`
+- `S37` `A` `src/cadrumo/adapters/persistence/profile/tests/test_family_cohabitation_answer.py`
+- `S37` `M` `src/cadrumo/application/wizard/setup_family_sections.py`
+- `S37` `M` `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml`
+- `S37` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S37` `M` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S37` `M` `native/desktop/frontend/src/components/profile/Household.tsx`
+- `S37` `M` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S37` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S37` `verify:` `wizard and profile suites` -> `pass`
+- `S37` `verify:` `rust household tests` -> `pass`
+- `S37` `verify:` `playwright profile-household` -> `pass`
+- `S37` `verify:` `storybook:build` -> `pass`
+- `S37` `verify:` `test_desktop_chrome` -> `fail`
+- `S37` `by:` `sonnet-high`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S35` `A` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S35` `D` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/facts/0038-lirpf-art-20-trabajo-reduccion-rnt-ceiling.toml`
+- `S35` `M` `src/cadrumo/application/modelo/projection.py`
+- `S35` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S35` `verify:` `art. 50.3 suite` -> `pass`
+- `S35` `verify:` `import_gate` -> `pass`
+- `S35` `verify:` `focused fallout run` -> `fail`
+- `S35` `by:` `opus-medium`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_answers.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S39` `A` `src/cadrumo/application/modelo/tests/test_work_form_answers.py`
+- `S39` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_form_answers.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S39` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S39` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S39` `verify:` `work-form suites` -> `pass`
+- `S39` `verify:` `modelo-fixtures --check` -> `pass`
+- `S39` `verify:` `playwright modelo-workspace and renta scenarios` -> `pass`
+- `S39` `verify:` `storybook:build` -> `pass`
+- `S39` `verify:` `check-import-boundaries` -> `pass`
+- `S39` `by:` `opus-medium`
+- `S40` `A` `src/cadrumo/_data/registry/aeat/facts/0178-household-row-limit-owners.toml`
+- `S40` `A` `src/cadrumo/domain/calculations/registry/profile_row_limits.py`
+- `S40` `M` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S40` `A` `dev/registry/compiler/validate_household_row_owners.py`
+- `S40` `M` `dev/registry/compiler/validator.py`
+- `S40` `A` `dev/registry/compiler/tests/test_validate_household_row_owners.py`
+- `S40` `verify:` `user_profile and writer tests` -> `pass`
+- `S40` `verify:` `household row owner build check` -> `pass`
+- `S40` `verify:` `import_gate` -> `pass`
+- `S40` `by:` `sonnet-high`
+- `S42` `A` `src/cadrumo/application/modelo/row_filled_bindings.py`
+- `S42` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S42` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_answers.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S42` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S42` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S42` `verify:` `edit-admission, work-form, scope and ladder suites` -> `pass`
+- `S42` `verify:` `manifest and relay --check` -> `pass`
+- `S42` `verify:` `import_gate` -> `fail`
+- `S42` `verify:` `dev/locales/tests` -> `fail`
+- `S42` `by:` `sonnet-high`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `S41` `M` `src/cadrumo/domain/calculations/registry/errors.py`
+- `S41` `M` `src/cadrumo/locales/en/errors.yml`
+- `S41` `verify:` `focused 0500/1391/art. 50.3 set` -> `pass`
+- `S41` `verify:` `modelo 100 suite` -> `fail`
+- `S41` `verify:` `registry suites` -> `fail`
+- `S41` `verify:` `check-types` -> `fail`
+- `S41` `by:` `opus-medium`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S38` `M` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S38` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S38` `verify:` `just check-registry` -> `pass`
+- `S38` `verify:` `just check-registry-gate` -> `pass`
+- `S38` `verify:` `just check-bindings` -> `pass`
+- `S38` `verify:` `just report-registry-edition-migration 100` -> `pass`
+- `S38` `verify:` `pytest comparison flags 2022-2025` -> `pass`
+- `S38` `verify:` `pytest renta suites` -> `pass`
+- `S38` `verify:` `pytest test_window_holds_no_tax_data` -> `pass`
+- `S38` `verify:` `lint-imports` -> `pass`
+- `S38` `verify:` `pytest dev/registry/tests modelo 100` -> `fail`
+- `S38` `by:` `vaultspec-standard-executor`
+- `S43` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S43` `M` `src/cadrumo/application/aggregation/counterpart.py`
+- `S43` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S43` `M` `src/cadrumo/domain/modelos/calculation_revision_amendment.py`
+- `S43` `M` `src/cadrumo/application/calculations/revision_carry_gate.py`
+- `S43` `M` `src/cadrumo/application/modelo/profile_derived_facts.py`
+- `S43` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S43` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S43` `A` `src/cadrumo/application/aggregation/tests/test_projected_year_declarations.py`
+- `S43` `A` `src/cadrumo/application/calculations/tests/test_revision_carry_gate_projection.py`
+- `S43` `M` `src/cadrumo/domain/calculations/registry/tests/authored_editions.py`
+- `S43` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_injection.py`
+- `S43` `M` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S43` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S43` `verify:` `ruff` -> `pass`
+- `S43` `verify:` `ty` -> `pass`
+- `S43` `verify:` `lint-imports` -> `pass`
+- `S43` `verify:` `pytest projected-year, comparison, carry gate, Madrid deduction suites` -> `pass`
+- `S43` `verify:` `pytest wide aggregation/calculations/modelo run` -> `fail`
+- `S43` `by:` `vaultspec-standard-executor`
+- `S19` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/form/FormView.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Settlement.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Settlement.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/profile/ProfileEditor.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/Years.stories.tsx`
+- `S19` `A` `native/desktop/frontend/src/dev/servedRentaYears.ts`
+- `S19` `A` `native/desktop/frontend/tests/scenarios/renta-journeys.spec.ts`
+- `S19` `verify:` `tsc` -> `pass`
+- `S19` `verify:` `eslint` -> `pass`
+- `S19` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S19` `verify:` `storybook:build` -> `pass`
+- `S19` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S19` `verify:` `relay_contracts.py --check` -> `pass`
+- `S19` `verify:` `renta-journeys.spec.ts` -> `pass`
+- `S19` `verify:` `playwright scenarios modelo specs` -> `fail`
+- `S19` `verify:` `test_desktop_chrome` -> `fail`
+- `S19` `by:` `vaultspec-standard-executor`
+- `S20` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S20` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S20` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S20` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S20` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S20` `M` `src/cadrumo/application/user_profile/imputation_election_service.py`
+- `S20` `M` `src/cadrumo/application/user_profile/question_view.py`
+- `S20` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S20` `M` `dev/locales/tests/test_audit.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/tests/test_compare_taxation_payload_contract.py`
+- `S20` `M` `dev/registry/compiler/validate_household_row_owners.py`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S20` `M` `dev/quality/metadata/import_load_targets.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S20` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S20` `verify:` `locale audit, parity, dynamic prefix, casilla catalogue` -> `pass`
+- `S20` `verify:` `test_desktop_chrome` -> `fail`
+- `S20` `verify:` `lint-imports` -> `pass`
+- `S20` `verify:` `just check-types` -> `fail`
+- `S20` `verify:` `playwright scenarios modelo/renta` -> `fail`
+- `S20` `verify:` `pytest renta regression` -> `fail`
+- `S20` `by:` `vaultspec-standard-executor`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S47` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S47` `verify:` `just check-registry` -> `pass`
+- `S47` `verify:` `just check-registry-gate` -> `pass`
+- `S47` `verify:` `just check-bindings` -> `pass`
+- `S47` `verify:` `just report-registry-edition-migration 100` -> `pass`
+- `S47` `verify:` `pytest taxation comparison all years incl projected` -> `pass`
+- `S47` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S47` `by:` `vaultspec-high-executor`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/schema_references.py`
+- `S44` `A` `src/cadrumo/domain/calculations/registry/tests/test_projected_year_filing_grade.py`
+- `S44` `A` `src/cadrumo/application/filing/tests/test_runtime_projected_year.py`
+- `S44` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_projected_year_verification.py`
+- `S44` `verify:` `ruff` -> `pass`
+- `S44` `verify:` `ty` -> `pass`
+- `S44` `verify:` `lint-imports` -> `pass`
+- `S44` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S44` `verify:` `dev.locales audit` -> `pass`
+- `S44` `verify:` `pytest wide suites` -> `fail`
+- `S44` `by:` `vaultspec-standard-executor`
+- `S50` `M` `src/cadrumo/application/_state_projection_readiness.py`
+- `S50` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S50` `M` `src/cadrumo/application/state_projection.py`
+- `S50` `M` `src/cadrumo/application/tests/test_state_projection.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/inventory_anexo_d_applicability.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S50` `M` `src/cadrumo/domain/contribuyente/inventory/valuation.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_state_projection.py`
+- `S50` `M` `src/cadrumo/locales/en/application.yml`
+- `S50` `M` `src/cadrumo/locales/es/application.yml`
+- `S50` `M` `src/cadrumo/locales/ca/application.yml`
+- `S50` `M` `src/cadrumo/locales/hu/application.yml`
+- `S50` `A` `src/cadrumo/domain/calculations/registry/tests/test_inventory_anexo_d_applicability.py`
+- `S50` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_projected_year_inventory_live.py`
+- `S50` `verify:` `ruff` -> `pass`
+- `S50` `verify:` `ty` -> `pass`
+- `S50` `verify:` `lint-imports` -> `pass`
+- `S50` `verify:` `pytest inventory, modelo, state projection suites` -> `pass`
+- `S50` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S50` `by:` `vaultspec-standard-executor`
+- `S49` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S49` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/assets/assetWrites.ts`
+- `S49` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S49` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/settle.rs`
+- `S49` `M` `src/cadrumo/locales/en/common.yml`
+- `S49` `M` `src/cadrumo/locales/es/common.yml`
+- `S49` `M` `src/cadrumo/locales/ca/common.yml`
+- `S49` `M` `src/cadrumo/locales/hu/common.yml`
+- `S49` `M` `dev/locales/desktop_ledger_catalogue_keys.py`
+- `S49` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S49` `A` `native/desktop/frontend/src/components/ledger/setup/CertificateFilePicker.tsx`
+- `S49` `verify:` `tsc` -> `pass`
+- `S49` `verify:` `eslint` -> `pass`
+- `S49` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S49` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S49` `verify:` `relay_contracts.py --check` -> `pass`
+- `S49` `verify:` `storybook:build` -> `pass`
+- `S49` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S49` `verify:` `playwright scenarios` -> `fail`
+- `S49` `verify:` `tauri test-unit` -> `fail`
+- `S49` `verify:` `test_desktop_chrome` -> `fail`
+- `S49` `by:` `vaultspec-standard-executor`
+- `S48` `M` `src/cadrumo/application/modelo/profile_derived_facts.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_injection.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_advisory.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_non_derived_injector_preservation.py`
+- `S48` `M` `src/cadrumo/locales/en/application.yml`
+- `S48` `M` `src/cadrumo/locales/es/application.yml`
+- `S48` `M` `src/cadrumo/locales/ca/application.yml`
+- `S48` `M` `src/cadrumo/locales/hu/application.yml`
+- `S48` `M` `src/cadrumo/locales/en/common.yml`
+- `S48` `M` `src/cadrumo/locales/es/common.yml`
+- `S48` `M` `src/cadrumo/locales/ca/common.yml`
+- `S48` `M` `src/cadrumo/locales/hu/common.yml`
+- `S48` `M` `dev/locales/tests/test_audit.py`
+- `S48` `verify:` `ruff` -> `pass`
+- `S48` `verify:` `ty` -> `pass`
+- `S48` `verify:` `lint-imports` -> `pass`
+- `S48` `verify:` `pytest settlement, export, locale audit` -> `fail`
+- `S48` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S48` `by:` `vaultspec-standard-executor`
+- `S52` `M` `.importlinter`
+- `S52` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S52` `M` `dev/quality/metadata/import_load_targets.json`
+- `S52` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S52` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S52` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/LedgerStage.tsx`
+- `S52` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S52` `A` `dev/desktop_withholding_certificate_words_fixture.py`
+- `S52` `A` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingWords.json`
+- `S52` `verify:` `tsc` -> `pass`
+- `S52` `verify:` `eslint` -> `pass`
+- `S52` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S52` `verify:` `relay_contracts.py --check` -> `pass`
+- `S52` `verify:` `storybook:build` -> `pass`
+- `S52` `verify:` `playwright ledger-setup.spec.ts` -> `pass`
+- `S52` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S52` `by:` `vaultspec-standard-executor`
+- `S46` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S46` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S46` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S46` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S46` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S46` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S46` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S46` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S46` `A` `src/cadrumo/application/modelo/work_form_credits.py`
+- `S46` `A` `src/cadrumo/application/modelo/tests/test_work_form_withholding_credit_dependents.py`
+- `S46` `verify:` `ruff` -> `pass`
+- `S46` `verify:` `ty` -> `pass`
+- `S46` `verify:` `lint-imports` -> `pass`
+- `S46` `verify:` `pytest work_form workbench` -> `pass`
+- `S46` `verify:` `tsc` -> `pass`
+- `S46` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S46` `verify:` `relay_contracts.py --check` -> `pass`
+- `S46` `verify:` `storybook:build` -> `pass`
+- `S46` `verify:` `playwright renta-credits` -> `pass`
+- `S46` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S46` `by:` `vaultspec-high-executor`
+- `S51` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`
+- `S51` `M` `dev/locales/desktop_workspace_keys.py`
+- `S51` `M` `src/cadrumo/locales/en/common.yml`
+- `S51` `M` `src/cadrumo/locales/es/common.yml`
+- `S51` `M` `src/cadrumo/locales/ca/common.yml`
+- `S51` `M` `src/cadrumo/locales/hu/common.yml`
+- `S51` `verify:` `tsc` -> `pass`
+- `S51` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S51` `verify:` `dev.locales audit` -> `pass`
+- `S51` `verify:` `storybook:build` -> `pass`
+- `S51` `verify:` `test_desktop_chrome` -> `fail`
+- `S51` `by:` `vaultspec-high-executor`
+- `S53` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S53` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S53` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S53` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S53` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S53` `M` `dev/locales/desktop_chrome.py`
+- `S53` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S53` `M` `src/cadrumo/locales/en/common.yml`
+- `S53` `M` `src/cadrumo/locales/es/common.yml`
+- `S53` `M` `src/cadrumo/locales/ca/common.yml`
+- `S53` `M` `src/cadrumo/locales/hu/common.yml`
+- `S53` `M` `.importlinter`
+- `S53` `M` `dev/quality/metadata/import_load_targets.json`
+- `S53` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S53` `A` `dev/desktop_withholding_refusal_words_fixture.py`
+- `S53` `A` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingRefusalWords.json`
+- `S53` `D` `dev/desktop_withholding_certificate_words_fixture.py`
+- `S53` `D` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingWords.json`
+- `S53` `verify:` `tsc` -> `pass`
+- `S53` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S53` `verify:` `relay_contracts.py --check` -> `pass`
+- `S53` `verify:` `storybook:build` -> `pass`
+- `S53` `verify:` `playwright ledger-setup.spec.ts` -> `pass`
+- `S53` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S53` `verify:` `test_desktop_chrome` -> `fail`
+- `S53` `by:` `vaultspec-standard-executor`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerContract.ts`
+- `S54` `M` `native/desktop/frontend/scripts/ledger_contract.py`
+- `S54` `A` `native/desktop/frontend/src/shell/ledgerClassifications.ts`
+- `S54` `A` `native/desktop/frontend/tests/support/servedClassifications.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S54` `M` `native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json`
+- `S54` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S54` `M` `src/cadrumo/application/ledger/tests/test_entry_options.py`
+- `S54` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S54` `verify:` `relay_contracts.py --check` -> `pass`
+- `S54` `verify:` `storybook:build` -> `pass`
+- `S54` `verify:` `playwright ledger specs` -> `pass`
+- `S54` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S54` `verify:` `tsc` -> `fail`
+- `S54` `by:` `vaultspec-standard-executor`
+- `S51` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S51` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S51` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S51` `A` `native/desktop/frontend/src/components/modelo/workspace/Disagreement.stories.tsx`
+- `S51` `A` `native/desktop/frontend/src/components/modelo/workspace/DisagreementAnswers.tsx`
+- `S51` `A` `native/desktop/frontend/src/components/modelo/workspace/DisagreementDialog.tsx`
+- `S51` `A` `native/desktop/frontend/src/components/modelo/workspace/disagreementRead.ts`
+- `S51` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-accepted-refused-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-accepted-refused-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-accepted-refused-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-accepted-refused-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-applied.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amend-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amendment-context-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/apply-130-1T-exported.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/calculate-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-applied-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-applied-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-applied-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-applied-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-165-unverified.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/file-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/metadata-130-receipt.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-hu.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-stale.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-review-06set-from-130-1T-exported.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-again-stale.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-stale.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-06clear-16set-18set-from-130-1T-rebase.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-16set-18set-from-130-1T-rebased.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-stale.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction-refused.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-renewed-review-06set-from-130-1T-expiring.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-review-06set-from-130-1T.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-review-06set-from-130-3T-prerequisite.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-review-42set-from-303-1T.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-credited-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-credited-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-credited-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-credited-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-projected-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-projected-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-projected-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/project-100-0A-projected-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/reconcile-130.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-expiring.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-moving.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-rebase.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted-stale-ca.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted-stale-en.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted-stale-es.json`
+- `S51` `A` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted-stale-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/settlement-100-0A-unsupported-ca.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/settlement-100-0A-unsupported-en.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/settlement-100-0A-unsupported-es.json`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo/settlement-100-0A-unsupported-hu.json`
+- `S51` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S51` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S51` `A` `native/desktop/frontend/tests/scenarios/modelo-disagreement.spec.ts`
+- `S51` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S51` `verify:` `playwright modelo-disagreement.spec` -> `pass`
+- `S51` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S51` `verify:` `tsc/eslint/prettier` -> `pass`
+- `S51` `verify:` `relay_contracts.py --check (modelo, ledger)` -> `pass`
+- `S51` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S51` `verify:` `playwright modelo-workspace.spec.ts:156` -> `fail`
+- `S45` `M` `dev/acceptance/income_tax/tests/test_modelo_100_edition_schema.py`
+- `S45` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_art_50_3_compensation_verification.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S45` `verify:` `pytest test_projection_region_and_remedies` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_edition_schema` -> `pass`
+- `S45` `verify:` `ruff check/format` -> `pass`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_art_50_3_compensation_verification` -> `fail`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-applied.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amend-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amendment-context-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/apply-130-1T-exported.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/calculate-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-165-unverified.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/file-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/metadata-130-receipt.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-review-06set-from-130-1T-exported.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-again-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-06clear-16set-18set-from-130-1T-rebase.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-16set-18set-from-130-1T-rebased.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction-refused.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-renewed-review-06set-from-130-1T-expiring.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-review-06set-from-130-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-review-06set-from-130-3T-prerequisite.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-review-42set-from-303-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/reconcile-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-expiring.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-moving.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-rebase.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted.json`
+- `S45` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S45` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S45` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S45` `verify:` `playwright modelo*.spec.ts` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_art_50_3_compensation_verification` -> `pass`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `tsc/eslint/prettier` -> `pass`
+- `S45` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S51` `verify:` `playwright modelo-workspace.spec.ts:172` -> `pass`
+
+## Notes
+
+- `S09` Ascendants served `not_served` because the schema has no `renta_family.ascendiente;` manifest regeneration lands with the S08 batch
+- `S08` Type and import gate failures are in other Steps' in-flight files; ADR says wizard preselects devengo but code has no default, left for operator
+- `S06` Landed inside combined commit 0b26ec31c6 with S01, S07 and S10 files; `compare_taxation` `individual_branch_caveat` is still English-only
+- `S10` Landed in combined commit 0b26ec31c6; a complexity fix is uncommitted pending another session's merge; drafts keep values only for 0596/0597/0603 and ZCCAD, and 2024-2025 have no extraction profile
+- `S04` Landed in combined commit 0b26ec31c6; waived refund (0694>0) refuses the whole calculation pending operator choice
+- `S01` Production code landed in 0b26ec31c6, locales in 6c2a0bcea3/dbb45caf39, tests in 75044c208a/be43f09bca, TUI fixture in cd55c3d714; `outline_groups.py` imports private `_heading_key;` S02 new pages lack headings
+- `S07` Landed mostly in 0b26ec31c6 and be43f09bca, rest in bd8f02cb85; TUI workbench and CLI lack the instalment choice; 60 percent rounding advisory; 0693/0694 suspension and renuncia not handled
+- `S03` Commits 570b5ea76f and heading-key cleanup 6be552467c; cross-period carries for 130/131/303 left unmarked pending operator
+- `S05` Commit cf12f70032; field already carried the withholding surface, issue lines now take the primary source surface
+- `S12` Commit 208a60e27b; also fixed pre-existing ledger admitted ordering and regenerated stale modeloContract.ts; Rust profile Field lacks `ejercicio_answer` and `country_options`
+- `S02` Work landed across 526ca3d9a1, 75044c208a, be43f09bca and 586b72dcf8; disability deductions stay flat; `apellidos_nombre` and `discapacidad_clave` unwritten; ascendiente object added without a writer
+- `S23` Commit 2a52318aee; dated amendment, no devengo preselection
+- `S06` Review fix compare-taxation-caveat-words; landed inside another worker's commit e88563425e
+- `S21` Committed by sweeps df0021ab64 and e88563425e; new generic `unresolved_outcome` operator; contract lock released early during overlapping regeneration
+- `S18` Commit 834cae6331; 39 prototype-only keys retired in four locales
+- `S11` Landed in b9c6a40a04 plus a8cf3f7af1 and 8b9d4898ce; Modelo 100 envelopes are about 7 MB each
+- `S22` Spread across sweep commits e88563425e, e3f270aeb0, 94ec8679c2, e232347dcd, 3c38b9c427, bd14c643a5, f12928bdb4; contract regeneration and conformance blocked by another session's `calculation_notes` edit; Step left open until contracts regenerate
+- `S02` Review fixes landed in e88563425e, 31826504d9, f12928bdb4, 28c3dc3494 and 54b2775c37; incomplete state with N stated M recorded finding; desktop-host-unit-test blocked by an S07 Decimal schema mismatch
+- `S13` Commit f8c27480bf; Playwright 194 passed with known 347 and two unrelated failures; backend gaps: 100 row `opens_local_work` false, 0596 check line offers manual entry
+- `S24` Commits 31574b0167, d8a5cd6edc, d295ec2d91 plus sweeps; host test failure is the known flaky manager `cancelled_ipc_caller` timeout, 833 others pass
+- `S05` Correction from P04.S13 findings, commit 92a3c0a516: blocked rows open their local work; non-typeable boxes never offer manual entry; fixtures need regenerating after another worker's `box_number` drift
+- `S07` Review fixes in e232347dcd, f12928bdb4, 987d72d1f9 and 3dbcaea611; settlement composes from 0700; split is a dated registry fact; instalment figures advisory; follow-ups in S25
+- `S16` Committed in ba312d12d8 and sweep c9d6d73b82; chrome catalogue blocked by unauthored workspace.modelo.filing.reconciliation keys from another worker; profile write refusal words not forwarded by the host (S26)
+- `S22` Rerun after the `calculation_notes` block cleared; first host run hit a flaky child-read failure in a credential-save relay test, rerun 837 passed
+- `S15` Committed in 0dfe66e239 and earlier sweeps; validate fails on stale 130/347/390 envelopes lacking `context_field.box_number;` chrome failures are another worker's reconciliation keys; projection backend gaps moved to S27
+- `S25` Commits 516039960e and sweeps 3be7987f95, 025eb9b4ed. Decided: revisions without a computed 0700 settle from 0670 (dictionary RESINGDEV) while 0693 holds nothing and refuse `settlement_unsupported` otherwise; TIPODECLARACION stays on 0670 because no source grounds a suspended payment as a zero-result disposition; 2024 0700 stays typed. Unrelated failure `test_work_form_modelo_100_resultado` outline-count sum left to its owner
+- `S14` Commit a1c99cc26d and sweeps c9d6d73b82, 3be7987f95, 025eb9b4ed; served `max_rows` added; profile refusal words now forwarded (part of S26); Field gains `ejercicio_answer` and `country_options;` descendants writer serves no refusal words (S26)
+- `S25` Reopened on the renta-withholding report; the 0693 regression was the 3be7987f95 sweep state, already fixed by 516039960e. 2700480cbf types settlement refusals as `export_settlement_unknown/unsupported` instead of `export_draft_write_failed.` Chrome failures are another worker's reconciliation keys
+- `S27` Commit 3e22c374ab (84 files incl. 40 Renta fixtures). Explicit region now overrides the profile (was ignored). Manifest surface failures are `precedence_tier_divergence` from 9ad14071d6. Typed remedy actions are served but the window offers none yet; modelo.project does not itself check the mapping revision (S29)
+- `S26` Commit 6d20c75368. Manifest and 24 Renta envelopes generated from the working tree carry S28's pending outline model until S28 regenerates. cmake desktop-host-unit-test blocked by webdriverio not installed; Rust ran through tauri.mjs. Descendants NIF checksum gap goes to S30
+- `S30` Commit eddf531619; ascendants' private check moved to a shared defining module used by both writers
+- `S28` Commit f9796d30e5. Decided reading B: working figures and unplaced boxes stay counted and get kept-apart outline groups, because failed working figures (Art. 50.3 gate, maritime exemption) and unplaced needs-you boxes (182, 184, 721) have no placed reader. 130/303/347/390 envelopes stay stale until the full producer clears `precedence_tier_divergence`
+- `S29` Commit a66305e9c0: modelo.project refuses `REFUSED_MODELO_PROJECT_REVISION_NOT_MAPPED` through the same `modelo_projection_available` check that serves projectable. Window remedy offer split to S31: decided the backend serves a typed next step on the refusal (the form's `next_action` shape) rather than a window-side table of operator action ids
+- `S17` Settlement element only, commit 60b0e4ce56; taxation and Borrador comparison elements wait on S32's served flags and comparison basis; chrome-strings.json stale until the reconciliation keys are authored, so new titles show key text
+- `S31` Commit e0ab4d0f36; fixture-script hunks landed in 60b0e4ce56. Accepted a sibling typed next-step shape since the form's next step cannot name another declaration. `import_gate` fails only on S32's in-flight removal of `compare_taxation_modes`
+- `S25` Re-review fix 68c84d55d0: 0694 waiver refuses settlement where 0700 is not computed; 2024 computes 0700 by the 2025 RESINGDEV rule; a split leaving nothing refuses as `second_instalment_nothing.` 2022/2023 negative 0695 remainder not modelled, so they refuse on 0694; 2024 layout digest awaits S32's regeneration
+- `S33` Commit 95ca6d079a: stock gate `positive_application_le_present_stock;` new `application_equals_present_maximum` enforces the art. 50.3 maximum min(1388, max(0, 0435-0461-0468)); `cap_le_when_positive` fail-closed. Six sweep failures are `DP_APENOM_D` export refusals and `precedence_tier_divergence,` not 1389
+- `S32` Commit ea11ad0538: comparison runs on held values and refuses with a closed reason naming unresolved boxes; `compares_taxation/compares_borrador` served (100/2025 only). 0461 follows LIRPF art. 84.2.3/4 with new profile fact `renta_family.convive_con_otro_progenitor,` unresolved until stated; spouse tax ID required only for the married unit. No wizard question for cohabitation yet (S37); 2022-2024 lack the `tipo_tributacion` role (S38)
+- `S36` Commit 5e0bd39067: typed `QUARTER_INCOMPLETE` and `RESULT_UNRESOLVED` refusals, new `open_work` next step. The opened 130 quarter lists writable binding overrides with no placed field, so the person may still be unable to answer (S39)
+- `S17` Commit 652baeca66: comparison elements. `individual_lower_result,` `revision_outdated` and `entries_unknown` envelopes are built from application classes rather than a reached profile; record `individual_lower` through a two-earner household in S19. Modelo 100 envelopes need re-recording after S35 publishes
+- `S34` Commit 0a0f530917. Refusals raised outside the handler so neither `__cause__` nor `__context__` carries a typed value. Row limit now scans the registry (about 1.7 s on first call); a declared owner is S40. Import-boundary metadata stale from S37/S39 in-flight modules; Settlement.tsx comment and story name still say the official file cannot state the remainder (S19)
+- `S37` Commit 19b3eff46a. 0096 setup-field row awaits the shared authority republish after S35. Two 'household from the Modelo 100' scenarios fail on the Renta heading, to recheck after the envelope re-record. The agent removed a zero-byte .git/index.lock from 04:50 that no process held
+- `S35` Commit 448b84d73d: 0501 sums 1381/1383/1386/1389 for 2022-2025, oldest first, per-row stock and maximum gates; art. 20 ceiling gains 2022 and 2023 values from the AEAT manuals. EXCEPTION: one stale refusal hand-removed from the generated `casilla_lineage_ledger.toml` because its generator is blocked by a Modelo 303 contradiction. Open: 0500 placed after compensation (AEAT puts it before), 1391 still manual, `test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses` fails on 0171 (S41)
+- `S39` Commit 7d5c775e76 with 214 re-recorded envelopes against authority a2010d0f71b2. Two modelo.spec.ts failures believed pre-existing, unconfirmed. Edit admission still accepts overrides the form serves no answer for (S42)
+- `S40` Commit 33ff6d607d: fact household-row-limit-owners names the owning form and repeating group (Modelo 100 XSD maxOccurs 15 and 4); first lookup 0.07 s instead of 1.7 s; build check fails if the owner layout stops capping the object
+- `S42` Commit 63bdd87985: one row-filled derivation shared by admission and the form; new reason `not_read_by_calculation.` Import gate unavailable because the tree changed mid-run; dev/locales failures include export settlement and election keys and a non-literal `message_locale_key,` to resolve in S20
+- `S41` Hunks swept into WIP commit 3ab1f97ff4 plus a948bba8b4. 0500 is the base before compensation from 2022, 1391 = max(0, -0500), unobserved prior boxes refuse with typed `errors.calc.previous_filing_casillas_unobserved.` 0171 test failure dates from 0f570046bf (no stated imputation criterion), not 448b84d73d. Open for S20: registry formula parity on renta-resultado-ingresar-o-devolver 2024/2025 and `casilla_record_order` 1997-2148, window guard failure unidentified
+- `S38` WIP checkpoint a950a0438d then 6aa82fb235. TIPOTRIBUTACION design identical 2022-2025 so the role sits on the 2022 base only; redundant 2024/2025 overrides removed. `compares_taxation` served 2022-2025; 2020/2021 below support floor. The registry failure is `test_every_relation_prefill_binding_has_a_typed_source_coordinate` on 130/131 pagos-fraccionados bindings 2020-2025, outside S38's diff, carried to S20.
+- `S43` Commit 2441755ff6. Every `contains_date` gate replaced by `select_revision_metadata_for_year;` revision carry gate projects within the support span; Madrid deduction gate compares the snapshot's authored year. A 2026 Modelo 100 calculates end to end. Wide run 9988 passed, 83 failed: 81 trace to the Modelo 130 art. 32.1 split and `box_number` length from the renta-withholding merge 24e2cef114, plus `minimo_descendientes` and 2025 prorrata tests, none touching S43 paths. Supported-filing-years floor 2022 left as declared.
+- `S19` Commits 5e0ec02dfc fixtures, 3567b54052 stories and journeys. Final single re-record via the full producer; years from the registry incl. projected 2026 calculated. projectable true only for 2025/2026: the m130 projection mapping is authored for revision 2025 only. Two-earner `individual_lower_result` not recordable: the comparison models a single input set per household. 46 Playwright failures are raw chrome keys `(workspace.modelo.filing.*,` `iva_wallet.*)` from a chrome declaration mismatch shown by `test_desktop_chrome,` plus 2 pre-existing modelo-workspace scenarios; carried to S20.
+- `S20` Commits 058065391e, 991f48bdea, cae85744d0, e499839a18, e9a18f1117, 148173569a, b7da0dbe77, 99d8a52aa8, 17bcee39e3, 5fd7982366. Every failure the plan's commits caused is fixed. Remaining reds belong to other lanes: desktop chrome 17 keys (frontend 6fa9d30093, 975330ea1f, bb0476fd0c); check-types 3 diagnostics outside our files; 130/131 relation-prefill drift (10dcf5c8fc); 0171 (0f570046bf); Modelo 130/131 split regressions (ca59ec5ecb, fb844a52db, 24e2cef114); identity inventory keys of other lanes; 2 Playwright modelo-workspace scenarios. 46 raw-key scenarios were stale build chrome-strings, cleared by regeneration.
+- `S47` Commit 781c65f4aa. 0506 = max(0, min(0460, 0461 - max(0, 0435))) from LIRPF art. 84.2.3 and the AEAT dictionary JREDU21, authored once at 2022. 2026 cases passed after S44 8a53bf9e6f. 2020/2021 below the floor left alone; box 0507 pension remainder is the same kind of gap, out of scope.
+- `S44` Commit 8a53bf9e6f (readers, verification findings, work form, workspace and 8 locale catalogues also in it). A projected year reads at calculation grade through `reading_snapshot;` verify refuses with `registry_filing_year_projected,` export with `errors.snapshot.filing_year_projected.` Wide-suite failures attributed to other lanes (M130, 131, layout). Open: inventory-anexo-d-applicability is authored for 2025 only, blocking box 0177 for any projected year; state-projection readiness still requests filing grade.
+- `S50` Commit 4902820ea6. Anexo D applies from its first authored filing year on `(inventory_anexo_d_applies),` so a projected year resolves 0177/0181/0182. Readiness reads at the reachable grade and refuses in served words. Open: the typed modelo.readiness.summary still carries only the cause token to the window.
+- `S49` Commits af49eeff4c contract and fixtures, e0094299fc custody UI. Disagreement operations admitted in the relay with no UI (S51). Custody refusals show the generic not-saved notice because the backend serves no refusal words for the record; asked the withholding session to serve them. PARTIAL now its own call kind via settle.rs. Failures not from this Step: modelo-workspace.spec.ts:130/:156 (fail on pre-regeneration fixtures), `automation_picker.rs:163` Rust tests, 17 unused chrome keys.
+- `S48` Commits a2b0346b3f and the identity-inventory enrolment of the S49 certificate hints. `authored_year` required; settlement-unsupported words name the suspended and the waived refund (0693, 0694, art. 97.6 LIRPF). Remaining identity-inventory failure is other lanes' keys. s20-attribution-incomplete: af80a603c4, f734e601ba and 6720e519fc also own unused chrome keys. Fixtures `settlement-100-0A-unsupported-*` to re-record in S45.
+- `S52` Commit 626dccd754. The pane shows `result.refusal.refusal_words;` the relay already forwarded them. The pane's own `desktop.ledger.withholding.refusal.<reason>` words remain for 13 unserved reasons; the backend session is serving words for every reason, after which the map is deleted (S53). Build chrome-strings regenerated so desktop.ledger.form.partial renders.
+- `S46` Commit 05786149c4. `ModeloWorkForm.withholding_credits` serves each credit's dependent numbered boxes from the formula graph, null when the graph cannot be read. The window walk is deleted. Open: no words for the null state yet, carried to S51.
+- `S51` Commit 9f34651a2e: unknown credit dependents now show served chrome words. The door itself is blocked on three backend fields asked of the renta-withholding session: `finding_id` on ModeloFormIssueLine, refusal words on CreditResolutionRefusalProjection, and a served sentence on CreditResolutionRowProjection. The commit also carries that session's absence `served.*` catalogue lines, committed whole by --only.
+- `S53` Commit e291a27cd0. The withholding pane shows only served refusal words for both operations; 13 `desktop.ledger.withholding.refusal.*` keys deleted in four locales. Remaining locale failures belong to other in-flight work (prorrata served keys, `credit_resolution` `served_source` identity, 17 unused chrome keys).
+- `S54` Commit b3a41c4296 (backend-served-surface P01.S03 window half). Three window classification sets deleted; served rows held in ledgerClassifications.ts. tsc errors are S51's uncommitted modeloFixture.ts. Not served yet: a 'carries business figures' flag (window still uses generated isBusinessBearing) and the mixed usage-ratio lookup. Committed via a temporary index around a held index.lock; history verified linear.
+- `S51` Commits 9f34651a2e, 16c59d4e91, 4be1830c46. 9f34651a2e also carried another worker's aggregation served locale hunks. modelo-workspace.spec.ts:156 still fails: the Modelo 130 income form's `unresolved_binding` note names no box or profile fact (missing estimation regime); handed to the backend owner. storybook:build was not run during the CHECKS hold.
+- `S45` 63401f110a: Renta test years derived from `authored_editions;` `RENTA_YEAR` = `newest_authored_edition.` Ruling: art. 50.3 findings cases run over authored years only, because a projected year refuses the filing claim first (covered by `test_modelo_100_projected_year_verification);` the calculation-only case keeps the projected year. The art. 50.3 file fails on another worker's uncommitted `prepare_calculation(usage_ratio_profile_loader)` edit, so it must be rerun once that settles. Open: servedRentaYears.ts projected still derived in the window (backend projected field requested); fixture re-record awaits the box 13 note and the M303 gate-order change.
+- `S45` 3351124e4a: one full modelo re-record after d97c70d771, 632e5e81ad and 455c215cd3 (457 envelopes). The main and checked or filed profiles now record `irpf.estimation_regime=directa_normal,` and the income scenario keeps none, so box 02 blocks. The main profile check refuses on box 13 (no prior Modelo 100 recorded). Ledger scenarios pass 316/316 on the deduplicated lock. Gap: no served form holds a box-less calculation note, so its rendering is untested. S45 stays open until renta serves the projected-year field and servedRentaYears.ts stops comparing revision to year.
+- `S51` The former :156 failure is resolved by renta's served box notes plus 3351124e4a: the note is drawn beside box 13 at its level, with the original assertion kept.

@@ -1,42 +1,17 @@
-"""THE canonical actionlint provisioner. One implementation, five repos.
+"""Provision a pinned, digest-verified actionlint for the workflow lint.
 
-Deployed, not called: same constraint as the CI contract checker and the
-runner preflight - their source repository is private, every consumer is
-public.
+The binary is downloaded from the upstream release for one pinned version and
+its archive is checked against a per-platform sha256 before it is executed.
+It runs from a recipe, so the gate a developer runs before pushing is the gate
+CI runs.
 
-WHY THIS EXISTS. The fleet acquired actionlint four different ways, one per
-repo, and each way was wrong in its own direction:
-
-  vaultspec-core        `curl` the upstream install script, pipe it to bash,
-                        run the result. Unpinned and unverified: whatever the
-                        script downloads today is what gates the workflows.
-  vaultspec-rag         `bash <(curl -sSfL .../download-actionlint.bash)`.
-                        The same, with process substitution.
-  vaultspec-dashboard   a pinned per-architecture tarball with a verified
-                        digest - correct, and 30 lines of YAML nobody can run
-                        before pushing.
-  cadrumo               a second copy of the dashboard's block, with its own
-                        copy of the digests, already at a different version.
-  vaultspec-a2a         `uses: docker://rhysd/actionlint` - a daemon dependency
-                        on a fleet where a lint gate that reddens because
-                        nobody opened Docker Desktop is a gate people learn to
-                        ignore.
-
-The dashboard's approach is the right one and is what this file generalises,
-with the property that made it hard to reuse removed: it now runs from a
-recipe, so the gate a developer runs before pushing is the gate CI runs.
-
-THE ARCHITECTURE PIN IS THE POINT, not tidiness. The dashboard block reached
-its current shape after naming `linux_amd64.tar.gz` unconditionally with a
-single digest. On an ARM64 runner that does not fail - it PASSES, because the
-downloaded file really is the amd64 archive the digest names - and then dies
-at `Exec format error` one line later. A verification step that reports
+THE ARCHITECTURE PIN IS THE POINT, not tidiness. Naming `linux_amd64.tar.gz`
+unconditionally with a single digest does not fail on an ARM64 runner - it
+PASSES, because the downloaded file really is the amd64 archive the digest
+names - and then dies at `Exec format error` one line later. A verification step that reports
 success while handing back an unusable binary is worse than none, because it
 reads as assurance. So the digest is per platform, and an unlisted platform is
 refused rather than guessed at.
-
-Stdlib only, so it behaves identically on every platform and needs nothing
-installed to install something.
 """
 
 from __future__ import annotations
@@ -52,15 +27,14 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from cadrumo.core.storage_environment import configured_storage_root, storage_directory
-from dev._paths import REPO_ROOT
+from cadrumo.core.storage_environment import configured_storage_root
+from dev.tool_storage import storage_directory
 
 VERSION = "1.7.12"
 
 #: `(system, machine) -> (archive suffix, sha256)`. Every digest here is one
-#: published in the upstream checksum file for THIS version, copied from the
-#: workflow blocks this file replaces; bump the version and every digest
-#: together, never one of them.
+#: published in the upstream checksum file for THIS version; bump the version
+#: and every digest together, never one of them.
 #:
 #: Every entry is read from `actionlint_<VERSION>_checksums.txt` on the
 #: release, never filled in from memory: a digest nobody checked is not a
@@ -112,7 +86,7 @@ def _platform_key() -> tuple[str, str]:
     return system, machine
 
 
-def _cache_root() -> Path:
+def cache_root() -> Path:
     """Where a verified binary is kept between runs.
 
     The Cadrumo storage root owns the default. ``CADRUMO_ACTIONLINT_DIR`` can
@@ -123,7 +97,7 @@ def _cache_root() -> Path:
         storage_directory(
             "CADRUMO_ACTIONLINT_DIR",
             "development/tools/actionlint",
-            root=configured_storage_root(repository_root=REPO_ROOT),
+            root=configured_storage_root(),
         )
         / VERSION
     )
@@ -199,7 +173,7 @@ def find() -> Path | None:
     key = _platform_key()
     if key not in ARCHIVES:
         return None
-    binary = _cache_root() / ("actionlint.exe" if key[0] == "windows" else "actionlint")
+    binary = cache_root() / ("actionlint.exe" if key[0] == "windows" else "actionlint")
     return binary if binary.is_file() else None
 
 
@@ -224,7 +198,7 @@ def ensure() -> Path:
             "reached an ARM runner and passed its own digest check."
         )
     suffix, expected = ARCHIVES[key]
-    root = _cache_root()
+    root = cache_root()
     binary = root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
     if binary.is_file():
         return binary
@@ -284,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     # a different set of things on every machine and nobody can tell which.
     # Runner labels are provisioned by infrastructure outside this codebase.
     # Keep actionlint's workflow parsing and all code-owned checks without
-    # turning this project into a registry for fleet topology.
+    # declaring runner labels here.
     command = [
         str(binary),
         "-no-color",

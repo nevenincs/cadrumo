@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.decimal.grammar import DecimalSeparator
 from ....core.field_role import FieldRole
 from ....tests.inventory import FIXTURES_DIR
 from ..bulk_import import read_bulk_invoice_import_source
@@ -101,7 +102,7 @@ def test_an_exact_column_name_is_never_displaced_by_the_mapping() -> None:
     The same exact-first rule the statement lane uses: a file already written in
     the product's vocabulary must never depend on a judgement to be read.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     headers = ("counterparty_nif", "base_imponible")
     resolution = resolve_bulk_import_columns(
@@ -123,7 +124,7 @@ def test_the_mapping_lane_is_not_consulted_when_exact_names_suffice() -> None:
     can already read, which is both slower and a needless dependency; the extra
     column simply reports.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     def _must_not_be_called(_headers):
         raise AssertionError("the mapping lane was consulted for a fully canonical header")
@@ -147,7 +148,7 @@ def test_a_rejected_role_token_leaves_the_column_unmapped_not_the_file_refused()
     the command boundary and emitted as a notice; what must hold here is that
     the file still reads and every other column still binds.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     resolution = resolve_bulk_import_columns(
         ("fecha_expedicion", "base_imponible", "algo_raro"),
@@ -168,7 +169,7 @@ def test_a_role_the_importer_has_no_slot_for_is_reported_with_its_role_intact() 
     the difference between "we do not know this column" and "we know it and do
     not take it".
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     resolution = resolve_bulk_import_columns(
         ("base_imponible", "cuota_iva"),
@@ -180,3 +181,133 @@ def test_a_role_the_importer_has_no_slot_for_is_reported_with_its_role_intact() 
     assert cuota.field is None
     assert cuota.role is FieldRole.IVA_AMOUNT
     assert cuota in resolution.unmapped_columns
+
+
+#: The roles an operator would assign to the bundled libro de facturas recibidas
+#: (tab separated; FECHA, NUM_FACTURA, PROVEEDOR, NIF, CATEGORIA, BASE, TIPO_IVA,
+#: CUOTA_IVA, TOTAL, OBSERVACIONES). The cuota and the total are figures the
+#: importer derives rather than accepts, so the operator marks them unused.
+_RECIBIDAS = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_recibidas_2025_2026.csv"
+RECIBIDAS_OPERATOR_ROLES = {
+    0: FieldRole.INVOICE_DATE,
+    1: FieldRole.INVOICE_NUMBER,
+    2: FieldRole.COUNTERPARTY_NAME,
+    3: FieldRole.COUNTERPARTY_NIF,
+    4: FieldRole.UNMAPPED,
+    5: FieldRole.TAXABLE_BASE,
+    6: FieldRole.IVA_RATE,
+    7: FieldRole.UNMAPPED,
+    8: FieldRole.UNMAPPED,
+    9: FieldRole.NOTES,
+}
+
+
+def test_operator_roles_read_a_book_no_header_names_without_any_mapping_lane() -> None:
+    """The operator's roles alone supply every required field of the recibidas book."""
+
+    def _must_not_be_called(_headers):
+        raise AssertionError("the mapping lane was consulted although the operator's roles sufficed")
+
+    source = read_bulk_invoice_import_source(
+        _RECIBIDAS, mapper=_must_not_be_called, operator_roles=RECIBIDAS_OPERATOR_ROLES
+    )
+
+    assert not source.resolution.consulted_mapping_lane
+    assert source.resolution.operator_assigned
+    assert [column.source for column in source.resolution.columns] == ["operator"] * 10
+    assert len(source.rows) == 10
+    # The book writes comma decimals; the operator's roles read it under its own convention.
+    assert source.rows[0].values["taxable_base"] == "360,55"
+    assert source.decimal_separator == DecimalSeparator.COMMA
+
+
+def test_a_stated_role_beats_an_exact_header_and_exact_names_fill_what_was_left_unstated() -> None:
+    """Operator first: its column wins the field, the exact header that lost is left unmapped."""
+    from ..bulk_import_columns import resolve_bulk_import_columns
+
+    resolution = resolve_bulk_import_columns(
+        ("counterparty_nif", "taxable_base", "importe_neto", "currency"),
+        mapper=None,
+        operator_roles={2: FieldRole.TAXABLE_BASE},
+    )
+
+    by_header = {column.header: column for column in resolution.columns}
+    assert by_header["importe_neto"].field == "taxable_base" and by_header["importe_neto"].source == "operator"
+    assert by_header["taxable_base"].field is None and by_header["taxable_base"].source == "unmapped"
+    assert by_header["counterparty_nif"].field == "counterparty_nif" and by_header["counterparty_nif"].source == "exact"
+    assert by_header["currency"].field == "currency" and by_header["currency"].source == "exact"
+
+
+def test_a_column_the_operator_marked_unused_is_not_read_by_name_or_by_the_model() -> None:
+    """UNMAPPED stated by the operator is final: neither exact matching nor the lane takes the column."""
+    from ..bulk_import_columns import resolve_bulk_import_columns
+
+    resolution = resolve_bulk_import_columns(
+        ("counterparty_nif", "taxable_base"),
+        mapper=lambda _headers: (FieldRole.COUNTERPARTY_NIF, FieldRole.TAXABLE_BASE),
+        required_fields=frozenset({"counterparty_nif", "taxable_base", "invoice_date"}),
+        operator_roles={1: FieldRole.UNMAPPED},
+    )
+
+    assert resolution.consulted_mapping_lane
+    assert resolution.columns[1].field is None
+    assert resolution.columns[1].source == "operator" and resolution.columns[1].role is FieldRole.UNMAPPED
+    assert resolution.columns[0].source == "exact"
+
+
+def test_the_mapping_lane_fills_only_what_stated_roles_and_exact_names_left_open() -> None:
+    """The model is asked only for a still-missing required field, and never overrules the operator."""
+    from ..bulk_import_columns import resolve_bulk_import_columns
+
+    asked: list[tuple[str, ...]] = []
+
+    def mapper(headers):
+        asked.append(tuple(headers))
+        return (FieldRole.NOTES, FieldRole.NOTES, FieldRole.INVOICE_DATE, FieldRole.COUNTERPARTY_NIF)
+
+    resolution = resolve_bulk_import_columns(
+        ("a", "b", "fecha", "taxable_base"),
+        mapper=mapper,
+        required_fields=frozenset({"taxable_base", "invoice_date"}),
+        operator_roles={0: FieldRole.COUNTERPARTY_NIF},
+    )
+
+    assert len(asked) == 1
+    by_header = {column.header: column for column in resolution.columns}
+    assert by_header["a"].source == "operator" and by_header["a"].field == "counterparty_nif"
+    assert by_header["b"].source == "model" and by_header["b"].field == "notes"
+    assert by_header["fecha"].source == "model" and by_header["fecha"].field == "invoice_date"
+    # The model's NIF claim for the last column is refused: the exact header and the operator hold those fields.
+    assert by_header["taxable_base"].source == "exact" and by_header["taxable_base"].field == "taxable_base"
+
+
+@pytest.mark.parametrize(
+    ("roles", "needle"),
+    [
+        ({12: FieldRole.NOTES}, "not in the file"),
+        ({-1: FieldRole.NOTES}, "not in the file"),
+        ({0: FieldRole.GRAND_TOTAL}, "not one the importer accepts"),
+        ({0: FieldRole.NOTES, 1: FieldRole.NOTES}, "more than one column"),
+    ],
+    ids=["beyond-the-file", "negative", "unaccepted-role", "role-twice"],
+)
+def test_roles_the_file_or_importer_cannot_honour_are_refused_with_a_typed_error(
+    roles: dict[int, FieldRole], needle: str
+) -> None:
+    from ....domain.invoices.errors import InvoiceValidationError
+    from ..bulk_import_columns import resolve_bulk_import_columns
+
+    with pytest.raises(InvoiceValidationError) as caught:
+        resolve_bulk_import_columns(("a", "b", "c"), operator_roles=roles)
+    assert needle in str(caught.value)
+
+
+def test_a_preview_read_reports_a_missing_required_field_instead_of_refusing_the_book() -> None:
+    from ....domain.invoices.errors import InvoiceValidationError
+
+    with pytest.raises(InvoiceValidationError):
+        read_bulk_invoice_import_source(_RECIBIDAS)
+    source = read_bulk_invoice_import_source(_RECIBIDAS, preview=True)
+
+    assert source.resolution.fields_present == frozenset()
+    assert len(source.rows) == 10

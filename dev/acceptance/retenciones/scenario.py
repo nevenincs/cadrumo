@@ -6,6 +6,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
+from functools import cache
+from typing import Final
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from dev.acceptance.iva.filing_year import newest_journey_year
 
 BRIEF_ID = "RETENCIONES-01"
 BRIEF_REVISION = "0.2"
@@ -14,8 +19,45 @@ PATTERN_REVISION = "1.6"
 SCENARIO_VERSION = "retenciones-resident-common-regime-v1"
 INSTALLED_CLI_SCENARIO_VERSION = "retenciones-installed-periodic-cli-v1"
 INSTALLED_ANNUAL_CLI_SCENARIO_VERSION = "retenciones-installed-annual-cli-v1"
-SUPPORTED_YEAR = 2025
 CENT = Decimal("0.01")
+
+# Two distinct synthetic entity CIFs: a filing name is declared per tax id, so one id cannot carry two names.
+PROFESSIONAL_NIF: Final = "B12345674"
+LANDLORD_NIF: Final = "B87654323"
+# The razón social the journey declares for each perceptor before the annual exports.
+PROFESSIONAL_RAZON_SOCIAL: Final = "Synthetic Professional"
+LANDLORD_RAZON_SOCIAL: Final = "Synthetic Urban Landlord"
+
+
+def filed_entity_name(razon_social: str) -> str:
+    """The text a 180/190 perceptor record files for a declared entity.
+
+    The design composes an entity as its razón social alone, and the perceptor
+    records state ``alphanumeric_text = "upper_unaccented"``: the codec upper-cases
+    the text and removes accents from vowels. The synthetic names are ASCII.
+    """
+    return razon_social.upper()
+
+
+# Every (modelo, period) coordinate the withholding scenario files or reads.
+_SCENARIO_COORDINATES: Final = (
+    ("111", "2T"),
+    ("115", "1T"),
+    ("115", "2T"),
+    ("123", "1T"),
+    ("180", "0A"),
+    ("190", "0A"),
+    ("193", "0A"),
+)
+# The newest filing year the pinned authority authors for every coordinate above.
+SUPPORTED_YEAR: Final = newest_journey_year(coordinates=_SCENARIO_COORDINATES).year
+
+
+@cache
+def _revision(modelo: str, year: int, period: str) -> str:
+    """The revision the pinned authority selects for the coordinate."""
+    with bundled_indexed_authority().operation() as operation:
+        return str(operation.revision_for_context(modelo, filing_year=year, period=period).id)
 
 
 class EvidenceState(StrEnum):
@@ -261,13 +303,13 @@ def build_installed_periodic_cli_slices(
     professional = InstalledPeriodicCliSlice(
         slice_id="professional-111-q2-partial-payments",
         modelo="111",
-        revision="2019-y-siguientes",
+        revision=_revision("111", year, "2T"),
         layout_id="modelo-111-fichero-boe",
         period="2T",
-        invoice_number="RET-PROF-2025-001",
+        invoice_number=f"RET-PROF-{year}-001",
         invoice_date=date(year, 3, 31),
-        counterparty_name="Synthetic Professional",
-        counterparty_nif="B12345674",
+        counterparty_name=PROFESSIONAL_RAZON_SOCIAL,
+        counterparty_nif=PROFESSIONAL_NIF,
         income_kind="professional",
         scheme="actividades_profesionales",
         invoice_base=Decimal("500.00"),
@@ -277,7 +319,7 @@ def build_installed_periodic_cli_slices(
         allocations=(
             PaymentAllocation(
                 allocation_id="professional-q2-payment-a",
-                payment_event_id="professional-payment-2025-04-02",
+                payment_event_id=f"professional-payment-{year}-04-02",
                 paid_on=date(year, 4, 2),
                 allocated_base=Decimal("300.00"),
                 allocated_withholding=Decimal("57.00"),
@@ -285,7 +327,7 @@ def build_installed_periodic_cli_slices(
             ),
             PaymentAllocation(
                 allocation_id="professional-q2-payment-b",
-                payment_event_id="professional-payment-2025-06-30",
+                payment_event_id=f"professional-payment-{year}-06-30",
                 paid_on=date(year, 6, 30),
                 allocated_base=Decimal("200.00"),
                 allocated_withholding=Decimal("38.00"),
@@ -309,13 +351,13 @@ def build_installed_periodic_cli_slices(
     rent = InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-invoice",
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_revision("115", year, "2T"),
         layout_id="modelo-115-fichero-boe",
         period="2T",
-        invoice_number="RET-RENT-2025-001",
+        invoice_number=f"RET-RENT-{year}-001",
         invoice_date=date(year, 6, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
         income_kind="urban_rent",
         scheme="arrendamiento_urbano",
         invoice_base=Decimal("3000.00"),
@@ -325,7 +367,7 @@ def build_installed_periodic_cli_slices(
         allocations=(
             PaymentAllocation(
                 allocation_id="urban-rent-q2-payment-a",
-                payment_event_id="urban-rent-payment-2025-06-05",
+                payment_event_id=f"urban-rent-payment-{year}-06-05",
                 paid_on=date(year, 6, 5),
                 allocated_base=Decimal("3000.00"),
                 allocated_withholding=Decimal("570.00"),
@@ -372,46 +414,7 @@ def build_installed_annual_cli_slices(
         raise ValueError(f"{INSTALLED_ANNUAL_CLI_SCENARIO_VERSION} is grounded only for {SUPPORTED_YEAR}")
 
     professional_primary, _periodic_rent = build_installed_periodic_cli_slices(year)
-    professional_second = InstalledPeriodicCliSlice(
-        slice_id="professional-111-q2-distinct-subclave",
-        modelo="111",
-        revision="2019-y-siguientes",
-        layout_id="modelo-111-fichero-boe",
-        period="2T",
-        invoice_number="RET-PROF-2025-002",
-        invoice_date=date(year, 5, 20),
-        counterparty_name="Synthetic Professional",
-        counterparty_nif="B12345674",
-        income_kind="professional",
-        scheme="actividades_profesionales",
-        invoice_base=Decimal("100.00"),
-        invoice_iva_rate=Decimal("0.21"),
-        invoice_withholding_rate=Decimal("0.15"),
-        invoice_withholding=Decimal("15.00"),
-        allocations=(
-            PaymentAllocation(
-                allocation_id="professional-q2-subclave-02",
-                payment_event_id="professional-payment-2025-06-15",
-                paid_on=date(year, 6, 15),
-                allocated_base=Decimal("100.00"),
-                allocated_withholding=Decimal("15.00"),
-                allocated_settlement=Decimal("106.00"),
-            ),
-        ),
-        expected_casillas=(
-            ("07", Decimal("1")),
-            ("08", Decimal("100.00")),
-            ("09", Decimal("15.00")),
-            ("28", Decimal("15.00")),
-            ("30", Decimal("15.00")),
-        ),
-        modelo_190_detail=Modelo190AnnualDetailInput(
-            clave="G",
-            subclave="02",
-            province_code="28",
-            territorial_deduction_clave=0,
-        ),
-    )
+    professional_second = _scenario_professional_second(year)
     property_a = Modelo180PropertyInput(
         property_key="urban-rent-property-a",
         situation="1",
@@ -434,295 +437,14 @@ def build_installed_annual_cli_slices(
         province_code="28",
         postal_code="28002",
     )
-    rent_a_q1 = InstalledPeriodicCliSlice(
-        slice_id="urban-rent-115-q1-property-a",
-        modelo="115",
-        revision="2019-y-siguientes",
-        layout_id="modelo-115-fichero-boe",
-        period="1T",
-        invoice_number="RET-RENT-2025-101",
-        invoice_date=date(year, 3, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
-        income_kind="urban_rent",
-        scheme="arrendamiento_urbano",
-        invoice_base=Decimal("1000.00"),
-        invoice_iva_rate=Decimal("0.21"),
-        invoice_withholding_rate=Decimal("0.19"),
-        invoice_withholding=Decimal("190.00"),
-        allocations=(
-            PaymentAllocation(
-                allocation_id="urban-rent-property-a-q1",
-                payment_event_id="urban-rent-property-a-payment-2025-03-05",
-                paid_on=date(year, 3, 5),
-                allocated_base=Decimal("1000.00"),
-                allocated_withholding=Decimal("190.00"),
-                allocated_settlement=Decimal("1020.00"),
-            ),
-        ),
-        expected_casillas=(
-            ("01", Decimal("1")),
-            ("02", Decimal("1000.00")),
-            ("03", Decimal("190.00")),
-            ("05", Decimal("190.00")),
-        ),
-        property_reference=property_a.cadastral_reference,
-        annual_detail_capture_supported=True,
-        modelo_180_property=property_a,
-    )
-    rent_a_q2 = InstalledPeriodicCliSlice(
-        slice_id="urban-rent-115-q2-property-a",
-        modelo="115",
-        revision="2019-y-siguientes",
-        layout_id="modelo-115-fichero-boe",
-        period="2T",
-        invoice_number="RET-RENT-2025-102",
-        invoice_date=date(year, 6, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
-        income_kind="urban_rent",
-        scheme="arrendamiento_urbano",
-        invoice_base=Decimal("2000.00"),
-        invoice_iva_rate=Decimal("0.21"),
-        invoice_withholding_rate=Decimal("0.19"),
-        invoice_withholding=Decimal("380.00"),
-        allocations=(
-            PaymentAllocation(
-                allocation_id="urban-rent-property-a-q2",
-                payment_event_id="urban-rent-property-a-payment-2025-06-05",
-                paid_on=date(year, 6, 5),
-                allocated_base=Decimal("2000.00"),
-                allocated_withholding=Decimal("380.00"),
-                allocated_settlement=Decimal("2040.00"),
-            ),
-        ),
-        expected_casillas=(
-            ("01", Decimal("1")),
-            ("02", Decimal("2000.00")),
-            ("03", Decimal("380.00")),
-            ("05", Decimal("380.00")),
-        ),
-        property_reference=property_a.cadastral_reference,
-        annual_detail_capture_supported=True,
-        modelo_180_property=property_a,
-    )
-    rent_b_q2 = InstalledPeriodicCliSlice(
-        slice_id="urban-rent-115-q2-property-b",
-        modelo="115",
-        revision="2019-y-siguientes",
-        layout_id="modelo-115-fichero-boe",
-        period="2T",
-        invoice_number="RET-RENT-2025-103",
-        invoice_date=date(year, 6, 10),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
-        income_kind="urban_rent",
-        scheme="arrendamiento_urbano",
-        invoice_base=Decimal("2000.00"),
-        invoice_iva_rate=Decimal("0.21"),
-        invoice_withholding_rate=Decimal("0.19"),
-        invoice_withholding=Decimal("380.00"),
-        allocations=(
-            PaymentAllocation(
-                allocation_id="urban-rent-property-b-q2",
-                payment_event_id="urban-rent-property-b-payment-2025-06-12",
-                paid_on=date(year, 6, 12),
-                allocated_base=Decimal("2000.00"),
-                allocated_withholding=Decimal("380.00"),
-                allocated_settlement=Decimal("2040.00"),
-            ),
-        ),
-        expected_casillas=(
-            ("01", Decimal("1")),
-            ("02", Decimal("2000.00")),
-            ("03", Decimal("380.00")),
-            ("05", Decimal("380.00")),
-        ),
-        property_reference=property_b.cadastral_reference,
-        annual_detail_capture_supported=True,
-        modelo_180_property=property_b,
-    )
+    rent_a_q1 = _scenario_rent_a_q1(year, property_a)
+    rent_a_q2 = _scenario_rent_a_q2(year, property_a)
+    rent_b_q2 = _scenario_rent_b_q2(year, property_b)
     for capture in (professional_primary, professional_second, rent_a_q1, rent_a_q2, rent_b_q2):
         _assert_slice_consistency(capture)
 
-    modelo_180 = InstalledAnnualCliSlice(
-        slice_id="urban-rent-180-annual-properties",
-        modelo="180",
-        revision="2023-y-siguientes",
-        layout_id="modelo-180-fichero-boe",
-        source_modelo="115",
-        captures=(rent_a_q1, rent_a_q2, rent_b_q2),
-        source_periods=(
-            AnnualSourcePeriodInput(
-                period="1T",
-                evidence_state=EvidenceState.AVAILABLE,
-                expected_observation_count=1,
-                expected_casillas=(
-                    ("01", Decimal("1")),
-                    ("02", Decimal("1000.00")),
-                    ("03", Decimal("190.00")),
-                    ("05", Decimal("190.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="2T",
-                evidence_state=EvidenceState.AVAILABLE,
-                expected_observation_count=2,
-                expected_casillas=(
-                    ("01", Decimal("1")),
-                    ("02", Decimal("4000.00")),
-                    ("03", Decimal("760.00")),
-                    ("05", Decimal("760.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="3T",
-                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
-                expected_observation_count=0,
-                expected_casillas=(
-                    ("01", Decimal("0")),
-                    ("02", Decimal("0.00")),
-                    ("03", Decimal("0.00")),
-                    ("05", Decimal("0.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="4T",
-                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
-                expected_observation_count=0,
-                expected_casillas=(
-                    ("01", Decimal("0")),
-                    ("02", Decimal("0.00")),
-                    ("03", Decimal("0.00")),
-                    ("05", Decimal("0.00")),
-                ),
-            ),
-        ),
-        expected_header_fields=(
-            ("modelo-180-decl-total-perceptores", "2"),
-            ("modelo-180-decl-base-total", "5000"),
-            ("modelo-180-decl-retenciones-total", "950"),
-        ),
-        expected_type2_rows=(
-            AnnualExportRecordExpectation(
-                values=(
-                    ("modelo-180-perc-nif", "B12345674"),
-                    ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
-                    ("modelo-180-perc-provincia", "28"),
-                    ("modelo-180-perc-modalidad", "1"),
-                    ("modelo-180-perc-base", "3000"),
-                    ("modelo-180-perc-porcentaje-retencion", "19"),
-                    ("modelo-180-perc-retenciones", "570"),
-                    ("modelo-180-perc-ejercicio-devengo", str(year)),
-                    ("modelo-180-perc-situacion-inmueble", "1"),
-                    ("modelo-180-perc-referencia-catastral", property_a.cadastral_reference),
-                )
-            ),
-            AnnualExportRecordExpectation(
-                values=(
-                    ("modelo-180-perc-nif", "B12345674"),
-                    ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
-                    ("modelo-180-perc-provincia", "28"),
-                    ("modelo-180-perc-modalidad", "1"),
-                    ("modelo-180-perc-base", "2000"),
-                    ("modelo-180-perc-porcentaje-retencion", "19"),
-                    ("modelo-180-perc-retenciones", "380"),
-                    ("modelo-180-perc-ejercicio-devengo", str(year)),
-                    ("modelo-180-perc-situacion-inmueble", "1"),
-                    ("modelo-180-perc-referencia-catastral", property_b.cadastral_reference),
-                )
-            ),
-        ),
-    )
-    modelo_190 = InstalledAnnualCliSlice(
-        slice_id="professional-190-annual-detail",
-        modelo="190",
-        revision="2025-y-siguientes",
-        layout_id="modelo-190-fichero-boe",
-        source_modelo="111",
-        captures=(professional_primary, professional_second),
-        source_periods=(
-            AnnualSourcePeriodInput(
-                period="1T",
-                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
-                expected_observation_count=0,
-                expected_casillas=(
-                    ("07", Decimal("0")),
-                    ("08", Decimal("0.00")),
-                    ("09", Decimal("0.00")),
-                    ("28", Decimal("0.00")),
-                    ("30", Decimal("0.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="2T",
-                evidence_state=EvidenceState.AVAILABLE,
-                expected_observation_count=3,
-                expected_casillas=(
-                    ("07", Decimal("1")),
-                    ("08", Decimal("600.00")),
-                    ("09", Decimal("110.00")),
-                    ("28", Decimal("110.00")),
-                    ("30", Decimal("110.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="3T",
-                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
-                expected_observation_count=0,
-                expected_casillas=(
-                    ("07", Decimal("0")),
-                    ("08", Decimal("0.00")),
-                    ("09", Decimal("0.00")),
-                    ("28", Decimal("0.00")),
-                    ("30", Decimal("0.00")),
-                ),
-            ),
-            AnnualSourcePeriodInput(
-                period="4T",
-                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
-                expected_observation_count=0,
-                expected_casillas=(
-                    ("07", Decimal("0")),
-                    ("08", Decimal("0.00")),
-                    ("09", Decimal("0.00")),
-                    ("28", Decimal("0.00")),
-                    ("30", Decimal("0.00")),
-                ),
-            ),
-        ),
-        expected_header_fields=(
-            ("modelo-190-decl-total-percepciones", "2"),
-            ("modelo-190-decl-percepciones-total", "600"),
-            ("modelo-190-decl-retenciones-total", "110"),
-        ),
-        expected_type2_rows=(
-            AnnualExportRecordExpectation(
-                values=(
-                    ("modelo-190-perc-nif", "B12345674"),
-                    ("modelo-190-perc-nombre", "Synthetic Professional"),
-                    ("modelo-190-perc-codigo-provincia", "28"),
-                    ("modelo-190-perc-ceuta-melilla", "0"),
-                    ("modelo-190-perc-clave", "G"),
-                    ("modelo-190-perc-subclave", "01"),
-                    ("modelo-190-perc-percepcion-dineraria", "500"),
-                    ("modelo-190-perc-retenciones-practicadas", "95"),
-                )
-            ),
-            AnnualExportRecordExpectation(
-                values=(
-                    ("modelo-190-perc-nif", "B12345674"),
-                    ("modelo-190-perc-nombre", "Synthetic Professional"),
-                    ("modelo-190-perc-codigo-provincia", "28"),
-                    ("modelo-190-perc-ceuta-melilla", "0"),
-                    ("modelo-190-perc-clave", "G"),
-                    ("modelo-190-perc-subclave", "02"),
-                    ("modelo-190-perc-percepcion-dineraria", "100"),
-                    ("modelo-190-perc-retenciones-practicadas", "15"),
-                )
-            ),
-        ),
-    )
+    modelo_180 = _scenario_modelo_180(year, property_a, property_b, rent_a_q1, rent_a_q2, rent_b_q2)
+    modelo_190 = _scenario_modelo_190(year, professional_primary, professional_second)
     return (modelo_180, modelo_190)
 
 
@@ -801,7 +523,416 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
     if year != SUPPORTED_YEAR:
         raise ValueError(f"{SCENARIO_VERSION} is grounded only for {SUPPORTED_YEAR}")
 
-    payments = (
+    payments = _scenario_payments(year)
+    own_sale = Payment(
+        source_id="own-sale-withholding",
+        recipient_id="12345678Z",
+        recipient_name="Synthetic Autonomo",
+        modelo="111",
+        annual_modelo="190",
+        scheme="actividades_profesionales",
+        invoice_date=date(year, 2, 1),
+        paid_on=date(year, 2, 10),
+        taxable_base=Decimal("1000"),
+        withheld=Decimal("150"),
+        direction=Direction.SUFFERED_ON_OWN_SALE,
+        annual_key="G",
+        annual_subkey="01",
+    )
+    nonresident = Payment(
+        source_id="nonresident-boundary",
+        recipient_id="X0000002W",
+        recipient_name="Nonresident Recipient",
+        modelo="216",
+        annual_modelo="296",
+        scheme="nonresident_unscoped",
+        invoice_date=date(year, 9, 1),
+        paid_on=date(year, 9, 5),
+        taxable_base=Decimal("1000"),
+        withheld=Decimal("190"),
+    )
+    return RetencionesScenario(
+        year=year,
+        payments=payments,
+        own_sale_withholding=own_sale,
+        nonresident_boundary=nonresident,
+        missing_state=EvidenceState.MISSING,
+        no_activity_state=EvidenceState.NO_RELEVANT_PAYMENT,
+        periodic_oracle=_periodic_oracle(payments),
+        annual_oracle=_annual_oracle(payments),
+        revisions=(
+            ("111", _revision("111", year, "2T")),
+            ("115", _revision("115", year, "2T")),
+            ("123", _revision("123", year, "1T")),
+            ("180", _revision("180", year, "0A")),
+            ("190", _revision("190", year, "0A")),
+            ("193", _revision("193", year, "0A")),
+        ),
+    )
+
+
+def _scenario_professional_second(year: int) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored professional second scenario facts."""
+    return InstalledPeriodicCliSlice(
+        slice_id="professional-111-q2-distinct-subclave",
+        modelo="111",
+        revision=_revision("111", year, "2T"),
+        layout_id="modelo-111-fichero-boe",
+        period="2T",
+        invoice_number=f"RET-PROF-{year}-002",
+        invoice_date=date(year, 5, 20),
+        counterparty_name=PROFESSIONAL_RAZON_SOCIAL,
+        counterparty_nif=PROFESSIONAL_NIF,
+        income_kind="professional",
+        scheme="actividades_profesionales",
+        invoice_base=Decimal("100.00"),
+        invoice_iva_rate=Decimal("0.21"),
+        invoice_withholding_rate=Decimal("0.15"),
+        invoice_withholding=Decimal("15.00"),
+        allocations=(
+            PaymentAllocation(
+                allocation_id="professional-q2-subclave-02",
+                payment_event_id=f"professional-payment-{year}-06-15",
+                paid_on=date(year, 6, 15),
+                allocated_base=Decimal("100.00"),
+                allocated_withholding=Decimal("15.00"),
+                allocated_settlement=Decimal("106.00"),
+            ),
+        ),
+        expected_casillas=(
+            ("07", Decimal("1")),
+            ("08", Decimal("100.00")),
+            ("09", Decimal("15.00")),
+            ("28", Decimal("15.00")),
+            ("30", Decimal("15.00")),
+        ),
+        modelo_190_detail=Modelo190AnnualDetailInput(
+            clave="G",
+            subclave="02",
+            province_code="28",
+            territorial_deduction_clave=0,
+        ),
+    )
+
+
+def _scenario_rent_a_q1(year: int, property_a: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent a q1 scenario facts."""
+    return InstalledPeriodicCliSlice(
+        slice_id="urban-rent-115-q1-property-a",
+        modelo="115",
+        revision=_revision("115", year, "1T"),
+        layout_id="modelo-115-fichero-boe",
+        period="1T",
+        invoice_number=f"RET-RENT-{year}-101",
+        invoice_date=date(year, 3, 1),
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
+        income_kind="urban_rent",
+        scheme="arrendamiento_urbano",
+        invoice_base=Decimal("1000.00"),
+        invoice_iva_rate=Decimal("0.21"),
+        invoice_withholding_rate=Decimal("0.19"),
+        invoice_withholding=Decimal("190.00"),
+        allocations=(
+            PaymentAllocation(
+                allocation_id="urban-rent-property-a-q1",
+                payment_event_id=f"urban-rent-property-a-payment-{year}-03-05",
+                paid_on=date(year, 3, 5),
+                allocated_base=Decimal("1000.00"),
+                allocated_withholding=Decimal("190.00"),
+                allocated_settlement=Decimal("1020.00"),
+            ),
+        ),
+        expected_casillas=(
+            ("01", Decimal("1")),
+            ("02", Decimal("1000.00")),
+            ("03", Decimal("190.00")),
+            ("05", Decimal("190.00")),
+        ),
+        property_reference=property_a.cadastral_reference,
+        annual_detail_capture_supported=True,
+        modelo_180_property=property_a,
+    )
+
+
+def _scenario_rent_a_q2(year: int, property_a: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent a q2 scenario facts."""
+    return InstalledPeriodicCliSlice(
+        slice_id="urban-rent-115-q2-property-a",
+        modelo="115",
+        revision=_revision("115", year, "2T"),
+        layout_id="modelo-115-fichero-boe",
+        period="2T",
+        invoice_number=f"RET-RENT-{year}-102",
+        invoice_date=date(year, 6, 1),
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
+        income_kind="urban_rent",
+        scheme="arrendamiento_urbano",
+        invoice_base=Decimal("2000.00"),
+        invoice_iva_rate=Decimal("0.21"),
+        invoice_withholding_rate=Decimal("0.19"),
+        invoice_withholding=Decimal("380.00"),
+        allocations=(
+            PaymentAllocation(
+                allocation_id="urban-rent-property-a-q2",
+                payment_event_id=f"urban-rent-property-a-payment-{year}-06-05",
+                paid_on=date(year, 6, 5),
+                allocated_base=Decimal("2000.00"),
+                allocated_withholding=Decimal("380.00"),
+                allocated_settlement=Decimal("2040.00"),
+            ),
+        ),
+        expected_casillas=(
+            ("01", Decimal("1")),
+            ("02", Decimal("2000.00")),
+            ("03", Decimal("380.00")),
+            ("05", Decimal("380.00")),
+        ),
+        property_reference=property_a.cadastral_reference,
+        annual_detail_capture_supported=True,
+        modelo_180_property=property_a,
+    )
+
+
+def _scenario_rent_b_q2(year: int, property_b: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent b q2 scenario facts."""
+    return InstalledPeriodicCliSlice(
+        slice_id="urban-rent-115-q2-property-b",
+        modelo="115",
+        revision=_revision("115", year, "2T"),
+        layout_id="modelo-115-fichero-boe",
+        period="2T",
+        invoice_number=f"RET-RENT-{year}-103",
+        invoice_date=date(year, 6, 10),
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
+        income_kind="urban_rent",
+        scheme="arrendamiento_urbano",
+        invoice_base=Decimal("2000.00"),
+        invoice_iva_rate=Decimal("0.21"),
+        invoice_withholding_rate=Decimal("0.19"),
+        invoice_withholding=Decimal("380.00"),
+        allocations=(
+            PaymentAllocation(
+                allocation_id="urban-rent-property-b-q2",
+                payment_event_id=f"urban-rent-property-b-payment-{year}-06-12",
+                paid_on=date(year, 6, 12),
+                allocated_base=Decimal("2000.00"),
+                allocated_withholding=Decimal("380.00"),
+                allocated_settlement=Decimal("2040.00"),
+            ),
+        ),
+        expected_casillas=(
+            ("01", Decimal("1")),
+            ("02", Decimal("2000.00")),
+            ("03", Decimal("380.00")),
+            ("05", Decimal("380.00")),
+        ),
+        property_reference=property_b.cadastral_reference,
+        annual_detail_capture_supported=True,
+        modelo_180_property=property_b,
+    )
+
+
+def _scenario_modelo_180(
+    year: int,
+    property_a: Modelo180PropertyInput,
+    property_b: Modelo180PropertyInput,
+    rent_a_q1: InstalledPeriodicCliSlice,
+    rent_a_q2: InstalledPeriodicCliSlice,
+    rent_b_q2: InstalledPeriodicCliSlice,
+) -> InstalledAnnualCliSlice:
+    """Construct the independently authored modelo 180 scenario facts."""
+    return InstalledAnnualCliSlice(
+        slice_id="urban-rent-180-annual-properties",
+        modelo="180",
+        revision=_revision("180", year, "0A"),
+        layout_id="modelo-180-fichero-boe",
+        source_modelo="115",
+        captures=(rent_a_q1, rent_a_q2, rent_b_q2),
+        source_periods=(
+            AnnualSourcePeriodInput(
+                period="1T",
+                evidence_state=EvidenceState.AVAILABLE,
+                expected_observation_count=1,
+                expected_casillas=(
+                    ("01", Decimal("1")),
+                    ("02", Decimal("1000.00")),
+                    ("03", Decimal("190.00")),
+                    ("05", Decimal("190.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="2T",
+                evidence_state=EvidenceState.AVAILABLE,
+                expected_observation_count=2,
+                expected_casillas=(
+                    ("01", Decimal("1")),
+                    ("02", Decimal("4000.00")),
+                    ("03", Decimal("760.00")),
+                    ("05", Decimal("760.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="3T",
+                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
+                expected_observation_count=0,
+                expected_casillas=(
+                    ("01", Decimal("0")),
+                    ("02", Decimal("0.00")),
+                    ("03", Decimal("0.00")),
+                    ("05", Decimal("0.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="4T",
+                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
+                expected_observation_count=0,
+                expected_casillas=(
+                    ("01", Decimal("0")),
+                    ("02", Decimal("0.00")),
+                    ("03", Decimal("0.00")),
+                    ("05", Decimal("0.00")),
+                ),
+            ),
+        ),
+        expected_header_fields=(
+            ("modelo-180-decl-total-perceptores", "2"),
+            ("modelo-180-decl-base-total", "5000"),
+            ("modelo-180-decl-retenciones-total", "950"),
+        ),
+        expected_type2_rows=(
+            AnnualExportRecordExpectation(
+                values=(
+                    ("modelo-180-perc-nif", LANDLORD_NIF),
+                    ("modelo-180-perc-nombre", filed_entity_name(LANDLORD_RAZON_SOCIAL)),
+                    ("modelo-180-perc-provincia", "28"),
+                    ("modelo-180-perc-modalidad", "1"),
+                    ("modelo-180-perc-base", "3000"),
+                    ("modelo-180-perc-porcentaje-retencion", "19"),
+                    ("modelo-180-perc-retenciones", "570"),
+                    ("modelo-180-perc-ejercicio-devengo", str(year)),
+                    ("modelo-180-perc-situacion-inmueble", "1"),
+                    ("modelo-180-perc-referencia-catastral", property_a.cadastral_reference),
+                )
+            ),
+            AnnualExportRecordExpectation(
+                values=(
+                    ("modelo-180-perc-nif", LANDLORD_NIF),
+                    ("modelo-180-perc-nombre", filed_entity_name(LANDLORD_RAZON_SOCIAL)),
+                    ("modelo-180-perc-provincia", "28"),
+                    ("modelo-180-perc-modalidad", "1"),
+                    ("modelo-180-perc-base", str(int(rent_b_q2.invoice_base))),
+                    ("modelo-180-perc-porcentaje-retencion", "19"),
+                    ("modelo-180-perc-retenciones", "380"),
+                    ("modelo-180-perc-ejercicio-devengo", str(year)),
+                    ("modelo-180-perc-situacion-inmueble", "1"),
+                    ("modelo-180-perc-referencia-catastral", property_b.cadastral_reference),
+                )
+            ),
+        ),
+    )
+
+
+def _scenario_modelo_190(
+    year: int, professional_primary: InstalledPeriodicCliSlice, professional_second: InstalledPeriodicCliSlice
+) -> InstalledAnnualCliSlice:
+    """Construct the independently authored modelo 190 scenario facts."""
+    return InstalledAnnualCliSlice(
+        slice_id="professional-190-annual-detail",
+        modelo="190",
+        revision=_revision("190", year, "0A"),
+        layout_id="modelo-190-fichero-boe",
+        source_modelo="111",
+        captures=(professional_primary, professional_second),
+        source_periods=(
+            AnnualSourcePeriodInput(
+                period="1T",
+                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
+                expected_observation_count=0,
+                expected_casillas=(
+                    ("07", Decimal("0")),
+                    ("08", Decimal("0.00")),
+                    ("09", Decimal("0.00")),
+                    ("28", Decimal("0.00")),
+                    ("30", Decimal("0.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="2T",
+                evidence_state=EvidenceState.AVAILABLE,
+                expected_observation_count=3,
+                expected_casillas=(
+                    ("07", Decimal("1")),
+                    ("08", Decimal("600.00")),
+                    ("09", Decimal("110.00")),
+                    ("28", Decimal("110.00")),
+                    ("30", Decimal("110.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="3T",
+                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
+                expected_observation_count=0,
+                expected_casillas=(
+                    ("07", Decimal("0")),
+                    ("08", Decimal("0.00")),
+                    ("09", Decimal("0.00")),
+                    ("28", Decimal("0.00")),
+                    ("30", Decimal("0.00")),
+                ),
+            ),
+            AnnualSourcePeriodInput(
+                period="4T",
+                evidence_state=EvidenceState.NO_RELEVANT_PAYMENT,
+                expected_observation_count=0,
+                expected_casillas=(
+                    ("07", Decimal("0")),
+                    ("08", Decimal("0.00")),
+                    ("09", Decimal("0.00")),
+                    ("28", Decimal("0.00")),
+                    ("30", Decimal("0.00")),
+                ),
+            ),
+        ),
+        expected_header_fields=(
+            ("modelo-190-decl-total-percepciones", "2"),
+            ("modelo-190-decl-percepciones-total", "600"),
+            ("modelo-190-decl-retenciones-total", "110"),
+        ),
+        expected_type2_rows=(
+            AnnualExportRecordExpectation(
+                values=(
+                    ("modelo-190-perc-nif", PROFESSIONAL_NIF),
+                    ("modelo-190-perc-nombre", filed_entity_name(PROFESSIONAL_RAZON_SOCIAL)),
+                    ("modelo-190-perc-codigo-provincia", "28"),
+                    ("modelo-190-perc-ceuta-melilla", "0"),
+                    ("modelo-190-perc-clave", "G"),
+                    ("modelo-190-perc-subclave", "01"),
+                    ("modelo-190-perc-percepcion-dineraria", "500"),
+                    ("modelo-190-perc-retenciones-practicadas", "95"),
+                )
+            ),
+            AnnualExportRecordExpectation(
+                values=(
+                    ("modelo-190-perc-nif", PROFESSIONAL_NIF),
+                    ("modelo-190-perc-nombre", filed_entity_name(PROFESSIONAL_RAZON_SOCIAL)),
+                    ("modelo-190-perc-codigo-provincia", "28"),
+                    ("modelo-190-perc-ceuta-melilla", "0"),
+                    ("modelo-190-perc-clave", "G"),
+                    ("modelo-190-perc-subclave", "02"),
+                    ("modelo-190-perc-percepcion-dineraria", "100"),
+                    ("modelo-190-perc-retenciones-practicadas", "15"),
+                )
+            ),
+        ),
+    )
+
+
+def _scenario_payments(year: int) -> tuple[Payment, ...]:
+    """Construct the independently authored payments scenario facts."""
+    return (
         Payment(
             source_id="professional-q1",
             recipient_id="00000000T",
@@ -832,7 +963,7 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
         ),
         Payment(
             source_id="payroll-q1",
-            recipient_id="00000001R",
+            recipient_id="00000024R",
             recipient_name="Employee One",
             modelo="111",
             annual_modelo="190",
@@ -897,50 +1028,5 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
             withheld=Decimal("190"),
             annual_key="B",
             annual_subkey="01",
-        ),
-    )
-    own_sale = Payment(
-        source_id="own-sale-withholding",
-        recipient_id="12345678Z",
-        recipient_name="Synthetic Autonomo",
-        modelo="111",
-        annual_modelo="190",
-        scheme="actividades_profesionales",
-        invoice_date=date(year, 2, 1),
-        paid_on=date(year, 2, 10),
-        taxable_base=Decimal("1000"),
-        withheld=Decimal("150"),
-        direction=Direction.SUFFERED_ON_OWN_SALE,
-        annual_key="G",
-        annual_subkey="01",
-    )
-    nonresident = Payment(
-        source_id="nonresident-boundary",
-        recipient_id="X0000000T",
-        recipient_name="Nonresident Recipient",
-        modelo="216",
-        annual_modelo="296",
-        scheme="nonresident_unscoped",
-        invoice_date=date(year, 9, 1),
-        paid_on=date(year, 9, 5),
-        taxable_base=Decimal("1000"),
-        withheld=Decimal("190"),
-    )
-    return RetencionesScenario(
-        year=year,
-        payments=payments,
-        own_sale_withholding=own_sale,
-        nonresident_boundary=nonresident,
-        missing_state=EvidenceState.MISSING,
-        no_activity_state=EvidenceState.NO_RELEVANT_PAYMENT,
-        periodic_oracle=_periodic_oracle(payments),
-        annual_oracle=_annual_oracle(payments),
-        revisions=(
-            ("111", "2019-y-siguientes"),
-            ("115", "2019-y-siguientes"),
-            ("123", "2024-y-siguientes"),
-            ("180", "2023-y-siguientes"),
-            ("190", "2025-y-siguientes"),
-            ("193", "2025-y-siguientes"),
         ),
     )

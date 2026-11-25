@@ -18,7 +18,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -193,7 +193,7 @@ def test_native_pidfd_session_and_same_owner_bracket_the_response(
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return ("other" if failure == "session" else "c42", bus.uid + (failure == "uid"))
 
-    monkeypatch.setattr(linux_gnome_lock, "_shell_pidfd", owned_process)
+    monkeypatch.setattr(linux_gnome_lock, "shell_pidfd", owned_process)
     if failure is not None:
         with pytest.raises(RefusalError) as caught:
             sample_gnome_lock(bus, uid=bus.uid, session_id="c42", peer_session=peer_session, expected=expected)
@@ -230,9 +230,9 @@ def test_bound_login_release_requires_current_observer_and_preserves_custody_ind
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return observer, GnomeLockState(_EPOCH, 1, False, False, "user")
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
     assert result.active and result.lock_state is (OsLockState.UNKNOWN if failure else OsLockState.UNLOCKED)
     assert result.unattended is (LoginEligibility.UNKNOWN if failure else LoginEligibility.ELIGIBLE)
@@ -250,16 +250,17 @@ def test_missing_observer_never_reselects_an_enabled_later_producer(monkeypatch:
     def unexpectedly_called(*_args: object) -> None:
         raise AssertionError("A missing capture must remain UNKNOWN")
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", unexpectedly_called)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", unexpectedly_called)
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert result.active and result.lock_state is OsLockState.UNKNOWN and result.unattended is LoginEligibility.UNKNOWN
 
 
-def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authority(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def _observe_with_gnome_state(
+    monkeypatch: pytest.MonkeyPatch, state: GnomeLockState, credential_facilities: Availability
+) -> OsLoginContext:
+    """Observe a bound login whose logind session is online and whose GNOME owner reports ``state``."""
     observer = GnomeLockBinding(b"a" * 32, _OWNER, 42, _EPOCH, 2)
     binding = LinuxLoginBinding("1000", _BOOT, "c42", 500_000, observer)
     observation = LinuxSessionObservation("c42", 1000, 500_000, "user", "wayland", "online", False)
@@ -272,12 +273,20 @@ def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authori
         _native: object, _session_id: str, _uid: int, expected: GnomeLockBinding | None = None
     ) -> tuple[GnomeLockBinding, GnomeLockState]:
         assert expected == observer
-        return observer, GnomeLockState(_EPOCH, 10, False, False, "user", 3)
+        return observer, state
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
-    result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", current_observer)
+    return binding.observe(credential_facilities=credential_facilities)
+
+
+def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = _observe_with_gnome_state(
+        monkeypatch, GnomeLockState(_EPOCH, 10, False, False, "user", 3), Availability.UNAVAILABLE
+    )
     assert result.active and result.lock_state is OsLockState.LOCKED
     # Existing unattended policy still separately requires native custody.
     assert result.unattended is LoginEligibility.ELIGIBLE
@@ -299,24 +308,7 @@ def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authori
 def test_only_complete_states_or_an_advanced_generation_are_positive_lock_evidence(
     monkeypatch: pytest.MonkeyPatch, state: GnomeLockState, expected: OsLockState
 ) -> None:
-    observer = GnomeLockBinding(b"a" * 32, _OWNER, 42, _EPOCH, 2)
-    binding = LinuxLoginBinding("1000", _BOOT, "c42", 500_000, observer)
-    observation = LinuxSessionObservation("c42", 1000, 500_000, "user", "wayland", "online", False)
-
-    class NativeLogin:
-        def session(self, _session_id: str) -> LinuxSessionObservation:
-            return observation
-
-    def current_observer(
-        _native: object, _session_id: str, _uid: int, expected: GnomeLockBinding | None = None
-    ) -> tuple[GnomeLockBinding, GnomeLockState]:
-        assert expected == observer
-        return observer, state
-
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
-    result = binding.observe(credential_facilities=Availability.AVAILABLE)
+    result = _observe_with_gnome_state(monkeypatch, state, Availability.AVAILABLE)
     assert result.active and result.lock_state is expected
     assert result.unlocked is (expected is OsLockState.UNLOCKED)
 
@@ -328,6 +320,6 @@ def test_insecure_storage_ancestor_refuses_before_any_bus_call(tmp_path: Path) -
     os.chmod(writable_ancestor, 0o777)  # noqa: S103 - deliberately unsafe refusal fixture
     root = writable_ancestor / "storage"
     assert writable_ancestor in root.parents and writable_ancestor.stat().st_mode & 0o022
-    with override_settings(cadrumo_local_storage_root=root), pytest.raises(RefusalError) as refused:
+    with override_settings(cadrumo_storage_root=root), pytest.raises(RefusalError) as refused:
         linux_gnome_lock.require_gnome_login_producer(posix_owner_uid())
     assert refused.value.reason is RefusalCode.UNAVAILABLE

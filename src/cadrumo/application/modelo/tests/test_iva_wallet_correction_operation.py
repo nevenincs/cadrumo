@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,12 +17,14 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
 from ...calculations.observations_repository import CalculationObservationPorts
 from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
 from ...operations.access_resolution import OperationAccessContext
@@ -31,7 +32,7 @@ from ...operations.capabilities import OperationRequestStoragePolicy, OperationS
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_correction_operation import (
     MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,
@@ -52,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = PublicPeriod(filing_year=2024, code="4T")
+_PERIOD = PublicPeriod(filing_year=filing_year_envelope().horizon, code="4T")
 _AUTHORITY = object()
 
 
@@ -104,29 +105,11 @@ def _history_state(
             modelo="303", revision_id="synthetic-revision", modelo_year=_PERIOD.filing_year, period=_PERIOD.code
         ),
         provenance=provenance,
-        presented_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        presented_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         generated_amount=Decimal("0"),
         available_end_amount=amount,
         source_observation_key="synthetic-correction-history",
     )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -200,6 +183,9 @@ def test_operation_keeps_request_confidential_and_public_result_closed() -> None
         "provenance",
         "register_status",
         "reason",
+        "words_language",
+        "previous_amount_words",
+        "amount_words",
     }
     with pytest.raises(ValidationError):
         ModeloIvaWalletCorrectionRequest(
@@ -240,7 +226,7 @@ def test_access_is_exact_profile_period_scoped_and_requires_commit() -> None:
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:
+def _executor_context(events: RecordingEvents, operands: _Operands) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
         SimpleNamespace(
@@ -250,7 +236,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=_AUTHORITY,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -263,7 +249,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 ) -> None:
     prior = _history_state(Decimal("500.00"))
     state = _history_state(Decimal("1200.50"), provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION)
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(history=_History(prior))
     seen: list[dict[str, object]] = []
@@ -310,7 +296,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_correction_result(report, receipt) == projection
@@ -318,7 +304,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 
 @pytest.mark.usefixtures("operation")
 def test_known_seed_refusal_is_settled_with_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     factory = _Factory(history=_History(_history_state(Decimal("500.00"))))
     monkeypatch.setattr(

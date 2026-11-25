@@ -56,14 +56,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
+from ...domain.calculations.registry.ine_provincia_catalogue import is_ine_provincia_code
+from ...domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind, DeclaredPartyNameRendering
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 from .classification_assembly import DeclaredFact
@@ -80,11 +82,17 @@ __all__ = [
     "CounterpartyConfirmationOutcomeV1",
     "CounterpartyEstablishmentConflictError",
     "CounterpartyEstablishmentContradiction",
+    "CounterpartyFilingNameInputError",
     "confirm_counterparty_establishment",
     "confirmed_counterparty_facts_key",
+    "declared_filing_name_from_parts",
     "forget_confirmed_counterparty_facts",
     "record_confirmed_counterparty_facts",
+    "record_counterparty_filing_name",
+    "record_counterparty_provincia",
     "resolve_confirmed_counterparty_facts",
+    "stated_counterparty_filing_name",
+    "stated_counterparty_provincia",
 ]
 
 
@@ -110,6 +118,10 @@ class ConfirmedCounterpartyFactsInputError(LedgerPreconditionErrorMixin, Cadrumo
 
 class CounterpartyEstablishmentConflictError(CadrumoError):
     """Raised when an assertion contradicts the one already confirmed for a counterparty."""
+
+
+class CounterpartyFilingNameInputError(LedgerPreconditionErrorMixin, CadrumoError):
+    """Raised when a stated party filing name is not one the record designs can take."""
 
 
 def confirmed_counterparty_facts_key(
@@ -188,6 +200,18 @@ class ConfirmedCounterpartyFacts(BaseModel):
             review item rather than reading the territory beside it.
         note: What the operator relied on, in their own words. Empty when they
             said nothing.
+        provincia_code: The INE code of the province of the counterparty's
+            domicilio fiscal, when the person has stated it. An answer of its
+            own: Modelo 347 declares it for a Spanish declarado, and it is
+            never derived from the identifier or read for the territory.
+        declared_filing_name: The name the person states this party is filed
+            under in an informative return, in the parts the record designs
+            name. Never derived from document text: an invoice's printed name
+            is display only and reaches an export only once it is stated here.
+        filing_name_asserted_by: Who stated the filing name. Its own
+            attribution, because the name is stated by a separate act, often
+            long after the establishment answers.
+        filing_name_asserted_at: When the filing name was stated.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -200,6 +224,24 @@ class ConfirmedCounterpartyFacts(BaseModel):
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
     note: str = ""
+    provincia_code: str | None = None
+    declared_filing_name: DeclaredPartyFilingName | None = None
+    filing_name_asserted_by: str | None = Field(default=None, min_length=1)
+    filing_name_asserted_at: datetime | None = None
+
+    @field_validator("provincia_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_in_the_ine_catalogue(cls, value: str | None) -> str | None:
+        """Take only a provincia code the registry's INE catalogue declares."""
+        if value is None:
+            return None
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            if not is_ine_provincia_code(value, authority=operation):
+                raise ValueError(f"{value!r} is not a provincia code the INE catalogue declares")
+        return value
 
     @field_validator("territorial_scope", mode="before")
     @classmethod
@@ -218,7 +260,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as operation:
-            return require_iva_territorial_scope(value, operation=operation)
+            return require_iva_territorial_scope(value, effective_date=today_madrid(), operation=operation)
 
     @model_validator(mode="after")
     def _only_an_operator_may_confirm(self) -> Self:
@@ -264,6 +306,8 @@ class ConfirmedCounterpartyFacts(BaseModel):
         country_code: str | None = None,
         note: str = "",
         asserted_at: datetime | None = None,
+        provincia_code: str | None = None,
+        declared_filing_name: DeclaredPartyFilingName | None = None,
     ) -> Self:
         """Build a fact for one counterparty, refusing an identifier with no identity.
 
@@ -281,6 +325,8 @@ class ConfirmedCounterpartyFacts(BaseModel):
                     facts={"counterparty_identifier_valid": False},
                 ),
             )
+        stamped_at = asserted_at or now()
+        named = declared_filing_name is not None
         return cls(
             counterparty_key=sha256_hex(token.encode()),
             canonical_tax_identifier=token,
@@ -288,8 +334,12 @@ class ConfirmedCounterpartyFacts(BaseModel):
             identification_state=identification_state,
             source=ClassifierInputSource.OPERATOR_ASSERTION,
             asserted_by=asserted_by,
-            asserted_at=asserted_at or now(),
+            asserted_at=stamped_at,
             note=note,
+            provincia_code=provincia_code,
+            declared_filing_name=declared_filing_name,
+            filing_name_asserted_by=asserted_by if named else None,
+            filing_name_asserted_at=stamped_at if named else None,
         )
 
     @model_validator(mode="after")
@@ -303,12 +353,30 @@ class ConfirmedCounterpartyFacts(BaseModel):
         record: it addresses a counterparty, occupies the key, and answers every
         later question with silence that reads as a confirmed absence.
         """
-        if self.territorial_scope is None and self.identification_state is None:
+        if (
+            self.territorial_scope is None
+            and self.identification_state is None
+            and self.provincia_code is None
+            and self.declared_filing_name is None
+        ):
             message = (
                 "a confirmed counterparty record must answer at least one of the "
-                "territorial scope or the identification state"
+                "territorial scope, the identification state, the provincia or the filing name"
             )
             raise ValueError(message)
+        return self
+
+    @model_validator(mode="after")
+    def _a_filing_name_carries_its_attribution(self) -> ConfirmedCounterpartyFacts:
+        """Keep a stated filing name together with who stated it and when.
+
+        A name without its attribution would reach an export as a statement
+        nobody can be shown to have made; an attribution without a name would
+        record a statement that was never made.
+        """
+        named = self.declared_filing_name is not None
+        if (self.filing_name_asserted_by is not None) != named or (self.filing_name_asserted_at is not None) != named:
+            raise ValueError("a stated filing name carries who stated it and when, and nothing else does")
         return self
 
     @property
@@ -448,11 +516,14 @@ def _merge_confirmed_counterparty_facts(
     _raise_scope_conflict(existing, asserted)
     _raise_identification_conflict(existing, asserted)
     added_identification = asserted.identification_state is not None and existing.identification_state is None
-    if existing.note == asserted.note and not added_identification:
+    added_territory = asserted.territorial_scope is not None and existing.territorial_scope is None
+    if existing.note == asserted.note and not added_identification and not added_territory:
         return existing
     update: dict[str, object] = {"note": asserted.note}
     if added_identification:
         update["identification_state"] = asserted.identification_state
+    if added_territory:
+        update["territorial_scope"] = asserted.territorial_scope
     corrected = existing.model_copy(update=update)
     repository.save(corrected)
     return corrected
@@ -528,6 +599,219 @@ def record_confirmed_counterparty_facts(
         return _merge_confirmed_counterparty_facts(repository, existing=existing, asserted=fact)
     repository.save(fact)
     return fact
+
+
+def record_counterparty_provincia(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    provincia_code: str,
+    asserted_by: str,
+    country_code: str | None = None,
+    asserted_at: datetime | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> ConfirmedCounterpartyFacts:
+    """State the province of a counterparty's domicilio fiscal, keeping every other answer.
+
+    Unlike the establishment axes, a different provincia is not a conflict: a
+    domicilio fiscal moves, and the person stating where it is now corrects the
+    record. The same provincia again writes nothing, so a retry keeps the
+    stored attribution.
+
+    Raises:
+        ConfirmedCounterpartyFactsInputError: When the identifier does not
+            verify, or the INE catalogue declares no such provincia.
+    """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        known = is_ine_provincia_code(provincia_code, authority=operation)
+    if not known:
+        raise ConfirmedCounterpartyFactsInputError(
+            translated_message="errors.refused.refused_ledger_counterparty_provincia_input",
+            context={"provincia_code": provincia_code},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.COUNTERPARTY_PROVINCIA_KNOWN,
+                facts={"counterparty_provincia_known": False},
+            ),
+        )
+    stated = ConfirmedCounterpartyFacts.create(
+        tax_identifier=tax_identifier,
+        asserted_by=asserted_by,
+        country_code=country_code,
+        asserted_at=asserted_at,
+        provincia_code=provincia_code,
+    )
+    existing = repository.load(stated.counterparty_key)
+    if existing is None:
+        repository.save(stated)
+        return stated
+    if existing.provincia_code == stated.provincia_code:
+        return existing
+    corrected = existing.model_copy(update={"provincia_code": stated.provincia_code})
+    repository.save(corrected)
+    return corrected
+
+
+def declared_filing_name_from_parts(
+    *,
+    kind: str,
+    primer_apellido: str | None = None,
+    segundo_apellido: str | None = None,
+    no_second_surname: bool = False,
+    nombre: str | None = None,
+    razon_social: str | None = None,
+    renderings: tuple[tuple[int, str], ...] = (),
+) -> DeclaredPartyFilingName:
+    """Build the stated filing name from the parts the person supplied, or refuse it.
+
+    The refusal names the rule the statement breaks and never the name parts
+    themselves: they are a third party's name.
+
+    Raises:
+        CounterpartyFilingNameInputError: When the kind is unknown or the parts
+            do not form a name the record designs can take.
+    """
+    try:
+        return DeclaredPartyFilingName.model_validate(
+            {
+                "kind": DeclaredPartyKind(kind),
+                "primer_apellido": primer_apellido,
+                "segundo_apellido": segundo_apellido,
+                "no_second_surname": no_second_surname,
+                "nombre": nombre,
+                "razon_social": razon_social,
+                "renderings": tuple(DeclaredPartyNameRendering(width=width, text=text) for width, text in renderings),
+            }
+        )
+    except (ValueError, ValidationError) as error:
+        reasons = (
+            "; ".join(str(detail["msg"]) for detail in error.errors(include_input=False))
+            if isinstance(error, ValidationError)
+            else "the party kind is a natural person or an entity"
+        )
+        raise CounterpartyFilingNameInputError(
+            translated_message="errors.refused.refused_ledger_counterparty_filing_name_input",
+            context={"reasons": reasons},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.COUNTERPARTY_FILING_NAME_STATED,
+                facts={"counterparty_filing_name_stated": False},
+            ),
+        ) from error
+
+
+def record_counterparty_filing_name(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    filing_name: DeclaredPartyFilingName,
+    asserted_by: str,
+    country_code: str | None = None,
+    asserted_at: datetime | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> ConfirmedCounterpartyFacts:
+    """State the name a counterparty is filed under, keeping every other answer.
+
+    Like the provincia, a different name is not a conflict: the person states
+    or restates the name, including a shorter rendering for a narrower field,
+    and the new statement replaces the old one with its own attribution. The
+    same name again writes nothing, so a retry keeps the stored attribution.
+    The establishment answers and their attribution are never touched.
+
+    Raises:
+        ConfirmedCounterpartyFactsInputError: When the identifier does not
+            verify, so there is no party to hold the name.
+    """
+    stated = ConfirmedCounterpartyFacts.create(
+        tax_identifier=tax_identifier,
+        asserted_by=asserted_by,
+        country_code=country_code,
+        asserted_at=asserted_at,
+        declared_filing_name=filing_name,
+    )
+    existing = repository.load(stated.counterparty_key)
+    if existing is None:
+        repository.save(stated)
+        return stated
+    if existing.declared_filing_name == filing_name:
+        return existing
+    corrected = existing.model_copy(
+        update={
+            "declared_filing_name": filing_name,
+            "filing_name_asserted_by": stated.filing_name_asserted_by,
+            "filing_name_asserted_at": stated.filing_name_asserted_at,
+        }
+    )
+    repository.save(corrected)
+    return corrected
+
+
+def stated_counterparty_filing_name(
+    tax_identifier: str,
+    *,
+    country_code: str | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> ConfirmedCounterpartyFacts | None:
+    """Return the record holding the filing name stated for a counterparty, or ``None`` when none is stated.
+
+    The record rather than the bare name, so the attribution of the statement
+    travels with it.
+    """
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
+    if key is None:
+        return None
+    stored = repository.load(key)
+    return stored if stored is not None and stored.declared_filing_name is not None else None
+
+
+def withdraw_counterparty_filing_name(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    country_code: str | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> tuple[bool, ConfirmedCounterpartyFacts | None]:
+    """Withdraw only the filing name stated for a counterparty, keeping every other answer.
+
+    Returns whether a name was held and removed, and the record that remains.
+    A record whose only answer was the name has nothing left to confirm, so it
+    is deleted with the name; any establishment or provincia answer, with its own
+    attribution, stays exactly as stated. Withdrawing where no name is stated,
+    or for an identifier that does not verify, writes nothing.
+    """
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
+    if key is None:
+        return False, None
+    existing = repository.load(key)
+    if existing is None or existing.declared_filing_name is None:
+        return False, existing
+    keeps_other_answers = (
+        existing.territorial_scope is not None
+        or existing.identification_state is not None
+        or existing.provincia_code is not None
+    )
+    if not keeps_other_answers:
+        repository.delete(key)
+        return True, None
+    remaining = existing.model_copy(
+        update={"declared_filing_name": None, "filing_name_asserted_by": None, "filing_name_asserted_at": None}
+    )
+    repository.save(remaining)
+    return True, remaining
+
+
+def stated_counterparty_provincia(
+    tax_identifier: str,
+    *,
+    country_code: str | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> str | None:
+    """Return the provincia the person stated for a counterparty, or ``None`` when none is stated."""
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
+    if key is None:
+        return None
+    stored = repository.load(key)
+    return None if stored is None else stored.provincia_code
 
 
 def forget_confirmed_counterparty_facts(

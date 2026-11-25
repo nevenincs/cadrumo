@@ -15,7 +15,6 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -24,6 +23,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentTransition,
 )
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -34,6 +34,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
@@ -45,7 +46,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ...application.approval_binding import RuntimeApprovalBinding
-from ..windows_process import WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from .profile_worker_support import owner_id
 from .worker_approval_fixture import Seed
@@ -90,7 +90,13 @@ class ApprovalAuthority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # Publication commits no operation an observer waits on, so a cue has nobody to wake.
         return
 

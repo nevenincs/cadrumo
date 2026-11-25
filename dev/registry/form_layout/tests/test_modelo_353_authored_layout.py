@@ -8,14 +8,18 @@ import pytest
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("353"))
+_BEFORE_FEBRUARY, _FROM_FEBRUARY = _EDITIONS
 
-@pytest.mark.parametrize("revision_id,pages", [("2021-hasta-2026-01", 1), ("2026-desde-02", 2)])
+
+@pytest.mark.parametrize("revision_id,pages", list(zip(_EDITIONS, (1, 2), strict=True)))
 def test_official_page_count_and_complete_placement(revision_id: str, pages: int) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     (layout,) = revision.form_layouts
@@ -28,7 +32,7 @@ def test_official_page_count_and_complete_placement(revision_id: str, pages: int
     assert layout.review.state == "generated"
 
 
-@pytest.mark.parametrize("revision_id", ["2021-hasta-2026-01", "2026-desde-02"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_entity_grid_keeps_identity_result_share_and_receipt_together(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     grid = next(
@@ -51,7 +55,7 @@ def test_entity_grid_keeps_identity_result_share_and_receipt_together(revision_i
         ]
 
 
-@pytest.mark.parametrize("revision_id", ["2021-hasta-2026-01", "2026-desde-02"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_payment_amounts_are_explicit_paper_inputs_not_automatic_refund_elections(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     fields = {c.id: c for c in revision.casillas}
@@ -66,8 +70,8 @@ def test_payment_amounts_are_explicit_paper_inputs_not_automatic_refund_election
 
 def test_february_form_moves_payments_to_page_two_without_backdating_advance() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353"))
-    previous = modelo.revisions["2021-hasta-2026-01"].form_layouts[0]
-    current = modelo.revisions["2026-desde-02"].form_layouts[0]
+    previous = modelo.revisions[_BEFORE_FEBRUARY].form_layouts[0]
+    current = modelo.revisions[_FROM_FEBRUARY].form_layouts[0]
     assert "10" not in previous.casilla_sections()
     assert current.casilla_sections()["10"] == ("pagina-1", "liquidacion")
     for identifier in ("06", "07", "papel.importe-ingreso"):
@@ -81,7 +85,7 @@ def test_february_form_moves_payments_to_page_two_without_backdating_advance() -
     ]
 
 
-@pytest.mark.parametrize("revision_id", ["2021-hasta-2026-01", "2026-desde-02"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_account_and_no_activity_fields_use_the_existing_exact_producers(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     fields = {
@@ -104,7 +108,7 @@ def test_account_and_no_activity_fields_use_the_existing_exact_producers(revisio
     assert contexts["sin-actividad"].computed_key is None
 
 
-@pytest.mark.parametrize("revision_id", ["2021-hasta-2026-01", "2026-desde-02"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_entity_amounts_and_shares_are_numeric_but_identifiers_remain_text(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     manual = [binding for binding in revision.bindings if isinstance(binding.provider, ManualInputProvider)]
@@ -121,7 +125,7 @@ def test_entity_amounts_and_shares_are_numeric_but_identifiers_remain_text(revis
             assert binding.provider.decimals == 2
 
 
-@pytest.mark.parametrize("revision_id", ["2021-hasta-2026-01", "2026-desde-02"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_human_numeric_values_retain_the_official_sign_and_decimal_wire_scale(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[revision_id]
     fields = {

@@ -1,6 +1,7 @@
 """Registered profile-bound context read for a guided Modelo amendment.
 
-Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
 """
 
 from __future__ import annotations
@@ -13,17 +14,21 @@ from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
 from ...domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
+    AMENDMENT_DECLARATION_KINDS,
     m303_rectificativa_motive_is_applicable,
 )
-from ...domain.modelos.filing_record import ModeloRecord
+from ...domain.modelos.filing_record import FilingDeclarationKind, ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_resolution import (
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -46,6 +51,8 @@ from .filing_record_ownership import load_profile_filing_record
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .registry_discovery import registry_casillas_for_registry_scope
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_amend_correction import ModeloAmendmentCorrectionContextV1, filed_casilla_values, worded_amendment_context
+from .work_form_service import modelo_form_snapshot
 
 MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID = "modelo.work.amendment_context"
 
@@ -57,6 +64,8 @@ class ModeloWorkAmendmentContextRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     filing_record_id: FilingRecordId
+    #: The language to word the correction in; ``None`` reads the facts without words.
+    output_language: OutputLanguage | None = None
 
 
 class ModeloWorkAmendmentContextProjection(BaseModel):
@@ -70,8 +79,10 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
     unit: ModeloWorkMetadataSnapshot
     calculation: ModeloCalculationSnapshot
     casilla_rows: tuple[ModeloCasillaRow, ...]
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...]
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...]
     m303_rectificativa_motive_applicable: bool
+    #: The correction worded in the requested language; ``None`` when no language was requested.
+    correction: ModeloAmendmentCorrectionContextV1 | None = None
 
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
@@ -85,7 +96,17 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
             self.permitted_amendment_kinds
         ):
             raise ValueError("amendment context has invalid permitted kinds")
+        self._require_correction_matches(row_ids)
         return self
+
+    def _require_correction_matches(self, row_ids: tuple[CasillaId, ...]) -> None:
+        correction = self.correction
+        if correction is not None and (
+            correction.filed.filing_record_id != self.record.filing_record_id
+            or tuple(option.kind for option in correction.kinds) != self.permitted_amendment_kinds
+            or not {row.casilla_id for row in correction.rows} <= set(row_ids)
+        ):
+            raise ValueError("amendment context wording does not match its facts")
 
 
 def _amendment_context_identity_differs(projection: ModeloWorkAmendmentContextProjection, profile_id: str) -> bool:
@@ -120,46 +141,94 @@ def _filing_unit(
     return load_profile_filing_record(bundle, profile_id=payload.profile_id, filing_record_id=payload.filing_record_id)
 
 
+def _saved_revision(
+    record: ModeloRecord, unit: WorkUnit, bundle: VerificationRepositoryBundle, context: OperationExecutorContext
+) -> CalculationRevision:
+    """The calculation revision the filing record kept, refused unless it belongs to the unit's own scope."""
+    revision = bundle.calculation.load(operation=context.authority_operation).get(record.calculation_revision_id)
+    if revision is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if revision.work_unit_id != unit.work_unit_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    saved_scope = revision.registry_snapshot_ref
+    if (
+        saved_scope.modelo != str(unit.modelo)
+        or saved_scope.modelo_year != unit.filing_year
+        or saved_scope.period != unit.period.registry_token
+        or saved_scope.revision_id != unit.revision_id
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    return revision
+
+
+def _rectificativa_motive_applicable(
+    revision: CalculationRevision, unit: WorkUnit, context: OperationExecutorContext
+) -> bool:
+    evidence = revision.filing_instance_evidence
+    if evidence is None or str(unit.modelo) != form_for_role("iva.periodic"):
+        return False
+    regimen = evidence.m303.regimen_simplificado.regimen_snapshot
+    return m303_rectificativa_motive_is_applicable(
+        registry_revision_id=regimen.registry_revision_id,
+        record_design=regimen.record_design,
+        operation=context.authority_operation,
+    )
+
+
+def _permitted_kinds(unit: WorkUnit, context: OperationExecutorContext) -> tuple[FilingDeclarationKind, ...]:
+    with validating_governed_facts(context.authority_operation):
+        permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
+    permitted_kinds = tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted_values)
+    if frozenset(kind.value for kind in permitted_kinds) != permitted_values:
+        raise ValueError("amendment context contains an unknown permitted kind")
+    return permitted_kinds
+
+
 def _capture(
     payload: ModeloWorkAmendmentContextRequest,
     bundle: VerificationRepositoryBundle,
     context: OperationExecutorContext,
 ) -> ModeloWorkAmendmentContextProjection:
     record, unit = _filing_unit(payload, bundle)
-    revision = bundle.calculation.load(operation=context.authority_operation).get(record.calculation_revision_id)
-    if revision is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if revision.work_unit_id != unit.work_unit_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    evidence = revision.filing_instance_evidence
-    motive_applicable = False
-    if evidence is not None and str(unit.modelo) == "303":
-        regimen = evidence.m303.regimen_simplificado.regimen_snapshot
-        motive_applicable = m303_rectificativa_motive_is_applicable(
-            registry_revision_id=regimen.registry_revision_id,
-            record_design=regimen.record_design,
-            operation=context.authority_operation,
-        )
-    with validating_governed_facts(context.authority_operation):
-        permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
-    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted_values)
-    if frozenset(kind.value for kind in permitted_kinds) != permitted_values:
-        raise ValueError("amendment context contains an unknown permitted kind")
+    revision = _saved_revision(record, unit, bundle, context)
+    saved_scope = revision.registry_snapshot_ref
+    snapshot = modelo_form_snapshot(
+        context.authority_operation, unit.modelo, unit.filing_year, unit.period, saved_scope.revision_id
+    )
+    motive_applicable = _rectificativa_motive_applicable(revision, unit, context)
+    permitted_kinds = _permitted_kinds(unit, context)
+    calculation = ModeloCalculationSnapshot.from_revision(
+        revision, work_unit=unit, operation=context.authority_operation
+    )
+    casilla_rows = registry_casillas_for_registry_scope(
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        operation=context.authority_operation,
+    ).rows
+    language = payload.output_language
     return ModeloWorkAmendmentContextProjection(
         profile_id=payload.profile_id,
         record=ModeloFilingRecordSnapshot.from_record(record),
         unit=ModeloWorkMetadataSnapshot.from_work_unit(unit),
-        calculation=ModeloCalculationSnapshot.from_revision(
-            revision, work_unit=unit, operation=context.authority_operation
-        ),
-        casilla_rows=registry_casillas_for_registry_scope(
-            str(unit.modelo),
-            filing_year=unit.filing_year,
-            period=unit.period.registry_token,
-            operation=context.authority_operation,
-        ).rows,
+        calculation=calculation,
+        casilla_rows=casilla_rows,
         permitted_amendment_kinds=permitted_kinds,
         m303_rectificativa_motive_applicable=motive_applicable,
+        correction=(
+            None
+            if language is None
+            else worded_amendment_context(
+                record=record,
+                unit=unit,
+                snapshot=snapshot,
+                casilla_rows=casilla_rows,
+                filed_values=filed_casilla_values(calculation),
+                permitted_kinds=permitted_kinds,
+                motive_applicable=motive_applicable,
+                language=language,
+            )
+        ),
     )
 
 

@@ -20,11 +20,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
     build_automation_operation_definitions,
@@ -32,6 +28,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -278,7 +275,7 @@ def test_without_a_cue_nothing_is_observed_again_until_the_deadline() -> None:
             deadline=deadline_after(0.5),
         )
 
-    assert expired.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert expired.value.reason is RefusalCode.TIMEOUT
     assert sum(isinstance(request, OperationObserve) for request in client.requests) == 2
     assert client.observers == []
 

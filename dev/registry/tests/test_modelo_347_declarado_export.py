@@ -32,8 +32,11 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_last_exercise
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -44,7 +47,11 @@ from ..compiler.validate_revision_rules import validate_informative_class_invari
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_REVISIONS = ("2011-2024", "2025-y-siguientes")
+_AUTHORED = authored_revisions("347")
+_EARLIER_ID, _LATER_ID = (str(revision.id) for revision in _AUTHORED)
+# The last exercise the earlier design governs and the first the later one does.
+_EARLIER_LAST = revision_last_exercise("347", _EARLIER_ID)
+_LATER_FIRST = _AUTHORED[1].valid_from.year
 _COUNT = "modelo-347-declarante-numero-personas-entidades"
 _TOTAL = "modelo-347-declarante-importe-total-anual-operaciones"
 _NIF = "modelo-347-contraparte-row-nif"
@@ -71,7 +78,7 @@ def _field(record: ExportRecordDefinition, offset: int) -> ExportFieldDefinition
     return next(field for field in record.fields if field.offset == offset)
 
 
-@pytest.mark.parametrize("revision_id", _REVISIONS)
+@pytest.mark.parametrize("revision_id", (_EARLIER_ID, _LATER_ID))
 def test_type_1_totals_are_export_fields_reading_the_summary_bindings(revision_id: str) -> None:
     revision = _revision(revision_id)
     declarante = _record(revision, "m347-declarante")
@@ -99,23 +106,24 @@ def _observation(party_tax_id: str, country_code: str, name: str) -> InvoiceObse
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id=party_tax_id,
         country_code=country_code,
-        transaction_date=date(2025, 5, 12),
+        transaction_date=date(_LATER_FIRST, 5, 12),
         base_amount=Decimal("8000.00"),
         invoice_total_amount=Decimal("8000.00"),
         operation_clave="B",
         party_legal_name=name,
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
     )
 
 
 _PARTIES = (
-    _observation("B12345674", "ES", "CLIENTE NACIONAL SL"),
+    _observation("B00015016", "ES", "CLIENTE NACIONAL SL"),
     _observation("DE123456789", "DE", "KUNDE GMBH"),
     _observation("123456789", "US", "CUSTOMER INC"),
 )
 
 
 def _rows(revision: ModeloRevision) -> dict[str, dict[str, object]]:
-    values = resolve_invoice_binding_row_values(revision, _PARTIES, effective_date=date(2025, 12, 31))
+    values = resolve_invoice_binding_row_values(revision, _PARTIES, effective_date=date(_LATER_FIRST, 12, 31))
     by_index: dict[int, dict[str, object]] = {}
     for (binding_id, row_index), value in values.items():
         by_index.setdefault(row_index, {})[str(binding_id)] = value
@@ -123,7 +131,7 @@ def _rows(revision: ModeloRevision) -> dict[str, dict[str, object]]:
 
 
 def test_declarado_rows_identify_residents_by_nif_and_non_residents_by_country_and_nif_iva() -> None:
-    revision = _revision("2025-y-siguientes")
+    revision = _revision(_LATER_ID)
     rows = _rows(revision)
     declarado = _record(revision, "m347-declarado")
     nif, country, community = _field(declarado, 18), _field(declarado, 79), _field(declarado, 264)
@@ -134,7 +142,7 @@ def test_declarado_rows_identify_residents_by_nif_and_non_residents_by_country_a
         rows["KUNDE GMBH"],
         rows["CUSTOMER INC"],
     )
-    assert (resident[_NIF], resident[_COUNTRY], resident[_COMMUNITY_VAT]) == ("B12345674", "", "")
+    assert (resident[_NIF], resident[_COUNTRY], resident[_COMMUNITY_VAT]) == ("B00015016", "", "")
     assert (community_operator[_NIF], community_operator[_COUNTRY], community_operator[_COMMUNITY_VAT]) == (
         "",
         "DE",
@@ -147,9 +155,9 @@ def test_declarado_rows_identify_residents_by_nif_and_non_residents_by_country_a
 
 
 def test_a_malformed_community_identifier_is_declared_by_country_alone() -> None:
-    revision = _revision("2025-y-siguientes")
+    revision = _revision(_LATER_ID)
     values = resolve_invoice_binding_row_values(
-        revision, (_observation("DE12", "DE", "KUNDE GMBH"),), effective_date=date(2025, 12, 31)
+        revision, (_observation("DE12", "DE", "KUNDE GMBH"),), effective_date=date(_LATER_FIRST, 12, 31)
     )
     row = {str(binding_id): value for (binding_id, _index), value in values.items()}
 
@@ -157,7 +165,7 @@ def test_a_malformed_community_identifier_is_declared_by_country_alone() -> None
 
 
 def test_the_2011_design_has_no_community_identifier_slot() -> None:
-    revision = _revision("2011-2024")
+    revision = _revision(_EARLIER_ID)
 
     assert _COMMUNITY_VAT not in {str(binding.id) for binding in revision.bindings}
     assert str(_field(_record(revision, "m347-declarado"), 18).binding) == _NIF
@@ -171,7 +179,7 @@ _INVERSION_SUJETO_PASIVO = "modelo-347-contraparte-row-inversion-sujeto-pasivo"
 _PROVINCIA = "modelo-347-contraparte-row-provincia-codigo"
 
 
-@pytest.mark.parametrize(("revision_id", "year"), (("2011-2024", 2024), ("2025-y-siguientes", 2025)))
+@pytest.mark.parametrize(("revision_id", "year"), ((_EARLIER_ID, _EARLIER_LAST), (_LATER_ID, _LATER_FIRST)))
 def test_provincia_export_reads_each_declared_row_binding(revision_id: str, year: int) -> None:
     revision = _revision(revision_id)
     field = _field(_record(revision, "m347-declarado"), 77)
@@ -187,7 +195,7 @@ def test_provincia_export_reads_each_declared_row_binding(revision_id: str, year
 
 def _filer_profile(operation: PinnedAuthorityOperation, *extra: UserProfileFact) -> ModeloWorkProfile:
     facts = (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="identity.tax_id", value="B00015016"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -221,7 +229,7 @@ def _operation(
     *,
     iva: str = "0",
     kind: InvoiceKind = InvoiceKind.ISSUED,
-    tax_id: str = "C3333333G",
+    tax_id: str = "C0001502D",
     name: str = "CONTRAPARTE PRUEBA SL",
     country: str = "ES",
     **facts: object,
@@ -273,17 +281,34 @@ class _CatalogueReader:
         return self._catalogue
 
 
-def _resolve_2025(invoices: tuple[Invoice, ...], profile: ModeloWorkProfile):
+class _StatedFilingNames:
+    """The filing name the person stated for each counterparty: here, the razón social its invoices print."""
+
+    def __init__(self, invoices: tuple[Invoice, ...]) -> None:
+        self._names = {
+            (str(invoice.counterparty_country), str(invoice.counterparty_tax_id)): str(invoice.counterparty_name)
+            for invoice in invoices
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        name = None if country_code is None else self._names.get((country_code, tax_identifier))
+        return None if name is None else DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name)
+
+
+def _resolve_later(invoices: tuple[Invoice, ...], profile: ModeloWorkProfile):
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="347",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        revision=_revision("2025-y-siguientes"),
+        filing_year=_LATER_FIRST,
+        period=Period.from_year_and_code(_LATER_FIRST, "0A"),
+        revision=_revision(_LATER_ID),
         profile=profile,
     )
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReader(invoices)),
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_CatalogueReader(invoices),
+            counterparty_filing_names=_StatedFilingNames(invoices),
+        ),
     ).resolve(context)
 
 
@@ -309,23 +334,23 @@ def test_a_net_negative_declarado_renders_the_n_sign_in_the_2025_record() -> Non
     compiled 2025 declarado record renders that row as "N" plus the unsigned amount.
     """
     with bundled_indexed_authority().operation() as operation:
-        subvencion = _operation("E-2025-001", date(2025, 2, 3), "1000.00", is_subvencion_ayuda=True)
+        subvencion = _operation("E-2025-001", date(_LATER_FIRST, 2, 3), "1000.00", is_subvencion_ayuda=True)
         correction = _operation(
             "E-2025-001R",
-            date(2025, 5, 5),
+            date(_LATER_FIRST, 5, 5),
             "1500.00",
             is_subvencion_ayuda=True,
             invoice_class=invoice_class_rectificativa(),
             series="R",
             rectifies_invoice_number="E-2025-001",
         )
-        resolution = _resolve_2025(
+        resolution = _resolve_later(
             (subvencion, correction),
             _filer_profile(operation, _role("public_administration_entity")),
         )
 
     (row,) = _declarado_rows(resolution)
-    declarado = _record(_revision("2025-y-siguientes"), "m347-declarado")
+    declarado = _record(_revision(_LATER_ID), "m347-declarado")
     assert row["modelo-347-contraparte-row-clave"] == "E"
     assert _render(declarado, 83, row) == "N000000000050000"
     assert _render(declarado, 136, row) == " 000000000100000"
@@ -355,35 +380,35 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
     """
     with bundled_indexed_authority().operation() as operation:
         invoices = (
-            _operation("V-1", date(2025, 2, 10), "4000.00", tax_id="C3333333G", name="CLIENTE CAJA SL"),
+            _operation("V-1", date(_LATER_FIRST, 2, 10), "4000.00", tax_id="C0001502D", name="CLIENTE CAJA SL"),
             _operation(
                 "V-2",
-                date(2025, 5, 10),
+                date(_LATER_FIRST, 5, 10),
                 "4132.23",
                 iva="867.77",
-                tax_id="C3333333G",
+                tax_id="C0001502D",
                 name="CLIENTE CAJA SL",
                 legal_mentions=("CASH_ACCOUNTING_REGIME",),
             ),
             _operation(
                 "C-1",
-                date(2025, 8, 1),
+                date(_LATER_FIRST, 8, 1),
                 "6000.00",
                 kind=InvoiceKind.RECEIVED,
-                tax_id="B87654323",
+                tax_id="B00015057",
                 name="SUBCONTRATA OBRA SL",
                 iva_category="domestic_reverse_charge",
             ),
             _operation(
                 "C-2",
-                date(2025, 11, 1),
+                date(_LATER_FIRST, 11, 1),
                 "4000.00",
                 kind=InvoiceKind.RECEIVED,
-                tax_id="B87654323",
+                tax_id="B00015057",
                 name="SUBCONTRATA OBRA SL",
             ),
         )
-        resolution = _resolve_2025(invoices, _filer_profile(operation))
+        resolution = _resolve_later(invoices, _filer_profile(operation))
 
     rows = _by_name(_declarado_rows(resolution))
     assert set(rows) == {
@@ -404,7 +429,7 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
     ]
     reverse_charge = rows[("SUBCONTRATA OBRA SL", "", "X")]
     assert (reverse_charge[_IMPORTE], reverse_charge[_QUARTERS[2]]) == (Decimal("6000.00"), Decimal("6000.00"))
-    declarado = _record(_revision("2025-y-siguientes"), "m347-declarado")
+    declarado = _record(_revision(_LATER_ID), "m347-declarado")
     cash_field, reverse_field = _field(declarado, 281), _field(declarado, 282)
     assert str(cash_field.binding) == _CRITERIO_CAJA and cash_field.casilla_id is None
     assert str(reverse_field.binding) == _INVERSION_SUJETO_PASIVO and reverse_field.casilla_id is None
@@ -427,13 +452,13 @@ def test_an_annual_basis_filer_reports_no_quarterly_amounts(filer_fact: UserProf
     with bundled_indexed_authority().operation() as operation:
         purchase = _operation(
             "C-4",
-            date(2025, 6, 1),
+            date(_LATER_FIRST, 6, 1),
             "5000.00",
             kind=InvoiceKind.RECEIVED,
-            tax_id="B87654323",
+            tax_id="B00015057",
             name="PROVEEDOR SL",
         )
-        resolution = _resolve_2025((purchase,), _filer_profile(operation, filer_fact))
+        resolution = _resolve_later((purchase,), _filer_profile(operation, filer_fact))
 
     (row,) = _declarado_rows(resolution)
     assert row[_IMPORTE] == Decimal("5000.00")
@@ -445,32 +470,39 @@ def test_a_non_resident_declarado_carries_provincia_99_and_a_spanish_one_is_disc
     """Both designs, pos. 77-78: "En el caso de no residentes sin establecimiento permanente se consignará 99"."""
     with bundled_indexed_authority().operation() as operation:
         invoices = (
-            _operation("V-4", date(2025, 2, 1), "8000.00", tax_id="US000000001", name="CUSTOMER INC", country="US"),
-            _operation("V-5", date(2025, 2, 1), "8000.00", tax_id="C3333333G", name="CLIENTE NACIONAL SL"),
+            _operation(
+                "V-4", date(_LATER_FIRST, 2, 1), "8000.00", tax_id="DE123456789", name="KUNDE GMBH", country="DE"
+            ),
+            _operation("V-5", date(_LATER_FIRST, 2, 1), "8000.00", tax_id="C0001502D", name="CLIENTE NACIONAL SL"),
         )
-        resolution = _resolve_2025(invoices, _filer_profile(operation))
+        resolution = _resolve_later(invoices, _filer_profile(operation))
 
     provincia = {str(row[_NAME]): row[_PROVINCIA] for row in _declarado_rows(resolution)}
-    assert provincia == {"CUSTOMER INC": "99", "CLIENTE NACIONAL SL": ""}
-    advisory = next(item for item in resolution.diagnostics if item.source_ref == "m347-record:provincia-not-recorded")
-    assert "C3333333G" in advisory.message
+    assert provincia == {"KUNDE GMBH": "99", "CLIENTE NACIONAL SL": ""}
+    # One note per Spanish declarado whose provincia is unstated, opening at its
+    # invoice; the non-resident's 99 needs none.
+    (advisory,) = (
+        item for item in resolution.diagnostics if item.source_ref.startswith("m347-record:provincia-not-stated:")
+    )
+    assert advisory.reason == "m347_declarado_provincia_unrecorded"
+    assert "C0001502D" in advisory.message
     assert "US000000001" not in advisory.message
 
 
 def test_declared_sales_disclose_that_cash_collections_are_not_recorded() -> None:
     """Art. 34.1.h: no invoice records a cash collection, so the metálico amount is disclosed, not guessed."""
     with bundled_indexed_authority().operation() as operation:
-        sale = _operation("V-6", date(2025, 9, 1), "8000.00", tax_id="C3333333G", name="CLIENTE EFECTIVO SL")
+        sale = _operation("V-6", date(_LATER_FIRST, 9, 1), "8000.00", tax_id="C0001502D", name="CLIENTE EFECTIVO SL")
         purchase = _operation(
             "C-5",
-            date(2025, 9, 1),
+            date(_LATER_FIRST, 9, 1),
             "8000.00",
             kind=InvoiceKind.RECEIVED,
-            tax_id="B87654323",
+            tax_id="B00015057",
             name="PROVEEDOR SL",
         )
-        with_sale = _resolve_2025((sale, purchase), _filer_profile(operation))
-        purchases_only = _resolve_2025((purchase,), _filer_profile(operation))
+        with_sale = _resolve_later((sale, purchase), _filer_profile(operation))
+        purchases_only = _resolve_later((purchase,), _filer_profile(operation))
 
     advisory = next(item for item in with_sale.diagnostics if item.source_ref == "m347-record:metalico-not-recorded")
     assert advisory.asserted_legal_refs == ("rd-1065-2007:art-34.1.h",)

@@ -36,27 +36,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .....application.modelo.work_form_models import (
-    ModeloFormField,
+from .....application.modelo.work_form_field_vocabulary import (
+    ASKS_FOR_A_VALUE,
+    NEEDS_ATTENTION,
     ModeloFormOrigin,
+    ModeloFormStanding,
     address_key,
 )
+from .....application.modelo.work_form_models import ModeloFormField
+from .....application.modelo.work_form_wording import origin_words
 from .grid import (
     CasillaListRecords,
     GridRowPlace,
     TableGeometry,
 )
-from .vocabulary import (
-    ASKS_FOR_A_VALUE,
-    NEEDS_ATTENTION,
-    ORIGIN_ROLES,
-    Attention,
-    ColourRole,
-    WorkbenchMark,
-    field_needs_filer,
-    origin_glyph,
-    origin_words,
-)
+from .vocabulary import ORIGIN_ROLES, Attention, ColourRole, WorkbenchMark, origin_glyph
 
 type AddressKey = tuple[str, str]
 
@@ -108,6 +102,8 @@ class CasillaListEntry:
     row_base_empty: bool | None = None
     #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
     recorded: bool = False
+    #: The declaration has been calculated; before then no source has been read, so a box waits on the calculation.
+    calculated: bool = True
     #: ``False`` on a page the read model states does not apply this period, which asks for no value.
     applies: bool = True
     #: In an official grid, the heading of the row the box sits in, and of its column.
@@ -130,14 +126,14 @@ class CasillaListEntry:
 
     @property
     def needs_filer(self) -> bool:
-        """Whether the filer can act on the field now: a staged change, or what the shared classing says.
+        """Whether the filer can act on the field now: a staged change, or the standing the read model states.
 
         A box waiting on an import or a calculation is not one, and nothing on
         a recorded declaration is; ``n`` visits exactly these.
         """
         if self.staged_text is not None:
             return True
-        return field_needs_filer(self.field, recorded=self.recorded, applies=self.applies)
+        return self.field.standing is ModeloFormStanding.NEEDS_YOU
 
     @property
     def origin_mark(self) -> str:
@@ -149,7 +145,11 @@ class CasillaListEntry:
     @property
     def origin_words(self) -> str:
         """The origin in words, as the row and the box panel say it; a recorded declaration asks nothing."""
-        return "" if self.staged_replaces_absence else origin_words(self.field, recorded=self.recorded)
+        return (
+            ""
+            if self.staged_replaces_absence
+            else origin_words(self.field, recorded=self.recorded, calculated=self.calculated)
+        )
 
     @property
     def staged_replaces_absence(self) -> bool:
@@ -172,7 +172,7 @@ type Density = Literal["comfortable", "compact"]
 
 
 @dataclass(frozen=True, slots=True)
-class _Measures:
+class Measures:
     """The widest box number, label, value and origin words among the fields shown, in cells."""
 
     box: int = 1
@@ -182,7 +182,7 @@ class _Measures:
 
 
 @dataclass(frozen=True, slots=True)
-class _Columns:
+class Columns:
     """The cells each column gets at one width; ``label`` is an unindented field's."""
 
     box: int
@@ -193,7 +193,7 @@ class _Columns:
 
 
 @dataclass(frozen=True, slots=True)
-class _TableRow:
+class TableRow:
     """One grid row drawn as a line of its table: where its cells are and what its label reads."""
 
     geometry: TableGeometry

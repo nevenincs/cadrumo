@@ -12,7 +12,7 @@ mainland, so a default introduced at any member is caught.
 
 **One entity, one record, however the page spells the identifier.** The
 confirmation is remembered against the canonical identifier, so the same
-supplier printing ``ESB-1234567-4`` next month is answered rather than asked
+supplier printing ``ESB-0001501-6`` next month is answered rather than asked
 again -- which is the whole reason an honest refusal on the domestic population
 is affordable.
 
@@ -24,19 +24,18 @@ issuer's error as authority. The resolution carries both and no fact.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import resolve_iva_classification_catalogue
+from ....domain.iva.classification import CustomerTaxStatus, resolve_iva_classification_catalogue
 from ....domain.iva.schema import IvaTerritorialScope
 from ..classification_assembly import (
     DeclaredFact,
@@ -55,14 +54,16 @@ from ..counterparty_establishment import (
     resolve_confirmed_counterparty_facts,
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from ._ledger_value_fixtures import repository
+from .ledger_value_fixtures import repository
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = ["repository"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 _OTHER_CIF = "B87654321"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 _DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_canarias")
@@ -110,7 +111,7 @@ def test_an_empty_store_never_answers_with_any_territory(
 
     assert resolution.fact is None
     assert resolution.contradiction is None
-    for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+    for scope in resolve_iva_classification_catalogue(_ON_DATE, operation=operation).territorial_scopes:
         assert resolution.fact is None or resolution.fact.value is not scope
 
 
@@ -225,7 +226,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("printed", ["B12345674", "ESB12345674", "B-1234567-4", "  b12345674 "])
+@pytest.mark.parametrize("printed", ["B00015016", "ESB00015016", "B-0001501-6", "  b00015016 "])
 def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     printed: str,
@@ -367,7 +368,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
     first = _confirm(repository, note="confirmed by telephone")
     again = record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
-        tax_identifier="ESB-1234567-4",
+        tax_identifier="ESB-0001501-6",
         territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="someone-else@example.test",
         note="confirmed by telephone",
@@ -443,14 +444,17 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
 ) -> None:
     """The pair that shows the row's purpose: blocked without it, derived with it.
 
-    A received invoice from a supplier whose paper is non-decisive. The
-    taxpayer's own side is a profile fact, so the only open axis is the
-    counterparty's. Without the remembered confirmation the assembly reports
-    ``issuer_residency`` missing; with it the rule table derives, and the
-    category it derives is ``DOMESTIC_NOT_SUBJECT`` -- the Canarian outcome a
-    mainland default would have replaced with a subject-to-IVA one.
+    A received invoice for services from a supplier whose paper is
+    non-decisive. The taxpayer's own establishment and IVA status are profile
+    facts, so the only open axis is the counterparty's. Without the remembered
+    confirmation the assembly reports ``issuer_residency`` missing; with it the
+    rule table derives ``DOMESTIC_REVERSE_CHARGE``: Canarias lies outside the
+    TAI (LIVA art. 3.Dos), art. 69.Uno.1.º places a business recipient's
+    service where the recipient is established, and art. 84.Uno.2.º a) makes
+    that recipient the sujeto pasivo. A mainland default would have replaced it
+    with the supplier charging domestic IVA.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from datetime import date
 
         from ....domain.iva.schema import InvoiceKind, IvaCategory
@@ -460,10 +464,15 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
             value=IvaTerritorialScope.from_registry("es_mainland"),
             source=ClassifierInputSource.PROFILE_AUTHORITY,
         )
-        # Goods and services are placed differently from Canarias, so the
-        # supply nature is declared to leave the counterparty as the only gap.
+        # Goods and services are placed differently from Canarias, and a
+        # service's place turns on the recipient's status (art. 69.Uno), so
+        # both are declared to leave the counterparty as the only gap.
         services = DeclaredFact[SupplyNature](
             value=SupplyNature.SERVICES, source=ClassifierInputSource.OPERATOR_ASSERTION
+        )
+        filer_status = DeclaredFact[CustomerTaxStatus](
+            value=CustomerTaxStatus.from_registry("b2b_iva_registered"),
+            source=ClassifierInputSource.PROFILE_AUTHORITY,
         )
 
         blocked = assemble_classification_criteria(
@@ -472,6 +481,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(
                 supply_nature=services,
+                customer_tax_status=filer_status,
                 customer_scope=filer_side,
                 issuer_scope=resolve_confirmed_counterparty_facts(
                     bucket_id=_BUCKET_ID,
@@ -497,7 +507,12 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
             transaction_date=date(2026, 3, 10),
             direction=InvoiceKind.RECEIVED,
             inputs=ClassifierInputs(),
-            declared=DeclaredFacts(supply_nature=services, customer_scope=filer_side, issuer_scope=remembered),
+            declared=DeclaredFacts(
+                supply_nature=services,
+                customer_tax_status=filer_status,
+                customer_scope=filer_side,
+                issuer_scope=remembered,
+            ),
             operation=_authority_operation_for_test,
         )
         assert derived.assembled, [gap.field for gap in derived.missing]
@@ -505,4 +520,4 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         assert derived.criteria.issuer_residency == IvaTerritorialScope.from_registry("es_canarias")
         verdict = classify_from_assembled_criteria(derived, operation=_authority_operation_for_test)
         assert verdict is not None
-        assert verdict.category == IvaCategory("domestic_not_subject")
+        assert verdict.category == IvaCategory("domestic_reverse_charge")

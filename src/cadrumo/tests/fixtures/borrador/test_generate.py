@@ -2,7 +2,7 @@
 
 The generator's `main`/`generate_corpus` mutates committed in-tree
 fixture bytes, so the smoke tests exercise the pure helper functions
-(`_format_spanish_decimal`, `render_borrador_pdf`) without invoking
+(`format_spanish_decimal`, `render_borrador_pdf`) without invoking
 the file-writing path. That covers the importable surface end-to-end:
 formatting + PDF rendering both run for real on real inputs.
 """
@@ -15,7 +15,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from .generate import (
-    _format_spanish_decimal,
+    format_spanish_decimal,
     render_borrador_pdf,
 )
 
@@ -34,15 +34,15 @@ _CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
 def test_format_spanish_decimal_uses_comma_and_dot_separators() -> None:
     """Spanish convention: thousands dot, decimal comma."""
 
-    assert _format_spanish_decimal(Decimal("0.00")) == "0,00"
-    assert _format_spanish_decimal(Decimal("1234.56")) == "1.234,56"
-    assert _format_spanish_decimal(Decimal("1000000.00")) == "1.000.000,00"
+    assert format_spanish_decimal(Decimal("0.00")) == "0,00"
+    assert format_spanish_decimal(Decimal("1234.56")) == "1.234,56"
+    assert format_spanish_decimal(Decimal("1000000.00")) == "1.000.000,00"
 
 
 def test_format_spanish_decimal_rounds_to_two_places() -> None:
     """Generator always emits two decimal places per AEAT presentation."""
 
-    assert _format_spanish_decimal(Decimal("12.5")) == "12,50"
+    assert format_spanish_decimal(Decimal("12.5")) == "12,50"
 
 
 def testrender_borrador_pdf_emits_valid_pdf_bytes() -> None:
@@ -54,7 +54,7 @@ def testrender_borrador_pdf_emits_valid_pdf_bytes() -> None:
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
         _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3450.00"),
     }
-    pdf_bytes = render_borrador_pdf(year=2024, casilla_values=casilla_values)
+    pdf_bytes = render_borrador_pdf(year=2024, casilla_values=casilla_values, tax_id="12345678Z")
 
     assert pdf_bytes.startswith(b"%PDF"), "rendered bytes are not a PDF"
     assert len(pdf_bytes) > 500, "rendered PDF suspiciously small"

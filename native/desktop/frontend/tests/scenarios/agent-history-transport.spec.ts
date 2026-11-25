@@ -1,5 +1,63 @@
 import { expect, test } from "@playwright/test";
 
+test("document removal distinguishes a stored name from the whole store, and policy comes from the host", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html");
+  const result = await page.evaluate(async () => {
+    const calls: { command: string; args: unknown }[] = [];
+    Object.assign(window, {
+      __CADRUMO_SHELL__: { token: "b".repeat(64) },
+      __TAURI_INTERNALS__: {
+        async invoke(command: string, args: unknown) {
+          calls.push({ command, args });
+          return command === "agent_attachment_policy"
+            ? {
+                max_file_bytes: 25,
+                max_files_per_conversation: 2,
+                max_total_bytes_per_conversation: 50,
+                formats: [
+                  { media_type: "application/pdf", extensions: [".pdf"] },
+                  { media_type: "text/plain", extensions: [".txt"] },
+                ],
+              }
+            : null;
+        },
+      },
+    });
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
+    const session = tauriHost().agentSession!;
+    await session.removeDocuments!("r-docs", "factura ñ.pdf");
+    await session.removeDocuments!("r-docs");
+    const policy = await session.attachmentPolicy!();
+    return { calls, policy };
+  });
+  expect(result.calls).toEqual([
+    {
+      command: "agent_documents_remove",
+      args: {
+        conversationId: "r-docs",
+        name: "factura ñ.pdf",
+        token: "b".repeat(64),
+      },
+    },
+    {
+      command: "agent_documents_remove",
+      args: { conversationId: "r-docs", token: "b".repeat(64) },
+    },
+    { command: "agent_attachment_policy", args: { token: "b".repeat(64) } },
+  ]);
+  expect(result.policy).toEqual({
+    max_file_bytes: 25,
+    max_files_per_conversation: 2,
+    max_total_bytes_per_conversation: 50,
+    formats: [
+      { media_type: "application/pdf", extensions: [".pdf"] },
+      { media_type: "text/plain", extensions: [".txt"] },
+    ],
+  });
+});
+
 // Presentation/transport evidence only: exercise the real Tauri adapter with
 // a recording invoke boundary. Backend deletion is tested against real stores.
 test("the Tauri session forwards archive and delete, including refusals", async ({
@@ -14,15 +72,13 @@ test("the Tauri session forwards archive and delete, including refusals", async 
       __TAURI_INTERNALS__: {
         async invoke(command: string, args: unknown) {
           calls.push({ command, args });
+          if (command === "desktop_frontend_diagnostic") return null;
           if (fail) throw { code: "agent_conversation_delete_incomplete" };
           return null;
         },
       },
     });
-    const modulePath = "/src/shell/tauriHost.ts";
-    const { tauriHost } = (await import(
-      modulePath
-    )) as typeof import("../../src/shell/tauriHost");
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
     const session = tauriHost().agentSession!;
     await session.archive!("r-archive");
     await session.delete!("r-delete");
@@ -47,6 +103,19 @@ test("the Tauri session forwards archive and delete, including refusals", async 
     {
       command: "agent_conversation_delete",
       args: { conversationId: "r-partial", token: "a".repeat(64) },
+    },
+    {
+      command: "desktop_frontend_diagnostic",
+      args: {
+        report: {
+          event: "command_rejected",
+          level: "ERROR",
+          command: "agent_conversation_delete",
+          code: "agent_conversation_delete_incomplete",
+          dropped: 0,
+        },
+        token: "a".repeat(64),
+      },
     },
   ]);
   expect(result.refusal).toEqual({

@@ -46,7 +46,7 @@ _CLI_MAIN_ALLOWED: frozenset[str] = frozenset(
         "cadrumo.entrypoints.cli._command_policy_validation",
         "cadrumo.entrypoints.cli._command_secret_contracts",
         "cadrumo.entrypoints.cli._command_structure_validation",
-        "cadrumo.entrypoints.cli._root_command_specs",
+        "cadrumo.entrypoints.cli.root_command_specs",
         "cadrumo.entrypoints.cli.command_graph",
         "cadrumo.entrypoints.cli.command_parameter_contracts",
         "cadrumo.entrypoints.cli.command_shared_contracts",

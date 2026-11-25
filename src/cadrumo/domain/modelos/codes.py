@@ -7,11 +7,14 @@ filing-grade availability is resolved from registry snapshots.
 
 from __future__ import annotations
 
-from pydantic import GetCoreSchemaHandler
+from typing import Annotated
+
+from pydantic import Field, GetCoreSchemaHandler
 from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from .errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from .errors import ModeloValidatedRecord, ModeloValidationError
 
 
 class ModeloCode(str):
@@ -25,7 +28,11 @@ class ModeloCode(str):
         """Build a code, refusing anything but three digits."""
         raw = str(value)
         if len(raw) != 3 or not raw.isdigit():
-            raise ModeloValidationError(f"modelo code must be a three-digit string, got {value!r}")
+            raise ModeloValidationError(
+                f"modelo code must be a three-digit string, got {value!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.MODELO_CODE,
+            )
         return str.__new__(cls, raw)
 
     @classmethod
@@ -37,3 +44,20 @@ class ModeloCode(str):
         """Teach pydantic to run the three-digit check on validation."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
+
+
+def coerce_modelo_code(value: object) -> ModeloCode:
+    """Accept a ``ModeloCode`` or its raw string, refusing every other type."""
+    if isinstance(value, ModeloCode):
+        return value
+    if isinstance(value, str):
+        return ModeloCode(value)
+    raise ModeloValidationError(
+        f"expected ModeloCode or str, got {type(value).__name__}",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        record=ModeloValidatedRecord.MODELO_CODE,
+    )
+
+
+ModeloCodeText = Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+"""An ASCII three-digit modelo identifier declared directly in a public wire schema."""

@@ -11,6 +11,7 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 
+from ..application.operation_cue_timing import log_operation_cue_timing
 from ..contracts.worker_authorization import WORKER_OPERATIONS_ADVANCED_MAX
 
 _LOGGER = get_logger(__name__)
@@ -31,21 +32,32 @@ class OperationProgressReporter:
     tries what is pending once.
     """
 
-    def __init__(self, send: Callable[[tuple[OperationId, ...]], None]) -> None:
-        """Report through ``send``, which blocks until the runtime acknowledges."""
+    def __init__(self, send: Callable[[tuple[OperationId, ...], tuple[OperationId, ...]], None]) -> None:
+        """Report through ``send``, which blocks until the runtime acknowledges.
+
+        ``send`` is given the batch and those of its operations whose settlement committed.
+        """
         self._send = send
         self._condition = Condition()
         # Insertion-ordered set: the oldest commits are reported first.
         self._pending: dict[OperationId, None] = {}
+        # Operations whose settlement committed and is not yet acknowledged.
+        self._settled: set[OperationId] = set()
         self._closed = False
         self._thread: Thread | None = None
 
-    def committed(self, operation_id: OperationId) -> None:
-        """Record one committed operation for the next report; never blocks on the runtime."""
+    def committed(self, operation_id: OperationId, *, settled: bool = False) -> None:
+        """Record one committed operation for the next report; never blocks on the runtime.
+
+        ``settled`` says the commit was the operation's settlement.
+        """
+        log_operation_cue_timing("commit_observed", (operation_id,), settled=(operation_id,) if settled else ())
         with self._condition:
             if self._closed:
                 return
             self._pending[operation_id] = None
+            if settled:
+                self._settled.add(operation_id)
             if self._thread is None:
                 self._start()
             self._condition.notify()
@@ -77,21 +89,15 @@ class OperationProgressReporter:
     def _report_until_closed(self) -> None:
         backoff = 0.0
         while True:
-            with self._condition:
-                while not self._pending and not self._closed:
-                    self._condition.wait()
-                if not self._pending:
-                    return
-                # A commit's notify does not cut a backoff short; a close does.
-                retry_at = monotonic() + backoff
-                while not self._closed and (remaining := retry_at - monotonic()) > 0:
-                    self._condition.wait(remaining)
-                batch = tuple(self._pending)[:WORKER_OPERATIONS_ADVANCED_MAX]
-                for operation_id in batch:
-                    del self._pending[operation_id]
+            taken = self._take_pending(backoff)
+            if taken is None:
+                return
+            batch, settled = taken
+            log_operation_cue_timing("report_send", batch, settled=settled)
             try:
-                self._send(batch)
+                self._send(batch, settled)
             except Exception as error:
+                log_operation_cue_timing("report_unacknowledged", batch, primary_error=error, settled=settled)
                 diagnostic_event(
                     _LOGGER,
                     "profile_operation_progress_unreported",
@@ -105,4 +111,24 @@ class OperationProgressReporter:
                         self._pending = dict.fromkeys(batch) | self._pending
                 backoff = min(max(backoff * 2, _RETRY_FIRST_SECONDS), _RETRY_LONGEST_SECONDS)
             else:
+                log_operation_cue_timing("report_send_returned", batch, settled=settled)
+                with self._condition:
+                    # Only a settlement no later commit queued again loses its mark.
+                    self._settled.difference_update(set(settled) - self._pending.keys())
                 backoff = 0.0
+
+    def _take_pending(self, backoff: float) -> tuple[tuple[OperationId, ...], tuple[OperationId, ...]] | None:
+        """Wait for work and preserve the retry bound unless closed."""
+        with self._condition:
+            while not self._pending and not self._closed:
+                self._condition.wait()
+            if not self._pending:
+                return
+            # A commit's notify does not cut a backoff short; a close does.
+            retry_at = monotonic() + backoff
+            while not self._closed and (remaining := retry_at - monotonic()) > 0:
+                self._condition.wait(remaining)
+            batch = tuple(self._pending)[:WORKER_OPERATIONS_ADVANCED_MAX]
+            for operation_id in batch:
+                del self._pending[operation_id]
+            return batch, tuple(operation_id for operation_id in batch if operation_id in self._settled)

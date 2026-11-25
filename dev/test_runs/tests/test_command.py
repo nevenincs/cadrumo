@@ -2,14 +2,24 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from ..command import run
+from ..locales_status_signal import LocalesStatusSignalProcessor
 from ..paths import SCRATCH_BASE_ENV
+from ..pytest_transcript_syntax import normalize_root_cause
+from ..reaper import assess_run_directories, reclaim_run_directories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_run_paths_do_not_split_root_cause_signatures() -> None:
+    first = normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-29/run-1/file.txt")
+    second = normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-30/run-2/file.txt")
+    assert first == second == "Failure: /.tmp/logs/test-runs/<run>/file.txt"
 
 
 def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -19,10 +29,11 @@ def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytes
 
     assert status == 0
     assert "observable signal" in capsys.readouterr().out
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["command"] == list(command)
     assert metadata["exit_status"] == 0
+    assert metadata["status"] == "completed"
     assert "COMMAND " in (run_dir / "run.log").read_text(encoding="utf-8")
 
 
@@ -47,8 +58,8 @@ def test_command_run_keeps_log_location_separate_from_child_working_directory(tm
 
     assert status == 0
     assert (repository / "cwd-marker").read_text() == "child ran here"
-    assert not (repository / ".logs").exists()
-    run_dir = next((log_root / ".logs" / "audit-runs").glob("*/*"))
+    assert not (repository / "logs").exists()
+    run_dir = next((log_root / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["command"] == list(command)
     assert metadata["exit_status"] == 0
@@ -65,7 +76,7 @@ def test_command_run_removes_its_scratch_after_a_failing_run(tmp_path: Path, mon
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="scratch-probe")
 
     assert status == 3
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
     assert scratch.parent.resolve() == base.resolve()
     assert not scratch.exists()
@@ -78,10 +89,15 @@ def test_command_run_finalizes_metadata_when_interrupted(
 ) -> None:
     class InterruptingOutput:
         async def read(self, size: int = -1) -> bytes:
-            run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+            run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
             assert seeded["finished_at"]
+            assert seeded["status"] == "running"
+            verdicts = assess_run_directories(tmp_path / "logs" / "audit-runs")
+            assert len(verdicts) == 1 and not verdicts[0].reclaimable
+            assert reclaim_run_directories(verdicts) == 0
+            assert (run_dir / "artifacts").is_dir()
             raise KeyboardInterrupt
 
     class InterruptingProcess:
@@ -112,10 +128,11 @@ def test_command_run_finalizes_metadata_when_interrupted(
 
     assert status == 130
     assert process.terminated is True
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 130
     assert metadata["finished_at"]
+    assert metadata["status"] == "completed"
     transcript = (run_dir / "run.log").read_text(encoding="utf-8")
     assert "INTERRUPTED exit=130" in transcript
     assert "FINISH " in transcript
@@ -143,7 +160,7 @@ def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(
     status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
 
     assert status == 0
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     transcript = (run_dir / "run.log").read_text(encoding="utf-8").splitlines()
     start = transcript.index("before")
     assert transcript[start : start + 3] == ["before", long_line, "after"]
@@ -186,15 +203,142 @@ def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
     assert finished["event"] == "run_finished"
     assert finished["classification"] == "blocking_findings"
     assert finished["translation_backlog"]["cells_to_translate"] == 4_000
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
     assert [json.loads(row) for row in persisted] == backlog
+
+
+def _run_locale_payload(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], payload: dict[str, object], label: str
+) -> tuple[dict[str, object], Path]:
+    script = f"import json; print(json.dumps({payload!r}))"
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label=label,
+        signal="locales-status",
+    )
+    assert status == 0
+    parsed = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert isinstance(parsed, dict)
+    finished: dict[str, object] = {}
+    for name, member in parsed.items():
+        finished[str(name)] = member
+    return finished, next((tmp_path / "logs" / "test-runs").glob("*/*"))
+
+
+def _locale_payload(outcome: str, findings: list[dict[str, object]]) -> dict[str, object]:
+    return {
+        "outcome": outcome,
+        "headline": "No blocking locale findings; 1 advisory findings retained for review.",
+        "summary": {
+            "translation_backlog": {"exact": True, "unique_keys_to_translate": 0, "cells_to_translate": 0},
+            "findings": {"blocking": 0, "advisory": len(findings), "total": len(findings)},
+        },
+        "details": {"backlog": [], "findings": findings},
+    }
+
+
+_ADVISORY_FINDING: dict[str, object] = {"classification": "advisory", "kind": "docs_translation_near_echo"}
+
+
+def test_check_locales_reports_an_advisory_only_audit_as_passed_with_advisories(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, run_dir = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING]), "check-locales"
+    )
+
+    assert finished["classification"] == "advisory_findings"
+    assert finished["result"] == "passed_with_advisories"
+    assert finished["posture"] == "blocking"
+    assert finished["findings"] == {"blocking": 0, "advisory": 1, "total": 1}
+    assert "advisory" in str(finished["headline"])
+    persisted = (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(row) for row in persisted] == [_ADVISORY_FINDING]
+
+
+def test_locales_status_reports_an_advisory_only_audit_without_failing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING]), "locales-status"
+    )
+
+    assert finished["classification"] == "advisory_findings"
+    assert finished["result"] == "advisory"
+    assert finished["posture"] == "advisory"
+
+
+@pytest.mark.parametrize(
+    "contradicting",
+    [{"kind": "unclassified"}, {"classification": "warning", "kind": "unknown"}],
+    ids=["missing", "unknown"],
+)
+def test_check_locales_refuses_an_advisory_outcome_its_own_findings_contradict(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], contradicting: dict[str, object]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("advisory", [_ADVISORY_FINDING, contradicting]), "check-locales"
+    )
+
+    assert finished["classification"] == "blocking_findings"
+    assert finished["result"] == "failed"
+
+
+def test_check_locales_keeps_a_backlog_outcome_blocking_even_with_only_advisory_findings(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finished, _ = _run_locale_payload(
+        tmp_path, capsys, _locale_payload("backlog", [_ADVISORY_FINDING]), "check-locales"
+    )
+
+    assert finished["classification"] == "blocking_findings"
+    assert finished["result"] == "failed"
+
+
+def test_check_locales_reports_a_complete_audit_as_clean(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    finished, _ = _run_locale_payload(tmp_path, capsys, _locale_payload("complete", []), "check-locales")
+
+    assert finished["classification"] == "clean"
+    assert finished["result"] == "passed"
 
 
 def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    original_envelope = LocalesStatusSignalProcessor.envelope
+
+    def envelope_while_running(
+        self: LocalesStatusSignalProcessor,
+        *,
+        label: str,
+        run_dir: Path,
+        log_path: Path,
+        exit_status: int,
+        started: datetime,
+        finished: datetime,
+    ) -> dict[str, object]:
+        """Run the real reaper while the real signal writer still owns its output."""
+        metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        assert metadata["status"] == "running"
+        verdicts = assess_run_directories(run_dir.parent.parent)
+        assert len(verdicts) == 1 and not verdicts[0].reclaimable
+        assert reclaim_run_directories(verdicts) == 0
+        return original_envelope(
+            self,
+            label=label,
+            run_dir=run_dir,
+            log_path=log_path,
+            exit_status=exit_status,
+            started=started,
+            finished=finished,
+        )
+
+    monkeypatch.setattr(LocalesStatusSignalProcessor, "envelope", envelope_while_running)
     payload = {
         "outcome": "backlog",
         "headline": "Translate 1 locale cell for 1 unique key: es 1.",
@@ -232,7 +376,7 @@ def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     finished = envelopes[-1]
     assert finished["translation_backlog"]["cells_to_translate"] == 1
     assert "cli.save" not in json.dumps(finished)
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     assert (run_dir / "artifacts" / "locale-status.json").is_file()
     assert "cli.save" in (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8")
     assert "translation_missing" in (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8")
@@ -250,7 +394,7 @@ def test_locale_signal_fails_closed_when_child_payload_is_not_parseable(
     )
 
     assert status == 7
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 7
 
@@ -265,7 +409,7 @@ def test_locale_signal_normalizes_nonzero_child_without_payload_to_tool_failure(
     )
 
     assert status == 7
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 7
 
@@ -310,7 +454,7 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
         "exact": False,
         "unique_keys_to_translate": None,
     }
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     log = (run_dir / "run.log").read_text(encoding="utf-8")
     assert "AuthorityComponentCodecError" in log
     report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
@@ -364,7 +508,7 @@ def test_command_run_confines_child_temp_and_preserves_tool_cache_environment(
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
 
     assert status == 0
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     paths = json.loads((run_dir / "artifacts" / "paths.json").read_text(encoding="utf-8"))
     scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
     assert Path(paths["temp"]).resolve() == scratch.resolve()
@@ -539,7 +683,7 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
             "phase": "execution",
         }
     ]
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     assert "collection detail" in (run_dir / "run.log").read_text(encoding="utf-8")
 
 

@@ -9,7 +9,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId, SourceRefId
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 __all__ = [
     "LiteralEnrollmentAudit",
@@ -22,10 +22,10 @@ __all__ = [
 REGISTRY_TEST_ROOT: Final[Path] = REPO_ROOT / "dev" / "registry" / "tests"
 
 
-_MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
+MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
 
 
-_REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
+REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
 
 
 @dataclass(frozen=True, order=True, slots=True)

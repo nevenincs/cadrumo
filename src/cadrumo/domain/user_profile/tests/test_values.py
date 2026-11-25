@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
 from ...calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..errors import UserProfileValidationError
 from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord, create_user_profile_record
@@ -30,7 +31,7 @@ _CREATE_CONTEXT = ProfileCreateContext(
 
 
 def test_profile_record_is_strict_frozen_and_carries_setup_state() -> None:
-    created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
+    created_at = datetime(1980, 5, 7, 10, 0, tzinfo=UTC)
     profile = create_user_profile_record(
         context=_CREATE_CONTEXT,
         profile_id=_PROFILE_ID,
@@ -79,8 +80,8 @@ def test_profile_fact_rejects_invalid_effective_window() -> None:
         UserProfileFact(
             path="tax_residence.ccaa",
             value="madrid",
-            valid_from=date(2026, 1, 2),
-            valid_to=date(2026, 1, 1),
+            valid_from=date(filing_year_envelope().horizon, 1, 2),
+            valid_to=date(filing_year_envelope().horizon, 1, 1),
         )
 
 
@@ -109,11 +110,11 @@ def test_leading_zero_identifier_stays_a_string() -> None:
     ("payload_json", "expected"),
     (
         (
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.50")).model_dump_json(),
             Decimal("0.50"),
         ),
         (
-            '{"path": "usage_ratios.business_ratio", "value": "0"}',
+            '{"path": "taxpayer_type.incn_prior_12_months", "value": "0"}',
             Decimal("0"),
         ),
     ),
@@ -136,13 +137,13 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero(
 
 
 def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
-    created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
+    created_at = datetime(1980, 5, 7, 10, 0, tzinfo=UTC)
     profile = create_user_profile_record(
         context=_CREATE_CONTEXT,
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.50")),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
         ),
         created_at=created_at,
@@ -163,7 +164,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     )
 
     assert first.canonical_hash == second.canonical_hash
-    assert [fact.path for fact in first.facts] == ["identity.tax_id", "usage_ratios.business_ratio"]
+    assert [fact.path for fact in first.facts] == ["identity.tax_id", "taxpayer_type.incn_prior_12_months"]
 
     with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
         create_user_profile_snapshot(
@@ -174,7 +175,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
 
 
 def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
-    created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
+    created_at = datetime(1980, 5, 7, 10, 0, tzinfo=UTC)
     facts = (
         UserProfileFact(path="identity.name", value="Ada", source="manual_cli"),
         UserProfileFact(path="identity.name", value="Babbage", source="modelo_036_import"),

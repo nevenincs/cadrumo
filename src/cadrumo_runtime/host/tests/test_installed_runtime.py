@@ -29,9 +29,10 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from ...adapters.boot_record import RuntimeBootRecordUnavailable, read_runtime_boot_record
-from ...adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 pytestmark = [
     pytest.mark.integration,
@@ -77,7 +78,7 @@ def _wait(process: _Process, *, timeout: float) -> int:
     try:
         return process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+        raise RefusalError(RefusalCode.TIMEOUT) from None
 
 
 def launch(
@@ -174,7 +175,7 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
             if _active(launched):
                 with pytest.raises(RefusalError) as waiting:
                     _wait(process, timeout=0)
-                assert waiting.value.reason is RefusalCode.DEADLINE_EXCEEDED
+                assert waiting.value.reason is RefusalCode.TIMEOUT
             else:
                 assert _wait(process, timeout=0) == ExitReason.OWNER_BUSY
         first_boot = statuses[0].runtime_boot_id

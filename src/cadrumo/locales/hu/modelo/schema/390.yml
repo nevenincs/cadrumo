@@ -354,94 +354,14 @@ modelo:
           label: Kiegészítő oldal jelölése
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 1: végzett tevékenység'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 1: CNAE-kód'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 1: ügyletek összege'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 1: levonási jogot biztosító ügyletek összege'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 1: prorrata százaléka'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Add meg a G vagy E értéket, vagy hagyja üresen.
-          label: 'Prorrata 1: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 2: végzett tevékenység'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 2: CNAE-kód'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 2: ügyletek összege'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 2: levonási jogot biztosító ügyletek összege'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 2: prorrata százaléka'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Add meg a G vagy E értéket, vagy hagyja üresen.
-          label: 'Prorrata 2: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 3: végzett tevékenység'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 3: CNAE-kód'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 3: ügyletek összege'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 3: levonási jogot biztosító ügyletek összege'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 3: prorrata százaléka'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Add meg a G vagy E értéket, vagy hagyja üresen.
-          label: 'Prorrata 3: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 4: végzett tevékenység'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 4: CNAE-kód'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 4: ügyletek összege'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 4: levonási jogot biztosító ügyletek összege'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 4: prorrata százaléka'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Add meg a G vagy E értéket, vagy hagyja üresen.
-          label: 'Prorrata 4: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 5: végzett tevékenység'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 5: CNAE-kód'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 5: ügyletek összege'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 5: levonási jogot biztosító ügyletek összege'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 5: prorrata százaléka'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Add meg a G vagy E értéket, vagy hagyja üresen.
-          label: 'Prorrata 5: prorrata típusa'
       casilla:
         continuidad:
           filing-year:
@@ -601,6 +521,56 @@ modelo:
           iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota:
             label: Fordított adózású belföldi és Közösségen belüli ügyletek levonásainak
               helyesbítése - levonható adóösszeg (a hivatalos 62. rovat része)
+          iva-anual-prorrata-actividad-1-codigo-cnae:
+            label: 'Prorrata 1: CNAE-kód'
+          iva-anual-prorrata-actividad-1-importe-con-derecho:
+            label: 'Prorrata 1: levonási jogot biztosító ügyletek összege'
+          iva-anual-prorrata-actividad-1-importe-operaciones:
+            label: 'Prorrata 1: ügyletek összege'
+          iva-anual-prorrata-actividad-1-porcentaje:
+            label: 'Prorrata 1: prorrata százaléka'
+          iva-anual-prorrata-actividad-1-tipo:
+            label: 'Prorrata 1: prorrata típusa'
+          iva-anual-prorrata-actividad-2-codigo-cnae:
+            label: 'Prorrata 2: CNAE-kód'
+          iva-anual-prorrata-actividad-2-importe-con-derecho:
+            label: 'Prorrata 2: levonási jogot biztosító ügyletek összege'
+          iva-anual-prorrata-actividad-2-importe-operaciones:
+            label: 'Prorrata 2: ügyletek összege'
+          iva-anual-prorrata-actividad-2-porcentaje:
+            label: 'Prorrata 2: prorrata százaléka'
+          iva-anual-prorrata-actividad-2-tipo:
+            label: 'Prorrata 2: prorrata típusa'
+          iva-anual-prorrata-actividad-3-codigo-cnae:
+            label: 'Prorrata 3: CNAE-kód'
+          iva-anual-prorrata-actividad-3-importe-con-derecho:
+            label: 'Prorrata 3: levonási jogot biztosító ügyletek összege'
+          iva-anual-prorrata-actividad-3-importe-operaciones:
+            label: 'Prorrata 3: ügyletek összege'
+          iva-anual-prorrata-actividad-3-porcentaje:
+            label: 'Prorrata 3: prorrata százaléka'
+          iva-anual-prorrata-actividad-3-tipo:
+            label: 'Prorrata 3: prorrata típusa'
+          iva-anual-prorrata-actividad-4-codigo-cnae:
+            label: 'Prorrata 4: CNAE-kód'
+          iva-anual-prorrata-actividad-4-importe-con-derecho:
+            label: 'Prorrata 4: levonási jogot biztosító ügyletek összege'
+          iva-anual-prorrata-actividad-4-importe-operaciones:
+            label: 'Prorrata 4: ügyletek összege'
+          iva-anual-prorrata-actividad-4-porcentaje:
+            label: 'Prorrata 4: prorrata százaléka'
+          iva-anual-prorrata-actividad-4-tipo:
+            label: 'Prorrata 4: prorrata típusa'
+          iva-anual-prorrata-actividad-5-codigo-cnae:
+            label: 'Prorrata 5: CNAE-kód'
+          iva-anual-prorrata-actividad-5-importe-con-derecho:
+            label: 'Prorrata 5: levonási jogot biztosító ügyletek összege'
+          iva-anual-prorrata-actividad-5-importe-operaciones:
+            label: 'Prorrata 5: ügyletek összege'
+          iva-anual-prorrata-actividad-5-porcentaje:
+            label: 'Prorrata 5: prorrata százaléka'
+          iva-anual-prorrata-actividad-5-tipo:
+            label: 'Prorrata 5: prorrata típusa'
           iva-anual-reconciliacion-deducible-303:
             label: Éves egyeztetés - a 303-as bevallásokban bevallott levonható ÁFA
           iva-anual-reconciliacion-devengada-303:

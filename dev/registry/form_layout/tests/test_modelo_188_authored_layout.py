@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormCellKind, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -13,10 +14,15 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("revision_id", ["2022", "2023-y-siguientes"])
-def test_summary_preserves_sign_rows_and_has_no_negative_retention_box(revision_id: str) -> None:
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 188 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("188")[position].id)
+
+
+@pytest.mark.parametrize("position", [0, 1])
+def test_summary_preserves_sign_rows_and_has_no_negative_retention_box(position: int) -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188"))
-    revision = modelo.revisions[revision_id]
+    revision = modelo.revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert layout.seed_source.value == "authored"
@@ -32,7 +38,7 @@ def test_summary_preserves_sign_rows_and_has_no_negative_retention_box(revision_
 
 def test_nonpositive_recipient_count_label_includes_zero_bases() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188"))
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_edition(1)]
     count = next(c for c in revision.casillas if c.id == "04")
     assert "negativa o cero" in count.get_label("es")
     assert "una vez por cada registro" in (count.get_help("es") or "")
@@ -40,10 +46,10 @@ def test_nonpositive_recipient_count_label_includes_zero_bases() -> None:
 
 def test_recipient_values_preserve_signed_money_and_reject_invalid_codes() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188"))
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_edition(1)]
     fields = {str(c.id): c for c in revision.casillas}
     assert len(fields) == 32
-    assert {str(c.id) for c in modelo.revisions["2022"].casillas} == set(fields)
+    assert {str(c.id) for c in modelo.revisions[_edition(0)].casillas} == set(fields)
     for identifier in ("rentas", "informacion-adicional", "base-retenciones"):
         field = fields[f"perceptor.{identifier}"]
         assert field.data_type.value == "money"
@@ -66,7 +72,7 @@ def test_recipient_values_preserve_signed_money_and_reject_invalid_codes() -> No
 
 
 def test_declarant_identity_and_amendments_are_typed_without_invented_receipts() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188")).revisions["2023-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188")).revisions[_edition(1)]
     fields = {str(c.id): c for c in revision.casillas}
     assert fields["decl.nif"].data_type.value == "nif"
     assert fields["decl.ejercicio"].data_type.value == "year"
@@ -91,10 +97,10 @@ def test_declarant_identity_and_amendments_are_typed_without_invented_receipts()
     )
 
 
-def test_2022_does_not_import_2023_province_or_minor_identification_rules() -> None:
+def test_the_older_edition_does_not_import_the_newer_ones_province_or_minor_identification_rules() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/188"))
-    historical = {str(c.id): c for c in modelo.revisions["2022"].casillas}
-    current = {str(c.id): c for c in modelo.revisions["2023-y-siguientes"].casillas}
+    historical = {str(c.id): c for c in modelo.revisions[_edition(0)].casillas}
+    current = {str(c.id): c for c in modelo.revisions[_edition(1)].casillas}
     for fields, accepts_la_palma in ((historical, False), (current, True)):
         constraint = fields["perceptor.provincia"].constraints
         assert constraint is not None
@@ -110,4 +116,4 @@ def test_2022_does_not_import_2023_province_or_minor_identification_rules() -> N
     for identifier in historical:
         assert historical[identifier].continuidad_id == current[identifier].continuidad_id
         assert "aeat-dr-188-2023" not in historical[identifier].source_refs
-    assert modelo.revisions["2022"].form_layouts[0].design_sources[1].source_ref == "aeat-dr-188-2017"
+    assert modelo.revisions[_edition(0)].form_layouts[0].design_sources[1].source_ref == "aeat-dr-188-2017"

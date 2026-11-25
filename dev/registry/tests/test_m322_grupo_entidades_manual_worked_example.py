@@ -73,21 +73,17 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .authored_edition_support import manual_oracle_payloads
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import general_settlement_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -117,33 +113,7 @@ _PERIOD = "03"
 
 def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculationResult:
     snapshot = compiled_bundled_authority().snapshot("322", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
-    observations = (
-        IvaLedgerObservation(
-            ledger_id="devengado-general",
-            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
-            category=IvaCategory("domestic_general"),
-            rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection.from_registry("repercutido"),
-            base_amount=Decimal("0"),
-            iva_amount=devengado,
-            observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        ),
-        IvaLedgerObservation(
-            ledger_id="deducible-general",
-            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
-            category=IvaCategory("domestic_general"),
-            rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection.from_registry("soportado"),
-            base_amount=Decimal("0"),
-            iva_amount=deducible,
-            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_provenance=_deduction_provenance(
-                IvaDeductionFactKind.from_registry("domestic_current"),
-                source_locator="invoice:deducible-general",
-            ),
-            observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        ),
-    )
+    observations = general_settlement_observations(exercise=_MANUAL_EXERCISE, devengado=devengado, deducible=deducible)
     binding_values = dict(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations))
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(

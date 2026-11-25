@@ -32,7 +32,13 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.projection_pages import ProjectionPage
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    FrontendRefusedError,
+)
+
+from .bounded_pages import REPLY_BYTES, ROWS_MAX
+from .view_register import VIEW_PAGE_MAX
 
 
 class _FieldSchema(TypedDict):
@@ -46,7 +52,7 @@ class _FieldSchema(TypedDict):
     maxLength: NotRequired[int]
     pattern: NotRequired[str]
     format: NotRequired[str]
-    items: NotRequired[dict[str, str]]
+    items: NotRequired[dict[str, object]]
 
 
 class _ToolSchema(TypedDict):
@@ -112,6 +118,11 @@ PERSON_ACT_REMEDY: Final = (
 )
 """What a call refused as the person's own act tells the agent to do."""
 
+PERSON_ACT_DENIAL_CODES: Final = frozenset(
+    {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}
+)
+"""Denial codes that mean only the person's own act can proceed, and so share one remedy."""
+
 PROFILE_CHANGED_REMEDY: Final = (
     "The person is now signed in to another profile than the one this agent session served, so this session is "
     "over and nothing of either profile is reachable through it. Ask the person to start a new agent session "
@@ -134,7 +145,7 @@ def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | N
     """
     if code == AccessDenialCode.PROFILE_MISMATCH.value:
         return PROFILE_CHANGED_REMEDY
-    if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+    if code in PERSON_ACT_DENIAL_CODES:
         return PERSON_ACT_REMEDY
     if code == AccessDenialCode.PRIVILEGE_EXPANSION.value:
         return (
@@ -210,13 +221,18 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "authority",
         "Read bundled public reference data from one pinned published tax authority generation, with the content "
         "the command line prints as JSON. modelos lists the registry's modelos (filing_year and domain narrow it); "
-        "support is the per-modelo capability matrix; describe, casillas, casilla (named by casilla) and formulas "
-        "read one modelo: give period alone for its latest revision, or filing_year with period to compose an exact "
-        "one (as_of needs the exact form); casillas narrows by input_kind, required, form_number and casilla_number; "
-        "bindings lists a modelo's bindings for a filing_year; categories lists the spending and IRPF category "
-        "vocabularies; portals lists the AEAT portal catalogue (narrow it by category or modelo, not both) and "
-        "portal reads one by id; auth_providers lists the sign-in providers; apoderado_scopes lists the "
-        "representative scopes. A ceded autonomic tax such as 600 or 650 is answered with its regional redirect",
+        "support is the per-modelo capability matrix (modelo narrows it to one and pages its renames); describe, "
+        "casillas, casilla (named by casilla) and formulas read one modelo: give period alone for its latest "
+        "revision, or filing_year with period to compose an exact one (as_of needs the exact form); casillas "
+        "narrows by input_kind, required, form_number and casilla_number; bindings lists a modelo's bindings for a "
+        "filing_year; categories lists the spending and IRPF category vocabularies; portals lists the AEAT portal "
+        "catalogue (narrow it by category or modelo, not both) and portal reads one by id; auth_providers lists "
+        "the sign-in providers; apoderado_scopes lists the representative scopes. A ceded autonomic tax such as "
+        "600 or 650 is answered with its regional redirect. A list is one page of at most "
+        f"{REPLY_BYTES // 1000} KB, never the whole: paging gives total and next_call, so pass next_cursor as "
+        "cursor for the next page, limit for a shorter one, and narrow before you page. casillas and formulas "
+        "rows are summaries; read one casilla whole with casilla. A formula expression too long for one reply "
+        "comes as formula_expression_json in windows, to join in order",
         _schema(
             {
                 "query": {
@@ -250,6 +266,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
                 "casilla_number": _TEXT,
                 "category": {"type": "string", "enum": [category.value for category in PortalCategory]},
                 "portal": _TEXT,
+                "limit": {"type": "integer", "minimum": 1, "maximum": ROWS_MAX},
+                "cursor": {"type": "integer", "minimum": 0},
             },
         ),
         _reads("Read published tax reference data"),
@@ -257,9 +275,41 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "corpus_search",
         "Search the bundled BOE/AEAT legal corpus and approved tax terminology; "
-        "an exact citation id resolves to its published verbatim text",
-        _schema({"query": _TEXT}, {"limit": {"type": "integer", "minimum": 1, "maximum": 50}}),
+        "an exact citation id resolves to its published verbatim text, in windows of at most "
+        f"{REPLY_BYTES // 1000} KB when it is longer: pass paging.next_cursor as cursor for the next window",
+        _schema(
+            {"query": _TEXT},
+            {"limit": {"type": "integer", "minimum": 1, "maximum": 50}, "cursor": {"type": "integer", "minimum": 0}},
+        ),
         _reads("Search the bundled legal corpus"),
+    ),
+    (
+        "views",
+        "Find the views of Cadrumo's window a link can open, and check a link before you "
+        "write one. A link is cadrumo://view/{id}, optionally with a query of the view's declared params and "
+        "prefer=gui, for example cadrumo://view/ledger/invoices?select={invoice id}: lowercase, at "
+        "most 512 characters, no profile, no fragment, no percent-encoding, each key once. A link only shows, "
+        "selects or focuses; it grants nothing. Pass query to search labels, keywords and ids; id for one view "
+        "exactly (not_found for an id that names none, including a retired one or one no surface implements yet); "
+        "link to check a whole link, "
+        "answered valid with its parts and opens (the surface and view it opens by the register's declared "
+        "surfaces, the fallback none or ancestor, whether its params are kept and whether the "
+        "person is told it opened other than asked) or invalid with the parser's reason, "
+        "or not_implemented when it opens nowhere; or nothing to list "
+        "every view. Each "
+        "view carries id, parent, surfaces (gui is the window), params (each name "
+        "with its value kind, alphabet and exact length), keywords and label in the profile's language, label_key "
+        "and the link that opens it. Copy the links operation results carry rather than composing record links",
+        _schema(
+            {},
+            {
+                "query": _TEXT,
+                "id": _TEXT,
+                "link": _TEXT,
+                "limit": {"type": "integer", "minimum": 1, "maximum": VIEW_PAGE_MAX},
+            },
+        ),
+        _reads("Find views and check links"),
     ),
     (
         "search",
@@ -323,11 +373,14 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "A refusal with code subject_busy means an earlier operation of this definition on the same subject has "
         "not settled, and holder_operation_id names it; signing in again changes nothing, so report it to the "
         "person with that id rather than retrying. "
+        "A submitted or unresolved reply carries page: the workspace view that shows the operation's records, "
+        "with url, a cadrumo://view link for the person to open it; it is navigation, not evidence of a change. "
         "Every call submits a new operation, so two identical calls run twice. "
         "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
         "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "
-        "interaction is never answered automatically. The wait bounds idle waiting, not an in-flight "
-        "runtime exchange. start=false does not wait. Never resubmit to obtain a result. "
+        "interaction is never answered automatically. "
+        "The wait bounds idle waiting, not an in-flight runtime exchange. "
+        "start=false does not wait. Never resubmit to obtain a result. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
         "unless it carried an idempotency_key, and then repeat it only with that same key",
@@ -362,8 +415,11 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "code beside it repeats that refusal token, and error_detail beside it carries what the operation "
         "recorded about why, which is the registered error code, the message key, the context and any "
         "precondition verdict the command line prints; "
-        "when that verdict names its recovery, recovery_action_id carries the action's identifier, for example "
-        "operator.provision.browser when the browser needs setting up",
+        "when that verdict names its recovery, recovery_action_id carries the action's identifier. "
+        "A succeeded result whose verdicts name a recovery, such as a batch that refused some of its items, "
+        "carries recovery_action_ids, each action once. A succeeded result that names exactly "
+        "one transaction or invoice carries record: its view, params with select, and link, the cadrumo://view "
+        "link that opens that record for the person",
         _schema({"result": _DOC}),
         _reads("Read an operation's result"),
     ),
@@ -383,7 +439,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     ),
     (
         "respond",
-        "Inspect, apply, or reject a pending review owned by this admitted session",
+        "Inspect, apply, or reject a pending review owned by this admitted session. A review that a verified "
+        "person has claimed cannot be answered by MCP",
         _schema(
             {
                 "action": {"type": "string", "enum": ["inspect", "apply", "reject"]},
@@ -518,12 +575,17 @@ def sign_in_refusal_facts(sign_in: SignInRefusal | None) -> dict[str, Any]:
 def refusal_facts(error: Exception) -> dict[str, Any]:
     """Return the public facts a refusal carries beside its code, so no sign-in refusal collapses to it.
 
-    A busy subject also names the unsettled operation that holds it, for the person to follow.
+    A busy subject also names the unsettled operation that holds it, for the person to follow. A change
+    the lost worker was serving reports its unknown effect, and its operation when named, so it is not repeated.
     """
     if isinstance(error, FrontendRefusedError):
         facts = sign_in_refusal_facts(error.sign_in)
         if error.holder_operation_id is not None:
             facts["holder_operation_id"] = error.holder_operation_id
+        if isinstance(error, CustodyRecoveringEffectUnknownError):
+            facts["effect"] = OperationEffect.UNKNOWN.value
+            if error.operation_id is not None:
+                facts["operation_id"] = error.operation_id
         return facts
     return {}
 
@@ -576,6 +638,24 @@ def _observed_projection(value: dict[str, Any]) -> dict[str, Any] | None:
     return None if observation is None else _result_object(observation.get("projection"))
 
 
+def _unresolved_instruction(value: dict[str, Any]) -> str:
+    """Explain which retained identity can recover a reply whose effect is not known."""
+    if "operation_id" in value:
+        return (
+            f"{_NOT_KNOWN}. {_NEVER_REPEAT}: read the operation named by operation_id with observe, and with "
+            "result once it has settled."
+        )
+    if "definition_id" in value:
+        return (
+            f"{_NOT_KNOWN}: the reply that carried the operation's id was lost, and request_id and "
+            f"definition_id identify what was sent. {_NEVER_REPEAT}, because a repeat submits a second "
+            "operation, unless it carried an idempotency_key: then a repeat with the same key, operation and "
+            "payload answers with the operation already recorded. Otherwise read the records the operation "
+            "writes to learn whether it ran, and tell the person the outcome is not known."
+        )
+    return f"{_NOT_KNOWN}. {_NEVER_REPEAT}, and tell the person the outcome is not known."
+
+
 def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
     """Say what to do about a reply whose effect is not known, or ``None`` where the reply settles it.
 
@@ -584,20 +664,7 @@ def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
     instead: the operation, or the request alone.
     """
     if value.get("outcome") == "unresolved":
-        if "operation_id" in value:
-            return (
-                f"{_NOT_KNOWN}. {_NEVER_REPEAT}: read the operation named by operation_id with observe, and with "
-                "result once it has settled."
-            )
-        if "definition_id" in value:
-            return (
-                f"{_NOT_KNOWN}: the reply that carried the operation's id was lost, and request_id and "
-                f"definition_id identify what was sent. {_NEVER_REPEAT}, because a repeat submits a second "
-                "operation, unless it carried an idempotency_key: then a repeat with the same key, operation and "
-                "payload answers with the operation already recorded. Otherwise read the records the operation "
-                "writes to learn whether it ran, and tell the person the outcome is not known."
-            )
-        return f"{_NOT_KNOWN}. {_NEVER_REPEAT}, and tell the person the outcome is not known."
+        return _unresolved_instruction(value)
     unsettled = [
         step
         for step in _EXECUTE_STEPS

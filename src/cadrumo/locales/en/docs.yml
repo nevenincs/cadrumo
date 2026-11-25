@@ -1,10 +1,14 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Gain, loss or excess from a baja in the activity-asset
+        register, added to the box this edition gives it
       afiliado_cotizacion: from the member contribution calendar you supplied
       atribucion_member: from the atribución de rentas members you recorded
       bienes_inversion_regularizacion: from your bienes de inversión regularisation
       borrador: from AEAT data (the borrador)
+      capital_mobiliario_position: from the ledger rows linked to your savings positions
+        and your payers' certificates
       collectible_invoice: from the invoices you issued
       design_constant: from a constant fixed by the AEAT record design
       foreign_asset: from your foreign-asset records
@@ -21,7 +25,7 @@ docs:
       ledger_renta_gastos_estimacion_directa_aggregation: from your expense records
         under estimación directa
       ledger_renta_gastos_pago_fraccionado_aggregation: from your expense records
-        for the pago fraccionado
+        for the advance payment
       ledger_renta_income_aggregation: from your income entries
       ledger_transaction: from your records
       m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
@@ -31,16 +35,22 @@ docs:
       manual_input: from a value you supply
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing
+      prevision_social_contribution: from the contributions your pension contribution
+        certificates report
       profile: from your taxpayer profile
+      prorrata_register_activity: from the activities in your prorrata register
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
       relation_prefill: from a related modelo's result
-      retenciones_aggregation: from the retenciones you recorded
+      renta_inmueble: from your let properties, their leases and the ledger rows linked
+        to them
+      retencion_soportada: from the withholding your payers' certificates report
+      retenciones_aggregation: from the withholdings you recorded
       withholding: from the withholdings you recorded
-      withholding296: from the modelo 296 withholdings per perceptor
+      withholding296: from the modelo 296 withholdings per recipient
     cadence:
-      ad_hoc: Filed when the event occurs
       annual: Filed annually
+      event: Filed when the event occurs
       monthly: Filed monthly
       profile_based: Filed when your profile requires it
       quarterly: Filed quarterly
@@ -69,7 +79,7 @@ docs:
       required: Required
       revisions: Revisions
       sections_nav: Sections of this modelo
-      segmento: Segmento {segmento}
+      segmento: Segment {segmento}
       semantic_role: Semantic role
       sources: Sources
     data_type:
@@ -346,23 +356,24 @@ docs:
       show_output: Show output
   terminology:
     cli:
-      authority: Source authority when the field is ‘source’.
+      authority: Source authority when the field is `source`.
       check: Report drift without writing; exit non-zero when drift exists.
       concept_id: Identifier of the concept to manage.
       domain: 'IATE: allowed set of subject fields (repeatable).'
       dry_run: Report what would be seeded without writing.
       export_path: Path to the downloaded source export file.
-      field_name: short_description | definition | scope_note | source | term.
-      field_value: Field value (citation for ‘source’; label for ‘term’).
+      field_name: '`short_description` | `definition` | `scope_note` | `source` |
+        `term`.'
+      field_value: Field value (citation for `source`; label for `term`).
       help: Terminology handbook maintenance.
       language: Language-section code.
       min_reliability: 'IATE: minimum reliability code to retain (>= 3).'
-      relation_kind: broader | related.
+      relation_kind: '`broader` | `related`.'
       relation_source: Identifier of the source concept for the relation.
       relation_target: Identifier of the target concept.
       remove_relation: Remove the relation instead of adding it.
       remove_term_label: Exact label of the term to remove.
       replaced_by: Successor concept identifier (required).
       retire_concept: Identifier of the concept to retire.
-      seed_source: 'Tier-A source: iate | ubterm (eurovoc after verification).'
-      term_status: Term status when the field is ‘term’.
+      seed_source: 'Tier-A source: `iate` | `ubterm` (`eurovoc` after verification).'
+      term_status: Term status when the field is `term`.

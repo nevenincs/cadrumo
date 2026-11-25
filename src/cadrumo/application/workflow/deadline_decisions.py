@@ -1,0 +1,389 @@
+"""Deadline decisions and context for the filing workflow."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date, datetime
+
+from ...core.filing_timeliness import FilingTimeliness
+from ...core.logging import get_logger
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
+from ...core.period import Period
+from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryError
+from ...domain.deadlines.effective_close import resolve_filing_timeliness
+from ...domain.deadlines.errors import DeadlineValidationError
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
+from .abort import WorkflowAbortReason
+from .deadline_stage import abort_missing_deadline_obligation
+from .engine_helpers import (
+    DeadlineRole,
+    FilingWindowState,
+)
+from .errors import WorkflowAbortSignalError, WorkflowError
+from .run_models import (
+    WorkflowDeadlineContextDetails,
+    WorkflowObligationFacts,
+    WorkflowPurpose,
+    WorkflowStage,
+    WorkflowStep,
+)
+
+_LOG = get_logger(__name__)
+
+type WorkflowDeadlineTarget = ModeloDeadline | WorkflowObligationFacts
+
+
+def no_recovery_verdict(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    provenance: ActionEvidenceProvenance,
+    values: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> PreconditionVerdict:
+    """Build one closed non-actionable workflow precondition outcome."""
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=evidence_id,
+        facts=values,
+        provenance=provenance,
+        outcome=outcome,
+    )
+
+
+_WINDOW_CONDITION_ID = "workflow.deadline.filing_window_open"
+_WINDOW_EVIDENCE_ID = "workflow.deadline.window"
+
+
+def _window_not_yet_open_verdict(obligation: ModeloDeadline) -> PreconditionVerdict:
+    """Name the local export as the door while the filing window has not opened.
+
+    Local filing waits for the window, but exporting the verified revision does
+    not: the artefact is prepared now and carried to AEAT once the window opens.
+    The window's opening date rides the evidence so the served words can state it.
+    The export needs a destination only the operator can give, so that argument
+    stays missing.
+    """
+    modelo = obligation.modelo.value
+    filing_year = obligation.period.filing_year
+    period_code = obligation.period.registry_token
+
+    def evidence_argument(name: str, key: str, value: str | int) -> ActionArgumentBinding:
+        return ActionArgumentBinding(
+            argument_name=name,
+            status=ActionArgumentStatus.RESOLVED,
+            value=value,
+            source=ActionArgumentSource.CONDITION_EVIDENCE,
+            source_key=key,
+            source_evidence_id=_WINDOW_EVIDENCE_ID,
+        )
+
+    return PreconditionVerdict(
+        failed_condition_id=_WINDOW_CONDITION_ID,
+        evidence=(
+            ConditionEvidence(
+                condition_id=_WINDOW_CONDITION_ID,
+                evidence_id=_WINDOW_EVIDENCE_ID,
+                provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                values={
+                    "filing_window": FilingWindowState.FUTURE.value,
+                    "modelo": modelo,
+                    "filing_year": filing_year,
+                    "period_code": period_code,
+                    "opens_on": obligation.opens_on.isoformat(),
+                },
+            ),
+        ),
+        action=ActionReference(action_id="operator.modelo.export"),
+        argument_bindings=(
+            evidence_argument("modelo", "modelo", modelo),
+            ActionArgumentBinding(argument_name="output", status=ActionArgumentStatus.MISSING),
+            evidence_argument("period", "period_code", period_code),
+            evidence_argument("year", "filing_year", filing_year),
+        ),
+        missing_argument_names=("output",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
+def _filing_window_closed_on(
+    *,
+    obligation: ModeloDeadline,
+    today: date,
+    authority_operation: PinnedAuthorityOperation,
+) -> date | None:
+    """Return the effective close date when the window has genuinely closed, else ``None``.
+
+    The obligation already carries the close its filer actually has: the engine
+    resolves the business-day shift once (Ley 39/2015 art. 30.5 through Ley
+    58/2003 art. 7.2) and publishes it. Comparing the registry's declared close
+    against ``today`` instead refused a filing on the shifted day that the
+    calculate posture, the declaration editor, the filing calendar and the
+    filing receipt all call in time.
+
+    An effective close the engine could not establish is not proof that the
+    window has closed: an unknown close is only a lower bound, so the window is
+    reported as still open and nothing is judged after it.
+
+    ``authority_operation`` is the caller's pin, required so this decision can
+    never answer from a generation other than the one the run reads.
+    """
+    if obligation.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        return None
+    try:
+        timeliness = resolve_filing_timeliness(
+            str(obligation.modelo),
+            obligation.period.filing_year,
+            obligation.period,
+            presented_on=today,
+            operation=authority_operation,
+        )
+    except (RegistryError, DeadlineValidationError):
+        # The registry or the shift could not be read, so lateness is unknown
+        # rather than established. The window stays open; the local filing
+        # receipt records its own posture as unknown for the same reason.
+        _LOG.debug(
+            "filing window lateness unresolved; treating the window as open",
+            extra={
+                "modelo": str(obligation.modelo),
+                "filing_year": obligation.period.filing_year,
+                "period": obligation.period.registry_token,
+            },
+            exc_info=True,
+        )
+        return None
+    if timeliness is not FilingTimeliness.EXTEMPORANEA:
+        return None
+    return obligation.adjusted_closes_on
+
+
+def decide_filing_deadline(
+    *,
+    obligation: ModeloDeadline | None,
+    target_modelo: str | None,
+    target_period: Period | None,
+    today: date,
+    started: datetime,
+    steps: list[WorkflowStep],
+    purpose: WorkflowPurpose,
+    authority_operation: PinnedAuthorityOperation,
+) -> WorkflowDeadlineTarget:
+    """Record the selected deadline and enforce the workflow purpose.
+
+    ``authority_operation`` is required: the lateness decision reads the
+    registry, and a decision taken on a generation other than the run's own is
+    a different answer about the same filing.
+    """
+    if purpose is WorkflowPurpose.VERIFY:
+        return _record_verify_deadline_context(
+            obligation=obligation,
+            target_modelo=target_modelo,
+            target_period=target_period,
+            today=today,
+            started=started,
+            steps=steps,
+        )
+
+    if obligation is None:
+        abort_missing_deadline_obligation(started=started, steps=steps)
+
+    if obligation.opens_on > today:
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started_at=started,
+                ended_at=now(),
+                success=False,
+                summary_locale_key="application.workflow.steps.deadline_future",
+                details=WorkflowDeadlineContextDetails(
+                    kind="deadline_context",
+                    modelo=obligation.modelo,
+                    period=obligation.period,
+                    opens_on=obligation.opens_on,
+                    closes_on=obligation.closes_on,
+                    filing_window=FilingWindowState.FUTURE,
+                    deadline_role=DeadlineRole.BINDING,
+                ),
+                precondition_verdict=_window_not_yet_open_verdict(obligation),
+            ),
+        )
+        raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
+
+    closed_on = _filing_window_closed_on(
+        obligation=obligation,
+        today=today,
+        authority_operation=authority_operation,
+    )
+    if closed_on is not None:
+        if target_modelo is not None and target_period is not None:
+            # A targeted but closed-window obligation that genuinely
+            # existed is filed locally and late (extemporánea, con recargo)
+            # rather than refused; `work file` contacts AEAT zero times.
+            steps.append(
+                WorkflowStep(
+                    stage=WorkflowStage.COMPUTING_DEADLINES,
+                    started_at=started,
+                    ended_at=now(),
+                    success=True,
+                    summary_locale_key="application.workflow.steps.deadline_overdue",
+                    details=WorkflowDeadlineContextDetails(
+                        kind="deadline_context",
+                        modelo=obligation.modelo,
+                        period=obligation.period,
+                        closes_on=closed_on,
+                        overdue=True,
+                        extemporanea=True,
+                    ),
+                ),
+            )
+            return obligation
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started_at=started,
+                ended_at=now(),
+                success=False,
+                summary_locale_key="application.workflow.steps.deadline_closed",
+                details=WorkflowDeadlineContextDetails(
+                    kind="deadline_context",
+                    modelo=obligation.modelo,
+                    period=obligation.period,
+                    closes_on=closed_on,
+                ),
+                precondition_verdict=no_recovery_verdict(
+                    condition_id="workflow.deadline.filing_window_open",
+                    evidence_id="workflow.deadline.window",
+                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                    values={
+                        "filing_window": FilingWindowState.CLOSED.value,
+                        "modelo": obligation.modelo.value,
+                        "filing_year": obligation.period.filing_year,
+                        "period_code": obligation.period.registry_token,
+                    },
+                    outcome=NoRecoveryOutcome.TERMINAL,
+                ),
+            ),
+        )
+        raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DEADLINE_PASSED)
+
+    steps.append(
+        WorkflowStep(
+            stage=WorkflowStage.COMPUTING_DEADLINES,
+            started_at=started,
+            ended_at=now(),
+            success=True,
+            summary_locale_key="application.workflow.steps.deadline_open",
+            details=WorkflowDeadlineContextDetails(
+                kind="deadline_context",
+                modelo=obligation.modelo,
+                period=obligation.period,
+                opens_on=obligation.opens_on,
+                closes_on=obligation.closes_on,
+            ),
+        ),
+    )
+    return obligation
+
+
+def _record_verify_deadline_context(
+    *,
+    obligation: ModeloDeadline | None,
+    target_modelo: str | None,
+    target_period: Period | None,
+    today: date,
+    started: datetime,
+    steps: list[WorkflowStep],
+) -> WorkflowDeadlineTarget:
+    """Record the filing-window state for a verify run without aborting.
+
+    Verification of a calculation is independent of the AEAT filing
+    calendar. This
+    helper turns the ``COMPUTING_DEADLINES`` stage into a purely
+    informational step for :attr:`WorkflowPurpose.VERIFY`: it never
+    raises ``NO_PENDING_OBLIGATION`` or ``DEADLINE_PASSED``.
+
+    When a scheduled obligation matches the verify target, its real
+    filing window is surfaced as informational ``details``. When
+    none matches, a context-only :class:`ModeloDeadline` is
+    synthesised so the downstream draft/validation stages still
+    have a ``(modelo, period)`` carrier; the synthetic record is
+    explicitly marked ``NOT_APPLICABLE`` and never reaches a
+    filing path.
+    """
+    if obligation is not None:
+        if obligation.opens_on > today:
+            window_state = FilingWindowState.FUTURE
+        elif obligation.adjusted_closes_on >= today:
+            # The effective close, so the window is not reported shut on a day
+            # the filer may still file.
+            window_state = FilingWindowState.OPEN
+        else:
+            window_state = FilingWindowState.CLOSED
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started_at=started,
+                ended_at=now(),
+                success=True,
+                summary_locale_key="application.workflow.steps.deadline_informational",
+                details=WorkflowDeadlineContextDetails(
+                    kind="deadline_context",
+                    modelo=obligation.modelo,
+                    period=obligation.period,
+                    opens_on=obligation.opens_on,
+                    closes_on=obligation.closes_on,
+                    filing_window=window_state,
+                    deadline_role=DeadlineRole.INFORMATIONAL,
+                ),
+            ),
+        )
+        return obligation
+
+    if target_modelo is None or target_period is None:
+        raise WorkflowError(
+            translated_message="errors.error.error_workflow",
+            context={"workflow": "verify", "explicit_target_supplied": False},
+        )
+    synthetic = WorkflowObligationFacts(
+        modelo=Modelo(target_modelo),
+        period=target_period,
+        opens_on=today,
+        closes_on=today,
+        status=ObligationStatus.NOT_APPLICABLE,
+    )
+    steps.append(
+        WorkflowStep(
+            stage=WorkflowStage.COMPUTING_DEADLINES,
+            started_at=started,
+            ended_at=now(),
+            success=True,
+            summary_locale_key="application.workflow.steps.deadline_absent",
+            details=WorkflowDeadlineContextDetails(
+                kind="deadline_context",
+                modelo=Modelo(target_modelo),
+                period=target_period,
+                filing_window=FilingWindowState.ABSENT,
+                deadline_role=DeadlineRole.INFORMATIONAL,
+            ),
+        ),
+    )
+    return synthetic
+
+
+def persisted_obligation(obligation: WorkflowDeadlineTarget | None) -> WorkflowObligationFacts | None:
+    """Return the locale-neutral durable projection for an in-flight deadline."""
+    if obligation is None or isinstance(obligation, WorkflowObligationFacts):
+        return obligation
+    return WorkflowObligationFacts.from_deadline(obligation)

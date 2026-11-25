@@ -53,11 +53,14 @@ jobs:
 
   merge-gate:
     name: "Check: Merge gate (Linux)"
-    needs: [check-prove-ref, publish-authority]
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
+    # A called workflow may hold no more than its caller grants, and the gate
+    # declares the read of pull request metadata its plan job uses.
+    permissions:
+      contents: read
+      pull-requests: read
     uses: ./.github/workflows/merge-gate.yml
-    with:
-      authority-artifact: cadrumo-registry-authority
 
   # Compiling the authority costs minutes and every prove job below reads the
   # same one, so it is compiled once here and restored everywhere else. Each
@@ -80,7 +83,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Upload the published registry authority
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-registry-authority
           path: |
@@ -400,7 +403,7 @@ jobs:
           sha256sum build/cadrumo-release-cohort.tar.gz > build/cadrumo-release-cohort.tar.gz.sha256
 
       - name: Upload the sealed release cohort
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-release-cohort
           path: |
@@ -441,7 +444,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -466,7 +469,7 @@ jobs:
             --distribution-evidence-dir var/distribution-install-readiness
 
       - name: Upload the distribution-evidence record
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-${{ matrix.row-id }}
           path: var/distribution-install-readiness/*.json
@@ -511,7 +514,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -555,8 +558,6 @@ jobs:
           - id: macos-arm64
             label: macOS arm64
             runner: [self-hosted, macOS, ARM64]
-            expected_os: Darwin
-            expected_arch: arm64
             brew: /opt/homebrew/bin/brew
             prefix: /opt/homebrew
             row_id: homebrew-macos-arm64
@@ -564,8 +565,6 @@ jobs:
           - id: linux-x86_64
             label: Linux x86_64
             runner: [self-hosted, Linux, X64]
-            expected_os: Linux
-            expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-x86-64
@@ -573,24 +572,11 @@ jobs:
           - id: linux-arm64
             label: Linux arm64
             runner: [self-hosted, Linux, ARM64]
-            expected_os: Linux
-            expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-arm64
             make_jobs: "2"
     steps:
-      - name: Verify declared Homebrew release row
-        env:
-          BREW_PATH: ${{ matrix.brew }}
-          EXPECTED_ARCH: ${{ matrix.expected_arch }}
-          EXPECTED_OS: ${{ matrix.expected_os }}
-        run: |
-          test "$(uname -s)" = "$EXPECTED_OS"
-          test "$(uname -m)" = "$EXPECTED_ARCH"
-          test -x "$BREW_PATH"
-          "$BREW_PATH" --version
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -614,7 +600,7 @@ jobs:
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/download
@@ -684,7 +670,7 @@ jobs:
 
       - name: Upload the Homebrew distribution-evidence rows
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-homebrew-${{ matrix.id }}
           path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/distribution-install-readiness/*.json
@@ -692,7 +678,7 @@ jobs:
 
       - name: Upload the Homebrew acquisition bundle
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-homebrew-acquisition-${{ matrix.id }}
           path: cadrumo-homebrew-acquisition-${{ matrix.id }}.tar.gz
@@ -707,45 +693,6 @@ jobs:
     env:
       CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     steps:
-      - name: Verify declared Windows native release row
-        shell: powershell
-        run: |
-          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
-            throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
-          }
-          if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-            throw "scoop is unavailable to the lane user; install Scoop into this runner user's own profile"
-          }
-          if (-not $env:CADRUMO_SCOOP_INSTALL_ROOT) {
-            throw "declare CADRUMO_SCOOP_INSTALL_ROOT for the release lane's installed Scoop prefix"
-          }
-          $scoopRoot = [System.IO.Path]::GetFullPath($env:CADRUMO_SCOOP_INSTALL_ROOT)
-          foreach ($required in @("apps", "buckets", "shims")) {
-            if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot $required) -PathType Container)) {
-              throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
-            }
-          }
-          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-          $principal = New-Object Security.Principal.WindowsPrincipal($identity)
-          if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            throw "the Scoop lane must run as the dedicated non-admin runner user; got elevated identity $($identity.Name)"
-          }
-          # A UAC-filtered administrator token passes IsInRole, so membership is
-          # read from the group by well-known SID and an unreadable group refuses.
-          try {
-            $administrators = @(Get-LocalGroupMember -SID "S-1-5-32-544" -ErrorAction Stop)
-          }
-          catch {
-            throw "cannot determine whether the lane user is an administrator ($($_.Exception.Message))"
-          }
-          $tokenGroups = @($identity.Groups | ForEach-Object { $_.Value })
-          foreach ($member in $administrators) {
-            $memberSid = [string]$member.SID.Value
-            if ($memberSid -eq $identity.User.Value -or $tokenGroups -contains $memberSid) {
-              throw "the Scoop lane must run as the dedicated non-admin runner user; $($identity.Name) is an administrator"
-            }
-          }
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -769,7 +716,7 @@ jobs:
           "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: ${{ env.CADRUMO_SCOOP_ROOT }}/download
@@ -863,7 +810,7 @@ jobs:
 
       - name: Upload the Scoop distribution-evidence rows
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-scoop
           path: ${{ env.CADRUMO_SCOOP_ROOT }}/distribution-install-readiness/*.json
@@ -892,7 +839,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -916,63 +863,16 @@ jobs:
             --with "cadrumo==${INPUT_VERSION#v}" \
             dev/smoke/smoke_check.py
 
-  test-windows-only:
-    name: "Test: Windows-only contracts (Windows)"
+  # Everything that needs a compiler toolchain, a desktop session or Windows
+  # lives in the native lane. It is advisory on a pull request and mandatory
+  # here: the proof needs every one of its jobs.
+  native:
+    name: "Test: Native lane"
     needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 106
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up toolchain
-        uses: ./.github/actions/setup
-        with:
-          authority-artifact: cadrumo-registry-authority
-
-      - name: Windows-only contracts
-        run: just test-windows
-
-      - name: PowerShell action literals
-        if: ${{ !cancelled() }}
-        run: just test-powershell-literal
-
-  test-native-ci:
-    name: "Test: Native package verification (Windows)"
-    needs: [check-prove-ref, publish-authority]
-    if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 150
-    env:
-      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up toolchain
-        uses: ./.github/actions/setup
-        with:
-          authority-artifact: cadrumo-registry-authority
-
-      - name: Require the repository agent-source variable
-        shell: pwsh
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR)) {
-            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory.'
-          }
-
-      - name: Native package verification
-        shell: pwsh
-        run: |
-          just test-native-ci "$env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uses: ./.github/workflows/native.yml
+    with:
+      authority-artifact: cadrumo-registry-authority
 
   check-proven:
     name: "Check: Release proven (Linux)"
@@ -988,8 +888,7 @@ jobs:
       - test-installer-campaign
       - test-homebrew
       - test-scoop
-      - test-windows-only
-      - test-native-ci
+      - native
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
@@ -1081,7 +980,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1143,7 +1042,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1238,7 +1137,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1349,7 +1248,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1449,7 +1348,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1508,7 +1407,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1558,7 +1457,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download

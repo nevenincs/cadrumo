@@ -34,7 +34,7 @@ def test_absent_and_recorded_empty_are_distinguishable(tmp_path: Path) -> None:
     """The assessment refuses on absence and answers on a recorded empty."""
     from ....core.config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         authority = FilingRetentionAuthority()
 
         # Absent: nobody asked. This is what makes a swallowed write safe.

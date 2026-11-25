@@ -72,32 +72,14 @@ def general_m303_filing_evidence(
         filing_year=period.filing_year,
         period=period.registry_token,
     )
-    return FilingInstanceEvidence(
-        m303=M303FilingInstanceEvidence(
-            period=period,
-            joint_return_elected=False,
-            annual_volume_nonzero=False,
-            insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(reference=reference),
-                endpoints=(),
-                activity_rows=(),
-                operaciones_terceros_declarables=None,
-                operaciones_terceros_reference=None,
-            ),
-            regimen_simplificado=regimen_simplificado_filing_evidence(
-                period=period,
-                scope_decision=scope,
-                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-                regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-                    registry_snapshot=snapshot,
-                    scope_decision=scope,
-                ),
-                dana_eligibility=None,
-                operation=operation,
-            ),
+    return general_m303_filing_evidence_from_regimen_snapshot(
+        period,
+        reference=reference,
+        regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=snapshot,
+            scope_decision=scope,
         ),
+        operation=operation,
     )
 
 

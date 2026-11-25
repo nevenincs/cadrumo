@@ -1,0 +1,26 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "iva-special-regime-used-goods"
+domain = "regimen"
+lifecycle = "draft"
+domain_refs = ["iva-category:special_regime_used_goods"]
+created_at = 2026-11-22
+updated_at = 2026-11-22
+
+[language.es]
+short_description = "Régimen especial de los bienes usados, objetos de arte, antigüedades y objetos de colección (REBU), que grava el margen de beneficio."
+
+[language.ca]
+short_description = "Règim especial dels béns usats, objectes d'art, antiguitats i objectes de col·lecció (REBU), que grava el marge de benefici."
+
+[language.en]
+short_description = "Special VAT margin scheme for used goods, works of art, antiques and collectors' items (REBU)."
+
+[language.hu]
+short_description = "A használt cikkekre, műalkotásokra, régiségekre és gyűjteménydarabokra vonatkozó különleges spanyol áfa-árrésrendszer (REBU)."

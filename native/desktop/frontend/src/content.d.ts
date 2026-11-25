@@ -34,8 +34,27 @@ declare module "virtual:desktop-provider-icons" {
   export default artwork;
 }
 
+/** The navigation register as the desktop reads it, generated from
+ * `src/cadrumo_client/contracts/navigation.toml` through its validating
+ * loader. An output of the build directory in use. */
+declare module "virtual:desktop-navigation" {
+  const register: import("./shell/navigation/register").NavigationRegister;
+  export default register;
+}
+
 /** The documentation fixture's own port; null where no development server
  * runs it. */
 declare module "virtual:docs-fixture" {
   export const port: number | null;
+}
+
+/** Defaults projected from the canonical native environment declaration. */
+declare module "virtual:operational-settings" {
+  const settings: Readonly<{
+    shell_toast_ms: number;
+    layout_save_delay_ms: number;
+    focus_wish_ms: number;
+    ledger_toast_ms: number;
+  }>;
+  export default settings;
 }

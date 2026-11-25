@@ -6,12 +6,15 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ..application.ledger.action_ports import LedgerActionPorts
 from ..application.ledger.import_ports import LedgerImportPorts
 from ..application.ledger.read_ports import LedgerReadPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.modelos.work_unit import WorkUnit
+from ..domain.transactions.models import Transaction
 from ..domain.usage_ratios.model import UsageRatioProfile
 
 if TYPE_CHECKING:
@@ -19,8 +22,9 @@ if TYPE_CHECKING:
 
 
 def compose_ledger_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerReadPorts:
-    """Bind only the transaction and event repositories used by ledger reads."""
+    """Bind only the transaction, event and invoice repositories used by ledger reads."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -29,6 +33,7 @@ def compose_ledger_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         operation=operation,
         transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
     )
 
 
@@ -51,7 +56,7 @@ def compose_ledger_action_ports(
     from ..adapters.persistence.storage.attachment import AttachmentStore
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..core.config import load_settings
-    from .adapter_composition import build_ledger_evidence_ports
+    from .adapter_composition_work_ports import build_ledger_evidence_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     settings = load_settings()
@@ -72,9 +77,17 @@ def compose_ledger_action_ports(
     ) -> UsageRatioProfile:
         return load_usage_ratios(bucket_id=bucket_id, operation=operation)
 
+    transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
+
+    def load_profile_facts() -> Mapping[str, str] | None:
+        from .adapter_composition_ports import build_pinned_profile_read_ports
+
+        ports = build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation)
+        return ports.path_values.load_path_values(bucket_id=bucket_id)
+
     return LedgerActionPorts(
         operation=operation,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+        transaction_repository=transaction_repository,
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
         attachment_store=AttachmentStore(objects=objects, bucket_id=bucket_id),
@@ -83,7 +96,31 @@ def compose_ledger_action_ports(
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
         calculation_repository=calculation_persistence.calculation_repository(),
         purchase_invoice_evidence_records=evidence_records,
+        fully_validated_transaction_reader=transaction_repository,
+        rental_profile_facts=load_profile_facts,
     )
+
+
+def load_ledger_rows_for_rental_references(bucket_id: str) -> Iterable[Transaction]:
+    """Read every ledger row of ``bucket_id``, in any lifecycle state, for the profile's removal guard."""
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+
+    return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions.values()
+
+
+def load_work_units_for_record_groups(bucket_id: str) -> Iterable[WorkUnit]:
+    """Read every Modelo work unit of ``bucket_id``, which date the reduction a lease is served."""
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load().work_units.values()
+
+
+def load_entry_option_profile_facts(bucket_id: str, operation: PinnedAuthorityOperation) -> Mapping[str, str] | None:
+    """Read the facts of ``bucket_id``'s profile under ``operation``'s pin, for the rental rows an entry form offers."""
+    from .adapter_composition_ports import build_pinned_profile_read_ports
+
+    ports = build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation)
+    return ports.path_values.load_path_values(bucket_id=bucket_id)
 
 
 def compose_ledger_import_ports() -> LedgerImportPorts:
@@ -93,4 +130,10 @@ def compose_ledger_import_ports() -> LedgerImportPorts:
     return build_ledger_import_ports()
 
 
-__all__ = ["compose_ledger_action_ports", "compose_ledger_import_ports"]
+__all__ = [
+    "compose_ledger_action_ports",
+    "compose_ledger_import_ports",
+    "load_entry_option_profile_facts",
+    "load_ledger_rows_for_rental_references",
+    "load_work_units_for_record_groups",
+]

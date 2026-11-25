@@ -39,7 +39,7 @@ from click.testing import Result
 from ....tests.inventory import FIXTURES_DIR
 from ...tests.ledger_corpus_support import load_active_catalogue, load_corpus_oracle_rules, match_corpus_rule
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -89,7 +89,7 @@ def _us_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
 # --- import + currency preservation -----------------------------------------
 def test_import_succeeds_and_persists_revolut_rows() -> None:
     """The operator imports the multi-currency Revolut export cleanly."""
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     assert rows, "import must persist the Revolut multicurrency rows"
 
 
@@ -100,7 +100,7 @@ def test_native_currency_is_preserved_on_import() -> None:
     -- a GBP invoice reads GBP, a USD invoice reads USD, the EUR top-up
     reads EUR. The currency axis is honest end to end.
     """
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     currencies = {r.get("currency") for r in rows}
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
 
@@ -112,7 +112,7 @@ def test_native_currency_is_preserved_on_import() -> None:
 
 def test_uk_and_us_client_receipts_are_incoming_foreign_income() -> None:
     """The UK/US client receipts land as INCOMING foreign-currency rows."""
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     uk = _uk_rows(rows)
     us = _us_rows(rows)
     assert uk and us, "corpus must carry UK (GBP) and US (USD) client receipts"
@@ -134,7 +134,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
     classification reflects it.
     """
     rules = load_corpus_oracle_rules()
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     targets = _uk_rows(rows)[:1] + _us_rows(rows)[:1]
     assert len(targets) == 2
 
@@ -161,7 +161,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
         )
         assert result.exit_code == 0, result.output
 
-    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
+    by_id = {r.get("transaction_id"): r for r in list_ledger_rows_via_cli() if isinstance(r.get("transaction_id"), str)}
     for row in targets:
         tx_id = row.get("transaction_id")
         assert isinstance(tx_id, str)
@@ -178,7 +178,7 @@ def test_list_json_surfaces_eur_equivalent_and_fx_rate() -> None:
     currency=GBP plus its EUR-equivalent and the applied rate, so the
     operator can audit the conversion from the list surface.
     """
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     uk = _uk_rows(rows)[0]
     # The native currency/amount are present...
     assert uk["currency"] == "GBP"

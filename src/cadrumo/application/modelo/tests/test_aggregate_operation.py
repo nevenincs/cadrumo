@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -22,20 +21,45 @@ from cadrumo.core.aggregation import (
     RetencionClave,
     RetencionScheme,
 )
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
-from ...aggregation.retenciones import RetencionObservation
-from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor, aggregate_per_modelo
+from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ...aggregation.received_invoice_withholding import ReceivedInvoiceWithholdingFindingKind
+from ...aggregation.retencion_observations_repository import RetencionObservationPorts
+from ...aggregation.retenciones import RetencionesAggregation, RetencionObservation
+from ...aggregation.service import (
+    PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+)
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.tests.received_invoice_withholding_support import (
+    NATURAL_PERSON_PROFESSIONAL_NIF,
+    PROFESSIONAL_COMPANY_NIF,
+    EmptyRetencionStore,
+    invoice_catalogue_ports,
+    professional_fee_quarter,
+)
 from ...aggregation.tests.withholding_filer_profile_support import withholding_filer_cadence
 from ...aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
@@ -47,13 +71,15 @@ from ...aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ...cli_exception_preconditions import nested_terminal_precondition_verdict
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
@@ -66,16 +92,30 @@ from ..aggregate_operation import (
     resolve_modelo_aggregate_access,
 )
 from ..aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
-from ..aggregate_projection import ModeloAggregateProjection, ModeloAggregateReport, project_modelo_aggregate_result
+from ..aggregate_projection import (
+    ModeloAggregateInvoiceFindingCount,
+    ModeloAggregateProjection,
+    ModeloAggregateReport,
+    project_modelo_aggregate_result,
+)
 from ..aggregate_public import PublicModeloAggregateCommand
 from ..aggregate_request import ModeloAggregateOperationRequest
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _RESULT_REF = "e" * 64
 _SCOPE = WithholdingWindowScope(modelo="111", period=_PERIOD)
 _BASELINE = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="a" * 64)
@@ -92,16 +132,16 @@ def _capital_capture_request() -> LedgerPaymentWithholdingEvidenceRequest:
         scheme=RetencionScheme("intereses"),
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="payment-2025-02",
+        payment_event_id=f"payment-{_YEAR}-02",
         allocation_id="allocation-1",
         gross_base=Decimal("100.00"),
         withholding_amount=Decimal("19.00"),
         net_settlement=Decimal("81.00"),
         idempotency_key="capture-1",
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Annual detail subject",
-        exigibility_event_id="exigible-2025-01",
-        exigibility_occurred_on=date(2025, 1, 10),
+        exigibility_event_id=f"exigible-{_YEAR}-01",
+        exigibility_occurred_on=date(_YEAR, 1, 10),
     )
 
 
@@ -120,24 +160,6 @@ def _request(
             ledger_payment=ledger_payment,
         ),
     )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
 
 
 class _Operands:
@@ -233,6 +255,7 @@ def _ports(
     window_service: _WindowService | None = None,
     transaction_repository: _TransactionRepository | None = None,
     percepciones: _PercepcionRepository | None = None,
+    invoice_catalogue: InvoiceCatalogueReadPorts | None = None,
 ) -> ModeloAggregateOperationPorts:
     return ModeloAggregateOperationPorts(
         profile_id=str(_PROFILE),
@@ -240,11 +263,16 @@ def _ports(
         retencion_observation_repository=_RetencionRepository(observations),
         percepcion_observation_repository=percepciones or _PercepcionRepository(),
         withholding_observation_service=window_service or _WindowService(observations=observations),
+        invoice_catalogue=invoice_catalogue or _no_invoices(),
     )
 
 
+def _no_invoices() -> InvoiceCatalogueReadPorts:
+    return invoice_catalogue_ports(build_invoice_catalogue(()), TransactionCatalogue.from_transactions(()))
+
+
 def _executor_context(
-    events: _Events, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
+    events: RecordingEvents, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -255,11 +283,23 @@ def _executor_context(
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority_operation,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
     )
+
+
+def _pin_profile_and_preparation(
+    monkeypatch: pytest.MonkeyPatch, executor: ModeloAggregateExecutor, prepared: object
+) -> None:
+    """Pin the active profile in both guards and make the executor prepare the supplied capture."""
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
+        lambda: str(_PROFILE),
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
 
 def _terminal_receipt(
@@ -338,12 +378,12 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
     observation = RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="transaction-1",
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Private subject",
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2025-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
     with pytest.raises(ValueError, match="read from storage"):
         ModeloAggregateOperationRequest.from_inputs(
@@ -351,7 +391,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             command=_command().model_copy(update={"retencion_observations": (observation,)}),
         )
 
-    with pytest.raises(ValidationError, match="only for Modelos 111 and 123"):
+    with pytest.raises(ValidationError, match="not supported for this modelo"):
         ModeloAggregateOperationRequest.from_inputs(
             profile_id=_PROFILE,
             command=_command(modelo="115"),
@@ -361,21 +401,12 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         annual_detail = WithholdingObservation(
             source_id="transaction-1",
-            perceptor_tax_id="11111111H",
-            transaction_date=date(2025, 1, 15),
+            perceptor_tax_id="00001500M",
+            transaction_date=date(_YEAR, 1, 15),
             clave=RetencionClave.from_registry("A"),
             percibido_dinerario=Decimal("100.00"),
             retencion_practicada=Decimal("15.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("100.00"),
         )
         PerModeloAggregationCommand.model_validate(
@@ -394,7 +425,7 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
         operation_period="1T",
         taxable_base=Decimal("200.10"),
         invoice_total=Decimal("242.12"),
-        accrued_on="2025-02-10",
+        accrued_on=date(_YEAR, 2, 10).isoformat(),
     )
     foreign_asset = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -407,8 +438,8 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
         valuation_amount=Decimal("50000.50"),
         currency_code="USD",
         valuation_event=M720ValuationEvent.EXTINCTION,
-        valuation_event_date="2025-06-13",
-        acquisition_date="2024-06-30",
+        valuation_event_date=date(_YEAR, 6, 13).isoformat(),
+        acquisition_date=date(_YEAR - 1, 6, 30).isoformat(),
     )
     command = PerModeloAggregationCommand(
         modelo="347",
@@ -426,7 +457,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     retenciones = _RetencionRepository()
     window_service = _WindowService()
@@ -437,6 +468,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
         retencion_observation_repository=retenciones,
         percepcion_observation_repository=_PercepcionRepository(),
         withholding_observation_service=window_service,
+        invoice_catalogue=_no_invoices(),
     )
     executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
     request = _request()
@@ -469,27 +501,18 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     assert not {"perceptor_nif", "perceptor_name", "taxable_base", "retencion_amount", "observations"} & set(serialized)
 
 
-_ANNUAL_PERIOD = Period.from_year_and_code(2025, "0A")
+_ANNUAL_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _percepcion(source_id: str, nif: str, clave: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2025, 2, 1),
+        transaction_date=date(_YEAR, 2, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("1000.00"),
     )
 
@@ -498,8 +521,8 @@ def _run_annual_190(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
     percepciones: _PercepcionRepository,
-) -> tuple[ModeloAggregateProjection, _Events]:
-    events = _Events()
+) -> tuple[ModeloAggregateProjection, RecordingEvents]:
+    events = RecordingEvents()
     operands = _Operands()
     window_service = _WindowService()
     ports = _ports(window_service=window_service, percepciones=percepciones)
@@ -532,15 +555,15 @@ def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
     """Modelo 190 composes the year's Modelo 111 detail and reports it per clave without perceptor identities."""
     percepciones = _PercepcionRepository(
         (
-            _percepcion("row-1", "11111111H", "A"),
-            _percepcion("row-2", "22222222J", "A"),
-            _percepcion("row-3", "33333333P", "G"),
+            _percepcion("row-1", "00001500M", "A"),
+            _percepcion("row-2", "00001501Y", "A"),
+            _percepcion("row-3", "00001502F", "G"),
         )
     )
 
     projection, events = _run_annual_190(monkeypatch, authority_operation, percepciones)
 
-    assert percepciones.annual_loads == [("111", 2025)]
+    assert percepciones.annual_loads == [("111", _YEAR)]
     assert events.effects == [OperationEffect.NONE]
     assert projection.outcome == "aggregated"
     assert projection.absent_source_families == ()
@@ -550,7 +573,7 @@ def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
         for row in projection.clave_breakdown or ()
     ] == [("A", 2, "2000.00", "300.00"), ("G", 1, "1000.00", "150.00")]
     serialized = projection.model_dump_json()
-    assert "11111111H" not in serialized
+    assert "00001500M" not in serialized
     assert "row-1" not in serialized
 
 
@@ -563,7 +586,7 @@ def test_annual_summary_without_stored_rows_names_the_absent_family_instead_of_a
 
     projection, _events = _run_annual_190(monkeypatch, authority_operation, percepciones)
 
-    assert percepciones.annual_loads == [("111", 2025)]
+    assert percepciones.annual_loads == [("111", _YEAR)]
     assert projection.clave_breakdown == ()
     assert projection.absent_source_families == (BindingSourceKind.WITHHOLDING,)
     assert projection.calculation_revision_id is not None
@@ -573,12 +596,12 @@ def _snapshot_observation() -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="1" * 64,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Synthetic recipient",
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2025-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
 
 
@@ -586,7 +609,7 @@ def test_read_aggregate_retains_rows_and_generation_from_prepared_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     service = _WindowService(generation=1, observations=(_snapshot_observation(),))
     ports = _ports(window_service=service)
@@ -631,7 +654,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     window_service = _WindowService(generation=2, observations=(_snapshot_observation(),))
     ports = _ports(window_service=window_service)
@@ -648,12 +671,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
         result = aggregate_per_modelo(command, operation=operation)
@@ -704,7 +722,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
     monkeypatch: pytest.MonkeyPatch,
     refusal_code: str,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     ports = _ports()
     executor = ModeloAggregateExecutor(
@@ -720,12 +738,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
@@ -764,7 +777,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
 def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     transaction_repository = _TransactionRepository()
     transaction_repository.revisions = ["f" * 64]
@@ -786,12 +799,7 @@ def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     result = asyncio.run(executor.execute(request, context))
 
@@ -809,7 +817,7 @@ def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     repository = _TransactionRepository()
     repository.revisions = ["b" * 64]
@@ -841,3 +849,129 @@ def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
     )
     assert isinstance(projection, ModeloAggregateProjection)
     assert projection.refusal_reason == "invalid_evidence"
+
+
+def _row_17_report_and_calculation(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    professional_nif: str,
+) -> tuple[ModeloAggregateProjection, RetencionesAggregation, CalculationSourceResolution]:
+    """Run the aggregate report and the calculation's resolver over one APP-QA row 17 quarter."""
+    invoices, movements = professional_fee_quarter(
+        _PERIOD.filing_year, tax_id=professional_nif, irpf_category="actividad_economica", bucket_id=str(_PROFILE)
+    )
+    catalogue = invoice_catalogue_ports(invoices, movements)
+    reported: list[PerModeloAggregationResult] = []
+
+    def recording_aggregate(
+        command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation
+    ) -> PerModeloAggregationResult:
+        result = aggregate_per_modelo(command, operation=operation)
+        reported.append(result)
+        return result
+
+    monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", recording_aggregate)
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    ports = _ports(invoice_catalogue=catalogue)
+    executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
+    operands = _Operands()
+    context = _executor_context(RecordingEvents(), operands, authority_operation=authority_operation)
+
+    asyncio.run(executor.execute(_request(), context))
+
+    report = operands.values[0]
+    assert isinstance(report, ModeloAggregateReport)
+    projection = project_modelo_aggregate_result(report, _terminal_receipt(effect=OperationEffect.NONE))
+    assert isinstance(projection, ModeloAggregateProjection)
+    (result,) = reported
+    assert isinstance(result.aggregation, RetencionesAggregation)
+    snapshot = published_snapshot("111", filing_year=_PERIOD.filing_year, period="1T")
+    calculation = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=EmptyRetencionStore()),
+        invoice_catalogue=catalogue,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=str(_PROFILE),
+            modelo="111",
+            filing_year=_PERIOD.filing_year,
+            period=_PERIOD,
+            revision=snapshot.revision,
+        )
+    )
+    return projection, result.aggregation, calculation
+
+
+def test_the_modelo_111_report_counts_a_professionals_invoice_retencion_as_its_calculation_does(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection, aggregation, calculation = _row_17_report_and_calculation(
+        monkeypatch, authority_operation, professional_nif=NATURAL_PERSON_PROFESSIONAL_NIF
+    )
+    snapshot = published_snapshot("111", filing_year=_PERIOD.filing_year, period="1T")
+
+    assert projection.observation_count == 1
+    assert projection.result_row_count == 1
+    assert projection.source_kinds == (BindingSourceKind.PAYABLE_INVOICE,)
+    assert projection.received_invoice_findings == ()
+    assert [(row.perceptor_nif, row.total_taxable_base, row.total_retencion) for row in aggregation.rollups] == [
+        (NATURAL_PERSON_PROFESSIONAL_NIF, Decimal("300.00"), Decimal("45.00"))
+    ]
+    assert calculation.diagnostics == ()
+    assert calculation.binding_values
+    assert resolve_retenciones_aggregation_binding_values(snapshot.revision, aggregation) == calculation.binding_values
+
+
+def test_the_modelo_111_report_holds_an_slps_fee_back_as_its_calculation_does(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection, aggregation, calculation = _row_17_report_and_calculation(
+        monkeypatch, authority_operation, professional_nif=PROFESSIONAL_COMPANY_NIF
+    )
+
+    assert projection.observation_count == 0
+    assert aggregation.rollups == ()
+    assert projection.received_invoice_findings == (
+        ModeloAggregateInvoiceFindingCount(
+            kind=ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE, invoice_count=1
+        ),
+    )
+    assert calculation.binding_values == {}
+    assert calculation.unresolved_binding_ids
+    assert [item.message.rsplit(": ", 1)[-1] for item in calculation.diagnostics] == [
+        ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE.value
+    ]
+
+
+def test_a_provider_that_changes_between_preflight_and_selection_is_a_terminal_invariant(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    ports = _ports()
+    executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+
+    def aggregate_with_another_provider(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
+        result = aggregate_per_modelo(command, operation=operation)
+        other = next(item for item in PerModeloAggregationContributor if item is not result.provider)
+        return result.model_copy(update={"provider": other})
+
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", aggregate_with_another_provider
+    )
+
+    with pytest.raises(InternalInvariantError) as refused:
+        executor._prepare(_request().payload, str(_PROFILE), authority_operation)
+
+    verdict = nested_terminal_precondition_verdict(refused.value)
+    assert verdict is not None
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+    assert refused.value.translated_message == "application.modelo.errors.aggregate_preflight_provider_changed"

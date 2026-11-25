@@ -278,7 +278,7 @@ def test_the_detector_resolves_a_method_through_its_owning_class() -> None:
     [
         "cadrumo.core.modelo.Modelo",
         "cadrumo_client.commands.errors.CliRefusedBoundaryError",
-        "cadrumo_runtime.commands._apoderado.apoderado_scopes_list",
+        "cadrumo_runtime.commands.apoderado.apoderado_scopes_list",
     ],
 )
 def test_qualified_first_party_targets_are_judged(target: str) -> None:

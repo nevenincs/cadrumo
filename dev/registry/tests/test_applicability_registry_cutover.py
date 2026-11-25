@@ -15,10 +15,8 @@ established fixture shape in ``test_authority.py``:
    what it always did. This is the anti-tautology proof for the deliberate
    no-cache decision -- a `@cache`-wrapped resolver would fail proof 2.
 
-``REGISTRY_RESOLVED_APPLICABILITY_MODELOS`` stays empty in production until
-the migrator's ``--apply`` run lands and is verified against the real bundled
-tree (tracked separately); this module proves the MECHANISM these tests
-exercise directly, not through that module-level switch.
+A modelo resolves from the registry when a revision declares a rule; this module
+proves the MECHANISM these tests exercise directly.
 """
 
 from __future__ import annotations
@@ -30,11 +28,9 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    ModeloApplicabilityRule,
-    resolve_applicability_rule_from_authority,
-)
+from cadrumo.domain.calculations.registry.applicability import resolve_applicability_rule_from_authority
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict, ModeloApplicabilityRule
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -53,6 +49,10 @@ _LEGAL_ID = "ley-35-2006:art-17"
 #: real modelos already declare their own applicability rule and a second one
 #: on the same revision is refused.
 _PLANTED_MODELO = "999"
+
+#: The one exercise the planted revision declares: the registry's support horizon.
+_EDITION_YEAR = filing_year_envelope().horizon
+_EDITION = str(_EDITION_YEAR)
 
 #: A layout-authority source the bundled tree carries, so the planted modelo
 #: satisfies the evidence tier the validator requires without a corpus of its
@@ -74,7 +74,7 @@ corpus_ref = "corpus/test/test-ley-001.html#a1"
 document_id = "BOE-T-001"
 article = "1"
 permalink = "https://example.com/test"
-effective_from = 2025-01-01
+effective_from = {_EDITION_YEAR}-01-01
 review_status = "pending_review"
 required_text = ["test provision text"]
 
@@ -85,7 +85,7 @@ kind = "record_design"
 corpus_path = "corpus/test/test-source-001.pdf"
 sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
-retrieved_at = 2025-01-01
+retrieved_at = {_EDITION_YEAR}-01-01
 source_url = "https://example.com/test-source"
 review_status = "pending_review"
 
@@ -96,7 +96,7 @@ kind = "instructions"
 corpus_path = "corpus/test/test-source-002.pdf"
 sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
-retrieved_at = 2025-01-01
+retrieved_at = {_EDITION_YEAR}-01-01
 source_url = "https://example.com/test-source-002"
 review_status = "pending_review"
 """
@@ -114,9 +114,9 @@ source_refs = ["{_BUNDLED_SOURCE_ID}"]
 
 def _revision_toml(*, entity_type: str, applicable_reason: str) -> str:
     return f"""\
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = {{ year_from = 2025, periods = ["0A"] }}
+[revisions."{_EDITION}"]
+valid_from = {_EDITION_YEAR}-01-01
+period_selector = {{ year_from = {_EDITION_YEAR}, periods = ["0A"] }}
 # This fixture exists to resolve an APPLICABILITY rule -- whether the modelo is
 # due, and to whom -- and is not built to compute amounts or back a filing, so
 # that is the rung it declares. An undeclared grade is a refusal now, and it
@@ -126,7 +126,7 @@ legal_refs = ["{_LEGAL_ID}"]
 source_refs = ["{_BUNDLED_SOURCE_ID}"]
 orden_aplicabilidad = ["{_LEGAL_ID}"]
 
-[[revisions."2025".application_links]]
+[[revisions."{_EDITION}".application_links]]
 id = "test-filing-link"
 surface = "filing"
 consumer = "cli.app"
@@ -134,7 +134,7 @@ requires_snapshot = true
 legal_refs = ["{_LEGAL_ID}"]
 source_refs = ["{_BUNDLED_GUIDANCE_SOURCE_ID}"]
 
-[[revisions."2025".casillas]]
+[[revisions."{_EDITION}".casillas]]
 id = "01"
 number = "01"
 section = ["test"]
@@ -142,7 +142,7 @@ data_type = "integer"
 legal_refs = ["{_LEGAL_ID}"]
 source_refs = ["{_BUNDLED_SOURCE_ID}"]
 
-[[revisions."2025".workbook_parity_refs]]
+[[revisions."{_EDITION}".workbook_parity_refs]]
 id = "test-workbook-001"
 workbook_source = "{_BUNDLED_SOURCE_ID}"
 fixture_id = "test-fixture-001"
@@ -152,7 +152,7 @@ tolerance = "0.00"
 legal_refs = ["{_LEGAL_ID}"]
 source_refs = ["{_BUNDLED_SOURCE_ID}"]
 
-[[revisions."2025".applicability]]
+[[revisions."{_EDITION}".applicability]]
 id = "m999-cutover-test"
 applicable_entity_types = ["{entity_type}"]
 applicable_fiscal_residencies = ["resident_irpf"]
@@ -180,7 +180,7 @@ def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
     registry_root = root / "registry" / "aeat"
     shutil.copytree(bundled_path("registry"), root / "registry", dirs_exist_ok=True)
     legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / _PLANTED_MODELO / "revisions" / "2025"
+    revision_dir = registry_root / "modelos" / _PLANTED_MODELO / "revisions" / _EDITION
     revision_dir.mkdir(parents=True, exist_ok=True)
     legal_dir.mkdir(parents=True, exist_ok=True)
     # Nothing else is written: the copied tree carries its own legal catalogue,
@@ -215,7 +215,7 @@ def _representative_profiles() -> tuple[TaxpayerProfile, ...]:
             iva_regime=IVARegime("NO_APLICA"),
         ),
         TaxpayerProfile(
-            tax_id="B12345674", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("NO_APLICA")
+            tax_id="B00015016", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("NO_APLICA")
         ),
         TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("NO_APLICA")),
     )
@@ -273,7 +273,13 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
     assert original_rule.applicable_reason == "applies (original)"
 
     fragment_path = (
-        registry_root / "modelos" / _PLANTED_MODELO / "revisions" / "2025" / "applicability" / "0001-applicability.toml"
+        registry_root
+        / "modelos"
+        / _PLANTED_MODELO
+        / "revisions"
+        / _EDITION
+        / "applicability"
+        / "0001-applicability.toml"
     )
     assert fragment_path.is_file()
     fragment_path.write_text(

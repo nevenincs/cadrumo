@@ -26,6 +26,7 @@ from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..home import HomeScreen, HomeTarget
 from ..navigation import TUI_DESTINATION_CATALOGUE
+from .settling import settle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -34,7 +35,7 @@ async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
     """Drive a full Tab cycle and require every focusable control to be reached."""
     app = ScreenHostApp(cast("Screen[None]", screen))
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         focusable = {
             widget.id or f"{type(widget).__name__}@{id(widget)}"
             for widget in app.screen.query(Widget)
@@ -45,7 +46,7 @@ async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
         reached: set[str] = set()
         for _ in range(len(focusable) * 2 + 2):
             await pilot.press("tab")
-            await pilot.pause()
+            await settle(pilot)
             focused = app.screen.focused
             if focused is not None:
                 reached.add(focused.id or f"{type(focused).__name__}@{id(focused)}")
@@ -88,7 +89,7 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
     screen = HomeScreen(projection)
     app = ScreenHostApp(screen)
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         targets = tuple(screen._targets.values())
         app.exit(None)
 
@@ -98,7 +99,7 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
     restored = HomeScreen(reordered, restore_target=chosen)
     app = ScreenHostApp(restored)
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert restored.highlighted_target == HomeTarget(kind=chosen.kind, identity=chosen.identity)
         app.exit(None)
 

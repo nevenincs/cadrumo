@@ -7,7 +7,11 @@ import shutil
 import sys
 from pathlib import Path
 
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    EXTENSION_SETTINGS_NAMESPACE,
+    LOCAL_MODEL_LIST_NAMESPACE,
+)
+from cadrumo_agent_service.providers.persistence.store import LOCAL_MODEL_LIST_CAPABILITY
 from cadrumo_client.contracts.extension_records import ExtensionRecordCapability
 
 
@@ -20,6 +24,19 @@ def provider_record_capability() -> ExtensionRecordCapability:
         schema_version=namespace.schema_version,
         classification=namespace.sensitivity,
         key_pattern=r"[a-z][a-z0-9_]*",
+        actions=frozenset({"read", "write", "delete", "generation"}),
+    )
+
+
+def local_model_list_capability() -> ExtensionRecordCapability:
+    """Bind the synthetic service descriptor to the actual local model list record policy."""
+    namespace = LOCAL_MODEL_LIST_NAMESPACE
+    return ExtensionRecordCapability(
+        capability=LOCAL_MODEL_LIST_CAPABILITY,
+        namespace=namespace.namespace,
+        schema_version=namespace.schema_version,
+        classification=namespace.sensitivity,
+        key_pattern=r"^selections$",
         actions=frozenset({"read", "write", "delete", "generation"}),
     )
 

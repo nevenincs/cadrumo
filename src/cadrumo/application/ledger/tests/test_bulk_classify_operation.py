@@ -16,8 +16,15 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.categories.spending_category_catalogue import spending_category_tokens
+from ....domain.transactions.classification_effects import fields_cleared_by_classification
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction
@@ -25,7 +32,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
@@ -35,7 +42,8 @@ from ..models import BulkClassifyResult
 from ..persistence_ports import LedgerPersistenceConflictError
 from ..protocols import InvoiceCatalogueCoCommitWriterProtocol
 from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
-from .test_classification_rule_plan import _InMemoryTransactionRepository, _transaction
+from .in_memory_transaction_repository import InMemoryTransactionRepository
+from .test_classification_rule_plan import BUCKET, transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -70,8 +78,8 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
 @pytest.fixture
 def transactions() -> tuple[Transaction, Transaction]:
     return (
-        _transaction(provider_id="bulk-office", description="Synthetic office purchase"),
-        _transaction(provider_id="bulk-personal", description="Synthetic personal purchase"),
+        transaction(provider_id="bulk-office", description="Synthetic office purchase"),
+        transaction(provider_id="bulk-personal", description="Synthetic personal purchase"),
     )
 
 
@@ -134,14 +142,14 @@ def test_complete_result_projector_correlates_effect_profile_and_terminal_condit
     projection = operation.LedgerBulkClassifyProjection(profile_id=PROFILE_ID, outcome="classified", result=result)
     execution = operation.LedgerBulkClassifyExecutionResult(projection=projection)
     receipt = _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED)
-    assert operation._project_result(execution, receipt) == projection
+    assert operation.project_result(execution, receipt) == projection
     for defect in (
         {"effect": OperationEffect.NONE},
         {"condition": OperationTerminalCondition.REFUSED},
         {"identity": receipt.identity.model_copy(update={"subject_ref": profile_operation_subject(str(uuid4()))})},
     ):
         with pytest.raises(ValueError):
-            operation._project_result(execution, receipt.model_copy(update=defect))
+            operation.project_result(execution, receipt.model_copy(update=defect))
 
 
 def test_real_csv_batch_loads_once_co_commits_once_and_preserves_row_failure(
@@ -194,7 +202,7 @@ def test_unknown_csv_header_is_an_explicit_prewrite_validation_refusal(subject: 
     execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
     assert execution.projection.outcome == "validation_error" and execution.projection.result is None
     assert (
-        operation._project_result(execution, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE))
+        operation.project_result(execution, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE))
         == execution.projection
     )
 
@@ -262,7 +270,11 @@ def test_exact_profile_and_authority_mismatch_refuses_before_csv_storage(
 def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassifySubject) -> None:
     subject.ports = replace(
         subject.ports,
-        transaction_repository=_InMemoryTransactionRepository(subject.repository.current),
+        transaction_repository=InMemoryTransactionRepository(
+            bucket_id=BUCKET,
+            catalogue=subject.repository.current,
+            permit_secure_object_writes=True,
+        ),
     )
     with pytest.raises(InternalInvariantError, match="revision-guarded"):
         asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(""), subject.context))
@@ -449,3 +461,124 @@ def test_the_recorded_actor_is_the_session_label_for_automation_and_the_typed_on
     stored = subject.repository.current.transactions[first.transaction_id]
     assert stored.business_classification is BusinessClassification.BUSINESS
     assert {entry.actor for entry in stored.edit_lineage} == {recorded}
+
+
+def _declared_spending_category(authority: PinnedAuthorityOperation) -> str:
+    return spending_category_tokens(authority=authority)[0].value
+
+
+@pytest.fixture
+def three_transactions() -> tuple[Transaction, Transaction, Transaction]:
+    return (
+        transaction(provider_id="bulk-batch-a", description="Synthetic batch purchase A"),
+        transaction(provider_id="bulk-batch-b", description="Synthetic batch purchase B"),
+        transaction(provider_id="bulk-batch-c", description="Synthetic batch purchase C"),
+    )
+
+
+@pytest.fixture
+def batch_subject(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+) -> BulkClassifySubject:
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
+    return BulkClassifySubject(operation=authority_operation, transactions=three_transactions)
+
+
+def test_one_category_applies_to_several_business_and_mixed_rows_and_is_persisted(
+    batch_subject: BulkClassifySubject,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_spending_category(authority_operation)
+    first, second, third = three_transactions
+    source = (
+        "transaction_id,classification,category_id,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{category},\n"
+        f"{second.transaction_id},MIXED,{category},0.25\n"
+        f"{third.transaction_id},BUSINESS,{category},\n"
+    )
+    asyncio.run(
+        operation.LedgerBulkClassifyExecutor(batch_subject.compose).execute(_request(source), batch_subject.context)
+    )
+    result = cast(operation.LedgerBulkClassifyExecutionResult, batch_subject.operands.values[-1]).projection.result
+    assert result is not None and not result.failures, result
+    assert (result.total, result.applied) == (3, 3)
+    stored = batch_subject.repository.current.transactions
+    assert [stored[row.transaction_id].category_id for row in three_transactions] == [category] * 3
+    assert stored[second.transaction_id].business_classification is BusinessClassification.MIXED
+    assert stored[second.transaction_id].business_pct == Decimal("0.25")
+    assert batch_subject.repository.committed_writes == 1
+
+
+def test_a_personal_row_in_a_category_batch_ends_with_no_category(
+    batch_subject: BulkClassifySubject,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_spending_category(authority_operation)
+    first, second, third = three_transactions
+    executor = operation.LedgerBulkClassifyExecutor(batch_subject.compose)
+    seed = "transaction_id,classification,category_id\n" + "".join(
+        f"{row.transaction_id},BUSINESS,{category}\n" for row in three_transactions
+    )
+    asyncio.run(executor.execute(_request(seed), batch_subject.context))
+    assert batch_subject.repository.current.transactions[second.transaction_id].category_id == category
+    source = (
+        "transaction_id,classification,category_id\n"
+        f"{first.transaction_id},BUSINESS,{category}\n"
+        f"{second.transaction_id},PERSONAL,{category}\n"
+        f"{third.transaction_id},PERSONAL,\n"
+    )
+    asyncio.run(executor.execute(_request(source), batch_subject.context))
+    stored = batch_subject.repository.current.transactions
+    assert stored[first.transaction_id].category_id == category
+    for personal in (second, third):
+        assert stored[personal.transaction_id].business_classification is BusinessClassification.PERSONAL
+        assert stored[personal.transaction_id].category_id is None
+    assert "category_id" in fields_cleared_by_classification(BusinessClassification.PERSONAL)
+
+
+def test_a_bulk_row_made_personal_persists_no_category_share_or_business_figures(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    transactions: tuple[Transaction, Transaction],
+) -> None:
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
+    business, mixed = transactions
+    business = business.model_copy(
+        update={
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "office-supplies",
+            "irpf_category": "activity-expense",
+            "taxable_base": Decimal("8.26"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("1.74"),
+        }
+    )
+    mixed = mixed.model_copy(
+        update={
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.30"),
+            "category_id": "office-supplies",
+        }
+    )
+    subject = BulkClassifySubject(operation=authority_operation, transactions=(business, mixed))
+    source = f"transaction_id,classification\n{business.transaction_id},PERSONAL\n{mixed.transaction_id},PERSONAL\n"
+
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    for before in (business, mixed):
+        stored = subject.repository.current.transactions[before.transaction_id]
+        assert stored.business_classification is BusinessClassification.PERSONAL
+        assert stored.category_id is None
+        assert stored.business_pct is None
+        assert stored.irpf_category is None
+        assert stored.taxable_base is None
+        assert stored.iva_rate is None
+        assert stored.iva_amount is None

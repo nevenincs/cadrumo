@@ -18,10 +18,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,
@@ -37,7 +37,10 @@ def _native_profile(tmp_path: Path) -> Iterator[None]:
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label="Historical overview profile",
+            # Residency decides IRPF or IRNR, so without it Modelo 130 has no
+            # registry row for a work unit to enrich.
             facts={
+                "taxpayer_type.fiscal_residency": "resident_irpf",
                 "withholding.has_employees": "false",
                 "withholding.pays_professionals_with_retencion": "false",
                 "irpf.art109_activity_income_withholding_ge_70pct": "false",
@@ -163,12 +166,11 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
             "2022-01-01",
             "--to",
             "2023-12-31",
-            "--allow-incomplete",
         ],
     )
 
     assert result.exit_code == 0, result.output
-    entries = _calendar_entries_by_target(_payload(result.output)["entries"])
+    entries = _calendar_entries_by_target(unwrap_schema_envelope(result.output)["entries"])
     for modelo, year, period in created:
         entry = entries[(modelo, f"{year} {period}")]
         assert entry["user_state"] == "late"
@@ -184,12 +186,11 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["range"]["from_date"] <= "2022-01-01"
     items = _backlog_entries_by_target(payload["items"])
     for (modelo, year, period), work_unit_id in created.items():
@@ -220,12 +221,11 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
     assert backlog_result.exit_code == 0, backlog_result.output
-    backlog_payload = _payload(backlog_result.output)
+    backlog_payload = unwrap_schema_envelope(backlog_result.output)
     assert all(item["local_work_unit_id"] != work_unit_id for item in backlog_payload["items"])
 
     calendar_result = _invoke(
@@ -239,12 +239,11 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "2022-01-01",
             "--to",
             "2022-12-31",
-            "--allow-incomplete",
         ],
     )
 
     assert calendar_result.exit_code == 0, calendar_result.output
-    entries = _calendar_entries_by_target(_payload(calendar_result.output)["entries"])
+    entries = _calendar_entries_by_target(unwrap_schema_envelope(calendar_result.output)["entries"])
     entry = entries[("130", "2022 1T")]
     assert entry["user_state"] == "filed"
     assert entry["local_filing_state"] == "ready_to_file"

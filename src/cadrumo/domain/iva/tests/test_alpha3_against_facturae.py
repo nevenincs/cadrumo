@@ -49,7 +49,7 @@ from pathlib import Path
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
-from ....core.toml import parse_toml
+from .country_names_vocabulary_support import country_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,21 +72,6 @@ def _facturae_codes() -> frozenset[str]:
         assert isinstance(code, str)
         codes.append(code)
     return frozenset(codes)
-
-
-def _vocabulary() -> list[dict[str, object]]:
-    payload = parse_toml(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
-    raw_country = payload.get("country")
-    assert isinstance(raw_country, list)
-    rows: list[dict[str, object]] = []
-    for raw_row in raw_country:
-        assert isinstance(raw_row, dict)
-        row: dict[str, object] = {}
-        for key, value in raw_row.items():
-            assert isinstance(key, str)
-            row[key] = value
-        rows.append(row)
-    return rows
 
 
 def test_the_bundled_extract_carries_its_provenance() -> None:
@@ -119,7 +104,7 @@ def test_every_vocabulary_alpha3_is_one_facturae_can_state() -> None:
     statable = _facturae_codes()
     unstatable = sorted(
         (str(record["code"]), str(record["alpha3"]))
-        for record in _vocabulary()
+        for record in country_vocabulary()
         if str(record["alpha3"]) not in statable
     )
 

@@ -13,6 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -24,7 +25,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
-from ...domain.transactions.classification_rule import LedgerClassificationRule
+from ...domain.transactions.classification_rule import (
+    RULE_PATTERN_ENTRY_MAX_LENGTH,
+    LedgerClassificationRule,
+    require_new_rule_decision,
+)
 from ...domain.transactions.errors import ClassificationRuleError, TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -48,6 +53,7 @@ from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_e
 from .actions_classification import (
     ClassificationRulePlan,
     ClassificationRulePlanRow,
+    ClassificationRuleSearchRefusedError,
     add_classification_rule,
     apply_classification_rule_match,
     plan_classification_rules,
@@ -77,6 +83,7 @@ from .rule_results import (
     LEDGER_RULE_VALIDATION_REFUSAL_CODE,
     build_rule_apply_plan_projection,
     build_rule_apply_result_projection,
+    build_rule_apply_search_refusal,
     build_rule_apply_validation_projection,
     build_rule_dry_run_projection,
     build_rule_validation_messages,
@@ -84,13 +91,14 @@ from .rule_results import (
     project_ledger_rule_apply_result,
     publish_rule_apply_refusal,
 )
+from .rule_trial_operation import rule_pattern_overruns_ledger
 
 LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
 LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID = "ledger.rule.apply"
 
 
-class _TrackedRuleRepository:
+class TrackedRuleRepository:
     """Track the canonical encrypted rule save without replacing its behavior."""
 
     def __init__(
@@ -102,10 +110,16 @@ class _TrackedRuleRepository:
         self._tracker = tracker
 
     def save(self, payload: LedgerClassificationRule) -> None:
+        """Save a classification rule through the writer tracker."""
         self._tracker.call_writer(lambda: self._repository.save(payload))
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
+        """Return the stored classification rules."""
         return self._repository.list_rules()
+
+    def delete(self, identifier: str) -> bool:
+        """Delete a rule by identifier and report whether it existed."""
+        return self._repository.delete(identifier)
 
 
 async def _prepare_rule_add(
@@ -124,6 +138,14 @@ async def _prepare_rule_add(
         )
         return await _publish_add_refusal(context, projection)
 
+    if len(payload.description_pattern) > RULE_PATTERN_ENTRY_MAX_LENGTH:
+        projection = _add_validation_projection(
+            payload.profile_id,
+            code="pattern_too_long",
+            error=ValueError(f"description pattern must not exceed {RULE_PATTERN_ENTRY_MAX_LENGTH} characters"),
+        )
+        return await _publish_add_refusal(context, projection)
+
     try:
         category_id = _resolve_category(payload.category_id, operation=operation)
     except RegistryValidationError as error:
@@ -138,6 +160,12 @@ async def _prepare_rule_add(
         return await _publish_add_refusal(context, projection)
 
     try:
+        require_new_rule_decision(payload.classification, category_id)
+    except ClassificationRuleError as error:
+        projection = _add_validation_projection(payload.profile_id, code="invalid_command", error=error)
+        return await _publish_add_refusal(context, projection)
+
+    try:
         candidate = LedgerClassificationRule.create(
             description_pattern=payload.description_pattern,
             classification=payload.classification,
@@ -148,6 +176,13 @@ async def _prepare_rule_add(
         LedgerRuleRowProjection.from_rule(candidate)
     except (ClassificationRuleError, ValidationError, ValueError) as error:
         projection = _add_validation_projection(payload.profile_id, code="invalid_pattern", error=error)
+        return await _publish_add_refusal(context, projection)
+    if await asyncio.to_thread(rule_pattern_overruns_ledger, bucket_id, payload.description_pattern):
+        projection = _add_validation_projection(
+            payload.profile_id,
+            code="pattern_overrun",
+            error=ValueError("the pattern did not finish searching this profile's descriptions within its bound"),
+        )
         return await _publish_add_refusal(context, projection)
     return candidate, category_id
 
@@ -163,7 +198,7 @@ async def _persist_rule_add(
 ) -> tuple[LedgerClassificationRule, LedgerCommitAttemptTracker] | OperationRefusalEvidence:
     repository = await asyncio.to_thread(repository_factory, bucket_id=bucket_id)
     tracker = LedgerCommitAttemptTracker()
-    tracked_repository = _TrackedRuleRepository(repository, tracker)
+    tracked_repository = TrackedRuleRepository(repository, tracker)
 
     def add() -> LedgerClassificationRule:
         return add_classification_rule(
@@ -317,13 +352,17 @@ class LedgerRuleApplyExecutor:
             asyncio.to_thread(self._repository_factory, bucket_id=bucket_id),
         )
         require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
-        plan = await asyncio.to_thread(
-            plan_classification_rules,
-            bucket_id=bucket_id,
-            reaffirm=payload.reaffirm,
-            ports=ports,
-            rule_repository=repository,
-        )
+        try:
+            plan = await asyncio.to_thread(
+                plan_classification_rules,
+                bucket_id=bucket_id,
+                reaffirm=payload.reaffirm,
+                ports=ports,
+                rule_repository=repository,
+            )
+        except ClassificationRuleSearchRefusedError as error:
+            await context.events.effect(OperationEffect.NONE)
+            return await publish_rule_apply_refusal(context, build_rule_apply_search_refusal(payload.profile_id, error))
 
         if payload.dry_run:
             projection = build_rule_dry_run_projection(payload.profile_id, plan)
@@ -552,7 +591,7 @@ def build_ledger_rule_add_definition(
         result_type=LedgerRuleAddExecutionResult,
         executor_type=LedgerRuleAddExecutor,
         build=lambda: LedgerRuleAddExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
-        effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+        effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
     )
 
 

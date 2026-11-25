@@ -41,7 +41,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.ledger_iva_bindings import invoice_ledger_screen_binding_ids
+from ....domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

@@ -16,25 +16,36 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.optional_extras import MissingOptionalExtraError
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef
-from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
+from ...domain.transactions.own_accounts import (
+    OwnAccountHolding,
+    OwnAccountId,
+    OwnAccountRegister,
+    OwnAccountRegisterValidationError,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import served_words_language
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.next_step import OperationNextStepV1
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import require_registered_own_account
@@ -43,15 +54,21 @@ from .actions_import import (
     LedgerProviderID,
     PreparedLedgerSourceImport,
     aggregate_ledger_import_results,
+    bind_prepared_import_to_own_account,
+    describe_statement_account,
     persist_prepared_ledger_source_import,
     plan_ledger_import_sources,
     prepare_ledger_source_import,
 )
-from .import_ports import LedgerImportPorts
+from .import_ports import LedgerImportPorts, LedgerImportReaderUnavailableError
 from .models import LedgerSourceImportCommand, LedgerSourceImportResult
+from .own_account_operation import LEDGER_OWN_ACCOUNT_LABEL_MAX, LedgerOwnAccountRequest, apply_own_account_request
 from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
+from .reading_model_refusal import model_run_refusal_code, reader_refusal_next_step
+
+_FILE_NAME_MAX_LENGTH = 255
 
 LEDGER_IMPORT_OPERATION_DEFINITION_ID = "ledger.import"
 MAX_LEDGER_IMPORT_FILES = 128
@@ -63,16 +80,23 @@ MAX_LEDGER_IMPORT_EVENTS = 4 * MAX_LEDGER_IMPORT_ROWS
 
 type LedgerImportDiagnosticMessage = Literal[
     "transactions.import.message_185962",
-    "transactions.import.message_082074",
+    "transactions.import.all_rows_already_in_ledger",
+    "transactions.import.some_rows_already_in_ledger",
     "transactions.import.batch_id_collision",
     "transactions.import.message_053465",
     "transactions.import.message_829073",
     "transactions.import.verified",
     "transactions.import.unreadable",
 ]
+# One canonical diagnostic per row already stored. The public result names the
+# fact once, for the whole import, and says whether it holds for every row.
+_STORED_DUPLICATE_MESSAGE = str(tr("transactions.import.message_082074"))
+_ALL_ROWS_STORED_MESSAGE = str(tr("transactions.import.all_rows_already_in_ledger"))
+_SOME_ROWS_STORED_MESSAGE = str(tr("transactions.import.some_rows_already_in_ledger"))
 _DIAGNOSTIC_MESSAGE_KEYS: dict[str, LedgerImportDiagnosticMessage] = {
     "transactions.import.message_185962": "transactions.import.message_185962",
-    "transactions.import.message_082074": "transactions.import.message_082074",
+    "transactions.import.all_rows_already_in_ledger": "transactions.import.all_rows_already_in_ledger",
+    "transactions.import.some_rows_already_in_ledger": "transactions.import.some_rows_already_in_ledger",
     "transactions.import.batch_id_collision": "transactions.import.batch_id_collision",
     "transactions.import.message_053465": "transactions.import.message_053465",
     "transactions.import.message_829073": "transactions.import.message_829073",
@@ -101,6 +125,18 @@ class LedgerImportOperationPortsFactory(Protocol):
         ...
 
 
+class LedgerImportAccountRegistration(BaseModel):
+    """The operator's own words for the account a statement names, when the import registers it.
+
+    The account number is never asked again: it is the one the statement names.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    label: str = Field(min_length=1, max_length=LEDGER_OWN_ACCOUNT_LABEL_MAX)
+    holding: OwnAccountHolding
+
+
 class LedgerImportRequest(BaseModel):
     """Sensitive local file references and import options for one profile.
 
@@ -125,11 +161,28 @@ class LedgerImportRequest(BaseModel):
     """The digest a preview reported for each file, in ``files`` order; a file whose
     parsed bytes now differ is refused rather than imported. A digest names one
     file's bytes, so an entry that is a directory is refused when paired with one."""
+    register_statement_account: LedgerImportAccountRegistration | None = None
+    """Register the account the one named file's statement names as an own account, then
+    bind the file's rows to it. It takes one file, with no own account chosen: the account
+    is the statement's, not the operator's choice. A dry run registers nothing and binds the
+    rows to the identity the register would give the account, so its preview is the import
+    the same request writes. A statement that names a registered account is bound to it and
+    registers nothing."""
 
     @model_validator(mode="after")
     def _one_digest_per_file(self) -> LedgerImportRequest:
         if self.expected_source_sha256 is not None and len(self.expected_source_sha256) != len(self.files):
             raise ValueError("ledger import expects exactly one source digest per file")
+        return self
+
+    @model_validator(mode="after")
+    def _registration_is_for_one_written_file(self) -> LedgerImportRequest:
+        if self.register_statement_account is None:
+            return self
+        if self.own_account_id is not None:
+            raise ValueError("a statement account is registered only when no own account is chosen")
+        if len(self.files) != 1:
+            raise ValueError("a statement account is registered from exactly one file")
         return self
 
     @model_validator(mode="after")
@@ -146,7 +199,7 @@ class LedgerImportFileRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    file_name: str = Field(min_length=1, max_length=255)
+    file_name: str = Field(min_length=1, max_length=_FILE_NAME_MAX_LENGTH)
     reason_code: Literal[
         "transaction_validation",
         "own_account_mismatch",
@@ -154,10 +207,35 @@ class LedgerImportFileRefusal(BaseModel):
         "source_changed",
         "empty_directory",
         "file_limit",
+        "reader_unavailable",
+        "format_not_installed",
+        "statement_account_missing",
     ]
     """``empty_directory`` names a requested directory holding no importable file.
     ``file_limit`` names each requested entry of a request whose planned files
-    exceed the registered count, of which none is read."""
+    exceed the registered count, of which none is read. ``reader_unavailable``
+    names a file whose only reading lane needs a model that could not be asked.
+    ``format_not_installed`` names a file of a format whose parser ships in an
+    optional extra this installation lacks. ``statement_account_missing`` names
+    a file whose statement names no valid account, when its account was to be
+    registered from it."""
+    precondition_verdict: PreconditionVerdictSnapshot | None = None
+    """Present exactly for ``reader_unavailable``: the reader probe's verdict,
+    naming the local AI setup when setting it up lets the file be read. One
+    file of a folder can need it while the others import, so it rides on the
+    file rather than refusing the operation."""
+    next_step: OperationNextStepV1 | None = None
+    """Only for ``reader_unavailable``: the step that lets the file be read, where
+    the verdict states one, worded in the worker's language. A role with no
+    picked reading model leads to choosing one."""
+
+    @model_validator(mode="after")
+    def _verdict_only_for_reader(self) -> LedgerImportFileRefusal:
+        if (self.reason_code == "reader_unavailable") != (self.precondition_verdict is not None):
+            raise ValueError("a ledger import file refusal carries a verdict exactly when its reader was unavailable")
+        if self.next_step is not None and self.reason_code != "reader_unavailable":
+            raise ValueError("a ledger import file refusal serves a step only when its reader was unavailable")
+        return self
 
 
 class LedgerImportValidationProjection(BaseModel):
@@ -190,6 +268,28 @@ class LedgerImportSourceDigest(BaseModel):
 
     file_index: NonNegativeInt
     sha256: ContentDigest
+
+
+class LedgerImportStatementAccount(BaseModel):
+    """The account one planned file's statement names, by mask only.
+
+    ``own_account_id`` is the registered own account the statement names;
+    ``registrable`` says the statement names a valid account that no registered
+    account has. The full account number never leaves the secure request.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    file_index: NonNegativeInt
+    masked_iban: str = Field(min_length=1, max_length=64)
+    own_account_id: OwnAccountId | None = None
+    registrable: bool
+
+    @model_validator(mode="after")
+    def _registrable_names_no_registered_account(self) -> LedgerImportStatementAccount:
+        if self.registrable and self.own_account_id is not None:
+            raise ValueError("a statement account that names a registered account is not registrable")
+        return self
 
 
 class LedgerImportDiagnosticProjection(BaseModel):
@@ -231,6 +331,18 @@ class LedgerImportResultProjection(BaseModel):
     )
     refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_REFUSALS)
     source_digests: tuple[LedgerImportSourceDigest, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    statement_accounts: tuple[LedgerImportStatementAccount, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    registered_own_account_id: OwnAccountId | None = None
+    """The own account this import added to the register from its statement, when it did."""
+
+    @property
+    def settled_effect(self) -> OperationEffect:
+        """The mutation effect a receipt must carry.
+
+        A dry run writes nothing, and an import of no row that registered no account writes nothing.
+        """
+        wrote = self.imported > 0 or self.registered_own_account_id is not None
+        return OperationEffect.UPDATED if not self.dry_run and wrote else OperationEffect.NONE
 
     @model_validator(mode="after")
     def _exact_profile(self) -> LedgerImportResultProjection:
@@ -272,7 +384,7 @@ class _LedgerImportExecutionFile(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    file_name: str = Field(min_length=1, max_length=255)
+    file_name: str = Field(min_length=1, max_length=_FILE_NAME_MAX_LENGTH)
     file_index: NonNegativeInt
     source_sha256: ContentDigest | None = None
     result: LedgerSourceImportResult = Field(repr=False)
@@ -289,12 +401,14 @@ class LedgerImportExecutionResult(BaseModel):
     period: PublicPeriod | None = None
     files: tuple[_LedgerImportExecutionFile, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
     refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_REFUSALS)
+    statement_accounts: tuple[LedgerImportStatementAccount, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    registered_own_account_id: OwnAccountId | None = None
 
 
 def _safe_file_name(path: Path) -> str:
     name = path.name or "(unnamed)"
     bounded = "".join("_" if ord(character) < 32 or ord(character) == 127 else character for character in name)
-    return bounded[:255] or "(unnamed)"
+    return bounded[:_FILE_NAME_MAX_LENGTH] or "(unnamed)"
 
 
 def _safe_encoding(value: str | None) -> str | None:
@@ -310,7 +424,14 @@ def _project_result_facts(
 ) -> _LedgerImportResultFacts:
     """Copy the explicitly public portions of one canonical backend result."""
     diagnostics: list[LedgerImportDiagnosticProjection] = []
+    stored_duplicates = 0
+    stored_duplicates_at: int | None = None
     for report in result.diagnostics:
+        if report.message == _STORED_DUPLICATE_MESSAGE:
+            stored_duplicates += 1
+            if stored_duplicates_at is None:
+                stored_duplicates_at = len(diagnostics)
+            continue
         try:
             message = _DIAGNOSTIC_MESSAGE_KEYS[report.message]
             kind = LedgerImportDiagnosticKind(report.kind)
@@ -325,6 +446,17 @@ def _project_result_facts(
                 severity=severity,
                 message=message,
                 affected_transaction_ids=report.affected_transaction_ids,
+            ),
+        )
+    if stored_duplicates_at is not None:
+        diagnostics.insert(
+            stored_duplicates_at,
+            LedgerImportDiagnosticProjection(
+                kind=LedgerImportDiagnosticKind.DUPLICATE,
+                severity=BaseSeverity.INFO,
+                message=_DIAGNOSTIC_MESSAGE_KEYS[
+                    _ALL_ROWS_STORED_MESSAGE if stored_duplicates == result.rows else _SOME_ROWS_STORED_MESSAGE
+                ],
             ),
         )
     return _LedgerImportResultFacts(
@@ -370,7 +502,9 @@ def _expected_import_effect(
     aggregate: LedgerSourceImportResult | None,
 ) -> OperationEffect:
     """Derive the public effect from persisted import facts, not the request alone."""
-    if not execution.dry_run and aggregate is not None and aggregate.imported > 0:
+    if execution.dry_run:
+        return OperationEffect.NONE
+    if execution.registered_own_account_id is not None or (aggregate is not None and aggregate.imported > 0):
         return OperationEffect.UPDATED
     return OperationEffect.NONE
 
@@ -440,6 +574,8 @@ def project_ledger_import_result(
             for item in result.files
             if item.source_sha256 is not None
         ),
+        statement_accounts=result.statement_accounts,
+        registered_own_account_id=result.registered_own_account_id,
         bucket_id=facts.bucket_id,
         import_batch_id=facts.import_batch_id,
         bucket_event_ids=facts.bucket_event_ids,
@@ -478,6 +614,19 @@ def _prepare_import_file(
     )
     try:
         prepared = prepare_ledger_source_import(command, ports=ports.import_ports, own_accounts=own_accounts)
+    except LedgerImportReaderUnavailableError as exc:
+        verdict = exc.terminal_precondition_verdict
+        if verdict is None:
+            return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="transaction_validation")
+        wording = reader_refusal_next_step(model_run_refusal_code(verdict))
+        return LedgerImportFileRefusal(
+            file_name=_safe_file_name(path),
+            reason_code="reader_unavailable",
+            precondition_verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+            next_step=None if wording is None else wording(served_words_language()),
+        )
+    except MissingOptionalExtraError:
+        return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="format_not_installed")
     except TransactionValidationError as exc:
         return LedgerImportFileRefusal(
             file_name=_safe_file_name(path),
@@ -491,6 +640,8 @@ def _prepare_import_file(
         return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="result_limit")
     if expected_sha256 is not None and parsed_source_sha256(prepared) != expected_sha256:
         return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="source_changed")
+    if payload.register_statement_account is not None and prepared.source.statement_account is None:
+        return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="statement_account_missing")
     return prepared
 
 
@@ -555,6 +706,13 @@ def _compose_staged_imports(
     if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     planned, refusals = _plan_requested_files(payload)
+    if payload.register_statement_account is not None and len(planned) > 1:
+        # One account is registered from one statement; a folder is not one statement.
+        refusals.extend(
+            LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="transaction_validation")
+            for path, _ in planned
+        )
+        planned = ()
     own_accounts = ports.own_accounts.load()
     if payload.own_account_id is not None:
         require_registered_own_account(own_accounts, payload.own_account_id)
@@ -579,6 +737,72 @@ def _compose_staged_imports(
     return ports, staged, refusals
 
 
+def _register_statement_account(
+    prepared: PreparedLedgerSourceImport,
+    *,
+    payload: LedgerImportRequest,
+    bucket_id: str,
+    ports: LedgerImportOperationPorts,
+) -> tuple[PreparedLedgerSourceImport, OwnAccountId | None] | None:
+    """Bind ``prepared`` to the account its statement names, registering the account when it has none.
+
+    Returns the prepared import with its rows bound and the id of an account this call added, or
+    ``None`` when the account could not be registered, in which case nothing was written. A dry
+    run writes nothing: it binds the rows to the identity the register would assign next, which
+    is part of every row's transaction id and duplicate fingerprint, so the preview counts what
+    registering would import rather than what importing with no account would.
+    """
+    registration = payload.register_statement_account
+    statement_account = prepared.source.statement_account
+    if registration is None or statement_account is None:
+        return prepared, None
+    register = ports.own_accounts.load()
+    fact = describe_statement_account(prepared, register)
+    if fact is not None and fact.own_account_id is not None:
+        # Registered since staging, by this operator elsewhere: the statement names that account.
+        return bind_prepared_import_to_own_account(prepared, fact.own_account_id), None
+    if payload.dry_run:
+        return bind_prepared_import_to_own_account(prepared, register.next_account_id()), None
+    try:
+        with validating_governed_facts(ports.operation):
+            added = apply_own_account_request(
+                LedgerOwnAccountRequest(
+                    profile_id=payload.profile_id,
+                    action="add",
+                    label=registration.label,
+                    holding=registration.holding,
+                    iban=statement_account,
+                ),
+                bucket_id=bucket_id,
+                repository=ports.own_accounts,
+            )
+    except OwnAccountRegisterValidationError:
+        return None
+    if added.own_account_id is None:
+        return None
+    return bind_prepared_import_to_own_account(prepared, added.own_account_id), added.own_account_id
+
+
+def _statement_account_facts(
+    staged: list[_StagedImport],
+    *,
+    ports: LedgerImportOperationPorts,
+) -> tuple[LedgerImportStatementAccount, ...]:
+    """The account each staged statement names, against the register as it now stands."""
+    register = ports.own_accounts.load()
+    facts = ((index, describe_statement_account(prepared, register)) for index, _, prepared in staged)
+    return tuple(
+        LedgerImportStatementAccount(
+            file_index=index,
+            masked_iban=fact.masked_iban,
+            own_account_id=fact.own_account_id,
+            registrable=fact.registrable,
+        )
+        for index, fact in facts
+        if fact is not None
+    )
+
+
 def _persist_staged_imports(
     *,
     bucket_id: str,
@@ -589,7 +813,18 @@ def _persist_staged_imports(
 ) -> LedgerImportExecutionResult:
     """Persist staged imports in order and append persistence refusals afterward."""
     files: list[_LedgerImportExecutionFile] = []
+    registered_own_account_id: OwnAccountId | None = None
+    persisted: list[_StagedImport] = []
     for index, path, prepared in staged:
+        if payload.register_statement_account is not None:
+            registered = _register_statement_account(prepared, payload=payload, bucket_id=bucket_id, ports=ports)
+            if registered is None:
+                refusals.append(
+                    LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="transaction_validation"),
+                )
+                continue
+            prepared, registered_own_account_id = registered
+        persisted.append((index, path, prepared))
         try:
             result = persist_prepared_ledger_source_import(
                 prepared,
@@ -620,6 +855,8 @@ def _persist_staged_imports(
         period=payload.period,
         files=tuple(files),
         refused_files=tuple(refusals),
+        statement_accounts=_statement_account_facts(persisted, ports=ports),
+        registered_own_account_id=registered_own_account_id,
     )
 
 
@@ -668,7 +905,8 @@ async def _commit_staged_imports(
         )
         effect = (
             OperationEffect.UPDATED
-            if any(item.result.imported > 0 for item in execution.files)
+            if execution.registered_own_account_id is not None
+            or any(item.result.imported > 0 for item in execution.files)
             else OperationEffect.NONE
         )
         reference = await context.operands.put(execution, written_at=now())
@@ -751,12 +989,13 @@ def resolve_ledger_import_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile read access and COMMIT only for a persisted import."""
-    if request.definition_id != LEDGER_IMPORT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerImportRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        request_type=LedgerImportRequest,
+        commits=lambda payload: not payload.dry_run,
+    )
 
 
 def build_ledger_import_registration(
@@ -773,6 +1012,7 @@ def build_ledger_import_registration(
 
 __all__ = [
     "LEDGER_IMPORT_OPERATION_DEFINITION_ID",
+    "LedgerImportAccountRegistration",
     "LedgerImportDiagnosticProjection",
     "LedgerImportExecutor",
     "LedgerImportFileRefusal",
@@ -781,6 +1021,7 @@ __all__ = [
     "LedgerImportRequest",
     "LedgerImportResultProjection",
     "LedgerImportSourceProjection",
+    "LedgerImportStatementAccount",
     "LedgerImportValidationProjection",
     "build_ledger_import_definition",
     "build_ledger_import_registration",

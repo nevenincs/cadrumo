@@ -16,48 +16,56 @@ keys stay aligned with the registry-token authority.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, Literal, Protocol, Self, runtime_checkable
 
-from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    NonNegativeInt,
+    PlainSerializer,
+    computed_field,
+    model_validator,
+)
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core.period import Period as _Period
-from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ...core.period import Period
+from ...core.post_filing_event import PostFilingEventKind
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
-from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...core.time.date_range import validate_inclusive_date_range
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, TaxpayerModelFact
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
-from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
-from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
-from ...domain.deadlines.models import Recovery as _Recovery
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
+from ...domain.deadlines.models import ObligationStatus, Recovery
 from ..operator_actions.models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
+from .suppressed_verdict_words import SUPPRESSING_VERDICTS
 
 
 def _hydrate_calendar_period(value: object) -> object:
     """Hydrate a calendar JSON period string into :class:`~core.period.Period`."""
     if isinstance(value, str):
-        return _Period.from_string(value)
+        return Period.from_string(value)
     return value
 
 
-def _serialize_calendar_period(value: _Period) -> str:
+def _serialize_calendar_period(value: Period) -> str:
     """Render a typed calendar period for JSON serialization."""
     return str(value)
 
 
 _CalendarPeriod = Annotated[
-    _Period,
+    Period,
     BeforeValidator(_hydrate_calendar_period),
     PlainSerializer(_serialize_calendar_period, return_type=str),
 ]
@@ -129,14 +137,198 @@ class OverviewAeatSubmissionState(StrEnum):
     JUSTIFICANTE_VERIFIED = "justificante_verified"
 
 
-_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewPeriodState] = MappingProxyType(
+class OverviewFilingStatus(StrEnum):
+    """The one filing status a calendar row states, decided from its evidence axes.
+
+    AEAT evidence outranks the local record and the local record outranks the
+    deadline, so a row never repeats a claim a stronger source already settled.
+    A local record never claims AEAT: ``recorded_locally`` says the application
+    holds a filing record that AEAT has not been observed to confirm.
+    ``evidence_withheld`` is a period its evidence shows filed, read where that
+    evidence is withheld, so it claims neither an AEAT submission nor a local
+    record.
+    """
+
+    RECEIPT_VERIFIED = "receipt_verified"
+    ACCEPTED = "accepted"
+    SUBMITTED = "submitted"
+    IMPORTED = "imported"
+    RECORDED_LOCALLY = "recorded_locally"
+    EVIDENCE_WITHHELD = "evidence_withheld"
+    DUE = "due"
+    OVERDUE = "overdue"
+    UNKNOWN = "unknown"
+
+
+_FILING_STATUS_FOR_AEAT_STATE: MappingProxyType[OverviewAeatSubmissionState, OverviewFilingStatus] = MappingProxyType(
     {
-        _ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
-        _ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
-        _ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
-        _ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
-        _ObligationStatus.FILED: OverviewPeriodState.FILED,
-        _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: OverviewFilingStatus.RECEIPT_VERIFIED,
+        OverviewAeatSubmissionState.ACCEPTED: OverviewFilingStatus.ACCEPTED,
+        OverviewAeatSubmissionState.SUBMITTED_OBSERVED: OverviewFilingStatus.SUBMITTED,
+    },
+)
+_FILING_STATUS_FOR_PERIOD_STATE: MappingProxyType[OverviewPeriodState, OverviewFilingStatus] = MappingProxyType(
+    {
+        OverviewPeriodState.DUE: OverviewFilingStatus.DUE,
+        OverviewPeriodState.LATE: OverviewFilingStatus.OVERDUE,
+        OverviewPeriodState.UNKNOWN: OverviewFilingStatus.UNKNOWN,
+        OverviewPeriodState.FILED: OverviewFilingStatus.EVIDENCE_WITHHELD,
+    },
+)
+
+
+def decide_filing_status(
+    *,
+    aeat_submission_state: OverviewAeatSubmissionState | None,
+    local_filing_state: OverviewLocalFilingState | None,
+    period_state: OverviewPeriodState,
+) -> OverviewFilingStatus:
+    """Decide the one filing status of a row from its AEAT, local and deadline axes.
+
+    A period is FILED only from a local filing record, which makes its local
+    state ready or imported, or from AEAT evidence. So a FILED period with
+    neither a local record nor an observed AEAT state is one whose evidence
+    this read withholds, and it is said as that. ``None`` is an axis the read
+    withholds; it states nothing.
+    """
+    aeat = None if aeat_submission_state is None else _FILING_STATUS_FOR_AEAT_STATE.get(aeat_submission_state)
+    if aeat is not None:
+        return aeat
+    if local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED:
+        return OverviewFilingStatus.IMPORTED
+    if local_filing_state is OverviewLocalFilingState.READY_TO_FILE:
+        return OverviewFilingStatus.RECORDED_LOCALLY
+    return _FILING_STATUS_FOR_PERIOD_STATE[period_state]
+
+
+class OverviewCalendarScope(StrEnum):
+    """A calendar scope a row belongs to; a row belongs to every scope that holds for it."""
+
+    PAST = "past"
+    AHEAD = "ahead"
+    UPCOMING = "upcoming"
+    OVERDUE = "overdue"
+    FILED = "filed"
+    EVIDENCE_UNKNOWN = "evidence_unknown"
+
+
+def deadline_scopes(
+    *,
+    adjusted_closes_on: date,
+    evaluated_on: date,
+    status: ObligationStatus,
+    user_state: OverviewPeriodState,
+    aeat_evidence_withheld: bool = False,
+) -> tuple[OverviewCalendarScope, ...]:
+    """The deadline scopes a row belongs to on ``evaluated_on``, in declaration order.
+
+    An unknown close is only bounded below by its nominal date, so its window
+    is not known to have closed and the row is not past; it is ahead only
+    while that earliest date is on or after ``evaluated_on``. Any row whose
+    close is on or after ``evaluated_on`` is ahead, whatever its state. Overdue needs both a
+    passed close and the overdue posture; upcoming needs an open close and a
+    due posture. A row whose AEAT evidence the read withholds is also in
+    ``evidence_unknown``.
+    """
+    closed = adjusted_closes_on < evaluated_on
+    held = {
+        OverviewCalendarScope.PAST: closed and status is not ObligationStatus.UNKNOWN,
+        OverviewCalendarScope.AHEAD: not closed,
+        OverviewCalendarScope.UPCOMING: not closed and user_state is OverviewPeriodState.DUE,
+        OverviewCalendarScope.OVERDUE: closed and user_state is OverviewPeriodState.LATE,
+        OverviewCalendarScope.FILED: user_state is OverviewPeriodState.FILED,
+        OverviewCalendarScope.EVIDENCE_UNKNOWN: aeat_evidence_withheld,
+    }
+    return tuple(scope for scope in OverviewCalendarScope if held.get(scope, False))
+
+
+_ATTENTION_RANK: MappingProxyType[OverviewPeriodState, int] = MappingProxyType(
+    {
+        OverviewPeriodState.LATE: 0,
+        OverviewPeriodState.DUE: 1,
+        OverviewPeriodState.UNKNOWN: 2,
+        OverviewPeriodState.FILED: 3,
+    }
+)
+
+
+def calendar_list_order_key(
+    *,
+    adjusted_closes_on: date,
+    status: ObligationStatus,
+    modelo: str,
+    period: str,
+    local_work_unit_id: str | None,
+) -> tuple[int, int, bool, date, str, str, str]:
+    """The calendar's served order: by the month a window closes in, known closes first, then date and identity.
+
+    An unknown close sorts by its earliest date only as a steady order, after
+    the known closes of its month.
+    """
+    return (
+        adjusted_closes_on.year,
+        adjusted_closes_on.month,
+        status is ObligationStatus.UNKNOWN,
+        adjusted_closes_on,
+        modelo,
+        period,
+        local_work_unit_id or "",
+    )
+
+
+def calendar_attention_order_key(
+    *,
+    adjusted_closes_on: date,
+    status: ObligationStatus,
+    user_state: OverviewPeriodState,
+    modelo: str,
+    period: str,
+    local_work_unit_id: str | None,
+) -> tuple[int, bool, date, str, str, str]:
+    """The order rows need the operator in: late, due, unknown, filed; then known closes first, date and identity."""
+    return (
+        _ATTENTION_RANK[user_state],
+        status is ObligationStatus.UNKNOWN,
+        adjusted_closes_on,
+        modelo,
+        period,
+        local_work_unit_id or "",
+    )
+
+
+def days_until_close(
+    *, adjusted_closes_on: date, evaluated_on: date, holiday_coverage: DeadlineHolidayCoverage
+) -> int | None:
+    """Signed days from ``evaluated_on`` to the effective close: 0 on the closing day, negative once past.
+
+    ``None`` when the close is unknown, because its date is only the earliest
+    it can close.
+    """
+    if holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        return None
+    return (adjusted_closes_on - evaluated_on).days
+
+
+def require_decided_derivations(model: BaseModel, decided: Mapping[str, object]) -> None:
+    """Refuse a public row whose stored derivations differ from what its own fields decide.
+
+    A public row stores its decided values (a public operation model carries no
+    computed output), so a reader or producer can never supply its own.
+    """
+    for name, value in decided.items():
+        if getattr(model, name) != value:
+            raise ValueError(f"{type(model).__name__} serves a {name} it does not decide")
+
+
+_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[ObligationStatus, OverviewPeriodState] = MappingProxyType(
+    {
+        ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
+        ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
+        ObligationStatus.FILED: OverviewPeriodState.FILED,
+        ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
     },
 )
 
@@ -156,7 +348,7 @@ form too.
 """
 
 
-def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
+def user_state_for(obligation_status: ObligationStatus) -> OverviewPeriodState:
     """Return the :class:`OverviewPeriodState` for a deadline engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
@@ -209,7 +401,7 @@ class OverviewCalendarRange(BaseModel):
     this inclusive range.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     from_date: date
     to_date: date
@@ -217,7 +409,7 @@ class OverviewCalendarRange(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_window_order(self) -> OverviewCalendarRange:
-        _validate_inclusive_date_range(self.from_date, self.to_date)
+        validate_inclusive_date_range(self.from_date, self.to_date)
         return self
 
     def covered_years(self) -> tuple[int, ...]:
@@ -252,9 +444,9 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     malformed event from claiming receipt verification without CSV evidence.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: str | None = Field(default=None, min_length=1, max_length=16)
     filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
@@ -290,36 +482,70 @@ class OverviewCalendarEntry(BaseModel):
     The optional :class:`OverviewCalendarFilingEvidence` row attaches local and
     AEAT evidence without changing the legal deadline status from the deadline
     engine.
+
+    A row whose status is :attr:`~domain.deadlines.models.ObligationStatus.UNKNOWN`
+    is a projected window whose close is unknown: ``closes_on`` and
+    ``adjusted_closes_on`` both hold its nominal close, a lower bound the close
+    is never earlier than, its holiday coverage is ``CALENDAR_UNAVAILABLE``, and
+    it carries no payment cutoff, overdue age or recovery.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
     opens_on: date
     closes_on: date
     adjusted_closes_on: date
     shift_reason: str = Field(min_length=1, max_length=64)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
-    jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
-    holiday_coverage: _DeadlineHolidayCoverage
-    # Text of the already-projected calendar territory: the CLI and TUI restore
-    # this row from its snapshot without a pinned authority to re-project it.
-    holiday_territory: str | None = None
+    jurisdictions: tuple[HolidayJurisdiction, ...] = Field(default_factory=tuple)
+    holiday_coverage: DeadlineHolidayCoverage
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
-    status: _ObligationStatus
+    status: ObligationStatus
     user_state: OverviewPeriodState
-    recovery: _Recovery | None = None
+    recovery: Recovery | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True)
     filing_year: FilingYear | None = None
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
     source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
     local_work_unit_id: WorkUnitId | None = None
-    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
+    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=256)
     local_work_unit_revision_id: RevisionId | None = Field(default=None, min_length=1, max_length=128)
+
+    @computed_field
+    @property
+    def days_until_close(self) -> int | None:
+        """Signed days to the effective close; ``None`` while the close is unknown."""
+        return days_until_close(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            holiday_coverage=self.holiday_coverage,
+        )
+
+    @computed_field
+    @property
+    def filing_status(self) -> OverviewFilingStatus:
+        """The one filing status this row states."""
+        return decide_filing_status(
+            aeat_submission_state=self.filing_evidence.aeat_submission_state,
+            local_filing_state=self.filing_evidence.local_filing_state,
+            period_state=self.user_state,
+        )
+
+    @computed_field
+    @property
+    def scopes(self) -> tuple[OverviewCalendarScope, ...]:
+        """The deadline scopes this row belongs to on its evaluation date."""
+        return deadline_scopes(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            status=self.status,
+            user_state=self.user_state,
+        )
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
@@ -340,18 +566,22 @@ class OverviewCalendarEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
-        known_territory = self.holiday_coverage in (
-            _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-        )
-        if known_territory != (self.holiday_territory is not None):
-            raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
         unevaluated = self.holiday_coverage in (
-            _DeadlineHolidayCoverage.NOT_SHIFTED,
-            _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            DeadlineHolidayCoverage.NOT_SHIFTED,
+            DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
         )
         if unevaluated and self.adjusted_closes_on != self.closes_on:
             raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_unknown_close_consistency(self) -> OverviewCalendarEntry:
+        if self.status is not ObligationStatus.UNKNOWN:
+            return self
+        if self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            raise ValueError("OverviewCalendarEntry with an unknown close must report the calendar as unavailable")
+        if self.payment_cutoff_on is not None or self.recovery is not None:
+            raise ValueError("OverviewCalendarEntry with an unknown close carries no payment cutoff or recovery")
         return self
 
     @model_validator(mode="after")
@@ -367,7 +597,7 @@ class OverviewCalendarEntry(BaseModel):
     @model_validator(mode="after")
     def _enforce_overdue_age_consistency(self) -> OverviewCalendarEntry:
         expected = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
-        if self.status is _ObligationStatus.OVERDUE:
+        if self.status is ObligationStatus.OVERDUE:
             if self.days_overdue != expected or expected == 0:
                 raise ValueError("OverviewCalendarEntry.days_overdue must measure the effective overdue deadline")
         elif self.days_overdue is not None:
@@ -427,17 +657,17 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     from; every other event source leaves it ``None``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     event_type: OverviewCalendarEventType
-    post_filing_kind: _PostFilingEventKind | None = None
-    notificacion_estado_servicio: _NotificacionEstadoServicio | None = None
+    post_filing_kind: PostFilingEventKind | None = None
+    notificacion_estado_servicio: NotificacionEstadoServicio | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
     summary: _EventSummary
     reference_id: str = Field(min_length=1, max_length=128)
     snapshot_id: SnapshotId | None = None
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: str | None = Field(default=None, min_length=1, max_length=16)
     filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     status: str | None = Field(default=None, max_length=64)
@@ -476,7 +706,7 @@ class CalendarWarning(BaseModel):
         affected_modelos: Obligation rows this gap can distort.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: str = Field(min_length=1, max_length=128)
     message: str = Field(min_length=1, max_length=128)
@@ -487,7 +717,7 @@ class CalendarWarning(BaseModel):
 class CalendarCompleteness(BaseModel):
     """Breakdown of explicit profile values versus deadline-engine defaults."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     explicitly_set_keys: tuple[str, ...] = Field(default=())
     defaulted_keys: tuple[str, ...] = Field(default=())
@@ -496,14 +726,36 @@ class CalendarCompleteness(BaseModel):
 
 
 class SuppressedCalendarEntry(BaseModel):
-    """One non-applicable obligation retained by ``--show-suppressed``."""
+    """One non-applicable obligation retained by ``--show-suppressed``.
 
-    model_config = _STRICT_FROZEN
+    ``actions`` are the doors that move an undecided obligation on, the primary
+    first and its alternatives after it. Like every calendar door they carry no
+    command text and are excluded from plain serialization; the presentation
+    boundary resolves them against the live command surface.
+    """
 
-    modelo: str = Field(min_length=1, max_length=8)
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
+    actions: tuple[DeclaredNextAction, ...] = Field(default=(), exclude=True)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _window_is_ordered(self) -> Self:
+        if self.opens_on > self.adjusted_closes_on or self.closes_on > self.adjusted_closes_on:
+            raise ValueError("a suppressed obligation's window closes before it opens")
+        # A held-off row is served with the sentence of its verdict; one with
+        # no sentence would fail the whole calendar read when it is projected,
+        # so it is refused where it is built.
+        if self.verdict not in SUPPRESSING_VERDICTS:
+            raise ValueError("a suppressed obligation carries a verdict that holds nothing off the schedule")
+        return self
 
 
 class OverviewCalendar(BaseModel):
@@ -518,7 +770,7 @@ class OverviewCalendar(BaseModel):
     consumer never has to infer coverage from the presence or absence of a row.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     range: OverviewCalendarRange
     evaluated_on: date
@@ -528,19 +780,27 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+    undeclared_profile_facts: tuple[TaxpayerModelFact, ...] = Field(default=())
+    """Every profile fact the taxpayer model still lacks, each named by the profile path that answers it."""
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
     events: tuple[OverviewCalendarEvent, ...] = Field(default=())
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
+
+    @model_validator(mode="after")
+    def _undeclared_facts_match_the_model(self) -> Self:
+        if self.taxpayer_model_declared and self.undeclared_profile_facts:
+            raise ValueError("a calendar with a declared taxpayer model names no undeclared profile fact")
+        return self
 
 
 class OverviewStatusReport(BaseModel):
     """Current active-profile readiness counters for ``overview status``.
 
-    Produced from :class:`~application.state_projection.OperatorStateProjection`
+    Produced from :class:`~application.state_projection_models.OperatorStateProjection`
     by :func:`application.overview.status_report.overview_status_report_from_projection`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile_name: str | None = None
     transactions: NonNegativeInt
@@ -565,10 +825,18 @@ __all__ = [
     "OverviewCalendarEventType",
     "OverviewCalendarFilingEvidence",
     "OverviewCalendarRange",
+    "OverviewCalendarScope",
     "OverviewCensoEnrolmentState",
+    "OverviewFilingStatus",
     "OverviewLocalFilingState",
     "OverviewPeriodState",
     "OverviewStatusReport",
     "SuppressedCalendarEntry",
+    "calendar_attention_order_key",
+    "calendar_list_order_key",
+    "days_until_close",
+    "deadline_scopes",
+    "decide_filing_status",
+    "require_decided_derivations",
     "user_state_for",
 ]

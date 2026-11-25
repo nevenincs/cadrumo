@@ -17,13 +17,13 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_report_verification import (
     CalculationSummaryCheckName,

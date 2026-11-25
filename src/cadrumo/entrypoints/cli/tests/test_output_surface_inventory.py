@@ -73,15 +73,16 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "text crosses into stdout. It replaced two entries that each owned a "
         "private copy of the same three lines."
     ),
-    ("entrypoints/cli/errors.py", "write_stderr", "write"): (
-        "IS the stderr funnel: every write in this function emits redacted_text, "
-        "already through the error-path redaction boundary."
+    ("entrypoints/cli/errors.py", "_write_stderr_encoded", "write"): (
+        "IS the stderr funnel's writer: its only caller, write_stderr, "
+        "hands it text already through the error-path "
+        "redaction boundary and terminal encoding, so every write emits safe_text."
     ),
     ("entrypoints/cli/common.py", "emit_help_text", "typer.echo"): (
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
     ),
-    ("entrypoints/cli/_root_support.py", "emit_version_report_and_exit", "typer.echo"): (
+    ("entrypoints/cli/root_support.py", "emit_version_report_and_exit", "typer.echo"): (
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."
     ),
@@ -91,13 +92,13 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "--cadrumo-command-surface short-circuit, before an app root, profile or "
         "renderer context exists, and carries no operator data to redact."
     ),
-    ("entrypoints/cli/_app_live_auth_preflight.py", "emit_live_auth_preflight", "typer.echo"): (
-        "Already redacted: emits redact_for_cli_output(line) to stderr. Honours "
+    ("entrypoints/cli/app_live_auth_preflight.py", "emit_live_auth_preflight", "typer.echo"): (
+        "Already redacted: emits encode_terminal_text(redact_for_cli_output(line)) to stderr. Honours "
         "the redaction boundary, though it hand-calls the policy rather than "
         "going through the renderer, so it does not consult the "
         "reveal-identifiers opt-in the way the funnel does."
     ),
-    ("entrypoints/cli/main.py", "_emit_operator_progress", "typer.echo"): (
+    ("entrypoints/cli/main.py", "emit_operator_progress", "typer.echo"): (
         "Operator progress banner on stderr, deliberately keeping stdout pure. "
         "Tolerated rather than clean: its content today is a closed set (Cl@ve "
         "Movil auth banners and a translated TUI action label) that "
@@ -106,7 +107,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "behind a public sink, so a future caller could feed it redactable "
         "material. Revisit if that sink grows a caller carrying identity data."
     ),
-    ("application/wizard/commands.py", "_echo_wizard_text", "typer.echo"): (
+    ("application/wizard/command_success.py", "_echo_wizard_text", "typer.echo"): (
         "IS the wizard funnel, and is now the ONLY one: echoes "
         "render_command_output()'s text arm after prepending the sandbox banner. "
         "The success surface and the save-and-exit disclosure both delegate here. "
@@ -114,12 +115,12 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "render-and-echo pair -- which is how one of them came to bypass the "
         "boundary while its sibling did not."
     ),
-    ("entrypoints/cli/_terminal_errors.py", "_render_click_exception_text", "write"): (
+    ("entrypoints/cli/terminal_errors.py", "render_click_exception_text", "write"): (
         "Last-resort crash-boundary fallback used only when typer/rich "
         "rendering is unavailable; it cannot route through the rich path it is "
         "the fallback for."
     ),
-    ("entrypoints/cli/_terminal_errors.py", "_emit_abort", "write"): (
+    ("entrypoints/cli/terminal_errors.py", "_emit_abort", "write"): (
         "Last-resort crash-boundary fallback emitting the constant 'Aborted.' "
         "marker; no operator data passes through it."
     ),

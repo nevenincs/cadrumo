@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from cadrumo.application.operations.events import OperationEventCode
-from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
+from cadrumo.application.operations.frontend_projection import (
+    OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+)
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+
+from ..contracts.operation_access import OperationReply, OperationRequest
 
 
 @dataclass(slots=True)
@@ -45,6 +51,20 @@ class RegisteredOperationReviewHandler[ReviewT: BaseModel]:
     decide: Callable[[ReviewT], Literal["apply", "reject"] | None]
     reject_reason_code: OperationEventCode | None = None
     validate_reference: Callable[[ReviewT, OperationReviewProjectionReferenceV1], None] | None = None
+    present_document: Callable[[Mapping[str, object]], None] | None = None
+    claim: (
+        Callable[
+            [
+                OperationReviewAvailableInteractionV1,
+                Mapping[str, object],
+                UUID,
+                UUID,
+                Callable[[OperationRequest], OperationReply],
+            ],
+            OperationReviewAvailableInteractionV1,
+        ]
+        | None
+    ) = None
 
 
 @dataclass(frozen=True, slots=True)

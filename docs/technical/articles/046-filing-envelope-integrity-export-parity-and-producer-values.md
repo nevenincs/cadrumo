@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-046` · **Topic:** [Filing exports and live state](../topics/filing-and-live-state.md)
+**Topic:** [Filing exports and live state](../topics/filing-and-live-state.md)
 
 <!-- preserved:article -->
 ## Scope

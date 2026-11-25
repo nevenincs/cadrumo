@@ -1,0 +1,341 @@
+import { useId, useState } from "react";
+import { Icon } from "@/components/ui/icon";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type {
+  ModeloFormOrigin,
+  ModeloWorkbenchFormProjectionV1,
+  OperationNextStepV1,
+} from "../../../shell/modeloContract/modeloWorkForm";
+
+import { useStrings } from "../../../shell/strings";
+import { BoxNumber } from "../form/BoxNumber";
+import { OutlineNavigator } from "../workspace/OutlineNavigator";
+import {
+  editKey,
+  editsAdmitted,
+  type FormSession,
+  type PlacedField,
+} from "../form/session";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkForm";
+
+// Beside the form: the boxes the read model says need the filer, and the
+// form's outline. A box leaves To do once the filer has staged a change for
+// it; which boxes need the filer is the read model's standing, never the
+// rail's own judgement.
+
+type Rail = "todo" | "outline";
+
+/** The boxes on pages that may apply that the read model says need the
+ * filer, grouped by their origin token in form order, and apart from them
+ * those whose calculation failed. */
+function todoOf(form: PublicModeloWorkForm, session: FormSession) {
+  const excluded = new Set(
+    form.pages.filter((page) => page.applies === false).map((page) => page.id),
+  );
+  const open = session.placed.filter(
+    (p) => !excluded.has(p.pageId) && !session.staged.has(editKey(p.field)),
+  );
+  const failed = open.filter((p) => p.field.origin === "calculation_failed");
+  const groups = new Map<ModeloFormOrigin, PlacedField[]>();
+  for (const p of open)
+    if (
+      p.field.standing === "needs_you" &&
+      p.field.origin !== "calculation_failed"
+    )
+      groups.set(p.field.origin, [...(groups.get(p.field.origin) ?? []), p]);
+  return { groups: [...groups], failed };
+}
+
+function TodoList({
+  envelope,
+  session,
+  onPicked,
+  onOpenProfile,
+  onOpenCheck,
+  onOpenMovement,
+  onSourceStep,
+}: {
+  envelope: ModeloWorkbenchFormProjectionV1;
+  session: FormSession;
+  onPicked?: () => void;
+  onOpenProfile?: () => void;
+  onOpenCheck?: () => void;
+  onOpenMovement?: (transactionId: string) => void;
+  onSourceStep?: (step: OperationNextStepV1) => void;
+}) {
+  const t = useStrings();
+  const [openFailed, setOpenFailed] = useState(false);
+  // What in the ledger calculating would be refused for, in the read model's
+  // words; its door is the movement it names, when it names one.
+  const hold = envelope.ledger_hold;
+  const movement = hold?.transaction_id ?? null;
+  const ledgerLine = hold && (
+    <button
+      type="button"
+      data-todo-ledger=""
+      onClick={
+        movement && onOpenMovement ? () => onOpenMovement(movement) : undefined
+      }
+      disabled={!movement || !onOpenMovement}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="text-sm">{hold.words}</span>
+      {movement && (
+        <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+      )}
+    </button>
+  );
+  // The profile facts the read model says must be answered before the period
+  // can be worked out, such as the one that decides its cadence; their door
+  // is the profile.
+  const required = envelope.profile_requirements;
+  const profileLine = required.length > 0 && (
+    <button
+      type="button"
+      data-todo-profile=""
+      onClick={onOpenProfile}
+      disabled={!onOpenProfile}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="flex flex-col">
+        <span className="text-sm">{t("workspace.modelo.todo.profile")}</span>
+        <ul className="text-xs text-muted-foreground">
+          {required.map((label) => (
+            <li key={label}>{label}</li>
+          ))}
+        </ul>
+      </span>
+      <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+    </button>
+  );
+  // The declarations this one sums whose filed figures are not there yet,
+  // each worded by the read model with the step that puts it right; the same
+  // answer a refused calculation names them from.
+  const sources = envelope.source_requirements;
+  const sourcesLine = sources.length > 0 && (
+    <div
+      data-todo-sources=""
+      className="flex flex-col gap-1 rounded-md border border-border px-2 py-2"
+    >
+      <span className="flex items-start gap-2 text-sm">
+        <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+        {t("workspace.modelo.todo.sources")}
+      </span>
+      <ul className="flex flex-col">
+        {sources.map((source) => (
+          <li key={source.words}>
+            <button
+              type="button"
+              data-todo-source={source.next_step.kind}
+              onClick={() => onSourceStep?.(source.next_step)}
+              disabled={!onSourceStep}
+              title={source.next_step.words}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
+            >
+              <span>{source.words}</span>
+              <Icon
+                name="forward"
+                size="xs"
+                className="ml-auto shrink-0 text-faint"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+  if (!editsAdmitted(envelope))
+    return (
+      <div className="flex flex-col gap-3 p-2">
+        {profileLine}
+        {ledgerLine}
+        {sourcesLine}
+        <p className="flex gap-2 p-2 text-sm text-muted-foreground">
+          <Icon name="lock" size="xs" className="mt-0.5" />
+          {envelope.form.form.edit_closure
+            ? t("workspace.modelo.filed.read_only")
+            : envelope.rules_incomplete
+              ? t("workspace.modelo.editor.rules_incomplete")
+              : (envelope.admission_refusal_words ??
+                t("workspace.modelo.editability.no_admission"))}
+        </p>
+      </div>
+    );
+  const todo = todoOf(envelope.form.form, session);
+  // Missing values no box holds are the check's to name; the read model
+  // counts them with the missing boxes, so the list states them too.
+  const elsewhere = envelope.header.missing_elsewhere;
+  const elsewhereLine = elsewhere && (
+    <button
+      type="button"
+      data-todo-elsewhere=""
+      onClick={onOpenCheck}
+      disabled={!onOpenCheck}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="text-sm">{elsewhere.words}</span>
+      <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+    </button>
+  );
+  if (
+    !todo.groups.length &&
+    !todo.failed.length &&
+    !elsewhereLine &&
+    !profileLine &&
+    !ledgerLine &&
+    !sourcesLine
+  )
+    return (
+      <p className="flex gap-2 p-4 text-sm text-muted-foreground">
+        <Icon name="check" size="xs" className="mt-0.5 text-success" />
+        {t("workspace.modelo.todo.none")}
+      </p>
+    );
+  const item = (p: PlacedField) => (
+    <li key={p.key}>
+      <button
+        type="button"
+        onClick={() => {
+          session.selectAddress(p.field.address);
+          onPicked?.();
+        }}
+        aria-current={session.selectedKey === p.key}
+        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent aria-[current=true]:bg-selected"
+      >
+        <BoxNumber box={p.field.box} size="sm" />
+        <span className="truncate text-sm">{p.field.label.text}</span>
+      </button>
+    </li>
+  );
+  return (
+    <div className="flex flex-col gap-3 p-2">
+      {profileLine}
+      {ledgerLine}
+      {sourcesLine}
+      {elsewhereLine}
+      {todo.groups.map(([origin, list]) => {
+        const word = t(`workspace.modelo.origin.${origin}`);
+        return (
+          <section key={origin} aria-label={word}>
+            <p className="px-2 pb-1 text-xs font-medium text-warning">{word}</p>
+            <ul>{list.map(item)}</ul>
+          </section>
+        );
+      })}
+      {todo.failed.length > 0 && (
+        <div className="rounded-md border border-border">
+          <button
+            type="button"
+            onClick={() => setOpenFailed(!openFailed)}
+            aria-expanded={openFailed}
+            className="flex w-full items-start gap-2 px-2 py-2 text-left"
+          >
+            <Icon name="alert" size="xs" className="mt-0.5 text-destructive" />
+            <span className="flex flex-col">
+              <span className="text-sm">
+                {t("workspace.modelo.todo.failed", {
+                  count: todo.failed.length,
+                })}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t("workspace.modelo.todo.failed_lead")}
+              </span>
+            </span>
+            <Icon
+              name={openFailed ? "chevronUp" : "chevronDown"}
+              size="xs"
+              className="mt-0.5 ml-auto text-faint"
+            />
+          </button>
+          {openFailed && <ul className="px-1 pb-1">{todo.failed.map(item)}</ul>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The section the form shows the filer at: the chosen box's, else the
+ * last one jumped to. */
+function currentSection(session: FormSession): string | null {
+  const chosen = session.selectedKey
+    ? session.placed.find((p) => p.key === session.selectedKey)
+    : undefined;
+  return chosen?.sectionId ?? session.reveal?.sectionId ?? null;
+}
+
+/** The rail beside the form: To do and the outline, as two tabs. The
+ * workspace places it; `onPicked` follows a pick, to show the form. */
+export function TodoRail({
+  envelope,
+  session,
+  onPicked,
+  onOpenProfile,
+  onOpenCheck,
+  onOpenMovement,
+  onSourceStep,
+}: {
+  envelope: ModeloWorkbenchFormProjectionV1;
+  session: FormSession;
+  onPicked?: () => void;
+  /** Opens the profile, where the boxes it keeps are corrected. */
+  onOpenProfile?: () => void;
+  /** Opens the check, which names the missing values no box holds. */
+  onOpenCheck?: () => void;
+  /** Opens a ledger movement in the Libro, where the shell has one. */
+  onOpenMovement?: (transactionId: string) => void;
+  /** Takes the step a declaration this one sums needs: creates it, or opens
+   * it, where its own form says what is left. */
+  onSourceStep?: (step: OperationNextStepV1) => void;
+}) {
+  const t = useStrings();
+  const [rail, setRail] = useState<Rail>("todo");
+  const panel = useId();
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <Tabs
+        value={rail}
+        onValueChange={(value) => setRail(value as Rail)}
+        className="flex-none px-2"
+      >
+        <TabsList aria-label={t("desktop.modelo.side.label")}>
+          <TabsTrigger value="todo" aria-controls={panel}>
+            {t("workspace.modelo.todo.title")}
+          </TabsTrigger>
+          <TabsTrigger value="outline" aria-controls={panel}>
+            {t("desktop.modelo.side.outline")}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <div
+        id={panel}
+        role="tabpanel"
+        className="min-h-0 flex-1 overflow-y-auto border-t border-border"
+      >
+        {rail === "todo" ? (
+          <TodoList
+            envelope={envelope}
+            session={session}
+            onPicked={onPicked}
+            onOpenProfile={onOpenProfile}
+            onOpenCheck={onOpenCheck}
+            onOpenMovement={onOpenMovement}
+            onSourceStep={onSourceStep}
+          />
+        ) : (
+          <OutlineNavigator
+            form={envelope.form.form}
+            currentSectionId={currentSection(session)}
+            onOpenProfile={onOpenProfile}
+            onJump={(sectionId) => {
+              session.goSection(sectionId);
+              onPicked?.();
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

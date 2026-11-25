@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -35,8 +35,11 @@ __all__ = [
     "PayerFactLedgerSource",
     "PayerFactPeriodCompanion",
     "PayerFactProjection",
+    "PayerFactRecordsKind",
+    "PayerFactRecordsSource",
     "PayerFactValue",
     "payer_fact_declaration",
+    "payer_fact_is_three_state",
     "payer_fact_profile_keys",
     "profile_path_value",
     "resolve_payer_fact",
@@ -91,6 +94,28 @@ class PayerFactLedgerSource:
     record_count_binding: str
 
 
+class PayerFactRecordsKind(StrEnum):
+    """The store of stated records a payer fact is decided from."""
+
+    MODELO_232_RELATED_PARTY = "modelo-232-related-party"
+    """The related-party operations, "none" statement and turnover stated for a Modelo 232 ejercicio."""
+
+
+@dataclass(frozen=True, slots=True)
+class PayerFactRecordsSource:
+    """The records the taxpayer states, which answer a payer fact for a filing year.
+
+    Unlike a ledger source, the records are the taxpayer's own statement of facts
+    no ledger holds, so a complete stated set also establishes the fact false.
+    ``modelo`` and ``period`` select the revision whose dated parameters the
+    derivation applies to the records.
+    """
+
+    kind: PayerFactRecordsKind
+    modelo: Modelo
+    period: str
+
+
 @dataclass(frozen=True, slots=True)
 class PayerFactProjection:
     """One dated, registry-owned payer-applicability declaration.
@@ -107,6 +132,10 @@ class PayerFactProjection:
 
     ``ledger_source`` is set when the registry declares that the taxpayer's own
     records can answer the fact, through a :class:`PayerFactLedgerSource`.
+
+    ``records_source`` is set instead when the fact has no profile field at all
+    and only the records the taxpayer states answer it, through a
+    :class:`PayerFactRecordsSource`; ``profile_keys`` is then empty.
     """
 
     token: str
@@ -116,10 +145,12 @@ class PayerFactProjection:
     three_state: bool = False
     period_companion: PayerFactPeriodCompanion | None = None
     ledger_source: PayerFactLedgerSource | None = None
+    records_source: PayerFactRecordsSource | None = None
+    undetermined_reason: str | None = None
+    """Registry-authored guidance shown, in place of the generic wording, while the fact is unanswered."""
 
 
 type PayerFactValue = PayerFact | PayerFactProjection
-type _PayerFactEvaluator = Callable[[TaxpayerProfile], bool]
 
 
 _FACT_ID = "modelo-payer-applicability-facts"
@@ -127,30 +158,21 @@ _ORDER_KEY = "payer_fact.order"
 _PREFIX = "payer_fact."
 
 
-_PAYER_FACT_EVALUATORS: Mapping[PayerFact, _PayerFactEvaluator] = MappingProxyType(
-    {
-        PayerFact.PAYS_WITHHELD_INCOME: (
-            lambda profile: profile.has_employees or profile.pays_professionals_with_retencion
-        ),
-        PayerFact.PAYS_RENT_WITH_RETENCION: lambda profile: profile.pays_rent_with_retencion,
-        PayerFact.TRADES_INTRACOMMUNITY: lambda profile: profile.does_intracomunitario,
-        PayerFact.IVA_GROUP_MEMBER: (lambda profile: profile.iva is not None and profile.iva.group_member_enrolled),
-        PayerFact.IVA_GROUP_DOMINANT_ENTITY: (
-            lambda profile: profile.iva is not None and profile.iva.group_dominant_entity_enrolled
-        ),
-        PayerFact.OSS_ENROLLED: lambda profile: profile.iva is not None and profile.iva.oss_enrolled,
-    },
-)
-
-
-_PAYER_FACT_PROFILE_KEYS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
+#: Every coded fact, with the optional boolean profile fields that answer it.
+#:
+#: Each key is a three-state field, so an unanswered question reads ``None``
+#: and a stored ``False`` is the taxpayer's own no. A fact with several keys
+#: holds when any of them is yes. A key inside the optional Modelo IVA block
+#: reads ``None`` for a profile that declares no IVA fact at all, which is the
+#: same unanswered state as an undeclared enrolment inside a claimed block.
+_THREE_STATE_PAYER_FACTS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
     {
         PayerFact.PAYS_WITHHELD_INCOME: ("has_employees", "pays_professionals_with_retencion"),
         PayerFact.PAYS_RENT_WITH_RETENCION: ("pays_rent_with_retencion",),
         PayerFact.TRADES_INTRACOMMUNITY: ("does_intracomunitario",),
-        PayerFact.IVA_GROUP_MEMBER: ("iva",),
-        PayerFact.IVA_GROUP_DOMINANT_ENTITY: ("iva",),
-        PayerFact.OSS_ENROLLED: ("iva",),
+        PayerFact.IVA_GROUP_MEMBER: ("iva.group_member_enrolled",),
+        PayerFact.IVA_GROUP_DOMINANT_ENTITY: ("iva.group_dominant_entity_enrolled",),
+        PayerFact.OSS_ENROLLED: ("iva.oss_enrolled",),
     },
 )
 
@@ -216,9 +238,15 @@ def _declaration_profile_key(profile_key: str, *, token: str) -> bool:
 
 
 def _declaration_profile_keys(entries: Mapping[str, str], prefix: str, *, token: str) -> tuple[str, ...]:
-    """Return the single key, or the keys of a derived any-of fact."""
+    """Return the single key, or the keys of a derived any-of fact, or none for a records-only fact."""
     single = f"{prefix}profile_key"
     any_of = f"{prefix}any_of_profile_keys"
+    if _declares_records_source(entries, prefix):
+        if single in entries or any_of in entries:
+            raise RegistryValidationError(
+                f"payer applicability fact {token!r} derives from stated records and declares a profile key",
+            )
+        return ()
     if (single in entries) == (any_of in entries):
         raise RegistryValidationError(
             f"payer applicability fact {token!r} must declare exactly one of profile_key or any_of_profile_keys",
@@ -297,6 +325,62 @@ def _ledger_source(
     return PayerFactLedgerSource(modelo=modelo, period=period, record_count_binding=binding)
 
 
+_RECORDS_SOURCE_FIELDS: Final = ("records_kind", "records_modelo", "records_period")
+
+
+def _declares_records_source(entries: Mapping[str, str], prefix: str) -> bool:
+    return any(f"{prefix}{field}" in entries for field in _RECORDS_SOURCE_FIELDS)
+
+
+def _hydrated_records_source(raw_kind: str, raw_modelo: str, period: str, *, token: str) -> PayerFactRecordsSource:
+    """Validate the three raw fields of a records source against the closed kinds, modelos and filing periods."""
+    try:
+        kind = PayerFactRecordsKind(raw_kind)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names an unknown kind {raw_kind!r}",
+        ) from exc
+    try:
+        modelo = Modelo(raw_modelo)
+    except CoreValidationError as exc:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names an invalid modelo {raw_modelo!r}",
+        ) from exc
+    if not is_filing_period_token(period):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names {period!r}, which is not a filing period",
+        )
+    return PayerFactRecordsSource(kind=kind, modelo=modelo, period=period)
+
+
+def _records_source(
+    entries: Mapping[str, str],
+    prefix: str,
+    *,
+    token: str,
+    period_companion: PayerFactPeriodCompanion | None,
+    ledger_source: PayerFactLedgerSource | None,
+) -> PayerFactRecordsSource | None:
+    """Hydrate the declared records source: all three fields or none."""
+    present = [field for field in _RECORDS_SOURCE_FIELDS if f"{prefix}{field}" in entries]
+    if not present:
+        return None
+    if len(present) != len(_RECORDS_SOURCE_FIELDS):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} declares an incomplete records source: it needs "
+            f"{', '.join(_RECORDS_SOURCE_FIELDS)}",
+        )
+    if period_companion is not None or ledger_source is not None:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} derives from stated records and declares a period set or a "
+            "ledger source",
+        )
+    raw_kind, raw_modelo, period = (
+        required_mapping_entry(entries, f"{prefix}{field}", subject=_ENTRY_SUBJECT) for field in _RECORDS_SOURCE_FIELDS
+    )
+    return _hydrated_records_source(raw_kind, raw_modelo, period, token=token)
+
+
 def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
     definitions: list[PayerFactProjection] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
@@ -314,6 +398,7 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
         # Every key is validated; a short-circuiting any() would leave later keys unchecked.
         key_three_states = [_declaration_profile_key(key, token=raw_token) for key in profile_keys]
         period_companion = _period_companion(entries, prefix, token=raw_token)
+        ledger_source = _ledger_source(entries, prefix, token=raw_token, period_companion=period_companion)
         definitions.append(
             PayerFactProjection(
                 token=raw_token,
@@ -322,7 +407,15 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
                 legal_refs=legal_refs,
                 three_state=any(key_three_states),
                 period_companion=period_companion,
-                ledger_source=_ledger_source(entries, prefix, token=raw_token, period_companion=period_companion),
+                ledger_source=ledger_source,
+                undetermined_reason=entries.get(f"{prefix}undetermined_reason"),
+                records_source=_records_source(
+                    entries,
+                    prefix,
+                    token=raw_token,
+                    period_companion=period_companion,
+                    ledger_source=ledger_source,
+                ),
             ),
         )
     if len({item.token for item in definitions}) != len(definitions):
@@ -419,11 +512,30 @@ def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection)
     return _projection_yes_declaration(profile, fact)
 
 
+def payer_fact_is_three_state(fact: PayerFactValue) -> bool:
+    """Report whether a profile can state ``fact`` as a declared no, not only a yes or nothing."""
+    if isinstance(fact, PayerFactProjection):
+        return fact.three_state
+    return fact in _THREE_STATE_PAYER_FACTS
+
+
+def _three_state_declaration(answers: tuple[object, ...]) -> PayerFactDeclaration:
+    """Reduce optional yes/no answers: any yes holds, else any unanswered leaves it open, else no."""
+    if any(answer is True for answer in answers):
+        return PayerFactDeclaration.DECLARED_YES
+    if any(answer is None for answer in answers):
+        return PayerFactDeclaration.UNDECLARED
+    return PayerFactDeclaration.DECLARED_NO
+
+
 def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> PayerFactDeclaration:
     """Return what ``profile`` declares about the supplied payer fact.
 
-    A coded mechanics fact is two-state: its evaluator can prove a yes, and
-    anything else stays undeclared.
+    Every coded fact reads optional boolean profile fields, so it is
+    three-state: a stated no is a declared no and an absent answer stays
+    undeclared. A dated projection over a plain boolean field keeps the
+    two-state reading, because that field's ``False`` cannot be told apart
+    from a question nobody asked.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
@@ -431,10 +543,10 @@ def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> Pa
     if isinstance(fact, PayerFactProjection):
         return _projection_declaration(profile, fact)
     try:
-        holds = _PAYER_FACT_EVALUATORS[fact](profile)
+        answered_keys = _THREE_STATE_PAYER_FACTS[fact]
     except KeyError as exc:
-        raise RegistryValidationError(f"payer applicability fact {fact!r} has no evaluator") from exc
-    return PayerFactDeclaration.DECLARED_YES if holds else PayerFactDeclaration.UNDECLARED
+        raise RegistryValidationError(f"payer applicability fact {fact!r} has no declared profile keys") from exc
+    return _three_state_declaration(tuple(profile_path_value(profile, key) for key in answered_keys))
 
 
 def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
@@ -443,4 +555,4 @@ def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
         if fact.period_companion is not None:
             return (*fact.profile_keys, fact.period_companion.profile_key)
         return fact.profile_keys
-    return _PAYER_FACT_PROFILE_KEYS.get(fact, ())
+    return _THREE_STATE_PAYER_FACTS.get(fact, ())

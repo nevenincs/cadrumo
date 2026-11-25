@@ -20,6 +20,7 @@ from .. import installed_tui_controls, installed_tui_seed, installed_tui_withhol
 from ..cli_contracts import RetencionesInstalledCliError
 from ..installed_tui_seed import WithholdingWork
 from ..installed_tui_withholding import main, validate_child_receipt
+from ..scenario import SUPPORTED_YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,11 +42,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 )
 def test_child_success_requires_the_whole_requested_public_continuation(fault: str, message: str) -> None:
     """A child's nominal proven status cannot cover an omitted runtime boundary."""
-    target = WithholdingWork("public-work-key", "111", 2025, "2T", "2025", "professional-190")
+    target = WithholdingWork("public-work-key", "111", SUPPORTED_YEAR, "2T", str(SUPPORTED_YEAR), "professional-190")
     work: dict[str, Any] = {
         "target": asdict(target),
         "independent_export_matches": True,
-        "artifact": {"name": "modelo-111-2025-2T.boe", "size": 350, "sha256": "b" * 64},
+        "artifact": {"name": f"modelo-111-{SUPPORTED_YEAR}-2T.boe", "size": 350, "sha256": "b" * 64},
         "operations": ["modelo.work.calculate", "modelo.work.verify", "modelo.export", "modelo.work.file"],
         "recorded_reopen": True,
     }
@@ -125,7 +126,7 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
     def refuse_profile(cli, *, year):
         raise RetencionesInstalledCliError(stage="profile_create", diagnostic_code="wrapper") from original
 
-    monkeypatch.setattr(installed_tui_seed, "_create_withholding_profile", refuse_profile)
+    monkeypatch.setattr(installed_tui_seed, "create_withholding_profile", refuse_profile)
     executable = tmp_path / "aeat"
     executable.write_text("", encoding="utf-8")
     authority = tmp_path / "authority"
@@ -139,9 +140,9 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
     cli.commands.extend(commands)
 
     def run_parent(args):
-        return installed_tui_seed.seed_withholding_work(cli, year=2025)
+        return installed_tui_seed.seed_withholding_work(cli, year=SUPPORTED_YEAR)
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_parent", run_parent)
+    monkeypatch.setattr(installed_tui_withholding, "run_parent", run_parent)
     receipt = tmp_path / "failed.json"
     assert main(("--output-dir", str(tmp_path / "outputs"), "--receipt", str(receipt))) == 2
     contents = receipt.read_text(encoding="utf-8")
@@ -160,15 +161,15 @@ def test_pilot_failure_receipt_keeps_public_surface_without_private_notice(tmp_p
     pilot: Any = SimpleNamespace(
         app=SimpleNamespace(screen=screen, query=lambda _: [SimpleNamespace(id="home-agenda")])
     )
-    monkeypatch.setattr(tui_navigation, "_stack_text", lambda *_args: secret)
+    monkeypatch.setattr(tui_navigation, "stack_text", lambda *_args: secret)
 
     def run_child(args):
         try:
-            tui_navigation._require_fresh_notice(pilot, label="modelo.export")
+            tui_navigation.require_fresh_notice(pilot, label="modelo.export")
         except TuiJourneyError as error:
-            raise installed_tui_withholding._pilot_failure(error, pilot=pilot, stage="lifecycle") from error
+            raise installed_tui_withholding.pilot_failure(error, pilot=pilot, stage="lifecycle") from error
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_child", run_child)
+    monkeypatch.setattr(installed_tui_withholding, "run_child", run_child)
     receipt = tmp_path / "failed.json"
     assert (
         main(
@@ -188,9 +189,9 @@ def test_pilot_failure_receipt_keeps_public_surface_without_private_notice(tmp_p
     contents = receipt.read_text(encoding="utf-8")
     document = json.loads(contents)
     assert document["phase"] == "lifecycle"
-    assert document["stage"] == "lifecycle._require_fresh_notice"
+    assert document["stage"] == "lifecycle.require_fresh_notice"
     assert document["error"] == (
-        "installed withholding lifecycle._require_fresh_notice failed: modelo.export would start under an earlier "
+        "installed withholding lifecycle.require_fresh_notice failed: modelo.export would start under an earlier "
         "workbench notice; open the declaration afresh first"
     )
     assert document["diagnostic"] == {
@@ -234,7 +235,7 @@ def test_home_return_waits_for_one_back_transition_and_the_public_root_refresh(m
 
     monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", refresh)
     pilot = DelayedPilot()
-    asyncio.run(installed_tui_controls._home(pilot))
+    asyncio.run(installed_tui_controls.home(pilot))
     assert pilot.app.screen is home
     assert pilot.back_count == 1
 
@@ -270,10 +271,10 @@ def test_unavailable_home_retains_trusted_control_stage_without_claiming_success
     monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", unavailable_refresh)
     pilot = RootPilot()
     with pytest.raises(InstalledTuiChildError) as caught:
-        asyncio.run(installed_tui_controls._home(pilot))
-    failure = installed_tui_withholding._pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
-    assert failure.stage == "lifecycle._home"
-    assert str(failure) == f"installed withholding lifecycle._home failed: {expected_reason}"
+        asyncio.run(installed_tui_controls.home(pilot))
+    failure = installed_tui_withholding.pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
+    assert failure.stage == "lifecycle.home"
+    assert str(failure) == f"installed withholding lifecycle.home failed: {expected_reason}"
     assert "private-profile-and-credential" not in str(failure)
 
 
@@ -281,10 +282,10 @@ def test_unavailable_home_retains_trusted_control_stage_without_claiming_success
 def test_operation_failure_reason_discards_dynamic_detail(private_suffix: str) -> None:
     """Known operation identities survive while modal values stay out of receipts."""
     error = TuiJourneyError(f"modelo.work.verify did not expose a terminal operation status{private_suffix}")
-    assert installed_tui_withholding._safe_tui_failure_reason(error) == (
+    assert installed_tui_withholding.safe_tui_failure_reason(error) == (
         "modelo.work.verify did not expose a terminal operation status"
     )
-    assert installed_tui_withholding._safe_tui_failure_reason(TuiJourneyError("private-facts")) == (
+    assert installed_tui_withholding.safe_tui_failure_reason(TuiJourneyError("private-facts")) == (
         "installed withholding public control failed"
     )
 
@@ -303,9 +304,9 @@ def test_parent_receipt_retains_child_phase_and_reportable_reason(tmp_path: Path
     )
 
     def run_parent(args):
-        raise installed_tui_withholding._child_process_failure(phase="lifecycle", receipt=child)
+        raise installed_tui_withholding.child_process_failure(phase="lifecycle", receipt=child)
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_parent", run_parent)
+    monkeypatch.setattr(installed_tui_withholding, "run_parent", run_parent)
     receipt = tmp_path / "parent.json"
     assert main(("--output-dir", str(tmp_path / "outputs"), "--receipt", str(receipt))) == 2
     document = json.loads(receipt.read_text(encoding="utf-8"))

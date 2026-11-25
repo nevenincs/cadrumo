@@ -40,11 +40,8 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from cadrumo.application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from cadrumo.application.modelo.verification_gate_findings import missing_evidence_findings
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -88,9 +85,10 @@ _IRPF = _Revision(
     modelo="130",
     input_values_by_casilla_id={
         validated_casilla_id("01", surface=_SURFACE): "250.00",
-        validated_casilla_id("02", surface=_SURFACE): "0.00",
+        validated_casilla_id("gastos-deducibles-previos", surface=_SURFACE): "0.00",
     },
     binding_overrides={
+        "modelo-130-estimacion-directa-modalidad": "directa_normal",
         "modelo-130-pagos-fraccionados-anteriores": "0",
         "modelo-130-resultados-negativos-anteriores": "0",
         "irpf.previous_year_economic_activity_net_income": "0",
@@ -211,7 +209,9 @@ def _export_outcome(
 def _verify_and_export(shape: _Revision, expense: Transaction, tmp_path: Path) -> tuple[bool, str, str]:
     """Return (verify blocks, export outcome, export outcome with no ledger contributor)."""
     with bundled_indexed_authority().operation() as operation:
-        bucket_id = seed_profile()
+        bucket_id = seed_profile(
+            profile_overrides={"irpf.estimation_regime": "directa_normal"} if shape.modelo == "130" else None
+        )
         work_unit_id, baseline_id = _seed(shape, bucket_id=bucket_id, operation=operation)
         transactions = TransactionCatalogueRepository(bucket_id=bucket_id)
         transactions.save(TransactionCatalogue.from_transactions((expense,)))
@@ -237,6 +237,7 @@ def _verify_and_export(shape: _Revision, expense: Transaction, tmp_path: Path) -
             source_transaction_ids=contributors,
             filing_instance_evidence=seeded.filing_instance_evidence,
             source_provenance=(),
+            screen_stamp=seeded.screen_stamp,
         )
         sealed = seeded.model_copy(
             update={

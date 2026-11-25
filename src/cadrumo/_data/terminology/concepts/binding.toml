@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 [language.es]
 short_description = "La regla del registro que conecta una entrada del ledger o un dato del perfil con una casilla."
 definition = "Regla del registro de modelos que asigna una entrada del ledger o un dato del perfil a una casilla concreta, de modo que el calculo sepa que dato alimenta cada casilla de un modelo."
-scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
+scope_note = "Concepto interno de la maquinaria de búsqueda/cálculo de la aplicación; documentado para el RAG de desarrollo, no es un término tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; concepto interno del registro de modelos."

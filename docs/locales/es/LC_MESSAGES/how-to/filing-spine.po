@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -352,10 +352,12 @@ msgid "the saved calculation reference, from `aeat app modelo work revisions`"
 msgstr "la referencia del cálculo guardado: de `aeat app modelo work revisions`"
 
 #: ../../how-to/filing-spine.md:156
-msgid "the rules version reference, shown in status output (you rarely need this)"
+msgid ""
+"the rules version reference, shown in `status` output (you rarely need "
+"this)"
 msgstr ""
 "la referencia de la versión de las reglas, que se muestra en la salida de"
-" estado (rara vez la necesitas)"
+" `status` (rara vez la necesitas)"
 
 #: ../../how-to/filing-spine.md:157
 msgid "a run reference, which only appears when a command was interrupted mid-way"
@@ -617,4 +619,3 @@ msgid "[Command reference](../cli/index.rst): exact flags and selector options."
 msgstr ""
 "[Referencia de órdenes](../cli/index.rst): opciones exactas y opciones de"
 " selector."
-

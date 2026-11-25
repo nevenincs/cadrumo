@@ -22,7 +22,7 @@ from typing import Final
 import pytest
 from sphinx.application import Sphinx
 
-from ..i18n import _GENERATED_MARKER
+from ..i18n import GENERATED_MARKER
 from ..untranslated_typesetting import PAGES_SETTING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -37,7 +37,7 @@ _SPANISH: Final[str] = "Open “Mis expedientes” now."
 #: The banner a generator stamps into a page it owns, which is what puts a page
 #: in the set the transforms read. Taken from the production constant, so a
 #: changed banner cannot leave this gate testing a page nothing selects.
-_BANNER: Final[str] = f"<!-- {_GENERATED_MARKER}: regenerate it, do not edit it -->"
+_BANNER: Final[str] = f"<!-- {GENERATED_MARKER}: regenerate it, do not edit it -->"
 
 
 def _write_site(root: Path, *, register: bool) -> None:

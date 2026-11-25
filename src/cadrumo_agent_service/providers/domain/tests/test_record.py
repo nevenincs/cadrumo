@@ -13,6 +13,7 @@ from ..record import (
     CredentialKind,
     CredentialSecretRefusal,
     CredentialState,
+    ListedModel,
     ProviderCredential,
     ProviderSettingsRecord,
     credential_secret_refusal,
@@ -114,3 +115,65 @@ def test_credential_presence_must_match_its_state() -> None:
 )
 def test_secret_acceptance(candidate: str, refusal: CredentialSecretRefusal | None) -> None:
     assert credential_secret_refusal(candidate) is refusal
+
+
+_AGENT_MODEL_ID_LENGTH = 512
+"""cadrumo-agent's longest model id in its catalogues."""
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("m" * _AGENT_MODEL_ID_LENGTH, id="longest-the-agent-carries"),
+        pytest.param("Synthetic model, edición 1", id="spaces-and-non-ascii"),
+        pytest.param("!" + "~" * 255, id="printable-ascii-stored-before"),
+    ],
+)
+def test_a_listed_model_names_any_model_id_the_catalogue_carries(model: str) -> None:
+    listed = ListedModel(lane="local_api", model=model)
+
+    assert listed.model == model
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("m" * (_AGENT_MODEL_ID_LENGTH + 1), id="one-past-the-agent-s-bound"),
+        pytest.param("", id="empty"),
+        pytest.param("synthetic\nmodel", id="control-character"),
+        pytest.param("synthetic\x7fmodel", id="delete-character"),
+    ],
+)
+def test_a_listed_model_refuses_a_model_id_no_catalogue_carries(model: str) -> None:
+    with pytest.raises(ValidationError):
+        ListedModel(lane="local_api", model=model)
+
+
+_AGENT_LANE_ID_LENGTH = 68
+"""cadrumo-agent's longest lane id: its 64-character provider metadata key, an underscore and the transport."""
+
+
+@pytest.mark.parametrize(
+    "lane",
+    [
+        pytest.param("l" * (_AGENT_LANE_ID_LENGTH - 4) + "_api", id="longest-the-agent-names"),
+        pytest.param("o" * 36 + "_cli", id="forty-characters-stored-before"),
+    ],
+)
+def test_a_record_and_a_listed_model_are_keyed_by_any_lane_id_the_catalogue_carries(lane: str) -> None:
+    document = json.loads(provider_settings_record_document(_record()))
+    document["provider"] = lane
+
+    assert parse_provider_settings_record(json.dumps(document).encode()).provider == lane
+    assert ListedModel(lane=lane, model="example-model-1").lane == lane
+
+
+def test_a_record_and_a_listed_model_refuse_a_lane_id_one_past_the_agent_s_bound() -> None:
+    lane = "l" * (_AGENT_LANE_ID_LENGTH - 3) + "_api"
+    document = json.loads(provider_settings_record_document(_record()))
+    document["provider"] = lane
+
+    with pytest.raises(ValidationError):
+        parse_provider_settings_record(json.dumps(document).encode())
+    with pytest.raises(ValidationError):
+        ListedModel(lane=lane, model="example-model-1")

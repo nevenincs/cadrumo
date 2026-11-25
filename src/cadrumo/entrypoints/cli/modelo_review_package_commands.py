@@ -63,11 +63,12 @@ from ...application.modelo.review_package_verification_files import (
     verify_review_package_signature_file,
 )
 from ...core.i18n.render import tr
-from ._modelo_cli_support import (
+from .common import emit_envelope
+from .modelo_cli_support import (
     parse_revision_selector,
     resolve_actor_option,
 )
-from ._modelo_review_package_rendering import (
+from .modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
     review_package_counter_sign_result,
@@ -80,7 +81,6 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
-from .common import emit_envelope
 from .operation_modelo_review_package import run_modelo_review_package_build
 from .operation_modelo_review_package_exchange import (
     run_review_package_counter_sign,
@@ -153,7 +153,7 @@ review_package_build.__dict__["__input_model__"] = ModeloReviewPackageBuildOpera
 
 def review_package_verify(ctx: typer.Context, package: Path) -> None:
     """Verify a review package's checksum manifest and render its descriptor."""
-    from ._modelo_cli_support import bad_parameter_from_error
+    from .modelo_cli_support import bad_parameter_from_error
 
     try:
         verification = verify_review_package(package, operation=authority_operation(ctx))
@@ -186,7 +186,7 @@ def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_
 
 def review_package_verify_signature(ctx: typer.Context, package: Path, signature: Path, public_key: str) -> None:
     """Verify a review package's Ed25519 signature against the signer's public key."""
-    from ._modelo_cli_support import bad_parameter_from_error
+    from .modelo_cli_support import bad_parameter_from_error
 
     if not signature.exists():
         raise typer.BadParameter(
@@ -232,7 +232,7 @@ def review_package_verify_receipt(
     ctx: typer.Context, package: Path, receipt_path: Path, operator_public_key: str, counter_signer_public_key: str
 ) -> None:
     """Verify both signature layers of a counter-signed review-package receipt."""
-    from ._modelo_cli_support import bad_parameter_from_error
+    from .modelo_cli_support import bad_parameter_from_error
 
     if not receipt_path.exists():
         raise typer.BadParameter(

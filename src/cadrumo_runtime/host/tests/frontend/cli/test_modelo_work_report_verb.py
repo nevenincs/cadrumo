@@ -28,13 +28,11 @@ from cadrumo.domain.modelos.calculation_repository import upsert_calculation_rev
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.entrypoints.cli.tests.modelo_review_package_support import seed_exportable_modelo_revision
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 
-from ._strict_cli_fixture_support import seeded_runtime_backend
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import seed_profile
+from .strict_cli_fixture_support import seeded_runtime_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -46,31 +44,18 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _seed_current_sealed_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Seed a sealed Modelo 111 revision and make it the work unit's current one.
+    """Seed a sealed Modelo 111 revision as the work unit's current one.
 
     The work target's *current* revision is what the report addresses, exactly as
-    ``work review`` does, so the pointer is advanced here the way calculating the
-    revision would have advanced it.
+    ``work review`` does; the seed makes it current the way calculating it would.
     """
     work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
         input_values_by_casilla_id={},
         operation=operation,
     )
-    repository = WorkUnitCatalogueRepository()
-    catalogue = repository.load()
-    work_unit = catalogue.get(work_unit_id)
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
     assert work_unit is not None
-    repository.save(
-        upsert_work_unit(
-            catalogue,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": calculation_revision_id,
-                    "updated_at": datetime.now(UTC),
-                },
-            ),
-        ),
-    )
+    assert work_unit.current_calculation_revision_id == calculation_revision_id
     return work_unit_id, calculation_revision_id
 
 
@@ -112,7 +97,7 @@ def test_the_report_lands_at_the_chosen_path_described_by_its_own_facts(
     result = _report(work_unit_id, output)
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     landed = output.read_bytes()
     assert payload["operation"] == "modelo.work.report"
     assert payload["modelo"] == "111"
@@ -145,7 +130,7 @@ def test_the_result_says_the_artefact_is_not_official_aeat_evidence(
     result = _report(work_unit_id, output)
 
     assert result.exit_code == 0, result.output
-    codes = {notice["code"] for notice in _notices(result.output)}
+    codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
     assert "modelo.work.report.local_calculation_not_official_evidence" in codes
     assert local_calculation_report_notice(OutputLanguage.ES) in output.read_text(encoding="utf-8")
 
@@ -169,7 +154,7 @@ def test_an_existing_file_is_refused_untouched_and_replaced_only_on_explicit_cho
     replaced = _report(work_unit_id, output, "--replace")
 
     assert replaced.exit_code == 0, replaced.output
-    assert _payload(replaced.output)["file_sha256"] == hashlib.sha256(output.read_bytes()).hexdigest()
+    assert unwrap_schema_envelope(replaced.output)["file_sha256"] == hashlib.sha256(output.read_bytes()).hexdigest()
 
 
 def test_a_missing_parent_directory_is_refused_before_any_file_is_written(
@@ -224,10 +209,20 @@ def test_a_work_target_without_a_calculation_is_refused_with_its_address(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A work unit that was never calculated has nothing to report."""
+    """A work unit with no current calculation has nothing to report, though a withdrawn one stays stored."""
     work_unit_id, _ = seed_exportable_modelo_revision(
         input_values_by_casilla_id={},
         operation=operation,
+    )
+    repository = WorkUnitCatalogueRepository()
+    catalogue = repository.load()
+    work_unit = catalogue.get(work_unit_id)
+    assert work_unit is not None
+    repository.save(
+        upsert_work_unit(
+            catalogue,
+            work_unit.model_copy(update={"current_calculation_revision_id": None, "updated_at": datetime.now(UTC)}),
+        ),
     )
     output = tmp_path / "modelo-111-report.csv"
 
@@ -255,8 +250,8 @@ def test_the_requested_output_language_is_the_report_language(
 
     assert spanish.exit_code == 0, spanish.output
     assert english.exit_code == 0, english.output
-    spanish_payload = _payload(spanish.output)
-    english_payload = _payload(english.output)
+    spanish_payload = unwrap_schema_envelope(spanish.output)
+    english_payload = unwrap_schema_envelope(english.output)
     assert spanish_payload["report_language"] == OutputLanguage.ES.value
     assert english_payload["report_language"] == OutputLanguage.EN.value
     assert english_payload["local_calculation_notice"] == local_calculation_report_notice(OutputLanguage.EN)

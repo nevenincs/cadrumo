@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -41,12 +44,18 @@ from ....application.calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
+from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
-from ....application.modelo.verification_cross_period import cross_period_clean_state_findings
+from ....application.modelo.verification_cross_period import (
+    cross_period_clean_state_findings,
+    require_cross_period_clean_state,
+)
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -74,9 +83,9 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import VerificationReport
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -90,41 +99,33 @@ _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_S
 
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
     )
 
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=str(workflow_profile().tax_id)),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="design"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value=IVARegime("GENERAL").value),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                *(
-                    (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
-                    if activity_start_date is not None
-                    else ()
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=str(workflow_profile().tax_id)),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="design"),
+                    UserProfileFact(path="iva.regime", value=IVARegime("GENERAL").value),
+                    *(
+                        (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
+                        if activity_start_date is not None
+                        else ()
+                    ),
+                )
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -152,8 +153,11 @@ def _persist_390_draft(
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     casilla_values: dict[CasillaId, Decimal] = {}
+    operation = published_authority_operation()
+    screen_stamp = calculation_screen_stamp(
+        operation.snapshot("390", filing_year=2025, period=work_unit.period.registry_token), operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -161,6 +165,7 @@ def _persist_390_draft(
         casilla_values=casilla_values,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -177,7 +182,11 @@ def _persist_390_draft(
         updated_at=_CLOCK,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
+    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision_id
 
@@ -203,6 +212,59 @@ def _verification_repositories(
     )
 
 
+class _FixtureRepositories(NamedTuple):
+    work_units: WorkUnitCatalogueRepository
+    calculations: CalculationRevisionCatalogueRepository
+    filings: ModeloRecordCatalogueRepository
+    reports: VerificationReportCatalogueRepository
+    observations: CalculationObservationRepository
+    events: BucketEventHistoryRepository
+
+
+def _fixture_repositories(objects: SecureObjectRepository) -> _FixtureRepositories:
+    """Open the verification fixture's catalogues over one profile's secure objects."""
+    return _FixtureRepositories(
+        work_units=WorkUnitCatalogueRepository(objects=objects),
+        calculations=CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        filings=ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        reports=VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+        observations=CalculationObservationRepository(objects=objects),
+        events=BucketEventHistoryRepository(objects=objects),
+    )
+
+
+def _verify_with_fixture_repositories(
+    revision_id: str,
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+    reports: VerificationReportCatalogueRepository,
+    observations: CalculationObservationRepository,
+    events: BucketEventHistoryRepository,
+    taxpayer: TaxpayerProfile,
+) -> VerificationReport:
+    """Verify one revision over the fixture repositories under a freshly pinned authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return verify_modelo_revision_with_preconditions(
+            revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories(
+                work_unit_repository=work_units,
+                calculation_repository=calculations,
+                filing_repository=filings,
+                verification_repository=reports,
+                observation_repository=observations,
+                bucket_event_repository=events,
+            ),
+            actor="test-operator",
+            workflow_profile=taxpayer,
+            clock=_CLOCK,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        ).report
+
+
 def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
     return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casilla_ids)}
@@ -219,7 +281,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_CLOCK,
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
@@ -299,7 +361,7 @@ def _seed_303_cross_period_sources(
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
                 observation_repository=observation_repository,
-                expected_tax_id="X1234567L",
+                expected_tax_id="X0001500M",
                 clock=_CLOCK,
             )
         observation_repository.save(
@@ -323,7 +385,7 @@ def _seed_303_cross_period_sources(
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": f"EXP-303-2025-{period}",
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                 },
             )
         )
@@ -466,35 +528,22 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         revision_id = _persist_390_draft(
             work_unit_repository=work_units,
             calculation_repository=calculations,
         )
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=workflow_profile(),
+        )
         stored_reports = reports.load().for_calculation_revision(revision_id)
 
     cross_period_findings = tuple(
@@ -518,12 +567,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         _seed_303_cross_period_sources(
             work_unit_repository=work_units,
             calculation_repository=calculations,
@@ -538,24 +582,16 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
             calculation_repository=calculations,
         )
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=workflow_profile(),
+        )
 
     cross_period_findings = tuple(
         finding for finding in report.findings if finding.kind.value == "cross_period_dependency_unclean"
@@ -580,12 +616,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
         objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        observations = CalculationObservationRepository(objects=objects)
-        events = BucketEventHistoryRepository(objects=objects)
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(objects)
         revision_id = _persist_390_draft(
             work_unit_repository=work_units,
             calculation_repository=calculations,
@@ -593,24 +624,16 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
         no_activity_profile = workflow_profile()
         assert no_activity_profile.activity_start_date is None
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=no_activity_profile,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=no_activity_profile,
+        )
 
     assert report.granted_verificado_completo is False
     fail_closed_findings = tuple(
@@ -623,3 +646,159 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     finding = fail_closed_findings[0]
     assert finding.severity.value == "blocking"
     assert "next_action" not in finding.model_dump(mode="json")
+
+
+def _seed_303_first_quarter(
+    repositories: _FixtureRepositories,
+    *,
+    filing_year: int,
+    state: CalculationRevisionState | None,
+    operation: PinnedAuthorityOperation,
+) -> WorkUnit:
+    """Create the 1T Modelo 303 the 390 reads, with a head calculation in ``state`` when one is given."""
+    period = Period.from_year_and_code(filing_year, "1T")
+    unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+        revision_id=operation.snapshot("303", filing_year=filing_year, period="1T").revision.id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repositories.work_units, bucket_event_repository=repositories.events
+        ),
+        clock=_CLOCK,
+        operation=operation,
+    )
+    if state is None:
+        return unit
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    verified = state is CalculationRevisionState.VERIFICADO_COMPLETO
+    repositories.calculations.save(
+        upsert_calculation_revision(
+            repositories.calculations.load(),
+            CalculationRevision(
+                calculation_revision_id=revision_id,
+                work_unit_id=unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=unit.modelo,
+                    revision_id=unit.revision_id,
+                    modelo_year=unit.filing_year,
+                    period=period.registry_token,
+                ),
+                state=state,
+                casilla_values={},
+                created_at=_CLOCK,
+                updated_at=_CLOCK,
+                verified_at=_CLOCK if verified else None,
+                verified_by="test-operator" if verified else None,
+                filing_instance_evidence=None,
+                source_provenance=(),
+            ),
+        )
+    )
+    unit = unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    repositories.work_units.save(upsert_work_unit(repositories.work_units.load(), unit))
+    return unit
+
+
+def _filing_door(
+    repositories: _FixtureRepositories, *, operation: PinnedAuthorityOperation
+) -> tuple[PreconditionVerdict, dict[str, object]]:
+    """Refuse filing the 390 through the real clean-state gate and return its verdict and bound action facts."""
+    (target,) = (unit for unit in repositories.work_units.load().values() if str(unit.modelo) == "390")
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
+        require_cross_period_clean_state(
+            target,
+            observation_repository=repositories.observations,
+            filing_repository=repositories.filings,
+            calculation_repository=repositories.calculations,
+            verification_repository=repositories.reports,
+            justificante_repository=JustificanteRepository(),
+            taxpayer_tax_id=str(workflow_profile().tax_id),
+            activity_start_date=date(target.filing_year - 1, 1, 1),
+            subject_leaf_key="modelo.work.file",
+            operation=operation,
+            work_unit_repository=repositories.work_units,
+        )
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    return verdict, {item.argument_name: item.value for item in verdict.argument_bindings}
+
+
+def _seeded_390(objects: SecureObjectRepository) -> tuple[_FixtureRepositories, int]:
+    repositories = _fixture_repositories(objects)
+    _persist_390_draft(work_unit_repository=repositories.work_units, calculation_repository=repositories.calculations)
+    (target,) = repositories.work_units.load().values()
+    return repositories, target.filing_year
+
+
+def test_filing_a_390_whose_first_quarter_303_does_not_exist_offers_to_create_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.create"
+    assert bound == {"modelo": "303", "period": "1T", "year": filing_year}
+
+
+@pytest.mark.parametrize(
+    ("state", "action_id"),
+    [
+        (None, "operator.modelo.work.calculate"),
+        (CalculationRevisionState.BORRADOR, "operator.modelo.work.verify"),
+        (CalculationRevisionState.VERIFICADO_COMPLETO, "operator.modelo.work.file"),
+    ],
+)
+def test_filing_a_390_moves_its_first_quarter_303_on_by_where_it_stands(
+    tmp_path: Path,
+    state: CalculationRevisionState | None,
+    action_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+        first_quarter = _seed_303_first_quarter(repositories, filing_year=filing_year, state=state, operation=operation)
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == action_id
+    assert bound == {"work_unit_id": first_quarter.work_unit_id}
+
+
+def test_filing_a_390_whose_filed_first_quarter_lacks_its_aeat_record_captures_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A 303 filed on a CSV register entry with no justificante is settled by capturing it, not by redoing it."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+        _seed_303_cross_period_sources(
+            work_unit_repository=repositories.work_units,
+            calculation_repository=repositories.calculations,
+            filing_repository=repositories.filings,
+            observation_repository=repositories.observations,
+            bucket_event_repository=repositories.events,
+            csv_periods={"1T"},
+            operation=operation,
+        )
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.live.filed.pull"
+    assert bound == {"modelos": "303", "period": "1T", "year": filing_year}

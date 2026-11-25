@@ -1,91 +1,68 @@
 """Real-CLI regression: a label reading that stands without its model fill says why.
 
-A text-layer invoice whose labels leave a required field unread asks the on-host
-text model to fill it. That fill is optional: when it cannot run, the label
-reading stands and the unread field stays empty. Two conditions stop it, and
-both must reach the operator on the envelope's ``notices`` channel, because a
-draft with an empty field otherwise looks exactly like a document that does not
-print it:
+A text-layer invoice whose labels leave a required field unread asks the
+person's text-extraction selection to fill it. That fill is optional: when it
+cannot run, the label reading stands and the unread field stays empty. Two
+conditions stop it, and each must reach the operator on the envelope's
+``notices`` channel, because a draft with an empty field otherwise looks
+exactly like a document that does not print it:
 
-- the model runtime cannot be reached;
-- admission control refuses to load the model because this machine shows no
-  measured memory headroom for it. The refusal is respected: the model is never
-  loaded, and nothing is sent to the runtime;
-- admission control refuses the fill because another read already holds the
-  process's on-host inference slot. Nothing is sent to the runtime either.
+- the agent service cannot run the role's lane;
+- the agent refuses to load the selected model because it does not fit this
+  computer's free memory. The refusal is respected: the fill is not retried.
 
 When the labels read nothing the model read is the whole read rather than a
-fill, and admission control's refusal stands unchanged.
+fill, and its refusal stands unchanged.
 
 A batch run keeps the same fact with the draft it stores, so the item's row,
 the run's notices and a later re-run over the same documents all report it.
 
 Drives the real Typer CLI tree, a real encrypted bucket session, a real
 reportlab-generated text-bearing PDF, the real composed reader and the real
-admission check. The runtime is a real HTTP endpoint on a loopback port that
-records every request reaching it; only its reply is authored here. The
-occupied slot is held by a real client dispatch that the runtime keeps open,
-so the arena is full the way a concurrent read fills it.
+execution authority's model-run door. The agent service is the recording
+stand-in the portable runtime relays each model run to; it records every run
+reaching it, and only its reply or its refusal is authored here.
 """
 
 from __future__ import annotations
 
-import asyncio
-import contextvars
 import json
-import socket
-import threading
 from collections.abc import Generator
 from contextlib import contextmanager
-from http import HTTPStatus
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, override
+from typing import Any
 
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.outbound.llm.client import LLMClient
-from cadrumo.adapters.outbound.llm.models import LLMRequest
-from cadrumo.adapters.persistence.llm.cache import LLMCache
-from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
-from cadrumo.adapters.persistence.llm.usage import UsageRecorder
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.model_catalogue import model_candidate
-from cadrumo.tests.fixtures.settings import EnvFileFreeSettings
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
+from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
+from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns
+from cadrumo.application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
+from cadrumo.core.config import load_settings
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
+from .ledger_ux_support import add_evidence, imported_transaction_id, invoke, ledger_ux_bucket_session
+from .portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
+__all__ = ["ledger_ux_bucket_session"]
 
 _HEADROOM_REFUSED = "ledger.evidence.label_reading.headroom_refused"
 _READER_UNAVAILABLE = "ledger.evidence.label_reading.reader_unavailable"
-_BUSY_REFUSED = "ledger.evidence.label_reading.busy_refused"
-_LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE, _BUSY_REFUSED}
+_NO_MODEL_SELECTED = "ledger.evidence.label_reading.no_model_selected"
+_LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE, _NO_MODEL_SELECTED}
 _BATCH_LABEL_READING_DEGRADED = "ledger.evidence.batch.label_reading_degraded"
-_SLOT_AVAILABLE = "llm.local_inference.slot_available"
 
-#: The preconditions a headroom refusal can fail on this host: the free memory
-#: could not be measured, or it was measured short of the requirement plus the
-#: margin with the runtime's resident set readable or not.
-_HEADROOM_CONDITIONS = {
-    ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value,
-    ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
-    ProvisioningPreconditionCondition.RESIDENT_SET_READABLE.value,
-}
+#: The precondition the agent's refusal to load a model too large for the free memory fails.
+_LOAD_CAPACITY = LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+_DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"
-_SUPPLIER_TAX_ID = "B92000082"
+_SUPPLIER_TAX_ID = "B00015081"
 
 # The labels read every required field here except the issuer's letterhead name,
 # which no label assigns, so the text model is asked for exactly that one field.
@@ -102,49 +79,41 @@ _PARTIALLY_LABELLED_LINES = (
 )
 
 # Nothing here is a label the rules read, so there is no reading to stand on.
-_UNLABELLED_LINES = ("B1234567X B17283946 766,30",)
+_UNLABELLED_LINES = ("B1234567X B00015024 766,30",)
 
-#: A model the catalogue makes no memory claim about. Admission control does
-#: not assess such a model, so the cases whose subject is NOT admission run the
-#: same way on every host whatever its free memory.
-_UNASSESSED_MODEL = "cadrumo-test-unassessed-reader:1b"
-
-#: A margin no machine can satisfy, so the real admission check refuses on every
-#: host: a measurable one falls short, an unmeasurable one fails closed.
-_UNSATISFIABLE_MARGIN_BYTES = 1 << 60
+#: The service's reply to every fill: the one field the labels leave unread.
+_FILL_REPLY = json.dumps({"supplier_name": _SUPPLIER_NAME, "supplier_name_anchor": _SUPPLIER_NAME})
 
 
-@contextmanager
-def _recording_runtime() -> Generator[tuple[str, list[str]]]:
-    """Serve a runtime that answers the fill and records every request that reaches it."""
-    arrivals: list[str] = []
+def _fills(service: RecordingModelRuns) -> list[str]:
+    """Return the role of every text-extraction run that reached the service: the fills under test.
 
-    class _Runtime(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            read_json_body(self)
-            arrivals.append(self.path)
-            reply = {"supplier_name": _SUPPLIER_NAME, "supplier_name_anchor": _SUPPLIER_NAME}
-            write_json_response(
-                self,
-                ollama_chat_reply(json.dumps(reply), model=_UNASSESSED_MODEL, prompt_eval_count=100, eval_count=20),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Runtime, path="/api/chat") as chat_url:
-        yield chat_url, arrivals
+    A read may also ask for an optional supply-nature proposal; that run is
+    answered and never counted.
+    """
+    return [header.role for header, _body in service.runs if header.role == ModelRole.TEXT_EXTRACTION.value]
 
 
 @contextmanager
-def _unreachable_runtime_url() -> Generator[str]:
-    """Reserve a loopback port that nothing listens on, so a connection is refused."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reserved:
-        reserved.bind(("127.0.0.1", 0))
-        yield f"http://127.0.0.1:{reserved.getsockname()[1]}/api/chat"
+def _recording_agent(
+    *,
+    lookup_refusal: ModelRunRefusalCode | None = None,
+    run_refusal: ModelRunRefusalCode | None = None,
+) -> Generator[RecordingModelRuns]:
+    """Serve the profile's agent service on the on-host lane, recording every run.
+
+    Each run is answered with the fill, or refused at its start with
+    ``run_refusal`` when one is given.
+    """
+    service = RecordingModelRuns(
+        replies=(_FILL_REPLY,), lane=ON_HOST_LANE, lookup_refusal=lookup_refusal, run_refusal=run_refusal
+    )
+    with serving_portable_agent(service):
+        yield service
 
 
 def _extract(evidence_id: str) -> tuple[int, dict[str, Any]]:
-    extracted = _invoke(["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id])
+    extracted = invoke(["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id])
     return extracted.exit_code, json.loads(extracted.output)
 
 
@@ -152,33 +121,19 @@ def _label_reading_notices(envelope: dict[str, Any]) -> list[dict[str, Any]]:
     return [notice for notice in envelope.get("notices", []) if notice["code"] in _LABEL_READING_CODES]
 
 
-def test_the_refused_model_is_one_the_admission_check_assesses() -> None:
-    """Anchor the detector: a model with no declared requirement is never refused, so the case would be vacuous."""
-    candidate = model_candidate(load_settings().cadrumo_llm_ollama_text_model)
-
-    assert candidate is not None
-    assert candidate.memory_requirement_bytes is not None
-
-
-def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_runtime(
+def test_a_fill_the_model_does_not_fit_leaves_the_label_reading_standing_and_is_not_retried(
     tmp_path: Path,
 ) -> None:
 
-    with (
-        _recording_runtime() as (chat_url, arrivals),
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_contention_check_override=False,
-            cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
-        ),
-    ):
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
-    # Admission control, not a failed read: no request reached the runtime, so
-    # no model was loaded to be refused afterwards.
-    assert arrivals == []
+    # The agent refused the one fill at its start; the refusal is final for
+    # this read, so the fill is not sent again.
+    assert ModelRole.TEXT_EXTRACTION in service.lookups
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value]
     result = envelope["result"]
     assert result["supplier_name"] is None
     assert result["invoice_number"] == "T-0042-2026"
@@ -190,7 +145,7 @@ def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_tou
     assert notice["context"]["reason"] == "load_headroom_refused"
     assert notice["context"]["unread_fields"] == "supplier_name"
     assert notice["context"]["reader_error_type"] == "LLMContentionError"
-    assert notice["context"]["failed_condition_id"] in _HEADROOM_CONDITIONS
+    assert notice["context"]["failed_condition_id"] == _LOAD_CAPACITY
 
 
 def _store_reading_for_review(evidence_id: str) -> None:
@@ -206,7 +161,7 @@ def _store_reading_for_review(evidence_id: str) -> None:
     from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-    from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
     from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
     bucket_id = require_active_bucket_id()
@@ -254,69 +209,61 @@ def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
         "--kind", "received",
         "--counterparty-name", _SUPPLIER_NAME,
     ]  # fmt: skip
-    confirmed = _invoke(args)
+    confirmed = invoke(args)
     if confirmed.exit_code == 0:
         return confirmed
     error = json.loads(confirmed.output)["error"]
     assert error["code"] == "REFUSED_LEDGER_CONFIRMATION_BLOCKED", confirmed.output
-    review = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", evidence_id])
+    review = invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", evidence_id])
     assert review.exit_code == 0, review.output
     blockers = json.loads(review.output)["result"]["blockers"]
     direction = [blocker for blocker in blockers if blocker["reason"] == "unresolved_direction"]
     assert len(direction) == 1, review.output
-    return _invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
+    return invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
 
 
-def test_confirm_reports_the_headroom_refused_fill_on_the_draft_it_re_reads(tmp_path: Path) -> None:
+def test_confirm_reports_the_fill_the_model_does_not_fit_on_the_draft_it_re_reads(tmp_path: Path) -> None:
     """Confirm reads the document again, so the operator minting from it is told the same thing."""
 
-    with (
-        _recording_runtime() as (chat_url, arrivals),
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_contention_check_override=False,
-            cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
-        ),
-    ):
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         _store_reading_for_review(evidence_id)
         confirmed = _confirm_supplying_the_unassigned_identifier(evidence_id)
 
     assert confirmed.exit_code == 0, confirmed.output
-    assert arrivals == []
+    # The stored reading, the review's extract and confirm's re-read each ask
+    # for the fill once; none of the three refusals is retried.
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value] * 3
     envelope = json.loads(confirmed.output)
     (notice,) = _label_reading_notices(envelope)
     assert notice["code"] == _HEADROOM_REFUSED
     assert notice["context"]["unread_fields"] == "supplier_name"
 
 
-def test_a_fill_the_runtime_answers_is_merged_without_a_label_reading_notice(tmp_path: Path) -> None:
+def test_a_fill_the_service_answers_is_merged_without_a_label_reading_notice(tmp_path: Path) -> None:
     """The positive control for the detector above: the same recorder sees an admitted fill arrive."""
 
-    with (
-        _recording_runtime() as (chat_url, arrivals),
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
-    ):
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+    with _recording_agent() as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
-    assert arrivals == ["/api/chat"]
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value]
     assert envelope["result"]["supplier_name"] == _SUPPLIER_NAME
     assert envelope["result"]["grand_total"] == "72.60"
     assert _label_reading_notices(envelope) == []
 
 
-def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning(tmp_path: Path) -> None:
+def test_an_unavailable_lane_leaves_the_label_reading_standing_with_a_warning(tmp_path: Path) -> None:
+    """The service cannot run the role's lane: the fill is refused at its lookup and nothing is run."""
 
-    with (
-        _unreachable_runtime_url() as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
-    ):
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.LANE_UNAVAILABLE) as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
+    assert ModelRole.TEXT_EXTRACTION in service.lookups
+    assert service.runs == []
     assert envelope["result"]["supplier_name"] is None
     assert envelope["result"]["grand_total"] == "72.60"
     (notice,) = _label_reading_notices(envelope)
@@ -324,193 +271,119 @@ def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning
     assert notice["severity"] == "warning"
     assert notice["context"]["reason"] == "reader_unavailable"
     assert notice["context"]["unread_fields"] == "supplier_name"
-    assert "failed_condition_id" not in notice["context"]
+    # The notice names the agent run that did not complete; no setup supplies an unavailable lane.
+    assert notice["context"]["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
 
 
-def test_a_headroom_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
-    """With no label reading to stand on, the model read is required and its refusal is the command's."""
+def _assert_names_the_unpicked_model(notice: dict[str, Any]) -> None:
+    """Not the generic "could not run" notice: the condition the person can put right."""
+    assert notice["code"] == _NO_MODEL_SELECTED
+    assert notice["severity"] == "warning"
+    assert notice["context"]["reason"] == "reader_unavailable"
+    assert notice["context"]["refusal_code"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert notice["context"]["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    assert notice["message"] == tr(
+        "application.ledger.evidence.label_reading.no_model_selected", count=1, fields="supplier_name"
+    )
 
-    with (
-        _recording_runtime() as (chat_url, arrivals),
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_contention_check_override=False,
-            cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
-        ),
-    ):
-        evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
+
+def _assert_serves_the_step_to_pick_a_model(fallback: dict[str, Any]) -> None:
+    """The result serves the refusal's sentence and the step to the choice, worded in one language."""
+    language = fallback["refusal_words_language"]
+    assert fallback["refusal_code"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert fallback["refusal_words"] == tr(NO_READING_MODEL_LOCALE_KEY, locale=language)
+    step = fallback["next_step"]
+    assert step["kind"] == "choose_reading_model"
+    assert step["words"] == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language)
+
+
+def test_no_picked_model_leaves_the_label_reading_standing_and_serves_the_refusal_and_the_step(
+    tmp_path: Path,
+) -> None:
+    """The role has no picked model: the notice and the result say so and serve the way to the choice."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code == 0, envelope
+    assert service.runs == []
+    (notice,) = _label_reading_notices(envelope)
+    _assert_names_the_unpicked_model(notice)
+    _assert_serves_the_step_to_pick_a_model(envelope["result"]["label_reading_fallback"])
+
+
+def test_an_unavailable_lane_serves_no_reading_model_step(tmp_path: Path) -> None:
+    """A lane that cannot run is not a model left unpicked: no step to the choice is served."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.LANE_UNAVAILABLE):
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code == 0, envelope
+    fallback = envelope["result"]["label_reading_fallback"]
+    assert fallback["next_step"] is None
+    assert fallback["refusal_words"] is None
+
+
+def test_no_picked_model_for_the_whole_read_refuses_with_the_sentence_that_says_to_pick_one(tmp_path: Path) -> None:
+    """With no label reading to stand on, the refusal is the command's and tells the person to pick a model."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        evidence_id = add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code != 0, envelope
-    assert arrivals == []
+    assert service.runs == []
+    error = envelope["error"]
+    assert error["code"] == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert error["message"] == tr(NO_READING_MODEL_LOCALE_KEY)
+    action = error["action"]
+    assert action["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    facts = action["evidence"][0]["values"]
+    assert facts["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert facts["role_selection_required"] is True
+
+
+def test_classify_with_no_picked_model_refuses_with_the_sentence_that_says_to_pick_one(tmp_path: Path) -> None:
+    """The model classification names the same refusal as the extraction does."""
+
+    transaction_id = imported_transaction_id(tmp_path)
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        classified = invoke(["--format", "json", "app", "ledger", "classify", transaction_id, "--llm"])
+        envelope = json.loads(classified.output)
+
+    assert classified.exit_code != 0, envelope
+    assert service.runs == []
+    error = envelope["error"]
+    assert error["code"] == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert error["message"] == tr(NO_READING_MODEL_LOCALE_KEY)
+    action = error["action"]
+    assert action["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    assert action["evidence"][0]["values"]["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+
+
+def test_a_does_not_fit_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
+    """With no label reading to stand on, the model read is required and its refusal is the command's."""
+
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
+        evidence_id = add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code != 0, envelope
+    assert len(service.runs) == 1, "the refused read is not retried"
     assert envelope["error"]["code"] == "REFUSED_LLM_CONTENTION"
 
-
-# --- an optional fill refused because another read holds the inference slot ---
-
-#: The prompt the holding read sends, so the runtime can tell it from the fill.
-_HOLDING_PROMPT = "cadrumo-test: hold the on-host inference slot"
-
-#: How long the runtime keeps the holding read open, and how long each side
-#: waits on the other. Generous, because a miss is a hang rather than a pass.
-_HOLD_WAIT_S = 60.0
 
 _CORPUS = files("cadrumo.application.ledger.tests") / "_evidence_corpus"
 
 #: A structured record read by a parser: a batch item that never asks for a
-#: fill, so it cannot be degraded by the occupied slot.
+#: fill, so it cannot be degraded by a refused load.
 _STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
 
 
-def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]:
-    """Dispatch one real on-host read from its own thread, and let it hold the slot.
-
-    The thread runs in a copy of this context, because the runtime URL is bound
-    through a context variable and a bare thread would resolve the host's real
-    runtime instead of the loopback one. The model is uncatalogued, so the
-    holding read is admitted on headroom on any host and it is occupancy alone
-    that the read under test meets.
-    """
-    root = tmp_path / "holding-read"
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_chat_url=load_settings().cadrumo_llm_ollama_chat_url,
-        cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL,
-        cadrumo_llm_cache_dir=root / "cache",
-        cadrumo_llm_usage_dir=root / "usage",
-        cadrumo_llm_run_record_dir=root / "run-record",
-    )
-    client = LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
-    )
-    outcome: list[object] = []
-    context = contextvars.copy_context()
-
-    def _run() -> None:
-        try:
-            outcome.append(context.run(asyncio.run, client.complete(LLMRequest(prompt=_HOLDING_PROMPT))))
-        except BaseException as exc:  # captured and re-asserted by the caller
-            outcome.append(exc)
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-    return thread, outcome
-
-
-@contextmanager
-def _runtime_with_the_slot(tmp_path: Path, *, held: bool) -> Generator[list[str]]:
-    """Serve the reading runtime, with another read holding the inference slot when ``held``.
-
-    Yields the requests that reached the runtime OTHER than the holding read,
-    so an empty list means no read under test was sent. ``held=False`` is the
-    positive control: the same runtime and the same recorder, with the slot
-    free, see the fill arrive.
-    """
-    arrivals: list[str] = []
-    holding = threading.Event()
-    release = threading.Event()
-
-    class _Runtime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            # The batch lane asks the runtime which models it has before it
-            # attempts a document that needs one.
-            write_json_response(
-                self,
-                {"models": [{"name": _UNASSESSED_MODEL, "model": _UNASSESSED_MODEL, "size": 0}]},
-                status=HTTPStatus.OK,
-            )
-
-        @override
-        def do_POST(self) -> None:
-            prompt = json.dumps(read_json_body(self)["messages"])
-            if _HOLDING_PROMPT in prompt:
-                holding.set()
-                release.wait(_HOLD_WAIT_S)
-                write_json_response(self, ollama_chat_reply("held", model=_UNASSESSED_MODEL), status=HTTPStatus.OK)
-                return
-            arrivals.append(self.path)
-            reply = {"supplier_name": _SUPPLIER_NAME, "supplier_name_anchor": _SUPPLIER_NAME}
-            write_json_response(
-                self,
-                ollama_chat_reply(json.dumps(reply), model=_UNASSESSED_MODEL, prompt_eval_count=100, eval_count=20),
-                status=HTTPStatus.OK,
-            )
-
-    with (
-        serving_loopback(_Runtime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
-    ):
-        if not held:
-            yield arrivals
-            return
-        thread, outcome = _start_holding_read(tmp_path)
-        try:
-            assert holding.wait(_HOLD_WAIT_S), f"the holding read never reached the runtime: {outcome}"
-            yield arrivals
-        finally:
-            release.set()
-            thread.join(_HOLD_WAIT_S)
-        # A slot still held here would refuse every later read in this process.
-        assert not thread.is_alive(), "the holding read did not finish, so the slot may still be held"
-        (completed,) = outcome
-        assert not isinstance(completed, BaseException), completed
-
-
-def test_a_busy_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_runtime(
-    tmp_path: Path,
-) -> None:
-
-    with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
-        exit_code, envelope = _extract(evidence_id)
-
-    assert exit_code == 0, envelope
-    # Refused at admission: the fill was never sent, so nothing was loaded for it.
-    assert arrivals == []
-    result = envelope["result"]
-    assert result["supplier_name"] is None
-    assert result["invoice_number"] == "T-0042-2026"
-    assert result["grand_total"] == "72.60"
-    (notice,) = _label_reading_notices(envelope)
-    assert notice["code"] == _BUSY_REFUSED
-    assert notice["severity"] == "warning"
-    assert envelope["status"] == "warning"
-    assert notice["context"]["reason"] == "inference_slot_busy"
-    assert notice["context"]["unread_fields"] == "supplier_name"
-    assert notice["context"]["reader_error_type"] == "LLMBusyError"
-    assert notice["context"]["failed_condition_id"] == _SLOT_AVAILABLE
-
-
-def test_the_same_runtime_sees_the_fill_arrive_when_the_slot_is_free(tmp_path: Path) -> None:
-    """The positive control for the case above: with the slot free the recorder sees the fill."""
-
-    with _runtime_with_the_slot(tmp_path, held=False) as arrivals:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
-        exit_code, envelope = _extract(evidence_id)
-
-    assert exit_code == 0, envelope
-    assert arrivals == ["/api/chat"]
-    assert envelope["result"]["supplier_name"] == _SUPPLIER_NAME
-    assert _label_reading_notices(envelope) == []
-
-
-def test_a_busy_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
-    """With no label reading to stand on, the occupancy refusal is the command's own refusal."""
-
-    with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
-        evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
-        exit_code, envelope = _extract(evidence_id)
-
-    assert exit_code != 0, envelope
-    assert arrivals == []
-    assert envelope["error"]["code"] == "REFUSED_LLM_BUSY"
-
-
 def _batch(folder: Path, *, kind: str = "received") -> tuple[int, dict[str, Any]]:
-    ran = _invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", kind])
+    ran = invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", kind])
     return ran.exit_code, json.loads(ran.output)
 
 
@@ -518,7 +391,7 @@ def _rows_by_source(envelope: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {row["source_name"]: row for row in envelope["result"]["items"]}
 
 
-def test_a_batch_item_degraded_by_a_busy_fill_is_stored_and_reported_with_its_reason(tmp_path: Path) -> None:
+def test_a_batch_item_degraded_by_a_refused_load_is_stored_and_reported_with_its_reason(tmp_path: Path) -> None:
     """One item of the run is degraded; its row, the run's notice and a re-run over its stored draft say so.
 
     The re-run reads nothing -- both documents are already ingested -- so the
@@ -530,31 +403,32 @@ def test_a_batch_item_degraded_by_a_busy_fill_is_stored_and_reported_with_its_re
     (folder / "ticket.pdf").write_bytes(text_pdf_bytes(_PARTIALLY_LABELLED_LINES))
     (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
 
-    with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
         exit_code, first = _batch(folder)
 
     assert exit_code == 0, first
-    assert arrivals == []
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value], "the refused fill is not retried"
     rows = _rows_by_source(first)
     ticket = rows["ticket.pdf"]
     assert ticket["status"] in {"ingested", "pending_review"}, ticket
     assert ticket["label_reading_fallback"] == {
-        "cause": "inference_slot_busy",
+        "cause": "load_headroom_refused",
         "unread_fields": ["supplier_name"],
-        "reader_error_type": "LLMBusyError",
-        "failed_condition_id": _SLOT_AVAILABLE,
+        "reader_error_type": "LLMContentionError",
+        "failed_condition_id": _LOAD_CAPACITY,
+        "refusal_code": None,
     }
     assert rows[_STRUCTURED]["label_reading_fallback"] is None
     (degraded,) = [notice for notice in first["notices"] if notice["code"] == _BATCH_LABEL_READING_DEGRADED]
     assert degraded["severity"] == "warning"
-    assert degraded["context"] == {"label_reading_degraded": "1", "reasons": "inference_slot_busy"}
+    assert degraded["context"] == {"label_reading_degraded": "1", "reasons": "load_headroom_refused"}
     assert first["status"] == "warning"
 
-    with _runtime_with_the_slot(tmp_path, held=False) as arrivals:
+    with _recording_agent() as service:
         exit_code, second = _batch(folder)
 
     assert exit_code == 0, second
-    assert arrivals == [], "a re-run over ingested documents must not read them again"
+    assert _fills(service) == [], "a re-run over ingested documents must not read them again"
     rerun = _rows_by_source(second)
     assert rerun["ticket.pdf"]["status"] == "no_op", second
     assert rerun["ticket.pdf"]["label_reading_fallback"] == ticket["label_reading_fallback"]
@@ -568,16 +442,23 @@ def test_a_stored_received_draft_does_not_complete_an_issued_batch_without_a_rea
     folder = tmp_path / "direction-control"
     folder.mkdir()
     (folder / "ticket.pdf").write_bytes(text_pdf_bytes(_PARTIALLY_LABELLED_LINES))
-    with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
         code, received = _batch(folder)
     assert code == 0, received
-    assert arrivals == []
-    assert received["result"]["items"][0]["label_reading_fallback"]["cause"] == "inference_slot_busy"
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value]
+    assert received["result"]["items"][0]["label_reading_fallback"]["cause"] == "load_headroom_refused"
 
-    # The configured loopback reader has now closed. The received draft is
-    # reusable, but cannot satisfy the distinct issued identity.
+    # No agent service answers now. The received draft is reusable, but cannot
+    # satisfy the distinct issued identity: the issued item is read again, its
+    # own fill is refused for the missing service, and its labels stand.
     code, issued = _batch(folder, kind="issued")
     assert code == 0, issued
-    assert issued["result"]["items"][0]["status"] == "paused", issued
-    assert issued["result"]["items"][0]["label_reading_fallback"] is None
+    (item,) = issued["result"]["items"]
+    assert item["direction"] == "issued", issued
+    assert item["status"] == "pending_review", issued
+    assert item["needed_inference"] is True
+    assert item["label_reading_fallback"]["cause"] == "reader_unavailable"
+    assert item["label_reading_fallback"]["failed_condition_id"] == (
+        LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    )
     assert issued["result"]["summary"]["no_op"] == 0

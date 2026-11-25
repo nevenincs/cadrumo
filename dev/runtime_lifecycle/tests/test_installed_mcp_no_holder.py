@@ -35,8 +35,8 @@ from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, Refusal
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only]
 
@@ -89,7 +89,7 @@ def test_a_fresh_server_process_with_no_key_and_no_holder_answers_authentication
         runtime_environment = {
             name: value for name, value in os.environ.items() if not name.upper().startswith(("PYTHON", "LD_", "DYLD_"))
         }
-        runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+        runtime_environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
         scope.launch(
             executable=runtime_executable.resolve(strict=True),
             arguments=(

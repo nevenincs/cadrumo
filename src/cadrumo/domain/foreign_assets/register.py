@@ -23,17 +23,18 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.country_code import CountryCodeAlpha2
+from ...core.country_code import COUNTRY_CODE_LENGTH, CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.isin import is_valid_isin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
+from ..calculations.registry.form_codes import RegistryCodedEnum, form_codes_in_scope, resolve_form_codes
 
 FOREIGN_ASSET_REGISTER_SCHEMA_VERSION: Final = "1"
 """Schema version stamped on the register document and every entry."""
@@ -89,14 +90,16 @@ _UNIQUE_SCHEMES: Final = frozenset(
     {M720IdentifierScheme.IBAN, M720IdentifierScheme.ACCOUNT_CODE, M720IdentifierScheme.ISIN},
 )
 
-#: Position-103 subclaves per class; ``I`` is written as zero (no subclave).
-_SUBCLAVES_BY_CLASS: Final[dict[M720AssetClassCode, frozenset[int]]] = {
-    M720AssetClassCode.CUENTA: frozenset({1, 2, 3, 4, 5}),
-    M720AssetClassCode.VALOR: frozenset({1, 2, 3}),
-    M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA: frozenset(),
-    M720AssetClassCode.SEGURO: frozenset({1, 2}),
-    M720AssetClassCode.BIEN_INMUEBLE: frozenset({1, 2, 3, 4, 5}),
-}
+_M720_FORM_CODES_FACT: Final = "modelo-720-type-two-form-codes"
+
+
+def _subclaves_for_class(asset_class: M720AssetClassCode) -> frozenset[int]:
+    """Return the position-103 subclaves the registry declares for one class.
+
+    A class declared with none has no subclave, and the design writes it as zero.
+    """
+    declared = resolve_form_codes(_M720_FORM_CODES_FACT).code(f"subclaves.{asset_class.value}")
+    return frozenset(int(token) for token in declared.split(",") if token.strip())
 
 
 def _validate_iban_identifier(value: str) -> None:
@@ -107,10 +110,13 @@ def _validate_iban_identifier(value: str) -> None:
 
 
 def _validate_issuer_country_identifier(value: str) -> None:
-    # Positions 132-143: "se reflejará la clave ZXX, siendo XX el código del país emisor".
-    if len(value) != 3 or not value.startswith("Z") or not value[1:].isalpha():
+    # The record design's marker clave, then the issuer's country code. Outside a scope the form's marker is unknown.
+    codes = form_codes_in_scope()
+    marker = value[:1] if codes is None else codes.code("m720.issuer_country_marker")
+    country = value.removeprefix(marker)
+    if len(marker) + len(country) != len(value) or len(country) != COUNTRY_CODE_LENGTH or not country.isalpha():
         raise ForeignAssetRegisterValidationError(
-            "a security without ISIN is written Z plus the issuer country",
+            "a security without ISIN is written as the form's marker plus the issuer country",
         )
     if value != value.upper():
         raise ForeignAssetRegisterValidationError("issuer country code must be uppercase")
@@ -122,7 +128,7 @@ class M720AssetIdentifier(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     scheme: M720IdentifierScheme
-    value: str = Field(default="", max_length=34)
+    value: str = Field(default="", max_length=64)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -160,7 +166,7 @@ class ForeignAssetRegisterEntry(BaseModel):
     subclave: int | None = None
     country_code: CountryCodeAlpha2
     identifier: M720AssetIdentifier
-    description: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=256)
     held_since: date
     ceased_on: date | None = None
     schema_version: str = FOREIGN_ASSET_REGISTER_SCHEMA_VERSION
@@ -176,7 +182,7 @@ class ForeignAssetRegisterEntry(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _class_invariants(self) -> ForeignAssetRegisterEntry:
-        allowed_subclaves = _SUBCLAVES_BY_CLASS[self.asset_class]
+        allowed_subclaves = _subclaves_for_class(self.asset_class)
         if not allowed_subclaves:
             if self.subclave is not None:
                 raise ForeignAssetRegisterValidationError("clave I carries no subclave (position 103 is zero)")
@@ -211,17 +217,22 @@ class ForeignAssetRegisterEntry(BaseModel):
         return (self.asset_class.value, self.identifier.scheme.value, self.identifier.value)
 
 
-class M720DeclarantCondition(StrEnum):
+class M720DeclarantCondition(RegistryCodedEnum):
     """Position 76 clave de condición del declarante."""
 
-    TITULAR = "1"
-    REPRESENTANTE = "2"
-    AUTORIZADO = "3"
-    BENEFICIARIO = "4"
-    USUFRUCTUARIO = "5"
-    TOMADOR = "6"
-    PODER_DISPOSICION = "7"
-    OTRAS_TITULARIDAD_REAL = "8"
+    TITULAR = "titular"
+    REPRESENTANTE = "representante"
+    AUTORIZADO = "autorizado"
+    BENEFICIARIO = "beneficiario"
+    USUFRUCTUARIO = "usufructuario"
+    TOMADOR = "tomador"
+    PODER_DISPOSICION = "poder_disposicion"
+    OTRAS_TITULARIDAD_REAL = "otras_titularidad_real"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M720_FORM_CODES_FACT, "condition"
 
 
 class ForeignAssetDeclarationEntry(BaseModel):
@@ -236,7 +247,7 @@ class ForeignAssetDeclarationEntry(BaseModel):
 
     asset_ref: M720AssetRef
     condition: M720DeclarantCondition
-    titularidad_detail: str | None = Field(default=None, min_length=1, max_length=25)
+    titularidad_detail: str | None = Field(default=None, min_length=1, max_length=32)
     participation_pct: Percentage
     """Position 476-480: the declarant's share, two decimals; 100 for a sole declarant."""
     schema_version: str = FOREIGN_ASSET_REGISTER_SCHEMA_VERSION

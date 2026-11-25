@@ -23,14 +23,16 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..authenticator_persistence import PersistedSessionMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
-_AWARE = datetime(2026, 4, 1, 10, 30, tzinfo=UTC)
-_LATER = datetime(2026, 4, 1, 12, 30, tzinfo=UTC)
-_NAIVE = datetime(2026, 4, 1, 10, 30)
-_OFFSET = datetime(2026, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
+_AWARE = datetime(_YEAR, 4, 1, 10, 30, tzinfo=UTC)
+_LATER = datetime(_YEAR, 4, 1, 12, 30, tzinfo=UTC)
+_NAIVE = datetime(_YEAR, 4, 1, 10, 30)
+_OFFSET = datetime(_YEAR, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
 _SHA = "a" * 64
 
 

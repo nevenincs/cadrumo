@@ -25,12 +25,13 @@ from __future__ import annotations
 import pytest
 
 from ..export_field_casilla import derive_casilla_export_refs
+from .authored_editions import newest_authored_edition
 from .published_authority import published_inspection, published_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 _MODELO = "390"
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition(_MODELO)
 _PERIOD = "0A"
 
 

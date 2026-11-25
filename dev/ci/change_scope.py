@@ -37,9 +37,9 @@ from typing import Final
 import grimp
 from grimp.exceptions import GrimpException
 
-from dev._paths import REPO_ROOT
 from dev.docs.sequences.verdict_cache import engine_import_closure
-from dev.first_party_source import DEVELOPMENT_TOOLING, MCP_PACKAGE, PACKAGING_HOOKS, PRODUCT_PACKAGE
+from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
+from dev.paths import REPO_ROOT
 
 __all__ = [
     "CHANGE_CLASS_RULES",
@@ -52,6 +52,7 @@ __all__ = [
     "compute_change_scope",
     "main",
     "read_changed_files",
+    "scope_for_manifest",
     "selects_sequence_goldens",
 ]
 
@@ -187,10 +188,20 @@ CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
     # Each pattern holds an input of the goldens gate's verdict: the pages with
     # their sequence contracts and goldens, the engine that executes them and
     # every dev module it imports, and the product and locked dependencies
-    # whose output the goldens record. The verdict key hashes the same set.
+    # whose output the goldens record, and the registry tooling that compiles the
+    # authority they read. The per-sequence verdict keys hash the same set.
     ChangeClassRule(
         name="documented-output",
-        patterns=("docs/**", "dev/docs/**", "src/cadrumo/**", "uv.lock", *engine_import_closure()),
+        patterns=(
+            "docs/**",
+            "dev/docs/**",
+            "dev/registry/**",
+            "src/cadrumo/**",
+            "src/cadrumo_client/**",
+            "src/cadrumo_runtime/**",
+            "uv.lock",
+            *engine_import_closure(),
+        ),
         sequence_goldens=True,
     ),
 )
@@ -365,26 +376,33 @@ def compute_change_scope(
     )
 
 
+def scope_for_manifest(changed_files: Path | None) -> ChangeScope:
+    """Return the selection for a changed-path manifest, or the full tree when there is none.
+
+    Raises ``OSError`` or ``ValueError`` when the manifest cannot be read or
+    names a path outside the repository.
+    """
+    if changed_files is None:
+        return ChangeScope(
+            targets=(*SOURCE_PACKAGES, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
+            ci_contracts=True,
+            sequence_goldens=True,
+            too_broad=False,
+            reason=None,
+        )
+    return compute_change_scope(read_changed_files(changed_files))
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Select tests from supplied paths, or select the full tree when absent."""
     parser = argparse.ArgumentParser(prog="python -m dev.ci.change_scope", description=__doc__)
     parser.add_argument("--changed-files", type=Path, help="file of repository-relative changed paths")
     parser.add_argument("--json", action="store_true", help="emit the full selection as JSON")
     arguments = parser.parse_args(argv)
-    if arguments.changed_files is None:
-        scope = ChangeScope(
-            targets=(PRODUCT_PACKAGE, MCP_PACKAGE, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
-            ci_contracts=True,
-            sequence_goldens=True,
-            too_broad=False,
-            reason=None,
-        )
-    else:
-        try:
-            changed = read_changed_files(arguments.changed_files)
-        except (OSError, ValueError) as error:
-            parser.error(str(error))
-        scope = compute_change_scope(changed)
+    try:
+        scope = scope_for_manifest(arguments.changed_files)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
     if arguments.json:
         print(json.dumps(scope.to_json(), indent=2))
     else:

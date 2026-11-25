@@ -1,9 +1,8 @@
 """The overview calendar's optional-evidence loaders degrade, never hard-refuse.
 
 A live run found `overview calendar` hard-refused for a never-filed taxpayer with
-`Local modelo event evidence is unavailable for this calendar row`, and
-`--allow-incomplete` did not relax it — the same operability class the backlog
-work-unit fix addressed. The three calendar-evidence loaders enrich the
+`Local modelo event evidence is unavailable for this calendar row` — the
+same operability class the backlog work-unit fix addressed. The three calendar-evidence loaders enrich the
 schedule-derived calendar with observed AEAT events and filing evidence; when
 their optional persisted state cannot be loaded they must DEGRADE to a
 schedule-only calendar with a WARNING notice (over-reporting an obligation as
@@ -23,7 +22,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
-from ...adapter_composition import build_expedientes_ports
+from ...adapter_composition_work_ports import build_expedientes_ports
 from ...overview_evidence_composition import (
     local_calendar_filing_evidence,
     local_live_calendar_events,

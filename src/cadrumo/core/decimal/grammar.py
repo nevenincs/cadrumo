@@ -52,7 +52,13 @@ from __future__ import annotations
 import re
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
+
+DECIMAL_TEXT_MAX_LENGTH: Final = 128
+"""The longest decimal text an operation takes."""
+
+CENT_FRACTION_DIGITS: Final = 2
+"""The fraction digits of a hand-typed euro amount."""
 
 _UNSIGNED_ANY_FRACTION = re.compile(r"^\d+(\.\d+)?$")
 _SIGNED_ANY_FRACTION = re.compile(r"^-?\d+(\.\d+)?$")
@@ -143,7 +149,8 @@ def try_parse_canonical_decimal(
 #: ``100.000`` match; ``0.333`` does not (nobody writes a thousands run whose
 #: first group is ``0``), and neither does ``1000.000`` (a lead group of four
 #: digits would itself have been grouped).
-_AMBIGUOUS_THOUSANDS_RE = re.compile(r"^[1-9][0-9]{0,2}\.[0-9]{3}$")
+AMBIGUOUS_THOUSANDS_PATTERN: Final = r"^[1-9][0-9]{0,2}\.[0-9]{3}$"
+_AMBIGUOUS_THOUSANDS_RE = re.compile(AMBIGUOUS_THOUSANDS_PATTERN)
 
 
 def european_thousands_reading_is_ambiguous(text: str) -> bool:
@@ -228,3 +235,20 @@ A bare enum under strict validation refuses the plain token a serialised layout 
 imported row carries, so those fields take this literal over the members above rather
 than restating the pair.
 """
+
+
+def decimal_separator_proved_by(body: str) -> DecimalSeparatorValue | None:
+    """Return which separator a printed amount's digits and marks prove decimal, if either.
+
+    With both marks the later one is the decimal mark; a lone comma is one; a lone dot is one
+    unless the token reads equally as a Spanish thousands group, which proves nothing.
+    """
+    has_comma = "," in body
+    has_dot = "." in body
+    if has_comma and has_dot:
+        return DecimalSeparator.COMMA if body.rfind(",") > body.rfind(".") else DecimalSeparator.PERIOD
+    if has_comma:
+        return DecimalSeparator.COMMA
+    if has_dot and not european_thousands_reading_is_ambiguous(body):
+        return DecimalSeparator.PERIOD
+    return None

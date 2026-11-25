@@ -20,7 +20,8 @@ The four behaviours under test:
   cross-period clean-state gate for FILING a dependent period — it still blocks with
   ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE``.
 * D2 (override precedence): a caller ``--binding`` beats the auto-carried value and is
-  NOT rejected as a source-owned collision.
+  NOT rejected as a source-owned collision; a caller value that differs from the carried
+  one is persisted as a tier divergence and blocks verify.
 * D3 (303 exclusion): the carry resolver never emits the M303 IVA-compensation
   binding (the iva-wallet decision owns it).
 * D4 (grupo fan-in non-goal): documented as out of scope in
@@ -38,12 +39,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.calculations.tests.cross_period_verdict_support import has_non_official_local_chain
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -55,23 +59,30 @@ from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from ....application.modelo.calculation_actions import (
-    calculate_modelo_revision,
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    resolve_bucket_source_mesh,
 )
-from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ....application.modelo.calculation_note_gate import (
+    SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
+    ModeloCalculationBlockedError,
+)
+from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
+from ....application.modelo.credit_resolution import credit_resolution_for_finding, find_finding
+from ....application.modelo.credit_resolution_repository import store_credit_resolution
+from ....application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_wallet_carry_targets import (
@@ -82,24 +93,22 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from ....domain.modelos.source_disagreement import DisagreementDecimalValue, SourceDisagreementRole
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import (
-    _DEFAULT_130_BINDING_VALUES,
-    _M130_AGRARIAN_VOLUME_CASILLA,
-    _M130_AGRARIAN_WITHHELD_CASILLA,
-    _M130_CARRY_FORWARD_CASILLA,
-    _M130_HOME_DEDUCTION_CASILLA,
-    _M130_INCOME_CASILLA,
-    _M130_PREVIOUS_PAYMENTS_CASILLA,
-    _M130_PRIOR_RETURN_RESULT_CASILLA,
-    _M130_SALDO_NEGATIVO_CASILLA,
-    _M130_WITHHELD_CASILLA,
-    _file_revision,
-    _Repos,
-    _verify_revision,
+    FILE_FLOW_DEFAULT_130_BINDING_VALUES,
+    FILE_FLOW_M130_CARRY_FORWARD_CASILLA,
+    FILE_FLOW_M130_HOME_DEDUCTION_CASILLA,
+    FILE_FLOW_M130_INCOME_CASILLA,
+    FILE_FLOW_M130_PRIOR_RETURN_RESULT_CASILLA,
+    FILE_FLOW_M130_SALDO_NEGATIVO_CASILLA,
+    FILE_FLOW_M130_WITHHELD_CASILLA,
+    M130_PREVIOUS_PAYMENTS_CASILLA,
+    FileFlowRepos,
     calculation_ports_for_test,
+    file_flow_file_revision,
+    file_flow_verify_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -112,7 +121,7 @@ _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 
 @pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
+def repos(tmp_path: Path) -> Iterator[FileFlowRepos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         yield (
@@ -134,32 +143,27 @@ _M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
 # previous_filing saldo-negativo at the current positive C14 before it flows through.
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
-# Positive operator-declared withholding makes 1T's partial result negative.
-# Home deduction stays zero, so the subsequent prior-payments aggregation
-# cannot manufacture a negative Casilla05. The carry seed is read from the
-# actually saved/filed revision, rather than derived here from the formulas.
+# No withholding is declared: no source states one, so box 06 is the ledger's
+# own zero and no operator value competes with it. A first-year filer's
+# previous-year net income is zero, so the art. 110.3.c minoración (box 13)
+# exceeds 1T's zero partial result and makes the Diferencia negative. Home
+# deduction stays zero, so the subsequent prior-payments aggregation cannot
+# manufacture a negative Casilla05. The carry seed is read from the actually
+# saved/filed revision, rather than derived here from the formulas.
 _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_WITHHELD_CASILLA: Decimal("5000"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    FILE_FLOW_M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    FILE_FLOW_M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 # Income/gastos remain resolver-owned. A real Q2 income receipt funds a
-# positive current C14 below the saved carry; withholding is cumulative and
-# retains the same operator-declared amount in both quarters. Casillas05/15
-# still come only from previous_filing, never from manual inputs.
-_2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
-    _M130_WITHHELD_CASILLA: Decimal("5000"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-}
+# positive current C14 below the saved carry: its 20 % partial result exceeds
+# the quarter's minoración by less than the 1T seed. Casillas05/15 still come
+# only from previous_filing, never from manual inputs.
+_2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = dict(_NEGATIVE_1T_INPUTS)
+_2T_INCOME = Decimal("750")
 
 
 def _seed_130(
-    repos_: _Repos,
+    repos_: FileFlowRepos,
     *,
     period: str,
     clock: datetime,
@@ -178,7 +182,7 @@ def _seed_130(
     )
 
 
-def _seed_2t_130_income(repos_: _Repos) -> str:
+def _seed_2t_130_income(repos_: FileFlowRepos) -> str:
     """Fund positive 2T through the real manual ledger writer and isolated store."""
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos_
     transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=bv_repo.secure_object_repository)
@@ -195,12 +199,12 @@ def _seed_2t_130_income(repos_: _Repos) -> str:
                 bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 15),
                 value_date=date(2026, 5, 15),
-                amount=Decimal("25750"),
+                amount=_2T_INCOME,
                 direction=TransactionDirection.INCOMING,
                 counterparty="Cliente SA",
                 description="Q2 economic activity income for cross-period carry",
                 business_classification=BusinessClassification.BUSINESS,
-                taxable_base=Decimal("25750"),
+                taxable_base=_2T_INCOME,
                 irpf_category="actividad_economica",
                 actor="operator-A",
                 idempotency_key="m130-carry-q2-income",
@@ -211,12 +215,12 @@ def _seed_2t_130_income(repos_: _Repos) -> str:
     persisted = transactions.load().get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.raw.value_date == date(2026, 5, 15)
-    assert persisted.raw.amount == Decimal("25750")
-    assert persisted.taxable_base == Decimal("25750")
+    assert persisted.raw.amount == _2T_INCOME
+    assert persisted.taxable_base == _2T_INCOME
     return persisted.transaction_id
 
 
-def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityOperation) -> Decimal:
+def _file_1t_with_negative_result(repos_: FileFlowRepos, *, operation: PinnedAuthorityOperation) -> Decimal:
     """File Modelo 130 1T with a negative Diferencia; return its saldo-negativo seed.
 
     Returns the value the 1T revision actually computed for
@@ -231,17 +235,17 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_190:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=_NEGATIVE_1T_INPUTS,
-            binding_values=_DEFAULT_130_BINDING_VALUES,
+            binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_190,
             clock=_T1,
-        )
-    assert Decimal(revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
-    assert Decimal(revision.casilla_values[_M130_HOME_DEDUCTION_CASILLA]) == Decimal("0")
-    assert Decimal(revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
-    saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
+        ).revision
+    assert Decimal(revision.casilla_values[FILE_FLOW_M130_WITHHELD_CASILLA]) == Decimal("0")
+    assert Decimal(revision.casilla_values[FILE_FLOW_M130_HOME_DEDUCTION_CASILLA]) == Decimal("0")
+    assert Decimal(revision.casilla_values[M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
+    saldo = Decimal(revision.casilla_values[FILE_FLOW_M130_SALDO_NEGATIVO_CASILLA])
     assert saldo > 0, "1T inputs must produce a positive carry-forward seed for the test to be meaningful"
     # 1T's casilla-05 expanding-span and casilla-15 single-offset previous_filing
     # bindings are both absent-by-design at 1T (max_year_delta=0, no prior quarter),
@@ -249,7 +253,7 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
     # so the direct mark-complete shortcut is refused and the full verify pipeline
     # is required. _verify_revision seeds the clean M100 prior-year evidence and
     # marks the 1T revision VERIFICADO_COMPLETO so filing can proceed.
-    _verify_revision(
+    file_flow_verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -266,7 +270,7 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
     # _file_revision threads the workflow gate and lets file_modelo_revision use its
     # default CalculationObservationRepository(), which binds to the active bucket and
     # persists the app_filing carry observation co-emitted with MODELO_FILED.
-    _file_revision(
+    file_flow_file_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -280,98 +284,76 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
     return saldo
 
 
-def _seed_first_year_activity_profile(repos_: _Repos) -> None:
-    profile = _create_profile_record_for_test(
+def _seed_first_year_activity_profile(repos_: FileFlowRepos) -> None:
+    profile = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Autonomo"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Autonomo"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+                *cash_criterion_facts(2026),
+            )
         ),
         created_at=_T1,
         updated_at=_T1,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(profile)
 
 
-def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
-    profile = _create_profile_record_for_test(
+def _seed_existing_303_activity_profile(repos_: FileFlowRepos) -> None:
+    profile = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Company"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
+                UserProfileFact(path="identity.legal_name", value="Test Company SL"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Company"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_T1,
         updated_at=_T1,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(profile)
 
 
-def _seed_first_303_activity_profile(repos_: _Repos, *, activity_start_date: str = "2025-01-01") -> None:
-    profile = _create_profile_record_for_test(
+def _seed_first_303_activity_profile(repos_: FileFlowRepos, *, activity_start_date: str = "2025-01-01") -> None:
+    profile = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Company"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
+                UserProfileFact(path="identity.legal_name", value="Test Company SL"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Company"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_T1,
         updated_at=_T1,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(profile)
 
 
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """E2E: filing 1T auto-carries its saldo-negativo into 2T's casilla 15 on calculate.
@@ -396,16 +378,16 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_2t.work_unit_id,
             casilla_inputs=_2T_INPUTS_WITHOUT_15,
-            binding_values=_DEFAULT_130_BINDING_VALUES,
+            binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_341,
             clock=_T4,
         )
 
     assert income_id in result.revision.source_transaction_ids
-    assert Decimal(result.revision.casilla_values[_M130_INCOME_CASILLA]) == Decimal("25750")
-    assert Decimal(result.revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
-    assert Decimal(result.revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
-    carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
+    assert Decimal(result.revision.casilla_values[FILE_FLOW_M130_INCOME_CASILLA]) == _2T_INCOME
+    assert Decimal(result.revision.casilla_values[FILE_FLOW_M130_WITHHELD_CASILLA]) == Decimal("0")
+    assert Decimal(result.revision.casilla_values[M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
+    carried_casilla_15 = Decimal(result.revision.casilla_values[FILE_FLOW_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
     assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
     assert carried_seed > c14 > Decimal("0")
@@ -413,7 +395,7 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(
 
 
 def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """2T calculation reaches same-year carry without a manual prior-year M100 binding."""
@@ -443,7 +425,7 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
     assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
     assert carried_seed > c14 > Decimal("0")
-    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == c14
+    assert Decimal(result.revision.casilla_values[FILE_FLOW_M130_CARRY_FORWARD_CASILLA]) == c14
 
 
 def test_app_filing_source_kind_is_not_official_evidence() -> None:
@@ -458,7 +440,7 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
 
 
 def test_same_year_locally_filed_upstream_admitted_with_advisory(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Same-year admission: a same-year locally-filed 1T lets 2T FILE with a disclosing advisory.
@@ -506,7 +488,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
         revision_2t = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_2t.work_unit_id,
             casilla_inputs=_2T_INPUTS_WITHOUT_15,
-            binding_values=_DEFAULT_130_BINDING_VALUES,
+            binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_431,
             clock=_T4,
         ).revision
@@ -556,7 +538,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
 
 
 def test_caller_binding_override_beats_auto_carried_previous_filing(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """D2: a caller ``--binding`` of the carry binding overrides the auto-carried value.
@@ -564,10 +546,11 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     After filing 1T with a positive saldo-negativo carry, calculating 2T while supplying
     the carry binding id explicitly must (a) NOT be rejected as a source-owned collision
     and (b) drive casilla 15 to the caller's value, not the carried one. The carried
-    value is read back from the no-override calculation so the override case is proven to
-    actually differ.
+    value is read back from the filed 1T revision so the override case is proven to
+    actually differ. Because the two values differ on a filed figure, the calculation
+    persists the divergence with both values, and verify refuses until it is resolved.
     """
-    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos, operation=operation)
     assert carried_seed > Decimal("0")
@@ -584,16 +567,90 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_2t.work_unit_id,
             casilla_inputs=_2T_INPUTS_WITHOUT_15,
-            binding_values={**_DEFAULT_130_BINDING_VALUES, _CARRY_BINDING_ID: override_value},
+            binding_values={**FILE_FLOW_DEFAULT_130_BINDING_VALUES, _CARRY_BINDING_ID: override_value},
             ports=_calculation_ports_500,
             clock=_T4,
         )
 
-    casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
+    casilla_15 = Decimal(result.revision.casilla_values[FILE_FLOW_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
     assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == override_value
     assert override_value > c14 > Decimal("0")
     assert casilla_15 == c14
+
+    divergences = [
+        issue
+        for issue in result.revision.source_issues
+        if issue.reason == "precedence_tier_divergence"
+        and issue.disagreement is not None
+        and issue.disagreement.key == _CARRY_BINDING_ID
+    ]
+    assert len(divergences) == 1
+    finding = divergences[0].disagreement
+    assert finding is not None
+    held = {entry.role: entry.value for entry in finding.sources}
+    assert held == {
+        SourceDisagreementRole.BACKEND: DisagreementDecimalValue.of(carried_seed),
+        SourceDisagreementRole.CALLER: DisagreementDecimalValue.of(override_value),
+    }
+    assert finding.selected_role is SourceDisagreementRole.CALLER
+    assert FILE_FLOW_M130_CARRY_FORWARD_CASILLA in finding.reached_casillas
+    backend, caller = finding.sources
+    # The carried value is named by its declared source, the caller's by the
+    # operator channel; neither names a source object. A previous-filing carry
+    # records no content fingerprint, so its value has no evidence digest.
+    assert (backend.source_family, backend.source_ref) == (
+        "previous_filing",
+        f"previous_filing:binding:{_CARRY_BINDING_ID}",
+    )
+    assert backend.evidence_ref is None
+    assert (caller.source_family, caller.source_ref) == (
+        "operator_input",
+        f"operator_input:binding:{_CARRY_BINDING_ID}",
+    )
+    assert caller.evidence_ref is None
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        file_flow_verify_revision(
+            result.revision.calculation_revision_id,
+            revision=result.revision,
+            work_unit=work_unit_2t,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+    context = refused.value.context
+    assert context is not None
+    assert "precedence_tier_divergence" in str(context["reasons"]).split(",")
+    assert context["finding_ids"] == finding.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+
+    # Accepting the divergence by the id verify named answers exactly that finding; the value in use does not change.
+    objects = secure_object_repository_for_active_bucket()
+    resolution_repository = CreditResolutionRepositoryAdapter(objects=objects)
+    issue = find_finding(result.revision, str(context["finding_ids"]))
+    store_credit_resolution(
+        credit_resolution_for_finding(issue, reason="Synthetic reason: the carry was checked.", at=_T4, by_session="s"),
+        repository=resolution_repository,
+        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+    assert Decimal(result.revision.casilla_values[FILE_FLOW_M130_CARRY_FORWARD_CASILLA]) == casilla_15
+    report = file_flow_verify_revision(
+        result.revision.calculation_revision_id,
+        revision=result.revision,
+        work_unit=work_unit_2t,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    assert report.granted_verificado_completo
 
 
 @pytest.mark.parametrize(
@@ -601,7 +658,7 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
 )
 def test_carry_resolver_excludes_303_iva_compensation_binding(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
     period_code: str,
     revision_id: str,
@@ -692,7 +749,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
     (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
 )
 def test_source_mesh_excludes_303_iva_compensation_relation_binding(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
     period_code: str,
     revision_id: str,
@@ -754,7 +811,7 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
 
 
 def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """An existing activity with no local 4T filing cannot invent a first-period zero."""
@@ -793,7 +850,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(
 
 
 def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A true first IVA period proven by activity start may use a zero prior compensation."""
@@ -882,7 +939,7 @@ def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 20
 
 
 def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A stored prior observation this build cannot read must block, never prove zero.
@@ -964,7 +1021,7 @@ def _persist_prior_303(
 
 
 def test_first_filer_same_year_chain_is_fully_reachable(
-    repos: _Repos,
+    repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Reachability proof: with first-year activity-start, the M130 2T verdict is fully clean.
@@ -996,7 +1053,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_2t.work_unit_id,
             casilla_inputs=_2T_INPUTS_WITHOUT_15,
-            binding_values=_DEFAULT_130_BINDING_VALUES,
+            binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_847,
             clock=_T4,
         )

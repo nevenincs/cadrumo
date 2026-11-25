@@ -6,25 +6,29 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.record_row_membership import ClosedRecordRowSet
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
-from .. import oss_ioss
+from .. import oss_ioss_resolver
 from ..errors import AggregationValidationError
-from ..source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
 _DATE = date(2025, 7, 15)
+_CORRECTIONS = "modelo-369-exterior-t36902"
 
 
 class _InvoiceReader:
@@ -49,8 +53,19 @@ class _Transactions:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
 
 
+def _service_rows(resolution: CalculationSourceResolution) -> ClosedRecordRowSet:
+    (closed,) = (row_set for row_set in resolution.closed_record_row_sets if row_set.record_id != _CORRECTIONS)
+    return closed
+
+
 def _invoice(
-    number: str = "SYNTHETIC-1", *, base: str = "100", country: str = "DE", supply_date: date = _DATE
+    number: str = "SYNTHETIC-1",
+    *,
+    base: str = "100",
+    country: str = "DE",
+    supply_date: date = _DATE,
+    regime: str = "external_scheme",
+    transaction_kind: str = "external_scheme_services",
 ) -> Invoice:
     amount = Decimal(base)
     quota = amount * (Decimal("0.19") if country == "DE" else Decimal("0.20"))
@@ -80,8 +95,8 @@ def _invoice(
                 ),
             ),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime("external_scheme"),
-            "oss_transaction_kind": TransactionKind("external_scheme_services"),
+            "oss_ioss_regime": OssIossRegime(regime),
+            "oss_transaction_kind": TransactionKind(transaction_kind),
         }
     )
 
@@ -98,8 +113,8 @@ def _context(operation: PinnedAuthorityOperation, revision: ModeloRevision | Non
     )
 
 
-def _resolver(reader: _InvoiceReader) -> oss_ioss.OssIossLedgerSourceResolver:
-    return oss_ioss.OssIossLedgerSourceResolver(
+def _resolver(reader: _InvoiceReader) -> oss_ioss_resolver.OssIossLedgerSourceResolver:
+    return oss_ioss_resolver.OssIossLedgerSourceResolver(
         ports=InvoiceCatalogueReadPorts(invoice_reader=reader, transaction_reader=_Transactions())
     )
 
@@ -107,7 +122,7 @@ def _resolver(reader: _InvoiceReader) -> oss_ioss.OssIossLedgerSourceResolver:
 def test_bound_catalogue_closes_all_declared_service_slots(operation: PinnedAuthorityOperation) -> None:
     reader = _InvoiceReader((_invoice(), _invoice("SYNTHETIC-2", base="200")))
     resolution = _resolver(reader).resolve(_context(operation))
-    (closed,) = resolution.closed_record_row_sets
+    closed = _service_rows(resolution)
     assert reader.reads == 1
     assert len(closed.rows) == 28
     assert all(len(row.binding_ids) == 5 for row in closed.rows)
@@ -143,12 +158,24 @@ def test_fingerprint_covers_membership_and_amounts_but_not_catalogue_order(opera
     assert original != fingerprint((first, changed_supply_date))
 
 
-@pytest.mark.parametrize(
-    "scenario", ["empty", "unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"]
-)
+def test_a_complete_read_of_an_empty_period_closes_its_tables(operation: PinnedAuthorityOperation) -> None:
+    """The closure only says every row is blank; declaring the period nil stays the operator's answer."""
+    resolution = _resolver(_InvoiceReader(())).resolve(_context(operation))
+    assert resolution.closed_record_row_sets
+    assert not any(row.occupied for row_set in resolution.closed_record_row_sets for row in row_set.rows)
+    assert not resolution.provenance
+
+
+@pytest.mark.parametrize("scenario", ["unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"])
 def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAuthorityOperation, scenario: str) -> None:
+    # A Union goods line has no table on this revision, and on its own none either.
+    invoice = (
+        _invoice(regime="union_scheme", transaction_kind="oss_union_goods_distance_sale")
+        if scenario == "unrouted"
+        else _invoice()
+    )
     reader = _InvoiceReader(
-        () if scenario == "empty" else (_invoice(country="FR" if scenario == "unrouted" else "DE"),),
+        (invoice,),
         bucket_id=None if scenario == "unbound" else _BUCKET,
         degraded=scenario == "degraded",
     )
@@ -158,10 +185,22 @@ def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAut
         context = context.model_copy(update={"work_unit_id": None})
     if scenario == "explicit-candidates":
         ports = InvoiceCatalogueReadPorts(invoice_reader=reader, transaction_reader=_Transactions())
-        projection = oss_ioss.project_oss_ioss_invoices_from_repositories(period=context.period, ports=ports)
-        resolver = oss_ioss.OssIossLedgerSourceResolver(ports=ports, candidates=projection.candidates)
+        projection = oss_ioss_resolver.project_oss_ioss_invoices_from_repositories(period=context.period, ports=ports)
+        resolver = oss_ioss_resolver.OssIossLedgerSourceResolver(ports=ports, candidates=projection.candidates)
     resolution = resolver.resolve(context)
     assert resolution.closed_record_row_sets == ()
+
+
+@pytest.mark.parametrize("scenario", ["unbound", "degraded", "no-work-unit"])
+def test_an_empty_period_read_from_an_incomplete_source_closes_nothing(
+    operation: PinnedAuthorityOperation, scenario: str
+) -> None:
+    """No lines from a source that cannot answer says nothing about the period, so its tables stay open."""
+    reader = _InvoiceReader((), bucket_id=None if scenario == "unbound" else _BUCKET, degraded=scenario == "degraded")
+    context = _context(operation)
+    if scenario == "no-work-unit":
+        context = context.model_copy(update={"work_unit_id": None})
+    assert _resolver(reader).resolve(context).closed_record_row_sets == ()
 
 
 def test_wrong_profile_is_refused_before_read(operation: PinnedAuthorityOperation) -> None:

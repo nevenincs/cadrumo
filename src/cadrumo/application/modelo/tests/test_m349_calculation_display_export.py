@@ -18,6 +18,7 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.filing.schema import (
     ModeloCasillaProvenance,
@@ -36,17 +37,19 @@ from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_construction import filing_binding_values
-from .._calculation_helpers import build_typed_observations
-from .._calculation_modelo_adjustments import drop_row_field_template_outputs
+from ..calculation_helpers import build_typed_observations
+from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..revision_replay_inputs import revision_detail_record_binding_inputs
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormRepeatingBlock
+from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ..work_form_models import ModeloFormRepeatingBlock
 from ..work_form_records import saved_form_records
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 6, 29, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "9c4acfdc-abb7-4206-8755-1d8c027b6114"  # was 'm349-display-export-parity'
 _PROFILE_TAX_ID = "12345678Z"
 _DECL_NUMERO_OPERADORES: CasillaId = validated_casilla_id(
@@ -68,25 +71,25 @@ _DECL_IMPORTE_RECTIFICACIONES: CasillaId = validated_casilla_id(
 
 
 def _m349_snapshot(*, period: str) -> RegistrySnapshot:
-    return published_snapshot(Modelo("349").value, filing_year=2026, period=period)
+    return published_snapshot(Modelo("349").value, filing_year=_YEAR, period=period)
 
 
 def _work_unit(*, period: str, snapshot: RegistrySnapshot) -> WorkUnit:
-    filing_period = Period.from_year_and_code(2026, period)
+    filing_period = Period.from_year_and_code(_YEAR, period)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="349",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=filing_period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("349"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=filing_period,
         revision_id=snapshot.revision.id,
-        name=f"349-2026-{period}",
+        name=f"349-{_YEAR}-{period}",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -232,7 +235,7 @@ def _record_calculation() -> tuple[RegistrySnapshot, WorkUnit, CalculationRevisi
 
 
 def _operator_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
-    layout = operation.form_layout("349", "2020-y-siguientes")
+    layout = operation.form_layout("349", str(open_ended_revision("349").id))
     assert layout is not None
     return next(
         block
@@ -289,7 +292,7 @@ def test_saved_detail_rows_populate_the_real_form_and_make_the_optional_page_app
         review=review,
         snapshot=snapshot,
         revision=revision,
-        layout=operation.form_layout("349", "2020-y-siguientes"),
+        layout=operation.form_layout("349", str(open_ended_revision("349").id)),
         permitted_surface=None,
         entered_casilla_ids=None,
         overridden_binding_ids=None,
@@ -372,8 +375,8 @@ def test_a_supported_explicit_empty_family_is_known_but_an_omitted_legacy_family
     assert _records(snapshot, empty, block.model_copy(update={"export_record_id": "unknown-record"})) == (False, ())
 
 
-def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operation: PinnedAuthorityOperation) -> None:
-    snapshot, _, revision = _record_calculation()
+def _with_operator_record_owned_elsewhere(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    """Re-point the operator record at a binding owner other than the one the rows were saved under."""
     layouts = tuple(
         layout.model_copy(
             update={
@@ -387,9 +390,12 @@ def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operat
         )
         for layout in snapshot.revision.export_layouts
     )
-    snapshot = snapshot.model_copy(
-        update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})}
-    )
+    return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})})
+
+
+def test_generic_saved_binding_rows_preserve_sparse_indices_zero_and_text(operation: PinnedAuthorityOperation) -> None:
+    snapshot, _, revision = _record_calculation()
+    snapshot = _with_operator_record_owned_elsewhere(snapshot)
     revision = revision.model_copy(
         update={
             "detail_rows": (),
@@ -445,22 +451,7 @@ def test_a_malformed_numeric_row_preserves_its_index_and_unknown_cell(
     raw: str,
 ) -> None:
     snapshot, _, revision = _record_calculation()
-    layouts = tuple(
-        layout.model_copy(
-            update={
-                "records": tuple(
-                    record.model_copy(update={"binding_record": "other-owner"})
-                    if record.id == "modelo-349-operador"
-                    else record
-                    for record in layout.records
-                )
-            }
-        )
-        for layout in snapshot.revision.export_layouts
-    )
-    snapshot = snapshot.model_copy(
-        update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})}
-    )
+    snapshot = _with_operator_record_owned_elsewhere(snapshot)
     revision = revision.model_copy(
         update={
             "detail_rows": (),
@@ -515,7 +506,7 @@ def test_saved_projection_casillas_remain_visible_even_when_the_projection_owner
     operation: PinnedAuthorityOperation,
 ) -> None:
     _, _, revision = _record_calculation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     record = next(
         record
         for layout in snapshot.revision.export_layouts

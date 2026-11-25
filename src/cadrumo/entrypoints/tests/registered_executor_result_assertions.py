@@ -14,8 +14,8 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger.actions_manual import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
+from ...application.ledger.manual_update import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...application.ledger.participation_operation import (
     LedgerParticipationProjection as LedgerParticipationLookupProjection,
@@ -43,11 +43,11 @@ from ...domain.buckets.event import BucketEvent
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports
-from .registered_executor_case_support import _ExecutionDriver, _resolve_result_projection
+from .registered_executor_case_support import ExecutionDriver, resolve_result_projection
 
 
-def _assert_ledger_track_result(
-    driver: _ExecutionDriver,
+def assert_ledger_track_result(
+    driver: ExecutionDriver,
     registry: OperationRegistry,
     *,
     profile_id: UUID,
@@ -57,7 +57,7 @@ def _assert_ledger_track_result(
     terminal_revision: int,
 ) -> None:
     assert isinstance(payload, LedgerTrackRequest)
-    track = _resolve_result_projection(
+    track = resolve_result_projection(
         driver,
         registry,
         definition_id="ledger.track",
@@ -96,8 +96,8 @@ def _assert_ledger_track_result(
     assert participation.period == unit.period
 
 
-def _assert_ledger_participation_lookup_result(
-    driver: _ExecutionDriver,
+def assert_ledger_participation_lookup_result(
+    driver: ExecutionDriver,
     registry: OperationRegistry,
     *,
     profile_id: UUID,
@@ -105,7 +105,7 @@ def _assert_ledger_participation_lookup_result(
     operation_id: str,
     terminal_revision: int,
 ) -> None:
-    participation_result = _resolve_result_projection(
+    participation_result = resolve_result_projection(
         driver,
         registry,
         definition_id="ledger.participation",
@@ -129,8 +129,8 @@ def _assert_ledger_participation_lookup_result(
     assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
 
 
-def _assert_ledger_participation_rebuild_result(
-    driver: _ExecutionDriver,
+def assert_ledger_participation_rebuild_result(
+    driver: ExecutionDriver,
     registry: OperationRegistry,
     *,
     profile_id: UUID,
@@ -138,7 +138,7 @@ def _assert_ledger_participation_rebuild_result(
     operation_id: str,
     terminal_revision: int,
 ) -> None:
-    rebuild_result = _resolve_result_projection(
+    rebuild_result = resolve_result_projection(
         driver,
         registry,
         definition_id="ledger.participation.rebuild",
@@ -160,7 +160,7 @@ def _assert_ledger_participation_rebuild_result(
     assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
 
 
-def _assert_canonical_bulk_classification_update(
+def assert_canonical_bulk_classification_update(
     *,
     profile_id: UUID,
     operation: PinnedAuthorityOperation,
@@ -193,7 +193,7 @@ def _assert_canonical_bulk_classification_update(
     assert expected_events == (event,)
 
 
-def _assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, profile_id: UUID) -> None:
+def assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, profile_id: UUID) -> None:
     assert isinstance(payload, LedgerReviewRequest)
     assert isinstance(review, LedgerReviewProjection)
     assert review.profile_id == profile_id
@@ -208,7 +208,7 @@ def _assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, p
     assert row.transaction.transaction_id.startswith(payload.transaction_prefix)
 
 
-def _assert_calculation_report_verification_projection(
+def assert_calculation_report_verification_projection(
     payload: BaseModel, projection: BaseModel, *, profile_id: UUID
 ) -> None:
     assert isinstance(payload, ModeloCalculationReportVerificationRequest)

@@ -32,8 +32,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
 _OBJECT_ID = "c" * 64
-_SAME_INSTANT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
-_LATER = datetime(2026, 4, 1, 11, 0, 0, tzinfo=UTC)
+_SAME_INSTANT = datetime(1980, 4, 1, 10, 0, 0, tzinfo=UTC)
+_LATER = datetime(1980, 4, 1, 11, 0, 0, tzinfo=UTC)
 
 
 def _event(actor: str, occurred_at: datetime = _SAME_INSTANT) -> BucketEvent:

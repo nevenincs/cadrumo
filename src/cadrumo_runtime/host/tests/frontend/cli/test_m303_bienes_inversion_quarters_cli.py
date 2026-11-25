@@ -26,25 +26,28 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import (
     admit_ordinary_m303_secure_evidence,
     joint_return_options,
 )
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = 2025
+#: The last complete filing year, one before the published horizon: its fourth quarter
+#: has closed, so the year-end Modelo 390 attestation it calculates with has been observed.
+_YEAR = PublishedGovernedFactSource().supported_filing_years().horizon - 1
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _SALE_DAYS = ("02-14", "05-14", "08-14", "11-14")
 
@@ -63,11 +66,7 @@ def _invoke(args: list[str]) -> Result:
 
 
 def _seed_operator(request: pytest.FixtureRequest, *, activity_start_date: str) -> str:
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date=activity_start_date))
+    facts = operator_profile_facts(activity_start_date=activity_start_date)
     cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))(label="operator", facts=facts)
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -136,15 +135,9 @@ def _add_quarterly_sales() -> None:
         )
 
 
-def _minimal_pdf(text: str) -> bytes:
-    """Return one syntactically minimal, synthetic PDF carrying ``text``."""
-    body = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("ascii", errors="replace")
-    return b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" + body + b"\n%%EOF\n"
-
-
 def _add_investment_purchase(tmp_path: Path, *, day: str) -> str:
     document = tmp_path / "torno.pdf"
-    document.write_bytes(_minimal_pdf(f"Factura torno base {_INVESTMENT_BASE} IVA {_INVESTMENT_CUOTA}"))
+    document.write_bytes(text_pdf_bytes((f"Factura torno base {_INVESTMENT_BASE} IVA {_INVESTMENT_CUOTA}",)))
     registered = _invoke(
         [
             "app",
@@ -239,7 +232,7 @@ def _calculate(quarter: str) -> Result:
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
     answers = (
-        admit_ordinary_m303_secure_evidence(period="4T").calculate_options()
+        admit_ordinary_m303_secure_evidence(filing_year=_YEAR, period="4T").calculate_options()
         if quarter == "4T"
         else joint_return_options()
     )

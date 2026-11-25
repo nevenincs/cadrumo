@@ -40,17 +40,19 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Self
+from typing import ClassVar, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex16Str
 from ...core.models import STRICT_FROZEN_CONFIG
-from .invoice_draft_records import FieldAmbiguityCandidate, InvoiceDraft
+from .confirmation_block_words import served_finding_words
+from .invoice_draft_records import FieldAmbiguityCandidate, FindingWords, InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 __all__ = [
@@ -75,6 +77,7 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
     DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED: ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS,
     DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS,
+    DraftDiscrepancyKind.INVOICE_NUMBER_UNNUMBERED: ConfirmationBlockReason.UNNUMBERED_INVOICE,
 }
 """Which review-gate reason each deterministic check's failure raises.
 
@@ -111,7 +114,15 @@ drives deductibility --- so it blocks and the name does not.
 
 
 class ConfirmationBlockedError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a confirm is attempted with an unresolved blocking finding."""
+    """Raised when a confirm is attempted with an unresolved blocking finding.
+
+    Each blocker's explanation names the figures or readings involved, so it
+    can repeat what the document prints: it stays in this process, and the
+    detail recorded for other processes names each blocker by its id and
+    reason only.
+    """
+
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"unresolved_blockers"})
 
 
 class ConfirmationBlocker(BaseModel):
@@ -126,18 +137,21 @@ class ConfirmationBlocker(BaseModel):
         reason: Which class of refusal this is.
         field: The draft field the blocker is about, or ``None`` when it is
             about a relationship between several.
-        detail: Operator-facing explanation naming the figures or readings
-            involved.
+        detail: An explanation worded in English by a check that serves no words
+            yet, or one stored before findings carried their words.
+        words: The catalogue sentence explaining the blocker and the values it
+            quotes.
         candidates: The competing readings, when the blocker is an ambiguity
             the operator resolves by choosing one. Empty otherwise.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    blocker_id: str = Field(min_length=16, max_length=16)
+    blocker_id: Hex16Str
     reason: ConfirmationBlockReason
     field: str | None = None
     detail: str = ""
+    words: FindingWords | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
 
     @property
@@ -202,7 +216,7 @@ class FindingResolution(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    blocker_id: str = Field(min_length=16, max_length=16)
+    blocker_id: Hex16Str
     action: FindingResolutionAction
     value: str | None = None
     note: str = ""
@@ -228,15 +242,25 @@ class FindingResolution(BaseModel):
         return self
 
 
-def blocker_id(*, reason: ConfirmationBlockReason, field: str | None, detail: str) -> str:
+def blocker_id(
+    *,
+    reason: ConfirmationBlockReason,
+    field: str | None,
+    detail: str = "",
+    words: FindingWords | None = None,
+) -> str:
     """Return the clock-free derived address for one blocker.
 
     Folds only what the blocker IS. A timestamp would make a re-read of the same
     unchanged document raise different ids, so a resolution captured from one
     listing would refuse against the next --- and the operator would learn to
-    re-run and re-copy rather than to answer.
+    re-run and re-copy rather than to answer. A blocker without words folds
+    exactly what it folded before words existed, so a stored draft keeps its ids.
     """
-    return content_hash_hex({"detail": detail, "field": field or "", "reason": reason.value})[:16]
+    folded: dict[str, object] = {"detail": detail, "field": field or "", "reason": reason.value}
+    if words is not None:
+        folded["words"] = {"params": [list(pair) for pair in words.params], "wording": words.wording.value}
+    return content_hash_hex(folded)[:16]
 
 
 def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...]:
@@ -269,10 +293,11 @@ def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...
         reason = BLOCKING_REASON_BY_DISCREPANCY_KIND[finding.kind]
         _append(
             ConfirmationBlocker(
-                blocker_id=blocker_id(reason=reason, field=finding.field, detail=finding.detail),
+                blocker_id=blocker_id(reason=reason, field=finding.field, detail=finding.detail, words=finding.words),
                 reason=reason,
                 field=finding.field,
                 detail=finding.detail,
+                words=finding.words,
             ),
         )
 
@@ -281,17 +306,18 @@ def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...
             continue
         if envelope.field not in IDENTITY_FIELDS:
             continue
-        detail = envelope.note or (
-            f"several readings of {envelope.field} competed and none was decidable; "
-            f"confirming would select one real taxpayer's identifier over another's"
+        words = FindingWords.of(
+            DraftFindingWording.IDENTITY_READINGS_COMPETE,
+            field=envelope.field,
+            count=len(envelope.candidates),
         )
         reason = ConfirmationBlockReason.AMBIGUOUS_IDENTITY
         _append(
             ConfirmationBlocker(
-                blocker_id=blocker_id(reason=reason, field=envelope.field, detail=detail),
+                blocker_id=blocker_id(reason=reason, field=envelope.field, words=words),
                 reason=reason,
                 field=envelope.field,
-                detail=detail,
+                words=words,
                 candidates=envelope.candidates,
             ),
         )
@@ -361,11 +387,15 @@ def _require_all_confirmation_blockers_resolved(
     """Refuse the confirmation when any draft blocker has no explicit answer."""
     unresolved = tuple(blocker for blocker in blockers if blocker.blocker_id not in answered)
     if unresolved:
-        named = "; ".join(f"{blocker.blocker_id} ({blocker.reason.value}): {blocker.detail}" for blocker in unresolved)
+        named = "; ".join(
+            f"{blocker.blocker_id} ({blocker.reason.value}): {served_finding_words(blocker.words)[0] or blocker.detail}"
+            for blocker in unresolved
+        )
         raise ConfirmationBlockedError(
             translated_message="errors.refused.refused_ledger_confirmation_blocked",
             context={
                 "unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved),
+                "unresolved_blocker_reasons": ",".join(blocker.reason.value for blocker in unresolved),
                 "unresolved_blockers": named,
             },
             precondition_verdict=ledger_no_recovery_verdict(

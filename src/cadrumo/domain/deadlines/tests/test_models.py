@@ -11,12 +11,14 @@ trip.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ..errors import ProfileError
+from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     IVARegime,
     M303RegimeComposition,
@@ -31,22 +33,21 @@ from ..models import (
 from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
-_P_2026_1T = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_P_YEAR_1T = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=True,
         pays_professionals_with_retencion=False,
-        professional_income_withholding_ge_70pct=False,
         art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=True,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
-        notes="example",
     )
 
 
@@ -61,7 +62,6 @@ class TestTaxpayerProfile:
                     "iva_regime": "GENERAL",
                     "has_employees": True,
                     "pays_professionals_with_retencion": False,
-                    "professional_income_withholding_ge_70pct": False,
                     "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
@@ -84,7 +84,6 @@ class TestTaxpayerProfile:
                     "iva_regime": "GENERAL",
                     "has_employees": 1,
                     "pays_professionals_with_retencion": False,
-                    "professional_income_withholding_ge_70pct": False,
                     "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
@@ -101,7 +100,6 @@ class TestTaxpayerProfile:
                     "iva_regime": "WHATEVER",
                     "has_employees": False,
                     "pays_professionals_with_retencion": False,
-                    "professional_income_withholding_ge_70pct": False,
                     "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
@@ -110,17 +108,40 @@ class TestTaxpayerProfile:
                 },
             )
 
-    def test_modelo_iva_profile_requires_explicit_redeme_authority(self) -> None:
-        with pytest.raises(ValidationError, match="redeme_enrolled"):
-            ModeloIVAProfile.model_validate(
-                {
-                    "tax_territory": M303TaxTerritory.from_registry("common_regime"),
-                    "regime_composition": M303RegimeComposition.from_registry("general"),
-                    "cash_accounting_regime_enrolled": False,
-                    "voluntary_sii_enrolled": False,
-                    "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
-                },
-            )
+    def test_modelo_iva_profile_keeps_an_unanswered_redeme_unanswered(self) -> None:
+        block = ModeloIVAProfile.model_validate(
+            {
+                "tax_territory": M303TaxTerritory.from_registry("common_regime"),
+                "regime_composition": M303RegimeComposition.from_registry("general"),
+                "cash_accounting_regime_enrolled": False,
+                "voluntary_sii_enrolled": False,
+                "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+            },
+        )
+
+        assert block.redeme_enrolled is None
+
+    def test_the_filing_projection_refuses_an_unanswered_redeme(self) -> None:
+        answered = {
+            "tax.id": "12345678Z",
+            "activity": "design",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        }
+        values = {path: value for path, value in answered.items() if path != "iva.redeme_enrolled"}
+
+        assert taxpayer_profile_from_mapping(answered, tax_id_default="12345678Z").iva is not None
+        with pytest.raises(ProfileError, match=r"iva\.redeme_enrolled"):
+            taxpayer_profile_from_mapping(values, tax_id_default="12345678Z")
+        read = taxpayer_profile_from_mapping(values, tax_id_default="12345678Z", withhold_unanswered_iva_block=True)
+        assert read.iva is not None
+        assert read.iva.redeme_enrolled is None
+        assert read.iva_block_unanswered_paths == ("iva.redeme_enrolled",)
 
     def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:
         profile = taxpayer_profile_from_mapping(
@@ -170,23 +191,6 @@ class TestTaxpayerProfile:
         )
         assert profile.enrollment == ModeloEnrollment(large_company=True)
 
-    def test_mapping_projection_reads_pagadores_axes(self) -> None:
-        # The three Art. 96 LIRPF pagadores axes flow from the canonical mapping
-        # into the typed profile, including the total-work-income leg.
-        profile = taxpayer_profile_from_mapping(
-            {
-                "tax.id": "12345678Z",
-                "irpf.pagadores_count": "2",
-                "irpf.pagadores_secondary_income": "1600",
-                "irpf.pagadores_total_work_income": "18000",
-            },
-            tax_id_default="00000000T",
-        )
-
-        assert profile.irpf_pagadores_count == 2
-        assert profile.irpf_pagadores_secondary_income == Decimal("1600")
-        assert profile.irpf_pagadores_total_work_income == Decimal("18000")
-
 
 class TestModeloDeadline:
     """Window-order and field invariants for :class:`ModeloDeadline`."""
@@ -195,24 +199,28 @@ class TestModeloDeadline:
         with pytest.raises(ValidationError, match=r"opens_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period=_P_2026_1T,
-                opens_on=date(2026, 4, 21),
-                closes_on=date(2026, 4, 20),
+                period=_P_YEAR_1T,
+                opens_on=date(_YEAR, 4, 21),
+                closes_on=date(_YEAR, 4, 20),
+                adjusted_closes_on=date(_YEAR, 4, 20),
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                shift_reason="business_day",
                 payment_cutoff_on=None,
                 status=ObligationStatus.UPCOMING,
-                applies_because="x",
             )
 
     def test_payment_after_closes_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"payment_cutoff_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period=_P_2026_1T,
-                opens_on=date(2026, 4, 1),
-                closes_on=date(2026, 4, 20),
-                payment_cutoff_on=date(2026, 4, 25),
+                period=_P_YEAR_1T,
+                opens_on=date(_YEAR, 4, 1),
+                closes_on=date(_YEAR, 4, 20),
+                adjusted_closes_on=date(_YEAR, 4, 20),
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                shift_reason="business_day",
+                payment_cutoff_on=date(_YEAR, 4, 25),
                 status=ObligationStatus.UPCOMING,
-                applies_because="x",
             )
 
 
@@ -222,19 +230,21 @@ class TestScheduleRoundTrip:
     def test_round_trip_equality(self) -> None:
         obligation = ModeloDeadline(
             modelo="303",
-            period=_P_2026_1T,
-            opens_on=date(2026, 4, 1),
-            closes_on=date(2026, 4, 20),
-            payment_cutoff_on=date(2026, 4, 15),
+            period=_P_YEAR_1T,
+            opens_on=date(_YEAR, 4, 1),
+            closes_on=date(_YEAR, 4, 20),
+            adjusted_closes_on=date(_YEAR, 4, 20),
+            holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+            shift_reason="business_day",
+            payment_cutoff_on=date(_YEAR, 4, 15),
             status=ObligationStatus.UPCOMING,
-            applies_because="Régimen general de IVA.",
             boe_references=("BOE-Orden-IVA-autoliquidacion",),
         )
         schedule = Schedule(
             profile=_profile(),
-            year=2026,
+            year=_YEAR,
             obligations=(obligation,),
-            generated_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
+            generated_at=datetime(_YEAR, 1, 1, 12, 0, 0, tzinfo=UTC),
         )
         payload = schedule.model_dump_json()
         restored = Schedule.model_validate_json(payload)

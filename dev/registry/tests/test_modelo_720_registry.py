@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from typing import cast
 
@@ -11,35 +12,31 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
+from .modelo_registry_surface_support import (
+    FORBIDDEN_REMOTE_ACTIONS,
+    assert_authenticated_read_surface_is_read_only,
+    assert_declaration_pdf_profile_legal_refs,
+    assert_review_surfaces_require_snapshot,
+)
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-_WWW1_HOST = aeat_host("www1")
-_WWW6_HOST = aeat_host("www6")
+
+_REVISION_ID = str(open_ended_revision("720").id)
 
 
-def _load_modelo_720():
-    return _committed_modelo("720")
+def _load_modelo_720() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    return committed_modelo("720")
 
 
-_FORBIDDEN_REMOTE_ACTIONS = frozenset(
-    [
-        "server-side-save",
-        "signing",
-        "presentation",
-        "payment",
-        "amendment",
-        "cancellation",
-        "document-submission",
-        "declaration-submission",
-    ],
-)
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "ley-58-2003:art-93",
@@ -64,18 +61,19 @@ _COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
 def test_committed_modelo_720_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_720()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2013-y-siguientes"}
+    assert set(modelo.revisions) == {_REVISION_ID}
 
 
-def test_validator_rejects_missing_factual_evidence_previous_filing_classification() -> None:
-    """The actual prior-year valuations require their Modelo 720 classification.
+def _modelo_720_with_previous_filing_classification(
+    rewrite: Callable[[DependencyClassificationDefinition], DependencyClassificationDefinition | None],
+) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    """The loaded Modelo 720 with its prior-year classification rewritten, or removed when ``rewrite`` returns ``None``.
 
-    This removes the loaded revision's sole factual-evidence classification and
-    its construct membership together, so the refusal proves the direct
-    previous-filing completeness gate rather than a dangling construct id.
+    The classification leaves its construct's membership list in both cases, so
+    a refusal proves the direct previous-filing gate rather than a dangling id.
     """
     modelo, catalogues = _load_modelo_720()
-    revision = modelo.revisions["2013-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
     construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
     mutated_construct = construct.model_copy(
@@ -85,10 +83,16 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
             ),
         },
     )
+    replacement = rewrite(classification)
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
-                item for item in revision.dependency_classifications if item.id != classification.id
+                item
+                for item in (
+                    replacement if candidate.id == classification.id else candidate
+                    for candidate in revision.dependency_classifications
+                )
+                if item is not None
             ),
             "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
         },
@@ -96,6 +100,17 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
     mutated_modelo = modelo.model_copy(
         update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
     )
+    return mutated_modelo, catalogues
+
+
+def test_validator_rejects_missing_factual_evidence_previous_filing_classification() -> None:
+    """The actual prior-year valuations require their Modelo 720 classification.
+
+    This removes the loaded revision's sole factual-evidence classification and
+    its construct membership together, so the refusal proves the direct
+    previous-filing completeness gate rather than a dangling construct id.
+    """
+    mutated_modelo, catalogues = _modelo_720_with_previous_filing_classification(lambda _classification: None)
 
     with pytest.raises(
         RegistryValidationError,
@@ -106,31 +121,10 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
 
 def test_validator_rejects_non_dependency_previous_filing_classification() -> None:
     """A direct prior-year baseline cannot be re-labelled as non-dependent."""
-    modelo, catalogues = _load_modelo_720()
-    revision = modelo.revisions["2013-y-siguientes"]
-    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
-    construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
-    mutated_construct = construct.model_copy(
-        update={
-            "dependency_classifications": tuple(
-                item for item in construct.dependency_classifications if item != classification.id
-            ),
-        },
-    )
-    mutated_classification = classification.model_copy(
-        update={"treatment": "non_dependency", "target_constructs": (), "binding_refs": ()},
-    )
-    mutated_revision = revision.model_copy(
-        update={
-            "dependency_classifications": tuple(
-                mutated_classification if item.id == classification.id else item
-                for item in revision.dependency_classifications
-            ),
-            "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
-        },
-    )
-    mutated_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
+    mutated_modelo, catalogues = _modelo_720_with_previous_filing_classification(
+        lambda classification: classification.model_copy(
+            update={"treatment": "non_dependency", "target_constructs": (), "binding_refs": ()},
+        )
     )
 
     with pytest.raises(
@@ -149,7 +143,7 @@ _SUPPORT = committed_supported_filing_years()
 )
 def test_committed_modelo_720_resolves_revision_by_filing_year(filing_year: int) -> None:
     """Every supported year selects the single open-ended edition."""
-    expected_revision = "2013-y-siguientes"
+    expected_revision = _REVISION_ID
     modelo, catalogues = _load_modelo_720()
     snapshot = build_snapshot(
         modelo,
@@ -204,22 +198,12 @@ def test_committed_modelo_720_static_cross_reference_forbids_remote_writes() -> 
         decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+        assert FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 
 
 def test_committed_modelo_720_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_720()
-    for revision in modelo.revisions.values():
-        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
-        assert decision.requires_authentication is True
-        assert decision.requires_aeat_authorization is True
-        assert decision.synthetic_data_allowed is False
-        assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
-        assert set(decision.allowed_hosts) == {
-            _WWW1_HOST,
-            _WWW6_HOST,
-        }, revision.id
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+    assert_authenticated_read_surface_is_read_only(modelo)
 
 
 def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declarante_casillas() -> None:
@@ -238,18 +222,7 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
 
 def test_committed_modelo_720_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_720()
-    for revision in modelo.revisions.values():
-        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
-        assert pdf_profiles, revision.id
-        for profile in pdf_profiles:
-            target_refs = frozenset(
-                legal_ref
-                for target in profile.target_casillas
-                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
-            )
-            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
-            assert frozenset(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+    assert_declaration_pdf_profile_legal_refs(modelo, _DECLARATION_PROFILE_TARGET_LEGAL_REFS)
 
 
 def test_committed_modelo_720_completeness_manifest_legal_refs_match_declarante_closure() -> None:
@@ -281,22 +254,34 @@ def test_committed_modelo_720_filing_schedule_is_annual() -> None:
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "expected_open", "expected_close"),
+    ("sample", "open_month", "close_month", "close_day"),
     [
-        # First ejercicio (2012) had a transitional plazo until 30 April 2013 per Orden HAP/72/2013 DT
-        (2012, date(2013, 2, 1), date(2013, 4, 30)),
+        # First ejercicio had a transitional plazo until 30 April of the following year per Orden HAP/72/2013 DT
+        ("first", 2, 4, 30),
         # Subsequent ejercicios run from 1 January to 31 March of the following year per art 7
-        (2013, date(2014, 1, 1), date(2014, 3, 31)),
-        (2018, date(2019, 1, 1), date(2019, 3, 31)),
-        (2024, date(2025, 1, 1), date(2025, 3, 31)),
+        ("second", 1, 3, 31),
+        ("middle", 1, 3, 31),
+        ("last", 1, 3, 31),
     ],
 )
 def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejercicio(
-    filing_year: int,
-    expected_open: date,
-    expected_close: date,
+    sample: str,
+    open_month: int,
+    close_month: int,
+    close_day: int,
 ) -> None:
     modelo, _ = _load_modelo_720()
+    authored_exercises = sorted(
+        {window.filing_year for revision in modelo.revisions.values() for window in revision.deadline_windows}
+    )
+    filing_year = {
+        "first": authored_exercises[0],
+        "second": authored_exercises[1],
+        "middle": authored_exercises[len(authored_exercises) // 2],
+        "last": authored_exercises[-1],
+    }[sample]
+    expected_open = date(filing_year + 1, open_month, 1)
+    expected_close = date(filing_year + 1, close_month, close_day)
     windows = [
         window
         for revision in modelo.revisions.values()
@@ -397,13 +382,4 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
 
 def test_modelo_720_workflow_surfaces_are_snapshot_gated_and_construct_scoped() -> None:
     modelo, _ = _load_modelo_720()
-    required_surfaces = {"review", "approval", "reconciliation", "workflow"}
-    for revision in modelo.revisions.values():
-        construct = revision.constructs[0]
-        linked_by_surface = {link.surface: link for link in revision.application_links}
-        assert required_surfaces <= set(linked_by_surface), revision.id
-        for link in revision.application_links:
-            if link.surface not in required_surfaces:
-                continue
-            assert link.requires_snapshot is True
-            assert link.id in construct.application_links
+    assert_review_surfaces_require_snapshot(modelo)

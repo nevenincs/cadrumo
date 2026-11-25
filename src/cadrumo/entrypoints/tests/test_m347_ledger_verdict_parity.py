@@ -11,7 +11,6 @@ unanswered, and both surfaces must show that row.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -25,20 +24,21 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.overview.read_payload import OverviewCalendarRead
 from cadrumo.application.overview.read_request import OverviewReadKind, OverviewReadRequest
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.time.clock import today_madrid
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.overview_read_composition import build_overview_read_ports
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
 from ...domain.iva.schema import InvoiceKind
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,30 +47,15 @@ _FILING_YEAR = 2025
 _CLOCK = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
 _THRESHOLD = "obligations.third_party_transactions_above_347_threshold"
 
-_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="design"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="design"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    )
 )
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _sale_above_the_floor() -> Invoice:
@@ -84,7 +69,7 @@ def _sale_above_the_floor() -> Invoice:
             kind=InvoiceKind.ISSUED,
             invoice_number="V-347",
             issued_at=issued_at,
-            counterparty_tax_id="B87654323",
+            counterparty_tax_id="B00015057",
             currency="EUR",
             grand_total=grand_total,
         ),
@@ -93,7 +78,7 @@ def _sale_above_the_floor() -> Invoice:
         invoice_number="V-347",
         issued_at=issued_at,
         counterparty_name="CLIENTE GRANDE SL",
-        counterparty_tax_id="B87654323",
+        counterparty_tax_id="B00015057",
         counterparty_country="ES",
         base_total=base_total,
         iva_total=iva_total,
@@ -134,7 +119,7 @@ def _tui_m347_years(operation: PinnedAuthorityOperation) -> set[int]:
     generation = compose_secure_workbench_generation_provider(
         profile_id=_BUCKET_ID,
         operation=operation,
-        operation_contracts=build_production_operation_registry().public_contract_set,
+        operation_contracts=production_operation_registry().public_contract_set,
         account_session_reader=lambda: HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label="347 parity",

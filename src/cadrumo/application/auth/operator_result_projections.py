@@ -17,7 +17,7 @@ from .operator_results import AuthConfigureResult, AuthStatusResult
 from .sessions import clave_auth_facts_from_profile_values, resolve_clave_credentials
 
 if TYPE_CHECKING:
-    from ..state_projection import OperatorStateProjection
+    from ..state_projection_models import OperatorStateProjection
     from ..workflow.state_models import WorkflowState
 
 
@@ -80,11 +80,7 @@ def auth_configure_result(
         from .operator_probes import classify_identity_alignment
 
         alignment = classify_identity_alignment(profile_tax_id, provider_identity)
-        alignment_detail = identity_alignment_detail(
-            alignment,
-            profile_tax_id=profile_tax_id,
-            provider_identity=provider_identity,
-        )
+        alignment_detail = identity_alignment_detail(alignment)
     complete, incomplete_reason = certificate_completeness(provider, certificate_path)
     if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment != "matches":
         complete = False
@@ -156,23 +152,10 @@ def incomplete_auth_configuration_verdict(
     )
 
 
-def identity_alignment_detail(
-    alignment: str,
-    *,
-    profile_tax_id: str,
-    provider_identity: str,
-) -> str:
+def identity_alignment_detail(alignment: str) -> str:
     """Explain a Cl@ve identity-alignment verdict in operator language."""
     if alignment == "matches" or alignment == "not_applicable":
         return ""
-    if alignment == "mismatch":
-        return tr(
-            "application.auth.operator.alignment.mismatch_detail",
-            clave_identity=provider_identity,
-            profile_tax_id=profile_tax_id,
-        )
-    if alignment == "clave_identity_missing":
-        return tr("application.auth.operator.alignment.clave_identity_missing_detail")
     if alignment == "profile_tax_id_missing":
         return tr("application.auth.operator.alignment.profile_tax_id_missing_detail")
     if alignment == "profile_tax_id_missing_and_clave_identity_missing":

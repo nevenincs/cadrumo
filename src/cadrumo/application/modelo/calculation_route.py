@@ -12,18 +12,25 @@ from ...domain.calculations.registry.binding_provider_registration import (
     RouteOwnership,
 )
 from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+from ..aggregation.capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
 from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
 from ..aggregation.inventory import InventorySourceResolver
 from ..aggregation.modelo_bindings import (
-    LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
-    LedgerIvaAggregationSourceResolver,
-    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
-from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+from ..aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
+from ..aggregation.modelo_bindings_renta_expenses import (
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
+)
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
+from ..aggregation.prevision_social_contribution_source import PrevisionSocialContributionSourceResolver
+from ..aggregation.prorrata_register_activity import ProrrataRegisterActivitySourceResolver
+from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
+from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import (
     ModeloSourceResolver,
 )
@@ -37,6 +44,7 @@ from ..calculations.multi_year import PreviousFilingSourceResolver
 from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 from ..calculations.relation_prefill import RelationPrefillSourceResolver
 from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]
@@ -99,7 +107,10 @@ def _resolver_ownership(
     resolver_type: type[ModeloSourceResolver],
 ) -> CalculationRouteResolverOwnership:
     if stage == "manual":
-        raise InternalInvariantError("manual input is not a class-owned resolver")
+        raise InternalInvariantError(
+            "manual input is not a class-owned resolver",
+            precondition_verdict=internal_invariant_verdict("calculation_route.manual_owner_is_pseudo"),
+        )
     return CalculationRouteResolverOwnership(
         stage=stage,
         resolver_type=resolver_type,
@@ -121,10 +132,15 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteResolverStage, type[Mode
     ("mesh", OssIossLedgerSourceResolver),
     ("mesh", RetencionesAggregationSourceResolver),
     ("mesh", WithholdingSourceResolver),
+    ("mesh", RetencionSoportadaSourceResolver),
+    ("mesh", CapitalMobiliarioPositionSourceResolver),
+    ("mesh", PrevisionSocialContributionSourceResolver),
     ("mesh", InvoiceCatalogueSourceResolver),
     ("mesh", ForeignAssetsAggregationSourceResolver),
     ("mesh", AtribucionMemberSourceResolver),
     ("mesh", InventorySourceResolver),
+    ("mesh", ProrrataRegisterActivitySourceResolver),
+    ("mesh", RentaInmuebleSourceResolver),
     ("mesh", PreviousFilingSourceResolver),
     ("mesh", RelationPrefillSourceResolver),
     ("mesh", IvaCompensationAnnualPartitionSourceResolver),
@@ -159,14 +175,20 @@ def _canonical_stage_map() -> dict[type[ModeloSourceResolver], CalculationRouteR
         resolver_type: stage for stage, resolver_type in _CANONICAL_RESOLVER_STAGES
     }
     if len(canonical_stages) != len(_CANONICAL_RESOLVER_STAGES):
-        raise InternalInvariantError("canonical calculation route repeats a resolver type")
+        raise InternalInvariantError(
+            "canonical calculation route repeats a resolver type",
+            precondition_verdict=internal_invariant_verdict("calculation_route.stage_resolver_types_unique"),
+        )
     return canonical_stages
 
 
 def _require_unique_resolver_ids(ownership: tuple[CalculationRouteOwnership, ...]) -> None:
     resolver_ids = tuple(row.resolver_id for row in ownership)
     if len(set(resolver_ids)) != len(resolver_ids):
-        raise InternalInvariantError("calculation route resolver ids must be unique")
+        raise InternalInvariantError(
+            "calculation route resolver ids must be unique",
+            precondition_verdict=internal_invariant_verdict("calculation_route.resolver_ids_unique"),
+        )
 
 
 def _require_complete_resolver_coverage(
@@ -177,7 +199,10 @@ def _require_complete_resolver_coverage(
         row.resolver_type for row in ownership if isinstance(row, CalculationRouteResolverOwnership)
     }
     if declared_resolver_types != set(canonical_stages):
-        raise InternalInvariantError("calculation route must contain every canonical executable resolver exactly once")
+        raise InternalInvariantError(
+            "calculation route must contain every canonical executable resolver exactly once",
+            precondition_verdict=internal_invariant_verdict("calculation_route.resolver_coverage_complete"),
+        )
 
 
 def _require_one_pseudo_owner(
@@ -186,7 +211,9 @@ def _require_one_pseudo_owner(
     message: str,
 ) -> None:
     if sum(isinstance(row, owner_type) for row in ownership) != 1:
-        raise InternalInvariantError(message)
+        raise InternalInvariantError(
+            message, precondition_verdict=internal_invariant_verdict("calculation_route.one_pseudo_owner_per_kind")
+        )
 
 
 def _validate_route_shape(
@@ -211,7 +238,10 @@ def _validate_route_shape(
 
 def _validate_manual_owner(row: CalculationRouteManualOwnership) -> None:
     if row != _MANUAL_INPUT_OWNER:
-        raise InternalInvariantError("calculation route permits only the canonical manual-input pseudo-owner")
+        raise InternalInvariantError(
+            "calculation route permits only the canonical manual-input pseudo-owner",
+            precondition_verdict=internal_invariant_verdict("calculation_route.manual_pseudo_owner_canonical"),
+        )
 
 
 def _validate_design_constant_owner(row: CalculationRouteDesignConstantOwnership) -> None:
@@ -220,7 +250,10 @@ def _validate_design_constant_owner(row: CalculationRouteDesignConstantOwnership
     # nothing to compare against and equality with the declared row is the
     # whole guard.
     if row != _DESIGN_CONSTANT_OWNER:
-        raise InternalInvariantError("calculation route permits only the canonical design-constant pseudo-owner")
+        raise InternalInvariantError(
+            "calculation route permits only the canonical design-constant pseudo-owner",
+            precondition_verdict=internal_invariant_verdict("calculation_route.design_constant_pseudo_owner_canonical"),
+        )
 
 
 def _validate_resolver_owner(
@@ -229,7 +262,10 @@ def _validate_resolver_owner(
 ) -> None:
     expected_stage = canonical_stages.get(row.resolver_type)
     if expected_stage is None:
-        raise InternalInvariantError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
+        raise InternalInvariantError(
+            f"calculation route contains an invented resolver: {row.resolver_type!r}",
+            precondition_verdict=internal_invariant_verdict("calculation_route.resolver_type_registered"),
+        )
     identity_checks = (
         (
             row.stage,
@@ -249,7 +285,9 @@ def _validate_resolver_owner(
     )
     for actual, expected, message in identity_checks:
         if actual != expected:
-            raise InternalInvariantError(message)
+            raise InternalInvariantError(
+                message, precondition_verdict=internal_invariant_verdict("calculation_route.owner_identity_agrees")
+            )
 
 
 def _validate_owner(
@@ -268,12 +306,16 @@ def _validate_owner(
 
 def _claim_owned_sources(row: CalculationRouteOwnership, source_owners: dict[BindingSourceKind, str]) -> None:
     if not row.owned_sources:
-        raise InternalInvariantError(f"calculation route resolver {row.resolver_id!r} owns no source")
+        raise InternalInvariantError(
+            f"calculation route resolver {row.resolver_id!r} owns no source",
+            precondition_verdict=internal_invariant_verdict("calculation_route.resolver_owns_source"),
+        )
     for source_kind in row.owned_sources:
         prior = source_owners.get(source_kind)
         if prior is not None:
             raise InternalInvariantError(
                 f"calculation route source {source_kind.value!r} has duplicate owners: {prior!r}, {row.resolver_id!r}",
+                precondition_verdict=internal_invariant_verdict("calculation_route.source_owner_unique"),
             )
         source_owners[source_kind] = row.resolver_id
 
@@ -318,18 +360,21 @@ def _require_registered_route_agreement(
             expected = (registration.route.resolver_id, registration.route.stage)
             if declared is None:
                 raise InternalInvariantError(
-                    f"binding provider {kind.value!r} claims route owner {expected!r} but is unrouted"
+                    f"binding provider {kind.value!r} claims route owner {expected!r} but is unrouted",
+                    precondition_verdict=internal_invariant_verdict("calculation_route.provider_route_routed"),
                 )
             if declared != expected:
                 raise InternalInvariantError(
                     f"binding provider {kind.value!r} declares route {expected!r} "
                     f"but the calculation route owns it at {declared!r}",
+                    precondition_verdict=internal_invariant_verdict("calculation_route.provider_route_agrees"),
                 )
             continue
         if declared is not None:
             raise InternalInvariantError(
                 f"binding provider {kind.value!r} declares no runtime owner but the calculation "
                 f"route owns it at {declared!r}",
+                precondition_verdict=internal_invariant_verdict("calculation_route.provider_runtime_owner_declared"),
             )
 
 
@@ -341,6 +386,7 @@ def _require_no_unregistered_route_sources(
         raise InternalInvariantError(
             "the calculation route may own exactly the mesh-only sources without a binding registration; "
             f"found {sorted(kind.value for kind in unregistered)}",
+            precondition_verdict=internal_invariant_verdict("calculation_route.unregistered_sources_mesh_only"),
         )
 
 
@@ -383,14 +429,18 @@ def require_calculation_route_resolver(stage: CalculationRouteStage, resolver: o
     )
     if len(matching) != 1:
         raise InternalInvariantError(
-            f"runtime calculation resolver is not declared at {stage}: {type(resolver).__name__}"
+            f"runtime calculation resolver is not declared at {stage}: {type(resolver).__name__}",
+            precondition_verdict=internal_invariant_verdict("calculation_route.runtime_resolver_declared"),
         )
     declaration = matching[0]
     if (
         getattr(resolver, "resolver_id", None) != declaration.resolver_id
         or getattr(resolver, "owned_sources", None) != declaration.owned_sources
     ):
-        raise InternalInvariantError(f"runtime calculation resolver identity drifted: {declaration.resolver_id}")
+        raise InternalInvariantError(
+            f"runtime calculation resolver identity drifted: {declaration.resolver_id}",
+            precondition_verdict=internal_invariant_verdict("calculation_route.runtime_resolver_identity"),
+        )
 
 
 __all__ = [

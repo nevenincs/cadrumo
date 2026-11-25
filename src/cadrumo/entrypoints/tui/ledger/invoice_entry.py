@@ -16,13 +16,15 @@ from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
 from ....domain.invoices.business_premises import SituacionInmueble, require_situacion_inmueble
-from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
-from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController
+from .controller import LedgerWorkspaceController
+from .invoice_entry_wording import SITUACION_LOCALE_KEYS, invoice_line_row, supplemental_summary_lines
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
+from .text_values import field_label
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerInvoiceEntryRequested
 
 #: Text fields in form order, each with whether the writer requires it. The
 #: taxable base is required only when no line is entered, which the reader
@@ -107,21 +109,11 @@ _LEASE_CHOICES: Final[tuple[tuple[str, bool], ...]] = (
     ("tui.ledger.invoice.lease.yes", True),
 )
 #: The record design's SITUACIÓN DEL INMUEBLE codes, each offered with its meaning.
-_SITUACION_LOCALE_KEYS: Final[dict[SituacionInmueble, str]] = {
-    SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE: "tui.ledger.invoice.situacion.1",
-    SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE: "tui.ledger.invoice.situacion.2",
-    SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE: "tui.ledger.invoice.situacion.3",
-    SituacionInmueble.ABROAD: "tui.ledger.invoice.situacion.4",
-}
 _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
     LedgerInvoiceClassChoice.ORDINARIA: "tui.ledger.invoice.class.ordinaria",
     LedgerInvoiceClassChoice.SIMPLIFICADA: "tui.ledger.invoice.class.simplificada",
     LedgerInvoiceClassChoice.RECTIFICATIVA: "tui.ledger.invoice.class.rectificativa",
 }
-
-
-def _field_label(name: str) -> str:
-    return tr(_FIELD_LOCALE_KEYS[name])
 
 
 def _line_field_label(name: str) -> str:
@@ -179,7 +171,7 @@ def _parsed_invoice_line(values: dict[str, str]) -> tuple[LedgerInvoiceLineEntry
 
 def _required_entry_problems(values: dict[str, str], lines: list[LedgerInvoiceLineEntryV1]) -> list[str]:
     problems = [
-        tr("tui.ledger.invoice.problem.required", field=_field_label(name))
+        tr("tui.ledger.invoice.problem.required", field=field_label(name, _FIELD_LOCALE_KEYS))
         for name, required in _TEXT_FIELDS
         if required and not values[name]
     ]
@@ -194,7 +186,7 @@ def _entry_day(values: dict[str, str], name: str) -> tuple[date | None, str | No
     try:
         return require_iso8601_date_unless_blank(values[name]), None
     except ValueError:
-        return None, tr("tui.ledger.invoice.problem.date", field=_field_label(name))
+        return None, tr("tui.ledger.invoice.problem.date", field=field_label(name, _FIELD_LOCALE_KEYS))
 
 
 def _entry_dates(values: dict[str, str]) -> tuple[date | None, date | None, list[str]]:
@@ -210,7 +202,7 @@ def _entry_amount(values: dict[str, str], name: str) -> tuple[Decimal | None, st
         return None, None
     parsed = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if parsed is None:
-        return None, tr("tui.ledger.invoice.problem.amount", field=_field_label(name))
+        return None, tr("tui.ledger.invoice.problem.amount", field=field_label(name, _FIELD_LOCALE_KEYS))
     return parsed, None
 
 
@@ -267,81 +259,6 @@ def _build_invoice_entry(
     )
 
 
-def invoice_line_row(index: int, line: InvoiceLine | LedgerInvoiceLineEntryV1) -> str:
-    """Render one invoice line as its numbered row, for entry review and the detail view alike."""
-    return tr(
-        "tui.ledger.invoice.line.row",
-        index=str(index),
-        description=line.description,
-        quantity=format(line.quantity, "f"),
-        unit_price=format(line.unit_price, "f"),
-        subtotal=format(line.subtotal, "f"),
-        rate=str(line.iva_rate),
-        amount=format(line.iva_amount, "f"),
-    )
-
-
-def _operation_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.operation_type is not None or entry.operation_date is not None:
-        return tr(
-            "tui.ledger.invoice.summary.operation",
-            code="-" if entry.operation_type is None else entry.operation_type.value,
-            date="-" if entry.operation_date is None else entry.operation_date.isoformat(),
-        )
-    return None
-
-
-def _recargo_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.recargo_amount is not None:
-        return tr(
-            "tui.ledger.invoice.summary.recargo",
-            amount=format(entry.recargo_amount, "f"),
-            currency=entry.currency,
-        )
-    return None
-
-
-def _rectifies_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.rectifies_invoice_number is not None:
-        return tr("tui.ledger.invoice.summary.rectifies", number=entry.rectifies_invoice_number)
-    return None
-
-
-def _retention_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.retention_rate is not None or entry.retention_amount is not None:
-        return tr(
-            "tui.ledger.invoice.summary.retention",
-            rate="-" if entry.retention_rate is None else format(entry.retention_rate, "f"),
-            amount="-" if entry.retention_amount is None else format(entry.retention_amount, "f"),
-        )
-    return None
-
-
-def _lease_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.arrendamiento_local_negocio:
-        return tr(
-            "tui.ledger.invoice.summary.lease",
-            situacion=entry.situacion_inmueble or "-",
-            referencia=entry.referencia_catastral or "-",
-        )
-    return None
-
-
-def _supplemental_summary_lines(entry: LedgerInvoiceEntryV1) -> list[str]:
-    lines: list[str] = []
-    for render_line in (
-        _operation_summary_line,
-        _recargo_summary_line,
-        _rectifies_summary_line,
-        _retention_summary_line,
-        _lease_summary_line,
-    ):
-        line = render_line(entry)
-        if line is not None:
-            lines.append(line)
-    return lines
-
-
 class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
     """Collect every field ``invoice add`` takes, then write only after review."""
 
@@ -366,7 +283,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield localized(Static(tr("tui.ledger.invoice.prompt"), markup=False), "tui.ledger.invoice.prompt")
-            yield Static(_field_label("kind"), markup=False)
+            yield Static(field_label("kind", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
                 value=InvoiceKind.RECEIVED.value,
@@ -374,13 +291,16 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 id="ledger-invoice-kind",
             )
             for name, required in _TEXT_FIELDS:
-                label = _field_label(name)
+                label = field_label(name, _FIELD_LOCALE_KEYS)
                 yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(value=_DEFAULTS.get(name, ""), id=f"ledger-invoice-{name.replace('_', '-')}")
             yield localized(
-                Static(tr("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False),
+                Static(
+                    tr("tui.ledger.invoice.optional", label=field_label("operation_type", _FIELD_LOCALE_KEYS)),
+                    markup=False,
+                ),
                 "tui.ledger.invoice.optional",
-                label=_field_label("operation_type"),
+                label=field_label("operation_type", _FIELD_LOCALE_KEYS),
             )
             yield Select[str](
                 tuple((key.value, key.value) for key in IntracomOperationType),
@@ -388,14 +308,14 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 allow_blank=True,
                 id="ledger-invoice-operation-type",
             )
-            yield Static(_field_label("invoice_class"), markup=False)
+            yield Static(field_label("invoice_class", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(_CLASS_LOCALE_KEYS[choice]), choice.value) for choice in LedgerInvoiceClassChoice),
                 value=LedgerInvoiceClassChoice.ORDINARIA.value,
                 allow_blank=False,
                 id="ledger-invoice-class",
             )
-            yield Static(_field_label("arrendamiento_local_negocio"), markup=False)
+            yield Static(field_label("arrendamiento_local_negocio", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(key), str(choice)) for key, choice in _LEASE_CHOICES),
                 value=str(False),
@@ -403,12 +323,15 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 id="ledger-invoice-lease",
             )
             yield localized(
-                Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False),
+                Static(
+                    tr("tui.ledger.invoice.optional", label=field_label("situacion_inmueble", _FIELD_LOCALE_KEYS)),
+                    markup=False,
+                ),
                 "tui.ledger.invoice.optional",
-                label=_field_label("situacion_inmueble"),
+                label=field_label("situacion_inmueble", _FIELD_LOCALE_KEYS),
             )
             yield Select[str](
-                tuple((tr(key), code.value) for code, key in _SITUACION_LOCALE_KEYS.items()),
+                tuple((tr(key), code.value) for code, key in SITUACION_LOCALE_KEYS.items()),
                 prompt=tr("tui.ledger.invoice.situacion_none"),
                 allow_blank=True,
                 id="ledger-invoice-situacion-inmueble",
@@ -537,7 +460,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                     currency=entry.currency,
                 )
             )
-        lines.extend(_supplemental_summary_lines(entry))
+        lines.extend(supplemental_summary_lines(entry))
         return "\n".join(lines)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -563,7 +486,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 confirm = self.query_one("#ledger-invoice-confirm", Button)
                 confirm.disabled = False
                 confirm.focus()
-            case "ledger-invoice-cancel" if self.flow_state in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+            case "ledger-invoice-cancel" if self.can_cancel_flow:
                 self._cancel_flow()
             case "ledger-invoice-confirm" if self.flow_state is LedgerFlowState.CONFIRMING:
                 self._transition(LedgerFlowState.SUBMITTING)
@@ -571,11 +494,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-invoice-cancel", Button).disabled = True
                 self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoice.progress"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "ledger-invoice-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "ledger-invoice-again" if self.flow_state.is_settled:
                 self.refresh_after_write(lambda: self.post_message(LedgerInvoiceEntryRequested()))
             case _:
                 return
@@ -599,11 +518,11 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         except AccountSessionExpiredError as error:
             self._clear_private_form()
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.invoice.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.invoice.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.invoice.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.invoice.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
@@ -635,7 +554,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
 
     @override
     def _cancel_flow(self) -> None:
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self.entry = None
         self._transition(LedgerFlowState.CANCELLED)
@@ -648,4 +567,4 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         again.focus()
 
 
-__all__ = ["LedgerInvoiceEntryScreen", "invoice_line_row"]
+__all__ = ["LedgerInvoiceEntryScreen"]

@@ -31,8 +31,8 @@ def test_application_refusal_keeps_its_own_code() -> None:
 
 
 def test_runtime_refusal_keeps_its_transport_code() -> None:
-    refused = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
-    assert frontend_failure_code(refused) == RefusalCode.DEADLINE_EXCEEDED.value
+    refused = RefusalError(RefusalCode.TIMEOUT)
+    assert frontend_failure_code(refused) == RefusalCode.TIMEOUT.value
 
 
 def test_contract_violation_is_an_invalid_frame() -> None:

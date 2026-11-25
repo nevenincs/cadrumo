@@ -1,21 +1,4 @@
-"""Persisted AEAT session discovery and verification.
-
-:func:`ensure_authenticated_aeat_session` returns
-:class:`AuthenticatedAeatSessionResult` after coordinating
-:class:`AuthProviderKind` selection, :class:`SessionStoreProtocol` persistence,
-and :class:`PersistedAuthSession` reuse.
-
-See Also:
-    :mod:`application.auth.acquisition_lock`
-        Defines the profile/provider
-        :class:`application.auth.acquisition_lock.AuthAcquisitionLockRecord`
-        used to serialize live authentication.
-    :mod:`application.live.session`
-        Read-only live-entry helper that calls this module only after
-        :class:`core.access_gate.gate.AeatAccessGate` allows a live read.
-    :mod:`adapters.outbound.aeat.auth`
-        Concrete providers and persisted-session store implementations.
-"""
+"""Persisted AEAT session discovery and verification."""
 
 from __future__ import annotations
 
@@ -31,7 +14,10 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 
 from ...core.async_cleanup import close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
+from ...core.errors.hierarchy import (
+    AeatLoginAssertionError,
+    CadrumoError,
+)
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import (
     same_tax_identifier,
@@ -104,7 +90,20 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
     ) -> tuple[AeatSession, AeatLoginAssertion]: ...
 
 
-def _get_session_store() -> SessionStoreProtocol:
+@runtime_checkable
+class PersistedSessionProbeProvider(Protocol):
+    """Provider that proves its stored session without a fresh-login fallback."""
+
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
+        """Prove the persisted session without a fresh login."""
+        ...
+
+
+def get_session_store() -> SessionStoreProtocol:
     """Return the sole encrypted outbound session-store implementation."""
     return session_store()
 
@@ -186,7 +185,8 @@ class ClaveCredentials(BaseModel):
     profile itself held, because the provider adapters read their
     credentials from :class:`Settings` - a profile-borne value only
     reaches AEAT once it has been bound onto the settings the provider
-    will read.
+    will read. The profile's Cl@ve identity, ``profile_dni_nie``, is its
+    ``identity.tax_id``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -282,14 +282,14 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
             # session, so there is nothing to load (and no stem to resolve).
             return None
         paths = storage_state_paths(kind)
-        if not _get_session_store().exists(paths.storage_state):
+        if not get_session_store().exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.storage_state, kind)
 
     for candidate in _STEM_BY_KIND:
         paths = storage_state_paths(candidate)
-        if _get_session_store().exists(paths.storage_state):
+        if get_session_store().exists(paths.storage_state):
             return _parse_single(paths.storage_state, candidate)
     _logger.debug("load_persisted_session: no session metadata found for any registered provider")
     return None
@@ -315,7 +315,7 @@ def delete_persisted_session(
         if candidate_kind not in _STEM_BY_KIND:
             continue
         paths = storage_state_paths(candidate_kind, bucket_id=bucket_id)
-        if not _get_session_store().delete(paths.storage_state):
+        if not get_session_store().delete(paths.storage_state):
             continue
         _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
         removed.append(paths.storage_state)
@@ -332,7 +332,7 @@ def persisted_session_exists(
     del settings
     if kind not in _STEM_BY_KIND:
         return False
-    return _get_session_store().exists(storage_state_paths(kind, bucket_id=bucket_id).storage_state)
+    return get_session_store().exists(storage_state_paths(kind, bucket_id=bucket_id).storage_state)
 
 
 async def ensure_authenticated_aeat_session(
@@ -409,7 +409,7 @@ async def _ensure_authenticated_aeat_session_locked(
     Returns an :class:`AuthenticatedAeatSessionResult` carrying the live
     session and the lock-reset status when one was requested.
     """
-    provider_kind = _resolve_provider_kind(
+    provider_kind = resolve_provider_kind(
         settings,
         kind,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -427,7 +427,7 @@ async def _ensure_authenticated_aeat_session_locked(
             settings = settings.model_copy(
                 update={"cadrumo_clave_permanente_password": snapshot.clave_permanente_password}
             )
-    settings, expected_identity = _prepare_clave_auth(
+    settings, expected_identity = prepare_clave_auth(
         settings,
         provider_kind,
         operator_scope_ports=operator_scope_ports,
@@ -449,7 +449,7 @@ async def _ensure_authenticated_aeat_session_locked(
         )
         if reused is not None:
             session, assertion = reused
-            _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
+            assert_session_identity_matches_expected(session.identity_nif, expected_identity)
             return AuthenticatedAeatSessionResult(
                 provider_kind=provider_kind,
                 session=session,
@@ -477,7 +477,7 @@ async def _ensure_authenticated_aeat_session_locked(
             )
             if reused is not None:
                 session, assertion = reused
-                _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
+                assert_session_identity_matches_expected(session.identity_nif, expected_identity)
                 return AuthenticatedAeatSessionResult(
                     provider_kind=provider_kind,
                     session=session,
@@ -489,7 +489,7 @@ async def _ensure_authenticated_aeat_session_locked(
         if fresh:
             removed_sessions = delete_persisted_session(settings, kind=provider_kind)
 
-        provider = _build_provider(
+        provider = build_provider(
             settings,
             provider_kind,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -497,8 +497,8 @@ async def _ensure_authenticated_aeat_session_locked(
             certificate_credentials=certificate_credentials,
             operator_scope_ports=operator_scope_ports,
         )
-        async with _provider_lifecycle(provider):
-            session, assertion = await _authenticate_and_verify_provider(
+        async with provider_lifecycle(provider):
+            session, assertion = await authenticate_and_verify_provider(
                 provider,
                 target_url=target_url,
             )
@@ -507,7 +507,7 @@ async def _ensure_authenticated_aeat_session_locked(
                 translated_message="errors.auth.auth_aeat_login_assertion",
                 context=_invalid_assertion_diagnostic(assertion),
             )
-        _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
+        assert_session_identity_matches_expected(session.identity_nif, expected_identity)
         return AuthenticatedAeatSessionResult(
             provider_kind=provider_kind,
             session=session,
@@ -522,7 +522,7 @@ async def _ensure_authenticated_aeat_session_locked(
 
 def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession | None:
     try:
-        persisted = _get_session_store().load(storage_state_path)
+        persisted = get_session_store().load(storage_state_path)
     except (ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
             translated_message="application.auth.sessions.errors.corrupt_session",
@@ -582,6 +582,7 @@ def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthS
 
 
 def session_metadata_datetime(value: object, *, field: str) -> datetime:
+    """Parse a timestamp from persisted session metadata."""
     if isinstance(value, datetime):
         return value
     if isinstance(value, str):
@@ -594,7 +595,7 @@ def session_metadata_datetime(value: object, *, field: str) -> datetime:
     )
 
 
-def _resolve_provider_kind(
+def resolve_provider_kind(
     settings: Settings,
     kind: AuthProviderKind | None,
     *,
@@ -653,14 +654,19 @@ def _normalise_credential(value: object) -> str:
     return str(value or "").strip()
 
 
-def _prepare_clave_auth(
+def prepare_clave_auth(
     settings: Settings,
     provider_kind: AuthProviderKind,
     *,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
+    logs_in: bool = True,
 ) -> tuple[Settings, str | None]:
     """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
+
+    ``logs_in`` is ``False`` where the provider only verifies a session the
+    person already signed into, in the Sede view: that verification types
+    nothing into a Cl@ve form, so only the identity it aligns is required.
 
     Returns the settings the provider should read - the caller's, with any
     profile-borne credential bound onto it - and the identity a resulting
@@ -680,7 +686,7 @@ def _prepare_clave_auth(
     meaningless, and a provider that returned no expectation would leave
     the session check silently no-opping.
     """
-    facts = _active_profile_auth_facts(
+    facts = active_profile_auth_facts(
         operator_scope_ports=operator_scope_ports,
         profile_decode_context=profile_decode_context,
     )
@@ -692,7 +698,7 @@ def _prepare_clave_auth(
         profile_decode_context=profile_decode_context,
     )
     if credentials is None:
-        _assert_profile_identity_available_for_deferred_check(
+        assert_profile_identity_available_for_deferred_check(
             facts,
             profile_decode_context=profile_decode_context,
         )
@@ -706,8 +712,9 @@ def _prepare_clave_auth(
         bound_settings,
         credentials,
         profile_decode_context=profile_decode_context,
+        logs_in=logs_in,
     )
-    expected_identity = _assert_active_profile_identity_matches_provider(
+    expected_identity = assert_active_profile_identity_matches_provider(
         credentials,
         profile_decode_context=profile_decode_context,
     )
@@ -738,7 +745,7 @@ def _resolve_clave_credentials(
         facts=(
             facts
             if facts is not None
-            else _active_profile_auth_facts(
+            else active_profile_auth_facts(
                 operator_scope_ports=operator_scope_ports,
                 profile_decode_context=profile_decode_context,
             )
@@ -772,24 +779,27 @@ def resolve_clave_credentials(
         settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
         settings_numero_soporte = _normalise_credential(settings.cadrumo_clave_movil_nie_soporte)
         settings_fecha_validez = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
+    # The person signing in is always the taxpayer the profile describes:
+    # representation is refused and the identity guard refuses any divergence.
+    # So the profile's tax identifier IS the Cl@ve identity, its single source.
+    profile_dni_nie = facts.tax_id
     return ClaveCredentials(
         provider_kind=provider_kind,
-        dni_nie=facts.dni_nie or settings_dni_nie,
+        dni_nie=profile_dni_nie or settings_dni_nie,
         numero_soporte=facts.numero_soporte or settings_numero_soporte,
         fecha_validez=facts.fecha_validez or settings_fecha_validez,
         profile_tax_id=facts.tax_id,
-        profile_dni_nie=facts.dni_nie,
+        profile_dni_nie=profile_dni_nie,
         profile_numero_soporte=facts.numero_soporte,
         profile_fecha_validez=facts.fecha_validez,
     )
 
 
-_CLAVE_DNI_NIE_PATH = "auth.dni_nie"
 _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 
 
-def _profile_field_label(
+def profile_field_label(
     path: str,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -815,28 +825,31 @@ def _require_clave_credentials(
     credentials: ClaveCredentials,
     *,
     profile_decode_context: ProfileDecodeContext,
+    logs_in: bool,
 ) -> None:
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
     Every Cl@ve mode needs the DNI/NIE that identifies the person. The
     contraste - the numero de soporte for a NIE, the validity date for a
     DNI - is read only by the app-request form, so it is required exactly
-    when that route is in effect. That is the default route, so a profile
+    when a login runs on that route. That is the default route, so a profile
     that never chose one is refused here too; an explicit QR route asks for
-    neither and must not be refused for their absence.
+    neither and must not be refused for their absence. Verifying a session the
+    person signed into in the Sede view (``logs_in`` false) fills no form, so it
+    needs the identity alone.
     """
     if not credentials.dni_nie:
         raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_identity_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "identity_field": _profile_field_label(
-                    _CLAVE_DNI_NIE_PATH,
+                "identity_field": profile_field_label(
+                    PROFILE_TAX_ID_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
             },
         )
-    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL or not logs_in:
         return
     if not settings.cadrumo_clave_prefer_non_qr:
         return
@@ -845,11 +858,11 @@ def _require_clave_credentials(
             translated_message="application.auth.sessions.errors.clave_contraste_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "nie_field": _profile_field_label(
+                "nie_field": profile_field_label(
                     _CLAVE_NUMERO_SOPORTE_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
-                "dni_field": _profile_field_label(
+                "dni_field": profile_field_label(
                     _CLAVE_FECHA_VALIDEZ_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
@@ -857,7 +870,7 @@ def _require_clave_credentials(
         )
 
 
-def _assert_profile_identity_available_for_deferred_check(
+def assert_profile_identity_available_for_deferred_check(
     facts: ClaveAuthFacts,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -888,17 +901,17 @@ def _assert_profile_identity_available_for_deferred_check(
     raise AuthProfileIdentityMismatchError(
         translated_message="application.auth.sessions.errors.profile_identity_cleared",
         context={
-            "requirements": _grounded_profile_identity_requirement(
+            "requirements": grounded_profile_identity_requirement(
                 profile_decode_context=profile_decode_context,
             ),
         },
     )
 
 
-_PROFILE_TAX_ID_PATH = "identity.tax_id"
+PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 
-def _grounded_profile_identity_requirement(
+def grounded_profile_identity_requirement(
     *,
     profile_decode_context: ProfileDecodeContext,
 ) -> str:
@@ -914,13 +927,13 @@ def _grounded_profile_identity_requirement(
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
-            _PROFILE_TAX_ID_PATH,
+            PROFILE_TAX_ID_PATH,
             schema=profile_decode_context.schema,
         ),
     )
 
 
-def _assert_active_profile_identity_matches_provider(
+def assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -960,7 +973,7 @@ def _assert_active_profile_identity_matches_provider(
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
             context={
-                "requirements": _grounded_profile_identity_requirement(
+                "requirements": grounded_profile_identity_requirement(
                     profile_decode_context=profile_decode_context,
                 ),
             },
@@ -1039,7 +1052,6 @@ class ClaveAuthFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     tax_id: str = ""
-    dni_nie: str = ""
     numero_soporte: str = ""
     fecha_validez: str = ""
     clave_movil_route: ClaveMovilRoute | None = None
@@ -1065,8 +1077,7 @@ def clave_auth_facts_from_profile_values(
     value mapping leaves it unset and is treated as the stricter case.
     """
     return ClaveAuthFacts(
-        tax_id=_normalise_tax_identity(values.get(_PROFILE_TAX_ID_PATH)),
-        dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
+        tax_id=_normalise_tax_identity(values.get(PROFILE_TAX_ID_PATH)),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
         clave_movil_route=(
@@ -1076,7 +1087,7 @@ def clave_auth_facts_from_profile_values(
     )
 
 
-def _active_profile_auth_facts(
+def active_profile_auth_facts(
     *,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
@@ -1117,16 +1128,17 @@ def _active_profile_auth_facts(
         return ClaveAuthFacts()
 
     path_values = dict(record_to_path_values(record))
-    if not _normalise_tax_identity(path_values.get(_PROFILE_TAX_ID_PATH)):
+    if not _normalise_tax_identity(path_values.get(PROFILE_TAX_ID_PATH)):
         # A record whose tax id reached the projection only through its
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
-        path_values[_PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
+        path_values[PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
-def _assert_session_identity_matches_expected(session_identity: str, expected_identity: str | None) -> None:
+def assert_session_identity_matches_expected(session_identity: str, expected_identity: str | None) -> None:
+    """Require a session identity to match the active profile."""
     if not (expected_identity is not None and expected_identity):
         return
     session_identity = _normalise_tax_identity(session_identity)
@@ -1150,7 +1162,7 @@ async def _try_probe_verified_session(
     certificate_credentials: ActiveCertificateCredentials | None,
     operator_scope_ports: OperatorScopePorts,
 ) -> tuple[AeatSession, AeatLoginAssertion] | None:
-    provider = _build_provider(
+    provider = build_provider(
         settings,
         kind,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -1158,7 +1170,7 @@ async def _try_probe_verified_session(
         certificate_credentials=certificate_credentials,
         operator_scope_ports=operator_scope_ports,
     )
-    async with _provider_lifecycle(provider):
+    async with provider_lifecycle(provider):
         try:
             session, assertion = await _probe_existing_session(provider, target_url=target_url)
         except Exception as exc:
@@ -1169,7 +1181,7 @@ async def _try_probe_verified_session(
     return None
 
 
-def _build_provider(
+def build_provider(
     settings: Settings,
     kind: AuthProviderKind,
     *,
@@ -1178,6 +1190,7 @@ def _build_provider(
     certificate_credentials: ActiveCertificateCredentials | None,
     operator_scope_ports: OperatorScopePorts,
 ) -> AuthProvider:
+    """Construct the configured authentication provider."""
     return select_provider(
         kind,
         settings=settings,
@@ -1199,10 +1212,10 @@ async def _probe_existing_session(
         return await provider.probe_persisted_session(
             target_url=target_url,
         )
-    return await _authenticate_and_verify_provider(provider, target_url=target_url)
+    return await authenticate_and_verify_provider(provider, target_url=target_url)
 
 
-async def _authenticate_and_verify_provider(
+async def authenticate_and_verify_provider(
     provider: AuthProvider,
     *,
     target_url: str | None,
@@ -1221,7 +1234,7 @@ async def _authenticate_and_verify_provider(
 
 
 @asynccontextmanager
-async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
+async def provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
     """Close ``provider`` without hiding a primary auth failure."""
     primary_error: BaseException | None = None
     try:
@@ -1236,25 +1249,3 @@ async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
             close_attempts=2,
             primary_error=primary_error,
         )
-
-
-__all__ = [
-    "AuthProfileIdentityMismatchError",
-    "AuthSessionUnavailableError",
-    "AuthenticatedAeatSessionResult",
-    "ClaveAuthFacts",
-    "ClaveCredentials",
-    "ClaveCredentialsIncompleteError",
-    "CorruptAuthSessionError",
-    "PersistedAuthSession",
-    "SessionDeserializationError",
-    "StorageStatePaths",
-    "bind_clave_credentials_to_settings",
-    "clave_auth_facts_from_profile_values",
-    "delete_persisted_session",
-    "ensure_authenticated_aeat_session",
-    "load_persisted_session",
-    "persisted_session_exists",
-    "resolve_clave_credentials",
-    "storage_state_paths",
-]

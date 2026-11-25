@@ -29,12 +29,14 @@ export records become repeating groups, never flattened rows.
 
 Where a design names a part in no form the ladder can read, a reviewer's quote
 of the official words (``official_headings.toml``) heads it, after the quote is
-verified on the cited line of a source the revision cites.
+verified on the cited line of a source the revision cites. Where a reviewer
+grouped a revision's sections for navigation (``outline_groups.toml``), the
+layout carries that outline.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -54,22 +56,23 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from ..compiler.form_layout_integrity import form_layout_source_digest
-from .generation_models import _Build
-from .heading_quotes import _quoted_pages
+from .generation_models import Build
+from .heading_quotes import quoted_pages
 from .official_form_pages import OfficialFormUnavailableError
 from .official_headings import QuotedHeading, read_official_headings
-from .page_assembly import _build_pages
-from .page_placement import _placements
+from .outline_groups import read_outline_groups
+from .page_assembly import build_pages
+from .page_placement import placements
 from .position_anchoring import (
-    _anchor_casillas,
-    _anchor_row_fields,
-    _binding_primary,
-    _dictionary_positions,
-    _fixed_width_records,
-    _manual_scalar_bindings,
+    anchor_casillas,
+    anchor_row_fields,
+    binding_primary,
+    dictionary_positions,
+    fixed_width_records,
+    manual_scalar_bindings,
 )
 from .predecessor_layout import ContinuedLayout, PredecessorLayout, continue_predecessor_layout
-from .record_design_anchoring import _record_design_positions
+from .record_design_anchoring import record_design_positions
 
 __all__ = [
     "GENERATED_LAYOUT_ID",
@@ -92,7 +95,7 @@ class LayoutGeneration:
     notes: tuple[str, ...] = ()
 
 
-def _seed_source(build: _Build, continued: ContinuedLayout | None) -> FormLayoutSeedSource:
+def _seed_source(build: Build, continued: ContinuedLayout | None) -> FormLayoutSeedSource:
     if build.used_dictionary:
         return FormLayoutSeedSource.XML_DICTIONARY
     if build.used_design and build.used_export:
@@ -104,12 +107,12 @@ def _seed_source(build: _Build, continued: ContinuedLayout | None) -> FormLayout
     return FormLayoutSeedSource.CASILLA_NUMBER
 
 
-def _has_own_layout_seed(build: _Build) -> bool:
+def _has_own_layout_seed(build: Build) -> bool:
     return bool(build.positions) or build.used_design or build.used_dictionary
 
 
 def _follow_predecessor_layout(
-    build: _Build,
+    build: Build,
     predecessor: PredecessorLayout,
     *,
     sources: Mapping[str, SourceReference],
@@ -129,20 +132,20 @@ def _follow_predecessor_layout(
     return continued
 
 
-def _note_unconfirmed_casillas(build: _Build, continued: ContinuedLayout) -> None:
+def _note_unconfirmed_casillas(build: Build, continued: ContinuedLayout) -> None:
     build.notes.append(
         f"{len(continued.unconfirmed)} continuing casilla(s) not confirmed on the revision's own form: "
         + ", ".join(sorted(continued.unconfirmed))
     )
 
 
-def _pin_continued_sources(build: _Build, continued: ContinuedLayout) -> None:
+def _pin_continued_sources(build: Build, continued: ContinuedLayout) -> None:
     pinned = {item.source_ref for item in build.design_sources}
     build.design_sources.extend(item for item in continued.design_sources if item.source_ref not in pinned)
 
 
 def _continued_layout(
-    build: _Build,
+    build: Build,
     predecessor: PredecessorLayout | None,
     *,
     sources: Mapping[str, SourceReference],
@@ -158,14 +161,14 @@ def _revision_position_inputs(
     revision: ModeloRevision,
 ) -> tuple[ExportLayoutDefinition | None, list[ExportRecordDefinition], dict[str, bool]]:
     layouts = derive_export_layouts_from_bindings(revision)
-    manual_bindings = _manual_scalar_bindings(revision)
+    manual_bindings = manual_scalar_bindings(revision)
     xml_layout = next((layout for layout in layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY), None)
-    records = _fixed_width_records(layouts)
+    records = fixed_width_records(layouts)
     return xml_layout, records, manual_bindings
 
 
 def _seed_revision_positions(
-    build: _Build,
+    build: Build,
     xml_layout: ExportLayoutDefinition | None,
     records: Sequence[ExportRecordDefinition],
     manual_bindings: Mapping[str, bool],
@@ -174,13 +177,13 @@ def _seed_revision_positions(
     data_root: Path,
 ) -> None:
     if xml_layout is not None and xml_layout.dictionary_source_ref is not None:
-        _dictionary_positions(build, xml_layout, sources, data_root)
+        dictionary_positions(build, xml_layout, sources, data_root)
     else:
-        _record_design_positions(build, sources, records, manual_bindings)
-    _anchor_row_fields(build, records)
+        record_design_positions(build, sources, records, manual_bindings)
+    anchor_row_fields(build, records)
     build.used_export = any(position.records for position in build.positions)
-    _anchor_casillas(build)
-    build.binding_primary = _binding_primary(build)
+    anchor_casillas(build)
+    build.binding_primary = binding_primary(build)
 
 
 def _headings_for_revision(
@@ -213,7 +216,7 @@ def generate_revision_layout(
     """
     if not revision.casillas:
         return LayoutGeneration(modelo_id, revision.id, None, failure="revision declares no casillas")
-    build = _Build(modelo_id=modelo_id, revision=revision)
+    build = Build(modelo_id=modelo_id, revision=revision)
     xml_layout, records, manual_bindings = _revision_position_inputs(revision)
     _seed_revision_positions(
         build,
@@ -225,9 +228,9 @@ def generate_revision_layout(
     )
     repeating = {record.id: record for record in records if record.repeat is not None}
     continued = _continued_layout(build, predecessor, sources=sources, data_root=data_root)
-    pages, section_of, shown, _placed_bindings = _build_pages(build, manual_bindings, repeating, continued)
+    pages, section_of, shown, _placed_bindings = build_pages(build, manual_bindings, repeating, continued)
     quotes = _headings_for_revision(modelo_id, revision, headings)
-    pages = _quoted_pages(build, pages, quotes, sources=sources, data_root=data_root)
+    pages = quoted_pages(build, pages, quotes, sources=sources, data_root=data_root)
     layout = FormLayoutDefinition(
         id=GENERATED_LAYOUT_ID,
         revision_id=revision.id,
@@ -236,7 +239,8 @@ def generate_revision_layout(
         source_state_digest=form_layout_source_digest(revision),
         design_sources=tuple(build.design_sources),
         pages=tuple(pages),
-        placements=_placements(build, section_of, shown, {} if continued is None else continued.aliases),
+        placements=placements(build, section_of, shown, {} if continued is None else continued.aliases),
+        outline=read_outline_groups().for_revision(modelo_id, str(revision.id)),
     )
     # Context and row projections depend on the blocks being published, which
     # may differ from the previous layout carried by the input revision.
@@ -263,26 +267,11 @@ def generate_modelo_layouts(
 
     def current(revision_id: str, visiting: frozenset[str]) -> FormLayoutDefinition | None:
         revision = modelo.revisions[revision_id]
-        existing = revision.form_layouts[0] if revision.form_layouts else None
-        if existing is not None and existing.seed_source is FormLayoutSeedSource.AUTHORED:
-            if existing.source_state_digest != form_layout_source_digest(revision):
-                raise RegistryValidationError(
-                    f"{modelo.id} {revision_id}: authored form layout is stale; reconcile its declarations"
-                )
-            return existing
-        if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
+        existing = _preserved_form_layout(modelo, revision_id, revision)
+        if existing is not None:
             return existing
         if revision_id not in outcomes:
-            followed: PredecessorLayout | None = None
-            declared = revision.predecessor
-            if (
-                isinstance(declared, DeclaredPredecessor)
-                and declared.revision_id in modelo.revisions
-                and declared.revision_id not in visiting
-            ):
-                layout = current(declared.revision_id, visiting | {revision_id})
-                if layout is not None:
-                    followed = PredecessorLayout(revision=modelo.revisions[declared.revision_id], layout=layout)
+            followed = _followed_predecessor(modelo, revision_id, revision, visiting, current)
             outcomes[revision_id] = generate_revision_layout(
                 str(modelo.id), revision, sources=sources, data_root=data_root, predecessor=followed
             )
@@ -295,3 +284,37 @@ def generate_modelo_layouts(
         for revision_id in sorted(modelo.revisions, key=str)
         if revision_id in outcomes
     }
+
+
+def _preserved_form_layout(
+    modelo: ModeloDefinition, revision_id: str, revision: ModeloRevision
+) -> FormLayoutDefinition | None:
+    existing = revision.form_layouts[0] if revision.form_layouts else None
+    if existing is not None and existing.seed_source is FormLayoutSeedSource.AUTHORED:
+        if existing.source_state_digest != form_layout_source_digest(revision):
+            raise RegistryValidationError(
+                f"{modelo.id} {revision_id}: authored form layout is stale; reconcile its declarations"
+            )
+        return existing
+    if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
+        return existing
+    return None
+
+
+def _followed_predecessor(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    visiting: frozenset[str],
+    current: Callable[[str, frozenset[str]], FormLayoutDefinition | None],
+) -> PredecessorLayout | None:
+    declared = revision.predecessor
+    if (
+        isinstance(declared, DeclaredPredecessor)
+        and declared.revision_id in modelo.revisions
+        and declared.revision_id not in visiting
+    ):
+        layout = current(declared.revision_id, visiting | {revision_id})
+        if layout is not None:
+            return PredecessorLayout(revision=modelo.revisions[declared.revision_id], layout=layout)
+    return None

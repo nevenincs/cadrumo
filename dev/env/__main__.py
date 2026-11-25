@@ -5,25 +5,35 @@ Usage::
     python -m dev.env install
     python -m dev.env workstation-tools
     python -m dev.env setup
+    python -m dev.env google-client
+    python -m dev.env google-publisher-client
 
 Provisioning actions mutate only the checkout's managed environment. The
 initialization runner owns the dependency checks that precede provisioning.
 ``setup`` materializes ``env/.env`` and ports the values set in the main
-worktree's copy; ``workstation-tools`` provisions workstation CLIs.
+worktree's copy using the standard library alone, and exits non-zero naming any
+key ``env/.env`` sets that ``env/.env.example`` does not declare;
+``google-client`` stages
+the Google Desktop client resource and needs the synchronized environment;
+``google-publisher-client`` stages the same resource but exits non-zero when no
+client is configured, for the ``google_publisher_client`` tests;
+``workstation-tools`` provisions workstation CLIs.
 """
 
 from __future__ import annotations
 
 import argparse
 
-from ._dotenv import env_setup
-from ._install import install
-from ._workstation import workstation_tools
+from .dotenv import env_setup, google_client_setup, google_publisher_client_setup
+from .install import install
+from .workstation import workstation_tools
 
 ACTIONS = {
     "install": install,
     "workstation-tools": workstation_tools,
     "setup": env_setup,
+    "google-client": google_client_setup,
+    "google-publisher-client": google_publisher_client_setup,
 }
 
 

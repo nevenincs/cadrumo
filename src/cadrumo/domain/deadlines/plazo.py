@@ -1,12 +1,14 @@
 """Registry lookup for filing window close dates (plazo voluntario).
 
 Provides one profile-free matcher for the modelo, filing year, period and
-optional resultado or Modelo 210 tipo-renta context. The typed window retains
-both opening and closing dates and feeds calendar and extemporaneidad
-projections through ``resolve_filing_window``.
+optional resultado or Modelo 210 tipo-renta context. The typed resolution says
+whether the window is authored, projected from the governed filing-window rule,
+or projected with an unknown close, and feeds calendar, extemporaneidad, export
+and workflow projections through ``resolve_filing_window``.
 
 Core types:
-:class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`.
+:class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`,
+:data:`~cadrumo.domain.deadlines.filing_window_projection.FilingWindowResolution`.
 """
 
 from __future__ import annotations
@@ -14,18 +16,20 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.result_disposition import ResultDisposition
 from ..calculations.registry.errors import RegistrySnapshotError
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from .errors import DeadlineValidationError
+from .filing_window_projection import AuthoredFilingWindow
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from .engine import DeadlineWindowProjection
+    from .filing_window_projection import FilingWindowResolution
 
 
 def resolve_filing_window(
@@ -36,17 +40,22 @@ def resolve_filing_window(
     resultado: ResultDisposition | None = None,
     tipo_renta_code: str | None = None,
     authority: PinnedAuthorityOperation | None = None,
-) -> DeadlineWindowDefinition | None:
-    """Return the registry deadline window for a modelo+year+period, or ``None``.
+) -> FilingWindowResolution | None:
+    """Return the deadline window resolution for a modelo+year+period, or ``None``.
 
-    This is the single matching authority for "which registry deadline window
-    covers this filing target". Every consumer — the extemporaneidad surface
-    that needs only
-    :attr:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition.closes_on`,
-    and the overview calendar that also
-    needs ``opens_on`` and ``payment_cutoff_on`` — resolves through here, so a
-    change to the year/token matching rule or to the no-window behaviour can
-    never move one surface without the other.
+    This is the single matching authority for "which deadline window covers
+    this filing target". Every consumer -- extemporaneidad, the overview
+    calendar, export and the workflow gate -- resolves through here, so a change
+    to the year/token matching rule, to precedence or to the no-window behaviour
+    can never move one surface without the other.
+
+    The resolution says where the window comes from. An authored window always
+    wins. A scheduled coordinate no revision authors is projected from the
+    governed filing-window rule into a
+    :class:`~cadrumo.domain.deadlines.filing_window_projection.ProjectedFilingWindow`,
+    a dated window like an authored one. A close whose holiday calendar is
+    unpublished is never reported as ``None``: an unknown close is not an
+    absent window.
 
     Matching uses the registry's canonical atomic deadline coordinate. The
     filing year and bare period token must be exact; a window's absent qualifier
@@ -67,6 +76,12 @@ def resolve_filing_window(
     taxpayer must file. The sibling deadline engine wraps the same call and
     raises with the failing stage named; this now agrees with it.
 
+    A year the support envelope gates answers the same way as any other: the
+    window a revision authors for it, or ``None``. No rule is projected for it,
+    because the product files nothing there, and the answer is never an
+    envelope refusal. The envelope decides what can be filed, not what the law
+    dated.
+
     Args:
         modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
             (e.g. ``"130"``, ``"303"``).
@@ -77,9 +92,9 @@ def resolve_filing_window(
         authority: Optional generation-pinned authority operation.
 
     Returns:
-        The matching
-        :class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`,
-        or ``None`` when the registry declares no window for the combination.
+        The authored or projected resolution, or ``None``
+        when the registry neither authors nor can project a window for the
+        combination.
 
     Raises:
         RegistryError: The registry could not be read or validated. The caller
@@ -118,7 +133,7 @@ def _resolve_filing_window_with_operation(
     period: Period,
     resultado: ResultDisposition | None,
     tipo_renta_code: str | None,
-) -> DeadlineWindowDefinition | None:
+) -> FilingWindowResolution | None:
     """Resolve one filing window from a single generation-pinned operation."""
     if modelo not in operation.modelo_ids():
         raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=modelo)
@@ -129,7 +144,7 @@ def _resolve_filing_window_with_operation(
     # this modelo fixes in code.
     filing_year_close = date(filing_year, 12, 31)
     if tipo_renta_code is not None and (
-        modelo != Modelo("210")
+        modelo != form_for_role("irnr.income")
         or tipo_renta_code
         not in m210_tipo_renta_code_projection(
             effective_date=filing_year_close,
@@ -139,10 +154,11 @@ def _resolve_filing_window_with_operation(
         raise DeadlineValidationError(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
         )
-    from .engine import indexed_deadline_windows
+    from .engine import indexed_deadline_window_year
 
-    windows = tuple(item for item in indexed_deadline_windows(operation, filing_year) if item[0] == modelo)
-    return _resolve_projected_filing_window(
+    year_index = indexed_deadline_window_year(operation, filing_year)
+    windows = tuple(item for item in year_index.dated if item[0] == modelo)
+    window = resolve_projected_filing_window(
         windows,
         modelo=modelo,
         filing_year=filing_year,
@@ -150,9 +166,13 @@ def _resolve_filing_window_with_operation(
         resultado=resultado,
         tipo_renta_code=tipo_renta_code,
     )
+    if window is None:
+        return None
+    projected = year_index.projected.get(window.id)
+    return AuthoredFilingWindow(window=window) if projected is None else projected
 
 
-def _resolve_projected_filing_window(
+def resolve_projected_filing_window(
     windows: tuple[DeadlineWindowProjection, ...],
     *,
     modelo: str,
@@ -199,7 +219,7 @@ def _is_qualified_m210_event(
     from ..calculations.registry.period_selector_match import selector_period_matches_request
 
     return (
-        modelo == Modelo("210")
+        modelo == form_for_role("irnr.income")
         and selector_period_matches_request("EVENT-N", period.registry_token)
         and (resultado is not None or tipo_renta_code is not None)
     )

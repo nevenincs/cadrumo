@@ -50,15 +50,31 @@ async function refresh(): Promise<void> {
 }
 
 // Two frames allow the loading page to paint before asking the host to assemble.
+// A hidden or covered window draws no frames, and nobody sees a paint there, so
+// it asks at once instead of waiting until the window is shown.
+function afterFirstPaint(begin: () => void): void {
+  let begun = false;
+  const once = () => {
+    if (begun) return;
+    begun = true;
+    document.removeEventListener("visibilitychange", whenHidden);
+    begin();
+  };
+  const whenHidden = () => {
+    if (document.visibilityState === "hidden") once();
+  };
+  document.addEventListener("visibilitychange", whenHidden);
+  whenHidden();
+  requestAnimationFrame(() => requestAnimationFrame(once));
+}
+
 if (host) {
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      void host
-        .begin()
-        .then(refresh)
-        .catch(() => {
-          failed(text("interrupted"));
-        });
-    }),
-  );
+  afterFirstPaint(() => {
+    void host
+      .begin()
+      .then(refresh)
+      .catch(() => {
+        failed(text("interrupted"));
+      });
+  });
 }

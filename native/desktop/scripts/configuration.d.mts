@@ -10,6 +10,9 @@ export function server(): {
   previewPort: number;
   docsPort: number;
   cataloguePort: number;
+  scenariosPort: number;
+  scenariosDocsPort: number;
+  hotPort: number;
 };
 export function profile(configuration?: string): {
   directory: string;
@@ -27,6 +30,7 @@ export function tauriConfig(
   product: ProductIdentity,
   locations: { configDirectory: string; frontend: string; icons: string },
   platform?: string,
+  deploymentTarget?: string,
 ): Record<string, unknown>;
 export function docsOrigin(
   window: { useHttpsScheme?: boolean },

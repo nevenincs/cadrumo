@@ -1,0 +1,10 @@
+[sources."facturae-3-2-2-schema"]
+evidence_tier = "layout_authority"
+authority = "other"
+kind = "xsd"
+corpus_path = "corpus/facturae/Facturaev3_2_2.xml"
+sha256 = "b4bbcd587f5fb0a8a906336cca09b0a40d06ffaa78c6a62f6e438c4e6ea86e07"
+bytes = 190062
+retrieved_at = 2026-11-02
+source_url = "https://www.facturae.gob.es/content/dam/facturae/formato/versiones/Facturaev3_2_2.xml"
+review_status = "agent_reviewed"

@@ -10,8 +10,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from ....domain.modelos.calculation_revision import CalculationSourceRef
-from ...state_projection import ProjectionModeloReadiness
+from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
+from ...state_projection_models import ProjectionModeloReadiness
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
@@ -116,6 +116,27 @@ def _schema_facet(
         facet=ModeloWorkspaceFacetName.SCHEMA,
         disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
         page_size=1,
+    )
+
+
+def _available_paged_facet(
+    target: ModeloWorkspaceResolvedTargetV1,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    baseline: ModeloWorkspaceBaselineV1,
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...],
+    cursor: ModeloWorkspaceCursorV1,
+) -> ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]:
+    return ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=1,
+        has_more=True,
+        next_cursor=cursor,
     )
 
 
@@ -367,25 +388,32 @@ def test_a_locale_key_still_refuses_a_shape_no_producer_emits() -> None:
             )
 
 
+def _schema_record_base_payload() -> dict[str, object]:
+    """The projected income casilla 0001 record every schema-record case here extends."""
+    return {
+        "reference": {"kind": "casilla", "casilla_id": "0001"},
+        "record_family": ("filing", "income"),
+        "data_type": "decimal",
+        "label": {
+            "kind": "localized",
+            "locale_key": "casilla.0001.label",
+            "value": "Base imponible",
+            "locale": {
+                "requested_language": OutputLanguage.ES,
+                "resolved_language": OutputLanguage.ES,
+                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                "catalogue_digest": _DIGEST,
+            },
+        },
+        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+    }
+
+
 def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_relationship() -> None:
     record = ModeloWorkspaceSchemaRecordV1.model_validate(
         {
-            "reference": {"kind": "casilla", "casilla_id": "0001"},
-            "record_family": ("filing", "income"),
-            "data_type": "decimal",
-            "label": {
-                "kind": "localized",
-                "locale_key": "casilla.0001.label",
-                "value": "Base imponible",
-                "locale": {
-                    "requested_language": OutputLanguage.ES,
-                    "resolved_language": OutputLanguage.ES,
-                    "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
-                    "catalogue_digest": _DIGEST,
-                },
-            },
-            "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
-            "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+            **_schema_record_base_payload(),
             "continuity": ({"kind": "continuity", "continuidad_id": "income-base"},),
             "constraints": ({"kind": "constraint", "casilla_id": "0001"},),
             "formula_operands": (
@@ -547,18 +575,7 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
     baseline = _baseline(target, schema_identity)
     contributors = _contributors()
     cursor = _cursor(target, schema_identity, baseline)
-    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
-        contributors=contributors,
-        facet=ModeloWorkspaceFacetName.SCHEMA,
-        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        page_size=1,
-        has_more=True,
-        next_cursor=cursor,
-    )
+    available = _available_paged_facet(target, schema_identity, baseline, contributors, cursor)
 
     assert (
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(available.model_dump_json())
@@ -602,18 +619,7 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
     baseline = _baseline(target, schema_identity)
     contributors = _contributors()
     cursor = _cursor(target, schema_identity, baseline)
-    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
-        contributors=contributors,
-        facet=ModeloWorkspaceFacetName.SCHEMA,
-        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        page_size=1,
-        has_more=True,
-        next_cursor=cursor,
-    )
+    available = _available_paged_facet(target, schema_identity, baseline, contributors, cursor)
 
     with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
@@ -638,24 +644,7 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
 
 def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:
     """None means the producer never carries the grounding; () means it does and declares none."""
-    base_payload = {
-        "reference": {"kind": "casilla", "casilla_id": "0001"},
-        "record_family": ("filing", "income"),
-        "data_type": "decimal",
-        "label": {
-            "kind": "localized",
-            "locale_key": "casilla.0001.label",
-            "value": "Base imponible",
-            "locale": {
-                "requested_language": OutputLanguage.ES,
-                "resolved_language": OutputLanguage.ES,
-                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
-                "catalogue_digest": _DIGEST,
-            },
-        },
-        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
-        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
-    }
+    base_payload = _schema_record_base_payload()
 
     unmeasured = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": None, "constraints": None})
     declared_empty = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": (), "constraints": ()})

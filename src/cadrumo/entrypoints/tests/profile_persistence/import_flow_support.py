@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,9 +18,13 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -39,14 +43,9 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
-_Repos = tuple[
+Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     ModeloRecordCatalogueRepository,
@@ -54,20 +53,30 @@ _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-_TAX_ID = "X1234567L"
-_PROFILE_ID = "13000000-0000-4000-8000-000000000001"
+T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
+T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
+T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+TAX_ID = "X0001500M"
+PROFILE_ID = "13000000-0000-4000-8000-000000000001"
 
 
-_IMPORT_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
-_IMPORT_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
-_UNKNOWN_IMPORT_CASILLA: CasillaId = validated_casilla_id("9999")
-_M303_PRINTED_RESULT_TOKEN: CasillaId = validated_casilla_id("69")
-_M111_AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01")
+IMPORT_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+IMPORT_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+#: What an imported Modelo 130 never records and a correction of box 01 reaches: the estimación directa modality
+#: (the RIRPF art. 30.2.4a provision on box 02), the expenses of the earlier quarters that box 02 accumulates, the
+#: earlier year's net income and the agrarian figures that boxes 03 to 19 read; the filer has no agrarian activity.
+IMPORT_UNRECORDED_BINDINGS: Mapping[str, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": "300",
+    "irpf.previous_year_economic_activity_net_income": "0",
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+}
+UNKNOWN_IMPORT_CASILLA: CasillaId = validated_casilla_id("9999")
+M303_PRINTED_RESULT_TOKEN: CasillaId = validated_casilla_id("69")
+M111_AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01")
 _M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = validated_casilla_id("03")
 _M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
 _M111_PRIZE_WITHHELD_CASILLA: CasillaId = validated_casilla_id("09")
@@ -79,37 +88,11 @@ _M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = validated_casilla_id("24")
 _M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
 _M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-    # carries the row as filer data, so it must be stated rather than assumed.
-    # False is the truthful value for this natural-person filer.
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
 
-
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite db."""
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
+def _catalogue_repositories(tmp_path: Path, seed: Callable[[], None]) -> Iterator[Repos]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
         objects = profile.repository
-        seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed()
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -118,20 +101,23 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def seed_ready_profile(*, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[Repos]:
+    """Yield the five catalogue repositories over an encrypted SQLite db."""
+
+    yield from _catalogue_repositories(tmp_path, lambda: seed_ready_profile(bucket_id=PROFILE_ID, at=T0))
+
+
+@pytest.fixture
+def withholding_payer_repos(tmp_path: Path) -> Iterator[Repos]:
+    """Yield the repositories over a profile whose taxpayer pays withheld income, so Modelo 111 applies."""
+
+    yield from _catalogue_repositories(
+        tmp_path, lambda: seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=PROFILE_ID, at=T0)
     )
 
 
-def _seed_work_unit(
+def seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
     *,
@@ -140,32 +126,32 @@ def _seed_work_unit(
     """Create the Modelo 130 work unit used by the import-flow scenarios."""
 
     return create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repository),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
 
 
 @dataclass(frozen=True, slots=True)
 class _ImportOutcome:
-    """Bundle returned by _drive_import_persists_filing."""
+    """Bundle returned by drive_import_persists_filing."""
 
     work_unit: WorkUnit
     filing: ModeloRecord
 
 
-def _persist_matching_justificante(
+def persist_matching_justificante(
     reference_id: str,
     work_unit: WorkUnit,
     *,
     captured_at: datetime,
     period: str | None = None,
-    tax_id: str = _TAX_ID,
+    tax_id: str = TAX_ID,
 ) -> None:
     persist_justificante_metadata(
         reference_id,
@@ -177,20 +163,20 @@ def _persist_matching_justificante(
     )
 
 
-def _import_external_filing(
-    repos: _Repos,
+def import_external_filing(
+    repos: Repos,
     work_unit: WorkUnit,
     *,
     casilla_values: Mapping[Any, Decimal] | None = None,
     evidence_kind: ExternalEvidenceKind = ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
     evidence_reference_id: str,
     expected_tax_id: str | None = None,
-    clock: datetime = _T1,
+    clock: datetime = T1,
     actor: str = "aeat-import",
     declared_kind: FilingDeclarationKind | None = None,
 ) -> ModeloRecord:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    resolved_casilla_values = {_IMPORT_INCOME_CASILLA: Decimal("1500")} if casilla_values is None else casilla_values
+    resolved_casilla_values = {IMPORT_INCOME_CASILLA: Decimal("1500")} if casilla_values is None else casilla_values
     return import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values=resolved_casilla_values,
@@ -208,26 +194,26 @@ def _import_external_filing(
     ).filing_record
 
 
-def _drive_import_persists_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _ImportOutcome:
+def drive_import_persists_filing(repos: Repos, *, operation: PinnedAuthorityOperation) -> _ImportOutcome:
     """Run the seed-work-unit and import-evidence scenario."""
     wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo, repos[-1], operation=operation)
-    _persist_matching_justificante(
+    work_unit = seed_work_unit(wu_repo, repos[-1], operation=operation)
+    persist_matching_justificante(
         "JUST2026303Q1OPERATOR1",
         work_unit,
-        captured_at=_T1,
+        captured_at=T1,
     )
-    filing = _import_external_filing(
+    filing = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500"), IMPORT_EXPENSE_CASILLA: Decimal("300")},
         evidence_reference_id="JUST2026303Q1OPERATOR1",
-        expected_tax_id=_TAX_ID,
+        expected_tax_id=TAX_ID,
     )
     return _ImportOutcome(work_unit=work_unit, filing=filing)
 
 
-def _seed_local_filing_record(
+def seed_local_filing_record(
     *,
     work_unit: WorkUnit,
     revision_id: str,

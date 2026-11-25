@@ -14,8 +14,8 @@ import pytest
 
 from cadrumo.core.storage_environment import configured_storage_root
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.cache_root import DEFAULT_DEV_CACHE_ROOT, DEV_CACHE_ROOT_ENV, dev_cache_dir, dev_cache_root
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -33,7 +33,6 @@ def test_an_explicit_root_relocates_every_cache(tmp_path: Path) -> None:
 
 
 def test_a_relative_cache_root_is_anchored_to_the_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv(DEV_CACHE_ROOT_ENV, "development/cache")
 

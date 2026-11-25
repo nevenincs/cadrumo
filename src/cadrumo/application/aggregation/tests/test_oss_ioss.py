@@ -40,68 +40,50 @@ from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerOb
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import enums as invoice_enums
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import REPO_ROOT
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from .. import oss_ioss as oss_ioss_module
+from .. import oss_ioss_resolver as oss_ioss_module
 from ..errors import AggregationValidationError
 from ..oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
-    project_oss_ioss_invoices_from_repositories,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
+from ..oss_ioss_resolver import project_oss_ioss_invoices_from_repositories
+from ..oss_ioss_wire_geometry import record_row_slots
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("row", [28, 29])
-def test_exterior_detail_refuses_rows_beyond_declared_capacity(row):
+def test_a_revision_missing_one_field_of_a_row_is_not_a_table_of_rows():
     revision = published_revision("369", "esquema-exterior")
-    prefix = "3-prestaciones-de-servicios-"
-    fields = {f"{prefix}codigo-de-pais-em-de-consumo-{row}": "DE", f"{prefix}tipo-iva-{row}": "S"}
-    decimals = {
-        f"{prefix}tipo-de-iva-{row}": Decimal("19"),
-        f"{prefix}base-imponible-{row}": Decimal("1000"),
-        f"{prefix}cuota-iva-{row}": Decimal("190"),
-    }
-    amounts, texts = {}, {}
-    if row == 29:
-        with pytest.raises(AggregationValidationError):
-            oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
-        assert amounts == texts == {}
-    else:
-        oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
-        assert sorted(amounts.values()) == [Decimal("19"), Decimal("190"), Decimal("1000")]
-        assert set(texts.values()) == {"DE", "S"}
-
-
-def test_exterior_detail_refuses_partial_row_without_mutating_outputs():
-    revision = published_revision("369", "esquema-exterior")
-    country = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1"
-    missing = "3-prestaciones-de-servicios-cuota-iva-1"
+    # DR369 T36901: the cuota of the fifth line, 25 positions into a 42-position line from 221.
+    missing_position = 221 + 4 * 42 + 25
     revision = revision.model_copy(
         update={
             "bindings": tuple(
                 binding
                 for binding in revision.bindings
-                if not (isinstance(binding.provider, ManualInputProvider) and binding.provider.field == missing)
+                if not (
+                    isinstance(binding.provider, ManualInputProvider)
+                    and binding.provider.record == "modelo-369-exterior-t36901"
+                    and binding.provider.offset == missing_position
+                )
             )
         }
     )
-    amounts, texts = {}, {}
     with pytest.raises(AggregationValidationError):
-        oss_ioss_module._assign_exterior_detail_bindings(
-            revision, {country: "DE"}, {missing: Decimal("190")}, amounts, texts
-        )
-    assert amounts == texts == {}
+        record_row_slots(revision, "modelo-369-exterior-t36901")
 
 
 # ---------------------------------------------------------------------------
@@ -211,10 +193,10 @@ def test_repository_projection_passes_invoice_devengo_to_rate_tier_classifier(
     with pytest.raises(IvaRateNotFoundError):
         invoice_enums.iva_rate_percentage(rate, observation_date)
     monkeypatch.setattr(invoice_enums, "today_madrid", lambda: observation_date)
-    classified_dates: list[date | None] = []
+    classified_dates: list[date] = []
     real_iva_rate_kind = invoice_enums.iva_rate_kind
 
-    def classify_at_date(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
+    def classify_at_date(rate: IvaRate, on_date: date) -> IvaRateKind | None:
         classified_dates.append(on_date)
         return real_iva_rate_kind(rate, on_date)
 
@@ -321,6 +303,29 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
     observation = validate_oss_ioss_observation(candidate)
     assert observation.destination_member_state == EUMemberState.from_registry("fr")
     assert observation.iva_amount == Decimal("20")
+
+
+def _projected_de_candidate(iva: Decimal) -> OssIossLedgerCandidate:
+    """The DE table starts in mid-2025, so an earlier supply's rate is only projected."""
+    return _candidate(
+        destination=EUMemberState.from_registry("de"),
+        rate_kind=IvaRateKind("general"),
+        base=Decimal("100"),
+        iva=iva,
+        transaction_date=date(2025, 6, 30),
+    )
+
+
+def test_validation_accepts_a_figure_matching_the_projected_destination_rate() -> None:
+    assert validate_oss_ioss_observation(_projected_de_candidate(Decimal("19"))).iva_amount == Decimal("19")
+
+
+def test_a_figure_differing_from_the_projected_destination_rate_is_a_coverage_gap() -> None:
+    """16 EUR is not refuted by a rate that is only projected, so it stays a refusal on the registry's reach."""
+    with pytest.raises(IvaRateNotFoundError) as refused:
+        validate_oss_ioss_observation(_projected_de_candidate(Decimal("16")))
+    assert refused.value.context is not None
+    assert refused.value.context["rate_registry_covers_date"] is False
 
 
 def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_de() -> None:
@@ -584,3 +589,20 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     assert offenders == {}, "CLI tree registers a forbidden OSS/IOSS verb: " + ", ".join(
         f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
     )
+
+
+def test_a_consignment_is_the_sum_of_its_invoice_lines_against_the_ceiling() -> None:
+    """Two 100.00 lines are one 200.00 consignment on one invoice, and two of 100.00 on two invoices."""
+
+    def line(ledger_id: str) -> OssIossLedgerCandidate:
+        return _candidate(
+            ledger_id=ledger_id,
+            regime=OssIossRegime("import_scheme"),
+            transaction_kind=TransactionKind("ioss_distance_sale_low_value"),
+        )
+
+    assert len(validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-b:1")])) == 2
+    with pytest.raises(AggregationValidationError) as refused:
+        validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-a:2")])
+    assert refused.value.context is not None
+    assert refused.value.context["consignment_value_eur"] == "200"

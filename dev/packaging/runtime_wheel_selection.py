@@ -19,7 +19,7 @@ from .runtime_wheelhouse_contract import (
     LockedWheel,
     RuntimeWheelhousePlan,
     TargetPlatform,
-    _canonical_python_minor,
+    canonical_python_minor,
     target_platform,
 )
 from .uv_constraints import export_runtime_constraints
@@ -27,10 +27,10 @@ from .uv_constraints import export_runtime_constraints
 _UTF_8 = "utf-8"
 
 
-def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tuple[tuple[str, bool], ...]:
+def runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tuple[tuple[str, bool], ...]:
     """Return stable and advisory runtime rows from the canonical inventory."""
     if python_versions is not None:
-        rows = tuple((_canonical_python_minor(value), True) for value in python_versions)
+        rows = tuple((canonical_python_minor(value), True) for value in python_versions)
     else:
         from dev.ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
 
@@ -49,7 +49,7 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
 
 def marker_environment(target: TargetPlatform, python_version: str) -> dict[str, str]:
     """Project target markers; never inherit kernel or Python facts from the host."""
-    python_minor = _canonical_python_minor(python_version)
+    python_minor = canonical_python_minor(python_version)
     python_full_version = python_version if python_version.count(".") == 2 else f"{python_minor}.0"
     return {
         "implementation_name": "cpython",
@@ -76,7 +76,7 @@ def _stable_abi_rank(interpreter: str, abi: str, target_minor: int) -> int | Non
 
 
 def _interpreter_rank(tag: Tag, python_version: str) -> int | None:
-    target_minor = int(_canonical_python_minor(python_version).split(".", maxsplit=1)[1])
+    target_minor = int(canonical_python_minor(python_version).split(".", maxsplit=1)[1])
     target_interpreter = f"cp3{target_minor}"
     interpreter = tag.interpreter
     abi = tag.abi
@@ -285,7 +285,7 @@ def _plan_runtime_wheelhouse(
 ) -> RuntimeWheelhousePlan:
     """Resolve one runtime's exact lock wheels across every supported platform."""
     root = repo_root.resolve(strict=True)
-    python_minor = _canonical_python_minor(python_version)
+    python_minor = canonical_python_minor(python_version)
     lock = parse_toml((root / "uv.lock").read_text(encoding=_UTF_8))
     by_name: dict[str, list[dict[str, Any]]] = {}
     for package in lock.get("package", []):
@@ -339,7 +339,7 @@ def plan_runtime_wheelhouses(
     """Resolve every requested runtime, retaining advisory missing-wheel rows."""
     root = repo_root.resolve(strict=True)
     plans: dict[str, RuntimeWheelhousePlan] = {}
-    for python_version, blocking in _runtime_rows(root, python_versions):
+    for python_version, blocking in runtime_rows(root, python_versions):
         plan = _plan_runtime_wheelhouse(root, python_version)
         if plan.missing and blocking:
             raise SystemExit(_missing_wheel_message(plan))

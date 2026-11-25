@@ -21,14 +21,14 @@ from typing import Any
 import pytest
 from PIL import Image
 
-from .._review_catalogue import ReviewCatalogue
-from .._review_elements import element_digest
-from .._review_network import TailnetNode, TailnetUnavailableError, is_wildcard_host, parse_tailnet_status
-from .._review_server import ReviewHTTPServer, serve
-from .._review_server_contracts import PAGE_PATH
-from .._review_state import ReviewState
-from .._review_store import ReviewStore
-from .._review_thumbnails import THUMBNAIL_WIDTH
+from ..review_catalogue import ReviewCatalogue
+from ..review_elements import element_digest
+from ..review_network import TailnetNode, TailnetUnavailableError, is_wildcard_host, parse_tailnet_status
+from ..review_server import ReviewHTTPServer, serve
+from ..review_server_contracts import PAGE_PATH
+from ..review_state import ReviewState
+from ..review_store import ReviewStore
+from ..review_thumbnails import THUMBNAIL_WIDTH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

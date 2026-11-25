@@ -21,9 +21,10 @@ from ...core.classification.policies import SensitivityClass
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
+from ...core.text_bounds import FILING_TEXT_CAPACITY
 from .errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -42,8 +43,8 @@ _FieldPath = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=160,
+        min_length=1,
+        max_length=256,
         pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$",
     ),
 ]
@@ -59,8 +60,8 @@ _DerivedSelectorPattern = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=160,
+        min_length=1,
+        max_length=256,
         pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_{}]+)+$",
     ),
 ]
@@ -68,6 +69,10 @@ _Description = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=512),
 ]
+
+#: Where the profile states the taxpayer entity type, whose tokens name each declaration's applicability.
+ENTITY_TYPE_SECTION_KEY: Final = "taxpayer_type"
+ENTITY_TYPE_FIELD_KEY: Final = "entity_type"
 
 
 class ProfileFieldType(StrEnum):
@@ -83,6 +88,17 @@ class ProfileFieldType(StrEnum):
     ENUM = "enum"
     ARRAY = "array"
     OBJECT = "object"
+
+
+class ProfileFieldCodeList(StrEnum):
+    """A list of country codes a text field is offered from.
+
+    What is known, not what is allowed: the field keeps taking any code of its
+    shape, so a real jurisdiction outside the list stays recordable.
+    """
+
+    COUNTRIES = "countries"
+    EU_EEA_COUNTRIES = "eu_eea_countries"
 
 
 class ProfileSnapshotPolicy(StrEnum):
@@ -121,7 +137,7 @@ def _parse_sensitivity(value: object) -> object:
 class ProfileFieldDefinition(BaseModel):
     """One field declared inside a user-profile schema section."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: _FieldKey
     type: ProfileFieldType
@@ -131,6 +147,7 @@ class ProfileFieldDefinition(BaseModel):
     effective_dated: bool = False
     description: _Description
     enum_values: tuple[str, ...] = Field(default=())
+    code_list: ProfileFieldCodeList | None = None
     model_selectors: tuple[_Selector, ...] = Field(default=())
     #: Modelos that require this field even though it is not globally required.
     #:
@@ -140,16 +157,91 @@ class ProfileFieldDefinition(BaseModel):
     #: such obligation. This axis carries the modelo-scoped requirement instead,
     #: and ONLY the filing-preflight walk consults it.
     required_for_modelos: tuple[Modelo, ...] = Field(default=())
+    #: Payer facts that must all read a declared yes before the modelo-scoped
+    #: requirement applies.
+    #:
+    #: ``required_for_modelos`` alone is a blanket demand: every taxpayer filing
+    #: that modelo owes the fact, including those the fact cannot concern. A
+    #: field whose obligation depends on what the declarant does names the
+    #: registry payer facts that decide it here, and the preflight walk reads
+    #: them through the dated payer-fact catalogue. While a condition is
+    #: unanswered the requirement is the condition's own fact, not this field:
+    #: asking for a header attestation before knowing whether it can apply is
+    #: how an irrelevant prerequisite reached an operator.
+    required_for_modelos_when_payer_facts: tuple[str, ...] = Field(default=())
+    #: Entity-set fact naming the IAE groups one declared activity must fall in
+    #: before the modelo-scoped requirement applies, ANDed with every payer-fact
+    #: condition above.
+    required_for_modelos_when_activity_iae_groups_fact: str | None = None
+    #: Profile path holding each activity's IAE epigraph the group condition reads.
+    required_for_modelos_when_activity_iae_epigraph_path: str | None = None
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
+    #: Registry source references grounding this field, newest design first.
+    #:
+    #: ``legal_refs`` grounds a fact in the law; a fact the taxpayer declares
+    #: only because an AEAT design has a position for it is grounded in that
+    #: design, and the design in force for the supported years is a different
+    #: document from the one the position first appeared in. Both belong here,
+    #: and a reader checking the requirement follows them rather than a comment.
+    source_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
     maximum: Decimal | None = None
+    #: Whether the filing path carries this string field into a bounded producer record.
+    carried_by_filing_record: bool = False
+    #: The repeatable section one of whose row keys this field holds.
+    #:
+    #: A field that names another row (a lease naming its property) stores the
+    #: row key as an integer. Declaring the section here lets every editor offer
+    #: the rows of that section to pick from, and lets a grouped read join the
+    #: rows, without either keeping a list of which fields are references.
+    references_section: _SectionKey | None = None
+    #: The taxpayer entity types this field concerns; empty when it concerns every one.
+    #:
+    #: The tokens are the ``taxpayer_type.entity_type`` vocabulary. A field an
+    #: AEAT design asks only of an Impuesto sobre Sociedades declarant names
+    #: ``legal_entity`` here, so the profile page does not offer it to a person.
+    entity_types: tuple[str, ...] = Field(default=())
 
     @field_validator("type", mode="before")
     @classmethod
     @pydantic_validation_boundary
     def _parse_type(cls, value: object) -> object:
         return _parse_str_enum(ProfileFieldType, value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _max_length_bounds_text(self) -> ProfileFieldDefinition:
+        if self.carried_by_filing_record and self.type is not ProfileFieldType.STRING:
+            raise UserProfileValidationError("only a string field is carried into a bounded record")
+        return self
+
+    @property
+    def max_length(self) -> int | None:
+        """Return the longest text this field holds: the capacity of the record that carries it."""
+        return FILING_TEXT_CAPACITY if self.carried_by_filing_record else None
+
+    @field_validator("code_list", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_code_list(cls, value: object) -> object:
+        return None if value is None else _parse_str_enum(ProfileFieldCodeList, value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _code_list_offers_text(self) -> ProfileFieldDefinition:
+        if self.code_list is not None and self.type is not ProfileFieldType.STRING:
+            raise UserProfileValidationError("code_list is declared only on a string field")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _row_reference_holds_a_row_key(self) -> ProfileFieldDefinition:
+        if self.references_section is not None and self.type is not ProfileFieldType.INTEGER:
+            raise UserProfileValidationError(
+                f"field {self.key!r}: a row reference is declared only on an integer field"
+            )
+        return self
 
     @field_validator("required_for_modelos", mode="before")
     @classmethod
@@ -166,6 +258,35 @@ class ProfileFieldDefinition(BaseModel):
             entries = _OBJECT_SEQUENCE_ADAPTER.validate_python(value)
             return tuple(Modelo(entry) if isinstance(entry, str) else entry for entry in entries)
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _conditions_gate_a_modelo_scoped_requirement(self) -> Self:
+        """Refuse a condition with nothing to gate, and a half-declared activity condition.
+
+        A condition on a field no modelo requires would be read by nothing, so
+        it would silently describe a rule that never runs. The IAE group
+        condition needs both the fact naming the groups and the path holding the
+        epigraphs: either alone cannot judge an activity.
+        """
+        activity_parts = (
+            self.required_for_modelos_when_activity_iae_groups_fact,
+            self.required_for_modelos_when_activity_iae_epigraph_path,
+        )
+        conditioned = bool(self.required_for_modelos_when_payer_facts) or any(
+            part is not None for part in activity_parts
+        )
+        if conditioned and not self.required_for_modelos:
+            raise UserProfileValidationError(
+                f"field {self.key!r}: a modelo-scoped condition needs required_for_modelos",
+            )
+        if any(part is not None for part in activity_parts) and not all(part is not None for part in activity_parts):
+            raise UserProfileValidationError(
+                f"field {self.key!r}: an IAE group condition declares both the fact and the epigraph path",
+            )
+        if len(set(self.required_for_modelos_when_payer_facts)) != len(self.required_for_modelos_when_payer_facts):
+            raise UserProfileValidationError(f"field {self.key!r}: duplicate payer-fact conditions are not allowed")
+        return self
 
     @field_validator("sensitivity", mode="before")
     @classmethod
@@ -221,13 +342,18 @@ def _validate_numeric_bounds(field: ProfileFieldDefinition) -> None:
 class ProfileSectionDefinition(BaseModel):
     """A top-level section in the user-profile schema."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: _SectionKey
     title: _Description
     sensitivity: SensitivityClass
     effective_dated: bool = False
     repeatable: bool = False
+    #: The taxpayer entity types this section concerns; empty when it concerns every one.
+    #:
+    #: Read with :attr:`ProfileFieldDefinition.entity_types`: a field of a
+    #: section that names entity types concerns only those.
+    entity_types: tuple[str, ...] = Field(default=())
     fields: tuple[ProfileFieldDefinition, ...] = Field(min_length=1)
 
     @field_validator("sensitivity", mode="before")
@@ -308,7 +434,7 @@ class ProfileDerivedSelectorDefinition(BaseModel):
     values: nothing here supplies a value to the binding resolver.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     pattern: _DerivedSelectorPattern
     derived_from: tuple[_FieldPath, ...] = Field(min_length=1)
@@ -360,7 +486,7 @@ def derived_selector_for_path(
 class ProfileSchemaDefinition(BaseModel):
     """The committed centralized user-profile schema."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _SchemaId
     version: int = Field(ge=1)
@@ -391,10 +517,77 @@ class ProfileSchemaDefinition(BaseModel):
             raise UserProfileValidationError(f"duplicate section keys {duplicates!r}")
         return self
 
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _row_references_name_repeatable_sections(self) -> Self:
+        """Refuse a row reference whose target is not a repeatable section, or that sits outside one."""
+        repeatable = {section.key: section.repeatable for section in self.sections}
+        for section in self.sections:
+            for field in section.fields:
+                target = field.references_section
+                if target is None:
+                    continue
+                if not repeatable.get(target, False):
+                    raise UserProfileValidationError(
+                        f"field {section.key}.{field.key}: references_section {target!r} is not a repeatable section"
+                    )
+                if not section.repeatable:
+                    raise UserProfileValidationError(
+                        f"field {section.key}.{field.key}: only a repeatable section's row names another row"
+                    )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _entity_types_name_the_declared_vocabulary(self) -> Self:
+        """Refuse an applicability token the ``taxpayer_type.entity_type`` field does not declare."""
+        declared = next(
+            (
+                frozenset(field.enum_values)
+                for section in self.sections
+                if section.key == ENTITY_TYPE_SECTION_KEY
+                for field in section.fields
+                if field.key == ENTITY_TYPE_FIELD_KEY
+            ),
+            frozenset[str](),
+        )
+        for section in self.sections:
+            for owner, tokens in (
+                (section.key, section.entity_types),
+                *((f"{section.key}.{field.key}", field.entity_types) for field in section.fields),
+            ):
+                unknown = sorted(set(tokens) - declared)
+                if unknown:
+                    raise UserProfileValidationError(f"{owner}: entity_types {unknown!r} are not declared entity types")
+        return self
+
+    def entity_types_of(self, section_key: str, field_key: str) -> frozenset[str]:
+        """Return the entity types a field concerns, empty when it concerns every one."""
+        return frozenset(
+            self.field(f"{section_key}.{field_key}").entity_types or self.section(section_key).entity_types
+        )
+
+    def row_references(self) -> tuple[tuple[str, str, str], ...]:
+        """Return each declared row reference as ``(section, field, referenced section)``, in schema order."""
+        return tuple(
+            (section.key, field.key, field.references_section)
+            for section in self.sections
+            for field in section.fields
+            if field.references_section is not None
+        )
+
     @property
     def field_paths(self) -> tuple[str, ...]:
         """Canonical dotted field paths declared by the schema."""
         return tuple(f"{section.key}.{field.key}" for section in self.sections for field in section.fields)
+
+    def schedule_predicate_path(self, predicate: str) -> str | None:
+        """Return the dotted path of the field that answers a filing-schedule predicate, if one declares it."""
+        for section in self.sections:
+            for field in section.fields:
+                if predicate in field.schedule_predicates:
+                    return f"{section.key}.{field.key}"
+        return None
 
     def section(self, key: str) -> ProfileSectionDefinition:
         """Return a :class:`ProfileSectionDefinition` by canonical section key."""
@@ -512,6 +705,20 @@ def numeric_value_refusal(field: ProfileFieldDefinition, value: object) -> str |
     return None
 
 
+def text_length_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` overruns ``field``'s declared length, or ``None``.
+
+    The message names the field and the counts and never quotes the value, because
+    the bounded fields hold taxpayer names and contact details.
+    """
+    if field.max_length is None or not isinstance(value, str):
+        return None
+    observed = len(value.strip())
+    if observed <= field.max_length:
+        return None
+    return f"{field.key} holds {observed} characters and admits at most {field.max_length}"
+
+
 def boolean_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
     """Return why ``value`` fails ``field``'s boolean declaration, or ``None``.
 
@@ -573,6 +780,7 @@ class ProfileValueRefusalKind(StrEnum):
     NUMERIC = "numeric"
     BOOLEAN = "boolean"
     EMAIL = "email"
+    TEXT_LENGTH = "text_length"
 
 
 class ProfileValueRefusal(BaseModel):
@@ -584,7 +792,7 @@ class ProfileValueRefusal(BaseModel):
     :attr:`kind`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: ProfileValueRefusalKind
     message: str
@@ -719,6 +927,7 @@ def profile_value_refusal(field: ProfileFieldDefinition, value: object) -> Profi
         (ProfileValueRefusalKind.BOOLEAN, boolean_value_refusal(field, value)),
         (ProfileValueRefusalKind.DATE, date_value_refusal(field, value)),
         (ProfileValueRefusalKind.EMAIL, email_value_refusal(field, value)),
+        (ProfileValueRefusalKind.TEXT_LENGTH, text_length_refusal(field, value)),
     ):
         if refusal is not None:
             return ProfileValueRefusal(kind=kind, message=refusal)

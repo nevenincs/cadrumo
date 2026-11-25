@@ -55,7 +55,7 @@ heading_key = "modelo.schema.210.form.page.pagina-01.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.210.form.section.general.heading"
+heading_key = "modelo.schema.210.form.page.pagina-01.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "tipo_renta" },
     { kind = "field", id = "field-2", casilla_id = "base_imponible_directa_i" },
@@ -90,7 +90,7 @@ blocks = [
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.210.form.section.general-2.heading"
+heading_key = "modelo.schema.210.form.page.pagina-01.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "porcentaje_convenio" },
     { kind = "field", id = "field-2", casilla_id = "limite_convenio" },
@@ -114,7 +114,7 @@ blocks = [
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.210.form.section.general-3.heading"
+heading_key = "modelo.schema.210.form.page.pagina-01.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "retencion_practicada" },
     { kind = "field", id = "field-2", casilla_id = "ingreso_devolucion_anterior" },

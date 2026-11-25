@@ -14,8 +14,8 @@ import pytest
 
 from cadrumo.entrypoints.tui.tests.workbench_fixtures import WORKBENCH_FIXTURES, WorkbenchFixtureScenario
 
-from .. import _harness
-from .._review_elements import (
+from .. import harness_support
+from ..review_elements import (
     FIXTURE_STATE_ORDER,
     ElementFamily,
     SurfaceParts,
@@ -35,10 +35,10 @@ def declared() -> dict[str, SurfaceParts]:
         for spec in WORKBENCH_FIXTURES
     }
     declared = dict(fixtures)
-    for surface in _harness.surfaces():
+    for surface in harness_support.surfaces():
         if surface.name not in fixtures:
             declared[surface.name] = SurfaceParts(family=ElementFamily.SCREEN, name=surface.name, state=None)
-    for scenario in _harness.scenarios():
+    for scenario in harness_support.scenarios():
         for page, surface in scenario.pages.items():
             declared[surface] = SurfaceParts(family=ElementFamily.SEQUENCE, name=page, state=scenario.name)
     return declared

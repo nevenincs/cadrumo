@@ -12,14 +12,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSX_EXTENSION
+from .....core.external_constants import (
+    CSV_EXTENSIONS,
+    OFX_EXTENSIONS,
+    PDF_EXTENSION,
+    XLS_EXTENSION,
+    XLSX_EXTENSION,
+)
 from .....core.logging import get_logger
-from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS
-from ._mapped_tabular import MappedTabularProvider
 from .base import FinancialProvider, require_admissible_source
 from .csv import CsvProvider
+from .mapped_tabular import MappedTabularProvider
 from .ofx import OfxProvider
-from .pdf_n26 import PdfN26Provider
+from .pdf_statement import PdfStatementProvider
 from .xls import XlsProvider
 from .xlsx import XlsxProvider
 
@@ -37,22 +42,22 @@ _SNIFF_BYTES = 256
 def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     """Order the exact fixed-layout providers by extension and content hint."""
     suffix = path.suffix.lower()
-    if suffix == PDF_EXTENSION:
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     if suffix == XLSX_EXTENSION:
-        return (XlsxProvider(), XlsProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
+        return (XlsxProvider(), XlsProvider(), CsvProvider(), OfxProvider())
     if suffix == XLS_EXTENSION:
-        return (XlsProvider(), XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
+        return (XlsProvider(), XlsxProvider(), CsvProvider(), OfxProvider())
     if suffix in OFX_EXTENSIONS:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider())
     if suffix in CSV_EXTENSIONS:
-        return (CsvProvider(), OfxProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
+        return (CsvProvider(), OfxProvider(), XlsxProvider(), XlsProvider())
+    if suffix == PDF_EXTENSION:
+        return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     try:
         with path.open("rb") as handle:
             head = handle.read(_SNIFF_BYTES)
     except OSError:
         _logger.warning("detect_provider: cannot read file header for sniffing")
-        return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
+        return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     return _header_layout_candidates(head)
 
 
@@ -65,49 +70,65 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     The shared size and file-kind guard runs before any header sniff or
     provider probe reads the source.
 
+    When none validates but one declined only because the model it reads
+    with could not be asked, that provider is returned: the file is one it
+    reads, and its own validation then tells the caller which component is
+    missing instead of the source being reported as unsupported.
+
     Args:
         path: Source document to classify.
 
     Returns:
-        The matching :class:`FinancialProvider`, or ``None`` when no
-        provider can interpret ``path``.
+        The matching :class:`FinancialProvider`, the first provider blocked
+        only by an unavailable reader, or ``None`` when no provider can
+        interpret ``path``.
 
     Raises:
         InvalidFinancialSourceError: When the source is a symlink, missing,
             not a regular file, or over the ingest size ceiling.
     """
     require_admissible_source(path)
-    providers = _ordered_candidates(path)
+    providers = ordered_candidates(path)
+    blocked_by_reader: FinancialProvider | None = None
     for provider in providers:
-        if provider.validate_source(path).is_valid:
+        validation = provider.validate_source(path)
+        if validation.is_valid:
             _logger.debug("detect_provider: matched %s for %s", provider.name, path.name)
             return provider
+        if blocked_by_reader is None and validation.reader_unavailable_verdict is not None:
+            blocked_by_reader = provider
+    if blocked_by_reader is not None:
+        _logger.warning("detect_provider: %s reads %s but its reader is unavailable", blocked_by_reader.name, path.name)
+        return blocked_by_reader
     _logger.warning("detect_provider: no provider matched %s", path.name)
     return None
 
 
-def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
-    """Order providers by extension hint and content sniffing, mapping lane last.
+def ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
+    """Order providers by extension hint and content sniffing, inferred lanes last.
 
-    :class:`MappedTabularProvider` is appended after every exact fixed-layout
-    provider and never ahead of one. An exact layout match is a deterministic
-    read of a known structure; the mapping lane's read depends on a per-file
-    column-role mapping. Ordering the fallback earlier would let it shadow an
-    exact provider on a known bank export, silently substituting an inferred
-    parse for a deterministic one.
+    The two inferred lanes are appended after every exact fixed-layout provider
+    and never ahead of one. An exact layout match is a deterministic read of a
+    known structure; an inferred lane's read depends on a model's proposal.
+    Ordering an inferred lane earlier would let it shadow an exact provider on
+    a known export, silently substituting an inferred parse for a deterministic
+    one.
+
+    :class:`PdfStatementProvider` precedes :class:`MappedTabularProvider`. It
+    accepts only PDF content and declines anything else from its signature
+    alone, so it shadows no tabular export, while a PDF never reaches the
+    tabular lane's column-role mapping as if it were a delimited table.
     """
-    return (*_exact_layout_candidates(path), MappedTabularProvider())
+    return (*_exact_layout_candidates(path), PdfStatementProvider(), MappedTabularProvider())
 
 
 def _header_layout_candidates(head: bytes) -> tuple[FinancialProvider, ...]:
     """Retain exact provider precedence for each supported content signature."""
     upper_head = head.upper()
-    if head.startswith(b"%PDF"):
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     if head.startswith(b"PK"):
-        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
+        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider())
     if head.startswith(_OLE2_SIGNATURE):
-        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
+        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider())
     if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
-    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider())
+    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())

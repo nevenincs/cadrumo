@@ -12,7 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from ....application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ....application.modelo.quickfile_operation_contracts import (
     QuickfileReadinessSummary,
@@ -25,14 +25,14 @@ from ....core.errors.error_codes import get_registered_error_code_by_code
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect
 from ....core.period import Period
-from ..app_quickfile_commands import _stage_notice
+from ..app_quickfile_commands import stage_notice
 from ..app_quickfile_results import (
     QuickfileReadinessSummaryPayload,
     QuickfileResultPayload,
     QuickfileStageOutcomePayload,
 )
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
@@ -143,7 +143,7 @@ def test_stage_notice_uses_declared_error_and_never_accepts_raw_cli_command_pros
         Notice(severity=NoticeSeverity.WARNING, code="quickfile.stage.calculate", message=reason)
 
     stage = _stopped_projection().stages[1]
-    notice = _stage_notice(stage)
+    notice = stage_notice(stage)
     Notice.model_validate_json(json.dumps(notice.model_dump(mode="json")))
     assert "aeat" not in notice.message.lower()
     assert notice.context is not None

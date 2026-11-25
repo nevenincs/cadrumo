@@ -13,6 +13,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from ....application.operations.error_detail import served_words_language
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference, DeclaredNextAction
 from ....application.overview.calendar_models import (
@@ -32,6 +33,7 @@ from ....application.overview.home import (
     HomeSessionPosture,
     HomeZoneState,
 )
+from ....application.workbench_generation_home_words import serve_home_projection
 from ....core.period import Period
 
 _GENERATED_AT: Final[datetime] = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
@@ -144,7 +146,7 @@ def _agenda(
     local_state: OverviewLocalFilingState,
     aeat_state: OverviewAeatSubmissionState,
 ) -> HomeAgendaEntry:
-    return HomeAgendaEntry(
+    return HomeAgendaEntry.worded(
         modelo=modelo,
         filing_year=2026,
         period=_period(period_code),
@@ -152,6 +154,7 @@ def _agenda(
         period_state=period_state,
         local_filing_state=local_state,
         aeat_submission_state=aeat_state,
+        language=served_words_language(),
     )
 
 
@@ -403,13 +406,13 @@ if frozenset(HOME_FIXTURE_SCENARIOS) != frozenset(HomeFixtureScenario):
 
 
 def build_home_projection_fixture(scenario: HomeFixtureScenario | str) -> HomeProjectionV1:
-    """Build a fresh immutable projection for one closed synthetic scenario."""
+    """Build a fresh immutable projection for one closed synthetic scenario, with its words served as the workbench serves them."""
     try:
         resolved = HomeFixtureScenario(scenario)
     except ValueError as error:
         accepted = ", ".join(item.value for item in HomeFixtureScenario)
         raise ValueError(f"unknown Home fixture scenario {scenario!r}; accepted: {accepted}") from error
-    return HOME_FIXTURE_SCENARIOS[resolved]()
+    return serve_home_projection(HOME_FIXTURE_SCENARIOS[resolved](), served_words_language())
 
 
 __all__ = [

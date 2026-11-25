@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import profile_operation_subject
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
@@ -21,7 +21,9 @@ from ..operations.access_resolution import (
 )
 from ..operations.models import OperationRequest
 from .access_errors import ProfileAccessRefusedError
+from .imputation_election_contracts import ProfileImputationElectionReadRequest, ProfileImputationElectionSetRequest
 from .profile_operation_contracts import (
+    ProfileAscendantsOperationRequest,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationRequest,
@@ -32,6 +34,7 @@ from .profile_operation_contracts import (
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
 )
+from .record_group_contracts import ProfileRecordGroupsRequest
 from .view_operation import (
     ProfileViewOperationRequest,
 )
@@ -48,10 +51,12 @@ def resolve_profile_mutation_access(
         | ProfilePatchOperationRequest
         | ProfilePlantillaMediaOperationRequest
         | ProfileDescendantsOperationRequest
+        | ProfileAscendantsOperationRequest
         | ProfileRepeatableRowMutationOperationRequest
         | ProfileRepeatableRowUpdateOperationRequest
         | ProfileRepeatableRowRemoveOperationRequest
-        | ProfileCompleteSetupOperationRequest,
+        | ProfileCompleteSetupOperationRequest
+        | ProfileImputationElectionSetRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _bind_exact_profile_access(
@@ -86,7 +91,9 @@ def resolve_profile_view_access(
     door and a session without one can still read the profile.
     """
     payload = request.payload
-    if not isinstance(payload, ProfileViewOperationRequest):
+    if not isinstance(
+        payload, ProfileViewOperationRequest | ProfileImputationElectionReadRequest | ProfileRecordGroupsRequest
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _bind_exact_profile_access(
         request,
@@ -110,7 +117,7 @@ def _bind_exact_profile_access(
     here, and the runtime still checks the current destination's own disclosure
     scope.
     """
-    if profile_id != context.profile_id or request.subject_ref != _profile_subject(str(profile_id)):
+    if profile_id != context.profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:

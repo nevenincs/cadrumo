@@ -94,6 +94,11 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.archive.import",
         "ledger.account.add",
         "ledger.account.update",
+        "ledger.invoice.duplicate",
+        "ledger.invoice.preview",
+        "ledger.rule.trial",
+        "ledger.split-check",
+        "ledger.staged-check",
         "modelo.m360.declare",
     }
     for node in adopters:
@@ -184,10 +189,6 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     # declaration more and the same family is gated again.
     for profile_free in ("modelo.list", "ledger.categories", "config.storage.list"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
-    # Component setup runs as the runtime's registered operations on the signed-in profile.
-    for setup in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
-        assert postures[setup] is ProfileAuthenticationPosture.RESUME_FALLBACK, setup
-    assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}
 

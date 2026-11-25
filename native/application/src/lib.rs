@@ -8,6 +8,8 @@
 //! platform-projected environment and creates commands with ambient inheritance disabled.
 //! `component` verifies pinned ZIP bytes before extracting into a private staging tree,
 //! then activates an immutable version by replacing one pointer under an OS file lock.
+//! `provisioning` is the component engine: package pins, the pinned HTTPS transfer with its
+//! hop, proxy, retry and resume rules, and the closed failure categories it reports.
 //! `binary` checks pinned executable bytes and target headers. `python` explicitly probes
 //! interpreter identity and existing Python browser policy with bounded time and output.
 //! The probe never launches a browser or downloads components. Its timeout covers child
@@ -23,17 +25,28 @@
 //! declarations remain with their existing owners and are inputs to this library.
 
 pub mod binary;
+mod canonical_json;
 pub mod capability;
 pub mod child;
 pub mod component;
 pub mod diagnostics;
 pub mod error;
 pub mod installation;
+#[cfg(feature = "platform")]
+pub mod instance_scope;
 pub mod package;
+#[cfg(feature = "platform")]
+pub mod person_operations;
 pub mod process;
+pub mod provisioning;
 pub mod python;
 pub mod role;
 pub mod runtime;
+#[cfg(feature = "platform")]
+pub mod runtime_client;
+pub mod shutdown;
 pub mod value;
+pub mod view_stream;
 
+mod archive;
 mod filesystem;

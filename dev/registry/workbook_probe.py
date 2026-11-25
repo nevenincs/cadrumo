@@ -26,7 +26,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from .compiler.authority import compiled_bundled_authority
@@ -178,27 +179,14 @@ def probe_authority(
 ) -> dict[str, object]:
     """Enumerate through the existing coverage owner and account for every row."""
     inventory = coverage_rows(authority.modelos)
-    known = {row.modelo_id for row in inventory}
-    if modelos is not None and (not modelos or modelos - known):
-        raise ValueError("probe modelo selection must be nonempty and present in the registry")
-    selected = tuple(row for row in inventory if modelos is None or row.modelo_id in modelos)
-    results = []
+    selected = _selected_coverage(inventory, modelos)
+    results: list[ProbeResult] = []
     for row in selected:
         result = probe_revision(authority, row)
         results.append(result)
         if on_result is not None:
             on_result(result)
-    counts = Counter(result.status for result in results)
-    errors = Counter(
-        f"{result.stage}: {result.error_type or 'NoSupportedFrame'}"
-        for result in results
-        if result.status != "compiled"
-    )
-    references = Counter(
-        str(result.context["reference"])
-        for result in results
-        if (result.context is not None and result.context) and "reference" in result.context
-    )
+    counts, errors, references = _probe_counters(results)
     return {
         "schema_version": 1,
         "evidence_kind": "one_empty_structural_scenario_per_revision",
@@ -217,6 +205,30 @@ def probe_authority(
         "blocking_references": dict(sorted(references.items())),
         "results": [result.as_json() for result in results],
     }
+
+
+def _selected_coverage(
+    inventory: tuple[RevisionCoverage, ...], modelos: frozenset[str] | None
+) -> tuple[RevisionCoverage, ...]:
+    known = {row.modelo_id for row in inventory}
+    if modelos is not None and (not modelos or modelos - known):
+        raise ValueError("probe modelo selection must be nonempty and present in the registry")
+    return tuple(row for row in inventory if modelos is None or row.modelo_id in modelos)
+
+
+def _probe_counters(results: list[ProbeResult]) -> tuple[Counter[ProbeStatus], Counter[str], Counter[str]]:
+    counts: Counter[ProbeStatus] = Counter(result.status for result in results)
+    errors = Counter(
+        f"{result.stage}: {result.error_type or 'NoSupportedFrame'}"
+        for result in results
+        if result.status != "compiled"
+    )
+    references = Counter(
+        str(result.context["reference"])
+        for result in results
+        if (result.context is not None and result.context) and "reference" in result.context
+    )
+    return counts, errors, references
 
 
 def main() -> None:

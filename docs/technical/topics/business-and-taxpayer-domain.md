@@ -39,7 +39,7 @@ Other business calculations retain their own authority and evidence boundaries. 
 
 ## Obligations, evidence and filing status
 
-Deadline scheduling combines registry windows, profile predicates, activity dates, holiday calendars and recargo bands under a pinned authority. It distinguishes ordinary static-profile obligations from result-qualified windows and reports national-only or unverified regional holiday coverage rather than claiming a fully checked deadline. Missing next-year publication can refuse a business-day walk. A wide taxpayer profile includes separate refund and debit IBANs with checksum validation. Malformed stored setup booleans and multiple-payer counts can be coerced to negative/absent values in local projection, so profile-store guarantees and advisory routing matter (schedule (`src/cadrumo/domain/deadlines/engine.py`), holiday coverage (`src/cadrumo/domain/deadlines/festivos.py`), profile projection (`src/cadrumo/domain/deadlines/profiles.py`), [deadline report](../articles/141-deadline-currency-and-evidence-consent-domain.md)).
+Deadline scheduling combines registry windows, profile predicates, activity dates, holiday calendars and recargo bands under a pinned authority. It distinguishes ordinary static-profile obligations from result-qualified windows and shifts a filing close only for weekends and national días inhábiles, reporting an unavailable holiday calendar rather than claiming a checked deadline. Missing next-year publication can refuse a business-day walk. A wide taxpayer profile includes separate refund and debit IBANs with checksum validation. Malformed stored setup booleans and multiple-payer counts can be coerced to negative/absent values in local projection, so profile-store guarantees and advisory routing matter (schedule (`src/cadrumo/domain/deadlines/engine.py`), holiday coverage (`src/cadrumo/domain/deadlines/festivos.py`), profile projection (`src/cadrumo/domain/deadlines/profiles.py`), [deadline report](../articles/141-deadline-currency-and-evidence-consent-domain.md)).
 
 Evidence custody uses content-addressed attachment manifests and a strict M303 attestation shape; blob persistence occurs before manifest write and needs adapter-level cleanup or atomicity. Bucket events and calculation revisions retain digests, actor labels, provenance and secure-serialization controls, but string actor labels do not authenticate a human and free-form event payloads need producer-side secrecy discipline. A calculation revision can be draft, verified, filed, superseded or discarded; a separate filing record distinguishes local and externally confirmed events. Verification reports and ledger fingerprints explain which facts contributed and whether they changed. The old-snapshot diff helper's `covers_current_fact_set` default can overstate coverage unless a caller corrects it. Participation indexes are rebuildable caches, not the authoritative revision catalogue (attachment ingest (`src/cadrumo/domain/attachments/service.py`), calculation revision (`src/cadrumo/domain/modelos/calculation_revision.py`), filing event (`src/cadrumo/domain/modelos/filing_record.py`), ledger diff (`src/cadrumo/domain/modelos/ledger_filing_snapshot.py`), [lifecycle reports](../articles/146-modelo-calculation-evidence-and-filing-lifecycle.md), [evidence report](../articles/147-ledger-evidence-detail-rows-and-modelo-verification.md)).
 
@@ -50,23 +50,23 @@ Submission-domain preflight checks a locally approved draft, blocking findings, 
 
 ## Detailed articles
 
-- [Domain evidence, filing periods, and capital-goods registers](../articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md) — `STAGE-2-123`
-- [Spending categories, proportionality, and census projections](../articles/138-spending-categories-proportionality-and-census-projections.md) — `STAGE-2-138`
-- [taxpayer and family domain records](../articles/139-taxpayer-and-family-domain-records.md) — `STAGE-2-139`
-- [inventory valuation and taxpayer-profile mechanics](../articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md) — `STAGE-2-140`
-- [deadline, currency, and evidence-consent domain](../articles/141-deadline-currency-and-evidence-consent-domain.md) — `STAGE-2-141`
-- [filing drafts and invoice records](../articles/142-filing-drafts-and-invoice-records.md) — `STAGE-2-142`
-- [IVA classification and evidence substrate](../articles/143-iva-classification-and-evidence-substrate.md) — `STAGE-2-143`
-- [IVA rates, settlement and statutory projections](../articles/144-iva-rates-settlement-and-statutory-projections.md) — `STAGE-2-144`
-- [IVA compensation carry-forward and filing receipts](../articles/145-iva-compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`
-- [modelo calculation, evidence and filing lifecycle](../articles/146-modelo-calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`
-- [ledger evidence, detail rows and modelo verification](../articles/147-ledger-evidence-detail-rows-and-modelo-verification.md) — `STAGE-2-147`
-- [portal catalogue and annual prorrata register](../articles/148-portal-catalogue-and-annual-prorrata-register.md) — `STAGE-2-148`
-- [Renta expense rules and activity-asset amortization](../articles/149-renta-expense-rules-and-activity-asset-amortization.md) — `STAGE-2-149`
-- [Local submission preflight and audit records](../articles/150-local-submission-preflight-and-audit-records.md) — `STAGE-2-150`
-- [Transaction ledger domain and classifier contracts](../articles/151-transaction-ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`
-- [Transaction mutations and registry-backed income predicates](../articles/152-transaction-mutations-and-registry-backed-income-predicates.md) — `STAGE-2-152`
-- [Usage ratios and user-profile domain](../articles/153-usage-ratios-and-user-profile-domain.md) — `STAGE-2-153`
+- [Domain evidence, filing periods, and capital-goods registers](../articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md)
+- [Spending categories, proportionality, and census projections](../articles/138-spending-categories-proportionality-and-census-projections.md)
+- [taxpayer and family domain records](../articles/139-taxpayer-and-family-domain-records.md)
+- [inventory valuation and taxpayer-profile mechanics](../articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md)
+- [deadline, currency, and evidence-consent domain](../articles/141-deadline-currency-and-evidence-consent-domain.md)
+- [filing drafts and invoice records](../articles/142-filing-drafts-and-invoice-records.md)
+- [IVA classification and evidence substrate](../articles/143-iva-classification-and-evidence-substrate.md)
+- [IVA rates, settlement and statutory projections](../articles/144-iva-rates-settlement-and-statutory-projections.md)
+- [IVA compensation carry-forward and filing receipts](../articles/145-iva-compensation-carry-forward-and-filing-receipts.md)
+- [modelo calculation, evidence and filing lifecycle](../articles/146-modelo-calculation-evidence-and-filing-lifecycle.md)
+- [ledger evidence, detail rows and modelo verification](../articles/147-ledger-evidence-detail-rows-and-modelo-verification.md)
+- [portal catalogue and annual prorrata register](../articles/148-portal-catalogue-and-annual-prorrata-register.md)
+- [Renta expense rules and activity-asset amortization](../articles/149-renta-expense-rules-and-activity-asset-amortization.md)
+- [Local submission preflight and audit records](../articles/150-local-submission-preflight-and-audit-records.md)
+- [Transaction ledger domain and classifier contracts](../articles/151-transaction-ledger-domain-and-classifier-contracts.md)
+- [Transaction mutations and registry-backed income predicates](../articles/152-transaction-mutations-and-registry-backed-income-predicates.md)
+- [Usage ratios and user-profile domain](../articles/153-usage-ratios-and-user-profile-domain.md)
 
 
 ```{toctree}

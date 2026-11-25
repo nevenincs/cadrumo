@@ -1,0 +1,432 @@
+"""Shared setup for Modelo 303 IVA wallet engine integration tests."""
+
+from __future__ import annotations
+
+from collections.abc import Generator
+from contextlib import contextmanager
+from datetime import UTC, datetime
+from decimal import Decimal
+from functools import cache
+from pathlib import Path
+
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test,
+)
+
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.modelo.work_lifecycle import create_work_unit
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloEnrollment,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_work_lifecycle_ports
+
+_EXTERNAL = load_external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+
+BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+TAXPAYER_NIF = "12345678Z"
+TARGET_YEAR = 2026
+TARGET_PERIOD = "2T"
+DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+
+
+M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
+)
+M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+
+
+def period(filing_year: int, period: str) -> Period:
+    return Period.from_year_and_code(filing_year, period)
+
+
+TARGET_PERIOD_VALUE = period(TARGET_YEAR, TARGET_PERIOD)
+
+
+def filing_instance_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
+    """Delegate to the one shared typed-evidence fixture builder."""
+    return general_m303_filing_evidence(period, reference="test:iva-wallet:exonerado-390", operation=operation)
+
+
+@cache
+def snapshot_303(*, filing_year: int = TARGET_YEAR, period: str = TARGET_PERIOD) -> RegistrySnapshot:
+    return published_authority_operation().snapshot("303", filing_year=filing_year, period=period)
+
+
+@contextmanager
+def secure_backend(tmp_path: Path) -> Generator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
+        yield
+
+
+@cache
+def wallet_observation(
+    *,
+    pending: Decimal,
+    taxpayer_nif: str = TAXPAYER_NIF,
+    target_year: int = TARGET_YEAR,
+    target_period: Period = TARGET_PERIOD_VALUE,
+    generation_year: int = 2026,
+    generation_period: str = "1T",
+    captured_at: datetime = DECIDED_AT,
+):
+    pending_text = _spanish_amount(pending)
+    return parse_iva_compensation_wallet_html(
+        f"""
+        <html><head><title>Cartera de cuotas de IVA a compensar</title></head>
+          <body>
+            <h1>Cartera de cuotas de IVA a compensar</h1>
+            <li><strong>Cuotas a compensar pendientes de períodos anteriores:</strong>
+              <span>{pending_text}</span></li>
+            <table id="tablaResultados">
+              <thead>
+                <tr><th>Ejercicio</th><th>Período</th><th>Cuota Disponible</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{generation_year}</td><td>{generation_period}</td><td>{pending_text}</td>
+                </tr>
+              </tbody>
+            </table>
+          </body>
+        </html>
+        """,
+        taxpayer_nif=taxpayer_nif,
+        authenticated_identity=taxpayer_nif,
+        target_year=target_year,
+        target_period=target_period,
+        source_url=WALLET_URL,
+        captured_at=captured_at,
+    )
+
+
+def _spanish_amount(value: Decimal) -> str:
+    whole, cents = f"{value:.2f}".split(".")
+    chunks: list[str] = []
+    while whole:
+        chunks.append(whole[-3:])
+        whole = whole[:-3]
+    return f"{'.'.join(reversed(chunks))},{cents}"
+
+
+@cache
+def _prior_303_compensation_observation(
+    *,
+    amount: Decimal,
+    filing_year: int,
+    period: str,
+) -> RegistryModeloObservation:
+    return RegistryModeloObservation(
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=filing_year,
+            period=period,
+            casilla_values={
+                M303_POSTERIOR_CASILLA: Decimal("0"),
+                M303_RESULTADO_CASILLA: -amount,
+            },
+        ),
+    )
+
+
+def store_prior_303_compensation(
+    repo: CalculationObservationRepository,
+    *,
+    amount: Decimal,
+    filing_year: int = TARGET_YEAR,
+    period: str = "1T",
+) -> None:
+    repo.save(
+        repo.prepare_observation_envelope(
+            _prior_303_compensation_observation(
+                amount=amount,
+                filing_year=filing_year,
+                period=period,
+            ),
+            source_kind="aeat_sede_justificante",
+            source_headers=(
+                ObservedHeaderFact(
+                    header_key="filing.result_disposition",
+                    value="C",
+                    source_artefact_kind="submitted_file",
+                    source_locator="test:iva-wallet:prior-declaration-type",
+                ),
+            ),
+            stamped_revision_id=snapshot_303(filing_year=filing_year, period=period).revision.id,
+            captured_at=DECIDED_AT,
+        )
+    )
+
+
+def work_unit_repositories() -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
+    return (
+        WorkUnitCatalogueRepository(),
+        CalculationRevisionCatalogueRepository(),
+        BucketEventHistoryRepository(),
+    )
+
+
+def create_modelo_303_work_unit(
+    snapshot: RegistrySnapshot,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    clock: datetime = DECIDED_AT,
+    operation: PinnedAuthorityOperation,
+) -> WorkUnit:
+    return create_work_unit(
+        bucket_id=BUCKET_ID,
+        modelo="303",
+        filing_year=snapshot.filing_year,
+        period=period(snapshot.filing_year, snapshot.period),
+        revision_id=snapshot.revision.id,
+        ports=build_work_lifecycle_ports(bucket_id=BUCKET_ID),
+        clock=clock,
+        operation=operation,
+    )
+
+
+def work_unit_repositories_with_modelo_303_work_unit(
+    snapshot: RegistrySnapshot,
+    *,
+    clock: datetime = DECIDED_AT,
+    operation: PinnedAuthorityOperation,
+) -> tuple[
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
+    work_repo, calc_repo, event_repo = work_unit_repositories()
+    work_unit = create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, clock=clock, operation=operation)
+    return work_unit, work_repo, calc_repo, event_repo
+
+
+def store_operator_profile() -> None:
+    store_operator_profile_with_tax_id(TAXPAYER_NIF)
+
+
+def store_operator_profile_with_tax_id(tax_id: str) -> None:
+    seed_test_profile_record(
+        create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=BUCKET_ID,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=tax_id),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="iva.regime", value=IVARegime("GENERAL")),
+                    UserProfileFact(path="provenance.source", value=PROVENANCE_SOURCE_MANUAL_CLI),
+                )
+            ),
+            created_at=DECIDED_AT,
+            updated_at=DECIDED_AT,
+            context=profile_creation_context_for_test(),
+        ),
+    )
+
+
+@cache
+def workflow_profile(tax_id: str = TAXPAYER_NIF) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=tax_id,
+        iva_regime=IVARegime("GENERAL"),
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
+    )
+
+
+def modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
+    """The operator-owned binding a Modelo 303 calculation takes; the cuotas come from the ledger."""
+    return {"modelo-303-profile-state-attribution-ratio": Decimal("100")}
+
+
+def work_unit_and_revision_for_wallet_gate(
+    *,
+    compensation_amount: Decimal,
+    state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
+    operation: PinnedAuthorityOperation,
+) -> tuple[WorkUnit, CalculationRevision]:
+    target_period = period(TARGET_YEAR, TARGET_PERIOD)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=BUCKET_ID,
+        modelo="303",
+        filing_year=TARGET_YEAR,
+        period=target_period,
+        revision_id="m303-wallet-gate-test",
+    )
+    casilla_values: dict[CasillaId, Decimal] = {
+        M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: compensation_amount,
+    }
+    filing_instance_evidence = general_m303_filing_evidence(
+        target_period, reference="test:iva-wallet-engine", operation=operation
+    )
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=TARGET_YEAR,
+        period=target_period,
+        revision_id="m303-wallet-gate-test",
+        name="303 wallet gate test",
+        created_at=DECIDED_AT,
+        updated_at=DECIDED_AT,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        state=state,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=TARGET_YEAR,
+            period=TARGET_PERIOD,
+            casilla_values=casilla_values,
+        ),
+        created_at=DECIDED_AT,
+        updated_at=DECIDED_AT,
+        filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
+    )
+    return work_unit, revision
+
+
+def save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> None:
+    IvaWalletDecisionRepository().save_decision(
+        IvaCompensationReconciliationDecision(
+            taxpayer_nif=TAXPAYER_NIF,
+            target_year=TARGET_YEAR,
+            target_period=period(TARGET_YEAR, TARGET_PERIOD),
+            target_registry_snapshot_ref=snapshot_303().snapshot_ref,
+            source_registry_snapshot_refs=(),
+            authority_sources=(
+                IvaCompensationAuthoritySource(
+                    source_kind="aeat_wallet",
+                    amount=amount,
+                    source_locator="test://wallet",
+                    captured_at=DECIDED_AT,
+                    registry_snapshot_refs=(),
+                ),
+            ),
+            selected_authority="aeat_wallet" if not blocked else "missing",
+            selected_amount=amount if not blocked else None,
+            wallet_amount=amount,
+            local_recurrence_amount=None,
+            override_amount=None,
+            divergence="match" if not blocked else "filed_history_only",
+            blocked=blocked,
+            stale_wallet=False,
+            reason_identity="aeat_wallet_validated",
+            wallet_captured_at=DECIDED_AT,
+            decided_at=DECIDED_AT,
+        ),
+    )
+
+
+def resolve_without_caller_inputs(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
+    repository: IvaWalletDecisionRepository,
+    observation_repository: CalculationObservationRepository,
+) -> IvaCompensationReconciliationDecision | None:
+    """Drive the calculation gate with no supplied, persisted or caller-bound compensation."""
+    decision = resolve_iva_compensation_decision_for_calculation(
+        work_unit,
+        snapshot=snapshot,
+        operation=operation,
+        supplied_decision=None,
+        repository=repository,
+        observation_repository=observation_repository,
+        history_repository=IvaCompensationHistoryRepository(),
+        binding_values=None,
+        backend_binding_values=None,
+        casilla_inputs=None,
+        backend_casilla_inputs=None,
+        profile_values=profile_path_values_for_bucket(work_unit.bucket_id),
+    )
+    assert decision is None or isinstance(decision, IvaCompensationReconciliationDecision)
+    return decision

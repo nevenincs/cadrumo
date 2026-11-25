@@ -1,0 +1,119 @@
+"""A forecast request ends its interval at the exclusive boundary or at the last day covered."""
+
+from __future__ import annotations
+
+import json
+from datetime import date
+from decimal import Decimal
+from uuid import uuid4
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetForecastRequest
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.core.hashing import content_hash_hex
+from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
+from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
+
+from .ledger_support import MemoryLedger, acquisition_transaction
+from .operations_support import build_forecast, build_revision
+from .register_support import MemoryRepository, accrued_through, memory_register_authority
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
+
+_PROFILE = uuid4()
+ACQUISITION = acquisition_transaction()
+
+
+def _decode(**interval: str | None) -> ActivityAssetForecastRequest:
+    document = {
+        "profile_id": str(_PROFILE),
+        "asset_id": "laptop-1",
+        "covered_from": date(_FIRST, 1, 1).isoformat(),
+        **interval,
+    }
+    return ActivityAssetForecastRequest.model_validate_json(json.dumps(document))
+
+
+def test_the_boundary_inverts_the_last_day() -> None:
+    for boundary in (date(_FIRST, 7, 1), date(_FIRST + 1, 1, 1), date(_FIRST - 1, 3, 1)):
+        assert covered_until_after(last_day_covered(boundary)) == boundary
+
+
+def test_a_last_day_decodes_to_the_boundary_the_operations_compute_with() -> None:
+    from_boundary = _decode(covered_until=date(_FIRST, 7, 1).isoformat())
+    from_last_day = _decode(covered_through=date(_FIRST, 6, 30).isoformat())
+    from_both = _decode(covered_until=date(_FIRST, 7, 1).isoformat(), covered_through=date(_FIRST, 6, 30).isoformat())
+
+    assert from_last_day.exclusive_end() == date(_FIRST, 7, 1)
+    assert from_boundary.covered_through == date(_FIRST, 6, 30)
+    assert from_last_day == from_boundary
+    assert from_both == from_boundary
+    assert from_both.model_dump_json() == from_boundary.model_dump_json() == from_last_day.model_dump_json()
+    assert content_hash_hex(from_last_day.model_dump(mode="json")) == content_hash_hex(
+        from_boundary.model_dump(mode="json")
+    )
+
+
+def test_a_year_end_last_day_reaches_the_next_new_year() -> None:
+    assert _decode(covered_through=date(_FIRST, 12, 31).isoformat()).exclusive_end() == date(_FIRST + 1, 1, 1)
+
+
+@pytest.mark.parametrize(
+    "interval",
+    [
+        {"covered_until": date(_FIRST, 7, 1).isoformat(), "covered_through": date(_FIRST, 7, 1).isoformat()},
+        {"covered_until": date(_FIRST, 7, 1).isoformat(), "covered_through": date(_FIRST, 6, 29).isoformat()},
+        {},
+        {"covered_through": "9999-12-31"},
+        {"covered_until": None, "covered_through": None},
+    ],
+)
+def test_a_disagreeing_or_missing_end_decodes_and_is_refused_with_its_reason(interval: dict[str, str | None]) -> None:
+    request = _decode(**interval)
+
+    with pytest.raises(ActividadAssetValidationError):
+        request.exclusive_end()
+
+
+def test_an_end_that_is_not_a_date_does_not_decode() -> None:
+    with pytest.raises(ValidationError):
+        _decode(covered_through="not a date")
+
+
+def test_the_stated_form_does_not_change_the_forecast_or_its_fingerprint() -> None:
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=build_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(),
+    )
+    operations.create(build_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
+
+    def forecast(request: ActivityAssetForecastRequest) -> object:
+        return operations.forecast(
+            asset_id=request.asset_id,
+            covered_from=request.covered_from,
+            covered_until=request.exclusive_end(),
+        )
+
+    exclusive = forecast(_decode(covered_until=date(_FIRST, 7, 1).isoformat()))
+    inclusive = forecast(_decode(covered_through=date(_FIRST, 6, 30).isoformat()))
+
+    assert inclusive == exclusive
+    assert operations.forecast(
+        asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_until=date(_FIRST, 7, 1)
+    ).amount == accrued_through(Decimal("520.00"), date(_FIRST, 7, 1))
+
+
+def test_the_schema_offers_both_ends_as_optional_fields() -> None:
+    schema = ActivityAssetForecastRequest.model_json_schema()
+
+    assert {"covered_until", "covered_through"} <= set(schema["properties"])
+    assert not {"covered_until", "covered_through"} & set(schema["required"])

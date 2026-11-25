@@ -14,6 +14,8 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import OutputLanguage
+from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.time.clock import now
@@ -36,15 +38,16 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import require_registered_own_account
-from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
+from .manual_update import update_manual_transaction_fields
 from .models import (
     LedgerTransactionResultPayload,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
 from .own_account_ports import OwnAccountRepositoryFactory
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 from .update_contracts import (
     LEDGER_UPDATE_MAX_VALIDATION_MESSAGES,
@@ -56,7 +59,9 @@ from .update_contracts import (
     LedgerUpdateRequest,
     LedgerUpdateValidationMessages,
 )
-from .validation_messages import bounded_validation_messages
+from .validation_messages import ledger_refusal_diagnostic, ledger_refusal_messages
+
+_log = get_logger(__name__)
 
 # Input refusals the canonical action raises while it still holds nothing to write: the
 # replacement is validated in full before its atomic catalogue and event commit.
@@ -115,12 +120,13 @@ def _prepare_update(
     require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
     catalogue = ports.transaction_repository.load()
     transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
-    patch_values = _manual_patch_values(payload, operation=operation)
+    patch_values = manual_patch_values(payload, operation=operation)
     patch = ManualLedgerTransactionPatch.model_validate(patch_values)
     return ports, catalogue, transaction_id, patch
 
 
-def _manual_patch_values(payload: LedgerUpdateRequest, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
+def manual_patch_values(payload: LedgerUpdateRequest, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
+    """Collect and normalize the patch values of a manual ledger update request."""
     patch_values: dict[str, object] = {name: getattr(payload.patch, name) for name in payload.patch_fields}
     _normalise_update_dates(patch_values)
     _normalise_update_amounts(patch_values)
@@ -137,7 +143,7 @@ def _normalise_update_irpf_category(patch_values: dict[str, object], *, operatio
 
 
 def _normalise_update_dates(patch_values: dict[str, object]) -> None:
-    for field_name in ("booked_date", "value_date"):
+    for field_name in ("booked_date", "value_date", "operation_date", "accrual_date"):
         raw_date = patch_values.get(field_name)
         if isinstance(raw_date, str):
             parsed_date = parse_iso8601_date(raw_date)
@@ -197,6 +203,7 @@ async def _commit_update(
             bucket_id=bucket_id,
             transaction_id=transaction_id,
             current=current,
+            language=payload.output_language,
         )
         await context.events.effect(OperationEffect.UNKNOWN)
         try:
@@ -222,6 +229,7 @@ def _validate_update_projection(
     bucket_id: str,
     transaction_id: str,
     current: Transaction,
+    language: OutputLanguage,
 ) -> None:
     _operation_result(
         profile_id,
@@ -231,6 +239,7 @@ def _validate_update_projection(
             bucket_event_ids=(),
         ),
         source_transaction_id=transaction_id,
+        language=language,
     )
 
 
@@ -248,8 +257,10 @@ async def _refuse_invalid_update(
     detail = LedgerUpdateExecutionResult(
         outcome="validation_error",
         profile_id=payload.profile_id,
-        validation_messages=_validation_messages(error),
+        validation_messages=_validation_messages(error, language=payload.output_language),
     )
+    # The settlement line names the refusal code only; this says which rule refused.
+    _log.info("ledger update refused %s", ledger_refusal_diagnostic(error))
     detail_ref = await context.operands.put(detail, written_at=now())
     return OperationRefusalEvidence(refusal_code=LEDGER_UPDATE_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
 
@@ -261,14 +272,16 @@ async def _finish_update(
     source_transaction_id: str,
     context: OperationExecutorContext,
 ) -> str:
-    projected = _operation_result(payload.profile_id, result, source_transaction_id=source_transaction_id)
+    projected = _operation_result(
+        payload.profile_id, result, source_transaction_id=source_transaction_id, language=payload.output_language
+    )
     await context.events.effect(OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE)
     result_ref = LedgerUpdateExecutionResult(outcome="updated", profile_id=payload.profile_id, result=projected)
     return await context.operands.put(result_ref, written_at=now())
 
 
 def _operation_result(
-    profile_id: UUID, result: ManualLedgerTransactionResult, *, source_transaction_id: str
+    profile_id: UUID, result: ManualLedgerTransactionResult, *, source_transaction_id: str, language: OutputLanguage
 ) -> LedgerUpdateOperationResult:
     """Validate identity and the complete canonical display projection."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
@@ -283,7 +296,7 @@ def _operation_result(
         outcome="updated",
         profile_id=profile_id,
         source_transaction_id=source_transaction_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         group_label=result.transaction.group_label,
@@ -291,16 +304,21 @@ def _operation_result(
     )
 
 
-def _validation_messages(error: Exception) -> LedgerUpdateValidationMessages:
-    """Retain only bounded locations and messages from an input refusal."""
-    return bounded_validation_messages(
+def _validation_messages(error: Exception, *, language: OutputLanguage) -> LedgerUpdateValidationMessages:
+    """Retain only bounded locations and messages from an input refusal.
+
+    The sentences cross the worker boundary already rendered, so they are said in
+    this request's language rather than the one the worker started with.
+    """
+    return ledger_refusal_messages(
         error,
         limit=LEDGER_UPDATE_MAX_VALIDATION_MESSAGES,
         fallback="ledger update values did not satisfy transaction validation",
+        locale=language.value,
     )
 
 
-def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release the matching success projection or field-safe refusal details."""
     if (
         type(result) is not LedgerUpdateExecutionResult
@@ -382,11 +400,9 @@ def resolve_ledger_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and COMMIT for every transaction update."""
-    if request.definition_id != LEDGER_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_UPDATE_OPERATION_DEFINITION_ID, request_type=LedgerUpdateRequest
+    )
 
 
 def build_ledger_update_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
@@ -394,7 +410,7 @@ def build_ledger_update_registration(definition: OperationDefinition) -> Operati
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerUpdateOperationResult,
-        result_projector=_project_operation_result,
+        result_projector=project_operation_result,
         access_resolver=resolve_ledger_update_access,
     )
 

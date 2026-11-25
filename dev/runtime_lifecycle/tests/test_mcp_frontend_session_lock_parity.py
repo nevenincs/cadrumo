@@ -51,7 +51,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.core.async_cleanup import close_async_resources
@@ -60,6 +60,7 @@ from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.json_contract import SchemaEnvelope
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -81,6 +82,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -192,7 +194,7 @@ def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Pari
     )
     with (
         override_settings(
-            cadrumo_local_storage_root=root,
+            cadrumo_storage_root=root,
             cadrumo_output_language="en",
             cadrumo_cli_reveal_identifiers=True,
             cadrumo_profile_kdf_measure_calibration=False,
@@ -385,7 +387,7 @@ async def test_cli_own_lock_and_human_proof_loss_preserve_independent_mcp_grant(
                 assert runtime.subject.store.profile_lock_state() == lock_before
                 factories: list[FrontendClient] = []
 
-                async def no_recovery() -> FrontendClient:
+                async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
                     raise AssertionError("lost human authority must not silently acquire password proof")
 
                 def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
@@ -492,7 +494,7 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
                 lock_before = runtime.subject.store.profile_lock_state()
                 factories: list[FrontendClient] = []
 
-                async def no_recovery() -> FrontendClient:
+                async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
                     raise AssertionError("global unlock requires a separate explicit password recovery")
 
                 def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:

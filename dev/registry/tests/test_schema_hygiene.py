@@ -246,8 +246,7 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
 
     The CCAA binding declares ``typed_enum = "CCAA"`` (the canonical enum in
-    :mod:`cadrumo.domain.contribuyente.ccaa`).  The estimacion-directa binding
-    declares ``typed_enum = "EstimacionDirectaModalidad"``.  Each binding
+    :mod:`cadrumo.domain.contribuyente.ccaa`).  Each binding
     whose id suffix matches a known typed-bridge anchor MUST declare the
     correct ``typed_enum`` so consumers can route through the closed-set
     contract instead of parsing free-form strings at runtime.
@@ -262,10 +261,7 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
 
 
-_RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
-    ("tax-residence-ccaa", "CCAA"),
-    ("estimacion-directa-es-normal", "EstimacionDirectaModalidad"),
-)
+_RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (("tax-residence-ccaa", "CCAA"),)
 
 
 def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:

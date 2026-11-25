@@ -13,7 +13,7 @@ assembly boundary accidentally.
 
 Core types:
 :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
@@ -23,11 +23,14 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, replace
 from datetime import date
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
+from ..core.diagnostic_log import DiagnosticValue, diagnostic_phase
 from ..core.errors.hierarchy import InternalInvariantError
+from ..core.logging import get_logger
 from ..core.time.utc import UtcInstant
 from ..domain.deadlines.errors import ProfileError
 from ..domain.deadlines.models import TaxpayerProfile
@@ -35,6 +38,7 @@ from ..domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ..domain.modelos.work_unit import WorkUnitCatalogue
 from ..domain.user_profile.errors import UserProfileValidationError
 from ..domain.user_profile.values import UserProfileRecord
+from .aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
 from .invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
@@ -49,7 +53,7 @@ from .modelo.declarations_workspace_contracts import (
 )
 from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.applicability_evidence import FilingYearApplicabilityEvidence, bind_filing_year_applicability_evidence
-from .overview.calendar import build_overview_calendar
+from .overview.calendar import build_overview_calendar, local_work_unit_entries
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
@@ -67,6 +71,14 @@ from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCalenda
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+
+_LOGGER = get_logger(__name__)
+_CALENDAR_PHASE_EVENT: Final = "workbench_calendar_phase"
+
+
+def _calendar_phase(phase: str) -> AbstractContextManager[dict[str, DiagnosticValue]]:
+    """Record how long one step of the calendar work took, and what it counted."""
+    return diagnostic_phase(_LOGGER, _CALENDAR_PHASE_EVENT, phase)
 
 
 def declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
@@ -89,7 +101,7 @@ def declarations_observation(
     )
 
 
-def _scope_filing_records(
+def scope_filing_records(
     filing_records: tuple[ModeloRecord, ...],
     schedule_calendar: OverviewCalendar,
 ) -> tuple[ModeloRecord, ...]:
@@ -98,6 +110,8 @@ def _scope_filing_records(
     The local source remains observed and available even when none of its
     profile-wide filing records belongs to the requested window. That is a
     measured empty query result, not an invented empty authority.
+
+    ``filing_records`` is a :class:`ModeloRecord`.
     """
     addresses = {
         (entry.modelo, entry.period.filing_year, entry.period.registry_token) for entry in schedule_calendar.entries
@@ -209,6 +223,7 @@ def read_workbench_calendar_inputs(
     memo: CalendarMemo,
     invoice_source_ports: InvoiceSourceResolverPorts,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
+    related_party_records: Modelo232RelatedPartyReader | None = None,
 ) -> WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
 
@@ -219,22 +234,26 @@ def read_workbench_calendar_inputs(
 
     Each obligation is decided on the per-filing-year evidence the overview
     reads bind: the profile as of the year and the ledger's own derivations
-    from ``invoice_source_ports``, so the workbench and the CLI reach the same
-    verdict for the same records.
+    from ``invoice_source_ports``, and the related-party obligation fact from
+    the stated Modelo 232 records in ``related_party_records``, so the workbench
+    and the CLI reach the same verdict for the same records.
 
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     try:
-        taxpayer = projection_for_taxpayer(
-            record,
-            tax_id_default="00000000T",
-            schema=operation.profile_schema(),
-        )
+        with _calendar_phase("taxpayer_projection"):
+            taxpayer = projection_for_taxpayer(
+                record,
+                tax_id_default="00000000T",
+                schema=operation.profile_schema(),
+            )
     except (ProfileError, UserProfileValidationError):
         refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
         return WorkbenchCalendarInputs(
             agenda_evidence_state=refusal,
-            declarations_calendar=_refused_declarations_calendar(refusal, as_of=as_of, observed_at=observed_at),
+            declarations_calendar=_refused_declarations_calendar(
+                refusal, as_of=as_of, observed_at=observed_at, work_units=work_units, operation=operation
+            ),
             agenda=None,
             agenda_refusal=refusal,
             refusal=refusal,
@@ -256,6 +275,7 @@ def read_workbench_calendar_inputs(
             invoice_source_ports=invoice_source_ports,
             operation=operation,
             today=as_of,
+            related_party_records=related_party_records,
         ),
     )
     if not model_declared:
@@ -286,12 +306,18 @@ def _refused_declarations_calendar(
     *,
     as_of: date,
     observed_at: UtcInstant,
+    work_units: WorkUnitCatalogue,
+    operation: PinnedAuthorityOperation,
 ) -> DeclarationsCalendarProjectionV1:
     """Publish a Declarations calendar that states why it has no schedule.
 
+    The calendar still dates each local declaration from its own registry
+    window; only the generic obligation schedule is withheld.
+
     Declarations stays admitted when only the calendar is refused, and an
     admitted Declarations destination always carries a calendar. The honest
-    calendar here is an empty one whose every source says why it is empty.
+    calendar here carries no obligation schedule, only the local declarations' own
+    dated entries, and every source says why it has no more.
     """
     reason_code = refusal.reason_code
     if reason_code is None:
@@ -301,9 +327,12 @@ def _refused_declarations_calendar(
         local=CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources](state=unavailable),
         aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](state=unavailable),
     )
+    query_range = calendar_query_range(as_of)
     calendar = OverviewCalendar(
-        range=_calendar_query_range(as_of),
-        entries=(),
+        range=query_range,
+        entries=local_work_unit_entries(
+            tuple(work_units.values()), calendar_range=query_range, today=as_of, operation=operation
+        ),
         generated_at=observed_at,
         evaluated_on=as_of,
         taxpayer_model_declared=False,
@@ -320,7 +349,7 @@ def _refused_declarations_calendar(
     )
 
 
-def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
+def calendar_query_range(as_of: date) -> OverviewCalendarRange:
     """Cover the latest completed filing year and the current calendar year.
 
     Annual returns for the completed filing year can close in the current
@@ -345,6 +374,27 @@ def unbound_calendar_aeat_evidence() -> CalendarEvidenceReadOutcome[AeatCalendar
     )
 
 
+def project_calendar_aeat_filing_evidence(
+    aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources],
+    *,
+    expected_tax_id: str | None,
+) -> CalendarEvidenceProjection:
+    """Join stored AEAT filing captures to one profile's tax identity through the shared evidence provider.
+
+    The local axis is available and empty here: the callers that project AEAT
+    evidence hold local filings separately, and this join only establishes what
+    the AEAT captures observed for ``expected_tax_id``.
+    """
+    return build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
+            value=LocalCalendarEvidenceSources(),
+        ),
+        aeat=aeat_evidence,
+        expected_tax_id=expected_tax_id,
+    )
+
+
 def _build_workbench_calendar_inputs(
     *,
     taxpayer: TaxpayerProfile,
@@ -358,14 +408,14 @@ def _build_workbench_calendar_inputs(
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
-    query_range = _calendar_query_range(as_of)
+    query_range = calendar_query_range(as_of)
 
     def evidence_for(schedule_calendar: OverviewCalendar) -> CalendarEvidenceProjection:
         projection = build_calendar_evidence_projection(
             local=CalendarEvidenceReadOutcome(
                 state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
                 value=LocalCalendarEvidenceSources(
-                    filing_records=_scope_filing_records(
+                    filing_records=scope_filing_records(
                         tuple(filings.records.values()),
                         schedule_calendar,
                     ),
@@ -387,44 +437,52 @@ def _build_workbench_calendar_inputs(
         )
 
     def compute() -> WorkbenchCalendarWork:
-        schedule_calendar = build_overview_calendar(
-            taxpayer,
-            query_range,
-            today=as_of,
-            raw_values=raw_values,
-            work_units=tuple(work_units.values()),
-            operation=operation,
-            applicability_evidence=applicability_evidence,
-        )
-        return WorkbenchCalendarWork(
-            schedule_calendar=schedule_calendar,
-            calendar=build_overview_calendar(
+        with _calendar_phase("calendar_schedule") as measured:
+            schedule_calendar = build_overview_calendar(
                 taxpayer,
                 query_range,
                 today=as_of,
                 raw_values=raw_values,
+                work_units=tuple(work_units.values()),
+                operation=operation,
+                applicability_evidence=applicability_evidence,
+            )
+            measured["item_count"] = len(schedule_calendar.entries)
+        with _calendar_phase("calendar_with_filing_evidence") as measured:
+            calendar = build_overview_calendar(
+                taxpayer,
+                query_range,
+                today=as_of,
+                raw_values=raw_values,
+                # Only this calendar is projected to the frontends; the held-back
+                # obligations ride beside its entries and never inside them.
+                show_suppressed=True,
                 filing_evidence=evidence_for(schedule_calendar).evidence,
                 work_units=tuple(work_units.values()),
                 operation=operation,
                 applicability_evidence=applicability_evidence,
-            ),
-            agenda=build_overview_agenda(
+            )
+            measured["item_count"] = len(calendar.entries)
+        with _calendar_phase("agenda"):
+            agenda = build_overview_agenda(
                 taxpayer,
                 as_of=as_of,
                 raw_values=raw_values,
                 operation=operation,
                 applicability_evidence=applicability_evidence,
-            ),
-        )
+            )
+        return WorkbenchCalendarWork(schedule_calendar=schedule_calendar, calendar=calendar, agenda=agenda)
 
     work = memo.reuse(compute)
     # The evidence rows depend only on the memo key's inputs; their observation
     # state is this capture's own, so the projection is rebuilt every time.
-    evidence = evidence_for(work.schedule_calendar)
-    declarations_calendar = project_declarations_calendar(
-        calendar=work.calendar,
-        evidence=evidence,
-        as_of=as_of,
-        schedule_observation=_schedule_observation(work.calendar, observed_at),
-    )
+    with _calendar_phase("declarations_calendar") as measured:
+        evidence = evidence_for(work.schedule_calendar)
+        declarations_calendar = project_declarations_calendar(
+            calendar=work.calendar,
+            evidence=evidence,
+            as_of=as_of,
+            schedule_observation=_schedule_observation(work.calendar, observed_at),
+        )
+        measured["item_count"] = len(declarations_calendar.entries)
     return evidence, declarations_calendar, work.agenda, work.calendar.taxpayer_model_declared

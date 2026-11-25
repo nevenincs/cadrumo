@@ -16,24 +16,26 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     ProfileAccessBinding,
     ProfileAccessState,
 )
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
-from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.profile_access import AccessRefusal, HumanProof, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.tests.test_windows_process_cleanup import native  # noqa: F401
+from cadrumo_client.transport.windows_process import unreturned_windows_process_scope
 
 from ...adapters import profile_worker
 from ...adapters.profile_worker import ProfileWorkerProcess
-from ...adapters.tests.test_windows_process_cleanup import native  # noqa: F401
-from ...adapters.windows_process import unreturned_windows_process_scope
 from ...application.session_authority_contracts import SessionAuthorityFacts
 from .. import session_owner
 from ..profile_connections import RuntimeProfileConnections
@@ -54,7 +56,7 @@ def test_scope_constructor_owner_survives_public_refusal_and_failed_settlement(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, request: pytest.FixtureRequest
 ) -> None:
     port = cast(_NativeScopeFaults, request.getfixturevalue("native"))
-    owner = _owner(tmp_path)
+    owner = worker_construction_cleanup_owner(tmp_path)
     primary = RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     port.setup_error = primary
     port.close_failures = {7: 2}
@@ -138,8 +140,9 @@ def test_scope_constructor_owner_survives_public_refusal_and_failed_settlement(
 def test_concurrent_custody_cannot_construct_a_second_worker_while_first_launch_is_pending(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release = Event(), Event()
     constructed: list[ProfileWorkerIdentity] = []
 
@@ -180,8 +183,126 @@ def test_concurrent_custody_cannot_construct_a_second_worker_while_first_launch_
     owner.settle()
 
 
+def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A sign-in that arrives while its watch is starting the worker waits for that worker, never a second one."""
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
+    entered, release = Event(), Event()
+    constructed: list[ProfileWorkerIdentity] = []
+
+    def paused_constructor(identity: ProfileWorkerIdentity, **kwargs: object) -> ProfileWorkerProcess:
+        constructed.append(identity)
+        entered.set()
+        assert release.wait(10)
+        return candidate
+
+    def sign_in() -> ProfileWorkerProcess:
+        with owner._custody(await_construction=True) as worker:
+            return worker
+
+    monkeypatch.setattr(session_owner, "ProfileWorkerProcess", paused_constructor)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        prepared = executor.submit(owner.prepare)
+        assert entered.wait(10)
+        signed_in = executor.submit(sign_in)
+        time.sleep(0.2)
+        assert not signed_in.done(), "the sign-in must wait for the worker being built, not be refused"
+        release.set()
+        prepared.result(timeout=10)
+        assert signed_in.result(timeout=10) is candidate
+    assert constructed == [owner.identity]
+    owner.close()
+    owner.settle()
+
+
+def test_cancelled_proof_leaves_shared_construction_and_its_next_joiner_untouched(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
+    entered, release, joined = Event(), Event(), Event()
+    cancellation = ProfileProofCancellation()
+    deadline = time.monotonic() + 100
+    secret = bytearray(b"owned-pending-construction-proof")
+    constructed = []
+    wait = owner._construction_changed.wait
+
+    def paused_constructor(identity: ProfileWorkerIdentity, **kwargs: object) -> ProfileWorkerProcess:
+        constructed.append(identity)
+        entered.set()
+        assert release.wait(10), "test did not release the shared key-free constructor"
+        return candidate
+
+    @contextmanager
+    def proof(connection_id: UUID) -> Generator[HumanProof]:
+        yield HumanProof(
+            method="password",
+            secret=secret,
+            originating_login_id="synthetic-login",
+            timeout_deadline=deadline,
+            attempt_id=uuid4(),
+            cancellation=cancellation,
+        )
+
+    def waiting(*, timeout: float | None = None) -> bool:
+        joined.set()
+        return wait(timeout=timeout)
+
+    def authenticate() -> None:
+        with owner.authenticate_human(uuid4()):
+            pytest.fail("a cancelled construction join must not dispatch a protected proof")
+
+    def next_join() -> ProfileWorkerProcess:
+        with owner._custody(await_construction=True, timeout=TimeoutDeadline(deadline)) as worker:
+            return worker
+
+    monkeypatch.setattr(session_owner, "ProfileWorkerProcess", paused_constructor)
+    monkeypatch.setattr(owner, "_human_secret", proof)
+    monkeypatch.setattr(owner._construction_changed, "wait", waiting)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        prepared = pool.submit(owner.prepare)
+        try:
+            assert entered.wait(3)
+            # Any restarted orchestration policy would extend the owner's
+            # original absolute deadline and is forbidden for this join.
+            monkeypatch.setattr(
+                session_owner,
+                "DEFAULT_TIMEOUT_POLICY",
+                SimpleNamespace(deadline=lambda: pytest.fail("construction join restarted the owner's timeout")),
+            )
+            pending = pool.submit(authenticate)
+            assert joined.wait(3), "the proof did not join the shared constructor"
+            cancellation.cancel()
+            with pytest.raises(AutomationCustodyError) as refused:
+                pending.result(timeout=3)
+            assert refused.value.reason is AutomationCustodyCode.REQUESTER_DISCONNECTED
+            assert secret == bytearray(len(secret))
+            assert owner._human_queue._owner is None
+            assert not owner.lost and not owner._stopping.is_set()
+            assert not prepared.done() and not owner._construction_done.is_set()
+            assert candidate.close_calls == 0 and not owner._retiring
+            joined.clear()
+            following = pool.submit(next_join)
+            assert joined.wait(3), "the next attempt could not join the retained construction"
+            assert not following.done()
+            release.set()
+            prepared.result(timeout=3)
+            assert following.result(timeout=3) is candidate
+            assert constructed == [owner.identity]
+        finally:
+            release.set()
+            prepared.result(timeout=3)
+    owner.close()
+    owner.settle()
+
+
 def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_path: Path) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     connection_id = uuid4()
     facts = SessionAuthorityFacts(
         ProfileAccessState(
@@ -219,9 +340,9 @@ def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_
         @override
         def require_alive(self) -> None:
             if self.busy:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
 
-    worker = ObservedWorker(owner.identity, owner._guard, failures=0)
+    worker = ObservedWorker(owner.identity, guard, failures=0)
     owner._worker = worker
     with pytest.raises(AutomationCustodyError):
         owner.facts(connection_id)
@@ -272,9 +393,10 @@ class _Candidate(ProfileWorkerProcess):
 def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_worker(
     tmp_path: Path, stopping: bool
 ) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     connection_id = uuid4()
-    primary = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    primary = RefusalError(RefusalCode.TIMEOUT)
 
     class QueuedWorker(_Candidate):
         """Represent the adapter's exact pre-dispatch versus fenced timeout outcome."""
@@ -298,7 +420,7 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             assert self.close_calls == 0
 
-    worker = QueuedWorker(owner.identity, owner._guard, failures=0)
+    worker = QueuedWorker(owner.identity, guard, failures=0)
     owner._worker = worker
     try:
         with pytest.raises(RefusalError) as caught, owner.prepare_api_admission(connection_id):
@@ -327,7 +449,8 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
 
 @pytest.mark.parametrize("outcome", ["fenced", "containment_failure", "queue_timeout"])
 def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tmp_path: Path, outcome: str) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     session_id = uuid4()
 
     class FencedWorker(_Candidate):
@@ -341,10 +464,10 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         @override
         def retire(self, session_id: UUID) -> None:
             if outcome == "queue_timeout":
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
-    worker = FencedWorker(owner.identity, owner._guard, failures=1 if outcome == "containment_failure" else 0)
+    worker = FencedWorker(owner.identity, guard, failures=1 if outcome == "containment_failure" else 0)
     owner._worker = worker
     try:
         if outcome == "fenced":
@@ -361,14 +484,14 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         else:
             with pytest.raises(RefusalError) as caught:
                 owner.retire(session_id)
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
             assert not owner.lost and owner._worker is worker and worker.close_calls == 0
     finally:
         owner.close()
         owner.settle()
 
 
-def _owner(root: Path) -> ProfileWorkerSessionOwner:
+def worker_construction_cleanup_owner(root: Path, guard: RLock | None = None) -> ProfileWorkerSessionOwner:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
         runtime_boot_id=uuid4(),
@@ -390,7 +513,7 @@ def _owner(root: Path) -> ProfileWorkerSessionOwner:
         yield
 
     return ProfileWorkerSessionOwner(
-        identity, storage_root=root, observe=unused_observe, human_secret=unused_secret, guard=RLock()
+        identity, storage_root=root, observe=unused_observe, human_secret=unused_secret, guard=guard or RLock()
     )
 
 
@@ -399,8 +522,9 @@ def _owner(root: Path) -> ProfileWorkerSessionOwner:
 def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_settled(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str, failures: int
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=failures)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=failures)
     primary = (
         RefusalError(RefusalCode.PEER_UNTRUSTED)
         if kind == "refusal"
@@ -490,8 +614,9 @@ def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_se
 def test_stop_racing_returned_candidate_keeps_recoverable_construction_settlement(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failures: int
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=failures)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=failures)
 
     def late_native_constructor(*args: object, **kwargs: object) -> ProfileWorkerProcess:
         owner._stopping.set()
@@ -516,8 +641,9 @@ def test_stop_racing_returned_candidate_keeps_recoverable_construction_settlemen
 def test_published_worker_drain_preserves_recoverable_construction_after_body_failure(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    guard = RLock()
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
     primary = OSError("synthetic failure after published worker drain")
 
     def native_constructor(*args: object, **kwargs: object) -> ProfileWorkerProcess:

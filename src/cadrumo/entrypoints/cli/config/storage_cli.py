@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Final
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ....application.operator_actions.models import ActionReference
 from ....application.storage_management.documents import (
     ConfigStorageCheckResult,
@@ -35,15 +37,14 @@ from ....application.storage_management.documents import (
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.storage_taxonomy import StorageArea
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
     from ....application.storage_management.models import StorageAreaInventoryReport
 
-from ....core.external_constants import OutputLanguage as _OutputLanguage
+from ....core.external_constants import OutputLanguage
 
-_ROOT_ENV_VAR: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
+_ROOT_ENV_VAR: Final[str] = "CADRUMO_STORAGE_ROOT"
 """Environment variable an operator sets to point the tree somewhere else.
 
 Named in the relocation advisory because the advisory's whole job is to hand the
@@ -53,17 +54,17 @@ operator the one control that does relocate, having refused to do it for them.
 
 def config_storage_list(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Report every declared location, its resolved path, and what it holds."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
     result = ConfigStorageListResult.from_report(report)
     notices = (_relocation_notice(str(report.storage_root)),)
     lines = _inventory_lines(report)
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(
         ctx,
         command="config.storage.list",
@@ -76,10 +77,10 @@ def config_storage_list(
 def config_storage_view(
     ctx: typer.Context,
     area: StorageArea,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Report one declared location in full."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
@@ -101,10 +102,10 @@ def config_storage_view(
 
 def config_storage_check(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Verify the tree on disk against its declaration, repairing nothing."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import inspect_storage_tree
 
     report = inspect_storage_tree()
@@ -156,7 +157,7 @@ def config_storage_check(
                 context={"issue_count": str(len(report.issues))},
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.check", result=result, lines=tuple(lines), notices=tuple(notices))
     if not report.healthy:
         raise typer.Exit(code=2)
@@ -164,10 +165,10 @@ def config_storage_check(
 
 def config_storage_init(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Materialise the declared tree, preserving everything already in it."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import materialise_storage_tree
 
     report = materialise_storage_tree()
@@ -191,7 +192,7 @@ def config_storage_init(
                 context={"storage_root": str(report.storage_root)},
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.init", result=result, lines=tuple(lines), notices=notices)
 
 
@@ -199,7 +200,7 @@ def config_storage_reclaim(
     ctx: typer.Context,
     area: StorageArea,
     confirmed: bool = False,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Delete an area's regenerable contents after the derived preflight.
 
@@ -208,7 +209,7 @@ def config_storage_reclaim(
     error boundary naming the resolved path, the entries left untouched, and the
     declared lifecycle that forbade the delete.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import reclaim_storage_area
 
     report = reclaim_storage_area(area, confirmed=confirmed)
@@ -236,7 +237,7 @@ def config_storage_reclaim(
                 },
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.reclaim", result=result, lines=tuple(lines), notices=notices)
 
 
@@ -325,7 +326,7 @@ def _table_lines(headers: tuple[str, ...], rows: Iterable[tuple[str, ...]]) -> l
     return [render(headers), render(tuple("-" * width for width in widths)), *(render(row) for row in materialised)]
 
 
-def _notice_lines(notices: Sequence[Notice]) -> list[str]:
+def _storage_notice_block_lines(notices: Sequence[Notice]) -> list[str]:
     """Render typed notices visibly in text mode as well as JSON mode."""
     lines: list[str] = []
     for notice in notices:

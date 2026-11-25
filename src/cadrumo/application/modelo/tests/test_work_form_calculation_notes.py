@@ -28,9 +28,9 @@ from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -40,13 +40,15 @@ from ....domain.modelos.verification_report import (
 )
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
-    ModeloFormField,
+from ..work_form_declaration_facts import ModeloFormCalculationNote
+from ..work_form_field_vocabulary import (
     ModeloFormOrigin,
-    ModeloWorkForm,
     address_key,
+)
+from ..work_form_findings import ModeloFormAttention
+from ..work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from ..work_form_service import modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
@@ -158,6 +160,7 @@ def test_a_printed_box_that_could_not_be_worked_out_blocks_filing_and_never_read
         attention=ModeloFormAttention.BLOCKS,
         casilla_id=_PRINTED,
         box=_PRINTED,
+        withholds_filing=True,
     )
     assert form.calculation_notes == (note,)
     assert form.blocking_calculation_notes == (note,)
@@ -174,16 +177,17 @@ def test_the_same_box_without_a_note_keeps_its_value(operation: PinnedAuthorityO
     assert field.value == Decimal("0")
 
 
-def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking(
+def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking_yet_withholds_filing(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Teeth for the rule above: the same reason on a box the form does not print withholds nothing."""
+    """The same reason on a box the form does not print reads as worth checking, and the filing gate still refuses it."""
     working = _working_figure(operation)
     form = _form(operation, diagnostics=(_unresolved(working),))
     (note,) = form.calculation_notes
 
     assert note.attention is ModeloFormAttention.CHECK
-    assert form.blocking_calculation_notes == ()
+    assert note.withholds_filing
+    assert form.blocking_calculation_notes == (note,)
     assert note.box is None
 
 
@@ -231,6 +235,58 @@ def test_each_reason_takes_its_place_on_the_scale_most_urgent_first(operation: P
     ]
 
 
+def _worded(message: str, language: OutputLanguage | None = OutputLanguage.EN) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind="prorrata_regularizacion",
+        casilla_id="03",
+        message=message,
+        message_language=language,
+    )
+
+
+def test_each_note_carries_the_account_its_resolver_worded_in_the_forms_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The message a calculate result carries for a diagnostic is the one its note on the form carries."""
+    written = "Liquidation 1T declared deductible input IVA, but the ledger holds none for it."
+
+    (note,) = _form(operation, diagnostics=(_worded(written),)).calculation_notes
+
+    assert (note.reason, note.casilla_id, note.message) == ("source_issue", "03", written)
+
+
+@pytest.mark.parametrize("language", [OutputLanguage.ES, None])
+def test_an_account_not_worded_in_the_forms_language_is_left_to_the_catalogue(
+    operation: PinnedAuthorityOperation, language: OutputLanguage | None
+) -> None:
+    """Teeth for the rule above: Spanish prose, or a technical account in no language, never reaches an English form."""
+    (note,) = _form(operation, diagnostics=(_worded("La liquidación 1T no tiene base.", language),)).calculation_notes
+
+    assert note.reason == "source_issue"
+    assert note.message is None
+
+
+def test_two_accounts_of_one_reason_are_two_notes_and_one_account_twice_is_one(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Without facts of its own, a note is told apart by what its resolver wrote, so neither account is lost."""
+    first = "The gross deductible input IVA of the earlier liquidations is negative."
+    second = "The earlier liquidations this regularisation reads are missing."
+
+    def issue(message: str) -> CalculationSourceDiagnostic:
+        return CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="prorrata_regularizacion",
+            message=message,
+            message_language=OutputLanguage.EN,
+        )
+
+    notes = _form(operation, diagnostics=(issue(first), issue(second), issue(first))).calculation_notes
+
+    assert [note.message for note in notes] == [first, second]
+
+
 def _revision_with_issues(
     snapshot: RegistrySnapshot, issues: tuple[CalculationSourceIssue, ...]
 ) -> CalculationRevision:
@@ -273,8 +329,9 @@ def test_a_declaration_opened_afresh_knows_only_the_notes_that_persist_with_its_
     form = _form(operation, diagnostics=None, zero_at=_PRINTED, revision=revision)
 
     assert not form.calculation_notes_held
-    assert [(note.reason, note.box, note.attention) for note in form.calculation_notes] == [
-        ("unresolved_binding", _PRINTED, ModeloFormAttention.BLOCKS)
+    # The stored message is a technical account, so the reopened note is worded by its reason alone.
+    assert [(note.reason, note.box, note.attention, note.message) for note in form.calculation_notes] == [
+        ("unresolved_binding", _PRINTED, ModeloFormAttention.BLOCKS, None)
     ]
     assert _field(form, _PRINTED).value is None
 

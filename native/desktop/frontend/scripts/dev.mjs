@@ -20,6 +20,7 @@ for (const name of [
   "chrome-strings.json",
   "palette.css",
   "provider-icons.json",
+  "navigation.json",
 ])
   if (!existsSync(resolve(generated, name)))
     throw new Error(
@@ -27,7 +28,7 @@ for (const name of [
     );
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
-const server = await createServer({ root: frontend });
+const server = await createServer({ root: frontend, configLoader: "runner" });
 try {
   await server.listen();
 } catch (error) {

@@ -7,7 +7,7 @@ import json
 import shutil
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
@@ -80,6 +80,15 @@ def clean_target(build: Path, target: str, config: str) -> None:
     _remove(build, paths, BuildLog(f"clean-{target}"))
 
 
+def _add_all_targets(build: Path, targets: list[Path]) -> None:
+    # Explicit clean-all also works with generators that do not implement
+    # ADDITIONAL_CLEAN_FILES, and covers every configured build configuration.
+    for manifest in sorted(build.glob("cleanup-*.json")):
+        ownership = json.loads(manifest.read_text(encoding="utf-8"))
+        _build_directory(build, Path(ownership["source"]))
+        targets.extend(Path(path) for target in ownership["targets"].values() for path in target["paths"])
+
+
 def clean(build: Path, group: str) -> None:
     """Delete only selected generated children of an identified native CMake build."""
     document = json.loads((build / "build-paths.json").read_text(encoding="utf-8"))
@@ -89,17 +98,12 @@ def clean(build: Path, group: str) -> None:
     groups = definitions.values() if group == "all" else (definitions[group],)
     targets = [paths[key] for keys in groups for key in keys]
     if group == "all":
-        # Explicit clean-all also works with generators that do not implement
-        # ADDITIONAL_CLEAN_FILES, and covers every configured build configuration.
-        for manifest in sorted(build.glob("cleanup-*.json")):
-            ownership = json.loads(manifest.read_text(encoding="utf-8"))
-            _build_directory(build, Path(ownership["source"]))
-            targets.extend(Path(path) for target in ownership["targets"].values() for path in target["paths"])
+        _add_all_targets(build, targets)
     _remove(build, [str(target) for target in targets], BuildLog(f"clean-{group}"))
-    # Presets point TEMP/TMP/TMPDIR here; later builds and CTest need it present
-    # or tools fail and Python silently falls back to the OS temporary directory.
+    # Presets and CTest point at these directories; later commands need both or
+    # tools can silently fall back to the OS temporary directory.
     if "temporary" in paths and paths["temporary"] in targets:
-        paths["temporary"].mkdir()
+        (paths["temporary"] / "ctest").mkdir(parents=True)
 
 
 if __name__ == "__main__":

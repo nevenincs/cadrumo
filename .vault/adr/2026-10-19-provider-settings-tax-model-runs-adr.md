@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#provider-settings'
 date: '2026-10-19'
-modified: '2026-10-21'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f829c09100d819ed9122abb5a75bb62240cfceb9e9675111d961fc844b40af26'
+body_hash: 'sha256:0dea6aafb2ab786b4b253c966c7bc12409ed4e3146270076c3e19507b28559e5'
 related:
   - "[[2026-10-13-provider-settings-adr]]"
   - "[[2026-10-04-canonical-environment-adr]]"
@@ -72,9 +72,9 @@ The operator ruled on 2026-10-19: "Migrate now". The tax app's key path is a leg
    No tax code speaks a vendor protocol, holds a key or bearer, or imports `cadrumo_agent_service`.
 3. **Output handling.** The adapter returns the run's final reply text. For structured consumers, Cadrumo takes the JSON from a fenced block, or else from the outermost object, and validates it with the consumer's existing parser. On a parse or schema failure it asks once more with the same request and the validation summary, then refuses. Free-text consumers, such as transcription, take the reply text as is.
 4. **New protocol direction: runtime to service, requests only.** The request travels from the tax worker on its existing runtime channel. The runtime forwards it to the exact profile's admitted service connection, under the `model-run` capability the service declares in its descriptor. The runtime binds the runtime boot, profile, session, service lease and operation request id. It treats the body as opaque, and it never persists or logs it. No key, bearer or credential appears in either direction. This is a new direction on that connection, accepted explicitly by the operator.
-5. **Service handler.** The service checks the lease and the settings generation. It resolves the lane and model from the profile's provider settings: a per-`ModelRole` selection when one exists, otherwise the default selection. Any catalog lane is eligible, CLI or API, at parity with chat.
+5. **Service handler.** The service checks the lease and the settings generation. It answers the `ModelRole` with the one model the person picked in the agent's model picker, on any lane, local or cloud (`2026-10-25-agent-owned-models-adr` constraint 6), when the role can use it. With no pick it refuses `no_selection`; a picked model not stated to read images refuses the vision role `model_cannot_read_images`. It reads no default selection and substitutes no other model.
 
-   The service starts a background run on the existing run path (`POST /v1/runs`) with its own bearer. It waits for the run to finish within the deadline, reads the reply text from `GET /v1/runs/{id}/reply?wait_seconds=N` (the model's text, unchanged), then deletes the run and its attachments, and replies with the text plus `provider_id`, `transport`, `model` and `agent_version`. The exact background marking, body and refusal codes are whatever cadrumo-agent commits, kept behind one service adapter. A per-role selection interface is a follow-on and is not part of this record.
+   The service starts a background run on the existing run path (`POST /v1/runs`) with its own bearer. It waits for the run to finish within the deadline, reads the reply text from `GET /v1/runs/{id}/reply?wait_seconds=N` (the model's text, unchanged), then deletes the run and its attachments, and replies with the text plus `provider_id`, `transport`, `model` and `agent_version`. The exact background marking, body and refusal codes are whatever cadrumo-agent commits, kept behind one service adapter.
 6. **Lane lookup before dispatch.** On the same capability, the tax side first asks for the resolved `provider_id`, `transport` and `model` for the role. That answer is non-secret. The run request then carries the triple, and the service refuses `consent_missing` if the lane it would use differs. Whether a lane takes an attachment is read from catalog data alone, never inferred from its transport. The provider catalog reports for each lane whether background requests accept documents, per media type (image, PDF), with a proven or unproven label. The lookup returns that support for the resolved lane, behind its adapter. A consumer whose request carries a media type the lane does not accept refuses `input_not_supported` before dispatch. The agent's own refusal at admission maps to the same code. A lane refuses only when it cannot take the input.
 7. **Typed refusals.** A run that yields no usable output refuses with exactly one closed code:
 
@@ -83,8 +83,9 @@ The operator ruled on 2026-10-19: "Migrate now". The tax app's key path is a leg
    | `service_unavailable` | No service is admitted for the profile |
    | `not_signed_in` | The profile has no active sign-in |
    | `profile_locked` | The profile is locked |
-   | `no_selection` | No lane is selected for the role |
-   | `lane_unavailable` | The selected lane cannot be used |
+   | `no_selection` | The person has picked no model, or took the picked local model off its list |
+   | `model_cannot_read_images` | The picked model is not stated to read images, which the role needs |
+   | `lane_unavailable` | The picked model's lane cannot be used, or the record cannot be read |
    | `input_not_supported` | The agent refused the lane or media type at admission |
    | `run_failed` | The run did not complete |
    | `output_invalid` | The reply still fails validation after the one re-ask |
@@ -92,7 +93,7 @@ The operator ruled on 2026-10-19: "Migrate now". The tax app's key path is a leg
    | `refused_by_provider` | The provider refused the request |
    | `consent_missing` | The lane differs from the one the token was bound to |
 
-   Each consumer maps these to its existing typed errors. A refusal never falls back to another lane, to the environment or to the on-host model. A result that is ambiguous after dispatch is not retried as though it never ran.
+   Each consumer maps these to its existing typed errors. A refusal never falls back to another lane or to the environment. A result that is ambiguous after dispatch is not retried as though it never ran.
 8. **Consent stays with its deterministic owner and binds to the lane.**
    - Every off-host agent run of taxpayer material goes through the digest-bound, per-invocation consent of `2026-06-10-llm-evidence-classification-adr`. The gestor-mode bar and the ledger append both run before dispatch.
    - The token and the ledger entry bind to the triple from constraint 6.
@@ -119,10 +120,10 @@ The service is the only owner of provider choice and credentials, and cadrumo-ag
 ## Consequences
 
 - Off-host model work needs a signed-in profile with an admitted agent service. Without one it refuses `service_unavailable`, so the CLI alone no longer reaches a vendor. On-host work is unchanged.
-- Off-host reading of images and PDFs works wherever the selected lane accepts that media, as the agent decides at admission. Elsewhere it refuses `input_not_supported`.
+- Reading images and PDFs works wherever the picked model's lane accepts that media, as the agent decides at admission. Elsewhere it refuses `input_not_supported`.
 - A developer who kept a tax-app key in `env/.env` loses that path. The live-agent lane's `dev/desktop_agent_live/provider_key.py` read those template names. Its owner is removing that file.
 - The runtime gains a request/reply direction to the service. It carries prompts and images that may be taxpayer evidence, in memory only, and it needs platform and race testing like the other channels.
-- Cost and latency follow the lane the person selected.
+- Cost and latency follow the local models the person keeps on the list.
 - Reconsider if the operator wants an off-host path without the service, or a per-request lane choice.
 
 Accepted 2026-10-19 on the operator's first-hand approval, given in the coordinating session: "lgtm, go". That approval explicitly covers the runtime-to-service `model-run` frame in constraint 4. The record was proposed earlier that day for the operator's review. Basis:
@@ -130,3 +131,14 @@ Accepted 2026-10-19 on the operator's first-hand approval, given in the coordina
 - CADRUMO-AGENT's written agreement the same day to the request path, the per-role resolution, the refusal set, the consent binding, the background-run shape and attachment admission.
 
 Acceptance records the decision. It is not evidence that any of it is built.
+
+### Amendment 2026-10-25: one path for local and hosted reads
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The 2026-10-27 amendment of that record replaces per-role selection with the one model the person picks, which constraint 5 states.
+
+- **Constraint 1 (retirement).** "`LocalAdapter` stays." is replaced by: "`LocalAdapter` and the `LLMProvider.LOCAL` member are deleted, with their tests, the four local-model settings and their defaults."
+- **Constraint 2 (one agent adapter).** "`LLMProvider` keeps `LOCAL` and gains one off-host member for cadrumo-agent." is replaced by: "`LLMProvider` has the one agent member. Every consumer, local or hosted, reaches a model through it." The consumers list gains statement reading.
+- **Constraint 7 (typed refusals).** "A refusal never falls back to another lane, to the environment or to the on-host model." is replaced by: "A refusal never falls back to another lane or to the environment." `no_selection` covers a role with no picked model.
+- **Constraint 8 (consent).** The phrases "when it runs off-host" and "Without one they stay on-host or refuse" are replaced by the catalogue entry's typed `reads_off_host` flag. A lane with the flag true needs the digest-bound token. A lane with it false needs none. The flag is never inferred from a transport or a path.
+- **Constraint 9 (operation contract).** `ledger.evidence.extract` keeps one agent choice. The on-host versus agent switch is removed, and the lane is the picked model's, as constraint 5 states.
+- **Implementation.** "`role_fitness.py` probes `LocalAdapter` only and is unaffected." is replaced by: "`role_fitness.py` is deleted with `LocalAdapter`."

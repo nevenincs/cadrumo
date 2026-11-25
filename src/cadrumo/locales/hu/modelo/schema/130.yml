@@ -1,6 +1,22 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-estimacion-directa-modalidad:
+          help: A tevékenységed közvetlen becslési módozata, normál vagy egyszerűsített,
+            a profilodból. Az egyszerűsített módozatban a 02-es mező hozzáadja a nehezen
+            igazolható költségek céltartalékát.
+          label: A közvetlen becslés módozata
+        modelo-130-resultados-negativos-anteriores:
+          help: A 130-as nyomtatvány idei korábbi bevallásaidban szereplő, eddig le
+            nem vont negatív eredmények előjel nélküli összege.
+          label: Az év korábbi negyedéveinek még le nem vont negatív eredményei ·
+            15. rovat
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: A 13. rovat csak akkor csökkenti a befizetést, ha ez a jövedelem legfeljebb
+            12 000 euró volt. Add meg az előző évi bevallásod ezen rovatainak összegét.
+          label: Az előző évi jövedelemadó-bevallás gazdasági tevékenységből származó
+            nettó jövedelme · 100-as nyomtatvány, 0224, 1479, 1553 és 1577 rovat
       construct:
         modelo-130-direct-estimation-instalment:
           field:
@@ -45,7 +61,10 @@ modelo:
               help: Az adóévben elért összesített vállalkozási bevétel.
               label: Bevételek
             '02':
-              help: Az adóévben elért összesített vállalkozási kiadás.
+              help: Az adóévben halmozott, adózási szempontból levonható vállalkozási
+                kiadás és értékcsökkenés. Egyszerűsített közvetlen becslés esetén
+                a levonható céltartalékokat és a nehezen igazolható költségeket is
+                tartalmazza.
               label: Kiadások
             '03':
               help: A közvetlen becslésű gazdasági tevékenységek nettó jövedelme,
@@ -113,9 +132,28 @@ modelo:
               help: A Modelo 130 nyomtatvány végső fizetendő összege minden levonás
                 és korábbi önadózás után.
               label: Végső eredmény
+            gastos-deducibles-previos:
+              help: A január 1-jétől a negyedév végéig halmozott, adózási szempontból
+                levonható költségek és értékcsökkenés, a levonható céltartalékok és
+                a nehezen igazolható költségek nélkül. A 02-es mező ehhez adja hozzá
+                ezt a céltartalékot.
+              label: Levonható költségek az egyszerűsített mód céltartaléka előtt
+            provisiones-gastos-dificil-justificacion:
+              help: 'Csak egyszerűsített közvetlen becslés esetén: az IRPF-rendelet
+                30. cikkében meghatározott százalék a halmozott bevételeid és levonható
+                költségeid különbségére, az éves felső határig. Nulla, ha ez a különbség
+                negatív.'
+              label: Levonható céltartalékok és nehezen igazolható költségek
+            rendimiento-neto-reducible-art-32-1:
+              help: A halmozott nettó jövedelem azon része, amely több mint két év
+                alatt keletkezett vagy kirívóan szabálytalan, és egyetlen időszakra
+                számolod el. Ne add meg, ha a tevékenységed rendszeresen ilyen jövedelmet
+                ér el. A 03. mező ennek 30%-os csökkentése után számolódik, évente
+                legfeljebb 300 000 euróig.
+              label: A 32.1. cikk szerinti csökkentésre jogosító nettó jövedelem
             saldo-negativo-fin-periodo:
-              help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben
-                a 15. mező levonásaként használható.
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)
+              help: Az év ezen és korábbi bevallásainak negatív eredményei, amelyek
+                egy későbbi negyedévben a 15. mezőben még levonhatók.
+              label: Későbbi időszakokra átvihető negatív egyenleg
           field:
             label: HAP/258/2015 rendelet, 2019. adóévtől

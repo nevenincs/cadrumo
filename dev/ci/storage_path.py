@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import argparse
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 
 def main() -> None:
     """Print the selected storage directory for workflow environment transport."""
-    from cadrumo.core.storage_environment import storage_directory
+    from dev.tool_storage import storage_directory
 
     parser = argparse.ArgumentParser(description=__doc__, epilog=f"Checkout: {REPO_ROOT}")
     parser.add_argument("channel", choices=("homebrew", "scoop"))

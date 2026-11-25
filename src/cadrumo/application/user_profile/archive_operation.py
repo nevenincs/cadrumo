@@ -21,6 +21,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -264,9 +265,7 @@ def _archive_effect(
 ) -> OperationEffect:
     if handoff or tracker.has_uncertain_write:
         return OperationEffect.UNKNOWN
-    if tracker.confirmed_write:
-        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-    return OperationEffect.NONE
+    return OperationEffect.of_confirmed_writes(wrote=tracker.confirmed_write, incomplete=failures)
 
 
 async def _settle_archive_work(
@@ -424,6 +423,11 @@ def resolve_profile_archive_operation_access(
     )
 
 
+def profile_archive_push_expected_effects(*, dry_run: bool) -> frozenset[OperationEffect]:
+    """Effects a mirror push may settle with: a dry run writes nothing, a real push may end unknown."""
+    return frozenset({OperationEffect.NONE}) if dry_run else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def _profile_archive_push_effects(
     projection: ProfileArchivePushProjection, receipt: OperationTerminalReceipt
 ) -> frozenset[OperationEffect]:
@@ -436,11 +440,7 @@ def _profile_archive_push_effects(
         or report.cleanup_failed_objects
     ):
         raise ValueError("mirror provider outcomes require an admitted handoff receipt")
-    return (
-        frozenset({OperationEffect.NONE})
-        if report.dry_run
-        else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    )
+    return profile_archive_push_expected_effects(dry_run=report.dry_run)
 
 
 def _profile_archive_reconcile_effects(
@@ -522,9 +522,7 @@ def build_profile_archive_operation_definitions(
             result_type=ProfileArchiveExportExecutionResult,
             executor_type=ProfileArchiveExportExecutor,
             build=lambda: ProfileArchiveExportExecutor(factory),
-            capabilities=_capabilities(
-                frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
-            ),
+            capabilities=_capabilities(EFFECTS_WITHOUT_PARTIAL_COMMIT),
             # A refused destination names the suffix the path needs, which a
             # client can only act on if the refusal's detail reaches it.
             public_error_detail=True,
@@ -538,9 +536,7 @@ def build_profile_archive_operation_definitions(
             build=lambda: ProfileArchivePushExecutor(factory),
             # Creation receipts are real local writes. Their intermediate
             # acknowledgement does not establish remote mirror completion.
-            capabilities=_capabilities(
-                frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
-            ),
+            capabilities=_capabilities(EFFECTS_WITHOUT_PARTIAL_COMMIT),
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,

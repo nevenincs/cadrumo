@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date as _date
-from datetime import date as _prov_date
 from decimal import Decimal
 from pathlib import Path
 
@@ -23,17 +21,14 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, compute_registro_regularizacion
-from ....domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionParameterProvenance,
-    BienesInversionRegularizacionParameters,
-)
+from ....domain.bienes_inversion.tests.explicit_parameters import params_for
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from ....domain.calculations.registry.schema_base import ThresholdComparison
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -64,42 +59,6 @@ from ..producer_snapshot import (
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-#: An explicit bundle. These tests exercise the surrounding wiring, not the law;
-#: whether these are the figures the law states is answered against the registry
-#: by the modelo 303 parameter gates.
-_PARAMS = BienesInversionRegularizacionParameters(
-    ventana_anos_mueble=4,
-    ventana_anos_inmueble=9,
-    divisor_mueble=Decimal("5"),
-    divisor_inmueble=Decimal("10"),
-    umbral_puntos=Decimal("10"),
-    umbral_comparison=ThresholdComparison.EXCLUSIVE,
-    provenance=BienesInversionParameterProvenance(
-        modelo_id="303",
-        revision_id="2025",
-        parameter_ids=(
-            "m303-bien-inversion-ventana-anos-mueble",
-            "m303-bien-inversion-ventana-anos-inmueble",
-            "m303-bien-inversion-divisor-mueble",
-            "m303-bien-inversion-divisor-inmueble",
-            "m303-bien-inversion-regularizacion-umbral-puntos",
-        ),
-        resolved_on=_date(2025, 6, 1),
-    ),
-)
-
-
-def _params_for(year: int) -> BienesInversionRegularizacionParameters:
-    """The bundle, resolved for ``year``.
-
-    The projection refuses a bundle resolved for a different filing year, so a
-    fixture cannot pin one year and be applied to another.
-    """
-    return _PARAMS.model_copy(
-        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
-    )
 
 
 _ENDPOINTS = frozenset(
@@ -186,11 +145,12 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Persisted A28 facts need no caller-authored export applicability envelope."""
-    period = Period.from_year_and_code(2025, "4T")
-    provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",), operation=operation)
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "4T")
+    provider = build_runtime_schema_provider(filing_year=year, period=period, modelos=("303",), operation=operation)
     computed_endpoints = {
         str(formula.target_casilla_id)
-        for formula in operation.snapshot("303", filing_year=2025, period=period.code).revision.formulas
+        for formula in operation.snapshot("303", filing_year=year, period=period.code).revision.formulas
     }
     inputs = {
         "iva.repercutido.general.base": Decimal("0"),
@@ -269,6 +229,7 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
             ),
             prorrata_transition=M303ProrrataTransitionArrival(
                 period=period,
+                is_applicable=True,
                 transition=None,
                 register_evidence=(),
             ),
@@ -279,9 +240,9 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
                 bienes_register,
                 regularizacion_year=period.filing_year,
                 prorrata_definitiva_by_identifier={},
-                parameters=_params_for(period.filing_year),
+                parameters=params_for(period.filing_year),
             ),
-            bienes_parameters=_params_for(period.filing_year),
+            bienes_parameters=params_for(period.filing_year),
         ),
     )
     output = tmp_path / "modelo-303-exonerado.txt"
@@ -303,9 +264,9 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     layout = provider.get_subview("303").export_layouts[0]
     parsed = parse_export_payload(layout, written)
     assert "m303-exonerado-390" in {field.record_id for field in parsed.fields}
-    closer = b"</T303020254T0000>"
+    closer = f"</T3030{year}{period.code}0000>".encode()
     assert written.endswith(closer)
-    for malformed in (written[:-1], written[: -len(closer)] + b"</T303020253T0000>"):
+    for malformed in (written[:-1], written[: -len(closer)] + f"</T3030{year}3T0000>".encode()):
         with pytest.raises(RegistryValidationError, match="does not end with its relative closer"):
             parse_export_payload(layout, malformed)
 
@@ -359,7 +320,7 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
     """Return a synthetic AEAT product/software identity for the export guard."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:exonerado-390-refusal-proof",

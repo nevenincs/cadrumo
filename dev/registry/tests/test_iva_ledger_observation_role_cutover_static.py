@@ -26,6 +26,21 @@ _INFORMATIONAL_BINDING_IDS = frozenset(
 )
 _MONETARY_TREATMENTS = ["none", "taxpayer_regime", "supplier_regime"]
 
+# Box [99] of Modelo 390 counts regimen-general supplies only. The taxpayer's
+# own criterio-de-caja supplies are box [653], which the volumen total [108]
+# adds beside [99], so this one settlement selector leaves taxpayer_regime out.
+_REGIMEN_GENERAL_ONLY_BINDING_IDS = frozenset({"modelo-390-volumen-regimen-general-base"})
+#: The issued-modification carriers read only rectification rows, with the
+#: same monetary treatments as a settlement row.
+_RECTIFICATION_MODIFICATION_BINDING_IDS = frozenset(
+    {
+        "modelo-303-iva-modificacion-bases-cuotas-base",
+        "modelo-303-iva-modificacion-bases-cuotas-cuota",
+        "modelo-303-iva-modificacion-recargo-cuota",
+    }
+)
+_REGIMEN_GENERAL_ONLY_TREATMENTS = ["none", "supplier_regime"]
+
 
 def _constructor_calls(name: str) -> Iterator[tuple[str, ast.Call]]:
     for path in scan_directory(_CADRUMO_ROOT, pattern="*.py", recursive=True):
@@ -69,7 +84,7 @@ def test_direct_iva_ledger_constructors_declare_the_required_role() -> None:
     constructor to appear in the scan, rather than by pinning a call tally: a
     tally encodes one moment, and the only way past it is to bump the constant.
     """
-    production_anchors = {"IvaLedgerObservation": "application/aggregation/_iva_transaction.py"}
+    production_anchors = {"IvaLedgerObservation": "application/aggregation/iva_transaction_projection.py"}
 
     for name in ("IvaLedgerObservation",):
         calls = tuple(_constructor_calls(name))
@@ -97,6 +112,8 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
     assert bindings, "no ledger_iva_aggregation binding was scanned"
 
     informational = []
+    regimen_general_only = set()
+    rectification_modification = set()
     for binding in bindings:
         binding_id = binding["id"]
         assert isinstance(binding_id, str)
@@ -107,11 +124,24 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
         if binding_id in _INFORMATIONAL_BINDING_IDS:
             informational.append(binding_id)
             assert selector["observation_roles"] == ["operation_informational"]
+        elif binding_id in _RECTIFICATION_MODIFICATION_BINDING_IDS:
+            rectification_modification.add(binding_id)
+            assert selector["observation_roles"] == ["rectification_modification"]
+            assert selector["cash_accounting_treatments"] == _MONETARY_TREATMENTS
         else:
             assert selector["observation_roles"] == ["settlement"]
-            assert selector["cash_accounting_treatments"] == _MONETARY_TREATMENTS
+            expected_treatments = (
+                _REGIMEN_GENERAL_ONLY_TREATMENTS
+                if binding_id in _REGIMEN_GENERAL_ONLY_BINDING_IDS
+                else _MONETARY_TREATMENTS
+            )
+            if binding_id in _REGIMEN_GENERAL_ONLY_BINDING_IDS:
+                regimen_general_only.add(binding_id)
+            assert selector["cash_accounting_treatments"] == expected_treatments
 
     # The four informational binding ids recur once per revision, so the
     # meaningful property is that the set found is exactly the declared set --
     # every named id is really carried, and no other id claimed the role.
     assert set(informational) == _INFORMATIONAL_BINDING_IDS
+    assert regimen_general_only == _REGIMEN_GENERAL_ONLY_BINDING_IDS
+    assert rectification_modification == _RECTIFICATION_MODIFICATION_BINDING_IDS

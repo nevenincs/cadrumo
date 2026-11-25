@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+from decimal import Decimal
 from enum import StrEnum
 from typing import Protocol, Self
 
@@ -17,13 +18,17 @@ from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
+from ...domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis, Modelo202InstalmentGrounds
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
+    BindingId,
     LegalRefId,
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_operator_layer import AttestedSource
+from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from .observations_repository import ObservationSourceKind
@@ -47,6 +52,11 @@ class _ObservationPayload(Protocol):
     member_nif: str | None
     stamped_revision_id: RevisionId
     source_metadata: dict[str, str]
+
+    @property
+    def observed_filing_kind(self) -> ObservedFilingKind:
+        """Return the observed filing kind, unknown when the envelope carries none."""
+        ...
 
 
 class CrossPeriodDependencyOrigin(StrEnum):
@@ -90,6 +100,22 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     INCOMPLETE_GROUP_MEMBER_COVERAGE = "incomplete_group_member_coverage"
     MISSING_EXPECTED_GROUP_MEMBER_ROSTER = "missing_expected_group_member_roster"
     UNEXPECTED_GROUP_MEMBER_SOURCE = "unexpected_group_member_source"
+    FILING_KIND_DISAGREEMENT = "filing_kind_disagreement"
+    """The source filing's kind evidence contradicts itself or a complementaria-only casilla.
+
+    Either the readings of the filed declaration named different kinds, or an
+    admitted original carries a nonzero value in a casilla only a complementaria
+    fills. The requirement names the coordinate and its source casillas; the
+    envelope keeps every reading and its basis. No side is allowed to win, so the
+    kind stays unknown until the evidence is reconciled.
+    """
+    HELD_SOURCE_SET_ASIDE = "held_source_set_aside"
+    """The current return marks a box under which the held source does not give the figure.
+
+    The registry declares the box on the carry, as the grupo mercantil mark that
+    measures the preceding turnover over the whole group. The held return's own
+    figure is set aside, so only the filer's statement of the figure settles it.
+    """
     REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
     """Stamped revision id does not re-confirm against the law-determined revision for the source.
 
@@ -125,6 +151,8 @@ OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER: Mapping[
     CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
+    CrossPeriodCleanStateBlocker.FILING_KIND_DISAGREEMENT: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.HELD_SOURCE_SET_ASIDE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
 }
 """Total operator-action projection retaining each native clean-state blocker."""
@@ -215,6 +243,26 @@ class NoPriorObligationProvenance(BaseModel):
         return self.provenance_kind is NoPriorObligationProvenanceKind.OPERATOR_DECLARED
 
 
+class Modelo202InstalmentNotOwedProvenance(BaseModel):
+    """Why an unfiled Modelo 202 instalment counts as nothing paid: its own verdict.
+
+    Below the LIS art. 40.3 threshold the Modelo 202 is presented only in an
+    instalment where an ingreso results (Orden HFP/227/2017 art. 1.3), so an
+    instalment whose verdict says nothing was owed was rightly never filed and
+    contributes 0.00. The grounds carry the catalogue's served reason and legal
+    references for that verdict, and the base fields name the art. 40.2 base
+    and the return it was read from where the base decided it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    grounds: Modelo202InstalmentGrounds
+    base_value: Decimal | None = None
+    base_basis: Modelo202BaseBasis | None = None
+    base_source_modelo: str | None = None
+    base_source_period: Period | None = None
+
+
 def _period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
     """Return whether ``period`` falls STRICTLY before the activity-start date.
 
@@ -223,7 +271,7 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
     are suppressed. A period is strictly-prior when its entire inclusive span ends
     before the activity-start date - mirroring the deadline engine's pre-start
     gate (``closes_on < activity_start_date``,
-    :func:`domain.deadlines.engine._window_outside_activity_period`) against
+    :func:`domain.deadlines.engine.window_outside_activity_period`) against
     the same operator-declared
     field. The comparison is routed through :class:`Period` boundary authority
     (:attr:`Period.end_date`) per ``aeat-registry-authority-flow`` - no
@@ -253,7 +301,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
@@ -264,6 +312,12 @@ class CrossPeriodDependencyRequirement(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     requires_member_fan_in: bool = False
+    source_outside_envelope: bool = Field(default=False, exclude=True)
+    """Whether the pinned support envelope refuses ``filing_year``, so no return for it can be held.
+
+    Derived from the authority generation the requirement was built under, never
+    declared by the registry, so it is not part of the requirement's serialized form.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -297,7 +351,7 @@ class CrossPeriodExpectedMemberSet(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
@@ -319,7 +373,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_revision_id: RevisionId = Field(min_length=1)
     target_filing_year: FilingYear
     target_period: Period
@@ -358,6 +412,50 @@ class CrossPeriodDependencyInventory(BaseModel):
     def source_modelos(self) -> tuple[str, ...]:
         """Return upstream modelos required by the inventory."""
         return tuple(sorted({source_modelo for item in self.items for source_modelo in item.source_modelos}))
+
+
+class OperatorAttestedValue(BaseModel):
+    """One figure the operator stated for an earlier filing the product cannot hold."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    binding_id: BindingId
+    value: str = Field(min_length=1)
+    sources: tuple[AttestedSource, ...] = Field(min_length=1)
+    """Every earlier filing the statement covers: one for a previous-filing carry, each period of a relation."""
+
+    def covers(self, *, source_modelo: str, filing_year: int, period_token: str) -> bool:
+        """Report whether this statement names the given earlier filing."""
+        return any(
+            source.source_modelo == source_modelo
+            and source.source_filing_year == filing_year
+            and source.source_period == period_token
+            for source in self.sources
+        )
+
+
+def operator_value_attestations(target: CalculationRevision | None) -> dict[str, OperatorAttestedValue]:
+    """Return the figures the operator stated for earlier filings the product cannot hold.
+
+    Only the target's operator layer is read: a value attestation is the
+    operator's own statement, so a value a source tier merged into the
+    revision's replay map can never stand for one. A revision with no layer, or
+    a layer that attests nothing, yields none.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
+    layer = None if target is None else target.operator_layer
+    if layer is None:
+        return {}
+    return {
+        binding_id: OperatorAttestedValue(
+            binding_id=binding_id,
+            value=layer.binding_overrides[binding_id],
+            sources=attestation.sources,
+        )
+        for binding_id, attestation in layer.value_attestations.items()
+    }
 
 
 class CrossPeriodDependencyEvidence(BaseModel):
@@ -421,6 +519,35 @@ class CrossPeriodDependencyEvidence(BaseModel):
     positive value would be a taxpayer benefit. A nonzero carry still requires the
     prior filing evidence.
     """
+    operator_attested_absent_upstream: tuple[OperatorAttestedValue, ...] = ()
+    """Non-blocking evidence: the operator stated the figure of a source the application holds nothing of.
+
+    One entry per origin binding of the requirement. No work unit, filing record or
+    observation exists for the source, so no filing can prove the figure; it rests
+    on the operator's word and is reported as such rather than as proof.
+    """
+    operator_attestation_conflict: tuple[OperatorAttestedValue, ...] = ()
+    """Blocking evidence: the operator's recorded figure differs from the source that has since appeared.
+
+    The dependency follows the source; the attestation is never preferred to it.
+    """
+    attestation_admitted: bool = Field(default=False, exclude=True)
+    """Whether the operator may state the figure of this unclean dependency's source.
+
+    Set only on a blocked dependency whose every origin binding is a scalar carry
+    the application holds no source of, so the statement is admitted for it.
+    Derived from the repositories at evaluation, never stored.
+    """
+
+    modelo_202_instalment_not_owed: Modelo202InstalmentNotOwedProvenance | None = None
+    """Clean evidence: an unfiled Modelo 202 instalment whose own verdict says none was owed.
+
+    No filing of the instalment is held, and its verdict (Orden HFP/227/2017
+    art. 1.3 below the LIS art. 40.3 threshold) says no ingreso resulted, so it
+    contributes a proven 0.00 rather than an absent source. An instalment whose
+    verdict is unknown, incomplete or owed never carries this.
+    """
+
     m111_no_retenciones_no_obligation_advisory: bool = False
     """Non-blocking advisory: an M111 source period was explicitly attested as no-obligation.
 
@@ -456,9 +583,14 @@ class CrossPeriodDependencyEvidence(BaseModel):
         return value
 
     @property
+    def operator_attested_absent_upstream_advisory(self) -> bool:
+        """True when this dependency is clean on the operator's stated figure for a source the application lacks."""
+        return bool(self.operator_attested_absent_upstream)
+
+    @property
     def clean(self) -> bool:
-        """Report whether this dependency carries no blockers."""
-        return not self.blockers
+        """Report whether this dependency carries no blockers and no conflicting attestation."""
+        return not self.blockers and not self.operator_attestation_conflict
 
     @property
     def suppressed_pre_activity(self) -> bool:
@@ -515,7 +647,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    target_modelo: str = Field(min_length=1, max_length=8)
+    target_modelo: str = Field(min_length=1, max_length=16)
     target_filing_year: FilingYear
     target_period: Period
     dependencies: tuple[CrossPeriodDependencyEvidence, ...] = ()

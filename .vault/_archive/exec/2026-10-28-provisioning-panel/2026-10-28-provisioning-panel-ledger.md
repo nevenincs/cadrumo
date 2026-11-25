@@ -1,0 +1,305 @@
+---
+tags:
+  - '#exec'
+  - '#provisioning-panel'
+date: '2026-10-28'
+modified: '2026-10-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:0808fc7f8d9a410420211c08728424dae4c2b54cdfe3165e006d6d3ea60d0424'
+related:
+  - "[[2026-10-28-provisioning-panel-plan]]"
+---
+
+# `provisioning-panel` ledger
+
+## Changes
+
+- `S01` `M` `native/application/src/provisioning/engine.rs`
+- `S01` `M` `native/application/src/provisioning/protocol.rs`
+- `S01` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S01` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S01` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S01` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S01` `M` `native/desktop/frontend/src/shell/setup.ts`
+- `S01` `M` `native/desktop/frontend/src/App.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/setup/SetupDialog.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/setup/SetupDialog.stories.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/setup/SetupAdvisory.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/settings/LocalModels.stories.tsx`
+- `S01` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S01` `verify:` `cargo test --lib provisioning` -> `pass`
+- `S01` `verify:` `tauri test-unit shell::setup` -> `pass`
+- `S01` `verify:` `eslint and prettier on touched frontend files` -> `pass`
+- `S01` `by:` `high-implementer`
+- `S02` `M` `native/application/src/person_operations.rs`
+- `S02` `M` `native/application/src/diagnostics/service.rs`
+- `S02` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/sede_view.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/sede_view/tests.rs`
+- `S02` `M` `native/desktop/src-tauri/src/app.rs`
+- `S02` `M` `native/desktop/frontend/src/App.tsx`
+- `S02` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S02` `M` `native/desktop/frontend/src/components/browser/browserModel.ts`
+- `S02` `M` `native/desktop/frontend/src/components/browser/browserWords.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S02` `M` `native/desktop/frontend/tests/sede-view-model.spec.ts`
+- `S02` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `M` `src/cadrumo/locales/es/common.yml`
+- `S02` `M` `src/cadrumo/locales/ca/common.yml`
+- `S02` `M` `src/cadrumo/locales/hu/common.yml`
+- `S02` `M` `dev/locales/desktop_chrome.py`
+- `S02` `A` `dev/packaging/tests/test_native_error_detail_schema.py`
+- `S02` `verify:` `cargo test -p cadrumo-application --features platform,test-support --lib person_operations:: diagnostics::` -> `pass`
+- `S02` `verify:` `cargo clippy cadrumo-application --all-targets -D warnings` -> `pass`
+- `S02` `verify:` `cargo test cadrumo-desktop -- sede_view logs::` -> `pass`
+- `S02` `verify:` `cargo clippy cadrumo-desktop --all-targets -D warnings` -> `pass`
+- `S02` `verify:` `pytest dev/packaging/tests/test_native_error_detail_schema.py` -> `pass`
+- `S02` `verify:` `tsc --noEmit` -> `pass`
+- `S02` `verify:` `playwright tests/sede-view-model.spec.ts tests/scenarios/sede-browser.spec.ts` -> `pass`
+- `S02` `by:` `high-implementer`
+- `S01` `M` `native/application/src/provisioning/activity.rs`
+- `S01` `M` `native/application/src/provisioning/plan.rs`
+- `S01` `verify:` `cargo test --lib provisioning` -> `pass`
+- `S01` `verify:` `cargo clippy --lib --tests` -> `pass`
+- `S01` `verify:` `tauri test-unit shell::setup` -> `pass`
+- `S03` `M` `native/desktop/frontend/src/App.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/agent/SetupApprovalPrompts.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/settings/LocalModels.stories.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/settings/LocalModels.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/setup/SetupOffer.stories.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/setup/SetupOffer.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S03` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/provisioningRecovery.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/setup.ts`
+- `S03` `M` `native/desktop/frontend/tests/provisioning-recovery.spec.ts`
+- `S03` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S03` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S03` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S03` `M` `dev/locales/desktop_chrome.py`
+- `S03` `M` `dev/locales/tests/test_audit.py`
+- `S03` `M` `src/cadrumo/locales/en/common.yml`
+- `S03` `M` `src/cadrumo/locales/es/common.yml`
+- `S03` `M` `src/cadrumo/locales/ca/common.yml`
+- `S03` `M` `src/cadrumo/locales/hu/common.yml`
+- `S03` `A` `native/desktop/frontend/src/components/setup/LocalAi.stories.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/setup/LocalAi.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/setup/ProvisioningPanel.stories.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/setup/ProvisioningRow.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/setup/SetupPlan.tsx`
+- `S03` `A` `native/desktop/frontend/src/dev/ProvisioningStage.tsx`
+- `S03` `A` `native/desktop/frontend/src/shell/provisioning.ts`
+- `S03` `A` `native/desktop/frontend/src/shell/localAiLanes.ts`
+- `S03` `D` `native/desktop/frontend/src/components/setup/SetupAdvisory.tsx`
+- `S03` `D` `native/desktop/frontend/src/components/setup/SetupDialog.stories.tsx`
+- `S03` `D` `native/desktop/frontend/src/components/setup/SetupDialog.tsx`
+- `S03` `D` `native/desktop/frontend/src/components/setup/SetupPrompt.tsx`
+- `S03` `D` `native/desktop/frontend/src/components/setup/SetupRowItem.tsx`
+- `S03` `verify:` `npx eslint .` -> `pass`
+- `S03` `verify:` `npx prettier --check . ../scripts ../tests` -> `pass`
+- `S03` `verify:` `node --test dev/eslint/tests/*.test.mjs tests/live/*.unit.ts` -> `pass`
+- `S03` `verify:` `npx playwright test -c playwright.scenarios.config.ts setup ledger-provisioning local-models agent-settings-navigation accessibility reading-model setup-approvals` -> `pass`
+- `S03` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts` -> `fail`
+- `S03` `verify:` `npx playwright test tests/provisioning-recovery.spec.ts tests/setup-words.spec.ts` -> `pass`
+- `S03` `verify:` `npx storybook build` -> `pass`
+- `S03` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py test_parity.py test_locale_translation_honesty.py` -> `pass`
+- `S03` `verify:` `pytest dev/locales/tests/test_audit.py` -> `fail`
+- `S03` `by:` `high-implementer`
+- `S04` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/Settings.stories.tsx`
+- `S04` `M` `native/desktop/frontend/src/App.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S04` `D` `native/desktop/frontend/tests/scenarios/agent-settings-navigation.spec.ts`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `M` `dev/locales/desktop_chrome.py`
+- `S04` `verify:` `npx eslint+prettier --check on touched files` -> `pass`
+- `S04` `verify:` `npx tsc --noEmit` -> `pass`
+- `S04` `verify:` `storybook build to scratchpad` -> `pass`
+- `S04` `verify:` `playwright scenarios (setup sede-browser accessibility local-models keyboard providers) 266 tests` -> `pass`
+- `S04` `by:` `sonnet-implementer`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ProvisioningRow.tsx`
+- `S05` `M` `native/desktop/tests/packaged/setup.mjs`
+- `S05` `verify:` `dev-server Playwright drive of startup panel, local AI dropdown, concurrent installs, rail spinner, Settings section, Sede offer` -> `pass`
+- `S05` `verify:` `npx tsc --noEmit; eslint; prettier --check` -> `pass`
+- `S05` `verify:` `npx playwright test -c playwright.scenarios.config.ts setup sede-browser local-models (69/71; 2 timing failures pass in isolation 4/4)` -> `pass`
+- `S05` `verify:` `node --test packaged/setup.test.mjs` -> `pass`
+- `S05` `verify:` `node desktop_cargo.mjs check --all-targets` -> `fail`
+- `S05` `by:` `implementation-engineer`
+- `S05` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S05` `verify:` `eslint + prettier --check on both files` -> `pass`
+- `S05` `verify:` `playwright scenarios sede-browser.spec.ts --repeat-each=5: 120 of 130 passed, 10 failed only in the context-teardown hang, no assertion failure` -> `fail`
+- `S05` `M` `native/desktop/frontend/src/dev/fixtures/agentCatalog.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/ProvisioningStage.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S05` `verify:` `tsc --noEmit` -> `pass`
+- `S05` `verify:` `eslint touched files` -> `pass`
+- `S05` `verify:` `prettier --check touched files` -> `pass`
+- `S05` `verify:` `playwright local-models+setup repeat-each=3 (new test 6/6; other failures are Close-context teardown timeouts or concurrent build removing chrome-strings.json)` -> `pass`
+- `S05` `verify:` `just build-native Release bundle at 58ce4ff11d tree (retries after peer edits and inputs-changed refusals)` -> `pass`
+- `S05` `verify:` `just build-native Debug bundle at 58ce4ff11d after just setup-desktop-frontend repaired node_modules lock drift` -> `pass`
+- `S05` `verify:` `just build-native Debug desktop-packaged-host and dev.desktop_agent_live.stage_host` -> `pass`
+- `S05` `verify:` `built Debug host on throwaway root: provisioning panel, local AI dropdown, concurrent setup, rail spinner, Settings section, Sede offer, feature_refused log (no profile: provisioning not offered, needs sign-in)` -> `fail`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S05` `M` `native/desktop/frontend/src/shell/setup.ts`
+- `S05` `M` `native/desktop/frontend/src/App.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/LocalAi.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx`
+- `S05` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `M` `dev/locales/desktop_interface_keys.py`
+- `S05` `verify:` `desktop-host-unit-test shell::setup` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `playwright setup local-models sede-browser ledger-provisioning` -> `pass`
+- `S05` `verify:` `tsc eslint prettier` -> `pass`
+- `S05` `M` `native/desktop/frontend/src/shell/provisioning.ts`
+- `S05` `verify:` `playwright setup+local-models+accessibility scenarios (142 tests)` -> `pass`
+- `S05` `verify:` `tsc eslint prettier` -> `pass`
+- `S05` `verify:` `tauri.mjs test-unit shell::setup` -> `pass`
+- `S05` `verify:` `tauri.mjs clippy-backend` -> `pass`
+- `S05` `verify:` `playwright scenarios setup.spec.ts local-models.spec.ts` -> `pass`
+- `S05` `verify:` `just build-native Release bundle (HEAD 9a33857fc7 then d0ad22cb4a; user-docs xref docs/how-to/import-bank-statements.md:87 to classify-with-llm.md#set-up-a-provider)` -> `fail`
+- `S05` `verify:` `just build-native Debug bundle (HEAD 9477d64ae6; same user-docs failure)` -> `fail`
+- `S05` `verify:` `just build-native Debug app-native (HEAD 9477d64ae6)` -> `pass`
+- `S05` `verify:` `just build-native Debug desktop-packaged-host (HEAD 9477d64ae6)` -> `pass`
+- `S05` `verify:` `python -m dev.desktop_agent_live.stage_host at 15:15, later refused because app-payload records nothing staged while docs fail` -> `pass`
+- `S05` `verify:` `built app signed out: only the create-profile dialog shows first` -> `pass`
+- `S05` `verify:` `built app: panel opens after Ahora no (store decided on pre-read complete=null snapshot; fixed in b0652a5d2a, not yet rechecked in a restaged host)` -> `fail`
+- `S05` `verify:` `npx playwright test tests/scenarios/setup.spec.ts (41 passed; new launch-after-unread test fails without the fix and passes with it)` -> `pass`
+- `S05` `verify:` `built app: one row per element with its own action, status said once, close button` -> `pass`
+- `S05` `verify:` `built app: no unknown size reads 0 byte (333 MB, 1,6 GB)` -> `pass`
+- `S05` `verify:` `built app: Local AI dropdown holds the program row; signed-out model list says sign-in is needed` -> `pass`
+- `S05` `verify:` `built app: browser setup review, approve, progress and ready on the real engine, twice` -> `pass`
+- `S05` `verify:` `built app: local AI program setup runs beside the browser (plan falls back silently within about 1 s, or stays in planning over 3.5 min with every button disabled)` -> `fail`
+- `S05` `verify:` `built app: rail Settings spinner while a run is live and not after` -> `pass`
+- `S05` `verify:` `built app: Settings has exactly one provisioning section with status and open button, no Local AI or browser section` -> `pass`
+- `S05` `verify:` `Sede page signed out needs a profile; feature_refused warning covered by native/desktop/src-tauri/src/shell/sede_view/tests.rs:1122-1176` -> `pass`
+- `S05` `verify:` `WebView console clean (one CSP unsafe-eval pageerror, source not identified)` -> `fail`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ItemRemoval.tsx`
+- `S05` `verify:` `playwright setup.spec.ts local-models.spec.ts (57 passed)` -> `pass`
+- `S05` `A` `docs/_static/cadrumo-plural-expression.js`
+- `S05` `M` `docs/conf.py`
+- `S05` `A` `dev/docs/tests/test_plural_expression.py`
+- `S05` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S05` `verify:` `pytest dev/docs/tests/test_docs_desktop_flavor.py dev/docs/tests/test_plural_expression.py` -> `pass`
+- `S05` `verify:` `ruff check and format, ty check on touched python` -> `pass`
+- `S05` `M` `native/application/src/provisioning/http.rs`
+- `S05` `M` `native/application/src/provisioning/network.rs`
+- `S05` `verify:` `cargo test application provisioning:: (139)` -> `pass`
+- `S05` `verify:` `desktop shell::setup unit (93)` -> `pass`
+- `S05` `verify:` `clippy -D warnings application+desktop` -> `pass`
+- `S05` `verify:` `playwright setup.spec.ts (44)` -> `pass`
+- `S05` `verify:` `built Debug app local AI plan review + unreachable alert` -> `pass`
+- `S05` `M` `native/application/src/provisioning/connection.rs`
+- `S05` `M` `native/application/src/provisioning/engine.rs`
+- `S05` `verify:` `cargo test --lib --features platform,test-support provisioning` -> `pass`
+- `S05` `verify:` `cargo clippy --all-targets --features platform,test-support -D warnings` -> `pass`
+- `S05` `M` `native/application/src/error/application.rs`
+- `S05` `M` `dev/packaging/native/package_health_facts.py`
+- `S05` `verify:` `desktop-host-unit-test shell::setup (95 passed)` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `test_cmake_installer_flow (8 passed)` -> `pass`
+- `S05` `M` `native/application/src/provisioning/plan.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S05` `verify:` `cargo test --lib provisioning (145)` -> `pass`
+- `S05` `verify:` `desktop-host-unit-test shell::setup (95)` -> `pass`
+- `S05` `verify:` `clippy -D warnings` -> `pass`
+- `S05` `M` `native/application/src/provisioning/test_servers.rs`
+- `S05` `verify:` `cargo test provisioning (150 passed)` -> `pass`
+- `S05` `verify:` `cargo clippy all-targets -D warnings` -> `pass`
+- `S05` `verify:` `rustfmt check` -> `pass`
+- `S05` `A` `dev/packaging/native/tests/test_native_error_code_parity.py`
+- `S05` `verify:` `pytest dev/packaging/native/tests/test_native_error_code_parity.py test_cmake_installer_flow.py` -> `pass`
+- `S05` `verify:` `ruff check+format, ty check, tsc --noEmit` -> `pass`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S05` `M` `native/desktop/frontend/src/components/setup/SetupPlan.tsx`
+- `S05` `verify:` `desktop-host-unit-test-shell-setup-95` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `playwright-setup-spec-45` -> `pass`
+- `S05` `verify:` `playwright-local-models-spec-14` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target bundle` -> `fail`
+- `S05` `M` `native/desktop/tests/packaged.test.mjs`
+- `S05` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S05` `M` `native/desktop/tests/packaged/probes.mjs`
+- `S05` `M` `native/desktop/tests/packaged/setup.test.mjs`
+- `S05` `M` `native/desktop/tests/packaged/provisioning.mjs`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs` -> `pass`
+- `S05` `verify:` `packaged harness JavaScript syntax checks` -> `pass`
+- `S05` `verify:` `Prettier explicit changed files` -> `pass`
+- `S05` `M` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S05` `M` `native/desktop/tests/packaged/session.mjs`
+- `S05` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S05` `M` `native/desktop/tests/packaged/terminal-observer.mjs`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target bundle` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target app-native` -> `pass`
+- `S05` `verify:` `just build-native Release desktop-frontend-check` -> `pass`
+- `S05` `verify:` `just build-native Release desktop-frontend-test (scenarios/setup.spec.ts; 45 tests)` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-harness-test` -> `pass`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs (35 tests; broken-input cases 1-10)` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-test` -> `fail`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-setup-test` -> `fail`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target bundle (2026-10-30 fresh Release)` -> `pass`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs (37 tests; bounded JSON transport)` -> `pass`
+- `S05` `verify:` `desktop-packaged-test 2026-10-30T08-59-36-691Z (42 PASS, 4 FAIL, 1 SKIP)` -> `fail`
+- `S05` `verify:` `desktop-packaged-setup-test 2026-10-30T09-05-07-579Z (22 PASS, 7 FAIL, 7 SKIP)` -> `fail`
+- `S05` `M` `native/desktop/tests/packaged/setup_probe.py`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs (40 tests; actual-crash driver and snapshot recovery)` -> `pass`
+- `S05` `verify:` `just check-style (crash process-handle probe)` -> `pass`
+- `S05` `verify:` `just check-format (crash process-handle probe)` -> `pass`
+- `S05` `verify:` `packaged crash wiring JavaScript syntax and diff checks` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target app-payload (2026-10-30 retry after peer freeze)` -> `fail`
+
+## Notes
+
+- `S01` commit ca94d89d71; desktop unit run patched a peer's uncompiled `sede_view` Default in a private snapshot only; playwright scenarios not run; locale keys `desktop.setup.browser_other_running` and `show_running` left for S03
+- `S01` commit 6e38a734d7: concurrent-run space reservation. Desktop run passed 79 before the final wait-condition tweak in the new test; the rerun after it is blocked by peers' in-progress desktop migration (EmergencyWait, `sede_view,` severity, `sign_in)` and a stale generated native contract. A falsified build without the reservation hung at review, which the tweak turns into a failure.
+- `S03` tsc --noEmit fails only in src/dev/scenarios.ts ManagerStatus.failure, another session's uncommitted edit
+- `S03` sede-browser.spec.ts offer test expects the retired per-item dialog; S02 owns that spec
+- `S03` `test_audit` prose-key contract fails on `desktop.browser.notice/publication.identity_mismatch,` added outside S03
+- `S03` `desktop_chrome.py` key edits were committed in f041516ab2 by another session
+- `S04` dev/locales `test_desktop_chrome:` 2 failures from another session's `service_timeout/payment_cutoff` keys; none from this Step. `desktop_chrome.py` committed as HEAD minus the `browser_open` line; working-tree copy holds another session's refactor, its `desktop_interface_keys.py` line removed there too.
+- `S05` Rebuild blocked by other sessions' uncommitted work: src/agent/person/native.rs:1549 E0599 unwrap on `Vec<Sender<Pushed>>;` `src/shell/sign_in/process.rs:493-494` E0373 closure borrows wake. Rebuilt-app check not run; S05 left open.
+- `S05` fixture holdPublication/publish committed in 0b064efd2f; spec poll fixes in a007e37053 (auto-commits)
+- `S05` Built-app checks need a signed-in profile; creating one needs the operator's password. Builds pass; S05 left open.
+- `S05` S05 left open: needs (1) the user-docs anchor fixed so the bundles build and the Debug host can be restaged with b0652a5d2a, then the launch opening rechecked in the built app; (2) the local AI program plan diagnosed (silent fallback or planning hang) and the concurrent run rechecked; (3) triage of the removal confirmation reappearing after a browser is set up again, and of the CSP unsafe-eval pageerror.
+- `S05` removal question cleared on settle; commit db1805cdb7
+- `S05` csp-eval: source was Sphinx doctools.js addTranslations new Function (docs frame, es); full `bundle/stage_host` not rebuilt, in-app proof via live call in WebView2
+- `S05` local AI plan: github.com 4214-byte CSP header exceeded the 4 KiB line bound, preflight said `host_unreachable` and the row stayed silent; commit 2f994b5100. Endless planning not reproduced; cancel now settles a planning setup. `stage_host` still blocked, built app checked via a lane-package mirror.
+- `S05` DNS bound already existed in connection.rs resolved() since 67cd87f077; added cancel reach and tests; commits f30854fdc7, 8f16dabb9c
+- `S05` new SetupFailed code for component setup failures; hand-kept mirrors updated (no generator exists); `child_failed` absent from both mirrors (pre-existing)
+- `S05` 2026-10-29 18:04-21:13, HEAD 65d05917db..e21c31c181: Release bundle 13 attempts, all exit 1, refused by `docs_build` 'Documentation inputs changed during the build' (concurrent peer edits); desktop-frontend-chrome also exited 1 in 5 runs, cause not isolated. Debug bundle and Debug desktop-packaged-host not reached; built-app checks 1-10 not run; S05 left open. Coverage gap: registered lanes desktop-packaged-test/desktop-packaged-setup-test (signed in, browser only) do not assert checks 1,3,4,5,7,9,10; 2 and 6 partial; 8 via csp-zero.
+- `S05` Packaged provisioning assertions implemented with pure negative cases (25 unit tests passed). Release rebuild and both packaged lanes pending: peer CMake desktop-frontend-dev PID 38512 still owns build/windows-x64. Initial complete:null is not deterministically exercised by reloading the cached native host; real crash-interruption/resume remains unverified (cancellation/retry is distinct). S05 remains open. Pre-existing shared .tmp entries preserved; this task retained no scratch.
+- `S05` S05 remains open. Quiet Release bundle passed on 2026-10-29; new-day app-native rebuild passed on 2026-10-30. Last real setup run 2026-10-29T23-47-40-140Z: 31 PASS, 3 FAIL (Sede missing offer, local AI removal/reinstall and model removal); real null-first startup, per-part sizes, concurrent transfers/cancellation, rail spinner, Settings, native proxy-induced failure logged once, browser cancel/retry/full check and CSP passed. Model installation completed but the catalog installed marker had not refreshed; a bounded marker wait was added afterward and is not yet verified in a packaged run. Existing crash-interruption/resume remains unverified; cancellation/retry is recorded distinctly. Latest normal run 2026-10-30T07-27-13-102Z refused staging because peer changes left interpreter, desktop and test-host identities unsettled; no app launched. Earlier real normal run 2026-10-30T00-18-51-762Z exposed a 4.622-second docs reply beyond the product 4-second cutoff and harness capture overflow. Bounded capture aggregation, activity wakeups, ACK-aware parser coalescing and their regressions now pass 35 unit and 45 existing harness tests, but final real normal/setup runs are pending. Another session is actively editing/building the native contract and diagnostics, so the build tree was released. Sede native start bypasses the setup-engine browser row; repairing product behavior is outside this task allowlist. Shared .tmp contains peer-owned work; this task retained no temporary fixture directory.
+- `S05` Fresh full Release bundle passed including installer/bootstrap and runtime crash recovery. Normal actual titlebar close passed584ms with paused Python reader, final successful `host_stopped` persisted exactly once and no child survived. Normal palette discarded valid cold search results after4s, and terminal capture overflow cascaded to flood/Ctrl+C failures. Bounded JSON transport now reviewed with37units passing; live replay pending. Setup real null-first/startup, Settings, shared LocalAI and specific setup failure passed; new native browser precheck offers setup but omits local `feature_refused` warning. LocalAI start refused `setup_catalogue_refused` with child busy, blocking concurrency and downstream model/removal checks. All23 setup processes ended, keychain140before/after, root removed and guarded storage unchanged. Product owners notified; S05 open pending repairs and fresh live reruns. True crash/Resume approval persistence remains an explicit uncovered requirement; cancellation/retry is distinct. This task retained no temporary files; shared peer scratch preserved.
+- `S05` Actual GUI-crash/relaunch acceptance now implemented in the existing setup lane, after independent two-item cancellation checks. Transfer gated before approval; only owned GUI killed; existing read-only setup probe waits on its descendants Windows exit handles, preserving the independent profile fixture; same root/environment/proxy reused, new CDP connection and conditional real password submit, then failed/interrupted/Resume signal and exactly one fresh new-window plan approval. Same-window unchanged-plan no-second-review predicate retained per ADR D4. CSP checks merge precrash and relaunched frame/console evidence. Sol reviewed ownership, cleanup, deadlines and driver integration; corrected fixture-control inclusion and replaced polling with pushed snapshots.40units pass. Review PENDING required fresh live replay; no additional must-fix finding. Product peer fixes passed782native tests/clippy and frontend/browser checks; docs refresh and protocol test fixes still writing, so Release rebuild waits. No task-owned scratch retained.
+- `S05` Release app-payload retry exited1 after frontend and native desktop compiled successfully. Product source snapshot refused enrolled content drift (timings product-5a443ce8dd3445d2b3d96dd4617a72f3.json); docs guard refused an input changed and restored `(docs_build-1c09f06431074833bb1ae4cbf1f8ff75.json).` No stale package was tested. Another unconnected writer changed `actividad_asset` sources and M100 registry after the connected sessions freeze. Registry authority republish now fails overlapping `filing_period` values in new M100 2025 asset parameters. Connected broad Python gate remains active and may transiently mutate enrolled inputs; owner will not start further broad runs but follows separate user instruction to finish current59914tests. Requested user coordination for consistent registry checkpoint and quiet build window. S05 remains open; only pending own source hunk waits for sign-in dialog hidden after either retained or renewed sign-in on GUI relaunch. No task-owned scratch retained.

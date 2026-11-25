@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import Literal, cast
 from uuid import UUID
@@ -24,19 +25,26 @@ from ...application.operations.public_scalar import PublicDecimal
 from ...application.operations.refusal_evidence import OperationRefusalEvidence
 from ...application.prorrata_register.executor import ProrrataOperationExecutor
 from ...application.prorrata_register.operation_requests import (
+    PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
+    PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
     PRORRATA_SEED_OPERATION_DEFINITION_ID,
     PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
+    ProrrataDeclareGrossRequest,
+    ProrrataRemoveGrossRequest,
     ProrrataSettleSectorRequest,
 )
 from ...application.prorrata_register.projection_contracts import ProrrataMutationProjection
+from ...application.prorrata_register.refusal_words import served_refusal_words
 from ...application.prorrata_register.result_contracts import ProrrataOperationExecutionResult
 from ...application.prorrata_register.result_projections import project_prorrata_mutation_result
 from ...application.prorrata_register.service import ProrrataRegisterService
+from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.prorrata_register_catalogue import prorrata_sector_letters
-from ...domain.prorrata_register.register import SectorDefinition
+from ...domain.prorrata_register.register import ProrrataRegister, SectorDefinition
 from .prorrata_operation_test_support import (
     ProrrataWholeSeedRefusalCase,
     prepare_prorrata_operation_conformance_case,
@@ -48,12 +56,6 @@ _PROFILE_ID = UUID("517e31f8-91b9-47b6-9ac1-3e12cc773c4f")
 _runtime_profile = bucket_scoped_runtime_profile_fixture(str(_PROFILE_ID))
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 @dataclass
@@ -172,6 +174,7 @@ def _seed_refusal_case(
     authority_operation: PinnedAuthorityOperation,
     *,
     refusal_reason: Literal["regulated_override_standing", "seed_existing_blocked"],
+    contradicted_entry_settled: bool = True,
 ) -> ProrrataWholeSeedRefusalCase:
     observations = CalculationObservationRepository(bucket_id=str(_PROFILE_ID))
     return prepare_prorrata_whole_seed_refusal_case(
@@ -180,6 +183,7 @@ def _seed_refusal_case(
         operation=authority_operation,
         observation_repository=observations,
         refusal_reason=refusal_reason,
+        contradicted_entry_settled=contradicted_entry_settled,
     )
 
 
@@ -189,10 +193,15 @@ def _assert_refusal_projection(
 ) -> ProrrataMutationProjection:
     if execution.refusal is None:
         raise AssertionError("expected refusal result lacks typed refusal detail")
-    return project_prorrata_mutation_result(
+    projection = project_prorrata_mutation_result(
         execution,
         _receipt(identity, refused=True, refusal_code=execution.refusal.code),
     )
+    served = projection.refusal
+    assert served is not None
+    expected, language = served_refusal_words(served.reason, error_code=served.code)
+    assert (served.refusal_words, served.refusal_words_language) == (expected, language)
+    return projection
 
 
 def test_standing_override_refusal_preserves_exact_provenance_and_writes_nothing(
@@ -229,7 +238,7 @@ def test_standing_override_refusal_preserves_exact_provenance_and_writes_nothing
     assert after == before == case.expected_register
 
 
-def test_carried_observation_contradiction_refuses_without_overwriting_register(
+def test_a_settled_year_contradicted_by_its_source_refuses_without_overwriting_register(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -261,6 +270,43 @@ def test_carried_observation_contradiction_refuses_without_overwriting_register(
         operation=authority_operation,
     )
     assert after == before == case.expected_register
+
+
+def test_reseeding_an_unsettled_contradicted_carry_replaces_it_with_the_held_return(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _seed_refusal_case(
+        authority_operation,
+        refusal_reason="seed_existing_blocked",
+        contradicted_entry_settled=False,
+    )
+    contradicted = case.expected_register.entry_for(case.request.ejercicio)
+    assert contradicted is not None
+
+    returned, execution, events, identity = _run_executor(
+        case.request,
+        definition_id=PRORRATA_SEED_OPERATION_DEFINITION_ID,
+        authority_operation=authority_operation,
+        monkeypatch=monkeypatch,
+        operation_number=5,
+    )
+
+    projection = project_prorrata_mutation_result(execution, _receipt(identity, refused=False))
+    after = read_prorrata_operation_conformance_register(
+        _PROFILE_ID,
+        repository_factory=_repository_factory,
+        operation=authority_operation,
+    )
+    reseeded = after.entry_for(case.request.ejercicio)
+    assert isinstance(returned, str)
+    assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert projection.refusal is None
+    assert reseeded is not None
+    assert reseeded.provisional_provenance == contradicted.provisional_provenance
+    assert reseeded.provisional_percentage != contradicted.provisional_percentage
+    assert reseeded.source_observation_ref == contradicted.source_observation_ref
+    assert len(after.entries) == 1
 
 
 def test_repeating_a_whole_seed_keeps_one_canonical_entry(
@@ -345,6 +391,7 @@ def test_settle_sector_without_a_current_entry_refuses_without_writing(
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
     assert projection.refusal is not None
     assert projection.refusal.reason == "sector_settlement_entry_absent"
+    assert projection.refusal.refusal_words == tr("application.prorrata_register.served.sector_settlement_entry_absent")
     assert projection.refusal.sector_id == sector_id
     with validating_governed_facts(authority_operation):
         after = ProrrataRegisterService(
@@ -353,3 +400,222 @@ def test_settle_sector_without_a_current_entry_refuses_without_writing(
         ).list_all()
     assert after == before
     assert after.entry_for(2026, sector_id=sector_id) is None
+
+
+def _declare_gross(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    operation_number: int,
+    period: str = "1T",
+    amount: str = "400.00",
+    evidence: str = "operator-evidence:303-2026-1T",
+    sector_id: str | None = None,
+    replace: bool = False,
+) -> tuple[str | OperationRefusalEvidence, ProrrataMutationProjection, _Events]:
+    request = ProrrataDeclareGrossRequest(
+        profile_id=_PROFILE_ID,
+        ejercicio=2026,
+        period=period,
+        sector_id=sector_id,
+        gross_cuota=PublicDecimal(decimal=amount),
+        evidence_reference=evidence,
+        replace=replace,
+    )
+    returned, execution, events, identity = _run_executor(
+        request,
+        definition_id=PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
+        authority_operation=authority_operation,
+        monkeypatch=monkeypatch,
+        operation_number=operation_number,
+    )
+    refused = isinstance(returned, OperationRefusalEvidence)
+    refusal_code = execution.refusal.code if execution.refusal is not None else None
+    projection = project_prorrata_mutation_result(
+        execution, _receipt(identity, refused=refused, refusal_code=refusal_code)
+    )
+    return returned, projection, events
+
+
+def _register(authority_operation: PinnedAuthorityOperation) -> ProrrataRegister:
+    return read_prorrata_operation_conformance_register(
+        _PROFILE_ID,
+        repository_factory=_repository_factory,
+        operation=authority_operation,
+    )
+
+
+def _q(code: str) -> Period:
+    return Period.from_year_and_code(2026, code)
+
+
+def test_declare_gross_persists_an_operator_declared_period_base(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started = datetime.now(UTC)
+
+    returned, projection, events = _declare_gross(authority_operation, monkeypatch, operation_number=11)
+
+    assert isinstance(returned, str)
+    assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert projection.outcome == "success"
+    assert projection.count == 1
+    assert projection.gross_declaration is not None
+    assert projection.gross_declaration.period == "1T"
+    assert projection.gross_declaration.gross_cuota.decimal == "400.00"
+    assert projection.gross_declaration.provenance == "operator_declared"
+    stored = _register(authority_operation).gross_declaration_for(_q("1T"), sector_id=None)
+    assert stored is not None
+    assert stored.gross_cuota == Decimal("400.00")
+    assert stored.evidence_reference == "operator-evidence:303-2026-1T"
+    assert started <= stored.declared_at <= datetime.now(UTC)
+    assert projection.gross_declaration.declared_at == stored.declared_at
+
+
+def test_declare_gross_refuses_a_duplicate_unless_replacing(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _declare_gross(authority_operation, monkeypatch, operation_number=12)
+    before = _register(authority_operation)
+
+    returned, refused, events = _declare_gross(authority_operation, monkeypatch, operation_number=13, amount="410.00")
+
+    assert isinstance(returned, OperationRefusalEvidence)
+    assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
+    assert refused.refusal is not None
+    assert refused.refusal.reason == "gross_declaration_duplicate"
+    assert refused.refusal.ejercicio == 2026
+    assert _register(authority_operation) == before
+
+    returned, replaced, _ = _declare_gross(
+        authority_operation, monkeypatch, operation_number=14, amount="410.00", replace=True
+    )
+
+    assert isinstance(returned, str)
+    assert replaced.count == 1
+    after = _register(authority_operation)
+    assert len(after.gross_declarations) == 1
+    stored = after.gross_declaration_for(_q("1T"), sector_id=None)
+    assert stored is not None
+    assert stored.gross_cuota == Decimal("410.00")
+
+
+@pytest.mark.parametrize(
+    ("period", "amount", "evidence", "fragment"),
+    [
+        ("1T", "-0.01", "operator-evidence", "greater than or equal to 0"),
+        ("1T", "400.00", "", "evidence_reference"),
+        ("1T", "400.00", "   ", "must not be blank"),
+        ("4T", "400.00", "operator-evidence", "settlement liquidation"),
+        ("13", "400.00", "operator-evidence", "not a Modelo 303 liquidation period"),
+    ],
+)
+def test_declare_gross_refuses_invalid_input_without_writing(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    period: str,
+    amount: str,
+    evidence: str,
+    fragment: str,
+) -> None:
+    before = _register(authority_operation)
+
+    returned, refused, events = _declare_gross(
+        authority_operation, monkeypatch, operation_number=15, period=period, amount=amount, evidence=evidence
+    )
+
+    assert isinstance(returned, OperationRefusalEvidence)
+    assert events.effects == [OperationEffect.NONE]
+    assert refused.refusal is not None
+    assert refused.refusal.reason == "validation"
+    assert fragment in refused.refusal.detail
+    assert _register(authority_operation) == before
+
+
+def test_declare_gross_refuses_an_undeclared_sector(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    before = _register(authority_operation)
+
+    returned, refused, _ = _declare_gross(
+        authority_operation, monkeypatch, operation_number=16, sector_id="sector-never-declared"
+    )
+
+    assert isinstance(returned, OperationRefusalEvidence)
+    assert refused.refusal is not None
+    assert refused.refusal.reason == "gross_declaration_sector_unknown"
+    assert refused.refusal.sector_id == "sector-never-declared"
+    assert _register(authority_operation) == before
+
+
+def test_declare_gross_binds_a_declared_sector_apart_from_the_whole_entity(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with validating_governed_facts(authority_operation):
+        ProrrataRegisterService(
+            repository=_repository_factory(bucket_id=str(_PROFILE_ID)),
+            operation=authority_operation,
+        ).declare_sector(
+            SectorDefinition(
+                sector_id="arrendamiento", letra=prorrata_sector_letters()[0], member_activity_codes=("6820",)
+            )
+        )
+    _declare_gross(authority_operation, monkeypatch, operation_number=17)
+
+    returned, projection, _ = _declare_gross(
+        authority_operation, monkeypatch, operation_number=18, amount="12.34", sector_id="arrendamiento"
+    )
+
+    assert isinstance(returned, str)
+    assert projection.count == 2
+    after = _register(authority_operation)
+    whole = after.gross_declaration_for(_q("1T"), sector_id=None)
+    sector = after.gross_declaration_for(_q("1T"), sector_id="arrendamiento")
+    assert whole is not None and whole.gross_cuota == Decimal("400.00")
+    assert sector is not None and sector.gross_cuota == Decimal("12.34")
+
+
+def test_remove_gross_deletes_only_the_named_declaration_and_refuses_an_absent_one(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _declare_gross(authority_operation, monkeypatch, operation_number=19)
+    _declare_gross(
+        authority_operation, monkeypatch, operation_number=20, period="2T", amount="420.00", evidence="evidence-2T"
+    )
+
+    def remove(period: str, operation_number: int) -> tuple[str | OperationRefusalEvidence, ProrrataMutationProjection]:
+        returned, execution, _, identity = _run_executor(
+            ProrrataRemoveGrossRequest(profile_id=_PROFILE_ID, ejercicio=2026, period=period),
+            definition_id=PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
+            authority_operation=authority_operation,
+            monkeypatch=monkeypatch,
+            operation_number=operation_number,
+        )
+        refused = isinstance(returned, OperationRefusalEvidence)
+        code = execution.refusal.code if execution.refusal is not None else None
+        return returned, project_prorrata_mutation_result(
+            execution, _receipt(identity, refused=refused, refusal_code=code)
+        )
+
+    returned, removed = remove("2T", 21)
+
+    assert isinstance(returned, str)
+    assert removed.count == 1
+    assert removed.gross_declaration is not None
+    assert removed.gross_declaration.period == "2T"
+    assert removed.gross_declaration.gross_cuota.decimal == "420.00"
+    after = _register(authority_operation)
+    assert after.gross_declaration_for(_q("2T"), sector_id=None) is None
+    assert after.gross_declaration_for(_q("1T"), sector_id=None) is not None
+
+    returned, absent = remove("2T", 22)
+
+    assert isinstance(returned, OperationRefusalEvidence)
+    assert absent.refusal is not None
+    assert absent.refusal.reason == "gross_declaration_absent"
+    assert _register(authority_operation) == after

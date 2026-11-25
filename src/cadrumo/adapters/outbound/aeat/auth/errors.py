@@ -16,6 +16,7 @@ See Also:
 
 from __future__ import annotations
 
+from .....application.live.errors import LiveIvaAcquisitionFailureMode
 from .....core.errors.hierarchy import AuthError
 
 
@@ -53,6 +54,11 @@ class AeatSessionExpiredError(AuthError):
     code is retryable so operator flows can prompt for a fresh authentication
     attempt.
     """
+
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        """Report the ended session to live captures as their own failure mode."""
+        return LiveIvaAcquisitionFailureMode.SESSION_ENDED
 
 
 __all__ = [

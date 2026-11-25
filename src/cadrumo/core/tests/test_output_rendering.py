@@ -174,7 +174,7 @@ def test_render_command_output_errors_use_registered_error_contract() -> None:
             (),
             "INTERNAL_OUTPUT_RENDERING",
             {"type_name": "object"},
-            "Internal. Internal error:",
+            "Internal. The command output could not be rendered safely.",
         ),
         (
             OutputFormatRefusedError,

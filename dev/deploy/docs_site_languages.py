@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import UTF_8
-from dev.docs import i18n as _docs_i18n
+from dev.docs import i18n
 from dev.docs.build_paths import DOCS_SITE_PREFIX_ENV
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from dev.paths import UTF_8
 
 from .docs_delivery_contracts import CANONICAL_DOCS_BASE_URL
 
@@ -25,7 +25,7 @@ def site_build_environment(*, base_environment: Mapping[str, str] | None = None)
     injected concept, casilla, legal and CLI records, not the rendered pages
     alone. This is the SITE's contract, and the site has one index -- so this is
     the environment the one index pass resolves its injector from
-    (:func:`~dev.deploy.docs_site_build._index_site`), while one root's own
+    (:func:`~dev.deploy.docs_site_build.index_site`), while one root's own
     build narrows it to ``none`` (:func:`source_root_build_environment`) because a
     root does not index itself. It is pinned explicitly rather than left to the
     build default so an ambient ``CADRUMO_DOCS_PAGEFIND_MODE`` in the
@@ -61,12 +61,12 @@ def localized_languages() -> tuple[str, ...]:
     Derived from the shared :data:`SITE_ROOT_LANGUAGES` so the deploy matrix
     never re-lists the language set. English is a root like any other: the
     readers here file Spanish tax, so no language holds the apex path and ``/``
-    resolves to the reader's own instead (see :func:`_write_language_entry`).
+    resolves to the reader's own instead (see :func:`write_language_entry`).
     """
-    return _docs_i18n.SITE_ROOT_LANGUAGES
+    return i18n.SITE_ROOT_LANGUAGES
 
 
-def _language_site_url(language: str) -> str:
+def language_site_url(language: str) -> str:
     """Return the canonical deploy URL for one localized site root."""
     return f"{CANONICAL_DOCS_BASE_URL}/{language}"
 
@@ -93,7 +93,7 @@ def translated_roots_compile_command(html_root: Path, languages: Sequence[str], 
     given the site's address above the language directories, from which every
     root takes its own canonical address and its own site prefix, and it writes
     no search index, because the site has one and it is built over every root
-    afterwards (:func:`~dev.deploy.docs_site_build._index_site`).
+    afterwards (:func:`~dev.deploy.docs_site_build.index_site`).
 
     Args:
         html_root: The composed HTML root; each language's root is written at
@@ -131,7 +131,7 @@ def source_root_build_environment(*, check_sequences: bool) -> dict[str, str]:
 
     - ``CADRUMO_DOCS_PAGEFIND_MODE=none``, because the site has ONE search index
       and it is built over every root once they all exist
-      (:func:`~dev.deploy.docs_site_build._index_site`). A root that indexed
+      (:func:`~dev.deploy.docs_site_build.index_site`). A root that indexed
       itself would write a second index the served site never loads, addressed
       to its own root rather than to the apex.
     - ``CADRUMO_DOCS_SITE_PREFIX``, this root's own directory in the served
@@ -146,7 +146,7 @@ def source_root_build_environment(*, check_sequences: bool) -> dict[str, str]:
     source = OutputLanguage.EN.value
     environment = {
         **site_build_environment(),
-        "CADRUMO_DOCS_BASE_URL": _language_site_url(source),
+        "CADRUMO_DOCS_BASE_URL": language_site_url(source),
         "CADRUMO_DOCS_PAGEFIND_MODE": "none",
         DOCS_SITE_PREFIX_ENV: source,
     }
@@ -253,6 +253,12 @@ def site_builds(html_root: Path) -> tuple[SiteBuild, ...]:
                 environment=translated_roots_compile_environment(check_sequences=False),
             )
         )
+    _validate_site_builds(builds)
+    return tuple(builds)
+
+
+def _validate_site_builds(builds: Sequence[SiteBuild]) -> None:
+    """Require one sequence check and complete language coverage before publishing."""
     checked = [build.name for build in builds if SEQUENCE_CHECK_SKIP_ENV not in build.environment]
     if len(checked) != 1:
         raise SystemExit(
@@ -266,10 +272,9 @@ def site_builds(html_root: Path) -> tuple[SiteBuild, ...]:
             f"The deploy's builds write the roots {written}, and the site publishes "
             f"{sorted(localized_languages())}. Refusing to publish a site with a root no build writes."
         )
-    return tuple(builds)
 
 
-def _write_language_entry(html_root: Path) -> Path:
+def write_language_entry(html_root: Path) -> Path:
     """Write the language-agnostic entry served at ``/``.
 
     No language owns the apex path. The entry resolves a reader to a root in a
@@ -301,7 +306,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "<script>\n"
         "(function () {\n"
         f"  var roots = [{languages}];\n"
-        f'  var fallback = "{_docs_i18n.DEFAULT_SITE_LANGUAGE}";\n'
+        f'  var fallback = "{i18n.DEFAULT_SITE_LANGUAGE}";\n'
         "  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n"
         "  var wanted = [];\n"
         "  if (cookie) { wanted.push(cookie[1]); }\n"

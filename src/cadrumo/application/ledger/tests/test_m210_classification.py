@@ -14,12 +14,12 @@ model, not about how the operator typed the command.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TypedDict, override
+from typing import TypedDict
 
 import pytest
 
@@ -27,15 +27,10 @@ from ....core.irnr import M210PayerMode
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
-from ....domain.transactions.models import (
-    LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-)
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from ..m210_classification import resolve_m210_income_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -81,72 +76,10 @@ def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transa
 @contextmanager
 def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueRepositoryProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
-    yield _InMemoryTransactionRepository(
+    yield CatalogueTransactionRepository(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
-
-
-class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
-    """Deterministic inward fake for the transaction catalogue read port."""
-
-    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
-        self._bucket_id = bucket_id
-        self._catalogue = catalogue
-
-    @property
-    @override
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @override
-    def exists(self) -> bool:
-        return bool(self._catalogue.transactions)
-
-    @override
-    def load(self) -> TransactionCatalogue:
-        return self._catalogue
-
-    @override
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
-        )
-
-    @override
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        requested = frozenset(transaction_ids)
-        return TransactionCatalogue.from_transactions(
-            transaction for transaction in self._catalogue if transaction.transaction_id in requested
-        )
-
-    @override
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue:
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-            else:
-                out_of_window.append(
-                    OutOfWindowTransactionIndexEntry(
-                        transaction_id=transaction.transaction_id,
-                        filing_date=filing_date,
-                    )
-                )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
-
-    @override
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
 
 
 class _Answers(TypedDict, total=False):
@@ -180,7 +113,7 @@ def _complete(**overrides: object) -> _Answers:
         # Required by the domain model: a non-35 income code declared under a
         # single payer must name that payer. Omitting it makes the "complete"
         # fixture incomplete and every refusal below untestable.
-        "payer_id": "B12345674",
+        "payer_id": "B00015016",
     }
     # `update` rather than a literal merge: the overrides arrive untyped from
     # `**overrides`, and a TypedDict rejects an unknown key at type level while

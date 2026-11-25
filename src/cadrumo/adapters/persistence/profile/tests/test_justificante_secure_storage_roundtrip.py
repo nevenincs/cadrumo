@@ -28,7 +28,7 @@ from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...storage.errors import SecureObjectRowIdentityError
 from ...storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -113,8 +113,8 @@ def test_justificante_corrupted_persisted_csv_refuses_at_load(tmp_path: Path) ->
         repo = JustificanteRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == JUSTIFICANTE_METADATA_NAMESPACE.namespace,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == JUSTIFICANTE_METADATA_NAMESPACE.namespace,
         )
 
         def mutate(document):

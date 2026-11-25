@@ -61,7 +61,7 @@ if TYPE_CHECKING:
 #: Field names that carry prose an operator is meant to read. A cap on one of
 #: these bounds a sentence, not an identifier, so a floor that breaches it
 #: destroys meaning rather than truncating a token.
-_PROSE_FIELDS: frozenset[str] = frozenset(
+PROSE_FIELDS: frozenset[str] = frozenset(
     {
         "message",
         "detail",
@@ -134,7 +134,7 @@ def _max_length(node: ast.AST, constants: Mapping[str, int]) -> int | None:
     return None
 
 
-def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mapping[tuple[str, str], int]:
+def prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mapping[tuple[str, str], int]:
     """Return caps from Pydantic field declarations in the production source AST."""
     trees = source_tree_ast or dict(production_ast_items())
     caps: dict[tuple[str, str], int] = {}
@@ -171,7 +171,7 @@ def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mappin
             for field in node.body:
                 if not isinstance(field, ast.AnnAssign) or not isinstance(field.target, ast.Name):
                     continue
-                if field.target.id not in _PROSE_FIELDS:
+                if field.target.id not in PROSE_FIELDS:
                     continue
                 cap = _max_length(field.annotation, constants)
                 if cap is None and isinstance(field.annotation, ast.Name):
@@ -229,7 +229,7 @@ def _builders(source_tree_ast: Mapping[Path, ast.AST]) -> Iterator[_Builder]:
     than the call sites that pass one around. A call site handling an
     already-built string cannot tell you whether it was buildable.
     """
-    caps = _prose_caps(source_tree_ast)
+    caps = prose_caps(source_tree_ast)
     for path, tree in sorted(source_tree_ast.items()):
         if "/tests/" in path.as_posix() or path.name.startswith("test_"):
             continue
@@ -241,7 +241,7 @@ def _builders(source_tree_ast: Mapping[Path, ast.AST]) -> Iterator[_Builder]:
             if model_name is None:
                 continue
             for keyword in node.keywords:
-                if keyword.arg not in _PROSE_FIELDS:
+                if keyword.arg not in PROSE_FIELDS:
                     continue
                 cap = caps.get((model_name, keyword.arg))
                 if cap is None:

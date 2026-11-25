@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -11,11 +12,17 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo.application.ledger.evidence import MediaKind
+from cadrumo.application.ledger.evidence import MediaKind, media_kind_for_path
 from cadrumo.application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
     LedgerEvidenceAddRequest,
+)
+from cadrumo.application.ledger.evidence_page_contracts import (
+    EVIDENCE_PAGE_MIN_WIDTH,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+    LedgerEvidencePageProjection,
+    LedgerEvidencePageRequest,
 )
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
@@ -33,11 +40,6 @@ from cadrumo.application.ledger.invoice_evidence_extract_operation import (
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
-from cadrumo.application.ledger.invoice_evidence_readiness_operation import (
-    LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
-    LedgerEvidenceReaderReadinessProjection,
-    LedgerEvidenceReaderReadinessRequest,
-)
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.hex import is_hex16, is_hex64
@@ -48,7 +50,6 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
-    LedgerReaderReadinessV1,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -56,7 +57,6 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from .operations.runtime_profile_session import RuntimeProfileSession
 
 _ResultT = TypeVar("_ResultT", bound=BaseModel)
-_IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +159,22 @@ class RuntimeEvidenceTuiDoorV1:
 
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         """Register one file and correlate its typed result with the durable receipt."""
+        expected_kind = media_kind_for_path(source_path) or MediaKind.PDF
+
+        def correlate(projection: LedgerEvidenceAddProjection) -> None:
+            record = projection.record
+            if (
+                projection.profile_id != self._profile_id
+                or len(projection.bucket_event_ids) != 1
+                or not is_hex64(projection.bucket_event_ids[0])
+                or record.bucket_id != str(self._profile_id)
+                or record.source_path != source_path
+                or record.media_kind is not expected_kind
+                or record.attachment_id != record.source_sha256
+                or not is_hex16(record.evidence_id)
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+
         projection = await self._execute(
             LedgerEvidenceAddRequest(
                 profile_id=self._profile_id,
@@ -168,59 +184,35 @@ class RuntimeEvidenceTuiDoorV1:
             definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
             result_type=LedgerEvidenceAddProjection,
             success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
         )
-        record = projection.record
-        expected_kind = MediaKind.IMAGE if Path(source_path).suffix.lower() in _IMAGE_EXTENSIONS else MediaKind.PDF
-        if (
-            projection.profile_id != self._profile_id
-            or len(projection.bucket_event_ids) != 1
-            or not is_hex64(projection.bucket_event_ids[0])
-            or record.bucket_id != str(self._profile_id)
-            or record.source_path != source_path
-            or record.media_kind is not expected_kind
-            or record.attachment_id != record.source_sha256
-            or not is_hex16(record.evidence_id)
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return self._record_row(record)
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        """Measure the local reader without provisioning or starting it."""
-        projection = self._call_sync(
-            LedgerEvidenceReaderReadinessRequest(profile_id=self._profile_id),
-            definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
-            result_type=LedgerEvidenceReaderReadinessProjection,
-            success_effect=OperationEffect.NONE,
-        )
-        failed_condition = projection.host.failed_condition_id
-        if failed_condition is None:
-            failed_condition = next(
-                (role.failed_condition_id for role in projection.roles if not role.ready),
-                None,
-            )
-        return LedgerReaderReadinessV1(
-            extraction_ready=projection.extraction_ready,
-            failed_condition_id=failed_condition,
-        )
+        return self._record_row(projection.record)
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         """Extract locally and retain only digests needed to bind a later confirmation."""
-        self._session.require_binding()
+        # The binding check reads the session over IPC; it never runs on the event loop.
+        await asyncio.to_thread(self._session.require_binding)
         self._review = None
+
+        def correlate(projection: LedgerEvidenceExtractProjection) -> None:
+            if (
+                projection.profile_id != self._profile_id
+                or projection.evidence_id != evidence_id
+                or projection.attachment_id is not None
+                or projection.consent_audit_effect is not OperationEffect.NONE
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+
         projection = await self._execute(
             LedgerEvidenceExtractRequest(profile_id=self._profile_id, evidence_id=evidence_id),
             definition_id=LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
             result_type=LedgerEvidenceExtractProjection,
             result_version=3,
             success_effect=OperationEffect.NONE,
+            correlate=correlate,
+            # A refused read raises its recorded reason, with the verdict naming the setup it needs.
+            explain_failure=True,
         )
-        if (
-            projection.profile_id != self._profile_id
-            or projection.evidence_id != evidence_id
-            or projection.attachment_id is not None
-            or projection.consent_audit_effect is not OperationEffect.NONE
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._review = _ReviewedEvidence(
             profile_id=self._profile_id,
             session_id=self._session.session_id,
@@ -230,9 +222,33 @@ class RuntimeEvidenceTuiDoorV1:
         )
         return self._draft(projection, evidence_id=evidence_id)
 
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what the runtime serves of page one of one stored document, correlated to that record."""
+
+        def correlate(projection: LedgerEvidencePageProjection) -> None:
+            if projection.evidence_id != evidence_id or projection.page != 1:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+
+        return await self._execute(
+            # The terminal draws no image, so the smallest drawing the read allows is asked for.
+            LedgerEvidencePageRequest(
+                profile_id=self._profile_id,
+                evidence_id=evidence_id,
+                page=1,
+                max_width=EVIDENCE_PAGE_MIN_WIDTH,
+            ),
+            definition_id=LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+            result_type=LedgerEvidencePageProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+            # A refused read raises its recorded reason, so the screen says it in the refusal's own words.
+            explain_failure=True,
+        )
+
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Re-read and confirm only the exact source and draft reviewed in this session."""
-        self._session.require_binding()
+        # The binding check reads the session over IPC; it never runs on the event loop.
+        await asyncio.to_thread(self._session.require_binding)
         reviewed = _require_review(
             self._review,
             profile_id=self._profile_id,
@@ -242,6 +258,11 @@ class RuntimeEvidenceTuiDoorV1:
         # Confirmation is a one-shot use of the review. A refusal, uncertain
         # receipt, or successful write all require the operator to review again.
         self._review = None
+
+        def correlate(projection: LedgerEvidenceConfirmProjection) -> None:
+            _validate_confirmation_projection(projection, reviewed, confirmation, self._profile_id)
+            _validate_confirmed_invoice(projection, reviewed, confirmation, self._profile_id)
+
         projection = await self._execute(
             LedgerEvidenceConfirmRequest(
                 profile_id=self._profile_id,
@@ -256,9 +277,8 @@ class RuntimeEvidenceTuiDoorV1:
             result_type=LedgerEvidenceConfirmProjection,
             result_version=2,
             success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
         )
-        _validate_confirmation_projection(projection, reviewed, confirmation, self._profile_id)
-        _validate_confirmed_invoice(projection, reviewed, confirmation, self._profile_id)
         return _confirmed_result(projection)
 
     def _call_sync[ResultT: BaseModel](
@@ -287,8 +307,17 @@ class RuntimeEvidenceTuiDoorV1:
         result_type: type[ResultT],
         result_version: int = 1,
         success_effect: OperationEffect,
+        correlate: Callable[[ResultT], None] = lambda _result: None,
+        explain_failure: bool = False,
     ) -> ResultT:
-        """Submit, observe, disclose and correlate one terminal receipt."""
+        """Submit, observe, disclose and correlate one terminal receipt.
+
+        ``correlate`` refuses a result its request does not account for. It
+        runs inside the session's settlement, so a refused result after a
+        receipt that saved something reads as an unknown outcome there. With
+        ``explain_failure``, a stopped operation that recorded a registered
+        error raises that error with its verdict.
+        """
 
         def admit(terminal: OperationPublicProjectionV1) -> None:
             if (
@@ -308,6 +337,7 @@ class RuntimeEvidenceTuiDoorV1:
         ) -> None:
             if getattr(result, "profile_id", None) != self._profile_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
+            correlate(result)
 
         return await self._session.run_operation(
             request,
@@ -316,6 +346,7 @@ class RuntimeEvidenceTuiDoorV1:
             settle=settle,
             admit=admit,
             result_version=result_version,
+            explain_failure=explain_failure,
         )
 
     @staticmethod

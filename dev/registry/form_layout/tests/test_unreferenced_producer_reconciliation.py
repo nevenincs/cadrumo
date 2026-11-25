@@ -7,6 +7,7 @@ import pytest
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
@@ -41,7 +42,9 @@ def _change(revision, field_ids, **updates):
 
 @pytest.fixture
 def revision():
-    current = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/190")).revisions["2022"]
+    current = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/190")).revisions[
+        str(authored_revisions("190")[0].id)
+    ]
     ids = {
         field.id
         for layout in current.export_layouts

@@ -68,9 +68,11 @@ def test_write_retries_a_windows_sharing_refusal_during_atomic_publication(
             raise PermissionError(13, "transient Windows sharing refusal")
         staged.publish()
 
-    monkeypatch.setattr(bucket_pointer.sys, "platform", "win32")
     monkeypatch.setattr(atomic_write.StagedPublication, "publish_with_open_readers", temporarily_contended)
-    write_pointer(tmp_path, _selected("alpha", 1))
+    # Only the publication retry is a Windows path; the readback below must use the host's opener.
+    with monkeypatch.context() as windows:
+        windows.setattr(bucket_pointer.sys, "platform", "win32")
+        write_pointer(tmp_path, _selected("alpha", 1))
 
     assert calls == 2
     assert read_pointer(tmp_path) == _selected("alpha", 1)

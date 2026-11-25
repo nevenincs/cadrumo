@@ -1,28 +1,26 @@
-"""Modelo 190 registry behaviour for annual Modelo 111 monetary links and withholding count."""
+"""Modelo 190 registry behaviour for the declarante totals, deadlines and live reads."""
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
-    relation_source_requirements,
 )
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
+from cadrumo.domain.calculations.registry.retencion_clave_catalogue import resolve_retencion_clave
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
-    resolve_retencion_clave,
     resolve_withholding_binding_values,
 )
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
@@ -45,47 +43,6 @@ _DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     "decl.retenciones-total",
     surface="_DECL_RETENCIONES_TOTAL_CASILLA",
 )
-_M111_IMPORTE_SOURCE_CASILLAS: tuple[CasillaId, ...] = tuple(
-    validated_casilla_id(value, surface="_M111_IMPORTE_SOURCE_CASILLAS")
-    for value in ("02", "05", "08", "11", "14", "17", "20", "23", "26")
-)
-_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
-    "28",
-    surface="_M111_RETENCIONES_TOTAL_CASILLA",
-)
-_RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
-    validated_casilla_id(value, surface="_RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS")
-    for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
-)
-_M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
-
-
-def _withholding_observation(
-    source_id: str,
-    nif: str,
-    clave: str,
-    *,
-    authority: GovernedFactSource,
-) -> WithholdingObservation:
-    return WithholdingObservation(
-        source_id=source_id,
-        perceptor_tax_id=nif,
-        transaction_date=date(2025, 6, 1),
-        clave=resolve_retencion_clave(clave, date(2025, 6, 1), modelo="190", authority=authority),
-        percibido_dinerario=Decimal("1000"),
-        retencion_practicada=Decimal("190"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("1000"),
-    )
 
 
 def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
@@ -126,7 +83,7 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year_envelope().horizon,
         period="0A",
     )
 
@@ -159,72 +116,8 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     } <= linked_surfaces
 
 
-@pytest.mark.parametrize(
-    ("ejercicio", "window_id", "expected", "expected_legal_refs", "expected_shift", "form_source"),
-    [
-        # Each ejercicio's form source is the orden that governs it: Orden
-        # HAC/1432/2024 for 2024, the 2025 consolidated form from 2025.
-        (
-            2024,
-            "modelo-190-2024-0a",
-            (2024, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
-            ("rd-439-2007:art-108", "orden-eha-3127-2009:art-5"),
-            (date(2025, 1, 31), False, "business_day"),
-            "boe-modelo-190-2024-amendment",
-        ),
-        # Both windows store the NOMINAL statutory close, the month-end the plazo
-        # names, and never AEAT's published operational date. 31 January 2026 is a
-        # Saturday, so this one's operational date IS 2 February -- but that is
-        # derived on read by shift_deadline, not stored. Storing the shifted date
-        # would report shifted=False / business_day, which says no shift occurred
-        # and discards the statutory date; both halves are asserted below because
-        # the two storage forms are indistinguishable on the operator-facing date
-        # alone. This window is also grounded on art. 5, the article that
-        # establishes the plazo, rather than art. 1, which approves the modelo.
-        (
-            2025,
-            "modelo-190-2025-0a",
-            (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
-            ("orden-eha-3127-2009:art-5",),
-            (date(2026, 2, 2), True, "sabado"),
-            "boe-modelo-190-2025-form",
-        ),
-    ],
-)
-def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
-    ejercicio: int,
-    window_id: str,
-    expected: tuple[int, str, date, date],
-    expected_legal_refs: tuple[str, ...],
-    expected_shift: tuple[date, bool, str],
-    form_source: str,
-) -> None:
-    """Each filing year resolves the revision that declares ITS deadline window.
-
-    Written when modelo 190 held both windows in one revision, this asserted a
-    construct referencing both and a revision declaring both. The span was later
-    split into "2024" and "2025-y-siguientes", which moved each window into the
-    revision it governs -- the windows did not change, and neither did their
-    dates, but the single-revision expectation could no longer hold.
-
-    Parametrising over the two filing years keeps every window, date and
-    grounding reference asserted while letting the registry declare each where
-    it belongs. A future split moves a window between revisions without making
-    this test wrong.
-    """
-    authority = compiled_bundled_authority()
-    modelo, catalogues = authority.modelo("190"), authority.catalogues
-
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=ejercicio,
-        period="0A",
-    )
-    revision = snapshot.revision
+def _assert_190_deadline_construct_and_sources(revision, catalogues, window_id: str, form_source: str) -> None:
     construct = revision.constructs[0]
-    windows = {window.id: window for window in revision.deadline_windows}
     schedule = next(item for item in revision.filing_schedules if item.id == "modelo-190-anual")
     deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
 
@@ -243,12 +136,13 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
     assert schedule.source_refs == ("aeat-modelo-190-procedure", form_source)
 
-    # The edition spans every supported year from 2025 onward and declares one
-    # window per year, so the requested year's window is asserted rather than
-    # the edition holding exactly one.
-    assert window_id in windows
-    assert len({window.filing_year for window in windows.values()}) == len(windows)
-    window = windows[window_id]
+
+def _assert_190_window_dates_and_grounding(
+    window,
+    expected: tuple[int, str, date, date],
+    expected_legal_refs: tuple[str, ...],
+    form_source: str,
+) -> None:
     expected_filing_year, expected_period, opens_on, closes_on = expected
     assert window.filing_year == expected_filing_year
     assert str(window.period) == expected_period
@@ -257,15 +151,20 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.closes_on == closes_on
     assert window.legal_refs == expected_legal_refs
     assert {"aeat-modelo-190-procedure", form_source} <= set(window.source_refs)
+
+
+def _assert_190_deadline_shift_and_calendar_citation(window, expected_shift: tuple[date, bool, str]) -> None:
     with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+        shift = shift_deadline(window.closes_on, modelo="190", operation=operation)
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
-        # A year with no published calendar still refuses rather than guessing.
+        # The horizon exercise closes in the year after it; the year past that has no
+        # published calendar and still refuses rather than guessing.
+        unpublished = filing_year_envelope().horizon + 2
         with pytest.raises(
             DeadlineValidationError,
-            match="holiday calendar publication for 2027 could not be resolved",
+            match=f"holiday calendar publication for {unpublished} could not be resolved",
         ):
-            shift_deadline(date(2027, 1, 29), modelo="190", ccaa_code=None, operation=operation)
+            shift_deadline(date(unpublished, 1, 28), modelo="190", operation=operation)
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read
@@ -277,6 +176,86 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
         f"{window.id}: closes_on {window.closes_on} and calendar citation must agree -- "
         f"a moved deadline names the calendar, an unmoved one does not need it"
     )
+
+
+# Each of the two newest editions' ejercicio takes the form source of the orden that governs it:
+# Orden HAC/1432/2024 for the earlier, the consolidated form from the later. Both windows store the
+# NOMINAL statutory close, the month-end the plazo names, and never AEAT's published operational date.
+# When the month-end falls on a Saturday the operational date is the following Monday, but that is
+# derived on read by shift_deadline, not stored. Storing the shifted date would report
+# shifted=False / business_day, which says no shift occurred and discards the statutory date; both
+# halves are asserted below because the two storage forms are indistinguishable on the
+# operator-facing date alone. The later window is also grounded on art. 5, the article that
+# establishes the plazo, rather than art. 1, which approves the modelo.
+_EDITION_GROUNDING = (
+    (("rd-439-2007:art-108", "orden-eha-3127-2009:art-5"), "boe-modelo-190-2024-amendment"),
+    (("orden-eha-3127-2009:art-5",), "boe-modelo-190-2025-form"),
+)
+
+
+def _published_shift(closes_on: date) -> tuple[date, bool, str]:
+    """Return the working-day shift AEAT's calendar applies to a close that falls on a weekend."""
+    weekend = {5: ("sabado", 2), 6: ("domingo", 1)}.get(closes_on.weekday())
+    if weekend is None:
+        return closes_on, False, "business_day"
+    reason, days = weekend
+    return closes_on + timedelta(days=days), True, reason
+
+
+@pytest.mark.parametrize(
+    ("ejercicio", "expected_legal_refs", "form_source"),
+    [
+        (ejercicio, *grounding)
+        for ejercicio, grounding in zip(newest_authored_editions("190", 2), _EDITION_GROUNDING, strict=True)
+    ],
+)
+def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
+    ejercicio: int,
+    expected_legal_refs: tuple[str, ...],
+    form_source: str,
+) -> None:
+    """Each filing year resolves the revision that declares ITS deadline window.
+
+    Written when modelo 190 held both windows in one revision, this asserted a
+    construct referencing both and a revision declaring both. The span was later
+    split into "2024" and "2025-y-siguientes", which moved each window into the
+    revision it governs -- the windows did not change, and neither did their
+    dates, but the single-revision expectation could no longer hold.
+
+    Parametrising over the two filing years keeps every window, date and
+    grounding reference asserted while letting the registry declare each where
+    it belongs. A future split moves a window between revisions without making
+    this test wrong.
+    """
+    window_id = f"modelo-190-{ejercicio}-0a"
+    expected = (
+        ejercicio,
+        str(Period.from_year_and_code(ejercicio, "0A")),
+        date(ejercicio + 1, 1, 1),
+        date(ejercicio + 1, 1, 31),
+    )
+    authority = compiled_bundled_authority()
+    modelo, catalogues = authority.modelo("190"), authority.catalogues
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=ejercicio,
+        period="0A",
+    )
+    revision = snapshot.revision
+    windows = {window.id: window for window in revision.deadline_windows}
+    _assert_190_deadline_construct_and_sources(revision, catalogues, window_id, form_source)
+
+    # The edition spans every supported year from 2025 onward and declares one
+    # window per year, so the requested year's window is asserted rather than
+    # the edition holding exactly one.
+    assert window_id in windows
+    assert len({window.filing_year for window in windows.values()}) == len(windows)
+    window = windows[window_id]
+    _assert_190_window_dates_and_grounding(window, expected, expected_legal_refs, form_source)
+    _assert_190_deadline_shift_and_calendar_citation(window, _published_shift(expected[3]))
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
@@ -299,102 +278,6 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
         assert set(filed_read.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}
 
 
-def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("190", filing_year=2025, period="0A")
-    snapshot_111 = authority.snapshot("111", filing_year=2025, period="1T")
-
-    modelo_111_outputs = {casilla.id for casilla in snapshot_111.revision.casillas}
-    relation_source_casilla_ids = {
-        source_casilla_id
-        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
-        for source_casilla_id in provider.declared_source_casilla_ids
-    }
-    assert relation_source_casilla_ids <= modelo_111_outputs
-    assert relation_source_casilla_ids.isdisjoint(_RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS)
-    expected_relation_source_casilla_ids = (*_M111_IMPORTE_SOURCE_CASILLAS, _M111_RETENCIONES_TOTAL_CASILLA)
-    assert tuple(sorted(relation_source_casilla_ids)) == expected_relation_source_casilla_ids
-    assert {
-        tuple(provider.required_source_periods)
-        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
-    } == {("1T", "2T", "3T", "4T")}
-
-
-def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    snapshot = compiled_bundled_authority().snapshot("190", filing_year=2025, period="0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    source_values: dict[CasillaId, tuple[Decimal, ...]] = {
-        _M111_IMPORTE_SOURCE_CASILLAS[0]: (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),
-        _M111_IMPORTE_SOURCE_CASILLAS[1]: (Decimal("100"), Decimal("0"), Decimal("0"), Decimal("50")),
-        _M111_IMPORTE_SOURCE_CASILLAS[2]: (Decimal("800"), Decimal("900"), Decimal("850"), Decimal("950")),
-        _M111_IMPORTE_SOURCE_CASILLAS[3]: (Decimal("120"), Decimal("0"), Decimal("0"), Decimal("0")),
-        _M111_IMPORTE_SOURCE_CASILLAS[4]: (Decimal("200"), Decimal("0"), Decimal("300"), Decimal("0")),
-        _M111_IMPORTE_SOURCE_CASILLAS[5]: (Decimal("0"), Decimal("80"), Decimal("0"), Decimal("0")),
-        _M111_IMPORTE_SOURCE_CASILLAS[6]: (Decimal("0"), Decimal("0"), Decimal("250"), Decimal("0")),
-        _M111_IMPORTE_SOURCE_CASILLAS[7]: (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("75")),
-        _M111_IMPORTE_SOURCE_CASILLAS[8]: (Decimal("400"), Decimal("0"), Decimal("0"), Decimal("0")),
-        _M111_RETENCIONES_TOTAL_CASILLA: (Decimal("190"), Decimal("210"), Decimal("175.25"), Decimal("225.75")),
-    }
-    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
-    for requirement in requirements:
-        source_casilla_id = requirement.source_casilla_ids[0]
-        if source_casilla_id not in source_values:
-            raise AssertionError(f"unexpected Modelo 190 relation source casilla {source_casilla_id}")
-        for index, period in enumerate(requirement.periods):
-            observed_by_period.setdefault(period, {})[source_casilla_id] = source_values[source_casilla_id][index]
-    observations = tuple(
-        registry_grounded_modelo_observation(
-            modelo="111",
-            filing_year=2025,
-            period=period,
-            casilla_values=casilla_values,
-        )
-        for period, casilla_values in sorted(observed_by_period.items())
-    )
-    relation_values = resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=2025,
-        period="0A",
-    )
-
-    # Assert binding wiring: relation_values must be populated for the
-    # casillas the 190 relations source from 111.
-    assert relation_values, "relation_values must be non-empty after resolving 111 observations"
-
-    expected_percepciones_total = sum(
-        (sum(source_values[casilla_id], Decimal("0")) for casilla_id in _M111_IMPORTE_SOURCE_CASILLAS),
-        Decimal("0"),
-    )
-    expected_retenciones_total = sum(source_values[_M111_RETENCIONES_TOTAL_CASILLA], Decimal("0"))
-    with bundled_indexed_authority().operation() as operation:
-        observations = (
-            _withholding_observation("m190-1", "11111111H", "A", authority=operation),
-            _withholding_observation("m190-1-repeat", "11111111H", "A", authority=operation),
-            _withholding_observation("m190-2", "11111111H", "G", authority=operation),
-            _withholding_observation("m190-3", "22222222J", "A", authority=operation),
-        )
-    withholding_values = resolve_withholding_binding_values(snapshot.revision, observations)
-    assert withholding_values[_M190_PERCEPCIONES_BINDING] == Decimal("3")
-
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, withholding_values),
-        date_context={"filing_period": date(2025, 12, 31)},
-        binding_values=withholding_values,
-        relation_values=relation_values,
-    )
-
-    entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert _DECL_TOTAL_PERCEPCIONES_CASILLA not in entries
-    assert _DECL_TOTAL_PERCEPCIONES_CASILLA in result.values, "perceptores aggregation casilla must be computed"
-    assert _DECL_PERCEPCIONES_TOTAL_CASILLA in result.values, "percepciones aggregation casilla must be computed"
-    assert _DECL_RETENCIONES_TOTAL_CASILLA in result.values, "retenciones aggregation casilla must be computed"
-    assert result.values[_DECL_TOTAL_PERCEPCIONES_CASILLA] == Decimal("3")
-    assert result.values[_DECL_PERCEPCIONES_TOTAL_CASILLA] == expected_percepciones_total
-    assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] == expected_retenciones_total
-
-
 _M190_RECORD_TOTAL_BINDINGS = frozenset(
     {
         "modelo-190-perceptor-rows-percepcion-dineraria-total",
@@ -414,39 +297,20 @@ def _supported_years() -> range:
     return range(support.floor, support.horizon + 1)
 
 
-def test_modelo_190_111_relation_feeds_totals_only_where_its_cited_sources_govern_the_exercise() -> None:
-    """A Modelo 111 relation prefill reaches the 190 totals only in an exercise every cited source covers.
+def test_modelo_190_totals_sum_the_type_2_records_in_every_supported_exercise() -> None:
+    """Positions 136-144, 145-160 and 161-175 total the declaration's own type-2 records in every exercise.
 
-    The design states positions 145-175 as sums over the type-2 records, so an
-    exercise whose instrucciones do not ground the relation totals those records.
+    Every record design from the 2020 edition onward, and the 2025 instrucciones
+    for casillas 01 to 03, define the three declarante totals over the type-2
+    records of the same declaration and none defines them from Modelo 111, so no
+    exercise takes a Modelo 111 relation or dependency.
     """
-    authority = compiled_bundled_authority()
-    sources = authority.catalogues.sources
-    related_years: list[int] = []
-    for year in _supported_years():
-        revision = authority.snapshot("190", filing_year=year, period="0A").revision
-        relations = relation_prefill_bindings_for_period(revision, period="0A")
-        if not relations:
-            assert not revision.dependency_classifications, year
-            continue
-        related_years.append(year)
-        for binding, _provider in relations:
-            for source_ref in {*binding.source_refs, *(citation.source_ref for citation in binding.source_citations)}:
-                source = sources[source_ref]
-                where = (year, binding.id, source_ref)
-                assert source.applies_from is None or source.applies_from <= date(year, 1, 1), where
-                assert source.applies_to is None or source.applies_to >= date(year, 12, 31), where
-    assert related_years, "no supported exercise routes the 190 totals through the Modelo 111 relation"
-
-
-def test_modelo_190_totals_sum_the_type_2_records_where_no_relation_is_grounded() -> None:
-    """Without a grounded Modelo 111 relation, positions 145-160 and 161-175 total the type-2 records."""
     authority = compiled_bundled_authority()
     record_years: list[int] = []
     for year in _supported_years():
         snapshot = authority.snapshot("190", filing_year=year, period="0A")
-        if relation_prefill_bindings_for_period(snapshot.revision, period="0A"):
-            continue
+        assert not relation_prefill_bindings_for_period(snapshot.revision, period="0A"), year
+        assert not snapshot.revision.dependency_classifications, year
         record_years.append(year)
         with bundled_indexed_authority().operation() as operation:
             observations = tuple(
@@ -471,9 +335,9 @@ def test_modelo_190_totals_sum_the_type_2_records_where_no_relation_is_grounded(
                 )
                 for index, (nif, clave, percibido, retencion) in enumerate(
                     (
-                        ("11111111H", "A", "1000.00", "150.00"),
-                        ("11111111H", "G", "2500.50", "375.08"),
-                        ("22222222J", "A", "730.25", "109.54"),
+                        ("00001500M", "A", "1000.00", "150.00"),
+                        ("00001500M", "G", "2500.50", "375.08"),
+                        ("00001501Y", "A", "730.25", "109.54"),
                     )
                 )
             )
@@ -491,4 +355,4 @@ def test_modelo_190_totals_sum_the_type_2_records_where_no_relation_is_grounded(
         assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] == Decimal("634.62"), year
         for casilla_id in (_DECL_PERCEPCIONES_TOTAL_CASILLA, _DECL_RETENCIONES_TOTAL_CASILLA):
             assert set(entries[casilla_id].operand_refs) <= _M190_RECORD_TOTAL_BINDINGS, (year, casilla_id)
-    assert record_years, "no supported exercise totals its own type-2 records"
+    assert record_years == list(_supported_years())

@@ -43,9 +43,11 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field, TypeAdapter
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from ...core.directory_scan import scan_directory
 from ...core.identity.digest import ContentDigest
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.schema import InvoiceKind
@@ -57,7 +59,6 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.iva.regime_legend import RegimeLegend
-    from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
     from .evidence_input_ports import EvidenceDocumentShapeProbe
     from .evidence_ports import LedgerEvidencePorts
@@ -183,11 +184,11 @@ class BatchItemResult(BaseModel):
 
 def _validate_batch_item_refusal(item: BatchItemResult) -> None:
     refused = item.status == "refused"
-    if refused and not (item.refusal_code is not None and item.refusal_code):
+    if refused and not bool(item.refusal_code):
         raise ValueError("a refused batch item must carry the reason it was refused")
     if refused and item.refusal_verdict is None:
         raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
-    if not refused and (item.refusal_code is not None and item.refusal_code):
+    if not refused and bool(item.refusal_code):
         raise ValueError(f"refusal_code is only meaningful for a refused item; got status={item.status!r}")
     if not refused and item.refusal_verdict is not None:
         raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={item.status!r}")
@@ -231,7 +232,7 @@ class InferencePause(BaseModel):
     so N copies of it would be N identical messages an operator learns to scroll
     past, which is how a real refusal goes unread.
 
-    ``facts`` and ``precondition_verdict`` are the application-owned provisioning
+    ``facts`` and ``precondition_verdict`` are the application-owned probe
     outcome. This record deliberately does not restate a reason, rendered
     explanation, or recovery command: its consumer must resolve the exact verdict
     against the live operator surface.
@@ -424,7 +425,7 @@ def _reads_without_a_model(
     return False
 
 
-def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
+def reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
     """Return the reader role these bytes will reach first, or ``None`` for neither.
 
     Read off the same shape probe the deterministic test uses, so the two agree
@@ -450,76 +451,77 @@ def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShape
 class _InferenceLaneState:
     """Whether inference-bearing items may still be attempted in this run.
 
-    Measured contention is batch-wide: it is a property of the machine, so one
-    measurement closes the lane for every model-bearing document before any
-    attempt. Admission control exists precisely so an unsafe load is not
-    attempted, so learning about it by attempting would defeat it.
+    Contention is batch-wide: it is a property of the machine, not of one
+    document. Every read goes through the agent service, and the agent loads a
+    lane's model on this computer at the run's start, refusing a model that
+    does not fit in the memory free. So the first document whose read is
+    refused that way closes the lane for every later model-bearing document,
+    which is paused with that verdict rather than sent into the same shortfall
+    straight away. That first document is paused too: nothing was read from
+    it, and a later run reads it.
 
     Reader availability is per ROLE, not batch-wide, because that is how it
-    actually fails: a machine with a text model and no vision model reads every
-    text-layer PDF and can read no scan. Each role is probed at most once, ahead
-    of the first document that needs it, so the first such document is PAUSED
-    with the provisioning outcome rather than refused as though the document
-    were at fault -- and a role that is present keeps working while another is
-    missing.
+    actually fails: a person can have a text selection and no vision selection,
+    and then every text-layer PDF reads and no scan does. The service answers a
+    role it cannot serve at its lookup, before anything is sent. So the first
+    document of a role is attempted, and when its refusal carries the service's
+    typed model-run verdict -- the ``model_run_refusal`` fact -- that verdict closes the role it names, and every later
+    document of that role is paused with it. A role that is served keeps
+    working while another is not. The batch carries no consent, so on a role
+    whose lane reads off this computer the dispatch's consent gate refuses with
+    the ``consent_missing`` model-run refusal and closes that role the same way,
+    with nothing sent.
 
-    A document whose role probed available can still refuse for want of a
-    reader, because a text-layer PDF may escalate to vision inside the
-    extractor. That discovery still closes the role it names, so the pause
-    reaches every later document of that role.
+    A refusal without either verdict -- a failed run, a document fault --
+    closes nothing: it is that document's refusal, and the next document of the
+    role is still attempted.
     """
 
-    __slots__ = ("_assessed", "_contention", "_profile", "_reader_pauses", "_settings")
+    __slots__ = ("_contention", "_reader_pauses")
 
-    def __init__(self, *, settings: Settings, profile: HardwareProfile | None = None) -> None:
-        self._settings = settings
-        self._profile = profile
-        self._assessed = False
+    def __init__(self) -> None:
         self._contention: InferencePause | None = None
         self._reader_pauses: dict[ModelRole, InferencePause] = {}
 
     def admits(self, *, deterministic: bool, role: ModelRole | None = None) -> bool:
-        """Return whether this item may be attempted, measuring each cause once.
+        """Return whether this item may be attempted.
 
         A document that reads without a model is always attempted: a closed lane
         says nothing about work that never needed the lane.
         """
         if deterministic:
             return True
-        if not self._assessed:
-            self._assessed = True
-            self._contention = _assess_model_load_contention_once(self._settings, profile=self._profile)
         if self._contention is not None:
             return False
         return role is None or self._reader_is_available(role)
 
-    def close_if_no_reader_is_available(self, role: ModelRole | None = None) -> None:
-        """Close one role when a refusal turns out to be the environment's.
+    def close_on_refusal(self, verdict: PreconditionVerdict | None) -> bool:
+        """Close what a refused document's verdict says cannot run, and say whether it was contention.
 
-        Asks the runtime whether that reader is actually there, rather than
-        reading an error string. ``None`` probes both reading roles, which is
-        what a refusal from a document the lane could not attribute needs.
+        A contention verdict closes the lane for the rest of the run,
+        and ``True`` tells the caller the document itself was not at fault: it
+        is deferred with every later model-bearing document, not refused. Only
+        the service's typed model-run refusal closes a role, and the role closed is the one the verdict names, so a
+        vision refusal reached by a text-layer PDF escalating to vision closes
+        vision, not text. Any other refusal closes nothing.
         """
+        if verdict is None:
+            return False
+        if _is_contention(verdict):
+            if self._contention is None:
+                self._contention = _inference_pause(facts=_verdict_facts(verdict), precondition_verdict=verdict)
+            return True
         if self._contention is not None:
-            return
-        roles = (role,) if role is not None else (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
-        for candidate in roles:
-            self._reader_is_available(candidate)
+            return False
+        role = _reader_refusal_role(verdict)
+        if role is None or role in self._reader_pauses:
+            return False
+        self._reader_pauses[role] = _inference_pause(facts=_verdict_facts(verdict), precondition_verdict=verdict)
+        return False
 
     def _reader_is_available(self, role: ModelRole) -> bool:
-        """Return whether ``role``'s reader can run, probing it at most once."""
-        if role in self._reader_pauses:
-            return False
-        from ..local_reader import probe_local_reader
-
-        status = probe_local_reader(role, self._settings)
-        if status.available:
-            return True
-        self._reader_pauses[role] = _inference_pause(
-            facts=status.facts,
-            precondition_verdict=status.precondition_verdict,
-        )
-        return False
+        """Return whether ``role`` is still open in this run."""
+        return role not in self._reader_pauses
 
     def pause(self) -> InferencePause | None:
         """Return the pause that closed work, or ``None`` when nothing closed."""
@@ -528,42 +530,37 @@ class _InferenceLaneState:
         return next(iter(self._reader_pauses.values()), None)
 
 
-def _assess_model_load_contention_once(
-    settings: Settings,
-    *,
-    profile: HardwareProfile | None = None,
-) -> InferencePause | None:
-    """Return the contention pause, or ``None`` when a load may be attempted.
+def _is_contention(verdict: PreconditionVerdict) -> bool:
+    """Return whether the verdict is the agent's refusal to load a model with the memory free."""
+    return _verdict_facts(verdict).get(_MODEL_RUN_REFUSAL_FACT) == ModelRunRefusalCode.MODEL_DOES_NOT_FIT.value
 
-    Provisioning never raises; it returns a snapshot with exact facts and a
-    failed-condition verdict. This module forwards that typed outcome unchanged
-    instead of constructing an instruction from a contention cause.
 
-    A role with no selectable model is deliberately NOT a pause. Nothing is
-    unsafe about attempting it, and the extractor's own refusal names the
-    provisioning verb far more precisely than a guess made here could.
-    """
-    from ...core.model_catalogue import ModelRole
-    from ..provisioning import select_model_for_role
-    from ..provisioning_runtime import assess_model_load_contention
+def _verdict_facts(verdict: PreconditionVerdict) -> dict[str, str | int | bool]:
+    return {
+        key: value
+        for evidence in verdict.evidence
+        for key, value in evidence.values.items()
+        if isinstance(value, str | int | bool)
+    }
 
-    for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
-        assessable = select_model_for_role(role, profile=profile).assessable_load
-        if assessable is None:
-            continue
-        runtime_id, required_bytes = assessable
-        snapshot = assess_model_load_contention(
-            runtime_id,
-            required_bytes,
-            profile=profile,
-            settings=settings,
-        )
-        if not snapshot.admitted:
-            return _inference_pause(
-                facts=snapshot.facts,
-                precondition_verdict=snapshot.precondition_verdict,
-            )
-    return None
+
+#: The fact the agent service's model-run refusal states; its presence is what
+#: makes a refusal the reader's rather than the document's.
+_MODEL_RUN_REFUSAL_FACT: Final[str] = "model_run_refusal"
+
+
+def _reader_refusal_role(verdict: PreconditionVerdict) -> ModelRole | None:
+    """Return the role a reader refusal names, or ``None`` when the verdict is not a reader refusal."""
+    facts = {key: value for evidence in verdict.evidence for key, value in evidence.values.items()}
+    if _MODEL_RUN_REFUSAL_FACT not in facts:
+        return None
+    named = facts.get("model_role", facts.get("role"))
+    if not isinstance(named, str):
+        return None
+    try:
+        return ModelRole(named)
+    except ValueError:
+        return None
 
 
 def _inference_pause(
@@ -629,7 +626,6 @@ def run_evidence_batch(
     settings: Settings | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
     before_item: Callable[[], None] | None = None,
-    profile: HardwareProfile | None = None,
 ) -> BatchRunResult:
     """Run the ingestion pipeline over every source, one typed row each.
 
@@ -677,21 +673,17 @@ def run_evidence_batch(
             other per-item failure.
         before_item: Optional current-authority admission before source reads
             and before/after item work. Failures propagate outside row translators.
-        profile: Measured hardware the admission check judges against; probed
-            when omitted. The same injection point the admission primitive
-            itself exposes, so a contended machine can be exercised from real
-            measurements rather than by substituting the decision.
 
     Returns:
         :class:`BatchRunResult`: Every row, ordered by content address.
     """
-    from ...core.config import load_settings as _load_settings
+    from ...core.config import load_settings
     from ...core.hashing import sha256_hex
     from .evidence import PurchaseInvoiceEvidenceService
     from .extraction_draft_store import read_extraction_draft, write_extraction_draft
     from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 
-    resolved_settings = settings or _load_settings()
+    resolved_settings = settings or load_settings()
     service = PurchaseInvoiceEvidenceService(ports=evidence_ports)
     addressed, deterministic, roles, unresolved = _plan_batch_inputs(
         sources=sources,
@@ -701,7 +693,7 @@ def run_evidence_batch(
         before_item=before_item,
         sha256=sha256_hex,
     )
-    lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
+    lane = _InferenceLaneState()
     rows = _run_planned_batch_items(
         addressed=addressed,
         deterministic=deterministic,
@@ -800,7 +792,7 @@ def _record_batch_source(
     content_address = sha256(data)
     if _reads_without_a_model(data, document_shape_probe=probe, text_layer_ports=text_layer_ports, operation=operation):
         deterministic.add(content_address)
-    role = _reader_role_for(data, document_shape_probe=probe)
+    role = reader_role_for(data, document_shape_probe=probe)
     if role is not None:
         roles[content_address] = role
     addressed[(content_address, str(path))] = path
@@ -918,8 +910,8 @@ def _run_planned_batch_item(
         read_draft=read_draft,
         write_draft=write_draft,
     )
-    if row.status == "refused":
-        lane.close_if_no_reader_is_available(role)
+    if row.status == "refused" and lane.close_on_refusal(row.refusal_verdict):
+        return _paused_batch_item(content_address=content_address, direction=direction, path=path)
     return row
 
 
@@ -1076,8 +1068,15 @@ def _ingest_one_batch_item(
             expected_content_digest=content_address,
         )
     except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
+        # Bytes no reader can read were once stored first and refused at the read below as
+        # `not_readable`; the add now refuses them before custody, and the row keeps that code.
+        owned = getattr(exc, "terminal_precondition_verdict", None)
+        unreadable = (
+            isinstance(owned, PreconditionVerdict)
+            and owned.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE.value
+        )
         return refused(
-            "evidence_refused",
+            "not_readable" if unreadable else "evidence_refused",
             exc,
             condition=LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
         )
@@ -1126,6 +1125,10 @@ def _ingest_one_batch_item(
             extractor=BATCH_DRAFT_EXTRACTOR,
             read_transports=BATCH_READ_TRANSPORTS,
             settings=settings,
+            # The operator's stated direction travels with the draft so the
+            # review opens on it. It is beside the reading's own suggestion,
+            # never written over it.
+            declared_kind=direction,
         )
     except Exception as exc:  # reason: a draft that could not be stored is this item's refusal.
         return refused(

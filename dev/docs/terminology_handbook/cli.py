@@ -31,14 +31,6 @@ import typer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 
-from ._scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
-from ._seed_import import (
-    SeedEntry,
-    SeedSource,
-    apply_seed_entries,
-    parse_iate_tbx,
-    parse_ubterm_csv,
-)
 from .curation import (
     CurationError,
     audit_handbook,
@@ -50,6 +42,14 @@ from .curation import (
 )
 from .enums import TermStatus
 from .errors import TerminologyError
+from .scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
+from .seed_import import (
+    SeedEntry,
+    SeedSource,
+    apply_seed_entries,
+    parse_iate_tbx,
+    parse_ubterm_csv,
+)
 
 app = typer.Typer(name="terminology", help=tr("docs.terminology.cli.help"), no_args_is_help=True)
 
@@ -205,7 +205,7 @@ def seed(
             # EuroVoc and the excluded sources are refused by the licence gate
             # the moment apply attempts an attribution lookup; surface it early
             # with the gate's reason rather than a half-parse.
-            from ._seed_import import assert_source_ingestible
+            from .seed_import import assert_source_ingestible
 
             assert_source_ingestible(source)
             raise typer.BadParameter(f"no parser wired for source {source.value!r}")

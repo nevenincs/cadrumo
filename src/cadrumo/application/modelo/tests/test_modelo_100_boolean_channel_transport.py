@@ -16,47 +16,39 @@ construction.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from typing import Any
 
 import pytest
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.formula_runtime import (
-    calculate_registry_snapshot,
-    evaluate_expression,
-)
+from ....domain.calculations.registry.formula_expression import evaluate_expression
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
     published_supported_filing_years,
 )
+from ....domain.modelos.source_disagreement import DisagreementBooleanValue, SourceDisagreementRole
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import (
+    PrecedenceTier,
     merge_source_resolutions,
     merge_source_resolutions_by_precedence,
 )
 from ..profile_binding import (
-    ProfileBindingResolutionError,
     profile_resolved_binding_ids,
     resolve_profile_binding_channels,
     resolve_profile_sourced_bindings,
 )
+from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation for each profile-channel transport test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"
@@ -161,9 +153,25 @@ def test_precedence_merge_lets_a_later_tier_overlay_a_truth_value() -> None:
         boolean_binding_values={_ANUALIDADES_BINDING: False},
     )
 
-    merged = merge_source_resolutions_by_precedence((lower, higher))
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(role=SourceDisagreementRole.PROFILE, resolution=lower, source_family="profile"),
+            PrecedenceTier(role=SourceDisagreementRole.CALLER, resolution=higher, source_family="operator_input"),
+        )
+    )
 
-    assert merged.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.resolution.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.selected_binding_roles[_ANUALIDADES_BINDING] is SourceDisagreementRole.CALLER
+    (divergence,) = overlay.divergences
+    assert divergence.value_channel == "boolean"
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.PROFILE,
+        SourceDisagreementRole.CALLER,
+    ]
+    assert tuple(source.value for source in divergence.sources) == (
+        DisagreementBooleanValue(value=True),
+        DisagreementBooleanValue(value=False),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -384,7 +392,6 @@ def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consu
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
-        operation=authority_operation,
     )
 
     assert channels.date_values == {_BIRTH_DATE_BINDING: date(1980, 3, 4)}
@@ -406,7 +413,6 @@ def test_declared_boolean_binding_resolves_on_the_boolean_channel_without_a_cons
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
-        operation=authority_operation,
     )
 
     assert channels.boolean_values == {_ANUALIDADES_BINDING: True}
@@ -432,7 +438,6 @@ def test_resolver_refuses_a_decimal_standing_in_for_a_boolean_contract(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 
@@ -459,7 +464,6 @@ def test_resolver_refuses_a_truth_value_for_a_money_contract(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 
@@ -485,7 +489,6 @@ def test_resolver_refuses_a_declaration_that_contradicts_its_consuming_formula(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset({_ANUALIDADES_BINDING}),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 

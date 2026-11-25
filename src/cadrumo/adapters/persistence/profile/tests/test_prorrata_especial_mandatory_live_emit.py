@@ -43,6 +43,7 @@ from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .....application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 from .....application.prorrata_register.service import ProrrataRegisterService
+from .....core.external_constants import OutputLanguage
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.modelo import Modelo
 from .....core.prorrata_register import (
@@ -60,6 +61,7 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
@@ -173,9 +175,9 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         period_token=period_token,
         filing_year=_EJERCICIO,
         bucket_id=_BUCKET,
-        observation_repository=CalculationObservationRepository(),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
     )
 
@@ -195,6 +197,24 @@ def _parenthesised_amounts(message: str) -> list[Decimal]:
 # ---------------------------------------------------------------------------
 
 
+def _seed_general_that_over_deducts(profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
+    """Save a COMMON and an EXCLUSIVELY_NON_DEDUCTIBLE purchase and declare the general regime."""
+    _save_txns(
+        profile,
+        (
+            _purchase(
+                "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
+            ),
+            _purchase(
+                "buy-non-ded",
+                cuota=Decimal("210.00"),
+                classification=InputClassification.from_registry("exclusively_non_deductible"),
+            ),
+        ),
+    )
+    _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+
+
 def test_fires_for_fully_classified_general_bucket_with_breach(
     tmp_path: Path,
     *,
@@ -207,20 +227,7 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
     general -> the general regime over-deducts by more than 10% (art. 103.Dos.2).
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -228,6 +235,8 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
     assert diagnostic.reason == "prorrata_especial_obligatoria"
     assert diagnostic.source_kind == "prorrata_especial_mandatory"
     assert str(_EJERCICIO) in diagnostic.message
+    # The message is Spanish prose for the filer, so a Spanish form shows it beside the catalogue's sentence.
+    assert diagnostic.message_language is OutputLanguage.ES
     # Both regime totals ride in the verbatim message, and the general total
     # genuinely exceeds the especial total (a real breach, law-derived).
     amounts = _parenthesised_amounts(diagnostic.message)
@@ -301,7 +310,38 @@ def test_prompt_for_general_bucket_with_unclassified_row(
     assert "--input-classification" in diagnostic.message
     assert "elect-especial" in diagnostic.message
     assert "1 operaciones sin clasificar" in diagnostic.message
+    assert diagnostic.message_language is OutputLanguage.ES
     # No fabricated amount: the prompt carries no monetary figure.
+    assert not _parenthesised_amounts(diagnostic.message)
+
+
+def test_prompt_for_especial_bucket_with_unclassified_row(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An ESPECIAL bucket with an unclassified deducible row prompts rather than fires.
+
+    The unclassified row has no art. 106 rule, so the especial deduction is
+    not derivable: it is never counted as common use to produce an amount.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        _save_txns(
+            profile,
+            (
+                _purchase(
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
+                ),
+                _purchase("buy-unclassified", cuota=Decimal("210.00"), classification=None),
+            ),
+        )
+        _declare(ProrrataRegisterRegime.from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
+        especial = _especial_diagnostics(_collect())
+
+    assert len(especial) == 1
+    diagnostic = especial[0]
+    assert diagnostic.reason == "prorrata_especial_check_unavailable"
+    assert "1 operaciones sin clasificar" in diagnostic.message
     assert not _parenthesised_amounts(diagnostic.message)
 
 
@@ -313,20 +353,7 @@ def test_prompt_for_general_bucket_with_unclassified_row(
 def test_silent_mid_year_period(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A mid-year quarter is never a settlement event: the check never runs."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         especial = _especial_diagnostics(_collect(period_token=_MID_YEAR_PERIOD))
 
     assert especial == []
@@ -420,20 +447,7 @@ def test_silent_for_sectorized_register(tmp_path: Path, *, operation: PinnedAuth
 def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """The obligation fires through the ACTUAL calculate advisory fan-out, not the collector alone."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        _save_txns(
-            profile,
-            (
-                _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
-                ),
-                _purchase(
-                    "buy-non-ded",
-                    cuota=Decimal("210.00"),
-                    classification=InputClassification.from_registry("exclusively_non_deductible"),
-                ),
-            ),
-        )
-        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _seed_general_that_over_deducts(profile, operation)
         diagnostics = collect_bucket_aggregation_advisory_diagnostics(
             _revision(),
             {},
@@ -445,6 +459,7 @@ def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: Pinn
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
         )
 
     obligation = [d for d in diagnostics if d.reason == "prorrata_especial_obligatoria"]

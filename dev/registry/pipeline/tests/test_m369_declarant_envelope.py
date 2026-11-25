@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole as R,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
 from ...compiler.loader import load_catalogue_file
@@ -51,24 +52,29 @@ def _declaration(*, roles: tuple[tuple[R, int], ...] = _ROLES) -> FilingEnvelope
         product_identity_requirement=None,
         closer_derivation="relative-closer-v1",
         total_derivation="emitted-byte-total-v1",
+        scheme_period_form="bare_quarter",
+        period_tokens=("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13))),
     )
 
 
+@pytest.mark.usefixtures("operation")
 def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
     declaration = _declaration()
-    period = Period.from_year_and_code(2025, "1T")
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "1T")
     rendered = render_declared_prefix(
         declaration.prefix_fields,
         prefix_extent=declaration.prefix_extent,
         modelo=Modelo("369"),
         period=period,
         product_software_identity=None,
-        declarant_tax_id="Y0000001S",
+        declarant_tax_id="Y0001006P",
+        envelope=declaration,
     )
     assert len(rendered) == 328
-    assert rendered[:17] == b"<T369020251T0000>"
+    assert rendered[:17] == f"<T3690{year}1T0000>".encode("ascii")
     assert rendered[17:109] == b" " * 92
-    assert rendered[109:118] == b"Y0000001S"
+    assert rendered[109:118] == b"Y0001006P"
     assert rendered[118:] == b" " * 210
     assert declaration.closer_for(rendered[:17]) == envelope_closer_bytes(modelo=Modelo("369"), period=period)
     serialised = declaration.model_dump(mode="json", exclude_none=True)
@@ -78,22 +84,25 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
         FilingEnvelopeDefinition.model_validate_json(
             json.dumps({**serialised, "product_identity_requirement": "aeat-product-software-identity-v1"})
         )
-    with pytest.raises(FilingExportValidationError, match="monthly/quarterly"):
+    with pytest.raises(FilingExportValidationError, match="range its design lists"):
         render_declared_prefix(
             declaration.prefix_fields,
             prefix_extent=328,
             modelo=Modelo("369"),
-            period=Period.from_year_and_code(2025, "0A"),
+            period=Period.from_year_and_code(year, "0A"),
             product_software_identity=None,
-            declarant_tax_id="Y0000001S",
+            declarant_tax_id="Y0001006P",
+            envelope=declaration,
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("quarter", ("1T", "4T"))
 def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
     declaration = _declaration()
-    period = Period.from_year_and_code(2025, f"EXT-{quarter}")
-    with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, f"EXT-{quarter}")
+    with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
         envelope_closer_bytes(modelo=Modelo("369"), period=period)
     rendered = render_declared_prefix(
         declaration.prefix_fields,
@@ -101,21 +110,16 @@ def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
         modelo=Modelo("369"),
         period=period,
         product_software_identity=None,
-        declarant_tax_id="Y0000001S",
+        declarant_tax_id="Y0001006P",
         envelope=declaration,
     )
-    assert rendered[:17] == f"<T36902025{quarter}0000>".encode("ascii")
+    assert rendered[:17] == f"<T3690{year}{quarter}0000>".encode("ascii")
     assert envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=declaration) == (
-        f"</T36902025{quarter}0000>".encode("ascii")
+        f"</T3690{year}{quarter}0000>".encode("ascii")
     )
-    for changed in (
-        declaration.model_copy(update={"source_sha256": "0" * 64}),
-        declaration.model_copy(update={"source_ref": "aeat-dr-369-2022"}),
-    ):
-        with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
-            envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=changed)
-    with pytest.raises(FilingExportValidationError, match="exact official Modelo 369 envelope"):
-        envelope_closer_bytes(modelo=Modelo("370"), period=period, envelope=declaration)
+    undeclared = declaration.model_copy(update={"scheme_period_form": None})
+    with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
+        envelope_closer_bytes(modelo=Modelo("369"), period=period, envelope=undeclared)
 
 
 def test_declarant_prefix_cannot_claim_auxiliary_or_partial_roles() -> None:
@@ -146,12 +150,13 @@ def test_declarant_prefix_cannot_claim_auxiliary_or_partial_roles() -> None:
 )
 def test_official_body_ranges_project_only_for_the_exact_revision(revision: str, expected: tuple[str, ...]) -> None:
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    design_year = authored_revisions("369")[0].valid_from.year
     intermediate = load_record_design_intermediate(
         bundled_path(),
         catalogues.sources,
         source_ref="aeat-dr-369-2021",
-        filing_year=2021,
-        design_epoch="2021",
+        filing_year=design_year,
+        design_epoch=str(design_year),
     )
     selected = project_record_design_for_revision(intermediate, revision)
     assert tuple(sheet.record_identity for sheet in selected.sheets) == expected

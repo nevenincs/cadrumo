@@ -11,14 +11,19 @@ from __future__ import annotations
 import copy
 import json
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records, delivered_text
+from cadrumo_client.contracts import deadline_budget
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ..controller import AgentHostError, AgentHostRefusal, AgentLaunch
 from ..launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
-from ..store_lifecycle import STORE_OUTPUT_MAX_BYTES, AgentInvocationResult, AgentStoreLifecycle, StoreLifecycleBounds
+from ..store_lifecycle import STORE_OUTPUT_MAX_BYTES, AgentInvocationResult, AgentStoreLifecycle, InvocationCancellation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,7 +34,14 @@ _LAUNCH = AgentLaunch(
     directory=Path("/root/agent/opaque"),
     environment={"ROOT_SLOT": "/root/agent/opaque"},
 )
-_BOUNDS = StoreLifecycleBounds(preflight=1.0, stores_state=2.0, setup=3.0, migrate=4.0)
+_DEADLINE = deadline_budget.TimeoutDeadline(1010.0)
+
+
+@pytest.fixture(autouse=True)
+def fixed_owner_clock(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: 1000.0))
+
+
 _LOGGER_NAME = "cadrumo_agent_service.host.store_lifecycle"
 _AGENT_DETAIL = "AGENT-DETAIL-TEXT"
 _HOME = "/private/home/of/the/agent"
@@ -85,6 +97,7 @@ class _Runner:
         }
         self.calls: list[tuple[str, ...]] = []
         self.timeouts: list[float] = []
+        self.after_call: Callable[[str], None] | None = None
 
     def run(
         self,
@@ -104,6 +117,8 @@ class _Runner:
         verb = tuple(arguments[len(_COMMAND_LINE) :])
         self.calls.append(verb)
         self.timeouts.append(timeout)
+        if self.after_call is not None:
+            self.after_call(verb[0])
         answer = self._answers[verb[0]]
         if isinstance(answer, Exception):
             raise answer
@@ -140,7 +155,7 @@ def _lifecycle(runner: _Runner, aside: _Aside, *, quiesced: bool = True) -> Agen
         command_line=_COMMAND_LINE,
         aside=aside,
         quiesced=lambda: quiesced,
-        bounds=_BOUNDS,
+        deadline=_DEADLINE,
     )
 
 
@@ -155,7 +170,7 @@ def test_current_stores_run_nothing_but_one_combined_read() -> None:
     aside = _Aside()
     _lifecycle(runner, aside).prepare()
     assert runner.calls == [("preflight",)]
-    assert runner.timeouts == [_BOUNDS.preflight]
+    assert runner.timeouts == [10.0]
     assert aside.actions == ["clear_partial"]
 
 
@@ -171,7 +186,7 @@ def test_absent_stores_are_set_up_then_must_read_current(status: str) -> None:
     aside = _Aside()
     _lifecycle(runner, aside).prepare()
     assert runner.calls == [("preflight",), ("setup",), ("stores-state",)]
-    assert runner.timeouts[1] == _BOUNDS.setup
+    assert runner.timeouts[1] == 10.0
     assert aside.actions == ["clear_partial"]
 
 
@@ -190,7 +205,7 @@ def test_older_stores_are_copied_aside_before_the_asserted_migrate_and_the_copy_
         ("migrate", "--expect-from", "0001", "--expect-head", "0002"),
         ("stores-state",),
     ]
-    assert runner.timeouts[1] == _BOUNDS.migrate
+    assert runner.timeouts[1] == 10.0
     assert aside.actions == ["clear_partial", "keep", "discard"]
 
 
@@ -226,14 +241,77 @@ def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
     aside = _Aside()
     with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
         error = _refusal(_lifecycle(runner, aside))
-    assert error.reason is AgentHostRefusal.STORES_UNPREPARED
-    assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
+    assert error.reason is (AgentHostRefusal.TIMEOUT if result.status is None else AgentHostRefusal.STORES_UNPREPARED)
+    assert launcher_refusal_for(error) is (
+        AgentLauncherRefusal.TIMEOUT if result.status is None else AgentLauncherRefusal.SERVICE_FAILED
+    )
     assert [call[0] for call in runner.calls] == ["preflight", "migrate"]
     assert aside.actions == ["clear_partial", "keep"]
     assert aside.copy
     # The agent's text and its home's path never reach a diagnostic.
-    assert _AGENT_DETAIL not in caplog.text
-    assert _HOME not in caplog.text
+    assert _AGENT_DETAIL not in delivered_text(caplog)
+    assert _HOME not in delivered_text(caplog)
+
+
+def _not_brought_to_current(caplog: pytest.LogCaptureFixture) -> list[str]:
+    return [
+        record.getMessage()
+        for record in delivered_records(caplog, _LOGGER_NAME)
+        if record.getMessage().startswith("agent stores not brought to current")
+    ]
+
+
+@pytest.mark.parametrize(
+    ("failure", "labels"),
+    [
+        pytest.param(
+            RefusalError(RefusalCode.TIMEOUT, check="job_process_ids_winerror_5"),
+            f"error_type=RefusalError reason={RefusalCode.TIMEOUT.value} check=job_process_ids_winerror_5",
+            id="refusal-with-check",
+        ),
+        pytest.param(
+            RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE),
+            f"error_type=RefusalError reason={RefusalCode.CONTAINMENT_UNAVAILABLE.value} check=none",
+            id="refusal-without-check",
+        ),
+        pytest.param(
+            AgentHostError(AgentHostRefusal.LAUNCH_FAILED),
+            f"error_type=AgentHostError reason={AgentHostRefusal.LAUNCH_FAILED.value} check=none",
+            id="host-refusal",
+        ),
+        pytest.param(OSError(_HOME), "error_type=OSError reason=none check=none", id="os-error"),
+        pytest.param(
+            RefusalError(RefusalCode.UNAVAILABLE, check=f"{_HOME} {_AGENT_DETAIL}"),
+            f"error_type=RefusalError reason={RefusalCode.UNAVAILABLE.value} check=none",
+            id="check-outside-the-closed-shape",
+        ),
+    ],
+)
+def test_a_run_that_could_not_complete_logs_the_type_and_closed_reason_of_its_failure(
+    failure: Exception, labels: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    runner = _Runner({"preflight": failure})
+    aside = _Aside()
+    with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
+        error = _refusal(_lifecycle(runner, aside))
+
+    assert error.reason is AgentHostRefusal.STORES_UNPREPARED
+    assert _not_brought_to_current(caplog) == [
+        f"agent stores not brought to current step=preflight outcome=run_failed failed_stage=none {labels}"
+    ]
+    # Neither the failure's message nor a check outside the closed shape is ever logged.
+    assert _HOME not in delivered_text(caplog) and _AGENT_DETAIL not in delivered_text(caplog)
+
+
+def test_a_refusal_that_is_not_a_failed_run_names_no_exception(caplog: pytest.LogCaptureFixture) -> None:
+    runner = _Runner({"preflight": [AgentInvocationResult(status=3, standard_output=b"")]})
+    with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
+        _refusal(_lifecycle(runner, _Aside()))
+
+    assert _not_brought_to_current(caplog) == [
+        "agent stores not brought to current step=preflight outcome=failed failed_stage=none "
+        "error_type=none reason=none check=none"
+    ]
 
 
 def test_a_kept_copy_over_stores_that_are_not_current_refuses_every_later_start() -> None:
@@ -284,7 +362,9 @@ def test_another_command_line_contract_is_incompatible() -> None:
 )
 def test_a_setup_that_did_not_succeed_is_refused_without_a_recheck(status: AgentInvocationResult) -> None:
     runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("absent")})], "setup": [status]})
-    assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
+    assert _refusal(_lifecycle(runner, _Aside())).reason is (
+        AgentHostRefusal.TIMEOUT if status.status is None else AgentHostRefusal.STORES_UNPREPARED
+    )
     assert [call[0] for call in runner.calls] == ["preflight", "setup"]
 
 
@@ -380,3 +460,66 @@ def test_a_reported_revision_that_could_read_as_an_option_is_never_passed_back(f
     assert _refusal(_lifecycle(runner, aside)).reason is AgentHostRefusal.STORES_UNPREPARED
     assert aside.actions == ([] if len(found) > 64 else ["clear_partial"])
     assert runner.calls == [("preflight",)]
+
+
+def test_store_phases_consume_one_owner_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
+    now = [1000.0]
+    monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
+    runner = _Runner(
+        {
+            "preflight": [_out({**_VERSION, "stores": _state("absent")})],
+            "setup": [_out(_step("succeeded"))],
+            "stores-state": [_out(_state("current", found="0002"))],
+        }
+    )
+
+    def elapsed(verb: str) -> None:
+        now[0] += {"preflight": 3.0, "setup": 4.0, "stores-state": 2.0}[verb]
+
+    runner.after_call = elapsed
+    _lifecycle(runner, _Aside()).prepare()
+    assert runner.timeouts == [10.0, 7.0, 3.0]
+
+
+def test_timeout_after_preflight_never_starts_setup(monkeypatch: pytest.MonkeyPatch) -> None:
+    now = [1000.0]
+    monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("absent")})]})
+
+    def expired(_verb: str) -> None:
+        now[0] = 1011.0
+
+    runner.after_call = expired
+    assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.TIMEOUT
+    assert runner.calls == [("preflight",)]
+
+
+def test_cancellation_after_migrate_keeps_the_copy_and_does_not_replay() -> None:
+    cancellation = InvocationCancellation()
+    runner = _Runner(
+        {
+            "preflight": [_out({**_VERSION, "stores": _state("older")})],
+            "migrate": [_out(_step("succeeded"))],
+        }
+    )
+    aside = _Aside()
+    lifecycle = AgentStoreLifecycle(
+        runner=runner,
+        launch=_LAUNCH,
+        command_line=_COMMAND_LINE,
+        aside=aside,
+        quiesced=lambda: True,
+        deadline=_DEADLINE,
+        cancellation=cancellation,
+    )
+
+    def cancel_after_change(verb: str) -> None:
+        if verb == "migrate":
+            cancellation.cancel()
+
+    runner.after_call = cancel_after_change
+    assert _refusal(lifecycle).reason is AgentHostRefusal.CANCELLED
+    assert aside.copy
+    assert [verb[0] for verb in runner.calls] == ["preflight", "migrate"]
+    assert _refusal(lifecycle).reason is AgentHostRefusal.CANCELLED
+    assert len(runner.calls) == 2

@@ -1,16 +1,20 @@
-"""Walk the declared form layout and account for its placements."""
+"""Present the declared form layout's pages from the form's classified summary of them."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.casilla_id import CasillaId
+from ...core.filing_producer_key import FilingProducerKey
+from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ...domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.modelo_localization import form_heading_edition_locale_key
 from ...domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormCellKind,
@@ -20,118 +24,117 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormPageDefinition,
     FormPlacementDefinition,
-    FormPlacementKind,
     FormRepeatingColumn,
     FormRepeatingGroupBlock,
     FormSectionDefinition,
 )
-from ..filing.producer_snapshot import FilingProducerSnapshot
 from .work_form_context_values import form_context_value
 from .work_form_counts import count_work_form_fields
-from .work_form_errors import ModeloWorkFormLayoutError
-from .work_form_field_projection import project_binding_field, project_casilla_field
-from .work_form_localization import localized_heading, localized_text
+from .work_form_facts import ModeloFormFieldFacts, ModeloFormPageFacts, ModeloWorkFormSummary
+from .work_form_field_projection import (
+    binding_facts,
+    casilla_facts,
+    casilla_label,
+    project_binding_field,
+    project_casilla_field,
+)
+from .work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from .work_form_layout_facts import placement_aliases
+from .work_form_localization import localized_casilla_label, localized_heading
 from .work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormContextFieldBlock,
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloFormGridCell,
     ModeloFormGridColumn,
     ModeloFormGridRow,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     section_fields,
 )
-from .work_form_rates import (
-    page_applies_for_values,
-    read_design_value,
-    with_grounded_grid_rates,
-    with_printed_row_rates,
-)
-from .work_form_records import saved_form_records
-from .work_form_sources import FIXED_BY_THE_FORM
+from .work_form_rates import with_grounded_grid_rates, with_printed_row_rates, with_row_rate_bases
+from .work_form_wording import context_value_text
 
 
 class LayoutWalker:
-    """Turn a declared layout into form pages while accounting for every placement."""
+    """Present a declared layout's pages from the form's classified summary of them.
+
+    Every decision about a box -- which casilla a block shows, which block only
+    repeats one, its value and where it stands, whether its page applies -- is
+    the summary's (:func:`~.work_form_layout_facts.walk_layout_facts`); this
+    walk adds the words, the controls and the layout's own structure.
+    """
 
     def __init__(
         self,
         layout: FormLayoutDefinition,
         context: WorkFormContext,
+        summary: ModeloWorkFormSummary,
         *,
-        producer_snapshot: FilingProducerSnapshot | None = None,
+        producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
+        profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     ) -> None:
-        """Prepare placement indexes and an empty set of casillas encountered on pages."""
+        """Index the summary's pages and boxes for the walk."""
         self.layout = layout
         self.context = context
-        self.producer_snapshot = producer_snapshot
+        self.summary = summary
+        self.producer_values = producer_values
+        self.profile_binding_values = profile_binding_values
         self.placements: dict[str, FormPlacementDefinition] = {item.casilla_id: item for item in layout.placements}
         self.aliases: dict[str, tuple[str, ...]] = {
-            item.casilla_id: tuple(alias.official_ref or alias.page_id for alias in item.aliases)
-            for item in layout.placements
+            item.casilla_id: placement_aliases(item) for item in layout.placements
         }
-        self.seen: set[str] = set()
-        self.positions: dict[str, set[tuple[str, str]]] = {}
+        self.pages: dict[str, ModeloFormPageFacts] = {page.id: page for page in summary.pages}
+        self.facts: dict[tuple[str, tuple[str, str]], ModeloFormFieldFacts] = {
+            (page.id, address_key(field.address)): field for page in summary.pages for field in page.fields
+        }
+        self.records = iter(summary.records)
         self.section_position: tuple[str, str] = ("", "")
 
-    def casilla(
-        self, casilla_id: str, *, design_constant: str | None = None, literal_decimals: int | None = None
-    ) -> ModeloFormField:
-        """Show one placed casilla; a box whose value the official design fixes is never editable.
+    def casilla(self, casilla_id: str) -> ModeloFormField:
+        """Show one placed casilla as the summary classified it on this page."""
+        facts = self.facts[(self.section_position[0], ("casilla", casilla_id))]
+        return project_casilla_field(
+            facts, self.context, self.placements.get(casilla_id), self.aliases.get(casilla_id, ())
+        )
 
-        Its value is the design's literal read at the export field's declared
-        scale. A literal whose scale the registry does not declare is shown as
-        fixed without a number: neither the literal's raw digits nor the
-        engine's own figure for the box is what the filed fichero carries.
-        """
-        if casilla_id in self.seen:
-            raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
-        placement = self.placements.get(casilla_id)
-        if placement is None or placement.kind is not FormPlacementKind.ON_FORM:
-            raise ModeloWorkFormLayoutError(f"casilla {casilla_id!r} sits on a page without an on-form placement")
-        self.seen.add(casilla_id)
-        self.positions.setdefault(casilla_id, set()).add(self.section_position)
-        field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
-        if design_constant is None:
-            return field
-        fixed = read_design_value(
-            design_constant,
-            literal_decimals if literal_decimals is not None else self.context.export_decimals(casilla_id),
-        )
-        return field.model_copy(
-            update={
-                "editability": ModeloFormEditability.DESIGN_CONSTANT,
-                "not_writable_reason": None,
-                "origin": ModeloFormOrigin.INFORMATIONAL,
-                "unattributed": False,
-                "value": fixed,
-                "source": FIXED_BY_THE_FORM,
-            }
-        )
+    def binding(self, binding_id: str) -> ModeloFormField:
+        """Show one binding input as the summary classified it on this page."""
+        return project_binding_field(self.facts[(self.section_position[0], ("binding", binding_id))], self.context)
 
     def page(self, page: FormPageDefinition) -> ModeloFormPage:
-        """Project one declared page and derive applicability from its fields and saved rows."""
+        """Present one declared page with the applicability and counts the summary decided for it."""
         language = self.context.language
-        sections = tuple(self.section(page.id, section) for section in page.sections)
+        facts = self.pages[page.id]
+        applies = facts.applies
+        sections = tuple(
+            section.model_copy(update={"applies": section_applies(section, page_applies=applies)})
+            for section in (self.section(page.id, part) for part in page.sections)
+        )
         return ModeloFormPage(
             id=page.id,
-            heading=localized_heading(page.heading_key, page.official_heading, page.official_ref or page.id, language),
+            heading=localized_heading(
+                page.heading_key,
+                page.official_heading,
+                page.official_ref or page.id,
+                language,
+                edition_key=self._edition_key(page.heading_key),
+            ),
             official_ref=page.official_ref,
             condition=page.condition,
-            applies=page_applies_for_values(page, self.context, sections),
+            applies=applies,
             sections=sections,
-            counts=count_work_form_fields(
-                (field for section in sections for field in section_fields(section)), filed=self.context.filed
-            ),
+            counts=facts.counts,
         )
 
     def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection:
@@ -140,14 +143,24 @@ class LayoutWalker:
         blocks = tuple(self.block(block) for block in section.blocks)
         form_section = ModeloFormSection(
             id=f"{page_id}.{section.id}",
-            heading=localized_heading(section.heading_key, section.official_heading, section.id, self.context.language),
+            heading=localized_heading(
+                section.heading_key,
+                section.official_heading,
+                section.id,
+                self.context.language,
+                edition_key=self._edition_key(section.heading_key),
+            ),
             official_heading=section.official_heading,
             blocks=blocks,
             counts=count_work_form_fields((), filed=self.context.filed),
+            applies=None,
         )
         return form_section.model_copy(
             update={"counts": count_work_form_fields(section_fields(form_section), filed=self.context.filed)}
         )
+
+    def _edition_key(self, heading_key: str) -> str | None:
+        return form_heading_edition_locale_key(str(self.context.review.modelo), self.layout.revision_id, heading_key)
 
     def block(
         self,
@@ -158,80 +171,100 @@ class LayoutWalker:
         | FormContextFieldBlock,
     ) -> ModeloFormBlock:
         """Project one declared field, grid, repeating group, or binding-input block."""
-        language = self.context.language
         if isinstance(block, FormContextFieldBlock):
-            owner = resolve_form_context_field(self.context.snapshot.revision, block)
-            label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
-            if block.box_number is not None:
-                label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
-            value = (
-                project_binding_field(owner.binding, self.context).value
-                if owner.binding is not None
-                else form_context_value(
-                    self.context.snapshot,
-                    block,
-                    producer_snapshot=self.producer_snapshot,
-                    revision=self.context.revision,
-                )
-            )
-            choice = form_context_choice(block, value)
-            if choice is not None:
-                value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
-            return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
+            return self._context_block(block)
         if isinstance(block, FormFieldBlock):
-            if block.casilla_id is not None and block.casilla_id in self.seen:
-                return self.alias(block)
-            field = (
-                self.casilla(
-                    block.casilla_id,
-                    design_constant=block.design_constant,
-                    literal_decimals=block.literal_decimals,
-                )
-                if block.casilla_id is not None
-                else project_binding_field(str(block.binding_id), self.context)
-            )
-            return ModeloFormFieldBlock(id=block.id, field=field)
+            return self._field_block(block)
         if isinstance(block, FormGridBlock):
-            columns = tuple(
-                ModeloFormGridColumn(
-                    key=column.key,
-                    heading=localized_heading(column.heading_key, column.official_heading, column.key, language),
-                )
-                for column in block.columns
-            )
-            rows = tuple(
-                ModeloFormGridRow(
-                    key=row.key,
-                    heading=localized_heading(row.heading_key, row.official_heading, row.key, language),
-                    cells=with_grounded_grid_rates(
-                        tuple(
-                            self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal, cell.literal_decimals)
-                            for cell in row.cells
-                        ),
-                        self.context,
-                    ),
-                )
-                for row in block.rows
-            )
-            return ModeloFormGridBlock(id=block.id, columns=columns, rows=with_printed_row_rates(rows))
+            return self._grid_block(block)
         if isinstance(block, FormRepeatingGroupBlock):
             return self.repeating(block)
         return ModeloFormBindingInputsBlock(
+            id=block.id, fields=tuple(self.binding(binding_id) for binding_id in block.binding_ids)
+        )
+
+    def _context_block(self, block: FormContextFieldBlock) -> ModeloFormContextFieldBlock:
+        language = self.context.language
+        owner = resolve_form_context_field(self.context.snapshot.revision, block)
+        label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
+        value = (
+            self._binding_context_value(owner.binding)
+            if owner.binding is not None
+            else form_context_value(
+                self.context.snapshot,
+                block,
+                producer_values=self.producer_values,
+                revision=self.context.revision,
+            )
+        )
+        choice = form_context_choice(block, value)
+        if choice is not None:
+            value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
+        period = self.context.snapshot.filing_period
+        shows_period = (
+            owner.binding is None
+            and owner.draft_attribute is ExportDraftAttribute.PERIOD_CODE
+            and value is not None
+            and choice is None
+        )
+        return ModeloFormContextFieldBlock(
             id=block.id,
-            fields=tuple(project_binding_field(binding_id, self.context) for binding_id in block.binding_ids),
+            label=label,
+            box_number=block.box_number,
+            value=value,
+            value_text=context_value_text(value, language, period=period if shows_period else None),
+        )
+
+    def _binding_context_value(self, binding_id: BindingId) -> ModeloFormScalar:
+        """Keep every saved answer; otherwise use the caller's admitted profile context."""
+        revision = self.context.revision
+        if (
+            (revision is None or binding_id not in revision.binding_overrides)
+            and self.profile_binding_values is not None
+            and binding_id in self.profile_binding_values
+        ):
+            return self.profile_binding_values[binding_id]
+        return binding_facts(binding_id, self.context).value
+
+    def _field_block(self, block: FormFieldBlock) -> ModeloFormBlock:
+        if (*self.section_position, block.id) in self.summary.alias_blocks:
+            return self.alias(block)
+        field = self.casilla(block.casilla_id) if block.casilla_id is not None else self.binding(str(block.binding_id))
+        # Both parts are validated: the id by the hydrated layout, the field as it was built. Validating
+        # the block would only run the field's own checks again on the same frozen field.
+        return ModeloFormFieldBlock.model_construct(id=block.id, field=field)
+
+    def _grid_block(self, block: FormGridBlock) -> ModeloFormGridBlock:
+        language = self.context.language
+        columns = tuple(
+            ModeloFormGridColumn(
+                key=column.key,
+                heading=localized_heading(column.heading_key, column.official_heading, column.key, language),
+            )
+            for column in block.columns
+        )
+        rows = tuple(
+            ModeloFormGridRow(
+                key=row.key,
+                heading=localized_heading(row.heading_key, row.official_heading, row.key, language),
+                cells=with_grounded_grid_rates(
+                    tuple(self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal) for cell in row.cells),
+                    self.context,
+                ),
+            )
+            for row in block.rows
+        )
+        return ModeloFormGridBlock(
+            id=block.id, columns=columns, rows=with_row_rate_bases(columns, with_printed_row_rates(rows))
         )
 
     def alias(self, block: FormFieldBlock) -> ModeloFormContextFieldBlock:
-        """Show a declared repeat without creating another editable address."""
+        """Show a declared repeat of a box shown elsewhere, with its label and value and no address of its own."""
         casilla_id = str(block.casilla_id)
-        placement = self.placements[casilla_id]
-        declared = {(alias.page_id, alias.section_id) for alias in placement.aliases}
-        visited = self.positions.setdefault(casilla_id, set())
-        if self.section_position not in declared or self.section_position in visited:
-            raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
-        visited.add(self.section_position)
-        field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
-        return ModeloFormContextFieldBlock(id=block.id, label=field.label, value=field.value)
+        facts = casilla_facts(casilla_id, self.context, self.placements[casilla_id])
+        return ModeloFormContextFieldBlock(
+            id=block.id, label=casilla_label(self.context.casillas[casilla_id], self.context), value=facts.value
+        )
 
     def cell(
         self,
@@ -239,19 +272,14 @@ class LayoutWalker:
         casilla_id: CasillaId | None,
         binding_id: BindingId | None,
         literal: str | None,
-        literal_decimals: int | None = None,
     ) -> ModeloFormGridCell:
         """Project one grid cell from its declared casilla, binding, or design literal."""
         if kind is FormCellKind.CASILLA and casilla_id is not None:
             return ModeloFormGridCell(kind=kind, field=self.casilla(casilla_id))
         if kind is FormCellKind.BINDING_INPUT and binding_id is not None:
-            return ModeloFormGridCell(kind=kind, field=project_binding_field(binding_id, self.context))
+            return ModeloFormGridCell(kind=kind, field=self.binding(binding_id))
         if kind is FormCellKind.DESIGN_CONSTANT and casilla_id is not None:
-            return ModeloFormGridCell(
-                kind=kind,
-                field=self.casilla(casilla_id, design_constant=literal, literal_decimals=literal_decimals),
-                literal=literal,
-            )
+            return ModeloFormGridCell(kind=kind, field=self.casilla(casilla_id), literal=literal)
         return ModeloFormGridCell(kind=kind, literal=literal)
 
     def repeating(self, block: FormRepeatingGroupBlock) -> ModeloFormRepeatingBlock:
@@ -260,18 +288,14 @@ class LayoutWalker:
             ModeloFormGridColumn(key=column.key, heading=self.repeating_heading(column)) for column in block.columns
         )
         column_casillas = tuple(column.casilla_id for column in block.columns)
-        self._remember_placed_columns(column_casillas)
+        record = next(self.records)
+        if record.position != (*self.section_position, block.id):
+            raise ValueError("the form's tables of records are presented in the order the summary read them")
         data_types = self._column_data_types(column_casillas)
         if any(column.export_field_id is not None for column in block.columns):
             data_types = tuple(
                 str(field.data_type) for field in resolve_form_projection_fields(self.context.snapshot.revision, block)
             )
-        rows_known, rows = saved_form_records(
-            snapshot=self.context.snapshot,
-            revision=self.context.revision,
-            block=block,
-            column_casillas=column_casillas,
-        )
         return ModeloFormRepeatingBlock(
             id=block.id,
             columns=columns,
@@ -279,16 +303,9 @@ class LayoutWalker:
             column_data_types=data_types,
             min_rows=block.min_rows,
             max_rows=block.max_rows,
-            rows_known=rows_known,
-            rows=rows,
+            rows_known=record.rows_known,
+            rows=record.rows,
         )
-
-    def _remember_placed_columns(self, column_casillas: tuple[str | None, ...]) -> None:
-        for casilla_id in column_casillas:
-            if casilla_id is not None and casilla_id not in self.seen:
-                placement = self.placements.get(casilla_id)
-                if placement is not None and placement.kind is FormPlacementKind.ON_FORM:
-                    self.seen.add(casilla_id)
 
     def _column_data_types(self, column_casillas: tuple[str | None, ...]) -> tuple[str, ...]:
         return tuple(
@@ -305,5 +322,23 @@ class LayoutWalker:
         if heading.disclosure is not ModeloFormTextDisclosure.TECHNICAL or column.casilla_id is None:
             return heading
         casilla = self.context.casillas.get(column.casilla_id)
-        label = None if casilla is None else localized_text(casilla.localization_keys, language)
+        label = (
+            None
+            if casilla is None
+            else localized_casilla_label(casilla, language, ejercicio=self.context.review.period.filing_year)
+        )
         return heading if label is None else label
+
+
+def section_applies(section: ModeloFormSection, *, page_applies: bool | None) -> bool | None:
+    """Whether a section applies: not on a page that does not, nor when every box on it is proven not to apply.
+
+    Otherwise the section answers as its page does, so a page that may not
+    apply leaves its sections undecided too.
+    """
+    if page_applies is False:
+        return False
+    fields = section_fields(section)
+    if fields and all(field.origin is ModeloFormOrigin.NOT_APPLICABLE for field in fields):
+        return False
+    return page_applies

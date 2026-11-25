@@ -31,7 +31,7 @@ from .base import (
     ProviderValidation,
     default_currency,
 )
-from .csv import CsvBankLayout, find_column, header_lookup
+from .csv import STATEMENT_COLUMNS, find_column, header_lookup
 from .workbook_layout import (
     LAYOUT_SAMPLE_ROWS,
     MIN_LAYOUT_SCORE,
@@ -56,7 +56,7 @@ class XlsxProvider(FinancialProvider):
     """Ingest raw transactions from ``.xlsx`` bank statement exports.
 
     Iterates every worksheet, scoring the first ten rows of each
-    against :data:`adapters.inbound.financial.providers.csv.CSV_LAYOUTS`
+    against :data:`adapters.inbound.financial.providers.csv.STATEMENT_COLUMNS`
     and selecting the worksheet/row pair with the highest match
     score. Numeric and date cell values are read directly from the
     cell types (rather than coerced through their printed strings)
@@ -102,7 +102,7 @@ class XlsxProvider(FinancialProvider):
         # needs this method's validation teardown in its ``finally`` block.
         workbook: object = None
         try:
-            workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(self._read_source_bytes(path))
+            workbook, rows, _, header_row, _, _ = self._locate_sheet(self._read_source_bytes(path))
             workbook = _runtime_object(workbook)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
@@ -116,20 +116,18 @@ class XlsxProvider(FinancialProvider):
                 except Exception:
                     _logger.debug("xlsx provider: workbook.close() after validate_source failed")
         warnings: list[str] = []
-        if layout is None:
+        if header_row is None:
             return ProviderValidation(
                 is_valid=False,
                 warnings=("Workbook does not contain a supported bank-statement header row",),
             )
-        if header_row is None or len(rows) <= self._last_header_index:
+        if len(rows) <= self._last_header_index:
             return ProviderValidation(
                 is_valid=False,
-                warnings=(f"{layout.bank_name} worksheet has no data rows after the header",),
+                warnings=("Worksheet has no data rows after the header",),
             )
-        if not bool(find_column(header_lookup(header_row), layout.columns.currency)):
-            warnings.append(
-                f"{layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
-            )
+        if not bool(find_column(header_lookup(header_row), STATEMENT_COLUMNS.currency)):
+            warnings.append(f"Worksheet has no currency column; falling back to {default_currency()}")
         return ProviderValidation(
             is_valid=True,
             warnings=tuple(warnings),
@@ -142,13 +140,11 @@ class XlsxProvider(FinancialProvider):
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the first matching worksheet."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
-        workbook, rows, sheet_name, layout, headers, lookup, header_index = self._locate_sheet(source_bytes)
-        if layout is None or headers is None or lookup is None:
+        workbook, rows, sheet_name, headers, lookup, header_index = self._locate_sheet(source_bytes)
+        if headers is None or lookup is None:
             workbook.close()
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
-        match = WorksheetLayoutMatch(
-            score=MIN_LAYOUT_SCORE, header_index=header_index, headers=headers, lookup=lookup, layout=layout
-        )
+        match = WorksheetLayoutMatch(score=MIN_LAYOUT_SCORE, header_index=header_index, headers=headers, lookup=lookup)
         try:
             yield from iter_worksheet_rows(
                 provider=self,
@@ -164,8 +160,8 @@ class XlsxProvider(FinancialProvider):
     def _locate_sheet(
         self,
         source_bytes: bytes,
-    ) -> tuple[Workbook, list[list[Any]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
-        """Return the first worksheet that matches a known bank layout."""
+    ) -> tuple[Workbook, list[list[Any]], str, list[str] | None, dict[str, str] | None, int]:
+        """Return the worksheet whose header row best names the statement columns."""
         workbook = _open_workbook_or_refuse(source_bytes)
         try:
             best = _select_best_layout_across_worksheets(workbook)
@@ -177,12 +173,11 @@ class XlsxProvider(FinancialProvider):
             self._last_sheet_name = best.sheet_name
             self._last_header_index = best.header_index + 1
             if best.score < MIN_LAYOUT_SCORE:
-                return workbook, best_rows, best.sheet_name, None, None, None, best.header_index
+                return workbook, best_rows, best.sheet_name, None, None, best.header_index
             return (
                 workbook,
                 best_rows,
                 best.sheet_name,
-                best.layout,
                 best.headers,
                 best.lookup,
                 best.header_index,
@@ -200,17 +195,16 @@ class XlsxProvider(FinancialProvider):
 
 @dataclass(frozen=True, slots=True)
 class _BestLayoutMatch:
-    """Best (worksheet, layout) match across every worksheet in the workbook.
+    """Best worksheet header match across every worksheet in the workbook.
 
-    Carries the per-worksheet score + selected layout + header row /
-    lookup so the caller can both report the picked sheet (via
-    name / index) and trigger the layout-not-supported short-circuit
-    when the best score falls below the minimum.
+    Carries the per-worksheet score + header row / lookup so the caller can
+    both report the picked sheet (via name / index) and trigger the
+    header-not-supported short-circuit when the best score falls below the
+    minimum.
     """
 
     worksheet: Worksheet | None
     sheet_name: str
-    layout: CsvBankLayout | None
     headers: list[str] | None
     lookup: dict[str, str] | None
     header_index: int
@@ -218,7 +212,7 @@ class _BestLayoutMatch:
 
 
 def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatch:
-    """Iterate every worksheet and keep the highest-scoring layout match.
+    """Iterate every worksheet and keep the highest-scoring header match.
 
     ``best_worksheet`` defaults to the first sheet in the workbook
     so a workbook whose every sheet scores below the minimum still
@@ -229,7 +223,6 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
     best = _BestLayoutMatch(
         worksheet=fallback,
         sheet_name=fallback.title if fallback is not None else "Sheet1",
-        layout=None,
         headers=None,
         lookup=None,
         header_index=0,
@@ -244,7 +237,6 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
         best = _BestLayoutMatch(
             worksheet=worksheet,
             sheet_name=worksheet.title,
-            layout=candidate.layout,
             headers=candidate.headers,
             lookup=candidate.lookup,
             header_index=candidate.header_index,

@@ -9,6 +9,7 @@ from typing import Literal, cast
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import (
@@ -18,6 +19,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
+    compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
@@ -33,14 +35,13 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.snapshot import validate_materialized_export_record_families
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
 
 from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader_semantics import (
-    compile_export_semantic_field as _compile_export_semantic_field,
-)
-from ..compiler.loader_semantics import (
-    compile_projection_endpoint_declaration as _compile_projection_endpoint_declaration,
+    compile_export_semantic_field,
+    compile_projection_endpoint_declaration,
 )
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validate_exports import (
@@ -50,6 +51,15 @@ from ..compiler.validate_exports import (
 from ..compiler.validate_projection_endpoints import validate_projection_endpoint_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EXERCISE = filing_year_envelope().horizon
+#: Modelo 390's newest edition at filing grade; its horizon edition is applicability grade only.
+_M390_FILING_EXERCISE = max(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "390", lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+    )
+)
 
 _LEGAL_REF = "ley-58-2003:art-98"
 _SOURCE_REF = "aeat-dr-303-2025"
@@ -124,8 +134,8 @@ def _revision(
     return ModeloRevision(
         id="projection-test",
         localization_key="test.projection.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(_EXERCISE, 1, 1),
+        period_selector=PeriodSelector(years=(_EXERCISE,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         projection_endpoints=projection_endpoints,
@@ -215,7 +225,7 @@ def test_projection_field_declares_only_the_typed_projection_payload() -> None:
 
 def test_registry_loader_hydrates_only_exact_projection_ref_toml() -> None:
     source_path = Path("projection.toml")
-    compiled = _compile_export_semantic_field(
+    compiled = compile_export_semantic_field(
         source_path,
         _raw_projection_field(
             reference={
@@ -230,14 +240,14 @@ def test_registry_loader_hydrates_only_exact_projection_ref_toml() -> None:
 
     assert field.projection_ref == _prorrata_ref()
     with pytest.raises(RegistryLoadError, match="does not match any of the expected tags"):
-        _compile_export_semantic_field(
+        compile_export_semantic_field(
             source_path,
             _raw_projection_field(reference={"projection_kind": "m303_unknown_projection"}),
         )
 
 
 def test_registry_loader_hydrates_required_flat_module_projection() -> None:
-    compiled = _compile_export_semantic_field(
+    compiled = compile_export_semantic_field(
         Path("projection.toml"),
         _raw_projection_field(
             reference={
@@ -358,20 +368,19 @@ def test_materialized_snapshot_boundary_refuses_unresolved_binding_record() -> N
 
 
 @pytest.mark.parametrize(
-    ("modelo_id", "filing_year", "period", "record_type", "repeat"),
+    ("modelo_id", "period", "record_type", "repeat"),
     [
-        ("131", 2024, "1T", "DPA", "binding_rows"),
-        ("720", 2024, "0A", "type_1", None),
+        ("131", "1T", "DPA", "binding_rows"),
+        ("720", "0A", "type_1", None),
     ],
 )
 def test_active_snapshots_materialize_repeated_and_fixed_binding_records(
     modelo_id: str,
-    filing_year: int,
     period: str,
     record_type: str,
     repeat: Literal["binding_rows"] | None,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo_id, filing_year=_EXERCISE, period=period)
     record = next(record for record in snapshot.revision.export_layouts[0].records if record.record_type == record_type)
 
     assert record.repeat == repeat
@@ -430,9 +439,34 @@ def test_generated_projection_fields_must_biject_revision_owned_declarations() -
     assert clean == []
 
 
+@pytest.mark.usefixtures("authority_operation")
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"projection_kind": "m390_activity", "slot": 7, "field": "activity_code"},
+        {"projection_kind": "m390_regimen_simplificado_module", "slot": 1, "module_order": 8, "value": "units"},
+        {"projection_kind": "m390_prorrata_activity", "slot": 6, "field": "cnae"},
+        {"projection_kind": "m390_differentiated_deduction", "slot": 4, "field": "total"},
+    ],
+)
+def test_m390_undeclared_positive_references_cannot_enter_an_export(payload: dict[str, object]) -> None:
+    """A structural reference does not enroll a row the revision does not declare."""
+    revision = compiled_bundled_authority().snapshot("390", filing_year=_M390_FILING_EXERCISE, period="0A").revision
+    assert revision.projection_endpoints == ()
+    assert all(record.repeat != "projection_rows" for layout in revision.export_layouts for record in layout.records)
+    reference = compile_filing_projection_ref(payload)
+    proposed_layout = _revision(_field(projection_ref=reference)).export_layouts
+    proposed = revision.model_copy(update={"export_layouts": proposed_layout})
+    failures: list[str] = []
+    validate_generated_projection_layout_bijection(
+        failures, prefix=f"modelo 390 revision {revision.id}", revision=proposed
+    )
+    assert any("undeclared generated refs" in failure for failure in failures)
+
+
 def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -> None:
     source_path = Path("projection-endpoint.toml")
-    compiled = _compile_projection_endpoint_declaration(
+    compiled = compile_projection_endpoint_declaration(
         source_path,
         {
             "id": "m303-prorrata-activity:field-cnae.slot-1",

@@ -16,8 +16,9 @@ from pathlib import Path
 from typing import TypeIs
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
+from ..quality.year_literal_shapes import YEAR_SOURCE
 from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
 
 AUTHORITY = Path("src/cadrumo/_data/registry/aeat") / SUPPORTED_FILING_YEARS_DECLARATION
@@ -54,7 +55,8 @@ class Finding:
     context: str
 
 
-def _canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
+def canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
+    """Return the supported filing years floor, horizon and hard ceiling from the registry."""
     payload = parse_toml((repo / AUTHORITY).read_text(encoding="utf-8"))
     catalogue = SupportedFilingYearsCatalogue.model_validate(payload.get("supported_filing_years"))
     return catalogue.floor, catalogue.horizon, catalogue.hard_ceiling
@@ -83,7 +85,7 @@ def _literal_years(node: ast.AST) -> tuple[int, ...]:
         if isinstance(child, ast.Constant)
         and isinstance(child.value, int)
         and not isinstance(child.value, bool)
-        and 2000 <= child.value <= 2099
+        and YEAR_SOURCE.match(str(child.value)) is not None
     )
 
 
@@ -150,7 +152,7 @@ def _toml_findings(path: Path, repo: Path, canonical: set[int]) -> list[Finding]
 
 def sweep(repo: Path, roots: tuple[Path, ...]) -> list[Finding]:
     """Return candidate policy restatements beneath the requested roots."""
-    floor, horizon, _ = _canonical_bounds(repo)
+    floor, horizon, _ = canonical_bounds(repo)
     canonical = set(range(floor, horizon + 1))
     findings: list[Finding] = []
     for root in roots:
@@ -174,7 +176,7 @@ def main() -> int:
     parser.add_argument("roots", nargs="*", type=Path, default=DEFAULT_ROOTS)
     args = parser.parse_args()
     repo = args.repo.resolve()
-    floor, horizon, hard_ceiling = _canonical_bounds(repo)
+    floor, horizon, hard_ceiling = canonical_bounds(repo)
     findings = sweep(repo, tuple(args.roots))
     print(f"authority={AUTHORITY} floor={floor} horizon={horizon} hard_ceiling={hard_ceiling}")
     print(f"candidates={len(findings)}")

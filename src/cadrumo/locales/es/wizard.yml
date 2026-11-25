@@ -23,7 +23,7 @@ wizard:
     checkbox_required: Selecciona al menos una opción para %{prompt_key}.
     checkbox_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
       válidas: %{choices}.'
-    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para `checkbox`.
     eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
       residencia en la UE o el EEE.'
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
@@ -34,9 +34,11 @@ wizard:
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
     invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
+    invalid_year: 'Ejercicio no válido para %{prompt_key}: %{raw}. Usa cuatro cifras
+      (AAAA).'
     select_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
       válidas: %{choices}.'
-    select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    select_without_choices: La pregunta %{prompt_key} no declara opciones para `select`.
     spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
       es tributación conjunta.'
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
@@ -71,11 +73,12 @@ wizard:
       google-export:
         prompt: ¿Activar la exportación a Google Sheets?
       llm-vision:
-        prompt: ¿Activar la visión LLM local para leer facturas?
+        prompt: ¿Permitir leer documentos escaneados o en imagen con el modelo de
+          lectura de imágenes que elegiste?
       title: Capacidades de servicios
     certificate:
       path:
-        prompt: Introduce la ruta a tu certificado digital (.p12, .pfx)
+        prompt: Introduce la ruta a tu certificado digital (`.p12`, `.pfx`)
     codes:
       disability-grade:
         choices:
@@ -126,6 +129,9 @@ wizard:
           al nacer.
         invalid_range: El mes debe estar entre %{minimum} y %{maximum}.
         prompt: Mes en que la madre completó los 30 días de cotización tras el nacimiento
+      apellidos-nombre:
+        prompt: Apellidos y nombre del descendiente (primero los apellidos)
+        too_long: Escribe los apellidos y el nombre con %{limit} caracteres como máximo.
       birth-date:
         prompt: Fecha de nacimiento
       convivencia:
@@ -260,6 +266,14 @@ wizard:
     familia:
       title: Situación familiar
     family:
+      family-convive-con-otro-progenitor:
+        help: El artículo 84.2.4.º de la Ley del IRPF excluye la reducción por tributación
+          conjunta de la unidad familiar monoparental cuando el contribuyente convive
+          con el padre o la madre de alguno de los hijos que forman parte de ella.
+          Déjalo sin responder si no lo sabes; entonces Cadrumo no puede calcular
+          esa reducción.
+        prompt: ¿Convives con el padre o la madre de alguno de los hijos de tu unidad
+          familiar?
       family-descendants-eu-eea-deduction:
         prompt: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
@@ -291,7 +305,8 @@ wizard:
         help: Rol declarante del modelo 347; indica --declaration-roles una vez por
           rol
       descendiente:
-        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,COTIZACIONES_SS_MADRE=N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<apellidos
+          y nombre>]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:
@@ -300,6 +315,9 @@ wizard:
         help: Presupuesto administración pública superior a 6.000.000
       entity-type:
         help: Persona física, persona jurídica o entidad en atribución de rentas
+      family-convive-con-otro-progenitor:
+        help: 'Unidad monoparental: si convives con el padre o la madre de un hijo
+          de la unidad (artículo 84.2.4.º LIRPF)'
       family-descendants-eu-eea-deduction:
         help: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
@@ -315,18 +333,30 @@ wizard:
         help: Importe neto de la cifra de negocios de los últimos 12 meses, en euros.
           Por encima de 6.000.000 EUR el Modelo 202 obliga a la modalidad del art.
           40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
+      irpf-activity-income-imputation-criterion:
+        help: 'Criterio del art. 7 RIRPF para los ingresos y gastos de actividad en
+          el ejercicio indicado con --irpf-activity-income-imputation-year: `devengo`
+          (lo habitual) o `cobros_y_pagos` (se mantiene tres años; no con contabilidad
+          ajustada al Código de Comercio).'
+      irpf-activity-income-imputation-year:
+        help: Ejercicio de cuatro cifras para el que se indican el criterio de imputación
+          y la respuesta sobre el Código de Comercio. Obligatorio con cualquiera de
+          las dos; las respuestas de otros ejercicios se conservan.
+      irpf-codigo-comercio-accounting:
+        help: Indica si llevas contabilidad ajustada al Código de Comercio en el ejercicio
+          indicado con --irpf-activity-income-imputation-year.
       irpf-estimation-regime:
         help: Régimen de estimación IRPF para la renta de actividad económica
       irpf-income-categories:
         help: Categoría de renta IRPF; indica --irpf-income-categories una vez por
           categoría
       irpf-special-regime:
-        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes.
-          "impatriado" para trabajadores desplazados a España acogidos a la Ley Beckham
+        help: Régimen especial IRPF. `general` para la mayoría de contribuyentes.
+          `impatriado` para trabajadores desplazados a España acogidos a la Ley Beckham
           (Art. 93 LIRPF), aplicable los primeros 6 años tras el traslado.
       irpf-special-regime-start-date:
         help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
-          Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
+          Solo cuando irpf-special-regime es `impatriado`. RIRPF Art. 116. El régimen
           expira al finalizar el 6.º año natural.
       iva-cash-accounting-regime-enrolled:
         help: Declara la inscripción en el régimen especial del criterio de caja del
@@ -359,20 +389,9 @@ wizard:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
       legal-name:
         help: Razón social de la persona jurídica para cabeceras de exportación
-      ley-49-2002-option-date:
-        help: Registra la fecha de la casilla 653 del modelo 036 para la opción del
-          título II de la Ley 49/2002.
-      ley-49-2002-option-declared:
-        help: Registra si la casilla 651 del modelo 036 declara la opción por el título
-          II de la Ley 49/2002.
-      ley-49-2002-renunciation-date:
-        help: Registra la fecha de la casilla 654 del modelo 036 para la renuncia
-          al título II de la Ley 49/2002.
-      ley-49-2002-renunciation-declared:
-        help: Registra si la casilla 652 del modelo 036 declara la renuncia al régimen
-          del título II de la Ley 49/2002.
       llm-vision:
-        help: Activar la visión LLM local para leer facturas.
+        help: Permitir leer documentos escaneados o en imagen con el modelo de lectura
+          de imágenes elegido.
       modelo-111-no-retenciones-periods:
         help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
           (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.
@@ -389,28 +408,22 @@ wizard:
           primeros periodos impositivos con beneficios (art. 29 LIS), para aplicar
           el tipo reducido del 15 por ciento. Opcional; sin marcar no se aplica el
           tipo reducido.
-      notes:
-        help: Notas para tu propio recuerdo (opcional)
-      objective-estimation-modulos-iae-epigraph:
-        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
-      objective-estimation-modulos-module-1-units:
-        help: Unidades anuales del módulo 1 para estimación objetiva.
-      objective-estimation-modulos-module-2-units:
-        help: Unidades anuales del módulo 2 para estimación objetiva.
-      objective-estimation-modulos-module-3-units:
-        help: Unidades anuales del módulo 3 para estimación objetiva.
-      objective-estimation-modulos-module-4-units:
-        help: Unidades anuales del módulo 4 para estimación objetiva.
-      objective-estimation-modulos-module-5-units:
-        help: Unidades anuales del módulo 5 para estimación objetiva.
-      objective-estimation-modulos-module-6-units:
-        help: Unidades anuales del módulo 6 para estimación objetiva.
-      objective-estimation-modulos-module-7-units:
-        help: Unidades anuales del módulo 7 para estimación objetiva.
       output-language:
         help: Idioma de salida de la CLI para este perfil
+      pago-fraccionado-art-40-3-elected:
+        help: Indica si la entidad ejerció en su declaración censal la opción del
+          artículo 40.3 de la LIS (pago fraccionado sobre la base imponible de los
+          3, 9 u 11 primeros meses); la forma negativa registra que no la ejerció
+          o que la renunció. Opcional; sin indicarlo no se presume ninguna de las
+          dos.
+      patrimonio-declaration-threshold-met:
+        help: Tu cuota del Impuesto sobre el Patrimonio resulta a ingresar o, si no,
+          tus bienes y derechos valen más de 2.000.000 euros
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
+      pays-non-resident-income-with-retencion:
+        help: Paga a no residentes sin establecimiento permanente rentas sujetas a
+          retención del IRNR
       pays-professionals-with-retencion:
         help: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -421,8 +434,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Trimestres en que se cobró el premio, como tokens AAAA-nT separados
           por | (por ejemplo 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: Al menos 70% de los ingresos profesionales con retención previa
       representante-fiscal-nif:
         help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
           fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -474,8 +485,8 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo
       tax-residence-ccaa:
-        help: Comunidad autónoma de residencia fiscal, en territorio común. Si el
-          valor no se reconoce, el error enumera las comunidades aceptadas.
+        help: Comunidad o ciudad autónoma de residencia fiscal, en territorio común.
+          Si el valor no se reconoce, el error enumera los territorios aceptados.
       tax-residence-jurisdiction-scope:
         help: 'Régimen territorial declarado: territorio común o territorio foral
           todavía no compatible.'
@@ -558,10 +569,6 @@ wizard:
             label: Solo régimen simplificado
         prompt: ¿Qué composición de regímenes se aplica al Modelo 303?
       title: IVA
-    notes:
-      notes:
-        prompt: Notas para tu propio recuerdo (opcional)
-      title: Notas para tu propio recuerdo
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de
@@ -572,6 +579,31 @@ wizard:
         prompt: Realiza operaciones intracomunitarias
       has-employees:
         prompt: Tiene empleados y paga salarios con retención
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Solo si lo elegiste en tu declaración y no llevas contabilidad
+              ajustada al Código de Comercio; te vincula al menos tres años.
+            label: Cobros y pagos
+          devengo:
+            description: 'Lo habitual: los ingresos y gastos cuentan en el ejercicio
+              en que se generan, sea cual sea la fecha de cobro o pago.'
+            label: Devengo
+        help: 'El devengo es lo habitual: los ingresos y gastos pertenecen al ejercicio
+          en que se generan, sea cual sea la fecha de cobro o pago. Cobros y pagos
+          es una opción que solo puedes usar si no llevas contabilidad ajustada al
+          Código de Comercio (art. 7.2 RIRPF); te vincula al menos tres años y se
+          manifiesta en la declaración. Si no estás seguro, déjalo en blanco: las
+          casillas de actividad quedan sin resolver hasta que lo indiques.'
+        prompt: ¿Qué criterio usas para imputar a cada ejercicio los ingresos y gastos
+          de tu actividad? Lo habitual es el devengo.
+      irpf-activity-income-imputation-year:
+        help: La opción se elige ejercicio a ejercicio, así que la respuesta se guarda
+          solo para ese ejercicio y las de otros ejercicios no cambian.
+        prompt: ¿Para qué ejercicio es esta respuesta? Escribe cuatro cifras.
+      irpf-codigo-comercio-accounting:
+        prompt: ¿Llevas contabilidad ajustada al Código de Comercio (obligatoria o
+          voluntaria) en ese ejercicio? Si es así, no puedes usar cobros y pagos.
       irpf-estimation-regime:
         choices:
           directa-normal:
@@ -616,30 +648,14 @@ wizard:
         prompt: Periodos Modelo 115 sin pago relevante
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
-      objective-estimation-modulos-iae-epigraph:
-        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el
-          registro del modelo.
-        prompt: Epígrafe IAE para módulos de estimación objetiva
-      objective-estimation-modulos-module-1-units:
-        prompt: Unidades anuales del módulo 1
-      objective-estimation-modulos-module-2-units:
-        prompt: Unidades anuales del módulo 2
-      objective-estimation-modulos-module-3-units:
-        prompt: Unidades anuales del módulo 3
-      objective-estimation-modulos-module-4-units:
-        prompt: Unidades anuales del módulo 4
-      objective-estimation-modulos-module-5-units:
-        prompt: Unidades anuales del módulo 5
-      objective-estimation-modulos-module-6-units:
-        prompt: Unidades anuales del módulo 6
-      objective-estimation-modulos-module-7-units:
-        prompt: Unidades anuales del módulo 7
-      objective-estimation-modulos-module-units:
-        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE
-          seleccionado define si significa personal, superficie del local, consumo
-          eléctrico u otro módulo oficial.
+      patrimonio-declaration-threshold-met:
+        prompt: Tu cuota del Impuesto sobre el Patrimonio resulta a ingresar, o tus
+          bienes y derechos valen más de 2.000.000 euros
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
+      pays-non-resident-income-with-retencion:
+        prompt: Paga a no residentes sin establecimiento permanente rentas sujetas
+          a retención
       pays-professionals-with-retencion:
         prompt: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -652,8 +668,6 @@ wizard:
           2025-1T|2025-3T). Cada trimestre abre su propia presentación del Modelo
           136.
         prompt: Trimestres en que se cobró el premio
-      professional-income-withholding-ge-70pct:
-        prompt: Al menos 70% de los ingresos profesionales con retención previa
       third-party-transactions-above-347-threshold:
         prompt: En el año natural que cubre el Modelo 347, ¿tus operaciones con una
           misma persona o entidad superaron 3.005,06 € (300,51 € en los cobros que
@@ -748,6 +762,8 @@ wizard:
             label: Castilla y León
           cataluna:
             label: Cataluña
+          ceuta:
+            label: Ciudad de Ceuta
           comunidad_valenciana:
             label: Comunidad Valenciana
           extremadura:
@@ -758,6 +774,8 @@ wizard:
             label: La Rioja
           madrid:
             label: Madrid
+          melilla:
+            label: Ciudad de Melilla
           murcia:
             label: Murcia
       country-of-fiscal-residence:
@@ -779,7 +797,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: Nombre del representante fiscal en España
       tax-residence-ccaa:
-        prompt: Comunidad autónoma de residencia fiscal
+        prompt: Comunidad o ciudad autónoma de residencia fiscal
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:
@@ -971,26 +989,18 @@ wizard:
           sociedad-civil-mercantil:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
-      ley-49-2002-option-date:
-        help: Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.
-        prompt: Fecha declarada de la opción por el régimen especial de la Ley 49/2002
-      ley-49-2002-option-declared:
-        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicación
-          legal sigue condicionada a los requisitos legales y a que no exista renuncia.
-        prompt: La entidad ha presentado en el modelo 036 la opción por el régimen
-          fiscal especial del título II de la Ley 49/2002?
-      ley-49-2002-renunciation-date:
-        help: Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.
-        prompt: Fecha declarada de la renuncia al régimen especial de la Ley 49/2002
-      ley-49-2002-renunciation-declared:
-        help: Usa el hecho declarado en la casilla 652 del modelo 036.
-        prompt: La entidad ha presentado en el modelo 036 la renuncia al régimen fiscal
-          especial del título II de la Ley 49/2002?
       new-entity-first-two-profit-periods:
         help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
           tipo reducido del 15 por ciento durante esos dos periodos.
         prompt: ¿Es una entidad de nueva creación en uno de sus dos primeros periodos
           impositivos con beneficios?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Aplica solo a personas jurídicas. Con un importe neto de la cifra de
+          negocios por debajo del umbral del artículo 40.3, de esta opción depende
+          si cada pago fraccionado del Modelo 202 da ingreso. Si no lo sabes, déjalo
+          sin responder: no se presume ninguna respuesta.'
+        prompt: ¿Ejerció la entidad en su declaración censal la opción del artículo
+          40.3 de la LIS para el pago fraccionado?
       title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:

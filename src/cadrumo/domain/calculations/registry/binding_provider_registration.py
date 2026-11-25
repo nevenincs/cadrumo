@@ -4,7 +4,7 @@ A provider kind used to be real only by agreement between three tables that
 could each be edited alone: a selector-model lookup, a validator lookup, and the
 application route table. Seven authored kinds proved the arrangement does not
 hold -- they carried a model and a validator, reached calculation, and had no
-owner at all, visible only as an advisory diagnostic.
+owner at all.
 
 :data:`BINDING_PROVIDER_REGISTRATIONS` replaces the agreement with one row per
 union member. The row carries the member's model, its build-time validator, the
@@ -31,9 +31,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, get_args, get_origin
+from typing import TYPE_CHECKING, Final, Literal, get_args
 
 from pydantic import BaseModel
 
@@ -43,13 +42,26 @@ from ....core.aggregation import (
     BindingSourceKind,
     RowSetGroupingKind,
 )
+from .actividad_asset_disposal_bindings import (
+    ActivityAssetDisposalProvider,
+    validate_activity_asset_disposal_binding,
+)
 from .afiliado_contribution_bindings import AfiliadoContributionProvider, validate_afiliado_contribution_binding
-from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
+from .bienes_inversion_regularizacion_bindings import (
+    BienesInversionRegularizacionProvider,
+    validate_bienes_inversion_regularizacion_binding,
+)
 from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
+from .binding_provider_coordinates import TEMPORAL_PROVIDER_FIELD_NAME, absolute_coordinate_offenders
+from .binding_temporal import temporal_reach_diagnostic
 from .binding_terminal_origin import TerminalOriginClass
 from .binding_value_contract import BindingValueChannel
 from .bindings_previous_filing import PreviousFilingProvider, validate_previous_filing_binding
+from .capital_mobiliario_position_bindings import (
+    CapitalMobiliarioPositionProvider,
+    validate_capital_mobiliario_position_binding,
+)
 from .counterpart_bindings import validate_counterpart_binding
 from .design_constant_bindings import DesignConstantProvider, validate_design_constant_binding
 from .detail_record_bindings import (
@@ -60,7 +72,6 @@ from .detail_record_bindings import (
 )
 from .errors import RegistryValidationError
 from .gasto193_bindings import Gasto193ContributorProvider, validate_gasto193_binding_selector_shape
-from .ids import RevisionId
 from .inventory_bindings import InventoryProvider, validate_inventory_binding
 from .invoice_bindings import (
     CollectibleInvoiceProvider,
@@ -72,7 +83,10 @@ from .invoice_bindings import (
     validate_invoice_binding,
 )
 from .irnr_ledger_bindings import LedgerIrnrIncomeProvider, validate_ledger_irnr_income_aggregation_binding
-from .iva_compensation_annual_partition_bindings import IvaCompensationAnnualPartitionProvider
+from .iva_compensation_annual_partition_bindings import (
+    IvaCompensationAnnualPartitionProvider,
+    validate_iva_compensation_annual_partition_binding,
+)
 from .ledger_binding_validation import LEDGER_AGGREGATION_OPS
 from .ledger_impatriado_bindings import (
     LedgerImpatriadoIncomeProvider,
@@ -89,17 +103,32 @@ from .ledger_renta_gastos_pago_fraccionado_bindings import (
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
 )
 from .ledger_renta_income_bindings import LedgerRentaIncomeProvider, validate_ledger_renta_income_aggregation_binding
-from .m303_regimen_simplificado_annual_summary_bindings import M303RegimenSimplificadoAnnualSummaryProvider
-from .manual_input_selector import ManualInputProvider
-from .profile_bindings import ProfileProvider
-from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
-from .relation_prefill_bindings import RelationPrefillProvider
+from .m303_regimen_simplificado_annual_summary_bindings import (
+    M303RegimenSimplificadoAnnualSummaryProvider,
+    validate_m303_regimen_simplificado_annual_summary_binding,
+)
+from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
+from .prevision_social_contribution_bindings import (
+    PrevisionSocialContributionProvider,
+    validate_prevision_social_contribution_binding,
+)
+from .profile_bindings import ProfileProvider, validate_profile_binding
+from .prorrata_register_activity_bindings import (
+    ProrrataRegisterActivityProvider,
+    validate_prorrata_register_activity_binding,
+)
+from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
+from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
+from .relations import validate_relation_prefill_fold_arity
+from .renta_inmueble_bindings import RentaInmuebleProvider, validate_renta_inmueble_binding
+from .retencion_soportada_bindings import RetencionSoportadaProvider, validate_retencion_soportada_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
 from .withholding_bindings import WithholdingProvider, validate_withholding_binding_selector_shape
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
+    from .schema_references import TemporalSupportEnvelope
 
 __all__ = [
     "BINDING_PROVIDER_REGISTRATIONS",
@@ -112,6 +141,7 @@ __all__ = [
     "ProviderOutputShape",
     "ProviderRouteOwnership",
     "RouteOwnership",
+    "binding_temporal_reach_diagnostic",
     "registration_for",
     "validate_binding_against_registration",
     "validate_binding_provider_registrations",
@@ -127,8 +157,13 @@ BindingRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "man
 ProviderOutputShape = Literal["scalar", "rows", "scalar_and_rows"]
 """What a resolver for this kind can emit."""
 
-ProviderDisposition = Literal["filing_grade", "advisory", "deferred", "non_runtime"]
-"""How much weight a value from this kind may carry in a filing."""
+ProviderDisposition = Literal["filing_grade", "deferred", "non_runtime"]
+"""How a value from this kind is routed: by an executable resolver, not yet, or never at runtime.
+
+A value's grade is not routing. A routed binding whose value stops short of
+filing grade carries its own declared cap (:mod:`.binding_grade_cap`), so
+this vocabulary has no member that could restate a grade per kind.
+"""
 
 ProviderAuthoringSupport = Literal["scaffold", "generator", "none"]
 """How much help an author gets writing a row of this kind."""
@@ -169,14 +204,13 @@ class BindingProviderRegistration:
 
     kind: BindingSourceKind
     provider_model: type[BaseModel]
-    validator: BindingProviderValidator | None
-    """The family's build-time gate, or ``None`` when the union member is the whole gate.
+    validator: BindingProviderValidator
+    """The family's build-time gate: every kind enrols one.
 
-    A family whose only build-time invariant is its own provider shape needs no
-    validator: the discriminated union has already constructed that member from
-    the authored row, so re-validating the typed member against its own class
-    can produce no diagnostic. ``None`` states that the member carries the gate,
-    rather than dressing a no-op call up as one.
+    The discriminated union has already constructed the provider member from the
+    authored row, so a validator earns its place by lifting the cross-invariants
+    between the member and the binding around it (value contract, aggregation,
+    applicability) that the member alone cannot see.
     """
     permitted_value_channels: frozenset[BindingValueChannel]
     permitted_aggregation_ops: frozenset[BindingAggregationOp]
@@ -185,6 +219,36 @@ class BindingProviderRegistration:
     disposition: ProviderDisposition
     route: ProviderRouteOwnership
     authoring: ProviderAuthoringSupport
+    admits_aeat_prefill: bool = False
+    """Whether an AEAT borrador value may replace this kind's value.
+
+    Only a kind whose value is operator- or profile-entered can be superseded
+    by the AEAT-live prefill tier. A kind a resolver computes from governed
+    facts must never be displaced by an imported observation, so the default is
+    refusal and each admitting kind states it on its own row.
+    """
+
+    @property
+    def default_aggregation_op(self) -> BindingAggregationOp:
+        """Return the operation an undeclared aggregation takes, derived from the permitted set.
+
+        A kind permitting one operation takes that operation. Otherwise a kind
+        that groups provider-native rows (other than the scalar-first
+        withholding family) takes ``rows`` when it permits it, and every other
+        kind takes ``sum`` when it permits it and ``copy`` when it does not.
+        """
+        permitted = self.permitted_aggregation_ops
+        if len(permitted) == 1:
+            return next(iter(permitted))
+        if (
+            BindingAggregationOp.ROWS in permitted
+            and self.row_grouping is not None
+            and self.kind is not BindingSourceKind.WITHHOLDING
+        ):
+            return BindingAggregationOp.ROWS
+        if BindingAggregationOp.SUM in permitted:
+            return BindingAggregationOp.SUM
+        return BindingAggregationOp.COPY
 
     @property
     def names_source_casilla(self) -> bool:
@@ -246,10 +310,22 @@ _DEFERRED_PERCEPTOR_OWNER: Final = (
 )
 
 
+def _validate_relation_prefill(binding: BindingDefinition) -> list[str]:
+    """Join the relation_prefill shape-and-reach gate with the fold-arity gate.
+
+    The shape gate already owns a copy's single source casilla, so the fold
+    arity is only added for the folds that read a different count per filing.
+    """
+    failures = validate_relation_prefill_binding(binding)
+    if binding_aggregation_op(binding) is not BindingAggregationOp.COPY:
+        failures.extend(validate_relation_prefill_fold_arity(binding))
+    return failures
+
+
 def _filing_grade(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     channels: frozenset[BindingValueChannel],
     ops: frozenset[BindingAggregationOp],
@@ -257,6 +333,7 @@ def _filing_grade(
     output: ProviderOutputShape,
     resolver_id: str,
     stage: BindingRouteStage,
+    admits_aeat_prefill: bool = False,
 ) -> BindingProviderRegistration:
     return BindingProviderRegistration(
         kind=kind,
@@ -269,13 +346,14 @@ def _filing_grade(
         disposition="filing_grade",
         route=RouteOwnership(resolver_id=resolver_id, stage=stage),
         authoring="scaffold",
+        admits_aeat_prefill=admits_aeat_prefill,
     )
 
 
 def _deferred(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     origins: frozenset[TerminalOriginClass],
     owner: str,
@@ -303,10 +381,11 @@ def _deferred(
 def _non_runtime(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     origin: TerminalOriginClass,
     resolver_id: str,
+    admits_aeat_prefill: bool = False,
 ) -> BindingProviderRegistration:
     """Register a kind that is enrolled on the route but runs no resolver."""
     return BindingProviderRegistration(
@@ -320,13 +399,14 @@ def _non_runtime(
         disposition="non_runtime",
         route=RouteOwnership(resolver_id=resolver_id, stage="manual"),
         authoring="scaffold",
+        admits_aeat_prefill=admits_aeat_prefill,
     )
 
 
 def _ledger_aggregation(
     kind: BindingSourceKind,
     provider_model: type[BaseModel],
-    validator: BindingProviderValidator | None,
+    validator: BindingProviderValidator,
     *,
     resolver_id: str,
     output: ProviderOutputShape = "scalar",
@@ -376,9 +456,10 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _non_runtime(
         BindingSourceKind.MANUAL_INPUT,
         ManualInputProvider,
-        None,
+        validate_manual_input_binding,
         origin=TerminalOriginClass.OPERATOR_INPUT,
         resolver_id=_MANUAL_INPUT_RESOLVER_ID,
+        admits_aeat_prefill=True,
     ),
     _non_runtime(
         BindingSourceKind.DESIGN_CONSTANT,
@@ -390,7 +471,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.PROFILE,
         ProfileProvider,
-        None,
+        validate_profile_binding,
         # Scalar profile fields use the carry operation; repeating typed
         # profile collections emit provider-native row sets. The two shapes
         # share one provider kind, so both channels and cardinalities belong
@@ -401,13 +482,17 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         output="scalar_and_rows",
         resolver_id="profile",
         stage="pre_mesh",
+        admits_aeat_prefill=True,
     ),
     _filing_grade(
         BindingSourceKind.PREVIOUS_FILING,
         PreviousFilingProvider,
         validate_previous_filing_binding,
         channels=_MONEY_OR_COUNT_CHANNELS,
-        ops=_FOLD_OPS | frozenset({BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS}),
+        ops=_FOLD_OPS
+        | frozenset(
+            {BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS, BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED}
+        ),
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
         output="scalar",
         resolver_id="previous_filing",
@@ -416,9 +501,9 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.RELATION_PREFILL,
         RelationPrefillProvider,
-        None,
+        _validate_relation_prefill,
         channels=_MONEY_OR_COUNT_CHANNELS,
-        ops=_FOLD_OPS,
+        ops=_FOLD_OPS | frozenset({BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS}),
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
         output="scalar",
         resolver_id="relation_prefill",
@@ -427,7 +512,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
         IvaCompensationAnnualPartitionProvider,
-        None,
+        validate_iva_compensation_annual_partition_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset(
@@ -440,7 +525,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
         M303RegimenSimplificadoAnnualSummaryProvider,
-        None,
+        validate_m303_regimen_simplificado_annual_summary_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
@@ -451,7 +536,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _filing_grade(
         BindingSourceKind.PRORRATA_REGULARIZACION,
         ProrrataRegularizacionProvider,
-        None,
+        validate_prorrata_regularizacion_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.DERIVED_CALCULATION}),
@@ -460,9 +545,20 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         stage="post_mesh",
     ),
     _filing_grade(
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY,
+        ProrrataRegisterActivityProvider,
+        validate_prorrata_register_activity_binding,
+        channels=frozenset({BindingValueChannel.DECIMAL, BindingValueChannel.TEXT}),
+        ops=_FOLD_OPS,
+        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
+        output="scalar",
+        resolver_id="prorrata_register_activity",
+        stage="mesh",
+    ),
+    _filing_grade(
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         BienesInversionRegularizacionProvider,
-        None,
+        validate_bienes_inversion_regularizacion_binding,
         channels=_MONEY_CHANNELS,
         ops=_FOLD_OPS,
         origins=frozenset({TerminalOriginClass.DERIVED_CALCULATION}),
@@ -493,6 +589,33 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         LedgerRentaGastosEstimacionDirectaProvider,
         validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+    ),
+    _filing_grade(
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+        ActivityAssetDisposalProvider,
+        validate_activity_asset_disposal_binding,
+        # A baja's totals are scalars the form's sums read; each sale also states its
+        # own row of other elements, so both shapes belong to this registration.
+        channels=_MONEY_CHANNELS | frozenset({BindingValueChannel.TEXT}) | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | frozenset({BindingAggregationOp.COPY}) | _ROW_OPS,
+        origins=frozenset({TerminalOriginClass.LEDGER_AGGREGATE}),
+        output="scalar_and_rows",
+        resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.RENTA_INMUEBLE,
+        RentaInmuebleProvider,
+        validate_renta_inmueble_binding,
+        # A property's identification comes from its profile row and its rent and
+        # expenses from the ledger rows linked to it, so both terminal classes occur.
+        # The results boxes the rows account for are the totals of their columns.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | _ROW_OPS,
+        origins=frozenset({TerminalOriginClass.PROFILE_FIELD, TerminalOriginClass.LEDGER_AGGREGATE}),
+        output="scalar_and_rows",
+        resolver_id="renta_inmueble",
+        stage="mesh",
     ),
     _ledger_aggregation(
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
@@ -527,6 +650,64 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         origins=frozenset({TerminalOriginClass.PERCEPTOR_OBSERVATION}),
         output="scalar_and_rows",
         resolver_id="retenciones_aggregation",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.RETENCION_SOPORTADA,
+        RetencionSoportadaProvider,
+        validate_retencion_soportada_binding,
+        # Withholding the taxpayer suffered, one record per payer: a payer
+        # certificate, or the operator's declaration where no certificate is
+        # held. A proven zero rests on the operator's absence attestation or on
+        # the profile's declaration that the class's income is absent. Never
+        # PERCEPTOR_OBSERVATION, which is the withholding-agent side.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset(
+            {
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+                TerminalOriginClass.PROFILE_FIELD,
+            },
+        ),
+        output="scalar",
+        resolver_id="retencion_soportada",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
+        CapitalMobiliarioPositionProvider,
+        validate_capital_mobiliario_position_binding,
+        # A saver's interest and dividends: net cash from the ledger rows linked
+        # to a profile position, plus the withholding of the payer's certificate,
+        # or none under the operator's attestation that the payer withheld nothing.
+        # Each occurrence also states its own row of the record the design repeats,
+        # so both shapes belong to this registration.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}) | _ROW_OPS,
+        origins=frozenset(
+            {
+                TerminalOriginClass.LEDGER_AGGREGATE,
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+            },
+        ),
+        output="scalar_and_rows",
+        resolver_id="capital_mobiliario_position",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION,
+        PrevisionSocialContributionProvider,
+        validate_prevision_social_contribution_binding,
+        # Contributions to social-welfare systems, one record per certificate
+        # line: the issuer's certificate, placed in its box by the edition's
+        # placement rows. A box no record reaches is left to the filer.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE}),
+        output="scalar",
+        resolver_id="prevision_social_contribution",
         stage="mesh",
     ),
     _filing_grade(
@@ -729,6 +910,15 @@ def _require_one_registration_per_pseudo_owner(registrations: tuple[BindingProvi
             )
 
 
+def _require_validator(registration: BindingProviderRegistration) -> None:
+    """Refuse a registration that enrols no callable validator."""
+    if not callable(registration.validator):
+        raise RegistryValidationError(
+            f"binding provider kind {registration.kind.value!r} must enrol a build-time validator",
+            context={"kind": registration.kind.value},
+        )
+
+
 def validate_binding_provider_registrations(
     registrations: tuple[BindingProviderRegistration, ...],
 ) -> Mapping[BindingSourceKind, BindingProviderRegistration]:
@@ -745,6 +935,7 @@ def validate_binding_provider_registrations(
         _require_declared_content(registration)
         _require_channel_shape(registration)
         _require_disposition_matches_route(registration)
+        _require_validator(registration)
     return MappingProxyType({registration.kind: registration for registration in registrations})
 
 
@@ -752,117 +943,6 @@ BINDING_PROVIDER_REGISTRATIONS: Final[Mapping[BindingSourceKind, BindingProvider
     validate_binding_provider_registrations(_REGISTRATIONS)
 )
 """The canonical enrollment authority, one row per provider union member."""
-
-
-AUTHORED_LAYOUT_INTEGER_FIELD_NAMES: Final[frozenset[str]] = frozenset({"offset", "length", "decimals"})
-"""Provider field names whose integer is a record-layout fact, not a filing coordinate.
-
-``offset``, ``length`` and ``decimals`` describe where a value sits in an
-official fixed-width record and how it is written, which is authored design data
-that does not change with the filing context. Every other integer on a provider
-member would pin the declaration to one concrete year, revision, or date, and is
-refused. The list is explicit so that adding a fourth is a deliberate decision
-with a stated reason rather than a field that slipped through.
-"""
-
-TEMPORAL_PROVIDER_FIELD_NAME: Final[str] = "temporal"
-"""The one provider field allowed to carry numbers that move with the context.
-
-The temporal union is where a relative coordinate is *supposed* to live: its
-members carry offsets and spans that are resolved against the target filing
-context. The guard therefore skips this field rather than descending into it.
-"""
-
-
-def _absolute_coordinate_leaves(annotation: object) -> bool:
-    """Return whether one resolved annotation pins a concrete filing coordinate.
-
-    Unwraps ``Annotated``, optionals and unions, then recognises the four shapes
-    that name a coordinate rather than describe one: a plain ``int``, the
-    ``RevisionId`` alias, a ``date``, and a ``Literal`` whose members are ints.
-    ``bool`` is a subclass of ``int`` in Python but names a flag, not a
-    coordinate, so it is not treated as one.
-    """
-    if annotation is RevisionId:
-        return True
-    origin = get_origin(annotation)
-    if origin is Literal:
-        return any(isinstance(arg, int) and not isinstance(arg, bool) for arg in get_args(annotation))
-    if origin is not None:
-        return any(_absolute_coordinate_leaves(arg) for arg in get_args(annotation))
-    if not isinstance(annotation, type):
-        return False
-    if issubclass(annotation, bool):
-        return False
-    return issubclass(annotation, (int, date))
-
-
-def _nested_models(annotation: object) -> tuple[type[BaseModel], ...]:
-    """Return every :class:`BaseModel` class reachable from one resolved annotation.
-
-    A provider that nests its coordinate one model deep is exactly as pinned as
-    one that declares it at the top level, so the walk follows the type rather
-    than stopping at the first structured field.
-    """
-    origin = get_origin(annotation)
-    if origin is Literal:
-        return ()
-    if origin is not None:
-        return tuple(model for arg in get_args(annotation) for model in _nested_models(arg))
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        return (annotation,)
-    return ()
-
-
-def absolute_coordinate_offenders(label: str, model: type[BaseModel]) -> tuple[str, ...]:
-    """Return one diagnostic per field of ``model`` that pins a filing coordinate.
-
-    The walk descends into nested models, reporting a dotted field path, because
-    a coordinate reached through a structured field is still a coordinate: a
-    provider declaring ``window: Window`` where ``Window`` carries a ``year``
-    would otherwise pass a check that only ever looked one level down. The
-    ``temporal`` field is skipped at every depth for the reason its own constant
-    states, and each model is visited once so a self-referential shape
-    terminates.
-
-    Both exemptions -- the record-layout integer names and the ``temporal`` field
-    -- are granted to the PROVIDER MODEL ITSELF and to nothing below it. Each is
-    a statement about one specific declared surface: ``offset`` on a provider is
-    an authored fixed-width address, and ``temporal`` on a provider is the union
-    built to carry relative coordinates. A field of the same name on some nested
-    model is a different field with a different contract, and an exemption that
-    followed the name down would let any nested structure re-admit an absolute
-    coordinate by calling it ``offset``.
-
-    Pure and model-agnostic, so the guard can be exercised against a fabricated
-    provider class without touching the enrolled table.
-    """
-    return _absolute_coordinate_offenders(label, model, seen=frozenset(), top_level=True)
-
-
-def _absolute_coordinate_offenders(
-    label: str,
-    model: type[BaseModel],
-    *,
-    seen: frozenset[type[BaseModel]],
-    top_level: bool,
-) -> tuple[str, ...]:
-    """Walk one model's fields, recursing into nested models not already visited."""
-    if model in seen:
-        return ()
-    visited = seen | {model}
-    offenders: list[str] = []
-    for name, field_info in sorted(model.model_fields.items()):
-        if top_level and name == TEMPORAL_PROVIDER_FIELD_NAME:
-            continue
-        exempt = top_level and name in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES
-        if not exempt and _absolute_coordinate_leaves(field_info.annotation):
-            offenders.append(f"{label} declares absolute coordinate field {name!r}")
-        for nested in _nested_models(field_info.annotation):
-            offenders.extend(
-                _absolute_coordinate_offenders(f"{label}.{name}", nested, seen=visited, top_level=False),
-            )
-    return tuple(offenders)
 
 
 def require_relative_provider_coordinates(
@@ -910,13 +990,8 @@ def registration_for(kind: BindingSourceKind) -> BindingProviderRegistration:
     return registration
 
 
-def validator_for(kind: BindingSourceKind) -> BindingProviderValidator | None:
-    """Return the build-time validator enrolled for one provider kind, if it has one.
-
-    ``None`` is the enrolled answer for a family whose provider member is its own
-    complete gate, not a missing registration: a kind with no row cannot reach
-    here at all.
-    """
+def validator_for(kind: BindingSourceKind) -> BindingProviderValidator:
+    """Return the build-time validator enrolled for one provider kind."""
     return registration_for(kind).validator
 
 
@@ -937,11 +1012,10 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     Gating the agreement on an authored ``aggregation`` block made omitting the
     block the way to escape it.
 
-    The permitted-operation check stays on the authored operation. The family
-    default is a ``rows``/not-``rows`` marker rather than an authored intent --
-    it answers ``sum`` for families whose registration permits only ``copy`` --
-    so holding an undeclared binding to it would report the default table rather
-    than the declaration.
+    The permitted-operation check stays on the authored operation: an
+    undeclared binding takes the registration's own derived default, so holding
+    it to the permitted set would only restate the registration.
+
     """
     registration = registration_for(binding.source)
     diagnostics: list[str] = []
@@ -950,7 +1024,39 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     _append_operation_channel_diagnostics(binding, diagnostics)
     _append_row_grouping_diagnostics(binding, registration, diagnostics)
     _append_terminal_origin_diagnostics(binding, registration, diagnostics)
+    _append_aeat_prefill_diagnostic(binding, registration, diagnostics)
     return tuple(diagnostics)
+
+
+def binding_temporal_reach_diagnostic(binding: BindingDefinition, support: TemporalSupportEnvelope) -> str | None:
+    """Return the refusal for a binding whose temporal member outreaches the support envelope.
+
+    The bound is the span of the registry's supported filing years, so no year
+    count is written here. Hydration holds no envelope, which is why this is
+    a separate check run where the compiler has one rather than part of
+    :func:`validate_binding_against_registration`.
+    """
+    temporal = getattr(binding.provider, TEMPORAL_PROVIDER_FIELD_NAME, None)
+    if temporal is None:
+        return None
+    reason = temporal_reach_diagnostic(temporal, supported_year_span=support.horizon - support.floor)
+    return None if reason is None else f"binding {binding.id!r}: {reason}"
+
+
+def _append_aeat_prefill_diagnostic(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
+    # Snapshot admission alone replaces nothing: a cross_check_only binding is
+    # compared with the borrador, so only a value the borrador may supply needs
+    # a kind whose value is operator- or profile-entered.
+    if binding.borrador_supplies_value and not registration.admits_aeat_prefill:
+        diagnostics.append(
+            f"binding {binding.id!r}: provider {registration.kind.value!r} computes a governed value and "
+            f"cannot be marked aeat_prefilled with borrador precedence; an AEAT borrador value must not "
+            f"replace it, so declare borrador_participation = 'cross_check_only'",
+        )
 
 
 def _append_channel_diagnostic(

@@ -54,6 +54,7 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
+from .....domain.modelos.filing_kind_evidence import ObservedFilingKind
 from .....domain.modelos.filing_record import ModeloRecordCatalogue
 from .....domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ....inbound.justificante.parser import parse_justificante_bytes
@@ -75,7 +76,7 @@ from .observation_store import FiledDeclaracionObservationStore
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 if TYPE_CHECKING:
-    from .....core.secure_object_write import SecureObjectWrite
+    from .....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -217,6 +218,7 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Prepare one validated calculation-observation envelope."""
         return _call_adapter(
@@ -228,6 +230,7 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
                 captured_at=captured_at,
                 source_metadata=source_metadata,
                 source_headers=source_headers,
+                filing_kind=filing_kind,
             ),
         )
 
@@ -391,6 +394,7 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Persist filing state and co-emitted writes atomically."""
         _call_adapter(
@@ -399,6 +403,7 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
                 catalogue,
                 extra_writes,
                 expected_revision_id=expected_revision_id,
+                assertions=assertions,
             ),
         )
 

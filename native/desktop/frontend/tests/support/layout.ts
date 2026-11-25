@@ -7,11 +7,12 @@ type Seed = {
   layout?: Partial<Layout>;
 };
 
-/** The documentation beside the TUI, documentation first, with no agent
- * column: the window a test of that split is about. */
-export const DOCS_BESIDE_TUI: Seed = {
+/** The documentation shown, placed before the TUI, with no agent column. It
+ * saves nothing about the TUI, which a fresh layout keeps closed, so a test
+ * of the two side by side opens the TUI itself (`showTui`). */
+export const DOCS_FIRST: Seed = {
   prefs: { order: "docs" },
-  layout: { agentShown: false, docsShown: true, tuiShown: true, page: "docs" },
+  layout: { agentShown: false, docsShown: true, page: "docs" },
 };
 
 /**
@@ -19,7 +20,7 @@ export const DOCS_BESIDE_TUI: Seed = {
  * would have left it. Registered after a spec's own clearing of storage, it
  * runs after it; a reload inside the test keeps what the test has changed.
  */
-export async function seedLayout(target: Page, seed: Seed = DOCS_BESIDE_TUI) {
+export async function seedLayout(target: Page, seed: Seed = DOCS_FIRST) {
   await target.addInitScript((stored) => {
     if (sessionStorage.getItem("layout-seeded")) return;
     localStorage.setItem("cadrumo-shell-layout", JSON.stringify(stored));

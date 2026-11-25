@@ -16,8 +16,16 @@ count from all three:
 * Modelo 136 1T 2025 closes nominally on Sunday 20 April 2025.
 * Modelo 185 period 09 of 2026 closes nominally on Saturday 10 October 2026;
   Monday the 12th is the Fiesta Nacional, so the filer has until Tuesday.
-* Modelo 303 4T 2026 closes on 1 February 2027, a year whose holiday calendar
-  is not published: the nominal date stands and is reported as unverified.
+* Modelo 303 4T 2026 closes on Monday 1 February 2027 and 2027 is a published
+  calendar year, so the date stands and is reported as nationally verified.
+* A Modelo 303 window of 2028, whose holiday calendar is not published, keeps
+  its nominal date and is reported as unverified.
+
+An electronic filing counts days on the State's calendar of días inhábiles
+(Ley 39/2015 art. 31.3), so a regional inhábil never moves a close. The
+2025 calendar (BOE-A-2024-26935) lists Jueves Santo, 17 April, as inhábil in
+Madrid and other communities but not nationally; Viernes Santo, 18 April, as
+inhábil nationally; and Lunes de Pascua, 21 April, as inhábil only in Cataluña.
 """
 
 from __future__ import annotations
@@ -29,7 +37,9 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.legal_text import legal_effective_to
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
+from ....domain.deadlines.effective_close import effective_filing_deadline, resolve_effective_filing_deadline
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.plazo import resolve_filing_window
@@ -38,7 +48,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...overview.calendar import build_overview_calendar
 from ...overview.calendar_models import OverviewCalendarRange
 from ...overview.tests.calendar_test_support import profile
-from ..effective_deadline import resolve_effective_filing_deadline
 from ..work_form_service import modelo_form_deadline
 from ..work_plazo import modelo_work_deadline_posture
 
@@ -56,14 +65,38 @@ class _Case(NamedTuple):
     coverage: DeadlineHolidayCoverage
 
 
-_WEEKEND = _Case("136", 2025, "1T", date(2025, 4, 20), date(2025, 4, 21), DeadlineHolidayCoverage.NATIONAL_ONLY)
+# Each case sits in the exercise whose published calendar of días inhábiles it
+# is about, so the exercise is read from that publication's in-force window.
+_CALENDAR_OF_SUNDAY_CLOSE = legal_effective_to("resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo").year
+_CALENDAR_OF_FIESTA_NACIONAL_MONDAY = legal_effective_to("resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo").year
+_CALENDAR_OF_NEXT_EXERCISE = legal_effective_to("resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo").year
+
+_WEEKEND = _Case(
+    "136",
+    _CALENDAR_OF_SUNDAY_CLOSE,
+    "1T",
+    date(_CALENDAR_OF_SUNDAY_CLOSE, 4, 20),
+    date(_CALENDAR_OF_SUNDAY_CLOSE, 4, 21),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
+)
 _NATIONAL_HOLIDAY = _Case(
-    "185", 2026, "09", date(2026, 10, 10), date(2026, 10, 13), DeadlineHolidayCoverage.NATIONAL_ONLY
+    "185",
+    _CALENDAR_OF_FIESTA_NACIONAL_MONDAY,
+    "09",
+    date(_CALENDAR_OF_FIESTA_NACIONAL_MONDAY, 10, 10),
+    date(_CALENDAR_OF_FIESTA_NACIONAL_MONDAY, 10, 13),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
 )
-_UNCOVERED_YEAR = _Case(
-    "303", 2026, "4T", date(2027, 2, 1), date(2027, 2, 1), DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+_PUBLISHED_NEXT_EXERCISE = _Case(
+    "303",
+    _CALENDAR_OF_NEXT_EXERCISE - 1,
+    "4T",
+    date(_CALENDAR_OF_NEXT_EXERCISE, 2, 1),
+    date(_CALENDAR_OF_NEXT_EXERCISE, 2, 1),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
 )
-_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _UNCOVERED_YEAR)
+_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _PUBLISHED_NEXT_EXERCISE)
+_UNCOVERED_YEAR = _CALENDAR_OF_NEXT_EXERCISE + 1
 
 
 class _Posture(NamedTuple):
@@ -116,7 +149,6 @@ def _editor_posture(case: _Case, reference_on: date, operation: PinnedAuthorityO
         operation,
         ModeloCode(case.modelo),
         Period.from_year_and_code(case.filing_year, case.period_code),
-        holiday_territory=None,
         reference_on=reference_on,
     )
     assert deadline is not None
@@ -131,7 +163,6 @@ def _editor_posture(case: _Case, reference_on: date, operation: PinnedAuthorityO
 
 def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorityOperation) -> _Posture:
     taxpayer = profile()
-    assert taxpayer.holiday_territory is None, "the parity compares national-only coverage on every surface"
     calendar = build_overview_calendar(
         taxpayer,
         OverviewCalendarRange(from_date=date(case.filing_year, 1, 1), to_date=case.effective + timedelta(days=31)),
@@ -148,7 +179,7 @@ def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorit
     return _Posture(row.closes_on, row.adjusted_closes_on, row.holiday_coverage, remaining, row.days_overdue)
 
 
-@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "uncovered-year"])
+@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "published-next-exercise"])
 def test_every_surface_reads_the_same_nominal_and_effective_deadline(
     case: _Case, operation: PinnedAuthorityOperation
 ) -> None:
@@ -197,14 +228,29 @@ def test_an_uncovered_year_is_reported_as_unverified_not_silently_nominal(
     operation: PinnedAuthorityOperation,
 ) -> None:
     deadline = resolve_effective_filing_deadline(
-        _UNCOVERED_YEAR.modelo,
-        _UNCOVERED_YEAR.filing_year,
-        Period.from_year_and_code(_UNCOVERED_YEAR.filing_year, _UNCOVERED_YEAR.period_code),
-        holiday_territory=None,
-        operation=operation,
+        "303", _UNCOVERED_YEAR, Period.from_year_and_code(_UNCOVERED_YEAR, "1T"), operation=operation
     )
 
     assert deadline is not None
-    assert deadline.closes_on == deadline.nominal_closes_on
+    assert deadline.closes_on == deadline.nominal_closes_on == date(_UNCOVERED_YEAR, 4, 20)
     assert deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert deadline.shift_reason == "calendar_unavailable"
+
+
+def test_a_regional_inhabil_keeps_the_close_while_a_national_one_moves_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    year = legal_effective_to("resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo").year
+    jueves_santo = date(year, 4, 17)
+    viernes_santo = date(year, 4, 18)
+    lunes_de_pascua = date(year, 4, 21)
+
+    regional = effective_filing_deadline(jueves_santo, modelo="303", operation=operation)
+    national = effective_filing_deadline(viernes_santo, modelo="303", operation=operation)
+
+    assert regional.closes_on == jueves_santo
+    assert regional.shift_reason == "business_day"
+    assert regional.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+    assert national.closes_on == lunes_de_pascua
+    assert national.holiday_refs == ("Viernes Santo",)
+    assert national.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY

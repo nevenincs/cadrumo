@@ -9,8 +9,8 @@ from pydantic import ValidationError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,
     build_workbench_generation_operation_registration,
@@ -22,12 +22,15 @@ from cadrumo.application.workbench_generation_projection import (
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import bounded_deadline_after, remaining_budget
+from ..contracts.operation_access import OperationSubmitted
 from .frontend_client import FrontendClient
 from .frontend_client_contracts import FrontendRefusedError
 from .operation_settlement import (
     PinnedConnection,
+    await_terminal,
     read_settled_result_bytes,
     start_and_await_terminal,
     submit_operation,
@@ -55,16 +58,10 @@ def read_workbench_generation(
     if contract != _contract() or contract.result_schema is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     subject_ref = profile_operation_subject(str(profile_id))
-    submitted = submit_operation(
-        client,
-        pinned,
-        definition_id=contract.definition_id,
-        subject_ref=subject_ref,
-        payload_json=WorkbenchGenerationOperationRequest(
-            profile_id=profile_id, output_language=output_language
-        ).model_dump_json(),
-        deadline=deadline,
-    )
+    payload_json = WorkbenchGenerationOperationRequest(
+        profile_id=profile_id, output_language=output_language
+    ).model_dump_json()
+    submitted = _submit_once_free(client, pinned, contract, subject_ref, payload_json, deadline)
     if submitted.receipt.secret_requirement is not None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     operation_id = submitted.receipt.operation_id
@@ -79,6 +76,39 @@ def read_workbench_generation(
     generation = _restore_verified_generation(encoded, contract, client, pinned)
     remaining_budget(deadline)
     return generation
+
+
+def _submit_once_free(
+    client: FrontendClient,
+    pinned: PinnedConnection,
+    contract: OperationPublicDefinitionContractV1,
+    subject_ref: str,
+    payload_json: str,
+    deadline: float,
+) -> OperationSubmitted:
+    """Submit this session's generation, after any generation that holds the profile has settled.
+
+    Another frontend of the same person, such as the window beside a terminal,
+    can be generating for the profile when this one asks. Its result is
+    released to its own session alone, but anyone may observe its lifecycle:
+    wait on its cues until it is terminal, then generate again. The deadline
+    bounds the whole wait.
+    """
+    while True:
+        try:
+            return submit_operation(
+                client,
+                pinned,
+                definition_id=contract.definition_id,
+                subject_ref=subject_ref,
+                payload_json=payload_json,
+                deadline=deadline,
+            )
+        except FrontendRefusedError as refusal:
+            holder = refusal.holder_operation_id
+            if refusal.reason != AccessDenialCode.SUBJECT_BUSY.value or holder is None:
+                raise
+        await_terminal(client, pinned, holder, contract=contract, subject_ref=subject_ref, deadline=deadline)
 
 
 def _restore_verified_generation(

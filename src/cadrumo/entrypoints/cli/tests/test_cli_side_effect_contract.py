@@ -70,7 +70,9 @@ _BATCH_COUNT = 2
 #: (cached settings, engines, registered ports) can still send a later leaf's
 #: writes to an earlier root, where a scan of the new root would miss them, so
 #: after each leaf every earlier root -- including the one live during import --
-#: is rescanned and any change is reported as a stray write.
+#: is rescanned and any change is reported as a stray write. Diagnostic delivery
+#: is drained after each leaf first, so a log record still in flight is charged
+#: to the leaf that wrote it rather than surfacing during the next one.
 _PROBE = textwrap.dedent(
     """
     import json
@@ -85,11 +87,12 @@ _PROBE = textwrap.dedent(
         return sorted(p.relative_to(root).as_posix() for p in root.rglob("*")) if root.exists() else []
 
     import_root = base / "import" / "state"
-    os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(import_root)
+    os.environ["CADRUMO_STORAGE_ROOT"] = str(import_root)
 
     import typer.main
     from click.testing import CliRunner
 
+    from cadrumo.core.logging import flush_logging
     from cadrumo.entrypoints.cli.main import cli_app
     app = cli_app()
 
@@ -99,8 +102,12 @@ _PROBE = textwrap.dedent(
     for index, argv in enumerate(leaves):
         root = base / f"leaf-{index:03d}" / "state"
         before = scan(root)
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ["CADRUMO_STORAGE_ROOT"] = str(root)
         CliRunner().invoke(command, argv)
+        # Diagnostics reach their file on a delivery thread; scanning before
+        # it drains would charge this leaf's log to the next leaf as a stray.
+        if not flush_logging(timeout=60.0):
+            raise SystemExit(f"diagnostic delivery did not drain after {argv}")
         strayed = {}
         for earlier, seen in observed.items():
             now = scan(earlier)
@@ -266,7 +273,7 @@ def test_the_probe_sees_state_a_writing_command_creates() -> None:
                 sys.executable,
                 "-c",
                 "import os, sys, json; from pathlib import Path; "
-                "root = sys.argv[1]; os.environ['CADRUMO_LOCAL_STORAGE_ROOT'] = root; "
+                "root = sys.argv[1]; os.environ['CADRUMO_STORAGE_ROOT'] = root; "
                 "from cadrumo.core.storage_materialization import ensure_storage_tree; ensure_storage_tree(); "
                 "base = Path(root); "
                 "print(json.dumps(sorted(p.relative_to(base).as_posix() for p in base.rglob('*'))))",

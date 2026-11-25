@@ -6,6 +6,7 @@ constructed. They use no Drive API doubles or patched dependencies.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import textwrap
@@ -19,14 +20,14 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from .....tests.google_credentials import unused_google_credentials
-from .._google_drive import GoogleDriveProvider
-from .._google_drive_metadata import drive_storage_content_hash
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
+from ..google_drive import GoogleDriveProvider
+from ..google_drive_metadata import drive_storage_content_hash
 from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -73,7 +74,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 import json
                 import sys
 
-                from cadrumo.adapters.outbound.storage._google_drive import GoogleDriveProvider
+                from cadrumo.adapters.outbound.storage.google_drive import GoogleDriveProvider
 
                 provider = GoogleDriveProvider(
                     credentials=object(),
@@ -448,6 +449,23 @@ def test_google_drive_provider_rejects_blank_put_values_before_service_construct
     assert exc.translated_message is not None
     _assert_drive_verdict(exc, condition_id, facts)
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+
+
+@pytest.mark.parametrize(
+    "content_hash",
+    (
+        "sha256-empty",
+        "md5-" + "a" * 32,
+        "sha256-" + "a" * 64,
+        "sha256-" + hashlib.sha256(b"other").hexdigest(),
+    ),
+    ids=("not-a-digest", "other-algorithm", "wrong-digest", "digest-of-other-bytes"),
+)
+def test_google_drive_put_refuses_a_hash_that_its_own_read_would_refuse(content_hash: str) -> None:
+    with pytest.raises(OutboundStorageIntegrityError) as raised:
+        _provider().put("ledger_transaction", "a" * 64, b"payload", content_hash=content_hash, label="x")
+
+    assert raised.value.translated_message == "adapters.outbound.storage.google_drive.errors.content_hash_mismatch"
 
 
 def test_google_drive_provider_rejects_forbidden_namespace_before_service_construction() -> None:

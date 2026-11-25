@@ -11,7 +11,6 @@ from typing import Final
 
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
-from ....core.time.clock import today_madrid
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -298,11 +297,11 @@ def _scoped_catalogue(effective_date: date) -> IvaCategoryCatalogue:
 
 def resolve_iva_category_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCategoryCatalogue:
     """Resolve the complete IVA category vocabulary through fact 0084."""
-    coordinate = effective_date or today_madrid()
+    coordinate = effective_date
     selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
         return _scoped_catalogue(coordinate)
@@ -312,7 +311,7 @@ def resolve_iva_category_catalogue(
 def require_iva_category(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCategory:
     """Return one registry-declared IVA category or refuse it."""
@@ -325,7 +324,7 @@ def require_iva_category(
 def registry_category_projection(
     name: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[IvaCategory]:
     """Return one explicit category projection from fact 0084."""

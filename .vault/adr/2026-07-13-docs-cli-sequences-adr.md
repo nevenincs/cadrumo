@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-10-21'
-body_hash: 'sha256:80eee2c490b271ad634916bd6d95307351f519827d0a952e94aea07198245e91'
+modified: '2026-11-04'
+body_hash: 'sha256:9dd5440c18b105144e4e00d242a5551f461a6767605f70371a8be5b111bea114'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
+  - '[[2026-11-04-fixture-canonicalization-canonical-test-personas-adr]]'
 ---
 
 # `docs-cli-sequences` adr: `interactive executed CLI sequence docs` | (**status:** `accepted`)
@@ -77,6 +78,10 @@ It keeps every byte on the pages, adds an indirection to every review diff, and
 git packs already delta-compress identical content. Also rejected: truncating
 displayed output in the renderer, which would show readers something other than
 what the command prints.
+
+## Persona seed amendment (2026-11-04)
+
+Operator approval recorded 2026-11-04 (fixture-canonicalization design session). Seed recipes under `docs/_sequences/seeds/` and the sandbox profile facts are generated from the canonical persona catalogue under `dev/fixtures/personas/` (`2026-11-04-fixture-canonicalization-canonical-test-personas-adr`) and checked for drift; they remain executed CLI steps. Goldens stay committed and keep their D2 role as the reviewed record of CLI behaviour. The sandbox no longer restates profile facts inline.
 
 ## Problem Statement
 
@@ -157,10 +162,10 @@ no nested fences. The grammar:
 Worked example, exactly as authored in a how-to page:
 
     ```{cli-sequence} modelo-303-first-quarter
-    :seed: autonomo-basic-2026
+    :seed: autonomo-basic
     :verify: Verify the calculation before exporting.
-    @setup aeat app ledger import --file fixtures/2026-1t-statement.csv
-    aeat app modelo create 303 --year 2026 --period 1T
+    @setup aeat app ledger import --file fixtures/first-quarter-statement.csv
+    aeat app modelo create 303 --year <year> --period 1T
     @capture work_unit_id result.work_unit_id
     aeat app modelo calculate {work_unit_id}
     @result aeat app modelo verify {work_unit_id}
@@ -468,7 +473,7 @@ inline-span baselines are empty; the em-dash baseline retains only the
 non-user-facing contributor surfaces. Separately, the golden canonicalisation
 tokenises the per-run sandbox storage root, workdir, and the repository checkout
 root inside envelope string values (value-anchored on the known roots), so a
-command whose output echoes an absolute path (such as `config check`) is
+command whose output echoes an absolute path is
 golden-stable across runs and machine-portable for CI.
 
 *Rejected:* flag-day migration of all how-tos (35 pages of goldens landing

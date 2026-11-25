@@ -21,10 +21,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
     changed,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -38,7 +38,8 @@ from ...application.automation_lifecycle_service import (
     AutomationLifecycleService,
 )
 from ..enrollment_offer import RuntimeEnrollmentOffer
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_connection import ProfileConnection
+from ..profile_host import RuntimeProfileHost
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

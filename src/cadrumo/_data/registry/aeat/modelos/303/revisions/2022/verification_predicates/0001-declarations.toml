@@ -120,3 +120,27 @@ id = "equals:iva-autoconsumo-promotor-base-equals-por-tipo"
 predicate_id = "modelo-303-iva-autoconsumo-promotor-base-equals-por-tipo"
 expression = 'equals(["iva.autoconsumo.promotor.base", "iva.autoconsumo.promotor.base.por-tipo"])'
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Box-equals-source consistency for the régimen general rate rows [09], [06] and
+# [03] (LIVA art. 88). Each row's cuota projects the cuota devengada carrier of
+# its row, the carrier [27] adds into the total (aeat-dr-303-2022, campo 51). The
+# predicate catches a future mis-edit (a box re-flipped to manual input, or a
+# projection pointed at the wrong source) and is blocking so such a filing is
+# refused.
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-09-equals-iva-cuota-devengada-general"
+predicate_id = "modelo-303-dr303-09-equals-iva-cuota-devengada-general"
+expression = 'equals(["09", "iva.cuota-devengada.general"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-06-equals-iva-cuota-devengada-reducido"
+predicate_id = "modelo-303-dr303-06-equals-iva-cuota-devengada-reducido"
+expression = 'equals(["06", "iva.cuota-devengada.reducido"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-03-equals-iva-cuota-devengada-super-reducido"
+predicate_id = "modelo-303-dr303-03-equals-iva-cuota-devengada-super-reducido"
+expression = 'equals(["03", "iva.cuota-devengada.super-reducido"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

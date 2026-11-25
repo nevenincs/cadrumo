@@ -8,7 +8,8 @@ impl Strings {
     pub fn current() -> io::Result<Self> {
         Self::for_language(std::env::var(MANAGER_LANGUAGE_ENV).ok().as_deref())
     }
-    fn for_language(language: Option<&str>) -> io::Result<Self> {
+    /// The labels of `language`, or of the canonical default when it is not carried.
+    pub fn for_language(language: Option<&str>) -> io::Result<Self> {
         let mut catalogue: BTreeMap<String, BTreeMap<String, String>> =
             serde_json::from_str(MANAGER_STRINGS_JSON).map_err(io::Error::other)?;
         let language = language

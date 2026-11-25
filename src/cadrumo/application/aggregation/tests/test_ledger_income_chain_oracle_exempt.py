@@ -58,6 +58,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import category_cuota_is_zero_by_law
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -70,6 +71,8 @@ from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -179,8 +182,10 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
     table rather than testing for nullness is what separates them, so the
     premise is asserted rather than assumed.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_ON_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_ON_DATE
+    )
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:

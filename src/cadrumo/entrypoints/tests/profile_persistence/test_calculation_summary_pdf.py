@@ -37,11 +37,14 @@ from cadrumo.adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
     build_review_package_signing_keypair_reader,
 )
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportSourceProvenance,
@@ -80,6 +83,7 @@ from cadrumo.application.modelo.review_package_signing import (
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue
@@ -108,29 +112,38 @@ Outcome = CalculationSummaryVerificationOutcome
 
 _EXPORTED_AT = T1
 
-#: What the Spanish summary of the Modelo 130 baseline must show: income 10 000,
-#: expenses 3 000, their difference 7 000 and the 20 per cent instalment on it,
-#: each grouped with a point and carrying no decimal comma it was not given.
-_EXPECTED_SPANISH_FIGURES = ("10.000", "3.000", "7.000", "1.400")
+#: The agrarian volume the ledger holds for the first quarter, which casilla 08 of the Modelo 130 reads.
+_AGRARIAN_VOLUME = Decimal("70000")
+#: What the Spanish summary must show: the 70 000 volume and the 2 per cent
+#: agrarian instalment on it (RIRPF art. 110.1.b), 1 400, each grouped with a
+#: point and carrying no decimal comma it was not given.
+_EXPECTED_SPANISH_FIGURES = ("70.000", "1.400")
 
 
 def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
     work_repo, calculation_repo, filing_repo, verification_repo, event_repo = repos
     work_unit = seed_work_unit(work_repo)
+    seed_m130_income_transaction(
+        amount=_AGRARIAN_VOLUME,
+        filing_year=work_unit.filing_year,
+        source_key="agrarian-volume",
+        bucket_id=work_unit.bucket_id,
+        tipo_actividad=TipoActividad.B01_AGRICOLA,
+    )
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         bucket_event_repository=event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             casilla_inputs=dict(DEFAULT_130_BASELINE_INPUTS),
             binding_values=dict(DEFAULT_130_BINDING_VALUES),
             ports=ports,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,

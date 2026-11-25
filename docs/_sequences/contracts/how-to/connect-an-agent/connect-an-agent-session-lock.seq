@@ -1,6 +1,6 @@
 @step List sessions for the intended profile.
-cadrumo-runtime config profile sessions
-@expect exit_code == 0
+@static cadrumo-runtime config profile sessions
+@blocked nondeterministic-output Each row shows the session's remaining seconds, judged on the real clock against an expiry minted on it, so the count drifts with the run's duration.
 @step Lock the caller's session.
 cadrumo-runtime config profile lock
 @expect exit_code == 0

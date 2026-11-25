@@ -31,7 +31,7 @@ from .export_proof import (
     FilingExportProofRefusalReason,
 )
 from .filing_export_conformance import (
-    _CONFORMANCE_AUTHORITY_ID,
+    CONFORMANCE_AUTHORITY_ID,
     FilingExportConformanceRequest,
     prove_export_conformance,
 )
@@ -43,8 +43,8 @@ from .filing_export_conformance_vectors import (
     FilingExportConformanceVector,
     canonical_filing_export_conformance_vectors,
 )
-from .filing_export_generated_verification import _ConformanceGenerationEntry, _verify_generated_revision
-from .filing_export_payload_acceptance import _literal_bytes
+from .filing_export_generated_verification import ConformanceGenerationEntry, verify_generated_revision
+from .filing_export_payload_acceptance import literal_bytes
 from .filing_export_proof_contracts import (
     FilingExportConformanceReceipt,
     FilingExportConformanceRenderInputs,
@@ -92,7 +92,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
     @property
     def authority_id(self) -> str:
         """Return the canonical public conformance authority identity."""
-        return _CONFORMANCE_AUTHORITY_ID
+        return CONFORMANCE_AUTHORITY_ID
 
     @property
     def conformance_enrollment(self) -> FilingExportConformanceEnrollmentReport:
@@ -184,7 +184,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
         if len(snapshot.revision.export_layouts) != 1:
             raise RegistryValidationError("conformance proof requires exactly one generated filing layout")
         layout = snapshot.revision.export_layouts[0]
-        generation_entry = _ConformanceGenerationEntry(
+        generation_entry = ConformanceGenerationEntry(
             modelo=coordinate.modelo,
             revision=coordinate.revision,
             design_epoch=evidence.provenance.design_epoch,
@@ -198,7 +198,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             sources=self._authority.catalogues.sources,
             legal_ref_ids=frozenset(self._authority.catalogues.legal),
         )
-        manifest, manifest_path = _verify_generated_revision(
+        manifest, manifest_path = verify_generated_revision(
             workspace_root=self._workspace_root,
             registry_root=self._registry_root,
             source_root=self._source_root,
@@ -232,7 +232,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
         return FilingExportConformanceReceipt(
             coordinate=coordinate,
             provenance=actual_provenance,
-            authority_id=_CONFORMANCE_AUTHORITY_ID,
+            authority_id=CONFORMANCE_AUTHORITY_ID,
             emitted_bytes=len(payload),
             checked_official_offsets=len(actual_provenance.probes),
         )
@@ -247,7 +247,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             coordinate=coordinate,
             channel=channel,
             reason=reason,
-            authority_id=_CONFORMANCE_AUTHORITY_ID if channel is FilingExportProofChannel.CONFORMANCE else None,
+            authority_id=CONFORMANCE_AUTHORITY_ID if channel is FilingExportProofChannel.CONFORMANCE else None,
         )
 
 
@@ -379,7 +379,7 @@ def _verify_public_vector_probe(
     expected_offset = prefix_extent + field_offset - 1
     if probe.emitted_offset != expected_offset or probe.length != field_length:
         raise RegistryValidationError("official conformance probe span conflicts with the selected layout")
-    expected = _literal_bytes(field, literal=literal, encoding=first_record.encoding)
+    expected = literal_bytes(field, literal=literal, encoding=first_record.encoding)
     if payload[probe.emitted_offset : probe.emitted_offset + probe.length] != expected:
         raise RegistryValidationError(
             f"conformance payload disagrees at official field {probe.record_id!r}/{probe.field_id!r}",

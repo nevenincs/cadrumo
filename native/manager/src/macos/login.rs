@@ -11,8 +11,8 @@ impl Token {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         let mut words = [0; 8];
-        for (word, bytes) in words.iter_mut().zip(bytes.chunks_exact(4)) {
-            *word = u32::from_ne_bytes(bytes.try_into().map_err(|_| io::ErrorKind::InvalidData)?);
+        for (word, bytes) in words.iter_mut().zip(bytes.as_chunks::<4>().0) {
+            *word = u32::from_ne_bytes(*bytes);
         }
         if words[0] != owner
             || words[1] != owner

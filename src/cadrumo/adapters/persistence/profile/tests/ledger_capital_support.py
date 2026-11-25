@@ -15,6 +15,8 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from .....application.aggregation.retenciones import Modelo193NonpaymentCause, Modelo193PendingPaymentEvidence
 from .....application.aggregation.tests.ledger_transaction_support import ledger_raw_transaction
@@ -50,10 +52,10 @@ CAPITAL_IRPF = Decimal("190.00")
 CAPITAL_NET = CAPITAL_GROSS - CAPITAL_IRPF
 CAPITAL_EXIGIBLE_ON = date(CAPITAL_YEAR, 6, 30)
 CAPITAL_PAID_ON = date(CAPITAL_YEAR, 7, 2)
-CAPITAL_HOLDER_NIF = "22222222J"
+CAPITAL_HOLDER_NIF = "00001501Y"
 CAPITAL_HOLDER_NAME = "Titular Sintetico"
 
-MANUAL_HOLDER_NIF = "33333333P"
+MANUAL_HOLDER_NIF = "00001502F"
 MANUAL_HOLDER_NAME = "Perceptor Manual Sintetico"
 MANUAL_BASE = Decimal("500.00")
 MANUAL_RETENCION = Decimal("95.00")
@@ -113,16 +115,7 @@ def capital_pending_payment(transaction: Transaction, *, transaction_date: date)
             clave=RetencionClave.from_registry("B"),
             percibido_dinerario=CAPITAL_GROSS,
             retencion_practicada=CAPITAL_IRPF,
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=CAPITAL_GROSS,
             porcentaje_retencion=Decimal("19"),
             clave_codigo=4,

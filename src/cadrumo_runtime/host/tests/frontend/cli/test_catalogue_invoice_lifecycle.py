@@ -17,6 +17,7 @@ worker, and the real encrypted catalogue, and pin the refusals:
 from __future__ import annotations
 
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -30,13 +31,21 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 )
 from cadrumo.application.invoices.catalogue_read_operation import INVOICE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.invoice_legal_classification import (
+    resolve_invoice_legal_classification_catalogue,
+)
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.invoices.business_premises import SituacionInmueble
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_text_output_support import line_value
 
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
+from .isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import catalogue_after_password_login, native_invoice_runtime_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,7 +54,7 @@ pytestmark = [
 ]
 __all__ = ["active_profile_isolated_backend"]
 
-_RECEIVED_COUNTERPARTY_CIF = "A58818501"
+_RECEIVED_COUNTERPARTY_CIF = "B00010157"
 _RUNTIME_OPERATIONS = frozenset(
     {
         INVOICE_ADD_OPERATION_DEFINITION_ID,
@@ -62,7 +71,7 @@ def _create_catalogue_invoice(session: NativeApiCliSession[None], *, invoice_num
         "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
         "--counterparty-name", "Papeleria Sol SL",
         "--invoice-number", invoice_number,
-        "--invoice-date", "2026-03-10",
+        "--invoice-date", date(_YEAR, 3, 10).isoformat(),
         "--country-code", "ES",
         "--taxable-base", "100.00", "--iva-rate", "21",
         output_format="text",
@@ -98,7 +107,7 @@ def test_catalogue_create_records_a_retention_amount(
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15", "--retention-amount", "150.00",
@@ -129,7 +138,7 @@ def test_catalogue_create_refuses_a_retention_rate_without_an_amount(
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-002",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15",
@@ -237,7 +246,7 @@ def test_catalogue_remove_refuses_linked_invoice(
     ) as session:
         add = session.invoke_password(
             "app", "ledger", "add",
-            "--date", "2026-03-10", "--amount", "121.00",
+            "--date", date(_YEAR, 3, 10).isoformat(), "--amount", "121.00",
             "--direction", "OUTGOING", "--description", f"Supplier {_RECEIVED_COUNTERPARTY_CIF}",
             output_format="text",
         )  # fmt: skip
@@ -289,7 +298,7 @@ def test_catalogue_create_refuses_an_omitted_country_code(tmp_path: Path, run_ca
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", "2026-NOCOUNTRY-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--taxable-base", "100.00", "--iva-rate", "21",
             output_format="text",
         )  # fmt: skip
@@ -318,7 +327,7 @@ def test_catalogue_create_still_accepts_an_explicit_domestic_country_code(tmp_pa
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", "2026-WITHCOUNTRY-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
             output_format="text",
@@ -353,10 +362,10 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Minorista Recargo SL",
             "--invoice-number", "2026-REG-001",
-            "--invoice-date", "2026-05-04",
+            "--invoice-date", date(_YEAR, 5, 4).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "RECTIFICATIVA",
@@ -392,10 +401,10 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Cliente SL",
             "--invoice-number", "2026-REG-002",
-            "--invoice-date", "2026-05-04",
+            "--invoice-date", date(_YEAR, 5, 4).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "no-such-class",
@@ -418,10 +427,10 @@ def test_catalogue_create_records_a_business_premises_lease(
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B87654323",
+            "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-001",
-            "--invoice-date", "2026-03-01",
+            "--invoice-date", date(_YEAR, 3, 1).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--arrendamiento-local-negocio",
@@ -435,7 +444,7 @@ def test_catalogue_create_records_a_business_premises_lease(
         assert stored is not None
         lease = stored.business_premises_lease
         assert lease is not None
-        assert lease.situacion_inmueble == "1"
+        assert lease.situacion_inmueble is SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE
         assert lease.referencia_catastral == "9872023VH5797S0001WX"
 
 
@@ -452,10 +461,10 @@ def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B87654323",
+            "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-002",
-            "--invoice-date", "2026-03-01",
+            "--invoice-date", date(_YEAR, 3, 1).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--arrendamiento-local-negocio",
@@ -464,3 +473,79 @@ def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
         assert result.exit_code == 2, result.output
         after = catalogue_after_password_login(session.profile_id, authority_operation)
         assert len(after.invoices) == len(before.invoices)
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_records_the_recipient_period_election_from_its_year_and_token(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """LIVA art. 114.Dos.1.º leaves the recipient a choice, and the CLI can now state it.
+
+    The elected declaración-liquidación is given as a filing year and a bare
+    AEAT period token, the one period grammar every other verb speaks, and
+    reaches the record as the period it names.
+    """
+    with native_invoice_runtime_session(
+        tmp_path, invoke_cli=run_cadrumo_cli, operation_ids=_RUNTIME_OPERATIONS
+    ) as session:
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=date(_YEAR, 3, 10))
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Proveedor Rectificativa SL",
+            "--invoice-number", "2026-ELECCION-001",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "RECTIFICATIVA",
+            "--series", "R",
+            "--rectifies-invoice-number", "2026-0100",
+            "--rectification-method", str(catalogue.diferencia_token),
+            "--rectification-cause", str(catalogue.otra_modificacion_cause_token),
+            "--rectification-direction", str(catalogue.aumento_token),
+            "--document-received-on", date(_YEAR, 3, 20).isoformat(),
+            "--recipient-increase-year", str(_YEAR),
+            "--recipient-increase-period", "2T",
+            output_format="text",
+        )  # fmt: skip
+        assert result.exit_code == 0, result.output
+        invoice_id = line_value(result.output, "invoice_id")
+
+        stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)
+        assert stored is not None
+        assert stored.recipient_increase_period == Period.from_year_and_code(_YEAR, "2T")
+        assert stored.issuer_minoracion_election is None
+        assert stored.art_80_tres_obligations_attested is None
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_elected_year_with_no_period_token(tmp_path: Path, run_cadrumo_cli) -> None:
+    """A year names no declaración-liquidación on its own, so the half-stated pair refuses."""
+    with native_invoice_runtime_session(
+        tmp_path, invoke_cli=run_cadrumo_cli, operation_ids=_RUNTIME_OPERATIONS
+    ) as session:
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=date(_YEAR, 3, 10))
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Proveedor Rectificativa SL",
+            "--invoice-number", "2026-ELECCION-002",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "RECTIFICATIVA",
+            "--series", "R",
+            "--rectifies-invoice-number", "2026-0101",
+            "--rectification-method", str(catalogue.diferencia_token),
+            "--rectification-cause", str(catalogue.otra_modificacion_cause_token),
+            "--rectification-direction", str(catalogue.aumento_token),
+            "--document-received-on", date(_YEAR, 3, 20).isoformat(),
+            "--recipient-increase-year", str(_YEAR),
+            output_format="text",
+        )  # fmt: skip
+
+        assert result.exit_code != 0, result.output

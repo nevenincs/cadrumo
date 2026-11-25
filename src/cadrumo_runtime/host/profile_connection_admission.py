@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import time
 from functools import partial
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.application.operations.person_acts import is_persons_frontend
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_management import (
     AutomationDeny,
     ProfileRecoveryPrepare,
@@ -24,11 +25,13 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.bootstrap import PasswordResetPrepare
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare
+from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.installation import installation
 
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -43,6 +46,27 @@ _HELD_FENCE_LONGEST_WAIT_SECONDS = 0.25
 """The wait between tries grows to this: a commit body or a containment holds its fence for a while."""
 
 
+def require_host_admission(admitting: bool, profile_id: UUID, mutations: set[UUID]) -> None:
+    """Refuse host selection while draining or custody mutation is reserved."""
+    if not admitting or profile_id in mutations:
+        raise RefusalError(RefusalCode.DRAINING)
+
+
+def admitted_installation(
+    current: Installation | None, root: Path, storage_identity: str, os_owner_id: str
+) -> Installation:
+    """Read the installation lazily and match its native owner."""
+    if current is None:
+        current = installation(storage_root=root, os_owner_id=os_owner_id, storage_identity=storage_identity)
+    return current
+
+
+def require_installation_owner(current: Installation, os_owner_id: str) -> None:
+    """Reject an installation belonging to another native owner."""
+    if current.os_owner_id != os_owner_id:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="installation_owner_mismatch")
+
+
 class ProfileConnectionAdmissionMixin:
     """Own the admission behavior of the profile connection service."""
 
@@ -50,16 +74,11 @@ class ProfileConnectionAdmissionMixin:
         deadline = time.monotonic() + 15
         while True:
             with self._guard:
-                if not self._admitting() or profile_id in self._custody_mutations:
-                    raise RefusalError(RefusalCode.DRAINING)
-                if self._installation is None:
-                    self._installation = installation(
-                        storage_root=self.root,
-                        os_owner_id=context.peer.os_owner_id,
-                        storage_identity=self.storage_identity,
-                    )
-                if self._installation.os_owner_id != context.peer.os_owner_id:
-                    raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="installation_owner_mismatch")
+                require_host_admission(self._admitting(), profile_id, self._custody_mutations)
+                self._installation = admitted_installation(
+                    self._installation, self.root, self.storage_identity, context.peer.os_owner_id
+                )
+                require_installation_owner(self._installation, context.peer.os_owner_id)
                 binding = current_automation_profile_binding(
                     profile_id=profile_id,
                     installation_id=self._installation.installation_id,
@@ -87,7 +106,7 @@ class ProfileConnectionAdmissionMixin:
                         runtime_boot_id=self.boot,
                         registry=registry,
                         connected=self._connected,
-                        logins=self._login_contexts,
+                        logins=self._observed_login_contexts,
                         admitting=lambda: self._private_work_available() and profile_id not in self._custody_mutations,
                         recipient=self._enrollments.recipient,
                         worker_script=self._worker_script,
@@ -95,6 +114,11 @@ class ProfileConnectionAdmissionMixin:
                         retired=self._publish_retirement,
                         operations_advanced=partial(self._operations_advanced, profile_id),
                         model_runs=partial(self._relay_model_run, profile_id),
+                        suspended=partial(self._sessions_suspended, profile_id),
+                        rebound=self._cue_lease_holders,
+                        recovery=self._custody_recovery,
+                        worker_lost=self.lifecycle_changed,
+                        fixed_clock=self.fixed_clock,
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)
@@ -145,7 +169,7 @@ class ProfileConnectionAdmissionMixin:
         channel: ByteChannel,
         request: ProfileLogin,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
-        self._validate_login_request(request)
+        self.validate_login_request(request)
         if self._nonhuman_peer(context, channel) and is_persons_frontend(request.frontend):
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="nonhuman_peer_person_frontend")
         if request.method in {"password", "receipt"}:
@@ -161,7 +185,7 @@ class ProfileConnectionAdmissionMixin:
         return connection, host
 
     @staticmethod
-    def _validate_login_request(request: ProfileLogin) -> None:
+    def validate_login_request(request: ProfileLogin) -> None:
         """Refuse a login whose method and options do not belong together, on any frontend.
 
         A sign-in holds the profile's whole ceiling, so neither a password nor
@@ -209,13 +233,14 @@ class ProfileConnectionAdmissionMixin:
     ) -> None:
         if not self._admitting():
             raise RefusalError(RefusalCode.DRAINING)
-        self._retire_invalid_prior_session(connection, host, context, request)
+        rebinding = self._retire_invalid_prior_session(connection, host, context, request)
         observation = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observation.active or (request.method in {"password", "receipt"} and not observation.unlocked):
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
         connection.method = request.method
         connection.persist_human_receipt = request.persist_receipt
-        if request.method in {"password", "receipt"}:
+        if request.method in {"password", "receipt"} and not rebinding:
+            # A rebind keeps the client the suspended lease was issued to.
             connection.client_id = uuid4()
         with self._guard:
             if not self._admitting():
@@ -229,18 +254,23 @@ class ProfileConnectionAdmissionMixin:
         host: RuntimeProfileHost,
         context: ConnectionContext,
         request: ProfileLogin,
-    ) -> None:
+    ) -> bool:
+        """Retire a prior session this login replaces; return whether it is a suspended one the login may rebind."""
         if connection.session_id is None:
-            return
+            return False
         try:
             prior = self._status(connection, host, request.request_id, connection.session_id)
-            valid = isinstance(prior, ProfileStatus) and prior.status.denial is None
+            denial = prior.status.denial if isinstance(prior, ProfileStatus) else prior.code
         except AutomationCustodyError:
-            valid = False
-        if valid:
+            denial = AccessDenialCode.CUSTODY_UNAVAILABLE
+        if denial is None:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        if denial is AccessDenialCode.CUSTODY_RECOVERING:
+            # The session waits for exactly this connection's fresh proof; the authority decides whether it fits.
+            return True
         host.authority.disconnect(context.connection_id)
         connection.session_id = None
+        return False
 
     def _prepare_enrollment(
         self: RuntimeProfileConnections,

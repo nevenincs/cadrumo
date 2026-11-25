@@ -13,12 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.errors import StorageValidationError
+from cadrumo.adapters.persistence.storage.errors import StorageSessionUnavailableError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from cadrumo.adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.audited_process import run_audited_process
 
@@ -37,7 +38,7 @@ def _exercise(tmp_path: Path) -> None:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
         profile_id = str(identity.binding.profile_id)
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=profile_id):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=profile_id):
             custody = ProfileWorkerCustody(identity, storage_root=root)
             admitted = lease(identity)
             custody.install(admitted, bytearray(key))
@@ -50,10 +51,11 @@ def _exercise(tmp_path: Path) -> None:
                 readiness = inspect_bucket_storage_runtime(profile_id).readiness
                 assert not readiness.ready
                 assert readiness.code is StorageRuntimeReadinessCode.NO_ACTIVE_SESSION
+                # A retired session is the operator's to sign in to again, not a broken store.
                 try:
                     secure_object_repository_for_active_bucket()
-                except StorageValidationError:
-                    pass
+                except StorageSessionUnavailableError as refused:
+                    assert get_registered_error_code(refused).category is ErrorCategory.REFUSED
                 else:
                     raise AssertionError("storage stayed ready after its only lease was retired")
             finally:

@@ -44,9 +44,14 @@ flows:
       clear: Clear
       completed_refresh_unavailable: The operation completed, but its updated view
         is unavailable. Return to Home to refresh it.
+      conflict: The profile changed while you were editing. Your change was not saved.
+        Review the current profile and open the field again; press F5 if you need
+        to reload.
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
       no_change: No changes were needed.
+      refresh_failed: The current profile could not be loaded. Press F5 to try again
+        before editing.
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
@@ -54,7 +59,7 @@ flows:
       shape:
         date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
         decimal: A number, using a point for decimals - for example 1234.56.
-        email: An email address - for example nombre@ejemplo.es.
+        email: An email address - for example name@example.com.
         integer: A whole number, with no thousands separator.
         money: An amount in euros, using a point for decimals - for example 1234.56.
       stale_result: The save completed, but a newer profile version is already visible.
@@ -65,9 +70,18 @@ flows:
     field_unavailable: Unavailable profile field
     help:
       about: 'About this setting:'
-      what: 'What it is:'
-      where: 'Where to find it:'
-      why: 'Why it is needed:'
+    household:
+      close: Close
+      full: This group is full, so no more people can be added.
+      read_again: Read again
+      read_failed: Your household could not be read. Read it again to try once more.
+      reading: Reading your household…
+      state_none_declared: You stated that there are none.
+      state_not_served: Your profile does not offer this group.
+      state_unknown: Nothing is recorded for this group. That is not the same as none.
+      title: Household
+      unknown_outcome: The change may have been saved, or not. Read your household
+        again before changing anything else.
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
@@ -158,10 +172,12 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Activity asset disposal
           afiliado_cotizacion: Member contributions
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft
+          capital_mobiliario_position: Savings interest and dividends
           collectible_invoice: Sales invoices
           design_constant: Design constant
           foreign_asset: Foreign asset
@@ -184,13 +200,17 @@ flows:
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing
+          prevision_social_contribution: Pension contributions
           profile: Profile
+          prorrata_register_activity: Prorrata register activities
           prorrata_regularizacion: Pro-rata adjustment
           purchase_invoice_evidence: Purchase-invoice evidence
           relation_prefill: Related filing
+          renta_inmueble: Let property
+          retencion_soportada: Withholding suffered
           retenciones_aggregation: Withholding totals
           withholding: Withholding record
-          withholding296: Withholding perceptor (modelo 296)
+          withholding296: Withholding recipient (modelo 296)
         estado_casilla_oficial:
           addressed: Directly addressed
           represented_via_binding: Represented through binding

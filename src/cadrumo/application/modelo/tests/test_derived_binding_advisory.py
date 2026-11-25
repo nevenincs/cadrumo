@@ -22,21 +22,19 @@ Real adapters: the resident registry authority and a real
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
     published_supported_filing_years,
@@ -44,20 +42,25 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
+from ..profile_binding import derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one authority generation for the resolver under test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
-
-
 _BUCKET = "0de41ce4-0000-4000-8000-000000000512"
-_T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
+_T0 = datetime(1980, 8, 4, 10, 0, tzinfo=UTC)
+# The edition that still binds the childcare increment as a derived profile path;
+# later editions drop it, so the full derived set below is edition specific.
+_YEAR = next(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "100",
+        lambda revision: (
+            {"renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad"}
+            <= {item.id for item in revision.bindings}
+        ),
+    )
+)
 _ADVISORY_REASON = "unresolved_derived_binding"
 
 
@@ -67,13 +70,13 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -81,7 +84,7 @@ def _derived_advisories(
     record: UserProfileRecord,
     *,
     operation: PinnedAuthorityOperation,
-    year: int = 2024,
+    year: int = _YEAR,
 ) -> tuple[str, ...]:
     """Binding ids the derived-scoped advisory fired for, via the real resolver."""
     resolution = resolve_profile_sourced_bindings(
@@ -109,8 +112,8 @@ def test_descendants_without_childcare_spend_do_not_fire_the_advisory(
     aggregate emitted only when positive.
     """
     descendientes = (
-        DescendantInfo(birth_date=date(2023, 2, 10)),
-        DescendantInfo(birth_date=date(2015, 7, 4)),
+        DescendantInfo(birth_date=date(_YEAR - 1, 2, 10)),
+        DescendantInfo(birth_date=date(_YEAR - 9, 7, 4)),
     )
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
@@ -149,7 +152,7 @@ def test_no_advisory_on_any_covered_filing_year(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every year the registry declares derived bindings for resolves them all."""
-    descendientes = (DescendantInfo(birth_date=date(2015, 7, 4)),)
+    descendientes = (DescendantInfo(birth_date=date(_YEAR - 9, 7, 4)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
     assert _derived_advisories(record, year=year, operation=authority_operation) == ()
@@ -165,7 +168,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
 
     The real gap this guards -- an injector stopping short while the registry
     still binds the path -- is reached here by handing the advisory the real
-    M100 2024 profile bindings alongside a fact index in which the injectors
+    M100 profile bindings alongside a fact index in which the injectors
     wrote nothing. That is precisely the state a registry year with no
     injector coverage produces, and it drives the shipped predicate rather
     than re-stating it.
@@ -174,10 +177,10 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     well by an advisory that can never fire at all.
     """
     schema = published_profile_schema()
-    snapshot = _snapshot(2024)
+    snapshot = _snapshot(_YEAR)
     bindings = tuple(b for b in snapshot.revision.bindings if b.source == "profile")
 
-    fired = _derived_binding_diagnostics(bindings, {}, schema, bucket_id=_BUCKET)
+    fired = derived_binding_diagnostics(bindings, {}, schema, bucket_id=_BUCKET)
 
     reasons = {diagnostic.reason for diagnostic in fired}
     assert reasons == {_ADVISORY_REASON}, reasons
@@ -185,9 +188,17 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     # index leaves every ordinary profile binding unresolved too, so a wider
     # set would mean the advisory had escaped its derived scope.
     assert {str(d.binding_id) for d in fired} == {
+        "renta-modelo-100-estimacion-directa-actividad-tipo-clave",
+        "renta-modelo-100-estimacion-directa-es-normal",
+        "renta-modelo-100-estimacion-directa-modalidad-clave",
+        "renta-profile-activity-cash-criterion-0169",
         "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-deduccion-maternidad",
+        "renta-profile-estimacion-directa",
         "renta-profile-incremento-guarderia",
+        "renta-profile-minimo-ascendientes-autonomico",
+        "renta-profile-minimo-ascendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-minimo-descendientes-estatal",
     }
@@ -205,10 +216,10 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
     them, so the silence above is resolution succeeding rather than the
     advisory being unreachable.
     """
-    descendientes = (DescendantInfo(birth_date=date(2023, 2, 10)),)
+    descendientes = (DescendantInfo(birth_date=date(_YEAR - 1, 2, 10)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
     resolution = resolve_profile_sourced_bindings(
-        _snapshot(2024),
+        _snapshot(_YEAR),
         bucket_id=_BUCKET,
         profile_record=record,
         operation=authority_operation,
@@ -219,6 +230,8 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
     resolved = {**resolution.binding_values, **resolution.boolean_binding_values}
     for binding_id in (
         "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-ascendientes-estatal",
+        "renta-profile-minimo-ascendientes-autonomico",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-incremento-guarderia",

@@ -23,6 +23,8 @@ from decimal import Decimal
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ...application.modelo.maritime_preview_operation import (
     MaritimePreviewObservation,
     ModeloMaritimePreviewProjection,
@@ -31,13 +33,13 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import RecordedRegisteredError
 from ...core.external_constants import OutputLanguage
-from ._modelo_cli_support import optional_decimal_option
-from .common import activate_subcommand_output_language, emit_envelope
-from .modelo_results import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
+from .common import emit_envelope
+from .modelo_cli_support import optional_decimal_option
+from .modelo_query_results import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
 from .operation_modelo_maritime_preview import preview_modelo_maritime_exemption
 
 
-def _parse_maritime_amounts(
+def parse_maritime_amounts(
     *,
     annual_salary: str | None,
     gross_navigation_income: str | None,
@@ -150,6 +152,7 @@ def work_preview_maritime_exemption(
     annual_salary: str | None = None,
     qualifying_days: int | None = None,
     gross_navigation_income: str | None = None,
+    filing_year: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve and render the maritime exemption preview for the active profile.
@@ -159,7 +162,7 @@ def work_preview_maritime_exemption(
     observation construction stay in the registered application operation.
     """
     activate_subcommand_output_language(ctx, output_language)
-    annual_salary_decimal, gross_navigation_decimal = _parse_maritime_amounts(
+    annual_salary_decimal, gross_navigation_decimal = parse_maritime_amounts(
         annual_salary=annual_salary,
         gross_navigation_income=gross_navigation_income,
     )
@@ -168,6 +171,7 @@ def work_preview_maritime_exemption(
         annual_salary=annual_salary_decimal,
         qualifying_days=qualifying_days,
         gross_navigation_income=gross_navigation_decimal,
+        filing_year=filing_year,
     )
     retmar_warning = (
         resolve_error_message(

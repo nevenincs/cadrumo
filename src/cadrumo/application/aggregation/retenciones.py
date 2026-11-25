@@ -23,7 +23,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KIND_ORDER,
@@ -32,19 +32,21 @@ from ...core.aggregation import (
     RetencionScheme,
     WorkIncomeRetencionTreatment,
 )
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
-from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...core.spanish_postcode import SPANISH_MUNICIPALITY_CODE_PATTERN, SpanishPostcode, SpanishProvinceCode
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_codes_in_scope, form_for_role, require_form_fit
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from .grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 from .withholding_recognition import WithholdingDatedEvent
 
 
@@ -70,21 +72,63 @@ class Modelo180StructuredAddress(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     province_code: SpanishProvinceCode
-    municipality_code: str = Field(pattern=r"^\d{3}$")
-    municipality: str = Field(min_length=1, max_length=30)
-    locality: str = Field(min_length=1, max_length=30)
+    municipality_code: str = Field(pattern=SPANISH_MUNICIPALITY_CODE_PATTERN)
+    municipality: str = Field(min_length=1, max_length=64)
+    locality: str = Field(min_length=1, max_length=64)
     postal_code: SpanishPostcode
-    street_type: str = Field(min_length=1, max_length=5)
-    street_name: str = Field(min_length=1, max_length=50)
-    number_type: str = Field(min_length=1, max_length=3)
-    house_number: str = Field(min_length=1, max_length=5)
-    number_qualifier: str = Field(default="", max_length=3)
-    block: str = Field(default="", max_length=3)
-    portal: str = Field(default="", max_length=3)
-    staircase: str = Field(default="", max_length=3)
-    floor: str = Field(default="", max_length=3)
-    door: str = Field(default="", max_length=3)
-    complement: str = Field(default="", max_length=40)
+    street_type: str = Field(min_length=1, max_length=64)
+    street_name: str = Field(min_length=1, max_length=64)
+    number_type: str = Field(min_length=1, max_length=64)
+    house_number: str = Field(min_length=1, max_length=64)
+    number_qualifier: str = Field(default="", max_length=64)
+    block: str = Field(default="", max_length=64)
+    portal: str = Field(default="", max_length=64)
+    staircase: str = Field(default="", max_length=64)
+    floor: str = Field(default="", max_length=64)
+    door: str = Field(default="", max_length=64)
+    complement: str = Field(default="", max_length=64)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _municipality_lies_in_the_province(self) -> Modelo180StructuredAddress:
+        if not self.municipality_code.startswith(self.province_code):
+            raise CoreValidationError("the municipality code must start with the province code")
+        return self
+
+    @field_validator(
+        "municipality",
+        "locality",
+        "street_type",
+        "street_name",
+        "number_type",
+        "house_number",
+        "number_qualifier",
+        "block",
+        "portal",
+        "staircase",
+        "floor",
+        "door",
+        "complement",
+    )
+    @classmethod
+    @pydantic_validation_boundary
+    def _fits_the_declared_field(cls, value: str, info: ValidationInfo) -> str | None:
+        return require_form_fit(value, f"m180.address.{info.field_name}")
+
+
+_M180_FORM_CODES_FACT = "modelo-180-perceptor-form-codes"
+
+
+def _modelo180_sign(taxable_base: Decimal) -> Literal["positive", "reimbursement"]:
+    return "reimbursement" if taxable_base < 0 else "positive"
+
+
+def _require_m180_percentage(value: Decimal) -> Decimal:
+    """Refuse a percentage above the maximum the Modelo 180 record design can carry."""
+    codes = form_codes_in_scope(_M180_FORM_CODES_FACT)
+    if codes is not None and value > Decimal(codes.code("withholding_percentage.maximum")):
+        raise ValueError("withholding percentage exceeds the Modelo 180 record design")
+    return value
 
 
 class Modelo180PropertyEvidence(BaseModel):
@@ -100,22 +144,30 @@ class Modelo180PropertyEvidence(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     property_key: str = Field(min_length=1, max_length=128)
-    situation: Literal["1", "2", "3", "4"]
-    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
+    situation: str = Field(min_length=1)
+    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=32)
     address: Modelo180StructuredAddress
     recipient_province_code: SpanishProvinceCode
-    modality: Literal["1", "2"]
-    accrual_year: int = Field(ge=1900, le=9999)
-    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+    modality: str = Field(min_length=1)
+    accrual_year: FourDigitYear
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), decimal_places=2)
     representative_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
 
     @model_validator(mode="after")
     def _conditional_property_identity(self) -> Modelo180PropertyEvidence:
-        if self.situation in {"1", "2", "3"}:
+        codes = form_codes_in_scope(_M180_FORM_CODES_FACT)
+        if codes is None:
+            return self
+        if self.situation not in codes.codes("situation.codes"):
+            raise ValueError("situation is not a code the Modelo 180 record design declares")
+        if self.modality not in codes.codes("modality.codes"):
+            raise ValueError("modality is not a code the Modelo 180 record design declares")
+        _require_m180_percentage(self.withholding_percentage)
+        if self.situation in codes.codes("situation.with_cadastral_reference"):
             if self.cadastral_reference is None:
-                raise ValueError("situations 1-3 require a cadastral reference")
+                raise ValueError("this situation requires a cadastral reference")
         elif self.cadastral_reference is not None:
-            raise ValueError("situation 4 requires no cadastral reference and a structured address")
+            raise ValueError("this situation requires no cadastral reference and a structured address")
         return self
 
     @property
@@ -123,7 +175,7 @@ class Modelo180PropertyEvidence(BaseModel):
         """Return the accepted property identity, without recipient/grouping axes."""
         if self.cadastral_reference is not None:
             return f"{self.situation}:cadastral:{self.cadastral_reference.upper()}"
-        return f"4:local:{self.property_key}"
+        return f"{self.situation}:local:{self.property_key}"
 
 
 class Modelo193NonpaymentCause(StrEnum):
@@ -144,9 +196,17 @@ class Modelo193PendingPaymentEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    perception_key: Literal["A", "B", "D"]
+    perception_key: str = Field(min_length=1)
     nonpayment_cause: Modelo193NonpaymentCause
     actual_recipient_detail: WithholdingObservation
+
+    @field_validator("perception_key")
+    @classmethod
+    def _declared_pending_key(cls, value: str) -> str:
+        catalogue = form_codes_in_scope("modelo-190-193-withholding-binding-catalogue")
+        if catalogue is not None and value not in catalogue.codes("identification_block_claves"):
+            raise ValueError("this perception key has no pending-payment treatment in the record design")
+        return value
 
     @model_validator(mode="after")
     def _is_a_supported_unpaid_perception(self) -> Modelo193PendingPaymentEvidence:
@@ -205,11 +265,11 @@ class RetencionObservation(BaseModel):
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
-    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
+    accrued_on: IsoDateString
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_193_capital: Modelo193CapitalDetail | None = None
 
@@ -233,7 +293,7 @@ class RetencionPerceptorRollup(BaseModel):
 
     source_kind: BindingSourceKind
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
-    perceptor_name: str = Field(default="", max_length=200)
+    perceptor_name: str = Field(default="", max_length=256)
     scheme: RetencionScheme
     observations_count: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
@@ -258,12 +318,17 @@ class Modelo180Type2Row(BaseModel):
     observations_count: NonNegativeInt
     taxable_base: Decimal
     retencion_amount: Decimal = Field(ge=Decimal("0"))
-    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), decimal_places=2)
+
+    @field_validator("withholding_percentage")
+    @classmethod
+    def _percentage_within_design(cls, value: Decimal) -> Decimal:
+        return _require_m180_percentage(value)
 
     @property
     def sign(self) -> Literal["positive", "reimbursement"]:
         """Return the sign axis required for reimbursement separation."""
-        return "reimbursement" if self.taxable_base < 0 else "positive"
+        return _modelo180_sign(self.taxable_base)
 
 
 class RetencionesAggregation(BaseModel):
@@ -320,9 +385,10 @@ def _validate_type2_record_count(aggregation: RetencionesAggregation) -> None:
 
 
 def _validate_type2_rows_match_modelo(aggregation: RetencionesAggregation) -> None:
-    if aggregation.modelo != "180" and aggregation.type2_rows:
+    lease_annual = form_for_role("withholding.lease_annual")
+    if aggregation.modelo != lease_annual and aggregation.type2_rows:
         raise ValueError("Modelo 180 type-2 rows cannot belong to another modelo")
-    if aggregation.modelo != "180" or not aggregation.type2_rows:
+    if aggregation.modelo != lease_annual or not aggregation.type2_rows:
         return
     if sum((row.taxable_base for row in aggregation.type2_rows), Decimal("0")) != aggregation.total_taxable_base:
         raise ValueError("Modelo 180 type-2 bases must reconcile with the declaration total")
@@ -534,7 +600,7 @@ def aggregate_retenciones_111(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
 
@@ -544,9 +610,6 @@ def aggregate_retenciones_111(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_111(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("111").value, period=period, operation=operation)
 
 
@@ -554,7 +617,7 @@ def aggregate_retenciones_115(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
@@ -563,9 +626,6 @@ def aggregate_retenciones_115(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_115(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("115").value, period=period, operation=operation)
 
 
@@ -573,15 +633,12 @@ def aggregate_retenciones_123(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
     Covers the capital-income schemes selected by the registry.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_123(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period, operation=operation)
 
 
@@ -589,7 +646,7 @@ def aggregate_retenciones_180(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
 
@@ -601,9 +658,6 @@ def aggregate_retenciones_180(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_180(observations, period=period, operation=indexed_operation)
     aggregation = _aggregate_for_modelo(
         observations,
         modelo=Modelo("180").value,
@@ -662,7 +716,7 @@ def _modelo180_type2_rows(
 def _modelo180_type2_group_key(
     row: RetencionObservation, detail: Modelo180PropertyEvidence, *, filing_year: int
 ) -> tuple[object, ...]:
-    sign = "reimbursement" if row.taxable_base < 0 else "positive"
+    sign = _modelo180_sign(row.taxable_base)
     return filing_year, row.perceptor_nif, detail.modality, detail.accrual_year, detail.identity, sign
 
 
@@ -716,7 +770,7 @@ def aggregate_retenciones_190(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
 
@@ -725,9 +779,6 @@ def aggregate_retenciones_190(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_190(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("190").value, period=period, operation=operation)
 
 
@@ -735,16 +786,13 @@ def aggregate_retenciones_193(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 193 retenciones into a :class:`RetencionesAggregation`.
 
     Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_193(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("193").value, period=period, operation=operation)
 
 

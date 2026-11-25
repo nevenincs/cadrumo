@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import (
@@ -15,6 +16,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
+    ProfileAscendantsOperationProjection,
+    ProfileAscendantsOperationRequest,
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationProjection,
@@ -43,6 +46,7 @@ from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
+    settled_registered_error_detail,
     start_and_await_terminal,
     submit_operation,
 )
@@ -52,6 +56,7 @@ type ProfileMutationRequest = (
     | ProfilePatchOperationRequest
     | ProfilePlantillaMediaOperationRequest
     | ProfileDescendantsOperationRequest
+    | ProfileAscendantsOperationRequest
     | ProfileRepeatableRowMutationOperationRequest
     | ProfileRepeatableRowUpdateOperationRequest
     | ProfileRepeatableRowRemoveOperationRequest
@@ -63,6 +68,7 @@ type ProfileMutationProjection = (
     | ProfilePatchOperationProjection
     | ProfilePlantillaMediaOperationProjection
     | ProfileDescendantsOperationProjection
+    | ProfileAscendantsOperationProjection
     | ProfileRepeatableRowMutationOperationProjection
     | ProfileRepeatableRowChangeOperationProjection
     | ProfileCompleteSetupOperationProjection
@@ -73,6 +79,7 @@ _SUPPORTED_REQUEST_TYPES: tuple[type[BaseModel], ...] = (
     ProfilePatchOperationRequest,
     ProfilePlantillaMediaOperationRequest,
     ProfileDescendantsOperationRequest,
+    ProfileAscendantsOperationRequest,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowRemoveOperationRequest,
@@ -90,7 +97,12 @@ class ProfileMutationCompletion:
 
 
 class ProfileMutationRunError(CadrumoError):
-    """Retain the submitted ID and only observed settlement facts on failure."""
+    """Retain the submitted ID and only observed settlement facts on failure.
+
+    A refused or failed operation also keeps the public detail the worker
+    recorded for the error that stopped it, so a frontend can rebuild that
+    error with its typed verdict instead of only its registered code.
+    """
 
     def __init__(
         self,
@@ -99,12 +111,14 @@ class ProfileMutationRunError(CadrumoError):
         code: str,
         terminal_condition: OperationTerminalCondition | None = None,
         effect: OperationEffect | None = None,
+        detail: OperationErrorDetailV1 | None = None,
     ) -> None:
         """Keep unknown effect explicit when the runtime could not be observed."""
         self.operation_id = operation_id
         self.reason = code
         self._terminal_condition = terminal_condition
         self._effect = effect
+        self._detail = detail
         super().__init__(
             code,
             context=operation_run_error_context(
@@ -122,9 +136,14 @@ class ProfileMutationRunError(CadrumoError):
         """Keep unobserved effects distinct from the serialized unknown marker."""
         return self._effect
 
+    @property
+    def detail(self) -> OperationErrorDetailV1 | None:
+        """Return the worker's recorded public detail of the stopping error, when one was read."""
+        return self._detail
+
 
 @cache
-def _registration(request_type: type[BaseModel]) -> OperationPublicDefinitionRegistrationV1:
+def profile_mutation_registration(request_type: type[BaseModel]) -> OperationPublicDefinitionRegistrationV1:
     """Resolve the exact definition and schemas from the canonical owner."""
     if request_type not in _SUPPORTED_REQUEST_TYPES:
         raise TypeError("unsupported profile mutation request type")
@@ -197,6 +216,14 @@ def run_profile_mutation(
                 or (condition.value if condition is not None else "unknown"),
                 terminal_condition=condition,
                 effect=effect,
+                detail=settled_registered_error_detail(
+                    client,
+                    operation_id=operation_id,
+                    terminal_revision=projection.revision,
+                    contract=contract,
+                    condition=condition,
+                    deadline=deadline,
+                ),
             )
         encoded = read_settled_result_bytes(client, operation_id, projection, contract, deadline=deadline)
         accepted = _validated_profile_mutation_projection(encoded, registration, contract, request, profile_id)
@@ -226,7 +253,7 @@ def _profile_mutation_contract(
     if request.profile_id != client.profile_id:
         raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     deadline = bounded_deadline_after(timeout, subject="profile mutation")
-    registration = _registration(type(request))
+    registration = profile_mutation_registration(type(request))
     contract = client.contract(registration.contract.definition_id, deadline=deadline)
     if contract != registration.contract or contract.result_schema is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -241,9 +268,14 @@ def _validated_profile_mutation_projection(
     profile_id: UUID,
 ) -> ProfileMutationOperationProjection:
     """Require a typed settled result for the addressed profile and expected revision."""
-    success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
+    parsed = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
     expected_type = next(
         binding.model_type for binding in registration.schema_bindings if binding.identity == contract.result_schema
+    )
+    # Projections with one shape (the descendants and the ascendants count) cannot be told apart by the union,
+    # so the settled schema decides which class the payload is read as.
+    success = parsed.model_copy(
+        update={"projection": expected_type.model_validate(parsed.projection.model_dump(mode="python"))}
     )
     if not _profile_mutation_result_is_current(success, contract, expected_type, profile_id, request.expected_revision):
         raise RefusalError(RefusalCode.INVALID_FRAME)

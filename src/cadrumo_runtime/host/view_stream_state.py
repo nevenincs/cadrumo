@@ -1,0 +1,83 @@
+"""Retained view attach authority and relay leg state."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from threading import Lock
+from uuid import UUID
+
+from cadrumo.application.operations.models import OperationId
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.contracts import ByteChannel, Peer
+from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import ViewState, ViewWorkerBind
+from cadrumo_client.transport.native_wake import NativeWake
+
+from ..adapters.worker_transport import WorkerChannel
+
+_LOGGER = get_logger(__name__)
+
+
+def close_view_leg_quietly(channel: ByteChannel) -> None:
+    """Close a leg's channel, logging only the failure's type: a close error must not mask the refusal being raised."""
+    try:
+        channel.close()
+    except Exception as error:
+        diagnostic_event(_LOGGER, "view_leg_close_failed", fields={"error_type": type(error).__name__}, level=30)
+
+
+@dataclass(frozen=True, slots=True)
+class ViewAttachGrant:
+    """Who may present a token: the exact attaching session, its person connection and native peer."""
+
+    operation_id: OperationId
+    profile_id: UUID
+    session_id: UUID
+    person_connection_id: UUID
+    peer: Peer
+    runtime_boot_id: UUID
+
+
+@dataclass(slots=True)
+class PendingViewAttach:
+    """A single-use attach token and its authority."""
+
+    token: bytes
+    grant: ViewAttachGrant
+    expires_at: float
+
+
+@dataclass(slots=True)
+class ViewWindowLeg:
+    """The live window transport and its credit state."""
+
+    channel: ByteChannel
+    context: ConnectionContext
+    grant: ViewAttachGrant
+    stopping: NativeWake = field(default_factory=NativeWake)
+    write_lock: Lock = field(default_factory=Lock)
+    credit: int = 0
+    ready: bool = False
+    unbound: bool = False
+    close_sent: bool = False
+    frames: int = 0
+    """Frames written to the window; a writer holding the lock that stops adding to it has stalled."""
+    mid_image: bool = False
+    """Whether the window has an announced image whose chunks have not all been written."""
+
+
+@dataclass(slots=True)
+class ViewWorkerLeg:
+    """The live worker transport and its credit state."""
+
+    profile_id: UUID
+    bind: ViewWorkerBind
+    channel: WorkerChannel
+    stopping: NativeWake = field(default_factory=NativeWake)
+    write_lock: Lock = field(default_factory=Lock)
+    credit: int = 0
+    last_sequence: int | None = None
+    last_state: ViewState | None = None
+    window: ViewWindowLeg | None = None
+    ended: bool = False

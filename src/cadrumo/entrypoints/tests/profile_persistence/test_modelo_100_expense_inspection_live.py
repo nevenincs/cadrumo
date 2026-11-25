@@ -14,8 +14,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -25,9 +26,9 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -40,16 +41,16 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -82,7 +83,10 @@ _M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casi
     "1391",
     surface="_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA",
 )
-_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _M100_SS_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-ledger-expense-0199-deductible"
 
@@ -96,44 +100,39 @@ _AUTO_RESOLVED_SOURCES = frozenset(
         # record and `relation_prefill` folds from the store.
         "profile",
         "relation_prefill",
+        # The withholding credits are the payer records' to state: this profile
+        # declares no income class a payer withholds on, which proves their zero.
+        "retencion_soportada",
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
 
 def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Sofia"),
-            UserProfileFact(path="identity.surnames", value="Expense Inspector"),
-            UserProfileFact(path="activities.description", value="professional services"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Sofia"),
+                UserProfileFact(path="identity.surnames", value="Expense Inspector"),
+                UserProfileFact(path="activities.description", value="professional services"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                *cash_criterion_facts(_YEAR),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -218,35 +217,24 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
 
 
 def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=objects).save(
-        CalculationObservationRepository(objects=objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        CalculationObservationRepository(objects=objects),
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_ANNUAL_PERIOD,
-                    casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
-                ),
+                casilla_values={
+                    _M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_YEAR - 1,
-                    period=_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_YEAR - 1,
-                        period=_ANNUAL_PERIOD,
-                        casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -257,7 +245,6 @@ def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
         for binding in snapshot.revision.bindings
         if str(binding.source) not in _AUTO_RESOLVED_SOURCES
     }
-    values[_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 
@@ -303,6 +290,9 @@ def test_sofia_m100_work_create_and_calculate_exposes_0186_and_0199(
     assert Decimal(values[_M100_SS_CASILLA]) == Decimal("340.00")
     assert Decimal(values[_M100_OTHER_EXPENSES_CASILLA]) == Decimal("5600.00")
     assert Decimal(values[_M100_SS_CASILLA]) + Decimal(values[_M100_OTHER_EXPENSES_CASILLA]) == Decimal("5940.00")
+    # No payer record, and a profile declaring only activity income: a proven zero, not a caller's.
+    for credit in ("0596", "0597", "0603"):
+        assert Decimal(values[validated_casilla_id(credit, surface="test casilla id")]) == Decimal("0")
     assert set(result.revision.source_transaction_ids) >= {transaction.transaction_id for transaction in transactions}
     assert not any(
         diagnostic.source_kind == "ledger_renta_gastos_estimacion_directa_aggregation"

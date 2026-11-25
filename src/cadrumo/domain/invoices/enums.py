@@ -36,9 +36,10 @@ from ..calculations.registry.iva_rate_kind_catalogue import (
 )
 from ..calculations.registry.schema_base import DateAxis
 from ..iva.errors import IvaRateNotFoundError
-from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
+from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, rate_vocabulary_date, resolve_iva_rate
 from ..iva.rates import rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
+from .validation_pass import answer_once
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -63,7 +64,7 @@ class IvaRate(RegistryToken):
             return value
         if isinstance(value, str):
             try:
-                resolved = resolve_iva_rate_token(value, today_madrid())
+                resolved = answer_once(resolve_iva_rate_token, value, today_madrid())
                 return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
@@ -118,11 +119,102 @@ class InvoiceOperationDateRole(StrictRegistryToken):
     __slots__ = ()
 
 
+class RectificationFact(StrEnum):
+    """One operator-supplied fact a factura rectificativa needs, named by its invoice field.
+
+    A closed Python vocabulary rather than a registry one: these are the names
+    of fields on :class:`~cadrumo.domain.invoices.models.Invoice`, so a refusal
+    or a declaration finding that carries them names the field the person
+    opens. The registry owns the VALUES each of the first three may take; this
+    owns only which facts exist to be stated. Which of them a given side needs
+    is :mod:`cadrumo.domain.invoices.rectification`.
+    """
+
+    RECTIFICATION_METHOD = "rectification_method"
+    RECTIFICATION_CAUSE = "rectification_cause"
+    RECTIFICATION_DIRECTION = "rectification_direction"
+    DOCUMENT_RECEIVED_ON = "document_received_on"
+    #: The elections and attestations LIVA art. 89.Cinco, art. 114.Dos and
+    #: art. 80.Tres leave to the taxpayer. They are not part of the facts every
+    #: rectificativa states: which of them a document needs follows from its
+    #: side, cause and direction, and
+    #: :mod:`cadrumo.domain.invoices.rectification_period` is what asks for one.
+    ISSUER_INCREASE_ELECTION = "issuer_increase_election"
+    ISSUER_MINORACION_ELECTION = "issuer_minoracion_election"
+    ISSUER_MINORACION_REGULARISATION_PERIOD = "issuer_minoracion_regularisation_period"
+    RECIPIENT_INCREASE_PERIOD = "recipient_increase_period"
+    ART_80_TRES_OBLIGATIONS_ATTESTED = "art_80_tres_obligations_attested"
+    EXERCISED_DEDUCTION_PERIOD = "exercised_deduction_period"
+
+
+class RectificationMethod(StrictRegistryToken):
+    """How a factura rectificativa states its figures (RD 1619/2012 art. 15.5).
+
+    The article permits two readings and only two, so this token says what the
+    document's own amounts MEAN: under the difference method they are the
+    modification itself, under the substitution method they are the figures as
+    they stand after the rectification. Nothing derives it -- the two readings
+    produce different modifications from identical amounts.
+    """
+
+    __slots__ = ()
+
+
+class RectificationDirection(StrictRegistryToken):
+    """Whether a rectification reduces or increases the original base and cuota.
+
+    Stored amounts stay non-negative magnitudes, so this is where the economic
+    sense lives, exactly as a ledger movement's direction carries it. The sign
+    is applied where the modification is projected, never in the record.
+    """
+
+    __slots__ = ()
+
+
+class RectificationCause(StrictRegistryToken):
+    """The ground on which a rectificativa modifies base and cuota.
+
+    A closed registry vocabulary of the LIVA art. 80 apartados that are
+    modification grounds, the art. 89 error fundado de derecho, and the "any
+    other modification" the Modelo 303 instructions for casillas 14 and 15
+    name. The cause, not the class or the amount, is what places the
+    modification in a period, so it is operator supplied and never inferred.
+    """
+
+    __slots__ = ()
+
+
+class IssuerIncreaseElection(StrictRegistryToken):
+    """Which route LIVA art. 89.Cinco's increase election takes.
+
+    The article gives the issuer a genuine choice, and only where the
+    rectification rests on an art. 80 ground or on an error fundado de derecho:
+    include the difference in the declaración-liquidación of the period the
+    rectification is effected in, or file a declaración-liquidación
+    rectificativa with recargo and interest. An application may record that
+    choice and may never make it.
+    """
+
+    __slots__ = ()
+
+
+class IssuerMinoracionElection(StrictRegistryToken):
+    """Which route LIVA art. 89.Cinco's minoración election takes.
+
+    Letter a) is the art. 120.3 LGT self-assessment rectification procedure,
+    which this application's declaraciones-liquidaciones do not carry. Letter
+    b) regularises in a declaración-liquidación within one year and obliges
+    reimbursement of the recipient, so it also records the period chosen.
+    """
+
+    __slots__ = ()
+
+
 def require_invoice_class(value: object, *, effective_date: date | None = None) -> InvoiceClass:
     """Resolve an invoice-class token through the dated facts authority."""
-    from ..calculations.registry.invoice_legal_classification import require_invoice_class as _require
+    from ..calculations.registry.invoice_legal_classification import require_invoice_class
 
-    return _require(value, effective_date=effective_date)
+    return require_invoice_class(value, effective_date=effective_date)
 
 
 def require_invoice_operation_date_role(
@@ -132,45 +224,84 @@ def require_invoice_operation_date_role(
 ) -> InvoiceOperationDateRole:
     """Resolve an operation-date role through the dated facts authority."""
     from ..calculations.registry.invoice_legal_classification import (
-        require_invoice_operation_date_role as _require,
+        require_invoice_operation_date_role,
     )
 
-    return _require(value, effective_date=effective_date)
+    return require_invoice_operation_date_role(value, effective_date=effective_date)
 
 
 def invoice_class_ordinaria(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared ordinary invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_ordinaria as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_ordinaria
 
-    return _token(effective_date=effective_date)
+    return invoice_class_ordinaria(effective_date=effective_date)
 
 
 def invoice_class_simplificada(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared simplified invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_simplificada as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_simplificada
 
-    return _token(effective_date=effective_date)
+    return invoice_class_simplificada(effective_date=effective_date)
 
 
 def invoice_class_rectificativa(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared corrective invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_rectificativa as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 
-    return _token(effective_date=effective_date)
+    return invoice_class_rectificativa(effective_date=effective_date)
 
 
 def operation_performed_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
     """Return the registry-declared performed-operation date role."""
-    from ..calculations.registry.invoice_legal_classification import operation_performed_role as _token
+    from ..calculations.registry.invoice_legal_classification import operation_performed_role
 
-    return _token(effective_date=effective_date)
+    return operation_performed_role(effective_date=effective_date)
 
 
 def advance_payment_received_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
     """Return the registry-declared advance-payment date role."""
-    from ..calculations.registry.invoice_legal_classification import advance_payment_received_role as _token
+    from ..calculations.registry.invoice_legal_classification import advance_payment_received_role
 
-    return _token(effective_date=effective_date)
+    return advance_payment_received_role(effective_date=effective_date)
+
+
+def require_rectification_method(value: object, *, effective_date: date | None = None) -> RectificationMethod:
+    """Resolve an RD 1619/2012 art. 15.5 rectification method through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_method
+
+    return require_rectification_method(value, effective_date=effective_date)
+
+
+def require_rectification_direction(value: object, *, effective_date: date | None = None) -> RectificationDirection:
+    """Resolve a rectification direction through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_direction
+
+    return require_rectification_direction(value, effective_date=effective_date)
+
+
+def require_rectification_cause(value: object, *, effective_date: date | None = None) -> RectificationCause:
+    """Resolve a rectification cause through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_cause
+
+    return require_rectification_cause(value, effective_date=effective_date)
+
+
+def require_issuer_increase_election(value: object, *, effective_date: date | None = None) -> IssuerIncreaseElection:
+    """Resolve a LIVA art. 89.Cinco increase election through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_issuer_increase_election
+
+    return require_issuer_increase_election(value, effective_date=effective_date)
+
+
+def require_issuer_minoracion_election(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> IssuerMinoracionElection:
+    """Resolve a LIVA art. 89.Cinco minoración election through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_issuer_minoracion_election
+
+    return require_issuer_minoracion_election(value, effective_date=effective_date)
 
 
 def default_invoice_class(*, effective_date: date | None = None) -> InvoiceClass:
@@ -338,7 +469,7 @@ def _iva_rate_slot_registry_values(
         MappingFactQuery(
             fact_id=_IVA_RATE_SLOT_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=on_date,
+            effective_date=selected.supported_filing_years().date_envelope().clamp_coordinate(on_date),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -400,8 +531,12 @@ def iva_rate_slots_on(on_date: date) -> tuple[IvaRate, ...]:
 
 def _iva_rate_slot_kind(declarations: Mapping[str, str], on_date: date) -> IvaRateKind:
     """Parse the registry-declared substrate kind without a Python fallback."""
+    authority = require_governed_fact_authority(None, subject="IVA rate-slot catalogue")
     try:
-        return require_iva_rate_kind(declarations["substrate_kind"], effective_date=on_date)
+        return require_iva_rate_kind(
+            declarations["substrate_kind"],
+            effective_date=authority.supported_filing_years().date_envelope().clamp_coordinate(on_date),
+        )
     except (KeyError, ValueError) as exc:
         raise RegistryValidationError("IVA rate slot catalogue has an invalid substrate kind") from exc
 
@@ -416,33 +551,27 @@ def _pinned_iva_rate_operation() -> PinnedAuthorityOperation:
     return operation
 
 
-def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
-    """Resolve a numeric slot's exact authority fact with its provenance.
-
-    Zero is a permanent semantic slot whose IVA facade accepts the fraction on
-    every date but which no flat rate fact can fully model; it consequently has
-    no single rate-fact variant to return.  Registry-declared nonnumeric slots
-    likewise have no rate-fact variant.
-    """
-    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
-    if declarations["numeric"] != "true":
-        return None
-    operation = _pinned_iva_rate_operation()
-    kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
-        return None
+def _resolve_numeric_iva_rate_slot_fact(
+    rate: IvaRate,
+    on_date: date,
+    declarations: Mapping[str, str],
+    kind: IvaRateKind,
+    operation: PinnedAuthorityOperation,
+) -> ResolvedMappingFact:
+    """Resolve the rate fact of a numeric, nonzero slot whose declarations are already read."""
     resolved = resolve_iva_rate(
-        spanish_eu_member_state(effective_date=on_date, authority=operation),
+        spanish_eu_member_state(effective_date=rate_vocabulary_date(on_date, operation), authority=operation),
         kind,
         on_date,
         rate_role=declarations["rate_role"],
         operation=operation,
     )
-    # Temporal projection supplies a missing coordinate; an authored start or
-    # end of validity is a statutory bound, so a rate projected across it was
-    # not in force on the devengo date.
-    if (resolved.authored_valid_from is not None and on_date < resolved.authored_valid_from) or (
-        resolved.authored_valid_to is not None and on_date > resolved.authored_valid_to
+    # A standing rate's nearest edition is the registry's own answer for a date
+    # it has no edition for. Any other read that crosses an authored start or end
+    # crossed a statutory bound, so that rate was not in force on the devengo date.
+    if resolved.published_on_date and (
+        (resolved.authored_valid_from is not None and on_date < resolved.authored_valid_from)
+        or (resolved.authored_valid_to is not None and on_date > resolved.authored_valid_to)
     ):
         raise RegistryValidationError(
             f"IVA rate slot {rate.name} is outside its authored validity window on {on_date.isoformat()}"
@@ -454,7 +583,9 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
     """Resolve ``rate`` to its fractional authority value at ``on_date``.
 
     The result is projected from the exact Spanish member-state, tier, role,
-    and devengo-date fact. No rate is parsed from the persisted token.
+    and devengo-date fact. No rate is parsed from the persisted token. An ordinary
+    slot always answers: a date the table has no edition for reads the nearest
+    one, and :func:`iva_rate_slot_is_published` says whether that happened.
 
     Resolving through :func:`cadrumo.domain.iva.lookup.lookup_rate` instead would
     answer a different question and silently return a different number. That
@@ -474,17 +605,12 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         registry-declared nonnumeric slots, which carry no percentage.
 
     Raises:
-        IvaRateNotFoundError: If the slot's rate was not in force for its tier
-            on ``on_date`` -- a transitional slot used outside its statutory
-            window, or a standing slot the registry no longer serves. Refusing
-            is the point: substituting whatever the tier happens to mean that
-            day would record a number the invoice never carried. When the rate
-            table does not reach ``on_date`` FOR THAT TIER the refusal says so
-            instead, because "not in force" would be a false claim about the law
-            rather than a true one about our coverage. The reach differs between
-            tiers, so the question is never whether the table reaches a date at
-            all: it carries the general and reducido records well before the
-            super-reducido ones.
+        IvaRateNotFoundError: If a transitional slot is used outside its
+            statutory window. Refusing is the point: substituting whatever the
+            tier happens to mean that day would record a number the invoice never
+            carried. When the rate table does not reach ``on_date`` FOR THAT TIER
+            the refusal says so instead, because "not in force" would be a false
+            claim about the law rather than a true one about our coverage.
             The registry-declared zero slot is never refused, because
             :func:`~cadrumo.domain.iva.lookup.rate_kinds_for_declared_rate` answers
             ZERO on every date -- Spain zero-rates on three permanent grounds
@@ -496,9 +622,10 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         return None
     operation = _pinned_iva_rate_operation()
     kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
+    vocabulary_date = rate_vocabulary_date(on_date, operation)
+    if kind == resolve_iva_rate_kind_catalogue(effective_date=vocabulary_date, authority=operation).zero_token:
         if kind not in rate_kinds_for_declared_rate(
-            spanish_eu_member_state(effective_date=on_date, authority=operation),
+            spanish_eu_member_state(effective_date=vocabulary_date, authority=operation),
             Decimal("0"),
             on_date,
             operation=operation,
@@ -506,20 +633,18 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             raise IvaRateNotFoundError("zero IVA slot is not accepted by the IVA authority")
         return Decimal("0")
     try:
-        resolved = resolve_iva_rate_slot_fact(rate, on_date)
-        if resolved is None:
-            raise RegistryValidationError("numeric IVA slot resolved without an authority fact")
+        # The slot's declarations, operation and tier were read above; reading
+        # them again for the fact would ask the registry the same questions.
+        resolved = _resolve_numeric_iva_rate_slot_fact(rate, on_date, declarations, kind, operation)
         return rate_record_from_fact(resolved, authority=operation).pct / Decimal("100")
     except RegistryValidationError as exc:
         # Coverage and legality are different facts and must not share a
-        # message. The registry's reach differs PER TIER -- the general and
-        # reducido records run from 2012, the super-reducido ones only from
-        # 2024 -- so a line can fail on OUR reach while the table carries other
+        # message. A line can fail on OUR reach while the table carries other
         # tiers that same day. Saying "not in force" there sends a filer to
         # correct a figure that was right, and invites widening the table with
         # a guessed value rather than an authored, corpus-backed one.
         if not rate_table_covers(
-            spanish_eu_member_state(effective_date=on_date, authority=operation),
+            spanish_eu_member_state(effective_date=vocabulary_date, authority=operation),
             on_date,
             kind,
             operation=operation,
@@ -529,7 +654,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
                 context={
                     "iva_rate_slot": rate.name,
                     "rate_kind": kind.value,
-                    "member_state": spanish_eu_member_state(effective_date=on_date, authority=operation).value,
+                    "member_state": spanish_eu_member_state(effective_date=vocabulary_date, authority=operation).value,
                     "on_date": on_date.isoformat(),
                     "rate_registry_covers_date": False,
                 },
@@ -539,7 +664,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             context={
                 "iva_rate_slot": rate.name,
                 "rate_kind": kind.value,
-                "member_state": spanish_eu_member_state(effective_date=on_date, authority=operation).value,
+                "member_state": spanish_eu_member_state(effective_date=vocabulary_date, authority=operation).value,
                 "on_date": on_date.isoformat(),
                 "rate_registry_covers_date": True,
                 "rate_in_force": False,
@@ -547,7 +672,36 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         ) from exc
 
 
-def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
+def iva_rate_slot_is_published(rate: IvaRate, on_date: date) -> bool:
+    """Return whether the slot's percentage on ``on_date`` is a published rate.
+
+    ``False`` means :func:`iva_rate_percentage` read the nearest edition: the
+    figure prices a line, but neither confirms nor refutes one a document stated.
+    A nonnumeric or zero slot has no edition to be missing.
+    """
+    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+    if declarations["numeric"] != "true":
+        return True
+    operation = _pinned_iva_rate_operation()
+    kind = _iva_rate_slot_kind(declarations, on_date)
+    if (
+        kind
+        == resolve_iva_rate_kind_catalogue(
+            effective_date=rate_vocabulary_date(on_date, operation),
+            authority=operation,
+        ).zero_token
+    ):
+        return True
+    return resolve_iva_rate(
+        spanish_eu_member_state(effective_date=rate_vocabulary_date(on_date, operation), authority=operation),
+        kind,
+        on_date,
+        rate_role=declarations["rate_role"],
+        operation=operation,
+    ).published_on_date
+
+
+def iva_rate_kind(rate: IvaRate, on_date: date) -> IvaRateKind | None:
     """Return the substrate rate tier for an invoice line rate slot.
 
     The out-of-scope slot has no OSS/IOSS rate tier because it is outside the
@@ -556,16 +710,19 @@ def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | N
     corresponding :class:`IvaRateKind`; a slot whose declared substrate kind is
     the catalogue's non-rate token returns ``None``.
     """
-    coordinate = on_date or today_madrid()
-    declarations = _iva_rate_slot_registry_declarations(rate, coordinate)
-    non_rate = resolve_iva_rate_kind_catalogue(effective_date=coordinate).non_rate_token
+    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+    non_rate = resolve_iva_rate_kind_catalogue(effective_date=on_date).non_rate_token
     if declarations.get("substrate_kind") == non_rate:
         return None
-    return _iva_rate_slot_kind(declarations, coordinate)
+    return _iva_rate_slot_kind(declarations, on_date)
 
 
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
-    """Resolve a printed percentage to its persisted slot at an explicit date."""
+    """Resolve a printed percentage to its persisted slot at an explicit date.
+
+    A printed percentage is a claim about the law, so only a published rate can
+    admit it: a date with no edition for the tier leaves the claim unconfirmed.
+    """
     if percentage is None:
         return _exempt_iva_rate_slot(on_date)
     resolved_rates: list[tuple[Decimal, IvaRate]] = []
@@ -574,7 +731,7 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
             resolved = iva_rate_percentage(rate, on_date)
         except IvaRateNotFoundError:
             continue
-        if resolved is not None:
+        if resolved is not None and iva_rate_slot_is_published(rate, on_date):
             resolved_rates.append((resolved, rate))
     matches = tuple(rate for resolved, rate in resolved_rates if resolved * Decimal("100") == percentage)
     if len(matches) == 1:
@@ -592,7 +749,12 @@ def _exempt_iva_rate_slot(on_date: date) -> IvaRate:
         if (
             declarations["numeric"] != "true"
             and declarations["substrate_kind"]
-            == resolve_iva_rate_kind_catalogue(effective_date=on_date).exempt_token.value
+            == resolve_iva_rate_kind_catalogue(
+                effective_date=require_governed_fact_authority(None, subject="IVA rate-slot catalogue")
+                .supported_filing_years()
+                .date_envelope()
+                .clamp_coordinate(on_date),
+            ).exempt_token.value
         ):
             return rate
     raise RegistryValidationError("IVA rate slot catalogue has no exempt slot")
@@ -603,9 +765,15 @@ __all__ = [
     "InvoiceLegalMention",
     "InvoiceLegalMentionDeclaration",
     "InvoiceOperationDateRole",
+    "IssuerIncreaseElection",
+    "IssuerMinoracionElection",
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
+    "RectificationCause",
+    "RectificationDirection",
+    "RectificationFact",
+    "RectificationMethod",
     "advance_payment_received_role",
     "default_invoice_class",
     "invoice_class_ordinaria",
@@ -614,11 +782,16 @@ __all__ = [
     "invoice_legal_mention_declarations",
     "iva_rate_kind",
     "iva_rate_percentage",
+    "iva_rate_slot_is_published",
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
+    "require_issuer_increase_election",
+    "require_issuer_minoracion_election",
+    "require_rectification_cause",
+    "require_rectification_direction",
+    "require_rectification_method",
     "resolve_invoice_legal_mention",
     "resolve_iva_rate_slot",
-    "resolve_iva_rate_slot_fact",
     "resolve_iva_rate_token",
 ]

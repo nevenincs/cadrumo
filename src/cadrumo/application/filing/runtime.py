@@ -37,7 +37,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -46,8 +45,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -55,12 +53,16 @@ from ...domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.authority_artifact import AuthorityEvidenceProjection
-from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
+from ...domain.calculations.registry.casilla_membership import (
+    duplicate_casilla_ids,
+    row_field_template_records_by_casilla,
+)
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     FormulaId,
     LegalRefId,
@@ -126,7 +128,7 @@ class ModeloOperatorProfile(BaseModel):
         display_name: Human-readable label for the profile.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: SubjectTaxId = Field(min_length=1)
     display_name: str = Field(min_length=1)
@@ -141,7 +143,7 @@ class RegistryCasillaSchema(BaseModel):
     :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value_type: str
@@ -165,7 +167,7 @@ class RegistryCasillaCollection:
     def __post_init__(self) -> None:
         """Reject ambiguous or dangling casilla schema references at construction."""
         ids = tuple(casilla.casilla_id for casilla in self.casillas)
-        duplicates = _duplicate_casilla_ids(ids)
+        duplicates = duplicate_casilla_ids(ids)
         if duplicates:
             raise ModeloBuilderError(
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
@@ -207,10 +209,6 @@ class RegistryCasillaCollection:
         Each element is a :class:`CasillaSchema`.
         """
         return self.casillas
-
-
-def _duplicate_casilla_ids(ids: Sequence[CasillaId]) -> tuple[CasillaId, ...]:
-    return tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
 
 
 def _dangling_formula_input_casilla_ids(
@@ -565,7 +563,7 @@ def _runtime_snapshots_for_modelos(
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo in modelos:
         try:
-            snapshots[modelo.id] = _snapshot_for_provider(
+            snapshots[modelo.id] = snapshot_for_provider(
                 authority,
                 modelo,
                 filing_year=filing_year,
@@ -776,13 +774,17 @@ def _is_below_filing_authority(exc: Exception) -> bool:
     )
 
 
-def _snapshot_for_provider(
+def snapshot_for_provider(
     authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
     modelo: ModeloDefinition,
     *,
     filing_year: int,
     period: Period,
 ) -> RegistrySnapshot:
+    """Return the registry snapshot for a modelo, year and period from an authority.
+
+    ``modelo`` is a :class:`ModeloDefinition`; ``authority`` is a :class:`ValidatedRegistryAuthority`.
+    """
     return authority.snapshot(modelo.id, filing_year=filing_year, period=period.registry_token)
 
 
@@ -830,7 +832,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     # rows exist.
     row_owned: frozenset[CasillaId] = (
         frozenset[CasillaId]()
-        if modelo.id == Modelo("349").value
+        if modelo.id == form_for_role("iva.intracommunity_summary")
         else frozenset(row_field_template_records_by_casilla(revision))
     )
     casillas = tuple(

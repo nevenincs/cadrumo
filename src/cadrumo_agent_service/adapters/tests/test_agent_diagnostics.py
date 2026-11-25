@@ -13,9 +13,13 @@ import pytest
 
 from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
+from cadrumo.core.traceback_summary import SUMMARY_FRAMES
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
-from ..agent_process import _StandardErrorTail
+from ..agent_process import StandardErrorTail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -25,18 +29,18 @@ def log_file(tmp_path: Path) -> Iterator[Path]:
     """Use real formatters, disk handlers and privacy filters."""
     project_logging.register_first_party_logger("cadrumo_agent_service")
     project_logging.register_first_party_logger("cadrumo_agent")
-    configured = project_logging._configured
+    configured = project_logging.configured
     try:
-        project_logging._configured = False
+        project_logging.configured = False
         with override_settings(
-            cadrumo_log_dir=tmp_path / "logs", cadrumo_log_root_level="DEBUG", cadrumo_log_file_level="DEBUG"
+            cadrumo_storage_root=tmp_path, cadrumo_log_root_level="DEBUG", cadrumo_log_file_level="DEBUG"
         ):
             project_logging.configure_logging()
-            yield tmp_path / "logs" / "cadrumo.log"
+            yield storage_path(StorageCategory.LOGS) / "cadrumo.log"
     finally:
-        project_logging._configured = False
+        project_logging.configured = False
         project_logging.configure_logging()
-        project_logging._configured = configured or True
+        project_logging.configured = configured or True
 
 
 def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", message: str = "worker diagnostic") -> bytes:
@@ -60,6 +64,7 @@ def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", messa
 
 
 def _read(path: Path) -> str:
+    assert project_logging.flush_logging(timeout=HANG_GUARD_SECONDS)
     for handler in logging.getLogger().handlers:
         handler.flush()
     return path.read_text(encoding="utf-8")
@@ -143,25 +148,22 @@ def test_successful_local_health_polls_are_quiet_but_failures_and_other_requests
 def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     """The drain must read a small live write without waiting for a 4KiB buffer."""
     import os
-    import time
 
     reader, writer = os.pipe()
     stream = os.fdopen(reader, "rb")
-    tail = _StandardErrorTail(
+    tail = StandardErrorTail(
         stream, limit=8192, diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=os.getpid())
     )
     try:
         os.write(writer, _line(1, service="gateway", message="live gateway"))
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline:
-            if log_file.is_file() and "live gateway" in _read(log_file):
-                break
-            time.sleep(0.01)
-        assert "live gateway" in _read(log_file)
+        eventually(
+            lambda: log_file.is_file() and "live gateway" in _read(log_file),
+            what="the live gateway line reaching the log before its writer closed",
+        )
         assert '"process_role":"extension_service"' in _read(log_file)
     finally:
         os.close(writer)
-        tail.release(timeout=2)
+        tail.release(timeout=HANG_GUARD_SECONDS)
     assert b"live gateway" in tail.settled(timeout=0)
 
 
@@ -191,6 +193,145 @@ def test_a_relayed_worker_record_keeps_its_exception_detail(log_file: Path) -> N
     assert "PRIVATE-TOOL-CANARY" not in written
 
 
+_SINK_LOGGER = "cadrumo_agent_service.adapters.agent_diagnostics"
+
+_CANARIES = ("Lucía Fernández", "12345678Z", "hunter2", "ES9121000418450200051332", "PRIVATE-PROMPT-CANARY")
+
+_GATEWAY_HEAD = (
+    "Traceback (most recent call last):\n"
+    '  File "C:\\Users\\Lucía Fernández\\gateway\\app.py", line 214, in handle_chat\n'
+    "    reply = await send(prompt='PRIVATE-PROMPT-CANARY')\n"
+)
+
+_GATEWAY_TAIL = (
+    '  File "/srv/gateway/provider.py", line 88, in Provider.send\n'
+    "    raise ProviderError(message)\n"
+    "gateway.errors.ProviderError: Lucía Fernández NIF 12345678Z password=hunter2 IBAN ES9121000418450200051332\n"
+)
+
+
+class _Records(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def sink_records() -> Iterator[_Records]:
+    handler = _Records()
+    logger = logging.getLogger(_SINK_LOGGER)
+    logger.addHandler(handler)
+    try:
+        yield handler
+    finally:
+        logger.removeHandler(handler)
+
+
+def _summaries(handler: _Records) -> list[logging.LogRecord]:
+    return [record for record in handler.records if record.getMessage() == "agent_traceback_summarized"]
+
+
+def test_a_gateway_traceback_is_recorded_as_its_type_and_frames_without_its_message(
+    log_file: Path, sink_records: _Records
+) -> None:
+    """The cause of a gateway failure reaches the log as identifiers alone, with every canary of its message absent."""
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    # A diagnostic record another thread wrote arrives between two lines of the block.
+    framing.feed(_GATEWAY_HEAD.encode())
+    framing.feed(_line(2, message="interleaved diagnostic"))
+    framing.feed(_GATEWAY_TAIL.encode())
+    framing.finish()
+    written = _read(log_file)
+    (record,) = _summaries(sink_records)
+    assert record.__dict__["traceback_type"] == "gateway.errors.ProviderError"
+    assert record.__dict__["traceback_origin"] == "provider.py:88:Provider.send"
+    assert record.__dict__["traceback_frames"] == "provider.py:88:Provider.send <- app.py:214:handle_chat"
+    assert "interleaved diagnostic" in written
+    assert "provider.py:88:Provider.send" in written
+    for canary in _CANARIES:
+        assert canary not in written
+        assert canary not in str(record.__dict__)
+        assert canary not in record.getMessage()
+
+
+_UNRAISABLE_BLOCK = (
+    "Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x000001F0A1B2C3D4>\n"
+    "Traceback (most recent call last):\n"
+    '  File "C:\\Python313\\Lib\\asyncio\\proactor_events.py", line 116, in __del__\n'
+    '    _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)\n'
+    '  File "C:\\Python313\\Lib\\asyncio\\proactor_events.py", line 80, in __repr__\n'
+    "    info.append(f'fd={self._sock.fileno()}')\n"
+    '  File "C:\\Python313\\Lib\\asyncio\\windows_utils.py", line 102, in fileno\n'
+    '    raise ValueError("I/O operation on closed pipe")\n'
+    "ValueError: I/O operation on closed pipe\n"
+)
+
+
+def test_an_exception_python_could_not_raise_is_one_summary_and_no_rejected_record(
+    log_file: Path, sink_records: _Records
+) -> None:
+    """Every line of the block, and the line Python writes before it, belongs to its one summary."""
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(_UNRAISABLE_BLOCK.encode())
+    framing.feed(b"a stray line no block accounts for\n")
+    framing.finish()
+    written = _read(log_file)
+    (record,) = _summaries(sink_records)
+    assert record.levelno == logging.ERROR
+    assert record.__dict__["traceback_type"] == "ValueError"
+    assert str(record.__dict__["traceback_origin"]).startswith("windows_utils.py:102")
+    rejected = [r for r in sink_records.records if r.getMessage() == "agent_diagnostic_record_rejected"]
+    assert [r.__dict__["diagnostic_rejected_count"] for r in rejected] == [1]
+    assert "closed pipe" not in written
+
+
+def test_a_traceback_names_only_its_innermost_frames(log_file: Path, sink_records: _Records) -> None:
+    frames = "".join(f'  File "deep.py", line {line}, in step_{line}\n    step()\n' for line in range(1, 400))
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(f"Traceback (most recent call last):\n{frames}RecursionError: depth\n".encode())
+    framing.finish()
+    (record,) = _summaries(sink_records)
+    named = str(record.__dict__["traceback_frames"]).split(" <- ")
+    assert len(named) == SUMMARY_FRAMES
+    assert named[0] == "deep.py:399:step_399"
+    assert named[-1] == f"deep.py:{400 - SUMMARY_FRAMES}:step_{400 - SUMMARY_FRAMES}"
+
+
+def test_a_block_that_never_ends_is_abandoned_and_counted(log_file: Path, sink_records: _Records) -> None:
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(b"Traceback (most recent call last):\n")
+    for _ in range(5000):
+        framing.feed(b'  File "loop.py", line 3, in spin\n')
+    framing.feed(b"RuntimeError: PRIVATE-LATE-CANARY\n")
+    framing.finish()
+    written = _read(log_file)
+    assert not _summaries(sink_records)
+    assert "agent_diagnostic_traceback_abandoned" in written
+    assert "PRIVATE-LATE-CANARY" not in written
+
+
+def test_a_block_that_is_not_a_traceback_names_no_frames_and_is_counted(log_file: Path, sink_records: _Records) -> None:
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(b"fatal: cannot open store for PRIVATE-JUNK-CANARY\n")
+    framing.feed(b'  File "junk.py", line 3, in orphan\n')
+    framing.feed(b"Traceback (most recent call last):\n")
+    framing.feed(b"PRIVATE-HEADERLESS-CANARY\n")
+    framing.feed(b"Traceback (most recent call last):\n")
+    framing.feed(b"  not a frame PRIVATE-INDENTED-CANARY\n")
+    framing.feed(b"123456789Z: PRIVATE-TYPE-CANARY\n")
+    framing.finish()
+    written = _read(log_file)
+    assert not _summaries(sink_records)
+    assert "agent_diagnostic_record_rejected" in written
+    assert "agent_diagnostic_traceback_unreadable" in written
+    assert "PRIVATE-" not in written
+    assert "junk.py" not in written
+
+
 class _StalledLog(logging.Handler):
     """A log destination whose writes wait until it is released, as a file on a saturated disk does."""
 
@@ -202,7 +343,8 @@ class _StalledLog(logging.Handler):
     @override
     def emit(self, record: logging.LogRecord) -> None:
         self.entered.set()
-        self.released.wait(30)
+        # Past every bound the test puts on the agent, so a stall that merely lasted that long cannot pass for a held one.
+        self.released.wait(3 * HANG_GUARD_SECONDS)
 
 
 def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: Path) -> None:
@@ -213,31 +355,33 @@ def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: P
     for as long as the log stalled.
     """
     import os
-    import time
 
     stalled = _StalledLog()
     logger = logging.getLogger("cadrumo_agent.worker.executor")
     logger.addHandler(stalled)
     reader, writer = os.pipe()
     stream = os.fdopen(reader, "rb")
-    tail = _StandardErrorTail(
+    tail = StandardErrorTail(
         stream, limit=8192, diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=os.getpid())
     )
     try:
         os.write(writer, _line(1))
-        assert stalled.entered.wait(10)
+        assert stalled.entered.wait(HANG_GUARD_SECONDS)
         # Twice the backlog the log may fall behind by, far past what the pipe holds.
         record = _line(2, message="x" * 900)
-        started = time.monotonic()
-        for _ in range(2 * 1024 * 1024 // len(record)):
-            os.write(writer, record)
-        assert time.monotonic() - started < 10
+
+        def write_backlog() -> None:
+            for _ in range(2 * 1024 * 1024 // len(record)):
+                os.write(writer, record)
+
+        # Every write returns while the log stays stalled; a drain held by the stall never lets the pipe empty.
+        finishes(write_backlog, what="the agent's writes behind a stalled log")
     finally:
         stalled.released.set()
         os.close(writer)
-        tail.release(timeout=10)
+        tail.release(timeout=HANG_GUARD_SECONDS)
         logger.removeHandler(stalled)
-    deadline = time.monotonic() + 10
-    while time.monotonic() < deadline and "agent_diagnostic_output_dropped" not in _read(log_file):
-        time.sleep(0.05)
-    assert "agent_diagnostic_output_dropped" in _read(log_file)
+    eventually(
+        lambda: log_file.is_file() and "agent_diagnostic_output_dropped" in _read(log_file),
+        what="the report of the lines the stalled log lost",
+    )

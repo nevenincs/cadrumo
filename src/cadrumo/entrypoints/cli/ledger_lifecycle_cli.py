@@ -31,20 +31,23 @@ from ...application.ledger.llm_review_contracts import (
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
+    ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.transactions.enums import BusinessClassification, is_classified
-from ._decimal_parsing import parse_decimal_amount
-from ._ledger_support import (
+from .common import bad, emit_envelope
+from .decimal_parsing import parse_decimal_amount
+from .ledger_support import (
     ledger_validation_bad,
 )
-from .common import bad, emit_envelope
 
 if TYPE_CHECKING:
     from ...application.ledger.split_operation import LedgerSplitOperationResult
@@ -332,7 +335,6 @@ def ledger_split(
     llm: bool = False,
     apply: bool = False,
     read_evidence: bool = False,
-    vision_model: str | None = None,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -346,7 +348,6 @@ def ledger_split(
             child_description=list(child_description),
             apply=apply,
             read_evidence=read_evidence,
-            vision_model=vision_model,
             reason=reason,
             yes=yes,
             actor=actor,
@@ -471,7 +472,7 @@ def _render_split_llm_preview(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the non-persisting split preview envelope."""
-    from ._ledger_llm_cli import transport_from_provenance
+    from ...application.ledger.llm_classification import transport_from_provenance
     from .ledger_results import LedgerSplitResult
 
     result = LedgerSplitResult.model_validate(
@@ -504,7 +505,7 @@ def _render_split_llm_applied(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the persisted split-applied envelope."""
-    from ._ledger_llm_cli import transport_from_provenance
+    from ...application.ledger.llm_classification import transport_from_provenance
     from .ledger_results import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
@@ -543,7 +544,6 @@ def _ledger_split_llm(
     child_description: list[str],
     apply: bool,
     read_evidence: bool,
-    vision_model: str | None,
     reason: str,
     yes: bool,
     actor: str | None,
@@ -563,7 +563,7 @@ def _ledger_split_llm(
     from cadrumo_client.contracts.contracts import RefusalCode
 
     from ...application.operations.schema_identity import OperationSchemaIdentityV1
-    from ...core.operations import profile_operation_subject
+    from .operation_ledger_view import resolve_ledger_transaction_id
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -575,13 +575,13 @@ def _ledger_split_llm(
     client = bound_profile_client(ctx)
     request = LedgerLlmReviewRequest(
         profile_id=client.profile_id,
-        transaction_id=transaction_id,
+        output_language=OutputLanguage(active_output_language()),
+        transaction_id=resolve_ledger_transaction_id(client, transaction_id),
         mode="split",
         origin=LlmReviewInvocationOrigin.SPLIT_LLM,
         preview=not apply,
         actor=actor,
         read_evidence=read_evidence,
-        vision_model=vision_model,
         reason=reason,
     )
     reviewed: LedgerLlmReviewProjection | None = None
@@ -606,7 +606,7 @@ def _ledger_split_llm(
         client,
         request,
         definition_id=LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(client.profile_id)),
+        subject_ref=ledger_llm_review_subject(request),
         result_type=LedgerLlmOperationResult,
         request_version=1,
         result_version=1,

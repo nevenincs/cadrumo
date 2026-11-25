@@ -16,7 +16,7 @@ from ..event_repository import append_bucket_event, build_bucket_event
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"
-_T0 = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
+_T0 = datetime(1980, 4, 1, 10, 0, 0, tzinfo=UTC)
 
 
 def _event(index: int) -> BucketEvent:

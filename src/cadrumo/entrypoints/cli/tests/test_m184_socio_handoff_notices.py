@@ -13,7 +13,7 @@ import pytest
 
 from ....application.modelo.lifecycle_advisories import Modelo184SocioHandoffV1
 from ....core.json_contract import NoticeSeverity
-from .._modelo_rendering import m184_socio_handoff_advisory_notices
+from ..modelo_rendering import m184_socio_handoff_advisory_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

@@ -7,12 +7,15 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Textarea } from "@/components/ui/textarea";
 import {
   MAX_CONTINUATION_CHARS,
   characters,
 } from "../../shell/agentClarification";
+import type { SkillRecord } from "../../shell/agentGatewayContract";
+import { described, facts } from "../../shell/compose";
 import { readPx } from "../../shell/metrics";
-import { useStrings } from "../../shell/strings";
+import { useStrings, type Translate } from "../../shell/strings";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { AttachmentWell } from "./AttachmentWell";
@@ -27,7 +30,6 @@ import {
   MAX_SKILLS_PER_MESSAGE,
   skillCommand,
   skillReferences,
-  type AgentSkillSummary,
   type SkillCommand,
 } from "../../shell/agentSkills";
 import type {
@@ -51,6 +53,7 @@ const MAX_LINES = 8;
 /** The model and effort, as the settings button names them, and the way into
  * its provider; null while none is chosen. */
 function selectionWords(
+  t: Translate,
   providers: readonly ProviderOption[],
   models: Readonly<Record<string, readonly ModelOption[]>>,
   selection: AgentSelection,
@@ -71,7 +74,7 @@ function selectionWords(
   return {
     provider,
     way,
-    words: effort ? `${name} · ${effort.name}` : name,
+    words: facts(t, [name, effort?.name]),
   };
 }
 
@@ -101,6 +104,15 @@ export function Composer({
   onStop,
   onAddFiles,
   onSelectionChange,
+  fixedWayId,
+  pickerRequests,
+  onPickerClosed,
+  onPickerOpened,
+  onDownloadModels,
+  onRetryCatalog,
+  onSignIn,
+  listsFailure = null,
+  onRetryLists,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -122,11 +134,32 @@ export function Composer({
   onStop?: () => void;
   onAddFiles?: () => void;
   onSelectionChange?: (selection: AgentSelection) => void;
+  /** The lane the conversation is fixed to, by way id: every other lane is
+   * offered as a new conversation. */
+  fixedWayId?: string;
+  /** Counts the asks from elsewhere to open the model picker. */
+  pickerRequests?: number;
+  /** Called when the person closes the model picker. */
+  onPickerClosed?: () => void;
+  /** Called when the model picker opens, however it was asked to. */
+  onPickerOpened?: () => void;
+  /** Opens the settings where a model this computer lacks is downloaded. */
+  onDownloadModels?: () => void;
+  /** Reads the catalog again, for a lane held back because its models could
+   * not be read. */
+  onRetryCatalog?: () => void;
+  /** Opens the settings where a lane that is signed out is signed in. */
+  onSignIn?: () => void;
+  /** Why the person's model lists could not be read, which the picker says;
+   * null once they are. */
+  listsFailure?: string | null;
+  /** Reads the person's model lists again. */
+  onRetryLists?: () => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
   /** cadrumo-agent's skills; without it `/` lists nothing. */
-  skills?: () => Promise<readonly AgentSkillSummary[]>;
+  skills?: () => Promise<readonly SkillRecord[]>;
   /** Runs a skill command: reviewing or verifying a skill. */
   onSkillCommand?: (command: SkillCommand) => void;
   /** Further suggestion lists, after the `/` list; memoized. */
@@ -235,12 +268,12 @@ export function Composer({
     send();
   };
 
-  const current = selectionWords(providers, models, selection);
+  const current = selectionWords(t, providers, models, selection);
   const settingsText = current?.words ?? t("desktop.agent.choose_model");
   // The name says which provider the words are for.
   const settingsName = t("desktop.agent.settings_label", {
     current: current
-      ? `${current.provider.name}, ${current.words}`
+      ? described(t, current.provider.name, current.words)
       : settingsText,
   });
   const settingsLook = (
@@ -263,8 +296,8 @@ export function Composer({
 
   return (
     <ComposerSuggestions state={suggestions}>
-      <div className="rounded-xl border bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
-        <textarea
+      <div className="rounded-xl bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
+        <Textarea
           ref={field}
           rows={1}
           value={draft}
@@ -275,7 +308,14 @@ export function Composer({
           onSelect={suggestions.onCaret}
           onClick={suggestions.onCaret}
           onKeyDown={onKeyDown}
-          className="block w-full resize-none bg-transparent px-3 pt-3 pb-1 text-base text-foreground placeholder:text-faint focus-visible:outline-none"
+          className="resize-none rounded-none border-0 bg-transparent px-3 pt-3 pb-1 focus-visible:outline-none"
+        />
+        <AttachmentWell
+          attachments={attachments}
+          locale={locale}
+          onRemove={onRemoveAttachment}
+          onRemoveAll={onRemoveAllAttachments}
+          onShowAll={onShowAllAttachments}
         />
         <div className="flex min-w-0 items-center gap-1 px-2 pb-2">
           <AgentIconAction
@@ -286,10 +326,17 @@ export function Composer({
           />
           {onSelectionChange ? (
             <AgentSettingsPopover
-              providers={providers}
-              models={models}
               selection={selection}
               onChange={onSelectionChange}
+              fixedWayId={fixedWayId}
+              openRequests={pickerRequests}
+              onClosed={onPickerClosed}
+              onOpened={onPickerOpened}
+              onDownloadModels={onDownloadModels}
+              onRetryCatalog={onRetryCatalog}
+              onSignIn={onSignIn}
+              listsFailure={listsFailure}
+              onRetryLists={onRetryLists}
             >
               {settingsButton}
             </AgentSettingsPopover>
@@ -298,7 +345,11 @@ export function Composer({
               variant="ghost"
               size="xs"
               className="min-w-0"
-              aria-label={`${settingsName}, ${t("desktop.agent.unavailable")}`}
+              aria-label={described(
+                t,
+                settingsName,
+                t("desktop.agent.unavailable"),
+              )}
             >
               {settingsLook}
             </AgentTextAction>
@@ -327,13 +378,6 @@ export function Composer({
             />
           )}
         </div>
-        <AttachmentWell
-          attachments={attachments}
-          locale={locale}
-          onRemove={onRemoveAttachment}
-          onRemoveAll={onRemoveAllAttachments}
-          onShowAll={onShowAllAttachments}
-        />
       </div>
     </ComposerSuggestions>
   );

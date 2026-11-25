@@ -49,43 +49,29 @@ is stabilised.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import (
-    build_calculation_action_ports,
-    build_work_lifecycle_ports,
-)
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_local_m303_compensacion_filings
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -103,7 +89,7 @@ def bucket_id() -> str:
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
-_TAX_ID = "12345678Z"
+_TAX_ID = ready_profile_tax_id()
 
 
 # Seeded M303 casilla ids consumed by the three M390←M303 relations and the
@@ -135,6 +121,11 @@ _IVA_IMPORTACION_ADUANA: CasillaId = validated_casilla_id("77")
 # carries that proven zero rather than a missing source.
 _COMPENSACIONES_REAGP: CasillaId = validated_casilla_id("42")
 _M390_COMPENSACIONES_REAGP_CASILLA: CasillaId = validated_casilla_id("iva.anual.deducible.compensaciones-reagp.cuota")
+# Box [44] of the settlement quarter is the prorrata regularisation the annual
+# summary restates. This filer applies no prorrata, so its 4T filed a [44] of
+# zero; without it the annual regularisation, and every total summing it, is
+# unresolved rather than zero.
+_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("44")
 _COMPENSACION_APLICADA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _COMPENSACION_POSTERIOR: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M390_REGULARIZACION_ART_80_CASILLA: CasillaId = validated_casilla_id("iva.anual.regularizacion-cuotas-art-80-cinco-5")
@@ -191,6 +182,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _REGULARIZACION_ART_80: Decimal("1.50"),
         _IVA_IMPORTACION_ADUANA: Decimal("0.00"),
         _COMPENSACIONES_REAGP: Decimal("0.00"),
+        _PRORRATA_REGULARIZACION: Decimal("0.00"),
     },
 }
 
@@ -219,71 +211,8 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     path the local-file carry flow uses — stamped with the non-official
     ``app_filing`` source_kind.
     """
-    for period, casillas in _M303_BY_PERIOD.items():
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        casilla_values=casillas,
-                    ),
-                ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-                ),
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo="303",
-                            filing_year=_YEAR,
-                            period=period,
-                            casilla_values=casillas,
-                        ),
-                    )
-                ),
-            )
-        )
-
-
-def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
+    save_local_m303_compensacion_filings(
+        obs_repo, filing_year=_YEAR, casillas_by_period=_M303_BY_PERIOD, captured_at=_T0
     )
 
 
@@ -340,7 +269,7 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     The asserted values derive from the seeded observations via the declared source mechanisms,
     never from the registry formula (non-tautological).
     """
-    _store_ready_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     obs_repo = CalculationObservationRepository()
     _seed_m303_quarters(obs_repo=obs_repo)
 

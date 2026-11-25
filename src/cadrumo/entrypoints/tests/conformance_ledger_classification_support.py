@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from ...adapters.outbound.llm.models import UsageRecord
+from ...adapters.outbound.llm.models import RecordedLLMProvider, UsageRecord
 from ...adapters.persistence.llm.usage import UsageRecorder
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ...application.ledger.llm_classification import apply_llm_classification
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
@@ -20,15 +19,17 @@ from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
     LedgerLlmReviewRequest,
+    ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.ledger.manual_update import attach_manual_transaction_evidence
 from ...application.ledger.operator_iva_contracts import (
     LEDGER_OPERATOR_IVA_DEFINITION_ID,
     LedgerOperatorIvaRequest,
     LedgerOperatorIvaResult,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...core.config_support import LLMProvider
+from ...core.config_support import LLMProvider, RetiredLLMProvider
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
@@ -123,17 +124,18 @@ def _prepare_classify_review(context: ConformanceFamilyContext) -> ConformancePr
     transaction_id = seed_manual_transaction(
         context, booked_date=date(2025, 2, 11), amount=Decimal("18.00"), description="classification review row"
     )
+    # A preview settles terminally; a full review would otherwise suspend for an
+    # operator response before reaching a result.
+    request = LedgerLlmReviewRequest(
+        profile_id=context.profile_id,
+        transaction_id=transaction_id,
+        mode="classification",
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+        preview=True,
+    )
     return ConformancePreparation(
-        subject_ref=profile_operation_subject(str(context.profile_id)),
-        # A preview settles terminally; a full review would otherwise suspend for an
-        # operator response before reaching a result.
-        request=LedgerLlmReviewRequest(
-            profile_id=context.profile_id,
-            transaction_id=transaction_id[:12],
-            mode="classification",
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-            preview=True,
-        ),
+        subject_ref=ledger_llm_review_subject(request),
+        request=request,
         verify=ledger_unchanged_verifier(context),
     )
 
@@ -144,7 +146,7 @@ def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePrepa
     )
     ports = ledger_action_ports(context)
     # A split proposal is only ever read from image evidence by the on-host vision reader.
-    # llm_classification.py `_split_with_evidence`.
+    # llm_evidence.py `split_with_evidence`.
     attachment = add_attachment(
         ports.attachment_store,
         content=AttachmentBytesContent(data=_PNG_1X1),
@@ -172,7 +174,7 @@ def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePrepa
         subject_ref=profile_operation_subject(str(context.profile_id)),
         request=LedgerLlmReviewRequest(
             profile_id=context.profile_id,
-            transaction_id=transaction_id[:12],
+            transaction_id=transaction_id,
             mode="split",
             origin=LlmReviewInvocationOrigin.SPLIT_LLM,
             read_evidence=True,
@@ -191,7 +193,7 @@ def _usage_record(
     request_id: str,
     created: datetime,
     *,
-    provider: LLMProvider,
+    provider: RecordedLLMProvider,
     input_tokens: int,
     output_tokens: int,
     cost: Decimal | None,
@@ -252,7 +254,8 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "local-unpriced",
             datetime(2026, 4, 6, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.LOCAL,
+            # A record written before every call went through the agent.
+            provider=RetiredLLMProvider.LOCAL,
             input_tokens=300,
             output_tokens=50,
             cost=None,
@@ -411,5 +414,4 @@ LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
-    closes_model_runtime=True,
 )

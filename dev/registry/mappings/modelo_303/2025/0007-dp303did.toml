@@ -16,7 +16,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 6
 source_cell = 'A6'
-ordinal = 1
+ordinal = "1"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -30,7 +30,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 7
 source_cell = 'A7'
-ordinal = 2
+ordinal = "2"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -44,7 +44,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 8
 source_cell = 'A8'
-ordinal = 3
+ordinal = "3"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -58,7 +58,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 9
 source_cell = 'A9'
-ordinal = 4
+ordinal = "4"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -72,7 +72,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 10
 source_cell = 'A10'
-ordinal = 5
+ordinal = "5"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -86,7 +86,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 11
 source_cell = 'A11'
-ordinal = 6
+ordinal = "6"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -100,7 +100,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 12
 source_cell = 'A12'
-ordinal = 7
+ordinal = "7"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -114,7 +114,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 13
 source_cell = 'A13'
-ordinal = 8
+ordinal = "8"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -128,7 +128,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 14
 source_cell = 'A14'
-ordinal = 9
+ordinal = "9"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -142,7 +142,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 15
 source_cell = 'A15'
-ordinal = 10
+ordinal = "10"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -156,7 +156,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 16
 source_cell = 'A16'
-ordinal = 11
+ordinal = "11"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -169,7 +169,7 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 17
 source_cell = 'A17'
-ordinal = 12
+ordinal = "12"
 record_identity = 'DP303DID'
 
 [[entries]]
@@ -183,5 +183,5 @@ source_refs = ['aeat-dr-303-2025']
 sheet = 'DP303DID'
 source_row = 18
 source_cell = 'A18'
-ordinal = 13
+ordinal = "13"
 record_identity = 'DP303DID'

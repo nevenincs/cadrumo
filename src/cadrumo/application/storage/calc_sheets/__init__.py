@@ -14,7 +14,7 @@ The package exposes these layers:
   frozen pydantic v2 types describing the workbook the engine intends to
   produce. The records are the shared vocabulary between the engine driver, both
   workbook materializers, the parity oracle, and the pull adapter.
-- Translator (:mod:`application.storage.calc_sheets._translator`) — pure
+- Translator (:mod:`application.storage.calc_sheets.translator`) — pure
   function that walks a registry
   :class:`domain.calculations.registry.schema_formula.FormulaExpression` AST and emits a
   Sheets A1 formula string, resolving casilla references through the layout

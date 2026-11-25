@@ -17,9 +17,9 @@ from ..compiler.record_design import (
     extract_record_design,
 )
 from ..compiler.record_design_pdf_rows import unnamed_position_candidate
-from ._record_design_support import (
-    _RECORD_DESIGN_ROOT,
-    _write_pdf_lines,
+from .record_design_support import (
+    RECORD_DESIGN_ROOT,
+    write_pdf_lines,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,10 +41,8 @@ def test_an_unnumbered_row_is_admitted_and_a_printed_label_is_admitted_verbatim(
     representable exactly as AEAT printed it, closing the gap the earlier,
     ``int``-typed ordinal could not represent.
     """
-    root = _RECORD_DESIGN_ROOT
-    unnumbered = (
-        root / "modelo_036" / "files" / "04-036-ejercicio-2021-y-siguientes-actualizado-11-04-2023-106-kb-xlsx.xlsx"
-    )
+    root = RECORD_DESIGN_ROOT
+    (unnumbered,) = (root / "modelo_036" / "files").glob("04-036-*-xlsx.xlsx")
     printed_label = (
         root / "modelo_303" / "files" / "12-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-292-kb-xlsx.xlsx"
     )
@@ -93,7 +91,7 @@ def test_a_dotted_ordinal_is_absorbed_as_a_component_not_a_peer() -> None:
     consumer reading only ``offset``/``length`` -- the contiguity check, the IR
     projection -- sees exactly what it saw when these rows were still invisible.
     """
-    root = _RECORD_DESIGN_ROOT
+    root = RECORD_DESIGN_ROOT
     path = root / "modelo_576" / "files" / "01-576-diseno-de-registro-vigente.xlsx"
     assert path.is_file(), f"corpus anchor moved: {path}"
 
@@ -118,7 +116,7 @@ def test_a_dotted_ordinal_is_absorbed_as_a_component_not_a_peer() -> None:
 
 def _narrative_pdf(path: Path, rows: tuple[str, ...]) -> None:
     """Write a narrative-style AEAT record design with ``rows`` as its body."""
-    _write_pdf_lines(
+    write_pdf_lines(
         path,
         (
             "Tipo de registro 1: Registro de Declarante",
@@ -241,7 +239,7 @@ def test_a_page_heading_abbreviated_with_a_period_is_recognised(tmp_path: Path) 
     in the file, absent from the read, and reported skipped.
     """
     pdf_path = tmp_path / "period.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Pág. 1 DISEÑO DE REGISTRO 25/03/2021",
@@ -283,7 +281,7 @@ def test_a_quoted_anexo_title_names_the_record_body_under_it(tmp_path: Path) -> 
     as prose, both bodies arrived unidentified and the design never read whole.
     """
     pdf_path = tmp_path / "anexo.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Tipo de registro 1: Registro de Declarante",
@@ -314,7 +312,7 @@ def test_a_prose_reference_to_a_numbered_anexo_names_no_record(tmp_path: Path) -
     renaming a record after an unrelated citation.
     """
     pdf_path = tmp_path / "prose_anexo.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Tipo de registro 1: Registro de Declarante",

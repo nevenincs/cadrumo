@@ -107,7 +107,6 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
 from dev.audit.unreachable_graph import module_edges, reachable_closure, resolved_symbol_uses
 from dev.audit.unreachable_memo import parse_module, shared_scan_memo
 from dev.audit.unreachable_models import ShippedModule
@@ -115,6 +114,7 @@ from dev.audit.unreachable_references import non_reference_nodes, string_referen
 from dev.audit.unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo, shipped_modules
 from dev.exit_codes import FAILED, OK, TOOL_BROKEN
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 from dev.quality.source_import_analysis import resolve_relative_import
 
 #: The repository verb that makes a method a producer. Everything else on the
@@ -652,7 +652,10 @@ def _surface_findings(
 def scan_write_path_coverage(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:
     """Scan the tree ``spec`` describes for readable surfaces with no writer."""
     with shared_scan_memo():
-        return _scan_with_memo(spec, surface)
+        try:
+            return _scan_with_memo(spec, surface)
+        except OSError as exc:
+            return WritePathResult.error(f"scan input could not be read ({type(exc).__name__}: {exc})")
 
 
 def _scan_with_memo(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:

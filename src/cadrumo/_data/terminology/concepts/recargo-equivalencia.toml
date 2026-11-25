@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Recargo de IVA que paga el comerciante minorista a su proveedor."
-definition = "Recargo que, en el regimen especial del recargo de equivalencia, el proveedor repercute al comerciante minorista ademas del IVA, a cambio de que este quede exonerado de presentar autoliquidaciones de IVA por esas ventas."
+definition = "Recargo que, en el régimen especial del recargo de equivalencia, el proveedor repercute al comerciante minorista ademas del IVA, a cambio de que este quede exonerado de presentar autoliquidaciones de IVA por esas ventas."
 
 [language.es.source]
 citation = "Articulos 154 y 156 de la Ley 37/1992 del IVA."
@@ -39,7 +39,7 @@ label = "equivalence surcharge"
 term_status = "preferred"
 
 [language.ca]
-short_description = "Recarrec d'IVA que el comerciant minorista paga al seu proveidor."
+short_description = "Recàrrec d'IVA que el comerciant minorista paga al seu proveïdor."
 definition = "Recàrrec que, en el règim especial del recàrrec d'equivalència, el proveïdor repercuteix al comerciant minorista a més de l'IVA, a canvi que aquest quedi exonerat de presentar autoliquidacions d'IVA per aquestes vendes."
 
 [language.ca.source]

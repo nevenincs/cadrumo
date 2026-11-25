@@ -8,12 +8,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
-from .pytest_transcript_syntax import _normalize_root_cause
-from .signal_values import _is_json_object, _write_json_lines
+from .pytest_transcript_syntax import normalize_root_cause
+from .signal_values import is_json_object, write_json_lines
 
-_LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
+LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
 
 
 _LOCALE_EXCEPTION_RE: Final[re.Pattern[str]] = re.compile(
@@ -53,7 +53,7 @@ def _locale_traceback_error(lines: list[str], decode_error: str | None) -> dict[
             continue
         exception_type = match.group("type")
         message_parts = _locale_message_parts(match, lines[index + 1 :])
-        message = _normalize_root_cause(" ".join(part for part in message_parts if part))
+        message = normalize_root_cause(" ".join(part for part in message_parts if part))
         if not message:
             message = f"locale status child terminated with {exception_type}"
         return {
@@ -63,7 +63,7 @@ def _locale_traceback_error(lines: list[str], decode_error: str | None) -> dict[
         }
 
     if decode_error is not None and decode_error:
-        message = _normalize_root_cause(decode_error)
+        message = normalize_root_cause(decode_error)
         return {
             "category": "payload",
             "type": "JSONDecodeError",
@@ -76,7 +76,7 @@ def _locale_traceback_error(lines: list[str], decode_error: str | None) -> dict[
     }
 
 
-class _LocalesStatusSignalProcessor:
+class LocalesStatusSignalProcessor:
     """Reduce the complete locale audit payload to a stable advisory envelope."""
 
     def __init__(self) -> None:
@@ -85,6 +85,7 @@ class _LocalesStatusSignalProcessor:
         self._decode_error: str | None = None
 
     def consume(self, line: str) -> None:
+        """Collect one output line of the locales status run."""
         self.lines.append(line)
 
     def _payload(self) -> dict[str, object] | None:
@@ -126,6 +127,7 @@ class _LocalesStatusSignalProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the locales status result envelope from the collected output."""
         decoded = self._payload()
         error: dict[str, str] | None = None
         if decoded is None:
@@ -149,7 +151,7 @@ class _LocalesStatusSignalProcessor:
             details = decoded["details"]
             assert isinstance(summary, dict)
             assert isinstance(details, dict)
-            outcome = str(decoded["outcome"])
+            outcome = _outcome_with_gating_findings(str(decoded["outcome"]), details)
             headline = str(decoded.get("headline", "Locale status produced no headline."))
         report_path = run_dir / "artifacts" / "locale-status.json"
         backlog_path = run_dir / "artifacts" / "locale-backlog.jsonl"
@@ -169,8 +171,8 @@ class _LocalesStatusSignalProcessor:
             encoding=UTF_8,
             newline="\n",
         )
-        _write_json_lines(backlog_path, details.get("backlog", []))
-        _write_json_lines(findings_path, details.get("findings", []))
+        write_json_lines(backlog_path, details.get("backlog", []))
+        write_json_lines(findings_path, details.get("findings", []))
         blocking = label == "check-locales"
         classification, result = _locale_run_classification(exit_status, outcome, blocking)
         return {
@@ -237,9 +239,9 @@ def _locale_message_parts(match: re.Match[str], continuations: list[str]) -> lis
 def _validated_locale_payload(raw: str) -> dict[str, object]:
     """Decode the exact locale payload shape, preserving the first refusal reason."""
     decoded = json.loads(raw)
-    if not _is_json_object(decoded):
+    if not is_json_object(decoded):
         raise ValueError("locale status payload is not a JSON object")
-    if decoded.get("outcome") not in {"backlog", "complete"}:
+    if decoded.get("outcome") not in {"backlog", "advisory", "complete"}:
         raise ValueError("locale status payload has an unknown outcome")
     if not isinstance(decoded.get("summary"), dict):
         raise ValueError("locale status payload has no summary object")
@@ -256,14 +258,29 @@ def _locale_payload_candidate(line: str) -> dict[str, object] | None:
         return None
 
 
+def _outcome_with_gating_findings(outcome: str, details: dict[str, object]) -> str:
+    """Refuse an advisory-only outcome that the payload's own findings contradict."""
+    if outcome != "advisory":
+        return outcome
+    findings = details.get("findings")
+    if not isinstance(findings, list) or not all(
+        isinstance(finding, dict) and finding.get("classification") == "advisory" for finding in findings
+    ):
+        return "backlog"
+    return outcome
+
+
 def _locale_run_classification(exit_status: int, outcome: str, blocking: bool) -> tuple[str, str]:
-    """Keep unavailable, backlog and complete outcomes distinct for blocking and advisory commands."""
+    """Keep unavailable, backlog, advisory and complete outcomes distinct for blocking and advisory commands."""
     if exit_status in {7, 127} or outcome == "unavailable":
         classification = "tool_failure"
         result = "unavailable"
     elif outcome == "backlog":
         classification = "blocking_findings" if blocking else "advisory_findings"
         result = "failed" if blocking else "backlog"
+    elif outcome == "advisory":
+        classification = "advisory_findings"
+        result = "passed_with_advisories" if blocking else "advisory"
     else:
         classification = "clean"
         result = "passed" if blocking else "complete"

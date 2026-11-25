@@ -11,10 +11,12 @@
 //! commands and the page-load hook take a lock that is never held across
 //! file I/O or a delivery.
 mod format;
+pub(crate) mod frontend;
 mod host;
 mod manager;
+pub(crate) mod native;
 mod record;
-mod severity;
+pub(crate) mod severity;
 mod tail;
 #[cfg(test)]
 mod tests;
@@ -297,7 +299,7 @@ impl Poller {
         );
         // Every deadline below counts from the same instant.
         let sent = sending();
-        let (deliveries, held) = {
+        let deliveries = {
             let mut inner = shared.lock();
             for record in prepared {
                 inner.aggregate.push(record);
@@ -309,13 +311,19 @@ impl Poller {
                 host: host::source(&self.diagnostics),
             };
             inner.polled = true;
-            let deliveries = inner.aggregate.deliver(sent);
-            (deliveries, inner.aggregate.due(sent))
+            inner.aggregate.deliver(sent)
         };
+        let recipients = record::recipients(&deliveries);
         let refused = record::send(deliveries);
-        if !refused.is_empty() {
-            shared.lock().aggregate.end(&refused);
-        }
+        // The next batch waits out the interval from the end of this one.
+        let held = {
+            let mut inner = shared.lock();
+            inner.aggregate.delivered(&recipients, sending());
+            if !refused.is_empty() {
+                inner.aggregate.end(&refused);
+            }
+            inner.aggregate.due(sending())
+        };
         [held, self.tail.due(sent), self.manager_tail.due(sent)]
             .into_iter()
             .flatten()
@@ -485,8 +493,18 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
         .build()
 }
 
+#[tauri::command]
+fn desktop_frontend_diagnostic(
+    startup: State<'_, Arc<crate::startup::Startup>>,
+    commands: State<'_, frontend::RegisteredCommands>,
+    report: frontend::Report,
+) {
+    frontend::record(startup, commands, report);
+}
+
 pub fn commands<R: Runtime>() -> Commands<R> {
     crate::app::commands![
+        desktop_frontend_diagnostic,
         logs_subscribe,
         logs_unsubscribe,
         logs_export,

@@ -54,13 +54,15 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The last exercise before LIS DT 44ª (Ley 7/2024) replaced the art. 29 flat 23 % pyme
 # rate with its tranche scale; its window is the historical back-fill under test.
-_PRE_TRANCHE_PYME_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year - 1
+_FIRST_TRANCHE_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+_PRE_TRANCHE_PYME_EXERCISE = _FIRST_TRANCHE_EXERCISE - 1
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
@@ -92,7 +94,9 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot_2024():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot(
+        "200", filing_year=_PRE_TRANCHE_PYME_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -125,15 +129,19 @@ def test_pyme_sl_pre_tranche_exercise_cuota_resolves_without_bracket_no_window()
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             # INCN below 1.000.000 EUR → micro-empresa lane → tipo-gravamen-pyme bracket
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            **turnover_binding_values(_snapshot_2024(), Decimal("500000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )
@@ -150,16 +158,22 @@ def test_pyme_sl_pre_tranche_exercise_cuota_resolves_without_bracket_no_window()
 def test_pyme_bracket_pre_tranche_window_is_present_in_registry() -> None:
     """The pre-tranche pyme bracket window exists at 23 % in the registry.
 
-    After the contract backfill ``is.modelo-200.tipo-gravamen-pyme`` must carry a
-    window covering 2024-01-01 to 2024-12-31 with ``marginal_rate = 0.23``.
+    ``is.modelo-200.tipo-gravamen-pyme`` must carry a window covering the whole
+    pre-tranche exercise with ``marginal_rate = 0.23``.
     This tests the registry encoding directly against the LIS Art. 29 2024
     authority; it is not a recomputation of the formula.
     """
     parameters = {p.id: p for p in _snapshot_2024().revision.parameters}
     parameter = parameters["is.modelo-200.tipo-gravamen-pyme"]
-    pre_tranche_brackets = [b for b in parameter.brackets if b.valid_from == date(_PRE_TRANCHE_PYME_EXERCISE, 1, 1)]
+    # The 23 % window opens with the periods initiated in 2023 (Ley 31/2022 art. 39), so it
+    # covers this exercise without starting in it.
+    first_day = date(_PRE_TRANCHE_PYME_EXERCISE, 1, 1)
+    last_day = date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)
+    pre_tranche_brackets = [
+        b for b in parameter.brackets if b.valid_from <= first_day and (b.valid_to is None or b.valid_to >= last_day)
+    ]
     assert pre_tranche_brackets, (
-        f"is.modelo-200.tipo-gravamen-pyme must have at least one bracket for {_PRE_TRANCHE_PYME_EXERCISE}-01-01"
+        f"is.modelo-200.tipo-gravamen-pyme must have a bracket covering the whole of {_PRE_TRANCHE_PYME_EXERCISE}"
     )
     # The 2024 flat rate was 23 % (pre-tranche regime).
     assert any(b.marginal_rate == Decimal("0.23") for b in pre_tranche_brackets), (
@@ -229,17 +243,21 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         enum_binding_values={_DISPATCH_BINDING: "sa"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("5000000"),
+            **turnover_binding_values(_snapshot_2024(), Decimal("5000000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )
     assert _M200_CUOTA_INTEGRA_CASILLA in result.values, (
         "formula engine must emit DP200014:00562 in result.values; "

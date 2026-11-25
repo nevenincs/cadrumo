@@ -14,7 +14,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.errors import IvaRateNotFoundError
 from .. import enums
-from ..enums import iva_rate_percentage, resolve_iva_rate_slot, resolve_iva_rate_slot_fact
+from ..enums import iva_rate_percentage, resolve_iva_rate_slot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -78,19 +78,6 @@ def test_persisted_numeric_slots_resolve_at_explicit_devengo_dates(
         slot = resolve_iva_rate_token(slot_token, date.today())
         assert iva_rate_percentage(slot, on_date) == expected
         assert resolve_iva_rate_slot(expected * Decimal("100"), on_date) == slot
-
-
-def test_coexisting_slot_resolution_retains_fact_provenance() -> None:
-    with bundled_indexed_authority().operation():
-        slot = resolve_iva_rate_token("RATE_2", date.today())
-        resolved = resolve_iva_rate_slot_fact(slot, date(2024, 11, 15))
-
-    assert resolved is not None
-    assert resolved.fact_id == "iva-rate-schedule"
-    assert resolved.effective_date == date(2024, 11, 15)
-    assert {selector.name: selector.value for selector in resolved.matched_selectors}["rate_role"] == "coexisting-2"
-    assert resolved.legal_refs
-    assert len(resolved.authority_digest) == 64
 
 
 def test_transitional_slot_fails_closed_outside_its_window() -> None:

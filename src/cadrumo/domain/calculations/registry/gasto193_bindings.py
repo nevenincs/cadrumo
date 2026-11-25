@@ -33,7 +33,7 @@ __all__ = [
 
 _Gasto193RowField = Literal[
     "contributor_tax_id",
-    "contributor_legal_name",
+    "party_filing_name",
     "representative_tax_id",
     "importe_gastos",
 ]

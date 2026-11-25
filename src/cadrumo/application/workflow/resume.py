@@ -31,7 +31,7 @@ See Also:
     :mod:`application.modelo`
         Owns visible modelo work addressing, revision selection, and conversion
         from registry filing periods to workflow periods.
-    :mod:`entrypoints.cli._modelo_work_runs_cli`
+    :mod:`entrypoints.cli.modelo_work_runs_cli`
         CLI surface that resolves operator resume selectors and emits
         :class:`application.workflow.resume.WorkflowResumeTargetResolution`
         metadata.
@@ -60,7 +60,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.hex import HEX_PATTERN_16, HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_16, HEX_PATTERN_64, Hex16Str
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -172,8 +172,8 @@ class WorkflowResumeRunCandidate(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    run_id: str = Field(min_length=16, max_length=16)
-    modelo: str = Field(min_length=1, max_length=8)
+    run_id: Hex16Str
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     final_stage: str = Field(min_length=1, max_length=64)
     aborted_reason: str | None = None
@@ -195,7 +195,7 @@ class WorkflowResumeTargetResolution(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    run_id: str = Field(min_length=16, max_length=16)
+    run_id: Hex16Str
     source: str = Field(min_length=1, max_length=64)
     modelo: str | None = None
     period: Period | None = None
@@ -217,8 +217,8 @@ class WorkflowResumeContext(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    resumed_from_run_id: str = Field(min_length=16, max_length=16)
-    modelo: str = Field(min_length=1, max_length=8)
+    resumed_from_run_id: Hex16Str
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     obligation: WorkflowObligationFacts
     aborted_reason: WorkflowAbortReason
@@ -481,7 +481,7 @@ def _resolve_resume_from_calculation_revision(
     ports: CalculationActionPorts,
     runs: WorkflowRunReader,
 ) -> WorkflowResumeSelection:
-    from ..modelo.calculation_actions import get_recorded_calculation_revision
+    from ..modelo.calculation_revision_queries import get_recorded_calculation_revision
     from ..modelo.work_lifecycle import get_work_unit
 
     revision = get_recorded_calculation_revision(calculation_revision_id, ports=ports)

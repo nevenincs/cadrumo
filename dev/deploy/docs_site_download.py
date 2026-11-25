@@ -20,10 +20,10 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 _DOWNLOAD_LATEST_URL = f"https://github.com/{PRODUCT_IDENTITY.repository}/releases/latest/download/download-latest.json"
 
 
-_DOWNLOAD_LATEST_SCHEMA = "cadrumo.download-latest.v1"
+DOWNLOAD_LATEST_SCHEMA = "cadrumo.download-latest.v1"
 
 
-_DOWNLOAD_LATEST_STATIC_PATH = ("docs", "_static", "download-latest.json")
+DOWNLOAD_LATEST_STATIC_PATH = ("docs", "_static", "download-latest.json")
 
 
 _DOWNLOAD_LATEST_TIMEOUT_SECONDS = 20
@@ -67,7 +67,7 @@ def _invalidate_download_latest(destination: Path, reason: str) -> None:
     print(f"{reason}; serving the offline channel table.", flush=True)
 
 
-def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
+def refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
     """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
 
     Fetches the version-agnostic latest-release asset, validates it is the
@@ -83,7 +83,7 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
     at a local HTTP server to exercise the real ``urlopen`` path against a real
     socket instead of faking the response.
     """
-    destination = repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
+    destination = repo_root.joinpath(*DOWNLOAD_LATEST_STATIC_PATH)
     endpoint = urlsplit(source_url)
     if endpoint.scheme not in {"http", "https"} or endpoint.hostname is None:
         _invalidate_download_latest(destination, f"download-latest.json unavailable (invalid URL: {source_url})")
@@ -101,7 +101,7 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
     except json.JSONDecodeError:
         _invalidate_download_latest(destination, "download-latest.json response was not JSON")
         return
-    if not isinstance(payload, dict) or payload.get("schema_name") != _DOWNLOAD_LATEST_SCHEMA:
+    if not isinstance(payload, dict) or payload.get("schema_name") != DOWNLOAD_LATEST_SCHEMA:
         _invalidate_download_latest(destination, "download-latest.json was not the expected payload")
         return
     try:

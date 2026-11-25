@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-dated-validity'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2b8506f9dc8ce786f4f517aaccd0ffbc92a7e2dfed1de23b48a7a446d98cc86'
+body_hash: 'sha256:b05e4d869e00e7a10b544823312da04717ed4503ba39405225107be2be4c782c'
 related:
   - "[[2026-08-27-registry-dated-validity-research]]"
 ---
@@ -50,11 +50,11 @@ year-neutral content rather than missing evidence.
 - Three of the forty-two profiles carry no year-neutral citation, and at least
   one citation is a hard model invariant, so a blanket retraction refuses at load
   (`2026-08-27-registry-dated-validity-research`).
-- The two IVA corpora are four supported years short and their gate is red at
+- The two IVA corpora fall short of the supported years and their gate is red at
   HEAD; that gate's remedy clause is grounding, and explicitly not copying
   (`2026-08-27-registry-dated-validity-research`).
 - Neither IVA corpus contains a year-dated field; every citation resolves to a
-  legal-catalogue provision effective before 2022 and repealed in none of the
+  legal-catalogue provision effective before the support floor and repealed in none of the
   supported years, so their span is derivable rather than attested
   (`2026-08-27-registry-dated-validity-research`).
 - `valid_from` is canonical only inside the modelo revision parameter subsystem,
@@ -96,9 +96,9 @@ prevents the next mirror. Grounding is sequenced after, not before.
 
 **Migrate categories only and defer the two IVA corpora.** Rejected by the
 operator, and the rejection is correct on the evidence. The deferral rested on
-treating the IVA four-year shortfall as missing evidence needing per-year
+treating the IVA multi-year shortfall as missing evidence needing per-year
 grounding. It is not: neither corpus carries a year-dated field, and every cited
-provision resolves to a legal-catalogue entry effective before 2022 and repealed
+provision resolves to a legal-catalogue entry effective before the support floor and repealed
 in none of the supported years. Deferring would have left two corpora per-year
 and red while the very migration that makes them honest was available.
 
@@ -115,7 +115,7 @@ authority, but the enforcement that reads it is mid-campaign in
 declaration and does not depend on the enforcement flip.
 
 The blocking constraint is external and named: three profiles cannot be collapsed
-honestly without the 2024 Manual práctico text. That text is not bundled. The
+honestly without the Manual práctico text of the mirrored year. That text is not bundled. The
 implementation below carries an explicit disposition for the case where it cannot
 be obtained, so the constraint cannot silently become a mirror.
 
@@ -164,13 +164,13 @@ exact-year semantics are preserved deliberately and byte-for-byte in effect, so
 the pinning defect stays exactly where it is and remains attributable to the brief
 that owns it.
 
-**The mirrored citations are not carried forward.** The forty-one year-dated 2024
-citations were produced by substitution and are dropped rather than re-windowed.
+**The mirrored citations are not carried forward.** The forty-one year-dated citations
+of the mirrored year were produced by substitution and are dropped rather than re-windowed.
 Thirty-nine profiles retain their statutory `ley_irpf` and `reglamento_irpf`
-grounding for 2024, which is the stronger authority and is genuinely
+grounding for that year, which is the stronger authority and is genuinely
 year-invariant. The three profiles that would be left with no citation are
-grounded against the 2024 Manual práctico in the same change. If that text cannot
-be obtained, 2024 is withdrawn from the corpus and resolves as a refusal; the gap
+grounded against that year's Manual práctico in the same change. If that text cannot
+be obtained, that year is withdrawn from the corpus and resolves as a refusal; the gap
 is then visible at the boundary instead of papered over by a copy.
 
 **One shared mechanism replaces three copied loaders.** The window resolution and
@@ -193,7 +193,7 @@ pattern.
 content is year-neutral throughout, so the collapse drops nothing and retracts
 nothing. Each citation's window is authored from the cited provision's own
 effective window in the legal catalogue and checked against it, which makes a
-2022-2026 span a derived fact. The covered-year set then derives from those
+span across the supported window a derived fact. The covered-year set then derives from those
 windows, and `test_year_coverage_matches_supported_filing_years` goes green
 because the grounding genuinely spans the supported window -- not because a table
 was copied into four new filenames. Where a cited provision does not in fact span
@@ -259,12 +259,12 @@ copying is no longer possible, so the cheap path is closed and the remaining pat
 is to read the year's source. That is the intended trade and it will feel like
 friction at the moment a year is admitted.
 
-Grounding for filing year 2024 is reduced on paper for thirty-nine profiles,
+Grounding for the mirrored filing year is reduced on paper for thirty-nine profiles,
 because forty-one citations that appeared to support it are withdrawn. Nothing is
 actually lost: those citations never carried evidence. The statutory citations
 that remain are the load-bearing ones.
 
-The three ungrounded profiles are a real, bounded external dependency. If the 2024
+The three ungrounded profiles are a real, bounded external dependency. If that year's
 text cannot be obtained, the corpus loses a filing year it currently appears to
 serve, and the loss becomes visible at a refusal boundary. That is the correct
 failure, and it will look like a regression to anyone reading only the coverage

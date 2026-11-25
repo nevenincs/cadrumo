@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .autonomic_deduccion_enrolment_checks import check_autonomic_deduccion_enrolments
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .reference_checker import IdReferenceChecker as _IdReferenceChecker
+from .reference_checker import IdReferenceChecker
 from .reference_sections import (
     check_binding_selector_shapes,
     check_construct_refs,
@@ -20,13 +21,7 @@ from .reference_sections import (
 )
 from .schema import ModeloRevision
 from .schema_input_kind import InputKind
-from .validate_cross_domain_snapshot import (
-    CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
-)
 from .validate_cross_domain_snapshot import check_cross_domain_snapshot_routing
-from .validate_cross_domain_snapshot import (
-    register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
-)
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot
@@ -44,7 +39,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     ``casilla.id`` values; display numbers, form numbers, and export
     field identifiers are never alternate lookup keys at this boundary.
     """
-    checker = _IdReferenceChecker(snapshot)
+    checker = IdReferenceChecker(snapshot)
     revision = snapshot.revision
 
     checker.chk_legal_source_refs("modelo", snapshot.modelo.legal_refs, snapshot.modelo.source_refs)
@@ -66,6 +61,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_deadline_window_refs(checker, revision)
     _check_filing_schedule_refs(checker, revision)
     check_construct_refs(checker, revision)
+    check_autonomic_deduccion_enrolments(checker, revision)
     check_dependency_classification_refs(checker, revision)
     check_export_layout_refs(checker, revision)
     check_cross_domain_snapshot_routing(checker, snapshot)
@@ -86,7 +82,7 @@ def check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_all_id_references(snapshot)
 
 
-def _check_completeness_manifest_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_completeness_manifest_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     manifest = revision.completeness_manifest
     if manifest is None:
         return
@@ -95,13 +91,13 @@ def _check_completeness_manifest_refs(checker: _IdReferenceChecker, revision: Mo
     checker.chk_legal_source_refs(cp, manifest.legal_refs, manifest.source_refs)
 
 
-def _check_casilla_continuidad_evolution_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_casilla_continuidad_evolution_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for evolution in revision.casilla_continuidad_evolutions:
         cp = f"casilla_continuidad_evolution {evolution.id}"
         checker.chk_legal_source_refs(cp, evolution.legal_refs, evolution.source_refs)
 
 
-def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_casilla_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for casilla in revision.casillas:
         cp = f"casilla {casilla.id}"
         checker.chk_opt(f"{cp}.formula", casilla.formula, checker.formula_ids)
@@ -128,7 +124,7 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
 
 
 def _check_bound_casilla_binding_coverage(
-    checker: _IdReferenceChecker,
+    checker: IdReferenceChecker,
     field_path: str,
     binding: BindingId | None,
 ) -> None:
@@ -140,7 +136,7 @@ def _check_bound_casilla_binding_coverage(
     checker.chk(f"{field_path}.binding", binding, checker.binding_ids)
 
 
-def _check_formula_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_formula_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for formula in revision.formulas:
         fp = f"formula {formula.id}"
         checker.chk(f"{fp}.target_casilla_id", formula.target_casilla_id, checker.casilla_ids)
@@ -149,7 +145,7 @@ def _check_formula_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
             checker.chk(f"{fp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
 
 
-def _check_parameter_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_parameter_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for parameter in revision.parameters:
         pp = f"parameter {parameter.id}"
         checker.chk_legal_source_refs(pp, parameter.legal_refs, parameter.source_refs)
@@ -157,7 +153,7 @@ def _check_parameter_refs(checker: _IdReferenceChecker, revision: ModeloRevision
             checker.chk(f"{pp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
 
 
-def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_binding_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for binding in revision.bindings:
         bp = f"binding {binding.id}"
         checker.chk_legal_source_refs(bp, binding.legal_refs, binding.source_refs)
@@ -165,7 +161,7 @@ def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
             checker.chk(f"{bp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
 
 
-def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_extraction_profile_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for profile in revision.extraction_profiles:
         ep = f"extraction_profile {profile.id}"
         target_ids = tuple(t.casilla_id for t in profile.target_casillas)
@@ -176,7 +172,7 @@ def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: Model
 
 
 def _check_text_casilla_strategy(
-    checker: _IdReferenceChecker,
+    checker: IdReferenceChecker,
     ep: str,
     profile: ExtractionProfileDefinition,
 ) -> None:
@@ -197,7 +193,7 @@ def _check_text_casilla_strategy(
             )
 
 
-def _check_cross_reference_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_cross_reference_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for cross_ref in revision.live_cross_references:
         crp = f"cross_reference {cross_ref.id}"
         checker.chk_legal_source_refs(crp, cross_ref.legal_refs, cross_ref.source_refs)
@@ -209,14 +205,14 @@ def _check_cross_reference_refs(checker: _IdReferenceChecker, revision: ModeloRe
             )
 
 
-def _check_workbook_parity_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_workbook_parity_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for workbook in revision.workbook_parity_refs:
         wp = f"workbook_parity_ref {workbook.id}"
         checker.chk(f"{wp}.workbook_source", workbook.workbook_source, checker.source_ids)
         checker.chk_legal_source_refs(wp, workbook.legal_refs, workbook.source_refs)
 
 
-def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_verification_expectation_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for expectation in revision.verification_expectations:
         vep = f"verification_expectation {expectation.id}"
         checker.chk_tuple(f"{vep}.computed_casilla_ids", expectation.computed_casilla_ids, checker.casilla_ids)
@@ -235,19 +231,19 @@ def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision:
         checker.chk_legal_source_refs(vep, expectation.legal_refs, expectation.source_refs)
 
 
-def _check_verification_predicate_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_verification_predicate_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for predicate in revision.verification_predicates:
         vpp = f"verification_predicate {predicate.predicate_id}"
         checker.chk_tuple(f"{vpp}.legal_refs", predicate.legal_refs, checker.legal_ids)
 
 
-def _check_application_link_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_application_link_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for link in revision.application_links:
         lp = f"application_link {link.id}"
         checker.chk_legal_source_refs(lp, link.legal_refs, link.source_refs)
 
 
-def _check_deadline_window_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_deadline_window_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for window in revision.deadline_windows:
         dwp = f"deadline_window {window.id}"
         checker.chk_legal_source_refs(dwp, window.legal_refs, window.source_refs)
@@ -259,7 +255,7 @@ def _check_deadline_window_refs(checker: _IdReferenceChecker, revision: ModeloRe
             )
 
 
-def _check_filing_schedule_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+def _check_filing_schedule_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     for schedule in revision.filing_schedules:
         fsp = f"filing_schedule {schedule.id}"
         checker.chk_legal_source_refs(fsp, schedule.legal_refs, schedule.source_refs)

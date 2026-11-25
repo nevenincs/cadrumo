@@ -19,6 +19,8 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
     wrap_profile_custody_password_material,
 )
 from cadrumo.core.config import Settings, configured_authority_root
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority_store import require_authority_store_available
 
 
@@ -30,10 +32,10 @@ def require(condition: bool, message: str) -> None:
 
 root = Path(sys.argv[1]).resolve(strict=True)
 manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-temporary_root = Settings().cadrumo_temp_dir
+temporary_root = storage_path(StorageCategory.TEMPORARY_FILES)
 temporary_root.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="cadrumo-package-kdf-", dir=temporary_root) as neutral:
-    settings = Settings(cadrumo_local_storage_root=Path(neutral) / "state")
+    settings = Settings(cadrumo_storage_root=Path(neutral) / "state")
     wrapped = wrap_profile_custody_password_material(
         secret=secrets.token_urlsafe(32),
         dek=secrets.token_bytes(32),
@@ -75,18 +77,20 @@ entrypoint_smoke["verify_entrypoints"](
     manifest["layout"]["entrypoint_suffix"],
 )
 native_manifest = json.loads((root / manifest["layout"]["files"]["native_manifest"]).read_text(encoding="utf-8"))
-for module in sorted(native_manifest["modules"]):
-    try:
-        for prerequisite in manifest["layout"].get("native_smoke_prerequisites", {}).get(module, []):
-            importlib.import_module(prerequisite)
-        importlib.import_module(module)
-    except Exception as error:
-        raise RuntimeError(f"Bundled native import failed: {module}") from error
-for distribution, modules in manifest["smoke_modules"].items():
+import_smoke = runpy.run_path(str(Path(__file__).with_name("import_smoke.py")))
+import_smoke["import_bundled"](
+    import_smoke["with_prerequisites"](
+        sorted(native_manifest["modules"]), manifest["layout"].get("native_smoke_prerequisites", {})
+    ),
+    "Bundled native import failed",
+)
+for distribution in manifest["smoke_modules"]:
     require(importlib.metadata.version(distribution) == manifest["distributions"][distribution], distribution)
-    for module in modules:
-        importlib.import_module(module)
-for module in (
+import_smoke["import_bundled"](
+    [module for modules in manifest["smoke_modules"].values() for module in modules],
+    "Bundled distribution import failed",
+)
+for extension_module in (
     "ssl",
     "sqlite3",
     "bz2",
@@ -104,15 +108,27 @@ for module in (
     "yaml._yaml",
     "rpds.rpds",
 ):
-    importlib.import_module(module)
+    importlib.import_module(extension_module)
 with zipfile.ZipFile(root / manifest["layout"]["paths"]["stdlib"]) as library:
     require("encodings/__init__.pyc" in library.namelist(), "Standard library is not bytecode ZIP")
     require(
         not any(n.startswith(("test/", "ensurepip/", "tkinter/", "idlelib/")) for n in library.namelist()),
         "Unpruned stdlib",
     )
+
+
+def _shipped_exactly(relative: str) -> bool:
+    # A case-insensitive file system would answer for the POSIX `lib` directory too.
+    parent = root
+    for part in relative.split("/"):
+        if not parent.is_dir() or part not in {child.name for child in parent.iterdir()}:
+            return False
+        parent = parent / part
+    return True
+
+
 require(
-    not any((root / p).exists() for p in ("Lib", "Libs", "Scripts", "python/Lib")), "Unexpected SDK directories shipped"
+    not any(_shipped_exactly(p) for p in ("Lib", "Libs", "Scripts", "python/Lib")), "Unexpected SDK directories shipped"
 )
 authority_root = configured_authority_root()
 if authority_root is None:

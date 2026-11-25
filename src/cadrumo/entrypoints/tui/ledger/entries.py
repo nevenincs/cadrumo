@@ -7,19 +7,16 @@ from typing import ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
-from .controller import (
-    LedgerEntrySelected,
-    LedgerTransactionDetailRequested,
-    LedgerWorkspaceController,
-    LedgerWorkspaceScreen,
-    review_status_label,
-)
+from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController, review_status_label
+from .entries_browse_layout import fit_columns
 from .models import LedgerEntryRowV1
 from .workspace_presentation import ledger_workspace_page, restore_transaction_focus
+from .workspace_screen import LedgerEntrySelected, LedgerTransactionDetailRequested, LedgerWorkspaceScreen
 
 
 def _description_fill_column(columns: tuple[tuple[str, str, int], ...]) -> int:
@@ -35,9 +32,13 @@ def _selected_row_key(table: DataTable[str]) -> str | None:
     return table.ordered_rows[table.cursor_row].key.value
 
 
-def _add_entry_columns(table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...]) -> None:
-    """Recreate the visible columns with the same translated header floors."""
+def _add_entry_columns(
+    table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...], visible: frozenset[str]
+) -> None:
+    """Recreate the visible columns of the screen's table with the same translated header floors."""
     for name, key, size in columns:
+        if name not in visible:
+            continue
         header = tr(key)
         table.add_column(header, key=name, width=max(size, len(header)))
 
@@ -91,6 +92,8 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
     projection behind it always carries the full record.
     """
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.ENTRIES
+
     _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
         ("date", "tui.ledger.column.date", 10),
         ("description", "tui.ledger.column.description", 24),
@@ -127,8 +130,21 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         repaint_tables(self, self._populate_view)
 
     def on_mount(self) -> None:
-        """Populate the initially mounted projection."""
+        """Populate the initially mounted projection.
+
+        Opened on a transaction the entries do not show, as a link may ask,
+        the page stays open and says so, without saying whether that
+        transaction exists anywhere else.
+        """
         self._populate_view()
+        focus = self.controller.context.focus
+        if (
+            focus is not None
+            and focus.semantic_key == LEDGER_TRANSACTION_FOCUS
+            and focus.restore_token is not None
+            and self.controller.restored_transaction_id() is None
+        ):
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.entries.selection_absent"))
 
     def _populate_view(self) -> None:
         """Populate the safe entry index using semantic row identities."""
@@ -152,20 +168,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     def _visible_columns(self, width: int) -> tuple[tuple[str, str, int], ...]:
         """Take columns in priority order while they still fit the terminal."""
-        taken: list[tuple[str, str, int]] = []
-        used = 0
-        for column in self._COLUMNS:
-            # The header is a floor on the rendered column, not merely a label:
-            # a column narrower than its own heading is widened to fit it, so
-            # budgeting the authored width alone under-counts every column
-            # whose translated heading is longer and overflows the last one.
-            # Two cells of padding per column, plus one for the scrollbar.
-            cost = max(column[2], len(tr(column[1]))) + 2
-            if used + cost > width - 1:
-                break
-            taken.append(column)
-            used += cost
-        return tuple(taken)
+        return fit_columns(self._COLUMNS, width)
 
     def _fill_table(self, table: ContentDataTable[str], width: int) -> None:
         """Rebuild the table for this width, preserving row identity.
@@ -184,7 +187,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         selected = _selected_row_key(table)
         table.clear(columns=True)
         columns = self._visible_columns(width)
-        _add_entry_columns(table, columns)
+        _add_entry_columns(table, self._COLUMNS, frozenset(name for name, _, _ in columns))
         _add_entry_rows(table, columns, self.controller.entry_rows())
         table.absorb_surplus_width()
         _restore_entry_selection(table, selected)

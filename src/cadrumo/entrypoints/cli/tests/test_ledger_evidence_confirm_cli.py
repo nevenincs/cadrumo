@@ -21,7 +21,7 @@ from ....core.field_origin import FieldOrigin
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ..ledger_business_payloads import EvidenceConfirmResult
-from ..ledger_evidence_commands import _evidence_confirm_payload, _require_exact_evidence_reference
+from ..ledger_evidence_commands import evidence_confirm_payload, require_exact_evidence_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -37,7 +37,7 @@ def _public_decimal(value: str) -> PublicDecimal:
     return PublicDecimal(decimal=value)
 
 
-def _projection() -> LedgerEvidenceConfirmProjection:
+def ledger_evidence_confirm_cli_projection() -> LedgerEvidenceConfirmProjection:
     """Build a strict canonical read projection with both provenance views."""
     extracted = FieldProvenanceProjectionV1(
         field="invoice_number",
@@ -62,7 +62,7 @@ def _projection() -> LedgerEvidenceConfirmProjection:
         invoice_number="FAC-2024-0007",
         issued_at=date(2024, 11, 20),
         counterparty_name="Mayorista Ejemplo SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=_public_decimal("100.00"),
         iva_total=_public_decimal("21.00"),
@@ -94,12 +94,25 @@ def _projection() -> LedgerEvidenceConfirmProjection:
         operation_date_role=None,
         iva_category=None,
         rectifies_invoice_number=None,
+        rectification_method=None,
+        rectification_cause=None,
+        rectification_direction=None,
+        document_received_on=None,
+        issuer_increase_election=None,
+        issuer_minoracion_election=None,
+        issuer_minoracion_regularisation_period=None,
+        recipient_increase_period=None,
+        art_80_tres_obligations_attested=None,
+        exercised_deduction_period=None,
         fx_rate=None,
         fx_rate_date=None,
         fx_rate_source=None,
         base_total_eur=None,
         iva_total_eur=None,
         grand_total_eur=None,
+        referencia_catastral=None,
+        settlement_amount=_public_decimal("121.00"),
+        documents=(),
     )
     return LedgerEvidenceConfirmProjection(
         profile_id=_PROFILE,
@@ -123,14 +136,14 @@ def test_confirm_preflight_requires_exactly_one_reference(
     attachment_id: str | None,
 ) -> None:
     with pytest.raises(typer.BadParameter):
-        _require_exact_evidence_reference(evidence_id, attachment_id)
+        require_exact_evidence_reference(evidence_id, attachment_id)
 
 
 def test_confirm_payload_keeps_canonical_invoice_review_digests_and_provenance() -> None:
-    projection = _projection()
+    projection = ledger_evidence_confirm_cli_projection()
 
     result = EvidenceConfirmResult.model_validate(
-        _evidence_confirm_payload(bucket_id=str(_PROFILE), projection=projection),
+        evidence_confirm_payload(bucket_id=str(_PROFILE), projection=projection),
     )
 
     assert result.evidence_id == _EVIDENCE_ID

@@ -30,9 +30,9 @@ from __future__ import annotations
 import secrets
 from typing import Final, Self
 
-from ....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .custody.zeroise import zeroise as _zeroise
-from .errors import storage_validation_error as _storage_validation_error
+from ....core.external_constants import UTF_8_ENCODING
+from .custody.zeroise import zeroise
+from .errors import storage_validation_error
 
 RECOVERY_CODE_ALPHABET: Final[str] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 RECOVERY_CODE_GROUP_LENGTH: Final[int] = 5
@@ -66,13 +66,13 @@ class RecoveryKey:
             StorageValidationError: If the code is not in canonical form.
         """
         if code != format_recovery_code(normalise_recovery_code(code)):
-            raise _storage_validation_error("recovery code must be in canonical grouped form")
-        self._code_buffer = bytearray(code.encode(_UTF_8_ENCODING))
+            raise storage_validation_error("recovery code must be in canonical grouped form")
+        self._code_buffer = bytearray(code.encode(UTF_8_ENCODING))
 
     @property
     def code(self) -> str:
         """Return the canonical grouped code, decoded from its wipeable buffer."""
-        return self._code_buffer.decode(_UTF_8_ENCODING)
+        return self._code_buffer.decode(UTF_8_ENCODING)
 
     def wipe(self) -> None:
         """Overwrite the code buffer with zero bytes.
@@ -80,7 +80,7 @@ class RecoveryKey:
         Idempotent: wiping an already-wiped key is a no-op that leaves the
         buffer zeroed and its length unchanged.
         """
-        _zeroise(self._code_buffer)
+        zeroise(self._code_buffer)
 
     def __enter__(self) -> Self:
         """Return this key, so a ``with`` block bounds the secret's lifetime."""
@@ -103,18 +103,18 @@ def normalise_recovery_code(text: str) -> str:
     """
     symbols = "".join(character for character in text.upper() if character not in _IGNORED_INPUT_CHARACTERS)
     if len(symbols) != RECOVERY_CODE_SYMBOL_COUNT:
-        raise _storage_validation_error(
+        raise storage_validation_error(
             f"recovery code must contain exactly {RECOVERY_CODE_SYMBOL_COUNT} symbols; got {len(symbols)}",
         )
     if any(character not in _ALPHABET_SET for character in symbols):
-        raise _storage_validation_error("recovery code contains a character outside its alphabet")
+        raise storage_validation_error("recovery code contains a character outside its alphabet")
     return symbols
 
 
 def format_recovery_code(symbols: str) -> str:
     """Render a bare symbol run in the canonical hyphen-grouped form."""
     if len(symbols) != RECOVERY_CODE_SYMBOL_COUNT or any(character not in _ALPHABET_SET for character in symbols):
-        raise _storage_validation_error("recovery code symbols are not a complete alphabet run")
+        raise storage_validation_error("recovery code symbols are not a complete alphabet run")
     groups = (
         symbols[index : index + RECOVERY_CODE_GROUP_LENGTH]
         for index in range(0, RECOVERY_CODE_SYMBOL_COUNT, RECOVERY_CODE_GROUP_LENGTH)

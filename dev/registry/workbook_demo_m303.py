@@ -9,7 +9,10 @@ No taxpayer profile is read and no registry generation is published here.
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from cadrumo.application.aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
+from cadrumo.application.aggregation.m303_arrivals import (
+    M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
+)
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (
     FilingElectionFacts,
@@ -137,7 +140,9 @@ def m303_demonstration_facts(snapshot: RegistrySnapshot) -> tuple[CalculationRev
             supplier_regime=M303SupplierRegimeArrival(
                 period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
             ),
-            prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
+            prorrata_transition=resolve_m303_prorrata_transition_arrival(
+                period=period, prorrata_register=prorrata, operation=operation
+            ),
             prorrata_register=prorrata,
             differentiated_contributions=(),
             bienes_register=bienes,

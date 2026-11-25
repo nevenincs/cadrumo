@@ -54,8 +54,8 @@ class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]
             "application.modelo.lifecycle.export",
         )
         yield localized(
-            Button(tr("tui.modelo.workbench.editor.cancel"), id="reconciliation-export-cancel"),
-            "tui.modelo.workbench.editor.cancel",
+            Button(tr("workspace.modelo.editor.cancel"), id="reconciliation-export-cancel"),
+            "workspace.modelo.editor.cancel",
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

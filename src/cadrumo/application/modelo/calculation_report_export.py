@@ -29,7 +29,7 @@ the optional ``pdf`` extra is absent, or when the surface supplies no writer.
 See Also:
     :func:`~cadrumo.application.modelo.export.load_exportable_revision_target`:
         The shared revision lookup.
-    :func:`~cadrumo.application.modelo.export.require_exportable_revision_state`:
+    :func:`~cadrumo.application.modelo.export_preparation.require_exportable_revision_state`:
         The shared sealed-revision rule.
     :class:`~cadrumo.application.modelo.export_sink.LocalFileExportSink`:
         The one place export bytes land on a local path.
@@ -37,6 +37,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -50,11 +51,12 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.credit_resolution import CreditResolutionRecord
 from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
@@ -62,6 +64,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..export.errors import ExportFormatError
 from ..filing.runtime import build_runtime_schema_provider
+from .calculation_note_gate import require_work_unit_calculation_screen_current
 from .calculation_report import ModeloCalculationReport, build_modelo_calculation_report
 from .calculation_report_document import (
     CalculationReportDocument,
@@ -70,15 +73,15 @@ from .calculation_report_document import (
     serialize_calculation_report,
 )
 from .calculation_report_provenance_key import derive_calculation_report_provenance_key
-from .export import (
-    ModeloExportNoActiveBucketError,
-    envelope_stamped_software_identity,
-    load_exportable_revision_target,
-    require_exportable_revision_state,
-)
+from .credit_resolution import applied_credit_resolutions, load_credit_resolutions
+from .export import load_exportable_revision_target
+from .export_contracts import ModeloExportNoActiveBucketError
 from .export_ports import ModeloExportPorts
+from .export_preparation import envelope_stamped_software_identity, require_exportable_revision_state
 from .export_sink import LocalFileExportReceipt, LocalFileExportSink
+from .lifecycle_view_refusal_doors import no_active_profile_verdict, profile_facts_verdict
 from .profile_export_binding import resolve_export_identity
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package_signing import ensure_review_package_signing_keypair
 from .work_review import build_modelo_work_review_casillas
 
@@ -238,12 +241,14 @@ def _taxpayer_identity(*, active_bucket_id: str, operation: PinnedAuthorityOpera
         raise ModeloCalculationReportTaxpayerUnknownError(
             translated_message="application.modelo.errors.calculation_report_taxpayer_unknown",
             context={"bucket_id": active_bucket_id},
+            precondition_verdict=profile_facts_verdict(("identity.tax_id", "identity.legal_name")),
         )
     presenter, taxpayer = identity
     if taxpayer.full_name is None:
         raise ModeloCalculationReportTaxpayerUnknownError(
             translated_message="application.modelo.errors.calculation_report_taxpayer_unknown",
             context={"bucket_id": active_bucket_id},
+            precondition_verdict=profile_facts_verdict(("identity.legal_name",)),
         )
     return presenter.tax_id, taxpayer.full_name
 
@@ -266,7 +271,7 @@ def build_modelo_calculation_report_for_revision(
     published document is rendered from.
 
     Raises:
-        CalculationRevisionStateError: The revision is not sealed.
+        ModeloRevisionNotSealedError: The revision is not sealed.
         ModeloCalculationReportTaxpayerUnknownError: The profile declares no
             usable taxpayer identity.
     """
@@ -276,21 +281,25 @@ def build_modelo_calculation_report_for_revision(
         export_ports=export_ports,
         operation=operation,
     )
-    require_exportable_revision_state(revision)
-    # The same two-step resolution the review assembly performs: select the
-    # revision metadata first so the snapshot is built at the rung of authority
-    # that revision declares, rather than at the strictest rung a modelo filed
-    # on AEAT's own sede would refuse.
-    selected = operation.revision_for_context(
-        str(work_unit.modelo),
-        filing_year=work_unit.period.filing_year,
-        period=work_unit.period.registry_token,
+    require_exportable_revision_state(revision, work_unit=work_unit)
+    # A sealed revision verified before a note was screened is refused as export
+    # refuses it; only a revision already recorded as filed keeps its history.
+    require_work_unit_calculation_screen_current(
+        work_unit=work_unit, revision=revision, action="report", operation=operation
     )
+    # The same resolution the review assembly performs: the snapshot is built at
+    # the rung of authority the selected revision reaches for this year, rather
+    # than at the strictest rung a modelo filed on AEAT's own sede, or a year
+    # carried across from another edition, would refuse.
     snapshot = operation.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.period.filing_year,
         period=work_unit.period.registry_token,
-        grade=selected.effective_authority_grade,
+        grade=operation.reachable_authority_grade(
+            str(work_unit.modelo),
+            filing_year=work_unit.period.filing_year,
+            period=work_unit.period.registry_token,
+        ),
     )
     verification_report_id, verification_outcome = _latest_verification_facts(
         revision,
@@ -323,7 +332,33 @@ def build_modelo_calculation_report_for_revision(
         ),
         report_language=report_language,
         exported_at=exported_at,
+        credit_resolutions=applied_report_resolutions(revision, work_unit, export_ports=export_ports),
     )
+
+
+def applied_report_resolutions(
+    revision: CalculationRevision, work_unit: WorkUnit, *, export_ports: ModeloExportPorts
+) -> tuple[CreditResolutionRecord, ...]:
+    """The acceptances that cover a disagreement of ``revision``, as the report lists them.
+
+    A store that cannot be read is refused when the revision persisted any
+    disagreement: a report that left out an acceptance it could not read would
+    present a figure as unanswered, or as answered, on no evidence.
+
+    Raises:
+        CreditResolutionPersistenceError: The resolutions could not be read.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
+    lookup = load_credit_resolutions(
+        export_ports.credit_resolution,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    if lookup.failure is not None and any(issue.disagreement is not None for issue in revision.source_issues):
+        raise lookup.failure
+    return applied_credit_resolutions(revision, lookup)
 
 
 def export_modelo_calculation_report(
@@ -334,6 +369,7 @@ def export_modelo_calculation_report(
     operation: PinnedAuthorityOperation,
     clock: datetime | None = None,
     pdf_writer: CalculationSummaryPdfWriter | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloCalculationReportResult:
     """Publish one sealed revision's calculation report to the operator's path.
 
@@ -354,6 +390,8 @@ def export_modelo_calculation_report(
             when omitted.
         pdf_writer: The outbound writer that draws a summary PDF. Required for
             the PDF format and ignored by every other.
+        mutation_writer: Optional admission around the file's publication, so
+            an operation journals a possible effect only once a write begins.
 
     Returns:
         :class:`ModeloCalculationReportResult`: The published file's identity and
@@ -375,11 +413,13 @@ def export_modelo_calculation_report(
             raise ExportFormatError(
                 translated_message="errors.refused.refused_export_format",
                 context={"export_format": str(command.document_format)},
+                precondition_verdict=operator_choice_verdict("report_document_format"),
             )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             translated_message="application.modelo.errors.export_no_active_bucket",
+            precondition_verdict=no_active_profile_verdict("report_export_bucket"),
         )
     sink = LocalFileExportSink(path=command.output_path, replace_existing=command.replace_existing)
     sink.require_writable()
@@ -390,7 +430,7 @@ def export_modelo_calculation_report(
         signing_keypair=signing_keypair,
         operation=operation,
         report_language=command.report_language,
-        exported_at=clock or _utc_now(),
+        exported_at=clock or now(),
     )
     document = serialize_calculation_report(
         report,
@@ -410,8 +450,23 @@ def export_modelo_calculation_report(
     return _report_result(
         report=report,
         document=document,
-        receipt=sink.write(document.payload),
+        receipt=_published(sink, document.payload, mutation_writer=mutation_writer),
     )
+
+
+def _published(
+    sink: LocalFileExportSink,
+    payload: bytes,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+) -> LocalFileExportReceipt:
+    """Write the document through the admission, when one is given, and return the landed file's facts."""
+    if mutation_writer is None:
+        return sink.write(payload)
+    receipts: list[LocalFileExportReceipt] = []
+    mutation_writer(lambda: receipts.append(sink.write(payload)))
+    (receipt,) = receipts
+    return receipt
 
 
 def _report_result(
@@ -452,6 +507,7 @@ __all__ = [
     "ModeloCalculationReportCommand",
     "ModeloCalculationReportResult",
     "ModeloCalculationReportTaxpayerUnknownError",
+    "applied_report_resolutions",
     "build_modelo_calculation_report_for_revision",
     "export_modelo_calculation_report",
 ]

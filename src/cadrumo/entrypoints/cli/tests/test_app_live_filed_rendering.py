@@ -16,8 +16,8 @@ from ....application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ....core.period import Period
-from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
 from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
+from ..app_live_rendering import filed_capture_lines, source_filed_capture_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,7 +49,7 @@ def test_live_filed_pull_text_reports_mode_failures_and_evidence_counts() -> Non
         calculation_observation_keys=("303:2026:1T:12345678901234567890",),
     )
 
-    lines = _filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
+    lines = filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
 
     assert "mode=single" in lines
     assert "modelo=303" in lines
@@ -111,7 +111,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         failures=(failure,),
     )
 
-    lines = _filed_capture_lines(
+    lines = filed_capture_lines(
         report,
         mode="bulk",
         modelos=report.modelos,
@@ -158,7 +158,7 @@ def test_live_filed_pull_sources_text_reports_target_period_and_evidence_counts(
         calculation_observation_keys=("130:2026:1T:EXP", "100:2025:0A:EXP"),
     )
 
-    lines = _source_filed_capture_lines(report)
+    lines = source_filed_capture_lines(report)
 
     assert "target_modelo=130" in lines
     assert "target_year=2026" in lines

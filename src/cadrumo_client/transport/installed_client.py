@@ -5,19 +5,26 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Callable
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError
+from pathlib import Path
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 
 from ..contracts.access_vocabulary import AccessScope
 from ..contracts.contracts import ClientHello, RefusalCode, RefusalError
-from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from ..contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    TimeoutDeadline,
+    deadline_after,
+    remaining_budget,
+)
 from .frontend_client import FrontendClient
 from .posix_endpoint import PosixEndpoint
+from .product_version import installed_product_version
 from .startup import LaunchDoor
 from .windows import WindowsEndpoint
 
@@ -58,7 +65,8 @@ async def open_installed_client(
     *,
     profile_id: UUID,
     frontend: OperationFrontendProjection,
-    timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    timeout: float | None = None,
+    timeout_deadline: TimeoutDeadline | None = None,
     scope: AccessScope | None = None,
 ) -> FrontendClient:
     """Connect to the exact running owner through the installed transport.
@@ -68,11 +76,17 @@ async def open_installed_client(
     An absent or untrusted endpoint returns a typed refusal. An optional scope
     narrows a later API-key login on this connection.
     """
+    timeout_deadline = timeout_deadline or (
+        DEFAULT_TIMEOUT_POLICY.deadline() if timeout is None else TimeoutDeadline(deadline_after(timeout))
+    )
+    deadline = timeout_deadline.instant
     try:
-        root = effective_storage_root().resolve(strict=True)
-        product_version = version("cadrumo")
-    except (OSError, PackageNotFoundError):
-        raise RefusalError(RefusalCode.UNAVAILABLE) from None
+        root, product_version, authority_generation = await asyncio.wait_for(
+            asyncio.to_thread(_connection_metadata), timeout=remaining_budget(deadline)
+        )
+    except TimeoutError:
+        raise RefusalError(RefusalCode.TIMEOUT) from None
+    remaining_budget(deadline)
     endpoint = (
         WindowsEndpoint(storage_root=root)
         if sys.platform == "win32"
@@ -86,11 +100,11 @@ async def open_installed_client(
                 lifecycle_notices="v1",
                 product_version=product_version,
                 storage_identity=endpoint.storage_identity,
-                authority_generation=published_authority_generation(),
+                authority_generation=authority_generation,
             ),
         )
         client = await FrontendClient.open(
-            launch, profile_id=profile_id, frontend=frontend, timeout=timeout, scope=scope
+            launch, profile_id=profile_id, frontend=frontend, timeout_deadline=timeout_deadline, scope=scope
         )
     except BaseException as error:
         await _close_owned_resource(endpoint_cleanup, task_name="installed-runtime-endpoint-close", primary_error=error)
@@ -110,6 +124,19 @@ async def open_installed_client(
         )
         raise
     return client
+
+
+def _connection_metadata() -> tuple[Path, str, str | None]:
+    """Read immutable connection inputs off the loop before acquiring native resources."""
+    try:
+        return (
+            effective_storage_root().resolve(strict=True),
+            installed_product_version(),
+            published_authority_generation(),
+        )
+    except (OSError, PackageNotFoundError):
+        # An OS metadata timeout is unavailability, not expiry of the caller's budget.
+        raise RefusalError(RefusalCode.UNAVAILABLE) from None
 
 
 def _retained_cleanup_failures(

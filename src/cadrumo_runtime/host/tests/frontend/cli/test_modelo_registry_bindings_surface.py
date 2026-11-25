@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import sys
 from collections.abc import Iterator, Sequence
@@ -15,11 +16,11 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli as _invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
+from .cli_runner import invoke_cached_cli as cli_runner_invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -28,6 +29,13 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+_M200_INSTALMENT_BINDINGS = tuple(
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
+)
+"""The Modelo 200 relation bindings that read each Modelo 202 instalment under each modalidad."""
 
 _active_native_profile: ContextVar[NativeCliProfileFixture | None] = ContextVar(
     "bindings_surface_native_profile",
@@ -55,25 +63,18 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
         profile.register(
             label="native-bindings-surface",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
                 "identity.surnames": "Example",
                 "activities.description": "design",
                 "censo.activity_start_date": "2025-01-01",
                 "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
     assert profile.label is not None
     close_active_bucket_session()
-    return _invoke_cached_cli(
+    return cli_runner_invoke_cached_cli(
         ("--profile", profile.label, "--profile-secrets-stdin", *args),
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
@@ -141,14 +142,15 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     )
 
     assert json_result.exit_code == 0, json_result.output
-    notices = _notices(json_result.output)
+    notices = unwrap_envelope_notices(json_result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["severity"] == "warning"
     assert notice["context"]["modelo_filter"] == "303"
     assert notice["context"]["year_filter"] == ""
     assert notice["context"]["period_filter"] == ""
     assert notice["context"]["missing_filters"] == "--year, --period"
-    assert "work calculate" in notice["message"]
+    assert "declaration the calculation uses" in notice["message"]
+    assert "work calculate" not in notice["message"]
     assert notice["action"]["action"] == {
         "action_id": "operator.modelo.bindings.list",
         "target_command_key": "modelo.bindings.list",
@@ -187,7 +189,7 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    notices = _notices(result.output)
+    notices = unwrap_envelope_notices(result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["context"]["modelo_filter"] == "303"
     assert notice["context"]["year_filter"] == "2025"
@@ -247,7 +249,9 @@ def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -
 
     assert result.exit_code == 0, result.output
     scope_notices = [
-        notice for notice in _notices(result.output) if notice["code"] == "modelo.bindings.list.unscoped_revision"
+        notice
+        for notice in unwrap_envelope_notices(result.output)
+        if notice["code"] == "modelo.bindings.list.unscoped_revision"
     ]
     assert scope_notices == []
 
@@ -281,20 +285,16 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
-    assert "\tmodelo-200-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
-    assert "\tmodelo-200-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert f"\t{instalment_binding}\trelation_prefill\trelation input\t" in result.output
     assert "relation_guidance\tSome box sources below are fed by relations in the modelo definitions" in result.output
     assert "--relation RELATION_ID=VALUE before calculating." in result.output
-    assert (
-        "relation_input\tmodelo-200-pagos-fraccionados-anuales\t"
-        "fed by relation modelo-200-pagos-fraccionados-anuales\t"
-        "use --relation modelo-200-pagos-fraccionados-anuales=VALUE"
-    ) in result.output
-    assert (
-        "relation_input\tmodelo-200-pagos-fraccionados-anuales-40-2\t"
-        "fed by relation modelo-200-pagos-fraccionados-anuales-40-2\t"
-        "use --relation modelo-200-pagos-fraccionados-anuales-40-2=VALUE"
-    ) in result.output
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert (
+            f"relation_input\t{instalment_binding}\t"
+            f"fed by relation {instalment_binding}\t"
+            f"use --relation {instalment_binding}=VALUE"
+        ) in result.output
 
 
 def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_period() -> None:
@@ -318,10 +318,13 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert one_p.exit_code == 0, one_p.output
-    # The first installment has no earlier installment to relate to; only the
-    # taxpayer's prior-twelve-month turnover, an input every year requires, is missing.
-    assert "binding_count\t1" in one_p.output
+    # The first installment has no earlier installment to relate to. What is missing
+    # is the taxpayer's prior-twelve-month turnover, an input every year requires, and
+    # the art. 40.2 base, which reads the Modelo 200 of an earlier periodo impositivo
+    # rather than an earlier installment.
+    assert "binding_count\t2" in one_p.output
     assert "modelo-202-incn-prior-12-months" in one_p.output
+    assert "relation_input\tmodelo-202-cuota-base-ejercicio-anterior\t" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(
@@ -368,8 +371,16 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
 
     two_p_snapshot = published_snapshot("202", filing_year=2024, period="2P")
     three_p_snapshot = published_snapshot("202", filing_year=2024, period="3P")
-    ((_, two_p_provider),) = relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
-    ((_, three_p_provider),) = relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+    (two_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
+    (three_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
     assert two_p_provider.required_period_anchors_for_target("2P") == ((0, "1P"),)
     assert three_p_provider.required_period_anchors_for_target("3P") == ((0, "1P"), (0, "2P"))
 
@@ -397,7 +408,7 @@ def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tFalse" in result.output
     assert "relation_guidance\t" not in result.output
-    assert "relation_input\tmodelo-200-pagos-fraccionados-anuales" not in result.output
+    assert "relation_input\tmodelo-200-pago-fraccionado-" not in result.output
 
 
 def test_bindings_resolve_echoes_override_for_known_key() -> None:
@@ -444,7 +455,7 @@ def test_bindings_resolve_echoes_override_for_known_key() -> None:
         ],
     )
     assert json_result.exit_code == 0, json_result.output
-    payload = _payload(json_result.output)
+    payload = unwrap_schema_envelope(json_result.output)
     row = next(item for item in payload["bindings"] if item["binding_id"] == "modelo-303-iva-repercutido-general-cuota")
     assert row["override"] == "1234.56"
 
@@ -471,7 +482,9 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
         ],
     )
     assert listed.exit_code == 0, listed.output
-    relation_rows = [row for row in _payload(listed.output)["bindings"] if row["source"] == "relation_prefill"]
+    relation_rows = [
+        row for row in unwrap_schema_envelope(listed.output)["bindings"] if row["source"] == "relation_prefill"
+    ]
     assert relation_rows
     assert {row["readiness"] for row in relation_rows} == {"entrada de relación"}
 
@@ -494,7 +507,9 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
         ],
     )
     assert resolved.exit_code == 0, resolved.output
-    ledger_rows = [row for row in _payload(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"]
+    ledger_rows = [
+        row for row in unwrap_schema_envelope(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"
+    ]
     assert ledger_rows
     assert {row["readiness"] for row in ledger_rows} == {"datos de tus registros"}
 
@@ -552,15 +567,22 @@ def test_bindings_resolve_rejects_malformed_override_syntax() -> None:
 
 
 def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
-    """The canonical ``bindings`` sub-Typer registration lives in
-    ``_modelo.py``. Any other module that re-implements a Typer
-    named ``bindings`` competes with the canonical surface and must
-    be removed."""
+    """Declarative bindings leaves admit no parallel imperative Typer registration."""
 
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+    from cadrumo.entrypoints.cli.modelo_discovery_commands import bindings_list, bindings_resolve
     from cadrumo.tests.inventory import REPO_ROOT
 
     cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
-    canonical = cli_root / "_modelo.py"
+    expected_handlers = {"list": bindings_list, "resolve": bindings_resolve}
+    bindings_leaves = COMMAND_GRAPH.children(
+        COMMAND_GRAPH.resolve_path((COMMAND_GRAPH.root().token, "app", "modelo", "bindings")).key
+    )
+    assert {spec.token for spec in bindings_leaves} == set(expected_handlers)
+    for spec in bindings_leaves:
+        assert spec.handler is not None and spec.handler.target is not None
+        handler = expected_handlers[spec.token]
+        assert spec.handler.target.identity == f"{handler.__module__}:{handler.__qualname__}"
     forbidden_patterns = (
         'typer.Typer(\n    name="bindings"',
         'typer.Typer(name="bindings"',
@@ -568,8 +590,6 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     offenders: list[Path] = []
     scanned = 0
     for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
-        if py_file == canonical:
-            continue
         if py_file.name.startswith("test_"):
             continue
         scanned += 1
@@ -581,7 +601,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
         "package relocation or rename), so an empty offender list would mean 'nothing was "
         "checked' rather than 'nothing is wrong'"
     )
-    assert offenders == [], f"Parallel bindings Typer outside the canonical _modelo.py: {[str(p) for p in offenders]}"
+    assert offenders == [], f"Parallel imperative bindings Typer: {[str(p) for p in offenders]}"
 
 
 def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
@@ -592,9 +612,11 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     any bucket-event emission call. If a future change wires one
     in by accident, this test fails fast."""
 
-    from cadrumo.tests.inventory import REPO_ROOT
+    from cadrumo.entrypoints.cli.modelo_discovery_commands import bindings_list, bindings_resolve
 
-    canonical_text = (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
+    canonical = inspect.getmodule(bindings_list)
+    assert canonical is not None and inspect.getmodule(bindings_resolve) is canonical
+    canonical_text = inspect.getsource(canonical)
     forbidden_emitters = (
         "emit_bucket_event",
         "emit_modelo_bucket_event",
@@ -604,7 +626,7 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     for needle in forbidden_emitters:
         assert needle not in canonical_text, (
             f"Forbidden bucket-event emission pattern {needle!r} found in "
-            "_modelo.py; bindings list/resolve must remain read-only."
+            f"{canonical.__name__}; bindings list/resolve must remain read-only."
         )
 
 
@@ -665,7 +687,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     bindings = payload["bindings"]
     assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
     snapshot = published_snapshot("100", filing_year=2025, period="0A")
@@ -695,8 +717,8 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         assert row["source_refs"], f"binding {row['binding_id']!r} must carry registry source_refs"
 
 
-def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> None:
-    """An operator's suffered salary withholding is discoverable as a public binding."""
+def test_bindings_list_exposes_m100_suffered_work_withholding_as_a_payer_record_source() -> None:
+    """The suffered salary withholding is discoverable as a public binding the payer records supply."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -714,12 +736,13 @@ def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> No
         ],
     )
     assert result.exit_code == 0, result.output
-    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
-    row = rows["renta-certificado-trabajo-retenciones"]
-    assert row["source"] == "manual_input"
+    rows = {row["binding_id"]: row for row in unwrap_schema_envelope(result.output)["bindings"]}
+    row = rows["renta-retencion-soportada-trabajo"]
+    assert row["source"] == "retencion_soportada"
     assert row["input_channel"] == "decimal"
-    assert "ley-35-2006:art-101" in row["legal_refs"]
-    assert "aeat-dr-100-2024-dictionary" in row["source_refs"]
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-108"} <= set(row["legal_refs"])
+    assert "boe-rirpf-art-108-3-certificado-retenciones" in row["source_refs"]
+    assert "renta-certificado-trabajo-retenciones" not in rows
 
 
 def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() -> None:
@@ -741,7 +764,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     scope = ["--modelo", "200", "--year", "2025", "--period", "0A"]
     result = _invoke_in_english(["--format", "json", "app", "modelo", "bindings", "list", *scope])
     assert result.exit_code == 0, result.output
-    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
+    rows = {row["binding_id"]: row for row in unwrap_schema_envelope(result.output)["bindings"]}
 
     # Cross-check against the authoritative snapshot: every relation-prefill
     # binding's own id must surface as its relation input on the listed row.
@@ -760,7 +783,8 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
         assert rows[binding_id]["readiness"] == "relation input"
 
     # The specific M202 pagos-fraccionados fold-ins from the audit are present.
-    assert "modelo-200-pagos-fraccionados-anuales" in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert instalment_binding in rows[instalment_binding]["relation_inputs"]
 
     # A non-relation-fed binding carries an empty relation_inputs tuple.
     non_relation = [r for r in rows.values() if r["source"] != "relation_prefill"]

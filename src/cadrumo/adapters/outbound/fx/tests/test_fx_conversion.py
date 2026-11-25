@@ -29,7 +29,6 @@ inversion and rounding are computed here.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -42,10 +41,10 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.tests.fx_conversion_support import USD_AMOUNT, usd_raw
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.transactions.enums import TransactionDirection
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
@@ -63,44 +62,24 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 # ECB EXR.D.USD.EUR.SP00.A, 2024-01-15: OBS_VALUE = 1.0945 (1 EUR = 1.0945 USD).
 # Provider contract (original * rate = eur_amount) needs the inverse:
 #   1 USD = 1/1.0945 EUR = 0.913659... EUR
-_ECB_2024_01_15_USD_QUOTE = Decimal("1.0945")
-_ECB_2024_01_15_USD_RATE = Decimal("1") / _ECB_2024_01_15_USD_QUOTE
+# The row the fixture imports carries its own booking date; the quote is published for that day.
+_TRANSACTION_DAY = usd_raw("quote-day").booked_date
+_ECB_USD_QUOTE = Decimal("1.0945")
+_ECB_USD_RATE = Decimal("1") / _ECB_USD_QUOTE
 
 # Oracle: 100.00 USD * (1 / 1.0945) = 91.365920... -> rounded half-even 0.01 = 91.37 EUR
-_USD_AMOUNT = Decimal("100.00")
-_EXPECTED_EUR = (_USD_AMOUNT * _ECB_2024_01_15_USD_RATE).quantize(Decimal("0.01"))
+_EXPECTED_EUR = (USD_AMOUNT * _ECB_USD_RATE).quantize(Decimal("0.01"))
 assert Decimal("91.37") == _EXPECTED_EUR, f"Oracle mismatch: {_EXPECTED_EUR}"
 
 
-def _ecb_provider(*, usd_quote: Decimal | None = _ECB_2024_01_15_USD_QUOTE) -> EcbReferenceRateProvider:
-    quotes = {} if usd_quote is None else {"USD": {date(2024, 1, 15): usd_quote}}
+def _ecb_provider(*, usd_quote: Decimal | None = _ECB_USD_QUOTE) -> EcbReferenceRateProvider:
+    quotes = {} if usd_quote is None else {"USD": {_TRANSACTION_DAY: usd_quote}}
     return EcbReferenceRateProvider(fetch=ecb_csv_fetch(quotes))
 
 
-def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2024, 1, 15),
-        value_date=date(2024, 1, 15),
-        amount=amount,
-        currency="USD",
-        counterparty="Acme Corp",
-        description=f"USD invoice {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 1, 16, 9, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Reference": provider_id},
-    )
-
-
-def _usd_parsed(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> ParsedLedgerRow:
+def _usd_parsed(provider_id: str, *, amount: Decimal = USD_AMOUNT) -> ParsedLedgerRow:
     """Wrap a USD magnitude row with an explicit OUTGOING direction."""
-    return ParsedLedgerRow(raw=_usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
+    return ParsedLedgerRow(raw=usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
 
 
 def test_usd_import_populates_fx_rate_and_value_in_eur(
@@ -132,7 +111,7 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
     tx = transactions[0]
 
     assert tx.raw.currency == "USD"
-    assert tx.fx_rate == _ECB_2024_01_15_USD_RATE
+    assert tx.fx_rate == _ECB_USD_RATE
     assert tx.value_in_eur == _EXPECTED_EUR
 
 
@@ -180,7 +159,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
 
     # Use a deliberately different ECB quote to produce a different EUR value.
     mutant_normalizer = CurrencyNormalizationService(
-        rate_provider=_ecb_provider(usd_quote=_ECB_2024_01_15_USD_QUOTE * Decimal("2")),
+        rate_provider=_ecb_provider(usd_quote=_ECB_USD_QUOTE * Decimal("2")),
     )
 
     repo_canonical = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)

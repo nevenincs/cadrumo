@@ -14,6 +14,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from ..calculations.observations_repository import ObservationSourceKind
 from ..operations.public_period import PublicPeriod
@@ -65,7 +66,7 @@ class ModeloLocalObservationMutationRequest(BaseModel):
 
     profile_id: UUID
     action: Literal["record", "clear"]
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     casilla_values: _CasillaValues = ()
     actor: ModeloActorLabel | None = None
@@ -92,7 +93,7 @@ class ModeloLocalObservationMutationProjection(BaseModel):
     result_version: Literal[1] = 1
     profile_id: UUID
     action: Literal["recorded", "cleared"]
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     revision_id: RevisionId | None = None
     observation_key: Annotated[str, Field(min_length=1, max_length=256)]

@@ -14,9 +14,11 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.modelos.calculation_revision import CalculationSourceIssue
-from ...aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceDiagnosticReason
-from ..calculation_actions import _unrouted_source_issues
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ...aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
+from ..bucket_unrouted_source_issues import unrouted_source_issues
 from ..printed_boxes import snapshot_printed_boxes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,8 +28,8 @@ def _project(
     operation: PinnedAuthorityOperation, diagnostics: tuple[CalculationSourceDiagnostic, ...]
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project diagnostics against the Modelo 130 first-quarter revision, whose box 01 the form prints."""
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
-    return _unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
+    snapshot = operation.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
+    return unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
 
 
 def _diagnostic(reason: CalculationSourceDiagnosticReason, message: str) -> CalculationSourceDiagnostic:
@@ -120,6 +122,7 @@ def test_a_diagnostic_with_no_binding_source_is_not_persisted(operation: PinnedA
         "unsupported_iva_rate",
         "missing_deduction_classification",
         "cuota_on_zero_rated_row",
+        "cuota_disagrees_with_rate",
         "non_zero_rate_on_zero_cuota_category",
         "non_arising_category_for_invoice_side",
         "missing_counterparty_identification_state",
@@ -230,7 +233,7 @@ def test_a_printed_box_whose_source_produced_nothing_persists_with_its_box(opera
 
 def test_a_working_figure_whose_source_produced_nothing_does_not_persist(operation: PinnedAuthorityOperation) -> None:
     """Teeth for the rule above: the same condition on a box the form does not print is not a filed figure."""
-    revision = operation.snapshot("130", filing_year=2026, period="1T").revision
+    revision = operation.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
     unprinted = next(
         str(casilla.id) for casilla in revision.casillas if casilla.form_number is None and not casilla.number.isdigit()
     )

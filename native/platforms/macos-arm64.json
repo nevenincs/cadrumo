@@ -35,6 +35,7 @@
       "artifact": "CADRUMO_DESKTOP_HOST_EXECUTABLE",
       "desktop": true,
       "signed": true,
+      "entitlements": "native/platforms/macos-desktop.entitlements",
       "version_arguments": [
         "--headless",
         "--",
@@ -53,6 +54,11 @@
       ]
     }
   ],
+  "application_bundle": {
+    "executable_directory": "Contents/MacOS",
+    "resources": "Contents/Resources",
+    "payload": "Contents/Resources/app"
+  },
   "files": {
     "development_executable": "python_d",
     "path_file": "lib/cadrumo/python.pth",
@@ -113,6 +119,13 @@
     "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
     "/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync",
     "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
-    "/usr/lib/libobjc.A.dylib"
+    "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+    "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+    "/System/Library/Frameworks/ServiceManagement.framework/Versions/A/ServiceManagement",
+    "/usr/lib/libobjc.A.dylib",
+    "/usr/lib/librdma.dylib",
+    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit"
   ]
 }

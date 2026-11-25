@@ -23,13 +23,13 @@ from ..counterparty_establishment import (
     confirm_counterparty_establishment,
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from ._ledger_value_fixtures import repository
+from .ledger_value_fixtures import repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 __all__ = ["repository"]
 
 _BUCKET = "99999999-9999-4999-8999-999999999999"
-_IDENTIFIER = "B12345674"
+_IDENTIFIER = "B00015016"
 
 
 def test_a_first_confirmation_reports_that_it_recorded(

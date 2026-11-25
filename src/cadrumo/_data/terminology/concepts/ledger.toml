@@ -14,8 +14,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El registro de movimientos de dinero dentro de la aplicacion, del que se nutren los calculos."
-definition = "El registro de movimientos economicos dentro de la aplicacion. La persona importa sus transacciones al ledger y clasifica cada una a efectos fiscales, de modo que las reglas de calculo puedan determinar que entrada alimenta cada casilla de un modelo."
+short_description = "El registro de movimientos de dinero dentro de la aplicación, del que se nutren los cálculos."
+definition = "El registro de movimientos económicos dentro de la aplicación. La persona importa sus transacciones al ledger y clasifica cada una a efectos fiscales, de modo que las reglas de calculo puedan determinar que entrada alimenta cada casilla de un modelo."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; concepto interno del producto."

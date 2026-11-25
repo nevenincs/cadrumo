@@ -4,20 +4,22 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal, cast
+from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
+from ..calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_default_token,
     descendant_relacion_entitling_tokens,
 )
+from ..calculations.registry.tax_id_format import spanish_tax_id_width_in_scope
 from .errors import ProfileValidationError
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -25,19 +27,20 @@ from .family_types import (
     MinimoDescendientesThresholds,
     coerce_iso_date_field,
 )
+from .household_person_name import require_household_person_name
 
 
 class DescendantRecordFields(BaseModel):
     """Canonical field vocabulary shared by domain records and projections."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     birth_date: date
     relacion: DescendantRelacion = Field(default_factory=descendant_relacion_default_token)
     inscripcion_registro_civil_date: date | None = None
     acogimiento_resolucion_date: date | None = None
     death_date: date | None = None
-    discapacidad_grado: Literal[0, 33, 65] | None = None
+    discapacidad_grado: int | None = None
     convive_con_contribuyente: bool = True
     dependencia_economica: bool | None = None
     custodia_compartida: bool = False
@@ -49,7 +52,23 @@ class DescendantRecordFields(BaseModel):
     segundo_ciclo_infantil_inicio_mes: CalendarMonth | None = None
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
+    cotizaciones_ss_madre_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     nif: str | None = None
+    apellidos_nombre: str | None = None
+
+    @field_validator("discapacidad_grado")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_governed_disability_grade(cls, value: int | None) -> int | None:
+        if value is not None and value not in accepted_descendant_disability_grades():
+            raise ValueError("discapacidad_grado must be a grade the governed catalogue accepts")
+        return value
+
+    @field_validator("apellidos_nombre")
+    @classmethod
+    @pydantic_validation_boundary
+    def _collapse_apellidos_nombre(cls, value: str | None) -> str | None:
+        return require_household_person_name(value)
 
 
 class DescendantRecordBase(DescendantRecordFields):
@@ -93,7 +112,7 @@ class DescendantRecordBase(DescendantRecordFields):
         in total, not six. A temporal placement is not entitling and therefore
         has no truthful value for this field.
     discapacidad_grado
-        0 = sin discapacidad, 33 = grado ≥ 33 % < 65 %, 65 = grado ≥ 65 %.
+        One of the grades the governed descendant disability catalogue accepts.
         A disabled descendant remains mínimo-eligible regardless of age.
     convive_con_contribuyente
         Whether the descendant cohabits with the taxpayer (Art. 58.1 condition).
@@ -185,6 +204,14 @@ class DescendantRecordBase(DescendantRecordFields):
         ``gastos_guarderia_euros`` for one child — declaring both is refused
         rather than reconciled, so a descendant always has exactly one spend
         authority.
+    cotizaciones_ss_madre_euros
+        The mother's cotizaciones y cuotas totales a la Seguridad Social y
+        Mutualidades devengadas in the period after this child's birth, as the
+        statement of the filing year the other maternity leaves describe
+        (Art. 81.2 LIRPF as in force until the Ley 31/2022 reform, which bounded
+        the guardería increment of each child by it). ``None`` is "never stated",
+        which is not zero: the limit it feeds is refused rather than applied to a
+        figure nobody gave. Only the editions whose binding names the limited increment read it.
     death_date
         The date this descendant died, or ``None`` (the default) for a
         descendant who did not die. Art. 61 norma 4ª LIRPF turns on this fact
@@ -216,6 +243,9 @@ class DescendantRecordBase(DescendantRecordFields):
         all — see :meth:`meets_non_income_conditions`.
     nif
         Optional NIF/NIE; validated for shape when present.
+    apellidos_nombre
+        Optional surnames and name, surnames first, whitespace collapsed; held to the
+        design's length inside an authority scope.
     """
 
     @field_validator(
@@ -502,8 +532,9 @@ class DescendantRecordBase(DescendantRecordFields):
         stripped = value.strip().upper()
         if not stripped:
             raise ProfileValidationError("nif must not be blank when provided")
-        if len(stripped) not in (9,):
-            raise ProfileValidationError(f"nif must be 9 characters, got {len(stripped)!r} for {value!r}")
+        width = spanish_tax_id_width_in_scope()
+        if width is not None and len(stripped) != width:
+            raise ProfileValidationError(f"nif must be {width} characters, got {len(stripped)!r} for {value!r}")
         return stripped
 
     def age_at_year_end(self, filing_year: int) -> int:

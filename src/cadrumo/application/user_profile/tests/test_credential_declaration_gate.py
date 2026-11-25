@@ -36,7 +36,7 @@ which covers what, because no one of them covers all of it:
 * The known credential set is pinned by name in the auth schema shape
   tests, as a set equality -- stronger than any heuristic where it
   applies. It catches a downgrade of either contraste field, and a
-  spurious upgrade of ``auth.provider`` or ``auth.dni_nie``. It cannot
+  spurious upgrade of ``auth.provider``. It cannot
   catch a field ADDED to the section, because adding one leaves that set
   equal.
 * That addition is what this gate catches, on either kind of evidence,
@@ -89,7 +89,7 @@ declares ``IDENTITY`` rather than ``SECRET``.
 
 Sharing one constant across both questions would have flagged twelve correctly
 declared identity and financial fields the moment the masking side widened --
-``identity.tax_id``, ``auth.dni_nie``, ``renta_spouse.tax_id``, the representante
+``identity.tax_id``, ``renta_spouse.tax_id``, the representante
 NIFs -- and would have re-presumed ``auth.provider`` a credential on the word
 ``certificate`` in its description, which is precisely the prose-driven
 misclassification ``_overview`` documents having already fixed once.
@@ -118,21 +118,6 @@ passes silently, which is the failure this module is built to prevent.
 """
 
 _EXEMPT: Final[Mapping[str, str]] = {
-    "auth.dni_nie": (
-        "In the auth section, and correctly so: every Cl@ve mode reads it. But it NAMES "
-        "the taxpayer rather than authenticating them, and the section presumption cannot "
-        "tell those apart. It carries the same identifier as identity.tax_id -- the two "
-        "are compared at live authentication and the session is refused when they diverge "
-        "-- which renders in the clear one section above, so classing this copy secret "
-        "concealed a value already on the same screen. What actually authenticates is the "
-        "contraste (numero_soporte / fecha_validez, both still secret) plus a Cl@ve PIN or "
-        "app this profile never stores; someone holding a DNI/NIE and nothing else gains no "
-        "capability. The classes themselves say so: SECRET is declared for 'long-lived "
-        "authentication material' while IDENTITY names the NIF explicitly, and classing "
-        "this field secret dropped nif-hash -- the one rule that hashes a NIF -- from the "
-        "policy resolved for it. This is a permanent member of the section rather than a "
-        "case awaiting reclassification."
-    ),
     "auth.provider": (
         "In the auth section, and correctly so: it selects the authentication mode and "
         "decides which of the other auth fields are required. But it holds WHICH method "
@@ -275,6 +260,24 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "sentence a reader needs to know the field is conditional, so the reference stays and "
         "the field is exempted here. It is identity-class rather than secret for the same "
         "reason the tax identifier is: it names a party rather than authenticating one."
+    ),
+    "m200_secretario_consejo.apellidos_y_nombre": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows."
+    ),
+    "m200_secretario_consejo.nif": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows."
+    ),
+    "m200_relaciones.has_secretario_consejo": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows. The field only states whether the entity has one."
     ),
 }
 """Fields whose credential-shaped wording is a false positive.

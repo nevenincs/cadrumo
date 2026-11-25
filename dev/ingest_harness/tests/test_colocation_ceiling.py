@@ -21,12 +21,12 @@ import pytest
 
 from cadrumo.application.ledger.party_colocation import party_regions
 
-from .._colocation_ceiling import (
+from ..colocation_ceiling import (
     CeilingOutcome,
-    _draft,
-    _transcription,
     colocation_ceiling,
     documents_with_authored_transcription,
+    draft,
+    transcription,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -38,10 +38,10 @@ _STACKED = "\n".join(
         "FACTURA",
         "EMISOR",
         "Suministros Iberia SA",
-        "NIF A22633036",
+        "NIF A00010041",
         "DESTINATARIO / CLIENTE",
         "Lucia Fernandez Ortega",
-        "NIF 45678912S",
+        "NIF 00001001N",
         "TOTAL 815,16 EUR",
     ),
 )
@@ -54,7 +54,7 @@ _TWO_COLUMN = "\n".join(
         "FACTURA",
         "EMISOR  DESTINATARIO / CLIENTE",
         "Suministros Iberia SA  Lucia Fernandez Ortega",
-        "NIF A22633036  NIF 45678912S",
+        "NIF A00010041  NIF 00001001N",
         "TOTAL 815,16 EUR",
     ),
 )
@@ -75,8 +75,8 @@ def test_the_instrument_partitions_a_stacked_header() -> None:
     figure to carry any information at all.
     """
     regions = party_regions(
-        draft=_draft("EMISOR", "DESTINATARIO / CLIENTE"),
-        transcription=_transcription(_STACKED),
+        draft=draft("EMISOR", "DESTINATARIO / CLIENTE"),
+        transcription=transcription(_STACKED),
     )
 
     assert regions, "the instrument cannot partition even a stacked header"
@@ -91,7 +91,7 @@ def test_the_instrument_partitions_a_gutter_separated_two_column_header() -> Non
     it as unpartitionable would report a ceiling the product does not have.
     """
     assert (
-        len(party_regions(draft=_draft("EMISOR", "DESTINATARIO / CLIENTE"), transcription=_transcription(_TWO_COLUMN)))
+        len(party_regions(draft=draft("EMISOR", "DESTINATARIO / CLIENTE"), transcription=transcription(_TWO_COLUMN)))
         == 2
     )
     # And the names partition the same way, so a reader quoting names instead of
@@ -99,8 +99,8 @@ def test_the_instrument_partitions_a_gutter_separated_two_column_header() -> Non
     assert (
         len(
             party_regions(
-                draft=_draft("Suministros Iberia SA", "Lucia Fernandez Ortega"),
-                transcription=_transcription(_TWO_COLUMN),
+                draft=draft("Suministros Iberia SA", "Lucia Fernandez Ortega"),
+                transcription=transcription(_TWO_COLUMN),
             ),
         )
         == 2
@@ -116,8 +116,8 @@ def test_the_instrument_refuses_a_header_whose_gutter_was_flattened() -> None:
     ceiling is about.
     """
     assert not party_regions(
-        draft=_draft("EMISOR", "DESTINATARIO / CLIENTE"),
-        transcription=_transcription(_FLATTENED_TWO_COLUMN),
+        draft=draft("EMISOR", "DESTINATARIO / CLIENTE"),
+        transcription=transcription(_FLATTENED_TWO_COLUMN),
     )
 
 

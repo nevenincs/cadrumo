@@ -10,10 +10,10 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .casilla_lineage_seed_absence import classify_absence
-from .casilla_lineage_seed_chain_state import _ChainState
+from .casilla_lineage_seed_chain_state import ChainState
 from .casilla_lineage_seed_chain_writing import write_chain
-from .casilla_lineage_seed_design import DesignInventory, DesignOracle, _design_trust
-from .casilla_lineage_seed_rules import _PARTIAL_STAMP, admit_bare_chain, positional_hold
+from .casilla_lineage_seed_design import DesignInventory, DesignOracle, design_trust
+from .casilla_lineage_seed_rules import PARTIAL_STAMP, admit_bare_chain, positional_hold
 from .casilla_lineage_seed_ruling_application import apply_ruling
 from .casilla_lineage_seed_types import LineagePlan, LineageRefusalCategory, Ruling
 
@@ -28,7 +28,7 @@ class _PlannerContext(Protocol):
     oracle: DesignOracle
     plan: LineagePlan
     rulings: dict[_Pair, Ruling]
-    state: _ChainState
+    state: ChainState
 
     def _already_disposed(self, casilla: CasillaDefinition) -> bool: ...
 
@@ -86,7 +86,7 @@ def _prepare_pair(
         previous_by_id={casilla.id: casilla for casilla in previous.casillas},
         previous_design=previous_design,
         successor_design=successor_design,
-        design_trust=_design_trust(previous, successor, previous_design, successor_design),
+        design_trust=design_trust(previous, successor, previous_design, successor_design),
         prior_chains=planner.state.ids_in(previous.id),
     )
 
@@ -174,7 +174,7 @@ def _judge_continuation(
             successor,
             casilla,
             LineageRefusalCategory.PARTIAL_STAMP,
-            _PARTIAL_STAMP,
+            PARTIAL_STAMP,
             candidate,
         )
         return

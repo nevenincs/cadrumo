@@ -10,7 +10,7 @@ from textual.widgets import Button, Static
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.i18n.render import tr
 
-from . import automation_requester_contracts as _contracts
+from . import automation_requester_contracts
 
 if TYPE_CHECKING:
     from .automation_requester import RuntimeAutomationRequesterScreen
@@ -45,7 +45,7 @@ class RequesterPresentationMixin:
         self.query_one("#automation-request-close", Button).disabled = False
 
     @staticmethod
-    def _outcome_label(outcome: _contracts.AutomationRequestOutcome) -> str:
+    def _outcome_label(outcome: automation_requester_contracts.AutomationRequestOutcome) -> str:
         if outcome.uncertain:
             return "uncertain"
         if outcome.stage is EnrollmentStage.COMPLETE:

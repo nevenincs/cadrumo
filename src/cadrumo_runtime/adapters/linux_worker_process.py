@@ -11,13 +11,14 @@ from pathlib import Path
 from threading import Lock
 from uuid import UUID
 
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_channel import PosixChannel
 
 from .containment_commands import ContainmentCommand, run_containment_command_sync
 from .linux_pidfd import open_linux_pidfd
-from .worker_arguments import validated_worker_arguments
+from .worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from .worker_environment import worker_path_environment_names
 
 _PROPERTIES = {
@@ -51,7 +52,8 @@ def linux_process_start_identity(pid: int) -> str:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
 
 
-def _unit_properties(unit: str) -> dict[str, str]:
+def unit_properties(unit: str) -> dict[str, str]:
+    """Return the properties of a systemd user unit, refusing a failed query."""
     result = run_containment_command_sync(
         ContainmentCommand.SYSTEMCTL,
         ("--user", "--no-pager", "--no-ask-password", "show", unit, "--property=" + ",".join(sorted(_PROPERTIES))),
@@ -69,7 +71,8 @@ def _unit_properties(unit: str) -> dict[str, str]:
     return properties
 
 
-def _unit_absent(unit: str) -> bool:
+def unit_absent(unit: str) -> bool:
+    """Report whether systemd no longer knows the user unit."""
     result = run_containment_command_sync(
         ContainmentCommand.SYSTEMCTL,
         (
@@ -86,7 +89,8 @@ def _unit_absent(unit: str) -> bool:
     return set(result.output.splitlines()) == {"LoadState=not-found", "ActiveState=inactive", "ControlGroup="}
 
 
-def _cgroup_for(pid: int) -> str:
+def cgroup_for(pid: int) -> str:
+    """Return the unified cgroup path of a process, refusing unexpected formats."""
     try:
         lines = (Path("/proc") / str(pid) / "cgroup").read_text(encoding="ascii").splitlines()
         if len(lines) != 1 or not lines[0].startswith("0::/"):
@@ -96,7 +100,8 @@ def _cgroup_for(pid: int) -> str:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
 
 
-def _pidfd_alive(descriptor: int) -> bool:
+def pidfd_alive(descriptor: int) -> bool:
+    """Report whether the process behind a pidfd is still alive."""
     if sys.platform == "linux":
         poller = select.poll()
         poller.register(descriptor, select.POLLIN | select.POLLERR | select.POLLHUP)
@@ -104,7 +109,7 @@ def _pidfd_alive(descriptor: int) -> bool:
     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
-def _cgroup_empty(group: str) -> bool:
+def cgroup_empty(group: str) -> bool:
     """Use kernel populated state, including nested independent descendants."""
     if not group.startswith("/") or ".." in Path(group).parts:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -138,7 +143,7 @@ class LinuxOwnedProcess:
             poller = select.poll()
             poller.register(self._pidfd, select.POLLIN | select.POLLERR | select.POLLHUP)
             if not poller.poll(min(2_147_483_647, int(timeout * 1000))):
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             return 0
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
@@ -151,7 +156,7 @@ class LinuxOwnedProcess:
     @property
     def alive(self) -> bool:
         """Observe the held guardian without treating a PID as a capability."""
-        return self._pidfd >= 0 and _pidfd_alive(self._pidfd)
+        return self._pidfd >= 0 and pidfd_alive(self._pidfd)
 
 
 class LinuxProcessScope:
@@ -209,10 +214,10 @@ class LinuxProcessScope:
             return (
                 pid == self._worker_pid
                 and self._worker_pidfd >= 0
-                and _pidfd_alive(self._worker_pidfd)
+                and pidfd_alive(self._worker_pidfd)
                 and self._guardian is not None
                 and self._guardian.alive
-                and _cgroup_for(pid) == self._cgroup
+                and cgroup_for(pid) == self._cgroup
             )
 
     @property
@@ -247,7 +252,12 @@ def _validated_launch_inputs(
     if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     selected_arguments = validated_worker_arguments(arguments, worker_script=scope._worker_script)
-    baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+    baseline = {
+        "PATH": "/usr/bin:/bin",
+        "LANG": "C",
+        "LC_ALL": "C",
+        PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
+    }
     allowed_storage = worker_path_environment_names()
     extras = set(environment) - set(baseline)
     if any(environment.get(name) != value for name, value in baseline.items()) or not extras <= allowed_storage:
@@ -272,9 +282,9 @@ def _guardian_launch_command(
     # environment, independently of the user manager's inherited state.
     clean = tuple(f"{name}={value}" for name, value in sorted(environment.items()))
     script_selection = ("--worker-script", str(scope._worker_script)) if scope._worker_script is not None else ()
+    # systemd-run has no --no-pager before systemd 258; the Ubuntu 24.04 manager (255) refuses the whole launch.
     return (
         "--user",
-        "--no-pager",
         "--no-ask-password",
         "--no-block",
         "--collect",
@@ -293,6 +303,7 @@ def _guardian_launch_command(
         "-i",
         *clean,
         str(executable),
+        *worker_interpreter_arguments(arguments),
         "-I",
         "-m",
         "cadrumo_runtime.host.linux_worker_guardian",
@@ -309,7 +320,7 @@ def _guardian_launch_command(
 def _wait_for_guardian(scope: LinuxProcessScope) -> LinuxOwnedProcess:
     deadline = time.monotonic() + 5
     while True:
-        facts = _unit_properties(scope._unit)
+        facts = unit_properties(scope._unit)
         if _valid_guardian_service(facts) and _valid_guardian_identity(facts, scope._unit):
             guardian = _retain_guardian(scope, facts)
             if guardian is not None:
@@ -346,7 +357,7 @@ def _retain_guardian(scope: LinuxProcessScope, facts: Mapping[str, str]) -> Linu
     pid = int(facts["MainPID"])
     pidfd = open_linux_pidfd(pid)
     try:
-        if _pidfd_alive(pidfd) and _cgroup_for(pid) == facts["ControlGroup"]:
+        if pidfd_alive(pidfd) and cgroup_for(pid) == facts["ControlGroup"]:
             scope._cgroup = facts["ControlGroup"]
             scope._guardian = LinuxOwnedProcess(pid=pid, pidfd=pidfd)
             return scope._guardian
@@ -367,7 +378,7 @@ def _validated_worker_peer(scope: LinuxProcessScope, channel: PosixChannel, owne
 
 def _worker_pidfd_matches_cgroup(scope: LinuxProcessScope, pidfd: int, pid: int) -> bool:
     guardian = scope._guardian
-    return guardian is not None and _pidfd_alive(pidfd) and _cgroup_for(pid) == scope._cgroup and pid != guardian.pid
+    return guardian is not None and pidfd_alive(pidfd) and cgroup_for(pid) == scope._cgroup and pid != guardian.pid
 
 
 def _retain_worker_pidfd(scope: LinuxProcessScope, pidfd: int, pid: int) -> None:
@@ -383,9 +394,9 @@ def _retain_worker_pidfd(scope: LinuxProcessScope, pidfd: int, pid: int) -> None
 
 def _failed_stop_is_settled(scope: LinuxProcessScope) -> bool:
     return (
-        _unit_absent(scope._unit)
+        unit_absent(scope._unit)
         and (scope._guardian is None or not scope._guardian.alive)
-        and (scope._worker_pidfd < 0 or not _pidfd_alive(scope._worker_pidfd))
+        and (scope._worker_pidfd < 0 or not pidfd_alive(scope._worker_pidfd))
     )
 
 
@@ -396,13 +407,13 @@ def _wait_for_unit_settlement(scope: LinuxProcessScope, timeout: float) -> None:
             _release_worker_authority(scope)
             return
         time.sleep(0.01)
-    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    raise RefusalError(RefusalCode.TIMEOUT)
 
 
 def _unit_is_settled(scope: LinuxProcessScope) -> bool:
     guardian_dead = scope._guardian is None or not scope._guardian.alive
-    worker_dead = scope._worker_pidfd < 0 or not _pidfd_alive(scope._worker_pidfd)
-    return worker_dead and guardian_dead and (not scope._cgroup or _cgroup_empty(scope._cgroup))
+    worker_dead = scope._worker_pidfd < 0 or not pidfd_alive(scope._worker_pidfd)
+    return worker_dead and guardian_dead and (not scope._cgroup or cgroup_empty(scope._cgroup))
 
 
 def _release_worker_authority(scope: LinuxProcessScope) -> None:

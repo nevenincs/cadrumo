@@ -29,16 +29,19 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.inventory import FIXTURES_DIR
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M111,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .parser_boundary_support import specimen_period
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M111,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -86,15 +89,22 @@ _M111_EPIGRAFE_PROBES: dict[CasillaId, Decimal] = {
 }
 _M111_PAGOS_ANTERIORES_PROBE = Decimal("1234.56")
 
-_M111_QUARTER_CASES = (
+_M111_QUARTER_RENDER_CASILLAS = frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))
+#: The 4T render prints casilla 30 alone. Pinning that explicitly is what
+#: makes that case assert something.
+_M111_FOURTH_QUARTER_RENDER_CASILLAS = frozenset(validated_casilla_id(_v) for _v in ("30",))
+
+
+def _m111_quarter_case(render: Path) -> tuple[str, int, str, frozenset[CasillaId]]:
+    """Describe one committed render by the period it is named for and the casilla set it prints."""
+    specimen = specimen_period(render)
+    printed = _M111_FOURTH_QUARTER_RENDER_CASILLAS if specimen.code == "4T" else _M111_QUARTER_RENDER_CASILLAS
     # (pdf_stem, year, period, the casilla set this render prints)
-    ("2024-1T", 2024, "1T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    ("2024-2T", 2024, "2T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    ("2024-3T", 2024, "3T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    # The 4T render prints casilla 30 alone. Pinning that explicitly is what
-    # makes this case assert something: before the set was pinned, 4T supplied
-    # no inputs, executed no assertion, and still reported success.
-    ("2024-4T", 2024, "4T", frozenset(validated_casilla_id(_v) for _v in ("30",))),
+    return render.stem, specimen.filing_year, specimen.code, printed
+
+
+_M111_QUARTER_CASES = tuple(
+    _m111_quarter_case(render) for render in sorted((FIXTURES_DIR / "justificantes" / "111").glob("*.pdf"))
 )
 
 
@@ -108,19 +118,16 @@ def test_verification_chain_m111_parses_each_committed_render(
     """Each committed M111 render parses to exactly the casilla set it declares.
 
     This is a PARSE-FIDELITY test over ``role = "parser_anchor"`` fixtures, and
-    that is the whole of its claim. The specimens WERE real AEAT renders; they
-    were withdrawn for carrying name-shaped strings the redaction pipeline never
-    wrote, and what stands in their place reproduces their printed layout. Their
-    numbers are probes chosen by the fixture generator, so no arithmetic is
+    that is the whole of its claim. The fixtures are synthetic stand-ins that
+    reproduce the printed layout of real AEAT renders.
+    The numbers are probes chosen by the fixture generator, so no arithmetic is
     asserted against them here -- the aggregation test below drives that from
     its own probes instead. The role is checked rather than assumed, so a
     fixture re-stamped as a formula specimen cannot silently land in a
     parse-fidelity test.
 
     Pinning the casilla set per render is what gives the 4T case content: it
-    prints casilla 30 alone, and an earlier version of this test guarded its
-    every assertion on leaf inputs 4T does not have, so the case passed while
-    verifying nothing.
+    prints casilla 30 alone.
     """
     sidecar_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.json"
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
@@ -129,7 +136,7 @@ def test_verification_chain_m111_parses_each_committed_render(
         f"parse-fidelity anchor and asserts no arithmetic over its redacted amounts."
     )
 
-    extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
+    extracted = parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
 
     assert frozenset(extracted) == expected_extracted_casillas, (
         f"PARSER-GAP [{pdf_stem}]: extracted casilla set drifted.\n"
@@ -140,8 +147,8 @@ def test_verification_chain_m111_parses_each_committed_render(
     # The parsed casilla ids must be ones the engine accepts as inputs: this is
     # the parse -> engine seam, and it is verified without asserting anything
     # about the placeholder amounts that flow through it.
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)
-    engine_values = _calculate_engine_values_from_inputs(
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M111)
+    engine_values = calculate_engine_values_from_inputs(
         modelo="111",
         year=year,
         period=period,
@@ -176,9 +183,9 @@ def test_verification_chain_m111_aggregates_the_epigrafes_the_orden_names() -> N
     declares. A registry formula that dropped casilla 24, or added a casilla the
     órden does not list, diverges and fails.
     """
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="111",
-        year=2024,
+        year=filing_year_envelope().horizon,
         period="1T",
         label="M111/probe/aggregation",
         inputs={**_M111_EPIGRAFE_PROBES, _M111_PAGOS_ANTERIORES_CASILLA: _M111_PAGOS_ANTERIORES_PROBE},
@@ -209,8 +216,7 @@ def test_verification_chain_m111_epigrafe_probe_values_are_pairwise_distinct() -
     This is the guard on the guard. The M111 aggregation test can only tell a
     sum from a max or a first-element pick because its nine probe amounts
     differ; a well-meaning edit that made them uniform would leave that test
-    green while silently gutting it — which is precisely the failure this
-    module was rewritten to remove.
+    green while silently gutting it.
     """
     probes = list(_M111_EPIGRAFE_PROBES.values())
     assert len(set(probes)) == len(probes), f"epígrafe probes must be pairwise distinct, got {probes!r}"

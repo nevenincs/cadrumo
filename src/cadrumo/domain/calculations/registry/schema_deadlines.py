@@ -17,7 +17,7 @@ from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .ids import DeadlineWindowId
 from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
-from .schema_verification import ProfilePredicateDefinition
+from .schema_live_verification import ProfilePredicateDefinition
 
 __all__ = [
     "DeadlineWindowDefinition",
@@ -49,7 +49,7 @@ class FilingCadence(StrEnum):
 
     Distinct from the period kind in the core package, which shares three member
     values but names a different axis: that vocabulary describes a period's shape,
-    including instalment and extended periods, and has no ad-hoc member. Both are
+    including instalment and extended periods, and has no event member. Both are
     referenced from this module, so the names must not collide.
     """
 
@@ -62,8 +62,12 @@ class FilingCadence(StrEnum):
     ANNUAL = "annual"
     """One filing period covering the ejercicio."""
 
-    AD_HOC = "ad_hoc"
-    """No fixed cadence; the period is opened by an event rather than a calendar."""
+    EVENT = "event"
+    """Filed only when an event occurs, such as a censal alta, an accrual or a refundable operation.
+
+    The schedule's periods name where an event's filing lands, which can be an
+    ordinary quarter, month or ``0A``; no recurring obligation arises from them.
+    """
 
 
 FilingCadenceField = Annotated[FilingCadence, BeforeValidator(coerce_enum_member(FilingCadence))]
@@ -108,11 +112,11 @@ class DeadlineWindowDefinition(RegistryModel):
             raise RegistryValidationError("deadline window tipo_renta_scope must not be empty")
         if len(set(value)) != len(value):
             raise RegistryValidationError("deadline window tipo_renta_scope entries must be unique")
-        malformed_codes = tuple(code for code in value if len(code) != 2 or not code.isdecimal())
+        malformed_codes = tuple(code for code in value if not code.isdecimal())
         if malformed_codes:
             raise RegistryValidationError(
                 f"deadline window tipo_renta_scope contains malformed official Modelo 210 codes "
-                f"{malformed_codes!r}; codes must be two-digit decimal tokens",
+                f"{malformed_codes!r}; codes must be decimal tokens",
             )
         return value
 
@@ -137,10 +141,10 @@ _SCHEDULE_PERIOD_KINDS: dict[str, frozenset[PeriodKind]] = {
     "monthly": frozenset({PeriodKind.MONTHLY}),
     "quarterly": frozenset({PeriodKind.QUARTERLY, PeriodKind.INSTALMENT, PeriodKind.EXTENDED}),
     "annual": frozenset({PeriodKind.ANNUAL}),
-    # Event and administrative tokens classify as EXTENDED. Modelo 840 uses
-    # annual 0A as its exercise coordinate, so this cadence also admits ANNUAL;
-    # legal/source grounding still establishes whether a declaration is correct.
-    "ad_hoc": frozenset({PeriodKind.EXTENDED, PeriodKind.ANNUAL}),
+    # An event lands in whatever period its record design names: an event
+    # number, an administrative censo token, or an ordinary quarter, month or
+    # 0A for a declaracion no periodica. Instalment claves are never events.
+    "event": frozenset({PeriodKind.EXTENDED, PeriodKind.QUARTERLY, PeriodKind.MONTHLY, PeriodKind.ANNUAL}),
 }
 
 

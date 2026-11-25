@@ -26,6 +26,8 @@
         "result": {
           "descendientes": [],
           "profile": "docs-sequence-sandbox",
+          "state": "unknown",
+          "stated_count": null,
           "total": 0
         },
         "schema_version": "2",
@@ -64,6 +66,7 @@
         ],
         "result": {
           "added": 1,
+          "none_declared": false,
           "profile": "docs-sequence-sandbox",
           "total": 1
         },

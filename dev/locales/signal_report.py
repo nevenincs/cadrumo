@@ -2,8 +2,34 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .signal_contracts import TranslationBacklogItem, TranslationMatrix
-from .signal_discovery import covered_by_namespace
+from .signal_discovery import covered_by_namespace, is_catalogue_only_key
+
+ADVISORY_CLASSIFICATION = "advisory"
+
+OUTCOME_COMPLETE = "complete"
+OUTCOME_ADVISORY = "advisory"
+OUTCOME_BACKLOG = "backlog"
+NON_GATING_OUTCOMES = frozenset({OUTCOME_COMPLETE, OUTCOME_ADVISORY})
+
+
+def is_advisory_finding(finding: Mapping[str, object]) -> bool:
+    """Only an explicit advisory classification is non-gating; anything else blocks."""
+    return finding.get("classification") == ADVISORY_CLASSIFICATION
+
+
+def signal_outcome(findings: list[dict[str, object]], *, unsettled_inventory_or_cells: bool) -> str:
+    """Reduce findings and open counters to the gate outcome.
+
+    A finding with a missing or unrecognised classification gates, and so does
+    any open inventory counter or unready cell even when no finding names it,
+    so an uncounted tool or extraction failure cannot read as a pass.
+    """
+    if unsettled_inventory_or_cells or any(not is_advisory_finding(finding) for finding in findings):
+        return OUTCOME_BACKLOG
+    return OUTCOME_ADVISORY if findings else OUTCOME_COMPLETE
 
 
 def signal_finite_dynamic_keys(finite_families: dict[str, tuple[str, ...]]) -> set[str]:
@@ -105,6 +131,6 @@ def signal_dynamic_family_details(
     return dynamic_key_families
 
 
-def signal_catalogue_only_cells(locale_leaves: dict[str, dict[str, object]], required_keys: set[str]) -> int:
+def signal_catalogue_only_cells(locale_leaves: Mapping[str, Mapping[str, object]], required_keys: set[str]) -> int:
     """Count populated catalogue cells outside the required key inventory."""
-    return sum(1 for leaves in locale_leaves.values() for key in leaves if key not in required_keys)
+    return sum(1 for leaves in locale_leaves.values() for key in leaves if is_catalogue_only_key(key, required_keys))

@@ -21,13 +21,20 @@ from ...application.ledger.ledger_add_contracts import (
     LedgerAddRequest,
 )
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    ManualEntryClassificationToken,
+    TransactionDirection,
+)
 from .common import bad
 
 
@@ -105,6 +112,8 @@ def run_ledger_add(
     direction: TransactionDirection,
     description: str,
     value_date: str | None,
+    operation_date: str | None = None,
+    accrual_date: str | None = None,
     currency: str,
     counterparty: str | None,
     business_classification: BusinessClassification,
@@ -116,6 +125,7 @@ def run_ledger_add(
     iva_category: IvaCategory | None,
     deduction_fact_kind: IvaDeductionFactKind | None,
     investment_asset_id: str | None,
+    iva_vehicle_use: str | None,
     counterparty_country: str | None,
     counterparty_identification_state: EUMemberState | None,
     recargo_amount: str | None,
@@ -132,19 +142,27 @@ def run_ledger_add(
     idempotency_key: str | None,
     source_jurisdiction: str | None,
     own_account_id: str | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
 ) -> LedgerAddOperationResult:
     """Submit one bounded add request and strictly correlate its terminal receipt."""
     client = bound_profile_client(ctx)
     request = LedgerAddRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         booked_date=booked_date,
         amount=amount,
         direction=direction.value,
         description=description,
         value_date=value_date,
+        operation_date=operation_date,
+        accrual_date=accrual_date,
         currency=currency,
         counterparty=counterparty,
-        business_classification=business_classification.value,
+        business_classification=_manual_classification_token(business_classification),
         business_pct=business_pct,
         category_id=category_id,
         taxable_base=taxable_base,
@@ -153,6 +171,7 @@ def run_ledger_add(
         iva_category=_wire_token(iva_category),
         deduction_fact_kind=_wire_token(deduction_fact_kind),
         investment_asset_id=investment_asset_id,
+        iva_vehicle_use=iva_vehicle_use,
         counterparty_country=counterparty_country,
         counterparty_identification_state=_wire_token(counterparty_identification_state),
         recargo_amount=recargo_amount,
@@ -169,6 +188,11 @@ def run_ledger_add(
         idempotency_key=idempotency_key,
         source_jurisdiction=source_jurisdiction,
         own_account_id=own_account_id,
+        arrendamiento_ref=arrendamiento,
+        inmueble_ref=inmueble,
+        gasto_capital_inmobiliario=gasto_inmobiliario,
+        posicion_ref=posicion,
+        concepto_capital_mobiliario=concepto_capital_mobiliario,
     )
     completed = run_registered_operation(
         client,
@@ -204,6 +228,19 @@ def run_ledger_add(
         business_pct,
     )
     return projection
+
+
+def _manual_classification_token(classification: BusinessClassification) -> ManualEntryClassificationToken:
+    """Narrow a CLI classification to the tokens a person may assign by hand."""
+    if classification is BusinessClassification.BUSINESS:
+        return "BUSINESS"
+    if classification is BusinessClassification.PERSONAL:
+        return "PERSONAL"
+    if classification is BusinessClassification.MIXED:
+        return "MIXED"
+    if classification is BusinessClassification.NOT_YET_PROCESSED:
+        return "NOT_YET_PROCESSED"
+    raise InternalInvariantError(f"ledger add received a pipeline-assigned classification: {classification.value}")
 
 
 def _wire_token(value: object | None) -> str | None:

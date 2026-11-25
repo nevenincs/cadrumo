@@ -13,21 +13,20 @@ depend on a pytest fixture or on an already-running test session.
 
 from __future__ import annotations
 
-from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    identity_seeded_custody_envelope,
+    profile_authority_contexts,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..custody.records import (
     ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
 )
 from ..custody.sentinel import create_profile_custody_sentinel
 
@@ -36,52 +35,22 @@ PROFILE_LABEL = "Operator"
 DEK = bytes(range(32))
 RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
 
-READY_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
+_READY_PERSONA_ID = "autonomo-fontanero"
+
+
+def ready_facts() -> tuple[UserProfileFact, ...]:
+    """The facts of a complete profile: the autonomo-fontanero persona's."""
+    return persona_profile_facts(_READY_PERSONA_ID)
 
 
 def build_envelope() -> ProfileCustodyEnvelope:
     """Return the deterministic password envelope both processes agree on."""
-    identity = UUID(PROFILE_ID)
-    seed = identity.bytes + identity.bytes
-    return ProfileCustodyEnvelope.create(
-        profile_id=identity,
-        password_generation=1,
-        dek_epoch=b64encode(seed[:16]).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(seed[16:]).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(seed[:12]).decode("ascii"),
-            ciphertext_b64=b64encode(seed).decode("ascii"),
-            tag_b64=b64encode(seed[:16]).decode("ascii"),
-        ),
-    )
+    return identity_seeded_custody_envelope(UUID(PROFILE_ID))
 
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from .....application.user_profile.capsule_record import ProfileRecordSession
     from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -96,10 +65,10 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            initial_record=_create_profile_record_for_test(
+            initial_record=create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=PROFILE_ID,
-                facts=READY_FACTS,
+                facts=ready_facts(),
                 context=_profile_create_context_for_test,
             ),
             record_session=session,
@@ -113,8 +82,8 @@ __all__ = [
     "DEK",
     "PROFILE_ID",
     "PROFILE_LABEL",
-    "READY_FACTS",
     "RECORD_NAMESPACE",
     "build_envelope",
     "publish_capsule_and_pointer",
+    "ready_facts",
 ]

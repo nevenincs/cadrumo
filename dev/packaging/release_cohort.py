@@ -18,10 +18,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
-from dev.packaging.build_storage import build_storage
+from dev.packaging.build_scratch_reclaim import remove_source_snapshot, sweep_var_scratch
+from dev.packaging.build_storage import build_environment, build_storage
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
+from dev.paths import UTF_8
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -42,7 +44,6 @@ _BUILD_SCRATCH = importlib.import_module("dev.packaging.build_scratch_reclaim")
 RELEASE_STAGING_FAMILY = _BUILD_SCRATCH.RELEASE_STAGING_FAMILY
 RELEASE_SOURCE_SNAPSHOT_FAMILY = _BUILD_SCRATCH.RELEASE_SOURCE_SNAPSHOT_FAMILY
 matching_family = _BUILD_SCRATCH.matching_family
-remove_tree = _BUILD_SCRATCH.remove_tree
 require_build_path = _BUILD_SCRATCH.require_build_path
 sweep_build_scratch = _BUILD_SCRATCH.sweep_build_scratch
 var_scratch_name = _BUILD_SCRATCH.var_scratch_name
@@ -79,12 +80,13 @@ REQUIRED_PYTHON_VERSION: Final[str] = (
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
-def _run(
+def run(
     argv: list[str],
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
 ) -> CommandResult:
+    """Run a command in a directory with an optional environment and return its result."""
     completed = run_command(
         argv,
         cwd=cwd,
@@ -99,7 +101,8 @@ def _run(
     return completed
 
 
-def _safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
+def safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
+    """Resolve a new output directory confined under the repository build tree."""
     root = repo_root.resolve(strict=True)
     build = root / "build"
     try:
@@ -139,7 +142,8 @@ def deterministic_zip_tree(source: Path, destination: Path) -> Path:
     return destination.resolve(strict=True)
 
 
-def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort:
+def copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort:
+    """Copy a Python cohort directory to a new destination, refusing an existing one."""
     if destination.exists():
         raise FileExistsError(destination)
     shutil.copytree(cohort.directory, destination)
@@ -205,7 +209,7 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     )
 
 
-def _complete_release_cohort(
+def complete_release_cohort(
     *,
     output: Path,
     manifest_path: Path,
@@ -230,7 +234,7 @@ def _generate_channel_artifacts(
     env: dict[str, str],
 ) -> tuple[Path, Path]:
     scoop = output / "scoop" / "cadrumo.json"
-    _run(
+    run(
         [
             sys.executable,
             "-B",
@@ -246,7 +250,7 @@ def _generate_channel_artifacts(
         env=env,
     )
     homebrew_dir = output / "homebrew"
-    _run(
+    run(
         [
             sys.executable,
             "-B",
@@ -301,11 +305,12 @@ def _source_commit(requested: str | None) -> str | None:
     return requested
 
 
-def _build_identity(clean_root: Path) -> BuildIdentity:
+def build_identity(clean_root: Path) -> BuildIdentity:
+    """Capture the build identity of a clean checkout, requiring the expected uv version."""
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to construct the release cohort")
-    uv_version = _run([uv, "--version"], cwd=clean_root).stdout.strip()
+    uv_version = run([uv, "--version"], cwd=clean_root).stdout.strip()
     observed_uv = uv_version.split(maxsplit=2)
     # Any uv builds the cohort. The version is RECORDED rather than pinned, so
     # reproducibility is an auditable coordinate instead of a precondition: two
@@ -351,6 +356,27 @@ def _assert_prepared_source_unchanged(root: Path, source_files: tuple[str, ...],
         )
 
 
+def _configure_builder_environment(root: Path) -> None:
+    build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
+    os.environ["SOURCE_DATE_EPOCH"] = _SOURCE_DATE_EPOCH
+    os.environ["PYTHONHASHSEED"] = "0"
+    os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
+    os.environ["UV_REQUIRE_HASHES"] = "1"
+    os.environ["UV_PYTHON"] = sys.executable
+    os.environ["UV_PYTHON_DOWNLOADS"] = "never"
+
+
+def _assert_release_inventory(output: Path, declared: set[str]) -> None:
+    observed = {
+        path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
+    }
+    if observed != declared:
+        raise SystemExit(
+            "release cohort contains undeclared or missing files: "
+            f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
+        )
+
+
 def build_from_clean_source(
     *,
     clean_root: Path,
@@ -375,16 +401,10 @@ def build_from_clean_source(
         raise SystemExit(
             f"clean source digest drifted: expected {expected_source_digest}, got {observed_digest}",
         )
-    output = _safe_new_output(output_dir, repo_root=root)
+    output = safe_new_output(output_dir, repo_root=root)
 
-    builder = _build_identity(root)
-    build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
-    os.environ["SOURCE_DATE_EPOCH"] = _SOURCE_DATE_EPOCH
-    os.environ["PYTHONHASHSEED"] = "0"
-    os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
-    os.environ["UV_REQUIRE_HASHES"] = "1"
-    os.environ["UV_PYTHON"] = sys.executable
-    os.environ["UV_PYTHON_DOWNLOADS"] = "never"
+    builder = build_identity(root)
+    _configure_builder_environment(root)
 
     try:
         build_root = require_build_path(root / "build", repo_root=root)
@@ -412,7 +432,7 @@ def build_from_clean_source(
                     "captured Python cohort source differs from the requested release source: "
                     f"expected {expected_source_digest}, got {python_cohort.source_digest}",
                 )
-            cohort = _copy_python_cohort(python_cohort, output / "python")
+            cohort = copy_python_cohort(python_cohort, output / "python")
         finally:
             if python_work.exists():
                 shutil.rmtree(python_work)
@@ -489,17 +509,10 @@ def build_from_clean_source(
     )
     manifest_path = write_manifest(output, manifest)
     declared = {record.path for record in manifest.artifacts} | {"release-cohort.json"}
-    observed = {
-        path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
-    }
-    if observed != declared:
-        raise SystemExit(
-            "release cohort contains undeclared or missing files: "
-            f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
-        )
+    _assert_release_inventory(output, declared)
     if use_prepared_source:
         _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
-    return _complete_release_cohort(
+    return complete_release_cohort(
         output=output,
         manifest_path=manifest_path,
         manifest=manifest,
@@ -507,7 +520,7 @@ def build_from_clean_source(
     )
 
 
-def _clean_builder_command() -> list[str]:
+def clean_builder_command() -> list[str]:
     """Select the declared builder without changing the caller's development environment."""
     if platform.python_implementation() == "CPython" and platform.python_version() == REQUIRED_PYTHON_VERSION:
         return [sys.executable]
@@ -517,6 +530,11 @@ def _clean_builder_command() -> list[str]:
     # Resolve the clean source's frozen project closure in an isolated environment.
     # The child still validates its exact interpreter before producing any artifact.
     return [uv, "run", "--isolated", "--frozen", "--no-editable", "--python", REQUIRED_PYTHON_VERSION, "python"]
+
+
+def _remove_failed_staging(staging: Path, build: Path) -> None:
+    if staging.parent == build and matching_family(staging.name) is not None and staging.exists():
+        shutil.rmtree(staging)
 
 
 def build_release_cohort(
@@ -529,7 +547,7 @@ def build_release_cohort(
     """Snapshot the current source tree and execute that clean copy's builder once."""
     root = repo_root.resolve(strict=True)
     _source_commit(source_commit)
-    output = _safe_new_output(output_dir, repo_root=root)
+    output = safe_new_output(output_dir, repo_root=root)
     source_files = repository_files(root)
     digest = content_digest(root, source_files)
     try:
@@ -544,9 +562,11 @@ def build_release_cohort(
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_build_scratch(build)
-    snapshot_work = require_build_path(
-        build / var_scratch_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
-        repo_root=root,
+    temporary_root = prepare_temp_root()
+    with contextlib.suppress(OSError):
+        sweep_var_scratch(temporary_root)
+    snapshot_work = resolve_temporary_output(
+        override=temporary_root / var_scratch_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
     )
     snapshot_work.mkdir(parents=True)
     staging = require_build_path(
@@ -554,7 +574,7 @@ def build_release_cohort(
         repo_root=root,
     )
     try:
-        with build_storage(snapshot_work, repo_root=root):
+        with build_environment(output.parent / "work", repo_root=root) as build_controls:
             clean_root = snapshot_work / "source"
             # An isolated copy of the enumerated tree, not the live one: the rest
             # of this build runs in a child process against `clean_root`, so a
@@ -578,11 +598,11 @@ def build_release_cohort(
                 child_build / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
                 repo_root=clean_root,
             )
-            env = os.environ.copy()
+            env = {**os.environ, **build_controls}
             env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
             env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
             argv = [
-                *_clean_builder_command(),
+                *clean_builder_command(),
                 "-m",
                 "dev.packaging.release_cohort",
                 "build-clean",
@@ -598,17 +618,16 @@ def build_release_cohort(
             if source_commit is not None:
                 argv.extend(("--source-commit", source_commit))
             try:
-                _run(argv, cwd=clean_root, env=env)
+                run(argv, cwd=clean_root, env=env)
                 child_staging.replace(staging)
                 staging.replace(output)
             except (OSError, SystemExit):
                 # Judged by the same registry the sweep uses, so the guard cannot
                 # drift from the name that was minted a few lines above.
-                if staging.parent == build and matching_family(staging.name) is not None and staging.exists():
-                    shutil.rmtree(staging)
+                _remove_failed_staging(staging, build)
                 raise
     finally:
-        remove_tree(snapshot_work)
+        remove_source_snapshot(resolve_temporary_output(override=snapshot_work), primary_error=sys.exception())
     cohort = load_release_cohort(output)
     if cohort.manifest.source.source_digest != digest:
         raise SystemExit("completed release cohort lost its requested source digest")
@@ -617,7 +636,8 @@ def build_release_cohort(
     return cohort
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the release cohort commands."""
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     build = subparsers.add_parser("build")
@@ -638,7 +658,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     """Build from a clean snapshot, run the internal assembly, or verify bytes."""
-    args = _parser().parse_args()
+    args = parser().parse_args()
     if args.command == "build":
         cohort = build_release_cohort(
             repo_root=_REPO_ROOT,

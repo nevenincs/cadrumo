@@ -31,7 +31,7 @@ from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, Refusal
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only, pytest.mark.os_keychain]
 
@@ -167,7 +167,7 @@ def test_native_runtime_password_login_shared_presence_and_logout(tmp_path: Path
                     try:
                         code = process.wait(timeout=0)
                     except RefusalError as waiting:
-                        if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                        if waiting.reason is not RefusalCode.TIMEOUT:
                             raise
                     else:
                         pytest.fail(f"Runtime exited before readiness: {code}", pytrace=False)

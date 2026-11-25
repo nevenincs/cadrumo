@@ -1,8 +1,11 @@
 import type { IconName } from "@/components/ui/icon";
-import type { CalendarEvent, CalendarUserState } from "@/shell/views";
+import { closeUnknown } from "@/shell/calendarEntries";
+import type { Translate } from "@/shell/strings";
+import type { OverviewPeriodState } from "@/shell/calendarContract";
+import type { FilingCalendarServed } from "@/shell/calendarContract";
 
 export const STATE_TONE: Record<
-  CalendarUserState,
+  OverviewPeriodState,
   "neutral" | "danger" | "success" | "warning"
 > = { due: "neutral", late: "danger", filed: "success", unknown: "warning" };
 
@@ -11,9 +14,12 @@ export const STATE_TONE: Record<
  * mark and a message a hollow one, told apart by shape, with or without
  * colour.
  */
-export const EVENT_MARK: Record<CalendarEvent["event_type"], string> = {
+export const EVENT_MARK: Record<
+  FilingCalendarServed["events"][number]["event_type"],
+  string
+> = {
   filing: "bg-success forced-colors:bg-[CanvasText]",
-  message: "border-(length:--calendar-mark-edge) border-muted-foreground",
+  message: "border-(length:--mark-edge) border-muted-foreground",
 };
 
 /**
@@ -21,9 +27,22 @@ export const EVENT_MARK: Record<CalendarEvent["event_type"], string> = {
  * it is drawn, so that it is never told by colour alone. What is simply due
  * carries none: it is the reading the others are set against.
  */
-export const STATE_MARK: Record<CalendarUserState, IconName | null> = {
+export const STATE_MARK: Record<OverviewPeriodState, IconName | null> = {
   due: null,
   late: "alert",
   filed: "check",
   unknown: "info",
 };
+
+/**
+ * What an obligation's reading is called. A close the product does not know
+ * is called that, in the product's own words for it, rather than by the
+ * general reading it shares with what could not be placed at all.
+ */
+export const stateWords = (
+  t: Translate,
+  entry: FilingCalendarServed["entries"][number],
+) =>
+  closeUnknown(entry)
+    ? t("workspace.declarations.calendar.legal.unknown")
+    : t(`desktop.calendar.state.${entry.user_state}`);

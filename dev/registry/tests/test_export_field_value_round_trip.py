@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.filing.record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
-from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
@@ -17,31 +16,39 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+_DATE = date(_YEAR, 3, 14)
+_DATE_TEXT = _DATE.strftime("%Y%m%d")
+
 
 def _values(field: ExportFieldDefinition) -> tuple[object, ...]:
     policy = field.value_policy
-    if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA and "aeat-dr-369-2021" in field.source_refs:
-        return ("C", " ")
+    if field.presence_marker is not None:
+        return (field.presence_marker, " ")
     if field.kind in {CasillaFieldKind.LITERAL, CasillaFieldKind.FILLER}:
         return (field.literal,)
     if policy in {ExportValuePolicy.FOUR_DIGIT_YEAR, ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS}:
-        return (max(2025, field.minimum_year or 0),)
+        return (max(_YEAR, field.minimum_year or 0),)
     if policy in {ExportValuePolicy.YYYYMMDD, ExportValuePolicy.DDMMYYYY}:
-        return (date(2025, 3, 14),)
+        return (_DATE,)
     if policy in {
         ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
         ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
         ExportValuePolicy.YYYYMMDD_TEXT_DAY,
     }:
-        return ("20250314",)
+        return (_DATE_TEXT,)
     if policy in {ExportValuePolicy.TWO_DIGIT_MONTH, ExportValuePolicy.TWO_DIGIT_DAY}:
         return (3,)
     if field.allowed_values is not None and field.allowed_values:
+        if field.data_type == "decimal" and field.decimals is not None and field.decimals != 0:
+            # Allowed values are the slot's digits at its implied scale: '50' in a two-decimal slot is 0,50.
+            return tuple(Decimal(value).scaleb(-field.decimals) for value in field.allowed_values)
         return field.allowed_values
     if policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0:
         return (False, True)
@@ -78,7 +85,7 @@ def _values(field: ExportFieldDefinition) -> tuple[object, ...]:
     if field.data_type == "boolean":
         return (True, False)
     if field.data_type == "date":
-        return ("20250314",)
+        return (_DATE_TEXT,)
     return ("A",)
 
 

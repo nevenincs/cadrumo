@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:641291f902aed2d673305f94658c64d63aa4b5bcce4c6484cca90ee608c78e2c'
+body_hash: 'sha256:aca11c36a10b9c7402292bc2316350684c24204cfeb4ab0979d7f0d69b83aa6e'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
   - "[[2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit]]"
@@ -27,6 +27,7 @@ The governing audit (`2026-08-09-...-audit.md`) already measured the headline ga
 
 ```python
 from cadrumo.application.wizard import ensure_profile_keys_registered
+
 ensure_profile_keys_registered()
 from cadrumo.domain.contribuyente import PROFILE_KEYS
 from cadrumo.domain.user_profile import load_user_profile_schema

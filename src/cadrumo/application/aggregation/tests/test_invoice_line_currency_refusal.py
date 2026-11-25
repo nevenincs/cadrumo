@@ -1,27 +1,20 @@
 """An invoice line that would be silently dropped for unresolved currency REFUSES.
 
-Supersedes the advisory this module used to test. Operator ruling, verbatim:
+A `Notice` advisory beside a smaller declared figure is still a green exit code over an
+under-declared return. An unconverted foreign-currency invoice line that would be silently
+dropped from a declared figure REFUSES the whole calculation rather than excluding the line
+and reporting it non-blockingly.
 
-    "Be strict - do not let code pass false green signals - aim for explicit
-    red signals, failures, parse errors until schema and api converges"
+Companion to ``test_currency_conversion_pipeline_parity.py``: that module
+proves the CONVERTED-figure path (a resolved fx_rate) is correct. This module
+proves the UNRESOLVED-rate path is a hard stop, for both invoice-line-reading
+resolvers this defect class touched: the M303 general IVA screen
+(``modelo_bindings.py``) and Modelo 369 OSS/IOSS (``_oss_ioss.py``). OSS/IOSS
+also gets a second refusal for the same "real declarable operation, one
+required fact missing" shape: an unclassifiable IVA rate tier
+(``rate_kind``).
 
-A `Notice` advisory beside a smaller declared figure is still a green exit
-code over an under-declared return -- exactly the false-green shape the
-operator is naming. An unconverted foreign-currency invoice line that would
-be silently dropped from a declared figure now REFUSES the whole calculation
-rather than excluding the line and reporting it non-blockingly.
-
-Companion to the currency-conversion fix in ``test_currency_conversion_pipeline_parity.py``:
-that module proves the CONVERTED-figure path (a resolved fx_rate) is correct.
-This module proves the UNRESOLVED-rate path is now a hard stop, for both
-invoice-line-reading resolvers this defect class touched: the M303 general
-IVA screen (``modelo_bindings.py``) and Modelo 369 OSS/IOSS
-(``_oss_ioss.py``). OSS/IOSS also gets a second refusal for the same
-"real declarable operation, one required fact missing" shape: an
-unclassifiable IVA rate tier (``rate_kind``).
-
-Anti-tautology, per the standing lesson about proofs that refuse for the
-WRONG reason: every assertion below is on ``exc_info.value.translated_message``
+Anti-tautology: every assertion below is on ``exc_info.value.translated_message``
 -- the exact locale key, a cause-unique marker only this guard emits -- and on
 ``exc_info.value.context``, never on "an exception was raised" alone. Two
 sibling guards in these functions could plausibly fire first (deduction
@@ -38,14 +31,19 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
-from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
+from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from ..errors import AggregationValidationError
-from ..oss_ioss import _candidate_for_invoice_line
+from ..modelo_bindings_invoice_iva import screened_invoice_line_observations
+from ..oss_ioss_resolver import candidate_for_invoice_line
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -57,7 +55,31 @@ def _pinned_operation() -> PinnedAuthorityOperation:
     return scoped
 
 
-_DEVENGO = date(2025, 2, 10)
+_DEVENGO = date(_YEAR, 2, 10)
+_PERIOD_LAST_DAY = date(_YEAR, 3, 31)
+
+
+class _PeriodCloseQuote:
+    """A rate authority that publishes at most the period's last day; its parsing has its own tests."""
+
+    rate_source_id = "ecb_reference"
+
+    def __init__(self, rate: Decimal | None) -> None:
+        self._rate = rate
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        del currency
+        if self._rate is None or rate_date != _PERIOD_LAST_DAY:
+            return EurRateLookup(
+                status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source=self.rate_source_id
+            )
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=self.rate_source_id,
+            rate=self._rate,
+            observation_date=rate_date,
+        )
 
 
 def _unconverted_gbp_invoice(*, line_count: int = 1) -> Invoice:
@@ -97,10 +119,10 @@ def _unconverted_gbp_invoice(*, line_count: int = 1) -> Invoice:
 
 
 def test_modelo_bindings_refuses_on_an_unconverted_line() -> None:
-    """FIXED: the M303 general IVA screen raises, it does not silently exclude."""
+    """The M303 general IVA screen raises, it does not silently exclude."""
     invoice = _unconverted_gbp_invoice()
     with pytest.raises(AggregationValidationError) as exc_info:
-        _screened_invoice_line_observations(
+        screened_invoice_line_observations(
             invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
         )
     assert exc_info.value.translated_message == "aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"
@@ -137,7 +159,7 @@ def test_modelo_bindings_does_not_refuse_a_converted_invoice() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    observations = _screened_invoice_line_observations(
+    observations = screened_invoice_line_observations(
         invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
     )
     assert len(observations) == 1
@@ -178,12 +200,15 @@ def _unconverted_pln_oss_line() -> tuple[Invoice, InvoiceLine]:
 
 
 def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
-    """FIXED, end-to-end: OSS/IOSS is cross-border EU B2C, where a destination-currency
+    """End-to-end: OSS/IOSS is cross-border EU B2C, where a destination-currency
     invoice is the ORDINARY case -- the highest-probability trigger of the whole class.
     """
     invoice, line = _unconverted_pln_oss_line()
-    with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+    with (
+        bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(None)),
+        pytest.raises(AggregationValidationError) as exc_info,
+    ):
+        candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
@@ -192,7 +217,7 @@ def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
 
 
 def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
-    """Anti-tautology: an OSS invoice with a resolved rate never trips the currency guard.
+    """Anti-tautology: an OSS invoice whose period-close rate is published never trips the currency guard.
 
     Built from a fresh payload rather than ``invoice.model_dump()`` merged
     with overrides: the model distinguishes an ABSENT optional field from one
@@ -219,24 +244,22 @@ def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
             "payment_status": PaymentStatus.PAID,
             "oss_ioss_regime": OssIossRegime("union_scheme"),
             "oss_transaction_kind": TransactionKind("oss_union_services"),
-            "fx_rate": Decimal("0.23"),
-            "fx_rate_date": _DEVENGO,
-            "fx_rate_source": "ecb_reference",
         },
     )
-    candidate = _candidate_for_invoice_line(resolved, line, line_index=1, devengo_date=_DEVENGO)
+    with bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(Decimal("0.23"))):
+        candidate = candidate_for_invoice_line(
+            resolved, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
+        )
     assert candidate is not None
     assert candidate.base_amount == Decimal("1000.00") * Decimal("0.23")
 
 
 def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
-    """FIXED: a real OSS-eligible line whose IVA rate cannot be tiered REFUSES.
+    """A real OSS-eligible line whose IVA rate cannot be tiered REFUSES.
 
     ``NOT_SUBJECT`` is the one :class:`IvaRate` slot ``iva_rate_kind`` maps to
     ``None`` -- ``EXEMPT`` has its own real :class:`IvaRateKind("exempt")` tier
-    and would not trip this guard, confirmed by reading
-    ``_IVA_RATE_TO_IVA_KIND`` in ``domain/invoices/enums.py`` rather than
-    assumed.
+    and would not trip this guard.
 
     Same "real declarable operation, one required fact missing" shape as the
     currency guard, distinguished by its OWN cause-unique marker so the two
@@ -270,7 +293,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         },
     )
     with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+        candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"
     context = exc_info.value.context
     assert context is not None
@@ -280,13 +303,9 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
 def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
     """Not this guard's business: no oss_ioss_regime means no OSS operation at all.
 
-    Left correctly silent, unchanged from before this task -- the operator
-    directive named the currency and rate_kind exclusions this task
-    introduced/found; converting the regime/destination eligibility gates
-    (which exclude the overwhelming majority of ordinary, non-OSS invoices in
-    any real bucket) into refusals is flagged separately rather than guessed
-    at here, since it would make Modelo 369 calculation fail on any bucket
-    containing a single non-OSS invoice.
+    Converting the regime and destination eligibility gates into refusals
+    would make Modelo 369 calculation fail on any bucket containing a single
+    non-OSS invoice.
     """
     line = InvoiceLine(
         description="Servicio nacional",
@@ -313,5 +332,7 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    candidate = _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+    candidate = candidate_for_invoice_line(
+        invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
+    )
     assert candidate is None

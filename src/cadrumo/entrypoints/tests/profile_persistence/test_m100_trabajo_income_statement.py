@@ -1,0 +1,450 @@
+"""A Modelo 100 on a work-income payer record: the boxes no certificate fills, stated by the filer.
+
+The payer record fills the gross, in-kind, reduction and expense boxes. The employer's
+contributions and the protected-estate contribution are in no certificate, so each blocks the
+return until the filer types a figure or states that there is none, all four at once through one
+action. Real behaviour throughout: an isolated encrypted profile, the bundled authority, the
+production admission and edit executor, and every Modelo 100 year the support envelope admits.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from ....application.modelo.absence_statement_submission import (
+    ModeloAbsenceStatementNothingOpenError,
+    absence_statement_submission,
+    prior_carry_absence_submission,
+)
+from ....application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
+    ModeloScalarEditIntentV1,
+)
+from ....application.modelo.trabajo_income_findings import TrabajoIncomeFinding, trabajo_income_findings
+from ....application.modelo.work_form_models import ModeloWorkForm
+from ....application.modelo.work_form_service import load_modelo_work_form
+from ....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.external_constants import OutputLanguage
+from ....core.retencion_soportada import RetencionSoportadaClase
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
+from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
+from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+from ....domain.user_profile.values import UserProfileFact
+from ...adapter_composition import profile_adapter_composition
+from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
+_CARRIES = (
+    "renta-base-liquidable-negativa-general-anterior",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
+)
+#: The four income boxes no payer certificate states, by the binding that carries each.
+_STATEMENT_BINDINGS = {
+    "0008": "renta-trabajo-contribucion-empresarial-prevision",
+    "0009": "renta-trabajo-contribucion-empresarial-seguro-dependencia",
+    "0010": "renta-trabajo-aportacion-patrimonio-protegido",
+    "0024": "renta-trabajo-aportacion-empresa-decision-trabajador",
+}
+_GROSS = Decimal("20300.00")
+_EXPENSES = Decimal("610.00")
+_TRABAJO = AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
+
+
+def _renta_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    admitted: list[int] = []
+    for year in sorted(support.years):
+        try:
+            published_authority_operation().snapshot(
+                "100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+            )
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        admitted.append(year)
+    return tuple(admitted)
+
+
+def _attest(binding_id: str) -> ModeloBindingEditIntentV1:
+    return ModeloBindingEditIntentV1(
+        address=ModeloEditBindingAddressV1(binding_id=binding_id), kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT
+    )
+
+
+def _form(work: SeededOperatorWork, language: OutputLanguage = OutputLanguage.EN) -> ModeloWorkForm:
+    unit = work.work_unit
+    return load_modelo_work_form(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        operation=work.operation,
+        work_unit_repository=work.ports.work_unit_repository,
+        calculation_repository=work.ports.calculation_repository,
+        verification_repository=work.ports.verification_repository,
+        admission=work.admit(),
+        language=language,
+    ).form
+
+
+def _findings(
+    work: SeededOperatorWork, *, profile_values: dict[str, str] | None = None
+) -> tuple[TrabajoIncomeFinding, ...]:
+    unit = work.work_unit
+    revision = work.operation.snapshot(
+        "100", filing_year=unit.filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    ).revision
+    head: CalculationRevision = work.require_head()
+    findings = trabajo_income_findings(
+        str(unit.modelo),
+        revision,
+        head,
+        profile_values=profile_values or {},
+        effective_date=date(unit.filing_year, 12, 31),
+        operation=work.operation,
+    )
+    # The producer builds each blocking finding with its verify verdict, and a warning without one.
+    for finding, failure in findings:
+        blocks = finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+        assert (failure is not None) is blocks, finding.message_locale_key
+        assert failure is None or failure.subject_leaf_key == "modelo.work.verify"
+    return findings
+
+
+def _blocking_boxes(findings: tuple[TrabajoIncomeFinding, ...]) -> set[str]:
+    return {
+        str(finding.casilla_id)
+        for finding, _failure in findings
+        if finding.severity is ModeloVerificationFindingSeverity.BLOCKING and finding.casilla_id is not None
+    }
+
+
+def _door(findings: tuple[TrabajoIncomeFinding, ...], box: str) -> tuple[str, dict[str, str | int | Decimal]]:
+    """The action a blocking box's verdict offers, with the arguments it already binds."""
+    failure = next(failure for finding, failure in findings if str(finding.casilla_id) == box and failure is not None)
+    action = failure.verdict.action
+    assert action is not None
+    bound = {
+        binding.argument_name: binding.value
+        for binding in failure.verdict.argument_bindings
+        if binding.value is not None
+    }
+    return action.action_id, bound
+
+
+def _alternative_doors(
+    findings: tuple[TrabajoIncomeFinding, ...], box: str
+) -> list[tuple[str, dict[str, str | int | Decimal], tuple[str, ...]]]:
+    """The alternatives a blocking box's verdict offers: action, bound arguments, arguments the filer supplies."""
+    failure = next(failure for finding, failure in findings if str(finding.casilla_id) == box and failure is not None)
+    return [
+        (
+            alternative.action.action_id,
+            {
+                binding.argument_name: binding.value
+                for binding in alternative.argument_bindings
+                if binding.value is not None
+            },
+            alternative.missing_argument_names,
+        )
+        for alternative in failure.verdict.alternative_actions
+    ]
+
+
+def _record_certificate(work: SeededOperatorWork, year: int) -> None:
+    seed_payer_certificate(
+        operation=work.operation,
+        taxpayer_tax_id="00000000T",
+        ejercicio=year,
+        payer_tax_id="B00000001",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("1200.00"),
+        importe_integro_dinerario=_GROSS,
+        gastos_deducibles=_EXPENSES,
+    )
+
+
+def _assert_record_fills_the_boxes_it_states(work: SeededOperatorWork) -> None:
+    # The record fills the boxes it states, from the certificate alone.
+    values = work.require_head().casilla_values
+    assert values[next(c for c in values if str(c) == "0003")] == _GROSS
+    assert values[next(c for c in values if str(c) == "0013")] == _EXPENSES
+
+
+def _assert_unstated_boxes_block_and_serve_their_doors(work: SeededOperatorWork) -> None:
+    # The four boxes no certificate states block, and the deductions only the filer can evidence are served.
+    findings = _findings(work)
+    assert _blocking_boxes(findings) == set(_STATEMENT_BINDINGS)
+    assert [f for f, _ in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
+    # Each box's verdict serves the one statement first, and keeps the override of the binding it reads
+    # as the alternative that states that box alone.
+    for box, binding_id in _STATEMENT_BINDINGS.items():
+        assert _door(findings, box) == (
+            "operator.modelo.work.attest_work_income",
+            {"work_unit_id": work.work_unit_id},
+        )
+        assert _alternative_doors(findings, box) == [
+            (
+                "operator.modelo.work.override",
+                {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
+                ("value",),
+            )
+        ]
+
+
+def _assert_one_action_names_all_four_boxes(work: SeededOperatorWork) -> dict[AbsenceAttestationFamily, Any]:
+    # One action, next to the finding, names all four boxes in its words and apart from the carry words.
+    offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+    assert set(offered) == {_TRABAJO}
+    statement = offered[_TRABAJO]
+    assert set(statement.binding_ids) == set(_STATEMENT_BINDINGS.values())
+    assert all(box in statement.statement_words for box in _STATEMENT_BINDINGS)
+    assert "earlier" not in statement.statement_words
+    spanish = next(iter(_form(work, OutputLanguage.ES).carry_attestations))
+    assert spanish.statement_words != statement.statement_words
+    return offered
+
+
+def _assert_applying_the_statement_clears_every_box(
+    work: SeededOperatorWork, offered: dict[AbsenceAttestationFamily, Any]
+) -> None:
+    # Applying it stages four statements of none in one submission, kept apart from a typed zero.
+    submission = absence_statement_submission(work.baseline(), offered.values(), family=_TRABAJO)
+    assert len(submission.binding_intents) == 4
+    assert work.apply(binding=submission.binding_intents).refusal is None
+    layer = work.require_head().operator_layer
+    assert layer is not None
+    assert set(layer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values())
+    assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _STATEMENT_BINDINGS.values())
+    assert _blocking_boxes(_findings(work)) == set()
+    assert _form(work).carry_attestations == ()
+    with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+        absence_statement_submission(work.baseline(), _form(work).carry_attestations, family=_TRABAJO)
+
+
+def _assert_a_typed_figure_withdraws_only_its_box(work: SeededOperatorWork, typed: str) -> None:
+    # A figure typed over one box is the filer's figure and withdraws only that box's statement.
+    retyped = work.apply(
+        binding=(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=typed),
+                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                value=Decimal("1500"),
+            ),
+        )
+    )
+    assert retyped.refusal is None
+    relayer = work.require_head().operator_layer
+    assert relayer is not None
+    assert typed not in relayer.attested_binding_ids
+    assert set(relayer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values()) - {typed}
+    assert _blocking_boxes(_findings(work)) == set()
+
+
+def _assert_removing_the_override_blocks_the_box_again(work: SeededOperatorWork, typed: str) -> None:
+    # Removing the override leaves that box neither typed nor stated: it blocks again.
+    removed = work.apply(
+        binding=(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=typed),
+                kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            ),
+        )
+    )
+    assert removed.refusal is None
+    assert _blocking_boxes(_findings(work)) == {"0008"}
+    assert {a.family for a in _form(work).carry_attestations} == {_TRABAJO}
+    assert next(iter(_form(work).carry_attestations)).binding_ids == (typed,)
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_each_unstated_income_box_blocks_until_the_one_action_states_all_four_and_a_typed_figure_withdraws_one(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
+
+        _assert_record_fills_the_boxes_it_states(work)
+        _assert_unstated_boxes_block_and_serve_their_doors(work)
+        offered = _assert_one_action_names_all_four_boxes(work)
+        _assert_applying_the_statement_clears_every_box(work, offered)
+        typed = _STATEMENT_BINDINGS["0008"]
+        _assert_a_typed_figure_withdraws_only_its_box(work, typed)
+        _assert_removing_the_override_blocks_the_box_again(work, typed)
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_stated_disability_blocks_the_unstated_increase_and_a_stated_expense_above_its_limit_blocks(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
+        disability = {"renta_taxpayer.disability_grade": "ge_33_lt_65"}
+
+        # Without a stated disability the increase is not in question; with one, it blocks until stated.
+        assert "0021" not in _blocking_boxes(_findings(work))
+        assert "0021" in _blocking_boxes(_findings(work, profile_values=disability))
+        assert _door(_findings(work, profile_values=disability), "0021") == (
+            "operator.modelo.work.set_value",
+            {"work_unit_id": work.work_unit_id, "casilla_id": "0021"},
+        )
+        assert _alternative_doors(_findings(work, profile_values=disability), "0021") == []
+
+        def stated(casilla: str, value: str) -> ModeloScalarEditIntentV1:
+            return ModeloScalarEditIntentV1(
+                address=ModeloEditScalarAddressV1(casilla_id=casilla),
+                kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                value=value,
+            )
+
+        assert work.apply(scalar=(stated("0021", "0"),)).refusal is None
+        assert "0021" not in _blocking_boxes(_findings(work, profile_values=disability))
+
+        # The legal limits are 500 for the professional-body fees and 300 for the legal defence.
+        assert work.apply(scalar=(stated("0015", "500"), stated("0016", "300"))).refusal is None
+        assert not {"0015", "0016"} & _blocking_boxes(_findings(work))
+        assert work.apply(scalar=(stated("0015", "500.01"), stated("0016", "300.01"))).refusal is None
+        assert {"0015", "0016"} <= _blocking_boxes(_findings(work))
+        for box in ("0015", "0016"):
+            assert _door(_findings(work), box) == (
+                "operator.modelo.work.set_value",
+                {"work_unit_id": work.work_unit_id, "casilla_id": box},
+            )
+            assert _alternative_doors(_findings(work), box) == []
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_return_with_no_work_income_record_asks_for_no_statement_of_the_four_boxes(tmp_path: Path, year: int) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
+        assert _blocking_boxes(_findings(work)) == set()
+        assert _TRABAJO not in {a.family for a in _form(work).carry_attestations}
+
+
+@pytest.mark.parametrize("year", _renta_years()[-1:])
+def test_the_work_income_statement_is_offered_only_once_the_open_carries_are_stated(tmp_path: Path, year: int) -> None:
+    """Both families are never open at once: a return with an open carry has no calculation to rest a record on.
+
+    The carries must be answered before the first calculation, and the work-income statement is
+    offered from the calculation on, so the carry family comes first and the work-income family
+    follows without any refusal beside it. Withdrawing a carry statement afterwards leaves the
+    return uncalculable, and the edit refuses that withdrawal.
+    """
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        before = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        assert set(before) == PRIOR_CARRY_FAMILIES
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+            absence_statement_submission(work.baseline(), before.values(), family=_TRABAJO)
+
+        stated = prior_carry_absence_submission(work.baseline(), before.values())
+        assert work.apply(binding=stated.binding_intents).refusal is None
+        after = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        assert set(after) == {_TRABAJO}
+        submission = absence_statement_submission(work.baseline(), after.values(), family=_TRABAJO)
+        assert work.apply(binding=submission.binding_intents).refusal is None
+
+        withdrawn = work.apply(
+            binding=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=_CARRIES[0]),
+                    kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+                ),
+            )
+        )
+        assert withdrawn.refusal is not None
+
+
+@pytest.mark.parametrize("year", _renta_years()[-1:])
+def test_restating_the_values_of_a_checked_calculation_names_it_and_leaves_the_current_draft(
+    tmp_path: Path, year: int
+) -> None:
+    """An edit that reproduces a sealed revision's content names it; the sealed revision and the pointer stay."""
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
+        offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        stated = work.apply(
+            binding=absence_statement_submission(work.baseline(), offered.values(), family=_TRABAJO).binding_intents
+        )
+        assert stated.refusal is None and stated.calculation_revision_id is not None
+        head = work.require_head()
+        sealed = head.model_copy(
+            update={
+                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+                "verified_at": head.updated_at,
+                "verified_by": "operator:test",
+            }
+        )
+        catalogue = work.ports.calculation_repository.load()
+        work.ports.calculation_repository.save(upsert_calculation_revision(catalogue, sealed))
+
+        typed = _STATEMENT_BINDINGS["0008"]
+        retyped = work.apply(
+            binding=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=typed),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=Decimal("1500"),
+                ),
+            )
+        )
+        # New content is a new draft: nothing is named.
+        assert retyped.refusal is None and retyped.public_result is not None
+        assert retyped.public_result.reused_sealed_revision is None
+        draft_id = retyped.calculation_revision_id
+        assert draft_id is not None and draft_id != sealed.calculation_revision_id
+
+        restated = work.apply(binding=(_attest(typed),))
+
+        assert restated.refusal is None and restated.public_result is not None
+        reused = restated.public_result.reused_sealed_revision
+        assert reused is not None
+        assert reused.calculation_revision_id == sealed.calculation_revision_id
+        assert reused.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        assert reused.current_calculation_revision_id == draft_id
+        # The pointer stays on the draft and the sealed revision is left exactly as it was.
+        assert work.require_head().calculation_revision_id == draft_id
+        assert work.ports.calculation_repository.load().get(sealed.calculation_revision_id) == sealed

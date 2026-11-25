@@ -13,15 +13,12 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
-    replace_test_profile_record,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
-from cadrumo.application.modelo.calculation_actions import (
-    calculate_modelo_revision,
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.profile_readiness_gate import (
@@ -34,14 +31,13 @@ from cadrumo.application.modelo.work_addressing import ensure_modelo_work_unit_f
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -55,11 +51,18 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .general_iva_profile_facts_support import general_iva_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -76,7 +79,7 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
     """The TUI's indexed activity row satisfies the shared filing baseline."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
@@ -85,7 +88,7 @@ def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
         ),
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
     assert modelo_work_profile_baseline_missing_paths(record, modelo="130") == ()
@@ -93,66 +96,53 @@ def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
 
 def _seed_profile_record(record: UserProfileRecord) -> None:
     """Persist one fixture record while its governed validation authority is pinned."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         seed_test_profile_record(record)
-
-
-def _replace_profile_record(record: UserProfileRecord) -> UserProfileRecord:
-    """Replace one fixture record under the same pinned validation authority."""
-    with _indexed_authority_for_test().operation():
-        return replace_test_profile_record(record)
 
 
 def _store_incomplete_profile(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
+        create_user_profile_record(
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
+        create_user_profile_record(
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=bucket_id,
             facts=(),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Ready"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+                ),
+                without=("activities.",),
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -164,41 +154,29 @@ def _store_ready_profile(
     setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
 ) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=setup_state,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="design"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            facts=general_iva_profile_facts(
+                tax_id="12345678Z",
+                activity_start_date=activity_start_date,
+                name="Ready",
+                activity="design",
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B66012345"),
+                UserProfileFact(path="identity.tax_id", value="B00015032"),
                 UserProfileFact(path="identity.legal_name", value="NordHaus GmbH"),
                 UserProfileFact(path="activities.description", value="Spanish-source services"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -212,10 +190,11 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
                 UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="DE"),
+                UserProfileFact(path="censo.large_company", value=False),
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -229,11 +208,11 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     Renta).
     """
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="identity.name", value="Olivia"),
                 UserProfileFact(path="identity.surnames", value="Whitfield"),
                 UserProfileFact(path="activities.description", value="UK-source pension"),
@@ -251,10 +230,11 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
                 UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
                 UserProfileFact(path="taxpayer_type.representante_fiscal_nif", value="12345678Z"),
                 UserProfileFact(path="taxpayer_type.representante_fiscal_nombre", value="Gestoria Madrid SL"),
+                UserProfileFact(path="censo.large_company", value=False),
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -330,7 +310,7 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
 
         with (
             pytest.raises(ModeloProfileReadinessError),
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -354,7 +334,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -402,7 +382,7 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
 
         with (
             pytest.raises(ModeloProfileReadinessError),
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -428,7 +408,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
 
         with (
             pytest.raises(WorkUnitMutationRefusedError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -472,7 +452,7 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_NONRESIDENT_PROFILE_ID,
@@ -511,7 +491,7 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_461,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -525,7 +505,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
     """The blocking gate's refusal carries real legal grounding.
 
     ``require_profile_ready_for_modelo_work`` (invoked here via
-    ``calculate_modelo_revision`` re-checking an existing work unit) threads
+    ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` re-checking an existing work unit) threads
     the live registry authority through both
     ``_require_profile_filing_ready`` and the full preflight report, so a
     profile missing ``identity.tax_id`` for a Modelo 100 work unit refuses
@@ -551,7 +531,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_496,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -563,7 +543,8 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
         assert excinfo.value.context is not None
         missing_text = excinfo.value.context["profile_requirements"]
         assert isinstance(missing_text, str)
-        assert "orden-hac-242-2025:art-3" in missing_text or "orden-hac-277-2026:art-3" in missing_text
+        assert "Orden HAC/242/2025, art.\u00a03" in missing_text or "Orden HAC/277/2026, art.\u00a03" in missing_text
+        assert "orden-hac" not in missing_text
 
 
 def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(tmp_path: Path) -> None:
@@ -621,7 +602,7 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_559,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -666,7 +647,7 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_599,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -693,14 +674,14 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     returns ``None`` (applicable, no refusal) for a resident IRPF natural
     person whose only differing fact is the residency axis.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        profile_context = _profile_creation_context_for_test()
-        nonresident = _create_profile_record_for_test(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        profile_context = profile_creation_context_for_test()
+        nonresident = create_user_profile_record(
             context=profile_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_NONRESIDENT_PROFILE_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
@@ -709,22 +690,18 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
             created_at=_NOW,
             updated_at=_NOW,
         )
-        resident = _create_profile_record_for_test(
+        resident = create_user_profile_record(
             context=profile_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_OPERATOR_PROFILE_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
-            ),
+            facts=persona_facts_beneath((UserProfileFact(path="identity.tax_id", value="12345678Z"),)),
             created_at=_NOW,
             updated_at=_NOW,
         )
 
         refusal = modelo_applicability_refusal(
             record=nonresident,
+            filing_year=filing_year_envelope().horizon,
             bucket_id=_NONRESIDENT_PROFILE_ID,
             modelo=Modelo("100").value,
             operation=_authority_operation_for_test,
@@ -738,6 +715,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
         assert (
             modelo_applicability_refusal(
                 record=resident,
+                filing_year=filing_year_envelope().horizon,
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("100").value,
                 operation=_authority_operation_for_test,
@@ -753,7 +731,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -788,7 +766,7 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -875,7 +853,7 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_791,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -918,7 +896,7 @@ def test_first_active_m303_period_allows_create_and_calculate(
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
 
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             work_unit = create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -971,7 +949,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
         )
 
         with (
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
             pytest.raises(ModeloProfileReadinessError) as excinfo,
         ):
             ensure_modelo_work_unit_for_active_target(
@@ -1013,7 +991,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -1051,14 +1029,14 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     before the status-aware gate below ever runs - so the two gates would
     always agree on "missing", never reach the SETUP_INCOMPLETE branch with a
     gap to report. This exercises the readiness re-check on an EXISTING work
-    unit instead (``calculate_modelo_revision``), whose only gate is
+    unit instead (``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``), whose only gate is
     ``require_profile_ready_for_work_unit`` -> the status-aware
     ``require_profile_ready_for_modelo_work`` directly.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _seed_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
+            create_user_profile_record(
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -1066,7 +1044,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 ),
                 created_at=_NOW,
                 updated_at=_NOW,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         repository = WorkUnitCatalogueRepository()
@@ -1078,8 +1056,6 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             period_code="1T",
             revision_id=_M303_2025_REVISION,
         )
-        record = load_test_profile_record(_OPERATOR_PROFILE_ID)
-        _replace_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
@@ -1087,7 +1063,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_955,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -1119,7 +1095,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
     Both facts are live at one effective-dated path, so declaration order and
     ``valid_from`` order disagree and the two readers can be told apart.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
@@ -1136,7 +1112,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
         ),
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
 

@@ -79,6 +79,17 @@ class SignInChanged(BaseModel):
     connection_id: UUID
 
 
+class ProfileLoginChanged(BaseModel):
+    """This connection's exact login attempt settled; claim its authoritative outcome."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_login_changed"] = "profile_login_changed"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    login_request_id: UUID
+
+
 class ServiceLeaseChanged(BaseModel):
     """The service connection's lease was issued or withdrawn; the service claims again to learn which."""
 
@@ -88,6 +99,17 @@ class ServiceLeaseChanged(BaseModel):
     runtime_boot_id: UUID
     connection_id: UUID
     profile_id: UUID
+
+
+class ServiceAdmissionChanged(BaseModel):
+    """This exact person's pending service admission changed; read its status."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["service_admission_changed"] = "service_admission_changed"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    session_id: UUID
 
 
 class AttendanceChanged(BaseModel):
@@ -131,7 +153,9 @@ type ConnectionEvent = (
     | ProfileLanguageChanged
     | ProfileRecordsChanged
     | SignInChanged
+    | ProfileLoginChanged
     | ServiceLeaseChanged
+    | ServiceAdmissionChanged
     | AttendanceChanged
     | AttendanceAnswered
     | OperationChanged
@@ -144,7 +168,9 @@ CONNECTION_EVENT_TYPES = (
     ProfileLanguageChanged,
     ProfileRecordsChanged,
     SignInChanged,
+    ProfileLoginChanged,
     ServiceLeaseChanged,
+    ServiceAdmissionChanged,
     AttendanceChanged,
     AttendanceAnswered,
     OperationChanged,

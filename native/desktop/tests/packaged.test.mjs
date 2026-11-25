@@ -16,17 +16,60 @@ import {
   statSync,
   statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { test } from "node:test";
+import "./packaged/setup.test.mjs";
+import "./packaged/product-log.test.mjs";
+import "./packaged/agent-log-evidence.test.mjs";
+import "./packaged/failure-capture.test.mjs";
+import "./packaged/override-refusal.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
+import { captureProvisioningFailure } from "./packaged/failure-capture.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
-import { hostRefusals, refusalProbe, tokenCheck } from "./packaged/probes.mjs";
-import { packagedHost, packagedHostPaths } from "./packaged/host.mjs";
+import {
+  hostRefusals,
+  refusalProbe,
+  tokenCheck,
+  runSedeMissingAcceptance,
+} from "./packaged/probes.mjs";
+import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
+import { overrideRefusalProblems } from "./packaged/override-refusal.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
+import {
+  loadAllowlist,
+  phaseWindowsOf,
+  productLogVerdict,
+  recordedChecks,
+} from "./packaged/product-log.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
+import {
+  captureAgentLogs,
+  captureGatedLogs,
+  resolvesInside,
+} from "./packaged/agent-log-evidence.mjs";
+import {
+  observeProvisioning,
+  startupObservation,
+  startupPanelVerdict,
+  firstNullSnapshotVerdict,
+  panelObservation,
+  panelRowsVerdict,
+  prepareSmallestModel,
+  installSmallestModel,
+  removeSmallestModel,
+  assertLocalAiShared,
+  runSettingsAcceptance,
+  runRemovalAcceptance,
+  addCustomLocalModel,
+  removeCustomLocalModel,
+  assertPlanSizes,
+  assertPreByteProgress,
+  localAiPartsVerdict,
+  planPartsObservation,
+} from "./packaged/provisioning.mjs";
 import {
   DesktopInput,
   descendants,
@@ -34,6 +77,8 @@ import {
   survivors,
 } from "./packaged/os.mjs";
 import { Results } from "./packaged/results.mjs";
+import { preserveTextClipboard } from "./packaged/clipboard.mjs";
+import { contextMenuVerdict } from "./packaged/context-menu-verdict.mjs";
 import {
   CountingProxy,
   SCRATCH_BUDGET_BYTES,
@@ -43,11 +88,14 @@ import {
   fingerprint,
   fingerprintChanges,
   freeSpaceVerdict,
+  guardedChange,
   isolatedEnvironment,
   probe,
   realStorageVerdict,
   removeScratch,
   runSetupAcceptance,
+  runSetupFailureAcceptance,
+  runConcurrentSetup,
   scratchLayout,
   setupHostVerdict,
   treeBytes,
@@ -75,6 +123,7 @@ import {
 const SKIP = "SKIP";
 const INFO = "INFO";
 const REMOTE = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
+const WORKSPACE_DEVTOOLS_PORT = "CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT";
 const PROCESS_NAMES = [
   "cadrumo.exe",
   "python.exe",
@@ -96,29 +145,40 @@ function settings() {
   // The setup run's whole footprint is one throwaway root in the build's
   // testing directory, removed when the run ends.
   const setup = process.env[SETUP_VARIABLE] === "1";
+  const configuration = process.env.CADRUMO_BUILD_CONFIG;
+  assert(
+    ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"].includes(
+      configuration,
+    ),
+    "Select a supported CMake configuration for the packaged run.",
+  );
   const setupParent = setup
-    ? resolve(buildPath("testing"), "packaged-setup")
+    ? resolve(buildPath("testing"), configuration, "packaged-setup")
     : null;
   const run = setup
     ? resolve(setupParent, `run-${stamp}`)
     : resolve(buildPath("desktop_testing"), "packaged", "runs", stamp);
   const layout = setup ? scratchLayout(run) : null;
+  const resultsParent = resolve(buildPath("desktop_results"), "packaged");
+  const results =
+    process.env.CADRUMO_PACKAGED_RESULTS || resolve(resultsParent, stamp);
+  const resultsMember = relative(resultsParent, resolve(results));
+  assert(
+    resultsMember &&
+      !resultsMember.startsWith("..") &&
+      !isAbsolute(resultsMember),
+    "Packaged results must be inside the CMake packaged results directory.",
+  );
   return {
     stamp,
     packageRoot,
     storageVariable:
-      process.env.CADRUMO_STORAGE_ROOT_VARIABLE || "CADRUMO_LOCAL_STORAGE_ROOT",
+      process.env.CADRUMO_STORAGE_ROOT_VARIABLE || "CADRUMO_STORAGE_ROOT",
     run,
     storage: layout ? layout.storage : resolve(run, "storage"),
     setupParent,
     layout,
-    results:
-      process.env.CADRUMO_PACKAGED_RESULTS ||
-      resolve(
-        buildPath("desktop_results"),
-        setup ? "packaged-setup" : "packaged",
-        stamp,
-      ),
+    results,
     allowBrowser: process.env.CADRUMO_PACKAGED_ALLOW_BROWSER === "1",
   };
 }
@@ -210,10 +270,6 @@ function projection(config, env) {
   const defaults = contract.desktop_defaults;
   const storage = env[config.storageVariable];
   assert(isAbsolute(storage), "the host environment pins the storage root");
-  assert(
-    !(defaults.log_variable in env),
-    "the packaged run relocates no log directory",
-  );
   const logs = resolve(storage, defaults.logs);
   return {
     storage,
@@ -226,6 +282,45 @@ function projection(config, env) {
   };
 }
 
+const PRODUCT_LOG_ALLOWLIST = fileURLToPath(
+  new URL("./packaged/product-log-allowlist.json", import.meta.url),
+);
+
+function desktopDefaults() {
+  return JSON.parse(readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"))
+    .desktop_defaults;
+}
+
+/**
+ * The product-log gate over the storage root the run used: the check verdict,
+ * with the full grouped findings kept as evidence beside it. The window run
+ * passes its in-memory harness IPC trace and its host pid so the authored
+ * terminal probe's refusal can be causally attributed; the setup run has no
+ * such probe and passes neither.
+ */
+function productLogGate({
+  results,
+  storage,
+  run,
+  signIn,
+  ipcTrace = null,
+  windowHostPid = null,
+}) {
+  const verdict = productLogVerdict({
+    storage,
+    defaults: desktopDefaults(),
+    checks: recordedChecks(results.checks, {
+      "canonical-sign-in": phaseWindowsOf(signIn?.timingStats()),
+    }),
+    allowlist: loadAllowlist(PRODUCT_LOG_ALLOWLIST),
+    run,
+    ipcTrace,
+    windowHostPid,
+  });
+  results.evidence("product-log-findings.json", verdict);
+  return { verdict: verdict.verdict, detail: verdict.detail };
+}
+
 function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
 }
@@ -235,7 +330,7 @@ function launch(executable, args, { env, cwd, out, err }) {
     cwd,
     env,
     stdio: ["ignore", openSync(out, "w"), openSync(err, "w")],
-    windowsHide: false,
+    windowsHide: true,
   });
   const exit = new Promise((done) =>
     child.on("exit", (code) => done({ code, at: Date.now() })),
@@ -248,7 +343,7 @@ async function exited(exit, ms) {
 }
 
 /** Records one check or experiment as a result line and as a subtest. */
-function recorder(t, results) {
+function recorder(t, results, onFailure) {
   return async (kind, id, title, run) => {
     const checkStartedAt = new Date().toISOString();
     const checkStarted = performance.now();
@@ -257,6 +352,13 @@ function recorder(t, results) {
       outcome = await run();
     } catch (error) {
       outcome = { verdict: FAIL, detail: `error: ${error?.message ?? error}` };
+    }
+    if (outcome.verdict === FAIL && onFailure) {
+      try {
+        await onFailure(id);
+      } catch (error) {
+        outcome.detail += `; capture: ${error.message}`;
+      }
     }
     const entry = results.record({
       kind,
@@ -294,18 +396,30 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
   let session = null;
   let host = null;
   let hostPid = null;
+  let ipcTrace = null;
+  const refusedPids = [];
   let projected = null;
   let webviewPids = [];
   let signIn = null;
+  let restoreClipboard = null;
 
-  const record = recorder(t, results);
+  const record = recorder(t, results, (id) =>
+    captureProvisioningFailure(session, results, id),
+  );
   const check = (id, title, run) => record("check", id, title, run);
   const experiment = (id, title, run) => record("experiment", id, title, run);
   const evidence = (name, value) => results.evidence(name, value);
 
   try {
     // Preflight ----------------------------------------------------------
-    const testHost = packagedHost();
+    // The desktop supervises its runtime only as the installed image of the
+    // package it is pointed at, so the window, its runtime and its CLI start
+    // from the stager's mirror of the staged package, never the stage itself.
+    const testHost = installedHost();
+    config.packageRoot = testHost.package;
+    // The window hosts the shared supervision core and starts the runtime that
+    // serves the run's root; a fixture-owned runtime would leave it owner-busy.
+    config.hostSupervisesRuntime = true;
     const desktop = await input.session();
     summary.host = testHost.executable;
     summary.hostSha256 = testHost.sha256;
@@ -361,7 +475,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     });
     const fixture = await check(
       "sign-in-fixture",
-      "canonical profile creation and explicitly owned packaged runtime",
+      "canonical profile creation; the window supervises the packaged runtime",
       () => signIn.start(),
     );
     if (fixture.verdict !== PASS) return;
@@ -382,8 +496,21 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           },
         ];
         const outcomes = [];
+        const logs = desktopDefaults().logs;
         for (const [index, extra] of cases.entries()) {
-          const { env } = hostEnvironment(config, extra);
+          // A refusal is expected to write an ERROR record, so it gets its own
+          // storage root rather than the window run's gated one.
+          const root = resolve(config.run, `override-refused-${index}`);
+          mkdirSync(root, { recursive: true });
+          if (!resolvesInside(config.run, root) || readdirSync(root).length)
+            return {
+              verdict: FAIL,
+              detail: `override-refused-${index} is not an empty root inside the run directory`,
+            };
+          const { env } = hostEnvironment(config, {
+            ...extra,
+            [config.storageVariable]: root,
+          });
           const out = resolve(config.run, `refused-${index}.out`);
           const err = resolve(config.run, `refused-${index}.err`);
           const started = launch(testHost.executable, ["--gui"], {
@@ -401,15 +528,36 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           } catch {
             code = stderr.slice(0, 120);
           }
+          const nativeLog = resolve(root, logs, "cadrumo-native.jsonl");
+          let record;
+          if (resolvesInside(root, nativeLog)) {
+            record = readFileSync(nativeLog, "utf8");
+            results.logEvidence(
+              `override-refused-${index}-cadrumo-native.jsonl`,
+              nativeLog,
+            );
+          }
+          const judged = overrideRefusalProblems(record, {
+            excludedPids: [
+              process.pid,
+              ...outcomes.map((outcome) => outcome.hostPid),
+            ],
+          });
+          refusedPids.push(judged.pid);
           outcomes.push({
             variables: Object.keys(extra),
             exit: done?.code ?? "running",
             code,
+            hostPid: judged.pid,
+            recordProblems: judged.problems,
           });
         }
         evidence("override-refused.json", outcomes);
         const bad = outcomes.filter(
-          (o) => o.exit !== 1 || o.code !== "environment_failed",
+          (o) =>
+            o.exit !== 1 ||
+            o.code !== "environment_failed" ||
+            o.recordProblems.length,
         );
         return bad.length
           ? {
@@ -428,7 +576,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     // Launch ----------------------------------------------------------------
     const port = await freePort();
     const { env: hostEnv, removed } = hostEnvironment(config, {
-      [REMOTE]: `--remote-debugging-port=${port}`,
+      [WORKSPACE_DEVTOOLS_PORT]: String(port),
     });
     summary.removedVariables = removed.join(", ") || "none";
     const hostLaunchStarted = performance.now();
@@ -439,6 +587,17 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       err: resolve(config.results, "host-stderr.txt"),
     });
     hostPid = host.child.pid;
+    await check(
+      "override-refused-isolated",
+      "the refused hosts were other processes than the window host",
+      async () =>
+        refusedPids.includes(hostPid)
+          ? {
+              verdict: FAIL,
+              detail: `the window host pid ${hostPid} is a refused host's`,
+            }
+          : { verdict: PASS, detail: "distinct host pids" },
+    );
     const launched = await check(
       "launch",
       "the window opens with the DevTools endpoint",
@@ -471,8 +630,15 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     const { page } = session;
     const environment = await session.call("desktop_environment");
     evidence("desktop-environment.json", environment);
-    await session.waitDocs(60000);
-    summary.hostToDocsReadyMs = performance.now() - hostLaunchStarted;
+    // The documentation frame is its own set of checks below; a window whose
+    // docs never settle still signs in, so that is not waited out here.
+    const docsReady = await session
+      .waitDocs(60000)
+      .then(() => true)
+      .catch(() => false);
+    summary.hostToDocsReadyMs = docsReady
+      ? performance.now() - hostLaunchStarted
+      : null;
     await results.screenshot(page, "01-loaded");
 
     const webviewProcesses = async () =>
@@ -480,6 +646,22 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
         p.commandLine.toLowerCase().includes(projected.webview.toLowerCase()),
       );
     webviewPids = (await webviewProcesses()).map((p) => p.pid);
+    const profileOwnership = await check(
+      "webview-profile-owned",
+      "the workspace browser uses this run's projected WebView data directory",
+      async () => {
+        assert(
+          webviewPids.length > 0,
+          "no browser process uses the projected WebView profile; refusing to drive a browser outside this run's profile",
+        );
+        return {
+          verdict: PASS,
+          detail: `${webviewPids.length} browser processes use this run's projected profile`,
+          data: { pids: webviewPids },
+        };
+      },
+    );
+    if (profileOwnership.verdict !== PASS) return;
     await experiment(
       "webview2-interfaces",
       "WebView2 runtime exposes ICoreWebView2_22 and ICoreWebView2Settings3",
@@ -527,6 +709,11 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       "canonical-sign-in",
       "real password form signs in through the packaged CLI",
       () => signIn.signIn(session, input, hostPid),
+    );
+    await check(
+      "provisioning-6-settings",
+      "Settings has one provisioning entry opening the panel",
+      () => runSettingsAcceptance(session),
     );
     await check(
       "profile-list",
@@ -628,6 +815,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
             verdict: SKIP,
             detail: "canonical sign-in failed; TUI remains gated",
           };
+        await session.showTab("tui");
         const state = await waitFor(
           async () => {
             const value = await session.terminal("tui");
@@ -714,8 +902,9 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
 
     // Documentation: CSP, search and a localized root ---------------------------
     // The documentation is put away by default: it is shown before it is read.
-    if (!(await page.locator(".pane-docs").isVisible()))
+    if (!(await page.locator(".docs-frame").isVisible()))
       await page.locator('.rail [data-rail="docs"]').click();
+    await page.locator(".docs-frame").waitFor({ state: "visible" });
     const shown = session.docsFrame()?.url();
     const shownEntry = entries.find((language) => language.entry === shown);
     const localized = entries.find(
@@ -744,7 +933,6 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       pagefind = await frame
         .evaluate(pagefindSearch, {
           query: "modelo",
-          bundle: "pagefind/pagefind.js",
         })
         .catch((error) => ({
           results: 0,
@@ -883,10 +1071,20 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
 
     // Refusal from inside the documentation frame -------------------------------
     const refusals = () => hostRefusals(session);
-    const original = await session.call("shell_clipboard_read");
-    if (original.ok) results.secret(original.value.text);
+    restoreClipboard = await preserveTextClipboard({
+      read: async () => {
+        const original = await session.call("shell_clipboard_read");
+        if (!original.ok) throw new Error("Clipboard text capture failed");
+        return original.value.text;
+      },
+      write: (text) => input.clipboardWrite(text),
+      registerSecret: (text) => results.secret(text),
+    });
     const baseline = `S10-BASELINE-${randomBytes(6).toString("hex")}`;
-    await session.call("shell_clipboard_write", { text: baseline });
+    const preparedClipboard = await session.call("shell_clipboard_write", {
+      text: baseline,
+    });
+    assert(preparedClipboard.ok, "Clipboard probe baseline could not be set");
     const probe = async (kind) => {
       const { result, ...verdict } = await refusalProbe(session, kind, {
         ipcOrigin: ipcPrefix.slice(0, -1),
@@ -1088,20 +1286,45 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       "a panel resize reaches the Python child",
       async () => {
         await session.showTab("python");
-        const separator = page.locator(".panel-separator");
-        await separator.focus();
-        for (let i = 0; i < 4; i += 1) await page.keyboard.press("ArrowUp");
-        await sleep(1000);
         const state = await session.terminal("python");
-        const resize = await session.shell(
-          (id) =>
-            window.__s10.ipc
-              .filter(
-                (e) =>
-                  e.cmd === "terminal_resize" && e.args?.session === id && e.ok,
-              )
-              .pop() ?? null,
-          state.session,
+        const cursor = await session.shell(
+          () => window.__s10.ipc.at(-1)?.seq ?? 0,
+        );
+        const separator = page.locator(
+          '[data-dock-divider][role="separator"][aria-orientation="horizontal"]:visible',
+        );
+        const before = Number(await separator.getAttribute("aria-valuenow"));
+        const minimum = Number(await separator.getAttribute("aria-valuemin"));
+        const maximum = Number(await separator.getAttribute("aria-valuemax"));
+        const direction =
+          before - minimum > maximum - before ? "ArrowUp" : "ArrowDown";
+        await separator.focus();
+        for (let i = 0; i < 4; i += 1) await page.keyboard.press(direction);
+        await waitFor(
+          async () =>
+            Number(await separator.getAttribute("aria-valuenow")) !== before,
+          { timeout: 5000, what: "the dock divider to move by keyboard" },
+        );
+        await sleep(1000);
+        const resize = await waitFor(
+          () =>
+            session.shell(
+              ({ id, cursor }) =>
+                window.__s10.ipc
+                  .filter(
+                    (e) =>
+                      e.seq > cursor &&
+                      e.cmd === "terminal_resize" &&
+                      e.args?.session === id &&
+                      e.ok,
+                  )
+                  .pop() ?? null,
+              { id: state.session, cursor },
+            ),
+          {
+            timeout: 10000,
+            what: "a new Python terminal resize to reach the host",
+          },
         );
         if (!resize)
           return {
@@ -1312,51 +1535,6 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       }),
     );
 
-    // Native context menu -------------------------------------------------------
-    await check(
-      "context-menu-null",
-      "a shell context menu opened and dismissed resolves null",
-      async () => {
-        const pending = session.call("shell_context_menu", {
-          items: [{ id: "s10", label: "S10 probe & menu", enabled: true }],
-          x: 40,
-          y: 40,
-        });
-        const menu = await waitFor(
-          async () =>
-            (await input.windows([hostPid])).find((w) => w.class === "#32768"),
-          { timeout: 5000, what: "the native menu" },
-        ).catch(() => null);
-        if (menu) {
-          await input.post(hostPid, "cancelmode");
-          const closed = await exited(
-            pending.then(() => ({})),
-            3000,
-          );
-          if (!closed) {
-            await input.activate(hostPid).catch(() => undefined);
-            await input.chord(hostPid, "escape").catch(() => undefined);
-          }
-        }
-        const result = await Promise.race([
-          pending,
-          sleep(8000).then(() => ({ ok: false, error: { code: "no answer" } })),
-        ]);
-        if (!menu)
-          return {
-            verdict: FAIL,
-            detail: `no native menu window appeared; result ${JSON.stringify(result)}`,
-          };
-        return result.ok && result.value.chosen === null
-          ? {
-              verdict: PASS,
-              detail:
-                "menu window #32768 appeared and the dismissal resolved null",
-            }
-          : { verdict: FAIL, detail: `result ${JSON.stringify(result)}` };
-      },
-    );
-
     // Accelerators and default context menus --------------------------------------
     const browserCdp = await session.browser.newBrowserCDPSession();
     const snapshot = async () =>
@@ -1376,9 +1554,30 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
         await input.post(hostPid, "close", window.hwnd).catch(() => undefined);
       }
     };
+    const menuWindowEvidence = async (state) => {
+      const windows = state.windows.map((window) => ({
+        ...window,
+        processRole: window.pid === hostPid ? "host" : "webview",
+      }));
+      try {
+        const metadata = await input.request("window-metadata", {
+          pids: [hostPid, ...webviewPids],
+          hwnds: windows.map((window) => window.hwnd),
+        });
+        return {
+          windows: windows.map((window) => ({
+            ...window,
+            metadata: metadata.find((item) => item.hwnd === window.hwnd) ?? {
+              diagnosticError: "metadata response omitted the requested HWND",
+            },
+          })),
+        };
+      } catch (error) {
+        return { windows, diagnosticError: error.message };
+      }
+    };
     const focusFrame = async (role) => {
-      if (role === "shell")
-        await page.locator(".pane-docs .pane-title").click();
+      if (role === "shell") await page.locator("#tab-docs").focus();
       else
         await session
           .docsFrame()
@@ -1484,24 +1683,61 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       for (const via of ["os", "cdp"]) {
         await suppress(role, true);
         const before = await snapshot();
+        const boundary = {
+          hostPid,
+          webviewPids: [...webviewPids],
+          before: await menuWindowEvidence(before),
+          settingsReadback: {
+            available: false,
+            gap: "No supported default-context-menu settings readback in the current host command surface",
+          },
+          diagnosticErrors: [],
+        };
         const box =
           role === "shell"
-            ? await page.locator(".pane-docs .pane-title").boundingBox()
+            ? await page.locator("#tab-docs").boundingBox()
             : await page
                 .locator("iframe.docs-frame")
                 .boundingBox()
-                .then(
-                  (b) =>
+                .then((b) => {
+                  boundary.domTargetBox = b;
+                  return (
                     b && {
                       ...b,
                       x: b.x + 40,
                       y: b.y + 60,
                       width: 1,
                       height: 1,
-                    },
-                );
+                    }
+                  );
+                });
         const x = box.x + Math.min(box.width / 2, 20);
         const y = box.y + Math.min(box.height / 2, 10);
+        boundary.target = { box, cssClick: { x, y } };
+        if (role === "shell") boundary.domTargetBox = box;
+        let expectedTitle = null;
+        if (role === "shell") {
+          try {
+            expectedTitle = await page
+              .locator("#tab-docs")
+              .evaluate((element) => {
+                const title = element.getAttribute("title");
+                return title !== null && title.length <= 1024 ? title : null;
+              });
+          } catch {
+            boundary.diagnosticErrors.push("DOM target title unavailable");
+          }
+        }
+        if (via === "cdp") {
+          try {
+            boundary.client = await input.client(hostPid);
+            boundary.devicePixelRatio = await session.shell(
+              () => devicePixelRatio,
+            );
+          } catch (error) {
+            boundary.diagnosticErrors.push(error.message);
+          }
+        }
         let note = null;
         try {
           if (via === "os") {
@@ -1511,7 +1747,13 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
               );
             const client = await input.client(hostPid);
             const scale = await session.shell(() => devicePixelRatio);
-            await input.click(
+            boundary.client = client;
+            boundary.devicePixelRatio = scale;
+            boundary.osScreenClick = {
+              x: Math.round(client.x + x * scale),
+              y: Math.round(client.y + y * scale),
+            };
+            boundary.osInput = await input.click(
               hostPid,
               Math.round(client.x + x * scale),
               Math.round(client.y + y * scale),
@@ -1524,13 +1766,48 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
         await sleep(1500);
         const after = await snapshot();
         await suppress(role, false);
-        const verdict = noEffectVerdict(before, after);
-        if (verdict.verdict === FAIL) await dismissNew(before);
+        const originalVerdict = noEffectVerdict(before, after);
+        boundary.after = await menuWindowEvidence(after);
+        const known = new Set(before.windows.map((window) => window.hwnd));
+        boundary.delta = boundary.after.windows.filter(
+          (window) => !known.has(window.hwnd),
+        );
+        if (boundary.delta.length) {
+          try {
+            boundary.deltaAccessibility = await input.request("window-roles", {
+              pids: [hostPid, ...webviewPids],
+              hwnds: boundary.delta.map((window) => window.hwnd),
+              expectedTitle,
+            });
+          } catch {
+            boundary.diagnosticErrors.push("delta accessibility query failed");
+          }
+        }
+        const remaining = new Set(after.windows.map((window) => window.hwnd));
+        boundary.removed = boundary.before.windows.filter(
+          (window) => !remaining.has(window.hwnd),
+        );
+        const verdict = contextMenuVerdict(before, after, boundary);
+        try {
+          evidence(`context-menu-${role}-${via}-boundary.json`, {
+            via,
+            ...verdict,
+            before,
+            after,
+            boundary,
+          });
+        } catch (error) {
+          boundary.diagnosticErrors.push(
+            `boundary evidence write: ${error.message}`,
+          );
+        }
+        if (originalVerdict.verdict === FAIL) await dismissNew(before);
         outcomes.push({
           via,
           ...verdict,
           reachedPage: after.menus[role] > before.menus[role],
           note,
+          boundary,
         });
       }
       evidence(`context-menu-${role}.json`, outcomes);
@@ -1555,7 +1832,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
                 detail: ran
                   .map(
                     (o) =>
-                      `${o.via}: no window${o.reachedPage ? ", contextmenu reached the page unprevented" : ", contextmenu not seen by the page"}`,
+                      `${o.via}: ${o.detail}${o.reachedPage ? ", contextmenu reached the page unprevented" : ", contextmenu not seen by the page"}`,
                   )
                   .join("; "),
               };
@@ -1638,17 +1915,15 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     );
 
     // Evidence before the window closes ---------------------------------------------
-    evidence("ipc-trace.json", await session.shell(() => window.__s10.ipc));
+    ipcTrace = await session.shell(() => window.__s10.ipc);
+    evidence("ipc-trace.json", ipcTrace);
     evidence("frames.json", await session.frames());
     evidence("playwright-console.json", session.console);
     evidence(
       "log-records.json",
       await session.shell(() => window.__s10.logs.records.slice(-500)),
     );
-    if (original.ok)
-      await session.call("shell_clipboard_write", {
-        text: original.value.text,
-      });
+    if (restoreClipboard) await restoreClipboard();
 
     await check(
       "canonical-sign-out",
@@ -1672,6 +1947,11 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     );
 
     // Close with a paused session ------------------------------------------------
+    const signedOutPrompt = page.locator('.sign-in[data-state="open"]');
+    if (await signedOutPrompt.isVisible()) {
+      await signedOutPrompt.locator(":scope > button[aria-label]").click();
+      await signedOutPrompt.waitFor({ state: "hidden" });
+    }
     await quiet("python", 1000);
     await session.shell(() => window.__s10.hold());
     await session.type("python", flood(40000, "S10-FLOOD3-END"));
@@ -1692,7 +1972,9 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       watched: watched.map(({ commandLine: _, ...p }) => p),
     });
     const closeStarted = Date.now();
-    await input.post(hostPid, "close");
+    // Exercise the principal window's actual button and authenticated IPC;
+    // WM_CLOSE alone cannot catch a broken titlebar command.
+    await session.page.locator(".window-close").click();
     const closed = await exited(host.exit, 15000);
     await sleep(5000);
     const now = await input.processes(PROCESS_NAMES);
@@ -1703,7 +1985,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     const trackedLeft = tracked.filter((p) => now.some((q) => q.pid === p.pid));
     await check(
       "close-settles",
-      "closing the window ends the host within 10 s and leaves no child process",
+      "the titlebar close button ends the host within 10 s and leaves no child process",
       async () =>
         closeVerdict({
           exitCode: closed ? closed.code : null,
@@ -1713,6 +1995,33 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
             ...trackedLeft.filter((p) => !left.some((q) => q.pid === p.pid)),
           ],
         }),
+    );
+    await check(
+      "close-flushes-diagnostics",
+      "the titlebar close persists its final host event before process exit",
+      async () => {
+        const records = readFileSync(
+          resolve(projected.logs, "cadrumo-native.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split(/\r?\n/)
+          .map((line) => JSON.parse(line));
+        const stops = records.filter(
+          (event) => event.hostPid === hostPid && event.kind === "host_stopped",
+        );
+        assert.equal(
+          stops.length,
+          1,
+          "one final event for the closing host must reach disk",
+        );
+        assert.equal(stops[0].hostExitCode, 0);
+        return {
+          verdict: PASS,
+          detail:
+            "the closing host's final successful event was drained to disk",
+        };
+      },
     );
     await experiment(
       "close-while-paused",
@@ -1766,6 +2075,22 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       }),
     );
   } finally {
+    let clipboardCleanup = null;
+    if (restoreClipboard) {
+      try {
+        await restoreClipboard();
+        clipboardCleanup = {
+          verdict: PASS,
+          detail:
+            "saved text restored and verified through the independent OS helper",
+        };
+      } catch {
+        clipboardCleanup = {
+          verdict: FAIL,
+          detail: "Clipboard text restoration failed",
+        };
+      }
+    }
     // Node-side evidence remains readable after a renderer crash. Preserve it
     // before cleanup, without asking the failed browser to execute more code.
     if (session) {
@@ -1799,19 +2124,44 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       );
     if (projected) {
       const captures = [
-        results.logEvidence("storage-cadrumo.log", projected.logFile),
-        results.logEvidence(
-          "storage-cadrumo-native.jsonl",
-          resolve(projected.logs, "cadrumo-native.jsonl"),
-        ),
+        ...captureGatedLogs({
+          results,
+          storage: projected.storage,
+          defaults: desktopDefaults(),
+          prefix: "storage",
+        }),
+        ...captureAgentLogs({
+          results,
+          storage: projected.storage,
+          prefix: "window",
+        }),
       ];
       try {
         evidence("final-log-capture.json", captures);
       } catch {
         // Keep cleanup and the original failing check authoritative.
       }
+      await check(
+        "product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: projected.storage,
+            run: "window",
+            signIn,
+            ipcTrace,
+            windowHostPid: hostPid,
+          }),
+      );
     }
     input.close();
+    if (clipboardCleanup)
+      await check(
+        "clipboard-restored",
+        "the saved text clipboard is restored even after a failed GUI check",
+        async () => clipboardCleanup,
+      );
     const counts = results.finish({
       startedAt,
       endedAt: new Date().toISOString(),
@@ -1847,38 +2197,6 @@ function realStorageRoots() {
   ];
 }
 
-const GUARDED_MEMBERS = new Set([
-  "components",
-  "models",
-  "buckets",
-  "active-profile",
-  "keystore",
-  "secrets",
-  "tokens",
-]);
-
-/** A change a setup or a profile of this run could have made, not another program's. */
-function guardedChange(change, roots, marks) {
-  const path = change.slice(change.indexOf(" ") + 1).replace(/\|absent$/, "");
-  if (
-    marks.some(
-      (mark) => mark && path.toLowerCase().includes(mark.toLowerCase()),
-    )
-  )
-    return true;
-  const root = roots.find(
-    (candidate) => path === candidate || path.startsWith(candidate + sep),
-  );
-  if (!root) return true;
-  if (root.toLowerCase().endsWith(`${sep}ms-playwright`)) return true;
-  const parts = relative(root, path).split(sep).filter(Boolean);
-  const member = parts[0] === "development" ? parts[1] : parts[0];
-  return (
-    member !== undefined &&
-    (GUARDED_MEMBERS.has(member) || member.startsWith("profile-custody"))
-  );
-}
-
 const SETUP_ACCEPTANCE = {
   timeout: 90 * 60 * 1000,
   skip: !SETUP_RUN && `set ${SETUP_VARIABLE}=1 to run the setup acceptance`,
@@ -1886,11 +2204,19 @@ const SETUP_ACCEPTANCE = {
 
 test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   const config = settings();
+  // The desktop supervises its runtime only as the installed image of the
+  // package it is pointed at, so the run starts the host, its runtime and its
+  // CLI from the stager's mirror of the staged package, never the stage itself.
+  const testHost = installedHost();
+  config.packageRoot = testHost.package;
+  config.hostSupervisesRuntime = true;
   const { layout } = config;
   const results = new Results(config.results);
   const startedAt = new Date().toISOString();
   const summary = { root: layout.root };
-  const record = recorder(t, results);
+  const record = recorder(t, results, (id) =>
+    captureProvisioningFailure(session, results, id),
+  );
   const check = (id, title, run) => record("check", id, title, run);
   const evidence = (name, value) => results.evidence(name, value);
   const input = new DesktopInput();
@@ -1909,6 +2235,8 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   let credentialsBefore = null;
   let started = false;
   const seen = new Map();
+  const priorSetupFrames = [];
+  const priorSetupConsole = [];
 
   /** Every process of this run: the host's and the runtime's trees, and anything naming the root. */
   const runProcesses = async () => {
@@ -1942,7 +2270,6 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   };
 
   try {
-    const testHost = packagedHost();
     const desktop = await input.session();
     summary.host = testHost.executable;
     summary.package = config.packageRoot;
@@ -2055,7 +2382,8 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
 
     const port = await freePort();
     const { env: hostEnv } = hostEnvironment(config, {
-      [REMOTE]: `--remote-debugging-port=${port}`,
+      [WORKSPACE_DEVTOOLS_PORT]: String(port),
+      CADRUMO_PROXY_URL: proxy.url,
     });
     host = launch(testHost.executable, ["--gui"], {
       env: hostEnv,
@@ -2069,6 +2397,49 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
     );
     const window = tauri.app.windows[0];
     const scheme = window.useHttpsScheme ? "https" : "http";
+    const captureSetupConnectionFailure = (prefix) => async (browser) => {
+      const snapshots = [];
+      for (const page of browser
+        .contexts()
+        .flatMap((context) => context.pages())) {
+        const url = new URL(page.url());
+        if (url.origin !== `${scheme}://tauri.localhost`) continue;
+        const snapshot = { page: `${url.origin}${url.pathname}` };
+        if (url.pathname.endsWith("/startup.html")) {
+          snapshot.startup = await Promise.race([
+            page.evaluate(() => ({
+              phase: document.querySelector("main")?.dataset.phase ?? null,
+              busy:
+                document.querySelector("main")?.getAttribute("aria-busy") ??
+                null,
+              visibility: document.visibilityState,
+              status:
+                document.querySelector("#status")?.textContent?.slice(0, 300) ??
+                null,
+              failure:
+                document
+                  .querySelector("#failure")
+                  ?.textContent?.slice(0, 300) ?? null,
+            })),
+            sleep(3000).then(() => ({ unavailable: true })),
+          ]).catch(() => ({ unavailable: true }));
+          await results.screenshot(page, prefix);
+        }
+        snapshots.push(snapshot);
+      }
+      evidence(`${prefix}-pages.json`, snapshots);
+      const logRoot = resolve(layout.storage, contract.desktop_defaults.logs);
+      evidence(`${prefix}-logs.json`, [
+        results.logEvidence(
+          `${prefix}-native.jsonl`,
+          resolve(logRoot, "cadrumo-native.jsonl"),
+        ),
+        results.logEvidence(
+          `${prefix}-startup.jsonl`,
+          resolve(logRoot, "cadrumo-startup-outcomes.jsonl"),
+        ),
+      ]);
+    };
     const launched = await check(
       "launch",
       "the window opens with the DevTools endpoint",
@@ -2084,6 +2455,10 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
         session = await connect({
           endpoint,
           shellOrigins: [`${scheme}://tauri.localhost`],
+          documentObserver: observeProvisioning,
+          onFailure: captureSetupConnectionFailure(
+            "setup-initial-connection-failure",
+          ),
           docsOrigin: docsOriginOf(window),
           ipcPrefix: `${scheme}://ipc.localhost/`,
           blockExternal: !config.allowBrowser,
@@ -2092,20 +2467,368 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     if (launched.verdict !== PASS) return;
+    // The host installs its sign-in state while startup assembles the workspace,
+    // so nothing is asked of it before the workspace has loaded, as in the main suite.
+    const workspace = await check(
+      "setup-workspace-ready",
+      "startup hands the window over to the workspace",
+      async () => {
+        try {
+          await session.waitDocs(120000);
+          return {
+            verdict: PASS,
+            detail: "the workspace's documentation frame loaded",
+          };
+        } catch (error) {
+          const progress = await session
+            .call("startup_status")
+            .catch((failure) => ({ ok: false, error: String(failure) }));
+          evidence("setup-startup-status.json", progress);
+          await results
+            .screenshot(session.page, "setup-00-startup")
+            .catch(() => undefined);
+          return {
+            verdict: FAIL,
+            detail: `${error.message}; startup reports ${JSON.stringify(progress).slice(0, 400)}`,
+          };
+        }
+      },
+    );
+    if (workspace.verdict !== PASS) return;
+    await session.page
+      .locator('.sign-in[data-state="open"]')
+      .waitFor({ state: "visible" });
+    await session.page.locator(".sign-in > button[aria-label]").click();
+    await session.page
+      .locator('.setup-dialog[data-state="open"]')
+      .waitFor({ state: "visible", timeout: 20000 });
+    await check(
+      "provisioning-1-startup",
+      "signed-out startup defers the panel until sign-in is dismissed",
+      async () => startupPanelVerdict(await startupObservation(session)),
+    );
+    await check(
+      "provisioning-1-null-first",
+      "an undecided first snapshot still leads to the startup panel",
+      async () => firstNullSnapshotVerdict(await startupObservation(session)),
+    );
+    await check(
+      "provisioning-1-elements",
+      "each engine element has one status and its own action",
+      async () => {
+        const localAi = session.page.locator(
+          '.setup-dialog [data-setup-element="local_ai"] > button',
+        );
+        if ((await localAi.getAttribute("aria-expanded")) !== "true")
+          await localAi.click();
+        const read = await session.call("desktop_setup_read");
+        return panelRowsVerdict(
+          read.value?.snapshot,
+          await panelObservation(session),
+        );
+      },
+    );
+    await session.page.locator(".setup-dialog button[aria-label]").click();
+    await session.page.locator(".profile-trigger").click();
+    const chrome = JSON.parse(
+      readFileSync(
+        resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
+        "utf8",
+      ),
+    );
+    let words = chrome.en ?? chrome;
     const authenticated = await check(
       "canonical-sign-in",
       "real password form signs in to the throwaway profile",
-      () => signIn.signIn(session, input, hostPid),
+      async () => {
+        evidence(
+          "setup-sign-in-menu.json",
+          await session.shell(() => ({
+            open:
+              document
+                .querySelector(".account-menu")
+                ?.getAttribute("data-state") ?? null,
+            items: [
+              ...document.querySelectorAll(
+                ".account-menu [data-slot=dropdown-menu-item]",
+              ),
+            ].map((node) => ({
+              text: node.textContent.trim(),
+              role: node.getAttribute("role"),
+              disabled: node.hasAttribute("data-disabled"),
+            })),
+          })),
+        );
+        await session.page
+          .locator(".account-menu")
+          .getByRole("menuitem", {
+            name: "Desktop Acceptance",
+            exact: true,
+          })
+          .click();
+        return signIn.signIn(session, input, hostPid);
+      },
     );
     if (authenticated.verdict !== PASS) return;
+    words =
+      chrome[await session.shell(() => document.documentElement.lang)] ??
+      chrome.en;
     await results.screenshot(session.page, "setup-01-signed-in");
 
-    driver = new SetupDriver({ session, input, signIn, layout, proxy });
+    const restartAfterCrash = async (cut) => {
+      const oldHost = host;
+      const oldPid = hostPid;
+      const oldSession = session;
+      await runProcesses();
+      const beforeCrash = await input.processes(TRACKED_PROCESSES);
+      const tracked = [
+        ...beforeCrash.filter((process) => process.pid === oldPid),
+        ...descendants(beforeCrash, oldPid),
+      ];
+      const frames = await oldSession.frames();
+      priorSetupFrames.push(...frames);
+      priorSetupConsole.push(...oldSession.console);
+      evidence("setup-before-crash-frames.json", frames);
+      evidence(
+        "setup-before-crash-ipc.json",
+        await oldSession.shell(() => window.__s10.ipc),
+      );
+      oldSession.stopObservation();
+      assert(oldHost.child.kill(), "the owned GUI must be interrupted");
+      const stopped = await exited(oldHost.exit, 15000);
+      assert(stopped, "the interrupted GUI must exit");
+      await runProcesses();
+      const afterCrash = await input.processes(TRACKED_PROCESSES);
+      const crashTree = [...tracked];
+      for (const process of tracked)
+        crashTree.push(...descendants(afterCrash, process.pid));
+      const waiting = probe(
+        python,
+        runtimeEnv,
+        ["wait-exits"],
+        [
+          ...new Set(
+            survivors(crashTree, afterCrash).map((process) => process.pid),
+          ),
+        ],
+      );
+      const left = survivors(
+        crashTree,
+        await input.processes(TRACKED_PROCESSES),
+      );
+      evidence("setup-crash-processes.json", {
+        cut,
+        oldPid,
+        stopped,
+        waiting,
+        left,
+      });
+      assert.equal(
+        waiting.length,
+        0,
+        "the crashed GUI's process handles must signal exit",
+      );
+      assert.equal(left.length, 0, "the crashed GUI must leave no owned child");
+      await oldSession.browser.close().catch(() => undefined);
+
+      const resumedPort = await freePort();
+      const resumedEnvironment = hostEnvironment(config, {
+        [WORKSPACE_DEVTOOLS_PORT]: String(resumedPort),
+        CADRUMO_PROXY_URL: proxy.url,
+      }).env;
+      host = launch(testHost.executable, ["--gui"], {
+        env: resumedEnvironment,
+        cwd: layout.root,
+        out: resolve(config.results, "host-resumed-stdout.txt"),
+        err: resolve(config.results, "host-resumed-stderr.txt"),
+      });
+      hostPid = host.child.pid;
+      const early = host.exit.then((done) => {
+        throw new Error(`the relaunched host exited with ${done.code}`);
+      });
+      early.catch(() => undefined);
+      const endpoint = await Promise.race([
+        devtoolsEndpoint(resumedPort, 90000),
+        early,
+      ]);
+      session = await connect({
+        endpoint,
+        shellOrigins: [`${scheme}://tauri.localhost`],
+        documentObserver: observeProvisioning,
+        onFailure: captureSetupConnectionFailure(
+          "setup-relaunch-connection-failure",
+        ),
+        docsOrigin: docsOriginOf(window),
+        ipcPrefix: `${scheme}://ipc.localhost/`,
+        blockExternal: !config.allowBrowser,
+      });
+      await session.waitDocs(120000);
+      const presence = await session.call("sign_in_status");
+      assert.equal(presence.ok, true);
+      if (presence.value.state === "absent") {
+        await session.page.locator('.sign-in[data-state="open"]').waitFor({
+          state: "visible",
+          timeout: 30000,
+        });
+        const answer = await signIn.submit(
+          session,
+          signIn.secret,
+          "crash-recovery",
+        );
+        assert.equal(answer.kind, "signed-in");
+      }
+      const ready = await session.call("sign_in_status");
+      assert.equal(ready.ok, true);
+      assert.equal(ready.value.state, "present");
+      await session.page.locator(".sign-in").waitFor({ state: "hidden" });
+      evidence("setup-relaunched-host.json", { oldPid, newPid: hostPid });
+      return { session, oldPid, newPid: hostPid };
+    };
+    driver = new SetupDriver({
+      session,
+      input,
+      signIn,
+      layout,
+      proxy,
+      restartAfterCrash,
+    });
     if (summary.budgetExceeded)
       driver.abort(
         `the throwaway root reached ${summary.budgetExceeded} bytes`,
       );
+    await check(
+      "provisioning-6-settings",
+      "Settings has one provisioning section opening the same panel",
+      () => runSettingsAcceptance(session),
+    );
+    await check(
+      "setup-rows-before",
+      "a clean root reads the browser as absent",
+      () => driver.rowsBefore(),
+    );
+    await check(
+      "provisioning-10-sede",
+      "Sede without a browser offers setup and logs its refusal locally",
+      () =>
+        runSedeMissingAcceptance({
+          session,
+          driver,
+          expectedSentence: words["desktop.browser.ended.component_not_ready"],
+        }),
+    );
+    await check(
+      "provisioning-9-failure",
+      "a real setup failure has specific wording and exactly one local record",
+      () =>
+        runSetupFailureAcceptance({
+          driver,
+          expectedSentence: words["desktop.setup.failure.blocked_by_network"],
+        }),
+    );
+    let model;
+    await check(
+      "provisioning-3-model-list",
+      "local AI groups its program and catalog-derived custom model",
+      async () => {
+        model = await prepareSmallestModel({ session, driver });
+        const custom = "cadrumo-acceptance-synthetic:local";
+        await addCustomLocalModel({
+          session,
+          driver,
+          lane: model.lane,
+          model: custom,
+        });
+        await removeCustomLocalModel({
+          session,
+          driver,
+          lane: model.lane,
+          model: custom,
+        });
+        return {
+          verdict: PASS,
+          detail: `smallest catalog model ${model.model}`,
+          data: model,
+        };
+      },
+    );
+    if (model) {
+      await check(
+        "provisioning-3-shared-component",
+        "agent Ollama settings render the panel's Local AI component by test id",
+        () =>
+          assertLocalAiShared({
+            session,
+            driver,
+            provider: model.provider,
+            openAgentSettings: async () => {
+              await session.showTab("agent");
+              const button = session.page
+                .locator(".pane-agent")
+                .getByRole("button", {
+                  name: words["desktop.agent.settings"],
+                  exact: true,
+                });
+              if ((await button.getAttribute("aria-pressed")) !== "true")
+                await button.click();
+            },
+          }),
+      );
+      await driver.openComponents();
+      await check(
+        "provisioning-4-5-concurrency-spinner",
+        "browser and local AI transfer independently and drive the rail spinner",
+        () =>
+          runConcurrentSetup(driver, model, async (snapshot) => {
+            await check(
+              "provisioning-2-part-sizes",
+              "each real plan part shows its own known size",
+              () => assertPlanSizes(session, snapshot),
+            );
+            await check(
+              "provisioning-3-program-model-steps",
+              "Ollama and the selected model are separate plan steps",
+              async () =>
+                localAiPartsVerdict(
+                  snapshot.runs.find((run) => run.item === "local_ai")?.review,
+                  model.model,
+                  await planPartsObservation(session, "local_ai"),
+                ),
+            );
+          }),
+      );
+      await check(
+        "provisioning-2-before-bytes",
+        "no byte count appears before bytes arrive",
+        () => assertPreByteProgress(session),
+      );
+    }
     await runSetupAcceptance({ driver, check, results });
+    if (model) {
+      await check(
+        "provisioning-3-model-download",
+        "the smallest model downloads through the local AI component",
+        () => installSmallestModel({ driver, ...model }),
+      );
+      await check(
+        "provisioning-7-remove-reinstall",
+        "removal confirmation stays gone when the element is set up again",
+        () => runRemovalAcceptance({ driver, model }),
+      );
+      await check(
+        "provisioning-3-model-remove",
+        "the downloaded model can be removed",
+        () => removeSmallestModel({ driver, ...model }),
+      );
+    }
+    await check(
+      "csp-zero",
+      "zero CSP violations during provisioning",
+      async () =>
+        cspVerdict(
+          [...priorSetupFrames, ...(await session.frames())],
+          [...priorSetupConsole, ...session.console].map((entry) => entry.text),
+        ),
+    );
     await results.screenshot(session.page, "setup-02-finished");
   } finally {
     clearInterval(watchdog);
@@ -2146,7 +2869,6 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           () => signIn.stop(),
         );
       await proxy?.stop();
-      await sleep(3000);
       await check(
         "setup-children-closed",
         "the window and every process it or its runtime started have ended",
@@ -2217,6 +2939,35 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           };
         },
       );
+      const logCaptures = [
+        ...captureGatedLogs({
+          results,
+          storage: layout.storage,
+          defaults: contract.desktop_defaults,
+          prefix: "setup-storage",
+        }),
+        ...captureAgentLogs({
+          results,
+          storage: layout.storage,
+          prefix: "setup",
+        }),
+      ];
+      try {
+        evidence("setup-final-log-capture.json", logCaptures);
+      } catch {
+        // Keep cleanup and the original failing check authoritative.
+      }
+      await check(
+        "setup-product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: layout.storage,
+            run: "setup",
+            signIn,
+          }),
+      );
       await check(
         "setup-scratch-removed",
         "the throwaway root is removed",
@@ -2231,8 +2982,15 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
         const after = fingerprint(realStorageRoots());
         summary.realStorageEntriesAfter = after.size;
         const changes = fingerprintChanges(before, after);
-        const roots = realStorageRoots();
-        const marks = [layout.root, profileId];
+        const local = process.env.LOCALAPPDATA;
+        const context = {
+          roots: realStorageRoots(),
+          marks: [layout.root, profileId],
+          browserCache: local ? resolve(local, "ms-playwright") : null,
+          runCommandLines: [...seen.values()].map(
+            (tracked) => tracked.commandLine ?? "",
+          ),
+        };
         evidence("setup-real-storage-changes.json", changes);
         await check(
           "setup-real-storage-unchanged",
@@ -2240,10 +2998,10 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           async () =>
             realStorageVerdict({
               guarded: changes.filter((change) =>
-                guardedChange(change, roots, marks),
+                guardedChange(change, context),
               ),
               observed: changes.filter(
-                (change) => !guardedChange(change, roots, marks),
+                (change) => !guardedChange(change, context),
               ),
             }),
         );

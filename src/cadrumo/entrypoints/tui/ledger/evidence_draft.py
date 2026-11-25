@@ -214,7 +214,7 @@ def _discrepancy_rows(
                 "tui.ledger.evidence.draft.finding",
                 kind=row.kind.value,
                 field=shown(row.field),
-                detail=shown(row.detail),
+                detail=shown(row.detail_words or row.detail),
                 expected=amount(row.expected),
                 observed=amount(row.observed),
             )
@@ -282,8 +282,6 @@ def _label_reading_line(fallback: LabelReadingFallback) -> str:
             key = "tui.ledger.evidence.draft.label_reading.reader_unavailable"
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             key = "tui.ledger.evidence.draft.label_reading.headroom_refused"
-        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
-            key = "tui.ledger.evidence.draft.label_reading.busy_refused"
         case unhandled:
             assert_never(unhandled)
     return tr(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))

@@ -6,7 +6,7 @@ import io
 
 import pytest
 
-from ..stdio import _set_windows_console_utf8, configure_stdio_for_utf8
+from ..stdio import configure_stdio_for_utf8, set_windows_console_utf8
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -19,7 +19,7 @@ def test_set_windows_console_utf8_does_not_raise() -> None:
     (as in CI) the API call is silently ignored.  Either way the
     function must never propagate an exception.
     """
-    _set_windows_console_utf8()  # must not raise
+    set_windows_console_utf8()  # must not raise
 
 
 def test_configure_stdio_for_utf8_streams_emit_valid_utf8() -> None:

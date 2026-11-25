@@ -2,7 +2,7 @@
 
 use cadrumo_manager::contract::{
     AUTHORITY, HOST_INHERITED_ENV, LAUNCH_NAMES, LAUNCH_PROFILES, NATIVE, PINNED_ENV,
-    ROOT_VARIABLE, TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    ROOT_VARIABLE, TEMPORARY_MEMBER,
 };
 use cadrumo_manager::supervision::environment::{ManagedLocations, runtime_environment};
 use std::ffi::OsString;
@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(unix)]
 use cadrumo_manager::{
-    contract::{EXECUTABLE, INSTALLED_DEFAULTS, INSTALLED_ROOT_PRECEDENCE, MODE_PACKAGE_MANIFEST},
+    contract::{EXECUTABLE, INSTALLED_DEFAULTS, PACKAGE_MANIFEST},
     supervision::{boot_record::boot_record_path, launch::LaunchTarget},
 };
 
@@ -84,8 +84,7 @@ fn runtime_children_pin_canonical_paths_and_never_inherit_operator_settings() {
     assert!(path.contains(&package.join(NATIVE)));
     assert!(!path.contains(&PathBuf::from("os-path")));
     assert_eq!(value("PYTHONPATH"), None);
-    assert_eq!(value(TEMPORARY_ENV), None);
-    let temporary = TEMPORARY_DEFAULT
+    let temporary = TEMPORARY_MEMBER
         .split('/')
         .fold(storage.clone(), |path, part| path.join(part));
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
@@ -233,7 +232,9 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
         let discarded = fixture.join("unused");
         let selected = fixture.join("selected");
         assert!(!discarded.exists() && !selected.exists());
+        // Every configuration, Debug included, manages the root its environment selects.
         let locations = ManagedLocations::resolve(&package.join(EXECUTABLE)).unwrap();
+        assert!(locations.is_default_root());
         assert_eq!(locations.package_root(), package);
         assert!(locations.storage_root().starts_with(&selected));
         assert!(!discarded.exists() && !selected.exists());
@@ -259,7 +260,7 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
     }
     let fixture = Root::new();
     let package = fixture.0.join("package");
-    let manifest = package.join(MODE_PACKAGE_MANIFEST);
+    let manifest = package.join(PACKAGE_MANIFEST);
     std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
     std::fs::write(manifest, b"{}").unwrap();
     let rule = INSTALLED_DEFAULTS
@@ -279,7 +280,7 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
             candidate.variable,
             fixture.0.join("unused").join("..").join("selected"),
         );
-    for name in INSTALLED_ROOT_PRECEDENCE.iter().chain(HOST_INHERITED_ENV) {
+    for name in std::iter::once(&ROOT_VARIABLE).chain(HOST_INHERITED_ENV) {
         child.env_remove(name);
     }
     let outcome = child.output().unwrap();
@@ -303,4 +304,43 @@ fn invalid_paths_are_refused_before_creating_storage() {
 #[test]
 fn a_checkout_binary_is_not_a_managed_installation() {
     assert!(ManagedLocations::resolve(&std::env::current_exe().unwrap()).is_err());
+}
+
+#[cfg(unix)]
+#[test]
+fn an_installed_package_manages_the_operator_root_its_environment_selects() {
+    const FIXTURE: &str = "B2_MANAGER_OPERATOR_ROOT_FIXTURE";
+    if let Some(fixture) = std::env::var_os(FIXTURE) {
+        let fixture = PathBuf::from(fixture);
+        let package = fixture.join("package");
+        let locations = ManagedLocations::resolve(&package.join(EXECUTABLE)).unwrap();
+        assert!(!locations.is_default_root());
+        assert_eq!(locations.package_root(), package);
+        assert_eq!(locations.storage_root(), fixture.join("operator"));
+        assert!(!fixture.join("operator").exists());
+        return;
+    }
+    let fixture = Root::new();
+    let manifest = fixture.0.join("package").join(PACKAGE_MANIFEST);
+    std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+    std::fs::write(manifest, b"{}").unwrap();
+    let mut child = std::process::Command::new(std::env::current_exe().unwrap());
+    child
+        .args([
+            "--exact",
+            "an_installed_package_manages_the_operator_root_its_environment_selects",
+            "--nocapture",
+        ])
+        .env(FIXTURE, &fixture.0)
+        .env(ROOT_VARIABLE, fixture.0.join("operator"));
+    for name in HOST_INHERITED_ENV {
+        child.env_remove(name);
+    }
+    let outcome = child.output().unwrap();
+    assert!(
+        outcome.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&outcome.stdout),
+        String::from_utf8_lossy(&outcome.stderr)
+    );
 }

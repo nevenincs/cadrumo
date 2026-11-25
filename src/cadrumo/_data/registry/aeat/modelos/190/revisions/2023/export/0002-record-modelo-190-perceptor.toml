@@ -6,6 +6,8 @@ id = "modelo-190-perceptor"
 record_type = "perceptor"
 order = 1
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-190-2023"
 line_ending = "none"
 required = false
 repeat = "binding_rows"
@@ -144,6 +146,15 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 source_refs = ["aeat-dr-190-2023"]
+
+[revisions.2023.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
 
 [[revisions.2023.export_layouts.records.fields]]
 id = "modelo-190-perc-codigo-provincia"
@@ -1363,9 +1374,9 @@ incapacity_kind_repercutido = "perc.incapacidad-especie-repercutidos"
 incapacity_kind_value = "perc.incapacidad-especie-valoracion"
 ingreso_a_cuenta = "perc.ingresos-a-cuenta"
 ingreso_a_cuenta_repercutido = "perc.ingresos-a-cuenta-repercutidos"
+party_filing_name = "perc.nombre"
 pension_compensatoria = "perc.pension-compensatoria"
 perceptor_birth_year = "perc.ano-nacimiento"
-perceptor_legal_name = "perc.nombre"
 perceptor_situacion_familiar = "perc.situacion-familiar"
 perceptor_tax_id = "perc.nif"
 percibido_dinerario = "perc.percepcion-dineraria"

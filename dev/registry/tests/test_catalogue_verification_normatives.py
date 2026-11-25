@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+import re
 
 import pytest
 
@@ -13,6 +13,7 @@ from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.authority import compiled_bundled_authority
@@ -20,11 +21,11 @@ from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.loader import load_catalogue_file
 from .catalogue_verification_support import (
-    _FORMAL_WITHHOLDING_ARTICLE_REF,
-    _FORMAL_WITHHOLDING_MODELOS,
-    _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _FRACTIONAL_PAYMENT_MODELOS,
-    _catalogues,
+    FORMAL_WITHHOLDING_ARTICLE_REF,
+    FORMAL_WITHHOLDING_MODELOS,
+    FRACTIONAL_PAYMENT_ARTICLE_REF,
+    FRACTIONAL_PAYMENT_MODELOS,
+    catalogue_verification_catalogues,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -32,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 def test_m210_art_5_grounding_covers_each_distinct_presentation_case() -> None:
     """M210 presentation periods stay distinct from payment domiciliacion cutoffs."""
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["orden-eha-3316-2010:art-5"]
 
     required_text = " ".join(reference.required_text)
@@ -57,11 +58,11 @@ def test_m210_art_5_grounding_covers_each_distinct_presentation_case() -> None:
 
 
 def test_lirpf_art_91_transparencia_fiscal_links_to_full_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-35-2006:art-91"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a91"
-    assert reference.effective_from == date(2021, 7, 11)
+    assert str(reference.effective_from) == "2021-07-11"
     assert reference.required_text == (
         "Imputación de rentas en el régimen de transparencia fiscal internacional.",
         "Los contribuyentes imputarán las rentas positivas obtenidas",
@@ -86,7 +87,7 @@ def test_lirpf_art_91_transparencia_fiscal_links_to_full_boe_corpus() -> None:
 def test_balearic_investment_reserve_reference_links_to_bundled_boe_corpus() -> None:
     # Ley 31/2022, disposicion adicional septuagesima: the cited norm's identity.
     law = "ley-31-2022"
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal[f"{law}:da-70"]
 
     assert reference.corpus_ref == f"corpus/normatives/html/{law}-da-70.html#da-70"
@@ -101,7 +102,7 @@ def test_balearic_investment_reserve_reference_links_to_bundled_boe_corpus() -> 
 
 
 def test_lirpf_da_45_regularizacion_clausulas_suelo_links_to_bundled_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-35-2006:da-45"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#dacuadragesimaquinta"
@@ -117,11 +118,11 @@ def test_lirpf_da_45_regularizacion_clausulas_suelo_links_to_bundled_corpus() ->
 
 
 def test_lirpf_art_99_payments_on_account_links_to_full_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-35-2006:art-99"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a99"
-    assert reference.effective_from == date(2016, 1, 1)
+    assert str(reference.effective_from) == "2016-01-01"
     assert reference.required_text == (
         "Obligación de practicar pagos a cuenta",
         "tendrán la consideración de deuda tributaria",
@@ -135,11 +136,11 @@ def test_lirpf_art_99_payments_on_account_links_to_full_boe_corpus() -> None:
 
 
 def test_lirpf_art_80_double_taxation_links_to_full_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-35-2006:art-80"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a80"
-    assert reference.effective_from == date(2015, 1, 1)
+    assert str(reference.effective_from) == "2015-01-01"
     assert reference.required_text == (
         "Deducción por doble imposición internacional",
         "rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero",
@@ -151,11 +152,11 @@ def test_lirpf_art_80_double_taxation_links_to_full_boe_corpus() -> None:
 
 
 def test_lirpf_art_49_savings_base_compensation_links_to_full_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-35-2006:art-49"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006-art-49.html#a49"
-    assert reference.effective_from == date(2015, 1, 1)
+    assert str(reference.effective_from) == "2015-01-01"
     assert reference.required_text == (
         "La base imponible del ahorro estará constituida",
         "con el límite del 25 por ciento",
@@ -166,12 +167,11 @@ def test_lirpf_art_49_savings_base_compensation_links_to_full_boe_corpus() -> No
 
 
 def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
 
     cases = (
         (
             "ley-35-2006:art-50",
-            date(2015, 1, 1),
             (
                 "Base liquidable general y del ahorro.",
                 "La base liquidable general estará constituida",
@@ -185,7 +185,6 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
         ),
         (
             "ley-35-2006:art-52",
-            date(2023, 1, 1),
             (
                 "Límite de reducción.",
                 "límite máximo conjunto",
@@ -202,12 +201,11 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
         ),
     )
 
-    for ref_id, effective_from, required_text in cases:
+    for ref_id, required_text in cases:
         reference = catalogues.legal[ref_id]
         article = ref_id.rsplit("-", 1)[-1]
 
         assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
-        assert reference.effective_from == effective_from, ref_id
         assert reference.required_text == required_text, ref_id
         if ref_id == "ley-35-2006:art-50":
             assert reference.notes is not None, ref_id
@@ -216,10 +214,14 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
             assert reference.notes is not None, ref_id
             assert "Ley 31/2022 art 62.1" in reference.notes, ref_id
         verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    assert {ref_id: str(catalogues.legal[ref_id].effective_from) for ref_id, _ in cases} == {
+        "ley-35-2006:art-50": "2015-01-01",
+        "ley-35-2006:art-52": "2023-01-01",
+    }
 
 
 def test_rirpf_art_59_regularizacion_perdida_derecho_links_to_bundled_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["rd-439-2007:art-59"]
 
     assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-59.html#a59"
@@ -234,7 +236,7 @@ def test_rirpf_art_59_regularizacion_perdida_derecho_links_to_bundled_corpus() -
 
 
 def test_lgt_art_26_interes_demora_links_to_bundled_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-58-2003:art-26"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-58-2003-art-26.html#a26"
@@ -252,7 +254,7 @@ def test_lgt_art_26_interes_demora_links_to_bundled_corpus() -> None:
 def test_renta_campaign_orden_borrador_deadline_links_to_full_boe_corpus() -> None:
     # Orden HAC/242/2025 approves the Modelo 100 campaign form; the cited norm's identity.
     orden = "orden-hac-242-2025"
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal[f"{orden}:art-8"]
     source = catalogues.sources["boe-modelo-100-2024-form"]
 
@@ -330,7 +332,7 @@ def test_repaired_required_text_is_verified_against_its_selected_bundled_unit(
 
 
 def test_modelo_100_historical_form_order_refs_link_to_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
 
     cases = (
         ("orden-hac-248-2021:art-3", "corpus/normatives/html/orden-hac-248-2021.html#a3", "BOE-A-2021-4238"),
@@ -356,7 +358,7 @@ def test_modelo_100_historical_form_order_refs_link_to_boe_corpus() -> None:
 
 
 def test_modelo_100_tfi_additional_documentation_order_refs_link_to_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
 
     cases = (
         ("orden-hac-248-2021:art-10", "10", "corpus/normatives/html/orden-hac-248-2021.html#a1-2"),
@@ -385,11 +387,11 @@ def test_modelo_100_tfi_additional_documentation_order_refs_link_to_boe_corpus()
 
 
 def test_rd_439_art_100_legal_basis_links_to_full_rental_withholding_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["rd-439-2007:art-100"]
 
     assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-100.html#a100"
-    assert reference.effective_from == date(2018, 12, 23)
+    assert str(reference.effective_from) == "2018-12-23"
     assert "summary" not in reference.corpus_ref
     assert "19 por ciento" in reference.required_text
     assert "se reducirá en el 60 por ciento" in reference.required_text
@@ -397,7 +399,7 @@ def test_rd_439_art_100_legal_basis_links_to_full_rental_withholding_corpus() ->
 
 
 def test_rd_439_art_30_legal_basis_links_to_simplified_direct_estimation_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["rd-439-2007:art-30"]
 
     assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-30.html#a30"
@@ -411,7 +413,7 @@ def test_rd_439_art_30_legal_basis_links_to_simplified_direct_estimation_corpus(
 
 
 def test_rd_439_art_109_legal_basis_links_to_pago_fraccionado_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["rd-439-2007:art-109"]
     corpus_text = bundled_path("corpus", "normatives", "html", "rd-439-2007-art-109.html").read_text(
         encoding="utf-8",
@@ -430,7 +432,7 @@ def test_rd_439_art_109_legal_basis_links_to_pago_fraccionado_corpus() -> None:
 
 
 def test_rd_439_art_110_legal_basis_links_to_full_payment_amount_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["rd-439-2007:art-110"]
 
     assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-110.html#a110"
@@ -447,7 +449,7 @@ def test_rd_439_art_110_legal_basis_links_to_full_payment_amount_corpus() -> Non
 
 
 def test_ley_19_1994_canary_tax_regime_refs_link_to_current_boe_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
 
     cases = (
         (
@@ -492,7 +494,7 @@ def test_ley_49_2002_art_14_special_regime_option_links_to_boe_corpus() -> None:
     reference = _authored_legal_reference("ley-49-2002:art-14")
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-14.html#a14"
-    assert reference.effective_from == date(2002, 12, 25)
+    assert str(reference.effective_from) == "2002-12-25"
     assert reference.required_text == (
         "Artículo 14. Aplicación del régimen fiscal especial.",
         "podrán acogerse al régimen fiscal especial",
@@ -538,16 +540,18 @@ def test_rd_1007_verifactu_refs_are_article_level_and_current() -> None:
         ),
     }.issubset(set(art3.required_text))
 
-    assert df4.article == "disposicion final cuarta"
+    assert df4.article == "disposición final cuarta"
     assert df4.corpus_ref == "corpus/normatives/html/rd-1007-2023.html#df-4"
     assert "antes del 1 de enero de 2027" in df4.required_text
     assert "antes del 1 de julio de 2027" in df4.required_text
-    assert "2026" not in " ".join(df4.required_text)
+    deadline_year = re.search(r"antes del 1 de enero de (20\d\d)", " ".join(df4.required_text))
+    assert deadline_year is not None
+    assert str(int(deadline_year.group(1)) - 1) not in " ".join(df4.required_text)
     verify_legal_catalogue({art3.id: art3, df4.id: df4}, source_root=bundled_path())
 
 
 def test_trlirnr_rows_use_current_real_decreto_legislativo_kind() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     trlirnr_refs = tuple(
         reference for ref_id, reference in catalogues.legal.items() if ref_id.startswith("trlirnr-rdleg-5-2004:")
     )
@@ -557,7 +561,7 @@ def test_trlirnr_rows_use_current_real_decreto_legislativo_kind() -> None:
 
 
 def test_real_decreto_legislativo_kind_still_runs_strict_required_text_check() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["trlirnr-rdleg-5-2004:art-25.1.a"].model_copy(
         update={"required_text": ("this text is intentionally absent from the bundled TRLIRNR corpus",)},
     )
@@ -571,16 +575,16 @@ def test_formal_withholding_modelos_do_not_cite_fractional_payment_article() -> 
     offenders: list[str] = []
     missing_formal_article: list[str] = []
 
-    for modelo_id in sorted(_FORMAL_WITHHOLDING_MODELOS):
+    for modelo_id in sorted(FORMAL_WITHHOLDING_MODELOS):
         modelo_root = modelos_root / modelo_id
         assert modelo_root.is_dir(), modelo_id
         has_formal_article = False
 
         for path in scan_directory(modelo_root, pattern="*.toml", recursive=True):
             text = path.read_text(encoding="utf-8")
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
+            if FRACTIONAL_PAYMENT_ARTICLE_REF in text:
                 offenders.append(path.relative_to(modelos_root).as_posix())
-            if _FORMAL_WITHHOLDING_ARTICLE_REF in text:
+            if FORMAL_WITHHOLDING_ARTICLE_REF in text:
                 has_formal_article = True
 
         if not has_formal_article:
@@ -633,7 +637,7 @@ def test_modelo_100_imports_no_formal_withholding_return() -> None:
         f"{revision_id}:{declaration_id}"
         for revision_id, revision in _modelo_100_revisions().items()
         for declaration_id, source_modelo, _legal_refs in _modelo_100_cross_modelo_imports(revision)
-        if source_modelo in _FORMAL_WITHHOLDING_MODELOS
+        if source_modelo in FORMAL_WITHHOLDING_MODELOS
     ]
 
     assert payer_side == []
@@ -653,15 +657,15 @@ def test_modelo_100_fractional_payment_imports_do_not_cite_the_formal_withholdin
 
     for revision_id, revision in _modelo_100_revisions().items():
         for declaration_id, source_modelo, legal_refs in _modelo_100_cross_modelo_imports(revision):
-            if source_modelo not in _FRACTIONAL_PAYMENT_MODELOS:
+            if source_modelo not in FRACTIONAL_PAYMENT_MODELOS:
                 continue
             reached.setdefault(revision_id, set()).add(source_modelo)
-            if _FORMAL_WITHHOLDING_ARTICLE_REF in legal_refs:
+            if FORMAL_WITHHOLDING_ARTICLE_REF in legal_refs:
                 miscited.append(f"{revision_id}:{declaration_id}")
 
     # Every authored revision folds both pagos-fraccionados modelos in; a revision
     # missing from this map would mean the scan stopped reaching the imports at all.
-    assert {revision_id: sources == _FRACTIONAL_PAYMENT_MODELOS for revision_id, sources in reached.items()} == (
+    assert {revision_id: sources == FRACTIONAL_PAYMENT_MODELOS for revision_id, sources in reached.items()} == (
         dict.fromkeys(_modelo_100_revisions(), True)
     )
     assert miscited == []
@@ -677,7 +681,7 @@ def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_art
                 continue
             site = f"{revision_id}:{formula.id}"
             checked.add(site)
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in formula.legal_refs:
+            if FRACTIONAL_PAYMENT_ARTICLE_REF in formula.legal_refs:
                 offenders.append(site)
 
     # Anchored on the formula's identity, so the gate cannot pass by checking nothing.
@@ -690,7 +694,7 @@ def test_ley_49_2002_art_6_rentas_exentas_links_to_bundled_boe_corpus() -> None:
     """Ley 49/2002 art. 6 (rentas exentas) grounds the Modelo 200 régimen-especial
     exclusion of exempt foundation income from the base imponible. The binding
     article is verified against the bundled BOE-A-2002-25039 consolidated excerpt."""
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-49-2002:art-6"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-6.html#a6"
@@ -713,7 +717,7 @@ def test_ley_49_2002_art_7_explotaciones_exentas_links_to_bundled_boe_corpus() -
     economic-activity income that art. 6.4.º excludes from the Modelo 200 base
     imponible. Verified against the bundled BOE-A-2002-25039 consolidated excerpt
     (apartado 12.º escasa relevancia currentized by RD-ley 6/2023)."""
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal["ley-49-2002:art-7"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-7.html#a7"
@@ -737,11 +741,11 @@ def test_modelo_200_regimen_especial_disminucion_casillas_cite_ley_49_2002_exemp
     exemption provisions.  This is a legal/calculation assertion, so its
     snapshot earns the calculation-grade validation of those facts, never a
     filing-layout claim."""
-    from ._registry_schema_support import _committed_snapshot
+    from .registry_schema_support import committed_snapshot
 
-    snapshot = _committed_snapshot(
+    snapshot = committed_snapshot(
         "200",
-        2025,
+        filing_year_envelope().horizon,
         "0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )

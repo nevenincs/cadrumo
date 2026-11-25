@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 import { label } from "./support/strings";
 
 // Exercise the shipped renderer through its real transport adapter. This host
@@ -239,58 +239,88 @@ test("cold font loads preserve equal columns across text and TUI borders", async
   ).toBeFocused();
 });
 
-for (const scale of [1, 1.25, 1.5]) {
-  test.describe(`display scale ${scale}`, () => {
+// Chromium's context-only DPR emulation leaves ResizeObserver's physical
+// pixel box at the host scale, so each display scale needs a browser launched
+// at that scale too. They are the worker's: starting and stopping a browser
+// process is not part of the time each test is given.
+const SCALES = [1, 1.25, 1.5];
+const scaled = test.extend<
+  object,
+  { scaledBrowsers: ReadonlyMap<number, Browser> }
+>({
+  scaledBrowsers: [
+    async ({ playwright }, use) => {
+      const browsers = new Map(
+        await Promise.all(
+          SCALES.map(
+            async (scale) =>
+              [
+                scale,
+                await playwright.chromium.launch({
+                  args: [`--force-device-scale-factor=${scale}`],
+                }),
+              ] as const,
+          ),
+        ),
+      );
+      await use(browsers);
+      await Promise.all(
+        [...browsers.values()].map((browser) => browser.close()),
+      );
+    },
+    { scope: "worker" },
+  ],
+});
+
+for (const scale of SCALES) {
+  scaled.describe(`display scale ${scale}`, () => {
     for (const fontSize of ["small", "medium", "large", "x-large"]) {
-      test(`${fontSize} cell columns stay aligned after resize`, async ({
-        playwright,
-        baseURL,
-      }) => {
-        // Chromium's context-only DPR emulation leaves ResizeObserver's
-        // physical pixel box at the host scale. Match the browser scale too.
-        const browser = await playwright.chromium.launch({
-          args: [`--force-device-scale-factor=${scale}`],
-        });
-        const page = await browser.newPage({
-          baseURL,
-          viewport: { width: 1440, height: 1050 },
-          deviceScaleFactor: scale,
-        });
-        try {
-          await openTerminal(page, fontSize);
-          await expect
-            .poll(() =>
-              page.evaluate(
-                () =>
-                  (window as unknown as { __renderTest: Probe }).__renderTest
-                    .opens,
-              ),
-            )
-            .toBe(1);
-          await drawGrid(page);
-          expect(await columnSpread(page)).toBeLessThan(1);
-          const before = await page.evaluate(
-            () =>
-              (window as unknown as { __renderTest: Probe }).__renderTest.cols,
-          );
-          await page.setViewportSize({ width: 1024, height: 768 });
-          await expect
-            .poll(() =>
-              page.evaluate(
-                () =>
-                  (window as unknown as { __renderTest: Probe }).__renderTest
-                    .cols,
-              ),
-            )
-            .toBeLessThan(before);
-          await drawGrid(page);
-          expect(await columnSpread(page)).toBeLessThan(1);
-          const pane = page.locator('[data-terminal="console"]');
-          await expect(pane.locator("canvas").first()).toBeVisible();
-        } finally {
-          await browser.close();
-        }
-      });
+      scaled(
+        `${fontSize} cell columns stay aligned after resize`,
+        async ({ scaledBrowsers, baseURL }) => {
+          const context = await scaledBrowsers.get(scale)!.newContext({
+            baseURL,
+            viewport: { width: 1440, height: 1050 },
+            deviceScaleFactor: scale,
+          });
+          const page = await context.newPage();
+          try {
+            await openTerminal(page, fontSize);
+            await expect
+              .poll(() =>
+                page.evaluate(
+                  () =>
+                    (window as unknown as { __renderTest: Probe }).__renderTest
+                      .opens,
+                ),
+              )
+              .toBe(1);
+            await drawGrid(page);
+            expect(await columnSpread(page)).toBeLessThan(1);
+            const before = await page.evaluate(
+              () =>
+                (window as unknown as { __renderTest: Probe }).__renderTest
+                  .cols,
+            );
+            await page.setViewportSize({ width: 1024, height: 768 });
+            await expect
+              .poll(() =>
+                page.evaluate(
+                  () =>
+                    (window as unknown as { __renderTest: Probe }).__renderTest
+                      .cols,
+                ),
+              )
+              .toBeLessThan(before);
+            await drawGrid(page);
+            expect(await columnSpread(page)).toBeLessThan(1);
+            const pane = page.locator('[data-terminal="console"]');
+            await expect(pane.locator("canvas").first()).toBeVisible();
+          } finally {
+            await context.close();
+          }
+        },
+      );
     }
   });
 }

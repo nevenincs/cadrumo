@@ -16,13 +16,15 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.secure_object_write import SecureObjectWrite
+from .....core.time.clock import frozen_clock, wall_now
 from ..bucket.directory_layout import bucket_paths
-from ..errors import StorageValidationError
-from ..master_key.active_session import activate_session
+from ..bucket.errors import BucketLockedError
+from ..errors import SessionExpiredError, StorageValidationError
+from ..master_key.active_session import activate_session, require_fresh_active_session
 from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime import (
-    _SYNTHETIC_SESSION_BUCKET_IDS,
+    SYNTHETIC_SESSION_BUCKET_IDS,
     StorageRuntime,
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
@@ -42,13 +44,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2099, 5, 26, 12, 15, 0, tzinfo=UTC)
 _DEK = b"d" * 32
+#: A document clock long behind real time, as a fixed-clock replay pins it.
+_PAST_DOCUMENT_INSTANT = datetime.now(UTC).replace(microsecond=0) - timedelta(days=2000)
 _BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
 _BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"
 _PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"
 
 
 def _settings_for_bucket(root: Path, bucket_id: str) -> Settings:
-    return Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=bucket_id)
+    return Settings(cadrumo_storage_root=root, cadrumo_active_profile=bucket_id)
 
 
 def _registered_settings(root: Path, bucket_id: str, *also: str) -> Settings:
@@ -100,7 +104,7 @@ def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> Non
     that stops being true the argument needs rewriting, and a docstring nobody
     re-checks is how a gate ends up defending a hazard that moved.
     """
-    assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
+    assert "ephemeral" in SYNTHETIC_SESSION_BUCKET_IDS
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:
@@ -164,7 +168,7 @@ def test_runtime_reports_unready_active_session_states(tmp_path: Path) -> None:
 
 
 def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -189,7 +193,7 @@ def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tm
 def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path: Path) -> None:
     explicit_db = tmp_path / _PRIVATE_BUCKET_ID / "explicit.db"
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path / "state-root-private",
+        cadrumo_storage_root=tmp_path / "state-root-private",
         cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
     )
 
@@ -208,7 +212,7 @@ def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path
 
 def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path / "state-root-private",
+        cadrumo_storage_root=tmp_path / "state-root-private",
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
 
@@ -232,7 +236,7 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
 
 
 def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     with pytest.raises(StorageValidationError, match="bucket_id must not be blank") as excinfo:
         inspect_bucket_storage_runtime("   ", settings, now=_NOW)
@@ -245,7 +249,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         activate_session(_session(_BUCKET_A_ID)),
     ):
@@ -284,7 +288,7 @@ def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         activate_session(_session(_BUCKET_A_ID)),
     ):
@@ -311,7 +315,7 @@ def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp
     object_key = "stale-session-write"
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -346,7 +350,7 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
     hashed_object_key = b"h" * 32
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -380,7 +384,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
     object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -421,7 +425,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
     object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -483,7 +487,7 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
 
 
 def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
         repository = secure_object_repository_for_cold_bootstrap_state()
 
     assert isinstance(repository, SecureObjectRepository)
@@ -491,7 +495,7 @@ def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_pat
 
 
 def test_default_route_repository_carries_namespace_registry_before_profile_selection(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None)
 
     repository = secure_object_repository_for_active_bucket_or_default_route(settings)
 
@@ -501,7 +505,7 @@ def test_default_route_repository_carries_namespace_registry_before_profile_sele
 
 def test_active_bucket_repository_refusal_carries_typed_readiness_facts(tmp_path: Path) -> None:
     with override_settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile=None,
         cadrumo_output_language="en",
     ):
@@ -518,7 +522,7 @@ def test_active_bucket_repository_refusal_carries_typed_readiness_facts(tmp_path
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_active_profile=_BUCKET_A_ID,
             cadrumo_output_language="en",
         ),
@@ -532,7 +536,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
     tmp_path: Path,
 ) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile=_BUCKET_A_ID,
         cadrumo_output_language=OutputLanguage.EN,
     )
@@ -570,7 +574,7 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
     write_pointer(tmp_path, BucketPointer.selected(bucket_id=_BUCKET_A_ID, transition_revision=1))
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(StorageValidationError),
     ):
         secure_object_repository_for_active_bucket_or_default_route()
@@ -580,11 +584,6 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
     cases = (
         (None, StorageRuntimeReadinessCode.NO_ACTIVE_SESSION),
         (_session(_BUCKET_B_ID), StorageRuntimeReadinessCode.SESSION_CHANGED),
-        (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
-        (
-            _session(_BUCKET_A_ID, opened_at=datetime(2000, 1, 1, tzinfo=UTC), idle_minutes=5),
-            StorageRuntimeReadinessCode.SESSION_EXPIRED,
-        ),
     )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
@@ -600,3 +599,159 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
             runtime.secure_object_repository()
         assert raised.value.context is not None
         assert raised.value.context["readiness_code"] == match.value
+
+
+def test_runtime_repository_factory_refuses_an_ended_session_as_expired(tmp_path: Path) -> None:
+    """A session that ended is the operator's to reopen, as the secure-object repository reports it.
+
+    The idle window lapsed on real time; the document clock frozen long before
+    it does not revive the session.
+    """
+    cases = (
+        (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
+        (
+            _session(_BUCKET_A_ID, opened_at=wall_now() - timedelta(minutes=20), idle_minutes=5),
+            StorageRuntimeReadinessCode.SESSION_EXPIRED,
+        ),
+    )
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+
+    for replacement_session, match in cases:
+        with activate_session(_session(_BUCKET_A_ID)):
+            runtime = inspect_storage_runtime(settings, now=_NOW)
+
+        with (
+            activate_session(replacement_session),
+            frozen_clock(_PAST_DOCUMENT_INSTANT),
+            pytest.raises(SessionExpiredError) as raised,
+        ):
+            runtime.secure_object_repository()
+        assert not isinstance(raised.value, StorageValidationError)
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] == match.value
+
+
+# --- bucket-session expiry follows real time, never the document clock ------------------------
+
+
+def _wall_session(bucket_id: str, *, idle_minutes: int = 15) -> BucketSession:
+    """A session opened now on real time, as sign-in and worker custody open one."""
+    opened_at = wall_now()
+    return BucketSession.open_resumed(
+        bucket_id=bucket_id,
+        dek=_DEK,
+        idle_minutes=idle_minutes,
+        opened_at=opened_at,
+        idle_deadline=opened_at + timedelta(minutes=idle_minutes),
+        absolute_deadline=opened_at + timedelta(minutes=240),
+    )
+
+
+def _end_on_wall_time(session: BucketSession) -> None:
+    instant = wall_now()
+    session.retarget_lifetime(
+        opened_at=instant - timedelta(minutes=10),
+        idle_minutes=5,
+        deadline=instant - timedelta(seconds=1),
+    )
+
+
+def _workflow_write(payload: bytes) -> SecureObjectWrite:
+    return SecureObjectWrite(
+        namespace=WORKFLOW_STATE_NAMESPACE.namespace,
+        object_key=WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+        classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+        schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        written_at=_PAST_DOCUMENT_INSTANT,
+        payload=payload,
+    )
+
+
+def _workflow_payload(repo: SecureObjectRepository) -> bytes | None:
+    loaded = repo.load(
+        WORKFLOW_STATE_NAMESPACE.namespace,
+        WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+        expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+        max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+    )
+    return None if loaded is None else loaded.payload
+
+
+def test_a_frozen_future_document_clock_does_not_expire_a_live_session(tmp_path: Path) -> None:
+    """A session live on real time stays live when the document clock reads a day ahead.
+
+    DISCRIMINATING against judging the session on the document clock: the
+    runtime projection, the runtime factory, the fresh-session check and the
+    repository's own freshness check would each see the deadline passed.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with (
+        override_settings(cadrumo_storage_root=tmp_path),
+        activate_session(session),
+        frozen_clock(wall_now() + timedelta(days=1)),
+    ):
+        runtime = inspect_storage_runtime(settings)
+        assert runtime.active_session is not None
+        assert runtime.active_session.expired is False
+        assert require_fresh_active_session() is session
+        repo = runtime.secure_object_repository()
+        repo.save_many((_workflow_write(b"future-clock"),))
+        assert _workflow_payload(repo) == b"future-clock"
+
+    assert session.sealed is False
+
+
+def test_a_frozen_past_document_clock_does_not_revive_an_ended_session(tmp_path: Path) -> None:
+    """A session that ended on real time refuses at every judge while the document clock reads the past.
+
+    DISCRIMINATING against judging the session on the document clock, which
+    would place the past instant inside the ended window and admit the access.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with override_settings(cadrumo_storage_root=tmp_path), activate_session(session):
+        runtime = inspect_storage_runtime(settings)
+        repo = runtime.secure_object_repository()
+        repo.save_many((_workflow_write(b"before-the-end"),))
+        _end_on_wall_time(session)
+        with frozen_clock(_PAST_DOCUMENT_INSTANT):
+            projected = inspect_storage_runtime(settings).active_session
+            assert projected is not None
+            assert projected.expired is True
+            with pytest.raises(SessionExpiredError) as factory_refusal:
+                runtime.secure_object_repository()
+            assert factory_refusal.value.context is not None
+            assert factory_refusal.value.context["readiness_code"] == StorageRuntimeReadinessCode.SESSION_EXPIRED.value
+            with pytest.raises(SessionExpiredError):
+                repo.load(
+                    WORKFLOW_STATE_NAMESPACE.namespace,
+                    WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+                    expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                )
+            with pytest.raises(BucketLockedError):
+                require_fresh_active_session()
+
+
+def test_a_read_under_a_frozen_past_clock_rolls_the_idle_window_on_real_time(tmp_path: Path) -> None:
+    """Activity under a past document clock extends the idle window from now, not from that instant.
+
+    DISCRIMINATING against rolling the window on the document clock, which
+    would set the idle deadline years behind real time and lock the session
+    for the next real-time read.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with override_settings(cadrumo_storage_root=tmp_path), activate_session(session):
+        repo = inspect_storage_runtime(settings).secure_object_repository()
+        repo.save_many((_workflow_write(b"rolled"),))
+        before_read = wall_now()
+        with frozen_clock(_PAST_DOCUMENT_INSTANT):
+            assert _workflow_payload(repo) == b"rolled"
+        assert session.idle_deadline >= before_read
+        assert _workflow_payload(repo) == b"rolled"
+        assert require_fresh_active_session() is session

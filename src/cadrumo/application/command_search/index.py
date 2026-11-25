@@ -5,8 +5,8 @@ bridges the operator's natural vocabulary to a command's own tokens:
 
 * a per-column FTS5 lexical index that weights the command KEY and TOOL NAME
   above curated OUTCOME ALIASES above the human DESCRIPTION above the per-verb
-  HELP, so a homonym token in a low-value column no longer outranks the correct
-  command whose key carries it (the ``import`` mis-rank the review found);
+  HELP, so a homonym token in a low-value column does not outrank the correct
+  command whose key carries it;
 * Spanish stemming and diacritics folding on every column, so a morphological
   or accent variant still recalls its command.
 

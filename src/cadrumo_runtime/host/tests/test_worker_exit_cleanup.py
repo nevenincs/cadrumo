@@ -8,6 +8,7 @@ import struct
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +23,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import write_document
@@ -50,9 +52,13 @@ def test_password_dispatch_budget_allows_derivation_without_hiding_other_slow_co
 ) -> None:
     request = ProfileWorkerControlRequest.model_validate({"request_id": uuid4(), "action": action})
     monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: 10.0 + elapsed))
-    caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
-    worker_service._record_control_dispatch_elapsed(request, handler_started=10.0, outcome="completed")
-    records = [record for record in caplog.records if record.msg == "profile_worker_control_dispatch_slow"]
+    caplog.set_level(logging.DEBUG, logger=worker_service.log.name)
+    worker_service.record_control_dispatch_elapsed(request, handler_started=10.0, outcome="completed")
+    records = [
+        record
+        for record in delivered_records(caplog, worker_service.log.name)
+        if record.msg == "profile_worker_control_dispatch_slow"
+    ]
     assert bool(records) is warns
     if warns:
         assert records[0].__dict__["budget_seconds"] == (1.5 if action == "password" else 0.5)
@@ -137,6 +143,13 @@ class _Release:
         self.closed = True
 
 
+class _Human(_Release):
+    """The human login owner: a release fault port that also settles its proof attempts."""
+
+    def cancel_all_attempts(self) -> None:
+        pass
+
+
 class _Channel(_Release):
     """Real framing runs against this bounded transport fault port."""
 
@@ -189,7 +202,8 @@ class _Endpoint(_Release):
         super().__init__()
         self.channel = channel
 
-    def connect(self) -> WorkerChannel:
+    def connect(self, *, timeout: float | None = None) -> WorkerChannel:
+        assert timeout is None or timeout > 0
         return cast(WorkerChannel, self.channel)
 
 
@@ -212,8 +226,9 @@ class _Entry:
     identity: ProfileWorkerIdentity
     control: _Channel
     operation: _Channel
+    proof: _Channel
     custody: _Release
-    endpoints: tuple[_Endpoint, _Endpoint]
+    endpoints: tuple[_Endpoint, _Endpoint, _Endpoint]
     arguments: list[str]
 
 
@@ -224,9 +239,9 @@ def _entry(
     body_failure: BaseException | None = None,
 ) -> _Entry:
     identity = _identity()
-    control, operation = _Channel(), _Channel()
-    endpoints = _Endpoint(control), _Endpoint(operation)
-    for channel in (control, operation):
+    control, operation, proof = _Channel(), _Channel(), _Channel()
+    endpoints = _Endpoint(control), _Endpoint(operation), _Endpoint(proof)
+    for channel in (control, operation, proof):
         channel.queue(
             ServerHello(
                 product_version="test-cohort",
@@ -260,11 +275,12 @@ def _entry(
     monkeypatch.setattr(worker, "ProfileWorkerHumanLogin", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(worker, "profile_adapter_composition", nullcontext)
     monkeypatch.setattr(worker, "live_exchange_rate_composition", nullcontext)
-    monkeypatch.setattr(worker_service, "_serve", serve)
+    monkeypatch.setattr(worker_service, "serve", serve)
     return _Entry(
         identity,
         control,
         operation,
+        proof,
         custody,
         endpoints,
         [
@@ -303,9 +319,9 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own
         assert caught.value is primary
         cleanup = primary.__dict__.get("async_cleanup_error") or primary.__dict__.get("cleanup_error")
         assert isinstance(cleanup, AsyncResourceCleanupError)
-    assert entry.custody.calls == entry.control.calls == entry.operation.calls == 1
+    assert entry.custody.calls == entry.control.calls == entry.operation.calls == entry.proof.calls == 1
     assert all(endpoint.calls == 1 and endpoint.closed for endpoint in entry.endpoints)
-    assert entry.operation.closed
+    assert entry.operation.closed and entry.proof.closed
     if failures == 2:
         with pytest.raises(AsyncResourceCleanupError) as retry:
             asyncio.run(cleanup.retry_cleanup())
@@ -314,7 +330,7 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own
     asyncio.run(cleanup.retry_cleanup())
     assert entry.custody.closed and entry.control.closed
     assert entry.custody.calls == entry.control.calls == failures + 1
-    assert entry.operation.calls == 1 and all(endpoint.calls == 1 for endpoint in entry.endpoints)
+    assert entry.operation.calls == entry.proof.calls == 1 and all(endpoint.calls == 1 for endpoint in entry.endpoints)
 
 
 @pytest.mark.parametrize("refused", [False, True])
@@ -324,7 +340,7 @@ def test_run_reports_clean_or_typed_exit_only_after_every_owner_releases(
     primary = RefusalError(RefusalCode.INVALID_FRAME) if refused else None
     entry = _entry(monkeypatch, tmp_path, body_failure=primary)
     assert worker.run(entry.arguments) == (2 if refused else 0)
-    assert entry.custody.calls == entry.control.calls == entry.operation.calls == 1
+    assert entry.custody.calls == entry.control.calls == entry.operation.calls == entry.proof.calls == 1
     assert all(endpoint.calls == 1 for endpoint in entry.endpoints)
 
 
@@ -346,8 +362,8 @@ def test_rejected_handshake_retains_first_failed_close_and_does_not_close_channe
     assert caught.value.reason is RefusalCode.VERSION_MISMATCH
     cleanup = caught.value.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
-    assert entry.control.calls == 1 and entry.custody.calls == entry.operation.calls == 0
-    assert entry.endpoints[0].closed and entry.endpoints[1].calls == 0
+    assert entry.control.calls == 1 and entry.custody.calls == entry.operation.calls == entry.proof.calls == 0
+    assert entry.endpoints[0].closed and entry.endpoints[1].calls == entry.endpoints[2].calls == 0
     asyncio.run(cleanup.retry_cleanup())
     asyncio.run(cleanup.retry_cleanup())
     assert entry.control.calls == 2 and entry.control.closed
@@ -356,6 +372,10 @@ def test_rejected_handshake_retains_first_failed_close_and_does_not_close_channe
 class _Operations:
     def __init__(self, failures: int) -> None:
         self.owner = _Release(failures)
+        self.session_reads_ended = 0
+
+    def end_session_reads(self) -> None:
+        self.session_reads_ended += 1
 
     @property
     def calls(self) -> int:
@@ -367,6 +387,9 @@ class _Operations:
 
     def profile_decode_context(self) -> None:
         """Only the entrypoint's constructor binding is under test."""
+
+    def warm_imports(self) -> None:
+        """The idle import is the host's own; these cases test the loop's cleanup."""
 
     async def close(self) -> OperationDrainResult:
         self.owner.close()
@@ -413,6 +436,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     discarded: list[UUID] = []
     expired: list[tuple[UUID, ...]] = []
     forgotten: list[bool] = []
+    ended: list[bool] = []
     output: list[bytes] = []
 
     class Custody(_ServeCustody):
@@ -426,6 +450,9 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     class Operations:
         def forget_settled_ephemeral(self) -> None:
             forgotten.append(True)
+
+        def end_session_reads(self) -> None:
+            ended.append(True)
 
         def in_flight_operation_count(self) -> int:
             return 0
@@ -441,15 +468,15 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
 
     custody = Custody()
     failed = asyncio.Event()
-    context = worker_service._WorkerControl(
+    context = worker_service.WorkerControl(
         channel=cast(WorkerChannel, Channel()),
         custody=cast(ProfileWorkerCustody, custody),
         human=cast(ProfileWorkerHumanLogin, Human()),
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
         failed=failed,
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -461,24 +488,24 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
     clock = iter((10.0, 10.75, 11.0))
     monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: next(clock)))
-    caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
+    caplog.set_level(logging.DEBUG, logger=worker_service.log.name)
 
-    with pytest.raises(RefusalError) as caught:
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError) as caught:
+        asyncio.run(worker_service.serve_control_requests(context, input_executor))
 
     assert caught.value.reason is RefusalCode.UNAVAILABLE
     assert retired == discarded == [session_id]
     assert expired == [()]
     assert forgotten == [True]
+    assert ended == [True]
     assert output
     assert context.changed.is_set(), "a handled command must wake idle custody expiry"
-    started = next(
-        record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_started"
-    )
-    slow = next(record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_slow")
+    delivered = delivered_records(caplog, worker_service.log.name)
+    started = next(record for record in delivered if record.getMessage() == "profile_worker_control_dispatch_started")
+    slow = next(record for record in delivered if record.getMessage() == "profile_worker_control_dispatch_slow")
     assert {
         "handler_name": started.__dict__["handler_name"],
         "request_type": started.__dict__["request_type"],
@@ -519,15 +546,15 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
             assert deadline > 0
             output.append(bytes(payload))
 
-    context = worker_service._WorkerControl(
+    context = worker_service.WorkerControl(
         channel=cast(WorkerChannel, Channel()),
         custody=cast(ProfileWorkerCustody, _ServeCustody()),
         human=cast(ProfileWorkerHumanLogin, _IdleHuman()),
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
         failed=asyncio.Event(),
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -539,10 +566,10 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
 
-    with pytest.raises(RefusalError):
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
+        asyncio.run(worker_service.serve_control_requests(context, input_executor))
 
     assert b'"in_flight_operations":2' in b"".join(output), "the status was not answered"
     assert not context.changed.is_set(), "a heartbeat's status read woke idle custody expiry"
@@ -568,15 +595,15 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
             assert deadline > 0
             output.append(bytes(payload))
 
-    context = worker_service._WorkerControl(
+    context = worker_service.WorkerControl(
         channel=cast(WorkerChannel, Channel()),
         custody=cast(ProfileWorkerCustody, Custody()),
         human=cast(ProfileWorkerHumanLogin, _IdleHuman()),
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
         failed=asyncio.Event(),
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -588,10 +615,10 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
 
-    with pytest.raises(RefusalError):
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
+        asyncio.run(worker_service.serve_control_requests(context, input_executor))
 
     written = b"".join(output)
     assert b'"kind":"activity"' in written and b'"in_flight_operations":3' in written
@@ -632,13 +659,14 @@ def test_idle_custody_validation_keeps_worker_loop_responsive(phase: str) -> Non
                     wait_for_loop()
                 return None
 
-        await worker_service._expire_custody(
+        await worker_service.expire_custody(
             stop,
             failed,
             cast(ProfileWorkerCustody, Custody()),
             cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
             cast(ProfileWorkerHumanLogin, Human()),
             _handled(),
+            cast(ProfileWorkerOperationHost, _Operations(0)),
         )
         assert not failed.is_set()
 
@@ -676,20 +704,76 @@ def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
             def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
                 assert live_sessions == (parent,)
 
-        context = worker_service._WorkerControl(
+        operations = _Operations(0)
+        context = worker_service.WorkerControl(
             channel=cast(WorkerChannel, object()),
             custody=cast(ProfileWorkerCustody, Custody()),
             human=cast(ProfileWorkerHumanLogin, Human()),
-            operations=cast(ProfileWorkerOperationHost, object()),
+            operations=cast(ProfileWorkerOperationHost, operations),
             uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
             failed=asyncio.Event(),
-            operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-            upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+            operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
             changed=asyncio.Event(),
         )
         request = ProfileWorkerRetireRequest(request_id=uuid4(), session_id=uuid4())
-        assert await worker_service._handle_custody_control(context, request) == "status"
+        assert await worker_service.handle_custody_control(context, request) == "status"
         assert progressed.is_set()
+        assert operations.session_reads_ended == 1, "a retired child ends kept reads though its parent lives on"
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("action", ["prepare_api", "cancel_human"])
+def test_blocking_control_keeps_loop_responsive_and_owns_cancelled_work(action: str) -> None:
+    async def exercise() -> None:
+        loop = asyncio.get_running_loop()
+        loop_thread = threading.get_ident()
+        entered = asyncio.Event()
+        release = threading.Event()
+        finished = threading.Event()
+
+        def blocking_control() -> None:
+            assert threading.get_ident() != loop_thread
+            loop.call_soon_threadsafe(entered.set)
+            assert release.wait(5), "test did not release the control handler"
+            finished.set()
+
+        class Operations:
+            def prepare(self) -> None:
+                blocking_control()
+
+        class Human:
+            def cancel(self) -> None:
+                blocking_control()
+
+        context = worker_service.WorkerControl(
+            channel=cast(WorkerChannel, object()),
+            custody=cast(ProfileWorkerCustody, object()),
+            human=cast(ProfileWorkerHumanLogin, Human()),
+            operations=cast(ProfileWorkerOperationHost, Operations()),
+            uploads=worker_service.WorkerSubmissionStaging(),
+            failed=asyncio.Event(),
+            operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
+            changed=asyncio.Event(),
+        )
+        request = ProfileWorkerControlRequest.model_validate({"request_id": uuid4(), "action": action})
+        handler = asyncio.create_task(worker_service.handle_action_control(context, request))
+        try:
+            await asyncio.wait_for(entered.wait(), 2)
+            handler.cancel()
+            await asyncio.sleep(0)
+            assert not handler.done()
+            assert not finished.is_set()
+            release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await handler
+            assert finished.is_set()
+        finally:
+            release.set()
+            with suppress(asyncio.CancelledError):
+                await handler
 
     asyncio.run(exercise())
 
@@ -729,13 +813,14 @@ def test_idle_custody_expiry_runs_only_at_a_deadline_or_a_handled_command() -> N
             await asyncio.wait_for(reached(), timeout=5)
 
         expiry = asyncio.create_task(
-            worker_service._expire_custody(
+            worker_service.expire_custody(
                 stop,
                 failed,
                 cast(ProfileWorkerCustody, Custody()),
                 cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
                 cast(ProfileWorkerHumanLogin, _IdleHuman()),
                 changed,
+                cast(ProfileWorkerOperationHost, _Operations(0)),
             )
         )
         await settled(1)
@@ -753,6 +838,71 @@ def test_idle_custody_expiry_runs_only_at_a_deadline_or_a_handled_command() -> N
     asyncio.run(exercise())
 
 
+def test_a_lapsed_lease_ends_the_reads_kept_for_reuse_and_an_unchanged_one_does_not() -> None:
+    """Expiry that finds a held lease gone ends every read's reuse; one that finds nothing changed leaves it."""
+
+    async def exercise() -> None:
+        stop, failed, changed = asyncio.Event(), asyncio.Event(), _handled()
+        lease = uuid4()
+        # Held, still held, lapsed, and nothing held: only the third pass loses a lease.
+        observations = iter(((lease,), (lease,), (), ()))
+        passes = 0
+        ended_at: list[int] = []
+
+        class Custody(_ServeCustody):
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                nonlocal passes
+                passes += 1
+                held = next(observations)
+                if passes == 4:
+                    stop.set()
+                return held
+
+        class Uploads:
+            def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+                del live_sessions
+
+            def seconds_until_expiry(self) -> float | None:
+                return None
+
+        class Observed(_Operations):
+            @override
+            def end_session_reads(self) -> None:
+                super().end_session_reads()
+                ended_at.append(passes)
+
+        operations = Observed(0)
+
+        async def wake_each_pass() -> None:
+            while not stop.is_set():
+                changed.set()
+                await asyncio.sleep(0.01)
+
+        waker = asyncio.create_task(wake_each_pass())
+        try:
+            await asyncio.wait_for(
+                worker_service.expire_custody(
+                    stop,
+                    failed,
+                    cast(ProfileWorkerCustody, Custody()),
+                    cast(worker_service.WorkerSubmissionStaging, Uploads()),
+                    cast(ProfileWorkerHumanLogin, _IdleHuman()),
+                    changed,
+                    cast(ProfileWorkerOperationHost, operations),
+                ),
+                timeout=5,
+            )
+        finally:
+            stop.set()
+            await waker
+        assert not failed.is_set()
+        assert ended_at == [3]
+        assert operations.session_reads_ended == 1
+
+    asyncio.run(exercise())
+
+
 def test_idle_custody_failure_retains_original_error_and_fences_work() -> None:
     async def exercise() -> None:
         failure = OSError("custody observation failed")
@@ -764,13 +914,14 @@ def test_idle_custody_failure_retains_original_error_and_fences_work() -> None:
                 raise failure
 
         with pytest.raises(OSError) as caught:
-            await worker_service._expire_custody(
+            await worker_service.expire_custody(
                 asyncio.Event(),
                 failed,
                 cast(ProfileWorkerCustody, Custody()),
                 cast(worker_service.WorkerSubmissionStaging, object()),
                 cast(ProfileWorkerHumanLogin, object()),
                 _handled(),
+                cast(ProfileWorkerOperationHost, _Operations(0)),
             )
         assert caught.value is failure
         assert failed.is_set()
@@ -791,7 +942,7 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     local_failure: bool,
 ) -> None:
     """Real frame decoding/serve/run retire a fault port, never a terminal task."""
-    serve = worker_service._serve
+    serve = worker_service.serve
     entry = _entry(monkeypatch, tmp_path)
     entered, release = threading.Event(), threading.Event()
     cancellation = asyncio.CancelledError("control cancelled during operation frame read")
@@ -832,12 +983,12 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     custody = _ServeCustody()
     custody.identity = entry.identity
     operations = _Operations(1 if local_failure else 0)
-    human, uploads = _Release(), _Release()
+    human, uploads = _Human(), _Release()
     monkeypatch.setattr(worker, "ProfileWorkerCustody", lambda *_args, **_kwargs: custody)
     monkeypatch.setattr(worker, "ProfileWorkerOperationHost", lambda *_args, **_kwargs: operations)
     monkeypatch.setattr(worker, "ProfileWorkerHumanLogin", lambda *_args, **_kwargs: human)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
-    monkeypatch.setattr(worker_service, "_serve", serve)
+    monkeypatch.setattr(worker_service, "serve", serve)
     try:
         with pytest.raises((RefusalError, asyncio.CancelledError)) as caught:
             worker.run(entry.arguments)
@@ -881,28 +1032,29 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
 async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownership_with_caller(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class IdleRelease(_Release):
+    class IdleRelease(_Human):
         def expire(self, *, live_sessions: tuple[UUID, ...] = ()) -> None:
             assert live_sessions == ()
 
         def seconds_until_expiry(self) -> float | None:
             return None
 
-    control, operation = _Channel(), _Channel()
+    control, operation, proof = _Channel(), _Channel(), _Channel()
     control.queue(ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="stop", request_id=uuid4())))
     custody, human, uploads = _ServeCustody(), IdleRelease(), IdleRelease()
     operations = _Operations(0)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
-    await worker_service._serve(
+    await worker_service.serve(
         cast(WorkerChannel, control),
         cast(WorkerChannel, operation),
+        cast(WorkerChannel, proof),
         cast(ProfileWorkerCustody, custody),
         cast(ProfileWorkerHumanLogin, human),
         cast(ProfileWorkerOperationHost, operations),
     )
     assert operations.calls == human.calls == uploads.calls == 1
     assert operations.closed and human.closed and uploads.closed
-    assert custody.calls == control.calls == operation.calls == 0
+    assert custody.calls == control.calls == operation.calls == proof.calls == 0
 
 
 @pytest.mark.asyncio
@@ -911,14 +1063,15 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
     monkeypatch: pytest.MonkeyPatch, failures: int
 ) -> None:
     primary = ValueError("synthetic control validation failure")
-    control, operation = _Channel(read_failure=primary), _Channel()
-    custody, human, uploads = _Release(), _Release(failures), _Release(failures)
+    control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
+    custody, human, uploads = _ServeCustody(), _Human(failures), _Release(failures)
     operations = _Operations(failures)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     with pytest.raises(ValueError) as caught:
-        await worker_service._serve(
+        await worker_service.serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
+            cast(WorkerChannel, proof),
             cast(ProfileWorkerCustody, custody),
             cast(ProfileWorkerHumanLogin, human),
             cast(ProfileWorkerOperationHost, operations),
@@ -927,7 +1080,7 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
     cleanup = primary.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
     assert operations.calls == human.calls == uploads.calls == 1
-    assert custody.calls == control.calls == operation.calls == 0
+    assert custody.calls == control.calls == operation.calls == proof.calls == 0
     if failures == 2:
         with pytest.raises(AsyncResourceCleanupError) as retry:
             await cleanup.retry_cleanup()
@@ -944,8 +1097,8 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     primary = asyncio.CancelledError("original control cancellation")
-    control, operation = _Channel(read_failure=primary), _Channel()
-    custody, human, uploads = _Release(), _Release(1), _Release()
+    control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
+    custody, human, uploads = _ServeCustody(), _Human(1), _Release()
     entered, finish = asyncio.Event(), asyncio.Event()
 
     class PendingOperations(_Operations):
@@ -958,9 +1111,10 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
     operations = PendingOperations(1)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     running = asyncio.create_task(
-        worker_service._serve(
+        worker_service.serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
+            cast(WorkerChannel, proof),
             cast(ProfileWorkerCustody, custody),
             cast(ProfileWorkerHumanLogin, human),
             cast(ProfileWorkerOperationHost, operations),

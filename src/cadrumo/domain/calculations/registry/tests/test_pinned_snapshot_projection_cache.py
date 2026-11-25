@@ -1,0 +1,201 @@
+"""A pinned operation shares each validated snapshot only under every input it depends on."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, date, datetime
+from threading import Barrier
+
+import pytest
+
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.time.clock import frozen_clock
+from ..authority import PinnedAuthorityOperation
+from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin
+from ..authority_location import bundled_authority_descriptor_path
+from ..authority_store import SQLiteAuthorityReader
+from ..errors import RegistryValidationError
+from ..schema import RegistrySnapshot
+from .authored_editions import filing_year_envelope
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_MODELO = "303"
+_YEAR = filing_year_envelope().horizon
+_PERIOD = "4T"
+
+
+class _ForwardingReader:
+    """A reader over the same generation that owns no accounted cache of its own."""
+
+    def __init__(self, reader: SQLiteAuthorityReader) -> None:
+        self._reader = reader
+
+    def pin(self) -> AuthorityGenerationPin:
+        return self._reader.pin()
+
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        return self._reader.load(query, pin=pin)
+
+    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
+        return self._reader.component_queries()
+
+
+@pytest.fixture
+def reader() -> Iterator[SQLiteAuthorityReader]:
+    reader = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+    try:
+        yield reader
+    finally:
+        reader.close()
+
+
+def _snapshot(
+    operation: PinnedAuthorityOperation,
+    *,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    on: date | None = None,
+) -> RegistrySnapshot:
+    return operation.snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD, on=on, grade=grade)
+
+
+def test_a_repeated_coordinate_returns_the_identical_snapshot(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+
+    first = _snapshot(operation)
+
+    assert _snapshot(operation) is first
+    assert _snapshot(PinnedAuthorityOperation(reader, reader.pin())) is first
+
+
+def test_concurrent_requests_for_one_coordinate_share_one_snapshot(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+    barrier = Barrier(4)
+
+    def request(_: int) -> RegistrySnapshot:
+        barrier.wait()
+        return _snapshot(operation)
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        snapshots = tuple(executor.map(request, range(4)))
+
+    assert all(snapshot is snapshots[0] for snapshot in snapshots)
+
+
+def test_grade_and_reference_date_are_part_of_the_shared_coordinate(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+
+    filing = _snapshot(operation)
+    applicability = _snapshot(operation, grade=RegistryAuthorityGrade.APPLICABILITY)
+    dated = _snapshot(operation, on=date(_YEAR + 1, 1, 20))
+
+    assert applicability is not filing
+    assert dated is not filing
+    assert dated is not applicability
+    assert _snapshot(operation, grade=RegistryAuthorityGrade.APPLICABILITY) is applicability
+    assert _snapshot(operation, on=date(_YEAR + 1, 1, 20)) is dated
+
+
+def test_a_later_run_date_shares_the_snapshot_because_no_check_reads_the_clock(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+
+    with frozen_clock(datetime(_YEAR, 3, 10, 12, tzinfo=UTC)):
+        first_day = _snapshot(operation)
+    with frozen_clock(datetime(_YEAR + 3, 11, 11, 12, tzinfo=UTC)):
+        years_later = _snapshot(operation)
+
+    assert years_later is first_day
+
+
+def test_another_reader_incarnation_never_serves_this_generations_snapshot(reader: SQLiteAuthorityReader) -> None:
+    first = _snapshot(PinnedAuthorityOperation(reader, reader.pin()))
+    other = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+    try:
+        assert other.pin() != reader.pin()
+        assert other.pin().logical_generation == reader.pin().logical_generation
+        assert _snapshot(PinnedAuthorityOperation(other, other.pin())) is not first
+    finally:
+        other.close()
+
+
+def test_a_reader_without_the_accounted_cache_builds_every_snapshot_afresh(reader: SQLiteAuthorityReader) -> None:
+    published = _snapshot(PinnedAuthorityOperation(reader, reader.pin()))
+    forwarding = _ForwardingReader(reader)
+    operation = PinnedAuthorityOperation(forwarding, forwarding.pin())
+
+    first = _snapshot(operation)
+
+    assert first is not published
+    assert _snapshot(operation) is not first
+
+
+def test_a_shared_snapshot_is_charged_for_its_own_members_not_again_for_its_components(
+    reader: SQLiteAuthorityReader,
+) -> None:
+    forwarding = _ForwardingReader(reader)
+    _snapshot(PinnedAuthorityOperation(forwarding, forwarding.pin()))
+    components = reader.stats()
+
+    _snapshot(PinnedAuthorityOperation(reader, reader.pin()))
+    shared = reader.stats()
+
+    assert shared.entries == components.entries + 1
+    assert 0 < shared.retained_weight - components.retained_weight <= 64 * 1024
+    assert shared.retained_weight <= shared.budget
+
+
+class _CountingBuild:
+    """A derivation that records each time it is computed."""
+
+    def __init__(self) -> None:
+        self.builds = 0
+
+    def __call__(self) -> str:
+        self.builds += 1
+        return f"derived-{self.builds}"
+
+
+def test_a_retained_projection_is_built_once_per_generation_and_key(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+
+    first = operation.retained_projection(("derivation", _MODELO), kind=str, build=build)
+
+    assert operation.retained_projection(("derivation", _MODELO), kind=str, build=build) is first
+    later_operation = PinnedAuthorityOperation(reader, reader.pin())
+    assert later_operation.retained_projection(("derivation", _MODELO), kind=str, build=build) is first
+    assert operation.retained_projection(("derivation", "other"), kind=str, build=build) == "derived-2"
+    assert build.builds == 2
+
+
+def test_another_generation_pin_recomputes_a_retained_projection(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    first = PinnedAuthorityOperation(reader, reader.pin()).retained_projection("derivation", kind=str, build=build)
+    other = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+    try:
+        other_operation = PinnedAuthorityOperation(other, other.pin())
+
+        assert other_operation.retained_projection("derivation", kind=str, build=build) != first
+        assert build.builds == 2
+    finally:
+        other.close()
+
+
+def test_a_reader_without_the_accounted_cache_rebuilds_every_projection(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    forwarding = _ForwardingReader(reader)
+    operation = PinnedAuthorityOperation(forwarding, forwarding.pin())
+
+    operation.retained_projection("derivation", kind=str, build=build)
+    operation.retained_projection("derivation", kind=str, build=build)
+
+    assert build.builds == 2
+
+
+def test_a_retained_projection_of_another_type_is_refused(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+    operation.retained_projection("derivation", kind=str, build=_CountingBuild())
+
+    with pytest.raises(RegistryValidationError):
+        operation.retained_projection("derivation", kind=int, build=int)

@@ -32,9 +32,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -56,8 +54,8 @@ from ..invoice_extraction_authority import default_invoice_extraction_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILER: Final = "B12345674"
-_OTHER: Final = "B63104517"
+_FILER: Final = "B00015016"
+_OTHER: Final = "B00010116"
 
 _ISSUED_PAGE: Final = (
     "FACTURA 2026-0001\n"
@@ -212,8 +210,8 @@ def test_a_document_naming_the_filer_as_both_parties_settles_nothing(*, operatio
 
 def test_a_document_naming_neither_party_as_the_filer_settles_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The negative control. A derivation that answered here would answer anything."""
-    page = _ISSUED_PAGE.replace(f"NIF {_FILER}", "NIF A58818501")
-    draft = _grounded(page=page, supplier="A58818501", customer=_OTHER, operation=operation)
+    page = _ISSUED_PAGE.replace(f"NIF {_FILER}", "NIF B00010157")
+    draft = _grounded(page=page, supplier="B00010157", customer=_OTHER, operation=operation)
 
     assert draft.suggested_kind is None
 
@@ -241,7 +239,7 @@ def test_a_document_with_no_party_headings_settles_nothing() -> None:
     The fail-safe direction, and the case that separates this from a slot
     comparison: the slots still name the filer, and the answer is still withheld.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = ground_draft_against_transcription(
             draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
             transcription=_transcription(_ISSUED_PAGE),

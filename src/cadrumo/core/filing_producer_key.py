@@ -213,10 +213,10 @@ class FilingProducerKey(StrEnum):
     M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES = "m202.tipo_gravamen_impuesto_sociedades"
     M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO = "m202.importe_neto_cifra_negocios_tramo"
     M202_MARCA_INSTRUMENTAL = "m202.marca_instrumental"
-    #: The slot AEAT prints for "Liquidación de modalidad A ó B", which selects
-    #: which of the form's two liquidation blocks the filer completed. It is a
-    #: discriminant, not a declared amount, and a negative filing depends on it.
-    M202_DISCRIMINANTE_DECLARACION_NEGATIVA = "m202.discriminante_declaracion_negativa"
+    #: The slot AEAT prints for "Liquidación de modalidad A ó B": "A" the LIS
+    #: art. 40.2 modality, "B" the art. 40.3 one. It names which of the form's
+    #: two liquidation blocks calculates the instalment, not a declared amount.
+    M202_MODALIDAD_LIQUIDACION = "m202.modalidad_liquidacion"
     M202_NORMATIVA_TERRITORIO_FORAL = "m202.normativa_territorio_foral"
     M202_COMUNICACION_DATOS_ADICIONALES = "m202.comunicacion_datos_adicionales"
     M202_NUMERO_REFERENCIA_SOCIEDADES = "m202.numero_referencia_sociedades"
@@ -414,6 +414,13 @@ class FilingProducerKey(StrEnum):
     M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACION_DE = "m200.b_2_suma_de_porcentajes_de_participacion_de"
     M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E = "m200.b_2_suma_de_porcentajes_de_participaciones_e"
     M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV = "m200.balance_0_no_consta_1_mod_normal_2_mod_abrev"
+    #: The 2022 diseño prints "Certificación del Secretario del Consejo de
+    #: Administración, declarante o representante - Fecha (sólo declaraciones
+    #: del I.R.N.R.)" as a Num 8 AAAAMMDD field. The Manual práctico de
+    #: Sociedades 2022 (p. 88) has an establecimiento permanente or an entidad en
+    #: régimen de atribución de rentas subject to the IRNR state the date the
+    #: declarante or representante signs; later diseños print no such field.
+    M200_CERTIFICACION_FECHA_SOLO_DECLARACIONES_IRNR = "m200.certificacion_fecha_solo_declaraciones_irnr"
     M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL = "m200.codigo_cnae_2025_actividad_principal"
     M200_CODIGO_PAIS_COUNTRY_CODE = "m200.codigo_pais_country_code"
     M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A = "m200.como_consecuencia_de_la_presentacion_de_la_a"
@@ -422,8 +429,23 @@ class FilingProducerKey(StrEnum):
     M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC = "m200.cuenta_bancaria_codigo_swift_bic"
     M200_CUENTA_BANCARIA_MARCA_SEPA = "m200.cuenta_bancaria_marca_sepa"
     M200_CUENTA_CORRIENTE_TRIBUTARIA = "m200.cuenta_corriente_tributaria"
+    #: The 2022 and 2023 diseños print an alphanumeric "Cuota Cero" slot on the
+    #: documento de ingreso o devolución; the 2024 diseño prints a numeric
+    #: "Resultado cero" in its place, so the two captions keep their own keys.
+    M200_CUOTA_CERO = "m200.cuota_cero"
+    #: The 2022 and 2023 diseños identify the sociedad matriz última by "NIF o
+    #: equivalente", "Código país" and "País o jurisdicción"; the 2024 diseño
+    #: splits the identifier into a NIF and a TIN in the country of residence,
+    #: so none of its keys names these three slots.
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS = "m200.datos_de_la_sociedad_matriz_ultima_codigo_pais"
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF = "m200.datos_de_la_sociedad_matriz_ultima_nif"
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE = (
+        "m200.datos_de_la_sociedad_matriz_ultima_nif_o_equivalente"
+    )
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE = "m200.datos_de_la_sociedad_matriz_ultima_nombre_de"
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION = (
+        "m200.datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion"
+    )
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC = "m200.datos_de_la_sociedad_matriz_ultima_razon_soc"
     M200_DEDUCCION_RESTO_DEL_GRUPO = "m200.deduccion_resto_del_grupo"
     M200_DEDUCCION_RESTO_DEL_GRUPO_10 = "m200.deduccion_resto_del_grupo_10"
@@ -464,6 +486,13 @@ class FilingProducerKey(StrEnum):
     M200_IDENTIFICADOR_CLIENTE_EEDD_RESERVADO_PARA_LA = "m200.identificador_cliente_eedd_reservado_para_la"
     M200_IMPORTE_A_DEVOLVER = "m200.importe_a_devolver"
     M200_IMPORTE_A_INGRESAR = "m200.importe_a_ingresar"
+    #: The 2023 diseño prints one "de al menos 20 millones de euros" band on its
+    #: first page and moves the 20 to 60 and 60 million bands to the régimen de
+    #: cooperativas sheet; the 2022 and 2024 diseños print all three bands on the
+    #: first page, so the single band and the cooperativa bands keep their own keys.
+    M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES = (
+        "m200.importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones"
+    )
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS = "m200.importe_neto_de_la_cifra_de_negocios_de_los"
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2 = "m200.importe_neto_de_la_cifra_de_negocios_de_los_2"
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_3 = "m200.importe_neto_de_la_cifra_de_negocios_de_los_3"
@@ -520,6 +549,12 @@ class FilingProducerKey(StrEnum):
     M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_7 = "m200.presentacion_de_documentacion_previa_en_la_s_7"
     M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_8 = "m200.presentacion_de_documentacion_previa_en_la_s_8"
     M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS = "m200.realiza_actividades_agricolas_y_o_ganaderas"
+    M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60 = (
+        "m200.regimen_de_cooperativas_incn_de_al_menos_20_millones_pero_inferior_a_60"
+    )
+    M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES = (
+        "m200.regimen_de_cooperativas_incn_de_al_menos_60_millones"
+    )
     M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA = "m200.reg_entidades_navieras_en_funcion_del_tonela"
     M200_RENUNCIA_O_POR_TRANSFERENCIA = "m200.renuncia_o_por_transferencia"
     M200_RESERVADO_PARA_LA_A_E_A_T_DEJAR_EN_BLANCO_IN = "m200.reservado_para_la_a_e_a_t_dejar_en_blanco_in"
@@ -653,50 +688,20 @@ class FilingProducerKey(StrEnum):
     # the bundled diseño (Orden HAC/2572/2003), apartado and block included. AEAT's
     # own labels for the local grid say only Total / Rectificada / Computable without
     # naming the magnitude, so these keys say the same rather than asserting a
-    # surface figure the document does not state. The relación de locales repeats
-    # nine times in the Anexo record; nine repeats of one local are one identity.
+    # surface figure the document does not state. The Anexo's relación de locales is
+    # a projection (filing_projection_m840), not a header key: it repeats per sheet.
     #: Delegación. Tabla.
     M840_DELEGACION_CODIGO = "m840.delegacion_codigo"
     #: Administración. Tabla.
     M840_ADMINISTRACION_CODIGO = "m840.administracion_codigo"
     #: Apart. I: Datos ident. del sujeto pasivo. Municipio
     M840_SUJETO_PASIVO_MUNICIPIO = "m840.sujeto_pasivo.municipio"
-    #: Apart. III: Representante. Municipio.
-    M840_REPRESENTANTE_MUNICIPIO = "m840.representante.municipio"
     #: Apart. IV: Datos de la act. Provincial (provincia) Tabla
     M840_ACTIVIDAD_PROVINCIA_CODIGO = "m840.actividad.provincia_codigo"
     #: Apart. IV: Datos de la act. Municipio
     M840_ACTIVIDAD_MUNICIPIO = "m840.actividad.municipio"
     #: Apart. V: Local afecto indirectamente a la act. Municipio
     M840_LOCAL_INDIRECTO_MUNICIPIO = "m840.local_indirecto.municipio"
-    #: Apartado II: Relación de locales. SG Tabla
-    M840_LOCALES_SG_TABLA = "m840.locales.sg_tabla"
-    #: Apartado II: Relación de locales. Nombre de la vía pública
-    M840_LOCALES_NOMBRE_VIA = "m840.locales.nombre_via"
-    #: Apartado II: Relación de locales. Núm.
-    M840_LOCALES_NUMERO = "m840.locales.numero"
-    #: Apartado II: Relación de locales. Km.
-    M840_LOCALES_KM = "m840.locales.km"
-    #: Apartado II: Relación de locales. Esc.
-    M840_LOCALES_ESCALERA = "m840.locales.escalera"
-    #: Apartado II: Relación de locales. Piso
-    M840_LOCALES_PISO = "m840.locales.piso"
-    #: Apartado II: Relación de locales. Pta.
-    M840_LOCALES_PUERTA = "m840.locales.puerta"
-    #: Apartado II: Relación de locales. Cód. Postal
-    M840_LOCALES_CODIGO_POSTAL = "m840.locales.codigo_postal"
-    #: Apartado II: Relación de locales. Provincia Tabla
-    M840_LOCALES_PROVINCIA_CODIGO = "m840.locales.provincia_codigo"
-    #: Apartado II: Relación de locales. Municipio Tabla
-    M840_LOCALES_MUNICIPIO_CODIGO = "m840.locales.municipio_codigo"
-    #: Apartado II: Relación de locales. Municipio
-    M840_LOCALES_MUNICIPIO_NOMBRE = "m840.locales.municipio_nombre"
-    #: Apartado II: Relación de locales. Total
-    M840_LOCALES_TOTAL = "m840.locales.total"
-    #: Apartado II: Relación de locales. Rectificada
-    M840_LOCALES_RECTIFICADA = "m840.locales.rectificada"
-    #: Apartado II: Relación de locales. Computable
-    M840_LOCALES_COMPUTABLE = "m840.locales.computable"
     #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Código
     M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A1_CODIGO = "m840.elementos_tributarios.grupo.a1.codigo"
     #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Número

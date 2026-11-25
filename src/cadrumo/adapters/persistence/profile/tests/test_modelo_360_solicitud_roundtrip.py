@@ -40,7 +40,7 @@ from .....core.period import Period
 from .....domain.deadlines.models import RefundAccount
 from ...storage.secure_object_namespaces import PROFILE_MODELO_360_SOLICITUD_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     isolated_two_bucket_runtime,
@@ -50,8 +50,8 @@ from ..modelo_360_solicitud import Modelo360SolicitudRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PERIOD_2025 = Period.from_year_and_code(2025, "AD-HOC")
-_PERIOD_2024 = Period.from_year_and_code(2024, "AD-HOC")
+_PERIOD_2025 = Period.from_year_and_code(2025, "0A")
+_PERIOD_2024 = Period.from_year_and_code(2024, "0A")
 #: Synthetic, checksum-valid IBANs: the ISO 13616 published example and a German sibling.
 _IBAN = "ES9121000418450200051332"
 _OTHER_VALID_IBAN = "DE89370400440532013000"
@@ -109,9 +109,9 @@ def _entry(period: Period = _PERIOD_2025, *, refund_account: RefundAccount | Non
 
 
 def _register_row():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.namespace,
-        SecureObjectRow.object_key == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.require_default_object_key(),
     )
 
 

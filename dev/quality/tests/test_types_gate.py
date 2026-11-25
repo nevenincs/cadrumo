@@ -36,23 +36,23 @@ import pytest
 from dev.packaging.command_execution import run_command
 
 from ..types import (
-    _IRREDUCIBLE_EXTERNAL_GAPS,
-    _PLATFORMS,
+    IRREDUCIBLE_EXTERNAL_GAPS,
+    PLATFORMS,
     Diagnostic,
+    ExternalGap,
     TargetPlatform,
-    _describe_stream,
-    _ExternalGap,
-    _is_irreducible_external_gap,
-    _run,
     collect_all,
     collect_basedpyright,
     collect_pyrefly,
     collect_ty,
+    describe_stream,
     fold_platforms,
+    is_irreducible_external_gap,
     main,
     platform_pin_failures,
     read_pyproject,
     require_report,
+    run,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -104,7 +104,7 @@ def test_an_absent_stream_is_named_as_empty_rather_than_omitted() -> None:
 
 def test_a_long_stream_is_excerpted_with_its_full_length_stated() -> None:
     """A checker dying mid-dump must not bury the rest of the message."""
-    described = _describe_stream("x" * 5000, "stderr")
+    described = describe_stream("x" * 5000, "stderr")
 
     assert described.startswith("stderr (5000 chars, first 2000): ")
     assert len(described) < 5000
@@ -112,9 +112,9 @@ def test_a_long_stream_is_excerpted_with_its_full_length_stated() -> None:
 
 def test_a_stream_python_never_captured_is_distinguished_from_an_empty_one() -> None:
     """``TimeoutExpired`` can carry ``None`` streams, which is a third state."""
-    assert _describe_stream(None, "stdout") == "stdout not captured"
-    assert _describe_stream("", "stdout") == "stdout empty"
-    assert _describe_stream(b"bytes arrive from a timed-out child", "stderr").endswith("child")
+    assert describe_stream(None, "stdout") == "stdout not captured"
+    assert describe_stream("", "stdout") == "stdout empty"
+    assert describe_stream(b"bytes arrive from a timed-out child", "stderr").endswith("child")
 
 
 def test_the_refusal_names_the_checker_that_went_silent() -> None:
@@ -146,7 +146,7 @@ def test_ty_uses_the_same_project_discovery_as_a_standalone_check(monkeypatch: p
         seen.append(cmd)
         return _completed(stdout="[]")
 
-    monkeypatch.setattr("dev.quality.types._run", run)
+    monkeypatch.setattr("dev.quality.types.run", run)
 
     assert collect_ty(TargetPlatform(key="linux", basedpyright="Linux")) == []
     assert seen == [
@@ -207,12 +207,12 @@ def test_every_checker_names_the_target_platform_it_analyses_for(monkeypatch: py
         seen.append(cmd)
         return _completed(stdout='{"errors": []}' if cmd[0] == "pyrefly" else "[]")
 
-    monkeypatch.setattr("dev.quality.types._run", run)
+    monkeypatch.setattr("dev.quality.types.run", run)
     target = TargetPlatform(key="darwin", basedpyright="Darwin")
 
     collect_ty(target)
     collect_pyrefly(target)
-    monkeypatch.setattr("dev.quality.types._run", lambda cmd: (seen.append(cmd), _completed(stdout="{}"))[1])
+    monkeypatch.setattr("dev.quality.types.run", lambda cmd: (seen.append(cmd), _completed(stdout="{}"))[1])
     collect_basedpyright(target)
 
     assert seen[0][2:4] == ["--python-platform", "darwin"]
@@ -239,7 +239,7 @@ def test_pyrefly_resolves_project_dependencies_without_losing_type_errors(
     monkeypatch.chdir(tmp_path)
     target = TargetPlatform(key="linux", basedpyright="Linux")
 
-    automatic = _run(["pyrefly", "check", "--python-platform", "linux", "--output-format", "json"])
+    automatic = run(["pyrefly", "check", "--python-platform", "linux", "--output-format", "json"])
     assert automatic.returncode == 1
     assert any(finding["name"] == "missing-import" for finding in json.loads(automatic.stdout)["errors"])
     assert collect_pyrefly(target) == []
@@ -268,11 +268,11 @@ def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr("dev.quality.types.collect_basedpyright", lambda p: seen.append(("basedpyright", p.key)) or [])
 
     assert collect_all() == []
-    assert {platform.key for platform in _PLATFORMS} == {"linux", "win32", "darwin"}
+    assert {platform.key for platform in PLATFORMS} == {"linux", "win32", "darwin"}
     # A set, because the nine runs overlap; the union is sorted before it is
     # reported, so completion order cannot reach the verdict.
     assert sorted(seen) == sorted(
-        (checker, platform.key) for platform in _PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
+        (checker, platform.key) for platform in PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
     )
 
 
@@ -418,12 +418,12 @@ def test_the_gate_refuses_to_measure_when_the_pin_cannot_be_trusted(
 
 def test_one_defect_seen_on_every_platform_counts_once() -> None:
     """Three runs of the same tree must not treble a tree-wide finding."""
-    everywhere = [_diagnostic(platform=platform.key) for platform in _PLATFORMS]
+    everywhere = [_diagnostic(platform=platform.key) for platform in PLATFORMS]
 
     folded = fold_platforms(everywhere)
 
     assert len(folded) == 1
-    assert folded[0][1] == tuple(platform.key for platform in _PLATFORMS)
+    assert folded[0][1] == tuple(platform.key for platform in PLATFORMS)
 
 
 def test_a_platform_specific_defect_keeps_the_platforms_that_reported_it() -> None:
@@ -440,7 +440,7 @@ def test_the_suppression_list_is_empty() -> None:
     model loader that was deleted with the runtime embedding stack, so it had no
     subject left. An entry reappearing should send whoever added it here.
     """
-    assert _IRREDUCIBLE_EXTERNAL_GAPS == ()
+    assert IRREDUCIBLE_EXTERNAL_GAPS == ()
 
 
 def _diagnostic(
@@ -461,7 +461,7 @@ def _diagnostic(
 
 def test_a_matching_gap_suppresses_only_its_own_diagnostic() -> None:
     """All four parts must agree, which is what keeps the suppression narrow."""
-    gap = _ExternalGap(
+    gap = ExternalGap(
         path_suffix="cadrumo/x.py",
         checker="ty",
         rule="unresolved-import",
@@ -493,7 +493,7 @@ def test_a_diagnostic_differing_in_any_part_is_not_suppressed(field: str, value:
     naming any other symbol stays a hard failure - and this is what holds the
     match to all four parts.
     """
-    gap = _ExternalGap(
+    gap = ExternalGap(
         path_suffix="cadrumo/x.py",
         checker="ty",
         rule="unresolved-import",
@@ -513,7 +513,7 @@ def test_a_diagnostic_differing_in_any_part_is_not_suppressed(field: str, value:
 
 def test_nothing_is_suppressed_while_the_list_is_empty() -> None:
     """The live predicate, so it cannot rot while the list stays empty."""
-    assert not _is_irreducible_external_gap(_diagnostic())
+    assert not is_irreducible_external_gap(_diagnostic())
 
 
 @pytest.mark.parametrize(

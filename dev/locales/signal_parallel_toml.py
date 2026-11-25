@@ -6,10 +6,31 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.toml import TomlDecodeError, load_toml
 
 from .signal_parallel_findings import data_finding
 from .signal_policy import LANGUAGE_CORE_FIELDS, LOCALES
+
+_TERMINOLOGY_SCAFFOLD_MARKER = "(sin curar) draft pendiente de definicion"
+
+
+def _has_terminology_scaffold_marker(payload: dict[str, object], path: Path, repository: Path) -> bool:
+    concepts = repository / "src" / "cadrumo" / "_data" / "terminology" / "concepts"
+    concept = payload.get("concept")
+    if not isinstance(concept, dict):
+        return False
+    concept_id = concept.get("concept_id")
+    lifecycle = concept.get("lifecycle")
+    return (
+        path.parent == concepts
+        and path.suffix == ".toml"
+        and isinstance(concept_id, str)
+        and concept_id == path.stem
+        and isinstance(lifecycle, str)
+        and lifecycle
+        in (ConceptLifecycle.DRAFT.value, ConceptLifecycle.DEPRECATED.value, ConceptLifecycle.RETIRED.value)
+    )
 
 
 def inventory_toml_suffix_translations(
@@ -60,7 +81,16 @@ def inventory_toml_language_translations(
             if field in LANGUAGE_CORE_FIELDS and isinstance(value, str)
         }
         for field in sorted(fields):
-            inventory_toml_language_field(field, languages, path, repository, counts, findings, spelling_values)
+            inventory_toml_language_field(
+                field,
+                languages,
+                path,
+                repository,
+                counts,
+                findings,
+                spelling_values,
+                scaffold_marker=_has_terminology_scaffold_marker(payload, path, repository),
+            )
 
 
 def inventory_parallel_toml_sources(
@@ -117,13 +147,22 @@ def inventory_toml_language_field(
     counts: Counter[str],
     findings: list[dict[str, object]],
     spelling_values: dict[str, dict[str, str]] | None,
+    *,
+    scaffold_marker: bool = False,
 ) -> None:
     """Inventory toml language field."""
     for locale in LOCALES:
         value = languages.get(locale, {}).get(field)
         counts["parallel_localization_cells"] += 1
         if isinstance(value, str) and value.strip():
-            if spelling_values is not None:
+            # The generated curation marker stays inventoried, but is not authored prose.
+            is_scaffold_marker = (
+                scaffold_marker
+                and locale == "es"
+                and field == "short_description"
+                and value == _TERMINOLOGY_SCAFFOLD_MARKER
+            )
+            if spelling_values is not None and not is_scaffold_marker:
                 relative = path.relative_to(repository).as_posix()
                 spelling_values.setdefault(locale, {})[f"parallel:{relative}:language.{locale}.{field}"] = value
             continue

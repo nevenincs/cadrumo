@@ -23,10 +23,10 @@ from ....domain.categories.proportionality_catalogue import require_proportional
 from ....domain.categories.spending_category import SpendingCategory
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import (
-    active_profile_isolated_backend as _isolated_backend,
+    active_profile_isolated_backend,
 )
 
-__all__ = ["_isolated_backend"]
+__all__ = ["active_profile_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -65,6 +65,29 @@ def test_ledger_ratios_eligible_returns_envelope_on_empty_bucket() -> None:
     assert result.exit_code == 0, result.output
 
 
+def test_ledger_ratios_eligible_lists_the_registry_wording_in_the_chosen_language() -> None:
+    """Each eligible category is printed with the registry's label, kind and notes,
+    said in the language the invocation asked for rather than the worker's."""
+
+    english = _invoke(["app", "ledger", "ratios", "eligible", "--output-language", "en"])
+    spanish = _invoke(["app", "ledger", "ratios", "eligible", "--output-language", "es"])
+
+    assert english.exit_code == 0, english.output
+    assert spanish.exit_code == 0, spanish.output
+    assert (
+        "ibi_vivienda_afecto\tProperty tax (IBI) on home used for business\tusage_ratio_home_area\toverride=.\t"
+        "Deductible in proportion to the home's floor area used for the business and to your ownership "
+        "share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF "
+        "art. 22.3, property tax on the home used for business)."
+    ) in english.output.splitlines()
+    assert (
+        "ibi_vivienda_afecto\tIBI de la vivienda afecta\tusage_ratio_home_area\toverride=.\t"
+        "Deducible en proporción a la superficie de la vivienda afecta a la actividad y a tu porcentaje "
+        "de titularidad en ella; no se aplica el 30 % de los suministros (Ley 35/2006 art. 29.2, "
+        "Reglamento IRPF art. 22.3, IBI de la vivienda afecta)."
+    ) in spanish.output.splitlines()
+
+
 def test_ledger_ratios_validate_on_empty_bucket_succeeds() -> None:
     """`aeat app ledger ratios validate` runs the engine validation on
     the persisted override set (empty here). No errors surface when no
@@ -100,16 +123,24 @@ def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tok
     with pytest.raises(RegistryValidationError, match="is not declared"):
         require_proportionality_kind("bogus")
 
-    for category in ("", "x" * 97):
+    for category in ("", "x" * 129):
         with pytest.raises(ValidationError):
             RatiosRowPayload(category=category, ratio="0.5")
-    for kind in ("", "x" * 97):
+    for kind in ("", "x" * 129):
         with pytest.raises(ValidationError):
-            RatiosEligibleRowPayload(category="worker-category", proportionality_kind=kind, override_present=False)
+            RatiosEligibleRowPayload(
+                category="worker-category",
+                label="Worker category",
+                notes="Worker notes.",
+                proportionality_kind=kind,
+                override_present=False,
+            )
 
     with outside_governed_fact_validation():
         projected = RatiosEligibleRowPayload(
             category="worker-pinned-category",
+            label="Worker pinned category",
+            notes="Worker pinned notes.",
             proportionality_kind="worker-pinned-kind",
             override_present=False,
         )
@@ -121,6 +152,8 @@ def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tok
     assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
     eligible = RatiosEligibleRowPayload(
         category=SpendingCategory.from_registry("suministros_home_office_luz"),
+        label="Home-office electricity",
+        notes="Deductible in proportion to the home's business-use floor area.",
         proportionality_kind=require_proportionality_kind("usage_ratio_home_area").value,
         override_present=False,
     )

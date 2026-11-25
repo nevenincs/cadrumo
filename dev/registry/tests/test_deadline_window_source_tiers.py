@@ -7,13 +7,11 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..conformance.registry_schema_support import (
-    committed_registry as _committed_registry,
+    committed_registry,
+    with_revision,
 )
 from ..conformance.registry_schema_support import (
-    revision as _revision,
-)
-from ..conformance.registry_schema_support import (
-    with_revision as _with_revision,
+    revision as committed_revision,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -21,8 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def test_validator_rejects_deadline_window_legal_ref_without_legal_authority() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     window = revision.deadline_windows[0]
     legal = dict(catalogues.legal)
     legal_ref = window.legal_refs[0]
@@ -37,8 +35,8 @@ def test_validator_rejects_deadline_window_legal_ref_without_legal_authority() -
 
 
 def test_validator_rejects_deadline_window_without_official_guidance_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     window = revision.deadline_windows[0]
     mutated_window = window.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
     mutated_revision = revision.model_copy(
@@ -50,13 +48,13 @@ def test_validator_rejects_deadline_window_without_official_guidance_source() ->
         match=r"deadline window modelo-130-2024-1t requires official_source_guidance source evidence",
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )
 
 
 def test_validator_rejects_deadline_condition_legal_ref_without_legal_authority() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     window = revision.deadline_windows[0]
     condition = window.applicability_conditions[0]
     legal = dict(catalogues.legal)
@@ -72,8 +70,8 @@ def test_validator_rejects_deadline_condition_legal_ref_without_legal_authority(
 
 
 def test_validator_rejects_deadline_condition_without_official_guidance_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     window = revision.deadline_windows[0]
     condition = window.applicability_conditions[0]
     mutated_condition = condition.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
@@ -87,5 +85,5 @@ def test_validator_rejects_deadline_condition_without_official_guidance_source()
         match=r"deadline condition for modelo-130-2024-1t requires official_source_guidance source evidence",
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )

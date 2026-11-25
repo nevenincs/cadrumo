@@ -14,9 +14,12 @@ from ...application.storage.calc_sheets.records import OperatorInputs
 from ...core.config import override_settings
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_spreadsheet_operation_composition import build_modelo_spreadsheet_operation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
@@ -30,7 +33,7 @@ def test_local_workbook_materializes_without_google_capability(
     with override_settings(cadrumo_active_profile=str(_PROFILE)), validating_governed_facts(authority_operation):
         ports = build_modelo_spreadsheet_operation_ports(profile_id=_PROFILE, operation=authority_operation)
         assert {field.name for field in fields(ports)} == {"profile_id", "operation", "materialize", "plan_builder"}
-        snapshot = authority_operation.snapshot("130", filing_year=2026, period="1T")
+        snapshot = authority_operation.snapshot("130", filing_year=_YEAR, period="1T")
         plan = ports.plan_builder(snapshot, operator_inputs=OperatorInputs())
         payload = ports.materialize(plan)
     workbook = load_workbook(BytesIO(payload))

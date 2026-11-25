@@ -23,31 +23,25 @@ from typing import override
 import pytest
 from textual.app import App, ComposeResult
 
-from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
-    ModeloWorkForm,
     address_key,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
+from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_wording import origin_words
+from ......application.modelo.work_review import ModeloWorkReviewCasilla
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.calculation_revision import CalculationRevisionState
-from ......domain.modelos.codes import ModeloCode
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -64,7 +58,8 @@ from ..casilla_list_values import (
 )
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import WorkbenchFilter, page_items, workbench_pages
-from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK, origin_words
+from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK
+from .workbench_fixture import registry_form_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -84,40 +79,27 @@ def _form(
     held: dict[str, Decimal] | None = None,
     lifecycle: CalculationRevisionState | None = None,
 ) -> ModeloWorkForm:
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = str(operation.revision_for_context("303", filing_year=2026, period="1T").id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode("303"), 2026, period, revision_id)
     values = held or {}
-    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000455",
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=lifecycle,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=tuple(
+
+    def hold_values(
+        _snapshot: RegistrySnapshot, rows: tuple[ModeloWorkReviewCasilla, ...]
+    ) -> tuple[ModeloWorkReviewCasilla, ...]:
+        return tuple(
             row.model_copy(update={"value": values[str(row.casilla_id)], "realised_kind": ModeloValueKind.LITERAL})
             if str(row.casilla_id) in values
             else row
             for row in rows
-        ),
-        findings=(),
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout("303", snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
+        )
+
+    return registry_form_of(
+        operation,
+        modelo="303",
+        year=2026,
+        code="1T",
+        bucket_id="13000000-0000-4000-8000-000000000455",
+        work_unit_id="e" * 64,
+        lifecycle_state=lifecycle,
+        hold=hold_values,
     )
 
 
@@ -129,6 +111,91 @@ def _entries(form: ModeloWorkForm) -> dict[str, CasillaListEntry]:
         for item in page_items(page, staged={})
         if isinstance(item, CasillaListEntry) and item.field.box is not None
     }
+
+
+def _assert_fixed_rate_box_reads_the_grounded_rate(calculated: CasillaListEntry, rate: str) -> None:
+    # Were the design to fix that row's rate box, the box would read the grounded rate as its value and, the
+    # rate being one the calculation is shown to apply, say nothing beside it.
+    fixed = replace(
+        calculated,
+        field=calculated.field.model_copy(
+            update={"editability": ModeloFormEditability.DESIGN_CONSTANT, "origin": ModeloFormOrigin.INFORMATIONAL}
+        ),
+    )
+    assert row_value_text(fixed, OutputLanguage.EN) == rate
+    assert value_text(fixed, OutputLanguage.EN) == rate
+    assert rate_note(fixed) is None
+
+
+def _assert_worked_out_rate_reads_the_grounded_rate(calculated: CasillaListEntry, rate: str) -> None:
+    typed = replace(calculated, staged_text="3,50")
+    assert row_value_text(typed, OutputLanguage.EN) == "3,50"
+    worked_out = replace(
+        calculated,
+        field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal("0.00")}),
+    )
+    failed = replace(
+        calculated, field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATION_FAILED})
+    )
+    # A worked-out rate in a row grounded on one rate reads that rate, as the form prints it, whatever the
+    # base: never a 0 % worked out of an empty base, and with nothing more to say beside it.
+    assert rate_note(worked_out, OutputLanguage.EN) is None
+    assert row_value_text(worked_out, OutputLanguage.EN) == rate
+    assert grid_value_text(worked_out, OutputLanguage.EN) == rate
+    assert row_value_text(failed, OutputLanguage.EN) == "·"
+
+    def worked(figure: str) -> str:
+        field = calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal(figure)})
+        return row_value_text(replace(calculated, field=field), OutputLanguage.EN)
+
+    # The row's grounded rate is what the cell reads, at either scale of the worked-out figure; a figure
+    # departing from it is a matter for the check, not for the cell, which still prints the row's rate.
+    assert worked("2.00") == rate
+    assert worked("0.02") == rate
+    assert worked("3") == rate
+
+
+def _assert_optional_rate_boxes(entries: dict[str, CasillaListEntry]) -> None:
+    # An optional rate box nobody filled shows nothing; one holding a zero shows it, and says it was left at 0.
+    optional = entries["169"]
+    assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
+    assert optional.field.value is None
+    assert row_value_text(optional, OutputLanguage.EN) == "·"
+    held_zero = replace(optional, field=optional.field.model_copy(update={"value": Decimal("0.00")}))
+    assert row_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
+    assert grid_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
+    assert origin_words(held_zero.field) == "Optional, left at 0"
+    assert origin_words(optional.field) == "Optional, empty"
+    assert row_value_text(entries["05"], OutputLanguage.ES) == f"10{_PERCENT}"
+
+
+def _assert_printed_and_ungrounded_rate_boxes(entries: dict[str, CasillaListEntry]) -> None:
+    # A literal that states its rate outright is printed, and the band says only the form prints it.
+    stated = replace(
+        entries["157"],
+        field=entries["157"].field.model_copy(
+            update={"printed_rate": ModeloFormPrintedRate(ratio=Decimal("0.0175"), literal="1,75 %")}
+        ),
+    )
+    assert row_value_text(stated, OutputLanguage.EN) == f"1.75{_PERCENT}"
+    assert row_value_text(stated, OutputLanguage.ES) == f"1,75{_PERCENT}"
+    assert rate_note(stated) == lookup_translation("workspace.modelo.rate.printed_by_form", locale="en")
+    for box, rate in _PRINTED.items():
+        entry = entries[box]
+        assert entry.rate_of_row, box
+        assert entry.field.printed_rate is not None, box
+        assert entry.field.printed_rate.ratio == Decimal(rate) / 100, box
+        assert row_value_text(entry, OutputLanguage.EN) == f"{rate}{_PERCENT}", box
+        assert rate_note(entry) == lookup_translation("workspace.modelo.rate.printed_by_form", locale="en")
+    for box in _UNGROUNDED:
+        entry = entries[box]
+        assert entry.rate_of_row, box
+        assert entry.field.grounded_rate is None, box
+        assert entry.field.printed_rate is None, box
+        assert row_value_text(entry, OutputLanguage.EN) == "·", box
+        assert rate_note(entry) == lookup_translation("workspace.modelo.rate.not_grounded", locale="en")
+    # A box that is not a row's rate box never carries the note.
+    assert rate_note(entries["01"]) is None
 
 
 def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
@@ -146,81 +213,10 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         assert row_value_text(calculated, OutputLanguage.EN) == "·"
         assert value_text(calculated, OutputLanguage.EN) == "…"
         assert rate_note(calculated, OutputLanguage.EN) == f"This row's rate is {rate}."
-        # Were the design to fix that row's rate box, the box would read the grounded rate as its value and, the
-        # rate being one the calculation is shown to apply, say nothing beside it.
-        fixed = replace(
-            calculated,
-            field=calculated.field.model_copy(
-                update={"editability": ModeloFormEditability.DESIGN_CONSTANT, "origin": ModeloFormOrigin.INFORMATIONAL}
-            ),
-        )
-        assert row_value_text(fixed, OutputLanguage.EN) == rate
-        assert value_text(fixed, OutputLanguage.EN) == rate
-        assert rate_note(fixed) is None
-        typed = replace(calculated, staged_text="3,50")
-        assert row_value_text(typed, OutputLanguage.EN) == "3,50"
-        worked_out = replace(
-            calculated,
-            field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal("0.00")}),
-        )
-        failed = replace(
-            calculated, field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATION_FAILED})
-        )
-        # A worked-out rate in a row grounded on one rate reads that rate, as the form prints it, whatever the
-        # base: never a 0 % worked out of an empty base, and with nothing more to say beside it.
-        assert rate_note(worked_out, OutputLanguage.EN) is None
-        assert row_value_text(worked_out, OutputLanguage.EN) == rate
-        assert grid_value_text(worked_out, OutputLanguage.EN) == rate
-        assert row_value_text(failed, OutputLanguage.EN) == "·"
-
-        def worked(figure: str) -> str:
-            field = calculated.field.model_copy(
-                update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal(figure)}
-            )
-            return row_value_text(replace(calculated, field=field), OutputLanguage.EN)
-
-        # The row's grounded rate is what the cell reads, at either scale of the worked-out figure; a figure
-        # departing from it is a matter for the check, not for the cell, which still prints the row's rate.
-        assert worked("2.00") == rate
-        assert worked("0.02") == rate
-        assert worked("3") == rate
-        # An optional rate box nobody filled shows nothing; one holding a zero shows it, and says it was left at 0.
-        optional = entries["169"]
-        assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-        assert optional.field.value is None
-        assert row_value_text(optional, OutputLanguage.EN) == "·"
-        held_zero = replace(optional, field=optional.field.model_copy(update={"value": Decimal("0.00")}))
-        assert row_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
-        assert grid_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
-        assert origin_words(held_zero.field) == "Optional, left at 0"
-        assert origin_words(optional.field) == "Optional, empty"
-        assert row_value_text(entries["05"], OutputLanguage.ES) == f"10{_PERCENT}"
-        # A literal that states its rate outright is printed, and the band says only the form prints it.
-        stated = replace(
-            entries["157"],
-            field=entries["157"].field.model_copy(
-                update={"printed_rate": ModeloFormPrintedRate(ratio=Decimal("0.0175"), literal="1,75 %")}
-            ),
-        )
-        assert row_value_text(stated, OutputLanguage.EN) == f"1.75{_PERCENT}"
-        assert row_value_text(stated, OutputLanguage.ES) == f"1,75{_PERCENT}"
-        assert rate_note(stated) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
-        for box, rate in _PRINTED.items():
-            entry = entries[box]
-            assert entry.rate_of_row, box
-            assert entry.field.printed_rate is not None, box
-            assert entry.field.printed_rate.ratio == Decimal(rate) / 100, box
-            assert row_value_text(entry, OutputLanguage.EN) == f"{rate}{_PERCENT}", box
-            assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
-        for box in _UNGROUNDED:
-            entry = entries[box]
-            assert entry.rate_of_row, box
-            assert entry.field.grounded_rate is None, box
-            assert entry.field.printed_rate is None, box
-            assert row_value_text(entry, OutputLanguage.EN) == "·", box
-            assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.not_grounded", locale="en")
-        # A box that is not a row's rate box never carries the note.
-        assert rate_note(entries["01"]) is None
+        _assert_fixed_rate_box_reads_the_grounded_rate(calculated, rate)
+        _assert_worked_out_rate_reads_the_grounded_rate(calculated, rate)
+        _assert_optional_rate_boxes(entries)
+        _assert_printed_and_ungrounded_rate_boxes(entries)
 
 
 def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAuthorityOperation) -> None:
@@ -312,7 +308,7 @@ async def _drawn(items: tuple[CasillaListItem, ...]) -> list[str]:
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(160, 400)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             return [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -357,7 +353,7 @@ async def test_a_filed_declaration_draws_no_attention_mark_but_keeps_its_origin_
     draft_lines = await _drawn(draft)
     filed_lines = await _drawn(filed)
     with override_settings(cadrumo_output_language="en"):
-        words = origin_words(box(filed, "65").field)
+        words = box(filed, "65").origin_words
     row = next(line for line in filed_lines if "[65]" in line)
     assert f" {words}" in row
     waiting = _heading_over(filed, "65")

@@ -7,7 +7,7 @@ diff is what a reviewer looks at, and losing it loses work. The other is RUN
 OUTPUT: a coverage report, a findings dump, a captured stderr. It is written by
 a run and read back by nothing, and losing it costs one re-run.
 
-Run output has one home in this repository -- `.logs/<family>/<date>/<run>/`,
+Run output has one home in this repository -- `.tmp/logs/<family>/<date>/<run>/`,
 allocated by `dev.test_runs.paths.allocate_run_directory` and reclaimed whole
 by the next `just clean-apply`. Output that lands beside its own harness under
 `dev/` instead gets none of that: no clean reclaims it, no run identity
@@ -44,7 +44,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -68,14 +68,25 @@ _RESOLUTION_DEPTH: Final[int] = 6
 #: is a source rather than run output. A path here is read, or is a reviewed
 #: file whose diff is the artefact; NONE of them is a measurement a run mints.
 #: Adding a run's output to this mapping is the mistake the gate exists to stop
-#: -- send it to `.logs/` through `allocate_run_directory` instead.
+#: -- send it to `.tmp/logs/` through `allocate_run_directory` instead.
 _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
+    "dev/acceptance/persona_table/calendar_sweep.py": (
+        "the calendar pytest module the persona table runner collects; read, never written"
+    ),
+    "dev/acceptance/persona_table/probe_sweep.py": (
+        "the probe pytest module the persona table runner collects; read, never written"
+    ),
+    "dev/acceptance/persona_table/sweep.py": "the pytest module the persona table runner collects; read, never written",
     "dev/ci/python-runtime-matrix.json": "the pinned interpreter matrix the runtime gates read",
+    "dev/desktop_agent_live/fixtures/ledger-seed.csv": "synthetic bank movements a disposable root seeds; read only",
     "dev/docs/terminology/evaluation/held-out-queries.json": "the committed query set a sweep is measured against",
     "dev/docs/terminology/ratification/synonym-candidates.json": "the reviewed synonym queue; mining preserves review",
     "dev/docs/terminology/relevance/relevance.json": "the committed mapping coverage is measured against",
     "dev/quality/import_checker.py": "the module the import gate spawns; read, never written",
     "dev/quality/import_load_worker.py": "the module the load probe spawns; read, never written",
+    "dev/quality/metadata/refusal_shape_ratchet.json": (
+        "the shrink-only refusal-shape ratchet the gate reads; --write regenerates it for review"
+    ),
     "dev/quality/secure_store_write_path.toml": "the declared write paths the gate checks source against",
     "dev/registry/analysis/casilla_lineage_ledger.toml": "the reviewed lineage ledger; its diff is the artefact",
     "dev/registry/analysis/casilla_lineage_rulings.toml": "the authored rulings the lineage seed resolves against",
@@ -84,17 +95,29 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/analysis/regulatory_prose_parser_channel.toml": (
         "the authored channel ledger; its diff is the artefact"
     ),
+    "dev/registry/analysis/year_independence_baseline.txt": (
+        "the shrink-only year-independence baseline; its diff is the artefact"
+    ),
+    "dev/registry/conformance_vectors/modelo_165_2026_y_siguientes.toml": (
+        "a pinned vector the export proof compares against"
+    ),
     "dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml": (
         "a pinned vector the export proof compares against"
     ),
     "dev/registry/form_layout/official_headings.toml": (
         "authored official heading rulings grounded in captured form evidence; its diff is reviewed"
     ),
+    "dev/registry/form_layout/outline_groups.toml": (
+        "authored outlines grouping a revision's layout sections by subject; read, never written"
+    ),
     "dev/registry/form_layout/stability_acknowledgements.toml": (
         "authored acknowledgements of intentional form presentation changes; its diff is reviewed"
     ),
     "dev/registry/pipeline/generated_export_bootstrap_targets.toml": "the authored targets candidate staging reads",
     "dev/registry/pipeline/generated_tree_dispositions.toml": "the authored dispositions the tree screens read",
+    "dev/registry/pipeline/reviewed_rename_sets.toml": (
+        "the reviewed casilla-rename repair sets the static repair reads; its diff is reviewed"
+    ),
     "dev/release/burned_versions.json": "the release ledger of burned versions; durable state",
     "dev/tui/review_page.html": "the page the visual review server serves; read, never written",
 }
@@ -227,7 +250,7 @@ def test_every_dev_internal_destination_is_a_declared_source() -> None:
 
     The failure is not "you wrote a file". It is "you resolved a path inside
     the harness and did not say why it is a source". If the answer is that it
-    is a measurement, the fix is `allocate_run_directory` and `.logs/`, not a
+    is a measurement, the fix is `allocate_run_directory` and `.tmp/logs/`, not a
     new line in the mapping.
     """
     undeclared: list[str] = []
@@ -239,7 +262,7 @@ def test_every_dev_internal_destination_is_a_declared_source() -> None:
                 undeclared.append(f"{relative_module}:{line} -> {destination}")
 
     assert not undeclared, (
-        "undeclared path inside dev/. Run output belongs in .logs/ through "
+        "undeclared path inside dev/. Run output belongs in .tmp/logs/ through "
         "dev.test_runs.paths.allocate_run_directory; a curated source belongs in "
         "_CURATED_DEV_DESTINATIONS with the reason it is a source:\n  " + "\n  ".join(undeclared)
     )

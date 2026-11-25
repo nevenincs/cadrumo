@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -33,9 +33,7 @@ from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
 )
@@ -68,13 +66,13 @@ _DECLARANTE = (
 
 
 def _record(*facts: UserProfileFact):
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_BUCKET,
         setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -114,6 +112,7 @@ def test_the_calculation_holds_what_the_filed_record_addresses(*, operation: Pin
     exported = resolve_profile_export_values(
         tuple(bindings.values()),
         bucket_id=_BUCKET,
+        filing_year=snapshot.filing_year,
         operation=operation,
         profile_record=record,
         schema=published_profile_schema(),
@@ -137,7 +136,7 @@ def test_a_gated_spouse_slot_is_neither_filled_nor_reported_for_an_individual_fi
         _fact_index(
             *_DECLARANTE,
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_spouse.tax_id", value="87654321X"),
+            UserProfileFact(path="renta_spouse.tax_id", value="X0001502F"),
         ),
     )
 
@@ -176,7 +175,12 @@ def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields()
     revision = published_snapshot("100", filing_year=2024, period="0A").revision
     facts = _fact_index(UserProfileFact(path="identity.tax_id", value="12345678Z"))
 
-    diagnostics = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids=frozenset())
+    diagnostics = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids=frozenset(),
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
 
     (advisory,) = (diagnostic for diagnostic in diagnostics if diagnostic.casilla_id == _DECLARANTE_NAME)
     assert (advisory.reason, advisory.source_kind) == ("unresolved_binding", "profile")
@@ -185,7 +189,12 @@ def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields()
         assert field in str(advisory.message)
         assert field in advisory.remedy
     assert advisory.legal_refs
-    supplied = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids={_DECLARANTE_NAME})
+    supplied = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids={_DECLARANTE_NAME},
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
     assert _DECLARANTE_NAME not in {diagnostic.casilla_id for diagnostic in supplied}
 
 
@@ -284,10 +293,6 @@ _CLASSIFIED_UNSUPPLIED: Mapping[tuple[str, str], str] = {
     ("309", "decl.tipo-trigger"): "the non-periodic trigger is the operator's choice, declared informational",
     ("360", "decl.estado-miembro"): "the refund member state is the operator's choice, declared informational",
 }
-#: Revisions whose calculation refuses before any text casilla is assembled.
-_CLASSIFIED_ASSEMBLY_REFUSALS: Mapping[str, str] = {
-    "189": "filing_year role declared on the non-informational casilla ejercicio-declaracion",
-}
 _NUMERIC_CHANNELS = frozenset({BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER})
 
 
@@ -376,7 +381,7 @@ def test_every_required_calculation_supplied_text_casilla_has_a_source(*, operat
 
     assert sorted(gaps - set(_CLASSIFIED_UNSUPPLIED)) == [], "unclassified required text casillas with no source"
     assert sorted(set(_CLASSIFIED_UNSUPPLIED) - gaps) == [], "classified gaps that now have a source"
-    assert refusals == set(_CLASSIFIED_ASSEMBLY_REFUSALS)
+    assert sorted(refusals) == [], "revisions whose calculation refuses before any text casilla is assembled"
 
 
 def test_an_identity_casilla_left_unbound_is_caught() -> None:
@@ -392,3 +397,24 @@ def test_an_identity_casilla_left_unbound_is_caught() -> None:
 
     assert _DECLARANTE_NIF not in _unsupplied_required_text_casillas(snapshot)
     assert _DECLARANTE_NIF in _unsupplied_required_text_casillas(defective)
+
+
+def test_a_filing_year_role_on_a_typed_casilla_refuses_assembly(*, operation: PinnedAuthorityOperation) -> None:
+    """Detector teeth: a design that leaves the declaration's ejercicio for the person to type stops the calculation.
+
+    Modelo 189 once mapped its ejercicio that way; the published revision now fills it
+    from the declaration, so the refusal is shown on a copy that restores the defect.
+    """
+    filing_year = operation.supported_filing_years().horizon
+    snapshot = operation.snapshot("189", filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    typed = tuple(
+        casilla.model_copy(update={"input_kind": InputKind.MANUAL})
+        if casilla.semantic_role == "filing_year"
+        else casilla
+        for casilla in snapshot.revision.casillas
+    )
+    defective = snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": typed})})
+
+    _unsupplied_required_text_casillas(snapshot)
+    with pytest.raises(ModeloError):
+        _unsupplied_required_text_casillas(defective)

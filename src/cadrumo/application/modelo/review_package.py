@@ -41,7 +41,6 @@ See Also:
 
 from __future__ import annotations
 
-import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
@@ -50,19 +49,26 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
 from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_bundle
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from .lifecycle_view_refusal_doors import unit_revisions_verdict
+from .refusal_door_verdicts import (
+    caller_defect_verdict,
+    registry_defect_verdict,
+    safety_stop_verdict,
+    stored_defect_verdict,
+)
 from .review_package_text import ReviewPackageNote
 
 if TYPE_CHECKING:
@@ -100,7 +106,7 @@ narrowing this one, so nothing previously accepted is now refused.
 """
 
 
-class ReviewPackageError(CadrumoError):
+class ReviewPackageError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package build/verify failures."""
 
 
@@ -135,14 +141,14 @@ class ReviewPackageManifest(BaseModel):
     bytes.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     package_info_version: int = Field(default=_PACKAGE_INFO_VERSION, ge=1)
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     registry_snapshot_ref: RegistrySnapshotRef
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     revision_state: str = Field(min_length=1)
@@ -168,7 +174,7 @@ class ReviewPackageManifest(BaseModel):
 class ReviewPackageBuildResult(BaseModel):
     """Receipt produced by :func:`build_review_package`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     output_path: Path
     manifest: ReviewPackageManifest
@@ -187,7 +193,7 @@ class ReviewPackageVerification(BaseModel):
     clean enough to read it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: ReviewPackageManifest
     missing: tuple[str, ...] = Field(default=())
@@ -241,16 +247,11 @@ def build_review_package(
       ledger evidence (a non-ledger modelo, or a manual-only filing).
     * ``package-info.json`` — the :class:`ReviewPackageManifest` descriptor.
 
-    Members are written to a temporary staging directory then packed with
-    :func:`~core.corpus_manifest.manifest.build_corpus_bundle`, which itself
-    writes atomically (temp-file-then-rename) so a build failure never
-    leaves a partial package at ``output_path``. The staging directory is a
-    sibling of ``output_path`` (``dir=output_path.parent``), never the
-    OS-shared temp directory: it holds the rendered fichero-BOE draft plus
-    the revision's typed observations and bundled ledger evidence in
-    plaintext for the few milliseconds the archive build takes, and a
-    world-shared temp location is not an acceptable home for that
-    (``sensitive-financial-data-secure-storage-only``).
+    Members are packed from memory by
+    :func:`~core.corpus_manifest.manifest.build_corpus_bundle`, which writes
+    atomically (temp-file-then-rename) so a build failure never leaves a
+    partial package at ``output_path``. No member is ever written as a
+    plaintext file of its own: only the finished archive reaches disk.
 
     Raises:
         ReviewPackageRevisionStateError: If ``revision.state`` is not in
@@ -265,6 +266,7 @@ def build_review_package(
                 "work_unit_id": work_unit.work_unit_id,
                 "revision_work_unit_id": revision.work_unit_id,
             },
+            precondition_verdict=caller_defect_verdict("review_package_unit_revision_pair"),
         )
     if revision.registry_snapshot_ref != RegistrySnapshotRef(
         modelo=work_unit.modelo,
@@ -275,6 +277,7 @@ def build_review_package(
         raise ReviewPackageError(
             translated_message="application.modelo.errors.review_package_generic",
             context={"work_unit_id": work_unit.work_unit_id, "detail": "registry snapshot coordinate mismatch"},
+            precondition_verdict=stored_defect_verdict("review_package_snapshot_coordinate"),
         )
     carry_outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
     if carry_outcome.refused:
@@ -284,6 +287,7 @@ def build_review_package(
                 "work_unit_id": work_unit.work_unit_id,
                 "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
             },
+            precondition_verdict=registry_defect_verdict("review_package_revision_reconfirmed"),
         )
     if revision.state not in CURRENT_SEALED_REVISION_STATES:
         raise ReviewPackageRevisionStateError(
@@ -293,9 +297,10 @@ def build_review_package(
                 "state": revision.state.value,
                 "eligible_states": ", ".join(sorted(s.value for s in CURRENT_SEALED_REVISION_STATES)),
             },
+            precondition_verdict=unit_revisions_verdict("review_package_revision_state", work_unit.work_unit_id),
         )
 
-    built_at = generated_at or _utc_now()
+    built_at = generated_at or now()
     manifest = ReviewPackageManifest(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
@@ -317,37 +322,22 @@ def build_review_package(
         else '{"present": false}'
     )
 
-    # Pin staging beside the operator-chosen destination rather than the
-    # OS-shared temp directory: the members below are plaintext filing
-    # evidence, and the default ``tempfile`` location is not a sanctioned
-    # home for that (``sensitive-financial-data-secure-storage-only``).
-    # ``mkdir`` runs before the ``TemporaryDirectory`` call because the
-    # latter requires ``dir`` to already exist; a destination whose parent
-    # cannot be created (permission denied, a path component is a file, disk
-    # full) refuses loudly here rather than silently falling back to
-    # ``tempfile.gettempdir()``.
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-", dir=output_path.parent) as staging_name:
-        staging_root = Path(staging_name)
-        (staging_root / _DRAFT_MEMBER).write_bytes(draft_bytes)
-        (staging_root / _REVISION_MEMBER).write_text(
-            revision.model_dump_json(indent=2),
-            encoding=UTF_8_ENCODING,
-            newline="\n",
-        )
-        (staging_root / _EVIDENCE_MEMBER).write_text(evidence_payload, encoding=UTF_8_ENCODING, newline="\n")
-        (staging_root / _PACKAGE_INFO_MEMBER).write_text(
-            manifest.model_dump_json(indent=2),
-            encoding=UTF_8_ENCODING,
-            newline="\n",
-        )
-        corpus_root_name = f"review-package:{revision.calculation_revision_id[:16]}"
-        corpus_manifest = build_corpus_bundle(
-            staging_root,
-            corpus_root_name=corpus_root_name,
-            output_path=output_path,
-            generated_at=built_at,
-        )
+    # The members are plaintext filing evidence, so they are handed to the
+    # bundle builder as bytes: none of them exists as a file of its own that a
+    # hard process stop could strand beside the destination.
+    members = {
+        _DRAFT_MEMBER: draft_bytes,
+        _REVISION_MEMBER: revision.model_dump_json(indent=2).encode(UTF_8_ENCODING),
+        _EVIDENCE_MEMBER: evidence_payload.encode(UTF_8_ENCODING),
+        _PACKAGE_INFO_MEMBER: manifest.model_dump_json(indent=2).encode(UTF_8_ENCODING),
+    }
+    corpus_root_name = f"review-package:{revision.calculation_revision_id[:16]}"
+    corpus_manifest = build_corpus_bundle(
+        members,
+        corpus_root_name=corpus_root_name,
+        output_path=output_path,
+        generated_at=built_at,
+    )
 
     return ReviewPackageBuildResult(
         output_path=output_path,
@@ -391,6 +381,7 @@ def verify_review_package(
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",
             context={"package_path": str(package_path), "detail": str(exc)},
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         ) from exc
 
     manifest = _recover_package_manifest(
@@ -406,6 +397,7 @@ def verify_review_package(
                 "package_path": str(package_path),
                 "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
             },
+            precondition_verdict=registry_defect_verdict("review_package_revision_reconfirmed"),
         )
 
     return ReviewPackageVerification(
@@ -440,6 +432,7 @@ def _recover_package_manifest(
                 "package_path": str(package_path),
                 "detail": f"embedded descriptor {_PACKAGE_INFO_MEMBER!r} is missing or checksum-mismatched",
             },
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         )
     try:
         with zipfile.ZipFile(package_path, mode="r") as archive:
@@ -453,6 +446,7 @@ def _recover_package_manifest(
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",
             context={"package_path": str(package_path), "detail": str(exc)},
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         ) from exc
 
 
@@ -482,6 +476,7 @@ def assert_review_package_verifies(
                 "unexpected": ", ".join(verification.unexpected),
                 "mismatched": ", ".join(verification.mismatched),
             },
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         )
     return verification.manifest
 

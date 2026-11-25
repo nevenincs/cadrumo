@@ -1,52 +1,377 @@
-@step Record when the activity started so every 2025 quarter is a valid obligation.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
-@step Record a first-quarter sale with output VAT.
-@setup aeat app ledger add --date 2025-02-10 --amount 2420 --direction INCOMING --description "Servicio de consultoria primer trimestre" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420 --iva-category domestic_general --idempotency-key venta-1t-2025
-@step Record a second-quarter sale with output VAT.
-@setup aeat app ledger add --date 2025-05-12 --amount 1815 --direction INCOMING --description "Servicio de consultoria segundo trimestre" --classification BUSINESS --taxable-base 1500 --iva-rate 0.21 --iva-amount 315 --iva-category domestic_general --idempotency-key venta-2t-2025
-@step Record a third-quarter sale with output VAT.
-@setup aeat app ledger add --date 2025-08-15 --amount 1210 --direction INCOMING --description "Servicio de consultoria tercer trimestre" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --iva-category domestic_general --idempotency-key venta-3t-2025
-@step Record a fourth-quarter sale with output VAT.
-@setup aeat app ledger add --date 2025-11-20 --amount 3025 --direction INCOMING --description "Servicio de consultoria cuarto trimestre" --classification BUSINESS --taxable-base 2500 --iva-rate 0.21 --iva-amount 525 --iva-category domestic_general --idempotency-key venta-4t-2025
-@step Record a first-quarter purchase with deductible input VAT.
-@setup aeat --format json app ledger add --date 2025-03-05 --amount 605 --direction OUTGOING --description "Compra de material de oficina" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --iva-category domestic_general --idempotency-key compra-1t-2025 --deduction-kind domestic_current
-@capture gasto_txn result.transaction_id
-@step Register the supplier's purchase invoice as encrypted evidence bytes.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2025-0087 --invoice-date 2025-03-05 --taxable-base 500 --iva-rate 21 --iva-amount 105
-@capture evidence_id result.evidence_id
-@step Attach the evidence to the deductible expense so the first quarter can be filed.
-@setup aeat app ledger attach {gasto_txn} --purchase-invoice-evidence-id {evidence_id}
-@step Open the first-quarter Modelo 303 work unit.
+:persona: autonomo-fontanero
+:profile: tax-id name surnames activity-start-date pays-rent-with-retencion third-party-transactions-above-347-threshold
+:ledger: all
+:carry: 303
+:file: 303
+@step State the plumber's identity and activity, active since years before the filing year.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --tax-id 00000026A --name Javier --surnames "Montero Alcaraz" --activity-start-date 2017-03-01 --pays-rent-with-retencion --third-party-transactions-above-347-threshold
+@step Record FON-ALQ-01, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-01-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-01
+@capture fon_alq_01 result.transaction_id
+@step Record FON-MAT-1, Compra material de fontaneria y calefaccion, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-01-14 --amount 2601.50 --direction OUTGOING --description "Compra material de fontaneria y calefaccion" --currency EUR --counterparty "Suministros Hidráulicos Centro, S.L." --classification BUSINESS --category-id suministros_cliente_directos --iva-category domestic_general --taxable-base 2150.00 --iva-rate 0.21 --iva-amount 451.50 --deduction-kind domestic_current --idempotency-key FON-MAT-1
+@capture fon_mat_1 result.transaction_id
+@step Record FON-VTA-01, Reparacion fuga bano vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-01-22 --amount 1298.00 --direction INCOMING --description "Reparacion fuga bano vivienda particular" --currency EUR --counterparty "Beatriz Sanz Calvo" --classification BUSINESS --iva-category domestic_reduced --taxable-base 1180.00 --iva-rate 0.10 --iva-amount 118.00 --idempotency-key FON-VTA-01
+@capture fon_vta_01 result.transaction_id
+@step Record FON-RETA-01, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-01-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-01
+@step Record FON-ALQ-02, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-02-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-02
+@capture fon_alq_02 result.transaction_id
+@step Record FON-VTA-02, Instalacion red de agua cocina restaurante, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-02-18 --amount 5203.00 --direction INCOMING --description "Instalacion red de agua cocina restaurante" --currency EUR --counterparty "Restauración Plaza Mayor, S.L." --classification BUSINESS --iva-category domestic_general --taxable-base 4300.00 --iva-rate 0.21 --iva-amount 903.00 --idempotency-key FON-VTA-02
+@capture fon_vta_02 result.transaction_id
+@step Record FON-RETA-02, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-02-27 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-02
+@step Record FON-ALQ-03, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-03-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-03
+@capture fon_alq_03 result.transaction_id
+@step Record FON-VTA-03, Sustitucion bajantes comunidad de propietarios, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-03-12 --amount 2860.00 --direction INCOMING --description "Sustitucion bajantes comunidad de propietarios" --currency EUR --counterparty "Comunidad de Propietarios Calle Olivar 12" --classification BUSINESS --iva-category domestic_reduced --taxable-base 2600.00 --iva-rate 0.10 --iva-amount 260.00 --idempotency-key FON-VTA-03
+@capture fon_vta_03 result.transaction_id
+@step Record FON-VTA-04, Reparacion caldera vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-03-26 --amount 836.00 --direction INCOMING --description "Reparacion caldera vivienda particular" --currency EUR --counterparty "Óscar Herrero Luque" --classification BUSINESS --iva-category domestic_reduced --taxable-base 760.00 --iva-rate 0.10 --iva-amount 76.00 --idempotency-key FON-VTA-04
+@capture fon_vta_04 result.transaction_id
+@step Record FON-RETA-03, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-03-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-03
+@step Record FON-GES-1, Honorarios gestoria trimestre, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-03-30 --amount 181.50 --direction OUTGOING --description "Honorarios gestoria trimestre" --currency EUR --counterparty "Gestoría Arganzuela, S.L." --classification BUSINESS --category-id asesoria_contable --iva-category domestic_general --taxable-base 150.00 --iva-rate 0.21 --iva-amount 31.50 --deduction-kind domestic_current --idempotency-key FON-GES-1
+@capture fon_ges_1 result.transaction_id
+@step Record FON-ALQ-04, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-04-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-04
+@capture fon_alq_04 result.transaction_id
+@step Record FON-MAT-2, Compra material de fontaneria y calefaccion, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-04-10 --amount 2395.80 --direction OUTGOING --description "Compra material de fontaneria y calefaccion" --currency EUR --counterparty "Suministros Hidráulicos Centro, S.L." --classification BUSINESS --category-id suministros_cliente_directos --iva-category domestic_general --taxable-base 1980.00 --iva-rate 0.21 --iva-amount 415.80 --deduction-kind domestic_current --idempotency-key FON-MAT-2
+@capture fon_mat_2 result.transaction_id
+@step Record FON-VTA-05, Reparacion termo electrico vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-04-24 --amount 704.00 --direction INCOMING --description "Reparacion termo electrico vivienda particular" --currency EUR --counterparty "Nuria Pastor Gallardo" --classification BUSINESS --iva-category domestic_reduced --taxable-base 640.00 --iva-rate 0.10 --iva-amount 64.00 --idempotency-key FON-VTA-05
+@capture fon_vta_05 result.transaction_id
+@step Record FON-RETA-04, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-04-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-04
+@step Record FON-ALQ-05, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-05-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-05
+@capture fon_alq_05 result.transaction_id
+@step Record FON-VTA-06, Instalacion de descalcificador y mantenimiento restaurante, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-05-20 --amount 3569.50 --direction INCOMING --description "Instalacion de descalcificador y mantenimiento restaurante" --currency EUR --counterparty "Restauración Plaza Mayor, S.L." --classification BUSINESS --iva-category domestic_general --taxable-base 2950.00 --iva-rate 0.21 --iva-amount 619.50 --idempotency-key FON-VTA-06
+@capture fon_vta_06 result.transaction_id
+@step Record FON-RETA-05, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-05-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-05
+@step Record FON-ALQ-06, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-06-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-06
+@capture fon_alq_06 result.transaction_id
+@step Record FON-VTA-07, Renovacion fontaneria bano vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-06-16 --amount 4290.00 --direction INCOMING --description "Renovacion fontaneria bano vivienda particular" --currency EUR --counterparty "Raúl Cabrera Soto" --classification BUSINESS --iva-category domestic_reduced --taxable-base 3900.00 --iva-rate 0.10 --iva-amount 390.00 --idempotency-key FON-VTA-07
+@capture fon_vta_07 result.transaction_id
+@step Record FON-RETA-06, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-06-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-06
+@step Record FON-GES-2, Honorarios gestoria trimestre, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-06-30 --amount 181.50 --direction OUTGOING --description "Honorarios gestoria trimestre" --currency EUR --counterparty "Gestoría Arganzuela, S.L." --classification BUSINESS --category-id asesoria_contable --iva-category domestic_general --taxable-base 150.00 --iva-rate 0.21 --iva-amount 31.50 --deduction-kind domestic_current --idempotency-key FON-GES-2
+@capture fon_ges_2 result.transaction_id
+@step Record FON-ALQ-07, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-07-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-07
+@capture fon_alq_07 result.transaction_id
+@step Record FON-MAT-3, Compra material de fontaneria y calefaccion, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-07-08 --amount 2710.40 --direction OUTGOING --description "Compra material de fontaneria y calefaccion" --currency EUR --counterparty "Suministros Hidráulicos Centro, S.L." --classification BUSINESS --category-id suministros_cliente_directos --iva-category domestic_general --taxable-base 2240.00 --iva-rate 0.21 --iva-amount 470.40 --deduction-kind domestic_current --idempotency-key FON-MAT-3
+@capture fon_mat_3 result.transaction_id
+@step Record FON-VTA-08, Reparacion montante agua comunidad de propietarios, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-07-21 --amount 2035.00 --direction INCOMING --description "Reparacion montante agua comunidad de propietarios" --currency EUR --counterparty "Comunidad de Propietarios Calle Olivar 12" --classification BUSINESS --iva-category domestic_reduced --taxable-base 1850.00 --iva-rate 0.10 --iva-amount 185.00 --idempotency-key FON-VTA-08
+@capture fon_vta_08 result.transaction_id
+@step Record FON-RETA-07, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-07-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-07
+@step Record FON-ALQ-08, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-08-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-08
+@capture fon_alq_08 result.transaction_id
+@step Record FON-RETA-08, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-08-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-08
+@step Record FON-ALQ-09, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-09-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-09
+@capture fon_alq_09 result.transaction_id
+@step Record FON-VTA-09, Reparacion radiadores vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-09-09 --amount 1562.00 --direction INCOMING --description "Reparacion radiadores vivienda particular" --currency EUR --counterparty "Inés Valero Campos" --classification BUSINESS --iva-category domestic_reduced --taxable-base 1420.00 --iva-rate 0.10 --iva-amount 142.00 --idempotency-key FON-VTA-09
+@capture fon_vta_09 result.transaction_id
+@step Record FON-VTA-10, Ampliacion instalacion agua caliente restaurante, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-09-25 --amount 3327.50 --direction INCOMING --description "Ampliacion instalacion agua caliente restaurante" --currency EUR --counterparty "Restauración Plaza Mayor, S.L." --classification BUSINESS --iva-category domestic_general --taxable-base 2750.00 --iva-rate 0.21 --iva-amount 577.50 --idempotency-key FON-VTA-10
+@capture fon_vta_10 result.transaction_id
+@step Record FON-RETA-09, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-09-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-09
+@step Record FON-GES-3, Honorarios gestoria trimestre, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-09-30 --amount 181.50 --direction OUTGOING --description "Honorarios gestoria trimestre" --currency EUR --counterparty "Gestoría Arganzuela, S.L." --classification BUSINESS --category-id asesoria_contable --iva-category domestic_general --taxable-base 150.00 --iva-rate 0.21 --iva-amount 31.50 --deduction-kind domestic_current --idempotency-key FON-GES-3
+@capture fon_ges_3 result.transaction_id
+@step Record FON-ALQ-10, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-10-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-10
+@capture fon_alq_10 result.transaction_id
+@step Record FON-MAT-4, Compra material de fontaneria y calefaccion, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-10-13 --amount 2976.60 --direction OUTGOING --description "Compra material de fontaneria y calefaccion" --currency EUR --counterparty "Suministros Hidráulicos Centro, S.L." --classification BUSINESS --category-id suministros_cliente_directos --iva-category domestic_general --taxable-base 2460.00 --iva-rate 0.21 --iva-amount 516.60 --deduction-kind domestic_current --idempotency-key FON-MAT-4
+@capture fon_mat_4 result.transaction_id
+@step Record FON-VTA-11, Renovacion fontaneria cocina vivienda particular, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-10-20 --amount 3685.00 --direction INCOMING --description "Renovacion fontaneria cocina vivienda particular" --currency EUR --counterparty "Héctor Rubio Esteban" --classification BUSINESS --iva-category domestic_reduced --taxable-base 3350.00 --iva-rate 0.10 --iva-amount 335.00 --idempotency-key FON-VTA-11
+@capture fon_vta_11 result.transaction_id
+@step Record FON-RETA-10, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-10-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-10
+@step Record FON-ALQ-11, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-11-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-11
+@capture fon_alq_11 result.transaction_id
+@step Record FON-VTA-12, Reparacion grupo de presion comunidad de propietarios, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-11-17 --amount 1870.00 --direction INCOMING --description "Reparacion grupo de presion comunidad de propietarios" --currency EUR --counterparty "Comunidad de Propietarios Calle Olivar 12" --classification BUSINESS --iva-category domestic_reduced --taxable-base 1700.00 --iva-rate 0.10 --iva-amount 170.00 --idempotency-key FON-VTA-12
+@capture fon_vta_12 result.transaction_id
+@step Record FON-RETA-11, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-11-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-11
+@step Record FON-ALQ-12, Alquiler nave taller, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-12-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-12
+@capture fon_alq_12 result.transaction_id
+@step Record FON-VTA-13, Sustitucion de calentador industrial restaurante, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-12-11 --amount 3146.00 --direction INCOMING --description "Sustitucion de calentador industrial restaurante" --currency EUR --counterparty "Restauración Plaza Mayor, S.L." --classification BUSINESS --iva-category domestic_general --taxable-base 2600.00 --iva-rate 0.21 --iva-amount 546.00 --idempotency-key FON-VTA-13
+@capture fon_vta_13 result.transaction_id
+@step Record FON-RETA-12, Cuota RETA trabajador autonomo, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-12-28 --amount 294.00 --direction OUTGOING --description "Cuota RETA trabajador autonomo" --currency EUR --classification BUSINESS --category-id cuotas_autonomos_ss --iva-category operacion_no_sujeta --taxable-base 294.00 --iva-rate 0 --iva-amount 0.00 --idempotency-key FON-RETA-12
+@step Record FON-GES-4, Honorarios gestoria trimestre, with its tax fields.
+@setup aeat --format json app ledger add --date 2025-12-30 --amount 181.50 --direction OUTGOING --description "Honorarios gestoria trimestre" --currency EUR --counterparty "Gestoría Arganzuela, S.L." --classification BUSINESS --category-id asesoria_contable --iva-category domestic_general --taxable-base 150.00 --iva-rate 0.21 --iva-amount 31.50 --deduction-kind domestic_current --idempotency-key FON-GES-4
+@capture fon_ges_4 result.transaction_id
+@step Record the received invoice ALQ-01 behind FON-ALQ-01 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-01 --invoice-date 2025-01-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_01_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_01} --invoice-id {fon_alq_01_invoice}
+@step Record the received invoice SH-0001 behind FON-MAT-1 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Suministros Hidráulicos Centro, S.L." --counterparty-nif B00000026 --country-code ES --invoice-number SH-0001 --invoice-date 2025-01-14 --currency EUR --taxable-base 2150.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_mat_1_invoice result.invoice_id
+@setup aeat app ledger link {fon_mat_1} --invoice-id {fon_mat_1_invoice}
+@step Record the issued invoice F-001 behind FON-VTA-01 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Beatriz Sanz Calvo" --counterparty-nif 00000011B --country-code ES --invoice-number F-001 --invoice-date 2025-01-22 --currency EUR --taxable-base 1180.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_01_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_01} --invoice-id {fon_vta_01_invoice}
+@step Record the received invoice ALQ-02 behind FON-ALQ-02 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-02 --invoice-date 2025-02-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_02_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_02} --invoice-id {fon_alq_02_invoice}
+@step Record the issued invoice F-002 behind FON-VTA-02 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Restauración Plaza Mayor, S.L." --counterparty-nif B00000034 --country-code ES --invoice-number F-002 --invoice-date 2025-02-18 --currency EUR --taxable-base 4300.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_vta_02_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_02} --invoice-id {fon_vta_02_invoice}
+@step Record the received invoice ALQ-03 behind FON-ALQ-03 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-03 --invoice-date 2025-03-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_03_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_03} --invoice-id {fon_alq_03_invoice}
+@step Record the issued invoice F-003 behind FON-VTA-03 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Comunidad de Propietarios Calle Olivar 12" --counterparty-nif H00000018 --country-code ES --invoice-number F-003 --invoice-date 2025-03-12 --currency EUR --taxable-base 2600.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_03_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_03} --invoice-id {fon_vta_03_invoice}
+@step Record the issued invoice F-004 behind FON-VTA-04 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Óscar Herrero Luque" --counterparty-nif 00000012N --country-code ES --invoice-number F-004 --invoice-date 2025-03-26 --currency EUR --taxable-base 760.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_04_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_04} --invoice-id {fon_vta_04_invoice}
+@step Record the received invoice GA-001 behind FON-GES-1 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Gestoría Arganzuela, S.L." --counterparty-nif B00000042 --country-code ES --invoice-number GA-001 --invoice-date 2025-03-30 --currency EUR --taxable-base 150.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_ges_1_invoice result.invoice_id
+@setup aeat app ledger link {fon_ges_1} --invoice-id {fon_ges_1_invoice}
+@step Record the received invoice ALQ-04 behind FON-ALQ-04 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-04 --invoice-date 2025-04-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_04_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_04} --invoice-id {fon_alq_04_invoice}
+@step Record the received invoice SH-0002 behind FON-MAT-2 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Suministros Hidráulicos Centro, S.L." --counterparty-nif B00000026 --country-code ES --invoice-number SH-0002 --invoice-date 2025-04-10 --currency EUR --taxable-base 1980.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_mat_2_invoice result.invoice_id
+@setup aeat app ledger link {fon_mat_2} --invoice-id {fon_mat_2_invoice}
+@step Record the issued invoice F-005 behind FON-VTA-05 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Nuria Pastor Gallardo" --counterparty-nif 00000013J --country-code ES --invoice-number F-005 --invoice-date 2025-04-24 --currency EUR --taxable-base 640.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_05_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_05} --invoice-id {fon_vta_05_invoice}
+@step Record the received invoice ALQ-05 behind FON-ALQ-05 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-05 --invoice-date 2025-05-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_05_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_05} --invoice-id {fon_alq_05_invoice}
+@step Record the issued invoice F-006 behind FON-VTA-06 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Restauración Plaza Mayor, S.L." --counterparty-nif B00000034 --country-code ES --invoice-number F-006 --invoice-date 2025-05-20 --currency EUR --taxable-base 2950.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_vta_06_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_06} --invoice-id {fon_vta_06_invoice}
+@step Record the received invoice ALQ-06 behind FON-ALQ-06 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-06 --invoice-date 2025-06-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_06_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_06} --invoice-id {fon_alq_06_invoice}
+@step Record the issued invoice F-007 behind FON-VTA-07 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Raúl Cabrera Soto" --counterparty-nif 00000014Z --country-code ES --invoice-number F-007 --invoice-date 2025-06-16 --currency EUR --taxable-base 3900.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_07_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_07} --invoice-id {fon_vta_07_invoice}
+@step Record the received invoice GA-002 behind FON-GES-2 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Gestoría Arganzuela, S.L." --counterparty-nif B00000042 --country-code ES --invoice-number GA-002 --invoice-date 2025-06-30 --currency EUR --taxable-base 150.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_ges_2_invoice result.invoice_id
+@setup aeat app ledger link {fon_ges_2} --invoice-id {fon_ges_2_invoice}
+@step Record the received invoice ALQ-07 behind FON-ALQ-07 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-07 --invoice-date 2025-07-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_07_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_07} --invoice-id {fon_alq_07_invoice}
+@step Record the received invoice SH-0003 behind FON-MAT-3 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Suministros Hidráulicos Centro, S.L." --counterparty-nif B00000026 --country-code ES --invoice-number SH-0003 --invoice-date 2025-07-08 --currency EUR --taxable-base 2240.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_mat_3_invoice result.invoice_id
+@setup aeat app ledger link {fon_mat_3} --invoice-id {fon_mat_3_invoice}
+@step Record the issued invoice F-008 behind FON-VTA-08 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Comunidad de Propietarios Calle Olivar 12" --counterparty-nif H00000018 --country-code ES --invoice-number F-008 --invoice-date 2025-07-21 --currency EUR --taxable-base 1850.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_08_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_08} --invoice-id {fon_vta_08_invoice}
+@step Record the received invoice ALQ-08 behind FON-ALQ-08 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-08 --invoice-date 2025-08-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_08_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_08} --invoice-id {fon_alq_08_invoice}
+@step Record the received invoice ALQ-09 behind FON-ALQ-09 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-09 --invoice-date 2025-09-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_09_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_09} --invoice-id {fon_alq_09_invoice}
+@step Record the issued invoice F-009 behind FON-VTA-09 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Inés Valero Campos" --counterparty-nif 00000015S --country-code ES --invoice-number F-009 --invoice-date 2025-09-09 --currency EUR --taxable-base 1420.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_09_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_09} --invoice-id {fon_vta_09_invoice}
+@step Record the issued invoice F-010 behind FON-VTA-10 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Restauración Plaza Mayor, S.L." --counterparty-nif B00000034 --country-code ES --invoice-number F-010 --invoice-date 2025-09-25 --currency EUR --taxable-base 2750.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_vta_10_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_10} --invoice-id {fon_vta_10_invoice}
+@step Record the received invoice GA-003 behind FON-GES-3 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Gestoría Arganzuela, S.L." --counterparty-nif B00000042 --country-code ES --invoice-number GA-003 --invoice-date 2025-09-30 --currency EUR --taxable-base 150.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_ges_3_invoice result.invoice_id
+@setup aeat app ledger link {fon_ges_3} --invoice-id {fon_ges_3_invoice}
+@step Record the received invoice ALQ-10 behind FON-ALQ-10 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-10 --invoice-date 2025-10-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_10_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_10} --invoice-id {fon_alq_10_invoice}
+@step Record the received invoice SH-0004 behind FON-MAT-4 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Suministros Hidráulicos Centro, S.L." --counterparty-nif B00000026 --country-code ES --invoice-number SH-0004 --invoice-date 2025-10-13 --currency EUR --taxable-base 2460.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_mat_4_invoice result.invoice_id
+@setup aeat app ledger link {fon_mat_4} --invoice-id {fon_mat_4_invoice}
+@step Record the issued invoice F-011 behind FON-VTA-11 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Héctor Rubio Esteban" --counterparty-nif 00000016Q --country-code ES --invoice-number F-011 --invoice-date 2025-10-20 --currency EUR --taxable-base 3350.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_11_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_11} --invoice-id {fon_vta_11_invoice}
+@step Record the received invoice ALQ-11 behind FON-ALQ-11 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-11 --invoice-date 2025-11-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_11_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_11} --invoice-id {fon_alq_11_invoice}
+@step Record the issued invoice F-012 behind FON-VTA-12 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Comunidad de Propietarios Calle Olivar 12" --counterparty-nif H00000018 --country-code ES --invoice-number F-012 --invoice-date 2025-11-17 --currency EUR --taxable-base 1700.00 --iva-rate 10 --iva-category domestic_reduced
+@capture fon_vta_12_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_12} --invoice-id {fon_vta_12_invoice}
+@step Record the received invoice ALQ-12 behind FON-ALQ-12 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Tomás Lozano Prieto" --counterparty-nif 00000010X --country-code ES --invoice-number ALQ-12 --invoice-date 2025-12-01 --currency EUR --taxable-base 600.00 --iva-rate 21 --iva-category domestic_general --retention-rate 0.19 --retention-amount 114.00
+@capture fon_alq_12_invoice result.invoice_id
+@setup aeat app ledger link {fon_alq_12} --invoice-id {fon_alq_12_invoice}
+@step Record the issued invoice F-013 behind FON-VTA-13 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Restauración Plaza Mayor, S.L." --counterparty-nif B00000034 --country-code ES --invoice-number F-013 --invoice-date 2025-12-11 --currency EUR --taxable-base 2600.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_vta_13_invoice result.invoice_id
+@setup aeat app ledger link {fon_vta_13} --invoice-id {fon_vta_13_invoice}
+@step Record the received invoice GA-004 behind FON-GES-4 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Gestoría Arganzuela, S.L." --counterparty-nif B00000042 --country-code ES --invoice-number GA-004 --invoice-date 2025-12-30 --currency EUR --taxable-base 150.00 --iva-rate 21 --iva-category domestic_general
+@capture fon_ges_4_invoice result.invoice_id
+@setup aeat app ledger link {fon_ges_4} --invoice-id {fon_ges_4_invoice}
+@step Register document factura-fon-alq-01 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-01.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-01
+@capture factura_fon_alq_01_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_01} --purchase-invoice-evidence-id {factura_fon_alq_01_evidence}
+@step Register document factura-fon-mat-1 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-1.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-1
+@capture factura_fon_mat_1_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_1} --purchase-invoice-evidence-id {factura_fon_mat_1_evidence}
+@step Register document factura-fon-alq-02 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-02.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-02
+@capture factura_fon_alq_02_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_02} --purchase-invoice-evidence-id {factura_fon_alq_02_evidence}
+@step Register document factura-fon-alq-03 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-03.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-03
+@capture factura_fon_alq_03_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_03} --purchase-invoice-evidence-id {factura_fon_alq_03_evidence}
+@step Register document factura-fon-ges-1 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-1.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-1
+@capture factura_fon_ges_1_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_1} --purchase-invoice-evidence-id {factura_fon_ges_1_evidence}
+@step Register document factura-fon-alq-04 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-04.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-04
+@capture factura_fon_alq_04_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_04} --purchase-invoice-evidence-id {factura_fon_alq_04_evidence}
+@step Register document factura-fon-mat-2 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-2.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-2
+@capture factura_fon_mat_2_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_2} --purchase-invoice-evidence-id {factura_fon_mat_2_evidence}
+@step Register document factura-fon-alq-05 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-05.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-05
+@capture factura_fon_alq_05_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_05} --purchase-invoice-evidence-id {factura_fon_alq_05_evidence}
+@step Register document factura-fon-alq-06 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-06.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-06
+@capture factura_fon_alq_06_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_06} --purchase-invoice-evidence-id {factura_fon_alq_06_evidence}
+@step Register document factura-fon-ges-2 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-2.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-2
+@capture factura_fon_ges_2_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_2} --purchase-invoice-evidence-id {factura_fon_ges_2_evidence}
+@step Register document factura-fon-alq-07 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-07.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-07
+@capture factura_fon_alq_07_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_07} --purchase-invoice-evidence-id {factura_fon_alq_07_evidence}
+@step Register document factura-fon-mat-3 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-3.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-3
+@capture factura_fon_mat_3_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_3} --purchase-invoice-evidence-id {factura_fon_mat_3_evidence}
+@step Register document factura-fon-alq-08 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-08.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-08
+@capture factura_fon_alq_08_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_08} --purchase-invoice-evidence-id {factura_fon_alq_08_evidence}
+@step Register document factura-fon-alq-09 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-09.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-09
+@capture factura_fon_alq_09_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_09} --purchase-invoice-evidence-id {factura_fon_alq_09_evidence}
+@step Register document factura-fon-ges-3 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-3.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-3
+@capture factura_fon_ges_3_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_3} --purchase-invoice-evidence-id {factura_fon_ges_3_evidence}
+@step Register document factura-fon-alq-10 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-10.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-10
+@capture factura_fon_alq_10_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_10} --purchase-invoice-evidence-id {factura_fon_alq_10_evidence}
+@step Register document factura-fon-mat-4 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-4.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-4
+@capture factura_fon_mat_4_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_4} --purchase-invoice-evidence-id {factura_fon_mat_4_evidence}
+@step Register document factura-fon-alq-11 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-11.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-11
+@capture factura_fon_alq_11_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_11} --purchase-invoice-evidence-id {factura_fon_alq_11_evidence}
+@step Register document factura-fon-alq-12 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-12.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-12
+@capture factura_fon_alq_12_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_12} --purchase-invoice-evidence-id {factura_fon_alq_12_evidence}
+@step Register document factura-fon-ges-4 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-4.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-4
+@capture factura_fon_ges_4_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_4} --purchase-invoice-evidence-id {factura_fon_ges_4_evidence}
+@step Record the compensation balance the 2025 first quarter starts from, as the persona's figures state.
+@setup aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+@step Open, calculate, verify and record as filed the 2025 1T Modelo 303.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 1T
-@capture wu1 result.work_unit_id
-@step Calculate the first quarter.
-@setup aeat --format json app modelo work calculate {wu1} --no-joint-return-elected
-@capture cr1 result.calculation_revision_id
-@step Verify the first quarter before filing it.
-@setup aeat --format json app modelo work verify {cr1}
-@step File the first quarter locally so the annual summary can fold it in.
-@setup aeat --format json app modelo work file {cr1}
-@step Open, calculate, verify and file the second quarter.
+@capture m303_1t_work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work calculate {m303_1t_work_unit_id} --no-joint-return-elected
+@capture m303_1t_calculation_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {m303_1t_calculation_revision_id}
+@setup aeat --format json app modelo work file {m303_1t_calculation_revision_id}
+@step Open, calculate, verify and record as filed the 2025 2T Modelo 303.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 2T
-@capture wu2 result.work_unit_id
-@setup aeat --format json app modelo work calculate {wu2} --no-joint-return-elected
-@capture cr2 result.calculation_revision_id
-@setup aeat --format json app modelo work verify {cr2}
-@setup aeat --format json app modelo work file {cr2}
-@step Open, calculate, verify and file the third quarter.
+@capture m303_2t_work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work calculate {m303_2t_work_unit_id} --no-joint-return-elected
+@capture m303_2t_calculation_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {m303_2t_calculation_revision_id}
+@setup aeat --format json app modelo work file {m303_2t_calculation_revision_id}
+@step Open, calculate, verify and record as filed the 2025 3T Modelo 303.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 3T
-@capture wu3 result.work_unit_id
-@setup aeat --format json app modelo work calculate {wu3} --no-joint-return-elected
-@capture cr3 result.calculation_revision_id
-@setup aeat --format json app modelo work verify {cr3}
-@setup aeat --format json app modelo work file {cr3}
-@step Open, calculate, verify and file the fourth quarter.
+@capture m303_3t_work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work calculate {m303_3t_work_unit_id} --no-joint-return-elected
+@capture m303_3t_calculation_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {m303_3t_calculation_revision_id}
+@setup aeat --format json app modelo work file {m303_3t_calculation_revision_id}
+@step Open, calculate, verify and record as filed the 2025 4T Modelo 303.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 4T
-@capture wu4 result.work_unit_id
+@capture m303_4t_work_unit_id result.work_unit_id
 @setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2025 --period 4T --observed-at 2025-12-31T12:00:00+00:00
-@capture attestation4 result.attachment_id
-@capture attestation_sha256_4 result.sha256
-@setup aeat --format json app modelo work calculate {wu4} --no-joint-return-elected --m303-exonerado-390-attachment-id {attestation4} --m303-exonerado-390-sha256 {attestation_sha256_4}
-@capture cr4 result.calculation_revision_id
-@setup aeat --format json app modelo work verify {cr4}
-@setup aeat --format json app modelo work file {cr4}
+@capture m303_4t_attestation result.attachment_id
+@capture m303_4t_attestation_sha256 result.sha256
+@setup aeat --format json app modelo work calculate {m303_4t_work_unit_id} --no-joint-return-elected --m303-exonerado-390-attachment-id {m303_4t_attestation} --m303-exonerado-390-sha256 {m303_4t_attestation_sha256}
+@capture m303_4t_calculation_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {m303_4t_calculation_revision_id}
+@setup aeat --format json app modelo work file {m303_4t_calculation_revision_id}
+:generated: end

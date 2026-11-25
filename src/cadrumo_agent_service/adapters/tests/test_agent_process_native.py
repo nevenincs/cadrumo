@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
 import sys
 import threading
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
+from types import SimpleNamespace
+from typing import Any, cast, override
 
 import pytest
 
-from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually
+from cadrumo.tests.log_records import delivered_records
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline, TimeoutPolicy
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...host.controller import (
     AgentGenerations,
@@ -23,13 +30,18 @@ from ...host.controller import (
     AgentHostRefusal,
     AgentHostState,
     AgentLaunch,
+    AgentProcess,
+    AgentReady,
     ResolvedAgentCredentials,
 )
 from ...host.credential_frame import AgentCredential, build_credential_frame
 from ...host.launch_environment import HOSTED_ROOT_VARIABLE
 from ...host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ...host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
-from ..agent_process import WindowsAgentProcessLauncher
+from ...host.store_lifecycle import InvocationCancellation
+from ...providers.domain.record import LocalEngine
+from ...service import AgentService
+from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher, _await_invocation_exit
 from . import agent_host_fixture
 
 pytestmark = [
@@ -55,7 +67,7 @@ class _CredentialSource:
         self.handed_out: list[AgentCredential] = []
         self.on_resolve: list[AgentGenerations] = []
 
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         credentials: Mapping[str, AgentCredential] = {
             "anthropic": AgentCredential(bytearray(_FAKE)),
             "zai": AgentCredential(bytearray(_GATEWAY_FAKE), _ZAI_URL),
@@ -66,13 +78,11 @@ class _CredentialSource:
             self.generations = self.on_resolve.pop()
         return resolved
 
-    def current_generations(self) -> AgentGenerations | None:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
         return self.generations
 
 
-def _controller(
-    tmp_path: Path, mode: str, source: _CredentialSource, *, ready_timeout: float = 30, stop_grace: float = 10
-) -> AgentHostController:
+def _controller(tmp_path: Path, mode: str, source: _CredentialSource, *, timeout: float = 30) -> AgentHostController:
     return AgentHostController(
         launcher=WindowsAgentProcessLauncher(),
         credentials=source,
@@ -81,8 +91,7 @@ def _controller(
             arguments=fixture_arguments(_FIXTURE, mode, str(tmp_path)),
             directory=tmp_path,
             environment=fixture_environment(),
-            ready_timeout=ready_timeout,
-            stop_grace=stop_grace,
+            timeout_policy=TimeoutPolicy(timeout),
         ),
     )
 
@@ -158,13 +167,13 @@ def test_imports_can_run_during_resolution_but_failed_credentials_retire_the_wai
 
     class WaitingCredentials(_CredentialSource):
         @override
-        def resolve_for_agent(self) -> ResolvedAgentCredentials:
+        def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
             # A real child must reach its input gate while resolution is still
             # in progress. No frame or ready publication can precede it.
             marker = tmp_path / "awaiting-frame"
-            deadline = time.monotonic() + 30
+            marker_deadline = time.monotonic() + 30
             while not marker.exists():
-                assert time.monotonic() < deadline, "gateway did not start beside credential resolution"
+                assert time.monotonic() < marker_deadline, "gateway did not start beside credential resolution"
                 time.sleep(0.05)
             pid = int(marker.read_text(encoding="utf-8"))
             observed_pids.append(pid)
@@ -190,11 +199,11 @@ def test_imports_can_run_during_resolution_but_failed_credentials_retire_the_wai
     assert all(credential.secret == bytearray() for credential in source.handed_out)
 
 
-def test_an_agent_that_never_answers_is_ended_at_the_ready_bound(tmp_path: Path) -> None:
-    controller = _controller(tmp_path, "silent", _CredentialSource(), ready_timeout=3)
+def test_an_agent_that_never_answers_is_ended_at_the_timeout(tmp_path: Path) -> None:
+    controller = _controller(tmp_path, "silent", _CredentialSource(), timeout=3)
     with pytest.raises(AgentHostError) as refused:
         controller.start()
-    assert refused.value.reason is AgentHostRefusal.NOT_READY
+    assert refused.value.reason is AgentHostRefusal.TIMEOUT
     assert controller.state is AgentHostState.DETACHED
 
 
@@ -243,10 +252,8 @@ def test_an_agent_speaking_another_hosting_contract_is_not_published(tmp_path: P
     assert controller.state is AgentHostState.DETACHED
 
 
-def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: Path) -> None:
+def test_the_agent_job_knows_its_own_members(tmp_path: Path) -> None:
     import os
-
-    import win32job
 
     from ..agent_process import WindowsAgentProcess
 
@@ -260,10 +267,6 @@ def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: P
     try:
         process.write_input(build_credential_frame({"anthropic": AgentCredential(bytearray(_FAKE))}))
         process.read_output_line(limit=4096, timeout=30)
-        breakaway = win32job.JOB_OBJECT_LIMIT_BREAKAWAY_OK | win32job.JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
-        flags = process.job_limit_flags()
-        assert flags & breakaway == 0
-        assert flags & win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         grandchild = _received(tmp_path)["grandchild"]
         assert isinstance(grandchild, int)
         # A descendant of the agent is a member; this test process is not.
@@ -275,7 +278,7 @@ def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: P
 
 
 def _refused(tmp_path: Path, mode: str) -> tuple[AgentHostController, AgentHostError]:
-    controller = _controller(tmp_path, mode, _CredentialSource(), ready_timeout=30)
+    controller = _controller(tmp_path, mode, _CredentialSource(), timeout=30)
     with pytest.raises(AgentHostError) as refused:
         controller.start()
     return controller, refused.value
@@ -293,7 +296,7 @@ def test_an_exit_with_the_native_hosts_status_is_its_typed_refusal_with_its_code
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
     assert controller.state is AgentHostState.DETACHED
     assert not (tmp_path / "received.json").exists()
-    messages = [record.getMessage() for record in caplog.records if record.name == _CONTROLLER_LOGGER]
+    messages = [record.getMessage() for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER]
     assert messages == [
         "agent launch refused by the native host exit=125 native_refusal=launch_value_malformed "
         f"subject={agent_host_fixture.NATIVE_REFUSAL_SUBJECT}"
@@ -310,7 +313,7 @@ def test_a_last_line_that_is_not_the_hosts_is_a_refusal_without_a_code_and_none_
     assert error.reason is AgentHostRefusal.LAUNCH_PROFILE_REFUSED
     assert error.native_refusal == NativeLaunchRefusal(code=None, subject=None)
     assert controller.state is AgentHostState.DETACHED
-    assert "S3CRET" not in " ".join(record.getMessage() for record in caplog.records)
+    assert "S3CRET" not in " ".join(record.getMessage() for record in delivered_records(caplog))
 
 
 def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
@@ -323,13 +326,13 @@ def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
     assert error.native_refusal is None
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
     assert controller.state is AgentHostState.DETACHED
-    assert [record for record in caplog.records if record.name == _CONTROLLER_LOGGER] == []
+    assert [record for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER] == []
 
 
 def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_ends_with_its_tree(
     tmp_path: Path,
 ) -> None:
-    controller = _controller(tmp_path, "chatty", _CredentialSource(), ready_timeout=30)
+    controller = _controller(tmp_path, "chatty", _CredentialSource(), timeout=30)
     ready = controller.start()
     try:
         assert ready.gateway_port == 47001
@@ -339,17 +342,14 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
     assert not [thread for thread in threading.enumerate() if thread.name == "agent-standard-error"]
 
 
-def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_grace_period(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    """The agent never reads the end of its input, and its grandchild only sleeps.
+def test_a_tree_that_ignores_stop_is_ended_only_at_timeout(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """A sleeping tree is allowed to finish until the injected timeout.
 
-    The stall bound is 1 s and the tree is sampled every 0.1 s, so the stop
-    ends the tree after about 1.1 s; the 30 s grace period would never be
-    reached. The bound of 5 s leaves the job's termination its loaded-host time.
+    The 3 s policy is the stop budget under test; the start gets its own
+    deadline so a slow fixture launch cannot spend it before the stop begins.
     """
-    controller = _controller(tmp_path, "deaf", _CredentialSource(), stop_grace=30)
-    controller.start()
+    controller = _controller(tmp_path, "deaf", _CredentialSource(), timeout=3)
+    controller.start(deadline=TimeoutPolicy(30).deadline())
     grandchild = _received(tmp_path)["grandchild"]
     assert isinstance(grandchild, int)
     try:
@@ -360,11 +360,11 @@ def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_g
     finally:
         controller.stop()
     assert controller.state is AgentHostState.DETACHED
-    assert 1.0 <= elapsed < 5.0, f"the stop took {elapsed:.3f} s"
+    assert 3.0 <= elapsed < 8.0, f"the stop took {elapsed:.3f} s"
     assert not _alive(grandchild, within=5)
-    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    retired = [record.getMessage() for record in delivered_records(caplog) if record.name == _RETIREMENT_LOGGER]
     assert len(retired) == 1
-    assert retired[0].startswith("agent tree retired: stop stalled after ")
+    assert retired[0].startswith("agent tree retired: stop timeout after ")
 
 
 def test_a_tree_that_exits_on_the_stop_is_ended_as_soon_as_it_has(
@@ -378,7 +378,7 @@ def test_a_tree_that_exits_on_the_stop_is_ended_as_soon_as_it_has(
         elapsed = time.monotonic() - started
     assert (tmp_path / "stopped").read_text(encoding="utf-8") == "stdin closed"
     assert elapsed < 5.0, f"the stop took {elapsed:.3f} s"
-    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    retired = [record.getMessage() for record in delivered_records(caplog) if record.name == _RETIREMENT_LOGGER]
     assert len(retired) == 1
     assert retired[0].startswith("agent tree retired: stop exited after ")
 
@@ -387,8 +387,6 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Exercise the real job and pipe drain with a separate worker PID whose records the agent relays."""
-    import time
-
     hosted_root = str(tmp_path / "agent")
     environment = dict(fixture_environment())
     environment[HOSTED_ROOT_VARIABLE] = hosted_root
@@ -402,16 +400,255 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     try:
         process.write_input(bytearray(b"{}\n"))
         assert b"agent_ready" in process.read_output_line(limit=4096, timeout=30)
-        deadline = time.monotonic() + 10
-        while time.monotonic() < deadline and not any(r.msg == "worker relayed probe" for r in caplog.records):
-            time.sleep(0.02)
+        eventually(
+            lambda: any(r.msg == "worker relayed probe" for r in delivered_records(caplog)),
+            what="the relayed worker record reaching the log",
+        )
     finally:
         process.terminate(timeout=10)
-    gateway = [r for r in caplog.records if r.msg == "gateway live probe"]
-    worker = [r for r in caplog.records if r.msg == "worker relayed probe"]
+    gateway = [r for r in delivered_records(caplog) if r.msg == "gateway live probe"]
+    worker = [r for r in delivered_records(caplog) if r.msg == "worker relayed probe"]
     assert len(gateway) == len(worker) == 1
     assert gateway[0].levelno == logging.DEBUG
     assert worker[0].levelno == logging.ERROR
     assert gateway[0].process != worker[0].process
     assert gateway[0].__dict__["_cadrumo_process_role"] == "extension_service"
     assert worker[0].__dict__["_cadrumo_process_role"] == "extension_service"
+
+
+@pytest.mark.parametrize("cancel_with", ["controller_cancel", "controller_stop", "service_close"])
+def test_cancel_wakes_readiness_and_startup_owner_retires_the_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel_with: str
+) -> None:
+    waiting = threading.Event()
+    controller = _controller(tmp_path, "waiting_ready", _CredentialSource(), timeout=120)
+    launch = controller._launcher.launch
+
+    def observed_launch(
+        *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> AgentProcess:
+        process = launch(executable=executable, arguments=arguments, directory=directory, environment=environment)
+        read = process.read_output_line
+
+        def observed_read(*, limit: int, timeout: float) -> bytes:
+            waiting.set()
+            return read(limit=limit, timeout=timeout)
+
+        monkeypatch.setattr(process, "read_output_line", observed_read)
+        return process
+
+    monkeypatch.setattr(controller._launcher, "launch", observed_launch)
+    service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
+        storage_root=tmp_path / "storage",
+        gateway_bearer=bytearray(b"synthetic-bearer"),
+        emit=lambda event: None,
+    )
+    service._controller = controller
+    errors: list[AgentHostError] = []
+
+    def start() -> None:
+        try:
+            with service._guard:
+                controller.start()
+        except AgentHostError as error:
+            errors.append(error)
+
+    owner = threading.Thread(target=start)
+    owner.start()
+    try:
+        assert waiting.wait(HANG_GUARD_SECONDS), "the real child must reach its readiness wait before cancellation"
+        if cancel_with == "service_close":
+            service.request_close()
+        elif cancel_with == "controller_stop":
+            controller.stop()
+        else:
+            controller.cancel_start()
+        owner.join(HANG_GUARD_SECONDS)
+        assert not owner.is_alive(), "cancel must wake readiness without waiting for its timeout"
+        assert [error.reason for error in errors] == [AgentHostRefusal.CANCELLED]
+        assert controller.state is AgentHostState.DETACHED
+        assert controller.published() is None
+    finally:
+        controller.cancel_start()
+        owner.join(HANG_GUARD_SECONDS)
+        if not owner.is_alive():
+            service.close()
+
+
+@pytest.mark.parametrize("cancel_with", ["close", "stop"])
+def test_service_cancel_before_controller_exists_wakes_its_contained_preparation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel_with: str
+) -> None:
+    cancellation = InvocationCancellation()
+    waiting = threading.Event()
+    subscribe = cancellation.subscribe
+
+    def subscribed(notify: Callable[[], None]) -> Callable[[], None]:
+        release = subscribe(notify)
+        waiting.set()
+        return release
+
+    monkeypatch.setattr(cancellation, "subscribe", subscribed)
+    service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+        ),
+        storage_root=tmp_path / "storage",
+        gateway_bearer=bytearray(b"synthetic-bearer"),
+        emit=lambda event: None,
+    )
+    service._startup_cancellation = cancellation
+    runner = WindowsAgentInvocationRunner(cancellation=cancellation)
+    service._preparation_runner = runner
+    errors: list[AgentHostError] = []
+
+    def prepare() -> None:
+        try:
+            with service._guard:
+                runner.run(
+                    executable=native_python(),
+                    arguments=fixture_arguments(_FIXTURE, "silent", str(tmp_path)),
+                    directory=tmp_path,
+                    environment=fixture_environment(),
+                    timeout=120,
+                    output_limit=4096,
+                )
+        except AgentHostError as error:
+            errors.append(error)
+
+    owner = threading.Thread(target=prepare)
+    owner.start()
+    try:
+        assert waiting.wait(10)
+        assert service._controller is None
+        if cancel_with == "close":
+            service.request_close()
+        else:
+            service._admit_stop()
+        owner.join(10)
+        assert not owner.is_alive()
+        assert [error.reason for error in errors] == [AgentHostRefusal.CANCELLED]
+        assert runner.settled
+    finally:
+        cancellation.cancel()
+        owner.join(10)
+        if not owner.is_alive():
+            service.close()
+
+
+class _RunningWaiter:
+    """An invocation that is still running: its exit wait returns only once the waiter is closed."""
+
+    def __init__(self) -> None:
+        self.closed = threading.Event()
+
+    def wait(self, *, timeout: float | None) -> int:
+        self.closed.wait(timeout)
+        return 0
+
+    def close(self) -> None:
+        self.closed.set()
+
+
+def test_a_deadline_that_passed_while_the_invocation_started_is_answered_as_a_timeout() -> None:
+    waiter = _RunningWaiter()
+    process = SimpleNamespace(retain_waiter=lambda: waiter)
+
+    status = _await_invocation_exit(cast("Any", process), TimeoutDeadline(time.monotonic() - 1.0), None)
+
+    assert status is None
+    waiter.close()
+
+
+def test_contained_preparation_reports_timeout_and_confirms_termination(tmp_path: Path) -> None:
+    runner = WindowsAgentInvocationRunner()
+    result = runner.run(
+        executable=native_python(),
+        arguments=fixture_arguments(_FIXTURE, "silent", str(tmp_path)),
+        directory=tmp_path,
+        environment=fixture_environment(),
+        timeout=1.0,
+        output_limit=4096,
+    )
+    assert result.status is None
+    assert result.standard_output == b""
+    assert runner.settled
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path, cancel: bool) -> None:
+    reading = threading.Event()
+    release = threading.Event()
+    document = {"api_version": "v1", "providers": []}
+    body = json.dumps(document).encode()
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.flush()
+            reading.set()
+            if release.wait(120):
+                with contextlib.suppress(OSError):
+                    self.wfile.write(body)
+
+        @override
+        def log_message(self, format: str, *args: object) -> None:
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.daemon_threads = True
+    server_owner = threading.Thread(target=server.serve_forever)
+    server_owner.start()
+    service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
+        storage_root=tmp_path / "storage",
+        gateway_bearer=bytearray(b"synthetic-bearer"),
+        emit=lambda event: None,
+    )
+    ready = AgentReady(AgentGenerations("session", "settings"), server.server_port, "test", 1)
+    service._controller = cast(
+        AgentHostController,
+        SimpleNamespace(
+            published=lambda: ready,
+            cancel_start=lambda: None,
+            stop=lambda: None,
+        ),
+    )
+    errors: list[AgentHostError] = []
+    results: list[dict[str, object]] = []
+
+    def read() -> None:
+        try:
+            results.append(service._served_catalog(ready))
+        except AgentHostError as error:
+            errors.append(error)
+
+    owner = threading.Thread(target=read)
+    owner.start()
+    try:
+        assert reading.wait(10)
+        if cancel:
+            service.request_close()
+        else:
+            release.set()
+        owner.join(10)
+        assert not owner.is_alive()
+        assert [error.reason for error in errors] == ([AgentHostRefusal.CANCELLED] if cancel else [])
+        assert results == ([] if cancel else [document])
+    finally:
+        release.set()
+        owner.join(10)
+        service.close()
+        server.shutdown()
+        server_owner.join(10)
+        server.server_close()

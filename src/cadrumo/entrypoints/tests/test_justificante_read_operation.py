@@ -5,18 +5,15 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.live.justificante import (
     JustificanteCaptureSnapshot,
@@ -38,17 +35,15 @@ from cadrumo.application.live.justificante_read_operation import (
     build_justificante_show_registration,
 )
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.live.tests.read_executor_support import ExecutorEvents, ExecutorOperands
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.operations import (
@@ -60,11 +55,21 @@ from cadrumo.core.operations import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 _SNAPSHOT_ID = "9" * 64
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
@@ -128,14 +133,32 @@ class _SnapshotPersistence:
         self.snapshots.append(snapshot)
 
 
+def _executor_context(
+    definition_id: str,
+    *,
+    subject_ref: str | None = None,
+    events: ExecutorEvents,
+) -> tuple[OperationExecutorContext, ExecutorOperands]:
+    identity = OperationIdentity(
+        operation_id="e" * 64,
+        definition_id=definition_id,
+        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE)),
+    )
+    operands = ExecutorOperands()
+    return cast(
+        OperationExecutorContext,
+        SimpleNamespace(identity=identity, events=events, operands=operands),
+    ), operands
+
+
 def _snapshot(*, bucket_id: str, snapshot_id: str = _SNAPSHOT_ID) -> JustificanteCaptureSnapshot:
     pdf = b"%PDF-1.4\nsynthetic AEAT receipt\n%%EOF"
     return JustificanteCaptureSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="202613000010001A",
         csv="ABCD1234EFGH5678",
         pdf_sha256=hashlib.sha256(pdf).hexdigest(),
@@ -158,51 +181,6 @@ def _service_factory(bucket_id: str, snapshots: tuple[JustificanteCaptureSnapsho
         return service
 
     return build
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
-class _ExecutorEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _ExecutorOperands:
-    def __init__(self) -> None:
-        self.values: list[BaseModel] = []
-
-    async def put(self, value: BaseModel, *, written_at: datetime) -> str:
-        assert written_at.tzinfo is not None
-        self.values.append(value)
-        return "synthetic-encrypted-result-reference"
-
-
-def _executor_context(
-    definition_id: str,
-    *,
-    subject_ref: str | None = None,
-    events: _ExecutorEvents,
-) -> tuple[OperationExecutorContext, _ExecutorOperands]:
-    identity = OperationIdentity(
-        operation_id="e" * 64,
-        definition_id=definition_id,
-        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE)),
-    )
-    operands = _ExecutorOperands()
-    return cast(
-        OperationExecutorContext,
-        SimpleNamespace(identity=identity, events=events, operands=operands),
-    ), operands
 
 
 @pytest.mark.parametrize(
@@ -233,7 +211,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 ) -> None:
     import cadrumo.application.live.justificante_read_operation as operation
 
-    events = _ExecutorEvents()
+    events = ExecutorEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         context_definition_id,
@@ -264,7 +242,7 @@ def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
 def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
     import cadrumo.application.live.justificante_read_operation as operation
 
-    events = _ExecutorEvents()
+    events = ExecutorEvents()
     factory_buckets: list[str] = []
     context, operands = _executor_context(
         "live.justificante.other",
@@ -332,14 +310,8 @@ def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path
 
         for request, _result_type in requests:
             registration = registry.lookup_public_registration(request.definition_id)
-            access_context = OperationAccessContext(
-                profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-                authority_operation=authority,
+            access_context = cli_submit_context(
+                profile_id=profile_id, contract=registration.contract, authority_operation=authority
             )
             admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
             assert admitted.request.profile_id == profile_id
@@ -347,50 +319,17 @@ def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path
             assert admitted.policy.requires_all_periods
             assert AccessAction.COMMIT not in admitted.policy.actions
 
-            foreign_profile_id = uuid4()
-            foreign_request = request.model_copy(
-                update={
-                    "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                    "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-                }
-            )
-            with pytest.raises(ProfileAccessRefusedError) as refusal:
-                resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-            assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+            assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionSuccessV1[BaseModel]]:
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(request.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                result_type,
+            terminal, projected = await settle_and_project(
+                supervisor, result_service, registry, request, result_type, operation_id=operation_id
             )
             assert isinstance(projected, OperationResultProjectionSuccessV1)
             return terminal, cast(OperationResultProjectionSuccessV1[BaseModel], projected)

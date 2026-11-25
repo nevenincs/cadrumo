@@ -19,7 +19,7 @@ See Also:
     :class:`~domain.user_profile.values.UserProfileRecord`
         Encrypted profile facts whose completeness determines the final health
         status.
-    :class:`~application.state_projection.ProjectionActiveProfile`
+    :class:`~application.state_projection_models.ProjectionActiveProfile`
         Operator-state projection that carries this redacted health verdict to
         status and diagnostics surfaces.
 """
@@ -35,7 +35,7 @@ from ...core.bucket_pointer import read_pointer, resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
 from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, InternalInvariantError
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -47,8 +47,8 @@ from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionR
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
-from ..user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
-from ..user_profile.custody_ports import ProfileCustodyRecordIntegrityError
+from ..user_profile.completeness import profile_completeness_gaps
+from ..user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
 from ..user_profile.profile_pointer import active_profile_pointer_transaction
@@ -144,7 +144,7 @@ class ActiveProfileHealth(BaseModel):
     contract.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile: str | None
     source: ProfileSource
@@ -179,7 +179,7 @@ class ActiveProfileHealth(BaseModel):
 class ActiveProfileRepairResult(BaseModel):
     """Result of a safe active-profile pointer repair probe/action."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     dry_run: bool
     cleared_pointer: bool
@@ -571,7 +571,7 @@ def _assess_selected_profile(
     )
 
 
-def _profile_record_session_is_missing(
+def profile_record_session_is_missing(
     bucket_id: str,
     *,
     operation: PinnedAuthorityOperation,
@@ -587,7 +587,7 @@ def _profile_record_session_is_missing(
         )
 
 
-def _load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
+def load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
     """Open workflow state only when the caller did not already supply it."""
     if state is not None:
         return
@@ -653,10 +653,7 @@ def assess_profile_record_health(
     # the key catalogue's gated-question notion instead is what made `status`
     # and `view` report different missing-field counts for one record.
     validation = validate_profile_values(values, operation=operation)
-    missing_required = (
-        *missing_required_field_paths(operation.profile_schema(), values),
-        *conditional_profile_missing_required(values),
-    )
+    missing_required = profile_completeness_gaps(operation.profile_schema(), values).paths
     status: ProfileHealthStatusValue = (
         ProfileHealthStatus.READY if not missing_required else ProfileHealthStatus.INCOMPLETE
     )
@@ -686,7 +683,7 @@ def _assess_registered_profile(
 ) -> ActiveProfileHealth:
     """Assess the committed profile after discovery has established its identity."""
     active_profile = pointer.bucket_id
-    if not include_private_record or _profile_record_session_is_missing(active_profile, operation=operation):
+    if not include_private_record or profile_record_session_is_missing(active_profile, operation=operation):
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
@@ -699,7 +696,7 @@ def _assess_registered_profile(
         )
 
     try:
-        _load_workflow_state_for_health(active_profile, state)
+        load_workflow_state_for_health(active_profile, state)
     except (CadrumoError, OSError) as exc:
         # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
@@ -767,7 +764,7 @@ def assess_active_profile_health(
         # Read strictly even where a corrupt pointer is otherwise read as no
         # selection: the command repairing it must see what it repairs.
         try:
-            read_pointer(settings.cadrumo_local_storage_root)
+            read_pointer(settings.cadrumo_storage_root)
         except ActiveProfilePointerError as exc:
             return _pointer_unreadable_health(total_keys=total_keys, error=exc)
     active_profile = resolve_active_bucket_id()
@@ -804,7 +801,7 @@ def repair_active_profile_pointer(
     if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
-    root = load_settings().cadrumo_local_storage_root
+    root = load_settings().cadrumo_storage_root
     with active_profile_pointer_transaction(root) as pointer_transaction:
         before = assess_active_profile_health(operation=operation)
         if not before.repairable_by_clearing_pointer:

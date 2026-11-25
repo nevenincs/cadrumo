@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import sys
 import time
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
@@ -27,10 +28,31 @@ _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
             "action",
+            "admission_ms",
             "call_name",
+            "changed_key_parts",
+            "commit_ms",
+            "epoch_ms",
+            "form_ms",
+            "guard_wait_ms",
+            "heap_frozen",
+            "projection_ms",
+            "projection_pair_reused",
+            "queued_ms",
+            "recheck_ms",
+            "refresh_kept",
+            "refresh_ms",
+            "total_ms",
+            "checked_out_count",
+            "child_process_id",
+            "definition_id",
+            "dump_file",
             "handler_name",
             "held_call_name",
             "held_elapsed_seconds",
+            "hold_seconds",
+            "job_empty_seconds",
+            "members_signalled_seconds",
             "request_type",
             "operation_channel",
             "budget_seconds",
@@ -57,6 +79,7 @@ _LIFECYCLE_FIELDS = tuple(
             "cleanup_error_type",
             "cleanup_status",
             "drain_timeout_seconds",
+            "drain_wait_seconds",
             "elapsed_seconds",
             "error_chain",
             "error_code",
@@ -71,6 +94,7 @@ _LIFECYCLE_FIELDS = tuple(
             "inventory_elapsed_ms",
             "inventory_login_count",
             "inventory_state",
+            "item_count",
             "kdf_operation",
             "kdf_clean_exit_elapsed_ms",
             "kdf_cleanup_elapsed_ms",
@@ -86,7 +110,9 @@ _LIFECYCLE_FIELDS = tuple(
             "observed_eligible_count",
             "observed_unknown_count",
             "outcome",
+            "own_work_seconds",
             "parent_process_id",
+            "peer_wait_seconds",
             "persist_receipt_requested",
             "phase_monotonic_ns",
             "profile_count",
@@ -105,7 +131,16 @@ _LIFECYCLE_FIELDS = tuple(
             "startup_phase",
             "step_id",
             "timeout_seconds",
+            "traceback_frames",
+            "traceback_origin",
+            "traceback_type",
             "transition",
+            "wal_bytes",
+            "wait_seconds",
+            "window_seconds",
+            "worker_error_frames",
+            "worker_error_origin",
+            "worker_error_type",
         }
     )
 )
@@ -161,6 +196,18 @@ def stamp_diagnostic_scalar_fields(record: logging.LogRecord) -> None:
     )
 
 
+def _diagnostic_level(event: str, fields: Mapping[str, DiagnosticValue] | None, level: int | None) -> int:
+    """Promote explicit failure events while preserving the caller's stronger level."""
+    outcome = fields.get("outcome") if fields is not None else None
+    failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
+    failed = failed or event.endswith(("_failed", " failed"))
+    if failed and (level is None or level < logging.ERROR):
+        level = logging.ERROR
+    elif level is None:
+        level = logging.DEBUG
+    return level
+
+
 def diagnostic_event(
     logger: logging.Logger,
     event: str,
@@ -171,13 +218,7 @@ def diagnostic_event(
 ) -> None:
     """Emit safe scalar diagnostics without displacing an existing primary."""
     try:
-        outcome = fields.get("outcome") if fields is not None else None
-        failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
-        failed = failed or event.endswith(("_failed", " failed"))
-        if failed and (level is None or level < logging.ERROR):
-            level = logging.ERROR
-        elif level is None:
-            level = logging.DEBUG
+        level = _diagnostic_level(event, fields, level)
         logger.log(level, event, extra=dict(fields or {}))
     except Exception:
         return
@@ -218,6 +259,68 @@ def diagnostic_timing_event(
             raise
 
 
+@contextmanager
+def diagnostic_slow_call(
+    logger: logging.Logger,
+    event: str,
+    *,
+    threshold_seconds: float,
+    fields: Mapping[str, DiagnosticValue] | None = None,
+    prompt_level: int | None = None,
+) -> Generator[None]:
+    """Warn, once the block ends, that it took at least ``threshold_seconds``.
+
+    A prompt block logs nothing unless ``prompt_level`` names the level to
+    record it at. The record carries the caller's fields, ``elapsed_seconds``
+    and whether the block ``raised``. The fields are read when the block ends,
+    so the caller's mapping may gain what the block measured. The block's own
+    exception always propagates unchanged.
+    """
+    started = time.monotonic()
+    try:
+        yield
+    finally:
+        elapsed = time.monotonic() - started
+        level = logging.WARNING if elapsed >= threshold_seconds else prompt_level
+        if level is not None:
+            primary = sys.exception()
+            diagnostic_event(
+                logger,
+                event,
+                fields={
+                    **(fields or {}),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "outcome": "completed" if primary is None else "raised",
+                },
+                level=level,
+                primary_error=primary,
+            )
+
+
+@contextmanager
+def diagnostic_phase(
+    logger: logging.Logger,
+    event: str,
+    phase: str,
+    *,
+    slow_seconds: float = 1.0,
+    fields: Mapping[str, DiagnosticValue] | None = None,
+) -> Generator[dict[str, DiagnosticValue]]:
+    """Record how long one named phase took, whether or not it was slow.
+
+    The record is DEBUG for a phase under ``slow_seconds`` and WARNING from
+    there. It carries ``phase``, the caller's fields and ``elapsed_seconds``.
+    The block receives the record's fields and may add what it measured, such
+    as ``item_count``; they must be counts, durations and fixed names, never
+    taxpayer values.
+    """
+    measured: dict[str, DiagnosticValue] = {**(fields or {}), "phase": phase}
+    with diagnostic_slow_call(
+        logger, event, threshold_seconds=slow_seconds, fields=measured, prompt_level=logging.DEBUG
+    ):
+        yield measured
+
+
 def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:
     """Name an error, its originating frame and its identifier-only cause chain, never its message or locals."""
     fields: dict[str, DiagnosticValue] = {"error_type": type(error).__name__}
@@ -252,6 +355,43 @@ def _scalar(value: object) -> DiagnosticValue:
     return None
 
 
+def _base_diagnostic_context(record: logging.LogRecord) -> dict[str, DiagnosticValue]:
+    """Retain emitting process identity and only local thread/task identity."""
+    context: dict[str, DiagnosticValue] = {
+        "process_id": record.process or os.getpid(),
+        "process_role": _scalar(record.__dict__.get("_cadrumo_process_role", _process_role)),
+    }
+    # Foreign-process records are forwarded by a reader thread; its identity
+    # is not the emitting child's worker identity.
+    if record.process == os.getpid():
+        context["thread_id"] = record.thread
+        context["thread_name"] = _scalar(record.threadName)
+        for key in ("task_id", "task_name"):
+            value = record.__dict__.get(f"_cadrumo_{key}")
+            if value is not None:
+                context[key] = _scalar(value)
+    identifier = record.__dict__.get("_cadrumo_diagnostic_id")
+    if isinstance(identifier, str) and identifier:
+        context["diagnostic_id"] = _scalar(identifier)
+    return context
+
+
+def _append_lifecycle_context(record: logging.LogRecord, context: dict[str, DiagnosticValue]) -> None:
+    """Append only declared scalar lifecycle fields within the context bounds."""
+    scalar_fields = cast("tuple[str, ...] | None", record.__dict__.get("_cadrumo_scalar_fields"))
+    for key in _LIFECYCLE_FIELDS:
+        if key not in record.__dict__:
+            continue
+        value = record.__dict__[key]
+        if (key in {"run_id", "step_id"} and not value) or (scalar_fields is not None and key not in scalar_fields):
+            continue
+        if not isinstance(value, str | int | float | bool) and value is not None:
+            continue
+        if len(context) >= _MAX_CONTEXT_FIELDS:
+            break
+        context[key[:_MAX_CONTEXT_TEXT]] = _scalar(value)
+
+
 class DiagnosticFormatter(logging.Formatter):
     """Format scrubbed records with UTC time and a bounded JSON scalar suffix."""
 
@@ -263,34 +403,8 @@ class DiagnosticFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
-        context: dict[str, DiagnosticValue] = {
-            "process_id": record.process or os.getpid(),
-            "process_role": _scalar(record.__dict__.get("_cadrumo_process_role", _process_role)),
-        }
-        # Foreign-process records are forwarded by a reader thread; its identity
-        # is not the emitting child's worker identity.
-        if record.process == os.getpid():
-            context["thread_id"] = record.thread
-            context["thread_name"] = _scalar(record.threadName)
-            for key in ("task_id", "task_name"):
-                value = record.__dict__.get(f"_cadrumo_{key}")
-                if value is not None:
-                    context[key] = _scalar(value)
-        identifier = record.__dict__.get("_cadrumo_diagnostic_id")
-        if isinstance(identifier, str) and identifier:
-            context["diagnostic_id"] = _scalar(identifier)
-        scalar_fields = cast("tuple[str, ...] | None", record.__dict__.get("_cadrumo_scalar_fields"))
-        for key in _LIFECYCLE_FIELDS:
-            if key not in record.__dict__:
-                continue
-            value = record.__dict__[key]
-            if (key in {"run_id", "step_id"} and not value) or (scalar_fields is not None and key not in scalar_fields):
-                continue
-            if not isinstance(value, str | int | float | bool) and value is not None:
-                continue
-            if len(context) >= _MAX_CONTEXT_FIELDS:
-                break
-            context[key[:_MAX_CONTEXT_TEXT]] = _scalar(value)
+        context = _base_diagnostic_context(record)
+        _append_lifecycle_context(record, context)
         record.__dict__["diagnostic_context"] = json.dumps(
             context, ensure_ascii=True, sort_keys=True, separators=(",", ":")
         )

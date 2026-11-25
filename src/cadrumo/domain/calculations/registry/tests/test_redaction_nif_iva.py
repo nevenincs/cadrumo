@@ -15,7 +15,7 @@ from .....core.identity.documents import IdentityError, validate_identity
 from .....core.redaction.rules import redact_for_cli_output, redact_for_log
 from .....core.redaction.tax_identity_admission import bind_tax_identity_admission
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
-from ..governed_fact_scope import validating_governed_facts
+from ..governed_fact_scope import GovernedFactSource, governed_facts_in_scope, validating_governed_facts
 from ..nif_iva_catalogue import nif_iva_format_for_country
 from ..schema_references import TemporalSupportEnvelope
 from ..tax_id_format import runtime_tax_id_format
@@ -55,8 +55,8 @@ _SHIPPED_COUNTRIES = (
     "GR",
 )
 
-_ES_PREFIXED = "ESB12345674"
-_ES_BARE = "B12345674"
+_ES_PREFIXED = "ESB00015016"
+_ES_BARE = "B00015016"
 
 
 def _redacts(value: str) -> bool:
@@ -135,13 +135,13 @@ def test_a_separator_bearing_document_reference_survives_the_prefixed_arm(docume
 
 @pytest.mark.parametrize(
     "printed_identity",
-    ["SE 556677889901", "SE556677889901", "FR12345678901", "DE123456789", "ESB12345674"],
+    ["SE 556677889901", "SE556677889901", "FR12345678901", "DE123456789", "ESB00015016"],
 )
 def test_a_member_state_number_is_still_redacted_beside_those_references(printed_identity: str) -> None:
     assert _redacts(printed_identity), f"{printed_identity!r} is a tax identity and must not reach the operator"
 
 
-@pytest.mark.parametrize("printed_identity", ["SE556677889901", "SE 556677889901", "ESB12345674"])
+@pytest.mark.parametrize("printed_identity", ["SE556677889901", "SE 556677889901", "ESB00015016"])
 def test_without_an_answering_authority_a_member_state_number_is_still_redacted(printed_identity: str) -> None:
     """The fail-safe half of the contract: an unanswered gate hashes rather than leaks.
 
@@ -168,7 +168,7 @@ class _AuthorityWithoutComponents:
         raise LookupError("authority component support envelope is unavailable")
 
 
-@pytest.mark.parametrize("printed_identity", ["SE556677889901", "FR12345678901", "ESB12345674"])
+@pytest.mark.parametrize("printed_identity", ["SE556677889901", "FR12345678901", "ESB00015016"])
 def test_an_authority_missing_the_catalogue_over_redacts_without_raising(printed_identity: str) -> None:
     """A partial authority is unbound for admission, so the lexical fail-safe hashes."""
     admission = RegistryTaxIdentityAdmission()
@@ -208,3 +208,60 @@ def test_unicode_decimal_digits_still_reach_the_governed_format() -> None:
 def test_nondecimal_digit_keeps_the_unavailable_authority_answer() -> None:
     with validating_governed_facts(_AuthorityWithoutComponents()):
         assert RegistryTaxIdentityAdmission().admits_nif_iva("RO²") is None
+
+
+class _CountingAuthority:
+    """Answer from the operation's published authority and count the fact queries it served."""
+
+    def __init__(self, inner: GovernedFactSource) -> None:
+        self.inner = inner
+        self.queries = 0
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.queries += 1
+        return self.inner.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self.inner.supported_filing_years()
+
+
+def _published() -> GovernedFactSource:
+    published = governed_facts_in_scope()
+    assert published is not None, "the operation fixture scopes the published authority"
+    return published
+
+
+def test_one_authority_resolves_the_catalogue_once_for_every_later_candidate() -> None:
+    """Nearly every log line asks the gate, so the catalogue is resolved once per authority, not per line."""
+    admission = RegistryTaxIdentityAdmission()
+    counting = _CountingAuthority(_published())
+    with validating_governed_facts(counting):
+        assert admission.admits_nif_iva("SE556677889901") is True
+        resolved = counting.queries
+        assert resolved > 0
+        assert admission.admits_nif_iva("FR12345678901") is True
+        assert admission.admits_nif_iva("TASK1") is False
+        assert admission.admits_spanish_identity("B00015016") is True
+        spanish = counting.queries
+        assert admission.admits_spanish_identity("B99999999") is False
+    assert counting.queries == spanish > resolved
+
+
+def test_another_authority_is_asked_afresh() -> None:
+    admission = RegistryTaxIdentityAdmission()
+    first, second = _CountingAuthority(_published()), _CountingAuthority(_published())
+    with validating_governed_facts(first):
+        assert admission.admits_nif_iva("SE556677889901") is True
+    with validating_governed_facts(second):
+        assert admission.admits_nif_iva("SE556677889901") is True
+    assert first.queries > 0
+    assert second.queries > 0
+
+
+@pytest.mark.parametrize(
+    "candidate", ["SE556677889901", "FR12345678901", "RO12", "XI123456789", "XX123456789", "TASK1", "SE2026000412"]
+)
+def test_a_held_answer_is_the_answer_a_fresh_gate_gives(candidate: str) -> None:
+    held = RegistryTaxIdentityAdmission()
+    held.admits_nif_iva("DE123456789")
+    assert held.admits_nif_iva(candidate) == RegistryTaxIdentityAdmission().admits_nif_iva(candidate)

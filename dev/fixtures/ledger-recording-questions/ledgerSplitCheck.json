@@ -1,0 +1,173 @@
+{
+  "answers": [
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "",
+          "description": "Licencia"
+        },
+        {
+          "amount": null,
+          "description": "Soporte"
+        }
+      ]
+    },
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "20",
+          "description": "Licencia"
+        },
+        {
+          "amount": null,
+          "description": "Soporte"
+        }
+      ]
+    },
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "20",
+          "description": "same"
+        },
+        {
+          "amount": null,
+          "description": "same"
+        }
+      ]
+    },
+    {
+      "parent_amount": "100",
+      "parts": [
+        {
+          "amount": "40.5",
+          "description": "a"
+        },
+        {
+          "amount": "9.5",
+          "description": "b"
+        },
+        {
+          "amount": null,
+          "description": "c"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10.20",
+      "parts": [
+        {
+          "amount": "10.10",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "10",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "11",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "1.000",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "5",
+          "description": "a"
+        },
+        {
+          "amount": "4.5",
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "6",
+          "description": "a"
+        },
+        {
+          "amount": "5",
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "0",
+          "description": "a"
+        },
+        {
+          "amount": "10",
+          "description": "b"
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "5",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "  "
+        }
+      ]
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "10",
+          "description": "a"
+        }
+      ]
+    }
+  ]
+}

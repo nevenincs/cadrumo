@@ -1,0 +1,1164 @@
+# Revision-owned Modelo 840 projection endpoint authority for the DR840 Anexo.
+# The Anexo ("Relación de locales") prints nine premises slots per sheet, each with
+# the fourteen Apartado II fields, and closes each sheet with three partial sums. The
+# record repeats once per sheet (repeat = "projection_rows"), so a premises row is
+# addressed by its slot and the sheet by its render occurrence. Source: aeat-dr-840,
+# Anexo campos 3-158.
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 1
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-2"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 2
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-3"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 3
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-4"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 4
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-5"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-6"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 6
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-7"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 7
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-8"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 8
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-sg-tabla.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "sg_tabla"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-nombre-via.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "nombre_via"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-numero.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "numero"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-km.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "km"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-escalera.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "escalera"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-piso.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "piso"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-puerta.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "puerta"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-codigo-postal.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "codigo_postal"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-provincia-codigo.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "provincia_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-codigo.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "municipio_codigo"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-municipio-nombre.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "municipio_nombre"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-total.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-rectificada.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-local:field-computable.slot-9"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_local"
+slot = 9
+field = "computable"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-anexo-hoja:field-suma-parcial-total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_anexo_hoja"
+field = "suma_parcial_total"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-anexo-hoja:field-suma-parcial-rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_anexo_hoja"
+field = "suma_parcial_rectificada"
+
+[[revisions."2003-y-siguientes".projection_endpoints]]
+id = "m840-anexo-hoja:field-suma-parcial-computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[revisions."2003-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m840_anexo_hoja"
+field = "suma_parcial_computable"

@@ -13,6 +13,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
+from ....renta.first_slice_routing_integrity import check_first_slice_routing
 from ....renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
@@ -22,21 +23,20 @@ from ....renta.ledger_expenses import (
 )
 from ..authority import PinnedAuthorityOperation
 from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ledger_renta_gastos_estimacion_directa_bindings import (
+    renta_first_slice_binding_target_casillas,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from .authored_editions import newest_authored_edition
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 # The newest Modelo 100 edition the registry authors; its ledger expense bindings
 # are the ones resolved here.
@@ -57,10 +57,6 @@ _M100_GASTO_OTROS_CONCEPTOS_CASILLA: CasillaId = validated_casilla_id(
 _M100_GASTO_AMORTIZACIONES_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTO_AMORTIZACIONES_CASILLA",
-)
-_UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
-    "9999",
-    surface="_UNKNOWN_RENTA_EXPENSE_CASILLA",
 )
 
 
@@ -221,6 +217,11 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
             # TIPOTRIBUTACION code 1; the joint-filing code is 2)
@@ -236,6 +237,18 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # provide the same explicit neutral opening balance used by the
             # Renta chain tests.
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
@@ -247,12 +260,18 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 guarderia increment (casilla 0613); neutral zero for a scenario with no descendants.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and
             # autonómico halves, regardless of the Madrid tax residence below.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
@@ -324,32 +343,17 @@ def test_modelo_100_renta_ledger_expense_bindings_cite_year_manual(
         assert fase_heading in required_text
 
 
-def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
-    # Use model_validate(dict) rather than the keyword constructor so the
-    # schema-hygiene gate (test_registry_tests_do_not_define_schema_authority_objects)
-    # stays clean. The gate forbids the direct keyword-constructor syntax for
-    # schema-authority types in test files; the validator under test still
-    # needs an invalid binding instance to exercise the target_casilla_id
-    # allow-list error path.
-    binding = BindingDefinition.model_validate(
-        {
-            "id": "bad-renta-binding",
-            "provider": {
-                "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
-                "modelo": "100",
-                "period": "0A",
-                "target_casilla_id": _UNKNOWN_RENTA_EXPENSE_CASILLA,
-                "fact": "deductible_amount_sum",
-            },
-            "value": {"data_type": "money", "channel": "decimal"},
-            "aggregation": {"op": "sum"},
-            "legal_refs": ("ley-35-2006:art-28",),
-            "source_refs": ("aeat-renta-2025-manual-parte1",),
-        },
-    )
+def test_a_binding_target_is_checked_against_the_revision_it_belongs_to() -> None:
+    revision = _reviewed_edition_snapshot().revision
+    targets = renta_first_slice_binding_target_casillas(revision)
+    declared = frozenset(casilla.id for casilla in revision.casillas)
 
-    with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger gastos slice"):
-        validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(binding)
+    assert {_M100_GASTO_AMORTIZACIONES_CASILLA, "0208", "0227"} <= targets
+    assert check_first_slice_routing("100", declared, targets, filing_year=_REVIEWED_EDITION) == []
+
+    failures = check_first_slice_routing("100", declared - {"0227"}, targets, filing_year=_REVIEWED_EDITION)
+    assert len(failures) == 1
+    assert "0227" in failures[0]
 
 
 def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:

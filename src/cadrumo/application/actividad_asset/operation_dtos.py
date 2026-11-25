@@ -9,269 +9,115 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Any, Final, Self
+from typing import Final, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from ...application.operations.public_scalar import PublicDecimal, project_scalar
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
+from ...domain.renta.actividad_asset.disposal import (
+    ActivityAssetDisposal,
+    ActivityAssetDisposalReason,
+    PriorFreeDepreciationRegime,
+    require_admissible_disposal,
+)
 from ...domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
-    ApprovedAmortizationPlan,
     ChargingInfrastructureEvidence,
     DefiniteUsefulLife,
     DigitOrder,
     DirectEstimationRegime,
     ElectionReference,
     EvidenceReference,
-    LowValueElection,
-    PlanAnnualAmount,
-    PlanApprovalKind,
     RenewableSelfConsumptionEvidence,
-    SmallEnterpriseEvidence,
 )
+from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import (
-    AcquisitionLineageReference,
     AcquisitionShape,
-    ActivityAssetBasis,
     ActivityAssetRevision,
-    AssetBasisStage,
     AssetKind,
-    OpeningAmortizationHistory,
-    OpeningHistoryStatus,
-    OwnershipMode,
 )
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetHistoryEvent
+from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, last_day_covered
 from ...domain.renta.actividad_asset.vehicle_affectation import VehicleAffectation
+from .acquisition_dtos import (
+    AcquisitionLineageSnapshot,
+    ActivityAssetBasisSnapshot,
+    FurtherAcquisitionSnapshot,
+    OpeningHistorySnapshot,
+)
+from .activity_asset_read_models import (
+    ActivityAssetHandoffLeftOut,
+    ActivityAssetM130Contribution,
+    ActivityAssetM130ProjectionSnapshot,
+    ServedWords,
+)
+from .election_fact_dtos import (
+    ApprovedAmortizationPlanSnapshot,
+    LowValueElectionSnapshot,
+    SmallEnterpriseEvidenceSnapshot,
+    UsedAssetOriginalPriceSnapshot,
+)
+from .filing_handoff import ActivityAssetFilingHandoff, M100ClaimGapProjection, M130AccrualProjection, M130Contribution
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .operations import ActivityAssetFilingHandoff
+from .request_restoration import restoring
+from .schedule_walk import M100GapKind
 
 
 def _decimal(value: PublicDecimal | None) -> Decimal | None:
     return None if value is None else Decimal(value.decimal)
 
 
-_CHARGE_DECIMAL_FIELDS: Final = ("amount", "free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
-"""Decimal facts a scheduled charge and a recorded claim both carry."""
+_CHARGE_DECIMAL_FIELDS: Final = (
+    "amount",
+    "annual_rate",
+    "free_depreciation_unit_acquisition_value",
+    "free_depreciation_annual_cap",
+)
+"""Decimal facts of a scheduled charge or a recorded claim; only a forecast states its rate."""
 
 
-def _public_charge_fields(value: BaseModel) -> dict[str, Any]:
+def _require_covered_through(covered_until: date, covered_through: date | None) -> None:
+    """Refuse a stated last covered day that is not the day before the exclusive boundary."""
+    if covered_through is not None and covered_through != last_day_covered(covered_until):
+        raise ValueError("covered_through is the day before covered_until")
+
+
+def _public_charge_fields(value: BaseModel) -> dict[str, object]:
     """Copy a domain charge field by field, carrying its decimals as public decimals."""
-    data = value.model_dump(mode="python")
+    data: dict[str, object] = {}
+    data.update(value.model_dump(mode="python"))
+    covered_until = data["covered_until"]
+    if not isinstance(covered_until, date):
+        raise TypeError("charge covered_until must be a date")
+    data["covered_through"] = last_day_covered(covered_until)
     for name in _CHARGE_DECIMAL_FIELDS:
-        amount = data[name]
-        data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
-    return data
-
-
-def _domain_charge_fields(snapshot: BaseModel) -> dict[str, Any]:
-    """Copy a charge snapshot field by field, restoring its public decimals."""
-    data: dict[str, Any] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
-    for name in _CHARGE_DECIMAL_FIELDS:
-        data[name] = _decimal(data[name])
-    return data
-
-
-class AcquisitionLineageSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    observed_transaction_id: TransactionId
-    observed_lineage_event_id: Hex64Str | None = None
-    invoice_evidence_id: str = Field(min_length=1, max_length=256)
-    evidence_fingerprint: Hex64Str
-
-    @classmethod
-    def from_domain(cls, value: AcquisitionLineageReference) -> Self:
-        return cls(**value.model_dump(mode="python"))
-
-    def to_domain(self) -> AcquisitionLineageReference:
-        return AcquisitionLineageReference(**self.model_dump(mode="python"))
-
-
-class OpeningHistorySnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    status: OpeningHistoryStatus
-    accumulated_amount: PublicDecimal | None = None
-    amortization_method: AmortizationMethod | None = None
-
-    @classmethod
-    def from_domain(cls, value: OpeningAmortizationHistory) -> Self:
-        return cls(
-            status=value.status,
-            accumulated_amount=(
-                project_scalar(value.accumulated_amount) if value.accumulated_amount is not None else None
-            ),
-            amortization_method=value.amortization_method,
-        )
-
-    def to_domain(self) -> OpeningAmortizationHistory:
-        return OpeningAmortizationHistory(
-            status=self.status,
-            accumulated_amount=_decimal(self.accumulated_amount),
-            amortization_method=self.amortization_method,
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
-
-
-class ActivityAssetBasisSnapshot(BaseModel):
-    """Public basis DTO with explicit decimal allocation facts."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    stage: AssetBasisStage
-    basis_amount: PublicDecimal
-    is_property: bool = False
-    construction_cost: PublicDecimal | None = None
-    land_cost: PublicDecimal | None = None
-    ownership_mode: OwnershipMode | None = None
-    ownership_share: PublicDecimal | None = None
-    office_area: PublicDecimal | None = None
-    total_area: PublicDecimal | None = None
-    business_use_share: PublicDecimal | None = None
-    prior_allocation_provenance: str | None = Field(default=None, min_length=1, max_length=512)
-
-    @classmethod
-    def from_domain(cls, value: ActivityAssetBasis) -> Self:
-        """Copy a canonical basis into its public decimal representation."""
-        decimal_names = (
-            "basis_amount",
-            "construction_cost",
-            "land_cost",
-            "ownership_share",
-            "office_area",
-            "total_area",
-            "business_use_share",
-        )
-        data = value.model_dump(mode="python")
-        for name in decimal_names:
+        if name in data:
             amount = data[name]
             data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
-        return cls(**data)
-
-    def to_domain(self) -> ActivityAssetBasis:
-        """Restore and revalidate the canonical domain basis."""
-        return ActivityAssetBasis(
-            stage=self.stage,
-            basis_amount=Decimal(self.basis_amount.decimal),
-            is_property=self.is_property,
-            construction_cost=_decimal(self.construction_cost),
-            land_cost=_decimal(self.land_cost),
-            ownership_mode=self.ownership_mode,
-            ownership_share=_decimal(self.ownership_share),
-            office_area=_decimal(self.office_area),
-            total_area=_decimal(self.total_area),
-            business_use_share=_decimal(self.business_use_share),
-            prior_allocation_provenance=self.prior_allocation_provenance,
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
+    return data
 
 
-class PlanAnnualAmountSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    tax_year: FilingYear
-    amount: PublicDecimal
-
-    @classmethod
-    def from_domain(cls, value: PlanAnnualAmount) -> Self:
-        return cls(tax_year=value.tax_year, amount=project_scalar(value.amount))
-
-    def to_domain(self) -> PlanAnnualAmount:
-        return PlanAnnualAmount(tax_year=self.tax_year, amount=Decimal(self.amount.decimal))
-
-
-class ApprovedAmortizationPlanSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    approval_reference: ElectionReference
-    approval_kind: PlanApprovalKind
-    submitted_on: date
-    resolved_on: date
-    annual_amounts: tuple[PlanAnnualAmountSnapshot, ...] = Field(min_length=1)
-
-    @classmethod
-    def from_domain(cls, value: ApprovedAmortizationPlan) -> Self:
-        return cls(
-            approval_reference=value.approval_reference,
-            approval_kind=value.approval_kind,
-            submitted_on=value.submitted_on,
-            resolved_on=value.resolved_on,
-            annual_amounts=tuple(PlanAnnualAmountSnapshot.from_domain(item) for item in value.annual_amounts),
-        )
-
-    def to_domain(self) -> ApprovedAmortizationPlan:
-        return ApprovedAmortizationPlan(
-            approval_reference=self.approval_reference,
-            approval_kind=self.approval_kind,
-            submitted_on=self.submitted_on,
-            resolved_on=self.resolved_on,
-            annual_amounts=tuple(item.to_domain() for item in self.annual_amounts),
-        )
-
-
-class SmallEnterpriseEvidenceSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    evidence_reference: EvidenceReference
-    made_available_on: date
-    prior_period_net_turnover: PublicDecimal
-
-    @classmethod
-    def from_domain(cls, value: SmallEnterpriseEvidence) -> Self:
-        return cls(
-            evidence_reference=value.evidence_reference,
-            made_available_on=value.made_available_on,
-            prior_period_net_turnover=project_scalar(value.prior_period_net_turnover),
-        )
-
-    def to_domain(self) -> SmallEnterpriseEvidence:
-        return SmallEnterpriseEvidence(
-            evidence_reference=self.evidence_reference,
-            made_available_on=self.made_available_on,
-            prior_period_net_turnover=Decimal(self.prior_period_net_turnover.decimal),
-        )
-
-
-class LowValueElectionSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    election_reference: ElectionReference
-    new_material_evidence_reference: EvidenceReference
-    unit_acquisition_value: PublicDecimal
-
-    @classmethod
-    def from_domain(cls, value: LowValueElection) -> Self:
-        return cls(
-            election_reference=value.election_reference,
-            new_material_evidence_reference=value.new_material_evidence_reference,
-            unit_acquisition_value=project_scalar(value.unit_acquisition_value),
-        )
-
-    def to_domain(self) -> LowValueElection:
-        return LowValueElection(
-            election_reference=self.election_reference,
-            new_material_evidence_reference=self.new_material_evidence_reference,
-            unit_acquisition_value=Decimal(self.unit_acquisition_value.decimal),
-        )
+def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
+    """Copy a charge snapshot field by field, restoring its public decimals."""
+    data: dict[str, object] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
+    data.pop("covered_through", None)
+    for name in _CHARGE_DECIMAL_FIELDS:
+        if name in data:
+            amount = data[name]
+            if amount is not None and not isinstance(amount, PublicDecimal):
+                raise TypeError("charge decimal must be a public decimal")
+            data[name] = _decimal(amount)
+    return data
 
 
 class ActivityAssetAmortizationElectionSnapshot(BaseModel):
@@ -284,7 +130,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
     authority_class_key: str | None = Field(default=None, min_length=1, max_length=64)
     linear_coefficient: PublicDecimal | None = None
     shift_hours_per_day: PublicDecimal | None = None
-    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
+    sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=128)
     digit_order: DigitOrder | None = None
     approved_plan: ApprovedAmortizationPlanSnapshot | None = None
     useful_life: DefiniteUsefulLife | None = None
@@ -293,6 +139,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
     research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
+    used_original_price: UsedAssetOriginalPriceSnapshot | None = None
 
     @classmethod
     def from_domain(cls, value: ActivityAssetAmortizationElection) -> Self:
@@ -324,10 +171,22 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             research_development_evidence_reference=value.research_development_evidence_reference,
             charging_infrastructure=value.charging_infrastructure,
             renewable_self_consumption=value.renewable_self_consumption,
+            used_original_price=(
+                UsedAssetOriginalPriceSnapshot.from_domain(value.used_original_price)
+                if value.used_original_price is not None
+                else None
+            ),
         )
 
     def to_domain(self) -> ActivityAssetAmortizationElection:
-        """Restore the canonical election and its nested evidence."""
+        """Restore the canonical election and its nested evidence.
+
+        Raises:
+            ActividadAssetError: With the reason key of the rule a fact breaks.
+        """
+        return restoring(self._restore)
+
+    def _restore(self) -> ActivityAssetAmortizationElection:
         return ActivityAssetAmortizationElection(
             regime=self.regime,
             method=self.method,
@@ -343,30 +202,93 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             research_development_evidence_reference=self.research_development_evidence_reference,
             charging_infrastructure=self.charging_infrastructure,
             renewable_self_consumption=self.renewable_self_consumption,
+            used_original_price=self.used_original_price.to_domain() if self.used_original_price is not None else None,
         )
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
+
+class ActivityAssetDisposalSnapshot(BaseModel):
+    """Public baja statement; its reason and amount rules are judged when it becomes the record.
+
+    A request carries this unjudged so that a refused reason reaches the operator as
+    its registered refusal and not as a malformed request.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    disposal_date: date
+    reason: ActivityAssetDisposalReason
+    proceeds: PublicDecimal
+    transmission_costs: PublicDecimal
+    market_value: PublicDecimal | None = None
+    prior_free_depreciation_regime: PriorFreeDepreciationRegime | None = None
+    later_affectation_on: date | None = None
+
+    @classmethod
+    def from_domain(cls, value: ActivityAssetDisposal) -> Self:
+        """Project one baja record without changing its facts."""
+        return cls(
+            disposal_date=value.disposal_date,
+            reason=value.reason,
+            proceeds=project_scalar(value.proceeds),
+            transmission_costs=project_scalar(value.transmission_costs),
+            market_value=None if value.market_value is None else project_scalar(value.market_value),
+            prior_free_depreciation_regime=value.prior_free_depreciation_regime,
+            later_affectation_on=value.later_affectation_on,
+        )
+
+    def to_domain(self) -> ActivityAssetDisposal:
+        """Judge the statement and restore the canonical record.
+
+        Raises:
+            ActividadAssetValidationError: When the reason cannot carry these amounts
+                or an amount is not a non-negative figure in euro cents.
+            ActividadAssetUnsupportedError: When the reason is a donation.
+        """
+        proceeds = Decimal(self.proceeds.decimal)
+        costs = Decimal(self.transmission_costs.decimal)
+        market_value = _decimal(self.market_value)
+        require_admissible_disposal(
+            self.reason,
+            proceeds=proceeds,
+            transmission_costs=costs,
+            market_value=market_value,
+        )
+        try:
+            return ActivityAssetDisposal(
+                disposal_date=self.disposal_date,
+                reason=self.reason,
+                proceeds=proceeds,
+                transmission_costs=costs,
+                market_value=market_value,
+                prior_free_depreciation_regime=self.prior_free_depreciation_regime,
+                later_affectation_on=self.later_affectation_on,
+            )
+        except ValidationError as error:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.disposal_amount_invalid",
+            ) from error
 
 
-class ActivityAssetRevisionSnapshot(BaseModel):
+class _ActivityAssetRevisionFields(BaseModel):
     """Public revision DTO with all monetary and fractional facts explicit."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    revision_number: int = Field(ge=1)
     supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageSnapshot
     acquisition_shape: AcquisitionShape
+    further_acquisitions: tuple[FurtherAcquisitionSnapshot, ...] = ()
+    declared_acquisition_date: date | None = None
+    declared_activity: TipoActividad | None = None
     asset_kind: AssetKind
     basis: ActivityAssetBasisSnapshot
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
     in_service_date: date
     out_of_service_date: date | None = None
+    """Derived from ``disposal``: the baja's boundary, or null without one.  A stated value is not read."""
+    disposal: ActivityAssetDisposalSnapshot | None = None
+    """The recorded baja.  A correction changes it by stating another and removes it by stating null."""
     opening_history: OpeningHistorySnapshot
     acquired_condition: AcquiredCondition
     building_construction_date: date | None = None
@@ -376,37 +298,60 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     @classmethod
     def from_domain(cls, value: ActivityAssetRevision) -> Self:
         """Project one immutable revision without changing its facts."""
-        return cls(
-            asset_id=value.asset_id,
-            revision_number=value.revision_number,
-            supersedes_revision_id=value.supersedes_revision_id,
-            acquisition=AcquisitionLineageSnapshot.from_domain(value.acquisition),
-            acquisition_shape=value.acquisition_shape,
-            asset_kind=value.asset_kind,
-            basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
-            residual_value=project_scalar(value.residual_value),
-            in_service_date=value.in_service_date,
-            out_of_service_date=value.out_of_service_date,
-            opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
-            acquired_condition=value.acquired_condition,
-            building_construction_date=value.building_construction_date,
-            amortization=ActivityAssetAmortizationElectionSnapshot.from_domain(value.amortization),
-            vehicle_affectation=value.vehicle_affectation,
+        return cls.model_validate(
+            dict(
+                asset_id=value.asset_id,
+                revision_number=value.revision_number,
+                supersedes_revision_id=value.supersedes_revision_id,
+                acquisition=AcquisitionLineageSnapshot.from_domain(value.acquisition),
+                acquisition_shape=value.acquisition_shape,
+                further_acquisitions=tuple(
+                    FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
+                ),
+                declared_acquisition_date=value.declared_acquisition_date,
+                declared_activity=value.declared_activity,
+                asset_kind=value.asset_kind,
+                basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
+                residual_value=project_scalar(value.residual_value),
+                in_service_date=value.in_service_date,
+                out_of_service_date=value.out_of_service_date,
+                disposal=None if value.disposal is None else ActivityAssetDisposalSnapshot.from_domain(value.disposal),
+                opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
+                acquired_condition=value.acquired_condition,
+                building_construction_date=value.building_construction_date,
+                amortization=ActivityAssetAmortizationElectionSnapshot.from_domain(value.amortization),
+                vehicle_affectation=value.vehicle_affectation,
+            )
         )
 
-    def to_domain(self) -> ActivityAssetRevision:
-        """Restore and revalidate the canonical immutable revision."""
+    def _to_domain(self, number: int) -> ActivityAssetRevision:
+        """Restore and revalidate the canonical immutable revision under its assigned number.
+
+        A request carries the revision unjudged, so a fact that breaks a rule reaches the operator as
+        the registered refusal of that rule and not as a request that cannot be read.
+
+        Raises:
+            ActividadAssetError: With the reason key of the rule a fact breaks.
+        """
+        return restoring(lambda: self._restore(number))
+
+    def _restore(self, number: int) -> ActivityAssetRevision:
+        disposal = None if self.disposal is None else self.disposal.to_domain()
         return ActivityAssetRevision(
             asset_id=self.asset_id,
-            revision_number=self.revision_number,
+            revision_number=number,
             supersedes_revision_id=self.supersedes_revision_id,
             acquisition=self.acquisition.to_domain(),
             acquisition_shape=self.acquisition_shape,
+            further_acquisitions=tuple(row.to_domain() for row in self.further_acquisitions),
+            declared_acquisition_date=self.declared_acquisition_date,
+            declared_activity=self.declared_activity,
             asset_kind=self.asset_kind,
             basis=self.basis.to_domain(),
             residual_value=Decimal(self.residual_value.decimal),
             in_service_date=self.in_service_date,
-            out_of_service_date=self.out_of_service_date,
+            out_of_service_date=None if disposal is None else disposal.boundary,
+            disposal=disposal,
             opening_history=self.opening_history.to_domain(),
             acquired_condition=self.acquired_condition,
             building_construction_date=self.building_construction_date,
@@ -414,11 +359,35 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             vehicle_affectation=self.vehicle_affectation,
         )
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
+
+class ActivityAssetRevisionSnapshot(_ActivityAssetRevisionFields):
+    """A complete public revision with its assigned number."""
+
+    revision_number: int = Field(ge=1)
+
+    def to_domain(self, *, revision_number: int | None = None) -> ActivityAssetRevision:
+        """Restore the revision, optionally under a supplied number."""
+        return self._to_domain(self.revision_number if revision_number is None else revision_number)
+
+
+class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
+    """The revision a correct request states: its baja is always stated and its number is the backend's to assign.
+
+    The number follows the revision this one supersedes.  A number a caller states is checked
+    against that rule and refused only when it disagrees.
+    """
+
+    revision_number: int | None = Field(default=None, ge=1)
+    """Left out, it is assigned as one more than the superseded revision's."""
+    disposal: ActivityAssetDisposalSnapshot | None = Field(...)
+    """The baja the correction records: another one replaces it and null removes it.  Leaving it out is refused."""
+
+    def to_domain(self, *, revision_number: int | None = None) -> ActivityAssetRevision:
+        """Restore the revision, which needs the number its superseded revision implies when none is stated."""
+        number = self.revision_number if revision_number is None else revision_number
+        if number is None:
+            raise ValueError("a correction's number is assigned from the revision it supersedes")
+        return self._to_domain(number)
 
 
 class AmortizationClaimSnapshot(BaseModel):
@@ -432,32 +401,34 @@ class AmortizationClaimSnapshot(BaseModel):
     tax_year: FilingYear
     covered_from: date
     covered_until: date
+    covered_through: date | None = None
+    """The last day covered, for display; stated on output and, when sent back, the day before ``covered_until``."""
     amount: PublicDecimal
     schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
     supersedes_claim_id: Hex64Str | None = None
-    calculation_revision_id: CalculationRevisionId | None = None
-    filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
     free_depreciation_annual_cap: PublicDecimal | None = None
+    disposal_revision_id: Hex64Str | None = None
 
     @classmethod
     def from_domain(cls, value: AmortizationClaim) -> Self:
         """Project a canonical history claim to its public wire representation."""
-        return cls(**_public_charge_fields(value))
+        return cls.model_validate(_public_charge_fields(value))
 
     def to_domain(self) -> AmortizationClaim:
         """Restore and revalidate the canonical history claim."""
-        return AmortizationClaim(**_domain_charge_fields(self))
+        return AmortizationClaim.model_validate(_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
         self.to_domain()
         return self
 
@@ -469,13 +440,17 @@ class ActivityAssetHistorySnapshot(BaseModel):
 
     revisions: tuple[ActivityAssetRevisionSnapshot, ...] = ()
     claims: tuple[AmortizationClaimSnapshot, ...] = ()
+    descriptors: tuple[ActivityAssetDescriptor, ...] = ()
+    events: tuple[ActivityAssetHistoryEvent, ...] = ()
 
     @classmethod
     def from_domain(cls, value: ActivityAssetHistory) -> Self:
-        """Project every canonical revision and claim in append order."""
+        """Project every canonical revision, claim, descriptor and event in append order."""
         return cls(
             revisions=tuple(ActivityAssetRevisionSnapshot.from_domain(item) for item in value.revisions),
             claims=tuple(AmortizationClaimSnapshot.from_domain(item) for item in value.claims),
+            descriptors=value.descriptors,
+            events=value.events,
         )
 
     def to_domain(self) -> ActivityAssetHistory:
@@ -483,6 +458,8 @@ class ActivityAssetHistorySnapshot(BaseModel):
         return ActivityAssetHistory(
             revisions=tuple(item.to_domain() for item in self.revisions),
             claims=tuple(item.to_domain() for item in self.claims),
+            descriptors=self.descriptors,
+            events=self.events,
         )
 
     @model_validator(mode="after")
@@ -502,6 +479,8 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     tax_year: FilingYear
     covered_from: date
     covered_until: date
+    covered_through: date | None = None
+    """The last day covered, for display; stated on output and, when sent back, the day before ``covered_until``."""
     service_days: int = Field(ge=0)
     calendar_days: int = Field(ge=365, le=366)
     amount: PublicDecimal
@@ -509,6 +488,7 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
+    annual_rate: PublicDecimal | None = None
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
@@ -517,15 +497,16 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     @classmethod
     def from_domain(cls, value: ScheduledAmortizationCharge) -> Self:
         """Project one pinned-authority forecast into the public wire form."""
-        return cls(**_public_charge_fields(value))
+        return cls.model_validate(_public_charge_fields(value))
 
     def to_domain(self) -> ScheduledAmortizationCharge:
         """Restore and revalidate the schedule used for claim creation."""
-        return ScheduledAmortizationCharge(**_domain_charge_fields(self))
+        return ScheduledAmortizationCharge.model_validate(_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
         self.to_domain()
         return self
 
@@ -533,15 +514,17 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
 class ClaimProjectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    target_casilla_id: str = Field(pattern=r"^(?:\d{2}|0\d{3})$")
+    target_casilla_id: CasillaId
+    box_name: str | None = None
     tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: PublicDecimal
 
     @classmethod
-    def from_domain(cls, value: ClaimProjection) -> Self:
+    def from_domain(cls, value: ClaimProjection, *, box_name: str | None = None) -> Self:
         return cls(
             target_casilla_id=value.target_casilla_id,
+            box_name=box_name,
             tax_year=value.tax_year,
             claim_ids=value.claim_ids,
             amount=project_scalar(value.amount),
@@ -562,33 +545,157 @@ class ClaimProjectionSnapshot(BaseModel):
         return self
 
 
-class ActivityAssetFilingHandoffSnapshot(BaseModel):
-    """Four non-consuming filing projections with explicit decimal amounts."""
+def _m130_snapshot(value: M130AccrualProjection, asset_kind: AssetKind) -> ActivityAssetM130ProjectionSnapshot:
+    return ActivityAssetM130ProjectionSnapshot(
+        asset_kind=asset_kind,
+        target_casilla_id=value.target_casilla_id,
+        box_name=value.box_name,
+        tax_year=value.tax_year,
+        amount=project_scalar(value.amount),
+        contributions=tuple(
+            ActivityAssetM130Contribution(
+                asset_id=item.asset_id,
+                amount=project_scalar(item.amount),
+                claim_id=item.claim_id,
+                schedule_fingerprint=item.schedule_fingerprint,
+            )
+            for item in value.contributions
+        ),
+        unavailable_asset_ids=value.unavailable_asset_ids,
+        free_gap_asset_ids=value.free_gap_asset_ids,
+        agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
+        partial_words=value.partial_words,
+        words_language=value.words_language,
+    )
+
+
+def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProjection:
+    return M130AccrualProjection(
+        target_casilla_id=value.target_casilla_id,
+        box_name=value.box_name,
+        tax_year=value.tax_year,
+        amount=Decimal(value.amount.decimal),
+        contributions=tuple(
+            M130Contribution(
+                asset_id=item.asset_id,
+                amount=Decimal(item.amount.decimal),
+                claim_id=item.claim_id,
+                schedule_fingerprint=item.schedule_fingerprint,
+            )
+            for item in value.contributions
+        ),
+        unavailable_asset_ids=value.unavailable_asset_ids,
+        free_gap_asset_ids=value.free_gap_asset_ids,
+        agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
+        partial_words=value.partial_words,
+        words_language=value.words_language,
+    )
+
+
+class ActivityAssetM100GapSnapshot(BaseModel):
+    """An interval of the year Modelo 100 leaves out of an element, with explicit decimal amounts."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    material_m100: ClaimProjectionSnapshot
-    intangible_m100: ClaimProjectionSnapshot
-    material_m130: ClaimProjectionSnapshot
-    intangible_m130: ClaimProjectionSnapshot
+    asset_id: str = Field(min_length=1)
+    kind: M100GapKind
+    covered_from: date
+    covered_until: date
+    covered_through: date
+    """The last day the interval covers, the day before the exclusive ``covered_until``."""
+    accrued: PublicDecimal | None = None
+    words: ServedWords | None = None
+    """The interval said whole, by the name the register holds for the element."""
+    words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _inclusive_end_follows(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
+        if self.words is not None and self.words_language is None:
+            raise ValueError("served words name the language they are in")
+        return self
+
+    @classmethod
+    def from_domain(cls, value: M100ClaimGapProjection) -> Self:
+        """Project one left-out interval."""
+        return cls(
+            asset_id=value.asset_id,
+            kind=value.kind,
+            covered_from=value.covered_from,
+            covered_until=value.covered_until,
+            covered_through=last_day_covered(value.covered_until),
+            accrued=None if value.accrued is None else project_scalar(value.accrued),
+            words=value.words,
+            words_language=value.words_language,
+        )
+
+    def to_domain(self) -> M100ClaimGapProjection:
+        """Restore one left-out interval."""
+        return M100ClaimGapProjection(
+            asset_id=self.asset_id,
+            kind=self.kind,
+            covered_from=self.covered_from,
+            covered_until=self.covered_until,
+            accrued=None if self.accrued is None else Decimal(self.accrued.decimal),
+            words=self.words,
+            words_language=self.words_language,
+        )
+
+
+class ActivityAssetFilingHandoffSnapshot(BaseModel):
+    """Non-consuming filing projections with explicit decimal amounts."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    material_m100: ClaimProjectionSnapshot | None
+    intangible_m100: ClaimProjectionSnapshot | None
+    """Null for a kind the edition binds no Modelo 100 box for; ``m100_gaps`` then names its elements."""
+    m100_gaps: tuple[ActivityAssetM100GapSnapshot, ...] = ()
+    material_m130: ActivityAssetM130ProjectionSnapshot | None = None
+    intangible_m130: ActivityAssetM130ProjectionSnapshot | None = None
+    """Both set for a Modelo 130 period, and both null when the handoff states Modelo 100 alone."""
+    left_out: tuple[ActivityAssetHandoffLeftOut, ...] = ()
+    """What the Modelo 130 amounts leave out, one entry per reason across both asset kinds."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _m130_together(self) -> Self:
+        if (self.material_m130 is None) != (self.intangible_m130 is None):
+            raise ValueError("a filing handoff states the Modelo 130 accrual of both asset kinds or of neither")
+        return self
 
     @classmethod
     def from_domain(cls, value: ActivityAssetFilingHandoff) -> Self:
-        """Project the canonical M100 and M130 filing destinations."""
+        """Project the canonical M100 and, when stated, M130 filing destinations."""
         return cls(
-            material_m100=ClaimProjectionSnapshot.from_domain(value.material_m100),
-            intangible_m100=ClaimProjectionSnapshot.from_domain(value.intangible_m100),
-            material_m130=ClaimProjectionSnapshot.from_domain(value.material_m130),
-            intangible_m130=ClaimProjectionSnapshot.from_domain(value.intangible_m130),
+            material_m100=None
+            if value.material_m100 is None
+            else ClaimProjectionSnapshot.from_domain(value.material_m100, box_name=value.material_m100_box_name),
+            intangible_m100=None
+            if value.intangible_m100 is None
+            else ClaimProjectionSnapshot.from_domain(value.intangible_m100, box_name=value.intangible_m100_box_name),
+            m100_gaps=tuple(ActivityAssetM100GapSnapshot.from_domain(gap) for gap in value.m100_gaps),
+            material_m130=None
+            if value.material_m130 is None
+            else _m130_snapshot(value.material_m130, AssetKind.MATERIAL),
+            intangible_m130=None
+            if value.intangible_m130 is None
+            else _m130_snapshot(value.intangible_m130, AssetKind.INTANGIBLE),
+            left_out=value.left_out,
         )
 
     def to_domain(self) -> ActivityAssetFilingHandoff:
         """Restore all canonical filing projections."""
         return ActivityAssetFilingHandoff(
-            material_m100=self.material_m100.to_domain(),
-            intangible_m100=self.intangible_m100.to_domain(),
-            material_m130=self.material_m130.to_domain(),
-            intangible_m130=self.intangible_m130.to_domain(),
+            material_m100=None if self.material_m100 is None else self.material_m100.to_domain(),
+            intangible_m100=None if self.intangible_m100 is None else self.intangible_m100.to_domain(),
+            m100_gaps=tuple(gap.to_domain() for gap in self.m100_gaps),
+            material_m100_box_name=None if self.material_m100 is None else self.material_m100.box_name,
+            intangible_m100_box_name=None if self.intangible_m100 is None else self.intangible_m100.box_name,
+            material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
+            intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
+            left_out=self.left_out,
         )
 
 
@@ -621,7 +728,7 @@ class ActivityAssetHistoryClaimResultSnapshot(BaseModel):
 
 __all__ = [
     "ActivityAssetAmortizationElectionSnapshot",
-    "ActivityAssetBasisSnapshot",
+    "ActivityAssetDisposalSnapshot",
     "ActivityAssetFilingHandoffSnapshot",
     "ActivityAssetHistoryClaimResultSnapshot",
     "ActivityAssetHistorySnapshot",

@@ -35,13 +35,13 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
 from ...application.workflow.persistence import workflow_state_repository
 from ...application.workflow.resume_operation import WORKFLOW_RESUME_OPERATION_DEFINITION_ID
 from ..actividad_asset_composition import build_activity_asset_operation_ports
-from ..adapter_composition import (
+from ..adapter_composition_ports import (
     build_bienes_inversion_repository,
     build_inventory_service_ports,
     build_prorrata_register_repository,
-    build_verification_repository_bundle,
 )
-from .conformance_family_contract import ConformanceFamily, RegisteredExecutorConformanceCase, closed_model_runtime
+from ..adapter_composition_work_ports import build_verification_repository_bundle
+from .conformance_family_contract import ConformanceFamily, RegisteredExecutorConformanceCase
 from .invoice_withholding_operation_test_support import (
     InvoiceWithholdingConformanceSeed,
     read_invoice_withholding_conformance_case,
@@ -53,13 +53,14 @@ from .prorrata_operation_test_support import read_prorrata_operation_conformance
 from .registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
-from .registered_executor_outcome_assertions import _assert_registered_executor_conformance_outcome
+from .registered_executor_outcome_assertions import assert_registered_executor_conformance_outcome
+from .registered_executor_seeding_support import conformance_profile_seed
 
 
-def _run_registered_executor_conformance_case(
+def run_registered_executor_conformance_case(
     tmp_path: Path,
     case: RegisteredExecutorConformanceCase,
     *,
@@ -70,12 +71,10 @@ def _run_registered_executor_conformance_case(
     definition_id = case.definition_id
     cleanup = OperationRuntimeCloseWitness()
     with (
-        (
-            closed_model_runtime()
-            if family is not None and family.closes_model_runtime
-            else model_runtime_for_operation(definition_id)
-        ),
-        conformance_operation_runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
+        family_environment_for_operation(definition_id),
+        conformance_operation_runtime(
+            tmp_path / case.definition_id, cleanup=cleanup, profile_seed=conformance_profile_seed(case.definition_id)
+        ) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
@@ -188,7 +187,7 @@ def _run_registered_executor_conformance_case(
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
         )
-        _assert_registered_executor_conformance_outcome(
+        assert_registered_executor_conformance_outcome(
             asset_before=asset_before,
             asset_repository=asset_repository,
             attachment_case=attachment_case,

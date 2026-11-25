@@ -25,9 +25,8 @@ from ...application.ledger.ratios_contracts import LedgerRatiosSetProjection, Le
 from ...application.ledger.rule_contracts import LedgerRuleAddProjection, LedgerRuleApplyProjection
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import registered_executor_case_support as conformance
@@ -65,7 +64,7 @@ def _run[ProjectionT: BaseModel](
 ) -> tuple[ProjectionT, tuple[BucketEvent, ...]]:
     """Run the seeded scenario of one operation as ``frontend`` and read what it left behind."""
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime",
             cleanup=conformance.OperationRuntimeCloseWitness(),
@@ -86,7 +85,7 @@ def _run[ProjectionT: BaseModel](
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,

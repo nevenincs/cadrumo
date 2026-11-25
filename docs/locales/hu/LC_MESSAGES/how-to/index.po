@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-11-09 22:19+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -272,12 +272,10 @@ msgid "Classify with an LLM"
 msgstr "Besorolás LLM-mel"
 
 #: ../../how-to/index.md:159
-msgid ""
-"Set up the local reader, preview and apply suggestions, and classify from"
-" an attached invoice."
+msgid "Preview and apply suggestions, and classify from an attached invoice."
 msgstr ""
-"Állítsd be a helyi olvasót, nézd meg előnézetben a javaslatokat, "
-"alkalmazd őket, és sorold be a tranzakciókat a csatolt számla alapján."
+"Javaslatok előnézete és alkalmazása, valamint besorolás csatolt számla "
+"alapján."
 
 #: ../../how-to/index.md:163
 msgid "Attach invoices and receipts to transactions"
@@ -322,8 +320,8 @@ msgid ""
 "Deduct input VAT under general or especial prorrata and declare "
 "differentiated sectors."
 msgstr ""
-"Vond le a beszámítható IVA-t általános vagy especial prorrata szerint, és"
-" vallj be differenciált tevékenységi ágakat."
+"Vond le a beszámítható IVA-t általános vagy különleges arányosítás "
+"(prorrata) szerint, és vallj be differenciált tevékenységi ágakat."
 
 #: ../../how-to/index.md:192
 msgid "Your filings"
@@ -365,10 +363,12 @@ msgid "Modelo 036"
 msgstr "Modelo 036"
 
 #: ../../how-to/index.md:218
-msgid "Record an alta, modificación, or baja you filed at AEAT's sede."
+msgid ""
+"Record a registration, amendment, or deregistration you filed at AEAT's "
+"online portal."
 msgstr ""
-"Rögzíts egy alta, modificación vagy baja bejelentést, amelyet az AEAT "
-"sedéjén nyújtottál be."
+"Rögzíts egy nyilvántartásba vételt, módosítást vagy megszüntetést, "
+"amelyet az AEAT portálján nyújtottál be."
 
 #: ../../how-to/index.md:221
 msgid "Modelo 100 (Renta)"
@@ -497,20 +497,32 @@ msgstr ""
 "számára, a biztonsági határ megőrzésével."
 
 #: ../../how-to/index.md:312
+msgid "Sign in to an AI provider by hand"
+msgstr "Bejelentkezés egy MI-szolgáltatóba kézzel"
+
+#: ../../how-to/index.md:316
+msgid ""
+"Sign in from a console when the in-app sign-in under Settings > AI "
+"providers fails."
+msgstr ""
+"Jelentkezz be egy konzolból, ha az alkalmazás Beállítások > MI-"
+"szolgáltatók alatti bejelentkezése nem sikerül."
+
+#: ../../how-to/index.md:319
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../how-to/index.md:316
+#: ../../how-to/index.md:323
 msgid "Fix active-profile, storage, tax-rules, and authentication problems."
 msgstr ""
 "Javítsd ki az aktív profillal, a tárolással, az adószabályokkal és a "
 "hitelesítéssel kapcsolatos problémákat."
 
-#: ../../how-to/index.md:319
+#: ../../how-to/index.md:326
 msgid "How to publish a validated runtime authority"
 msgstr "Érvényesített futtatókörnyezeti autoritás közzététele"
 
-#: ../../how-to/index.md:323
+#: ../../how-to/index.md:330
 msgid ""
 "Publish and check the signed tax rules that Cadrumo reads, as a release "
 "maintainer."

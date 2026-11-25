@@ -12,10 +12,10 @@ from threading import Thread
 import pytest
 
 from ..session_hold import (
-    _MAXIMUM_PASSWORD_BYTES,
-    _MAXIMUM_REQUEST_LINE_BYTES,
-    _read_stdin_bytes,
-    _read_stdin_line,
+    MAXIMUM_PASSWORD_BYTES,
+    MAXIMUM_REQUEST_LINE_BYTES,
+    read_stdin_bytes,
+    read_stdin_line,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -29,24 +29,24 @@ def test_password_and_correlated_command_frames_are_read_without_overconsuming()
     os.write(writer, struct.pack("!I", len(password)) + password + first + second)
     os.close(writer)
     try:
-        header = _read_stdin_bytes(reader, 4)
+        header = read_stdin_bytes(reader, 4)
         assert len(header) == 4
         password_size = struct.unpack("!I", header)[0]
-        assert 0 < password_size <= _MAXIMUM_PASSWORD_BYTES
-        secret = _read_stdin_bytes(reader, password_size)
+        assert 0 < password_size <= MAXIMUM_PASSWORD_BYTES
+        secret = read_stdin_bytes(reader, password_size)
         try:
             assert secret == password
         finally:
             secret[:] = bytes(len(secret))
-        assert _read_stdin_line(reader, _MAXIMUM_REQUEST_LINE_BYTES) == first
-        assert _read_stdin_line(reader, _MAXIMUM_REQUEST_LINE_BYTES) == second
+        assert read_stdin_line(reader, MAXIMUM_REQUEST_LINE_BYTES) == first
+        assert read_stdin_line(reader, MAXIMUM_REQUEST_LINE_BYTES) == second
     finally:
         os.close(reader)
 
 
 def test_request_line_reader_stops_at_the_existing_maximum_plus_one() -> None:
     reader, writer = os.pipe()
-    payload = b"x" * (_MAXIMUM_REQUEST_LINE_BYTES + 2) + b"\n"
+    payload = b"x" * (MAXIMUM_REQUEST_LINE_BYTES + 2) + b"\n"
 
     def write_payload() -> None:
         try:
@@ -60,8 +60,8 @@ def test_request_line_reader_stops_at_the_existing_maximum_plus_one() -> None:
     writer_thread = Thread(target=write_payload)
     writer_thread.start()
     try:
-        assert _read_stdin_line(reader, _MAXIMUM_REQUEST_LINE_BYTES) == b"x" * (_MAXIMUM_REQUEST_LINE_BYTES + 1)
-        assert _read_stdin_line(reader, _MAXIMUM_REQUEST_LINE_BYTES) == b"x\n"
+        assert read_stdin_line(reader, MAXIMUM_REQUEST_LINE_BYTES) == b"x" * (MAXIMUM_REQUEST_LINE_BYTES + 1)
+        assert read_stdin_line(reader, MAXIMUM_REQUEST_LINE_BYTES) == b"x\n"
         writer_thread.join(timeout=5)
         assert not writer_thread.is_alive()
     finally:

@@ -8,8 +8,8 @@ accept the receipt the executor itself published for that outcome.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import Callable
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any, cast
@@ -25,6 +25,7 @@ from ....tests.aeat_literal_fixtures import (
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.operation_definition import OperationDefinition
 from ...operations.registry import OperationPublicDefinitionRegistrationV1
+from ...tests.operation_host_fakes import IrreversibleSectionGrant
 from .. import notification_document_capture_operation as document_module
 from .. import notifications_capture_operation as notifications_module
 from ..live_operation_registration import require_live_capture_receipt
@@ -70,12 +71,6 @@ class _Events:
         self.effects.append(effect)
 
 
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
 class _Operands:
     report: BaseModel | None = None
 
@@ -107,7 +102,7 @@ def _execute_and_project(
         identity=identity,
         authority_operation=object(),
         events=events,
-        cancellation=_Cancellation(),
+        cancellation=IrreversibleSectionGrant(),
         operands=operands,
         cleanup=_Cleanup(),
     )

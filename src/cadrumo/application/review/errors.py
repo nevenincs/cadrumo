@@ -10,7 +10,13 @@ domain error uniformly.
 
 from __future__ import annotations
 
+from typing import Final
+
 from ...core.errors.hierarchy import CadrumoError
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import profile_required_facts_missing_verdict
+
+_TAX_ID_FIELD_PATH: Final[str] = "identity.tax_id"
 
 
 class ReviewError(CadrumoError):
@@ -42,6 +48,27 @@ class ReviewItemNotFoundError(ReviewError):
 
 class ReviewSourceLoadError(ReviewError):
     """Raised when a source disk file is present but cannot be parsed."""
+
+
+class ReviewDraftsUnattributedError(ReviewError):
+    """Raised when stored drafts exist but the profile declares no tax id to own them.
+
+    Drafts are shown only to the taxpayer whose tax id they carry, so without
+    one none can be attributed; an empty queue would read as nothing to review.
+    """
+
+    def __init__(self, *, draft_count: int) -> None:
+        """Name the profile fact that attributes drafts, never a draft's identity."""
+        super().__init__(
+            message="stored drafts cannot be attributed: the profile declares no tax id",
+            translated_message="review.adapters.errors.drafts_unattributed",
+            context={"draft_count": draft_count},
+        )
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Open the profile edit that declares the tax id drafts are attributed by."""
+        return profile_required_facts_missing_verdict(modelo=None, field_paths=(_TAX_ID_FIELD_PATH,))
 
 
 class FilterParseError(ReviewError):

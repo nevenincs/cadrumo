@@ -148,16 +148,21 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
 string(JSON CADRUMO_PLATFORM GET "${package_layout}" platform)
 string(JSON CADRUMO_BACKEND GET "${package_layout}" backend)
 cadrumo_build_fact("Package layout" "${CADRUMO_PLATFORM}, ${CADRUMO_BACKEND} assembly backend")
+# The package declaration owns the storage variable's name; the build only passes it on.
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
+  "from pathlib import Path; from dev.packaging.native.application_environment import load; print(load(Path('.')).root['variable'])"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+# A Debug build bakes this checkout's var/storage into its native images as their default root at
+# compile time. A release build receives none, so no release image names a checkout or its storage.
+cmake_path(APPEND PROJECT_SOURCE_DIR var storage OUTPUT_VARIABLE development_storage_root)
+cmake_path(NATIVE_PATH development_storage_root NORMALIZE CADRUMO_BUILD_STORAGE_ROOT)
 include(CTest)
 include(native/cmake/CTestEnvironment.cmake)
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_ctest_environment)
+option(CADRUMO_CONFIGURE_PAYLOAD "Configure full payload assembly, documentation and desktop targets" ON)
 add_subdirectory(native)
 include(native/cmake/ToolchainIdentity.cmake)
-option(CADRUMO_CONFIGURE_PAYLOAD "Configure full payload assembly, documentation and desktop targets" ON)
 if(CADRUMO_CONFIGURE_PAYLOAD)
   include(native/cmake/Packaging.cmake)
 else()

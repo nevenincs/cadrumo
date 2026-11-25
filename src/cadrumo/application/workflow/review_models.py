@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as utc_now
 from ...core.time.utc import UtcInstant
 from ...domain.contribuyente.normalise import normalise_key
@@ -23,7 +23,7 @@ class WorkflowEvent(BaseModel):
     ``object_id`` are optional pointers to the affected resource.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     action: str = Field(min_length=1)
     reason: str = ""
@@ -54,7 +54,7 @@ class LedgerReviewRecord(BaseModel):
     bucket-scoped transaction catalogue.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     history: tuple[WorkflowEvent, ...] = ()
@@ -64,7 +64,7 @@ class LedgerReviewRecord(BaseModel):
 class InvoiceReviewRecord(BaseModel):
     """Workflow annotations for one persisted invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     fields: dict[str, str] = Field(default_factory=dict)

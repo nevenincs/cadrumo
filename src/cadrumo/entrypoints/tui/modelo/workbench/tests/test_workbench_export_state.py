@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 from textual.color import Color
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
@@ -32,8 +31,11 @@ from ......adapters.persistence.profile.tests.modelo_export_support import (
     seed_profile,
     seed_revision,
 )
-from ......application.modelo.export import ModeloExportCommand, export_modelo_revision
-from ......application.modelo.work_form_models import ModeloFormExport, ModeloWorkForm
+from ......application.modelo.export import export_modelo_revision
+from ......application.modelo.export_contracts import ModeloExportCommand
+from ......application.modelo.work_form_declaration_facts import ModeloFormExport
+from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_wording import day_text
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -46,20 +48,15 @@ from ......domain.modelos.work_unit import WorkUnitCatalogue
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle
 from ..export import WorkbenchExportScreen
 from ..screen import ModeloWorkbenchScreen
-from ..wording import day_text
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 __all__ = ["isolated_backend"]
 
 _EXPORTED_AT = datetime(2026, 4, 2, 9, 30, tzinfo=UTC)
 _EN = OutputLanguage.EN
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _exported(*, current: bool) -> ModeloWorkForm:
@@ -88,7 +85,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
         screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             file_widget = screen.query_one("#wb-file", Static)
             shown = file_widget.display
             file_text = _text(screen, "#wb-file")
@@ -97,18 +94,16 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             warning = Color.parse(app.theme_variables["warning"])
             next_line = _text(screen, "#wb-next")
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             after_f8 = app.screen
             if isinstance(after_f8, ConfirmScreen):
                 await pilot.click("#btn-confirm-accept")
-                await _settle(pilot, 6)
+                await settle(pilot)
             notice = _text(screen, "#wb-notice")
             app.exit(None)
 
         def next_words(key: str, action: str, **values: object) -> str:
-            return tr(
-                "tui.modelo.workbench.next_line", action=tr(f"tui.modelo.workbench.next.{action}", **values), key=key
-            )
+            return tr("tui.modelo.next_line", action=tr(f"workspace.modelo.next.{action}", **values), key=key)
 
         if state == "no-file":
             assert not shown
@@ -117,17 +112,17 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             assert actions.requested == []
         elif state == "current-file":
             assert shown and not warned
-            assert file_text == tr("tui.modelo.workbench.header.file_created", date=day)
+            assert file_text == tr("workspace.modelo.header.file_created", date=day)
             assert next_line == next_words("F8", "record_after_file", date=day)
             assert isinstance(after_f8, ConfirmScreen), "F8 asks before recording the filing"
             assert actions.requested == ["file"]
         else:
             assert shown and warned
             assert file_colour == warning, "a file that no longer matches reads as a warning"
-            assert file_text == tr("tui.modelo.workbench.header.file_out_of_date", date=day, key="e")
+            assert file_text == f"{tr('workspace.modelo.header.file_out_of_date', date=day)} [e]"
             assert next_line == next_words("e", "export_again", date=day)
             assert after_f8 is screen, "F8 neither records the filing nor asks to"
-            assert notice == tr("tui.modelo.workbench.record.refused_file_out_of_date", date=day)
+            assert notice == tr("workspace.modelo.record.refused_file_out_of_date", date=day)
             assert actions.requested == []
             assert actions.exports == []
 
@@ -137,8 +132,12 @@ _PERIOD_CODE = "4T"
 _ACTIVITY_START = date(_FILING_YEAR, 10, 1)
 _SURFACE = "workbench export state test"
 _RESULT_BOX = validated_casilla_id("19", surface=_SURFACE)
-_INPUTS = {validated_casilla_id("01", surface=_SURFACE): "250.00", validated_casilla_id("02", surface=_SURFACE): "0.00"}
+_INPUTS = {
+    validated_casilla_id("01", surface=_SURFACE): "250.00",
+    validated_casilla_id("gastos-deducibles-previos", surface=_SURFACE): "0.00",
+}
 _ZERO_PRIOR_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
     "modelo-130-pagos-fraccionados-anteriores": "0",
     "modelo-130-resultados-negativos-anteriores": "0",
     "irpf.previous_year_economic_activity_net_income": "0",
@@ -189,13 +188,13 @@ def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workb
         assert unit is not None
         installed = application_workbench(unit, operation=operation)
         read = installed.load(_EN).form.last_export
-        expected = tr("tui.modelo.workbench.header.file_created", date=day_text(exported_at, _EN))
+        expected = tr("workspace.modelo.header.file_created", date=day_text(exported_at, _EN))
 
         async def header() -> str:
             screen = ModeloWorkbenchScreen(installed)
             app = ScreenHostApp(screen)
             async with app.run_test(size=(160, 40)) as pilot:
-                await _settle(pilot, 10)
+                await settle(pilot)
                 shown = _text(screen, "#wb-file")
                 app.exit(None)
             return shown

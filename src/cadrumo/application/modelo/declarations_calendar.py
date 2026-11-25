@@ -13,7 +13,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Final, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -31,19 +31,35 @@ from ..overview.calendar_models import (
     OverviewCalendarEntrySource,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
+    OverviewCalendarScope,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
 )
 from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
+from .declarations_calendar_suppressed import (
+    DeclarationsCalendarSuppressedEntryV1,
+    project_suppressed_calendar_entries,
+)
+from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
 
 DECLARATIONS_CALENDAR_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsCalendarProjectionError(CadrumoError):
-    """The supplied calendar authorities cannot form one coherent safe view."""
+class DeclarationsCalendarProjectionError(StoredDataIntegrityMixin, CadrumoError):
+    """The supplied calendar authorities cannot form one coherent safe view.
+
+    A stored-data integrity fault: no operator input at the refusal site joins
+    the authorities, so the error carries the terminal integrity verdict.
+    """
+
+    integrity_record = "declarations_calendar_projection"
 
 
 class DeclarationsCalendarSource(StrEnum):
@@ -86,7 +102,7 @@ class DeclarationsCalendarSourceStateV1(DeclarationsCalendarSourceObservationV1)
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
-        observable = self.availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+        observable = self.availability.is_observable
         if observable != (self.item_count is not None):
             raise ValueError("only observable calendar sources carry a measured count")
         return self
@@ -118,9 +134,6 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    # Text of the already-projected calendar territory: a frontend restores this
-    # projection without a pinned authority, so it cannot re-project the token.
-    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -136,6 +149,38 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
+
+    @computed_field
+    @property
+    def days_until_close(self) -> int | None:
+        """Signed days to the effective close; ``None`` while the close is unknown."""
+        return days_until_close(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            holiday_coverage=self.holiday_coverage,
+        )
+
+    @computed_field
+    @property
+    def filing_status(self) -> OverviewFilingStatus:
+        """The one filing status this row states; a withheld axis states nothing from it."""
+        return decide_filing_status(
+            aeat_submission_state=self.aeat_submission_state,
+            local_filing_state=self.local_filing_state,
+            period_state=self.user_state,
+        )
+
+    @computed_field
+    @property
+    def scopes(self) -> tuple[OverviewCalendarScope, ...]:
+        """The scopes this row belongs to; ``evidence_unknown`` while its AEAT evidence is withheld."""
+        return deadline_scopes(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            status=self.legal_status,
+            user_state=self.user_state,
+            aeat_evidence_withheld=self.aeat_submission_state is None,
+        )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -193,6 +238,7 @@ def _validate_calendar_obligation_axes(entry: DeclarationsCalendarEntryRefV1) ->
         ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
         ObligationStatus.FILED: OverviewPeriodState.FILED,
         ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
     }[entry.legal_status]
     if entry.user_state is not expected_user_state:
         raise ValueError("calendar legal status and user state disagree")
@@ -226,6 +272,13 @@ class DeclarationsCalendarProjectionV1(BaseModel):
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[DeclarationsCalendarEntryRefV1, ...]
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
+    suppressed_entries: tuple[DeclarationsCalendarSuppressedEntryV1, ...] = ()
+    """Scheduled obligations the calendar positively held back, each with its verdict and words.
+
+    These are never part of ``entries``: an entry is an obligation the calendar
+    positively found applicable. An obligation the calendar could not decide is
+    in neither list; ``coverage`` names it as undetermined.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -257,6 +310,7 @@ def project_declarations_calendar(
         sources=sources,
         entries=tuple(rows),
         coverage=calendar.coverage,
+        suppressed_entries=project_suppressed_calendar_entries(calendar.suppressed_entries),
     )
 
 
@@ -268,15 +322,19 @@ def _prepare_calendar_inputs(
 ) -> _PreparedCalendarInputs:
     if schedule_observation.source is not DeclarationsCalendarSource.SCHEDULE:
         raise DeclarationsCalendarProjectionError("schedule observation names another calendar source")
-    schedule_observable = _observable(schedule_observation.availability)
-    if not schedule_observable and calendar.entries:
+    schedule_observable = schedule_observation.availability.is_observable
+    # A local declaration keeps its own dated entry beside an unavailable
+    # schedule; only a registry-scheduled row would claim the schedule was read.
+    if not schedule_observable and any(
+        entry.source is not OverviewCalendarEntrySource.LOCAL_WORK_UNIT for entry in calendar.entries
+    ):
         raise DeclarationsCalendarProjectionError("an unavailable schedule cannot carry legal rows")
 
     local_observation = _observation_from_home(DeclarationsCalendarSource.LOCAL_FILING, evidence.local_state)
     aeat_observation = _observation_from_home(DeclarationsCalendarSource.AEAT_EVIDENCE, evidence.aeat_state)
     evidence_by_address = _evidence_by_address(evidence.evidence)
-    local_observable = _observable(local_observation.availability)
-    aeat_observable = _observable(aeat_observation.availability)
+    local_observable = local_observation.availability.is_observable
+    aeat_observable = aeat_observation.availability.is_observable
     _validate_unobservable_evidence(
         evidence.evidence,
         local_observable=local_observable,
@@ -370,7 +428,6 @@ def _project_calendar_row(
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
         holiday_coverage=entry.holiday_coverage,
-        holiday_territory=entry.holiday_territory,
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,
@@ -433,6 +490,7 @@ def _validate_projection_model(projection: DeclarationsCalendarProjectionV1) -> 
     if not projection.query_range.covers(projection.as_of):
         raise ValueError("calendar as_of must fall inside its query range")
     _validate_unique_projection_entries(projection.entries)
+    _validate_unique_suppressed_entries(projection.suppressed_entries)
     by_source = {item.source: item for item in projection.sources}
     _validate_schedule_projection_count(by_source[DeclarationsCalendarSource.SCHEDULE], len(projection.entries))
     _validate_local_projection_rows(by_source[DeclarationsCalendarSource.LOCAL_FILING], projection.entries)
@@ -450,6 +508,12 @@ def _validate_unique_projection_entries(entries: tuple[DeclarationsCalendarEntry
         raise ValueError("calendar entries require unique natural legal identities")
 
 
+def _validate_unique_suppressed_entries(entries: tuple[DeclarationsCalendarSuppressedEntryV1, ...]) -> None:
+    keys = tuple(item.semantic_key() for item in entries)
+    if len(keys) != len(set(keys)):
+        raise ValueError("suppressed calendar entries require unique natural legal identities")
+
+
 def _validate_schedule_projection_count(
     schedule: DeclarationsCalendarSourceStateV1,
     entry_count: int,
@@ -462,7 +526,7 @@ def _validate_local_projection_rows(
     local: DeclarationsCalendarSourceStateV1,
     entries: tuple[DeclarationsCalendarEntryRefV1, ...],
 ) -> None:
-    if entries and _observable(local.availability) != all(row.local_filing_state is not None for row in entries):
+    if entries and local.availability.is_observable != all(row.local_filing_state is not None for row in entries):
         raise ValueError("calendar rows contradict local source observability")
 
 
@@ -470,14 +534,10 @@ def _validate_aeat_projection_rows(
     aeat: DeclarationsCalendarSourceStateV1,
     entries: tuple[DeclarationsCalendarEntryRefV1, ...],
 ) -> None:
-    if entries and _observable(aeat.availability) != all(
+    if entries and aeat.availability.is_observable != all(
         row.aeat_submission_state is not None and row.justificante_verified is not None for row in entries
     ):
         raise ValueError("calendar rows contradict AEAT source observability")
-
-
-def _observable(availability: HomeAvailability) -> bool:
-    return availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
 
 
 def _observation_from_home(
@@ -559,5 +619,6 @@ __all__ = [
     "DeclarationsCalendarSource",
     "DeclarationsCalendarSourceObservationV1",
     "DeclarationsCalendarSourceStateV1",
+    "DeclarationsCalendarSuppressedEntryV1",
     "project_declarations_calendar",
 ]

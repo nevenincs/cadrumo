@@ -4,7 +4,6 @@ use crate::{
     binary::{self, BinaryExpectation},
     child::ChildConfiguration,
     error::Error,
-    filesystem,
     value::Sha256Digest,
 };
 use serde::{Deserialize, Serialize};
@@ -42,12 +41,6 @@ impl PythonExpectation {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct BrowserQuery {
-    /// None delegates storage resolution to the Python settings owner.
-    pub root: Option<PathBuf>,
-}
-
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PythonReport {
@@ -57,40 +50,11 @@ pub struct PythonReport {
     pub pointer_bits: u32,
     pub executable: PathBuf,
     pub distributions: BTreeMap<String, Option<String>>,
-    pub browser: Option<BrowserReport>,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum BrowserState {
-    MissingDependency,
-    UnreadableManifest,
-    MissingBuilds,
-    Ready,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct BrowserBuild {
-    pub name: String,
-    pub revision: String,
-    pub directory_name: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct BrowserReport {
-    pub state: BrowserState,
-    pub builds: Vec<BrowserBuild>,
-    /// Canonical facts and recovery verdict, retained without reinterpreting domain policy.
-    pub owner_report: Option<serde_json::Value>,
 }
 
 #[derive(Serialize)]
 struct Request<'a> {
     distributions: Vec<&'a String>,
-    browser: bool,
-    browser_root: Option<&'a std::path::Path>,
 }
 
 /// Requires a Tokio runtime with time and I/O enabled. Timeout covers the child execution
@@ -100,7 +64,6 @@ struct Request<'a> {
 pub async fn probe(
     configuration: &ChildConfiguration,
     expected: &PythonExpectation,
-    browser: Option<&BrowserQuery>,
     timeout: Duration,
     cancel: &crate::component::Cancellation,
 ) -> Result<PythonReport, Error> {
@@ -110,13 +73,8 @@ pub async fn probe(
             "probe timeout must be within 0..60 seconds".into(),
         ));
     }
-    if let Some(root) = browser.and_then(|b| b.root.as_ref()) {
-        filesystem::absolute_root(root)?;
-    }
     let request = serde_json::to_vec(&Request {
         distributions: expected.distributions.keys().collect(),
-        browser: browser.is_some(),
-        browser_root: browser.and_then(|b| b.root.as_deref()),
     })?;
     if request.len() > 65536 {
         return Err(Error::LimitExceeded);
@@ -142,7 +100,6 @@ pub async fn probe(
             .distributions
             .iter()
             .any(|(name, version)| report.distributions.get(name) != Some(&Some(version.clone())))
-        || report.browser.is_some() != browser.is_some()
     {
         return Err(Error::Incompatible(
             "interpreter or distributions differ".into(),

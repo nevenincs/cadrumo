@@ -12,8 +12,8 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._validate_helpers import missing_refs as _missing_refs
 from .validate_evidence import EvidenceValidator
+from .validate_helpers import missing_refs
 
 __all__ = ["validate_projection_endpoint_declarations"]
 
@@ -146,8 +146,8 @@ def _validate_projection_endpoint_declaration_evidence(
 ) -> None:
     """Require catalogue-grounded, revision-pinned endpoint evidence."""
     owner = f"projection endpoint {declaration.projection_ref!r}"
-    failures.extend(_missing_refs(prefix, owner, declaration.legal_refs, legal_refs, "legal"))
-    failures.extend(_missing_refs(prefix, owner, declaration.source_refs, source_refs, "source"))
+    failures.extend(missing_refs(prefix, owner, declaration.legal_refs, legal_refs, "legal"))
+    failures.extend(missing_refs(prefix, owner, declaration.source_refs, source_refs, "source"))
     failures.extend(evidence.require_source_tier(prefix, owner, declaration.source_refs, "layout_authority"))
     foreign_sources = tuple(sorted(set(declaration.source_refs) - set(revision.source_refs)))
     if foreign_sources:

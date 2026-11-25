@@ -15,7 +15,8 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole as Role,
 )
-from cadrumo.domain.filing.errors import FilingExportValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.filing.errors import FilingExportCasillaValueRefusedError
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -36,7 +37,7 @@ _COMMON = (
 def _identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C604",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="aeat-software-registration:c604", digest="a" * 64),),
     )
 
@@ -67,32 +68,34 @@ def test_exact_language_prefix_from_approved_casilla(
     )
     with validating_governed_facts(authority_operation):
         identity = _identity()
+    year = filing_year_envelope().horizon
     for language in ("E", "C", "G", "V"):
         rendered = render_declared_prefix(
             fields,
             prefix_extent=328,
             modelo=Modelo(modelo),
-            period=Period.from_year_and_code(2025, "0A"),
+            period=Period.from_year_and_code(year, "0A"),
             product_software_identity=identity,
             casilla_values={"decl.idioma": language},
         )
         assert len(rendered) == 328
-        assert rendered[:17] == f"<T{modelo}020250A0000>".encode("ascii")
+        assert rendered[:17] == f"<T{modelo}0{year}0A0000>".encode("ascii")
         assert rendered[52:53] == language.encode("ascii")
         assert rendered[22:52] == b" " * 30
         assert rendered[53:92] == b" " * 39
         assert rendered[96:100] == b" " * 4
         assert rendered[109:322] == b" " * 213
     for value in (None, "", "X", "e", "EC"):
-        with pytest.raises(FilingExportValidationError, match="language"):
+        with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
             render_declared_prefix(
                 fields,
                 prefix_extent=328,
                 modelo=Modelo(modelo),
-                period=Period.from_year_and_code(2025, "0A"),
+                period=Period.from_year_and_code(year, "0A"),
                 product_software_identity=identity,
                 casilla_values={} if value is None else {"decl.idioma": value},
             )
+        assert refused.value.casilla_id == "decl.idioma"
 
 
 def test_language_casilla_cannot_be_relabelled_or_put_on_filler() -> None:

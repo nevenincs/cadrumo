@@ -26,12 +26,13 @@ from dataclasses import replace
 
 import pytest
 
-from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
-from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 from dev.deploy.docs_delivery_contracts import DELIVERY_CREDENTIAL_ENV
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
-from dev.packaging.native.application_environment import ApplicationEnvironment, load
+from dev.packaging.native.application_environment import load
+from dev.packaging.native.environment_models import ApplicationEnvironment
+from dev.paths import REPO_ROOT
+from dev.tool_storage import TOOL_STORAGE_LOCATIONS
 
 from ..env_reference import render_environment_reference, render_installed_package, target_path
 
@@ -49,11 +50,9 @@ _DEVELOPMENT_TOOLING_KEYS = frozenset(
         GOOGLE_OAUTH_ENV,
         *DELIVERY_CREDENTIAL_ENV,
         *(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()),
-        "CADRUMO_NATIVE_BUILD_ROOT",
         "CADRUMO_BUILD_LOG_LEVEL",
         "CADRUMO_DOCS_BUILD_ROOT",
         "CADRUMO_HOMEBREW_ROOT",
-        "CADRUMO_SCOOP_ROOT",
         "CADRUMO_HOMEBREW_PREFIX",
         "CADRUMO_SCOOP_INSTALL_ROOT",
         "CADRUMO_HOMEBREW_CACHE_DIR",
@@ -77,11 +76,11 @@ _DEVELOPMENT_TOOLING_KEYS = frozenset(
 _TEST_RUNNER_KEYS = frozenset(
     {
         "CADRUMO_PYTEST_WORKERS",
+        "CADRUMO_DEV_AGENT_HOSTED_ROOT",
         "CADRUMO_SCRATCH_BASE",
         "CADRUMO_TEST_LOG_ROOT",
         "CADRUMO_CI_REPORTS_DIR",
-        "VAULTSPEC_CI_REPORTS",
-        "VAULTSPEC_CI_REPORT_NAME",
+        "CADRUMO_CI_REPORT_NAME",
         "CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH",
         "CADRUMO_INGEST_CORPUS_ROOT",
     },

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....application.modelo.action_errors import ModeloEditBaselineStaleError
-from .....application.modelo.calculation_actions import (
+from .....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from .....application.modelo.edit_models import (
@@ -33,9 +33,9 @@ from .....application.modelo.work_lifecycle import discard_work_unit
 from .....application.modelo.workbench_read import read_modelo_workbench_form
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
-from ....adapter_composition import build_work_lifecycle_ports
-from ....operation_composition import build_production_operation_registry
+from ....adapter_composition_work_ports import build_work_lifecycle_ports
 from ....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+from ....tests.production_operation_registry import production_operation_registry
 from ...tests.modelo_workbench_session import RecordedSubmissions, application_lifecycle_door, workbench_read_ports
 from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
@@ -55,7 +55,7 @@ def _door(work: SeededOperatorWork, submissions: RecordedSubmissions) -> ModeloW
         bucket_id=work.work_unit.bucket_id,
         ports=workbench_read_ports(work.work_unit.bucket_id, work.operation),
         operation=work.operation,
-        contracts=build_production_operation_registry().public_contract_set,
+        contracts=production_operation_registry().public_contract_set,
         submissions=submissions,
         read=None,
     )
@@ -64,7 +64,7 @@ def _door(work: SeededOperatorWork, submissions: RecordedSubmissions) -> ModeloW
 def test_the_form_read_admits_an_edit_and_carries_a_refusal_as_the_typed_refusal(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         ports = workbench_read_ports(work.work_unit.bucket_id, work.operation)
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         read = read_modelo_workbench_form(
             work.work_unit_id,
             bucket_id=work.work_unit.bucket_id,

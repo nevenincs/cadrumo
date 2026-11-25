@@ -5,14 +5,16 @@ fraccionado in casilla 03; modalidad base imponible (art. 40.3 LIS) reports it i
 casilla 34. The two are mutually exclusive per filing. The Modelo 200 fold-in must
 credit whichever modality the taxpayer used. Before the fix it read only casilla 34,
 so a 40.2 filer's instalments folded in as 0 — the annual cuota diferencial omitted
-payments already made (over-payment). This verifies each modality's relation resolves
-to the persisted M202 quarterly amounts, against an external oracle (the sum the test
-persists), not the formula under test.
+payments already made (over-payment). The Modelo 200 reads each instalment through its
+own relation per modality (casillas 00601, 00603 and 00605). This verifies each
+relation resolves to the persisted M202 amount of its instalment, against an external
+oracle (the amount the test persists), not the formula under test.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -23,6 +25,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -33,12 +36,23 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REL_40_2: RelationId = "modelo-200-pagos-fraccionados-anuales-40-2"
-_REL_40_3: RelationId = "modelo-200-pagos-fraccionados-anuales"
+_INSTALMENT_ORDINAL = {"1P": "primero", "2P": "segundo", "3P": "tercero"}
+_REL_40_2: dict[str, RelationId] = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-2" for period, ordinal in _INSTALMENT_ORDINAL.items()
+}
+_REL_40_3: dict[str, RelationId] = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-3" for period, ordinal in _INSTALMENT_ORDINAL.items()
+}
 
 
 _M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = validated_casilla_id("03")
 _M202_MODALIDAD_BASE_PAGO_CASILLA: CasillaId = validated_casilla_id("34")
+
+
+@cache
+def _filing_year() -> int:
+    """Return the newest supported exercise an authored Modelo 200 edition governs; the fold reads at calculation grade."""
+    return supported_authored_exercises("200")[-1]
 
 
 def _m202_observation(
@@ -57,7 +71,7 @@ def _m202_observation(
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
     snapshot = published_authority_operation().snapshot(
-        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=_filing_year(), period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:
         relation_vals = resolve_relations_from_local_store(snapshot, operation=operation, repository=repository)
@@ -72,20 +86,23 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
+                    _m202_observation(
+                        filing_year=_filing_year(), period=period, casilla_03=amount, casilla_34=Decimal("0")
+                    ),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))
+                        _m202_observation(
+                            filing_year=_filing_year(), period=period, casilla_03=amount, casilla_34=Decimal("0")
+                        )
                     ),
                 )
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        # The 40.2 relation captures the modalidad-cuota instalments — the sum of the
-        # quarterly casilla-03 values the relation aggregated (computed from the inputs,
-        # not a hand-summed literal, so the assertion proves the aggregation wiring).
-        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
-        # The 40.3 relation is 0 for a 40.2 filer (casilla 34 = 0 every quarter).
-        assert values.get(_REL_40_3) == Decimal("0")
+        # Each 40.2 relation captures its modalidad-cuota instalment: the casilla-03
+        # value persisted for that period.
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts
+        # The 40.3 relations are 0 for a 40.2 filer (casilla 34 = 0 every quarter).
+        assert {values.get(_REL_40_3[period]) for period in amounts} == {Decimal("0")}
 
 
 def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None:
@@ -97,32 +114,36 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount),
+                    _m202_observation(
+                        filing_year=_filing_year(), period=period, casilla_03=Decimal("0"), casilla_34=amount
+                    ),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount)
+                        _m202_observation(
+                            filing_year=_filing_year(), period=period, casilla_03=Decimal("0"), casilla_34=amount
+                        )
                     ),
                 )
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        assert values.get(_REL_40_3) == sum(amounts.values(), Decimal("0"))
-        assert values.get(_REL_40_2) == Decimal("0")
+        assert {period: values.get(_REL_40_3[period]) for period in amounts} == amounts
+        assert {values.get(_REL_40_2[period]) for period in amounts} == {Decimal("0")}
 
 
 def _all_m202_relation_values(
     repository: CalculationObservationRepository,
     *,
-    first_year_cuota: bool,
+    no_base_periods: tuple[str, ...],
 ) -> dict[RelationId, Decimal | None]:
     snapshot = published_authority_operation().snapshot(
-        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=_filing_year(), period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:
         relation_vals = resolve_relations_from_local_store(
             snapshot,
             operation=operation,
             repository=repository,
-            modelo_202_first_year_cuota=first_year_cuota,
+            modelo_202_no_base_instalments=frozenset((_filing_year(), period) for period in no_base_periods),
         )
     return {rv.relation: rv.value for rv in relation_vals.values}
 
@@ -133,9 +154,9 @@ def test_is3_first_year_cuota_resolves_unfiled_m202_relations_to_zero(tmp_path: 
     crash) rather than refusing on an unsupplied relation."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # no M202 observations persisted
-        values = _all_m202_relation_values(repository, first_year_cuota=True)
-        assert values.get(_REL_40_3) == Decimal("0")
-        assert values.get(_REL_40_2) == Decimal("0")
+        values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
+        relations = (*_REL_40_3.values(), *_REL_40_2.values())
+        assert {values.get(relation) for relation in relations} == {Decimal("0")}
 
 
 def test_is3_flag_off_leaves_unfiled_m202_relations_unresolved(tmp_path: Path) -> None:
@@ -143,9 +164,9 @@ def test_is3_flag_off_leaves_unfiled_m202_relations_unresolved(tmp_path: Path) -
     (the pre-IS-3 behaviour is unchanged for every non-first-year-cuota path)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        values = _all_m202_relation_values(repository, first_year_cuota=False)
-        assert values.get(_REL_40_3) is None
-        assert values.get(_REL_40_2) is None
+        values = _all_m202_relation_values(repository, no_base_periods=())
+        relations = (*_REL_40_3.values(), *_REL_40_2.values())
+        assert {values.get(relation) for relation in relations} == {None}
 
 
 def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) -> None:
@@ -158,14 +179,46 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
+                    _m202_observation(
+                        filing_year=_filing_year(), period=period, casilla_03=amount, casilla_34=Decimal("0")
+                    ),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))
+                        _m202_observation(
+                            filing_year=_filing_year(), period=period, casilla_03=amount, casilla_34=Decimal("0")
+                        )
                     ),
                 )
             )
-        values = _all_m202_relation_values(repository, first_year_cuota=True)
-        # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed
-        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
-        assert values.get(_REL_40_3) == Decimal("0")  # casilla 34 = 0 each quarter (genuinely 0)
+        values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
+        # filed values preserved (each quarter's casilla-03 input), NOT zeroed
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts
+        # casilla 34 = 0 each quarter (genuinely 0)
+        assert {values.get(_REL_40_3[period]) for period in amounts} == {Decimal("0")}
+
+
+def test_second_year_first_instalment_without_base_folds_the_filed_later_instalments(tmp_path: Path) -> None:
+    """The second IS year owes no 1P under modalidad cuota, so 2P and 3P fold without a 1P filing.
+
+    The 1P instalment's art. 40.2 base would come from a periodo impositivo before
+    the activity start, so no 1P was filed. Scoping it out lets the relation fold
+    the filed 2P and 3P instead of staying unresolved for a filing never owed.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        amounts = {"2P": Decimal("410.00"), "3P": Decimal("90.00")}
+        repository = CalculationObservationRepository()
+        for period, amount in amounts.items():
+            observation = _m202_observation(
+                filing_year=_filing_year(), period=period, casilla_03=amount, casilla_34=Decimal("0")
+            )
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation,
+                    source_kind="app_filing",
+                    stamped_revision_id=revision_id_for_observation(observation),
+                )
+            )
+        assert _all_m202_relation_values(repository, no_base_periods=()).get(_REL_40_2["1P"]) is None
+        values = _all_m202_relation_values(repository, no_base_periods=("1P",))
+        assert values.get(_REL_40_2["1P"]) == Decimal("0")
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts

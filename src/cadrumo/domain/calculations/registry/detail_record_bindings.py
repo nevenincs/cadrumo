@@ -28,6 +28,7 @@ from .binding_selector_utils import (
     uppercase_alpha_code,
 )
 from .errors import RegistryValidationError
+from .form_codes import require_form_width
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
@@ -200,8 +201,7 @@ class ForeignAssetProvider(BaseModel):
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
     so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
+    validated whole against its own strict model.
     """
 
 
@@ -299,7 +299,7 @@ def foreign_asset_row_order(row: Modelo720ValuedRow) -> tuple[str, str, str, str
 
 def foreign_asset_record_order(record: Modelo720Record) -> tuple[str, str, str, str, str, str]:
     """Return the deterministic row order of a type 2 record: its lot, then the declarant condition."""
-    return (*foreign_asset_row_order(record.row), record.declaration.condition.value)
+    return (*foreign_asset_row_order(record.row), record.declaration.condition.code)
 
 
 def _build_foreign_asset_rows(
@@ -325,7 +325,7 @@ def _build_foreign_asset_rows(
                 "identifier_scheme": record.asset.identifier.scheme,
                 # Position 103 is zero for a class without subclaves (I).
                 "subclave": str(record.asset.subclave) if record.asset.subclave is not None else "0",
-                "declarant_condition": declaration.condition,
+                "declarant_condition": declaration.condition.code,
                 "titularidad_detail": declaration.titularidad_detail or "",
                 "participation_pct": declaration.participation_pct,
             },
@@ -368,19 +368,18 @@ _AtributionRowField = Literal[
 class AtributionMemberObservation(BaseModel):
     """One (member, clave, subclave) atribuci�n row for modelo 184.
 
-    Every field below ``base_imponible_assigned`` is the (member, clave,
-    subclave) row-shape ADR's clave/subclave-conditional fact set, and is
-    ``None`` whenever the declaring clave does not license it -- e.g.
-    ``naturaleza_inmueble`` is only ever populated for a clave-C row. A
-    ``None`` here is a legitimate "this field does not apply to this row",
-    never a missing value.
+    Every field below ``base_imponible_assigned`` is part of the clave/subclave-conditional
+    fact set of the (member, clave, subclave) row shape, and is ``None`` whenever the
+    declaring clave does not license it -- e.g. ``naturaleza_inmueble`` is only ever
+    populated for a clave-C row. A ``None`` here is a legitimate "this field does not apply
+    to this row", never a missing value.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     member_tax_id: TaxIdIdentityToken
-    member_legal_name: str = Field(default="", max_length=200)
+    member_legal_name: str = Field(default="", max_length=256)
     country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
@@ -391,15 +390,14 @@ class AtributionMemberObservation(BaseModel):
 
     Absence propagates as an ABSENT KEY in the built row rather than as a
     value, so a binding that needs the country refuses with the shipped
-    not-produced error naming itself. That is the visible failure the silent
-    default replaced."""
+    not-produced error naming itself."""
     transaction_date: date
     share_percentage: Decimal
     base_imponible_assigned: Decimal
 
     clave: str = Field(min_length=1, max_length=1)
-    subclave: str | None = Field(default=None, min_length=2, max_length=2)
-    codigo_provincia: str | None = Field(default=None, min_length=2, max_length=2)
+    subclave: str | None = Field(default=None, min_length=1, max_length=16)
+    codigo_provincia: str | None = Field(default=None, min_length=1, max_length=16)
     miembro_a_31_diciembre: str | None = Field(default=None, min_length=1, max_length=1)
     """``"X"`` when the member remained one at 31 December, else ``None``.
 
@@ -409,10 +407,10 @@ class AtributionMemberObservation(BaseModel):
     field expects.
     """
     dias_miembro: int | None = None
-    domicilio_fiscal: str | None = Field(default=None, max_length=40)
+    domicilio_fiscal: str | None = Field(default=None, max_length=64)
     naturaleza_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
     situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
-    referencia_catastral: str | None = Field(default=None, max_length=20)
+    referencia_catastral: str | None = Field(default=None, max_length=32)
     clave_declarado: str | None = Field(default=None, min_length=1, max_length=1)
     porcentaje_titularidad_inmueble: Decimal | None = None
     dias_arrendamiento: int | None = None
@@ -436,6 +434,18 @@ class AtributionMemberObservation(BaseModel):
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         return value
 
+    @field_validator("subclave")
+    @classmethod
+    @pydantic_validation_boundary
+    def _subclave_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.subclave_digits")
+
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
+
 
 class AtribucionMemberProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
@@ -451,8 +461,7 @@ class AtribucionMemberProvider(BaseModel):
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
     so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
+    validated whole against its own strict model.
     """
 
 

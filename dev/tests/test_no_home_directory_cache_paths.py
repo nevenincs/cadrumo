@@ -30,7 +30,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -63,14 +63,16 @@ _HOME_ATTRIBUTE: Final[str] = "home"
 #: state owned by something OUTSIDE this project, which is the only reason the
 #: home directory is the right place to look.
 _HOME_IS_CORRECT: Final[dict[str, str]] = {
-    "src/cadrumo/application/provisioning_host.py": (
-        "where each platform's official Ollama installer places the runtime binary, which that "
-        "installer chooses and this project only looks for"
-    ),
     "src/cadrumo/core/config_state_root.py": (
         "captures the user's home as one typed input to platform state-root resolution, not as a cache location"
     ),
     "dev/env/temp_reaper.py": "Claude Code's session transcript root, written by the tool this module observes",
+    "dev/measure/ledger_classification_speed.py": (
+        "Ollama's own model store, the default place the measured local engine keeps the models it presents"
+    ),
+    "dev/measure/tests/test_ledger_classification_speed.py": (
+        "asserts the measurement's default model store is Ollama's own home-directory store"
+    ),
 }
 
 #: Modules that name the home directory in order to REMOVE it from output, and
@@ -82,7 +84,9 @@ _HOME_IS_REDACTED: Final[dict[str, str]] = {
     "src/cadrumo/core/tests/test_diagnostic_log.py": (
         "uses the real home spelling in an opaque extra to prove it cannot be promoted into exported diagnostic text"
     ),
-    "src/cadrumo/core/logging.py": "derives every spelling of the home directory so log output can be scrubbed of it",
+    "src/cadrumo/core/log_scrubbing.py": (
+        "derives every spelling of the home directory so log output can be scrubbed of it"
+    ),
     "src/cadrumo/core/tests/test_logging_private_helpers.py": (
         "exercises that scrubbing, so it must build the paths the redaction is meant to remove"
     ),

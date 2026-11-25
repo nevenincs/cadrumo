@@ -154,7 +154,7 @@ def test_the_registration_reads_the_source_facts_off_the_member(
 
 def test_a_narrowing_gap_is_refused_rather_than_answered_empty() -> None:
     """The drift branch raises with the binding and the coordinate named."""
-    from ..bindings import _refuse_undeclared_source_narrowing
+    from ..bindings import refuse_undeclared_source_narrowing
 
     with pytest.raises(RegistryValidationError, match="does not narrow"):
-        _refuse_undeclared_source_narrowing(_profile_binding(), "source casilla")
+        refuse_undeclared_source_narrowing(_profile_binding(), "source casilla")

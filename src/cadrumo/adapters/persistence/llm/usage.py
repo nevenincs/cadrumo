@@ -20,6 +20,8 @@ from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
 from ....core.redaction.rules import default_rules_for_class, redact_structured
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....core.time.clock import now
 from ...outbound.llm.errors import LLMCacheError
 from ...outbound.llm.models import LLMResponse, UsageRecord
@@ -50,9 +52,9 @@ class UsageRecorder:
 
         Args:
             root_dir: Logical usage partition; defaults to the centralized
-                ``cadrumo_llm_usage_dir`` setting.
+                LLM usage storage member.
         """
-        self.root_dir = root_dir or load_settings().cadrumo_llm_usage_dir
+        self.root_dir = root_dir or storage_path(StorageCategory.LLM_USAGE, settings=load_settings())
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
         """Build a :class:`llm.UsageRecord` from a response.

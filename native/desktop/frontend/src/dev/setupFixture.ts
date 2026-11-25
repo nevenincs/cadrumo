@@ -4,22 +4,39 @@ import type {
   SetupFailureCategory,
   SetupItemId,
   SetupItemProgress,
+  SetupPartProgress,
   SetupPlanEntry,
+  SetupPlanPart,
+  SetupRemoval,
   SetupReview,
   SetupRow,
   SetupRun,
   SetupSnapshot,
-} from "../ipc/contract";
+} from "../ipc/componentSetup";
 import type { Setup } from "../shell/host";
+import { catalogLanes } from "../shell/agentOffer";
+import {
+  FIXTURE_CATALOG,
+  type FixtureModelPresence,
+} from "./fixtures/agentCatalog";
 
 // The scenario host's component setup: a made-up computer with the browser
 // and the local AI (its program and its models, one item), each in the state
 // a shape gives it, and the profile's Google account beside them -- not a
-// setup item. Its sentences stand for the host's own, which come already
-// worded; they are English here because the fixture has no catalogue of its
-// own. Nothing is downloaded: every plan, byte count and receipt is
-// synthetic. With a latency the fixture runs a setup by itself; with none it
-// waits for the scenario tests to move it on through `window.__scenarioSetup`.
+// setup item. Like the host, it serves the items whether or not anyone is
+// signed in, and refuses only what is a profile's while nobody is: the
+// Google account, beside which it shows no sign-in, and a model of the
+// person's list. Signed in while the profile's runtime does not answer, it
+// still serves the items, shows the account as unreadable and refuses what is
+// the profile's as `unavailable`. Like the host, it sends codes only, which
+// the window words.
+// Nothing is downloaded: every plan, byte count and receipt is synthetic. Each
+// item has a setup of its own, and items set up side by side. The local AI's
+// setup installs its program when it is missing, then the one model asked
+// for, each as a part with progress of its own. With a latency the fixture
+// runs a setup by itself; with none it waits for the scenario tests to move
+// it on through `window.__scenarioSetup`, whose controls act on the first
+// item setting up now, or on the item they name.
 
 export const SETUP_SHAPES = [
   "fresh",
@@ -34,22 +51,91 @@ export const SETUP_SHAPES = [
   "busy",
   "unavailable",
   "google_signed_out",
+  /** The browser's builds are in place but no current receipt records them,
+   * as an earlier installer left them: it reads unknown with Check again,
+   * and the full check records it ready. */
+  "unrecorded",
+  /** Nothing set up, and no status read settled until `readRows`. */
+  "unread",
+  /** Nothing set up, and every setup's network check finds a host it
+   * downloads from unreachable: the setup settles failed before its review,
+   * leaving its row as it was. */
+  "unreachable",
+  /** Nothing set up, and every setup's download server answers with an error
+   * until the retries run out: the setup settles failed at its download,
+   * leaving its row as it was. */
+  "server_error",
+  /** As `ready`, but a start stays in its planning with nothing reported,
+   * as while the host checks a model with the agent service, until
+   * `finishPlanning` lets its plan reach review. */
+  "start_held",
+  /** As `start_held`, but the start is in flight before any snapshot names
+   * its setup: nothing the window reads carries the run until
+   * `finishPlanning`, which lets the plan reach review and the start return. */
+  "start_unreported",
+  /** The browser is ready, and the system refused the local AI's downloaded
+   * program, whose files still match their receipt: it offers the reinstall
+   * of the program. */
+  "engine_unusable",
+  /** The browser is ready, and the system refused the local AI's program
+   * that came with Cadrumo: it offers no action here. */
+  "package_damaged",
+  /** Everything is set up, and the local AI's server sleeps until a document
+   * is read: the local AI reads ready, starting when it is needed. */
+  "dormant",
+  /** The browser is ready, and the local AI's program came with Cadrumo, as
+   * the bundled llama.cpp does, with no model downloaded yet: the local AI
+   * reads absent, offers no action of its own, and names the model it waits
+   * for, which the person's model list beside it downloads. */
+  "model_needed",
+  /** As `model_needed`, with a model an earlier download stored: the status
+   * read finds it in the models folder, so the local AI reads ready, its
+   * server sleeping until a document is read, and waits for nothing. */
+  "model_stored",
+  /** The browser is ready, and the local AI's server failed a start a read
+   * demanded: it reads not running and offers to try again. */
+  "start_failed",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
 export type SetupFixtureControls = {
-  /** Moves a running setup on by one step. */
-  step(): void;
-  /** A retry notice on the item now running. */
+  /** Changes the underlying files; only the next host command observes it. */
+  setAbsent(item: SetupItemId): void;
+  /** Moves the first running setup, or `item`'s, on by one step. */
+  step(item?: SetupItemId): void;
+  /** A retry notice on the first item now running. */
   retry(attempt: number, delaySeconds: number): void;
-  /** The item now running fails in this way; the setup settles. */
+  /** The first item now running fails in this way; its setup settles. */
   fail(category: SetupFailureCategory): void;
-  /** The setup stops part-way, as when the computer sleeps or Cadrumo
-   * closes. */
-  interrupt(): void;
+  /** The first running setup fails at its item, not in any part, as when the
+   * host's check of what it fetched finds it damaged: no part carries the
+   * failure, the setup settles failed with it, and the row keeps the state
+   * it had until the status is read again. */
+  failItem(category: SetupFailureCategory): void;
+  /** Every later start, or none once `null`, is refused this way while its
+   * setup plans, as when the host's check before any download refuses it:
+   * the start returns without a rejection and the setup settles failed with
+   * the category on its item, naming no part, its row as it was. */
+  refuseStarts(category: SetupFailureCategory | null): void;
+  /** The first running setup, or `item`'s, stops part-way, as when the
+   * computer sleeps or Cadrumo closes. */
+  interrupt(item?: SetupItemId): void;
   /** Google's own page answers the sign-in this window started. */
   finishGoogle(succeeded: boolean): void;
   setGoogle(account: GoogleAccount): void;
+  /** The first status read settles: an `unread` setup has its rows. */
+  readRows(): void;
+  /** The planning a `start_held` or `start_unreported` start waits in
+   * ends: its plan awaits an answer, and the start returns. */
+  finishPlanning(): void;
+  /** The next status reads and verifications stay unanswered until
+   * `releaseChecks`, as while the host reads a slow status. */
+  holdChecks(): void;
+  /** Answers the checks held: with the refusal's code, or as asked. */
+  releaseChecks(refusal?: string): void;
+  /** The host reads again after the sign-in status changed, as it does on
+   * the session's cue. */
+  reread(): void;
 };
 
 declare global {
@@ -58,28 +144,27 @@ declare global {
   }
 }
 
-const GB = 1_000_000_000;
-const MB = 1_000_000;
+const MB = 1024 * 1024;
+const GB = 1024 * MB;
 
 type Seed = {
   row: SetupRow;
-  // What the plan says of the entry; its advisories are for the host's
-  // logic and are never shown.
-  plan: Omit<SetupPlanEntry, "item" | "name"> & { advisories?: string[] };
+  // What the plan says of the entry.
+  plan: Omit<SetupPlanEntry, "item">;
 };
 
-/** The operator action the product names as each kind's recovery. */
-const RECOVERY_ACTION: Record<SetupRow["kind"], string> = {
-  browser: "operator.provision.browser",
-  local_ai: "operator.provision.local_ai",
-};
+/** The operator action the product names as an item's recovery. */
+const recoveryAction = (item: SetupItemId) => `operator.provision.${item}`;
 
 const GOOGLE_EMAIL = "persona@example.com";
+
+/** The folders the local AI's program and its models are stored in. */
+const PROGRAM_FOLDER = "components/ollama";
+const MODELS_FOLDER = "models/ollama";
 
 const row = (
   item: SetupItemId,
   kind: SetupRow["kind"],
-  name: string,
   size: number | null,
 ): SetupRow => ({
   item,
@@ -90,84 +175,59 @@ const row = (
   blocked_reason: null,
   failure: null,
   recovery: "set_up",
-  recovery_action_id: RECOVERY_ACTION[kind],
+  recovery_action_id: recoveryAction(item),
   version: null,
   size_bytes: size,
-  name,
-  sentence: "Not set up yet.",
-  note: null,
-  action_label: "Set up",
+  removals: [],
 });
+
+/** The removals the engine serves on a row: those of an item with something on
+ * this computer to delete, none for a damaged program that came with Cadrumo. */
+function served(held: SetupRow): SetupRow {
+  const removable =
+    held.failure !== "engine_package_damaged" &&
+    (held.state === "ready" ||
+      held.state === "stale" ||
+      held.state === "failed" ||
+      held.state === "unknown");
+  const removals: SetupRemoval[] = !removable
+    ? []
+    : held.item === "browser"
+      ? ["browser"]
+      : ["local_ai", "local_ai_program"];
+  return { ...held, removals };
+}
 
 function seeds(): Seed[] {
   return [
     {
-      row: row(
-        "browser",
-        "browser",
-        "Browser for the tax agency website",
-        180 * MB,
-      ),
+      row: row("browser", "browser", 180 * MB),
       plan: {
         download_bytes: 180 * MB,
         source_hosts: ["cdn.playwright.dev"],
         destination: "components/browser",
         installs_outside_program: false,
         shares_download_with: null,
-        advisories: [],
-        licence_notice: null,
         parts: [],
       },
     },
     {
-      // One item: the program that runs the models, then each role's model.
-      // Two roles read with the same model, so only the first downloads it.
-      row: row("local_ai", "local_ai", "Local AI", 3.4 * GB),
+      // One item: the program that runs the models, whose installer's size
+      // is known only once it starts, then the model asked for. Its parts are
+      // planned with each setup.
+      row: row("local_ai", "local_ai", null),
       plan: {
-        download_bytes: 3.4 * GB,
+        download_bytes: null,
         source_hosts: ["github.com", "registry.ollama.ai"],
-        destination: "models",
-        licence_notice:
-          "This model is shared under its maker's licence, which lets you use it on this computer.",
+        // The program and each model name their own folder.
+        destination: null,
         installs_outside_program: true,
         shares_download_with: null,
-        advisories: [],
-        parts: [
-          {
-            part: "program",
-            name: "The program that runs the models",
-            download_bytes: null,
-          },
-          {
-            part: "vision_transcription",
-            name: "Model for scanned pages",
-            download_bytes: 2.4 * GB,
-          },
-          {
-            part: "text_extraction",
-            name: "Model for document text",
-            download_bytes: 1 * GB,
-          },
-          {
-            part: "column_role_mapping",
-            name: "Model for table columns",
-            download_bytes: 0,
-          },
-          {
-            part: "supply_nature_proposal",
-            name: "Model for the kind of sale or purchase",
-            download_bytes: 0,
-          },
-        ],
+        parts: [],
       },
     },
   ];
 }
-
-const READY: Record<SetupRow["kind"], string> = {
-  browser: "Ready.",
-  local_ai: "Ready.",
-};
 
 function readied(held: SetupRow): SetupRow {
   return {
@@ -179,102 +239,43 @@ function readied(held: SetupRow): SetupRow {
     recovery: null,
     recovery_action_id: null,
     version: "1.0",
-    sentence: READY[held.kind],
-    note: held.kind === "local_ai" ? "Downloaded, not loaded yet." : null,
-    action_label: null,
+    awaits: null,
   };
 }
 
-/** The sentence and button the host words each failure with. */
-const FAILURE: Record<
-  SetupFailureCategory,
-  { sentence: string; recovery: SetupRow["recovery"] }
-> = {
-  offline: {
-    sentence: "You're offline. Connect to the internet, then check again.",
-    recovery: "check_again",
-  },
-  host_unreachable: {
-    sentence: "The download site can't be reached right now.",
-    recovery: "try_again",
-  },
-  secure_connection_failed: {
-    sentence: "A secure connection to the download site couldn't be made.",
-    recovery: "try_again",
-  },
-  blocked_by_network: {
-    sentence: "Your network blocked the download.",
-    recovery: "try_again",
-  },
-  disk_full: {
-    sentence: "There isn't enough free space on this computer.",
-    recovery: "try_again",
-  },
-  no_permission: {
-    sentence: "Cadrumo isn't allowed to write to its storage folder.",
-    recovery: "try_again",
-  },
-  damaged_download: {
-    sentence: "The download arrived damaged. Setting it up again fixes it.",
-    recovery: "try_again",
-  },
-  not_enough_memory: {
-    sentence: "This computer doesn't have enough memory for the local AI.",
-    recovery: null,
-  },
-  memory_busy: {
-    sentence: "Other programs are using the memory the local AI needs.",
-    recovery: "try_again",
-  },
-  program_missing: {
-    sentence: "The local AI program isn't installed.",
-    recovery: "set_up",
-  },
-  program_not_running: {
-    sentence: "The local AI program isn't running.",
-    recovery: "try_again",
-  },
-  interrupted: {
-    sentence: "Setup stopped before it finished.",
-    recovery: "resume",
-  },
-  needs_sign_in: {
-    sentence: "Sign in to Google again to keep using it.",
-    recovery: "try_again",
-  },
-  not_in_this_build: {
-    sentence: "This version of Cadrumo does not include this.",
-    recovery: null,
-  },
-  cancelled: {
-    sentence: "Setup was cancelled.",
-    recovery: "set_up",
-  },
-  unexpected: {
-    sentence: "Something unexpected went wrong.",
-    recovery: "try_again",
-  },
-};
-
-const ACTION: Record<NonNullable<SetupRow["recovery"]>, string> = {
-  set_up: "Set up",
-  update: "Update",
-  try_again: "Try again",
-  resume: "Resume",
-  check_again: "Check again",
+/** The button the engine offers after each failure. */
+const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
+  offline: "check_again",
+  host_unreachable: "try_again",
+  server_error: "try_again",
+  secure_connection_failed: "try_again",
+  blocked_by_network: "try_again",
+  disk_full: "try_again",
+  no_permission: "try_again",
+  damaged_download: "try_again",
+  not_enough_memory: null,
+  memory_busy: "try_again",
+  program_missing: "try_again",
+  program_not_running: "try_again",
+  engine_program_unusable: "reinstall_engine_program",
+  engine_package_damaged: null,
+  interrupted: "resume",
+  needs_sign_in: "try_again",
+  not_in_this_build: null,
+  cancelled: "try_again",
+  unexpected: "try_again",
 };
 
 function failed(held: SetupRow, failure: SetupFailureCategory): SetupRow {
-  const { sentence, recovery } = FAILURE[failure];
+  const recovery = RECOVERY[failure];
   return {
     ...held,
+    awaits: null,
     state: failure === "offline" ? "blocked" : "failed",
     blocked_reason: failure === "offline" ? "offline" : null,
     failure: failure === "offline" ? null : failure,
     recovery,
-    recovery_action_id: recovery ? RECOVERY_ACTION[held.kind] : null,
-    sentence,
-    action_label: recovery ? ACTION[recovery] : null,
+    recovery_action_id: recovery ? recoveryAction(held.item) : null,
   };
 }
 
@@ -286,6 +287,8 @@ function shaped(shape: SetupShape): Seed[] {
   };
   switch (shape) {
     case "ready":
+    case "start_held":
+    case "start_unreported":
       all.forEach((seed) => (seed.row = readied(seed.row)));
       break;
     case "google_signed_out":
@@ -299,9 +302,54 @@ function shaped(shape: SetupShape): Seed[] {
       set("browser", readied);
       set("local_ai", (held) => failed(held, "interrupted"));
       break;
+    case "unrecorded":
+      set("browser", (held) => ({
+        ...held,
+        state: "unknown",
+        recovery: "check_again",
+        size_bytes: null,
+      }));
+      break;
     case "offline":
       set("browser", (held) => failed(held, "offline"));
       set("local_ai", (held) => failed(held, "offline"));
+      break;
+    case "engine_unusable":
+      set("browser", readied);
+      set("local_ai", (held) => failed(held, "engine_program_unusable"));
+      break;
+    case "package_damaged":
+      set("browser", readied);
+      set("local_ai", (held) => failed(held, "engine_package_damaged"));
+      break;
+    case "dormant":
+      all.forEach((seed) => (seed.row = readied(seed.row)));
+      set("local_ai", (held) => ({ ...held, server: "dormant" }));
+      break;
+    case "model_needed":
+      set("browser", readied);
+      // As the host serves it: the program reads present from the package,
+      // so nothing here sets it up and no size is stated.
+      set("local_ai", (held) => ({
+        ...held,
+        recovery: null,
+        recovery_action_id: null,
+        version: "b1",
+        size_bytes: null,
+        awaits: "model",
+      }));
+      break;
+    case "model_stored":
+      set("browser", readied);
+      set("local_ai", (held) => ({
+        ...readied(held),
+        version: "b1",
+        server: "dormant",
+      }));
+      break;
+    case "start_failed":
+      set("browser", readied);
+      set("local_ai", (held) => failed(readied(held), "program_not_running"));
       break;
     case "hardware":
       set("browser", readied);
@@ -311,8 +359,6 @@ function shaped(shape: SetupShape): Seed[] {
         blocked_reason: "hardware",
         recovery: null,
         recovery_action_id: null,
-        sentence: "This computer does not have enough memory for this.",
-        action_label: null,
       }));
       break;
     default:
@@ -329,15 +375,23 @@ export function setupFixture({
   latencyMs,
   say,
   readable,
+  answers = () => true,
+  models,
 }: {
   shape: SetupShape;
   latencyMs: number;
   say: (call: string) => void;
   readable: () => boolean;
+  /** Whether the signed-in profile's runtime answers. */
+  answers?: () => boolean;
+  /** Where a model this setup downloads or removes is marked on or off this
+   * computer, for the catalog to report. */
+  models?: FixtureModelPresence;
 }): Setup {
   const items = shaped(shape);
   let revision = 1;
-  let run: SetupRun | null = null;
+  // Each item's latest setup, in the rows' order.
+  let runs: SetupRun[] = [];
   let operations = 0;
   let plans = 0;
   // The digests of the plans this window approved, and whether a setup has
@@ -347,55 +401,116 @@ export function setupFixture({
   // The profile's Google account: signed in on a computer that is otherwise
   // set up, not yet on one where setup has only begun.
   const signedIn =
-    shape === "ready" || shape === "partial" || shape === "hardware";
+    shape === "ready" ||
+    shape === "dormant" ||
+    shape === "start_held" ||
+    shape === "start_unreported" ||
+    shape === "partial" ||
+    shape === "hardware";
   let google: GoogleAccount = {
     state: signedIn ? "signed_in" : "signed_out",
     email: signedIn ? GOOGLE_EMAIL : null,
     drive_folder_id: signedIn ? "profile-drive-folder" : null,
     stage: "idle",
     failure: null,
-    sentence: null,
   };
   let check: SetupSnapshot["check"] = null;
   let mode: SetupSnapshot["rows_mode"] = "quick";
+  let unread = shape === "unread";
   const listeners = new Set<(state: DesktopSetup) => void>();
   const timers = new Set<number>();
-  let pendingCancel = false;
+  // The starts a `start_held` setup keeps in planning, by operation id; each
+  // returns its start, with the plan reached or not.
+  const heldStarts = new Map<string, (planned: boolean) => void>();
+  // The status reads and verifications `holdChecks` keeps unanswered, each
+  // answering with a refusal's code or none.
+  let checksHeld = false;
+  const heldChecks: ((refusal: string | null) => void)[] = [];
+  const afterHold = (
+    act: () => Promise<DesktopSetup>,
+  ): Promise<DesktopSetup> =>
+    checksHeld
+      ? new Promise<DesktopSetup>((resolve, reject) => {
+          heldChecks.push((refusal) =>
+            refusal ? reject({ code: refusal }) : act().then(resolve, reject),
+          );
+        })
+      : act();
+  // The category every start is refused with while it plans, if any.
+  let refusing: SetupFailureCategory | null = null;
+  // The setups asked to stop, by operation id.
+  const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
   // that stopped never reached.
   const before = new Map<SetupItemId, SetupRow>();
-  // What an interrupted download had already fetched: a resume goes on from
-  // there instead of starting again.
-  const partial = new Map<SetupItemId, number>();
+  // What an interrupted download had already fetched, by item and part: a
+  // resume goes on from there instead of starting again.
+  const partial = new Map<string, number>();
+  // Whether the local AI's program is on this computer: a computer whose
+  // local AI was set up once has it, whatever became of its models.
+  let programReady =
+    shape === "ready" ||
+    shape === "dormant" ||
+    shape === "start_failed" ||
+    shape === "start_held" ||
+    shape === "start_unreported" ||
+    shape === "google_signed_out" ||
+    shape === "partial" ||
+    shape === "hardware" ||
+    shape === "model_needed" ||
+    shape === "model_stored";
 
-  const rows = () => items.map((seed) => seed.row);
+  const rows = () => items.map((seed) => served(seed.row));
+  // Signed out there is no profile, so no Google sign-in either; signed in
+  // with no runtime to ask, the profile's sign-in cannot be read.
+  const account = (): GoogleAccount =>
+    readable()
+      ? answers()
+        ? google
+        : {
+            state: "unknown",
+            email: null,
+            drive_folder_id: null,
+            stage: "idle",
+            failure: null,
+          }
+      : {
+          state: "signed_out",
+          email: null,
+          drive_folder_id: null,
+          stage: "idle",
+          failure: null,
+        };
   const snapshot = (): SetupSnapshot => {
-    const now = rows();
+    const now = unread ? [] : rows();
+    const shown = account();
     return {
       rows: now,
-      rows_mode: mode,
-      complete: now.every(usable),
-      hardware_limited: now.some((held) => held.blocked_reason === "hardware"),
+      rows_mode: unread ? null : mode,
+      complete: unread ? null : now.every(usable),
+      hardware_limited: unread
+        ? null
+        : now.some((held) => held.blocked_reason === "hardware"),
       check,
-      setup: run,
-      google,
+      runs,
+      google: shown,
       details: [
         "Cadrumo component report (simulated)",
         ...now.map(
           (held) =>
             `${held.item}: ${held.state}${held.failure ? ` (${held.failure})` : ""}`,
         ),
-        `google: ${google.state ?? "unread"}`,
-        run ? `setup ${run.operation_id}: ${run.stage}` : "no setup",
+        `google: ${shown.state ?? "unread"}`,
+        ...(runs.length > 0
+          ? runs.map((held) => `setup ${held.operation_id}: ${held.stage}`)
+          : ["no setup"]),
       ].join("\n"),
     };
   };
   const state = (): DesktopSetup =>
-    !readable()
-      ? { revision, state: "signed_out", snapshot: null }
-      : shape === "unavailable"
-        ? { revision, state: "unavailable", snapshot: null }
-        : { revision, state: "ready", snapshot: snapshot() };
+    shape === "unavailable"
+      ? { revision, state: "unavailable", snapshot: null }
+      : { revision, state: "ready", snapshot: snapshot() };
   const publish = () => {
     revision += 1;
     const next = state();
@@ -412,10 +527,17 @@ export function setupFixture({
   };
   const refuse = (code: string) => Promise.reject({ code });
   const ready = () => {
-    if (!readable()) return refuse("not_signed_in");
     if (shape === "unavailable") return refuse("unavailable");
     return null;
   };
+  // What is a profile's: its Google account and its person's model list.
+  const personal = () =>
+    ready() ??
+    (!readable()
+      ? refuse("not_signed_in")
+      : answers()
+        ? null
+        : refuse("unavailable"));
 
   const review = (wanted: Seed[]): SetupReview => {
     plans += 1;
@@ -428,7 +550,6 @@ export function setupFixture({
         : 0;
     const entries = wanted.map((seed): SetupPlanEntry => ({
       item: seed.row.item,
-      name: seed.row.name,
       ...seed.plan,
       download_bytes:
         seed.plan.download_bytes === null
@@ -447,7 +568,6 @@ export function setupFixture({
       plan_digest: `plan-${entries
         .map((entry) => `${entry.item}:${entry.download_bytes ?? "?"}`)
         .join("|")}`,
-      expires_at: null,
       entries,
       known_download_bytes: known,
       // A part of unknown size, such as the program's installer, leaves the
@@ -468,108 +588,244 @@ export function setupFixture({
 
   const progress = (seed: Seed): SetupItemProgress => ({
     item: seed.row.item,
-    name: seed.row.name,
     step: null,
     completed: null,
     total: null,
     retry: null,
     result: null,
+    parts: seed.plan.parts.map((part): SetupPartProgress => ({
+      part: part.part,
+      ...(part.model ? { model: part.model } : {}),
+      step: null,
+      completed: null,
+      total: null,
+      result: null,
+    })),
   });
 
-  const settle = (outcome: NonNullable<SetupRun["outcome"]>) => {
-    if (!run) return;
+  const seedOf = (item: SetupItemId) =>
+    items.find((seed) => seed.row.item === item);
+  const order = (item: SetupItemId) =>
+    items.findIndex((seed) => seed.row.item === item);
+  const runFor = (item: SetupItemId) =>
+    runs.find((held) => held.item === item) ?? null;
+  const runById = (operationId: string) =>
+    runs.find((held) => held.operation_id === operationId) ?? null;
+  /** Keeps `next` as its item's setup, in the rows' order. */
+  const put = (next: SetupRun) => {
+    runs = [...runs.filter((held) => held.item !== next.item), next].sort(
+      (left, right) => order(left.item) - order(right.item),
+    );
+    return next;
+  };
+  /** The item setting up now that the scenario controls act on: `item`'s,
+   * or the first. */
+  const active = (item?: SetupItemId) =>
+    runs.find(
+      (held) =>
+        held.stage === "running" && (item === undefined || held.item === item),
+    ) ?? null;
+
+  const settle = (
+    run: SetupRun,
+    outcome: NonNullable<SetupRun["outcome"]>,
+  ): SetupRun => {
     for (const entry of run.items) {
       const seed = seedOf(entry.item);
       const held = before.get(entry.item);
       if (seed && held && !entry.result && seed.row.state === "provisioning")
         seed.row = held;
+      before.delete(entry.item);
     }
-    before.clear();
-    run = {
+    pendingCancel.delete(run.operation_id);
+    return put({
       ...run,
       stage: "settled",
       review: null,
       cancellable: false,
       outcome,
-      failure_sentence: null,
-    };
+      failure: null,
+    });
   };
 
-  const current = () => run?.items.find((entry) => entry.result === null);
-  const seedOf = (item: SetupItemId) =>
-    items.find((seed) => seed.row.item === item);
+  const current = (run: SetupRun | null) =>
+    run?.items.find((entry) => entry.result === null);
+  /** The part of `entry` setting up now; none for an item without parts. */
+  const currentPart = (entry: SetupItemProgress | undefined) =>
+    entry?.parts.find((part) => part.result === null);
 
-  /** One step of a running setup: connect, download in quarters, check,
-   * then the next item; then the outcome. */
-  const step = () => {
+  type Track = Pick<
+    SetupPartProgress,
+    "step" | "completed" | "total" | "result"
+  >;
+  /** One step of one track, an item's or one of its parts': connect,
+   * download in quarters where the size is known, install where it is a
+   * program, check; then its result. */
+  const advance = (
+    track: Track,
+    key: string,
+    size: number | null,
+    installs: boolean,
+  ): Track => {
+    switch (track.step) {
+      case null:
+        return { ...track, step: "preflight" };
+      case "preflight":
+        return {
+          ...track,
+          step: "download",
+          completed: size === null ? null : (partial.get(key) ?? 0),
+          total: size,
+        };
+      case "download": {
+        if (track.total === null || track.completed === null)
+          return { ...track, step: installs ? "install" : "verify" };
+        const done = Math.min(track.total, track.completed + track.total / 4);
+        if (done < track.total) return { ...track, completed: done };
+        // A model's bytes end with its part still reporting its download:
+        // the host verifies at the item's own step (see `stepOf`).
+        if (!installs && track.completed < track.total)
+          return { ...track, completed: track.total };
+        return {
+          ...track,
+          step: installs ? "install" : "verify",
+          completed: null,
+          total: null,
+        };
+      }
+      case "install":
+        return { ...track, step: "verify" };
+      default:
+        return {
+          step: null,
+          completed: null,
+          total: null,
+          result: {
+            changed: true,
+            failure: null,
+            transferred_bytes: size ?? 0,
+          },
+        };
+    }
+  };
+
+  /** The program's installer, sized once its download starts. */
+  const PROGRAM_BYTES = 120 * MB;
+  // Each item's plan as its latest setup worked it out.
+  const plannedSeeds = new Map<SetupItemId, Seed>();
+  const partSize = (part: SetupPartProgress, item: SetupItemId) =>
+    part.model
+      ? (plannedSeeds
+          .get(item)
+          ?.plan.parts.find((held) => held.model === part.model)
+          ?.download_bytes ?? null)
+      : PROGRAM_BYTES;
+  const partKey = (item: SetupItemId, part: SetupPartProgress) =>
+    `${item}:${part.model ?? part.part}`;
+
+  /** One step of a running setup, on its current item and part; then the
+   * outcome. */
+  const stepOf = (run: SetupRun | null) => {
     if (!run || run.stage !== "running") return;
-    if (pendingCancel) {
-      pendingCancel = false;
+    if (pendingCancel.has(run.operation_id)) {
       run.items.forEach((entry) => {
         const seed = seedOf(entry.item);
         const held = before.get(entry.item);
         if (!entry.result && seed && held) seed.row = held;
       });
-      before.clear();
-      settle("cancelled");
+      settle(run, "cancelled");
       publish();
       return;
     }
-    const entry = current();
+    const entry = current(run);
     const seed = entry && seedOf(entry.item);
     if (!entry || !seed) {
-      settle("completed");
+      settle(run, "completed");
       publish();
       return;
     }
-    const total = seed.plan.download_bytes;
-    const download = (): SetupItemProgress => ({
-      ...entry,
-      step: "download",
-      completed: total === null ? null : (partial.get(entry.item) ?? 0),
-      total,
-    });
     let next: SetupItemProgress;
-    if (entry.step === null) next = { ...entry, step: "preflight" };
-    else if (entry.step === "preflight")
-      // The local AI installs its program first, then fetches its models.
-      next = seed.plan.installs_outside_program
-        ? { ...entry, step: "install" }
-        : download();
-    else if (entry.step === "install") next = download();
-    else if (entry.step === "download" && total !== null) {
-      const done = Math.min(total, (entry.completed ?? 0) + total / 4);
-      next =
-        done >= total
-          ? { ...entry, step: "verify", completed: null, total: null }
-          : { ...entry, completed: done, retry: null };
-    } else if (entry.step === "download") next = { ...entry, step: "verify" };
-    else {
-      seed.row = readied(seed.row);
+    const part = currentPart(entry);
+    // A model whose bytes are all fetched: the part keeps reporting its
+    // download while the item verifies, and the part ends on the step after.
+    const fetched =
+      part?.model !== undefined &&
+      part.step === "download" &&
+      part.total !== null &&
+      part.completed === part.total;
+    if (part && fetched && entry.step !== "verify") {
+      next = { ...entry, step: "verify" };
+    } else if (part) {
+      const moved: SetupPartProgress = {
+        ...part,
+        ...(fetched
+          ? {
+              step: null,
+              completed: null,
+              total: null,
+              result: {
+                changed: true,
+                failure: null,
+                transferred_bytes: partSize(part, entry.item) ?? 0,
+              },
+            }
+          : advance(
+              part,
+              partKey(entry.item, part),
+              partSize(part, entry.item),
+              !part.model,
+            )),
+      };
+      if (moved.result && !part.model) programReady = true;
+      if (moved.result?.failure === null && part.model)
+        models?.mark(part.model, true);
+      const parts = entry.parts.map((held) => (held === part ? moved : held));
+      const finished = parts.every((held) => held.result !== null);
       next = {
         ...entry,
-        step: null,
-        retry: null,
-        result: {
-          changed: true,
-          failure: null,
-          sentence: null,
-          transferred_bytes: total ?? 0,
-        },
+        parts,
+        step: moved.step,
+        completed: moved.completed,
+        total: moved.total,
+        retry: moved.step === part.step ? entry.retry : null,
+        result: finished
+          ? {
+              changed: true,
+              failure: null,
+              transferred_bytes: parts.reduce(
+                (sum, held) => sum + (held.result?.transferred_bytes ?? 0),
+                0,
+              ),
+            }
+          : null,
       };
-    }
-    run = {
+    } else
+      next = {
+        ...entry,
+        ...advance(
+          entry,
+          entry.item,
+          seed.plan.download_bytes,
+          seed.plan.installs_outside_program,
+        ),
+        retry: null,
+      };
+    if (next.result) seed.row = readied(seed.row);
+    let moved = put({
       ...run,
       items: run.items.map((held) => (held.item === entry.item ? next : held)),
-    };
-    if (!current()) settle("completed");
+    });
+    if (!current(moved)) moved = settle(moved, "completed");
     publish();
-    if (run.stage === "running") later(step);
+    if (moved.stage === "running") {
+      const id = moved.operation_id;
+      later(() => stepOf(runById(id)));
+    }
   };
+  const step = (item?: SetupItemId) => stepOf(active(item));
 
   /** The approved plan starts: its rows are being set up from now on. */
-  const begin = () => {
-    if (!run) return publish();
+  const begin = (run: SetupRun) => {
     for (const entry of run.items) {
       const seed = seedOf(entry.item);
       if (!seed) continue;
@@ -577,82 +833,195 @@ export function setupFixture({
       seed.row = {
         ...seed.row,
         state: "provisioning",
+        awaits: null,
         recovery: null,
         recovery_action_id: null,
-        sentence: "Being set up now.",
-        action_label: null,
       };
     }
-    run = { ...run, stage: "running", review: null };
+    const id = put({ ...run, stage: "running", review: null }).operation_id;
     const next = publish();
-    later(step);
+    later(() => stepOf(runById(id)));
     return next;
   };
 
+  /** What setting up `seed` plans: the browser as it is; the local AI's
+   * program where it is missing or nothing else is asked for, then the
+   * model asked for. */
+  const planned = (
+    seed: Seed,
+    model: { id: string; sizeBytes: number | null } | null,
+  ): Seed => {
+    if (!seed.plan.installs_outside_program) {
+      plannedSeeds.set(seed.row.item, seed);
+      return seed;
+    }
+    const parts: SetupPlanPart[] = [
+      ...(!programReady || !model
+        ? [
+            {
+              part: "program",
+              download_bytes: null,
+              destination: PROGRAM_FOLDER,
+            },
+          ]
+        : []),
+      ...(model
+        ? [
+            {
+              part: "download",
+              model: model.id,
+              download_bytes: model.sizeBytes,
+              destination: MODELS_FOLDER,
+            },
+          ]
+        : []),
+    ];
+    const known = parts.flatMap((part) =>
+      part.download_bytes === null ? [] : [part.download_bytes],
+    );
+    const shaped: Seed = {
+      ...seed,
+      plan: {
+        ...seed.plan,
+        download_bytes:
+          known.length === 0 ? null : known.reduce((sum, n) => sum + n, 0),
+        parts,
+      },
+    };
+    plannedSeeds.set(seed.row.item, shaped);
+    return shaped;
+  };
+
   const controls: SetupFixtureControls = {
+    setAbsent(item) {
+      const seed = seedOf(item);
+      if (seed)
+        seed.row = row(seed.row.item, seed.row.kind, seed.row.size_bytes);
+    },
     step,
     retry(attempt, delaySeconds) {
-      const entry = current();
+      const run = active();
+      const entry = current(run);
       if (!run || !entry) return;
-      run = {
+      put({
         ...run,
         items: run.items.map((held) =>
           held.item === entry.item
             ? {
                 ...held,
-                retry: {
-                  attempt,
-                  delay_s: delaySeconds,
-                  sentence: `Trying again in ${delaySeconds} seconds (attempt ${attempt}).`,
-                },
+                retry: { attempt, delay_s: delaySeconds },
               }
             : held,
         ),
-      };
+      });
       publish();
     },
     fail(category) {
-      const entry = current();
+      const run = active();
+      const entry = current(run);
       const seed = entry && seedOf(entry.item);
       if (!run || !entry || !seed) return;
       const held = before.get(seed.row.item) ?? seed.row;
       before.delete(seed.row.item);
       seed.row = failed(held, category);
-      run = {
-        ...run,
-        items: run.items.map((held) =>
-          held.item === entry.item
-            ? {
-                ...held,
-                step: null,
-                retry: null,
-                result: {
-                  changed: false,
-                  failure: category,
-                  sentence: FAILURE[category].sentence,
-                  transferred_bytes: held.completed ?? 0,
-                },
-              }
-            : held,
-        ),
+      const cut = {
+        changed: false,
+        failure: category,
+        transferred_bytes: entry.completed ?? 0,
       };
-      settle("failed");
-      run = { ...run, failure_sentence: FAILURE[category].sentence };
+      // Only the part it hit fails; the parts after it were never reached.
+      const part = currentPart(entry);
+      const ended = settle(
+        {
+          ...run,
+          items: run.items.map((held) =>
+            held.item === entry.item
+              ? {
+                  ...held,
+                  step: null,
+                  retry: null,
+                  result: cut,
+                  parts: held.parts.map((each) =>
+                    each === part ? { ...each, step: null, result: cut } : each,
+                  ),
+                }
+              : held,
+          ),
+        },
+        "failed",
+      );
+      put({ ...ended, failure: category });
       publish();
     },
-    interrupt() {
-      const entry = current();
+    failItem(category) {
+      const run = active();
+      const entry = current(run);
+      const seed = entry && seedOf(entry.item);
+      if (!run || !entry || !seed) return;
+      seed.row = before.get(seed.row.item) ?? seed.row;
+      before.delete(seed.row.item);
+      const ended = settle(
+        {
+          ...run,
+          items: run.items.map((held) =>
+            held.item === entry.item
+              ? {
+                  ...held,
+                  step: null,
+                  retry: null,
+                  result: {
+                    changed: false,
+                    failure: category,
+                    transferred_bytes: 0,
+                  },
+                }
+              : held,
+          ),
+        },
+        "failed",
+      );
+      put({ ...ended, failure: category });
+      publish();
+    },
+    refuseStarts(category) {
+      refusing = category;
+    },
+    interrupt(item) {
+      const run = active(item);
+      const entry = current(run);
       const seed = entry && seedOf(entry.item);
       if (!run || !seed) return;
       const held = before.get(seed.row.item) ?? seed.row;
-      if (entry.completed !== null) partial.set(entry.item, entry.completed);
+      const part = currentPart(entry);
+      if (entry.completed !== null)
+        partial.set(
+          part ? partKey(entry.item, part) : entry.item,
+          entry.completed,
+        );
       stopped = true;
-      settle("interrupted");
+      settle(run, "interrupted");
       seed.row = failed(held, "interrupted");
       publish();
     },
     setGoogle(account) {
       google = account;
+      publish();
+    },
+    readRows() {
+      unread = false;
+      publish();
+    },
+    finishPlanning() {
+      [...heldStarts.values()].forEach((finish) => finish(true));
+    },
+    holdChecks() {
+      checksHeld = true;
+    },
+    releaseChecks(refusal) {
+      checksHeld = false;
+      heldChecks.splice(0).forEach((answer) => answer(refusal ?? null));
+    },
+    reread() {
       publish();
     },
     finishGoogle(succeeded) {
@@ -664,13 +1033,11 @@ export function setupFixture({
             drive_folder_id: "profile-drive-folder",
             stage: "idle",
             failure: null,
-            sentence: null,
           }
         : {
             ...google,
             stage: "failed",
             failure: "needs_sign_in",
-            sentence: "Google sign-in didn't finish. Try again.",
           };
       publish();
     },
@@ -685,48 +1052,190 @@ export function setupFixture({
       say(`setup.check ${checkMode}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      const id = `check-${operations}`;
-      mode = checkMode;
-      check = {
-        operation_id: id,
-        kind: checkMode === "full" ? "status_full" : "status_quick",
-        stage: "done",
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        const id = `check-${operations}`;
+        mode = checkMode;
+        check = {
+          operation_id: id,
+          kind: checkMode === "full" ? "status_full" : "status_quick",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     verify(wanted) {
       say(`setup.verify ${wanted?.join(",") ?? "all"}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      mode = "full";
-      check = {
-        operation_id: `verify-${operations}`,
-        kind: "verify",
-        stage: "done",
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        mode = "full";
+        // The full check launches builds no receipt recorded, and records
+        // them.
+        if (shape === "unrecorded")
+          items
+            .filter(
+              (seed) =>
+                seed.row.state === "unknown" &&
+                (wanted ?? [seed.row.item]).includes(seed.row.item),
+            )
+            .forEach((seed) => (seed.row = readied(seed.row)));
+        check = {
+          operation_id: `verify-${operations}`,
+          kind: "verify",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     start(wanted, options) {
       say(
-        `setup.start ${wanted?.join(",") ?? "all"}${options?.resume ? " resume" : ""}`,
+        `setup.start ${wanted}${options?.resume ? " resume" : ""}${options?.reinstall ? " reinstall" : ""}`,
       );
-      const refused = ready();
+      const refused = options?.download ? personal() : ready();
       if (refused) return refused;
       if (shape === "busy") return refuse("busy");
-      if (run && run.stage !== "settled") return Promise.resolve(state());
-      const chosen = items.filter(
-        (seed) =>
-          (wanted === null
-            ? !usable(seed.row)
-            : wanted.includes(seed.row.item)) &&
-          seed.row.recovery !== null &&
-          seed.row.recovery !== "check_again",
-      );
+      const running = runFor(wanted);
+      if (running && running.stage !== "settled")
+        return Promise.resolve(state());
+      const download = options?.download;
+      // A model the catalog does not size, such as one the person named, is
+      // planned with an unknown download.
+      const lane = download
+        ? catalogLanes(FIXTURE_CATALOG).find(
+            (held) => held.id === download.lane,
+          )
+        : undefined;
+      if (download && !lane) return refuse("model_selection_unusable");
+      const model = download
+        ? {
+            id: download.model,
+            sizeBytes:
+              lane?.models.find((held) => held.id === download.model)
+                ?.sizeBytes ?? null,
+          }
+        : null;
+      const chosen = items
+        .filter(
+          (seed) =>
+            seed.row.item === wanted &&
+            (download !== undefined ||
+              (seed.row.recovery !== null &&
+                seed.row.recovery !== "check_again")),
+        )
+        .map((seed) => planned(seed, model));
+      if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
+      if (refusing !== null && chosen.length > 0) {
+        const failure: SetupFailureCategory = refusing;
+        put({
+          item: wanted,
+          operation_id: `setup-${operations}`,
+          stage: "settled",
+          review: null,
+          // Refused while it plans: no part is planned yet.
+          items: chosen.map((seed) => ({
+            ...progress(seed),
+            step: "plan",
+            result: { changed: false, failure, transferred_bytes: 0 },
+            parts: [],
+          })),
+          cancellable: false,
+          cancel_requested: false,
+          outcome: "failed",
+          failure,
+        });
+        return Promise.resolve(publish());
+      }
+      const settled: SetupFailureCategory | null =
+        shape === "unreachable"
+          ? "host_unreachable"
+          : shape === "server_error"
+            ? "server_error"
+            : null;
+      if (settled !== null && chosen.length > 0) {
+        const failure: SetupFailureCategory = settled;
+        const result = { changed: false, failure, transferred_bytes: 0 };
+        put({
+          item: wanted,
+          operation_id: `setup-${operations}`,
+          stage: "settled",
+          review: null,
+          items: chosen.map((seed) => ({
+            ...progress(seed),
+            // The network check finds an unreachable host before the review;
+            // a server's error answers come during the download.
+            step: failure === "host_unreachable" ? "preflight" : "download",
+            result,
+          })),
+          cancellable: false,
+          cancel_requested: false,
+          outcome: "failed",
+          failure,
+        });
+        return Promise.resolve(publish());
+      }
+      if (shape === "start_unreported" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        // The host is still checking the request: it has published nothing
+        // of this setup, so the start is in flight with no run to read.
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            if (planned)
+              put({
+                item: wanted,
+                operation_id: id,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+                cancellable: true,
+                cancel_requested: false,
+                outcome: null,
+                failure: null,
+              });
+            resolve(publish());
+          });
+        });
+      }
+      if (shape === "start_held" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        put({
+          item: wanted,
+          operation_id: id,
+          stage: "planning",
+          review: null,
+          // The host names no part before its engine has planned.
+          items: chosen.map((seed) => ({ ...progress(seed), parts: [] })),
+          cancellable: true,
+          cancel_requested: false,
+          outcome: null,
+          failure: null,
+        });
+        publish();
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            const run = runById(id);
+            if (run && run.stage === "planning" && planned)
+              put({
+                ...run,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+              });
+            resolve(publish());
+          });
+        });
+      }
       const plan = chosen.length === 0 ? null : review(chosen);
-      run = {
+      const run = put({
+        item: wanted,
         operation_id: `setup-${operations}`,
         stage: chosen.length === 0 ? "settled" : "review",
         review: plan,
@@ -734,70 +1243,100 @@ export function setupFixture({
         cancellable: chosen.length > 0,
         cancel_requested: false,
         outcome: chosen.length === 0 ? "nothing_to_do" : null,
-        failure_sentence: null,
-      };
+        failure: null,
+      });
       // Resuming the plan this window approved before is approved already.
       if (options?.resume && plan && approved.has(plan.plan_digest))
-        return Promise.resolve(begin());
+        return Promise.resolve(begin(run));
       return Promise.resolve(publish());
     },
     answer(operationId, planDigest, decision) {
       say(`setup.answer ${decision}`);
       const refused = ready();
       if (refused) return refused;
-      if (
-        !run ||
-        run.operation_id !== operationId ||
-        run.stage !== "review" ||
-        !run.review
-      )
+      const run = runById(operationId);
+      if (!run || run.stage !== "review" || !run.review)
         return refuse("not_pending");
       if (decision === "reject") {
-        settle("rejected");
+        settle(run, "rejected");
         return Promise.resolve(publish());
       }
       if (run.review.plan_digest !== planDigest) return refuse("plan_changed");
       if (shape === "plan_changes" && plans === 1) {
         const chosen = run.items
-          .map((entry) => seedOf(entry.item))
+          .map((entry) => plannedSeeds.get(entry.item) ?? seedOf(entry.item))
           .filter((seed): seed is Seed => seed !== undefined);
-        run = { ...run, review: review(chosen) };
+        put({ ...run, review: review(chosen) });
         publish();
         return refuse("plan_changed");
       }
       if (!run.review.space_sufficient) {
-        settle("not_enough_space");
+        settle(run, "not_enough_space");
         return Promise.resolve(publish());
       }
       approved.add(run.review.plan_digest);
-      return Promise.resolve(begin());
+      return Promise.resolve(begin(run));
     },
     cancel(operationId) {
       say("setup.cancel");
       const refused = ready();
       if (refused) return refused;
-      if (!run || run.operation_id !== operationId || run.stage === "settled")
-        return refuse("not_cancellable");
-      if (run.stage === "review") {
-        settle("cancelled");
+      const run = runById(operationId);
+      if (!run || run.stage === "settled") return refuse("not_cancellable");
+      const held = heldStarts.get(operationId);
+      if (held) {
+        // A setup cancelled before anything is approved ends at once.
+        settle(run, "cancelled");
+        held(false);
         return Promise.resolve(publish());
       }
-      pendingCancel = true;
-      run = { ...run, cancel_requested: true, cancellable: false };
+      if (run.stage === "review") {
+        settle(run, "cancelled");
+        return Promise.resolve(publish());
+      }
+      pendingCancel.add(operationId);
+      put({ ...run, cancel_requested: true, cancellable: false });
       const next = publish();
       // Cancellation lands between transfer chunks: at the next step.
-      later(step);
+      later(() => stepOf(runById(operationId)));
       return Promise.resolve(next);
+    },
+    removeModel(model) {
+      say(`setup.removeModel ${model}`);
+      const refused = personal();
+      if (refused) return refused;
+      // Only the local AI's own setup holds its models.
+      const localAi = runFor("local_ai");
+      if (localAi && localAi.stage !== "settled") return refuse("busy");
+      models?.mark(model, false);
+      return Promise.resolve(publish());
+    },
+    remove(removal) {
+      say(`setup.remove ${removal}`);
+      const refused = removal === "local_ai" ? personal() : ready();
+      if (refused) return refused;
+      const item = removal === "browser" ? "browser" : "local_ai";
+      const running = runFor(item);
+      if (running && running.stage !== "settled") return refuse("busy");
+      const seed = items.find((entry) => entry.row.item === item);
+      if (seed)
+        seed.row = row(item, item, item === "browser" ? 180 * MB : null);
+      if (item === "local_ai") {
+        programReady = false;
+        // The program alone leaves every model; the whole local AI takes
+        // the models on the person's lists with it.
+        if (removal === "local_ai") models?.markAll(false);
+      }
+      return Promise.resolve(publish());
     },
     signInGoogle() {
       say("google.signIn");
-      const refused = ready();
+      const refused = personal();
       if (refused) return refused;
       google = {
         ...google,
         stage: "signing_in",
         failure: null,
-        sentence: null,
       };
       const next = publish();
       later(() => controls.finishGoogle(true));
@@ -805,7 +1344,7 @@ export function setupFixture({
     },
     signOutGoogle() {
       say("google.signOut");
-      const refused = ready();
+      const refused = personal();
       if (refused) return refused;
       // Removing the stored sign-in contacts nothing, so it settles at once.
       google = {
@@ -814,7 +1353,6 @@ export function setupFixture({
         drive_folder_id: null,
         stage: "idle",
         failure: null,
-        sentence: null,
       };
       return Promise.resolve(publish());
     },

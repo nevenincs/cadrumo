@@ -11,9 +11,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -29,14 +26,12 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -45,33 +40,36 @@ from ....application.aggregation.ledger_filing_snapshot import (
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import (
-    attach_manual_transaction_evidence,
-    link_manual_transaction_invoice,
-)
+from ....application.ledger.actions_manual import link_manual_transaction_invoice
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ....application.modelo.calculation_actions import (
+from ....application.ledger.manual_update import attach_manual_transaction_evidence
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from ....application.modelo.export_ports import ModeloExportPorts
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_gate_findings import missing_evidence_findings
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from ....application.modelo.work_form_next_step import ModeloFormNextAction, form_next_step
+from ....application.modelo.work_form_service import load_modelo_work_form
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import OutputLanguage
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -83,6 +81,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -91,16 +90,17 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.env_scope import ready_clave_settings
-from ...adapter_composition import (
+from ....tests.pdf_fixtures import text_pdf_bytes
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
 )
+from .ledger_drift_support import raw_transaction
+from .ready_profile_taxpayer import persona_tax_id
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -117,7 +117,7 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_TAX_ID = "12345678Z"
+_TAX_ID = persona_tax_id("alta.titular")
 _YEAR = 2026
 _PERIOD = "1T"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
@@ -218,46 +218,8 @@ _DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 
 
-def _store_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Irene"),
-                UserProfileFact(path="identity.surnames", value="Evidence"),
-                UserProfileFact(path="activities.description", value="consulting"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(_YEAR, 1, 1))
 
 
 def _wallet_decision() -> IvaCompensationReconciliationDecision:
@@ -283,27 +245,6 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
     )
 
 
-def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente o proveedor",
-        description=f"M303 evidence gate {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="e" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=_T0,
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
 def iva_transaction(
     provider_id: str,
     *,
@@ -314,7 +255,7 @@ def iva_transaction(
     booked_date = date(_YEAR, 2, 15)
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=booked_date,
                 amount=taxable_base + iva_amount,
@@ -384,6 +325,28 @@ def _repositories(
     )
 
 
+def _calculate_work_unit(
+    work_unit_id: str, *, bucket_id: str, decision: IvaCompensationReconciliationDecision | None = None
+) -> CalculationRevision:
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                Period.from_year_and_code(_YEAR, _PERIOD),
+                reference="test:m303-deductible-evidence-gate",
+                operation=operation,
+            ),
+        ).revision
+
+
 def _calculate_irene_revision(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
@@ -397,7 +360,7 @@ def _calculate_irene_revision(
     BucketEventHistoryRepository,
     TransactionCatalogueRepository,
 ]:
-    _store_profile(objects)
+    seed_persona_profile("autonomo-alta-reciente", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _repositories(objects)
     sale = iva_transaction(
         "irene-sale-no-evidence",
@@ -423,8 +386,18 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
+    revision = _calculate_work_unit(work_unit.work_unit_id, bucket_id=work_unit.bucket_id, decision=decision)
+    return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
+
+
+def _recalculate_after_a_ledger_write(
+    revision: CalculationRevision, *, wu_repo: WorkUnitCatalogueRepository
+) -> CalculationRevision:
+    """Take a new baseline: the facts moved, so the draft must read them again."""
+    work_unit = wu_repo.load().get(revision.work_unit_id)
+    assert work_unit is not None
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator",
@@ -432,13 +405,11 @@ def _calculate_irene_revision(
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
             },
-            iva_compensation_decision=decision,
             clock=_CALCULATED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
             ),
         ).revision
-    return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
 def _persist_legacy_verified_revision(
@@ -473,6 +444,65 @@ def _persist_legacy_verified_revision(
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), legacy))
     return legacy
+
+
+def _assert_blocked_report_carries_both_severities(report) -> None:
+    assert report.granted_verificado_completo is False
+    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    blocking = [
+        finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    ]
+    warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
+    assert blocking != []
+    assert warning != []
+
+
+def _evidence_findings_of(report: VerificationReport, revision: CalculationRevision) -> list[ModeloVerificationFinding]:
+    expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
+    evidence_findings = [
+        finding
+        for finding in report.findings
+        if finding.source_refs == expected_source_refs
+        and finding.kind in {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.ADVISORY}
+    ]
+    assert evidence_findings
+    assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
+    assert all("deductible_iva_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all("output_iva_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all(
+        "_" not in source_ref and "-" in source_ref
+        for finding in evidence_findings
+        for source_ref in finding.source_refs
+    )
+    return evidence_findings
+
+
+def _assert_evidence_findings_split_blocking_and_advisory(evidence_findings) -> None:
+    # The deductible finding is BLOCKING while the output side stays an
+    # ADVISORY; each remains factual and has no persisted recovery prose.
+    assert any(finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE for finding in evidence_findings)
+    assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
+    assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
+
+
+def _assert_evidence_projections(verification, evidence_findings) -> None:
+    evidence_projections = tuple(
+        projection for projection in verification.finding_preconditions if projection.finding in evidence_findings
+    )
+    assert len(evidence_projections) == len(evidence_findings)
+    assert all(
+        projection.precondition_failure is not None
+        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_iva_evidence.missing"
+        and projection.precondition_failure.verdict.action is None
+        and projection.precondition_failure.verdict.no_recovery_outcome is not None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    )
+    assert all(
+        projection.precondition_failure is None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
+    )
 
 
 def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output_gap(
@@ -524,52 +554,10 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
         )
     report = verification.report
 
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    blocking = [
-        finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    ]
-    warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
-    assert blocking != []
-    assert warning != []
-    expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
-    evidence_findings = [
-        finding
-        for finding in report.findings
-        if finding.source_refs == expected_source_refs
-        and finding.kind in {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.ADVISORY}
-    ]
-    assert evidence_findings
-    assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
-    assert all("deductible_iva_evidence" not in finding.source_refs for finding in evidence_findings)
-    assert all("output_iva_evidence" not in finding.source_refs for finding in evidence_findings)
-    assert all(
-        "_" not in source_ref and "-" in source_ref
-        for finding in evidence_findings
-        for source_ref in finding.source_refs
-    )
-    # The deductible finding is BLOCKING while the output side stays an
-    # ADVISORY; each remains factual and has no persisted recovery prose.
-    assert any(finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE for finding in evidence_findings)
-    assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
-    assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
-    evidence_projections = tuple(
-        projection for projection in verification.finding_preconditions if projection.finding in evidence_findings
-    )
-    assert len(evidence_projections) == len(evidence_findings)
-    assert all(
-        projection.precondition_failure is not None
-        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_iva_evidence.missing"
-        and projection.precondition_failure.verdict.action is None
-        and projection.precondition_failure.verdict.no_recovery_outcome is not None
-        for projection in evidence_projections
-        if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    )
-    assert all(
-        projection.precondition_failure is None
-        for projection in evidence_projections
-        if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
-    )
+    _assert_blocked_report_carries_both_severities(report)
+    evidence_findings = _evidence_findings_of(report, revision)
+    _assert_evidence_findings_split_blocking_and_advisory(evidence_findings)
+    _assert_evidence_projections(verification, evidence_findings)
     # The load-bearing half: a blocked verify must leave NO frozen bundle and a
     # still-open draft. If either moved, the operator would be locked out of the
     # target exactly as before, and the promotion would have changed the message
@@ -588,7 +576,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
             _calculate_irene_revision(profile.repository, operation=operation)
         )
         invoice = tmp_path / "supplier-invoice.pdf"
-        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
@@ -607,6 +595,10 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
+        assert (
+            _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo).calculation_revision_id
+            == revision.calculation_revision_id
+        )
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
@@ -645,41 +637,17 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
 
 
-def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
+def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_files(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A row bound to a real, validated ``Invoice`` passes verify AND survives filing.
+    """A received invoice deducts on its stored factura, not on its typed row.
 
-    This is the real path, not the model boundary: the invoice is minted
-    through :func:`create_catalogue_invoice` -- the sanctioned catalogue
-    writer that runs RD 1619/2012 art. 6 content validation -- and bound to
-    the transaction through :func:`link_manual_transaction_invoice`, the sole
-    invoice-linkage writer. Neither is a mock; both are the production
-    functions an operator's ``aeat app ledger link`` command calls.
-
-    Before the fix this test defends, ``_row_has_deduction_grade_evidence``
-    read only ``purchase_invoice_evidence_id`` and never ``invoice_id``, so a
-    row linked to a fully-validated ``Invoice`` still blocked verification --
-    a validated invoice was treated as no evidence at all. This test fails on
-    that code, and the sibling
-    ``test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set``
-    in ``test_evidence_advisory.py`` proves the widening did not also silence
-    a row with neither carrier set.
-
-    The ``file_modelo_revision`` step at the end defends the SECOND grading
-    surface this discovery uncovered: ``LedgerEvidenceRow`` (the bundle
-    ``verify`` freezes) never carried ``invoice_id``, so a row credited only
-    through a linked invoice at verify time bundled with
-    ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty --
-    and ``raise_if_deductible_iva_evidence_missing``
-    (``_ledger_evidence_gate.py``) then blocked local filing on a revision
-    ``verify`` had JUST granted. That is not a hypothetical: it reproduced
-    against the first version of this fix, and is exactly the "permanent dead
-    end" failure class the surrounding campaign was built to close -- a
-    revision that is VERIFICADO_COMPLETO and content-addressed cannot be
-    re-verified or recalculated into a different id, so a fix that only
-    closes the verify-time gate while leaving the bundle-time gate blind
-    would strand the taxpayer worse than before the fix.
+    The invoice is minted through :func:`create_catalogue_invoice`, the catalogue
+    writer that runs RD 1619/2012 art. 6 content validation, and linked to its
+    payment through :func:`link_manual_transaction_invoice`. Its lines are the
+    revision's IVA source. Verification blocks while no document belongs to the
+    invoice (LIVA art. 97) and names the invoice to open; once the document is
+    stored with it, the same revision verifies complete and files.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
@@ -693,7 +661,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Proveedor Ejemplo SL",
-                counterparty_tax_id="B12345674",
+                counterparty_tax_id="B00015016",
                 counterparty_country="ES",
                 invoice_number="F2026-0042",
                 issued_at=date(_YEAR, 2, 15),
@@ -730,50 +698,83 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.invoice_id == created.invoice.invoice_id
+        # An invoice entered in the period after the calculation moves the invoice
+        # baseline, so the draft reads the catalogue again before it can be verified.
+        revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision.calculation_revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                actor="operator",
-                workflow_profile=workflow_profile(),
-                settings=ready_clave_settings(_TAX_ID),
-                verification_repositories=_verification_ports(
+        # The invoice joined the period after the calculation read its invoices,
+        # so the draft is calculated again from the catalogue that now holds it.
+        revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
+
+        def verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as operation:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=operation,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                    wu_repo=wu_repo,
-                    cr_repo=cr_repo,
-                    filing_repo=filing_repo,
-                    vr_repo=vr_repo,
-                    event_repo=event_repo,
-                    tx_repo=tx_repo,
-                ),
-                clock=_VERIFIED_AT,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+                ).report
 
+        # A typed invoice row is not the factura LIVA art. 97 deducts on: until
+        # its document is stored with it, the deduction it declares blocks.
+        blocked = verify()
+        assert blocked.granted_verificado_completo is False
+        missing = [
+            finding
+            for finding in blocked.findings
+            if finding.message_locale_key == "application.modelo.findings.invoice_source_document_missing"
+        ]
+        assert [(finding.severity, finding.message_facts["invoice_id"]) for finding in missing] == [
+            (ModeloVerificationFindingSeverity.BLOCKING, created.invoice.invoice_id)
+        ]
+
+        add_attachment(
+            AttachmentStore(objects=profile.repository),
+            content=AttachmentBytesContent(data=text_pdf_bytes(("synthetic factura F2026-0042",))),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="operator-evidence",
+                mime_type="application/pdf",
+                captured_at=_VERIFIED_AT,
+                bucket_id=_BUCKET_ID,
+                link_invoice_ids=(created.invoice.invoice_id,),
+            ),
+        )
+
+        report = verify()
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
         assert not any(
-            finding.message_locale_key == "application.modelo.findings.transaction_evidence_missing_deductible"
+            finding.message_locale_key
+            in {
+                "application.modelo.findings.transaction_evidence_missing_deductible",
+                "application.modelo.findings.invoice_source_document_missing",
+            }
             for finding in report.findings
         )
 
+        # The invoice, not its payment, is what the revision declared: the paying
+        # movement is no calculation source, so the frozen ledger evidence holds no
+        # row for it that filing could find unsupported.
         stored = cr_repo.load().get(revision.calculation_revision_id)
         assert stored is not None
         assert stored.ledger_filing_evidence is not None
-        purchase_rows = [
-            row for row in stored.ledger_filing_evidence.rows if row.transaction_id == purchase.transaction_id
-        ]
-        assert len(purchase_rows) == 1
-        assert purchase_rows[0].invoice_id == created.invoice.invoice_id
-        assert purchase_rows[0].purchase_invoice_evidence_id is None
+        assert purchase.transaction_id not in {row.transaction_id for row in stored.ledger_filing_evidence.rows}
 
-        # The load-bearing half of this test: filing a VERIFICADO_COMPLETO
-        # revision whose only deductible evidence is a linked invoice must
-        # NOT dead-end. Before the LedgerEvidenceRow.invoice_id fix, this
-        # raised ModeloFilingEvidenceMissingError even though verify had just
-        # granted the same revision.
         with bundled_indexed_authority().operation() as operation:
             filed = file_modelo_revision(
                 revision.calculation_revision_id,
@@ -797,10 +798,107 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert tuple(filing_repo.load().values()) != ()
 
 
-def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
+def test_an_issued_invoice_without_its_copy_warns_until_its_document_is_stored(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The recovery the whole promotion rests on: block, attach, re-verify, grant.
+    """An issued invoice that is the IVA source keeps the output-evidence advisory.
+
+    The sale is paid by a linked movement, so the invoice, not the movement, is
+    what the revision declares. RD 1619/2012 art. 2 makes the issued factura the
+    output document: while the records hold no document for it, verification
+    warns and names the invoice, without blocking; once its copy is stored with
+    it, the warning goes.
+    """
+    output_key = "application.modelo.findings.transaction_evidence_missing_output"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository, operation=operation)
+        )
+        invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+        with bundled_indexed_authority().operation() as operation:
+            invoice = build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Cliente Ejemplo SL",
+                counterparty_tax_id="B00015016",
+                counterparty_country="ES",
+                invoice_number="V-0001",
+                issued_at=date(_YEAR, 2, 10),
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+                rate_provider=catalogue_ports.rate_provider,
+                operation=operation,
+            )
+        created = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
+        with _ledger_ports(
+            objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo, invoice_repo=invoice_repo
+        ) as ports:
+            link_manual_transaction_invoice(
+                bucket_id=_BUCKET_ID,
+                transaction_id=sale.transaction_id,
+                invoice_id=created.invoice.invoice_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
+        revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
+        assert sale.transaction_id not in revision.source_transaction_ids
+
+        def verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as operation:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=operation,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                ).report
+
+        warned = verify()
+        output = [finding for finding in warned.findings if finding.message_locale_key == output_key]
+        assert [(finding.kind, finding.severity, finding.message_facts["invoice_id"]) for finding in output] == [
+            (
+                ModeloVerificationFindingKind.ADVISORY,
+                ModeloVerificationFindingSeverity.WARNING,
+                created.invoice.invoice_id,
+            )
+        ]
+
+        add_attachment(
+            AttachmentStore(objects=profile.repository),
+            content=AttachmentBytesContent(data=text_pdf_bytes(("synthetic factura V-0001",))),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="operator-evidence",
+                mime_type="application/pdf",
+                captured_at=_VERIFIED_AT,
+                bucket_id=_BUCKET_ID,
+                link_invoice_ids=(created.invoice.invoice_id,),
+            ),
+        )
+        assert not any(finding.message_locale_key == output_key for finding in verify().findings)
+
+
+def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifying_again(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The recovery the whole promotion rests on: block, attach, recalculate, grant.
 
     The sibling test above attaches BEFORE the first verify, which was the only
     ordering that ever worked. This one drives the ordering an operator actually
@@ -812,6 +910,10 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
     It also pins that the idempotent re-verify guard does not fire here. That
     guard keys on a non-BORRADOR state, so a blocked revision must stay BORRADOR
     for the second verify to do real work rather than return the first report.
+
+    Evidence is a watched fact, so verifying straight after the attach reports
+    drift. Recalculating the same figures keeps the content-addressed id and moves
+    only the draft's baseline, which is what leaves the path recoverable.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
@@ -849,7 +951,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
         assert after_block.ledger_filing_evidence is None
 
         invoice = tmp_path / "supplier-invoice.pdf"
-        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
@@ -862,6 +964,12 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
                 ports=ports,
                 occurred_at=_VERIFIED_AT,
             )
+
+        drifted = _verify()
+        assert drifted.granted_verificado_completo is False
+        assert any("drift" in finding.message_locale_key for finding in drifted.findings)
+        recalculated = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        assert recalculated.calculation_revision_id == revision.calculation_revision_id
 
         granted = _verify()
         assert granted.granted_verificado_completo is True
@@ -881,6 +989,91 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
         # folding evidence into identity: no calculation differs, so no new
         # revision was needed to carry the fix.
         assert settled.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_the_form_offers_the_check_again_once_evidence_is_attached_after_a_blocked_check(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A blocked check whose movements gained evidence since is offered again, not resolved.
+
+    The stored report still lists the missing factura it found, but the
+    movement it read has changed: only checking again says whether that
+    finding still stands. The form serves the check, follows each step it
+    serves, and arrives at a granted verification.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository, operation=operation)
+        )
+
+        def _verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as pinned:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=pinned,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=pinned,
+                ).report
+
+        def _next() -> ModeloFormNextAction:
+            unit = wu_repo.load().get(revision.work_unit_id)
+            assert unit is not None
+            with bundled_indexed_authority().operation() as pinned:
+                loaded = load_modelo_work_form(
+                    unit.bucket_id,
+                    unit.modelo,
+                    unit.filing_year,
+                    unit.period,
+                    operation=pinned,
+                    work_unit_repository=wu_repo,
+                    calculation_repository=cr_repo,
+                    verification_repository=vr_repo,
+                    admission=None,
+                    language=OutputLanguage.EN,
+                    transactions=tx_repo,
+                )
+            return form_next_step(loaded.form, verified=loaded.verified, filed=loaded.filed).action
+
+        assert _verify().completeness_status is VerificationCompletenessStatus.BLOCKED
+        assert _next() is ModeloFormNextAction.RESOLVE
+
+        invoice = tmp_path / "supplier-invoice.pdf"
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
+        evidence = PurchaseInvoiceEvidenceService(
+            ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
+        ).add(bucket_id=_BUCKET_ID, source_path=invoice)
+        with _ledger_ports(objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo) as ports:
+            attach_manual_transaction_evidence(
+                bucket_id=_BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
+
+        assert _next() is ModeloFormNextAction.VERIFY
+        # Evidence is a watched fact, so the check reports the calculation stale.
+        assert _verify().granted_verificado_completo is False
+        assert _next() is ModeloFormNextAction.RECALCULATE
+        _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        assert _next() is ModeloFormNextAction.VERIFY
+        granted = _verify()
+        assert granted.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert _next() is not ModeloFormNextAction.VERIFY
 
 
 def _work_unit() -> WorkUnit:

@@ -8,7 +8,6 @@ use cadrumo_application::{
     value::Sha256Digest,
 };
 use serde_json::json;
-use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -88,7 +87,7 @@ impl Fixture {
             "build":{"application_id":"test.launch","channel":"stable","version":"1.0.0",
                 "target":if cfg!(windows) {"windows-x86-64"} else {"fixture"}},
             "layout":{"abi":1,"platform":self.contract.layout.platform},"python":"fixture","distributions":{},
-            "files":{member.as_str():format!("{:x}",Sha256::digest(fs::read(source).unwrap()))},
+            "files":{member.as_str():Sha256Digest::of(fs::read(source).unwrap()).to_string()},
             "user_docs":{"directory":"docs/user","bundled":false}
         })).unwrap();
         fs::write(self.package.join("data/package-manifest.json"), &manifest).unwrap();
@@ -101,11 +100,7 @@ impl Fixture {
         )
         .unwrap();
         let reservation = store
-            .prepare(
-                "1.0.0",
-                owner,
-                Sha256Digest::new(format!("{:x}", Sha256::digest(manifest))).unwrap(),
-            )
+            .prepare("1.0.0", owner, Sha256Digest::of(manifest))
             .unwrap();
         (store, reservation)
     }

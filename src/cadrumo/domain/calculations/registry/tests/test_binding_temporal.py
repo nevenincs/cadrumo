@@ -19,6 +19,7 @@ from ..binding_temporal import (
     TargetPeriodOffset,
     TargetPeriods,
 )
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -68,7 +69,7 @@ def test_applicability_and_authorship_unions_round_trip_every_member() -> None:
         TargetPeriods(periods=("0A",)),
         NonCalculation(
             reason="informational_total",
-            box_retired_in="2023",
+            box_retired_in=str(filing_year_envelope().floor),
             consumed_by="modelo-390 annual informational handoff",
         ),
     ]
@@ -85,7 +86,7 @@ def test_applicability_and_authorship_unions_round_trip_every_member() -> None:
 
 def test_temporal_union_refuses_an_unknown_discriminator() -> None:
     with pytest.raises(ValidationError, match=r"union_tag_invalid|does not match any"):
-        _TEMPORAL.validate_python({"kind": "absolute_year", "year": 2025})
+        _TEMPORAL.validate_python({"kind": "absolute_year", "year": filing_year_envelope().horizon})
 
 
 def test_filing_year_offset_refuses_a_zero_year_offset() -> None:

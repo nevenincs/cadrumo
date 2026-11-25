@@ -3,6 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
+import { list, rulesIncomplete } from "../support/scenarioModelo";
 
 // An automated accessibility audit of each major surface, in both schemes.
 // It finds what a rule engine can find: names, roles, relationships and
@@ -83,19 +85,18 @@ const SURFACES: {
         })
         .click();
       await target
-        .getByRole("button", {
-          name: label("desktop.profile.censo.title"),
+        .getByRole("region", {
+          name: label("desktop.profile.censo.band"),
           exact: true,
         })
-        .click();
-      await target
-        .getByRole("dialog")
         .getByRole("button", {
           name: label("desktop.profile.censo.pull"),
           exact: true,
         })
         .click();
-      await expect(target.getByRole("dialog")).toContainText("Calle Nueva 1");
+      await expect(target.locator(".user-profile-page")).toContainText(
+        "Calle Nueva 1",
+      );
     },
   },
   {
@@ -130,7 +131,7 @@ const SURFACES: {
         })
         .click();
       await expect(target.locator(".user-profile-page")).toContainText(
-        "Soler Vidal",
+        PROFILE_SURNAMES,
       );
       if (editing)
         await target
@@ -142,6 +143,44 @@ const SURFACES: {
           .click();
     },
   })),
+  {
+    name: "the AEAT access editor",
+    scenario: "aeat-setup",
+    reach: async (target: Page) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await expect(target.locator(".user-profile-page")).toContainText(
+        PROFILE_SURNAMES,
+      );
+      await target
+        .locator(".user-profile-page")
+        .getByRole("button", {
+          name: label("desktop.profile.edit_field", {
+            field: "Authentication method",
+          }),
+          exact: true,
+        })
+        .click();
+      const editor = target.getByRole("dialog", {
+        name: label("desktop.profile.action.aeat_access"),
+        exact: true,
+      });
+      await editor
+        .getByLabel("Authentication method", { exact: true })
+        .selectOption("certificate");
+      await editor
+        .getByRole("button", {
+          name: label("desktop.profile.aeat.certificate_choose"),
+        })
+        .click();
+      await expect(editor).toContainText("firma-ana-soler.p12");
+    },
+  },
   {
     name: "a refused sign-in",
     scenario: "wrong-password",
@@ -347,8 +386,13 @@ const SURFACES: {
         .getByRole("navigation", { name: label("desktop.rail.label") })
         .getByRole("button", { name: label("desktop.calendar.title") })
         .click();
+      // Maximized from its pane's own header.
       await target
-        .getByRole("button", { name: label("desktop.calendar.maximize") })
+        .locator('[data-dock-header="docs"]')
+        .getByRole("button", {
+          name: label("desktop.dock.expand"),
+          exact: true,
+        })
         .click();
       const page = target.getByRole("region", {
         name: label("desktop.calendar.title"),
@@ -493,7 +537,220 @@ const SURFACES: {
       await expect(target.locator("#profile-password")).toBeFocused();
     },
   },
+  ...[false, true].map((choosing) => ({
+    name: choosing
+      ? "the Ledger page's period dropdown"
+      : "the Ledger page with a period read",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await target.locator("[data-rail=ledger]").click();
+      await expect(
+        target.locator(".ledger-page .ledger-readiness [data-readiness]"),
+      ).not.toHaveCount(0);
+      if (choosing) {
+        await target.locator(".ledger-period").click();
+        await expect(
+          target
+            .getByRole("dialog", {
+              name: label("desktop.ledger.period.choose"),
+            })
+            .getByRole("group", {
+              name: label(
+                "desktop.ledger.period.years_with_movements_or_invoices",
+              ),
+            }),
+        ).toBeVisible();
+      }
+    },
+  })),
+  ...(["filters", "columns", "classify"] as const).map((open) => ({
+    name: `the Ledger movements grouped by counterparty, with ${open === "classify" ? "the classify dialog" : `the ${open}`} open`,
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await target.locator("[data-rail=ledger]").click();
+      const movements = target.locator(".ledger-movements");
+      await expect(movements.getByRole("grid")).toBeVisible();
+      await movements.locator(".ledger-views").click();
+      await target
+        .getByRole("menuitemradio", {
+          name: label("desktop.ledger.view.to_classify"),
+        })
+        .click();
+      await target.keyboard.press("Escape");
+      await expect(movements.locator("[data-kind=section]")).not.toHaveCount(0);
+      if (open === "classify") {
+        await movements
+          .locator(".ledger-group-actions")
+          .first()
+          .getByRole("button", { name: label("desktop.ledger.group.classify") })
+          .click();
+        await target
+          .getByRole("menuitem", {
+            name: label("desktop.ledger.group.business"),
+          })
+          .click();
+        await expect(target.locator(".ledger-classify")).toBeVisible();
+        return;
+      }
+      await movements
+        .getByRole("button", {
+          name: new RegExp(
+            `^${label(open === "filters" ? "desktop.ledger.filters.title" : "desktop.ledger.columns.title")}`,
+          ),
+        })
+        .click();
+      await expect(target.locator(`.ledger-${open}`)).toBeVisible();
+    },
+  })),
+  {
+    name: "the Declarations page",
+    scenario: "ledger",
+    reach: openDeclarations,
+  },
+  {
+    name: "the new-declaration dialog with a modelo chosen",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await newDeclaration(target, "130");
+    },
+  },
+  {
+    name: "a declaration whose rules are incomplete",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await newDeclaration(target, rulesIncomplete.modelo);
+      const dialog = target.getByRole("dialog");
+      const existing = list().creation_targets.find(
+        (entry) => entry.modelo === rulesIncomplete.modelo && entry.existing,
+      );
+      if (!existing) throw new Error("no declaration with incomplete rules");
+      await dialog.getByRole("radio", { name: existing.period_words }).click();
+      await dialog
+        .getByRole("button", {
+          name: label("workspace.declarations.list.new.open_it"),
+        })
+        .click();
+      await expect(declarationViews(target)).toBeVisible();
+    },
+  },
+  {
+    name: "the outline beside a Modelo 303",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await target
+        .getByRole("grid", {
+          name: label("workspace.declarations.destination.overview"),
+        })
+        .getByRole("row")
+        .filter({
+          has: target.getByRole("gridcell", { name: "303", exact: true }),
+        })
+        .first()
+        .dblclick();
+      await openOutline(target);
+    },
+  },
+  {
+    name: "the outline beside a Modelo 100",
+    scenario: "ledger",
+    extra: "&modelo=renta",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      // The list's row opens no local work; the dialog opens the existing
+      // declaration, which is the period the read names as existing.
+      const read = await target.evaluate(async () =>
+        window.__fixtureModelo!.declarations("en"),
+      );
+      const existing = read.creation_targets.find(
+        (entry) => entry.modelo === "100" && entry.existing,
+      )!;
+      await newDeclaration(target, "100");
+      const dialog = target.getByRole("dialog");
+      await dialog.getByRole("radio", { name: existing.period_words! }).click();
+      await dialog
+        .getByRole("button", {
+          name: label("workspace.declarations.list.new.open_it"),
+        })
+        .click();
+      await expect(declarationViews(target)).toBeVisible({ timeout: 30_000 });
+      await openOutline(target);
+    },
+  },
+  ...(
+    [
+      ["", "desktop.modelo.view.form"],
+      ["checked", "workspace.modelo.step.review"],
+      ["filed", "workspace.modelo.filing.title"],
+      ["stale", "workspace.modelo.filing.title"],
+      ["", "workspace.modelo.key.sources"],
+      ["filed", "workspace.modelo.history.title"],
+    ] as const
+  ).map(([shape, view]) => ({
+    name: `a Modelo 130${shape ? ` (${shape})` : ""} on its ${label(view)} view`,
+    scenario: "ledger",
+    extra: shape ? `&modelo=${shape}` : "",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await target
+        .getByRole("grid", {
+          name: label("workspace.declarations.destination.overview"),
+        })
+        .getByRole("row")
+        .filter({
+          has: target.getByRole("gridcell", { name: "130", exact: true }),
+        })
+        .first()
+        .dblclick();
+      const tab = declarationViews(target).getByRole("tab", {
+        name: new RegExp(`^${label(view)}`),
+      });
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+    },
+  })),
 ];
+
+async function openDeclarations(target: Page) {
+  await target.locator("[data-rail=declarations]").click();
+  await expect(
+    target
+      .getByRole("grid", {
+        name: label("workspace.declarations.destination.overview"),
+      })
+      .getByRole("row")
+      .nth(1),
+    // The list is one large read; under a loaded host it takes a while.
+  ).toBeVisible({ timeout: 15_000 });
+}
+
+async function newDeclaration(target: Page, modelo: string) {
+  await target
+    .getByRole("button", { name: label("workspace.declarations.list.key.new") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog
+    .getByRole("button")
+    .filter({ hasText: new RegExp(`^${modelo}(?!\\d)`) })
+    .first()
+    .click();
+  await expect(dialog.getByRole("radio").first()).toBeVisible();
+}
+
+async function openOutline(target: Page) {
+  await target
+    .getByRole("tab", { name: label("desktop.modelo.side.outline") })
+    .click();
+  await expect(
+    target.getByRole("tree", { name: label("desktop.modelo.outline.label") }),
+  ).toBeVisible({ timeout: 15_000 });
+}
+
+const declarationViews = (target: Page) =>
+  target.getByRole("tablist", { name: label("desktop.modelo.views.label") });
 
 for (const scheme of ["light", "dark"] as const)
   for (const surface of SURFACES)
@@ -514,3 +771,37 @@ for (const scheme of ["light", "dark"] as const)
       );
       expect(await audit(target, surface.unchecked)).toEqual([]);
     });
+
+// A glyph that says one thing is named on its wrapper, because the icon is
+// always hidden from the tree: the label must be in the tree, the bare
+// icon must not be.
+test("a glyph mark's label is in the accessibility tree while its icon stays hidden", async ({
+  page: target,
+}) => {
+  await open(target, "ledger", "&modelo=filed");
+  await openDeclarations(target);
+  await target
+    .getByRole("grid", {
+      name: label("workspace.declarations.destination.overview"),
+    })
+    .getByRole("row")
+    .filter({
+      has: target.getByRole("gridcell", { name: "130", exact: true }),
+    })
+    .first()
+    .dblclick();
+  const filing = declarationViews(target).getByRole("tab", {
+    name: new RegExp(`^${label("workspace.modelo.filing.title")}`),
+  });
+  const mark = filing.getByRole("img", {
+    name: label("workspace.declarations.list.group.recorded"),
+  });
+  await expect(mark).toBeVisible();
+  await expect(filing).toMatchAriaSnapshot(
+    `- tab:\n  - img "${label("workspace.declarations.list.group.recorded")}"`,
+  );
+  await expect(mark.locator("svg[data-slot=icon]")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+});

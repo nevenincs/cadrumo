@@ -3,21 +3,31 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from dev.acceptance.iva.filing_year import newest_journey_year
 
 from .installed_method_fixture import (
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
-    METHOD_REVISION_JSON,
     method_correction_json,
+    method_revision_json,
 )
 from .installed_tui_contracts import InstalledAssetTuiError
 from .installed_tui_controls import (
-    _activate_public_button,
-    _set_public_input,
-    _wait_for_asset_result,
-    _wait_for_current_revision_id,
+    activate_public_button,
+    set_public_input,
+    wait_for_asset_result,
+    wait_for_current_revision_id,
 )
+
+if TYPE_CHECKING:
+    from textual.pilot import Pilot
+
+
+def _method_filing_year() -> int:
+    """The newest filing year the installed authority authors for the Modelo 130 and 100 the handoff names."""
+    return newest_journey_year(coordinates=(("130", "4T"), ("100", "0A"))).year
 
 
 def _claim_result_reused(*, rendered: str, expected: bool, stage: str) -> None:
@@ -39,22 +49,107 @@ def _assert_method_forecast_result(forecast: str) -> None:
         )
 
 
-async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def exercise_method_asset_lifecycle(
+    *, pilot: Any, progress: Callable[[str], None], acquisition_transaction_id: str
+) -> dict[str, object]:
     """Create, correct, forecast, claim, and hand off one public asset lifecycle."""
-    await _set_public_input(
+    first_revision_id = await _create_method_asset(pilot, progress, acquisition_transaction_id)
+    await _inspect_method_asset(pilot, progress, first_revision_id)
+    await _correct_method_asset(pilot, progress, acquisition_transaction_id, first_revision_id)
+
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-covered-from",
+        value=f"{_method_filing_year()}-01-01",
+        stage="asset_forecast",
+    )
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-covered-until",
+        value=f"{_method_filing_year() + 1}-01-01",
+        stage="asset_forecast",
+    )
+    forecast_action = await activate_public_button(pilot=pilot, selector="#asset-forecast", stage="asset_forecast")
+    forecast = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix="forecast\t",
+        stage="asset_forecast",
+        transition=forecast_action,
+    )
+    _assert_method_forecast_result(forecast)
+    progress("asset_forecast")
+
+    first_claim_action = await activate_public_button(pilot=pilot, selector="#asset-claim", stage="asset_claim")
+    first_claim = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix="claim\t",
+        expected_suffix="reused=false",
+        stage="asset_claim",
+        transition=first_claim_action,
+    )
+    _claim_result_reused(rendered=first_claim, expected=False, stage="asset_claim")
+    progress("asset_claim")
+
+    replay_claim_action = await activate_public_button(
+        pilot=pilot,
+        selector="#asset-claim",
+        stage="asset_claim_replay",
+    )
+    replayed_claim = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix="claim\t",
+        expected_suffix="reused=true",
+        stage="asset_claim_replay",
+        transition=replay_claim_action,
+    )
+    _claim_result_reused(rendered=replayed_claim, expected=True, stage="asset_claim_replay")
+    progress("asset_claim_replay")
+
+    await _supersede_method_claim(pilot, progress, first_claim)
+
+    await _prove_method_filing_handoff(pilot, progress)
+
+    return {
+        "asset_created": True,
+        "asset_inspected": True,
+        "correction_uses_public_revision_identity": True,
+        "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "forecast_provenance_present": True,
+        "claim_replay_reused": True,
+        "superseding_claim_replaced_the_first": True,
+        "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "inspection_revision_identity_exposed": True,
+        "filing_handoff_control_exposed": True,
+    }
+
+
+async def _create_method_asset[T](
+    pilot: Pilot[T], progress: Callable[[str], None], acquisition_transaction_id: str
+) -> str:
+    """Create the asset through the rendered public controls; return its first public revision identity."""
+    await set_public_input(
         pilot=pilot,
         selector="#asset-id",
         value=METHOD_ASSET_ID,
         stage="asset_creation",
     )
-    await _set_public_input(
+    await set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=METHOD_REVISION_JSON,
+        value=method_revision_json(
+            acquisition_transaction_id=acquisition_transaction_id, in_service_year=_method_filing_year()
+        ),
         stage="asset_creation",
     )
-    creation_action = await _activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
-    created = await _wait_for_asset_result(
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-name",
+        value="Method element",
+        stage="asset_creation",
+    )
+    creation_action = await activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
+    created = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"created\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_creation",
@@ -66,10 +161,14 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
             stage="asset_creation",
         )
     progress("asset_created")
-    first_revision_id = await _wait_for_current_revision_id(pilot=pilot, stage="asset_inspection")
+    first_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection")
+    return first_revision_id
 
-    inspection_action = await _activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_inspection")
-    inspected = await _wait_for_asset_result(
+
+async def _inspect_method_asset[T](pilot: Pilot[T], progress: Callable[[str], None], first_revision_id: str) -> None:
+    """Inspect the created asset and require the current revision identity to stay the first one."""
+    inspection_action = await activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_inspection")
+    inspected = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_inspection",
@@ -81,20 +180,29 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
             stage="asset_inspection",
         )
     progress("asset_inspected")
-    if await _wait_for_current_revision_id(pilot=pilot, stage="asset_inspection") != first_revision_id:
+    if await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection") != first_revision_id:
         raise InstalledAssetTuiError(
             "installed TUI inspection did not retain its public current revision identity",
             stage="asset_inspection",
         )
 
-    await _set_public_input(
+
+async def _correct_method_asset[T](
+    pilot: Pilot[T], progress: Callable[[str], None], acquisition_transaction_id: str, first_revision_id: str
+) -> None:
+    """Correct the asset and require the correction to advance the public revision identity."""
+    await set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=method_correction_json(supersedes_revision_id=first_revision_id),
+        value=method_correction_json(
+            supersedes_revision_id=first_revision_id,
+            acquisition_transaction_id=acquisition_transaction_id,
+            in_service_year=_method_filing_year(),
+        ),
         stage="asset_correction",
     )
-    correction_action = await _activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
-    corrected = await _wait_for_asset_result(
+    correction_action = await activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
+    corrected = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"corrected\t{METHOD_ASSET_ID}\trevisions=2",
         stage="asset_correction",
@@ -105,7 +213,7 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
             "installed TUI asset correction returned an unexpected public result",
             stage="asset_correction",
         )
-    corrected_revision_id = await _wait_for_current_revision_id(pilot=pilot, stage="asset_correction")
+    corrected_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_correction")
     if corrected_revision_id == first_revision_id:
         raise InstalledAssetTuiError(
             "installed TUI correction did not advance the public immutable revision identity",
@@ -113,82 +221,37 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         )
     progress("asset_corrected")
 
-    await _set_public_input(
-        pilot=pilot,
-        selector="#asset-covered-from",
-        value="2025-01-01",
-        stage="asset_forecast",
-    )
-    await _set_public_input(
-        pilot=pilot,
-        selector="#asset-covered-until",
-        value="2026-01-01",
-        stage="asset_forecast",
-    )
-    forecast_action = await _activate_public_button(pilot=pilot, selector="#asset-forecast", stage="asset_forecast")
-    forecast = await _wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix="forecast\t",
-        stage="asset_forecast",
-        transition=forecast_action,
-    )
-    _assert_method_forecast_result(forecast)
-    progress("asset_forecast")
 
-    first_claim_action = await _activate_public_button(pilot=pilot, selector="#asset-claim", stage="asset_claim")
-    first_claim = await _wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix="claim\t",
-        expected_suffix="reused=false",
-        stage="asset_claim",
-        transition=first_claim_action,
-    )
-    _claim_result_reused(rendered=first_claim, expected=False, stage="asset_claim")
-    progress("asset_claim")
-
-    replay_claim_action = await _activate_public_button(
-        pilot=pilot,
-        selector="#asset-claim",
-        stage="asset_claim_replay",
-    )
-    replayed_claim = await _wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix="claim\t",
-        expected_suffix="reused=true",
-        stage="asset_claim_replay",
-        transition=replay_claim_action,
-    )
-    _claim_result_reused(rendered=replayed_claim, expected=True, stage="asset_claim_replay")
-    progress("asset_claim_replay")
-
+async def _supersede_method_claim[T](pilot: Pilot[T], progress: Callable[[str], None], first_claim: str) -> None:
+    """Exercise this asset lifecycle phase through the rendered public controls."""
     # Replace the recorded claim through the public supersession control.  The
     # superseding forecast leaves the replaced claim out, so it reproduces the
     # same amount, and the filing handoff below must still count one claim.
     superseded_claim_id = first_claim.split("\t")[1]
-    await _set_public_input(
+    await set_public_input(
         pilot=pilot,
         selector="#asset-supersedes-claim-id",
         value=superseded_claim_id,
         stage="asset_superseding_forecast",
     )
-    superseding_forecast_action = await _activate_public_button(
+    superseding_forecast_action = await activate_public_button(
         pilot=pilot,
         selector="#asset-forecast",
         stage="asset_superseding_forecast",
     )
-    await _wait_for_asset_result(
+    await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"forecast\t{METHOD_CORRECTED_FORECAST_AMOUNT}\t",
         stage="asset_superseding_forecast",
         transition=superseding_forecast_action,
     )
     progress("asset_superseding_forecast")
-    superseding_claim_action = await _activate_public_button(
+    superseding_claim_action = await activate_public_button(
         pilot=pilot,
         selector="#asset-claim",
         stage="asset_superseding_claim",
     )
-    superseding_claim = await _wait_for_asset_result(
+    superseding_claim = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix="claim\t",
         expected_suffix="reused=false",
@@ -203,24 +266,27 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         )
     progress("asset_superseding_claim")
 
-    await _set_public_input(
+
+async def _prove_method_filing_handoff[T](pilot: Pilot[T], progress: Callable[[str], None]) -> None:
+    """Exercise this asset lifecycle phase through the rendered public controls."""
+    await set_public_input(
         pilot=pilot,
         selector="#asset-filing-tax-year",
-        value="2025",
+        value=str(_method_filing_year()),
         stage="asset_filing_handoff",
     )
-    await _set_public_input(
+    await set_public_input(
         pilot=pilot,
         selector="#asset-filing-m130-period",
         value="4T",
         stage="asset_filing_handoff",
     )
-    filing_handoff_action = await _activate_public_button(
+    filing_handoff_action = await activate_public_button(
         pilot=pilot,
         selector="#asset-filing-handoff",
         stage="asset_filing_handoff",
     )
-    handoff = await _wait_for_asset_result(
+    handoff = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix="filing_handoff\t",
         stage="asset_filing_handoff",
@@ -239,31 +305,18 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
             stage="asset_filing_handoff",
         )
     progress("asset_filing_handoff")
-    return {
-        "asset_created": True,
-        "asset_inspected": True,
-        "correction_uses_public_revision_identity": True,
-        "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "forecast_provenance_present": True,
-        "claim_replay_reused": True,
-        "superseding_claim_replaced_the_first": True,
-        "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "inspection_revision_identity_exposed": True,
-        "filing_handoff_control_exposed": True,
-    }
 
 
-async def _exercise_method_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def exercise_method_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
     """Read an asset created by a prior installed TUI process through its public screen."""
-    await _set_public_input(
+    await set_public_input(
         pilot=pilot,
         selector="#asset-id",
         value=METHOD_ASSET_ID,
         stage="asset_readback",
     )
-    readback_action = await _activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_readback")
-    inspected = await _wait_for_asset_result(
+    readback_action = await activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_readback")
+    inspected = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=2",
         stage="asset_readback",
@@ -274,25 +327,25 @@ async def _exercise_method_asset_readback(*, pilot: Any, progress: Callable[[str
             "installed TUI fresh readback returned an unexpected public result",
             stage="asset_readback",
         )
-    await _wait_for_current_revision_id(pilot=pilot, stage="asset_readback")
+    await wait_for_current_revision_id(pilot=pilot, stage="asset_readback")
     progress("asset_readback")
     return {"fresh_process_asset_readback": True, "inspection_revision_identity_exposed": True}
 
 
-async def _exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
     """Read an asset created by the installed CLI through the public TUI screen."""
-    await _set_public_input(
+    await set_public_input(
         pilot=pilot,
         selector="#asset-id",
         value=METHOD_ASSET_ID,
         stage="asset_cli_readback",
     )
-    cli_readback_action = await _activate_public_button(
+    cli_readback_action = await activate_public_button(
         pilot=pilot,
         selector="#asset-inspect",
         stage="asset_cli_readback",
     )
-    inspected = await _wait_for_asset_result(
+    inspected = await wait_for_asset_result(
         pilot=pilot,
         expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_cli_readback",
@@ -303,6 +356,6 @@ async def _exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable
             "installed TUI CLI-created-asset readback returned an unexpected public result",
             stage="asset_cli_readback",
         )
-    await _wait_for_current_revision_id(pilot=pilot, stage="asset_cli_readback")
+    await wait_for_current_revision_id(pilot=pilot, stage="asset_cli_readback")
     progress("asset_cli_readback")
     return {"cli_to_tui_asset_readback": True, "inspection_revision_identity_exposed": True}

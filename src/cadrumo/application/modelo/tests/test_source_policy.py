@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation

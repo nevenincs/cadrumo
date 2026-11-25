@@ -10,7 +10,10 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
-use std::{collections::BTreeSet, sync::Arc};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, OnceLock},
+};
 use tauri::{
     Manager, Runtime,
     http::HeaderMap,
@@ -29,6 +32,12 @@ pub struct Commands<R: Runtime> {
 impl<R: Runtime> Commands<R> {
     pub fn new(names: &'static [&'static str], handler: Handler<R>) -> Self {
         Self { names, handler }
+    }
+
+    /// The command names this module registers.
+    #[cfg(test)]
+    pub fn names(&self) -> &'static [&'static str] {
+        self.names
     }
 }
 
@@ -117,12 +126,7 @@ pub fn run(
     parent: crate::environment::Parent,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<i32> {
-    if cfg!(target_os = "macos") {
-        return Err(ApplicationError::new(
-            ErrorCode::UnsupportedPlatform,
-            Operation::Webview,
-        ));
-    }
+    logs::native::install(diagnostics.clone());
     // Before the console detaches, so the refusal still reaches it.
     #[cfg(windows)]
     shell::webview_environment::refuse_overrides()?;
@@ -137,28 +141,43 @@ pub fn run(
     let token = ShellToken::mint()?;
     let origins = shell::origins(context.config(), window);
     let script = token.script(&origins)?;
-    let handler = dispatch(
-        vec![
-            terminal::commands(),
-            docs::commands(),
-            logs::commands(),
-            shell::commands(),
-            shell::window_controls::commands(),
-            shell::about::commands(),
-            shell::sign_in::commands(),
-            shell::provider_settings::commands(),
-            shell::agent_access::commands(),
-            shell::language::commands(),
-            shell::setup::commands(),
-            shell::user_profile::commands(),
-            shell::user_profile::censo::commands(),
-            manager::commands(),
-            agent::commands(),
-            crate::startup::commands(),
-        ],
-        token,
-        diagnostics.clone(),
-    )?;
+    #[cfg(feature = "native-automation")]
+    let script = match shell::automation_nonce::current()? {
+        Some(nonce) => format!("{nonce}{script}"),
+        None => script,
+    };
+    let modules = vec![
+        terminal::commands(),
+        docs::commands(),
+        logs::commands(),
+        shell::commands(),
+        shell::channel::commands(),
+        shell::window_controls::commands(),
+        shell::about::commands(),
+        shell::sign_in::commands(),
+        shell::provider_settings::commands(),
+        shell::agent_access::commands(),
+        shell::language::commands(),
+        shell::setup::commands(),
+        shell::user_profile::commands(),
+        shell::user_profile::censo::commands(),
+        shell::aeat_sync::commands(),
+        shell::ledger::commands(),
+        shell::background_tasks::commands(),
+        shell::modelo::commands(),
+        shell::sede_view::commands::register(),
+        manager::commands(),
+        agent::commands(),
+        crate::startup::commands(),
+        crate::close_outcome::commands(),
+    ];
+    let registered = logs::frontend::RegisteredCommands(
+        modules
+            .iter()
+            .flat_map(|module| module.names.iter().copied())
+            .collect(),
+    );
+    let handler = dispatch(modules, token, diagnostics.clone())?;
     let startup = Arc::new(crate::startup::Startup::new(
         root,
         parent,
@@ -166,9 +185,26 @@ pub fn run(
         script.clone(),
         origins.clone(),
     ));
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // The ordinary host does not compile this plugin. Even the isolated test
+    // host starts no listener until its launcher explicitly supplies a port.
+    #[cfg(feature = "native-automation")]
+    let builder = if let Some(port) = std::env::var_os("TAURI_WEBDRIVER_PORT") {
+        let port = port
+            .to_str()
+            .and_then(|value| value.parse::<u16>().ok())
+            .filter(|port| *port != 0)
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
+            })?;
+        builder.plugin(tauri_plugin_wdio_webdriver::init_with_port(port))
+    } else {
+        builder
+    };
+    let app = builder
         .plugin(crate::startup::plugin(diagnostics.clone()))
         .manage(startup.clone())
+        .manage(registered)
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
@@ -182,7 +218,18 @@ pub fn run(
             loading.height = 300.0;
             loading.min_width = Some(380.0);
             loading.min_height = Some(240.0);
-            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
+            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?;
+            let loading = if crate::launch::ShowMode::current().activates() {
+                loading
+            } else {
+                loading.focused(false)
+            };
+            #[cfg(windows)]
+            let loading = match shell::webview_environment::startup_data_directory() {
+                Some(directory) => loading.data_directory(directory),
+                None => loading,
+            };
+            let loading = loading
                 .center()
                 .incognito(true)
                 .initialization_script(script)
@@ -190,6 +237,8 @@ pub fn run(
                 .build()?;
             #[cfg(windows)]
             sharpen_icon(loading.as_ref().window(), None)?;
+            #[cfg(not(windows))]
+            drop(loading);
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -224,10 +273,30 @@ pub fn run(
                 return;
             };
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                state
-                    .launch
-                    .diagnostics
-                    .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
+                let view = window
+                    .try_state::<Arc<shell::sede_view::SedeViewHost>>()
+                    .map(|view| view.inner().clone());
+                // A close the hidden window continues was already decided.
+                if !view.as_ref().is_some_and(|view| view.window_closing()) {
+                    // The page asks before staged work is dropped; it answers
+                    // by closing or keeping the window open.
+                    if shell::window_controls::close_held(window) {
+                        api.prevent_close();
+                        return;
+                    }
+                    state
+                        .launch
+                        .diagnostics
+                        .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
+                }
+                // An open view publishes the person's session before sign-in
+                // ends it; the window goes away meanwhile instead of freezing.
+                if let Some(view) = view
+                    && close_behind(&view, window, &state.launch.diagnostics)
+                {
+                    api.prevent_close();
+                    return;
+                }
                 if let Err(error) = close_clients_and_supervision(window.app_handle()) {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
@@ -244,26 +313,206 @@ pub fn run(
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let handle = app.handle().clone();
-    let code = app.run_return(move |_, event| {
-        if matches!(event, tauri::RunEvent::ExitRequested { .. }) {
-            diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
+    #[cfg(unix)]
+    quit_on_signal(
+        &handle,
+        &diagnostics,
+        tokio::signal::unix::SignalKind::terminate(),
+    )?;
+    // The application can end without returning from the run loop: on macOS a Quit
+    // terminates the process right after the loop reports its exit. Shutdown therefore
+    // runs when the loop reports its exit, once, and the return path reuses its outcome.
+    let shutdown: Arc<OnceLock<Result<()>>> = Arc::new(OnceLock::new());
+    let settle = {
+        let startup = startup.clone();
+        let shutdown = shutdown.clone();
+        move |handle: &tauri::AppHandle| {
+            shutdown
+                .get_or_init(|| {
+                    startup.cancel();
+                    tauri::async_runtime::block_on(startup.settle());
+                    close_clients_and_supervision(handle)
+                })
+                .clone()
         }
+    };
+    let exiting = settle.clone();
+    let ending = startup.clone();
+    let mut requested = 0;
+    let code = app.run_return(move |handle, event| match event {
+        // AppKit has started on this thread; the installed desktop gets no icon from
+        // its bundle, so it sets its own.
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Ready => {
+            cadrumo_platform::application_icon::set(include_bytes!(env!("CADRUMO_DESKTOP_ICON")));
+        }
+        tauri::RunEvent::ExitRequested { code, .. } => {
+            diagnostics.host_exit_requested();
+            if requested == 0 {
+                requested = code.unwrap_or(0);
+            }
+        }
+        tauri::RunEvent::Exit => {
+            // A quit that skips the exit request still records it, and the process
+            // may end before the return path could record the outcome or drain the
+            // log writer, so both are durable here.
+            diagnostics.host_exit_requested();
+            let outcome = exiting(handle);
+            let code = if ending.failed() { 1 } else { requested };
+            finish_exit(outcome, code, &diagnostics);
+        }
+        _ => {}
     });
-    startup.cancel();
-    tauri::async_runtime::block_on(startup.settle());
-    close_clients_and_supervision(&handle)?;
+    settle(&handle)?;
     if startup.failed() {
         return Ok(1);
     }
     Ok(code)
 }
 
+/// Records a shutdown outcome and the code the host was asked to exit with, and drains
+/// the log before the platform may end the process. The first recorded stop wins, so
+/// the return path repeating it adds nothing.
+fn finish_exit(outcome: Result<()>, requested: i32, diagnostics: &Diagnostics) {
+    let code = match outcome {
+        Ok(()) => requested,
+        Err(error) => {
+            diagnostics.failure(error);
+            1
+        }
+    };
+    diagnostics.host_stopped(code);
+    let _ = diagnostics.flush_logs(std::time::Duration::from_millis(250));
+}
+
+/// A termination request (a logout, a system shutdown or a stop sent to the process)
+/// ends the window as a quit does, so the changes it submitted get the same settle
+/// window and its runtime the same drain. Registered before the run loop starts, so
+/// no such request meanwhile ends the process without them.
+#[cfg(unix)]
+fn quit_on_signal<R: Runtime>(
+    handle: &tauri::AppHandle<R>,
+    diagnostics: &Arc<Diagnostics>,
+    kind: tokio::signal::unix::SignalKind,
+) -> Result<()> {
+    let host = handle.clone();
+    let deadline = CloseDeadline::default();
+    let requests = on_signal(kind, move || {
+        host.exit(0);
+        deadline.arm(cadrumo_application::shutdown::RELAUNCH_PATIENCE, || {
+            std::process::exit(TERMINATED_EXIT_CODE)
+        });
+    })
+    .map_err(|cause| {
+        ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch).caused_by(cause)
+    })?;
+    spawn_detached(
+        handle.clone(),
+        diagnostics.clone(),
+        HostStage::Shutdown,
+        requests,
+    );
+    Ok(())
+}
+
+/// The status of a process a termination request ended after its close stalled: the
+/// conventional 128 plus the signal number.
+#[cfg(unix)]
+const TERMINATED_EXIT_CODE: i32 = 128 + 15;
+
+/// The bound on a close a termination request began. Taking the signal from its default
+/// disposition means a close that stalls no longer ends the process, so the first request
+/// starts a clock that ends it once the declared close budget has passed. A request
+/// during the pending close changes nothing.
+#[cfg(unix)]
+#[derive(Clone, Default)]
+struct CloseDeadline(Arc<std::sync::atomic::AtomicBool>);
+
+#[cfg(unix)]
+impl CloseDeadline {
+    /// Starts the clock on the first call; `expire` runs once `budget` after it.
+    fn arm(&self, budget: std::time::Duration, expire: impl FnOnce() + Send + 'static) {
+        use std::sync::atomic::Ordering;
+        if self.0.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        std::thread::spawn(move || {
+            std::thread::sleep(budget);
+            expire();
+        });
+    }
+}
+
+/// Takes `kind` from its default disposition now and answers each delivery with `act`
+/// once the returned task runs. Every further delivery asks again; the close already
+/// under way answers it.
+#[cfg(unix)]
+fn on_signal(
+    kind: tokio::signal::unix::SignalKind,
+    act: impl Fn() + Send + 'static,
+) -> std::io::Result<impl std::future::Future<Output = ()> + Send + 'static> {
+    let mut requests = tauri::async_runtime::block_on(async { tokio::signal::unix::signal(kind) })?;
+    Ok(async move {
+        while requests.recv().await.is_some() {
+            act();
+        }
+    })
+}
+
+/// Hides `window` and lets `view` publish behind it, closing the window again
+/// once the view has ended. Says whether the close waits for that. A launch
+/// meanwhile is not answered by the hidden window: it waits for the lock.
+fn close_behind<R: Runtime>(
+    view: &Arc<shell::sede_view::SedeViewHost>,
+    window: &tauri::Window<R>,
+    diagnostics: &Arc<Diagnostics>,
+) -> bool {
+    let hidden = window.clone();
+    let hiding = diagnostics.clone();
+    let closing = window.clone();
+    let continuing = diagnostics.clone();
+    let close = view.close_behind(
+        move || {
+            shell::single_instance::close();
+            if let Err(error) = hidden.hide() {
+                hiding.failure(webview_failure(error));
+            }
+        },
+        move || {
+            if let Err(error) = closing.close() {
+                continuing.failure(webview_failure(error));
+                closing.app_handle().exit(1);
+            }
+        },
+    );
+    close == shell::sede_view::WindowClose::Behind
+}
+
 /// End runtime clients before asking their owned supervisor to drain. Attempt
 /// every cleanup even after a failure, including on run-loop exit without a
 /// window close event. Each owner keeps failed cleanup available for retry.
 fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    // First, while the person's session is still held: the view publishes its session.
+    if let Some(view) = handle.try_state::<Arc<shell::sede_view::SedeViewHost>>() {
+        view.close();
+    }
+    settle_changes(handle);
+    if let Some(modelo) = handle.try_state::<Arc<shell::modelo::ModeloHost>>() {
+        modelo.close();
+    }
+    if let Some(ledger) = handle.try_state::<Arc<shell::ledger::LedgerHost>>() {
+        ledger.close();
+    }
+    if let Some(tasks) = handle.try_state::<Arc<shell::background_tasks::BackgroundTasks>>() {
+        tasks.close();
+    }
     if let Some(profile) = handle.try_state::<Arc<shell::user_profile::ProfileHost>>() {
         profile.close();
+    }
+    // Preparation may be opening a person connection. Wake it before joining
+    // the agent or any observer that depends on that exact window connection.
+    if let Some(sign_in) = handle.try_state::<Arc<shell::sign_in::SignIn>>() {
+        sign_in.request_stop();
     }
     let language_cleanup = handle
         .try_state::<Arc<shell::language::LanguageHost>>()
@@ -301,12 +550,59 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
         .and(manager_cleanup)
 }
 
+/// Stops admitting changes, then gives the changes the window already submitted one
+/// shared settle window to report before any client ends. What is still running then
+/// is ended with its client; the runtime's journal keeps what happened to it, and this
+/// root's next window says that its outcome is unknown.
+fn settle_changes<R: Runtime>(handle: &tauri::AppHandle<R>) {
+    let deadline =
+        std::time::Instant::now() + cadrumo_application::shutdown::OPERATION_SETTLE_BOUND;
+    let profile = handle
+        .try_state::<Arc<shell::user_profile::ProfileHost>>()
+        .map(|profile| profile.inner().clone());
+    let sign_in = handle
+        .try_state::<Arc<shell::sign_in::SignIn>>()
+        .map(|sign_in| sign_in.inner().clone());
+    let interrupted = tauri::async_runtime::block_on(async move {
+        let relayed = async {
+            match profile {
+                Some(profile) => profile.settle(deadline).await,
+                None => false,
+            }
+        };
+        let helper = async {
+            match sign_in {
+                Some(sign_in) => sign_in.settle_changes(deadline).await,
+                None => None,
+            }
+        };
+        let (relayed, helper) = tokio::join!(relayed, helper);
+        relayed
+            .then_some(crate::close_outcome::PROFILE_RELAY)
+            .into_iter()
+            .chain(helper)
+            .collect::<Vec<_>>()
+    });
+    if interrupted.is_empty() {
+        return;
+    }
+    if let Some(outcomes) = handle
+        .try_state::<Option<Arc<crate::close_outcome::CloseOutcomes>>>()
+        .and_then(|outcomes| outcomes.inner().clone())
+        && let Err(error) = outcomes.interrupted(&interrupted)
+        && let Some(state) = handle.try_state::<Arc<TerminalState>>()
+    {
+        state.launch.diagnostics.failure(error);
+    }
+}
+
 pub(crate) async fn assemble<R: Runtime>(
     app: tauri::AppHandle<R>,
     launch: Launch,
     startup: &crate::startup::Startup,
 ) -> Result<()> {
     let diagnostics = launch.diagnostics.clone();
+    #[cfg(windows)]
     let data_directory = launch.webview.clone();
     if let Some(lease) = launch._publication.as_ref() {
         std::mem::forget(lease.clone());
@@ -327,73 +623,123 @@ pub(crate) async fn assemble<R: Runtime>(
     }
     let manager = Arc::new(ManagerStart::new(&launch));
     app.manage(manager.clone());
+    app.manage(crate::close_outcome::of(&launch));
     app.manage(Arc::new(TerminalState::new(launch)));
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
-    app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
-    app.manage(Arc::new(shell::user_profile::ProfileHost::new(
+    let agent = app.state::<Arc<agent::AgentHost>>().inner().clone();
+    app.manage(Arc::new(shell::setup::SetupHost::new(
         sign_in.clone(),
+        agent,
+        diagnostics.clone(),
+    )));
+    let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
+    app.manage(profile.clone());
+    let background_tasks = Arc::new(shell::background_tasks::BackgroundTasks::new(
+        profile.clone(),
+    ));
+    app.manage(background_tasks.clone());
+    app.manage(Arc::new(shell::ledger::LedgerHost::new(
+        profile.clone(),
+        background_tasks,
+        diagnostics.clone(),
+    )));
+    app.manage(Arc::new(shell::sede_view::SedeViewHost::new(
+        diagnostics.clone(),
+    )));
+    app.manage(Arc::new(shell::modelo::ModeloHost::new(
+        profile,
+        diagnostics.clone(),
     )));
     startup.stage(crate::startup::Phase::Runtime);
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     tokio::select! {
         result = manager.ensure_ready(&sign_in) => result?,
         _ = startup.wait_cancelled() => { startup.check_cancelled()?; }
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "macos")))]
     manager.start(false).await?;
     startup.check_cancelled()?;
     startup.stage(crate::startup::Phase::Workspace);
+    #[cfg(target_os = "macos")]
+    let placement = shell::traffic_lights::placement();
+    #[cfg(target_os = "macos")]
+    app.manage(placement.controls);
     let config = &app.config().app.windows[0];
     let origins = startup.origins.clone();
-    tauri::WebviewWindowBuilder::from_config(&app, config)
-        .and_then(|builder| {
-            let builder = match shell::webview_environment::workspace_browser_arguments() {
-                Some(arguments) => builder.additional_browser_args(&arguments),
+    let workspace = tauri::WebviewWindowBuilder::from_config(&app, config).and_then(|builder| {
+        #[cfg(windows)]
+        let builder = {
+            let arguments = shell::webview_environment::workspace_browser_arguments();
+            let builder = match &arguments {
+                Some(arguments) => builder.additional_browser_args(arguments),
                 None => builder,
             };
-            builder
-                .visible(false)
-                .data_directory(data_directory)
-                .initialization_script(startup.script.clone())
-                .on_navigation(move |url| shell::navigation::allowed(&origins, url))
-                .on_page_load(|window, payload| {
-                    if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
-                        if let Err(error) = window.show() {
-                            window
-                                .state::<Arc<TerminalState>>()
-                                .launch
-                                .diagnostics
-                                .failure(
-                                    ApplicationError::new(
-                                        ErrorCode::WebviewFailed,
-                                        Operation::Webview,
-                                    )
+            match shell::webview_environment::workspace_data_directory(
+                data_directory,
+                arguments.as_deref(),
+            ) {
+                Some(directory) => builder.data_directory(directory),
+                None => builder,
+            }
+        };
+        // The system draws the controls over the page's header.
+        #[cfg(target_os = "macos")]
+        let builder = builder
+            .decorations(true)
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true)
+            .traffic_light_position(placement.position);
+        // The automation host shows at creation without activation: the page-load
+        // `show` below would activate the window (the toolkit only honours
+        // `focused(false)` for the show that creates the window).
+        let builder = if crate::launch::ShowMode::current().activates() {
+            builder.visible(false)
+        } else {
+            builder.visible(true).focused(false)
+        };
+        builder
+            .initialization_script(startup.script.clone())
+            .on_navigation(move |url| shell::navigation::allowed(&origins, url))
+            .on_page_load(|window, payload| {
+                if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+                    let shown = if crate::launch::ShowMode::current().activates() {
+                        window.show()
+                    } else {
+                        Ok(())
+                    };
+                    if let Err(error) = shown {
+                        window
+                            .state::<Arc<TerminalState>>()
+                            .launch
+                            .diagnostics
+                            .failure(
+                                ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
                                     .caused_by(error),
-                                );
-                            return;
-                        }
-                        if let Some(loading) = window.app_handle().get_webview_window("startup")
-                            && let Err(error) = loading.destroy()
-                        {
-                            window
-                                .state::<Arc<TerminalState>>()
-                                .launch
-                                .diagnostics
-                                .failure(webview_failure(error));
-                        }
+                            );
+                        return;
                     }
-                })
-                .build()
-        })
-        .and_then(|window| {
-            #[cfg(windows)]
-            sharpen_icon(window.as_ref().window(), None)?;
-            Ok(window)
-        })
-        .map_err(|e| {
-            ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
-        })?;
+                    if let Some(loading) = window.app_handle().get_webview_window("startup")
+                        && let Err(error) = loading.destroy()
+                    {
+                        window
+                            .state::<Arc<TerminalState>>()
+                            .launch
+                            .diagnostics
+                            .failure(webview_failure(error));
+                    }
+                }
+            })
+            .build()
+    });
     #[cfg(windows)]
+    let workspace = workspace.and_then(|window| {
+        sharpen_icon(window.as_ref().window(), None)?;
+        Ok(window)
+    });
+    workspace.map_err(|e| {
+        ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
+    })?;
+    #[cfg(any(windows, target_os = "macos"))]
     {
         let host = app.clone();
         spawn_detached(
@@ -498,6 +844,95 @@ pub(crate) fn supervision_continues(
 
 #[cfg(test)]
 mod tests {
+    use cadrumo_application::diagnostics::Diagnostics;
+
+    #[test]
+    fn every_exit_path_leaves_one_durable_request_and_stop_record() {
+        // The exit hook, the signal path and the return path may all report; the file
+        // must hold exactly one of each, written before finish_exit returns.
+        let directory = std::env::temp_dir().join(format!("exit-records-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let diagnostics = Diagnostics::default();
+        diagnostics.configure(&directory, 1 << 20, 1).unwrap();
+        assert!(diagnostics.host_exit_requested());
+        assert!(!diagnostics.host_exit_requested());
+        super::finish_exit(Ok(()), 0, &diagnostics);
+        diagnostics.host_stopped(1);
+        let current = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
+        let text = std::fs::read_to_string(current).unwrap();
+        let _ = std::fs::remove_dir_all(&directory);
+        assert_eq!(text.matches("host_exit_requested").count(), 1, "{text}");
+        assert_eq!(text.matches("host_stopped").count(), 1, "{text}");
+        assert!(text.contains("\"hostExitCode\":0"), "{text}");
+    }
+
+    #[test]
+    fn a_refused_start_records_the_exit_code_it_was_asked_for() {
+        let directory = std::env::temp_dir().join(format!("exit-refused-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let diagnostics = Diagnostics::default();
+        diagnostics.configure(&directory, 1 << 20, 1).unwrap();
+        super::finish_exit(Ok(()), 1, &diagnostics);
+        let current = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
+        let text = std::fs::read_to_string(current).unwrap();
+        let _ = std::fs::remove_dir_all(&directory);
+        assert!(text.contains("\"hostExitCode\":1"), "{text}");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_signal_delivered_to_the_process_asks_the_window_to_close() {
+        // A signal nothing else in this test binary uses, so the delivery is this test's alone.
+        let (asked, answered) = std::sync::mpsc::channel();
+        let requests = super::on_signal(
+            tokio::signal::unix::SignalKind::user_defined1(),
+            move || {
+                let _ = asked.send(());
+            },
+        )
+        .unwrap();
+        tauri::async_runtime::spawn(requests);
+        for _ in 0..2 {
+            let delivered = std::process::Command::new("/bin/kill")
+                .args(["-USR1", &std::process::id().to_string()])
+                .status()
+                .unwrap();
+            assert!(delivered.success());
+            answered
+                .recv_timeout(std::time::Duration::from_secs(10))
+                .expect("the delivery asked the window to close");
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_stalled_close_ends_the_process_once_its_budget_passes_whatever_requests_follow() {
+        use std::time::{Duration, Instant};
+        let deadline = super::CloseDeadline::default();
+        let (expired, observed) = std::sync::mpsc::channel();
+        let started = Instant::now();
+        let first = expired.clone();
+        deadline.arm(Duration::from_millis(400), move || {
+            let _ = first.send(Instant::now());
+        });
+        std::thread::sleep(Duration::from_millis(200));
+        // A request during the pending close neither resets the clock nor adds a second one.
+        let second = expired.clone();
+        deadline.arm(Duration::from_secs(60), move || {
+            let _ = second.send(Instant::now());
+        });
+        drop(expired);
+        let at = observed
+            .recv_timeout(Duration::from_secs(10))
+            .expect("the close budget ended the wait");
+        assert!(at.duration_since(started) >= Duration::from_millis(400));
+        assert!(at.duration_since(started) < Duration::from_millis(1500));
+        assert!(
+            observed.recv_timeout(Duration::from_millis(300)).is_err(),
+            "the clock fired once"
+        );
+    }
+
     #[test]
     fn healthy_gui_allows_bounded_repair_but_fails_prolonged_or_terminal_supervision_loss() {
         use super::*;
@@ -549,6 +984,7 @@ mod tests {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::channel::commands(),
             shell::window_controls::commands(),
             shell::about::commands(),
             shell::sign_in::commands(),
@@ -558,6 +994,11 @@ mod tests {
             shell::setup::commands(),
             shell::user_profile::commands(),
             shell::user_profile::censo::commands(),
+            shell::aeat_sync::commands(),
+            shell::ledger::commands(),
+            shell::background_tasks::commands(),
+            shell::modelo::commands(),
+            shell::sede_view::commands::register(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),

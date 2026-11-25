@@ -37,11 +37,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
 from ..site_chrome import site_chrome
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import (
@@ -18,15 +19,20 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...core.precondition_action_invariants import ServedActionWords, ServedNoRecoveryWords
 from ...domain.calculations.registry.ids import LegalRefId, ModeloId, RevisionId, SourceRefId, VerificationExpectationId
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
+    DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
 )
+from ..operations.error_detail import served_words_language
 from ..operations.public_scalar import (
     PublicNamedScalar,
     PublicScalar,
@@ -35,7 +41,14 @@ from ..operations.public_scalar import (
     restore_facts,
     restore_scalar,
 )
-from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import (
+    ActionArgumentBinding,
+    ActionReference,
+    AlternativeRecoveryAction,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
+from ..operator_actions.served_actions import serve_precondition_verdict
 from .preconditions import ModeloPreconditionFailure
 from .verification_preconditions import ModeloVerificationResult, VerificationFindingPreconditionProjection
 
@@ -62,6 +75,8 @@ class ModeloFindingSnapshot(BaseModel):
     message_facts: tuple[PublicNamedScalar, ...]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
+    disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:
@@ -122,8 +137,51 @@ class ModeloArgumentSnapshot(BaseModel):
         )
 
 
-class ModeloPreconditionSnapshot(BaseModel):
-    """A complete application refusal identity and its canonical recovery facts."""
+class ModeloAlternativeActionSnapshot(ServedActionWords):
+    """A further declared recovery action, offered in order after the primary one, with its served words."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: ActionReference
+    argument_bindings: tuple[ModeloArgumentSnapshot, ...]
+    missing_argument_names: tuple[str, ...]
+    conditionality: ActionConditionality
+
+    @classmethod
+    def from_alternative(cls, alternative: AlternativeRecoveryAction) -> Self:
+        """Preserve the application's exact alternative and its argument facts."""
+        return cls(
+            action=alternative.action,
+            argument_bindings=tuple(
+                ModeloArgumentSnapshot.from_argument(item) for item in alternative.argument_bindings
+            ),
+            missing_argument_names=alternative.missing_argument_names,
+            conditionality=alternative.conditionality,
+            action_words=alternative.action_words,
+            action_words_language=alternative.action_words_language,
+            target_operation_ids=alternative.target_operation_ids,
+        )
+
+    def to_alternative(self) -> AlternativeRecoveryAction:
+        """Validate the restored canonical alternative."""
+        return AlternativeRecoveryAction(
+            action=self.action,
+            argument_bindings=tuple(item.to_argument() for item in self.argument_bindings),
+            missing_argument_names=self.missing_argument_names,
+            conditionality=self.conditionality,
+            action_words=self.action_words,
+            action_words_language=self.action_words_language,
+            target_operation_ids=self.target_operation_ids,
+        )
+
+
+class ModeloPreconditionSnapshot(ServedActionWords, ServedNoRecoveryWords):
+    """A complete application refusal identity and its canonical recovery facts.
+
+    ``alternative_actions`` is left out of the serialized snapshot when empty,
+    so a refusal without alternatives keeps the shape it was published with.
+    The served action words and routing, or the no-way-out sentence, follow
+    the same rule.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     subject_leaf_key: str
@@ -135,11 +193,14 @@ class ModeloPreconditionSnapshot(BaseModel):
     missing_argument_names: tuple[str, ...]
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None
+    alternative_actions: tuple[ModeloAlternativeActionSnapshot, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
 
     @classmethod
     def from_failure(cls, failure: ModeloPreconditionFailure) -> Self:
-        """Flatten one verdict without losing its discriminators or evidence."""
-        verdict = failure.verdict
+        """Flatten one verdict without losing its discriminators or evidence, serving its action words."""
+        verdict = serve_precondition_verdict(failure.verdict, served_words_language())
         return cls.model_validate(
             verdict.model_dump(mode="python")
             | {
@@ -148,6 +209,9 @@ class ModeloPreconditionSnapshot(BaseModel):
                 "evidence": tuple(ModeloConditionEvidenceSnapshot.from_evidence(item) for item in verdict.evidence),
                 "argument_bindings": tuple(
                     ModeloArgumentSnapshot.from_argument(item) for item in verdict.argument_bindings
+                ),
+                "alternative_actions": tuple(
+                    ModeloAlternativeActionSnapshot.from_alternative(item) for item in verdict.alternative_actions
                 ),
             }
         )
@@ -159,6 +223,7 @@ class ModeloPreconditionSnapshot(BaseModel):
             | {
                 "evidence": tuple(item.to_evidence() for item in self.evidence),
                 "argument_bindings": tuple(item.to_argument() for item in self.argument_bindings),
+                "alternative_actions": tuple(item.to_alternative() for item in self.alternative_actions),
             }
         )
         return ModeloPreconditionFailure(
@@ -188,6 +253,7 @@ class ModeloVerificationReportSnapshot(BaseModel):
     run_at: datetime
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
+    source_transactions_digest: Hex64Str | None = None
 
     @classmethod
     def from_report(cls, report: VerificationReport) -> Self:
@@ -211,6 +277,7 @@ class ModeloVerificationSnapshot(BaseModel):
     report: ModeloVerificationReportSnapshot
     published: bool
     finding_preconditions: tuple[ModeloFindingPreconditionSnapshot, ...]
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
     @classmethod
     def from_verification(cls, outcome: ModeloVerificationResult) -> Self:
@@ -229,6 +296,7 @@ class ModeloVerificationSnapshot(BaseModel):
                 )
                 for item in outcome.finding_preconditions
             ),
+            calculation_notes=outcome.calculation_notes,
         )
 
     def to_verification(self) -> ModeloVerificationResult:
@@ -245,6 +313,7 @@ class ModeloVerificationSnapshot(BaseModel):
                 )
                 for item in self.finding_preconditions
             ),
+            calculation_notes=self.calculation_notes,
         )
 
     @model_validator(mode="after")

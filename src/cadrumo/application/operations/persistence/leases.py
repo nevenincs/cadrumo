@@ -82,6 +82,18 @@ class OperationOwnerLease(BaseModel):
         _raise_if(self.expires_at <= self.acquired_at, "operation owner lease must expire after acquisition")
         return self
 
+    def observation_at(self, observed_at: datetime) -> OperationLeaseObservationDisposition:
+        """A lease is active strictly before its expiry instant."""
+        if self.expires_at > observed_at:
+            return OperationLeaseObservationDisposition.ACTIVE
+        return OperationLeaseObservationDisposition.EXPIRED
+
+    def succession_at(self, observed_at: datetime) -> OperationLeaseDisposition:
+        """A successor renews an unexpired lease and takes over an expired one."""
+        if self.expires_at > observed_at:
+            return OperationLeaseDisposition.RENEWED
+        return OperationLeaseDisposition.TAKEN_OVER
+
 
 def _lease_payload(lease: OperationOwnerLease | None) -> dict[str, object] | None:
     """Project one lease into the fixed JSON shape used for evidence identities."""

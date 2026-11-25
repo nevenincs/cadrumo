@@ -8,8 +8,8 @@ from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....core.config import override_settings
 from ....core.i18n.render import lookup_translation
 from ....core.json_contract import NoticeSeverity
-from .._modelo_rendering import source_diagnostic_notice
-from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
+from ..modelo_rendering import source_diagnostic_notice
+from ..modelo_work_calculate_cli import work_calculate_source_advisory_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -52,7 +52,7 @@ def test_the_advisory_becomes_a_non_action_notice_worded_by_its_reason_with_its_
 
 def test_the_text_line_names_the_level_what_happened_and_what_to_do_without_the_account() -> None:
     with override_settings(cadrumo_output_language="en"):
-        notices, lines = _work_calculate_source_advisory_output((_rate_box_diagnostic(),))
+        notices, lines = work_calculate_source_advisory_output((_rate_box_diagnostic(),))
 
     assert notices[0].action is None
     expected_template = lookup_translation(
@@ -81,7 +81,7 @@ def test_a_note_for_the_filers_information_is_not_a_warning() -> None:
 
 def test_a_calculation_with_no_advisory_emits_no_notice() -> None:
     """The negative control: a projector that always emitted one would pass above."""
-    assert _work_calculate_source_advisory_output(()) == ([], [])
+    assert work_calculate_source_advisory_output(()) == ([], [])
 
 
 def test_the_same_sentence_is_presented_once_without_discarding_distinct_contexts() -> None:
@@ -90,7 +90,7 @@ def test_the_same_sentence_is_presented_once_without_discarding_distinct_context
     distinct = first.model_copy(update={"message": f"{_MESSAGE} for a different source row"})
 
     with override_settings(cadrumo_output_language="en"):
-        notices, lines = _work_calculate_source_advisory_output((first, same_reason, distinct))
+        notices, lines = work_calculate_source_advisory_output((first, same_reason, distinct))
 
     assert [notice.context["detail"] for notice in notices if notice.context is not None] == [
         _MESSAGE,

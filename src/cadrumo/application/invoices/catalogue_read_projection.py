@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Self
 
 from pydantic import BaseModel, PositiveInt, model_validator
@@ -17,11 +19,17 @@ from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
+from ...domain.attachments.enums import AttachmentSource
+from ...domain.attachments.models import Attachment, normalize_media_type
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.service import invoice_settlement
 from ...domain.iva.schema import InvoiceKind
+from ..operations.host_path_name import host_path_file_name
 from ..operations.public_scalar import PublicDecimal
+from .catalogue_reads_ports import InvoiceDocumentManifestReader
 
 
 def _decimal(value: Decimal) -> PublicDecimal:
@@ -30,6 +38,14 @@ def _decimal(value: Decimal) -> PublicDecimal:
 
 def _optional_decimal(value: Decimal | None) -> PublicDecimal | None:
     return _decimal(value) if value is not None else None
+
+
+def _displayed_period(value: Period | None) -> str | None:
+    """One elected period in the canonical display form a surface renders.
+
+    Core types: :class:`~cadrumo.core.period.Period`.
+    """
+    return str(value) if value is not None else None
 
 
 def _bounded_decimal(value: PublicDecimal | None, *, positive: bool = False) -> bool:
@@ -76,6 +92,82 @@ class InvoiceLineSnapshot(BaseModel):
         )
 
 
+def _is_bare_file_name(value: str) -> bool:
+    return value not in {"", ".", ".."} and "/" not in value and "\\" not in value
+
+
+def _document_file_name(attachment: Attachment) -> str | None:
+    # Only a document read from a local file records that file's path; any
+    # other channel's reference (a message id, a URL) is not a file name.
+    if attachment.source is not AttachmentSource.LOCAL_FILE:
+        return None
+    name = host_path_file_name(attachment.source_reference)
+    return name if name is not None and _is_bare_file_name(name) else None
+
+
+class InvoiceDocumentSnapshot(BaseModel):
+    """One stored document kept as an invoice's source, named by its file name alone."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    attachment_id: Hex64Str
+    #: The name of the file the document was read from, without its folder;
+    #: absent when the document did not come from a local file.
+    name: NonEmptyStr | None
+    media_type: NonEmptyStr
+
+    @model_validator(mode="after")
+    def _bare_name(self) -> Self:
+        if self.name is not None and not _is_bare_file_name(self.name):
+            raise ValueError("an invoice document is named by its file name alone")
+        return self
+
+    @classmethod
+    def from_attachment(cls, attachment: Attachment) -> Self:
+        """Copy the document's identity, file name and media type from its manifest."""
+        return cls(
+            attachment_id=attachment.attachment_id,
+            name=_document_file_name(attachment),
+            media_type=normalize_media_type(attachment.mime_type),
+        )
+
+
+class InvoiceDocumentIndex:
+    """Each invoice's stored documents, gathered from the manifests in one pass."""
+
+    __slots__ = ("_documents",)
+
+    def __init__(self, documents: Mapping[str, tuple[InvoiceDocumentSnapshot, ...]]) -> None:
+        """Hold an already ordered invoice-to-documents mapping."""
+        self._documents: Mapping[str, tuple[InvoiceDocumentSnapshot, ...]] = MappingProxyType(dict(documents))
+
+    @classmethod
+    def from_manifests(cls, manifests: Iterable[Attachment]) -> Self:
+        """Index every manifest by each invoice it records, ordered by attachment id."""
+        gathered: dict[str, list[InvoiceDocumentSnapshot]] = {}
+        for manifest in manifests:
+            if not manifest.linked_invoice_ids:
+                continue
+            document = InvoiceDocumentSnapshot.from_attachment(manifest)
+            for invoice_id in manifest.linked_invoice_ids:
+                gathered.setdefault(invoice_id, []).append(document)
+        return cls(
+            {
+                invoice_id: tuple(sorted(documents, key=lambda document: document.attachment_id))
+                for invoice_id, documents in gathered.items()
+            }
+        )
+
+    @classmethod
+    def read(cls, reader: InvoiceDocumentManifestReader) -> Self:
+        """Read the profile's manifests once and index them."""
+        return cls.from_manifests(reader.iter_manifests())
+
+    def of(self, invoice_id: str) -> tuple[InvoiceDocumentSnapshot, ...]:
+        """The documents kept for ``invoice_id``; empty when the records hold none."""
+        return self._documents.get(invoice_id, ())
+
+
 class CatalogueInvoiceSnapshot(BaseModel):
     """The existing catalogue readback fields, excluding full source paths."""
 
@@ -110,12 +202,34 @@ class CatalogueInvoiceSnapshot(BaseModel):
     operation_date_role: str | None
     iva_category: str | None
     rectifies_invoice_number: str | None
+    #: The facts a factura rectificativa states, served as the stable tokens
+    #: the registry declares. A surface renders the words for a token it is
+    #: served; it holds no cause, method or direction list of its own.
+    rectification_method: str | None
+    rectification_cause: str | None
+    rectification_direction: str | None
+    document_received_on: date | None
+    #: The elections and the attestation the law leaves the taxpayer, served as
+    #: the stable tokens the record holds and each elected period in its
+    #: canonical ``"YYYY <code>"`` display form. A surface renders what it is
+    #: served; it holds no route list and no window of its own.
+    issuer_increase_election: str | None
+    issuer_minoracion_election: str | None
+    issuer_minoracion_regularisation_period: str | None
+    recipient_increase_period: str | None
+    art_80_tres_obligations_attested: bool | None
+    exercised_deduction_period: str | None
     fx_rate: PublicDecimal | None
     fx_rate_date: date | None
     fx_rate_source: NonEmptyStr | None
     base_total_eur: PublicDecimal | None
     iva_total_eur: PublicDecimal | None
     grand_total_eur: PublicDecimal | None
+    referencia_catastral: str | None
+    #: The cash the invoice settles for: its total less the retención withheld at source.
+    settlement_amount: PublicDecimal
+    #: The stored documents kept as this invoice's source, ordered by attachment id.
+    documents: tuple[InvoiceDocumentSnapshot, ...]
 
     @model_validator(mode="after")
     def _bounds(self) -> Self:
@@ -124,8 +238,12 @@ class CatalogueInvoiceSnapshot(BaseModel):
         return self
 
     @classmethod
-    def from_invoice(cls, invoice: Invoice) -> Self:
-        """Copy the existing list/view surface without forwarding the aggregate."""
+    def from_invoice(cls, invoice: Invoice, *, documents: InvoiceDocumentIndex) -> Self:
+        """Copy the existing list/view surface and the invoice's stored documents without forwarding the aggregate.
+
+        ``documents`` is required so that no reader serves an invoice as having
+        no document merely because it did not look.
+        """
         provenance = invoice.provenance
         return cls(
             invoice_id=invoice.invoice_id,
@@ -157,12 +275,39 @@ class CatalogueInvoiceSnapshot(BaseModel):
             operation_date_role=str(invoice.operation_date_role) if invoice.operation_date_role is not None else None,
             iva_category=str(invoice.iva_category) if invoice.iva_category is not None else None,
             rectifies_invoice_number=invoice.rectifies_invoice_number,
+            rectification_method=(
+                str(invoice.rectification_method) if invoice.rectification_method is not None else None
+            ),
+            rectification_cause=str(invoice.rectification_cause) if invoice.rectification_cause is not None else None,
+            rectification_direction=(
+                str(invoice.rectification_direction) if invoice.rectification_direction is not None else None
+            ),
+            document_received_on=invoice.document_received_on,
+            issuer_increase_election=(
+                str(invoice.issuer_increase_election) if invoice.issuer_increase_election is not None else None
+            ),
+            issuer_minoracion_election=(
+                str(invoice.issuer_minoracion_election) if invoice.issuer_minoracion_election is not None else None
+            ),
+            issuer_minoracion_regularisation_period=_displayed_period(
+                invoice.issuer_minoracion_regularisation_period,
+            ),
+            recipient_increase_period=_displayed_period(invoice.recipient_increase_period),
+            art_80_tres_obligations_attested=invoice.art_80_tres_obligations_attested,
+            exercised_deduction_period=_displayed_period(invoice.exercised_deduction_period),
             fx_rate=_optional_decimal(invoice.fx_rate),
             fx_rate_date=invoice.fx_rate_date,
             fx_rate_source=invoice.fx_rate_source,
             base_total_eur=_optional_decimal(invoice.base_total_eur),
             iva_total_eur=_optional_decimal(invoice.iva_total_eur),
             grand_total_eur=_optional_decimal(invoice.grand_total_eur),
+            referencia_catastral=(
+                invoice.business_premises_lease.referencia_catastral
+                if invoice.business_premises_lease is not None
+                else None
+            ),
+            settlement_amount=_decimal(invoice_settlement(invoice)),
+            documents=documents.of(invoice.invoice_id),
         )
 
 
@@ -189,12 +334,10 @@ def _require_snapshot_classification_and_source(snapshot: CatalogueInvoiceSnapsh
         not _bounded_decimal(snapshot.fx_rate, positive=True)
         or not snapshot.invoice_class
         or normalise_iso_4217_currency(snapshot.currency) != snapshot.currency
-        or (
-            snapshot.source_filename is not None
-            and (not snapshot.source_filename or "/" in snapshot.source_filename or "\\" in snapshot.source_filename)
-        )
+        or (snapshot.source_filename is not None and not _is_bare_file_name(snapshot.source_filename))
+        or len({document.attachment_id for document in snapshot.documents}) != len(snapshot.documents)
     ):
         raise ValueError("invoice snapshot has invalid disclosed values")
 
 
-__all__ = ["CatalogueInvoiceSnapshot", "InvoiceLineSnapshot"]
+__all__ = ["CatalogueInvoiceSnapshot", "InvoiceDocumentIndex", "InvoiceDocumentSnapshot", "InvoiceLineSnapshot"]

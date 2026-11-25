@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import override
+from typing import Any, override
 from uuid import UUID, uuid4
 
 import pytest
 from textual.widgets import Button
 
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness, AuthSyncRequirement
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.overview import ProfileOverview, ProfileSectionView
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
@@ -34,7 +35,7 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationHandoffV1, AeatSyncOperationRequestV1
@@ -42,6 +43,7 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.operations.controller_port import OperationControllerPort
 from cadrumo.entrypoints.tui.profile.client_errors import ProfileManagerCompletedViewUnavailableError
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
@@ -161,6 +163,14 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
 ) -> None:
     client = _Client(uuid4())
     requests: list[AeatSyncOperationRequestV1] = []
+    settings_threads: list[int] = []
+    storage_path = manager_client.storage_path
+
+    def recorded_storage_path(*args: Any, **kwargs: Any) -> Path:
+        settings_threads.append(threading.get_ident())
+        return storage_path(*args, **kwargs)
+
+    monkeypatch.setattr(manager_client, "storage_path", recorded_storage_path)
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
         requests.append(request)
@@ -192,17 +202,20 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
     )
     screen = composition.compose()
     async with ScreenHostApp(screen).run_test(size=(120, 45)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.click("#setup-stage-get_data")
-        await pilot.pause()
+        await settle(pilot)
         button = screen.query_one(f"#source-{source} Button", Button)
         button.scroll_visible(immediate=True)
-        await pilot.pause()
+        await settle(pilot)
         assert button.display and not button.disabled
         await pilot.click(button)
-        await pilot.pause()
+        await settle(pilot)
         assert [str(request.operation) for request in requests] == [definition]
         assert not screen.disabled
+        # Settings read the active-profile pointer from disk; the acquisition never reads them on the loop.
+        assert settings_threads
+        assert threading.get_ident() not in settings_threads
 
 
 def test_every_write_door_carries_exact_dialog_cas_and_reads_authorized_overview() -> None:
@@ -340,7 +353,7 @@ async def test_completed_operation_without_refresh_reports_truthful_status(effec
     assert registered.message_key == "flows.manager.edit.completed_refresh_unavailable"
     assert registered.retryable is False
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._refuse_worker(error, message_key="flows.manager.edit.write_failed")
         assert screen.query_one("#manager-status", PinnedStatusBar).message == tr(
             "flows.manager.edit.completed_refresh_unavailable"

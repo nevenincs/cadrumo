@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,16 +11,11 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.config_support import LLMProvider
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.iva.schema import InvoiceKind
-from ...local_reader import LocalReaderStatus
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ..invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmRequest,
@@ -35,12 +29,6 @@ from ..invoice_evidence_extract_operation import (
     build_ledger_evidence_extract_registration,
 )
 from ..invoice_evidence_operation import InvoiceEvidenceOperationPorts, InvoiceEvidenceOperationPortsFactory
-from ..invoice_evidence_readiness_operation import (
-    LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
-    LedgerEvidenceReaderReadinessRequest,
-    build_ledger_evidence_reader_readiness_definition,
-    build_ledger_evidence_reader_readiness_registration,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -57,14 +45,12 @@ def _registrations() -> tuple[OperationRegistry, tuple[OperationPublicDefinition
 
     typed_factory: InvoiceEvidenceOperationPortsFactory = unused_factory
     definitions = (
-        build_ledger_evidence_reader_readiness_definition(cast(Callable[[], LocalReaderStatus], lambda: None)),
         build_ledger_evidence_extract_definition(typed_factory),
         build_ledger_evidence_confirm_definition(typed_factory),
     )
     registrations = (
-        build_ledger_evidence_reader_readiness_registration(definitions[0]),
-        build_ledger_evidence_extract_registration(definitions[1]),
-        build_ledger_evidence_confirm_registration(definitions[2]),
+        build_ledger_evidence_extract_registration(definitions[0]),
+        build_ledger_evidence_confirm_registration(definitions[1]),
     )
     ordered = tuple(sorted(registrations, key=lambda registration: registration.contract.definition_id))
     return OperationRegistry(definitions=definitions, public_registrations=ordered), registrations
@@ -89,10 +75,9 @@ def _request(definition_id: str, payload: BaseModel) -> OperationRequest[BaseMod
     )
 
 
-def test_readiness_is_profile_metadata_while_document_operations_require_all_periods() -> None:
+def test_document_operations_require_all_periods() -> None:
     registry, registrations = _registrations()
     payloads: tuple[BaseModel, ...] = (
-        LedgerEvidenceReaderReadinessRequest(profile_id=_PROFILE),
         LedgerEvidenceExtractRequest(profile_id=_PROFILE, evidence_id="e" * 16),
         LedgerEvidenceConfirmRequest(
             profile_id=_PROFILE,
@@ -103,7 +88,6 @@ def test_readiness_is_profile_metadata_while_document_operations_require_all_per
         ),
     )
     ids = (
-        LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
         LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     )
@@ -115,14 +99,12 @@ def test_readiness_is_profile_metadata_while_document_operations_require_all_per
             context=context,
         )
         assert resolved.request.profile_id == _PROFILE
-        assert resolved.policy.requires_all_periods is (index != 0)
+        assert resolved.policy.requires_all_periods is True
         assert any(
-            disclosure.destination_id == context.destination_id
-            and disclosure.category
-            is (DisclosureCategory.PROFILE_VALUES if index == 0 else DisclosureCategory.TAX_VALUES)
+            disclosure.destination_id == context.destination_id and disclosure.category is DisclosureCategory.TAX_VALUES
             for disclosure in resolved.policy.disclosures
         )
-        assert (AccessAction.COMMIT in resolved.policy.actions) is (index == 2)
+        assert (AccessAction.COMMIT in resolved.policy.actions) is (index == 1)
 
 
 def test_only_explicit_off_host_extraction_acquires_commit_and_cannot_use_an_attachment_alone() -> None:
@@ -136,7 +118,7 @@ def test_only_explicit_off_host_extraction_acquires_commit_and_cannot_use_an_att
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, off_host),
-        context=_context(registrations[1]),
+        context=_context(registrations[0]),
     )
     assert AccessAction.COMMIT in resolved.policy.actions
 
@@ -172,10 +154,9 @@ def test_confirmation_requires_both_review_addresses_and_canonical_amounts() -> 
         )
 
 
-def test_three_definitions_never_reconcile_into_a_second_consent_or_confirmation() -> None:
+def test_both_definitions_never_reconcile_into_a_second_consent_or_confirmation() -> None:
     registry, _ = _registrations()
     for definition_id in (
-        LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
         LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     ):

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import canonical_json_bytes
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction
@@ -18,9 +18,9 @@ from ..operations.models import (
     refused_receipt_references_hold,
     require_succeeded_terminal_receipt,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
-from .actions_manual import ledger_transaction_result_payload
 from .lifecycle_contracts import (
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_MAX_RECOVERY_TRANSACTION_IDS,
@@ -37,6 +37,7 @@ from .lifecycle_contracts import (
     LedgerLifecycleReversalOperationId,
     LedgerLifecycleValidationProjection,
 )
+from .manual_read import ledger_transaction_result_payload
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 
@@ -60,6 +61,8 @@ def project_lifecycle_mutation_from_action(
     operation_id: LedgerLifecycleOperationId,
     result: ManualLedgerTransactionResult,
     replaced: Transaction | None,
+    *,
+    language: OutputLanguage,
 ) -> LedgerLifecycleMutationProjection:
     """Project the canonical action result after checking profile and row identity.
 
@@ -80,7 +83,7 @@ def project_lifecycle_mutation_from_action(
     return LedgerLifecycleMutationProjection(
         profile_id=profile_id,
         operation_id=operation_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         replaced=LedgerLifecycleReplacedStateProjection(
@@ -180,8 +183,7 @@ def project_lifecycle_validation_from_error(
 
 def require_lifecycle_result_size(result: LedgerLifecycleExecutionResult) -> None:
     """Reject an encrypted lifecycle result that exceeds its registered byte limit."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > LEDGER_LIFECYCLE_MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, LEDGER_LIFECYCLE_MAX_RESULT_BYTES - 128)
 
 
 def _lifecycle_receipt_identity_matches(

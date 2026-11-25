@@ -1,0 +1,1686 @@
+//! The window's component engine: every status read, full check and setup the
+//! window asks for runs on its own worker thread against an engine of this
+//! installation, so no command holds the window while the engine works. Each
+//! engine report, event and review becomes the window's setup state, and every
+//! change bumps one counter the observer follows; nothing polls.
+//!
+//! Each item has a setup of its own: a setup names one item, runs under that item's
+//! writer lock on an engine of its own, and is reviewed, cancelled and resumed apart
+//! from any other item's, so the browser and the local AI set up at the same time. A
+//! second start of an item already setting up joins that setup.
+//!
+//! A setup asks for the person's approval through the engine's review: the
+//! worker publishes the plan and waits for `desktop_setup_answer`, which
+//! approves exactly the digest the window showed. The engine checks that
+//! digest against a plan it computes again after the answer; when the plan
+//! changed meanwhile, the worker asks again with the new plan, so an old
+//! approval never sets anything up. What only this window knows stays here:
+//! which check and setup it started, how far each item came, and the plans it
+//! approved, so a Resume whose plan is one of them applies without a second
+//! dialog.
+//!
+//! A setup of an item another process or window is already setting up follows
+//! that setup: the engine reports it as followed, so the window shows it running
+//! with its steps and bytes, asks for no review, and settles with the result the
+//! other setup reached. Cancelling a followed setup is the person's act in this
+//! window, so it asks the other setup to stop through the engine's cancel
+//! request, and the window keeps following until that setup ends. Closing the
+//! window stops only its following; the setup it followed goes on.
+//!
+//! Each engine a check or setup builds selects the local AI as its program alone;
+//! a download selects the one model the person asked for from a local lane's
+//! model list before it runs (`admission`). A download that cannot be admitted
+//! refuses the command and the engine never runs, so it changes no row. An
+//! engine for a command that reaches the local AI is made for the local engine
+//! and placement the runtime manager runs, which admission reads; a selection
+//! nobody can read refuses that command. A command for other items alone runs no
+//! local engine and reads no selection.
+//!
+//! The window words an `unavailable` refusal and a host failure by their code
+//! alone, so what lay behind one reaches diagnostics. A command that returns its
+//! `Stop` leaves recording it to the host that answers the window; a step that no
+//! command returns, such as a check, records its own.
+//!
+//! The engine words nothing; every value here is a code or a locale-neutral
+//! fact, and the window words them. A browser check's process ends with the
+//! window: on Windows it runs inside the window's kill-on-close job, and on
+//! Linux and macOS inside the window's process scope (`installation`).
+use super::{
+    admission::Admission,
+    reports::Reports,
+    wire::{self, CheckKind, CheckStage, Outcome, Refusal, Removal, RunStage, Stop},
+};
+use cadrumo_application::{
+    component::Cancellation,
+    diagnostics::Diagnostics,
+    error::{
+        Error,
+        application::{ApplicationError, ErrorCode, Operation},
+    },
+    provisioning::{
+        browser::failure_category,
+        engine::{
+            Answer, Engine, Event, LocalAiServed, Outcome as Ended, Report, ServedServer,
+            SetupRequest,
+        },
+        failure::{FailureCategory, TransferFailure},
+        installation::installation_config,
+        items::{Destination, ItemId, Locations, PROGRAM_PART},
+        local_ai::{
+            LocalEngine, NotRunningCause, Placement,
+            hardware::Hardware,
+            models::{LocalModels, ModelName},
+        },
+        plan::{PlanEntry, SetupPlan},
+        state::{
+            BlockedReason, CheckMode, ItemState, RecoveryAction, RemovalOffer, SetupStep,
+            StaleReason, StatusRow,
+        },
+    },
+    value::Sha256Digest,
+};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::{Arc, Mutex, MutexGuard, OnceLock, mpsc},
+    thread::JoinHandle,
+};
+use tokio::sync::watch;
+
+/// One engine of this installation.
+pub struct Installation {
+    pub engine: Engine,
+}
+
+/// Builds an engine for one command, whose local engine runs models with `Placement`.
+pub type Engines = dyn Fn(Placement) -> Result<Installation, Error> + Send + Sync;
+
+/// The engines of the installation this process belongs to. The hardware is
+/// measured once, by the first engine, and every later one reuses it. On Linux
+/// and macOS the window first keeps a process scope that every browser check
+/// and hardware query is created into, so none outlives the window; on Windows
+/// the window's kill-on-close job already holds them.
+pub fn installation() -> Arc<Engines> {
+    let hardware: Arc<OnceLock<Hardware>> = Arc::default();
+    Arc::new(move |placement: Placement| {
+        #[cfg(unix)]
+        cadrumo_platform::process_scope::contain_current()?;
+        let mut config = installation_config()?;
+        let measured = *hardware.get_or_init(|| Hardware::measure(&*config.ambient));
+        config.hardware = Some(measured);
+        config.placement = placement;
+        Ok(Installation {
+            engine: Engine::new(config)?,
+        })
+    })
+}
+
+/// Why a command got no engine to run on.
+enum Unready {
+    /// The installation's own settings could not make an engine: the category the
+    /// window words, and the failure diagnostics keep.
+    Engine(wire::Failure, ApplicationError),
+    /// The model the person asked to download could not be admitted.
+    Stopped(Stop),
+}
+
+impl Unready {
+    /// The failure diagnostics keep for this, if it is one.
+    fn cause(&self) -> Option<&ApplicationError> {
+        match self {
+            Self::Engine(_, error) => Some(error),
+            Self::Stopped(stop) => stop.cause(),
+        }
+    }
+
+    /// What a command that returns its stop tells the window.
+    fn into_stop(self) -> Stop {
+        match self {
+            Self::Engine(_, error) => Stop::Unavailable(error),
+            Self::Stopped(stop) => stop,
+        }
+    }
+}
+
+/// The engine of this installation could not be made.
+fn engine_unavailable(error: Error) -> ApplicationError {
+    ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+        .with_reason("setup_engine_unavailable")
+        .caused_by(error)
+}
+
+/// What a status read reads: every item, or, with an unreadable engine selection, the
+/// browser alone.
+const EVERY_ITEM: &[ItemId] = &ItemId::ALL;
+const BROWSER_ONLY: &[ItemId] = &[ItemId::Browser];
+
+/// How a check that `stop` refused ends. A host failure has no word of its own for a
+/// check, so it is the unexpected one; a refusal is the person's to fix or retry.
+fn check_stopped(stop: &Stop) -> (CheckStage, Option<wire::Failure>, Option<Refusal>) {
+    match stop.refusal() {
+        Some(refusal) => (CheckStage::Failed, None, Some(refusal)),
+        None => (CheckStage::Failed, Some(wire::Failure::Unexpected), None),
+    }
+}
+
+/// Whether a command over `items` reaches the local AI; no items names every item.
+fn reaches_local_ai(items: &[ItemId]) -> bool {
+    items.is_empty() || items.contains(&ItemId::LocalAi)
+}
+
+/// An engine of this installation. One for a command that reaches the local AI is made
+/// for the local engine and placement the runtime manager runs, as admission reads
+/// them; one for other items alone runs no local engine, so it reads no selection.
+fn selected(engines: &Engines, admission: &Admission, local_ai: bool) -> Result<Engine, Unready> {
+    let selection = if local_ai {
+        Some(admission.local_engine().map_err(Unready::Stopped)?)
+    } else {
+        None
+    };
+    made(engines, selection)
+}
+
+/// An engine of this installation for `selection`, the local engine and placement the
+/// runtime manager runs; without one it runs no local engine.
+fn made(engines: &Engines, selection: Option<(LocalEngine, Placement)>) -> Result<Engine, Unready> {
+    let placement = selection.map_or_else(Placement::default, |(_, placement)| placement);
+    let Installation { mut engine } = engines(placement).map_err(|error| {
+        Unready::Engine(failure(failure_category(&error)), engine_unavailable(error))
+    })?;
+    if let Some((local_engine, _)) = selection {
+        engine.select_local_engine(local_engine);
+    }
+    Ok(engine)
+}
+
+/// An engine of this installation, given the local AI's program alone or, for an
+/// explicit download, the one model the person asked for from a local lane's model
+/// list, as the agent service states it now. Every check and setup runs on one;
+/// `local_ai` says whether it reaches the local AI.
+fn admitted(
+    engines: &Engines,
+    admission: &Admission,
+    local_ai: bool,
+    download: Option<&wire::ModelDownload>,
+    cancellation: Option<&Cancellation>,
+) -> Result<Engine, Unready> {
+    let mut engine = selected(engines, admission, local_ai || download.is_some())?;
+    let models = match download {
+        Some(request) => match cancellation {
+            Some(cancellation) => admission.download_cancellable(request, cancellation),
+            None => admission.download(request),
+        },
+        None => Ok(LocalModels::default()),
+    }
+    .map_err(Unready::Stopped)?;
+    engine.select_local_models(models);
+    Ok(engine)
+}
+
+/// The served facts as the agent service's catalogue read takes them, each model by
+/// the name on the person's list its role was selected for.
+fn local_ai_facts(served: &LocalAiServed, named: &[(String, String)]) -> serde_json::Value {
+    let server = match served.server {
+        ServedServer::Dormant => "dormant",
+        ServedServer::Running => "running",
+        ServedServer::StartFailed => "start_failed",
+    };
+    let models: Vec<serde_json::Value> = served
+        .stored
+        .iter()
+        .filter_map(|(role, stored)| {
+            let (_, name) = named.iter().find(|(listed, _)| listed == role)?;
+            Some(serde_json::json!({"name": name, "stored": stored}))
+        })
+        .collect();
+    serde_json::json!({"engine": served.engine, "server": server, "models": models})
+}
+
+fn lock<T>(value: &Mutex<T>) -> MutexGuard<'_, T> {
+    value.lock().unwrap_or_else(|error| error.into_inner())
+}
+
+fn operation_id() -> String {
+    let mut bytes = [0u8; 32];
+    // Without entropy the identifier is still unique within this window.
+    if getrandom::fill(&mut bytes).is_err() {
+        static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        bytes[..8].copy_from_slice(&next.to_be_bytes());
+    }
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[derive(Clone, Debug)]
+struct PartTrack {
+    part: String,
+    model: Option<String>,
+    step: Option<SetupStep>,
+    progress: Option<(u64, u64)>,
+    result: Option<wire::ItemResult>,
+}
+
+#[derive(Clone, Debug)]
+struct ItemTrack {
+    item: ItemId,
+    step: Option<SetupStep>,
+    progress: Option<(u64, u64)>,
+    retry: Option<(u32, u32)>,
+    result: Option<wire::ItemResult>,
+    /// The local AI's parts in the order its plan carries them out.
+    parts: Vec<PartTrack>,
+}
+
+impl ItemTrack {
+    fn new(item: ItemId) -> Self {
+        Self {
+            item,
+            step: None,
+            progress: None,
+            retry: None,
+            result: None,
+            parts: Vec::new(),
+        }
+    }
+
+    fn part(&mut self, part: &str) -> &mut PartTrack {
+        let index = match self.parts.iter().position(|track| track.part == part) {
+            Some(index) => index,
+            None => {
+                self.parts.push(PartTrack {
+                    part: part.to_owned(),
+                    model: None,
+                    step: None,
+                    progress: None,
+                    result: None,
+                });
+                self.parts.len() - 1
+            }
+        };
+        &mut self.parts[index]
+    }
+
+    /// The results of the item's parts once its setup ended: every part it finished
+    /// changed, and when it stopped while downloading or installing a part, that part
+    /// failed and the parts after it were never reached.
+    fn settle_parts(&mut self, stopped: Option<wire::Failure>) {
+        let began = self.parts.iter().rposition(|part| part.step.is_some());
+        let in_part = matches!(self.step, Some(SetupStep::Download | SetupStep::Install));
+        let at = stopped.and_then(|failure| Some((began.filter(|_| in_part)?, failure)));
+        for (index, part) in self.parts.iter_mut().enumerate() {
+            let transferred_bytes = part.progress.map_or(0, |(completed, _)| completed);
+            let reached = match (stopped, began) {
+                (None, _) => true,
+                (Some(_), Some(began)) => index <= began,
+                (Some(_), None) => false,
+            };
+            part.result = match at {
+                Some((at, failure)) if index == at => Some(wire::ItemResult {
+                    changed: false,
+                    failure: Some(failure),
+                    transferred_bytes,
+                }),
+                Some((at, _)) if index > at => None,
+                _ if reached => Some(wire::ItemResult {
+                    changed: true,
+                    failure: None,
+                    transferred_bytes,
+                }),
+                _ => None,
+            };
+        }
+    }
+}
+
+struct CheckTrack {
+    operation_id: String,
+    kind: CheckKind,
+    stage: CheckStage,
+    /// The category a refused check carried, which the window words as it words a row's;
+    /// `None` for a check that is running, done, or failed with no category at all.
+    failure: Option<wire::Failure>,
+    /// The refusal of a check whose engine could not be admitted.
+    refusal: Option<Refusal>,
+}
+
+struct SetupTrack {
+    /// The one item this setup sets up.
+    item: ItemId,
+    operation_id: String,
+    download: Option<wire::ModelDownload>,
+    stage: RunStage,
+    /// The plan awaiting the person's answer, by its digest.
+    review: Option<(String, wire::Review)>,
+    /// Where the waiting review hears the answer.
+    answers: Option<mpsc::Sender<Answer>>,
+    /// The person answered; the engine is checking the plan again.
+    answered: bool,
+    /// The setup follows one another process or window runs.
+    following: bool,
+    items: Vec<ItemTrack>,
+    phases: Vec<String>,
+    hosts: BTreeSet<String>,
+    cancellation: Arc<Cancellation>,
+    cancel_requested: bool,
+    outcome: Option<Outcome>,
+    failure: Option<wire::Failure>,
+}
+
+impl SetupTrack {
+    fn track_of(&mut self, item: ItemId) -> &mut ItemTrack {
+        let index = match self.items.iter().position(|track| track.item == item) {
+            Some(index) => index,
+            None => {
+                self.items.push(ItemTrack::new(item));
+                self.items.len() - 1
+            }
+        };
+        &mut self.items[index]
+    }
+
+    /// The item an entry of the plan sets up, with each of its parts.
+    fn planned(&mut self, entry: &PlanEntry) {
+        let item = self.track_of(entry.item);
+        for part in &entry.parts {
+            let track = item.part(&part.part_id);
+            if track.model.is_none() && part.part_id != PROGRAM_PART {
+                track.model = part.target_version.clone();
+            }
+        }
+    }
+
+    fn live(&self) -> bool {
+        self.stage != RunStage::Settled
+    }
+
+    /// The answer the waiting review receives now, if one waits.
+    fn decline(&mut self) {
+        if let Some(answers) = self.answers.take() {
+            // A review that stopped waiting has nothing left to hear.
+            let _ = answers.send(Answer::Decline);
+        }
+        self.review = None;
+        if self.stage == RunStage::Review {
+            self.stage = RunStage::Planning;
+        }
+    }
+}
+
+#[derive(Default)]
+struct Window {
+    rows: Option<(CheckMode, Vec<StatusRow>)>,
+    check: Option<CheckTrack>,
+    /// Each item's latest setup.
+    setups: BTreeMap<ItemId, SetupTrack>,
+    /// The plans this window approved, by item and digest.
+    approved: BTreeMap<ItemId, BTreeSet<String>>,
+    /// The setup of an item whose engine could not be admitted, by operation id, and why.
+    /// Its track is gone: the start that asked for it is refused with this.
+    refused: BTreeMap<ItemId, (String, Stop)>,
+    workers: Vec<JoinHandle<()>>,
+    /// Stops a check at its next transfer chunk or browser launch once the window closes.
+    checks: Arc<Cancellation>,
+    closed: bool,
+}
+
+impl Window {
+    /// The download a start of `item` that names none takes over: on a resume, or
+    /// after a failed or interrupted setup, the local AI's last explicit download.
+    /// Resume never substitutes document roles.
+    fn retained(&self, item: ItemId, resume: bool) -> Option<wire::ModelDownload> {
+        self.setups
+            .get(&item)
+            .filter(|track| {
+                item == ItemId::LocalAi
+                    && (resume
+                        || matches!(track.outcome, Some(Outcome::Failed | Outcome::Interrupted)))
+            })
+            .and_then(|track| track.download.clone())
+    }
+
+    fn setup_of(&mut self, operation_id: &str) -> Option<&mut SetupTrack> {
+        self.setups
+            .values_mut()
+            .find(|track| track.operation_id == operation_id)
+    }
+
+    /// Forgets the setup `operation_id`, which set nothing up; the item it named.
+    fn drop_setup(&mut self, operation_id: &str) -> Option<ItemId> {
+        let item = self.setup_of(operation_id).map(|track| track.item)?;
+        self.setups.remove(&item);
+        Some(item)
+    }
+
+    fn check_running(&self) -> bool {
+        self.check
+            .as_ref()
+            .is_some_and(|check| check.stage == CheckStage::Running)
+    }
+}
+
+struct Shared {
+    window: Mutex<Window>,
+    changed: watch::Sender<u64>,
+    /// Where a check's, a setup's or the worker's own failure is recorded, for the
+    /// causes no command returns.
+    reports: Reports,
+}
+
+impl Shared {
+    fn update<T>(&self, change: impl FnOnce(&mut Window) -> T) -> T {
+        let out = change(&mut lock(&self.window));
+        self.changed
+            .send_modify(|revision| *revision = revision.wrapping_add(1));
+        out
+    }
+}
+
+/// What the engine side of the snapshot holds: every value but the account.
+pub struct View {
+    pub rows: Vec<wire::Row>,
+    pub rows_mode: Option<wire::CheckMode>,
+    pub complete: Option<bool>,
+    pub hardware_limited: Option<bool>,
+    pub check: Option<wire::Check>,
+    pub runs: Vec<wire::Run>,
+    pub details: String,
+}
+
+/// The engine as this window drives it.
+pub struct Components {
+    engines: Arc<Engines>,
+    admission: Arc<Admission>,
+    shared: Arc<Shared>,
+}
+
+impl Components {
+    pub fn new(
+        engines: Arc<Engines>,
+        admission: Arc<Admission>,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
+        Self {
+            engines,
+            admission,
+            shared: Arc::new(Shared {
+                window: Mutex::default(),
+                changed: watch::Sender::new(0),
+                reports: Reports::new(diagnostics),
+            }),
+        }
+    }
+
+    /// The selected local engine's facts, as the agent service relays them on its local
+    /// lane in place of its agent's probe of a server that sleeps until a document is
+    /// read: whether the server sleeps, runs or failed a demanded start, and whether each
+    /// model on the person's local lists is stored. Files and records only; nothing is
+    /// started. `None` where the engine selection, the lists or the program cannot be
+    /// read, and the service then holds the lane unknown.
+    pub fn local_ai_facts(&self) -> Option<serde_json::Value> {
+        let selection = self.admission.local_engine().ok()?;
+        let (named, models) = self.admission.listed_named().ok()?;
+        let mut engine = made(&*self.engines, Some(selection)).ok()?;
+        engine.select_local_models(models);
+        Some(local_ai_facts(&engine.local_ai_served()?, &named))
+    }
+
+    /// Changes whenever a command, report, event or review changes what the
+    /// window shows.
+    pub fn changes(&self) -> watch::Receiver<u64> {
+        self.shared.changed.subscribe()
+    }
+
+    /// Whether the work got a thread. Without one it never starts, and the caller's track
+    /// says it failed.
+    fn spawn(&self, window: &mut Window, name: &str, work: impl FnOnce() + Send + 'static) -> bool {
+        window.workers.retain(|worker| !worker.is_finished());
+        match std::thread::Builder::new()
+            .name(name.to_owned())
+            .spawn(work)
+        {
+            Ok(worker) => {
+                window.workers.push(worker);
+                true
+            }
+            Err(error) => {
+                self.shared.reports.error(
+                    &ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
+                        .with_reason("setup_worker_spawn")
+                        .caused_by(error),
+                );
+                false
+            }
+        }
+    }
+
+    /// Reads every item's quick state once, when nothing has read it yet.
+    pub fn observe(&self) {
+        let mut window = lock(&self.shared.window);
+        if window.rows.is_none() && !window.check_running() && !window.closed {
+            self.start_check(&mut window, CheckKind::StatusQuick, Vec::new());
+            drop(window);
+            self.shared
+                .changed
+                .send_modify(|revision| *revision = revision.wrapping_add(1));
+        }
+    }
+
+    /// Read the browser alone from fresh local facts and publish the checked row.
+    pub async fn check_browser(&self) -> Option<bool> {
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let shared = self.shared.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut engine = match admitted(&*engines, &admission, false, None, None) {
+                Ok(engine) => engine,
+                Err(unready) => {
+                    if let Some(cause) = unready.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                    return None;
+                }
+            };
+            let cancellation = lock(&shared.window).checks.clone();
+            let report = engine.status(
+                CheckMode::Quick,
+                &[ItemId::Browser],
+                &mut |_| {},
+                &cancellation,
+            );
+            if !report.outcome.succeeded() {
+                return None;
+            }
+            let checked = report
+                .rows
+                .into_iter()
+                .find(|row| row.item == ItemId::Browser)?;
+            let usable = checked.state.usable();
+            shared.update(|window| {
+                let (_, rows) = window
+                    .rows
+                    .get_or_insert_with(|| (CheckMode::Quick, Vec::new()));
+                if let Some(row) = rows.iter_mut().find(|row| row.item == ItemId::Browser) {
+                    *row = checked;
+                } else {
+                    rows.push(checked);
+                }
+            });
+            Some(usable)
+        })
+        .await
+        .ok()
+        .flatten()
+    }
+
+    /// Starts a status read, or joins the one running.
+    pub fn check(&self, mode: wire::CheckMode) {
+        let kind = match mode {
+            wire::CheckMode::Quick => CheckKind::StatusQuick,
+            wire::CheckMode::Full => CheckKind::StatusFull,
+        };
+        self.shared.update(|window| {
+            if !window.check_running() && !window.closed {
+                self.start_check(window, kind, Vec::new());
+            }
+        });
+    }
+
+    /// Starts a full check of `items`, every item when empty, or joins the check running.
+    pub fn verify(&self, items: Vec<ItemId>) {
+        self.shared.update(|window| {
+            if !window.check_running() && !window.closed {
+                self.start_check(window, CheckKind::Verify, items);
+            }
+        });
+    }
+
+    fn start_check(&self, window: &mut Window, kind: CheckKind, items: Vec<ItemId>) {
+        let id = operation_id();
+        window.check = Some(CheckTrack {
+            operation_id: id.clone(),
+            kind,
+            stage: CheckStage::Running,
+            failure: None,
+            refusal: None,
+        });
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let shared = self.shared.clone();
+        let cancellation = window.checks.clone();
+        let spawned = self.spawn(window, "setup-check", move || {
+            // A status read whose engine selection nobody can read refuses the local AI
+            // alone: it reads the browser, and the local AI's refusal crosses beside it.
+            let (report, withheld) = match kind {
+                CheckKind::StatusQuick | CheckKind::StatusFull => {
+                    let mode = match kind {
+                        CheckKind::StatusFull => CheckMode::Full,
+                        _ => CheckMode::Quick,
+                    };
+                    let (selection, read, withheld) = match admission.local_engine() {
+                        Ok(selection) => (Some(selection), EVERY_ITEM, None),
+                        Err(stop) => (None, BROWSER_ONLY, Some(stop)),
+                    };
+                    let report = made(&*engines, selection).map(|mut engine| {
+                        engine.select_local_models(LocalModels::default());
+                        engine.status(mode, read, &mut |_| {}, &cancellation)
+                    });
+                    (report, withheld)
+                }
+                CheckKind::Verify => (
+                    admitted(&*engines, &admission, reaches_local_ai(&items), None, None)
+                        .map(|mut engine| engine.verify(&items, &mut |_| {}, &cancellation)),
+                    None,
+                ),
+            };
+            // No command returns a check's refusal, so its cause is recorded here, once
+            // for as long as every check fails the same way.
+            match (&report, &withheld) {
+                (Err(unready), _) => {
+                    if let Some(cause) = unready.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                }
+                (Ok(_), Some(stop)) => {
+                    if let Some(cause) = stop.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                }
+                (Ok(_), None) => shared.reports.recovered(),
+            }
+            shared.update(|window| {
+                let current = window
+                    .check
+                    .as_ref()
+                    .is_some_and(|check| check.operation_id == id);
+                // A refusal the engine classified itself, such as a setting it cannot
+                // use, is that category's refusal: the window is given the category to
+                // word, as the role's other clients are given it. A selection that could
+                // not be admitted is the person's to fix, so it crosses as its own code.
+                let (stage, category, refusal) = match report {
+                    // The browser's rows stand; the local AI's refusal fails the check.
+                    Ok(report) if report.outcome.succeeded() => {
+                        window.rows = Some((report.mode, report.rows));
+                        match &withheld {
+                            Some(stop) => check_stopped(stop),
+                            None => (CheckStage::Done, None, None),
+                        }
+                    }
+                    Ok(report) => (CheckStage::Failed, report.failure.map(failure), None),
+                    Err(Unready::Engine(category, _)) => (CheckStage::Failed, Some(category), None),
+                    Err(Unready::Stopped(stop)) => check_stopped(&stop),
+                };
+                if let Some(check) = window.check.as_mut().filter(|_| current) {
+                    check.stage = stage;
+                    check.failure = category;
+                    check.refusal = refusal;
+                }
+            });
+        });
+        if !spawned && let Some(check) = window.check.as_mut() {
+            check.stage = CheckStage::Failed;
+        }
+    }
+
+    /// Whether a start of `item` would download a model, which only the person's
+    /// local model list admits: the one asked for, or the one a resume or retry takes
+    /// over. A start that joins a setup already running downloads nothing of its own.
+    pub fn downloads(
+        &self,
+        item: ItemId,
+        resume: bool,
+        download: Option<&wire::ModelDownload>,
+    ) -> bool {
+        let window = lock(&self.shared.window);
+        !window.setups.get(&item).is_some_and(SetupTrack::live)
+            && (download.is_some() || window.retained(item, resume).is_some())
+    }
+
+    /// Plans a setup of `item` and waits until it asks for an answer, runs or settles.
+    /// A setup of `item` already running is joined; another item's setup runs beside it.
+    /// With `resume`, a plan this window approved for the item before applies without
+    /// asking again. With `reinstall`, the local AI's downloaded program is installed
+    /// afresh even where its files match their receipt.
+    pub async fn start(
+        &self,
+        item: ItemId,
+        resume: bool,
+        reinstall: bool,
+        download: Option<wire::ModelDownload>,
+    ) -> Result<(), Stop> {
+        let mut changes = self.changes();
+        let id = {
+            let mut window = lock(&self.shared.window);
+            if window.closed {
+                return Err(Stop::unavailable("setup_window_closed"));
+            }
+            if window.setups.get(&item).is_some_and(SetupTrack::live) {
+                return Ok(());
+            }
+            let download = download.or_else(|| window.retained(item, resume));
+            let id = operation_id();
+            let cancellation = Arc::new(Cancellation::default());
+            let mut track = SetupTrack {
+                item,
+                operation_id: id.clone(),
+                download,
+                stage: RunStage::Planning,
+                review: None,
+                answers: None,
+                answered: false,
+                following: false,
+                items: Vec::new(),
+                phases: Vec::new(),
+                hosts: BTreeSet::new(),
+                cancellation: cancellation.clone(),
+                cancel_requested: false,
+                outcome: None,
+                failure: None,
+            };
+            track.track_of(item);
+            window.setups.insert(item, track);
+            window.refused.remove(&item);
+            let engines = self.engines.clone();
+            let admission = self.admission.clone();
+            let shared = self.shared.clone();
+            let request = SetupRequest {
+                items: Some(vec![item]),
+                approved: None,
+                reinstall,
+            };
+            let run_id = id.clone();
+            let spawned = self.spawn(&mut window, "setup-run", move || {
+                run_setup(
+                    &*engines,
+                    &admission,
+                    &shared,
+                    &run_id,
+                    &request,
+                    resume,
+                    &cancellation,
+                );
+            });
+            if !spawned && let Some(track) = window.setup_of(&id) {
+                settle_failed(track, wire::Failure::Unexpected);
+            }
+            id
+        };
+        self.shared
+            .changed
+            .send_modify(|revision| *revision = revision.wrapping_add(1));
+        loop {
+            {
+                let mut window = lock(&self.shared.window);
+                match window.setup_of(&id) {
+                    None => {
+                        let ours = window
+                            .refused
+                            .get(&item)
+                            .is_some_and(|(refused, _)| *refused == id);
+                        let refused = ours.then(|| window.refused.remove(&item)).flatten();
+                        return Err(refused.map_or(Stop::Refused(Refusal::Busy), |(_, stop)| stop));
+                    }
+                    Some(track) if track.stage != RunStage::Planning => return Ok(()),
+                    Some(_) => {}
+                }
+            }
+            if changes.changed().await.is_err() {
+                return Ok(());
+            }
+        }
+    }
+
+    /// Answers the plan on screen. An approval binds the digest the window
+    /// showed; a plan that changed is refused and shown again. Waits until the
+    /// setup runs, settles, or asks again.
+    pub async fn answer(
+        &self,
+        operation_id: &str,
+        plan_digest: &str,
+        decision: wire::Decision,
+    ) -> Result<(), Refusal> {
+        let mut changes = self.changes();
+        self.shared.update(|window| {
+            let Some(track) = window
+                .setup_of(operation_id)
+                .filter(|track| track.stage == RunStage::Review && track.answers.is_some())
+            else {
+                return Err(Refusal::NotPending);
+            };
+            let shown = track
+                .review
+                .as_ref()
+                .map(|(digest, _)| digest.clone())
+                .unwrap_or_default();
+            let answer = match decision {
+                wire::Decision::Reject => Answer::Decline,
+                wire::Decision::Apply if shown != plan_digest => {
+                    return Err(Refusal::PlanChanged);
+                }
+                wire::Decision::Apply => Answer::Approve(
+                    Sha256Digest::new(plan_digest).map_err(|_| Refusal::PlanChanged)?,
+                ),
+            };
+            if let Some(answers) = track.answers.take() {
+                // The worker is waiting for exactly this answer.
+                let _ = answers.send(answer.clone());
+            }
+            track.review = None;
+            track.answered = true;
+            track.stage = RunStage::Planning;
+            let item = track.item;
+            if matches!(answer, Answer::Approve(_)) {
+                window
+                    .approved
+                    .entry(item)
+                    .or_default()
+                    .insert(plan_digest.to_owned());
+            }
+            Ok(())
+        })?;
+        loop {
+            {
+                let mut window = lock(&self.shared.window);
+                match window.setup_of(operation_id) {
+                    None => return Err(Refusal::Busy),
+                    Some(track) if track.stage == RunStage::Review => {
+                        return Err(Refusal::PlanChanged);
+                    }
+                    Some(track) if track.stage != RunStage::Planning => return Ok(()),
+                    Some(_) => {}
+                }
+            }
+            if changes.changed().await.is_err() {
+                return Ok(());
+            }
+        }
+    }
+
+    /// Stops the setup this window started at its next transfer chunk, or
+    /// declines the plan it waits on. A setup the window follows is asked to
+    /// stop through the engine's cancel request, which is in place when this
+    /// returns; the window follows it until it ends.
+    pub async fn cancel(&self, operation_id: &str) -> Result<(), Stop> {
+        let followed = self.shared.update(|window| {
+            let Some(track) = window.setup_of(operation_id).filter(|track| track.live()) else {
+                return Err(Refusal::NotPending);
+            };
+            if track.cancel_requested {
+                return Err(Refusal::NotCancellable);
+            }
+            track.cancel_requested = true;
+            if track.following {
+                return Ok(Some(vec![track.item]));
+            }
+            track.cancellation.cancel();
+            track.decline();
+            if track.stage == RunStage::Planning && !track.answered {
+                // Nothing is approved, so nothing will run: the setup ends here, whatever
+                // its planning is still doing, and its worker's later result is not shown.
+                settle_cancelled(track);
+            }
+            Ok(None)
+        })?;
+        let Some(items) = followed else {
+            return Ok(());
+        };
+        let engines = self.engines.clone();
+        // Asking a followed setup to stop runs no local engine, so it waits on no selection
+        // and a selection nobody can read does not keep the person from cancelling.
+        let asked = tokio::task::spawn_blocking(move || {
+            engines(Placement::default())
+                .map(|installation| installation.engine.ask_to_stop(&items))
+        })
+        .await;
+        let unasked = match asked {
+            Ok(Ok(_)) => return Ok(()),
+            Ok(Err(error)) => Stop::Unavailable(engine_unavailable(error)),
+            Err(error) => Stop::unavailable("setup_worker_join").because(error),
+        };
+        // Nothing was asked of the followed setup, so the person may ask again.
+        self.shared.update(|window| {
+            if let Some(track) = window.setup_of(operation_id) {
+                track.cancel_requested = false;
+            }
+        });
+        Err(unasked)
+    }
+
+    /// Removes the local model `model` and takes the rows the removal reads after it.
+    /// Refused while the local AI sets up, since that setup holds its writer lock or may
+    /// pull the model again; another item's setup does not stand in its way.
+    pub async fn remove_model(&self, model: &str) -> Result<(), Stop> {
+        let name = ModelName::parse(model).map_err(|_| Refusal::ModelSelectionUnusable)?;
+        let running = self.shared.update(|window| {
+            window.closed
+                || window
+                    .setups
+                    .get(&ItemId::LocalAi)
+                    .is_some_and(SetupTrack::live)
+        });
+        if running {
+            return Err(Refusal::Busy.into());
+        }
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
+            let mut engine = selected(&*engines, &admission, true).map_err(Unready::into_stop)?;
+            // The local AI is selected as its program alone: a removal pulls nothing.
+            engine.select_local_models(LocalModels::default());
+            Ok(engine.remove_model(&name, &mut |_| {}))
+        })
+        .await
+        .map_err(|error| Stop::unavailable("setup_worker_join").because(error))??;
+        self.shared.update(|window| match removed.outcome {
+            Ended::Removed => {
+                window.rows = Some((removed.mode, removed.rows));
+                Ok(())
+            }
+            Ended::Busy => Err(Refusal::Busy.into()),
+            _ => Err(Refusal::ModelNotRemoved.into()),
+        })
+    }
+
+    /// Removes what `removal` names and takes the rows the removal reads after it.
+    /// Refused while that item sets up, since a setup holds its writer lock. A removal of
+    /// the local AI takes the models on the person's lists with it; one of its program
+    /// alone selects none, and every model stays.
+    pub async fn remove(&self, removal: Removal) -> Result<(), Stop> {
+        let item = removal.item();
+        let running = self.shared.update(|window| {
+            window.closed || window.setups.get(&item).is_some_and(SetupTrack::live)
+        });
+        if running {
+            return Err(Refusal::Busy.into());
+        }
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
+            let local_ai = !matches!(removal, Removal::Browser);
+            let mut engine =
+                selected(&*engines, &admission, local_ai).map_err(Unready::into_stop)?;
+            Ok(match removal {
+                Removal::Browser => engine.remove(&[item], &mut |_| {}),
+                Removal::LocalAi => {
+                    engine.select_local_models(admission.listed()?);
+                    engine.remove(&[item], &mut |_| {})
+                }
+                Removal::LocalAiProgram => engine.remove_program(&mut |_| {}),
+            })
+        })
+        .await
+        .map_err(|error| Stop::unavailable("setup_worker_join").because(error))??;
+        self.shared.update(|window| match removed.outcome {
+            Ended::Removed => {
+                window.rows = Some((removed.mode, removed.rows));
+                Ok(())
+            }
+            Ended::Busy => Err(Refusal::Busy.into()),
+            _ => Err(match removal {
+                Removal::Browser => Refusal::BrowserNotRemoved,
+                Removal::LocalAi | Removal::LocalAiProgram => Refusal::LocalAiNotRemoved,
+            }
+            .into()),
+        })
+    }
+
+    /// Stops everything this window started and waits for its workers.
+    pub async fn close(&self) {
+        let workers = self.shared.update(|window| {
+            window.closed = true;
+            window.checks.cancel();
+            for track in window.setups.values_mut().filter(|track| track.live()) {
+                track.cancel_requested = true;
+                track.cancellation.cancel();
+                track.decline();
+            }
+            std::mem::take(&mut window.workers)
+        });
+        let joined = tokio::task::spawn_blocking(move || {
+            for worker in workers {
+                // A worker that panicked has nothing left to stop.
+                let _ = worker.join();
+            }
+        });
+        // The join cannot fail but by a panic, which leaves nothing to wait for.
+        let _ = joined.await;
+    }
+
+    /// The engine side of the window's snapshot.
+    pub fn view(&self) -> View {
+        let window = lock(&self.shared.window);
+        let (rows, rows_mode) = match &window.rows {
+            Some((mode, rows)) => (rows.iter().map(row).collect(), Some(check_mode(*mode))),
+            None => (Vec::new(), None),
+        };
+        let read = window.rows.as_ref().map(|(_, rows)| rows.as_slice());
+        let setups: Vec<&SetupTrack> = ItemId::ALL
+            .iter()
+            .filter_map(|item| window.setups.get(item))
+            .collect();
+        View {
+            rows,
+            rows_mode,
+            complete: read.map(|rows| {
+                rows.len() == ItemId::ALL.len() && rows.iter().all(|row| row.state.usable())
+            }),
+            hardware_limited: read.map(|rows| {
+                rows.iter()
+                    .any(|row| row.state == ItemState::Blocked(BlockedReason::Hardware))
+            }),
+            check: window.check.as_ref().map(|check| wire::Check {
+                operation_id: check.operation_id.clone(),
+                kind: check.kind,
+                stage: check.stage,
+                failure: check.failure,
+                refusal: check.refusal,
+            }),
+            runs: setups.iter().copied().map(run).collect(),
+            details: details(read.unwrap_or_default(), &setups),
+        }
+    }
+}
+
+/// One setup on its worker: the engine's review becomes the window's dialog,
+/// and a plan that changed after its approval is asked about again.
+fn run_setup(
+    engines: &Engines,
+    admission: &Admission,
+    shared: &Shared,
+    id: &str,
+    request: &SetupRequest,
+    resume: bool,
+    cancellation: &Cancellation,
+) {
+    let download = lock(&shared.window)
+        .setup_of(id)
+        .and_then(|track| track.download.clone());
+    let local_ai = request.items.as_deref().is_none_or(reaches_local_ai);
+    let mut engine = match admitted(
+        engines,
+        admission,
+        local_ai,
+        download.as_ref(),
+        Some(cancellation),
+    ) {
+        Ok(engine) => engine,
+        Err(Unready::Engine(category, cause)) => {
+            // A setting the engine cannot use is a classified refusal of its own; the
+            // window words the category it is given, as the role's clients do. No
+            // command returns this failure, so its cause is recorded here.
+            shared.reports.error(&cause);
+            shared.update(|window| {
+                if let Some(track) = window.setup_of(id).filter(|track| track.live()) {
+                    settle_failed(track, category);
+                }
+            });
+            return;
+        }
+        Err(Unready::Stopped(stop)) => {
+            // Nothing was planned, so there is no setup to settle: the start that asked
+            // for it is refused instead, and the window shows no run. That start returns
+            // the stop, so the host that answers the window records its cause.
+            shared.update(|window| {
+                let live = window.setup_of(id).is_some_and(|track| track.live());
+                if let Some(item) = live.then(|| window.drop_setup(id)).flatten() {
+                    window.refused.insert(item, (id.to_owned(), stop));
+                }
+            });
+            return;
+        }
+    };
+    if cancellation.is_cancelled() {
+        return;
+    }
+    let locations = engine.locations().clone();
+    loop {
+        let mut review = |plan: &SetupPlan| -> Answer {
+            let digest = plan.digest();
+            let (answers, answer) = mpsc::channel();
+            let decided = shared.update(|window| {
+                let item = window.setup_of(id).map(|track| track.item);
+                let approved = resume
+                    && item.is_some_and(|item| {
+                        window
+                            .approved
+                            .get(&item)
+                            .is_some_and(|plans| plans.contains(digest.as_str()))
+                    });
+                let closed = window.closed;
+                let Some(track) = window.setup_of(id) else {
+                    return Some(Answer::Decline);
+                };
+                track.hosts.extend(plan_hosts(plan));
+                for entry in &plan.entries {
+                    track.planned(entry);
+                }
+                if closed || track.cancel_requested {
+                    return Some(Answer::Decline);
+                }
+                if approved {
+                    // A Resume of a plan this window approved is the person's act.
+                    track.answered = true;
+                    return Some(Answer::Approve(digest.clone()));
+                }
+                track.review = Some((digest.as_str().to_owned(), review_view(plan, &locations)));
+                track.answers = Some(answers);
+                track.answered = false;
+                track.stage = RunStage::Review;
+                None
+            });
+            // A window that closes drops the sender, which declines.
+            decided.unwrap_or_else(|| answer.recv().unwrap_or(Answer::Decline))
+        };
+        let mut events = |event: Event| {
+            shared.update(|window| {
+                if let Some(track) = window.setup_of(id).filter(|track| track.live()) {
+                    take_event(track, event);
+                }
+            });
+        };
+        let report = engine.setup(request, &mut review, &mut events, cancellation);
+        let again = report.outcome == Ended::PlanChanged
+            && !lock(&shared.window)
+                .setup_of(id)
+                .is_none_or(|track| track.cancel_requested);
+        if again {
+            shared.update(|window| {
+                if let Some(track) = window.setup_of(id) {
+                    track.answered = false;
+                    track.stage = RunStage::Planning;
+                }
+            });
+            continue;
+        }
+        let failed = shared.update(|window| {
+            if !report.rows.is_empty() {
+                window.rows = Some((CheckMode::Quick, report.rows.clone()));
+            }
+            // A setup cancelled before anything was approved has already ended.
+            let track = window.setup_of(id).filter(|track| track.live())?;
+            if report.outcome == Ended::Busy {
+                // A removal changes the item, or the window stopped following
+                // another setup as it closed; this one set nothing up.
+                window.drop_setup(id);
+                return None;
+            }
+            settle(track, &report);
+            let category = report.failure?;
+            matches!(report.outcome, Ended::Refused | Ended::Failed)
+                .then_some((track.item, category))
+        });
+        // No command returns how a setup ended, so a setup that failed, in its planning
+        // or later, records why here, once.
+        if let Some((item, category)) = failed {
+            shared.reports.error(&setup_failed(
+                item,
+                category,
+                report.failure_cause.as_deref(),
+                report.download_failure.as_deref(),
+            ));
+        }
+        return;
+    }
+}
+
+fn take_event(track: &mut SetupTrack, event: Event) {
+    if let Event::Following { item, .. } = &event {
+        // Another setup holds the item: there is no plan to review here.
+        track.following = true;
+        track.track_of(*item);
+    }
+    if (track.answered || track.following) && track.stage == RunStage::Planning {
+        track.stage = RunStage::Running;
+    }
+    match event {
+        Event::Phase { item, step } => {
+            let code = step.phase_code(item);
+            if !track.phases.contains(&code) {
+                track.phases.push(code);
+            }
+            let item = track.track_of(item);
+            item.step = Some(step);
+            item.retry = None;
+        }
+        Event::Progress {
+            item,
+            completed,
+            total,
+        } => {
+            if total > 0 {
+                track.track_of(item).progress = Some((completed.min(total), total));
+            }
+        }
+        Event::Part {
+            item,
+            part,
+            model,
+            step,
+        } => {
+            let item = track.track_of(item);
+            let part = item.part(&part);
+            part.step = Some(step);
+            if model.is_some() {
+                part.model = model;
+            }
+        }
+        Event::PartProgress {
+            item,
+            part,
+            completed,
+            total,
+        } => {
+            if total > 0 {
+                track.track_of(item).part(&part).progress = Some((completed.min(total), total));
+            }
+        }
+        Event::Retrying {
+            item,
+            attempt,
+            delay,
+        } => {
+            if attempt >= 2 {
+                let seconds = u32::try_from(delay.as_millis().div_ceil(1000)).unwrap_or(u32::MAX);
+                track.track_of(item).retry = Some((attempt, seconds.max(1)));
+            }
+        }
+        Event::Following { .. } => {}
+    }
+}
+
+/// What diagnostics keep of a setup that ended failed: the item, the category the
+/// window words; for `program_not_running`, which start or request ran out or
+/// broke, so a host too busy to answer in time reads apart from a missing program; and
+/// for a download that failed, the host it failed at, the stage, the HTTP status and
+/// I/O kind that decided it and the attempts made, so a server answering errors reads
+/// apart from one that cannot be reached.
+fn setup_failed(
+    item: ItemId,
+    category: FailureCategory,
+    cause: Option<&NotRunningCause>,
+    download: Option<&TransferFailure>,
+) -> ApplicationError {
+    let reason = match item {
+        ItemId::Browser => "setup_browser_failed",
+        ItemId::LocalAi => "setup_local_ai_failed",
+    };
+    let mut worded = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+        .with_reason(category.as_str());
+    if let Some(cause) = cause {
+        let mut why = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+            .with_reason(cause.reason());
+        if let Some(kind) = cause.io_kind() {
+            why = why.caused_by(std::io::Error::from(kind));
+        }
+        worded = worded.caused_by(why);
+    }
+    if let Some(download) = download {
+        worded = worded.caused_by(download.clone());
+    }
+    ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+        .with_reason(reason)
+        .caused_by(worded)
+}
+
+/// Ends a setup the person cancelled before approving anything.
+fn settle_cancelled(track: &mut SetupTrack) {
+    track.stage = RunStage::Settled;
+    track.review = None;
+    track.answers = None;
+    track.outcome = Some(Outcome::Cancelled);
+    track.failure = None;
+}
+
+fn settle_failed(track: &mut SetupTrack, failure: wire::Failure) {
+    track.stage = RunStage::Settled;
+    track.review = None;
+    track.answers = None;
+    track.outcome = Some(Outcome::Failed);
+    track.failure = Some(failure);
+}
+
+/// Records how the engine ended the setup: the outcome, and for each planned
+/// item whether it was set up, failed, or never reached.
+fn settle(track: &mut SetupTrack, report: &Report) {
+    let failure = report.failure.map(failure);
+    let (outcome, stopped) = match report.outcome {
+        Ended::Completed => (Outcome::Completed, None),
+        Ended::NothingToDo => (Outcome::NothingToDo, None),
+        Ended::NeedsApproval | Ended::PlanChanged if track.cancel_requested => {
+            (Outcome::Cancelled, None)
+        }
+        Ended::NeedsApproval => (Outcome::Rejected, None),
+        Ended::Cancelled => (Outcome::Cancelled, report.item),
+        Ended::Refused if report.failure == Some(FailureCategory::DiskFull) => {
+            (Outcome::NotEnoughSpace, None)
+        }
+        Ended::Refused | Ended::Failed => (Outcome::Failed, report.item),
+        _ => (Outcome::Failed, None),
+    };
+    if let Some(plan) = &report.plan {
+        for entry in &plan.entries {
+            track.planned(entry);
+        }
+    }
+    let ran = matches!(
+        report.outcome,
+        Ended::Completed | Ended::Failed | Ended::Cancelled
+    );
+    let mut reached = false;
+    for item in &mut track.items {
+        let transferred = item.progress.map_or(0, |(completed, _)| completed);
+        if Some(item.item) == stopped {
+            reached = true;
+            let failed = failure.unwrap_or(wire::Failure::Unexpected);
+            item.result = Some(wire::ItemResult {
+                changed: false,
+                failure: Some(failed),
+                transferred_bytes: transferred,
+            });
+            item.settle_parts(Some(failed));
+        } else if ran && !reached {
+            item.result = Some(wire::ItemResult {
+                changed: true,
+                failure: None,
+                transferred_bytes: transferred,
+            });
+            item.settle_parts(None);
+        }
+        item.retry = None;
+    }
+    track.stage = RunStage::Settled;
+    track.review = None;
+    track.answers = None;
+    track.outcome = Some(outcome);
+    track.failure =
+        (outcome == Outcome::Failed).then(|| failure.unwrap_or(wire::Failure::Unexpected));
+}
+
+fn plan_hosts(plan: &SetupPlan) -> impl Iterator<Item = String> + '_ {
+    plan.entries
+        .iter()
+        .flat_map(|entry| &entry.source_hosts)
+        .map(|host| host.as_str().to_owned())
+}
+
+/// The entry that first plans the same download as `entry`, and the entry's own key.
+type DownloadKey = (Destination, String);
+
+fn download_key(destination: Option<Destination>, version: Option<&String>) -> Option<DownloadKey> {
+    Some((destination?, version?.clone()))
+}
+
+/// The folder a download is stored in, as the person's machine names it.
+fn folder(destination: Option<Destination>, locations: &Locations) -> Option<String> {
+    destination.map(|destination| locations.destination(destination).display().to_string())
+}
+
+fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
+    let mut first_by_download: BTreeMap<DownloadKey, ItemId> = BTreeMap::new();
+    let entries = plan
+        .entries
+        .iter()
+        .map(|entry| {
+            let shares_download_with =
+                download_key(entry.destination, entry.target_version.as_ref()).and_then(|key| {
+                    let first = *first_by_download.entry(key).or_insert(entry.item);
+                    (first != entry.item).then(|| first.as_str().to_owned())
+                });
+            let mut seen = BTreeSet::new();
+            let parts = entry
+                .parts
+                .iter()
+                .map(|part| {
+                    let shared = download_key(part.destination, part.target_version.as_ref())
+                        .is_some_and(|key| !seen.insert(key));
+                    wire::PlanPart {
+                        part: part.part_id.clone(),
+                        model: (part.part_id == "download")
+                            .then(|| part.target_version.clone())
+                            .flatten(),
+                        download_bytes: part
+                            .download_bytes
+                            .map(|bytes| if shared { 0 } else { bytes }),
+                        destination: folder(part.destination, locations),
+                    }
+                })
+                .collect();
+            wire::PlanEntry {
+                item: entry.item.as_str().to_owned(),
+                download_bytes: entry.download_bytes,
+                source_hosts: entry
+                    .source_hosts
+                    .iter()
+                    .map(|host| host.as_str().to_owned())
+                    .collect(),
+                destination: folder(entry.destination, locations),
+                installs_outside_program: entry.installs_outside_program,
+                shares_download_with,
+                parts,
+            }
+        })
+        .collect();
+    wire::Review {
+        plan_digest: plan.digest().as_str().to_owned(),
+        entries,
+        known_download_bytes: plan.known_download_bytes(),
+        has_unknown_size: plan.has_unknown_size(),
+        installs_outside_program: plan.installs_outside_program(),
+        required_bytes: plan.space.required_bytes,
+        free_bytes: plan.space.free_bytes,
+        space_sufficient: plan.space.sufficient(),
+    }
+}
+
+fn run(track: &SetupTrack) -> wire::Run {
+    let settled = track.stage == RunStage::Settled;
+    wire::Run {
+        item: track.item.as_str().to_owned(),
+        operation_id: track.operation_id.clone(),
+        stage: track.stage,
+        review: track
+            .review
+            .as_ref()
+            .filter(|_| track.stage == RunStage::Review)
+            .map(|(_, review)| review.clone()),
+        items: track
+            .items
+            .iter()
+            .map(|item| wire::ItemProgress {
+                item: item.item.as_str().to_owned(),
+                step: item.step.map(step),
+                completed: item.progress.map(|(completed, _)| completed),
+                total: item.progress.map(|(_, total)| total),
+                retry: item
+                    .retry
+                    .filter(|_| !settled)
+                    .map(|(attempt, delay_s)| wire::Retry { attempt, delay_s }),
+                result: item.result.clone(),
+                parts: item
+                    .parts
+                    .iter()
+                    .map(|part| wire::PartProgress {
+                        part: part.part.clone(),
+                        model: part.model.clone(),
+                        step: part.step.map(step),
+                        completed: part.progress.map(|(completed, _)| completed),
+                        total: part.progress.map(|(_, total)| total),
+                        result: part.result.clone(),
+                    })
+                    .collect(),
+            })
+            .collect(),
+        cancellable: !settled && !track.cancel_requested,
+        cancel_requested: track.cancel_requested,
+        outcome: track.outcome,
+        failure: track.failure,
+    }
+}
+
+/// The redacted report "Copy details" puts on the clipboard: closed values,
+/// versions, the operation id, phase codes and hosts, and nothing else.
+fn details(rows: &[StatusRow], setups: &[&SetupTrack]) -> String {
+    let mut lines = vec!["Cadrumo setup details".to_owned()];
+    for track in setups {
+        lines.push(format!("operation: {}", track.operation_id));
+    }
+    for row in rows {
+        let mut parts = vec![
+            format!("item: {}", row.item),
+            format!("state: {}", row.state.code()),
+            format!("check: {}", code(check_mode(row.mode))),
+        ];
+        let reason = match row.state {
+            ItemState::Stale(reason) => Some(code(stale(reason))),
+            ItemState::Blocked(reason) => Some(code(blocked(reason))),
+            ItemState::Failed(category) => Some(code(failure(category))),
+            _ => None,
+        };
+        if let Some(reason) = reason {
+            parts.push(format!("reason: {reason}"));
+        }
+        if let Some(version) = &row.version {
+            parts.push(format!("version: {version}"));
+        }
+        lines.push(parts.join("; "));
+    }
+    let phases: Vec<&str> = setups
+        .iter()
+        .flat_map(|track| &track.phases)
+        .map(String::as_str)
+        .collect();
+    if !phases.is_empty() {
+        lines.push(format!("phases: {}", phases.join(", ")));
+    }
+    let hosts: BTreeSet<&str> = setups
+        .iter()
+        .flat_map(|track| &track.hosts)
+        .map(String::as_str)
+        .collect();
+    if !hosts.is_empty() {
+        let hosts: Vec<&str> = hosts.into_iter().collect();
+        lines.push(format!("hosts: {}", hosts.join(", ")));
+    }
+    lines.join("\n") + "\n"
+}
+
+/// The code a closed value is serialized as.
+fn code(value: impl serde::Serialize) -> String {
+    match serde_json::to_value(value) {
+        Ok(serde_json::Value::String(code)) => code,
+        _ => String::new(),
+    }
+}
+
+// ── The engine's codes as the window's ──────────────────────────────────────
+
+fn row(row: &StatusRow) -> wire::Row {
+    let (state, stale_reason, blocked_reason, failure_category) = match row.state {
+        ItemState::Absent => (wire::State::Absent, None, None, None),
+        ItemState::Provisioning => (wire::State::Provisioning, None, None, None),
+        ItemState::Verifying => (wire::State::Verifying, None, None, None),
+        ItemState::Ready => (wire::State::Ready, None, None, None),
+        ItemState::Stale(reason) => (wire::State::Stale, Some(stale(reason)), None, None),
+        ItemState::Failed(category) => (wire::State::Failed, None, None, Some(failure(category))),
+        ItemState::Blocked(reason) => (wire::State::Blocked, None, Some(blocked(reason)), None),
+        ItemState::Unknown => (wire::State::Unknown, None, None, None),
+    };
+    wire::Row {
+        item: row.item.as_str().to_owned(),
+        kind: match row.item {
+            ItemId::Browser => wire::ItemKind::Browser,
+            ItemId::LocalAi => wire::ItemKind::LocalAi,
+        },
+        mode: check_mode(row.mode),
+        state,
+        stale_reason,
+        blocked_reason,
+        failure: failure_category,
+        recovery: row.recovery.map(recovery),
+        recovery_action_id: row.recovery_action_id().map(str::to_owned),
+        version: row.version.clone(),
+        size_bytes: row.size_estimate_bytes,
+        server: row.dormant.then_some(wire::Server::Dormant),
+        awaits: row.awaits_model.then_some(wire::Awaits::Model),
+        removals: row
+            .removals
+            .iter()
+            .map(|offer| match (row.item, offer) {
+                (ItemId::Browser, _) => Removal::Browser,
+                (ItemId::LocalAi, RemovalOffer::Whole) => Removal::LocalAi,
+                (ItemId::LocalAi, RemovalOffer::ProgramOnly) => Removal::LocalAiProgram,
+            })
+            .collect(),
+    }
+}
+
+fn check_mode(mode: CheckMode) -> wire::CheckMode {
+    match mode {
+        CheckMode::Quick => wire::CheckMode::Quick,
+        CheckMode::Full => wire::CheckMode::Full,
+    }
+}
+
+fn stale(reason: StaleReason) -> wire::StaleReason {
+    match reason {
+        StaleReason::OlderRevision => wire::StaleReason::OlderRevision,
+        StaleReason::ProgramTooOld => wire::StaleReason::ProgramTooOld,
+    }
+}
+
+fn blocked(reason: BlockedReason) -> wire::BlockedReason {
+    match reason {
+        BlockedReason::Offline => wire::BlockedReason::Offline,
+        BlockedReason::NeedsPerson => wire::BlockedReason::NeedsPerson,
+        BlockedReason::Hardware => wire::BlockedReason::Hardware,
+        BlockedReason::NotInThisBuild => wire::BlockedReason::NotInThisBuild,
+    }
+}
+
+fn recovery(action: RecoveryAction) -> wire::Recovery {
+    match action {
+        RecoveryAction::SetUp => wire::Recovery::SetUp,
+        RecoveryAction::Update => wire::Recovery::Update,
+        RecoveryAction::TryAgain => wire::Recovery::TryAgain,
+        RecoveryAction::Resume => wire::Recovery::Resume,
+        RecoveryAction::CheckAgain => wire::Recovery::CheckAgain,
+        RecoveryAction::ReinstallEngineProgram => wire::Recovery::ReinstallEngineProgram,
+    }
+}
+
+fn step(step: SetupStep) -> wire::Step {
+    match step {
+        SetupStep::Plan => wire::Step::Plan,
+        SetupStep::Preflight => wire::Step::Preflight,
+        SetupStep::Download => wire::Step::Download,
+        SetupStep::Install => wire::Step::Install,
+        SetupStep::Verify => wire::Step::Verify,
+        SetupStep::Cleanup => wire::Step::Cleanup,
+    }
+}
+
+fn failure(category: FailureCategory) -> wire::Failure {
+    match category {
+        FailureCategory::Offline => wire::Failure::Offline,
+        FailureCategory::HostUnreachable => wire::Failure::HostUnreachable,
+        FailureCategory::ServerError => wire::Failure::ServerError,
+        FailureCategory::SecureConnectionFailed => wire::Failure::SecureConnectionFailed,
+        FailureCategory::BlockedByNetwork => wire::Failure::BlockedByNetwork,
+        FailureCategory::DiskFull => wire::Failure::DiskFull,
+        FailureCategory::NoPermission => wire::Failure::NoPermission,
+        FailureCategory::DamagedDownload => wire::Failure::DamagedDownload,
+        FailureCategory::NotEnoughMemory => wire::Failure::NotEnoughMemory,
+        FailureCategory::MemoryBusy => wire::Failure::MemoryBusy,
+        FailureCategory::ProgramMissing => wire::Failure::ProgramMissing,
+        FailureCategory::ProgramNotRunning => wire::Failure::ProgramNotRunning,
+        FailureCategory::EngineProgramUnusable => wire::Failure::EngineProgramUnusable,
+        FailureCategory::EnginePackageDamaged => wire::Failure::EnginePackageDamaged,
+        FailureCategory::Interrupted => wire::Failure::Interrupted,
+        FailureCategory::NeedsSignIn => wire::Failure::NeedsSignIn,
+        FailureCategory::NotInThisBuild => wire::Failure::NotInThisBuild,
+        FailureCategory::Cancelled => wire::Failure::Cancelled,
+        FailureCategory::Unexpected => wire::Failure::Unexpected,
+    }
+}
+
+#[cfg(test)]
+#[path = "components_tests.rs"]
+pub(super) mod tests;

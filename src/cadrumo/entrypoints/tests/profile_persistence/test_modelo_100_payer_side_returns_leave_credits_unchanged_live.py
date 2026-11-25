@@ -19,12 +19,14 @@ these assertions with no test edit.
 
 The two personas differ only in whether the six payer-side returns are filed.
 Both assert the same oracle, hand-derived below from the seeded Modelo 130
-quarters and the keyed salary certificate:
+quarters and the recorded salary certificate:
 
-* ``0596`` = the salary certificate the operator keys (perceptor-side evidence).
+* ``0596`` = the employer's certificate the operator records (perceptor-side evidence).
 * ``0604`` = the four seeded Modelo 130 casilla 19 quarters, plus a Modelo 131
   true zero.
-* every other credit casilla = 0, because this persona bore no other withholding.
+* every other credit casilla = 0, because this persona bore no other withholding:
+  the profile declares only work and activity income, which proves the other
+  payer-record classes zero.
 * ``0609`` = ``0596`` + ``0604``.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
@@ -40,8 +42,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -50,16 +53,14 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.aggregation.source_mesh import (
-    CallerOverrideDisposition,
-    precedence_ladder_sources,
-)
+from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -67,6 +68,7 @@ from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
@@ -74,12 +76,13 @@ from ....domain.calculations.registry.runtime_graph import expression_casilla_re
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ._fold_in_assertions_support import _assert_distinct_positive
+from ....domain.modelos.filing_kind_evidence import ObservedFilingKind, observed_filing_kind_for_local_revision
+from ....domain.modelos.filing_record import FilingDeclarationKind
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
+from .fold_in_assertions_support import assert_distinct_positive
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -114,8 +117,11 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     "1391",
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 
-_SALARY_CERTIFICATE_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
 # The withholding the taxpayer's own employer certifies as borne. Perceptor-side
 # evidence, so this is the only work-income credit the declaration may carry.
 _SALARY_CERTIFICATE_RETENCIONES = Decimal("1234.56")
@@ -195,6 +201,7 @@ def _seed_filing(
     period: str,
     casilla_id: CasillaId,
     value: Decimal,
+    filing_kind: ObservedFilingKind | None = None,
 ) -> None:
     """Persist one filed source-modelo period carrying a single source casilla id.
 
@@ -216,13 +223,24 @@ def _seed_filing(
             ),
         )
 
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            observation(),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation()),
-        )
+    save_stamped_observation(
+        obs_repo,
+        observation(),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+        filing_kind=filing_kind,
+    )
+
+
+def _local_original_kind(source_modelo: str, period: str) -> ObservedFilingKind:
+    """The admitted kind a locally filed original quarter carries, as the local-filing producer stamps it.
+
+    Casilla 18 is absent from these quarters; it folds as a proven zero only
+    because each quarter is an admitted original.
+    """
+    return observed_filing_kind_for_local_revision(
+        FilingDeclarationKind.ORIGINAL,
+        source_locator=f"local-filing:{source_modelo}:{_YEAR}:{period}",
     )
 
 
@@ -235,6 +253,7 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             period=period,
             casilla_id=_M130_PAGOS_OUTPUT,
             value=_M130_C19_BY_PERIOD[period],
+            filing_kind=_local_original_kind("130", period),
         )
         _seed_filing(
             obs_repo=obs_repo,
@@ -242,6 +261,7 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             period=period,
             casilla_id=_M131_PAGOS_OUTPUT,
             value=Decimal("0"),
+            filing_kind=_local_original_kind("131", period),
         )
 
 
@@ -300,76 +320,79 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                casilla_values={
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
+                },
             ),
         )
 
-    repository.save(
-        repository.prepare_observation_envelope(
-            observation(),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation()),
-        )
-    )
+    save_stamped_observation(repository, observation(), source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the single-taxpayer profile record the annual profile bindings consume."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                # Advertising services (IAE group 844) is an activity and not an urban rental.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo,actividad_economica"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.sex", value="H"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
 
-def _caller_binding_values() -> dict[BindingId, Decimal]:
-    """Supply the caller-owned annual bindings: zero, plus the salary certificate.
+def _seed_salary_certificate(operation: PinnedAuthorityOperation) -> None:
+    """Record the employer's certificate through the real write port."""
+    seed_payer_certificate(
+        operation=operation,
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_YEAR,
+        payer_tax_id="B00010082",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=_SALARY_CERTIFICATE_RETENCIONES,
+        importe_integro_dinerario=Decimal("20000.00"),
+    )
 
-    ``profile`` and ``relation_prefill`` sources are resolved by the live mesh
-    and must stay out of ``binding_values``; the bucket-locked kinds are derived
-    from the caller-override ladder rather than hand-listed. What remains is the
-    caller's own channel, zero for a persona with no other prior activity.
+
+def _caller_binding_values() -> dict[BindingId, Decimal]:
+    """Supply the caller-owned annual bindings, all zero.
+
+    ``profile``, ``relation_prefill`` and the payer-record credits are resolved
+    by the live mesh and must stay out of ``binding_values``; the bucket-locked
+    kinds are derived from the caller-override ladder rather than hand-listed.
+    What remains is the caller's own channel, zero for a persona with no other
+    prior activity.
     """
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
-    resolved_elsewhere = frozenset({"profile", _RELATION_PREFILL_SOURCE}) | {
+    resolved_elsewhere = frozenset({"profile", _RELATION_PREFILL_SOURCE, "retencion_soportada"}) | {
         kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)
     }
     values = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in resolved_elsewhere
     }
-    values[_SALARY_CERTIFICATE_BINDING] = _SALARY_CERTIFICATE_RETENCIONES
     return values
 
 
@@ -390,6 +413,7 @@ def _calculate_m100_annual(
     """Run the live annual Modelo 100 calculate over the seeded bucket."""
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
+    _seed_salary_certificate(operation)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
@@ -437,13 +461,13 @@ def _assert_credit_oracle(result: BucketAggregationCalculationResult) -> None:
 def test_credit_casillas_carry_only_perceptor_side_evidence(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Baseline: with no payer-side return filed, the credits are the keyed evidence.
+    """Baseline: with no payer-side return filed, the credits are the perceptor-side evidence.
 
     Legal grounding: LIRPF art. 99 with RIRPF arts. 109 and 110 for the pagos
     fraccionados, and LIRPF arts. 99 and 101 with RIRPF arts. 80 and 86 for the
     certified salary withholding.
     """
-    assert _assert_distinct_positive(_M130_C19_BY_PERIOD) == _EXPECTED_PAGOS_FRACCIONADOS
+    assert assert_distinct_positive(_M130_C19_BY_PERIOD) == _EXPECTED_PAGOS_FRACCIONADOS
     _seed_pagos_quarters(obs_repo=CalculationObservationRepository())
 
     _assert_credit_oracle(_calculate_m100_annual(secure_objects, operation=operation))

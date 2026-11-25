@@ -54,7 +54,6 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceProjectionV1,
 )
-from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ....application.live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
@@ -94,6 +93,7 @@ from ....application.overview.calendar_models import (
 from ....application.overview.evidence import CalendarEvidenceProjection
 from ....application.overview.home import HomeAvailability, HomeZoneState
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ....application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -121,17 +121,15 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ..aeat_sync.census_screen import AeatSyncCensusScreen
 from ..aeat_sync.controller import AeatSyncWorkspaceController
+from ..aeat_sync.evidence_comparison_screen import AeatSyncEvidenceComparisonScreen
+from ..aeat_sync.filed_declarations_screen import AeatSyncFiledDeclarationsScreen
 from ..aeat_sync.models import AeatSyncOperationRequestV1
+from ..aeat_sync.notifications_screen import AeatSyncNotificationsScreen
+from ..aeat_sync.overview_screen import AeatSyncOverviewScreen
+from ..aeat_sync.reconciliation_screen import AeatSyncReconciliationScreen
 from ..aeat_sync.routes import resolve_aeat_sync_screen
-from ..aeat_sync.screens import (
-    AeatSyncCensusScreen,
-    AeatSyncEvidenceComparisonScreen,
-    AeatSyncFiledDeclarationsScreen,
-    AeatSyncNotificationsScreen,
-    AeatSyncOverviewScreen,
-    AeatSyncReconciliationScreen,
-)
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController
@@ -881,15 +879,21 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ..ledger.controller import LedgerWorkspaceController
     from ..ledger.own_accounts import LedgerOwnAccountDoorV1
     from ..ledger.tests.own_account_fixtures import MemoryOwnAccountDoor
+    from ..ledger.tests.review_door_fixtures import MemoryEvidenceReviewListDoor, synthetic_draft
+    from ..ledger.tests.workspace_fixtures import ledger_review_door
 
+    projection = _ledger_projection(scenario)
+    drafts = (synthetic_draft(1),) if projection.entries else ()
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _ledger_projection(scenario),
+        projection,
         LedgerWorkspaceInjection(
             review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
+            review_door=ledger_review_door(projection),
             classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
+            evidence_review_door=MemoryEvidenceReviewListDoor(drafts),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
             own_account_door=cast(LedgerOwnAccountDoorV1, MemoryOwnAccountDoor()),
         ),

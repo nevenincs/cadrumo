@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...command_execution import run_command
 from ...google_oauth import GOOGLE_OAUTH_ENV
@@ -18,6 +18,12 @@ from ..cached_command import run_cached
 from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
 
 
 def test_native_contract_cache_tracks_the_publisher_identity_without_recording_it(
@@ -180,6 +186,9 @@ def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path, mon
         f'''cmake_minimum_required(VERSION 4.4)
 project(Currency LANGUAGES NONE)
 {build_manifest_cmake()}
+file(READ "${{CMAKE_BINARY_DIR}}/build-paths.json" fixture_manifest)
+string(JSON fixture_manifest SET "${{fixture_manifest}}" paths temporary "\\\"temporary\\\"")
+file(WRITE "${{CMAKE_BINARY_DIR}}/build-paths.json" "${{fixture_manifest}}\n")
 set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")
 include("{REPO_ROOT.as_posix()}/native/cmake/Cleanup.cmake")
 include("{REPO_ROOT.as_posix()}/native/cmake/CachedCommand.cmake")
@@ -219,3 +228,89 @@ cadrumo_finalize_clean_targets()
 
     with zipfile.ZipFile(build / "fixture.zip") as archive:
         assert sorted(Path(name).name for name in archive.namelist() if not name.endswith("/")) == ["a", "b"]
+
+
+_DISCOVERING_PRODUCER = """\
+import pathlib, sys
+from dev.packaging.native.discovered_inputs import record_discovered_inputs
+root, output = map(pathlib.Path, sys.argv[1:3])
+record_discovered_inputs(root)
+sys.path.insert(0, str(root))
+import helper
+(root / "scratch.txt").write_text("written, never read", encoding="utf-8")
+output.write_text(helper.PREFIX + (root / "data.txt").read_text(encoding="utf-8"), encoding="utf-8")
+"""
+
+
+def test_a_discovering_action_keys_on_what_its_producer_imported_and_read(tmp_path: Path) -> None:
+    """Undeclared modules and data the producer used invalidate it; files it never read do not."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    (checkout / "helper.py").write_text('PREFIX = "one:"\n', encoding="utf-8")
+    (checkout / "data.txt").write_text("alpha", encoding="utf-8")
+    (checkout / "unrelated.txt").write_text("never read", encoding="utf-8")
+    output = tmp_path / "out.txt"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps(
+            {"name": "discover", "inputs": [], "outputs": [str(output)], "marker": str(marker), "discover": True}
+        ),
+        encoding="utf-8",
+    )
+    command = [sys.executable, "-B", "-c", _DISCOVERING_PRODUCER, str(checkout), str(output)]
+
+    assert run_cached(tmp_path, spec, command)
+    discovered = {Path(name).name for name in json.loads(marker.read_text(encoding="utf-8"))["discovered"]}
+    assert discovered == {"helper.py", "data.txt"}, "imports and reads are inputs; writes and unread files are not"
+    # The files first discovered by that run were not inventoried before it, so it reruns once to key on them.
+    assert run_cached(tmp_path, spec, command)
+    assert not run_cached(tmp_path, spec, command)
+
+    (checkout / "unrelated.txt").write_text("changed, still never read", encoding="utf-8")
+    assert not run_cached(tmp_path, spec, command)
+
+    (checkout / "data.txt").write_text("beta", encoding="utf-8")
+    assert run_cached(tmp_path, spec, command)
+    assert output.read_text(encoding="utf-8") == "one:beta"
+
+    (checkout / "helper.py").write_text('PREFIX = "two:"\n', encoding="utf-8")
+    assert run_cached(tmp_path, spec, command)
+    assert output.read_text(encoding="utf-8") == "two:beta"
+    assert not run_cached(tmp_path, spec, command)
+
+
+def test_a_discovered_input_changed_mid_run_leaves_no_receipt_and_no_failure(tmp_path: Path) -> None:
+    """A torn read of a discovered file is never reused, and does not fail the build that saw it."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    data = checkout / "data.txt"
+    data.write_text("alpha", encoding="utf-8")
+    output = tmp_path / "out.txt"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps({"name": "torn", "inputs": [], "outputs": [str(output)], "marker": str(marker), "discover": True}),
+        encoding="utf-8",
+    )
+    producer = (
+        "import pathlib, sys\n"
+        "from dev.packaging.native.discovered_inputs import record_discovered_inputs\n"
+        "root, output, edit = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), sys.argv[3]\n"
+        "record_discovered_inputs(root)\n"
+        "output.write_text((root / 'data.txt').read_text(encoding='utf-8'), encoding='utf-8')\n"
+        "if edit != 'unchanged': (root / 'data.txt').write_text(edit, encoding='utf-8')\n"
+    )
+
+    def command(edit: str) -> list[str]:
+        return [sys.executable, "-B", "-c", producer, str(checkout), str(output), edit]
+
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert not run_cached(tmp_path, spec, command("unchanged"))
+
+    data.write_text("beta", encoding="utf-8")
+    assert run_cached(tmp_path, spec, command("gamma"))
+    assert not marker.exists(), "a receipt would name bytes the producer may not have read"
+    assert run_cached(tmp_path, spec, command("unchanged"))
+    assert output.read_text(encoding="utf-8") == "gamma"

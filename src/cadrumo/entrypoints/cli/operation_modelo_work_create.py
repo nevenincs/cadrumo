@@ -22,6 +22,7 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateRefusal,
     ModeloWorkCreateRequest,
     ModeloWorkCreateSuccess,
+    modelo_work_create_effect,
 )
 from ...application.operations.public_period import PublicPeriod
 from ...core.bucket_pointer import resolve_active_bucket_id
@@ -36,6 +37,11 @@ class ModeloWorkCreation:
 
     completion: RegisteredOperationCompletion[ModeloWorkCreateProjection]
     result: ModeloWorkCreateSuccess
+
+
+def _require_requested_bucket(bucket_id: str | None, profile_id: UUID) -> None:
+    if bucket_id is not None and bucket_id.strip() and bucket_id.strip() != str(profile_id):
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
 
 
 def create_modelo_work(
@@ -55,8 +61,7 @@ def create_modelo_work(
     if target is None:
         raise no_active_profile_refusal()
     client = require_profile_client(ctx, expected_profile_id=UUID(target))
-    if bucket_id is not None and bucket_id.strip() and bucket_id.strip() != str(client.profile_id):
-        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+    _require_requested_bucket(bucket_id, client.profile_id)
     requested_period = PublicPeriod.from_period(period)
     completed = run_registered_operation(
         client,
@@ -161,9 +166,7 @@ def _correlate_work_creation(
     invalid: bool,
 ) -> ModeloWorkCreation | None:
     """Return creation only after all successful receipt and coordinate checks."""
-    expected_effect = (
-        OperationEffect.UPDATED if not outcome.reused or outcome.name_applied is not None else OperationEffect.NONE
-    )
+    expected_effect = modelo_work_create_effect(reused=outcome.reused, name_applied=outcome.name_applied)
     invalid = (
         invalid
         or _work_creation_terminal_invalid(completed, expected_effect)

@@ -27,7 +27,18 @@ inputs refuse configuration. The toolchain preserves the canonical architecture
 and deployment floor and does not change the host's selected developer tools.
 Supply an explicit `CADRUMO_RUST_LINKER` carrying that same compiler and SDK;
 Cargo does not inherit CMake's sysroot options. Builder receipts bind the selected
-files and complete SDK inventory to their bytes.
+files and complete SDK inventory to their bytes. A developer records these
+per-machine values once in an ignored `CMakeUserPresets.json` configure preset
+that inherits `macos-arm64` (for example from `xcrun -f clang`,
+`xcrun --show-sdk-path` and `xcrun --show-sdk-version`), together with
+`CADRUMO_RUST_ROOT`, `CADRUMO_ZSTD`, `CADRUMO_INSTALL_NAME_TOOL`,
+`CADRUMO_CODESIGN`, `CADRUMO_CARGO_DENY` and the agent source directory. The
+binary directory's cache retains them, so the `just` native recipes reuse the
+same reviewed inputs. `CADRUMO_NATIVE_SIGNING_IDENTITY` defaults to `-`, the
+ad-hoc identity, which is also the signature Cadrumo distributes: the project is
+open source, holds no Apple Developer ID or other code-signing certificate, and
+its builds are not notarized. Another local identity changes only the seal on
+that builder's own images.
 
 `CADRUMO_CONFIGURE_PAYLOAD=OFF` configures native component targets and their tests
 without the full product/documentation/desktop assembly graph. It supports backend
@@ -48,8 +59,7 @@ under `tool_versions` in `generated/build-toolchain.json` and in the configure b
 facts. Windows uses the pinned
 official NuGet SDK. Linux x86-64/AArch64 and macOS ARM64 use the reviewed Astral
 Python Build Standalone 20251209 full shared-library SDKs for normal-GIL CPython
-3.13.11, with exact archive hashes and target/ABI provenance. The authorized
-selection is recorded in `scratch/provisioning-state-map/B2-native-decisions.md`.
+3.13.11, with exact archive hashes and target/ABI provenance in `native/toolchain.json`.
 Missing or mismatched pins refuse provisioning. Acquisition retains provider
 metadata and all embedded dependency notices; assembly stages those notices and
 the canonical CPython notice through the declared license inventory.
@@ -59,8 +69,8 @@ executable. Its content hash and canonical source provenance enter
 `generated/build-toolchain.json`; the path is not a target SDK pin. Standalone
 provisioning accepts `--build-toolchain <file>` with that configured decoder.
 Linux assembly requires explicit `CADRUMO_READELF` and `CADRUMO_PATCHELF` tools;
-macOS requires `CADRUMO_INSTALL_NAME_TOOL`, `CADRUMO_CODESIGN` and an explicit
-`CADRUMO_NATIVE_SIGNING_IDENTITY`. Native tools are checked against configured
+macOS requires `CADRUMO_INSTALL_NAME_TOOL` and `CADRUMO_CODESIGN`, and records
+`CADRUMO_NATIVE_SIGNING_IDENTITY`, `-` unless set. Native tools are checked against configured
 content identities and are never discovered through the runtime PATH.
 
 The selected host interpreter, compiler, linker, Rust tools, uv and toolchain file
@@ -162,8 +172,9 @@ extension or a runtime file to install. It does not enter the package manifest.
 `verify` includes `application.rust` and `application.package` through CTest.
 The package test consumes the selected layout's manifest location, checks its
 complete file inventory, probes the delivered interpreter against every declared
-distribution version, and checks the original inventory again. It uses a disposable
-browser cache and calls the existing Python readiness owner. This checks the staged
+distribution version, and checks the original inventory again. The native browser
+quick check reads the packaged driver manifest and pins against a disposable empty
+browser cache and reports it absent without creating browser data. This checks the staged
 package. `verify-package` runs both the Python acceptance suite and the CMake-selected
 Rust compatibility probe against the same freshly extracted ZIP. Its result records
 the archive hash, manifest hash, extracted root and application-probe outcome; a failed
@@ -173,6 +184,15 @@ The standalone `application.package` CTest uses `live-package-tests` without a
 release expectation; the artifact probe uses `live-release-tests` and receives
 the verifier's archive-bound release expectation. Both feature selections are
 intentional.
+The same test file also runs the local engines' programs: it starts the package's
+`llama-server` as the manager does and checks that it answers as the pinned build with
+no model loaded, presents the fetched model at the llama.cpp context its pull recorded,
+lists it under its alias and generates a counted token;
+and it starts a real Ollama program and checks that it lists and generates from the same
+model. The model is the one 1.2 MB file the tests pin, fetched by the engine's own Rust
+fetcher from Hugging Face, so these tests need that network access. The package carries
+no Ollama program, so the Ollama check uses one installed outside Cadrumo, found as the
+engine reports one, and fails when there is none.
 For a separately extracted or installed artifact, configure the absolute
 `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
 `ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that
@@ -182,14 +202,17 @@ selected artifact and does not establish a successful fresh `bundle` build.
 
 `P` means installed package root; `U` means the effective storage root. The rule
 that selects it is declared in `native/application-environment.toml` and applied
-by the platform crate to every packaged image. An absolute
-`CADRUMO_LOCAL_STORAGE_ROOT` wins in every mode. Without it, a source checkout
-uses `var/storage` beneath the checkout and an installed package uses the
-per-user, per-channel default in the mutable-root row. The platform crate decides
-the mode by where the package tree lives, never by the working directory. The
-command line keeps its own resolver and built-in default for runs outside a
-package. The package takes nothing from it; the package-side conformance check
-only compares the two defaults.
+by the platform crate to every packaged image. `CADRUMO_STORAGE_ROOT` is the only
+variable that places storage; it names an absolute directory and wins in every
+image, and a relative value is refused. Without it, every image, whatever
+configuration built it, uses the per-user, per-channel default in the mutable-root
+row; no build bakes a storage root into an image. Every other location is a
+declared path beneath the root. The package manifest beside an image proves that
+it belongs to an installed package and locates package files; it never selects a
+root, and neither does the working directory or a search for a checkout. The
+command line keeps its own
+resolver and built-in default for runs outside a package. The package takes nothing
+from it; the package-side conformance check only compares the two defaults.
 `<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
 other, such as `cadrumo-preview`; the channel comes from the identity projection.
 
@@ -199,7 +222,7 @@ other, such as `cadrumo-preview`; the channel comes from the identity projection
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | `P/python.zip`, `P/lib/cadrumo/site-packages/`, controlled `P/lib/cadrumo/python.pth` | Same declared Python placement as Linux |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | `P/bin/`; qualified extension identities retained | `P/bin/`; qualified extensions and relocated install names |
 | Immutable resources | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` |
-| Mutable root | `%LOCALAPPDATA%\<name>`; checkout `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
+| Mutable root | `%LOCALAPPDATA%\<name>`; a Debug image defaults to its build checkout's `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
 | Secure state | Existing Settings/taxonomy beneath the selected root | Same logical owner | Same logical owner |
 | Transient IPC sockets | Native named pipes | Canonical runtime socket directory | Installed default: private product-family directory beneath the native per-user cache base |
 | Loader | Static bootstrap CRT; explicit absolute DLL load with restricted search, then registered bundle directories | Relative ELF RUNPATH for every transitive dependency; audit LD_* and libc floor | Relative install names and rpaths; signing and hardened-runtime validation |
@@ -228,6 +251,56 @@ Windows relocation passed real package-qualified extensions and transitive-DLL
 artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 Library-owned resources retain their wheel locations; assembly projects the
 application authority into `data/authority` through its existing setting.
+
+### Bundled llama-server
+
+The package ships the upstream `llama-server` program and builds none of it.
+`native/llamacpp-pins.json` pins one release archive per build target by tag, size
+and SHA-256, and names the hosts it may come from. The `llama_server` CMake step
+fetches the target's archive into `inputs/llama-server/archives/` under the
+selected binary directory, never under `native/`, and refuses bytes that differ
+from the pin with a typed `ArchiveMismatchError`. A verified archive stays in the
+build tree between builds, as the CPython archive does.
+
+The step keeps the launcher, every library it needs inside the archive, and, on
+ELF and PE builds, the compute backends ggml opens by scanning its own directory.
+The archive's other programs stay behind. Library links are kept as regular
+copies under the name a loader asks for, because an installed package holds no
+links. A receipt beside the kept files records the pin, each file's SHA-256 and
+the libraries the files import that the host must supply. Assembly checks the
+receipt, the files and the committed pin again, refuses any difference, and
+records the receipt in the package manifest's `inputs`.
+
+The program is staged in the layout's `llama_server` directory, `bin/llama/`,
+beside the interpreter's native directory and not among its libraries. The
+archive's licence files go to `docs/licenses/llama.cpp/`. Every staged file
+enters the package manifest's inventory like any other file, so the exact
+inventory check of an installation admits them and refuses a modified one. The
+Windows backend leaves the directory out of the interpreter's DLL search
+directories, because the program loads its own libraries from beside it.
+
+On Windows the program imports the C++ runtime and loads it from its own
+directory, so the package carries app-local copies of `msvcp140.dll`,
+`vcruntime140.dll` and `vcruntime140_1.dll` in `bin/llama/`. Configure finds them
+in the `VC/Redist/MSVC/<build>/x64/Microsoft.VC*.CRT` folder of the Visual Studio
+instance and toolset it selected, using the toolset's `major.minor` line and the
+newest redistributable build in it, never the search path. It records the folder
+and each file's SHA-256 in the build toolchain, and assembly refuses a file that
+is missing or changed. A staging check then reads the import table of every PE
+image in `bin/llama/`: each imported library must be an operating-system library
+(a fixed list and the `api-ms-win-` and `ext-ms-win-` API sets) or a file in that
+directory, or the build fails naming the image and the library. `vulkan-1.dll`
+belongs to the graphics driver; only `ggml-vulkan.dll` may import it, because
+ggml skips a backend library that fails to load, so a machine without a Vulkan
+loader loses that backend and keeps the CPU backends.
+
+The files are staged before native relocation. On Linux the relocation checks
+each ELF image against the glibc floor and rewrites its `RUNPATH`; the step also
+refuses, before anything is staged, a Linux archive whose files need a newer glibc
+than the target's floor, and names the files and versions. On macOS the
+relocation rewrites each image's loader paths and seals it, so the application
+bundle's seal admits the program's signatures as it does the other nested
+images.
 
 ## Bootstrap and ABI
 
@@ -306,8 +379,8 @@ dotenv override. Contract caching binds the publisher client's digest without
 recording the provisioning contents in its receipt.
 The host passes an operator or pass-through name unchanged and does not judge how
 a component uses it; the command line validates its own settings as before. The
-operator groups are the relocatable storage members, presentation settings,
-remote-interaction timings and display settings, and the two package overrides.
+operator groups are presentation settings, remote-interaction timings and display
+settings, and the two package overrides.
 No secret, authority, endpoint or consent name is in them. The runtime image's
 profile admits no operator names, so the runtime and the workers it starts take no
 operator overrides. The generated environment reference lists each group and which
@@ -324,8 +397,8 @@ names each program passes.
   the runtime, whose profile fixes it, relays it to the profile workers it starts
   on that image, which ask the bundled agent for its provider catalog.
 - A profile that pins the root resolves it by the package's rule and sets
-  `CADRUMO_LOCAL_STORAGE_ROOT`, the temporary variables beneath it and the
-  authority root. A profile may instead take the root as a launch parameter
+  `CADRUMO_STORAGE_ROOT`, the temporary variables to the `tmp` member beneath it
+  and the authority root. A profile may instead take the root as a launch parameter
   without pinning it.
 - `PATH` is set by the host and by no parent. For a profile whose policy is
   `package`, it holds the directory of the package's interpreter, the existing
@@ -399,8 +472,12 @@ subject is the declared variable name, or the image for an undeclared invocation
 The value is never written. 125 is the last status of the native-host range 120 to
 125 that the file declares and the generator emits to the hosts as
 `CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT`. The runtime's reserved table equals it,
-which the package-side check verifies. A supervisor reads 125 as a launch failure,
-never as a runtime exit reason; the manager's exit classification does so, and
+which the package-side check verifies. The desktop image's role dispatcher also
+exits 125 when it cannot host a role at all, such as an unsupported platform. A
+supervisor reads 125 as a terminal launch refusal, never as a runtime exit reason:
+the same image and arguments would be refused again, so the manager stands down at
+once with `launch_refused` instead of restarting, while other launch failures
+(1 and 2) keep their bounded backoff. The manager's exit classification does so, and
 runtime exit reasons stay in 64 to 73. When the agent gateway or worker exits 125
 before its ready line, the runtime ends the launch with its existing closed code
 `agent_service_failed`. It reads the last line of the agent's standard error from a
@@ -501,7 +578,13 @@ excluding `descriptor_digest`. The descriptor file is itself a hashed package
 manifest member and a startup member. The `desktop-session` descriptor admits
 only the staged native desktop parent image and grants no secret-record
 capabilities. The service's provider-settings capability retains the original
-encrypted namespace and schema; no encryption key leaves runtime custody.
+encrypted namespace and schema; no encryption key leaves runtime custody. Its
+model-role-selections capability keeps the models the person added to a local
+lane's model list, and the one model the person picked in the agent's model picker
+to read documents with, in a separate encrypted namespace under one fixed record
+key, so a change never moves the provider-settings generation the running agent was
+started under. Every kind of reading runs with the picked model, on any lane; a
+picked model that lacks a capability a reading needs is refused, never replaced.
 
 The agent image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own
@@ -587,11 +670,11 @@ disagreement. Its comparisons are:
   fixed agent, relay, `aeat` and interpreter paths the runtime reads;
 - the native-host exit range, the refusal status and the refusal codes, against the
   runtime's reserved table;
-- the command line's built-in storage-root rule (its variables, development
-  default and the directory names of the `stable` and `preview` channels) and the
-  installed default it resolves, against the declared root rule;
-- the command line's diagnostic-log directory and file name, including a relative
-  relocation anchored beneath the root, against the declared components.
+- the command line's built-in storage-root rule (its variable and the directory
+  names of the `stable` and `preview` channels) and the installed default it
+  resolves, against the declared root rule;
+- the command line's diagnostic-log directory and file name beneath the root,
+  against the declared components.
 
 `bundle.environment-launch` starts the assembled package's agent image the way the
 runtime does, through the runtime's own composer, and checks that a launch the
@@ -603,6 +686,15 @@ admits, an unlisted name under the agent's prefix included, sets the declared `P
 and pins the root to the command line's default.
 The agent's names are read from the contract and from the installed agent, never
 spelled in the probe.
+
+`bundle.release-image-scan` runs on a Release package only. It refuses a package whose
+product-owned files spell a storage variable the declaration retired, the development
+`var/storage` default or the path of the checkout the build ran in; the
+Python standard library, dependencies and the Node runtime are not scanned. A Release build
+therefore compiles Rust with the checkout path remapped to a neutral prefix, writes the desktop
+configuration's icon paths relative to it, records only checkout-relative locations and no agent
+project location in the package manifest, and drops the installer's `direct_url.json` records of
+wheels on the build host.
 
 ### Application images
 
@@ -617,7 +709,7 @@ scripts. Each entry carries:
 | `target` | CMake target that builds the image; the stage depends on it |
 | `artifact` | CMake variable, defined in the root or `native/` directory scope, holding the image's absolute build path; a generator expression is allowed |
 | `desktop` | Marks the one image that receives desktop registration; that image needs the bundled documentation |
-| `signed` | The image belongs to the release signing inventory; no signing step consumes it yet |
+| `signed` | The image belongs to the signing inventory; no step consumes the flag, because macOS assembly ad-hoc signs every Mach-O image and Windows images carry no Authenticode signature |
 | `startup` | Optional, default false; `true` adds the image to `startup_files` |
 | `version_arguments` | Arguments that make the image print the product version |
 
@@ -657,33 +749,107 @@ are the release version and `OriginalFilename` is `cadrumo-manager.exe`. The
 crate's build script writes that resource and the process manifest without a
 resource compiler, from the `CADRUMO_ID_*` identity projection.
 
+### The component engine
+
+The native component engine reports, plans, sets up, checks and removes the browser and
+the local AI. The desktop links it in process and is the only surface that provisions;
+the command line, the TUI and the MCP service neither provision nor start the engine.
+The engine words nothing: its rows, reports and events carry closed codes and
+locale-neutral facts (item ids, step and category codes, byte counts, versions,
+digests), and the desktop words them from its locale catalogue.
+
+The item ids are `browser` and `local_ai`. A setup that names no item covers every item
+whose row offers an action. A quick check reads local files only: no network and no
+model load, within 2 s. A full check also runs each item's network preflight, one
+headless launch of the browser, and one generated token for each selected local model.
+The person's local model selection, as role, model name and size, reaches the engine
+from the desktop; a check, verification or general setup selects the local AI program
+alone, and only a download names a model.
+
+A setup's approval binds its plan's digest. A setup that carries a digest runs only
+while the plan still has that digest and asks for no review, which is how a Resume
+after an interruption proceeds without a second review. Without one, the engine asks
+its owner to review the plan and computes the plan again after the answer, which must
+still match; a plan that changed reports `plan_changed` with the current plan for a new
+approval. An offline computer, an unreachable host or too little free space refuses
+before any review; the free space must cover the download plus a fifth plus 1 GiB. A
+setup stops at its next transfer chunk when it is cancelled, and a cancelled setup's
+report names the item it stopped at and the `cancelled` category. A report's outcome is
+one closed code; `busy` says that another engine changes the item and this command did
+not follow it to its end.
+
+A second setup of an item another engine is already setting up follows that setup
+instead of refusing, whether that engine runs in this process or another. It plans
+nothing, asks for no review and downloads nothing. It reports a following event for
+each item, naming the digest of the plan the other setup was approved under, then that
+setup's phase, progress, retry and server-wait events as it reaches them, and ends with
+the result that setup reached for the items: completed, or the outcome, item and
+failure category of the item it stopped at. A followed setup whose process dies reads
+`failed` `interrupted`. The report carries every item's rows and no plan. Cancelling
+the follower stops only the following, which ends `busy` while the other setup goes on;
+stopping the followed setup itself is the person's act, made by leaving a cancel
+request beside each named item's lock, which the setup looks for at every transfer
+chunk. An item being removed is not followed and answers `busy`.
+
+The engine coordinates through `components/activity` under the storage root. A setup
+takes the writer lock of every item it will change before the first starts, so its
+whole run reads as running, and keeps each item's activity record current with the run
+id, the approved plan digest, every step reached, the latest byte figure, any retry
+and any wait for the local AI server. Before it removes the record it writes the item's
+end record, which names how the run ended for that item. A removal takes the same lock
+and leaves no record of a run, so it is refused with `busy` while a setup holds the
+item. A follower reads the record again when the folder's change notification fires on
+Windows, and within 100 ms elsewhere, where no notification source is used yet; it
+learns that the setup ended or died by taking the item's lock shared once the kernel
+releases it, on a thread of its own, and a follower's cancellation ends its wait at once.
+
+The desktop resolves the installation from its own image: the package's pin tables and
+bundled browser driver, and the storage root with its fixed browsers, models and
+server-home locations beneath it, by the same rules every other Cadrumo process uses. It honours the
+`CADRUMO_PROXY_*` settings. On Windows the desktop places itself in a kill-on-close job
+before it starts anything; on Linux and macOS it first starts a guardian process whose
+process group every browser check and hardware query it starts is created into, and
+the guardian kills that group once the desktop ends. Either way a browser it launches
+for a check ends with it, however it ends; on Linux and macOS a process that moves
+itself out of the group is not reached. The engine never runs the local AI server: the
+runtime manager runs it on the fixed local AI address while the program is set up, and
+contains it the same way, in a kill-on-close job on Windows and in a guarded process
+group of its own on Linux and macOS, so the server and what it starts end when the
+manager ends. The supervised runtime is contained the same way on Linux and macOS: it
+starts in a guarded process group of its own, apart from the terminal's job control,
+which its guardian kills when the supervising process ends however it ends, and which
+the supervisor releases once it has observed the runtime's exit, so a clean drain is
+unchanged. A local AI setup installs the program, records it with that address, and
+waits up to 35 s for the manager's server before it pulls the models through it;
+without a manager the setup fails with `program_not_running`.
+
 ## Mutable data and reconciliation
 
 The native bootstrap applies the storage-root rule that
 `native/application-environment.toml` declares. Python continues to own bucket
-routing, encryption, authorization and member defaults. A checkout keeps its
-repository-local default and an installed package uses the per-user, per-channel
-default of the platform mappings. A relative `CADRUMO_LOCAL_STORAGE_ROOT` anchors
-at the checkout in development and is refused when installed. The command line's
-own built-in default is the stable channel's; a native package pins the root for
-its own channel before Python starts, and a pinned root is never re-resolved. The
-native host is installed when its package root holds the package manifest and
-in development when a checkout marker is above the executable; otherwise it
-refuses. It never reads the working directory. Installed Windows resolves the
+routing, encryption, authorization and member defaults. Without
+`CADRUMO_STORAGE_ROOT`, every image uses the per-user, per-channel default of the
+platform mappings. A relative `CADRUMO_STORAGE_ROOT` is refused. The command
+line's own built-in default is the stable channel's; a native package pins the root
+for its own channel before Python starts, and a pinned root is never re-resolved.
+The native host is installed when its package root holds the package manifest;
+otherwise a host that needs package files refuses. It never reads the working
+directory and never looks for a checkout. Windows resolves the
 default through `FOLDERID_LocalAppData`, not the environment, and replays the
 generated storage-root vectors in the `platform.resolver` test. No
 storage is migrated: a tree that an earlier installed build created beneath a
 launch directory is neither read nor moved, and an operator who wants it sets
-`CADRUMO_LOCAL_STORAGE_ROOT` to it.
+`CADRUMO_STORAGE_ROOT` to it.
 
 The package declares its own names and locations once, in
 `native/application-environment.toml`. The command line's taxonomy declares only
 the locations the command line creates under a root it is given; it is not an
-environment source for the package. The file's `locations` group names the storage
-members an operator may relocate, and each launch profile says which name groups it
-passes, so an inherited Python variable or any other name no profile declares never
-reaches a packaged image. The development root variable `CADRUMO_STORAGE_ROOT` and
-the development tool locations are declared for no installed profile. Package-owned
+environment source for the package. The root variable is the one location name the
+file declares: no variable relocates a member of the root, so the log, temporary,
+component and model locations are fixed paths beneath it. Each launch profile says
+which name groups it passes, so an inherited Python variable or any other name no
+profile declares never reaches a packaged image. The development tool locations are
+declared for no installed profile. Package-owned
 `CADRUMO_EXTERNAL_BIN_DIRS` accepts existing absolute directories for external
 executables. These directories affect child-process PATH, not DLL search.
 `CADRUMO_CLI_REVEAL_IDENTIFIERS` is in the same group, so the installed command
@@ -815,6 +981,11 @@ admits only `build/<name>` at the repository root, where `<name>` is a configure
 preset of the project being configured; a directory of another name, or an
 enrolled name elsewhere, stops with the enrolled names.
 
+`native/cmake/BuildPaths.cmake` owns the output-directory map. Keys use uppercase
+snake case; relative directory segments use lowercase kebab case. Configuration
+rejects duplicate keys, duplicate destinations and overlapping directory owners.
+Helpers consume the emitted `build-paths.json` rather than inventing output roots.
+
 | Path beneath the binary directory | Contents |
 | --- | --- |
 | `inputs/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
@@ -824,9 +995,10 @@ enrolled name elsewhere, stops with the enrolled names.
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
+| `timings/` | Per-action phase timing records, retained after failures until explicit cleanup |
 | `bin/<Config>/`, `lib/<Config>/`, `symbols/<Config>/` | Native executables/DLLs, import libraries and symbols |
 | `cargo/native/` | Native Rust build products; isolated from `cargo/desktop/` |
-| `tmp/` | Preset-scoped compiler and MSBuild scratch files; retained during cleanup targets because MSBuild can still be using them |
+| `temporary/` | Preset-scoped compiler and test scratch; cleanup empties it and recreates the preset and CTest directories |
 | `stage/<Config>/app/` | Complete application tree used by install and CPack |
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
 | `packages/<Config>/` | ZIP artifacts |
@@ -913,7 +1085,14 @@ Each component also has a build record for readers outside the build,
 `build_stamp.py` read them. A record opens in state `building` when a build of a new
 fingerprint begins, becomes `settled` once the component is built and staged from inputs
 that still give that fingerprint, or `unsettled` when they moved while it ran, and lists per
-configuration the SHA-256 of every artifact the stage holds for it.
+configuration the SHA-256 of every artifact the stage holds for it. Only a step that builds
+the images a stage ships opens the record: `native_interpreter_record` before the interpreter
+hosts and the CPython bridge compile, `desktop-host-build`, `desktop-packaged-host` for the
+test host, and a Cargo `build` of the manager or installer. Steps that only generate, test or
+lint (`native_metadata`, `desktop-host-prepare`, the desktop host `test`, `clippy`,
+`unit-test` and `unit-clippy` targets, and Cargo `clippy` and `test`) publish the identity
+they compile with (`build_stamp --identity-only`) and leave the record describing the
+staged bytes; so does a component resolved only because the one being built embeds it.
 
 The package has its own identity, allocated when `app-payload` (or `app-native` /
 `app-agent`) stages it, keyed on the logical staged content: every staged file by content
@@ -924,7 +1103,10 @@ including relinked but unchanged images, keeps the package identity; it lives on
 so it never forces a recompile. `data/build.json` and the manifest's `build` carry the
 package's `build_id`, `build_sequence`, `build_number`, `build_date`, `build_type` and
 `display_version`, and the interpreter hosts' identity under `build.interpreter`, which the
-bootstrap compares with the running host to refuse a mixed build. The manifest lists each
+bootstrap compares with the running host to refuse a mixed build. They also carry
+`source_commit`: the full commit hash the builder supplied in `CADRUMO_SOURCE_COMMIT`, or
+null when none was supplied. The build never resolves it from version control, and a new
+value restages `app-payload`. The manifest lists each
 Cadrumo-built binary under `components` (name, role, path, component, version, build id,
 sequence, date, type and display version of its own component), the agent's installed
 closure under `agent.dependencies`, and the staged agent Node version under `tools.node`.
@@ -963,7 +1145,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Validate the existing development interpreter without installing tools |
 | `registry_authority` | Validate the existing publication and its source currency; refuse a missing or stale one without publishing |
-| `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts, resolve the interpreter hosts' build identity, and generate executable resources |
+| `native_contract`, `native_metadata`, `native_interpreter_record` | Generate content-stable C/Rust contracts, resolve the interpreter hosts' build identity, generate executable resources, and open the interpreter hosts' build record before they compile |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
 | `python`, `python_d` | Build a runnable standalone interpreter at `stage/<Config>/app`, including `python.zip`, native libraries and site-packages; `python_d` also includes the development executable. Uses the application package layout and assembler without product wheels, application images or user documentation |
@@ -981,7 +1163,8 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `package` | Standard CPack target; use `zip` for content-aware archive reuse |
 | `verify-package` | Build ZIP, extract into a Unicode/spaces path, run cohesion and runtime probes |
 | `clean` | Generator's standard build-output cleanup |
-| `clean-stage` | Remove stage, testing and verification trees |
+| `clean-stage` | Remove stage, testing, verification and temporary contents; recreate the temporary directories |
+| `clean-timings` | Remove per-action timing records without rebuilding products |
 | `clean-packages` | Remove ZIP and CPack staging trees |
 | `clean-dependencies` | Remove downloaded SDK/dependencies and product wheel staging |
 | `clean-native` | Remove bin, lib, symbols and Cargo outputs; retain configure metadata |
@@ -1092,7 +1275,7 @@ Tests, GUI demos, tkinter/IDLE, ensurepip and SDK development directories do not
 ship. The remaining runtime stdlib is retained because application imports can be
 dynamic. Only the locked base third-party dependency closure and the three CADRUMO
 wheels enter `cadrumo/site-packages/`, widened only by the locked closures of the
-native bundle's shipped extras (`llm` and `browser`); development and every other
+native bundle's shipped extra (`browser`); development and every other
 optional extra are excluded. Playwright's Node driver ships with `browser`; its
 Chromium builds do not, and are provisioned into profile storage on demand.
 `Lib`, `Libs`, `Scripts`, headers and import libraries stay in build inputs. Native
@@ -1274,9 +1457,10 @@ it runs the installed CLI as a passthrough in the caller's directory. `--gui`
 forces the window: it exits with 69 and `desktop_unavailable` when no interactive
 desktop exists, and with 64 when other arguments follow it. On Windows an
 interactive desktop means a visible window station with an input desktop the
-process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`. macOS
-refuses the window with `unsupported_platform`. One window runs per user and
-channel; the [Desktop single instance](#desktop-single-instance) section records
+process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`; on macOS a
+graphical login session the process belongs to. The macOS window uses the system's
+own title bar controls over the page's header. One window runs per user, channel
+and storage root; the [Desktop single instance](#desktop-single-instance) section records
 that contract.
 
 ### Launch projection and storage root
@@ -1291,7 +1475,7 @@ platform and ABI against the generated contract and the interpreter against its
 manifest digest. It then defines the environment its children receive with the
 platform crate, by applying the `python` launch profile to its own environment,
 without starting Python and on every platform. The result carries
-`CADRUMO_LOCAL_STORAGE_ROOT` set to the root the package's rule resolved; every
+`CADRUMO_STORAGE_ROOT` set to the root the package's rule resolved; every
 other name is one that profile passes or sets (see Launch profiles). The host
 spawns no Python process to learn a location. Profile and pointer validation
 stays with the canonical account CLI read after the window opens.
@@ -1300,16 +1484,13 @@ The projection reports the child environment, the storage root, the webview, the
 console workspace and the manager log, the log directory, log file, line format
 and rotation limits, and the output language. The webview, workspace and manager
 log are package component locations that the file declares beneath the pinned root.
-The log directory is the declared `logs` location, moved to the value of
-`CADRUMO_LOG_DIR` when the profile passed that override, with a relative value
-anchored beneath the root. The log file name, line format and rotation limits are
+The log directory is the declared `logs` location beneath the root. The log file name, line format and rotation limits are
 the package's declared copy of the command line's own, which a package-side test
 holds equal. The output language is the value the profile passed for
 `CADRUMO_OUTPUT_LANGUAGE`, or the declared default. The host refuses a projection
 with a relative path, a log file outside the log directory, an empty line format,
-an output language that is not lowercase ASCII, a root variable the package does
-not declare as a location, or an environment that does not carry exactly that root
-under that name. The host, every terminal kind and the CLI passthrough therefore
+an output language that is not lowercase ASCII, or an environment that does not
+carry exactly that root under the declared root variable. The host, every terminal kind and the CLI passthrough therefore
 share one root whatever their working directory. The host adds no storage, log or
 Settings variable of its own.
 
@@ -1322,6 +1503,13 @@ shrunk and moved to lie within a current display, and on close writes the
 record to a temporary file, flushes it and renames it over the previous record.
 A missing or unreadable record means the configured defaults. No webview command
 reads or writes it.
+
+A launch that ends before the regular startup log exists records one payload-free
+outcome line in the `cadrumo-startup-outcomes.jsonl` file of the declared log
+directory beneath the root its environment selects. When that selection cannot be
+resolved, the launch records nothing and creates no root: it reports on its standard
+error and, where the platform shows one, in its native alert. It never writes into
+a root the operator did not select, including the channel's default root.
 
 ### Origins and the documentation scheme
 
@@ -1485,11 +1673,9 @@ palettes owned by the desktop. Changing appearance recolors existing content
 and hidden panes without restarting a process or writing to its input. The
 console and Python panes follow appearance unless their explicit always-dark
 preference is selected. The TUI pane and its header follow desktop appearance.
-Only the dedicated TUI launch sets `TERM_PROGRAM=cadrumo`; standalone Textual
-surfaces retain their own RGB themes. The embedded TUI's appearance action
-emits `OSC 777;cadrumo;appearance;toggle ST`. Only the TUI pane recognizes that
-exact presentation request and toggles the frontend preference. Other OSC
-payloads and terminal kinds cannot invoke it; it carries no runtime state.
+The terminal sets no `TERM_PROGRAM` and recognizes no escape sequence of its
+own: a pane is a plain terminal, and nothing the TUI prints asks the desktop
+to change appearance or open a page.
 
 `src-tauri/src/terminal/` keeps at most one live PTY session per kind:
 
@@ -1638,19 +1824,8 @@ control manager records. Aborts that bypass panicking (stack overflow,
 | `open_external` | `token`, `url` | Opens the URL with the system's registered handler. Only lowercase `https://` with a host and no user information, or `mailto:` with an address, written as printable ASCII without a backslash and at most 8192 bytes; anything else is `invalid_arguments`. |
 | `shell_clipboard_read` | `token` | `{text}`. |
 | `shell_clipboard_write` | `token`, `text` | At most 1 MiB of UTF-8, else `invalid_arguments`. |
-| `shell_context_menu` | `token`, `items`, optional `x` and `y` | `{chosen}`: the id of the enabled item chosen, or null when the menu closed without a choice. |
 
-`shell_context_menu` takes 1 to 64 items, each `{id, label, enabled, shortcut?}`
-or `{separator: true}`, with at least one action. Ids, labels and shortcuts are
-at most 128, 256 and 64 characters without control characters, and ids are
-unique. The host names each native item `ctx/<popup>/<id>` and doubles every `&`
-so labels show literally. `x` and `y` come together, as a logical position in
-shell CSS pixels within 1,000,000 of the origin; without them the menu opens at
-the cursor. One popup is open at a time, and a second request is refused with
-`session_unavailable`. The command is asynchronous because the Windows popup
-blocks until the menu closes. A sentinel queued on the main thread afterwards
-resolves a dismissal to null after any pending menu event. Other platforms
-refuse it with `unsupported_platform`.
+The host shows no native menu: the shell draws every context menu itself.
 
 ### WebView2 requirements
 
@@ -1725,11 +1900,13 @@ stopped when the window closes.
 | `profile_delete_review` | `token`, `name` | `config profile delete -- LABEL` | `{name, profileId, digest}` from the canonical non-mutating preflight. Only the current OS account's configured storage is addressed; no path or alternate storage root is accepted. |
 | `profile_delete` | `token`, `review`, `confirmation`, `acknowledged` | `config profile delete --yes --expected-profile-id ID --expected-digest DIGEST -- LABEL` | Requires the exact reviewed name and an explicit data-loss acknowledgement. Revalidates the identity and fingerprint before the runtime drains sessions and executes the custody journal. Resolves only after the deletion receipt; refusal or lost output is never reported as success or automatically retried. Selected and last profiles are supported. Retention protections remain enforced. |
 | `profile_create` | Raw UTF-8 password body, whose JSON encoding must fit the product's 8192-byte read (twice over for a creation); headers `x-cadrumo-token` and `x-cadrumo-profile` | `config profile create --quiet --secrets-stdin -- LABEL` | `{kind: "created", name}`, or `{kind: "refused", code, retryAfterSeconds}`. The new profile is selected and left signed out. A label already in use is refused with the code `profile_already_exists`. One attempt: nothing is retried. |
-| `provider_settings_status` | `token` | `config provider status` | `{development, providers: [{id, provider, display_name, transport, auth_kind, consumers, mode, credential_saved, available, source, readiness, reason, base_url, default_base_url, revision, cli_state}]}`, every value a closed set. `credential_saved` says whether a key is stored for the lane whatever its mode, so a lane turned off still reports its kept key. No field carries a key or anything derived from one. |
+| `provider_settings_status` | `token` | `config provider status` | `{development, providers: [{id, provider, display_name, transport, auth_kind, consumers, mode, credential_saved, available, source, readiness, reason, base_url, default_base_url, revision, cli_state, cli_state_cause, next_step, sign_out_available}], console_sign_in_command}`, every value a closed set except `console_sign_in_command`. `credential_saved` says whether a key is stored for the lane whatever its mode, so a lane turned off still reports its kept key. `cli_state_cause` says why a command-line lane's state is not established, one of `cli_not_found`, `home_in_git_project`, `home_unavailable`, `probe_start_failed`, `probe_timed_out`, `probe_output_unreadable`, `probe_cleanup_unconfirmed`, `status_read_failed`, `status_unreadable` or `status_context_unavailable`. `next_step` is what a person can do about that cause, one of `retry`, `install_cli`, `move_profile_outside_git`, `close_other_sign_in`, `console_sign_in` or `update_app`, and is never sent without a cause. Both are absent where the service names none, and a web API lane never carries either; a word outside these sets refuses the whole read. `console_sign_in_command` is the console command that signs a provider in by hand, with one `{provider}` slot for the lane's `provider` id: printable ASCII, at most 200 characters, no path separator; one that is not is refused. The window shows the words for a cause and a step, and the command only for `console_sign_in`. No field carries a key or anything derived from one. |
+| `provider_sign_in_start`, `provider_sign_in_status`, `provider_sign_in_cancel`, `provider_sign_in_submit_code` | `token` and, by call, `provider`, `revision` and `method`, or `attemptId`; the code goes as a raw body with the header `x-cadrumo-attempt-id` | Agent service administration `connect`, `connect_status`, `connect_cancel`, `connect_submit_code` | The attempt snapshot `{attempt_id, provider, event, reason, cause, next_step, status_cause, url, user_code}`; `provider` is the lane id and `event` is `starting`, `started`, `browser_action`, `authorization_code_required`, `succeeded`, `cancelled` or `failed`. `reason`, `cause`, `next_step` and `status_cause` appear only on `failed` and `cancelled`; a snapshot that carries one on any other event, a word outside its closed set, or a field not named here is refused. `cause` is one of the helper's words (`profile_missing`, `unsupported_method`, `host_input_invalid`, `host_disconnected`, `login_already_running`, `timed_out`, `home_in_git_project`, `home_unavailable`, `cli_not_found`, `browser_relay_unavailable`, `browser_not_offered`, `cli_start_failed`, `cli_exited_early`, `cli_protocol_mismatch`, `cli_reported_error`, `login_not_completed`, `cleanup_unconfirmed`, `internal_error`) or the service's (`helper_start_failed`, `helper_output_invalid`, `helper_ended_without_result`, `helper_exit_nonzero`, `agent_stop_failed`, `status_not_confirmed`); `next_step` is as for `provider_settings_status`; `status_cause` is a `cli_state_cause` word and says why the status read after a sign-in did not confirm it. `url` and `user_code` are sent only while the person can use them. |
 | `provider_settings_set` | Raw UTF-8 key body; headers `x-cadrumo-token`, `x-cadrumo-provider`, `x-cadrumo-revision`, and `x-cadrumo-base-url` or `x-cadrumo-clear-base-url: 1` | `config provider set PROVIDER --expected-revision REVISION [--base-url URL \| --clear-base-url] --secrets-stdin`; the key is written once to standard input as `{"secret"}`, which is then closed | The provider's new status entry, or a refusal `{code}`: `not_signed_in`, `profile_locked`, `invalid_key_format`, `base_url_rejected`, `revision_conflict`, `committed_readback_failed`, `person_act_required` or `unknown`. One attempt: nothing is retried. |
 | `provider_settings_remove` | `token`, `provider`, `revision` | `config provider remove PROVIDER --expected-revision REVISION` | Turns the lane off: the provider's new status entry, `mode` and `readiness` `disabled` with `reason` `turned_off`, or a refusal as for `provider_settings_set`. A stored key and the lane's sign-in are kept, and the lane leaves the agent's provider catalog. |
 | `provider_settings_turn_on` | `token`, `provider`, `revision` | Agent service administration `turn_on` | Turns an off lane back on: a stored key is used directly again, a lane that takes only its provider's sign-in uses that sign-in again, and a lane with nothing kept returns to unset. The provider's new status entry, or a refusal as for `provider_settings_set`; a lane that is not off is refused with `unknown`. |
 | `provider_settings_reset` | `token`, `provider`, `revision` | `config provider reset PROVIDER --expected-revision REVISION` | The provider's new status entry, unset, or a refusal as for `provider_settings_set`. |
+| `provider_sign_out` | `token`, `provider`, `revision` | Agent service administration `sign_out` | Signs a command-line lane's provider out through the logout the bundled agent declares for that lane; offered only where the entry's required `sign_out_available` is true. The lane's refreshed status entry, or a refusal `{code, cause, log_ref}`: `not_signed_in` (`profile_signed_out`), `revision_conflict` (`settings_refused`), `busy` (`sign_in_in_progress` or `agent_tree_running`), `unsupported_flow` (`lane_not_signable`) when the agent declares no logout for the lane, or `service_failed` (`settings_change_failed`) when the agent's logout fails. The profile's record is left as it is. One attempt: nothing is retried. |
 | `agent_access_list` | `token` | `config profile automation list` | `{credentials: [{id, state, issued_at, expires_at, last_used_at, categories, all_operations}]}`, one per grant, ended ones included. `id` is the grant's UUID, `state` is `pending`, `active`, `suspended` or `revoked`, `issued_at` is when the grant became valid, `last_used_at` is the latest use of any of its keys or null, and `categories` are `profile_values`, `operation_metadata` or `tax_values`. A value outside those sets is a protocol failure. No field carries a key or anything derived from one. Refusals reject with `{code}`: `not_signed_in`, `profile_locked`, `person_act_required` or `unknown`. |
 | `agent_access_issue` | `token`, `taxValues` | None yet | Refused with `{code: "issue_unavailable"}` and nothing is run. Issuing becomes one act of the person's, with no password and no second approval process, when the product offers it; the answer will then be `{credential_reference}`, the reference of the key put in this computer's secure store, never the key. |
 | `agent_access_revoke` | `token`, `grantId` | `config profile automation deny grant GRANT_ID` | `{cleanup_pending}`: access is denied, and the stored key is still to be removed from this computer when it is true. `grantId` must be a UUID. Refusals reject with `{code}` as for `agent_access_list`, and `outcome_unknown` when the host did not hear how the revoke ended, which the window answers by listing again. One attempt: nothing is retried. The product answers the same for a grant it does not hold, so `not_found` is not yet sent. |
@@ -1786,13 +1963,15 @@ defaults to `ON`.
 | Target | Operation |
 | --- | --- |
 | `desktop-frontend-install` | Validate checkout-owned dependencies against the lockfile without installing, deleting or locking the source tree |
-| `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
-| `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
+| `desktop-window-fixtures` | Seed the generated window projections the frontend imports into this build's `fixtures/window` and record them in its `.window-projections.json`, through `python -m dev.fixture_projections seed --window`; reruns only when a file named in its depfile changes or `desktop-window-inputs` rewrites its listing, and refuses without a published authority or the frontend packages |
+| `desktop-window-inputs` | Run on every build and rewrite `desktop/vite-cache/window-inputs.listing` with the window projections' input files only when that set changes, so a file added beside the inputs reruns the seed without a directory dependency |
+| `desktop-frontend-check` | Seed the window projections, then type check against them, lint and `prettier --check` the frontend, scripts and tests |
+| `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette and seed the window projections, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |
 | `desktop-frontend-dev` | Regenerate chrome strings and palette, then serve the development display from this build until stopped (`just dev`) |
 | `user_docs` | Build and stage the user documentation, as above |
 | `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; refuse a binary other than `CADRUMO_DESKTOP_HOST_EXECUTABLE` and record it in `generated/desktop-<Config>.json` |
-| `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |
+| `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage`; with no package root selected it first assembles the configuration's stage (`app-payload`) |
 | `desktop-host-clippy` | Clippy on all targets with warnings denied |
 | `desktop-headless-test` | Byte-for-byte CLI passthrough parity with the package interpreter, under a hostile Python environment |
 | `desktop-paths-test`, `desktop-configuration-test` | Build-path and generated Tauri configuration checks |
@@ -1809,7 +1988,7 @@ The window cannot be checked without an interactive desktop. A process in
 Windows Session 0, where services and service-hosted runners and agents run, has
 no visible window station, so the host selects the CLI passthrough and `--gui` exits
 with 69. A person therefore runs the window smoke from an interactive logon
-session. Set `CADRUMO_LOCAL_STORAGE_ROOT` to a disposable absolute directory first
+session. Set `CADRUMO_STORAGE_ROOT` to a disposable absolute directory first
 unless the run should use the default root, build `desktop-run`, and check:
 
 - The window opens on the documentation index in the output language, and a
@@ -1827,20 +2006,27 @@ unless the run should use the default root, build `desktop-run`, and check:
 
 ## Desktop single instance
 
-The desktop GUI holds one lock per user and channel, across installed versions and
-install paths. The names and the protocol below are a cross-version contract: a
-version that changed them would take a separate lock, and two versions could open
-windows at once. The headless CLI passthrough (`cadrumo` with arguments, or
-`--headless`) never opens these objects.
+The desktop GUI holds one lock per user, channel and storage root, across installed
+versions and install paths. The names and the protocol below are a cross-version
+contract: a version that changed them would take a separate lock, and two versions
+could open windows on one root at once. The headless CLI passthrough (`cadrumo` with
+arguments, or `--headless`) never opens these objects.
 
 `<family>` is the application identifier of the generated Tauri configuration: the
 identity projection's `application_id` with its channel suffix, such as
-`md.neve.cadrumo` or `md.neve.cadrumo.preview`. Neither the version nor the install
-path enters a name. `native/platform/src/desktop.rs` implements the Windows side and
+`md.neve.cadrumo` or `md.neve.cadrumo.preview`. `<key>` is `<family>.root.<identity>`,
+where `<identity>` is the 64-digit lowercase hex storage identity of the root the
+launch's environment selects: the digest of the root's physical identity that also
+names the runtime serving that root. The launch resolves the root and creates it
+owner-only when absent before it claims. Two paths to one directory give one key;
+two roots give two keys, so a launch on another root never hands off to an open
+window and opens its own. `src/cadrumo/core/connection_transport.py` declares the
+`.root.` grammar and the shared vectors; `native/application/src/instance_scope.rs`
+consumes them. Neither the version nor the install path enters a name. `native/platform/src/desktop.rs` implements the Windows side and
 `native/desktop/src-tauri/src/shell/single_instance/` the Linux side and the
 desktop's use of both.
 
-On Windows, `<base>` is `Global\<family>.desktop.<SID>`, where `<SID>` is the string
+On Windows, `<base>` is `Global\<key>.desktop.<SID>`, where `<SID>` is the string
 form of the process token user's SID. Named mutexes and events in `Global\` need no
 `SeCreateGlobalPrivilege`.
 
@@ -1876,8 +2062,9 @@ form of the process token user's SID. Named mutexes and events in `Global\` need
   for a request it took before that point can still answer the later claim; the
   holder was then still accepting requests.
 
-The names are predictable: the family is public, and any local account can look up
-another account's SID. Another local account can therefore create any of these
+The names are predictable: the family is public, a root's storage identity follows
+from directory metadata other accounts can often read, and any local account can look
+up another account's SID. Another local account can therefore create any of these
 objects first, from any session and without a privilege. A claimant refuses such an
 object, since it cannot open it with full access or does not own it, so the GUI
 launch exits with 77 and `instance_lock_foreign` while the other account keeps a
@@ -1900,20 +2087,32 @@ access, so no other account can create or reach them.
 
 | Object | Name |
 | --- | --- |
-| Lock | `<family>.desktop.lock`, held with an exclusive `flock` |
-| Activation | `<family>.desktop.session.<session>.activate`, a Unix stream socket the holder binds |
+| Lock | `desktop-<digest>.lock`, held with an exclusive `flock` |
+| Activation | `desktop-<digest>-<session>.sock`, a Unix stream socket the holder binds |
 
+- `<digest>` is the first 12 hexadecimal digits of the SHA-256 of
+  `cadrumo-desktop-instance-v1`, a NUL byte and the key. The key, a channel family
+  scoped to one storage root, is too long to appear in a name within the `sun_path`
+  bound, and stable and preview keys differ, so their digests differ. The same
+  names apply on every Unix.
 - `<session>` is `XDG_SESSION_ID`, or `unnamed` when it is unset. It is letters,
   digits, `-` and `_`.
-- On taking the lock, the holder removes every
-  `<family>.desktop.session.*.activate` socket, then binds its own.
+- A claim refuses with an invalid-input error, before it opens the lock file, a
+  socket path that reaches the `sun_path` size (108 bytes on Linux, 104 on macOS).
+- On taking the lock, the holder removes every `desktop-<digest>-*.sock` socket,
+  then binds its own.
 - A claimant connects to its own session's socket and writes nothing. The holder
   reads nothing and writes the byte `0x01` for a request it accepted, on the
   connection that carried it, so a late acknowledgement reaches no later claim.
   Timing, the other-session report and the exit status match Windows; a socket that
   is missing or refuses the connection counts as absent.
 
-macOS runs no desktop GUI and takes no lock.
+On macOS the lock and the activation sockets live in the private transient transport
+directory the runtime's sockets use, rechecked against replacement. The names are
+those above, and `<session>` is the kernel audit session of the graphical login.
+Claiming, activation and the
+other-session report match Linux. The window that holds the lock establishes
+supervision of the runtime.
 
 ## Manager startup and supervision
 
@@ -1922,7 +2121,13 @@ macOS runs no desktop GUI and takes no lock.
 Every installed version of a channel shares the per-user storage root and these
 coordination names. They are not versioned with an immutable package:
 
-- The session mutex is `Local\\<manager-component-id>.<user-SID>.session.<session>.lock`.
+- The session mutex is `Local\\<manager-id>.<user-SID>.session.<session>.lock`, where
+  `<manager-id>` is the manager component identifier `<application-id>.manager`
+  scoped to the managed storage root as `<manager-component-id>.root.<identity>`, in
+  the same grammar as the desktop's `<key>`. The macOS session lock and manager socket
+  name and the Windows manager pipe use the same `<manager-id>`, so a standalone
+  manager and a desktop hosting the manager core on one root share one owner, and
+  supervisors of different roots in one session never contend.
   It grants access only to that user, verifies the object's owner, and uses the
   Windows kernel's abandoned-mutex behavior. A claimed mutex remains on its
   claiming thread; an existing foreign or wrong-type object is refused.
@@ -2020,8 +2225,9 @@ authenticate a publisher or sandbox a concurrent same-user file writer.
 The desktop dispatches the verified stable entry. After job escape, that entry (or
 an older version's manager) redirects to the selected version before taking the
 session lock or runtime ownership. The successor repeats job escape and catalogue
-verification and resolves the canonical installed default; an override never becomes
-managed through environment clearing. Dispatch still acknowledges launch only.
+verification and manages the root the entry selected: the strict host environment
+carries an operator-selected root variable to it and leaves an installed default for it
+to resolve. A cutover successor receives the same environment. Dispatch still acknowledges launch only.
 
 The exact metadata argument `--supports-retry` returns exit code zero without
 output, before job escape, package discovery or runtime launch. Combined
@@ -2071,11 +2277,26 @@ supervisor command reader. A stalled read refuses retries without accumulating
 workers; expired results cannot enqueue notices or authorize stop. A later
 attempt requires a fresh observation, within its own existing stop deadline.
 
-The optional ClientHello `lifecycle_notices: "v1"` capability is omitted for legacy
-clients and unattended MCP composition. Legacy clients can connect to this server
-and receive only their existing event grammar. An opted-in client is refused by an
-older strict protocol-3 server; there is no silent capability downgrade. Unknown
-event kinds and mismatched connection/boot identity remain protocol failures.
+Runtime clients and servers use protocol 4 as one package cohort. Protocol 3 peers
+are refused; there is no silent capability downgrade. Within protocol 4, callers
+may omit the optional ClientHello `lifecycle_notices: "v1"` capability, including
+unattended MCP composition, and receive only the event grammar they requested.
+Unknown event kinds and mismatched connection/boot identity remain protocol failures.
+
+Human login and installed-service admission can return `ProfileLoginPending` or
+`ServiceAdmissionPending`. Their producer completion cues allow the same admitted
+connection to claim or cancel the exact attempt without replaying proof or admission.
+Pending verification releases shared request slots. Cancellation, connection loss,
+profile replacement and process exit wake the owner and prevent stale publication;
+a committed result remains committed. Worker readiness is published only after all
+authenticated dispatchers, including private proof cancellation, are installed.
+
+Startup progress follows readiness and completion signals. `TimeoutPolicy` supplies
+the centralized last-resort timeout, and `TimeoutDeadline` retains one absolute
+owner deadline across dependent preparation, credential reads, proof, admission and
+cleanup. Timeout does not authorize replay or prove termination when containment
+remains unconfirmed. Private proof cancellation can wake queued capacity, OS lock
+and child-response waits independently of the occupied proof channel.
 
 Obsolete native-product cleanup and interactive two-release installer acceptance
 remain separate completion evidence. Headless notice checks do not prove attended
@@ -2093,7 +2314,8 @@ its `native-package` target. Windows also builds and supplies the installer-only
 DLL and maintenance runner. Set `CADRUMO_WIX_EXECUTABLE` on the source configure
 when WiX is not on PATH. The channel, builder interpreter, configuration-specific
 payload and staged desktop image are passed explicitly. This target creates
-unsigned artifacts; it does not install them or bypass lifecycle acceptance gates.
+artifacts without a publisher signature (a macOS bundle carries its ad-hoc seal);
+it does not install them or bypass lifecycle acceptance gates.
 The distribution preset owns its own outputs and cleanup targets. A process-held
 lock serializes its configure-and-package operation across source build trees.
 Standalone distribution configure/build/clean commands must not overlap that
@@ -2128,8 +2350,9 @@ not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
 inventory, and that file must be the application image the payload manifest's
 platform mapping marks `desktop`, such as `cadrumo.exe` on Windows. Only that image
-receives desktop registration. macOS requires a root-level desktop executable. Its runtime backend and WebView containment validation
-must be completed before a macOS application release.
+receives desktop registration. macOS requires a root-level desktop executable, the
+bundle launcher and its icon. Its WebView containment validation must be completed
+before a macOS application release.
 
 CPack's `package` target selects MSI on Windows, DEB and RPM on Linux, and DMG
 on macOS. Native format targets validate and refresh the selected payload before
@@ -2159,7 +2382,9 @@ for MSI; current WiX 7 also requires operator acceptance of its OSMF EULA. CPack
 `CPACK_WIX_VERSION=4` selects the WiX XML/tool interface, not a claim that WiX 4
 is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO
 when producing the Windows installer. DEB requires dpkg tooling; RPM requires
-rpmbuild. Signing, notarization and native launch/upgrade tests remain release gates.
+rpmbuild. Native launch/upgrade tests remain release gates. Publisher signing and
+notarization are not: Windows artifacts carry no Authenticode signature, and macOS
+artifacts carry the ad-hoc seal and are never notarized.
 
 Linux desktop packages use distribution-managed GTK 3 and WebKitGTK 4.1.
 `dev/packaging/native/linux_desktop_runtime.py` owns the provider minimums and
@@ -2295,9 +2520,70 @@ through them. The one-MSI topology still requires disposable-host verification o
 integrated process lifetime and installer transactions before release acceptance.
 The catalogue alone does not implement manager cutover or obsolete-version removal.
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
-under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
-bundle for the Applications folder. Runtime storage remains owned by Settings;
-current packaging adds no services or automatic launch.
+under `/usr/share`. Preview uses separate names. Runtime storage remains owned by
+Settings; current packaging adds no services or automatic launch.
+
+macOS packages one `<name>.app` bundle, `<name>` being the channel's product name,
+for the Applications folder in a CPack DragNDrop image. The platform mapping's
+`application_bundle` declares its placements, which the layout loader validates:
+the unchanged payload lies at `Contents/Resources/app`, because a bundle's
+executable directory may hold only signed code, and `Contents/MacOS/<desktop>` is
+the bundle's main executable. That executable, `bundle-launcher` from the source
+build's `cadrumo_bundle_launcher` target, holds the declared package location
+relative to itself and replaces itself with the payload's desktop image, keeping
+the process, arguments and environment, so the desktop resolves its package from
+its own image as everywhere else. `Contents/Info.plist` carries the identity's
+application ID, name, version and canonical floor as `LSMinimumSystemVersion`,
+`LSUIElement` false for an ordinary windowed application, and
+`Contents/Resources/<desktop>.icns`, the `icon.icns` the desktop icon step renders
+from `docs/_static/cadrumo-icon.svg`. `native-installer` passes the launcher, the
+icon, `CADRUMO_CODESIGN` and `CADRUMO_NATIVE_SIGNING_IDENTITY` to the distribution
+preset.
+
+`installation_prepare` seals the bundle inside-out in its candidate stage, after
+every other member is written and before the receipt inventory is taken. It first
+requires every nested Mach-O image to carry the valid signature package assembly
+gave it; those bytes are inventory-bound and are never re-signed. It then signs the
+bundle with the hardened runtime, which signs the main executable, binds
+`Info.plist` and writes `Contents/_CodeSignature/CodeResources` over every other
+member, and verifies the result with `codesign --verify --deep --strict`. The
+receipt, outside the bundle, records the sealed bytes; the projection admits the
+two members the seal produces by presence and re-verifies the seal whenever an
+existing stage is reused. The stage, a `cmake --install` prefix, the ZIP and the
+DMG therefore carry the same seal, and nothing writes beneath the bundle after it.
+CPack only copies the stage: its pre-build script verifies the seal of its staging
+copy, then starts that copy's runtime role against a private temporary storage root,
+requiring the ready line and a stop when its input closes, and verifies the seal
+again, so no package is built from a bundle that cannot start. Its post-build script
+verifies the bundle inside each built package, the
+DMG attached read-only and the ZIP extracted with `ditto`. Either refusal fails the
+package build. Each check also records `spctl --assess`, which rejects an ad-hoc
+seal; that assessment is informational.
+
+A bundle's nested-code directories admit only code, so the flat payload with its
+data cannot lie beneath `Contents/Frameworks` or `Contents/MacOS`; its nested
+images are sealed as signed resources beneath `Contents/Resources/app`. Splitting
+code from data across nested-code and resource directories would require the
+package-root containment checks to accept the joining links. Nested images carry
+ad-hoc signatures without the hardened runtime. The ad-hoc seal is the
+distribution signature, and `codesign --verify --deep --strict` is its gate. With
+no Developer ID and no notarization, Gatekeeper refuses a downloaded copy until
+the user approves it once; the user documentation's installation page describes
+that first run. A locally built bundle carries no quarantine and opens directly.
+
+The bundle carries `Contents/Library/LaunchAgents/<manager_id>.plist`, an Aqua
+agent that runs the payload's manager with `--sign-in`. Packaging never registers
+it. The manager registers it with `SMAppService` for its own user only when its
+bundle lies directly in `/Applications` or `~/Applications`, it runs on the
+default storage root, the bundle holds exactly that one agent declaration and the
+system provides `SMAppService`; anywhere else the menu's start-at-sign-in row is
+disabled. At each start it reconciles registration with the per-user
+`manager-preferences.json`: it registers an unregistered agent while start is on,
+and removes the agent when the user has turned start off. An agent the user
+disabled in the system's login items is left alone while start is on. Turning
+start on registers before storing the preference, so a refusal changes nothing;
+turning it off stores the opt-out first, and a sign-in start that finds it exits
+at once. A refused registration never stops supervision.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact

@@ -9,12 +9,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.filing_year import FilingYear
-from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -56,18 +56,16 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
-from .actions_manual import (
-    attach_manual_transaction_evidence,
-    detach_manual_transaction_attachments,
-    ledger_transaction_result_payload,
-)
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
+from .manual_update import attach_manual_transaction_evidence, detach_manual_transaction_attachments
 from .models import LedgerRemovalBlocker, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ATTACH_OPERATION_DEFINITION_ID = "ledger.attach"
@@ -76,7 +74,6 @@ LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE = "REFUSED_LEDGER_ATTACHMENT_VALIDATIO
 LedgerAttachmentOperationId = Literal["ledger.attach", "ledger.detach"]
 
 _MAX_ATTACHMENT_IDS = 256
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 _MAX_VALIDATION_MESSAGES = 16
 _MAX_VALIDATION_MESSAGE_LENGTH = 2048
 _AttachmentId = Annotated[str, Field(min_length=1, max_length=64)]
@@ -105,6 +102,8 @@ class LedgerAttachRequest(BaseModel):
     Every evidence member is the identifier of evidence already stored in the
     profile. ``actor`` is recorded as sent for a person's session. An automation's
     session is recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -114,6 +113,7 @@ class LedgerAttachRequest(BaseModel):
     purchase_invoice_evidence_id: _EvidenceId | None = None
     attachment_ids: _AttachmentIds = ()
     actor: _Actor | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("purchase_invoice_evidence_id")
     @classmethod
@@ -129,6 +129,8 @@ class LedgerDetachRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -137,6 +139,7 @@ class LedgerDetachRequest(BaseModel):
     transaction_id: _TransactionPrefix
     attachment_ids: Annotated[tuple[_AttachmentId, ...], Field(min_length=1, max_length=256)]
     actor: _Actor | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerAttachmentStaleRevisionProjection(BaseModel):
@@ -304,10 +307,11 @@ class _LedgerAttachmentExecutor:
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
-                projection = _operation_projection(
+                projection = operation_projection(
                     payload.profile_id,
                     self._operation_id,
                     result,
+                    language=payload.output_language,
                 )
                 operation_result = LedgerAttachmentOperationResult(
                     outcome="updated",
@@ -437,10 +441,12 @@ def _require_attachment_payload(
     return payload
 
 
-def _operation_projection(
+def operation_projection(
     profile_id: UUID,
     operation_id: LedgerAttachmentOperationId,
     result: ManualLedgerTransactionResult,
+    *,
+    language: OutputLanguage,
 ) -> LedgerAttachmentProjection:
     """Copy the full canonical transaction result and all finalized-revision facts."""
     canonical = ledger_transaction_result_payload(result)
@@ -454,7 +460,7 @@ def _operation_projection(
     return LedgerAttachmentProjection(
         profile_id=profile_id,
         operation_id=operation_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         stale_finalized_revisions=tuple(
@@ -483,8 +489,7 @@ def _validation_result(
 
 def _check_result_size(result: LedgerAttachmentExecutionResult) -> None:
     """Keep encrypted receipts within the bounded operation-result budget."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES - 128)
 
 
 def _attachment_refusal_receipt_matches(
@@ -600,32 +605,12 @@ def build_ledger_detach_definition(
     )
 
 
-def _resolve_attachment_access(
-    request: OperationRequest[BaseModel],
-    context: OperationAccessContext,
-    *,
-    operation_id: LedgerAttachmentOperationId,
-    request_type: type[BaseModel],
-    profile_id: UUID,
-) -> ResolvedOperationAccess:
-    """Require full-profile read access and COMMIT for the canonical mutation."""
-    if request.definition_id != operation_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=profile_id, periods=frozenset())
-
-
 def resolve_ledger_attach_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve whole-profile access plus COMMIT for attach."""
-    if not isinstance(request.payload, LedgerAttachRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return _resolve_attachment_access(
-        request,
-        context,
-        operation_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID,
-        request_type=LedgerAttachRequest,
-        profile_id=request.payload.profile_id,
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID, request_type=LedgerAttachRequest
     )
 
 
@@ -633,14 +618,8 @@ def resolve_ledger_detach_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve whole-profile access plus COMMIT for detach."""
-    if not isinstance(request.payload, LedgerDetachRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return _resolve_attachment_access(
-        request,
-        context,
-        operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID,
-        request_type=LedgerDetachRequest,
-        profile_id=request.payload.profile_id,
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_DETACH_OPERATION_DEFINITION_ID, request_type=LedgerDetachRequest
     )
 
 

@@ -38,8 +38,9 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ....application.ledger.actions_manual import ledger_transaction_payload
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
+from ....application.ledger.evidence_read_operation import LedgerEvidenceRecordProjection
+from ....application.ledger.manual_read import ledger_transaction_payload
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.review_projection import ledger_transaction_review_status
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
@@ -51,7 +52,8 @@ from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
-from ...adapter_composition import build_ledger_evidence_ports
+from ....tests.pdf_fixtures import text_pdf_bytes
+from ...adapter_composition_work_ports import build_ledger_evidence_ports
 from ..command_schema import command_schema_types
 from ..ledger_business_payloads import EvidenceAddResult
 from ..ledger_results import LedgerAddResult
@@ -151,8 +153,9 @@ def _emit_ledger_add(profile: TestRuntimeProfile) -> dict[str, object]:
 def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
     """Drive one real ``ledger evidence add`` in a fresh bucket and capture its envelope.
 
-    Builds the ``EvidenceAddResult`` exactly as the CLI leaf does (record dump plus
-    the ``bucket_event_ids`` appended at the emit site) and emits it through the
+    Builds the ``EvidenceAddResult`` exactly as the CLI leaf does (the worker's
+    record projection dumped, plus the ``bucket_event_ids`` appended at the emit
+    site) and emits it through the
     real success-envelope path under a capture sink. All storage ops stay inside one
     ``frozen_clock`` block.
     """
@@ -169,7 +172,7 @@ def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
             iva_amount=Decimal("21.00"),
             notes="office supplies",
         )
-        payload = result.record.model_dump(mode="json")
+        payload = LedgerEvidenceRecordProjection.from_record(result.record).model_dump(mode="json")
         payload["bucket_event_ids"] = list(result.bucket_event_ids)
         with capture_envelopes() as sink:
             emit_json_success("ledger.evidence.add", EvidenceAddResult.model_validate(payload), stream=io.StringIO())
@@ -237,7 +240,7 @@ class TestEnrolledCommandDeterminism:
         fields, so no ``GOLDEN_MASK_FIELDS`` entry is warranted.
         """
         pdf = tmp_path / "receipt.pdf"
-        pdf.write_bytes(b"%PDF-1.4 determinism")
+        pdf.write_bytes(text_pdf_bytes(("synthetic determinism receipt",)))
 
         first = _emit_evidence_add(tmp_path / "run-a", pdf)
         second = _emit_evidence_add(tmp_path / "run-b", pdf)
@@ -260,7 +263,7 @@ class TestEnrolledCommandDeterminism:
         machine-absolutized path), and the persisted ``source_path`` echoes the
         argv-faithful relative path in both runs, not the resolved absolute form.
         """
-        pdf_bytes = b"%PDF-1.4 cwd-independent"
+        pdf_bytes = text_pdf_bytes(("synthetic cwd-independent receipt",))
         cwd_a = tmp_path / "cwd-a"
         cwd_b = tmp_path / "cwd-b"
         for cwd in (cwd_a, cwd_b):

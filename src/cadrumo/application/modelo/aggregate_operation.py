@@ -10,14 +10,15 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.calculations.registry.withholding_bindings import aggregate_withholding_by_clave
-from ..aggregation.errors import AggregationConfigError, AggregationUnsupportedModeloError
+from ...domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
+from ..aggregation.errors import AggregationUnsupportedModeloError
 from ..aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
     LedgerPaymentWithholdingEvidenceError,
@@ -27,6 +28,10 @@ from ..aggregation.ledger_payment_withholding import (
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
+)
+from ..aggregation.received_invoice_withholding import (
+    ReceivedInvoiceWithholdingFinding,
+    ReceivedInvoiceWithholdingFindingKind,
 )
 from ..aggregation.retencion_observations_repository import (
     RetencionObservationPorts,
@@ -45,6 +50,7 @@ from ..aggregation.withholding_filing_cadence import (
     WithholdingFilingCadenceError,
     load_bucket_withholding_filer_cadence,
 )
+from ..aggregation.withholding_modelo_routing import periodic_withholding_modelos
 from ..aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
     WithholdingWindowScope,
@@ -72,6 +78,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .aggregate_contracts import (
     AGGREGATE_COMMIT_PHASE,
@@ -79,7 +86,6 @@ from .aggregate_contracts import (
     AGGREGATE_PHASES,
     AGGREGATE_PREPARE_PHASE,
     AGGREGATE_RESULT_PHASE,
-    AGGREGATE_WITHHOLDING_MODELOS,
     MODELO_AGGREGATE_CADENCE_REFUSAL_CODE,
     MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
@@ -91,6 +97,7 @@ from .aggregate_contracts import (
 from .aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
 from .aggregate_projection import (
     ModeloAggregateClaveTotals,
+    ModeloAggregateInvoiceFindingCount,
     ModeloAggregateProjection,
     ModeloAggregateReport,
     ModeloAggregateWindow,
@@ -167,6 +174,7 @@ class ModeloAggregateExecutor:
                 context=context,
                 aggregate_result=prepared.preflight_result,
                 window_state=prepared.window_state,
+                invoice_findings=prepared.invoice_findings,
                 local_write_performed=False,
             )
 
@@ -227,7 +235,9 @@ class ModeloAggregateExecutor:
                     prepared.ports.withholding_observation_service.read_window,
                     capture.scope,
                 )
-                aggregate_command = self._withholding_command(prepared.aggregate_command, window_state)
+                aggregate_command, invoice_findings = await asyncio.to_thread(
+                    self._withholding_command, prepared.aggregate_command, window_state, prepared.ports
+                )
                 aggregate_result = await asyncio.to_thread(self._aggregate, aggregate_command, operation)
                 return await self._publish_aggregate(
                     prepared=prepared,
@@ -235,6 +245,7 @@ class ModeloAggregateExecutor:
                     context=context,
                     aggregate_result=aggregate_result,
                     window_state=window_state,
+                    invoice_findings=invoice_findings,
                     local_write_performed=local_write_performed,
                 )
 
@@ -269,17 +280,21 @@ class ModeloAggregateExecutor:
                 ports.withholding_observation_service.read_window(
                     WithholdingWindowScope(modelo=command.modelo, period=command.period)
                 )
-                if command.modelo in AGGREGATE_WITHHOLDING_MODELOS
+                if command.modelo in periodic_withholding_modelos()
                 else None
             )
-            command = self._withholding_command(command, window_state)
+            command, invoice_findings = self._withholding_command(command, window_state, ports)
             calculation_rows = self._calculation_rows(command, ports, profile_id, operation)
             if calculation_rows is not None:
                 command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
             provider = provider_for_modelo(command.modelo, operation=operation)
             preflight_result = aggregate_per_modelo(command, operation=operation)
         if preflight_result.provider is not provider:
-            raise AggregationConfigError("aggregate preflight provider changed")
+            raise InternalInvariantError(
+                "aggregate preflight provider changed",
+                translated_message="application.modelo.errors.aggregate_preflight_provider_changed",
+                precondition_verdict=internal_invariant_verdict("aggregate_preflight.provider_stable"),
+            )
         if payload.ledger_payment is None:
             return _PreparedModeloAggregate(
                 ports=ports,
@@ -287,6 +302,7 @@ class ModeloAggregateExecutor:
                 preflight_result=preflight_result,
                 window_state=window_state,
                 calculation_rows=calculation_rows,
+                invoice_findings=invoice_findings,
             )
 
         if provider is not PerModeloAggregationContributor.RETENCIONES:
@@ -358,7 +374,7 @@ class ModeloAggregateExecutor:
         withholding store. Every other modelo is an annual summary composed from
         stored windows, so it aggregates exactly what its calculation reads.
         """
-        if command.modelo in AGGREGATE_WITHHOLDING_MODELOS or not RetencionesAggregationSourceResolver.supports_modelo(
+        if command.modelo in periodic_withholding_modelos() or not RetencionesAggregationSourceResolver.supports_modelo(
             command.modelo
         ):
             return None
@@ -396,13 +412,45 @@ class ModeloAggregateExecutor:
     def _withholding_command(
         command: PerModeloAggregationCommand,
         state: WithholdingWindowState | None,
-    ) -> PerModeloAggregationCommand:
+        ports: ModeloAggregateOperationPorts,
+    ) -> tuple[PerModeloAggregationCommand, tuple[ReceivedInvoiceWithholdingFinding, ...]]:
+        """Aggregate a periodic window's stored rows with the received invoices its calculation reads.
+
+        The invoice-stated rows and findings come from the calculation's own
+        resolver, so the report counts and holds back what the calculation does.
+        """
         if state is None:
-            return command
+            return command, ()
         if state.scope != WithholdingWindowScope(modelo=command.modelo, period=command.period):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        observations = tuple(entry.retencion for entry in state.entries if entry.retencion is not None)
-        return command.model_copy(update={"retencion_observations": observations})
+        stored = tuple(entry.retencion for entry in state.entries if entry.retencion is not None)
+        invoices = RetencionesAggregationSourceResolver(
+            ports=RetencionObservationPorts(repository=ports.retencion_observation_repository),
+            invoice_catalogue=ports.invoice_catalogue,
+        ).invoice_stated_withholding(
+            bucket_id=ports.profile_id,
+            modelo=command.modelo,
+            period=command.period,
+            stored=stored,
+        )
+        return (
+            command.model_copy(update={"retencion_observations": (*stored, *invoices.observations)}),
+            invoices.findings,
+        )
+
+    @staticmethod
+    def _invoice_finding_counts(
+        findings: tuple[ReceivedInvoiceWithholdingFinding, ...],
+    ) -> tuple[ModeloAggregateInvoiceFindingCount, ...]:
+        """Count the held-back invoices by reason, in the reasons' declared order."""
+        invoices: dict[ReceivedInvoiceWithholdingFindingKind, set[str]] = {}
+        for finding in findings:
+            invoices.setdefault(finding.kind, set()).add(finding.invoice_id)
+        return tuple(
+            ModeloAggregateInvoiceFindingCount(kind=kind, invoice_count=len(invoices[kind]))
+            for kind in ReceivedInvoiceWithholdingFindingKind
+            if kind in invoices
+        )
 
     @staticmethod
     def _aggregate(
@@ -420,6 +468,7 @@ class ModeloAggregateExecutor:
         context: OperationExecutorContext,
         aggregate_result: PerModeloAggregationResult,
         window_state: WithholdingWindowState | None,
+        invoice_findings: tuple[ReceivedInvoiceWithholdingFinding, ...],
         local_write_performed: bool,
     ) -> str | OperationRefusalEvidence:
         if (
@@ -451,6 +500,7 @@ class ModeloAggregateExecutor:
                 None if prepared.calculation_rows is None else prepared.calculation_rows.revision_id
             ),
             withholding_window=window,
+            received_invoice_findings=self._invoice_finding_counts(invoice_findings),
         )
         await context.events.phase(AGGREGATE_RESULT_PHASE)
         report = ModeloAggregateReport(projection=projection, local_write_performed=local_write_performed)
@@ -524,6 +574,7 @@ class _PreparedModeloAggregate:
     preflight_result: PerModeloAggregationResult
     window_state: WithholdingWindowState | None = None
     calculation_rows: CalculationWithholdingRows | None = None
+    invoice_findings: tuple[ReceivedInvoiceWithholdingFinding, ...] = ()
     capture: LedgerPaymentWithholdingCapture | None = None
     cadence: WithholdingFilerCadence | None = None
 

@@ -20,11 +20,11 @@ from .. import clave_permanente as clave_permanente_module
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_support import clave_permanente_auth_browser_action_policy
 from ..errors import AuthConfigurationError
-from ._clave_permanente_support import (
-    _DOMAINS,
-    _aeat_url,
-    _run,
-    _settings_for,
+from .clave_permanente_support import (
+    DOMAINS,
+    aeat_url,
+    clave_permanente_run,
+    clave_permanente_settings_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
@@ -51,7 +51,7 @@ class TestBrowserActionPolicy:
         # The build itself is the regression: the policy previously raised on
         # construction because it listed the Cl@ve IdP host. The two credential-
         # fill actions are on the allow-list and carry no write-verb token.
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         for action in (
             "clave-permanente-fill-username",
@@ -68,7 +68,7 @@ class TestBrowserActionPolicy:
         # ``submit``): it is an authentication step, not an AEAT tax filing, so
         # the write-token block does not apply. ``authenticate`` carries no
         # forbidden verb token, so it reaches — and matches — the allow-list.
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         result = assert_remote_operation_allowed(
             policy,
@@ -80,7 +80,7 @@ class TestBrowserActionPolicy:
         # Safety net: the rename is ONLY the login label. A genuine write-verb
         # browser action under the SAME permanente policy is STILL refused by the
         # unchanged write-token filter — proof the block was not weakened.
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         with pytest.raises(RegistryValidationError, match="token 'presentar' is forbidden"):
             assert_remote_operation_allowed(
@@ -89,10 +89,10 @@ class TestBrowserActionPolicy:
             )
 
     def test_policy_admits_sibling_aeat_host_and_clave_idp_host(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         clave_host = urlsplit(settings.external_constants().aeat.domains.clave).netloc
-        aeat_sibling = _aeat_url(_DOMAINS.www12, settings.aeat_sede_expedientes_path)
+        aeat_sibling = aeat_url(DOMAINS.www12, settings.aeat_sede_expedientes_path)
         idp_url = f"https://se-pasarela.{clave_host}/idp/gateway"
         for url in (aeat_sibling, idp_url):
             result = assert_remote_operation_allowed(
@@ -102,7 +102,7 @@ class TestBrowserActionPolicy:
             assert result.decision == "allowed"
 
     def test_policy_refuses_non_aeat_non_idp_host(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
             assert_remote_operation_allowed(
@@ -111,7 +111,7 @@ class TestBrowserActionPolicy:
             )
 
     def test_policy_rejects_unlisted_action(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
         with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
             assert_remote_operation_allowed(
@@ -159,7 +159,7 @@ class TestBrowserActionPolicy:
             "assert_remote_operation_allowed",
             refuse_selected_action,
         )
-        provider = ClavePermanenteAuthProvider(_settings_for(tmp_path))
+        provider = ClavePermanenteAuthProvider(clave_permanente_settings_for(tmp_path))
 
         async def run() -> None:
             with pytest.raises(RegistryValidationError, match=f"refused {blocked_action}"):
@@ -169,7 +169,7 @@ class TestBrowserActionPolicy:
                     password="secret",
                 )
 
-        _run(run())
+        clave_permanente_run(run())
         assert page_events == expected_page_events
 
 
@@ -180,7 +180,7 @@ def test_auth_provider_kind_has_clave_permanente_member() -> None:
 def test_select_provider_dispatches_clave_permanente(tmp_path: Path) -> None:
     from ..provider_selection import select_provider
 
-    settings = _settings_for(
+    settings = clave_permanente_settings_for(
         tmp_path,
         CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
         CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
@@ -195,27 +195,27 @@ def test_select_provider_dispatches_clave_permanente(tmp_path: Path) -> None:
 
 class TestPreconditions:
     def test_missing_identity_raises_configuration_error(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2")
+        settings = clave_permanente_settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2")
         provider = ClavePermanenteAuthProvider(settings)
 
         async def run() -> None:
             with pytest.raises(AuthConfigurationError, match="CADRUMO_CLAVE_PERMANENTE_DNI_NIE"):
                 await provider.authenticate()
 
-        _run(run())
+        clave_permanente_run(run())
 
     def test_missing_password_raises_configuration_error(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
+        settings = clave_permanente_settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
         provider = ClavePermanenteAuthProvider(settings)
 
         async def run() -> None:
             with pytest.raises(AuthConfigurationError, match="CADRUMO_CLAVE_PERMANENTE_PASSWORD"):
                 await provider.authenticate()
 
-        _run(run())
+        clave_permanente_run(run())
 
     def test_malformed_identity_raises_configuration_error(self, tmp_path: Path) -> None:
-        settings = _settings_for(
+        settings = clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE="NOT-A-VALID-ID",
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
@@ -226,7 +226,7 @@ class TestPreconditions:
             with pytest.raises(AuthConfigurationError, match=r"NIF|NIE|identity"):
                 await provider.authenticate()
 
-        _run(run())
+        clave_permanente_run(run())
 
 
 # ── describe() ───────────────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ class TestPreconditions:
 
 class TestDescribe:
     def test_describe_unconfigured(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
+        settings = clave_permanente_settings_for(tmp_path)
         provider = ClavePermanenteAuthProvider(settings)
         description = provider.describe()
         assert description.configured is False
@@ -244,14 +244,14 @@ class TestDescribe:
         assert "AEAT_CLAVE_PERMANENTE" not in (description.health_summary or "")
 
     def test_describe_missing_password_only(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
+        settings = clave_permanente_settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
         provider = ClavePermanenteAuthProvider(settings)
         description = provider.describe()
         assert description.configured is False
         assert description.available is False
 
     def test_describe_configured(self, tmp_path: Path) -> None:
-        settings = _settings_for(
+        settings = clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
@@ -264,7 +264,7 @@ class TestDescribe:
         assert description.kind == AuthProviderKind.CLAVE_PERMANENTE
 
     def test_describe_invalid_identity(self, tmp_path: Path) -> None:
-        settings = _settings_for(
+        settings = clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE="BAD",
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
@@ -281,7 +281,7 @@ class TestDescribe:
 
 class TestVerify:
     def test_verify_without_active_context_raises(self, tmp_path: Path) -> None:
-        settings = _settings_for(
+        settings = clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
@@ -302,4 +302,4 @@ class TestVerify:
             with pytest.raises(AeatLoginAssertionError, match="requires an active browser context"):
                 await provider.verify(session_without_context)
 
-        _run(run())
+        clave_permanente_run(run())

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1d4731ceb84453c1ff08ea9aa9b13a321008970288bca424bc8ff85487b3aaa'
+body_hash: 'sha256:25f7bd7890d6a0b87291676366e225e342cd95c00e6e6b1f9263f2622cb2e38b'
 related:
   - "[[2026-08-25-source-casilla-integration-modelo-721-structured-message-source-grounding-research]]"
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -15,8 +15,8 @@ related:
 
 ## Problem Statement
 
-Decide whether the exact Modelo 721 source facts for its selected 2023 and
-2024 structured-message eras authorize a connection, a non-applicable result,
+Decide whether the exact Modelo 721 source facts for its two selected
+structured-message eras authorize a connection, a non-applicable result,
 or a bounded source-owner deferral. The factual record is
 `2026-08-25-source-casilla-integration-modelo-721-structured-message-source-grounding-research`.
 
@@ -53,9 +53,9 @@ complete source fact and its lifecycle for each exact era.
 
 ## Constraints
 
-- This decision is limited to Modelo 721, annual period `0A`, and the selected
-  2023 and 2024 revisions. It does not select, classify, or imply continuity
-  for 2025 or later.
+- This decision is limited to Modelo 721, annual period `0A`, and the two selected
+  structured-message editions. It does not select, classify, or imply continuity
+  for any other edition or any later year.
 - XML/SOAP/WSDL/XSD, official field grammar, transport validation, export
   coordinates, and emitted bytes remain target or serializer evidence only;
   none is source acquisition or provenance evidence.
@@ -69,7 +69,7 @@ complete source fact and its lifecycle for each exact era.
 ## Implementation
 
 Classify the unconnected M721 custody-and-valuation source domain for
-`2023/0A` and `2024/0A` as `ingress_blocked`, owned by
+the annual coordinate of each of the two selected eras as `ingress_blocked`, owned by
 `source-connectivity-campaign`. This is a model-scoped refusal to connect,
 not a statement that its BOE messages, manual fields, encrypted observations,
 or filing work are absent or invalid. No census row is created by this decision.
@@ -111,7 +111,7 @@ factual separation in
 
 ## Consequences
 
-- Modelo 721 remains unconnected for its 2023 and 2024 source domains, with no
+- Modelo 721 remains unconnected for the source domains of its two selected eras, with no
   inferred binding, producer, resolver, or export authority.
 - The genuine direct/manual casillas and encrypted threshold-continuity
   observations remain distinct, usable paths; they are not silently withdrawn

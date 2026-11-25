@@ -18,27 +18,39 @@ import hashlib
 import io
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
+from cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 from cadrumo.adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
+    build_review_package_signing_keypair_reader,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.application.export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.calculation_notes import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    FILED_BEFORE_GRADE_CAP_REASON,
+)
 from cadrumo.application.modelo.calculation_report import (
     CalculationReportRowRole,
     CalculationReportValueState,
     ModeloCalculationReport,
+    ModeloCalculationReportResolution,
+    ModeloCalculationReportResolutionSource,
     local_calculation_report_notice,
 )
 from cadrumo.application.modelo.calculation_report_document import (
     CALCULATION_REPORT_CSV_FIELDNAMES,
     CALCULATION_REPORT_CSV_PREAMBLE_PREFIX,
     DOCUMENT_SERIALIZERS,
+    CalculationSummaryPdfRendering,
     calculation_report_csv_row,
     serialize_calculation_report,
 )
@@ -48,29 +60,48 @@ from cadrumo.application.modelo.calculation_report_export import (
     build_modelo_calculation_report_for_revision,
     export_modelo_calculation_report,
 )
+from cadrumo.application.modelo.calculation_report_verification import (
+    CalculationSummaryStoreContext,
+    CalculationSummaryVerificationOutcome,
+    verify_calculation_summary,
+)
+from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
+from cadrumo.application.modelo.review_package_signing import ensure_review_package_signing_keypair
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.grade_cap_support import recapped_operation
 from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id_from_revision,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.calculation_review_snapshot_composition import load_calculation_review_snapshot
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     M130_INCOME_CASILLA,
     T1,
+    T2,
     Repos,
     calculation_ports_for_test,
+    file_revision,
     seed_work_unit,
     verify_revision,
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
     build_verified_modelo_303_revision,
 )
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 
 __all__ = ["isolated_backend"]
 
@@ -94,8 +125,10 @@ _BASELINE_INPUTS = {
 }
 
 
-def _calculate_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
-    """Calculate the shared Modelo 130 1T baseline through the real engine."""
+def _calculate_130(
+    repos: Repos, *, inputs: dict[CasillaId, Decimal] | None = None
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Calculate the shared Modelo 130 1T baseline, or ``inputs`` over it, through the real engine."""
     work_repo, calculation_repo, _, _, event_repo = repos
     work_unit = seed_work_unit(work_repo)
     with calculation_ports_for_test(
@@ -104,21 +137,23 @@ def _calculate_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
         calculation_repository=calculation_repo,
         bucket_event_repository=event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_as_filer_enters(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs=dict(_BASELINE_INPUTS),
+            casilla_inputs={**_BASELINE_INPUTS, **(inputs or {})},
             binding_values=dict(DEFAULT_130_BINDING_VALUES),
             ports=ports,
             clock=T1,
-        )
+        ).revision
     return work_unit, revision
 
 
-def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
+def _verified_130(
+    repos: Repos, *, inputs: dict[CasillaId, Decimal] | None = None
+) -> tuple[WorkUnit, CalculationRevision]:
     """Calculate and verify the Modelo 130 1T baseline, returning the sealed revision."""
     work_repo, calculation_repo, filing_repo, verification_repo, event_repo = repos
-    work_unit, revision = _calculate_130(repos)
+    work_unit, revision = _calculate_130(repos, inputs=inputs)
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -134,6 +169,17 @@ def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
     sealed = calculation_repo.load().revisions[revision.calculation_revision_id]
     assert sealed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     return work_unit, sealed
+
+
+def _stored_unstamped(repos: Repos, revision: CalculationRevision) -> CalculationRevision:
+    """Store a copy of ``revision`` that was never screened, as one verified before the cap is."""
+    _, calculation_repo, _, _, _ = repos
+    unstamped = revision.model_copy(update={"screen_stamp": None})
+    unstamped = unstamped.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(unstamped)}
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), unstamped))
+    return calculation_repo.load().revisions[unstamped.calculation_revision_id]
 
 
 def _export_ports(repos: Repos, work_unit: WorkUnit) -> ModeloExportPorts:
@@ -154,13 +200,14 @@ def _report(
     revision: CalculationRevision,
     *,
     report_language: OutputLanguage = OutputLanguage.ES,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloCalculationReport:
     return build_modelo_calculation_report_for_revision(
         revision.calculation_revision_id,
         active_bucket_id=work_unit.bucket_id,
         export_ports=_export_ports(repos, work_unit),
         signing_keypair=build_review_package_signing_keypair_capability(bucket_id=work_unit.bucket_id),
-        operation=published_authority_operation(),
+        operation=published_authority_operation() if operation is None else operation,
         report_language=report_language,
         exported_at=_EXPORTED_AT,
     )
@@ -223,6 +270,148 @@ def test_report_header_carries_every_traceability_coordinate(repos: Repos) -> No
     assert header.verification_outcome is verified[-1].completeness_status
 
 
+def test_a_sealed_revision_screened_by_an_earlier_calculation_is_refused_as_export_refuses_it(repos: Repos) -> None:
+    """A sealed revision with no screen stamp is stale, so no signed report is built from it."""
+    work_unit, revision = _verified_130(repos)
+    stale = _stored_unstamped(repos, revision)
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        _report(repos, work_unit, stale)
+
+    assert (refused.value.context or {}).get("reason") == CALCULATION_SCREEN_OUTDATED_REASON
+    assert refused.value.translated_message == calculation_screen_outdated_message_key()
+    assert _report(repos, work_unit, revision).header.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_a_filed_revision_without_a_screen_stamp_keeps_its_report(repos: Repos) -> None:
+    """A revision already recorded as filed is never stale, whatever it was screened against."""
+    work_unit, revision = _verified_130(repos)
+    work_repo, calculation_repo, filing_repo, _, event_repo = repos
+    file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=event_repo,
+        clock=T2,
+    )
+    filed = calculation_repo.load().revisions[revision.calculation_revision_id]
+    assert filed.state is CalculationRevisionState.PRESENTADO
+    unstamped = _stored_unstamped(repos, filed)
+
+    report = _report(repos, work_unit, unstamped)
+
+    assert report.header.calculation_revision_id == unstamped.calculation_revision_id
+    assert report.header.calculation_revision_state is CalculationRevisionState.PRESENTADO
+
+
+# Hand-derived: the 150,00 and 360,00 retenciones of two invoiced receipts, as casilla 06 held them
+# when filed before a capped binding's figure was withheld.
+_FILED_CAPPED_FIGURE = Decimal("510.00")
+_CAPPED_BOX = "06"
+# The published registry caps no binding, so the filed-before-cap screen is exercised against an
+# operation whose Modelo 130 snapshots declare the cap in memory on the binding that feeds casilla 06.
+_CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+
+
+def _capping_operation() -> PinnedAuthorityOperation:
+    return recapped_operation(published_authority_operation(), "130", _CAPPED_BINDING)
+
+
+def _filed_with_box(repos: Repos, *, value: Decimal, stamped: bool) -> tuple[WorkUnit, CalculationRevision]:
+    """File the verified baseline, then store it as recorded before screens with ``value`` in casilla 06."""
+    work_repo, calculation_repo, filing_repo, _, event_repo = repos
+    work_unit, revision = _verified_130(repos)
+    file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=event_repo,
+        clock=T2,
+    )
+    filed = calculation_repo.load().revisions[revision.calculation_revision_id]
+    assert filed.state is CalculationRevisionState.PRESENTADO and filed.screen_stamp is not None
+    changed = filed.model_copy(
+        update={
+            "casilla_values": {**filed.casilla_values, _CAPPED_BOX: value},
+            "observations": tuple(
+                item.model_copy(update={"value": value}) if item.casilla_id == _CAPPED_BOX else item
+                for item in filed.observations
+            ),
+            "screen_stamp": filed.screen_stamp if stamped else None,
+        }
+    )
+    changed = changed.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(changed)}
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), changed))
+    return work_unit, calculation_repo.load().revisions[changed.calculation_revision_id]
+
+
+def _review_finding_reasons(
+    work_unit: WorkUnit, revision: CalculationRevision, operation: PinnedAuthorityOperation
+) -> set[str]:
+    snapshot = load_calculation_review_snapshot(
+        revision.calculation_revision_id,
+        profile_id=UUID(work_unit.bucket_id),
+        operation=operation,
+    )
+    return {
+        item.code.removeprefix(CALCULATION_NOTE_FINDING_PREFIX)
+        for item in snapshot.findings
+        if item.code.startswith(CALCULATION_NOTE_FINDING_PREFIX)
+    }
+
+
+def test_a_revision_filed_before_screens_with_a_capped_figure_gets_no_signed_report(repos: Repos) -> None:
+    """Export refuses such a revision, so a signed report must not certify the figure either."""
+    work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        _report(repos, work_unit, revision, operation=_capping_operation())
+
+    context = refused.value.context or {}
+    assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON
+    assert context["action"] == "report"
+    assert context["box"] == _CAPPED_BOX
+
+
+_ALLOWED_FILED = pytest.mark.parametrize(
+    ("value", "stamped"), [(Decimal("0"), False), (_FILED_CAPPED_FIGURE, True)], ids=["proven_zero", "stamped"]
+)
+
+
+@_ALLOWED_FILED
+def test_a_revision_filed_before_screens_with_a_proven_zero_or_a_stamp_keeps_its_report(
+    repos: Repos, value: Decimal, stamped: bool
+) -> None:
+    work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
+
+    report = _report(repos, work_unit, revision, operation=_capping_operation())
+
+    assert report.header.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_the_review_workbook_flags_a_revision_filed_before_screens_with_a_capped_figure(repos: Repos) -> None:
+    work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
+
+    assert FILED_BEFORE_GRADE_CAP_REASON in _review_finding_reasons(work_unit, revision, _capping_operation())
+
+
+@_ALLOWED_FILED
+def test_the_review_workbook_does_not_flag_a_proven_zero_or_a_stamped_filed_revision(
+    repos: Repos, value: Decimal, stamped: bool
+) -> None:
+    work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
+
+    assert FILED_BEFORE_GRADE_CAP_REASON not in _review_finding_reasons(work_unit, revision, _capping_operation())
+
+
 def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Repos) -> None:
     """Row order is the registry's section order and casilla numbering, unaltered."""
     work_unit, revision = _verified_130(repos)
@@ -246,14 +435,30 @@ def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Rep
     assert report.header.row_count == len(report.rows)
 
 
+_HOME_DEDUCTION_CASILLA = validated_casilla_id("16")
+# Hand-derived: the baseline's zero prior-year income earns the box 13 minoración of 100,00, leaving
+# box 14 at -100,00, so a typed box 16
+# of 40,00 leaves box 17 = -100,00 - 0 - 40,00 and box 19 = box 17 - 0.
+_TYPED_MEASURED = {
+    _HOME_DEDUCTION_CASILLA: Decimal("40.00"),
+    validated_casilla_id("17"): Decimal("-140.00"),
+    validated_casilla_id("19"): Decimal("-140.00"),
+}
+
+
 def test_measured_zero_absent_and_not_applicable_stay_three_states(repos: Repos) -> None:
     """A proven zero, an unrealised casilla and a non-applicable one never merge."""
-    work_unit, revision = _verified_130(repos)
+    work_unit, revision = _verified_130(repos, inputs={_HOME_DEDUCTION_CASILLA: Decimal("40.00")})
     report = _report(repos, work_unit, revision)
+
+    measured = {row.casilla_id: row for row in report.rows if row.casilla_id in _TYPED_MEASURED}
+    assert {row.value_state for row in measured.values()} == {CalculationReportValueState.VALUE}
+    values = {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()}
+    assert values == _TYPED_MEASURED, values
 
     income = next(row for row in report.rows if row.casilla_id == M130_INCOME_CASILLA)
     assert income.value_state is CalculationReportValueState.VALUE
-    assert Decimal(str(income.value)) == _BASELINE_INPUTS[M130_INCOME_CASILLA]
+    assert Decimal(str(income.value)) == Decimal("0")
 
     zeros = [
         row
@@ -370,19 +575,56 @@ def test_every_declared_document_format_has_a_serialiser() -> None:
 
 
 def test_report_rows_ground_every_casilla_without_inventing_a_source_trace(repos: Repos) -> None:
-    """Grounding is the registry's own, and an unsourced revision reports no trace.
+    """Grounding is the registry's own, and the only trace is one the registry justifies.
 
     The Modelo 130 baseline resolves its figures from operator inputs and a
-    previous-filing binding rather than from the ledger mesh, so the revision
-    persists no resolver provenance. The report carries that absence as absence:
-    a row with no trace is not given one, and the keyed-provenance path is
-    exercised where traces actually exist, on the Modelo 303 case below.
+    previous-filing binding rather than from the ledger mesh. Its one resolver
+    trace is the profile's: each binding the registry declares as profile-sourced
+    and the calculation consumed carries a primary profile reference, and nothing
+    else does. A profile fact feeds no single casilla at resolution time, so the
+    report attaches that trace to no row; a row with no trace is not given one,
+    and the keyed-provenance path is exercised where casilla-linked traces exist,
+    on the Modelo 303 case below.
     """
     work_unit, revision = _verified_130(repos)
     report = _report(repos, work_unit, revision)
+    registry_revision = published_authority_operation().revision(
+        str(work_unit.modelo), revision.registry_snapshot_ref.revision_id
+    )
+    consumed_profile_bindings = {
+        binding.id
+        for binding in registry_revision.bindings
+        if binding.source is BindingSourceKind.PROFILE and binding.id in revision.binding_overrides
+    }
 
-    assert revision.source_provenance == ()
-    assert all(row.source_provenance == () for row in report.rows)
+    assert consumed_profile_bindings
+    # Box 06 (retenciones) is handed to the calculation by the ledger renta resolver, so the
+    # revision records that resolver for it; every other trace is a consumed profile binding.
+    (supplied,) = [ref for ref in revision.source_provenance if ref.source_casilla_ids]
+    assert supplied.source_ref == "bound_input:06"
+    assert supplied.source_casilla_ids == ("06",)
+    assert supplied.resolved_binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    assert supplied.lineage_role is CalculationSourceLineageRole.PRIMARY
+    profile_refs = [ref for ref in revision.source_provenance if ref is not supplied]
+    assert {ref.source_ref for ref in profile_refs} == {
+        f"profile:{work_unit.bucket_id}:binding:{binding_id}" for binding_id in consumed_profile_bindings
+    }
+    assert len(profile_refs) == len(consumed_profile_bindings)
+    assert all(
+        ref.resolved_binding_source is BindingSourceKind.PROFILE
+        and ref.contributor_binding_source is BindingSourceKind.PROFILE
+        and ref.lineage_role is CalculationSourceLineageRole.PRIMARY
+        and ref.parent_source_ref is None
+        and ref.source_casilla_ids == ()
+        for ref in profile_refs
+    )
+    assert [
+        (ref.resolved_binding_source, ref.lineage_role)
+        for row in report.rows
+        if row.casilla_id == "06"
+        for ref in row.source_provenance
+    ] == [(supplied.resolved_binding_source, supplied.lineage_role)]
+    assert all(row.source_provenance == () for row in report.rows if row.casilla_id != "06")
     assert all(row.legal_refs and row.source_refs for row in report.rows)
     assert all(row.label and row.section_path and row.number for row in report.rows)
 
@@ -459,3 +701,56 @@ def test_verified_modelo_303_reports_its_own_casillas_and_publishes_them(
     assert taxpayer_nif.encode("utf-8") in output_path.read_bytes()
     assert {row["row_role"] for row in rows} <= {role.value for role in CalculationReportRowRole}
     assert all(row["row_role"] for row in rows)
+
+
+def test_a_report_of_a_revision_with_no_disagreement_lists_no_acceptance_and_keeps_its_legacy_payload(
+    repos: Repos,
+) -> None:
+    work_unit, revision = _verified_130(repos)
+
+    report = _report(repos, work_unit, revision)
+
+    assert report.credit_resolutions == ()
+    assert set(report.canonical_payload()) == {"content_version", "header", "rows"}
+
+
+def test_a_signed_summary_listing_an_acceptance_stays_verified_whatever_the_store_holds_now(repos: Repos) -> None:
+    """Verification checks the document: the acceptance listed here is in no store, as a revoked one would not be."""
+    work_unit, revision = _verified_130(repos)
+    listed = ModeloCalculationReportResolution(
+        finding_id="0123456789abcdef",
+        box="27",
+        sources=(
+            ModeloCalculationReportResolutionSource(role="value_source", source_family="binding", value="1400.00"),
+            ModeloCalculationReportResolutionSource(role="cross_check", source_family="borrador", value="1399.99"),
+        ),
+        accepted_role="value_source",
+        reason="Synthetic reason: the payer's own copy states this amount.",
+        resolved_at=_EXPORTED_AT,
+    )
+    keypair = ensure_review_package_signing_keypair(
+        bucket_id=work_unit.bucket_id,
+        signing_keypair=build_review_package_signing_keypair_capability(bucket_id=work_unit.bucket_id),
+    )
+    report = _report(repos, work_unit, revision).model_copy(update={"credit_resolutions": (listed,)})
+
+    payload = serialize_calculation_report(
+        report,
+        document_format=CalculationReportDocumentFormat.PDF,
+        pdf_rendering=CalculationSummaryPdfRendering(writer=write_calculation_summary_pdf, keypair=keypair),
+    ).payload
+    verification = verify_calculation_summary(
+        payload,
+        reader=read_calculation_summary_pdf,
+        store=CalculationSummaryStoreContext(
+            active_bucket_id=work_unit.bucket_id,
+            export_ports=_export_ports(repos, work_unit),
+            signing_keypair=build_review_package_signing_keypair_reader(bucket_id=work_unit.bucket_id),
+            operation=published_authority_operation(),
+        ),
+    )
+
+    assert "0123456789abcdef" in read_calculation_summary_pdf(payload).page_text.replace(" ", "")
+    assert verification.store_checked is True
+    assert verification.outcome is CalculationSummaryVerificationOutcome.VERIFIED
+    assert verification.reasons == ()

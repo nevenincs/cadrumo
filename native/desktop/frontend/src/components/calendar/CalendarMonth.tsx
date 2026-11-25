@@ -12,11 +12,17 @@ import {
   type GridWeek,
 } from "@/shell/calendarGrid";
 import { evaluatedLabel } from "@/shell/calendar";
-import { entryKey, entrySpan } from "@/shell/calendarEntries";
+import { labelled, listed, noted } from "@/shell/compose";
+import { closeUnknown, entryKey, entrySpan } from "@/shell/calendarEntries";
 import { isoDay as day } from "@/shared/dates";
-import { dateFormats } from "@/shared/dateFormats";
+import { dateFormats, weekdayLetters } from "@/shared/dateFormats";
 import { useStrings } from "@/shell/strings";
-import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendarMarks";
+import {
+  EVENT_MARK,
+  STATE_MARK,
+  STATE_TONE,
+  stateWords,
+} from "./calendarMarks";
 
 export function CalendarMonth({
   month,
@@ -47,20 +53,26 @@ export function CalendarMonth({
   const heading = useId();
   const wholeControl = useRef<HTMLButtonElement>(null);
   const formats = dateFormats(locale);
-  // The seven weekday letters, from the week's first day. 4 January 1970
-  // was a Sunday.
-  const weekdays = Array.from({ length: 7 }, (_, column) =>
-    formats.weekdayNarrow.format(new Date(1970, 0, 4 + weekStart + column)),
-  );
+  const weekdays = weekdayLetters(locale, weekStart);
   // What a window says for itself: its Modelo and period, the days it is
-  // open, and where it stands.
+  // open, and where it stands. A close that is not known is said only as
+  // the earliest it can be, never as the window's last day.
   const describe = (bar: GridBar) => {
     const span = entrySpan(bar.entry);
-    const days =
-      bar.entry.opens_on === null
-        ? `${formats.short.format(day(span.to))} (${t("desktop.calendar.window_unknown")})`
-        : formats.short.formatRange(day(span.from), day(span.to));
-    return `${t("desktop.calendar.modelo", { modelo: bar.entry.modelo })} ${bar.entry.period}, ${days}, ${t(`desktop.calendar.state.${bar.entry.user_state}`)}`;
+    const earliest = t("desktop.calendar.earliest_close", {
+      date: formats.short.format(day(span.to)),
+    });
+    const days = closeUnknown(bar.entry)
+      ? span.from === span.to
+        ? earliest
+        : noted(t, formats.short.format(day(span.from)), earliest)
+      : formats.short.formatRange(day(span.from), day(span.to));
+    return t("desktop.calendar.window_label", {
+      modelo: t("desktop.calendar.modelo", { modelo: bar.entry.modelo }),
+      period: bar.entry.period,
+      days,
+      state: stateWords(t, bar.entry),
+    });
   };
   const title = formats.month.format(new Date(month.year, month.month - 1, 1));
   const toggle = t(
@@ -95,17 +107,17 @@ export function CalendarMonth({
             ref={wholeControl}
             className="calendar-whole -my-1"
             aria-expanded={whole}
-            aria-label={`${toggle}: ${title}`}
+            aria-label={labelled(t, toggle, title)}
             onClick={() => onWhole(!whole)}
           >
             {toggle}
           </Button>
         )}
       </div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg bg-card">
         <div
           aria-hidden="true"
-          className="grid grid-cols-7 border-b bg-chrome py-0.5 text-center text-2xs font-medium text-muted-foreground"
+          className="grid grid-cols-7 bg-chrome py-0.5 text-center text-2xs font-medium text-muted-foreground"
         >
           {weekdays.map((letter, column) => (
             <span key={column}>{letter}</span>
@@ -114,7 +126,7 @@ export function CalendarMonth({
         {month.weeks.map((week, row) => (
           <div
             key={row}
-            className="grid min-h-9 grid-cols-7 content-start gap-y-1 border-b pb-1 last:border-b-0"
+            className="grid min-h-9 grid-cols-7 content-start gap-y-1 pb-1"
           >
             {week.days.map((cell, column) => (
               <div
@@ -145,13 +157,19 @@ export function CalendarMonth({
                     </span>
                     {cell.today && (
                       <span className="sr-only">
-                        {evaluatedLabel(cell.iso, today, locale, true)}
+                        {evaluatedLabel(t, cell.iso, today, locale, true)}
                       </span>
                     )}
                     {cell.events.length > 0 && (
                       <span className="flex gap-0.5">
                         {cell.events.map((event) => {
-                          const said = `${formats.full.format(day(cell.iso))}: ${t(`desktop.calendar.event.${event.event_type}`)}. ${event.summary}`;
+                          const said = t("desktop.calendar.day_event", {
+                            date: formats.full.format(day(cell.iso)),
+                            kind: t(
+                              `desktop.calendar.event.${event.event_type}`,
+                            ),
+                            summary: event.summary,
+                          });
                           return (
                             <span
                               key={event.reference_id}
@@ -259,9 +277,13 @@ export function CalendarMonth({
                 aria-hidden="true"
                 className="calendar-more flex h-control-xs min-w-0 cursor-pointer items-center px-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:underline"
                 style={{ gridColumn: "1 / -1", gridRow: LANES_SHOWN + 1 }}
-                title={(drawn.get(week)?.hidden ?? [])
-                  .map((bar) => `${bar.entry.modelo} ${bar.entry.period}`)
-                  .join(", ")}
+                title={listed(
+                  t,
+                  (drawn.get(week)?.hidden ?? []).map(
+                    (bar) => `${bar.entry.modelo} ${bar.entry.period}`,
+                  ),
+                  "plain",
+                )}
                 onClick={(event) => {
                   // The month grows above and below this week. It is drawn
                   // at once and the week put back where it was pressed, so

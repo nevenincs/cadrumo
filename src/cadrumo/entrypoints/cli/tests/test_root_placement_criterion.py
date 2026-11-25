@@ -26,9 +26,8 @@ made and demanded no splits.
 
 **This is a refusal criterion, not a placement criterion, and the distinction is
 not pedantic.** Roughly two thirds of subjects carry no signal in either
-direction. This module says nothing about where `app live`, `app overview`,
-`config auth` or `config provision` belong, and a green run is not evidence they
-are correctly placed. Reading it as one would recreate the false confidence the
+direction. This module says nothing about where `app live`, `app overview` or `config auth` belong, and a green run is not evidence
+they are correctly placed. Reading it as one would recreate the false confidence the
 first draft of the governing decision was rejected for.
 """
 

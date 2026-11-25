@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4d54b6be44249a4f9a690147bf5d7f5248e2e4ffb3a4d009d45da836ecc187b'
+body_hash: 'sha256:82882940739fa15aca148514ec7568d4709673d1655b6baf5163948e5afa391b'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -79,6 +79,16 @@ Operator direction 2026-10-12: CMake is the only surface that controls the build
 
 This supersedes the earlier packaging behaviour in which a package assembled without documentation omitted the desktop image ("desktop payloads refuse it"). It does not change identity, installation scopes, signing, lifecycle ownership or the Linux runtime-prerequisite contract. The desktop's behaviour without documentation is recorded in the 2026-10-12 amendment of `2026-10-04-desktop-shell-adr`.
 
+### Native bundle Python closure
+
+The native application package owns its locked Python closure privately: the locked base closure of the `cadrumo` distribution plus the locked `[browser]` extra closure, installed into the package's private site-packages. A person who installs the desktop app has no supported way to add a Python extra to that interpreter, so a surface gated on an extra the bundle omits is an absent capability. The `[browser]` closure is `playwright` with its platform wheel's bundled Node driver, `playwright-stealth`, and their locked dependencies (`pyee`, `greenlet`). The bundled extras are declared once as `BUNDLED_EXTRAS` and passed only by native provisioning, assembly and the CMake build, so wheel planning, assembly verification and the CMake build select the same set; the default constraint export omits every extra. Authorization is the owner's ruling of 2026-10-18, "Ship it".
+
+- The added distributions come from the same `uv.lock` resolution, version-pinned, wheel-only and target-selected, under the same assembly refusals as the base closure. Every native target has a locked wheel for the closure: `playwright` 1.64.0 ships `win_amd64`, `manylinux1_x86_64`, `manylinux_2_17_aarch64` and `macosx_11_0_arm64` wheels, and the other additions are pure-Python or already locked for each target.
+- Every other extra stays out of the bundle, and the wheel's default install stays core-only.
+- Chromium builds are not bundled. They are provisioned on demand into the installation-wide storage root (`components/playwright`) by the Rust component engine of `2026-10-24-rust-component-provisioning-adr`, so the packaged app's probe reports a browser that is not provisioned rather than an unavailable extra. The `[browser]` extra ships because Playwright's Python package and driver launch the browser at use time.
+- No model weights and no browser binary enter any artifact. Models are never package data; every tax model call goes through the agent service (`2026-10-25-agent-owned-models-adr`).
+- The bundle grows by the `[browser]` closure, which is dominated by the per-platform Node driver.
+
 ## Rationale
 
 One shared identity projection keeps product names, installer IDs and platform registration consistent while OS adapters retain native lifecycle behavior. Content hashes identify exact artifacts; stable namespace-derived IDs identify upgrade families. These have different lifetimes.
@@ -86,3 +96,20 @@ One shared identity projection keeps product names, installer IDs and platform r
 ## Consequences
 
 This extends the earlier interpreter foundation's installer exclusion for this authorized work. PyPI release delivery remains unchanged; native application packaging is an additional authorized deliverable, refining the earlier CLI distribution deferral without replacing its Python release pipeline. Public publication and signing credentials remain separate external actions. Final acceptance requires real payload build/install/uninstall evidence on every declared target, including the runtime manager's registration and lifecycle on disposable hosts.
+
+## Amendment 2026-10-31 - no publisher signing
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+"Signing is explicit and must not claim publisher verification without actual credentials and verification." stands and is now permanent: no distributed artifact claims publisher verification, because no credentials will exist. macOS bundles carry the ad-hoc seal; Windows and Linux artifacts carry no code signature. The authorization phrase "everything except signing certificates" in this record's amendments describes a permanent exclusion, not deferred work. `RELEASING.md` and the user installation page, `docs/workstation-setup.md`, state the unsigned posture and the macOS first-run path; neither describes a signing step.
+
+## Amendment 2026-11-08 - the package carries what the application offers
+
+Basis: the operator's ruling of 2026-11-08, relayed by the coordinator for desktop finding D48 after the packaged app offered the calculation-summary PDF without its `pdf` extra: "whatever the window offers, the package carries", with no GPL component in the installer, and a third-party notices page generated from the assembled package with a gate, never hand-maintained. This amends the "Native bundle Python closure" section; the rest of that section stands.
+
+- `BUNDLED_EXTRAS` is derived from `OPTIONAL_EXTRAS` minus `BUNDLE_EXCLUDED_EXTRAS`, a mapping that names each excluded extra with its reason (`dev/packaging/native/product.py`). Today the bundle carries `google`, `browser` and `pdf`; `ofx` is excluded because `ofxtools` is GPL-3.0-only. The bullet "Every other extra stays out of the bundle" is replaced by this rule; the wheel's default install stays core-only.
+- A surface whose extra is excluded is withdrawn through a served capability fact, never a frontend check: `ledger.entry-options` serves the `import_format` family from `installed_ledger_providers()`, and the window and the TUI offer only those formats. The host file picker's extension allowlist stays the outer bound.
+- Package assembly generates `docs/reference/third-party-notices-<target>.md` from the assembled candidate (`dev/packaging/native/third_party_notices.py`): the interpreter, the native programs and runtime libraries, both Node.js runtimes, the Python distributions and the agent runtime's JavaScript packages, each with version, declared licence and the licence text's location in the package. Assembly refuses a stale page, a missing listed licence text, a program file attributed to no component, and any GPL or AGPL component.
+- The llama.cpp MIT licence text is pinned and staged by the llama-server acquisition owner; D48 lands after that commit.
+
+Open, second phase of D48 (required before any distribution build, not for the APP-QA Release build): the notices page does not yet list the Rust crates statically linked into the native executables (from `Cargo.lock` under the `native/deny.toml` policy) or the npm packages bundled into the desktop window's frontend.

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from dev._paths import REPO_ROOT
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.paths import REPO_ROOT
 
 from .dead_code import DeadCodeOutcome, DeadCodeResult, dead_code_scope, run_dead_code_scan
 from .duplication import DuplicationOutcome, DuplicationResult, run_duplication_scan
@@ -16,18 +16,7 @@ def main() -> int:
     duplication = run_duplication_scan(REPO_ROOT)
     dead_code = run_dead_code_scan(REPO_ROOT)
 
-    unavailable = duplication.outcome is DuplicationOutcome.UNAVAILABLE or dead_code.outcome is DeadCodeOutcome.ERROR
-    has_findings = duplication.outcome is DuplicationOutcome.CLONES or dead_code.outcome is DeadCodeOutcome.FINDINGS
-    outcome = "unavailable" if unavailable else "findings" if has_findings else "clean"
-    headline = (
-        f"dead weight: {duplication.clone_count} duplication clone(s); {len(dead_code.findings)} dead-code finding(s)"
-    )
-    if unavailable:
-        headline += "; one or more scanners unavailable"
-    elif has_findings:
-        headline += " (advisory)"
-    else:
-        headline += " across both scanners"
+    unavailable, outcome, headline = _classify(duplication, dead_code)
 
     print(
         json.dumps(
@@ -67,6 +56,23 @@ def main() -> int:
         )
     )
     return ADVISORY_BROKEN if unavailable else OK
+
+
+def _classify(duplication: DuplicationResult, dead_code: DeadCodeResult) -> tuple[bool, str, str]:
+    unavailable = duplication.outcome is DuplicationOutcome.UNAVAILABLE or dead_code.outcome is DeadCodeOutcome.ERROR
+    has_findings = duplication.outcome is DuplicationOutcome.CLONES or dead_code.outcome is DeadCodeOutcome.FINDINGS
+    outcome = "unavailable" if unavailable else "findings" if has_findings else "clean"
+    headline = (
+        f"dead weight: {duplication.clone_count} duplication clone(s); {len(dead_code.findings)} dead-code finding(s)"
+    )
+    if unavailable:
+        headline += "; one or more scanners unavailable"
+    elif has_findings:
+        headline += " (advisory)"
+    else:
+        headline += " across both scanners"
+
+    return unavailable, outcome, headline
 
 
 def _duplication_summary(duplication: DuplicationResult) -> dict[str, object]:

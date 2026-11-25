@@ -29,9 +29,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _BUCKET_A = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
 _BUCKET_B = "8a08e144-26e5-4275-b75f-42e07d2458e0"  # was 'operator-b'
-_T0 = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 4, 1, 11, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 4, 1, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(1980, 4, 1, 10, 0, 0, tzinfo=UTC)
+_T1 = datetime(1980, 4, 1, 11, 0, 0, tzinfo=UTC)
+_T2 = datetime(1980, 4, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def _build_event(

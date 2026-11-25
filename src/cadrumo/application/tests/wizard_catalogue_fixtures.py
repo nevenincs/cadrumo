@@ -2,12 +2,12 @@
 
 import pytest
 
-from ..wizard import catalogue as _catalogue
+from ..wizard import catalogue
 
 
 @pytest.fixture(autouse=True, scope="session")
 def register_wizard_catalogue() -> None:
-    if _catalogue is None:
+    if catalogue is None:
         raise AssertionError("wizard catalogue registration import failed")
 
 

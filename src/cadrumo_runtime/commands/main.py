@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from contextlib import nullcontext
+from typing import TYPE_CHECKING
 
 from typer import Exit as TyperExit
 from typer._click.exceptions import ClickException as TyperClickException
@@ -18,35 +19,75 @@ from cadrumo.core.errors.error_codes import (
     render_error_text,
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.logging import operator_document_output
+from cadrumo.core.logging import (
+    defer_logging_configuration,
+    logging_configuration_deferred,
+    operator_document_output,
+    resume_logging_configuration,
+)
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.errors import (
     CliRefusedBoundaryError,
     CliUnexpectedBoundaryError,
     log_cli_boundary_failure,
 )
-from cadrumo_client.commands.output import write_stderr
+from cadrumo_client.commands.output import precondition_action_lines, write_stderr
 from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 from cadrumo_client.logging import register_client_logging_namespace
 
 from .command_specs import RUNTIME_COMMAND_GRAPH
 from .lifecycle import dispatch_runtime_behavior
-from .presentation import precondition_action_lines, resolve_cli_precondition_action, runtime_error_context
+from .presentation import resolve_cli_precondition_action, runtime_error_context
+
+if TYPE_CHECKING:
+    from inspect import BoundArguments
+
+    from cadrumo_client.commands.graph import CommandSpecGraph
+    from cadrumo_client.commands.spec import CommandSpec
 
 
 def main(arguments: Sequence[str] | None = None) -> int:
     """Run one runtime configuration command without entering the daemon server."""
     argv = list(sys.argv[1:] if arguments is None else arguments)
     with operator_document_output() if argv_requests_json(argv) else nullcontext():
-        return _run_command(argv)
+        return run_command(argv)
 
 
-def _run_command(argv: list[str]) -> int:
+def run_command(argv: list[str]) -> int:
     """Dispatch and render within the invocation's diagnostic routing scope."""
+    was_deferred = logging_configuration_deferred()
+    defer_logging_configuration()
+    try:
+        return _run_deferred_command(argv)
+    finally:
+        if was_deferred:
+            defer_logging_configuration()
+        else:
+            resume_logging_configuration()
+
+
+def _run_deferred_command(argv: list[str]) -> int:
+    """Keep parse and admission diagnostics buffered until a leaf starts."""
     register_client_logging_namespace()
     configure_stdio_for_utf8()
     disable_rich_cli_rendering()
-    app = build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior)
+    command_started = False
+
+    def dispatch(
+        graph: CommandSpecGraph, spec: CommandSpec, bound: BoundArguments, behavior: Callable[[], object]
+    ) -> object:
+        def run_behavior() -> object:
+            nonlocal command_started
+            if spec.kind == "leaf":
+                command_started = True
+                resume_logging_configuration()
+            return behavior()
+
+        # Runtime admission runs before this callback. A parsed target or a
+        # Click context alone does not prove that a command actually started.
+        return dispatch_runtime_behavior(graph, spec, bound, run_behavior)
+
+    app = build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch)
     command = get_command(app)
     try:
         command.main(args=argv, prog_name="cadrumo-runtime", standalone_mode=False)
@@ -57,43 +98,54 @@ def _run_command(argv: list[str]) -> int:
             translated_message="errors.refused.refused_cli_validation_boundary",
             context={"boundary_error_type": type(error).__name__},
         )
-        return _emit_error(boundary, argv, click_context=getattr(error, "ctx", None))
+        return emit_error(boundary, argv, click_context=getattr(error, "ctx", None), durable=command_started)
     except CadrumoError as error:
-        return _emit_error(error, argv)
+        return emit_error(error, argv, durable=command_started)
     except Exception as error:
         boundary = CliUnexpectedBoundaryError(error)
-        return _emit_error(boundary, argv)
+        return emit_error(boundary, argv, durable=command_started)
     return 0
 
 
-def _emit_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
+def emit_error(
+    error: CadrumoError,
+    arguments: Sequence[str],
+    *,
+    click_context: object | None = None,
+    durable: bool = True,
+) -> int:
     """Render one runtime command failure through the shared error envelope."""
     from contextlib import nullcontext
 
     from cadrumo.core.config import override_settings
 
-    log_cli_boundary_failure("runtime_cli", error, durable=click_context is None)
+    log_cli_boundary_failure("runtime_cli", error, durable=durable)
     captured = runtime_error_context(error)
     language_scope = (
         override_settings(cadrumo_output_language=captured.output_language) if captured is not None else nullcontext()
     )
     with language_scope:
-        return _render_error(error, arguments, click_context=click_context)
+        return render_error(error, arguments, click_context=click_context)
 
 
-def _render_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
+def _context_requests_json(click_context: object | None) -> bool:
+    """Read the optional Click context without masking other rendering failures."""
+    if click_context is not None:
+        try:
+            return context_chain_requests_json(click_context)
+        except (AttributeError, TypeError):
+            return False
+    return False
+
+
+def render_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
     """Render while the invocation's captured language is active."""
     from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 
     captured = runtime_error_context(error)
     verdict = nested_terminal_precondition_verdict(error)
     action = None if verdict is None else resolve_cli_precondition_action(verdict)
-    context_requests_json = False
-    if click_context is not None:
-        try:
-            context_requests_json = context_chain_requests_json(click_context)
-        except (AttributeError, TypeError):
-            context_requests_json = False
+    context_requests_json = _context_requests_json(click_context)
     as_json = (
         (captured is not None and captured.output_format == "json")
         or context_requests_json

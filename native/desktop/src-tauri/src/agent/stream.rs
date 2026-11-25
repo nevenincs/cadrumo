@@ -33,6 +33,10 @@ pub const TOOL_KINDS: &[&str] = &[
     "switch_mode",
     "other",
 ];
+/// cadrumo-agent's `ToolReach`.
+pub const TOOL_REACHES: &[&str] = &["local_read", "local_write", "online"];
+/// cadrumo-agent's bound on a failure's message.
+const FAILURE_MESSAGE_CAP: usize = 300;
 /// cadrumo-agent's `ToolCallStatus`.
 pub const TOOL_STATUSES: &[&str] = &["pending", "in_progress", "completed", "failed"];
 /// cadrumo-agent's bound on a refusal's code and recovery action identifier.
@@ -89,6 +93,65 @@ fn refusal(frame: &Value) -> Option<ToolRefusal> {
     })
 }
 
+/// Why a tool call failed, as the agent states it: the closed refusal code and
+/// recovery action when the tool's result named them, and the first line of its
+/// error text. Each is left out when the agent stated none.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[cfg_attr(
+    test,
+    derive(schemars::JsonSchema),
+    schemars(rename = "AgentToolFailure")
+)]
+pub struct ToolFailure {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_action_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+/// A failure object as the agent serves it (a frame's or a snapshot's), checked
+/// again here: a token outside its declared shape is dropped, the message is its
+/// first line within the cap, and a failure that states nothing is no failure.
+pub fn failure_of(failure: Option<&Value>) -> Option<ToolFailure> {
+    let failure = failure?.as_object()?;
+    let token = |key: &str| {
+        failure
+            .get(key)
+            .and_then(Value::as_str)
+            .filter(|value| refusal_token(value))
+            .map(str::to_owned)
+    };
+    let code = token("code");
+    let recovery_action_id = token("recovery_action_id").filter(|action| {
+        code.is_some()
+            && action
+                .strip_prefix(ACTION_PREFIX)
+                .is_some_and(|rest| !rest.is_empty())
+    });
+    let message = failure
+        .get("message")
+        .and_then(Value::as_str)
+        .and_then(|message| message.lines().next())
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| line.chars().take(FAILURE_MESSAGE_CAP).collect::<String>());
+    let failure = ToolFailure {
+        code,
+        recovery_action_id,
+        message,
+    };
+    (failure != ToolFailure::default()).then_some(failure)
+}
+
+/// A tool's reach, when the agent's vocabulary holds the word.
+pub fn reach_of(value: Option<&str>) -> Option<String> {
+    value
+        .filter(|reach| TOOL_REACHES.contains(reach))
+        .map(str::to_owned)
+}
+
 /// A tool call as the agent reports it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ToolCall {
@@ -100,12 +163,26 @@ pub struct ToolCall {
     /// Present only on a call that failed because the product refused it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refusal: Option<ToolRefusal>,
+    /// The tool server that owns the tool, e.g. `cadrumo`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_server: Option<String>,
+    /// The tool's own name within its server.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_name: Option<String>,
+    /// How far the tool reaches, when the agent says.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_reach: Option<String>,
+    /// Present only on a call that failed and stated why.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failure: Option<ToolFailure>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(test, derive(schemars::JsonSchema), schemars(rename = "AgentQuestion"))]
 pub struct Question {
     pub id: String,
     pub prompt: String,
+    #[cfg_attr(test, schemars(extend("enum" = ["choice", "text"])))]
     pub kind: String,
     /// A choice's options; null for a text question.
     pub options: Option<Vec<String>>,
@@ -113,6 +190,11 @@ pub struct Question {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(
+    test,
+    derive(schemars::JsonSchema),
+    schemars(rename = "AgentQuestionnaire")
+)]
 pub struct Questionnaire {
     pub request_id: String,
     pub reply_id: String,
@@ -120,26 +202,45 @@ pub struct Questionnaire {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(
+    test,
+    derive(schemars::JsonSchema),
+    schemars(rename = "AgentApprovalOption")
+)]
 pub struct ApprovalOption {
     pub option_id: String,
     /// The option's own name, which may be absent: the card words an option
     /// by its kind.
     pub name: Option<String>,
+    #[cfg_attr(
+        test,
+        schemars(extend("enum" = ["allow_once", "allow_session", "reject_once"]))
+    )]
     pub kind: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(test, derive(schemars::JsonSchema), schemars(rename = "AgentApproval"))]
 pub struct Approval {
     pub request_id: String,
     pub reply_id: String,
+    #[cfg_attr(test, schemars(extend("enum" = ["agent_tool"])))]
     pub source: &'static str,
     /// The tool the agent wants to call, as the agent names it.
     pub tool_call: Option<String>,
     /// The host-declared server that owns this tool, when supplied.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_server: Option<String>,
+    /// The tool's own name within its server, when the request names a tool.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_name: Option<String>,
+    /// How far the tool reaches, when the agent says.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, schemars(schema_with = "super::records::relayed::tool_reach"))]
+    pub tool_reach: Option<String>,
     pub description: Option<String>,
     /// One of the agent's ten tool kinds.
+    #[cfg_attr(test, schemars(schema_with = "super::records::relayed::tool_kind"))]
     pub tool_kind: Option<String>,
     pub options: Vec<ApprovalOption>,
 }
@@ -205,7 +306,8 @@ pub enum StreamEvent {
 /// What the stream's owner does next.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Step {
-    Emit(StreamEvent),
+    /// Boxed so the common non-event steps stay small.
+    Emit(Box<StreamEvent>),
     /// Read the run's status for the questionnaire `request_id` names: the
     /// frame carries only the handle.
     ReadQuestionnaire(String),
@@ -217,6 +319,12 @@ pub enum Step {
     Resume,
     /// Nothing more is read from this stream.
     End,
+}
+
+impl Step {
+    pub fn emit(event: StreamEvent) -> Self {
+        Self::Emit(Box::new(event))
+    }
 }
 
 /// One run's stream, mapped frame by frame.
@@ -258,7 +366,7 @@ impl Mapping {
     fn lost(&mut self) -> Vec<Step> {
         self.ended = true;
         vec![
-            Step::Emit(StreamEvent::Lost {
+            Step::emit(StreamEvent::Lost {
                 reply_id: Some(self.reply_id.clone()),
             }),
             Step::End,
@@ -321,7 +429,7 @@ impl Mapping {
         let mut steps = Vec::new();
         if !self.started {
             self.started = true;
-            steps.push(Step::Emit(StreamEvent::ReplyStarted {
+            steps.push(Step::emit(StreamEvent::ReplyStarted {
                 reply_id: self.reply_id.clone(),
             }));
         }
@@ -374,7 +482,7 @@ impl Mapping {
         if content.chars().count() >= CONTENT_CAP {
             return Err(());
         }
-        Ok(vec![Step::Emit(StreamEvent::Text {
+        Ok(vec![Step::emit(StreamEvent::Text {
             reply_id: self.reply_id.clone(),
             message_id: message.to_owned(),
             sequence,
@@ -393,7 +501,7 @@ impl Mapping {
         let subagent = text(frame, "subagent_id").is_some_and(|id| !id.is_empty());
         match message {
             Some(message) if !content.is_empty() && !subagent => {
-                vec![Step::Emit(StreamEvent::Thought {
+                vec![Step::emit(StreamEvent::Thought {
                     reply_id: self.reply_id.clone(),
                     message_id: message.to_owned(),
                     sequence,
@@ -426,8 +534,32 @@ impl Mapping {
         } else {
             None
         };
+        let named = |key: &str| {
+            text(frame, key)
+                .filter(|v| !v.is_empty())
+                .map(str::to_owned)
+        };
+        let (server, name, reach) = (
+            named("tool_server"),
+            named("tool_name"),
+            reach_of(text(frame, "tool_reach")),
+        );
+        let failure = if update && status == Some("failed") {
+            failure_of(frame.get("failure"))
+        } else {
+            None
+        };
         let tool = match self.tools.get_mut(id) {
             Some(tool) => {
+                if server.is_some() {
+                    tool.tool_server.clone_from(&server);
+                }
+                if name.is_some() {
+                    tool.tool_name.clone_from(&name);
+                }
+                if reach.is_some() {
+                    tool.tool_reach.clone_from(&reach);
+                }
                 if let Some(title) = title {
                     title.clone_into(&mut tool.title);
                 }
@@ -437,6 +569,7 @@ impl Mapping {
                 if let Some(status) = status {
                     status.clone_into(&mut tool.status);
                     tool.refusal.clone_from(&refused);
+                    tool.failure.clone_from(&failure);
                 }
                 tool.clone()
             }
@@ -449,12 +582,16 @@ impl Mapping {
                     tool_kind: kind.ok_or(())?.to_owned(),
                     status: status.ok_or(())?.to_owned(),
                     refusal: refused,
+                    tool_server: server,
+                    tool_name: name,
+                    tool_reach: reach,
+                    failure,
                 };
                 self.tools.insert(id.to_owned(), tool.clone());
                 tool
             }
         };
-        Ok(vec![Step::Emit(StreamEvent::Tool {
+        Ok(vec![Step::emit(StreamEvent::Tool {
             reply_id: self.reply_id.clone(),
             tool,
         })])
@@ -469,33 +606,27 @@ impl Mapping {
             .and_then(Value::as_array)
             .ok_or(())?
             .iter()
-            .filter_map(|option| {
-                let kind = text(option, "kind")?;
-                if !matches!(
-                    kind,
-                    "allow_once"
-                        | "allow_session"
-                        | "allow_always"
-                        | "reject_once"
-                        | "reject_always"
-                ) {
-                    return None;
-                }
-                Some(ApprovalOption {
+            .map(|option| {
+                // The agent offers only these: nothing it serves outlives the session.
+                let kind = text(option, "kind")
+                    .filter(|kind| matches!(*kind, "allow_once" | "allow_session" | "reject_once"))
+                    .ok_or(())?;
+                Ok(ApprovalOption {
                     option_id: text(option, "option_id")
-                        .filter(|id| !id.is_empty())?
+                        .filter(|id| !id.is_empty())
+                        .ok_or(())?
                         .to_owned(),
                     name: text(option, "name").map(str::to_owned),
                     kind: kind.to_owned(),
                 })
             })
-            .collect();
-        // An option the column cannot word is left out; none at all cannot be answered.
+            .collect::<Result<_, ()>>()?;
+        // An option outside the agent's schema refuses the frame; none at all cannot be answered.
         if options.is_empty() {
             return Err(());
         }
         self.pending.insert(request_id.to_owned());
-        Ok(vec![Step::Emit(StreamEvent::Approval {
+        Ok(vec![Step::emit(StreamEvent::Approval {
             reply_id: self.reply_id.clone(),
             approval: Approval {
                 request_id: request_id.to_owned(),
@@ -503,6 +634,10 @@ impl Mapping {
                 source: "agent_tool",
                 tool_call: text(frame, "tool_call").map(str::to_owned),
                 tool_server: text(frame, "tool_server").map(str::to_owned),
+                tool_name: text(frame, "tool_name")
+                    .filter(|name| !name.is_empty())
+                    .map(str::to_owned),
+                tool_reach: reach_of(text(frame, "tool_reach")),
                 description: text(frame, "description").map(str::to_owned),
                 // A kind the agent's vocabulary does not hold is not shown.
                 tool_kind: text(frame, "tool_kind")
@@ -572,7 +707,7 @@ impl Mapping {
         let mut steps: Vec<Step> = std::mem::take(&mut self.pending)
             .into_iter()
             .map(|request_id| {
-                Step::Emit(StreamEvent::Resolved {
+                Step::emit(StreamEvent::Resolved {
                     reply_id: self.reply_id.clone(),
                     request_id,
                 })
@@ -631,7 +766,7 @@ mod tests {
         steps
             .into_iter()
             .filter_map(|step| match step {
-                Step::Emit(event) => Some(event),
+                Step::Emit(event) => Some(*event),
                 _ => None,
             })
             .collect()
@@ -927,7 +1062,7 @@ mod tests {
     #[test]
     fn what_a_replay_cannot_cover_ends_the_stream_as_lost() {
         let lost = [
-            Step::Emit(StreamEvent::Lost {
+            Step::emit(StreamEvent::Lost {
                 reply_id: Some("run-1".into()),
             }),
             Step::End,
@@ -991,6 +1126,28 @@ mod tests {
                 )],
             ),
             (
+                "an approval offering a remembering kind the agent never serves",
+                vec![frame(
+                    "permission_request",
+                    Some(1),
+                    json!({"request_id": "p1", "options": [
+                        {"option_id": "a", "name": "A", "kind": "allow_once"},
+                        {"option_id": "b", "name": "B", "kind": "allow_always"}
+                    ]}),
+                )],
+            ),
+            (
+                "an approval with an option outside the agent's kinds",
+                vec![frame(
+                    "permission_request",
+                    Some(1),
+                    json!({"request_id": "p1", "options": [
+                        {"option_id": "a", "name": "A", "kind": "reject_once"},
+                        {"option_id": "b", "name": "B", "kind": "reject_always"}
+                    ]}),
+                )],
+            ),
+            (
                 "unanswerable approval",
                 vec![frame(
                     "permission_request",
@@ -1045,7 +1202,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::Lost {
+                Step::emit(StreamEvent::Lost {
                     reply_id: Some("run-1".into())
                 }),
                 Step::End
@@ -1068,8 +1225,7 @@ mod tests {
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
                     {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
-                    {"option_id": "never", "kind": "reject_always"},
-                    {"option_id": "odd", "name": "Odd", "kind": "sometimes"}
+                    {"option_id": "never", "kind": "reject_once"}
                 ]
             }),
         )));
@@ -1083,7 +1239,7 @@ mod tests {
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
                     {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
-                    {"option_id": "never", "name": null, "kind": "reject_always"}
+                    {"option_id": "never", "name": null, "kind": "reject_once"}
                 ]
             }})
         );
@@ -1129,7 +1285,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::Resolved {
+                Step::emit(StreamEvent::Resolved {
                     reply_id: "run-1".into(),
                     request_id: "clar-1".into()
                 }),
@@ -1159,7 +1315,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::ReplyStarted {
+                Step::emit(StreamEvent::ReplyStarted {
                     reply_id: "run-1".into()
                 }),
                 Step::Settle(RunEnd::Cancelled),
@@ -1170,5 +1326,80 @@ mod tests {
             serde_json::to_value(StreamEvent::Lost { reply_id: None }).unwrap(),
             json!({"type": "lost"})
         );
+    }
+
+    #[test]
+    fn a_tool_call_carries_its_identity_reach_and_failure() {
+        let mut mapping = Mapping::new("run-1");
+        let started = events(mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "mcp__cadrumo__status", "kind": "read",
+                   "status": "in_progress", "tool_server": "cadrumo", "tool_name": "status",
+                   "tool_reach": "local_read"}),
+        )));
+        let tool = serde_json::to_value(&started[1]).unwrap();
+        assert_eq!(tool["tool"]["tool_server"], "cadrumo");
+        assert_eq!(tool["tool"]["tool_name"], "status");
+        assert_eq!(tool["tool"]["tool_reach"], "local_read");
+        assert!(tool["tool"].get("failure").is_none());
+        // The update names only what changed; the identity stays, and the failure is told.
+        let failed = events(mapping.frame(&frame(
+            "tool_call_update",
+            Some(2),
+            json!({"tool_call_id": "t1", "status": "failed",
+                   "failure": {"code": "person_act_required", "message": "  Ask the person.
+second line  "}}),
+        )));
+        let tool = serde_json::to_value(&failed[0]).unwrap();
+        assert_eq!(tool["tool"]["tool_name"], "status");
+        assert_eq!(
+            tool["tool"]["failure"],
+            json!({"code": "person_act_required", "message": "Ask the person."})
+        );
+    }
+
+    #[test]
+    fn a_failure_is_checked_again_and_a_reach_outside_the_vocabulary_is_dropped() {
+        let long = "x".repeat(FAILURE_MESSAGE_CAP + 40);
+        let kept = failure_of(Some(&json!({"message": long}))).unwrap();
+        assert_eq!(kept.message.unwrap().chars().count(), FAILURE_MESSAGE_CAP);
+        // A recovery action without a code, a malformed token and blank text state nothing.
+        assert_eq!(
+            failure_of(Some(
+                &json!({"recovery_action_id": "operator.x", "code": "BAD", "message": " "})
+            )),
+            None
+        );
+        assert_eq!(failure_of(Some(&json!("failed"))), None);
+        assert_eq!(failure_of(None), None);
+        assert_eq!(reach_of(Some("online")), Some("online".into()));
+        assert_eq!(reach_of(Some("everywhere")), None);
+        let mut mapping = Mapping::new("run-1");
+        let seen = events(mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "x", "kind": "read", "status": "pending",
+                   "tool_reach": "everywhere", "failure": {"message": "not on a start"}}),
+        )));
+        let tool = serde_json::to_value(&seen[1]).unwrap();
+        assert!(tool["tool"].get("tool_reach").is_none());
+        assert!(tool["tool"].get("failure").is_none());
+    }
+
+    #[test]
+    fn a_permission_request_carries_the_tool_name_and_reach() {
+        let mut mapping = Mapping::new("run-1");
+        let seen = events(mapping.frame(&frame(
+            "permission_request",
+            Some(1),
+            json!({"request_id": "p1", "tool_server": "cadrumo_agent_tools", "tool_name": "web_search",
+                   "tool_reach": "online", "tool_kind": "fetch",
+                   "options": [{"option_id": "allow_once", "kind": "allow_once"}]}),
+        )));
+        let approval = serde_json::to_value(&seen[1]).unwrap();
+        assert_eq!(approval["approval"]["tool_name"], "web_search");
+        assert_eq!(approval["approval"]["tool_reach"], "online");
+        assert_eq!(approval["approval"]["tool_server"], "cadrumo_agent_tools");
     }
 }

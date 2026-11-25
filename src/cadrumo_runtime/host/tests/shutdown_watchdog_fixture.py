@@ -9,8 +9,9 @@ import time
 from pathlib import Path
 from threading import Event, Timer
 
-from ...adapters.tests.process_support import fixture_environment, native_python
-from ...adapters.windows_process import WindowsProcessScope
+from cadrumo.tests.process_support import fixture_environment, native_python
+from cadrumo_client.transport.windows_process import WindowsProcessScope
+
 from ..shutdown import RuntimeShutdownWatchdog
 
 

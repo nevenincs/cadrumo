@@ -9,16 +9,17 @@ Durable grants remain in the existing automation control store.
 from __future__ import annotations
 
 import logging
+import math
+import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from uuid import UUID
 
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
-    LoginEligibility,
-    OsLockState,
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyPort, AutomationCustodySnapshot
@@ -28,12 +29,42 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessDecision, AccessDenialCode, AccessDenied
-from cadrumo_client.contracts.automation_codes import AutomationCustodyError
-from cadrumo_client.contracts.session_policy import evaluate_session_authority, session_requires_grant
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.session_policy import (
+    evaluate_session_authority,
+    session_refusal,
+    session_requires_grant,
+)
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
+from .session_login_observation import observable_login_ids, unavailable_observation_reason, uncertain_login_denial
 
 _log = get_logger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class CustodyRecoveryPolicy:
+    """How long a profile's leases wait for a fresh proof after its worker is lost, and when none wait.
+
+    ``monotonic`` measures only these two intervals; every lease keeps its own
+    deadlines on the clocks its facts report.
+    """
+
+    window_seconds: float = 120.0
+    """A positive worker loss suspends every lease this long from the moment the loss is established."""
+    repeat_loss_seconds: float = 600.0
+    """A loss this soon after the previous one retires every lease at once and opens no window."""
+    monotonic: Callable[[], float] = time.monotonic
+
+
+def _retirement_kind(kind: SessionRetirementKind, reason: AccessDenialCode) -> SessionRetirementKind:
+    """Name the explicit lock or custody retirement when a revoke carries that reason."""
+    if kind is SessionRetirementKind.REVOKED:
+        if reason is AccessDenialCode.PROFILE_LOCKED:
+            return SessionRetirementKind.PROFILE_LOCKED
+        if reason is AccessDenialCode.CUSTODY_CHANGED:
+            return SessionRetirementKind.CUSTODY_CHANGED
+    return kind
 
 
 class SessionAuthorityCore:
@@ -48,32 +79,142 @@ class SessionAuthorityCore:
         custody: AutomationCustodyPort,
         issuer: AutomationKeyIssuer,
         retired: Callable[[SessionRetirement], None] | None = None,
+        replace_lost_owner: Callable[[], SessionAuthorityOwner] | None = None,
+        suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        recovery: CustodyRecoveryPolicy | None = None,
     ) -> None:
-        """Bind trusted collaborators; construction grants no session authority."""
+        """Bind trusted collaborators; construction grants no session authority.
+
+        Without ``replace_lost_owner`` a positive worker loss retires every
+        lease at once. With it the loss suspends them for the recovery window
+        under a fresh owner; ``suspended`` hears which leases wait and
+        ``rebound`` which returned to custody after a fresh proof.
+        """
         self.binding = binding
         self.runtime_boot_id = runtime_boot_id
         self.owner = owner
         self.custody = custody
         self.issuer = issuer
         self._sessions: dict[UUID, AccessSession] = {}
+        # Leases of a lost worker: they grant nothing until a fresh proof rebinds them.
+        self._suspended: dict[UUID, AccessSession] = {}
+        self._recovery_deadline: float | None = None
+        self._last_worker_loss: float | None = None
         self._pending_retirements: set[UUID] = set()
         self._last_observation: tuple[UtcInstant, float] | None = None
         self._closed = False
         self._human_admission_generation = 0
         self._retired = retired
+        self._replace_lost_owner = replace_lost_owner
+        self._suspended_notice = suspended
+        self._rebound_notice = rebound
+        self._recovery = CustodyRecoveryPolicy() if recovery is None else recovery
 
     def _facts(self, connection_id: UUID) -> SessionAuthorityFacts | AccessDenied:
         if self._closed:
             return AccessDenied(code=AccessDenialCode.RUNTIME_CHANGED)
-        facts = self.owner.facts(connection_id)
+        self._observe_worker_loss()
+        try:
+            facts = self.owner.facts(connection_id)
+        except AutomationCustodyError:
+            # This very observation may be the one that found the worker gone.
+            if not self._observe_worker_loss():
+                raise
+            facts = self.owner.facts(connection_id)
         mismatch = self._facts_binding_denial(facts, connection_id)
         if mismatch is not None:
             return mismatch
         if self._clock_rollback_detected(facts):
-            self._retire(set(self._sessions), reason=AccessDenialCode.CLOCK_INVALID)
+            self._retire(set(self._sessions) | set(self._suspended), reason=AccessDenialCode.CLOCK_INVALID)
             return AccessDenied(code=AccessDenialCode.CLOCK_INVALID)
         self._retire_sessions_without_live_login(facts)
         return facts
+
+    def _leases(self) -> tuple[AccessSession, ...]:
+        """Every lease this authority still answers for, live or suspended."""
+        return (*self._sessions.values(), *self._suspended.values())
+
+    def _observe_worker_loss(self) -> bool:
+        """Turn a positive worker loss into suspension, or retirement, of every lease; say whether one was found.
+
+        The caller holds the admission guard. The lost owner is replaced at
+        once, so later observations read the fresh owner. A second loss within
+        the repeat interval of the previous one opens no window.
+        """
+        if self._replace_lost_owner is None or self._closed or not self.owner.worker_lost:
+            return False
+        instant = self._recovery.monotonic()
+        previous, self._last_worker_loss = self._last_worker_loss, instant
+        self.owner = self._replace_lost_owner()
+        if previous is not None and instant - previous < self._recovery.repeat_loss_seconds:
+            self._retire(set(self._sessions) | set(self._suspended), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
+            return True
+        suspended = tuple(self._sessions.values())
+        self._sessions.clear()
+        if not suspended:
+            return True
+        self._suspended.update((lease.session_id, lease) for lease in suspended)
+        self._recovery_deadline = instant + self._recovery.window_seconds
+        diagnostic_event(
+            _log,
+            "runtime_sessions_suspended",
+            fields={
+                "session_kinds": ",".join(sorted(lease.kind.value for lease in suspended)),
+                "window_seconds": self._recovery.window_seconds,
+            },
+            level=logging.INFO,
+        )
+        if self._suspended_notice is not None:
+            self._suspended_notice(suspended)
+        return True
+
+    def _recovery_remaining_seconds(self) -> int:
+        """Whole seconds, rounded up, until unrebound suspended leases retire."""
+        if self._recovery_deadline is None:
+            return 0
+        return max(0, math.ceil(self._recovery_deadline - self._recovery.monotonic()))
+
+    def _recovering(self, session_id: UUID) -> AccessDenied | None:
+        """Refuse a suspended lease with the time left to rebind it; ``None`` for any other identity."""
+        if session_id not in self._suspended:
+            return None
+        return AccessDenied(
+            code=AccessDenialCode.CUSTODY_RECOVERING,
+            recovery_remaining_seconds=self._recovery_remaining_seconds(),
+        )
+
+    def _absent_session(self, session_id: UUID, code: AccessDenialCode) -> AccessDenied:
+        """Refuse an identity no live lease holds: recovering while it is suspended, else ``code``."""
+        return self._recovering(session_id) or AccessDenied(code=code)
+
+    def _expire_suspended_locked(self) -> None:
+        """Retire suspended leases whose window, own time or profile custody has ended, or whose connection is gone."""
+        if not self._suspended:
+            return
+        if self._recovery_deadline is None or self._recovery.monotonic() >= self._recovery_deadline:
+            self._retire(set(self._suspended), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
+            return
+        for connection_id in {lease.connection_id for lease in self._suspended.values()}:
+            self._expire_suspended_connection(connection_id)
+
+    def _expire_suspended_connection(self, connection_id: UUID) -> None:
+        """Revalidate each suspended lease for one observed connection."""
+        waiting = {lease.session_id for lease in self._suspended.values() if lease.connection_id == connection_id}
+        try:
+            facts = self._facts(connection_id)
+        except AutomationCustodyError as error:
+            if error.reason is AutomationCustodyCode.UNAVAILABLE and not self.owner.lost:
+                return
+            self._retire(waiting & self._suspended.keys(), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
+            return
+        if isinstance(facts, AccessDenied):
+            self._retire(waiting & self._suspended.keys(), reason=facts.code)
+            return
+        for session_id in waiting & self._suspended.keys():
+            lapsed = session_refusal(self._suspended[session_id], facts.profile, facts.context)
+            if lapsed is not None:
+                self._retire({session_id}, reason=lapsed)
 
     def _facts_binding_denial(self, facts: SessionAuthorityFacts, connection_id: UUID) -> AccessDenied | None:
         if facts.context.connection_id != connection_id:
@@ -93,24 +234,12 @@ class SessionAuthorityCore:
         )
 
     def _retire_sessions_without_live_login(self, facts: SessionAuthorityFacts) -> None:
-        live_logins = {
-            login.login_id
-            for login in facts.context.login_contexts
-            if login.active and login.unlocked and login.os_owner_id == self.binding.os_owner_id
-        }
-        uncertain_logins = {
-            login.login_id
-            for login in facts.context.login_contexts
-            if login.os_owner_id == self.binding.os_owner_id
-            and login.lock_state is OsLockState.UNKNOWN
-            and login.unattended is LoginEligibility.UNKNOWN
-        }
+        retained_logins = observable_login_ids(facts, self.binding.os_owner_id)
         self._retire(
             {
                 session.session_id
-                for session in self._sessions.values()
-                if session.originating_login_id is not None
-                and session.originating_login_id not in live_logins | uncertain_logins
+                for session in self._leases()
+                if session.originating_login_id is not None and session.originating_login_id not in retained_logins
             },
             reason=AccessDenialCode.OS_SESSION_UNAVAILABLE,
         )
@@ -163,25 +292,21 @@ class SessionAuthorityCore:
             profile=facts.profile,
             context=facts.context,
         )
+        if isinstance(decision, AccessDenied) and decision.code is AccessDenialCode.OS_SESSION_UNAVAILABLE:
+            diagnostic_event(
+                _log,
+                "runtime_session_observation_unavailable",
+                fields={"reason_code": unavailable_observation_reason(session, facts)},
+                level=logging.DEBUG,
+            )
         if (
             isinstance(decision, AccessDenied)
             and session.session_id in self._sessions
             and decision.code not in {AccessDenialCode.CONNECTION_MISMATCH, AccessDenialCode.CLIENT_MISMATCH}
-            and not self._uncertain_login_denial(session, facts, decision)
+            and not uncertain_login_denial(session, facts, decision)
         ):
             self._retire({session.session_id}, reason=decision.code)
         return decision
-
-    @staticmethod
-    def _uncertain_login_denial(session: AccessSession, facts: SessionAuthorityFacts, decision: AccessDenied) -> bool:
-        """Observation failure denies work without turning uncertainty into logout."""
-        return decision.code is AccessDenialCode.OS_SESSION_UNAVAILABLE and any(
-            login.login_id == session.originating_login_id
-            and login.os_owner_id == session.binding.os_owner_id
-            and login.lock_state is OsLockState.UNKNOWN
-            and login.unattended is LoginEligibility.UNKNOWN
-            for login in facts.context.login_contexts
-        )
 
     @contextmanager
     def _activation(self, session_id: UUID) -> Generator[None]:
@@ -206,6 +331,48 @@ class SessionAuthorityCore:
             return None
         return None if isinstance(snapshot, AccessDenied) else snapshot
 
+    def _expand_retirement(self, retired: set[UUID]) -> None:
+        """Include every descendant before releasing any published lease."""
+        while True:
+            dependents = {s.session_id for s in self._leases() if s.parent_session_id in retired}
+            if dependents <= retired:
+                break
+            retired |= dependents
+
+    def _publish_retirements(
+        self,
+        published: tuple[AccessSession, ...],
+        reason: AccessDenialCode,
+        kind: SessionRetirementKind,
+        failures: list[Exception],
+    ) -> None:
+        """Notify each published lease once and retain notification failures."""
+        if self._retired is not None:
+            for session in published:
+                try:
+                    self._retired(
+                        SessionRetirement(
+                            profile_id=self.binding.profile_id,
+                            connection_id=session.connection_id,
+                            session_id=session.session_id,
+                            session_kind=session.kind,
+                            reason=reason,
+                            kind=kind,
+                        )
+                    )
+                except Exception as error:
+                    failures.append(error)
+
+    def _retire_physical(self, retired: set[UUID], failures: list[Exception]) -> None:
+        """Retain each failed physical retirement for a later retry."""
+        for session_id in retired:
+            try:
+                self.owner.retire(session_id)
+            except Exception as error:
+                failures.append(error)
+            else:
+                self._pending_retirements.discard(session_id)
+
     def _retire(
         self: SessionAuthorityCore,
         retired: set[UUID],
@@ -213,20 +380,19 @@ class SessionAuthorityCore:
         reason: AccessDenialCode = AccessDenialCode.SESSION_INACTIVE,
         kind: SessionRetirementKind = SessionRetirementKind.REVOKED,
     ) -> None:
-        while True:
-            dependents = {s.session_id for s in self._sessions.values() if s.parent_session_id in retired}
-            if dependents <= retired:
-                break
-            retired |= dependents
+        self._expand_retirement(retired)
         # Remove authority for the entire cascade before fallible physical cleanup.
-        published = tuple(self._sessions.pop(identity) for identity in retired if identity in self._sessions)
+        # A suspended lease was published to its frontend, so its end is announced too.
+        published = tuple(
+            lease
+            for identity in retired
+            if (lease := self._sessions.pop(identity, None) or self._suspended.pop(identity, None)) is not None
+        )
+        if not self._suspended:
+            self._recovery_deadline = None
         self._pending_retirements.update(retired)
         failures: list[Exception] = []
-        if kind is SessionRetirementKind.REVOKED:
-            if reason is AccessDenialCode.PROFILE_LOCKED:
-                kind = SessionRetirementKind.PROFILE_LOCKED
-            elif reason is AccessDenialCode.CUSTODY_CHANGED:
-                kind = SessionRetirementKind.CUSTODY_CHANGED
+        kind = _retirement_kind(kind, reason)
         if published:
             # A frontend hears only that its session ended; the runtime log keeps why.
             # A connection's own end is routine, every other retirement ends a person's access.
@@ -242,27 +408,8 @@ class SessionAuthorityCore:
             )
         # Delivery is a nonblocking owner queue. Only actually published leases
         # emit; retries of failed physical cleanup never emit a second event.
-        if self._retired is not None:
-            for session in published:
-                try:
-                    self._retired(
-                        SessionRetirement(
-                            profile_id=self.binding.profile_id,
-                            connection_id=session.connection_id,
-                            session_id=session.session_id,
-                            reason=reason,
-                            kind=kind,
-                        )
-                    )
-                except Exception as error:
-                    failures.append(error)
-        for session_id in retired:
-            try:
-                self.owner.retire(session_id)
-            except Exception as error:
-                failures.append(error)
-            else:
-                self._pending_retirements.discard(session_id)
+        self._publish_retirements(published, reason, kind, failures)
+        self._retire_physical(retired, failures)
         if failures:
             raise ExceptionGroup("session custody retirement failed", failures)
 
@@ -274,7 +421,11 @@ class SessionAuthorityCore:
         connected = {item.session_id for item in self._sessions.values() if item.connection_id == connection_id}
         try:
             facts = self._facts(connection_id)
-        except AutomationCustodyError:
+        except AutomationCustodyError as error:
+            if error.reason is AutomationCustodyCode.UNAVAILABLE and not self.owner.lost:
+                # A worker that could not be observed in time is busy, not lost. Every use
+                # still refuses until it answers; the next sweep revalidates these leases.
+                return
             self._retire(connected, reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
             return
         if isinstance(facts, AccessDenied):
@@ -305,8 +456,10 @@ class SessionAuthorityCore:
 
     def _revalidate_sessions_locked(self: SessionAuthorityCore) -> tuple[UUID, ...]:
         """Run the one canonical lease sweep while the admission fence is held."""
-        before = set(self._sessions)
+        before = set(self._sessions) | set(self._suspended)
+        self._observe_worker_loss()
         for connection_id in {session.connection_id for session in self._sessions.values()}:
             self._revalidate_connection_sessions(connection_id)
+        self._expire_suspended_locked()
         self._retire_pending_sessions()
-        return tuple(sorted(before - self._sessions.keys()))
+        return tuple(sorted(before - self._sessions.keys() - self._suspended.keys()))

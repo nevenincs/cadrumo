@@ -42,6 +42,7 @@ legal_refs = [
     "ley-35-2006:art-99",
     "orden-eha-672-2007:art-1",
     "rd-439-2007:art-110",
+    "rd-439-2007:art-30",
     "rd-439-2007:art-95",
 ]
 source_refs = ["aeat-dr-130-2019-v12"]

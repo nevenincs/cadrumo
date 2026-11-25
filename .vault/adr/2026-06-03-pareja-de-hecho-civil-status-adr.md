@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#pareja-de-hecho-civil-status'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:013890982f6241692542e468f8cbe193da096ddf07982fc25ce88715aea62449'
+modified: '2026-11-04'
+body_hash: 'sha256:243fef830b9d8d7ba7245bfb96f61a17ec299290149ad4dd77402852938dfb36'
 related:
   - "[[2026-06-03-pareja-de-hecho-civil-status-research]]"
 ---
@@ -148,7 +148,7 @@ information twice.
 
 The choice to keep `RentaMaritalStatus` at 4 values (rather than
 5) is grounded in the published AEAT `tipo_EstadoCivil` dictionary
-for Renta 2020-2025 — extending the enum would emit a wire value
+for the authored Renta editions — extending the enum would emit a wire value
 the PADRE parser rejects. The choice to use a separate section
 (rather than embedding pareja-de-hecho fields under `renta_spouse`)
 reflects the legal distinction: a marriage and a registered union

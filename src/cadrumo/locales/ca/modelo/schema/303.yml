@@ -35,8 +35,6 @@ modelo:
           dr303-11:
             label: IVA meritat per adquisicions intracomunitàries de béns i serveis
               - quota
-          dr303-111:
-            label: Rectificativa - import de la rectificació
           dr303-112:
             help: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
               atribuït a l'Estat
@@ -212,8 +210,6 @@ modelo:
           dr303-70:
             label: Resultat - resultats a ingressar d'autoliquidacions anteriors de
               l'exercici i període
-          dr303-71:
-            help: Dada declarada al model 303, presa del disseny de registre oficial.
           dr303-74:
             label: Informació addicional - adquisicions de criteri de caixa - base
               imposable
@@ -243,6 +239,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Base imposable de l'autoconsum del promotor immobiliari al tipus
               superreduït (4%) (part de la casella oficial 01)
+          iva-base-autorepercutida-interior-devengado:
+            label: Base imposable de l'IVA autorepercutit meritat en operacions interiors
+              (LIVA art. 84.Uno.2; casella oficial 12)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Suma la base imposable autorepercutida meritada en adquisicions
               intracomunitàries.
@@ -262,6 +261,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imposable IVA suportat en operacions interiors amb béns d'inversió
               (part de la casella oficial 30)
+          iva-base-modificacion-bases-cuotas:
+            label: Base imposable de la modificació procedent de les factures rectificatives
+              del període (LIVA art. 80 i art. 89; casella oficial 14)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Base imposable de la modificació que fas constar tu, per al que
+              no consta document al catàleg (casella oficial 14)
           iva-base-repercutida-general:
             label: Base imposable de l'IVA repercutit al tipus general (21%) (part
               de la casella oficial 07)
@@ -314,6 +319,19 @@ modelo:
               del promotor (casella oficial 03)
           iva-cuota-devengada-total:
             label: Total quota d'IVA meritada
+          iva-cuota-modificacion-bases-cuotas:
+            label: Quota de la modificació procedent de les factures rectificatives
+              del període (LIVA art. 80 i art. 89; casella oficial 15)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Quota de la modificació que fas constar tu, per al que no consta
+              document al catàleg (casella oficial 15)
+          iva-cuota-modificacion-recargo:
+            label: Quota de la modificació del recàrrec d'equivalència procedent de
+              les factures rectificatives del període (LIVA art. 80 i art. 161; casella
+              oficial 26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Quota de la modificació del recàrrec d'equivalència que fas constar
+              tu, per al que no consta document al catàleg (casella oficial 26)
           iva-cuota-repercutida-general:
             help: Quota total d'IVA repercutit calculada al tipus general del 21%.
             label: Quota IVA repercutit al tipus general (21%)
@@ -337,6 +355,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: IVA suportat en operacions interiors amb béns d'inversió (part
               de la casella oficial 31)
+          iva-importe-rectificacion:
+            label: Rectificativa - import de la rectificació
           iva-prorrata-porcentaje:
             label: Percentatge de prorrata general (volum amb dret / volum total ×
               100)
@@ -344,6 +364,10 @@ modelo:
             label: Volum anual d'operacions que originen dret a deducció
           iva-prorrata-volumen-total:
             label: Volum anual total d'operacions
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Recàrrec d'equivalència transitori sobre el tipus reduït - quota
+          iva-recargo-equivalencia-super-reducido:
+            label: Recàrrec d'equivalència sobre el tipus superreduït del 4% - quota
           iva-rectificacion-deducciones-importaciones-base:
             label: Rectificació de deduccions en importacions - Base (part de la casella
               oficial 40)
@@ -367,6 +391,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Regularització de béns d'inversió (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Dada declarada al model 303, presa del disseny de registre oficial.
+          iva-resultado-final:
             help: Dada declarada al model 303, presa del disseny de registre oficial.
           iva-resultado-regimen-general:
             label: Resultat del règim general
@@ -811,6 +837,8 @@ modelo:
             heading: Ingrés, devolució i compte bancari
           pais-banco:
             heading: Codi del país
+          prorrata-especial-no:
+            heading: No / no es pregunta en aquest període
           reagp:
             heading: Compensacions en règim especial d’agricultura, ramaderia i pesca
           rectificacion-devolucion:
@@ -1012,7 +1040,7 @@ modelo:
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
-            label: Modelo 303, exercici 2024, a partir de períodos 09 i 3T i següents
+            label: Modelo 303, exercici 2024, a partir de períodes 09 i 3T i següents
         2024-hasta-08-y-2t:
           casilla:
             '64':

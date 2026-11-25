@@ -16,14 +16,16 @@ from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.confirmation_gate import FindingResolutionAction
 from ...core.country_code import CountryCodeAlpha2
-from ...core.hex import Hex64Str
+from ...core.hex import Hex16Str, Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
 )
+from ...core.percentage import fraction_of_percentage
 from ...core.time.clock import now
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
+from ..invoices.catalogue_read_projection import InvoiceDocumentIndex
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -65,7 +67,7 @@ class FindingResolutionInputV1(BaseModel):
     """Bounded wire form restored to the canonical finding-resolution record."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    blocker_id: Annotated[str, Field(min_length=16, max_length=16)]
+    blocker_id: Hex16Str
     action: FindingResolutionAction
     value: InvoiceEvidenceLabel | None = None
     note: InvoiceEvidenceNote = ""
@@ -93,11 +95,14 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     taxable_base: InvoiceEvidenceDecimalText | None = None
     iva_rate: InvoiceEvidenceDecimalText | None = None
     iva_amount: InvoiceEvidenceDecimalText | None = None
-    currency: Annotated[str, Field(min_length=3, max_length=3)] | None = None
+    currency: Annotated[str, Field(min_length=1, max_length=16)] | None = None
     iva_category: Annotated[str, Field(min_length=1, max_length=128)] | None = None
     operation_type: IntracomOperationType | None = None
     operation_date: date | None = None
     retention_rate: InvoiceEvidenceDecimalText | None = None
+    """The retención as a fraction: 0.15 for 15 %."""
+    retention_points: InvoiceEvidenceDecimalText | None = None
+    """The same retención as a person states it, in points: 15 for 15 %."""
     retention_amount: InvoiceEvidenceDecimalText | None = None
     recargo_amount: InvoiceEvidenceDecimalText | None = None
     invoice_class: Annotated[str, Field(min_length=1, max_length=128)] | None = None
@@ -107,7 +112,15 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     notes: InvoiceEvidenceNote = ""
     resolutions: Annotated[tuple[FindingResolutionInputV1, ...], Field(max_length=128)] = ()
 
-    @field_validator("taxable_base", "iva_rate", "iva_amount", "retention_rate", "retention_amount", "recargo_amount")
+    @field_validator(
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "retention_rate",
+        "retention_points",
+        "retention_amount",
+        "recargo_amount",
+    )
     @classmethod
     def _canonical_decimal(cls, value: str | None) -> str | None:
         """Reject malformed figures before they become a durable operation."""
@@ -118,6 +131,12 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     def _one_reference(self) -> Self:
         if (self.evidence_id is None) == (self.attachment_id is None):
             raise ValueError("exactly one evidence or attachment reference is required")
+        return self
+
+    @model_validator(mode="after")
+    def _one_retention_scale(self) -> Self:
+        if self.retention_rate is not None and self.retention_points is not None:
+            raise ValueError("a retention is stated as a fraction or in points, not both")
         return self
 
 
@@ -151,6 +170,11 @@ def _decimal(value: str | None) -> Decimal | None:
     if not parsed.is_finite() or str(parsed) != value:
         raise ValueError("confirmation decimal must be finite and canonical")
     return parsed
+
+
+def _stated_retention_fraction(payload: LedgerEvidenceConfirmRequest) -> Decimal | None:
+    points = _decimal(payload.retention_points)
+    return _decimal(payload.retention_rate) if points is None else fraction_of_percentage(points)
 
 
 class LedgerEvidenceConfirmExecutor:
@@ -192,7 +216,7 @@ class LedgerEvidenceConfirmExecutor:
                 iva_category=None if payload.iva_category is None else IvaCategory(payload.iva_category),
                 operation_type=payload.operation_type,
                 operation_date=payload.operation_date,
-                retention_rate=_decimal(payload.retention_rate),
+                retention_rate=_stated_retention_fraction(payload),
                 retention_amount=_decimal(payload.retention_amount),
                 recargo_amount=_decimal(payload.recargo_amount),
                 invoice_class_token=payload.invoice_class,
@@ -225,13 +249,14 @@ class LedgerEvidenceConfirmExecutor:
                     evidence_ports=ports.evidence_ports,
                 )
                 await context.events.effect(OperationEffect.UPDATED)
+                documents = await asyncio.to_thread(InvoiceDocumentIndex.read, ports.catalogue_creation_ports.documents)
             result = LedgerEvidenceConfirmProjection(
                 profile_id=payload.profile_id,
                 evidence_id=payload.evidence_id,
                 attachment_id=payload.attachment_id,
                 source_sha256=payload.expected_source_sha256,
                 reviewed_draft_sha256=payload.expected_draft_review_sha256,
-                confirmation=InvoiceConfirmationProjectionV1.from_result(confirmation),
+                confirmation=InvoiceConfirmationProjectionV1.from_result(confirmation, documents=documents),
             )
             check_invoice_evidence_result_size(result)
             return await context.operands.put(
@@ -254,6 +279,11 @@ def build_ledger_evidence_confirm_definition(
         executor_type=LedgerEvidenceConfirmExecutor,
         build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=True),
+        # Confirming reads the document again, so a reader refusal's verdict
+        # names the local AI setup; a frontend in another process learns it
+        # only from the recorded detail. A blocked confirm records its
+        # blockers by id and reason, never their document-quoting explanation.
+        public_error_detail=True,
     )
 
 

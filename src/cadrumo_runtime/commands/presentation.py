@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -10,8 +9,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import clear_output_language_cache, output_language
+from cadrumo.core.i18n.render import output_language
 from cadrumo_client.commands.graph import CommandSpecGraph, resolve_command_target
 from cadrumo_client.commands.shared_contracts import BindingState, DefaultKind
 from cadrumo_client.commands.spec import CommandSpecNode
@@ -21,38 +19,7 @@ from cadrumo_client.contracts.command_program import CommandProgram
 if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
     from cadrumo.application.operator_surface.manifest import OperatorSurfaceReconciliation
-    from cadrumo.core.json_contract import Notice, ResolvedPreconditionAction
-
-
-def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply a leaf-level language choice to this runtime invocation."""
-    if language is None:
-        return
-    from cadrumo.core.config import override_settings
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
-
-
-def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
-    """Render the typed precondition action as stable machine-readable rows."""
-    if action is None:
-        return ()
-    document = action.model_dump(mode="json")
-    fields = (
-        "failed_condition_id",
-        "evidence",
-        "action",
-        "argument_bindings",
-        "missing_argument_names",
-        "conditionality",
-        "no_recovery_outcome",
-    )
-    return tuple(
-        f"precondition_action.{field}\t"
-        f"{json.dumps(document[field], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
-        for field in fields
-    )
+    from cadrumo.core.json_contract import Notice, ResolvedActionReference, ResolvedPreconditionAction
 
 
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
@@ -80,22 +47,30 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
         runtime_nodes[command_key] = node
         return _runtime_action_target_reconciliation(RUNTIME_COMMAND_GRAPH, command_key)
 
+    def with_executable(action: ResolvedActionReference) -> ResolvedActionReference:
+        node = runtime_nodes.get(action.target_command_key)
+        if node is not None:
+            return action.model_copy(update={"cli_path": node.path})
+        target = next(item for item in ACTION_TARGETS if item.command_key == action.target_command_key)
+        cli_path = action.cli_path
+        if cli_path is None:
+            cli_path = (target.program.executable_name,)
+        elif not cli_path or cli_path[0] != target.program.executable_name:
+            cli_path = (target.program.executable_name, *cli_path)
+        return action.model_copy(update={"cli_path": cli_path})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
     if resolved.action is None:
         return resolved
-    node = runtime_nodes.get(resolved.action.target_command_key)
-    if node is not None:
-        cli_path = node.path
-        action = resolved.action.model_copy(update={"cli_path": cli_path})
-        return resolved.model_copy(update={"action": action})
-    target = next(item for item in ACTION_TARGETS if item.command_key == resolved.action.target_command_key)
-    cli_path = resolved.action.cli_path
-    if cli_path is None:
-        cli_path = (target.program.executable_name,)
-    elif not cli_path or cli_path[0] != target.program.executable_name:
-        cli_path = (target.program.executable_name, *cli_path)
-    action = resolved.action.model_copy(update={"cli_path": cli_path})
-    return resolved.model_copy(update={"action": action})
+    return resolved.model_copy(
+        update={
+            "action": with_executable(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_executable(item.action)})
+                for item in resolved.alternative_actions
+            ),
+        }
+    )
 
 
 def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: str) -> OperatorSurfaceReconciliation:
@@ -178,11 +153,6 @@ def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: 
             ),
         ),
     )
-
-
-def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
-    """Render the notice channel into the text transport's corresponding rows."""
-    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
 
 
 def _format_name(ctx: typer.Context) -> str:
@@ -338,18 +308,17 @@ def emit_envelope(
         return
     rendered_lines = tuple(lines)
     if not metadata_only:
-        rendered_lines = (*rendered_lines, *notice_lines(supplied))
+        from cadrumo.application.operator_output.text_transport import notice_lines, with_sandbox_banner
+
+        rendered_lines = with_sandbox_banner((*rendered_lines, *notice_lines(supplied)))
     rendered = render_command_output(format_name=output_format, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
 
 
 __all__ = [
-    "activate_subcommand_output_language",
     "capture_runtime_error_context",
     "emit_envelope",
-    "notice_lines",
-    "precondition_action_lines",
     "resolve_cli_precondition_action",
     "runtime_error_context",
 ]

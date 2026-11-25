@@ -76,8 +76,8 @@ def test_all_six_m390_repeated_row_reference_families_are_flat_and_closed() -> N
             "union_tag_invalid",
         ),
         (
-            {"projection_kind": "m390_activity", "slot": 7, "field": "activity_code"},
-            "less_than_equal",
+            {"projection_kind": "m390_activity", "slot": 0, "field": "activity_code"},
+            "greater_than_equal",
         ),
         (
             {
@@ -110,18 +110,18 @@ def test_all_six_m390_repeated_row_reference_families_are_flat_and_closed() -> N
             {
                 "projection_kind": "m390_regimen_simplificado_module",
                 "slot": 1,
-                "module_order": 8,
+                "module_order": 0,
                 "value": "units",
             },
-            "less_than_equal",
+            "greater_than_equal",
         ),
         (
-            {"projection_kind": "m390_prorrata_activity", "slot": 6, "field": "cnae"},
-            "less_than_equal",
+            {"projection_kind": "m390_prorrata_activity", "slot": 0, "field": "cnae"},
+            "greater_than_equal",
         ),
         (
-            {"projection_kind": "m390_differentiated_deduction", "slot": 4, "field": "total"},
-            "less_than_equal",
+            {"projection_kind": "m390_differentiated_deduction", "slot": 0, "field": "total"},
+            "greater_than_equal",
         ),
     ],
 )

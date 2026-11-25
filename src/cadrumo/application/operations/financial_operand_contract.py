@@ -15,7 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
@@ -41,6 +41,8 @@ class OperationFinancialOperandRefusalCode(StrEnum):
     TERMINAL_OPERATION = "terminal_operation"
     WRONG_MODEL = "wrong_model"
     WRONG_BASELINE = "wrong_baseline"
+    #: An apply carried entries as the filer typed them, which only a preflight reads.
+    ENTRY_AS_TYPED = "entry_as_typed"
     WRONG_GRANT = "wrong_grant"
     STALE_REVISION = "stale_revision"
     DUPLICATE_SUBMISSION = "duplicate_submission"
@@ -48,13 +50,17 @@ class OperationFinancialOperandRefusalCode(StrEnum):
     OWNER_LOST = "owner_lost"
 
 
-class OperationFinancialOperandRefusedError(CadrumoError):
+class OperationFinancialOperandRefusedError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """A custody refusal carrying a closed code and no financial input."""
 
-    def __init__(self, reason: OperationFinancialOperandRefusalCode) -> None:
+    def __init__(
+        self, reason: OperationFinancialOperandRefusalCode, *, precondition_verdict: object | None = None
+    ) -> None:
         """Retain only the safe refusal code."""
         self.reason = reason
-        super().__init__(f"financial operand handoff refused: {reason.value}")
+        super().__init__(
+            f"financial operand handoff refused: {reason.value}", precondition_verdict=precondition_verdict
+        )
 
 
 class OperationTransientFinancialOperandRequirementV1(BaseModel):
@@ -104,7 +110,7 @@ class OperationTransientFinancialOperandPublicDeclarationV1(BaseModel):
     protocol_version: Literal[1] = 1
     operand_schema: OperationSchemaIdentityV1
     baseline_schema: OperationSchemaIdentityV1
-    lifetime_seconds: float = Field(gt=0, le=1800, allow_inf_nan=False)
+    lifetime_seconds: float = Field(gt=0, le=2048, allow_inf_nan=False)
 
 
 class OperationTransientFinancialOperandDeclarationV1(BaseModel):

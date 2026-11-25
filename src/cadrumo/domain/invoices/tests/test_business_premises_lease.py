@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.form_codes import resolve_form_codes
 from ...iva.schema import InvoiceKind
 from ..business_premises import (
     BusinessPremisesLease,
@@ -26,7 +27,12 @@ from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine, derive_invoice_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("operation"),
+    pytest.mark.usefixtures("operation"),
+]
 
 
 def _lease_invoice(
@@ -42,7 +48,7 @@ def _lease_invoice(
                 kind=kind,
                 invoice_number="ALQ-2025-03",
                 issued_at=issued_at,
-                counterparty_tax_id="B87654323",
+                counterparty_tax_id="B00015057",
                 currency="EUR",
                 grand_total=base + iva,
             ),
@@ -50,7 +56,7 @@ def _lease_invoice(
             "invoice_number": "ALQ-2025-03",
             "issued_at": issued_at,
             "counterparty_name": "INQUILINO LOCAL SL",
-            "counterparty_tax_id": "B87654323",
+            "counterparty_tax_id": "B00015057",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,
@@ -81,7 +87,7 @@ def test_an_issued_lease_keeps_its_premises_facts_and_canonicalises_the_referenc
     )
 
     assert invoice.business_premises_lease is not None
-    assert invoice.business_premises_lease.situacion_inmueble == "1"
+    assert invoice.business_premises_lease.situacion_inmueble is SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE
     assert invoice.business_premises_lease.referencia_catastral == "9872023VH5797S0001WX"
     assert invoice.invoice_id == derive_invoice_id(
         kind=invoice.kind,
@@ -140,20 +146,28 @@ def test_a_situacion_without_a_spanish_referencia_refuses_one(situacion: str) ->
         )
 
 
-def test_the_referencia_is_bounded_by_the_record_designs_25_positions() -> None:
-    with pytest.raises(ValidationError, match="at most 25 characters"):
+def test_the_referencia_is_bounded_by_the_record_designs_positions() -> None:
+    limit = resolve_form_codes("form-row-codes").integer("m347.inmueble.referencia_catastral_max")
+    accepted = BusinessPremisesLease.model_validate(
+        {
+            "situacion_inmueble": SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
+            "referencia_catastral": "X" * limit,
+        }
+    )
+    assert accepted.referencia_catastral == "X" * limit
+    with pytest.raises(ValidationError, match=r"m347\.inmueble\.referencia_catastral_max"):
         BusinessPremisesLease.model_validate(
             {
                 "situacion_inmueble": SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
-                "referencia_catastral": "X" * 26,
+                "referencia_catastral": "X" * (limit + 1),
             }
         )
 
 
 def test_only_the_four_record_design_codes_are_a_situacion() -> None:
-    assert [require_situacion_inmueble(code) for code in (" 1", "2", "3", "4 ")] == ["1", "2", "3", "4"]
+    assert [require_situacion_inmueble(code).code for code in (" 1", "2", "3", "4 ")] == ["1", "2", "3", "4"]
     for typed in ("0", "5", "uno", ""):
-        with pytest.raises(InvoiceValidationError, match="1, 2, 3 or 4"):
+        with pytest.raises(InvoiceValidationError, match="declared Modelo 347 situation"):
             require_situacion_inmueble(typed)
 
 

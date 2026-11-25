@@ -13,14 +13,22 @@ from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory
-from ..workbook_demo import DEMO_CASES, demonstration_producer
+from ..workbook_demo import demonstration_producer
+from ..workbook_demo_cases import DEMO_CASES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+# The four authored designs, oldest first, each taken at the last exercise its window governs.
+_EARLIEST, _SECOND, _THIRD, _CURRENT = (
+    (str(revision.id), (revision.valid_to or revision.valid_from).year) for revision in authored_revisions("322")
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -32,10 +40,10 @@ def governed_facts():
 @pytest.mark.parametrize(
     "revision_id,year,record_id,field_id,offset",
     [
-        ("2008-2022", 2022, "m322-page-02", "m322-2022.page-02.f020", 270),
-        ("2023", 2023, "m322-page-02", "m322-2023.page-02.f019", 253),
-        ("2024-2025", 2025, "m322-page-02", "m322-2024.pagina02.f019", 253),
-        ("2026-y-siguientes", 2026, "modelo-322-page-02", "modelo-322-page-02-338", 338),
+        (*_EARLIEST, "m322-page-02", "m322-2022.page-02.f020", 270),
+        (*_SECOND, "m322-page-02", "m322-2023.page-02.f019", 253),
+        (*_THIRD, "m322-page-02", "m322-2024.pagina02.f019", 253),
+        (*_CURRENT, "modelo-322-page-02", "modelo-322-page-02-338", 338),
     ],
 )
 @pytest.mark.parametrize("marker,expected", [(None, " "), ("", " "), ("X", "X")])
@@ -57,12 +65,12 @@ def test_activity_byte_reads_only_the_explicit_fact(
     ref = RegistrySnapshotRef(modelo="322", revision_id=str(revision.id), modelo_year=year, period="12")
     draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
-            modelo="322", period=period, profile_tax_id="B12345674", snapshot_ref=ref, values=()
+            modelo="322", period=period, profile_tax_id="B00015016", snapshot_ref=ref, values=()
         ),
         modelo="322",
         period=period,
-        profile_tax_id="B12345674",
-        subject_tax_id="B12345674",
+        profile_tax_id="B00015016",
+        subject_tax_id="B00015016",
         snapshot_ref=ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(),

@@ -13,8 +13,7 @@ fields are validated against path-traversal at construction.
 
 There is no human CLI for corpus verification. Consumers import manifest and
 bundle operations from their defining modules; this package initializer is
-inert. The same operations own manifest regeneration after an intentional
-corpus update.
+inert.
 
 This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded

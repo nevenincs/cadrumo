@@ -5,29 +5,28 @@ published national plus autonomous-community ("CCAA") holiday
 calendars from governed event facts in the validated authority and exposes
 pure functions that answer two questions:
 
-* Is a given date a *día hábil* (business day) for AEAT filings in the
-  taxpayer's CCAA of tax residence?
+* Is a given date a *día hábil* (business day) on the national calendar,
+  or on the calendar of a named territory for a procedure that declares one?
 * Given an AEAT-registered close date, what is the legally-due filing
-  deadline once weekends, national holidays, and CCAA holidays are
-  considered, and what was the reason for the shift?
+  deadline once weekends and national inhábiles are considered, and what
+  was the reason for the shift?
 
-AEAT's published deadline-shift rule (Calendario del Contribuyente,
-*"Vencimientos en días inhábiles, sábados o festivos"*) is:
+A filing deadline whose last day is inhábil extends to the next día hábil
+(Ley 39/2015 art. 30.5, applied to tax procedure through Ley 58/2003
+art. 7.2). AEAT filings are electronic, and for an electronic registry
+art. 31.3 counts days against the calendar of días inhábiles declared for
+the State, expressly excluding art. 30.6. A regional (CCAA) or municipal
+holiday of the filer's domicile therefore never moves a filing close: only
+Saturdays, Sundays and the national inhábiles do, whatever the filer's
+territory. Regional holidays stay in the calendar for the procedures that
+count business days on a declared territory's calendar.
 
-    "Si el último día del plazo coincide con un sábado, domingo o
-    festivo, el plazo se entiende ampliado hasta el primer día hábil
-    siguiente."
-
-The rule covers national holidays plus the autonomous-community holiday
-of the taxpayer's domicilio fiscal. Local (municipal) holidays do NOT
-affect AEAT filing deadlines and are not part of this calendar.
-
-One well-known exception: **Modelo 369** (OSS / IOSS one-stop-shop)
-deadlines do NOT shift, even when the close date falls on a non-
+One well-known exception: one-stop-shop (OSS / IOSS) deadlines do NOT
+shift, even when the close date falls on a non-
 business day, because the OSS / IOSS regime is governed by the EU
 Council Directive's harmonised cutoffs and the AEAT cannot lengthen
 the EU-wide window unilaterally. The exception list is encoded in
-:data:`MODELOS_WITHOUT_SHIFT` so future modelo additions land as data,
+the ``deadline-shift-exempt-modelos`` fact so future modelo additions land as data,
 not as a fork in :func:`shift_deadline`.
 
 The substrate is pure domain logic: it never touches the CLI, never
@@ -37,21 +36,23 @@ validated registry authority.
 
 from __future__ import annotations
 
+from calendar import SATURDAY, SUNDAY
 from collections import OrderedDict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from enum import StrEnum
 from threading import RLock
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated, Final, Self
 
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.modelo import Modelo
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import RegistryToken
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
+from ..calculations.registry.form_codes import resolve_form_codes
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
@@ -117,10 +118,10 @@ class HolidayJurisdiction(StrEnum):
     * ``CCAA`` — declared by an autonomous community; observed only in
       that CCAA's territory.
 
-    Municipal holidays also extend an AEAT filing deadline (Ley 39/2015
-    art. 30.6 and 30.7), but the registry carries no municipal holiday
-    source, so no shift can be attributed to one; see
-    :class:`DeadlineHolidayCoverage`.
+    Only a national holiday moves a filing close (Ley 39/2015 art. 31.3);
+    a regional holiday counts only for a procedure that declares the
+    territory whose calendar it uses. The registry carries no municipal
+    holiday source.
     """
 
     NATIONAL = "national"
@@ -130,29 +131,25 @@ class HolidayJurisdiction(StrEnum):
 class DeadlineHolidayCoverage(StrEnum):
     """Which holiday layers were checked when a close date was adjusted.
 
-    A deadline also moves for a holiday of the taxpayer's autonomous community
-    or municipality (Ley 39/2015 art. 30.6). Municipal holidays are never
-    checked because the registry has no source for them, so no state claims
-    complete coverage.
+    An electronic filing close moves only for weekends and the national
+    inhábiles (Ley 39/2015 art. 31.3, which excludes art. 30.6), so the
+    national calendar is the complete rule for every filer.
 
-    * ``NATIONAL_AND_TERRITORY`` — weekends, national holidays and the
-      taxpayer's autonomous-community holidays were checked.
-    * ``TERRITORY_UNVERIFIED`` — the taxpayer's territory is known but its
-      regional holidays for the year are not verified in the registry, so
-      only weekends and national holidays were applied.
-    * ``NATIONAL_ONLY`` — the taxpayer's territory is not established, so
-      only weekends and national holidays were checked.
+    * ``NATIONAL_ONLY`` — weekends and national inhábiles were checked; the
+      adjusted date is final.
     * ``NOT_SHIFTED`` — the modelo's deadline does not move for non-working
       days, so no calendar applies.
     * ``CALENDAR_UNAVAILABLE`` — the holiday calendar could not be resolved
       and the original close date was kept unverified.
     """
 
-    NATIONAL_AND_TERRITORY = "national_and_territory"
-    TERRITORY_UNVERIFIED = "territory_unverified"
     NATIONAL_ONLY = "national_only"
     NOT_SHIFTED = "not_shifted"
     CALENDAR_UNAVAILABLE = "calendar_unavailable"
+
+
+#: Shift reason recorded when the holiday calendar a close needs could not be resolved.
+CALENDAR_UNAVAILABLE_SHIFT_REASON: Final = "calendar_unavailable"
 
 
 # ---------------------------------------------------------------------------
@@ -160,9 +157,12 @@ class DeadlineHolidayCoverage(StrEnum):
 # ---------------------------------------------------------------------------
 
 
+_SHORT_TEXT_MAX_LENGTH: Final = 200
+_BUSINESS_DAY_SEARCH = 14
+
 _NonEmptyShortString = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_SHORT_TEXT_MAX_LENGTH),
 ]
 
 
@@ -192,7 +192,7 @@ class HolidayCalendar(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    year: Annotated[int, Field(ge=2000, le=2100)]
+    year: FourDigitYear
     boe_ref: _NonEmptyShortString
     boe_url: str | None = None
     national: tuple[Holiday, ...] = Field(default_factory=tuple)
@@ -232,15 +232,12 @@ class DeadlineShift(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-#: Modelos whose deadlines are NOT shifted by the AEAT día-inhábil rule.
+#: The fact declaring the modelos whose deadlines the día-inhábil rule does not shift.
 #:
-#: Per the AEAT Calendario del Contribuyente, the OSS / IOSS one-stop-shop
-#: regime (Modelo 369) is governed by the EU-harmonised cutoff date and
-#: AEAT cannot extend the window unilaterally even when the close date
-#: falls on a Spanish holiday or weekend. Adding new modelos to this
-#: tuple keeps the exception list data-driven; :func:`shift_deadline`
-#: never grows a switch statement.
-MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
+#: A one-stop-shop period is governed by the EU-harmonised cutoff date, which AEAT
+#: cannot extend unilaterally even when the close date falls on a Spanish holiday or
+#: weekend.
+_SHIFT_EXEMPT_MODELOS_FACT: Final = "deadline-shift-exempt-modelos"
 
 
 # ---------------------------------------------------------------------------
@@ -291,7 +288,7 @@ def holiday_calendar_from_authority(
     unpublished calendar year.  All individual holiday values are then read
     through exact event queries, retaining the authority's provenance.
     """
-    coordinate = date(year, 7, 1)
+    coordinate = date(year, 1, 1)
     publication = _resolve_holiday_publication(year, coordinate, operation=operation)
     boe_ref_value, boe_url_value, verified_value = _publication_fields(publication, year=year)
     territory = _calendar_territory_resolver(operation=operation)
@@ -334,8 +331,15 @@ def _resolve_holiday_publication(
     if not isinstance(publication, ResolvedEventFact):
         raise DeadlineValidationError("holiday calendar publication must resolve to an event fact")
     # A publication carried over from another year proves nothing about this
-    # one: only an authored publication makes absent holiday events business days.
-    if publication.projection_direction is not TemporalProjectionDirection.AUTHORED:
+    # one: only a publication authored for this very year makes absent holiday
+    # events business days. A year above the support horizon resolves its own
+    # authored variant as a forward projection, so the variant's event date, not
+    # the projection direction, proves it belongs to the year.
+    authored_for_year = (
+        publication.projection_direction is TemporalProjectionDirection.AUTHORED
+        or publication.payload.event_date.year == year
+    )
+    if not authored_for_year:
         raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
     return publication
 
@@ -496,15 +500,15 @@ def is_business_day(
     calendar: HolidayCalendar,
     ccaa_code: CalendarCCAA | None,
 ) -> bool:
-    """Return True when ``candidate`` is a business day for AEAT filings.
+    """Return True when ``candidate`` is a business day.
 
     A date is a business day when it is not a Saturday, not a Sunday,
     not a national holiday for that year, and (when ``ccaa_code`` is
-    supplied) not a CCAA holiday for that ccaa-year pair. When
-    ``ccaa_code`` is ``None`` the predicate degrades to national-only:
-    callers with no tax-residence information get weekend + national
-    detection but miss CCAA shifts. A date outside ``calendar.year`` is
-    refused rather than classified.
+    supplied) not a CCAA holiday for that ccaa-year pair. ``None`` judges
+    the national calendar alone, the rule for an electronic filing close;
+    a territory is supplied only by a procedure that declares whose
+    calendar it counts on. A date outside ``calendar.year`` is refused
+    rather than classified.
     """
     _require_calendar_year(candidate, calendar=calendar)
     if candidate.weekday() in _WEEKEND:
@@ -515,18 +519,16 @@ def is_business_day(
 def _first_business_day(
     start: date,
     *,
-    ccaa_code: CalendarCCAA | None,
     business_day: Callable[[date], bool],
 ) -> date:
     candidate = start
-    for _ in range(14):
+    for _ in range(_BUSINESS_DAY_SEARCH):
         if business_day(candidate):
             return candidate
         candidate = candidate + timedelta(days=1)
     raise DeadlineValidationError(
-        f"could not find a business day within 14 days of {start.isoformat()} "
-        f"(ccaa={ccaa_code.value if (ccaa_code is not None and ccaa_code) else 'none'}); the calendar may "
-        f"have invalid contiguous holidays",
+        f"could not find a business day within {_BUSINESS_DAY_SEARCH} days of {start.isoformat()}; "
+        f"the calendar may have invalid contiguous holidays",
     )
 
 
@@ -541,9 +543,9 @@ def _reason_for(
     holidays: Iterable[Holiday],
 ) -> tuple[str, tuple[HolidayJurisdiction, ...], tuple[str, ...]]:
     """Build the structured shift reason for one non-business day."""
-    if candidate.weekday() == 5:
+    if candidate.weekday() == SATURDAY:
         weekend_token = "sabado"
-    elif candidate.weekday() == 6:
+    elif candidate.weekday() == SUNDAY:
         weekend_token = "domingo"
     else:
         weekend_token = ""
@@ -584,65 +586,36 @@ def _calendar_source(
     return calendar_for
 
 
-def _territory_coverage(
-    ccaa_code: CalendarCCAA | None,
-    *,
-    calendar: HolidayCalendar,
-) -> tuple[DeadlineHolidayCoverage, CalendarCCAA | None]:
-    """Return the coverage one year's calendar gives and the territory it may apply."""
-    # A later deadline is the harmful error, so a territory's regional
-    # holidays only move a date once its list for the year is verified.
-    if ccaa_code is None:
-        return DeadlineHolidayCoverage.NATIONAL_ONLY, None
-    if ccaa_code in calendar.verified_territories:
-        return DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, ccaa_code
-    return DeadlineHolidayCoverage.TERRITORY_UNVERIFIED, None
-
-
 def _walk_to_business_day(
     start: date,
     *,
-    ccaa_code: CalendarCCAA | None,
-    coverage: DeadlineHolidayCoverage,
     calendar_for: Callable[[int], HolidayCalendar],
-) -> tuple[date, DeadlineHolidayCoverage]:
-    """Walk forward from ``start`` judging each day against its own year's calendar.
-
-    The returned coverage is degraded when a year the walk enters does not
-    verify the territory.
-    """
-    walked_coverage = coverage
+) -> date:
+    """Walk forward from ``start`` judging each day against its own year's national calendar."""
 
     def business_day(candidate: date) -> bool:
-        nonlocal walked_coverage
-        calendar = calendar_for(candidate.year)
-        year_coverage, applied_territory = _territory_coverage(ccaa_code, calendar=calendar)
-        if year_coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
-            walked_coverage = year_coverage
-        return is_business_day(candidate, calendar=calendar, ccaa_code=applied_territory)
+        return is_business_day(candidate, calendar=calendar_for(candidate.year), ccaa_code=None)
 
-    adjusted = _first_business_day(start, ccaa_code=ccaa_code, business_day=business_day)
-    return adjusted, walked_coverage
+    return _first_business_day(start, business_day=business_day)
 
 
 def shift_deadline(
     original_close_date: date,
     *,
     modelo: str,
-    ccaa_code: CalendarCCAA | None,
     calendars: tuple[HolidayCalendar, ...] = (),
     operation: PinnedAuthorityOperation,
 ) -> DeadlineShift:
     """Apply the AEAT deadline-shift rule and return a :class:`DeadlineShift` result.
 
     The rule moves the deadline to the next business day when the
-    original close date is a Saturday, Sunday, national holiday, or
-    holiday of ``ccaa_code``, the taxpayer's autonomous community
-    (Ley 39/2015 art. 30.6). ``None`` means the territory is not
-    established: only national holidays are checked and the result's
-    coverage says so rather than implying the date is final.
+    original close date is a Saturday, Sunday or national inhábil
+    (Ley 39/2015 art. 30.5). A regional or local holiday never moves it,
+    because an electronic filing counts days on the State's calendar of
+    días inhábiles (art. 31.3, excluding art. 30.6), so the result is the
+    same for every filer whatever their territory.
 
-    Modelo-specific exceptions (e.g., Modelo 369 OSS / IOSS) bypass
+    A modelo the ``deadline-shift-exempt-modelos`` fact names bypasses
     the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
@@ -652,13 +625,12 @@ def shift_deadline(
     the governed publication and holiday event facts. A missing publication
     fact for any year the walk enters fails closed with
     :class:`DeadlineValidationError`; it is never treated as a holiday-free
-    calendar. Coverage reports the weakest territory verification among the
-    years consulted.
+    calendar.
     """
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
 
-    if modelo in MODELOS_WITHOUT_SHIFT:
+    if modelo in resolve_form_codes(_SHIFT_EXEMPT_MODELOS_FACT, authority=operation).codes("modelos"):
         return DeadlineShift(
             original_close_date=original_close_date,
             adjusted_close_date=original_close_date,
@@ -672,14 +644,7 @@ def shift_deadline(
 
     calendar_for = _calendar_source(calendars, operation=operation)
     close_calendar = calendar_for(original_close_date.year)
-    coverage, applied_territory = _territory_coverage(ccaa_code, calendar=close_calendar)
-
-    # Determine whether the original date is a business day.
-    holidays_on_close = _holidays_on(
-        original_close_date,
-        calendar=close_calendar,
-        ccaa_code=applied_territory,
-    )
+    holidays_on_close = _holidays_on(original_close_date, calendar=close_calendar, ccaa_code=None)
     is_weekend = original_close_date.weekday() in _WEEKEND
 
     if not is_weekend and not holidays_on_close:
@@ -691,7 +656,7 @@ def shift_deadline(
             shift_reason="business_day",
             jurisdictions=(),
             holiday_refs=(),
-            coverage=coverage,
+            coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         )
 
     # Build the structured reason for the original date being inhábil.
@@ -700,12 +665,7 @@ def shift_deadline(
         holidays=holidays_on_close,
     )
 
-    adjusted, coverage = _walk_to_business_day(
-        original_close_date + timedelta(days=1),
-        ccaa_code=ccaa_code,
-        coverage=coverage,
-        calendar_for=calendar_for,
-    )
+    adjusted = _walk_to_business_day(original_close_date + timedelta(days=1), calendar_for=calendar_for)
 
     return DeadlineShift(
         original_close_date=original_close_date,
@@ -715,14 +675,14 @@ def shift_deadline(
         shift_reason=reason,
         jurisdictions=jurisdictions,
         holiday_refs=holiday_names,
-        coverage=coverage,
+        coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
     )
 
 
 __all__ = (
+    "CALENDAR_UNAVAILABLE_SHIFT_REASON",
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "HOLIDAY_EVENT_FACT_ID",
-    "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
     "DeadlineHolidayCoverage",
     "DeadlineShift",

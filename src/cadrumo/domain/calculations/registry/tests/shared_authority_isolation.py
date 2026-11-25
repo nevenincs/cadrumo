@@ -36,14 +36,14 @@ def isolated_shared_authority(directory: Path) -> Generator[Path]:
     database = source.parent / str(json.loads(source.read_text(encoding="utf-8"))["database"])
     shutil.copy2(source, directory / source.name)
     shutil.copy2(database, directory / database.name)
-    session_owner = authority_module._bundled_indexed_authority
-    authority_module._bundled_indexed_authority = None
+    session_owner = authority_module.bundled_indexed_authority_owner
+    authority_module.bundled_indexed_authority_owner = None
     try:
         with override_settings(cadrumo_authority_root=directory):
             yield directory / database.name
     finally:
         release_bundled_indexed_authority()
-        authority_module._bundled_indexed_authority = session_owner
+        authority_module.bundled_indexed_authority_owner = session_owner
 
 
 __all__ = ["isolated_shared_authority"]

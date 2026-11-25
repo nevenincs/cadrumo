@@ -8,18 +8,20 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 MODULE = REPO_ROOT / "native/cmake/CTestEnvironment.cmake"
+# Variables a test run may still export that the module must neither read nor add.
+RETIRED_VARIABLES = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR")
 
 
 def _clean_environment() -> dict[str, str]:
     environment = dict(os.environ)
-    for name in ("CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT"):
+    for name in ("CADRUMO_STORAGE_ROOT", *RETIRED_VARIABLES):
         environment.pop(name, None)
     return environment
 
@@ -43,19 +45,17 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
         "    message(FATAL_ERROR \"${name} was not pinned: '$ENV{${name}}'\")\n"
         "  endif()\n"
         "endforeach()\n"
-        'if(DEFINED EXPECT_STORAGE AND NOT "$ENV{CADRUMO_STORAGE_ROOT}" STREQUAL "${EXPECT_STORAGE}")\n'
-        '  message(FATAL_ERROR "CADRUMO_STORAGE_ROOT was not preserved")\n'
-        "endif()\n"
-        "if(DEFINED EXPECT_LOCAL_STORAGE)\n"
-        '  if(NOT "$ENV{CADRUMO_LOCAL_STORAGE_ROOT}" STREQUAL "${EXPECT_LOCAL_STORAGE}")\n'
-        '    message(FATAL_ERROR "CADRUMO_LOCAL_STORAGE_ROOT was not preserved")\n'
+        "foreach(name IN ITEMS CADRUMO_TEST_LOG_ROOT CADRUMO_SCRATCH_BASE CADRUMO_DEV_CACHE_ROOT)\n"
+        '  if(NOT "$ENV{${name}}" STREQUAL "${EXPECT_${name}}")\n'
+        "    message(FATAL_ERROR \"${name} was not pinned: '$ENV{${name}}'\")\n"
         "  endif()\n"
+        "endforeach()\n"
+        'if(NOT "$ENV{CADRUMO_STORAGE_ROOT}" STREQUAL "${EXPECT_STORAGE}")\n'
+        "  message(FATAL_ERROR \"CADRUMO_STORAGE_ROOT was not the expected root: '$ENV{CADRUMO_STORAGE_ROOT}'\")\n"
         "endif()\n"
-        "if(EXPECT_STORAGE_ABSENT AND DEFINED ENV{CADRUMO_STORAGE_ROOT})\n"
-        '  message(FATAL_ERROR "an absent storage alias was added")\n'
-        "endif()\n"
-        "if(EXPECT_LOCAL_STORAGE_ABSENT AND DEFINED ENV{CADRUMO_LOCAL_STORAGE_ROOT})\n"
-        '  message(FATAL_ERROR "an absent local storage alias was added")\n'
+        # A retired storage variable is never added to a test's environment.
+        "if(DEFINED ENV{CADRUMO_LOCAL_STORAGE_ROOT} OR DEFINED ENV{CADRUMO_TEMP_DIR})\n"
+        '  message(FATAL_ERROR "a retired storage variable was added")\n'
         "endif()\n",
         encoding="utf-8",
     )
@@ -69,6 +69,9 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
         "include(CTestEnvironment.cmake)\n"
         'add_test(NAME root.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CADRUMO_CTEST_TEMPORARY}"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_TESTING}/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_TESTING}/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_TESTING}/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CADRUMO_CTEST_TEMPORARY}"\n'
         '  "-DEXPECT_TMPDIR=${CADRUMO_CTEST_TEMPORARY}"\n'
         '  "-DEXPECT_STORAGE=${CADRUMO_PATH_TESTING}/Debug/storage"\n'
@@ -80,24 +83,27 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
     (child / "CMakeLists.txt").write_text(
         'add_test(NAME child.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CMAKE_BINARY_DIR}/custom-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CMAKE_BINARY_DIR}/testing/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_TMPDIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
-        '  "-DEXPECT_LOCAL_STORAGE=${CMAKE_BINARY_DIR}/custom-local-storage"\n'
-        "  -DEXPECT_STORAGE_ABSENT=ON\n"
+        '  "-DEXPECT_STORAGE=${CMAKE_BINARY_DIR}/testing/Debug/storage"\n'
         '  -P "${CMAKE_SOURCE_DIR}/verify.cmake")\n'
         "set_tests_properties(child.test PROPERTIES ENVIRONMENT\n"
-        '  "TEMP=${CMAKE_BINARY_DIR}/custom-temp;'
-        'CADRUMO_LOCAL_STORAGE_ROOT=${CMAKE_BINARY_DIR}/custom-local-storage")\n'
+        '  "TEMP=${CMAKE_BINARY_DIR}/custom-temp")\n'
         "add_subdirectory(nested)\n",
         encoding="utf-8",
     )
     (nested / "CMakeLists.txt").write_text(
         'add_test(NAME nested.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CMAKE_BINARY_DIR}/testing/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_TMPDIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_STORAGE=${CMAKE_BINARY_DIR}/nested-storage"\n'
-        "  -DEXPECT_LOCAL_STORAGE_ABSENT=ON\n"
         '  -P "${CMAKE_SOURCE_DIR}/verify.cmake")\n'
         "set_tests_properties(nested.test PROPERTIES ENVIRONMENT\n"
         '  "CADRUMO_STORAGE_ROOT=${CMAKE_BINARY_DIR}/nested-storage")\n',

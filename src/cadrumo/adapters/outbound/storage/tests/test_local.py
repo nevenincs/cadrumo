@@ -37,7 +37,7 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ..local import LocalFileSystemProvider, _local_failure_verdict
+from ..local import LocalFileSystemProvider, local_failure_verdict
 from ..protocol import StorageProvider
 from ..records import ProviderKind
 
@@ -247,7 +247,7 @@ def test_local_failure_verdict_contracts_are_exact(
 ) -> None:
     error = StorageCorruptionError(
         "local provider refusal",
-        precondition_verdict=_local_failure_verdict(condition_id, facts=facts, outcome=outcome),
+        precondition_verdict=local_failure_verdict(condition_id, facts=facts, outcome=outcome),
     )
 
     _assert_local_verdict(error, condition_id, outcome, facts)
@@ -263,7 +263,7 @@ def test_local_failure_verdict_contracts_cover_every_local_provider_failure_site
         if (
             not isinstance(node, ast.Call)
             or not isinstance(node.func, ast.Name)
-            or node.func.id != "_local_failure_verdict"
+            or node.func.id != "local_failure_verdict"
         ):
             continue
         assert node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
@@ -297,7 +297,7 @@ def test_local_provider_satisfies_runtime_protocol(provider: LocalFileSystemProv
 
 def test_local_sidecar_return_type_is_mapping() -> None:
     """The sidecar loader advertises its mapping boundary."""
-    return_hint = LocalFileSystemProvider._load_sidecar.__annotations__.get("return")
+    return_hint = LocalFileSystemProvider.load_sidecar.__annotations__.get("return")
 
     assert "Mapping" in str(return_hint)
 
@@ -308,7 +308,7 @@ def test_local_sidecar_runtime_returns_mapping(tmp_path: Path) -> None:
     payload: dict[str, object] = {"content_hash": "abc123", "byte_length": 42}
     sidecar.write_text(json.dumps(payload), encoding="utf-8")
 
-    result = LocalFileSystemProvider(root=tmp_path)._load_sidecar(sidecar)
+    result = LocalFileSystemProvider(root=tmp_path).load_sidecar(sidecar)
 
     assert isinstance(result, Mapping)
     assert result == payload

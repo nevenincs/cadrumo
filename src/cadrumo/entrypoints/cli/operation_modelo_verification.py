@@ -15,7 +15,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.operation_shared import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
@@ -25,18 +25,19 @@ from ...application.modelo.revision_selection_operation import (
     ModeloWorkRevisionRequest,
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionDefault, ModeloCalculationRevisionSelector
-from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_address_errors import ModeloWorkAddressNotFoundError
 from ...application.modelo.work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.public_period import PublicPeriod
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
     profile_operation_subject,
 )
-from ._modelo_behavior_support import work_address_for_cli
-from ._modelo_cli_support import selector_bad_parameter, validate_calculation_revision_id
 from .common import no_active_profile_refusal
+from .modelo_behavior_support import work_address_for_cli
+from .modelo_cli_support import selector_bad_parameter, validate_calculation_revision_id
 
 #: Annual verification checks the stored quarterly chain and workflow gates.
 #: Like calculation, it can outlast a transport exchange without being stuck.
@@ -134,7 +135,7 @@ def run_modelo_work_verification(
         or projection.calculation_revision_id != request.calculation_revision_id
         or projection.advisories.work_unit_id != work_unit_id
         or projection.advisories.calculation_revision_id != request.calculation_revision_id
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise invalid_completion_error(completed)
     return completed
@@ -169,7 +170,7 @@ def run_modelo_work_filing(
         or projection.advisories.work_unit_id != work_unit_id
         or projection.advisories.calculation_revision_id != request.approval.calculation_revision_id
         or not projection.handoff_required
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise invalid_completion_error(completed)
     return completed

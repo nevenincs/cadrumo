@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Final
 
 from dev.first_party_source import is_test_module_name
 
-from .signal_values import _top
+from .signal_values import top
 
 _REMEDIATION_CODE_FAMILIES: Final[dict[str, frozenset[str]]] = {
     "canonical_import_surface": frozenset(
@@ -28,7 +28,7 @@ _REMEDIATION_CODE_FAMILIES: Final[dict[str, frozenset[str]]] = {
 
 
 @dataclass(frozen=True)
-class _ContractPath:
+class ContractPath:
     """One normalized dependency path reported under one forbidden edge."""
 
     forbidden_from: str
@@ -45,11 +45,11 @@ def _module_is_test_scoped(module: str) -> bool:
     )
 
 
-def _contract_path_deductions(self: _ImportBoundariesProcessor) -> dict[str, object]:
+def contract_path_deductions(self: ImportBoundariesProcessor) -> dict[str, object]:
     """Reduce broken-contract paths without treating overlapping contracts as new imports."""
     self._finish_contract_path()
     path_multiplicity = Counter(path.normalized for path in self._contract_paths)
-    lanes: defaultdict[tuple[str, str], list[_ContractPath]] = defaultdict(list)
+    lanes: defaultdict[tuple[str, str], list[ContractPath]] = defaultdict(list)
     for path in self._contract_paths:
         lanes[(path.forbidden_from, path.forbidden_to)].append(path)
     by_forbidden_edge: dict[str, object] = {}
@@ -67,7 +67,7 @@ def _contract_path_deductions(self: _ImportBoundariesProcessor) -> dict[str, obj
     }
 
 
-def _diagnostic_deductions(self: _ImportBoundariesProcessor) -> dict[str, object]:
+def import_signal_projection_diagnostic_deductions(self: ImportBoundariesProcessor) -> dict[str, object]:
     """Expose finding amplification and recurring diagnostic surfaces."""
     by_code: dict[str, object] = {}
     for code, findings in sorted(self.diagnostics.items()):
@@ -78,11 +78,11 @@ def _diagnostic_deductions(self: _ImportBoundariesProcessor) -> dict[str, object
             "locations": len(self._diagnostic_locations_by_code[code]),
             "non_test_scoped_findings": findings - test_scoped,
             "test_scoped_findings": test_scoped,
-            "top_targets": _top(self._diagnostic_targets[code]),
+            "top_targets": top(self._diagnostic_targets[code]),
         }
     multi_locations = Counter({location: count for location, count in self._diagnostic_locations.items() if count > 1})
     top_locations = []
-    for item in _top(self._diagnostic_locations):
+    for item in top(self._diagnostic_locations):
         location = str(item["value"])
         top_locations.append(
             {
@@ -105,7 +105,7 @@ def _diagnostic_deductions(self: _ImportBoundariesProcessor) -> dict[str, object
     }
 
 
-def _remediation_lanes(self: _ImportBoundariesProcessor) -> dict[str, object]:
+def remediation_lanes(self: ImportBoundariesProcessor) -> dict[str, object]:
     """Group diagnostic codes by the import defect they describe."""
     lanes: dict[str, object] = {}
     for lane, codes in sorted(_REMEDIATION_CODE_FAMILIES.items()):
@@ -123,7 +123,7 @@ def _remediation_lanes(self: _ImportBoundariesProcessor) -> dict[str, object]:
     return lanes
 
 
-def _forbidden_edge_impact(paths: list[_ContractPath]) -> dict[str, object]:
+def _forbidden_edge_impact(paths: list[ContractPath]) -> dict[str, object]:
     """Count each forbidden edge span without multiplying a shared dependency path."""
     sources = Counter(path.edges[0][0] for path in paths)
     terminals = Counter(path.edges[-1][1] for path in paths)
@@ -136,9 +136,9 @@ def _forbidden_edge_impact(paths: list[_ContractPath]) -> dict[str, object]:
         "non_test_scoped_paths": len(paths) - test_scoped,
         "reported_paths": len(paths),
         "test_scoped_paths": test_scoped,
-        "top_bridge_modules": _top(bridges, minimum_count=2),
-        "top_source_modules": _top(sources, minimum_count=2),
-        "top_terminal_modules": _top(terminals, minimum_count=2),
+        "top_bridge_modules": top(bridges, minimum_count=2),
+        "top_source_modules": top(sources, minimum_count=2),
+        "top_terminal_modules": top(terminals, minimum_count=2),
         "transitive_paths": sum(len(path.edges) > 1 for path in paths),
         "unique_source_modules": len({path.edges[0][0] for path in paths}),
         "unique_terminal_modules": len(terminals),
@@ -146,4 +146,4 @@ def _forbidden_edge_impact(paths: list[_ContractPath]) -> dict[str, object]:
 
 
 if TYPE_CHECKING:
-    from .import_boundaries_signal import _ImportBoundariesProcessor
+    from .import_boundaries_signal import ImportBoundariesProcessor

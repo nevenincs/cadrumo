@@ -31,8 +31,8 @@ formulas = [
 ]
 workbook_parity_refs = ["modelo-202-dr-xlsx"]
 live_cross_references = ["modelo-202-static-documentation"]
-bindings = ["modelo-202-pagos-fraccionados-anteriores"]
-dependency_classifications = ["modelo-202-dep-self-prior-pagos"]
+bindings = ["modelo-202-pagos-fraccionados-anteriores", "modelo-202-cuota-base-ejercicio-anterior"]
+dependency_classifications = ["modelo-202-dep-self-prior-pagos", "modelo-202-dep-200-cuota-base"]
 application_links = [
     "modelo-202-portal",
     "modelo-202-calculation",

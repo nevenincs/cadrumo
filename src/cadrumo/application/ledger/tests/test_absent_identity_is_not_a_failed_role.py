@@ -22,7 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
@@ -30,8 +30,8 @@ from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: The filer's own identifier, and a real third party's. Both verify.
-_FILER_CIF = "B17283946"
-_COUNTERPARTY_CIF = "B12345674"
+_FILER_CIF = "B00015024"
+_COUNTERPARTY_CIF = "B00015016"
 #: Correct shape, wrong control character -- the misread that hides a real
 #: supplier from a validating read.
 _BAD_CHECKSUM_CIF = "B1234567X"
@@ -138,7 +138,11 @@ def test_the_role_failure_now_names_the_verification_failure_rather_than_the_exc
     )
 
     role = next(f for f in resolution.findings if f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED)
-    assert "failed verification" in role.detail
+    assert role.words is not None
+    assert role.words.wording in {
+        DraftFindingWording.EVERY_IDENTIFIER_FAILED,
+        DraftFindingWording.EVERY_IDENTIFIER_FAILED_OWN_UNAVAILABLE,
+    }
 
 
 def test_a_verified_but_unevidenced_lone_survivor_still_blocks(operation: PinnedAuthorityOperation) -> None:

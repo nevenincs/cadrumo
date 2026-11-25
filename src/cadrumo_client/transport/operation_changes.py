@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from math import isfinite
-from threading import Event
+from threading import Event, Lock
 from types import TracebackType
 from typing import Protocol, Self
 
@@ -90,22 +90,45 @@ class AsyncOperationChanges(_OperationCueSubscription):
         super().__init__(client)
         self._changed: asyncio.Event | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._guard = Lock()
+        self._pending = False
+        self._dirty = False
 
     def arm(self) -> None:
         """Subscribe on first use, then forget earlier cues; call before the observation the next wait follows."""
+        loop = asyncio.get_running_loop()
+        if self._loop is not None and self._loop is not loop:
+            raise RuntimeError("operation changes belong to their original event loop")
         if self._changed is None:
-            self._loop = asyncio.get_running_loop()
+            self._loop = loop
             self._changed = asyncio.Event()
+        with self._guard:
+            self._dirty = False
+            self._changed.clear()
+        if self._unsubscribe is None:
             self._unsubscribe = self._client.subscribe_operation_changes(self._wake)
-        self._changed.clear()
 
     def _wake(self) -> None:
-        loop, changed = self._loop, self._changed
-        if loop is None or changed is None:
-            return
-        # A closed loop has nobody left waiting.
-        with suppress(RuntimeError):
-            loop.call_soon_threadsafe(changed.set)
+        with self._guard:
+            loop = self._loop
+            if loop is None:
+                return
+            self._dirty = True
+            if self._pending:
+                return
+            self._pending = True
+            try:
+                loop.call_soon_threadsafe(self._deliver)
+            except RuntimeError:
+                # A closed loop has nobody left waiting.
+                self._pending = False
+
+    def _deliver(self) -> None:
+        with self._guard:
+            self._pending = False
+            if self._dirty and self._changed is not None:
+                self._dirty = False
+                self._changed.set()
 
     async def wait(self, timeout: float) -> None:
         """Wait until a cue since the last arm, or until ``timeout`` seconds pass; an unbounded wait has none."""

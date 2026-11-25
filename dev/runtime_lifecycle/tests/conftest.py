@@ -38,13 +38,12 @@ def harness(
     manager, package = lifecycle_binaries
     root = tmp_path / "storage"
     monkeypatch.setenv(STORAGE_ROOT.variable, str(root))
-    monkeypatch.setenv(STORAGE_ROOT.development_variable, str(root))
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(package / "data/authority"))
     instance = LifecycleHarness(manager, package, root)
     try:
         with (
             override_settings(
-                cadrumo_local_storage_root=root,
+                cadrumo_storage_root=root,
                 cadrumo_authority_root=package / "data/authority",
             ),
             instance,

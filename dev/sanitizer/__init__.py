@@ -20,8 +20,8 @@ that same sense: a module another package imports is not an implementation
 detail.
 
 Examples:
-    >>> from dev.sanitizer._pipeline import sanitize_pdf  # doctest: +SKIP
-    >>> from dev.sanitizer._records import NifReplacement, TokenMap  # doctest: +SKIP
+    >>> from dev.sanitizer.pipeline import sanitize_pdf  # doctest: +SKIP
+    >>> from dev.sanitizer.records import NifReplacement, TokenMap  # doctest: +SKIP
     >>> mapping = TokenMap(  # doctest: +SKIP
     ...     nif=(NifReplacement(real="Y1234567X", synthetic="Y0000001S", surface_label="taxpayer NIE"),),
     ... )

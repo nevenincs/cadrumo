@@ -46,6 +46,11 @@ bound casilla, are both bypassed. Here the same published example is driven
 through those two links for real, and the manual's own printed 138.400 and
 58.100 are what the chain has to land on.
 
+**What it does not cover.** Casilla 0208 appears here only as the manual's own printed
+gasto figure, typed in by hand. This module is not an amortization oracle: no element, claim or
+schedule is involved. The register-driven chain from an element's claim to 0208 and the
+rendimiento neto is pinned in ``test_ledger_asset_amortization_chain_worked_example``.
+
 **Fixture provenance.** The rows below carry the operations the example
 DESCRIBES — two income lines, their amounts, the exempt treatment it states —
 and never its RESULT. Nothing in the fixture is derived from 138.400 or from
@@ -91,6 +96,8 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -105,6 +112,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_income_ledger import aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import m130_activity_category_matcher, m130_employment_category_matcher
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -157,7 +166,7 @@ _GASTO_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("0217", surface="0217"): Decimal("2300.00"),
 }
 
-# Eight of those gasto boxes are casillas the registry declares
+# Nine of those gasto boxes are casillas the registry declares
 # ``input_kind = "bound"``, to the ledger-expense aggregation. Supplying them
 # hand-types values the engine is meant to produce, which is a deliberate
 # scoping choice here and not an oversight: this module exists to drive the
@@ -174,6 +183,7 @@ _GASTO_LEG_REASON = (
 _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
     casilla_id: _GASTO_LEG_REASON
     for casilla_id in (
+        validated_casilla_id("0181", surface="0181"),
         validated_casilla_id("0186", surface="0186"),
         validated_casilla_id("0193", surface="0193"),
         validated_casilla_id("0194", surface="0194"),
@@ -184,6 +194,10 @@ _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
         validated_casilla_id("0217", surface="0217"),
     )
 }
+_HAND_TYPED_BOUND_CASILLAS[validated_casilla_id("0177", surface="0177")] = (
+    "variacion de existencias supplied from the manual's own printed figure; this scenario "
+    "drives the INCOME leg through its ledger binding and makes no claim about the inventory aggregation"
+)
 
 # The two ingresos the manual states outside the invoiced lines. They are not
 # bank movements, so the ledger chain never produces them; they enter the
@@ -196,13 +210,30 @@ _NON_LEDGER_INGRESO_INPUTS: dict[CasillaId, Decimal] = {
 
 _BASE_BINDINGS: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     "renta-profile-declaration-type": Decimal("1"),
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+    "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
 }
 
@@ -385,8 +416,10 @@ def test_the_manual_states_the_activity_is_iva_exempt() -> None:
     operation has no cuota" from "nobody recorded one", and the whole exempt
     case rests on that distinction.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_ON_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_ON_DATE
+    )
 
 
 def test_the_two_printed_income_lines_fold_into_the_bound_casilla() -> None:

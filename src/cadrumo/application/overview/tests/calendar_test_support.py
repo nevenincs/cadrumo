@@ -23,8 +23,9 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.deadlines.models import ModeloEnrollment, TaxpayerProfile
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -45,7 +46,10 @@ from ...calculations.ports import (
     FiledDeclaracionObservationProtocol,
     ObservedCasillaValueProtocol,
 )
+from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_models import (
     OverviewCalendar,
     OverviewCalendarEvent,
@@ -187,6 +191,42 @@ def april_2025_range() -> OverviewCalendarRange:
     return OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
 
 
+def expediente_declaration(
+    expediente_id: str,
+    *,
+    presented_at: datetime = datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+    period: Period = PERIOD_2025_1T,
+    estado: str = "ALTA",
+) -> ExpedientesDeclaration:
+    return ExpedientesDeclaration(
+        modelo="303",
+        ejercicio=2025,
+        period=period,
+        expediente_id=expediente_id,
+        estado=estado,
+        presented_at=presented_at,
+    )
+
+
+def expedientes_filing_events(
+    *declarations: ExpedientesDeclaration,
+    snapshot_id: str = "f" * 64,
+    authenticated_identity: str | None = None,
+    captured_at: datetime = datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+    calendar_range: OverviewCalendarRange | None = None,
+) -> tuple[OverviewCalendarEvent, ...]:
+    snapshot = PersistedExpedientesSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=BUCKET_ID,
+        captured_at=captured_at,
+        source_url=SOURCE_URL,
+        authenticated_identity=authenticated_identity,
+        declarations=declarations,
+        persisted_at=captured_at.replace(minute=5),
+    )
+    return calendar_events_from_expedientes_snapshots((snapshot,), calendar_range or april_2025_range())
+
+
 def calendar_with_evidence(
     *,
     events: tuple[OverviewCalendarEvent, ...],
@@ -250,7 +290,7 @@ def filed_declaration_observation(
         _expediente_id=expediente_id,
         _status="ALTA",
         _presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        _authenticated_identity="X1234567L",
+        _authenticated_identity="X0001500M",
         _artefacts=artefacts,
     )
 
@@ -275,7 +315,7 @@ def justificante_metadata(
     modelo: str = "303",
     filing_year: int = 2025,
     period: Period = PERIOD_2025_1T,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
 ) -> Justificante:
     pdf_bytes = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
@@ -362,18 +402,21 @@ def profile() -> TaxpayerProfile:
     """A declared autónomo en estimación directa."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
-        professional_income_withholding_ge_70pct=False,
         art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
-        notes="overview-calendar test profile",
+        # Habitual residence in Spain selects the IRPF family these rows
+        # belong to, and the large-company condition selects their cadence.
+        # Both are stated so no assertion below turns on an unasked question.
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )

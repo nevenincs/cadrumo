@@ -12,13 +12,14 @@ import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import type { ToolCallStatus } from "../../shell/agentGatewayContract";
+import { describedGap } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { KIND_GLYPH } from "./files";
 import { Markdown, type OpenLink } from "./Markdown";
 import type {
   SentFile,
-  ToolActivityState,
   TranscriptItem,
   TranscriptMessage,
   TranscriptToolActivity,
@@ -33,22 +34,7 @@ const NEWEST_SLACK = 8;
 /** How much of the agent's thinking the preview keeps: its newest part. */
 const THINKING_SHOWN = 4_000;
 
-const lists = new Map<string, Intl.ListFormat>();
-
-/** Names joined as the locale joins a list of things. */
-function listFormat(locale: string): Intl.ListFormat {
-  let format = lists.get(locale);
-  if (!format) {
-    format = new Intl.ListFormat(locale, {
-      style: "long",
-      type: "conjunction",
-    });
-    lists.set(locale, format);
-  }
-  return format;
-}
-
-function toolWords(t: Translate): Record<ToolActivityState, string> {
+function toolWords(t: Translate): Record<ToolCallStatus, string> {
   return {
     pending: t("desktop.agent.tool_pending"),
     in_progress: t("desktop.agent.tool_running"),
@@ -58,34 +44,43 @@ function toolWords(t: Translate): Record<ToolActivityState, string> {
 }
 
 /** The files that went with a message, read-only, above its bubble. */
-function SentFiles({
-  files,
-  locale,
-}: {
-  files: readonly SentFile[];
-  locale: string;
-}) {
+function SentFiles({ files }: { files: readonly SentFile[] }) {
   const t = useStrings();
   const shown = files.slice(0, FILES_SHOWN);
   const folded = files.slice(FILES_SHOWN);
+  const fileBadge = (file: SentFile) => (
+    <li key={file.id} className="min-w-0 max-w-full">
+      <Badge className="min-h-control-xs max-w-full min-w-0 whitespace-normal">
+        <Icon name={KIND_GLYPH[file.kind]} size="xs" />
+        <span className="wrap-anywhere">{file.name}</span>
+      </Badge>
+    </li>
+  );
   return (
     <ul
       aria-label={t("desktop.agent.sent_files")}
       className="flex max-w-full flex-wrap justify-end gap-1"
     >
-      {shown.map((file) => (
-        <li key={file.id} title={file.name} className="min-w-0">
-          <Badge className="h-control-xs max-w-40 min-w-0">
-            <Icon name={KIND_GLYPH[file.kind]} size="xs" />
-            <span className="truncate">{file.name}</span>
-          </Badge>
-        </li>
-      ))}
+      {shown.map(fileBadge)}
       {folded.length > 0 && (
-        <li title={listFormat(locale).format(folded.map((file) => file.name))}>
-          <Badge className="h-control-xs">
-            {t("desktop.agent.more_files", { count: folded.length })}
-          </Badge>
+        <li className="min-w-0 max-w-full">
+          <details className="group">
+            <summary className="flex min-h-control-xs cursor-pointer list-none items-center justify-end gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2">
+              {t("desktop.agent.more_files", { count: folded.length })}
+              <Icon
+                name="chevronDown"
+                size="xs"
+                className="group-open:rotate-180"
+              />
+            </summary>
+            <ul
+              tabIndex={0}
+              aria-label={t("desktop.agent.sent_files")}
+              className="mt-1 flex max-h-48 max-w-full flex-wrap justify-end gap-1 overflow-y-auto rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2"
+            >
+              {folded.map(fileBadge)}
+            </ul>
+          </details>
         </li>
       )}
     </ul>
@@ -101,9 +96,9 @@ function SentSkills({ skills }: { skills: readonly string[] }) {
       className="flex max-w-full flex-wrap justify-end gap-1"
     >
       {skills.map((name) => (
-        <li key={name} title={name} className="min-w-0">
-          <Badge className="h-control-xs max-w-60 min-w-0">
-            <span className="truncate font-mono">/{name}</span>
+        <li key={name} className="min-w-0 max-w-full">
+          <Badge className="min-h-control-xs max-w-full min-w-0 whitespace-normal">
+            <span className="font-mono wrap-anywhere">/{name}</span>
           </Badge>
         </li>
       ))}
@@ -113,10 +108,8 @@ function SentSkills({ skills }: { skills: readonly string[] }) {
 
 const PersonTurn = memo(function PersonTurn({
   message,
-  locale,
 }: {
   message: Extract<TranscriptMessage, { kind: "person" }>;
-  locale: string;
 }) {
   const t = useStrings();
   const files = message.files ?? [];
@@ -127,12 +120,17 @@ const PersonTurn = memo(function PersonTurn({
         aria-label={t("desktop.agent.you_said")}
         className="flex min-w-0 flex-col items-end gap-1"
       >
-        {files.length > 0 && <SentFiles files={files} locale={locale} />}
+        {files.length > 0 && <SentFiles files={files} />}
         {skills.length > 0 && <SentSkills skills={skills} />}
         {message.text && (
           <p className="max-w-full rounded-lg bg-accent px-3 py-2 whitespace-pre-wrap text-foreground wrap-anywhere">
             {message.text}
           </p>
+        )}
+        {message.carriedLabel && (
+          <span className="text-xs text-muted-foreground wrap-anywhere">
+            {message.carriedLabel}
+          </span>
         )}
         {message.sending ? (
           <span
@@ -182,7 +180,7 @@ function Disclosure({
       <button
         type="button"
         aria-expanded={open}
-        aria-controls={region}
+        aria-controls={open ? region : undefined}
         onClick={() => setOpen((was) => !was)}
         className={cn(
           "group flex min-w-0 items-start gap-2 rounded-sm text-left hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2",
@@ -221,11 +219,13 @@ const AgentTurn = memo(function AgentTurn({
   message,
   onRetry,
   onOpenProviderSettings,
+  onChooseModel,
   onOpenLink,
 }: {
   message: Extract<TranscriptMessage, { kind: "agent" }>;
   onRetry?: (id: string) => void;
   onOpenProviderSettings?: () => void;
+  onChooseModel?: () => void;
   onOpenLink?: OpenLink;
 }) {
   const t = useStrings();
@@ -252,6 +252,11 @@ const AgentTurn = memo(function AgentTurn({
         aria-label={t("desktop.agent.agent_replied")}
         className="grid min-w-0 gap-1.5"
       >
+        {message.carriedLabel && (
+          <span className="text-xs text-muted-foreground wrap-anywhere">
+            {message.carriedLabel}
+          </span>
+        )}
         {text && <Markdown text={text} onOpenLink={onOpenLink} />}
         {state === "working" && message.waitingOnPerson && (
           <p className="text-sm text-muted-foreground">
@@ -298,6 +303,16 @@ const AgentTurn = memo(function AgentTurn({
                   {t("desktop.agent.settings")}
                 </AgentTextAction>
               )
+            ) : message.failureAction === "choose_model" ? (
+              onChooseModel && (
+                <AgentTextAction
+                  variant="outline"
+                  size="xs"
+                  onAction={onChooseModel}
+                >
+                  {t("desktop.agent.choose_another_model")}
+                </AgentTextAction>
+              )
             ) : (
               <AgentTextAction
                 variant="outline"
@@ -322,9 +337,11 @@ const ToolRow = memo(function ToolRow({
   const t = useStrings();
   const { state } = activity;
   const failed = state === "failed";
+  const outcome = state === null ? "" : toolWords(t)[state];
   return (
     <li className="flex min-w-0 items-start gap-2 pr-4 text-sm text-muted-foreground">
-      {state === "pending" || state === "in_progress" ? (
+      {state === null ? null : state === "pending" ||
+        state === "in_progress" ? (
         <Spinner className="mt-0.5" />
       ) : (
         <Icon
@@ -339,8 +356,7 @@ const ToolRow = memo(function ToolRow({
               {activity.label}
               {/* A failed call is said in words, not by its icon alone. */}
               <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
-                {failed ? "" : ", "}
-                {toolWords(t)[state]}
+                {failed || !outcome ? outcome : `${describedGap(t)}${outcome}`}
               </span>
             </span>
           }
@@ -359,6 +375,11 @@ const ToolRow = memo(function ToolRow({
             </div>
           ) : undefined}
         </Disclosure>
+        {failed && activity.failureMessage && (
+          <span className="text-xs text-destructive wrap-anywhere">
+            {activity.failureMessage}
+          </span>
+        )}
         {activity.detail && (
           <span className="text-xs wrap-anywhere">{activity.detail}</span>
         )}
@@ -381,15 +402,14 @@ const ToolRow = memo(function ToolRow({
  */
 export function Transcript({
   items,
-  locale,
   emptyHint,
   onRetry,
   onOpenProviderSettings,
+  onChooseModel,
   onOpenLink,
   followNewest = true,
 }: {
   items: readonly TranscriptItem[];
-  locale: string;
   /** What an empty conversation says in place of the default hint. */
   emptyHint?: string;
   /** Ask again for a failed reply. Without it, Retry says it is not
@@ -397,6 +417,8 @@ export function Transcript({
   onRetry?: (id: string) => void;
   /** Open the provider settings for a reply that needs sign-in. */
   onOpenProviderSettings?: () => void;
+  /** Open the model picker for a reply whose model the lane cannot run. */
+  onChooseModel?: () => void;
   /** Open an address a reply links to, outside the window. */
   onOpenLink?: OpenLink;
   /** Keep the newest turn in view as the conversation grows. */
@@ -405,13 +427,24 @@ export function Transcript({
   const t = useStrings();
   // Event handlers always use the current caller without invalidating every
   // completed row when the parent publishes another text chunk.
-  const actions = useRef({ onRetry, onOpenProviderSettings, onOpenLink });
-  actions.current = { onRetry, onOpenProviderSettings, onOpenLink };
+  const actions = useRef({
+    onRetry,
+    onOpenProviderSettings,
+    onChooseModel,
+    onOpenLink,
+  });
+  actions.current = {
+    onRetry,
+    onOpenProviderSettings,
+    onChooseModel,
+    onOpenLink,
+  };
   const retry = useCallback((id: string) => actions.current.onRetry?.(id), []);
   const settings = useCallback(
     () => actions.current.onOpenProviderSettings?.(),
     [],
   );
+  const chooseModel = useCallback(() => actions.current.onChooseModel?.(), []);
   const openLink = useCallback(
     (url: string) => actions.current.onOpenLink?.(url),
     [],
@@ -473,7 +506,7 @@ export function Transcript({
           <ol className="mt-auto grid gap-4 px-3 py-4">
             {items.map((item) =>
               item.kind === "person" ? (
-                <PersonTurn key={item.id} message={item} locale={locale} />
+                <PersonTurn key={item.id} message={item} />
               ) : item.kind === "agent" ? (
                 <AgentTurn
                   key={item.id}
@@ -482,6 +515,7 @@ export function Transcript({
                   onOpenProviderSettings={
                     onOpenProviderSettings ? settings : undefined
                   }
+                  onChooseModel={onChooseModel ? chooseModel : undefined}
                   onOpenLink={onOpenLink ? openLink : undefined}
                 />
               ) : (

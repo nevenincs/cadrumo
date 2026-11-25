@@ -57,7 +57,7 @@ _BUCKET_ID = "35353535-3535-4353-8353-353535353535"
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
 #: and these fixtures must carry real identifier shapes.
 _TAXPAYER_REF = "12345678Z"
-_OTHER_TAXPAYER_REF = "87654321X"
+_OTHER_TAXPAYER_REF = "X0001502F"
 
 
 @cache
@@ -80,6 +80,28 @@ def _local_recurrence_source(
         source_filing_year=filing_year,
         source_periods=(Period.from_year_and_code(filing_year, period),),
         registry_snapshot_refs=(_m303_snapshot_ref(filing_year, period),),
+    )
+
+
+def _save_positive_second_quarter_filing() -> None:
+    """Record a local 2026 2T M303 filing with a positive result and nothing pending."""
+    IvaCompensationHistoryRepository().save_period(
+        IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.APP_FILING,
+            taxpayer_nif=_TAXPAYER_REF,
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
+            registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+            presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+            prior_pending_amount=Decimal("0"),
+            applied_amount=Decimal("0"),
+            pending_for_later_amount=Decimal("0"),
+            period_result_amount=Decimal("399"),
+            final_result_amount=Decimal("399"),
+            generated_amount=Decimal("0"),
+            available_end_amount=Decimal("0"),
+            source_observation_key="303:2026:2T:positive-local-filing",
+        ),
     )
 
 
@@ -349,24 +371,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        IvaCompensationHistoryRepository().save_period(
-            IvaCompensationPeriodState(
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                taxpayer_nif=_TAXPAYER_REF,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
-                registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
-                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
-                prior_pending_amount=Decimal("0"),
-                applied_amount=Decimal("0"),
-                pending_for_later_amount=Decimal("0"),
-                period_result_amount=Decimal("399"),
-                final_result_amount=Decimal("399"),
-                generated_amount=Decimal("0"),
-                available_end_amount=Decimal("0"),
-                source_observation_key="303:2026:2T:positive-local-filing",
-            ),
-        )
+        _save_positive_second_quarter_filing()
         snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
         decision_repository = IvaWalletDecisionRepository()
@@ -421,24 +426,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
     that had just declared the producer must have no authority.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        IvaCompensationHistoryRepository().save_period(
-            IvaCompensationPeriodState(
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                taxpayer_nif=_TAXPAYER_REF,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
-                registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
-                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
-                prior_pending_amount=Decimal("0"),
-                applied_amount=Decimal("0"),
-                pending_for_later_amount=Decimal("0"),
-                period_result_amount=Decimal("399"),
-                final_result_amount=Decimal("399"),
-                generated_amount=Decimal("0"),
-                available_end_amount=Decimal("0"),
-                source_observation_key="303:2026:2T:positive-local-filing",
-            ),
-        )
+        _save_positive_second_quarter_filing()
         snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
 

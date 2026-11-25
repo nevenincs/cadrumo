@@ -2,11 +2,16 @@ import { useEffect, useId, useRef, useState } from "react";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { chordMatches, chordText, type ChordKeys } from "@/shared/chords";
 import { useStrings } from "../../shell/strings";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { TitleEditor } from "./TitleEditor";
 import type { ConversationGroup, ConversationSummary } from "./types";
+
+/** Renames the focused conversation: a row runs it, and the row's menu shows
+ * it. */
+const RENAME_CHORD: ChordKeys = { code: "F2", key: "F2" };
 
 /** A title matches a search when it holds every word of it, in any case. */
 function matches(title: string, query: string): boolean {
@@ -28,7 +33,7 @@ function DeleteConfirmation({
   const t = useStrings();
   const textId = useId();
   const question =
-    conversation.documentCount > 0
+    conversation.documentCount !== undefined && conversation.documentCount > 0
       ? t("desktop.agent.delete_confirm", {
           title: conversation.title,
           count: conversation.documentCount,
@@ -38,7 +43,7 @@ function DeleteConfirmation({
     <div
       role="group"
       aria-labelledby={textId}
-      className="grid gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2"
+      className="grid gap-2 rounded-md bg-destructive/5 p-2"
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.nativeEvent.isComposing) {
           event.stopPropagation();
@@ -160,6 +165,8 @@ export function HistoryList({
       items.push({
         id: "rename",
         label: t("desktop.agent.rename"),
+        icon: "edit",
+        chord: RENAME_CHORD,
         enabled: true,
         run: () => setRenaming(conversation.id),
       });
@@ -167,6 +174,7 @@ export function HistoryList({
       items.push({
         id: "restore",
         label: t("desktop.agent.restore"),
+        icon: "unarchive",
         enabled: true,
         run: () => restore(conversation.id),
       });
@@ -174,6 +182,7 @@ export function HistoryList({
       items.push({
         id: "archive",
         label: t("desktop.agent.archive"),
+        icon: "archive",
         enabled: true,
         run: () => archive(conversation.id),
       });
@@ -182,6 +191,7 @@ export function HistoryList({
       items.push({
         id: "delete",
         label: t("desktop.agent.delete"),
+        icon: "trash",
         enabled: true,
         run: () => setConfirming(conversation.id),
       });
@@ -205,7 +215,7 @@ export function HistoryList({
             type="search"
             controlSize="sm"
             value={query}
-            placeholder={t("desktop.agent.search_history")}
+            placeholder={t("desktop.agent.search_placeholder")}
             onChange={(event) => setQuery(event.target.value)}
             className="pl-7"
           />
@@ -265,20 +275,18 @@ export function HistoryList({
                           const items = rowMenu(conversation);
                           if (!onMenu || items.length === 0) return;
                           event.preventDefault();
-                          onMenu(
-                            items,
-                            { x: event.clientX, y: event.clientY },
-                            true,
-                          );
+                          onMenu(items, { x: event.clientX, y: event.clientY });
                         }}
                       >
                         <AgentTextAction
                           variant="ghost"
                           aria-current={conversation.current || undefined}
                           data-open-for={conversation.id}
-                          aria-keyshortcuts={onRename ? "F2" : undefined}
+                          aria-keyshortcuts={
+                            onRename ? chordText(RENAME_CHORD) : undefined
+                          }
                           onKeyDown={(event) => {
-                            if (event.key === "F2" && onRename) {
+                            if (chordMatches(RENAME_CHORD, event) && onRename) {
                               event.preventDefault();
                               setRenaming(conversation.id);
                             }
@@ -295,19 +303,20 @@ export function HistoryList({
                           </span>
                           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span>{conversation.lastActivityLabel}</span>
-                            {conversation.documentCount > 0 && (
-                              <span className="flex items-center gap-0.5">
-                                <Icon name="page" size="xs" />
-                                <span aria-hidden="true">
-                                  {conversation.documentCount}
+                            {conversation.documentCount !== undefined &&
+                              conversation.documentCount > 0 && (
+                                <span className="flex items-center gap-0.5">
+                                  <Icon name="page" size="xs" />
+                                  <span aria-hidden="true">
+                                    {conversation.documentCount}
+                                  </span>
+                                  <span className="sr-only">
+                                    {t("desktop.agent.row_documents", {
+                                      count: conversation.documentCount,
+                                    })}
+                                  </span>
                                 </span>
-                                <span className="sr-only">
-                                  {t("desktop.agent.row_documents", {
-                                    count: conversation.documentCount,
-                                  })}
-                                </span>
-                              </span>
-                            )}
+                              )}
                           </span>
                         </AgentTextAction>
                         <div className="flex shrink-0 gap-0.5 opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 pointer-coarse:opacity-100">

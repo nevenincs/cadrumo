@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#code-dedup-sweep'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:1858c16c9f8f3b20e4e2441cac46d7565ac2fd43324336fe0d6cab240780e0d1'
+body_hash: 'sha256:decee7ee8776aab351c2c949417a0ef4f5c8eda556ed5207a9bffe54bde6eadf'
 related: []
 ---
 
@@ -116,16 +116,23 @@ this cite*:
 BOGUS = "zzz-no-such-provision-9999"
 for path, anchor in every_anchored_corpus_ref():
     if path.endswith((".extracted.md", ".extracted.json")):
-        derived += 1; continue
+        derived += 1
+        continue
     side = DATA / (path + ".extracted.json")
+
     def resolves(a: str) -> bool:
         try:
-            resolve_anchored_extracted_unit(side, anchor=a); return True
+            resolve_anchored_extracted_unit(side, anchor=a)
+            return True
         except Exception:
             return False
-    if not resolves(anchor):      real_refused += 1
-    elif resolves(BOGUS):         unchecked += 1
-    else:                         enforced += 1
+
+    if not resolves(anchor):
+        real_refused += 1
+    elif resolves(BOGUS):
+        unchecked += 1
+    else:
+        enforced += 1
 ```
 
 ### two-probe-errors-same-class | high | Both early passes tested a real pattern against the wrong instance

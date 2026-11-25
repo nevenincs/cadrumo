@@ -25,13 +25,14 @@ from ..events import OperationEventCode
 from ..financial_operand_contract import OperationTransientFinancialOperandRequirementV1
 from ..interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..models import (
+    OperationDefinitionId,
     OperationId,
     OperationIdentity,
     OperationRevision,
     OperationTerminalReceipt,
 )
 from ..secret_submission import OperationSecretRequirement
-from . import _journal_snapshot_validation as _snapshot_validation
+from . import journal_snapshot_validation
 from .events import (
     OperationEvent,
     OperationPhaseEvent,
@@ -52,10 +53,10 @@ from .replay import (
     OperationReplayStatus,
 )
 
-_validate_checkpoint_state = _snapshot_validation.validate_checkpoint_state
-_validate_deadline_and_cancellation_state = _snapshot_validation.validate_deadline_and_cancellation_state
-_validate_request_storage = _snapshot_validation.validate_request_storage
-_validate_secret_state = _snapshot_validation.validate_secret_state
+_validate_checkpoint_state = journal_snapshot_validation.validate_checkpoint_state
+_validate_deadline_and_cancellation_state = journal_snapshot_validation.validate_deadline_and_cancellation_state
+_validate_request_storage = journal_snapshot_validation.validate_request_storage
+_validate_secret_state = journal_snapshot_validation.validate_secret_state
 
 
 class OperationPersistedSnapshot(BaseModel):
@@ -102,6 +103,11 @@ class OperationPersistedSnapshot(BaseModel):
     def operation_id(self) -> OperationId:
         """Return the filename identity consumed by the journal substrate."""
         return self.identity.operation_id
+
+    @property
+    def interruption_effect(self) -> OperationEffect:
+        """What an interruption can have done: nothing before the executor ran, otherwise unknown."""
+        return OperationEffect.NONE if self.executor_entered_at is None else OperationEffect.UNKNOWN
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -349,6 +355,15 @@ class OperationRecoveryInventoryEntry(BaseModel):
 
     operation_id: OperationId
     disposition: OperationRecoveryInventoryDisposition
+    #: The definition the record was opened for, read with its classification; absent exactly when it is refused.
+    definition_id: OperationDefinitionId | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _definition_named_unless_refused(self) -> OperationRecoveryInventoryEntry:
+        if (self.definition_id is None) != (self.disposition is OperationRecoveryInventoryDisposition.REFUSED):
+            raise ValueError("an operation inventory entry names its definition exactly when its record was read")
+        return self
 
 
 class OperationRecoveryInventoryPage(BaseModel):
@@ -372,6 +387,38 @@ class OperationRecoveryInventoryPage(BaseModel):
         return self
 
 
+class OperationRecoveryInventoryDelta(BaseModel):
+    """Every record a journal holds at one instant, classifying only those outside a caller's known set.
+
+    ``present`` names every record identifier, so a known record that is gone
+    shows as absent; ``entries`` classifies exactly the present records the
+    caller did not already know, in identifier order.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    present: frozenset[OperationId]
+    entries: tuple[OperationRecoveryInventoryEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_entries(self) -> OperationRecoveryInventoryDelta:
+        ids = tuple(entry.operation_id for entry in self.entries)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("operation inventory delta entries must be unique and ordered")
+        if not self.present.issuperset(ids):
+            raise ValueError("operation inventory delta classifies only present records")
+        return self
+
+
+@runtime_checkable
+class OperationRecoveryInventoryDeltaReader(Protocol):
+    """Name every journal record and classify only those a caller has not classified yet."""
+
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        """List every present record and classify each one outside ``known``, under one journal exclusion."""
+        ...
+
+
 @runtime_checkable
 class OperationRecoveryInventoryReader(Protocol):
     """Read credential-free journal identities before authorized recovery."""
@@ -384,7 +431,7 @@ class OperationRecoveryInventoryReader(Protocol):
 
 
 @runtime_checkable
-class OperationJournal(OperationRecoveryInventoryReader, Protocol):
+class OperationJournal(OperationRecoveryInventoryReader, OperationRecoveryInventoryDeltaReader, Protocol):
     """Atomic snapshot-plus-event persistence with optimistic revision checks."""
 
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot:

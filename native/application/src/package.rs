@@ -5,7 +5,6 @@ use crate::{
     value::{RelativePath, Sha256Digest},
 };
 use serde::Deserialize;
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     fs::{self, File},
@@ -295,7 +294,7 @@ fn read_delegated(
     if bytes.len() as u64 > filesystem::JSON_BYTES_LIMIT {
         return Err(Error::LimitExceeded);
     }
-    let actual = Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))?;
+    let actual = Sha256Digest::of(&bytes);
     cancellation.check()?;
     if actual != *expected {
         return Ok(Admission::Refused(Readiness::Incompatible(

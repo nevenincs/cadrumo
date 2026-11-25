@@ -172,7 +172,7 @@ fn require_package_cancellable(
     #[cfg(test)]
     PACKAGE_INSPECTIONS.with(|count| count.set(count.get() + 1));
     let manifest_path =
-        RelativePath::new(crate::contract::MODE_PACKAGE_MANIFEST).map_err(package_failure)?;
+        RelativePath::new(crate::contract::PACKAGE_MANIFEST).map_err(package_failure)?;
     let manifest = PackageManifest::read_cancellable(package, &manifest_path, cancellation)
         .map_err(package_failure)?;
     let contract: cadrumo_application::installation::DiscoveryContract =
@@ -277,7 +277,9 @@ fn same_directory(actual: &Path, expected: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics};
+    use cadrumo_application::diagnostics::{
+        DiagnosticSource, Diagnostics, delivery_wait::delivered,
+    };
     use std::{
         fs,
         path::PathBuf,
@@ -339,6 +341,8 @@ mod tests {
             require_identity(&identity, &root).unwrap_err().refusal,
             InspectionRefusal::RuntimeIdentityMismatch
         );
+        // Delivery is asynchronous; read the file only after the writer has drained.
+        delivered(&diagnostics);
         let log = fs::read_to_string(log).unwrap();
         assert!(log.contains("failed_version_marker"));
         assert!(log.contains("runtime_identity_mismatch"));
@@ -349,7 +353,7 @@ mod tests {
     fn a_runtime_start_checks_the_package_target_and_never_its_files() {
         let scratch = Scratch::new();
         let package = scratch.0.join("package");
-        let manifest = package.join(crate::contract::MODE_PACKAGE_MANIFEST);
+        let manifest = package.join(crate::contract::PACKAGE_MANIFEST);
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         let contract: cadrumo_application::installation::DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).unwrap();
@@ -384,6 +388,8 @@ mod tests {
         assert_eq!(failure.refusal, InspectionRefusal::PackageIncompatible);
         assert!(!failure.is_cancelled());
         crate::diagnostics::inspection_failed(&diagnostics, failure);
+        // Delivery is asynchronous; read the file only after the writer has drained.
+        delivered(&diagnostics);
         let log = fs::read_to_string(log).unwrap();
         assert!(log.contains("package_incompatible"));
         assert!(!log.contains("synthetic-private"));

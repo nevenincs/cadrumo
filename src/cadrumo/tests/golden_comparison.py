@@ -43,7 +43,7 @@ nothing else in the envelope does.  Only ``modelo.export``'s
 ``result.file_sha256`` and ``result.bucket_event_id`` are masked; the byte
 size and every other leaf remain assertable.
 
-Two ledger read refusals expose an opaque invocation id, minted separately
+Registered read refusals expose an opaque invocation id, minted separately
 from the transaction or evidence identity. Only their exact registered
 command/code pairs' ``error.context.operation_id`` are masked, and only when
 the value has the canonical lower-case 64-hex shape. Receipt correlation is
@@ -62,8 +62,38 @@ from ..core.json_contract import (
     RegisteredSchema,
     SchemaEnvelope,
 )
-from ..core.observability.errors import GoldenCaptureError, GoldenReplayMismatchError
 from ..core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
+
+
+class GoldenCaptureError(Exception):
+    """Raised when a captured envelope document cannot be typed or re-validated.
+
+    Surfaces an emitted-envelope document whose ``command`` is not in the
+    JSON-contract schema registry, or whose payload fails strict validation
+    against the registered schema. The comparison substrate refuses to compare
+    an untyped document, keeping the captured payload from degrading to a
+    ``dict[str, Any]`` bag.
+    """
+
+
+class GoldenReplayMismatchError(AssertionError):
+    """Raised when compared envelopes diverge after the declared mask.
+
+    Attributes:
+        differing_paths: Sorted tuple of dotted JSON paths that differ after
+            masking.
+    """
+
+    def __init__(self, *, differing_paths: tuple[str, ...], detail: str) -> None:
+        """Build the mismatch error and its diagnostic message.
+
+        Args:
+            differing_paths: Dotted JSON paths that differ after masking.
+            detail: Rendered human-readable diff summary.
+        """
+        super().__init__(detail)
+        self.differing_paths: tuple[str, ...] = differing_paths
+
 
 #: The sentinel a masked leaf is replaced with before comparison.
 MASK_SENTINEL = "<masked>"
@@ -86,6 +116,8 @@ GOLDEN_MASK_PATHS: frozenset[tuple[str, str]] = frozenset(
         # with every release while the rest of the envelope does not.
         ("modelo.export", "result.file_sha256"),
         ("modelo.export", "result.bucket_event_id"),
+        # The edit receipt id hashes the supervisor's per-invocation operation id.
+        ("modelo.work.attest_work_income", "result.receipt_id"),
     },
 )
 
@@ -93,6 +125,7 @@ _REFUSAL_OPERATION_ID_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("ledger.view", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
         ("ledger.evidence.view", "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"),
+        ("config.google.status", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
     },
 )
 
@@ -144,7 +177,7 @@ def mask_document(
 
 
 def _mask_refusal_operation_id(document: dict[str, object], command: str) -> None:
-    """Mask only a canonical invocation id on the two enrolled read refusals."""
+    """Mask only a canonical invocation id on the enrolled read refusals."""
     error = document.get("error")
     if not is_object_dict(error):
         return

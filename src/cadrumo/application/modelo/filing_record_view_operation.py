@@ -9,10 +9,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
-from ...core.casilla_id import validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import FilingRecordId
@@ -48,22 +49,28 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .filing_projection import ModeloRelatedFilingProjection, related_filing_projections
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .filing_record_ownership import load_profile_filing_record
-from .historical_filing_projection import ModeloHistoricalFilingContentProjection, project_historical_filing_content
+from .historical_filing_projection import (
+    ModeloHistoricalComparisonProjection,
+    ModeloHistoricalFilingContentProjection,
+    compare_historical_filing_content,
+    historical_display_words,
+    project_historical_filing_content,
+)
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 
 MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID = "modelo.filing_record.view"
 MODELO_FILING_RECORD_VIEW_RESULT_VERSION = 2
 MAX_FILING_RECORD_VIEW_CASILLA_VALUES = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _ObservationCasillaValues = Annotated[
-    tuple[tuple[Annotated[str, Field(min_length=1, max_length=32)], Annotated[str, Field(max_length=128)]], ...],
+    tuple[tuple[CasillaId, Annotated[str, Field(max_length=128)]], ...],
     Field(max_length=MAX_FILING_RECORD_VIEW_CASILLA_VALUES),
 ]
 _OverrideCasillaValues = Annotated[
-    tuple[tuple[Annotated[str, Field(min_length=1, max_length=32)], Annotated[str, Field(max_length=512)]], ...],
+    tuple[tuple[CasillaId, Annotated[str, Field(max_length=512)]], ...],
     Field(max_length=MAX_FILING_RECORD_VIEW_CASILLA_VALUES),
 ]
 
@@ -75,6 +82,7 @@ class ModeloFilingRecordViewRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     filing_record_id: FilingRecordId
+    output_language: OutputLanguage = OutputLanguage.ES
 
 
 class ModeloFilingObservationLayerProjection(BaseModel):
@@ -207,22 +215,52 @@ class ModeloFilingRecordViewProjection(BaseModel):
     record: ModeloFilingRecordListEntryProjection
     observation_layers: ModeloFilingObservationLayersProjection
     historical_content: ModeloHistoricalFilingContentProjection
+    related_filings: tuple[ModeloRelatedFilingProjection, ...] = ()
+    historical_display_words: str | None = None
+    comparison: ModeloHistoricalComparisonProjection | None = None
 
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
         record = self.record
-        layers = self.observation_layers
-        if (
-            record.filing_record_id != self.filing_record_id
-            or record.bucket_id != str(self.profile_id)
-            or record.modelo != layers.modelo
-            or record.filing_year != layers.filing_year
-            or record.period != layers.period
-            or record.member_nif != layers.member_nif
-            or self.historical_content.calculation_revision_id != record.calculation_revision_id
-        ):
-            raise ValueError("filing view coordinates do not match the selected profile and receipt")
+        _require_matching_coordinates(self, record)
+        _require_related_filings_match(self.related_filings, record)
+        if self.comparison is not None and self.comparison.base_filing_record_id != record.amends_filing_record_id:
+            raise ValueError("historical comparison does not select the filing's amendment base")
         return self
+
+
+def _require_matching_coordinates(
+    view: ModeloFilingRecordViewProjection, record: ModeloFilingRecordListEntryProjection
+) -> None:
+    layers = view.observation_layers
+    if (
+        record.filing_record_id != view.filing_record_id
+        or record.bucket_id != str(view.profile_id)
+        or record.modelo != layers.modelo
+        or record.filing_year != layers.filing_year
+        or record.period != layers.period
+        or record.member_nif != layers.member_nif
+        or view.historical_content.calculation_revision_id != record.calculation_revision_id
+    ):
+        raise ValueError("filing view coordinates do not match the selected profile and receipt")
+
+
+def _require_related_filings_match(
+    related_filings: tuple[ModeloRelatedFilingProjection, ...], record: ModeloFilingRecordListEntryProjection
+) -> None:
+    for related in related_filings:
+        if (
+            related.modelo != record.modelo
+            or related.filing_year != record.filing_year
+            or related.period != record.period
+            or related.member_nif != record.member_nif
+        ):
+            raise ValueError("related filing does not match the selected filing coordinate")
+    identities = tuple(item.filing_record_id for item in related_filings)
+    if len(identities) != len(set(identities)):
+        raise ValueError("related filings repeat an identity")
+    if related_filings and record.filing_record_id not in identities:
+        raise ValueError("related filings omit the selected filing")
 
 
 def _resolve_period(
@@ -239,7 +277,7 @@ def _resolve_period(
     return PublicPeriod.from_period(record.period)
 
 
-def _capture(
+def capture(
     payload: ModeloFilingRecordViewRequest,
     bundle: VerificationRepositoryBundle,
 ) -> ModeloFilingRecordViewProjection:
@@ -250,15 +288,31 @@ def _capture(
     layers = bundle.observation.load_observation_layers(str(record.modelo), record.period, member_nif=record.member_nif)
     if bundle.calculation.bucket_id != str(payload.profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    revision = bundle.calculation.load().get(record.calculation_revision_id)
+    revisions = bundle.calculation.load()
+    revision = revisions.get(record.calculation_revision_id)
+    historical_content = project_historical_filing_content(record, revision)
+    catalogue = bundle.filing.load()
+    related = related_filing_projections(catalogue, record, payload.output_language)
+    base = catalogue.get(record.amends_filing_record_id) if record.amends_filing_record_id is not None else None
+    if base is not None and base.filing_record_id not in {item.filing_record_id for item in related}:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     projection = ModeloFilingRecordViewProjection(
         profile_id=payload.profile_id,
         filing_record_id=payload.filing_record_id,
         record=ModeloFilingRecordListEntryProjection.from_record(record),
         observation_layers=ModeloFilingObservationLayersProjection.from_layers(layers),
-        historical_content=project_historical_filing_content(record, revision),
+        historical_content=historical_content,
+        related_filings=related,
+        historical_display_words=historical_display_words(historical_content, payload.output_language),
+        comparison=compare_historical_filing_content(
+            historical_content,
+            None
+            if base is None
+            else project_historical_filing_content(base, revisions.get(base.calculation_revision_id)),
+            base_filing_record_id=record.amends_filing_record_id,
+        ),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection
 
@@ -289,7 +343,7 @@ class ModeloFilingRecordViewExecutor:
 
         def read() -> ModeloFilingRecordViewProjection:
             bundle = self._factory(str(payload.profile_id), operation=context.authority_operation)
-            return _capture(payload, bundle)
+            return capture(payload, bundle)
 
         return await capture_read_result(context, read, task_name="modelo-filing-record-view")
 

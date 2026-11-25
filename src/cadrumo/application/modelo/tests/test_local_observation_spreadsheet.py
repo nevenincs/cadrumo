@@ -27,7 +27,7 @@ def _write_xlsx_with_stale_formula_cache(path: Path) -> None:
 
     worksheet_member = "xl/worksheets/sheet1.xml"
     original_cell = b'<c r="B2" t="n"><v>1</v></c>'
-    formula_cell_with_stale_cache = b'<c r="B2"><f>1+1</f><v>9999</v></c>'
+    formula_cell_with_stale_cache = b'<c r="B2"><f>1+1</f><v>7777</v></c>'
     with ZipFile(path) as source_archive:
         members = {member.filename: source_archive.read(member) for member in source_archive.infolist()}
     assert members[worksheet_member].count(original_cell) == 1
@@ -99,7 +99,7 @@ def test_parse_xlsx_refuses_stale_formula_cache_before_value_materialisation(tmp
         assert formula_sheet is not None
         assert cached_sheet is not None
         assert formula_sheet["B2"].value == "=1+1"
-        assert cached_sheet["B2"].value == 9999
+        assert cached_sheet["B2"].value == 7777
     finally:
         formula_workbook.close()
         cached_workbook.close()

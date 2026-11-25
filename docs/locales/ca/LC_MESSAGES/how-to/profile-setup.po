@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 17:01+0200\n"
+"POT-Creation-Date: 2026-11-01 02:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -242,7 +242,7 @@ msgid ""
 "first page asks for your output language. Answer it and the rest of the "
 "wizard renders in the language you chose. The pages then walk your "
 "identity, fiscal residence, economic activity, VAT, enrollment, family "
-"situation (including your descendientes), recurring obligations, and "
+"situation (including your descendants), recurring obligations, and "
 "service preferences, ending on a review page that shows every answer "
 "before anything is saved. Questions are conditional: the wizard only asks"
 " what applies to the answers you already gave."
@@ -253,10 +253,10 @@ msgstr ""
 "llengua de sortida. Respon-la i la resta de l'assistent es mostrarà en la"
 " llengua que hagis triat. Les pàgines recorren la teva identitat, "
 "residència fiscal, activitat econòmica, IVA, alta, situació familiar "
-"(inclosos els teus descendientes), obligacions recurrents i preferències "
-"de servei, i acaben en una pàgina de revisió que mostra cada resposta "
-"abans de desar res. Les preguntes són condicionals: l'assistent només "
-"pregunta allò que s'aplica a les respostes que ja has donat."
+"(inclosos els teus descendents), obligacions recurrents i preferències de"
+" servei, i acaben en una pàgina de revisió que mostra cada resposta abans"
+" de desar res. Les preguntes són condicionals: l'assistent només pregunta"
+" allò que s'aplica a les respostes que ja has donat."
 
 #: ../../how-to/profile-setup.md:101
 msgid ""
@@ -318,8 +318,9 @@ msgid ""
 "examples in this documentation are recorded in English."
 msgstr ""
 "La variable d'entorn `CADRUMO_OUTPUT_LANGUAGE` estableix l'idioma per a "
-"tota una sessió de shell i preval sobre el valor per defecte del perfil. "
-"Els exemples d'aquesta documentació s'han enregistrat en anglès."
+"tota una sessió de l'intèrpret d'ordres i preval sobre el valor per "
+"defecte del perfil. Els exemples d'aquesta documentació s'han enregistrat"
+" en anglès."
 
 #: ../../how-to/profile-setup.md:131
 msgid "Save now, finish later"
@@ -517,9 +518,9 @@ msgid ""
 "assume a regime when you leave it unset."
 msgstr ""
 "Per a una activitat, indica amb `--irpf-estimation-regime` com estima "
-"l'IRPF el rendiment. L'estimación directa (`directa_normal` o "
-"`directa_simplificada`) presenta el Modelo 130. El règim d'estimación "
-"objetiva (módulos), `objetiva`, presenta en canvi el Modelo 131. Cadrumo "
+"l'IRPF el rendiment. L'estimació directa (`directa_normal` o "
+"`directa_simplificada`) presenta el Modelo 130. El règim d'estimació "
+"objectiva (mòduls), `objetiva`, presenta en canvi el Modelo 131. Cadrumo "
 "no dona per suposat cap règim quan no l'estableixes."
 
 #: ../../how-to/profile-setup.md:225
@@ -556,14 +557,14 @@ msgstr ""
 msgid ""
 "This tool does not model the foral regimes. Setting the community to "
 "`pais_vasco` or `navarra` is refused, because residents there file with "
-"their *Hacienda Foral*, under the *Concierto Económico* (País Vasco) or "
-"the *Convenio Económico* (Navarra), not with the AEAT:"
+"their *Hacienda Foral*, under the *Concierto Económico* (Basque Country) "
+"or the *Convenio Económico* (Navarra), not with the AEAT:"
 msgstr ""
 "Aquesta eina no modela els règims forals. Establir la comunitat a "
 "`pais_vasco` o `navarra` es rebutja, perquè els residents d'aquests "
 "territoris presenten davant la seva *Hacienda Foral*, en virtut del "
-"*Concierto Económico* (País Vasco) o del *Convenio Económico* (Navarra), "
-"i no davant l'AEAT:"
+"*Concierto Económico* (País Basc) o del *Convenio Económico* (Navarra), i"
+" no davant l'AEAT:"
 
 #: ../../how-to/profile-setup.md:250
 msgid ""
@@ -720,19 +721,19 @@ msgstr ""
 #: ../../how-to/profile-setup.md:298
 msgid ""
 "`aeat app modelo readiness` checks one modelo, filing year, and period. "
-"Here the profile is ready (`profile_ready` is true), but the Modelo 303 "
-"source inputs are not (`binding_ready` is false), so the command exits "
-"with status 2. Use [Find out which modelos apply to you](choose-"
+"Here the profile is ready (`profile_ready` is `true`), but the Modelo 303"
+" source inputs are not (`binding_ready` is `false`), so the command exits"
+" with status 2. Use [Find out which modelos apply to you](choose-"
 "modelo.md) to find the period codes a modelo accepts. Fix any wrong facts"
 " with `edit` before you continue."
 msgstr ""
 "`aeat app modelo readiness` comprova un model, un any de presentació i un"
-" període. Aquí el perfil està a punt (`profile_ready` és true), però les "
-"entrades d'origen del Modelo 303 no ho estan (`binding_ready` és false), "
-"de manera que l'ordre acaba amb l'estat de sortida 2. Fes servir "
-"[Descobreix quins models t'apliquen](choose-modelo.md) per trobar els "
-"codis de període que accepta un model. Corregeix qualsevol dada errònia "
-"amb `edit` abans de continuar."
+" període. Aquí el perfil està a punt (`profile_ready` és `true`), però "
+"les entrades d'origen del Modelo 303 no ho estan (`binding_ready` és "
+"`false`), de manera que l'ordre acaba amb l'estat de sortida 2. Fes "
+"servir [Descobreix quins models t'apliquen](choose-modelo.md) per trobar "
+"els codis de període que accepta un model. Corregeix qualsevol dada "
+"errònia amb `edit` abans de continuar."
 
 #: ../../how-to/profile-setup.md:304
 msgid "How your facts decide which forms apply"
@@ -888,12 +889,12 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:343
 msgid ""
-"Descendientes are not part of profile edit. Manage them with the "
-"[descendiente command](#manage-your-descendants). The edit summary "
+"Descendants are not part of profile editing. Manage them with the "
+"[`descendiente` command](#manage-your-descendants). The edit summary "
 "reminds you of this every time."
 msgstr ""
-"Els descendientes no formen part de l'edició del perfil. Gestiona'ls amb "
-"l'[ordre descendiente](#manage-your-descendants). El resum de l'edició "
+"Els descendents no formen part de l'edició del perfil. Gestiona'ls amb "
+"l'[ordre `descendiente`](#manage-your-descendants). El resum de l'edició "
 "t'ho recorda cada vegada."
 
 #: ../../how-to/profile-setup.md:347
@@ -906,33 +907,33 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:351
 msgid "Manage your descendants"
-msgstr "Gestiona els teus descendientes"
+msgstr "Gestiona els teus descendents"
 
 #: ../../how-to/profile-setup.md:353
 msgid ""
-"Descendientes drive the *mínimo por descendientes* in the annual Renta. "
-"Declare them during first-time setup; manage them afterwards with the "
-"`descendiente` command."
+"Descendants determine the *minimum allowance for descendants (mínimo por "
+"descendientes)* in the annual Renta. Declare them during first-time "
+"setup; manage them afterwards with the `descendiente` command."
 msgstr ""
-"Els descendientes alimenten el *mínimo por descendientes* de la Renta "
+"Els descendents alimenten el *mínimo por descendientes* de la Renta "
 "anual. Declara'ls durant la configuració inicial i gestiona'ls després "
 "amb l'ordre `descendiente`."
 
 #: ../../how-to/profile-setup.md:357
 msgid "Open the paged descendant editor:"
-msgstr "Obre l'editor paginat de descendientes:"
+msgstr "Obre l'editor paginat de descendents:"
 
 #: ../../how-to/profile-setup.md:362
 msgid ""
-"The editor shows your declared descendientes, lets you change any answer,"
-" add one, or reduce the count, and saves the complete set when you "
-"confirm. Reducing the count removes the descendientes beyond it. The "
-"stored set always matches exactly what you confirmed."
+"The editor shows your declared descendants, lets you change any answer, "
+"add one, or reduce the count, and saves the complete set when you "
+"confirm. Reducing the count removes the descendants beyond it. The stored"
+" set always matches exactly what you confirmed."
 msgstr ""
-"L'editor mostra els descendientes declarats, et permet canviar qualsevol "
+"L'editor mostra els descendents declarats, et permet canviar qualsevol "
 "resposta, afegir-ne un o reduir-ne el nombre, i desa el conjunt complet "
-"quan confirmes. Reduir el nombre elimina els descendientes que queden més"
-" enllà. El conjunt desat coincideix sempre exactament amb el que has "
+"quan confirmes. Reduir el nombre elimina els descendents que queden més "
+"enllà. El conjunt desat coincideix sempre exactament amb el que has "
 "confirmat."
 
 #: ../../how-to/profile-setup.md:367
@@ -948,7 +949,7 @@ msgid ""
 "`tutela`), `INSCRIPCION`, `DISCAPACIDAD` (`0`, `33`, or `65`), "
 "`CONVIVENCIA`, `CUSTODIA`, `MESES_TRABAJO`, `GASTOS_GUARDERIA`, and "
 "`NIF`. Run `aeat config profile descendiente add --help` for the full "
-"list. A descendiente without a tax identifier is fine. Leave `NIF` out. "
+"list. A descendant without a tax identifier is fine. Leave `NIF` out. "
 "`remove` takes the position from `list`, counting from `0`."
 msgstr ""
 "`add` accepta un `--descendiente` per infant, com a parelles `KEY=VALUE` "
@@ -958,9 +959,9 @@ msgstr ""
 "`acogimiento_temporal` o `tutela`), `INSCRIPCION`, `DISCAPACIDAD` (`0`, "
 "`33` o `65`), `CONVIVENCIA`, `CUSTODIA`, `MESES_TRABAJO`, "
 "`GASTOS_GUARDERIA` i `NIF`. Executa `aeat config profile descendiente add"
-" --help` per veure la llista completa. Un descendiente sense "
-"identificador fiscal és correcte. Omet `NIF`. `remove` pren la posició de"
-" `list`, comptant des de `0`."
+" --help` per veure la llista completa. Un descendent sense identificador "
+"fiscal és correcte. Omet `NIF`. `remove` pren la posició de `list`, "
+"comptant des de `0`."
 
 #: ../../how-to/profile-setup.md:383
 msgid ""
@@ -978,13 +979,13 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:388
 msgid ""
-"Name the months. The guardería increment counts only the months the "
+"Name the months. The childcare increment counts only the months the "
 "mother worked *and* the child attended, so a count cannot say whether the"
 " two overlap."
 msgstr ""
-"Anomena els mesos. L'increment per guardería compta només els mesos en "
-"què la mare va treballar *i* el menor hi va assistir, de manera que un "
-"recompte no pot indicar si tots dos coincideixen."
+"Anomena els mesos. L'increment per llar d'infants compta només els mesos "
+"en què la mare va treballar *i* el menor hi va assistir, de manera que un"
+" recompte no pot indicar si tots dos coincideixen."
 
 #: ../../how-to/profile-setup.md:391
 msgid "Maintain your profile"
@@ -1067,23 +1068,31 @@ msgstr "Les tres capacitats són:"
 #: ../../how-to/profile-setup.md:430
 msgid ""
 "`cloud_evidence_upload`: allow sending sensitive supporting documents to "
-"a cloud LLM provider. Off by default. Barred for gestor profiles."
+"a cloud LLM provider. Off by default. Barred for <span "
+"lang=\"es\">gestor</span> profiles."
 msgstr ""
 "`cloud_evidence_upload`: permet enviar justificants sensibles a un "
 "proveïdor d'LLM al núvol. Desactivat per defecte. Vedat per als perfils "
 "de gestor."
 
 #: ../../how-to/profile-setup.md:432
-msgid "`llm_vision`: read invoices with the on-host vision model. On by default."
+msgid ""
+"`llm_vision`: read scanned and image invoices with the vision model you "
+"chose in the Cadrumo agent. On by default. It does not decide where the "
+"read runs: a model that reads off this computer also needs "
+"`cloud_evidence_upload` and your consent for each read."
 msgstr ""
-"`llm_vision`: llegeix factures amb el model de visió local. Activat per "
-"defecte."
+"`llm_vision`: llegeix factures escanejades i en imatge amb el model de "
+"visió que has triat a l'agent de Cadrumo. Activat per defecte. No "
+"decideix on s'executa la lectura: un model que llegeix fora d'aquest "
+"equip necessita a més `cloud_evidence_upload` i el teu consentiment per a"
+" cada lectura."
 
-#: ../../how-to/profile-setup.md:433
+#: ../../how-to/profile-setup.md:436
 msgid "`google_export`: export calculations to Google Sheets. On by default."
 msgstr "`google_export`: exporta càlculs a Google Sheets. Activat per defecte."
 
-#: ../../how-to/profile-setup.md:435
+#: ../../how-to/profile-setup.md:438
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -1098,7 +1107,7 @@ msgstr ""
 "extra; consulta [Instal·la Cadrumo](../workstation-setup.md) per als "
 "extres."
 
-#: ../../how-to/profile-setup.md:440
+#: ../../how-to/profile-setup.md:443
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout revokes "
@@ -1114,11 +1123,11 @@ msgstr ""
 "exigeixen una autenticació nova. Les credencials d'API inscrites "
 "conserven la seva autoritat independent:"
 
-#: ../../how-to/profile-setup.md:450
+#: ../../how-to/profile-setup.md:453
 msgid "See what changed"
 msgstr "Mira què ha canviat"
 
-#: ../../how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:455
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -1133,7 +1142,7 @@ msgstr ""
 "sessió oberta, així que inicia primer sessió al perfil. L'exemple llista "
 "els filtres que accepta `aeat config profile history`:"
 
-#: ../../how-to/profile-setup.md:462
+#: ../../how-to/profile-setup.md:465
 msgid ""
 "Repeat `--event-type` to include several types. Narrow the window with "
 "`--since` and `--until`, or match one record with `--object-id` or "
@@ -1146,11 +1155,11 @@ msgstr ""
 "acceptats, de manera que un valor buit és una manera ràpida de descobrir "
 "el vocabulari."
 
-#: ../../how-to/profile-setup.md:467
+#: ../../how-to/profile-setup.md:470
 msgid "Delete a profile permanently"
 msgstr "Elimina un perfil permanentment"
 
-#: ../../how-to/profile-setup.md:469
+#: ../../how-to/profile-setup.md:472
 msgid ""
 "Open **Manage profiles** from the profile menu or sign-in screen. You can"
 " create a profile or delete one stored under your current OS account. You"
@@ -1163,7 +1172,7 @@ msgstr ""
 "perfil per suprimir-lo. Els perfils d'altres comptes del sistema operatiu"
 " no apareixen a la llista."
 
-#: ../../how-to/profile-setup.md:473
+#: ../../how-to/profile-setup.md:476
 msgid ""
 "Choose **Delete profile**, type its displayed name exactly, and "
 "acknowledge the data loss. This permanently removes its local invoices, "
@@ -1180,7 +1189,7 @@ msgstr ""
 " perfil. Els registres sota protecció de conservació no es poden "
 "suprimir."
 
-#: ../../how-to/profile-setup.md:479
+#: ../../how-to/profile-setup.md:482
 msgid ""
 "On the command line, first review the named profile without `--yes`; "
 "nothing is deleted. Add `--yes` only when you intend to remove that "
@@ -1190,11 +1199,11 @@ msgstr ""
 "`--yes`; no se suprimeix res. Afegeix `--yes` només quan vulguis suprimir"
 " aquest perfil de manera permanent:"
 
-#: ../../how-to/profile-setup.md:486
+#: ../../how-to/profile-setup.md:489
 msgid "If setup looks wrong"
 msgstr "Si la configuració sembla incorrecta"
 
-#: ../../how-to/profile-setup.md:488
+#: ../../how-to/profile-setup.md:491
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1204,7 +1213,7 @@ msgstr ""
 " vàlid, o que estàs treballant sota el perfil incorrecte, consulta "
 "[Diagnostica i repara la teva configuració local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:492
+#: ../../how-to/profile-setup.md:495
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1218,26 +1227,26 @@ msgstr ""
 "deixar fora abans de portar el problema al gestor d'incidències del "
 "projecte."
 
-#: ../../how-to/profile-setup.md:498
+#: ../../how-to/profile-setup.md:501
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/profile-setup.md:500
+#: ../../how-to/profile-setup.md:503
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:501
+#: ../../how-to/profile-setup.md:504
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:502
+#: ../../how-to/profile-setup.md:505
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:503
+#: ../../how-to/profile-setup.md:506
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:504
+#: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

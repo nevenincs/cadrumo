@@ -1,10 +1,11 @@
-"""Profile output directories stay private while shared test-host locations retain their pins.
+"""The isolation fixture relocates the one storage root; shared test-host locations keep their pins.
 
-The canonical CLI isolation fixture relocates profile storage dynamically from
-the taxonomy. The repository bootstrap separately pins browser assets, diagnostic logs and
-process temporary files before application imports. Pytest scratch stays under
-the pinned temporary root. This
-gate verifies both lifetimes so a new output field cannot escape unnoticed.
+The canonical CLI isolation fixture replaces the storage root, the single
+control over where the product stores anything, so every member resolves beneath
+the test's own ``tmp_path``. The repository bootstrap separately pins the
+process temporary directories and the shared browser assets before application
+imports, and neither is a product storage member. This gate verifies both
+lifetimes so a new member cannot escape the fixture unnoticed.
 """
 
 from __future__ import annotations
@@ -17,58 +18,75 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.core.config import load_settings
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import ROOT_DERIVED_STORAGE_FIELDS, storage_location
+from cadrumo.core.storage_environment import STORAGE_ROOT, TEMPORARY_VARIABLES
+from cadrumo.core.storage_taxonomy import StorageCategory, StorageScope
+from cadrumo.core.storage_taxonomy_locations import (
+    STORAGE_TAXONOMY,
+    storage_location,
+    storage_path,
+    uses_external_transport,
+)
 
 __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
-def test_isolated_cli_backend_covers_every_state_root_derived_dir(
+def test_isolated_cli_backend_relocates_every_root_member_under_tmp_path(
     isolated_cli_backend: Path,
     tmp_path: Path,
 ) -> None:
-    """Check profile-derived paths and the bootstrap's shared locations independently.
+    """Every root-scoped member resolves beneath the fixture's root, which sits under ``tmp_path``.
 
-    Profile paths, including the independently provisioned secret-store sibling,
-    must stay under this test's ``tmp_path``. Browser assets, logs and temporary
-    files retain their exact host pins. The temporary root must also contain
-    pytest's own per-test scratch.
+    The fixture pins the root in the environment as well as in the settings, so
+    a child process started from the test inherits the same single control.
     """
-
     storage_root = isolated_cli_backend
     settings = load_settings()
 
-    assert settings.cadrumo_local_storage_root == storage_root
+    assert settings.cadrumo_storage_root == storage_root
+    assert os.environ[STORAGE_ROOT.variable] == str(storage_root)
+    assert storage_root.is_relative_to(tmp_path)
 
-    assert ROOT_DERIVED_STORAGE_FIELDS, "the root-derived member set must not be empty"
-    shared_pins: dict[str, Path] = {}
-    for category, variable in (
-        (StorageCategory.TEMPORARY_FILES, "CADRUMO_TEMP_DIR"),
-        (StorageCategory.PLAYWRIGHT_BROWSERS, "CADRUMO_PLAYWRIGHT_BROWSERS_DIR"),
-        (StorageCategory.LOGS, "CADRUMO_LOG_DIR"),
-    ):
-        field = storage_location(category).settings_field
-        assert field is not None and field in ROOT_DERIVED_STORAGE_FIELDS
-        pinned = Path(os.environ[variable])
-        assert pinned.is_absolute(), variable
-        shared_pins[field] = pinned
-    assert Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"]) == Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])
-    run_temporary_root = Path(tempfile.gettempdir())
-    assert run_temporary_root == Path(os.environ["TEMP"])
-    assert run_temporary_root.is_relative_to(Path(os.environ["CADRUMO_TEMP_DIR"]))
-    assert tmp_path.is_relative_to(run_temporary_root)
-    for field_name in ROOT_DERIVED_STORAGE_FIELDS:
-        value = getattr(settings, field_name)
-        assert value is not None, field_name
-        if field_name in shared_pins:
-            assert value == shared_pins[field_name], field_name
-            continue
-        assert value == tmp_path or tmp_path in value.parents, (
-            f"{field_name} did not relocate under the test's isolated tmp_path; "
-            f"got {value!r}, expected it under {tmp_path!r}"
+    members = [
+        location
+        for location in STORAGE_TAXONOMY.values()
+        if location.scope is StorageScope.ROOT and not uses_external_transport(location)
+    ]
+    assert members, "the root-scoped member set must not be empty"
+    for location in members:
+        resolved = storage_path(location.category, settings=settings)
+        assert resolved == storage_root / location.relative_path(), (
+            f"{location.category.value} did not relocate with the fixture's root; "
+            f"got {resolved!r}, expected it at {storage_root / location.relative_path()!r}"
         )
+        assert resolved.is_relative_to(tmp_path), location.category
+
+
+def test_shared_test_host_pins_are_not_product_storage(isolated_cli_backend: Path, tmp_path: Path) -> None:
+    """Process temporary files and browser assets keep the bootstrap's pins, outside the isolated root.
+
+    The temporary variables agree with the interpreter's temporary directory and
+    contain pytest's own per-test scratch. The browser assets are the operator's
+    shared install: the process-wide pin names the browser member's relative
+    location under a root other than the fixture's, so isolated profiles reuse
+    one download while the product member itself relocates with the root.
+    """
+    storage_root = isolated_cli_backend
+
+    temporary = {name: Path(os.environ[name]) for name in TEMPORARY_VARIABLES}
+    assert all(pinned.is_absolute() for pinned in temporary.values()), temporary
+    assert len(set(temporary.values())) == 1, "TEMP, TMP and TMPDIR must name one directory"
+    run_temporary_root = Path(tempfile.gettempdir())
+    assert run_temporary_root == temporary["TEMP"]
+    assert tmp_path.is_relative_to(run_temporary_root)
+
+    browsers = storage_location(StorageCategory.PLAYWRIGHT_BROWSERS)
+    shared_browsers = Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])
+    assert shared_browsers.is_absolute()
+    assert shared_browsers.parts[-len(browsers.relative_path().parts) :] == browsers.relative_path().parts
+    assert not shared_browsers.is_relative_to(storage_root), "the shared browser install must outlive the fixture"
+    assert storage_path(StorageCategory.PLAYWRIGHT_BROWSERS) == storage_root / browsers.relative_path()
 
 
 def test_isolated_cli_backend_yields_a_directory_under_tmp_path(isolated_cli_backend: Path, tmp_path: Path) -> None:

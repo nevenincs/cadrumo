@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -27,6 +28,7 @@ from ...core.operations import (
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access,
@@ -51,7 +53,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
@@ -73,6 +74,7 @@ from .m145_communication_projection import (
     project_m145_communication_result,
 )
 from .m145_communication_records_ports import M145CommunicationRecordsPortsFactory
+from .ports import FicheroBoeRecordRenderer
 
 
 def _resolve_access(
@@ -99,18 +101,7 @@ def _resolve_access(
         context,
         profile_id=context.profile_id,
         definition_id=operation_id,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-                permission,
-            }
-        ),
+        actions=OPERATION_LIFECYCLE_ACTIONS | frozenset({permission}),
         disclosures=disclosures,
         periods=frozenset(),
         period_independent=True,
@@ -155,11 +146,9 @@ def _build_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset(
-                {OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}
-                if mutating
-                else {OperationEffect.NONE, OperationEffect.UNKNOWN}
-            ),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT
+            if mutating
+            else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

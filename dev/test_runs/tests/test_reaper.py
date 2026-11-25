@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _run(root: Path, name: str, *, age: float, completed: bool, now: float) -> Path:
-    directory = root / "2026-09-08" / name
+    directory = root / "1980-09-08" / name
     directory.mkdir(parents=True)
     if completed:
         (directory / "run.json").write_text(json.dumps({"exit_status": 0}), encoding="utf-8")
@@ -53,6 +53,26 @@ def test_no_age_threshold_is_exposed_for_a_completed_run(tmp_path: Path) -> None
         "a new seconds threshold appeared; both existing ones bound how long UNFINISHED output"
         " may persist, and a third that applies to a finished run would be a retention window"
     )
+
+
+def test_seeded_running_record_does_not_authorize_reclaiming_live_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = 2_000_000_000.0
+    live = _run(tmp_path, "stamp-check-import-boundaries-301-aaaaaaaa", age=60, completed=False, now=now)
+    dead = _run(tmp_path, "stamp-locales-status-302-bbbbbbbb", age=3_600, completed=False, now=now)
+    for directory in (live, dead):
+        (directory / "artifacts").mkdir()
+        (directory / "run.json").write_text(json.dumps({"status": "running", "exit_status": 130}), encoding="utf-8")
+        os.utime(directory, (now - 3_600, now - 3_600))
+    monkeypatch.setattr(reaper, "process_is_live", lambda pid: pid == 301)
+
+    verdicts = reaper.assess_run_directories(tmp_path, now=now)
+
+    assert {row.directory: row.reclaimable for row in verdicts} == {live: False, dead: True}
+    assert reaper.reclaim_run_directories(verdicts) == 1
+    assert (live / "artifacts").is_dir()
+    assert not dead.exists()
 
 
 def test_a_recycled_pid_cannot_spare_unfinished_output_past_the_trust_ceiling(
@@ -119,7 +139,7 @@ def test_interrupted_run_requires_a_dead_owner_and_the_grace_period(
 def test_symlinks_are_never_assessed_or_removed(tmp_path: Path) -> None:
     target = tmp_path / "elsewhere"
     target.mkdir()
-    date = tmp_path / "2026-09-08"
+    date = tmp_path / "1980-09-08"
     date.mkdir()
     link = date / "stamp-pytest-999-dddddddd"
     # Unguarded: a host that cannot create a directory symlink raises here and

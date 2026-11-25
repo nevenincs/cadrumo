@@ -32,6 +32,8 @@ const REDISCOVERY_DELAY: Duration = Duration::from_secs(60);
 
 pub struct Coordinator {
     current: Selection,
+    /// The root-scoped session lock and IPC name this manager retakes after a cutover.
+    manager_id: String,
     /// When discovery is next due without a change to the versions directory.
     next: Option<Instant>,
     /// The versions directory and everything published below it.
@@ -52,13 +54,14 @@ pub struct Coordinator {
     notify: crate::wake::Slot,
 }
 impl Coordinator {
-    pub fn new(current: Selection) -> Self {
+    pub fn new(current: Selection, manager_id: String) -> Self {
         let mut versions = crate::change_watch::ChangeWatch::default();
         if let Some(directory) = versions_directory(&current) {
             versions.directory(directory, true);
         }
         Self {
             current,
+            manager_id,
             next: Some(Instant::now()),
             versions,
             versions_changed: false,
@@ -154,13 +157,16 @@ impl Coordinator {
             }
             if self.resume_requested {
                 if session.is_none() {
-                    *session = claim_session(crate::identity::MANAGER_ID, Duration::ZERO)?;
+                    *session = claim_session(&self.manager_id, Duration::ZERO)?;
                     if session.is_none() {
                         return Ok(false);
                     }
                 }
                 if ipc.is_none() {
-                    *ipc = Some(Server::bind_installed(&self.current.package)?);
+                    *ipc = Some(Server::bind_installed(
+                        &self.current.package,
+                        &self.manager_id,
+                    )?);
                 }
             }
             self.claim = None;
@@ -183,13 +189,16 @@ impl Coordinator {
             let previous = self.current.version.map(|part| part.to_string()).join(".");
             FailedVersions::record(root, release, &previous)?;
             if session.is_none() {
-                *session = claim_session(crate::identity::MANAGER_ID, Duration::ZERO)?;
+                *session = claim_session(&self.manager_id, Duration::ZERO)?;
             }
             if session.is_none() {
                 return Ok(false);
             }
             if ipc.is_none() {
-                *ipc = Some(Server::bind_installed(&self.current.package)?);
+                *ipc = Some(Server::bind_installed(
+                    &self.current.package,
+                    &self.manager_id,
+                )?);
             }
             runtime.rollback(
                 self.claim
@@ -212,13 +221,16 @@ impl Coordinator {
                     let previous = self.current.version.map(|part| part.to_string()).join(".");
                     FailedVersions::record(root, &parent.version(), &previous)?;
                     if session.is_none() {
-                        *session = claim_session(crate::identity::MANAGER_ID, Duration::ZERO)?;
+                        *session = claim_session(&self.manager_id, Duration::ZERO)?;
                         if session.is_none() {
                             return Ok(false);
                         }
                     }
                     if ipc.is_none() {
-                        *ipc = Some(Server::bind_installed(&self.current.package)?);
+                        *ipc = Some(Server::bind_installed(
+                            &self.current.package,
+                            &self.manager_id,
+                        )?);
                     }
                     let claim = parent
                         .take_claim()
@@ -254,11 +266,14 @@ impl Coordinator {
                         // No child was authorized. Keep the claim while restoring our
                         // ordinary session endpoint and the previously running version.
                         FailedVersions::record(&root, &release, &previous)?;
-                        *session = claim_session(crate::identity::MANAGER_ID, Duration::ZERO)?;
+                        *session = claim_session(&self.manager_id, Duration::ZERO)?;
                         if session.is_none() {
                             return Err(error);
                         }
-                        *ipc = Some(Server::bind_installed(&self.current.package)?);
+                        *ipc = Some(Server::bind_installed(
+                            &self.current.package,
+                            &self.manager_id,
+                        )?);
                         runtime.rollback(
                             self.claim
                                 .take()
@@ -401,7 +416,7 @@ mod tests {
         };
         let versions = versions_directory(&current).unwrap();
         std::fs::create_dir_all(&versions).unwrap();
-        let mut coordinator = Coordinator::new(current);
+        let mut coordinator = Coordinator::new(current, "test.cadrumo.coordinator.manager".into());
         let finished = crate::wake::windows::Event::new().unwrap();
         coordinator.notify_with(finished.notifier());
         let mut runtime = Busy {
@@ -453,7 +468,7 @@ mod tests {
             lease: None,
             registration: None,
         };
-        let mut coordinator = Coordinator::new(current);
+        let mut coordinator = Coordinator::new(current, "test.cadrumo.coordinator.manager".into());
         let mut runtime = Busy {
             root: root.clone(),
             abandoned: false,

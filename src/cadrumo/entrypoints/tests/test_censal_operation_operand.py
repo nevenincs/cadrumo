@@ -37,25 +37,33 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalOperationExecutor,
     CensalOperationRequest,
     CensalProfileBaseline,
-    CensalReviewedFieldIntent,
     CensalReviewedOperand,
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
+from cadrumo.application.user_profile.tests.censal_intent_support import censal_field_intents
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 12, tzinfo=UTC)
+#: The three paths a version 2 operand decided before the read learned more.
+_VERSION_2_PATHS = (
+    "contact.fiscal_address",
+    "contact.postcode",
+    "contact.fiscal_address_cadastral_reference",
+)
 
 
 def _test_censal_operation_definition():
@@ -92,7 +100,7 @@ def _domicilio(*, notification: bool) -> CensalObservationAddress:
     )
 
 
-def _operand() -> CensalReviewedOperand:
+def censal_operation_operand() -> CensalReviewedOperand:
     observation = CensalObservation(
         identity=CensalObservationIdentity(
             nif="12345678Z",
@@ -117,7 +125,7 @@ def _operand() -> CensalReviewedOperand:
             parse_censal_table(OBLIGATIONS_HTML, kind="obligaciones", source_url=aeat_url("www6", "/consulta")),
         ),
     )
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z", source="manual_cli"),),
         setup_state=ProfileSetupState.COMPLETE,
@@ -125,38 +133,29 @@ def _operand() -> CensalReviewedOperand:
         previous_record_digest="a" * 64,
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
     return CensalReviewedOperand(
         observation=observation,
         baseline=CensalProfileBaseline.from_record(record),
-        field_intents=(
-            CensalReviewedFieldIntent(
-                path="contact.fiscal_address",
-                intent=CensalFieldIntent.ADOPT,
-            ),
-            CensalReviewedFieldIntent(
-                path="contact.postcode",
-                intent=CensalFieldIntent.PRESERVE,
-            ),
-            CensalReviewedFieldIntent(
-                path="contact.fiscal_address_cadastral_reference",
-                intent=CensalFieldIntent.ADOPT,
-            ),
+        field_intents=censal_field_intents(
+            {
+                "contact.fiscal_address": CensalFieldIntent.ADOPT,
+                "contact.fiscal_address_cadastral_reference": CensalFieldIntent.ADOPT,
+            }
         ),
     )
 
 
 def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     assert CensalReviewedOperand.model_validate_json(operand.model_dump_json(), strict=True) == operand
 
     changed = operand.model_copy(
         update={
             "field_intents": (
                 operand.field_intents[0].model_copy(update={"intent": CensalFieldIntent.PRESERVE}),
-                operand.field_intents[1],
-                operand.field_intents[2],
+                *operand.field_intents[1:],
             )
         }
     )
@@ -167,7 +166,7 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
     invalid_intent_sets = (
         [],
         complete[:-1],
-        [complete[0], complete[0], complete[2]],
+        [complete[0], complete[0], *complete[2:]],
         list(reversed(complete)),
         [*complete, {"path": "contact.unknown", "intent": "preserve"}],
     )
@@ -183,24 +182,49 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
 def test_historical_review_preimage_without_consultations_keeps_its_digest() -> None:
     from cadrumo.core.hashing import content_hash_hex
 
-    payload = _operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
+    payload = censal_operation_operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
     del payload["observation"]["consultations"]
+    payload["schema_version"] = 2
+    payload["field_intents"] = [
+        item.model_dump(mode="json")
+        for item in censal_field_intents(
+            {"contact.fiscal_address": CensalFieldIntent.ADOPT},
+            paths=_VERSION_2_PATHS,
+        )
+    ]
     historical_digest = content_hash_hex(payload)
     payload["proposed_effect_digest"] = historical_digest
     restored = CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
+    assert restored.schema_version == 2
     assert restored.proposed_effect_digest == historical_digest
     assert restored.observation.consultations == ()
+    assert tuple(item.path for item in restored.field_intents) == _VERSION_2_PATHS
+
+
+def test_each_operand_version_refuses_the_other_versions_intent_paths() -> None:
+    operand = censal_operation_operand()
+    payload = operand.model_dump(mode="json", exclude={"proposed_effect_digest"})
+
+    version_2_with_every_path = {**payload, "schema_version": 2}
+    version_3_with_legacy_paths = {
+        **payload,
+        "schema_version": 3,
+        "field_intents": [item.model_dump(mode="json") for item in censal_field_intents(paths=_VERSION_2_PATHS)],
+    }
+    for invalid in (version_2_with_every_path, version_3_with_legacy_paths):
+        with pytest.raises(ValidationError, match="canonical adoptable"):
+            CensalReviewedOperand.model_validate_json(json.dumps(invalid), strict=True)
 
 
 def test_consultation_tampering_changes_the_existing_review_digest() -> None:
-    payload = _operand().model_dump(mode="json")
+    payload = censal_operation_operand().model_dump(mode="json")
     payload["observation"]["consultations"][0]["sections"][0]["rows"][0]["cells"][2]["text"] = "CHANGED"
     with pytest.raises(ValidationError, match="proposed-effect digest"):
         CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
 
 
 def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption(tmp_path: Path) -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository
         store = operation_secure_reference_repository(objects=objects)
@@ -224,7 +248,7 @@ def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption
 
 
 def test_censal_operation_definition_binds_complete_resumable_request() -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     definition = _test_censal_operation_definition()
     payload = CensalOperationRequest(
         baseline=operand.baseline,

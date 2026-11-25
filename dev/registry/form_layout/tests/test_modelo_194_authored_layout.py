@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormGridBlock,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -16,8 +17,9 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("revision_id", ["2019", "2023", "2024"])
-def test_summary_keeps_separate_bases_without_inventing_calculations(revision_id: str) -> None:
+@pytest.mark.parametrize("position", range(3))
+def test_summary_keeps_separate_bases_without_inventing_calculations(position: int) -> None:
+    revision_id = str(authored_revisions("194")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/194")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
@@ -53,8 +55,9 @@ def test_summary_keeps_separate_bases_without_inventing_calculations(revision_id
     assert "not a complete" in layout.review.notes
 
 
-@pytest.mark.parametrize(("epoch", "count"), [("2019", 28), ("2023", 29), ("2024", 29)])
-def test_published_editions_place_every_recipient_field_and_real_identity_context(epoch: str, count: int) -> None:
+@pytest.mark.parametrize(("position", "count"), [(0, 28), (1, 29), (2, 29)])
+def test_published_editions_place_every_recipient_field_and_real_identity_context(position: int, count: int) -> None:
+    epoch = str(authored_revisions("194")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/194")).revisions[epoch]
     layout = revision.form_layouts[0]
     assert all(p.kind.value == "on_form" for p in layout.placements)

@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import reg
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.cli_performance import profile_cli_path
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 
@@ -34,7 +35,7 @@ _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 
 def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, object]:
     return {
-        "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
+        "cadrumo_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": passphrase,
     }
 
@@ -208,7 +209,7 @@ def test_scripted_create_records_an_explicit_false_modelo_111_attestation_and_fr
                     "--modelo",
                     "111",
                     "--year",
-                    "2025",
+                    str(filing_year_envelope().horizon),
                     "--period",
                     "2T",
                 ),
@@ -557,7 +558,7 @@ def test_a_guidance_failure_after_commit_still_reports_the_creation(tmp_path: Pa
 
 #: Calls that mean a password key is being derived: the supervised KDF worker
 #: launch and the key derivation itself.
-_KEY_DERIVATION_CALL_MARKERS = ("_kdf_process:launch_worker", "aead:derive_key")
+_KEY_DERIVATION_CALL_MARKERS = ("kdf_process:launch_worker", "aead:derive_key")
 
 
 def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) -> None:
@@ -589,3 +590,40 @@ def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) 
         if any(marker in call for marker in _KEY_DERIVATION_CALL_MARKERS)
     )
     assert derived == []
+
+
+@pytest.mark.parametrize(
+    ("name", "surnames"),
+    [("Ana", "P" * 257), ("N" * 128, "S" * 128)],
+    ids=["a surname past its own bound", "a name and surnames that overrun together"],
+)
+def test_scripted_create_refuses_a_name_a_filing_cannot_carry_naming_the_field(
+    tmp_path: Path, name: str, surnames: str
+) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
+        created = invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "Overlong Operator",
+                "--quiet",
+                "--secrets-stdin",
+                "--entity-type",
+                "natural_person",
+                "--tax-id",
+                "12345678Z",
+                "--name",
+                name,
+                "--surnames",
+                surnames,
+            ),
+            input=_creation_payload(),
+        )
+
+    assert created.exit_code != 0, created.output
+    assert surnames not in created.output
+    assert "Apellidos" in created.output
+    assert "256" in created.output

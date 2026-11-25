@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as utc_now
 from ..auth.models import AuthState
 from .active_profile import (
@@ -53,7 +53,7 @@ class WorkflowState(BaseModel):
     precedence chain (Settings override > plaintext pointer file).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     auth: AuthState = Field(default_factory=AuthState)
     invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)

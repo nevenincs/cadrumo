@@ -12,7 +12,8 @@ from collections.abc import Iterable
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from .models import LedgerDatePartition, TransactionCatalogue
+from .date_partition import LedgerDatePartition
+from .models import TransactionCatalogue
 
 
 @runtime_checkable

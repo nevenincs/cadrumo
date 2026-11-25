@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import cast
 
 import pytest
 from textual.containers import VerticalScroll
@@ -11,14 +12,22 @@ from textual.widgets import DataTable, Static
 
 from .....application.ledger.workspace import (
     LedgerWorkspaceArea,
+    LedgerWorkspaceAvailability,
+    LedgerWorkspaceProjectionV1,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
+from .....application.user_profile.language_resolver import adopt_profile_output_language, register_language_resolver
+from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
+from .....core.identity.transaction_ids import TransactionId
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
+from ..controller import LEDGER_TRANSACTION_FOCUS
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
@@ -28,6 +37,8 @@ from .workspace_fixtures import (
     LEDGER_TX_B,
     ledger_context,
     ledger_controller,
+    ledger_evidence_action,
+    ledger_focused_context,
     ledger_projection,
     ledger_review_action,
 )
@@ -91,6 +102,117 @@ def test_factory_requires_real_outer_context_and_keeps_injected_projection() -> 
         )
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("selected", (LEDGER_TX_B, cast("TransactionId", "f" * 64)), ids=("shown", "not-shown"))
+async def test_a_selection_landing_on_the_overview_because_entries_are_unavailable_says_it_was_dropped(
+    selected: TransactionId,
+) -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    factory = ledger_screen_factory(projection, review_action=ledger_review_action())
+    screen = factory(ledger_focused_context(selected))
+    assert isinstance(screen, LedgerOverviewScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#ledger-refusal", Static).render())
+    assert notice == tr("tui.ledger.overview.selection_dropped")
+    assert notice != "tui.ledger.overview.selection_dropped"
+
+
+@pytest.mark.asyncio
+async def test_an_overview_opened_without_a_selection_carries_no_notice() -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    screen = ledger_screen_factory(projection, review_action=ledger_review_action())(ledger_context())
+    assert isinstance(screen, LedgerOverviewScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        assert str(screen.query_one("#ledger-refusal", Static).render()) == ""
+
+
+@pytest.mark.asyncio
+async def test_a_refused_area_picked_by_an_action_carries_no_entries_notice_even_with_a_selection() -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.EVIDENCE)
+    evidence = ledger_evidence_action()
+    factory = ledger_screen_factory(projection, review_action=ledger_review_action(), evidence_action=evidence)
+    context = TuiScreenContextV1(
+        destination="workbench.ledger",
+        focus=TuiFocusIdentityV1(
+            destination="workbench.ledger", semantic_key=LEDGER_TRANSACTION_FOCUS, restore_token=LEDGER_TX_B
+        ),
+        action_candidate_id=evidence.action_id,
+    )
+    screen = factory(context)
+    assert isinstance(screen, LedgerOverviewScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        assert str(screen.query_one("#ledger-refusal", Static).render()) == ""
+
+
+@pytest.mark.asyncio
+async def test_the_dropped_selection_notice_is_reworded_when_the_language_changes() -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    screen = ledger_screen_factory(projection, review_action=ledger_review_action())(
+        ledger_focused_context(LEDGER_TX_B)
+    )
+    assert isinstance(screen, LedgerOverviewScreen)
+    with override_settings(cadrumo_output_language=""):
+        register_language_resolver()
+        adopt_profile_output_language(OutputLanguage.EN)
+        try:
+            async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+                await settle(pilot)
+                english = str(screen.query_one("#ledger-refusal", Static).render())
+                adopt_profile_output_language(OutputLanguage.ES)
+                await screen.refresh_language()
+                await settle(pilot)
+                spanish = str(screen.query_one("#ledger-refusal", Static).render())
+                expected = tr("tui.ledger.overview.selection_dropped")
+        finally:
+            adopt_profile_output_language(None)
+    assert english != spanish
+    assert spanish == expected
+    assert spanish != "tui.ledger.overview.selection_dropped"
+
+
+def _whole_ledger_unavailable() -> LedgerWorkspaceProjectionV1:
+    """A projection whose every area, the overview included, is locked."""
+    projection = ledger_projection()
+    return projection.model_copy(
+        update={
+            "areas": tuple(
+                state.model_copy(
+                    update={"availability": LedgerWorkspaceAvailability.LOCKED, "reason_code": "ledger.locked"}
+                )
+                for state in projection.areas
+            )
+        }
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("selected", (True, False), ids=("with-selection", "without-selection"))
+async def test_an_unavailable_ledger_says_the_selected_entry_is_not_shown_only_when_one_was_selected(
+    selected: bool,
+) -> None:
+    factory = ledger_screen_factory(_whole_ledger_unavailable(), review_action=ledger_review_action())
+    screen = factory(ledger_focused_context(LEDGER_TX_B) if selected else ledger_context())
+    assert isinstance(screen, LedgerUnavailableScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        clause = screen.query("#ledger-selection-dropped")
+        refusal = str(screen.query_one("#ledger-refusal", Static).render())
+        if selected:
+            text = str(cast(Static, clause.first()).render())
+            assert text == tr("tui.ledger.unavailable.selection_dropped")
+            assert text != "tui.ledger.unavailable.selection_dropped"
+        else:
+            assert not clause
+    assert refusal == tr("tui.ledger.refusal.application_state")
+
+
 def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalogue() -> None:
     with pytest.raises(KeyError, match="unknown operator action ID"):
         ledger_screen_factory(ledger_projection(), review_action=ActionReference(action_id="operator.ledger.absent"))
@@ -101,8 +223,7 @@ def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalo
             review_action=ActionReference(action_id=classified.action_id),
         )
     review_action = ledger_review_action()
-    controller = ledger_controller(ledger_projection())
-    assert all(row.action == review_action for row in controller.review_rows())
+    assert ledger_controller(ledger_projection()).review_action == review_action
     assert lookup_action(review_action.action_id).target_command_key == "ledger.review"
 
 
@@ -114,7 +235,7 @@ async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_hori
     screen = screen_type(ledger_controller(ledger_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         navigation = screen.query_one("#ledger-navigation", DataTable)
         assert navigation.row_count == 7
         assert geometry_band(app, 80) == []
@@ -130,18 +251,18 @@ async def test_navigation_refusal_and_review_selection_preserve_semantic_identit
     screen = LedgerReviewScreen(ledger_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         navigation = screen.query_one("#ledger-navigation", DataTable)
         navigation.move_cursor(row=1)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.refusal is not None
         assert screen.refusal.target.area is LedgerWorkspaceArea.ENTRIES
         assert "ledger.locked" not in _all_copy(screen)
         review = screen.query_one("#ledger-review", DataTable)
         review.focus()
         await pilot.press("down", "enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.requested_transaction_id == LEDGER_TX_B
         await pilot.press("escape")
         assert screen.back_requested
@@ -169,7 +290,7 @@ async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_
     # the right edge. Full disclosure is therefore asserted where every column
     # fits, and the sibling overflow gates own the narrow sizes.
     async with app.run_test(size=TERMINAL_WIDE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert tuple(widget.id for widget in screen.focus_chain) == ("ledger-navigation", "ledger-entries")
         copy = _all_copy(screen)
         for field in (
@@ -187,13 +308,11 @@ async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_
 
 @pytest.mark.asyncio
 async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses_all_statuses() -> None:
-    from .....core.config import override_settings
-
     with override_settings(cadrumo_output_language="en"):
         review_screen = LedgerReviewScreen(ledger_controller(ledger_projection()))
         app = ScreenHostApp[None](review_screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             navigation = review_screen.query_one("#ledger-navigation", DataTable)
             import_row = tuple(str(cell) for cell in navigation.get_row("import"))
             evidence_row = tuple(str(cell) for cell in navigation.get_row("evidence"))
@@ -209,7 +328,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
         overview_screen = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview_screen)
         async with overview_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             quality = overview_screen.query_one("#ledger-quality", DataTable)
             evidence_row = tuple(str(cell) for cell in quality.get_row("evidence"))
             assert evidence_row == ("Supporting documents", "Not measured", "Not measured")
@@ -231,25 +350,23 @@ async def test_transaction_focus_restores_by_identity_after_row_reordering() -> 
     screen = LedgerEntriesScreen(ledger_controller(reordered, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#ledger-entries", DataTable)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == LEDGER_TX_A
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.selected_transaction_id == LEDGER_TX_A
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
 async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary(locale: OutputLanguage) -> None:
-    from .....core.config import override_settings
-
     with override_settings(cadrumo_output_language=locale.value):
         overview = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview)
         async with overview_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _all_copy(overview)
             assert _LOCALE_EXPECTED[locale][0] in rendered
             assert "tui.ledger." not in rendered
@@ -262,7 +379,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
         review = LedgerReviewScreen(ledger_controller(ledger_projection()))
         review_app = ScreenHostApp[None](review)
         async with review_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _all_copy(review)
             assert _LOCALE_EXPECTED[locale][1] in rendered
             assert _LOCALE_EXPECTED[locale][2] in rendered

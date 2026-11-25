@@ -25,6 +25,9 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
+#: Art. 161 4.o: labores del tabaco ride on the general IVA rate with their own
+#: recargo, so their pairing is a separate fact keyed the same way.
+IVA_RECARGO_TOBACCO_FACT_ID = "iva-recargo-labores-del-tabaco"
 
 
 class RecargoRateRecord(BaseModel):
@@ -75,6 +78,7 @@ def recargo_rate_record_for_applied_rate(
     on_date: date,
     *,
     operation: PinnedAuthorityOperation,
+    fact_id: str = IVA_RECARGO_FACT_ID,
 ) -> RecargoRateRecord | None:
     """Return the dated pairing record, or ``None`` when no candidate exists.
 
@@ -83,9 +87,9 @@ def recargo_rate_record_for_applied_rate(
     zero-rate pairing remains a record with ``recargo_rate == 0``; it is not
     confused with the no-candidate ``None`` result.
     """
-    if not _recargo_fact_candidate_exists(applied_rate, on_date, operation=operation):
+    if not _recargo_fact_candidate_exists(applied_rate, on_date, operation=operation, fact_id=fact_id):
         return None
-    resolved = resolve_recargo_rate_for_applied_rate(applied_rate, on_date, operation=operation)
+    resolved = resolve_recargo_rate_for_applied_rate(applied_rate, on_date, operation=operation, fact_id=fact_id)
     return recargo_rate_record_from_fact(resolved)
 
 
@@ -94,11 +98,12 @@ def resolve_recargo_rate_for_applied_rate(
     on_date: date,
     *,
     operation: PinnedAuthorityOperation,
+    fact_id: str = IVA_RECARGO_FACT_ID,
 ) -> ResolvedMappingFact:
     """Resolve the dated recargo pairing with its complete governed-fact provenance."""
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id=IVA_RECARGO_FACT_ID,
+            fact_id=fact_id,
             date_axis=DateAxis.DEVENGO_DATE,
             effective_date=on_date,
             selectors=(FactSelector(name="applied_rate", value=applied_rate),),
@@ -114,6 +119,7 @@ def _recargo_fact_candidate_exists(
     on_date: date,
     *,
     operation: PinnedAuthorityOperation,
+    fact_id: str,
 ) -> bool:
     """Return false only for an unmodelled applied-rate/date pairing.
 
@@ -121,7 +127,7 @@ def _recargo_fact_candidate_exists(
     or other invalid exact selection remains a loud fail-closed error rather
     than being mistaken for the public ``None`` sentinel.
     """
-    fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
+    fact = operation.governed_fact(fact_id)
     return any(
         variant.date_axis is DateAxis.DEVENGO_DATE
         and variant.valid_from is not None
@@ -148,6 +154,7 @@ def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateR
 
 __all__ = [
     "IVA_RECARGO_FACT_ID",
+    "IVA_RECARGO_TOBACCO_FACT_ID",
     "RecargoRateRecord",
     "recargo_rate_record_for_applied_rate",
     "recargo_rate_record_from_fact",

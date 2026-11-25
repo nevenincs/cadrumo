@@ -28,8 +28,9 @@ from ...adapters.persistence.profile.recipient_replay_guard import RecipientRepl
 from ...adapters.persistence.profile.review_package_recipient_encryption import build_recipient_encryption_capability
 from ...adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ...adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
-from ...application.modelo.export import ModeloExportCommand, export_modelo_revision
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.export import export_modelo_revision
+from ...application.modelo.export_contracts import ModeloExportCommand
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.recipient_encryption import RecipientEncryptedPackage, RecipientEncryptionKeypair
 from ...application.modelo.review_package import build_review_package
 from ...application.modelo.review_package_counter_sign import (
@@ -78,7 +79,7 @@ from ...application.modelo.review_package_signing import (
 from ...core.corpus_manifest.manifest import verify_corpus_bundle
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEvent, BucketEventType
-from ..adapter_composition import build_modelo_export_ports
+from ..adapter_composition_ports import build_modelo_export_ports
 from ..review_package_exchange_operation_composition import build_review_package_exchange_operation_ports
 from . import modelo_operation_test_support
 from .conformance_family_contract import (
@@ -136,7 +137,7 @@ def _profile_signing_keypair(profile_id: UUID) -> ReviewPackageSigningKeypair:
     )
 
 
-def _profile_recipient_keypair(profile_id: UUID) -> RecipientEncryptionKeypair:
+def profile_recipient_keypair(profile_id: UUID) -> RecipientEncryptionKeypair:
     bucket_id = str(profile_id)
     return ensure_recipient_encryption_keypair(
         bucket_id=bucket_id, recipient_encryption=build_recipient_encryption_capability(bucket_id=bucket_id)
@@ -165,7 +166,7 @@ def _register_recipient(profile_id: UUID, recipient_id: str, public_key_hex: str
 def _seal_for_profile(profile_id: UUID, payload: bytes, *, review_only: bool) -> RecipientEncryptedPackage:
     return encrypt_review_package_for_recipient(
         payload,
-        recipient_public_key_hex=_profile_recipient_keypair(profile_id).public_key_hex,
+        recipient_public_key_hex=profile_recipient_keypair(profile_id).public_key_hex,
         recipient_encryption=build_recipient_encryption_capability(bucket_id=str(profile_id)),
         review_only=review_only,
     )
@@ -174,7 +175,7 @@ def _seal_for_profile(profile_id: UUID, payload: bytes, *, review_only: bool) ->
 def _open_as_profile(profile_id: UUID, envelope: RecipientEncryptedPackage) -> bytes:
     return decrypt_review_package_for_recipient(
         envelope,
-        recipient_private_key_hex=_profile_recipient_keypair(profile_id).private_key_hex,
+        recipient_private_key_hex=profile_recipient_keypair(profile_id).private_key_hex,
         recipient_encryption=build_recipient_encryption_capability(bucket_id=str(profile_id)),
     ).package_bytes
 
@@ -269,7 +270,7 @@ def _prepare_counter_sign(context: ConformanceFamilyContext) -> ConformancePrepa
 
 def _prepare_encrypt_for_recipient(context: ConformanceFamilyContext) -> ConformancePreparation:
     package = _seed_package(context)
-    recipient = _profile_recipient_keypair(context.profile_id)
+    recipient = profile_recipient_keypair(context.profile_id)
     _register_recipient(context.profile_id, _RECIPIENT_ID, recipient.public_key_hex)
     output = context.input_root / "recipient-envelope.json"
     before = _events(BucketEventType.COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT)
@@ -341,7 +342,7 @@ def _prepare_decrypt(context: ConformanceFamilyContext) -> ConformancePreparatio
 
 def _prepare_encrypt_feedback(context: ConformanceFamilyContext) -> ConformancePreparation:
     package = _seed_package(context)
-    originator_recipient = _profile_recipient_keypair(context.profile_id)
+    originator_recipient = profile_recipient_keypair(context.profile_id)
     _register_recipient(context.profile_id, _ORIGINATOR_ID, originator_recipient.public_key_hex)
     signed = sign_review_package(package.path, keypair=_counterparty_signing_keypair(), operation=context.operation)
     receipt = counter_sign_review_package(
@@ -409,7 +410,7 @@ def _prepare_import_feedback(context: ConformanceFamilyContext) -> ConformancePr
     )
     envelope = encrypt_feedback_package_for_originator(
         feedback,
-        originator_public_key_hex=_profile_recipient_keypair(context.profile_id).public_key_hex,
+        originator_public_key_hex=profile_recipient_keypair(context.profile_id).public_key_hex,
         recipient_encryption=build_recipient_encryption_capability(bucket_id=str(context.profile_id)),
     )
     envelope_path = _write_json(context.input_root / "feedback-envelope.json", envelope.model_dump_json(indent=2))

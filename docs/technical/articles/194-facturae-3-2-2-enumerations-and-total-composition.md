@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-194` · **Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
+**Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
 
 <!-- preserved:article -->
 ## Scope and assessment

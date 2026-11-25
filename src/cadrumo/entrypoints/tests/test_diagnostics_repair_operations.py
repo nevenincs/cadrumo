@@ -17,13 +17,13 @@ import pytest
 from pydantic import AnyHttpUrl, BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
 from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import (
+from ...adapters.persistence.storage.secure_object_probe_namespaces import (
     TEST_RUNTIME_PROFILE_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
 )
@@ -47,29 +47,33 @@ from ...application.diagnostics_repair_operations import (
     build_connectivity_probe_definition,
 )
 from ...application.ledger.tests.bulk_classify_operation_support import CommitFence, EffectEvents, PrivateOperands
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.owner import OperationExecutorContext
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
 from ...application.user_profile.access_contracts import SessionKind
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.workflow.persistence import workflow_state_repository
 from ...application.workflow.state_models import WorkflowState
 from ...core.errors.hierarchy import SiteHealthState
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..diagnostics_repair_composition import DiagnosticsRepairOperations, build_diagnostics_repair_operations
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("93939393-9393-4393-8393-939393939393")
 _SOUND_NAMESPACE = TEST_SESSION_LIFECYCLE_NAMESPACE.namespace
 _TORN_NAMESPACE = TEST_RUNTIME_PROFILE_NAMESPACE.namespace
-_SEEDED_PROGRESS_AT = datetime(2026, 4, 2, 9, 30, 11, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(_YEAR, 4, 2, 9, 30, 11, tzinfo=UTC)
 _AUTOMATION_CLIENT = UUID("a4a4a4a4-a4a4-44a4-84a4-a4a4a4a4a4a4")
 _OBSERVED = SiteHealthStatus(
     state=SiteHealthState.MANTENIMIENTO,
@@ -79,7 +83,7 @@ _OBSERVED = SiteHealthStatus(
         html_fragment="<html>synthetic maintenance page</html>",
         detected_markers=("mantenimiento", "retry-after:120"),
     ),
-    observed_at=datetime(2026, 4, 2, 9, 31, 0, tzinfo=UTC),
+    observed_at=datetime(_YEAR, 4, 2, 9, 31, 0, tzinfo=UTC),
     retry_after_seconds=120,
 )
 
@@ -472,14 +476,7 @@ def test_each_resolver_gives_the_three_frontends_the_same_decision(
     operations = build_diagnostics_repair_operations()
     registry = OperationRegistry(definitions=operations.definitions, public_registrations=operations.registrations)
     contract = registry.lookup_public_registration(definition_id).contract
-    context = OperationAccessContext(
-        profile_id=_PROFILE,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    context = operation_access_context(contract, profile_id=_PROFILE)
     request = _request(definition_id, payload)
 
     for action in (AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT):

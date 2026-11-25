@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterator
 from dataclasses import replace
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -16,10 +18,20 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.iva.schema import InvoiceKind
+from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import TransactionCatalogue
+from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -27,7 +39,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.operation_definition import OperationDefinition
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..export_operation import (
@@ -45,7 +57,7 @@ from ..link_operation import (
 )
 from ..persistence_ports import LedgerPersistenceConflictError
 from .bulk_classify_operation_support import PROFILE_ID
-from .export_link_operation_support import Subject
+from .export_link_operation_support import Rates, Subject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -195,6 +207,88 @@ def test_link_single_atomic_writer_returns_full_quintet_or_truthful_failure(subj
         assert subject.repository.commits == (0 if mode == "conflict" else 1)
 
 
+def test_link_resolves_an_invoice_prefix_to_the_one_catalogue_invoice(subject: Subject) -> None:
+    definition = _definition(subject, "link")
+    request = _request(
+        definition,
+        LedgerLinkRequest(
+            profile_id=PROFILE_ID,
+            transaction_id=subject.transaction.transaction_id[:12],
+            invoice_id=subject.invoice.invoice_id[:12],
+        ),
+    )
+
+    asyncio.run(definition.executor_factory.create().execute(request, subject.context(definition.definition_id)))
+
+    retained = subject.operands.values[0]
+    assert isinstance(retained, LedgerLinkExecutionResult) and retained.result.projection is not None
+    assert retained.result.outcome == "linked"
+    assert retained.result.invoice_id == subject.invoice.invoice_id
+    assert retained.result.projection.invoice_id == subject.invoice.invoice_id
+    stored = subject.invoices.load().get(subject.invoice.invoice_id)
+    assert stored is not None and subject.transaction.transaction_id in stored.linked_transaction_ids
+    registration = build_ledger_link_registration(definition)
+    assert registration.result_projector is not None
+    assert registration.result_projector(retained, _receipt(definition)) == retained.result
+
+
+def test_link_refuses_an_ambiguous_invoice_prefix_naming_every_candidate_without_writing(subject: Subject) -> None:
+    # Seventeen content-addressed hex ids cannot all begin with a different digit.
+    invoices = {
+        invoice.invoice_id: invoice
+        for invoice in (
+            build_catalogue_invoice(
+                bucket_id=str(PROFILE_ID),
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Synthetic supplier",
+                counterparty_tax_id="B00015016",
+                counterparty_country="ES",
+                invoice_number=f"synthetic-prefix-{number}",
+                issued_at=date(filing_year_envelope().horizon, 4, 10),
+                currency="EUR",
+                taxable_base=Decimal("10"),
+                iva_rate=Decimal("21"),
+                rate_provider=Rates(),
+                operation=subject.operation,
+            )
+            for number in range(17)
+        )
+    }
+    subject.invoices._catalogue = InvoiceCatalogue(invoices=invoices)
+    prefix = next(
+        digit for digit in "0123456789abcdef" if sum(invoice_id.startswith(digit) for invoice_id in invoices) > 1
+    )
+    candidates = tuple(invoice_id for invoice_id in invoices if invoice_id.startswith(prefix))
+    definition = _definition(subject, "link")
+    request = _request(
+        definition,
+        LedgerLinkRequest(
+            profile_id=PROFILE_ID, transaction_id=subject.transaction.transaction_id[:12], invoice_id=prefix
+        ),
+    )
+
+    evidence = asyncio.run(
+        definition.executor_factory.create().execute(request, subject.context(definition.definition_id))
+    )
+
+    assert (
+        isinstance(evidence, OperationRefusalEvidence) and evidence.refusal_code == LEDGER_LINK_VALIDATION_REFUSAL_CODE
+    )
+    retained = subject.operands.values[0]
+    assert isinstance(retained, LedgerLinkExecutionResult)
+    assert retained.result.reason == "ambiguous_invoice" and retained.result.projection is None
+    assert retained.result.invoice_id == prefix
+    assert retained.result.candidate_invoice_ids == candidates
+    assert (
+        not subject.events.load().events
+        and subject.repository.commits == 0
+        and subject.effects.effects[-1] is OperationEffect.NONE
+    )
+    registration = build_ledger_link_registration(definition)
+    assert registration.result_projector is not None
+    assert registration.result_projector(retained, _receipt(definition, refusal=True)) == retained.result
+
+
 @pytest.mark.parametrize("reason", ["missing_invoice", "cross_bucket_invoice"])
 def test_operator_invoice_refusal_retains_only_closed_no_write_facts(subject: Subject, reason: str) -> None:
     if reason == "missing_invoice":
@@ -236,6 +330,41 @@ def test_operator_invoice_refusal_retains_only_closed_no_write_facts(subject: Su
         registration.result_projector(
             retained, _receipt(definition, refusal=True).model_copy(update={"effect": OperationEffect.UNKNOWN})
         )
+
+
+@pytest.mark.parametrize(
+    "facts",
+    [
+        {"direction": TransactionDirection.INTERNAL_TRANSFER},
+        {"lifecycle_state": TransactionLifecycleState.ARCHIVED},
+        {"lifecycle_state": TransactionLifecycleState.STASHED},
+        {"lifecycle_state": TransactionLifecycleState.SPLIT},
+    ],
+)
+def test_a_transfer_or_a_row_that_takes_no_change_refuses_the_link_without_writing(
+    subject: Subject, facts: dict[str, object]
+) -> None:
+    row = subject.transaction.model_copy(update=facts)
+    subject.repository._catalogue = TransactionCatalogue.from_transactions((row,))
+    definition = _definition(subject, "link")
+    request = _request(
+        definition,
+        LedgerLinkRequest(
+            profile_id=PROFILE_ID,
+            transaction_id=row.transaction_id,
+            invoice_id=subject.invoice.invoice_id,
+        ),
+    )
+    evidence = asyncio.run(
+        definition.executor_factory.create().execute(request, subject.context(definition.definition_id))
+    )
+    assert isinstance(evidence, OperationRefusalEvidence)
+    retained = subject.operands.values[0]
+    assert isinstance(retained, LedgerLinkExecutionResult)
+    assert retained.result.reason == "transaction_takes_no_invoice" and retained.result.projection is None
+    assert subject.repository.commits == 0 and not subject.events.load().events
+    invoice = subject.invoices.load().get(subject.invoice.invoice_id)
+    assert invoice is not None and invoice.linked_transaction_ids == ()
 
 
 def test_guarded_invoice_owner_recheck_refuses_changed_snapshot_before_atomic_writer(
@@ -312,7 +441,7 @@ def test_exact_scope_and_dual_category_consent_on_every_frontend(subject: Subjec
         LedgerExportRequest(
             profile_id=POLICY_PROFILE_ID,
             output_path=str(tmp_path / "ledger.csv"),
-            period=PublicPeriod(filing_year=2024, code="2T"),
+            period=PublicPeriod(filing_year=filing_year_envelope().horizon, code="2T"),
         )
         if kind == "export"
         else LedgerLinkRequest(

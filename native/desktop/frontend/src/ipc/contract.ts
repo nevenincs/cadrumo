@@ -1,37 +1,100 @@
 // The desktop shell's published IPC contract: the app commands the Rust host
-// registers, the frames its channels carry, and the postMessage bridge between
-// the shell document and the documentation frame.
+// registers, with the arguments and results each carries. The frames its
+// channels carry and the postMessage bridge between the shell document and
+// the documentation frame are declared beside it, in this directory.
 //
-// Types, plus the terminal frame tags as constants; nothing else here runs.
-// Field names and casing follow the host's serde output exactly.
+// Types only; nothing here runs. Field names and casing follow the host's
+// serde output exactly.
 
 import type { Channel } from "@tauri-apps/api/core";
+import type { AgentAccessAnswer } from "../shell/agentAccess";
+import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
+import type {
+  AttachmentCardAnswer,
+  AttachmentGrantRevokeAnswer,
+  AttachmentGrantsAnswer,
+  AttachmentReleaseAnswer,
+  ReleaseScope,
+} from "../shell/attachmentAdminContract";
+import type {
+  LocalEngine,
+  LocalEngineStatus,
+  LocalModelListStatus,
+  LocalPlacement,
+} from "../shell/localModelsContract";
+import type {
+  AttachmentPolicyResponse,
+  ModelLicenceResponse,
+  SkillDetailRecord,
+  SkillListResponse,
+  SkillVerificationRecord,
+} from "../shell/agentGatewayContract";
 import type {
   AgentAnswerResult,
-  AgentApproval,
-  AgentProviderCatalog,
-  AgentQuestionnaire,
+  AgentDropSignal,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
-  AgentUploadEvent,
-  AgentUploadPick,
   AgentSendResult,
   AgentServiceStatus,
   AgentStreamEvent,
+  AgentUploadEvent,
+  AgentUploadPick,
 } from "../shell/agentSession";
-import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type {
-  AgentSnapshot,
   AgentConversationRecord,
   AgentDocumentPage,
+  AgentDocumentRecord,
   AgentDocumentsQuery,
-  AgentTurnRecord,
 } from "../shell/agentViews";
 import type {
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
   ProviderSignInSnapshot,
-} from "../shell/providerSettings";
+} from "../shell/providerSettingsContract";
+import type {
+  ManagerSignal,
+  ManagerStatus,
+  PasswordChangeResult,
+  ProfileDeleteReview,
+  ProfileList,
+  SignInSignal,
+  SignInStatus,
+  SignOutResult,
+} from "./account";
+import type {
+  DesktopSetup,
+  SetupCheckMode,
+  SetupItemId,
+  SetupModelDownload,
+  SetupRemoval,
+} from "./componentSetup";
+import type { DiagnosticsSnapshot } from "./diagnostics";
+import type {
+  AboutInfo,
+  DesktopEnvironment,
+  DesktopLanguage,
+} from "./environment";
+import type {
+  SedeClipboardAction,
+  SedeViewDelivery,
+  SedeViewInput,
+  SedeViewVerb,
+} from "./sedeViewMessages";
+import type {
+  TerminalAck,
+  TerminalClose,
+  TerminalClosed,
+  TerminalKind,
+  TerminalOpened,
+  TerminalResize,
+  TerminalSize,
+} from "./terminalFrames";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+  AgentSnapshot,
+  AgentTurnRecord,
+} from "../shell/agentSnapshotContract";
 
 // ---------------------------------------------------------------------------
 // Launch token
@@ -92,11 +155,13 @@ export type HostErrorCode =
   | "timed_out"
   | "output_limit"
   | "spawn_failed"
+  | "child_failed"
   | "read_failed"
   | "write_failed"
   | "resize_failed"
   | "cleanup_failed"
   | "session_unavailable"
+  | "setup_failed"
   | "queue_full"
   | "cli_busy"
   | "cli_wait_timed_out"
@@ -153,94 +218,6 @@ export type ProcessRole =
   | "console"
   | "sign_in"
   | "manager_dispatch";
-
-// ---------------------------------------------------------------------------
-// about_info
-// ---------------------------------------------------------------------------
-
-/** One name with its version, ordered by name. */
-export type AboutNamed = { name: string; version: string };
-
-/** A native binary of the installed package. Every field the package does
- * not state is null. */
-export type AboutComponent = {
-  name: string | null;
-  role: string | null;
-  path: string | null;
-  version: string | null;
-  build_id: string | null;
-  build_type: string | null;
-};
-
-/** What this installation is: the installed package manifest's statement,
- * plus the desktop binary's own compile-time identity. A null is a value the
- * package or the build did not state; the shell says it is unavailable. */
-export type AboutInfo = {
-  product: string | null;
-  display_version: string | null;
-  version: string | null;
-  build_id: string | null;
-  build_type: string | null;
-  build_date: string | null;
-  channel: string | null;
-  target: string | null;
-  /** The bundled CPython runtime's version. */
-  python: string | null;
-  desktop: {
-    version: string | null;
-    build_id: string | null;
-    build_type: "debug" | "release";
-  };
-  components: AboutComponent[];
-  /** Null when the package does not bundle the agent. */
-  agent: { version: string | null; dependencies: AboutNamed[] } | null;
-  /** Bundled tools by name, for example `node`. */
-  tools: Record<string, string>;
-  distributions: AboutNamed[];
-};
-
-// ---------------------------------------------------------------------------
-// desktop_environment
-// ---------------------------------------------------------------------------
-
-export type DocsLanguage = {
-  /** Language code, for example `en`, `es`, `ca`, `hu`. */
-  code: string;
-  /**
-   * The language's entry page from the docs manifest, as an absolute URL on
-   * the documentation origin with its path segments percent-encoded. Use it
-   * as given; do not rebuild it from `origin`.
-   */
-  entry: string;
-};
-
-export type DesktopLanguage = {
-  language: string;
-  persisted: boolean;
-  profile: string | null;
-  /** Monotonic host revision shared by reads, writes and observations. */
-  revision: number;
-};
-
-export type DesktopEnvironment = {
-  /** The output language Settings resolved for this profile. */
-  outputLanguage: string;
-  /** Initial minimum severity selected by the host; defaults to INFO. */
-  logLevel: LogLevel;
-  /** The package's statement of whether it carries the documentation. */
-  docs: DesktopDocs;
-};
-
-export type DesktopDocs =
-  | {
-      state: "bundled";
-      /** The documentation origin, computed by the host for this platform. */
-      origin: string;
-      languages: DocsLanguage[];
-    }
-  | { state: "notBundled" }
-  /** Bundled, but this launch could not open it; everything else still works. */
-  | { state: "unavailable" };
 
 // ---------------------------------------------------------------------------
 // Logs (logs_subscribe, logs_unsubscribe)
@@ -330,389 +307,18 @@ export type LogSubscription = {
  */
 export type ClipboardText = { text: string };
 
-/**
- * `id` and `label` are 1 to 128 and 1 to 256 characters, `shortcut` 1 to 64,
- * none with control characters; ids are unique within one menu.
- */
-export type ContextMenuAction = {
-  /** Returned as `chosen`; the host namespaces it internally per popup. */
-  id: string;
-  /** Shown literally; an `&` is not a mnemonic marker. */
-  label: string;
-  /** A disabled item is shown but can never be `chosen`. */
-  enabled: boolean;
-  /** Display-only accelerator text shown beside the label; binds nothing. */
-  shortcut?: string;
-};
-
-/** Exactly `{ separator: true }`; any other field is refused. */
-export type ContextMenuSeparator = { separator: true };
-
-export type ContextMenuItem = ContextMenuAction | ContextMenuSeparator;
-
-/**
- * 1 to 64 items with at least one action. `x` and `y` are both present or
- * both omitted; one without the other is refused with `invalid_arguments`.
- */
-export type ContextMenuRequest = {
-  items: ContextMenuItem[];
-} & (
-  | {
-      /**
-       * Logical position in shell CSS pixels: for a documentation menu, the
-       * iframe rect plus its border plus the relayed client coordinates, with
-       * no device-pixel scaling. Finite, with a magnitude of at most 1e6.
-       */
-      x: number;
-      y: number;
-    }
-  | {
-      /** Omit both for a pointer-opened menu, which opens at the cursor. */
-      x?: never;
-      y?: never;
-    }
-);
-
-/** Resolves when the native menu closes; `null` when it was dismissed. */
-export type ContextMenuResult = { chosen: string | null };
-
-// ---------------------------------------------------------------------------
-// Terminals
-// ---------------------------------------------------------------------------
-
-/**
- * At most one session per kind: `console` is the platform's interactive
- * shell and `python` the packaged interpreter's REPL, both started in the
- * user's home; `tui` is the Cadrumo TUI, started in the storage root.
- */
-export type TerminalKind = "console" | "python" | "tui";
-/** A protected editor has its own session and an exact profile target. */
-export type TerminalTarget =
-  TerminalKind | { aeat_setup: { profile_id: string } };
-
-/** A session id from `terminal_open`; a replaced or closed id is refused. */
-export type TerminalSessionId = number;
-
-/** Columns and rows are each an integer from 2 to 1000. */
-export type TerminalSize = { cols: number; rows: number };
-
-/**
- * Every message on a session's frame channel arrives as an `ArrayBuffer`
- * holding one frame: a tag byte, then the payload. One channel orders every
- * frame, and frames can arrive before `terminal_open` resolves.
- *
- * | Tag | Frame     | Payload                                    |
- * | --- | --------- | ------------------------------------------ |
- * | 0   | `data`    | PTY output bytes, 1 to 8192                |
- * | 1   | `started` | UTF-8 JSON `TerminalStartedPayload`        |
- * | 2   | `exited`  | UTF-8 JSON `TerminalExitedPayload`         |
- * | 3   | `failed`  | UTF-8 JSON `TerminalFailedPayload`         |
- *
- * An empty frame, an empty `data` frame, an unknown tag or a payload that is
- * not the stated JSON is malformed.
- */
-export const TerminalFrameTag = {
-  data: 0,
-  started: 1,
-  exited: 2,
-  failed: 3,
-} as const;
-
-export type TerminalFrameType = keyof typeof TerminalFrameTag;
-export type TerminalFrameTagValue =
-  (typeof TerminalFrameTag)[TerminalFrameType];
-
-/** The largest `data` payload, in bytes. */
-export type TerminalDataLimit = 8192;
-
-/** The `started` payload: the child's operating-system process id. */
-export type TerminalStartedPayload = { pid: number };
-
-/**
- * The `exited` payload. `code` is the child's exit code as an unsigned
- * 32-bit value, so a Windows status such as `0xC000013A` arrives as a large
- * positive number; it is `null` when the host could not read the status.
- */
-export type TerminalExitedPayload = { code: number | null };
-
-/** The `failed` payload: the serialized host failure. */
-export type TerminalFailedPayload = { error: HostFailure };
-
-/**
- * Output bytes. Only `data` payload bytes advance the offset `terminal_ack`
- * acknowledges.
- */
-export type TerminalDataFrame = { type: "data"; bytes: Uint8Array };
-
-/** The first frame of a session. */
-export type TerminalStartedFrame = {
-  type: "started";
-} & TerminalStartedPayload;
-
-/**
- * The last frame of a session whose child exited on its own: it follows
- * every `data` frame. A session settled by `terminal_close` or by a new
- * shell document stops delivering frames and sends no `exited`.
- */
-export type TerminalExitedFrame = { type: "exited" } & TerminalExitedPayload;
-
-/**
- * A read, write or wait failure. A read failure ends output; write and wait
- * failures are reported just before `exited`. Not itself the last frame.
- */
-export type TerminalFailedFrame = { type: "failed" } & TerminalFailedPayload;
-
-/** One decoded frame, discriminated by `type`. */
-export type TerminalFrame =
-  | TerminalDataFrame
-  | TerminalStartedFrame
-  | TerminalExitedFrame
-  | TerminalFailedFrame;
-
 export type TerminalOpenArguments = TerminalSize & {
-  kind: TerminalTarget;
+  kind: TerminalKind;
   /** Receives the session's frames, each as an `ArrayBuffer`. */
   frames: Channel<ArrayBuffer>;
 };
 
-export type TerminalOpened = { session: TerminalSessionId };
+export type StartupPhase = "environment" | "runtime" | "workspace";
 
-/**
- * The cumulative count of `data` payload bytes the shell has consumed. A
- * stale offset changes nothing; an offset beyond the bytes delivered is
- * refused with `invalid_arguments`. The host stops reading the PTY once
- * 512 KiB are unacknowledged and resumes below 128 KiB, so the child blocks
- * rather than losing output.
- */
-export type TerminalAck = { session: TerminalSessionId; offset: number };
-
-export type TerminalResize = TerminalSize & { session: TerminalSessionId };
-
-export type TerminalClose = { session: TerminalSessionId };
-
-/** Resolves once the session has settled: its child and workers are gone. */
-export type TerminalClosed = Record<never, never>;
-
-/**
- * The headers of a `terminal_write` call, as a plain object passed as
- * `invoke`'s `headers` option. The session header is the id in decimal.
- */
-export type TerminalWriteHeaders = {
-  [Name in TokenHeader]: ShellToken;
-} & { [Name in SessionHeader]: string };
-
-/**
- * The body of a `terminal_write` call: raw input bytes, at most 65,536. When
- * Tauri falls back to its postMessage transport the same bytes arrive as a
- * JSON array of integers from 0 to 255, under the same limit. An empty body
- * is accepted and writes nothing. The call resolves with `null` once the
- * bytes are queued.
- *
- * Refusals: `invalid_arguments` for a missing token or session header, an
- * oversized or malformed body; `queue_full` when eight writes are already
- * pending, which is backpressure and must be retried with the same bytes;
- * `session_unavailable` once the session's input has stopped; `write_failed`
- * after an earlier write to the child failed.
- */
-export type TerminalWriteBody = Uint8Array | number[];
-
-export type TerminalWriteLimit = 65536;
-
-// ---------------------------------------------------------------------------
-// Diagnostics (diagnostics_snapshot)
-// ---------------------------------------------------------------------------
-
-export type DiagnosticsEventKind =
-  | "host_started"
-  | "stage_started"
-  | "stage_completed"
-  | "headless_selected"
-  | "gui_selected"
-  | "child_started"
-  | "child_exited"
-  | "child_terminated"
-  | "helper_timing"
-  | "helper_result"
-  | "failure"
-  | "host_stopped"
-  | "window_close_requested"
-  | "host_exit_requested"
-  | "panic";
-
-/** `ProcessPhase` in `native/application/src/process/status.rs`. */
-export type ProcessPhase = "running" | "exited" | "terminated" | "failed";
-
-export type OutputStream = "stdout" | "stderr" | "terminal";
-
-/** One child process the host started; the host keeps the latest 128. */
-export type ProcessStatus = {
-  /** The host's own process number, distinct from the operating-system `pid`. */
-  id: number;
-  pid: number;
-  role: ProcessRole;
-  phase: ProcessPhase;
-  startedMs: number;
-  finishedMs: number | null;
-  exitCode: number | null;
-  stdoutBytes: number;
-  stderrBytes: number;
-  terminalBytes: number;
-};
-
-export type DiagnosticsEvent = {
-  /** Monotonic identity within this diagnostics instance. */
-  sequence: number;
-  source: "desktop" | "manager" | "installer";
-  timestampMs: number;
-  hostPid: number;
-  kind: DiagnosticsEventKind;
-  /** The `ProcessStatus.id` the event concerns. */
-  process: number | null;
+export type StartupProgress = {
+  phase: StartupPhase;
+  locale: string | null;
   failure: HostFailure | null;
-  status: ProcessStatus | null;
-  stage?: "admission" | "environment" | "manager" | "window" | "shutdown";
-  role?: ProcessRole;
-  outcome?:
-    | "ready"
-    | "already_running"
-    | "dispatched"
-    | "skipped_unmanaged"
-    | "unavailable";
-  hostExitCode?: number;
-  webviewFailure?: WebviewFailure;
-  helperTiming?: HelperTiming;
-  helperResult?: HelperResult;
-  panic?: PanicFact;
-};
-
-/** `PanicFact` in `native/application/src/diagnostics/panic.rs`: never the message. */
-export type PanicFact = {
-  /** Crate-relative source path, without the build account's directories. */
-  file: string | null;
-  line: number | null;
-  column: number | null;
-  thread: string;
-  threadId: number;
-  category:
-    | "option_none"
-    | "result_err"
-    | "index_out_of_bounds"
-    | "slice_range"
-    | "arithmetic_overflow"
-    | "division_by_zero"
-    | "borrow_conflict"
-    | "lock_poisoned"
-    | "no_async_runtime"
-    | "nested_async_runtime"
-    | "unreachable"
-    | "unimplemented"
-    | "assertion"
-    | "allocation_failure"
-    | "cannot_unwind"
-    | "explicit"
-    | "unclassified";
-};
-
-export type HelperResult = {
-  command: string;
-  executable: "cli" | "runtime" | "agent_service";
-  envelopeDecode:
-    "success" | "refused" | "native_refused" | "malformed" | "unavailable";
-  stdoutBytes: number;
-  stderrBytes: number;
-  code: string | null;
-  reason: string | null;
-  exceptionType: string | null;
-  raisedAt: string | null;
-  nativeSubject: string | null;
-};
-
-/** One native helper attempt; CLI envelope decoding happens after this summary. */
-export type HelperTiming = {
-  helperKind: "read" | "mutation";
-  outcome:
-    | "admission_refused"
-    | "spawn_failed"
-    | "execution_failed"
-    | "nonzero_exit"
-    | "completed";
-  admissionWaitMs: number;
-  spawnMs: number | null;
-  executionMs: number | null;
-  cleanupMs: number | null;
-  outputJoinMs: number | null;
-  totalMs: number;
-};
-
-/** Closed WebView2 telemetry. No page text, URLs, paths or failed renderer PID. */
-export type WebviewFailure =
-  | {
-      event: "process_failed";
-      kind:
-        | "browser_process_exited"
-        | "render_process_exited"
-        | "render_process_unresponsive"
-        | "frame_render_process_exited"
-        | "utility_process_exited"
-        | "sandbox_helper_process_exited"
-        | "gpu_process_exited"
-        | "ppapi_plugin_process_exited"
-        | "ppapi_broker_process_exited"
-        | "unknown_process_exited"
-        | "unrecognized"
-        | null;
-      kindCode: number | null;
-      reason:
-        | "unexpected"
-        | "unresponsive"
-        | "terminated"
-        | "crashed"
-        | "launch_failed"
-        | "out_of_memory"
-        | "profile_deleted"
-        | "unrecognized"
-        | null;
-      reasonCode: number | null;
-      /** Telemetry only: 259 for an unresponsive renderer means STILL_ACTIVE. */
-      exitCode: number | null;
-      readFailures: {
-        argumentsHresult?: number;
-        kindHresult?: number;
-        detailsHresult?: number;
-        reasonHresult?: number;
-        exitCodeHresult?: number;
-      };
-    }
-  | {
-      event: "monitor_unavailable";
-      operation: "dispatch" | "core_webview" | "register";
-      hresult: number | null;
-    };
-
-/** Captured output, kept in memory only and bounded to 256 KiB in total. */
-export type OutputChunk = {
-  /** Increases by one per chunk; pass the last one seen as `after`. */
-  sequence: number;
-  /** The `ProcessStatus.id` that wrote the chunk. */
-  process: number;
-  stream: OutputStream;
-  bytes: number[];
-};
-
-/** Absolute paths of the host's diagnostics log. */
-export type DiagnosticsLogPaths = { current: string; lock: string };
-
-export type DiagnosticsSnapshot = {
-  /** `null` until the host has configured its log file. */
-  paths: DiagnosticsLogPaths | null;
-  logFailure: HostFailure | null;
-  /** The latest 512 events. */
-  events: DiagnosticsEvent[];
-  processes: ProcessStatus[];
-  /** Only chunks whose `sequence` is greater than the request's `after`. */
-  output: OutputChunk[];
-  /** Output bytes evicted from the capture since the host started. */
-  droppedBytes: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -725,390 +331,34 @@ export type DiagnosticsSnapshot = {
  * `HostFailure`. Commands that return nothing resolve with `null`.
  * `terminal_write` takes a raw body instead: see `TerminalWriteBody`.
  */
-export type SignInRefusal = {
-  code: string;
-  retryAfterSeconds: number | null;
-  /** Safe native failure context, without exception messages or paths. */
-  operation?: HostOperation;
-  ioKind?: string;
-  osCode?: number;
-};
-
-/** Presence only: reading this never resumes or extends a sign-in. */
-export type SignInStatus = {
-  supported: boolean;
-  state: "present" | "absent" | "unknown";
-  active_profile: string | null;
-  runtimeAvailable: boolean;
-  refusal: SignInRefusal | null;
-};
-
-/** Public presence and runtime/profile changes; never session authority. */
-export type SignInSignal =
-  | { kind: "sign-in-state"; revision: number; status: SignInStatus }
-  | {
-      kind: "sign-in-observation-failed";
-      revision: number;
-      error: HostFailure;
-    };
-
-/** Supervisor readiness is public availability, never profile authentication. */
-export type ManagerStatus = {
-  state:
-    | "unsupported"
-    | "starting"
-    | "ready"
-    | "recovering"
-    | "waiting"
-    | "stopping"
-    | "stopped"
-    | "failed";
-  failure: HostFailure | null;
-};
-
-export type ManagerSignal =
-  | { kind: "manager-state"; revision: number; status: ManagerStatus }
-  | {
-      kind: "manager-observation-failed";
-      revision: number;
-      error: HostFailure;
-    };
-
-/** sign_in_submit uses a raw UTF-8 password body and x-cadrumo-token header. */
-export type SignInResult =
-  | { kind: "signed-in"; status: SignInStatus }
-  | ({ kind: "refused" } & SignInRefusal);
-
-export type SignOutResult = {
-  remainingAccess: {
-    /** The person's saved automation setting. A sign-out keeps it; it is not
-     * access. */
-    automationEnabled: boolean | null;
-    /** Whether a key issued for an external agent can still admit. Keys do
-     * not follow the sign-in, so this is true while one can. Null when the
-     * product could not say. */
-    automationAccessRemains: boolean | null;
-    automationRevoked: false;
-  };
-};
-
-export type ProfileChoice = {
-  /** The label the person gave it. It is also what a sign-in names: labels
-   * are unique on a computer, and the product keeps a profile's identity
-   * out of everything it prints. */
-  name: string;
-  /** The profile the product has selected. */
-  active: boolean;
-};
-
-export type ProfileList = {
-  profiles: ProfileChoice[];
-  /** False when the product could not read its profiles coherently: an
-   * empty list is then not proof that there are none. */
-  complete: boolean;
-};
-
-export type ProfileDeleteReview = {
-  name: string;
-  profileId: string;
-  digest: string;
-};
-
-/**
- * sign_in_submit and profile_create name a profile in the
- * `x-cadrumo-profile` header: its label as UTF-8, percent-encoded, since a
- * header carries no other text. sign_in_submit may leave it out, and then
- * signs in to the profile the product has selected. profile_create uses a
- * raw UTF-8 password body, as sign_in_submit does.
- */
-export type ProfileCreateResult =
-  { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
-
-// ---------------------------------------------------------------------------
-// Component setup (desktop_setup_*)
-// ---------------------------------------------------------------------------
-//
-// The software Cadrumo needs on this computer -- the browser and the local AI
-// (its program and every model it runs, as one item) -- read and set up
-// through the held person session. The profile's Google account travels in
-// the same snapshot because it rides the same session, but it is not setup:
-// it is the profile's own sign-in, read and changed on its own. The host
-// pushes a fresh `DesktopSetup` on the observe channel whenever an observed
-// setup, check or Google act changes; nothing polls. Every closed value below
-// is for choosing what to show; the words to show are the `name`, `sentence`,
-// `note` and `action_label` fields, already in the profile's language. Never
-// render a closed value itself.
-
-/** `browser` or `local_ai`. */
-export type SetupItemId = string;
-
-export type SetupItemKind = "browser" | "local_ai";
-
-export type SetupState =
-  | "absent"
-  | "provisioning"
-  | "verifying"
-  | "ready"
-  | "stale"
-  | "failed"
-  | "blocked"
-  | "unknown";
-
-export type SetupBlockedReason =
-  "offline" | "needs_person" | "hardware" | "not_in_this_build";
-
-export type SetupStaleReason =
-  "older_revision" | "different_model_version" | "program_too_old";
-
-export type SetupFailureCategory =
-  | "offline"
-  | "host_unreachable"
-  | "secure_connection_failed"
-  | "blocked_by_network"
-  | "disk_full"
-  | "no_permission"
-  | "damaged_download"
-  | "not_enough_memory"
-  | "memory_busy"
-  | "program_missing"
-  | "program_not_running"
-  | "interrupted"
-  | "needs_sign_in"
-  | "not_in_this_build"
-  | "cancelled"
-  | "unexpected";
-
-/** The one button a row offers; its words are the row's `action_label`. */
-export type SetupRecovery =
-  "set_up" | "update" | "try_again" | "resume" | "check_again";
-
-export type SetupCheckMode = "quick" | "full";
-
-/** Why the local AI's plan entry is worth telling the person about. */
-export type SetupAdvisory =
-  | "licence_commercial_use_barred"
-  | "licence_unverified"
-  | "override_not_in_catalogue"
-  | "override_below_context_floor"
-  | "fit_exceeds_measured_headroom"
-  | "fit_unverified";
-
-export type SetupStep =
-  "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
-
-/** One item's derived state and its plain wording. */
-export type SetupRow = {
-  item: SetupItemId;
-  kind: SetupItemKind;
-  /** Which check produced the row. */
-  mode: SetupCheckMode;
-  state: SetupState;
-  stale_reason: SetupStaleReason | null;
-  blocked_reason: SetupBlockedReason | null;
-  failure: SetupFailureCategory | null;
-  recovery: SetupRecovery | null;
-  /** The operator action that offers `recovery`, such as
-   * `operator.provision.browser`; null exactly when `recovery` is. An
-   * identifier for routing, never shown. */
-  recovery_action_id: string | null;
-  version: string | null;
-  size_bytes: number | null;
-  /** The item's plain name, such as "Local AI". */
-  name: string;
-  /** One sentence stating the state and its reason. */
-  sentence: string;
-  /** For example "downloaded, not loaded yet"; null when there is none. */
-  note: string | null;
-  /** The button's words for `recovery`; null exactly when it is null. */
-  action_label: string | null;
-};
-
-/** A status read or a full check this window started. A settled check has
- * already replaced `rows`; a failed one leaves the earlier rows. */
-export type SetupCheck = {
-  operation_id: string;
-  kind: "status_quick" | "status_full" | "verify";
-  stage: "running" | "done" | "failed";
-};
-
-/** One part of the local AI's plan: its program, or the model one role
- * reads with. A part sharing an earlier part's download has size 0. */
-export type SetupPlanPart = {
-  part: string;
-  name: string;
-  /** Null when the size is not known before the download starts. */
-  download_bytes: number | null;
-};
-
-/** One entry of the plan a person approves: what, how large, from where and
- * where it is stored. Shown, never sent back. */
-export type SetupPlanEntry = {
-  item: SetupItemId;
-  name: string;
-  /** Null when the size is not known before the download starts. */
-  download_bytes: number | null;
-  source_hosts: string[];
-  /** The folder it goes into; null when only an outside program installs. */
-  destination: string | null;
-  installs_outside_program: boolean;
-  /** Another entry of this plan that downloads the same files. */
-  shares_download_with: SetupItemId | null;
-  /** A model's licence notice, such as a non-commercial use limit, in the
-   * profile's language; null when there is none. Approving the plan
-   * approves it too. */
-  licence_notice: string | null;
-  /** Empty except on the local AI's entry; approving the plan approves
-   * them too. `licence_notice` is present exactly when one is
-   * "licence_commercial_use_barred". */
-  advisories: SetupAdvisory[];
-  /** The local AI's parts in the order setup carries them out; empty for
-   * any other item. */
-  parts: SetupPlanPart[];
-};
-
-/** The plan awaiting approval. `plan_digest` is what an answer binds. */
-export type SetupReview = {
-  plan_digest: string;
-  expires_at: string | null;
-  entries: SetupPlanEntry[];
-  known_download_bytes: number;
-  has_unknown_size: boolean;
-  installs_outside_program: boolean;
-  required_bytes: number;
-  /** Null when the free space could not be read. */
-  free_bytes: number | null;
-  space_sufficient: boolean;
-};
-
-export type SetupRetry = {
-  attempt: number;
-  delay_s: number;
-  /** "Trying again in N seconds (attempt M)", in the profile's language. */
-  sentence: string;
-};
-
-export type SetupItemResult = {
-  changed: boolean;
-  failure: SetupFailureCategory | null;
-  /** The failure's sentence; null when the item ended usable. */
-  sentence: string | null;
-  transferred_bytes: number;
-};
-
-/** One planned item while setup runs: its current step, byte progress and
- * last retry notice, then its result once setup settles. */
-export type SetupItemProgress = {
-  item: SetupItemId;
-  name: string;
-  step: SetupStep | null;
-  /** Both null while the size is unknown: show an indeterminate bar. */
-  completed: number | null;
-  total: number | null;
-  retry: SetupRetry | null;
-  result: SetupItemResult | null;
-};
-
-export type SetupOutcome =
-  | "completed"
-  | "nothing_to_do"
-  | "rejected"
-  | "plan_changed"
-  | "not_enough_space"
-  | "interrupted"
-  | "cancelled"
-  /** The setup ended without a result of its own; see `failure_sentence`. */
-  | "failed";
-
-/** The setup this window started or joined. */
-export type SetupRun = {
-  operation_id: string;
-  stage: "planning" | "review" | "running" | "settled";
-  /** Present exactly while `stage` is "review". */
-  review: SetupReview | null;
-  items: SetupItemProgress[];
-  /** Whether Cancel can be offered now. */
-  cancellable: boolean;
-  cancel_requested: boolean;
-  /** Present exactly once `stage` is "settled". */
-  outcome: SetupOutcome | null;
-  /** Present when `outcome` is "failed". */
-  failure_sentence: string | null;
-};
-
-/** The profile's stored Google sign-in, as the product reads it. */
-export type GoogleAccountState =
-  "signed_in" | "signed_out" | "not_in_this_build" | "unknown";
-
-/** The sign-in or sign-out this window started. */
-export type GoogleActStage = "idle" | "signing_in" | "signing_out" | "failed";
-
-/** The signed-in profile's Google account: not a setup item. */
-export type GoogleAccount = {
-  /** Null until the stored sign-in has been read. */
-  state: GoogleAccountState | null;
-  /** The account's address; present only when signed in. */
-  email: string | null;
-  /** The profile's saved folder, present only with a stored Drive grant. */
-  drive_folder_id: string | null;
-  stage: GoogleActStage;
-  failure: SetupFailureCategory | null;
-  /** The failure's sentence; present exactly when `stage` is "failed". */
-  sentence: string | null;
-};
-
-export type SetupSnapshot = {
-  /** Empty until the first status read settles. */
-  rows: SetupRow[];
-  /** Null until the first status read settles, as are the next two. */
-  rows_mode: SetupCheckMode | null;
-  /** Every item ready or usable: Cadrumo is set up. */
-  complete: boolean | null;
-  /** Setup cannot complete on this computer's hardware. */
-  hardware_limited: boolean | null;
-  check: SetupCheck | null;
-  setup: SetupRun | null;
-  google: GoogleAccount;
-  /** The redacted report "Copy details" puts on the clipboard. */
-  details: string;
-};
-
-/** What the observe channel carries and every setup command answers.
- * `revision` grows with every change; `snapshot` is present exactly when
- * `state` is "ready", which needs a signed-in profile and its runtime. */
-export type DesktopSetup = {
-  revision: number;
-  state: "signed_out" | "unavailable" | "ready";
-  snapshot: SetupSnapshot | null;
-};
-
-/** Why a setup command was refused; a host failure rejects as `HostFailure`. */
-export type SetupRefusalCode =
-  /** No profile is signed in. */
-  | "not_signed_in"
-  /** Another setup, started elsewhere, is running. */
-  | "busy"
-  /** The plan changed since it was shown; show the new one. */
-  | "plan_changed"
-  /** No plan of that setup is awaiting an answer, or it is not this window's. */
-  | "not_pending"
-  /** The setup cannot be cancelled now. */
-  | "not_cancellable"
-  /** The runtime could not carry the request. */
-  | "unavailable";
-
-export type SetupRefusal = { code: SetupRefusalCode };
-
-export type StartupPhase = "environment" | "runtime" | "workspace";
-export type StartupProgress = {
-  phase: StartupPhase;
-  locale: string | null;
-  failure: HostFailure | null;
-};
-
 export interface HostCommands {
   user_profile_read: {
     args: { language: string };
     result: import("../shell/userProfile").UserProfile;
+  };
+  /** The household the profile states, in the product's words and at one
+   * profile revision. Rejects with `{ code }`: `not_signed_in` or
+   * `unavailable`. */
+  user_profile_household: {
+    args: { language: string };
+    result: import("../shell/profileHousehold").ProfileHousehold;
+  };
+  /** Which leaves one person with unsaved answers is asked, resolved by the
+   * product. The draft is a hidden input: no value of it is stored, logged or
+   * echoed. Rejects with `{ code }`: `not_signed_in`, `unavailable` or
+   * `refused` with `reason: "invalid_household_draft"`. */
+  user_profile_household_draft: {
+    args: {
+      language: string;
+      draft: import("../shell/profileHousehold").HouseholdDraft;
+    };
+    result: import("../shell/profileHousehold").HouseholdDraftAnswer;
+  };
+  /** What `profile` states for the imputation election of `taxYear`, with
+   * the setup wizard's own questions and words in `language`. */
+  user_profile_imputation_election: {
+    args: { profile: string; taxYear: number; language: string };
+    result: import("../shell/profileContract").ProfileImputationElectionReadProjection;
   };
   profile_censo_readiness: {
     args: { profile: string };
@@ -1130,6 +380,7 @@ export interface HostCommands {
       operation: string;
       reviewDigest: string | null;
       decision: import("../shell/profileCenso").CensoDecision;
+      accepted: string[] | null;
     };
     result: import("../shell/profileCenso").CensoSnapshot;
   };
@@ -1139,6 +390,378 @@ export interface HostCommands {
   };
   user_profile_observe: { args: { updates: Channel<null> }; result: number };
   user_profile_unobserve: { args: { subscription: number }; result: null };
+  /** A token and the name of the certificate file picked in the native
+   * dialog, never its path; null when the dialog is closed unchosen. A file
+   * that is not a PKCS#12 certificate (.p12 or .pfx) rejects with `invalid`. */
+  profile_aeat_certificate_pick: {
+    args: Authorized;
+    result: import("../shell/userProfile").AeatCertificate | null;
+  };
+  /**
+   * Raw body only: one UTF-8 JSON object with `profile_id`, `provider` and
+   * `password`, which the host sends to the runtime on its secret frame and
+   * keeps nowhere. A refusal rejects with `{ code }`, one of `invalid`,
+   * `not_signed_in`, `refused`, `conflict`, `unknown`, `saved_unread` and
+   * `unavailable`. `unknown` and `saved_unread` mean the save was submitted
+   * and its outcome was not confirmed, and it is never retried.
+   */
+  profile_aeat_credential_save: { args: Authorized; result: null };
+  /** What was brought from AEAT, area by area, from the profile's own
+   * records; it reaches no network. */
+  aeat_sync_status: {
+    args: { language: string };
+    result: import("../shell/aeatSync").AeatSyncStatus;
+  };
+  aeat_sync_observe: { args: { updates: Channel<null> }; result: number };
+  aeat_sync_unobserve: { args: { subscription: number }; result: null };
+  /** Asks the host to bring the named areas, each over every year the
+   * backend serves; while a run still goes on, the request reattaches to it.
+   * A rejection carries `{ code }`: `unknown` means the request was
+   * submitted and its outcome was not confirmed, and it is never retried. */
+  aeat_sync_start: {
+    args: {
+      profile: string;
+      request: import("../shell/aeatSync").AeatSyncStart;
+    };
+    result: null;
+  };
+  /** What the last reads came to, per kind of data, with the filed
+   * declarations set against the profile's records; no network. */
+  aeat_sync_results: {
+    args: { profile: string; language: string };
+    result: Omit<
+      import("../shell/aeatSyncResults").AeatSyncResults,
+      "notifications"
+    >;
+  };
+  /** The notification rows with their read state, without identifiers. */
+  aeat_sync_notifications: {
+    args: { profile: string };
+    result: import("../shell/aeatSyncResults").NotificationRow[];
+  };
+  /** Reads one kind of data again, or one failed part of it. A rejection
+   * carries `{ code }`; `unknown` is never retried. */
+  aeat_sync_retry: {
+    args: {
+      profile: string;
+      area: import("../shell/aeatSync").AeatSyncAreaId;
+      item: number | null;
+      /** True once the person was told the part may already have been
+       * brought; only then is a part with an unknown outcome read again. */
+      acknowledgedUnknown?: boolean;
+    };
+    result: null;
+  };
+  /** The update now going on or last ended: each kind of data with its
+   * parts and their outcomes; null before any. */
+  aeat_sync_progress: {
+    args: { profile: string };
+    result: import("../shell/aeatSyncRun").AeatSyncRunSnapshot | null;
+  };
+  /** Lets the part in progress settle and starts nothing further. */
+  aeat_sync_stop: { args: { profile: string }; result: null };
+  /** Carries a paused update on from where it stopped, once the person signed
+   * in again. */
+  aeat_sync_resume: { args: { profile: string }; result: null };
+  /** A token and the name of the Borrador PDF picked in the native dialog;
+   * null when it is closed without a choice. Never a path. */
+  aeat_sync_borrador_pick: {
+    args: Record<never, never>;
+    result: import("../shell/aeatSyncResults").BorradorFile | null;
+  };
+  /** Imports the picked Borrador PDF into the profile for the filing `year`
+   * the person chose from the years the host served; without one the host
+   * refuses with `invalid`. A rejection `unknown` means the import may have
+   * been kept. */
+  aeat_sync_borrador_import: {
+    args: { profile: string; file: string; year?: number };
+    result: import("../shell/aeatSyncResults").BorradorImportResult;
+  };
+  /** The Borrador 100 drafts the profile holds, as the full human read
+   * serves them. It reaches no network. */
+  aeat_sync_borrador_read: {
+    args: {
+      profile: string;
+      selector: import("../shell/borrador").BorradorSelector;
+    };
+    result: import("../shell/borradorContract").Borrador100ReadProjection;
+  };
+  /** The same drafts without each capture's provenance. */
+  aeat_sync_borrador_query: {
+    args: {
+      profile: string;
+      selector: import("../shell/borrador").BorradorSelector;
+    };
+    result: import("../shell/borradorContract").Borrador100QueryProjection;
+  };
+  /** The year's newest readable draft beside the saved Modelo 100
+   * calculation, in `language`. It changes no record. */
+  aeat_sync_borrador_compare: {
+    args: { profile: string; year: number; language: string };
+    result: import("../shell/borradorContract").Borrador100ComparisonProjection;
+  };
+  /** What an update needs before it reads AEAT: the secure browser's row and
+   * whether the profile has AEAT access. It reaches no network. */
+  aeat_sync_prepare: {
+    args: Record<string, never>;
+    result: import("../shell/aeatSyncPrepare").AeatSyncPrepared;
+  };
+  /** Signs in to AEAT with the profile's way, reusing a valid session.
+   * `progress` is told when it waits on the person's phone. A rejection
+   * carries `{ code }`: `needs_access`, `cancelled`, `refused` or
+   * `unavailable`. */
+  aeat_sync_sign_in: {
+    args: {
+      progress: Channel<import("../shell/aeatSyncPrepare").AeatSignInStage>;
+    };
+    result: null;
+  };
+  /** Stops a sign-in that waits on the person's phone. */
+  aeat_sync_sign_in_cancel: { args: Record<string, never>; result: null };
+  /** Counts of the last notifications capture; no row reaches the window. */
+  profile_views_notifications: {
+    args: Authorized;
+    result: import("../shell/views").NotificationsSummary;
+  };
+  /** The filing calendar for an inclusive range of at most about a year. */
+  profile_views_calendar: {
+    args: Authorized<{ from: string; to: string; language: string }>;
+    result: import("../shell/calendarContract").FilingCalendarServed;
+  };
+  /** Home: only the `home` state of the product's workbench generation, its
+   * sentences in `language`. */
+  profile_views_home: {
+    args: Authorized<{ language: string }>;
+    result: import("../shell/homeContract").HomeServed;
+  };
+  /** Reference: the bundled corpus searched for `query`, at most `limit`
+   * passages, its words in `language`. The host keeps nothing of the query. */
+  profile_views_reference: {
+    args: Authorized<{ query: string; limit: number; language: string }>;
+    result: import("../shell/referenceContract").ReferenceServed;
+  };
+  /** Operations: one page of the signed-in profile's operation history, at
+   * most `limit` runs, after the continuation the previous page served. The
+   * host runs, retries and cancels nothing and keeps nothing. */
+  profile_views_operations: {
+    args: Authorized<{
+      limit: number;
+      after:
+        import("../shell/operationsContract").OperationHistoryCursorV1 | null;
+    }>;
+    result: import("../shell/operationsContract").OperationsServed;
+  };
+  /** Submits one admitted ledger operation with its request, without the
+   * profile, and follows it until it settles or waits on the person. A
+   * failure rejects with `LedgerFailure`. */
+  ledger_submit: {
+    args: Authorized<{
+      definition: import("../shell/ledger").LedgerDefinitionId;
+      /** A JSON object: the definition's registered request. */
+      payload: object;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Where an operation this window submitted stands, without waiting. */
+  ledger_observe: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  ledger_review: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerReview;
+  };
+  /** Refused with `review_changed` unless `reviewDigest` is the digest of
+   * the review the window read last for that operation. */
+  ledger_answer: {
+    args: Authorized<{
+      operation: string;
+      reviewDigest: string;
+      decision: import("../shell/ledger").LedgerDecision;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  ledger_cancel: {
+    args: Authorized<{ operation: string; revision: number }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Tokens for the files picked in the native dialog; never a path. */
+  ledger_files_pick: {
+    args: Authorized<{
+      purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
+      pick: import("../shell/ledger").FilePick;
+      filterLabel: string;
+      /** The extensions the dialog is asked to offer, within what the host
+       * allows for the purpose; null leaves the host its full list. */
+      kinds: string[] | null;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  ledger_files_save: {
+    args: Authorized<{
+      format: import("../shell/ledgerTransferContract").ExportSerializationFormat;
+      filterLabel: string;
+      suggestedName: string | null;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  /** Shows an exported file in the system file manager; the path never
+   * reaches the window. */
+  ledger_files_reveal: {
+    args: Authorized<{ token: import("../shell/ledger").FileToken }>;
+    result: null;
+  };
+  ledger_files_forget: {
+    args: Authorized<{ tokens: import("../shell/ledger").FileToken[] }>;
+    result: null;
+  };
+  ledger_drop_observe: {
+    args: Authorized<{
+      purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
+      /** As for `ledger_files_pick`: what a drop takes. */
+      kinds: string[] | null;
+      updates: Channel<import("../shell/ledger").LedgerDropSignal>;
+    }>;
+    result: number;
+  };
+  ledger_drop_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** Raw body only: the bytes of `ownAccountChange`, the one route for an
+   * own account's number and bank block. */
+  ledger_own_account: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Sends a typed cue each time a background job of the signed-in profile
+   * changes, until unobserved. A cue says only which job to read again and
+   * at which stored revision; read the revisions on subscribing and on
+   * focus, since a change before the subscription is not cued. */
+  background_tasks_observe: {
+    args: Authorized<{
+      updates: Channel<
+        import("../shell/backgroundTasksContract").BackgroundTaskCue
+      >;
+    }>;
+    result: number;
+  };
+  background_tasks_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** Every background job's stored revision for the signed-in profile, read
+   * now; a failure rejects with `LedgerFailure`. */
+  background_tasks_revisions: {
+    args: Authorized;
+    result: import("../shell/backgroundTasksContract").BackgroundTaskRevisions;
+  };
+  /** Every row of the signed-in profile's declarations list. */
+  modelo_declarations: {
+    args: Authorized<{
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract/modeloDeclarations").ModeloDeclarationsListProjectionV1;
+  };
+  /** The declarations and works of the signed-in profile that match a query,
+   * said in the output language. */
+  modelo_declarations_search: {
+    args: Authorized<{
+      query: string;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
+      limit?: number;
+    }>;
+    result: import("../shell/modeloContract/modeloDeclarations").ModeloDeclarationsSearchResultV1;
+  };
+  /** One declaration's form, with its admitted edit baseline or refusal. */
+  modelo_form: {
+    args: Authorized<{
+      workUnitId: string;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract/modeloWorkForm").ModeloWorkbenchFormProjectionV1;
+  };
+  modelo_casilla_help: {
+    args: Authorized<{
+      workUnitId: string;
+      casillaId: string;
+      registryRevisionId: string;
+      calculationRevisionId: string | null;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract/modeloWorkCasillaHelp").ModeloCasillaHelpProjectionV1;
+  };
+  /** Submits one admitted modelo operation with its request, without the
+   * profile. `workUnit` names the form's declaration for a definition whose
+   * subject is a stored record, and is absent for every other. A failure
+   * rejects with `LedgerFailure`. */
+  modelo_submit: {
+    args: Authorized<{
+      definition: import("../shell/modelo").ModeloDefinitionId;
+      /** A JSON object: the definition's registered request. */
+      payload: object;
+      workUnit?: string;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Raw body only, one command per definition: the bytes of
+   * `modeloEditBody`, at most `RELAY_PAYLOAD_LIMIT`. */
+  modelo_edit_preflight: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_edit_apply: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_observe: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_review: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerReview;
+  };
+  /** Refused with `review_changed` unless `reviewDigest` is the digest of
+   * the review the window read last for that operation. */
+  modelo_answer: {
+    args: Authorized<{
+      operation: string;
+      reviewDigest: string;
+      decision: import("../shell/ledger").LedgerDecision;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_cancel: {
+    args: Authorized<{ operation: string; revision: number }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** A token for the one file picked in the native dialog; never a path. */
+  modelo_files_pick: {
+    args: Authorized<{
+      purpose: import("../shell/modelo").ModeloFilePurpose;
+      filterLabel: string;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  modelo_files_save: {
+    args: Authorized<{
+      format: import("../shell/modelo").ModeloSaveFormat;
+      filterLabel: string;
+      suggestedName: string | null;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  modelo_files_forget: {
+    args: Authorized<{ tokens: import("../shell/ledger").FileToken[] }>;
+    result: null;
+  };
+  /** Shows a saved file in the system file manager; the path never reaches
+   * the window. */
+  modelo_files_reveal: {
+    args: Authorized<{ token: import("../shell/ledger").FileToken }>;
+    result: null;
+  };
   startup_begin: { args: Authorized; result: void };
   startup_status: { args: Authorized; result: StartupProgress };
 
@@ -1169,11 +792,45 @@ export interface HostCommands {
     args: Authorized<{ action: WindowAction }>;
     result: null;
   };
+  desktop_frontend_diagnostic: {
+    args: Authorized<{
+      report: {
+        event:
+          | "command_rejected"
+          | "uncaught_error"
+          | "unhandled_rejection"
+          | "react_error"
+          | "console";
+        level: LogLevel;
+        command: string | null;
+        code: string | null;
+        dropped: number;
+        line?: number;
+        column?: number;
+        /** The backend's closed code beside a relay failure's `code`. */
+        reason?: string;
+        /** The message's authored shape with every value taken out. */
+        template?: string;
+        /** The script the first stack frame names, by file name. */
+        module?: string;
+      };
+    }>;
+    result: null;
+  };
   shell_window_subscribe: {
     args: Authorized<{ updates: Channel<WindowPresentation> }>;
     result: number;
   };
   shell_window_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** A close the system raised asks the page first, while it listens. */
+  shell_close_guard_subscribe: {
+    args: Authorized<{ requests: Channel<null> }>;
+    result: number;
+  };
+  shell_close_guard_unsubscribe: {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
@@ -1219,6 +876,8 @@ export interface HostCommands {
     };
     result: null;
   };
+  /** Raw body only: see PasswordChangeResult. */
+  profile_password_change: { args: Authorized; result: PasswordChangeResult };
   desktop_language_read: { args: Authorized; result: DesktopLanguage };
   desktop_language_set: {
     args: Authorized<{ language: string }>;
@@ -1237,6 +896,8 @@ export interface HostCommands {
     result: DesktopEnvironment;
   };
   about_info: { args: Authorized; result: AboutInfo };
+  /** The changes the previous close ended before they reported, once. */
+  previous_close: { args: Authorized; result: number };
   /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
   desktop_setup_read: { args: Authorized; result: DesktopSetup };
   /** Starts a status read; "quick" reads local facts only, "full" also
@@ -1250,17 +911,24 @@ export interface HostCommands {
     args: Authorized<{ items: SetupItemId[] | null }>;
     result: DesktopSetup;
   };
-  /** Plans setup of `items`, or of every item not ready when null; the plan
-   * then awaits an answer in `setup.review`. `model` picks one catalogue
-   * model for every role of the local AI. A setup already running is joined.
+  /** Plans setup of one `item`; the plan then awaits an answer in that
+   * item's run's `review`. An explicit download, of the local AI alone, is
+   * validated against the current catalogue independently of document tasks;
+   * otherwise the host reads saved model selections. Admission failure
+   * refuses the start. A setup of the item already running is joined; another
+   * item's setup never refuses it.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
-   * without a second review; any other plan awaits an answer as usual. */
+   * without a second review; any other plan awaits an answer as usual.
+   * `reinstall` is the served reinstall of the local AI's program: its
+   * downloaded program is installed afresh, never with a resume or a
+   * download. */
   desktop_setup_start: {
     args: Authorized<{
-      items: SetupItemId[] | null;
-      model: string | null;
+      item: SetupItemId;
       resume: boolean;
+      reinstall?: boolean;
+      download?: SetupModelDownload;
     }>;
     result: DesktopSetup;
   };
@@ -1276,6 +944,17 @@ export interface HostCommands {
   };
   desktop_setup_cancel: {
     args: Authorized<{ operationId: string }>;
+    result: DesktopSetup;
+  };
+  /** Removes one local model no role selects, named as a selection names it. */
+  desktop_setup_remove_model: {
+    args: Authorized<{ model: string }>;
+    result: DesktopSetup;
+  };
+  /** Removes the browser, or the local AI or its program alone, from this
+   * computer. */
+  desktop_setup_remove: {
+    args: Authorized<{ removal: SetupRemoval }>;
     result: DesktopSetup;
   };
   /** Opens Google's own sign-in page for the signed-in profile; `google`
@@ -1361,6 +1040,13 @@ export interface HostCommands {
     args: Authorized<{ url: string }>;
     result: null;
   };
+  /** The bytes of the raw frame a channel message named, as binary, handed
+   * over once to the document they were sent to. An unknown, taken or dropped
+   * frame is refused with `invalid_arguments`. */
+  shell_channel_frame: {
+    args: Authorized<{ frame: string }>;
+    result: ArrayBuffer;
+  };
   /**
    * Refuses with `output_limit` when the clipboard text exceeds 1 MiB in
    * UTF-8; the text is never truncated.
@@ -1373,16 +1059,6 @@ export interface HostCommands {
   shell_clipboard_write: {
     args: Authorized<ClipboardText>;
     result: null;
-  };
-  /**
-   * Shows a native popup and resolves when it closes. Refuses
-   * `session_unavailable` while another popup is open, `unsupported_platform`
-   * on every platform but Windows, and `invalid_arguments` for a malformed
-   * request.
-   */
-  shell_context_menu: {
-    args: Authorized<ContextMenuRequest>;
-    result: ContextMenuResult;
   };
   /**
    * The agent host. Every agent command refuses with `{ code }`: the
@@ -1400,17 +1076,81 @@ export interface HostCommands {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
-  /** cadrumo-agent's catalog, unchanged and unfiltered. */
-  agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  /** cadrumo-agent's catalog, unchanged, less the lanes the profile turned
+   * off; while no agent is ready, its declared catalog in an envelope. */
+  agent_provider_catalog: { args: Authorized; result: ServedCatalogAnswer };
+  /** The models the person added to the local lanes' lists, as the agent
+   * service stores them. */
+  agent_local_models: { args: Authorized; result: LocalModelListStatus };
+  /** Adds a model by name to a local lane's list at the revision read. A
+   * refusal is `agent_local_models_<reason>` for the service's reasons, such
+   * as `agent_local_models_full`, or a column code. */
+  agent_local_model_add: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: LocalModelListStatus;
+  };
+  /** Takes an added model off a local lane's list at the revision read. */
+  agent_local_model_remove: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: LocalModelListStatus;
+  };
+  /** Removes the list record, readable or not, at the revision read. */
+  agent_local_models_reset: {
+    args: Authorized<{ expectedRevision: string }>;
+    result: LocalModelListStatus;
+  };
+  /** The local engine and placement, as the agent service stores them. */
+  agent_local_engine: { args: Authorized; result: LocalEngineStatus };
+  /** Stores the local engine and placement at the revision read; the service
+   * retires and restarts the assistant when either changes. A refusal is
+   * `agent_local_models_<reason>` (the same service reasons as the model
+   * list) or a column code. */
+  agent_local_engine_choose: {
+    args: Authorized<{
+      engine: LocalEngine;
+      placement: LocalPlacement;
+      expectedRevision: string;
+    }>;
+    result: LocalEngineStatus;
+  };
+  /** Stores the model documents are read with, on any lane the catalogue
+   * reports, at the revision read. */
+  agent_reading_model_choose: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: LocalModelListStatus;
+  };
+  /** Sets the lane, model and effort one task kind runs with, or with no lane
+   * and model clears it, at the revision read. */
+  agent_task_model_choose: {
+    args: Authorized<{
+      taskKind: string;
+      lane: string | null;
+      model: string | null;
+      effort: string | null;
+      expectedRevision: string;
+    }>;
+    result: LocalModelListStatus;
+  };
+  /** One model's licence text, from the ready agent's licence route. */
+  agent_model_licence: {
+    args: Authorized<{ provider: string; transport: string; model: string }>;
+    result: ModelLicenceResponse;
+  };
   /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
-  agent_skills: { args: Authorized; result: unknown };
+  agent_skills: { args: Authorized; result: SkillListResponse };
   /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A
    * name outside the skill grammar is refused as `agent_invalid_request`
    * before the agent is asked, and an unknown one as
    * `agent_gateway_skill_not_found`. */
-  agent_skill: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill: {
+    args: Authorized<{ name: string }>;
+    result: SkillDetailRecord;
+  };
   /** The agent's checks of one skill, from `POST /v1/skills/{name}/verify`. */
-  agent_skill_verify: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill_verify: {
+    args: Authorized<{ name: string }>;
+    result: SkillVerificationRecord;
+  };
   agent_conversation_start: {
     args: Authorized;
     result: AgentConversationRecord;
@@ -1439,8 +1179,33 @@ export interface HostCommands {
       conversationId: string;
       filterLabel: string;
       updates: Channel<AgentUploadEvent>;
+      dropId?: string;
     }>;
     result: AgentUploadPick[];
+  };
+  /** Stores the Libro movement the ledger's movement read serves for the
+   * signed-in profile in the conversation's storage, as JSON from memory,
+   * and answers its record; it sends nothing to a model. A refusal carries
+   * `code` and, from a ledger refusal, `refusal_words`. */
+  agent_attach_ledger_movement: {
+    args: Authorized<{ conversationId: string; transactionId: string }>;
+    result: AgentDocumentRecord;
+  };
+  agent_drop_observe: {
+    args: Authorized<{ updates: Channel<AgentDropSignal> }>;
+    result: number;
+  };
+  agent_drop_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  agent_documents_remove: {
+    args: Authorized<{ conversationId: string; name?: string }>;
+    result: null;
+  };
+  agent_attachment_policy: {
+    args: Authorized;
+    result: AttachmentPolicyResponse;
   };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
@@ -1468,6 +1233,30 @@ export interface HostCommands {
       optionId: string;
     }>;
     result: null;
+  };
+  /** What the service says the card shows for a parked attachment read. */
+  agent_attachment_card: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+    }>;
+    result: AttachmentCardAnswer;
+  };
+  /** Puts the person's answer to the service; the request is answered only once released. */
+  agent_attachment_release: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+      optionId: string;
+      scope: ReleaseScope | "decline" | null;
+    }>;
+    result: AttachmentReleaseAnswer;
+  };
+  agent_attachment_grants: {
+    args: Authorized<Record<string, never>>;
+    result: AttachmentGrantsAnswer;
+  };
+  agent_attachment_grant_revoke: {
+    args: Authorized<{ grantId: string }>;
+    result: AttachmentGrantRevokeAnswer;
   };
   agent_observe: {
     args: Authorized<{
@@ -1515,13 +1304,17 @@ export interface HostCommands {
     args: Authorized<{ provider: string; revision: string }>;
     result: ProviderSettingsRecord;
   };
+  provider_sign_out: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
   // An attended provider sign-in is transient. Its URL and device code are
   // returned only while the person is completing this attempt.
   provider_sign_in_start: {
     args: Authorized<{
       provider: string;
       revision: string;
-      method: "browser" | "device";
+      method: "browser" | "device" | "browser-code";
     }>;
     result: ProviderSignInSnapshot;
   };
@@ -1531,6 +1324,11 @@ export interface HostCommands {
   };
   provider_sign_in_cancel: {
     args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
+  };
+  // provider_sign_in_submit_code takes a raw secret body and attempt-id header.
+  provider_sign_in_submit_code: {
+    args: Authorized;
     result: ProviderSignInSnapshot;
   };
   // The keys issued to agents outside Cadrumo. None carries a password or a
@@ -1547,214 +1345,93 @@ export interface HostCommands {
     args: Authorized<{ grantId: string }>;
     result: { cleanup_pending: boolean };
   };
+  // The Sede view: one view at a time, relayed on the channel `sede_view_open`
+  // is given. The window never names an address; `sede_view_open_external`
+  // opens the page the host holds.
+  sede_view_open: {
+    args: Authorized<{
+      cssWidth: number;
+      cssHeight: number;
+      scale: number;
+      messages: Channel<SedeViewDelivery>;
+    }>;
+    result: { view: number };
+  };
+  sede_view_close: { args: Authorized<{ view: number }>; result: null };
+  sede_view_input: {
+    args: Authorized<{ view: number; event: SedeViewInput }>;
+    result: null;
+  };
+  sede_view_navigate: {
+    args: Authorized<{ view: number; verb: SedeViewVerb }>;
+    result: null;
+  };
+  sede_view_clipboard: {
+    args: Authorized<{ view: number; action: SedeClipboardAction }>;
+    result: null;
+  };
+  sede_view_resize: {
+    args: Authorized<{
+      view: number;
+      cssWidth: number;
+      cssHeight: number;
+      scale: number;
+    }>;
+    result: null;
+  };
+  /** One for each image message received, drawn or not. */
+  sede_view_credit: { args: Authorized<{ view: number }>; result: null };
+  sede_view_dialog: {
+    args: Authorized<{
+      view: number;
+      dialogId: number;
+      accept: boolean;
+      promptText?: string;
+    }>;
+    result: null;
+  };
+  /** With `save`, the native save dialog asks where; the answer waits for it. */
+  sede_view_download_answer: {
+    args: Authorized<{ view: number; transferId: number; save: boolean }>;
+    result: { saving: boolean };
+  };
+  /** With `choose`, the native open dialog asks which files; the answer
+   * waits for it. */
+  sede_view_file_chooser_answer: {
+    args: Authorized<{ view: number; chooserId: number; choose: boolean }>;
+    result: { supplied: number };
+  };
+  sede_view_open_external: {
+    args: Authorized<{ view: number }>;
+    result: null;
+  };
 }
 
 /** Native presentation only; no profile or runtime authority. */
-export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
-export type WindowAction = "minimize" | "toggle_maximize" | "close" | "drag";
+export type WindowPresentation = {
+  maximized: boolean;
+  fullscreen: boolean;
+  /** Who draws the minimise, maximise and close controls. */
+  chrome: "custom" | "native";
+  /** Where the system draws the controls: the header row's height and the
+   * leading inset that clears them, in CSS pixels, as the host seated them. */
+  nativeControls: { height: number; inset: number } | null;
+};
+
+export type WindowAction =
+  | "minimize"
+  | "toggle_maximize"
+  | "toggle_fullscreen"
+  | "leave_fullscreen"
+  | "close"
+  | "drag"
+  | "focus"
+  /** The page's answers to a close it was asked about. */
+  | "close_now"
+  | "keep_open";
 
 export type HostCommand = keyof HostCommands;
+
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];
+
 export type HostResult<C extends HostCommand> = HostCommands[C]["result"];
-
-// ---------------------------------------------------------------------------
-// Documentation bridge
-// ---------------------------------------------------------------------------
-
-/**
- * Every bridge message is a `window.postMessage` envelope addressed to the
- * peer's exact origin. Each side reads a message only when its `source` is the
- * peer window and its `origin` is the peer origin. An unknown `type` is
- * ignored; another `version` or a malformed known type is refused. The
- * envelope never carries the launch token.
- */
-export type BridgeEnvelope<Type extends string> = {
-  channel: "cadrumo-desktop";
-  version: 1;
-  type: Type;
-};
-
-export type DocsTheme = "auto" | "light" | "dark";
-
-/**
- * Optional page bridge capabilities a page announces in `ready`. Send a
- * message that needs one only when the page lists it in `ready.features`.
- */
-export type BridgeFeature =
-  "search" | "navigate" | "home" | "appearance" | (string & {});
-
-export type DocsLink = {
-  /** Absolute URL. */
-  href: string;
-  /** True when the link leaves the documentation origin. */
-  external: boolean;
-};
-
-/**
- * Documentation result kinds from the docs search controller. Open:
- * the index also carries `legal` records, and a navigation title with no
- * kind of its own arrives as `page`.
- */
-export type DocsResultKind =
-  "concept" | "cli" | "casilla" | "page" | (string & {});
-
-/**
- * One documentation search result. Results arrive in the docs search
- * controller's own ranking: term, casilla and command cards above pages.
- */
-export type DocsSearchResult = {
-  kind: DocsResultKind;
-  title: string;
-  /** An absolute documentation-origin URL; the page never sends another origin. */
-  url: string;
-  /** Plain text, never HTML; empty when the result has no excerpt. */
-  excerpt: string;
-  /**
-   * Match ranges into `excerpt` as sorted, non-overlapping `[start, end)`
-   * offsets in UTF-16 code units, the indices `String.prototype.slice` takes.
-   */
-  ranges: Array<readonly [start: number, end: number]>;
-  /**
-   * The controller's localized category line, such as
-   * `Casilla · Modelo 200 · 00562`; empty when it has none. Every page that
-   * answers `search` sends it.
-   */
-  crumb?: string;
-};
-
-// Documentation page to shell.
-
-export type DocsReady = BridgeEnvelope<"ready"> & {
-  url: string;
-  title: string;
-  lang: string;
-  theme: DocsTheme;
-  /**
-   * Absent on pages that predate the optional capabilities; enable a
-   * feature only when listed.
-   */
-  features?: BridgeFeature[];
-};
-
-export type DocsLocation = BridgeEnvelope<"location"> & {
-  url: string;
-  title: string;
-};
-
-export type DocsThemeReport = BridgeEnvelope<"theme"> & { theme: DocsTheme };
-
-/** A relayed shell chord; `id` is the chord id the shell sent in `keymap`. */
-export type DocsShortcut = BridgeEnvelope<"shortcut"> & { id: string };
-
-/**
- * A link leaving the documentation origin. Act on it only while
- * `navigator.userActivation.isActive`, under a rate limit, and only through
- * `open_external`.
- */
-export type DocsOpenExternal = BridgeEnvelope<"open-external"> & {
-  url: string;
-};
-
-/** Coordinates are in the frame's viewport CSS pixels, whatever the zoom. */
-export type DocsContextMenu = BridgeEnvelope<"context-menu"> & {
-  x: number;
-  y: number;
-  /** At most 65,536 characters. */
-  selection: string;
-  link: DocsLink | null;
-  /**
-   * False when the keyboard opened the menu (Shift+F10 or the menu key),
-   * true for a pointer. Absent on pages that predate keyboard menus; read
-   * `pointer !== false` as pointer-opened.
-   */
-  pointer?: boolean;
-};
-
-/**
- * The answer to a `search` request with the same `id`; sent only by a page
- * that lists `search` in `ready.features`.
- */
-export type DocsSearchResults = BridgeEnvelope<"search-results"> & {
-  id: string;
-  results: DocsSearchResult[];
-};
-
-export type DocsToShell =
-  | (BridgeEnvelope<"language-change"> & { language: string })
-  | DocsReady
-  | DocsLocation
-  | DocsThemeReport
-  | DocsShortcut
-  | DocsOpenExternal
-  | DocsContextMenu
-  | DocsSearchResults;
-
-// Shell to documentation page.
-
-/** Matched on `KeyboardEvent.code`; an omitted modifier means not pressed. */
-export type BridgeChord = {
-  /** At most 64 characters. */
-  id: string;
-  /** A `KeyboardEvent.code`, at most 32 characters. */
-  code: string;
-  ctrlKey?: boolean;
-  shiftKey?: boolean;
-  altKey?: boolean;
-  metaKey?: boolean;
-};
-
-/** Replaces the page's chord list; at most 64 chords. */
-export type ShellKeymap = BridgeEnvelope<"keymap"> & { chords: BridgeChord[] };
-
-export type ShellCommand = BridgeEnvelope<"command"> &
-  (
-    | { name: "back" }
-    | { name: "forward" }
-    | { name: "open-search" }
-    /**
-     * An absolute URL on the documentation origin, at most 4,096 characters;
-     * anything else is refused. Optional; send only when the page lists
-     * `navigate` in `ready.features`.
-     */
-    | { name: "navigate"; url: string }
-    /**
-     * The root of the language the shown page belongs to: the target of the
-     * page's own brand link, which is the docs manifest's entry for that
-     * language. Optional; send only when the page lists `home` in
-     * `ready.features`.
-     */
-    | { name: "home" }
-  );
-
-/** Documentation zoom, 0.5 to 2.0; 1 restores the page's own size. */
-export type ShellZoom = BridgeEnvelope<"zoom"> & { factor: number };
-
-/**
- * A bounded search, answered by one `search-results` with the same `id`. A
- * refused request is never answered. A blank query is answered with no
- * results. Optional; send only when the page lists `search` in
- * `ready.features`.
- */
-export type ShellSearch = BridgeEnvelope<"search"> & {
-  /** At most 64 characters; at most one request in flight per `id`. */
-  id: string;
-  /** At most 256 characters. At most eight searches are in flight at once. */
-  query: string;
-  /** An integer from 1 to 50. */
-  limit: number;
-};
-
-/**
- * Applied the way Furo's own toggle applies a theme, and persisted the same
- * way for later pages; answered by one `theme` report. `auto` hands the
- * choice back to the page's toggle. Optional; send only when the page lists
- * `appearance` in `ready.features`.
- */
-export type ShellAppearance = BridgeEnvelope<"appearance"> & {
-  theme: DocsTheme;
-};
-
-export type ShellToDocs =
-  ShellKeymap | ShellCommand | ShellZoom | ShellSearch | ShellAppearance;
-
-export type BridgeMessage = DocsToShell | ShellToDocs;

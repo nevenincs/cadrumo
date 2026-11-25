@@ -22,6 +22,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
@@ -29,12 +30,17 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -51,13 +57,13 @@ def _invoice(
     retention_amount: str | None = "150.00",
     retention_rate: str | None = "0.15",
     country: str = "ES",
-    tax_id: str = "B12345674",
+    tax_id: str = "B00015016",
     currency: str = "EUR",
     fx_rate: str | None = None,
     category: IvaCategory = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -71,7 +77,7 @@ def _invoice(
         {
             "kind": kind,
             "invoice_number": number,
-            "issued_at": date(2026, 3, 15),
+            "issued_at": date(_YEAR, 3, 15),
             "counterparty_name": "Asesoría Profesional SL",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
@@ -85,7 +91,7 @@ def _invoice(
             "retention_rate": None if retention_rate is None else Decimal(retention_rate),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "fx_rate": None if fx_rate is None else Decimal(fx_rate),
-            "fx_rate_date": None if fx_rate is None else date(2026, 3, 15),
+            "fx_rate_date": None if fx_rate is None else date(_YEAR, 3, 15),
             # The three fx fields are set together or not at all: a rate with no
             # named authority is an unattributable conversion.
             "fx_rate_source": None if fx_rate is None else _FX_RATE_SOURCE,
@@ -190,7 +196,9 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
     )
 
 
-def test_routed_observations_aggregate_through_the_existing_modelo_111_path() -> None:
+def test_routed_observations_aggregate_through_the_existing_modelo_111_path(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A routable invoice's observation is consumable by the aggregator that already exists.
 
     This is what "route into the store, never fork a path" has to mean in
@@ -202,7 +210,8 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(first, second),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        operation=operation,
     )
 
     assert aggregation.total_retencion == Decimal("450.00")
@@ -223,6 +232,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
     role = category_components(
         IvaCategory("intra_community_acquisition_reverse_charge"),
         InvoiceKind.RECEIVED,
+        effective_date=_ON_DATE,
     ).retencion_role
 
     defects = invoice_retencion_liability_defects(received_no_liability)
@@ -261,12 +271,12 @@ def _modelo_111_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("111").value,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 
 
-def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
+def test_the_committed_m111_bindings_receive_the_invoice_figures(operation: PinnedAuthorityOperation) -> None:
     """A received invoice reaches the casillas that declare the liability.
 
     The base casilla takes the base imponible, never the grand total: the
@@ -284,7 +294,8 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        operation=operation,
     )
 
     resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)
@@ -294,7 +305,7 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
     assert resolved[_M111_ACTIVIDADES_PERCEPTORES_BINDING] == Decimal("1")
 
 
-def test_the_filed_base_is_never_the_grand_total() -> None:
+def test_the_filed_base_is_never_the_grand_total(operation: PinnedAuthorityOperation) -> None:
     """The declared base must exclude the IVA the invoice also carries.
 
     Stated as its own case because the two figures are both present on the
@@ -307,7 +318,8 @@ def test_the_filed_base_is_never_the_grand_total() -> None:
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        operation=operation,
     )
 
     resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)

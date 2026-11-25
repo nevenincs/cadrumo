@@ -31,17 +31,17 @@ from cadrumo.core.document_shape import PDF_CONTAINER_SHAPES, DocumentShape
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
-from ._evidence_input_test_support import (
-    _BUCKET_ID,
-    _PDF_BYTES,
-    _added_record,
-    _make_svc,
+from .evidence_input_test_support import (
+    BUCKET_ID,
+    PDF_BYTES,
+    added_record,
     evidence_input_ports,
     isolated_settings,
+    make_svc,
     pdf_file,
     secure_objects,
 )
-from ._evidence_input_test_support import runtime_profile as runtime_profile
+from .evidence_input_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["evidence_input_ports", "isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]
@@ -52,13 +52,13 @@ def test_add_stores_bytes_in_secure_storage_under_attachment_id(
     secure_objects: SecureObjectRepository,
     pdf_file: Path,
 ) -> None:
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     # The bytes now live in the encrypted attachment store, content-addressed.
-    assert record.attachment_id == hashlib.sha256(_PDF_BYTES).hexdigest()
+    assert record.attachment_id == hashlib.sha256(PDF_BYTES).hexdigest()
     assert record.source_sha256 == record.attachment_id
     assert record.attachment_id is not None
     store = AttachmentStore(objects=secure_objects)
-    assert store.read_bytes(record.attachment_id) == _PDF_BYTES
+    assert store.read_bytes(record.attachment_id) == PDF_BYTES
 
 
 def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
@@ -73,11 +73,11 @@ def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
     to fix the path, then re-run ``evidence add`` — never to list existing
     records, which does not address a wrong path at all.
     """
-    svc = _make_svc(isolated_settings, secure_objects)
+    svc = make_svc(isolated_settings, secure_objects)
     bogus = tmp_path / "does-not-exist.pdf"
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
-        svc.add(bucket_id=_BUCKET_ID, source_path=bogus)
+        svc.add(bucket_id=BUCKET_ID, source_path=bogus)
 
     error = exc_info.value
     assert error.terminal_precondition_verdict is not None
@@ -97,14 +97,14 @@ def test_resolve_purchase_invoice_evidence_reads_secure_storage_into_memory(
     pdf_file: Path,
     evidence_input_ports: EvidenceInputPorts,
 ) -> None:
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     store = AttachmentStore(objects=secure_objects)
 
     resolved = resolve_purchase_invoice_evidence_input(record, store=store, ports=evidence_input_ports)
 
     assert isinstance(resolved, EvidenceInput)
-    assert resolved.data == _PDF_BYTES
-    assert resolved.content_sha256 == hashlib.sha256(_PDF_BYTES).hexdigest()
+    assert resolved.data == PDF_BYTES
+    assert resolved.content_sha256 == hashlib.sha256(PDF_BYTES).hexdigest()
     assert resolved.document_shape in PDF_CONTAINER_SHAPES
     assert resolved.mime_type == "application/pdf"
     assert resolved.evidence_id == record.evidence_id
@@ -117,13 +117,13 @@ def test_resolve_attachment_evidence_input_round_trips_bytes(
     pdf_file: Path,
     evidence_input_ports: EvidenceInputPorts,
 ) -> None:
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     assert record.attachment_id is not None
     store = AttachmentStore(objects=secure_objects)
 
     resolved = resolve_attachment_evidence_input(record.attachment_id, store=store, ports=evidence_input_ports)
 
-    assert resolved.data == _PDF_BYTES
+    assert resolved.data == PDF_BYTES
     assert resolved.attachment_id == record.attachment_id
 
 
@@ -144,7 +144,7 @@ def _stored_attachment_id(
             source_reference="operator-evidence",
             mime_type=mime_type,
             captured_at=datetime(2026, 8, 1, tzinfo=UTC),
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
         ),
     )
     return attachment.attachment_id
@@ -176,7 +176,7 @@ def test_resolution_reads_the_bytes_while_the_declared_media_type_is_preserved_v
     provenance: what the producer declared, preserved exactly, casing and
     parameters included.
     """
-    attachment_id = _stored_attachment_id(secure_objects, data=_PDF_BYTES, mime_type=mime_type, kind=kind)
+    attachment_id = _stored_attachment_id(secure_objects, data=PDF_BYTES, mime_type=mime_type, kind=kind)
 
     resolved = resolve_attachment_evidence_input(
         attachment_id,
@@ -206,7 +206,7 @@ def test_a_readable_document_is_admitted_even_when_its_declared_type_is_opaque(
     """
     attachment_id = _stored_attachment_id(
         secure_objects,
-        data=_PDF_BYTES,
+        data=PDF_BYTES,
         mime_type="application/octet-stream",
     )
 
@@ -258,9 +258,9 @@ def test_record_without_in_store_attachment_is_unconstructable() -> None:
     with pytest.raises(ValidationError) as excinfo:
         PurchaseInvoiceEvidence(  # type: ignore[call-arg]  # ty: ignore[missing-argument]  # reason: omitting attachment_id is the refusal under test
             evidence_id="ev-orphan",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             source_path="/some/cleartext/path.pdf",
-            source_sha256=hashlib.sha256(_PDF_BYTES).hexdigest(),
+            source_sha256=hashlib.sha256(PDF_BYTES).hexdigest(),
             media_kind=MediaKind.PDF,
             created_at=datetime(2026, 6, 10, tzinfo=UTC),
             updated_at=datetime(2026, 6, 10, tzinfo=UTC),
@@ -281,14 +281,14 @@ def test_persisted_record_stripped_of_its_attachment_is_refused_on_load(
     refuses it. If this ever passes with the field absent, the required-field
     contract is not actually enforced at the persistence boundary.
     """
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     stripped = record.model_dump()
     del stripped["attachment_id"]
 
     with pytest.raises(ValidationError):
         PurchaseInvoiceEvidence.model_validate(stripped)
 
-    document = PurchaseInvoiceEvidenceDocument(bucket_id=_BUCKET_ID, records=(record,))
+    document = PurchaseInvoiceEvidenceDocument(bucket_id=BUCKET_ID, records=(record,))
     payload = document.model_dump()
     del payload["records"][0]["attachment_id"]
     with pytest.raises(ValidationError):

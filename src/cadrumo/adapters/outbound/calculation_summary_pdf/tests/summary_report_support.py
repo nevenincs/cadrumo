@@ -25,6 +25,8 @@ from .....application.modelo.calculation_report import (
     CalculationReportValueState,
     ModeloCalculationReport,
     ModeloCalculationReportHeader,
+    ModeloCalculationReportResolution,
+    ModeloCalculationReportResolutionSource,
     ModeloCalculationReportRow,
     local_calculation_report_notice,
 )
@@ -40,6 +42,8 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from .....domain.filing.schema import ModeloValueKind
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....domain.modelos.calculation_revision import CalculationRevisionState
@@ -48,8 +52,9 @@ from .....domain.modelos.verification_report import VerificationCompletenessStat
 from ..summary_container import write_calculation_summary_pdf
 
 BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-EXPORTED_AT = datetime(2026, 7, 20, 9, 30, tzinfo=UTC)
-TAXPAYER_TAX_ID = "00000002W"
+FILING_YEAR = filing_year_envelope().horizon
+EXPORTED_AT = datetime(FILING_YEAR, 7, 20, 9, 30, tzinfo=UTC)
+TAXPAYER_TAX_ID = "00001000B"
 TAXPAYER_NAME = "Őrs Güell Núñez"
 CALCULATION_REVISION_ID = "1" * 64
 WORK_UNIT_ID = "2" * 64
@@ -168,14 +173,15 @@ def synthetic_report(
     *,
     authority_logical_generation: str = GENERATION,
     rows: tuple[ModeloCalculationReportRow, ...] | None = None,
+    credit_resolutions: tuple[ModeloCalculationReportResolution, ...] = (),
 ) -> ModeloCalculationReport:
     """Return the synthetic Modelo 303 report in ``language``."""
     report_rows = synthetic_report_rows() if rows is None else rows
     return ModeloCalculationReport(
         header=ModeloCalculationReportHeader(
             modelo=ModeloCode("303"),
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
+            filing_year=FILING_YEAR,
+            period=Period.from_year_and_code(FILING_YEAR, "2T"),
             taxpayer_tax_id=TAXPAYER_TAX_ID,
             taxpayer_name=TAXPAYER_NAME,
             calculation_revision_id=CALCULATION_REVISION_ID,
@@ -186,8 +192,8 @@ def synthetic_report(
             filing_record_id=None,
             registry_snapshot_ref=RegistrySnapshotRef(
                 modelo="303",
-                revision_id="2026-y-siguientes",
-                modelo_year=2026,
+                revision_id=published_selected_revision_id("303", filing_year=FILING_YEAR, period="2T"),
+                modelo_year=FILING_YEAR,
                 period="2T",
             ),
             authority_logical_generation=authority_logical_generation,
@@ -198,6 +204,7 @@ def synthetic_report(
             local_calculation_notice=local_calculation_report_notice(language),
         ),
         rows=report_rows,
+        credit_resolutions=credit_resolutions,
     )
 
 
@@ -218,6 +225,21 @@ def render_summary(
         )
 
 
+def synthetic_resolution() -> ModeloCalculationReportResolution:
+    """Return one accepted disagreement on casilla 27, whose reason needs Hungarian letters and wraps."""
+    return ModeloCalculationReportResolution(
+        finding_id="0123456789abcdef",
+        box="27",
+        sources=(
+            ModeloCalculationReportResolutionSource(role="value_source", source_family="binding", value="259259.26"),
+            ModeloCalculationReportResolutionSource(role="cross_check", source_family="borrador", value="259259.25"),
+        ),
+        accepted_role="value_source",
+        reason="A kifizető saját igazolása ezt az összeget tartalmazza, ezért a számítás összegét fogadtam el.",
+        resolved_at=EXPORTED_AT,
+    )
+
+
 __all__ = [
     "BUCKET_ID",
     "CALCULATION_REVISION_ID",
@@ -234,4 +256,5 @@ __all__ = [
     "synthetic_keypair",
     "synthetic_report",
     "synthetic_report_rows",
+    "synthetic_resolution",
 ]

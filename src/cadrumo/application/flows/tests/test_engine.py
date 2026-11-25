@@ -18,7 +18,6 @@ validator is registered exactly once at module import under a
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -27,12 +26,11 @@ from pydantic import BaseModel, ValidationError
 from ....core.flows import (
     DEFER_TOKEN,
     CheckpointAvailability,
-    CopyRefKind,
     FlowMode,
     FlowWidgetKind,
     PageStatus,
 )
-from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowRepeatingGroup, FlowSection
+from ..definition import FlowCondition, FlowDefinition, FlowRepeatingGroup, FlowSection
 from ..engine import (
     SECTION_VERDICT_PREFIX,
     FlowState,
@@ -40,6 +38,7 @@ from ..engine import (
     jump_to,
     next_page,
     page_status,
+    page_visible,
     reset_page,
     restart_flow,
     start_flow,
@@ -48,6 +47,7 @@ from ..engine import (
 from ..errors import FlowNavigationError, FlowSubmitError
 from ..review import ReviewProjection, assert_submit_eligible, review
 from ..validators import ValidationVerdict, register_cross_field_validator
+from .flow_definition_support import copy_ref, flow_choice, flow_page
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,39 +74,11 @@ _FULL_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 }
 
 
-def _copy(ref: str = "flows.test.copy") -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=ref)
-
-
-def _page(
-    page_id: str,
-    *,
-    widget: FlowWidgetKind = FlowWidgetKind.TEXT,
-    answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
-    choices: tuple[FlowChoice, ...] = (),
-    visible_when: FlowCondition | None = None,
-    required: bool = True,
-) -> FlowPage:
-    return FlowPage(
-        id=page_id,
-        widget=widget,
-        prompt=_copy(),
-        choices=choices,
-        visible_when=visible_when,
-        required=required,
-        answer_type=answer_type,
-    )
-
-
-def _choice(value: str, *, provenance: CopyRef | None = None) -> FlowChoice:
-    return FlowChoice(value=value, label=_copy(), provenance=provenance)
-
-
 def _definition(sections: tuple[FlowSection, ...]) -> FlowDefinition:
     return FlowDefinition(
         id="flows.test.flow",
-        title=_copy(),
-        description=_copy(),
+        title=copy_ref(),
+        description=copy_ref(),
         sections=sections,
         answers_model=_Answers,
         checkpoint=dict(_FULL_CHECKPOINT),
@@ -123,22 +95,24 @@ def _nav_definition() -> FlowDefinition:
         (
             FlowSection(
                 id="s1",
-                title=_copy(),
+                title=copy_ref(),
                 items=(
-                    _page("p_name"),
-                    _page("p_kind", widget=FlowWidgetKind.SELECT, choices=(_choice("alpha"), _choice("beta"))),
-                    _page(
+                    flow_page("p_name"),
+                    flow_page(
+                        "p_kind", widget=FlowWidgetKind.SELECT, choices=(flow_choice("alpha"), flow_choice("beta"))
+                    ),
+                    flow_page(
                         "p_detail",
                         visible_when=FlowCondition(page_id="p_kind", equals="alpha"),
                     ),
-                    _page("p_confirm", widget=FlowWidgetKind.CONFIRM, answer_type=bool, required=False),
-                    _page(
+                    flow_page("p_confirm", widget=FlowWidgetKind.CONFIRM, answer_type=bool, required=False),
+                    flow_page(
                         "p_tags",
                         widget=FlowWidgetKind.CHECKBOX,
-                        choices=(_choice("x"), _choice("y"), _choice("z")),
+                        choices=(flow_choice("x"), flow_choice("y"), flow_choice("z")),
                         required=False,
                     ),
-                    _page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int, required=False),
+                    flow_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int, required=False),
                 ),
             ),
         ),
@@ -266,14 +240,14 @@ def _repeat_definition() -> FlowDefinition:
         (
             FlowSection(
                 id="s",
-                title=_copy(),
+                title=copy_ref(),
                 items=(
-                    _page("p_count", widget=FlowWidgetKind.INTEGER, answer_type=int),
+                    flow_page("p_count", widget=FlowWidgetKind.INTEGER, answer_type=int),
                     FlowRepeatingGroup(
                         id="grp",
-                        title=_copy(),
+                        title=copy_ref(),
                         count_from="p_count",
-                        pages=(_page("g_a"),),
+                        pages=(flow_page("g_a"),),
                     ),
                 ),
             ),
@@ -313,14 +287,14 @@ def _compare_definition() -> FlowDefinition:
         (
             FlowSection(
                 id="s",
-                title=_copy(),
+                title=copy_ref(),
                 items=(
-                    _page(
+                    flow_page(
                         "p_cmp",
                         widget=FlowWidgetKind.COMPARE_SELECT,
                         choices=(
-                            _choice("cand_a", provenance=_copy("prov.a")),
-                            _choice("cand_b", provenance=_copy("prov.b")),
+                            flow_choice("cand_a", provenance=copy_ref("prov.a")),
+                            flow_choice("cand_b", provenance=copy_ref("prov.b")),
                         ),
                     ),
                 ),
@@ -355,14 +329,14 @@ def _section_exit_definition() -> FlowDefinition:
         (
             FlowSection(
                 id="s_a",
-                title=_copy(),
-                items=(_page("p_a"),),
+                title=copy_ref(),
+                items=(flow_page("p_a"),),
                 exit_validator_ids=(_SECTION_EXIT_VALIDATOR_ID,),
             ),
             FlowSection(
                 id="s_b",
-                title=_copy(),
-                items=(_page("p_b", required=False),),
+                title=copy_ref(),
+                items=(flow_page("p_b", required=False),),
             ),
         ),
     )
@@ -389,7 +363,7 @@ def test_section_exit_validator_blocks_boundary_then_clears_after_fix() -> None:
 # ── Submit gate ──────────────────────────────────────────────────────────────
 def _submit_definition() -> FlowDefinition:
     return _definition(
-        (FlowSection(id="s", title=_copy(), items=(_page("p_only"),)),),
+        (FlowSection(id="s", title=copy_ref(), items=(flow_page("p_only"),)),),
     )
 
 
@@ -450,3 +424,23 @@ def test_derived_review_projection_round_trips() -> None:
     projection = review(definition, state)
 
     assert ReviewProjection.model_validate_json(projection.model_dump_json()) == projection
+
+
+def test_a_gated_page_in_an_instance_holds_on_its_own_sibling_and_fails_without_the_parent_answer() -> None:
+    gated = flow_page("p_detail", visible_when=FlowCondition(page_id="p_kind", equals="alpha"))
+    prefix = "grp#1"
+    assert page_visible(gated, {"grp#1.p_kind": "alpha"}, instance_prefix=prefix)
+    # Another instance's answer is not this instance's sibling.
+    assert not page_visible(gated, {"grp#0.p_kind": "alpha"}, instance_prefix=prefix)
+    assert not page_visible(gated, {"grp#1.p_kind": "beta"}, instance_prefix=prefix)
+    assert not page_visible(gated, {}, instance_prefix=prefix)
+    # A top-level answer is the fallback only when the instance states none.
+    assert page_visible(gated, {"p_kind": "alpha"}, instance_prefix=prefix)
+    assert not page_visible(gated, {"p_kind": "alpha", "grp#1.p_kind": "beta"}, instance_prefix=prefix)
+
+
+def test_an_ungated_page_is_visible_and_a_contains_clause_reads_the_comma_joined_tokens() -> None:
+    assert page_visible(flow_page("p_free"), {}, instance_prefix=None)
+    tagged = flow_page("p_tagged", visible_when=FlowCondition(page_id="p_tags", contains="y"))
+    assert page_visible(tagged, {"p_tags": "x, y"}, instance_prefix=None)
+    assert not page_visible(tagged, {"p_tags": "x,z"}, instance_prefix=None)

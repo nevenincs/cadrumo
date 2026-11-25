@@ -31,7 +31,8 @@ from ...application.modelo.typed_query_contracts import (
     ModeloTypedBindingValue,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.state_projection import ModeloReadinessRequest, build_modelo_readiness_reports
+from ...application.state_projection import build_modelo_readiness_reports
+from ...application.state_projection_models import ModeloReadinessRequest
 from ...core.external_constants import OutputLanguage
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation

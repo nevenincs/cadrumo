@@ -40,6 +40,7 @@ from cadrumo.application.prorrata_register.ports import (
     ProrrataPriorSettlementSourceSnapshot,
     ProrrataSourceRevision,
 )
+from cadrumo.application.prorrata_register.seed import prior_definitiva_source_coordinates
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -52,6 +53,7 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
@@ -214,20 +216,21 @@ class CalculationObservationRepository:
             member_nif=member_nif,
         )
 
-    def load_prior_m303_settlement_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
-        """Read both possible unmembered annual 303 source rows and revisions.
+    def load_prior_definitiva_source_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
+        """Read every possible unmembered prior definitive source row and its revision.
 
-        The 4T and 12 coordinates are both asserted at commit, including
-        absence. A newly captured higher-priority source therefore invalidates
-        a previously evaluated seed rather than escaping its source fence.
+        The prior 390 and the 303 4T and 12 coordinates are all asserted at
+        commit, including absence. A newly captured higher-priority source
+        therefore invalidates a previously evaluated seed rather than escaping
+        its source fence.
         """
 
         def _read() -> ProrrataPriorSettlementSourceSnapshot:
             observations: list[ObservationEnvelopePayload] = []
             revisions: list[ProrrataSourceRevision] = []
             objects = self._layers.secure_object_repository
-            for period_token in ("4T", "12"):
-                identifier = observation_key_for_token("303", prior_year, period_token)
+            for modelo, period_token in prior_definitiva_source_coordinates():
+                identifier = observation_key_for_token(modelo, prior_year, period_token)
                 layers, revision = self._layers.load_revisioned(identifier)
                 if layers is not None and layers.effective is not None:
                     observations.append(layers.effective)
@@ -259,6 +262,7 @@ class CalculationObservationRepository:
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
 
@@ -291,6 +295,10 @@ class CalculationObservationRepository:
         ``override`` records the audit of an operator figure; only a
         non-official envelope can carry one.
 
+        ``filing_kind`` is the typed original or correction kind of the
+        observed declaration with the basis that admitted it. ``None`` stores
+        no projection, which every reader takes as unknown.
+
         Every Modelo 303 envelope crosses the canonical disposition-aware
         normalization ingress. Incomplete or conflicting evidence is refused;
         there is no generic unnormalized storage shape. Callers that co-emit
@@ -318,11 +326,13 @@ class CalculationObservationRepository:
                     "source_kind": resolved_source_kind,
                     "member_nif": member_nif,
                     "stamped_revision_id": stamped_revision_id,
+                    "authority_generation": operation.pin().logical_generation,
                     "source_metadata": dict(source_metadata or {}),
                     "source_headers": source_headers,
                     "result_disposition": result_disposition,
                     "prior_domiciliation_election": prior_domiciliation_election,
                     "override": override,
+                    "filing_kind": filing_kind,
                 },
                 context={"canonical_m303_ingress_candidate": True},
             )

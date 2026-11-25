@@ -13,13 +13,10 @@ quarterly source filings (1T-4T) through the enrolled
   ``decl.retenciones-total`` via ``copy``-from-relation formulas.
   ``decl.total-perceptores`` comes from the dedicated per-perceptor retención
   store, because quarterly perceptor counts double-count recurring perceptors.
-* **Modelo 190** (revision ``2025-y-siguientes``) folds **Modelo 111** quarterly
-  retención-rendimientos-del-trabajo monetary filings. Nine importe casilla ids
-  sum into ``decl.percepciones-total``, output ``28`` copies into
-  ``decl.retenciones-total``, and ``decl.total-percepciones`` comes from the
-  withholding detalle source because quarterly perceptor counts double-count
-  recurring percepciones. The 2024 edition totals its own type-2 records, so
-  the Modelo 111 fold is proven on the first exercise that routes through it.
+* **Modelo 190** is the counter-case: every edition totals its declarante
+  summary over its own type-2 records, as the designs and the 2025
+  instrucciones define it, so **Modelo 111** quarters never fold into it. They
+  remain a reconciliation check whose difference is a warning.
 * **Modelo 193** (revision ``2024``) folds **Modelo 123** quarterly
   retención-capital-mobiliario monetary filings. Source casilla ids ``06``
   (base), ``09`` (retenciones) feed the monetary declarante casillas; the
@@ -61,16 +58,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -81,18 +77,20 @@ from ....adapters.persistence.profile.participation_index import TransactionPart
 from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    persona_taxpayer_tax_id,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
-    seed_test_profile_record,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.retenciones import (
@@ -101,14 +99,18 @@ from ....application.aggregation.retenciones import (
     RetencionObservation,
 )
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.ledger.counterparty_establishment import record_counterparty_filing_name
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.revision_persistence import persist_filed_revision
+from ....application.modelo.filing_revision_persistence import persist_filed_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ....core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -121,17 +123,18 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.env_scope import ready_clave_settings
-from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
+from .fold_in_assertions_support import assert_distinct_positive
+from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -173,43 +176,28 @@ _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 
-def _seed_ready_profile() -> None:
-    """Persist a filing-ready withholding-operator profile for annual summaries."""
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="withholding operator activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-                # carries the row as filer data, so it must be stated rather than assumed.
-                # False is the truthful value for this natural-person filer.
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+@pytest.fixture
+def capital_payer_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """Yield the repository of a profile that pays withheld capital income, so Modelos 123 and 193 apply."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        seed_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=_T0,
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
+        yield profile.repository
+
+
+@pytest.fixture
+def withholding_payer_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """Yield the repository of a profile whose taxpayer pays withheld income, so Modelos 111 and 190 apply."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
+        yield profile.repository
 
 
 def _seed_quarterly_filing(
@@ -230,35 +218,21 @@ def _seed_quarterly_filing(
     :meth:`CalculationObservationRepository.save_observation` write path with the
     non-official ``app_filing`` source_kind.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=source_modelo,
+            filing_year=year,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=source_modelo,
                 filing_year=year,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=source_modelo,
-                    filing_year=year,
-                    period=period,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=source_modelo,
-                    filing_year=year,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=source_modelo,
-                        filing_year=year,
-                        period=period,
-                        casilla_values=casilla_values,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -349,6 +323,28 @@ def _calculate_periodic(
         )
 
 
+def _state_perceptor_filing_name(secure_objects: SecureObjectRepository, *, tax_id: str, nombre: str) -> None:
+    """State the name a perceptor is filed under, as the operator does before an informative return.
+
+    The record designs prescribe surnames then name for a natural person and give
+    no rule for deriving it from a free-text name, so an unstated filing name
+    leaves the perceptor's name field without content.
+    """
+    record_counterparty_filing_name(
+        bucket_id=_BUCKET_ID,
+        tax_identifier=tax_id,
+        filing_name=DeclaredPartyFilingName(
+            kind=DeclaredPartyKind.NATURAL_PERSON,
+            primer_apellido="Ejemplo",
+            segundo_apellido="Ficticio",
+            nombre=nombre,
+        ),
+        asserted_by="test-operator",
+        asserted_at=_T0,
+        repository=CounterpartyEstablishmentRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+
 def _assert_empty_withholding_store_source_issue(result: BucketAggregationCalculationResult, *, modelo: str) -> None:
     """Assert enrolled withholding resolver reports an empty detail store loudly."""
     assert not any(
@@ -392,7 +388,7 @@ _M115_C03_RETENCIONES = {
     "3T": Decimal("142.55"),
     "4T": Decimal("570.00"),
 }
-_M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 # The per-perceptor rental detail M180 counts is the quarterly M115 detail; it is
 # filed under the quarter its accrual date falls in.
 _M180_DETAIL_SOURCE_MODELO = "115"
@@ -416,7 +412,7 @@ def _m180_property_evidence(index: int) -> Modelo180PropertyEvidence:
         withholding_percentage=_M180_WITHHOLDING_PERCENTAGE,
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",
@@ -455,7 +451,7 @@ def _seed_retencion_perceptors(
     period_code: str,
     observations: tuple[RetencionObservation, ...],
 ) -> None:
-    """Persist one complete retenciones observation window."""
+    """Persist one complete retenciones observation window and state each perceptor's filing name."""
     period = Period.from_year_and_code(_YEAR, period_code)
     assert period.contains(_RETENCION_ACCRUED_ON), (period_code, _RETENCION_ACCRUED_ON)
     replace_retencion_observations(
@@ -466,10 +462,12 @@ def _seed_retencion_perceptors(
         observations=list(observations),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
+    for observation in observations:
+        _state_perceptor_filing_name(secure_objects, tax_id=observation.perceptor_nif, nombre="Perceptor")
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id=persona_taxpayer_tax_id(WITHHOLDING_PAYER_PERSONA), iva_regime=IVARegime("GENERAL"))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(
@@ -484,8 +482,8 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(
     property evidence. With both sources supplied, the live resolution is clean.
     """
     obs_repo = CalculationObservationRepository()
-    expected_base = _assert_distinct_positive(_M115_C02_BASE)
-    expected_retenciones = _assert_distinct_positive(_M115_C03_RETENCIONES)
+    expected_base = assert_distinct_positive(_M115_C02_BASE)
+    expected_retenciones = assert_distinct_positive(_M115_C03_RETENCIONES)
     expected_perceptores = Decimal(len(set(_M180_RETENCION_PERCEPTOR_NIFS)))
     _seed_retencion_perceptors(
         secure_objects,
@@ -553,6 +551,8 @@ _M190_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M190_
 _M190_DETAIL_SOURCE_MODELO = "111"
 _M190_DETAIL_QUARTER = "1T"
 _M190_DETAIL_TRANSACTION_DATE = date(_M190_YEAR, 3, 15)
+_M190_DETAIL_PERCIBIDO = Decimal("1000.00")
+_M190_DETAIL_RETENCION = Decimal("150.00")
 
 
 def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
@@ -575,7 +575,7 @@ def _seed_m190_withholding_detail(
     clave: str = "G",
     subclave: str = "01",
 ) -> None:
-    """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 count's source."""
+    """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 records' source, with its filing name."""
     period = Period.from_year_and_code(_M190_YEAR, _M190_DETAIL_QUARTER)
     assert period.contains(_M190_DETAIL_TRANSACTION_DATE), (_M190_DETAIL_QUARTER, _M190_DETAIL_TRANSACTION_DATE)
     replace_percepcion_observations(
@@ -593,23 +593,15 @@ def _seed_m190_withholding_detail(
                 transaction_date=_M190_DETAIL_TRANSACTION_DATE,
                 clave=RetencionClave.from_registry(clave),
                 subclave=subclave,
-                percibido_dinerario=Decimal("1000.00"),
-                retencion_practicada=Decimal("150.00"),
-                incapacity_cash_perception=Decimal("0"),
-                incapacity_cash_withholding=Decimal("0"),
-                incapacity_kind_value=Decimal("0"),
-                incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-                incapacity_kind_repercutido=Decimal("0"),
-                foral_retention_estatal=Decimal("0"),
-                foral_retention_navarra=Decimal("0"),
-                foral_retention_araba=Decimal("0"),
-                foral_retention_gipuzkoa=Decimal("0"),
-                foral_retention_bizkaia=Decimal("0"),
+                percibido_dinerario=_M190_DETAIL_PERCIBIDO,
+                retencion_practicada=_M190_DETAIL_RETENCION,
+                **zeroed_withholding_blocks(),
                 base_retenciones=Decimal("0"),
             )
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
+    _state_perceptor_filing_name(secure_objects, tax_id="12345678Z", nombre="Profesional")
 
 
 def _seed_m111_quarterly_m190_evidence() -> None:
@@ -677,7 +669,7 @@ def _seed_and_file_m111_1t(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -723,71 +715,45 @@ def _seed_and_file_m111_1t(
     return result
 
 
-def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+def test_m190_totals_its_own_records_and_never_the_m111_quarters(
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """E2E: four filed M111 quarters fold into M190 monetary totals; withholding advisory present.
+    """The M190 declarante summary totals the declaration's own type-2 records, whatever M111 quarters hold.
 
-    The nine importe relations sum into ``decl.percepciones-total`` and the
-    retenciones relation (output ``28``) into ``decl.retenciones-total``. The
-    annual count ``decl.total-percepciones`` is withholding-backed; with an empty
-    detail store the enrolled resolver materialises an explicit zero and emits a
-    ``source_issue`` advisory.
+    Every design and the 2025 instrucciones define ``decl.total-percepciones``,
+    ``decl.percepciones-total`` and ``decl.retenciones-total`` over the type-2
+    records of the declaration itself. Four filed M111 quarters with distinct
+    positive values are seeded beside an empty detail store, so a summary that
+    still folded them would show their sums; with no record every total is an
+    explicit zero and the enrolled withholding resolver reports the empty store.
     """
-    obs_repo = CalculationObservationRepository()
-    all_outputs = (*_M190_IMPORTE_OUTPUTS, _M190_RETENCIONES_OUTPUT)
-    for period in _QUARTERS:
-        _seed_quarterly_filing(
-            obs_repo=obs_repo,
-            source_modelo="111",
-            period=period,
-            casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
-            year=_M190_YEAR,
-        )
+    _seed_m111_quarterly_m190_evidence()
 
-    expected_percepciones_amount = sum(
-        (_m190_seed_value(output, period) for output in _M190_IMPORTE_OUTPUTS for period in _QUARTERS),
-        Decimal("0"),
-    )
-    expected_retenciones = sum(
-        (_m190_seed_value(_M190_RETENCIONES_OUTPUT, period) for period in _QUARTERS),
-        Decimal("0"),
-    )
-    # Sanity: the monetary expected totals are strictly positive and distinct, so
-    # a cross-wired fold would red the per-casilla assertions below.
-    assert expected_percepciones_amount > Decimal("0")
-    assert expected_retenciones > Decimal("0")
-    assert expected_percepciones_amount != expected_retenciones
-
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
 
     values = result.revision.casilla_values
-    assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
-        f"M190 {_DECL_PERCEPCIONES_COUNT} must come from withholding detalle and materialise zero "
-        f"when the detail store is empty; got {values[_DECL_PERCEPCIONES_COUNT]}"
-    )
-    assert Decimal(values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount, (
-        f"M190 {_DECL_PERCEPCIONES_AMOUNT} must fold the nine importe outputs over four quarters "
-        f"(sum {expected_percepciones_amount}); got {values[_DECL_PERCEPCIONES_AMOUNT]}"
-    )
-    assert Decimal(values[_DECL_RETENCIONES]) == expected_retenciones, (
-        f"M190 {_DECL_RETENCIONES} must fold the retenciones output (28) over four quarters "
-        f"(sum {expected_retenciones}); got {values[_DECL_RETENCIONES]}"
-    )
-
-    # The relation fold is clean (claimed source, no diagnostic names it)...
+    for casilla_id in (_DECL_PERCEPCIONES_COUNT, _DECL_PERCEPCIONES_AMOUNT, _DECL_RETENCIONES):
+        assert Decimal(values[casilla_id]) == Decimal("0"), (
+            f"M190 {casilla_id} must total the declaration's own records, of which there are none; "
+            f"got {values[casilla_id]}"
+        )
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     _assert_empty_withholding_store_source_issue(result, modelo="190")
 
 
-def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+def test_m190_verify_compares_observed_m111_quarters_with_its_records_without_depending_on_them(
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M190 verify recognizes observed M111 values and names the missing filing-grade quarterly evidence."""
-    _seed_m111_quarterly_m190_evidence()
-    _seed_m190_withholding_detail(secure_objects)
+    """Observed M111 quarters are a reconciliation check on the M190 summary, not a source it waits for.
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    The summary totals its own records, so unfiled M111 quarters raise no
+    cross-period blocker. Their retenciones are still compared with the summary,
+    and a difference is a warning naming both totals and the quarters checked.
+    """
+    _seed_m111_quarterly_m190_evidence()
+    _seed_m190_withholding_detail(withholding_payer_objects)
+
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
@@ -795,56 +761,50 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
 
     assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
-    assert report.granted_verificado_completo is False
-    cross_period_findings = tuple(
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == _M190_DETAIL_RETENCION
+    assert not any(
+        finding.kind.value == "cross_period_dependency_unclean" and finding.message_facts.get("source_modelo") == "111"
+        for finding in report.findings
+    ), report.findings
+    mismatches = tuple(
         finding
         for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+        if finding.message_locale_key == "application.modelo.findings.withholding_total_differs_from_periodic_returns"
     )
-    assert cross_period_findings, report.findings
-    m111_findings = tuple(
-        finding
-        for finding in cross_period_findings
-        if finding.message_facts.get("source_modelo") == "111"
-        and finding.message_facts.get("source_filing_year") == _M190_YEAR
-    )
-    assert m111_findings, cross_period_findings
-    assert all(
-        "missing_current_filing_record" in str(finding.message_facts["blocker_codes"]).split("|")
-        for finding in m111_findings
-    )
-    assert not any(
-        "missing_observation" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings
-    )
-    assert not any(
-        "missing_observed_casilla" in str(finding.message_facts["blocker_codes"]).split("|")
-        for finding in m111_findings
+    assert len(mismatches) == 1, report.findings
+    (mismatch,) = mismatches
+    assert mismatch.severity.value == "warning"
+    assert mismatch.message_facts["source_modelo"] == "111"
+    assert mismatch.message_facts["checked_periods"] == "|".join(_QUARTERS)
+    assert mismatch.message_facts["summary_total"] == _M190_DETAIL_RETENCION
+    assert mismatch.message_facts["periodic_total"] == sum(
+        (_m190_seed_value(_M190_RETENCIONES_OUTPUT, period) for period in _QUARTERS),
+        Decimal("0"),
     )
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
-    m111_result = _seed_and_file_m111_1t(secure_objects, operation=operation)
-    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
-    _seed_m190_withholding_detail(secure_objects)
+    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence.
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
-    expected_percepciones_amount = sum(
-        (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
-        Decimal("0"),
-    )
-    expected_retenciones = Decimal(m111_result.revision.casilla_values[_M190_RETENCIONES_OUTPUT])
-    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount
-    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == expected_retenciones
+    The summary totals the declaration's one record, so its figures are that
+    record's percibido and retención.
+    """
+    _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
+    _attest_m111_no_retenciones_periods(withholding_payer_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail(withholding_payer_objects)
+
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == _M190_DETAIL_PERCIBIDO
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == _M190_DETAIL_RETENCION
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
 
     with bundled_indexed_authority().operation() as operation:
@@ -854,7 +814,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -867,12 +827,6 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
         if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
     )
     assert not blocking_cross_period
-    m111_advisories = tuple(
-        finding
-        for finding in report.findings
-        if finding.message_locale_key == "application.modelo.findings.cross_period_m111_no_retenciones"
-    )
-    assert {finding.message_facts["source_period"] for finding in m111_advisories} == {"2T", "3T", "4T"}
     assert not any(
         finding.message_facts.get("source_modelo") == "111"
         and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
@@ -881,18 +835,18 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
 
 
 def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The registry scopes descendant data to work-income claves, so a clave A row must carry it.
 
     The companion above files a clave G row without that data and verifies; the
     same row as clave A is refused on exactly the casillas its clave carries.
     """
-    _seed_and_file_m111_1t(secure_objects, operation=operation)
-    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
-    _seed_m190_withholding_detail(secure_objects, clave="A", subclave="")
+    _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
+    _attest_m111_no_retenciones_periods(withholding_payer_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail(withholding_payer_objects, clave="A", subclave="")
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
@@ -900,7 +854,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -937,11 +891,11 @@ _M123_C09_RETENCIONES = {
     "3T": Decimal("1710.04"),
     "4T": Decimal("63.28"),
 }
-_M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("33333333P", "44444444A", "55555555K")
+_M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("00001502F", "00001503P", "00001504D")
 
 
 def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    capital_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: four filed M123 quarters fold into M193 annual totals; withholding advisory present.
 
@@ -955,10 +909,10 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     withholding resolver emits a ``source_issue`` advisory.
     """
     obs_repo = CalculationObservationRepository()
-    expected_base = _assert_distinct_positive(_M123_C06_BASE)
-    expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
+    expected_base = assert_distinct_positive(_M123_C06_BASE)
+    expected_retenciones = assert_distinct_positive(_M123_C09_RETENCIONES)
     _seed_retencion_perceptors(
-        secure_objects,
+        capital_payer_objects,
         modelo="193",
         period_code=_ANNUAL_PERIOD,
         observations=tuple(
@@ -978,7 +932,7 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
             },
         )
 
-    result = _calculate_annual(secure_objects, modelo="193", operation=operation)
+    result = _calculate_annual(capital_payer_objects, modelo="193", operation=operation)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == Decimal("0"), (

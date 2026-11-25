@@ -18,7 +18,7 @@ from ....application.invoices.catalogue_add_contracts import (
     InvoiceAddResult,
 )
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
-from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -43,7 +43,7 @@ def _invoice(currency: str, invoice_number: str) -> Invoice:
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Exterior SL",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number=invoice_number,
             issued_at=date(2026, 3, 16),
@@ -58,7 +58,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
     invoice = _invoice(currency, invoice_number)
     added = InvoiceAddResult.created(
         _PROFILE,
-        invoice=CatalogueInvoiceSnapshot.from_invoice(invoice),
+        invoice=CatalogueInvoiceSnapshot.from_invoice(invoice, documents=InvoiceDocumentIndex.from_manifests(())),
         bucket_event_ids=("bucket-event",),
         euro_value_pending=invoice.euro_value_pending,
         simplificada_tax_id_advisory_required=False,
@@ -69,7 +69,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
         effect=OperationEffect.UPDATED,
     )
     captured: dict[str, object] = {}
-    monkeypatch.setattr(handler, "_business_invoice_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(handler, "add_invoice_catalogue", lambda *_args, **_kwargs: (completion, added))
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: captured.update(kwargs))
 
@@ -83,7 +83,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
         country_code="ES",
         iva_rate="21",
         currency=currency,
-        counterparty_nif="A58818501",
+        counterparty_nif="B00010157",
     )
     return captured
 

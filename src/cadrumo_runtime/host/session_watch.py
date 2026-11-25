@@ -3,7 +3,10 @@
 The shell holds no runtime connection; this child does, unauthenticated and
 for status only. It reads the selected profile's sign-in status once, then
 again only when the runtime pushes a sign-in cue, the connection is lost,
-the active-profile pointer changes, or the status's own deadline passes.
+the active-profile pointer changes, a profile is created or removed, or the
+status's own deadline passes. Each line also lists the profiles on this
+computer, as ``config profile list`` lists them, so the sign-in view needs no
+process of its own to show them.
 Each line is the whole current observation, written only when it differs
 from the last one, or when the parent asks with a newline, as it does after a
 sign-in or sign-out of its own. The child ends when its parent closes
@@ -24,24 +27,27 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.core.time.clock import now
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 
-_RECONNECT_SECONDS = (1.0, 2.0, 5.0, 10.0, 30.0)
+RECONNECT_SECONDS = (1.0, 2.0, 5.0, 10.0, 30.0)
 """Waits between attempts while the runtime is unavailable; reconnection, not observation."""
 _DEADLINE_MARGIN_SECONDS = 0.5
 """A coarse timer then wakes after a deadline, never just before it."""
+# FILE_NOTIFY_CHANGE_FILE_NAME, DIR_NAME and LAST_WRITE.
+_FILE_NAME, _DIR_NAME, _LAST_WRITE = 0x001, 0x002, 0x010
 
 
-class _Wakes:
+class Wakes:
     """Why the watch woke; each flag is set by its own source and taken once."""
 
     def __init__(self) -> None:
+        """Create the wake flags with nothing cued and the stopping event clear."""
         self._guard = Lock()
         self._event = Event()
         self._cued = False
@@ -50,6 +56,7 @@ class _Wakes:
         self.stopping = Event()
 
     def cue(self) -> None:
+        """Mark the watcher as cued and wake its loop."""
         with self._guard:
             self._cued = True
         self._event.set()
@@ -61,16 +68,19 @@ class _Wakes:
         self._event.set()
 
     def take_forced(self) -> bool:
+        """Return whether a forced refresh was requested, clearing the request."""
         with self._guard:
             forced, self._forced = self._forced, False
         return forced
 
     def pointer_moved(self) -> None:
+        """Record that the profile pointer moved and wake the loop."""
         with self._guard:
             self._pointer = True
         self._event.set()
 
     def stop(self) -> None:
+        """Request the watch loop to stop and wake it."""
         self.stopping.set()
         self._event.set()
 
@@ -84,7 +94,8 @@ class _Wakes:
         return cued, pointer
 
 
-def _emit(document: Mapping[str, object]) -> None:
+def emit(document: Mapping[str, object]) -> None:
+    """Write one compact JSON document line to standard output."""
     sys.stdout.write(json.dumps(document, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
@@ -93,7 +104,7 @@ class _PointerUnreadableError(Exception):
     """The active-profile pointer could not be read; its next change is the next reason to try."""
 
 
-def _selection() -> tuple[UUID | None, str | None]:
+def selection() -> tuple[UUID | None, str | None]:
     """The selected profile and its public label, read as ``config sign-in-status`` reads them."""
     from cadrumo.adapters.persistence.storage.errors import StorageValidationError
     from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
@@ -127,6 +138,19 @@ def _observation(
     }
 
 
+def profiles() -> dict[str, object]:
+    """The profiles on this computer as ``config profile list`` lists them: labels and the selection only."""
+    from cadrumo.application.user_profile.profile_summary import profile_listing
+    from cadrumo.core.errors.hierarchy import CadrumoError
+
+    try:
+        listing = profile_listing()
+    except (CadrumoError, OSError):
+        return {"rows": [], "complete": False}
+    rows = [{"name": row.name, "active": row.active} for row in listing.result().profiles]
+    return {"rows": rows, "complete": listing.inventory.recognized}
+
+
 def _refusal_code(error: BaseException) -> str:
     if isinstance(error, RefusalError):
         # A connection the runtime closed means the runtime is gone, as an absent endpoint does.
@@ -142,11 +166,11 @@ def _seconds_until_deadline(status: SignInStatus) -> float | None:
     if not deadlines:
         return None
     earliest: datetime = min(deadlines)
-    return max(0.0, (earliest - now()).total_seconds()) + _DEADLINE_MARGIN_SECONDS
+    return max(0.0, (earliest - wall_now()).total_seconds()) + _DEADLINE_MARGIN_SECONDS
 
 
-def _watch_pointer_directory(directory: Path, wakes: _Wakes) -> None:
-    """Wake on each change of a file name or write time directly in the pointer's directory (Windows)."""
+def _watch_directory(directory: Path, changes: int, changed: Callable[[], None], stopping: Event) -> None:
+    """Call ``changed`` on each change of the given kinds directly in ``directory`` (Windows)."""
     if sys.platform != "win32":
         return
     import ctypes
@@ -161,22 +185,21 @@ def _watch_pointer_directory(directory: Path, wakes: _Wakes) -> None:
     wait.argtypes, wait.restype = (wintypes.HANDLE, wintypes.DWORD), wintypes.DWORD
     close = kernel.FindCloseChangeNotification
     close.argtypes, close.restype = (wintypes.HANDLE,), wintypes.BOOL
-    # The pointer is replaced by rename, a name change; a write in place changes its write time.
-    handle = first(str(directory), False, 0x00000001 | 0x00000010)
+    handle = first(str(directory), False, changes)
     if handle is None or handle == wintypes.HANDLE(-1).value:
         return
     try:
-        while not wakes.stopping.is_set():
+        while not stopping.is_set():
             if wait(handle, 0xFFFFFFFF) != 0:
                 return
-            wakes.pointer_moved()
+            changed()
             if not following(handle):
                 return
     finally:
         close(handle)
 
 
-def _watch_parent(stdin_fd: int, wakes: _Wakes) -> None:
+def watch_parent(stdin_fd: int, wakes: Wakes) -> None:
     """Each newline from the parent asks for a fresh line; the end of its input ends the watch."""
     with contextlib.suppress(OSError):
         while byte := os.read(stdin_fd, 1):
@@ -188,7 +211,7 @@ def _watch_parent(stdin_fd: int, wakes: _Wakes) -> None:
 type _Publish = Callable[[dict[str, object]], None]
 
 
-def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes: _Wakes, publish: _Publish) -> bool:
+def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes: Wakes, publish: _Publish) -> bool:
     """Follow one profile on one connection; return whether its connection was lost."""
     try:
         status = client.watch_sign_in(wakes.cue).status
@@ -202,7 +225,7 @@ def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes:
             return False
         if pointer:
             try:
-                moved = _selection() != (profile_id, label)
+                moved = selection() != (profile_id, label)
             except _PointerUnreadableError:
                 moved = True
             if moved:
@@ -218,18 +241,20 @@ def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes:
     return False
 
 
-def _watch(wakes: _Wakes) -> int:
+def watch(wakes: Wakes) -> int:
+    """Watch the selected profile and sessions, emitting an observation on each change."""
     previous: list[dict[str, object]] = []
 
     def publish(observation: dict[str, object]) -> None:
+        observation = {**observation, "profiles": profiles()}
         if wakes.take_forced() or previous != [observation]:
             previous[:] = [observation]
-            _emit(observation)
+            emit(observation)
 
     attempt = 0
     while not wakes.stopping.is_set():
         try:
-            profile_id, label = _selection()
+            profile_id, label = selection()
         except _PointerUnreadableError:
             publish(_observation(None, None, None, "active_profile_unreadable"))
             wakes.wait(None)
@@ -242,7 +267,7 @@ def _watch(wakes: _Wakes) -> int:
             client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
         except (RefusalError, FrontendRefusedError, OSError) as error:
             publish(_observation(profile_id, label, None, _refusal_code(error)))
-            wakes.wait(_RECONNECT_SECONDS[min(attempt, len(_RECONNECT_SECONDS) - 1)])
+            wakes.wait(RECONNECT_SECONDS[min(attempt, len(RECONNECT_SECONDS) - 1)])
             attempt += 1
             continue
         try:
@@ -251,7 +276,7 @@ def _watch(wakes: _Wakes) -> int:
             client.close()
         attempt = attempt + 1 if lost else 0
         if lost:
-            wakes.wait(_RECONNECT_SECONDS[min(attempt - 1, len(_RECONNECT_SECONDS) - 1)])
+            wakes.wait(RECONNECT_SECONDS[min(attempt - 1, len(RECONNECT_SECONDS) - 1)])
     return 0
 
 
@@ -264,10 +289,18 @@ def main(arguments: list[str] | None = None) -> int:
     )
     from cadrumo.core.bucket_pointer import pointer_path
     from cadrumo.core.paths import effective_storage_root
+    from cadrumo.core.storage_taxonomy import StorageCategory
+    from cadrumo.core.storage_taxonomy_locations import storage_path
 
-    wakes = _Wakes()
-    Thread(target=_watch_parent, args=(sys.stdin.fileno(), wakes), name="watch-parent", daemon=True).start()
+    wakes = Wakes()
+    Thread(target=watch_parent, args=(sys.stdin.fileno(), wakes), name="watch-parent", daemon=True).start()
     with composed_profile_persistence_ports():
-        directory = pointer_path(effective_storage_root()).parent
-        Thread(target=_watch_pointer_directory, args=(directory, wakes), name="watch-pointer", daemon=True).start()
-        return _watch(wakes)
+        # The pointer is replaced by rename, a name change; a write in place changes its write time.
+        pointer = pointer_path(effective_storage_root()).parent, _FILE_NAME | _LAST_WRITE, wakes.pointer_moved
+        # A profile is created or removed as its folder appears or disappears.
+        profiles = storage_path(StorageCategory.BUCKETS), _DIR_NAME, wakes.cue
+        for name, (directory, changes, changed) in (("watch-pointer", pointer), ("watch-profiles", profiles)):
+            Thread(
+                target=_watch_directory, args=(directory, changes, changed, wakes.stopping), name=name, daemon=True
+            ).start()
+        return watch(wakes)

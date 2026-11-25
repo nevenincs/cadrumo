@@ -15,8 +15,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "La version de las reglas de un modelo que se aplica a un periodo, segun el registro."
-definition = "La version de las reglas de un modelo que rige para un periodo de presentacion concreto, nombrada en el registro. Por ejemplo, una revision como 2019-y-siguientes cubre las presentaciones de 2019 en adelante. La AEAT publica una revision por cada (modelo, ano, periodo) mediante Orden Ministerial, de modo que la revision aplicable es un hecho derivado, no una eleccion."
+short_description = "La versión de las reglas de un modelo que se aplica a un periodo, según el registro."
+definition = "La versión de las reglas de un modelo que rige para un periodo de presentación concreto, nombrada en el registro. Por ejemplo, una revisión como 2019-y-siguientes cubre las presentaciones de 2019 en adelante. La AEAT publica una revisión por cada (modelo, ano, periodo) mediante Orden Ministerial, de modo que la revisión aplicable es un hecho derivado, no una elección."
 
 [language.es.source]
 citation = "AEAT, Ordenes Ministeriales que aprueban cada revision de modelo publicadas en el BOE."

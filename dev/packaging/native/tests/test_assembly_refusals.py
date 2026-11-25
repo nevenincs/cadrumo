@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...runtime_wheel_selection import active_requirements
 from ...runtime_wheelhouse_contract import target_platform
@@ -46,8 +46,9 @@ def _agent_dependencies(root: Path, versions: Mapping[str, str]) -> Path:
     ("defect", "message"),
     [
         ("missing", "closure mismatch"),
-        ("core-only", "closure mismatch"),
         ("browser-missing", "closure mismatch"),
+        ("pdf-missing", "closure mismatch"),
+        ("google-missing", "closure mismatch"),
         ("mixed", "cohort versions"),
         ("duplicate", "Duplicate installed"),
         ("target", "target/layout ABI"),
@@ -67,15 +68,19 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
         versions[name] = next(iter(requirement.specifier)).version
     assert "httpx" in bundled and "websockets" not in bundled
     assert {"playwright", "playwright-stealth", "pyee"} <= set(bundled)
+    assert {"reportlab", "google-api-python-client", "google-auth-oauthlib"} <= set(bundled)
+    assert "ofxtools" not in bundled
     versions.update(_AGENT_ADDITIONS)
     versions["cadrumo-agent"] = "0.1.0"
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
         del versions[companion]
-    if defect == "core-only":
-        del versions["nvidia-ml-py"]
     if defect == "browser-missing":
         del versions["playwright"]
+    if defect == "pdf-missing":
+        del versions["reportlab"]
+    if defect == "google-missing":
+        del versions["google-api-python-client"]
     if defect == "mixed":
         versions[companion] = "1.2.2"
     if defect == "agent-missing":

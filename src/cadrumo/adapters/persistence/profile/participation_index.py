@@ -203,7 +203,7 @@ class TransactionParticipationIndexRepository:
         participations the authoritative catalogue no longer records.
 
         Every upsert and every stale-row removal commits in one
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
         unit of work, so a crash mid-replace rolls back to the previous complete
         index rather than a half-pruned one.
 
@@ -217,8 +217,9 @@ class TransactionParticipationIndexRepository:
         Returns:
             The number of stale participation objects removed.
         """
+        from ....core.secure_object_write import SecureObjectRevisionAssertion
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
+        from ..storage.sql.secure_object_records import SecureObjectDeletion
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)
         retained = {secure_object_key_digest(write.object_key).hex() for write in writes}

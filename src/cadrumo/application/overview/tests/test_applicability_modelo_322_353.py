@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -19,11 +22,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def _legal_entity_with_iva_group_role(
     *,
-    group_member: bool = False,
-    group_dominant: bool = False,
+    group_member: bool | None = None,
+    group_dominant: bool | None = None,
 ) -> TaxpayerProfile:
+    """Build the entity with each grupo de entidades role stated, or unanswered.
+
+    The two roles are three-state, so the default is ``None``: a test about an
+    undeclared role must leave the fact absent, and a stated ``False`` is the
+    taxpayer's own no, which rules the modelo out instead.
+    """
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
@@ -36,7 +45,12 @@ def _legal_entity_with_iva_group_role(
             hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             group_member_enrolled=group_member,
             group_dominant_entity_enrolled=group_dominant,
+            roi_enrolled=False,
+            oss_enrolled=False,
+            sii_enrolled=False,
+            intracommunity_operations_exceed_50000_eur=False,
         ),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -44,6 +58,7 @@ def test_modelo_322_applies_to_iva_group_member_role() -> None:
     result = derive_modelo_applicability(
         _legal_entity_with_iva_group_role(group_member=True),
         "322",
+        reference_date=latest_period_end(),
     )
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
@@ -58,6 +73,7 @@ def test_modelo_353_applies_to_iva_group_dominant_entity_role() -> None:
     result = derive_modelo_applicability(
         _legal_entity_with_iva_group_role(group_dominant=True),
         "353",
+        reference_date=latest_period_end(),
     )
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
@@ -71,12 +87,24 @@ def test_modelo_353_applies_to_iva_group_dominant_entity_role() -> None:
 def test_iva_group_member_role_does_not_imply_dominant_entity_role() -> None:
     profile = _legal_entity_with_iva_group_role(group_member=True)
 
-    assert derive_modelo_applicability(profile, "322").verdict is ApplicabilityVerdict.APPLICABLE
-    assert derive_modelo_applicability(profile, "353").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert (
+        derive_modelo_applicability(profile, "322", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(profile, "353", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
 
 
 def test_iva_group_roles_are_incomplete_when_no_role_fact_is_declared() -> None:
     profile = _legal_entity_with_iva_group_role()
 
-    assert derive_modelo_applicability(profile, "322").verdict is ApplicabilityVerdict.INCOMPLETE
-    assert derive_modelo_applicability(profile, "353").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert (
+        derive_modelo_applicability(profile, "322", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
+    assert (
+        derive_modelo_applicability(profile, "353", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )

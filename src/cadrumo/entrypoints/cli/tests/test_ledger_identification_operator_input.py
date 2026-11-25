@@ -29,7 +29,7 @@ from ...tests.ledger_corpus_support import (
     invoke_corpus_cli,
     load_active_catalogue,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _intracom_row(invoke_cli: Callable[..., Result]) -> dict[str, object]:
     # The intra-community client row lives in the BBVA business account alone.
     import_bbva_corpus_account(invoke_cli=invoke_cli)
-    rows = [row for row in _list_rows() if "cliente DE GmbH intracom" in row["description"]]
+    rows = [row for row in list_ledger_rows_via_cli() if "cliente DE GmbH intracom" in row["description"]]
     assert rows, "corpus must contain a DE intracommunity client invoice"
     raw_row = rows[0]
     assert isinstance(raw_row, dict)

@@ -74,7 +74,6 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.ci.lane_configuration import configured_testpaths
 from dev.ci.lane_contracts import Lane
 from dev.ci.lane_ctest_commands import CTEST_EXTERNAL_TOOL_RECIPE, CTEST_MODULE_DIR, CTEST_RECIPE
@@ -88,6 +87,7 @@ from dev.ci.lane_marker_inventory import (
 )
 from dev.ci.lane_reachability import analyse_directory_coverage, analyse_reachability, ci_invoked_lanes, declared_lanes
 from dev.ci.lane_workflow_graph import ci_invoked_recipes, workflow_triggers
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -102,7 +102,10 @@ _ROOT: Path = REPO_ROOT
 _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
     {
         # Needs a tool outside the Python dependency set: LibreOffice for binary
-        # .xls conversion, or the npm-installed Hunspell dictionaries.
+        # .xls conversion, or the full locale orthography pass, which needs
+        # dictionaries that `just setup` provisions but no CI lane enrols, or
+        # the lock-selected runtime wheels an installed-oracle cohort build
+        # acquires, which the network guard refuses to fetch inside pytest.
         "external_tool",
         # Reads a real external service; opt-in, and never enabled on CI.
         "aeat_live",
@@ -115,6 +118,9 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
         # Scores against the ingestion measurement corpus, operator data held
         # outside the checkout that no runner holds or installs.
         "private_ingest_corpus",
+        # Needs the publisher's Google Desktop OAuth client, a host secret that
+        # is never committed and that no runner or ordinary checkout holds.
+        "google_publisher_client",
     },
 )
 
@@ -155,6 +161,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-workbook-parity",
         "test-locale-spelling",
         "test-ingest-corpus",
+        "test-google-publisher-client",
         "test-powershell-literal",
         "test-calculation-summary-pdf",
         # CTest's package-stage process assertions have their own opt-in lane;
@@ -220,6 +227,7 @@ def test_native_package_assertions_have_exactly_one_live_owner() -> None:
         "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_administration_reuses_the_live_service",
         "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_cli_reads_the_same_profile_after_shared_setup",
         "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_client_authentication_and_profile_scope",
+        "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_password_rotation_retires_old_authority_and_resumes_new_receipt",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_login_logout_profile_switch_and_stale_receipt",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_exact_runtime_crash_manager_recovery_and_operation_state",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_wrong_password_never_admits_private_work",
@@ -355,7 +363,7 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     # contracts are split the same way: `test-ci-contracts` is the local
     # convenience over its deterministic and CPU-budget legs.
     expected_invoked = {
-        "test-gate",
+        "test-gate-shard",
         "test-unit",
         "test-ci-contracts-gate",
         "test-ci-perf",

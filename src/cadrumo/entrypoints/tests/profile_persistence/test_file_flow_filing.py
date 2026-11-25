@@ -14,16 +14,22 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
     ModeloWorkflowGateError,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision, list_filing_records
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.domain.deadlines.effective_close import resolve_effective_filing_deadline
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -32,14 +38,12 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordStatus,
 )
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_EXPENSE_CASILLA,
-    M130_INCOME_CASILLA,
+    FILE_FLOW_PROFILE_ID,
     T1,
     T2,
     T3,
@@ -48,6 +52,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     Repos,
     calculation_ports_for_test,
     file_revision,
+    file_revision_result,
     seed_work_unit,
     target_filing_records,
     verify_revision,
@@ -84,13 +89,13 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_70:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_70,
             clock=T1,
-        )
+        ).revision
     with (
         pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised,
         bundled_indexed_authority().operation() as operation,
@@ -135,13 +140,13 @@ def test_file_creates_filing_record_and_advances_pointers(
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_112:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_112,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -178,7 +183,7 @@ def test_file_creates_filing_record_and_advances_pointers(
     monkeypatch.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
 
     def publish() -> ModeloRecord:
-        record = file_revision(
+        outcome = file_revision_result(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -190,7 +195,13 @@ def test_file_creates_filing_record_and_advances_pointers(
             bucket_event_repository=bv_repo,
             clock=T3,
         )
+        record = outcome.record
         assert isinstance(record, ModeloRecord)
+        # Filed inside the plazo voluntario of Modelo 130 1T, so the posture is
+        # decided at filing time and kept on the receipt rather than left for the
+        # operator to infer from ``original``.
+        assert record.filing_timeliness is FilingTimeliness.EN_PLAZO
+        assert outcome.filing_timeliness is FilingTimeliness.EN_PLAZO
         return record
 
     if reject_final_read:
@@ -259,13 +270,13 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_194:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_194,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -278,7 +289,7 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         clock=T2,
     )
 
-    filing = file_revision(
+    outcome = file_revision_result(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -289,10 +300,29 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         bucket_event_repository=bv_repo,
         clock=T3,
     )
+    filing = outcome.record
 
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.external_evidence is None
+    # The declaration kind stays ``original``, so lateness has to be carried as
+    # its own fact or no consumer of the file result can see the late-filing
+    # consequence of a closed-window filing. Which fact the exercise supports
+    # depends on its own holiday calendar: without one the effective close is
+    # not established, and an unverified nominal close is only a lower bound,
+    # so the posture is unknown rather than late.
+    deadline = resolve_effective_filing_deadline(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        operation=published_authority_operation(),
+    )
+    assert deadline is not None
+    calendar_published = deadline.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    expected_timeliness = FilingTimeliness.EXTEMPORANEA if calendar_published else FilingTimeliness.UNKNOWN
+    assert filing.declaration_kind is FilingDeclarationKind.ORIGINAL
+    assert filing.filing_timeliness is expected_timeliness
+    assert outcome.filing_timeliness is expected_timeliness
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -326,8 +356,10 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
     assert computing.success is True
     assert isinstance(computing.details, WorkflowDeadlineContextDetails)
-    assert computing.details.overdue is True
-    assert computing.details.extemporanea is True
+    # The gate and the receipt answer alike: a window the shift calendar cannot
+    # establish is never reported closed, so no overdue marker is recorded.
+    assert computing.details.overdue is (True if calendar_published else None)
+    assert computing.details.extemporanea is (True if calendar_published else None)
 
     assert target_filing_records(
         list_filing_records(
@@ -346,16 +378,18 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_278:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values={
                 **DEFAULT_130_BINDING_VALUES,
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                # No 1T or 2T return was made, so the operator enters the prior pagos fraccionados by hand.
+                "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             },
             ports=_calculation_ports_278,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -389,6 +423,8 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert terminal_step.details.filing_window.value == "future"
     assert terminal_step.precondition_verdict is not None
     assert terminal_step.precondition_verdict.failed_condition_id == "workflow.deadline.filing_window_open"
+    assert terminal_step.precondition_verdict.action is not None
+    assert terminal_step.precondition_verdict.action.action_id == "operator.modelo.export"
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -425,13 +461,13 @@ def test_file_records_overdue_modelo_130_as_late_local_filing(repos: Repos, fili
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_345:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_345,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -493,13 +529,13 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_410:
         # First filing: revision-1, filed at T3.
-        revision_one = calculate_modelo_revision(
+        revision_one = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_410,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -530,17 +566,14 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_450:
         # Second filing: revision-2 with corrected inputs, filed at T5.
-        revision_two = calculate_modelo_revision(
+        revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={
-                **DEFAULT_130_BASELINE_INPUTS,
-                M130_INCOME_CASILLA: Decimal("1200"),
-                M130_EXPENSE_CASILLA: Decimal("100"),
-            },
-            binding_values=DEFAULT_130_BINDING_VALUES,
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             ports=_calculation_ports_450,
             clock=T4,
-        )
+        ).revision
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
@@ -645,13 +678,13 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_557:
-        revision_one = calculate_modelo_revision(
+        revision_one = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_557,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -681,13 +714,14 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_592:
-        revision_two = calculate_modelo_revision(
+        revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1200")},
-            binding_values=DEFAULT_130_BINDING_VALUES,
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             ports=_calculation_ports_592,
             clock=T4,
-        )
+        ).revision
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
@@ -780,7 +814,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
 
     listed = list_filing_records(
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
+            build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
@@ -842,7 +876,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     listed = list_filing_records(
         modelo="100",
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
+            build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )

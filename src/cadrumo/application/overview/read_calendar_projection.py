@@ -9,15 +9,21 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.applicability_models import TaxpayerModelFact
+from ...domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ...domain.deadlines.models import ObligationStatus
 from .agenda import OverviewAgenda
 from .backlog import OverviewBacklog
+from .calendar_envelope import OverviewCalendarSupport, calendar_support_state
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendar,
     OverviewCalendarEntry,
+    OverviewCalendarEntrySource,
     OverviewCalendarRange,
+    calendar_attention_order_key,
+    calendar_list_order_key,
 )
 from .coverage import CoverageAdviceReason, ObligationCoverageReport
 from .read_calendar_item_projection import (
@@ -43,16 +49,53 @@ def _entry(
     )
 
 
+def _listed(row: OverviewCalendarEntrySnapshot) -> tuple[int, int, bool, date, str, str, str]:
+    return calendar_list_order_key(
+        adjusted_closes_on=row.adjusted_closes_on,
+        status=row.status,
+        modelo=row.modelo,
+        period=row.period,
+        local_work_unit_id=row.local_work_unit_id,
+    )
+
+
+def _attention_order(entries: tuple[OverviewCalendarEntrySnapshot, ...]) -> tuple[int, ...]:
+    """The entries' indices in the order they need the operator."""
+    return tuple(
+        sorted(
+            range(len(entries)),
+            key=lambda index: calendar_attention_order_key(
+                adjusted_closes_on=entries[index].adjusted_closes_on,
+                status=entries[index].status,
+                user_state=entries[index].user_state,
+                modelo=entries[index].modelo,
+                period=entries[index].period,
+                local_work_unit_id=entries[index].local_work_unit_id,
+            ),
+        )
+    )
+
+
 def _without_deadlines(coverage: ObligationCoverageReport) -> tuple[str, ...]:
     return tuple(row.modelo for row in coverage.advised if row.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING)
 
 
 class OverviewCalendarSnapshot(BaseModel):
-    """Full current calendar output without private input records."""
+    """Full current calendar output without private input records.
+
+    ``support`` carries the filing-year envelope the read was served under and
+    where the requested range sits in it, so a range outside the envelope reads
+    as unsupported rather than as a calendar with nothing due.
+
+    ``entries`` come in the calendar's list order and ``attention_order`` holds
+    their indices in the order they need the operator, so no frontend orders
+    obligations itself.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     range: OverviewCalendarRange
+    support: OverviewCalendarSupport
     evaluated_on: date
     entries: tuple[OverviewCalendarEntrySnapshot, ...]
     generated_at: datetime
@@ -60,11 +103,21 @@ class OverviewCalendarSnapshot(BaseModel):
     completeness: CalendarCompleteness
     taxpayer_model_declared: bool
     incomplete_reason: str | None
+    undeclared_profile_facts: tuple[TaxpayerModelFact, ...]
     suppressed_entries: tuple[OverviewSuppressedEntrySnapshot, ...]
     events: tuple[OverviewCalendarEventSnapshot, ...]
     coverage: ObligationCoverageReport
     late_count: NonNegativeInt | None = None
     applicable_modelos_without_deadline: tuple[str, ...] | None = None
+    attention_order: tuple[NonNegativeInt, ...]
+
+    @model_validator(mode="after")
+    def _entries_keep_the_decided_orders(self) -> Self:
+        if list(self.entries) != sorted(self.entries, key=_listed):
+            raise ValueError("calendar entries must be served in the calendar's list order")
+        if self.attention_order != _attention_order(self.entries):
+            raise ValueError("calendar attention_order differs from the order its entries decide")
+        return self
 
     @model_validator(mode="after")
     def _late_count_matches_entries(self) -> Self:
@@ -74,18 +127,33 @@ class OverviewCalendarSnapshot(BaseModel):
             raise ValueError("calendar late_count must count only overdue entries")
         return self
 
+    @model_validator(mode="after")
+    def _support_matches_range(self) -> Self:
+        if self.support.state is not calendar_support_state(self.range, self.support.envelope()):
+            raise ValueError("calendar support state differs from its range and envelope")
+        if self.support.unsupported and (
+            self.suppressed_entries
+            or any(row.source is OverviewCalendarEntrySource.REGISTRY_DEADLINE for row in self.entries)
+        ):
+            raise ValueError("a calendar range outside the filing-year envelope cannot carry registry deadlines")
+        return self
+
     @classmethod
-    def from_calendar(cls, value: OverviewCalendar) -> Self:
-        """Copy legal rows, observed events, completeness and total coverage."""
+    def from_calendar(cls, value: OverviewCalendar, *, envelope: TemporalSupportEnvelope) -> Self:
+        """Copy legal rows, observed events, completeness and total coverage under the served envelope."""
+        entries = tuple(_entry(row, value.completeness, value.warnings) for row in value.entries)
         return cls(
             range=value.range,
+            support=OverviewCalendarSupport.for_range(value.range, envelope),
             evaluated_on=value.evaluated_on,
-            entries=tuple(_entry(row, value.completeness, value.warnings) for row in value.entries),
+            entries=entries,
+            attention_order=_attention_order(entries),
             generated_at=value.generated_at,
             warnings=tuple(OverviewCalendarWarningSnapshot.from_warning(row) for row in value.warnings),
             completeness=value.completeness,
             taxpayer_model_declared=value.taxpayer_model_declared,
             incomplete_reason=value.incomplete_reason,
+            undeclared_profile_facts=value.undeclared_profile_facts,
             suppressed_entries=tuple(
                 OverviewSuppressedEntrySnapshot.from_entry(row) for row in value.suppressed_entries
             ),
@@ -106,6 +174,7 @@ class OverviewCalendarSnapshot(BaseModel):
             completeness=self.completeness,
             taxpayer_model_declared=self.taxpayer_model_declared,
             incomplete_reason=self.incomplete_reason,
+            undeclared_profile_facts=self.undeclared_profile_facts,
             suppressed_entries=tuple(row.to_entry() for row in self.suppressed_entries),
             events=tuple(row.to_event() for row in self.events),
             coverage=self.coverage,

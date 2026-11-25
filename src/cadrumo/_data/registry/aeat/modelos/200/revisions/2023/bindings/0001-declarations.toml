@@ -1,0 +1,33 @@
+# Modelo 200 bindings stated at the 2023 edition. The other bindings are authored at
+# the 2022 edition and inherited. The INCN binding enters here because only the 2023
+# rate formulas read it: Ley 31/2022 art. 39 keys the 23 % rate to the INCN from
+# periods initiated in 2023, and no 2022 rate depends on the INCN.
+
+# The importe neto de la cifra de negocios of the immediately preceding tax
+# period (LIS art. 29.1; art. 101.1 for the reduced-dimension rate). It is a
+# fact of the preceding period's own Modelo 200: casilla 00255, "Cuenta de
+# pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la cifra
+# de negocios" (DR200 sheet DP200007, field 6). Where the application holds no
+# preceding return the filer states the figure; unstated, the rate refuses.
+# A typed zero is the figure that lowers the rate, so only an attested zero
+# stands for the earlier return (`zero_needs_attestation`). A preceding period
+# that ended before the activity began has the annualised turnover of the first
+# period of activity (art. 101.2), never zero (`before_activity_unresolved`).
+# An entity that marks 00039 (grupo mercantil, Codigo de Comercio art. 42)
+# measures that turnover over the whole group (art. 101.3), which its own
+# return does not show, so the held return is set aside and the filer states it
+# (`held_source_set_aside_when_marked`).
+[[revisions."2023".bindings]]
+id = "modelo-200-incn-periodo-impositivo-anterior"
+provider = { kind = "previous_filing", source_modelo = "200", source_casilla_id = "DP200007:00255", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+zero_needs_attestation = true
+before_activity_unresolved = true
+held_source_set_aside_when_marked = ["DP200001:00039"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2023"
+required_text = ["importe neto de la cifra de negocios del período"]

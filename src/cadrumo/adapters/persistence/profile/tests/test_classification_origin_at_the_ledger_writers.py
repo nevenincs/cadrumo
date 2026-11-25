@@ -18,13 +18,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded
-from cadrumo.application.ledger.actions_manual import (
-    detach_manual_transaction_attachments,
-    link_manual_transaction_invoice,
-)
+from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.application.ledger.actions_split_merge import split_transaction, split_transaction_with_classified_children
 from cadrumo.application.ledger.llm_classification import apply_llm_classification, derive_operator_iva_substrate
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
+from cadrumo.application.ledger.manual_read import ledger_transaction_payload
+from cadrumo.application.ledger.manual_update import detach_manual_transaction_attachments
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionPatch,
     SplitChildCommand,
@@ -51,7 +50,7 @@ from .classification_origin_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROPOSED_BY = "llm:local-text:synthetic"
+PROPOSED_BY = "llm:local-text:synthetic"
 _ACTORS = pytest.mark.parametrize(
     ("actor", "origin"),
     [(PERSON, ClassificationOrigin.PERSON), (AUTOMATION, ClassificationOrigin.AUTOMATION)],
@@ -65,7 +64,7 @@ def ledger(tmp_path: Path) -> Generator[Ledger]:
         yield composed
 
 
-def _derive(ledger: Ledger, transaction_id: str, *, actor: str, category: str = "domestic_general") -> None:
+def derive(ledger: Ledger, transaction_id: str, *, actor: str, category: str = "domestic_general") -> None:
     derive_operator_iva_substrate(
         bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
@@ -109,18 +108,18 @@ def _classified_split(ledger: Ledger, transaction_id: str, *, actor: str) -> Non
         child_classifications=tuple(
             ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS) for _ in _PARTS
         ),
-        classified_by=_PROPOSED_BY,
+        classified_by=PROPOSED_BY,
         actor=actor,
         source_command="aeat app ledger split --llm",
         ports=ledger.ports,
     )
 
 
-def _accept_proposal(ledger: Ledger, transaction_id: str, *, actor: str) -> None:
+def accept_proposal(ledger: Ledger, transaction_id: str, *, actor: str) -> None:
     apply_llm_classification(
         LLMClassificationSuggestion(
             transaction_id=transaction_id,
-            provenance=_PROPOSED_BY,
+            provenance=PROPOSED_BY,
             classification=BusinessClassification.PERSONAL,
             confidence=Decimal("0.9000"),
             reason="synthetic proposal",
@@ -148,14 +147,14 @@ def test_a_first_classification_records_who_ran_the_write(
     later = add_row(ledger, description="classified later")
     classify_row(ledger, later, actor=actor)
     accepted = add_row(ledger, description="accepted from a model")
-    _accept_proposal(ledger, accepted, actor=actor)
+    accept_proposal(ledger, accepted, actor=actor)
     excluded = add_row(ledger, description="excluded")
     _exclude(ledger, excluded, actor=actor)
     unprocessed = add_row(ledger, description="left unprocessed", actor=actor)
 
     for transaction_id in (at_creation, later, accepted, excluded):
         assert ledger.row(transaction_id).classification_origin is origin, ledger.row(transaction_id).raw.description
-    assert ledger.row(accepted).classified_by == _PROPOSED_BY
+    assert ledger.row(accepted).classified_by == PROPOSED_BY
     assert ledger.row(unprocessed).classification_origin is None
 
 
@@ -167,7 +166,7 @@ def test_a_rules_classification_is_nobodys_whoever_ran_the_rules_and_a_derivatio
     classify_row(ledger, by_rule, actor=actor, stamp="rule:synthetic")
     assert ledger.row(by_rule).classification_origin is ClassificationOrigin.AUTOMATIC
 
-    _derive(ledger, by_rule, actor=actor)
+    derive(ledger, by_rule, actor=actor)
 
     derived = ledger.row(by_rule)
     assert derived.classified_by == "derived:iva-category"
@@ -223,9 +222,9 @@ def test_a_split_child_classified_in_the_split_records_who_ran_it_and_the_parent
 
 _Write = Callable[..., None]
 _WRITES_IN_PLACE: tuple[tuple[str, _Write], ...] = (
-    ("derive", _derive),
+    ("derive", derive),
     ("reclassify", _reclassify),
-    ("accept-proposal", _accept_proposal),
+    ("accept-proposal", accept_proposal),
     ("exclude", _exclude),
 )
 _SPLITS: tuple[tuple[str, _Write], ...] = (("split", _split), ("classified-split", _classified_split))
@@ -339,3 +338,58 @@ def test_a_link_replaces_the_invoice_a_row_already_links_under_either_label(
 
     assert ledger.row(row).invoice_id == second.invoice_id
     assert row in ledger.invoices.load().invoices[second.invoice_id].linked_transaction_ids
+
+
+def test_a_derivation_on_a_persons_classification_keeps_the_person_as_its_decider_and_marks_the_figures(
+    ledger: Ledger,
+) -> None:
+    by_hand = add_row(ledger, description="classified by hand", classification=BusinessClassification.BUSINESS)
+    before = ledger_transaction_payload(ledger.row(by_hand))
+    assert (before.classification_decided_by, before.figures_derived) == ("manual", False)
+
+    derive(ledger, by_hand, actor=PERSON)
+
+    derived = ledger.row(by_hand)
+    payload = ledger_transaction_payload(derived)
+    assert payload.classified_by == "derived:iva-category"
+    assert payload.classification_decided_by == "manual"
+    assert payload.figures_derived is True
+    assert derived.classification_origin is ClassificationOrigin.PERSON
+
+
+def test_a_derivation_on_a_rules_classification_becomes_the_runners_decision_and_marks_the_figures(
+    ledger: Ledger,
+) -> None:
+    by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    ruled = ledger_transaction_payload(ledger.row(by_rule))
+    assert (ruled.classification_decided_by, ruled.figures_derived) == ("rule:synthetic", False)
+
+    derive(ledger, by_rule, actor=PERSON)
+
+    payload = ledger_transaction_payload(ledger.row(by_rule))
+    assert payload.figures_derived is True
+    assert payload.classification_decided_by == "manual"
+
+
+def test_a_derivation_by_an_automation_keeps_the_derivation_stamp_as_the_decider(ledger: Ledger) -> None:
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
+    )
+
+    derive(ledger, by_automation, actor=AUTOMATION)
+
+    payload = ledger_transaction_payload(ledger.row(by_automation))
+    assert payload.figures_derived is True
+    assert payload.classification_decided_by == payload.classified_by == "derived:iva-category"
+
+
+def test_an_unprocessed_row_serves_its_own_stamp_and_no_derived_figures(ledger: Ledger) -> None:
+    unprocessed = add_row(ledger, description="not yet processed")
+
+    payload = ledger_transaction_payload(ledger.row(unprocessed))
+
+    assert payload.classification_decided_by == payload.classified_by
+    assert payload.figures_derived is False

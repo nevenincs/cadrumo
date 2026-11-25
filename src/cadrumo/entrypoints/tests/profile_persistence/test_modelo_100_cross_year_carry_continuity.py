@@ -1,7 +1,7 @@
 """Cross-year carry continuity for Modelo 100 (IRPF anual).
 
 This module drives the real M100 calculation engine
-(``calculate_modelo_revision``) across two distinct renta years.
+(``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``) across two distinct renta years.
 
 The cross-renta hook is the Anexo C base-liquidable-general-negativa
 carry-forward. A year's *generated* negative general base left pending —
@@ -20,7 +20,7 @@ carried saldo. The carry is origin-year-matched in both revisions (each
 revision's 1388 is the immediately-prior origin year).
 
 Calc-mode (honest evidence): each renta year is driven through the REAL
-``calculate_modelo_revision`` — the same full-engine path M130/M200/M202/M151
+``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` — the same full-engine path M130/M200/M202/M151
 use — so the ``evidence_class = calculation`` manifest label is backed by an
 actual calculation, not resolver output. A taxpayer-unit ``UserProfileRecord``
 is seeded so the ``source = "profile"`` bindings (tax-residence CCAA, taxpayer
@@ -49,37 +49,34 @@ are deferred calc-completeness follow-ons — not claimed here.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.bindings import binding_source_casilla_ids
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -98,6 +95,13 @@ _PERIOD = "0A"
 
 _GENERATED_SALDO: CasillaId = validated_casilla_id("1391")
 _PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
+#: The carries of negative savings balances (LIRPF art. 49) pending from earlier years.
+_SAVINGS_CARRY_PREFIX = "renta-saldo-negativo-"
+_SAVINGS_CARRY_SUFFIX = "-pendiente-inicio"
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
 _YEAR_N = 2024
@@ -117,111 +121,56 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
     return published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
 
 
+def _prior_savings_remainders(filing_year: int) -> tuple[CasillaId, ...]:
+    """The prior-return boxes the year's savings carries open from, read from the year's own bindings."""
+    return tuple(
+        casilla_id
+        for binding in _snapshot(filing_year).revision.bindings
+        if binding.provider.kind == "previous_filing"
+        and binding.id.startswith(_SAVINGS_CARRY_PREFIX)
+        and binding.id.endswith(_SAVINGS_CARRY_SUFFIX)
+        for casilla_id in binding_source_casilla_ids(binding)
+    )
+
+
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
-    """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=source_year,
-                period=_PERIOD,
-                casilla_values={_GENERATED_SALDO: saldo},
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo=_MODELO,
-                    filing_year=source_year,
-                    period=_PERIOD,
-                    casilla_values={_GENERATED_SALDO: saldo},
-                )
-            ),
-        )
-    )
+    """Record a prior-year M100 with its generated saldo (casilla 1391) and no other pending balance.
 
-
-def _seed_taxpayer_unit_profile() -> None:
-    """Seed a realistic single-taxpayer ``UserProfileRecord``.
-
-    The seeded facts cover every ``source = "profile"`` binding M100's calc
-    chain consumes across the 2024 and 2025 revisions (tax-residence CCAA,
-    taxpayer birth date for ``age_at_year_end``, declaration type, marital
-    status and the derived marriage facts, minor-children count). The profile
-    is the substrate of record, so ``calculate_modelo_revision`` auto-resolves
-    these via ``_resolve_profile_bindings_for_calculation`` — no profile fact
-    is hand-fed through the caller binding channel.
+    The prior return states every older general-base remainder and every savings
+    remainder as zero, so the only carry it hands the next year is the saldo.
     """
-    # The display_name MUST match the label the isolated_runtime_profile
-    # fixture stamps on the bucket's profile manifest ("Test runtime profile");
-    # a divergent label trips the torn-rename guard in CommittedProfileView.
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            # Single taxpayer, no dependants: every family / guardería / descendant
-            # Decimal-channel profile fact is a true zero for this persona.
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
-            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
+    remainders = (*_PRIOR_ANEXO_C_REMAINDERS, *_prior_savings_remainders(source_year + 1))
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=source_year,
+            period=_PERIOD,
+            casilla_values={_GENERATED_SALDO: saldo, **dict.fromkeys(remainders, Decimal("0"))},
         ),
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
-    seed_test_profile_record(record)
 
 
 def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationRepository):
-    """Run the REAL M100 ``calculate_modelo_revision`` for ``filing_year``.
+    """Run the bucket M100 calculation for ``filing_year``.
 
-    Resolves the ``previous_filing`` carry from the local observation store and
-    supplies it (plus a zero default for every other non-profile binding)
-    through the caller binding channel; the seeded user profile auto-resolves
-    the ``source = "profile"`` bindings; relations are supplied as zero (no
-    dependent-modelo activity for this pure-carry persona). Returns the
+    The bucket resolves the ``previous_filing`` carry from the local observation
+    store and the seeded profile fills the ``source = "profile"`` bindings.
+    Every other operator-owned binding is supplied as zero, and relations are
+    zero (no dependent-modelo activity for this pure-carry persona). Returns the
     persisted :class:`CalculationRevision`.
     """
     snapshot = _snapshot(filing_year)
     with bundled_indexed_authority().operation() as operation:
-        carry = resolve_bindings_from_local_store(
-            snapshot,
-            operation=operation,
-            repository=obs_repo,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        ).binding_values
-        # Every non-profile binding defaults to zero through the caller channel;
-        # the previous_filing carry overlays its real resolved value. profile
-        # bindings are deliberately omitted so the profile resolver fills them.
         binding_values: dict[BindingId, Decimal] = {
-            binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
+            binding.id: Decimal("0")
+            for binding in snapshot.revision.bindings
+            if binding.source != "profile"
+            and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+            and binding.provider.kind not in {"retencion_soportada", "previous_filing"}
         }
-        binding_values.update(carry)
         relation_values: dict[RelationId, Decimal] = {
             binding.id: Decimal("0")
             for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -237,7 +186,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
             operation=operation,
             clock=_CLOCK,
         )
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             actor=_BUCKET_ID,
@@ -245,7 +194,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
             binding_values=binding_values,
             relation_values=relation_values,
             clock=_CLOCK,
-        )
+        ).revision
 
 
 def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Path) -> None:
@@ -253,12 +202,12 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 
     The cross-renta continuity contract: once the prior M100 is recorded, the
     ``filing_year_delta = -1`` carry populates casilla 1388 from that prior
-    1391 generated saldo, and a real ``calculate_modelo_revision`` emits it —
+    1391 generated saldo, and a real ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` emits it —
     the operator does not re-key the carried negative general base.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         revision = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
     assert Decimal(revision.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
@@ -267,7 +216,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M100 general-base saldo carry across two renta years.
 
-    Drives the REAL M100 ``calculate_modelo_revision`` for two distinct renta
+    Drives the REAL M100 ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` for two distinct renta
     years (2024, 2025), each sourcing the prior year's 1391 generated saldo
     (2023, 2024), records each through the ``cross-year observation`` (CALC;
     evidence = the _produced-value count from the real engine run), and
@@ -285,7 +234,7 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         _seed_prior_year_saldo(source_year=2024, saldo=_SALDO_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
 

@@ -109,6 +109,7 @@ def _write_verbs(names: Iterable[str]) -> frozenset[str]:
 
 _NETWORK_READS_NAMED_LIKE_A_WRITE: Mapping[str, str] = {
     "live.verify.tgvi": "reads whether a tax id is registered for intra-community operations; it sends nothing",
+    "live.sede.view": "opens a read-only portal view; its sign-in handshake grants access but submits no filing",
 }
 """Operations that reach the network and whose name carries a write verb of the tax agency.
 

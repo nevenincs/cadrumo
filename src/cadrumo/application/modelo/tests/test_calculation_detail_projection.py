@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 from typing import get_args
 
@@ -11,7 +12,7 @@ from pydantic import BaseModel
 from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
 from ..calculation_projection import ModeloCalculationDetailSnapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _member_row() -> Modelo184MemberRow:
@@ -28,8 +29,11 @@ def _operator_row() -> Modelo349OperadorRow:
     )
 
 
-@pytest.mark.parametrize("row", [_member_row(), _operator_row()], ids=["modelo-184-member", "modelo-349-operator"])
-def test_projected_field_names_are_exactly_the_names_the_row_model_declares(row: ModeloDetailRow) -> None:
+@pytest.mark.parametrize("build", [_member_row, _operator_row], ids=["modelo-184-member", "modelo-349-operator"])
+def test_projected_field_names_are_exactly_the_names_the_row_model_declares(
+    build: Callable[[], ModeloDetailRow],
+) -> None:
+    row = build()
     snapshot = ModeloCalculationDetailSnapshot.from_row(3, row)
 
     declared = set(type(row).model_fields) - {"row_type"}

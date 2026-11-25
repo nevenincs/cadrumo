@@ -27,10 +27,11 @@ from ....application.invoices.catalogue_read_operation import (
     InvoiceViewRefusal,
     InvoiceViewSuccess,
 )
-from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....domain.invoices.figures import settlement_amount
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from .. import ledger_business_invoice_commands as handler
@@ -48,7 +49,7 @@ def _record() -> tuple[Invoice, CatalogueInvoiceSnapshot]:
         bucket_id=str(_PROFILE),
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
         issued_at=date(2026, 3, 10),
@@ -57,7 +58,7 @@ def _record() -> tuple[Invoice, CatalogueInvoiceSnapshot]:
         currency="EUR",
         rate_provider=exchange_rate_provider(),
     )
-    return invoice, CatalogueInvoiceSnapshot.from_invoice(invoice)
+    return invoice, CatalogueInvoiceSnapshot.from_invoice(invoice, documents=InvoiceDocumentIndex.from_manifests(()))
 
 
 def _client(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -75,15 +76,16 @@ def test_snapshot_reconstructs_exact_existing_cli_record_payload() -> None:
         if hasattr(invoice, name)
     }
     expected_fields["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    expected_fields["settlement_amount"] = settlement_amount(invoice.grand_total, invoice.retention_amount)
     expected_fields["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
     provenance = invoice.provenance
     expected_fields["source_filename"] = provenance.source_path.name if provenance is not None else None
     expected_fields["source_sha256"] = provenance.source_sha256 if provenance is not None else None
     expected_fields["source_row_index"] = provenance.source_row_index if provenance is not None else None
     existing = handler.CatalogueInvoiceRecordPayload.model_validate(expected_fields)
-    reconstructed = handler._snapshot_invoice_payload(snapshot)
+    reconstructed = handler.snapshot_invoice_payload(snapshot)
     assert reconstructed.model_dump(mode="python") == existing.model_dump(mode="python")
-    assert handler._catalogue_invoice_lines(reconstructed) == handler._catalogue_invoice_lines(invoice)
+    assert handler.catalogue_invoice_lines(reconstructed) == handler.catalogue_invoice_lines(invoice)
 
 
 def test_list_bridge_keeps_order_and_exact_filter(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -114,7 +116,7 @@ def test_add_bridge_uses_the_captured_request_profile(monkeypatch: pytest.Monkey
         profile_id=_PROFILE,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
         issued_at=date(2026, 3, 10),

@@ -31,6 +31,7 @@ from cadrumo.core.errors.hierarchy import AeatLoginAssertionError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.tests.log_records import delivered_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -165,7 +166,7 @@ async def test_enrolled_local_custody_never_substitutes_for_provider_verificatio
                     *selector.arguments,
                     *provider.arguments,
                     error_output,
-                    caplog.text.encode("utf-8"),
+                    delivered_text(caplog).encode("utf-8"),
                     captured.out.encode("utf-8"),
                     captured.err.encode("utf-8"),
                     "\n".join(sys.argv).encode("utf-8"),

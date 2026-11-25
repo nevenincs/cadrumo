@@ -19,6 +19,7 @@ from .pydantic_error_detail import validation_error_detail
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileDesignIdentity
 from .render_profile_rules import (
+    AlphanumericTextRule,
     LiteralNumericRule,
     RenderProfileFragment,
     SignedMonetaryCompositeRule,
@@ -26,7 +27,7 @@ from .render_profile_rules import (
     TelematicTransportChoiceRule,
     Width17MembershipRule,
 )
-from .render_profile_validation import _duplicates
+from .render_profile_validation import render_profile_validation_duplicates
 
 RENDER_PROFILE_SCHEMA_VERSION: Final[Literal[1]] = 1
 
@@ -139,6 +140,7 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
         signed_composite_rules=_compile_signed_composite_rules(ordered),
         literal_numeric_rules=_compile_literal_numeric_rules(ordered),
         telematic_transport_choice_rules=_compile_telematic_transport_rules(ordered),
+        alphanumeric_text_rule=_compile_alphanumeric_text_rule(ordered),
         empty_rule_assertion=empty_assertion,
     )
 
@@ -174,6 +176,15 @@ def _compile_telematic_transport_rules(
     return tuple(rule for fragment in fragments for rule in fragment.telematic_transport_choice_rules)
 
 
+def _compile_alphanumeric_text_rule(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> AlphanumericTextRule | None:
+    rules = tuple(rule for fragment in fragments for rule in fragment.alphanumeric_text_rules)
+    if len(rules) > 1:
+        raise RegistryValidationError("render profile states more than one alphanumeric text rule for one design")
+    return rules[0] if rules else None
+
+
 def _ordered_profile_fragments(fragments: Iterable[RenderProfileFragment]) -> tuple[RenderProfileFragment, ...]:
     ordered = tuple(fragments)
     if not ordered:
@@ -182,7 +193,7 @@ def _ordered_profile_fragments(fragments: Iterable[RenderProfileFragment]) -> tu
 
 
 def _require_unique_fragment_ids(ids: tuple[str, ...]) -> None:
-    duplicate_ids = _duplicates(ids)
+    duplicate_ids = render_profile_validation_duplicates(ids)
     if duplicate_ids:
         raise RegistryValidationError(f"render profile contains duplicate fragment ids: {duplicate_ids!r}")
 
@@ -206,7 +217,7 @@ def _require_fragment_identity(
 #: must not silently reorder generated output. It is held exhaustive against that
 #: annotation by the owning test, so widening the type without extending this
 #: tuple -- which would drop the new type's rules here in silence -- fails.
-_WIDTH_17_TYPE_ORDER: Final[tuple[str, ...]] = ("Num", "N")
+WIDTH_17_TYPE_ORDER: Final[tuple[str, ...]] = ("Num", "N")
 
 
 def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Width17MembershipRule, ...]:
@@ -214,7 +225,7 @@ def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Wid
     for rule in rules:
         by_type.setdefault(rule.aeat_type, []).append(rule)
     compiled: list[Width17MembershipRule] = []
-    for aeat_type in _WIDTH_17_TYPE_ORDER:
+    for aeat_type in WIDTH_17_TYPE_ORDER:
         type_rules = by_type.get(aeat_type, [])
         if not type_rules:
             continue

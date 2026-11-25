@@ -7,8 +7,10 @@ Core types:
 
 from __future__ import annotations
 
+import base64
+import os
 from collections.abc import Callable, Generator, Mapping
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, closing, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
@@ -16,34 +18,9 @@ from uuid import UUID
 
 from ....application.user_profile.authentication import ProfilePasswordProofOperation
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
-from ....application.user_profile.custody_ports import (
-    ProfileBucketStoragePathsPort,
-    ProfileBucketStoragePort,
-    ProfileCapsuleArchiveContentsMaterial,
-    ProfileCapsuleArchiveHeaderMaterial,
-    ProfileCustodyBucketEventHistoryPort,
-    ProfileCustodyCapsuleLabelPort,
-    ProfileCustodyCapsuleSourceMaterial,
-    ProfileCustodyCapsuleSummaryWitnessPort,
-    ProfileCustodyCarryMaterial,
+from ....application.user_profile.custody_crypto_contracts import (
     ProfileCustodyConcurrentChangeError,
-    ProfileCustodyEnvelopePort,
-    ProfileCustodyInventoryPort,
-    ProfileCustodyLabelHeadPort,
-    ProfileCustodyLocalRecordStore,
-    ProfileCustodyPasswordMaterialPort,
-    ProfileCustodyPasswordProofMaterialPort,
-    ProfileCustodyPort,
     ProfileCustodyRecordIntegrityError,
-    ProfileCustodyRecoveryEnrollmentMaterial,
-    ProfileCustodyRecoveryEnvelopePort,
-    ProfileCustodyRecoveryMaterialPort,
-    ProfileCustodyRecoveryUnlockPort,
-    ProfileCustodyRegistrationMaterial,
-    ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRepositoryPort,
-    ProfileCustodySentinelPort,
-    ProfileCustodyUnlockPort,
     ProfilePassphraseEncryptedRecord,
     ProfilePassphraseKdfParameters,
     ProfilePassphraseKdfPolicy,
@@ -51,13 +28,43 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
 )
+from ....application.user_profile.custody_ports import (
+    ProfileBucketStoragePathsPort,
+    ProfileBucketStoragePort,
+    ProfileCapsuleArchiveContentsMaterial,
+    ProfileCapsuleArchiveHeaderMaterial,
+    ProfileCustodyBucketEventHistoryPort,
+    ProfileCustodyCapsuleSourceMaterial,
+    ProfileCustodyCarryMaterial,
+    ProfileCustodyInventoryPort,
+    ProfileCustodyPort,
+    ProfileCustodyRecoveryEnrollmentMaterial,
+    ProfileCustodyRecoveryMaterialPort,
+    ProfileCustodyRecoveryUnlockPort,
+    ProfileCustodyRegistrationMaterial,
+    ProfileCustodySecureObjectNamespace,
+    ProfileCustodyUnlockPort,
+)
+from ....application.user_profile.custody_record_ports import (
+    ProfileCustodyCapsuleLabelPort,
+    ProfileCustodyCapsuleSummaryWitnessPort,
+    ProfileCustodyEnvelopePort,
+    ProfileCustodyLabelHeadPort,
+    ProfileCustodyLocalRecordStore,
+    ProfileCustodyPasswordMaterialPort,
+    ProfileCustodyPasswordProofMaterialPort,
+    ProfileCustodyRecoveryEnvelopePort,
+    ProfileCustodySecureObjectRepositoryPort,
+    ProfileCustodySentinelPort,
+)
+from ....application.user_profile.kdf_strength import ProfileKdfStrength
+from ....application.user_profile.proof_cancellation import ProfileProofCancellation
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.profile_publication import ProfilePublicationKindValue
 from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ....core.storage_taxonomy_locations import storage_location
-from ....core.time.clock import now as _utc_now
-from ._kdf_salt import KDF_SALT_BYTES
+from ....core.time.clock import wall_now
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .bucket.lockfile import acquire_lock, release_lock
@@ -69,7 +76,7 @@ from .bucket.output_language_hint import (
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
-from .custody.automation_retirement import retire_profile_automation
+from .custody.automation_retirement import profile_automation_enrolled, retire_profile_automation
 from .custody.capsule import (
     ProfileCustodyRecoveryMaterial,
     install_committed_profile_custody_recovery_envelope,
@@ -111,8 +118,23 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
-from .custody.kdf_supervision import calibrate_profile_kdf, unlock_profile_custody
+from .custody.kdf_strengthening import profile_kdf_strengthening_point, profile_kdf_strictly_stronger
+from .custody.kdf_supervision import (
+    ProfileKdfPrewarm,
+    calibrate_profile_kdf,
+    calibrate_profile_kdf_in_background,
+    profile_kdf_at_fallback,
+    unlock_profile_custody,
+)
 from .custody.label_head_repository import ProfileLabelHeadRepository
+from .custody.password_replacement_intent import (
+    ProfilePasswordReplacementIntent,
+    clear_profile_password_replacement_intent,
+    make_profile_record_durable,
+    profile_password_replacement_intent_path,
+    resolve_profile_password_replacement,
+    stage_profile_password_replacement_intent,
+)
 from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope
 from .custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
@@ -136,6 +158,7 @@ from .errors import (
     PersistenceError,
     StorageValidationError,
 )
+from .kdf_salt import KDF_SALT_BYTES
 from .master_key.active_session import activate_session, current_active_bucket_session, session_serves_bucket
 from .master_key.bucket_session import BucketSession
 from .master_key.kdf_params import (
@@ -203,8 +226,11 @@ class _PersistenceProfileBucketStorage:
         release_lock(paths)
 
 
-class _PersistenceProfileRecordCrypto:
+class PersistenceProfileRecordCrypto:
+    """Profile record cryptography backed by the persistence layer's key derivation and AEAD."""
+
     def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        """Return the Argon2 passphrase key-derivation policy bounds."""
         return ProfilePassphraseKdfPolicy(
             version=ARGON2_VERSION,
             minimum_memory_cost_kib=MIN_MEMORY_COST_KIB,
@@ -224,6 +250,7 @@ class _PersistenceProfileRecordCrypto:
         parallelism: int,
         salt: bytes,
     ) -> bool:
+        """Report whether the given Argon2 cost parameters fall inside the accepted window."""
         policy = self.passphrase_kdf_policy()
         return (
             policy.minimum_memory_cost_kib <= memory_cost <= policy.maximum_memory_cost_kib
@@ -239,6 +266,7 @@ class _PersistenceProfileRecordCrypto:
         key: bytes,
         associated_data: bytes | None = None,
     ) -> ProfileRecordEncryptedBlob:
+        """Encrypt a profile record under the key with optional associated data."""
         try:
             blob = encrypt_record(plaintext, key=key, associated_data=associated_data)
             return ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
@@ -252,6 +280,7 @@ class _PersistenceProfileRecordCrypto:
         key: bytes,
         associated_data: bytes | None = None,
     ) -> bytes:
+        """Decrypt a profile record blob under the key with optional associated data."""
         try:
             adapter_blob = EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
             return decrypt_record(adapter_blob, key=key, associated_data=associated_data)
@@ -265,6 +294,7 @@ class _PersistenceProfileRecordCrypto:
         passphrase: bytes,
         associated_data: bytes,
     ) -> ProfilePassphraseEncryptedRecord:
+        """Encrypt plaintext under a key derived from the passphrase."""
         try:
             parameters = KdfParams.default()
             sealing_key = derive_kek_with_params(
@@ -605,7 +635,7 @@ class _PersistenceProfileCustody:
         # reach the authenticated profile aggregate.  Importing it at module
         # scope made every consumer of this adapter -- including a pure profile
         # listing -- pay for all of it, so it is loaded only when carry runs.
-        from ._profile_custody_carry import collect_profile_custody_carry
+        from .profile_custody_carry import collect_profile_custody_carry
 
         return collect_profile_custody_carry(
             bucket_id=bucket_id,
@@ -614,7 +644,7 @@ class _PersistenceProfileCustody:
         )
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
-        return _PersistenceProfileRecordCrypto()
+        return PersistenceProfileRecordCrypto()
 
     def create_registration_material(
         self,
@@ -625,19 +655,82 @@ class _PersistenceProfileCustody:
         dek_epoch: str,
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength | None = None,
     ) -> ProfileCustodyRegistrationMaterial:
-        calibration = calibrate_profile_kdf(salt=salt)
+        if strength is not None:
+            return self._strengthened_registration_material(
+                profile_id=profile_id,
+                password=password,
+                dek=dek,
+                dek_epoch=dek_epoch,
+                salt=salt,
+                predecessor=predecessor,
+                strength=strength,
+            )
+        # Each calibration sample and the wrap run in a fresh contained child.
+        # A spare scoped to this one mint is launched between samples, never
+        # during a timed one, and is contained before the mint returns.
+        with closing(ProfileKdfPrewarm()) as prewarm:
+            prewarm.refill()
+            with prewarm.bound():
+                calibration = calibrate_profile_kdf(salt=salt)
+            with prewarm.bound(refill=False):
+                envelope = create_profile_custody_password_envelope(
+                    profile_id=profile_id,
+                    password=password,
+                    dek=dek,
+                    dek_epoch=dek_epoch,
+                    kdf=calibration.parameters,
+                    password_generation=1 if predecessor is None else predecessor.password_generation + 1,
+                    previous_envelope_digest=None if predecessor is None else predecessor.self_digest,
+                )
+        sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
+        return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def _strengthened_registration_material(
+        self,
+        *,
+        profile_id: UUID,
+        password: str,
+        dek: bytes,
+        dek_epoch: str,
+        salt: bytes,
+        predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength,
+    ) -> ProfileCustodyRegistrationMaterial:
+        """Mint ``predecessor``'s successor at a measured point, checked again here rather than trusted."""
+        if predecessor is None:
+            raise ValueError("a measured KDF point only strengthens an existing password envelope")
+        committed = _substrate_handle(predecessor, ProfileCustodyEnvelope, "password envelope")
+        kdf = profile_kdf_strengthening_point(
+            memory_mib=strength.memory_mib,
+            iterations=strength.iterations,
+            parallelism=strength.parallelism,
+            salt=salt,
+            committed=committed.kdf,
+        )
         envelope = create_profile_custody_password_envelope(
             profile_id=profile_id,
             password=password,
             dek=dek,
             dek_epoch=dek_epoch,
-            kdf=calibration.parameters,
-            password_generation=1 if predecessor is None else predecessor.password_generation + 1,
-            previous_envelope_digest=None if predecessor is None else predecessor.self_digest,
+            kdf=kdf,
+            password_generation=committed.password_generation + 1,
+            previous_envelope_digest=committed.self_digest,
         )
         sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def measure_stronger_password_kdf(self, profile_id: UUID, *, root: Path | None = None) -> ProfileKdfStrength | None:
+        committed = load_committed_profile_password_material(profile_id, root=root).envelope.kdf
+        if not profile_kdf_at_fallback(committed):
+            return None
+        measured = calibrate_profile_kdf_in_background(salt=base64.b64decode(committed.salt_b64))
+        if measured is None or not profile_kdf_strictly_stronger(measured, committed):
+            return None
+        return ProfileKdfStrength(
+            memory_mib=measured.memory_mib, iterations=measured.iterations, parallelism=measured.parallelism
+        )
 
     def create_recovery_enrollment_material(
         self,
@@ -742,11 +835,15 @@ class _PersistenceProfileCustody:
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
+        timeout_deadline: float | None = None,
+        cancellation: ProfileProofCancellation | None = None,
     ) -> ProfileCustodyUnlockPort:
         return unlock_profile_custody(
             _substrate_handle(material.envelope, ProfileCustodyEnvelope, "password envelope"),
             password,
             sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
+            timeout_deadline=timeout_deadline,
+            cancellation=cancellation,
         )
 
     def fence_human_sign_in(self, *, profile_id: UUID, root: Path) -> None:
@@ -754,6 +851,9 @@ class _PersistenceProfileCustody:
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         return retire_profile_automation(root=root, profile_id=profile_id, secrets_store=self.automation_secrets_store)
+
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        return profile_automation_enrolled(root=root, profile_id=profile_id)
 
     def replace_password_envelope(
         self,
@@ -777,6 +877,43 @@ class _PersistenceProfileCustody:
         root: Path | None = None,
     ) -> ProfileCustodyPasswordMaterialPort:
         return load_committed_profile_password_material(profile_id, root=root)
+
+    def stage_password_replacement(
+        self,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyEnvelopePort,
+        rotated: ProfileCustodyEnvelopePort,
+        previous_row_provenance: str,
+        rehead_row_provenance: str,
+        root: Path,
+    ) -> None:
+        stage_profile_password_replacement_intent(
+            ProfilePasswordReplacementIntent.create(
+                profile_id=profile_id,
+                expected_envelope=current.canonical_json_bytes(),
+                proposed_envelope=rotated.canonical_json_bytes(),
+                previous_row_provenance=previous_row_provenance,
+                rehead_row_provenance=rehead_row_provenance,
+            ),
+            root=root,
+        )
+
+    def make_record_durable(self, profile_id: UUID, *, root: Path) -> None:
+        make_profile_record_durable(profile_id, root=root)
+
+    def resolve_password_replacement(self, profile_id: UUID, *, root: Path) -> str:
+        return resolve_profile_password_replacement(profile_id, root=root).value
+
+    def clear_password_replacement(self, profile_id: UUID, *, root: Path) -> None:
+        clear_profile_password_replacement_intent(profile_id, root=root)
+
+    def password_replacement_pending(self, profile_id: UUID, *, root: Path) -> bool:
+        return os.path.lexists(profile_password_replacement_intent_path(profile_id, root=root))
+
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        material = load_committed_profile_password_material(profile_id, root=root)
+        return profile_kdf_at_fallback(material.envelope.kdf)
 
     def is_authentication_proof_failure(
         self,
@@ -820,7 +957,7 @@ class _PersistenceProfileCustody:
 
         active = current_active_bucket_session()
         if database_file is None and session_serves_bucket(active, str(profile_id)):
-            settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
+            settings = Settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id))
             yield secure_object_repository_for_bucket(str(profile_id), settings)
             return
 
@@ -834,7 +971,7 @@ class _PersistenceProfileCustody:
 
     @contextmanager
     def _temporary_session(self, *, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
-        instant = _utc_now()
+        instant = wall_now()
         bridge = BucketSession.open_resumed(
             bucket_id=str(profile_id),
             dek=dek,

@@ -18,15 +18,15 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceLine
-from .....domain.iva.schema import InvoiceKind
+from .....domain.invoices.enums import IvaRate
+from .....domain.invoices.models import Invoice
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
+from .issued_invoice_support import issued_consulting_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -36,33 +36,7 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _invoice(invoice_number: str = "INV-001") -> Invoice:
-    line = InvoiceLine.model_validate(
-        {
-            "description": "Consultoría",
-            "quantity": Decimal("1"),
-            "unit_price": Decimal("100.00"),
-            "subtotal": Decimal("100.00"),
-            "iva_rate": IvaRate.from_registry("RATE_21"),
-            "iva_amount": Decimal("21.00"),
-        },
-    )
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-        },
-    )
+    return issued_consulting_invoice(invoice_number, iva_rate=IvaRate.from_registry("RATE_21"))
 
 
 def _transaction(provider_id: str = "row-1") -> Transaction:

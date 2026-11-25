@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import shutil
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from functools import partial
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast, override
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -42,6 +44,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
+from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -52,9 +55,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _JUSTIFICANTE_FIXTURE = (
     Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
 )
+_SWAPPED_DECLARACION_FIXTURE = _JUSTIFICANTE_FIXTURE.with_name("2024-2T.pdf")
 
 
-class _CommitWitness:
+class CommitWitness:
     """Observe exact operation identity and its guarded persistence boundary."""
 
     def __init__(self, definition_id: str = MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID) -> None:
@@ -104,7 +108,7 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The real registered executor refuses retargeting and settles its write as UPDATED."""
-    witness = _CommitWitness()
+    witness = CommitWitness()
     original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
@@ -152,25 +156,12 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         )
 
-        other_profile_id = uuid4()
-        with override_settings(cadrumo_active_profile=str(other_profile_id)):
-            refused_submission, refused_observation = asyncio.run(
-                driver.run(
-                    definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
-                    subject_ref=subject_ref,
-                    payload=request,
-                )
-            )
-        refused_snapshot = asyncio.run(
-            driver.services.submission.supervisor.inspect(refused_submission.receipt.operation_id)
+        assert_refused_for_foreign_active_profile(
+            driver,
+            definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
+            subject_ref=subject_ref,
+            payload=request,
         )
-        refused_receipt = refused_snapshot.terminal_receipt
-        assert refused_receipt is not None
-        assert refused_receipt.identity.subject_ref == subject_ref
-        assert refused_receipt.condition is OperationTerminalCondition.REFUSED
-        assert refused_receipt.effect is OperationEffect.NONE
-        assert refused_receipt.result_ref is None
-        assert refused_observation.projection.terminal_condition is OperationTerminalCondition.REFUSED
         assert witness.events == []
 
         with override_settings(cadrumo_active_profile=str(profile_id)):
@@ -197,7 +188,7 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
         assert observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observation.projection.effect is OperationEffect.UPDATED
 
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
@@ -209,12 +200,15 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
         assert projection.bucket_id == str(profile_id)
         assert projection.work_unit_id == work_unit.work_unit_id
         assert projection.source_path == request.source_path
+        fixture_sha256 = hashlib.sha256(Path(request.source_path).read_bytes()).hexdigest()
+        assert projection.source_pdf_sha256 == fixture_sha256
 
         assert records_after[: len(records_before)] == records_before
         assert len(records_after) == len(records_before) + 1
         persisted = records_after[-1]
         assert persisted.bucket_id == str(profile_id)
         assert persisted.work_unit_id == work_unit.work_unit_id
+        assert persisted.source_pdf_sha256 == fixture_sha256
         assert persisted.bucket_event_id in events_after
         assert set(events_before).issubset(events_after)
         assert witness.checked_actions.count(AccessAction.START) >= 2
@@ -271,17 +265,22 @@ def test_registered_import_refuses_a_relative_source_that_the_working_directory_
         assert records_after == records_before
 
 
-class _FileChangingParser(ReconciliationEvidenceParserPort):
-    """A path parser during whose parse the named file is, or is not, rewritten.
+class _PathSwappingParser(ReconciliationEvidenceParserPort):
+    """A declaración parser during whose parse the named file is swapped out.
 
     It stands in for whatever else can write to the file while a real parser
-    reads it; the guard under test is the wrapper around it.
+    reads it, then hands the bytes it was given to ``delegate``; the guard
+    under test is the wrapper around it.
     """
 
-    def __init__(self, during_parse: Callable[[Path], object]) -> None:
+    def __init__(
+        self,
+        during_parse: Callable[[], object],
+        delegate: Callable[[bytes], ReconciliationDeclaracionObservation],
+    ) -> None:
         self._during_parse = during_parse
-        self.parsed: list[Path] = []
-        self.observation = cast(ReconciliationDeclaracionObservation, object())
+        self._delegate = delegate
+        self.parsed: list[bytes] = []
 
     @override
     def parse_justificante(self, source: Path) -> Justificante:
@@ -295,16 +294,23 @@ class _FileChangingParser(ReconciliationEvidenceParserPort):
     def parse_declaracion(
         self, source: Path, *, modelo: str, filing_year: int, period: str
     ) -> ReconciliationDeclaracionObservation:
-        del modelo, filing_year, period
-        self.parsed.append(source)
-        self._during_parse(source)
-        return self.observation
+        raise AssertionError("a declaración is parsed from its verified bytes, never from its path")
 
     @override
     def parse_declaracion_bytes(
-        self, source: bytes, *, modelo: str, filing_year: int, period: str, registry_snapshot: RegistrySnapshot
+        self,
+        source: bytes,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        registry_snapshot: RegistrySnapshot | None,
     ) -> ReconciliationDeclaracionObservation:
-        raise AssertionError("this parser is asked for a declaración path only")
+        del modelo, filing_year, period
+        assert registry_snapshot is None
+        self.parsed.append(source)
+        self._during_parse()
+        return self._delegate(source)
 
 
 def _refusal_reason(error: ReconciliationEvidenceInvalidError) -> str:
@@ -343,7 +349,7 @@ def test_a_source_the_guard_does_not_accept_never_reaches_a_parser(
     source = tmp_path / "justificante.pdf"
     shutil.copyfile(_JUSTIFICANTE_FIXTURE, source)
     monkeypatch.chdir(tmp_path)
-    parser = _FileChangingParser(lambda _source: None)
+    parser = _PathSwappingParser(lambda: None, lambda _content: cast(ReconciliationDeclaracionObservation, object()))
     refused: dict[Path, tuple[str, int]] = {
         Path("justificante.pdf"): ("relative_path", source.stat().st_size),
         tmp_path / "nested" / ".." / "justificante.pdf": ("parent_traversal", source.stat().st_size),
@@ -364,20 +370,64 @@ def test_a_source_the_guard_does_not_accept_never_reaches_a_parser(
     assert parser.parsed == []
 
 
-def test_a_declaracion_rewritten_while_it_is_parsed_is_refused(tmp_path: Path) -> None:
+def test_a_declaracion_swapped_while_it_is_parsed_is_parsed_from_its_verified_bytes(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     source = tmp_path / "declaracion.pdf"
-    source.write_bytes(b"%PDF-synthetic declaration as first read")
-    rewriting = _FileChangingParser(lambda path: path.write_bytes(b"%PDF-synthetic declaration swapped in"))
-    steady = _FileChangingParser(lambda _path: None)
+    shutil.copyfile(_JUSTIFICANTE_FIXTURE, source)
+    original = _JUSTIFICANTE_FIXTURE.read_bytes()
+    swapped_in = _SWAPPED_DECLARACION_FIXTURE.read_bytes()
+    composed = reconciliation_evidence_parser()
+    swapped: list[ReconciliationDeclaracionObservation] = []
 
-    with pytest.raises(ReconciliationEvidenceInvalidError) as refusal:
-        HandleVerifiedEvidenceParser(rewriting).parse_declaracion(source, modelo="130", filing_year=2024, period="1T")
-    source.write_bytes(b"%PDF-synthetic declaration left alone")
-    observation = HandleVerifiedEvidenceParser(steady).parse_declaracion(
-        source, modelo="130", filing_year=2024, period="1T"
+    def swap_and_restore() -> None:
+        source.write_bytes(swapped_in)
+        swapped.append(composed.parse_declaracion(source, modelo="130", filing_year=2024, period="2T"))
+        source.write_bytes(original)
+
+    swapping = _PathSwappingParser(
+        swap_and_restore,
+        lambda content: composed.parse_declaracion_bytes(
+            content, modelo="130", filing_year=2024, period="1T", registry_snapshot=None
+        ),
     )
 
-    assert _refusal_reason(refusal.value) == "changed_while_read"
-    assert rewriting.parsed == [source]
-    assert observation is steady.observation
-    assert steady.parsed == [source]
+    with validating_governed_facts(operation):
+        observation = HandleVerifiedEvidenceParser(swapping).parse_declaracion(
+            source, modelo="130", filing_year=2024, period="1T"
+        )
+        expected = composed.parse_declaracion_bytes(
+            original, modelo="130", filing_year=2024, period="1T", registry_snapshot=None
+        )
+
+    assert swapping.parsed == [original]
+    assert observation.source_pdf_sha256 == hashlib.sha256(original).hexdigest()
+    assert observation.period == expected.period
+    assert observation.period != swapped[0].period
+    assert [(value.casilla_id, value.printed_value) for value in observation.values] == [
+        (value.casilla_id, value.printed_value) for value in expected.values
+    ]
+
+
+def test_a_declaracion_observation_of_other_bytes_is_refused(tmp_path: Path) -> None:
+    source = tmp_path / "declaracion.pdf"
+    source.write_bytes(b"%PDF-synthetic declaration as verified")
+    foreign = cast(
+        ReconciliationDeclaracionObservation,
+        SimpleNamespace(source_pdf_sha256=hashlib.sha256(b"%PDF-synthetic other declaration").hexdigest()),
+    )
+    bound = cast(
+        ReconciliationDeclaracionObservation,
+        SimpleNamespace(source_pdf_sha256=hashlib.sha256(source.read_bytes()).hexdigest()),
+    )
+
+    with pytest.raises(ReconciliationEvidenceInvalidError) as refusal:
+        HandleVerifiedEvidenceParser(_PathSwappingParser(lambda: None, lambda _content: foreign)).parse_declaracion(
+            source, modelo="130", filing_year=2024, period="1T"
+        )
+    observation = HandleVerifiedEvidenceParser(
+        _PathSwappingParser(lambda: None, lambda _content: bound)
+    ).parse_declaracion(source, modelo="130", filing_year=2024, period="1T")
+
+    assert _refusal_reason(refusal.value) == "parsed_digest_mismatch"
+    assert observation is bound

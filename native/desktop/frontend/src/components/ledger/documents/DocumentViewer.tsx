@@ -1,0 +1,363 @@
+// The document a reading came from, shown beside what was read from it, so
+// the person can check a value against the page before confirming it. The
+// runtime draws each page as an image; this view never parses the document.
+// The image is held in this component's memory only, and goes when the
+// panel closes or another document is shown.
+
+import { useEffect, useRef, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
+import { Spinner } from "@/components/ui/spinner";
+import type { LedgerEvidencePageProjection } from "../../../shell/ledgerDocumentContract";
+import type {
+  EvidenceStructuredFactV1,
+  EvidenceStructuredInvoiceV1,
+} from "../../../shell/ledgerDocumentContract";
+import type { LedgerPort } from "../../../shell/ledger";
+import type { LedgerReadFailure } from "../../../shell/ledgerWindow";
+import { formatDay } from "../../../shared/dateFormats";
+import {
+  formatAmount,
+  formatDecimal,
+  formatPercent,
+} from "../../../shared/numbers";
+import {
+  SOURCE_LOCALE,
+  useStrings,
+  type Translate,
+} from "../../../shell/strings";
+import { referenceFields, type DocumentReference } from "./documentsModel";
+import { useLedgerRead } from "./useLedgerRead";
+
+/** Zoom steps, as multiples of the frame's width. */
+const ZOOMS = [1, 1.5, 2, 3] as const;
+/** Requested widths come in steps, so a resize reads again only when the
+ * step changes. */
+const WIDTH_STEP = 320;
+const MIN_WIDTH = 64;
+const MAX_WIDTH = 4096;
+
+/** The page read's refusals, as their registered codes end. */
+const REFUSALS = [
+  "not_found",
+  "digest_mismatch",
+  "unsupported_media",
+  "too_large",
+  "out_of_range",
+  "unreadable",
+] as const;
+const REFUSAL_PREFIX = "REFUSED_LEDGER_EVIDENCE_PAGE_";
+
+/** The widest image worth asking for a frame `cssWidth` pixels wide. */
+export function requestedWidth(
+  cssWidth: number,
+  zoom: number,
+  density: number,
+) {
+  const pixels =
+    Math.ceil((cssWidth * zoom * density) / WIDTH_STEP) * WIDTH_STEP;
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, pixels));
+}
+
+/** Why a page is not shown, in words where the refusal is one the read
+ * declares; otherwise its code. */
+function refusalText(t: Translate, failure: LedgerReadFailure): string | null {
+  const code = failure.kind === "unsettled" ? null : failure.reason;
+  const reason = code?.startsWith(REFUSAL_PREFIX)
+    ? code.slice(REFUSAL_PREFIX.length).toLowerCase()
+    : null;
+  return reason !== null && (REFUSALS as readonly string[]).includes(reason)
+    ? t(`desktop.ledger.documents.viewer.refused.${reason}`)
+    : null;
+}
+
+/** A fact's value as the record states it, by the kind the backend serves
+ * for it: text as it stands; a date, an amount, a rate and a quantity in the
+ * locale's marks and order. */
+function factValue(t: Translate, fact: EvidenceStructuredFactV1): string {
+  const locale = t.locale ?? SOURCE_LOCALE;
+  switch (fact.value_kind) {
+    case "date":
+      return fact.iso_date ? formatDay(locale, fact.iso_date) : "";
+    case "amount":
+      return fact.number ? formatAmount(locale, fact.number.decimal) : "";
+    case "rate_percent":
+      return fact.number
+        ? formatPercent(locale, fact.number.decimal, { unit: "points" })
+        : "";
+    case "quantity":
+      return fact.number ? formatDecimal(locale, fact.number.decimal) : "";
+    case "text":
+      return fact.text ?? "";
+  }
+}
+
+/** The columns of the lines table: each served label once, in the order the
+ * lines first state it. */
+function lineColumns(invoice: EvidenceStructuredInvoiceV1): string[] {
+  const columns: string[] = [];
+  for (const line of invoice.lines)
+    for (const fact of line.facts)
+      if (!columns.includes(fact.label_key)) columns.push(fact.label_key);
+  return columns;
+}
+
+/** One shown page: a structured e-invoice as the facts its record states,
+ * never as an image; any other document as the image the runtime drew. */
+export function DocumentPage({
+  t,
+  shown,
+  scale,
+  fileName,
+}: {
+  t: Translate;
+  shown: LedgerEvidencePageProjection;
+  scale: number;
+  fileName: string;
+}) {
+  return (
+    <>
+      {shown.structured_invoice && (
+        <StructuredInvoice t={t} invoice={shown.structured_invoice} />
+      )}
+      {shown.media_type !== "application/xml" && (
+        <img
+          className="ledger-document-image block max-w-none"
+          style={{ width: `${scale * 100}%` }}
+          src={shown.image_data_url ?? undefined}
+          alt={t("desktop.ledger.documents.viewer.image", {
+            file: shown.file_name ?? fileName,
+            page: shown.page,
+          })}
+          draggable={false}
+        />
+      )}
+    </>
+  );
+}
+
+/** A structured e-invoice as the facts its record states. Every word is a
+ * key the backend serves, and nothing is read from the document here. */
+function StructuredInvoice({
+  t,
+  invoice,
+}: {
+  t: Translate;
+  invoice: EvidenceStructuredInvoiceV1;
+}) {
+  const columns = lineColumns(invoice);
+  return (
+    <div className="ledger-document-structured flex flex-col gap-3 p-3">
+      <h3 className="ledger-document-structured-title text-sm font-semibold">
+        {t(invoice.title_key)}
+      </h3>
+      <dl className="ledger-document-structured-facts grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        {invoice.facts.map((fact) => (
+          <div key={fact.label_key} className="contents">
+            <dt className="text-muted-foreground">{t(fact.label_key)}</dt>
+            <dd className="min-w-0 break-words tabular-nums">
+              {factValue(t, fact)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {invoice.lines.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="ledger-document-structured-lines w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                {columns.map((column) => (
+                  <th
+                    key={column}
+                    scope="col"
+                    className="px-2 py-1 font-normal"
+                  >
+                    {t(column)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.lines.map((line, at) => (
+                <tr key={at} className="border-b last:border-b-0">
+                  {columns.map((column) => {
+                    const fact = line.facts.find(
+                      (found) => found.label_key === column,
+                    );
+                    return (
+                      <td key={column} className="px-2 py-1 tabular-nums">
+                        {fact ? factValue(t, fact) : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DocumentViewer({
+  port,
+  reader,
+  reference,
+  fileName,
+}: {
+  port: LedgerPort;
+  reader: string | null;
+  reference: DocumentReference;
+  fileName: string;
+}) {
+  const t = useStrings();
+  const [page, setPage] = useState(1);
+  const [zoom, setZoom] = useState(0);
+  const frame = useRef<HTMLDivElement>(null);
+  const [frameWidth, setFrameWidth] = useState(0);
+  useEffect(() => {
+    const at = frame.current;
+    if (!at) return;
+    setFrameWidth(at.clientWidth);
+    const observer = new ResizeObserver(() => setFrameWidth(at.clientWidth));
+    observer.observe(at);
+    return () => observer.disconnect();
+  }, []);
+
+  const scale = ZOOMS[zoom] ?? 1;
+  const width =
+    frameWidth > 0
+      ? requestedWidth(frameWidth, scale, window.devicePixelRatio || 1)
+      : null;
+  const { read, reread } = useLedgerRead(
+    port,
+    reader,
+    width !== null,
+    "ledger.evidence.page",
+    width === null
+      ? null
+      : { ...referenceFields(reference), page, max_width: width },
+    `${reference.kind}:${reference.id}:${page}:${width}`,
+  );
+  // While a sharper drawing of the same page is read, the one already
+  // drawn stays on screen.
+  const [kept, setKept] = useState<LedgerEvidencePageProjection | null>(null);
+  useEffect(() => {
+    if (read.phase === "ready") setKept(read.value);
+  }, [read]);
+  const shown =
+    read.value ?? (kept !== null && kept.page === page ? kept : null);
+  const count = shown?.page_count ?? kept?.page_count ?? null;
+  const structured = (shown ?? kept)?.structured_invoice ?? null;
+  const reading = read.phase === "reading";
+  const refusal = read.phase === "failed" ? refusalText(t, read.failure) : null;
+
+  return (
+    <section
+      aria-label={t("desktop.ledger.documents.viewer.label")}
+      className="ledger-document flex min-h-0 flex-1 flex-col gap-2"
+    >
+      <div className="flex flex-wrap items-center gap-1">
+        {structured === null && count !== null && count > 1 && (
+          <>
+            <IconButton
+              className="ledger-document-previous"
+              label={t("desktop.ledger.documents.viewer.previous")}
+              disabled={page <= 1}
+              onClick={() => setPage((at) => Math.max(1, at - 1))}
+            >
+              <Icon name="back" size="sm" />
+            </IconButton>
+            <span className="ledger-document-page text-sm tabular-nums">
+              {t("desktop.ledger.documents.viewer.page", { page, count })}
+            </span>
+            <IconButton
+              className="ledger-document-next"
+              label={t("desktop.ledger.documents.viewer.next")}
+              disabled={page >= count}
+              onClick={() => setPage((at) => Math.min(count, at + 1))}
+            >
+              <Icon name="forward" size="sm" />
+            </IconButton>
+          </>
+        )}
+        <span className="flex-1" />
+        {structured === null && (
+          <>
+            <IconButton
+              className="ledger-document-zoom-out"
+              label={t("desktop.ledger.documents.viewer.zoom_out")}
+              disabled={zoom <= 0}
+              onClick={() => setZoom((at) => Math.max(0, at - 1))}
+            >
+              <Icon name="zoomOut" size="sm" />
+            </IconButton>
+            <span className="ledger-document-zoom text-sm text-muted-foreground tabular-nums">
+              {t("desktop.ledger.documents.viewer.zoom", {
+                percent: Math.round(scale * 100),
+              })}
+            </span>
+            <IconButton
+              className="ledger-document-zoom-in"
+              label={t("desktop.ledger.documents.viewer.zoom_in")}
+              disabled={zoom >= ZOOMS.length - 1}
+              onClick={() =>
+                setZoom((at) => Math.min(ZOOMS.length - 1, at + 1))
+              }
+            >
+              <Icon name="zoomIn" size="sm" />
+            </IconButton>
+            <IconButton
+              className="ledger-document-fit"
+              label={t("desktop.ledger.documents.viewer.fit")}
+              disabled={zoom === 0}
+              onClick={() => setZoom(0)}
+            >
+              <Icon name="maximize" size="sm" />
+            </IconButton>
+          </>
+        )}
+      </div>
+      <div
+        ref={frame}
+        // The page can be wider than its frame: the keyboard scrolls it too.
+        tabIndex={0}
+        className="ledger-document-frame relative min-h-0 flex-1 overflow-auto rounded-md border bg-muted"
+        aria-busy={reading || undefined}
+      >
+        {shown && (
+          <DocumentPage t={t} shown={shown} scale={scale} fileName={fileName} />
+        )}
+        {reading && (
+          <div
+            role="status"
+            className="ledger-document-reading flex items-center gap-2 p-3 text-sm text-muted-foreground"
+          >
+            <Spinner />
+            {t("desktop.ledger.documents.viewer.reading")}
+          </div>
+        )}
+        {read.phase === "failed" && (
+          <Alert
+            tone={refusal ? "warning" : "danger"}
+            role="alert"
+            icon={<Icon name={refusal ? "refused" : "alert"} />}
+            className="ledger-document-refused m-2"
+          >
+            <AlertDescription className="flex flex-wrap items-center gap-2">
+              {refusal ?? <>{t("desktop.ledger.documents.viewer.failed")}</>}
+              {!refusal && (
+                <Button size="xs" variant="outline" onClick={reread}>
+                  {t("desktop.ledger.retry")}
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    </section>
+  );
+}

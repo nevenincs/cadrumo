@@ -27,23 +27,27 @@ import asyncio
 
 import pytest
 
+from ......application.live.filed_capture_queries import list_filed_data_bulk
 from ......application.live.filed_data import BulkFiledDataListingReport
-from ......application.live.filed_data_capture import list_filed_data_bulk
+from ......domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from .declarations_register_test_support import (
     RoutedFiledDataCapturePort,
     aeat_sede_fixture,
-    declared_register_total,
+    fixture_offered_ejercicios,
     open_routed_declarations_register,
-    rendered_register_rows,
+    truncation_failures_naming_their_cause,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "100"
 # Both years carry a registry revision for this modelo, so both survive the
-# pre-flight query plan and actually reach the register walk.
-_YEAR_FROM = 2024
-_YEAR_TO = 2025
+# pre-flight query plan, and both are offered by the register form, so both
+# actually reach the register walk.
+_YEAR_FROM, _YEAR_TO = sorted(
+    set(supported_authored_exercises(_MODELO))
+    & set(fixture_offered_ejercicios("declaraciones-register-form-complete-synthetic"))
+)[-2:]
 
 
 def test_a_truncated_pair_is_reported_while_the_other_pair_still_yields_rows() -> None:
@@ -78,20 +82,7 @@ def test_a_truncated_pair_is_reported_while_the_other_pair_still_yields_rows() -
 
     report = asyncio.run(_sweep())
 
-    truncation_failures = [failure for failure in report.failures if failure.error_type == "SedeParseError"]
-    assert truncation_failures, f"no truncation refusal was absorbed into a failure row: {report.failures}"
-    # Both numbers are read straight out of the fixture's own markup rather than
-    # from anything the parser computed, so the row is cross-checked against the
-    # page it came from and neither number is hardcoded here.
-    truncated_page = aeat_sede_fixture("declaraciones-register-form-paginated-synthetic")
-    declared_total = declared_register_total(truncated_page)
-    assert declared_total is not None
-    rendered_rows = rendered_register_rows(truncated_page)
-    assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
-    for failure in truncation_failures:
-        assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (
-            f"the failure row lost the rendered-versus-declared cause: {failure.message!r}"
-        )
+    truncation_failures = truncation_failures_naming_their_cause(report.failures)
 
     assert report.rows, "the untruncated pair returned no rows, so the sweep did not survive the refusal"
     refused_years = {failure.year for failure in truncation_failures}

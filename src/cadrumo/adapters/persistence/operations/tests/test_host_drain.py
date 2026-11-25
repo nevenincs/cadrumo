@@ -18,7 +18,14 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.operations import OperationLifecycle
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
+from .supervisor_test_support import (
+    SUPERVISOR_NOW,
+    IdleExecutor,
+    operation_repositories,
+    operation_supervisor,
+    supervisor_registry,
+    supervisor_request,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -44,7 +51,7 @@ class CancellationResistantExecutor:
 
 def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 
@@ -59,7 +66,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 return executor
 
             services = compose_operation_services(
-                registry=_registry(executor_type=CancellationResistantExecutor, build=build),
+                registry=supervisor_registry(executor_type=CancellationResistantExecutor, build=build),
                 authority_operation=unread_authority_operation(),
                 journal=journal,
                 reader=journal,
@@ -68,7 +75,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 operands=operands,
                 owner_id="1" * 64,
                 lease_token_factory=lambda: "2" * 64,
-                clock=lambda: _NOW,
+                clock=lambda: SUPERVISOR_NOW,
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=timedelta(minutes=1),
                 cleanup_timeout=timedelta(minutes=1),
@@ -78,7 +85,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
             try:
                 for index, operation_id in enumerate(ids):
                     await services.submission.submit(
-                        _request(subject_ref=f"subject:{index}"),
+                        supervisor_request(subject_ref=f"subject:{index}"),
                         actor_ref="operator:drain-test",
                         operation_id=operation_id,
                     )
@@ -100,7 +107,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                     assert (await journal.load(operation_id)).lifecycle is not OperationLifecycle.TERMINAL
                 with pytest.raises(ValueError, match="draining"):
                     await services.submission.submit(
-                        _request(subject_ref="subject:new"), actor_ref="operator:drain-test"
+                        supervisor_request(subject_ref="subject:new"), actor_ref="operator:drain-test"
                     )
 
                 release.set()
@@ -116,13 +123,13 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
 
 def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 
         async def exercise() -> None:
-            supervisor = _supervisor(
-                registry=_registry(
+            supervisor = operation_supervisor(
+                registry=supervisor_registry(
                     executor_type=CancellationResistantExecutor,
                     build=lambda: CancellationResistantExecutor(asyncio.Event(), asyncio.Queue()),
                 ),
@@ -133,14 +140,14 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
                 token="2" * 64,
             )
             operation_id = "3" * 64
-            request = _request()
+            request = supervisor_request()
             assert supervisor.in_flight_operation_count() == 0
             await supervisor.submit(request, operation_id=operation_id)
             assert supervisor.in_flight_operation_count() == 1
             scope = operation_conflict_scope_reference(
                 definition_id=request.definition_id, subject_ref=request.subject_ref
             )
-            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            before = await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)
             assert before.current is not None
 
             drained = await supervisor.drain(timedelta(milliseconds=40))
@@ -149,14 +156,14 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
             assert not drained.needs_containment
             assert supervisor.in_flight_operation_count() == 1
             assert (await journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
-            assert (await leases.inspect(scope, operation_id, observed_at=_NOW)).current == before.current
+            assert (await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)).current == before.current
 
             for admission in (
                 supervisor.start(operation_id),
                 supervisor.continue_operation(operation_id),
                 supervisor.reconcile(operation_id),
                 supervisor.stored_invocation(operation_id),
-                supervisor.submit(_request(subject_ref="subject:new")),
+                supervisor.submit(supervisor_request(subject_ref="subject:new")),
             ):
                 with pytest.raises(ValueError, match="draining"):
                     await admission
@@ -168,28 +175,28 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
 def test_operation_count_returns_to_zero_after_durable_settlement(tmp_path: Path) -> None:
     """An idle host is not an in-flight operation; observation does not renew leases."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 
         async def exercise() -> None:
-            supervisor = _supervisor(
-                registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            supervisor = operation_supervisor(
+                registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
                 journal=journal,
                 leases=leases,
                 operands=operands,
                 owner_id="1" * 64,
                 token="2" * 64,
             )
-            request = _request()
+            request = supervisor_request()
             operation_id = await supervisor.submit(request)
             scope = operation_conflict_scope_reference(
                 definition_id=request.definition_id, subject_ref=request.subject_ref
             )
-            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            before = await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)
             assert supervisor.in_flight_operation_count() == 1
             assert supervisor.in_flight_operation_count() == 1
-            assert await leases.inspect(scope, operation_id, observed_at=_NOW) == before
+            assert await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW) == before
             settled = await run_to_settlement(supervisor, operation_id)
             assert settled.lifecycle is OperationLifecycle.TERMINAL
             assert supervisor.in_flight_operation_count() == 0

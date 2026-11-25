@@ -9,7 +9,7 @@ history through one ``SecureObjectRepository.apply_batch`` transaction.
 from __future__ import annotations
 
 import json
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -30,8 +30,8 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError
 from ...domain.user_profile.schema_migration import (
-    LEGACY_PROFILE_SCHEMA_VERSION,
     MIGRATED_PROFILE_SCHEMA_VERSION,
+    SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS,
     ProfileSchemaMigration,
     legacy_profile_schema,
     migrate_profile_facts,
@@ -39,17 +39,19 @@ from ...domain.user_profile.schema_migration import (
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .custody_ports import (
     ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRawRowPort,
-    ProfileCustodySecureObjectRecordPort,
-    ProfileCustodySecureObjectRepositoryPort,
     default_profile_bucket_event_history_repository,
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
+from .custody_record_ports import (
+    ProfileCustodySecureObjectRawRowPort,
+    ProfileCustodySecureObjectRecordPort,
+    ProfileCustodySecureObjectRepositoryPort,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
-    from .custody_ports import ProfileCustodyEnvelopePort
+    from .custody_record_ports import ProfileCustodyEnvelopePort
 
 
 _RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
@@ -116,7 +118,7 @@ class ProfileRecordCommandEvent(BaseModel):
     model_config = _RECORD_CONFIG
 
     event_type: BucketEventType
-    occurred_at: str = Field(min_length=20, max_length=64)
+    occurred_at: str = Field(min_length=1, max_length=64)
     payload: Mapping[str, str] = Field(default_factory=dict)
 
 
@@ -372,7 +374,7 @@ class ProfileRecordStore:
     def validate_staged_database(self, *, stage_path: Path) -> LoadedProfileRecord:
         """Refuse a restore stage unless its exact current record is authenticated.
 
-        A stage written under the one migratable earlier schema is authenticated
+        A stage written under any migratable earlier schema is authenticated
         against that schema instead; it is restored as stored and carried
         forward on the first open, like any other record of that age.
         """
@@ -382,8 +384,8 @@ class ProfileRecordStore:
         with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
             try:
                 return self._load_from_objects(objects)
-            except ProfileRecordMigrationRequiredError:
-                return self._load_from_objects(objects, legacy=True)
+            except ProfileRecordMigrationRequiredError as exc:
+                return self._load_from_objects(objects, legacy_version=exc.stored_version)
 
     def schema_migrations(self) -> tuple[ProfileSchemaMigration, ...]:
         """Return every schema migration recorded in this profile's history, oldest first."""
@@ -400,18 +402,20 @@ class ProfileRecordStore:
         authenticated against its own schema and lineage exactly as a current
         row is, then replaced by the next revision under the current schema in
         one batch with a ``PROFILE_SCHEMA_MIGRATED`` event whose payload names
-        the cleared facts. A second call finds a current record and writes
-        nothing.
+        the stored version it came from and the cleared facts. A record stored
+        more than one version back crosses every transition in this one write,
+        so the row is replaced once whatever its age. A second call finds a
+        current record and writes nothing.
         """
         with _secure_objects_for_record(self.session, root=self._root) as objects:
             try:
                 self._load_from_objects(objects)
-            except ProfileRecordMigrationRequiredError:
-                pass
+            except ProfileRecordMigrationRequiredError as exc:
+                stored_version = exc.stored_version
             else:
                 return None
-            current = self._load_from_objects(objects, legacy=True)
-            kept_facts, migration = migrate_profile_facts(current.record.facts)
+            current = self._load_from_objects(objects, legacy_version=stored_version)
+            kept_facts, migration = migrate_profile_facts(current.record.facts, from_version=stored_version)
             instant = now.astimezone(UTC)
             from ...domain.user_profile.values import create_user_profile_record
 
@@ -481,8 +485,13 @@ class ProfileRecordStore:
         *,
         rotated: ProfileRecordSession,
         event: ProfileRecordCommandEvent,
+        before_write: Callable[[str, str], None],
     ) -> UserProfileRecord:
         """Re-publish the current row's witness under a re-wrapped envelope.
+
+        ``before_write`` receives the row header before and after the re-head,
+        once both are known and before anything is written, so the caller can
+        make the replacement recoverable from either side of this write.
 
         A passphrase rotation re-mints the password envelope over the SAME
         data key. The row's ``write_provenance`` folds the envelope digest and
@@ -523,6 +532,7 @@ class ProfileRecordStore:
                 updated_at=datetime.fromisoformat(event.occurred_at).astimezone(UTC),
             )
             rotated.assert_replacement(current.record, replacement)
+            before_write(self.session.write_provenance(current.record), rotated.write_provenance(replacement))
             self._write_with_event(
                 objects,
                 record=replacement,
@@ -540,13 +550,13 @@ class ProfileRecordStore:
         self,
         objects: ProfileCustodySecureObjectRepositoryPort,
         *,
-        legacy: bool = False,
+        legacy_version: int | None = None,
     ) -> LoadedProfileRecord:
         namespace = profile_custody_secure_object_namespace()
         raw, loaded = _load_profile_record_row(objects, self.session.profile_id, namespace)
         context = self.session.profile_decode_context
-        if legacy:
-            context = replace(context, schema=legacy_profile_schema(context.schema))
+        if legacy_version is not None:
+            context = replace(context, schema=legacy_profile_schema(context.schema, version=legacy_version))
         record = _decode_profile_record(loaded, context=context)
         self.session.assert_row_binding(raw, record)
         event_id, event = _load_profile_record_event(objects, raw)
@@ -645,9 +655,10 @@ def _decode_profile_record(
 ) -> UserProfileRecord:
     """Decode the strict current profile record payload.
 
-    A payload stamped with the one migratable earlier schema version is refused
-    with :class:`ProfileRecordMigrationRequiredError`, so it is never read as the
-    current schema and the record repository can carry it forward.
+    A payload stamped with any migratable earlier schema version is refused
+    with :class:`ProfileRecordMigrationRequiredError`, which names the version
+    actually stored, so it is never read as the current schema and the record
+    repository can carry it forward from exactly that version.
     """
     try:
         from ...domain.user_profile.values import decode_user_profile_record
@@ -656,10 +667,11 @@ def _decode_profile_record(
     except ValueError as exc:
         stored_version = _stored_schema_version(loaded.payload)
         if (
-            stored_version == LEGACY_PROFILE_SCHEMA_VERSION
+            stored_version is not None
+            and stored_version in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
             and context.schema.version == MIGRATED_PROFILE_SCHEMA_VERSION
         ):
-            raise ProfileRecordMigrationRequiredError(LEGACY_PROFILE_SCHEMA_VERSION, context.schema.version) from exc
+            raise ProfileRecordMigrationRequiredError(stored_version, context.schema.version) from exc
         raise ProfileRecordIntegrityError("profile record row is not the current strict record shape") from exc
 
 

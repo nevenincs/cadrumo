@@ -18,11 +18,10 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import RetencionClave
-from ..withholding_bindings import (
-    WithholdingClaveBreakdown,
-    WithholdingObservation,
-    aggregate_withholding_by_clave,
-)
+from ..withholding_bindings import WithholdingObservation
+from ..withholding_clave_breakdown import WithholdingClaveBreakdown, aggregate_withholding_by_clave
+from .authored_editions import filing_year_envelope
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,35 +40,25 @@ def _obs(
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2025, 6, 1),
+        transaction_date=date(filing_year_envelope().horizon, 6, 1),
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal(percibido_dinerario),
         percibido_especie=Decimal(percibido_especie),
         retencion_practicada=Decimal(retencion_practicada),
         ingreso_a_cuenta=Decimal(ingreso_a_cuenta),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **zero_incapacity_and_foral_fields(),
     )
 
 
 def test_breakdown_groups_by_clave_and_sums_magnitudes() -> None:
     """Two claves roll up to distinct per-clave percepción counts and magnitudes."""
     observations = (
-        _obs(source_id="a1", nif="11111111H", clave="A", percibido_dinerario="1000.00", retencion_practicada="190.00"),
-        _obs(source_id="a2", nif="22222222J", clave="A", percibido_dinerario="500.00", retencion_practicada="95.00"),
+        _obs(source_id="a1", nif="00001500M", clave="A", percibido_dinerario="1000.00", retencion_practicada="190.00"),
+        _obs(source_id="a2", nif="00001501Y", clave="A", percibido_dinerario="500.00", retencion_practicada="95.00"),
         _obs(
             source_id="g1",
-            nif="11111111H",
+            nif="00001500M",
             clave="G",
             percibido_dinerario="2000.00",
             percibido_especie="100.00",
@@ -96,9 +85,9 @@ def test_breakdown_groups_by_clave_and_sums_magnitudes() -> None:
 def test_distinct_percepcion_count_is_per_perceptor_subclave_within_clave() -> None:
     """A perceptor paid twice under one (clave, subclave) is one percepción; a new subclave is another."""
     observations = (
-        _obs(source_id="r1", nif="11111111H", clave="A", subclave="01", retencion_practicada="50.00"),
-        _obs(source_id="r2", nif="11111111H", clave="A", subclave="01", retencion_practicada="70.00"),
-        _obs(source_id="r3", nif="11111111H", clave="A", subclave="02", retencion_practicada="30.00"),
+        _obs(source_id="r1", nif="00001500M", clave="A", subclave="01", retencion_practicada="50.00"),
+        _obs(source_id="r2", nif="00001500M", clave="A", subclave="01", retencion_practicada="70.00"),
+        _obs(source_id="r3", nif="00001500M", clave="A", subclave="02", retencion_practicada="30.00"),
     )
 
     breakdown = aggregate_withholding_by_clave(observations)
@@ -113,9 +102,9 @@ def test_distinct_percepcion_count_is_per_perceptor_subclave_within_clave() -> N
 
 def test_breakdown_is_order_independent_and_sorted_by_clave() -> None:
     """Identical observations in any order produce the same clave-sorted tuple."""
-    a = _obs(source_id="a", nif="11111111H", clave="A", retencion_practicada="10.00")
-    g = _obs(source_id="g", nif="22222222J", clave="G", retencion_practicada="20.00")
-    e = _obs(source_id="e", nif="33333333P", clave="E", retencion_practicada="30.00")
+    a = _obs(source_id="a", nif="00001500M", clave="A", retencion_practicada="10.00")
+    g = _obs(source_id="g", nif="00001501Y", clave="G", retencion_practicada="20.00")
+    e = _obs(source_id="e", nif="00001502F", clave="E", retencion_practicada="30.00")
 
     forward = aggregate_withholding_by_clave((a, e, g))
     shuffled = aggregate_withholding_by_clave((g, a, e))

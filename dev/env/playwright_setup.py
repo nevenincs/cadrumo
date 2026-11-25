@@ -6,8 +6,8 @@ import os
 import shutil
 import sys
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from .playwright_doctor import managed_browsers_root, run_doctor
 

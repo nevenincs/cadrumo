@@ -24,7 +24,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG
 
 
 class SensitivityClass(StrEnum):
@@ -125,7 +125,7 @@ class RetentionPolicy(BaseModel):
             Set for SECRET and SESSION, and enforced for them.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     max_age: timedelta | None = Field(default=None)
     archive_after: timedelta | None = Field(default=None)
@@ -205,7 +205,7 @@ class RedactionRule(BaseModel):
     declared once, where it is read.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str = Field(min_length=1)
     pattern: str = Field(min_length=1)
@@ -233,7 +233,7 @@ class ClassificationPolicy(BaseModel):
             without depending on the rule registry.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sensitivity: SensitivityClass
     at_rest: AtRestTreatment
@@ -244,7 +244,9 @@ class ClassificationPolicy(BaseModel):
 _SHORT_SESSION_RETENTION = timedelta(hours=24)
 """Default upper bound on raw bearer-state retention before invalidation."""
 
-_DIAGNOSTIC_RETENTION = timedelta(days=7)
+_DIAGNOSTIC_RETENTION_DAYS = 7
+
+_DIAGNOSTIC_RETENTION = timedelta(days=_DIAGNOSTIC_RETENTION_DAYS)
 """Default retention for opt-in diagnostic capture."""
 
 _AUDIT_REDACTION_RULES = (

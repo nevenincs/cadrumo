@@ -28,10 +28,10 @@ from ..smoke_check import (
     CLI_SCRIPT,
     COMPANIONS,
     MCP_SCRIPT,
-    _fail,
-    _ok,
-    _run,
+    fail,
     installed_version,
+    ok,
+    run,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -42,7 +42,7 @@ def test_a_refusal_exits_non_zero_and_names_the_reason(
 ) -> None:
     """Every failure in this file routes here, so its shape is the whole contract."""
     with pytest.raises(SystemExit) as exit_info:
-        _fail("the corpora disagree")
+        fail("the corpora disagree")
 
     assert exit_info.value.code == 1
     assert "FAIL: the corpora disagree" in capsys.readouterr().err
@@ -50,7 +50,7 @@ def test_a_refusal_exits_non_zero_and_names_the_reason(
 
 def test_a_pass_is_reported_on_stdout(capsys: pytest.CaptureFixture[str]) -> None:
     """CI reads these lines to see which checks actually ran."""
-    _ok("something held")
+    ok("something held")
 
     assert "ok: something held" in capsys.readouterr().out
 
@@ -101,7 +101,7 @@ def test_a_script_on_path_is_invoked_directly(tmp_path: pathlib.Path, monkeypatc
         launcher.chmod(0o755)
     monkeypatch.setenv("PATH", str(tmp_path))
 
-    result = _run(CLI_SCRIPT, ["--version"])
+    result = run(CLI_SCRIPT, ["--version"])
 
     assert result.returncode == 7, result.stderr
 
@@ -116,7 +116,7 @@ def test_a_missing_script_falls_back_to_the_module_form(monkeypatch: pytest.Monk
     """
     monkeypatch.setenv("PATH", "")
 
-    result = _run(MCP_SCRIPT, ["--help"])
+    result = run(MCP_SCRIPT, ["--help"])
 
     assert result.returncode != 0
     assert result.stderr

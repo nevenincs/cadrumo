@@ -33,9 +33,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
 _OBJECT_ID = "b" * 64
-_UTC_INSTANT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
-_NAIVE_INSTANT = datetime(2026, 4, 1, 10, 0, 0)  # the refused shape under test
-_OFFSET_INSTANT = datetime(2026, 4, 1, 11, 0, 0, tzinfo=timezone(timedelta(hours=1)))
+_UTC_INSTANT = datetime(1980, 4, 1, 10, 0, 0, tzinfo=UTC)
+_NAIVE_INSTANT = datetime(1980, 4, 1, 10, 0, 0)  # the refused shape under test
+_OFFSET_INSTANT = datetime(1980, 4, 1, 11, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 _REFUSED_INSTANTS = (_NAIVE_INSTANT, _OFFSET_INSTANT)
 
@@ -80,7 +80,7 @@ def test_model_refuses_a_non_utc_instant_from_serialized_text() -> None:
     """The refusal must hold on the hydration path, not only on construction."""
     event = _valid_event()
     payload = event.model_dump(mode="json")
-    payload["occurred_at"] = "2026-04-01T10:00:00"
+    payload["occurred_at"] = datetime(1980, 4, 1, 10, 0, 0).isoformat()
 
     with pytest.raises(ValidationError):
         BucketEvent.model_validate(payload)

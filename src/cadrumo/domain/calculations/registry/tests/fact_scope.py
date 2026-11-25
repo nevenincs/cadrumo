@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from ..governed_fact_scope import _VALIDATING_GOVERNED_FACTS
+from ..governed_fact_scope import VALIDATING_GOVERNED_FACTS
 
 
 @contextmanager
@@ -15,8 +15,8 @@ def outside_governed_fact_validation() -> Generator[None]:
     A component that must acquire its own authority lease is only proven to do
     so when no enclosing validation scope can lend it one.
     """
-    token = _VALIDATING_GOVERNED_FACTS.set(None)
+    token = VALIDATING_GOVERNED_FACTS.set(None)
     try:
         yield
     finally:
-        _VALIDATING_GOVERNED_FACTS.reset(token)
+        VALIDATING_GOVERNED_FACTS.reset(token)

@@ -20,6 +20,11 @@ entry a reviewer translates; ``official_heading`` quotes the design's own
 Spanish words verbatim, as provenance and as the disclosed fallback when no
 translation exists. Neither is ever produced by humanising a technical token.
 
+An outline may group a layout's sections for navigation, under a heading of its
+own. When a layout declares one it names every section exactly once, so a
+navigator built over it can neither hide nor repeat a part of the form; a
+layout without one is navigated by its pages.
+
 Page conditions are a closed set of structural facts the registry already
 declares (an optional export record, a record gated on a positive casilla, a
 period-restricted record). Prose notes in a design are not parsed into
@@ -61,6 +66,8 @@ __all__ = [
     "FormLayoutReview",
     "FormLayoutReviewState",
     "FormLayoutSeedSource",
+    "FormOutlineGroup",
+    "FormOutlineSection",
     "FormPageCondition",
     "FormPageDefinition",
     "FormPlacementDefinition",
@@ -81,13 +88,13 @@ _NODE_ID_RE: Final[str] = r"^[a-z0-9][a-z0-9_-]*$"
 _HEADING_KEY_RE: Final[str] = r"^[a-z0-9][a-z0-9_]*(\.[a-z0-9][a-z0-9_-]*)+$"
 _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
 
-type FormNodeId = Annotated[str, Field(min_length=1, max_length=96, pattern=_NODE_ID_RE)]
+type FormNodeId = Annotated[str, Field(min_length=1, max_length=128, pattern=_NODE_ID_RE)]
 """A page, section, block, row or column id, stable within its layout."""
 
-type FormHeadingKey = Annotated[str, Field(min_length=3, max_length=200, pattern=_HEADING_KEY_RE)]
+type FormHeadingKey = Annotated[str, Field(min_length=1, max_length=256, pattern=_HEADING_KEY_RE)]
 """A catalogue key naming a heading; the catalogue may not yet translate it."""
 
-type OfficialHeading = Annotated[str, Field(min_length=1, max_length=400)]
+type OfficialHeading = Annotated[str, Field(min_length=1, max_length=512)]
 """The official design's own Spanish words, quoted verbatim."""
 
 
@@ -327,7 +334,7 @@ class FormGridBlock(RegistryModel):
     id: FormNodeId
     row_heading_key: FormHeadingKey | None = None
     official_row_heading: OfficialHeading | None = None
-    columns: tuple[FormGridColumn, ...] = Field(min_length=2)
+    columns: tuple[FormGridColumn, ...]
     rows: tuple[FormGridRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -337,6 +344,8 @@ class FormGridBlock(RegistryModel):
         owner = f"form grid {self.id!r}"
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
         _require_unique(owner, "row keys", tuple(row.key for row in self.rows))
+        if len(self.columns) < 2:
+            raise RegistryValidationError(f"{owner} needs at least two columns")
         width = len(self.columns)
         for row in self.rows:
             if len(row.cells) != width:
@@ -354,6 +363,8 @@ class FormRepeatingColumn(RegistryModel):
     official_heading: OfficialHeading | None = None
     casilla_id: CasillaId | None = None
     export_field_id: ExportFieldId | None = None
+    binding_id: BindingId | None = None
+    """The row-set binding this column reads when a group's columns come from several bindings."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -387,23 +398,38 @@ class FormRepeatingGroupBlock(RegistryModel):
         if self.max_rows is not None and self.max_rows < self.min_rows:
             raise RegistryValidationError(f"{owner} declares max_rows below min_rows")
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
+        if not by_binding and any(column.binding_id is not None for column in self.columns):
+            raise RegistryValidationError(f"{owner} reads column bindings without a row-set binding source")
+        self._validate_projected_columns(owner)
+        self._validate_grids(owner)
+        return self
+
+    def _validate_projected_columns(self, owner: str) -> None:
+        """Require projected columns to have distinct fields in one export record."""
         projected = tuple(column.export_field_id for column in self.columns if column.export_field_id is not None)
         if projected:
             if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD or len(projected) != len(self.columns):
                 raise RegistryValidationError("projected form columns require one export-record field owner each")
             _require_unique(owner, "export fields", projected)
-        if self.grids:
-            if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
-                raise RegistryValidationError(f"{owner} grids require an export-record row source")
-            targets = tuple(column.casilla_id for column in self.columns)
-            if any(target is None for target in targets) or len(targets) != len(set(targets)):
-                raise RegistryValidationError(f"{owner} grids require uniquely addressed columns")
-            _require_unique(owner, "grid ids", tuple(grid.id for grid in self.grids))
-            cells = tuple(cell for grid in self.grids for row in grid.rows for cell in row.cells)
-            if any(cell.kind is not FormCellKind.CASILLA or cell.casilla_id not in targets for cell in cells):
-                raise RegistryValidationError(f"{owner} grid cells must address declared member columns")
-            _require_unique(owner, "grid casillas", tuple(str(cell.casilla_id) for cell in cells))
-        return self
+
+    def _validate_grids(self, owner: str) -> None:
+        """Require uniquely addressed export-record columns before validating grid cells."""
+        if not self.grids:
+            return
+        if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
+            raise RegistryValidationError(f"{owner} grids require an export-record row source")
+        targets = tuple(column.casilla_id for column in self.columns)
+        if any(target is None for target in targets) or len(targets) != len(set(targets)):
+            raise RegistryValidationError(f"{owner} grids require uniquely addressed columns")
+        _require_unique(owner, "grid ids", tuple(grid.id for grid in self.grids))
+        self._validate_grid_cells(owner, targets)
+
+    def _validate_grid_cells(self, owner: str, targets: tuple[CasillaId | None, ...]) -> None:
+        """Require each grid cell to name a distinct declared member column."""
+        cells = tuple(cell for grid in self.grids for row in grid.rows for cell in row.cells)
+        if any(cell.kind is not FormCellKind.CASILLA or cell.casilla_id not in targets for cell in cells):
+            raise RegistryValidationError(f"{owner} grid cells must address declared member columns")
+        _require_unique(owner, "grid casillas", tuple(str(cell.casilla_id) for cell in cells))
 
 
 class FormBindingInputsBlock(RegistryModel):
@@ -498,6 +524,22 @@ class FormPageDefinition(RegistryModel):
         return self
 
 
+class FormOutlineSection(RegistryModel):
+    """One section an outline group gathers, addressed by its page and its own id."""
+
+    page_id: FormNodeId
+    section_id: FormNodeId
+
+
+class FormOutlineGroup(RegistryModel):
+    """One navigation group of a layout's outline: a heading and the sections it gathers, in order."""
+
+    id: FormNodeId
+    heading_key: FormHeadingKey
+    official_heading: OfficialHeading | None = None
+    sections: tuple[FormOutlineSection, ...] = Field(min_length=1)
+
+
 class FormAliasPosition(RegistryModel):
     """Another official position the same box also appears at; never editable twice."""
 
@@ -559,6 +601,7 @@ class FormLayoutDefinition(RegistryModel):
     design_sources: tuple[FormDesignSource, ...] = ()
     pages: tuple[FormPageDefinition, ...] = ()
     placements: tuple[FormPlacementDefinition, ...] = Field(min_length=1)
+    outline: tuple[FormOutlineGroup, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -571,13 +614,8 @@ class FormLayoutDefinition(RegistryModel):
         _require_unique(owner, "placements for casillas", tuple(item.casilla_id for item in self.placements))
         _require_unique(owner, "design sources", tuple(item.source_ref for item in self.design_sources))
         sections = {(page.id, section.id) for page in self.pages for section in page.sections}
-        for placement in self.placements:
-            for alias in placement.aliases:
-                if (alias.page_id, alias.section_id) not in sections:
-                    raise RegistryValidationError(
-                        f"{owner} placement {placement.casilla_id!r} aliases unknown section "
-                        f"{alias.page_id!r}/{alias.section_id!r}",
-                    )
+        _require_alias_sections_exist(owner, self.placements, sections)
+        _require_total_outline(owner, self.outline, tuple(item for page in self.pages for item in _page_sections(page)))
         return self
 
     def casilla_sections(self) -> dict[str, tuple[str, str]]:
@@ -594,6 +632,46 @@ class FormLayoutDefinition(RegistryModel):
                     for casilla_id in _block_casilla_ids(block):
                         found.setdefault(casilla_id, (page.id, section.id))
         return found
+
+
+def _page_sections(page: FormPageDefinition) -> tuple[tuple[str, str], ...]:
+    return tuple((page.id, section.id) for section in page.sections)
+
+
+def _require_total_outline(
+    owner: str, outline: tuple[FormOutlineGroup, ...], sections: tuple[tuple[str, str], ...]
+) -> None:
+    """Refuse an outline that invents a section, names one twice, or leaves one out."""
+    if not outline:
+        return
+    _require_unique(owner, "outline groups", tuple(group.id for group in outline))
+    grouped = tuple((item.page_id, item.section_id) for group in outline for item in group.sections)
+    _require_unique(owner, "outline sections", tuple(f"{page}/{section}" for page, section in grouped))
+    _require_outline_matches_sections(owner, grouped, sections)
+
+
+def _require_alias_sections_exist(
+    owner: str, placements: tuple[FormPlacementDefinition, ...], sections: set[tuple[str, str]]
+) -> None:
+    for placement in placements:
+        for alias in placement.aliases:
+            if (alias.page_id, alias.section_id) not in sections:
+                raise RegistryValidationError(
+                    f"{owner} placement {placement.casilla_id!r} aliases unknown section "
+                    f"{alias.page_id!r}/{alias.section_id!r}",
+                )
+
+
+def _require_outline_matches_sections(
+    owner: str, grouped: tuple[tuple[str, str], ...], sections: tuple[tuple[str, str], ...]
+) -> None:
+    known = set(sections)
+    unknown = sorted(f"{page}/{section}" for page, section in grouped if (page, section) not in known)
+    if unknown:
+        raise RegistryValidationError(f"{owner} outline names unknown sections {unknown!r}")
+    missing = sorted(f"{page}/{section}" for page, section in sections if (page, section) not in set(grouped))
+    if missing:
+        raise RegistryValidationError(f"{owner} outline leaves out sections {missing!r}")
 
 
 def _block_casilla_ids(block: FormBlockDefinition) -> tuple[str, ...]:

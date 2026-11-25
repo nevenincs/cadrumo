@@ -43,7 +43,7 @@ import pytest
 from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
-from ..parser import _classify_target, _printed_box_numbers, _TargetClassification
+from ..parser import TargetClassification, classify_target, parser_printed_box_numbers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -122,9 +122,9 @@ def _classify(
     label_pattern: str,
     line: str,
     printed_box_number: str,
-) -> _TargetClassification:
+) -> TargetClassification:
     target = _target(casilla_id, label_pattern)
-    return _classify_target(
+    return classify_target(
         target,
         pages=(line,),
         pages_words=None,
@@ -308,7 +308,7 @@ def test_the_guard_is_actually_armed_for_semantically_named_casillas(
         if p.surface == "declaracion_pdf" and "declaration_pdf" in p.accepted_artefact_kinds
     )
 
-    printed = {str(k): v for k, v in _printed_box_numbers(profile, revision).items()}
+    printed = {str(k): v for k, v in parser_printed_box_numbers(profile, revision).items()}
 
     for casilla_id, expected in expected_printed.items():
         assert printed.get(casilla_id) == expected, (

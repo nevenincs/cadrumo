@@ -37,10 +37,10 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 
 from .test_config_reset import (
-    _OVERRIDE_REASON,
-    _create_profile,
-    _isolated_reset_root,
-    _persist_filing,
+    OVERRIDE_REASON,
+    create_profile,
+    isolated_reset_root,
+    persist_filing,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -66,12 +66,12 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
     from cadrumo.application.config_reset import resume_config_reset, start_config_reset
     from cadrumo.application.config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_ID, label="Tamper target", tax_id="00000000T")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(_PROFILE_ID, label="Tamper target", tax_id="00000000T")
         # The filing is what HOLDS the reset at a pause. Without one, a confirmed
         # start runs straight through to the erase and leaves no window in which
         # a target could be tampered with.
-        _persist_filing(_PROFILE_ID, filing_year=2025, seed="7")
+        persist_filing(_PROFILE_ID, filing_year=2025, seed="7")
 
         operation = start_config_reset(
             confirmed=True,
@@ -90,7 +90,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,

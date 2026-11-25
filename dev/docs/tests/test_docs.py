@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -234,7 +234,7 @@ def test_the_version_citation_scan_catches_a_stale_citation() -> None:
 
     shapes = (
         "download `cadrumo-{v}-py3-none-any.whl`",
-        "run `uvx cadrumo[llm]=={v}`",
+        "run `uvx cadrumo[pdf]=={v}`",
         "the current release is `{v}`",
     )
     for shape in shapes:

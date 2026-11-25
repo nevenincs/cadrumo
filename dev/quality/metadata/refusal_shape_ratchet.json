@@ -1,0 +1,9 @@
+{
+ "description": "Refusal-shape ratchet. Regenerate with `python -m dev.quality.refusal_shape --write`; entries may only be removed by giving the site a door or served words.",
+ "doorless": [
+  "src/cadrumo/application/modelo/reconciliation_export_labels.py::ReconciliationWorkbookLabels.__call__::INTERNAL_I18N_MISSING_TRANSLATION::0",
+  "src/cadrumo/domain/modelos/calculation_revision_operator_layer.py::CalculationOperatorLayer._require_channel_unique_canonical_values::ERROR_MODELOS_VALIDATION::0",
+  "src/cadrumo/domain/modelos/verification_report.py::<module>::INTERNAL_INVARIANT::0"
+ ],
+ "free_text": []
+}

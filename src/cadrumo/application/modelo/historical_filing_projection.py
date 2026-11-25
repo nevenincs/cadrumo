@@ -13,21 +13,22 @@ from pydantic import BaseModel, Field, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.casilla_id import CasillaId
-from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
     derive_calculation_revision_id_from_revision,
 )
 from ...domain.modelos.calculation_revision_identity import (
     outputs_for_hash_from_mapping,
     outputs_for_hash_from_observations,
 )
+from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 from ...domain.modelos.filing_record import ModeloRecord
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_projection import ModeloCalculationDetailSnapshot
@@ -183,19 +184,130 @@ class ModeloHistoricalFilingContentProjection(BaseModel):
         return self
 
 
-def project_historical_filing_content(
-    record: ModeloRecord, revision: CalculationRevision | None
-) -> ModeloHistoricalFilingContentProjection:
-    """Project exactly the record's saved revision, refusing identity or coordinate drift.
+class ModeloHistoricalComparisonRowProjection(BaseModel):
+    """Exact saved scalar spellings; a missing side remains absent rather than zero."""
 
-    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
-    The ``record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
-    """
-    if revision is None:
-        return ModeloHistoricalFilingContentProjection(
-            calculation_revision_id=record.calculation_revision_id,
-            availability="missing",
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    casilla_id: CasillaId
+    base_value: str | None
+    selected_value: str | None
+    base_value_kind: Literal["decimal", "text"] | None
+    selected_value_kind: Literal["decimal", "text"] | None
+    change: Literal["unchanged", "changed", "added", "removed"]
+
+    @model_validator(mode="after")
+    def _change_matches_saved_values(self) -> Self:
+        if (self.base_value is None) != (self.base_value_kind is None) or (
+            (self.selected_value is None) != (self.selected_value_kind is None)
+        ):
+            raise ValueError("a saved comparison value requires its value kind")
+        if self.base_value is None and self.selected_value is None:
+            raise ValueError("a saved comparison row must have at least one value")
+        expected = (
+            "added"
+            if self.base_value is None
+            else "removed"
+            if self.selected_value is None
+            else "unchanged"
+            if (self.base_value_kind, self.base_value) == (self.selected_value_kind, self.selected_value)
+            else "changed"
         )
+        if self.change != expected:
+            raise ValueError("a saved comparison change must match its values")
+        return self
+
+
+class ModeloHistoricalComparisonProjection(BaseModel):
+    """A technical saved-value comparison, with no inferred labels or tax effects."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    base_filing_record_id: FilingRecordId | None
+    availability: Literal["available", "no_base", "missing_base", "missing_content", "different_registry_revision"]
+    rows: tuple[ModeloHistoricalComparisonRowProjection, ...] = ()
+
+    @model_validator(mode="after")
+    def _availability_matches_comparison(self) -> Self:
+        if (self.availability == "no_base") != (self.base_filing_record_id is None):
+            raise ValueError("saved comparison availability must match its base reference")
+        if self.availability != "available" and self.rows:
+            raise ValueError("unavailable saved comparisons cannot carry paired values")
+        keys = tuple(row.casilla_id for row in self.rows)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError("saved comparison casillas must be unique and sorted")
+        return self
+
+
+def compare_historical_filing_content(
+    selected: ModeloHistoricalFilingContentProjection,
+    base: ModeloHistoricalFilingContentProjection | None,
+    *,
+    base_filing_record_id: FilingRecordId | None,
+) -> ModeloHistoricalComparisonProjection:
+    """Pair scalar IDs only inside the same saved registry scope and revision."""
+    if base_filing_record_id is None:
+        return ModeloHistoricalComparisonProjection(base_filing_record_id=None, availability="no_base")
+    if base is None:
+        return ModeloHistoricalComparisonProjection(
+            base_filing_record_id=base_filing_record_id, availability="missing_base"
+        )
+    if selected.availability != "available" or base.availability != "available":
+        return ModeloHistoricalComparisonProjection(
+            base_filing_record_id=base_filing_record_id, availability="missing_content"
+        )
+    if selected.registry_snapshot_ref != base.registry_snapshot_ref:
+        return ModeloHistoricalComparisonProjection(
+            base_filing_record_id=base_filing_record_id, availability="different_registry_revision"
+        )
+    return ModeloHistoricalComparisonProjection(
+        base_filing_record_id=base_filing_record_id,
+        availability="available",
+        rows=_paired_comparison_rows(base, selected),
+    )
+
+
+def _paired_comparison_rows(
+    base: ModeloHistoricalFilingContentProjection, selected: ModeloHistoricalFilingContentProjection
+) -> tuple[ModeloHistoricalComparisonRowProjection, ...]:
+    before = {item.casilla_id: item for item in base.observations}
+    after = {item.casilla_id: item for item in selected.observations}
+    return tuple(_comparison_row(key, before.get(key), after.get(key)) for key in sorted(before.keys() | after.keys()))
+
+
+def _comparison_row(
+    key: CasillaId, old: ModeloHistoricalCasillaProjection | None, new: ModeloHistoricalCasillaProjection | None
+) -> ModeloHistoricalComparisonRowProjection:
+    change: Literal["unchanged", "changed", "added", "removed"] = (
+        "added"
+        if old is None
+        else "removed"
+        if new is None
+        else "unchanged"
+        if (old.value_kind, old.value) == (new.value_kind, new.value)
+        else "changed"
+    )
+    return ModeloHistoricalComparisonRowProjection(
+        casilla_id=key,
+        base_value=None if old is None else old.value,
+        selected_value=None if new is None else new.value,
+        base_value_kind=None if old is None else old.value_kind,
+        selected_value_kind=None if new is None else new.value_kind,
+        change=change,
+    )
+
+
+def historical_display_words(
+    historical_content: ModeloHistoricalFilingContentProjection, language: OutputLanguage
+) -> str:
+    """Say why saved filing content is shown or why it cannot be."""
+    locale = language.value
+    if historical_content.availability == "available":
+        return tr("workspace.declarations.related_filings.historical_display_unavailable", locale=locale)
+    return tr("workspace.declarations.related_filings.historical_content_missing", locale=locale)
+
+
+def _require_saved_filing_coordinates(record: ModeloRecord, revision: CalculationRevision) -> None:
     coordinate = revision.registry_snapshot_ref
     if (
         revision.calculation_revision_id != record.calculation_revision_id
@@ -209,6 +321,23 @@ def project_historical_filing_content(
         or set(revision.row_casilla_values) != set(revision.row_casilla_provenance)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def project_historical_filing_content(
+    record: ModeloRecord, revision: CalculationRevision | None
+) -> ModeloHistoricalFilingContentProjection:
+    """Project exactly the record's saved revision, refusing identity or coordinate drift.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
+    """
+    if revision is None:
+        return ModeloHistoricalFilingContentProjection(
+            calculation_revision_id=record.calculation_revision_id,
+            availability="missing",
+        )
+    _require_saved_filing_coordinates(record, revision)
+    coordinate = revision.registry_snapshot_ref
     return ModeloHistoricalFilingContentProjection(
         calculation_revision_id=revision.calculation_revision_id,
         availability="available",

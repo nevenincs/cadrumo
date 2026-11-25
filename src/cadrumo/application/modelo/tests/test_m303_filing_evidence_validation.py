@@ -14,6 +14,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
@@ -33,7 +34,8 @@ from ..m303_filing_evidence import validate_m303_filing_instance_evidence_for_re
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000058"
-_CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 4, 1, tzinfo=UTC)
 
 
 def _general_scope() -> M303RegimenSimplificadoScopeDecision:
@@ -68,8 +70,8 @@ def _work_unit(period: Period) -> WorkUnit:
 
 
 def _non_m303_work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
+    registry_snapshot = published_snapshot("130", filing_year=_YEAR, period="1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
@@ -83,7 +85,7 @@ def _non_m303_work_unit() -> WorkUnit:
         filing_year=period.filing_year,
         period=period,
         revision_id=registry_snapshot.revision.id,
-        name="130-2026-1T",
+        name=f"130-{_YEAR}-1T",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -127,7 +129,7 @@ def _evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingI
 
 def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted(*, operation: PinnedAuthorityOperation) -> None:
     work_unit = _non_m303_work_unit()
-    registry_snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    registry_snapshot = published_snapshot("130", filing_year=_YEAR, period="1T")
 
     assert (
         validate_m303_filing_instance_evidence_for_revision(
@@ -145,7 +147,7 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted(*, operat
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=work_unit,
             registry_snapshot=registry_snapshot,
-            evidence=_evidence(Period.from_year_and_code(2026, "1T"), operation=operation),
+            evidence=_evidence(Period.from_year_and_code(_YEAR, "1T"), operation=operation),
             casilla_values={},
             observations=(),
             operation=operation,
@@ -158,12 +160,12 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted(*, operat
 
 
 def test_m303_evidence_is_required_before_profile_lookup(*, operation: PinnedAuthorityOperation) -> None:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
 
     with pytest.raises(M303FilingEvidenceError) as raised_missing:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(period),
-            registry_snapshot=published_snapshot("303", filing_year=2026, period="1T"),
+            registry_snapshot=published_snapshot("303", filing_year=_YEAR, period="1T"),
             evidence=None,
             casilla_values={},
             observations=(),
@@ -177,13 +179,13 @@ def test_m303_evidence_is_required_before_profile_lookup(*, operation: PinnedAut
 
 
 def test_evidence_for_another_work_period_refuses_before_persistence(*, operation: PinnedAuthorityOperation) -> None:
-    work_period = Period.from_year_and_code(2026, "1T")
-    evidence_period = Period.from_year_and_code(2026, "2T")
+    work_period = Period.from_year_and_code(_YEAR, "1T")
+    evidence_period = Period.from_year_and_code(_YEAR, "2T")
 
     with pytest.raises(M303FilingEvidenceError) as raised_period_mismatch:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(work_period),
-            registry_snapshot=published_snapshot("303", filing_year=2026, period="1T"),
+            registry_snapshot=published_snapshot("303", filing_year=_YEAR, period="1T"),
             evidence=_evidence(evidence_period, operation=operation),
             casilla_values={},
             observations=(),

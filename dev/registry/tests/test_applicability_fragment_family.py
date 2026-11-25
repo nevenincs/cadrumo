@@ -14,15 +14,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.applicability import (
-    ModeloApplicabilityRule,
-    hydrate_applicability_rule,
-    modelo_requires_iva_regime,
-)
+from cadrumo.domain.calculations.registry.applicability import hydrate_applicability_rule, modelo_requires_iva_regime
+from cadrumo.domain.calculations.registry.applicability_models import ModeloApplicabilityRule
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -30,7 +28,7 @@ from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCate
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_applicability_section import validate_applicability_section
 from ..conformance.schema_family_support import schema_family_enrollment_failures
-from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
+from .referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -43,15 +41,17 @@ _MANIFEST_TEXT = (
     f'legal_refs = ["{REFERENCE_LEGAL_ID}"]\n'
     'source_refs = ["aeat-manual"]\n'
 )
+_EDITION_YEAR = filing_year_envelope().horizon
+_EDITION = str(_EDITION_YEAR)
 _REVISION_MANIFEST_TEXT = (
-    '[revisions."2025"]\n'
-    "valid_from = 2025-01-01\n"
-    'period_selector = { years = [2025], periods = ["0A"] }\n'
+    f'[revisions."{_EDITION}"]\n'
+    f"valid_from = {_EDITION_YEAR}-01-01\n"
+    f'period_selector = {{ years = [{_EDITION_YEAR}], periods = ["0A"] }}\n'
     f'legal_refs = ["{REFERENCE_LEGAL_ID}"]\n'
     'source_refs = ["aeat-manual"]\n'
 )
 _FRAGMENT_TEXT = f"""
-[[revisions."2025".applicability]]
+[[revisions."{_EDITION}".applicability]]
 id = "m999-seed"
 applicable_entity_types = ["natural_person"]
 applicable_fiscal_residencies = ["resident_irpf"]
@@ -66,14 +66,14 @@ def test_iva_regime_coverage_is_derived_from_the_applicability_owner() -> None:
     """No core constant repeats the IVA-regime applicability classification."""
     assert modelo_requires_iva_regime("303") is True
     assert modelo_requires_iva_regime("390") is True
-    assert modelo_requires_iva_regime("unknown") is False
+    assert modelo_requires_iva_regime("999") is False
 
 
 def _write_directory_modelo(root: Path, *, inline_in_manifest: bool = False) -> Path:
     target = root / "999"
     (target).mkdir(parents=True)
     (target / "manifest.toml").write_text(_MANIFEST_TEXT, encoding="utf-8", newline="\n")
-    revision_dir = target / "revisions" / "2025"
+    revision_dir = target / "revisions" / _EDITION
     revision_dir.mkdir(parents=True)
     if inline_in_manifest:
         (revision_dir / "revision.toml").write_text(
@@ -102,7 +102,7 @@ def test_a_fragmented_directory_modelo_loads_the_applicability_rule(tmp_path: Pa
     """
     target = _write_directory_modelo(tmp_path)
     definition = load_modelo_directory(target)
-    revision = definition.revisions["2025"]
+    revision = definition.revisions[_EDITION]
 
     assert len(revision.applicability) == 1
     rule = revision.applicability[0]

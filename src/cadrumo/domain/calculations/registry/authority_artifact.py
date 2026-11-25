@@ -27,7 +27,8 @@ from .provenance import NormativeCorpusProvenance
 
 if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
-    from .schema import ModeloDefinition, RegistryCatalogues
+    from .schema import ModeloDefinition
+    from .schema_catalogues import RegistryCatalogues
 
 __all__ = [
     "AuthorityArtifact",
@@ -420,7 +421,8 @@ def _validate_authority_artifact_payload(
     identity_digest: str,
     evidence: AuthorityEvidenceProjection,
 ) -> None:
-    from .schema import ModeloDefinition, RegistryCatalogues
+    from .schema import ModeloDefinition
+    from .schema_catalogues import RegistryCatalogues
 
     if not isinstance(modelos, tuple) or not all(isinstance(modelo, ModeloDefinition) for modelo in modelos):
         raise TypeError("authority artifact modelos must be a tuple of ModeloDefinition instances")

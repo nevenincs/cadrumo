@@ -26,11 +26,18 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
-from ...core.errors.hierarchy import CadrumoError
-from ...core.result_disposition import result_disposition_casilla_ids
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+from ...domain.calculations.registry.result_casillas import (
+    result_disposition_casilla_ids,
+    settlement_casilla_role,
+    settlement_remainder_casilla_ids,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from .refusal_door_verdicts import registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 SETTLEMENT_SEMANTIC_ROLES: Final = frozenset(
     {
@@ -69,7 +76,7 @@ only modelo it covers -- because that revision legitimately declares both.
 """
 
 
-class AmbiguousDeclarationResultError(CadrumoError):
+class AmbiguousDeclarationResultError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """A revision declares more than one final-result casilla."""
 
 
@@ -126,7 +133,8 @@ def declaration_result_casilla_id(revision: SettlementRevisionV1) -> CasillaId |
     if len(settling) > 1:
         raise AmbiguousDeclarationResultError(
             f"revision {revision.id!r} declares {len(settling)} final-result casillas "
-            f"({', '.join(sorted(settling))}); a declaration cannot have two results"
+            f"({', '.join(sorted(settling))}); a declaration cannot have two results",
+            precondition_verdict=registry_defect_verdict("declaration_result_unique"),
         )
     return settling[0]
 
@@ -164,6 +172,76 @@ def declaration_result_casillas(modelo: str, revision: SettlementRevisionV1) -> 
     return None if role is None else DeclarationResultCasillas(casilla_ids=(role,), by_declared_type=False)
 
 
+def _computed_settlement_casilla(role: str, revision: ModeloRevision) -> CasillaId | None:
+    """Return the one casilla of ``role`` the revision computes, or ``None`` when it computes none.
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the role.
+    """
+    settling = [
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.semantic_role == role and casilla.input_kind is InputKind.COMPUTED
+    ]
+    if len(settling) > 1:
+        raise AmbiguousDeclarationResultError(
+            f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}",
+            precondition_verdict=registry_defect_verdict("settlement_role_unique"),
+        )
+    return settling[0] if settling else None
+
+
+def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> CasillaId | None:
+    """Return the casilla whose value ``revision`` pays or refunds, or ``None`` when it names none.
+
+    A modelo whose record states its amount to pay or refund apart from its
+    result names that box's role in the registry; the revision's box of that
+    role settles it, but only where the revision computes it, because a box
+    the filer may type is no declared amount. Otherwise the amount settled is
+    the result itself: the one result box the "tipo de declaración" rule reads,
+    where the revision defines it, which is the amount settled only while no
+    part of it is suspended or waived (see :func:`declaration_settlement_remainder_casilla_ids`).
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the settlement role.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    role = settlement_casilla_role(modelo)
+    computed = None if role is None else _computed_settlement_casilla(role, revision)
+    if computed is not None:
+        return computed
+    defined = {casilla.id for casilla in revision.casillas}
+    declared = [casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if casilla_id in defined]
+    return declared[0] if len(declared) == 1 else None
+
+
+def declaration_settlement_remainder_casilla_ids(modelo: str, revision: ModeloRevision) -> tuple[CasillaId, ...]:
+    """Return the boxes that must hold no part of the result for the result to be the amount settled.
+
+    Non-empty only when ``revision`` computes no box of the settlement role, so
+    its settlement reads the result, and the modelo's record lets a part of the
+    result be suspended (an amount to pay) or waived (a refund) apart from it.
+    Where one of these boxes holds a positive part the amount settled is the
+    remainder, which the revision does not compute, so the result is not the
+    amount to pay or refund. Empty where the revision computes the settlement
+    box, and for a box the revision does not define.
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the settlement role.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    role = settlement_casilla_role(modelo)
+    if role is not None and _computed_settlement_casilla(role, revision) is not None:
+        return ()
+    defined = {casilla.id for casilla in revision.casillas}
+    return tuple(casilla_id for casilla_id in settlement_remainder_casilla_ids(modelo) if casilla_id in defined)
+
+
 __all__ = [
     "DECLARATION_RESULT_SEMANTIC_ROLES",
     "SETTLEMENT_SEMANTIC_ROLES",
@@ -171,4 +249,6 @@ __all__ = [
     "DeclarationResultCasillas",
     "declaration_result_casilla_id",
     "declaration_result_casillas",
+    "declaration_settlement_casilla_id",
+    "declaration_settlement_remainder_casilla_ids",
 ]

@@ -136,7 +136,7 @@ if str(_ROOT) not in sys.path:  # pragma: no cover - import bootstrap
     sys.path.insert(0, str(_ROOT))
 
 _NORMATIVES: Final[Path] = _ROOT / "src/cadrumo/_data/corpus/normatives"
-_HTML_CORPUS: Final[Path] = _NORMATIVES / "html"
+HTML_CORPUS: Final[Path] = _NORMATIVES / "html"
 _XML_CORPUS: Final[Path] = _NORMATIVES / "xml"
 _ACT_URL: Final[str] = "https://www.boe.es/buscar/act.php"
 _DOC_URL: Final[str] = "https://www.boe.es/buscar/doc.php"
@@ -407,7 +407,7 @@ def fetch_normative(
             ``required_text`` phrase is absent, or the read-back does not match.
     """
     destination = corpus_destination(
-        _HTML_CORPUS if destination_root is None else destination_root, destination_name, suffix=".html"
+        HTML_CORPUS if destination_root is None else destination_root, destination_name, suffix=".html"
     )
     owned = client is None
     http = client or httpx.Client(
@@ -850,7 +850,7 @@ def fetch_published_document(
             consolidates the id, a ``required_text`` phrase is absent, or the
             read-back does not match.
     """
-    destination = corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
+    destination = corpus_destination(HTML_CORPUS, destination_name, suffix=".html")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,

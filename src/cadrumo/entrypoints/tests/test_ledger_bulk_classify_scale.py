@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,13 +23,18 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.ledger.actions_classification import bulk_classify_from_csv
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
+from cadrumo.tests.log_records import delivered_records
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _ROW_COUNT = 270
 _BUCKET_ID = "18181818-1818-4818-8818-181818181818"
@@ -39,8 +43,8 @@ _BUCKET_ID = "18181818-1818-4818-8818-181818181818"
 def _raw(idx: int) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"provider-row-{idx:04d}",
-        booked_date=date(2026, 5, 1),
-        value_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
+        value_date=date(_YEAR, 5, 1),
         amount=Decimal("80.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -50,7 +54,7 @@ def _raw(idx: int) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=idx + 1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": f"row {idx}"},
@@ -72,13 +76,6 @@ def _unclassified(idx: int) -> Transaction:
 profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="profile")
 
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Pin the compiled authority for the composed ledger workflow."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
-
-
 def test_bulk_classify_270_rows_persists_catalogue_once(
     profile: TestRuntimeProfile,
     caplog: pytest.LogCaptureFixture,
@@ -95,6 +92,8 @@ def test_bulk_classify_270_rows_persists_catalogue_once(
     lines += [f"{txn.transaction_id},BUSINESS,material_oficina" for txn in transactions]
     csv_text = "\n".join(lines) + "\n"
 
+    # The seeding save logged its own record; let it arrive so the clear below drops it.
+    delivered_records(caplog)
     caplog.clear()
     with caplog.at_level(logging.INFO, logger="cadrumo.adapters.persistence.profile.transactions"):
         start = time.perf_counter()
@@ -113,9 +112,8 @@ def test_bulk_classify_270_rows_persists_catalogue_once(
 
     atomic_save_events = [
         record
-        for record in caplog.records
-        if record.name == "cadrumo.adapters.persistence.profile.transactions"
-        and record.getMessage().startswith(("saved transaction catalogue", "saved guarded transaction catalogue"))
+        for record in delivered_records(caplog, "cadrumo.adapters.persistence.profile.transactions")
+        if record.getMessage().startswith(("saved transaction catalogue", "saved guarded transaction catalogue"))
     ]
     assert len(atomic_save_events) == 1
     assert atomic_save_events[0].getMessage().startswith("saved guarded transaction catalogue")

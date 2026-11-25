@@ -49,7 +49,7 @@ def bind_tax_identity_admission(admission: TaxIdentityAdmission | None) -> Gener
 
     ``None`` suspends the gate for the scope, leaving redaction on its fallback.
 
-    Process-wide rather than context-local: log records are redacted on worker
+    Process-wide rather than context-local: redaction callers can run on worker
     threads and fresh event-loop contexts that never inherit a context variable.
     """
     previous = _TAX_IDENTITY_ADMISSION.get()
@@ -65,8 +65,22 @@ def tax_identity_admission() -> TaxIdentityAdmission | None:
     return _TAX_IDENTITY_ADMISSION.get()
 
 
+@contextmanager
+def lexical_tax_identity_redaction() -> Generator[None]:
+    """Use conservative shape redaction without borrowing application authority.
+
+    A diagnostic thread must not hold registry locks while opening authority
+    files: application work needs those same locks. The context-only override
+    leaves other threads' admission unchanged and hashes identity lookalikes
+    rather than waiting for their registry-backed validation.
+    """
+    with _TAX_IDENTITY_ADMISSION.override(None):
+        yield
+
+
 __all__ = [
     "TaxIdentityAdmission",
     "bind_tax_identity_admission",
+    "lexical_tax_identity_redaction",
     "tax_identity_admission",
 ]

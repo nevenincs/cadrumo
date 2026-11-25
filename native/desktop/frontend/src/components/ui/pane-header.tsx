@@ -13,7 +13,7 @@ export function PaneHeaderFrame({
     <div
       data-slot="pane-header"
       className={cn(
-        "@container/head flex min-h-control-lg shrink-0 items-center gap-2 border-b bg-chrome py-1 pr-1.5 pl-3 text-muted-foreground select-none",
+        "@container/head flex min-h-control-lg shrink-0 items-center gap-2 bg-chrome py-1 pr-1.5 pl-3 text-muted-foreground select-none",
         className,
       )}
       onDoubleClick={(event) => {

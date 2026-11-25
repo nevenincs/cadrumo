@@ -174,8 +174,8 @@ class TestCertificateSourceName:
 
     def test_overlength_name_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            CertificateSourceRecord(name="x" * 161, certificate_path="p", registered_at=_AWARE)
-        assert CertificateSourceRecord(name="x" * 160, certificate_path="p", registered_at=_AWARE).name == "x" * 160
+            CertificateSourceRecord(name="x" * 257, certificate_path="p", registered_at=_AWARE)
+        assert CertificateSourceRecord(name="x" * 256, certificate_path="p", registered_at=_AWARE).name == "x" * 256
 
     def test_cleanup_witness_carries_the_same_contract(self) -> None:
         witness = AuthCleanupCertificateSource(name=self._PADDED, registered_at=_AWARE)

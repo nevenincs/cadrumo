@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _GALICIA_DEDUCTION_SECTION,
-    _GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    GALICIA_DEDUCTION_SECTION,
+    GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE,
+    modelo_100_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ _LEGACY_GALICIA_2025_PENDING_ROLES = frozenset(
 
 
 def test_modelo_100_galicia_inmueble_vacio_adecuacion_roles_follow_ga21_family() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0829", "0981", "1078"}}
     legacy_roles = [
         casilla.semantic_role
@@ -48,25 +48,25 @@ def test_modelo_100_galicia_inmueble_vacio_adecuacion_roles_follow_ga21_family()
 
     parent = casillas_by_id["1078"]
     assert parent.label.startswith("Por gastos derivados de la adecuación de un inmueble vacío")
-    assert tuple(parent.section) == _GALICIA_DEDUCTION_SECTION
-    assert parent.semantic_role == _GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert tuple(parent.section) == GALICIA_DEDUCTION_SECTION
+    assert parent.semantic_role == GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["0829"]
     assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(generated.section) == _GALICIA_DEDUCTION_SECTION
+    assert tuple(generated.section) == GALICIA_DEDUCTION_SECTION
     assert generated.semantic_role == _GALICIA_INMUEBLE_VACIO_ADECUACION_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["0981"]
     assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(pending.section) == _GALICIA_DEDUCTION_SECTION
+    assert tuple(pending.section) == GALICIA_DEDUCTION_SECTION
     assert pending.semantic_role == _GALICIA_INMUEBLE_VACIO_ADECUACION_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
 def test_modelo_100_galicia_arrendamiento_viviendas_vacias_roles_follow_ga22_family() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0982", "1036", "1037"}}
     legacy_roles = [
         casilla.semantic_role
@@ -79,18 +79,18 @@ def test_modelo_100_galicia_arrendamiento_viviendas_vacias_roles_follow_ga22_fam
 
     parent = casillas_by_id["1036"]
     assert parent.label.startswith("Por el arrendamiento de viviendas vacías")
-    assert tuple(parent.section) == _GALICIA_DEDUCTION_SECTION
+    assert tuple(parent.section) == GALICIA_DEDUCTION_SECTION
     assert parent.semantic_role == _GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["1037"]
     assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
-    assert tuple(generated.section) == _GALICIA_DEDUCTION_SECTION
+    assert tuple(generated.section) == GALICIA_DEDUCTION_SECTION
     assert generated.semantic_role == _GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["0982"]
     assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
-    assert tuple(pending.section) == _GALICIA_DEDUCTION_SECTION
+    assert tuple(pending.section) == GALICIA_DEDUCTION_SECTION
     assert pending.semantic_role == _GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs

@@ -13,7 +13,8 @@ from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceip
 from cadrumo_client.contracts.profile_access import Reply
 
 from ..access_management import RuntimeLifecycleOwner
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_connection import ProfileConnection
+from ..profile_host import RuntimeProfileHost
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

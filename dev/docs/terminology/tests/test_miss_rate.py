@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._miss_rate import (
+from ..miss_rate_support import (
     HeldOutCaseKind,
     HeldOutQueryCase,
     HeldOutQuerySet,
@@ -146,7 +146,7 @@ def _live_record_ids() -> tuple[frozenset[str], frozenset[str]]:
     also builds a full search record and so carries failure modes unrelated to
     record identity.
     """
-    from dev._paths import REPO_ROOT
+    from dev.paths import REPO_ROOT
 
     from ...legal_catalogue import load_legal_provisions
     from ...terminology_handbook.loader import load_terminology_handbook

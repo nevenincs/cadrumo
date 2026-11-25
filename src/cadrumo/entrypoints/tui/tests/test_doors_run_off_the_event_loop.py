@@ -18,9 +18,10 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
-from ..app import CadrumoTuiApp, RootBindingV1
+from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
@@ -32,7 +33,6 @@ from ..ledger.models import (
     LedgerEvidenceConfirmedV1,
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
-    LedgerReaderReadinessV1,
 )
 from ..ledger.tests.workspace_fixtures import (
     ledger_context,
@@ -41,8 +41,10 @@ from ..ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
+from ..root_binding import RootBindingV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from .test_app import _account_factories, _catalogue
+from .settling import settle
+from .test_app import account_factories, catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -85,32 +87,28 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
 
     def refresh_catalogue():
         boundary.enter("refresh_catalogue")
-        return _catalogue([])
+        return catalogue([])
 
     def load_root() -> RootBindingV1:
         boundary.enter("load_root")
         return RootBindingV1(
-            destination_catalogue=_catalogue([]),
+            destination_catalogue=catalogue([]),
             refresh_home=refresh_home,
             workbench_search_service=WorkbenchSearchService(()),
             refresh_workbench_search=refresh_search,
             refresh_destination_catalogue=refresh_catalogue,
-            account_factories=_account_factories(),
+            account_factories=account_factories(),
             read_account_session=None,
         )
 
     app = CadrumoTuiApp(load_root=load_root)
     async with app.run_test() as pilot:
-        await app.workers.wait_for_complete()
-        for _ in range(4):
-            await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         app._show_home(None)
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         app._on_destination_dismissed(None)
-        await app.workers.wait_for_complete()
-        for _ in range(4):
-            await pilot.pause()
+        await settle(pilot)
 
     assert boundary.names == {"load_root", "refresh_home", "refresh_search", "refresh_catalogue"}
     assert boundary.on_loop == []
@@ -127,15 +125,14 @@ class _GuardedEvidenceDoor:
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         raise AssertionError(f"not exercised: {source_path}")
 
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        self.boundary.enter("reader_readiness")
-        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="provisioning.runtime.reachable")
-
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         raise AssertionError(f"not exercised: {evidence_id}")
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         raise AssertionError(f"not exercised: {confirmation}")
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        raise AssertionError(f"not exercised: {evidence_id}")
 
 
 def _evidence_screen(boundary: TransportBoundary) -> LedgerEvidenceScreen:
@@ -155,14 +152,13 @@ def _evidence_screen(boundary: TransportBoundary) -> LedgerEvidenceScreen:
 
 
 @pytest.mark.asyncio
-async def test_the_evidence_area_reads_records_and_the_reader_off_the_loop() -> None:
+async def test_the_evidence_area_reads_records_off_the_loop() -> None:
     boundary = TransportBoundary()
     screen = _evidence_screen(boundary)
     async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
 
-    assert boundary.names == {"list_records", "reader_readiness"}
+    assert boundary.names == {"list_records"}
     assert boundary.on_loop == []
 
 
@@ -180,15 +176,14 @@ async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
         calendar_controller(projection, recovery_handoff=lambda action, row: boundary.enter("create_declaration"))
     )
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         table.move_cursor(row=0)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
 
     assert boundary.names == {"create_declaration"}
     assert boundary.on_loop == []
@@ -214,7 +209,7 @@ async def test_the_gate_catches_a_door_entered_on_the_loop() -> None:
     """Detector teeth: the same boundary flags a screen that reads while mounting."""
     boundary = TransportBoundary()
     async with ScreenHostApp[None](_BlockingScreen(boundary)).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
     assert boundary.on_loop == ["read_on_mount"]
 
     moved = TransportBoundary()

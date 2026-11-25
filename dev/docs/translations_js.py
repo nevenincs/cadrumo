@@ -17,7 +17,7 @@ The one compile has no one language, so both become per-language here:
   stands in the page every language shares and English needs no tag at all. So
   the mark carries the line break in front of it as well: a language with the
   file reads a line, and English reads nothing and composes to no line. That is
-  the shape :func:`dev.docs._locale_chrome.docs_line` uses, for the same
+  the shape :func:`dev.docs.locale_chrome.docs_line` uses, for the same
   reason -- an element some languages have and others do not cannot be a line
   of its own.
 

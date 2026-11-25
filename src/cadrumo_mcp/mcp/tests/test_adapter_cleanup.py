@@ -11,8 +11,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.profile_access import SessionRequest
 from cadrumo_client.transport.frame_io import write_document

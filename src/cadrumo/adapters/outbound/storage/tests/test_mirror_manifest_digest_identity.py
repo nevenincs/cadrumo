@@ -26,13 +26,16 @@ from pydantic import TypeAdapter, ValidationError
 
 from .....core.hashing import sha256_hex
 from .....core.identity.digest import ContentDigest
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..mirror_manifest import remote_mirror_object_key_hmac
 from ..records import RemoteMirrorNamespaceManifest, RemoteMirrorObjectManifest
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _NAMESPACE = "cadrumo.mirror.digest"
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
+_NOW = datetime(_FILING_YEAR, 1, 1, tzinfo=UTC)
 
 #: Pins the manifest shape under test; claims nothing about what production
 #: stamps, so this file deliberately does not import the application constant.

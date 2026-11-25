@@ -29,17 +29,19 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operator_action_enums import OperatorActionAxis
+from ...core.operator_action_enums import NoRecoveryOutcome, OperatorActionAxis
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel
 
 """Validated string identifying the operator who triggered a verification run.
@@ -67,7 +69,7 @@ _PRESENTATION_FACT_TOKENS = frozenset(
 )
 _FindingLocaleKey = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=NAMESPACED_ID_PATTERN),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=256, pattern=NAMESPACED_ID_PATTERN),
 ]
 _FindingFactValue = str | int | bool | Decimal
 
@@ -162,6 +164,26 @@ class ModeloVerificationFindingSeverity(StrEnum):
     WARNING = "warning"
 
 
+def _omitted_when_false(value: bool) -> bool:
+    return not value
+
+
+DisclosedLimitationFlag = Annotated[bool, Field(exclude_if=_omitted_when_false)]
+"""A finding's disclosed-limitation marker, left out of every serialized form while it is false."""
+
+
+def _omitted_when_absent(value: RegistryAuthorityGrade | None) -> bool:
+    return value is None
+
+
+BelowFilingGradeField = Annotated[RegistryAuthorityGrade | None, Field(exclude_if=_omitted_when_absent)]
+"""The grade of the edition a registry check ran against when that edition is below filing grade.
+
+Left out of every serialized form while absent, so a finding checked against a
+filing-grade edition keeps the identity it was published with.
+"""
+
+
 class ModeloVerificationFinding(BaseModel):
     """One verification finding.
 
@@ -185,6 +207,39 @@ class ModeloVerificationFinding(BaseModel):
     message_facts: Mapping[str, _FindingFactValue] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
+    disclosed_limitation: DisclosedLimitationFlag = False
+    """Whether the finding discloses a figure the calculation leaves out, not a check that ran.
+
+    The producer that knows the value is uncomputed sets it, and it never blocks: a limitation
+    is served so the filer can add what only they hold, which can only raise the tax. It is
+    left out of the serialized finding when false, so an ordinary check keeps its identity.
+    """
+    below_filing_grade: BelowFilingGradeField = None
+    """The edition's own grade when this advisory was checked against an edition below filing grade.
+
+    Such an edition is refused for filing, so only its advisory checks run, against the
+    snapshot of its own grade. The grade is provenance: it never lowers or raises the
+    verification outcome, which the grade refusal beside it keeps blocked.
+    """
+
+    @model_validator(mode="after")
+    def _limitation_never_blocks(self) -> ModeloVerificationFinding:
+        if self.disclosed_limitation and self.severity is not ModeloVerificationFindingSeverity.WARNING:
+            raise ValueError("a disclosed limitation is a warning, never a blocking finding")
+        return self
+
+    @model_validator(mode="after")
+    def _below_filing_grade_is_an_advisory(self) -> ModeloVerificationFinding:
+        if self.below_filing_grade is None:
+            return self
+        if self.below_filing_grade is RegistryAuthorityGrade.FILING:
+            raise ValueError("a finding checked at filing grade carries no below-filing grade")
+        if (
+            self.kind is not ModeloVerificationFindingKind.ADVISORY
+            or self.severity is not ModeloVerificationFindingSeverity.WARNING
+        ):
+            raise ValueError("only an advisory warning is checked against an edition below filing grade")
+        return self
 
     @field_validator("message_facts")
     @classmethod
@@ -263,6 +318,14 @@ class VerificationReport(BaseModel):
     run_at: UtcInstant
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
+    source_transactions_digest: Hex64Str | None = None
+    """The digest of the source movements and the calculation's ledger anchor as this run read them.
+
+    ``None`` for a report that recorded none. Like ``run_at`` it is no part of
+    the identity: it says what the findings were judged against, so a later
+    reader can tell they predate a change to those movements, such as evidence
+    attached since, or a calculation taken over them since.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -276,24 +339,40 @@ class VerificationReport(BaseModel):
         if derived != self.verification_report_id:
             raise ModeloValidationError(
                 f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.VERIFICATION_REPORT,
             )
         # granted_verificado_completo is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
         has_blocking = any(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in self.findings)
         if self.granted_verificado_completo:
             if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
-                raise ModeloValidationError("granted_verificado_completo=True requires completeness_status=COMPLETE")
+                raise ModeloValidationError(
+                    "granted_verificado_completo=True requires completeness_status=COMPLETE",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
+                )
             if has_blocking:
-                raise ModeloValidationError("granted_verificado_completo=True requires no blocking findings")
+                raise ModeloValidationError(
+                    "granted_verificado_completo=True requires no blocking findings",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
+                )
         else:
             if self.completeness_status is VerificationCompletenessStatus.COMPLETE and not has_blocking:
                 raise ModeloValidationError(
                     "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
                 )
         # Required-casilla sets must be disjoint from resolved.
         overlap = set(self.resolved_casilla_ids) & set(self.missing_required_casilla_ids)
         if overlap:
-            raise ModeloValidationError(f"casillas cannot be both resolved and missing: {sorted(overlap)!r}")
+            raise ModeloValidationError(
+                f"casillas cannot be both resolved and missing: {sorted(overlap)!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.VERIFICATION_REPORT,
+            )
         return self
 
 
@@ -318,6 +397,8 @@ class VerificationReportCatalogue(BaseModel):
             if key != report.verification_report_id:
                 raise ModeloValidationError(
                     f"catalogue key {key!r} does not match verification_report_id {report.verification_report_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
                 )
         return self
 

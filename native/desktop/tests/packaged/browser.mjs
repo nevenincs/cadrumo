@@ -126,6 +126,8 @@ export function instrument(config) {
   const sessions = {};
   const latest = {};
   const observation = [];
+  // Fixed-shape records and their scalar span metadata consume budget too.
+  const recordBytes = 64;
   const bounds = config.observationLimits ?? {
     bytes: 2 * 1024 * 1024,
     records: 4096,
@@ -140,6 +142,7 @@ export function instrument(config) {
     captured: 0,
     drained: 0,
     batches: 0,
+    coalesced: 0,
   };
   const logs = { batches: 0, records: [] };
   state.ipc = ipc;
@@ -150,6 +153,18 @@ export function instrument(config) {
   state.blockExternal = !!config.blockExternal;
   state.tokenSeen = false;
   state.tokenGetter = null;
+  state.setupSnapshots = [];
+  state.setupLatest = null;
+  const setupSnapshot = (value) => {
+    if (!value || typeof value.revision !== "number" || !("snapshot" in value))
+      return;
+    state.setupLatest = value;
+    if (state.setupSnapshots.length === 4096) state.setupSnapshots.shift();
+    state.setupSnapshots.push({ at: Date.now(), value });
+    window.dispatchEvent(
+      new CustomEvent("packaged-setup-snapshot", { detail: value }),
+    );
+  };
   const channelOf = (id) =>
     (channels[id] ??= {
       kind: null,
@@ -176,30 +191,65 @@ export function instrument(config) {
     const channel = channels[id];
     return channel && latest[channel.kind] === id ? channel : null;
   };
+  const wakeObservation = () => {
+    const notify =
+      config.observationWakeBinding && window[config.observationWakeBinding];
+    if (typeof notify === "function") {
+      try {
+        Promise.resolve(notify()).catch(() => undefined);
+      } catch {}
+    }
+  };
   const lose = (id, code) => {
     const channel = current(id);
-    if (channel) channel.observationLoss ??= code;
+    if (channel && !channel.observationLoss) {
+      channel.observationLoss = code;
+      wakeObservation();
+    }
   };
   const capture = (id, record, bytes = null) => {
     const channel = current(id);
     if (!channel || channel.observationLoss) return;
     const size = bytes?.length ?? 0;
+    const previous = observation.at(-1);
+    // A span owns [index, index + count) and the exact concatenated payload.
+    // No per-frame metadata grows behind the record cap; ACKs and controls break it.
+    const join =
+      record.type === "frame" &&
+      !record.end &&
+      bytes?.[0] === 0 &&
+      previous?.type === "frame" &&
+      !previous.end &&
+      previous.bytes?.[0] === 0 &&
+      previous.kind === channel.kind &&
+      previous.generation === channel.generation &&
+      Number.isSafeInteger(record.index) &&
+      record.index === previous.index + (previous.count ?? 1) &&
+      previous.bytes.length + size - 1 <= bounds.batchBytes;
+    const retained = join ? size - 1 : size + recordBytes;
     if (
-      captureStats.bytes + size > bounds.bytes ||
-      observation.length >= bounds.records
+      captureStats.bytes + retained > bounds.bytes ||
+      (!join && observation.length >= bounds.records)
     ) {
       lose(id, "TerminalObservationCaptureLimit");
       return;
     }
-    observation.push({
-      ...record,
-      kind: channel.kind,
-      generation: channel.generation,
-      ...(bytes ? { bytes: Array.from(bytes) } : {}),
-    });
-    captureStats.bytes += size;
+    const empty = observation.length === 0;
+    if (join) {
+      for (let i = 1; i < size; i += 1) previous.bytes.push(bytes[i]);
+      previous.count = (previous.count ?? 1) + 1;
+      captureStats.coalesced += 1;
+    } else {
+      observation.push({
+        ...record,
+        kind: channel.kind,
+        generation: channel.generation,
+        ...(bytes ? { bytes: Array.from(bytes) } : {}),
+      });
+      captureStats.captured += 1;
+    }
+    captureStats.bytes += retained;
     captureStats.records = observation.length;
-    captureStats.captured += 1;
     captureStats.peakBytes = Math.max(
       captureStats.peakBytes,
       captureStats.bytes,
@@ -208,20 +258,34 @@ export function instrument(config) {
       captureStats.peakRecords,
       captureStats.records,
     );
+    if (empty) wakeObservation();
   };
-  state.drainVT = () => {
+  state.observationLimits = bounds;
+  state.drainVT = (budget = {}) => {
+    const byteLimit =
+      Number.isSafeInteger(budget.bytes) && budget.bytes >= 0
+        ? Math.min(budget.bytes, bounds.batchBytes)
+        : bounds.batchBytes;
+    const recordLimit =
+      Number.isSafeInteger(budget.records) && budget.records >= 0
+        ? Math.min(budget.records, bounds.batchRecords)
+        : bounds.batchRecords;
     const records = [];
     let size = 0;
-    while (observation.length && records.length < bounds.batchRecords) {
+    while (observation.length && records.length < recordLimit) {
       const next = observation[0];
       const bytes = next.bytes?.length ?? 0;
       // A single larger frame drains alone; the Node parser splits its writes.
-      if (records.length && size + bytes > bounds.batchBytes) break;
+      if (
+        size + bytes > byteLimit &&
+        (records.length || budget.oversized === false)
+      )
+        break;
       records.push(observation.shift());
       size += bytes;
-      if (size >= bounds.batchBytes) break;
+      if (size >= byteLimit) break;
     }
-    captureStats.bytes -= size;
+    captureStats.bytes -= size + records.length * recordBytes;
     captureStats.records = observation.length;
     captureStats.drained += records.length;
     captureStats.batches += 1;
@@ -245,6 +309,7 @@ export function instrument(config) {
   };
   const ALT_SCREEN = "\x1b[?1049h";
   const observe = (id, data) => {
+    setupSnapshot(data?.message ?? data);
     if (!data || typeof data !== "object" || !("index" in data)) return;
     const message = data.message;
     if (message && typeof message === "object" && "records" in message) {
@@ -281,6 +346,11 @@ export function instrument(config) {
         lose(id, "TerminalObservationCaptureLimit");
         return;
       }
+      for (const byte of message)
+        if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+          lose(id, "TerminalObservationFrameInvalid");
+          return;
+        }
       bytes = Uint8Array.from(message);
     }
     if (!bytes || !bytes.length) {
@@ -335,6 +405,7 @@ export function instrument(config) {
       try {
         observe(id, data);
       } catch (error) {
+        lose(id, "TerminalObservationFrameInvalid");
         limit(state.console, 2000, {
           at: Date.now(),
           level: "harness",
@@ -448,7 +519,8 @@ export function instrument(config) {
         // Retiring a session discards only that kind's old observation records.
         for (let i = observation.length - 1; i >= 0; i -= 1) {
           if (observation[i].kind !== channel.kind) continue;
-          captureStats.bytes -= observation[i].bytes?.length ?? 0;
+          captureStats.bytes -=
+            (observation[i].bytes?.length ?? 0) + recordBytes;
           observation.splice(i, 1);
         }
         captureStats.records = observation.length;
@@ -498,11 +570,14 @@ export function instrument(config) {
     if (
       json &&
       (!entry.ok ||
+        entry.cmd.startsWith("desktop_setup_") ||
         entry.cmd === "terminal_open" ||
         entry.cmd === "sign_in_submit")
     ) {
       try {
         const value = await response.clone().json();
+        if (entry.ok && entry.cmd.startsWith("desktop_setup_"))
+          setupSnapshot(value);
         if (entry.ok && entry.cmd === "terminal_open") {
           entry.session = value?.session ?? null;
           if (entry.channel !== null && entry.channel !== undefined) {
@@ -564,6 +639,32 @@ export function instrument(config) {
         error: {
           code: text(error?.code ?? error, 60),
           operation: text(error?.operation ?? "", 40),
+          ...(typeof error?.reason === "string"
+            ? { reason: text(error.reason, 120) }
+            : {}),
+          ...(Array.isArray(error?.causes)
+            ? {
+                causes: error.causes.slice(0, 8).map((cause) => {
+                  const facts = {};
+                  // Native ApplicationError serializes only closed facts.
+                  // Retain those fields, never arbitrary messages or payloads.
+                  for (const key of [
+                    "kind",
+                    "code",
+                    "operation",
+                    "reason",
+                    "ioKind",
+                    "category",
+                  ])
+                    if (typeof cause?.[key] === "string")
+                      facts[key] = text(cause[key], 120);
+                  for (const key of ["osCode", "line", "column"])
+                    if (Number.isSafeInteger(cause?.[key]))
+                      facts[key] = cause[key];
+                  return facts;
+                }),
+              }
+            : {}),
         },
       };
     }
@@ -585,8 +686,40 @@ export function instrument(config) {
 }
 
 /** A bounded batch of wire observations, consumed by the Node-owned parser. */
-export function drainTerminalObservation() {
-  return window.__s10?.drainVT?.() ?? null;
+export function drainTerminalObservation(limits) {
+  const capture = window.__s10;
+  if (!capture?.drainVT) return null;
+  const bounds = capture.observationLimits ?? limits;
+  if (!bounds) return capture.drainVT();
+  let combined = null;
+  let bytes = 0;
+  // Raw batches retain their 64-record cap. One synchronous CDP round trip
+  // fills the existing byte budget, bounded by the global record allowance.
+  while (
+    (!combined || combined.more) &&
+    bytes < bounds.batchBytes &&
+    (!combined || combined.records.length < bounds.records)
+  ) {
+    const batch = capture.drainVT({
+      bytes: bounds.batchBytes - bytes,
+      records: bounds.records - (combined?.records.length ?? 0),
+      oversized: !combined?.records.length,
+    });
+    if (!batch) break;
+    if (!combined) combined = { ...batch, records: [] };
+    combined.records.push(...batch.records);
+    combined.more = batch.more;
+    combined.losses = batch.losses;
+    combined.captureStats = batch.captureStats;
+    bytes += batch.records.reduce(
+      (sum, record) => sum + (record.bytes?.length ?? 0),
+      0,
+    );
+    if (!batch.records.length) break;
+  }
+  // Playwright otherwise recursively serializes every byte and record. Keep
+  // the same bounded batch in one scalar across the DevTools boundary.
+  return limits?.transport === "json" ? JSON.stringify(combined) : combined;
 }
 
 /** Renderer presence and pane visibility; this does not inspect GPU pixels. */
@@ -795,6 +928,24 @@ export async function docsProbe({ kind, nonce, ids, timeoutMs, ipcOrigin }) {
 /** The page's own search, through the Pagefind bundle beside the document. */
 export async function pagefindSearch({ query, bundle }) {
   const started = performance.now();
+  if (!bundle) {
+    const root =
+      document.documentElement.getAttribute("data-content_root") || "";
+    const declared =
+      document
+        .querySelector('meta[name="cadrumo-docs-site-prefix"]')
+        ?.getAttribute("content") || "";
+    const prefix =
+      declared && !declared.endsWith("/") ? `${declared}/` : declared;
+    const apex =
+      (root === "./" ? "" : root) +
+      prefix
+        .split("/")
+        .slice(0, -1)
+        .map(() => "../")
+        .join("");
+    bundle = new URL(`${apex}pagefind/pagefind.js`, document.baseURI).href;
+  }
   const pagefind = await import(new URL(bundle, location.href).href);
   if (typeof pagefind.init === "function") await pagefind.init();
   const search = await pagefind.search(query);

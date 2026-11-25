@@ -47,7 +47,7 @@ export function LanguageSelect({
       </NativeSelect>
       {failed && (
         <p role="alert" className="text-sm text-destructive">
-          {t("desktop.messages.failed", { code: "language_change_failed" })}
+          {t("desktop.messages.failed")}
         </p>
       )}
     </Field>

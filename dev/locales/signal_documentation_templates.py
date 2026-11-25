@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.core.hashing import sha256_file
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .signal_contracts import DocumentationEchoDictionaries
 from .signal_documentation_echo import inventory_documentation_translation_message

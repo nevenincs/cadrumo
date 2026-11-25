@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
@@ -66,7 +66,7 @@ _DAY = timedelta(days=1)
 )
 def test_the_five_percent_food_rate_classifies_across_its_whole_grounded_span(on_date: date) -> None:
     """Every date the two bundled provisions jointly cover must classify 5 %."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert rate_kinds_for_declared_rate(
             EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
         ) == (IvaRateKind("reduced"),), (
@@ -91,7 +91,7 @@ def test_the_five_percent_rate_stays_refused_outside_its_statutory_span(on_date:
     admitting it would be an under-declaration -- the exact error the earlier
     tier-merge work closed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             rate_kinds_for_declared_rate(
                 EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
@@ -105,7 +105,7 @@ def test_the_five_percent_rate_stays_refused_outside_its_statutory_span(on_date:
 
 def test_the_successor_rate_still_holds_its_own_window() -> None:
     """Second control: adding the earlier window must not disturb the later one."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         seven_five = Decimal("0.075")
         assert (
             rate_kinds_for_declared_rate(
@@ -129,7 +129,7 @@ def test_the_two_food_windows_abut_without_a_gap_or_an_overlap() -> None:
     tier would red registry load through the no-overlap rule. Assert the join
     directly so neither is discovered by a downstream symptom.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for on_date in (date(2024, 6, 29), date(2024, 6, 30), date(2024, 7, 1), date(2024, 7, 2)):
             assert rate_kinds_for_declared_rate(
                 EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test

@@ -9,7 +9,7 @@ from typing import Any
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from .installed_tui_cli_transport import _cli_command, _decimal, _result, _text
+from .installed_tui_cli_transport import cli_command, decimal, installed_tui_cli_transport_result, text
 from .installed_tui_contracts import LedgerInstalledTuiError
 
 
@@ -39,39 +39,39 @@ def _assert_public_export_rows(rows: list[dict[str, Any]], export_rows: list[dic
         # empty cell, whereas the public list envelope projects it as null.
         # Normalize only that documented absent-link representation; a linked
         # identifier continues through the exact-string comparison below.
-        exported_link = _optional_link_id(
+        exported_link = optional_link_id(
             None if exported_row.get("invoice_id") == "" else exported_row.get("invoice_id"),
             stage=stage,
         )
-        persisted_link = _optional_link_id(persisted_row.get("invoice_id"), stage=stage)
+        persisted_link = optional_link_id(persisted_row.get("invoice_id"), stage=stage)
         if (
-            _decimal(exported_row.get("amount"), stage=stage),
+            decimal(exported_row.get("amount"), stage=stage),
             exported_link,
             exported_row.get("direction"),
         ) != (
-            _decimal(persisted_row.get("amount"), stage=stage),
+            decimal(persisted_row.get("amount"), stage=stage),
             persisted_link,
             persisted_row.get("direction"),
         ):
             raise LedgerInstalledTuiError(f"{stage} export values or links differ from public persisted state")
 
 
-def _optional_link_id(value: object, *, stage: str) -> str | None:
+def optional_link_id(value: object, *, stage: str) -> str | None:
     """Project a canonical optional invoice link without accepting other blank identifiers."""
-    return None if value is None else _text(value, stage=stage)
+    return None if value is None else text(value, stage=stage)
 
 
-def _compare_export(cli: InstalledCli, *, output_path: Path, stage: str) -> tuple[int, str]:
+def compare_export(cli: InstalledCli, *, output_path: Path, stage: str) -> tuple[int, str]:
     """Compare the installed JSONL export with public persisted rows and links."""
-    persisted = _result(
-        _cli_command(cli, ("app", "ledger", "list"), stage=stage, command="ledger.list"),
+    persisted = installed_tui_cli_transport_result(
+        cli_command(cli, ("app", "ledger", "list"), stage=stage, command="ledger.list"),
         stage=stage,
     )
     rows = persisted.get("rows")
     if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
         raise LedgerInstalledTuiError(f"{stage} did not expose public persisted transaction rows")
-    exported = _result(
-        _cli_command(
+    exported = installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "export", "--output", str(output_path), "--export-format", "jsonl"),
             stage=stage,

@@ -40,7 +40,7 @@ _IDENTIFIERS: Final[tuple[str, ...]] = (
     "prorrata-volumen-con-derecho",
     "iva.anual.repercutido.recargo.super-reducido",
     "prestacion-inss-maternidad-paternidad-exenta",
-    "base-liq-neg-general-2024-aplicada-maxima",
+    "base-liq-neg-general-em4-aplicada-maxima",
     "saldo-negativo-fin-periodo",
     "108-120",
 )

@@ -79,6 +79,10 @@ _M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
     surface="_M200_BIN_APLICADA_MAXIMA",
 )
 
+#: Net turnover (00255) every filed prior return states; the current rate reads it.
+_M200_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_M200_TURNOVER")
+_PRIOR_TURNOVER = Decimal("500000")
+
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
@@ -92,8 +96,11 @@ _BIN_STOCK_BY_SOURCE_YEAR: dict[int, Decimal] = {
 #: The same-year M202 pagos relation the M200 cuota chain reads; zero here (no
 #: instalments) keeps the BIN-stock assertion focused. Supplied directly as a
 #: relation value rather than seeded, since pagos are not under test.
-_M200_PAGOS_RELATION = "modelo-200-pagos-fraccionados-anuales"
-_M200_PAGOS_RELATION_40_2 = "modelo-200-pagos-fraccionados-anuales-40-2"
+_M200_PAGOS_RELATIONS = tuple(
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
+)
 
 #: Minimal SL-persona profile bindings the M200 cuota chain requires to compute.
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
@@ -120,7 +127,7 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
                     modelo=_MODELO_200,
                     filing_year=source_year,
                     period="0A",
-                    casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+                    casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock, _M200_TURNOVER: _PRIOR_TURNOVER},
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
@@ -135,7 +142,7 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
                         modelo=_MODELO_200,
                         filing_year=source_year,
                         period="0A",
-                        casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+                        casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock, _M200_TURNOVER: _PRIOR_TURNOVER},
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),
                 )
@@ -208,8 +215,8 @@ def _resolve_and_supply_relations(
     }
     # No instalments this scenario: supply the same-year M202 pagos relation as zero
     # (it is not the cross-year hook under test).
-    resolved.setdefault(_M200_PAGOS_RELATION, Decimal("0"))
-    resolved.setdefault(_M200_PAGOS_RELATION_40_2, Decimal("0"))
+    for pagos_relation in _M200_PAGOS_RELATIONS:
+        resolved.setdefault(pagos_relation, Decimal("0"))
     return resolved
 
 

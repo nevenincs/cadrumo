@@ -36,7 +36,7 @@ from cadrumo.application.aggregation.tests.ledger_transaction_support import iva
 from cadrumo.application.aggregation.withholding_filing_cadence import load_bucket_withholding_filer_cadence
 from cadrumo.application.aggregation.withholding_producer import WithholdingProducer
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.calculation_report_verification_operation import (
@@ -48,7 +48,7 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
     STATEMENT_ATTACHMENT_NAME,
 )
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     resolve_active_workflow_profile,
 )
@@ -64,27 +64,26 @@ from cadrumo.core.optional_extras import PDF_EXTRA
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import build_withholding_observation_service
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_verification_repository_bundle,
-    build_withholding_observation_service,
     build_work_lifecycle_ports,
 )
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import m111_withholding_aggregate_arguments
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 from cadrumo.tests.optional_extra_absence import optional_extra_absent
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -95,6 +94,8 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import password_profile_session
+
+from ...native_profile_facts import native_general_iva_facts
 
 pytestmark = [
     pytest.mark.integration,
@@ -145,20 +146,20 @@ def _report_session(
 ) -> AbstractContextManager[NativeApiCliSession[None]]:
     def prepare_profile(profile_id: UUID, root: Path) -> None:
         values = {
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Report",
             "identity.surnames": "Operator",
             "activities.description": "consulting",
             "censo.activity_start_date": "2026-01-01",
-            "tax_residence.jurisdiction_scope": "common_regime",
             "withholding.colegio_concertado": "false",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            # Modelo 111 files quarterly only for a filer stated as neither a gran empresa nor a public
+            # administration above the budget threshold; an unstated filer has no quarterly window.
+            "censo.large_company": "false",
+            "censo.public_administration_budget_gt_6000000": "false",
+            # The Modelo 111 report seeds the retención withheld from a professional's invoice,
+            # and Modelo 111 applies only to a payer of income subject to retención.
+            "withholding.pays_professionals_with_retencion": "true",
         }
         facts = complete_profile_facts(
             operation.profile_schema(),
@@ -278,7 +279,7 @@ def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthor
                 "invoice_number": "REPORT-PROF-2026-001",
                 "issued_at": paid_on,
                 "counterparty_name": "Synthetic Professional",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("1000"),
                 "iva_total": Decimal("210"),
@@ -357,7 +358,7 @@ def summary_path(tmp_path: Path, operation: PinnedAuthorityOperation, run_cadrum
         work_unit_id = _seed_current_sealed_revision(session=session, operation=operation)
         result = _summary(work_unit_id, output, session=session)
         assert result.exit_code == 0, result.output
-    with override_settings(cadrumo_local_storage_root=tmp_path / "document-only-storage"):
+    with override_settings(cadrumo_storage_root=tmp_path / "document-only-storage"):
         yield output
 
 
@@ -373,13 +374,13 @@ def test_the_summary_lands_and_names_the_key_it_is_signed_with(
     result = _summary(work_unit_id, output, session=report_session)
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     landed = output.read_bytes()
     assert landed.startswith(b"%PDF-1.7")
     assert payload["document_format"] == CalculationReportDocumentFormat.PDF.value
     assert payload["file_sha256"] == hashlib.sha256(landed).hexdigest()
     assert payload["signing_key_fingerprint"] == hashlib.sha256(bytes.fromhex(_signed_by(output))).hexdigest()
-    codes = {notice["code"] for notice in _notices(result.output)}
+    codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
     assert "modelo.work.report.local_calculation_not_official_evidence" in codes
 
 
@@ -413,7 +414,7 @@ def test_a_summary_verifies_against_the_store_and_exits_zero(
     result = _verify(output, session=report_session)
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["operation"] == "modelo.work.report_verify"
     assert payload["outcome"] == "verified"
     assert payload["store_checked"] is True
@@ -444,7 +445,7 @@ def test_a_modelo_303_summary_verifies_with_every_check_ok(
 
     assert written.exit_code == 0, written.output
     assert verified.exit_code == 0, verified.output
-    payload = _payload(verified.output)
+    payload = unwrap_schema_envelope(verified.output)
     assert payload["outcome"] == "verified"
     assert payload["store_checked"] is True
     assert payload["reasons"] == []
@@ -463,11 +464,13 @@ def test_a_document_only_check_is_unpinned_until_a_key_is_trusted(summary_path: 
     pinned = _verify(summary_path, "--document-only", "--trusted-key", _signed_by(summary_path))
 
     assert unpinned.exit_code == 0, unpinned.output
-    assert _payload(unpinned.output)["outcome"] == "valid_unpinned"
-    assert _payload(unpinned.output)["store_checked"] is False
-    assert "modelo.work.report_verify.valid_unpinned" in {notice["code"] for notice in _notices(unpinned.output)}
+    assert unwrap_schema_envelope(unpinned.output)["outcome"] == "valid_unpinned"
+    assert unwrap_schema_envelope(unpinned.output)["store_checked"] is False
+    assert "modelo.work.report_verify.valid_unpinned" in {
+        notice["code"] for notice in unwrap_envelope_notices(unpinned.output)
+    }
     assert pinned.exit_code == 0, pinned.output
-    assert _payload(pinned.output)["outcome"] == "verified"
+    assert unwrap_schema_envelope(pinned.output)["outcome"] == "verified"
 
 
 def test_a_tampered_summary_is_refused_with_a_non_zero_exit(summary_path: Path, tmp_path: Path) -> None:
@@ -481,7 +484,7 @@ def test_a_tampered_summary_is_refused_with_a_non_zero_exit(summary_path: Path, 
     result = _verify(tampered, "--document-only")
 
     assert result.exit_code == 1
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["outcome"] == "refused"
     assert payload["reasons"] == ["signature_invalid"]
 
@@ -490,7 +493,7 @@ def test_another_trusted_key_refuses_the_summary(summary_path: Path) -> None:
     result = _verify(summary_path, "--document-only", "--trusted-key", "ab" * 32)
 
     assert result.exit_code == 1
-    assert _payload(result.output)["reasons"] == ["signing_key_untrusted"]
+    assert unwrap_schema_envelope(result.output)["reasons"] == ["signing_key_untrusted"]
 
 
 def test_a_malformed_trusted_key_and_a_missing_file_are_refused(summary_path: Path, tmp_path: Path) -> None:
@@ -512,13 +515,14 @@ def pdf_extra_absent() -> Iterator[None]:
 
 @pytest.mark.usefixtures("pdf_extra_absent")
 @pytest.mark.parametrize(
-    ("language", "phrase"),
-    (("es", "complemento opcional"), ("en", "optional")),
+    ("language", "phrase", "component"),
+    (("es", "componente opcional", "«pdf»"), ("en", "optional", "“pdf”")),
 )
 def test_without_the_pdf_extra_the_summary_is_refused_before_the_work_unit_is_read(
     tmp_path: Path,
     language: str,
     phrase: str,
+    component: str,
     report_session: NativeApiCliSession[None],
 ) -> None:
     """An absent work unit proves the refusal precedes its private catalogue read."""
@@ -530,7 +534,8 @@ def test_without_the_pdf_extra_the_summary_is_refused_before_the_work_unit_is_re
     error = require_error_document(refused.output)["error"]
     assert error["code"] == "REFUSED_CALCULATION_SUMMARY_PDF_UNAVAILABLE"
     assert phrase in error["message"]
-    assert "cadrumo[pdf]" in error["message"]
+    assert component in error["message"]
+    assert "cadrumo[pdf]" not in error["message"]
     assert not output.exists()
 
 
@@ -538,4 +543,4 @@ def test_verification_needs_no_pdf_extra(summary_path: Path, pdf_extra_absent: N
     result = _verify(summary_path, "--document-only")
 
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["outcome"] == "valid_unpinned"
+    assert unwrap_schema_envelope(result.output)["outcome"] == "valid_unpinned"

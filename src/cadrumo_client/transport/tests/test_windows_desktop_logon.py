@@ -9,24 +9,24 @@ import pytest
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ..windows_desktop_logon import (
+    StationSnapshot,
+    TokenSnapshot,
     WindowsDesktopLogon,
-    _object_text,
-    _owned_handle,
-    _StationSnapshot,
-    _TokenSnapshot,
-    _validated_witness,
+    object_text,
+    owned_handle,
+    validated_witness,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _OWNER = "S-1-5-21-100-200-300-1001"
 _LOGON_SID = "S-1-5-5-0-1234"
-_TOKEN = _TokenSnapshot(_OWNER, 101, 1, _LOGON_SID, 1, 2, 201, 301)
-_STATION = _StationSnapshot("WinSta0", "WindowStation", 1, _LOGON_SID, False, False)
+_TOKEN = TokenSnapshot(_OWNER, 101, 1, _LOGON_SID, 1, 2, 201, 301)
+_STATION = StationSnapshot("WinSta0", "WindowStation", 1, _LOGON_SID, False, False)
 
 
 def test_exact_stable_logon_sid_witness_retains_immutable_native_identity() -> None:
-    result = _validated_witness(_TOKEN, _STATION, _TOKEN, _STATION)
+    result = validated_witness(_TOKEN, _STATION, _TOKEN, _STATION)
     assert result == WindowsDesktopLogon(_OWNER, 101, 1, _LOGON_SID)
     field_name = "authentication_id"
     with pytest.raises(FrozenInstanceError):
@@ -50,10 +50,10 @@ def test_exact_stable_logon_sid_witness_retains_immutable_native_identity() -> N
     ],
 )
 def test_missing_foreign_account_or_noncanonical_station_never_substitutes_for_logon_role(
-    station: _StationSnapshot,
+    station: StationSnapshot,
 ) -> None:
     with pytest.raises(RefusalError) as caught:
-        _validated_witness(_TOKEN, station, _TOKEN, station)
+        validated_witness(_TOKEN, station, _TOKEN, station)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
 
 
@@ -78,11 +78,11 @@ def test_missing_foreign_account_or_noncanonical_station_never_substitutes_for_l
     ],
 )
 def test_invalid_noninteractive_or_ambiguous_token_cannot_become_a_current_desktop_witness(
-    token: _TokenSnapshot,
+    token: TokenSnapshot,
 ) -> None:
     station = replace(_STATION, associated_sid=token.logon_sid)
     with pytest.raises(RefusalError) as caught:
-        _validated_witness(token, station, token, station)
+        validated_witness(token, station, token, station)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
 
 
@@ -99,27 +99,27 @@ def test_invalid_noninteractive_or_ambiguous_token_cannot_become_a_current_deskt
     ],
 )
 def test_changed_token_incarnation_refuses_even_when_both_snapshots_individually_look_valid(
-    after_token: _TokenSnapshot,
+    after_token: TokenSnapshot,
 ) -> None:
     with pytest.raises(RefusalError) as caught:
-        _validated_witness(_TOKEN, _STATION, after_token, _STATION)
+        validated_witness(_TOKEN, _STATION, after_token, _STATION)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
 
 
 def test_station_reassociation_to_same_account_new_logon_refuses_old_token() -> None:
     replacement = replace(_STATION, associated_sid="S-1-5-5-0-9999")
     with pytest.raises(RefusalError) as caught:
-        _validated_witness(_TOKEN, _STATION, _TOKEN, replacement)
+        validated_witness(_TOKEN, _STATION, _TOKEN, replacement)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
     # Stable stale association also refuses; account SID equality cannot rescue it.
     with pytest.raises(RefusalError):
-        _validated_witness(_TOKEN, replacement, _TOKEN, replacement)
+        validated_witness(_TOKEN, replacement, _TOKEN, replacement)
 
 
 @pytest.mark.parametrize("payload", [b"", b"x", b"x\0", b"\0\0x\0\0\0", b"\x00\xd8\0\0", b"x\0" * 257])
 def test_malformed_unterminated_or_excessive_native_text_refuses(payload: bytes) -> None:
     with pytest.raises(RefusalError) as caught:
-        _object_text(payload)
+        object_text(payload)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
 
 
@@ -130,10 +130,10 @@ def test_owned_handle_cleanup_occurs_once_before_a_witness_can_be_released() -> 
         closed.append(handle)
         return True
 
-    with _owned_handle(17, close) as handle:
+    with owned_handle(17, close) as handle:
         assert handle == 17 and not closed
     assert closed == [17]
-    with pytest.raises(RefusalError) as caught, _owned_handle(18, lambda _handle: False):
+    with pytest.raises(RefusalError) as caught, owned_handle(18, lambda _handle: False):
         pass
     assert caught.value.reason is RefusalCode.UNAVAILABLE
 
@@ -144,7 +144,7 @@ def test_cleanup_failure_preserves_primary_refusal_without_native_error_text() -
     def close(_handle: int) -> bool:
         raise OSError("private native diagnostic")
 
-    with pytest.raises(RefusalError) as caught, _owned_handle(19, close):
+    with pytest.raises(RefusalError) as caught, owned_handle(19, close):
         raise original
     assert caught.value is original
     assert "private native diagnostic" not in str(caught.value)

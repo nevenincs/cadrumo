@@ -23,7 +23,7 @@ import pytest
 from dev.registry.compiler.record_design_schema import RecordDesignField, RecordDesignSheet
 
 from ..compiler.record_design import extract_record_design
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,7 +50,7 @@ def test_the_bundled_modelo_200_orden_design_now_reads_named_page_records() -> N
     Before the recovery this design produced ZERO sheets: every one of its page
     records was anonymous, so the whole document was reported unread.
     """
-    matches = [path for path in _bundled_designs() if path.name.startswith("17-200-orden-eha-1338-2010")]
+    matches = [path for path in bundled_designs() if path.name.startswith("17-200-orden-eha-1338-2010")]
     assert matches, "the bundled modelo 200 2010 orden design is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

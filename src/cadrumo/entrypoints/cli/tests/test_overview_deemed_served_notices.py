@@ -24,7 +24,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_legal_evidence_text,
     published_legal_reference,
 )
-from .._overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
+from ..overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -19,7 +19,7 @@ from .....application.operations.subject_reference import OperationSubjectKind, 
 from .....core.errors.error_codes import build_error_envelope
 from .....core.operations import profile_operation_subject
 from .....core.period import PeriodError
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ..catalogue import OperationCatalogueEntryV1, OperationCatalogueV1, build_operation_catalogue
 from ..request_form import (
     RequestFieldKind,
@@ -42,7 +42,7 @@ _VIEW = "user-profile.view"
 
 @lru_cache(maxsize=1)
 def _catalogue() -> OperationCatalogueV1:
-    return build_operation_catalogue(build_production_operation_registry())
+    return build_operation_catalogue(production_operation_registry())
 
 
 def _entry(definition_id: str) -> OperationCatalogueEntryV1:
@@ -113,12 +113,10 @@ def test_the_profile_field_is_filled_with_the_session_profile_and_never_entered(
 
 
 def test_the_derived_subject_is_what_the_contract_declares_for_every_operation() -> None:
-    kinds: set[OperationSubjectKind] = set()
     for entry in _catalogue().entries:
         if entry.typed_operator_input:
             continue
         reference = entry.contract.subject_reference
-        kinds.add(reference.kind)
         fields = request_fields(entry.input_json_schema, profile_id=_PROFILE_ID)
         untouched, _problems = request_document(fields, {field.name: field.initial for field in fields})
         documents = ((False, untouched), (True, _with_subject_field(reference, untouched)))
@@ -129,7 +127,19 @@ def test_the_derived_subject_is_what_the_contract_declares_for_every_operation()
                 )
                 expected = _declared_subject(reference, field_set=field_set, entered=entered)
                 assert derived == expected, (entry.definition_id, field_set, entered)
-    assert kinds == set(OperationSubjectKind)
+
+    # FIXED is a valid contract kind even though no production operation currently uses it.
+    fixed_reference = OperationSubjectReferenceV1.fixed("machine:runtime")
+    assert (
+        derived_subject(
+            fixed_reference,
+            profile_id=_PROFILE_ID,
+            document={},
+            entered=None,
+            typed_operator_input=False,
+        )
+        == "machine:runtime"
+    )
 
 
 def test_a_person_names_the_subject_only_where_nothing_else_can() -> None:
@@ -198,6 +208,7 @@ def test_a_valid_request_is_the_request_model_the_operation_registers() -> None:
         "expected_revision": None,
         "expected_content_digest": None,
         "output_language": "es",
+        "household_draft": None,
     }
 
 
@@ -294,3 +305,91 @@ def test_the_whole_request_round_trips_between_its_fields_and_its_json() -> None
     assert request_document(fields, restored)[0] == document
     assert restored["page_kind"] == "issues"
     assert restored["expected_revision"] == ""
+
+
+def _retencion_fields() -> tuple[RequestFieldV1, ...]:
+    from .....application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+
+    schema = RetencionSoportadaRecordRequest.model_json_schema(mode="validation")
+    return request_fields(schema, profile_id=_PROFILE_ID)
+
+
+def _retencion_texts(**overrides: str) -> dict[str, str]:
+    base = {
+        "profile_id": str(_PROFILE_ID),
+        "ejercicio": "2025",
+        "income_class": "trabajo",
+        "payer_tax_id": "A00010025",
+        "importe_integro_dinerario": "12000,50",
+        "valoracion_especie": "0",
+        "retencion": "1.234,56",
+        "ingreso_a_cuenta": "0",
+        "ingreso_a_cuenta_repercutido": "0",
+        "reducciones_aplicables": "100.25",
+        "gastos_deducibles": "",
+        "origin": "operator_declaration",
+    }
+    return base | overrides
+
+
+def test_a_public_decimal_field_is_offered_as_a_decimal_not_json() -> None:
+    by_name = {field.name: field for field in _retencion_fields()}
+
+    for name in ("importe_integro_dinerario", "retencion", "reducciones_aplicables", "gastos_deducibles"):
+        assert by_name[name].kind is RequestFieldKind.DECIMAL
+        assert by_name[name].public_decimal
+    assert by_name["importe_integro_dinerario"].required
+    assert not by_name["gastos_deducibles"].required
+    assert by_name["importe_integro_dinerario"].initial == ""
+    assert not by_name["payer_tax_id"].public_decimal
+
+
+def test_typed_decimal_text_builds_a_document_the_request_model_accepts() -> None:
+    from .....application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+
+    document, problems = request_document(_retencion_fields(), _retencion_texts())
+
+    assert problems == {}
+    assert document["importe_integro_dinerario"] == {"decimal": "12000.50"}
+    assert document["retencion"] == {"decimal": "1234.56"}
+    assert document["reducciones_aplicables"] == {"decimal": "100.25"}
+    validation = validate_request(RetencionSoportadaRecordRequest, document)
+    assert validation.field_errors == {}
+    assert isinstance(validation.payload, RetencionSoportadaRecordRequest)
+    assert validation.payload.importe_integro_dinerario.decimal == "12000.50"
+
+
+def test_a_blank_optional_public_decimal_is_null_never_zero() -> None:
+    from .....application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+
+    document, problems = request_document(_retencion_fields(), _retencion_texts(reducciones_aplicables=""))
+
+    assert problems == {}
+    assert "reducciones_aplicables" not in document
+    validation = validate_request(RetencionSoportadaRecordRequest, document)
+    assert isinstance(validation.payload, RetencionSoportadaRecordRequest)
+    assert validation.payload.reducciones_aplicables is None
+    assert validation.payload.gastos_deducibles is None
+
+
+def test_a_public_decimal_round_trips_back_to_its_decimal_text() -> None:
+    fields = _retencion_fields()
+    document, _problems = request_document(fields, _retencion_texts())
+
+    texts = field_texts(fields, document)
+
+    assert texts["importe_integro_dinerario"] == "12000.50"
+    assert texts["reducciones_aplicables"] == "100.25"
+    assert texts["gastos_deducibles"] == ""
+    again, problems = request_document(fields, texts)
+    assert problems == {}
+    assert again == document
+
+
+def test_ambiguous_or_malformed_decimal_text_is_refused_not_guessed() -> None:
+    fields = _retencion_fields()
+
+    for text in ("1.234", "twelve", "1,2,3", "NaN", '{"decimal": "1"}'):
+        document, problems = request_document(fields, _retencion_texts(retencion=text))
+        assert problems == {"retencion": RequestFieldProblem.NUMBER}, text
+        assert "retencion" not in document

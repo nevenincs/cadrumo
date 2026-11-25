@@ -8,10 +8,10 @@ from sqlalchemy import bindparam, text
 
 from ......core.classification.policies import SensitivityClass
 from ...crypto.encrypted_columns import secure_object_key_digest
-from ..orm import SecureObjectRow
 from ..secure_object_records import SecureObjectBatchLoadItem
 from ..secure_objects import SecureObjectRepository
 from ..session import session_scope
+from ..tables import secure_objects_table
 
 
 def iter_many_with_failures(
@@ -46,11 +46,11 @@ def iter_many_with_failures(
                 bindparam("object_keys", value=object_key_digests, expanding=True),
             )
             .columns(
-                id=SecureObjectRow.__table__.c.id.type,
-                object_key=SecureObjectRow.__table__.c.object_key.type,
-                classification=SecureObjectRow.__table__.c.classification.type,
-                schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                written_at=SecureObjectRow.__table__.c.written_at.type,
+                id=secure_objects_table.c.id.type,
+                object_key=secure_objects_table.c.object_key.type,
+                classification=secure_objects_table.c.classification.type,
+                schema_version=secure_objects_table.c.schema_version.type,
+                written_at=secure_objects_table.c.written_at.type,
             )
         )
         for raw in session.execute(stmt):

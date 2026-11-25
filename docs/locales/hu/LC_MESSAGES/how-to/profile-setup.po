@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 17:01+0200\n"
+"POT-Creation-Date: 2026-11-01 02:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -244,7 +244,7 @@ msgid ""
 "first page asks for your output language. Answer it and the rest of the "
 "wizard renders in the language you chose. The pages then walk your "
 "identity, fiscal residence, economic activity, VAT, enrollment, family "
-"situation (including your descendientes), recurring obligations, and "
+"situation (including your descendants), recurring obligations, and "
 "service preferences, ending on a review page that shows every answer "
 "before anything is saved. Questions are conditional: the wizard only asks"
 " what applies to the answers you already gave."
@@ -519,11 +519,12 @@ msgid ""
 "(módulos) regime, `objetiva`, files Modelo 131 instead. Cadrumo does not "
 "assume a regime when you leave it unset."
 msgstr ""
-"Tevékenységnél az `--irpf-estimation-regime` kapcsolóval rögzítsd, hogyan"
-" becsüli az IRPF a hozamot. Az estimación directa (`directa_normal` vagy "
-"`directa_simplificada`) Modelo 130-at nyújt be. Az estimación objetiva "
-"(módulos) rendszer, az `objetiva`, ehelyett Modelo 131-et nyújt be. A "
-"Cadrumo nem feltételez rendszert, ha üresen hagyod."
+"Tevékenység esetén az `--irpf-estimation-regime` kapcsolóval rögzítsd, "
+"hogyan állapítja meg az IRPF a tevékenység jövedelmét. A normál vagy "
+"egyszerűsített közvetlen becslési rendszer (`directa_normal` vagy "
+"`directa_simplificada`) Modelo 130 bevallást igényel. Az objektív "
+"becslési rendszer (átalányadózás, `objetiva`) ehelyett Modelo 131-et "
+"igényel. Ha üresen hagyod, a Cadrumo nem feltételez adózási rendszert."
 
 #: ../../how-to/profile-setup.md:225
 msgid "Identity"
@@ -560,13 +561,14 @@ msgstr ""
 msgid ""
 "This tool does not model the foral regimes. Setting the community to "
 "`pais_vasco` or `navarra` is refused, because residents there file with "
-"their *Hacienda Foral*, under the *Concierto Económico* (País Vasco) or "
-"the *Convenio Económico* (Navarra), not with the AEAT:"
+"their *Hacienda Foral*, under the *Concierto Económico* (Basque Country) "
+"or the *Convenio Económico* (Navarra), not with the AEAT:"
 msgstr ""
-"Ez az eszköz nem modellezi a foral rendszereket. A közösség `pais_vasco` "
-"vagy `navarra` értékre állítását elutasítja, mert az ottani illetőségűek "
-"a *Hacienda Foral*-jukhoz nyújtanak be, a *Concierto Económico* (País "
-"Vasco) vagy a *Convenio Económico* (Navarra) alapján, nem az AEAT-nál:"
+"Ez az eszköz nem modellezi a forális adórendszereket. Elutasítja, ha a "
+"közösség `pais_vasco` vagy `navarra` értékre van állítva, mert az ottani "
+"illetőségűek a saját forális adóhatóságuknak (Hacienda Foral) nyújtják be"
+" a bevallást, a *Concierto Económico* vagy a *Convenio Económico* "
+"alapján; ezek nem AEAT-bevallások."
 
 #: ../../how-to/profile-setup.md:250
 msgid ""
@@ -722,19 +724,19 @@ msgstr ""
 #: ../../how-to/profile-setup.md:298
 msgid ""
 "`aeat app modelo readiness` checks one modelo, filing year, and period. "
-"Here the profile is ready (`profile_ready` is true), but the Modelo 303 "
-"source inputs are not (`binding_ready` is false), so the command exits "
-"with status 2. Use [Find out which modelos apply to you](choose-"
+"Here the profile is ready (`profile_ready` is `true`), but the Modelo 303"
+" source inputs are not (`binding_ready` is `false`), so the command exits"
+" with status 2. Use [Find out which modelos apply to you](choose-"
 "modelo.md) to find the period codes a modelo accepts. Fix any wrong facts"
 " with `edit` before you continue."
 msgstr ""
 "Az `aeat app modelo readiness` egy nyomtatványt, benyújtási évet és "
-"időszakot ellenőriz. Itt a profil készen áll (a `profile_ready` igaz), de"
-" a Modelo 303 forrásbemenetei nem (a `binding_ready` hamis), ezért a "
-"parancs 2-es státuszkóddal lép ki. Hogy megtudd, milyen időszakkódokat "
-"fogad el egy nyomtatvány, használd a [Mely nyomtatványok vonatkoznak rád"
-"?](choose-modelo.md) útmutatót. Javíts ki minden hibás adatot az `edit` "
-"paranccsal, mielőtt továbbmész."
+"időszakot ellenőriz. Itt a profil készen áll (a `profile_ready` igaz, "
+"azaz `true`), de a Modelo 303 forrásbemenetei nem (a `binding_ready` "
+"hamis, azaz `false`), ezért a parancs 2-es státuszkóddal lép ki. Hogy "
+"megtudd, milyen időszakkódokat fogad el egy nyomtatvány, használd a [Mely"
+" nyomtatványok vonatkoznak rád?](choose-modelo.md) útmutatót. Javíts ki "
+"minden hibás adatot az `edit` paranccsal, mielőtt továbbmész."
 
 #: ../../how-to/profile-setup.md:304
 msgid "How your facts decide which forms apply"
@@ -795,7 +797,7 @@ msgstr "Modelo nyomtatvány"
 
 #: ../../how-to/profile-setup.md:294
 msgid "Art. 109 activity-income coverage exception applies"
-msgstr "A 109. cikk szerinti tevékenységijövedelem-fedezeti kivétel érvényes"
+msgstr "A 109. cikk szerinti kivétel alkalmazható a tevékenységi bevételekre"
 
 #: ../../how-to/profile-setup.md:294
 msgid "Removes the Modelo 130 obligation"
@@ -889,11 +891,11 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:343
 msgid ""
-"Descendientes are not part of profile edit. Manage them with the "
-"[descendiente command](#manage-your-descendants). The edit summary "
+"Descendants are not part of profile editing. Manage them with the "
+"[`descendiente` command](#manage-your-descendants). The edit summary "
 "reminds you of this every time."
 msgstr ""
-"A descendientek nem részei a profilszerkesztésnek. A [descendiente "
+"A leszármazottak nem részei a profilszerkesztésnek. A [`descendiente` "
 "paranccsal](#manage-your-descendants) kezeld őket. A szerkesztési "
 "összefoglaló erre minden alkalommal emlékeztet."
 
@@ -912,11 +914,11 @@ msgstr "Leszármazottak kezelése"
 
 #: ../../how-to/profile-setup.md:353
 msgid ""
-"Descendientes drive the *mínimo por descendientes* in the annual Renta. "
-"Declare them during first-time setup; manage them afterwards with the "
-"`descendiente` command."
+"Descendants determine the *minimum allowance for descendants (mínimo por "
+"descendientes)* in the annual Renta. Declare them during first-time "
+"setup; manage them afterwards with the `descendiente` command."
 msgstr ""
-"A descendientek határozzák meg az éves Renta *mínimo por descendientes* "
+"A leszármazottak határozzák meg az éves Renta *mínimo por descendientes* "
 "értékét. Az első beállításkor add meg őket, később pedig kezeld a "
 "`descendiente` paranccsal."
 
@@ -926,10 +928,10 @@ msgstr "Nyisd meg a lapozható leszármazott-szerkesztőt:"
 
 #: ../../how-to/profile-setup.md:362
 msgid ""
-"The editor shows your declared descendientes, lets you change any answer,"
-" add one, or reduce the count, and saves the complete set when you "
-"confirm. Reducing the count removes the descendientes beyond it. The "
-"stored set always matches exactly what you confirmed."
+"The editor shows your declared descendants, lets you change any answer, "
+"add one, or reduce the count, and saves the complete set when you "
+"confirm. Reducing the count removes the descendants beyond it. The stored"
+" set always matches exactly what you confirmed."
 msgstr ""
 "A szerkesztő megmutatja a deklarált leszármazottakat, lehetővé teszi "
 "bármely válasz módosítását, egy új személy hozzáadását vagy a szám "
@@ -950,7 +952,7 @@ msgid ""
 "`tutela`), `INSCRIPCION`, `DISCAPACIDAD` (`0`, `33`, or `65`), "
 "`CONVIVENCIA`, `CUSTODIA`, `MESES_TRABAJO`, `GASTOS_GUARDERIA`, and "
 "`NIF`. Run `aeat config profile descendiente add --help` for the full "
-"list. A descendiente without a tax identifier is fine. Leave `NIF` out. "
+"list. A descendant without a tax identifier is fine. Leave `NIF` out. "
 "`remove` takes the position from `list`, counting from `0`."
 msgstr ""
 "Az `add` gyermekenként egy `--descendiente` kapcsolót fogad, vesszővel "
@@ -961,7 +963,7 @@ msgstr ""
 " (`0`, `33` vagy `65`), a `CONVIVENCIA`, a `CUSTODIA`, a `MESES_TRABAJO`,"
 " a `GASTOS_GUARDERIA` és a `NIF`. A teljes listáért futtasd az `aeat "
 "config profile descendiente add --help` parancsot. Adóazonosító nélküli "
-"descendiente is megengedett: hagyd ki a `NIF` kulcsot. A `remove` a "
+"leszármazott is megengedett: hagyd ki a `NIF` kulcsot. A `remove` a "
 "`list` által mutatott pozíciót fogadja, `0`-tól számolva."
 
 #: ../../how-to/profile-setup.md:383
@@ -980,13 +982,14 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:388
 msgid ""
-"Name the months. The guardería increment counts only the months the "
+"Name the months. The childcare increment counts only the months the "
 "mother worked *and* the child attended, so a count cannot say whether the"
 " two overlap."
 msgstr ""
-"Nevezd meg a hónapokat. A guardería-növekmény csak azokat a hónapokat "
-"számítja, amelyekben az anya dolgozott *és* a gyermek bölcsődébe járt, "
-"ezért egy darabszám nem árulja el, hogy a kettő átfedi-e egymást."
+"Nevezd meg a hónapokat. A bölcsődei költségek után járó növekmény csak "
+"azokat a hónapokat számítja, amelyekben az anya dolgozott *és* a gyermek "
+"bölcsődébe járt, ezért egy darabszám nem árulja el, hogy a két feltétel "
+"ugyanazokban a hónapokban teljesült-e."
 
 #: ../../how-to/profile-setup.md:391
 msgid "Maintain your profile"
@@ -1070,25 +1073,33 @@ msgstr "A három képesség:"
 #: ../../how-to/profile-setup.md:430
 msgid ""
 "`cloud_evidence_upload`: allow sending sensitive supporting documents to "
-"a cloud LLM provider. Off by default. Barred for gestor profiles."
+"a cloud LLM provider. Off by default. Barred for <span "
+"lang=\"es\">gestor</span> profiles."
 msgstr ""
 "`cloud_evidence_upload`: érzékeny bizonylatok küldésének engedélyezése "
-"egy felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. "
-"Gestor-profiloknál tiltott."
+"egy felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. A "
+"<span lang=\"es\">gestor</span> típusú profiloknál tiltott."
 
 #: ../../how-to/profile-setup.md:432
-msgid "`llm_vision`: read invoices with the on-host vision model. On by default."
+msgid ""
+"`llm_vision`: read scanned and image invoices with the vision model you "
+"chose in the Cadrumo agent. On by default. It does not decide where the "
+"read runs: a model that reads off this computer also needs "
+"`cloud_evidence_upload` and your consent for each read."
 msgstr ""
-"`llm_vision`: számlák olvasása a gépen futó vision-modellel. "
-"Alapértelmezés szerint bekapcsolva."
+"`llm_vision`: szkennelt és képes számlák olvasása a Cadrumo-ügynökben "
+"választott látásmodellel. Alapértelmezés szerint bekapcsolva. Nem dönti "
+"el, hol fut az olvasás: az a modell, amely ezen a számítógépen kívül "
+"olvas, ezenkívül a `cloud_evidence_upload` képességet és minden egyes "
+"olvasáshoz a hozzájárulásodat igényli."
 
-#: ../../how-to/profile-setup.md:433
+#: ../../how-to/profile-setup.md:436
 msgid "`google_export`: export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: számítások exportálása Google Táblázatokba. "
 "Alapértelmezés szerint bekapcsolva."
 
-#: ../../how-to/profile-setup.md:435
+#: ../../how-to/profile-setup.md:438
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -1103,7 +1114,7 @@ msgstr ""
 " a kiegészítő telepítését; a kiegészítőkért lásd: [Cadrumo telepítése"
 "](../workstation-setup.md)."
 
-#: ../../how-to/profile-setup.md:440
+#: ../../how-to/profile-setup.md:443
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout revokes "
@@ -1118,11 +1129,11 @@ msgstr ""
 " marad; a további parancsokhoz új hitelesítés szükséges. A beléptetett "
 "API-hitelesítő adatok megtartják külön jogosultságukat:"
 
-#: ../../how-to/profile-setup.md:450
+#: ../../how-to/profile-setup.md:453
 msgid "See what changed"
 msgstr "Nézd meg, mi változott"
 
-#: ../../how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:455
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -1137,7 +1148,7 @@ msgstr ""
 "ezért előbb jelentkezz be a profilba. A példa felsorolja az `aeat config "
 "profile history` által elfogadott szűrőket:"
 
-#: ../../how-to/profile-setup.md:462
+#: ../../how-to/profile-setup.md:465
 msgid ""
 "Repeat `--event-type` to include several types. Narrow the window with "
 "`--since` and `--until`, or match one record with `--object-id` or "
@@ -1151,11 +1162,11 @@ msgstr ""
 "kiírásával elutasítja, így egy üres érték gyors módja a szókincs "
 "felfedezésének."
 
-#: ../../how-to/profile-setup.md:467
+#: ../../how-to/profile-setup.md:470
 msgid "Delete a profile permanently"
 msgstr "Profil végleges törlése"
 
-#: ../../how-to/profile-setup.md:469
+#: ../../how-to/profile-setup.md:472
 msgid ""
 "Open **Manage profiles** from the profile menu or sign-in screen. You can"
 " create a profile or delete one stored under your current OS account. You"
@@ -1164,11 +1175,11 @@ msgid ""
 msgstr ""
 "Nyisd meg a **Profilok kezelése** felületet a profilmenüből vagy a "
 "bejelentkezési képernyőről. Létrehozhatsz profilt, vagy törölhetsz egyet,"
-" amely a jelenlegi operációsrendszer-fiókod alatt van tárolva. A "
-"törléshez nincs szükséged a profil jelszavára. A többi operációsrendszer-"
-"fiók profiljai nem szerepelnek a listán."
+" amely az operációs rendszerben használt jelenlegi fiókod alatt van "
+"tárolva. A törléshez nincs szükséged a profil jelszavára. Az operációs "
+"rendszer más fiókjaihoz tartozó profilok nem szerepelnek a listán."
 
-#: ../../how-to/profile-setup.md:473
+#: ../../how-to/profile-setup.md:476
 msgid ""
 "Choose **Delete profile**, type its displayed name exactly, and "
 "acknowledge the data loss. This permanently removes its local invoices, "
@@ -1184,7 +1195,7 @@ msgstr ""
 "munkameneteit, és szükség esetén törli a kijelölését; az utolsó profilt "
 "is törölheted. A megőrzési védelem alatt álló rekordok nem törölhetők."
 
-#: ../../how-to/profile-setup.md:479
+#: ../../how-to/profile-setup.md:482
 msgid ""
 "On the command line, first review the named profile without `--yes`; "
 "nothing is deleted. Add `--yes` only when you intend to remove that "
@@ -1194,11 +1205,11 @@ msgstr ""
 "semmi nem törlődik. A `--yes` kapcsolót csak akkor add hozzá, ha "
 "véglegesen el akarod távolítani azt a profilt:"
 
-#: ../../how-to/profile-setup.md:486
+#: ../../how-to/profile-setup.md:489
 msgid "If setup looks wrong"
 msgstr "Ha a beállítás hibásnak tűnik"
 
-#: ../../how-to/profile-setup.md:488
+#: ../../how-to/profile-setup.md:491
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1208,7 +1219,7 @@ msgstr ""
 "mezőértéket talált, vagy hogy rossz profil alatt dolgozol, lásd: "
 "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:492
+#: ../../how-to/profile-setup.md:495
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1221,28 +1232,28 @@ msgstr ""
 "részt. Megnevezi a mellékelendő kimeneteket és a kihagyandó személyes "
 "adatokat, mielőtt a problémát a projekt hibakövetőjéhez viszi."
 
-#: ../../how-to/profile-setup.md:498
+#: ../../how-to/profile-setup.md:501
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/profile-setup.md:500
+#: ../../how-to/profile-setup.md:503
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:501
+#: ../../how-to/profile-setup.md:504
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Tartsd karban a profilod Modelo 036-os censo-adatait](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:502
+#: ../../how-to/profile-setup.md:505
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezd meg a benyújtási naptárad](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:503
+#: ../../how-to/profile-setup.md:506
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/profile-setup.md:504
+#: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

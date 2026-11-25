@@ -37,7 +37,7 @@ pytestmark = [
 ]
 
 _STARTUP_TIMEOUT_SECONDS = 60
-_ROOT_VARIABLES = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT")
+_ROOT_VARIABLES = ("CADRUMO_STORAGE_ROOT",)
 
 
 def _environment(root: Path | None) -> dict[str, str]:
@@ -45,7 +45,7 @@ def _environment(root: Path | None) -> dict[str, str]:
     # Native IPC acceptance is independent of the test runner's desktop session.
     environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
     if root is not None:
-        environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        environment["CADRUMO_STORAGE_ROOT"] = str(root)
     return environment
 
 
@@ -137,7 +137,7 @@ def test_a_root_overlapping_the_installed_default_is_refused_untouched(tmp_path:
         environment[name] = str(home)
     default = host_installed_default_root(environment)
     root = {"same": default, "inside": default / "nested", "containing": default.parent}[relation]
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     before = sorted(home.rglob("*"))
     with _caller_owned(environment, tmp_path) as process:
         process.communicate(timeout=_STARTUP_TIMEOUT_SECONDS)

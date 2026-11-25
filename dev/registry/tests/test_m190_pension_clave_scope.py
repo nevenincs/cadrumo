@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.modelos.perceptor_clave_scope import (
     PerceptorClaveScope,
     resolve_perceptor_clave_scope,
@@ -18,6 +22,14 @@ from cadrumo.domain.modelos.perceptor_clave_scope import (
 from ..compiler.authority import AuthoringCandidateInspection, inspect_authoring_candidate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _JUBILACION = validated_casilla_id("perc.prestacion-jubilacion")
 
@@ -35,7 +47,7 @@ def test_pension_indicators_are_required_for_b01_not_professional_g_rows(
     support = candidate.components.catalogues.require_supported_filing_years()
     authority = CandidateFactAuthority(candidate.components.catalogues.facts, support)
     revision = next(modelo for modelo in candidate.components.modelos if modelo.id == "190").revisions[
-        "2025-y-siguientes"
+        str(open_ended_revision("190").id)
     ]
     # The revision that introduces the pension indicators opens its own open-ended span;
     # every supported exercise inside that span must carry the same clave scope.

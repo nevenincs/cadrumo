@@ -1,0 +1,59 @@
+[fact]
+fact_id = "modelo-232-always-specific-operation-types"
+family = "mapping"
+
+# Orden HFP/816/2017 art. 2.1.b makes an operation "específica" when it is one of "aquellas
+# operaciones excluidas del contenido simplificado de la documentación a que se refieren los
+# artículos 18.3 de la Ley del Impuesto sobre Sociedades y 16.5 del Reglamento". LIS art. 18.3
+# lists them, among them "5.º Las operaciones sobre activos intangibles". Tabla C of the record
+# design has one type for that class, "Clave 2: Adquisición/Transmisión/Cesión de uso de
+# intangibles", so an operation of that type is specific whatever the filer states.
+#
+# What is NOT claimed: the other classes of art. 18.3 (the business and securities transfers,
+# 2.º and 3.º, and the operations on real estate, 4.º) have no Tabla C type of their own. Tipo 01
+# mixes real estate with other tangible assets, tipo 03 mixes listed with unlisted securities and
+# tipo 08 mixes rentals of real estate with other uses, so none of them is listed here: the filer
+# states whether such an operation is specific.
+[[fact.variants]]
+variant_id = "modelo-232-always-specific-operation-types:2016-01-01"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+legal_refs = [
+  "orden-hfp-816-2017:art-2",
+  "ley-27-2014:art-18",
+]
+source_refs = [
+  "boe-orden-hfp-816-2017-art-2-obligados",
+  "boe-ley-27-2014-art-18-operaciones-vinculadas",
+  "aeat-dr-232-2016",
+  "aeat-dr-232-2018",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-816-2017-art-2-obligados"
+required_text = [
+    "tienen la consideración de operaciones específicas, aquellas operaciones excluidas del contenido simplificado de la documentación a que se refieren los artículos 18.3 de la Ley del Impuesto sobre Sociedades y 16.5 del Reglamento del Impuesto sobre Sociedades.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-27-2014-art-18-operaciones-vinculadas"
+required_text = [
+    "En ningún caso, el contenido simplificado de la documentación resultará de aplicación a las siguientes operaciones:",
+    "5.º Las operaciones sobre activos intangibles.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-232-2016"
+required_text = ["Clave 2: Adquisición/Transmisión/Cesión de uso de intangibles"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-232-2018"
+required_text = ["Clave 2: Adquisición/Transmisión/Cesión de uso de intangibles"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "m232.tipo_operacion.always_specific", value = "02" },
+]

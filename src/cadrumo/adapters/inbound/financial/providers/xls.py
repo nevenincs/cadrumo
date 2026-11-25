@@ -2,7 +2,7 @@
 
 Implements :class:`XlsProvider`, the ``.xls`` counterpart of
 :class:`~adapters.inbound.financial.providers.xlsx.XlsxProvider`. The workbook
-is read by :func:`~core.legacy_workbook.read_legacy_workbook`, which marks
+is read by :func:`~core.xls_workbook.read_xls_workbook`, which marks
 formula cells the way ``openpyxl`` does, and the worksheet and header row are
 chosen and parsed by :mod:`adapters.inbound.financial.providers.workbook_layout`.
 An ``.xls`` and an ``.xlsx`` export of the same bank statement therefore select
@@ -17,9 +17,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from .....core.legacy_workbook import LegacyWorksheet, read_legacy_workbook
 from .....core.tabular import TabularSourceError
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
+from .....core.xls_workbook import XlsWorksheet, read_xls_workbook
 from .....domain.transactions.raw_transaction import SourceFormat
 from .base import (
     FinancialProvider,
@@ -28,7 +28,7 @@ from .base import (
     ProviderValidation,
     default_currency,
 )
-from .csv import find_column
+from .csv import STATEMENT_COLUMNS, find_column
 from .workbook_layout import (
     LAYOUT_SAMPLE_ROWS,
     MIN_LAYOUT_SCORE,
@@ -42,7 +42,7 @@ __all__ = ["XlsProvider"]
 
 @dataclass(frozen=True, slots=True)
 class _SelectedWorksheet:
-    """The worksheet whose opening rows best match a known bank layout."""
+    """The worksheet whose opening rows best name the statement columns."""
 
     name: str
     rows: tuple[tuple[object, ...], ...]
@@ -52,7 +52,7 @@ class _SelectedWorksheet:
 class XlsProvider(FinancialProvider):
     """Ingest raw transactions from legacy ``.xls`` bank statement exports.
 
-    Every worksheet's first rows are scored against the bank-layout catalogue,
+    Every worksheet's first rows are scored against the statement vocabulary,
     and the best-scoring worksheet and header row are read. A formula cell in a
     data row below the header refuses the source rather than trusting its
     cached value.
@@ -68,7 +68,7 @@ class XlsProvider(FinancialProvider):
 
     @override
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that ``path`` is a readable ``.xls`` workbook with a known bank layout and data rows."""
+        """Validate that ``path`` is a readable ``.xls`` workbook with a statement header and data rows."""
         try:
             selected = self._select_worksheet(self._read_source_bytes(path), path=path)
         except InvalidFinancialSourceError as exc:
@@ -77,13 +77,11 @@ class XlsProvider(FinancialProvider):
         if len(selected.rows) <= match.header_index + 1:
             return ProviderValidation(
                 is_valid=False,
-                warnings=(f"{match.layout.bank_name} worksheet has no data rows after the header",),
+                warnings=("Worksheet has no data rows after the header",),
             )
         warnings: tuple[str, ...] = ()
-        if not bool(find_column(match.lookup, match.layout.columns.currency)):
-            warnings = (
-                f"{match.layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
-            )
+        if not bool(find_column(match.lookup, STATEMENT_COLUMNS.currency)):
+            warnings = (f"Worksheet has no currency column; falling back to {default_currency()}",)
         return ProviderValidation(
             is_valid=True,
             warnings=warnings,
@@ -109,9 +107,9 @@ class XlsProvider(FinancialProvider):
     def _select_worksheet(self, source_bytes: bytes, *, path: Path) -> _SelectedWorksheet:
         """Read the workbook, choose its best worksheet and refuse formula cells in its data rows."""
         try:
-            worksheets = read_legacy_workbook(source_bytes)
+            worksheets = read_xls_workbook(source_bytes)
         except TabularSourceError as exc:
-            raise InvalidFinancialSourceError(f"could not open legacy workbook {path.name}: {exc}") from exc
+            raise InvalidFinancialSourceError(f"could not open XLS workbook {path.name}: {exc}") from exc
         best = _best_worksheet_layout(worksheets)
         if best is None or best[1].score < MIN_LAYOUT_SCORE:
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
@@ -124,7 +122,7 @@ class XlsProvider(FinancialProvider):
         )
 
 
-def _refuse_formula_data_rows(worksheet: LegacyWorksheet, *, header_index: int) -> None:
+def _refuse_formula_data_rows(worksheet: XlsWorksheet, *, header_index: int) -> None:
     """Refuse a formula cell anywhere below the header, as the ``.xlsx`` provider does."""
     for row_number, cells in enumerate(worksheet.rows, start=1):
         if row_number <= header_index + 1:
@@ -138,10 +136,10 @@ def _refuse_formula_data_rows(worksheet: LegacyWorksheet, *, header_index: int) 
 
 
 def _best_worksheet_layout(
-    worksheets: tuple[LegacyWorksheet, ...],
-) -> tuple[LegacyWorksheet, WorksheetLayoutMatch] | None:
+    worksheets: tuple[XlsWorksheet, ...],
+) -> tuple[XlsWorksheet, WorksheetLayoutMatch] | None:
     """Choose the highest layout score while preserving first-worksheet ties."""
-    best: tuple[LegacyWorksheet, WorksheetLayoutMatch] | None = None
+    best: tuple[XlsWorksheet, WorksheetLayoutMatch] | None = None
     for worksheet in worksheets:
         candidate = best_layout_match([cell.value for cell in row] for row in worksheet.rows[:LAYOUT_SAMPLE_ROWS])
         if candidate is not None and (best is None or candidate.score > best[1].score):

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ from ....core.time.clock import now
 from ....core.type_guards import is_str_keyed_dict
 from ...persistence.storage.secure_object_namespaces import GOOGLE_ARTIFACT_RECEIPTS_NAMESPACE
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
-from .api import RequestRetryPolicy, execute_request
+from .api import ExecutableRequest, RequestRetryPolicy, execute_request
 from .artifact_admission import CREATION_MARKER, KIND_MARKER, managed_artifact_refusal, validate_creation_metadata
 from .drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 
@@ -87,13 +87,15 @@ class GoogleRootLayout:
         self.drive, self.repository, self.root = drive, repository, root
         self.commit, self.before, self.ack = commit, before_handoff, acknowledged
 
-    def _call(self, request, action: str, *, writes: bool = False):
+    def _call[ResponseBodyT](
+        self, request: ExecutableRequest[ResponseBodyT], action: str, *, writes: bool = False
+    ) -> ResponseBodyT:
         self.before(action, writes=writes)
         result = execute_request(request, action=action, retry=RequestRetryPolicy.SINGLE_ATTEMPT)
         self.ack(action, writes=writes)
         return result
 
-    def _get(self, identifier: str):
+    def _get(self, identifier: str) -> Mapping[str, object]:
         return self._call(self.drive.files().get(fileId=identifier, fields=_FIELDS), "drive.layout.get")
 
     def _save(self, state: RootLayoutState, prior: RootLayoutState | None) -> None:
@@ -121,7 +123,7 @@ class GoogleRootLayout:
             changed=lambda _: True,
         )
 
-    def _find_parent(self) -> list[dict[str, object]]:
+    def _find_parent(self) -> list[Mapping[str, object]]:
         # Explicitly authorized organizational-parent metadata exception. Never
         # list contents, search by name alone, or adopt a profile root here.
         query = (
@@ -130,9 +132,9 @@ class GoogleRootLayout:
             f"and appProperties has {{ key='{OWNERSHIP_KEY}' and value='{OWNERSHIP_VALUE}' }} "
             f"and appProperties has {{ key='{KIND_MARKER}' and value='{_APP_KIND}' }}"
         )
-        found = []
-        page = None
-        seen = set()
+        found: list[Mapping[str, object]] = []
+        page: str | None = None
+        seen: set[str] = set()
         while True:
             result = self._call(
                 self.drive.files().list(
@@ -145,7 +147,7 @@ class GoogleRootLayout:
             )
             found.extend(result.get("files", []))
             page = result.get("nextPageToken")
-            if not page:
+            if page is None or not page:
                 return found
             if page in seen:
                 raise managed_artifact_refusal("layout_repeated_page")
@@ -161,12 +163,9 @@ class GoogleRootLayout:
             or entry.get("name") != "Cadrumo"
             or entry.get("parents") != [my_drive]
             or entry.get("ownedByMe") is not True
-            or props.get(APPLICATION_ROOT_ID_MARKER) != entry.get("id")
-            or props.get(OWNERSHIP_KEY) != OWNERSHIP_VALUE
-            or props.get(KIND_MARKER) != _APP_KIND
-            or props.get(CREATION_MARKER) != str(creation_id)
         ):
             raise managed_artifact_refusal("layout_parent_identity_mismatch")
+        _require_parent_markers(props, entry.get("id"), creation_id)
 
     def organize(self) -> str:
         """Move a known root once; uncertain moves reconcile by exact metadata."""
@@ -178,82 +177,94 @@ class GoogleRootLayout:
         # drive.file cannot read My Drive itself. Retain the known root's
         # source and verify it against the application folder created/listed
         # directly under 'root'; no ancestor resource read is necessary.
-        parents = root.get("parents")
-        my_drive = state.source_parent if state is not None else None
-        if my_drive is None:
-            if not isinstance(parents, list) or len(parents) != 1 or not isinstance(parents[0], str):
-                raise managed_artifact_refusal("layout_source_parent_missing")
-            my_drive = parents[0]
-        if state is None or state.parent_id is None:
-            candidates = self._find_parent()
-            if len(candidates) > 1:
-                raise managed_artifact_refusal("layout_parent_ambiguous")
-            if candidates:
-                parent = candidates[0]
-                try:
-                    props = parent.get("appProperties", {})
-                    if not is_str_keyed_dict(props) or not isinstance(value := props.get(CREATION_MARKER), str):
-                        raise ValueError("missing creation marker")
-                    creation_id = UUID(value)
-                except (ValueError, TypeError):
-                    raise managed_artifact_refusal("layout_parent_creation_missing") from None
-                if state is not None and state.parent_creation_id != creation_id:
-                    raise managed_artifact_refusal("layout_parent_creation_uncertain", uncertain=True)
-                self._validate_parent(parent, creation_id, my_drive)
-                updated = RootLayoutState(
-                    profile_id=self.root.profile_id,
-                    root_id=self.root.artifact_id,
-                    parent_creation_id=creation_id,
-                    parent_id=str(parent["id"]),
-                    phase="ready",
-                    source_parent=my_drive,
-                )
-                self._save(updated, state)
-                state = updated
-            else:
-                if state is not None:
-                    raise managed_artifact_refusal("layout_parent_creation_uncertain", uncertain=True)
-                generated = self._call(
-                    self.drive.files().generateIds(count=1, space="drive", type="files"),
-                    "drive.layout.generate-parent-id",
-                )
-                identifiers = generated.get("ids")
-                if not isinstance(identifiers, list) or len(identifiers) != 1 or not isinstance(identifiers[0], str):
-                    raise managed_artifact_refusal("layout_parent_id_missing")
-                state = RootLayoutState(
-                    profile_id=self.root.profile_id,
-                    root_id=self.root.artifact_id,
-                    parent_creation_id=uuid4(),
-                    parent_id=identifiers[0],
-                    source_parent=my_drive,
-                )
-                self._save(state, None)
-                parent_identifier = identifiers[0]
-                parent = self._call(
-                    self.drive.files().create(
-                        body={
-                            "id": parent_identifier,
-                            "name": "Cadrumo",
-                            "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
-                            "parents": ["root"],
-                            "appProperties": {
-                                OWNERSHIP_KEY: OWNERSHIP_VALUE,
-                                KIND_MARKER: _APP_KIND,
-                                CREATION_MARKER: str(state.parent_creation_id),
-                                APPLICATION_ROOT_ID_MARKER: parent_identifier,
-                            },
-                        },
-                        fields="id",
-                    ),
-                    "drive.layout.create-parent",
-                    writes=True,
-                )
-                identifier = parent.get("id")
-                if identifier != state.parent_id:
-                    raise managed_artifact_refusal("layout_parent_response_missing", uncertain=True)
-                updated = state.model_copy(update={"parent_id": identifier, "phase": "ready"})
-                self._save(updated, state)
-                state = updated
+        my_drive = _layout_source_parent(state, root.get("parents"))
+        state = self._ensure_application_parent(state, my_drive)
+        return self._move_root(state, my_drive)
+
+    def _ensure_application_parent(self, state: RootLayoutState | None, my_drive: str) -> RootLayoutState:
+        """Adopt or create one exact application folder without repeating uncertain creation."""
+        if state is not None and state.parent_id is not None:
+            return state
+        candidates = self._find_parent()
+        if len(candidates) > 1:
+            raise managed_artifact_refusal("layout_parent_ambiguous")
+        if candidates:
+            return self._adopt_application_parent(candidates[0], state, my_drive)
+        if state is not None:
+            raise managed_artifact_refusal("layout_parent_creation_uncertain", uncertain=True)
+        return self._create_application_parent(my_drive)
+
+    def _adopt_application_parent(
+        self, parent: Mapping[str, object], state: RootLayoutState | None, my_drive: str
+    ) -> RootLayoutState:
+        """Validate the listed folder's creation identity before retaining it locally."""
+        try:
+            props = parent.get("appProperties", {})
+            if not is_str_keyed_dict(props) or not isinstance(value := props.get(CREATION_MARKER), str):
+                raise ValueError("missing creation marker")
+            creation_id = UUID(value)
+        except (ValueError, TypeError):
+            raise managed_artifact_refusal("layout_parent_creation_missing") from None
+        if state is not None and state.parent_creation_id != creation_id:
+            raise managed_artifact_refusal("layout_parent_creation_uncertain", uncertain=True)
+        self._validate_parent(parent, creation_id, my_drive)
+        updated = RootLayoutState(
+            profile_id=self.root.profile_id,
+            root_id=self.root.artifact_id,
+            parent_creation_id=creation_id,
+            parent_id=str(parent["id"]),
+            phase="ready",
+            source_parent=my_drive,
+        )
+        self._save(updated, state)
+        return updated
+
+    def _create_application_parent(self, my_drive: str) -> RootLayoutState:
+        """Record generated identity before the single folder-create handoff."""
+        generated = self._call(
+            self.drive.files().generateIds(count=1, space="drive", type="files"),
+            "drive.layout.generate-parent-id",
+        )
+        identifiers = generated.get("ids")
+        if not isinstance(identifiers, list) or len(identifiers) != 1 or not isinstance(identifiers[0], str):
+            raise managed_artifact_refusal("layout_parent_id_missing")
+        state = RootLayoutState(
+            profile_id=self.root.profile_id,
+            root_id=self.root.artifact_id,
+            parent_creation_id=uuid4(),
+            parent_id=identifiers[0],
+            source_parent=my_drive,
+        )
+        self._save(state, None)
+        parent_identifier = identifiers[0]
+        parent = self._call(
+            self.drive.files().create(
+                body={
+                    "id": parent_identifier,
+                    "name": "Cadrumo",
+                    "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
+                    "parents": ["root"],
+                    "appProperties": {
+                        OWNERSHIP_KEY: OWNERSHIP_VALUE,
+                        KIND_MARKER: _APP_KIND,
+                        CREATION_MARKER: str(state.parent_creation_id),
+                        APPLICATION_ROOT_ID_MARKER: parent_identifier,
+                    },
+                },
+                fields="id",
+            ),
+            "drive.layout.create-parent",
+            writes=True,
+        )
+        identifier = parent.get("id")
+        if identifier != state.parent_id:
+            raise managed_artifact_refusal("layout_parent_response_missing", uncertain=True)
+        updated = state.model_copy(update={"parent_id": identifier, "phase": "ready"})
+        self._save(updated, state)
+        return updated
+
+    def _move_root(self, state: RootLayoutState, my_drive: str) -> str:
+        """Reconcile or perform the one root move through retained intent and postchecks."""
         if state.parent_id is None:
             raise managed_artifact_refusal("layout_parent_missing")
         self._validate_parent(self._get(state.parent_id), state.parent_creation_id, my_drive)
@@ -286,3 +297,27 @@ class GoogleRootLayout:
             raise managed_artifact_refusal("layout_move_unconfirmed", uncertain=True)
         self._save(moving.model_copy(update={"phase": "complete"}), moving)
         return state.parent_id
+
+
+def _layout_source_parent(state: RootLayoutState | None, parents: object) -> str:
+    """Retain the recorded source or require exactly one string parent from root metadata."""
+    my_drive = state.source_parent if state is not None else None
+    if my_drive is None:
+        if not isinstance(parents, list):
+            raise managed_artifact_refusal("layout_source_parent_missing")
+        known_parents = cast(list[object], parents)
+        if len(known_parents) != 1 or not isinstance(known_parents[0], str):
+            raise managed_artifact_refusal("layout_source_parent_missing")
+        my_drive = known_parents[0]
+    return my_drive
+
+
+def _require_parent_markers(props: Mapping[str, object], identifier: object, creation_id: UUID) -> None:
+    """Require the application's exact ownership, kind and creation markers."""
+    if (
+        props.get(APPLICATION_ROOT_ID_MARKER) != identifier
+        or props.get(OWNERSHIP_KEY) != OWNERSHIP_VALUE
+        or props.get(KIND_MARKER) != _APP_KIND
+        or props.get(CREATION_MARKER) != str(creation_id)
+    ):
+        raise managed_artifact_refusal("layout_parent_identity_mismatch")

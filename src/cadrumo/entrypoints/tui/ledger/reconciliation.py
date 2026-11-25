@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-from typing import cast, override
+from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
-from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
-from ....core.errors.hierarchy import InternalInvariantError
+from ....application.ledger.workspace import (
+    LedgerAffectedDeclarationRefV1,
+    LedgerInvoiceReconciliationRefV1,
+    LedgerWorkspaceArea,
+)
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
+from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
-from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
+from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
 #: Operator copy for each one-sided link direction, keyed by the canonical
 #: value rather than a hand-typed string.
@@ -36,8 +42,15 @@ DIRECTION_STATE_LOCALE_KEYS: dict[str, str] = {
 }
 
 
+def _register_cell(row: LedgerAffectedDeclarationRefV1) -> str:
+    """State the asset-register comparison beside the ledger counts; an unread register is not a zero."""
+    return "?" if row.register_state is FiledRegisterState.UNAVAILABLE else str(row.register_change_count)
+
+
 class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     """Render local-only reconciliation and submit admitted visible links."""
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.RECONCILIATION
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain the injected safe workspace projection and link door."""
@@ -191,7 +204,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             table.add_row(
                 str(row.modelo),
                 str(row.period),
-                f"{row.changed_count}/{row.removed_count}",
+                f"{row.changed_count}/{row.removed_count}/{_register_cell(row)}",
                 key=str(row.calculation_revision_id),
             )
 
@@ -260,10 +273,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit once through the injected door or cancel before persistence."""
-        if event.button.id == "ledger-reconciliation-cancel" and self.flow_state in {
-            LedgerFlowState.EDITING,
-            LedgerFlowState.CONFIRMING,
-        }:
+        if event.button.id == "ledger-reconciliation-cancel" and self.can_cancel_flow:
             self._cancel_flow()
             return
         if (
@@ -285,9 +295,12 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         status = self.query_one("#ledger-flow-status", Static)
         try:
             await self.controller.submit_link(*pair)
-        except Exception:
+        except Exception as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.reconciliation.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.reconciliation.failure"))
+            if isinstance(error, CadrumoError) and unknown_outcome_of(error) is not None:
+                # A lost session's own message names the operation too, and asks for a sign-in first.
+                self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(tr("tui.ledger.reconciliation.success"))
@@ -295,7 +308,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     @override
     def _cancel_flow(self) -> None:
         """Cancel only before the injected mutation begins."""
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self._transition(LedgerFlowState.CANCELLED)
         self.selected_pair = None

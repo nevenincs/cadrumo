@@ -15,8 +15,9 @@ from pydantic import TypeAdapter, ValidationError
 from ..authority import bundled_indexed_authority
 from ..errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError
 from ..modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
-from ..schema import SupportedFilingYearsCatalogue
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..temporal import ModeloRevisionDirectory, select_revision_metadata
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -24,9 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.mark.parametrize(
     "declaration",
     (
-        DeclaredInception(filing_year=2023, legal_refs=("orden-hfp-886-2023:art-1",)),
+        DeclaredInception(filing_year=filing_year_envelope().floor, legal_refs=("orden-hfp-886-2023:art-1",)),
         UnauthoredBefore(
-            earliest_authored=2022,
+            earliest_authored=filing_year_envelope().floor,
             reason="Synthetic earlier-edition authoring debt",
             legal_refs=("orden-eha-3377-2011:art-1",),
         ),

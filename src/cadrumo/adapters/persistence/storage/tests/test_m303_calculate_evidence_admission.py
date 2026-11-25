@@ -16,13 +16,13 @@ from typing import cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    seed_modelo_ready_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo import operation_definitions as definitions_module
+from cadrumo.application.modelo import calculation_operation as definitions_module
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
@@ -33,16 +33,19 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
 )
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality
 from cadrumo.core.period import Period
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.m303_filing_evidence import (
@@ -136,9 +139,13 @@ def _calculation_ports_factory(work_unit: WorkUnit) -> CalculationActionPortsFac
     )
 
     def build(
-        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
-        del bucket_id, operation, profile_record
+        del bucket_id, operation, profile_record, mutation_writer
         return _work_unit_read_ports(SimpleNamespace(work_unit_repository=repository))
 
     return build
@@ -149,7 +156,7 @@ def _calculate_request(
     evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None,
 ) -> OperationRequest[ModeloWorkCalculateRequest]:
     return OperationRequest(
-        definition_id=definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work_unit.work_unit_id,
         payload=ModeloWorkCalculateRequest(
             work_unit_id=work_unit.work_unit_id,
@@ -345,8 +352,21 @@ def test_calculate_executor_refuses_missing_m303_evidence_without_entering_calcu
     ):
         asyncio.run(executor.execute(_calculate_request(work_unit, None), _calculate_context(operation)))
 
-    assert raised.value.precondition_failure is not None
-    assert raised.value.precondition_failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.joint_return_unanswered"
+    # The refusal names the unanswered question and the calculation that takes it.
+    verdict = failure.verdict
+    assert verdict.action is not None
+    assert lookup_action(verdict.action.action_id).target_command_key == "modelo.work.calculate"
+    assert verdict.missing_argument_names == ("joint_return_elected",)
+    assert verdict.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    resolved = {
+        binding.argument_name: binding.value
+        for binding in verdict.argument_bindings
+        if binding.status is ActionArgumentStatus.RESOLVED
+    }
+    assert resolved == {"work_unit_id": work_unit.work_unit_id}
 
 
 def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calculation(
@@ -382,7 +402,7 @@ def test_calculate_executor_refuses_unadmissible_attestations_before_any_revisio
     work_unit = _m303_work_unit(operation)
     context = _CalculateContext(operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID) as profiles:
             store = AttachmentStore()
             evidence_input = build_evidence(store, profiles, operation)
@@ -410,7 +430,7 @@ def test_calculate_executor_refuses_evidence_admitted_under_another_profile_buck
     work_unit = _m303_work_unit(operation, bucket_id=foreign_bucket_id)
     opened: list[str] = []
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID):
             store = AttachmentStore()
             evidence_input = _m303_attestation_input(operation=operation, store=store)
@@ -496,7 +516,7 @@ def test_calculation_preparation_authors_a_period_before_the_last_from_the_joint
     first_quarter = Period.from_year_and_code(2025, "1T")
     work_unit = _m303_work_unit(operation, period=first_quarter)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID):
             prepared = asyncio.run(
                 definitions_module.prepare_modelo_work_calculation(
@@ -530,7 +550,7 @@ def test_calculate_executor_refuses_the_last_period_without_an_attestation(
         attachment_store_factory=lambda _bucket_id: AttachmentStore(),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised:
             asyncio.run(
                 executor.execute(

@@ -2,6 +2,7 @@
 //!
 //! The core runs without a window or tray. Collaborators that later Steps provide, such as
 //! the session-activity check and the installed-version catalogue, are injected traits.
+//! `local_ai` hosts the local AI server beside the runtime for the manager's whole life.
 
 pub mod adoption;
 pub mod boot_record;
@@ -9,6 +10,7 @@ pub mod environment;
 pub mod exit;
 pub(crate) mod json;
 pub mod launch;
+pub mod local_ai;
 pub mod process;
 pub mod protocol;
 pub mod restart;

@@ -6,35 +6,40 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_verification import VerificationFindingKind
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
-from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
-from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
-from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
-from ._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_advisory_finding_for_work_unit
-from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
-from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
 )
-from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
+from .art109_activity_income import derive_art109_activity_income_coverage_for_work_unit
+from .attribution_received_advisory import attribution_received_omission_advisory_findings
+from .autonomic_deduccion_advisory import madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
+from .export_content_findings import append_export_content_findings
+from .m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
+from .objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
 from .preconditions import ModeloPreconditionFailure
+from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
+from .trabajo_income_findings import trabajo_income_findings
 from .verification_finding_contracts import (
     REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
     REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
@@ -43,7 +48,12 @@ from .verification_iva_evidence import (
     append_iva_compensation_annual_source_evidence_finding,
     append_iva_selected_scope_evidence_finding,
 )
-from .verification_oss_evidence import m369_unresolved_oss_source_finding
+from .verification_modification_contributions import modification_contribution_findings
+from .verification_operator_stated_outcomes import (
+    append_operator_stated_outcome_findings,
+    values_with_operator_stated_figures,
+)
+from .verification_oss_evidence import NO_ACTIVITY_CONTRADICTED_KEY, m369_unresolved_oss_source_finding
 from .verification_preconditions import (
     build_verification_precondition_failure,
 )
@@ -62,6 +72,7 @@ if TYPE_CHECKING:
 
 def append_revision_advisory_findings(
     findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
@@ -70,40 +81,36 @@ def append_revision_advisory_findings(
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> None:
-    """Append the selected revision’s model advisories without changing grant semantics.
+    """Append the selected revision’s model advisories and its work-income findings.
+
+    A work-income finding that blocks arrives with its verify verdict, and is
+    recorded beside it so the report projects it with its door.
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
     ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``profile``
     (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     fact_coordinate = date(work_unit.filing_year, 12, 31)
-    modelo_fact_context = ModeloFactResolutionContext(
-        authority=operation,
-        filing_period=fact_coordinate,
-        devengo_date=fact_coordinate,
-    )
     for finding in (
         dt12_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
-        ),
-        art20_reduccion_advisory_finding(
-            snapshot.revision,
-            target.casilla_values,
-            context=modelo_fact_context,
+            effective_date=fact_coordinate,
         ),
         art52_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         dt12_antiquity_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
@@ -112,7 +119,7 @@ def append_revision_advisory_findings(
             operation=operation,
             profile=work_profile,
         ),
-        _m210_convenio_lob_advisory_finding(
+        m210_convenio_lob_advisory_finding(
             snapshot,
             profile,
             target.input_values_by_casilla_id,
@@ -121,9 +128,9 @@ def append_revision_advisory_findings(
     ):
         if finding is not None:
             findings.append(finding)
-    findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
+    findings.extend(objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
     findings.extend(
-        _attribution_received_omission_advisory_findings(
+        attribution_received_omission_advisory_findings(
             work_unit=work_unit,
             snapshot=snapshot,
             casilla_values=target.casilla_values,
@@ -131,6 +138,19 @@ def append_revision_advisory_findings(
             profile_record=work_profile.record if work_profile is not None else None,
         )
     )
+    for finding, failure in trabajo_income_findings(
+        str(work_unit.modelo),
+        snapshot.revision,
+        target,
+        profile_values={}
+        if work_profile is None
+        else record_to_path_values(work_profile.record, as_of=fact_coordinate),
+        effective_date=fact_coordinate,
+        operation=operation,
+    ):
+        findings.append(finding)
+        if failure is not None:
+            failures_by_finding_id[id(finding)] = failure
 
 
 def resolve_verification_snapshot(
@@ -165,19 +185,37 @@ def resolve_verification_snapshot(
         # file, and the operator got a traceback instead of a finding.
         classification = getattr(exc, "registry_failure", None)
         facts = dict(getattr(classification, "facts", {}) or {})
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.registry_authority_grade_insufficient",
-            message_facts={
-                "modelo": str(work_unit.modelo),
-                "filing_year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-                "declared_grade": str(facts.get("declared_authority_grade", "")),
-                "requested_grade": str(facts.get("requested_authority_grade", "")),
-            },
-            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
-        )
+        # A year the selected revision does not author is carried across from the
+        # edition that does, and the facts name that edition; a revision that
+        # declares less than filing authority names its grade instead.
+        authored_filing_year = facts.get("authored_filing_year")
+        if isinstance(authored_filing_year, int) and not isinstance(authored_filing_year, bool):
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key="application.modelo.findings.registry_filing_year_projected",
+                message_facts={
+                    "modelo": str(work_unit.modelo),
+                    "filing_year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                    "authored_filing_year": authored_filing_year,
+                },
+                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+            )
+        else:
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key="application.modelo.findings.registry_authority_grade_insufficient",
+                message_facts={
+                    "modelo": str(work_unit.modelo),
+                    "filing_year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                    "declared_grade": str(facts.get("declared_authority_grade", "")),
+                    "requested_grade": str(facts.get("requested_authority_grade", "")),
+                },
+                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+            )
         findings.append(finding)
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
             calculation_revision_id=target.calculation_revision_id,
@@ -224,6 +262,52 @@ def resolve_verification_snapshot(
         return None
 
 
+def append_scheme_period_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    """Block an entered period row that disagrees with the period the work unit files.
+
+    The export prints the work unit's period, so such a value could never reach
+    the file; it means the operator believes this return covers another period.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
+    for layout in snapshot.revision.export_layouts:
+        for record in layout.records:
+            for field in record.fields:
+                entered = None if field.binding is None else target.binding_overrides.get(field.binding)
+                if not contradicts_scheme_period(field, work_unit.period, entered):
+                    continue
+                finding = ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message_locale_key="application.modelo.findings.scheme_period_contradicted",
+                    message_facts={
+                        "binding_id": str(field.binding),
+                        "entered": str(entered),
+                        "expected": str(scheme_period_value(field, work_unit.period)),
+                    },
+                    legal_refs=tuple(field.legal_refs) or WORKFLOW_GATE_LEGAL_REFS,
+                    source_refs=tuple(field.source_refs),
+                )
+                findings.append(finding)
+                failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.scheme_period.matches",
+                    scenario_id="modelo.work.verify.scheme_period.contradicted",
+                    evidence_id="modelo.work.verify.scheme_period",
+                    evidence_values={"modelo": str(work_unit.modelo), "binding_id": str(field.binding)},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                )
+
+
 def append_oss_verification_finding(
     *,
     work_unit: WorkUnit,
@@ -251,6 +335,17 @@ def append_oss_verification_finding(
         if issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
     )
     is_unrouted = unrouted_issue_count > 0
+    if oss_source_finding.message_locale_key == NO_ACTIVITY_CONTRADICTED_KEY:
+        failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.oss_no_activity.consistent",
+            scenario_id="modelo.work.verify.oss_no_activity.contradicted",
+            evidence_id="modelo.work.verify.oss_no_activity",
+            evidence_values={"modelo": str(work_unit.modelo)},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        )
+        return
     failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
         calculation_revision_id=target.calculation_revision_id,
         work_unit_id=target.work_unit_id,
@@ -288,9 +383,11 @@ def append_registry_predicate_findings(
     findings.extend(
         evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
-            target.casilla_values,
+            values_with_operator_stated_figures(target),
             predicate_profile,
             target.input_values_by_casilla_id,
+            declared_casilla_ids=frozenset(casilla.id for casilla in snapshot.revision.casillas),
+            fact_date=calculation_filing_date(work_unit.period),
             blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
                 id(finding),
                 build_verification_precondition_failure(
@@ -304,6 +401,60 @@ def append_registry_predicate_findings(
                 ),
             ),
         ),
+    )
+
+
+def append_below_filing_grade_advisory_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    predicate_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+    findings: list[ModeloVerificationFinding],
+) -> None:
+    """Append the advisory registry checks of an edition that is refused for filing.
+
+    An edition below filing grade cannot be verified for filing, and the grade
+    refusal already appended keeps the outcome blocked. Its advisory checks
+    still say something the filer should see, such as a positive result that
+    cascades to a zero base, so they run against the snapshot of the grade the
+    edition reaches. Only checks of advisory severity run: a blocking check of
+    an edition below filing grade is not evaluated, so none is reported. Each
+    finding carries that grade. A coordinate the registry cannot resolve at
+    any grade adds nothing beside its own refusal.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``predicate_profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
+    from ...domain.calculations.registry.errors import (
+        RegistrySnapshotError,
+        RegistryValidationError,
+    )
+
+    period = work_unit.period.registry_token
+    try:
+        grade = operation.reachable_authority_grade(work_unit.modelo, filing_year=work_unit.filing_year, period=period)
+        if grade is RegistryAuthorityGrade.FILING:
+            return
+        snapshot = operation.snapshot(work_unit.modelo, filing_year=work_unit.filing_year, period=period, grade=grade)
+    except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError):
+        # The caller reaches this only after a blocking snapshot finding (the grade refusal)
+        # was appended, so an unreadable own-grade snapshot only means no advisory checks.
+        return
+    advisory_predicates = tuple(
+        predicate
+        for predicate in snapshot.revision.verification_predicates
+        if predicate.finding_kind is VerificationFindingKind.ADVISORY
+    )
+    findings.extend(
+        ModeloVerificationFinding.model_validate(finding.model_dump(mode="python") | {"below_filing_grade": grade})
+        for finding in evaluate_verification_predicates(
+            advisory_predicates,
+            target.casilla_values,
+            predicate_profile,
+            target.input_values_by_casilla_id,
+            fact_date=calculation_filing_date(work_unit.period),
+        )
     )
 
 
@@ -322,6 +473,9 @@ def append_unresolved_outcome_findings(
     ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``predicate_profile``
     (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
+    append_operator_stated_outcome_findings(
+        target=target, findings=findings, failures_by_finding_id=failures_by_finding_id
+    )
     findings.extend(
         m210_unresolved_outcome_findings(
             target.unresolved_outcomes,
@@ -350,6 +504,85 @@ def append_unresolved_outcome_findings(
     )
 
 
+def _append_source_evidence_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    profile: TaxpayerProfile,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    rectification_evidence_recordable: bool,
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile | None,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    """Append the export-content, IVA, scheme, OSS and withholding evidence findings of a resolved revision."""
+    append_shared_casilla_cells_findings(
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_export_content_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        profile=profile,
+        operation=operation,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    findings.extend(
+        modification_contribution_findings(
+            revision=snapshot.revision,
+            form_layout=operation.form_layout(snapshot.modelo.id, snapshot.revision.id),
+            casilla_values=target.casilla_values,
+            input_values_by_casilla_id=target.input_values_by_casilla_id,
+        )
+    )
+    append_iva_selected_scope_evidence_finding(
+        work_unit=work_unit,
+        target=target,
+        transaction_repository=transaction_repository,
+        rectification_evidence_recordable=rectification_evidence_recordable,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_iva_compensation_annual_source_evidence_finding(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_scheme_period_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_oss_verification_finding(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_withholding_detail_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        profile_path_values=record_to_path_values(work_profile.record) if work_profile is not None else None,
+        operation=operation,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+
+
 def collect_revision_verification_findings(
     *,
     work_unit: WorkUnit,
@@ -357,6 +590,7 @@ def collect_revision_verification_findings(
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    rectification_evidence_recordable: bool,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> tuple[
@@ -371,7 +605,9 @@ def collect_revision_verification_findings(
     revision whose ``(modelo, year, period)`` triple does not resolve
     against the registry yields a single BLOCKING_RULE finding and
     empty resolved/missing lists — there is no per-casilla check to
-    perform without a registry snapshot.
+    perform without a registry snapshot. A revision that resolves below filing
+    grade adds only its fired advisory checks beside that refusal, each carrying
+    the grade it was checked at.
 
     With a snapshot present, the operator-supplied
     ``input_values_by_casilla_id`` keys are compared against the registry's
@@ -399,6 +635,18 @@ def collect_revision_verification_findings(
         operation=operation,
     )
     if snapshot is None:
+        append_below_filing_grade_advisory_findings(
+            work_unit=work_unit,
+            target=target,
+            predicate_profile=profile_with_art109_period_evidence(
+                work_unit=work_unit,
+                profile=profile,
+                transaction_repository=transaction_repository,
+                operation=operation,
+            ),
+            operation=operation,
+            findings=findings,
+        )
         return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
     append_required_casilla_findings(
@@ -411,34 +659,16 @@ def collect_revision_verification_findings(
         failures_by_finding_id=failures_by_finding_id,
         clave_scope=perceptor_clave_scope(work_unit, operation=operation),
     )
-    append_iva_selected_scope_evidence_finding(
+    _append_source_evidence_findings(
         work_unit=work_unit,
         target=target,
+        snapshot=snapshot,
+        profile=profile,
         transaction_repository=transaction_repository,
-        findings=findings,
-        failures_by_finding_id=failures_by_finding_id,
-    )
-    append_iva_compensation_annual_source_evidence_finding(
-        work_unit=work_unit,
-        target=target,
-        findings=findings,
-        failures_by_finding_id=failures_by_finding_id,
-    )
-    append_oss_verification_finding(
-        work_unit=work_unit,
-        target=target,
-        snapshot=snapshot,
-        findings=findings,
-        failures_by_finding_id=failures_by_finding_id,
-    )
-    append_withholding_detail_findings(
-        work_unit=work_unit,
-        target=target,
-        snapshot=snapshot,
         invoice_repository=invoice_repository,
-        transaction_repository=transaction_repository,
-        profile_path_values=record_to_path_values(work_profile.record) if work_profile is not None else None,
+        rectification_evidence_recordable=rectification_evidence_recordable,
         operation=operation,
+        work_profile=work_profile,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )
@@ -446,6 +676,7 @@ def collect_revision_verification_findings(
         work_unit=work_unit,
         profile=profile,
         transaction_repository=transaction_repository,
+        operation=operation,
     )
     append_registry_predicate_findings(
         work_unit=work_unit,
@@ -465,6 +696,7 @@ def collect_revision_verification_findings(
     )
     append_revision_advisory_findings(
         findings,
+        failures_by_finding_id,
         work_unit=work_unit,
         target=target,
         profile=profile,
@@ -480,14 +712,19 @@ def profile_with_art109_period_evidence(
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> TaxpayerProfile:
     """Add the work unit’s grounded period-income evidence to the retained profile.
 
+    The coverage is derived under the verification's own pinned authority, so
+    the evidence and the predicates it feeds read one generation.
+
     Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
-    coverage = _derive_art109_coverage(
+    coverage = derive_art109_activity_income_coverage_for_work_unit(
         work_unit,
         transaction_repository=transaction_repository,
+        operation=operation,
     )
     if not coverage.is_proven or coverage.meets_threshold is None:
         return profile

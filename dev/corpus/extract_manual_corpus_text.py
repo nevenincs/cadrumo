@@ -41,13 +41,13 @@ from cadrumo.core.directory_scan import (
 )
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.text_fold import normalise_corpus_text
-from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSchemaVersion,
     ManualCorpusTextSidecar,
 )
+from dev.paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2
@@ -126,7 +126,7 @@ def extract_raw_text(path: Path) -> str:
     a private name would force that gate to reach into module internals.
 
     This is the same extraction logic as
-    :func:`cadrumo.domain.calculations.registry.validate_evidence._extract_pdf_text_impl`
+    :func:`cadrumo.domain.calculations.registry.validate_evidence.extract_pdf_text_impl`
     and must produce byte-identical output so runtime validation passes.
     """
     try:

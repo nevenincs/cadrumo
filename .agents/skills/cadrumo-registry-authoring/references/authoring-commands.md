@@ -70,6 +70,8 @@ Use derived keys from the canonical localization helpers and existing locales. R
 uv run --no-sync python -m dev.registry.conformance stamp --help
 ```
 
+Prefer `just registry-governance-stamp REGISTRY_ROOT MODELO REVISION` (optional `ENGINEERED_BY`, `CLEAR_ENGINEERED_BY`, `REVIEW_STATUS`, `REVIEWED_BY`, `REVIEWED_AT`) over the raw module form.
+
 Do not stamp operator review on behalf of an operator or use a passing compiler as review evidence.
 
 ## Inspect current authoring source without publication
@@ -111,7 +113,26 @@ $applyDir = Join-Path ([System.IO.Path]::GetTempPath()) ('registry-authoring-app
 uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root $registryRoot --modelo $modelo --work-dir $applyDir --apply
 ```
 
-`--apply` installs source, not runtime authority. Retain its recovery receipt. Rerun the non-applying command with a fresh work directory against live source to prove no-op/idempotence. Then run independent full-inventory verification without authorizing changes to other modelos:
+`--apply` installs source, not runtime authority. Retain its recovery receipt. Rerun the non-applying command with a fresh work directory against live source to prove no-op/idempotence.
+
+Conversion rewrites casillas only. To remove members of the enrolled keyed families that an edition restates byte for byte, run the same module with `--drop-restatement`, optionally limited with a repeatable `--family SECTION` (the default is every accepted family). Dry run first into a fresh work directory and read the report, then repeat with `--apply` into another fresh directory:
+
+```powershell
+$dropDir = Join-Path ([System.IO.Path]::GetTempPath()) ('registry-authoring-drop-' + [guid]::NewGuid().ToString('N'))
+uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root $registryRoot --modelo $modelo --work-dir $dropDir --drop-restatement
+$dropApplyDir = Join-Path ([System.IO.Path]::GetTempPath()) ('registry-authoring-drop-apply-' + [guid]::NewGuid().ToString('N'))
+uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root $registryRoot --modelo $modelo --work-dir $dropApplyDir --drop-restatement --apply
+```
+
+Export layouts, form layouts, verification expectations, workbook pins and the completeness manifest are per-edition generated claims and are never collapsed. The converter assigns `predecessor` for storage inheritance only: review it, and treat a blocked edition as unresolved, never as legal continuity. Minimality is measured by the `delta_minimality` and `edition_delta_assessment` lanes of `just check-registry` and by:
+
+```powershell
+uv run --no-sync python -m dev.registry.analysis.delta_minimality --check
+```
+
+The declared `authority_grade` can be screened against what each revision's tree derives with `uv run --no-sync python -m dev.registry.analysis.grade_earned`. It prints one row per `under_supported` or `under_declared` finding and exits 0 whatever it finds, so read its rows and summary rather than trusting the exit code; a finding is not a verdict.
+
+Then run independent full-inventory verification without authorizing changes to other modelos. This module has no `just` recipe, writes only under its work directory, and exits 1 until every rollout result is complete, so a nonzero exit is expected while other modelos are unfinished:
 
 ```powershell
 $verifyDir = Join-Path ([System.IO.Path]::GetTempPath()) ('registry-authoring-verify-' + [guid]::NewGuid().ToString('N'))
@@ -136,7 +157,7 @@ For a generated record-design target only, first author/enroll its mapping and r
 ```powershell
 uv run --no-sync python -m dev.registry.pipeline check $modelo $revision $sourceRef $filingYear $period
 just registry-publish-target $modelo $revision $sourceRef $filingYear $period
-uv run --no-sync python -m dev.registry.pipeline target-current $modelo $revision $sourceRef $filingYear $period
+just check-registry-target-current $modelo $revision $sourceRef $filingYear $period
 ```
 
 For replacement of an existing reviewed target, bind `$expectedManifestSha256` to the exact reviewed lowercase SHA-256 and use:
@@ -163,6 +184,9 @@ Final checks:
 
 ```powershell
 just check-registry
+just check-registry-gate
+just check-bindings
+just check-registry-year-independence
 uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py dev/packaging/tests/test_authority_runtime_boundary.py src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py
 ```
 

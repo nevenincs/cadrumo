@@ -8,12 +8,10 @@ from typing import Literal
 
 import pytest
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import LedgerEvidenceRepositoryAdapter
-from cadrumo.adapters.persistence.storage.sql.secure_object_records import (
-    SecureObjectDeletion,
-    SecureObjectRevisionAssertion,
-)
+from cadrumo.adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.evidence import (
     MediaKind,
@@ -23,13 +21,9 @@ from cadrumo.application.ledger.evidence import (
 )
 from cadrumo.application.ledger.evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
-
-from .evidence_test_support import secure_objects as _secure_objects
-
-__all__ = ["_secure_objects"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -81,6 +75,7 @@ def test_evidence_mutation_retries_whole_snapshot_and_co_commits_event(
         evidence_repository=evidence_repository,
         attachment_ingestor=_UnexpectedAttachmentIngestor(),
         bucket_event_repository=event_repository,
+        document_shape_probe=probe_document_shape,
     )
     service = PurchaseInvoiceEvidenceService(ports=ports)
 

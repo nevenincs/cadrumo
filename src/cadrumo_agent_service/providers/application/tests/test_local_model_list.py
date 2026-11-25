@@ -1,0 +1,709 @@
+"""The person's model record: add a local model by name, remove one, and select the reading model, each guarded."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+import pytest
+
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunLane,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+)
+
+from ...domain.catalog import BackgroundOption, EffortLevel
+from ...domain.record import (
+    LOCAL_MODEL_LIST_MAX_MODELS,
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+    ListedModel,
+    LocalEngine,
+    LocalModelListRecord,
+    LocalPlacement,
+    new_settings_generation,
+)
+from ..contracts import (
+    LocalEngineStatus,
+    LocalModelListStatus,
+    ProviderSettingsRefusal,
+    ProviderSettingsRefusalCode,
+    ReadingSource,
+)
+from ..local_model_list import LocalModelListService, listed_models, local_lanes
+from ..model_runs import ModelRunService
+from ..ports import StoreRefusal, StoreRefusalCode
+from ..resolution import ProviderCredentialResolver
+from .memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
+from .synthetic_catalog import (
+    KEY_LANE,
+    KEYLESS_LANE,
+    KEYLESS_TEXT_MODEL,
+    KEYLESS_VISION_MODEL,
+    MISSING_LANE,
+    ProvidedProviderCatalogSource,
+    StaticLiveModels,
+    UnavailableCatalogSource,
+    live_model,
+    synthetic_catalog,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_ADDED = "custom-model:test"
+
+
+def _service(
+    store: MemoryLocalModelListStore,
+    default_engine: LocalEngine = LocalEngine.LLAMACPP,
+    live: StaticLiveModels | None = None,
+) -> LocalModelListService:
+    return LocalModelListService(
+        store=store,
+        catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        live_models=StaticLiveModels() if live is None else live,
+        default_engine=default_engine,
+    )
+
+
+def _status(result: LocalModelListStatus | ProviderSettingsRefusal) -> LocalModelListStatus:
+    assert isinstance(result, LocalModelListStatus), result
+    return result
+
+
+def _added(status: LocalModelListStatus) -> list[tuple[str, str]]:
+    return [(entry.lane, entry.model) for entry in status.models]
+
+
+def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
+    return ProviderSettingsRefusal(code=code)
+
+
+def _put(
+    store: MemoryLocalModelListStore,
+    *models: tuple[str, str],
+    reading: ListedModel | None = None,
+    engine: LocalEngine | None = None,
+    placement: LocalPlacement | None = None,
+) -> str:
+    record = LocalModelListRecord(
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        models=tuple(ListedModel(lane=lane, model=model) for lane, model in models),
+        reading=reading,
+        engine=engine,
+        placement=placement,
+        generation=new_settings_generation(),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
+    )
+    assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    assert store.stored is not None
+    return store.stored.revision
+
+
+def test_the_local_lanes_are_the_keyless_ones_and_list_the_recommended_models_before_the_added_ones() -> None:
+    catalog = synthetic_catalog()
+
+    (local,) = local_lanes(catalog, lambda: LocalEngine.LLAMACPP)
+
+    assert local.id == KEYLESS_LANE
+    assert listed_models(local, ()) == (KEYLESS_TEXT_MODEL, KEYLESS_VISION_MODEL)
+    assert listed_models(local, (_ADDED, KEYLESS_VISION_MODEL, _ADDED)) == (
+        KEYLESS_TEXT_MODEL,
+        KEYLESS_VISION_MODEL,
+        _ADDED,
+    )
+
+
+def test_a_fresh_profile_lists_no_added_model() -> None:
+    assert _service(MemoryLocalModelListStore()).status() == LocalModelListStatus(
+        unreadable=False,
+        models=(),
+        reading=None,
+        reading_source=ReadingSource.NONE,
+        tasks=(),
+        local_lanes=(KEYLESS_LANE,),
+        revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+
+
+def test_models_are_added_in_order_and_removing_one_keeps_the_others() -> None:
+    service = _service(MemoryLocalModelListStore())
+    first = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    second = _status(service.add(KEYLESS_LANE, model="another:1", expected_revision=first.revision))
+
+    assert _added(second) == [(KEYLESS_LANE, _ADDED), (KEYLESS_LANE, "another:1")]
+    assert service.status() == second
+
+    removed = _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=second.revision))
+
+    assert _added(removed) == [(KEYLESS_LANE, "another:1")]
+    assert len({first.revision, second.revision, removed.revision}) == 3
+
+
+@pytest.mark.parametrize("model", [KEYLESS_TEXT_MODEL, KEYLESS_VISION_MODEL, _ADDED])
+def test_adding_a_model_the_list_already_holds_writes_nothing(model: str) -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, (KEYLESS_LANE, _ADDED))
+    service = _service(store)
+
+    unchanged = _status(service.add(KEYLESS_LANE, model=model, expected_revision=revision))
+
+    assert unchanged.revision == revision
+    assert _added(unchanged) == [(KEYLESS_LANE, _ADDED)]
+
+
+def test_a_recommended_model_cannot_be_removed_from_the_list() -> None:
+    service = _service(MemoryLocalModelListStore())
+
+    refused = service.remove(KEYLESS_LANE, model=KEYLESS_TEXT_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
+
+
+@pytest.mark.parametrize(
+    ("lane", "model"),
+    [
+        (KEY_LANE, _ADDED),
+        (MISSING_LANE, _ADDED),
+        (KEYLESS_LANE, "has" + chr(9) + "tab"),
+        (KEYLESS_LANE, "m" * 513),
+        (KEYLESS_LANE, ""),
+    ],
+    ids=["keyed-lane", "unreported-lane", "model-with-control-character", "model-past-the-id-bound", "empty-model"],
+)
+def test_adding_to_a_lane_that_is_not_local_or_a_malformed_name_is_refused(lane: str, model: str) -> None:
+    store = MemoryLocalModelListStore()
+
+    refused = _service(store).add(lane, model=model, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
+    assert store.stored is None
+
+
+def test_a_full_list_refuses_another_model() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, *((KEYLESS_LANE, f"model-{index}") for index in range(LOCAL_MODEL_LIST_MAX_MODELS)))
+
+    refused = _service(store).add(KEYLESS_LANE, model=_ADDED, expected_revision=revision)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.MODEL_LIST_FULL)
+
+
+def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
+    service = _service(MemoryLocalModelListStore())
+    status = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    conflict = _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
+
+    assert service.add(KEYLESS_LANE, model="another:1", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == conflict
+    assert service.remove(KEYLESS_LANE, model=_ADDED, expected_revision="f" * 64) == conflict
+    assert service.reset(expected_revision="f" * 64) == conflict
+    assert service.add(KEYLESS_LANE, model="another:1", expected_revision="not-hex") == conflict
+    assert service.status() == status
+
+
+def test_a_write_drops_models_on_lanes_the_catalogue_reports_as_not_local_and_keeps_unreported_ones() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, (KEY_LANE, "synthetic-text-1"), (MISSING_LANE, "kept:1"), (KEYLESS_LANE, _ADDED))
+
+    written = _status(_service(store).add(KEYLESS_LANE, model="another:1", expected_revision=revision))
+
+    assert _added(written) == [(MISSING_LANE, "kept:1"), (KEYLESS_LANE, _ADDED), (KEYLESS_LANE, "another:1")]
+
+
+def test_a_catalogue_the_agent_cannot_report_refuses_changes() -> None:
+    store = MemoryLocalModelListStore()
+    service = LocalModelListService(
+        store=store,
+        catalog_source=UnavailableCatalogSource(),
+        live_models=StaticLiveModels(),
+        default_engine=LocalEngine.LLAMACPP,
+    )
+    unavailable = _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
+
+    assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == unavailable
+    assert store.stored is None
+    assert _status(service.status()).models == ()
+    assert _status(service.status()).local_lanes == ()
+
+
+def test_an_unreadable_record_lists_no_model_refuses_changes_and_only_a_guarded_reset_clears_it() -> None:
+    store = MemoryLocalModelListStore()
+    store.unreadable = "d" * 64
+    service = _service(store)
+
+    assert service.status() == LocalModelListStatus(
+        unreadable=True,
+        models=(),
+        reading=None,
+        reading_source=ReadingSource.NONE,
+        tasks=(),
+        local_lanes=(KEYLESS_LANE,),
+        revision="d" * 64,
+    )
+    unknown = _refused(ProviderSettingsRefusalCode.UNKNOWN)
+    assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision="d" * 64) == unknown
+    assert service.remove(KEYLESS_LANE, model=_ADDED, expected_revision="d" * 64) == unknown
+    assert service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision="d" * 64) == unknown
+
+    reset = _status(service.reset(expected_revision="d" * 64))
+
+    assert reset == LocalModelListStatus(
+        unreadable=False,
+        models=(),
+        reading=None,
+        reading_source=ReadingSource.NONE,
+        tasks=(),
+        local_lanes=(KEYLESS_LANE,),
+        revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+
+
+def test_a_profile_that_is_not_signed_in_refuses_reads_and_changes() -> None:
+    store = MemoryLocalModelListStore()
+    store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
+    service = _service(store)
+    signed_out = _refused(ProviderSettingsRefusalCode.NOT_SIGNED_IN)
+
+    assert service.status() == signed_out
+    assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == signed_out
+
+
+class _NoGateway:
+    def run(
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
+    ) -> ModelRunOutput | ModelRunRefusal:
+        del lane, body, deadline_seconds, options, effort
+        return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+
+
+def _reading(status: LocalModelListStatus) -> tuple[str, str] | None:
+    return None if status.reading is None else (status.reading.lane, status.reading.model)
+
+
+@pytest.mark.parametrize(
+    ("lane", "model"),
+    [(KEYLESS_LANE, KEYLESS_VISION_MODEL), (KEY_LANE, "synthetic-text-1")],
+    ids=["local-lane", "keyed-lane"],
+)
+def test_the_reading_model_is_selected_on_any_reported_lane(lane: str, model: str) -> None:
+    service = _service(MemoryLocalModelListStore())
+
+    chosen = _status(service.choose_reading(lane, model=model, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+
+    assert _reading(chosen) == (lane, model)
+    assert service.status() == chosen
+
+
+def test_selecting_the_selected_reading_model_again_writes_nothing() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, reading=ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL))
+
+    unchanged = _status(
+        _service(store).choose_reading(KEYLESS_LANE, model=KEYLESS_TEXT_MODEL, expected_revision=revision)
+    )
+
+    assert unchanged.revision == revision
+
+
+@pytest.mark.parametrize(
+    ("lane", "model"),
+    [(MISSING_LANE, _ADDED), (KEYLESS_LANE, "has" + chr(9) + "tab"), (KEYLESS_LANE, "")],
+    ids=["unreported-lane", "model-with-control-character", "empty-model"],
+)
+def test_selecting_a_reading_model_on_an_unreported_lane_or_with_a_malformed_name_is_refused(
+    lane: str, model: str
+) -> None:
+    store = MemoryLocalModelListStore()
+
+    refused = _service(store).choose_reading(lane, model=model, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
+    assert store.stored is None
+
+
+def test_selecting_a_reading_model_against_a_stale_revision_is_refused() -> None:
+    service = _service(MemoryLocalModelListStore())
+    status = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+
+    refused = service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
+    assert service.status() == status
+
+
+def test_adding_and_removing_models_keeps_the_reading_model_and_selecting_it_keeps_the_list() -> None:
+    service = _service(MemoryLocalModelListStore())
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    chosen = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+    assert _added(chosen) == [(KEYLESS_LANE, _ADDED)]
+
+    more = _status(service.add(KEYLESS_LANE, model="another:1", expected_revision=chosen.revision))
+    removed = _status(service.remove(KEYLESS_LANE, model="another:1", expected_revision=more.revision))
+
+    assert _reading(more) == _reading(removed) == (KEYLESS_LANE, _ADDED)
+
+
+def _runs(store: MemoryLocalModelListStore, live: StaticLiveModels) -> ModelRunService:
+    source = ProvidedProviderCatalogSource(synthetic_catalog())
+    return ModelRunService(
+        model_list=store,
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=live,
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=_NoGateway(),
+    )
+
+
+def _local_lane(model: str) -> ModelRunLane:
+    return ModelRunLane(provider_id="local", transport="api", model=model, reads_off_host=False)
+
+
+def _served(status: LocalModelListStatus) -> tuple[str, str] | None:
+    return None if status.reading is None else (status.reading.lane, status.reading.model)
+
+
+def test_a_fresh_profile_with_the_recommended_model_installed_reads_with_it_without_a_choice() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),)})
+
+    status = _status(_service(store, live=live).status())
+
+    assert (_served(status), status.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+    # The stand-in is an answer, never a write.
+    assert store.stored is None
+
+
+def test_without_an_installed_model_nothing_is_read_and_the_run_refuses_no_selection() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),)})
+
+    status = _status(_service(store, live=live).status())
+
+    assert (status.reading, status.reading_source) == (None, ReadingSource.NONE)
+    assert _runs(store, live).lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+
+
+def test_an_unknown_install_state_never_stands_in() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False),)})
+
+    assert _status(_service(store, live=live).status()).reading_source is ReadingSource.NONE
+    assert _runs(store, live).lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+
+
+def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_resolves() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels(
+        {
+            ("local", "api"): (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
+                live_model(KEYLESS_VISION_MODEL, vision=True, installed=False),
+                live_model(_ADDED, vision=False, installed=True),
+            )
+        }
+    )
+    runs = _runs(store, live)
+    service = _service(store, live=live)
+    assert runs.lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    assert runs.lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+    chosen = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    assert (_served(chosen), chosen.reading_source) == ((KEYLESS_LANE, _ADDED), ReadingSource.CHOSEN)
+    assert runs.lookup("text_extraction") == _local_lane(_ADDED)
+
+
+def test_a_chosen_model_taken_off_its_list_gives_way_to_the_installed_default() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels(
+        {
+            ("local", "api"): (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
+                live_model(_ADDED, vision=False, installed=True),
+            )
+        }
+    )
+    service = _service(store, live=live)
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    chosen = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    removed = _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=chosen.revision))
+
+    assert (_served(removed), removed.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+
+
+def test_a_chosen_model_the_server_no_longer_holds_gives_way_to_the_installed_default() -> None:
+    store = MemoryLocalModelListStore()
+    _put(store, (KEYLESS_LANE, _ADDED), reading=ListedModel(lane=KEYLESS_LANE, model=_ADDED))
+    live = StaticLiveModels(
+        {
+            ("local", "api"): (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
+                live_model(_ADDED, vision=False, installed=False),
+            )
+        }
+    )
+
+    status = _status(_service(store, live=live).status())
+
+    assert (_served(status), status.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+
+
+def _engine(result: LocalEngineStatus | ProviderSettingsRefusal) -> LocalEngineStatus:
+    assert isinstance(result, LocalEngineStatus), result
+    return result
+
+
+def test_a_fresh_profile_reads_the_bundled_llamacpp_engine_with_automatic_placement() -> None:
+    assert _service(MemoryLocalModelListStore()).engine_status() == LocalEngineStatus(
+        unreadable=False,
+        chosen=False,
+        engine=LocalEngine.LLAMACPP,
+        placement=LocalPlacement.AUTO,
+        revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+
+
+def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_llamacpp() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+    setting = _engine(service.engine_status())
+    assert (setting.chosen, setting.engine, setting.placement) == (False, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert setting.revision == added.revision
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_a_fresh_profile_reads_the_engine_the_package_defaults_to(default: LocalEngine) -> None:
+    setting = _engine(_service(MemoryLocalModelListStore(), default).engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement) == (False, default, LocalPlacement.AUTO)
+    assert setting.revision == ABSENT_SECURE_OBJECT_REVISION_ID
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_an_unchosen_stored_record_reads_as_the_package_default_and_stays_unchosen(default: LocalEngine) -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, (KEYLESS_LANE, _ADDED))
+    service = _service(store, default)
+
+    setting = _engine(service.engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement, setting.revision) == (
+        False,
+        default,
+        LocalPlacement.AUTO,
+        revision,
+    )
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+
+
+def test_a_stored_llamacpp_choice_is_not_overruled_by_an_ollama_package_default() -> None:
+    store = MemoryLocalModelListStore()
+    _put(store, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.AUTO)
+
+    setting = _engine(_service(store, LocalEngine.OLLAMA).engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+
+
+def test_a_stored_ollama_choice_is_kept_through_list_changes() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, engine=LocalEngine.OLLAMA, placement=LocalPlacement.AUTO)
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=revision))
+    _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    kept = _engine(service.engine_status())
+    assert (kept.engine, kept.placement) == (LocalEngine.OLLAMA, LocalPlacement.AUTO)
+
+
+def test_choosing_the_engine_stores_it_with_its_placement_and_reads_back() -> None:
+    service = _service(MemoryLocalModelListStore())
+
+    chosen = _engine(
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+
+    assert (chosen.engine, chosen.placement) == (LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert service.engine_status() == chosen
+
+
+def test_choosing_the_engine_keeps_the_added_models_and_the_reading_model() -> None:
+    store = MemoryLocalModelListStore()
+    reading = ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL)
+    revision = _put(store, (KEYLESS_LANE, _ADDED), reading=reading)
+    service = _service(store)
+
+    chosen = _engine(service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=revision))
+
+    listed = _status(service.status())
+    assert _added(listed) == [(KEYLESS_LANE, _ADDED)]
+    assert _reading(listed) == (KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    assert listed.revision == chosen.revision
+
+
+def test_list_changes_and_the_reading_choice_keep_the_stored_engine_setting() -> None:
+    service = _service(MemoryLocalModelListStore())
+    chosen = _engine(
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=chosen.revision))
+    assert _engine(service.engine_status()).model_copy(update={"revision": chosen.revision}) == chosen
+
+    picked = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+    removed = _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=picked.revision))
+
+    kept = _engine(service.engine_status())
+    assert (kept.engine, kept.placement) == (LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    assert kept.revision == removed.revision
+
+
+def test_choosing_the_stored_engine_setting_again_writes_nothing() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.CPU_ONLY)
+    stored = store.stored
+
+    unchanged = _engine(
+        _service(store).choose_engine(LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=revision)
+    )
+
+    assert unchanged.revision == revision
+    assert store.stored is stored
+
+
+def test_choosing_the_setting_an_unchosen_profile_reads_stores_it_as_the_person_s_choice() -> None:
+    store = MemoryLocalModelListStore()
+
+    chosen = _engine(
+        _service(store).choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+
+    assert (chosen.chosen, chosen.engine, chosen.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+
+
+def test_choosing_the_engine_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store)
+    service = _service(store)
+
+    refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="f" * 64)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
+    assert _engine(service.engine_status()).engine == LocalEngine.LLAMACPP
+    assert _engine(service.engine_status()).revision == revision
+
+
+def test_an_unreadable_record_names_no_engine_and_refuses_choosing_one() -> None:
+    store = MemoryLocalModelListStore()
+    store.unreadable = "d" * 64
+    service = _service(store)
+
+    assert service.engine_status() == LocalEngineStatus(
+        unreadable=True, chosen=False, engine=None, placement=None, revision="d" * 64
+    )
+    refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="d" * 64)
+    assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
+    assert store.unreadable == "d" * 64
+
+
+def test_a_profile_that_is_not_signed_in_refuses_the_engine_read_and_change() -> None:
+    store = MemoryLocalModelListStore()
+    store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
+    service = _service(store)
+    signed_out = _refused(ProviderSettingsRefusalCode.NOT_SIGNED_IN)
+
+    assert service.engine_status() == signed_out
+    assert (
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        == signed_out
+    )
+
+
+def test_an_engine_status_names_an_engine_and_placement_exactly_when_the_record_is_readable() -> None:
+    revision = ABSENT_SECURE_OBJECT_REVISION_ID
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=True, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=False, chosen=False, engine=None, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=False, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="choice"):
+        LocalEngineStatus(unreadable=True, chosen=True, engine=None, placement=None, revision=revision)
+
+
+def test_every_engine_status_serves_the_declared_engines_and_placements_in_declared_order() -> None:
+    unreadable_store = MemoryLocalModelListStore()
+    unreadable_store.unreadable = "d" * 64
+    fresh = _engine(_service(MemoryLocalModelListStore()).engine_status())
+    unreadable = _engine(_service(unreadable_store).engine_status())
+
+    for status in (fresh, unreadable):
+        answer = status.model_dump(mode="json")
+        assert answer["choices"] == {
+            "engine": [engine.value for engine in LocalEngine],
+            "placement": [placement.value for placement in LocalPlacement],
+        }
+    assert fresh.model_dump(mode="json")["choices"] == {
+        "engine": ["llamacpp", "ollama"],
+        "placement": ["auto", "cpu_only"],
+    }
+
+
+def test_the_served_choices_follow_the_chosen_setting_and_every_one_of_them_can_be_chosen() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store)
+    served = _engine(service.engine_status()).choices
+    revision = ABSENT_SECURE_OBJECT_REVISION_ID
+
+    for engine in served.engine:
+        for placement in served.placement:
+            chosen = _engine(service.choose_engine(engine, placement, expected_revision=revision))
+            assert (chosen.chosen, chosen.engine, chosen.placement) == (True, engine, placement)
+            assert chosen.choices == served
+            revision = chosen.revision
+
+
+def test_a_status_cannot_be_given_a_choice_list_of_its_own() -> None:
+    with pytest.raises(ValueError, match="choices"):
+        LocalEngineStatus.model_validate(
+            {
+                "unreadable": False,
+                "chosen": False,
+                "engine": LocalEngine.OLLAMA,
+                "placement": LocalPlacement.AUTO,
+                "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+                "choices": {"engine": [LocalEngine.OLLAMA], "placement": [LocalPlacement.AUTO]},
+            }
+        )

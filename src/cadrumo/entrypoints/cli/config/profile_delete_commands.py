@@ -37,11 +37,11 @@ from typing import TYPE_CHECKING
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 
 if TYPE_CHECKING:
@@ -58,7 +58,7 @@ def _refused(preflight: ProfileDeletionPreflight) -> Exception | None:
     the command reports the codes, messages and recovery verdicts it always has.
     """
     from ....application.bucket_maintenance.deletion_preflight import ProfileDeletionRefusal
-    from ._profile_support import unknown_profile_refusal
+    from .profile_support import unknown_profile_refusal
 
     refusal = preflight.refusal
     if refusal is None:
@@ -105,7 +105,7 @@ def _destroy(ctx: typer.Context, assessment: BucketDeletionAssessment) -> str:
     return invocation_services(ctx).delete_profile(assessment)
 
 
-def _result_and_lines(
+def result_and_lines(
     assessment: BucketDeletionAssessment,
     *,
     label: str,
@@ -152,15 +152,15 @@ def config_profile_delete(
     ctx: typer.Context,
     name: str,
     yes: bool = False,
-    output_language: OutputLanguage | None = None,
     expected_profile_id: str | None = None,
     expected_digest: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Destroy one named profile capsule, after a preflight the operator confirms."""
     from ....application.bucket_maintenance.deletion_preflight import assess_named_profile_deletion
     from ..state_projection_support import bucket_storage
 
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     preflight = assess_named_profile_deletion(name, bucket_storage=bucket_storage(ctx))
     refused = _refused(preflight)
     if refused is not None:
@@ -168,7 +168,7 @@ def config_profile_delete(
     assessment, label = preflight.assessment, preflight.label
     if assessment is None or label is None:
         raise CliRefusedBoundaryError("custody_changed")
-    # Desktop confirmation binds the name and content seen in its review.
+    # The confirmation binds the name and content seen in its review.
     # Never silently re-resolve a reused label into a different capsule.
     if (expected_profile_id is None) != (expected_digest is None):
         raise CliRefusedBoundaryError("custody_changed")
@@ -179,7 +179,7 @@ def config_profile_delete(
     ):
         raise CliRefusedBoundaryError("custody_changed")
     completed_at = _destroy(ctx, assessment) if yes else None
-    result, lines, notices = _result_and_lines(
+    result, lines, notices = result_and_lines(
         assessment,
         label=label,
         completed_at=completed_at,

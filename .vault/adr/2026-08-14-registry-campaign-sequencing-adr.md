@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-15'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:cdd56cfd070161ee652d3df7e7ba2aeb427ab6e1922fc55a0a95199b8aa39b49'
+body_hash: 'sha256:f9d20abd938e126ac6ddde32e5bf4d2ce16a536f494533ff30e74bba9c549dc4'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
@@ -68,7 +68,7 @@ revision cannot file.
   The split did not remove a live export layout; it retired the
   already-withdrawn `2010-y-siguientes` revision and copied the SAME
   standing withdrawal into each of the four new revision directories
-  (2022, 2023, 2024, 2025) rather than making a fresh decision.
+  (one per annual epoch) rather than making a fresh decision.
 - `2026-04-22-aeat-fichero-boe-export-adr`, still `accepted`, already rules
   that Modelo 130 and Modelo 303 fichero-BOE export support is REQUIRED.
   The 2026-08-11 sweep withdrew Modelo 303's export layout without amending
@@ -77,7 +77,7 @@ revision cannot file.
 - The historical layouts recoverable from git are not directly restorable
   by revert. The recovered Modelo 390 layout declares
   `source_refs = ["aeat-dr-390-2025"]` on every field while its pre-split
-  revision claimed 2010 onward, and its own record boundaries do not hold
+  revision claimed an open-ended range, and its own record boundaries do not hold
   across every epoch that revision claimed (`page_02` closes at four
   different offsets and box 47 sits at three different offsets across the
   epochs measured). A straight revert of the withdrawal commits would

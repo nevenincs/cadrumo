@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.child_console import WINDOWS_CREATE_NO_WINDOW
-from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 pytestmark = [
     pytest.mark.integration,

@@ -1,9 +1,34 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { Frame, type Surface } from "../src/dev/catalogue/Frame";
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import "../src/dev/index.css";
+import { holdLedgerClassifications } from "../src/shell/ledgerClassifications";
+import { holdRecordedPeriods } from "../src/dev/periodRecording";
+import { holdLedgerLanguage } from "../src/shell/ledgerLanguage";
+import { holdLedgerLimits } from "../src/shell/ledgerLimits";
+import type {
+  LedgerEntryClassificationProjection,
+  LedgerEntryLimitsProjection,
+} from "../src/shell/ledgerEntryContract";
 
 import "virtual:desktop-palette.css";
+
+holdLedgerLimits(servedEntryOptions.limits as LedgerEntryLimitsProjection);
+holdLedgerClassifications(
+  servedEntryOptions.classifications as LedgerEntryClassificationProjection[],
+);
+
+// The filing periods are held as the recording of the backend's read serves
+// them, in the language chosen in the toolbar.
+let periodsFor: string | null = null;
+const holdPeriods = (locale: string) => {
+  if (periodsFor === locale) return;
+  periodsFor = locale;
+  holdRecordedPeriods(locale as Parameters<typeof holdRecordedPeriods>[0]);
+  // The register's sentences are asked for, and recorded, in this language.
+  holdLedgerLanguage(locale as Parameters<typeof holdLedgerLanguage>[0]);
+};
 
 // Every story is drawn on a real shell surface, in the scheme and language
 // chosen in the toolbar, with the application's own providers around it.
@@ -11,6 +36,7 @@ const withShell: Decorator = (Story, context) => {
   const scheme = context.globals.scheme as "light" | "dark";
   const locale = context.globals.locale as string;
   const surface = (context.parameters.surface ?? "background") as Surface;
+  holdPeriods(locale);
   useEffect(() => {
     document.documentElement.dataset.scheme = scheme;
     document.documentElement.lang = locale;
@@ -65,7 +91,13 @@ const preview: Preview = {
     a11y: { test: "error" },
     options: {
       storySort: {
-        order: ["Foundations", "Primitives", "Shell"],
+        order: [
+          "Settings",
+          ["AI settings (whole section)"],
+          "Foundations",
+          "Primitives",
+          "Shell",
+        ],
       },
     },
   },

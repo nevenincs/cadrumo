@@ -19,7 +19,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
@@ -63,7 +64,7 @@ _WRITE = PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 _ALLOWED = "allowed"
 _OPERATION_DENIED = AccessDenialCode.OPERATION_DENIED.value
 
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(1980, 10, 10, 12, tzinfo=UTC)
 _BOOT = UUID("5cc00000-0000-4000-8000-000000000001")
 _CONNECTION = UUID("5cc00000-0000-4000-8000-000000000002")
 _RECIPIENT_CONNECTION = UUID("5cc00000-0000-4000-8000-000000000003")
@@ -125,6 +126,8 @@ class _Host:
 
     def __init__(self) -> None:
         self._guard = RLock()
+        self.lost = False
+        self.worker_lost = False
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:

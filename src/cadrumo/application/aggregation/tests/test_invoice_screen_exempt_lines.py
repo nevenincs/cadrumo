@@ -39,9 +39,14 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import category_components
 from ....domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ....domain.iva.schema import InvoiceKind
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,7 +67,7 @@ def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory) ->
     the declaration despite carrying no cuota.
     """
     with bundled_indexed_authority().operation():
-        components = category_components(category, InvoiceKind.ISSUED)
+        components = category_components(category, InvoiceKind.ISSUED, effective_date=_ON_DATE)
 
     assert components.base.value == "required", f"{category.value} should require a base"
     assert components.cuota.value == "zero_by_law", f"{category.value} should carry no cuota by law"
@@ -80,7 +85,7 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
         iva_rate = resolve_iva_rate_token("EXEMPT", date.today())
         observation = invoice_line_to_iva_observation(
             invoice_id="invoice:exempt-line-proof:0",
-            issued_at=date(2026, 2, 10),
+            issued_at=date(_YEAR, 2, 10),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=iva_rate,
             base_amount=Decimal("1000.00"),
@@ -120,7 +125,7 @@ def test_the_screen_keeps_a_line_whose_only_contribution_is_its_base() -> None:
     assert contributes(*ordinary_rated)
     assert not contributes(*contributes_nothing), "an empty line is the only one safe to drop"
 
-    from .._modelo_bindings_invoice_iva import line_contributes_to_the_iva_screen
+    from ..modelo_bindings_invoice_iva import line_contributes_to_the_iva_screen
 
     assert line_contributes_to_the_iva_screen(*exempt_base_only) is True
     assert line_contributes_to_the_iva_screen(*ordinary_rated) is True

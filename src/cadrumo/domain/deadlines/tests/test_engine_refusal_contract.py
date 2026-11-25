@@ -19,14 +19,15 @@ import pytest
 
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
-from ...calculations.registry.schema_verification import ProfilePredicateDefinition
-from .. import engine as _engine_module
+from ...calculations.registry.schema_live_verification import ProfilePredicateDefinition
+from .. import engine
 from ..engine import (
-    _MISSING_WINDOWS_MESSAGE_KEY,
-    _SCHEDULE_COMPUTATION_MESSAGE_KEY,
+    MISSING_WINDOWS_MESSAGE_KEY,
+    SCHEDULE_COMPUTATION_MESSAGE_KEY,
     DeadlineEngine,
 )
 from ..errors import NoDeadlineWindowsError, ScheduleComputationError
@@ -46,21 +47,22 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
     {
         "DeadlineEngine.compute",
         "DeadlineEngine.explain",
-        "DeadlineEngine._deadline_windows",
+        "DeadlineEngine._deadline_window_year",
         "DeadlineEngine._evaluate_conditions",
-        "_project_deadline_windows",
+        "DeadlineEngine.target_obligation",
+        "project_deadline_windows",
     },
 )
 
-assert _engine_module.__file__ is not None
-_ENGINE_SOURCE = Path(_engine_module.__file__)
+assert engine.__file__ is not None
+_ENGINE_SOURCE = Path(engine.__file__)
 
 
 def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
     with validating_governed_facts(operation):
         return TaxpayerProfile.model_validate(
             {
-                "tax_id": "X1234567L",
+                "tax_id": "X0001500M",
                 "iva_regime": IVARegime("GENERAL"),
                 "iva": ModeloIVAProfile(
                     tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -70,7 +72,6 @@ def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
                     voluntary_sii_enrolled=False,
                     hydrocarbon_deposit_advance_payment_deduction_entitled=False,
                 ),
-                "professional_income_withholding_ge_70pct": False,
                 "art109_activity_income_withholding_ge_70pct": False,
             },
         )
@@ -80,10 +81,14 @@ class TestMessageKeysMatchTheRegistry:
     """The stated keys are the classes' own registered keys."""
 
     def test_missing_windows_key_is_the_registered_key(self) -> None:
-        assert NoDeadlineWindowsError.code.message_key == _MISSING_WINDOWS_MESSAGE_KEY
+        assert NoDeadlineWindowsError.code.message_key == MISSING_WINDOWS_MESSAGE_KEY
 
     def test_schedule_computation_key_is_the_registered_key(self) -> None:
-        assert ScheduleComputationError.code.message_key == _SCHEDULE_COMPUTATION_MESSAGE_KEY
+        assert ScheduleComputationError.code.message_key == SCHEDULE_COMPUTATION_MESSAGE_KEY
+
+
+_NO_WINDOWS_YEAR = FOUR_DIGIT_YEAR_FIRST
+"""A filing year no registry deadline window reaches: the first year the canonical four-digit span allows."""
 
 
 class TestRefusalsCarryNoAuthoredSentence:
@@ -91,17 +96,17 @@ class TestRefusalsCarryNoAuthoredSentence:
 
     def test_compute_without_registered_windows_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine(authority=operation).compute(_profile(operation), 1999)
+            DeadlineEngine(authority=operation).compute(_profile(operation), _NO_WINDOWS_YEAR)
 
         assert str(excinfo.value) == "errors.error.error_deadlines_missing_windows"
-        assert excinfo.value.context == {"filing_year": 1999}
+        assert excinfo.value.context == {"filing_year": _NO_WINDOWS_YEAR}
 
     def test_explain_without_registered_windows_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine(authority=operation).explain(_profile(operation), "999", year=1999)
+            DeadlineEngine(authority=operation).explain(_profile(operation), "999", year=_NO_WINDOWS_YEAR)
 
         assert str(excinfo.value) == "errors.error.error_deadlines_missing_windows"
-        assert excinfo.value.context == {"modelo": "999", "filing_year": 1999}
+        assert excinfo.value.context == {"modelo": "999", "filing_year": _NO_WINDOWS_YEAR}
 
     def test_unresolvable_profile_condition_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         condition = ProfilePredicateDefinition(
@@ -149,7 +154,8 @@ def _pinned_raise_sites() -> tuple[tuple[str, ast.Call], ...]:
 class TestEveryPinnedRaiseSiteIsStructurallyClean:
     """No pinned raise site may reintroduce a positional sentence.
 
-    The runtime assertions above reach four of the five sites.  The
+    The runtime assertions above reach four of the six sites; the deadline
+    engine's own tests reach the duplicate-target refusal.  The
     validation-stage refusal in ``_deadline_windows`` is not reachable from a
     test: an authority is only ever compiled validated, so a registry
     that would fail per-modelo validation is refused at the load stage instead.
@@ -166,8 +172,8 @@ class TestEveryPinnedRaiseSiteIsStructurallyClean:
 
     def test_every_pinned_raise_site_states_a_registered_key(self) -> None:
         registered = {
-            "_MISSING_WINDOWS_MESSAGE_KEY": NoDeadlineWindowsError.code.message_key,
-            "_SCHEDULE_COMPUTATION_MESSAGE_KEY": ScheduleComputationError.code.message_key,
+            "MISSING_WINDOWS_MESSAGE_KEY": NoDeadlineWindowsError.code.message_key,
+            "SCHEDULE_COMPUTATION_MESSAGE_KEY": ScheduleComputationError.code.message_key,
         }
         stated = {}
         for qualname, call in _pinned_raise_sites():
@@ -195,8 +201,8 @@ class TestPeriodBoundariesStayCanonical:
 
     def test_reported_filing_year_matches_the_canonical_period_year(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine(authority=operation).compute(_profile(operation), 1999)
+            DeadlineEngine(authority=operation).compute(_profile(operation), _NO_WINDOWS_YEAR)
 
         assert excinfo.value.context is not None
         reported = excinfo.value.context["filing_year"]
-        assert reported == Period.from_year_and_code(1999, "1T").filing_year
+        assert reported == Period.from_year_and_code(_NO_WINDOWS_YEAR, "1T").filing_year

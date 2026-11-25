@@ -20,7 +20,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from dev.operation_contract_manifest.tests.test_operation_catalogue import (
     production_operation_source_tree,
     production_operation_sources,
@@ -106,11 +106,30 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
     ),
     (
         "src/cadrumo_runtime/host/profile_connection_services.py",
-        "ProfileConnectionServicesMixin._admit_service",
+        "ProfileConnectionServicesMixin._begin_service_admission",
+    ): (
+        "starts installed service verification only for the exact live person-held session; "
+        "the verification remains bound to that session"
+    ),
+    (
+        "src/cadrumo_runtime/host/service_connection_records.py",
+        "person_holder_matches",
     ): (
         "only the exact live person-held session may approve an independently verified installed service; "
         "this admits a service connection and does not discriminate between submitted operations"
     ),
+    (
+        "src/cadrumo/application/live/sede_view_operation.py",
+        "resolve_sede_view_access",
+    ): "the Sede view streams a person-driven browser that only the desktop window can display and drive",
+    (
+        "src/cadrumo_runtime/host/operation_authority.py",
+        "ProfileWorkerOperationAuthority.sede_view_session",
+    ): "rechecks that a running Sede view stays bound to the desktop person session whose window shows it",
+    (
+        "src/cadrumo_runtime/host/profile_connection_operations.py",
+        "ProfileConnectionOperationMixin._view_target",
+    ): "only the desktop window attaches to a Sede view's stream, as no other frontend consumes it",
 }
 """Functions that name a frontend without refusing or changing an operation for it."""
 

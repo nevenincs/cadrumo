@@ -46,13 +46,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -90,7 +91,9 @@ _RESULT_CASILLAS: tuple[CasillaId, ...] = (
 # Anti-tautology: casilla 02 (gastos) is identical across both years.
 _TAUTOLOGY_CASILLA: CasillaId = validated_casilla_id("02", surface="_TAUTOLOGY_CASILLA")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = _TAUTOLOGY_CASILLA
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
@@ -131,26 +134,18 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=profile_authority_contexts()[0],
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Compare Test Autónomo"),
-            UserProfileFact(path="identity.surnames", value="Compare Test Autónomo"),
-            UserProfileFact(path="identity.tax_id", value="11223344B"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories",
-                value="actividad_economica",
-            ),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Compare Test Autónomo"),
+                UserProfileFact(path="identity.surnames", value="Compare Test Autónomo"),
+                UserProfileFact(path="identity.tax_id", value="00001002J"),
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            )
         ),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Compare test profile")
@@ -195,7 +190,7 @@ def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, g
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    raw_values = _payload(result.output)["casilla_values"]
+    raw_values = unwrap_schema_envelope(result.output)["casilla_values"]
     assert isinstance(raw_values, dict), f"casilla_values must be an object, got {type(raw_values).__name__}"
     return {_casilla_id_from_payload(key): str(value) for key, value in raw_values.items()}
 
@@ -276,7 +271,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert compare_result.exit_code == 0, compare_result.output
     assert "Traceback" not in compare_result.output
 
-    payload = _payload(compare_result.output)
+    payload = unwrap_schema_envelope(compare_result.output)
     assert payload["year_a"] == 2025
     assert payload["year_b"] == 2026
     assert payload["modelo"] == "130"
@@ -340,7 +335,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
         snap,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
@@ -356,6 +351,8 @@ def test_compare_delta_rows_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
+        # The normal modality keeps box 02 equal to the supplied expenses.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.

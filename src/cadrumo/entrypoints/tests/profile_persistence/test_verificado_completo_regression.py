@@ -30,8 +30,9 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -54,7 +55,9 @@ from ....adapters.persistence.storage.operator_scope import build_operator_scope
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
@@ -64,24 +67,21 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from ....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
+from .verification_substance_support import workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -124,43 +124,23 @@ def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
-def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
-
-
 def _seed_runtime_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Verifier"),
-                UserProfileFact(path="activities.description", value="design services"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="X0001500M"),
+                    UserProfileFact(path="identity.name", value="Ana"),
+                    UserProfileFact(path="identity.surnames", value="Verifier"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -176,7 +156,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_T0,
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
@@ -277,7 +257,7 @@ def _seed_clean_cross_period_sources_for_m130(
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
             observation_repository=observation_repository,
-            expected_tax_id="X1234567L",
+            expected_tax_id="X0001500M",
             clock=_T0,
         )
         observation_repository.save(
@@ -302,7 +282,7 @@ def _seed_clean_cross_period_sources_for_m130(
                         f"EXP-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
                     ),
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                 },
             )
         )
@@ -325,7 +305,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
     missing-required mechanism itself is exercised against a real registry casilla
     definition in ``test_missing_required_casilla_finding_carries_registry_provenance``.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
         assert required == (), (
@@ -349,13 +329,11 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_348:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs={
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
                     _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                    _M130_RETENCIONES_CASILLA: Decimal("0"),
-                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
                     _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
                     _M130_RESULTADO_CASILLA: Decimal("0"),
                 },
@@ -365,14 +343,14 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
                 },
                 ports=_calculation_ports_348,
                 clock=_T1,
-            )
+            ).revision
 
         report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
+            settings=ready_clave_settings("X0001500M"),
             verification_repositories=_verification_repositories_for_test(repos),
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -393,7 +371,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
 
@@ -409,12 +387,8 @@ def test_verify_grants_when_required_casillas_supplied_m130(
         )
 
         casilla_inputs: dict[CasillaId, Decimal] = {
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("3000"),
             _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
             _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-            _M130_RETENCIONES_CASILLA: Decimal("0"),
-            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
             _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
             _M130_RESULTADO_CASILLA: Decimal("0"),
         }
@@ -428,7 +402,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_413:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs=casilla_inputs,
                 binding_values={
@@ -437,7 +411,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
                 },
                 ports=_calculation_ports_413,
                 clock=_T1,
-            )
+            ).revision
         observation_repo = _seed_clean_cross_period_sources_for_m130(
             work_unit,
             work_unit_repository=wu_repo,
@@ -452,7 +426,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
+            settings=ready_clave_settings("X0001500M"),
             verification_repositories=_verification_repositories_for_test(
                 repos,
                 observation_repository=observation_repo,
@@ -491,7 +465,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
     In production, such breakage can occur through raw-storage manipulation or a
     future schema migration that mutates the payload without updating the id.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
         work_unit = create_work_unit(
@@ -510,15 +484,11 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_498:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs={
-                    _M130_INGRESOS_CASILLA: Decimal("10000"),
-                    _M130_GASTOS_CASILLA: Decimal("3000"),
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
                     _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                    _M130_RETENCIONES_CASILLA: Decimal("0"),
-                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
                     _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
                     _M130_RESULTADO_CASILLA: Decimal("0"),
                 },
@@ -528,7 +498,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 },
                 ports=_calculation_ports_498,
                 clock=_T1,
-            )
+            ).revision
 
         catalogue = cr_repo.load()
         original = catalogue.get(revision.calculation_revision_id)
@@ -566,7 +536,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 verification_repositories=build_test_verification_repository_bundle(),
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_T2,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,

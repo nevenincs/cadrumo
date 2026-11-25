@@ -26,6 +26,7 @@ from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .credit_resolution import credit_resolutions_for_work
 from .history_operation import bind_profile_history_ports, read_profile_work_unit
 from .history_ports import ModeloHistoryPortsFactory
 from .work_review import build_modelo_work_review
@@ -83,6 +84,11 @@ class ModeloWorkReviewExecutor:
                 work_unit_repository=ports.work_unit_repository,
                 calculation_repository=ports.calculation_repository,
                 verification_repository=ports.verification_repository,
+                resolutions=(
+                    None
+                    if ports.credit_resolution is None
+                    else credit_resolutions_for_work(ports.credit_resolution, unit)
+                ),
             )
             snapshot = ModeloWorkReviewSnapshot.from_review(review)
             if snapshot.work_unit_id != unit.work_unit_id or snapshot.registry_revision_id != unit.revision_id:

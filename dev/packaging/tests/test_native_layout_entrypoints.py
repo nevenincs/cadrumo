@@ -1,4 +1,4 @@
-"""Native console entrypoints must name declared console scripts."""
+"""Native console entrypoints must name declared console scripts; the layout locates the component pins."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from dev.packaging.native.layout import entrypoint_files, load_layout
+from dev.paths import COMPONENT_PINS_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -61,3 +62,22 @@ def test_checkout_layout_declares_the_runtime_entrypoint() -> None:
     layout = load_layout("windows-x64")
 
     assert entrypoint_files(layout)["cadrumo-runtime"] == "bin/cadrumo-runtime.exe"
+
+
+@pytest.mark.parametrize("platform", ["windows-x64", "linux-x86-64", "linux-aarch64", "macos-arm64"])
+def test_every_platform_stages_the_component_pins_beside_the_authority(platform: str) -> None:
+    paths = load_layout(platform)["paths"]
+
+    assert paths["component_pins"] == "data/component-pins"
+    assert Path(paths["component_pins"]).parent == Path(paths["authority"]).parent
+    staged_names = {child.name for child in COMPONENT_PINS_ROOT.iterdir()}
+    assert {"browser_archives.toml", "local_ai_program.toml"} <= staged_names
+    assert "local_ai_models.toml" not in staged_names, "no model pins are staged; models are the person's selection"
+
+
+@pytest.mark.parametrize("platform", ["windows-x64", "linux-x86-64", "linux-aarch64", "macos-arm64"])
+def test_every_platform_stages_the_llama_server_program_in_its_own_native_subdirectory(platform: str) -> None:
+    layout = load_layout(platform)
+    program = Path(layout["paths"]["llama_server"])
+
+    assert program == Path(layout["paths"]["native"]) / "llama", "beside, never among, the interpreter's libraries"

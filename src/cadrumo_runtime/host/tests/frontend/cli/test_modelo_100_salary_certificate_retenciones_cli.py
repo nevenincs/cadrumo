@@ -1,4 +1,4 @@
-"""CLI reproduction for the M100 work-retention credit the payee keys."""
+"""CLI reproduction for the M100 work-retention credit a payer certificate records."""
 
 from __future__ import annotations
 
@@ -11,16 +11,18 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
@@ -29,15 +31,9 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
-from .native_api_cli_support import native_api_cli_session
+from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,81 +48,44 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 
 _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 
+#: The withholding the synthetic payer's certificate states.
+_CERTIFIED_RETENCION = Decimal("4200")
 
-_M100_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ana"),
-    UserProfileFact(path="identity.surnames", value="Retenciones"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
-    UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
-    UserProfileFact(path="renta_taxpayer.sex", value="H"),
-    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
+
+_M100_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Ana"),
+        UserProfileFact(path="identity.surnames", value="Retenciones"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        # Activity and salary: the certificate below credits 0596, and the declared categories prove
+        # the capital mobiliario and ganancia patrimonial credits zero. The activity's IAE epigraph is
+        # not an urban-rental group, so the rental-activity credit in 0598 is a proven zero too; a
+        # later fact replaces the general-regime default categories.
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica,trabajo"),
+        UserProfileFact(path="activities.iae_epigraph", value="844"),
+        UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the registered work creation, addressing and calculation operations."""
-    operation_ids = frozenset(
-        {
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+_OPERATIONS = frozenset(
+    {
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    }
+)
 
 
 def _prepare_m100_profile(profile_id: UUID, root: Path, authority_operation: PinnedAuthorityOperation) -> None:
@@ -141,6 +100,35 @@ def _prepare_m100_profile(profile_id: UUID, root: Path, authority_operation: Pin
         )
     assert ready.setup_state is ProfileSetupState.COMPLETE
     _seed_prior_year_zero_carry(profile_id)
+    seed_payer_certificate(
+        operation=authority_operation,
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_REVIEWED_EDITION,
+        payer_tax_id="B00010082",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=_CERTIFIED_RETENCION,
+        importe_integro_dinerario=Decimal("32000"),
+    )
+
+
+#: The boxes of the earlier Modelo 100 the current declaration's carries read: the negative general
+#: bases still pending (1384, 1387, 1390, 1391) and the negative savings balances of gains and losses
+#: (1263, 1266, 1269, 1270) and of capital income (1276, 1279, 1282, 1283). The seeded earlier return
+#: shows each as zero, so every carry is settled by that return rather than by a typed value.
+_PRIOR_YEAR_CARRY_SOURCE_BOXES = (
+    "1384",
+    "1387",
+    "1390",
+    "1391",
+    "1263",
+    "1266",
+    "1269",
+    "1270",
+    "1276",
+    "1279",
+    "1282",
+    "1283",
+)
 
 
 def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
@@ -155,7 +143,7 @@ def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
                     modelo="100",
                     filing_year=_REVIEWED_EDITION - 1,
                     period="0A",
-                    casilla_values={"1391": Decimal("0")},
+                    casilla_values=dict.fromkeys(_PRIOR_YEAR_CARRY_SOURCE_BOXES, Decimal("0")),
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
@@ -172,10 +160,10 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
     authority_operation: PinnedAuthorityOperation,
     run_cadrumo_cli,
 ) -> None:
-    """Real CLI reproduction: the payee salary-certificate binding affects 0596."""
+    """Real CLI reproduction: the payer's recorded certificate credits 0596."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=lambda profile_id, root: _prepare_m100_profile(profile_id, root, authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -194,7 +182,7 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             str(_REVIEWED_EDITION),
         )
         assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-        work_unit_id = _payload(created.output)["work_unit_id"]
+        work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
         assert isinstance(work_unit_id, str) and work_unit_id, created.output
         result = session.invoke_password(
             "app",
@@ -203,13 +191,7 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             "calculate",
             work_unit_id,
             "--casilla",
-            "0003=32000",
-            "--casilla",
             "0102=9600",
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
-            "--binding",
-            "renta-certificado-trabajo-retenciones=4200",
             "--relation",
             "renta-modelo-130-pagos-fraccionados=0",
             "--relation",
@@ -217,6 +199,6 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
         )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
-    assert Decimal(payload["casilla_values"]["0596"]) == Decimal("4200")
-    assert Decimal(payload["casilla_values"]["0609"]) == Decimal("4200")
+    payload = unwrap_schema_envelope(result.output)
+    assert Decimal(payload["casilla_values"]["0596"]) == _CERTIFIED_RETENCION
+    assert Decimal(payload["casilla_values"]["0609"]) == _CERTIFIED_RETENCION

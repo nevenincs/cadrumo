@@ -24,13 +24,15 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..guarderia_mensual import parse_guarderia_mensual
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2024
+
+_YEAR = filing_year_envelope().horizon
 _CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
 
 
@@ -48,11 +50,14 @@ class TestDeclaredMonthlyMapIsTheEvidence:
 
     def test_two_declared_months_count_two(self) -> None:
         """The manual's worked case: two complete months, which prorates to 166,67."""
-        assert _child(date(2022, 3, 1), mensual="5:250;6:250").guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 2
+        assert (
+            _child(date(_YEAR - 2, 3, 1), mensual="5:250;6:250").guarderia_qualifying_meses(_YEAR, context=_CONTEXT)
+            == 2
+        )
 
     def test_six_declared_months_count_six(self) -> None:
         """The manual's second worked case, which prorates to 500."""
-        assert _child(date(2022, 3, 1), mensual="1-6:200").guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 6
+        assert _child(date(_YEAR - 2, 3, 1), mensual="1-6:200").guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 6
 
     def test_a_declared_map_is_preferred_over_the_age_eligible_fallback(self) -> None:
         """A child under three all year who declares two months counts two, not twelve.
@@ -61,7 +66,7 @@ class TestDeclaredMonthlyMapIsTheEvidence:
         it win over declared evidence would restore the flat cap for anyone who
         supplied the detail the statute asks for.
         """
-        child = _child(date(2022, 3, 1), mensual="5:250;6:250")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="5:250;6:250")
 
         assert child.age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 12
         assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 2
@@ -83,7 +88,7 @@ class TestAnnualTotalFallsBackToAgeEligibleMonths:
         assert _child(date(_YEAR, 1, 20), annual=3000).guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 12
 
     def test_a_child_under_three_throughout_is_eligible_for_twelve(self) -> None:
-        assert _child(date(2022, 3, 1), annual=3000).guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 12
+        assert _child(date(_YEAR - 2, 3, 1), annual=3000).guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 12
 
     def test_a_child_born_after_the_period_is_eligible_for_none(self) -> None:
         """Profiles are effective-dated, so a later birth must not reach back."""
@@ -103,7 +108,7 @@ class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
 
     def test_a_child_already_over_three_all_year_is_eligible_for_none(self) -> None:
         """The case that read as twelve before this was made total."""
-        assert _child(date(2019, 6, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 0
+        assert _child(date(_YEAR - 5, 6, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 0
 
     def test_a_child_turning_three_is_eligible_only_until_the_birthday_month(self) -> None:
         """Turning three in June: January to May, five months.
@@ -111,10 +116,10 @@ class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
         The birthday month is excluded, matching the boundary the spend method
         already draws for that period.
         """
-        assert _child(date(2021, 6, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 5
+        assert _child(date(_YEAR - 3, 6, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 5
 
     def test_a_january_third_birthday_leaves_no_eligible_months(self) -> None:
-        assert _child(date(2021, 1, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 0
+        assert _child(date(_YEAR - 3, 1, 10)).age_eligible_guarderia_meses(_YEAR, context=_CONTEXT) == 0
 
     def test_the_live_path_is_unchanged_by_making_it_total(self) -> None:
         """Under the caller's guard the answer is identical to before.
@@ -123,7 +128,7 @@ class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
         change: every descendant the one caller can reach still prorates on the
         same month count.
         """
-        for birth in (date(2022, 3, 1), date(2022, 12, 31), date(_YEAR, 6, 15), date(_YEAR, 1, 1)):
+        for birth in (date(_YEAR - 2, 3, 1), date(_YEAR - 2, 12, 31), date(_YEAR, 6, 15), date(_YEAR, 1, 1)):
             child = _child(birth, annual=1000)
             assert child.age_at_year_end(_YEAR) < 3
             assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == child.age_eligible_guarderia_meses(
@@ -143,7 +148,7 @@ class TestTurningThreePeriod:
         return zero on the manual's own worked case, which counts January to
         June for a child turning three in September.
         """
-        child = _child(date(2021, 6, 10), mensual="4:200;5:200;7:200;8:200")
+        child = _child(date(_YEAR - 3, 6, 10), mensual="4:200;5:200;7:200;8:200")
 
         assert child.age_at_year_end(_YEAR) == 3
         assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 4
@@ -158,18 +163,20 @@ class TestTurningThreePeriod:
         the monthly-detail advisory; the count agrees rather than inventing a
         basis the euros do not have.
         """
-        child = _child(date(2021, 6, 10), annual=3000)
+        child = _child(date(_YEAR - 3, 6, 10), annual=3000)
 
         assert child.guarderia_contributing_spend(_YEAR, context=_CONTEXT) == 0
         assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0
 
     def test_a_child_past_the_turning_three_period_counts_nothing(self) -> None:
-        assert _child(date(2020, 6, 10), mensual="1-12:200").guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0
+        assert (
+            _child(date(_YEAR - 4, 6, 10), mensual="1-12:200").guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0
+        )
 
 
 class TestNonCohabitingContributesNothing:
     def test_a_non_cohabiting_descendant_has_no_qualifying_months(self) -> None:
-        child = _child(date(2022, 3, 1), mensual="1-6:200", convive=False)
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-6:200", convive=False)
 
         assert child.guarderia_contributing_spend(_YEAR, context=_CONTEXT) == 0
         assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0
@@ -180,7 +187,7 @@ class TestMonthSelectionAgreesWithTheSpendMethod:
 
     @pytest.mark.parametrize(
         "birth",
-        [date(2022, 3, 1), date(2021, 6, 10), date(2020, 6, 10), date(_YEAR, 6, 15)],
+        [date(_YEAR - 2, 3, 1), date(_YEAR - 3, 6, 10), date(_YEAR - 4, 6, 10), date(_YEAR, 6, 15)],
         ids=["under-three", "turning-three", "past-three", "born-mid-year"],
     )
     def test_zero_months_and_zero_spend_coincide_for_a_declared_map(self, birth: date) -> None:
@@ -207,7 +214,7 @@ class TestMonthSelectionAgreesWithTheSpendMethod:
         month come to disagree, and re-adding the filter to one method alone
         makes exactly one of these two assertions fail.
         """
-        child = _child(date(2021, 6, 10), mensual="1:100;2:200;3:300;7:400;8:500")
+        child = _child(date(_YEAR - 3, 6, 10), mensual="1:100;2:200;3:300;7:400;8:500")
 
         assert child.guarderia_contributing_spend(_YEAR, context=_CONTEXT) == 1_500
         assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 5

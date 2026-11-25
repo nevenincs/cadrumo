@@ -18,10 +18,11 @@ from typing import TYPE_CHECKING
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.buckets.event import BucketEventType, bucket_event_order_key
+from ..aggregation.ledger_filing_snapshot import FiledRegisterReader, stale_filed_revisions
 from .action_ports import LedgerActionPorts
-from .actions_manual import ledger_transaction_payload, summarize_manual_transactions
 from .attachment_review import list_attachment_review_queue
 from .confirmation_record import load_confirmation_records
+from .manual_read import ledger_transaction_payload, summarize_manual_transactions
 from .models import LedgerReviewQuery
 from .review_projection import project_ledger_review_query
 from .workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
@@ -30,8 +31,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from ...domain.buckets.event import BucketEventHistoryCatalogue
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
     from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
@@ -42,6 +44,7 @@ def read_ledger_workspace_projection(
     ports: LedgerActionPorts,
     calculation_revisions: Mapping[str, CalculationRevision],
     work_units: WorkUnitCatalogue,
+    register_reader: FiledRegisterReader,
     transactions: TransactionCatalogue | None = None,
     invoices: InvoiceCatalogue | None = None,
 ) -> LedgerWorkspaceProjectionV1:
@@ -59,12 +62,18 @@ def read_ledger_workspace_projection(
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     catalogue = transactions if transactions is not None else ports.transaction_repository.load()
     invoice_catalogue = invoices if invoices is not None else ports.invoice_repository.load()
     events = ports.bucket_event_repository.load()
+
+    def read_filing_staleness(
+        *, revisions: Mapping[str, CalculationRevision], catalogue: TransactionCatalogue
+    ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
+        return stale_filed_revisions(revisions=revisions, catalogue=catalogue, register_reader=register_reader)
+
     return project_ledger_workspace(
         summary=summarize_manual_transactions(
             bucket_id=bucket_id,
@@ -84,6 +93,7 @@ def read_ledger_workspace_projection(
         work_units=work_units,
         evidence_pending_review=_evidence_pending_review(bucket_id=bucket_id, ports=ports, events=events),
         last_import_count=_last_import_count(events),
+        filing_staleness_reader=read_filing_staleness,
     )
 
 

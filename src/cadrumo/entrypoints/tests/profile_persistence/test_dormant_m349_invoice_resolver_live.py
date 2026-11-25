@@ -12,10 +12,14 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    INTRACOMMUNITY_OPERATOR_PERSONA,
+    seed_persona_profile,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -33,12 +37,11 @@ from cadrumo.domain.invoices.tests.modelo_349_invoice_facts import (
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _revision,
-    _seed_ready_profile,
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
+    T0,
+    T1,
+    dormant_resolver_live_revision,
 )
 
 pytestmark = [pytest.mark.hex_entrypoint]
@@ -57,7 +60,7 @@ _M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operador
 @pytest.fixture
 def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M349_BUCKET) as profile:
-        _seed_ready_profile(profile.repository, bucket_id=_M349_BUCKET)
+        seed_persona_profile(INTRACOMMUNITY_OPERATOR_PERSONA, bucket_id=_M349_BUCKET, at=T0)
         yield profile.repository
 
 
@@ -94,7 +97,7 @@ def m349_calculated(
 
     # Non-vacuity: the casilla under test binds the invoice source, and the seeded
     # bases are distinct so a copy/contamination cannot satisfy the sum.
-    revision = _revision("349", _M349_REVISION)
+    revision = dormant_resolver_live_revision("349", _M349_REVISION)
     importe_casilla = next(c for c in revision.casillas if c.id == _M349_IMPORTE_CASILLA)
     assert importe_casilla.binding == _M349_IMPORTE_BINDING
     assert any(
@@ -111,14 +114,14 @@ def m349_calculated(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m349_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),
-            clock=_T1,
+            clock=T1,
         )
 
     assert isinstance(result, BucketAggregationCalculationResult)
@@ -147,3 +150,25 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
     _, revision = m349_calculated
     assert revision.casilla_values[_M349_IMPORTE_CASILLA] == M349_EXPECTED_IMPORTE
     assert len(revision.detail_rows) == 3
+
+
+@pytest.mark.unit
+def test_recalculation_replaying_the_current_rows_keeps_the_m349_totals(
+    m349_calculated: tuple[WorkUnit, CalculationRevision],
+    m349_objects: SecureObjectRepository,
+) -> None:
+    # A recalculation replays the current revision's detail rows as caller rows,
+    # and those are the resolver's own rows; counting them again doubled the totals.
+    work_unit, revision = m349_calculated
+    with bundled_indexed_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),
+            detail_rows=revision.detail_rows,
+            clock=T1,
+        )
+
+    assert isinstance(result, BucketAggregationCalculationResult)
+    assert Decimal(result.revision.casilla_values[_M349_IMPORTE_CASILLA]) == M349_EXPECTED_IMPORTE
+    assert Decimal(result.revision.casilla_values[_M349_OPERADORES_CASILLA]) == M349_EXPECTED_OPERADORES
+    assert result.revision.detail_rows == revision.detail_rows

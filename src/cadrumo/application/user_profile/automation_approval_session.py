@@ -60,6 +60,7 @@ def _candidate_grant(
         expires_at=record.proposal.expires_at,
         unattended=record.proposal.unattended,
         allow_os_lock=record.proposal.allow_os_lock,
+        label=record.proposal.label,
     )
 
 

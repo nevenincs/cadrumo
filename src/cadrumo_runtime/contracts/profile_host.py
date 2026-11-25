@@ -32,6 +32,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     SessionRequest,
     SessionsLocked,
@@ -42,10 +44,11 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
-from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
+from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceAdmissionStatusQuery, ServiceConnect
 from cadrumo_client.contracts.session_events import ConnectionEvent
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import ViewAttachRequest, ViewConnect
 from cadrumo_client.transport.native_wake import NativeWake
 
 from .profile_worker import ProfileWorkerDrained
@@ -93,6 +96,7 @@ class ProfileHandler(Protocol):
         context: ConnectionContext,
         channel: ByteChannel,
         request: ProfileLogin
+        | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
         | SignInStatusRequest
@@ -102,6 +106,7 @@ class ProfileHandler(Protocol):
         | AttendanceDecide,
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
@@ -122,6 +127,14 @@ class ProfileHandler(Protocol):
 
     def operation(self, context: ConnectionContext, channel: ByteChannel, request: OperationRequest) -> None:
         """Resolve and write a canonical projection while holding current output authority."""
+        ...
+
+    def view_attach(self, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest) -> None:
+        """Write a single-use attach token for the session's running view, or a refusal."""
+        ...
+
+    def view_connect(self, context: ConnectionContext, channel: ByteChannel, request: ViewConnect) -> None:
+        """Admit a connection's first request as a view connection and relay until it unbinds."""
         ...
 
     def enrollment(self, context: ConnectionContext, channel: ByteChannel, request: EnrollmentRequest) -> None:
@@ -154,7 +167,10 @@ class ProfileHandler(Protocol):
         ...
 
     def service(
-        self, context: ConnectionContext, channel: ByteChannel, request: ServiceConnect | ServiceAdmission
+        self,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery,
     ) -> None:
         """Register or human-admit an exact installed service peer."""
         ...

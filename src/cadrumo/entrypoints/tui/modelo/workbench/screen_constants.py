@@ -6,31 +6,30 @@ from collections.abc import Mapping
 from typing import Final
 from weakref import WeakSet
 
-from .....application.modelo.operation_definitions import (
+from .....application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
-from .....domain.modelos.verification_report import VerificationCompletenessStatus
+from .....application.modelo.work_form_header import ModeloFormDeadlineTone
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from ...components.theme import CADRUMO_CSS_TOKENS
-from .header import DeadlineTone
 from .page_items import WorkbenchFilter
-from .progress import NextAction
 
-_NARROW: Final[int] = 110
-_SHORT: Final[int] = 30
+NARROW: Final[int] = 110
+SHORT: Final[int] = 30
 """Below this many rows the list shows one line per box and the help band one line, so ten or more boxes fit."""
-_DOCKED_FROM: Final[int] = _SHORT
+DOCKED_FROM: Final[int] = SHORT
 """From this many rows the box panel docks in place of the help band; below it, it opens as the centred dialog."""
-_FOLLOWING_LINES: Final[int] = 2
+FOLLOWING_LINES: Final[int] = 2
 """Lines of the list kept in view after the box being edited, so its neighbours show beside the docked panel."""
-_GUTTERS: Final[int] = 2 * int(CADRUMO_CSS_TOKENS["cadrumo-gutter"])
-_NEXT_GAP: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
-_FOOTER_KEY_GAP: Final[int] = 1
-_NO_BREAK_SPACE: Final[str] = "\u00a0"
-_PALETTE_FRAME: Final[int] = 2
+GUTTERS: Final[int] = 2 * int(CADRUMO_CSS_TOKENS["cadrumo-gutter"])
+NEXT_GAP: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
+FOOTER_KEY_GAP: Final[int] = 1
+NO_BREAK_SPACE: Final[str] = "\u00a0"
+PALETTE_FRAME: Final[int] = 2
 """The command palette key's rule on its left and its gap on its right, beside its words, in the compact footer."""
-_FOOTER_PRIORITY: Final[tuple[str, ...]] = (
+FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "enter",
     "up",
     "n",
@@ -49,30 +48,34 @@ _FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "c",
     "e",
     "b",
+    "a",
+    "t",
+    "m",
+    "w",
 )
 """Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
-_HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
+HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
 """Keys the help and the legend name that the footer never shows."""
-_CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "b", "c", "f8", "n"})
+CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "a", "b", "c", "f8", "n"})
 """Footer keys that change a declaration or lead to what is left to do; a declaration recorded as filed shows none."""
-_NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
-    True: "tui.modelo.workbench.bulk_confirm.none_in_section",
-    False: "tui.modelo.workbench.bulk_confirm.none_on_page",
+NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
+    True: "workspace.modelo.bulk_confirm.none_in_section",
+    False: "workspace.modelo.bulk_confirm.none_on_page",
 }
 """What ``b`` says with nothing assumed in the section under the cursor (``True``) or on the page."""
-_VALUE_CHANGING_OPERATIONS: Final[frozenset[str]] = frozenset(
+VALUE_CHANGING_OPERATIONS: Final[frozenset[str]] = frozenset(
     {str(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID), str(MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID)}
 )
 """Operations after which the workbench shows which boxes now read differently."""
-_SELF_REPORTING_OPERATIONS: Final[frozenset[str]] = frozenset(
+SELF_REPORTING_OPERATIONS: Final[frozenset[str]] = frozenset(
     {str(MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID), str(MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID)}
 )
 """Operations whose notice says what they concluded, read from the declaration once it is read again."""
-_NAV_MIN_LABEL: Final[int] = 12
-_DIALOG_FRAME: Final[int] = 4
+NAV_MIN_LABEL: Final[int] = 12
+DIALOG_FRAME: Final[int] = 4
 """Cells a full-width confirmation dialog's border and padding take across, around its message."""
-_FRAGMENT_SEPARATOR: Final[str] = " … "
-_FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
+FRAGMENT_SEPARATOR: Final[str] = " … "
+FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.ALL,
     WorkbenchFilter.ATTENTION,
     WorkbenchFilter.MINE,
@@ -80,69 +83,63 @@ _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.CALCULATED,
     WorkbenchFilter.AMOUNT,
 )
-_NEXT_KEYS: Final[Mapping[NextAction, str]] = {
-    NextAction.APPLY: "R",
-    NextAction.FILL: "n",
-    NextAction.CONFIRM: "n",
-    NextAction.RESOLVE: "i",
-    NextAction.CALCULATE: "F8",
-    NextAction.RECALCULATE: "c",
-    NextAction.VERIFY: "F8",
-    NextAction.EXPORT: "e",
-    NextAction.EXPORT_AGAIN: "e",
-    NextAction.RECORD_AFTER_FILE: "F8",
-    NextAction.RECORDED: "",
+NEXT_KEYS: Final[Mapping[ModeloFormNextAction, str]] = {
+    ModeloFormNextAction.APPLY: "R",
+    ModeloFormNextAction.FILL: "n",
+    ModeloFormNextAction.CONFIRM: "n",
+    ModeloFormNextAction.RESOLVE: "i",
+    ModeloFormNextAction.CALCULATE: "F8",
+    ModeloFormNextAction.RECALCULATE: "c",
+    ModeloFormNextAction.VERIFY: "F8",
+    ModeloFormNextAction.EXPORT: "e",
+    ModeloFormNextAction.EXPORT_AGAIN: "e",
+    ModeloFormNextAction.RECORD_AFTER_FILE: "F8",
+    ModeloFormNextAction.RECORDED: "",
 }
-_FINDINGS_KEY: Final[str] = _NEXT_KEYS[NextAction.RESOLVE]
+FINDINGS_KEY: Final[str] = NEXT_KEYS[ModeloFormNextAction.RESOLVE]
 """The key the next-action line names when the findings list leads to what is left, whichever step it is."""
-_CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
-    VerificationCompletenessStatus.COMPLETE: "tui.modelo.workbench.operation.checked.complete",
-    VerificationCompletenessStatus.INCOMPLETE: "tui.modelo.workbench.operation.checked.incomplete",
-    VerificationCompletenessStatus.BLOCKED: "tui.modelo.workbench.operation.checked.blocked",
+DEADLINE_TONE_CLASSES: Final[Mapping[ModeloFormDeadlineTone, str]] = {
+    ModeloFormDeadlineTone.NORMAL: "-normal",
+    ModeloFormDeadlineTone.SOON: "-soon",
+    ModeloFormDeadlineTone.URGENT: "-urgent",
+    ModeloFormDeadlineTone.MUTED: "-muted",
 }
-_DEADLINE_TONE_CLASSES: Final[Mapping[DeadlineTone, str]] = {
-    DeadlineTone.NORMAL: "-normal",
-    DeadlineTone.SOON: "-soon",
-    DeadlineTone.URGENT: "-urgent",
-    DeadlineTone.MUTED: "-muted",
+SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "left_square_bracket": "workspace.modelo.key.previous_page",
+    "right_square_bracket": "workspace.modelo.key.next_page",
+    "f": "workspace.modelo.key.filter",
+    "question_mark": "workspace.modelo.key.help",
+    "escape": "workspace.modelo.key.back",
+    "R": "workspace.modelo.key.review",
+    "f8": "workspace.modelo.key.next_step",
+    "c": "workspace.modelo.key.calculate",
+    "e": "workspace.modelo.key.export",
+    "i": "workspace.modelo.key.issues",
+    "n": "workspace.modelo.key.next_attention",
+    "slash": "workspace.modelo.key.search",
+    "g": "workspace.modelo.key.go_to",
+    "o": "workspace.modelo.key.sort",
+    "b": "workspace.modelo.bulk_confirm.title",
+    "a": "tui.modelo.statements.key",
+    "t": "tui.modelo.taxation.key",
+    "D": "tui.modelo.disagreements.key",
+    "w": "tui.modelo.wallet.key",
+    "m": "tui.modelo.amendment.key",
+    "space": "workspace.modelo.key.fold",
 }
-_SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "left_square_bracket": "tui.modelo.workbench.key.previous_page",
-    "right_square_bracket": "tui.modelo.workbench.key.next_page",
-    "f": "tui.modelo.workbench.key.filter",
-    "question_mark": "tui.modelo.workbench.key.help",
-    "escape": "tui.modelo.workbench.key.back",
-    "R": "tui.modelo.workbench.key.review",
-    "f8": "tui.modelo.workbench.key.next_step",
-    "c": "tui.modelo.workbench.key.calculate",
-    "e": "tui.modelo.workbench.key.export",
-    "i": "tui.modelo.workbench.key.issues",
-    "n": "tui.modelo.workbench.key.next_attention",
-    "slash": "tui.modelo.workbench.key.search",
-    "g": "tui.modelo.workbench.key.go_to",
-    "o": "tui.modelo.workbench.key.sort",
-    "b": "tui.modelo.workbench.bulk_confirm.title",
-    "space": "tui.modelo.workbench.key.fold",
+LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "enter": "workspace.modelo.key.edit",
+    "s": "workspace.modelo.key.sources",
+    "up": "workspace.modelo.key.scroll",
 }
-_LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "enter": "tui.modelo.workbench.key.edit",
-    "s": "tui.modelo.workbench.key.sources",
-    "up": "tui.modelo.workbench.key.scroll",
-}
-_RECORDED_ENTER_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.key.go"
+RECORDED_ENTER_LOCALE_KEY: Final[str] = "workspace.modelo.sources.key.go"
 """What Enter does on a declaration recorded as filed: it opens the box, to read it, never to edit it."""
-_CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
-_EMPTY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty"
-_EMPTY_NEXT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty_next"
-_CRUMB_SEPARATOR: Final[str] = " · "
-_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.record.refused_file_out_of_date"
-"""Why recording the filing is refused while the latest file was made from an earlier calculation."""
-_WITHHELD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.confirm_first"
-"""Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
-_BLOCKED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.resolve_first"
-"""Why neither is offered while something blocks filing."""
-_LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
-_SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
+CLOSE_LOCALE_KEY: Final[str] = "workspace.modelo.key.close"
+EMPTY_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty"
+EMPTY_NEXT_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty_next"
+CRUMB_SEPARATOR: Final[str] = " · "
+LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
+SCROLL_LOCALE_KEY: Final[str] = "workspace.modelo.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""
-_GREETED: Final[WeakSet[object]] = WeakSet()
+GREETED: Final[WeakSet[object]] = WeakSet()
 """The applications whose filer has already been told once where to find what the symbols mean."""

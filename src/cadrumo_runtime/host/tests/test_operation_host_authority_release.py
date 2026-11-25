@@ -86,7 +86,7 @@ async def test_a_close_whose_drain_fails_leaves_the_shared_registry_authority_to
         served = bundled_indexed_authority()
         host = _leased_host()
         # Only the drain's failure is under test; the services it would drain are not.
-        host._services = cast(OperationComposedServices, _FailingDrain())
+        host.services = cast(OperationComposedServices, _FailingDrain())
         try:
             with pytest.raises(RuntimeError, match="operation drain failed"):
                 await host.close()

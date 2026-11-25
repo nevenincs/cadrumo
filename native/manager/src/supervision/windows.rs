@@ -9,7 +9,7 @@
 use std::ffi::{OsString, c_void};
 use std::io;
 use std::os::windows::ffi::OsStringExt;
-use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle};
+use std::os::windows::io::{AsHandle, AsRawHandle, FromRawHandle, OwnedHandle, RawHandle};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
@@ -33,7 +33,6 @@ const TOKEN_ELEVATION_TYPE_CLASS: u32 = 18;
 const TOKEN_ELEVATION_TYPE_FULL: u32 = 2;
 const WAIT_OBJECT_0: u32 = 0;
 const WAIT_TIMEOUT: u32 = 0x102;
-const INFINITE: u32 = u32::MAX;
 const CTRL_C_EVENT: u32 = 0;
 const CTRL_BREAK_EVENT: u32 = 1;
 const ERROR_ACCESS_DENIED: i32 = 5;
@@ -125,6 +124,13 @@ pub(crate) fn open_process(pid: u32) -> io::Result<HeldProcess> {
 }
 
 impl HeldProcess {
+    /// Observe the exact held process without reopening a numeric PID.
+    pub(crate) fn exit_watch(
+        &self,
+    ) -> io::Result<cadrumo_platform::process_exit::ProcessExitWatch> {
+        cadrumo_platform::process_exit::ProcessExitWatch::from_handle(self.handle.as_handle())
+    }
+
     /// The process creation time as FILETIME ticks, the boot record's stamp.
     pub(crate) fn creation_time(&self) -> io::Result<u64> {
         let (mut created, mut exited, mut kernel, mut user) = Default::default();
@@ -221,27 +227,6 @@ impl HeldProcess {
             return Err(io::Error::last_os_error());
         }
         Ok(())
-    }
-}
-
-/// A wait on one process's exit, independent of the handle the supervisor holds.
-#[derive(Debug)]
-pub(crate) struct ExitWatch(OwnedHandle);
-
-impl ExitWatch {
-    /// Open while the caller still holds the process, so `pid` cannot name another.
-    pub(crate) fn open(pid: u32) -> io::Result<Self> {
-        // SAFETY: OpenProcess takes plain integers and returns a new handle or null.
-        owned(unsafe { OpenProcess(SYNCHRONIZE, 0, pid) }).map(Self)
-    }
-
-    /// Block until the process has ended.
-    pub(crate) fn wait(&self) -> io::Result<()> {
-        // SAFETY: the handle is open with SYNCHRONIZE for this value's lifetime.
-        match unsafe { WaitForSingleObject(raw(&self.0), INFINITE) } {
-            WAIT_OBJECT_0 => Ok(()),
-            _ => Err(io::Error::last_os_error()),
-        }
     }
 }
 

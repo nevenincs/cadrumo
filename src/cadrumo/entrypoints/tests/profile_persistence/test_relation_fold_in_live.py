@@ -38,9 +38,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import (
     AggregationValidationError,
@@ -56,7 +56,7 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
 from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -76,22 +76,17 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
-    build_retencion_observation_ports,
     build_work_lifecycle_ports,
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -136,45 +131,14 @@ _QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     },
 }
 
-_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile(profile.repository)
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
-
-
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    """Persist a filing-ready profile for the annual M180 work-unit gate."""
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="rental withholding activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
@@ -201,25 +165,16 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="115",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=result.observations,
-                ),
-                source_kind="app_filing",
-                captured_at=_T0,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="115",
-                        filing_year=_YEAR,
-                        period=period,
-                        observations=result.observations,
-                    )
-                ),
-            )
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo="115",
+                filing_year=_YEAR,
+                period=period,
+                observations=result.observations,
+            ),
+            source_kind="app_filing",
+            captured_at=_T0,
         )
         for cid in totals:
             totals[cid] += result.values[cid]
@@ -246,7 +201,7 @@ def _retencion_observation(nif: str) -> RetencionObservation:
             withholding_percentage=Decimal("19.00"),
             address=Modelo180StructuredAddress(
                 province_code="28",
-                municipality_code="079",
+                municipality_code="28079",
                 municipality="Madrid",
                 locality="Madrid",
                 postal_code="28001",

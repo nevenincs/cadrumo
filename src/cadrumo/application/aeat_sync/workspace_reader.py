@@ -19,11 +19,16 @@ which is what makes the destination worth reaching in a fresh session.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.period import PeriodKind, registry_period_kind
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.work_unit import WorkUnitState
 from ..modelo.reconciliation_records import ModeloReconciliationRecord
 from ..operations.models import OperationDefinitionId
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
@@ -32,16 +37,27 @@ from ..overview.calendar_models import OverviewAeatSubmissionState
 from ..overview.home import HomeAvailability
 from ..user_profile.censal_observation import CensalObservation
 from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
-from .reconciliation_reader import reconciliation_rows
+from .reconciliation_reader import reconciliation_rows, reconciliation_source_state
 from .workspace import (
+    AEAT_SYNC_STALENESS_HORIZONS,
     AeatSyncAeatObservationState,
+    AeatSyncAreaState,
+    AeatSyncAreaStatusV1,
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
     AeatSyncDiscrepancyKind,
+    AeatSyncFiledDifference,
+    AeatSyncFiledLocalRecord,
+    AeatSyncFiledMatch,
+    AeatSyncFiledPeriodCountsV1,
+    AeatSyncFiledRowV1,
     AeatSyncJustificanteState,
     AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
+    AeatSyncRefusedSnapshotV1,
     AeatSyncSourceState,
+    AeatSyncStatusArea,
+    AeatSyncStatusV1,
     AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceCensusRowV1,
     AeatSyncWorkspaceFactV1,
@@ -55,12 +71,18 @@ from .workspace import (
     AeatSyncWorkspaceZoneObservationV1,
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
+    source_observation_is_observable,
 )
 
 if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from ...core.filing_year import FilingYear
+    from ...core.identifier_grammar import NamespacedId
     from ...core.period import Period
     from ...core.time.utc import UtcInstant
     from ...domain.modelos.filing_record import ModeloRecord
+    from ...domain.modelos.work_unit import WorkUnit
     from ..operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
     from ..overview.calendar_models import OverviewCalendarFilingEvidence
     from ..overview.evidence import CalendarEvidenceProjection
@@ -74,6 +96,10 @@ _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
 )
 
 _NEVER_PULLED: Final[str] = "workbench.aeat_sync.never_pulled"
+_CAPTURE_REFUSED: Final[NamespacedId] = "aeat_sync.status.capture_refused"
+"""Every stored capture of the area was refused, so none can date it."""
+_SNAPSHOT_SCHEMA_OUTDATED: Final[NamespacedId] = "aeat_sync.status.snapshot_schema_outdated"
+"""Every stored capture of the area was written under an older storage schema, so none can be read."""
 _READER_NOT_COMPOSED: Final[str] = "workbench.aeat_sync.local_reader_not_composed"
 """A local authority exists, but this session did not compose its reader.
 
@@ -105,6 +131,15 @@ _OPERATION_ACTION_IDS: Final[frozenset[str]] = frozenset(
     }
 )
 
+
+_READABLE_AVAILABILITIES: Final[frozenset[AeatSyncWorkspaceAvailability]] = frozenset(
+    {
+        AeatSyncWorkspaceAvailability.AVAILABLE,
+        AeatSyncWorkspaceAvailability.STALE,
+        AeatSyncWorkspaceAvailability.NEVER_CAPTURED,
+    }
+)
+"""The filed-capture availabilities that are not a failure to read the store."""
 
 _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
     AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: _READER_NOT_COMPOSED,
@@ -173,7 +208,7 @@ def _filed_source_observation(
             refusal=_NEVER_PULLED,
         )
     availability = AeatSyncWorkspaceAvailability(state.availability.value)
-    if availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}:
+    if not source_observation_is_observable(availability):
         return AeatSyncWorkspaceSourceObservationV1(
             source=AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
             availability=availability,
@@ -427,18 +462,11 @@ def _overview_row(
     if area is AeatSyncOverviewArea.RECONCILIATION and reconciliations is not None:
         local_state = AeatSyncSourceState.PRESENT if reconciliations else AeatSyncSourceState.ABSENT
         local_observed_at = observed_at
-        if reconciliations:
-            rows = reconciliation_rows(
-                bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
-            )
-            aeat_state = (
-                AeatSyncSourceState.CONFLICT
-                if any(fact.row.diffs for fact in rows)
-                else AeatSyncSourceState.INCOMPLETE
-                if any(fact.row.advisory_count for fact in rows)
-                else AeatSyncSourceState.PRESENT
-            )
-            aeat_observed_at = max(record.reconciled_at for record in reconciliations)
+        aeat_state, aeat_observed_at = _reconciliation_overview_state(
+            reconciliations,
+            aeat_state,
+            aeat_observed_at,
+        )
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
@@ -451,10 +479,35 @@ def _overview_row(
     )
 
 
+def _reconciliation_overview_state(
+    reconciliations: tuple[ModeloReconciliationRecord, ...],
+    aeat_state: AeatSyncSourceState,
+    aeat_observed_at: UtcInstant | None,
+) -> tuple[AeatSyncSourceState, UtcInstant | None]:
+    if reconciliations:
+        rows = reconciliation_rows(
+            bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
+        )
+        aeat_state = reconciliation_source_state(
+            has_diffs=any(fact.row.diffs for fact in rows),
+            has_advisories=any(fact.row.advisory_count for fact in rows),
+        )
+        aeat_observed_at = max(record.reconciled_at for record in reconciliations)
+    return aeat_state, aeat_observed_at
+
+
 _CENSUS_FIELD_CATEGORIES: Final[dict[str, AeatSyncCensusCategory]] = {
     "contact.fiscal_address": AeatSyncCensusCategory.ADDRESS,
     "contact.postcode": AeatSyncCensusCategory.ADDRESS,
     "contact.fiscal_address_cadastral_reference": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_province_code": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_municipality_code": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_municipality_name": AeatSyncCensusCategory.ADDRESS,
+    "censo.aeat_delegacion_code": AeatSyncCensusCategory.OTHER,
+    "censo.aeat_administracion_code": AeatSyncCensusCategory.OTHER,
+    "censo.aeat_administracion_name": AeatSyncCensusCategory.OTHER,
+    "censo.activity_start_date": AeatSyncCensusCategory.ACTIVITY,
+    "censo.activity_end_date": AeatSyncCensusCategory.ACTIVITY,
 }
 """Which censo field each comparable path belongs to.
 
@@ -536,45 +589,72 @@ def _filed_declaration_rows(
     area_actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
     # The whole-history pull is the area's offer on its overview row; one declaration's row does not carry it.
     actions = tuple(action for action in area_actions if action.action_id != "operator.live.filed.pull_all")
+    latest = _latest_filings(filings)
+    rows: list[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]] = []
+    for key in sorted(latest.keys() | observed.keys()):
+        record, evidence = latest.get(key), observed.get(key)
+        rows.append(
+            _filed_declaration_fact(
+                bucket_id,
+                subject_key,
+                key,
+                record,
+                evidence,
+                aeat_observed_at,
+                actions,
+                operations,
+            )
+        )
+    return tuple(rows)
+
+
+def _latest_filings(filings: tuple[ModeloRecord, ...]) -> dict[_NaturalKey, ModeloRecord]:
     latest: dict[_NaturalKey, ModeloRecord] = {}
     for record in filings:
         key = (str(record.modelo), record.filing_year, record.period.registry_token)
         current = latest.get(key)
         if current is None or record.filed_at > current.filed_at:
             latest[key] = record
-    rows: list[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]] = []
-    for key in sorted(latest.keys() | observed.keys()):
-        record, evidence = latest.get(key), observed.get(key)
-        aeat_at = None if evidence is None else aeat_observed_at
-        verified = evidence is not None and evidence.justificante_verified
-        rows.append(
-            AeatSyncWorkspaceFactV1(
-                bucket_id=bucket_id,
-                subject_key=subject_key,
-                row=AeatSyncWorkspaceFiledDeclarationRowV1(
-                    modelo=record.modelo if record is not None else ModeloCode(key[0]),
-                    filing_year=key[1],
-                    period=record.period if record is not None else _evidence_period(evidence),
-                    local_filing_state=(
-                        AeatSyncLocalFilingState.NOT_OBSERVED if record is None else AeatSyncLocalFilingState.FILED
-                    ),
-                    local_filed_at=None if record is None else record.filed_at,
-                    aeat_observation_state=(
-                        AeatSyncAeatObservationState.NOT_OBSERVED
-                        if evidence is None
-                        else _AEAT_OBSERVATION_STATES[evidence.aeat_submission_state]
-                    ),
-                    aeat_observed_at=aeat_at,
-                    justificante_state=(
-                        AeatSyncJustificanteState.VERIFIED if verified else AeatSyncJustificanteState.NOT_OBSERVED
-                    ),
-                    justificante_observed_at=aeat_at if verified else None,
-                    supported_actions=actions,
-                    supported_operations=operations,
-                ),
-            )
-        )
-    return tuple(rows)
+    return latest
+
+
+def _filed_declaration_fact(
+    bucket_id: str,
+    subject_key: str,
+    key: _NaturalKey,
+    record: ModeloRecord | None,
+    evidence: OverviewCalendarFilingEvidence | None,
+    aeat_observed_at: UtcInstant | None,
+    actions: tuple[ActionReference, ...],
+    operations: tuple[OperationDefinitionId, ...],
+) -> AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]:
+    aeat_at = None if evidence is None else aeat_observed_at
+    verified = evidence is not None and evidence.justificante_verified
+    return AeatSyncWorkspaceFactV1(
+        bucket_id=bucket_id,
+        subject_key=subject_key,
+        row=AeatSyncWorkspaceFiledDeclarationRowV1(
+            modelo=record.modelo if record is not None else ModeloCode(key[0]),
+            filing_year=key[1],
+            period=record.period if record is not None else _evidence_period(evidence),
+            local_filing_state=(
+                AeatSyncLocalFilingState.NOT_OBSERVED if record is None else AeatSyncLocalFilingState.FILED
+            ),
+            local_filed_at=None if record is None else record.filed_at,
+            aeat_observation_state=(
+                AeatSyncAeatObservationState.NOT_OBSERVED
+                if evidence is None
+                else _AEAT_OBSERVATION_STATES[evidence.aeat_submission_state]
+            ),
+            aeat_observed_at=aeat_at,
+            justificante_state=(
+                AeatSyncJustificanteState.VERIFIED if verified else AeatSyncJustificanteState.NOT_OBSERVED
+            ),
+            justificante_observed_at=aeat_at if verified else None,
+            supported_actions=actions,
+            supported_operations=operations,
+        ),
+    )
 
 
 def _evidence_period(evidence: OverviewCalendarFilingEvidence | None) -> Period:
@@ -702,4 +782,333 @@ def read_local_aeat_sync_workspace_projection(
     )
 
 
-__all__ = ["read_local_aeat_sync_workspace_projection"]
+@dataclass(frozen=True, slots=True)
+class AeatSyncAreaAttempt:
+    """The last attempt a sync-run record holds for an area, successful or not."""
+
+    attempted_at: UtcInstant
+    succeeded: bool
+
+
+@dataclass(frozen=True, slots=True)
+class AeatSyncNotificationsCapture:
+    """The newest stored notification snapshot, reduced to what the status shows.
+
+    ``unread_count`` counts rows the AEAT marked unread. A row whose read state
+    the capture did not establish is not counted as unread.
+    """
+
+    captured_at: UtcInstant
+    unread_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class AeatSyncStatusSources:
+    """Already-loaded stored captures the per-area status judges.
+
+    `None` for a capture means its store was read and holds none; an area whose
+    store could not be read at all is named in ``unreadable`` with its refusal,
+    which keeps it distinct from an area that was never brought.
+    """
+
+    census_observation: CensalObservation | None = None
+    filings: tuple[ModeloRecord, ...] = ()
+    drafts: tuple[WorkUnit, ...] = ()
+    filed_evidence: CalendarEvidenceProjection | None = None
+    filed_attempt: AeatSyncAreaAttempt | None = None
+    notifications: AeatSyncNotificationsCapture | None = None
+    iva_wallet_captured_at: UtcInstant | None = None
+    borrador_imported_at: UtcInstant | None = None
+    borrador_refused: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
+    borrador_outdated: int = 0
+    identity_checked_at: UtcInstant | None = None
+    unreadable: Mapping[AeatSyncStatusArea, NamespacedId] = field(default_factory=lambda: MappingProxyType({}))
+
+
+def _area_status(
+    area: AeatSyncStatusArea,
+    *,
+    observed_at: UtcInstant,
+    captured_at: UtcInstant | None,
+    refusal: NamespacedId | None = None,
+    attempt: AeatSyncAreaAttempt | None = None,
+    unread_notification_count: int | None = None,
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None,
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = (),
+    outdated_stored_snapshots: int = 0,
+) -> AeatSyncAreaStatusV1:
+    """Judge one area against its backend-owned horizon.
+
+    A capture is possibly stale only when it is strictly older than the horizon,
+    so one made exactly a horizon ago is still current. An unreadable store wins
+    over any capture time, because a time the store cannot confirm is not proof.
+    """
+    horizon = AEAT_SYNC_STALENESS_HORIZONS[area]
+    last_attempt_at = None if attempt is None else attempt.attempted_at
+    last_attempt_succeeded = None if attempt is None else attempt.succeeded
+    if refusal is not None:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=refusal,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+        )
+    if captured_at is None and refused_snapshots:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=_CAPTURE_REFUSED,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+            refused_snapshots=refused_snapshots,
+            outdated_stored_snapshots=outdated_stored_snapshots,
+        )
+    if captured_at is None and outdated_stored_snapshots:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=_SNAPSHOT_SCHEMA_OUTDATED,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+            outdated_stored_snapshots=outdated_stored_snapshots,
+        )
+    if captured_at is None:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.NEVER_BROUGHT,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+        )
+    return _captured_area_status(
+        area,
+        horizon=horizon,
+        observed_at=observed_at,
+        captured_at=captured_at,
+        last_attempt_at=last_attempt_at,
+        last_attempt_succeeded=last_attempt_succeeded,
+        unread_notification_count=unread_notification_count,
+        filed_rows=filed_rows,
+        refused_snapshots=refused_snapshots,
+        outdated_stored_snapshots=outdated_stored_snapshots,
+    )
+
+
+def _captured_area_status(
+    area: AeatSyncStatusArea,
+    *,
+    horizon: timedelta | None,
+    observed_at: UtcInstant,
+    captured_at: UtcInstant,
+    last_attempt_at: UtcInstant | None,
+    last_attempt_succeeded: bool | None,
+    unread_notification_count: int | None,
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None,
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...],
+    outdated_stored_snapshots: int,
+) -> AeatSyncAreaStatusV1:
+    """Judge an area that holds a capture: current unless strictly older than its horizon."""
+    stale = horizon is not None and observed_at - captured_at > horizon
+    return AeatSyncAreaStatusV1(
+        area=area,
+        state=AeatSyncAreaState.POSSIBLY_STALE if stale else AeatSyncAreaState.CURRENT,
+        last_brought_at=captured_at,
+        stale_after_days=None if horizon is None else horizon.days,
+        last_attempt_at=last_attempt_at,
+        last_attempt_succeeded=last_attempt_succeeded,
+        unread_notification_count=unread_notification_count,
+        filed_periods=None if filed_rows is None else _filed_period_counts(filed_rows),
+        filed_rows=filed_rows,
+        refused_snapshots=refused_snapshots,
+        outdated_stored_snapshots=outdated_stored_snapshots,
+    )
+
+
+def _contested_filings(
+    filed_evidence: CalendarEvidenceProjection | None,
+) -> dict[_NaturalKey, OverviewCalendarFilingEvidence]:
+    """Index the filings the register shows with evidence that conflicts or raises a concern."""
+    if filed_evidence is None:
+        return {}
+    return {
+        (row.modelo, row.filing_year, row.period.registry_token): row
+        for row in filed_evidence.evidence
+        if row.modelo is not None
+        and row.filing_year is not None
+        and row.period is not None
+        and row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+        and not row.aeat_filed
+    }
+
+
+def _open_drafts(drafts: tuple[WorkUnit, ...]) -> dict[_NaturalKey, UtcInstant]:
+    """Index when each declaration's open work units last changed."""
+    latest: dict[_NaturalKey, UtcInstant] = {}
+    for unit in drafts:
+        if unit.state is not WorkUnitState.BORRADOR:
+            continue
+        key = (str(unit.modelo), unit.filing_year, unit.period.registry_token)
+        current = latest.get(key)
+        if current is None or unit.updated_at > current:
+            latest[key] = unit.updated_at
+    return latest
+
+
+def _filed_match(
+    key: _NaturalKey,
+    *,
+    record: ModeloRecord | None,
+    observed: Mapping[_NaturalKey, OverviewCalendarFilingEvidence],
+    contested: Mapping[_NaturalKey, OverviewCalendarFilingEvidence],
+) -> AeatSyncFiledMatch:
+    if key in contested:
+        return AeatSyncFiledMatch.DIFFERING
+    if key in observed:
+        return AeatSyncFiledMatch.AEAT_ONLY if record is None else AeatSyncFiledMatch.MATCHED
+    return AeatSyncFiledMatch.LOCAL_ONLY
+
+
+def _filed_rows(
+    sources: AeatSyncStatusSources,
+    *,
+    aeat_shown_at: UtcInstant,
+) -> tuple[AeatSyncFiledRowV1, ...]:
+    """Set every declaration either side knows against the other, one row each.
+
+    The AEAT side is the shared calendar evidence join over stored register
+    captures; the local side is the latest filing record per declaration, or
+    else an open draft. A draft alone is not a filed declaration and makes no
+    row. Rows the register shows with conflicting or concerning evidence are
+    differing, and what differs is their status.
+    """
+    local = _latest_filings(sources.filings)
+    observed = _observed_filings(sources.filed_evidence)
+    contested = _contested_filings(sources.filed_evidence)
+    drafts = _open_drafts(sources.drafts)
+    rows: list[AeatSyncFiledRowV1] = []
+    for key in sorted(local.keys() | observed.keys() | contested.keys()):
+        record = local.get(key)
+        evidence = observed.get(key) or contested.get(key)
+        match = _filed_match(key, record=record, observed=observed, contested=contested)
+        draft_at = drafts.get(key)
+        if record is not None:
+            local_record, local_at = AeatSyncFiledLocalRecord.MARKED_FILED, record.filed_at
+        elif draft_at is not None:
+            local_record, local_at = AeatSyncFiledLocalRecord.DRAFT, draft_at
+        else:
+            local_record, local_at = AeatSyncFiledLocalRecord.NONE, None
+        rows.append(
+            AeatSyncFiledRowV1(
+                modelo=str(ModeloCode(key[0])),
+                filing_year=key[1],
+                period=None if registry_period_kind(key[2]) is PeriodKind.ANNUAL else key[2],
+                match=match,
+                local_record=local_record,
+                local_record_at=local_at,
+                aeat_shown_at=None if evidence is None else aeat_shown_at,
+                # A register that conflicts or raises a concern cannot stand behind a receipt.
+                receipt_confirmed=match is not AeatSyncFiledMatch.DIFFERING
+                and evidence is not None
+                and evidence.justificante_verified,
+                differences=(AeatSyncFiledDifference.STATUS,) if match is AeatSyncFiledMatch.DIFFERING else (),
+            )
+        )
+    return tuple(rows)
+
+
+def _filed_period_counts(rows: tuple[AeatSyncFiledRowV1, ...]) -> AeatSyncFiledPeriodCountsV1:
+    """Count the rows in each match group."""
+    groups = Counter(row.match for row in rows)
+    return AeatSyncFiledPeriodCountsV1(
+        matched=groups[AeatSyncFiledMatch.MATCHED],
+        aeat_only=groups[AeatSyncFiledMatch.AEAT_ONLY],
+        local_only=groups[AeatSyncFiledMatch.LOCAL_ONLY],
+        differing=groups[AeatSyncFiledMatch.DIFFERING],
+    )
+
+
+def _filed_area_status(sources: AeatSyncStatusSources, *, observed_at: UtcInstant) -> AeatSyncAreaStatusV1:
+    """Judge filed declarations from the stored register captures and their sync-run record."""
+    area = AeatSyncStatusArea.FILED_DECLARATIONS
+    source = _filed_source_observation(
+        sources.filed_evidence, observed_count=len(_observed_filings(sources.filed_evidence))
+    )
+    unreadable = sources.unreadable.get(area)
+    if unreadable is None and source.availability not in _READABLE_AVAILABILITIES:
+        unreadable = source.refusal
+    rows = None if source.observed_at is None else _filed_rows(sources, aeat_shown_at=source.observed_at)
+    return _area_status(
+        area,
+        observed_at=observed_at,
+        captured_at=source.observed_at,
+        refusal=unreadable,
+        attempt=sources.filed_attempt,
+        filed_rows=rows,
+    )
+
+
+def read_aeat_sync_status(
+    *,
+    observed_at: UtcInstant,
+    sources: AeatSyncStatusSources,
+    filed_declaration_years: tuple[FilingYear, ...],
+    iva_wallet_years: tuple[FilingYear, ...],
+) -> AeatSyncStatusV1:
+    """Judge every sync area from already-loaded stored captures, contacting nothing.
+
+    The workbench projection above reads the same stored census and filed
+    captures; this is the cheap per-area view over them plus the notification,
+    IVA wallet, Borrador 100 and identity-check captures the workbench does not
+    carry. Staleness is judged here, once, so every frontend serves the same
+    answer: an area is possibly stale once its last successful capture is
+    strictly older than its horizon.
+    """
+
+    def judge(
+        area: AeatSyncStatusArea,
+        captured_at: UtcInstant | None,
+        unread_notification_count: int | None = None,
+    ) -> AeatSyncAreaStatusV1:
+        return _area_status(
+            area,
+            observed_at=observed_at,
+            captured_at=captured_at,
+            refusal=sources.unreadable.get(area),
+            unread_notification_count=unread_notification_count,
+        )
+
+    notifications = sources.notifications
+    census = sources.census_observation
+    return AeatSyncStatusV1(
+        observed_at=observed_at,
+        areas=(
+            judge(AeatSyncStatusArea.CENSUS, None if census is None else census.captured_at),
+            judge(AeatSyncStatusArea.IDENTITY_CHECKS, sources.identity_checked_at),
+            judge(
+                AeatSyncStatusArea.NOTIFICATIONS,
+                None if notifications is None else notifications.captured_at,
+                None if notifications is None else notifications.unread_count,
+            ),
+            judge(AeatSyncStatusArea.IVA_WALLET, sources.iva_wallet_captured_at),
+            _filed_area_status(sources, observed_at=observed_at),
+            _area_status(
+                AeatSyncStatusArea.BORRADOR_100,
+                observed_at=observed_at,
+                captured_at=sources.borrador_imported_at,
+                refusal=sources.unreadable.get(AeatSyncStatusArea.BORRADOR_100),
+                refused_snapshots=sources.borrador_refused,
+                outdated_stored_snapshots=sources.borrador_outdated,
+            ),
+        ),
+        filed_declaration_years=filed_declaration_years,
+        iva_wallet_years=iva_wallet_years,
+    )
+
+
+__all__ = [
+    "AeatSyncAreaAttempt",
+    "AeatSyncNotificationsCapture",
+    "AeatSyncStatusSources",
+    "read_aeat_sync_status",
+    "read_local_aeat_sync_workspace_projection",
+]

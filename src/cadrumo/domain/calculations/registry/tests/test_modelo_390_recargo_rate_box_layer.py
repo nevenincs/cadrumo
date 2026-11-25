@@ -43,10 +43,18 @@ from ..ledger_iva_bindings import (
 )
 from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
 from ..schema import BindingDefinition, ModeloRevision
-from .m390_formula_support import assert_partition_is_not_double_counted, liquidation_operands
+from .authored_editions import filing_grade_exercises
+from .m390_formula_support import (
+    assert_partition_is_not_double_counted,
+    liquidation_operands,
+    spanish_temporary_rate_window,
+    temporary_rate_year,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = temporary_rate_year()
 
 
 # Recargo box suffix, the IVA rate slot statute pairs it with, a date inside that
@@ -61,12 +69,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # super-reducido tier (0,5 / 0,26). That many-to-one relation is exactly why a
 # per-tier casilla cannot serve a per-rate box, and it is what this module pins.
 _RUNGS = (
-    ("5-2", IvaRate.from_registry("RATE_21"), date(2024, 3, 10), "4000.00", "817.00", "203.00"),
-    ("1-4", IvaRate.from_registry("RATE_10"), date(2024, 3, 11), "2500.00", "241.00", "31.00"),
-    ("1", IvaRate.from_registry("RATE_7.5"), date(2024, 11, 12), "1600.00", "127.00", "17.00"),
-    ("0-62", IvaRate.from_registry("RATE_5"), date(2024, 8, 13), "1400.00", "73.00", "11.00"),
-    ("0-5", IvaRate.from_registry("RATE_4"), date(2024, 3, 14), "1200.00", "51.00", "7.00"),
-    ("0-26", IvaRate.from_registry("RATE_2"), date(2024, 11, 15), "900.00", "19.00", "3.00"),
+    ("5-2", IvaRate.from_registry("RATE_21"), date(_YEAR, 3, 10), "4000.00", "817.00", "203.00"),
+    ("1-4", IvaRate.from_registry("RATE_10"), date(_YEAR, 3, 11), "2500.00", "241.00", "31.00"),
+    ("1", IvaRate.from_registry("RATE_7.5"), spanish_temporary_rate_window("7.5")[0], "1600.00", "127.00", "17.00"),
+    ("0-62", IvaRate.from_registry("RATE_5"), spanish_temporary_rate_window("5")[0], "1400.00", "73.00", "11.00"),
+    ("0-5", IvaRate.from_registry("RATE_4"), date(_YEAR, 3, 14), "1200.00", "51.00", "7.00"),
+    ("0-26", IvaRate.from_registry("RATE_2"), spanish_temporary_rate_window("2")[0], "900.00", "19.00", "3.00"),
 )
 
 # The official AEAT box each recargo rung occupies, read off the bundled 2024
@@ -111,10 +119,10 @@ def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:
 
 
 #: Modelo 390's four exact-year revisions, after the revision-span split.
-_M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
+_M390_FILING_YEARS = filing_grade_exercises("390")
 
 
-def _m390_revision(filing_year: str | int = 2024) -> ModeloRevision:
+def _m390_revision(filing_year: str | int = _YEAR) -> ModeloRevision:
     """Resolve one filing year's revision through the law-determined selector."""
     return published_snapshot("390", filing_year=int(filing_year), period="0A").revision
 
@@ -154,7 +162,7 @@ def _unrated_row() -> IvaLedgerObservation:
     return rated.model_copy(
         update={
             "ledger_id": "inv-m390-recargo-unrated",
-            "transaction_date": date(2024, 6, 1),
+            "transaction_date": date(_YEAR, 6, 1),
             "applied_rate": None,
             "base_amount": _UNRATED_BASE,
             "iva_amount": _UNRATED_CUOTA,
@@ -342,14 +350,14 @@ def test_no_recargo_rate_box_exports_without_something_to_populate_it() -> None:
     every exported rate box must have a value producer, including the newly
     connected 0.5 %, 1.4 % and 5.2 % owners in each source epoch.
     """
-    for revision_id in _M390_REVISION_IDS:
-        casillas = {casilla.id: casilla for casilla in _m390_revision(revision_id).casillas}
+    for filing_year in _M390_FILING_YEARS:
+        casillas = {casilla.id: casilla for casilla in _m390_revision(filing_year).casillas}
         for casilla_id in _OFFICIAL_BOX_NUMBER:
             casilla = casillas.get(casilla_id)
             if casilla is None or not casilla.export_refs:
                 continue
             assert casilla.binding is not None or casilla.formula is not None, (
-                f"{casilla_id} exports in revision {revision_id} while nothing populates it, "
+                f"{casilla_id} exports in the {filing_year} revision while nothing populates it, "
                 "so an empty field would render as a false 0,00"
             )
 

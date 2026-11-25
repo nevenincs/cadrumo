@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -13,9 +15,29 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ..ledger_runtime_benchmark import copy_ledger_worker, observe_ledger_boundaries
-from ..modelo_runtime_benchmark import RuntimeBenchmarkRecorder
+from ..modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition
 
 pytestmark = [pytest.mark.hex_core]
+
+
+@pytest.mark.unit
+def test_worker_composition_uses_selected_observer(tmp_path: Path) -> None:
+    events: list[str] = []
+    recorder = RuntimeBenchmarkRecorder(tmp_path, role="worker")
+
+    @contextmanager
+    def composition() -> Generator[None]:
+        events.append("composition")
+        yield
+
+    @contextmanager
+    def observer(selected: RuntimeBenchmarkRecorder) -> Generator[None]:
+        assert selected is recorder
+        events.append("observer")
+        yield
+
+    with observe_worker_composition(recorder, composition, observer=observer):
+        assert events == ["composition", "observer"]
 
 
 @pytest.mark.unit

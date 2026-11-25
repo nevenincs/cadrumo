@@ -13,7 +13,12 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ....core.modelo import Modelo
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
 from ...modelo.calculation_action_ports import CalculationActionPortsFactory
@@ -21,7 +26,7 @@ from ...modelo.selectors import ModeloCalculationRevisionSelector
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..abort import WorkflowAbortReason
 from ..obligation_snapshot import WorkflowObligationSnapshot

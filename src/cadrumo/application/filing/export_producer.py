@@ -3,50 +3,37 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...domain.calculations.registry.m303_schema_vocabulary import (
-    m303_regime_composition_export_code,
-    m303_tax_territory_exclusively_foral_mark,
-    m303_tax_territory_is_foral,
-)
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    opcion_prorrata_transition,
-    revocacion_prorrata_transition,
-)
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.deadlines.models import ModeloIVAProfile
-from ...domain.filing.errors import FilingExportValidationError
-from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
-from ...domain.iva.sepa_marca import derive_sepa_marca
+from ...domain.filing.errors import FilingExportDesignIntegrityError
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
-from ...domain.modelos.calculation_revision_m303_evidence import (
-    M303Exonerado390FilingEvidence,
-    M303InsolvencyFilingFact,
-    M303InsolvencyFilingSubtype,
+from . import producer_ownership
+from .export_producer_m200_account import m200_account_values
+from .export_producer_m303 import (
+    m303_context_producer_values,
+    m303_filing_lexicals,
+    m303_profile_lexicals,
 )
-from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
-from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
+from .export_producer_m360 import M360_PRODUCER_KEYS, m360_producer_values
+from .export_producer_m840 import M840_PRODUCER_KEYS, m840_producer_values
+from .identity_contact_producer import identity_contact_producer_values
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
     FilingModelProfileFacts,
     FilingProducerSnapshot,
-    M303FilingFacts,
     Modelo111ProfileFacts,
     Modelo202ProducerProfile,
-    Modelo210ProfileFacts,
     Modelo222ProfileFacts,
-    Modelo296ProfileFacts,
     Modelo353ProfileFacts,
     RefundAccountSelection,
-    SelectedFilingAccount,
-    TaxpayerIdentityFacts,
 )
 from .producer_snapshot_m200 import Modelo200ProfileFacts
-from .producer_snapshot_m360 import Modelo360ProfileFacts
+from .producer_snapshot_m210 import Modelo210ProfileFacts
+from .producer_snapshot_m296 import Modelo296ProfileFacts
 
 
 @dataclass(frozen=True)
@@ -61,41 +48,7 @@ class SelectedAccountLexicals:
     bank_country_code: str | None = None
 
 
-@dataclass(frozen=True)
-class M303ProfileLexicals:
-    """Rendered lexical values for a Modelo 303 profile's enrolment facts."""
-
-    redeme_enrolled: str | None = None
-    exclusively_foral: str | None = None
-    regime_composition_code: str | None = None
-    cash_accounting_regime_enrolled: str | None = None
-    voluntary_sii_enrolled: str | None = None
-    hydrocarbon_deposit_advance_payment_deduction_entitled: str | None = None
-    is_foral: bool = False
-
-
-@dataclass(frozen=True)
-class M303FilingLexicals:
-    """Rendered lexical values for a Modelo 303 filing's period-specific facts."""
-
-    joint_return_elected: str | None = None
-    annual_volume_nonzero: str | None = None
-    recipient_of_cash_accounting_operations: str | None = None
-    prorrata_special_option: str | None = None
-    prorrata_special_revocation: str | None = None
-    insolvency_declared: str | None = None
-    insolvency_judicial_order_date: str | None = None
-    insolvency_filing_subtype: str | None = None
-    exonerado_390_applicable: str | None = None
-    prorrata_transition_applicable: bool = False
-
-
-@dataclass(frozen=True)
-class M303ForalLexicals:
-    """Rendered lexical values for a Modelo 303 foral prorrata election."""
-
-    prorrata_special_option: str | None
-    prorrata_special_revocation: str | None
+_FORM_ROW_CODES_FACT = "form-row-codes"
 
 
 _M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
@@ -114,106 +67,7 @@ _M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
 }
 
 
-_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_TIPO_VIA: "tipo_via",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NOMBRE_VIA: "nombre_via",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_TIPO_NUMERACION: "tipo_numeracion",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NUMERO_CASA: "numero_casa",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_CALIFICADOR_NUMERO: "calificador_numero",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_BLOQUE: "bloque",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PORTAL: "portal",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_ESCALERA: "escalera",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PLANTA: "planta",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PUERTA: "puerta",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_DATOS_COMPLEMENTARIOS: "datos_complementarios",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_LOCALIDAD: "localidad",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_CODIGO_POSTAL: "codigo_postal",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NOMBRE_MUNICIPIO: "nombre_municipio",
-    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PROVINCIA: "provincia",
-}
-_M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_TIPO_VIA: "tipo_via",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NOMBRE_VIA: "nombre_via",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_TIPO_NUMERACION: "tipo_numeracion",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NUMERO_CASA: "numero_casa",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_CALIFICADOR_NUMERO: "calificador_numero",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_BLOQUE: "bloque",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PORTAL: "portal",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_ESCALERA: "escalera",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PLANTA: "planta",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PUERTA: "puerta",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_DATOS_COMPLEMENTARIOS: "datos_complementarios",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_LOCALIDAD: "localidad",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_CODIGO_POSTAL: "codigo_postal",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NOMBRE_MUNICIPIO: "nombre_municipio",
-    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PROVINCIA: "provincia",
-}
-_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_NUMERO: "numero",
-    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_LOCALIDAD: "localidad",
-    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_CODIGO_POSTAL: "codigo_postal",
-    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO: "nombre_municipio",
-    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_PROVINCIA: "provincia",
-}
-_M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_NUMERO: "numero",
-    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_LOCALIDAD: "localidad",
-    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_CODIGO_POSTAL: "codigo_postal",
-    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO: "nombre_municipio",
-    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_PROVINCIA: "provincia",
-}
-_M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_STREET: "street",
-    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_CITY: "city",
-    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_POSTAL_CODE: "postal_code",
-    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_REGION: "region",
-    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_COUNTRY_CODE: "country_code",
-}
-#: DR360 página 1 campos 31-35 read "espacios": a solicitante established in Spain, or in
-#: Canarias, Ceuta o Melilla, has no foreign address to declare, so these always resolve blank.
-_M360_SOLICITANTE_FOREIGN_ADDRESS_KEYS: tuple[FilingProducerKey, ...] = (
-    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_STREET,
-    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_CITY,
-    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_POSTAL_CODE,
-    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_REGION,
-    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_COUNTRY_CODE,
-)
-_M360_SCALAR_KEYS: tuple[FilingProducerKey, ...] = (
-    FilingProducerKey.M360_PRESENTACION_EN_PRUEBAS,
-    FilingProducerKey.M360_NIVEL_CALIDAD_DATOS,
-    FilingProducerKey.M360_PAIS_DESTINO_SOLICITUD,
-    FilingProducerKey.M360_CAUSA_PRESENTACION,
-    FilingProducerKey.M360_COMUNICACION_PRORRATA_DEFINITIVA,
-    FilingProducerKey.M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR,
-    FilingProducerKey.M360_SOLICITANTE_TAX_ID,
-    FilingProducerKey.M360_SOLICITANTE_FULL_NAME,
-    FilingProducerKey.M360_SOLICITANTE_EMAIL,
-    FilingProducerKey.M360_SOLICITANTE_PHONE,
-    FilingProducerKey.M360_SOLICITANTE_ESTABLECIDO_EN_TAI,
-    FilingProducerKey.M360_SOLICITANTE_HACIENDA_FORAL,
-    FilingProducerKey.M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA,
-    FilingProducerKey.M360_REPRESENTANTE_TAX_ID,
-    FilingProducerKey.M360_REPRESENTANTE_FULL_NAME,
-    FilingProducerKey.M360_REPRESENTANTE_EMAIL,
-    FilingProducerKey.M360_REPRESENTANTE_PHONE,
-    FilingProducerKey.M360_CUENTA_TITULAR_NOMBRE,
-    FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE,
-    FilingProducerKey.M360_CUENTA_DIVISA,
-)
-_M360_PRODUCER_KEYS: frozenset[FilingProducerKey] = frozenset(
-    {
-        *_M360_SCALAR_KEYS,
-        *_M360_SOLICITANTE_FOREIGN_ADDRESS_KEYS,
-        *_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY,
-        *_M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY,
-        *_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY,
-        *_M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY,
-        *_M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY,
-    }
-)
-
-
-_SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
+SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
     {
         FilingProducerKey.PRESENTER_TAX_ID,
         FilingProducerKey.FILING_RESULT_DISPOSITION,
@@ -239,6 +93,7 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACION_DE,
         FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E,
         FilingProducerKey.M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV,
+        FilingProducerKey.M200_CERTIFICACION_FECHA_SOLO_DECLARACIONES_IRNR,
         FilingProducerKey.M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL,
         FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE,
         FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A,
@@ -247,8 +102,12 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC,
         FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA,
         FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA,
+        FilingProducerKey.M200_CUOTA_CERO,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC,
         FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO,
         FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_10,
@@ -288,6 +147,7 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO,
         FilingProducerKey.M200_IMPORTE_A_DEVOLVER,
         FilingProducerKey.M200_IMPORTE_A_INGRESAR,
+        FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_3,
@@ -344,6 +204,8 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_7,
         FilingProducerKey.M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_8,
         FilingProducerKey.M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS,
+        FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60,
+        FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES,
         FilingProducerKey.M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA,
         FilingProducerKey.M200_RENUNCIA_O_POR_TRANSFERENCIA,
         FilingProducerKey.M200_RESULTADO_A_INGRESAR_CORRESPONDIENTE_A_LA_AN,
@@ -527,7 +389,7 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
         FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO,
         FilingProducerKey.M202_MARCA_INSTRUMENTAL,
-        FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA,
+        FilingProducerKey.M202_MODALIDAD_LIQUIDACION,
         FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL,
         FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES,
         FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES,
@@ -535,7 +397,8 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         # here would let the ownership claim and the resolver drift apart, and the
         # exhaustiveness assertion below would then fire on a key one of them forgot.
         *_M296_DECLARANTE_FIELD_BY_KEY,
-        *_M360_PRODUCER_KEYS,
+        *M360_PRODUCER_KEYS,
+        *M840_PRODUCER_KEYS,
     }
 )
 
@@ -636,115 +499,6 @@ def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     }
 
 
-def _m360_zero_one(value: bool | None) -> str | None:
-    """DR360 writes these answers "1"/"0"; absent stays absent, never a "0"."""
-    if value is None:
-        return None
-    return "1" if value else "0"
-
-
-def _m360_solicitante_name(identity: TaxpayerIdentityFacts) -> str | None:
-    """DR360 campo 13, "Apellidos y nombre o denominación social".
-
-    An entity's legal name, or a person's surnames before the given name as the label
-    orders them. ``full_name`` is not used: its order is not part of the identity
-    contract, and guessing it would print a name AEAT cannot match to the NIF.
-    """
-    if identity.legal_name is not None:
-        return identity.legal_name
-    if identity.surnames is not None and identity.given_name is not None:
-        return f"{identity.surnames} {identity.given_name}"
-    return None
-
-
-def _m360_scope_values(
-    field_by_key: dict[FilingProducerKey, str], scope: object | None
-) -> dict[FilingProducerKey, object]:
-    return {key: (getattr(scope, field) if scope is not None else None) for key, field in field_by_key.items()}
-
-
-def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
-    """Resolve the solicitud, parties and account holder Modelo 360's página 1 cites.
-
-    The solicitante is the filing's taxpayer, so its NIF and name come from the snapshot's
-    identity rather than a second copy in the profile. Every other value comes from
-    :class:`Modelo360ProfileFacts`, whose types already enforce DR360's widths and code
-    sets; a field the profile leaves absent resolves to ``None`` and the renderer decides,
-    from the layout's own ``required`` flag, whether that blank is legal.
-
-    A profile of the wrong type yields every key as ``None`` rather than raising: this
-    resolver runs for every modelo, and only Modelo 360's snapshot validator may decide
-    that a 360 filing without these facts is invalid.
-    """
-    profile = snapshot.model_profile
-    values: dict[FilingProducerKey, object] = {key: None for key in _M360_PRODUCER_KEYS}
-    if not isinstance(profile, Modelo360ProfileFacts):
-        return values
-    solicitud = profile.solicitud
-    solicitante = profile.solicitante
-    establecimiento = solicitante.establecimiento
-    representante = profile.representante
-    values.update(
-        {
-            FilingProducerKey.M360_PRESENTACION_EN_PRUEBAS: _m360_zero_one(solicitud.presentacion_en_pruebas),
-            FilingProducerKey.M360_NIVEL_CALIDAD_DATOS: solicitud.nivel_calidad_datos.value,
-            FilingProducerKey.M360_PAIS_DESTINO_SOLICITUD: solicitud.pais_destino,
-            FilingProducerKey.M360_CAUSA_PRESENTACION: solicitud.causa_presentacion.value,
-            FilingProducerKey.M360_COMUNICACION_PRORRATA_DEFINITIVA: _m360_zero_one(
-                solicitud.comunicacion_prorrata_definitiva
-            ),
-            FilingProducerKey.M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR: (
-                solicitud.numero_registro_declaracion_anterior
-            ),
-            FilingProducerKey.M360_SOLICITANTE_TAX_ID: snapshot.taxpayer_tax_id,
-            FilingProducerKey.M360_SOLICITANTE_FULL_NAME: _m360_solicitante_name(snapshot.taxpayer_identity),
-            FilingProducerKey.M360_SOLICITANTE_EMAIL: solicitante.email,
-            FilingProducerKey.M360_SOLICITANTE_PHONE: solicitante.phone,
-            FilingProducerKey.M360_SOLICITANTE_ESTABLECIDO_EN_TAI: _m360_zero_one(
-                establecimiento.establecido_en_territorio_de_aplicacion
-            ),
-            FilingProducerKey.M360_SOLICITANTE_HACIENDA_FORAL: (
-                establecimiento.hacienda_foral.value if establecimiento.hacienda_foral is not None else None
-            ),
-            FilingProducerKey.M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA: (
-                establecimiento.delegacion_canarias_ceuta_melilla.value
-                if establecimiento.delegacion_canarias_ceuta_melilla is not None
-                else None
-            ),
-            FilingProducerKey.M360_REPRESENTANTE_TAX_ID: (representante.tax_id if representante is not None else None),
-            FilingProducerKey.M360_REPRESENTANTE_FULL_NAME: (
-                representante.full_name if representante is not None else None
-            ),
-            FilingProducerKey.M360_REPRESENTANTE_EMAIL: representante.email if representante is not None else None,
-            FilingProducerKey.M360_REPRESENTANTE_PHONE: representante.phone if representante is not None else None,
-            FilingProducerKey.M360_CUENTA_TITULAR_NOMBRE: profile.cuenta.titular_nombre,
-            FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE: profile.cuenta.titular_en_calidad_de.value,
-            FilingProducerKey.M360_CUENTA_DIVISA: profile.cuenta.divisa,
-        }
-    )
-    values.update(_m360_scope_values(_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY, solicitante.domicilio))
-    values.update(_m360_scope_values(_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY, solicitante.apartado_correos))
-    values.update(
-        _m360_scope_values(
-            _M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY,
-            representante.domicilio if representante is not None else None,
-        )
-    )
-    values.update(
-        _m360_scope_values(
-            _M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY,
-            representante.apartado_correos if representante is not None else None,
-        )
-    )
-    values.update(
-        _m360_scope_values(
-            _M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY,
-            representante.foreign_address if representante is not None else None,
-        )
-    )
-    return values
-
-
 _M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL: "principal_cnae",
     FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: "regimen_ley_49_2002_sin_fines_lucrativos",
@@ -760,7 +514,7 @@ _M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES: "tipo_gravamen_impuesto_sociedades",
     FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "importe_neto_cifra_negocios_tramo",
     FilingProducerKey.M202_MARCA_INSTRUMENTAL: "marca_instrumental",
-    FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA: "discriminante_declaracion_negativa",
+    FilingProducerKey.M202_MODALIDAD_LIQUIDACION: "modalidad_liquidacion",
     FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL: "normativa_territorio_foral",
     FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES: "comunicacion_datos_adicionales",
     FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES: "numero_referencia_sociedades",
@@ -950,11 +704,22 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACION_DE: "b_2_suma_de_porcentajes_de_participacion_de",
     FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E: "b_2_suma_de_porcentajes_de_participaciones_e",
     FilingProducerKey.M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV: "balance_0_no_consta_1_mod_normal_2_mod_abrev",
+    FilingProducerKey.M200_CERTIFICACION_FECHA_SOLO_DECLARACIONES_IRNR: "certificacion_fecha_solo_declaraciones_irnr",
     FilingProducerKey.M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL: "codigo_cnae_2025_actividad_principal",
     FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A: "como_consecuencia_de_la_presentacion_de_la_a",
     FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA: "cuenta_corriente_tributaria",
+    FilingProducerKey.M200_CUOTA_CERO: "cuota_cero",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS: (
+        "datos_de_la_sociedad_matriz_ultima_codigo_pais"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF: "datos_de_la_sociedad_matriz_ultima_nif",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE: (
+        "datos_de_la_sociedad_matriz_ultima_nif_o_equivalente"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE: "datos_de_la_sociedad_matriz_ultima_nombre_de",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION: (
+        "datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC: "datos_de_la_sociedad_matriz_ultima_razon_soc",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO: "deduccion_resto_del_grupo",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_10: "deduccion_resto_del_grupo_10",
@@ -993,6 +758,9 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO: "identificacion_tipo_de_ejercicio",
     FilingProducerKey.M200_IMPORTE_A_DEVOLVER: "importe_a_devolver",
     FilingProducerKey.M200_IMPORTE_A_INGRESAR: "importe_a_ingresar",
+    FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES: (
+        "importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones"
+    ),
     FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS: "importe_neto_de_la_cifra_de_negocios_de_los",
     FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2: (
         "importe_neto_de_la_cifra_de_negocios_de_los_2"
@@ -1087,6 +855,12 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
         "presentacion_de_documentacion_previa_en_la_s_8"
     ),
     FilingProducerKey.M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS: "realiza_actividades_agricolas_y_o_ganaderas",
+    FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60: (
+        "regimen_de_cooperativas_incn_de_al_menos_20_millones_pero_inferior_a_60"
+    ),
+    FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES: (
+        "regimen_de_cooperativas_incn_de_al_menos_60_millones"
+    ),
     FilingProducerKey.M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA: "reg_entidades_navieras_en_funcion_del_tonela",
     FilingProducerKey.M200_RENUNCIA_O_POR_TRANSFERENCIA: "renuncia_o_por_transferencia",
     FilingProducerKey.M200_RESULTADO_A_INGRESAR_CORRESPONDIENTE_A_LA_AN: "resultado_a_ingresar_correspondiente_a_la_an",
@@ -1111,43 +885,18 @@ def m200_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
     values: dict[FilingProducerKey, object] = {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M200_FIELD_BY_KEY.items()
     }
-    values.update(_m200_account_values(snapshot.selected_account if profile is not None else None))
+    values.update(m200_account_values(snapshot.selected_account if profile is not None else None))
     return values
-
-
-def _m200_account_values(selected: SelectedFilingAccount | None) -> dict[FilingProducerKey, object]:
-    """Feed modelo 200's DID page by role from the one selected account.
-
-    DR200 page DID carries the devolución account block (Marca SEPA at 242, IBAN
-    at 243, SWIFT-BIC and the foreign-bank block after it) and, separately, the
-    ingreso domiciliación IBAN at 443. A refund selection fills the first, a
-    charge selection the second; the account is never copied into the profile.
-    """
-    refund = selected.account if isinstance(selected, RefundAccountSelection) else None
-    charge = selected.account if isinstance(selected, ChargeAccountSelection) else None
-    return {
-        FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: (
-            None
-            if refund is None
-            else derive_sepa_marca(iban=refund.iban, bank_country_code=refund.bank_country_code).value
-        ),
-        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None if refund is None else refund.iban,
-        FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None if refund is None else refund.swift_bic,
-        FilingProducerKey.M200_CUENTA_BANCARIA_BANCO_BANK_NAME: None if refund is None else refund.bank_name,
-        FilingProducerKey.M200_DIRECCION_DEL_BANCO_BANK_ADDRESS: None if refund is None else refund.bank_address,
-        FilingProducerKey.M200_CUENTA_BANCARIA_CIUDAD_CITY: None if refund is None else refund.bank_city,
-        FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE: None if refund is None else refund.bank_country_code,
-        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: None if charge is None else charge.iban,
-    }
 
 
 def _amendment_marker(amendment: AmendmentEvidence | None) -> str | None:
     if amendment is None:
         return None
+    codes = resolve_form_codes(_FORM_ROW_CODES_FACT)
     if amendment.is_sustitutiva:
-        return "S"
+        return codes.code("aeat.amendment.sustitutiva_marker")
     if amendment.is_complementaria:
-        return "C"
+        return codes.code("aeat.amendment.complementaria_marker")
     return None
 
 
@@ -1179,34 +928,18 @@ def _m111_colegio_concertado(model_profile: FilingModelProfileFacts) -> bool | N
 def _shared_filing_producer_values(
     snapshot: FilingProducerSnapshot,
     account: SelectedAccountLexicals,
-    m303_profile: M303ProfileLexicals,
-    m303_filing: M303FilingLexicals,
     m303_motive: dict[FilingProducerKey, bool | None],
 ) -> dict[FilingProducerKey, object]:
-    identity = snapshot.taxpayer_identity
     values: dict[FilingProducerKey, object] = {
+        **identity_contact_producer_values(
+            taxpayer_tax_id=snapshot.taxpayer_tax_id,
+            identity=snapshot.taxpayer_identity,
+            contact=snapshot.declaration_contact,
+        ),
         FilingProducerKey.PRESENTER_TAX_ID: snapshot.presenter.tax_id,
         FilingProducerKey.FILING_RESULT_DISPOSITION: (
             None if snapshot.elections.result_disposition is None else snapshot.elections.result_disposition.value
         ),
-        FilingProducerKey.TAXPAYER_TAX_ID: snapshot.taxpayer_tax_id,
-        FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
-        FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
-        FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,
-        FilingProducerKey.TAXPAYER_FULL_NAME: identity.full_name,
-        # "Apellidos o Razon Social": the two are mutually exclusive by
-        # construction -- a natural person carries surnames and no legal_name,
-        # an entity carries legal_name and no surnames -- so this resolves to
-        # whichever the filer actually has, and stays absent only when both are.
-        FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: identity.surnames or identity.legal_name,
-        # Read from the declaration's own contact fact, never from the taxpayer
-        # or the presenter: under a gestor the persona con quien relacionarse is
-        # routinely neither, and substituting either would name the wrong person
-        # in AEAT's informativa header.
-        FilingProducerKey.CONTACT_PERSON_PHONE: snapshot.declaration_contact.phone,
-        FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
-        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE: snapshot.declaration_contact.secondary_phone,
-        FilingProducerKey.CONTACT_PERSON_EMAIL: snapshot.declaration_contact.email,
         **_amendment_producer_values(snapshot.amendment_evidence, m303_motive),
         FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
         FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
@@ -1217,57 +950,9 @@ def _shared_filing_producer_values(
         FilingProducerKey.PRIOR_DOMICILIATION_ACTION: (
             "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
         ),
-        FilingProducerKey.M303_REDEME_ENROLLED: m303_profile.redeme_enrolled,
-        FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
-        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: m303_profile.regime_composition_code,
-        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: m303_filing.annual_volume_nonzero,
-        FilingProducerKey.M303_JOINT_RETURN_ELECTED: m303_filing.joint_return_elected,
-        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: m303_profile.cash_accounting_regime_enrolled,
-        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
-            m303_filing.recipient_of_cash_accounting_operations
-        ),
-        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: m303_filing.prorrata_special_option,
-        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: m303_filing.prorrata_special_revocation,
-        FilingProducerKey.M303_INSOLVENCY_DECLARED: m303_filing.insolvency_declared,
-        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: m303_filing.insolvency_judicial_order_date,
-        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: m303_filing.insolvency_filing_subtype,
-        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: m303_profile.voluntary_sii_enrolled,
-        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: m303_filing.exonerado_390_applicable,
-        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
-            m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
-        ),
         FilingProducerKey.M111_COLEGIO_CONCERTADO: (_m111_colegio_concertado(snapshot.model_profile)),
     }
     return values
-
-
-def _apply_foral_m303_overrides(
-    values: dict[FilingProducerKey, object],
-    m303_profile: M303ProfileLexicals,
-    m303_filing: M303FilingLexicals,
-) -> None:
-    if not m303_profile.is_foral:
-        return
-    foral = m303_foral_lexicals(m303_filing)
-    values.update(
-        {
-            FilingProducerKey.M303_REDEME_ENROLLED: "2",
-            FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
-            FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
-            FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
-            FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
-            FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
-            FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
-            FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
-            FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
-            FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
-            FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
-            FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
-            FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
-            FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: "2",
-            FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
-        },
-    )
 
 
 def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
@@ -1280,30 +965,36 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
     values.update(m296_producer_values(model_profile))
     values.update(m353_producer_values(model_profile))
     values.update(m360_producer_values(snapshot))
+    values.update(m840_producer_values(model_profile))
     return values
 
 
 def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) -> None:
     shared_owned = {
         key
-        for key, owner in _filing_producer_ownership(
-            shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS,
+        for key, owner in producer_ownership.filing_producer_ownership(
+            shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS,
         ).items()
         if owner == "shared_snapshot"
     }
     if set(values) != shared_owned:
-        raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
+        raise FilingExportDesignIntegrityError(
+            "shared filing producer resolver is not exhaustive over its owned keys",
+            translated_message="errors.integrity.filing_export_shared_resolver_not_exhaustive",
+        )
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
     """Resolve every canonical producer identity from one immutable snapshot."""
     account = selected_account_lexicals(snapshot)
     iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
-    m303_profile = m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
+    m303_profile = m303_profile_lexicals(
+        iva_profile, None if snapshot.m303_filing_facts is None else snapshot.m303_filing_facts.period
+    )
     m303_filing = m303_filing_lexicals(snapshot.m303_filing_facts)
     m303_motive = m303_rectificativa_motive_producer_values(snapshot.amendment_evidence)
-    values = _shared_filing_producer_values(snapshot, account, m303_profile, m303_filing, m303_motive)
-    _apply_foral_m303_overrides(values, m303_profile, m303_filing)
+    values = _shared_filing_producer_values(snapshot, account, m303_motive)
+    values.update(m303_context_producer_values(m303_profile, m303_filing))
     values.update(_model_specific_producer_values(snapshot))
     _validate_shared_producer_values(values)
     return values
@@ -1341,126 +1032,9 @@ def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccou
     return SelectedAccountLexicals()
 
 
-def m303_profile_lexicals(
-    iva_profile: ModeloIVAProfile | None,
-    m303_facts: M303FilingFacts | None,
-) -> M303ProfileLexicals:
-    """Project the Modelo 303 IVA profile and filing facts into rendered lexicals."""
-    if iva_profile is None:
-        return M303ProfileLexicals()
-    period = m303_facts.period if m303_facts is not None else None
-    a30 = (
-        yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
-        if period is not None and m303_a30_entitlement_applicable(period)
-        else "0"
-        if period is not None
-        else None
-    )
-    territory_date = date(period.filing_year, 1, 1) if period is not None else None
-    is_foral = m303_tax_territory_is_foral(
-        iva_profile.tax_territory,
-        effective_date=territory_date,
-    )
-    exclusively_foral = m303_tax_territory_exclusively_foral_mark(
-        iva_profile.tax_territory,
-        effective_date=territory_date,
-    )
-    return M303ProfileLexicals(
-        redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
-        exclusively_foral=exclusively_foral,
-        regime_composition_code=m303_regime_composition_export_code(iva_profile.regime_composition),
-        cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
-        voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
-        hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
-        is_foral=is_foral,
-    )
-
-
-def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexicals:
-    """Project the Modelo 303 filing facts into their rendered period-specific lexicals."""
-    if m303_facts is None:
-        return M303FilingLexicals()
-    transition = m303_facts.prorrata_transition
-    insolvency = m303_facts.insolvency
-    transition_applicable = transition.is_applicable
-    # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
-    final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
-    special_option, special_revocation = _m303_prorrata_election_lexicals(transition, transition_applicable)
-    insolvency_declared, insolvency_date, insolvency_subtype = _m303_insolvency_lexicals(insolvency)
-    return M303FilingLexicals(
-        joint_return_elected=yes_no(m303_facts.joint_return_elected),
-        # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
-        # last period; every other filing carries "0" whatever the operator answered.
-        annual_volume_nonzero=_m303_annual_volume_lexical(m303_facts, final_exonerado),
-        recipient_of_cash_accounting_operations=yes_no(
-            m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
-        ),
-        prorrata_special_option=special_option,
-        prorrata_special_revocation=special_revocation,
-        insolvency_declared=insolvency_declared,
-        insolvency_judicial_order_date=insolvency_date,
-        insolvency_filing_subtype=insolvency_subtype,
-        exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
-        prorrata_transition_applicable=transition_applicable,
-    )
-
-
-def _m303_annual_volume_lexical(
-    m303_facts: M303FilingFacts,
-    final_exonerado: M303Exonerado390FilingEvidence | None,
-) -> str:
-    if final_exonerado is None or not final_exonerado.applicable or m303_facts.annual_volume_nonzero is None:
-        return "0"
-    return yes_no(m303_facts.annual_volume_nonzero)
-
-
-def _m303_prorrata_election_lexicals(
-    transition: M303ProrrataTransitionArrival,
-    applicable: bool,
-) -> tuple[str | None, str | None]:
-    if not applicable:
-        return None, None
-    return (
-        yes_no(transition.transition == opcion_prorrata_transition()),
-        yes_no(transition.transition == revocacion_prorrata_transition()),
-    )
-
-
-def _m303_insolvency_lexicals(
-    insolvency: M303InsolvencyFilingFact | None,
-) -> tuple[str, str | None, str | None]:
-    if insolvency is None:
-        return "2", None, None
-    subtype = {
-        M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-        M303InsolvencyFilingSubtype.POST_ORDER: "2",
-    }[insolvency.subtype]
-    return "1", insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
-
-
-def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
-    """Project the Modelo 303 filing lexicals into the foral prorrata election lexicals."""
-    value = "2" if m303_filing.prorrata_transition_applicable else None
-    return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
-
-
-def yes_no(value: bool) -> str:
-    return "1" if value else "2"
-
-
-def m303_a30_entitlement_applicable(period: Period) -> bool:
-    return period.registry_token.isdigit() and int(period.registry_token) >= 2
-
-
 __all__ = [
-    "M303FilingLexicals",
-    "M303ForalLexicals",
-    "M303ProfileLexicals",
     "SelectedAccountLexicals",
     "filing_producer_values",
-    "m303_filing_lexicals",
-    "m303_foral_lexicals",
-    "m303_profile_lexicals",
     "m303_rectificativa_motive_producer_values",
     "selected_account_lexicals",
 ]

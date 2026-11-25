@@ -18,6 +18,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.m347_operation_scope import resolve_m347_estimacion_objetiva_scope
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 from cadrumo.domain.iva.schema import InvoiceKind
 
@@ -26,7 +27,7 @@ from ..compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON_DATE = date(2025, 12, 31)
+_ON_DATE = date(filing_year_envelope().horizon, 12, 31)
 
 
 @pytest.fixture

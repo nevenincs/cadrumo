@@ -28,12 +28,13 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.casilla_value_absence import AbsentCasillaReading
-from ....core.decimal.constants import ZERO
+from ....core.decimal.constants import ONE, ZERO
 from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from .binding_temporal import SameTargetContext
@@ -43,6 +44,7 @@ from .casilla_membership import casillas_by_id, text_family_casilla_ids
 from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .ids import BindingId
 from .schema import BindingDefinition, ModeloRevision
+from .schema_base import CasillaDataType
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
@@ -123,19 +125,45 @@ def _refuse_numeric_text_observation(
         )
 
 
+@dataclass(frozen=True, slots=True)
+class InitialCasillaValues:
+    """Seeded casilla state before registry formula evaluation.
+
+    ``values`` holds every numeric casilla that entered with a value, including
+    absent-by-design structural zeroes, which ``absent_by_design_casilla_ids``
+    names. ``unresolved_casilla_ids`` names bound casillas whose resolver
+    reported their binding unresolved and for which no value was supplied: they
+    have no value at all, so formulas that read them stay unresolved instead of
+    folding the gap into zero.
+    """
+
+    values: dict[CasillaId, Decimal]
+    absent_by_design_casilla_ids: frozenset[CasillaId]
+    unresolved_casilla_ids: frozenset[CasillaId]
+
+
 def initial_values(
     revision: ModeloRevision,
     inputs: Mapping[CasillaId, Decimal],
     *,
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
-) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
-    """Build initial numeric casilla values and absent-by-design markers.
+    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
+    unresolved_observation_backed_casilla_ids: frozenset[CasillaId] = frozenset(),
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
+) -> InitialCasillaValues:
+    """Build initial numeric casilla values, absent-by-design and unresolved markers.
 
     The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
     :class:`~cadrumo.core.casilla_id.CasillaId` membership, formula
     targets, and :class:`~cadrumo.domain.calculations.registry.ids.BindingId` slots
-    before formula evaluation starts.
+    before formula evaluation starts. ``unresolved_binding_ids`` are bindings
+    whose resolver ran and could not settle a value; a bound casilla fed only by
+    such a binding, with no supplied input, is left unresolved. Observation-backed
+    casillas remain strict unless their ids are explicitly named in
+    ``unresolved_observation_backed_casilla_ids`` by an amendment replay.
+    ``boolean_binding_values`` answer a bound yes/no casilla in the record design's
+    1/0 encoding; a profile fact nobody stated leaves the box absent rather than no.
     """
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
@@ -164,6 +192,9 @@ def initial_values(
         bindings_by_id=bindings_by_id,
         binding_values=binding_values,
         target_period=target_period,
+        unresolved_binding_ids=unresolved_binding_ids,
+        unresolved_observation_backed_casilla_ids=unresolved_observation_backed_casilla_ids,
+        boolean_binding_values=boolean_binding_values or {},
     )
 
 
@@ -264,7 +295,7 @@ def _can_default_absent_binding(
     equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
     if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
         return False
-    return _binding_is_absent_by_design(binding, target_period=target_period)
+    return binding_is_absent_by_design(binding, target_period=target_period)
 
 
 def _reject_unknown_inputs(
@@ -417,13 +448,33 @@ def _initial_values_for_casillas(
     bindings_by_id: Mapping[BindingId, BindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
-) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
+    unresolved_binding_ids: frozenset[BindingId],
+    unresolved_observation_backed_casilla_ids: frozenset[CasillaId],
+    boolean_binding_values: Mapping[BindingId, bool],
+) -> InitialCasillaValues:
     """Build initial values for non-computed registry casilla definitions."""
     values: dict[CasillaId, Decimal] = {}
     absent_by_design: set[CasillaId] = set()
+    unresolved: set[CasillaId] = set()
     text_casilla_ids = text_family_casilla_ids(casillas)
     for casilla in casillas:
         if casilla.input_kind in {InputKind.COMPUTED, InputKind.PROJECTION_ONLY} or casilla.id in text_casilla_ids:
+            continue
+        if _bound_casilla_is_unresolved(
+            casilla,
+            inputs=inputs,
+            bindings_by_id=bindings_by_id,
+            unresolved_binding_ids=unresolved_binding_ids,
+            unresolved_observation_backed_casilla_ids=unresolved_observation_backed_casilla_ids,
+        ):
+            unresolved.add(casilla.id)
+            continue
+        answer = _bound_boolean_answer(casilla, inputs, bindings_by_id, boolean_binding_values)
+        if answer is not None:
+            value, absent = answer
+            values[casilla.id] = value
+            if absent:
+                absent_by_design.add(casilla.id)
             continue
         value, absent = _initial_value_for_casilla(
             casilla,
@@ -435,7 +486,57 @@ def _initial_values_for_casillas(
         values[casilla.id] = value
         if absent:
             absent_by_design.add(casilla.id)
-    return values, frozenset(absent_by_design)
+    return InitialCasillaValues(
+        values=values,
+        absent_by_design_casilla_ids=frozenset(absent_by_design),
+        unresolved_casilla_ids=frozenset(unresolved),
+    )
+
+
+def _bound_casilla_is_unresolved(
+    casilla: CasillaDefinition,
+    *,
+    inputs: Mapping[CasillaId, Decimal],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+    unresolved_binding_ids: frozenset[BindingId],
+    unresolved_observation_backed_casilla_ids: frozenset[CasillaId],
+) -> bool:
+    """Return whether a bound casilla has no value because its resolver could not settle one.
+
+    Ordinary calculations only carry unresolved bindings for casillas fed
+    through the input channel. An amendment can explicitly opt an
+    observation-backed slot into this unresolved state to preserve a missing
+    historical source without turning it into zero. A supplied input always
+    wins, so an operator or resolver value is never discarded.
+    """
+    if casilla.input_kind != InputKind.BOUND or casilla.id in inputs:
+        return False
+    if (
+        _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
+        and casilla.id not in unresolved_observation_backed_casilla_ids
+    ):
+        return False
+    return any(binding_id in unresolved_binding_ids for binding_id in bound_casilla_binding_ids(casilla))
+
+
+def _bound_boolean_answer(
+    casilla: CasillaDefinition,
+    inputs: Mapping[CasillaId, Decimal],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+    boolean_binding_values: Mapping[BindingId, bool],
+) -> tuple[Decimal, bool] | None:
+    """Answer a bound yes/no casilla from its profile fact; ``None`` when another route owns it."""
+    if casilla.input_kind != InputKind.BOUND or casilla.data_type != CasillaDataType.BOOLEAN or casilla.id in inputs:
+        return None
+    binding_ids = bound_casilla_binding_ids(casilla)
+    for binding_id in binding_ids:
+        truth = boolean_binding_values.get(binding_id)
+        if truth is not None:
+            return (ONE if truth else ZERO), False
+    bindings = (bindings_by_id[binding_id] for binding_id in binding_ids)
+    if any(binding.source == BindingSourceKind.PROFILE for binding in bindings):
+        return ZERO, True
+    return None
 
 
 def _initial_value_for_casilla(
@@ -453,7 +554,7 @@ def _initial_value_for_casilla(
     value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
     if value is not None:
         return value, False
-    if any(_binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
+    if any(binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
         return ZERO, True
     binding_ids = bound_casilla_binding_ids(casilla)
     raise RegistryValidationError(
@@ -463,7 +564,7 @@ def _initial_value_for_casilla(
     )
 
 
-def _binding_is_absent_by_design(binding: BindingDefinition, *, target_period: str) -> bool:
+def binding_is_absent_by_design(binding: BindingDefinition, *, target_period: str) -> bool:
     """Decide whether a missing bound slot is structural for ``target_period``."""
     # A relation_prefill slot legitimately blanks when no prior filing exists to
     # fold in (the relation resolver returns no value and the operator fills it

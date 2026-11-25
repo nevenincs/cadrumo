@@ -1,9 +1,9 @@
 """Service helpers for invoice catalogues.
 
 Exposes pure-function service operations over an
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`: lookup
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`: lookup
 (:func:`suggest_reconciliations`), in-memory linking
-(:func:`link_transaction`), reconciliation suggestions
+(:func:`link_transaction`) and unlinking (:func:`unlink_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
 (:func:`verify_link_consistency`). Operations that span both the invoice
 catalogue and the :class:`TransactionCatalogue` accept each as an
@@ -13,7 +13,10 @@ independent argument. Persisted cross-catalogue workflows belong in
 
 from __future__ import annotations
 
+import re
+from bisect import bisect_left
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -22,21 +25,25 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.text_fold import fold_diacritics
+from ..iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
 from ..iva.schema import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue
+from .catalogue import InvoiceCatalogue
 from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
     InvoiceValidationError,
 )
-from .models import Invoice, InvoiceCatalogue
+from .figures import settlement_amount
+from .models import Invoice
 
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.
 #:
-#: DELIBERATELY NOT :data:`~core.money.rounding.CENT`, despite carrying the same value.
+#: DELIBERATELY NOT ``CENT``, despite carrying the same value.
 #: CENT bounds rounding noise: it answers "could these two figures be the same
 #: number, differently rounded". This answers something else -- "are these two
 #: figures close enough that a human should be offered the link" -- which is a
@@ -45,7 +52,35 @@ _LOGGER = get_logger(__name__)
 #: rounding means. The two agreeing today is a coincidence of scale, and folding
 #: this onto CENT would make a later loosening of link suggestions silently
 #: loosen every rounding check in the codebase.
-_DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
+INVOICE_MATCH_TOLERANCE = Decimal("0.01")
+
+#: The legal forms a counterparty name may end in, folded as :func:`_names_no_party` folds. Thousands
+#: of unrelated companies share one, so a name that is only a legal form tells no party apart.
+BARE_LEGAL_FORMS: Final[frozenset[str]] = frozenset(
+    {
+        "aie",
+        "cb",
+        "coop",
+        "gmbh",
+        "inc",
+        "llc",
+        "ltd",
+        "sa",
+        "sal",
+        "sau",
+        "sc",
+        "scoop",
+        "scp",
+        "sl",
+        "sll",
+        "slne",
+        "slp",
+        "slu",
+        "sociedadanonima",
+        "sociedadlimitada",
+    }
+)
+_NOT_COMPARED_IN_LEGAL_FORM: Final = re.compile(r"[^a-z0-9]+")
 
 
 class ReconciliationSuggestion(BaseModel):
@@ -55,12 +90,12 @@ class ReconciliationSuggestion(BaseModel):
         invoice_id: Stable invoice identifier.
         transaction_id: Candidate transaction identifier.
         amount_match: Whether the sign-aware amount matches within tolerance.
-        counterparty_match: Whether the counterparty name overlaps
-            (case-insensitive substring match either direction).
+        counterparty_match: Whether the counterparty name overlaps, by
+            :func:`counterparties_overlap`.
         score: Confidence in the inclusive ``0..1`` range.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     transaction_id: TransactionId
@@ -87,7 +122,7 @@ class LinkInconsistency(BaseModel):
             :class:`LinkInconsistencyDirection` member.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     # NOT core.identity.InvoiceId, deliberately: the TRANSACTION_ONLY branch
     # (verify_link_consistency) feeds this from transaction.invoice_id, which
@@ -150,19 +185,54 @@ def link_transaction(
     return _replace_invoice(catalogue, updated_invoice)
 
 
+def unlink_transaction(
+    catalogue: InvoiceCatalogue,
+    invoice_id: str,
+    transaction_id: str,
+) -> InvoiceCatalogue:
+    """Return a new catalogue with ``transaction_id`` removed from ``invoice_id``'s links.
+
+    Args:
+        catalogue: Source catalogue.
+        invoice_id: Invoice identifier to update.
+        transaction_id: Transaction identifier to remove from the invoice's
+            ``linked_transaction_ids`` tuple; the remaining links keep their order.
+
+    Returns:
+        A fresh immutable :class:`InvoiceCatalogue`. An invoice that does not list
+        the transaction is returned value-equal.
+    """
+    invoice = _require_invoice(catalogue, invoice_id)
+    normalized_tx = transaction_id.strip().lower()
+    if normalized_tx not in invoice.linked_transaction_ids:
+        return catalogue
+    remaining = tuple(item for item in invoice.linked_transaction_ids if item != normalized_tx)
+    try:
+        updated_invoice = Invoice.model_validate(
+            {**invoice.model_dump(mode="python"), "linked_transaction_ids": remaining},
+        )
+    except ValidationError as exc:
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"invoice_id": invoice_id, "link_update_error_type": type(exc).__name__},
+        ) from exc
+    return _replace_invoice(catalogue, updated_invoice)
+
+
 def suggest_reconciliations(
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
     *,
-    amount_tolerance: Decimal = _DEFAULT_AMOUNT_TOLERANCE,
+    amount_tolerance: Decimal = INVOICE_MATCH_TOLERANCE,
 ) -> tuple[ReconciliationSuggestion, ...]:
     """Return auto-suggested invoice/transaction links sorted by score.
 
     Only unlinked invoices (empty ``linked_transaction_ids``) and
     transactions whose ``invoice_id`` is ``None`` are considered.
     Suggestions are emitted only when the amount matches within
-    ``amount_tolerance``. Counterparty similarity acts as a score-boost
-    (case-insensitive substring match) but is never sufficient on its
+    ``amount_tolerance`` in the invoice's own currency: the same figure in
+    another currency is a different amount. Counterparty similarity acts as a
+    score-boost (:func:`counterparties_overlap`) but is never sufficient on its
     own.
 
     Args:
@@ -176,10 +246,10 @@ def suggest_reconciliations(
         ``(score desc, invoice_id asc, transaction_id asc)``.
     """
     unmatched_invoices = _unmatched_reconciliation_invoices(invoices)
-    candidate_transactions = _unlinked_reconciliation_transactions(transactions)
+    amount_index = _ReconciliationAmountIndex(_unlinked_reconciliation_transactions(transactions))
     suggestions: list[ReconciliationSuggestion] = []
     for invoice in unmatched_invoices:
-        for transaction in candidate_transactions:
+        for transaction in amount_index.candidates(invoice, amount_tolerance=amount_tolerance):
             suggestion = _suggestion_for_pair(invoice, transaction, amount_tolerance=amount_tolerance)
             if suggestion is not None:
                 suggestions.append(suggestion)
@@ -198,12 +268,66 @@ def _unlinked_reconciliation_transactions(catalogue: TransactionCatalogue) -> tu
     return tuple(transaction for transaction in catalogue.values() if transaction.invoice_id is None)
 
 
-def _expected_reconciliation_direction(invoice: Invoice) -> TransactionDirection:
-    """Return the ledger flow expected for an invoice kind."""
+class _ReconciliationAmountIndex:
+    """Transactions bucketed by direction and sorted by amount, probed per invoice.
+
+    A pair can only become a suggestion when its direction is the invoice's
+    expected flow and :func:`_reconciliation_amount_matches` accepts it, so the
+    index yields exactly the transactions of the expected direction that the
+    amount rule itself accepts, without visiting the rest.
+
+    Invariant: for one settlement ``s``, ``|round(amount - s)| <= tolerance`` is
+    monotone on each side of ``s``. Every :mod:`decimal` rounding mode is
+    monotone with ``round(0) == 0``, so among amounts ``>= s`` the accepted ones
+    form a prefix of the ascending order, and among amounts ``< s`` they form a
+    suffix. Walking outward from the insertion point of ``s`` and stopping at the
+    first refusal on each side therefore visits every accepted transaction. A
+    negative tolerance accepts nothing and stops both walks at once. The
+    insertion point uses exact :class:`~decimal.Decimal` comparison, and the
+    acceptance test is the unchanged amount rule, so no tolerance arithmetic is
+    duplicated here.
+    """
+
+    __slots__ = ("_by_direction",)
+
+    def __init__(self, transactions: tuple[Transaction, ...]) -> None:
+        grouped: dict[TransactionDirection, list[Transaction]] = {}
+        for transaction in transactions:
+            grouped.setdefault(transaction.direction, []).append(transaction)
+        self._by_direction: dict[TransactionDirection, tuple[list[Decimal], list[Transaction]]] = {}
+        for direction, members in grouped.items():
+            members.sort(key=lambda transaction: transaction.raw.amount)
+            self._by_direction[direction] = ([member.raw.amount for member in members], members)
+
+    def candidates(self, invoice: Invoice, *, amount_tolerance: Decimal) -> list[Transaction]:
+        """Return the expected-direction transactions whose amount the rule accepts."""
+        bucket = self._by_direction.get(invoice_settling_direction(invoice.kind))
+        if bucket is None:
+            return []
+        amounts, members = bucket
+        start = bisect_left(amounts, invoice_settlement(invoice))
+        stop = start
+        while stop < len(members) and _reconciliation_amount_matches(
+            invoice,
+            members[stop],
+            amount_tolerance=amount_tolerance,
+        ):
+            stop += 1
+        while start > 0 and _reconciliation_amount_matches(
+            invoice,
+            members[start - 1],
+            amount_tolerance=amount_tolerance,
+        ):
+            start -= 1
+        return members[start:stop]
+
+
+def invoice_settling_direction(kind: InvoiceKind) -> TransactionDirection:
+    """Return the ledger flow an invoice of ``kind`` is settled in."""
     # ``amount`` is a non-negative magnitude; flow is carried by ``direction``.
     # An ISSUED invoice reconciles against an INCOMING transaction, a RECEIVED
     # invoice against an OUTGOING transaction.
-    return TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+    return TransactionDirection.INCOMING if kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
 
 
 def _reconciliation_amount_matches(
@@ -212,33 +336,83 @@ def _reconciliation_amount_matches(
     *,
     amount_tolerance: Decimal,
 ) -> bool:
-    """Return whether the transaction settles the invoice within the requested tolerance.
+    """Return whether the transaction settles the invoice within the requested tolerance."""
+    return abs(transaction.raw.amount - invoice_settlement(invoice)) <= amount_tolerance
 
-    A retención is withheld at source, so the cash that moves is the total less
-    the withheld figure; the total itself never reaches the bank.
+
+def recipient_self_assesses(invoice: Invoice) -> bool:
+    """Whether the declarant received the invoice as the sujeto pasivo destinatario (LIVA art. 84.Uno.2.º).
+
+    Read through the flow classification the Modelo 303 invoice bindings use to
+    find a recipient self-assessment. Only a received invoice can carry it: the
+    supplier's side of a reverse charge self-assesses nothing.
     """
-    settlement = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
-    return abs(transaction.raw.amount - settlement) <= amount_tolerance
+    if invoice.kind is not InvoiceKind.RECEIVED or invoice.iva_category is None:
+        return False
+    devengo_date = invoice.operation_date or invoice.issued_at
+    return is_inversion_sujeto_pasivo_flow(
+        derive_flow_for_classification(
+            category=invoice.iva_category, invoice_direction=invoice.kind, effective_date=devengo_date
+        ),
+        effective_date=devengo_date,
+    )
+
+
+def invoice_settlement(invoice: Invoice) -> Decimal:
+    """Return the cash an invoice settles for, in its own currency.
+
+    The total less a retención withheld at source. Under inversión del sujeto
+    pasivo the supplier charges no cuota: the recipient self-assesses the IVA it
+    records, so that cuota and any recargo stay outside the cash the supplier is
+    paid. The stored tax figures are unchanged; only the settlement reads them so.
+    """
+    total = invoice.grand_total
+    if recipient_self_assesses(invoice):
+        total -= invoice.iva_total + (invoice.recargo_amount or Decimal("0"))
+    return settlement_amount(total, invoice.retention_amount)
+
+
+def invoice_settlement_eur(invoice: Invoice) -> Decimal | None:
+    """Return :func:`invoice_settlement` in euro, or ``None`` when the invoice is unconverted."""
+    total = invoice.grand_total_eur
+    if total is None:
+        return None
+    if recipient_self_assesses(invoice):
+        total -= (invoice.iva_total_eur or Decimal("0")) + (invoice.recargo_amount_eur or Decimal("0"))
+    return settlement_amount(total, invoice.retention_amount_eur)
+
+
+def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: str | None) -> bool:
+    """Return whether both counterparties have a non-empty overlapping name.
+
+    The one reading of "the same party" for proposing a link: case-insensitive, either name
+    inside the other. A blank name, or one that is only a legal form, overlaps nothing.
+    """
+    invoice_name = invoice_counterparty.strip().lower()
+    if transaction_counterparty is None or not invoice_name:
+        return False
+    transaction_name = transaction_counterparty.strip().lower()
+    # ``bool(transaction_name)`` guards against the empty-string case; without it
+    # ``"" in invoice_name`` returns True and grants a false-positive
+    # 0.5 score boost.
+    if not transaction_name or _names_no_party(invoice_name) or _names_no_party(transaction_name):
+        return False
+    return invoice_name in transaction_name or transaction_name in invoice_name
+
+
+def _names_no_party(name: str) -> bool:
+    """Return whether a lowercase name is only a legal form, however it is punctuated or spaced."""
+    return _NOT_COMPARED_IN_LEGAL_FORM.sub("", fold_diacritics(name)) in BARE_LEGAL_FORMS
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
     """Return whether both counterparties have a non-empty overlapping name."""
-    invoice_counterparty = invoice.counterparty_name.strip().lower()
-    tx_counterparty = transaction.raw.counterparty
-    if tx_counterparty is None or not invoice_counterparty:
-        return False
-    tx_normalised = tx_counterparty.strip().lower()
-    # ``bool(tx_normalised)`` guards against the empty-string case; without it
-    # ``"" in invoice_counterparty`` returns True and grants a false-positive
-    # 0.5 score boost.
-    return bool(tx_normalised) and (invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty)
+    return counterparties_overlap(invoice.counterparty_name, transaction.raw.counterparty)
 
 
 def _reconciliation_score(*, amount_match: bool, counterparty_match: bool) -> Decimal:
     """Calculate the existing amount and counterparty confidence score."""
-    score = Decimal("0.5") * (1 if amount_match else 0)
-    score += Decimal("0.5") * (1 if counterparty_match else 0)
-    return score
+    return (Decimal(int(amount_match) + int(counterparty_match)) / 2).quantize(Decimal("0.1"))
 
 
 def _suggestion_for_pair(
@@ -247,8 +421,11 @@ def _suggestion_for_pair(
     *,
     amount_tolerance: Decimal,
 ) -> ReconciliationSuggestion | None:
-    """Build one suggestion when a candidate pair satisfies flow and amount."""
-    if transaction.direction is not _expected_reconciliation_direction(invoice):
+    """Build one suggestion when a candidate pair satisfies flow, currency and amount."""
+    if (
+        transaction.direction is not invoice_settling_direction(invoice.kind)
+        or transaction.raw.currency != invoice.currency
+    ):
         return None
     amount_match = _reconciliation_amount_matches(
         invoice,

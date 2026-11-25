@@ -10,9 +10,10 @@ import psutil
 import pytest
 
 from ......application.auth.protocols import BrowserSessionPort
-from ......application.provisioning_browser import required_browser_builds
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
@@ -249,23 +250,17 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 
 
 @pytest.mark.asyncio
-async def test_launch_failure_is_a_factual_typed_safety_outcome(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A cache that claims provisioning but holds no executable fails the real launch.
+async def test_launch_failure_is_a_factual_typed_safety_outcome(tmp_path: Path) -> None:
+    """A launch that fails for a reason other than a missing browser is a typed safety outcome.
 
-    The completion markers satisfy the provisioning probe, so the refusal does
-    not fire and Playwright itself reports the missing executable.
+    The Chromium working root names an existing file, so the real launch cannot
+    make its working directory.
     """
-    builds = required_browser_builds()
-    assert builds is not None
-    cache = tmp_path / "marked-but-empty-cache"
-    for build in builds:
-        directory = cache / build.directory_name
-        directory.mkdir(parents=True)
-        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
-    session = await create_browser_session(Settings(), _profile("launch-hint"))
+    storage_root = tmp_path / "storage"
+    working_root = storage_root / storage_location(StorageCategory.CHROMIUM_DATA).relative_path()
+    working_root.parent.mkdir(parents=True)
+    working_root.write_bytes(b"")
+    session = await create_browser_session(Settings(cadrumo_storage_root=storage_root), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:
             await session.create_context()
@@ -294,11 +289,14 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
 
     loop.set_exception_handler(capture_unhandled)
     try:
-        session = await create_browser_session(Settings(), _profile("context-cancel"))
+        settings = Settings()
+        session = await create_browser_session(settings, _profile("context-cancel"))
         driver_pid = playwright_driver_pid(session._playwright)
         create_task = asyncio.create_task(session.create_context())
         try:
-            deadline = time.monotonic() + 10
+            # A real Chromium launch can outlast a fixed budget on a loaded host, so the
+            # boundary is awaited for as long as the product allows a navigation to take.
+            deadline = time.monotonic() + settings.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             # Yield one loop turn at a time: bundled Chromium can finish context
             # creation within a timed sleep, which would skip the boundary.
             while session.session._browser is None and not create_task.done():

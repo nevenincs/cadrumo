@@ -175,7 +175,7 @@ class ConfigResetTarget(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    label: str | None = Field(default=None, min_length=1, max_length=160)
+    label: str | None = Field(default=None, min_length=1, max_length=256)
     setup_state_at_snapshot: ProfileSetupState | None = None
     exists_at_snapshot: bool
     fingerprint: BucketDeletionFingerprint | None = None

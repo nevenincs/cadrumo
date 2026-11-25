@@ -1,17 +1,29 @@
 import { dateFormats } from "../shared/dateFormats";
 import { isoDay, localDay } from "../shared/dates";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { failureCode } from "../errors";
-import type { FilingCalendar, ProfileViews } from "./views";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { failureCode, failureWords } from "../errors";
+import type { OverviewCalendarSupport } from "./calendarContract";
+import { facts } from "./compose";
+import type { Translate } from "./strings";
+import type { FilingCalendarServed } from "./calendarContract";
+import type { ProfileViews } from "./views";
 
 /** What the calendar page has to show: the read in flight, that the account
  * withholds it, why it failed, or the calendar. A failed read is never drawn
- * as an empty calendar. */
+ * as an empty calendar; it carries the sentence the product served for its
+ * refusal, or null where it served none. */
 export type CalendarState =
   | { kind: "loading" }
   | { kind: "withheld" }
-  | { kind: "failed"; code: string }
-  | { kind: "ready"; calendar: FilingCalendar };
+  | { kind: "failed"; code: string; words: string | null }
+  | { kind: "ready"; calendar: FilingCalendarServed };
 
 type Read = Exclude<CalendarState, { kind: "withheld" }>;
 
@@ -24,12 +36,41 @@ export function calendarRange(today: Date): { from: string; to: string } {
   };
 }
 
+/** One whole filing year, January to December: the range asked for when the
+ * person looks at a year. Calendar arithmetic on the year chosen; which
+ * obligations fall in it is the product's to say. */
+export function yearRange(year: number): { from: string; to: string } {
+  return {
+    from: localDay(new Date(year, 0, 1)),
+    to: localDay(new Date(year + 1, 0, 0)),
+  };
+}
+
+/**
+ * Which neighbouring years the person may step to from `year`, the year on
+ * screen or, while the rolling range is shown, the year it falls in. The
+ * bounds are the ones the read was served under; a read that served none
+ * bounds nothing, and an envelope with no hard ceiling is open above.
+ */
+export function yearSteps(
+  support: OverviewCalendarSupport | null | undefined,
+  year: number,
+): { previous: boolean; next: boolean } {
+  return {
+    previous: !support || year - 1 >= support.floor,
+    next:
+      !support ||
+      support.hard_ceiling === null ||
+      year + 1 <= support.hard_ceiling,
+  };
+}
+
 /**
  * The day the product worked a calendar's states out for: one day for the
  * whole read, the latest that any of its entries names. Null where no entry
  * says.
  */
-export function evaluatedDay(calendar: FilingCalendar): string | null {
+export function evaluatedDay(calendar: FilingCalendarServed): string | null {
   let latest: string | null = null;
   for (const entry of calendar.entries)
     if (latest === null || entry.evaluated_on > latest)
@@ -44,6 +85,7 @@ export function evaluatedDay(calendar: FilingCalendar): string | null {
  * where there is no month heading beside it to complete it.
  */
 export function evaluatedLabel(
+  t: Translate,
   on: string,
   today: string,
   locale: string,
@@ -54,7 +96,7 @@ export function evaluatedLabel(
   if (on !== today) return (full ? formats.full : formats.medium).format(day);
   const word = evaluatedWord(on, today, locale);
   const date = (full ? formats.full : formats.short).format(day);
-  return `${word} · ${date}`;
+  return facts(t, [word, date]);
 }
 
 /** The label for returning to the evaluated day, in the locale's own words. */
@@ -132,10 +174,25 @@ export function useFilingCalendar(
   onRefused: () => void,
   locale = "",
 ) {
-  const [read, setRead] = useState<Read>({ kind: "loading" });
+  const identity = useMemo(() => ({ reader, views }), [reader, views]);
+  const [stored, setStored] = useState<{
+    identity: typeof identity;
+    read: Read;
+  }>({
+    identity,
+    read: { kind: "loading" },
+  });
   const [refreshing, setRefreshing] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const request = useRef(0);
+  // The year on screen and the year last asked for; null is the rolling
+  // range around today, which is what a page opens on.
+  const [year, setYear] = useState<number | null>(null);
+  const [yearFailed, setYearFailed] = useState(false);
+  const answered = useRef<number | null>(null);
+  const wanted = useRef<number | null>(null);
+  // Whether a calendar is on screen to be kept when a year cannot be read.
+  const onScreen = useRef(false);
   // When the calendar on screen was read; zero while there is none.
   const readAt = useRef(0);
   // The local day it was read on; empty while there is none.
@@ -144,39 +201,85 @@ export function useFilingCalendar(
   const refused = useRef(onRefused);
   refused.current = onRefused;
 
-  const refresh = useCallback(() => {
-    if (!views) return;
-    const mine = ++request.current;
-    // What is on screen stays up, and so does whatever was pressed to ask.
-    setRefreshing(true);
-    views
-      .filingCalendar(calendarRange(new Date()))
-      .then(
-        (calendar): Read => ({ kind: "ready", calendar }),
-        (error: unknown): Read => ({
-          kind: "failed",
-          code: failureCode(error),
-        }),
-      )
-      .then((next) => {
-        // An answer to a question no longer being asked is not shown.
-        if (mine !== request.current) return;
-        readAt.current = next.kind === "ready" ? Date.now() : 0;
-        readOn.current = next.kind === "ready" ? localDay() : "";
-        setRead(next);
-        setRefreshing(false);
-        setAttempt((count) => count + 1);
-        if (next.kind === "failed") refused.current();
-      });
-  }, [views]);
+  const load = useCallback(
+    (target: number | null, change: boolean) => {
+      if (!views || reader === null) return;
+      const mine = ++request.current;
+      if (change) wanted.current = target;
+      // What is on screen stays up, and so does whatever was pressed to ask.
+      setRefreshing(true);
+      views
+        .filingCalendar(
+          target === null ? calendarRange(new Date()) : yearRange(target),
+          locale,
+        )
+        .then(
+          (calendar): Read => ({ kind: "ready", calendar }),
+          (error: unknown): Read => ({
+            kind: "failed",
+            code: failureCode(error),
+            words: failureWords(error),
+          }),
+        )
+        .then((next) => {
+          // An answer to a question no longer being asked is not shown.
+          if (mine !== request.current) return;
+          setRefreshing(false);
+          setAttempt((count) => count + 1);
+          if (next.kind === "failed" && change && onScreen.current) {
+            // A year that cannot be read leaves what was read as it was.
+            wanted.current = answered.current;
+            setYearFailed(true);
+            refused.current();
+            return;
+          }
+          readAt.current = next.kind === "ready" ? Date.now() : 0;
+          readOn.current = next.kind === "ready" ? localDay() : "";
+          if (next.kind === "ready") {
+            answered.current = target;
+            wanted.current = target;
+            setYear(target);
+            setYearFailed(false);
+          }
+          setStored({ identity, read: next });
+          if (next.kind === "failed") refused.current();
+        });
+    },
+    [views, reader, identity, locale],
+  );
+
+  const refresh = useCallback(() => load(answered.current, false), [load]);
+
+  /** Looks at the year before or after the one asked for last, the current
+   * year being the one the rolling range falls in. */
+  const step = useCallback(
+    (by: -1 | 1) =>
+      load((wanted.current ?? new Date().getFullYear()) + by, true),
+    [load],
+  );
+
+  /** Goes back to the rolling range around today. */
+  const current = useCallback(() => load(null, true), [load]);
+
+  // Invalidate before the new profile is painted, including refusal callbacks.
+  useLayoutEffect(() => {
+    request.current += 1;
+    return () => {
+      request.current += 1;
+    };
+  }, [identity]);
 
   useEffect(() => {
     ++request.current;
     readAt.current = 0;
     readOn.current = "";
-    setRead({ kind: "loading" });
+    answered.current = null;
+    wanted.current = null;
+    setYear(null);
+    setYearFailed(false);
+    setStored({ identity, read: { kind: "loading" } });
     setRefreshing(false);
-  }, [reader]);
+  }, [identity]);
 
   useEffect(() => {
     // Locale invalidates wording without dropping the current calendar or selection.
@@ -191,15 +294,31 @@ export function useFilingCalendar(
     if (reader !== null && shown && stale) {
       // Shown anew after a failure, it starts over: the old failure is not
       // said a second time ahead of the new answer.
-      setRead((held) => (held.kind === "failed" ? { kind: "loading" } : held));
+      setStored((held) =>
+        held.read.kind === "failed"
+          ? { identity, read: { kind: "loading" } }
+          : held,
+      );
       refresh();
     }
-  }, [reader, shown, refresh, today, locale]);
+  }, [reader, shown, refresh, today, locale, identity]);
 
-  const state: CalendarState = reader === null ? { kind: "withheld" } : read;
+  const state: CalendarState =
+    reader === null
+      ? { kind: "withheld" }
+      : stored.identity === identity
+        ? stored.read
+        : { kind: "loading" };
+  onScreen.current = state.kind === "ready";
   return {
     state,
     refreshing: refreshing && state.kind !== "loading",
+    /** The filing year on screen; null while it is the rolling range. */
+    year,
+    /** The year asked for last could not be read; what is shown is unchanged. */
+    yearFailed,
+    step,
+    current,
     /** How many reads have answered: tells one failure from the next. */
     attempt,
     /** The local day, kept current while the window is open. */

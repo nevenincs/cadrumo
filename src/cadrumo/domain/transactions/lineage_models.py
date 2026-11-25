@@ -19,7 +19,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STRICT_STR_KEYED_MAPPING_ADAPTER
 from ...core.type_guards import is_object_mapping
@@ -37,7 +37,7 @@ from .model_validation import (
 )
 
 
-def _string_keyed_mapping(data: object) -> dict[str, object]:
+def string_keyed_mapping(data: object) -> dict[str, object]:
     """Materialize an untrusted mapping after enforcing JSON-object keys."""
     try:
         return STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(data)
@@ -48,7 +48,7 @@ def _string_keyed_mapping(data: object) -> dict[str, object]:
 class DecisionProvenance(BaseModel):
     """Typed provenance for one classification decision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     decided_by: str = Field(min_length=1, max_length=128)
     decided_at: UtcInstant
@@ -65,7 +65,7 @@ class DecisionProvenance(BaseModel):
             return data
         if not is_object_mapping(data):
             return data
-        payload = _string_keyed_mapping(data)
+        payload = string_keyed_mapping(data)
         raw_confidence = payload.get("confidence")
         if isinstance(raw_confidence, str):
             payload["confidence"] = Decimal(raw_confidence)
@@ -103,7 +103,7 @@ class DecisionProvenance(BaseModel):
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     business_classification: BusinessClassification
     business_pct: Decimal | None = None
@@ -124,7 +124,7 @@ class ClassificationHistoryEntry(BaseModel):
             return data
         if not is_object_mapping(data):
             return data
-        payload = _string_keyed_mapping(data)
+        payload = string_keyed_mapping(data)
         raw_state = payload.get("business_classification")
         if isinstance(raw_state, str):
             payload["business_classification"] = BusinessClassification(raw_state)
@@ -197,7 +197,7 @@ class ClassificationHistoryEntry(BaseModel):
 class TransactionEvidenceProvenanceEntry(BaseModel):
     """Actor/source lineage for evidence linked to one transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     evidence_id: str = Field(min_length=1, max_length=128)
     evidence_kind: Literal["purchase_invoice_evidence", "attachment"]
@@ -222,7 +222,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
 class TransactionEditLineageEntry(BaseModel):
     """One durable manual correction applied to a transaction row."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     previous_transaction_id: TransactionId
     actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
@@ -246,7 +246,7 @@ class TransactionEditLineageEntry(BaseModel):
 class TransactionLifecycleLineageEntry(BaseModel):
     """One durable lifecycle transition applied to a transaction row."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     previous_state: TransactionLifecycleState
     state: TransactionLifecycleState
@@ -262,7 +262,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     def _coerce_lifecycle_states(cls, data: object) -> object:
         if not is_object_mapping(data):
             return data
-        payload = _string_keyed_mapping(data)
+        payload = string_keyed_mapping(data)
         for key in ("previous_state", "state"):
             raw_state = payload.get(key)
             if isinstance(raw_state, str):
@@ -298,7 +298,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 class SplitLineage(BaseModel):
     """Split-lineage anchor embedded on a parent/child/merged transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     split_group_id: Hex64Str
     role: SplitRole
@@ -310,7 +310,7 @@ class SplitLineage(BaseModel):
     def _coerce_role(cls, data: object) -> object:
         if not is_object_mapping(data):
             return data
-        payload = _string_keyed_mapping(data)
+        payload = string_keyed_mapping(data)
         raw_role = payload.get("role")
         if isinstance(raw_role, str):
             payload["role"] = SplitRole(raw_role)
@@ -381,6 +381,6 @@ __all__ = [
     "TransactionEditLineageEntry",
     "TransactionEvidenceProvenanceEntry",
     "TransactionLifecycleLineageEntry",
-    "_string_keyed_mapping",
     "derive_split_group_id",
+    "string_keyed_mapping",
 ]

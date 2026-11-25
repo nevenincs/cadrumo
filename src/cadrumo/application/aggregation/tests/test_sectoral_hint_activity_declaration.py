@@ -30,8 +30,8 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.user_profile.values import UserProfileFact
-from .. import _retencion_rate_advisory
-from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
+from .. import retencion_rate_advisory
+from ..retencion_rate_advisory import profile_suggests_sectoral_activity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -56,13 +56,13 @@ def _suggests(*facts: UserProfileFact) -> bool | None:
     profile = _profile_for_facts(*facts)
     with pytest.MonkeyPatch.context() as monkeypatch:
         monkeypatch.setattr(
-            _retencion_rate_advisory,
-            "_load_profile_for_bucket",
+            retencion_rate_advisory,
+            "load_profile_for_bucket",
             lambda _bucket_id, *, profile_decode_context: profile,
         )
         operation = governed_facts_in_scope()
         assert isinstance(operation, PinnedAuthorityOperation)
-        return _profile_suggests_sectoral_activity(
+        return profile_suggests_sectoral_activity(
             _BUCKET_ID,
             profile_decode_context=operation.profile_decode_context(),
         )

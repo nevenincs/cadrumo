@@ -21,7 +21,7 @@ import pathlib
 
 import pytest
 
-from .._ast_scanner import scan_source_tree
+from ..ast_scanner import scan_source_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

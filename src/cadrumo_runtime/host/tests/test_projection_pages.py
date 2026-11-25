@@ -23,8 +23,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.automation_operations import (
@@ -32,7 +32,7 @@ from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo_client.contracts.operation_access import (
     OperationPage,
@@ -53,10 +53,12 @@ from cadrumo_runtime.contracts.worker_authorization import WORKER_AUTOMATION_INV
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from .. import profile_connection_operations
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
-from .test_automation_enrollment import _connect, _LoginObservation, _submit_operation
+from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
+from .test_automation_enrollment import submit_operation
 
 pytestmark = [
     pytest.mark.integration,
@@ -142,7 +144,7 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
@@ -159,11 +161,11 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
-                    raw = _connect(endpoint)
+                    raw = connect_verified(endpoint)
                     cleanup.callback(raw.close)
                     client = FrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                     cleanup.callback(client.close)
-                    control_raw = _connect(endpoint)
+                    control_raw = connect_verified(endpoint)
                     cleanup.callback(control_raw.close)
                     control = FrontendClient(
                         control_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI
@@ -174,7 +176,7 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
                     client.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
                     control.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
                     assert client.session_id is not None
-                    contract, submitted, observed = _submit_operation(
+                    contract, submitted, observed = submit_operation(
                         raw,
                         profile_id=profile_id,
                         session_id=client.session_id,
@@ -240,7 +242,7 @@ def test_native_projection_denies_revoke_after_worker_before_parent_guard(
         host: RuntimeProfileHost,
         connection: ProfileConnection,
         selected: OperationResult | OperationResultPage,
-    ) -> tuple[OperationReply, WorkerAuthorityRequest]:
+    ) -> tuple[OperationReply, WorkerAuthorityRequest, OperationId | None]:
         prepared = original_prepare(host, connection, selected)
         if selected.request_id == request.request_id:
             subject.assert_projection(prepared[0])
@@ -336,106 +338,85 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
                 )
             }
         )
-        # Fill the raw budget rather than fixing a count: a request's size follows its proposal's scope.
+        # Add requests until the raw inventory alone exceeds one page rather than fixing a count:
+        # a request's size follows its proposal's scope.
         bounded = uuid4()
         subject.service.request(bounded, bounded_proposal)
         requested = {bounded}
         size = len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
-        step = 0
-        while size + step <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
+        while size <= PROJECTION_PAGE_BYTES:
             identity = uuid4()
             subject.service.request(identity, subject.proposal)
             requested.add(identity)
-            previous, size = size, len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
-            step = size - previous
+            size = len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
         assert size <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                with ExitStack() as cleanup:
-                    raw, control_raw = _connect(endpoint), _connect(endpoint)
-                    client, control = (
-                        FrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
-                        FrontendClient(control_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
-                    )
-                    cleanup.callback(client.close)
-                    cleanup.callback(control.close)
-                    client.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
-                    control.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
-                    contract, submitted, observed = _submit_operation(
-                        raw,
+        with (
+            serving_runtime(
+                endpoint,
+                root,
+                capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
+                secret_store=lambda: subject.native,
+            ),
+            ExitStack() as cleanup,
+        ):
+            raw, control_raw = connect_verified(endpoint), connect_verified(endpoint)
+            client, control = (
+                FrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
+                FrontendClient(control_raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI),
+            )
+            cleanup.callback(client.close)
+            cleanup.callback(control.close)
+            client.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
+            control.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
+            contract, submitted, observed = submit_operation(
+                raw,
+                profile_id=profile_id,
+                session_id=client.session_id,
+                definition_id=AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
+                payload=AutomationOperationRequest(profile_id=profile_id, request_id=uuid4()),
+            )
+            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            schema = contract.contract.result_schema
+            assert schema is not None
+            result = OperationResultProjectionRequestV1(
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                definition_contract_digest=contract.contract.definition_contract_digest,
+                result_schema=schema,
+            )
+            document = client.read_result_document(result, timeout=30)
+            encoded = canonical_json_bytes(document)
+            assert len(encoded) > PROJECTION_PAGE_BYTES
+            inventory = (
+                OperationResultProjectionSuccessV1[AutomationInventoryProjection]
+                .model_validate_json(encoded)
+                .projection
+            )
+            assert {item.receipt.request_id for item in inventory.requests} == requested
+            first = client.operation(
+                OperationResultPage(
+                    request_id=uuid4(),
+                    profile_id=profile_id,
+                    session_id=client.session_id,
+                    result=result,
+                    page=ProjectionPageRequest(),
+                ),
+                deadline=time.monotonic() + 10,
+            )
+            assert isinstance(first, OperationPage)
+            control.deny_automation(AutomationDenialKind.PROFILE_LOCK)
+            with pytest.raises(FrontendRefusedError):
+                client.operation(
+                    OperationResultPage(
+                        request_id=uuid4(),
                         profile_id=profile_id,
                         session_id=client.session_id,
-                        definition_id=AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
-                        payload=AutomationOperationRequest(profile_id=profile_id, request_id=uuid4()),
-                    )
-                    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    schema = contract.contract.result_schema
-                    assert schema is not None
-                    result = OperationResultProjectionRequestV1(
-                        operation_id=submitted.receipt.operation_id,
-                        terminal_revision=observed.projection.revision,
-                        definition_contract_digest=contract.contract.definition_contract_digest,
-                        result_schema=schema,
-                    )
-                    document = client.read_result_document(result, timeout=30)
-                    encoded = canonical_json_bytes(document)
-                    assert len(encoded) > PROJECTION_PAGE_BYTES
-                    inventory = (
-                        OperationResultProjectionSuccessV1[AutomationInventoryProjection]
-                        .model_validate_json(encoded)
-                        .projection
-                    )
-                    assert {item.receipt.request_id for item in inventory.requests} == requested
-                    first = client.operation(
-                        OperationResultPage(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=client.session_id,
-                            result=result,
-                            page=ProjectionPageRequest(),
+                        result=result,
+                        page=ProjectionPageRequest(
+                            offset=len(first.page.decode()), expected_digest=first.page.document_digest
                         ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(first, OperationPage)
-                    control.deny_automation(AutomationDenialKind.PROFILE_LOCK)
-                    with pytest.raises(FrontendRefusedError):
-                        client.operation(
-                            OperationResultPage(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=client.session_id,
-                                result=result,
-                                page=ProjectionPageRequest(
-                                    offset=len(first.page.decode()), expected_digest=first.page.document_digest
-                                ),
-                            ),
-                            deadline=time.monotonic() + 10,
-                        )
-            finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result(timeout=20)
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+                    ),
+                    deadline=time.monotonic() + 10,
+                )

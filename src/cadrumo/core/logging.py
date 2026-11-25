@@ -29,68 +29,52 @@ Logging is a diagnostic channel, not the CLI result contract. Operator-facing
 success payloads and typed :class:`~cadrumo.core.json_contract.Notice` values are
 rendered through the JSON/text output stack; this module only prepares redacted
 log records and plaintext diagnostic log files rooted by settings.
+
+Producers hand off bounded builtin snapshots before redaction or output. Opaque
+arguments are omitted without invoking application rendering hooks. Independent
+background sinks expose delivery counters and finite flush/shutdown attempts;
+overload rejects diagnostic work rather than blocking application progress.
+Queued redaction uses conservative lexical identity matching without borrowing
+application registry locks; identity-shaped technical references may be hashed.
+
+Every handler receives a record once. A :func:`get_logger` logger withholds its
+record from propagation, so the dispatch thread hands the scrubbed snapshot to
+every handler in the hierarchy, foreign ones included. A plain stdlib logger
+cannot be intercepted before propagation: foreign handlers already received the
+original, so the snapshot goes only to this module's own handlers.
 """
 
 from __future__ import annotations
 
+import atexit
 import logging
-import re
+import math
+import os
 import sys
+import time
+from codecs import getincrementalencoder
 from collections import deque
-from collections.abc import Generator, Iterable, Iterator, Mapping
-from contextlib import contextmanager
-from contextvars import ContextVar
+from collections.abc import Callable, Generator
+from contextlib import contextmanager, suppress
+from contextvars import Context, ContextVar, copy_context
+from io import BufferedRandom, BufferedWriter, RawIOBase, TextIOWrapper
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, overload, override
+from threading import Event, Lock, Thread
+from typing import TYPE_CHECKING, Any, NamedTuple, TextIO, cast, override
 
 if TYPE_CHECKING:
+    from .config import Settings
+    from .log_file_handler import AnnouncingRotatingFileHandler
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
-from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record, stamp_diagnostic_scalar_fields
-from .redaction.rules import (
-    ALWAYS_REDACT_KEY_TERMS,
-    is_sensitive_redaction_key,
-    normalise_redaction_key,
-    redact_for_log,
-)
-from .type_guards import (
-    is_object_list,
-    is_object_list_or_tuple,
-    is_object_mapping,
-    is_object_set,
-    is_object_tuple,
-)
+from .diagnostic_dispatch import DiagnosticDispatch, DispatchStatus
+from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record
+from .log_scrubbing import SCRUBBED_RECORD, SecretScrubbingFilter, scrub_text
+from .log_snapshot import bound_format, snapshot_record, snapshot_value
+from .redaction.tax_identity_admission import lexical_tax_identity_redaction
 
-_configured = False
+configured = False
 _factory_installed = False
-# Built directly rather than through ``logging.makeLogRecord``, which dispatches
-# via the process-global record factory. This set is the redaction filter's
-# exemption list, so any field an installed factory adds would enrol itself as
-# "standard" and escape scrubbing. Calling the factory here also re-enters this
-# module through the observability layer while it is still initialising.
-_STANDARD_LOG_RECORD_FIELDS = frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__)
-_EXCEPTION_FORMATTER = logging.Formatter()
-
-SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
-    *sorted(ALWAYS_REDACT_KEY_TERMS),
-    "access_token",
-    "api_key",
-    "bearer_header",
-    "cert_password",
-    "certificate_password",
-    "certificate_serial",
-    "cif",
-    "llm_api_key",
-    "oauth_access_token",
-    "oauth_refresh_token",
-    "profile_tax_id",
-    "refresh_token",
-    "session_cookie",
-)
-"""Log-message KEY-NAME redaction vocabulary: :data:`ALWAYS_REDACT_KEY_TERMS`
-(the tree-wide shared base) plus this module's own generic logging-domain
-additions. See :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS` for why
-the base is never redeclared independently."""
 
 
 def _is_cli_metadata_invocation() -> bool:
@@ -108,464 +92,37 @@ def _is_cli_metadata_invocation() -> bool:
     return is_metadata_invocation(sys.argv[1:])
 
 
-_SENSITIVE_KEY_SET = frozenset(normalise_redaction_key(pattern) for pattern in SCRUB_FIELD_PATTERNS)
-_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
+def _run_context_variables() -> tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]]:
+    """Return the run and step contextvars, importing their module on first use."""
+    from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 
-_SENSITIVE_ASSIGNMENT_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?P<key>"
-    + "|".join(re.escape(pattern) for pattern in _SENSITIVE_ASSIGNMENT_KEYS)
-    + r")(?![A-Za-z0-9])(?P<separator>\s*[:=]\s*)"
-    + r"(?P<value>\"[^\"]*\"|'[^']*'|[^,;\r\n]+?)"
-    + r"(?=$|[,;\r\n]|\s+[A-Za-z0-9_.-]+\s*[:=])",
-    flags=re.IGNORECASE,
-)
-_BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
-_LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PLACEHOLDER_PATTERN = r"%(?:\([^)]+\))?[-#+ 0-9]*(?:\*|\d+)?(?:\.(?:\*|\d*))?[hlL]?[diouxXeEfFgGcrsa]"
-_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(rf"%%|{_PLACEHOLDER_PATTERN}")
-_PERCENT_PLACEHOLDER_VALUE_RE = re.compile(rf"^{_PLACEHOLDER_PATTERN}$")
-_PERCENT_PLACEHOLDER_RE = re.compile(
-    rf"%%|(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})"
-)
-_FORMAT_OPERAND_RE = re.compile(
-    r"%(?:\((?P<mapping>[^)]+)\))?[-#+ 0-9]*(?P<width>\*)?"
-    r"(?:\.(?P<precision>\*|\d*))?[hlL]?(?P<conversion>[diouxXeEfFgGcrsa])"
-)
+    return RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 
-#: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
-#: when the image travels inline rather than as a bare field.
-_DATA_URI_PAYLOAD_RE = re.compile(r"data:[A-Za-z0-9.+-]+/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=]+")
 
-#: Base64 renderings of the file magics a scanned or photographed document
-#: arrives as. Matched without a word boundary because several magics begin
-#: with ``/``, which is not a word character.
-_BINARY_MAGIC_PAYLOAD_RE = re.compile(
-    r"(?:iVBORw0KGg|/9j/4AAQ|R0lGODdh|R0lGODlh|UklGR|JVBERi0|SUkqA|TU0AK)[A-Za-z0-9+/]{16,}={0,2}",
-)
+#: Position of the message arguments in ``logging.LogRecord``'s positional constructor.
+_LOG_RECORD_ARGS_INDEX = 5
 
-#: Any sufficiently long unbroken base64 run, whatever produced it. Diagnostic
-#: prose never contains one; an encoded document always does. This is the rule
-#: that does not need to recognise the payload's shape, so a format the magic
-#: alternation above has never heard of is still contained.
-_OPAQUE_PAYLOAD_RE = re.compile(r"[A-Za-z0-9+/]{256,}={0,2}")
 
-#: Ceiling on a ``bytes`` log argument before it is treated as a payload rather
-#: than a diagnostic value. Decrypted document bytes must never be formatted
-#: into a log line, and a %s-rendered ``bytes`` object writes them verbatim.
-_MAX_LOGGED_BYTES = 256
+def _safe_factory_args(args: tuple[Any, ...]) -> tuple[Any, ...]:
+    if len(args) <= _LOG_RECORD_ARGS_INDEX or type(args[_LOG_RECORD_ARGS_INDEX]) is not tuple:
+        return args
+    arguments = cast(tuple[object, ...], args[_LOG_RECORD_ARGS_INDEX])
+    if len(arguments) != 1:
+        return args
+    candidate = arguments[0]
+    if type(candidate) in (str, int, float, bool, bytes, bytearray, tuple, list, dict) or candidate is None:
+        return args
+    return (*args[:5], (snapshot_value(candidate),), *args[6:])
 
-_PAYLOAD_REDACTION_MARKER = "<redacted:payload>"
 
-#: Stand-in for the operator's home directory in a logged path.
-_HOME_DIRECTORY_MARKER = "~"
-
-
-def _home_directory_prefixes() -> tuple[str, ...]:
-    """Return the spellings of this machine's home directory, longest first.
-
-    Both separators are produced because a path reaches a log line as whatever
-    spelling its producer built -- ``Path`` renders native separators, while a
-    URI, a config value, or a string-joined path can carry the other one on the
-    same machine. Longest first so the drive-qualified form is replaced before
-    a prefix of it.
-    """
-    home = Path.home()
-    spellings = {str(home), str(home).replace("\\", "/"), home.as_posix()}
-    return tuple(sorted((spelling for spelling in spellings if spelling), key=len, reverse=True))
-
-
-def _mask_home_directory(value: str) -> str:
-    """Replace this machine's home directory with ``~`` wherever it appears.
-
-    A diagnostic path is worth keeping -- it is the only identity a failed
-    write, fsync, or lock acquisition has -- but its leading segments are the
-    operator's account name and local layout, which the diagnostic never needed.
-    Masking the prefix keeps the part that answers "which file" and drops the
-    part that answers "whose machine", so a log file attached to a bug report
-    does not carry an identity with it.
-    """
-    for prefix in _HOME_DIRECTORY_PREFIXES:
-        value = value.replace(prefix, _HOME_DIRECTORY_MARKER)
-    return value
-
-
-_HOME_DIRECTORY_PREFIXES: tuple[str, ...] = _home_directory_prefixes()
-
-
-def _redact_payloads(value: str) -> str:
-    """Redact encoded document payloads from ``value``.
-
-    Sensitive financial documents may exist only transiently in process
-    memory; a diagnostic log file is an on-disk plaintext store, so an image
-    or PDF that reaches a log record has left its only sanctioned home. The
-    three patterns run widest-last: a ``data:`` URI and a recognised file
-    magic name the payload precisely, and the length rule then catches
-    whatever neither recognised.
-    """
-    redacted = _DATA_URI_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, value)
-    redacted = _BINARY_MAGIC_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
-    return _OPAQUE_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
-
-
-def _looks_sensitive_key(key: str | None) -> bool:
-    """Return whether ``key`` should have its value redacted."""
-    return is_sensitive_redaction_key(key, additional_exact_terms=_SENSITIVE_KEY_SET)
-
-
-def _redacted_value(key: str | None, value: str) -> str:
-    """Return the stable redaction marker for a sensitive value."""
-    if key is not None and "serial" in key.lower():
-        suffix = value[-4:] if len(value) >= 4 else "????"
-        return f"<cert:....{suffix}>"
-    return "<redacted>"
-
-
-def _redact_around_placeholders(key: str | None, value: str) -> str:
-    """Redact a sensitive assignment's value, preserving its %-format placeholders.
-
-    A record's ``msg`` is scrubbed before ``%``-formatting runs, so a
-    placeholder dropped here would leave the record with more args than slots
-    and the whole line would be lost to a formatting error. Placeholders are
-    therefore kept verbatim and only the literal runs around them are redacted
-    -- which is exactly where an inline secret sits when a message mixes a
-    real value with a placeholder, as in ``token=abc123 %s``.
-
-    A value that is nothing but a placeholder carries no secret and is
-    returned untouched, which is the ``credential=%s`` format-string shape the
-    paired :func:`_scrub_positional_format` pass redacts at the argument instead.
-    """
-    if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(value.strip()):
-        return value
-    marker = _redacted_value(key, value)
-    pieces: list[str] = []
-    cursor = 0
-    for placeholder in _PERCENT_PLACEHOLDER_ONLY_RE.finditer(value):
-        if placeholder.group(0) == "%%":
-            continue  # An escaped percent is literal secret text, not an operand.
-        if value[cursor : placeholder.start()].strip():
-            pieces.append(marker)
-        pieces.append(placeholder.group(0))
-        cursor = placeholder.end()
-    if value[cursor:].strip():
-        pieces.append(marker)
-    return "".join(pieces) if pieces else marker
-
-
-def _scrub_text(value: str, *, key: str | None = None) -> str:
-    """Redact sensitive fragments from a free-form string."""
-    if not value:
-        return value
-    if _looks_sensitive_key(key):
-        return _redacted_value(key, value)
-
-    scrubbed = _redact_payloads(value)
-    scrubbed = redact_for_log(scrubbed)
-    scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
-        lambda match: (
-            f"{match.group('key')}{match.group('separator')}"
-            f"{_redact_around_placeholders(match.group('key'), match.group('value'))}"
-        ),
-        scrubbed,
-    )
-    scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
-    scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
-    return _mask_home_directory(scrubbed)
-
-
-@overload
-def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
-
-
-@overload
-def _scrub_value(value: Mapping[str, object], *, key: str | None = ...) -> dict[str, object]: ...
-
-
-@overload
-def _scrub_value(value: tuple[object, ...], *, key: str | None = ...) -> tuple[object, ...]: ...
-
-
-@overload
-def _scrub_value(value: list[object], *, key: str | None = ...) -> list[object]: ...
-
-
-@overload
-def _scrub_value(value: set[object], *, key: str | None = ...) -> set[object]: ...
-
-
-@overload
-def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
-
-
-def _scrub_items(values: Iterable[object], key: str | None) -> Iterator[object]:
-    """Yield every element of a logging container, each recursively scrubbed.
-
-    The element walk is shared by the tuple, list and set arms of
-    :func:`_scrub_value`; each arm rebuilds its own concrete container from
-    this stream so a subclass never dictates the reconstructed type.
-    """
-    return (_scrub_value(item, key=key) for item in values)
-
-
-def _scrub_binary_value(value: bytes | bytearray) -> bytes | bytearray | str:
-    """Keep short diagnostic bytes and replace larger document payloads."""
-    return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
-
-
-def _scrub_mapping_value(value: Mapping[object, object]) -> dict[object, object]:
-    """Rebuild a mapping while scrubbing each value with its key hint."""
-    return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
-
-
-def _scrub_tuple_value(value: tuple[object, ...], key: str | None) -> tuple[object, ...]:
-    """Rebuild a tuple from recursively scrubbed logging values."""
-    return tuple(_scrub_items(value, key))
-
-
-def _scrub_list_value(value: list[object], key: str | None) -> list[object]:
-    """Rebuild a list from recursively scrubbed logging values."""
-    return list(_scrub_items(value, key))
-
-
-def _scrub_set_value(value: set[object], key: str | None) -> set[object]:
-    """Rebuild a set from recursively scrubbed logging values."""
-    return set(_scrub_items(value, key))
-
-
-# ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
-# The implementation overload returns Any to subsume all concrete overload
-# return types per mypy overload rules.
-def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL
-    """Recursively scrub sensitive values in common logging payload shapes."""
-    if isinstance(value, str):
-        return _scrub_text(value, key=key)
-    if isinstance(value, bytes | bytearray):
-        return _scrub_binary_value(value)
-    if is_object_mapping(value):
-        return _scrub_mapping_value(value)
-    if is_object_tuple(value):
-        return _scrub_tuple_value(value, key)
-    if is_object_list(value):
-        return _scrub_list_value(value, key)
-    if is_object_set(value):
-        return _scrub_set_value(value, key)
-    if _looks_sensitive_key(key):
-        return _redacted_value(key, str(value))
-    return _scrub_opaque_object(value)
-
-
-# ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT: the parameter and return mirror an
-# arbitrary %-formatting operand, which the stdlib types as ``object``.
-def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT
-    """Redact a payload carried inside a non-string logging argument.
-
-    Scrubbing the record's structured shapes is not enough on its own: a
-    third-party client logs its whole request object with ``%s``, so the
-    payload is never a ``str``, a ``Mapping`` or a sequence the recursive
-    walk above descends into -- it is a field of an opaque object that only
-    becomes text when the handler formats the record, downstream of every
-    filter. Rendering the object here is what lets the payload rules see it.
-
-    The same reasoning covers the home directory in a logged path: a
-    :class:`~pathlib.Path` argument is not a ``str`` either, so masking it in
-    :func:`_scrub_text` alone would leave ``target=%s`` carrying the operator's
-    account name into the formatted line.
-
-    The original object is returned untouched when it holds no payload and no
-    home prefix, so the formatted record is unchanged for the overwhelming
-    majority of arguments; only a rendering that actually matched is
-    substituted.
-    """
-    if value is None or isinstance(value, int | float | complex):
-        return value
-    rendered = str(value)
-    redacted = _mask_home_directory(_redact_payloads(rendered))
-    return redacted if redacted != rendered else value
-
-
-def _scrub_format_operand(
-    value: object, key: str | None, placeholder: str, *, redacted: bool = False
-) -> tuple[object, str]:
-    """Keep the conversion compatible with a redacted operand.
-
-    A numeric credential becomes a string marker. Numeric conversions cannot
-    consume it, and string precision must not truncate the marker. Replacing
-    that one conversion preserves the other operands' diagnostic formatting.
-    """
-    scrubbed = _scrub_value(value, key=key)
-    operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-    if operand is not None and (
-        redacted
-        or _looks_sensitive_key(key)
-        or (
-            isinstance(scrubbed, str)
-            and (not isinstance(value, str) or scrubbed != value)
-            and operand.group("conversion") not in "sra"
-        )
-    ):
-        mapping = operand.group("mapping")
-        return scrubbed, f"%({mapping})s" if mapping is not None else "%s"
-    return scrubbed, placeholder
-
-
-def _scrub_positional_format(message: str, args: tuple[object, ...]) -> tuple[str, tuple[object, ...]]:
-    """Scrub operands and their conversions together, including star widths."""
-    pieces: list[str] = []
-    scrubbed_args: list[object] = []
-    cursor = 0
-    index = 0
-    for match in _PERCENT_PLACEHOLDER_RE.finditer(message):
-        placeholder = match.group("placeholder")
-        if placeholder is None:  # %% consumes no argument.
-            continue
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None or operand.group("mapping") is not None:
-            continue
-        stars = int(operand.group("width") == "*") + int(operand.group("precision") == "*")
-        if index + stars >= len(args):
-            break  # Retain the stdlib's refusal of an invalid format/arity.
-        value, conversion = _scrub_format_operand(args[index + stars], match.group("key"), placeholder)
-        pieces.append(message[cursor : match.start("placeholder")])
-        pieces.append(conversion)
-        cursor = match.end("placeholder")
-        if conversion == placeholder:
-            scrubbed_args.extend(args[index : index + stars])
-        scrubbed_args.append(value)
-        index += stars + 1
-    pieces.append(message[cursor:])
-    scrubbed_args.extend(_scrub_value(value) for value in args[index:])
-    return "".join(pieces), tuple(scrubbed_args)
-
-
-def _scrub_mapping_format(message: str, args: Mapping[str, object]) -> tuple[str, dict[str, object]]:
-    """Scrub mapping operands, preserving each use's conversion independently."""
-    scrubbed_args = {str(key): _scrub_value(value, key=str(key)) for key, value in args.items()}
-    redacted_keys: set[str] = set()
-
-    def replace(match: re.Match[str]) -> str:
-        placeholder = match.group("placeholder")
-        if placeholder is None:
-            return match.group(0)
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None:
-            return match.group(0)
-        mapping_key = operand.group("mapping")
-        if mapping_key is None or mapping_key not in args:
-            return match.group(0)
-        key = match.group("key") if _looks_sensitive_key(match.group("key")) else mapping_key
-        value, conversion = _scrub_format_operand(args[mapping_key], key, placeholder)
-        # A key used in a sensitive assignment must stay redacted in all uses.
-        if _looks_sensitive_key(key):
-            scrubbed_args[mapping_key] = value
-            redacted_keys.add(mapping_key)
-        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
-
-    rewritten = _PERCENT_PLACEHOLDER_RE.sub(replace, message)
-
-    # A later sensitive assignment may redact a key previously used numerically.
-    def compatible(match: re.Match[str]) -> str:
-        placeholder = match.group("placeholder")
-        if placeholder is None:
-            return match.group(0)
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None:
-            return match.group(0)
-        mapping_key = operand.group("mapping")
-        if mapping_key is None or mapping_key not in scrubbed_args:
-            return match.group(0)
-        _, conversion = _scrub_format_operand(
-            scrubbed_args[mapping_key], None, placeholder, redacted=mapping_key in redacted_keys
-        )
-        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
-
-    return _PERCENT_PLACEHOLDER_RE.sub(compatible, rewritten), scrubbed_args
-
-
-def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
-    """Scrub a record's message and all supported argument shapes."""
-    raw_msg: object = record.msg
-    scrubbed_msg = _scrub_text(raw_msg) if isinstance(raw_msg, str) else _scrub_value(raw_msg)
-    record.msg = scrubbed_msg
-    _scrub_record_args(record, scrubbed_msg)
-
-
-def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
-    """Scrub record arguments, retaining placeholder-aware positional arity."""
-    if is_object_list_or_tuple(record.args) and isinstance(message, str):
-        record.msg, scrubbed_args = _scrub_positional_format(message, tuple(record.args))
-        # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
-        # | Mapping[str, object] | None``; ``list`` is not in the
-        # union even though logging accepts it at runtime.
-        # Normalising to a tuple sidesteps the union mismatch
-        # without changing the runtime contract.
-        record.args = tuple(scrubbed_args)
-        return
-    if isinstance(record.args, Mapping):
-        if isinstance(message, str):
-            record.msg, record.args = _scrub_mapping_format(message, record.args)
-        else:
-            record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
-        return
-    if isinstance(record.args, tuple | list):
-        # Residual tuple/list args reach only when ``record.msg`` is not a
-        # str (the positional branch above requires a str format). Preserve
-        # the original ``_scrub_value`` element-wise scrubbing so no args
-        # path skips redaction.
-        record.args = tuple(_scrub_value(item) for item in record.args)
-
-
-def _scrub_record_exception(record: logging.LogRecord) -> None:
-    """Scrub formatted exception text while retaining the exception tuple."""
-    # ``exc_info=False`` reaches the record unchanged; only an exception tuple names one to format.
-    if isinstance(record.exc_info, tuple):
-        record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
-    elif record.exc_text is not None and record.exc_text:
-        record.exc_text = _scrub_text(record.exc_text)
-
-
-def _scrub_record_extras(record: logging.LogRecord) -> None:
-    """Scrub non-standard record attributes in place."""
-    for key, value in tuple(record.__dict__.items()):
-        if key in _STANDARD_LOG_RECORD_FIELDS or key in {"msg", "args", "exc_info", "exc_text"}:
-            continue
-        record.__dict__[key] = _scrub_value(value, key=key)
-
-
-class SecretScrubbingFilter(logging.Filter):
-    """Redact sensitive fields from log records before formatting.
-
-    The filter mutates each :class:`logging.LogRecord` in place so handlers,
-    stderr diagnostics, and JSONL run sinks see the same scrubbed record. It is
-    deliberately narrower than CLI output redaction: structured command results
-    still route through :mod:`cadrumo.core.output_rendering` or
-    :mod:`cadrumo.core.json_contract`, while this filter protects logging-only
-    message text, %-format args, exception text, and ``extra`` fields.
-    """
-
-    @override
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Scrub sensitive values from ``record`` in-place and return ``True`` to allow it.
-
-        Args:
-            record: The log record whose ``msg``, ``args``, ``exc_info``,
-                ``exc_text``, and extra fields are scrubbed before formatting.
-
-        Returns:
-            Always ``True`` — every record is allowed through after scrubbing.
-        """
-        stamp_diagnostic_scalar_fields(record)
-        _scrub_record_message_and_args(record)
-        _scrub_record_exception(record)
-        _scrub_record_extras(record)
-        return True
-
-
-def _install_run_context_record_factory() -> None:
+def install_run_context_record_factory() -> None:
     """Install a :class:`logging.LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
     The contextvars live in :mod:`cadrumo.core.observability.context`. They are
-    imported lazily inside the closure so this function never triggers
-    a partial import of :mod:`cadrumo.core.observability` (which would create a
-    cycle through :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
+    imported lazily, when the first record is made or :func:`configure_logging`
+    runs, so installing the factory never triggers a partial import of
+    :mod:`cadrumo.core.observability` (which would create a cycle through
+    :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
 
     Both fields are EXPECTED to be empty strings on every record a normal CLI
     invocation emits, and that is the accepted design rather than a gap. Wrapping
@@ -584,11 +141,8 @@ def _install_run_context_record_factory() -> None:
     if _factory_installed:
         return
     previous_factory = logging.getLogRecordFactory()
-    # Cache the contextvars across record creations. The `import` statement
-    # is cheap after the first call (``sys.modules`` lookup), but hoisting
-    # it into the closure eliminates the repeated try/except on every
-    # single log record — the factory runs in the hottest path of the
-    # logging subsystem.
+    # Cache the contextvars across record creations: the factory runs in the
+    # hottest path of the logging subsystem, and resolving them is an import.
     cached_vars: tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]] | None = None
 
     # KWARGS-ANY-RATIONALE-LOG-RECORD-FACTORY: signature mirrors the stdlib
@@ -596,11 +150,12 @@ def _install_run_context_record_factory() -> None:
     # LogRecord constructor arguments.
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         nonlocal cached_vars
+        # The stdlib probes a lone operand as a Mapping before logger filters.
+        # An opaque object's class/metaclass hooks must not run in that probe.
+        args = _safe_factory_args(args)
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
-
-            cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
+            cached_vars = _run_context_variables()
         run_var, step_var = cached_vars
         ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
@@ -632,17 +187,17 @@ class DropRunEventFilter(logging.Filter):
 
 #: First-party namespaces for Cadrumo and its hosted automation diagnostics. SDK
 #: request-body DEBUG remains excluded even when it originates inside the automation.
-_FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
+FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
 
 
 def register_first_party_logger(namespace: str) -> None:
     """Enroll this process's owning application namespace for scrubbed diagnostics."""
     if not namespace.isidentifier():
         raise ValueError("a logger namespace must be one application identifier")
-    _FIRST_PARTY_LOGGER_ROOTS.add(namespace)
+    FIRST_PARTY_LOGGER_ROOTS.add(namespace)
 
 
-class _ThirdPartyDebugFilter(logging.Filter):
+class ThirdPartyDebugFilter(logging.Filter):
     """Hold third-party loggers below DEBUG at every sink that writes to disk.
 
     The root logger runs at DEBUG so Cadrumo's own diagnostics are complete,
@@ -676,7 +231,7 @@ class _ThirdPartyDebugFilter(logging.Filter):
         """
         if record.levelno >= logging.INFO:
             return True
-        return any(record.name == root or record.name.startswith(f"{root}.") for root in _FIRST_PARTY_LOGGER_ROOTS)
+        return any(record.name == root or record.name.startswith(f"{root}.") for root in FIRST_PARTY_LOGGER_ROOTS)
 
 
 #: Extra key marking a record whose content the emitter has ALREADY written to
@@ -694,7 +249,7 @@ def operator_document_output() -> Generator[None]:
     async/thread contexts keep the same routing. Other invocations and text
     output retain their stderr diagnostics; no process or handler level changes.
     """
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     token = _OPERATOR_DOCUMENT_OUTPUT.set(True)
     try:
         yield
@@ -740,16 +295,9 @@ class DropOperatorDocumentEchoFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
-    Resolved through the taxonomy accessor rather than by reading
-    ``cadrumo_log_dir`` here. Both answer the same today, because the settings
-    field is what the accessor consults first -- but only one of them stays
-    correct if the member's resolution ever gains a case. A call site that
-    reads the field directly has quietly opted out of whatever the accessor
-    decides, and it does so invisibly, by continuing to work.
-
-    An explicit ``CADRUMO_LOG_DIR`` override still wins, and still keeps the
-    log isolated per workspace rather than mixing every session's records into
-    one system-wide file.
+    Resolved through the taxonomy accessor, so the log sits beneath the
+    storage root and stays isolated per root rather than mixing every
+    session's records into one system-wide file.
 
     The filename itself is read off the taxonomy's ``LOG_FILE`` member rather
     than declared as an untethered string literal here.
@@ -761,7 +309,7 @@ def default_log_file_path() -> Path:
     return storage_path(StorageCategory.LOGS).expanduser() / filename
 
 
-def _prepare_log_directory(log_file: Path) -> str | None:
+def prepare_log_directory(log_file: Path) -> str | None:
     """Best-effort create the diagnostic log directory.
 
     Returns ``None`` when the directory already exists or was created, and a
@@ -769,7 +317,7 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     an :exc:`OSError`.
 
     File logging is a best-effort diagnostic channel, not the operator result
-    contract. An ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR`` that the
+    contract. A ``CADRUMO_STORAGE_ROOT`` that the
     process cannot create — an inaccessible Windows path the operator's
     account may not write, a path routed under a non-directory, a
     ``PermissionError`` — MUST degrade to stderr-only logging rather than
@@ -789,6 +337,8 @@ def _prepare_log_directory(log_file: Path) -> str | None:
 def _install_secret_scrubbing_filters() -> None:
     """Attach one :class:`SecretScrubbingFilter` to the root logger and each handler."""
     root_logger = logging.getLogger()
+    if not any(isinstance(active_filter, _DispatchFilter) for active_filter in root_logger.filters):
+        root_logger.filters.insert(0, _DispatchFilter())
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in root_logger.filters):
         root_logger.addFilter(SecretScrubbingFilter())
     for handler in root_logger.handlers:
@@ -796,19 +346,84 @@ def _install_secret_scrubbing_filters() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
 
-def _rotating_file_handler_path() -> str:
-    """Name the rotating file handler by the dotted path dictConfig resolves.
+class _ConfigurationParts(NamedTuple):
+    load_settings: Callable[[], Settings]
+    former_state_error: type[Exception]
+    file_handler: type[AnnouncingRotatingFileHandler]
 
-    Derived from the class rather than hand-spelled, so a typo cannot hide
-    until the first file-logging run; imported here because only a host that
-    configures file logging needs the handler module.
-    """
+
+def _configuration_parts() -> _ConfigurationParts:
+    """Return what configuration builds its sinks from, importing it on first use."""
+    from .config import load_settings
+    from .config_state_root import FormerProductStateError
     from .log_file_handler import AnnouncingRotatingFileHandler
 
-    return f"{AnnouncingRotatingFileHandler.__module__}.{AnnouncingRotatingFileHandler.__qualname__}"
+    return _ConfigurationParts(load_settings, FormerProductStateError, AnnouncingRotatingFileHandler)
+
+
+#: Synthetic text shaped like each family redaction recognises. Scrubbing it
+#: runs every import the first real record's redaction would otherwise perform.
+_DELIVERY_WARMUP_TEXT = (
+    "B12345678 12345678Z ES9121000418450200051332 Bearer warmup.token "
+    "https://sede.agenciatributaria.gob.es/Sede/warmup?token=warmup password=warmup"
+)
+_delivery_modules_loaded = False
+
+
+def _load_delivery_modules() -> None:
+    """Import, on this thread, what configuration and the first records would import elsewhere.
+
+    The dispatch thread's first work item imports the settings graph, and its
+    first record imports redaction's lazily bound identity and classification
+    modules. A producer's own first record imports the run-context module, which
+    shares pydantic with that graph, so a producer that logs while the dispatch
+    thread is mid-import waits on its import lock. Doing all of it here, before
+    anything is queued, leaves no import for either thread to perform or wait on.
+    """
+    global _delivery_modules_loaded
+    if _delivery_modules_loaded:
+        return
+    _run_context_variables()
+    _configuration_parts()
+    with lexical_tax_identity_redaction():
+        scrub_text(_DELIVERY_WARMUP_TEXT)
+    _delivery_modules_loaded = True
 
 
 def configure_logging() -> None:
+    """Schedule idempotent diagnostic configuration without entering its I/O.
+
+    Module imports are the exception: the host's thread performs them, once,
+    so that neither the dispatch thread nor a producer logging in the meantime
+    stalls behind a cold import. Settings, directories and files are still
+    reached only on the dispatch thread.
+    """
+    if not configured and not _is_cli_metadata_invocation():
+        # The dispatch thread repeats these imports and counts a failure there;
+        # a host's startup must not raise for a diagnostic channel.
+        with suppress(Exception):
+            _load_delivery_modules()
+    _submit_work(_configure_logging)
+
+
+def _replace_root_handlers(sinks: list[logging.Handler], root_level: str) -> None:
+    root_logger = logging.getLogger()
+    previous = tuple(root_logger.handlers)
+    root_logger.handlers = [
+        handler
+        for handler in previous
+        if not isinstance(handler, AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
+    ]
+    root_logger.handlers.extend(AsyncDiagnosticHandler(sink) for sink in sinks)
+    root_logger.setLevel(root_level)
+    for handler in previous:
+        if isinstance(handler, AsyncDiagnosticHandler):
+            handler.close()
+    for name in ("alembic.runtime.plugins", "pdfminer", "pikepdf._core"):
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
+def _configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
     Installs settings-derived stderr/file handlers, the run-context record
@@ -818,100 +433,61 @@ def configure_logging() -> None:
     persist them through secure-object repositories.
 
     When the diagnostic log directory cannot be created (an inaccessible
-    ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR``), logging degrades to
+    ``CADRUMO_STORAGE_ROOT``), logging degrades to
     stderr-only and records an instructive diagnostic naming the likely
     remedy — it never crashes CLI startup with a raw traceback.
 
     The function is idempotent, so hosts and the first-record placeholder can
     both reach it without duplicating handlers.
     """
-    global _configured
-    if _configured or _is_cli_metadata_invocation():
+    global configured
+    if configured or _is_cli_metadata_invocation():
         return
 
-    from .config import load_settings
-    from .config_state_root import FormerProductStateError
-
+    parts = _configuration_parts()
     try:
         log_file = default_log_file_path()
-        settings = load_settings()
-    except FormerProductStateError:
+        settings = parts.load_settings()
+    except parts.former_state_error:
         # A normal command must reach the typed CLI refusal boundary instead
         # of crashing while its import-time logger tries to open former state.
         # Do not configure a file handler or inspect the rejected root.
-        _configured = True
+        configured = True
         _retire_first_record_configuration()
         return
-    log_directory_failure = _prepare_log_directory(log_file)
+    log_directory_failure = prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
 
-    configured_handlers: dict[str, dict[str, Any]] = {
-        "stderr": {
-            "level": settings.cadrumo_log_stderr_level,
-            "formatter": "standard",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
-            "filters": ["drop_run_event", "drop_operator_document", "third_party_debug"],
-        },
-    }
-    root_handlers = ["stderr"]
+    stderr = _DiagnosticStreamHandler(sys.stderr)
+    stderr.setLevel(settings.cadrumo_log_stderr_level)
+    stderr.addFilter(DropOperatorDocumentEchoFilter())
+    sinks: list[logging.Handler] = [stderr]
     if file_logging_enabled:
-        configured_handlers["file"] = {
-            "level": settings.cadrumo_log_file_level,
-            "formatter": "standard",
-            "class": _rotating_file_handler_path(),
-            "filename": str(log_file),
-            "maxBytes": settings.cadrumo_log_file_max_bytes,
-            "backupCount": settings.cadrumo_log_file_backup_count,
-            "encoding": "utf-8",
-            "filters": ["drop_run_event", "third_party_debug"],
-        }
-        root_handlers.append("file")
-    from logging.config import dictConfig
-
-    dictConfig(
-        {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "standard": {"()": DiagnosticFormatter, "fmt": LOG_FILE_FORMAT},
-            },
-            "filters": {
-                "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},
-                "drop_operator_document": {"()": f"{__name__}.DropOperatorDocumentEchoFilter"},
-                "third_party_debug": {"()": _ThirdPartyDebugFilter},
-            },
-            "handlers": configured_handlers,
-            "root": {
-                "handlers": root_handlers,
-                "level": settings.cadrumo_log_root_level,
-            },
-            "loggers": {
-                "alembic.runtime.plugins": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-                "pdfminer": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-                "pikepdf._core": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-            },
-        },
-    )
+        file = parts.file_handler(
+            str(log_file),
+            maxBytes=settings.cadrumo_log_file_max_bytes,
+            backupCount=settings.cadrumo_log_file_backup_count,
+            encoding="utf-8",
+            delay=True,
+        )
+        file.setLevel(settings.cadrumo_log_file_level)
+        sinks.append(file)
+    for sink in sinks:
+        sink.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+        sink.addFilter(DropRunEventFilter())
+        sink.addFilter(ThirdPartyDebugFilter())
+        sink.addFilter(SecretScrubbingFilter())
+    _replace_root_handlers(sinks, settings.cadrumo_log_root_level)
 
     # Local import: the observability layer imports ``cadrumo.core.logging`` for
     # its own get_logger() seed, so attaching the filter at module
     # import time would create a circular import. Inside this function
     # the import is safe because configure_logging() runs after both
     # modules finish loading.
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     _install_secret_scrubbing_filters()
 
-    _configured = True
+    configured = True
     _flush_pending_records()
 
     if not file_logging_enabled:
@@ -922,26 +498,29 @@ def configure_logging() -> None:
         # import-time traceback this degrade replaces.
         logging.getLogger(__name__).error(
             "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
-            "Continuing with stderr-only logging. Ensure CADRUMO_LOCAL_STORAGE_ROOT / CADRUMO_LOG_DIR "
+            "Continuing with stderr-only logging. Ensure CADRUMO_STORAGE_ROOT "
             "points at a path your account can write; on Windows check the folder's permissions, "
-            "run from a directory you own, or set CADRUMO_LOCAL_STORAGE_ROOT to a writable location.",
+            "run from a directory you own, or set CADRUMO_STORAGE_ROOT to a writable location.",
             log_file.parent,
             log_directory_failure,
         )
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
-    """Apply ``level`` to the root logger and every attached handler.
+    """Apply ``level`` to the root logger and every sink this module installed.
 
     The root logger itself is always set to ``logging.DEBUG`` so no
-    record is discarded before reaching a handler; each handler then
-    applies its own level gate.  ``FileHandler`` instances receive
+    record is discarded before reaching a handler; each sink then
+    applies its own level gate.  ``FileHandler`` sinks receive
     ``file_level`` (default ``DEBUG``) to keep the diagnostic log
-    comprehensive.  All other handlers (typically the stderr stream
+    comprehensive.  All other sinks (typically the stderr stream
     handler) receive ``level``.
 
-    :func:`configure_logging` is called first so the dictConfig contract
-    is in place before any level mutation.
+    A handler some other owner attached to the root, such as a test
+    harness's capture handler, keeps its own level: the CLI verbosity
+    governs what Cadrumo writes, not what another observer records.
+
+    Configuration and sink-level changes are queued before subsequent records.
 
     Args:
         level: The effective level for non-file handlers (e.g.
@@ -949,14 +528,19 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
         file_level: The level applied to :class:`logging.FileHandler`
             instances (default ``logging.DEBUG``).
     """
-    configure_logging()
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-    for handler in root_logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            handler.setLevel(file_level)
-        else:
-            handler.setLevel(level)
+    # Admit records immediately; the queued command precedes their sink-level checks.
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    def apply() -> None:
+        _configure_logging()
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+        for handler in root_logger.handlers:
+            if isinstance(handler, AsyncDiagnosticHandler):
+                sink = handler.sink
+                sink.setLevel(file_level if isinstance(sink, logging.FileHandler) else level)
+
+    _submit_work(apply)
 
 
 _configuration_deferred = False
@@ -1001,22 +585,37 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     configuring = False
 
     @override
+    def handle(self, record: logging.LogRecord) -> bool:
+        if _active_record.get() is not record:
+            _enqueue_record(record, offered_to_handlers=True)
+            return True
+        return bool(super().handle(record))
+
+    @override
     def emit(self, record: logging.LogRecord) -> None:
+        if _active_record.get() is not record:
+            _enqueue_record(record, offered_to_handlers=True)
+            return
         root_logger = logging.getLogger()
-        walked = root_logger.handlers
-        position = walked.index(self) if self in walked else 0
+        walked = tuple(root_logger.handlers)
         _configure_for_first_record(self, record)
         if _defer_record_if_placeholder(self, root_logger, record):
             return
-        _forward_first_record(self, root_logger, walked, position, record)
+        _forward_first_record(root_logger, walked, record)
 
 
 def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
-    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler).configuring:
+    if (
+        record.levelno < logging.WARNING
+        or configured
+        or _configuration_deferred
+        or record.__dict__.get("_cadrumo_configuration_deferred") is True
+        or type(handler).configuring
+    ):
         return
     type(handler).configuring = True
     try:
-        configure_logging()
+        _configure_logging()
     finally:
         type(handler).configuring = False
 
@@ -1031,56 +630,60 @@ def _defer_record_if_placeholder(
     if record.levelno >= logging.WARNING:
         _handle_as_last_resort(record)
     else:
-        _pending_records.append(record)
+        _hold_pending_record(record)
     return True
 
 
 def _forward_first_record(
-    handler: _ConfigureOnFirstRecordHandler,
     root_logger: logging.Logger,
-    walked: list[logging.Handler],
-    position: int,
+    walked: tuple[logging.Handler, ...],
     record: logging.LogRecord,
 ) -> None:
-    # ``Logger.callHandlers`` is still walking the handler list it read before
-    # configuration ran. If removal mutated that list in place, only the
-    # configured handlers before this placeholder are ours. If removal replaced
-    # it (CPython 3.13.15 and 3.14.7 onward, gh-79366), all configured handlers
-    # are ours and the triggering record must be forwarded to each one.
-    configured = root_logger.handlers
-    ours = configured if configured is not walked else configured[: position + 1]
-    for active_handler in ours:
-        if record.levelno >= active_handler.level:
+    # Configuration replaces the root handler list, so the walk that reached the
+    # placeholder never sees the sinks configuration installed, and still
+    # reaches every handler it started with. Only the new sinks need the record.
+    for active_handler in tuple(root_logger.handlers):
+        if active_handler not in walked and record.levelno >= active_handler.level:
             active_handler.handle(record)
 
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:
     if _operator_document_record(record):
-        _pending_records.append(record)
+        _hold_pending_record(record)
         return
     last_resort = logging.lastResort
     if last_resort is not None and record.levelno >= last_resort.level:
         last_resort.handle(record)
 
 
+def _hold_pending_record(record: logging.LogRecord) -> None:
+    if len(_pending_records) == _PENDING_RECORD_LIMIT:
+        _dispatch.discard()
+    # The walk that held it also reached every foreign handler; only the sinks
+    # that configuration installs are still owed this record.
+    record.__dict__[_OFFERED_TO_HANDLERS] = True
+    _pending_records.append(record)
+
+
 def _flush_pending_records() -> None:
     """Replay held records through the handlers configuration installed."""
     global _root_level_before_buffering
     _root_level_before_buffering = None
-    root_logger = logging.getLogger()
     while _pending_records:
         record = _pending_records.popleft()
-        for handler in root_logger.handlers:
-            if record.levelno >= handler.level:
-                handler.handle(record)
+        _deliver_work(record)
 
 
 def _retire_first_record_configuration() -> None:
     """Drop the placeholder and its held records when configuration is refused."""
     global _root_level_before_buffering
     root_logger = logging.getLogger()
-    for handler in [handler for handler in root_logger.handlers if isinstance(handler, _ConfigureOnFirstRecordHandler)]:
-        root_logger.removeHandler(handler)
+    # Replaced rather than removed in place: before CPython 3.13.15 and 3.14.7
+    # (gh-79366) an in-place removal makes the walk that reached the placeholder
+    # skip the handler after it.
+    root_logger.handlers = [
+        handler for handler in root_logger.handlers if not isinstance(handler, _ConfigureOnFirstRecordHandler)
+    ]
     _pending_records.clear()
     if _root_level_before_buffering is not None:
         root_logger.setLevel(_root_level_before_buffering)
@@ -1090,7 +693,7 @@ def _retire_first_record_configuration() -> None:
 def _install_first_record_configuration() -> None:
     global _root_level_before_buffering
     root_logger = logging.getLogger()
-    if _configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
+    if configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
         return
     root_logger.addHandler(_ConfigureOnFirstRecordHandler())
     if root_logger.level == logging.WARNING:
@@ -1121,8 +724,330 @@ def get_logger(name: str) -> logging.Logger:
     # Stamping run context onto records loads no settings and opens nothing, so
     # it is installed here rather than waiting for a host to configure logging;
     # otherwise records made before configuration carry no ``run_id`` at all.
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     logger = logging.getLogger(name)
+    if not any(isinstance(active_filter, _DispatchFilter) for active_filter in logger.filters):
+        logger.filters.insert(0, _DispatchFilter())
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
         logger.addFilter(SecretScrubbingFilter())
     return logger
+
+
+#: Snapshot attribute stating that its original already reached every handler of
+#: its logger hierarchy during propagation.
+_OFFERED_TO_HANDLERS = "_cadrumo_offered_to_handlers"
+_active_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_delivery_record", default=None)
+
+_sink_workers: list[DiagnosticDispatch[logging.LogRecord]] = []
+_stdlib_shutdown = logging.shutdown
+
+
+def _enqueue_record(record: logging.LogRecord, *, offered_to_handlers: bool) -> None:
+    """Queue a snapshot of ``record`` for the dispatch thread.
+
+    ``offered_to_handlers`` states whether ``record`` itself goes on to reach the
+    handlers of its hierarchy. A logger filter withholds it, so the snapshot owes
+    every handler a delivery. A handler that intercepts it during propagation
+    leaves the other handlers to receive the original, so the snapshot owes only
+    this module's own handlers.
+    """
+    if _active_record.get() is not None:
+        _dispatch.discard()
+        return
+    # Several root handlers can see one third-party record. Admit it once.
+    if record.__dict__.get("_cadrumo_queued_pid") == os.getpid():
+        return
+    record.__dict__["_cadrumo_queued_pid"] = os.getpid()
+    record.__dict__["_cadrumo_configuration_deferred"] = _configuration_deferred
+    try:
+        snapshot = snapshot_record(record)
+        snapshot.__dict__[_OFFERED_TO_HANDLERS] = offered_to_handlers
+        _submit_work(snapshot)
+    except Exception:
+        # A malformed foreign LogRecord must not change the caller's result.
+        _dispatch.discard()
+        return
+
+
+class _DispatchFilter(logging.Filter):
+    @override
+    def filter(self, record: logging.LogRecord) -> bool:
+        if _active_record.get() is record:
+            return True
+        _enqueue_record(record, offered_to_handlers=False)
+        return False
+
+
+def _deliver_work(work: logging.LogRecord | Callable[[], None]) -> None:
+    if not isinstance(work, logging.LogRecord):
+        work()
+        return
+    token = _active_record.set(work)
+    try:
+        exception = work.__dict__.pop("_cadrumo_exception_snapshot", None)
+        if exception is not None:
+            sections: list[str] = []
+            for name, arguments, frames, relation in reversed(exception):
+                if sections:
+                    sections.append(f"\nException {relation}:\n")
+                stack = "".join(f'  File "{path}", line {line}, in {function}\n' for path, line, function in frames)
+                sections.append(f"Traceback (most recent call last):\n{stack}{name}: {arguments}")
+            work.exc_text = "\n".join(sections)
+        bound_format(work)
+        with lexical_tax_identity_redaction():
+            SecretScrubbingFilter().filter(work)
+        scrubbed = SCRUBBED_RECORD.set(work)
+        try:
+            if work.__dict__.get(_OFFERED_TO_HANDLERS) is True:
+                _handle_by_own_handlers(work)
+            else:
+                logging.getLogger(work.name).handle(work)
+        finally:
+            SCRUBBED_RECORD.reset(scrubbed)
+    finally:
+        _active_record.reset(token)
+
+
+def _handle_by_own_handlers(record: logging.LogRecord) -> None:
+    """Offer a snapshot to this module's handlers, along the path ``callHandlers`` takes.
+
+    The original of ``record`` was already offered to every handler of its
+    hierarchy, so a foreign handler reached again here would log it twice. Each
+    logger's handlers are read once, so a sink installed while the walk is in
+    progress is not reached; the placeholder that installs sinks forwards the
+    record to them itself.
+    """
+    found = False
+    logger: logging.Logger | None = logging.getLogger(record.name)
+    while logger is not None:
+        for handler in tuple(logger.handlers):
+            found = True
+            if isinstance(handler, AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler) and (
+                record.levelno >= handler.level
+            ):
+                handler.handle(record)
+        logger = logger.parent if logger.propagate else None
+    fallback = logging.lastResort
+    # The stdlib falls back to ``lastResort`` only for a hierarchy with no handler.
+    if not found and isinstance(fallback, AsyncDiagnosticHandler) and record.levelno >= fallback.level:
+        fallback.handle(record)
+
+
+class AsyncDiagnosticHandler(logging.Handler):
+    """A logging handler that forwards record snapshots to a sink on a background worker."""
+
+    def __init__(self, sink: logging.Handler) -> None:
+        """Bind the sink and start the background worker that writes records to it."""
+        super().__init__(logging.NOTSET)
+        self.sink = sink
+        self._worker = DiagnosticDispatch(
+            self._write,
+            name=f"diagnostic-{type(sink).__name__}",
+            capacity=8192,
+            finish=sink.close,
+        )
+        _sink_workers.append(self._worker)
+
+    @override
+    def handle(self, record: logging.LogRecord) -> bool:
+        """Divert records from foreign loggers into the diagnostic queue before filters run."""
+        # Foreign loggers bypass logger-attached filters during propagation.
+        # Intercept before handler filters can enter redaction or registry I/O.
+        if _active_record.get() is not record:
+            _enqueue_record(record, offered_to_handlers=True)
+            return True
+        return bool(super().handle(record))
+
+    def _write(self, record: logging.LogRecord) -> None:
+        token = _active_record.set(record)
+        scrubbed = SCRUBBED_RECORD.set(record)
+        try:
+            self.sink.handle(record)
+        finally:
+            SCRUBBED_RECORD.reset(scrubbed)
+            _active_record.reset(token)
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        """Queue a snapshot of the active record for the sink when it meets the sink level."""
+        if _active_record.get() is record:
+            if record.levelno < self.sink.level:
+                return
+            snapshot = logging.LogRecord.__new__(logging.LogRecord)
+            snapshot.__dict__ = record.__dict__.copy()
+            self._worker.submit(snapshot, weight=record.__dict__.get("_cadrumo_snapshot_weight", 1024))
+        else:
+            _enqueue_record(record, offered_to_handlers=True)
+
+    @override
+    def close(self) -> None:
+        """Close the background worker without waiting, then close the handler."""
+        self._worker.close(timeout=0)
+        super().close()
+
+
+class _DiagnosticStreamHandler(logging.StreamHandler[TextIO]):
+    def __init__(self, stream: TextIO, *, follow_stderr: bool = False) -> None:
+        super().__init__(stream)
+        self._follow_stderr = follow_stderr
+        self._raw: RawIOBase | None = None
+        self._encoder = getincrementalencoder("utf-8")("backslashreplace")
+        self._prepare_stream()
+
+    def _prepare_stream(self) -> None:
+        self._raw = None
+        if type(self.stream) is TextIOWrapper:
+            buffer = self.stream.buffer
+            raw = (
+                cast("BufferedWriter[RawIOBase] | BufferedRandom", buffer).raw
+                if isinstance(buffer, BufferedWriter | BufferedRandom)
+                else buffer
+            )
+            if isinstance(raw, RawIOBase):
+                self._raw = raw
+                self._encoder = getincrementalencoder(self.stream.encoding)(self.stream.errors or "backslashreplace")
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if self._follow_stderr and sys.stderr is not self.stream and sys.stderr is not None:
+            # setStream flushes the old stream, which can itself be blocked.
+            self.stream = sys.stderr
+            self._prepare_stream()
+        if self._raw is None:
+            super().emit(record)
+            return
+        # A daemon must never hold stderr's BufferedWriter lock: CPython takes
+        # that lock again during finalization, beyond our bounded shutdown.
+        data = self._encoder.encode((self.format(record) + self.terminator).replace("\n", os.linesep))
+        with _stderr_write_guard:
+            remaining = memoryview(data)
+            while remaining:
+                written = self._raw.write(remaining)
+                if written is None or written <= 0:
+                    raise OSError("diagnostic stream delivery failed")
+                remaining = remaining[written:]
+
+    @override
+    def handleError(self, record: logging.LogRecord) -> None:
+        # The stdlib fallback prints the unsanitized record and arguments.
+        raise OSError("diagnostic stream delivery failed") from None
+
+
+_stderr_write_guard = Lock()
+
+
+def _reset_stderr_write_guard() -> None:
+    global _stderr_write_guard
+    _stderr_write_guard = Lock()
+
+
+if sys.platform != "win32" and hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_reset_stderr_write_guard)
+
+
+_dispatch = DiagnosticDispatch[logging.LogRecord | Callable[[], None]](
+    _deliver_work, name="diagnostic-records", capacity=8192
+)
+
+
+def _submit_work(work: logging.LogRecord | Callable[[], None]) -> None:
+    """Keep configuration settings without retaining an invocation's authority lease."""
+    if configured:
+        weight = work.__dict__.get("_cadrumo_snapshot_weight", 1024) if isinstance(work, logging.LogRecord) else 1024
+        _dispatch.submit(work, weight=weight)
+        return
+    context = Context()
+    for variable, value in copy_context().items():
+        if variable.name == "settings_override":
+            context.run(variable.set, value)
+    weight = work.__dict__.get("_cadrumo_snapshot_weight", 1024) if isinstance(work, logging.LogRecord) else 1024
+    _dispatch.submit(lambda: context.run(_deliver_work, work), weight=weight)
+
+
+def flush_logging(*, timeout: float = 2.0) -> bool:
+    """Attempt delivery within one bound; ordinary log calls never wait for this."""
+    deadline = time.monotonic() + (max(0.0, timeout) if math.isfinite(timeout) else 0.0)
+    if not _dispatch.flush(timeout=max(0.0, deadline - time.monotonic())):
+        return False
+    complete = True
+    for worker in tuple(_sink_workers):
+        complete = worker.flush(timeout=max(0.0, deadline - time.monotonic())) and complete
+    return complete
+
+
+def detach_diagnostic_files(directory: Path) -> None:
+    """Deliver every pending record, then detach and close each diagnostic log file inside ``directory``.
+
+    The diagnostic file is bound once per process, beneath whatever storage
+    root the settings name when the first warning arrives. A caller that ends a
+    temporary root calls this as it ends it, so the log file inside stops being
+    written and no handle stays open on it; records after that reach the
+    remaining sinks only.
+
+    Raises:
+        OSError: When the pending records cannot be delivered, since the files may still be written.
+    """
+    if not flush_logging(timeout=30.0):
+        raise OSError(f"the diagnostic records were not delivered before {directory} was released")
+    inside = Path(os.path.normcase(directory))
+    root = logging.getLogger()
+    for handler in tuple(root.handlers):
+        if not isinstance(handler, AsyncDiagnosticHandler):
+            continue
+        sink = handler.sink
+        if isinstance(sink, logging.FileHandler) and Path(os.path.normcase(sink.baseFilename)).is_relative_to(inside):
+            root.removeHandler(handler)
+            handler.close()
+            sink.close()
+
+
+def diagnostic_delivery_status() -> dict[str, DispatchStatus]:
+    """Read delivery health without acquiring any formatter, handler or file lock."""
+    return {
+        "records": _dispatch.status(),
+        **{f"sink_{index}": worker.status() for index, worker in enumerate(tuple(_sink_workers))},
+    }
+
+
+_shutdown_guard = Lock()
+_shutdown_finished = Event()
+_shutdown_thread: Thread | None = None
+
+
+def shutdown_logging(*, timeout: float = 2.0) -> None:
+    """Also bound stdlib shutdown, whose default waits indefinitely on sink locks."""
+    global _shutdown_thread
+    deadline = time.monotonic() + (max(0.0, timeout) if math.isfinite(timeout) else 0.0)
+    flush_logging(timeout=max(0.0, deadline - time.monotonic()))
+    for worker in tuple(_sink_workers):
+        worker.close(timeout=max(0.0, deadline - time.monotonic()))
+
+    def finish() -> None:
+        try:
+            _stdlib_shutdown()
+        finally:
+            _shutdown_finished.set()
+
+    with _shutdown_guard:
+        if _shutdown_thread is None:
+            _shutdown_thread = Thread(target=finish, name="diagnostic-shutdown", daemon=True)
+            try:
+                _shutdown_thread.start()
+            except RuntimeError:
+                _shutdown_finished.set()
+    _shutdown_finished.wait(max(0.0, deadline - time.monotonic()))
+
+
+atexit.unregister(_stdlib_shutdown)
+atexit.register(shutdown_logging)
+
+# Preserve caller-installed fallback handlers. The stdlib default must use the
+# same isolated sink as configured diagnostics, including before configuration.
+if type(logging.lastResort) is getattr(logging, "_StderrHandler", None):
+    _fallback_sink = _DiagnosticStreamHandler(sys.stderr, follow_stderr=True)
+    _fallback_sink.addFilter(DropOperatorDocumentEchoFilter())
+    _fallback_sink.addFilter(DropRunEventFilter())
+    _fallback_sink.addFilter(ThirdPartyDebugFilter())
+    _fallback_handler = AsyncDiagnosticHandler(_fallback_sink)
+    _fallback_handler.setLevel(logging.WARNING)
+    logging.lastResort = _fallback_handler

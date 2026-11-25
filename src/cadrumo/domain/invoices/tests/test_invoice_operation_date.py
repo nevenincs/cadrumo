@@ -14,16 +14,14 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import date
-from decimal import Decimal
-from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...iva.schema import InvoiceKind
-from ..enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
-from ..models import Invoice, InvoiceLine
+from ..enums import InvoiceOperationDateRole
+from ..models import Invoice
+from .issued_services_invoice_support import issued_services_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,43 +33,13 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
-_BASE = Decimal("1000.00")
-_CUOTA = Decimal("210.00")
-
-
-def _line() -> InvoiceLine:
-    return InvoiceLine(
-        description="Servicios profesionales",
-        quantity=Decimal("1"),
-        unit_price=_BASE,
-        subtotal=_BASE,
-        iva_rate=IvaRate.from_registry("RATE_21"),
-        iva_amount=_CUOTA,
-    )
-
-
-def _invoice(**overrides: Any) -> Invoice:
-    payload: dict[str, Any] = {
-        "kind": InvoiceKind.ISSUED,
-        "invoice_number": "2026/OP-1",
-        "issued_at": date(2026, 4, 15),
-        "counterparty_name": "Cliente SL",
-        "counterparty_tax_id": "B12345674",
-        "counterparty_country": "ES",
-        "base_total": _BASE,
-        "iva_total": _CUOTA,
-        "grand_total": _BASE + _CUOTA,
-        "currency": "EUR",
-        "lines": (_line(),),
-        "payment_status": PaymentStatus.PAID,
-    }
-    payload.update(overrides)
-    return Invoice(**payload)  # type: ignore[arg-type]
+_INVOICE_NUMBER = "2026/OP-1"
 
 
 def test_an_invoice_can_state_its_operation_date_distinct_from_the_issue_date() -> None:
     """The fecha de operación is representable, naming which art. 6.1.i clause it answers."""
-    invoice = _invoice(
+    invoice = issued_services_invoice(
+        _INVOICE_NUMBER,
         operation_date=date(2026, 3, 28),
         operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
     )
@@ -83,7 +51,7 @@ def test_an_invoice_can_state_its_operation_date_distinct_from_the_issue_date() 
 
 def test_an_ordinary_invoice_declares_no_operation_date() -> None:
     """Most invoices never need the axis: the operation coincides with the issue date."""
-    invoice = _invoice()
+    invoice = issued_services_invoice(_INVOICE_NUMBER)
 
     assert invoice.operation_date is None
     assert invoice.operation_date_role is None
@@ -92,13 +60,15 @@ def test_an_ordinary_invoice_declares_no_operation_date() -> None:
 def test_a_date_without_a_role_is_refused() -> None:
     """A bare date would leave a reader guessing which art. 6.1.i clause it answers."""
     with pytest.raises(ValidationError, match="operation_date and operation_date_role must be set together"):
-        _invoice(operation_date=date(2026, 3, 28))
+        issued_services_invoice(_INVOICE_NUMBER, operation_date=date(2026, 3, 28))
 
 
 def test_a_role_without_a_date_is_refused() -> None:
     """A role with nothing to date states nothing."""
     with pytest.raises(ValidationError, match="operation_date and operation_date_role must be set together"):
-        _invoice(operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"))
+        issued_services_invoice(
+            _INVOICE_NUMBER, operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
+        )
 
 
 def test_the_role_is_one_field_not_a_second_date() -> None:

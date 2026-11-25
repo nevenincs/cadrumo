@@ -111,7 +111,7 @@ for received catalogue invoices. In Modelo 349, `R` is the call-off-stock
 transfer key; rectification rows use separate rectified-period and base fields.
 
 An invoice is counted in the period of the date you record with
-`--operation-date`, so record the devengo date that LIVA art. 75 sets. For an
+`--operation-date`, so record the accrual date that LIVA art. 75 sets. For an
 intra-community supply of goods, that is the 15th of the month after the
 transport starts, or the invoice date if it is earlier (art. 75.Uno.8.º).
 Without `--operation-date`, the invoice date stands in for it. Modelo 349
@@ -131,7 +131,7 @@ and confirms the link on the invoice:
 Remove a catalogue invoice you created by mistake, confirming with `--yes`.
 If the invoice is still linked to a transaction, the removal is refused, so
 the bank transaction never ends up citing an invoice that no longer exists.
-`aeat` has no command that unlinks an invoice. Removing the linked transaction
+`aeat` has no command to remove an invoice link. Removing the linked transaction
 releases the link (see [Correct mistakes in your records](correct-ledger-entries.md)).
 The example removes an invoice that has no link:
 

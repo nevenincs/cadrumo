@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8150fcc53e7e337e277d50d00a478d86e1ac50ced37fbe0feba69f6c103849a'
+body_hash: 'sha256:588a168f9847a32bf1db92ebd18310a410761ba1b347002b9b08f9d6ab0fc5d0'
 related:
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
   - '[[2026-08-04-modelo-100-casilla-implementation-audit]]'
@@ -48,7 +48,7 @@ The portfolio denominator is the accepted baseline inventory of 73 modelos and 9
 
 Every coordinate selects its registry revision through the law-determined authority. Schema parity uses that yearâ€™s official form or layout denominator, never the newest or largest revision.
 
-`D2025` means provisionally and only: Modelo 100, ejercicio 2025, period `0A`, registry revision `2025`. It is not a repository-wide identifier, annex name, or global revision class.
+`D2025` is a provisional label for exactly one behavioral coordinate: a Modelo 100 ejercicio, period `0A`, and the registry revision its law-determined authority selects. It is not a repository-wide identifier, annex name, or global revision class.
 
 Revision-level legal, source, layout, documentary, or executable evidence is a minimum evidence floor. It is not proof for each casilla, formula, parameter, binding, relation, or result. Numeric correctness requires an independent AEAT or BOE example, authoritative workbook result, or live AEAT oracle result.
 
@@ -107,7 +107,7 @@ M100 `0150`, `0613`, and `1481` remain open. Their production closure requires f
 
 ### Decision
 
-The 2025 Modelo 100 `0150` producer remains `manual`, and fincas source readiness remains false. This amendment authorizes only the source-contract definition and its independent-oracle gate; it authorizes no registry, formula, binding, relation, profile, persistence, application, or `0150` producer change.
+The Modelo 100 `0150` producer at the `D2025` coordinate remains `manual`, and fincas source readiness remains false. This amendment authorizes only the source-contract definition and its independent-oracle gate; it authorizes no registry, formula, binding, relation, profile, persistence, application, or `0150` producer change.
 
 Before `0150` can become computed, the future implementation must expose one typed rental-source contract through the application aggregation boundary. The contract must:
 

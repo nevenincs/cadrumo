@@ -30,12 +30,9 @@ from ...core.paths import effective_storage_root
 from ...core.profile_discovery import ProfileSummaryOutcome
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.time.utc import parse_iso_datetime
-from .custody_ports import (
-    ProfileCustodyCapsuleSummaryWitnessPort,
-    ProfileCustodyConcurrentChangeError,
-    ProfileCustodyRecordIntegrityError,
-    profile_custody_port,
-)
+from .custody_crypto_contracts import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
+from .custody_ports import profile_custody_port
+from .custody_record_ports import ProfileCustodyCapsuleSummaryWitnessPort
 
 _SUMMARY_MODEL_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
 
@@ -128,7 +125,7 @@ def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
         observed = snapshot.get(resolved_root)
         if observed is not None:
             return observed
-    inventory = _observe_summary_inventory(resolved_root)
+    inventory = observe_summary_inventory(resolved_root)
     if snapshot is not None and inventory.recognized:
         snapshot[resolved_root] = inventory
     return inventory
@@ -200,7 +197,8 @@ def profile_listing(*, root: Path | None = None) -> ProfileListing:
     )
 
 
-def _observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
+def observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
+    """Observe the committed profile summaries, reporting concurrent change or degradation."""
     try:
         witnesses = profile_custody_port().list_committed_capsule_summaries(root=root)
     except ProfileCustodyConcurrentChangeError as exc:

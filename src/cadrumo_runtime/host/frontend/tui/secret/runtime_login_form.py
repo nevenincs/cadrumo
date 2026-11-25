@@ -10,7 +10,6 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Checkbox, Footer, Input, Label, Select, Static
 
 from cadrumo.core.i18n.render import tr
-from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.components.theme import install_cadrumo_themes
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
@@ -19,6 +18,18 @@ from .runtime_login_contracts import RuntimeLoginMethod
 
 if TYPE_CHECKING:
     from .runtime_login import RuntimeLoginScreen
+
+
+def login_control_disabled(selector: str, method: object, *, busy: bool) -> bool:
+    """Disable inputs that cannot participate in the selected proof method."""
+    return busy or (
+        (
+            selector == "#runtime-login-credential"
+            and method in {RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_REFERENCE}
+        )
+        or (selector == "#runtime-login-reference" and method is not RuntimeLoginMethod.API_REFERENCE)
+        or (selector == "#runtime-login-persist" and method is not RuntimeLoginMethod.PASSWORD)
+    )
 
 
 class RuntimeLoginFormMixin:
@@ -95,13 +106,6 @@ class RuntimeLoginFormMixin:
                 None,
                 resume_first=True,
             )
-        else:
-            self.call_after_refresh(self._present_login)
-
-    def _present_login(self: RuntimeLoginScreen) -> None:
-        """Keep automatic resumption covered; reveal a form that needs input."""
-        if self._active() and not self._transferred and isinstance(self.app, QuietApp):
-            self.app.present_terminal()
 
     def _show_method(self: RuntimeLoginScreen, method: RuntimeLoginMethod) -> None:
         """Show one proof family and discard values from the previous one."""
@@ -153,14 +157,7 @@ class RuntimeLoginFormMixin:
             *((("#runtime-login-request-access", Button),) if self._requester_factory is not None else ()),
             *((("#runtime-login-installation", Button),) if self._installation_factory is not None else ()),
         ):
-            self.query_one(selector, kind).disabled = self._busy or (
-                (
-                    selector == "#runtime-login-credential"
-                    and method in {RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_REFERENCE}
-                )
-                or (selector == "#runtime-login-reference" and method is not RuntimeLoginMethod.API_REFERENCE)
-                or (selector == "#runtime-login-persist" and method is not RuntimeLoginMethod.PASSWORD)
-            )
+            self.query_one(selector, kind).disabled = login_control_disabled(selector, method, busy=self._busy)
         selected = cast("Select[str]", self.query_one("#runtime-login-profile", Select)).value
         profile_id = self._profile_ids.get(selected) if isinstance(selected, str) else None
         self.query_one("#runtime-login-resume", Button).disabled = (

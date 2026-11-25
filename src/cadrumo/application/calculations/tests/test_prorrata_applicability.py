@@ -21,6 +21,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
@@ -131,3 +132,5 @@ def test_volume_advisory_distinguishes_disagreement_from_unknown_or_absent_facts
     )
     diagnostic = build_prorrata_declared_volume_advisory(rollup, ejercicio=2026)
     assert (diagnostic.reason if diagnostic else None) == reason
+    # Spanish prose for the filer: a Spanish form shows it beside the catalogue's sentence.
+    assert diagnostic is None or diagnostic.message_language is OutputLanguage.ES

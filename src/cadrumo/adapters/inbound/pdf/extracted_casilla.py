@@ -18,7 +18,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.unit_proportion import UnitFraction
 
 
@@ -44,7 +44,7 @@ class ExtractedCasilla(BaseModel):
             disambiguate competing label candidates.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     printed_value: Decimal | int | str | bool | date | None

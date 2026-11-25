@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from .action_errors import WorkUnitRevisionDivergenceError
+from .lifecycle_view_refusal_doors import unit_calculate_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -36,6 +37,7 @@ def require_calculation_revision_coordinates_current(
             "work_unit_revision": snapshot_ref.revision_id,
             "law_revision": outcome.selected_revision_id or "unresolvable",
         },
+        precondition_verdict=unit_calculate_verdict("saved_revision_registry_coordinate", revision.work_unit_id),
     )
 
 

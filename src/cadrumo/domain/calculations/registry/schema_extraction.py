@@ -218,15 +218,23 @@ class ExtractionTargetDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _field_strategy_consistency(self) -> ExtractionTargetDefinition:
+        self._validate_label_strategy()
+        self._validate_anchor_strategy()
+        return self
+
+    def _validate_label_strategy(self) -> None:
+        """Enforce label patterns only where the matching strategy requires them."""
         if self.match_strategy == "named_label" and not (self.label_pattern is not None and self.label_pattern):
             raise RegistryValidationError("named_label extraction targets require label_pattern")
         if self.match_strategy == "numeric_casilla" and self.label_pattern is not None:
             raise RegistryValidationError("numeric_casilla extraction targets must not define label_pattern")
+
+    def _validate_anchor_strategy(self) -> None:
+        """Require a box anchor exactly for spatially anchored extraction."""
         if self.match_strategy == "bbox_anchored" and self.bbox_anchor is None:
             raise RegistryValidationError("bbox_anchored extraction targets require bbox_anchor")
         if self.match_strategy != "bbox_anchored" and self.bbox_anchor is not None:
             raise RegistryValidationError("bbox_anchor must be None for non-bbox_anchored strategies")
-        return self
 
 
 class ExtractionProfileDefinition(RegistryModel):

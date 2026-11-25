@@ -1,11 +1,10 @@
 """Full builds purge orphaned pages and never resolve operator storage.
 
-Furo bakes theme variables and templates into every page at build time, so a
-built page whose source was removed keeps rendering its build-era design and
-leaks into the search index (the docs-brand audit found 2208 such orphans
-rendering a retired theme). :func:`dev.docs.build.remove_orphan_pages` is the
-full-build purge; :func:`dev.docs.build.ensure_isolated_storage_root` keeps
-the build's application imports off the workstation's product state.
+Furo bakes theme variables and templates into every page at build time, so a built page
+whose source was removed keeps rendering its build-era design and leaks into the search
+index. :func:`dev.docs.output_cleanup.remove_orphan_pages` is the full-build purge;
+:func:`dev.docs.build.ensure_isolated_storage_root` keeps the build's application
+imports off the workstation's product state.
 
 Run via::
 
@@ -19,7 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from ..build import ensure_isolated_storage_root, remove_orphan_pages
+from ..build import ensure_isolated_storage_root
+from ..output_cleanup import remove_orphan_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -87,10 +87,8 @@ def test_localized_site_roots_survive_an_apex_sweep(tmp_path: Path) -> None:
     The deploy publishes ``/es/``, ``/ca/`` and ``/hu/`` as subdirectories of the
     same HTML tree the English root occupies, and their pages carry the same
     docnames one level down. Resolved against ``docs/`` those docnames find
-    nothing, so before the exemption every localized page was an orphan by this
-    function's own test and an apex build deleted all of them -- leaving exactly
-    the residue that was long mis-diagnosed: a language
-    directory holding asset subdirectories and not one rendered page.
+    nothing, so this function's own test would classify every localized page as an
+    orphan and an apex build would delete all of them.
 
     The assertion is paired with a real orphan in the same tree, so an exemption
     widened until it swept nothing would fail here rather than pass vacuously.
@@ -116,29 +114,29 @@ def test_missing_html_root_is_a_noop(tmp_path: Path) -> None:
 
 def test_isolated_storage_root_set_and_created() -> None:
     """When unset, the storage root points at a created build-scoped scratch dir."""
-    prior = os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+    prior = os.environ.pop("CADRUMO_STORAGE_ROOT", None)
     try:
         ensure_isolated_storage_root()
-        configured = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"])
+        configured = Path(os.environ["CADRUMO_STORAGE_ROOT"])
         assert configured.name == "cadrumo-docs-build-storage"
         assert configured.is_dir()
     finally:
         if prior is None:
-            os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+            os.environ.pop("CADRUMO_STORAGE_ROOT", None)
         else:
-            os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = prior
+            os.environ["CADRUMO_STORAGE_ROOT"] = prior
 
 
 def test_isolated_storage_root_respects_caller_pin(tmp_path: Path) -> None:
     """A deliberately pinned storage root is kept verbatim."""
-    prior = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
-    os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(tmp_path / "pinned")
+    prior = os.environ.get("CADRUMO_STORAGE_ROOT")
+    os.environ["CADRUMO_STORAGE_ROOT"] = str(tmp_path / "pinned")
     try:
         ensure_isolated_storage_root()
-        assert os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "pinned")
+        assert os.environ["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "pinned")
         assert (tmp_path / "pinned").is_dir()
     finally:
         if prior is None:
-            os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+            os.environ.pop("CADRUMO_STORAGE_ROOT", None)
         else:
-            os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = prior
+            os.environ["CADRUMO_STORAGE_ROOT"] = prior

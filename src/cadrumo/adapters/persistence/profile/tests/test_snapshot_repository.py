@@ -13,6 +13,8 @@ from cadrumo.adapters.persistence.profile.snapshots import SecureSnapshotReposit
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
+)
+from cadrumo.adapters.persistence.storage.secure_object_probe_namespaces import (
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

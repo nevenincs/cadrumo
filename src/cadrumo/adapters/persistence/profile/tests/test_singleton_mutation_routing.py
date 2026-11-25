@@ -78,7 +78,7 @@ _GUARDED_SERVICE_SEAMS = ("invoice_repository.mutate(", "audit_commit.mutate_wit
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
     ("InventoryLedgerRepository.create", InventoryLedgerRepository.create),
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
-    ("InventoryLedgerRepository.remove", InventoryLedgerRepository.remove),
+    ("InventoryLedgerRepository.apply_ledger_change", InventoryLedgerRepository.apply_ledger_change),
     ("InvoiceCatalogueRepository.mutate", InvoiceCatalogueRepository.mutate),
     ("WorkUnitCatalogueRepository.mutate", WorkUnitCatalogueRepository.mutate),
 )

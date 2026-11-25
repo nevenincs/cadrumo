@@ -97,8 +97,8 @@ from cadrumo_runtime.commands.command_targets import resolve_deferred_target
 
 from .....commands.command_specs import RUNTIME_COMMAND_GRAPH
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
-from ._command_drive_support import seeded_probe_runtime, synthetic_aeat_credentials
 from .cli_runner import invoke_uncached_typer_app
+from .command_drive_support import seeded_probe_runtime, synthetic_aeat_credentials
 from .portable_human_cli_runtime import PortableHumanCliRuntime
 
 __all__ = ["offline_guard_fixture"]
@@ -111,6 +111,7 @@ _SEDE_CLIENT_FACTORY: Final = "default_browser_session_factory"
 _SEDE_CLIENT_MODULES: Final = (
     "cadrumo.adapters.outbound.aeat.browser.connectivity",
     "cadrumo.adapters.outbound.aeat.browser.factory",
+    "cadrumo.adapters.outbound.aeat.browser.sede_view",
     "cadrumo.adapters.outbound.aeat.sede.censal_datos",
     "cadrumo.adapters.outbound.aeat.sede.groi_check",
     "cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet",
@@ -121,9 +122,7 @@ _SEDE_CLIENT_MODULES: Final = (
 _AEAT_ADAPTERS: Final = ("adapters", "outbound", "aeat")
 
 #: Optional parameters a command's own handler requires one of.
-_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
-    "config_provision_remove": ("role",),
-}
+_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {}
 
 #: The quarterly self-assessment modelo the period-scoped live reads are asked
 #: for; any modelo the Sede register holds would do.
@@ -544,7 +543,7 @@ def test_every_aeat_command_is_a_positive_control_or_a_reasoned_exemption() -> N
 def test_the_population_covers_network_commands_and_the_authentication_family() -> None:
     keys = {spec.key for spec in _POPULATION}
 
-    assert {"config_provision_status", "config_auth_test", "config_auth_status"} <= keys
+    assert {"config_google_probe", "config_auth_test", "config_auth_status"} <= keys
     assert _owning_graph("config_auth_login") is RUNTIME_COMMAND_GRAPH
     for spec in RUNTIME_COMMAND_GRAPH.specs:
         if is_runnable(spec) and command_path(RUNTIME_COMMAND_GRAPH, spec)[:2] == _AUTHENTICATION_FAMILY:

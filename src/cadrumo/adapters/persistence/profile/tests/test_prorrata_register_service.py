@@ -14,7 +14,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -29,7 +28,7 @@ from cadrumo.core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
@@ -37,13 +36,6 @@ from .....application.prorrata_register.tests.provisional_override import record
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one published authority generation across each service operation."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:

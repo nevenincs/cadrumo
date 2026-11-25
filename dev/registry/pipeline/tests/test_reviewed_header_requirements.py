@@ -18,17 +18,20 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
-from ..export_field_schema import _combined_requirement
+from ..export_field_schema import combined_requirement
 from ..joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate
 from ..semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRequirement, load_semantic_map
 from ..semantic_map_validation import verify_requirement_statements
-from ._generated_tree_test_support import bundled_revision_inspection
+from .generated_tree_test_support import bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MAPPINGS = Path(__file__).resolve().parents[2] / "mappings" / "modelo_111" / "2019"
+_MAPPING_EPOCHS = Path(__file__).resolve().parents[2] / "mappings" / "modelo_111"
+(_DESIGN_EPOCH,) = (path.name for path in _MAPPING_EPOCHS.iterdir() if path.is_dir())
+_MAPPINGS = _MAPPING_EPOCHS / _DESIGN_EPOCH
 _INSTRUCTIONS = "aeat-modelo-111-instructions"
 _DESIGN = "aeat-dr-111-2019-v18"
 _IDENTIFICATION = (
@@ -37,7 +40,7 @@ _IDENTIFICATION = (
 
 
 def _inspection() -> RegistryRevisionInspection:
-    return bundled_revision_inspection("111", "2019-y-siguientes")
+    return bundled_revision_inspection("111", str(open_ended_revision("111").id))
 
 
 @cache
@@ -52,8 +55,8 @@ def _joined(semantic_map: SemanticMap | None = None) -> JoinedRecordDesign:
         bundled_path(),
         inspection.sources,
         source_ref=_DESIGN,
-        filing_year=2026,
-        design_epoch="2019",
+        filing_year=filing_year_envelope().horizon,
+        design_epoch=_DESIGN_EPOCH,
     )
     return join_record_design_semantics(semantic_map or _semantic_map(), intermediate, inspection)
 
@@ -100,13 +103,13 @@ def test_modelo_111_identifying_fields_carry_the_instructions_requirement() -> N
 def test_a_reviewed_requirement_fills_the_design_silence_it_cites() -> None:
     """The design states nothing for these slots, so the reviewed requirement decides them."""
     assert _field("modelo-111-page-01-apellidos").parser_field.validation is None
-    assert _combined_requirement(_field("modelo-111-page-01-apellidos"), design_required=False) == (True, None)
-    assert _combined_requirement(_field("modelo-111-page-01-ejercicio"), design_required=False) == (True, None)
-    assert _combined_requirement(_field("modelo-111-page-01-nombre"), design_required=False) == (
+    assert combined_requirement(_field("modelo-111-page-01-apellidos"), design_required=False) == (True, None)
+    assert combined_requirement(_field("modelo-111-page-01-ejercicio"), design_required=False) == (True, None)
+    assert combined_requirement(_field("modelo-111-page-01-nombre"), design_required=False) == (
         False,
         "natural_person",
     )
-    assert _combined_requirement(_field("modelo-111-page-01-tipo-declaracion"), design_required=False) == (
+    assert combined_requirement(_field("modelo-111-page-01-tipo-declaracion"), design_required=False) == (
         False,
         None,
     )
@@ -121,7 +124,7 @@ def test_a_reviewed_requirement_restating_the_design_refuses(validation: str) ->
     )
 
     with pytest.raises(RegistryValidationError, match="design already states one"):
-        _combined_requirement(restated, design_required=validation == "Obligatorio")
+        combined_requirement(restated, design_required=validation == "Obligatorio")
 
 
 def test_every_modelo_111_quotation_is_found_in_the_cited_instructions() -> None:

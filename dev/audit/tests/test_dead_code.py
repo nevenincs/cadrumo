@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
+from dev.paths import REPO_ROOT
 
 from ..dead_code import (
     DeadCodeOutcome,

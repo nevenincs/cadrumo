@@ -44,7 +44,9 @@ stock inventory for the year, calculation warns and the boxes stay 0.
   - CSV or TXT containing supported delimited bank data
   - XLSX, but not legacy XLS
   - OFX or QFX when the optional OFX dependency is installed
-  - Recognized German-language N26 monthly statement PDFs
+  - PDF statements from any bank, read on your computer by the local language
+    model chosen in the Cadrumo agent; only movements whose date and
+    amount are printed on one line are kept, and printed balances must add up
 
   These become normalized transactions in your records, not tax-return values
   directly. File detection also uses content signatures to avoid trusting
@@ -114,7 +116,7 @@ stock inventory for the year, calculation warns and the boxes stay 0.
 
 | Export | Purpose | What it does not prove |
 | --- | --- | --- |
-| AEAT fichero or XML export | Produces the local payload where the selected Modelo revision has a complete export layout in the tax rules: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
+| AEAT file or XML export | Produces the local payload where the selected Modelo revision has a complete export layout in the tax rules: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
 | Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a file for filing or an authoritative calculation record |
 | Accountant review package | Shares the draft, saved calculation, where each value came from, and supporting documents when present, in a ZIP you can check against its checksums | Checksums alone do not identify who created or approved it |
 | Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued proof |
@@ -166,7 +168,7 @@ the profile passphrase and works outside any one profile.
 
 The sealed custody archive is an encrypted profile backup, not a structured,
 readable copy of one profile's records. It excludes recovery material,
-process-local state, and rebuildable derivatives. Restore it with the profile
+process-local state, and derived files that can be recreated. Restore it with the profile
 passphrase. A restored profile starts without a recovery code; enable one
 again afterwards if you want it.
 
@@ -223,7 +225,7 @@ authoritative layouts and real evidence. Consequently:
 
 - Import and export support must not be described as universal across all
   Modelos and periods.
-- Filed declaración-PDF extraction requires an exact registered profile.
+- Filed return-PDF extraction requires an exact registered profile.
 - A local observation you supplied, local export, checksum, Google Sheet, or
   review ZIP cannot prove AEAT acceptance. A locally held AEAT receipt
   (justificante) can become official proof. Import it through the workflow for

@@ -42,14 +42,15 @@ errors:
     auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
       a autenticar-te per crear una sessió nova.
     auth_session_deserialization: Les dades de sessió d'autenticació emmagatzemades
-      no s'han pogut deserialitzar. Torna a autenticar-te per crear una sessió nova.
+      no s'han pogut interpretar. Torna a autenticar-te per crear una sessió nova.
     auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
       Autentica't abans de continuar.
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
       disponible. O no hi ha cap magatzem de credencials registrat, o aquesta sessió
       d'inici no pot desar credencials, cosa habitual en sessions de xarxa o de servei.
-      Inicia la sessió de manera interactiva o comprova que hi hagi un magatzem de
-      credencials instal·lat i actiu.
+      Inicia la sessió de manera interactiva.
+    auth_view_capture_identity_mismatch: La sessió de l'AEAT pertany a un contribuent
+      diferent del del perfil actiu.
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
       però la seva lletra de control no coincideix amb els dígits. Revisa l'última
       lletra del document i torna-ho a provar.
@@ -83,7 +84,7 @@ errors:
     bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid
       per a {as_of}.
     casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
-      la restricció declarada: {violation}. Refs: {legal_refs}.'
+      la restricció declarada: {violation}. Referències: {legal_refs}.'
     casilla_referenced_before_evaluation: La casella {casilla_id} s'ha referenciat
       abans d'avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
@@ -99,25 +100,18 @@ errors:
     empty_expression: Expressió de fórmula buida.
     enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
       assignat (requerida per l'operador {op}).
+    formula_override_target_invalid: Les caselles {casilla_ids} no poden rebre un
+      valor conservat o substituït perquè no són caselles de fórmula d'aquesta revisió.
+    formula_recalculation_binding_unrecorded: El recàlcul de la rectificació arriba
+      a caselles de fórmula ({casilla_ids}) que depenen de {binding_ids}. La presentació
+      mai no ho va registrar; indica-ho a la rectificació amb --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
+    formula_recalculation_unresolved: 'El recàlcul de la rectificació ha deixat sense
+      resoldre caselles de fórmula obligatòries: {casilla_ids}.'
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L'operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
-    m100_art85_boolean_invalid: La casella booleana de l'article 85 del Model 100
-      ha de ser 0 o 1.
-    m100_art85_catastral_value_negative: El valor cadastral de l'article 85 del Model
-      100 no pot ser negatiu.
-    m100_art85_disposal_percentage_invalid: El percentatge d'ús mixt de l'article
-      85 del Model 100 ha de ser superior a 0 i com a màxim 100.
-    m100_art85_imputation_days_invalid: Els dies d'imputació de l'article 85 del Model
-      100 han de ser un nombre enter entre 1 i 365.
-    m100_art85_input_negative: Les entrades numèriques de l'article 85 del Model 100
-      no poden ser negatives.
-    m100_art85_mixed_use_inputs_without_flag: Els dies o el percentatge d'ús mixt
-      de l'article 85 del Model 100 requereixen que la casella d'ús mixt estigui marcada.
-    m100_art85_no_catastral_base_missing: La imputació de l'article 85 del Model 100
-      sense valor cadastral requereix caselles de base substitutiva que no hi són.
-    m100_art85_revision_flag_invalid: L'indicador de valor cadastral revisat de l'article
-      85 del Model 100 ha de ser el valor oficial X de la casella.
+    m184_days_past_the_year: '{days} dies no caben a {filing_year}.'
     m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
       ser negatives; valor rebut %{value}.
     m210_gastos_deducibles_not_allowed: Les gastos_deducibles M210 %{casilla_id} només
@@ -133,6 +127,16 @@ errors:
     m210_imputation_no_filing_year: La imputació immobiliària M210 requereix un exercici
       de declaració no nul.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
+    previous_filing_casillas_conflicting: La declaració del model {source_modelo}
+      de {source_filing_year} ({source_period}) que tens desada conté les caselles
+      {casilla_ids} dues vegades, amb el número antic i amb el número qualificat per
+      pàgina, amb valors diferents. Corregeix aquesta declaració perquè cada casella
+      tingui un sol valor i torna a calcular.
+    previous_filing_casillas_unobserved: 'La declaració del model {source_modelo}
+      de {source_filing_year} ({source_period}) que tens desada no mostra les caselles
+      {casilla_ids}, que aquest càlcul arrossega d''ella. Una casella que no mostra
+      és desconeguda, no zero: captura o registra aquesta declaració amb aquestes
+      caselles i torna a calcular.'
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     row_field_template_supplied_as_input: Les caselles {casilla_ids} prenen un valor
       per cada fila de detall de {record_ids}, de manera que no es poden subministrar
@@ -149,10 +153,56 @@ errors:
     certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
       de Situación Censal descarregat de la Seu.
   context_labels:
+    accepted: acceptat
+    actual_value: valor real
     area: àrea
+    candidate: candidat
+    casilla_id: casella
+    casilla_ids: caselles
+    casillas: caselles
+    cause: causa
+    count: recompte
+    currency: moneda
+    detail: detall
+    door: ordre
+    ejercicio: exercici
     entry_count: nombre d'entrades
+    expected: esperat
+    export_format: format d'exportació
+    field: camp
+    fields: camps
+    filing_period: període de presentació
+    filing_year: exercici de presentació
+    got: rebut
+    key: clau
+    kind: tipus
+    limit: límit
+    match_count: nombre de coincidències
+    modelo: model
+    name: nom
+    operation: operació
+    path: ruta
+    period: període
+    position: posició
+    profile: perfil
+    provider: proveïdor
     reason: motiu
+    remedy: solució
+    revision: revisió
+    row: fila
+    schema_version: versió de l'esquema
+    section: secció
+    source: origen
+    state: estat
+    status: estat
+    tax_year: exercici
+    terminal_condition: resultat
+    value: valor
+    year: any
   error:
+    canonical_tui_operation_outcome_unknown: 'L''operació %{operation_id} s''ha enviat,
+      però el seu resultat és desconegut: pot ser que el canvi s''hagi desat sencer,
+      en part o gens. Torna a llegir els registres abans de tornar-ho a provar.'
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
@@ -177,12 +227,10 @@ errors:
       torna a intentar la neteja abans de continuar.
     error_cadrumo_core: S'ha produït un error intern en l'aplicació.
     error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
-    error_cadrumo_observability: S'ha produït un error en el registre de diagnòstic
-      de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
-      per un índex de columna invàlid o una adreça A1 malformada.
+      per un índex de columna invàlid o una adreça A1 amb un format incorrecte.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
       el registre de càlcul.
     error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
@@ -204,8 +252,8 @@ errors:
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
       de terminis vàlid. Comprova l'any sol·licitat i les dades del perfil.
     error_deadlines_validation: Un registre de termini no ha superat la validació.
-    error_decimal_format: 'S''ha produït un error de format decimal: el valor és None
-      però no s''ha configurat cap substitut.'
+    error_decimal_format: 'S''ha produït un error de format decimal: falta el valor
+      i no s''ha configurat cap substitut.'
     error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
       la versió de plantilla del PDF de la declaració.
     error_domain_submission: S'ha produït un error en el domini d'enviament.
@@ -263,11 +311,8 @@ errors:
     error_ledger_own_account_register_record: Un registre de comptes bancaris propis
       no és estructuralment vàlid.
     error_llm: S'ha produït un error en el model de llenguatge.
-    error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
+    error_modelo_aggregation_binding: Les vinculacions d'agregació derivades del contenidor
       entren en conflicte amb les dades indicades.
-    error_modelo_amendment_evidence_missing: No es pot complementar una declaració
-      que no té evidència oficial importada. Importa primer el justificant de la declaració
-      original.
     error_modelo_amendment_target_state: No es pot complementar una declaració que
       no està en estat vigent; ja ha estat substituïda per una de posterior.
     error_modelo_calculation_registry_unavailable: No s'ha pogut resoldre la instantània
@@ -285,8 +330,8 @@ errors:
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
       sol·licitada.
-    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està
-      bloquejat: cal la reconciliació del wallet d''IVA'
+    error_modelo_iva_wallet_authority_unavailable: No s'ha pogut llegir el registre
+      que el Saldo d'IVA necessita per a aquest període.
     error_modelo_metadata_run: L’operació sobre les metadades del treball no ha retornat
       cap resultat confirmat. Consulta’n l’identificador abans de tornar-ho a provar.
     error_modelo_verification_outcome_incomplete: 'La verificació d''aquesta revisió
@@ -303,9 +348,7 @@ errors:
       forma.
     error_observation_key: Un component de la clau d'observació no compleix el contracte
       del repositori.
-    error_optional_extra_missing: Aquesta instal·lació no té el complement opcional
-      «{extra}», necessari per a {feature}. Instal·la'l amb pip install cadrumo[{extra}]
-      i torna a executar la comanda.
+    error_optional_extra_missing: El component opcional d'aquesta funció no està instal·lat.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el
@@ -351,8 +394,8 @@ errors:
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
-      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
-      curt o activa LongPathsEnabled (consulta `aeat config check`).
+      límit MAX_PATH de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més curt
+      o activa LongPathsEnabled (consulta `aeat config storage check`).
     error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
       local.
     error_submission_validation: Un model d'enviament no ha superat la validació.
@@ -373,6 +416,14 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    ledger_category_needs_business_classification: 'Una categoria de despesa necessita
+      una classificació empresarial: classifica primer aquest moviment.'
+    ledger_gross_above_cash_needs_withholding_category: La base i l'IVA declarats
+      sumen més que el diner que s'ha mogut; aquesta diferència és una retenció d'IRPF
+      i no s'ha declarat cap categoria d'IRPF.
+    ledger_gross_does_not_reconstitute: La base, la quota d'IVA i el recàrrec d'equivalència,
+      si n'hi ha, sumen {reconstituted}, però l'import és {expected}. Corregeix la
+      base i la quota, o l'import, perquè coincideixin i torna a desar.
     m145_communication_record_not_found: Cap registre local de comunicació del Model
       145 coincideix amb l'id sol·licitat.
     m145_communication_service: Ha fallat una operació del servei local de comunicació
@@ -402,10 +453,12 @@ errors:
   fail:
     canonical_auth_diagnostic_persistence: No s'han pogut desar els diagnòstics d'autenticació.
     canonical_catalogue_invoice_persistence: No s'ha pogut desar el catàleg de factures.
-    canonical_catalogue_invoice_rate: Ha fallat la consulta del tipus de canvi del
-      catàleg de factures.
+    canonical_catalogue_invoice_rate: La consulta del tipus de canvi del catàleg de
+      factures no s'ha completat.
     canonical_counterparty_establishment_persistence: No s'ha pogut desar el registre
       d'establiment de la contrapart.
+    canonical_credit_resolution_persistence: No s'han pogut llegir ni desar les discrepàncies
+      entre fonts que vas acceptar.
     canonical_diagnostic_run_record: No s'han pogut llegir els registres de l'execució
       diagnòstica.
     canonical_evidence_bundle_persistence: No s'ha pogut desar el paquet d'evidències.
@@ -423,28 +476,43 @@ errors:
       Model 036.
     canonical_m145_communication_record_persistence: No s'ha pogut desar el registre
       de comunicació del Model 145.
+    canonical_modelo_232_related_party_persistence: No s'han pogut llegir ni desar
+      les teves declaracions d'operacions vinculades del model 232.
     canonical_modelo_edit_receipt_persistence: No s'ha pogut desar el rebut d'edició
       del Model.
     canonical_operator_scope_session: No s'ha pogut llegir la sessió de custòdia activa
       de l'operador.
-    canonical_operator_scope_storage: Ha fallat l'operació d'emmagatzematge de l'autenticació
-      de l'operador.
+    canonical_operator_scope_storage: L'operació d'emmagatzematge de l'autenticació
+      de l'operador no s'ha completat.
     canonical_percepcion_observation_persistence: No s'han pogut desar les observacions
       de percepcions.
     canonical_persistence_degradation: La capacitat de persistència no ha pogut proporcionar
       l'operació sol·licitada.
+    canonical_prevision_social_contribution_persistence: No s'han pogut llegir ni
+      desar els teus registres d'aportacions a sistemes de previsió social.
     canonical_retencion_observation_persistence: No s'han pogut desar les observacions
       de retencions.
+    canonical_retencion_soportada_persistence: No s'han pogut llegir ni desar els
+      registres de retencions dels teus pagadors.
     canonical_state_projection_read: No s'ha pogut llegir la projecció de l'estat
       de l'aplicació.
     canonical_taxation_comparison_persistence: No s'han pogut carregar les unitats
       de treball per comparar la tributació.
     canonical_tui_account_session_expired: La sessió del compte del TUI ha caducat;
       torna a iniciar sessió per continuar.
+    canonical_tui_session_expired_outcome_unknown: 'La teva sessió ha caducat abans
+      de veure acabar l''operació %{operation_id}, així que el seu resultat és desconegut:
+      pot ser que el canvi s''hagi desat sencer, en part o gens. Torna a iniciar sessió
+      i llegeix els registres abans de tornar-ho a provar.'
+    canonical_tui_session_unavailable_outcome_unknown: 'L''entorn d''execució ha deixat
+      de respondre abans de veure acabar l''operació %{operation_id}, així que el
+      seu resultat és desconegut: pot ser que el canvi s''hagi desat sencer, en part
+      o gens. Quan torni a estar disponible, llegeix els registres abans de tornar-ho
+      a provar.'
     canonical_workflow_gate_persistence: No s'ha pogut desar el control d'accés del
       flux de treball.
     censo_sync: La sincronització del cens del Model 036 ha fallat.
-    currency_error: Ha fallat la normalització de la moneda.
+    currency_error: La normalització de la moneda no s'ha completat.
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
       per a la conciliació.
     exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.
@@ -461,9 +529,6 @@ errors:
       ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
       incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
-    fail_dependency_preflight_stage: No ha acabat la comprovació de xarxa del servidor
-      de baixada d'un component.
-    fail_dependency_transfer: Ha fallat la baixada d'un component.
     fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
     fail_financial_attachments_attachment_persistence: El magatzem de justificants
       no ha pogut llegir o escriure les dades.
@@ -482,8 +547,8 @@ errors:
     fail_justificante_parse: No s'ha pogut interpretar el PDF com un justificant.
     fail_llm_cache: No s'ha pogut llegir, escriure o interpretar una entrada de la
       memòria cau del model de llenguatge.
-    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF per a l'entrada de
-      visió local.
+    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF en imatges de pàgina
+      per llegir-lo.
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.
@@ -499,13 +564,13 @@ errors:
       de treball.
     fail_notificacion_parse: No s'ha pogut interpretar el document de la notificació
       de l'AEAT.
-    fail_observability_run_trace_persistence: El magatzem de traces d'execució no
-      ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
     fail_outbound_storage_network: No s'ha pogut contactar amb el servei d'emmagatzematge.
       Comprova la connexió a internet i torna-ho a provar.
     fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
       temporalment. Espera uns minuts i torna-ho a provar.
+    fail_pattern_search_unavailable: La cerca de patrons no s'ha pogut iniciar o entendre,
+      així que no s'ha cercat res.
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
       entre ells.
@@ -541,8 +606,8 @@ errors:
       fixa.
     ledger_check: Una comprovació de consistència del llibre ha detectat un problema
       que impedeix continuar.
-    ledger_link: No s'ha pogut vincular una transacció del llibre a un binding de
-      model.
+    ledger_link: No s'ha pogut vincular una transacció del llibre a una vinculació
+      de model.
     missing_exchange_rate: Falta el tipus de canvi per a la data i la moneda indicades.
     modelo_036_lifecycle: S'ha produït un error en el cicle de vida del Model 036
       (alta, modificació o baixa).
@@ -601,6 +666,90 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Registra una rectificació sense
+      el seu motiu, o un motiu sense la seva rectificació. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_disagree: Les seves files de registre tancades
+      no concorden amb els seus valors de vinculació desats. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_foreign: Les seves files de registre tancades
+      pertanyen a una altra unitat de treball o a una altra instantània del registre.
+      L'aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_handoff_outputs_disagree: 'Els valors del seu traspàs al
+      resum anual difereixen de les caselles del model 390 que conté: %{casilla_ids}.
+      L''aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_outputs_missing: 'El seu traspàs al resum anual anomena
+      caselles del model 390 que el càlcul no conté: %{casilla_ids}. L''aplicació
+      va escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_target_mismatch: El seu traspàs al resum anual del
+      model 303 apunta a un càlcul diferent del que el conté. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_identity_mismatch: El seu identificador desat %{calculation_revision_id}
+      no és el derivat de les seves entrades (%{derived_id}). L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_lifecycle_order: Es va actualitzar per última vegada (%{updated_at})
+      abans de crear-se (%{created_at}). L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_observations_missing: Conté valors de caselles però cap de
+      les observacions de què procedeixen. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_observations_projection_mismatch: Els seus valors de caselles
+      difereixen del que donen les seves observacions. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
+    calculation_revision_operator_layer_cleared_overlap: 'Fixa i alhora esborra les
+      mateixes caselles: %{casilla_ids}. L''aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.'
+    calculation_revision_rectificativa_context_missing: És una rectificativa però
+      no es va comprovar contra la presentació que corregeix. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_identity_without_value: Una identitat d'origen de fila
+      desada no té cap valor de fila al darrere. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_index_mismatch: La posició d'una casella de fila difereix
+      de la de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va
+      escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_identity_absent: La fila %{row_index} de %{binding_id}
+      no té identitat d'origen desada. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_source_identity_mismatch: La identitat d'origen desada
+      per a la fila %{row_index} de %{binding_id} difereix de la que registra la seva
+      casella. L'aplicació va escriure aquest registre ella mateixa, així que es va
+      alterar o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_shared: La fila %{row_index} de %{binding_id}
+      alimenta més d'una casella de fila. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_source_value_not_decimal: El valor desat de la fila %{row_index}
+      de %{binding_id} no és un nombre. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_value_mismatch: El valor d'una casella de fila difereix
+      de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_values_provenance_mismatch: Els valors de les seves caselles
+      de fila i la seva procedència cobreixen files diferents. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_secure_row_fields_missing: La seva còpia desada no té els
+      camps de files que tota còpia així ha de portar. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
     canonical_actividad_asset_history_persistence: No s'ha pogut tornar a obrir amb
       seguretat l'historial xifrat d'actius.
     canonical_aeat_sync_workspace_projection: Les autoritats de l'AEAT ja carregades
@@ -634,11 +783,357 @@ errors:
     canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
       repetida emmagatzemat no indica la seva vinculació d'origen.
     canonical_relation_binding_join: No s'ha pogut llegir d'acord amb el que s'ha
-      declarat la correspondència inclosa entre relacions i bindings.
+      declarat la correspondència inclosa entre relacions i vinculacions.
     canonical_tampered_manifest_payload: El resum del manifest del corpus no coincideix
       amb el seu contingut; pot estar malmès o manipulat.
     canonical_unsupported_manifest_version: El manifest del corpus fa servir una versió
       no compatible.
+    filing_approval_basis_version_stale: L'aprovació de la declaració usa la versió
+      de base %{version}, però la versió de base vigent és %{current_version}. Torna
+      a aprovar la declaració.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaració indica
+      un origen de fila diferent de la font del seu camp. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaració indica
+      d'on vénen les seves files, però no quina fila és. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_draft_binding_claimed_twice: La declaració dona més d'un valor a la mateixa
+      fila de camp (%{bindings}). Deixa un sol valor per fila de camp.
+    filing_draft_casilla_claimed_twice: La declaració dona més d'un valor a la mateixa
+      casella (%{casillas}). Deixa un sol valor per casella.
+    filing_draft_modelo_differs: La declaració és del Modelo %{modelo}, però la seva
+      instantània del registre és del Modelo %{snapshot_modelo}. Construeix la declaració
+      de nou.
+    filing_draft_period_token_differs: La declaració és del període %{period}, però
+      la seva instantània del registre és del període %{snapshot_period}. Construeix
+      la declaració de nou.
+    filing_draft_period_year_differs: La declaració és de l'exercici %{filing_year},
+      però la seva instantània del registre és del %{snapshot_year}. Construeix la
+      declaració de nou.
+    filing_draft_schema_marker_differs: La declaració registra la versió de definició
+      %{schema_version}, però la seva instantània del registre indica %{expected_schema_version}.
+      Construeix la declaració de nou.
+    filing_draft_taxpayer_diverges: La declaració anomena dos contribuents diferents,
+      un per al perfil i un altre per al subjecte de la presentació. Una declaració
+      pertany a un sol contribuent; construeix-la de nou des del perfil correcte.
+    filing_export_boolean_in_text_slot: El camp d'exportació %{field} no pot escriure
+      un fet de productor booleà en un espai de text de %{length} bytes. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_draft_schema_mismatch: S'ha lliurat a l'exportació un esborrany
+      construït amb definicions del model diferents de les que fa servir per escriure'l.
+      L'aplicació construeix i aprova aquest esborrany per si mateixa, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_draft_unapproved: S'ha lliurat a l'exportació un esborrany que no
+      està aprovat. L'aplicació construeix i aprova aquest esborrany per si mateixa,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_closer_extent: El tancament del sobre de la presentació
+      no es genera amb l'extensió declarada de %{extent} bytes. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_envelope_declarant_tax_id_absent: S'ha demanat al sobre de presentació
+      escriure el NIF del declarant sense el subjecte de la presentació. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_election_unresolved: El sobre de la presentació s'anava
+      a escriure sense una elecció de domiciliació prèvia resolta. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_envelope_language_casilla_absent: S'ha demanat al sobre de presentació
+      escriure l'idioma de la declaració sense el valor de la seva casella declarada.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_envelope_layout_absent: Falta la declaració del disseny del sobre
+      de la presentació. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_period_not_representable: El període %{period} no té representació
+      de %{extent} caràcters al sobre. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_period_outside_range: El període del sobre del declarant
+      és fora de l'interval que enumera el disseny. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_extent: El prefix del sobre no es genera amb la
+      seva extensió declarada de %{extent} bytes. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_role_authority: El paper %{role} del prefix del
+      sobre de la presentació no té cap autoritat de valor declarada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_prefix_role_not_ascii: El paper %{role} del prefix del
+      sobre de la presentació no és ASCII. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_role_width: El paper %{role} del prefix del sobre
+      de la presentació ocupa %{actual} bytes i se n'esperen %{expected}. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_quarter_token_undeclared: El disseny del sobre no declara
+      el trimestre simple que necessita un trimestre de l'esquema. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_envelope_records_unemitted: 'Les famílies de registres obligatòries
+      del sobre de la presentació no tenen cap aparició emesa: %{records}. L''aplicació
+      ho deriva del seu propi disseny d''exportació, així que cap canvi a les teves
+      dades ho corregeix.'
+    filing_export_field_binding_undeclared: El camp d'exportació %{field} no declara
+      enllaç. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_field_casilla_undeclared: El camp d'exportació %{field} no declara
+      casella. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_computed_key_undeclared: El camp d'exportació %{field} no
+      declara clau calculada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_contradicts_period: El camp d'exportació %{field} contradiu
+      el període que es presenta. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_draft_attribute_undeclared: El camp d'exportació %{field}
+      no declara atribut de l'esborrany. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_kind_unsupported: El tipus de camp d'exportació %{kind} no
+      està admès. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_length_undeclared: El camp d'exportació %{field} no declara
+      longitud. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_offset_undeclared: El camp d'exportació %{field} no declara
+      posició. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_overlap: El camp d'exportació %{field} se solapa amb un altre
+      camp. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_field_producer_key_undeclared: El camp d'exportació %{field} no
+      declara clau de productor. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_projection_context_absent: El camp d'exportació %{field} necessita
+      un context de generació de la instantània per adreçar la seva projecció. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_field_projection_ref_undeclared: El camp d'exportació %{field} no
+      declara referència de projecció. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_input_dictionary_field_undeclared: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field}: cap dels seus diccionaris no el declara.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_input_dictionary_not_repeated: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: cap element
+      que l''XSD oficial repeteix no el conté. L''aplicació ho deriva del seu propi
+      disseny d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_outside_xsd: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: l''XSD
+      oficial no declara aquest element. L''aplicació ho deriva del seu propi disseny
+      d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_path_conflict: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: el diccionari
+      de la declaració ja defineix aquest registre o aquesta ruta com a %{declared_field}.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_layout_not_owned_by_snapshot: El disseny d'exportació no pertany
+      a la instantània del registre seleccionada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_layout_projection_address_duplicate: El disseny d'exportació admet
+      l'adreça de projecció duplicada %{address}. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_layout_unclassified: El disseny d'exportació del model %{modelo}
+      no es pot generar i l'aplicació no té cap motiu que ho expliqui. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m190_component_declaration: La declaració del component signat del
+      model 190 està incompleta o ha canviat. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_component_wire: Un component signat del model 190 té bytes
+      de registre no vàlids. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_context_differs: El context de condicions signat del model
+      190 difereix de la font revisada. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_source_digest: Els components signats del model 190 no tenen
+      el resum exacte de la seva font revisada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m193_declaration_changed: La declaració de pendent i meritació del
+      perceptor del model 193 està incompleta o ha canviat. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_m280_declaration_changed: Els components d'imputació negativa del
+      model 280 difereixen de la font revisada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m280_sign_differs: El signe de la imputació negativa del model 280
+      difereix de la font revisada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m280_zero_sign_differs: El signe zero explícit del model 280 difereix
+      de la seva projecció revisada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m303_evidence_design_unowned: El disseny del registre d'evidència
+      de la presentació del model 303 no pertany a la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_evidence_orden_mismatch: L'Ordre anual de l'evidència de la
+      presentació del model 303 no coincideix amb la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_projection_layout_unowned: El disseny de la projecció de la
+      presentació del model 303 no pertany a la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_projection_snapshot_period: La instantània de la projecció
+      de la presentació del model 303 no coincideix amb el període presentat. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_modelo100_comunidad_prefix_missing: Falta el prefix del bloc de
+      comunitat triat pel registre. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_comunidad_total_missing: Falta la casella de total de
+      comunitat triada pel registre. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_not_mapping: Les declaracions XML del model
+      100 seleccionades no són un fet de tipus mapa. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_unpinned: Les declaracions d'exportació XML
+      del model 100 necessiten una operació fixada a una generació de l'autoritat.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_unresolved: No es van resoldre les declaracions
+      XML del model 100. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_sign_declarations_incomplete: Les declaracions de signe
+      XML triades pel registre estan incompletes. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_payload_consumer_unavailable: El consumidor del contingut de l'exportació
+      no està disponible. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_payload_destination_count: A l'exportació se li va donar un nombre
+      de destinacions del contingut diferent d'un. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_period_start_unresolved: 'No es pot determinar l''inici del període
+      impositiu de %{modelo} %{period}: indica al teu perfil la data de constitució
+      i el dia i mes de tancament de l''exercici.'
+    filing_export_producer_fact_not_boolean: El camp d'exportació %{field} necessita
+      un fet de productor booleà tipat i n'ha rebut un d'altre tipus. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_producer_snapshot_modelo_mismatch: La instantània de productors
+      de la presentació pertany a un altre model diferent de l'esborrany que s'exporta.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_producer_unowned: La clau de productor %{key} no té cap propietari
+      declarat. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_projection_address_duplicate: 'Les adreces de projecció d''exportació
+      estan duplicades: %{addresses}. L''aplicació ho deriva del seu propi disseny
+      d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_projection_address_unpreflighted: L'adreça de projecció d'exportació
+      %{address} no té cap valor comprovat prèviament. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_duplicate_values: El registre de projecció %{record}
+      ha emès valors de projecció tipats duplicats. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_family_unsupported: El registre de projecció %{record}
+      barreja famílies de referència de projecció o en fa servir una de no admesa.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_projection_occurrence_absent: El registre de projecció obligatori
+      %{record} no té cap aparició aplicable emesa. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_occurrence_ambiguous: Les famílies del registre de projecció
+      %{record} no es resolen en una única aparició determinista. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_projection_plan_not_bijection: 'El pla de projecció de la presentació
+      no es correspon un a un amb el disseny: falten %{missing}, sobren %{extraneous}.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_projection_references_unemitted: El registre de projecció %{record}
+      no ha emès totes les referències de projecció tipades redactades. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_projection_repeat_mismatch: El registre de projecció %{record} fa
+      servir la repetició %{repeat} per a una família que no es repeteix. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_projector_field_untyped: Un projector ha retornat un camp sense
+      una referència de projecció tipada real. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_regimen_rows_not_repeated: El registre de projecció del règim simplificat
+      ha de repetir les seves files de projecció. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_result_casilla_ids_malformed: Un resultat de verificació de l'exportació
+      enumera un identificador de casella en blanc o amb espais. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_result_digest_malformed: Un resultat d'exportació porta un resum
+      de fitxer que no és un valor SHA-256 hexadecimal en minúscules. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA ha rebut una selecció
+      de compte per a la qual no té regla. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_shared_resolver_not_exhaustive: El resolutor compartit de productors
+      de la presentació no cobreix totes les claus que li pertanyen. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_verification_modelo100_declarations_unresolved: No es van resoldre
+      les declaracions de verificació XML del model 100. L'aplicació ho deriva del
+      seu propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_verification_signed_entry_unresolved: El camp XML %{field_id} no
+      té cap entrada signada amb què verificar-lo. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_verification_value_unrenderable: No s'ha pogut generar el valor
+      de verificació esperat del camp d'exportació %{field_id}. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_xml_attribute_not_terminal: Un atribut del diccionari XML no acaba
+      la seva ruta. L'aplicació ho deriva del seu propi disseny d'exportació, així
+      que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_aux_idioma_omitted: El disseny d'exportació XML omet l'element
+      obligatori Aux/Idioma. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_boolean_in_non_boolean_row: Una fila de tipus %{data_type} ha
+      rebut un valor booleà, i només les files que l'AEAT declara booleanes el poden
+      tenir. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_xml_converter_non_string: El convertidor XML triat pel registre
+      (%{converter}) ha retornat un valor que no és text. L'aplicació ho deriva del
+      seu propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_converter_unavailable: El convertidor XML triat pel registre
+      (%{converter}) no està disponible. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_entry_path_empty: Una entrada del diccionari XML té una ruta
+      buida. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_xml_row_column_occurrence: La columna de fila %{binding} necessita
+      una fila repetida del diccionari per a %{column} i n'ha trobat %{found}. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_xml_row_column_undeclared: L'enllaç %{binding} porta files però
+      no declara cap columna de fila. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_row_total_box_unresolved: L'enllaç %{binding} totalitza columnes
+      de fila però no omple una sola casella. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_serialiser_not_bytes: El serialitzador XML ha retornat %{type}
+      i no bytes. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_xml_version_token_unresolved: L'exportació XML no va resoldre el
+      seu element obligatori Aux/VERSION. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_root_absent: L'origen XSD del diccionari XML %{source} no declara
+      l'element arrel %{root}. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_source_unresolved: El disseny d'exportació de diccionari XML
+      %{layout} no té cap origen XSD resolt. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_unparseable: No s'ha pogut analitzar l'origen XSD del diccionari
+      XML %{source}. L'aplicació ho deriva del seu propi disseny d'exportació, així
+      que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_version_absent: L'origen XSD del diccionari XML %{source} no
+      declara cap valor de `versionxsd`. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_value_kind_contradicts_trace: 'La declaració té a la casella %{casilla_id}
+      un rastre de càlcul que contradiu el seu tipus (%{kind}): només una casella
+      calculada en porta. La declaració desada està malmesa; construeix-la de nou.'
+    filing_value_kind_contradicts_value: 'La declaració té a la casella %{casilla_id}
+      un valor que contradiu el seu tipus (%{kind}): només una casella buida no té
+      valor. La declaració desada està malmesa; construeix-la de nou.'
     integrity_active_profile_pointer: El punter de perfil actiu no és vàlid; repara
       el perfil seleccionat abans de continuar.
     integrity_apoderado_configuration_identity: La configuració d'apoderat emmagatzemada
@@ -650,6 +1145,10 @@ errors:
       mal configurat.
     integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament
       en una unitat extreta.
+    integrity_filing_export: Una comprovació de l'exportació ha trobat un error en
+      el propi disseny d'exportació de l'aplicació.
+    integrity_filing_export_design: Ha fallat una comprovació del disseny d'exportació
+      dins de l'aplicació.
     integrity_filing_validation: La validació de la declaració ha detectat un problema
       que impedeix continuar.
     integrity_financial_attachments_attachment_validation: El justificant adjunt no
@@ -658,8 +1157,25 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
-    integrity_observability_run_trace_validation: La traça d'execució desada no ha
-      superat la validació estricta.
+    integrity_modelo_export_design: No s'ha pogut escriure l'exportació perquè el
+      propi disseny d'exportació de l'aplicació es contradiu.
+    integrity_modelo_export_field_unrenderable: 'No s''ha escrit res: el camp %{field_id}
+      (casella %{casilla_id}) no es pot escriure a partir del seu valor, perquè el
+      disseny de registre oficial que porta l''aplicació i aquest valor no concorden.
+      El defecte és al disseny d''exportació, no a les teves dades, així que canviar
+      les teves dades no ho arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No s''ha escrit res: el
+      camp %{field_id} no es pot escriure a partir del seu valor, perquè el disseny
+      de registre oficial que porta l''aplicació i aquest valor no concorden. El defecte
+      és al disseny d''exportació, no a les teves dades, així que canviar les teves
+      dades no ho arregla.'
+    integrity_modelos_calculation_revision: El càlcul desat es contradiu a si mateix,
+      així que no se'n pot aplicar res. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
+      càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
+      registre s'ha alterat o malmès i no se'n pot aplicar res.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
@@ -689,9 +1205,9 @@ errors:
       ni verificar.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
       o validar.
-    integrity_storage_corpus_manifest_tamper: El resum autoverificable del manifest
-      del corpus no coincideix amb el seu contingut. El manifest pot estar malmès
-      o manipulat.
+    integrity_storage_corpus_manifest_tamper: El resum que el manifest del corpus
+      declara sobre si mateix no coincideix amb el seu contingut. El manifest pot
+      estar malmès o manipulat.
     integrity_storage_decryption: El desxifratge d'un objecte emmagatzemat ha fallat.
       Les dades poden estar malmeses o la clau no és correcta.
     integrity_storage_encryption: S'ha produït un error de xifratge o desxifratge
@@ -702,8 +1218,8 @@ errors:
       segur.
     integrity_storage_namespace_registry: Una clau o definició del registre d'espais
       de noms ha violat un invariant d'inicialització.
-    integrity_storage_nonce_collision: S'ha detectat una col·lisió de nonce en l'emmagatzematge
-      segur.
+    integrity_storage_nonce_collision: S'ha detectat una col·lisió de valors d'un
+      sol ús en l'emmagatzematge segur.
     integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
       configurat.
     integrity_storage_profile_custody_record: El registre de custòdia del perfil no
@@ -724,6 +1240,22 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    ledger_filing_evidence_diverges_from_snapshot: 'L''evidència del llibre de la
+      revisió de càlcul %{calculation_revision_id} no cobreix les mateixes transaccions
+      que la seva empremta: en manquen %{missing_count} i en sobren %{extra_count}.
+      La revisió desada està danyada; calcula de nou.'
+    operator_layer_attestation_kinds_conflict: El registre desat declara l'enllaç
+      %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
+      aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
+      el pot fer servir.
+    operator_layer_income_family_entry_digest_malformed: El registre desat de les
+      xifres introduïdes a mà per a la família de rendes %{family} no conté un resum
+      vàlid de les seves files del llibre. L'aplicació va escriure aquest registre,
+      així que es va alterar o malmetre i el càlcul no el pot fer servir.
+    operator_layer_value_attestation_not_canonical: La declaració de valor desada
+      per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
+      va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el
+      càlcul no el pot fer servir.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
     windows_credential_record: La credencial de Windows no compleix el format requerit
@@ -742,6 +1274,10 @@ errors:
       coincideix amb el seu contracte.
     canonical_operation_financial_operand_custody: S'ha infringit l'ordre fix de transició
       de custòdia de l'operand financer.
+    canonical_profile_kdf_background_yielded: La derivació de claus en segon pla ha
+      cedit el pas a un inici de sessió.
+    canonical_profile_kdf_strengthening_point_refused: Un ajust de derivació de claus
+      mesurat no pot reforçar la protecció per contrasenya d'aquest perfil.
     canonical_schema_resolution: La projecció de l'esquema d'ordres està incompleta.
     canonical_structured_invoice_read: El lector seleccionat no ha pogut llegir la
       factura estructurada.
@@ -757,6 +1293,8 @@ errors:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulta els registres de diagnòstic
       per veure què ha fallat.
+    internal_domiciliation_calendar_gap: 'Error intern: un any del calendari no ha
+      pogut classificar els seus dies.'
     internal_flow_copy_resolution: 'Error intern: el flux guiat no ha pogut resoldre
       els seus textos de presentació.'
     internal_flow_validator_registry: 'Error intern: el registre de validadors del
@@ -771,8 +1309,6 @@ errors:
       té regla de presentació.
     internal_modelo_work_form_layout: La distribució de l'imprès d'aquest model no
       coincideix amb la seva revisió.
-    internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
-      un esdeveniment de diagnòstic fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'
@@ -812,8 +1348,6 @@ errors:
       en aquest moment. Espera que acabi i torna-ho a provar.
     locked_cli_operation_still_running: L'operació {operation_id} encara s'està executant.
       Encara no se'n coneix el resultat. Comprova'l abans de tornar-ho a provar.
-    locked_dependency_item: Una altra instal·lació està canviant aquest component
-      ara mateix. Torna-ho a provar quan acabi.
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
@@ -856,8 +1390,6 @@ errors:
       tant l'exercici com el règim d'alienació.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
-    canonical_invoice_draft_reader_busy_refused: El lector automàtic de factures no
-      s'ha executat perquè una altra lectura ja feia servir aquest equip.
     canonical_invoice_draft_reader_headroom_refused: El lector automàtic de factures
       no s'ha executat perquè aquest equip no té prou memòria lliure.
     canonical_invoice_evidence_review_changed: El justificant o l'esborrany de la
@@ -869,6 +1401,10 @@ errors:
       la retenció.
     canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet
       registrar la retenció.
+    canonical_ledger_registry_value_unaccepted: L'apunt %{transaction_id} registra
+      %{field} com a %{value}, un valor que l'autoritat fixada del registre tributari
+      no admet per a %{effective_date}. Corregeix aquest valor a l'apunt i torna a
+      executar l'operació.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix
@@ -896,7 +1432,7 @@ errors:
       trobat una selecció de treball no resolta.
     canonical_operation_financial_operand: No s’han pogut acceptar les dades financeres.
     canonical_operation_observation_cursor_ahead: El cursor d'observació sol·licitat
-      supera l'àncora autoritativa.
+      supera l'àncora de referència.
     canonical_operation_observation_unknown_operation: No existeix cap diari d'observacions
       per a l'operació sol·licitada.
     canonical_operation_subject_busy: Una altra operació sobre aquesta declaració
@@ -911,6 +1447,11 @@ errors:
       vàlida.
     canonical_tui_destination_unavailable: La destinació TUI sol·licitada no està
       disponible actualment.
+    canonical_tui_iva_wallet_not_sent: La sol·licitud del saldo d'IVA no ha superat
+      les comprovacions de l'aplicació, així que no s'ha enviat res i no ha canviat
+      res.
+    canonical_tui_iva_wallet_refused: L'aplicació ha rebutjat la lectura o el registre
+      del saldo d'IVA; un registre rebutjat no ha canviat res.
     canonical_tui_modelo_workspace_declaration_admission: La declaració de l'espai
       de treball del Model no es pot admetre en la generació actual de l'espai de
       treball.
@@ -937,13 +1478,25 @@ errors:
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
+    credit_resolution_refused: No s'ha desat la resolució.
+    credit_resolution_revision_conflict: La resolució ha canviat des que la vas llegir;
+      torna a llegir-la abans de desar.
     financial_edit_journal_purge: No s’ha pogut depurar de manera segura aquest diari
       antic d’edició financera. L’operació no està disponible. No s’ha carregat cap
       valor d’edició.
+    ledger_batch_plan_changed: Els moviments han canviat des que vas revisar aquesta
+      edició; revisa-la de nou abans de desar.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    ledger_purchase_evidence_release: 'No pots treure el document d''aquest moviment:
+      {cause}.'
     ledger_source_jurisdiction_required: Indica la jurisdicció fiscal del contribuent
       abans d'afegir aquest moviment al llibre.
+    ledger_summary_period_without_span: Aquest període no abasta dates del calendari,
+      així que el registre no pot totalitzar els seus moviments. Els períodes de pagament
+      fraccionat com 1P són terminis de pagament. Fes servir un trimestre, un mes
+      o 0A.
+    ledger_unlink: 'No pots treure el vincle de la factura: {cause}.'
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
       no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
@@ -963,6 +1516,9 @@ errors:
     modelo_210_agrupacion_renta_rows: Les rendes agrupades anuals del Model 210 han
       de formar una agrupació única i vàlida (un codi, un tipus, un bé identificat
       i un pagador, excepte l'excepció de múltiples pagadors).
+    modelo_232_related_party_refused: No s'ha desat la declaració del model 232.
+    modelo_232_related_party_revision_conflict: La declaració del model 232 ha canviat
+      des que la vas llegir; torna a llegir-la abans de desar.
     modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de país {country_code}
       per a la clau d''operació {clave_operacion} en {filing_year}/{period}: {reason}.
       Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
@@ -993,6 +1549,14 @@ errors:
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_edit_baseline_stale: La declaració ha canviat des que es va obrir, de manera
       que no s'ha aplicat l'edició. Torna-la a obrir i edita-la de nou.
+    modelo_edit_carry_withdrawal_filed: Aquesta declaració consta com a presentada,
+      de manera que no es pot retirar la declaració sobre els imports pendents d'exercicis
+      anteriors. No s'ha canviat res. Corregeix-la amb una declaració complementària
+      o rectificativa.
+    modelo_edit_carry_withdrawal_keeps_entries: Retirar la declaració sobre els imports
+      pendents d'exercicis anteriors deixaria la declaració sense càlcul i descartaria
+      els altres valors que hi has introduït. No s'ha canviat res. Indica els imports
+      pendents en lloc de retirar la declaració.
     modelo_edit_contract_incompatible: L'edició es va preparar en un format que aquesta
       versió no accepta, de manera que no s'ha canviat res. Torna a obrir la declaració
       i edita-la de nou.
@@ -1004,8 +1568,16 @@ errors:
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
-    modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
+    modelo_project_invalid_decimal_override: Una sobreescriptura de projecció no és
       un import decimal vàlid.
+    modelo_project_quarter_incomplete: No es fa la projecció mentre una declaració
+      trimestral calculada no tingui una casella que la projecció llegeix.
+    modelo_project_region_unstated: La projecció necessita la comunitat autònoma on
+      tributa el contribuent i el perfil no n'indica cap.
+    modelo_project_result_unresolved: No es fa la projecció quan la declaració anual
+      no ha pogut obtenir una xifra que la projecció comunica.
+    modelo_project_revision_not_mapped: No es fa una projecció per a un any la declaració
+      anual del qual no nomena la declaració de projecció del registre.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
     modelo_work_capture_not_current: La selecció de treball ja no es actual. Torna
       a llegir l'objectiu de treball i prova-ho de nou.
@@ -1026,8 +1598,108 @@ errors:
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
       mentre es llegia; torna a capturar-lo.
+    pension_reduccion_contingencia_year_not_four_digits: L'any de la contingència
+      s'ha d'escriure amb quatre xifres; has indicat %{value}.
+    pension_reduccion_early_contributions_exceed_total: Les aportacions al pla de
+      pensions fetes fins al 31 de desembre de 2006 (%{value}) superen les aportacions
+      totals (%{aportaciones_totales}), tot i que són una part del total. Corregeix
+      un dels dos imports.
+    pension_reduccion_early_contributions_negative: Les aportacions al pla de pensions
+      fetes fins al 31 de desembre de 2006 no poden ser negatives; has indicat %{value}.
+      Indica l'import com a zero o més.
+    pension_reduccion_rescate_negative: L'import rescatat del pla de pensions no pot
+      ser negatiu; has indicat %{value}. Indica l'import com a zero o més.
+    pension_reduccion_rescate_year_not_four_digits: L'any del rescat s'ha d'escriure
+      amb quatre xifres; has indicat %{value}.
+    pension_reduccion_total_contributions_not_positive: Les aportacions totals al
+      pla de pensions han de ser superiors a zero; has indicat %{value}. Indica el
+      total de totes les aportacions.
+    prevision_social_contribution_revision_conflict: El registre d'aportacions ha
+      canviat des que el vas llegir; torna a llegir-lo abans de desar.
+    prevision_social_contribution_write_refused: No s'ha desat el registre d'aportacions
+      a sistemes de previsió social.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
       llegia; torna a capturar-la.
+    profile_access_administration_denied: El teu accés actual no permet gestionar
+      els ajustos d'accés, per això s'ha rebutjat la sol·licitud.
+    profile_access_authentication_required: No has iniciat la sessió. Inicia la sessió
+      i torna-ho a provar.
+    profile_access_authority_unavailable: Les normes publicades que necessita aquesta
+      operació no són disponibles ara mateix. Torna-ho a provar més tard.
+    profile_access_automation_suspended: L'accés automàtic a aquest perfil està suspès.
+      Aprova'l de nou en persona abans de tornar-ho a provar.
+    profile_access_backend_unavailable: El servei que atén aquesta sol·licitud no
+      és disponible ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_client_mismatch: Aquesta sol·licitud ha arribat des d'un client
+      diferent de l'admès, per això s'ha rebutjat.
+    profile_access_clock_invalid: El rellotge de l'ordinador no és prou fiable per
+      comprovar aquest accés, per això s'ha rebutjat. Corregeix l'hora del sistema
+      i torna-ho a provar.
+    profile_access_connection_mismatch: Aquesta sol·licitud ha arribat per una connexió
+      diferent de l'admesa, per això s'ha rebutjat.
+    profile_access_custody_changed: La custòdia protegida del perfil ha canviat des
+      que vas iniciar la sessió. Torna a iniciar la sessió.
+    profile_access_custody_recovering: Es va perdre el procés de treball del perfil,
+      per això la teva sessió està suspesa mentre es recupera. Torna a iniciar la
+      sessió per reprendre-la.
+    profile_access_custody_unavailable: La custòdia protegida del perfil no és disponible
+      ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_disclosure_denied: El teu accés actual no permet mostrar aquestes
+      dades, per això s'ha rebutjat la sol·licitud.
+    profile_access_fresh_password_required: Aquesta operació necessita la teva contrasenya
+      de nou. Torna a iniciar la sessió amb la contrasenya.
+    profile_access_frontend_denied: Aquesta operació no està permesa des d'aquesta
+      interfície, per això s'ha rebutjat.
+    profile_access_grant_expired: L'autorització d'accés d'aquesta sol·licitud ha
+      caducat. Concedeix l'accés de nou en persona i torna-ho a provar.
+    profile_access_grant_inactive: L'autorització d'accés d'aquesta sol·licitud no
+      és activa. Concedeix l'accés de nou en persona i torna-ho a provar.
+    profile_access_human_authority_required: Aquesta operació l'ha de fer una persona,
+      no una automatització. Fes-la tu i torna-ho a provar.
+    profile_access_key_expired: La clau d'accés d'aquesta sol·licitud ha caducat.
+      Emet una clau nova en persona i torna-ho a provar.
+    profile_access_key_inactive: La clau d'accés d'aquesta sol·licitud no és activa.
+      Emet una clau nova en persona i torna-ho a provar.
+    profile_access_operation_denied: Aquesta operació no està permesa amb el teu accés
+      actual, per això s'ha rebutjat.
+    profile_access_operation_unavailable: Aquesta operació no és disponible ara mateix.
+      Torna-ho a provar més tard.
+    profile_access_os_locked: L'ordinador està bloquejat. Desbloqueja'l i torna-ho
+      a provar.
+    profile_access_os_session_unavailable: La sessió d'usuari de l'ordinador no és
+      disponible, per això no es pot comprovar l'accés. Entra al teu compte de l'ordinador
+      i torna-ho a provar.
+    profile_access_parent_invalid: L'accés del qual es va delegar aquesta sol·licitud
+      ja no és vàlid, per això s'ha rebutjat.
+    profile_access_period_denied: El teu accés actual no cobreix aquest període, per
+      això s'ha rebutjat la sol·licitud.
+    profile_access_person_act_required: 'Aquest acte és només teu: iniciar la sessió,
+      les sessions, les claus, els secrets i la feina fora del perfil no es poden
+      delegar. Fes-ho en persona.'
+    profile_access_privilege_expansion: Aquesta sol·licitud demana més accés del concedit,
+      per això s'ha rebutjat.
+    profile_access_profile_locked: El perfil està bloquejat. Torna a iniciar la sessió
+      per desbloquejar-lo.
+    profile_access_profile_mismatch: Aquesta sol·licitud no pertany al perfil amb
+      el qual has iniciat la sessió, per això s'ha rebutjat.
+    profile_access_provider_required: Aquesta operació necessita un proveïdor que
+      no està configurat. Configura'n un i torna-ho a provar.
+    profile_access_response_authority_required: Respondre la pregunta d'aquesta operació
+      requereix una autoritat que aquesta sol·licitud no té, per això s'ha rebutjat.
+      Respon des de la finestra que va iniciar l'operació.
+    profile_access_runtime_changed: El servei en segon pla s'ha reiniciat des que
+      vas iniciar la sessió. Torna a iniciar la sessió.
+    profile_access_session_expired: La teva sessió ha caducat. Torna a iniciar la
+      sessió.
+    profile_access_session_inactive: La teva sessió ja no és activa. Torna a iniciar
+      la sessió.
+    profile_access_storage_unavailable: L'emmagatzematge del perfil no és disponible
+      ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_subject_busy: Una operació anterior sobre el mateix element no
+      ha acabat. Espera que acabi i torna-ho a provar.
+    profile_access_transaction_authority_required: Confirmar aquest canvi requereix
+      una autoritat que aquesta sol·licitud no té, per això s'ha rebutjat. Confirma'l
+      en persona.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
@@ -1080,6 +1752,8 @@ errors:
       l'apoderat abans de consultar-ne l'estat.
     refused_apoderado_unknown_scope: L'àmbit d'apoderament indicat no és al catàleg
       disponible.
+    refused_application_live_aeat_session_ended: L'AEAT ha tancat la sessió iniciada,
+      així que no s'ha llegit res més. Inicia la sessió de nou i repeteix la captura.
     refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
       pot executar amb les dades indicades.
     refused_application_live_nif_iva_certificate_required: 'L''AEAT només respon la
@@ -1101,20 +1775,23 @@ errors:
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
       dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
       càlcul.
+    refused_classification_rule_search: No s'ha pogut cercar amb una regla desada,
+      així que no s'ha canviat res.
     refused_cli_boundary: L'ordre ha rebutjat la sol·licitud.
     refused_cli_log_level_resolution: Les opcions de nivell de registre indicades
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
+    refused_cli_operation_contract_stale: El servei en segon pla ofereix per a aquesta
+      operació un contracte diferent del que espera aquesta ordre, així que no s'ha
+      enviat res. Actualitza o reinstal·la Cadrumo perquè l'ordre i el servei en segon
+      pla siguin de la mateixa versió.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
       Comprova els arguments o executa `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
       corpus.
-    refused_dependency_proxy_configuration: El paràmetre del servidor intermediari
-      no és una adreça http:// amb un nom d'amfitrió i un port vàlid.
-    refused_dependency_selection: Aquest component no es pot configurar aquí.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic
       incomplit.'
     refused_einvoice_xml_parse: No s'ha pogut llegir l'XML de la factura electrònica
@@ -1131,6 +1808,27 @@ errors:
       és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
+    refused_filing_export_casilla_value: 'No s''ha escrit res: una casella que indiques
+      té un valor que l''exportació no pot escriure tal com el situa el disseny oficial.
+      Torna a indicar aquesta casella i torna a exportar.'
+    refused_filing_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id}
+      anomena una part sense un nom de declaració que el disseny de registre de l''AEAT
+      admeti allà. Indica el nom de declaració de la part i torna a exportar.'
+    refused_filing_export_declared_party_name_missing: 'No s''ha escrit res: el camp
+      %{export_field_id} anomena una part sense nom de declaració indicat. El disseny
+      de registre de l''AEAT l''omple amb els seus cognoms i nom, o amb la seva raó
+      social, i res més no pot ocupar el seu lloc. Indica el nom de declaració de
+      la part i torna a exportar.'
+    refused_filing_export_declared_party_name_single_surname: 'No s''ha escrit res:
+      el camp %{export_field_id} anomena una persona física indicada amb un sol cognom,
+      i el disseny de registre de l''AEAT no dona cap regla per compondre aquest nom.
+      Revisa els cognoms indicats; no es declara res en el seu lloc.'
+    refused_filing_export_declared_party_name_too_wide: 'No s''ha escrit res: el nom
+      de declaració d''una part té %{composed_length} caràcters i el camp %{export_field_id}
+      en té %{field_length}. El disseny de registre no permet abreujar-lo, així que
+      indica una versió del nom de %{field_length} caràcters i torna a exportar.'
+    refused_filing_export_profile_fact_missing: 'No s''ha escrit res: l''exportació
+      necessita una dada teva que el teu perfil no indica. Indica-la i torna a exportar.'
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions
@@ -1169,9 +1867,9 @@ errors:
       valoració del bé.
     refused_google_client_metadata_unavailable: Aquesta instal·lació no inclou el
       client de Google que necessita per iniciar la sessió. Les funcions de Google
-      no estaran disponibles fins que instal·lis una versió que l'inclogui.
+      no estan disponibles.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
-      interactiu amb navegador; executa'l des d'una shell interactiva.
+      interactiu amb navegador; executa'l des d'un terminal interactiu.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
     refused_google_sign_in_required: L'accés a Google d'aquest perfil ha caducat o
@@ -1184,6 +1882,9 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_invoice_retention_figures: La retenció indicada es contradiu o no encaixa
+      amb la base imposable de la factura. Indica de nou el tipus i l'import de manera
+      que l'import sigui la base pel tipus.
     refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensació d''IVA
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
@@ -1193,6 +1894,26 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comprova la configuració d'antiguitat
       de la cartera i torna-ho a intentar.
+    refused_ledger_classification_job_consent_not_needed: Aquest model llegeix en
+      aquest equip, així que no cal ni es registra cap consentiment per llegir fora
+      de l'equip.
+    refused_ledger_classification_job_empty_scope: La sol·licitud no inclou cap moviment
+      per classificar, així que no s'ha posat res a la cua.
+    refused_ledger_classification_job_lane_changed: L'agent ara llegeix amb un model
+      diferent del que té assignat aquesta tasca de classificació, així que no s'ha
+      llegit res. Torna a posar els moviments a la cua o permet les lectures fora
+      de l'equip de la tasca per al model amb què llegeix ara l'agent.
+    refused_ledger_classification_job_movement_unknown: Alguns dels moviments indicats
+      no són al llibre d'aquest perfil, així que no s'ha posat res a la cua.
+    refused_ledger_classification_job_nothing_to_retry: La tasca de classificació
+      no té cap moviment fallit o interromput pel qual tornar a preguntar.
+    refused_ledger_classification_job_revision_stale: La tasca de classificació ha
+      canviat des que la vas llegir; torna a llegir-la i decideix sobre el que conté
+      ara.
+    refused_ledger_classification_job_state: L'estat actual de la tasca de classificació
+      no permet aquest canvi.
+    refused_ledger_classification_job_unknown: Aquest perfil no té cap tasca de classificació
+      amb aquesta identitat.
     refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
       ha de resoldre abans de poder-lo confirmar.
     refused_ledger_counterparty_establishment_conflict: Aquesta contrapart ja està
@@ -1200,15 +1921,39 @@ errors:
       de substituir-lo.
     refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
       amb un identificador de contrapart que no valida.
+    refused_ledger_counterparty_filing_name_input: El nom indicat no és un que admeti
+      una declaració informativa. Una persona física necessita el primer cognom, el
+      nom i el segon cognom o la indicació que no en té; una entitat només necessita
+      la seva raó social. Cada part s'escriu sense espais inicials, finals ni dobles,
+      i cada forma abreujada cap en la seva amplada.
+    refused_ledger_counterparty_provincia_input: La província indicada no és un codi
+      de província de l'INE.
+    refused_ledger_evidence_filer_postcode_missing: El teu perfil no indica el codi
+      postal del teu domicili fiscal. Sense ell no se sap el teu territori d'IVA (península
+      i Balears, Canàries, o Ceuta i Melilla), i no es pot confirmar cap factura.
+      Afegeix-lo a El teu perfil o porta'l del cens.
+    refused_ledger_evidence_filer_postcode_unreadable: El codi postal del domicili
+      fiscal del teu perfil no és un codi postal espanyol vàlid, així que no se sap
+      el teu territori d'IVA i no es pot confirmar cap factura. Corregeix-lo a El
+      teu perfil.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
-    refused_ledger_evidence_reader_unavailable: El lector de documents per a aquest
-      justificant no està disponible en aquest equip, així que no s'ha llegit res.
-      Comprova-ho amb `aeat config provision status`, arrenca'l amb `aeat config provision
-      start` i descarrega'n els models amb `aeat config provision pull`, o tria un
-      proveïdor extern per a aquesta lectura, i torna-ho a provar.
+    refused_ledger_evidence_page_digest_mismatch: El document desat no coincideix
+      amb l'empremta que indica el seu registre, així que no es mostra.
+    refused_ledger_evidence_page_not_found: Aquest perfil no desa cap document amb
+      aquest identificador.
+    refused_ledger_evidence_page_out_of_range: El document no té cap pàgina amb aquest
+      número.
+    refused_ledger_evidence_page_too_large: El document, o la seva pàgina com a imatge,
+      és massa gran per mostrar-lo.
+    refused_ledger_evidence_page_unreadable: El document desat no es pot llegir com
+      el tipus amb què es va desar.
+    refused_ledger_evidence_page_unsupported_media: Només els documents PDF, JPEG
+      i PNG es poden mostrar com a pàgina.
+    refused_ledger_evidence_reader_unavailable: El lector automàtic no ha pogut funcionar,
+      així que no s'ha llegit res.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documents ha respost
       en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
       del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,
@@ -1227,22 +1972,24 @@ errors:
       notificacions amb l'identificador indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
-    refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al
-      model de llenguatge en local.
     refused_llm_config: La configuració del client de model de llenguatge no és vàlida
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
       no s'ha atorgat el consentiment per a la transmissió externa.
-    refused_llm_contention: Aquest equip no té memòria lliure mesurada per carregar
-      el model de llenguatge ara mateix.
+    refused_llm_contention: El model amb què llegeix Cadrumo no hi cap ara mateix
+      a la memòria lliure d'aquest equip.
+    refused_llm_model_cannot_read_images: El model que has triat no pot llegir imatges.
+      Tria un model que pugui llegir imatges i torna-ho a provar.
+    refused_llm_no_model_selected: No has triat cap model per llegir. Tria'n un i
+      torna-ho a provar.
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
     refused_modelo_360_solicitud: No s'ha pogut declarar ni eliminar la sol·licitud
       del Model 360 com has demanat.
     refused_modelo_360_solicitud_account_bic_missing: El compte propi {own_account_id}
-      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb app ledger account
-      update.
+      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb `aeat app ledger account
+      update`.
     refused_modelo_360_solicitud_account_closed: El compte propi {own_account_id}
       està tancat i no pot rebre la devolució.
     refused_modelo_360_solicitud_account_invalid: El compte del representant no és
@@ -1253,6 +2000,13 @@ errors:
       (camp 114) ha de ser el titular del compte que has triat.
     refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
       declarada per a {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El model 390 continua rebutjat:
+      el teu registre de prorrata té files per a aquest exercici, però l''edició del
+      formulari en ús encara no inclou l''apartat de prorrates (apartat 12), de manera
+      que no es pot verificar, registrar com a presentat ni exportar sense deixar
+      aquest apartat en blanc.'
+    refused_modelo_aggregation_input_conflict: Una dada que has introduït contradiu
+      el que donen els teus registres; corregeix-la abans de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària
       no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
       rectificativa. Utilitza el procediment de sol·licitud de rectificació per a
@@ -1262,6 +2016,9 @@ errors:
       Aporta els registres que declara la rectificació (només els afegits en una complementària,
       el conjunt corregit complet en una substitutiva) o un conjunt buit per declarar
       que no n'hi ha cap.
+    refused_modelo_amendment_evidence_missing: No es pot complementar una declaració
+      que no té evidència oficial importada. Importa primer el justificant de la declaració
+      original.
     refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
       no està legalment disponible per al període de declaració resolt. El conjunt
       de tipus acceptats figura en el context de l'error.
@@ -1270,19 +2027,66 @@ errors:
       model, any i període.
     refused_modelo_amendment_verification: El mapa de caselles corregit de la declaració
       complementària no ha superat la verificació. Falten caselles obligatòries.
-    refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
-      desconegut al registre. Es tracta d'un error d'autoria del registre; actualitza
-      la taula de despacho de filtres.
-    refused_modelo_charge_account_missing: S'ha triat una domiciliació pero no hi
+    refused_modelo_applicability_filter: S’ha trobat al registre un nom de filtre
+      d’aplicabilitat desconegut. És un error d’autoria del registre; actualitza la
+      taula de despatx dels filtres.
+    refused_modelo_assumed_value_unconfirmed: 'Aquesta declaració encara té %{unconfirmed_assumed_values}
+      valor(s) que ningú no ha introduït, així que encara no es pot verificar, registrar
+      com a presentada ni exportar. Confirma cadascun indicant-lo, o introdueix el
+      valor correcte: %{boxes}.'
+    refused_modelo_charge_account_missing: S’ha triat la domiciliació, però no hi
       ha cap compte de càrrec registrat.
     refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració
-      es va tancar el {payment_cutoff_on}; el {export_on} només pots pagar el resultat
-      d'una altra manera.
+      es va tancar el {payment_cutoff_on}, data que fixa la mateixa finestra de presentació
+      ({payment_cutoff_legal_refs}); el {export_on} només pots pagar el resultat d'una
+      altra manera.
+    refused_modelo_domiciliation_past_cutoff_derived: La domiciliació d'aquesta declaració
+      es va tancar el {payment_cutoff_on}, data calculada amb la regla de domiciliació
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) perquè la finestra de presentació
+      no en fixa cap; el {export_on} només pots pagar el resultat d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
+    refused_modelo_export_casilla_value: 'No s''ha escrit res: una casella que indiques
+      té un valor que l''exportació no pot escriure tal com el situa el disseny oficial.
+      Torna a indicar aquesta casella i torna a exportar.'
+    refused_modelo_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id},
+      de %{field_length} posicions, anomena una part sense un nom de declaració que
+      el disseny de registre de l''AEAT admeti. Indica o corregeix el nom de declaració
+      de la part i torna a exportar.'
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidació
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la
       domiciliació anterior (mantenir-la, o anul·lar-la o modificar-la); no se n'ha
       indicat cap, així que no s'ha escrit res. Tria'n una i torna a exportar.
+    refused_modelo_export_producer_facts: 'No s''ha escrit res: falten o no quadren
+      dades que el fitxer declara sobre tu o sobre aquesta declaració (identificació,
+      compte bancari o dades pròpies del model). Completa-les al teu perfil o a les
+      opcions de l''exportació i torna a exportar.'
+    refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
+      un registre %{export_record_id}, però aquesta declaració no en té cap, així
+      que no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_settlement: 'No s''ha escrit res: l''exportació no pot indicar
+      com es paga o es retorna la declaració.'
+    refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp
+      %{field_id} conté el caràcter «%{character}» (%{code_point}), que el disseny
+      de registre de l''AEAT no permet escriure. Treure''l o substituir-lo declararia
+      una altra dada. Corregeix aquesta dada on la vas registrar i torna a exportar.'
+    refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
+      camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
+      posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import
+      i torna a exportar.'
+    refused_modelo_household_row_fact_unstated: 'La declaració continua rebutjada:
+      el teu perfil no indica una dada de la llar que el disseny oficial exigeix.
+      Afegeix-la al perfil i torna a calcular.'
+    refused_modelo_instalment_election: 'Aquesta declaració no es pot pagar en dos
+      terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
+      un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies
+      el segon termini, un compte espanyol teu.'
+    refused_modelo_inventory_purchase_ledger_row: 'La declaració continua rebutjada:
+      una compra del teu inventari no indica quin moviment la registra, o n''indica
+      un que no hi coincideix. Indica quin moviment registra cada compra, o que cap
+      no la registra, i torna a calcular.'
+    refused_modelo_iva_wallet_reconciliation_blocked: 'El Model 303 no es pot calcular
+      fins que la compensació de períodes anteriors tingui suport: registra-la al
+      Saldo d''IVA.'
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
@@ -1296,10 +2100,20 @@ errors:
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
+    refused_modelo_operation_subject_not_work_unit: Aquesta sol·licitud no indica
+      la declaració a què pertany el seu càlcul desat; obre aquesta declaració i torna-la
+      a fer des d'allà.
     refused_modelo_payment_election_capability: El mètode de pagament escollit encara
       no està disponible.
     refused_modelo_payment_election_incompatible: L'opció de pagament escollida requereix
       un resultat positiu.
+    refused_modelo_predicate_date_required: Una regla de verificació necessita saber
+      si el país de residència fiscal pertanyia a la UE o a l'EEE, i això depèn de
+      la data del període de presentació. La comprovació no ha aportat aquesta data.
+      És un error del programa i res del que has introduït l'ha causat.
+    refused_modelo_prorrata_seed_superseded: El model %{modelo} %{filing_year}, %{period}
+      es va presentar deduint amb una prorrata provisional que el teu registre ja
+      no conté. Corregeix-lo amb una declaració complementària o rectificativa.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
       sense un compte. Configura un compte de devolució o compensa el crèdit (compensar).
@@ -1310,10 +2124,15 @@ errors:
       model té un camp de tipus de declaració, però Cadrumo encara no té un joc de
       codis fonamentat per a aquest camp, així que el resultat no es pot presentar
       sense endevinar-lo.
+    refused_modelo_revision_not_sealed: Aquesta declaració encara no està comprovada;
+      comprova-la abans d'exportar-la o de treure'n l'informe.
     refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
       desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
       valor per cada fila de detall. Torna a calcular la unitat de treball {work_unit_id}
       per substituir-la.
+    refused_modelo_verification_predicate_malformed: Un predicat de verificació del
+      registre està mal format, així que la verificació s'ha rebutjat en lloc d'avaluar-se.
+      Es tracta d'un error d'autoria del registre; corregeix el predicat al registre.
     refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
       303 o la prova oficial de la presentació base U.
@@ -1328,6 +2147,9 @@ errors:
     refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
       no han superat la validació.
     refused_output_format: El format de sortida sol·licitat no és compatible.
+    refused_pattern_search_overrun: La cerca amb el teu patró no ha acabat dins del
+      seu límit, així que s'ha aturat.
+    refused_pattern_search_unreadable: No s'ha pogut llegir el patró.
     refused_pension_reduccion_computation: Una entrada del càlcul de reducció fiscal
       per pensions ha incomplert una condició numèrica; corregeix els imports indicats.
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
@@ -1339,14 +2161,20 @@ errors:
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
       no s'ha pogut resoldre al canal de vincle correcte.
-    refused_profile_custody_kdf_resource_limit: L'equip no pot assignar els recursos
-      de derivació de clau sol·licitats. Torna-ho a provar quan l'equip estigui menys
-      carregat; si persisteix, aquest equip no pot aportar la memòria que requereix
-      la derivació de clau.
-    refused_profile_custody_kdf_supervision_unavailable: La supervisió de derivació
-      de clau no està disponible en aquest equip. Torna-ho a provar quan l'equip estigui
-      menys carregat; si persisteix, aquest equip no pot iniciar el procés de treball
-      supervisat que requereix la derivació de clau.
+    refused_profile_custody_kdf_resource_busy: La derivació de clau no ha acabat a
+      temps perquè l'equip està ocupat. Això no diu res de la teva contrasenya; torna-ho
+      a provar d'aquí a un moment.
+    refused_profile_custody_kdf_resource_limit: 'La derivació de clau no es pot executar
+      en aquest equip: no pot aportar, o no pot informar de, els processadors i la
+      memòria que requereix la derivació de clau. Consulta els registres per conèixer-ne
+      la causa.'
+    refused_profile_custody_kdf_supervision_busy: La derivació de clau no s'ha pogut
+      iniciar a temps perquè l'equip està ocupat. La teva contrasenya no s'ha comprovat;
+      torna-ho a provar d'aquí a un moment.
+    refused_profile_custody_kdf_supervision_unavailable: 'La derivació de clau no
+      es pot executar en aquest equip: no pot iniciar, contenir ni verificar el procés
+      de treball supervisat que requereix la derivació de clau. Consulta els registres
+      per conèixer-ne la causa.'
     refused_profile_custody_legacy: L'emmagatzematge conté custòdia retirada; el restabliment
       destructiu i la nova inscripció són l'única via.
     refused_profile_displaced_session_retirement: No s'ha pogut revocar la sessió
@@ -1374,6 +2202,9 @@ errors:
       autenticar aquest perfil.
     refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
       de l'esquema. Corregeix els valors indicats.
+    refused_renta_date_required: Aquesta exempció depèn del que és vigent en l'exercici
+      de la renda, així que el càlcul no fa servir la data d'avui. Indica l'exercici
+      de presentació.
     refused_renta_maritime_exemption_inactive: 'L''exempció DA 41 LIRPF (flota tonyinaire)
       està inactiva: no s''ha concedit l''autorització d''ajuts d''Estat de la UE
       per al 2024/2025. L''AEAT confirma la seva no aplicabilitat en la guia oficial
@@ -1384,8 +2215,18 @@ errors:
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
       Espera fins aleshores o torna a executar amb --override-retention i --reason
       per forçar-ho.'
+    refused_review_drafts_unattributed: El teu perfil no té NIF, així que cap dels
+      %{draft_count} esborranys desats no es pot mostrar com a teu. Afegeix el teu
+      NIF al perfil i torna a revisar.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
+    refused_runtime_custody_recovering: S'està restablint l'accés a aquest perfil.
+      Repeteix la sol·licitud d'aquí a un moment; si es torna a rebutjar, torna a
+      iniciar la sessió.
+    refused_runtime_custody_recovering_effect_unknown: 'S''està restablint l''accés
+      a aquest perfil i el canvi que estava en curs pot haver-se aplicat ja. No el
+      repeteixis encara: quan torni l''accés, comprova primer l''operació o el que
+      canvia.'
     refused_runtime_frontend: L'entorn d'execució del perfil ha rebutjat aquesta sol·licitud.
     refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
     refused_storage_bucket_already_present: Ja existeix un bucket amb aquest identificador.
@@ -1407,6 +2248,8 @@ errors:
       o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
       pot realitzar per a aquest model o instantània.
+    refused_unread_setting: 'L''entorn defineix {count} variable(s) que no són ajustos
+      que Cadrumo llegeixi: {names}. Treu-les de l''entorn.'
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.
     refused_wizard_answer_type: Un camp de resposta de l'assistent ha rebut un tipus
@@ -1423,6 +2266,18 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    retencion_soportada_absence_refused: No s'ha desat la declaració d'absència d'aquesta
+      classe de renda.
+    retencion_soportada_revision_conflict: El registre de retenció ha canviat des
+      que el vas llegir; torna a llegir-lo abans de desar.
+    retencion_soportada_write_refused: No s'ha desat el registre de retenció d'aquest
+      pagador.
+    sal_reserva_beneficio_negative: El benefici net que s'usa per a la reserva especial
+      no pot ser negatiu; has indicat %{value}. Indica'l com a zero o més.
+    sal_reserva_capital_social_not_positive: El capital social ha de ser superior
+      a zero; has indicat %{value}. Indica el capital social de la societat.
+    sal_reserva_dotada_negative: La reserva ja dotada no pot ser negativa; has indicat
+      %{value}. Indica-la com a zero o més.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està
@@ -1435,6 +2290,11 @@ errors:
       i aprova l'esborrany de nou.
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
+    transaction_figures_without_business: Un moviment Personal no té part professional,
+      així que no pot portar dades de l'activitat com una categoria de despesa, una
+      base imposable o l'IVA. Classifica'l com a Professional o Mixt per registrar-les.
+    transaction_iva_rate_not_fraction: 'El tipus d''IVA s''escriu com a fracció decimal,
+      no com a percentatge: has introduït {value}. Escriu el 21 % d''IVA com a 0.21.'
     tui_modelo_lifecycle_action_unavailable: L'acció seleccionada del cicle de vida
       del model no està disponible.
     unsupported_currency: El codi de moneda indicat no és compatible.
@@ -1447,6 +2307,10 @@ errors:
     filing_year_outside_support_envelope: 'L''exercici %{filing_year} i el període
       %{period} del model %{modelo_id} queden fora dels exercicis admesos (mínim %{floor},
       horitzó %{horizon}); revisions que cobreixen aquesta coordenada: %{covering_revision_ids}.'
+    filing_year_projected: El model %{modelo_id} encara no té edició de %{filing_year}.
+      El període %{period} es calcula amb les regles de %{authored_filing_year}, que
+      serveixen per calcular i previsualitzar el model, però no per comprovar-lo per
+      presentar-lo ni exportar-lo com a fitxer per a l'AEAT.
     modelo_not_registered: El model no està registrat al registre.
     no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id}
       de l''exercici %{filing_year} i període %{period}; revisions disponibles: %{available_revision_ids}.'
@@ -1496,5 +2360,20 @@ errors:
       perfil actiu, llevat del mode de prova.
     own_account_unknown: El compte propi {own_account_id} no és cap dels teus comptes
       bancaris propis registrats.
+    rental_lease_unknown: L'arrendament {ref} no és cap dels arrendaments del teu
+      perfil. Consulta'ls amb «{door}».
+    rental_link_category: Una fila vinculada a un arrendament o a un immoble ha de
+      portar la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    rental_property_unknown: L'immoble {ref} no és cap dels immobles del teu perfil.
+      Consulta'ls amb «{door}».
+    savings_concept_kind: El concepte {concepto} només s'admet en una posició de tipus
+      {kind}, i la posició {ref} és d'un altre tipus. Tria un altre concepte o una
+      altra posició amb «{door}».
+    savings_concept_unknown: '--concepto-capital-mobiliario {value!r} no reconegut.
+      Conceptes admesos: {accepted}.'
+    savings_link_category: Una fila vinculada a una posició d'estalvi ha de portar
+      la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    savings_position_unknown: La posició d'estalvi {ref} no és cap de les posicions
+      del teu perfil. Consulta-les amb «{door}».
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
       reconeguts: {providers}.'

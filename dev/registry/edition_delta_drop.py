@@ -7,20 +7,22 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from . import edition_delta_assessment as _edition_delta_assessment
-from . import edition_delta_drop_scope as _edition_delta_drop_scope
-from . import edition_delta_equivalence as _edition_delta_equivalence
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_order_restoration as _edition_delta_order_restoration
-from . import edition_delta_workdir as _edition_delta_workdir
+from . import (
+    edition_delta_assessment,
+    edition_delta_drop_scope,
+    edition_delta_equivalence,
+    edition_delta_errors,
+    edition_delta_fields,
+    edition_delta_order_restoration,
+    edition_delta_workdir,
+)
 from .edition_delta_drop_planning import plan_drop
 from .edition_delta_drop_types import DropOutcome, DropPlan
-from .edition_delta_drop_writer import _write_drop
+from .edition_delta_drop_writer import write_drop
 from .edition_delta_source_publication import (
-    _apply_proven_modelo,
-    _assert_proof_inputs_unchanged,
-    _validate_staged_modelo,
+    apply_proven_modelo,
+    assert_proof_inputs_unchanged,
+    validate_staged_modelo,
 )
 from .edition_round_trip import EditionExportScenario, RoundTripReport, copy_registry_tree, edition_round_trip_report
 
@@ -34,10 +36,10 @@ def _plan_declared_order_tree(
     reference: Path,
     modelo_dir: Path,
     definition: ModeloDefinition,
-    families: Sequence[_edition_delta_drop_scope._DroppableFamily],
-    restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...],
+    families: Sequence[edition_delta_drop_scope.DroppableFamily],
+    restorations: tuple[edition_delta_order_restoration.OrderRestoration, ...],
 ) -> tuple[Path, tuple[tuple[str, str], ...], DropPlan]:
-    declared, reordered = _edition_delta_order_restoration._stage_declared_order(
+    declared, reordered = edition_delta_order_restoration.stage_declared_order(
         registry_root=registry_root,
         modelo_id=modelo_id,
         work_dir=work_dir,
@@ -45,8 +47,8 @@ def _plan_declared_order_tree(
         restorations=restorations,
     )
     if restorations:
-        declared_modelo = declared / _edition_delta_fields._MODELOS / modelo_id
-        definition = _edition_delta_workdir._load(declared, modelo_id)
+        declared_modelo = declared / edition_delta_fields.MODELOS / modelo_id
+        definition = edition_delta_workdir.load(declared, modelo_id)
         plan = plan_drop(declared_modelo, definition, families=families)
     else:
         plan = plan_drop(modelo_dir, definition, families=families)
@@ -58,19 +60,19 @@ def _write_staged_drops(
     work_dir: Path,
     modelo_id: str,
     plan: DropPlan,
-    families: Sequence[_edition_delta_drop_scope._DroppableFamily],
+    families: Sequence[edition_delta_drop_scope.DroppableFamily],
 ) -> Path:
     staged = copy_registry_tree(
         declared,
-        _edition_delta_workdir._scratch_path(work_dir, "dropped", "registry", "aeat"),
+        edition_delta_workdir.scratch_path(work_dir, "dropped", "registry", "aeat"),
         modelo_id=modelo_id,
     )
     by_section = {family.section: family for family in families}
-    modelo_stage = _edition_delta_workdir._scratch_path(
-        work_dir, "dropped", "registry", "aeat", _edition_delta_fields._MODELOS, modelo_id
+    modelo_stage = edition_delta_workdir.scratch_path(
+        work_dir, "dropped", "registry", "aeat", edition_delta_fields.MODELOS, modelo_id
     )
     for edition in plan.editions:
-        _write_drop(modelo_stage, edition, by_section)
+        write_drop(modelo_stage, edition, by_section)
     return staged
 
 
@@ -87,9 +89,9 @@ def _prove_staged_drops(
         modelo_id=modelo_id,
         export_scenarios=export_scenarios or {},
     )
-    return _edition_delta_equivalence._prove_chain(
-        reference_modelo_dir=declared / _edition_delta_fields._MODELOS / modelo_id,
-        staged_modelo_dir=staged / _edition_delta_fields._MODELOS / modelo_id,
+    return edition_delta_equivalence.prove_chain(
+        reference_modelo_dir=declared / edition_delta_fields.MODELOS / modelo_id,
+        staged_modelo_dir=staged / edition_delta_fields.MODELOS / modelo_id,
         revision_ids=tuple(edition.revision_id for edition in plan.editions),
         report=report,
     )
@@ -104,15 +106,15 @@ def _publish_clean_drop(
     reference: Path,
     modelo_id: str,
 ) -> bool:
-    has_source_findings = any(_edition_delta_assessment._is_source_finding(finding) for finding in report.findings)
+    has_source_findings = any(edition_delta_assessment.is_source_finding(finding) for finding in report.findings)
     if not apply or has_source_findings:
         return False
-    _validate_staged_modelo(staged_root=staged, modelo_id=modelo_id)
-    _assert_proof_inputs_unchanged(live_root=registry_root, captured_root=reference, modelo_id=modelo_id)
-    _apply_proven_modelo(
+    validate_staged_modelo(staged_root=staged, modelo_id=modelo_id)
+    assert_proof_inputs_unchanged(live_root=registry_root, captured_root=reference, modelo_id=modelo_id)
+    apply_proven_modelo(
         target=modelo_dir.resolve(),
-        staged=staged / _edition_delta_fields._MODELOS / modelo_id,
-        original=reference / _edition_delta_fields._MODELOS / modelo_id,
+        staged=staged / edition_delta_fields.MODELOS / modelo_id,
+        original=reference / edition_delta_fields.MODELOS / modelo_id,
     )
     return True
 
@@ -141,19 +143,19 @@ def drop_restatement(
             staged tree does not materialise identically to the tree it was
             planned from.
     """
-    registry_root, work_dir = _edition_delta_workdir._resolve_work_directory(registry_root, work_dir)
-    modelo_dir = registry_root / _edition_delta_fields._MODELOS / modelo_id
-    if not modelo_dir.is_dir() or not _edition_delta_workdir._inside(modelo_dir, registry_root):
-        raise _edition_delta_errors.MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
+    registry_root, work_dir = edition_delta_workdir.resolve_work_directory(registry_root, work_dir)
+    modelo_dir = registry_root / edition_delta_fields.MODELOS / modelo_id
+    if not modelo_dir.is_dir() or not edition_delta_workdir.inside(modelo_dir, registry_root):
+        raise edition_delta_errors.MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
     families = _selected_families(sections)
-    definition = _edition_delta_workdir._load(registry_root, modelo_id)
-    restorations = _edition_delta_order_restoration.declared_order_restorations(modelo_dir)
+    definition = edition_delta_workdir.load(registry_root, modelo_id)
+    restorations = edition_delta_order_restoration.declared_order_restorations(modelo_dir)
     plan = plan_drop(modelo_dir, definition, families=families)
     if not plan.dropped and not restorations:
         return DropOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
     reference = copy_registry_tree(
         registry_root,
-        _edition_delta_workdir._scratch_path(work_dir, "reference", "registry", "aeat"),
+        edition_delta_workdir.scratch_path(work_dir, "reference", "registry", "aeat"),
         modelo_id=modelo_id,
     )
     declared, reordered, plan = _plan_declared_order_tree(
@@ -173,23 +175,23 @@ def drop_restatement(
     )
 
 
-def _selected_families(sections: Sequence[str] | None) -> tuple[_edition_delta_drop_scope._DroppableFamily, ...]:
+def _selected_families(sections: Sequence[str] | None) -> tuple[edition_delta_drop_scope.DroppableFamily, ...]:
     """Resolve ``--family`` names against the accepted set, refusing a held-back family by name and reason."""
     if sections is None:
-        return _edition_delta_drop_scope._DROPPABLE_FAMILIES
-    accepted = {family.section: family for family in _edition_delta_drop_scope._DROPPABLE_FAMILIES}
-    selected: list[_edition_delta_drop_scope._DroppableFamily] = []
+        return edition_delta_drop_scope.DROPPABLE_FAMILIES
+    accepted = {family.section: family for family in edition_delta_drop_scope.DROPPABLE_FAMILIES}
+    selected: list[edition_delta_drop_scope.DroppableFamily] = []
     for section in sections:
         if section in accepted:
             selected.append(accepted[section])
             continue
-        if section in _edition_delta_drop_scope._HELD_BACK_FAMILIES:
-            reason = _edition_delta_drop_scope._HELD_BACK_FAMILIES[section]
-            raise _edition_delta_errors.MigrationRefusedError(
+        if section in edition_delta_drop_scope.HELD_BACK_FAMILIES:
+            reason = edition_delta_drop_scope.HELD_BACK_FAMILIES[section]
+            raise edition_delta_errors.MigrationRefusedError(
                 f"family {section!r} is held back from dropping: {reason}",
             )
-        held_back = ", ".join(sorted(_edition_delta_drop_scope._HELD_BACK_FAMILIES))
-        raise _edition_delta_errors.MigrationRefusedError(
+        held_back = ", ".join(sorted(edition_delta_drop_scope.HELD_BACK_FAMILIES))
+        raise edition_delta_errors.MigrationRefusedError(
             f"family {section!r} is not a family this tool drops; it accepts "
             f"{', '.join(sorted(accepted))} and holds back {held_back}",
         )

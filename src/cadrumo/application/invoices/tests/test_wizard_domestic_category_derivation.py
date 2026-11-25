@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.domain.iva.schema import IvaCategory
 
-from ..creation_wizard import _derived_domestic_category
+from ..creation_wizard import derived_domestic_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,7 +47,7 @@ _DAY = date(2025, 6, 15)
 )
 def test_a_domestic_rate_derives_its_category(rate: Decimal, expected: IvaCategory) -> None:
     """Each in-force tier reaches its own category, so the income path is grounded."""
-    assert _derived_domestic_category(country_code="ES", iva_rate=rate, on_date=_DAY) == expected
+    assert derived_domestic_category(country_code="ES", iva_rate=rate, on_date=_DAY) == expected
 
 
 def test_a_non_domestic_counterparty_derives_nothing() -> None:
@@ -58,12 +58,12 @@ def test_a_non_domestic_counterparty_derives_nothing() -> None:
     this is the single assertion standing between a French counterparty and a
     DOMESTIC_GENERAL_21 stamp on an operation that is not domestic at all.
     """
-    assert _derived_domestic_category(country_code="FR", iva_rate=Decimal("21"), on_date=_DAY) is None
+    assert derived_domestic_category(country_code="FR", iva_rate=Decimal("21"), on_date=_DAY) is None
 
 
 def test_an_unstated_rate_derives_nothing() -> None:
     """No rate, no tier, no category. Absence is not a tier of its own."""
-    assert _derived_domestic_category(country_code="ES", iva_rate=None, on_date=_DAY) is None
+    assert derived_domestic_category(country_code="ES", iva_rate=None, on_date=_DAY) is None
 
 
 def test_a_rate_outside_its_force_window_derives_nothing() -> None:
@@ -79,7 +79,7 @@ def test_a_rate_outside_its_force_window_derives_nothing() -> None:
     that half is defensive rather than exercised, and saying so is more honest
     than implying the branch is covered.
     """
-    assert _derived_domestic_category(country_code="ES", iva_rate=Decimal("5"), on_date=_DAY) is None
+    assert derived_domestic_category(country_code="ES", iva_rate=Decimal("5"), on_date=_DAY) is None
 
 
 def test_the_same_rate_derives_again_once_its_window_reopens() -> None:
@@ -91,6 +91,6 @@ def test_the_same_rate_derives_again_once_its_window_reopens() -> None:
     """
     inside_the_window = date(2024, 3, 1)
 
-    assert _derived_domestic_category(
+    assert derived_domestic_category(
         country_code="ES", iva_rate=Decimal("5"), on_date=inside_the_window
     ) == IvaCategory("domestic_reduced")

@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import FrozenInstanceError
 
 import pytest
 
 from ..hashing import (
     CONTENT_DIGEST_PREFIX,
+    CanonicalJsonValue,
     bounded_canonical_json_bytes,
     canonical_json_bytes,
+    canonical_json_bytes_with_member,
     canonical_json_digest,
     content_hash_hex,
     prefixed_digest,
@@ -20,6 +23,64 @@ from ..hashing import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("member", ("a", "middle", "z", "ñ", "😀"))
+def test_canonical_member_composition_preserves_exact_encoding(member: str) -> None:
+    fragment = {"escaped": '"\n\\', "values": [None, True, -0.0, 1.25e-20, 2**70, "niño 😀"]}
+    child: dict[str, object] = {"a": [], "z": False}
+    payload = {"z": 3, "head": child}
+    expected = {"z": 3, "head": {"a": [], "z": False, member: fragment}}
+    # Leave the insertion point absent, including the first/last existing key cases.
+    child.pop(member, None)
+    assert canonical_json_bytes_with_member(
+        payload, object_path=("head",), member=member, value=CanonicalJsonValue(fragment)
+    ) == canonical_json_bytes(expected)
+
+
+def test_canonical_value_does_not_retain_mutable_source() -> None:
+    source = ["original"]
+    value = CanonicalJsonValue(source)
+    source.append("changed")
+    assert canonical_json_bytes_with_member({}, object_path=(), member="x", value=value) == b'{"x":["original"]}'
+    attribute = "_encoded"
+    with pytest.raises(FrozenInstanceError):
+        setattr(value, attribute, b"unchecked")
+
+
+@pytest.mark.parametrize("value", (b"{}", "{}", {}))
+def test_canonical_member_refuses_unchecked_fragment(value: CanonicalJsonValue) -> None:
+    with pytest.raises(TypeError, match="CanonicalJsonValue"):
+        canonical_json_bytes_with_member({}, object_path=(), member="x", value=value)
+
+
+@pytest.mark.parametrize("member", (1, None))
+def test_canonical_member_refuses_non_string_key(member: str) -> None:
+    with pytest.raises(TypeError, match="string keys"):
+        canonical_json_bytes_with_member({}, object_path=(), member=member, value=CanonicalJsonValue(None))
+
+
+@pytest.mark.parametrize("payload", (b"{}", bytearray(b"{}"), float("nan"), float("inf"), object()))
+def test_canonical_value_refuses_non_json_inputs(payload: object) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        CanonicalJsonValue(payload)
+
+
+@pytest.mark.parametrize(
+    ("payload", "path", "error"),
+    (
+        ({}, ("missing",), KeyError),
+        ({"x": []}, ("x",), TypeError),
+        ({1: 2}, (), TypeError),
+        ({"member": 1}, (), ValueError),
+    ),
+)
+def test_canonical_member_refuses_invalid_target(
+    payload: object, path: tuple[str, ...], error: type[Exception]
+) -> None:
+    with pytest.raises(error):
+        canonical_json_bytes_with_member(payload, object_path=path, member="member", value=CanonicalJsonValue(None))
+
 
 #: The ruled byte spelling of one accented record, written from the encoding
 #: contract rather than read back out of the encoder: sorted keys, no

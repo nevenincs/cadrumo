@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-10-06'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:aba7163bbfbb86671f52df79c18412946254ab883d87fe654a8cc34d5cc7b176'
+body_hash: 'sha256:1d6273329e0574d857c05b999633915912079474d8f52852ae002c62003c9d26'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-corpus-structure-hardening-reference]]"
@@ -132,11 +132,13 @@ the requested schema family and filing context. A revision that combines differe
 annual form designs or time-bounded substantive provisions is split into the
 smallest source-grounded epochs needed for unambiguous selection. Modelo 390 is the
 first mandatory repair: its mixed `2010-y-siguientes` revision is replaced, on the
-currently enrolled evidence, by disjoint 2022, 2023, 2024, and 2025 filing-year
-epochs. Each epoch selects only its own record design; the 2025 source is capped at
-2025-12-31; and the time-bounded RDL 4/2024 provision appears only in the 2024
-slice. Filing years 2010-2021 and 2026 refuse as unsupported until their own source
-authority is enrolled. The repair preserves canonical casilla identity and
+currently enrolled evidence, by disjoint annual filing-year epochs, one per
+enrolled record design. Each epoch selects only its own record design; the newest
+enrolled source is capped at the end of its filing year; and the time-bounded
+RDL 4/2024 provision appears only in the epoch it governs. A supported filing year
+with no epoch of its own is calculated from the nearest authored epoch at
+calculation grade, and filing grade waits for that year's own source authority;
+years below the registry floor refuse. The repair preserves canonical casilla identity and
 continuity where meaning persists; it does not copy a later design backward or
 retain the open revision as a compatibility fallback.
 
@@ -202,3 +204,7 @@ weakening the filing-grade meaning of `RegistrySnapshot`.
   epochs before new-year filing support can be claimed. The broader coverage
   manifest and revision-governance rollout remains follow-on work grounded by
   `2026-08-14-registry-temporal-coverage-research`.
+
+## Clarification: activity-asset projection (2026-10-30)
+
+Authorized by the operator on 2026-10-30. An activity-asset forecast and the Modelo 130 of a year above the newest authored Modelo 100 edition may use the projected edition, as the 2026-10-30 amendment of `2026-09-23-assets-core-amortization-method-set-adr` states. This does not widen a filing-grade Modelo 100 snapshot, which keeps this decision's gates. Current year bounds are read from `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml`, not from the years this record names.

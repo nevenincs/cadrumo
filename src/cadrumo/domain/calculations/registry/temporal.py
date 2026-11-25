@@ -26,13 +26,7 @@ from .modelo_inception import DeclaredInception, ModeloInceptionField
 from .modelo_localization import require_modelo_localization
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .period_selector_match import selector_token_for_request
-from .schema import (
-    MODELO_REVISION_IDS_CONTEXT,
-    ModeloCadence,
-    ModeloDefinition,
-    ModeloRevision,
-    SupportedFilingYearsCatalogue,
-)
+from .schema import MODELO_REVISION_IDS_CONTEXT, ModeloCadence, ModeloDefinition, ModeloRevision
 from .schema_base import (
     CalculationClass,
     CalculationClassField,
@@ -44,6 +38,7 @@ from .schema_base import (
 )
 from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_references import PeriodSelector, TemporalProjectionDirection, date_within_validity_window
+from .snapshot_globals import SupportedFilingYearsCatalogue
 
 
 class RevisionSelectionMetadata(RegistryModel):

@@ -44,17 +44,66 @@ if TYPE_CHECKING:
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
 # Policy verdicts are projected through the typed action channel, not as object-valued context.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
+INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
     {"prompt_key", "question_id", "flow_id", "missing", "missing_flags", "terminal_precondition_verdict"}
 )
 
-ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = ("area", "entry_count", "reason")
+ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = (
+    "accepted",
+    "actual_value",
+    "area",
+    "candidate",
+    "casilla_id",
+    "casilla_ids",
+    "casillas",
+    "cause",
+    "count",
+    "currency",
+    "detail",
+    "door",
+    "ejercicio",
+    "entry_count",
+    "expected",
+    "export_format",
+    "field",
+    "fields",
+    "filing_period",
+    "filing_year",
+    "got",
+    "key",
+    "kind",
+    "limit",
+    "match_count",
+    "modelo",
+    "name",
+    "operation",
+    "path",
+    "period",
+    "position",
+    "profile",
+    "provider",
+    "reason",
+    "remedy",
+    "revision",
+    "row",
+    "schema_version",
+    "section",
+    "source",
+    "state",
+    "status",
+    "tax_year",
+    "terminal_condition",
+    "value",
+    "year",
+)
 """Finite vocabulary translated for human-facing error context labels.
 
 Error contexts themselves remain extensible structured data.  Only this
 declared operator-facing label subset is sent through the locale catalogue;
-unknown context keys use the same human-readable fallback shape without
-constructing an unregistered translation key.
+unknown context keys use a humanized fallback without constructing an
+unregistered translation key.  The fallback is English-shaped, so a key an
+operator reads in a refusal belongs in this vocabulary; the fallback is
+reserved for diagnostic identifiers whose label carries no meaning to translate.
 """
 
 
@@ -70,7 +119,7 @@ class ErrorCategory(StrEnum):
     LOCKED = "LOCKED"
 
 
-def _category_text_prefix(category: ErrorCategory) -> str:
+def category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
     from ..i18n.render import tr
 
@@ -167,13 +216,13 @@ def complete_error_envelope_model() -> None:
 
 
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
-_CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
+CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
 
 # Collects CadrumoError subclasses created before the declared-code catalogue
 # was loaded. The catalogue spans every layer's declaration module, so loading
 # it at import would make any exception import walk all of them; the first
 # lookup loads it and drains this set instead.
-_DEFERRED_BIND: set[type[BaseException]] = set()
+DEFERRED_BIND: set[type[BaseException]] = set()
 
 
 def register(code: ErrorCode) -> ErrorCode:
@@ -234,25 +283,51 @@ def get_registered_error_code_by_code(code: str) -> ErrorCode:
     return matches[0]
 
 
-def _flush_deferred_binds() -> None:
+RETIRED_ERROR_CODE_SUCCESSORS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        # A blocked IVA wallet became a refusal with no effect rather than a failure.
+        "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED": "REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+        # An amendment of a baseline AEAT never attested became a refusal whose door is the import.
+        "ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING": "REFUSED_MODELO_AMENDMENT_EVIDENCE_MISSING",
+        # A calculation missing an input the operator supplies became a refusal whose door is that input.
+        "ERROR_MODELO_WORK_INPUT_REQUIRED": "REFUSED_MODELO_WORK_INPUT_REQUIRED",
+        # The interim refusal of a savings return ended when the export placed its detail records;
+        # a record settled under it reads as an export the product did not support.
+        "REFUSED_MODELO_EXPORT_SAVINGS_DETAIL_RECORDS_UNWRITABLE": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
+    }
+)
+"""Every code no longer declared that a persisted record can still hold, with the code it now reads as.
+
+Operation journals, receipts and refusal evidence keep the code they were
+settled under for as long as the record lives. Retiring a code therefore
+names its successor here, so that history still reads as settled.
+"""
+
+
+def current_error_code(code: str) -> str:
+    """The code a persisted record's ``code`` reads as today: itself, or a retired code's successor."""
+    return RETIRED_ERROR_CODE_SUCCESSORS.get(code, code)
+
+
+def flush_deferred_binds() -> None:
     """Bind every class created before the declared-code catalogue loaded.
 
     Loads the catalogue first; a class still unbound afterwards has no
     declaration and stays pending for its caller to refuse.
     """
     declared = declared_error_codes_by_qualname()
-    if not _DEFERRED_BIND:
+    if not DEFERRED_BIND:
         return
     still_pending: set[type[BaseException]] = set()
-    for error_type in list(_DEFERRED_BIND):
+    for error_type in list(DEFERRED_BIND):
         code = declared.get(_qualname(error_type))
         if code is not None:
-            _CLASS_CODE_REGISTRY[error_type] = code
+            CLASS_CODE_REGISTRY[error_type] = code
             type.__setattr__(error_type, "code", code)
         else:
             still_pending.add(error_type)
-    _DEFERRED_BIND.clear()
-    _DEFERRED_BIND.update(still_pending)
+    DEFERRED_BIND.clear()
+    DEFERRED_BIND.update(still_pending)
 
 
 def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
@@ -260,7 +335,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
 
     Called from ``CadrumoError.__init_subclass__`` at class-creation
     time. Until the declared-code catalogue has been loaded, including while
-    it is loading, the class is added to :data:`_DEFERRED_BIND` and bound on
+    it is loading, the class is added to :data:`DEFERRED_BIND` and bound on
     first use via :func:`get_registered_error_code`; once it is loaded, an
     undeclared class is refused at creation.
 
@@ -274,12 +349,12 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         InternalInvariantError: When the mapping is available but contains no entry
             for this class.
     """
-    bound = _CLASS_CODE_REGISTRY.get(error_type)
+    bound = CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:
         return bound
     declared = _declared_code_map
     if declared is None:
-        _DEFERRED_BIND.add(error_type)
+        DEFERRED_BIND.add(error_type)
         return None
     qualname = _qualname(error_type)
     code = declared.get(qualname)
@@ -294,7 +369,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
             f"process mid-flight: run `git status` and rerun once the working "
             f"tree settles.",
         )
-    _CLASS_CODE_REGISTRY[error_type] = code
+    CLASS_CODE_REGISTRY[error_type] = code
     type.__setattr__(error_type, "code", code)
     return code
 
@@ -306,13 +381,13 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     the lookup, so classes created before the catalogue loaded are bound
     here on first use.
     """
-    _flush_deferred_binds()
+    flush_deferred_binds()
     from .hierarchy import RecordedRegisteredError
 
     if isinstance(error, RecordedRegisteredError):
         return get_registered_error_code_by_code(error.recorded_code)
     error_type = error if isinstance(error, type) else type(error)
-    code = _CLASS_CODE_REGISTRY.get(error_type)
+    code = CLASS_CODE_REGISTRY.get(error_type)
     if code is None:
         resolved = bind_error_code(error_type)
         # The catalogue is loaded by now, so None means it is still loading:
@@ -332,7 +407,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     """Redact secret-looking keys and strip internal keys from ``context``.
 
     Keys classified by :func:`is_sensitive_redaction_key` are replaced with
-    ``"<redacted>"``. Keys in :data:`_INTERNAL_CONTEXT_KEYS` are dropped
+    ``"<redacted>"``. Keys in :data:`INTERNAL_CONTEXT_KEYS` are dropped
     entirely — they are implementation detail (e.g. widget prompt identifiers)
     and must not appear in operator-facing output.
     """
@@ -342,7 +417,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
 
     scrubbed: dict[str, str] = {}
     for key, value in sorted(context.items()):
-        if key in _INTERNAL_CONTEXT_KEYS:
+        if key in INTERNAL_CONTEXT_KEYS:
             continue
         if is_sensitive_redaction_key(key):
             scrubbed[key] = "<redacted>"
@@ -357,9 +432,14 @@ def public_error_context(error: BaseException) -> dict[str, str] | None:
     The same merge of ``context`` and public attributes, and the same
     redaction, as :func:`build_error_envelope`, so a process that records the
     context for another process to render discloses nothing the envelope would
-    not have disclosed itself.
+    not have disclosed itself. Keys the error's class declares process-local
+    are left out as well: the envelope may show them, the record never does.
     """
-    return scrub_error_context(_merge_error_context(error, None))
+    merged = _merge_error_context(error, None)
+    local = frozenset[str](getattr(type(error), "process_local_context_keys", ()))
+    if merged is not None and local:
+        merged = {key: value for key, value in merged.items() if key not in local} or None
+    return scrub_error_context(merged)
 
 
 def build_error_envelope(
@@ -417,7 +497,7 @@ def render_error_text(
 ) -> str:
     """Render the human-readable stderr payload for ``error``."""
     code = get_registered_error_code(error)
-    prefix = _category_text_prefix(code.category)
+    prefix = category_text_prefix(code.category)
     message = resolve_error_message(error, code)
     first_line = f"{prefix} {message}"
     lines = [first_line]
@@ -671,11 +751,13 @@ _install_binder()
 
 __all__ = [
     "ERROR_CONTEXT_LABEL_KEYS",
+    "RETIRED_ERROR_CODE_SUCCESSORS",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
     "bind_error_code",
     "build_error_envelope",
+    "current_error_code",
     "get_error_exit_code",
     "get_registered_error_code",
     "get_registered_error_code_by_code",

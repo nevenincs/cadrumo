@@ -13,32 +13,41 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
-from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
-from ...core.hashing import hash_file, sha256_file, sha256_hex
+from ...core.hashing import SHA256_HEX_LENGTH, hash_file, sha256_file, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.export_parse import (
-    XmlDictionaryEntry,
-    parse_export_payload,
-    xml_dictionary_entries,
-)
+from ...domain.calculations.registry.export_parse import parse_export_payload
+from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
 from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
-from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ._export_xml_dictionary import (
-    expected_xml_dictionary_root_identity,
-    format_xml_dictionary_value,
-    modelo_100_sign_branch_value,
-    read_xml_dictionary_root_identity,
-    registry_modelo_100_xml_declarations,
+from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
 )
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportError, FilingExportValidationError
+from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from .export_ratio_scale import casilla_values_as_designed
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
+from .export_xml_dictionary import (
+    expected_xml_dictionary_root_identity,
+    mismatched_xml_dictionary_repeated_casillas,
+    read_xml_dictionary_root_identity,
+    refuse_xml_dictionary_payload_outside_xsd,
+    stamped_individual_return_titular,
+    xml_dictionary_repeated_rows,
+    xml_dictionary_value_schema,
+)
+from .export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
+from .export_xml_dictionary_rows import xml_dictionary_layout_casillas, xml_dictionary_layout_entries
+from .export_xml_dictionary_values import format_xml_dictionary_value
+from .export_xml_input_dictionary import declared_and_admitted_dictionary_entries
+from .export_xml_value_limits import XmlValueSchema, canonical_xml_text
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -65,7 +74,7 @@ class DeclaracionExportResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     output_path: Path
@@ -82,9 +91,15 @@ class DeclaracionExportResult(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be a hex-encoded digest",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            ) from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hex",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -94,7 +109,7 @@ class FilingExportConsumedResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     byte_size: int = Field(gt=0)
@@ -107,7 +122,10 @@ class FilingExportConsumedResult(BaseModel):
     @pydantic_validation_boundary
     def _validate_sha256_hex(cls, value: str) -> str:
         if any(character not in "0123456789abcdef" for character in value):
-            raise FilingExportValidationError("file_sha256 must be lowercase hexadecimal")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hexadecimal",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -117,7 +135,7 @@ class FilingExportValidatedPayload(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     payload: bytes = Field(min_length=1)
@@ -154,7 +172,10 @@ class DeclaracionVerifyResult(BaseModel):
     def _validate_casilla_ids(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         for entry in value:
             if not entry or entry != entry.strip():
-                raise FilingExportValidationError("casilla-id entries must be non-blank, untrimmed identifiers")
+                raise FilingExportDesignIntegrityError(
+                    "casilla-id entries must be non-blank, untrimmed identifiers",
+                    translated_message="errors.integrity.filing_export_result_casilla_ids_malformed",
+                )
         return value
 
     @field_validator("file_sha256")
@@ -163,14 +184,23 @@ class DeclaracionVerifyResult(BaseModel):
     def _validate_sha256_hex(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        if len(value) != _SHA256_HEX_LENGTH:
-            raise FilingExportValidationError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
+        if len(value) != SHA256_HEX_LENGTH:
+            raise FilingExportDesignIntegrityError(
+                f"file_sha256 must be {SHA256_HEX_LENGTH} hex characters when provided",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be a hex-encoded digest",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            ) from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hex",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -182,6 +212,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
         raise FilingExportError(
             translated_message="application.filing.export.errors.receipt_artefact_unreadable",
             context={"artifact_path": str(artifact_path), "os_error_type": type(exc).__name__},
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_UNREADABLE),
         ) from exc
     if byte_size != receipt.byte_size:
         raise FilingExportError(
@@ -191,6 +222,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
                 "declared_byte_size": receipt.byte_size,
                 "observed_byte_size": byte_size,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_DIFFERS),
         )
     if digest != receipt.file_sha256:
         raise FilingExportError(
@@ -200,6 +232,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
                 "declared_sha256": receipt.file_sha256,
                 "observed_sha256": digest,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_DIFFERS),
         )
 
 
@@ -235,6 +268,7 @@ def _require_current_verify_schema(draft: ModeloDraft, subview: RegistryModeloSu
                 "draft_schema_version": draft.schema_version,
                 "active_schema_version": subview.schema_version,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.VERIFY_SNAPSHOT_STALE),
         )
 
 
@@ -284,7 +318,7 @@ def _verify_export_file(
         return _missing_verification_result(draft, file_path=file_path, narrative="filing.export.missing_file")
     digest = sha256_hex(payload)
     try:
-        mismatched, checked = _mismatched_casilla_ids(
+        mismatched, checked = mismatched_casilla_ids(
             subview.export_layouts[0], draft=draft, payload=payload, schema_provider=provider
         )
     except RegistryValidationError:
@@ -302,6 +336,10 @@ def _verify_export_file(
         return _missing_verification_result(
             draft, file_path=file_path, narrative="filing.export.malformed_file", digest=digest
         )
+    if subview.export_layouts[0].format is ExportLayoutFormat.XML_DICTIONARY:
+        # A file can state exactly what the draft holds and still be one AEAT rejects,
+        # so agreement with the draft alone is no match.
+        refuse_xml_dictionary_payload_outside_xsd(subview.export_layouts[0], payload=payload, schema_provider=provider)
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,
@@ -336,6 +374,7 @@ def verify_written_export(draft: ModeloDraft, *, file_path: Path, schema_provide
             "mismatched_casilla_ids": tuple(verification.mismatched_casilla_ids),
             "mismatched_root_fields": tuple(verification.mismatched_root_fields),
         },
+        precondition_verdict=export_design_terminal(ExportRefusalReason.WRITTEN_FILE_REFUSED),
     )
 
 
@@ -346,11 +385,7 @@ def _xml_exported_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> Iterable[CasillaId]:
     """Yield draft casillas represented by an XML dictionary layout."""
-    entries = xml_dictionary_entries(
-        layout,
-        sources=schema_provider.sources,
-        source_payloads=schema_provider.source_payloads,
-    )
+    entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
     draft_casillas = {value.casilla_id for value in draft.values}
     return (
         entry.casilla_id for entry in entries if entry.casilla_id is not None and entry.casilla_id in draft_casillas
@@ -398,9 +433,19 @@ def exported_casilla_provenance(
     )
 
 
-def _mismatched_casilla_ids(
+def _export_fields_by_identity(
+    layout: ExportLayoutDefinition,
+) -> dict[tuple[str, str], tuple[ExportRecordDefinition, ExportFieldDefinition]]:
+    return {(record.id, field.id): (record, field) for record in layout.records for field in record.fields}
+
+
+def mismatched_casilla_ids(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, payload: bytes, schema_provider: RegistrySchemaAccessor
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
+    """Return the casilla ids whose export payload values differ from the draft.
+
+    ``draft`` is a :class:`ModeloDraft`.
+    """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return _mismatched_xml_dictionary_casilla_ids(
             layout,
@@ -408,8 +453,11 @@ def _mismatched_casilla_ids(
             payload=payload,
             schema_provider=schema_provider,
         )
-    values = {value.casilla_id: value.value for value in draft.values}
-    fields_by_identity = {(record.id, field.id): field for record in layout.records for field in record.fields}
+    values = casilla_values_as_designed(
+        {value.casilla_id: value.value for value in draft.values},
+        revision=schema_provider.get_snapshot(draft.modelo).revision,
+    )
+    fields_by_identity = _export_fields_by_identity(layout)
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     for parsed in parse_export_payload(
@@ -420,15 +468,17 @@ def _mismatched_casilla_ids(
         checked.append(parsed.casilla_id)
         expected = values.get(parsed.casilla_id)
         try:
-            field = fields_by_identity[(parsed.record_id, parsed.field_id)]
+            record, field = fields_by_identity[(parsed.record_id, parsed.field_id)]
             if field.required_with is not None and values.get(field.required_with) is None:
                 # An occurrence block the draft leaves empty renders its blank fill.
                 expected_wire = render_empty_block_slot(field)
             else:
-                expected_wire = render_fixed_width_export_field(field, expected)
+                expected_wire = render_fixed_width_export_field(field, expected, record=record)
         except (KeyError, RegistryValidationError) as exc:
-            raise FilingExportValidationError(
-                f"export field {parsed.field_id!r} could not render its expected verification value"
+            raise FilingExportDesignIntegrityError(
+                f"export field {parsed.field_id!r} could not render its expected verification value",
+                translated_message="errors.integrity.filing_export_verification_value_unrenderable",
+                context={"field_id": parsed.field_id},
             ) from exc
         if expected_wire != parsed.raw:
             mismatched.append(parsed.casilla_id)
@@ -449,52 +499,109 @@ def _mismatched_xml_dictionary_casilla_ids(
     dictionary.  Resolve that same signed projection used by both renderer and
     parser, then compare the filed token with the renderer's canonical token.
     """
-    entries = {
-        entry.field_id: entry
-        for entry in xml_dictionary_entries(
-            layout,
-            sources=schema_provider.sources,
-            source_payloads=schema_provider.source_payloads,
-        )
-    }
+    layout_casillas = xml_dictionary_layout_casillas(layout, schema_provider=schema_provider)
+    declared_entries, admitted_entries = declared_and_admitted_dictionary_entries(
+        layout,
+        bindings=schema_provider.get_snapshot(draft.modelo).revision.bindings,
+        casillas=layout_casillas,
+        sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
+    )
+    entries = {entry.field_id: entry for entry in (*declared_entries, *admitted_entries)}
+    repeated_rows = xml_dictionary_repeated_rows(
+        layout, draft=draft, entries=(*declared_entries, *admitted_entries), schema_provider=schema_provider
+    )
     values = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
-    mismatched: list[CasillaId] = []
+    modelo_100_declarations = (
+        registry_modelo_100_xml_declarations() if draft.modelo == form_for_role("renta.annual") else None
+    )
+    value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
+    mismatched: list[CasillaId] = list(mismatched_xml_dictionary_repeated_casillas(payload, repeated_rows))
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
         layout,
         payload,
         sources=schema_provider.sources,
         source_payloads=schema_provider.source_payloads,
+        casillas=layout_casillas,
+        admitted_entries=admitted_entries,
     )
     for parsed in parsed_payload.casillas:
         casilla_id = parsed.casilla_id
         if casilla_id is None:
             continue
         checked.append(casilla_id)
-        entry = entries.get(parsed.field_id)
+        entry = _signed_dictionary_entry(entries, parsed.field_id)
+        if any(rows.holds(entry.path) and not rows.takes_box(entry.path) for rows in repeated_rows):
+            continue
         expected = values.get(casilla_id)
-        if entry is None:
-            raise FilingExportValidationError(
-                f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
-            )
-        try:
-            expected_wire = _xml_dictionary_expected_wire_value(
-                entry,
-                expected,
-                modelo=draft.modelo,
-                modelo_100_declarations=modelo_100_declarations,
-            )
-        except FilingExportValidationError as exc:
-            raise FilingExportValidationError(
-                f"XML dictionary field {parsed.field_id!r} could not render its expected verification value"
-            ) from exc
+        expected_wire = _verification_wire_value(
+            entry,
+            expected,
+            payload=payload,
+            modelo=draft.modelo,
+            modelo_100_declarations=modelo_100_declarations,
+            value_schema=value_schema,
+        )
         if expected_wire != parsed.raw:
             mismatched.append(casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
 
 
-def _xml_dictionary_expected_wire_value(
+def _signed_dictionary_entry(entries: Mapping[str, XmlDictionaryEntry], field_id: str) -> XmlDictionaryEntry:
+    entry = entries.get(field_id)
+    if entry is None:
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary field {field_id!r} could not resolve its signed entry for verification",
+            translated_message="errors.integrity.filing_export_verification_signed_entry_unresolved",
+            context={"field_id": field_id},
+        )
+    return entry
+
+
+def _verification_wire_value(
+    entry: XmlDictionaryEntry,
+    expected: object,
+    *,
+    payload: bytes,
+    modelo: str,
+    modelo_100_declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
+) -> str:
+    """Return the token the payload should carry: the stamped titular when no value was filed, else the render."""
+    stamped = stamped_individual_return_titular(entry, payload) if expected is None else None
+    return stamped or _xml_dictionary_checked_wire_value(
+        entry,
+        expected,
+        modelo=modelo,
+        modelo_100_declarations=modelo_100_declarations,
+        value_schema=value_schema,
+    )
+
+
+def _xml_dictionary_checked_wire_value(
+    entry: XmlDictionaryEntry,
+    value: object,
+    *,
+    modelo: str,
+    modelo_100_declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
+) -> str:
+    """Attach the signed field identity to an expected-value rendering refusal."""
+    try:
+        expected = xml_dictionary_expected_wire_value(
+            entry, value, modelo=modelo, modelo_100_declarations=modelo_100_declarations
+        )
+        return canonical_xml_text(value_schema, entry.path, expected)
+    except FilingExportValidationError as exc:
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary field {entry.field_id!r} could not render its expected verification value",
+            translated_message="errors.integrity.filing_export_verification_value_unrenderable",
+            context={"field_id": entry.field_id},
+        ) from exc
+
+
+def xml_dictionary_expected_wire_value(
     entry: XmlDictionaryEntry,
     value: object,
     *,
@@ -508,9 +615,12 @@ def _xml_dictionary_expected_wire_value(
     verification must project the raw draft value before comparing either wire
     token.  The renderer owns the projection; this reader reuses it.
     """
-    if modelo == Modelo("100"):
+    if modelo == form_for_role("renta.annual"):
         if modelo_100_declarations is None:
-            raise FilingExportValidationError("Modelo 100 XML verification declarations were not resolved")
+            raise FilingExportDesignIntegrityError(
+                "Modelo 100 XML verification declarations were not resolved",
+                translated_message="errors.integrity.filing_export_verification_modelo100_declarations_unresolved",
+            )
         value = modelo_100_sign_branch_value(
             entry,
             value,

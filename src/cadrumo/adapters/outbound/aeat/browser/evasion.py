@@ -35,7 +35,7 @@ from .errors import (
 logger = get_logger(__name__)
 
 
-def _raise_playwright_stealth_unavailable(cause: ImportError) -> Never:
+def raise_playwright_stealth_unavailable(cause: ImportError) -> Never:
     """Translate a missing stealth dependency into the browser safety contract."""
     raise BrowserEvasionError(
         "Browser evasion support is unavailable",
@@ -85,7 +85,7 @@ class PlaywrightStealthEvasion:
             from playwright_stealth import Stealth
         except ImportError as exc:
             logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
-            _raise_playwright_stealth_unavailable(exc)
+            raise_playwright_stealth_unavailable(exc)
 
         await Stealth().apply_stealth_async(context)
         logger.debug("playwright-stealth evasion applied")

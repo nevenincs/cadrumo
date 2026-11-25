@@ -25,22 +25,27 @@ from cadrumo.domain.calculations.registry.binding_value_contract import BindingV
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_formulas import validate_boolean_channel_operands
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
 _MODELO = "131"
-_REVISION = "2025"
-# The 2025 edition inherits this formula through 2024 from the 2019-2023 storage
-# baseline, so the fixture edits the fragment that edition actually hydrates.
-_FORMULA_FRAGMENT = "revisions/2019-2023/formulas/0001-declarations.toml"
+_REVISION = str(authored_revisions(_MODELO)[-1].id)
 _FORMULA_ID = "modelo-131-pago-fraccionado-sin-datos-base"
 _BOOLEAN_BINDING = "modelo-131.page1.discapacidad-33"
 _CASILLA = "03"
 _AUTHORED_EXPRESSION = (
     'expression = { op = "percent", args = [{ casilla_id = "03" }, '
     '{ parameter = "irpf.objective_no_base_fractional_payment_rate" }] }'
+)
+# The newest edition inherits this formula from an earlier storage baseline, so the fixture edits the
+# fragment that declares it: the one authored revision whose formulas state the expression.
+(_FORMULA_FRAGMENT,) = (
+    path.relative_to(_MODELOS_ROOT / _MODELO).as_posix()
+    for path in sorted((_MODELOS_ROOT / _MODELO / "revisions").glob("*/formulas/0001-declarations.toml"))
+    if _AUTHORED_EXPRESSION in path.read_text(encoding="utf-8")
 )
 
 

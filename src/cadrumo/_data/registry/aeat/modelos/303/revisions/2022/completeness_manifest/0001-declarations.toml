@@ -141,6 +141,10 @@ casilla_id = "iva.autorepercutido.interior.devengado"
 number = "iva.autorepercutido.interior.devengado"
 
 [[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.devengado.base"
+number = "iva.autorepercutido.interior.devengado.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "iva.autorepercutido.interior.deducible"
 number = "iva.autorepercutido.interior.deducible"
 
@@ -373,6 +377,10 @@ casilla_id = "11"
 number = "11"
 
 [[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "12"
+number = "12"
+
+[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "13"
 number = "13"
 
@@ -387,6 +395,18 @@ number = "122"
 # Box [10], the intracomunitaria acquisitions base carrier it projects, the
 # promotor's autoconsumo carriers and the rate rows' ledger bases and cuota
 # carriers join the calculation closure once they are wired on this edition.
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "06"
+number = "06"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "09"
+number = "09"
+
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "10"
 number = "10"
@@ -492,3 +512,27 @@ number = "99"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "88"
 number = "88"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "14"
+number = "14"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.base"
+number = "iva.modificacion-bases-cuotas.base"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas"
+number = "iva.modificacion-bases-cuotas"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.operador.base"
+number = "iva.modificacion-bases-cuotas.operador.base"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.operador"
+number = "iva.modificacion-bases-cuotas.operador"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "25"
+number = "25"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-recargo"
+number = "iva.modificacion-recargo"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-recargo.operador"
+number = "iva.modificacion-recargo.operador"

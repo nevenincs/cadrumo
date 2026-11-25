@@ -13,10 +13,72 @@ from typing import Any
 import pytest
 
 from ...command_execution import run_command
-from .. import cmake_build
-from ..cmake_build import run_configured_command
+from .. import cargo_command
+from ..cargo_command import run_configured_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize(
+    "arguments", [["--config", "build.build-dir='outside'", "build"], ["build", "--artifact-dir=outside"]]
+)
+def test_cargo_output_overrides_are_refused_before_launch(tmp_path: Path, arguments: list[str]) -> None:
+    with pytest.raises(ValueError, match="not accept"):
+        run_configured_command(tmp_path, {}, ["cargo", *arguments])
+
+
+@pytest.mark.parametrize("arguments", [["b"], ["doc"], ["bench"], ["+nightly", "build"], ["--version"], ["fmt"]])
+def test_unrecognized_cargo_commands_are_refused_before_launch(tmp_path: Path, arguments: list[str]) -> None:
+    with pytest.raises(ValueError, match="subcommand or global option"):
+        run_configured_command(tmp_path, {}, ["cargo", *arguments])
+
+
+def test_test_program_target_dir_is_not_a_cargo_override(tmp_path: Path) -> None:
+    native = tmp_path / "cargo"
+    assert cargo_command.selected_target_directory(native, ["cargo", "test", "--", "--target-dir", "outside"]) == native
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["fmt", "--check", "--manifest-path", "Cargo.toml"],
+        [
+            "deny",
+            "--locked",
+            "--manifest-path",
+            "Cargo.toml",
+            "--config",
+            "deny.toml",
+            "check",
+            "--hide-inclusion-graph",
+            "advisories",
+            "bans",
+            "licenses",
+            "sources",
+        ],
+    ],
+)
+def test_quality_commands_use_owned_cargo_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, arguments: list[str]
+) -> None:
+    native = tmp_path / "cargo/native"
+    (tmp_path / "build-paths.json").write_text(
+        json.dumps({"paths": {"generated": "generated", "cargo": "cargo/native", "desktop_cargo": "cargo/desktop"}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CARGO_TARGET_DIR", str(native))
+    monkeypatch.setenv("CARGO_BUILD_TARGET_DIR", str(tmp_path / "outside"))
+    monkeypatch.setenv("CARGO_BUILD_BUILD_DIR", str(tmp_path / "outside"))
+
+    def command(_argv: list[str], **kwargs: Any) -> Any:
+        assert kwargs["environment"]["CARGO_BUILD_TARGET_DIR"] == str(native)
+        assert kwargs["environment"]["CARGO_BUILD_BUILD_DIR"] == str(native)
+        assert kwargs["environment"]["PATH"].split(os.pathsep)[0] == str(toolchain)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(cargo_command, "run_command", command)
+    toolchain = tmp_path / "toolchain/bin"
+    assert run_configured_command(tmp_path, {}, [str(toolchain / "cargo"), *arguments]).returncode == 0
 
 
 def _toolchain(wrapper: Path) -> dict[str, Any]:
@@ -133,6 +195,8 @@ def test_failed_cargo_action_keeps_identity_unpublished_and_retry_rebuilds(
         encoding="utf-8",
     )
     monkeypatch.setenv("CARGO_TARGET_DIR", str(native))
+    monkeypatch.setenv("CARGO_BUILD_BUILD_DIR", str(tmp_path / "outside"))
+    monkeypatch.setenv("CARGO_BUILD_TARGET_DIR", str(tmp_path / "outside"))
     inherited_path = os.pathsep.join((str(tmp_path / "path with spaces"), os.environ["PATH"]))
     monkeypatch.setenv("PATH", inherited_path)
     calls = []
@@ -140,14 +204,19 @@ def test_failed_cargo_action_keeps_identity_unpublished_and_retry_rebuilds(
 
     def command(argv: list[str], **kwargs: object) -> Any:
         nonlocal failed
-        assert kwargs["environment"] == dict(os.environ, PATH=os.pathsep.join((str(tmp_path), inherited_path)))
+        assert kwargs["environment"] == dict(
+            os.environ,
+            PATH=os.pathsep.join((str(tmp_path), inherited_path)),
+            CARGO_BUILD_BUILD_DIR=str(native),
+            CARGO_BUILD_TARGET_DIR=str(native),
+        )
         calls.append(argv[1])
         status = 0
         if argv[1] == failed_action and not failed:
             status, failed = 1, True
         return SimpleNamespace(returncode=status, stdout="", stderr="")
 
-    monkeypatch.setattr(cmake_build, "run_command", command)
+    monkeypatch.setattr(cargo_command, "run_command", command)
     argv = [str(tmp_path / "cargo.exe"), "build"]
     assert run_configured_command(tmp_path, {}, argv).returncode == 1
     assert not list(generated.glob("rust-toolchain-*.txt"))
@@ -241,7 +310,7 @@ def test_linked_native_root_is_refused_before_clean_without_sibling_damage(
     def unexpected_command(*args: object, **kwargs: object) -> Any:
         raise AssertionError("Linked target root must be refused before any Cargo command")
 
-    monkeypatch.setattr(cmake_build, "run_command", unexpected_command)
+    monkeypatch.setattr(cargo_command, "run_command", unexpected_command)
     with pytest.raises(ValueError, match="Linked CMake output directory"):
         run_configured_command(build, {}, [str(tmp_path / "cargo.exe"), "build"])
     assert sentinel.read_bytes() == b"retain desktop"

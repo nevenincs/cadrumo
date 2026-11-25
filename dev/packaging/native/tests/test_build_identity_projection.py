@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from ..assemble import agent_closure, package_binaries, package_build_record, package_components
-from ..build_stamp import BuildStamp, ComponentIdentity
+from ..assembly_identity import agent_closure, package_binaries, package_build_record, package_components
+from ..build_stamp import SOURCE_COMMIT_VARIABLE, BuildStamp, ComponentIdentity, supplied_source_commit
 from ..layout import application_images, load_layout
-from ..metadata import generate
+from ..metadata import LAYOUT_HEADER, generate, generate_unstamped
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-STAMP = BuildStamp("2026101903", 412, "2026-10-19T08:30:00Z")
+STAMP = BuildStamp("2026101903", 412, "1980-10-19T08:30:00Z")
 
 
 def test_the_shared_record_and_header_carry_the_interpreter_identity_and_both_display_versions(
@@ -28,7 +28,7 @@ def test_the_shared_record_and_header_carry_the_interpreter_identity_and_both_di
         "build_id": "2026101903",
         "build_sequence": 412,
         "build_number": 412,
-        "build_date": "2026-10-19T08:30:00Z",
+        "build_date": "1980-10-19T08:30:00Z",
     }
     # The package identity is allocated at staging, and the type belongs to each staged package.
     assert not {"build_id", "build_sequence", "build_type", "display_version"} & set(record)
@@ -44,8 +44,24 @@ def test_the_shared_record_and_header_carry_the_interpreter_identity_and_both_di
     assert '#define CADRUMO_BUILD_TYPE "release"' in release and "CADRUMO_DISPLAY_VERSION_RELEASE" in release
 
 
+def test_the_unstamped_outputs_are_the_stamped_run_s_identity_free_outputs_alone(tmp_path: Path) -> None:
+    stamped, unstamped = tmp_path / "stamped", tmp_path / "unstamped"
+    generate(stamped, STAMP, tmp_path, target="linux-x86-64")
+    generate_unstamped(unstamped, target="linux-x86-64")
+    assert sorted(path.name for path in unstamped.iterdir()) == [LAYOUT_HEADER]
+    assert (unstamped / LAYOUT_HEADER).read_bytes() == (stamped / LAYOUT_HEADER).read_bytes()
+
+
+def test_the_unstamped_windows_outputs_are_the_layout_header_and_the_identity_manifests(tmp_path: Path) -> None:
+    generate_unstamped(tmp_path, target="windows-x86-64")
+    manifests = [f"{image}-{kind}.manifest" for image in ("desktop", "process") for kind in ("development", "release")]
+    assert sorted(path.name for path in tmp_path.iterdir()) == sorted([LAYOUT_HEADER, *manifests])
+    for name in manifests:
+        assert b"urn:schemas-microsoft-com:msix.v1" in (tmp_path / name).read_bytes()
+
+
 def _identity(component: str, build_id: str, sequence: int) -> ComponentIdentity:
-    return ComponentIdentity(component, "0" * 64, "0.6.0", BuildStamp(build_id, sequence, "2026-10-19T08:30:00Z"))
+    return ComponentIdentity(component, "0" * 64, "0.6.0", BuildStamp(build_id, sequence, "1980-10-19T08:30:00Z"))
 
 
 def test_components_name_every_cadrumo_built_binary_with_its_own_component_build() -> None:
@@ -85,10 +101,33 @@ def test_components_name_every_cadrumo_built_binary_with_its_own_component_build
 
 def test_the_staged_record_carries_the_package_identity_beside_the_interpreter_identity() -> None:
     shared = {"version": "0.6.0", "interpreter": {"build_id": "2026101901", "build_number": 1}}
-    record = package_build_record(shared, BuildStamp("2026101907", 7, "2026-10-19T09:00:00Z"), "release")
+    commit = "0123456789abcdef0123456789abcdef01234567"
+    record = package_build_record(
+        shared, BuildStamp("2026101907", 7, "1980-10-19T09:00:00Z"), "release", source_commit=commit
+    )
     assert record["interpreter"] == shared["interpreter"]
     assert (record["build_id"], record["build_sequence"], record["build_number"]) == ("2026101907", 7, 7)
     assert (record["build_type"], record["display_version"]) == ("release", "0.6.0+2026101907")
+    assert record["source_commit"] == commit
+
+
+def test_a_stage_built_without_a_supplied_commit_records_none_rather_than_a_guess() -> None:
+    record = package_build_record(
+        {"version": "0.6.0"}, BuildStamp("2026101907", 7, "1980-10-19T09:00:00Z"), "debug", source_commit=None
+    )
+    assert "source_commit" in record
+    assert record["source_commit"] is None
+
+
+def test_the_supplied_commit_is_read_from_the_builder_and_must_be_a_full_hash() -> None:
+    commit = "fedcba9876543210fedcba9876543210fedcba98"
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: commit}) == commit
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: f" {commit}\n"}) == commit
+    assert supplied_source_commit({}) is None
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: ""}) is None
+    for refused in ("fedcba9", commit.upper(), commit + "0", "HEAD", "feature/tui"):
+        with pytest.raises(ValueError, match=SOURCE_COMMIT_VARIABLE):
+            supplied_source_commit({SOURCE_COMMIT_VARIABLE: refused})
 
 
 def test_the_agent_closure_lists_its_installed_versions_by_name() -> None:

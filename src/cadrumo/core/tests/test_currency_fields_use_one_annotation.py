@@ -32,8 +32,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path(__file__).resolve().parent.parent.parent
 
-#: The canonical annotation, and the spellings a field may use to name it.
-_CANONICAL = {"IsoCurrencyCode", "IsoCurrencyCode | None"}
+#: The canonical annotations, and the spellings a field may use to name them:
+#: ``IsoCurrencyCode`` folds through the normaliser, and its declared wire twin
+#: ``IsoCurrencyCodeText`` states the same three-letter shape as a pattern, for a
+#: public operation schema that may not customise its Pydantic core schema.
+_CANONICAL = {"IsoCurrencyCode", "IsoCurrencyCode | None", "IsoCurrencyCodeText", "IsoCurrencyCodeText | None"}
 
 #: Field names that carry an ISO 4217 code. Deliberately narrow: a name like
 #: ``local_recurrence_amount`` contains no currency code however it reads, and
@@ -49,7 +52,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "can name the offending value; normalisation happens once at the "
         "RawTransaction boundary this feeds, not twice"
     ),
-    "adapters/inbound/financial/providers/_mapped_tabular.py::currency": (
+    "adapters/inbound/financial/providers/mapped_tabular.py::currency": (
         "the same raw parse struct as the CSV provider, for the same reason: it "
         "carries the source cell, and RawTransaction normalises it"
     ),
@@ -57,6 +60,11 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "the draft payload of a document reading, beside taxable_base and "
         "iva_rate which are strings for the same reason: it shows the operator "
         "what was read, including when what was read is wrong"
+    ),
+    "application/ledger/statement_reading.py::currency": (
+        "a reader's proposal for one page, as the model wrote it: a code or a bare "
+        "symbol, which the grounding step resolves against what the page prints "
+        "and refuses when it prints nothing that names it"
     ),
     "application/ledger/structured_invoice_ports.py::currency": (
         "a structured e-invoice as the parser read it, beside the parsed "
@@ -97,13 +105,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
     # before/plain/wrap validators. A public operation field therefore cannot
     # normalise at all -- it declares shape and nothing else -- so the canonical
     # policy stays at the boundary each field feeds or is projected from.
-    "application/invoices/catalogue_add_contracts.py::currency": (
-        "a registered operation's public request schema, which the operation "
-        "model contract forbids from carrying a core-schema-customising "
-        "annotation; build_catalogue_invoice constructs the domain Invoice, "
-        "whose currency IS IsoCurrencyCode, so the canonical policy applies one "
-        "step later rather than not at all"
-    ),
     "application/invoices/catalogue_read_projection.py::currency": (
         "a public projection of the domain Invoice, under the same operation "
         "schema contract; it does not merely omit the policy -- its _bounds "
@@ -123,6 +124,12 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "annotation here, and the row it copies cannot hold a value the "
         "canonical policy would reject"
     ),
+    "application/actividad_asset/activity_asset_read_models.py::currency": (
+        "a registered operation's public acquisition-candidate projection, whose "
+        "schema contract forbids IsoCurrencyCode's core-schema hook; "
+        "register_reads._candidate copies RawTransaction.currency, whose "
+        "before validator applies the canonical ISO currency normalizer"
+    ),
     "application/ledger/transaction_projection.py::currency": (
         "a public projection of LedgerTransactionPayload.currency, which is "
         "already IsoCurrencyCode, under the same operation schema contract; "
@@ -136,18 +143,19 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "carry a policy its non-optional siblings cannot; prepare_invoice_"
         "confirmation_from_evidence reaches the domain Invoice that owns it"
     ),
-    "application/modelo/aggregate_public.py::currency_code": (
-        "a public projection of ForeignAssetIngestObservation.currency_code, "
-        "which is IsoCurrencyCode, under the same operation schema contract; "
-        "to_domain revalidates through that model and refuses a value its "
-        "canonical round trip would change"
-    ),
     "application/invoices/catalogue_intake_contracts.py::currency": (
         "a wizard request field held as raw transport text because "
         "create_invoice_via_wizard validates every field independently and "
         "ACCUMULATES the failures, so a malformed code is reported beside a "
         "malformed NIF and date; refusing it at the request boundary would "
         "mask the other two behind the first"
+    ),
+    "application/invoices/figures_preview_contracts.py::currency": (
+        "an invoice draft preview answers a malformed code as a closed rule "
+        "finding (would_refuse, with the offending field named) beside the other "
+        "findings, judged by normalise_iso_4217_currency; the operation schema "
+        "contract forbids the folding annotation, and a refusing one would reject "
+        "the whole preview ahead of the rest of the findings"
     ),
     "application/ledger/update_contracts.py::currency": (
         "a canonical-text patch whose sibling date and decimal fields REFUSE "

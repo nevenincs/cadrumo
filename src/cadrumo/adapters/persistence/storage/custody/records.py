@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.errors.hierarchy import pydantic_validation_boundary
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
@@ -17,10 +17,12 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .._kdf_salt import KDF_SALT_BYTES
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..crypto.aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
-from ._kdf_records import (
+from ..kdf_salt import KDF_SALT_BYTES
+from .digest_model import CustodyDigestModel
+from .errors import ProfileCustodyRecordError
+from .kdf_records import (
     KdfAlgorithm,
     KdfIterations,
     KdfMemoryMib,
@@ -30,8 +32,6 @@ from ._kdf_records import (
     canonical_b64,
     canonical_dek_epoch,
 )
-from .digest_model import CustodyDigestModel
-from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
 #: The password envelope's name inside a capsule's ``custody/`` directory.
@@ -43,6 +43,7 @@ PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 #: predecessor digest, and the ten-digit maximum password generation.
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704
 PROFILE_CUSTODY_PASSWORD_GENERATION_MAX: Final = 2_147_483_647
+_FIRST_PASSWORD_GENERATION: Final = 1
 
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
 
@@ -58,7 +59,7 @@ def _canonical_json_bytes(value: object) -> bytes:
 class ProfileCustodyKdfParameters(BaseModel):
     """The finite Argon2id parameter grid accepted by custody v1."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     algorithm: KdfAlgorithm
     version: KdfVersion
@@ -78,7 +79,7 @@ class ProfileCustodyKdfParameters(BaseModel):
 class ProfileCustodyWrappedDek(BaseModel):
     """Authenticated AES-GCM payload carrying exactly one 32-byte DEK."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     nonce_b64: str
     ciphertext_b64: str
@@ -103,10 +104,12 @@ class ProfileCustodyWrappedDek(BaseModel):
         return canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
-PasswordGeneration = Annotated[int, Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+PasswordGeneration = Annotated[int, Field(ge=_FIRST_PASSWORD_GENERATION, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
 """A profile password generation counter: at least the first, never past the ceiling."""
 
-PostChangePasswordGeneration = Annotated[int, Field(ge=2, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+PostChangePasswordGeneration = Annotated[
+    int, Field(ge=_FIRST_PASSWORD_GENERATION + 1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)
+]
 """The generation a profile reaches after a passphrase change.
 
 Narrower than :obj:`PasswordGeneration` at the bottom only: a profile starts at
@@ -120,7 +123,7 @@ store. Both halves are declared here, beside the envelope that owns them.
 class _ProfileCustodyEnvelopePayload(BaseModel):
     """Validated v1 envelope fields before self-digest construction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     profile_id: UUID
@@ -180,7 +183,7 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel)
                 profile_id=profile_id,
                 password_generation=password_generation,
                 dek_epoch=dek_epoch,
-                password_encoding=cast(Literal["utf-8"], _UTF_8_ENCODING),
+                password_encoding=cast(Literal["utf-8"], UTF_8_ENCODING),
                 key_schedule=_KEY_SCHEDULE,
                 kdf=kdf,
                 wrapped_dek=wrapped_dek,
@@ -203,7 +206,7 @@ def parse_profile_custody_envelope(value: bytes) -> ProfileCustodyEnvelope:
             f"profile custody envelope exceeds {PROFILE_CUSTODY_ENVELOPE_MAX_BYTES}-byte canonical limit",
         )
     try:
-        text = value.decode(_UTF_8_ENCODING, errors="strict")
+        text = value.decode(UTF_8_ENCODING, errors="strict")
         parsed = json.loads(
             text,
             object_pairs_hook=reject_duplicate_json_members,

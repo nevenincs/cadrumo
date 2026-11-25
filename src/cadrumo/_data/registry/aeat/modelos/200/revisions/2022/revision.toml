@@ -1,8 +1,15 @@
 [revisions."2022"]
 casilla_source_refs = ["aeat-dr-200-2022"]
+binding_source_refs = ["aeat-modelo-200-manual-2022"]
+formula_source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+parameter_source_refs = ["aeat-modelo-200-manual-2022"]
+dependency_classification_source_refs = ["aeat-modelo-200-manual-2022"]
+live_cross_reference_source_refs = ["aeat-modelo-200-manual-2022"]
 application_link_source_refs = ["boe-modelo-200-2022-form", "aeat-dr-200-2022"]
 filing_schedule_source_refs = ["boe-modelo-200-2022-form", "aeat-modelo-200-manual-2022"]
-authority_grade = "applicability"
+# This edition files ejercicio 2022 through the exact 2022 design its export
+# layout renders.
+authority_grade = "filing"
 # Modelo 200, declaracion del Impuesto sobre Sociedades y del IRNR (establecimientos
 # permanentes y entidades en regimen de atribucion de rentas constituidas en el
 # extranjero con presencia en territorio espanol), for periodos impositivos
@@ -22,9 +29,24 @@ authority_grade = "applicability"
 # prints with another caption, stay undeclared and are recorded as debt in
 # casillas/0001-declarations.toml.
 #
-# Grade: applicability. No formula, construct relation, binding or export layout
-# computes, checks or files these casillas, so the modelo is not calculated or
-# filed for this year; the 2024 edition's calculation authority does not reach it.
+# Grade: filing. The Modelo 200 cuota chain (base imponible previa [00550], base
+# imponible [00552], base tras reserva de nivelacion [01330], tipo [00558], cuota
+# integra [00562], cuota integra ajustada positiva [00582], cuota liquida [00592],
+# cuota del ejercicio [00599], cuota diferencial [00611]) is authored at this edition
+# from aeat-dr-200-2022 and the Manual practico de Sociedades 2022, which states the
+# same operations as the 2023 manual. The 2022 design prints the base imponible block
+# on DP200013 ("Liquidacion II") and the otras deducciones block with the cuota
+# liquida on DP200014 ("Liquidacion III"), one record earlier than the 2023 design, so
+# the formulas that read those boxes name the 2022 records and the 2023 edition states
+# its own; the members whose boxes both designs print alike (bindings, the cuota
+# diferencial, two verification predicates, dependency classifications, the rates)
+# are declared here once and inherited. The rates are those the manual's "Tipos de
+# gravamen vigentes" table prints for 2022: no rate depends on the INCN, which Ley
+# 31/2022 art. 39 introduces only for periods initiated from 2023. Its export layout
+# renders the 2022 design (export/, generated from aeat-dr-200-2022), and the cuota
+# chain reproduces, box by box, the liquidaciones the Manual practico de Sociedades
+# 2022 prints in its "Cuota liquida minima (casilla 00619)" supuestos practicos
+# (pages 351-364) at the tipo general.
 valid_from = 2022-01-01
 valid_to = 2022-12-31
 period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
@@ -34,10 +56,55 @@ legal_refs = [
     "orden-hfp-523-2023:art-6-1",
     "orden-hfp-523-2023:art-3",
     "ley-27-2014:art-124",
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-49-2002:art-10",
 ]
 source_refs = [
     "boe-modelo-200-2022-form",
     "aeat-dr-200-2022",
     "aeat-modelo-200-manual-2022",
 ]
-review_status = "pending_review"
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-11-18
+
+[revisions."2022".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This return credits withholding suffered against the Impuesto sobre Sociedades, not IRPF. A credit reconciliation entry names a Modelo 100 credit casilla and the IRPF income classes of payer records, so it cannot state an Impuesto sobre Sociedades credit."""
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[revisions."2022".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 200's corpus carries its diseno de registro workbook, which describes the fichero layout rather than the labels the declaracion prints, and no declaracion specimen. The label dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a sweep for \
+.properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]

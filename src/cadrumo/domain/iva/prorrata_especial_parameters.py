@@ -31,8 +31,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError as _CadrumoError
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core.errors.hierarchy import CadrumoError
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
 from ..calculations.registry.schema_base import ThresholdComparison
 
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID = "m303-prorrata-especial-obligatoria-margen-porcentaje"
 
 
-class ProrrataEspecialMandatoryParameterError(_CadrumoError):
+class ProrrataEspecialMandatoryParameterError(CadrumoError):
     """Raised when the art-103.Dos.2 margin cannot be grounded for an ejercicio."""
 
 
@@ -59,7 +59,7 @@ class ProrrataEspecialMandatoryParameters(BaseModel):
         resolved_on: The filing-period date the value was selected for.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     margin_percentage: Decimal = Field(gt=Decimal("0"))
     comparison: ThresholdComparison

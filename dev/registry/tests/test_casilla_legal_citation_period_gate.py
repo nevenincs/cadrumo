@@ -17,8 +17,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_covering
 from dev.registry.analysis.casilla_legal_citation_period import (
     CasillaCitationKey,
     CitationPeriodRefusal,
@@ -37,6 +39,21 @@ from ..compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SHOWN = 20
+
+
+def _superseded_edition() -> str:
+    """Return the Modelo 100 edition inside the window of the redaction that superseded art. 23's base row."""
+    with bundled_indexed_authority().operation() as operation:
+        redaction = operation.legal_reference("ley-35-2006:art-23-2021")
+    assert redaction.effective_from is not None
+    return str(revision_covering("100", redaction.effective_from.year).id)
+
+
+# The oldest edition of Modelo 100 predates every dated redaction the gate probes, and the
+# newest postdates them all.
+_OLDEST = str(authored_revisions("100")[0].id)
+_NEWEST = str(authored_revisions("100")[-1].id)
+_SUPERSEDED = _superseded_edition()
 
 
 @pytest.fixture(scope="module")
@@ -105,10 +122,16 @@ def test_every_ledger_category_agrees_with_the_catalogue(
 def test_the_known_drifting_citations_are_refused_by_name(
     refusals: Mapping[CasillaCitationKey, CitationPeriodRefusal],
 ) -> None:
-    anachronistic = refusals[CasillaCitationKey("100", "2020", "0066", "ley-35-2006:art-23")]
+    anachronistic = refusals[CasillaCitationKey("100", _OLDEST, "0066", "ley-35-2006:art-23")]
     assert anachronistic.alternatives == ()
     message = anachronistic.describe()
-    for fragment in ("modelo 100", "edition 2020", "[2020-01-01..2020-12-31]", "casilla 0066", "ley-35-2006:art-23"):
+    for fragment in (
+        "modelo 100",
+        f"edition {_OLDEST}",
+        f"[{_OLDEST}-01-01..{_OLDEST}-12-31]",
+        "casilla 0066",
+        "ley-35-2006:art-23",
+    ):
         assert fragment in message
 
 
@@ -123,9 +146,9 @@ def test_a_planted_superseded_citation_names_the_governing_alternative(
     citation would take.
     """
     modelo = _modelo(corpus, "100")
-    planted = _plant(modelo, "2022", "0066", "ley-35-2006:art-23")
+    planted = _plant(modelo, _SUPERSEDED, "0066", "ley-35-2006:art-23")
     new = set(casilla_citation_period_refusals(planted, legal)) - set(casilla_citation_period_refusals(modelo, legal))
-    assert [refusal.key for refusal in new] == [CasillaCitationKey("100", "2022", "0066", "ley-35-2006:art-23")]
+    assert [refusal.key for refusal in new] == [CasillaCitationKey("100", _SUPERSEDED, "0066", "ley-35-2006:art-23")]
     (refusal,) = new
     assert refusal.alternatives == ("ley-35-2006:art-23-2021",)
 
@@ -147,7 +170,7 @@ def test_an_exception_naming_a_governing_citation_is_stale(
     legal: Mapping[str, LegalReference],
     ledger: Mapping[CasillaCitationKey, CitationException],
 ) -> None:
-    governing = CasillaCitationKey("100", "2024", "0066", "ley-35-2006:art-22")
+    governing = CasillaCitationKey("100", _NEWEST, "0066", "ley-35-2006:art-22")
     assert governing in _citations(corpus)
     baseline = citation_period_correctness(corpus, legal, ledger.keys())
     report = citation_period_correctness(corpus, legal, {*ledger, governing})
@@ -159,9 +182,9 @@ def test_a_planted_drifting_citation_is_refused(
     corpus: tuple[ModeloDefinition, ...], legal: Mapping[str, LegalReference]
 ) -> None:
     modelo = _modelo(corpus, "100")
-    planted = _plant(modelo, "2024", "0066", "ley-35-2006:art-52-2015")
+    planted = _plant(modelo, _NEWEST, "0066", "ley-35-2006:art-52-2015")
     new = set(casilla_citation_period_refusals(planted, legal)) - set(casilla_citation_period_refusals(modelo, legal))
-    assert [refusal.key for refusal in new] == [CasillaCitationKey("100", "2024", "0066", "ley-35-2006:art-52-2015")]
+    assert [refusal.key for refusal in new] == [CasillaCitationKey("100", _NEWEST, "0066", "ley-35-2006:art-52-2015")]
     (refusal,) = new
     assert refusal.alternatives == ("ley-35-2006:art-52",)
     assert "[2015-01-01..2020-12-31]" in refusal.describe()
@@ -174,20 +197,20 @@ def test_a_planted_citation_the_modelo_lists_as_cross_year_authority_is_still_re
     reference = "ley-35-2006:art-23"
     assert reference in modelo.legal_refs
     casilla = next(
-        str(casilla.id) for casilla in modelo.revisions["2020"].casillas if reference not in casilla.legal_refs
+        str(casilla.id) for casilla in modelo.revisions[_OLDEST].casillas if reference not in casilla.legal_refs
     )
-    planted = _plant(modelo, "2020", casilla, reference)
+    planted = _plant(modelo, _OLDEST, casilla, reference)
     new = {refusal.key for refusal in casilla_citation_period_refusals(planted, legal)} - {
         refusal.key for refusal in casilla_citation_period_refusals(modelo, legal)
     }
-    assert new == {CasillaCitationKey("100", "2020", casilla, reference)}
+    assert new == {CasillaCitationKey("100", _OLDEST, casilla, reference)}
 
 
 def test_a_planted_governing_citation_is_admitted(
     corpus: tuple[ModeloDefinition, ...], legal: Mapping[str, LegalReference]
 ) -> None:
     modelo = _modelo(corpus, "100")
-    planted = _plant(modelo, "2024", "0066", "ley-35-2006:art-52")
+    planted = _plant(modelo, _NEWEST, "0066", "ley-35-2006:art-52")
     assert casilla_citation_period_refusals(planted, legal) == casilla_citation_period_refusals(modelo, legal)
 
 
@@ -195,7 +218,7 @@ def test_a_planted_unresolved_citation_is_refused(
     corpus: tuple[ModeloDefinition, ...], legal: Mapping[str, LegalReference]
 ) -> None:
     modelo = _modelo(corpus, "100")
-    planted = _plant(modelo, "2024", "0066", "ley-35-2006:art-9999")
+    planted = _plant(modelo, _NEWEST, "0066", "ley-35-2006:art-9999")
     new = set(casilla_citation_period_refusals(planted, legal)) - set(casilla_citation_period_refusals(modelo, legal))
     (refusal,) = new
     assert refusal.governs_from is None
@@ -230,7 +253,7 @@ def _plant(modelo: ModeloDefinition, revision_id: str, casilla_id: str, referenc
 
 
 _ENTRY = (
-    'modelo = "100"\nrevision = "2020"\nreference = "ley-35-2006:art-23"\n'
+    f'modelo = "100"\nrevision = "{_OLDEST}"\nreference = "ley-35-2006:art-23"\n'
     'category = "{category}"\nreason = "{reason}"\ncasillas = {casillas}\n'
 )
 
@@ -244,8 +267,8 @@ def _ledger(tmp_path: Path, *entries: str) -> Path:
 def test_the_ledger_reader_admits_a_well_formed_exception(tmp_path: Path) -> None:
     entry = _ENTRY.format(category="no_governing_row_catalogued", reason="no row", casillas='["0066", "0100"]')
     assert set(load_citation_exceptions(_ledger(tmp_path, entry))) == {
-        CasillaCitationKey("100", "2020", "0066", "ley-35-2006:art-23"),
-        CasillaCitationKey("100", "2020", "0100", "ley-35-2006:art-23"),
+        CasillaCitationKey("100", _OLDEST, "0066", "ley-35-2006:art-23"),
+        CasillaCitationKey("100", _OLDEST, "0100", "ley-35-2006:art-23"),
     }
 
 

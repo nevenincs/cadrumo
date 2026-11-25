@@ -19,18 +19,20 @@ Python guarantees a deeper wipe than the language can deliver.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .....core.diagnostic_log import diagnostic_phase
 from .....core.logging import get_logger
 from .....core.time.utc import validate_utc_aware
 from ..bucket.errors import BucketLockedError
 from ..crypto.aes_gcm import KEY_SIZE
-from ..custody.zeroise import zeroise as _zeroise
+from ..custody.zeroise import zeroise
 from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from .live_sessions import register_live_session
 
@@ -43,8 +45,11 @@ if TYPE_CHECKING:
 #: -- a profile write asks for the route once inside a settings override and
 #: once outside it, alternating -- so the bound is that pair with headroom,
 #: not a general-purpose cache size.
-_ROUTED_SETTINGS_MEMO_SIZE = 4
+ROUTED_SETTINGS_MEMO_SIZE = 4
 _log = get_logger(__name__)
+
+KEY_RELEASE_PHASE_EVENT = "storage_key_release_phase"
+"""The record naming how long one step of releasing a profile key session took."""
 
 
 class BucketSession:
@@ -72,6 +77,7 @@ class BucketSession:
         "_routed_settings",
         "_sealed",
         "_storage_root",
+        "_window_lock",
     )
 
     def __init__(
@@ -94,6 +100,10 @@ class BucketSession:
         self._opened_at = opened_at
         self._absolute_deadline = absolute_deadline
         self._sealed = False
+        # Serialises the sliding idle update against a lifetime retarget, so a
+        # touch never writes back an idle deadline computed from a window that
+        # was replaced while it ran.
+        self._window_lock = threading.Lock()
         self._engine: Engine | None = None
         # Small bounded memo behind :meth:`routed_settings`; see that method
         # for why the scope is the session and not the process, and why one
@@ -108,7 +118,7 @@ class BucketSession:
         # cannot wipe in place.
         self._hmac_subkeys: dict[bytes, bytes] = {}
         # Registered at construction, not at binding: a session owns its key buffer
-        # from this point on, and the emergency-zeroisation path must cover it
+        # from this point on, and the timeout-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
         # binds it). Weak, so this never keeps the buffers alive.
         register_live_session(self)
@@ -156,16 +166,16 @@ class BucketSession:
                 or the idle deadline outlives the absolute deadline.
         """
         if not bucket_id:
-            raise _storage_validation_error("bucket_id must be non-empty")
+            raise storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
-            raise _storage_validation_error("idle_minutes must be a strict positive integer")
+            raise storage_validation_error("idle_minutes must be a strict positive integer")
         if len(dek) != KEY_SIZE:
-            raise _storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
+            raise storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
         opened_at = validate_utc_aware(opened_at)
         idle_deadline = validate_utc_aware(idle_deadline)
         absolute_deadline = validate_utc_aware(absolute_deadline)
         if idle_deadline > absolute_deadline:
-            raise _storage_validation_error("idle_deadline must not exceed absolute_deadline")
+            raise storage_validation_error("idle_deadline must not exceed absolute_deadline")
         return cls(
             bucket_id=bucket_id,
             dek_buffer=bytearray(dek),
@@ -203,10 +213,11 @@ class BucketSession:
 
     @property
     def absolute_deadline(self) -> datetime:
-        """Return the immutable absolute session-lifetime cap.
+        """Return the absolute session-lifetime cap.
 
-        Fixed when the session opens as ``opened_at + absolute_minutes`` and never
-        refreshed; :meth:`touch` clamps the sliding idle deadline to it.
+        Fixed when the session opens; only :meth:`retarget_lifetime` moves it, for
+        the owner whose leases bound the session. :meth:`touch` clamps the sliding
+        idle deadline to it, so activity alone never extends it.
         """
         return self._absolute_deadline
 
@@ -258,14 +269,45 @@ class BucketSession:
     def touch(self, now: datetime) -> None:
         """Roll the idle deadline forward to `now + idle_window`, clamped to the cap.
 
-        The sliding idle deadline is never advanced past the immutable
-        absolute deadline, so continuous activity within the idle window
+        The sliding idle deadline is never advanced past the absolute
+        deadline, so continuous activity within the idle window
         cannot extend the session beyond its absolute lifetime cap.
         """
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
         now = validate_utc_aware(now)
-        self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
+        with self._window_lock:
+            self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
+
+    def retarget_lifetime(self, *, opened_at: datetime, idle_minutes: int, deadline: datetime) -> None:
+        """Give this live session the lifetime window a replacement for the same key would open with.
+
+        For the owner whose access leases bound the session: when the leases
+        sharing this DEK change, the session takes exactly the opening instant,
+        idle window and deadline a freshly opened session for those leases would
+        carry, and both its idle and absolute deadlines become ``deadline``. The
+        key stays bounded by the leases that admit work, and storage access that
+        already resolved this session keeps a live session instead of one sealed
+        underneath it.
+
+        Raises:
+            BucketLockedError: When the session has already been sealed.
+            StorageValidationError: When ``idle_minutes`` is not positive or the
+                window ends before it opens.
+        """
+        if idle_minutes <= 0:
+            raise storage_validation_error("idle_minutes must be a strict positive integer")
+        opened_at = validate_utc_aware(opened_at)
+        deadline = validate_utc_aware(deadline)
+        if deadline < opened_at:
+            raise storage_validation_error("deadline must not precede opened_at")
+        with self._window_lock:
+            if self._sealed:
+                raise BucketLockedError(bucket_id=self._bucket_id)
+            self._opened_at = opened_at
+            self._idle_window = timedelta(minutes=idle_minutes)
+            self._absolute_deadline = deadline
+            self._idle_deadline = deadline
 
     def is_expired(self, now: datetime) -> bool:
         """Return whether the idle window or the absolute cap has elapsed at `now`."""
@@ -329,7 +371,7 @@ class BucketSession:
         if memoised is not None:
             return memoised
         derived = settings_for_active_profile_bucket(self._bucket_id, source)
-        if len(self._routed_settings) >= _ROUTED_SETTINGS_MEMO_SIZE:
+        if len(self._routed_settings) >= ROUTED_SETTINGS_MEMO_SIZE:
             # Bounded, and evicting the oldest keeps an alternating pair
             # resident rather than letting one arm evict the other.
             self._routed_settings.pop(next(iter(self._routed_settings)))
@@ -375,43 +417,57 @@ class BucketSession:
         return self._engine
 
     def close(self) -> None:
-        """Zeroise key buffers, dispose the bucket's engine, and seal the session.
+        """Zeroise key buffers, seal the session, and dispose the bucket's engines.
 
-        Idempotent: a second call after the first is a no-op.
-
-        Engine disposal:
-
-        The session owns the engine lifecycle for its bucket. Closing the
-        session (on idle expiry, profile switch, or explicit close)
-        disposes the engine handle registered at first storage access and
-        evicts every cached engine bound to this bucket id, so the next
-        consumer that opens a different bucket — or re-opens this one —
-        never reuses a stale engine handle. Disposal keys on bucket
-        identity, so it never depends on re-deriving a database route from
-        live settings.
+        Idempotent: a call on a sealed session is a no-op; whoever sealed it
+        owns :meth:`dispose_engines`. Otherwise :meth:`seal` followed by
+        :meth:`dispose_engines`.
         """
         if self._sealed:
             return
-        _zeroise(self._dek_buffer)
-        self._sealed = True
-        self._routed_settings.clear()
-        self._hmac_subkeys.clear()
-        self._dispose_engine()
+        self.seal()
+        self.dispose_engines()
 
-    def _dispose_engine(self) -> None:
-        """Dispose the engine(s) bound to this bucket's database."""
-        from sqlalchemy.exc import SQLAlchemyError
+    def seal(self) -> None:
+        """Zeroise key buffers, seal the session, and detach the bucket's engines without closing them.
 
-        from ..sql.engine import dispose_engine_handle, dispose_engines_for_bucket
+        Idempotent. Once this returns the session refuses key access and the
+        engine cache no longer serves this bucket's engines, so the next
+        consumer that opens a different bucket, or re-opens this one, never
+        reuses a stale engine handle. The detached pools stay open until
+        :meth:`dispose_engines` runs: closing the last connection to a WAL
+        database checkpoints and fsyncs it, which a caller can do after
+        releasing a lock that other work waits on.
+
+        The session owns the engine lifecycle for its bucket. Detaching evicts
+        the engine handle registered at first storage access and every cached
+        engine bound to this bucket id. It keys on bucket identity, so it never
+        depends on re-deriving a database route from live settings.
+        """
+        if self._sealed:
+            return
+        with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "dek_zeroise"):
+            zeroise(self._dek_buffer)
+            self._sealed = True
+            self._routed_settings.clear()
+            self._hmac_subkeys.clear()
+        from ..sql.engine import detach_bucket_engines
 
         engine = self._engine
         self._engine = None
-        try:
-            if engine is not None:
-                dispose_engine_handle(engine)
-            dispose_engines_for_bucket(self._bucket_id)
-        except SQLAlchemyError as exc:
-            _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
+        detach_bucket_engines(self._bucket_id, engine)
+
+    def dispose_engines(self) -> None:
+        """Close the pools of every engine detached for this session's bucket and not yet disposed."""
+        from sqlalchemy.exc import SQLAlchemyError
+
+        from ..sql.engine import dispose_detached_bucket_engines
+
+        with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "engine_dispose"):
+            try:
+                dispose_detached_bucket_engines(self._bucket_id)
+            except SQLAlchemyError as exc:
+                _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]

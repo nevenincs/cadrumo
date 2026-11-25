@@ -25,13 +25,16 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ..errors import RegistryValidationError
 from ..schedules import (
-    _resolve_profile_fact,
     evaluate_profile_conditions,
     profile_condition_matches,
+    resolve_profile_fact,
 )
-from ..schema_verification import ProfilePredicateDefinition
+from ..schema_live_verification import ProfilePredicateDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _condition(field: str, op: str, value: bool | int | str, explanation: str = "test") -> ProfilePredicateDefinition:
@@ -87,8 +90,8 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
 @pytest.mark.parametrize(
     ("observed", "expected"),
     (
-        pytest.param(frozenset({"2025-1T", "2025-3T"}), True, id="member"),
-        pytest.param(frozenset({"2025-2T"}), False, id="other-quarter"),
+        pytest.param(frozenset({f"{_YEAR}-1T", f"{_YEAR}-3T"}), True, id="member"),
+        pytest.param(frozenset({f"{_YEAR}-2T"}), False, id="other-quarter"),
         pytest.param(frozenset(), False, id="empty-set"),
         pytest.param(None, False, id="absent-set"),
     ),
@@ -97,15 +100,15 @@ def test_profile_condition_includes_matches_only_a_member_token(
     observed: frozenset[str] | None,
     expected: bool,
 ) -> None:
-    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", f"{_YEAR}-1T")
     facts = SimpleNamespace(premio_loteria_gravamen_especial_trimestres=observed)
     assert profile_condition_matches(condition, facts) is expected
 
 
 def test_profile_condition_includes_refuses_a_scalar_observation() -> None:
-    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", f"{_YEAR}-1T")
     with pytest.raises(RegistryValidationError, match="non-set value"):
-        profile_condition_matches(condition, {"premio_loteria_gravamen_especial_trimestres": "2025-1T"})
+        profile_condition_matches(condition, {"premio_loteria_gravamen_especial_trimestres": f"{_YEAR}-1T"})
 
 
 @pytest.mark.parametrize("value", (True, 3, "  "), ids=("bool", "int", "blank"))
@@ -130,32 +133,32 @@ def test_profile_condition_includes_requires_one_token_value(value: bool | int |
     ids=("dict-single", "dict-nested", "object-single", "object-nested"),
 )
 def test_resolve_profile_fact_resolves_present_paths(facts: object, field: str, expected: object) -> None:
-    assert _resolve_profile_fact(facts, field) == expected
+    assert resolve_profile_fact(facts, field) == expected
 
 
 def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
     """The walker dispatches per-segment, so a top-level dict can contain
     a nested object whose attribute is then resolved by getattr."""
     facts = {"residence": SimpleNamespace(ccaa="madrid")}
-    assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
+    assert resolve_profile_fact(facts, "residence.ccaa") == "madrid"
 
 
 def test_resolve_profile_fact_missing_dict_key_raises() -> None:
     with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
-        _resolve_profile_fact({"residence_ccaa": "madrid"}, "age")
+        resolve_profile_fact({"residence_ccaa": "madrid"}, "age")
 
 
 def test_resolve_profile_fact_keeps_missing_fact_refusal_for_mapping_proxy() -> None:
     facts = MappingProxyType({"age": 35})
 
     with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
-        _resolve_profile_fact(facts, "age")
+        resolve_profile_fact(facts, "age")
 
 
 def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
     profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     with pytest.raises(RegistryValidationError, match="profile facts missing 'name'"):
-        _resolve_profile_fact(profile, "name")
+        resolve_profile_fact(profile, "name")
 
 
 @pytest.mark.usefixtures("operation")
@@ -172,11 +175,11 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     from ....deadlines.models import TaxpayerProfile
 
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
     )
-    result = _resolve_profile_fact(profile, "taxpayer.entity_type")
+    result = resolve_profile_fact(profile, "taxpayer.entity_type")
     assert result == EntityType.from_registry("legal_entity")
 
 

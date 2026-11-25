@@ -20,13 +20,14 @@ from ...core.json_contract import (
     ActionConditionEvidence,
     ResolvedActionArgument,
     ResolvedActionReference,
+    ResolvedAlternativeAction,
     ResolvedPreconditionAction,
 )
 from ...core.operator_action_enums import ActionArgumentStatus
 
 if TYPE_CHECKING:
     from ..operator_actions.catalogue import ActionArgumentBindingSpecification
-    from ..operator_actions.models import ActionArgumentBinding, PreconditionVerdict
+    from ..operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
     from .manifest import OperatorSurfaceReconciliation
 
 __all__ = ["ActionTargetReconciliation", "resolve_precondition_action"]
@@ -51,8 +52,16 @@ def resolve_precondition_action(
 
     Both immediate refusal envelopes and persisted workflow history use this
     projection, so neither path can reconstruct recovery prose or disagree
-    about missing bindings.
+    about missing bindings. Each alternative action is resolved and checked
+    against its own target exactly as the primary one, and keeps its order.
+    Each offered action carries the words and target operations served for it,
+    and a refusal with no way out carries its served sentence, in this
+    process's language.
     """
+    from ..operations.error_detail import served_words_language
+    from ..operator_actions.served_actions import serve_precondition_verdict
+
+    verdict = serve_precondition_verdict(verdict, served_words_language())
     return ResolvedPreconditionAction(
         failed_condition_id=verdict.failed_condition_id,
         evidence=tuple(
@@ -64,31 +73,56 @@ def resolve_precondition_action(
             )
             for item in verdict.evidence
         ),
-        action=_resolve_action_reference(verdict, target_reconciliation),
-        argument_bindings=tuple(
-            ResolvedActionArgument(
-                argument_name=item.argument_name,
-                status=item.status,
-                value=item.value,
-                source=item.source,
-                source_key=item.source_key,
-                source_evidence_id=item.source_evidence_id,
-            )
-            for item in verdict.argument_bindings
+        action=(
+            None
+            if verdict.action is None
+            else _resolve_action_reference(verdict.action, verdict.argument_bindings, target_reconciliation)
         ),
+        argument_bindings=_resolved_arguments(verdict.argument_bindings),
         missing_argument_names=verdict.missing_argument_names,
         conditionality=verdict.conditionality,
         no_recovery_outcome=verdict.no_recovery_outcome,
+        alternative_actions=tuple(
+            ResolvedAlternativeAction(
+                action=_resolve_action_reference(item.action, item.argument_bindings, target_reconciliation),
+                argument_bindings=_resolved_arguments(item.argument_bindings),
+                missing_argument_names=item.missing_argument_names,
+                conditionality=item.conditionality,
+                action_words=item.action_words,
+                action_words_language=item.action_words_language,
+                target_operation_ids=item.target_operation_ids,
+            )
+            for item in verdict.alternative_actions
+        ),
+        action_words=verdict.action_words,
+        action_words_language=verdict.action_words_language,
+        target_operation_ids=verdict.target_operation_ids,
+        no_recovery_words=verdict.no_recovery_words,
+        no_recovery_words_language=verdict.no_recovery_words_language,
+    )
+
+
+def _resolved_arguments(argument_bindings: tuple[ActionArgumentBinding, ...]) -> tuple[ResolvedActionArgument, ...]:
+    """Project application argument bindings onto their wire records."""
+    return tuple(
+        ResolvedActionArgument(
+            argument_name=item.argument_name,
+            status=item.status,
+            value=item.value,
+            source=item.source,
+            source_key=item.source_key,
+            source_evidence_id=item.source_evidence_id,
+        )
+        for item in argument_bindings
     )
 
 
 def _resolve_action_reference(
-    verdict: PreconditionVerdict, target_reconciliation: ActionTargetReconciliation
-) -> ResolvedActionReference | None:
-    """Resolve the optional verdict recovery action against its reconciled target."""
-    action = verdict.action
-    if action is None:
-        return None
+    action: ActionReference,
+    argument_bindings: tuple[ActionArgumentBinding, ...],
+    target_reconciliation: ActionTargetReconciliation,
+) -> ResolvedActionReference:
+    """Resolve one offered recovery action against its reconciled target."""
     # The catalogue is loaded only when a verdict carries an action to resolve.
     from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
     from .action_resolution import resolve_catalogue_action
@@ -106,7 +140,7 @@ def _resolve_action_reference(
     _validate_action_bindings(
         action_id=action.action_id,
         specifications=declaration.argument_specifications,
-        argument_bindings=verdict.argument_bindings,
+        argument_bindings=argument_bindings,
     )
     return ResolvedActionReference(
         action_id=declaration.action_id,
@@ -134,9 +168,18 @@ def _validate_action_bindings(
         matching_specifications = tuple(
             specification
             for specification in specifications_by_name[name]
-            if argument.source is specification.source
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
+            if _matches_binding_source(argument, specification)
         )
         if len(matching_specifications) != 1:
             raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
+
+
+def _matches_binding_source(
+    argument: ActionArgumentBinding,
+    specification: ActionArgumentBindingSpecification,
+) -> bool:
+    return (
+        argument.source is specification.source
+        and argument.source_key == specification.source_key
+        and argument.source_evidence_id == specification.source_evidence_id
+    )

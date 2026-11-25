@@ -1,128 +1,955 @@
 import {
+  memo,
+  useCallback,
   useDeferredValue,
+  useEffect,
+  useId,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
-  type SetStateAction,
 } from "react";
-import type { ITheme } from "@xterm/xterm";
-import type { ProfileView } from "../../shell/layout";
-import { IconButton } from "@/components/ui/icon-button";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icon, type IconName } from "@/components/ui/icon";
+import { Spinner } from "@/components/ui/spinner";
+import { chordMatches, type ChordKeys } from "@/shared/chords";
+import type { Action, Chord } from "../../shell/actions";
 import type { Host } from "../../shell/host";
+import type { ProfileView } from "../../shell/layout";
+import type { LedgerProfileStep } from "../../shell/ledger";
+import { facts } from "../../shell/compose";
+import {
+  useNavigationGuard,
+  useViewParams,
+} from "../../shell/navigation/hooks";
+import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
+import {
+  columns,
+  counts,
+  entries,
+  aeatMethod,
+  fieldAt,
+  marked,
+  matches,
+  rowsOf,
+  sorted,
+  type Row,
+} from "../../shell/profileRows";
 import { useStrings } from "../../shell/strings";
 import {
   fieldValue,
+  PASSWORD_CHANGE_ACTION_ID,
   profileText,
   useUserProfile,
   type ProfileField,
   type ProfileSection,
+  type UserProfile,
 } from "../../shell/userProfile";
-import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Spinner } from "@/components/ui/spinner";
-import { Icon } from "@/components/ui/icon";
+import type { MenuEntry, OpenMenu } from "../ContextMenu";
+import { AeatAccessEditor } from "./AeatAccessEditor";
+import { CensoReview } from "./CensoReview";
+import { Household, HOUSEHOLD_KEY } from "./Household";
+import {
+  CensoConfirm,
+  PasswordChange,
+  ProfileShortcuts,
+} from "./ProfileDialogs";
+import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
-import { ProfileSectionCard } from "./ProfileSectionCard";
-import { AeatSetupDialog } from "../agent/AeatSetupDialog";
-import { CensoDialog } from "./CensoDialog";
+import { PROFILE_KEYS } from "./profileKeys";
+import { ProfileSectionIndex } from "./ProfileSectionIndex";
+import { ProfileSummaryHeader } from "./ProfileSummaryHeader";
+import { ProfileSync } from "./ProfileSync";
+import { ProfileToolbar } from "./ProfileToolbar";
+import { ProfileCompletionNotice } from "./ProfileCompletionNotice";
 
-export function UserProfilePage({
+/** A profile action and, where the page runs it by a key of its own, that
+ * key: the page's menus show it from the declaration its handlers match. */
+type PageAction = Action & { pageKey?: ChordKeys };
+
+// Drawn again only when what it is given changes: the window redraws far more
+// often than the profile does.
+export const UserProfilePage = memo(function UserProfilePage({
   host,
   reader,
+  sessionEnded,
   language,
   shown,
-  theme,
-  fontSize,
   page,
   maximized,
+  onToggleMaximize,
+  maximizeChord,
   view,
   onViewChange,
+  aeatAsked,
+  onAeatHandled,
+  censoAsked,
+  onCensoHandled,
+  profileStep,
+  onProfileStepHandled,
+  contribute,
+  openMenu,
+  accountActions,
+  onCopy,
+  onNotice,
 }: {
   host: Host;
   reader: string;
+  /** Whether the window asked the signed-in session to end. */
+  sessionEnded?: () => boolean;
   language: string;
   shown: boolean;
-  theme: ITheme;
-  fontSize: number;
   page: RefObject<HTMLElement | null>;
+  /** Full screen: the page has the window to itself. */
   maximized: boolean;
+  onToggleMaximize(): void;
+  /** The registry's chord for full screen, shown beside it in the menus. */
+  maximizeChord?: Chord;
   view: ProfileView;
   onViewChange(update: (current: ProfileView) => ProfileView): void;
+  /** The AEAT access editor was asked for, by a link or the palette: the
+   * page opens it once it has the profile, then says it did. */
+  aeatAsked: boolean;
+  onAeatHandled(): void;
+  censoAsked: boolean;
+  onCensoHandled(): void;
+  /** The step a refusal elsewhere served for putting this profile right,
+   * held as the backend served it; the page answers its kind once it has the
+   * profile, then says it did. Null when none is asked for. */
+  profileStep: LedgerProfileStep | null;
+  onProfileStepHandled(): void;
+  /** Hands the window's palette what the page offers, read when it opens. */
+  contribute(actions: (() => Action[]) | null): void;
+  openMenu: OpenMenu;
+  /** The window's own account actions, offered among the profile's, as
+   * they stand when a menu opens. */
+  accountActions(): Action[];
+  onCopy(text: string): void;
+  onNotice(text: string): void;
 }) {
   const t = useStrings();
   const profile = useUserProfile(host.userProfile, reader, language, shown);
-  const [search, setSearch] = useState("");
-  const { section, filter } = view;
-  const expanded = new Set(view.expanded);
-  const collapsed = new Set(view.collapsed);
-  const setSection = (section: string) =>
-    onViewChange((current) => ({ ...current, section }));
-  const setFilter = (filter: ProfileView["filter"]) =>
-    onViewChange((current) => ({ ...current, filter }));
-  const setMembership = (
-    key: "expanded" | "collapsed",
-    update: SetStateAction<Set<string>>,
-  ) =>
-    onViewChange((current) => ({
-      ...current,
-      [key]: [
-        ...(typeof update === "function"
-          ? update(new Set(current[key]))
-          : update),
-      ],
-    }));
-  const setExpanded = (update: SetStateAction<Set<string>>) =>
-    setMembership("expanded", update);
-  const setCollapsed = (update: SetStateAction<Set<string>>) =>
-    setMembership("collapsed", update);
-  const [draft, setDraft] = useState<ProfileDraft | null>(null);
-  const [auth, setAuth] = useState(false);
-  const [censo, setCenso] = useState(false);
-  const [returnToCenso, setReturnToCenso] = useState(false);
-  const query = profileText(useDeferredValue(search));
   const data = profile.data;
+  const sync = useCensoSync(host.censo, data, shown && !!data, profile.refresh);
+  const [search, setSearch] = useState("");
+  // Whether the profile actions menu this page opened is shown.
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+  const [current, setCurrent] = useState("");
+  const [draft, setDraft] = useState<ProfileDraft | null>(null);
+  // The profile the AEAT access editor opened on.
+  const [aeat, setAeat] = useState<UserProfile | null>(null);
+  const [password, setPassword] = useState(false);
+  const [shortcuts, setShortcuts] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  // A pull asked for from outside the band waits here for the person's
+  // word, since starting it signs in to the AEAT.
+  const [confirmingCenso, setConfirmingCenso] = useState(false);
+  const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
+  const pageId = useId();
+  const scroller = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const { show, group, sort } = view;
+  const collapsed = useMemo(() => new Set(view.collapsed), [view.collapsed]);
+  const needle = profileText(useDeferredValue(search).trim());
+  const filtering = show !== "all" || !!needle;
   const missing = useMemo(() => new Set(data?.missing_required), [data]);
-  const chooseSection = (key: string) => {
-    setSection(key);
-    setCollapsed(new Set());
-    if (key) setExpanded((current) => new Set([...current, key]));
-  };
-  const sections = useMemo(
+  const allRows = useMemo(() => (data ? rowsOf(data) : []), [data]);
+  const visible = useMemo(
     () =>
-      data?.sections
-        .filter((item) => !section || item.key === section)
-        .map((item) => ({
-          ...item,
-          fields: item.fields.filter((field) => {
-            const empty = field.value === null || field.value === "";
-            const match =
-              filter === "missing"
-                ? empty
-                : filter === "required"
-                  ? missing.has(field.path)
-                  : filter === "saved"
-                    ? !empty
-                    : true;
-            return (
-              match &&
-              (!query ||
-                profileText(
-                  [
-                    item.title,
-                    field.label,
-                    ...(field.help ?? []),
-                    field.masked ? "" : (fieldValue(field) ?? ""),
-                  ].join(" "),
-                ).includes(query))
-            );
-          }),
-        }))
-        .filter((item) => item.fields.length),
-    [data, section, filter, missing, query],
+      sorted(
+        allRows.filter((row) => matches(row, show, needle)),
+        sort,
+        language,
+      ),
+    [allRows, show, needle, sort, language],
   );
+  const busy = profile.saving || profile.loading;
+  const review = sync.snapshot?.state === "review" ? sync.snapshot : null;
+  const incoming = useMemo(
+    () => new Map(review?.fields.map((field) => [field.path, field])),
+    [review],
+  );
+  // Leaving the page loses a save or a Censo pull in flight, whose outcome
+  // only this page shows, and a Censo review not yet answered. A field
+  // draft is its editor's own to weigh.
+  const censoState = sync.snapshot?.state;
+  useNavigationGuard(
+    "profile",
+    profile.saving ||
+      sync.busy ||
+      censoState === "reading" ||
+      censoState === "device"
+      ? "busy"
+      : review
+        ? "dirty"
+        : "clean",
+  );
+
+  const setView = useCallback(
+    (patch: Partial<ProfileView>) =>
+      onViewChange((now) => ({ ...now, ...patch })),
+    [onViewChange],
+  );
+  const toggle = useCallback(
+    (key: string, open?: boolean) =>
+      onViewChange((now) => {
+        const next = new Set(now.collapsed);
+        if (open ?? next.has(key)) next.delete(key);
+        else next.add(key);
+        return { ...now, collapsed: [...next] };
+      }),
+    [onViewChange],
+  );
+
+  // What a review brings is remembered until it is answered, so the values
+  // it saved can say where they came from.
+  const reviewed = useRef<CensoSnapshot["fields"]>([]);
+  // The paths the operator accepted when they saved the review, if they
+  // chose one by one; a review that comes back replaces that choice.
+  const choiceMade = useRef<string[] | null>(null);
+  useEffect(() => {
+    if (review) {
+      reviewed.current = review.fields;
+      choiceMade.current = null;
+    }
+  }, [review]);
+  const syncState = sync.snapshot?.state;
+  useEffect(() => {
+    if (syncState === "done")
+      setFromAeat(
+        new Set(
+          reviewed.current
+            .filter((field) =>
+              choiceMade.current
+                ? choiceMade.current.includes(field.path)
+                : !field.preserve && field.incoming !== null,
+            )
+            .map((field) => field.path),
+        ),
+      );
+    if (
+      syncState === "done" ||
+      syncState === "stopped" ||
+      syncState === "failed"
+    )
+      reviewed.current = [];
+  }, [syncState]);
+
+  const saved = profile.saved;
+  useEffect(() => {
+    if (saved) onNotice(t("desktop.profile.saved_notice"));
+  }, [saved, onNotice, t]);
+
+  // Which section is in view, for the section index.
+  useEffect(() => {
+    const root = scroller.current;
+    if (!root || !maximized) return;
+    const observer = new IntersectionObserver(
+      (records) => {
+        const top = records
+          .filter((record) => record.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+          )[0];
+        if (top) setCurrent((top.target as HTMLElement).dataset.section ?? "");
+      },
+      { root, rootMargin: "0px 0px -70% 0px" },
+    );
+    root
+      .querySelectorAll("[data-section]")
+      .forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [group, visible, collapsed, maximized, data]);
+
+  const focusNav = (id: string) => {
+    const element = page.current?.querySelector<HTMLElement>(
+      `[data-nav="${CSS.escape(id)}"]`,
+    );
+    element?.focus();
+    element?.scrollIntoView({ block: "nearest" });
+  };
+  // Each change of view is drawn before focus moves into it.
+  const afterDraw = (then: () => void) =>
+    requestAnimationFrame(() => requestAnimationFrame(then));
+
+  const goToSection = (key: string) => {
+    const hidden =
+      !!needle ||
+      (show !== "all" &&
+        !visible.some((row) => row.section.key === key) &&
+        !data?.sections.find((section) => section.key === key)?.repeatable);
+    if (hidden) setSearch("");
+    onViewChange((now) => ({
+      ...now,
+      show: hidden ? "all" : now.show,
+      group: "section",
+      collapsed: now.collapsed.filter((held) => held !== key),
+    }));
+    afterDraw(() => {
+      const target = page.current?.querySelector<HTMLElement>(
+        `[data-section="${CSS.escape(key)}"]`,
+      );
+      target?.scrollIntoView({ block: "start" });
+      target?.querySelector<HTMLElement>("[data-nav]")?.focus({
+        preventScroll: true,
+      });
+    });
+  };
+  const showDetail = (id: string) => {
+    setSearch("");
+    const section = id.slice(0, id.indexOf("."));
+    onViewChange((now) => ({
+      ...now,
+      show: "all",
+      collapsed: now.collapsed.filter((held) => held !== section),
+    }));
+    afterDraw(() => focusNav(id));
+  };
+
+  const openEditor = (
+    section: ProfileSection,
+    fields: ProfileField[],
+    kind: ProfileDraft["kind"],
+  ) => {
+    if (!data || !fields.length) return;
+    // The method is one edit of its own, with its route and certificate.
+    if (kind === "field" && aeatMethod(fields[0]!)) {
+      setAeat(data);
+      return;
+    }
+    setDraft({ base: data, section, fields, kind });
+  };
+  // A detail of a section holding no entry is filled in as its first entry.
+  const editRow = (row: Row) =>
+    row.section.repeatable
+      ? openEditor(row.section, columns(row.section), "add_row")
+      : openEditor(row.section, [row.field], "field");
+  const editEntry = (section: ProfileSection, entry: string | null) =>
+    entry === null
+      ? openEditor(section, columns(section), "add_row")
+      : openEditor(
+          section,
+          section.fields.filter((field) => field.row_index === entry),
+          "update_row",
+        );
+  const removeEntry = (section: ProfileSection, entry: string) =>
+    openEditor(
+      section,
+      section.fields.filter((field) => field.row_index === entry),
+      "remove_row",
+    );
+
+  const writable = !!data && !busy && profile.error !== "unknown";
+  // Asked for from outside the page, the editor opens on the profile read,
+  // and an editor already open keeps the one it has.
+  useEffect(() => {
+    if (!aeatAsked || !data) return;
+    setAeat((open) => open ?? data);
+    onAeatHandled();
+  }, [aeatAsked, data, onAeatHandled]);
+  const rowById = (id: string | null) =>
+    allRows.find((row) => row.id === id) ?? null;
+  const entryOf = (id: string | null) => {
+    const [kind, key, entry] = id?.split(":") ?? [];
+    const section = data?.sections.find((item) => item.key === key);
+    return kind === "entry" && section && entry !== undefined
+      ? { section, entry }
+      : null;
+  };
+
+  // ── Actions ─────────────────────────────────────────────────────────────
+  const action = (
+    id: string,
+    label: string,
+    icon: IconName,
+    run: () => void,
+    extra: Partial<PageAction> = {},
+  ): PageAction => ({
+    id: `profile.${id}`,
+    label,
+    group: "profile",
+    icon,
+    run,
+    ...extra,
+  });
+  const rowActions = (row: Row): PageAction[] => {
+    const { field } = row;
+    const value = field.masked ? null : fieldValue(field);
+    return [
+      action(
+        "edit",
+        t("desktop.profile.edit_field", { field: field.label }),
+        "edit",
+        () => editRow(row),
+        { pageKey: PROFILE_KEYS.edit, enabled: () => writable },
+      ),
+      action(
+        "copy",
+        t("desktop.profile.action.copy", { field: field.label }),
+        "copy",
+        () => {
+          if (value) onCopy(value);
+        },
+        { pageKey: PROFILE_KEYS.copy, enabled: () => !!value },
+      ),
+      action(
+        "clear",
+        t("desktop.profile.action.clear", { field: field.label }),
+        "erase",
+        () => {
+          if (data)
+            void profile.save(data, {
+              kind: "field",
+              path: field.path,
+              value: "",
+            });
+        },
+        {
+          enabled: () =>
+            writable &&
+            row.state === "filled" &&
+            !marked(row) &&
+            !aeatMethod(field),
+        },
+      ),
+      action(
+        "about",
+        t("desktop.profile.action.about", { field: field.label }),
+        "info",
+        () => onNotice(field.help?.join(" ") || field.about || field.label),
+        { enabled: () => !!field.help?.length || !!field.about },
+      ),
+    ];
+  };
+  const entryActions = (
+    section: ProfileSection,
+    entry: string,
+  ): PageAction[] => [
+    action(
+      "edit",
+      t("desktop.profile.action.edit_entry"),
+      "edit",
+      () => editEntry(section, entry),
+      { pageKey: PROFILE_KEYS.edit, enabled: () => writable },
+    ),
+    action(
+      "add",
+      t("desktop.profile.add"),
+      "plus",
+      () => editEntry(section, null),
+      { enabled: () => writable },
+    ),
+    action(
+      "remove",
+      t("desktop.profile.remove"),
+      "trash",
+      () => removeEntry(section, entry),
+      { enabled: () => writable },
+    ),
+  ];
+  const focusedActions = (): PageAction[] => {
+    const row = rowById(active);
+    if (row) return rowActions(row);
+    const owner = entryOf(active);
+    return owner ? entryActions(owner.section, owner.entry) : [];
+  };
+  const syncReady =
+    !!sync.readiness?.ready &&
+    !sync.busy &&
+    !sync.recovering &&
+    !sync.uncertain &&
+    (!sync.snapshot ||
+      sync.snapshot.state === "done" ||
+      sync.snapshot.state === "stopped" ||
+      sync.snapshot.state === "failed");
+  const pullCenso = () => {
+    if (sync.snapshot?.state === "done") sync.dismiss();
+    void sync.start();
+  };
+  // Asked for from outside the page (the global palette action): a pull
+  // already running or awaiting review is left to its band, and otherwise the
+  // check of what a pull needs is awaited and, if it passes, the person is
+  // asked before the pull reaches the AEAT. A refused check is shown by the
+  // band.
+  const censoWaiting =
+    !!sync.snapshot &&
+    sync.snapshot.state !== "done" &&
+    sync.snapshot.state !== "stopped" &&
+    sync.snapshot.state !== "failed";
+  useEffect(() => {
+    if (!censoAsked) return;
+    if (!host.censo) return onCensoHandled();
+    if (!data || !shown || sync.recovering) return;
+    if (censoWaiting || sync.busy || sync.uncertain) return onCensoHandled();
+    if (sync.snapshot && !sync.readiness) return sync.dismiss();
+    if (!sync.readiness && !sync.error) return;
+    if (syncReady) setConfirmingCenso(true);
+    onCensoHandled();
+  }, [
+    censoAsked,
+    data,
+    shown,
+    host.censo,
+    censoWaiting,
+    onCensoHandled,
+    sync,
+    syncReady,
+  ]);
+  // Declaring the setup complete: the one door that ends it, offered as a
+  // page action and run by the step a refusal elsewhere served.
+  const completeReady =
+    writable &&
+    !!data &&
+    data.setup_state !== "complete" &&
+    missing.size === 0 &&
+    data.valid;
+  // A completed setup is said so: the page's own state changes quietly, and
+  // the action leaves with it. A save not sent leaves its reason on the page.
+  const completeSetup = () => {
+    if (!data) return;
+    void profile.save(data, { kind: "complete" }).then((completed) => {
+      if (completed) onNotice(t("desktop.profile.setup_completed_notice"));
+    });
+  };
+  // How a step is answered, kept on a ref so the ask is answered once per ask
+  // rather than on every redraw the page's own handlers are rebuilt in.
+  const answerStep = useRef<(step: LedgerProfileStep) => void>(() => {});
+  useLayoutEffect(() => {
+    answerStep.current = (step) => {
+      // A field step reveals and focuses that detail's own row; a detail of a
+      // section holding no entry yet is filled in as its first entry, so the
+      // step opens that entry. The completion step runs the action where it
+      // is ready, and otherwise reveals the first detail still outstanding,
+      // which is what the action is waiting for.
+      if (step.kind === "open_profile_field") {
+        const owner = data?.sections.find(
+          (section) =>
+            section.key === step.path.slice(0, step.path.indexOf(".")),
+        );
+        if (owner?.repeatable && entries(owner).length === 0 && writable)
+          editEntry(owner, null);
+        else showDetail(step.path);
+      } else if (completeReady) completeSetup();
+      else {
+        const first = data?.missing_required[0];
+        if (first !== undefined) showDetail(first);
+      }
+    };
+  });
+  // Asked for from outside the page: answered once the profile is read.
+  useEffect(() => {
+    if (profileStep === null || !data || !shown) return;
+    answerStep.current(profileStep);
+    onProfileStepHandled();
+  }, [profileStep, data, shown, onProfileStepHandled]);
+
+  // A link naming one field (`field` is its served profile path) reveals and
+  // focuses that detail and opens its editor; a detail of a section holding
+  // no entry yet opens that first entry, as a field step does.
+  const [linkedField, setLinkedField] = useState<string | null>(null);
+  useViewParams("profile", (params) => setLinkedField(params.field ?? null));
+  const answerField = useRef<(path: string) => void>(() => {});
+  useLayoutEffect(() => {
+    answerField.current = (path) => {
+      const owner = data?.sections.find(
+        (section) => section.key === path.slice(0, path.indexOf(".")),
+      );
+      if (owner?.repeatable && entries(owner).length === 0 && writable) {
+        editEntry(owner, null);
+        return;
+      }
+      showDetail(path);
+      const row = rowById(path);
+      // After the detail has the focus, so closing the editor returns there.
+      if (row && writable) afterDraw(() => editRow(row));
+    };
+  });
+  useEffect(() => {
+    if (linkedField === null || !data || !shown) return;
+    answerField.current(linkedField);
+    setLinkedField(null);
+  }, [linkedField, data, shown]);
+  const changePassword = host.profiles?.changePassword;
+  const profileActions: PageAction[] = [
+    ...(host.censo
+      ? [
+          action(
+            "sync",
+            t("desktop.profile.censo.title"),
+            "sync",
+            () => setConfirmingCenso(true),
+            // The global palette entry runs the same flow from any page.
+            { enabled: () => syncReady, hidden: true },
+          ),
+        ]
+      : []),
+    ...(host.userProfile && data
+      ? [
+          action(
+            "aeatAccess",
+            t("desktop.profile.action.aeat_access"),
+            "shield",
+            () => setAeat(data),
+            { enabled: () => writable },
+          ),
+        ]
+      : []),
+    ...(changePassword
+      ? [
+          action("password", t("desktop.profile.password.title"), "key", () =>
+            setPassword(true),
+          ),
+        ]
+      : []),
+    // Once the setup is complete there is nothing left to finish, so the
+    // action leaves the page's menu and the palette with it.
+    ...(data?.setup_state === "complete"
+      ? []
+      : [
+          action(
+            "complete",
+            t("desktop.profile.complete"),
+            "selectAll",
+            completeSetup,
+            { enabled: () => completeReady },
+          ),
+        ]),
+    action(
+      "refresh",
+      t("desktop.profile.action.refresh"),
+      "reset",
+      () => profile.refresh(),
+      { enabled: () => !busy },
+    ),
+  ];
+  const viewActions: PageAction[] = [
+    action(
+      "search",
+      t("desktop.profile.search"),
+      "search",
+      () => {
+        searchInput.current?.focus();
+        searchInput.current?.select();
+      },
+      { pageKey: PROFILE_KEYS.search },
+    ),
+    action(
+      "expand",
+      t("desktop.profile.action.expand"),
+      "expandAll",
+      () => setView({ collapsed: [] }),
+      { enabled: () => collapsed.size > 0 },
+    ),
+    action(
+      "collapse",
+      t("desktop.profile.action.collapse"),
+      "collapseAll",
+      () => setView({ collapsed: groupKeys() }),
+      {
+        enabled: () => collapsed.size < groupKeys().length,
+      },
+    ),
+    action(
+      "fullScreen",
+      t(maximized ? "desktop.profile.compact" : "desktop.profile.maximize"),
+      maximized ? "restore" : "maximize",
+      onToggleMaximize,
+      { chords: maximizeChord ? [maximizeChord] : undefined },
+    ),
+    action(
+      "shortcuts",
+      t("desktop.profile.keys.title"),
+      "keyboard",
+      () => setShortcuts(true),
+      { pageKey: PROFILE_KEYS.help },
+    ),
+  ];
+  function groupKeys() {
+    return [
+      ...(data?.sections.map((section) => section.key) ?? []),
+      ...STATUS_GROUPS.map((state) => `status-${state}`),
+      "all",
+      HOUSEHOLD_KEY,
+    ];
+  }
+
+  // The palette asks for these when it opens: the focused detail's own
+  // actions only while focus is on the page, then the profile's, and a way
+  // to every section once something is typed.
+  const latest = useRef<() => Action[]>(() => []);
+  useEffect(() => {
+    latest.current = () =>
+      shown && data
+        ? [
+            ...(page.current?.contains(document.activeElement)
+              ? focusedActions()
+              : []),
+            ...profileActions,
+            ...viewActions.filter((item) => item.id !== "profile.fullScreen"),
+            ...data.sections.map((section) =>
+              action(
+                `goto.${section.key}`,
+                t("desktop.profile.action.go_to", { section: section.title }),
+                "forward",
+                () => goToSection(section.key),
+                { quiet: true },
+              ),
+            ),
+          ]
+        : [];
+  });
+  useEffect(() => {
+    contribute(() => latest.current());
+    return () => contribute(null);
+  }, [contribute]);
+
+  const entry = (item: PageAction): MenuEntry => ({
+    id: item.id,
+    label: item.label,
+    icon: item.icon,
+    chord: item.pageKey ?? item.chords?.[0],
+    enabled: item.enabled ? item.enabled() : true,
+    run: item.run,
+  });
+  const menuOf = (...groups: PageAction[][]): MenuEntry[] =>
+    groups
+      .filter((items) => items.length)
+      .flatMap((items, index) => [
+        ...(index ? [{ separator: true as const }] : []),
+        ...items.map(entry),
+      ]);
+  const detailMenu = (at: { x: number; y: number; height?: number }) =>
+    openMenu(
+      menuOf(
+        focusedActions(),
+        profileActions.filter((item) =>
+          ["profile.sync", "profile.refresh"].includes(item.id),
+        ),
+      ),
+      at,
+    );
+  const actionsMenu = (button: HTMLElement) => {
+    const box = button.getBoundingClientRect();
+    setActionsOpen(true);
+    openMenu(
+      menuOf(
+        profileActions,
+        viewActions,
+        accountActions().filter((item) => !item.enabled || item.enabled()),
+      ),
+      { x: box.left, y: box.top, height: box.height },
+      () => setActionsOpen(false),
+    );
+  };
+
+  // ── Keys ────────────────────────────────────────────────────────────────
+  // The page's own keys. The palette and full screen are the window's.
+  const onPageKey = (event: ReactKeyboardEvent<HTMLElement>) => {
+    const typing = (event.target as HTMLElement).closest(
+      "input, textarea, select, [role='dialog'], [role='menu']",
+    );
+    const mod = event.ctrlKey || event.metaKey;
+    if (typing || event.altKey) return;
+    if (chordMatches(PROFILE_KEYS.search, event)) {
+      event.preventDefault();
+      searchInput.current?.focus();
+      searchInput.current?.select();
+    } else if (chordMatches(PROFILE_KEYS.help, event)) {
+      event.preventDefault();
+      setShortcuts(true);
+    } else if (mod && !event.shiftKey && event.code === "KeyF") {
+      event.preventDefault();
+      searchInput.current?.focus();
+    }
+  };
+  // Arrow keys walk the details in the order they are shown.
+  const onListKey = (event: ReactKeyboardEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    const id = target.dataset.nav;
+    if (!id) return;
+    const items = [
+      ...(page.current?.querySelectorAll<HTMLElement>("[data-nav]") ?? []),
+    ];
+    const at = items.indexOf(target);
+    const heads = items.filter((item) => item.dataset.kind === "head");
+    const go = (element: HTMLElement | undefined) => {
+      if (!element) return;
+      event.preventDefault();
+      element.focus();
+      element.scrollIntoView({ block: "nearest" });
+    };
+    const row = rowById(id);
+    const owner = entryOf(id);
+    const head = target.dataset.kind === "head";
+    const key = head ? id.slice("head:".length) : "";
+    if (event.altKey) return;
+    if (
+      [PROFILE_KEYS.edit, ...PROFILE_KEYS.editToo].some((keys) =>
+        chordMatches(keys, event),
+      )
+    ) {
+      if (head) return;
+      event.preventDefault();
+      if (!writable) return;
+      if (row) editRow(row);
+      else if (owner) editEntry(owner.section, owner.entry);
+      return;
+    }
+    if (chordMatches(PROFILE_KEYS.copy, event)) {
+      if (row && !row.field.masked && !window.getSelection()?.toString()) {
+        event.preventDefault();
+        const value = fieldValue(row.field);
+        if (value) onCopy(value);
+      }
+      return;
+    }
+    switch (event.key) {
+      case "ArrowDown":
+      case "j":
+        return go(items[at + 1]);
+      case "ArrowUp":
+      case "k":
+        return go(items[at - 1]);
+      case "Home":
+        return go(items[0]);
+      case "End":
+        return go(items.at(-1));
+      case "]":
+      case "PageDown":
+        return go(heads.find((item) => items.indexOf(item) > at));
+      case "[":
+      case "PageUp":
+        return go(
+          [...heads].reverse().find((item) => items.indexOf(item) < at),
+        );
+      case "ArrowLeft":
+        if (head) {
+          event.preventDefault();
+          toggle(key, false);
+        } else
+          go(
+            items.find(
+              (item) => item.dataset.nav === `head:${target.dataset.of}`,
+            ),
+          );
+        return;
+      case "ArrowRight":
+        if (head) {
+          event.preventDefault();
+          if (collapsed.has(key)) toggle(key, true);
+          else go(items[at + 1]);
+        }
+        return;
+      case "Delete":
+        if (owner && writable) {
+          event.preventDefault();
+          removeEntry(owner.section, owner.entry);
+        }
+        return;
+      case "ContextMenu":
+      case "F10":
+        if (event.key === "F10" && !event.shiftKey) return;
+        if (head) return;
+        event.preventDefault();
+        {
+          const box = target.getBoundingClientRect();
+          detailMenu({ x: box.left + 24, y: box.top, height: box.height });
+        }
+        return;
+    }
+  };
+
+  // ── Summary header ──────────────────────────────────────────────────────
+  const total = data ? counts(data) : null;
+  const header = data && total && (
+    <ProfileSummaryHeader
+      name={data.name}
+      full={maximized}
+      facts={[
+        ["idCard", fieldAt(data, "identity.tax_id")],
+        ["mail", fieldAt(data, "identity.email")],
+        ["phone", fieldAt(data, "contact.contact_person_phone")],
+        [
+          "place",
+          fieldAt(data, "contact.fiscal_address"),
+          facts(t, [
+            fieldAt(data, "contact.fiscal_address")?.value,
+            fieldAt(data, "contact.postcode")?.value,
+          ]),
+        ],
+      ]}
+      missing={missing}
+      filled={total.filled}
+      total={total.total}
+      missingCount={total.missing}
+      onMissing={() => setView({ show: "required", group: "section" })}
+      actions={
+        <Button
+          size="sm"
+          variant="outline"
+          aria-haspopup="menu"
+          aria-expanded={actionsOpen}
+          aria-keyshortcuts="Shift+F10"
+          onClick={(event) => actionsMenu(event.currentTarget)}
+        >
+          {t("desktop.profile.action.menu")}
+          <Icon name="chevronDown" size="xs" />
+        </Button>
+      }
+    />
+  );
+
+  // ── Toolbar ─────────────────────────────────────────────────────────────
+  const toolbar = data && (
+    <ProfileToolbar
+      sections={data.sections}
+      onGoToSection={goToSection}
+      maximized={maximized}
+      search={search}
+      onSearch={setSearch}
+      searchInput={searchInput}
+      page={page}
+      show={show}
+      group={group}
+      sort={sort}
+      onView={setView}
+      collapsedCount={collapsed.size}
+      onToggleCollapsed={() =>
+        setView({ collapsed: collapsed.size ? [] : groupKeys() })
+      }
+      loading={profile.loading}
+      filtering={filtering}
+      results={visible.length}
+    />
+  );
+
+  // ── Details ─────────────────────────────────────────────────────────────
+  // Entries are listed with the details they belong beside, except where
+  // the person asked only for what is missing.
+  const listsEntries = show === "all" || show === "filled";
+  const nothing =
+    !!data &&
+    !visible.length &&
+    !(
+      listsEntries &&
+      data.sections.some(
+        (section) => section.repeatable && (!needle || entries(section).length),
+      )
+    );
+
+  const index = data && maximized && (
+    <ProfileSectionIndex
+      sections={data.sections}
+      missing={missing}
+      current={current}
+      onGoToSection={goToSection}
+    />
+  );
+
   const errorKeys = {
     unavailable: "desktop.profile.unavailable",
     not_signed_in: "desktop.profile.signed_out",
@@ -132,266 +959,125 @@ export function UserProfilePage({
     saved_unread: "desktop.profile.saved_unread",
   } as const;
   const error = profile.error ? t(errorKeys[profile.error]) : null;
-  const busy = profile.saving || profile.loading;
-  const open = (item: ProfileSection, field?: ProfileField, remove = false) => {
-    if (!data) return;
-    const original = data.sections.find((entry) => entry.key === item.key)!;
-    const fields = field
-      ? original.repeatable
-        ? original.fields.filter((entry) => entry.row_index === field.row_index)
-        : [field]
-      : [
-          ...new Map(
-            original.fields.map((entry) => [
-              entry.path.slice(
-                original.key.length +
-                  1 +
-                  (entry.row_index === null ? 0 : entry.row_index.length + 1),
-              ),
-              entry,
-            ]),
-          ).values(),
-        ];
-    const existing = fields.some(
-      (entry) => entry.value !== null && entry.value !== "",
-    );
-    setDraft({
-      base: data,
-      section: original,
-      fields,
-      kind: remove
-        ? "remove_row"
-        : original.repeatable
-          ? !field || !existing
-            ? "add_row"
-            : "update_row"
-          : "field",
-    });
-  };
+
   return (
     <section
       ref={page}
+      id={pageId}
       tabIndex={-1}
-      className="user-profile-page @container/profile flex min-h-0 flex-1 flex-col outline-none"
       aria-label={t("desktop.profile.title")}
+      onKeyDown={onPageKey}
+      className="user-profile-page @container/profile relative flex min-h-0 flex-1 flex-col outline-none"
     >
-      <header className="flex flex-wrap items-center justify-end gap-2 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
+      {header}
+      {data && host.censo && (
+        <ProfileSync
+          sync={sync}
+          compact={!maximized}
+          onSetup={() => {
+            if (writable) setAeat(data);
+          }}
+          onReview={() => setReviewing(true)}
+        />
+      )}
+      {error && (
+        <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
+          <Alert role="alert" tone="danger" className="min-w-0 flex-1">
+            {error}
+          </Alert>
           <Button
             size="sm"
-            disabled={!data || busy}
-            onClick={() => setCenso(true)}
-          >
-            {t("desktop.profile.censo.title")}
-          </Button>
-          <IconButton
-            size="sm"
-            onClick={profile.refresh}
+            variant="outline"
             disabled={busy}
-            label={t("desktop.profile.refresh")}
+            onClick={profile.refresh}
           >
-            <Icon name="reset" />
-          </IconButton>
+            {t("desktop.profile.refresh")}
+          </Button>
         </div>
-      </header>
-      <div className="flex min-h-0 flex-1">
-        {data && maximized && (
-          <nav
-            aria-label={t("desktop.profile.sections")}
-            className="hidden w-menu shrink-0 overflow-y-auto border-r p-3 sm:block"
+      )}
+      {profile.loading && !data && (
+        <div role="status" className="flex items-center gap-2 px-4 py-3">
+          <Spinner />
+          {t("desktop.profile.loading")}
+        </div>
+      )}
+      {data && (
+        <div className="flex min-h-0 flex-1">
+          {index}
+          <div
+            ref={scroller}
+            role="group"
+            tabIndex={0}
+            aria-labelledby={pageId}
+            className="relative min-w-0 flex-1 overflow-y-auto focus-visible:-outline-offset-2"
+            onKeyDown={onListKey}
           >
-            <Button
-              size="sm"
-              variant={section === "" ? "secondary" : "ghost"}
-              className="mb-2 w-full justify-start"
-              onClick={() => chooseSection("")}
-              aria-current={section === "" ? "page" : undefined}
-            >
-              {t("desktop.profile.all_sections")}
-            </Button>
-            {data.sections
-              .filter((item) => item.fields.length)
-              .map((item) => {
-                const count = item.fields.filter((field) =>
-                  missing.has(field.path),
-                ).length;
-                return (
-                  <Button
-                    key={item.key}
-                    size="sm"
-                    variant={section === item.key ? "secondary" : "ghost"}
-                    className="h-auto w-full justify-between gap-2 py-2 text-left whitespace-normal"
-                    onClick={() => chooseSection(item.key)}
-                    aria-current={section === item.key ? "page" : undefined}
-                  >
-                    <span>{item.title}</span>
-                    {count > 0 && <Badge variant="warning">{count}</Badge>}
-                  </Button>
-                );
-              })}
-          </nav>
-        )}
-        <div className="min-w-0 flex-1 overflow-y-auto p-4">
-          {error && (
-            <Alert role="alert" tone="danger">
-              {error}
-            </Alert>
-          )}
-          {profile.saved && !error && (
-            <div role="status" className="mb-2 text-sm text-muted-foreground">
-              {t("desktop.profile.saved_notice")}
-            </div>
-          )}
-          {profile.loading && (
-            <div role="status" className="flex items-center gap-2 py-2">
-              <Spinner />
-              {t("desktop.profile.loading")}
-            </div>
-          )}
-          {data && (
-            <>
-              <div
-                className="mb-4 flex flex-wrap items-center gap-2"
-                role="search"
-                aria-label={t("desktop.profile.search")}
-              >
-                <Input
-                  type="search"
-                  className="min-w-0 flex-1 basis-field"
-                  aria-label={t("desktop.profile.search")}
-                  placeholder={t("desktop.profile.search")}
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setCollapsed(new Set());
-                  }}
+            {toolbar}
+            <div className="grid gap-3 p-4">
+              <ProfileCompletionNotice
+                key={data.profile_id}
+                profile={profile.loading || profile.error ? null : data}
+                actions={
+                  changePassword
+                    ? {
+                        [PASSWORD_CHANGE_ACTION_ID]: {
+                          label: t("desktop.profile.password.title"),
+                          run: () => setPassword(true),
+                        },
+                      }
+                    : {}
+                }
+              />
+              <ProfileDetails
+                data={data}
+                visible={visible}
+                group={group}
+                needle={needle}
+                listsEntries={listsEntries}
+                collapsed={collapsed}
+                onToggle={toggle}
+                missing={missing}
+                incoming={incoming}
+                fromAeat={fromAeat}
+                writable={writable}
+                maximized={maximized}
+                active={active}
+                onActive={setActive}
+                onEditRow={editRow}
+                onEditEntry={editEntry}
+                onRemoveEntry={removeEntry}
+                onMenu={detailMenu}
+              />
+              {/* The household is not one of the profile's details: it is
+                  the people the declaration lists, read and written as a
+                  whole, so a text search of details does not hide it. */}
+              {host.profileCompanions && host.userProfile && !needle && (
+                <Household
+                  reads={host.profileCompanions}
+                  change={host.userProfile.change}
+                  observe={host.userProfile.observe}
+                  language={language}
+                  writable={writable}
+                  sessionEnded={sessionEnded}
+                  collapsed={collapsed.has(HOUSEHOLD_KEY)}
+                  onToggle={() => toggle(HOUSEHOLD_KEY)}
+                  active={active}
+                  onActive={setActive}
                 />
-                <NativeSelect
-                  className={
-                    maximized
-                      ? "w-auto max-w-full sm:hidden"
-                      : "w-auto max-w-full"
-                  }
-                  aria-label={t("desktop.profile.sections")}
-                  value={section}
-                  onChange={(event) => chooseSection(event.target.value)}
-                >
-                  <option value="">{t("desktop.profile.all_sections")}</option>
-                  {data.sections
-                    .filter((item) => item.fields.length)
-                    .map((item) => (
-                      <option key={item.key} value={item.key}>
-                        {item.title}
-                      </option>
-                    ))}
-                </NativeSelect>
-                <NativeSelect
-                  className="w-auto max-w-full"
-                  aria-label={t("desktop.profile.filter")}
-                  value={filter}
-                  onChange={(event) => {
-                    setFilter(event.target.value as ProfileView["filter"]);
-                    setCollapsed(new Set());
-                  }}
-                >
-                  <option value="all">{t("desktop.profile.all_fields")}</option>
-                  <option value="missing">
-                    {t("desktop.profile.missing_filter")}
-                  </option>
-                  <option value="required">
-                    {t("desktop.profile.required_filter")}
-                  </option>
-                  <option value="saved">
-                    {t("desktop.profile.saved_filter")}
-                  </option>
-                </NativeSelect>
-              </div>
-              <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => {
-                    setCollapsed(new Set());
-                    setExpanded(new Set(data.sections.map((item) => item.key)));
-                  }}
-                >
-                  {t("desktop.profile.expand_all")}
-                </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => {
-                    setSearch("");
-                    setFilter("all");
-                    setExpanded(new Set());
-                    setCollapsed(new Set());
-                  }}
-                >
-                  {t("desktop.profile.collapse_all")}
-                </Button>
-              </div>
-              <div className="grid gap-3">
-                {sections?.map((item) => (
-                  <ProfileSectionCard
-                    key={item.key}
-                    section={item}
-                    expanded={
-                      !collapsed.has(item.key) &&
-                      (expanded.has(item.key) || !!query || filter !== "all")
-                    }
-                    onToggle={() => {
-                      const isOpen =
-                        !collapsed.has(item.key) &&
-                        (expanded.has(item.key) || !!query || filter !== "all");
-                      setCollapsed((current) => {
-                        const next = new Set(current);
-                        if (isOpen) next.add(item.key);
-                        else next.delete(item.key);
-                        return next;
-                      });
-                      setExpanded((current) => {
-                        const next = new Set(current);
-                        if (isOpen) next.delete(item.key);
-                        else next.add(item.key);
-                        return next;
-                      });
-                    }}
-                    missing={missing}
-                    busy={busy}
-                    onEdit={(field, remove) => open(item, field, remove)}
-                    onAuth={() => setAuth(true)}
-                  />
-                ))}
-              </div>
-              {!sections?.length && (
+              )}
+              {nothing && (
                 <p className="py-5 text-muted-foreground">
                   {t("desktop.profile.empty")}
                 </p>
               )}
-              {data.notices.map((notice, index) => (
-                <Alert key={index}>{notice.message}</Alert>
-              ))}
-              {data.setup_state !== "complete" &&
-                missing.size === 0 &&
-                data.valid && (
-                  <Button
-                    className="mt-4"
-                    disabled={busy || profile.error === "unknown"}
-                    onClick={() =>
-                      void profile.save(data, { kind: "complete" })
-                    }
-                  >
-                    {t("desktop.profile.complete")}
-                  </Button>
-                )}
-            </>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
       {draft && (
         <ProfileEditor
           draft={draft}
-          busy={busy}
+          busy={profile.saving}
           blocked={profile.error === "unknown"}
           onRefresh={profile.refresh}
           changed={
@@ -401,64 +1087,74 @@ export function UserProfilePage({
           }
           error={error}
           onSave={(edit) => profile.save(draft.base, edit)}
-          onClose={() => {
-            setDraft(null);
-            if (returnToCenso) {
-              setReturnToCenso(false);
-              setCenso(true);
-            }
-          }}
+          onClose={() => setDraft(null)}
         />
       )}
-      {auth && data && (
-        <AeatSetupDialog
-          host={host}
-          profile={data.profile_id}
-          theme={theme}
-          fontSize={fontSize}
-          onClose={() => {
-            setAuth(false);
-            if (returnToCenso) {
-              setReturnToCenso(false);
-              setCenso(true);
-            }
-          }}
-          onDone={() => {
-            setAuth(false);
-            profile.refresh();
-            if (returnToCenso) {
-              setReturnToCenso(false);
-              setCenso(true);
-            }
-          }}
-        />
-      )}
-      {data && (
-        <CensoDialog
-          key={data.profile_id}
-          port={host.censo}
-          profile={data}
-          open={censo}
-          onClose={() => setCenso(false)}
+      {aeat && host.userProfile && (
+        <AeatAccessEditor
+          base={aeat}
+          current={data}
+          port={host.userProfile.aeat}
+          censo={host.censo}
+          busy={profile.saving}
+          blocked={profile.error === "unknown"}
+          error={error}
+          latest={profile.latest}
           onRefresh={profile.refresh}
-          onSetup={() => {
-            setCenso(false);
-            setReturnToCenso(true);
-            setAuth(true);
+          onSave={profile.save}
+          onSettled={sync.retry}
+          onSaved={() => {
+            setAeat(null);
+            onNotice(t("desktop.profile.aeat.saved_notice"));
           }}
-          onIdentity={() => {
-            setCenso(false);
-            setReturnToCenso(true);
-            const identity = data.sections.find(
-              (item) => item.key === "identity",
+          onClose={() => setAeat(null)}
+        />
+      )}
+      <ProfileShortcuts open={shortcuts} onClose={() => setShortcuts(false)} />
+      <CensoConfirm
+        open={confirmingCenso}
+        onCancel={() => setConfirmingCenso(false)}
+        onConfirm={() => {
+          setConfirmingCenso(false);
+          if (syncReady) pullCenso();
+        }}
+      />
+      {review && (
+        <CensoReview
+          open={reviewing}
+          onOpenChange={setReviewing}
+          fields={review.fields.filter((field) => rowById(field.path))}
+          label={(path) => rowById(path)?.field.label ?? ""}
+          busy={sync.busy}
+          onAnswer={(decision, accepted) => {
+            setReviewing(false);
+            // A value the dialog does not list keeps the host's proposal.
+            const unlisted = review.fields.filter(
+              (field) =>
+                !rowById(field.path) &&
+                !field.preserve &&
+                field.incoming !== null,
             );
-            const field = identity?.fields.find(
-              (item) => item.path === "identity.tax_id",
-            );
-            if (identity && field) open(identity, field);
+            const chosen = accepted && [
+              ...accepted,
+              ...unlisted.map((field) => field.path),
+            ];
+            choiceMade.current = chosen ?? null;
+            void sync.answer(decision, chosen);
+          }}
+        />
+      )}
+      {changePassword && (
+        <PasswordChange
+          change={changePassword}
+          open={password}
+          onClose={() => setPassword(false)}
+          onChanged={() => {
+            setPassword(false);
+            onNotice(t("desktop.profile.password.changed"));
           }}
         />
       )}
     </section>
   );
-}
+});

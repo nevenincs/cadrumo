@@ -1,0 +1,3711 @@
+{
+ "events": {
+  "2022-01-01:national:es": [
+   "2022-01-01",
+   "national",
+   null,
+   "Año Nuevo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-01-06:national:es": [
+   "2022-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-02-28:ccaa:es-an": [
+   "2022-02-28",
+   "ccaa",
+   "ES-AN",
+   "Día de Andalucía",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-03-01:ccaa:es-ib": [
+   "2022-03-01",
+   "ccaa",
+   "ES-IB",
+   "Día de les Illes Balears",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-an": [
+   "2022-04-14",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ar": [
+   "2022-04-14",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-as": [
+   "2022-04-14",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-cb": [
+   "2022-04-14",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ce": [
+   "2022-04-14",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-cl": [
+   "2022-04-14",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-cm": [
+   "2022-04-14",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-cn": [
+   "2022-04-14",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ex": [
+   "2022-04-14",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ga": [
+   "2022-04-14",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ib": [
+   "2022-04-14",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-mc": [
+   "2022-04-14",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-md": [
+   "2022-04-14",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ml": [
+   "2022-04-14",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-nc": [
+   "2022-04-14",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-pv": [
+   "2022-04-14",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-ri": [
+   "2022-04-14",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-14:ccaa:es-vc": [
+   "2022-04-14",
+   "ccaa",
+   "ES-VC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-15:national:es": [
+   "2022-04-15",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-ct": [
+   "2022-04-18",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-ib": [
+   "2022-04-18",
+   "ccaa",
+   "ES-IB",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-nc": [
+   "2022-04-18",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-pv": [
+   "2022-04-18",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-ri": [
+   "2022-04-18",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-04-18:ccaa:es-vc": [
+   "2022-04-18",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-an": [
+   "2022-05-02",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-ar": [
+   "2022-05-02",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-as": [
+   "2022-05-02",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-cl": [
+   "2022-05-02",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-ex": [
+   "2022-05-02",
+   "ccaa",
+   "ES-EX",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-mc": [
+   "2022-05-02",
+   "ccaa",
+   "ES-MC",
+   "Lunes siguiente a la Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-02:ccaa:es-md": [
+   "2022-05-02",
+   "ccaa",
+   "ES-MD",
+   "Fiesta de la Comunidad de Madrid",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-03:ccaa:es-ml": [
+   "2022-05-03",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Eid Fitr",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-17:ccaa:es-ga": [
+   "2022-05-17",
+   "ccaa",
+   "ES-GA",
+   "Día de las Letras Gallegas",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-30:ccaa:es-cn": [
+   "2022-05-30",
+   "ccaa",
+   "ES-CN",
+   "Día de Canarias",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-05-31:ccaa:es-cm": [
+   "2022-05-31",
+   "ccaa",
+   "ES-CM",
+   "Día de Castilla-La Mancha",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-06:ccaa:es-ct": [
+   "2022-06-06",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua Granada",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-09:ccaa:es-mc": [
+   "2022-06-09",
+   "ccaa",
+   "ES-MC",
+   "Día de la Región de Murcia",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-09:ccaa:es-ri": [
+   "2022-06-09",
+   "ccaa",
+   "ES-RI",
+   "Día de La Rioja",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-16:ccaa:es-cm": [
+   "2022-06-16",
+   "ccaa",
+   "ES-CM",
+   "Corpus Christi",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-24:ccaa:es-ct": [
+   "2022-06-24",
+   "ccaa",
+   "ES-CT",
+   "San Juan",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-24:ccaa:es-ga": [
+   "2022-06-24",
+   "ccaa",
+   "ES-GA",
+   "San Juan",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-06-24:ccaa:es-vc": [
+   "2022-06-24",
+   "ccaa",
+   "ES-VC",
+   "San Juan",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-11:ccaa:es-ml": [
+   "2022-07-11",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Sacrificio-Aid Al Adha",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-25:ccaa:es-ga": [
+   "2022-07-25",
+   "ccaa",
+   "ES-GA",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-25:ccaa:es-md": [
+   "2022-07-25",
+   "ccaa",
+   "ES-MD",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-25:ccaa:es-nc": [
+   "2022-07-25",
+   "ccaa",
+   "ES-NC",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-25:ccaa:es-pv": [
+   "2022-07-25",
+   "ccaa",
+   "ES-PV",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-07-28:ccaa:es-cb": [
+   "2022-07-28",
+   "ccaa",
+   "ES-CB",
+   "Día de las Instituciones de Cantabria",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-08-05:ccaa:es-ce": [
+   "2022-08-05",
+   "ccaa",
+   "ES-CE",
+   "Nuestra Señora de África",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-08-15:national:es": [
+   "2022-08-15",
+   "national",
+   null,
+   "Asunción de la Virgen",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-09-02:ccaa:es-ce": [
+   "2022-09-02",
+   "ccaa",
+   "ES-CE",
+   "Día de Ceuta",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-09-06:ccaa:es-pv": [
+   "2022-09-06",
+   "ccaa",
+   "ES-PV",
+   "V Centenario Vuelta al Mundo",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-09-08:ccaa:es-as": [
+   "2022-09-08",
+   "ccaa",
+   "ES-AS",
+   "Día de Asturias",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-09-08:ccaa:es-ex": [
+   "2022-09-08",
+   "ccaa",
+   "ES-EX",
+   "Día de Extremadura",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-09-15:ccaa:es-cb": [
+   "2022-09-15",
+   "ccaa",
+   "ES-CB",
+   "La Bien Aparecida",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-10-12:national:es": [
+   "2022-10-12",
+   "national",
+   null,
+   "Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-11-01:national:es": [
+   "2022-11-01",
+   "national",
+   null,
+   "Todos los Santos",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-06:national:es": [
+   "2022-12-06",
+   "national",
+   null,
+   "Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-08:national:es": [
+   "2022-12-08",
+   "national",
+   null,
+   "Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-an": [
+   "2022-12-26",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-ar": [
+   "2022-12-26",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-as": [
+   "2022-12-26",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-cb": [
+   "2022-12-26",
+   "ccaa",
+   "ES-CB",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-cl": [
+   "2022-12-26",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-cm": [
+   "2022-12-26",
+   "ccaa",
+   "ES-CM",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-cn": [
+   "2022-12-26",
+   "ccaa",
+   "ES-CN",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-ex": [
+   "2022-12-26",
+   "ccaa",
+   "ES-EX",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-ib": [
+   "2022-12-26",
+   "ccaa",
+   "ES-IB",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-mc": [
+   "2022-12-26",
+   "ccaa",
+   "ES-MC",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-md": [
+   "2022-12-26",
+   "ccaa",
+   "ES-MD",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-ml": [
+   "2022-12-26",
+   "ccaa",
+   "ES-ML",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-nc": [
+   "2022-12-26",
+   "ccaa",
+   "ES-NC",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2022-12-26:ccaa:es-ri": [
+   "2022-12-26",
+   "ccaa",
+   "ES-RI",
+   "Lunes siguiente a la Natividad del Señor",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "2023-01-02:ccaa:es-an": [
+   "2023-01-02",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente a Año Nuevo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-01-02:ccaa:es-ar": [
+   "2023-01-02",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a Año Nuevo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-01-02:ccaa:es-as": [
+   "2023-01-02",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente a Año Nuevo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-01-02:ccaa:es-cl": [
+   "2023-01-02",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente a Año Nuevo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-01-02:ccaa:es-mc": [
+   "2023-01-02",
+   "ccaa",
+   "ES-MC",
+   "Lunes siguiente a Año Nuevo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-01-06:national:es": [
+   "2023-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-02-21:ccaa:es-ex": [
+   "2023-02-21",
+   "ccaa",
+   "ES-EX",
+   "Martes de Carnaval",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-02-28:ccaa:es-an": [
+   "2023-02-28",
+   "ccaa",
+   "ES-AN",
+   "Día de Andalucía",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-03-01:ccaa:es-ib": [
+   "2023-03-01",
+   "ccaa",
+   "ES-IB",
+   "Día de les Illes Balears",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-03-20:ccaa:es-md": [
+   "2023-03-20",
+   "ccaa",
+   "ES-MD",
+   "Lunes siguiente a San José",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-an": [
+   "2023-04-06",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ar": [
+   "2023-04-06",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-as": [
+   "2023-04-06",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-cb": [
+   "2023-04-06",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ce": [
+   "2023-04-06",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-cl": [
+   "2023-04-06",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-cm": [
+   "2023-04-06",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-cn": [
+   "2023-04-06",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ex": [
+   "2023-04-06",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ga": [
+   "2023-04-06",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ib": [
+   "2023-04-06",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-mc": [
+   "2023-04-06",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-md": [
+   "2023-04-06",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ml": [
+   "2023-04-06",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-nc": [
+   "2023-04-06",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-pv": [
+   "2023-04-06",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-06:ccaa:es-ri": [
+   "2023-04-06",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-07:national:es": [
+   "2023-04-07",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-ct": [
+   "2023-04-10",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-ib": [
+   "2023-04-10",
+   "ccaa",
+   "ES-IB",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-nc": [
+   "2023-04-10",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-pv": [
+   "2023-04-10",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-ri": [
+   "2023-04-10",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-10:ccaa:es-vc": [
+   "2023-04-10",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-21:ccaa:es-ml": [
+   "2023-04-21",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Eid Fitr",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-04-24:ccaa:es-ar": [
+   "2023-04-24",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a San Jorge/Día de Aragón",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-05-01:national:es": [
+   "2023-05-01",
+   "national",
+   null,
+   "Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-05-02:ccaa:es-md": [
+   "2023-05-02",
+   "ccaa",
+   "ES-MD",
+   "Fiesta de la Comunidad de Madrid",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-05-17:ccaa:es-ga": [
+   "2023-05-17",
+   "ccaa",
+   "ES-GA",
+   "Día de las Letras Gallegas",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-05-30:ccaa:es-cn": [
+   "2023-05-30",
+   "ccaa",
+   "ES-CN",
+   "Día de Canarias",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-05-31:ccaa:es-cm": [
+   "2023-05-31",
+   "ccaa",
+   "ES-CM",
+   "Día de Castilla-La Mancha",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-06-08:ccaa:es-cm": [
+   "2023-06-08",
+   "ccaa",
+   "ES-CM",
+   "Corpus Christi",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-06-09:ccaa:es-mc": [
+   "2023-06-09",
+   "ccaa",
+   "ES-MC",
+   "Día de la Región de Murcia",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-06-09:ccaa:es-ri": [
+   "2023-06-09",
+   "ccaa",
+   "ES-RI",
+   "Día de La Rioja",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-06-29:ccaa:es-ce": [
+   "2023-06-29",
+   "ccaa",
+   "ES-CE",
+   "Fiesta del Sacrificio-Eidul Adha",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-06-29:ccaa:es-ml": [
+   "2023-06-29",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Sacrificio-Aid Al Adha",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-07-25:ccaa:es-cl": [
+   "2023-07-25",
+   "ccaa",
+   "ES-CL",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-07-25:ccaa:es-ga": [
+   "2023-07-25",
+   "ccaa",
+   "ES-GA",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-07-25:ccaa:es-nc": [
+   "2023-07-25",
+   "ccaa",
+   "ES-NC",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-07-25:ccaa:es-pv": [
+   "2023-07-25",
+   "ccaa",
+   "ES-PV",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-07-28:ccaa:es-cb": [
+   "2023-07-28",
+   "ccaa",
+   "ES-CB",
+   "Día de las Instituciones de Cantabria",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-08-15:national:es": [
+   "2023-08-15",
+   "national",
+   null,
+   "Asunción de la Virgen",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-09-08:ccaa:es-as": [
+   "2023-09-08",
+   "ccaa",
+   "ES-AS",
+   "Día de Asturias",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-09-08:ccaa:es-ex": [
+   "2023-09-08",
+   "ccaa",
+   "ES-EX",
+   "Día de Extremadura",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-09-11:ccaa:es-ct": [
+   "2023-09-11",
+   "ccaa",
+   "ES-CT",
+   "Fiesta Nacional de Cataluña",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-09-15:ccaa:es-cb": [
+   "2023-09-15",
+   "ccaa",
+   "ES-CB",
+   "La Bien Aparecida",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-10-09:ccaa:es-vc": [
+   "2023-10-09",
+   "ccaa",
+   "ES-VC",
+   "Día de la Comunitat Valenciana",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-10-12:national:es": [
+   "2023-10-12",
+   "national",
+   null,
+   "Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-11-01:national:es": [
+   "2023-11-01",
+   "national",
+   null,
+   "Todos los Santos",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-12-06:national:es": [
+   "2023-12-06",
+   "national",
+   null,
+   "Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-12-08:national:es": [
+   "2023-12-08",
+   "national",
+   null,
+   "Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2023-12-25:national:es": [
+   "2023-12-25",
+   "national",
+   null,
+   "Natividad del Señor",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "2024-01-01:national:es": [
+   "2024-01-01",
+   "national",
+   null,
+   "Año Nuevo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-01-06:national:es": [
+   "2024-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-02-13:ccaa:es-ex": [
+   "2024-02-13",
+   "ccaa",
+   "ES-EX",
+   "Martes de Carnaval",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-02-28:ccaa:es-an": [
+   "2024-02-28",
+   "ccaa",
+   "ES-AN",
+   "Día de Andalucía",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-01:ccaa:es-ib": [
+   "2024-03-01",
+   "ccaa",
+   "ES-IB",
+   "Día de les Illes Balears",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-19:ccaa:es-mc": [
+   "2024-03-19",
+   "ccaa",
+   "ES-MC",
+   "San José",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-19:ccaa:es-vc": [
+   "2024-03-19",
+   "ccaa",
+   "ES-VC",
+   "San José",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-an": [
+   "2024-03-28",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ar": [
+   "2024-03-28",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-as": [
+   "2024-03-28",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-cb": [
+   "2024-03-28",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ce": [
+   "2024-03-28",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-cl": [
+   "2024-03-28",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-cm": [
+   "2024-03-28",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-cn": [
+   "2024-03-28",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ex": [
+   "2024-03-28",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ga": [
+   "2024-03-28",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ib": [
+   "2024-03-28",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-mc": [
+   "2024-03-28",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-md": [
+   "2024-03-28",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ml": [
+   "2024-03-28",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-nc": [
+   "2024-03-28",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-pv": [
+   "2024-03-28",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-28:ccaa:es-ri": [
+   "2024-03-28",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-03-29:national:es": [
+   "2024-03-29",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-cb": [
+   "2024-04-01",
+   "ccaa",
+   "ES-CB",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-ct": [
+   "2024-04-01",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-ib": [
+   "2024-04-01",
+   "ccaa",
+   "ES-IB",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-nc": [
+   "2024-04-01",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-pv": [
+   "2024-04-01",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-ri": [
+   "2024-04-01",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-01:ccaa:es-vc": [
+   "2024-04-01",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-23:ccaa:es-ar": [
+   "2024-04-23",
+   "ccaa",
+   "ES-AR",
+   "San Jorge/Día de Aragón",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-04-23:ccaa:es-cl": [
+   "2024-04-23",
+   "ccaa",
+   "ES-CL",
+   "Fiesta de Castilla y León",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-01:national:es": [
+   "2024-05-01",
+   "national",
+   null,
+   "Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-02:ccaa:es-md": [
+   "2024-05-02",
+   "ccaa",
+   "ES-MD",
+   "Fiesta de la Comunidad de Madrid",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-17:ccaa:es-ga": [
+   "2024-05-17",
+   "ccaa",
+   "ES-GA",
+   "Día de las Letras Gallegas",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-30:ccaa:es-cm": [
+   "2024-05-30",
+   "ccaa",
+   "ES-CM",
+   "Corpus Christi",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-30:ccaa:es-cn": [
+   "2024-05-30",
+   "ccaa",
+   "ES-CN",
+   "Día de Canarias",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-05-31:ccaa:es-cm": [
+   "2024-05-31",
+   "ccaa",
+   "ES-CM",
+   "Día de Castilla-La Mancha",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-06-10:ccaa:es-ri": [
+   "2024-06-10",
+   "ccaa",
+   "ES-RI",
+   "Lunes siguiente al Día de La Rioja",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-06-17:ccaa:es-ce": [
+   "2024-06-17",
+   "ccaa",
+   "ES-CE",
+   "Fiesta del Sacrificio-Eidul Adha",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-06-17:ccaa:es-ml": [
+   "2024-06-17",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Sacrificio-Aid Al Adha",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-06-24:ccaa:es-ct": [
+   "2024-06-24",
+   "ccaa",
+   "ES-CT",
+   "San Juan",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-06-24:ccaa:es-vc": [
+   "2024-06-24",
+   "ccaa",
+   "ES-VC",
+   "San Juan",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-07-25:ccaa:es-cb": [
+   "2024-07-25",
+   "ccaa",
+   "ES-CB",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-07-25:ccaa:es-ga": [
+   "2024-07-25",
+   "ccaa",
+   "ES-GA",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-07-25:ccaa:es-md": [
+   "2024-07-25",
+   "ccaa",
+   "ES-MD",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-07-25:ccaa:es-nc": [
+   "2024-07-25",
+   "ccaa",
+   "ES-NC",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-07-25:ccaa:es-pv": [
+   "2024-07-25",
+   "ccaa",
+   "ES-PV",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-08-05:ccaa:es-ce": [
+   "2024-08-05",
+   "ccaa",
+   "ES-CE",
+   "Nuestra Señora de África",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-08-15:national:es": [
+   "2024-08-15",
+   "national",
+   null,
+   "Asunción de la Virgen",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-09-09:ccaa:es-as": [
+   "2024-09-09",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente al Día de Asturias",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-09-11:ccaa:es-ct": [
+   "2024-09-11",
+   "ccaa",
+   "ES-CT",
+   "Fiesta Nacional de Cataluña",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-10-09:ccaa:es-vc": [
+   "2024-10-09",
+   "ccaa",
+   "ES-VC",
+   "Día de la Comunitat Valenciana",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-10-12:national:es": [
+   "2024-10-12",
+   "national",
+   null,
+   "Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-11-01:national:es": [
+   "2024-11-01",
+   "national",
+   null,
+   "Todos los Santos",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-06:national:es": [
+   "2024-12-06",
+   "national",
+   null,
+   "Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-an": [
+   "2024-12-09",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-ar": [
+   "2024-12-09",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-as": [
+   "2024-12-09",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-cl": [
+   "2024-12-09",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-ex": [
+   "2024-12-09",
+   "ccaa",
+   "ES-EX",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-mc": [
+   "2024-12-09",
+   "ccaa",
+   "ES-MC",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-09:ccaa:es-ml": [
+   "2024-12-09",
+   "ccaa",
+   "ES-ML",
+   "Lunes siguiente a la Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2024-12-25:national:es": [
+   "2024-12-25",
+   "national",
+   null,
+   "Natividad del Señor",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "2025-01-01:national:es": [
+   "2025-01-01",
+   "national",
+   null,
+   "Año Nuevo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-01-06:national:es": [
+   "2025-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-02-28:ccaa:es-an": [
+   "2025-02-28",
+   "ccaa",
+   "ES-AN",
+   "Día de Andalucía",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-03-19:ccaa:es-mc": [
+   "2025-03-19",
+   "ccaa",
+   "ES-MC",
+   "San José",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-03-19:ccaa:es-vc": [
+   "2025-03-19",
+   "ccaa",
+   "ES-VC",
+   "San José",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-03-31:ccaa:es-ml": [
+   "2025-03-31",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Eid Fitr",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-an": [
+   "2025-04-17",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ar": [
+   "2025-04-17",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-as": [
+   "2025-04-17",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-cb": [
+   "2025-04-17",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ce": [
+   "2025-04-17",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-cl": [
+   "2025-04-17",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-cm": [
+   "2025-04-17",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-cn": [
+   "2025-04-17",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ex": [
+   "2025-04-17",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ga": [
+   "2025-04-17",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ib": [
+   "2025-04-17",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-mc": [
+   "2025-04-17",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-md": [
+   "2025-04-17",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ml": [
+   "2025-04-17",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-nc": [
+   "2025-04-17",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-pv": [
+   "2025-04-17",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-17:ccaa:es-ri": [
+   "2025-04-17",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-18:national:es": [
+   "2025-04-18",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-21:ccaa:es-ct": [
+   "2025-04-21",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-21:ccaa:es-nc": [
+   "2025-04-21",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-21:ccaa:es-pv": [
+   "2025-04-21",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-21:ccaa:es-ri": [
+   "2025-04-21",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-21:ccaa:es-vc": [
+   "2025-04-21",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-23:ccaa:es-ar": [
+   "2025-04-23",
+   "ccaa",
+   "ES-AR",
+   "San Jorge/Día de Aragón",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-04-23:ccaa:es-cl": [
+   "2025-04-23",
+   "ccaa",
+   "ES-CL",
+   "Fiesta de Castilla y León",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-05-01:national:es": [
+   "2025-05-01",
+   "national",
+   null,
+   "Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-05-02:ccaa:es-md": [
+   "2025-05-02",
+   "ccaa",
+   "ES-MD",
+   "Fiesta de la Comunidad de Madrid",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-05-30:ccaa:es-cn": [
+   "2025-05-30",
+   "ccaa",
+   "ES-CN",
+   "Día de Canarias",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-06:ccaa:es-ce": [
+   "2025-06-06",
+   "ccaa",
+   "ES-CE",
+   "Fiesta del Sacrificio - Eidul Adha",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-06:ccaa:es-ml": [
+   "2025-06-06",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Sacrificio - Aid Al Adha",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-09:ccaa:es-mc": [
+   "2025-06-09",
+   "ccaa",
+   "ES-MC",
+   "Día de la Región de Murcia",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-09:ccaa:es-ri": [
+   "2025-06-09",
+   "ccaa",
+   "ES-RI",
+   "Día de la Rioja",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-19:ccaa:es-cm": [
+   "2025-06-19",
+   "ccaa",
+   "ES-CM",
+   "Fiesta del Corpus Christi",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-24:ccaa:es-ct": [
+   "2025-06-24",
+   "ccaa",
+   "ES-CT",
+   "San Juan",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-06-24:ccaa:es-vc": [
+   "2025-06-24",
+   "ccaa",
+   "ES-VC",
+   "San Juan",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-07-25:ccaa:es-ga": [
+   "2025-07-25",
+   "ccaa",
+   "ES-GA",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-07-25:ccaa:es-md": [
+   "2025-07-25",
+   "ccaa",
+   "ES-MD",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-07-25:ccaa:es-nc": [
+   "2025-07-25",
+   "ccaa",
+   "ES-NC",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-07-25:ccaa:es-pv": [
+   "2025-07-25",
+   "ccaa",
+   "ES-PV",
+   "Santiago Apóstol/Día Nacional de Galicia",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-07-28:ccaa:es-cb": [
+   "2025-07-28",
+   "ccaa",
+   "ES-CB",
+   "Día de las Instituciones de Cantabria",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-08-05:ccaa:es-ce": [
+   "2025-08-05",
+   "ccaa",
+   "ES-CE",
+   "Nuestra Señora de África",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-08-15:national:es": [
+   "2025-08-15",
+   "national",
+   null,
+   "Asunción de la Virgen",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-09-08:ccaa:es-as": [
+   "2025-09-08",
+   "ccaa",
+   "ES-AS",
+   "Día de Asturias",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-09-08:ccaa:es-ex": [
+   "2025-09-08",
+   "ccaa",
+   "ES-EX",
+   "Día de Extremadura",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-09-11:ccaa:es-ct": [
+   "2025-09-11",
+   "ccaa",
+   "ES-CT",
+   "Fiesta Nacional de Cataluña",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-09-15:ccaa:es-cb": [
+   "2025-09-15",
+   "ccaa",
+   "ES-CB",
+   "La Bien Aparecida",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-09:ccaa:es-vc": [
+   "2025-10-09",
+   "ccaa",
+   "ES-VC",
+   "Día de la Comunitat Valenciana",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-13:ccaa:es-an": [
+   "2025-10-13",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente al día de la Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-13:ccaa:es-ar": [
+   "2025-10-13",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente al día de la Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-13:ccaa:es-as": [
+   "2025-10-13",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente al día de la Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-13:ccaa:es-cl": [
+   "2025-10-13",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente al día de la Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-10-13:ccaa:es-ex": [
+   "2025-10-13",
+   "ccaa",
+   "ES-EX",
+   "Lunes siguiente al día de la Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-11-01:national:es": [
+   "2025-11-01",
+   "national",
+   null,
+   "Todos los Santos",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-12-06:national:es": [
+   "2025-12-06",
+   "national",
+   null,
+   "Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-12-08:national:es": [
+   "2025-12-08",
+   "national",
+   null,
+   "Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-12-25:national:es": [
+   "2025-12-25",
+   "national",
+   null,
+   "Natividad del Señor",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2025-12-26:ccaa:es-ib": [
+   "2025-12-26",
+   "ccaa",
+   "ES-IB",
+   "San Esteban",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "2026-01-01:national:es": [
+   "2026-01-01",
+   "national",
+   null,
+   "Año Nuevo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-01-06:national:es": [
+   "2026-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-02:ccaa:es-ib": [
+   "2026-03-02",
+   "ccaa",
+   "ES-IB",
+   "Lunes siguiente al Día de les Illes Balears",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-19:ccaa:es-ga": [
+   "2026-03-19",
+   "ccaa",
+   "ES-GA",
+   "San José",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-19:ccaa:es-mc": [
+   "2026-03-19",
+   "ccaa",
+   "ES-MC",
+   "San José",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-19:ccaa:es-nc": [
+   "2026-03-19",
+   "ccaa",
+   "ES-NC",
+   "San José",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-19:ccaa:es-pv": [
+   "2026-03-19",
+   "ccaa",
+   "ES-PV",
+   "San José",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-19:ccaa:es-vc": [
+   "2026-03-19",
+   "ccaa",
+   "ES-VC",
+   "San José",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-03-20:ccaa:es-ml": [
+   "2026-03-20",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Eid Fitr",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-an": [
+   "2026-04-02",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ar": [
+   "2026-04-02",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-as": [
+   "2026-04-02",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-cb": [
+   "2026-04-02",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ce": [
+   "2026-04-02",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-cl": [
+   "2026-04-02",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-cm": [
+   "2026-04-02",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-cn": [
+   "2026-04-02",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ex": [
+   "2026-04-02",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ga": [
+   "2026-04-02",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ib": [
+   "2026-04-02",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-mc": [
+   "2026-04-02",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-md": [
+   "2026-04-02",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ml": [
+   "2026-04-02",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-nc": [
+   "2026-04-02",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-pv": [
+   "2026-04-02",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-02:ccaa:es-ri": [
+   "2026-04-02",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-03:national:es": [
+   "2026-04-03",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-cm": [
+   "2026-04-06",
+   "ccaa",
+   "ES-CM",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-ct": [
+   "2026-04-06",
+   "ccaa",
+   "ES-CT",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-ib": [
+   "2026-04-06",
+   "ccaa",
+   "ES-IB",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-nc": [
+   "2026-04-06",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-pv": [
+   "2026-04-06",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-ri": [
+   "2026-04-06",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-06:ccaa:es-vc": [
+   "2026-04-06",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-23:ccaa:es-ar": [
+   "2026-04-23",
+   "ccaa",
+   "ES-AR",
+   "San Jorge/Día de Aragón",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-04-23:ccaa:es-cl": [
+   "2026-04-23",
+   "ccaa",
+   "ES-CL",
+   "Fiesta de Castilla y León",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-05-01:national:es": [
+   "2026-05-01",
+   "national",
+   null,
+   "Fiesta del Trabajo",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-05-27:ccaa:es-ce": [
+   "2026-05-27",
+   "ccaa",
+   "ES-CE",
+   "Fiesta Sacrificio-Eidul Adha",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-05-27:ccaa:es-ml": [
+   "2026-05-27",
+   "ccaa",
+   "ES-ML",
+   "Fiesta Sacrificio-Aid al Adha",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-04:ccaa:es-cm": [
+   "2026-06-04",
+   "ccaa",
+   "ES-CM",
+   "Corpus Christi",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-09:ccaa:es-mc": [
+   "2026-06-09",
+   "ccaa",
+   "ES-MC",
+   "Día de la Región de Murcia",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-09:ccaa:es-ri": [
+   "2026-06-09",
+   "ccaa",
+   "ES-RI",
+   "Día de la Rioja",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-24:ccaa:es-ct": [
+   "2026-06-24",
+   "ccaa",
+   "ES-CT",
+   "San Juan",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-24:ccaa:es-ga": [
+   "2026-06-24",
+   "ccaa",
+   "ES-GA",
+   "San Juan",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-06-24:ccaa:es-vc": [
+   "2026-06-24",
+   "ccaa",
+   "ES-VC",
+   "San Juan",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-07-28:ccaa:es-cb": [
+   "2026-07-28",
+   "ccaa",
+   "ES-CB",
+   "Día de las Instituciones de Cantabria",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-08-05:ccaa:es-ce": [
+   "2026-08-05",
+   "ccaa",
+   "ES-CE",
+   "Nuestra Señora de África",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-08-15:national:es": [
+   "2026-08-15",
+   "national",
+   null,
+   "Asunción de la Virgen",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-09-02:ccaa:es-ce": [
+   "2026-09-02",
+   "ccaa",
+   "ES-CE",
+   "Día de Ceuta",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-09-08:ccaa:es-as": [
+   "2026-09-08",
+   "ccaa",
+   "ES-AS",
+   "Día de Asturias",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-09-08:ccaa:es-ex": [
+   "2026-09-08",
+   "ccaa",
+   "ES-EX",
+   "Día de Extremadura",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-09-11:ccaa:es-ct": [
+   "2026-09-11",
+   "ccaa",
+   "ES-CT",
+   "Fiesta Nacional de Cataluña",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-09-15:ccaa:es-cb": [
+   "2026-09-15",
+   "ccaa",
+   "ES-CB",
+   "La Bien Aparecida",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-10-09:ccaa:es-vc": [
+   "2026-10-09",
+   "ccaa",
+   "ES-VC",
+   "Día de la Comunitat Valenciana",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-10-12:national:es": [
+   "2026-10-12",
+   "national",
+   null,
+   "Fiesta Nacional de España",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-an": [
+   "2026-11-02",
+   "ccaa",
+   "ES-AN",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-ar": [
+   "2026-11-02",
+   "ccaa",
+   "ES-AR",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-as": [
+   "2026-11-02",
+   "ccaa",
+   "ES-AS",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-cl": [
+   "2026-11-02",
+   "ccaa",
+   "ES-CL",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-cm": [
+   "2026-11-02",
+   "ccaa",
+   "ES-CM",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-cn": [
+   "2026-11-02",
+   "ccaa",
+   "ES-CN",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-ex": [
+   "2026-11-02",
+   "ccaa",
+   "ES-EX",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-md": [
+   "2026-11-02",
+   "ccaa",
+   "ES-MD",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-11-02:ccaa:es-nc": [
+   "2026-11-02",
+   "ccaa",
+   "ES-NC",
+   "Día siguiente a Todos los Santos",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-an": [
+   "2026-12-07",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-ar": [
+   "2026-12-07",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-as": [
+   "2026-12-07",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-cb": [
+   "2026-12-07",
+   "ccaa",
+   "ES-CB",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-cl": [
+   "2026-12-07",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-ex": [
+   "2026-12-07",
+   "ccaa",
+   "ES-EX",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-mc": [
+   "2026-12-07",
+   "ccaa",
+   "ES-MC",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-md": [
+   "2026-12-07",
+   "ccaa",
+   "ES-MD",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-ml": [
+   "2026-12-07",
+   "ccaa",
+   "ES-ML",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-07:ccaa:es-ri": [
+   "2026-12-07",
+   "ccaa",
+   "ES-RI",
+   "Lunes siguiente al Día de la Constitución Española",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-08:national:es": [
+   "2026-12-08",
+   "national",
+   null,
+   "Inmaculada Concepción",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2026-12-25:national:es": [
+   "2026-12-25",
+   "national",
+   null,
+   "Natividad del Señor",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "2027-01-01:national:es": [
+   "2027-01-01",
+   "national",
+   null,
+   "Año Nuevo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-01-06:national:es": [
+   "2027-01-06",
+   "national",
+   null,
+   "Epifanía del Señor",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-01:ccaa:es-an": [
+   "2027-03-01",
+   "ccaa",
+   "ES-AN",
+   "Día de Andalucía",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-01:ccaa:es-ib": [
+   "2027-03-01",
+   "ccaa",
+   "ES-IB",
+   "Día de les Illes Balears",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-10:ccaa:es-ml": [
+   "2027-03-10",
+   "ccaa",
+   "ES-ML",
+   "Fiesta del Eid Fitr",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-19:ccaa:es-ga": [
+   "2027-03-19",
+   "ccaa",
+   "ES-GA",
+   "San José",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-19:ccaa:es-mc": [
+   "2027-03-19",
+   "ccaa",
+   "ES-MC",
+   "San José",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-19:ccaa:es-md": [
+   "2027-03-19",
+   "ccaa",
+   "ES-MD",
+   "San José",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-19:ccaa:es-nc": [
+   "2027-03-19",
+   "ccaa",
+   "ES-NC",
+   "San José",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-19:ccaa:es-vc": [
+   "2027-03-19",
+   "ccaa",
+   "ES-VC",
+   "San José",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-an": [
+   "2027-03-25",
+   "ccaa",
+   "ES-AN",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ar": [
+   "2027-03-25",
+   "ccaa",
+   "ES-AR",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-as": [
+   "2027-03-25",
+   "ccaa",
+   "ES-AS",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-cb": [
+   "2027-03-25",
+   "ccaa",
+   "ES-CB",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ce": [
+   "2027-03-25",
+   "ccaa",
+   "ES-CE",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-cl": [
+   "2027-03-25",
+   "ccaa",
+   "ES-CL",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-cm": [
+   "2027-03-25",
+   "ccaa",
+   "ES-CM",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-cn": [
+   "2027-03-25",
+   "ccaa",
+   "ES-CN",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ex": [
+   "2027-03-25",
+   "ccaa",
+   "ES-EX",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ga": [
+   "2027-03-25",
+   "ccaa",
+   "ES-GA",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ib": [
+   "2027-03-25",
+   "ccaa",
+   "ES-IB",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-mc": [
+   "2027-03-25",
+   "ccaa",
+   "ES-MC",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-md": [
+   "2027-03-25",
+   "ccaa",
+   "ES-MD",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ml": [
+   "2027-03-25",
+   "ccaa",
+   "ES-ML",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-nc": [
+   "2027-03-25",
+   "ccaa",
+   "ES-NC",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-pv": [
+   "2027-03-25",
+   "ccaa",
+   "ES-PV",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-25:ccaa:es-ri": [
+   "2027-03-25",
+   "ccaa",
+   "ES-RI",
+   "Jueves Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-26:national:es": [
+   "2027-03-26",
+   "national",
+   null,
+   "Viernes Santo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-29:ccaa:es-ib": [
+   "2027-03-29",
+   "ccaa",
+   "ES-IB",
+   "Lunes de Pascua",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-29:ccaa:es-nc": [
+   "2027-03-29",
+   "ccaa",
+   "ES-NC",
+   "Lunes de Pascua",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-29:ccaa:es-pv": [
+   "2027-03-29",
+   "ccaa",
+   "ES-PV",
+   "Lunes de Pascua",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-29:ccaa:es-ri": [
+   "2027-03-29",
+   "ccaa",
+   "ES-RI",
+   "Lunes de Pascua",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-03-29:ccaa:es-vc": [
+   "2027-03-29",
+   "ccaa",
+   "ES-VC",
+   "Lunes de Pascua",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-04-23:ccaa:es-ar": [
+   "2027-04-23",
+   "ccaa",
+   "ES-AR",
+   "San Jorge/Día de Aragón",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-04-23:ccaa:es-cl": [
+   "2027-04-23",
+   "ccaa",
+   "ES-CL",
+   "Fiesta de Castilla y León",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-01:national:es": [
+   "2027-05-01",
+   "national",
+   null,
+   "Fiesta del Trabajo",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-17:ccaa:es-ce": [
+   "2027-05-17",
+   "ccaa",
+   "ES-CE",
+   "Eidul Adha-Fiesta Sacrificio",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-17:ccaa:es-ga": [
+   "2027-05-17",
+   "ccaa",
+   "ES-GA",
+   "Día de las Letras Gallegas",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-17:ccaa:es-ml": [
+   "2027-05-17",
+   "ccaa",
+   "ES-ML",
+   "Fiesta Sacrificio-Aid Al Adha",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-27:ccaa:es-cm": [
+   "2027-05-27",
+   "ccaa",
+   "ES-CM",
+   "Corpus Christi",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-05-31:ccaa:es-cm": [
+   "2027-05-31",
+   "ccaa",
+   "ES-CM",
+   "Día de Castilla-La Mancha",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-06-09:ccaa:es-mc": [
+   "2027-06-09",
+   "ccaa",
+   "ES-MC",
+   "Día de la Región de Murcia",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-06-09:ccaa:es-ri": [
+   "2027-06-09",
+   "ccaa",
+   "ES-RI",
+   "Día de La Rioja",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-06-24:ccaa:es-ct": [
+   "2027-06-24",
+   "ccaa",
+   "ES-CT",
+   "San Juan",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-07-28:ccaa:es-cb": [
+   "2027-07-28",
+   "ccaa",
+   "ES-CB",
+   "Día de las Instituciones de Cantabria",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-05:ccaa:es-ce": [
+   "2027-08-05",
+   "ccaa",
+   "ES-CE",
+   "Nuestra Señora de África",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-an": [
+   "2027-08-16",
+   "ccaa",
+   "ES-AN",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-ar": [
+   "2027-08-16",
+   "ccaa",
+   "ES-AR",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-as": [
+   "2027-08-16",
+   "ccaa",
+   "ES-AS",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-cl": [
+   "2027-08-16",
+   "ccaa",
+   "ES-CL",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-cn": [
+   "2027-08-16",
+   "ccaa",
+   "ES-CN",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-08-16:ccaa:es-md": [
+   "2027-08-16",
+   "ccaa",
+   "ES-MD",
+   "Lunes siguiente a la Asunción de la Virgen",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-09-08:ccaa:es-as": [
+   "2027-09-08",
+   "ccaa",
+   "ES-AS",
+   "Día de Asturias",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-09-08:ccaa:es-ex": [
+   "2027-09-08",
+   "ccaa",
+   "ES-EX",
+   "Día de Extremadura",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-09-15:ccaa:es-cb": [
+   "2027-09-15",
+   "ccaa",
+   "ES-CB",
+   "La Bien Aparecida",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-10-07:ccaa:es-pv": [
+   "2027-10-07",
+   "ccaa",
+   "ES-PV",
+   "Aniversario 1er Gobierno Euskadi",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-10-11:ccaa:es-ex": [
+   "2027-10-11",
+   "ccaa",
+   "ES-EX",
+   "Sustitución del 15 de agosto",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-10-12:national:es": [
+   "2027-10-12",
+   "national",
+   null,
+   "Fiesta Nacional de España",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-11-01:national:es": [
+   "2027-11-01",
+   "national",
+   null,
+   "Todos los Santos",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-12-06:national:es": [
+   "2027-12-06",
+   "national",
+   null,
+   "Día de la Constitución Española",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-12-08:national:es": [
+   "2027-12-08",
+   "national",
+   null,
+   "Inmaculada Concepción",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ],
+  "2027-12-25:national:es": [
+   "2027-12-25",
+   "national",
+   null,
+   "Natividad del Señor",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ]
+ },
+ "publications": {
+  "holiday-calendar-publication:2022": [
+   "2022-01-01",
+   "2022-12-31",
+   "boe-dias-inhabiles-age-2022",
+   "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+  ],
+  "holiday-calendar-publication:2023": [
+   "2023-01-01",
+   "2023-12-31",
+   "boe-dias-inhabiles-age-2023",
+   "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+  ],
+  "holiday-calendar-publication:2024": [
+   "2024-01-01",
+   "2024-12-31",
+   "boe-dias-inhabiles-age-2024",
+   "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+  ],
+  "holiday-calendar-publication:2025": [
+   "2025-01-01",
+   "2025-12-31",
+   "boe-dias-inhabiles-age-2025",
+   "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+  ],
+  "holiday-calendar-publication:2026": [
+   "2026-01-01",
+   "2026-12-31",
+   "boe-dias-inhabiles-age-2026",
+   "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+  ],
+  "holiday-calendar-publication:2027": [
+   "2027-01-01",
+   "2027-12-31",
+   "boe-fiestas-laborales-2027",
+   "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+  ]
+ }
+}

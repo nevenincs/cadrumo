@@ -6,26 +6,47 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.errors import (
+    FixedWidthUnrepresentableCharacterError,
+    FixedWidthValueOverflowError,
+    RegistryValidationError,
+)
 from ...domain.calculations.registry.export import export_fields_overlap
+from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
     render_fixed_width_export_field,
 )
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
+    FilingExportFieldUnrenderableError,
+    FilingExportIntegrityError,
+    FilingExportProfileFactMissingError,
+    FilingExportUnrepresentableCharacterError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
+from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
+from .errors import FilingPreconditionCondition, casilla_value_refusal, filing_no_recovery_verdict
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .m190_context_validation import require_m190_signed_reintegro_context
-from .m280_context_validation import m280_contextual_sign_byte, require_m280_negative_imputation_context
+from .m193_context_validation import require_m193_perceptor_devengo_context
+from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
+from .producer_profile_facts import missing_producer_fact_names, missing_producer_fact_verdict
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow
+
+_FORM_ROW_CODES_FACT = "form-row-codes"
 
 
 def render_record(
@@ -40,6 +61,7 @@ def render_record(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
     source_digests: Mapping[str, str] | None = None,
+    clave_scope: PerceptorClaveScope | None = None,
 ) -> str:
     """Render one registry record, positioned when every field declares an offset.
 
@@ -58,6 +80,7 @@ def render_record(
             render_context=render_context,
             projection_values=projection_values,
             source_digests=source_digests,
+            clave_scope=clave_scope,
         )
     return _render_unpositioned_record(
         record,
@@ -87,6 +110,7 @@ def _render_unpositioned_record(
     return "".join(
         _render_field(
             field,
+            record=record,
             draft=draft,
             headers=producer_values,
             producer_snapshot=producer_snapshot,
@@ -113,14 +137,13 @@ def _render_positioned_record(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
     source_digests: Mapping[str, str] | None,
+    clave_scope: PerceptorClaveScope | None,
 ) -> str:
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         active_for_row = _field_is_active_for_row(field, row)
-        if not active_for_row and any(
-            export_fields_overlap(field, other) for other in record.fields if other is not field
-        ):
+        if _skip_inactive_alternative(field, record, active_for_row):
             # An inactive alternative must not overwrite another binding's
             # slot. An unambiguous absent slot still needs its declared fill.
             continue
@@ -140,12 +163,27 @@ def _render_positioned_record(
         )
         end = start + len(rendered)
         if any(char != " " for char in buffer[start:end]):
-            raise FilingExportError(f"export field {field.id!r} overlaps another field")
+            raise FilingExportIntegrityError(
+                f"export field {field.id!r} overlaps another field",
+                translated_message="errors.integrity.filing_export_field_overlap",
+                context={"field": field.id},
+            )
         buffer[start:end] = rendered
     wire = "".join(buffer)
-    require_m190_signed_reintegro_context(record, wire, source_digests=source_digests)
+    require_m190_signed_reintegro_context(record, wire, clave_scope=clave_scope, source_digests=source_digests)
+    require_m193_perceptor_devengo_context(record, wire)
     require_m280_negative_imputation_context(record, wire, source_digests=source_digests)
     return wire
+
+
+def _skip_inactive_alternative(
+    field: ExportFieldDefinition,
+    record: ExportRecordDefinition,
+    active_for_row: bool,
+) -> bool:
+    return not active_for_row and any(
+        export_fields_overlap(field, other) for other in record.fields if other is not field
+    )
 
 
 def _render_positioned_field_bytes(
@@ -165,9 +203,14 @@ def _render_positioned_field_bytes(
 ) -> tuple[int, str]:
     offset = field.offset
     if offset is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare offset",
+            translated_message="errors.integrity.filing_export_field_offset_undeclared",
+            context={"field": field.id},
+        )
     rendered = _render_positioned_field(
         field,
+        record=record,
         draft=draft,
         producer_values=producer_values,
         producer_snapshot=producer_snapshot,
@@ -181,7 +224,7 @@ def _render_positioned_field_bytes(
         record,
         field,
         rendered,
-        key_wire=buffer[136] if len(buffer) > 136 else " ",
+        key_wire=m280_key_wire(record, buffer),
         raw_amount=casilla_values.get(field.casilla_id) if field.casilla_id is not None else None,
         source_digests=source_digests,
     )
@@ -191,6 +234,7 @@ def _render_positioned_field_bytes(
 def _render_positioned_field(
     field: ExportFieldDefinition,
     *,
+    record: ExportRecordDefinition,
     draft: ModeloDraft,
     producer_values: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -201,9 +245,14 @@ def _render_positioned_field(
     projection_values: Mapping[ProjectionAddress, object],
 ) -> str:
     if field.offset is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare offset",
+            translated_message="errors.integrity.filing_export_field_offset_undeclared",
+            context={"field": field.id},
+        )
     return _render_field(
         field,
+        record=record,
         draft=draft,
         headers=producer_values,
         producer_snapshot=producer_snapshot,
@@ -226,6 +275,7 @@ def _field_is_active_for_row(field: ExportFieldDefinition, row: RecordRenderRow)
 def _render_field(
     field: ExportFieldDefinition,
     *,
+    record: ExportRecordDefinition,
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -236,7 +286,11 @@ def _render_field(
     projection_values: Mapping[ProjectionAddress, object],
 ) -> str:
     if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare length",
+            translated_message="errors.integrity.filing_export_field_length_undeclared",
+            context={"field": field.id},
+        )
     raw = _field_value(
         field,
         draft=draft,
@@ -251,7 +305,38 @@ def _render_field(
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)):
         # The block carries no occurrence; _casilla_field_value refused any stray campo.
         return render_empty_block_slot(field)
-    return format_field(field, raw)
+    return format_field(field, raw, record=record)
+
+
+def _scheme_period_field_value(
+    field: ExportFieldDefinition,
+    draft: ModeloDraft,
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row_index: int | None,
+) -> object | None:
+    """Return the value the scheme's period gives the field, refusing a bound value that contradicts it."""
+    derived_period_value = scheme_period_value(field, draft.period)
+    if derived_period_value is None:
+        return None
+    bound_value = None if field.binding is None else binding_values.get((field.binding, row_index))
+    if contradicts_scheme_period(field, draft.period, bound_value):
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} contradicts the period being filed",
+            translated_message="errors.integrity.filing_export_field_contradicts_period",
+            context={"field": field.id},
+        )
+    return derived_period_value
+
+
+def _computed_slot_value(
+    field: ExportFieldDefinition,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    render_context: FilingRecordRenderContext | None,
+) -> object:
+    computed = _computed_field_value(field, draft, producer_snapshot, render_context)
+    # The blank is the slot's populated negative answer, not a missing byte.
+    return " " if computed is None and field.presence_marker is not None else computed
 
 
 def _field_value(
@@ -266,9 +351,9 @@ def _field_value(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> object:
-    m369_period_value = _m369_period_binding_value(field, draft)
-    if m369_period_value is not None:
-        return m369_period_value
+    derived_period_value = _scheme_period_field_value(field, draft, binding_values, row_index)
+    if derived_period_value is not None:
+        return derived_period_value
     match field.kind:
         case CasillaFieldKind.LITERAL:
             return field.literal
@@ -277,52 +362,58 @@ def _field_value(
         case CasillaFieldKind.CASILLA:
             return _casilla_field_value(field, casilla_values)
         case CasillaFieldKind.BINDING:
-            return _binding_field_value(field, binding_values, row_index)
+            return binding_field_value(field, binding_values, row_index)
         case CasillaFieldKind.HEADER:
-            return _header_field_value(field, headers, modelo=draft.modelo)
+            return header_field_value(field, headers)
         case CasillaFieldKind.PROJECTION:
             return projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
-            return _draft_value(field, draft)
+            return _draft_value(field, draft, producer_snapshot)
         case CasillaFieldKind.COMPUTED:
-            return _computed_field_value(field, draft, producer_snapshot, render_context)
+            return _computed_slot_value(field, draft, producer_snapshot, render_context)
         case _:
-            raise FilingExportError(f"unsupported export field kind {field.kind!r}")
-
-
-def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
-    """Project the typed Exterior period into the three official detail fields."""
-    if draft.modelo != Modelo("369") or not draft.period.registry_token.startswith("EXT-"):
-        return None
-    if "2-ejercicio-y-periodo-ejercicio" in field.id:
-        return draft.period.filing_year
-    if "2-ejercicio-y-periodo-tipo-de-periodo" in field.id:
-        return "T"
-    if "2-ejercicio-y-periodo-periodo" in field.id:
-        return int(_draft_period_code(draft))
-    return None
+            raise FilingExportIntegrityError(
+                f"unsupported export field kind {field.kind!r}",
+                translated_message="errors.integrity.filing_export_field_kind_unsupported",
+                context={"kind": str(field.kind)},
+            )
 
 
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
     if field.casilla_id is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla_id")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare casilla_id",
+            translated_message="errors.integrity.filing_export_field_casilla_undeclared",
+            context={"field": field.id},
+        )
     value = casilla_values.get(field.casilla_id)
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)) and not _is_blank(value):
-        # An empty block has no occurrence to carry this campo.
-        raise FilingExportValidationError(
-            f"export field {field.id!r} has a value but its block anchor {field.required_with!r} has none",
+        # An empty block has no occurrence to carry this campo; stating its
+        # anchor opens the block.
+        raise casilla_value_refusal(
+            field.required_with,
+            translated_message="application.filing.export.errors.block_anchor_unstated",
+            context={"field_id": field.id, "field_casilla_id": field.casilla_id},
         )
     return value
 
 
-def _binding_field_value(
+def binding_field_value(
     field: ExportFieldDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> object:
+    """Return the value an export field takes from its binding and row index."""
     if field.binding is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
-    return binding_values.get((field.binding, row_index))
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare binding",
+            translated_message="errors.integrity.filing_export_field_binding_undeclared",
+            context={"field": field.id},
+        )
+    value = binding_values.get((field.binding, row_index))
+    if isinstance(value, bool) and field.data_type == "text":
+        return _text_presence_marker(field, value)
+    return value
 
 
 def projection_field_value(
@@ -332,49 +423,82 @@ def projection_field_value(
 ) -> object:
     """Return the preflighted projection value one field addresses in its record occurrence."""
     if field.projection_ref is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare projection_ref")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare projection_ref",
+            translated_message="errors.integrity.filing_export_field_projection_ref_undeclared",
+            context={"field": field.id},
+        )
     if context is None:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"export field {field.id!r} requires a snapshot-owned render context to address its projection",
+            translated_message="errors.integrity.filing_export_field_projection_context_absent",
+            context={"field": field.id},
         )
     address = (context.record.id, context.occurrence, field.projection_ref)
     try:
         return values[address]
     except KeyError as exc:
-        raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
+        raise FilingExportDesignIntegrityError(
+            f"export projection address {address!r} has no preflighted value",
+            translated_message="errors.integrity.filing_export_projection_address_unpreflighted",
+            context={"address": str(address)},
+        ) from exc
 
 
-def _header_field_value(
-    field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object], *, modelo: str | None = None
-) -> object:
+def header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
+    """Return the value an export field takes from the header producers, enforcing requirement."""
     if field.producer_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare producer_key",
+            translated_message="errors.integrity.filing_export_field_producer_key_undeclared",
+            context={"field": field.id},
+        )
     value = headers.get(field.producer_key)
-    if (
-        modelo == Modelo("369")
-        and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-        and "aeat-dr-369-2021" in field.source_refs
-    ):
-        # DR369 v1.1 requires the slot itself, with [blank | constant "C"].
-        # No amendment evidence describes an ordinary return; neither that
-        # absence nor a false complementaria fact means a missing wire byte.
-        if field.data_type != "text" or field.length != 1:
-            raise FilingExportValidationError("Modelo 369 complementaria requires a one-byte text slot")
-        if field.producer_key not in headers:
-            raise FilingExportValidationError("Modelo 369 complementaria requires an amendment producer fact")
-        if value is True:
-            return "C"
-        if value is False or value is None:
-            return " "
-        raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
+    if field.presence_marker is not None:
+        return _presence_marker_value(field, headers, value)
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
-        raise FilingExportValidationError(
+        raise FilingExportProfileFactMissingError(
             f"export producer {field.producer_key!r} is required",
-            context={"missing_producer_key": field.producer_key.value},
+            translated_message="application.filing.export.errors.producer_fact_required",
+            context={
+                "missing_producer_key": field.producer_key.value,
+                "fact": missing_producer_fact_names(field.producer_key),
+            },
+            precondition_verdict=missing_producer_fact_verdict(field.producer_key),
         )
     if isinstance(value, bool) and field.data_type == "text":
         return _text_presence_marker(field, value)
     return value.strip() if isinstance(value, str) else value
+
+
+def _presence_marker_value(
+    field: ExportFieldDefinition,
+    headers: Mapping[FilingProducerKey, object],
+    value: object,
+) -> str:
+    # The design requires the slot itself, with a blank or its constant. No
+    # evidence describes an ordinary return; neither that absence nor a false
+    # fact means a missing wire byte.
+    producer_key = field.producer_key
+    if producer_key is None or producer_key not in headers:
+        raise FilingExportValidationError(
+            f"export field {field.id!r} requires its producer fact",
+            translated_message="application.filing.export.errors.producer_fact_required",
+            context={
+                "missing_producer_key": None if producer_key is None else producer_key.value,
+                "fact": field.id if producer_key is None else missing_producer_fact_names(producer_key),
+            },
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCER_FACT_UNSUPPLIED),
+        )
+    if value is True and field.presence_marker is not None:
+        return field.presence_marker
+    if value is False or value is None:
+        return " "
+    raise FilingExportDesignIntegrityError(
+        f"export field {field.id!r} requires a typed boolean producer fact",
+        translated_message="errors.integrity.filing_export_producer_fact_not_boolean",
+        context={"field": field.id},
+    )
 
 
 def _text_presence_marker(field: ExportFieldDefinition, value: bool) -> str | None:
@@ -384,8 +508,10 @@ def _text_presence_marker(field: ExportFieldDefinition, value: bool) -> str | No
     a blank otherwise; any wider text slot has no such reading.
     """
     if field.length != 1:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"export field {field.id!r} cannot write a boolean producer fact into a {field.length}-byte text slot",
+            translated_message="errors.integrity.filing_export_boolean_in_text_slot",
+            context={"field": field.id, "length": field.length},
         )
     return "X" if value else None
 
@@ -410,28 +536,43 @@ def _envelope_closing_tag(
     snapshot: FilingProducerSnapshot,
     context: FilingRecordRenderContext | None = None,
 ) -> str:
-    del snapshot, context
+    del context
     year = str(draft.period.filing_year)
-    period_code = _draft_period_code(draft)
+    period_code = _draft_period_code(draft, snapshot)
     return f"</T{draft.modelo}0{year}{period_code}0000>"
 
 
-def _draft_filing_year(draft: ModeloDraft) -> str:
+def _draft_filing_year(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     return str(draft.period.filing_year)
 
 
-def _draft_period_code(draft: ModeloDraft) -> str:
-    registry_token = draft.period.registry_token
-    if draft.modelo == Modelo("369") and registry_token.startswith("EXT-") and registry_token.endswith("T"):
-        return f"{int(registry_token.removeprefix('EXT-').removesuffix('T')):02d}"
-    return registry_token
+def _draft_period_code(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
+    return draft.period.registry_token
 
 
-def _draft_period_start_date(draft: ModeloDraft) -> str:
-    return draft.period.start_date.strftime("%d%m%Y")
+def _draft_period_start_date(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    """The first day of the period filed for, or of the período impositivo a pago fraccionado is on account of.
+
+    A pago fraccionado has no calendar span: its start is the período
+    impositivo in progress, which the export resolves from the entity's stated
+    facts before rendering. An instalment that reaches here without it is an
+    export assembly fault, never a date to pad or guess.
+    """
+    if draft.period.has_date_span():
+        return draft.period.start_date.strftime("%d%m%Y")
+    if snapshot.periodo_impositivo_start is None:
+        raise FilingExportDesignIntegrityError(
+            "a period without a calendar span renders its start only from the resolved período impositivo",
+            translated_message="errors.integrity.filing_export_period_start_unresolved",
+            context={"period": draft.period.registry_token},
+        )
+    return snapshot.periodo_impositivo_start.strftime("%d%m%Y")
 
 
-def _draft_period_end_date(draft: ModeloDraft) -> str:
+def _draft_period_end_date(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     return draft.period.end_date.strftime("%d%m%Y")
 
 
@@ -445,11 +586,14 @@ def _sepa_marca(
     if selected is None or isinstance(selected, ChargeAccountSelection):
         return None
     if not isinstance(selected, RefundAccountSelection):
-        raise FilingExportValidationError("SEPA marker requires a selected refund account")
+        raise FilingExportDesignIntegrityError(
+            "SEPA marker requires a selected refund account",
+            translated_message="errors.integrity.filing_export_sepa_marker_selection_unsupported",
+        )
     return derive_sepa_marca(
         iban=selected.account.iban,
         bank_country_code=selected.account.bank_country_code,
-    ).value
+    ).code
 
 
 def continuation_page_marker(
@@ -457,7 +601,7 @@ def continuation_page_marker(
     snapshot: FilingProducerSnapshot,
     context: FilingRecordRenderContext | None = None,
 ) -> str | None:
-    """Render ``C`` on a continuation page of its record and blank on the principal page.
+    """Render the declared marker on a continuation page of its record and blank on the principal page.
 
     The marker says the page continues an earlier page of the same type, which
     is a fact of the record occurrence being written, never of the declaration's
@@ -468,7 +612,9 @@ def continuation_page_marker(
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     del draft, snapshot
-    return "C" if context is not None and context.occurrence > 1 else None
+    if context is None or context.occurrence <= 1:
+        return None
+    return resolve_form_codes(_FORM_ROW_CODES_FACT).code("aeat.page.continuation_marker")
 
 
 def m303_complementaria_marker(
@@ -510,7 +656,7 @@ COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: m303_no_activity_marker,
 }
 
-DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {
+DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft, FilingProducerSnapshot], str]] = {
     ExportDraftAttribute.FILING_YEAR: _draft_filing_year,
     ExportDraftAttribute.PERIOD_CODE: _draft_period_code,
     ExportDraftAttribute.PERIOD_START_DATE: _draft_period_start_date,
@@ -525,22 +671,67 @@ def _computed_field_value(
     render_context: FilingRecordRenderContext | None,
 ) -> str | None:
     if field.computed_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare computed_key")
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare computed_key",
+            translated_message="errors.integrity.filing_export_field_computed_key_undeclared",
+            context={"field": field.id},
+        )
     return COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot, render_context)
 
 
-def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
+def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
     if field.draft_attribute is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare draft_attribute")
-    return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
+        raise FilingExportDesignIntegrityError(
+            f"export field {field.id!r} must declare draft_attribute",
+            translated_message="errors.integrity.filing_export_field_draft_attribute_undeclared",
+            context={"field": field.id},
+        )
+    return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft, snapshot)
 
 
-def format_field(field: ExportFieldDefinition, value: object) -> str:
-    """Render one value through the field's fixed-width codec, as a filing export refusal on failure."""
+def format_field(field: ExportFieldDefinition, value: object, *, record: ExportRecordDefinition | None = None) -> str:
+    """Render one value through the field's fixed-width codec, as a filing export refusal on failure.
+
+    Every record render passes ``record``, whose text rule and encoding govern
+    a text value; a slot checked on its own omits it. A value wider than
+    its slot is refused as that slot's overflow, never cut to fit, and a
+    character the record cannot write is refused by name, never dropped.
+    """
     try:
-        return render_fixed_width_export_field(field, value)
+        return render_fixed_width_export_field(field, value, record=record)
+    except FixedWidthUnrepresentableCharacterError as exc:
+        raise FilingExportUnrepresentableCharacterError(
+            field_id=field.id,
+            first_position=field.offset,
+            field_length=field.length,
+            character=exc.character,
+            rendered=exc.rendered,
+            precondition_verdict=filing_no_recovery_verdict(
+                FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+                facts={"error_type": "FilingExportUnrepresentableCharacterError", "field_id": field.id},
+            ),
+        ) from exc
+    except FixedWidthValueOverflowError as exc:
+        raise FilingExportValueOverflowError(
+            field_id=field.id,
+            first_position=field.offset,
+            field_length=exc.field_length,
+            rendered=exc.rendered,
+            data_type=field.data_type.value,
+            precondition_verdict=export_input_decision(ExportRefusalReason.SLOT_VALUE_TOO_WIDE),
+        ) from exc
     except RegistryValidationError as exc:
-        raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
+        raise FilingExportFieldUnrenderableError(
+            field_id=field.id,
+            casilla_id=field.casilla_id,
+            data_type=field.data_type.value,
+            reason=str(exc),
+            precondition_verdict=filing_no_recovery_verdict(
+                FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+                facts={"error_type": "FilingExportFieldUnrenderableError", "field_id": field.id},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            ),
+        ) from exc
 
 
 __all__ = [

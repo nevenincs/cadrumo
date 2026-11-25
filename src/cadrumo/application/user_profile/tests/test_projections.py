@@ -23,7 +23,7 @@ from ....domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...wizard import catalogue as _wizard_catalogue
+from ...wizard import catalogue
 from ..projections import (
     facts_to_values,
     projection_for_taxpayer,
@@ -32,7 +32,7 @@ from ..projections import (
     record_to_values,
 )
 
-__all__ = ["_wizard_catalogue"]
+__all__ = ["catalogue"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -44,6 +44,16 @@ _CREATE_CONTEXT = ProfileCreateContext(
         content_hash_hex({"generation": "projection-fixture"}),
         content_hash_hex({"reader": "projection-fixture"}),
     ),
+)
+
+
+_COMMON_REGIME_IVA_FACTS = (
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
 )
 
 
@@ -87,12 +97,7 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            *_COMMON_REGIME_IVA_FACTS,
         ),
     )
     profile = projection_for_taxpayer(record, schema=_SCHEMA)
@@ -126,12 +131,7 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
             UserProfileFact(path="iva.regime", value="EXENTO"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            *_COMMON_REGIME_IVA_FACTS,
         ),
     )
 
@@ -144,7 +144,7 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
     profile = projection_for_taxpayer(
         {
-            "tax.id": "X9876543K",
+            "tax.id": "X0001004S",
             "iva.regime": "GENERAL",
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.m303_regime_composition": "general",
@@ -154,7 +154,7 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
-    assert profile.tax_id == "X9876543K"
+    assert profile.tax_id == "X0001004S"
     assert profile.iva_regime == default_iva_regime()
 
 
@@ -162,8 +162,8 @@ def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
     record = _record(
         setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=()
     )
-    profile = projection_for_taxpayer(record, tax_id_default="Z0000000M", schema=_SCHEMA)
-    assert profile.tax_id == "Z0000000M"
+    profile = projection_for_taxpayer(record, tax_id_default="Z0001008R", schema=_SCHEMA)
+    assert profile.tax_id == "Z0001008R"
     assert profile.iva_regime == default_iva_regime()
 
 
@@ -188,12 +188,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            *_COMMON_REGIME_IVA_FACTS,
             UserProfileFact(
                 path="irpf.art109_activity_income_withholding_ge_70pct",
                 value=True,
@@ -245,12 +240,7 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            *_COMMON_REGIME_IVA_FACTS,
             UserProfileFact(path="obligations.bienes_extranjero_above_threshold", value=False),
             UserProfileFact(path="obligations.monedas_virtuales_extranjero_above_threshold", value=True),
         ),
@@ -265,30 +255,18 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
     assert profile.monedas_virtuales_extranjero_above_threshold is True
 
 
-def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> None:
-    """Selector-aliased fields must survive the record projection.
-
-    ``taxpayer_profile_from_mapping`` reads the fiscal-address family at its
-    declared ``model_selectors`` alias (``address.cadastral_reference``,
-    ``address.is_habitual_vivienda``) while the wizard projection resolves
-    path keys. The record branch must therefore feed BOTH key spaces; a
-    path-only projection silently blanks this family.
-    """
+def test_projection_for_taxpayer_reads_path_keyed_facts_from_a_record() -> None:
+    """Path-keyed facts survive the record projection beside the selector overlay."""
     record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="contact.fiscal_address_cadastral_reference", value="9872023VH5797S0001WX"),
-            UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="50000.00"),
         ),
     )
     profile = projection_for_taxpayer(record, schema=_SCHEMA)
-    # Selector-aliased direct reads.
-    assert profile.fiscal_address_cadastral_reference == "9872023VH5797S0001WX"
-    assert profile.fiscal_address_is_habitual_vivienda is True
-    # Path-keyed direct read carried by the same merged mapping.
+    # Path-keyed direct read carried by the merged mapping.
     assert profile.incn_prior_12_months == Decimal("50000.00")
     # Path-keyed typed projection unaffected by the selector overlay.
     assert profile.tax_id == "12345678Z"
@@ -310,14 +288,8 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            *_COMMON_REGIME_IVA_FACTS,
             UserProfileFact(path="withholding.has_employees", value=True),
-            UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
         ),
     )
     via_record = projection_for_taxpayer(record, schema=_SCHEMA)
@@ -339,16 +311,16 @@ def test_a_record_with_no_windows_projects_exactly_as_declared() -> None:
     migration, so it is asserted rather than assumed.
     """
     facts = (
-        UserProfileFact(path="identity.tax_id", value="11111111H"),
-        UserProfileFact(path="identity.tax_id", value="22222222J"),
+        UserProfileFact(path="identity.tax_id", value="00001500M"),
+        UserProfileFact(path="identity.tax_id", value="00001501Y"),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
     record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
-    assert record_to_path_values(record)["identity.tax_id"] == "22222222J", (
+    assert record_to_path_values(record)["identity.tax_id"] == "00001501Y", (
         "declaration order still decides when no window does"
     )
-    assert record_to_effective_facts(record)["identity.tax_id"].value == "22222222J"
+    assert record_to_effective_facts(record)["identity.tax_id"].value == "00001501Y"
 
 
 def test_the_latest_effective_window_wins_at_one_path() -> None:

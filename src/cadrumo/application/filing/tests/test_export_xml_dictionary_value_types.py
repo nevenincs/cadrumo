@@ -33,9 +33,9 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.filing.errors import FilingExportValidationError
-from .._export_xml_dictionary import format_xml_dictionary_value
+from ..export_xml_dictionary_values import format_xml_dictionary_value
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 _MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
@@ -277,9 +277,9 @@ def test_a_row_aeat_does_not_declare_boolean_refuses_a_boolean() -> None:
     row a boolean arrived on: ``True`` on a ``P102`` euro-cent row rendered ``1``,
     a plausible one-euro amount the XSD accepts, and on an ``X`` or ``FEC`` row it
     rendered ``1`` where AEAT expects text or a date. Both launder an upstream type
-    error, and the amount case is the one that hides: nothing on the export path
-    validates against the schema, and ``1`` would satisfy it anyway, so a taxpayer
-    files a figure they never stated.
+    error, and the amount case is the one that hides: ``1`` satisfies the schema, so
+    no check on the export path can catch it and a taxpayer files a figure they
+    never stated.
 
     The row types are enumerated here rather than derived, because deriving them
     from the same set the renderer consults would make this test agree with the

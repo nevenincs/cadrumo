@@ -48,6 +48,7 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .recipient_encryption import RecipientEncryptedPackage
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package import ReviewPackageActor
 from .review_package_collab_audit import (
     emit_collab_feedback_countersign_attached_event,
@@ -117,7 +118,7 @@ class ModeloReviewPackageEncryptForRecipientRequest(_Request):
     """One trusted recipient and the existing review-only/expiry choices."""
 
     package: Path
-    recipient_id: Annotated[str, Field(min_length=1, max_length=200)]
+    recipient_id: Annotated[str, Field(min_length=1, max_length=256)]
     output: Path
     review_only: bool = False
     valid_for_days: Annotated[int, Field(gt=0)] | None = None
@@ -138,7 +139,7 @@ class ModeloReviewPackageEncryptFeedbackRequest(_Request):
     request carries.
     """
 
-    originator_id: Annotated[str, Field(min_length=1, max_length=200)]
+    originator_id: Annotated[str, Field(min_length=1, max_length=256)]
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     submitted_by: ReviewPackageActor
@@ -282,21 +283,61 @@ def _signed(path: Path, ports: ReviewPackageExchangeOperationPorts) -> SignedRev
     try:
         return SignedReviewPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise ReviewPackageSigningError(str(exc)) from exc
+        raise ReviewPackageSigningError(
+            str(exc),
+            translated_message="application.modelo.errors.review_package_signature_file_unreadable",
+            precondition_verdict=operator_choice_verdict("signature_file_unreadable"),
+        ) from exc
 
 
 def _receipt(path: Path, ports: ReviewPackageExchangeOperationPorts) -> CounterSignedReceipt:
     try:
         return CounterSignedReceipt.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise ReviewPackageCounterSigningError(str(exc)) from exc
+        raise ReviewPackageCounterSigningError(
+            str(exc),
+            translated_message="application.modelo.errors.review_package_receipt_file_unreadable",
+            precondition_verdict=operator_choice_verdict("receipt_file_unreadable"),
+        ) from exc
 
 
 def _envelope(path: Path, ports: ReviewPackageExchangeOperationPorts) -> RecipientEncryptedPackage:
     try:
         return RecipientEncryptedPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise RecipientEncryptionError(str(exc)) from exc
+        raise RecipientEncryptionError(
+            str(exc),
+            translated_message="application.modelo.errors.review_package_envelope_file_unreadable",
+            precondition_verdict=operator_choice_verdict("envelope_file_unreadable"),
+        ) from exc
+
+
+def _encrypt_for_recipient(
+    payload: ModeloReviewPackageEncryptForRecipientRequest, ports: ReviewPackageExchangeOperationPorts, profile: str
+) -> ModeloReviewPackageEncryptForRecipientProjection:
+    ports.files.require_exists(payload.package)
+    recipient = get_recipient_fingerprint(payload.recipient_id, ports=ports.recipients)
+    package_bytes = ports.files.read_bytes(payload.package)
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=recipient.public_key_hex,
+        recipient_encryption=ports.encryption,
+        review_only=payload.review_only,
+        valid_for=timedelta(days=payload.valid_for_days) if payload.valid_for_days is not None else None,
+    )
+    ports.files.write_text(payload.output, envelope.model_dump_json(indent=2))
+    emit_collab_package_encrypted_event(envelope, bucket_id=profile, repository=ports.history)
+    return ModeloReviewPackageEncryptForRecipientProjection(
+        profile_id=payload.profile_id,
+        effect=OperationEffect.UPDATED,
+        package_path=str(payload.package),
+        output_path=str(payload.output),
+        recipient_id=payload.recipient_id,
+        recipient_public_key_hex=recipient.public_key_hex,
+        review_only=envelope.review_only,
+        issued_at=envelope.issued_at,
+        valid_until=envelope.valid_until,
+    )
 
 
 def _exchange(
@@ -341,29 +382,7 @@ def _exchange(
             counter_signed_at=receipt.counter_signed_at,
         )
     if isinstance(payload, ModeloReviewPackageEncryptForRecipientRequest):
-        ports.files.require_exists(payload.package)
-        recipient = get_recipient_fingerprint(payload.recipient_id, ports=ports.recipients)
-        package_bytes = ports.files.read_bytes(payload.package)
-        envelope = encrypt_review_package_for_recipient(
-            package_bytes,
-            recipient_public_key_hex=recipient.public_key_hex,
-            recipient_encryption=ports.encryption,
-            review_only=payload.review_only,
-            valid_for=timedelta(days=payload.valid_for_days) if payload.valid_for_days is not None else None,
-        )
-        ports.files.write_text(payload.output, envelope.model_dump_json(indent=2))
-        emit_collab_package_encrypted_event(envelope, bucket_id=profile, repository=ports.history)
-        return ModeloReviewPackageEncryptForRecipientProjection(
-            profile_id=payload.profile_id,
-            effect=OperationEffect.UPDATED,
-            package_path=str(payload.package),
-            output_path=str(payload.output),
-            recipient_id=payload.recipient_id,
-            recipient_public_key_hex=recipient.public_key_hex,
-            review_only=envelope.review_only,
-            issued_at=envelope.issued_at,
-            valid_until=envelope.valid_until,
-        )
+        return _encrypt_for_recipient(payload, ports, profile)
     if isinstance(payload, ModeloReviewPackageDecryptRequest):
         envelope = _envelope(payload.envelope_path, ports)
         keypair = ensure_recipient_encryption_keypair(bucket_id=profile, recipient_encryption=ports.encryption)
@@ -441,17 +460,6 @@ def _exchange(
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def _failed_exchange_writer_effect(tracker: LedgerCommitAttemptTracker) -> OperationEffect:
-    """Preserve uncertainty ahead of confirmed partial writes when exchange fails."""
-    return (
-        OperationEffect.UNKNOWN
-        if tracker.has_uncertain_write
-        else OperationEffect.PARTIAL
-        if tracker.confirmed_write
-        else OperationEffect.NONE
-    )
-
-
 class ReviewPackageExchangeExecutor:
     """Settle each concrete key/artifact/audit/replay writer before result release."""
 
@@ -495,7 +503,7 @@ class ReviewPackageExchangeExecutor:
                     work, tracker=tracker, context=context, task_name=request.definition_id
                 )
             except BaseException:
-                effect = _failed_exchange_writer_effect(tracker)
+                effect = tracker.effect(incomplete=True)
                 await context.events.effect(effect)
                 raise
             if tracker.has_uncertain_write:

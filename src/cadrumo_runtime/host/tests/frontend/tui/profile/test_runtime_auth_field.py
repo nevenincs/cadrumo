@@ -8,7 +8,6 @@ import pytest
 
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
@@ -16,7 +15,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

@@ -2,26 +2,23 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from cadrumo.domain.categories.proportionality_catalogue import require_proportionality_kind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
-from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.profile import CategoryProfile
 from ....domain.categories.proportionality import (
     CategoryCitation,
@@ -30,23 +27,30 @@ from ....domain.categories.proportionality import (
     parse_http_url,
 )
 from ....domain.contribuyente.ccaa import CCAA
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions.models import TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from ..renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    aggregate_renta_ledger_expenses,
+from ..renta_ledger import aggregate_renta_ledger_expenses
+from ..renta_ledger_models import RentaLedgerAggregationIssueReason
+from .renta_income_aggregation_support import renta_income_aggregation_period
+from .renta_ledger_support import (
+    ledger_expense_transaction,
 )
-from .renta_income_aggregation_support import _period
+from .usage_ratio_support import (
+    HOME_OFFICE_DEGREE_OF_USE,
+    HOME_OFFICE_SUMINISTRO_RATIO,
+    dwelling_classify_share,
+    dwelling_profile,
+    dwelling_usage_ratios,
+)
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
 
 pytestmark = [
     pytest.mark.unit,
@@ -56,121 +60,14 @@ pytestmark = [
 ]
 
 
-def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> BindingDefinition:
-    return BindingDefinition(
-        id=binding_id,
-        provider={
-            "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
-            **{
-                "modelo": "100",
-                "period": "0A",
-                "target_casilla_id": casilla_id,
-                "fact": "deductible_amount_sum",
-            },
-        },
-        value={"data_type": "money", "channel": "decimal"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
-        source_refs=("aeat-renta-2025-manual-parte1",),
-    )
-
-
-def _m100_2025_renta_expense_revision() -> ModeloRevision:
-    return ModeloRevision(
-        id="2025",
-        localization_key="test.schema.revision.2025.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
-        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
-        source_refs=("aeat-renta-2025-manual-parte1",),
-        bindings=(
-            _m100_renta_expense_binding("renta-ledger-expense-0186-deductible", "0186"),
-            _m100_renta_expense_binding("renta-ledger-expense-0192-deductible", "0192"),
-            _m100_renta_expense_binding("renta-ledger-expense-0199-deductible", "0199"),
-            _m100_renta_expense_binding("renta-ledger-expense-0203-deductible", "0203"),
-        ),
-    )
-
-
-_ANNUAL_2025 = _period(2025, "0A")
-_Q1_2025 = _period(2025, "1T")
+_ANNUAL_2025 = renta_income_aggregation_period(2025, "0A")
+_Q1_2025 = renta_income_aggregation_period(2025, "1T")
 _M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199", surface="_M100_ASESORIA_CASILLA")
 _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTOS_FINANCIEROS_CASILLA",
 )
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
-
-
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date = date(2025, 4, 5),
-    value_date: date | None = date(2025, 4, 5),
-    amount: Decimal = Decimal("121.00"),
-    currency: str = "EUR",
-) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=value_date,
-        amount=amount,
-        currency=currency,
-        counterparty="Proveedor SL",
-        description=f"ledger row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
-
-
-def _transaction(
-    provider_id: str,
-    *,
-    amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = _DEFAULT_SPENDING_CATEGORY,
-    purchase_invoice_evidence_id: str | None = None,
-    direction: TransactionDirection = TransactionDirection.OUTGOING,
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    booked_date: date = date(2025, 4, 5),
-    value_date: date | None = date(2025, 4, 5),
-    currency: str = "EUR",
-    taxable_base: Decimal | None = None,
-    iva_rate: Decimal | None = None,
-    iva_amount: Decimal | None = None,
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                provider_id,
-                booked_date=booked_date,
-                value_date=value_date,
-                amount=amount,
-                currency=currency,
-            ),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": category.value,
-            "taxable_base": taxable_base,
-            "iva_rate": iva_rate,
-            "iva_amount": iva_amount,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="M130_GASTOS_CASILLA")
 
 
 def _invoice(
@@ -198,7 +95,7 @@ def _invoice(
             "invoice_number": f"INV-{tx_id[:8]}",
             "issued_at": issued_at,
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total,
             "iva_total": Decimal("21.00"),
@@ -212,7 +109,7 @@ def _invoice(
 
 
 def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
-    mixed = _transaction(
+    mixed = ledger_expense_transaction(
         "row-mixed",
         amount=Decimal("200.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
@@ -236,18 +133,18 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
 
 
 def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation() -> None:
-    active = _transaction(
+    active = ledger_expense_transaction(
         "row-active",
         amount=Decimal("100.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
     )
-    archived = _transaction(
+    archived = ledger_expense_transaction(
         "row-archived",
         amount=Decimal("500.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
-    stashed = _transaction(
+    stashed = ledger_expense_transaction(
         "row-stashed",
         amount=Decimal("700.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
@@ -268,7 +165,7 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
 
 
 def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_catalogue() -> None:
-    manual = _transaction(
+    manual = ledger_expense_transaction(
         "manual-tax-fields",
         amount=Decimal("121.00"),
         category=SpendingCategory.from_registry("asesoria_fiscal"),
@@ -292,26 +189,88 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
-def test_raw_amortizable_acquisition_is_currently_deducted_at_full_base_without_a_schedule() -> None:
-    """Pin the pre-asset-schedule behavior at the ledger boundary.
+@pytest.mark.parametrize(
+    ("category_id", "base", "iva"),
+    [
+        ("hardware_amortizable", Decimal("2000.00"), Decimal("420.00")),
+        ("hardware_amortizable", Decimal("250.00"), Decimal("52.50")),
+        ("mobiliario_amortizable", Decimal("250.00"), Decimal("52.50")),
+        ("amortizacion_vivienda_afecto", Decimal("1000.00"), Decimal("0.00")),
+    ],
+)
+def test_a_purchase_in_an_amortizable_category_deducts_nothing_whatever_its_value(
+    category_id: str,
+    base: Decimal,
+    iva: Decimal,
+) -> None:
+    """DISCRIMINATING. The purchase is acquisition evidence: only the activity-asset register deducts.
 
-    This is deliberately a material acquisition whose taxable base is larger
-    than any illustrative annual charge: the current transaction-ledger path
-    has only the raw purchase amount and category.  It therefore routes the
-    whole base to 0208; it neither receives nor validates asset lifecycle,
-    service-date, coefficient, or accumulated-depreciation facts.
+    A 2,000 EUR computer is amortized (LIS art. 12.1), and a 250 EUR chair is
+    written off through the register's low-value free method, so neither
+    reaches an expense casilla from the ledger row.
     """
-    equipment = _transaction(
-        "unscheduled-equipment-acquisition",
-        amount=Decimal("2420.00"),
-        category=SpendingCategory.from_registry("hardware_amortizable"),
-        taxable_base=Decimal("2000.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("420.00"),
+    purchase = ledger_expense_transaction(
+        "amortizable-acquisition",
+        amount=base + iva,
+        category=SpendingCategory.from_registry(category_id),
+        taxable_base=base,
+        iva_rate=Decimal("0.21") if iva else Decimal("0"),
+        iva_amount=iva,
     )
 
     result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((equipment,)),
+        TransactionCatalogue.from_transactions((purchase,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.observations == ()
+    assert result.casilla_values == {}
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY]
+    assert [issue.category_id for issue in result.issues] == [category_id]
+
+
+@pytest.mark.parametrize("category_id", ["telefonia_movil", "vehiculo_combustible"])
+def test_a_shared_use_line_or_vehicle_deducts_nothing_and_says_why(category_id: str) -> None:
+    """DISCRIMINATING. A mobile line or a turismo is affected only by exclusive use (RIRPF art. 22).
+
+    A MIXED row states private use, so its stated share is not deducted: the
+    element admits no partial affectation, and the refusal is a review issue.
+    """
+    shared = ledger_expense_transaction(
+        "shared-use",
+        category=SpendingCategory.from_registry(category_id),
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((shared,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.observations == ()
+    assert result.casilla_values == {}
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.EXCLUSIVE_USE_REQUIRED]
+
+
+@pytest.mark.parametrize("category_id", ["telefonia_movil", "vehiculo_combustible"])
+def test_an_exclusively_business_line_or_vehicle_deducts_in_full(category_id: str) -> None:
+    business = ledger_expense_transaction(
+        "business-use",
+        category=SpendingCategory.from_registry(category_id),
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((business,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
@@ -319,47 +278,43 @@ def test_raw_amortizable_acquisition_is_currently_deducted_at_full_base_without_
     )
 
     assert result.issues == ()
-    assert result.observations[0].target_casilla_id == "0208"
-    assert result.observations[0].deductible_amount == Decimal("2000.00")
-    assert result.casilla_values == {validated_casilla_id("0208", surface="test"): Decimal("2000.00")}
+    assert [observation.deductible_amount for observation in result.observations] == [Decimal("100.00")]
 
 
-def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
-    phone = _transaction(
-        "phone",
-        category=SpendingCategory.from_registry("telefonia_movil"),
+def test_an_annual_cap_holds_across_the_rows_of_the_year() -> None:
+    """DISCRIMINATING. Two 300 EUR premiums are each under the 500 EUR limit, and together above it.
+
+    LIRPF art. 30.2, regla 5.a a) allows 500 EUR a year for the insured person,
+    so the second premium deducts only the 200 EUR the first left.
+    """
+    premiums = tuple(
+        ledger_expense_transaction(
+            f"premium-{month}",
+            amount=Decimal("300.00"),
+            category=SpendingCategory.from_registry("seguros_salud_autonomo"),
+            booked_date=date(2025, month, 1),
+            value_date=date(2025, month, 1),
+        )
+        for month in (3, 9)
     )
 
-    missing_ratio = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((phone,)),
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions(premiums),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
 
-    assert missing_ratio.observations == ()
-    assert missing_ratio.issues[0].reason is RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
-    assert "missing usage ratio" in missing_ratio.issues[0].detail
-
-    with_ratio = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((phone,)),
-        InvoiceCatalogue(),
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
-        usage_ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.25")},
-    )
-
-    assert with_ratio.issues == ()
-    assert with_ratio.observations[0].deductible_amount == Decimal("30.2500")
-    assert with_ratio.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("30.2500")}
+    assert result.issues == ()
+    by_date = sorted(result.observations, key=lambda observation: observation.filing_date)
+    assert [observation.deductible_amount for observation in by_date] == [Decimal("300.00"), Decimal("200.00")]
 
 
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
-    initial = _transaction("row-outside")
+    initial = ledger_expense_transaction("row-outside")
     invoice = _invoice(initial.transaction_id, issued_at=date(2024, 12, 31))
-    linked = _transaction("row-outside", purchase_invoice_evidence_id=invoice.invoice_id)
+    linked = ledger_expense_transaction("row-outside", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
@@ -375,10 +330,10 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
 
 
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
-    first = _transaction("row-partial-a")
-    second = _transaction("row-partial-b", amount=Decimal("60.50"))
+    first = ledger_expense_transaction("row-partial-a")
+    second = ledger_expense_transaction("row-partial-b", amount=Decimal("60.50"))
     invoice = _invoice(first.transaction_id, linked_transaction_ids=(first.transaction_id, second.transaction_id))
-    linked = _transaction("row-partial-a", purchase_invoice_evidence_id=invoice.invoice_id)
+    linked = ledger_expense_transaction("row-partial-a", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
@@ -396,9 +351,9 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
 
 
 def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> None:
-    initial = _transaction("row-cross-bucket")
+    initial = ledger_expense_transaction("row-cross-bucket")
     invoice = _invoice(initial.transaction_id, bucket_id="other")
-    linked = _transaction("row-cross-bucket", purchase_invoice_evidence_id=invoice.invoice_id)
+    linked = ledger_expense_transaction("row-cross-bucket", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
@@ -414,13 +369,13 @@ def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> N
 
 
 def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
-    initial = _transaction(
+    initial = ledger_expense_transaction(
         "row-refund",
         amount=Decimal("121.00"),
         direction=TransactionDirection.INCOMING,
     )
     invoice = _invoice(initial.transaction_id)
-    refund = _transaction(
+    refund = ledger_expense_transaction(
         "row-refund",
         amount=Decimal("121.00"),
         purchase_invoice_evidence_id=invoice.invoice_id,
@@ -458,7 +413,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     basis selector. This test covers the un-invoiced branch where caja governs.
     """
     # value_date in-year (caja), booked_date in the prior year (devengo would differ).
-    caja_in_year = _transaction(
+    caja_in_year = ledger_expense_transaction(
         "row-caja-in-year",
         amount=Decimal("100.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
@@ -467,7 +422,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
         purchase_invoice_evidence_id=None,
     )
     # value_date in the prior year (caja), booked_date in-year (devengo would include).
-    caja_out_of_year = _transaction(
+    caja_out_of_year = ledger_expense_transaction(
         "row-caja-out-of-year",
         amount=Decimal("100.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
@@ -497,7 +452,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
 
 
 def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None:
-    usd_expense = _transaction(
+    usd_expense = ledger_expense_transaction(
         "row-usd",
         category=SpendingCategory.from_registry("gastos_bancarios"),
         purchase_invoice_evidence_id=None,
@@ -517,7 +472,7 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
 
 
 def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
-    zero_business = _transaction(
+    zero_business = ledger_expense_transaction(
         "row-zero-business",
         amount=Decimal("200.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
@@ -563,6 +518,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
                     locator="test",
                     url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
+                    source_ref="aeat-renta-2025-manual-parte1",
                     valid_from=date(2025, 1, 1),
                     valid_to=date(2025, 12, 31),
                 ),
@@ -578,7 +534,7 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
     A category with no territorial-regime override produces byte-identical
     observations whether the residence comunidad is declared or not.
     """
-    row = _transaction(
+    row = ledger_expense_transaction(
         "row-region-inert", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     catalogue = TransactionCatalogue.from_transactions((row,))
@@ -606,7 +562,7 @@ def test_region_override_selected_when_residence_matches() -> None:
     The synthetic 50% override for the residence comunidad halves the deductible
     versus the full-deductible state profile, proving selection by CCAA.
     """
-    row = _transaction(
+    row = ledger_expense_transaction(
         "row-region-hit", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     overrides = {
@@ -634,7 +590,7 @@ def test_region_override_selected_when_residence_matches() -> None:
 
 def test_region_override_undeclared_residence_fails_closed() -> None:
     """A category carrying an override with no declared residence fails closed."""
-    row = _transaction(
+    row = ledger_expense_transaction(
         "row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     overrides = {
@@ -666,12 +622,152 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
 
 def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
     """A user profile carrying an optional ``tax_residence.ccaa`` fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    facts = (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
     if ccaa_value is not None:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
+
+
+# ---------------------------------------------------------------------------
+# One proportion, one application: the category rule applies the usage ratio, and
+# a row's business share (the degree of use, which feeds IVA) never scales it again.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_home_office_utility_bill_deducts_the_statutory_share_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIRPF art. 30.2.5.b: 30 per cent of office m2 over total m2, applied one time.
+
+    Expected figure, worked by hand: 20 / 100 = 0.20; 0.30 * 0.20 = 0.06; the bill
+    is a 100.00 EUR base, so 100.00 * 0.06 = 6.00. The row's stored share is the
+    degree of use, 0.20, which IVA deducts; the category's usage ratio is 0.06.
+    Both come out of the real resolvers for the same profile. Applying the share
+    as well would give 1.20, not 6.00, which is the double application this
+    guards against.
+    """
+    category = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = dwelling_profile()
+    usage_ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    stamped_share = dwelling_classify_share(profile, category, operation=operation)
+    assert usage_ratios[category] == HOME_OFFICE_SUMINISTRO_RATIO
+    assert stamped_share == HOME_OFFICE_DEGREE_OF_USE
+
+    bill = ledger_expense_transaction(
+        "home-office-luz",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=classification,
+        business_pct=stamped_share if classification is BusinessClassification.MIXED else None,
+        usage_ratio_id=category.value if classification is BusinessClassification.MIXED else None,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios=usage_ratios,
+        profile_record=profile,
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == Decimal("6.00"), f"{classification.value} home-office bill deducted {deducted}, expected 6.00"
+    assert sum(result.casilla_values.values()) == Decimal("6.00")
+
+
+def test_a_40_of_100_m2_home_office_bill_deducts_12_per_cent_in_renta_though_its_row_share_is_40(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The Manual de Renta 2025 example: 30% x 40% = 12% of the base, here 12.00 of 100.00.
+
+    The row's stamped share is the 0.40 degree of use, which IVA deducts. Renta
+    must not read it: the IRPF factor reaches the base only through the category
+    rule over the usage-ratio store.
+    """
+    category = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = dwelling_profile(office_m2=Decimal("40"))
+    usage_ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    stamped_share = dwelling_classify_share(profile, category, operation=operation)
+    assert usage_ratios[category] == Decimal("0.12")
+    assert stamped_share == Decimal("0.40")
+    bill = ledger_expense_transaction(
+        "home-office-luz-40",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=BusinessClassification.MIXED,
+        business_pct=stamped_share,
+        usage_ratio_id=category.value,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios=usage_ratios,
+        profile_record=profile,
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("12.00")
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_operator_usage_ratio_on_a_dwelling_lease_applies_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A stored 25 per cent dwelling-lease ratio deducts 25.00 of a 100.00 base, not 6.25."""
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
+    bill = ledger_expense_transaction(
+        "lease-bill",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=classification,
+        business_pct=Decimal("0.25") if classification is BusinessClassification.MIXED else None,
+        usage_ratio_id=category.value if classification is BusinessClassification.MIXED else None,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios={category: Decimal("0.25")},
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == Decimal("25.00"), f"{classification.value} lease deducted {deducted}, expected 25.00"

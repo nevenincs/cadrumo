@@ -53,10 +53,22 @@ from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
+from ...domain.calculations.registry.invoice_legal_classification import (
+    InvoiceLegalClassificationCatalogue,
+    resolve_invoice_legal_classification_catalogue,
+)
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ...domain.invoices.enums import InvoiceClass, resolve_iva_rate_slot
+from ...domain.invoices.enums import (
+    InvoiceClass,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
+    RectificationCause,
+    RectificationDirection,
+    RectificationMethod,
+    resolve_iva_rate_slot,
+)
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
@@ -105,7 +117,7 @@ class InvoiceWizardResult(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class _WizardFieldError(CadrumoError):
+class WizardFieldError(CadrumoError):
     """Internal control-flow carrier for one field-validation failure."""
 
     field: str
@@ -128,6 +140,16 @@ class _ValidatedWizardFields:
     invoice_class: InvoiceClass | None
     series: str | None
     rectifies_invoice_number: str | None
+    rectification_method: RectificationMethod | None
+    rectification_cause: RectificationCause | None
+    rectification_direction: RectificationDirection | None
+    document_received_on: date | None
+    issuer_increase_election: IssuerIncreaseElection | None
+    issuer_minoracion_election: IssuerMinoracionElection | None
+    issuer_minoracion_regularisation_period: Period | None
+    recipient_increase_period: Period | None
+    exercised_deduction_period: Period | None
+    art_80_tres_obligations_attested: bool | None
     recargo_amount: Decimal | None
 
 
@@ -145,7 +167,7 @@ def _collect_wizard_field[T](
     """
     try:
         return validate()
-    except _WizardFieldError as exc:
+    except WizardFieldError as exc:
         field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
         return fallback
 
@@ -153,26 +175,26 @@ def _collect_wizard_field[T](
 def _validate_counterparty_nif(raw: str, *, country: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="counterparty_nif", reason="must not be blank")
+        raise WizardFieldError(field="counterparty_nif", reason="must not be blank")
     try:
         if country == "ES":
             return validate_runtime_spanish_tax_id(stripped)
         return validate_iva_number(stripped, country)
     except (IdentityError, InvoiceValidationError) as exc:
-        raise _WizardFieldError(field="counterparty_nif", reason=resolve_error_message(exc)) from exc
+        raise WizardFieldError(field="counterparty_nif", reason=resolve_error_message(exc)) from exc
 
 
 def _validate_counterparty_name(raw: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="counterparty_name", reason="must not be blank")
+        raise WizardFieldError(field="counterparty_name", reason="must not be blank")
     return stripped
 
 
 def _validate_invoice_number(raw: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="invoice_number", reason="must not be blank")
+        raise WizardFieldError(field="invoice_number", reason="must not be blank")
     return stripped
 
 
@@ -188,12 +210,12 @@ def _validate_operation_date(raw: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="operation_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
     if value is None:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="operation_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         )
@@ -204,19 +226,19 @@ def _validate_invoice_date(raw: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
     if value is None:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         )
     return value
 
 
-def _validate_taxable_base(raw: str) -> Decimal:
+def validate_taxable_base(raw: str) -> Decimal:
     """Validate the operator-typed taxable base against the canonical euro grammar.
 
     The two-fractional-digit cap is what makes the Spanish thousands shape
@@ -230,13 +252,13 @@ def _validate_taxable_base(raw: str) -> Decimal:
     """
     value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if value is None:
-        raise _WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}")
+        raise WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}")
     if value < 0:
-        raise _WizardFieldError(field="taxable_base", reason="must not be negative")
+        raise WizardFieldError(field="taxable_base", reason="must not be negative")
     return value
 
 
-def _validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | None:
+def validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | None:
     """Validate the operator-typed IVA percentage against the canonical grammar.
 
     Uncapped fractional digits: this is a percentage, not a euro amount, and the
@@ -253,14 +275,14 @@ def _validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | No
         return None
     value = try_parse_canonical_decimal(raw)
     if value is None:
-        raise _WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
+        raise WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
     if on_date is None:
-        raise _WizardFieldError(field="iva_rate", reason="requires a valid invoice or operation date")
+        raise WizardFieldError(field="iva_rate", reason="requires a valid invoice or operation date")
     try:
         resolve_iva_rate_slot(value, on_date)
     except IvaRateNotFoundError as exc:
         accepted = (exc.context or {}).get("accepted", "")
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="iva_rate",
             reason=f"{format(value, 'f')} is not a recognised IVA percentage; use one of: {accepted}",
         ) from exc
@@ -282,9 +304,9 @@ def _validate_retention_amount(raw: str | None) -> Decimal | None:
         return None
     value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if value is None:
-        raise _WizardFieldError(field="retention_amount", reason=f"invalid decimal amount: {raw!r}")
+        raise WizardFieldError(field="retention_amount", reason=f"invalid decimal amount: {raw!r}")
     if value < 0:
-        raise _WizardFieldError(field="retention_amount", reason="must not be negative")
+        raise WizardFieldError(field="retention_amount", reason="must not be negative")
     return value
 
 
@@ -302,9 +324,9 @@ def _validate_retention_rate(raw: str | None) -> Decimal | None:
         return None
     value = try_parse_canonical_decimal(raw)
     if value is None:
-        raise _WizardFieldError(field="retention_rate", reason=f"invalid decimal fraction: {raw!r}")
+        raise WizardFieldError(field="retention_rate", reason=f"invalid decimal fraction: {raw!r}")
     if value < 0 or value > 1:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="retention_rate",
             reason="must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
         )
@@ -315,14 +337,14 @@ def _validate_country_code(raw: str) -> str:
     try:
         return validate_country_code(raw)
     except InvoiceValidationError as exc:
-        raise _WizardFieldError(field="country_code", reason=str(exc)) from exc
+        raise WizardFieldError(field="country_code", reason=str(exc)) from exc
 
 
 def _validate_currency(raw: str) -> str:
     try:
         return normalise_iso_4217_currency(raw)
     except CoreValidationError as exc:
-        raise _WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
+        raise WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
 
 
 def _validate_declared_text(raw: str | None, *, field: str) -> str | None:
@@ -330,7 +352,7 @@ def _validate_declared_text(raw: str | None, *, field: str) -> str | None:
         return None
     value = raw.strip()
     if not value:
-        raise _WizardFieldError(field=field, reason="must not be blank")
+        raise WizardFieldError(field=field, reason="must not be blank")
     return value
 
 
@@ -340,15 +362,83 @@ def _validate_declared_invoice_class(raw: str | None, *, on_date: date | None) -
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=on_date)
     value = next((token for token in catalogue.invoice_class_choices if str(token) == raw.strip()), None)
     if value is None:
-        raise _WizardFieldError(field="invoice_class", reason="must be a declared invoice class")
+        raise WizardFieldError(field="invoice_class", reason="must be a declared invoice class")
     return value
+
+
+def _validate_declared_rectification_fact[TokenT](
+    raw: str | None,
+    *,
+    field: str,
+    choices: Callable[[InvoiceLegalClassificationCatalogue], tuple[TokenT, ...]],
+    on_date: date | None,
+) -> TokenT | None:
+    """Admit one rectification token the served vocabulary declares for ``on_date``.
+
+    Driven by fact 0141's own ordered choices, through the same catalogue the
+    class validator above reads, so the wizard holds no cause, method or
+    direction list of its own and a registry edition that adds one needs no
+    change here.
+    """
+    if raw is None:
+        return None
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=on_date)
+    value = next((token for token in choices(catalogue) if str(token) == raw.strip()), None)
+    if value is None:
+        accepted = ", ".join(str(token) for token in choices(catalogue))
+        raise WizardFieldError(field=field, reason=f"must be one of: {accepted}")
+    return value
+
+
+def _validate_document_received_on(raw: str | None) -> date | None:
+    """Validate the recipient's reception date, reported under its own field name.
+
+    Separate from the invoice and operation dates for the reason
+    :func:`_validate_operation_date` states: three dates on one document, and a
+    refusal naming the wrong one sends the person to correct a value that was
+    already right.
+    """
+    if raw is None:
+        return None
+    try:
+        value = parse_iso8601_date(raw)
+    except ValueError as exc:
+        raise WizardFieldError(
+            field="document_received_on",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        ) from exc
+    if value is None:
+        raise WizardFieldError(
+            field="document_received_on",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        )
+    return value
+
+
+def _validate_elected_period(raw: str | None, *, field: str) -> Period | None:
+    """Validate one elected declaración-liquidación, reported under its own field name.
+
+    The value is the canonical display form of a period, a filing year and a
+    bare registry period code, which :meth:`Period.from_string` is the one
+    parser for. A calendar string is refused there rather than guessed here, so
+    an election never silently lands in a period the operator did not state.
+    """
+    if raw is None:
+        return None
+    try:
+        return Period.from_string(raw)
+    except PeriodError as exc:
+        raise WizardFieldError(
+            field=field,
+            reason=f"must be a filing year and a registry period code, got {raw!r}",
+        ) from exc
 
 
 def _validate_recargo_amount(raw: str | None) -> Decimal | None:
     try:
         return _validate_retention_amount(raw)
-    except _WizardFieldError as exc:
-        raise _WizardFieldError(field="recargo_amount", reason=exc.reason) from exc
+    except WizardFieldError as exc:
+        raise WizardFieldError(field="recargo_amount", reason=exc.reason) from exc
 
 
 #: The one country code that establishes domesticity. Named rather than inlined
@@ -357,7 +447,7 @@ def _validate_recargo_amount(raw: str | None) -> Decimal | None:
 _DOMESTIC_COUNTRY = "ES"
 
 
-def _derived_domestic_category(
+def derived_domestic_category(
     *,
     country_code: str,
     iva_rate: Decimal | None,
@@ -392,7 +482,7 @@ def _derived_domestic_category(
 
     if operation is None:
         with bundled_indexed_authority().operation() as pinned:
-            return _derived_domestic_category(
+            return derived_domestic_category(
                 country_code=country_code, iva_rate=iva_rate, on_date=on_date, operation=pinned
             )
     rate_kind = unique_rate_kind_for_declared_rate(
@@ -423,6 +513,16 @@ def _validate_wizard_fields(
     invoice_class: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_period: str | None,
+    recipient_increase_period: str | None,
+    exercised_deduction_period: str | None,
+    art_80_tres_obligations_attested: bool | None,
     recargo_amount: str | None,
 ) -> tuple[_ValidatedWizardFields, list[InvoiceWizardFieldError]]:
     field_errors: list[InvoiceWizardFieldError] = []
@@ -464,12 +564,12 @@ def _validate_wizard_fields(
     )
     resolved_base = _collect_wizard_field(
         field_errors,
-        lambda: _validate_taxable_base(taxable_base),
+        lambda: validate_taxable_base(taxable_base),
         fallback=None,
     )
     resolved_rate = _collect_wizard_field(
         field_errors,
-        lambda: _validate_iva_rate(iva_rate, on_date=resolved_operation_date or resolved_date),
+        lambda: validate_iva_rate(iva_rate, on_date=resolved_operation_date or resolved_date),
         fallback=None,
     )
     resolved_currency = _collect_wizard_field(
@@ -500,6 +600,77 @@ def _validate_wizard_fields(
         lambda: _validate_declared_text(rectifies_invoice_number, field="rectifies_invoice_number"),
         fallback=None,
     )
+    rectification_on_date = resolved_operation_date or resolved_date
+    resolved_method = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_method,
+            field="rectification_method",
+            choices=lambda catalogue: catalogue.rectification_method_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_cause = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_cause,
+            field="rectification_cause",
+            choices=lambda catalogue: catalogue.rectification_cause_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_direction = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_direction,
+            field="rectification_direction",
+            choices=lambda catalogue: catalogue.rectification_direction_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_received_on = _collect_wizard_field(
+        field_errors, lambda: _validate_document_received_on(document_received_on), fallback=None
+    )
+    resolved_increase_election = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            issuer_increase_election,
+            field="issuer_increase_election",
+            choices=lambda catalogue: catalogue.issuer_increase_election_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_minoracion_election = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            issuer_minoracion_election,
+            field="issuer_minoracion_election",
+            choices=lambda catalogue: catalogue.issuer_minoracion_election_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_regularisation_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(
+            issuer_minoracion_regularisation_period, field="issuer_minoracion_regularisation_period"
+        ),
+        fallback=None,
+    )
+    resolved_recipient_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(recipient_increase_period, field="recipient_increase_period"),
+        fallback=None,
+    )
+    resolved_exercised_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(exercised_deduction_period, field="exercised_deduction_period"),
+        fallback=None,
+    )
     resolved_recargo = _collect_wizard_field(
         field_errors, lambda: _validate_recargo_amount(recargo_amount), fallback=None
     )
@@ -519,6 +690,19 @@ def _validate_wizard_fields(
             invoice_class=resolved_class,
             series=resolved_series,
             rectifies_invoice_number=resolved_rectifies,
+            rectification_method=resolved_method,
+            rectification_cause=resolved_cause,
+            rectification_direction=resolved_direction,
+            document_received_on=resolved_received_on,
+            issuer_increase_election=resolved_increase_election,
+            issuer_minoracion_election=resolved_minoracion_election,
+            issuer_minoracion_regularisation_period=resolved_regularisation_period,
+            recipient_increase_period=resolved_recipient_period,
+            exercised_deduction_period=resolved_exercised_period,
+            # The attestation is a stated answer rather than a parsed value, so
+            # it is carried as the person gave it: absent holds the
+            # modification, false refuses it.
+            art_80_tres_obligations_attested=art_80_tres_obligations_attested,
             recargo_amount=resolved_recargo,
         ),
         field_errors,
@@ -560,7 +744,7 @@ def _build_wizard_invoice(
         # Derived once, before construction, so the built candidate and the
         # persisted record cannot disagree about the category. An
         # operator-supplied value always wins: this only fills a silence.
-        effective_category = iva_category or _derived_domestic_category(
+        effective_category = iva_category or derived_domestic_category(
             country_code=fields.country,
             iva_rate=fields.iva_rate,
             on_date=fields.operation_date or invoice_date,
@@ -587,6 +771,22 @@ def _build_wizard_invoice(
             invoice_class=fields.invoice_class,
             series=fields.series,
             rectifies_invoice_number=fields.rectifies_invoice_number,
+            rectification_method=None if fields.rectification_method is None else str(fields.rectification_method),
+            rectification_cause=None if fields.rectification_cause is None else str(fields.rectification_cause),
+            rectification_direction=(
+                None if fields.rectification_direction is None else str(fields.rectification_direction)
+            ),
+            document_received_on=fields.document_received_on,
+            issuer_increase_election=(
+                None if fields.issuer_increase_election is None else str(fields.issuer_increase_election)
+            ),
+            issuer_minoracion_election=(
+                None if fields.issuer_minoracion_election is None else str(fields.issuer_minoracion_election)
+            ),
+            issuer_minoracion_regularisation_period=fields.issuer_minoracion_regularisation_period,
+            recipient_increase_period=fields.recipient_increase_period,
+            art_80_tres_obligations_attested=fields.art_80_tres_obligations_attested,
+            exercised_deduction_period=fields.exercised_deduction_period,
             recargo_amount=fields.recargo_amount,
             operation=operation,
         )
@@ -651,6 +851,16 @@ def create_invoice_via_wizard(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo_amount: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
     actor: str = "cli",
@@ -692,6 +902,31 @@ def create_invoice_via_wizard(
         invoice_class: Optional declared registry invoice-class token.
         series: Optional declared invoice series; a supplied blank is refused.
         rectifies_invoice_number: Optional declared original invoice reference.
+        rectification_method: Optional RD 1619/2012 art. 15.5 method token the
+            served vocabulary declares, saying whether the stated figures are
+            the modification or the figures after it.
+        rectification_cause: Optional ground token the served vocabulary
+            declares, which is what places the modification in a period.
+        rectification_direction: Optional token saying whether the
+            rectification reduces or increases the original base and cuota.
+        document_received_on: Optional raw ISO-8601 date the recipient received
+            the rectificativa; refused on an issued invoice.
+        issuer_increase_election: Optional LIVA art. 89.Cinco route token for an
+            issued aumento, which the served vocabulary declares.
+        issuer_minoracion_election: Optional LIVA art. 89.Cinco route token for
+            an issued minoración, which the served vocabulary declares.
+        issuer_minoracion_regularisation_period: Optional elected
+            declaración-liquidación the issued minoración is regularised in,
+            as a filing year and a registry period code.
+        recipient_increase_period: Optional elected declaración-liquidación the
+            recipient declares an aumento in (LIVA art. 114.Dos.1.º), in the
+            same form.
+        exercised_deduction_period: Optional declaración-liquidación the
+            original deduction was exercised in, which RIVA art. 24.2.b.3 routes
+            an art. 80.Tres minoración to, in the same form.
+        art_80_tres_obligations_attested: Whether the operator attests the RIVA
+            art. 24 communication and remittance. ``None`` is unanswered, which
+            holds the modification; ``False`` is a stated denial, which refuses it.
         recargo_amount: Optional canonical euro amount added to grand total.
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
@@ -722,6 +957,16 @@ def create_invoice_via_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+        recipient_increase_period=recipient_increase_period,
+        exercised_deduction_period=exercised_deduction_period,
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=recargo_amount,
     )
     _raise_wizard_field_errors(field_errors)

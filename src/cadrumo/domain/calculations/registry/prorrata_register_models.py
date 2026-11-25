@@ -174,6 +174,11 @@ class ProrrataRegisterCatalogue:
         return self.provenances[2].token
 
     @property
+    def operator_stated_prior_definitiva_provenance(self) -> ProrrataProvisionalProvenance:
+        """Return the operator-stated prior definitive provenance in registry order."""
+        return self.provenances[4].token
+
+    @property
     def provenance_precedence(self) -> tuple[ProrrataProvisionalProvenance, ...]:
         """Return provisional provenances in their registry precedence order."""
         return tuple(definition.token for definition in self.provenances)

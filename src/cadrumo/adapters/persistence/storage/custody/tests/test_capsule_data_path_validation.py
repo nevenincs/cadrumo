@@ -35,7 +35,7 @@ from pathlib import PurePosixPath, PureWindowsPath
 
 import pytest
 
-from .._capsule_data import validated_data_path
+from ..capsule_data import validated_data_path
 from ..errors import ProfileCustodyRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

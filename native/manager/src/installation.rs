@@ -107,6 +107,10 @@ pub fn dispatch_newest(
 ) -> io::Result<DispatchOutcome> {
     let mut selected = select(image)?;
     let root = ManagedLocations::resolve(&selected.manager)?;
+    // The successor manages the root this entry selected: the strict host environment
+    // carries an operator-selected root and leaves the default for it to resolve.
+    let environment = cadrumo_platform::storage::successor_host_environment(std::env::vars_os())
+        .map_err(io::Error::from)?;
     let release = selected.version.map(|part| part.to_string()).join(".");
     if let Some(previous) = restoration(root.storage_root(), &release, intent)? {
         let contract: DiscoveryContract =
@@ -124,7 +128,7 @@ pub fn dispatch_newest(
             )
             .map_err(io::Error::other)?;
     }
-    // Validate management eligibility before dispatch; never clear an override into eligibility.
+    // Validate management eligibility before dispatch.
     let locations = ManagedLocations::resolve(&selected.manager)?;
     if let Some(current) = current_installation(image, &selected, locations)? {
         return Ok(DispatchOutcome::Current(current));
@@ -137,9 +141,7 @@ pub fn dispatch_newest(
         Command::new(selected.manager)
             .args(intent.argument())
             .env_clear()
-            .envs(cadrumo_platform::storage::strict_host_environment(
-                std::env::vars_os(),
-            ))
+            .envs(environment)
             .current_dir(selected.package)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -174,9 +176,8 @@ thread_local! {
 #[cfg(all(test, target_arch = "x86_64"))]
 mod tests {
     use super::*;
-    use cadrumo_application::diagnostics::lifecycle::InspectionRefusal;
+    use cadrumo_application::{diagnostics::lifecycle::InspectionRefusal, value::Sha256Digest};
     use serde_json::{Value, json};
-    use sha2::{Digest, Sha256};
     use std::{
         fs,
         path::PathBuf,
@@ -247,8 +248,8 @@ mod tests {
                     "layout": {"abi": contract.layout.abi, "platform": contract.layout.platform},
                     "python": "fixture", "distributions": {},
                     "files": {
-                        (member.as_str()): format!("{:x}", Sha256::digest(bytes)),
-                        "fixture-dependency.bin": format!("{:x}", Sha256::digest(dependency)),
+                        (member.as_str()): Sha256Digest::of(bytes).to_string(),
+                        "fixture-dependency.bin": Sha256Digest::of(dependency).to_string(),
                     },
                     "user_docs": {"directory": "docs/user", "bundled": false},
                     "startup_files": [member.as_str(), "fixture-dependency.bin"],

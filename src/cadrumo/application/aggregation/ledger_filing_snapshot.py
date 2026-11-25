@@ -1,15 +1,12 @@
 """Capture and staleness for the modelo filing ledger snapshot.
 
-Used by: :mod:`application.modelo._ledger_drift_gate` for the calculate-time
+Used by: :mod:`application.modelo.ledger_drift_gate` for the calculate-time
 staleness refusal, :mod:`entrypoints.cli.ledger_read_commands` for the stale-revision
 listing, and :mod:`application.modelo.verification_actions` for the Modelo 303
 deductible-evidence verify gate.
 
 That list names the callers as they stand and is not a guarantee that no other
-site reaches these functions; grep before relying on it. It previously named two
-modules that call nothing here at all, which is worse than naming none: a reader
-auditing the staleness refusal went looking in the wrong package, found nothing,
-and had every reason to conclude the enforcement did not exist.
+site reaches these functions; grep before relying on it.
 
 The pure records live in :mod:`domain.modelos.ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
@@ -23,7 +20,12 @@ The fingerprint covers exactly the transaction facts that can move a casilla --
 dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
-state, the FX conversion, and the lifecycle state.
+state, the FX conversion, the lifecycle state, and (from field-set version 3)
+the bienes de inversion link and the customer's identifying Member State, and
+(from version 5) the operation date and the deduction evidence behind the row,
+and (from version 7) the operator-stated accrual date, (from version 8) the
+stated exemption article, and (from version 9) the savings-position link and
+its capital-mobiliario concept.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -34,7 +36,7 @@ for drift evaluation.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
 from typing import Final
 
@@ -43,8 +45,10 @@ from pydantic import ValidationError
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LEGAL_REFS_ADAPTER, SOURCE_REFS_ADAPTER, LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.ledger_filing_snapshot import (
+    FiledRegisterState,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
@@ -77,21 +81,20 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 # (``art_104_tres_exclusion``, ``input_classification``, ``prorrata_sector_id``,
 # ``prorrata_reference``).
 #
-# The six declaration fields are where the gap was REACHABLE, and that is worth
-# stating precisely because it is narrower than it first looks. ``Transaction``
+# The declaration fields are narrower in effect than they first look. ``Transaction``
 # enforces ``taxable_base + iva_amount + recargo_amount == gross``, so a
 # surcharge cannot move without moving an amount V1 already covered; a
 # recargo-only drift is invisible to a V1 hash but cannot exist in a valid
 # catalogue. The declarations carry no such identity: reclassifying a row's
 # ``input_classification`` changes what it deducts while every amount stays put,
-# so a V1 comparison filed it under ``unchanged`` and the verdict reported that
-# a filed return still matched a ledger whose deduction had since changed.
+# so a V1 comparison would file it under ``unchanged``, reporting that a filed
+# return still matched a ledger whose deduction had changed.
 #
 # A V1 snapshot is NOT upgraded by recomputation. Rehashing it under V2 would
 # assert that the wider facts were checked when the filing was sealed, which
 # nobody knows; the honest report is that its comparison is sound but narrower,
 # which is what ``covers_current_fact_set`` carries.
-_FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
+FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
     ("booked_date", "raw.booked_date"),
     ("value_date", "raw.value_date"),
     ("amount", "raw.amount"),
@@ -118,8 +121,8 @@ _FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
     ("lifecycle_state", "lifecycle_state"),
 )
 
-_FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V1,
+FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V1,
     ("recargo_amount", "recargo_amount"),
     ("usage_ratio_id", "usage_ratio_id"),
     ("deduction_fact_kind", "deduction_fact_kind"),
@@ -129,16 +132,101 @@ _FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
     ("prorrata_reference", "prorrata_reference"),
 )
 
+# V3 adds the two IVA facts an operator can still change through the manual
+# ledger edit path without moving anything V2 watches. ``investment_asset_id``
+# links a row to the bienes de inversion register, and the deduction admission
+# checks that link; ``counterparty_identification_state`` is the Member State
+# that identified the customer, and an intra-community supply is admitted only
+# when it validates. Neither moves an amount, so an edit to either on a
+# BORRADOR contributor left a V2 anchor unchanged and verify sealed values
+# computed under the old admission outcome.
+#
+# Both are scalars (an opaque identifier and a registry token whose canonical
+# text is its ``value``), so ``_normalise`` already renders them
+# deterministically and without a repr.
+#
+# The non-writable facts the IVA resolvers also read (the criterio de caja
+# fields, ``rectifies_ledger_id``) stay out until a write
+# path can change them; the write-path coverage test fails the moment one can,
+# which forces the next version rather than a silent gap.
+FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V2,
+    ("investment_asset_id", "investment_asset_id"),
+    ("counterparty_identification_state", "counterparty_identification_state"),
+)
+
+# Version 4 is unassigned: V5 follows V3 directly.
+# V5 adds what a calculation reads and V3 could not see: the operation date, which
+# picks the row's period and rate, and the evidence behind the deduction. Without
+# the provenance a row yields no input-IVA observation, so a draft holding a 21.00
+# cuota read as current after the evidence went while recalculating it refused.
+# The purchase evidence link is hashed because a recalculation takes the row's
+# figures from that invoice, so attaching one now asks for a recalculation too.
+# Supplementary ``attachment_ids`` feed no calculation and stay out.
+FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V3,
+    ("operation_date", "operation_date"),
+    ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
+    ("deduction_authority", "deduction_provenance.authority"),
+    ("deduction_source_locator", "deduction_provenance.source_locator"),
+    ("deduction_evidence_digest", "deduction_provenance.evidence_digest"),
+)
+
+# V6 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
+# (LIVA art. 95.Tres.2.ª) without moving any amount V5 watches.
+FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V5,
+    ("iva_vehicle_use", "iva_vehicle_use"),
+)
+
+# V7 adds ``accrual_date``: the operator-stated LIRPF art. 14 date moves the Renta
+# year or period an income or expense falls in without moving any amount or IVA
+# fact V6 watches.
+FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V6,
+    ("accrual_date", "accrual_date"),
+)
+
+# V8 adds ``exemption_article``: the operator-stated LIVA art. 20.Uno exemption
+# decides whether a DOMESTIC_EXEMPT row enters the prorrata volume as an operation
+# without the right to deduct (art. 104.Dos), without moving any amount V7 watches.
+FINGERPRINT_FIELDS_V8: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V7,
+    ("exemption_article", "exemption_article"),
+)
+
+# V9 adds the savings-position link: ``posicion_ref`` and ``concepto_capital_mobiliario``
+# decide whether a row feeds the interest and dividend boxes of the position it names
+# or an activity aggregation, and which detail record it feeds, without moving any
+# amount or date V8 watches.
+FINGERPRINT_FIELDS_V9: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V8,
+    ("posicion_ref", "posicion_ref"),
+    ("concepto_capital_mobiliario", "concepto_capital_mobiliario"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
-    1: _FINGERPRINT_FIELDS_V1,
-    2: _FINGERPRINT_FIELDS_V2,
+    1: FINGERPRINT_FIELDS_V1,
+    2: FINGERPRINT_FIELDS_V2,
+    3: FINGERPRINT_FIELDS_V3,
+    5: FINGERPRINT_FIELDS_V5,
+    6: FINGERPRINT_FIELDS_V6,
+    7: FINGERPRINT_FIELDS_V7,
+    8: FINGERPRINT_FIELDS_V8,
+    9: FINGERPRINT_FIELDS_V9,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 2
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 9
+
+#: The first version whose hash sees a row's operation date.
+OPERATION_DATE_FIELD_SET_VERSION: Final = 5
+
+#: The first version whose hash sees a row's stated accrual date.
+ACCRUAL_DATE_FIELD_SET_VERSION: Final = 7
 
 
-def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
+def fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
     """Return the field set a given version fingerprints over.
 
     Refuses an unknown version rather than falling back to the current one: a
@@ -190,7 +278,7 @@ def row_fingerprint(
             instead, or it compares two different questions and calls the
             difference drift.
     """
-    fields = _fingerprint_fields(field_set_version)
+    fields = fingerprint_fields(field_set_version)
     canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in fields)
     return sha256_hex(canonical.encode("utf-8"))
 
@@ -269,6 +357,10 @@ def _normalised_source_refs(refs: Iterable[SourceRefId], *, field_name: str) -> 
         raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
 
 
+def _iso_date(value: date | None) -> str | None:
+    return None if value is None else value.isoformat()
+
+
 def _evidence_row(
     transaction: Transaction,
     *,
@@ -284,11 +376,15 @@ def _evidence_row(
     """
     raw = transaction.raw
     m210_classification = transaction.m210_income_classification
+    deduction_provenance = transaction.deduction_provenance
     return LedgerEvidenceRow(
         transaction_id=transaction.transaction_id,
         fingerprint=row_fingerprint(transaction),
         booked_date=raw.booked_date.isoformat(),
-        value_date=raw.value_date.isoformat() if raw.value_date is not None else None,
+        value_date=_iso_date(raw.value_date),
+        operation_date=_iso_date(transaction.operation_date),
+        accrual_date=_iso_date(transaction.accrual_date),
+        deduction_evidence_digest=deduction_provenance.evidence_digest if deduction_provenance is not None else None,
         amount=raw.amount,
         currency=raw.currency,
         direction=transaction.direction.value,
@@ -317,6 +413,10 @@ def _evidence_row(
         m210_payer_id=m210_classification.payer_id if m210_classification is not None else None,
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
+        investment_asset_id=transaction.investment_asset_id,
+        iva_vehicle_use=_enum_value(transaction.iva_vehicle_use),
+        exemption_article=_enum_value(transaction.exemption_article),
+        counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,
         lifecycle_state=transaction.lifecycle_state.value,
@@ -410,7 +510,13 @@ def evaluate_ledger_filing_staleness(
         snapshot: The filed ledger snapshot.
         catalogue: The live :class:`TransactionCatalogue`.
     """
-    index = _index(catalogue)
+    return _evaluate_over_index(snapshot, _index(catalogue))
+
+
+def _evaluate_over_index(
+    snapshot: LedgerFilingSnapshot,
+    index: Mapping[str, Transaction],
+) -> LedgerFilingStalenessVerdict:
     current = {
         row.transaction_id: row_fingerprint(
             index[row.transaction_id],
@@ -429,34 +535,69 @@ def evaluate_ledger_filing_staleness(
     )
 
 
+type FiledRegisterReader = Callable[[CalculationRevision], ActivityAssetConsumption | None]
+"""Read what the asset register yields now for a revision's coordinates; ``None`` when that cannot be read."""
+
+
+def _register_change_count(recorded: ActivityAssetConsumption, current: ActivityAssetConsumption) -> int:
+    return (
+        len(set(recorded.claim_ids) ^ set(current.claim_ids))
+        + len(set(recorded.schedule_fingerprints) ^ set(current.schedule_fingerprints))
+        + current.disposals_changed_from(recorded)
+    )
+
+
 def stale_filed_revisions(
     *,
     revisions: Mapping[str, CalculationRevision],
     catalogue: TransactionCatalogue,
+    register_reader: FiledRegisterReader,
 ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
-    """Return finalized snapshot-backed revisions whose ledger drifted.
+    """Return finalized revisions whose ledger or asset register moved, or whose register cannot be read.
 
     Each item pairs a :class:`CalculationRevision` with its
-    :class:`LedgerFilingStalenessVerdict`. Scans verified/filed revisions
-    carrying a ``ledger_filing_snapshot`` and re-evaluates each against the
-    live catalogue. A revision with no snapshot or a non-finalized
-    state is skipped. Pure given its inputs.
+    :class:`LedgerFilingStalenessVerdict`. The ledger is compared when the revision
+    carries a ``ledger_filing_snapshot``. The register is compared for every sealed
+    revision, because a filing that rested on no claim goes stale when one is recorded.
+    Nothing is written: a sealed revision stays as filed and the difference is a state
+    of this read.
 
     Args:
         revisions: A mapping of :class:`CalculationRevision` files.
         catalogue: The live :class:`TransactionCatalogue`.
+        register_reader: The current register view of one revision.
     """
     findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
+    index = _index(catalogue)
     for revision in revisions.values():
-        if revision.state not in SEALED_REVISION_STATES or revision.ledger_filing_snapshot is None:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
-        verdict = evaluate_ledger_filing_staleness(revision.ledger_filing_snapshot, catalogue)
+        snapshot = revision.ledger_filing_snapshot
+        verdict = (
+            LedgerFilingStalenessVerdict(is_stale=False) if snapshot is None else _evaluate_over_index(snapshot, index)
+        )
+        current = register_reader(revision)
+        if current is None:
+            findings.append((revision, verdict.model_copy(update={"register_state": FiledRegisterState.UNAVAILABLE})))
+            continue
+        changes = _register_change_count(revision.activity_asset_consumption, current)
+        if changes:
+            verdict = verdict.model_copy(
+                update={
+                    "is_stale": True,
+                    "register_state": FiledRegisterState.CHANGED,
+                    "register_change_count": changes,
+                },
+            )
         if verdict.is_stale:
             findings.append((revision, verdict))
     return tuple(findings)
 
 
 __all__ = [
+    "ACCRUAL_DATE_FIELD_SET_VERSION",
+    "OPERATION_DATE_FIELD_SET_VERSION",
+    "FiledRegisterReader",
     "assert_evidence_covers_snapshot",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",

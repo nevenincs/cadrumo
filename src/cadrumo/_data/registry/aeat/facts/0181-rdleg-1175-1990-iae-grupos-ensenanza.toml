@@ -1,0 +1,38 @@
+# The IAE groups that classify a teaching activity. RDLeg 1175/1990 (tarifas del IAE),
+# Seccion Primera, Agrupacion 93 "Educacion e investigacion", holds six groups; the four
+# declared here are exactly the ones whose own rubrica names ensenanza: 931 "Ensenanza
+# reglada", 932 "Ensenanza no reglada de formacion y perfeccionamiento profesional y
+# educacion superior", 933 "Otras actividades de ensenanza" and 934 "Ensenanza fuera de
+# establecimiento permanente". Groups 935 (colegios mayores y residencias de estudiantes)
+# and 936 (investigacion cientifica y tecnica) are in the same agrupacion and are not
+# teaching, so they are out. The set is the tariff's own grouping, not a judgement about
+# which teaching is concertado: a concierto educativo covers ensenanza reglada, so a
+# narrower set would read a centre classified under a neighbouring ensenanza rubrica as
+# proof that it teaches nothing. Entities are three-digit groups; an activity's epigraph
+# digit is read past, never matched.
+[fact]
+fact_id = "rdleg-1175-1990:iae-grupos-ensenanza"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rdleg-1175-1990:iae-grupos-ensenanza:1990-10-19"
+date_axis = "filing_period"
+valid_from = 1990-10-19
+legal_refs = ["rdleg-1175-1990:art-unico"]
+source_refs = ["boe-iae-tarifas-rdleg-1175-1990"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-iae-tarifas-rdleg-1175-1990"
+required_text = [
+  "Agrupación 93. Educación e investigación.",
+  "Grupo 931. Enseñanza reglada.",
+  "Grupo 932. Enseñanza no reglada de formación y perfeccionamiento profesional y educación superior.",
+  "Grupo 933. Otras actividades de enseñanza.",
+  "Grupo 934. Enseñanza fuera de establecimiento permanente.",
+]
+
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["931", "932", "933", "934"]

@@ -3,8 +3,10 @@
     display: flex;
     align-items: center;
     flex: 0 0 var(--titlebar-height);
+    /* The row the system seats its controls in, also where an error fallback
+       mounts the header outside the window's column. */
+    height: var(--titlebar-height);
     min-width: 0;
-    border-bottom: var(--hairline) solid var(--border);
     background: var(--chrome);
     user-select: none;
   }
@@ -14,6 +16,14 @@
     align-self: stretch;
     flex-shrink: 0;
     padding-inline: calc(var(--spacing) * 4);
+  }
+  /* The system's window controls sit over the header's leading edge, except
+     in full screen, where the system hides them. */
+  .titlebar:not([data-chrome="custom"], [data-fullscreen]) .titlebar-brand {
+    padding-inline-start: var(--titlebar-native-controls-inset);
+  }
+  .titlebar:not([data-chrome="custom"]) .titlebar-account {
+    padding-right: calc(var(--spacing) * 4);
   }
   .titlebar-brand [data-slot="logo"] > span {
     text-box: trim-both cap alphabetic;
@@ -34,49 +44,14 @@
     text-overflow: ellipsis;
   }
   .profile-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    white-space: nowrap;
-  }
-  .profile-status > span {
+    flex-shrink: 0;
     width: calc(var(--spacing) * 1.5);
     height: calc(var(--spacing) * 1.5);
     border-radius: 50%;
     background: var(--faint);
   }
-  .profile-status.signed-in > span {
+  .profile-status.signed-in {
     background: var(--success);
-  }
-  .account-menu {
-    max-width: min(
-      var(--spacing-palette-max),
-      calc(100vw - var(--spacing) * 4)
-    );
-  }
-  .profile-menu-heading {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing);
-    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2.5);
-    overflow-wrap: anywhere;
-  }
-  .profile-menu-heading > span {
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-  }
-  .profile-menu-heading > strong {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .profile-menu-hint {
-    max-width: var(--spacing-dialog);
-    margin: calc(var(--spacing) * 2);
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
   }
   .window-controls {
     display: flex;
@@ -92,9 +67,6 @@
     border-top: var(--hairline) solid currentColor;
   }
   @variant titlebar-compact {
-    .profile-status {
-      display: none;
-    }
     .profile-name {
       max-width: calc(var(--spacing-field) / 2);
     }
@@ -122,7 +94,7 @@
   }
   .window-controls .window-control {
     width: var(--titlebar-height);
-    height: calc(var(--titlebar-height) - var(--hairline));
+    height: var(--titlebar-height);
     border-radius: 0;
     color: var(--foreground);
   }

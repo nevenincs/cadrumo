@@ -31,17 +31,25 @@ source_refs = [
     "boe-dr-184-2023-2024",
     "boe-modelo-184-2015-form",
 ]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes it cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off. An operator re-stamping this to
-# 'operator_reviewed' is what promotes the revision to a countersigned filing
-# grade.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-16
 family_storage_baseline = "2022"
 scoped_families = ["workbook_parity_refs"]
+
+family_disposition_removals = ["bindings"]
+
+[revisions."2023-2024".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This informative return states the withholding an entity in attribution of income bore, for attribution to its members. The entity credits nothing here; each member credits its share on the member's own Modelo 100."""
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure", "boe-dr-184-2023-2024", "boe-modelo-184-2015-form"]
+
+[revisions."2023-2024".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure", "boe-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 
 [revisions."2023-2024".family_dispositions.projection_endpoints]
 reason = """

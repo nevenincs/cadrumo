@@ -18,23 +18,16 @@ from pathlib import Path
 import pytest
 from reportlab.pdfgen import canvas
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
+from .....adapters.inbound.einvoice.shape import probe_document_shape
 from .....application.ledger import tests as ledger_application_tests
 from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .....application.ledger.evidence_ports import LedgerEvidencePorts
 from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from .....application.provisioning import (
-    AcceleratorDevice,
-    AcceleratorReading,
-    HardwareProfile,
-    SystemMemoryReading,
-    probe_hardware_profile,
-)
-from .....core.config import load_settings, override_settings
-from .....core.hardware import AcceleratorKind
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.regime_legend import resolve_regime_legends
 from .....domain.iva.schema import InvoiceKind
-from .....tests.loopback_llm import SilentLoopbackHandler, serving_loopback
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -43,7 +36,7 @@ from ..purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
-from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
+from .invoice_confirmation_test_support import invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -65,7 +58,7 @@ _LABELLED_TEXT_LAYER = "labelled_text_layer_invoice.pdf"
 _LABELLED_LINES = (
     "FACTURA",
     "Proveedor: Hardware Profesional Sur SL",
-    "NIF: B92000090",
+    "NIF: B00015099",
     "Numero de factura: A-0003",
     "Fecha de expedicion: 2026-03-27",
     "Destinatario: Javier Ortega Llorens NIF: 12345678Z",
@@ -74,8 +67,6 @@ _LABELLED_LINES = (
     "Cuota IVA: 252.00 EUR",
     "Total factura: 1452.00 EUR",
 )
-
-_GIB = 1024**3
 
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
@@ -101,59 +92,19 @@ def labelled_batch(mixed_batch: Path) -> Path:
     return mixed_batch
 
 
-def _headroom(*, free_vram_bytes: int) -> HardwareProfile:
-    """A machine whose free memory is readable, with the given device headroom.
-
-    Injected rather than probed because the host running these tests reports no
-    readable accelerator and its admission check therefore fails closed --
-    correctly. Left to the host, the contended case would pass for the wrong
-    reason and the control case could not exist at all.
-    """
-    return probe_hardware_profile(
-        memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
-        accelerator=AcceleratorReading(
-            kind=AcceleratorKind.NVIDIA_CUDA,
-            devices=(
-                AcceleratorDevice(
-                    index=0,
-                    name="card-0",
-                    total_vram_bytes=24 * _GIB,
-                    free_vram_bytes=free_vram_bytes,
-                ),
-            ),
-        ),
-    )
+#: The agent owns load admission and refuses a run at its start when the
+#: selected model does not fit this computer's free memory.
+_DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
+_LOAD_CAPACITY = "llm.agent.model_run_completed"
 
 
-def _run(
-    profile: TestRuntimeProfile,
-    folder: Path,
-    *,
-    free_vram_bytes: int,
-    safety_margin_bytes: int | None = None,
-) -> BatchRunResult:
-    """Run the batch against injected headroom, optionally widening the margin.
-
-    The margin is a real operator setting -- raised on a machine that also
-    drives a display -- and it is what makes a contended run reachable here at
-    all. Selection and admission read the same measured free figure, and their
-    thresholds sit within tens of megabytes of each other on the shipped
-    catalogue, so a headroom low enough to refuse admission is usually also low
-    enough for selection to find no candidate, which is NOT a pause. Widening
-    the margin separates the two thresholds without touching either decision.
-    """
-    # The profile's settings are a snapshot taken before any reader was served.
-    # The batch probes each reading role against the settings it is handed, so
-    # they must name the runtime this case is actually serving.
-    settings = profile.settings.model_copy(
-        update={"cadrumo_llm_ollama_chat_url": load_settings().cadrumo_llm_ollama_chat_url},
-    )
-    if safety_margin_bytes is not None:
-        settings = settings.model_copy(update={"cadrumo_llm_contention_safety_margin_bytes": safety_margin_bytes})
+def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
+    """Run the batch through the production extraction ports, under whatever lane the bound agent resolves."""
     evidence_ports = LedgerEvidencePorts(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        document_shape_probe=probe_document_shape,
     )
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:
@@ -162,12 +113,11 @@ def _run(
             bucket_id=_BUCKET_ID,
             sources=[folder],
             direction=InvoiceKind.RECEIVED,
-            settings=settings,
+            settings=profile.settings,
             evidence_ports=evidence_ports,
-            extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
             operation=operation,
             legends=legends,
-            profile=_headroom(free_vram_bytes=free_vram_bytes),
         )
 
 
@@ -177,23 +127,17 @@ def test_a_contended_machine_parks_the_model_work_and_completes_the_rest(
 ) -> None:
     """The property: deterministic progress continues while inference-bearing work parks.
 
-    The runtime is served here rather than left to the host: which contention
-    verdict a shortfall earns depends on whether the resident set could be read,
-    and a runtime the host happens to be running would answer that differently.
-    This endpoint answers but refuses to report its resident set.
+    The agent refuses the scan's read at its start because the selected model
+    does not fit the free memory, before anything loads.
     """
-    with (
-        serving_loopback(SilentLoopbackHandler, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-    ):
-        result = _run(runtime_profile, mixed_batch, free_vram_bytes=3 * _GIB, safety_margin_bytes=4 * _GIB)
+    with serving_a_loopback_reader(replies=(), run_refusal=_DOES_NOT_FIT):
+        result = _run(runtime_profile, mixed_batch)
 
     assert result.deterministic_completed == 1
     assert result.paced == 1
     # Reported once on the run rather than stamped onto an innocent document.
     assert result.inference_pause is not None
-    assert result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.resident_set.readable"
-    assert result.inference_pause.facts["resident_set_readable"] is False
+    assert result.inference_pause.precondition_verdict.failed_condition_id == _LOAD_CAPACITY
     # Parked, not failed: a re-run costs nothing because completed items are
     # no-ops, so this must not read as a broken document.
     assert result.any_deferred is True
@@ -202,6 +146,7 @@ def test_a_contended_machine_parks_the_model_work_and_completes_the_rest(
     parked = [item for item in result.items if item.status == "paused"]
     assert [item.source_name for item in parked] == [_SCAN]
     assert all(item.needed_inference for item in parked)
+    assert all(item.refusal_verdict is None for item in parked)
 
 
 def test_with_headroom_the_same_batch_paces_nothing(
@@ -210,13 +155,13 @@ def test_with_headroom_the_same_batch_paces_nothing(
 ) -> None:
     """The positive control, and the proof that the parked item's window OPENS.
 
-    Same folder, same documents, same run -- only the measured headroom differs.
+    Same folder, same documents, same run -- only the agent's load answer differs.
     It says the parked row above genuinely WOULD have dispatched, which "it did
     not dispatch" cannot say on its own: an item that could never have been read
     would produce the same paced count.
     """
     with serving_a_loopback_reader(replies=()):
-        result = _run(runtime_profile, mixed_batch, free_vram_bytes=12 * _GIB)
+        result = _run(runtime_profile, mixed_batch)
 
     assert result.paced == 0
     assert result.inference_pause is None
@@ -237,7 +182,7 @@ def test_the_deterministic_count_does_not_absorb_model_read_items(
     run indistinguishable from it.
     """
     with serving_a_loopback_reader(replies=()):
-        with_headroom = _run(runtime_profile, mixed_batch, free_vram_bytes=12 * _GIB)
+        with_headroom = _run(runtime_profile, mixed_batch)
 
     assert with_headroom.deterministic_completed == 1, (
         "the scan was counted as deterministic progress; the split that makes pacing observable is gone"
@@ -250,7 +195,8 @@ def test_a_fully_labelled_text_layer_invoice_completes_while_the_lane_is_closed(
     labelled_batch: Path,
 ) -> None:
     """The label rules read it completely, so a closed inference lane does not park it."""
-    result = _run(runtime_profile, labelled_batch, free_vram_bytes=3 * _GIB, safety_margin_bytes=4 * _GIB)
+    with serving_a_loopback_reader(replies=(), run_refusal=_DOES_NOT_FIT):
+        result = _run(runtime_profile, labelled_batch)
 
     by_name = {item.source_name: item for item in result.items}
     assert by_name[_LABELLED_TEXT_LAYER].status in COMPLETED_BATCH_ITEM_STATUSES

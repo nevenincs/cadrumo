@@ -6,18 +6,18 @@ from pathlib import Path
 
 from babel.messages.catalog import Catalog
 
-from .locale_catalogue_io import _catalogue_messages
-from .locale_message_format import _validate_format_contract
+from .locale_catalogue_io import catalogue_messages
+from .locale_message_format import validate_format_contract
 from .locale_mutation_contracts import DocumentationLocaleMutationError, ManifestMessage
 
 
-def _apply_messages(
+def apply_messages(
     catalogue: Catalog,
     updates: tuple[ManifestMessage, ...],
     path: Path,
 ) -> tuple[int, int]:
     """Validate identities, conflicts, and formatting before mutating messages."""
-    active = _catalogue_messages(catalogue)
+    active = catalogue_messages(catalogue)
     changed = 0
     cleared_fuzzy = 0
     for update in updates:
@@ -39,7 +39,7 @@ def _apply_messages(
             raise DocumentationLocaleMutationError(
                 f"translation conflict in {path} for {identity!r}: expected {update.expected!r}, got {current!r}"
             )
-        _validate_format_contract(update.msgid, current, update.replacement, path, identity)
+        validate_format_contract(update.msgid, current, update.replacement, path, identity)
         if current != update.replacement:
             changed += 1
             message.string = update.replacement

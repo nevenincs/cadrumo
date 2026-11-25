@@ -22,8 +22,6 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
@@ -33,9 +31,9 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 
 from ..compiler.authority import compiled_bundled_authority
-from ..compiler.fact_loader import load_governed_facts
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -48,7 +46,8 @@ _MARRIAGE = {
 }
 _MATERNIDAD_FORMULA = "renta-deduccion-maternidad-0611"
 _MATERNIDAD_BINDING = "renta-profile-deduccion-maternidad"
-_CEILING_RETIRED_FACT = "lirpf-art-81-contribution-ceiling-retired-effective-year"
+_CEILING_RETIRING_LAW = "ley-31-2022:art-64"
+"""The legal reference that rewrote LIRPF art. 81 without the cotizaciones ceiling."""
 _GUARDERIA_CAP = "renta-guarderia-incremento-cap-anual"
 _RENOVABLES_PERIOD = (
     "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio",
@@ -61,11 +60,14 @@ _VEHICULO_ROWS = (
     "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-ultimo-ejercicio",
 )
 # The amending real decreto-ley that fixed each year's renewables entry-into-service period.
-_RENOVABLES_AMENDING_LAW = {
-    2023: "real-decreto-ley-18-2022:art-22",
-    2024: "real-decreto-ley-8-2023:art-18",
-    2025: "rdl-16-2025:art-17",
-}
+# The three newest editions each carry the period their own amending law fixed, oldest first.
+_RENOVABLES_AMENDING_LAW = dict(
+    zip(
+        newest_authored_editions("100", 3),
+        ("real-decreto-ley-18-2022:art-22", "real-decreto-ley-8-2023:art-18", "rdl-16-2025:art-17"),
+        strict=True,
+    )
+)
 
 
 @cache
@@ -89,13 +91,7 @@ def _supported_editions() -> tuple[tuple[int, ModeloRevision], ...]:
 
 @cache
 def _ceiling_retired_year() -> int:
-    fact = next(
-        f for f in load_governed_facts(bundled_path("registry", "aeat", "facts")) if f.fact_id == _CEILING_RETIRED_FACT
-    )
-    (variant,) = fact.variants
-    payload = variant.payload
-    assert isinstance(payload, ScalarFactPayload) and isinstance(payload.value, int | Decimal), payload
-    return int(payload.value)
+    return compiled_bundled_authority().catalogues.legal[_CEILING_RETIRING_LAW].effective_from.year
 
 
 def _casillas(revision: ModeloRevision) -> dict[str, CasillaDefinition]:
@@ -153,20 +149,22 @@ def test_a_marriage_box_left_manual_is_reported() -> None:
 
 
 @pytest.mark.parametrize(("year", "revision"), _supported_editions(), ids=lambda v: str(getattr(v, "id", v)))
-def test_maternidad_is_computed_from_the_year_the_cotizaciones_ceiling_is_retired(
-    year: int, revision: ModeloRevision
-) -> None:
+def test_maternidad_is_computed_in_every_edition_under_the_rule_in_force(year: int, revision: ModeloRevision) -> None:
+    """Each edition computes 0611; those before the ceiling's retirement bind the cotizaciones-limited fold."""
+    limited = year < _ceiling_retired_year()
+    suffix = "-cotizaciones" if limited else ""
     casilla = _casillas(revision)["0611"]
-    binding = _bindings(revision).get(_MATERNIDAD_BINDING)
-    if year < _ceiling_retired_year():
-        assert casilla.formula is None and casilla.input_kind.value == "manual", year
-        assert binding is None, year
-        return
-    assert str(casilla.formula) == _MATERNIDAD_FORMULA and casilla.input_kind.value == "computed", year
+    binding = _bindings(revision).get(_MATERNIDAD_BINDING + suffix)
+    formula = _formulas(revision).get(_MATERNIDAD_FORMULA + suffix)
+    assert formula is not None and str(casilla.formula) == _MATERNIDAD_FORMULA + suffix, year
+    assert casilla.input_kind.value == "computed", year
     assert binding is not None and isinstance(binding.provider, ProfileProvider), year
-    assert binding.provider.profile_key == f"renta_family.deduccion_maternidad_{year}", year
+    assert binding.provider.profile_key == "renta_family.deduccion_maternidad" + ("_cotizaciones" if limited else ""), (
+        year
+    )
+    assert (_MATERNIDAD_BINDING + ("" if limited else "-cotizaciones")) not in _bindings(revision), year
     assert _cites_own_year(binding, year), year
-    assert _cites_own_year(_formulas(revision)[_MATERNIDAD_FORMULA], year), year
+    assert _cites_own_year(formula, year), year
 
 
 @pytest.mark.parametrize(("year", "revision"), _supported_editions(), ids=lambda v: str(getattr(v, "id", v)))

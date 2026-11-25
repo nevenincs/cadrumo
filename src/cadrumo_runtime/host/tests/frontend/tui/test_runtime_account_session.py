@@ -20,6 +20,7 @@ from cadrumo.entrypoints.tui.account import (
     AccountSessionUnavailableError,
 )
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -116,8 +117,7 @@ async def test_account_watch_coalesces_polls_and_discards_late_result_after_seve
 
         app._read_account_session = None
         finish.set()
-        await app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         assert app.account_session == initial
 
 
@@ -159,7 +159,7 @@ async def test_account_watch_clears_private_state_without_claiming_unobserved_ex
             expires_at=datetime.now(UTC) + timedelta(minutes=10),
         )
         app._watch_account_session()
-        await pilot.pause()
+        await settle(pilot)
         assert app.return_value is not None and app.return_value.reason is reason
         assert app.account_session is None
         assert app._read_account_session is None
@@ -175,14 +175,14 @@ async def test_person_input_reports_activity_once_while_polls_do_not() -> None:
 
     app = CadrumoTuiApp(note_activity=note)
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert calls == 0
         await pilot.press("a", "b")
-        await pilot.pause()
+        await settle(pilot)
         assert calls == 1
         app._last_activity_sent = None
         await pilot.press("c")
-        await pilot.pause()
+        await settle(pilot)
         assert calls == 2
         app._sever_profile_root()
         app._last_activity_sent = None
@@ -198,7 +198,7 @@ async def test_activity_transport_failure_is_a_recoverable_handoff() -> None:
     app = CadrumoTuiApp(note_activity=note)
     async with app.run_test() as pilot:
         await pilot.press("a")
-        await pilot.pause()
+        await settle(pilot)
         assert app.return_value is not None
         assert app.return_value.reason is AccountRecomposeReasonV1.UNAVAILABLE
         assert app._note_activity is None
@@ -221,9 +221,9 @@ async def test_queued_retirement_does_not_overtake_logout_completion() -> None:
         )
         await started.wait()
         app._post_session_retired()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert app.is_running and app.return_value is None
         finish.set()
-        await pilot.pause()
+        await settle(pilot)
         assert app.return_value is not None
         assert app.return_value.reason is AccountRecomposeReasonV1.SIGNED_OUT

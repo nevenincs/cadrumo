@@ -99,7 +99,7 @@ def _bind(monkeypatch: pytest.MonkeyPatch) -> tuple[FrontendClient, AutomationRe
     client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
     review = _review(profile_id)
     events: list[object] = []
-    monkeypatch.setattr(subject, "_client", lambda _ctx, *, requested_language: client)
+    monkeypatch.setattr(subject, "runtime_access_management_client", lambda _ctx, *, requested_language: client)
 
     def read(bound: FrontendClient) -> AutomationInventoryCompletion:
         assert bound is client
@@ -131,7 +131,7 @@ def test_live_parser_has_review_identity_but_no_password_argv(path: tuple[str, .
 
 def test_inspect_emits_exact_review_without_decision_or_password(monkeypatch: pytest.MonkeyPatch) -> None:
     client, review, events = _bind(monkeypatch)
-    monkeypatch.setattr(subject, "_approval_password", lambda **_kwargs: pytest.fail("inspect read proof"))
+    monkeypatch.setattr(subject, "approval_password", lambda **_kwargs: pytest.fail("inspect read proof"))
     monkeypatch.setattr(subject, "run_automation_decision", lambda *_args, **_kwargs: pytest.fail("inspect decided"))
 
     subject.automation_inspect(_context(), review.receipt.request_id)
@@ -152,7 +152,7 @@ def test_inspect_emits_exact_review_without_decision_or_password(monkeypatch: py
 def test_approval_leaf_uses_one_strict_staged_secret_payload() -> None:
     try:
         stage_machine_secret_payload(subject.AutomationApprovalSecrets(passphrase=SecretStr(_PROOF.decode())))
-        proof = subject._approval_password(secrets_stdin=True, secrets_fd=None)
+        proof = subject.approval_password(secrets_stdin=True, secrets_fd=None)
         assert proof == _PROOF
         proof[:] = bytes(len(proof))
         assert not any(proof)
@@ -167,7 +167,7 @@ def test_approval_leaf_uses_one_strict_staged_secret_payload() -> None:
 @pytest.mark.parametrize("mismatch", ["unknown_request", "wrong_digest"])
 def test_approval_rejects_review_mismatch_before_leaf_password(monkeypatch: pytest.MonkeyPatch, mismatch: str) -> None:
     _, review, events = _bind(monkeypatch)
-    monkeypatch.setattr(subject, "_approval_password", lambda **_kwargs: pytest.fail("read proof before review"))
+    monkeypatch.setattr(subject, "approval_password", lambda **_kwargs: pytest.fail("read proof before review"))
     request_id = uuid4() if mismatch == "unknown_request" else review.receipt.request_id
     digest = "c" * 64 if mismatch == "wrong_digest" else _DIGEST
 
@@ -182,7 +182,7 @@ def test_approval_passes_mutable_fresh_proof_once_and_wipes_it(monkeypatch: pyte
     client, review, events = _bind(monkeypatch)
     proof = bytearray(_PROOF)
     seen: list[object] = []
-    monkeypatch.setattr(subject, "_approval_password", lambda **_kwargs: proof)
+    monkeypatch.setattr(subject, "approval_password", lambda **_kwargs: proof)
 
     def decide(
         bound: FrontendClient,
@@ -216,7 +216,7 @@ def test_approval_passes_mutable_fresh_proof_once_and_wipes_it(monkeypatch: pyte
 
 def test_decline_never_reads_password_and_keeps_decision_identity(monkeypatch: pytest.MonkeyPatch) -> None:
     client, review, events = _bind(monkeypatch)
-    monkeypatch.setattr(subject, "_approval_password", lambda **_kwargs: pytest.fail("decline read proof"))
+    monkeypatch.setattr(subject, "approval_password", lambda **_kwargs: pytest.fail("decline read proof"))
 
     def decide(
         bound: FrontendClient,
@@ -246,7 +246,7 @@ def test_decline_never_reads_password_and_keeps_decision_identity(monkeypatch: p
 def test_post_submit_failure_retains_operation_and_wipes_password(monkeypatch: pytest.MonkeyPatch) -> None:
     _, review, events = _bind(monkeypatch)
     proof = bytearray(_PROOF)
-    monkeypatch.setattr(subject, "_approval_password", lambda **_kwargs: proof)
+    monkeypatch.setattr(subject, "approval_password", lambda **_kwargs: proof)
 
     def fail(*_args: object, **_kwargs: object) -> None:
         raise AutomationDecisionRunError(operation_id="f" * 64, code="unavailable")

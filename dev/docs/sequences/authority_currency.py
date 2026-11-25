@@ -18,6 +18,8 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from dev.dependency_observation.observation import unobserved
+
 from .errors import SequenceEngineError
 
 if TYPE_CHECKING:
@@ -91,6 +93,10 @@ def require_current_authority() -> None:
         descriptor_path = bundled_authority_descriptor_path()
     except AuthorityDescriptorUnavailableError as exc:
         raise SequenceEngineError(unavailable_authority_refusal(str(exc))) from exc
-    refusal = _descriptor_refusal(descriptor_path.resolve())
+    # The comparison re-reads every registry source to refuse a stale generation.
+    # It decides only whether sequences may run, never what they print, so its
+    # reads are not any sequence's product inputs (the generation keys them).
+    with unobserved():
+        refusal = _descriptor_refusal(descriptor_path.resolve())
     if refusal is not None:
         raise SequenceEngineError(refusal)

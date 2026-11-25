@@ -3,10 +3,17 @@
 A Cadrumo release is cut by merging a pull request. There is no dispatch to start one,
 no rehearsal mode, and no sealed candidate to retire afterwards.
 
+`main` is the release branch and `feature/tui` the development branch. Work reaches
+`main` only through a promotion pull request from `feature/tui`; a push to `feature/tui`
+starts no release run, and release-please never targets it.
+
 `release-please` watches `main`, keeps a release pull request up to date from the
 conventional commits merged since the last release, and dispatches `release.yml` in its
-prove phase against that pull request's branch. The prove run builds the release cohort
-once, refuses any file the index would reject, and proves the sealed files on every stable
+prove phase against that pull request's branch. The `nevenincs-release` GitHub App opens
+and updates that pull request, so its own pull request events run the required merge gate
+like any trusted pull request, and it merges like any other once that check passes. The
+prove run builds the release cohort once, refuses any file the index would reject, and
+proves the sealed files on every stable
 runtime and channel across Linux, macOS and Windows. When the pull request merges,
 release-please writes the version surfaces and the changelog, tags `vX.Y.Z`, creates the
 GitHub release, and dispatches `release.yml` in its publish phase, which reuses the proven
@@ -20,7 +27,7 @@ PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 | --- | --- | --- |
 | Propose | `release-please.yml` | Keeps a release pull request current from conventional commits on `main` |
 | Release | `release-please.yml` | On merge: writes version surfaces and changelog, tags `vX.Y.Z`, creates the GitHub release |
-| Prove | `release.yml` (`phase=prove`) | Runs the merge gate and full suites, builds and seals the cohort once, and proves it on every runtime and channel |
+| Prove | `release.yml` (`phase=prove`) | Runs the headless merge gate, the native lane and the full suites, builds and seals the cohort once, and proves it on every runtime and channel |
 | Publish | `release.yml` (`phase=publish`) | Locates the proven cohort for the tag, uploads it to PyPI over OIDC without rebuilding, then updates and reacquires the channels |
 
 The workflow runs and their logs are the authoritative operational record.
@@ -80,7 +87,10 @@ reviewers.
 
 Confirm the repository configuration used by the destinations that are enabled:
 
-- variable `HOMEBREW_TAP_REPO` and secret `HOMEBREW_TAP_TOKEN`
+- variable `RELEASE_APP_CLIENT_ID` and secret `RELEASE_APP_PRIVATE_KEY`, the
+  `nevenincs-release` App that writes the release pull request
+- variable `HOMEBREW_TAP_REPOSITORY` (default `nevenincs/homebrew-tap`) and secret
+  `HOMEBREW_TAP_TOKEN`
 - the `release-alert` repository label, or the configured webhook fallback
 
 ## Google OAuth and desktop publisher setup
@@ -155,30 +165,26 @@ Record the tested commit, platform, date and pass/fail outcomes with the release
 evidence. Do not copy callback URLs, tokens, authorization codes or profile keys.
 A successful login alone does not establish all of these controls.
 
-The current desktop release plan is unsigned: the publisher has no code-signing
-certificate and is deferring trusted signing. Do not describe these artifacts
-as publisher-signed or ask users to trust a self-signed certificate as proof of
-Cadrumo's identity. A self-signed certificate may exercise a development signing
-pipeline, but it is not a production trust anchor. No signing certificate is
-required to complete the Google OAuth setup above.
+Cadrumo's desktop artifacts carry no publisher signature, permanently. Cadrumo is
+an open-source project: it has no Apple Developer ID or Windows code-signing
+certificate, will not obtain one, and does not notarize its macOS builds. A macOS
+bundle carries an ad-hoc seal, which the build verifies with
+`codesign --verify --deep --strict`; the seal shows that the bundle is intact
+since it was built, not who built it. Windows executables and installers carry no
+Authenticode signature. Users therefore see the operating system's
+unidentified-developer warnings, and the installation page of the user
+documentation describes the first run. The release checklist has no signing or
+notarization step. Do not describe these artifacts as publisher-signed or ask
+users to trust a self-signed certificate as proof of Cadrumo's identity. No
+signing certificate is required to complete the Google OAuth setup above.
 
 The release workflow already declares build-provenance attestations for Python
 distributions and PyPI Trusted Publishing. Confirm their actual production run
 before claiming verified provenance. They do not establish the publisher of a
-native executable on the user's machine. When trusted desktop signing is
-introduced, the remaining setup for each platform is:
-
-- Windows: provision a publisher code-signing identity, protect its signing
-  access, and sign and timestamp the executables and installer.
-- macOS: configure Developer ID signing and notarization for the shipped app.
-- Linux: authenticate the chosen package/repository channel and its metadata.
-
-Release engineering must then wire those identities into the actual distribution
-path and test modified-artifact and wrong-signer rejection. Any updater must
-verify authenticated metadata and artifacts against trusted publisher keys,
-with an explicit rollback policy. Checksums supplied alongside an untrusted
-download do not establish publisher identity. Signing configuration and updater
-acceptance were not live-verified by the OAuth review.
+native executable on the user's machine. Checksums supplied alongside a download
+detect corruption but do not establish publisher identity; a user who needs that
+assurance builds from source. An updater would need its own decision on how it
+authenticates metadata and artifacts without publisher keys.
 
 PKCE and local Drive ownership checks do not authenticate the distributed app.
 A counterfeit program can reuse the public client ID and initiate its own
@@ -187,8 +193,8 @@ software; it does not prevent the counterfeit from calling Google directly.
 
 ## Per-release preflight
 
-Both workflows run on hosted runners, so no self-hosted runner needs to be online to
-release. Work from a clean `main` checkout with an authenticated GitHub CLI:
+Both workflows run in GitHub Actions; nothing in a release runs locally. Work from a
+clean `main` checkout with an authenticated GitHub CLI:
 
 ```console
 git status --short
@@ -279,14 +285,6 @@ the same phase against its branch:
 ```console
 gh workflow run release.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH> \
   -f phase=prove -f ref=<RELEASE_BRANCH> -f version=<VERSION>
-```
-
-The prove run needs all three self-hosted runner shapes online — Linux x64, Windows x64
-and macOS ARM64. A queue watchdog cancels the run when a lane has no runner, but confirm
-before dispatching:
-
-```console
-gh api repos/nevenincs/cadrumo/actions/runners --jq '.runners[] | "\(.status)  \(.name)"'
 ```
 
 Merge the release PR once the prove run is green.
@@ -456,7 +454,9 @@ checks locally with `just docs-availability-check`.
 
 - `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches proof and publication
 - `.github/workflows/release.yml` — sole proof and publication authority
-- `.github/workflows/merge-gate.yml` — the required pull request verdict, reused by the prove phase
+- `.github/workflows/merge-gate.yml` — the headless lane and the required pull request verdict, on hosted runners, reused by the prove phase
+- `.github/workflows/native.yml` — the native lane on self-hosted runners: advisory on a pull request, required by the prove phase
+- `.github/ci-control-plane.md` — which lane runs what, on which machines, and who may start it
 - `dev/smoke/smoke_check.py` — the check that proves an installed artifact
-- `dev/packaging/_distribution_limits.py` — the index file cap, declared once
+- `dev/packaging/distribution_limits.py` — the index file cap, declared once
 - `SECURITY.md` — private security reporting

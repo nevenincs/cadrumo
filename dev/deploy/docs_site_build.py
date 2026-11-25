@@ -14,20 +14,20 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import UTF_8
 from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import IndexedRoot
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import UTF_8
+from dev.temporary_output import prepare_temp_root
 
-from .docs_site_commands import _command_label
+from .docs_site_commands import command_label
 from .docs_site_languages import (
     SiteBuild,
-    _language_site_url,
-    _write_language_entry,
+    language_site_url,
     localized_languages,
     site_build_environment,
     site_builds,
+    write_language_entry,
 )
 
 
@@ -36,7 +36,7 @@ def _site_root(repo_root: Path) -> Path:
     return docs_html_root(repo_root)
 
 
-def _clear_apex(html_root: Path) -> None:
+def clear_apex(html_root: Path) -> None:
     """Remove everything at the apex except the language roots.
 
     The apex is composed afresh on every publish, but each language root keeps
@@ -56,10 +56,10 @@ def _clear_apex(html_root: Path) -> None:
             entry.unlink()
 
 
-def _write_apex_sitemap(html_root: Path) -> Path:
+def write_apex_sitemap(html_root: Path) -> Path:
     """Write the apex sitemap as an index of every language root's own sitemap."""
     sitemaps = "".join(
-        f"  <sitemap><loc>{_language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
+        f"  <sitemap><loc>{language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
         for language in localized_languages()
     )
     path = html_root / "sitemap.xml"
@@ -110,7 +110,7 @@ def _write_apex_error_page(source: Path, destination: Path) -> Path:
     return destination
 
 
-def _compose_apex(html_root: Path) -> None:
+def compose_apex(html_root: Path) -> None:
     """Give the apex its language entry, error page and sitemap index.
 
     The apex carries no copy of any site, and no pages of its own beyond these.
@@ -120,13 +120,13 @@ def _compose_apex(html_root: Path) -> None:
     The site's one search index sits at the apex too, written by
     :func:`_index_site` before this runs.
     """
-    _write_language_entry(html_root)
+    write_language_entry(html_root)
     source = html_root / OutputLanguage.EN.value
     _write_apex_error_page(source / "404.html", html_root / "404.html")
-    _write_apex_sitemap(html_root)
+    write_apex_sitemap(html_root)
 
 
-def _run_site_builds(
+def run_site_builds(
     repo_root: Path,
     html_root: Path,
     *,
@@ -139,7 +139,7 @@ def _run_site_builds(
     :func:`_index_site` writes it once every root exists. English holds no
     privileged position either: the readers here file Spanish tax, so it sits at
     ``/en/`` like the rest and ``/`` resolves to the reader's own language
-    instead (:func:`_write_language_entry`).
+    instead (:func:`write_language_entry`).
 
     An index a PREVIOUS publish left inside a root is removed before the builds,
     because the source root is kept between publishes for its Sphinx environment
@@ -167,14 +167,10 @@ def _run_site_builds(
         replace(build, environment={**build.environment, "CADRUMO_DOCS_BUILD_ROOT": str(html_root.parent)})
         for build in builds_for(html_root)
     ]
-    for build in builds:
-        for language in build.languages:
-            stale_index = html_root / language / "pagefind"
-            if stale_index.exists():
-                shutil.rmtree(stale_index)
+    _clear_root_indexes(html_root, builds)
     written = "; ".join(f"{build.name} writes {', '.join(build.languages)}" for build in builds)
     print(f"Running {len(builds)} site build(s) at once on {os.cpu_count() or 1} CPUs: {written}.", flush=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temp_root()) as scratch:
 
         def run(index: int, build: SiteBuild) -> CommandResult:
             storage_root = Path(scratch) / str(index)
@@ -182,7 +178,7 @@ def _run_site_builds(
             return run_command(
                 build.command,
                 cwd=repo_root,
-                environment={**build.environment, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)},
+                environment={**build.environment, "CADRUMO_STORAGE_ROOT": str(storage_root)},
             )
 
         with ThreadPoolExecutor(max_workers=len(builds)) as pool:
@@ -192,6 +188,20 @@ def _run_site_builds(
                 _record_site_build_result(name, future, failed)
     if failed:
         raise SystemExit(f"Documentation build failed for {', '.join(failed)}; refusing to publish.")
+    _validate_built_roots(html_root, builds)
+
+
+def _clear_root_indexes(html_root: Path, builds: Sequence[SiteBuild]) -> None:
+    """Remove previous indexes before building the language roots."""
+    for build in builds:
+        for language in build.languages:
+            stale_index = html_root / language / "pagefind"
+            if stale_index.exists():
+                shutil.rmtree(stale_index)
+
+
+def _validate_built_roots(html_root: Path, builds: Sequence[SiteBuild]) -> None:
+    """Require every promised root and reject indexes below the apex."""
     absent = sorted(language for build in builds for language in build.languages if not (html_root / language).is_dir())
     if absent:
         raise SystemExit(
@@ -207,7 +217,7 @@ def _run_site_builds(
         )
 
 
-def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]:
+def produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]:
     """Produce every published language root and return where each one landed.
 
     The ONE place the published pages come from. Everything after it -- the one
@@ -228,7 +238,7 @@ def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]
     Returns:
         ``{language: root directory}`` for every published language.
     """
-    _run_site_builds(repo_root, html_root)
+    run_site_builds(repo_root, html_root)
     return {language: html_root / language for language in localized_languages()}
 
 
@@ -256,7 +266,7 @@ def indexed_roots(roots: Mapping[str, Path]) -> list[IndexedRoot]:
     ]
 
 
-def _index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> None:
+def index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> None:
     """Build the site's ONE search index over every published root, at the apex.
 
     Runs after every root is produced, because the index spans all of them. Each
@@ -307,7 +317,7 @@ def _index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> 
     )
 
 
-def _build_site_roots(repo_root: Path) -> Path:
+def build_site_roots(repo_root: Path) -> Path:
     """Build every language root, index the site once, and compose the apex.
 
     The write half of a publish's pre-upload work, factored out so the dry run
@@ -321,17 +331,17 @@ def _build_site_roots(repo_root: Path) -> Path:
         The composed HTML root, carrying every published root and the one index.
     """
     html_root = _site_root(repo_root)
-    _clear_apex(html_root)
-    roots = _produce_language_roots(repo_root, html_root)
-    _index_site(repo_root, html_root, roots)
-    _compose_apex(html_root)
+    clear_apex(html_root)
+    roots = produce_language_roots(repo_root, html_root)
+    index_site(repo_root, html_root, roots)
+    compose_apex(html_root)
     return html_root
 
 
 def _record_site_build_result(name: str, future: Future[CommandResult], failed: list[str]) -> None:
     """Print one site build's whole output and note it if it failed."""
     result = future.result()
-    print(f"+ [{name}] {_command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
+    print(f"+ [{name}] {command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
     for stream, text in ((sys.stdout, result.stdout), (sys.stderr, result.stderr)):
         if text:
             print(text, end="" if text.endswith("\n") else "\n", file=stream, flush=True)

@@ -214,7 +214,7 @@ def test_the_closure_reaches_the_module_that_once_held_the_defect() -> None:
     closure = _compile_path_closure()
     reached = {path.relative_to(_REPO_ROOT).as_posix() for path in closure}
 
-    assert "dev/registry/compiler/_m303_orden_legal.py" in reached, (
+    assert "dev/registry/compiler/m303_orden_legal.py" in reached, (
         "the import closure no longer reaches the module that held the original defect; "
         f"the gate would pass vacuously. Reached {len(reached)} modules."
     )

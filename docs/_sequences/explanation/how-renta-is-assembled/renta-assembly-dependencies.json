@@ -31,19 +31,13 @@
         ],
         "result": {
           "clean_state": {
-            "blockers": [
-              "missing_observation",
-              "missing_current_filing_record"
-            ],
-            "clean": false,
+            "blockers": [],
+            "clean": true,
             "dependencies": [
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -59,12 +53,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -80,12 +71,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -101,12 +89,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -122,12 +107,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -143,12 +125,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -164,12 +143,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -185,12 +161,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -206,12 +179,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -242,22 +212,56 @@
                 {
                   "filing_year": 2024,
                   "legal_refs": [
+                    "ley-35-2006:art-49",
                     "ley-35-2006:art-50",
                     "orden-hac-277-2026:art-3"
                   ],
                   "origin": "previous_filing_binding",
                   "origin_ids": [
-                    "renta-base-liquidable-negativa-general-anterior"
+                    "renta-base-liquidable-negativa-general-anterior",
+                    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+                    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2024
                   },
                   "required_source_casilla_ids": [
+                    "1263",
+                    "1266",
+                    "1269",
+                    "1270",
+                    "1276",
+                    "1279",
+                    "1282",
+                    "1283",
+                    "1384",
+                    "1387",
+                    "1390",
                     "1391"
                   ],
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
+                    "1263",
+                    "1266",
+                    "1269",
+                    "1270",
+                    "1276",
+                    "1279",
+                    "1282",
+                    "1283",
+                    "1384",
+                    "1387",
+                    "1390",
                     "1391"
                   ],
                   "source_modelo": "100",
@@ -286,11 +290,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "19",
+                    "18"
                   ],
                   "source_modelo": "130",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-130-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -313,11 +319,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "19",
+                    "18"
                   ],
                   "source_modelo": "130",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-130-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -340,11 +348,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "19",
+                    "18"
                   ],
                   "source_modelo": "130",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-130-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -367,11 +377,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "19",
+                    "18"
                   ],
                   "source_modelo": "130",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-130-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -394,11 +406,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "15"
+                    "15",
+                    "14"
                   ],
                   "source_modelo": "131",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-131-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -421,11 +435,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "15"
+                    "15",
+                    "14"
                   ],
                   "source_modelo": "131",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-131-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -448,11 +464,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "15"
+                    "15",
+                    "14"
                   ],
                   "source_modelo": "131",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-131-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
@@ -475,11 +493,13 @@
                   "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "15"
+                    "15",
+                    "14"
                   ],
                   "source_modelo": "131",
                   "source_presence_groups": [],
                   "source_refs": [
+                    "aeat-modelo-131-instructions",
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]

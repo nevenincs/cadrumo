@@ -20,7 +20,7 @@ strings that embeds an ``aeat app`` /
   command on a failed draft.
 
 The hint-string extraction reuses the documented-command gate's command-line
-decomposition and live-tree resolution (``_parse_command_line``,
+decomposition and live-tree resolution (``parse_command_line``,
 ``resolve_path``, ``validate_cited_command``) so the two gates share one notion of
 "resolves against the live CLI".
 
@@ -50,6 +50,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from typing import Protocol, TypeGuard
 
 import pytest
@@ -58,7 +59,7 @@ from ....application.modelo.selectors import ModeloCalculationRevisionSelector
 from ....core.i18n.render import locale_map
 from .cli_runner import cadrumo_click_command
 from .live_command_validation import CitedCommand, validate_cited_command
-from .test_documented_command_conformance import _AEAT_TOKEN_RE, _parse_command_line
+from .test_documented_command_conformance import AEAT_TOKEN_RE, parse_command_line
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -97,7 +98,7 @@ _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     "aeat app modelo work calculate",
     # cadrumo.application.workflow.engine: draft-has-errors next_action.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
-    # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
+    # cadrumo.entrypoints.cli.modelo_rendering: local-finish-line guidance.
     "aeat app modelo export",
     "aeat app modelo work file",
 )
@@ -112,7 +113,7 @@ def _locale_command_strings() -> Iterator[tuple[str, str]]:
             continue
         if not isinstance(value, str):
             continue
-        if _AEAT_TOKEN_RE.search(value) is None:
+        if AEAT_TOKEN_RE.search(value) is None:
             continue
         token = (key, value)
         if token in seen:
@@ -165,23 +166,66 @@ def _command_span(after_aeat: str) -> str:
 def _cited_from_text(text: str) -> list[CitedCommand]:
     """Decompose every ``aeat ...`` command embedded in a free-text string.
 
-    Reuses the documented-command gate's :func:`_parse_command_line` for the
+    Reuses the documented-command gate's :func:`parse_command_line` for the
     final decomposition, after trimming sentence prose around the command span so
     a hint embedded in a sentence is validated as the command it cites, not the
     surrounding words.
     """
     out: list[CitedCommand] = []
-    for raw_line in text.replace("`", " ").splitlines():
-        match = _AEAT_TOKEN_RE.search(raw_line)
+
+    def unquoted(raw_line: str) -> None:
+        match = AEAT_TOKEN_RE.search(raw_line)
         if match is None:
-            continue
+            return
         span = _command_span(raw_line[match.end() :].strip())
         if not span:
-            continue
-        parsed = _parse_command_line(f"aeat {span}")
+            return
+        parsed = parse_command_line(f"aeat {span}")
         if parsed is not None:
             out.append(parsed)
+
+    for raw_line in text.splitlines():
+        start = 0
+        for literal in re.finditer(r"`([^`]+)`", raw_line):
+            if AEAT_TOKEN_RE.search(literal.group(1)) is None:
+                continue
+            unquoted(raw_line[start : literal.start()].replace("`", " "))
+            # An explicit command literal is validated whole. Do not trim a
+            # bad flag/suffix or structured argument into a safe prefix.
+            parsed = parse_command_line(literal.group(1))
+            if parsed is not None:
+                out.append(parsed)
+            start = literal.end()
+        unquoted(raw_line[start:].replace("`", " "))
     return out
+
+
+def test_inline_command_boundary_excludes_surrounding_decision_prose() -> None:
+    [cited] = _cited_from_text("Visible on `aeat app ledger view`), or with a `--reject` decision.")
+    assert cited.raw == "aeat app ledger view"
+    assert validate_cited_command(cited) == []
+
+
+@pytest.mark.parametrize(
+    "literal",
+    [
+        "aeat app ledger view --not-a-real-option",
+        "aeat app ledger not-a-real-verb",
+        "aeat app ledger view), or --reject",
+    ],
+)
+def test_inline_command_does_not_discard_an_invalid_flag_or_suffix(literal: str) -> None:
+    [cited] = _cited_from_text(f"Use `{literal}` for this case.")
+    assert cited.raw == literal
+    assert validate_cited_command(cited)
+
+
+def test_inline_command_preserves_structured_argument_punctuation() -> None:
+    literal = 'aeat app ledger classify ROW --reason \'{"notes": ["a,b)"]}\''
+    [cited] = _cited_from_text(f"Use `{literal}` for this case.")
+    assert cited.raw == literal
+    assert cited.tokens[-1] == '{"notes": ["a,b)"]}'
+    assert validate_cited_command(cited) == []
 
 
 def test_locale_command_strings_resolve() -> None:
@@ -231,12 +275,10 @@ class _EnumChoiceSurface:
 def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> frozenset[str]:
     """Read the advertised choice-set of one Typer option, live from the tree.
 
-    Reads the option's choice type by duck-typing its ``choices`` attribute so
-    the gate is agnostic to the vendored ``typer._types.TyperChoice`` versus the
-    upstream ``click.Choice`` (the project ships the typer-vendored hierarchy, so
-    an ``isinstance(t, click.Choice)`` check is False even for a real choice
-    surface). A future widening of the advertised enum is caught because the set
-    is read live, not frozen.
+    Reads the set Typer describes from the option's annotation, or else the
+    ``choices`` its value parser declares, so the gate covers a spec-declared
+    choice set and a parser-owned one alike. A future widening of the
+    advertised enum is caught because the set is read live, not frozen.
     """
     import typer._click as click_vendored
     from typer.core import TyperGroup
@@ -256,12 +298,17 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     for param in cmd.params:
         opts = getattr(param, "opts", ())
         if getattr(param, "param_type_name", None) == "option" and option_flag in opts:
-            choices = getattr(getattr(param, "type", None), "choices", None)
+            descriptor = getattr(param, "type_descriptor", None)
+            choices = getattr(descriptor, "choices", None)
+            if choices is None:
+                parser = getattr(getattr(descriptor, "parameter_info", None), "parser", None)
+                choices = getattr(parser, "choices", None)
             assert choices is not None, f"{' '.join(verb_path)} {option_flag} is not a choice option"
             typed_choices: set[str] = set()
             for choice in choices:
-                assert isinstance(choice, str), f"{' '.join(verb_path)} {option_flag} has a non-string choice"
-                typed_choices.add(choice)
+                token = choice.value if isinstance(choice, Enum) else choice
+                assert isinstance(token, str), f"{' '.join(verb_path)} {option_flag} has a non-string choice"
+                typed_choices.add(token)
             return frozenset(typed_choices)
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")
 

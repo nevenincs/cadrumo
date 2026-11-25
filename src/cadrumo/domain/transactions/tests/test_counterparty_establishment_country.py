@@ -29,8 +29,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
@@ -41,22 +42,24 @@ from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture(autouse=True)
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Validate every ledger row inside one generation-pinned authority operation."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 
-def _transaction(*, counterparty_country: str | None) -> Transaction:
+def _transaction(*, counterparty_country: str | None, booked: date = date(2026, 4, 10)) -> Transaction:
     return Transaction(
         raw=RawTransaction(
             provider_transaction_id="row-1",
-            booked_date=date(2026, 4, 10),
-            value_date=date(2026, 4, 10),
+            booked_date=booked,
+            value_date=booked,
             amount=Decimal("100.00"),
             currency="EUR",
             counterparty="Acme Inc",
@@ -86,13 +89,15 @@ def test_a_third_country_establishment_is_recordable_at_all() -> None:
     it is that the stored value RESOLVES to a third country, which is what a
     gate downstream has to be able to ask.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction(counterparty_country="US")
 
         assert transaction.counterparty_country == "US"
         assert territorial_scope_for_country(
-            transaction.counterparty_country, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
+            transaction.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "third_country", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_the_member_state_is_derived_and_never_stored_twice() -> None:
@@ -112,6 +117,26 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
                 "counterparty_eu_member_state": "fr",
             },
         )
+
+
+def test_the_membership_is_decided_on_the_rows_own_date_across_the_support_envelope() -> None:
+    """A row at the envelope's floor and one at its horizon both resolve their membership."""
+    with bundled_indexed_authority().operation() as authority:
+        envelope = authority.supported_filing_years().date_envelope()
+    for booked in (envelope.floor, envelope.horizon):
+        row = _transaction(counterparty_country="DE", booked=booked)
+        assert row.counterparty_eu_member_state == require_eu_member_state("DE", effective_date=booked)
+
+
+def test_a_row_dated_outside_the_envelope_is_not_decided_on_the_run_date() -> None:
+    """The membership read takes the row's date: a date below the floor is refused, not replaced by today."""
+    with bundled_indexed_authority().operation() as authority:
+        envelope = authority.supported_filing_years().date_envelope()
+    below_floor = date(envelope.floor.year - 1, 6, 1)
+    row = _transaction(counterparty_country="DE", booked=below_floor)
+
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        _ = row.counterparty_eu_member_state
 
 
 @pytest.mark.parametrize("country", ("US", "XX"))
@@ -157,12 +182,14 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
     test.
     ``None`` is an unrecorded fact. Only ``US`` may license export treatment.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction(counterparty_country=country)
 
         assert transaction.counterparty_country == country
         assert (
-            territorial_scope_for_country(transaction.counterparty_country, operation=_authority_operation_for_test)
+            territorial_scope_for_country(
+                transaction.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
             == scope
         )
         assert (
@@ -189,7 +216,7 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
     A field that validates and then does not persist would leave the gate
     reading ``None`` again on every reload -- the same blank, one layer down.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         original = _transaction(counterparty_country="US")
 
         restored = Transaction.model_validate_json(original.model_dump_json())
@@ -197,5 +224,7 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
         assert restored == original
         assert restored.counterparty_country == "US"
         assert territorial_scope_for_country(
-            restored.counterparty_country, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
+            restored.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "third_country", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )

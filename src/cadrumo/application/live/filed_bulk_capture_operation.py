@@ -10,6 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
+from ...core.storage_taxonomy import StorageCategory
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
@@ -25,11 +27,11 @@ from .filed_history_operation import (
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
     FiledHistorySyncRunRepositoryFactory,
-    require_capture_output_root,
+    resolve_capture_output_root,
 )
 from .filed_single_capture_operation import (
+    FiledCaptureEvidenceTallyV1,
     FiledCaptureNoticeV1,
-    FiledReconciliationV1,
     public_filed_capture_notice,
     public_filed_capture_tally,
 )
@@ -38,7 +40,7 @@ from .live_operation_execution import (
     publish_live_capture_report,
     require_exact_profile_worker,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 
 FILED_BULK_CAPTURE_DEFINITION_ID = "live.filed-capture.bulk"
@@ -51,7 +53,7 @@ class FiledBulkCaptureRequest(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
-    output_root: Path
+    output_root: Path | None = None
     year_from: FilingYear
     year_to: FilingYear
     modelos: tuple[str, ...] | None = None
@@ -85,33 +87,17 @@ class FiledBulkSkippedCasillaV1(BaseModel):
     reason: str
 
 
-class FiledBulkCapturePublicResultV1(BaseModel):
+class FiledBulkCapturePublicResultV1(FiledCaptureEvidenceTallyV1):
     """Complete scalar accounting for a bulk or preview capture."""
 
-    model_config = _PUBLIC_CONFIG
     output_root: str
     modelos: tuple[str, ...]
     year_from: int
     year_to: int
     dry_run: bool
-    captured_count: NonNegativeInt
-    reached_count: NonNegativeInt
     pair_outcomes: tuple[FiledCapturePairOutcome, ...]
     failed_count: NonNegativeInt
     sync_run_ref: str | None
-    observation_paths: tuple[str, ...]
-    artefact_refs: tuple[str, ...]
-    justificante_metadata_count: NonNegativeInt
-    justificante_csvs: tuple[str, ...]
-    filing_evidence_stamped_count: NonNegativeInt
-    filing_record_ids: tuple[str, ...]
-    filing_evidence_conflict_count: NonNegativeInt
-    filing_evidence_conflict_record_ids: tuple[str, ...]
-    casilla_count: NonNegativeInt
-    calculation_observation_count: NonNegativeInt
-    calculation_observation_keys: tuple[str, ...]
-    evidence_notices: tuple[FiledCaptureNoticeV1, ...]
-    reconciliations: tuple[FiledReconciliationV1, ...]
     failures: tuple[FiledBulkFailureV1, ...]
     skipped_casillas: tuple[FiledBulkSkippedCasillaV1, ...]
     recapture_notices: tuple[FiledCaptureNoticeV1, ...]
@@ -184,11 +170,11 @@ class FiledBulkCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
-        require_capture_output_root(payload.output_root)
+        output_root = resolve_capture_output_root(payload.output_root, StorageCategory.FILED_DECLARATIONS)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
             payload.profile_id,
-            payload.output_root,
+            output_root,
             self._composition_factory,
             self._browser_resources_factory,
             self._provider_preflight,
@@ -204,7 +190,7 @@ class FiledBulkCaptureExecutor:
                 filed_data_port=composition.filed_data_port,
                 year_from=payload.year_from,
                 year_to=payload.year_to,
-                output_root=payload.output_root,
+                output_root=output_root,
                 ports=composition.ports,
                 modelos=payload.modelos,
                 limit=payload.limit,
@@ -214,10 +200,17 @@ class FiledBulkCaptureExecutor:
                 on_session_write=session_receipt,
                 operation=context.authority_operation,
             )
-        effect = OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
         return await publish_live_capture_report(
-            context, report, result_phase=_PHASES[2], effect=session_receipt.combine(effect)
+            context,
+            report,
+            result_phase=_PHASES[2],
+            effect=session_receipt.combine(bulk_capture_effect(report)),
         )
+
+
+def bulk_capture_effect(report: BulkFiledDataCaptureReport) -> OperationEffect:
+    """Report an update only when the sweep recorded a sync run; a preview or empty sweep wrote nothing."""
+    return OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
 
 
 def build_filed_bulk_capture_definition(
@@ -248,8 +241,8 @@ def resolve_filed_bulk_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile access for a sweep that may cross any period."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_BULK_CAPTURE_DEFINITION_ID, payload_type=FiledBulkCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_BULK_CAPTURE_DEFINITION_ID, request_type=FiledBulkCaptureRequest
     )
 
 

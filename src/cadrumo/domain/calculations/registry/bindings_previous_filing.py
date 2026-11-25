@@ -324,36 +324,62 @@ def _observed_casilla_values(
     match: _RegistryModeloObservationLike,
     expected_year: int,
     required_period: str,
-) -> list[Decimal]:
+) -> list[Decimal] | _UnobservedCasillas:
     source_ids = _previous_filing_source_ids(selector)
+    unobserved_ids = _refusing_unobserved_casilla_ids(selector, match, source_ids)
+    if unobserved_ids:
+        return _UnobservedCasillas(
+            binding_id=binding.id,
+            source_key=(selector.source_modelo, expected_year, required_period),
+            casilla_ids=unobserved_ids,
+        )
+    return [_observed_or_zero(match, casilla_id) for casilla_id in source_ids]
+
+
+def _refusing_unobserved_casilla_ids(
+    selector: PreviousFilingProvider,
+    match: _RegistryModeloObservationLike,
+    source_ids: tuple[CasillaId, ...],
+) -> tuple[CasillaId, ...]:
+    """Return the unshown boxes that refuse the match, or ``()`` when it resolves.
+
+    A missing required box refuses; so does a match showing none of the boxes.
+    """
     required_ids = (
         frozenset(source_ids)
         if selector.required_source_casilla_ids is None
         else frozenset(selector.required_source_casilla_ids)
     )
-    values: list[Decimal] = []
-    observed_count = 0
-    for casilla_id in source_ids:
-        casilla_value = match.casilla_values.get(casilla_id)
-        if casilla_value is None:
-            if casilla_id in required_ids:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                    f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
-                )
-            values.append(Decimal("0"))
-            continue
-        observed_count += 1
-        values.append(casilla_value)
-    if source_ids and observed_count == 0:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} requires at least one observed source casilla "
-            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
-        )
-    return values
+    unobserved = tuple(casilla_id for casilla_id in source_ids if match.casilla_values.get(casilla_id) is None)
+    missing_required = tuple(casilla_id for casilla_id in unobserved if casilla_id in required_ids)
+    if missing_required:
+        return missing_required
+    if source_ids and len(unobserved) == len(source_ids):
+        return unobserved
+    return ()
 
 
-class _PreviousFilingObservationAbsentError(CadrumoError):
+def _observed_or_zero(match: _RegistryModeloObservationLike, casilla_id: CasillaId) -> Decimal:
+    casilla_value = match.casilla_values.get(casilla_id)
+    return Decimal("0") if casilla_value is None else casilla_value
+
+
+@dataclass(frozen=True)
+class _UnobservedCasillas:
+    """A matched earlier filing does not show boxes a binding reads.
+
+    Returned instead of values by :func:`_observed_casilla_values` and collected
+    by :func:`resolve_previous_filing_binding_values`, which names every such box
+    of every binding in one refusal instead of stopping at the first. A box the
+    observed return does not show is unknown, never zero.
+    """
+
+    binding_id: BindingId
+    source_key: tuple[str, int, str]
+    casilla_ids: tuple[CasillaId, ...]
+
+
+class PreviousFilingObservationAbsentError(CadrumoError):
     """Internal signal: the required source filing was simply never observed.
 
     Raised by :func:`_resolve_anchor_values` for the ZERO-MATCH case only,
@@ -361,8 +387,9 @@ class _PreviousFilingObservationAbsentError(CadrumoError):
     can never be caught by a broad ``except RegistryValidationError`` /
     ``except CoreValidationError`` elsewhere in the tree — the raise site's
     OTHER two conditions (an ambiguous multiple-match, or a matched filing
-    missing a required source casilla) are structural defects and must keep
-    raising :class:`RegistryValidationError` unchanged. Absence is not a
+    missing a required source casilla) must keep refusing with
+    :class:`RegistryValidationError`; the second names every box the matched
+    filing does not show. Absence is not a
     validation failure: AEAT has simply never seen this filing yet, which is
     exactly the SAME condition the sibling relation-fold channel resolves to
     an unsatisfied slot rather than a refusal. Caught immediately by
@@ -379,7 +406,7 @@ def _resolve_anchor_values(
     *,
     expected_year: int,
     required_period: str,
-) -> list[Decimal]:
+) -> list[Decimal] | _UnobservedCasillas:
     matches = tuple(
         observation
         for observation in available
@@ -388,17 +415,15 @@ def _resolve_anchor_values(
         and observation.period == required_period
     )
     if selector.grouping == "per_grupo_member":
-        if not matches:
-            raise _PreviousFilingObservationAbsentError(
-                f"binding {binding.id!r} (per_grupo_member) has no observed filing "
-                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
-            )
-        values: list[Decimal] = []
-        for member_match in matches:
-            values.extend(_observed_casilla_values(binding, selector, member_match, expected_year, required_period))
-        return values
+        return _per_grupo_member_values(
+            binding,
+            selector,
+            matches,
+            expected_year=expected_year,
+            required_period=required_period,
+        )
     if not matches:
-        raise _PreviousFilingObservationAbsentError(
+        raise PreviousFilingObservationAbsentError(
             f"binding {binding.id!r} has no observed filing "
             f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
         )
@@ -411,6 +436,28 @@ def _resolve_anchor_values(
     return _observed_casilla_values(binding, selector, single_match, expected_year, required_period)
 
 
+def _per_grupo_member_values(
+    binding: BindingDefinition,
+    selector: PreviousFilingProvider,
+    matches: tuple[_RegistryModeloObservationLike, ...],
+    *,
+    expected_year: int,
+    required_period: str,
+) -> list[Decimal] | _UnobservedCasillas:
+    if not matches:
+        raise PreviousFilingObservationAbsentError(
+            f"binding {binding.id!r} (per_grupo_member) has no observed filing "
+            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
+        )
+    values: list[Decimal] = []
+    for member_match in matches:
+        member_values = _observed_casilla_values(binding, selector, member_match, expected_year, required_period)
+        if isinstance(member_values, _UnobservedCasillas):
+            return member_values
+        values.extend(member_values)
+    return values
+
+
 def _resolve_binding_values(
     binding: BindingDefinition,
     available: tuple[_RegistryModeloObservationLike, ...],
@@ -418,7 +465,7 @@ def _resolve_binding_values(
     filing_year: int,
     period: str,
     activity_start_date: date | None = None,
-) -> list[Decimal] | None:
+) -> list[Decimal] | _UnobservedCasillas | None:
     selector = _previous_filing_selector(binding)
     required_anchors = selector.required_period_anchors_for_target(period)
     if not required_anchors:
@@ -432,24 +479,28 @@ def _resolve_binding_values(
             required_period,
             activity_start_date=activity_start_date,
         ):
+            if binding.before_activity_unresolved:
+                # The law gives that period a figure of its own, so zero would be a default.
+                return None
             scoped_pre_activity = True
             continue
         try:
-            values.extend(
-                _resolve_anchor_values(
-                    binding,
-                    selector,
-                    available,
-                    expected_year=expected_year,
-                    required_period=required_period,
-                ),
+            anchor_values = _resolve_anchor_values(
+                binding,
+                selector,
+                available,
+                expected_year=expected_year,
+                required_period=required_period,
             )
-        except _PreviousFilingObservationAbsentError:
+        except PreviousFilingObservationAbsentError:
             # The whole binding resolves to unsatisfied rather than a partial
             # (and therefore wrong) value from the anchors that DID resolve.
             # A malformed binding (RegistryValidationError, not caught here)
             # still propagates unchanged.
             return None
+        if isinstance(anchor_values, _UnobservedCasillas):
+            return anchor_values
+        values.extend(anchor_values)
     if not values and scoped_pre_activity:
         return _zero_values_for_scoped_out_binding(selector)
     return values
@@ -463,6 +514,7 @@ def resolve_previous_filing_binding_values(
     period: str,
     activity_start_date: date | None = None,
     excluded_binding_ids: frozenset[BindingId] | None = None,
+    answered_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
@@ -471,16 +523,19 @@ def resolve_previous_filing_binding_values(
     filed casilla values they fold. The returned mapping is keyed by
     :class:`~cadrumo.domain.calculations.registry.ids.BindingId` and carries resolved
     :class:`decimal.Decimal` values for formula runtime consumption.
+
+    A binding in ``answered_binding_ids`` already has the caller's value. When
+    the observed return cannot show the boxes it reads, its own value is
+    unknown, so it is left unresolved for that answer rather than refused; one
+    the return does show still resolves, so a differing answer stays a
+    disagreement the calculation records.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     excluded = excluded_binding_ids or frozenset()
+    unobserved: list[_UnobservedCasillas] = []
     for binding in revision.bindings:
-        if binding.id in excluded:
-            continue
-        if binding.source != BindingSourceKind.PREVIOUS_FILING:
-            continue
-        if not is_direct_previous_filing_binding(binding):
+        if not _is_resolvable_direct_binding(binding, excluded):
             continue
         values = _resolve_binding_values(
             binding,
@@ -489,6 +544,10 @@ def resolve_previous_filing_binding_values(
             period=period,
             activity_start_date=activity_start_date,
         )
+        if isinstance(values, _UnobservedCasillas):
+            if binding.id not in answered_binding_ids:
+                unobserved.append(values)
+            continue
         if values is None:
             continue
         resolved[binding.id] = _aggregate_previous_filing_binding(
@@ -496,7 +555,30 @@ def resolve_previous_filing_binding_values(
             values,
             source_casilla_ids=_previous_filing_source_ids(_previous_filing_selector(binding)),
         )
+    if unobserved:
+        raise _unobserved_casillas_error(unobserved)
     return resolved
+
+
+def _is_resolvable_direct_binding(binding: BindingDefinition, excluded: frozenset[BindingId]) -> bool:
+    return (
+        binding.id not in excluded
+        and binding.source == BindingSourceKind.PREVIOUS_FILING
+        and is_direct_previous_filing_binding(binding)
+    )
+
+
+def _unobserved_casillas_error(unobserved: list[_UnobservedCasillas]) -> RegistryValidationError:
+    """Name every unshown box of the first unobserved source filing in one refusal."""
+    source_modelo, source_filing_year, source_period = unobserved[0].source_key
+    same_filing = tuple(signal for signal in unobserved if signal.source_key == unobserved[0].source_key)
+    return RegistryValidationError.for_previous_filing_casillas_unobserved(
+        source_modelo=source_modelo,
+        source_filing_year=source_filing_year,
+        source_period=source_period,
+        casilla_ids=tuple(casilla_id for signal in same_filing for casilla_id in signal.casilla_ids),
+        binding_ids=tuple(signal.binding_id for signal in same_filing),
+    )
 
 
 def _anchor_strictly_before_activity_start(
@@ -664,6 +746,14 @@ _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(
         BindingAggregationOp.SUM,
         BindingAggregationOp.COPY,
         BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS,
+        BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED,
+    },
+)
+
+_PAIRED_SOURCE_OPS: frozenset[BindingAggregationOp] = frozenset(
+    {
+        BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS,
+        BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED,
     },
 )
 
@@ -674,8 +764,8 @@ def _validate_previous_filing_invariants(binding: BindingDefinition) -> None:
     A previous_filing binding aggregates one or more source casillas under one of
     the supported ops. The op must be a member of :data:`_PREVIOUS_FILING_OPS`
     (the same closed set :func:`_aggregate_previous_filing_binding` accepts at
-    resolve time); ``copy`` requires exactly one source casilla and
-    ``prior_pagos_fraccionados`` requires exactly two (per quarter pair). These
+    resolve time); ``copy`` requires exactly one source casilla and the
+    paired ops require exactly two (per quarter pair). These
     are determinable from the selector at build time, so a malformed pairing
     fails at snapshot construction rather than only on a taxpayer calculation.
 
@@ -696,10 +786,9 @@ def _validate_previous_filing_invariants(binding: BindingDefinition) -> None:
         raise RegistryValidationError(
             f"binding {binding.id!r} copy aggregation requires one source casilla",
         )
-    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS and len(source_ids) != 2:
+    if op in _PAIRED_SOURCE_OPS and len(source_ids) != 2:
         raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
-            f"source casillas (positive-part casilla then minoracion casilla); got {source_ids!r}",
+            f"binding {binding.id!r} {op.value} aggregation requires exactly two source casillas; got {source_ids!r}",
         )
 
 
@@ -788,47 +877,60 @@ def _aggregate_previous_filing_binding(
             subject=f"binding {binding.id!r}",
             copy_unit="source casilla",
         )
-    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
-        return _aggregate_prior_pagos_fraccionados(binding, values, source_casilla_ids=source_casilla_ids)
+    if op in _PAIRED_SOURCE_OPS:
+        pairs = _per_quarter_pairs(binding, op, values, source_casilla_ids=source_casilla_ids)
+        if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
+            return _prior_pagos_fraccionados(pairs)
+        return _prior_negative_results_undeducted(pairs)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")
 
 
-def _aggregate_prior_pagos_fraccionados(
+def _per_quarter_pairs(
     binding: BindingDefinition,
+    op: BindingAggregationOp,
     values: list[Decimal],
     *,
     source_casilla_ids: tuple[CasillaId, ...],
-) -> Decimal:
-    """Compute the AEAT Modelo 130 casilla-05 identity from per-anchor pairs.
+) -> tuple[tuple[Decimal, Decimal], ...]:
+    """Slice the flat ``[a_q1, b_q1, a_q2, b_q2, ...]`` values into one pair per anchor quarter."""
+    if len(source_casilla_ids) != 2:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} {op.value} aggregation requires exactly two source casillas; "
+            f"got {source_casilla_ids!r}",
+        )
+    if len(values) % 2 != 0:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} {op.value} aggregation expected per-quarter pairs; "
+            f"got {len(values)} values for 2 source casillas",
+        )
+    return tuple(zip(values[::2], values[1::2], strict=True))
+
+
+def _prior_pagos_fraccionados(pairs: tuple[tuple[Decimal, Decimal], ...]) -> Decimal:
+    """Compute the AEAT Modelo 130 casilla-05 identity from per-quarter pairs.
 
     casilla 05 = SUM over prior quarters q of max(0, casilla 07_q)
                  minus SUM over the same q of casilla 16_q
 
-    The flat ``values`` list carries per-anchor groups in ``source_casilla_ids``
-    order (``[07_q1, 16_q1, 07_q2, 16_q2, ...]``); the op slices that grouping,
-    applies the positive-part to the first casilla (07) PER QUARTER before
-    summing, and subtracts the sum of the second casilla (16). Both terms are
-    load-bearing: a negative prior 07 contributes 0 (not its negative value),
-    and the prior casilla-16 minoración is never dropped (per the
-    aeat-modelo-130-instructions verbatim rule).
+    Both terms are load-bearing: a negative prior 07 contributes 0 (not its
+    negative value), and the prior casilla-16 minoración is never dropped (per
+    the aeat-modelo-130-instructions verbatim rule).
     """
-    if len(source_casilla_ids) != 2:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
-            f"source casillas (positive-part casilla then minoracion casilla); got {source_casilla_ids!r}",
-        )
-    group_size = len(source_casilla_ids)
-    if len(values) % group_size != 0:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation expected per-quarter pairs; "
-            f"got {len(values)} values for {group_size} source casillas",
-        )
     zero = Decimal("0")
-    positive_part_total = zero
-    minoracion_total = zero
-    for index in range(0, len(values), group_size):
-        positive_casilla_value = values[index]
-        minoracion_casilla_value = values[index + 1]
-        positive_part_total += positive_casilla_value if positive_casilla_value > zero else zero
-        minoracion_total += minoracion_casilla_value
-    return positive_part_total - minoracion_total
+    return sum((max(zero, result) - minoracion for result, minoracion in pairs), zero)
+
+
+def _prior_negative_results_undeducted(pairs: tuple[tuple[Decimal, Decimal], ...]) -> Decimal:
+    """Compute what earlier quarters' negative results still leave to deduct.
+
+    carry = SUM over prior quarters q of max(0, -result_q)
+            minus SUM over the same q of deducted_q
+
+    The AEAT instructions name the negative results "de cualquiera de las
+    autoliquidaciones anteriores [...] del mismo ejercicio y que no hubieran sido
+    deducidos anteriormente", so every earlier quarter counts, read from what each
+    filing states. An inconsistent history is not floored here: a negative carry
+    reaches the box's own non-negative constraint rather than reading as zero.
+    """
+    zero = Decimal("0")
+    return sum((max(zero, -result) - deducted for result, deducted in pairs), zero)

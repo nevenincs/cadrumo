@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from threading import Event, Lock, RLock, Thread
@@ -10,9 +9,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo.core.logging import get_logger
+
 from ..contracts.access_management import SessionInventoryTransfer
 from ..contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
-from ..contracts.deadline_budget import remaining_budget
+from ..contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, remaining_budget
 from ..contracts.profile_access import AccessRefusal, ProfileStatusTransfer, Reply, SecretReady
 from ..contracts.session_events import CONNECTION_EVENT_TYPES, ConnectionEvent, LifecycleNotice
 from .frame_io import (
@@ -66,6 +67,7 @@ class VerifiedTransport:
         return unsubscribe
 
     def _initialize_session_events(self) -> None:
+        self._channel_close_guard = RLock()
         self._event_receivers: list[Callable[[ConnectionEvent], None]] = []
         self._disconnect_receivers: list[Callable[[], None]] = []
         self._event_reader: Thread | None = None
@@ -131,20 +133,37 @@ class VerifiedTransport:
                     try:
                         if not self._channel.wait_readable(wake):
                             continue
-                        received = read_reply_or_event(self._channel, Reply, deadline=time.monotonic() + 5)
+                        # Idle readiness itself has no clock. Once a peer
+                        # starts a frame, only last-resort stalled-I/O
+                        # containment can end that bounded transfer.
+                        received = read_reply_or_event(
+                            self._channel, Reply, deadline=DEFAULT_TIMEOUT_POLICY.deadline().instant
+                        )
                         if not isinstance(received, CONNECTION_EVENT_TYPES):
                             raise RefusalError(RefusalCode.INVALID_FRAME)
                         self._receive_event(received)
                     except BaseException as error:
-                        try:
-                            self._close_after_failure(error)
-                        finally:
-                            for disconnected in tuple(self._disconnect_receivers):
-                                disconnected()
+                        if isinstance(error, RefusalError) and error.reason is RefusalCode.TIMEOUT:
+                            error.reason = RefusalCode.TIMEOUT
+                            error.args = (error.reason.value,)
+                        self._close_after_failure(error)
                         return
         finally:
             with self._claims_guard:
                 self._idle_wake = None
+            # Explicit close and failed exchanges also end this reader. Notify
+            # from its single exit, outside the exchange lock, on every path.
+            self._notify_disconnected()
+
+    def _notify_disconnected(self) -> None:
+        with self._exchange_lock:
+            receivers = tuple(self._disconnect_receivers)
+            self._disconnect_receivers.clear()
+        for disconnected in receivers:
+            try:
+                disconnected()
+            except Exception as error:
+                get_logger(__name__).warning("disconnect callback failed error_type=%s", type(error).__name__)
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_transport_cleanup")
@@ -153,8 +172,9 @@ class VerifiedTransport:
             # Fence exchanges now, and let its retained owner retry through
             # the connection's success-only channel-close bookkeeping.
             self._closed = True
-            self._channel_closed = retained.released
-            retained.resource = self
+            with self._channel_close_guard:
+                self._channel_closed = self._channel_closed or retained.released
+                retained.resource = self
             return
         close_transport_after_failure(self, error)
 
@@ -164,7 +184,7 @@ class VerifiedTransport:
         try:
             remaining = remaining_budget(deadline)
             if not self._claim(timeout=remaining):
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             try:
                 yield
             finally:
@@ -206,6 +226,16 @@ class VerifiedTransport:
         with self._claimed():
             return self._connection_id
 
+    @property
+    def closed(self) -> bool:
+        """Whether exchanges have stopped, by request or after a failed exchange.
+
+        Read without claiming the exchange, so a caller can tell a refusal that
+        left the connection open from one that ended it while another exchange
+        is still in flight.
+        """
+        return self._closed
+
     def send_secret(self, secret: bytearray, *, deadline: float) -> None:
         """Consume a one-shot secret buffer after peer and cohort verification."""
         with self._exchange(deadline=deadline, secret=secret):
@@ -233,6 +263,33 @@ class VerifiedTransport:
         elif isinstance(result.root, SessionInventoryTransfer):
             result = Reply(read_session_inventory(self._channel, result.root, deadline=deadline))
         return result
+
+    def _request_reply[ReplyT](
+        self,
+        request: BaseModel,
+        request_id: UUID,
+        accepted: tuple[type[ReplyT], ...],
+        *,
+        deadline: float,
+        admits: Callable[[ReplyT], bool] | None = None,
+    ) -> ReplyT:
+        """Exchange one credential-free document for a reply of an accepted type that ``admits`` passes.
+
+        A reply of another type, or one ``admits`` refuses, is an invalid frame; any failure closes the
+        connection.
+        """
+        with self._exchange(deadline=deadline):
+            try:
+                if self._closed:
+                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+                write_document(self._channel, request, deadline=deadline)
+                reply = self._reply(request_id, deadline=deadline).root
+                if not isinstance(reply, accepted) or (admits is not None and not admits(reply)):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return reply
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
 
     def _verify_reply(self, expected: UUID, received: UUID, boot: UUID, connection: UUID) -> None:
         if (
@@ -262,8 +319,9 @@ class VerifiedTransport:
 
     def close(self) -> None:
         """Stop exchanges immediately and retry failed owned channel cleanup."""
-        with self._claimed():
-            self._closed = True
+        self._closed = True
+        # Native close cancels pending I/O; it must not await the exchange it wakes.
+        with self._channel_close_guard:
             if not self._channel_closed:
                 self._channel.close()
                 self._channel_closed = True

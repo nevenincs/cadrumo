@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-12'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e8cfd011e924b8274348cd63b66ebee323873cdd77f8b0d5d8348d9e7fad4f8'
+body_hash: 'sha256:2e58b5e2cd9be142a020ea023fbba21d9d3df7dcaa92340d696016e59fed63b2'
 related:
   - '[[2026-10-10-mcp-parity-admission-rulings-adr]]'
   - '[[2026-10-10-mcp-parity-admitted-surface-defects-reference]]'
@@ -18,10 +18,8 @@ related:
   - '[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]'
   - '[[2026-10-10-mcp-parity-file-exchange-adr]]'
   - '[[2026-10-10-mcp-parity-file-exchange-reference]]'
-  - '[[2026-10-10-mcp-parity-ledger]]'
   - '[[2026-10-10-mcp-parity-parity-mechanism-adr]]'
   - '[[2026-10-10-mcp-parity-parity-mechanism-options-research]]'
-  - '[[2026-10-10-mcp-parity-plan]]'
   - '[[2026-10-10-mcp-parity-replay-identity-adr]]'
   - '[[2026-10-10-mcp-parity-replay-identity-reference]]'
   - '[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]'
@@ -55,14 +53,6 @@ Auto-generated index of all documents tagged with `#mcp-parity`.
 ### audit
 
 - `2026-10-11-mcp-parity-audit` - `mcp-parity` audit: `Phase-close reviews of the MCP parity plan`
-
-### exec
-
-- `2026-10-10-mcp-parity-ledger` - `mcp-parity` ledger
-
-### plan
-
-- `2026-10-10-mcp-parity-plan` - `mcp-parity` plan
 
 ### reference
 

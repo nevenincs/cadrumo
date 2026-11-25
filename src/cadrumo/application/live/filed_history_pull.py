@@ -25,6 +25,7 @@ from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .errors import raise_if_aeat_session_ended
 from .filed_data_capture import capture_filed_data_bulk
 from .filed_data_ports import (
     FiledDataCapturePort,
@@ -91,7 +92,7 @@ class FiledHistoryDiscoveryPort(Protocol):
     ) -> FiledHistoryDiscoveryReport: ...
 
 
-def _filed_history_pair_outcomes(
+def filed_history_pair_outcomes(
     discovery: FiledHistoryDiscoveryReport,
     capture: BulkFiledDataCaptureReport,
 ) -> tuple[FiledHistoryPairOutcome, ...]:
@@ -145,16 +146,12 @@ async def _capture_discovered_filed_history(
     on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> BulkFiledDataCaptureReport:
-    """Capture the discovered grid with its original modelo order and year span."""
-    modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
-    years = tuple(year for _modelo, year in walk_pairs)
+    """Capture exactly the nominated pairs, in discovery's walk order."""
     return await capture_filed_data_bulk(
         filed_data_port=filed_data_port,
-        year_from=min(years),
-        year_to=max(years),
         output_root=output_root,
         ports=ports,
-        modelos=modelos,
+        pairs=walk_pairs,
         limit=limit,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
@@ -172,7 +169,7 @@ class _FiledHistoryIvaWalletStage:
     failure: str | None = None
 
 
-async def _capture_filed_history_iva_wallet(
+async def capture_filed_history_iva_wallet(
     *,
     iva_remote_state_port: IvaRemoteStatePort,
     resolved_today: date,
@@ -199,6 +196,7 @@ async def _capture_filed_history_iva_wallet(
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
             raise
+        raise_if_aeat_session_ended(exc)
         await emit_filed_history_refusal(events, FILED_HISTORY_IVA_WALLET_REFUSAL_CODE)
         return _FiledHistoryIvaWalletStage(
             status="failed",
@@ -220,7 +218,7 @@ class _FiledHistoryNotificationsStage:
     failure: str | None = None
 
 
-async def _capture_filed_history_notifications(
+async def capture_filed_history_notifications(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
@@ -249,6 +247,7 @@ async def _capture_filed_history_notifications(
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
             raise
+        raise_if_aeat_session_ended(exc)
         await emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
             status="failed",
@@ -362,14 +361,14 @@ async def pull_filed_history(
         on_session_write=on_session_write,
         events=events,
     )
-    pairs = _filed_history_pair_outcomes(discovery, capture)
+    pairs = filed_history_pair_outcomes(discovery, capture)
     if dry_run:
         iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
         notifications = _FiledHistoryNotificationsStage(status="not_attempted", row_count=0)
     else:
         if profile is not None:
             await emit_filed_history_phase(events, FILED_HISTORY_PHASE_IVA_WALLET)
-            iva_wallet = await _capture_filed_history_iva_wallet(
+            iva_wallet = await capture_filed_history_iva_wallet(
                 iva_remote_state_port=iva_remote_state_port,
                 resolved_today=resolved_today,
                 output_root=output_root,
@@ -380,7 +379,7 @@ async def pull_filed_history(
         else:
             iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
         await emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
-        notifications = await _capture_filed_history_notifications(
+        notifications = await capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             notifications_ports=notifications_ports,
@@ -389,16 +388,7 @@ async def pull_filed_history(
             on_session_write=on_session_write,
             events=events,
         )
-    nominated_coordinates = set(walk_pairs)
-    # Keep rectangular capture refusals that have no discovered pair to carry them.
-    capture_stage_failures = tuple(
-        f"filed_capture: modelo {failure.modelo} ejercicio {failure.year}: {failure.error_type}"
-        for failure in capture.failures
-        if (failure.modelo, failure.year) not in nominated_coordinates
-    )
-    stage_failures = capture_stage_failures + tuple(
-        failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None
-    )
+    stage_failures = _onboarding_stage_failures(discovery, capture, iva_wallet, notifications)
 
     return FiledHistoryOnboardingRun(
         pairs=pairs,
@@ -417,6 +407,27 @@ async def pull_filed_history(
         evidence_notices=capture.evidence_notices,
         recapture_notices=capture.recapture_notices,
     )
+
+
+def _onboarding_stage_failures(
+    discovery: FiledHistoryDiscoveryReport,
+    capture: BulkFiledDataCaptureReport,
+    iva_wallet: _FiledHistoryIvaWalletStage,
+    notifications: _FiledHistoryNotificationsStage,
+) -> tuple[str, ...]:
+    nominated_coordinates = set(discovery.walk_pairs)
+    # Capture is exact, so every failure should map to a nominated pair that
+    # carries it; surface any that does not instead of dropping it.
+    capture_stage_failures = tuple(
+        f"filed_capture: modelo {failure.modelo} ejercicio {failure.year}: {failure.error_type}"
+        for failure in capture.failures
+        if (failure.modelo, failure.year) not in nominated_coordinates
+    )
+    stage_failures = capture_stage_failures + tuple(
+        failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None
+    )
+
+    return stage_failures
 
 
 __all__ = ["pull_filed_history"]

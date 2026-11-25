@@ -23,7 +23,12 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCaptureRequest,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,6 +161,6 @@ def _require_invoice_capture_success(
         or _invoice_capture_window_invalid(projection)
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
-        or completed.effect not in {OperationEffect.UPDATED, OperationEffect.NONE}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise ValueError("invoice withholding result differs from its exact request")

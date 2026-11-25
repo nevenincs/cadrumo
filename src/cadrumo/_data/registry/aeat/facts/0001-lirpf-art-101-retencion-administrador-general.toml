@@ -2,6 +2,8 @@
 fact_id = "lirpf-art-101:retencion-administrador-general"
 family = "scalar"
 
+[fact.standing_rate]
+
 [[fact.variants]]
 variant_id = "lirpf-art-101:retencion-administrador-general:2015-01-01"
 date_axis = "filing_period"

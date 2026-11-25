@@ -20,18 +20,24 @@ from rich.text import Text
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
+from ......application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ......application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
+from ......application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
+from ....tests.settling import settle, settle_until
 from ..casilla_list import CasillaList
 from ..casilla_list_values import description_text
 from ..factory import InstalledModeloWorkbench
 from ..navigator import heading_groups
 from ..screen import ModeloWorkbenchScreen
-from ..vocabulary import SOURCE_WORDED_ORIGINS, origin_text
+from ..vocabulary import origin_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,11 +54,10 @@ def workbench(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledMod
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return screen.form
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
+    form = screen.form
+    assert form is not None
+    return form
 
 
 def _navigator(screen: ModeloWorkbenchScreen) -> list[str]:
@@ -84,7 +89,7 @@ async def test_a_heading_the_real_layout_prints_twice_is_listed_once(tmp_path: P
             index, headings = repeated
             for _ in range(index):
                 await pilot.press("right_square_bracket")
-            await pilot.pause()
+            await settle(pilot)
             rows = _navigator(screen)
             navigator = screen.query_one("#wb-sections", OptionList)
             row_ids = [navigator.get_option_at_index(i).id for i in range(navigator.option_count)]
@@ -122,14 +127,18 @@ async def test_a_real_boxs_help_band_says_its_source_once_in_the_rows_words(
         async with app.run_test(size=(160, 48)) as pilot:
             form = await _opened(pilot, screen)
             field = _sourced(form)
-            await pilot.press("g", *(field.box or ""), "enter")
-            for _ in range(100):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*(field.box or ""), "enter")
+
+            def _origin_shown() -> bool:
                 band = str(screen.query_one("#wb-help", Static).render()).splitlines()
                 entry = screen.query_one(CasillaList).highlighted
-                if entry is not None and entry.field.box == field.box and len(band) > 3:
-                    break
-            words = origin_text(field)
+                return entry is not None and entry.field.box == field.box and len(band) > 3
+
+            await settle_until(pilot, _origin_shown, "the help band to show the origin of the chosen box")
+            band = str(screen.query_one("#wb-help", Static).render()).splitlines()
+            words = origin_text(field, calculated=form.calculation_revision_id is not None)
             said = {
                 lookup_translation(binding.policy.origin_sentence_key, locale="en")
                 for binding in field.bindings
@@ -185,22 +194,24 @@ async def test_the_help_band_never_breaks_a_citation_between_art_and_its_number(
         assert isinstance(field.address, ModeloFormCasillaAddressV1)
         card = annual_iva.help_card(field.address.casilla_id, OutputLanguage.EN)
         assert any(item.text.endswith(_ART_71_TEXT) for item in card.legal_basis)
-        line = tr("tui.modelo.workbench.help.legal", citations="; ".join(item.text for item in card.legal_basis))
+        line = tr("workspace.modelo.help.legal", citations="; ".join(item.text for item in card.legal_basis))
         width = next(width for width in range(76, 200) if _splits_the_citation(line, width))
         screen = ModeloWorkbenchScreen(annual_iva, actions=annual_iva)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width + _GUTTERS, 48)) as pilot:
             await _opened(pilot, screen)
-            await pilot.press("g", *(field.box or ""), "enter")
-            band: list[str] = []
-            for _ in range(100):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*(field.box or ""), "enter")
+
+            def _legal_basis_shown() -> bool:
                 band = str(screen.query_one("#wb-help", Static).render()).splitlines()
-                if any(item.startswith("Legal basis:") for item in band):
-                    break
+                return any(item.startswith("Legal basis:") for item in band)
+
+            await settle_until(pilot, _legal_basis_shown, "the help band to show the legal basis")
+            band = str(screen.query_one("#wb-help", Static).render()).splitlines()
             await pilot.press("question_mark")
-            for _ in range(5):
-                await pilot.pause()
+            await settle(pilot)
             widget = screen.query_one("#wb-help", Static)
             band_width = widget.content_region.width
             painted = [widget.render_line(row).text for row in range(widget.size.height)]

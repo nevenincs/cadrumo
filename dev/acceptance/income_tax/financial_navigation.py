@@ -32,7 +32,7 @@ def _highlight_palette_destination(results: OptionList, destination_label: str) 
     return False
 
 
-async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -> None:
+async def open_destination(pilot: Any, *, query: str, expected_selector: str) -> None:
     """Open a workbench destination with the normal command-palette keyboard path."""
     from textual.css.query import NoMatches
     from textual.widgets import Input, OptionList
@@ -72,7 +72,7 @@ async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -
     await wait_for_public_selector(pilot, expected_selector, polls=180)
 
 
-async def _activate_button(pilot: Any, selector: str) -> None:
+async def activate_button(pilot: Any, selector: str) -> None:
     """Activate a visible button by focus so compact terminals remain operable."""
     from textual.widgets import Button
 
@@ -108,11 +108,11 @@ async def wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
     )
 
 
-async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: str) -> None:
+async def create_calendar_work(pilot: Any, *, modelo: str, year: int, period: str) -> None:
     """Create one filing-period work unit through Calendar confirmation."""
     from textual.widgets import Static
 
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
+    await open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#declarations-navigation",
@@ -125,7 +125,7 @@ async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: s
         row_key=f"{modelo}|{year}|{period}",
     )
     await wait_for_public_selector(pilot, "#btn-confirm-accept")
-    await _activate_button(pilot, "#btn-confirm-accept")
+    await activate_button(pilot, "#btn-confirm-accept")
     await pilot.app.workers.wait_for_complete()
     notice = str(query_public_selector(pilot, "#declarations-calendar-notice", Static).render()).strip()
     if notice.startswith("Created ") is False:
@@ -142,16 +142,16 @@ async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: s
 
 async def open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
     """Open the created work's workbench using its public work-unit row key, once it has read its form."""
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
+    await open_destination(pilot, query="declarations", expected_selector="#declarations-list")
     await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)
     return await wait_for_workbench(pilot)
 
 
-async def _work_ids_by_period(pilot: Any, *, year: int) -> dict[str, str]:
+async def work_ids_by_period(pilot: Any, *, year: int) -> dict[str, str]:
     """Resolve opaque work ids from the visible natural-address rows."""
     from textual.widgets import DataTable
 
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
+    await open_destination(pilot, query="declarations", expected_selector="#declarations-list")
     table = query_public_selector(pilot, "#declarations-list", DataTable)
     found: dict[str, str] = {}
     for row_key in table.rows:

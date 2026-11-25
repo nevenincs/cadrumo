@@ -19,9 +19,10 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.text_fold import normalise_corpus_text
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
@@ -171,13 +172,18 @@ def _read_source_text(source: SourceReference, source_path: Path, *, source_root
         sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path, source_root=source_root)
         if sidecar_text is not None:
             return sidecar_text
-        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_pdf_text_impl(str(source_path)))
     if source_path.suffix.casefold() == ".xlsx":
-        return normalise_corpus_text(_extract_xlsx_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_xlsx_text_impl(str(source_path)))
     if source_path.suffix.casefold() == ".pdf":
         # A record-design PDF is compressed; its citations are against the text
         # it renders, never against the raw bytes.
-        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_pdf_text_impl(str(source_path)))
+    if source.kind is RegistrySourceKind.DICTIONARY and source_path.suffix.casefold() == ".properties":
+        try:
+            return normalise_corpus_text(decode_dictionary_text(source_path.read_bytes()))
+        except RegistryValidationError as exc:
+            raise OSError(f"could not decode dictionary source {source_path}: {exc}") from exc
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
 
 
@@ -204,7 +210,7 @@ def _xlsx_workbook_text(workbook: Workbook, path: str) -> str:
     return "\n".join(cells)
 
 
-def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
+def extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
     """Return cell text from an enrolled XLSX record-design authority.
 
     Only a workbook the reader itself rejects is relabelled as an unreadable
@@ -258,7 +264,7 @@ def corpus_text_cache_dir() -> Path:
     """
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("corpus-text")
 
 
@@ -305,15 +311,18 @@ def _persisted_corpus_text(cache_key: str) -> str | None:
         return None
 
 
-def _source_text_cache_key(
+def source_text_cache_key(
     source: SourceReference,
     source_path: Path,
     source_root: Path,
     source_stat: os.stat_result,
 ) -> _SourceTextCacheKey:
+    """Build the cache key for a source's extracted text from its path, suffix and file stat."""
     suffix = source_path.suffix.casefold()
     extraction_contract = (
-        f"{source.kind}:xlsx-text-v1"
+        f"{source.kind}:properties-text-v1"
+        if suffix == ".properties" and source.kind is RegistrySourceKind.DICTIONARY
+        else f"{source.kind}:xlsx-text-v1"
         if suffix == ".xlsx"
         else f"{source.kind}:pdf-text-v1"
         if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF
@@ -364,7 +373,7 @@ def _remember_normalised_source_text(
     _pending_entries[cache_key] = normalised
 
 
-def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
+def extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
     """Return page text from an enrolled manual PDF authority.
 
     Only a document pdfium itself rejects, or a filesystem failure reading it,
@@ -461,6 +470,28 @@ class EvidenceValidator:
         self._sources = source_refs
         self._source_root = source_root
         self._source_text_cache: dict[str, str] = {}
+
+    def source_tier(self, ref: str) -> str | None:
+        """The evidence tier of the cited source, or ``None`` when the catalogue does not declare it."""
+        source = self._sources.get(ref)
+        return None if source is None else source.evidence_tier
+
+    def dictionary_lines(self, ref: str) -> tuple[str, ...] | None:
+        """The decoded lines of a cited dictionary source, or ``None`` when no evidence root is bound.
+
+        Raises:
+            OSError: the source is not a bundled dictionary, or its file cannot be read or decoded.
+        """
+        source = self._sources.get(ref)
+        if self._source_root is None:
+            return None
+        if source is None or source.kind is not RegistrySourceKind.DICTIONARY:
+            raise OSError(f"source {ref!r} is not a declared dictionary")
+        try:
+            body = _resolve_source_path(source, self._source_root).read_bytes()
+            return tuple(decode_dictionary_text(body).splitlines())
+        except RegistryValidationError as exc:
+            raise OSError(f"could not decode dictionary source {ref!r}: {exc}") from exc
 
     def require_source_tier(
         self,
@@ -618,7 +649,7 @@ class EvidenceValidator:
         if source_root is None:
             return ""
         source_path = _resolve_source_path(source, source_root)
-        source_key = _source_text_cache_key(source, source_path, source_root, source_path.stat())
+        source_key = source_text_cache_key(source, source_path, source_root, source_path.stat())
         cache_hit, cached_text, cache_key = _lookup_normalised_source_text(
             source.id, source_key, self._source_text_cache
         )

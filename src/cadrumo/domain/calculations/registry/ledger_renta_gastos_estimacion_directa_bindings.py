@@ -2,55 +2,38 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, BeforeValidator, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import (
+from ...renta.actividad_asset.lifecycle import AssetKind
+from .binding_selector_utils import provider_member
+from .errors import RegistryError
+from .form_codes import differs_from_role
+from .ids import BindingId
+from .ledger_binding_resolution import (
     deductible_amount_aggregate,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .binding_selector_utils import provider_member
-from .ids import BindingId
-from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_target_casilla_failures,
     require_ledger_aggregation_op,
     require_ledger_fact,
-    require_ledger_target_casilla,
 )
+from .schema_base import coerce_enum_member
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
-
-# SpendingCategory routing table.
-_RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
-    "_RENTA_100_FIRST_SLICE_CASILLAS",
-    "0183",
-    "0186",
-    "0191",
-    "0192",
-    "0193",
-    "0194",
-    "0195",
-    "0199",
-    "0200",
-    "0202",
-    "0203",
-    "0206",
-    "0208",
-    "0217",
-)
-
 
 _DEDUCTIBLE_AMOUNT_FACTS: frozenset[str] = frozenset({"deductible_amount_sum"})
 
@@ -100,13 +83,15 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
     modelo: Modelo = Modelo("100")
     period: Literal["0A"] = "0A"
     target_casilla_id: CasillaId
+    activity_asset_kind: Annotated[AssetKind, BeforeValidator(coerce_enum_member(AssetKind))] | None = None
+    """The asset kind whose register amortization this box receives; ``None`` for a box of ledger categories."""
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 
     @field_validator("modelo")
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_100(cls, value: Modelo) -> Modelo:
-        if value != Modelo("100"):
+        if differs_from_role(value, "renta.annual"):
             raise ValueError("ledger_renta_gastos_estimacion_directa_aggregation modelo must be '100'")
         return value
 
@@ -120,14 +105,24 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
         LedgerRentaGastosEstimacionDirectaProvider,
     )
-    require_ledger_target_casilla(
-        binding,
-        selector.target_casilla_id,
-        _RENTA_100_FIRST_SLICE_CASILLAS,
-        scope="first Modelo 100 Renta ledger gastos slice",
-    )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
+
+
+def ledger_renta_gastos_estimacion_directa_target_failures(revision: ModeloRevision) -> list[str]:
+    """Refuse a gastos binding aimed at a box the edition does not bind to it.
+
+    Args:
+        revision: :class:`ModeloRevision` whose expense binding targets are checked.
+    """
+    return ledger_target_casilla_failures(
+        revision,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        target_casilla_id=lambda binding: (
+            provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider).target_casilla_id
+        ),
+        reciprocal=True,
+    )
 
 
 def _renta_gastos_estimacion_directa_build_matcher(
@@ -206,15 +201,12 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return the ``target_casilla_id`` set this revision's own bindings route to.
 
-    Unlike the universal BOE-prescribed first-slice routing projection spanning
-    every filing year the
-    application supports), this returns only the casillas a
-    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on THIS revision actually
-    targets. Older Modelo 100 revisions (2020-2023) declare no such bindings
-    at all -- the first-slice ledger-aggregation mechanism did not yet exist
-    for them -- so their required set is legitimately empty even though the
-    universal routing table's codomain is wider. The snapshot-time
-    referential-integrity gate
+    Unlike the universal first-slice routing projection spanning supported
+    filing years, this returns only the casillas a
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on this revision
+    actually targets. It includes asset-register-only targets as well as
+    category-routing targets. A revision with no such bindings has an empty
+    required set. The snapshot-time referential-integrity gate
     (:mod:`cadrumo.domain.renta.first_slice_routing_integrity`) uses this
     per-revision set rather than the universal table so it only fails when a
     binding THIS revision actually declares points at a casilla absent from
@@ -233,6 +225,29 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
+
+
+def activity_asset_amortization_casillas(revision: ModeloRevision) -> Mapping[AssetKind, CasillaId]:
+    """Return the box a :class:`ModeloRevision` gives each asset kind's amortization; an unbound kind is absent.
+
+    Raises:
+        RegistryError: When two bindings of the revision claim one asset kind.
+    """
+    boxes: dict[AssetKind, CasillaId] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
+            continue
+        provider = provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider)
+        kind = provider.activity_asset_kind
+        if kind is None:
+            continue
+        if kind in boxes:
+            raise RegistryError(
+                "selected revision binds one asset kind's amortization twice",
+                context={"revision_id": revision.id, "asset_kind": kind.value},
+            )
+        boxes[kind] = provider.target_casilla_id
+    return boxes
 
 
 def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding: BindingDefinition) -> list[str]:

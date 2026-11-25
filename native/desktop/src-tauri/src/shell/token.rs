@@ -61,7 +61,7 @@ impl ShellToken {
 
 /// Compares every byte regardless of where the first difference occurs. The
 /// token length is public, so a length mismatch may return early.
-fn constant_time_equal(expected: &[u8], presented: &[u8]) -> bool {
+pub(crate) fn constant_time_equal(expected: &[u8], presented: &[u8]) -> bool {
     if expected.len() != presented.len() {
         return false;
     }

@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
@@ -36,6 +36,9 @@ from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     ProfileViewFactItem,
+    ProfileViewHeadingItem,
+    ProfileViewHouseholdDraft,
+    ProfileViewHouseholdDraftFact,
     ProfileViewIssueItem,
     ProfileViewOperationRequest,
     ProfileViewOperationResult,
@@ -47,8 +50,9 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_adoption_token
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
@@ -191,6 +195,89 @@ def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(
                 assert not stale.items and stale.next_cursor is None
 
 
+@pytest.mark.parametrize(
+    ("facts", "heading"),
+    [
+        ((), "Profile view operation"),
+        (
+            (
+                UserProfileFact(path="identity.name", value="Ana"),
+                UserProfileFact(path="identity.surnames", value="Ruiz Gil"),
+            ),
+            "Ana Ruiz Gil",
+        ),
+        ((UserProfileFact(path="identity.legal_name", value="Talleres Ruiz SL"),), "Talleres Ruiz SL"),
+    ],
+)
+def test_the_overview_is_headed_with_the_taxpayer_name_else_the_profile_name(
+    tmp_path: Path, facts: tuple[UserProfileFact, ...], heading: str
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        with bundled_indexed_authority().operation() as authority:
+            page = read_profile_view_page(
+                ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.OVERVIEW, limit=2),
+                authority_operation=authority,
+            )
+    assert page.outcome == "page"
+    assert page.items[0] == ProfileViewHeadingItem(name=heading)
+    assert not any(isinstance(item, ProfileViewHeadingItem) for item in page.items[1:])
+
+
+def test_registered_view_resolves_a_household_draft_without_changing_the_profile(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        profile_id = _register_profile()
+        with bundled_indexed_authority().operation() as authority:
+            before = ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=authority.profile_decode_context()
+            ).load(profile_id)
+            adoption = descendant_relacion_adoption_token(authority=authority).value
+            with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+                assert isinstance(objects, SecureObjectRepository)
+                operands = operation_secure_reference_repository(objects=objects)
+                journal = OperationJournalRepository(storage_root=root)
+                supervisor = OperationSupervisor(
+                    authority_operation=authority,
+                    registry=_registry(),
+                    journal=journal,
+                    event_stream=journal,
+                    leases=OperationLeaseFilesystemRepository(storage_root=root),
+                    operands=operands,
+                    owner_id="1" * 64,
+                    lease_token_factory=lambda: "2" * 64,
+                    clock=lambda: datetime.now(UTC),
+                    lease_duration=timedelta(minutes=6),
+                )
+                request = OperationRequest(
+                    definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
+                    subject_ref=f"profile:{profile_id}",
+                    payload=ProfileViewOperationRequest(
+                        profile_id=profile_id,
+                        page_kind=ProfileViewPageKind.FAMILY_ROWS,
+                        household_draft=ProfileViewHouseholdDraft(
+                            group="renta_family.descendiente",
+                            facts=(ProfileViewHouseholdDraftFact(leaf="relacion", value=adoption),),
+                        ),
+                    ),
+                )
+                created = asyncio.run(supervisor.submit(request, operation_id="b" * 64))
+                terminal = asyncio.run(run_to_settlement(supervisor, created))
+                assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                assert terminal.effect is OperationEffect.NONE
+                assert terminal.terminal_receipt is not None
+                assert terminal.terminal_receipt.result_ref is not None
+                page = asyncio.run(operands.resolve(terminal.terminal_receipt.result_ref, ProfileViewOperationResult))
+                projection = project_profile_view_result(page, terminal.terminal_receipt)
+            after = ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=authority.profile_decode_context()
+            ).load(profile_id)
+    (item,) = projection.model_dump(mode="json")["items"]
+    asks = {entry["leaf"]: entry["ask"] for entry in item["leaf_asks"]}
+    assert item["kind"] == "family_draft" and asks["inscripcion_registro_civil"] == "asked"
+    assert set(item) == {"kind", "group_key", "leaf_asks"}
+    assert (after.record_revision, after.content_digest) == (before.record_revision, before.content_digest)
+
+
 def test_view_access_requires_exact_profile_and_profile_values_disclosure() -> None:
     registry = _registry()
     profile_id = uuid4()
@@ -318,6 +405,7 @@ def test_status_page_ready_record_projects_only_declared_facts(tmp_path: Path) -
             ("iva.voluntary_sii_enrolled", "false"),
             ("iva.hydrocarbon_deposit_advance_payment_deduction_entitled", "false"),
             ("tax_residence.jurisdiction_scope", "common_regime"),
+            ("censo.large_company", "false"),
         )
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):

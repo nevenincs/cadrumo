@@ -12,12 +12,16 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.tax_residence import parse_tax_region
+from ...domain.modelos.codes import ModeloCodeText
 from ..operations.access_resolution import (
     COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
@@ -25,6 +29,7 @@ from ..operations.access_resolution import (
     bind_operation_access_profile,
 )
 from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import served_words_language
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
@@ -48,6 +53,7 @@ from .profile_readiness_gate import (
     load_modelo_work_profile,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
+    require_taxpayer_projection_facts_declared,
 )
 from .work_addressing import (
     ModeloWorkEnsureResult,
@@ -60,10 +66,12 @@ from .work_create_policy import (
     modelo_work_create_refusal_locale_key,
 )
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory, WorkLifecyclePorts
+from .work_lifecycle_refusal_failures import ceded_modelo_failure
 from .work_profile import ModeloWorkProfile
 
 MODELO_WORK_CREATE_OPERATION_DEFINITION_ID = "modelo.work.create"
 MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE = "REFUSED_MODELO_WORK_CREATE_APPLICABILITY"
+_NOT_APPLICABLE_WORDS_LOCALE_KEY = "application.modelo.errors.work_create_not_applicable"
 
 
 class ModeloWorkCreateRequest(BaseModel):
@@ -79,10 +87,10 @@ class ModeloWorkCreateRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     period: PublicPeriod
     revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None = None
-    name: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    name: Annotated[str, Field(min_length=1, max_length=256)] | None = None
     actor: Annotated[str, Field(min_length=1, max_length=128)]
     causante_ccaa: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     allow_not_applicable: bool = False
@@ -96,9 +104,9 @@ class ModeloWorkCreateSuccess(BaseModel):
     kind: Literal["success"] = "success"
     unit: ModeloWorkMetadataSnapshot
     reused: bool
-    name_applied: Annotated[str, Field(min_length=1, max_length=200)] | None
+    name_applied: Annotated[str, Field(min_length=1, max_length=256)] | None
     applicability_guard_bypassed: bool
-    advisory_keys: tuple[Annotated[str, Field(min_length=1, max_length=160)], ...]
+    advisory_keys: tuple[Annotated[str, Field(min_length=1, max_length=256)], ...]
 
     @model_validator(mode="after")
     def _coherent_name(self) -> Self:
@@ -108,13 +116,38 @@ class ModeloWorkCreateSuccess(BaseModel):
 
 
 class ModeloWorkCreateRefusal(BaseModel):
-    """Only the canonical applicability reason crosses the refusal detail door."""
+    """Only the canonical applicability reason, and the words that say it, cross the refusal detail door.
+
+    ``refusal_words`` tell the filer why no declaration was created, in
+    ``refusal_words_language``, the language the worker's catalogue renders,
+    so a frontend shows them and words none of its own. The refusal names no
+    next step: whether a modelo applies is the AEAT's rule, read from the
+    profile, not a choice the filer makes here.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["refused"] = "refused"
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")]
+    modelo: ModeloCodeText
     reason: Annotated[str, Field(min_length=1, max_length=2048)]
+    refusal_words: Annotated[str, Field(min_length=1, max_length=4096)]
+    refusal_words_language: OutputLanguage
+
+
+def _work_create_refusal(modelo: str, reason: str) -> ModeloWorkCreateRefusal:
+    """The applicability refusal of ``modelo``, worded in the language the worker's catalogue renders."""
+    language = served_words_language()
+    return ModeloWorkCreateRefusal(
+        modelo=modelo,
+        reason=reason,
+        refusal_words=tr(_NOT_APPLICABLE_WORDS_LOCALE_KEY, locale=language.value, modelo=modelo, reason=reason),
+        refusal_words_language=language,
+    )
+
+
+def modelo_work_create_effect(*, reused: bool, name_applied: str | None) -> OperationEffect:
+    """Creating a unit, or renaming a reused one, writes; reusing it unchanged does not."""
+    return OperationEffect.UPDATED if not reused or name_applied is not None else OperationEffect.NONE
 
 
 def _require_outcome_for_profile_period(
@@ -204,9 +237,7 @@ def project_modelo_work_create_result(result: BaseModel, receipt: OperationTermi
             definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
             subject_ref=subject_ref,
             condition=OperationTerminalCondition.SUCCEEDED,
-            effect=OperationEffect.UPDATED
-            if not outcome.reused or outcome.name_applied is not None
-            else OperationEffect.NONE,
+            effect=modelo_work_create_effect(reused=outcome.reused, name_applied=outcome.name_applied),
             message="work create success has an incompatible terminal receipt",
         )
     return ModeloWorkCreateProjection(profile_id=private.profile_id, period=private.period, outcome=outcome)
@@ -251,7 +282,11 @@ class ModeloWorkCreateExecutor:
         ]:
             locale_key = modelo_work_create_refusal_locale_key(payload.modelo)
             if locale_key is not None:
-                raise WorkUnitMutationRefusedError(translated_message=locale_key, context={"modelo": payload.modelo})
+                raise WorkUnitMutationRefusedError(
+                    translated_message=locale_key,
+                    context={"modelo": payload.modelo},
+                    precondition_failure=ceded_modelo_failure(payload.modelo),
+                )
             ports = _bound_ports(self._factory, profile_id)
             profile = load_modelo_work_profile(
                 bucket_id=profile_id, profile_decode_context=operation.profile_decode_context()
@@ -259,8 +294,16 @@ class ModeloWorkCreateExecutor:
             if profile is None or profile.record.profile_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             guard_active_profile_foral_ccaa(profile.record)
+            require_taxpayer_projection_facts_declared(
+                record=profile.record,
+                modelo=payload.modelo,
+                filing_year=period.filing_year,
+                period=period,
+                operation=operation,
+            )
             applicability = modelo_work_create_applicability_refusal(
                 payload.modelo,
+                filing_year=period.filing_year,
                 allow_not_applicable=payload.allow_not_applicable,
                 record=profile.record,
                 operation=operation,
@@ -269,7 +312,7 @@ class ModeloWorkCreateExecutor:
                 return (
                     ports,
                     profile,
-                    ModeloWorkCreateRefusal(modelo=applicability.modelo, reason=applicability.reason),
+                    _work_create_refusal(applicability.modelo, applicability.reason),
                     None,
                     (),
                 )
@@ -308,7 +351,7 @@ class ModeloWorkCreateExecutor:
                     filing_year=period.filing_year,
                     operation=operation,
                 )
-                if payload.modelo == "100"
+                if payload.modelo == form_for_role("renta.annual")
                 else ()
             )
             return ports, profile, None, causante, advisory_keys
@@ -346,9 +389,7 @@ class ModeloWorkCreateExecutor:
 
                 ensured = await asyncio.to_thread(ensure)
                 await context.events.effect(
-                    OperationEffect.UPDATED
-                    if not ensured.reused or ensured.name_applied is not None
-                    else OperationEffect.NONE
+                    modelo_work_create_effect(reused=ensured.reused, name_applied=ensured.name_applied)
                 )
                 unit = ensured.work_unit
                 if unit.bucket_id != profile_id or unit.period != period:

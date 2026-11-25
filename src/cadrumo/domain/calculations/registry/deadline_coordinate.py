@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from ....core.modelo import Modelo
 from ....core.period import Period, registry_period_kind
 from ....core.result_disposition import ResultDisposition
+from .form_codes import form_for_role
 from .irnr_tipo_renta import m210_tipo_renta_code_projection
 from .schema_deadlines import DeadlineWindowDefinition
 
@@ -68,7 +68,7 @@ def deadline_window_semantic_coordinates(
     tipos: tuple[str | None, ...]
     if window.tipo_renta_scope is not None:
         tipos = tuple(sorted(window.tipo_renta_scope))
-    elif modelo == Modelo("210"):
+    elif modelo == form_for_role("irnr.income"):
         tipos = (None, *tuple(sorted(m210_tipo_renta_code_projection())))
     else:
         tipos = (None,)

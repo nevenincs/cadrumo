@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-095` · **Topic:** [Ledger, invoices, evidence, and registers](../topics/ledger-invoices-and-registers.md)
+**Topic:** [Ledger, invoices, evidence, and registers](../topics/ledger-invoices-and-registers.md)
 
 <!-- preserved:article -->
 **Scope:** 13 files under `src/cadrumo/application/prorrata_register`, totaling 3,438 lines, 132,465 bytes, and 28,407 measured `o200k_base` proxy tokens. All six bounded-reader pages and assigned ranges were read. Static inspection only; no application execution or tests were run. References to LIVA rules below describe the implementation’s declared workflow and are not independent legal validation.

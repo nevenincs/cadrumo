@@ -297,7 +297,7 @@ def _anchored_current_capsule_commits_posix(
             if candidate_fd is None:
                 continue
             try:
-                profile_id = _canonical_profile_id(candidate_name)
+                profile_id = canonical_profile_id(candidate_name)
                 if profile_id is None:
                     continue
                 marker_path = capsules_root / candidate_name / commit_filename
@@ -451,7 +451,7 @@ def _windows_candidate_commit(
             # The candidate itself cannot be anchored, so it may not be
             # treated as a capsule and no child is inspected.
             return None
-        profile_id = _canonical_profile_id(entry.name)
+        profile_id = canonical_profile_id(entry.name)
         if profile_id is None:
             return None
         label_path, label_anchored = _anchor_windows_label(
@@ -544,7 +544,7 @@ def _read_windows_label(
     return read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
 
 
-def _canonical_profile_id(candidate_name: str) -> UUID | None:
+def canonical_profile_id(candidate_name: str) -> UUID | None:
     """Recognize only a name the custody path builder itself could have written.
 
     Recognition is expressed as the exact inverse of

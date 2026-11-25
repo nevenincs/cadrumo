@@ -9,16 +9,22 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..adapters.inbound.borrador.parser import parse_borrador
 from ..adapters.inbound.borrador.schema import BorradorParseMode
+from ..application.live.borrador_100_comparison import Borrador100ComparisonSources
+from ..application.live.borrador_100_comparison_operation import Borrador100ComparisonPorts
 from ..application.live.borrador_100_operation_ports import (
     Borrador100ImportObservation,
     Borrador100OperationPorts,
     Borrador100PrintedValue,
 )
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
+from ..application.user_profile.profile_record_repository import ProfileRecordRepository
+from ..application.user_profile.projections import record_to_path_values
+from ..application.workbench_generation_calendar import declared_tax_id
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
-from .adapter_composition import build_borrador_100_snapshot_repository
+from ..domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from .adapter_composition_ports import build_borrador_100_snapshot_repository
 
 
 class _CanonicalBorradorParser:
@@ -29,11 +35,13 @@ class _CanonicalBorradorParser:
         pdf_bytes: bytes,
         *,
         filing_year: int,
+        supported_filing_years: TemporalSupportEnvelope,
         extraction_profile: ExtractionProfileDefinition,
     ) -> Borrador100ImportObservation:
         observation = parse_borrador(
             pdf_bytes,
-            año_override=filing_year,
+            filing_year=filing_year,
+            supported_filing_years=supported_filing_years,
             extraction_profile=extraction_profile,
             parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )
@@ -43,6 +51,7 @@ class _CanonicalBorradorParser:
             extraction_coverage=observation.extraction_coverage,
             artefact_kind=observation.artefact_kind.value,
             source_pdf_sha256=observation.source_pdf_sha256,
+            tax_id=observation.tax_id,
             values=tuple(
                 Borrador100PrintedValue(
                     casilla_id=row.casilla_id,
@@ -69,4 +78,35 @@ def build_borrador_100_operation_ports(
         operation=operation,
         repository=build_borrador_100_snapshot_repository(bucket_id=str(profile_id)),
         parser=_CanonicalBorradorParser(),
+        profile_tax_id=lambda: _profile_tax_id(profile_id, operation),
     )
+
+
+def build_borrador_100_comparison_ports(
+    *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> Borrador100ComparisonPorts:
+    """Bind the profile's borrador store and calculation repositories inside the admitted worker."""
+    from .operation_composition_inputs import build_modelo_workbench_read_ports
+
+    bucket_id = str(profile_id)
+    if require_active_bucket_id() != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    workbench = build_modelo_workbench_read_ports(bucket_id, operation)
+    return Borrador100ComparisonPorts(
+        profile_id=profile_id,
+        operation=operation,
+        borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
+        sources=Borrador100ComparisonSources(
+            bucket_id=bucket_id,
+            work_units=workbench.work_units,
+            calculations=workbench.calculations,
+            verifications=workbench.verifications,
+        ),
+    )
+
+
+def _profile_tax_id(profile_id: UUID, operation: PinnedAuthorityOperation) -> str | None:
+    record = ProfileRecordRepository.for_current_session(
+        profile_id, profile_decode_context=operation.profile_decode_context()
+    ).load(profile_id)
+    return declared_tax_id(record_to_path_values(record))

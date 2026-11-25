@@ -7,13 +7,15 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import cast
 
-from cadrumo_client.commands._structure_validation import graph_by_key as _graph_by_key
-from cadrumo_client.commands._structure_validation import graph_by_schema_identity as _graph_by_schema_identity
-from cadrumo_client.commands._structure_validation import graph_nodes as _graph_nodes
-from cadrumo_client.commands._structure_validation import validate_graph as _validate_graph
 from cadrumo_client.commands.parameters import OptionSpec, ParameterSpec
 from cadrumo_client.commands.shared_contracts import DeferredTarget, SchemaState
 from cadrumo_client.commands.spec import CommandSpec, CommandSpecNode
+from cadrumo_client.commands.structure_validation import (
+    graph_by_key,
+    graph_by_schema_identity,
+    graph_nodes,
+    validate_graph,
+)
 from cadrumo_client.commands.target import TargetResolver
 
 
@@ -62,7 +64,7 @@ class CommandSpecGraph:
 
     def __post_init__(self) -> None:
         """Validate the declared specs, or raise; families validate as they load."""
-        _validate_graph(self.declared)
+        validate_graph(self.declared)
 
     def _loaded_specs(self) -> tuple[CommandSpec, ...]:
         rows = list(self.declared)
@@ -82,7 +84,7 @@ class CommandSpecGraph:
         rows = list(self.declared)
         for index in range(len(self.families)):
             rows.extend(candidate.get(index, ()))
-        _validate_graph(tuple(rows))
+        validate_graph(tuple(rows))
         self._loaded.update(loaded)
 
     def _loadable_mounts(self) -> tuple[str, ...]:
@@ -168,11 +170,11 @@ class CommandSpecGraph:
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
         """Return every command spec indexed by its key."""
-        return _graph_by_key(self.specs)
+        return graph_by_key(self.specs)
 
     def nodes(self) -> tuple[CommandSpecNode, ...]:
         """Return every command spec paired with its derived operator path."""
-        return _graph_nodes(self.specs, node_type=CommandSpecNode)
+        return graph_nodes(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
         """Resolve one complete operator path, loading only the families along it."""
@@ -220,7 +222,7 @@ class CommandSpecGraph:
 
     def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
         """Return the unique executable result-schema identity index."""
-        return _graph_by_schema_identity(self.specs)
+        return graph_by_schema_identity(self.specs)
 
 
 def resolve_command_target(graph: CommandSpecGraph, command_key: str, /) -> CommandSpecNode:

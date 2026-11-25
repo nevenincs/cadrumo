@@ -82,6 +82,10 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
+#: Net turnover (00255) every filed prior return states; the current rate reads it.
+_M200_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_M200_TURNOVER")
+_PRIOR_TURNOVER = Decimal("500000")
+
 #: Distinct prior-year stock per source year + condition-state so a cross-year
 #: contamination (or a condition-state channel swap) surfaces.
 _STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
@@ -89,8 +93,11 @@ _STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
     2025: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
 }
 
-_M200_PAGOS_RELATION = "modelo-200-pagos-fraccionados-anuales"
-_M200_PAGOS_RELATION_40_2 = "modelo-200-pagos-fraccionados-anuales-40-2"
+_M200_PAGOS_RELATIONS = tuple(
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
+)
 
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
     "modelo-200-profile-new-entity-flag": Decimal("0"),
@@ -118,6 +125,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
                     casilla_values={
                         _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
                         _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                        _M200_TURNOVER: _PRIOR_TURNOVER,
                     },
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
@@ -136,6 +144,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
                         casilla_values={
                             _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
                             _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                            _M200_TURNOVER: _PRIOR_TURNOVER,
                         },
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),
@@ -195,8 +204,8 @@ def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepo
             for item in resolve_relations_from_local_store(snapshot, operation=operation, repository=obs_repo).values
             if item.value is not None
         }
-    resolved.setdefault(_M200_PAGOS_RELATION, Decimal("0"))
-    resolved.setdefault(_M200_PAGOS_RELATION_40_2, Decimal("0"))
+    for pagos_relation in _M200_PAGOS_RELATIONS:
+        resolved.setdefault(pagos_relation, Decimal("0"))
     return resolved
 
 

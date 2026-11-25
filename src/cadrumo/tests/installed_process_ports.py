@@ -11,8 +11,6 @@ from typing import Protocol
 class InstalledProcessWorld(Protocol):
     """Repository orchestration supplied explicitly to installed-process assertions."""
 
-    def environment(
-        self, *, storage_root: Path, authority_root: Path, runtime_socket_dir: Path | None = None
-    ) -> dict[str, str]: ...
+    def environment(self, *, storage_root: Path, authority_root: Path) -> dict[str, str]: ...
 
     def runtime(self, cli: Path, environment: Mapping[str, str], log: Path) -> AbstractContextManager[None]: ...

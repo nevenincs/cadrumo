@@ -11,7 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .....application.diagnostic_models import (
     ConfigRepairReport,
@@ -34,6 +34,7 @@ from .....application.overview.next_actions import declare_next_action
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.log_records import delivered_text
 from ..errors import StorageValidationError
 from ..master_key.active_session import NoActiveBucketSessionError, activate_session, has_active_bucket_session
 from ..master_key.bucket_session import BucketSession
@@ -101,9 +102,8 @@ def _diagnostics_ports() -> DiagnosticsPorts:
     )
 
 
-#: A declared continuation this module never expects to see rendered. It was a
-#: bare sentinel string until ``next_action`` became a typed record; the action
-#: id now carries the same "must not appear in the output" identity.
+#: A declared continuation this module never expects to see rendered. The action
+#: id carries the same "must not appear in the output" identity.
 _UNRENDERED_NEXT_ACTION = declare_next_action("operator.profile.descendiente")
 
 
@@ -112,7 +112,7 @@ def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
     """Bind diagnostics tests to an isolated storage root by default."""
 
     storage_root = tmp_path / "diagnostics-storage"
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -289,13 +289,7 @@ def test_profile_readiness_reports_no_profile_configured_when_genuinely_absent()
 
 
 def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tmp_path: Path) -> None:
-    """A locked profile must not fall through to the "no profile configured" row.
-
-    Before the fix: neither status set diagnostics keys off included
-    ``profile_locked``, so a real, intact, merely-not-logged-in profile fell
-    through to the same summary a cold environment with no profile at all
-    gets -- true of the second, false of the first.
-    """
+    """A locked profile must not fall through to the "no profile configured" row."""
     from .....core.i18n.render import tr
 
     with isolated_runtime_profile(tmp_path=tmp_path), suspend_active_session():
@@ -340,9 +334,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 ) -> None:
     """A namespace populated under master key K1 must be reported as unreadable under K2.
 
-    Guards the divergence the audit flagged: ``secure_state.load`` used
-    to report ``ok`` while iterating read paths crashed. The new
-    ``secure_objects.integrity`` row must surface non-zero unreadable
+    The ``secure_objects.integrity`` row must surface non-zero unreadable
     counts whenever rows from a prior keychain generation persist.
     """
     db_path = tmp_path / "rotated.db"
@@ -443,17 +435,17 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
             assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
         finally:
             dispose_engine(settings)
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "StorageValidationError" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
-    assert "no active bucket session" not in caplog.text
+    assert "secure objects engine unreachable for repair probe" in delivered_text(caplog)
+    assert "StorageSessionUnavailableError" in delivered_text(caplog)
+    assert "errors.storage.runtime.not_ready" in delivered_text(caplog)
+    assert "no active bucket session" not in delivered_text(caplog)
 
 
 def test_secure_object_unreadable_total_logs_route_session_mismatch(
@@ -465,7 +457,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
         activate_session(bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)
@@ -474,10 +466,10 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
         finally:
             dispose_engine(settings)
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "StorageValidationError" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
-    assert "route does not match the active bucket session" not in caplog.text
+    assert "secure objects engine unreachable for repair probe" in delivered_text(caplog)
+    assert "StorageValidationError" in delivered_text(caplog)
+    assert "errors.storage.runtime.not_ready" in delivered_text(caplog)
+    assert "route does not match the active bucket session" not in delivered_text(caplog)
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path) -> None:
@@ -489,7 +481,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
         from .....application.auth.actions import update_auth
@@ -646,8 +638,8 @@ def test_the_preview_reports_nothing_without_a_session_rather_than_a_false_corru
 
     Every row is undecryptable without the bucket key, so a probe that ran
     keyless would report a sound bucket as entirely corrupt.  The repair path
-    used to open a shared-master session of its own to avoid that; it now opens
-    none, and the substrate refusal underneath leaves the report empty.
+    opens no session of its own, and the substrate refusal underneath leaves the
+    report empty.
 
     The served read is what gives the sessionless one meaning: it proves the row
     is there and decrypts cleanly, so an empty sessionless report is the missing
@@ -825,9 +817,7 @@ def test_diagnostic_check_defaults_to_operator_audience_and_no_findings() -> Non
 def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     """``profile.readiness`` warn rows must name the missing keys, not a counter.
 
-    Reproduces cluster F / M14: a bare ``N/M`` counter or a one-word
-    ``warn`` verdict told the operator nothing actionable. The fixed row
-    carries one :class:`DiagnosticFinding` per unset required key and one
+    The row carries one :class:`DiagnosticFinding` per unset required key and one
     canonical profile-editor action on the parent check.
     """
 
@@ -857,16 +847,14 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     assert verdict.action is not None
     assert verdict.action.action_id == "operator.profile.edit"
     assert verdict.argument_bindings[0].value == "demo"
-    # The bare counter must no longer be the only signal: the row carries
-    # one finding per cause.
+    # The row carries one finding per cause rather than a bare counter.
     assert len(check.findings) == 3
 
 
 def test_missing_log_parent_has_no_false_read_only_recovery_action(tmp_path: Path) -> None:
     """A log-tail command cannot repair a missing log directory."""
 
-    missing_log_dir = tmp_path / "not-created" / "logs"
-    with override_settings(cadrumo_log_dir=missing_log_dir):
+    with override_settings(cadrumo_storage_root=tmp_path / "not-created"):
         report = build_config_repair_report(ports=_diagnostics_ports())
     check = next(item for item in report.checks if item.name == "logging.file")
     assert check.status == "warn"
@@ -915,18 +903,16 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
     assert "identity.tax_id" in rendered
     # The status report's declared continuation must not leak into the
     # application-level rendering: projecting it is the entrypoint's job. The
-    # action id is the greppable identity now that the field is a typed record
-    # rather than the free string this once pinned.
+    # action id is the greppable identity.
     assert _UNRENDERED_NEXT_ACTION.action.action_id not in rendered
 
 
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     """Internal application defects must read differently from operator gaps.
 
-    A persona saw an internal repair ``fail`` and believed their own profile
-    was invalid. The renderer tags an
-    ``audience='internal'`` row so a taxpayer is not alarmed into
-    thinking they forgot a field; operator-fixable rows carry no tag.
+    The renderer tags an ``audience='internal'`` row so a taxpayer is not
+    alarmed into thinking they forgot a field; operator-fixable rows carry no
+    tag.
     """
 
     from .....core.i18n.render import tr
@@ -1051,3 +1037,109 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert is_missing_active_bucket_session_failure(first, ports=_diagnostics_ports()) is False
+
+
+class _ScriptedIntegrityRepository:
+    """Storage-port double scripting only the integrity projection inputs."""
+
+    def __init__(
+        self,
+        *,
+        namespaces: tuple[str, ...] | None,
+        counts: dict[str, tuple[int, int]],
+    ) -> None:
+        self._namespaces = namespaces
+        self._counts = counts
+
+    def list_namespaces(self) -> tuple[str, ...]:
+        if self._namespaces is None:
+            raise OSError("private store path")
+        return self._namespaces
+
+    def probe_namespace_integrity(self, namespace: str) -> DiagnosticSecureObjectNamespace:
+        if namespace not in self._counts:
+            raise OSError("private probe detail")
+        readable, unreadable = self._counts[namespace]
+        return DiagnosticSecureObjectNamespace(namespace=namespace, readable=readable, unreadable=unreadable)
+
+    def quarantine_unreadable_rows(self) -> tuple[DiagnosticSecureObjectNamespace, ...]:
+        return ()
+
+
+def _integrity_row(
+    tmp_path: Path,
+    *,
+    namespaces: tuple[str, ...] | None,
+    counts: dict[str, tuple[int, int]],
+):
+    ports = DiagnosticsPorts(
+        secure_object_repository=_ScriptedIntegrityRepository(namespaces=namespaces, counts=counts),
+        session_failure_classifier=_diagnostics_ports().session_failure_classifier,
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        report = build_config_repair_report(ports=ports)
+    return report, next(c for c in report.checks if c.name == "secure_objects.integrity")
+
+
+def test_secure_objects_integrity_unreachable_store_is_not_reported_healthy(tmp_path: Path) -> None:
+    """A store that cannot be listed is a warn row with a door, never empty-and-ok."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(tmp_path, namespaces=None, counts={})
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_unavailable")
+    assert row.summary != tr("cli.diagnostics.summary.secure_objects_empty")
+    assert row.detail is None
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.repair"
+    assert "private" not in row.summary
+    assert report.secure_objects.unreadable_total == 0
+
+
+def test_secure_objects_integrity_failed_probe_is_not_an_unreadable_object(tmp_path: Path) -> None:
+    """A namespace whose probe raised is surfaced as not checked, with no quarantine verdict."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(tmp_path, namespaces=("alpha", "beta"), counts={"alpha": (3, 0)})
+    assert report.secure_objects.unreadable_total == 0
+    assert report.secure_objects.readable_total == 3
+    assert [item.namespace for item in report.secure_objects.namespaces] == ["alpha"]
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_probe_failed", failed=1)
+    assert row.detail == "beta"
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.repair"
+    assert "private" not in (row.detail or "")
+
+
+def test_secure_objects_integrity_empty_store_stays_ok(tmp_path: Path) -> None:
+    """A store that lists no namespaces is genuinely empty."""
+    from .....core.i18n.render import tr
+
+    _report, row = _integrity_row(tmp_path, namespaces=(), counts={})
+    assert row.status == "ok"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_empty")
+
+
+def test_secure_objects_integrity_real_unreadable_keeps_quarantine_row(tmp_path: Path) -> None:
+    """Unreadable rows keep the quarantine verdict; a failed probe is only added to the detail."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(
+        tmp_path,
+        namespaces=("alpha", "beta"),
+        counts={"alpha": (1, 2)},
+    )
+    assert report.secure_objects.unreadable_total == 2
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_unreadable", unreadable=2, readable=1)
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.secure_objects.quarantine"
+    assert (row.detail or "").startswith("alpha (2/3)")
+    assert "beta" in (row.detail or "")
+
+    _clean, plain = _integrity_row(tmp_path / "plain", namespaces=("alpha",), counts={"alpha": (1, 2)})
+    assert plain.detail == "alpha (2/3)"

@@ -51,6 +51,7 @@ from uuid import UUID, uuid4
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -68,27 +69,28 @@ from ...application.modelo.amendment_context_operation import (
     ModeloWorkAmendmentContextRequest,
 )
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.edit_models import ModeloEditCorrectionAddressV1, ModeloEditParseRefusalV1
+from ...application.modelo.edit_parsing import validate_modelo_edit_value
+from ...application.modelo.edit_value_grammar import ModeloEditValueGrammarV1
 from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,
 )
-from ...application.operations.public_scalar import PublicDecimal
+from ...application.modelo.work_amend_correction import amendable_casilla_rows, filed_casilla_values
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n.render import tr
+from ...core.i18n.render import output_language, tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
-from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-)
-from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
-from ._modelo_rendering import filing_record_lines
-from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
+from .common import emit_envelope, no_active_profile_refusal
 from .modelo_amend_wizard_results import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
+from .modelo_cli_support import bad_parameter_from_error, resolve_actor_option
+from .modelo_rendering import filing_record_lines
 from .operation_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit
 
@@ -105,7 +107,7 @@ class _AmendWizardAnswers(BaseModel):
 
 
 _COPY_NAMESPACE = "modelo-amend"
-_ACTIVE_RUNS: dict[str, dict[str, str]] = {}
+ACTIVE_RUNS: dict[str, dict[str, str]] = {}
 (
     "Per-run registry-derived copy tables, keyed by an opaque run token.\n\n"
     "Each wizard invocation owns one table for its whole lifetime — both the\n"
@@ -120,9 +122,9 @@ _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
     "get their turn.\n"
 )
 _SELECTION_PAGE_ID = "selection"
-_KIND_PAGE_ID = "amendment-kind"
-_MOTIVE_PAGE_ID = "m303-rectificativa-motive"
-_REASON_PAGE_ID = "reason"
+KIND_PAGE_ID = "amendment-kind"
+MOTIVE_PAGE_ID = "m303-rectificativa-motive"
+REASON_PAGE_ID = "reason"
 
 
 def _resolve_amend_wizard_copy(ref: str) -> str | None:
@@ -130,7 +132,7 @@ def _resolve_amend_wizard_copy(ref: str) -> str | None:
     if not ref.startswith(prefix):
         return None
     run_token, _, _ = ref[len(prefix) :].partition(":")
-    table = _ACTIVE_RUNS.get(run_token)
+    table = ACTIVE_RUNS.get(run_token)
     return table.get(ref) if table is not None else None
 
 
@@ -141,7 +143,8 @@ def _copy_ref(run_token: str, slot: str) -> str:
     return f"{_COPY_NAMESPACE}:{run_token}:{slot}"
 
 
-def _value_page_id(casilla_id: str) -> str:
+def value_page_id(casilla_id: str) -> str:
+    """Return the amendment wizard page id for a casilla value."""
     return f"value:{casilla_id}"
 
 
@@ -155,6 +158,22 @@ class _AmendWizardTarget:
     period: str | None
     revision: str | None
     bucket_id: str | None
+
+
+def _require_current_filing(unit: WorkUnit) -> str:
+    if unit.current_filing_record_id is None:
+        raise bad_parameter_from_error(
+            ModeloRecordNotFoundError(
+                translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
+                context={"work_unit_id": unit.work_unit_id},
+            )
+        )
+    return unit.current_filing_record_id
+
+
+def _require_corrections(rows: tuple[ModeloCasillaRow, ...]) -> None:
+    if not rows:
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_no_corrections"))
 
 
 def run_modelo_work_amend_wizard(
@@ -174,20 +193,18 @@ def run_modelo_work_amend_wizard(
         revision=target.revision,
         bucket_id=target.bucket_id,
     )
-    if unit.current_filing_record_id is None:
-        raise bad_parameter_from_error(
-            ModeloRecordNotFoundError(
-                translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
-                context={"work_unit_id": unit.work_unit_id},
-            )
-        )
+    filing_record_id = _require_current_filing(unit)
     profile_id = resolve_active_bucket_id()
     if profile_id is None:
         raise no_active_profile_refusal()
     client = require_profile_client(ctx, expected_profile_id=UUID(profile_id))
     context_projection = read_modelo_work_amendment_context(
         client,
-        ModeloWorkAmendmentContextRequest(profile_id=client.profile_id, filing_record_id=unit.current_filing_record_id),
+        ModeloWorkAmendmentContextRequest(
+            profile_id=client.profile_id,
+            filing_record_id=filing_record_id,
+            output_language=OutputLanguage(output_language()),
+        ),
     ).projection
     if not isinstance(context_projection, ModeloWorkAmendmentContextProjection) or _amendment_context_scope_invalid(
         context_projection, unit
@@ -203,40 +220,38 @@ def run_modelo_work_amend_wizard(
                 "external_evidence_present": False,
             },
             precondition_failure=amendment_evidence_missing_precondition(
+                subject_leaf_key="modelo.work.amend_wizard",
                 work_unit_id=unit.work_unit_id,
                 filing_record_id=baseline.filing_record_id,
             ),
         ) from None
-    baseline_values = _baseline_values(context_projection)
-    amendable = _amendable_rows(context_projection.casilla_rows, baseline_values)
-    if not amendable:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.amend_wizard_no_corrections",
-            )
-        )
+    correction = context_projection.correction
+    if correction is None:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    try:
+        baseline_values = filed_casilla_values(context_projection.calculation)
+    except ValueError:
+        raise RefusalError(RefusalCode.INVALID_FRAME) from None
+    amendable = amendable_casilla_rows(context_projection.casilla_rows, baseline_values)
+    grammars = {row.casilla_id: row.grammar for row in correction.rows}
+    _require_corrections(amendable)
     run_token = uuid4().hex
-    _ACTIVE_RUNS[run_token] = {}
+    ACTIVE_RUNS[run_token] = {}
     try:
         selected = _prompt_selection(
             amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
         )
-        if not selected:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.amend_wizard_no_corrections",
-                )
-            )
+        _require_corrections(selected)
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
             selected=selected,
             baseline_values=baseline_values,
-            modelo=str(baseline.modelo),
             permitted_amendment_kinds=context_projection.permitted_amendment_kinds,
             m303_rectificativa_motive_applicable=context_projection.m303_rectificativa_motive_applicable,
+            grammars=grammars,
             run_token=run_token,
         )
     finally:
-        _ACTIVE_RUNS.pop(run_token, None)
+        ACTIVE_RUNS.pop(run_token, None)
     request = ModeloWorkAmendRequest(
         baseline=ModeloWorkAmendBaseline(from_filing_record_id=baseline.filing_record_id),
         amendment_kind=amendment_kind,
@@ -261,29 +276,6 @@ def run_modelo_work_amend_wizard(
     )
 
 
-def _baseline_values(context: ModeloWorkAmendmentContextProjection) -> dict[str, Decimal]:
-    """Read exact persisted decimal values without reconstructing a revision."""
-    values: dict[str, Decimal] = {}
-    for fact in context.calculation.casilla_values:
-        if not isinstance(fact.value, PublicDecimal):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        values[fact.key] = Decimal(fact.value.decimal)
-    return values
-
-
-def _amendable_rows(
-    casilla_rows: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal]
-) -> tuple[ModeloCasillaRow, ...]:
-    """Return the registry rows that carry a baseline value, in casilla-number order.
-
-    These are exactly the casillas the operator may amend: every casilla the
-    attested baseline actually declares a value for. The order is stable
-    (casilla number) so the CHECKBOX choices and the follow-up value pages
-    read top-to-bottom like the printed return.
-    """
-    return tuple(row for row in sorted(casilla_rows, key=lambda r: r.number) if row.casilla_id in baseline_values)
-
-
 def _run_flow(definition: FlowDefinition) -> FlowState:
     """Drive one CLI flow through the frontend-neutral line projection.
 
@@ -306,18 +298,18 @@ def _prompt_selection(
     ticked) reads back as an empty tuple, exactly as the one-shot prompt's
     empty answer did — the caller turns that into the no-corrections refusal.
     """
-    definition = _selection_definition(
+    definition = modelo_amend_wizard_commands_selection_definition(
         amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
     )
     state = _run_flow(definition)
-    return _selected_rows(amendable=amendable, unit=unit, state=state)
+    return selected_rows(amendable=amendable, unit=unit, state=state)
 
 
-def _selection_definition(
+def modelo_amend_wizard_commands_selection_definition(
     *, amendable: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal], unit: WorkUnit, run_token: str
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
-    table = _ACTIVE_RUNS[run_token]
+    table = ACTIVE_RUNS[run_token]
     summary_lines = "\n".join(f"  {row.number}\t{row.label}\t{baseline_values[row.casilla_id]}" for row in amendable)
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
@@ -355,7 +347,7 @@ def _selection_definition(
     )
 
 
-def _selected_rows(
+def selected_rows(
     *, amendable: tuple[ModeloCasillaRow, ...], unit: WorkUnit, state: FlowState
 ) -> tuple[ModeloCasillaRow, ...]:
     """Map the CHECKBOX answer back to the selected registry rows, in flow order."""
@@ -379,34 +371,38 @@ def _selected_rows(
     return tuple(selected)
 
 
-def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
+def _wizard_corrected_amount(state: FlowState, casilla_id: str, grammar: ModeloEditValueGrammarV1 | None) -> Decimal:
     """Read one corrected casilla amount back off the flow state.
 
     The DECIMAL widget's shape validation already admitted only a
-    canonical-grammar amount and canonicalised it to ``str(Decimal)``, so this
-    re-read is defence in depth against a widget contract change rather than the
-    boundary itself. It uses the same uncapped grammar the widget applies, so a
-    value the widget accepted can never hard-refuse here — a refusal at the end
-    of a collected flow would be a refusal at the wrong surface.
+    canonical-grammar amount and canonicalised it to ``str(Decimal)``. The
+    amount is then held to the correction grammar every frontend reads a
+    corrected value against, which admits any amount the amendment request's
+    override shape takes, so it refuses only what the amendment would refuse.
     """
-    raw = (state.answers.get(_value_page_id(casilla_id)) or "").strip()
+    raw = (state.answers.get(value_page_id(casilla_id)) or "").strip()
     parsed = try_parse_canonical_decimal(raw)
-    if parsed is None:
+    if parsed is None or grammar is None:
         raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
-    return parsed
+    outcome = validate_modelo_edit_value(
+        parsed, address=ModeloEditCorrectionAddressV1(casilla_id=casilla_id), grammar=grammar, tax_id_format=None
+    )
+    if isinstance(outcome, ModeloEditParseRefusalV1) or not isinstance(outcome.value, Decimal):
+        raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
+    return outcome.value
 
 
 def _prompt_values_kind_reason(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    modelo: str,
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...],
     m303_rectificativa_motive_applicable: bool,
+    grammars: Mapping[str, ModeloEditValueGrammarV1],
     run_token: str,
 ) -> tuple[
     tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
-    CalculationRevisionAmendmentKind,
+    FilingDeclarationKind,
     M303RectificativaMotive | None,
     str,
 ]:
@@ -420,10 +416,9 @@ def _prompt_values_kind_reason(
     finite :class:`~decimal.Decimal`, and the SELECT guarantees the kind is
     one the period permits.
     """
-    definition = _values_kind_reason_definition(
+    definition = values_kind_reason_definition(
         selected=selected,
         baseline_values=baseline_values,
-        modelo=modelo,
         permitted_amendment_kinds=permitted_amendment_kinds,
         m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
         run_token=run_token,
@@ -432,22 +427,23 @@ def _prompt_values_kind_reason(
     corrections: list[tuple[ModeloCasillaRow, Decimal, Decimal]] = []
     for row in selected:
         previous = baseline_values[row.casilla_id]
-        corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
-    amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
-    raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
+        corrections.append(
+            (row, previous, _wizard_corrected_amount(state, row.casilla_id, grammars.get(row.casilla_id)))
+        )
+    amendment_kind = FilingDeclarationKind((state.answers.get(KIND_PAGE_ID) or "").strip())
+    raw_motive = (state.answers.get(MOTIVE_PAGE_ID) or "").strip()
     motive = M303RectificativaMotive(raw_motive) if raw_motive else None
-    reason = (state.answers.get(_REASON_PAGE_ID) or "").strip()
+    reason = (state.answers.get(REASON_PAGE_ID) or "").strip()
     if not reason:
         raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_reason_required"))
     return (tuple(corrections), amendment_kind, motive, reason)
 
 
-def _values_kind_reason_definition(
+def values_kind_reason_definition(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    modelo: str,
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...],
     m303_rectificativa_motive_applicable: bool,
     run_token: str,
 ) -> FlowDefinition:
@@ -456,13 +452,12 @@ def _values_kind_reason_definition(
     The SELECT uses kinds projected under the same worker authority capture
     as the baseline. The amendment writer reasserts the legal guard.
     """
-    table = _ACTIVE_RUNS[run_token]
+    table = ACTIVE_RUNS[run_token]
     pages = _correction_value_pages(
         selected=selected, baseline_values=baseline_values, run_token=run_token, table=table
     )
     pages.append(_amendment_kind_page(permitted_kinds=permitted_amendment_kinds, run_token=run_token, table=table))
     motive_page = _m303_motive_page(
-        modelo=modelo,
         m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
         run_token=run_token,
         table=table,
@@ -493,7 +488,7 @@ def _correction_value_pages(
         help_ref = _value_help_ref(row=row, run_token=run_token, table=table)
         pages.append(
             FlowPage(
-                id=_value_page_id(row.casilla_id),
+                id=value_page_id(row.casilla_id),
                 widget=FlowWidgetKind.DECIMAL,
                 prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=prompt_ref),
                 help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref)
@@ -515,7 +510,7 @@ def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, s
 
 
 def _amendment_kind_page(
-    *, permitted_kinds: tuple[CalculationRevisionAmendmentKind, ...], run_token: str, table: dict[str, str]
+    *, permitted_kinds: tuple[FilingDeclarationKind, ...], run_token: str, table: dict[str, str]
 ) -> FlowPage:
     kind_choices = tuple(
         _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds
@@ -530,7 +525,7 @@ def _amendment_kind_page(
         "cli.app.modelo.work.amend_wizard_kind_help",
     )
     return FlowPage(
-        id=_KIND_PAGE_ID,
+        id=KIND_PAGE_ID,
         widget=FlowWidgetKind.SELECT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_prompt_ref),
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_help_ref),
@@ -540,18 +535,16 @@ def _amendment_kind_page(
     )
 
 
-def _amendment_kind_choice(
-    *, kind: CalculationRevisionAmendmentKind, run_token: str, table: dict[str, str]
-) -> FlowChoice:
+def _amendment_kind_choice(*, kind: FilingDeclarationKind, run_token: str, table: dict[str, str]) -> FlowChoice:
     kind_label_ref = _copy_ref(run_token, f"kind:choice:{kind.value}")
     table[kind_label_ref] = kind.value
     return FlowChoice(value=kind.value, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_label_ref))
 
 
 def _m303_motive_page(
-    *, modelo: str, m303_rectificativa_motive_applicable: bool, run_token: str, table: dict[str, str]
+    *, m303_rectificativa_motive_applicable: bool, run_token: str, table: dict[str, str]
 ) -> FlowPage | None:
-    if modelo != "303" or not m303_rectificativa_motive_applicable:
+    if not m303_rectificativa_motive_applicable:
         return None
     motive_choices = tuple(
         _m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive
@@ -564,13 +557,13 @@ def _m303_motive_page(
     motive_help_ref = _copy_ref(run_token, "motive:help")
     table[motive_help_ref] = tr("cli.app.modelo.work.m303_rectificativa_motive_help")
     return FlowPage(
-        id=_MOTIVE_PAGE_ID,
+        id=MOTIVE_PAGE_ID,
         widget=FlowWidgetKind.SELECT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_prompt_ref),
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_help_ref),
         choices=motive_choices,
         required=True,
-        visible_when=FlowCondition(page_id=_KIND_PAGE_ID, equals=CalculationRevisionAmendmentKind.RECTIFICATIVA.value),
+        visible_when=FlowCondition(page_id=KIND_PAGE_ID, equals=FilingDeclarationKind.RECTIFICATIVA.value),
         answer_type=str,
     )
 
@@ -587,7 +580,7 @@ def _amendment_reason_page(*, run_token: str, table: dict[str, str]) -> FlowPage
         "cli.app.modelo.work.amend_wizard_reason_prompt",
     )
     return FlowPage(
-        id=_REASON_PAGE_ID,
+        id=REASON_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=reason_prompt_ref),
         required=False,
@@ -614,12 +607,12 @@ def _emit_amend_wizard_result(
     ctx: typer.Context,
     *,
     record: ModeloRecord,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     reason: str,
     corrections: tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
 ) -> None:
-    from ._modelo_rendering import filing_record_payload
+    from .modelo_rendering import filing_record_payload
 
     corrected_payload = tuple(
         (

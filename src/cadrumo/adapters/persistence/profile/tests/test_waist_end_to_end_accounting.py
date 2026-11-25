@@ -79,7 +79,7 @@ _CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 #: hop that broke the chain, and the assertion that fails names it.
 _DOCUMENT_FACTS: dict[str, object] = {
     "invoice_number": "FAC-2024-0007",
-    "supplier_tax_id": "ESB12345674",
+    "supplier_tax_id": "ESB00015016",
     "taxable_base": Decimal("100.00"),
     "recargo_amount": Decimal("5.20"),
     "grand_total": Decimal("126.20"),
@@ -108,7 +108,7 @@ def _amount(key: str) -> Decimal:
 #: with its country prefix; the catalogue stores the bare Spanish NIF. This is a
 #: normalisation, not a loss, and hop 5 asserts it AS a transformation so a
 #: future silent change of form is still caught.
-_STORED_TAX_ID = "B12345674"
+_STORED_TAX_ID = "B00015016"
 
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")

@@ -139,7 +139,7 @@ def test_the_rate_is_chosen_by_the_caller_date_inside_the_supported_span() -> No
     """The caller's date, not the wall clock, chooses the settled legal rate.
 
     The general rate resolves at the supported floor and is carried forward past
-    the horizon; the day before the floor is refused at the support gate.
+    the horizon; a rate stands, so the day before the floor reads its own edition.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = operation.supported_filing_years().date_envelope()
@@ -148,14 +148,12 @@ def test_the_rate_is_chosen_by_the_caller_date_inside_the_supported_span() -> No
     past_horizon = load_retencion_actividades_rates(effective_date=envelope.horizon + timedelta(days=1))
     assert past_horizon.general_rate == load_retencion_actividades_rates(effective_date=envelope.horizon).general_rate
     assert at_floor.general_rate > 0
-    with pytest.raises(TransactionValidationError, match="failed to resolve retención fact"):
-        load_retencion_actividades_rates(effective_date=envelope.floor - timedelta(days=1))
+    assert load_retencion_actividades_rates(effective_date=envelope.floor - timedelta(days=1)).general_rate > 0
 
 
-def test_unsupported_pre_source_date_refuses_instead_of_selecting_a_nearest_rate() -> None:
-    """An uncovered coordinate has no fallback variant."""
-    with pytest.raises(TransactionValidationError, match="failed to resolve retención fact"):
-        load_retencion_actividades_rates(effective_date=date(2007, 3, 31))
+def test_a_date_before_the_first_edition_reads_it() -> None:
+    """RIRPF art. 95 as authored from 1 April 2007 states 15 %; an earlier date carries it back."""
+    assert load_retencion_actividades_rates(effective_date=date(2007, 3, 31)).general_rate == Decimal("0.15")
 
 
 def test_transaction_coordinate_prefers_value_date_and_refuses_when_absent() -> None:

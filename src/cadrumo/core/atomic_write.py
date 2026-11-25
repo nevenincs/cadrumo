@@ -149,7 +149,7 @@ def _file_identity(metadata: os.stat_result) -> tuple[int, int]:
 
 if sys.platform == "win32":
 
-    def _windows_file_rename_info_ex_supported_by_os() -> bool:
+    def windows_file_rename_info_ex_supported_by_os() -> bool:
         """Report whether Windows 10 build 14393 (RS1) or newer is running."""
         version = sys.getwindowsversion()
         return (version.major, version.minor, version.build) >= (
@@ -158,7 +158,7 @@ if sys.platform == "win32":
             _WINDOWS_FILE_RENAME_INFO_EX_MINIMUM_BUILD,
         )
 
-    def _windows_rename_staged_handle(handle: int, target_path: Path) -> None:
+    def windows_rename_staged_handle(handle: int, target_path: Path) -> None:
         """Rename one open staged file handle with Windows POSIX replacement semantics."""
         target_name = os.fsdecode(os.fspath(target_path.absolute())).encode("utf-16-le")
         name_offset = _WindowsFileRenameInfoEx.file_name.offset
@@ -194,12 +194,12 @@ if sys.platform == "win32":
             if not stat.S_ISREG(metadata.st_mode) or _file_identity(metadata) != identity:
                 raise InternalInvariantError("hardened staging file identity changed before publication")
 
-            if not _windows_file_rename_info_ex_supported_by_os():
+            if not windows_file_rename_info_ex_supported_by_os():
                 _replace_staged_path_after_identity_check(staging_path, target_path, identity)
                 return
 
             try:
-                _windows_rename_staged_handle(msvcrt.get_osfhandle(descriptor), target_path)
+                windows_rename_staged_handle(msvcrt.get_osfhandle(descriptor), target_path)
                 return
             except OSError as exc:
                 if getattr(exc, "winerror", None) not in {
@@ -231,7 +231,7 @@ def _replace_staged_path_after_identity_check(
     os.replace(staging_path, target_path)
 
 
-def _hardened_staging_path(path: Path) -> Path:
+def hardened_staging_path(path: Path) -> Path:
     """Return the collision-hardened staging sibling name for ``path``.
 
     The ``{pid}`` segment separates concurrent processes and the
@@ -429,7 +429,7 @@ def _hardened_staged_bytes(
 ) -> Generator[StagedPublication]:
     """Stage ``data`` through its exclusive descriptor and clean it if unpublished."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    staging_path = _hardened_staging_path(path)
+    staging_path = hardened_staging_path(path)
     descriptor = os.open(staging_path, _hardened_staging_flags(), mode)
     try:
         try:
@@ -754,7 +754,7 @@ def hardened_staged_publication(
             collision).
     """
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    staging_path = _hardened_staging_path(target_path)
+    staging_path = hardened_staging_path(target_path)
     descriptor = os.open(staging_path, _hardened_staging_flags(), mode)
     try:
         try:

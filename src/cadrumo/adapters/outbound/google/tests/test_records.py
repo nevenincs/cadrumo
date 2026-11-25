@@ -31,6 +31,7 @@ from cadrumo_client.contracts.google_auth import (
 )
 
 from .....core.config_google_client import OAuthClient
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
@@ -40,6 +41,7 @@ from ..records import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 class _ClientKwargs(TypedDict):
@@ -74,7 +76,7 @@ def _valid_metadata_kwargs() -> _MetadataKwargs:
     return {
         "account_email": "operator@example.com",
         "granted_scopes": REQUIRED_SCOPES,
-        "issued_at": datetime(2026, 5, 14, 9, 0, tzinfo=UTC),
+        "issued_at": datetime(_YEAR, 5, 14, 9, 0, tzinfo=UTC),
     }
 
 
@@ -200,14 +202,14 @@ def test_oauth_metadata_round_trip() -> None:
 
     assert reloaded == metadata
     assert DRIVE_FILE_SCOPE in metadata.granted_scopes
-    assert metadata.issued_at.isoformat() == "2026-05-14T09:00:00+00:00"
+    assert metadata.issued_at.isoformat() == f"{_YEAR}-05-14T09:00:00+00:00"
 
 
 @pytest.mark.parametrize(
     ("field", "invalid_instant"),
     (
-        ("issued_at", datetime(2026, 5, 14, 9, 0)),
-        ("issued_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
+        ("issued_at", datetime(_YEAR, 5, 14, 9, 0)),
+        ("issued_at", datetime(_YEAR, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
     ),
 )
 def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_instant: datetime) -> None:
@@ -246,7 +248,7 @@ def test_oauth_metadata_rejects_empty_scope_tuple() -> None:
 def test_oauth_metadata_does_not_accept_the_refresh_lifecycle_fields_nothing_maintains(field: str) -> None:
     """A stored record of the earlier shape is refused, not read with stale values."""
     payload: dict[str, object] = dict(_valid_metadata_kwargs())
-    payload[field] = True if field == "reauth_required" else datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
+    payload[field] = True if field == "reauth_required" else datetime(_YEAR, 5, 14, 12, 0, tzinfo=UTC)
 
     with pytest.raises(ValidationError):
         OAuthMetadata.model_validate(payload)

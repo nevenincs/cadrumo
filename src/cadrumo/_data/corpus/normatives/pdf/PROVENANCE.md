@@ -32,6 +32,7 @@ The bundled bytes are what the address served.
 | `boe-a-2022-19290-modelos-322-390.pdf` | 1200305 | 2026-10-06 | `https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf` |
 | `boe-a-2022-21458-modelo-309.pdf` | 396280 | 2026-10-06 | `https://www.boe.es/boe/dias/2022/12/19/pdfs/BOE-A-2022-21458.pdf` |
 | `boe-a-2023-26632-modelos-036-030-390.pdf` | 2079432 | 2026-10-07 | `https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf` |
+| `boe-a-2023-12416-modelos-200-220.pdf` | 5980787 | 2026-11-18 | `https://www.boe.es/boe/dias/2023/05/29/pdfs/BOE-A-2023-12416.pdf` |
 | `boe-a-2024-16129-modelo-303-form.pdf` | 557667 | 2026-10-07 | `https://www.boe.es/boe/dias/2024/08/05/pdfs/BOE-A-2024-16129.pdf` |
 | `boe-a-2024-21961-modelos-322-390.pdf` | 1935745 | 2026-10-06 | `https://www.boe.es/boe/dias/2024/10/25/pdfs/BOE-A-2024-21961.pdf` |
 | `boe-modelo-309-2003.pdf` | 767317 | 2026-10-06 | `https://www.boe.es/boe/dias/2003/12/30/pdfs/A46405-46414.pdf` |

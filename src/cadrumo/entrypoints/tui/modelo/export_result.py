@@ -23,11 +23,13 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from ....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
+from ....application.modelo.calculation_notes import note_fact_text
 from ....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
+from ....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
 from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.presentation import NoticePresentation
@@ -54,12 +56,6 @@ ModeloExportResultScreen { align: center middle; }
 #: member of the closed axis appears, so an artefact the product can publish is
 #: never offered or stated as a bare token. The export control offers these and
 #: the statement names the one that was published with the same words.
-EXPORT_ARTEFACT_LOCALE_KEYS: Final[dict[ModeloExportArtefact, str]] = {
-    ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
-    ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
-    ModeloExportArtefact.CALCULATION_REPORT_PDF: "tui.modelo.export.artefact.calculation_report_pdf",
-    ModeloExportArtefact.CALCULATION_REVIEW_XLSX: "tui.modelo.export.artefact.calculation_review_xlsx",
-}
 #: Each evidence status in the operator's words. Every member appears, so a
 #: status the export can state is never shown as a bare token.
 EXPORT_EVIDENCE_STATUS_LOCALE_KEYS: Final[dict[ModeloExportEvidenceStatus, str]] = {
@@ -137,8 +133,9 @@ def export_result_warnings(
     """Return every limit the result states on the file, most fundamental first.
 
     No export is official AEAT evidence, so that warning is always present. The
-    development identity and an unverified completeness are added only when the
-    result states them.
+    development identity, an unverified cutoff, work-income deductions left
+    uncomputed and an unverified completeness are added only when the result
+    states them.
     """
     if result is None:
         return (NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.unavailable")),)
@@ -167,11 +164,35 @@ def export_result_warnings(
         warnings.append(
             NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.warning.cutoff_unverified"))
         )
+    disclosure = result.disclosure
+    served = () if disclosure is None else disclosure.limitations
+    served_words = {item.words for item in served}
+    if (
+        receipt is not None
+        and receipt.trabajo_deductions_not_computed
+        and tr("application.modelo.findings.trabajo_deduction_not_computed") not in served_words
+    ):
+        # The receipt flag's own finding words, as the CLI shows them for the same flag; the backend's
+        # disclosure, when it states the same sentence, is shown once.
+        warnings.append(
+            NoticePresentation(
+                severity="warning", message=tr("application.modelo.findings.trabajo_deduction_not_computed")
+            )
+        )
+    if disclosure is not None:
+        # The backend's lead sentence, then each limit it served, in its words and its order.
+        warnings.append(NoticePresentation(severity="info", message=disclosure.lead_words))
+        warnings.extend(NoticePresentation(severity="warning", message=item.words) for item in served)
     if result.completeness is ModeloExportCompleteness.UNVERIFIED:
         warnings.append(
             NoticePresentation(
                 severity="warning", message=tr("tui.modelo.export.result.warning.completeness_unverified")
             )
+        )
+    if receipt is not None:
+        warnings.extend(
+            NoticePresentation(severity="warning", message=note_fact_text(note.fact, element_names=note.element_names))
+            for note in receipt.calculation_notes
         )
     return tuple(warnings)
 
@@ -202,8 +223,8 @@ class ModeloExportResultScreen(ModalScreen[None]):
             with Horizontal(id="modelo-export-result-actions"):
                 if self._result is not None:
                     yield localized(
-                        Button(tr("tui.modelo.workbench.issues.technical"), id="modelo-export-result-technical"),
-                        "tui.modelo.workbench.issues.technical",
+                        Button(tr("workspace.modelo.issues.technical"), id="modelo-export-result-technical"),
+                        "workspace.modelo.issues.technical",
                     )
                 yield localized(
                     Button(tr("tui.modelo.export.result.close"), id="modelo-export-result-close"),
@@ -274,7 +295,6 @@ class ModeloExportResultScreen(ModalScreen[None]):
 
 
 __all__ = [
-    "EXPORT_ARTEFACT_LOCALE_KEYS",
     "EXPORT_COMPLETENESS_LOCALE_KEYS",
     "EXPORT_EVIDENCE_STATUS_LOCALE_KEYS",
     "EXPORT_RESULT_ROW_LOCALE_KEYS",

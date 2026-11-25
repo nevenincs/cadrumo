@@ -13,13 +13,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.period import Period, PeriodKind
+from ...core.period import Period
+from ...domain.iva.m303_settlement import M303_LIQUIDATION_CADENCES
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-
-#: Orden EHA/3786/2008 art. 7 settles Modelo 303 by quarter or, for the filers it names, by month.
-_SETTLEMENT_PERIOD_KINDS: frozenset[PeriodKind] = frozenset({PeriodKind.QUARTERLY, PeriodKind.MONTHLY})
 
 ORDINARY_M303_EVIDENCE_PRODUCER_KEYS: frozenset[FilingProducerKey] = frozenset(
     {
@@ -41,7 +39,7 @@ def ordinary_m303_evidence_coordinate_supported(
     A coordinate outside the registry's supported envelope raises the
     authority's own refusal from ``snapshot`` rather than reporting ``False``.
     """
-    if period.filing_year != filing_year or period.kind not in _SETTLEMENT_PERIOD_KINDS:
+    if period.filing_year != filing_year or period.kind not in M303_LIQUIDATION_CADENCES:
         return False
     snapshot = operation.snapshot("303", filing_year=filing_year, period=period.registry_token)
     declared = {

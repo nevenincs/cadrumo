@@ -27,9 +27,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.modelo import Modelo
@@ -47,7 +45,7 @@ from ....domain.deadlines.models import (
 )
 from ....tests.attribute_scope import scoped_attribute
 from ...modelo.registry_discovery import registry_modelo_codes
-from .. import coverage as _coverage
+from .. import coverage
 from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
@@ -68,7 +66,7 @@ _TODAY = date(2026, 7, 1)
 def _paying_autonomo() -> TaxpayerProfile:
     """An autónomo who pays withholding-subject income (has employees)."""
     return TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -79,7 +77,7 @@ def _paying_autonomo() -> TaxpayerProfile:
 
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
@@ -88,7 +86,7 @@ def _landlord() -> TaxpayerProfile:
 
 def _sociedad_limitada() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -293,10 +291,10 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(*, operation
     assert unmodelled_code not in _dispositions(baseline)
 
     declared = {Modelo("037"): "censo simplificada suprimida; reconocida sin definicion en el registro"}
-    assert _coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
+    assert coverage.UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
         "the builder no longer reads the module-level declaration this test rebinds"
     )
-    with scoped_attribute(_coverage, "_UNMODELED_OBLIGATIONS", declared):
+    with scoped_attribute(coverage, "UNMODELED_OBLIGATIONS", declared):
         report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
         _assert_total_partition(report, unmodeled=declared, operation=operation)
 
@@ -337,7 +335,7 @@ def test_calendar_attaches_coverage_by_default(
 
 def test_agenda_and_backlog_inherit_calendar_coverage(*, operation: PinnedAuthorityOperation) -> None:
     """Agenda and backlog compose the calendar, so they inherit its coverage."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         profile = _paying_autonomo()
         agenda = build_overview_agenda(profile, as_of=_TODAY, operation=_authority_operation_for_test)
         backlog = build_overview_backlog(profile, as_of=_TODAY, operation=_authority_operation_for_test)

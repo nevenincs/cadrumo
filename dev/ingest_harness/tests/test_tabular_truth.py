@@ -24,9 +24,9 @@ import pytest
 from cadrumo.core.field_role import FieldRole
 from cadrumo.core.tabular import normalize_tabular_bytes
 
-from .._key import CorpusKey, corpus_root, load_corpus_key
-from .._scoring import score_emission
-from .._tabular_truth import (
+from ..key import CorpusKey, corpus_root, load_corpus_key
+from ..scoring import score_emission
+from ..tabular_truth import (
     TABULAR_COLUMN_ROLE_TRUTH,
     TabularTruthError,
     column_role_truth_document,

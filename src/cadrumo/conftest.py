@@ -8,19 +8,10 @@ keeps the environment bootstrap needed by direct package test runs.
 from __future__ import annotations
 
 import os
-import sys
 import tempfile
 from pathlib import Path
 
-from .core.storage_environment import (
-    prepare_temporary_directory,
-    storage_directory,
-)
-
-if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
-    # Preserve the interpreter's standard tool environment while keeping
-    # bytecode from a standalone package test run under its test-owned root.
-    sys.pycache_prefix = str(storage_directory("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache"))
+from .core.storage_environment import prepare_temporary_directory
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise
@@ -54,7 +45,7 @@ if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
     tempfile.tempdir = str(_temporary_root)
 
 _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
+os.environ["CADRUMO_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
 
 

@@ -51,13 +51,13 @@ class ModeloOverview:
     what it is rather than opening on a bare list. A definition is held per
     language rather than resolved to one because the paragraph it fills is a
     paragraph the page does not have where it is absent, which is a difference
-    in markup and not in a string (:func:`~dev.docs._locale_chrome.docs_line`).
+    in markup and not in a string (:func:`~dev.docs.locale_chrome.docs_line`).
     """
 
     title: str
     #: The title as the SOURCE language reads it, which is what names the
     #: page's anchor: the anchor is one string for every language root, and
-    #: ``title`` is the reader's own (:func:`~dev.docs._locale_chrome.chrome_anchor`).
+    #: ``title`` is the reader's own (:func:`~dev.docs.locale_chrome.chrome_anchor`).
     source_title: str
     official_name: str
     #: Curated Handbook definitions by language tag, absent where unauthored.

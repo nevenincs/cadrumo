@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-11-09 13:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -112,7 +112,20 @@ msgstr ""
 "configuració en directe. Configuració avançada de desplegament i de "
 "desenvolupament; cap flux de treball d'usuari no les necessita."
 
-#: ../../reference/index.md:32
+#: ../../reference/index.md:31
+msgid ""
+"[Third-party notices for Windows](third-party-notices-windows-x86-64.md) "
+"- every third-party component the Windows package installs, from the "
+"interpreter and its programs to the Python and JavaScript packages, with "
+"its version and declared licence, generated from the assembled package."
+msgstr ""
+"[Avisos de tercers per a Windows](third-party-notices-windows-x86-64.md):"
+" cada component de tercers que instal·la el paquet de Windows, des de "
+"l'intèrpret i els seus programes fins als paquets de Python i JavaScript,"
+" amb la seva versió i la llicència que declara, generat a partir del "
+"paquet acoblat."
+
+#: ../../reference/index.md:36
 #, python-brace-format
 msgid ""
 "Terms are defined in the {doc}`glossary </_generated/glossary>`. For "
@@ -134,4 +147,3 @@ msgstr ""
 "seguretat](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md) "
 "per a la comunicació privada de vulnerabilitats i el seu recurs "
 "alternatiu quan la comunicació privada no estigui disponible."
-

@@ -247,6 +247,9 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"
     LEDGER_TRANSACTION_INVOICE_LINKED = "ledger.transaction.invoice.linked"
+    # A link removed by the person. Its own member rather than a deletion of the
+    # linked event: the history keeps that the link existed and when it ended.
+    LEDGER_TRANSACTION_INVOICE_UNLINKED = "ledger.transaction.invoice.unlinked"
     LEDGER_CATALOGUE_RESET = "ledger.catalogue.reset"
     LEDGER_SANITIZATION_COMPLETED = "ledger.sanitization.completed"
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
@@ -270,6 +273,13 @@ class BucketEventType(StrEnum):
     LEDGER_INVENTORY_MOVEMENT_ADDED = "ledger.inventory.movement_added"
     LEDGER_INVENTORY_VALUATION_PREVIEWED = "ledger.inventory.valuation_previewed"
     LEDGER_INVENTORY_REMOVED = "ledger.inventory.removed"
+    LEDGER_INVENTORY_DESCRIBED = "ledger.inventory.described"
+    LEDGER_INVENTORY_CORRECTED = "ledger.inventory.corrected"
+    LEDGER_INVENTORY_MOVEMENT_CORRECTED = "ledger.inventory.movement_corrected"
+    LEDGER_INVENTORY_MOVEMENT_REVERSED = "ledger.inventory.movement_reversed"
+    LEDGER_INVENTORY_MOVEMENT_LEDGER_ROW_STATED = "ledger.inventory.movement_ledger_row_stated"
+    LEDGER_INVENTORY_RETIRED = "ledger.inventory.retired"
+    LEDGER_INVENTORY_RESTORED = "ledger.inventory.restored"
     # audit verb-group (evidence bundle)
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"

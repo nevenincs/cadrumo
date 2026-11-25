@@ -14,7 +14,7 @@ from ...tests.ledger_corpus_support import (
     import_ledger_corpus,
     invoke_corpus_cli,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -24,13 +24,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_import_full_corpus_persists_operating_scale(invoke_cli: Callable[..., Result]) -> None:
     import_ledger_corpus(invoke_cli=invoke_cli)
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     assert len(rows) >= 500, f"expected operating-scale corpus, got {len(rows)}"
 
 
 def test_reimport_is_idempotent_dedups(invoke_cli: Callable[..., Result]) -> None:
     import_ledger_corpus(invoke_cli=invoke_cli)
-    first = len(_list_rows())
+    first = len(list_ledger_rows_via_cli())
     result = invoke_corpus_cli(
         [
             "--format",
@@ -49,7 +49,7 @@ def test_reimport_is_idempotent_dedups(invoke_cli: Callable[..., Result]) -> Non
     payload = json.loads(result.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] >= 1, payload
-    assert len(_list_rows()) == first
+    assert len(list_ledger_rows_via_cli()) == first
 
 
 def test_import_dry_run_does_not_persist(invoke_cli: Callable[..., Result]) -> None:
@@ -67,12 +67,12 @@ def test_import_dry_run_does_not_persist(invoke_cli: Callable[..., Result]) -> N
         invoke_cli=invoke_cli,
     )
     assert result.exit_code == 0, result.output
-    assert _list_rows() == []
+    assert list_ledger_rows_via_cli() == []
 
 
 def test_import_preserves_foreign_currencies(invoke_cli: Callable[..., Result]) -> None:
     import_ledger_corpus(invoke_cli=invoke_cli)
-    currencies = {row.get("currency") for row in _list_rows()}
+    currencies = {row.get("currency") for row in list_ledger_rows_via_cli()}
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
 
 

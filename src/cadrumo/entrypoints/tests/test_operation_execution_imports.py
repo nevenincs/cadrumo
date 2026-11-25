@@ -3,11 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import os
-import subprocess
-import sys
-import sysconfig
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -31,23 +26,19 @@ from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.offline_seal import OfflineGuard, offline_guard_fixture
-from .. import operation_composition
+from .. import operation_composition, operation_composition_inputs
+from .isolated_registry_probe_support import run_isolated_registry_probe
 
 __all__ = ["offline_guard_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "60606060-6060-4060-8060-606060606060"
-_NIF = "B12345674"
+_NIF = "B00015016"
 _LEDGER_DEFINITIONS = (LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, LEDGER_SPLIT_REVIEW_DEFINITION_ID)
 
 
 def test_registry_builds_when_ledger_llm_and_aeat_execution_modules_are_unavailable(tmp_path: Path) -> None:
-    source = Path(__file__).resolve().parents[3]
-    base_executable = getattr(sys, "_base_executable", None)
-    assert isinstance(base_executable, str)
-    interpreter = Path(base_executable).resolve(strict=True)
-    package_paths = sorted({sysconfig.get_path("purelib"), sysconfig.get_path("platlib")})
     probe = """
 import faulthandler
 import importlib.abc
@@ -87,48 +78,7 @@ assert registry.public_contract_set.contract_set_digest
 assert not blocked.intersection(sys.modules)
 faulthandler.cancel_dump_traceback_later()
 """
-    allowed = {"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE", "PATH", "COMSPEC", "USERNAME", "USERDOMAIN"}
-    environment = {key: value for key, value in os.environ.items() if key.upper() in allowed}
-    environment.update(
-        {
-            "CADRUMO_AUTHORITY_ROOT": os.environ["CADRUMO_AUTHORITY_ROOT"],
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
-            "PYDANTIC_DISABLE_PLUGINS": "__all__",
-            "TEMP": str(tmp_path),
-            "TMP": str(tmp_path),
-            "HOME": str(tmp_path),
-            "USERPROFILE": str(tmp_path),
-            "APPDATA": str(tmp_path),
-            "LOCALAPPDATA": str(tmp_path),
-        }
-    )
-    stdout_path = tmp_path / "registry-probe.stdout"
-    stderr_path = tmp_path / "registry-probe.stderr"
-    with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
-        process = subprocess.Popen(  # noqa: S603 - resolved base interpreter, fixed import-only probe, owned child
-            [str(interpreter), "-I", "-S", "-B", "-c", probe, str(source), json.dumps(package_paths)],
-            cwd=tmp_path,
-            env=environment,
-            stdout=stdout,
-            stderr=stderr,
-        )
-        try:
-            process.wait(timeout=30)
-        except subprocess.TimeoutExpired as error:
-            error.add_note(f"Owned child PID: {process.pid}")
-            error.add_note(stdout_path.read_text(encoding="utf-8"))
-            error.add_note(stderr_path.read_text(encoding="utf-8"))
-            raise
-        finally:
-            if process.poll() is None:
-                process.kill()
-            process.wait(timeout=5)
-    assert process.returncode == 0, stderr_path.read_text(encoding="utf-8")
-    observation = json.loads(stdout_path.read_text(encoding="utf-8"))
-    assert observation["pid"] == process.pid
-    assert Path(observation["interpreter"]).resolve(strict=True) == interpreter
-    assert not (tmp_path / "storage").exists()
+    run_isolated_registry_probe(tmp_path, probe)
 
 
 @dataclass
@@ -229,7 +179,7 @@ def test_verify_branch_forwards_settings_expectation_and_converts_real_observati
     name = "collect_nif_iva_check_observations" if surface is VerifySurface.NIF_IVA else "collect_groi_observations"
     monkeypatch.setattr(owner, name, collect)
     acquired = asyncio.run(
-        operation_composition._acquire_registry_verify_observation(
+        operation_composition_inputs.acquire_registry_verify_observation(
             surface, _NIF, expected, unread_authority_operation(), resolved_settings=settings
         )
     )
@@ -254,7 +204,7 @@ def test_verify_branch_preserves_the_canonical_collector_refusal(
     monkeypatch.setattr(owner, name, collect)
     with pytest.raises(ValueError) as escaped:
         asyncio.run(
-            operation_composition._acquire_registry_verify_observation(
+            operation_composition_inputs.acquire_registry_verify_observation(
                 surface, _NIF, None, unread_authority_operation(), resolved_settings=Settings(_env_file=None)
             )
         )
@@ -285,7 +235,7 @@ def test_verify_branch_still_refuses_non_singleton_observations(
     monkeypatch.setattr(owner, name, collect)
     with pytest.raises(ValueError, match="exactly one observation"):
         asyncio.run(
-            operation_composition._acquire_registry_verify_observation(
+            operation_composition_inputs.acquire_registry_verify_observation(
                 surface, _NIF, None, unread_authority_operation(), resolved_settings=Settings(_env_file=None)
             )
         )

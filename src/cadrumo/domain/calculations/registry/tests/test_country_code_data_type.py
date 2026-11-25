@@ -12,7 +12,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import CountryCode, _validate_country_code
+from ..schema_scalars import CountryCode, validate_country_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -54,7 +54,7 @@ class TestCountryCodeRejects:
             # The validator sits behind the pydantic boundary, which keeps the
             # registered refusal as the cause of the builtin ValueError.
             with pytest.raises(ValueError) as refused:
-                _validate_country_code(raw)
+                validate_country_code(raw)
             assert isinstance(refused.value.__cause__, RegistryValidationError)
 
 

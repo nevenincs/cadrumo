@@ -23,22 +23,16 @@ from ...iva.regimen_simplificado_rows import (
     ReduccionLorcaOrdenAnual,
 )
 from .errors import RegistryValidationError
+from .form_codes import form_codes_in_scope
 from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_constants import (
-    EXPECTED_ACTIVITY_COUNT,
-    EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
     EXTRACTOR_VERSION,
+    M303_2022_ORDEN_SOURCE_REF,
+    validate_2022_annual_orden_coordinate,
+    validate_generated_source_axis_shape,
+    validate_generated_source_counts,
     validate_percentage_shape,
     validate_seasonal_index_shape,
-)
-from .m303_orden_constants import (
-    validate_2022_annual_orden_coordinate as _validate_2022_annual_orden_coordinate,
-)
-from .m303_orden_constants import (
-    validate_generated_source_axis_shape as _validate_generated_source_axis_shape,
-)
-from .m303_orden_constants import (
-    validate_generated_source_counts as _validate_generated_source_counts,
 )
 from .schema_base import RegistryModel, RegistrySourceKind
 from .schema_references import LegalReference, SourceReference, TemporalSupportEnvelope
@@ -55,14 +49,12 @@ def _require_invariant(condition: bool, message: str) -> None:
 def _has_m303_2022_record_design_source(
     source_ref: str,
     source_content_digest: str,
-    *,
-    record_design_epoch: str | None = None,
 ) -> bool:
     """Return whether one source axis retains the pinned 2022 design identity."""
     return (source_ref, source_content_digest) == (
         _M303_2022_RECORD_DESIGN_SOURCE_REF,
         _M303_2022_RECORD_DESIGN_SOURCE_DIGEST,
-    ) and record_design_epoch in (None, "2022")
+    )
 
 
 class ActividadOrdenAnualRef(RegistryModel):
@@ -83,20 +75,20 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     source_content_digest: ContentDigest
     activity_table_count: PositiveCount
     module_row_count: PositiveCount
-    module_distribution: tuple[int, ...] = Field(min_length=7, max_length=7)
+    module_distribution: tuple[int, ...] = Field(min_length=1)
     agricultural_index_row_count: PositiveCount
     agricultural_ingreso_a_cuenta_row_count: PositiveCount
     non_agricultural_ingreso_a_cuenta_row_count: PositiveCount
-    seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
-    seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
+    seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=1)
+    seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=1)
     difficult_justification_pct: Percentage
     lorca_reduction_pct: Decimal | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _is_the_exact_supported_annual_quota_shape(self) -> M303AnnualOrdenGeneratedSource:
-        _validate_generated_source_counts(self)
-        _validate_generated_source_axis_shape(self)
+        validate_generated_source_counts(self)
+        validate_generated_source_axis_shape(self)
         return self
 
 
@@ -138,7 +130,7 @@ class M303AnnualOrdenProjection(RegistryModel):
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
-    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
+    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=1)
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)
@@ -155,10 +147,6 @@ class M303AnnualOrdenProjection(RegistryModel):
 
 
 def _validate_projection_activity_rows(projection: M303AnnualOrdenProjection) -> None:
-    _require_invariant(
-        len(projection.activities) == EXPECTED_ACTIVITY_COUNT,
-        "annual Orden projection is incomplete",
-    )
     _require_invariant(
         not any(activity.ejercicio != projection.ejercicio for activity in projection.activities),
         "annual Orden activities must match their projection ejercicio",
@@ -183,10 +171,6 @@ def _validate_projection_iae_identity(projection: M303AnnualOrdenProjection) -> 
 
 
 def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> None:
-    _require_invariant(
-        len(projection.non_agricultural_ingresos_a_cuenta) == EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
-        "annual Orden projection has the wrong IAE ingreso-a-cuenta row count",
-    )
     validate_seasonal_index_shape(
         tuple((item.minimum_days, item.maximum_days) for item in projection.seasonal_indexes),
         tuple(item.coefficient for item in projection.seasonal_indexes),
@@ -197,7 +181,7 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         "annual Orden agricultural refusal must retain its exact annual source reference",
     )
     _require_invariant(
-        projection.ejercicio != 2022
+        projection.source_ref != M303_2022_ORDEN_SOURCE_REF
         or _has_m303_2022_record_design_source(
             projection.agricultural_authority.record_design_source_ref,
             projection.agricultural_authority.record_design_source_content_digest,
@@ -205,10 +189,8 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         "annual Orden 2022 agricultural refusal must retain its exact AEAT design source",
     )
     reduction = projection.lorca_reduction
-    if projection.ejercicio == 2022:
-        _validate_2022_annual_orden_coordinate(
-            ejercicio=projection.ejercicio,
-            registry_revision_id=projection.registry_revision_id,
+    if projection.source_ref == M303_2022_ORDEN_SOURCE_REF:
+        validate_2022_annual_orden_coordinate(
             source_ref=projection.source_ref,
             source_content_digest=projection.source_content_digest,
             scope="projection",
@@ -265,8 +247,8 @@ class M303AnnualOrdenSnapshot(RegistryModel):
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
-    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
-    activity_refs: tuple[ActividadOrdenAnualRef, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
+    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=1)
+    activity_refs: tuple[ActividadOrdenAnualRef, ...] = Field(min_length=1)
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)
@@ -316,9 +298,11 @@ def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -
 
 def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> None:
     reduction = snapshot.lorca_reduction
-    if snapshot.ejercicio == 2022:
+    if snapshot.source_ref == M303_2022_ORDEN_SOURCE_REF:
+        codes = form_codes_in_scope()
         _require_invariant(
-            reduction is not None and reduction.percentage == Decimal("20"),
+            reduction is not None
+            and (codes is None or reduction.percentage == Decimal(codes.code("m303.2022.lorca_reduction_percentage"))),
             "annual Orden 2022 snapshot lacks its Lorca reduction authority",
         )
     if reduction is not None:
@@ -330,10 +314,8 @@ def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> No
         snapshot.agricultural_authority.annual_orden_source_ref == snapshot.source_ref,
         "annual Orden snapshot agricultural refusal must retain its exact source reference",
     )
-    if snapshot.ejercicio == 2022:
-        _validate_2022_annual_orden_coordinate(
-            ejercicio=snapshot.ejercicio,
-            registry_revision_id=snapshot.registry_revision_id,
+    if snapshot.source_ref == M303_2022_ORDEN_SOURCE_REF:
+        validate_2022_annual_orden_coordinate(
             source_ref=snapshot.source_ref,
             source_content_digest=snapshot.source_content_digest,
             scope="snapshot",
@@ -399,10 +381,8 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
         and agricultural.record_design_source_content_digest == snapshot.record_design.sha256,
         "M303 regimen simplificado snapshot agricultural refusal must retain its resolved record-design source",
     )
-    if snapshot.filing_year == 2022:
-        _validate_2022_annual_orden_coordinate(
-            ejercicio=snapshot.orden.ejercicio,
-            registry_revision_id=snapshot.orden.registry_revision_id,
+    if snapshot.orden.source_ref == M303_2022_ORDEN_SOURCE_REF:
+        validate_2022_annual_orden_coordinate(
             source_ref=snapshot.orden.source_ref,
             source_content_digest=snapshot.orden.source_content_digest,
             scope="resolved snapshot",
@@ -411,7 +391,6 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
             _has_m303_2022_record_design_source(
                 snapshot.record_design.id,
                 snapshot.record_design.sha256,
-                record_design_epoch=snapshot.record_design.record_design_epoch,
             ),
             "M303 regimen simplificado 2022 snapshot must retain its exact AEAT design source",
         )

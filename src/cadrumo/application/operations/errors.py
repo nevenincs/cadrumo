@@ -14,6 +14,15 @@ class OperationDeclarationError(CoreValidationError):
     """An executor attempted behavior outside its registered declaration."""
 
 
+class OperationContractStaleError(InternalInvariantError):
+    """The composed operation group no longer reproduces the shipped contract manifest.
+
+    Only the named operation's group is affected: the manifest is not
+    regenerated until the next build, so every later lookup in that group fails
+    the same way while the rest of the registry keeps answering.
+    """
+
+
 class OperationExecutorReturnedNoResultError(InternalInvariantError):
     """An executor returned no result while its operation was neither suspended nor stopped.
 
@@ -66,6 +75,7 @@ class OperationUnsettledError(InternalInvariantError):
 
 
 __all__ = [
+    "OperationContractStaleError",
     "OperationDeclarationError",
     "OperationExecutorReturnedNoResultError",
     "OperationSubjectBusyError",

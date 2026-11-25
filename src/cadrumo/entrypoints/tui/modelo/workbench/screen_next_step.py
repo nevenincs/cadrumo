@@ -6,21 +6,30 @@ from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING
 
-from .....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm, address_key
+from .....application.modelo.edit_prerequisite_wording import prerequisite_words
+from .....application.modelo.work_form_field_vocabulary import address_key
+from .....application.modelo.work_form_findings import ModeloFormAttention
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .editor import open_area_target
-from .issue_scale import CalculateAgain, ConfirmAssumedValues, IssueLevel, IssueLine, IssuesChoice
+from .issue_scale import CalculateAgain, ConfirmAssumedValues, IssueLine, IssuesChoice
 from .issues import WorkbenchIssuesScreen
 from .ports import ModeloWorkbenchActionsV1, WorkbenchApplyPrerequisite
-from .progress import NextAction, WorkbenchProgress, workbench_progress
+from .progress import WorkbenchProgress, workbench_progress
 from .review import recalculation_risk_text
 from .screen_constants import (
-    _DIALOG_FRAME,
+    DIALOG_FRAME,
+    FINDINGS_KEY,
+    NEXT_KEYS,
 )
-from .sources import OpenSourceSurface, earlier_filing_text
+from .sources import OpenSourceSurface
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -48,30 +57,33 @@ class WorkbenchNextStepMixin:
         self: ModeloWorkbenchScreen, load: ModeloWorkFormLoadV1, progress: WorkbenchProgress
     ) -> bool:
         action = progress.next_action
-        if action is NextAction.RECORDED:
+        if action is ModeloFormNextAction.RECORDED:
             self._edit_unavailable()
-        elif action is NextAction.APPLY:
+        elif action is ModeloFormNextAction.APPLY:
             self.action_review()
-        elif action is NextAction.CONFIRM:
+        elif action is ModeloFormNextAction.CONFIRM:
             self._confirm_next()
         elif progress.findings_lead or (
-            action is NextAction.RESOLVE and (load.form.verification is not None or load.form.calculation_notes)
+            # Where resolving leads is decided here until the journey serves it with the step: the findings
+            # once a check or a calculation note names what blocks, else the next box that needs the filer.
+            action is ModeloFormNextAction.RESOLVE
+            and (load.form.verification is not None or load.form.calculation_notes)
         ):
             self.action_issues()
-        elif action in {NextAction.FILL, NextAction.RESOLVE}:
+        elif action in {ModeloFormNextAction.FILL, ModeloFormNextAction.RESOLVE}:
             self._advance_attention(1)
         else:
             return False
         return True
 
     def _run_operation_next_step(
-        self: ModeloWorkbenchScreen, action: NextAction, actions: ModeloWorkbenchActionsV1
+        self: ModeloWorkbenchScreen, action: ModeloFormNextAction, actions: ModeloWorkbenchActionsV1
     ) -> None:
-        if action in {NextAction.CALCULATE, NextAction.RECALCULATE}:
+        if action in {ModeloFormNextAction.CALCULATE, ModeloFormNextAction.RECALCULATE}:
             self._calculate(actions)
-        elif action is NextAction.VERIFY:
+        elif action is ModeloFormNextAction.VERIFY:
             self._run_operation(actions.verify)
-        elif action in {NextAction.EXPORT, NextAction.EXPORT_AGAIN}:
+        elif action in {ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN}:
             if not self._file_out_of_date():
                 self.action_export()
         else:
@@ -84,7 +96,7 @@ class WorkbenchNextStepMixin:
             self._edit_unavailable()
             return
         if self._session.dirty:
-            self._notice(tr("tui.modelo.workbench.calculate.apply_first"))
+            self._notice(f"{tr('workspace.modelo.calculate.apply_first')} [{NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return
         self._calculate(actions)
 
@@ -99,18 +111,18 @@ class WorkbenchNextStepMixin:
             if proceed is not None and proceed:
                 self._calculate_now(actions)
             else:
-                self._notice(tr("tui.modelo.workbench.calculate.kept"))
+                self._notice(tr("workspace.modelo.calculate.kept"))
 
         self.app.push_screen(
             ConfirmScreen(
-                title=lambda: tr("tui.modelo.workbench.calculate.at_risk_title"),
+                title=lambda: tr("workspace.modelo.calculate.at_risk_title"),
                 message=lambda: recalculation_risk_text(
                     self._unattributed_boxes(form),
                     console=self.app.console,
-                    width=max(self._width() - _DIALOG_FRAME, 1),
+                    width=max(self._width() - DIALOG_FRAME, 1),
                 ),
-                confirm_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_proceed"),
-                cancel_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_cancel"),
+                confirm_label=lambda: tr("workspace.modelo.calculate.at_risk_proceed"),
+                cancel_label=lambda: tr("workspace.modelo.calculate.at_risk_cancel"),
             ),
             closed,
         )
@@ -142,8 +154,8 @@ class WorkbenchNextStepMixin:
         step for the section, or the page, holding the box chosen there,
         never the whole declaration at once.
         """
-        form = self.form
-        if form is None:
+        load = self._load
+        if load is None:
             return
 
         def closed(choice: IssuesChoice | None) -> None:
@@ -161,7 +173,7 @@ class WorkbenchNextStepMixin:
         prerequisite = self._apply_prerequisite_line()
         self.app.push_screen(
             WorkbenchIssuesScreen(
-                form,
+                load,
                 status_line=self._status_line(),
                 additional_lines=() if prerequisite is None else (prerequisite,),
                 changes_unapplied=self._session.dirty,
@@ -197,11 +209,11 @@ class WorkbenchNextStepMixin:
         field = next(field for field in form.fields() if field.address == prerequisite.address)
         message = self._prerequisite_message(form, field, prerequisite)
         return IssueLine(
-            level=IssueLevel.BLOCKS,
+            level=ModeloFormAttention.BLOCKS,
             box=field.box or "·",
             where=field.label.text,
             message=message,
-            action=tr("tui.modelo.workbench.apply_prerequisite.action"),
+            action=tr("workspace.modelo.apply_prerequisite.action"),
             detail="",
             technical="",
             key=address_key(field.address),
@@ -215,39 +227,25 @@ class WorkbenchNextStepMixin:
         field: ModeloFormField,
         prerequisite: WorkbenchApplyPrerequisite,
     ) -> str:
-        source = field.source
-        filings = () if source is None else source.earlier_filings
-        message = tr(
-            "tui.modelo.workbench.apply_prerequisite.earlier"
-            if filings
-            else "tui.modelo.workbench.apply_prerequisite.what"
+        return prerequisite_words(
+            field,
+            operator_entries_known=form.operator_entries_known,
+            source_boxes=prerequisite.source_boxes,
+            language=self._language,
         )
-        if not form.operator_entries_known:
-            message += "\n" + tr("tui.modelo.workbench.apply_prerequisite.legacy")
-        if filings:
-            message += "\n" + earlier_filing_text(filings)
-        if prerequisite.source_boxes:
-            message += "\n" + tr(
-                "tui.modelo.workbench.apply_prerequisite.source_boxes",
-                boxes=", ".join(f"[{box}]" for box in prerequisite.source_boxes),
-            )
-        return message
 
     def _state_apply_prerequisite(self: ModeloWorkbenchScreen) -> bool:
         line = self._apply_prerequisite_line()
         if line is None:
             return False
-        self._notice(tr("tui.modelo.workbench.apply_prerequisite.notice", box=f"[{line.box}]"))
+        self._notice(f"{tr('workspace.modelo.apply_prerequisite.notice', box=f'[{line.box}]')} [{FINDINGS_KEY}]")
         self._render_progress()
         return True
 
     def _progress(self: ModeloWorkbenchScreen, load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
         """Where the declaration stands now, with the changes staged here."""
-        progress = workbench_progress(
-            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
-        )
+        progress = workbench_progress(load, staged=len(self._session.changes))
         if self._active_apply_prerequisite() is not None:
-            return replace(
-                progress, next_action=NextAction.RESOLVE, count=1, blocking=progress.blocking + 1, findings_lead=True
-            )
+            held = load.journey.held_prerequisite_next_step
+            return replace(progress, next_action=held.action, count=held.count, findings_lead=held.findings_lead)
         return progress

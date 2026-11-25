@@ -25,8 +25,9 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -34,7 +35,7 @@ from ..filing.draft_review import ModeloApprovalStaleReason
 from ..filing.draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from .enums import ReviewSeverity
-from .errors import ReviewSourceLoadError
+from .errors import ReviewDraftsUnattributedError, ReviewSourceLoadError
 from .models import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -272,12 +273,16 @@ def drafts_pending(
 
     A draft whose ``profile_tax_id`` does not match the active
     profile's tax id is not the active profile's data and is skipped.
-    Callers see only drafts owned by the active profile.
+    Callers see only drafts owned by the active profile. A profile that
+    declares no tax id owns none of them, which is refused rather than shown
+    as an empty queue while drafts are stored.
     """
     if drafts is None:
         drafts = load_drafts(ports=ports, operation=operation)
     active_tax_id = _resolve_review_active_tax_id(ports.profile_repository, bucket_id=bucket_id)
     if active_tax_id is None:
+        if drafts:
+            raise ReviewDraftsUnattributedError(draft_count=len(drafts))
         return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
@@ -412,7 +417,7 @@ def _append_unready_draft_review_item(
     if draft.status in {ModeloDraftStatus.BORRADOR, ModeloDraftStatus.VALIDADO}:
         items.append(_to_placeholder_item(draft=draft, path_str=path_str))
     elif draft.status is ModeloDraftStatus.APROBACION_CADUCADA:
-        items.append(_to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
+        items.append(to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
 
 
 def _resolve_review_active_tax_id(
@@ -423,9 +428,13 @@ def _resolve_review_active_tax_id(
     """Return the reviewed bucket's tax id through the composed profile port."""
     try:
         values = repository.load_path_values(bucket_id=bucket_id)
-    except (CadrumoError, OSError, ValueError):
-        _LOGGER.debug("review adapters could not resolve profile tax id", exc_info=True)
-        return None
+    except (CadrumoError, ValidationError, OSError, ValueError) as exc:
+        # An unreadable profile must not look like a profile with nothing to review.
+        raise ReviewSourceLoadError(
+            message="failed to load profile from secure backend",
+            translated_message="review.adapters.errors.profile_load_failed",
+            context=_load_failure_context(exc),
+        ) from exc
     tax_id = (values or {}).get("identity.tax_id")
     return tax_id if isinstance(tax_id, str) and tax_id else None
 
@@ -508,7 +517,7 @@ def _to_placeholder_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewI
     )
 
 
-def _to_stale_approval_item(
+def to_stale_approval_item(
     *,
     draft: ModeloDraft,
     path_str: str,
@@ -520,6 +529,8 @@ def _to_stale_approval_item(
     approval is stale because the transaction catalogue changed" ask the
     operator for different next actions, and only the projection that renders
     a row may turn the second into words.
+
+    ``draft`` is a :class:`ModeloDraft`.
     """
     summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(

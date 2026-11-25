@@ -9,17 +9,59 @@ from __future__ import annotations
 
 import math
 import time
+from dataclasses import dataclass
 
 from .contracts import RefusalCode, RefusalError
 
 #: Longest a single frontend exchange with the runtime may be granted by its caller.
 MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS = 120.0
 
+#: Below this much time left on the shared deadline, a settled operation's result read gets its own.
+MIN_SETTLED_OPERATION_READ_SECONDS = 0.25
+
+
+class OrchestrationTimeoutError(TimeoutError):
+    """The last-resort timeout ended an owned wait; it says nothing about its outcome."""
+
+
+@dataclass(frozen=True, slots=True)
+class TimeoutDeadline:
+    """One absolute timeout shared by every phase of an owned operation."""
+
+    instant: float
+
+    def remaining_seconds(self) -> float:
+        """Return time until timeout termination, never a fresh phase budget."""
+        remaining = self.instant - time.monotonic()
+        if not math.isfinite(remaining) or remaining <= 0:
+            raise OrchestrationTimeoutError("orchestration_timeout")
+        return remaining
+
+
+@dataclass(frozen=True, slots=True)
+class TimeoutPolicy:
+    """Bound a stuck owner as a last resort; readiness and completion remain signals."""
+
+    timeout_seconds: float = 600.0
+
+    def __post_init__(self) -> None:
+        """Reject timeouts that could silently disable termination."""
+        if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
+            raise ValueError("timeout must be positive and finite")
+
+    def deadline(self) -> TimeoutDeadline:
+        """Start one timeout at the operation owner."""
+        return TimeoutDeadline(time.monotonic() + self.timeout_seconds)
+
+
+DEFAULT_TIMEOUT_POLICY = TimeoutPolicy()
+"""Canonical last-resort wait policy, also projected into native hosts."""
+
 
 def require_finite_budget(timeout: float) -> float:
     """Return ``timeout`` unchanged, refusing a non-finite or empty budget as an exceeded deadline."""
     if not math.isfinite(timeout) or timeout <= 0:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
     return timeout
 
 
@@ -48,7 +90,7 @@ def remaining_budget(deadline: float) -> float:
     """Return the positive seconds left before ``deadline`` or refuse it as exceeded."""
     remaining = deadline - time.monotonic()
     if not math.isfinite(remaining) or remaining <= 0:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
     return remaining
 
 
@@ -74,7 +116,12 @@ def exchange_deadline(deadline: float | None = None) -> float:
 
 
 __all__ = [
+    "DEFAULT_TIMEOUT_POLICY",
     "MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS",
+    "MIN_SETTLED_OPERATION_READ_SECONDS",
+    "OrchestrationTimeoutError",
+    "TimeoutDeadline",
+    "TimeoutPolicy",
     "bounded_deadline_after",
     "deadline_after",
     "exchange_deadline",

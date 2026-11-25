@@ -90,18 +90,18 @@ def test_optional_facts_can_still_be_cleared_and_a_required_fact_can_be_replaced
 
 
 def test_irpf_category_must_be_declared_by_the_published_taxonomy(operation: PinnedAuthorityOperation) -> None:
-    accepted = update_operation._manual_patch_values(
+    accepted = update_operation.manual_patch_values(
         _request(irpf_category=" Actividad_Economica "), operation=operation
     )
     assert accepted["irpf_category"] == "actividad_economica"
 
     with pytest.raises(TransactionValidationError, match="rental_withholding") as refusal:
-        update_operation._manual_patch_values(_request(irpf_category="rental_withholding"), operation=operation)
+        update_operation.manual_patch_values(_request(irpf_category="rental_withholding"), operation=operation)
     assert "arrendamiento_local" in str(refusal.value)
 
 
 def test_a_blank_category_still_clears_the_stored_one(operation: PinnedAuthorityOperation) -> None:
-    values = update_operation._manual_patch_values(_request(irpf_category="  "), operation=operation)
+    values = update_operation.manual_patch_values(_request(irpf_category="  "), operation=operation)
     patch = ManualLedgerTransactionPatch.model_validate(values)
 
     assert "irpf_category" in patch.model_fields_set

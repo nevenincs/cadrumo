@@ -39,29 +39,22 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 )
 from cadrumo.application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from ...native_profile_facts import native_general_iva_facts
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -72,62 +65,25 @@ pytestmark = [
 ]
 
 _FILING_YEAR = "2022"
-_ADVISER_NIF = "B12345674"
+_ADVISER_NIF = "B00015016"
 _ADVISER_NAME = "Asesoria Profesional SL"
 _QUARTERLY_INVOICE_DATES = ("2022-03-20", "2022-06-20", "2022-09-20", "2022-12-20")
 _ALL_QUARTERS_ATTESTED = "2022:1T,2022:2T,2022:3T,2022:4T"
 _LEDGER_EVIDENCE_FINDING_KEY = "application.modelo.findings.withholding_detail_absent_against_ledger_evidence"
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant source creation and the Modelo 190 lifecycle across all periods."""
-    operation_ids = frozenset(
-        {
-            INVOICE_ADD_OPERATION_DEFINITION_ID,
-            LEDGER_ADD_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
-            MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+_OPERATIONS = frozenset(
+    {
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        LEDGER_ADD_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+        MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+        MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    }
+)
 
 
 def _profile_session(
@@ -141,21 +97,19 @@ def _profile_session(
 
     def prepare(profile_id: UUID, root: Path) -> None:
         values = {
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Retenedor",
             "activities.description": "design",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "censo.activity_start_date": "2020-01-01",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "withholding.colegio_concertado": "false",
+            # A filer stated as neither a gran empresa nor a large public administration files quarterly;
+            # an unstated filer has no quarterly window.
+            "censo.large_company": "false",
+            "withholding.has_employees": "true",
+            "censo.public_administration_budget_gt_6000000": "false",
         }
         if attested_periods is not None:
             values["withholding.modelo_111_no_retenciones_periods"] = attested_periods
@@ -174,7 +128,7 @@ def _profile_session(
 
     return native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
         invoke_cli=invoke_cli,
     )
@@ -195,7 +149,7 @@ def _add_received_professional_invoice(session: NativeApiCliSession[None], *, nu
         "--iva-category", "domestic_general",
     )  # fmt: skip
     assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-    invoice_id = _payload(created.output)["invoice_id"]
+    invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
     assert isinstance(invoice_id, str) and invoice_id, created.output
     return invoice_id
 
@@ -221,7 +175,7 @@ def _create_190_work_unit(session: NativeApiCliSession[None]) -> str:
         "--modelo", "190", "--year", _FILING_YEAR, "--period", "0A",
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(created.output))
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(created.output))
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
     return work_unit_id
@@ -238,7 +192,7 @@ def _calculate(session: NativeApiCliSession[None], work_unit_id: str) -> str:
         work_unit_id,
     )
     assert calculated.exit_code == 0, calculated.output
-    payload = _payload(calculated.output)
+    payload = unwrap_schema_envelope(calculated.output)
     values = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["casilla_values"])
     assert values["decl.total-percepciones"] == "0", calculated.output
     assert values["decl.percepciones-total"] == "0.00", calculated.output
@@ -287,7 +241,7 @@ def test_verify_refuses_an_empty_190_contradicted_by_invoice_retenciones(
         )
 
         assert verified.exit_code == 1, verified.output
-        payload = _payload(verified.output)
+        payload = unwrap_schema_envelope(verified.output)
         assert payload["granted_verificado_completo"] is False
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "blocking"
@@ -323,7 +277,7 @@ def test_verify_refuses_an_attested_nil_190_contradicted_by_a_ledger_payment(
         )
 
         assert verified.exit_code == 1, verified.output
-        assert _payload(verified.output)["granted_verificado_completo"] is False
+        assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is False
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "blocking"
         assert facts["contradicting_invoice_count"] == "0"
@@ -372,7 +326,7 @@ def test_verify_grants_a_fully_attested_nil_190(
         )
 
         assert verified.exit_code == 0, verified.output
-        payload = _payload(verified.output)
+        payload = unwrap_schema_envelope(verified.output)
         assert payload["granted_verificado_completo"] is True
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "warning"
@@ -401,7 +355,7 @@ def test_the_refusal_renders_in_every_supported_locale(
                 calculation_revision_id,
             )
             assert verified.exit_code == 1, verified.output
-            assert _payload(verified.output)["granted_verificado_completo"] is False
+            assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is False
             facts = _finding_facts(verified.output)
             assert facts["severity"] == "blocking"
             assert facts["contradicting_invoice_count"] == "1"
@@ -461,7 +415,7 @@ def test_the_refused_revision_cannot_be_filed_locally(
             calculation_revision_id,
         )
         assert refused.exit_code == 1, refused.output
-        assert _payload(refused.output)["granted_verificado_completo"] is False
+        assert unwrap_schema_envelope(refused.output)["granted_verificado_completo"] is False
         assert _finding_facts(refused.output)["contradicting_invoice_count"] == "1"
 
         filed = session.invoke_password("app", "modelo", "work", "file", calculation_revision_id)

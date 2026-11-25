@@ -23,7 +23,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from ..cli_reference import _reference_subprocess_environment
+from ..cli_reference import reference_subprocess_environment
 from ..cli_tree import (
     CLI_TREE_STATIC_RELPATH,
     CliCommandNode,
@@ -50,13 +50,13 @@ def test_projection_environment_preserves_the_published_authority_dependency(
     """The isolated docs process keeps authority while discarding product state."""
     authority_root = tmp_path / "authority"
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(authority_root))
-    monkeypatch.setenv("CADRUMO_TOKEN_DIR", str(tmp_path / "ambient-tokens"))
+    monkeypatch.setenv("CADRUMO_LOG_LEVEL", "DEBUG")
 
-    environment = _reference_subprocess_environment(tmp_path / "state")
+    environment = reference_subprocess_environment(tmp_path / "state")
 
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root)
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "state")
-    assert "CADRUMO_TOKEN_DIR" not in environment
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "state")
+    assert "CADRUMO_LOG_LEVEL" not in environment
 
 
 def _collect_all_path_keys_in_subprocess() -> set[str]:
@@ -73,7 +73,7 @@ def _collect_all_path_keys_in_subprocess() -> set[str]:
     with TemporaryDirectory(prefix="cadrumo-cli-tree-cov-") as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
-            env=_reference_subprocess_environment(Path(storage_root)),
+            env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
             text=True,
             timeout=None,
@@ -171,10 +171,15 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         if node.machine_secret_payloads:
             secret_paths.add(path)
     # Interactive profile-authentication metadata is projected separately;
-    # these are the seven commands with machine-secret payload contracts.
+    # these are the twelve commands with machine-secret payload contracts.
     assert secret_paths == {
         ("aeat", "app", "ledger", "account", "add"),
         ("aeat", "app", "ledger", "account", "update"),
+        ("aeat", "app", "ledger", "invoice", "duplicate"),
+        ("aeat", "app", "ledger", "invoice", "preview"),
+        ("aeat", "app", "ledger", "rule", "trial"),
+        ("aeat", "app", "ledger", "split-check"),
+        ("aeat", "app", "ledger", "staged-check"),
         ("aeat", "app", "modelo", "m360", "declare"),
         ("aeat", "config", "login"),
         ("aeat", "config", "logout"),
@@ -198,7 +203,8 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
             assert projected.profile_authentication_contract == expected_contract
 
     rendered = serialise_cli_tree(cli_tree).lower()
-    assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
+    # No member carries a value or an example; an argument may still be named ``value``.
+    assert all(token not in rendered for token in ('"value":', '"example":', "secretstr"))
 
 
 def test_round_trip_through_serialised_form(cli_tree: CliTree, tmp_path: Path) -> None:

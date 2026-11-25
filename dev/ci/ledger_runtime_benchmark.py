@@ -24,7 +24,7 @@ from dev.ci.modelo_runtime_benchmark import (
 from dev.ci.modelo_runtime_benchmark import (
     observe_runtime_boundaries as observe_modelo_boundaries,
 )
-from dev.ci.profile_wizard_benchmark import _observe, observe_worker, summarize
+from dev.ci.profile_wizard_benchmark import observe, observe_worker, summarize
 
 
 @contextmanager
@@ -36,7 +36,7 @@ def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[N
     from cadrumo_client.transport.frontend_client import FrontendClient
 
     with pytest.MonkeyPatch.context() as patch, observe_modelo_boundaries(recorder), observe_worker(recorder):
-        observe_kdf_startup(partial(_observe, patch, recorder))
+        observe_kdf_startup(partial(observe, patch, recorder))
         for owner, method, label in (
             (FrontendClient, "operation", "frontend.operation"),
             (FrontendClient, "contract", "frontend.contract"),
@@ -45,7 +45,7 @@ def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[N
             (TransactionCatalogueRepository, "load", "ledger.load"),
             (TransactionCatalogueRepository, "load_revisioned", "ledger.load_revisioned"),
         ):
-            _observe(patch, recorder, owner, method, label)
+            observe(patch, recorder, owner, method, label)
         try:
             yield
         finally:
@@ -56,14 +56,17 @@ def copy_ledger_worker(output: Path) -> Path:
     """Instrument the canonical native fixture, refusing a changed bootstrap."""
     worker = copy_instrumented_worker(output)
     source = worker.read_text(encoding="utf-8")
-    original = "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_runtime_boundaries"
+    original = "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition"
     replacement = (
-        "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder\n"
-        "    from dev.ci.ledger_runtime_benchmark import observe_ledger_boundaries as observe_runtime_boundaries"
+        "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition\n"
+        "    from dev.ci.ledger_runtime_benchmark import observe_ledger_boundaries"
     )
     if source.count(original) != 1:
         raise ValueError("instrumented worker bootstrap changed")
     source = source.replace(original, replacement)
+    if source.count("profile_setup=False):") != 1:
+        raise ValueError("instrumented worker observer setup changed")
+    source = source.replace("profile_setup=False):", "profile_setup=False, observer=observe_ledger_boundaries):")
     compile(source, str(worker), "exec")
     worker.write_text(source, encoding="utf-8")
     return worker

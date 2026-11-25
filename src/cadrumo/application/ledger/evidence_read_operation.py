@@ -15,12 +15,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.document_shape import DocumentShape
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -49,19 +49,20 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_ports import LedgerEvidencePortsFactory
-from .read_access import resolve_ledger_read_access
+from .evidence_readability import EvidenceReadabilityState, EvidenceUnreadableCause
+from .read_access import resolve_ledger_request_read_access
 
 LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID = "ledger.evidence.list"
 LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID = "ledger.evidence.view"
 LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID = "ledger.evidence.query"
 LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE = "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 _MAX_EVIDENCE_LIST_ROWS = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
 _SourcePath = Annotated[str, Field(min_length=1, max_length=4_096)]
@@ -99,14 +100,13 @@ class LedgerEvidenceQueryRequest(BaseModel):
     evidence_id: _EvidenceIdentity | None = None
 
 
-class LedgerEvidenceRecordProjection(BaseModel):
-    """Bounded allowlist of fields already shown by the evidence CLI."""
+class _LedgerEvidenceRecordFacts(BaseModel):
+    """Bounded evidence fields shared by the person's record and the automation's record."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     evidence_id: _EvidenceIdentity
     bucket_id: BucketId
-    source_path: _SourcePath
     source_sha256: ContentDigest
     attachment_id: Hex64Str
     media_kind: MediaKind
@@ -119,12 +119,39 @@ class LedgerEvidenceRecordProjection(BaseModel):
     notes: _Notes = ""
     created_at: datetime
     updated_at: datetime
+    readability: EvidenceReadabilityState = "unchecked"
+    """Whether the stored bytes were found readable, unreadable or never checked; read from the record, not probed."""
+    document_shape: DocumentShape | None = None
+    """The recognised document shape when the bytes were found readable."""
+    unreadable_cause: EvidenceUnreadableCause | None = None
+    """Why the bytes were found unreadable, in the read path's refusal vocabulary."""
+    readability_checked_at: datetime | None = None
+    """When the stored bytes were last checked."""
 
     @field_validator("created_at", "updated_at")
     @classmethod
     @pydantic_validation_boundary
     def _timestamps_are_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    def _readability_carries_its_own_facts(self) -> _LedgerEvidenceRecordFacts:
+        checked = self.readability_checked_at is not None
+        if self.readability == "unchecked":
+            consistent = not checked and self.document_shape is None and self.unreadable_cause is None
+        elif self.readability == "readable":
+            consistent = checked and self.document_shape is not None and self.unreadable_cause is None
+        else:
+            consistent = checked and self.document_shape is None and self.unreadable_cause is not None
+        if not consistent:
+            raise ValueError("evidence readability does not carry exactly its own facts")
+        return self
+
+
+class LedgerEvidenceRecordProjection(_LedgerEvidenceRecordFacts):
+    """Bounded allowlist of fields already shown by the evidence CLI."""
+
+    source_path: _SourcePath
 
     @classmethod
     def from_record(cls, record: PurchaseInvoiceEvidence) -> LedgerEvidenceRecordProjection:
@@ -152,6 +179,7 @@ class LedgerEvidenceRecordProjection(BaseModel):
             validate_utc_aware(record.updated_at)
         except CoreValidationError:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from None
+        finding = record.readability
         return cls(
             evidence_id=record.evidence_id,
             bucket_id=record.bucket_id,
@@ -168,35 +196,17 @@ class LedgerEvidenceRecordProjection(BaseModel):
             notes=record.notes,
             created_at=record.created_at,
             updated_at=record.updated_at,
+            readability="unchecked" if finding is None else finding.state,
+            document_shape=None if finding is None else finding.document_shape,
+            unreadable_cause=None if finding is None else finding.unreadable_cause,
+            readability_checked_at=None if finding is None else finding.checked_at,
         )
 
 
-class LedgerEvidenceAutomationRecordProjection(BaseModel):
+class LedgerEvidenceAutomationRecordProjection(_LedgerEvidenceRecordFacts):
     """One evidence record as an automation receives it: every field but the directory it was added from."""
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    evidence_id: _EvidenceIdentity
-    bucket_id: BucketId
     source_file_name: _SourceFileName | None = None
-    source_sha256: ContentDigest
-    attachment_id: Hex64Str
-    media_kind: MediaKind
-    supplier: _Supplier | None = None
-    invoice_number: _InvoiceNumber | None = None
-    invoice_date: _InvoiceDate | None = None
-    taxable_base: _DecimalText | None = None
-    iva_rate: _DecimalText | None = None
-    iva_amount: _DecimalText | None = None
-    notes: _Notes = ""
-    created_at: datetime
-    updated_at: datetime
-
-    @field_validator("created_at", "updated_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _timestamps_are_utc(cls, value: datetime) -> datetime:
-        return validate_utc_aware(value)
 
     @classmethod
     def from_person_projection(cls, record: LedgerEvidenceRecordProjection) -> LedgerEvidenceAutomationRecordProjection:
@@ -217,6 +227,10 @@ class LedgerEvidenceAutomationRecordProjection(BaseModel):
             notes=record.notes,
             created_at=record.created_at,
             updated_at=record.updated_at,
+            readability=record.readability,
+            document_shape=record.document_shape,
+            unreadable_cause=record.unreadable_cause,
+            readability_checked_at=record.readability_checked_at,
         )
 
 
@@ -386,7 +400,7 @@ def _require_read_receipt(
     )
 
 
-def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the exact list result carried by its successful receipt."""
     if type(result) is not LedgerEvidenceListExecutionResult:
         raise ValueError("invalid ledger evidence list result")
@@ -399,7 +413,7 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
     return result.result
 
 
-def _project_view_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_view_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the closed outcome matching its exact terminal receipt."""
     if type(result) is not LedgerEvidenceViewExecutionResult:
         raise ValueError("invalid ledger evidence view result")
@@ -442,8 +456,7 @@ def _project_query_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse a public read result that cannot fit the bounded projection document."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 class LedgerEvidenceReadExecutor:
@@ -710,45 +723,33 @@ def build_ledger_evidence_query_definition(ports_factory: LedgerEvidencePortsFac
 def _resolve_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceListRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceListRequest,
     )
 
 
 def _resolve_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceViewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceViewRequest,
     )
 
 
 def _resolve_query_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceQueryRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceQueryRequest,
     )
 
 
@@ -759,7 +760,7 @@ def build_ledger_evidence_list_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerEvidenceListProjection,
-        result_projector=_project_list_result,
+        result_projector=project_list_result,
         access_resolver=_resolve_list_access,
     )
 
@@ -776,7 +777,7 @@ def build_ledger_evidence_view_registration(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=definition.definition_id + ".result", schema_version=2, model_type=LedgerEvidenceViewProjection
         ),
-        result_projector=_project_view_result,
+        result_projector=project_view_result,
         access_resolver=_resolve_view_access,
     )
 

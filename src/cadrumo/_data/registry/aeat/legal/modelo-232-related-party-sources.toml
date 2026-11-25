@@ -1,0 +1,29 @@
+# The two legal texts the Modelo 232 obligation fact quotes: Orden HFP/816/2017 art. 2
+# (who must file) and LIS art. 18 (the operations the simplified documentation never
+# covers). Both are the BOE consolidated texts bundled in the corpus.
+
+[sources."boe-orden-hfp-816-2017-art-2-obligados"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hfp-816-2017-art-2.html"
+sha256 = "c6923683940c9d4f3c0d8eea6a176aa90137c68d27aa211ad8af84bff97302d3"
+bytes = 4714
+retrieved_at = 2026-11-12
+published_at = 2017-08-30
+applies_from = 2016-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a2"
+review_status = "pending_review"
+
+[sources."boe-ley-27-2014-art-18-operaciones-vinculadas"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-27-2014-art-18.html"
+sha256 = "4bd88cd90d16b34189b4843561dff63d0d77d931281d14c7e68f7f3b81b14df9"
+bytes = 29649
+retrieved_at = 2026-11-12
+published_at = 2014-11-28
+applies_from = 2015-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a18"
+review_status = "pending_review"

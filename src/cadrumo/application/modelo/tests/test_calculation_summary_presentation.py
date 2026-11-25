@@ -28,7 +28,7 @@ from ..calculation_summary_presentation import (
     format_summary_value,
 )
 from ..value_presentation import LOCALE_NUMBER_FORMATS
-from ._calculation_report_fixture import (
+from .calculation_report_fixture import (
     MEASURED_CASILLA,
     NOT_APPLICABLE_CASILLA,
     TAXPAYER_NAME,
@@ -92,7 +92,7 @@ def test_non_figure_values_are_shown_as_the_report_spells_them() -> None:
 
     assert shown(True) == "Sí"
     assert shown(False) == "No"
-    assert shown("2026-06-30") == "2026-06-30"
+    assert shown("1980-06-30") == "1980-06-30"
     assert shown("01A") == "01A"
     assert shown("1.2.3") == "1.2.3"
 

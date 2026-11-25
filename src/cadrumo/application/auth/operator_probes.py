@@ -17,7 +17,7 @@ from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ..auth_credentials import (
     ActiveCertificateCredentials,
@@ -51,22 +51,21 @@ if TYPE_CHECKING:
 def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
     """Classify a Cl@ve Móvil identity against the active profile tax id.
 
-    The single home for the five-way alignment ladder shared by the live
-    identity-state probe and ``_auth_configure_result``. Inputs are the
-    already-normalised (stripped, upper-cased) tax id and provider identity.
+    The single home for the alignment ladder shared by the live
+    identity-state probe and ``auth_configure_result``. The profile tax id is
+    the Cl@ve identity whenever it is recorded, so a recorded tax id always
+    matches; only a settings-supplied identity can stand without it. Inputs
+    are the already-normalised (stripped, upper-cased) tax id and provider
+    identity.
     """
-    if not profile_tax_id and not provider_identity:
-        return "profile_tax_id_missing_and_clave_identity_missing"
-    if not profile_tax_id:
-        return "profile_tax_id_missing"
-    if not provider_identity:
-        return "clave_identity_missing"
-    if profile_tax_id == provider_identity:
+    if profile_tax_id:
         return "matches"
-    return "mismatch"
+    if provider_identity:
+        return "profile_tax_id_missing"
+    return "profile_tax_id_missing_and_clave_identity_missing"
 
 
-def _active_profile_path_values(
+def active_profile_path_values(
     state: WorkflowState | None = None,
     *,
     operator_probe_ports: OperatorProbePorts,
@@ -116,7 +115,7 @@ def probe_clave_credentials(
         provider_kind,
         settings=settings,
         facts=clave_auth_facts_from_profile_values(
-            _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+            active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
         ),
     )
 
@@ -140,7 +139,7 @@ def bind_profile_auth_settings(
     ):
         return settings
     facts = clave_auth_facts_from_profile_values(
-        _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+        active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
     )
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     if credentials is None:
@@ -162,7 +161,7 @@ def live_auth_identity_state(
     """Project whether the configured live-auth identity is usable."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
-    values = _active_profile_path_values(state, operator_probe_ports=operator_probe_ports)
+    values = active_profile_path_values(state, operator_probe_ports=operator_probe_ports)
     facts = clave_auth_facts_from_profile_values(values)
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     provider_identity = credentials.dni_nie if credentials is not None else ""
@@ -205,7 +204,7 @@ def live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings
 class _LocalSessionProbe(BaseModel):
     """Outcome of the on-disk persisted-session probe run by ``auth test``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     present: bool = False
     expired: bool | None = None
@@ -274,7 +273,7 @@ def probe_local_session(
 class _ProviderProbeOutcome(BaseModel):
     """Verdict of the per-provider local probe run by ``auth test``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     result: ProviderProbeResult
     summary: str = ""
@@ -285,49 +284,18 @@ class ProviderConfigurationProbe(BaseModel):
     """Public per-provider local configuration readiness verdict.
 
     Wraps the pure-local :func:`probe_provider_credentials` (no network,
-    no active-profile requirement) so the workstation doctor
-    (``aeat config check``) can render one certificate / Cl@ve Móvil
-    readiness row per :class:`core.auth_provider.AuthProviderKind`
+    no active-profile requirement) so a caller can read one certificate /
+    Cl@ve Móvil readiness verdict per :class:`core.auth_provider.AuthProviderKind`
     directly from :class:`core.config.Settings`. ``result`` is the
     typed :class:`ProviderProbeResult`; ``summary`` is the localised
     one-line operator-facing verdict.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     result: ProviderProbeResult
     summary: str = ""
-
-
-def probe_provider_configuration(
-    provider: str,
-    *,
-    settings: Settings | None = None,
-    operator_probe_ports: OperatorProbePorts,
-) -> ProviderConfigurationProbe:
-    """Run the pure-local per-provider configuration probe for ``provider``.
-
-    Resolves the certificate path or Cl@ve Móvil identity from
-    :class:`core.config.Settings` and classifies the local
-    configuration health without any network call or active-profile
-    session. Returns a typed :class:`ProviderConfigurationProbe`; it
-    never raises for a missing or malformed configuration — an absent
-    provider surfaces as :attr:`ProviderProbeResult.NO_PATH_SET` /
-    :attr:`ProviderProbeResult.IDENTITY_UNSET`, a broken one as
-    ``expired`` / ``corrupt`` / ``invalid_identity``.
-    """
-    resolved_settings = settings or load_settings()
-    credentials = (
-        unnamed_certificate_credentials(resolved_settings) if provider == AuthProviderKind.CERTIFICATE.value else None
-    )
-    return probe_provider_credentials(
-        provider,
-        "",
-        settings=resolved_settings,
-        certificate_credentials=credentials,
-        operator_probe_ports=operator_probe_ports,
-    )
 
 
 def probe_provider_credentials(
@@ -582,6 +550,5 @@ __all__ = [
     "probe_certificate_bundle",
     "probe_clave_credentials",
     "probe_local_session",
-    "probe_provider_configuration",
     "probe_provider_credentials",
 ]

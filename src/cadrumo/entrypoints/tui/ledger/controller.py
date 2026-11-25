@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
+from collections.abc import Collection
 from dataclasses import replace
-from typing import ClassVar, Final, cast, override
+from typing import Final
 
-from textual.binding import Binding
-from textual.message import Message
-from textual.widgets import DataTable, Static
-
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -23,16 +19,11 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceProjectionV1,
     LedgerWorkspaceStatus,
 )
-from ....application.operator_actions.models import ActionReference
 from ....application.review.filter import LedgerReviewStatus
-from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
-from ..components.account_chrome import AccountChromeScreen
-from ..components.language import reword_navigation
-from ..components.theme import BASE_CSS, tokenised
-from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
@@ -45,6 +36,7 @@ from .models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRowV1,
+    LedgerExclusionResultV1,
     LedgerExclusionSubmissionV1,
     LedgerImportOutcomeV1,
     LedgerImportRequestV1,
@@ -52,12 +44,14 @@ from .models import (
     LedgerInvoiceEntryV1,
     LedgerLinkResultV1,
     LedgerLinkSubmissionV1,
-    LedgerReaderReadinessV1,
-    LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
+from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection
+
+LEDGER_TRANSACTION_FOCUS: Final = "ledger.transaction"
+"""The Ledger focus that opens its entries with one transaction selected, by its id."""
 
 _AREA_LOCALE_KEYS: Final = {
     LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
@@ -145,20 +139,32 @@ class LedgerWorkspaceController:
         self.projection = projection
         self.injection = injection
         self.review_action = injection.review_action
+        self.review_door = injection.review_door
         self.classify_action = injection.classify_action
         self.classification_submitter = injection.classification_submitter
+        self.link_options_door = injection.link_options_door
         self.import_door = injection.import_door
         self.invoice_add_door = injection.invoice_add_door
         self.exclusion_submitter = injection.exclusion_submitter
         self.evidence_door = injection.evidence_door
         self.evidence_action = injection.evidence_action
         self.evidence_items = injection.evidence_items
+        self.evidence_review_door = injection.evidence_review_door
         self.link_action = injection.link_action
         self.link_submitter = injection.link_submitter
         self.activity_asset_actions = injection.activity_asset_actions
         self.record_doors = injection.record_doors
         self.own_account_door = injection.own_account_door
+        self.tools = injection.tools
         self._states = {row.area: row for row in projection.areas}
+
+    def tools_for(self, area: LedgerWorkspaceArea) -> tuple[LedgerToolV1, ...]:
+        """Return the tools an area lists, in the order they were given."""
+        return tuple(tool for tool in self.tools if tool.area is area)
+
+    def tool(self, key: str) -> LedgerToolV1 | None:
+        """Return the tool with this key, if the workspace was given one."""
+        return next((tool for tool in self.tools if tool.key == key), None)
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
         """Return a safe position and redacted identifier from the visible projection."""
@@ -241,15 +247,19 @@ class LedgerWorkspaceController:
         shape the wholly-wired-doors gate reads the launcher's obligations from.
         """
         return (
-            (
+            (area is LedgerWorkspaceArea.REVIEW and self.review_door is None)
+            or (
                 area is LedgerWorkspaceArea.CLASSIFICATION
                 and (self.classify_action is None or self.classification_submitter is None)
             )
             or (area is LedgerWorkspaceArea.IMPORT and self.import_door is None)
-            or (
-                area is LedgerWorkspaceArea.EVIDENCE
-                and (self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))
-            )
+            or self._evidence_door_is_missing(area)
+        )
+
+    def _evidence_door_is_missing(self, area: LedgerWorkspaceArea) -> bool:
+        return area is LedgerWorkspaceArea.EVIDENCE and (
+            self.evidence_action is None
+            or (self.evidence_items is None and self.evidence_door is None and self.evidence_review_door is None)
         )
 
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
@@ -315,7 +325,7 @@ class LedgerWorkspaceController:
                 destination=self.context.destination,
                 focus=TuiFocusIdentityV1(
                     destination=self.context.destination,
-                    semantic_key="ledger.transaction",
+                    semantic_key=LEDGER_TRANSACTION_FOCUS,
                     restore_token=transaction_id,
                 ),
                 action_candidate_id=self.context.action_candidate_id,
@@ -332,28 +342,10 @@ class LedgerWorkspaceController:
     def restored_transaction_id(self) -> TransactionId | None:
         """Resolve a transaction focus by semantic identity, never by row position."""
         focus = self.context.focus
-        if focus is None or focus.semantic_key != "ledger.transaction" or focus.restore_token is None:
+        if focus is None or focus.semantic_key != LEDGER_TRANSACTION_FOCUS or focus.restore_token is None:
             return None
         candidate = focus.restore_token
         return candidate if any(row.transaction_id == candidate for row in self.projection.entries) else None
-
-    def review_rows(self) -> tuple[LedgerReviewRowV1, ...]:
-        """Join review identities to safe entry references, refusing contradictions."""
-        by_id = {row.transaction_id: row for row in self.projection.entries}
-        rows: list[LedgerReviewRowV1] = []
-        for transaction_id in self.projection.review_transaction_ids:
-            source = by_id.get(transaction_id)
-            if source is None:
-                raise ValueError("Ledger review identity is absent from the projected entry catalogue")
-            rows.append(
-                LedgerReviewRowV1(
-                    transaction_id=transaction_id,
-                    review_status=source.review_status,
-                    action=self.review_action,
-                    source=source,
-                )
-            )
-        return tuple(rows)
 
     def build_classification_patch(self, values: dict[str, object]) -> LedgerClassificationPatchV1:
         """Use the injected request boundary or the existing direct application's patch."""
@@ -395,16 +387,19 @@ class LedgerWorkspaceController:
         """Report whether excluding an entry is admitted: the classify authority and its writer."""
         return self.classify_action is not None and self.exclusion_submitter is not None
 
-    async def submit_exclusion(self, transaction_id: TransactionId) -> ManualLedgerTransactionResult:
-        """Exclude one entry the operator can see in the review list."""
+    async def submit_exclusion(
+        self, transaction_id: TransactionId, *, listed: Collection[TransactionId]
+    ) -> ManualLedgerTransactionResult | LedgerExclusionResultV1:
+        """Exclude one entry the operator can see in the review queue, which lists ``listed``."""
         if self.classify_action is None or self.exclusion_submitter is None:
             raise InternalInvariantError("exclusion is unavailable")
-        if transaction_id not in self.projection.review_transaction_ids:
+        if transaction_id not in listed:
             raise ValueError("exclusion target is absent from the visible review list")
         result = await self.exclusion_submitter(
             LedgerExclusionSubmissionV1(action=self.classify_action, transaction_id=transaction_id)
         )
-        if result.ref.transaction_id != transaction_id:
+        settled = result.transaction_id if isinstance(result, LedgerExclusionResultV1) else result.ref.transaction_id
+        if settled != transaction_id:
             raise ValueError("exclusion result transaction identity disagrees")
         return result
 
@@ -434,15 +429,17 @@ class LedgerWorkspaceController:
             raise InternalInvariantError("evidence reading is unavailable")
         return await self.evidence_door.extract(evidence_id)
 
+    async def view_evidence_page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what is served of one registered document through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence viewing is unavailable")
+        return await self.evidence_door.page(evidence_id)
+
     async def confirm_evidence(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Record one read document as an invoice through the injected evidence door."""
         if self.evidence_door is None:
             raise InternalInvariantError("evidence confirmation is unavailable")
         return await self.evidence_door.confirm(confirmation)
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1 | None:
-        """Measure the local reader, or ``None`` when no door can measure it."""
-        return None if self.evidence_door is None else self.evidence_door.reader_readiness()
 
     def can_refresh(self) -> bool:
         """Report whether this workspace can re-read its state after a write."""
@@ -462,7 +459,7 @@ class LedgerWorkspaceController:
         focus = self.context.focus
         if (
             focus is not None
-            and focus.semantic_key == "ledger.transaction"
+            and focus.semantic_key == LEDGER_TRANSACTION_FOCUS
             and all(row.transaction_id != focus.restore_token for row in snapshot.projection.entries)
         ):
             focus = None
@@ -525,284 +522,8 @@ class LedgerWorkspaceController:
         return result
 
 
-class LedgerRouteRequested(Message):
-    """Host-facing request to replace the active Ledger destination body."""
-
-    def __init__(self, target: LedgerRouteTargetV1) -> None:
-        """Store the internal semantic target for the owning host."""
-        super().__init__()
-        self.target = target
-
-
-class LedgerReviewRequested(Message):
-    """Host-facing request naming a real application query and transaction focus."""
-
-    def __init__(self, *, transaction_id: TransactionId, action: ActionReference) -> None:
-        """Store the safe transaction identity and canonical query action."""
-        super().__init__()
-        self.transaction_id = transaction_id
-        self.action = action
-
-
-class LedgerEvidenceReviewRequested(Message):
-    """Host-facing request carrying the canonical evidence-review query."""
-
-    def __init__(self, *, attachment_id: str, action: ActionReference) -> None:
-        """Store one visible attachment identity and its admitted action."""
-        super().__init__()
-        self.attachment_id = attachment_id
-        self.action = action
-
-
-class LedgerEntrySelected(Message):
-    """Host-facing semantic selection of one safe Ledger entry reference."""
-
-    def __init__(self, transaction_id: TransactionId) -> None:
-        """Store only the application projection's safe transaction identity."""
-        super().__init__()
-        self.transaction_id = transaction_id
-
-
-class LedgerBackRequested(Message):
-    """Request that the owning host return to the parent destination."""
-
-
-class LedgerInvoiceEntryRequested(Message):
-    """Request the invoice entry form as the workspace body."""
-
-
-class LedgerInvoiceCatalogueRequested(Message):
-    """Request canonical invoice readback from the bucket-bound door."""
-
-
-class LedgerTransactionDetailRequested(Message):
-    """Request detail for one selected transaction identity."""
-
-    def __init__(self, transaction_id: TransactionId) -> None:
-        """Retain the selected transaction rather than a mutable table position."""
-        super().__init__()
-        self.transaction_id = transaction_id
-
-
-class LedgerWorkspaceScreen(AccountChromeScreen):
-    """Shared one-scroll shell and semantic navigation behavior."""
-
-    BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
-    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = False
-    """Whether Back from this body leaves the workspace rather than returning to its overview."""
-    CSS = BASE_CSS + tokenised(
-        """
-        .ledger-page { width: 100%; height: 1fr; }
-        .ledger-section { width: 100%; height: auto; margin-bottom: $cadrumo-stack; }
-        .ledger-refusal { color: $warning; text-style: bold; height: auto; }
-        .ledger-empty { color: $text-muted; height: auto; }
-        """
-    )
-
-    def __init__(self, controller: LedgerWorkspaceController, *, id: str | None = None) -> None:
-        """Retain the read-only controller and interaction observations."""
-        super().__init__(id=id)
-        self.controller = controller
-        self.requested_target: LedgerRouteTargetV1 | None = None
-        self.refusal: LedgerRouteRefusalV1 | None = None
-        self.back_requested = False
-        self.refreshing = False
-        """Whether a re-read of the workspace is running off the event loop."""
-        self._after_refresh: Callable[[], object] | None = None
-        self.refresh_seconds: list[float] = []
-        """How long each completed re-read took, newest last."""
-
-    def refresh_then(self, then: Callable[[], object]) -> None:
-        """Re-read the workspace off the event loop, then continue with ``then``.
-
-        A capture reads every catalogue the workspace projects, which takes
-        seconds on a real ledger; on the loop that froze every key. A request
-        made while one is already running does not start a second read: it
-        replaces what happens when the running one lands, so the operator's
-        last intent wins and the store is read once.
-        """
-        if not self.controller.can_refresh():
-            then()
-            return
-        self._after_refresh = then
-        if self.refreshing:
-            return
-        self.refreshing = True
-        self._status_line().update(tr("tui.ledger.flow.refreshing"))
-        self.run_worker(self._refresh(), group="ledger-refresh")
-
-    async def _refresh(self) -> None:
-        started = asyncio.get_running_loop().time()
-        try:
-            self.controller = await asyncio.to_thread(self.controller.refreshed)
-        except CadrumoError:
-            self._status_line().update(tr("tui.ledger.flow.refresh_failed"))
-        else:
-            self._status_line().update("")
-        finally:
-            self.refreshing = False
-            self.refresh_seconds.append(asyncio.get_running_loop().time() - started)
-        then, self._after_refresh = self._after_refresh, None
-        if then is not None:
-            then()
-
-    def _status_line(self) -> Static:
-        """The body's flow status line, or its notice line when it has none."""
-        found = self.query("#ledger-flow-status")
-        return cast(Static, found.first()) if found else self.query_one("#ledger-refusal", Static)
-
-    @override
-    async def refresh_language(self) -> None:
-        """Reword navigation without replacing forms or restarting their workers."""
-        await super().refresh_language()
-        reword_navigation(self, "#ledger-navigation", self.populate_navigation)
-
-    def populate_navigation(self) -> None:
-        """Populate the complete seven-area catalogue in canonical order."""
-        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.add_column(tr("tui.ledger.column.destination"), key="destination")
-        table.add_column(tr("tui.ledger.column.availability"), key="availability")
-        table.add_column(tr("tui.ledger.column.items"), key="items")
-        for area in LedgerWorkspaceArea:
-            state = self.controller.state_for(area)
-            refusal = self.controller.refusal_for(area)
-            availability = state.availability if refusal is None else refusal.availability
-            # An area waiting only for the operator to pick an entry is not
-            # unavailable; saying so would send them away from the fix.
-            availability_cell = (
-                tr("tui.ledger.availability.choose_entry")
-                if refusal is not None and refusal.reason_key == "tui.ledger.refusal.selection_required"
-                else availability_label(availability)
-            )
-            table.add_row(area_label(area), availability_cell, item_count_label(state), key=area.value)
-
-    def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
-        """Handle the common navigation table and expose refusals as visible copy."""
-        event_table = cast("DataTable[str]", event.data_table)
-        if event_table.id != "ledger-navigation":
-            return False
-        area = LedgerWorkspaceArea(str(event.row_key.value))
-        refusal = self.controller.refusal_for(area)
-        notice = self.query_one("#ledger-refusal", Static)
-        if refusal is not None:
-            self.refusal = refusal
-            notice.update(tr(refusal.reason_key))
-            return True
-        target = self.controller.route_target(area)
-        self.requested_target = target
-        notice.update("")
-        self.post_message(LedgerRouteRequested(target))
-        return True
-
-    def action_back(self) -> None:
-        """Ask the host to return; never terminate the application."""
-        self.back_requested = True
-        self.post_message(LedgerBackRequested())
-
-    def on_ledger_entry_selected(self, event: LedgerEntrySelected) -> None:
-        """Re-address the workspace at the chosen entry and repaint navigation.
-
-        Lives on the shared base rather than on the entries screen because the
-        controller is shared: review and reconciliation restore their cursor
-        from the same focus, so a selection made anywhere is the selection
-        everywhere.
-
-        The controller is REBOUND, not mutated — ``with_transaction_focus``
-        returns a new one — so the next area move, which resolves its screen
-        against ``self.controller``, carries the selection across the body swap
-        without any extra push. The navigation table is rebuilt because
-        classification's reachability has just changed, and a stale row would
-        keep offering the old refusal.
-        """
-        self.controller = self.controller.with_transaction_focus(event.transaction_id)
-        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.clear(columns=True)
-        self.populate_navigation()
-
-    def on_ledger_route_requested(self, event: LedgerRouteRequested) -> None:
-        """Resolve the requested area here and hand the finished body to the host.
-
-        Textual delivers a screen's own posted message to it before bubbling,
-        so the workspace answers its own navigation: it owns the controller and
-        the route catalogue, and the host owns only the screen stack.
-        """
-        # Imported at call time because the route catalogue imports this module
-        # for the shared shell; at module scope the two would form a cycle.
-        from .routes import resolve_ledger_screen
-
-        replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
-
-    def on_ledger_invoice_entry_requested(self, _: LedgerInvoiceEntryRequested) -> None:
-        """Open the invoice entry form, or say why it cannot open in this session."""
-        from .invoice_entry import LedgerInvoiceEntryScreen
-
-        if not self.controller.can_add_invoices():
-            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
-            return
-        replace_workspace_body(self.app, LedgerInvoiceEntryScreen(self.controller))
-
-    def on_ledger_invoice_catalogue_requested(self, _: LedgerInvoiceCatalogueRequested) -> None:
-        """Open canonical invoice readback through the injected record door."""
-        from .record_views import LedgerInvoiceCatalogueScreen
-
-        doors = self.controller.record_doors
-        if doors is None:
-            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
-            return
-        replace_workspace_body(self.app, LedgerInvoiceCatalogueScreen(self.controller, doors))
-
-    def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
-        """Open the selected transaction without resolving a row position."""
-        from .transaction_views import LedgerTransactionDetailScreen
-
-        doors = self.controller.record_doors
-        if doors is None:
-            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
-            return
-        replace_workspace_body(
-            self.app,
-            LedgerTransactionDetailScreen(self.controller, doors, str(event.transaction_id)),
-        )
-
-    def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
-        """Return an area to the Ledger overview; leave the workspace only from the overview."""
-        # An overview that cannot open would bounce Back straight back here.
-        if self.IS_WORKSPACE_OVERVIEW or self.controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is not None:
-            self.dismiss(None)
-            return
-        self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.OVERVIEW)))
-
-    def on_ledger_review_requested(self, _: LedgerReviewRequested) -> None:
-        """Say that the selection led nowhere, rather than appearing to work.
-
-        Selecting a review row names a real query action, but no production
-        consumer executes one yet. Answering with the pending-area copy is the
-        honest state: an unhandled message is indistinguishable from a dead
-        keypress, and that silence is precisely how the workspace navigation
-        defect stayed invisible through the whole surface's construction.
-        """
-        self._refuse_pending_destination()
-
-    def on_ledger_evidence_review_requested(self, _: LedgerEvidenceReviewRequested) -> None:
-        """Report the same pending state for an evidence-row selection."""
-        self._refuse_pending_destination()
-
-    def _refuse_pending_destination(self) -> None:
-        """Surface the canonical pending-area copy on this screen's notice."""
-        self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.destination_pending"))
-
-
 __all__ = [
-    "LedgerBackRequested",
-    "LedgerEntrySelected",
-    "LedgerEvidenceReviewRequested",
-    "LedgerInvoiceCatalogueRequested",
-    "LedgerInvoiceEntryRequested",
-    "LedgerReviewRequested",
-    "LedgerRouteRequested",
-    "LedgerTransactionDetailRequested",
     "LedgerWorkspaceController",
-    "LedgerWorkspaceScreen",
     "area_label",
     "availability_label",
     "item_count_label",

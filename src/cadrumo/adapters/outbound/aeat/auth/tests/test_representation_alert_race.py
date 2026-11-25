@@ -31,7 +31,7 @@ class _LateAlertProvider(ClaveMovilAuthProvider):
 @pytest.mark.asyncio
 async def test_alert_appearing_after_inspection_is_dismissed_before_retry(tmp_path: Path) -> None:
     """Real browser hit testing blocks the first click; the bounded recovery reaches confirmation."""
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_browser_navigation_timeout_ms=500)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_browser_navigation_timeout_ms=500)
     async with opened_http_boundary() as boundary:
         playwright, session = await open_real_browser_session(
             boundary=boundary, settings=settings, profile_name="late-representation-alert"

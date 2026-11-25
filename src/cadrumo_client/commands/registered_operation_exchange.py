@@ -10,10 +10,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseApplyRequestV1,
     OperationResponseRejectRequestV1,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-)
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import remaining_budget

@@ -3,26 +3,27 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import asynccontextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
-from typing import Any, cast
-from uuid import UUID, uuid4
+from typing import cast
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
-    TransactionDirection,
     TransactionLifecycleState,
 )
 from ....domain.transactions.errors import TransactionValidationError
@@ -31,18 +32,14 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.owner import OperationExecutorContext
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import SplitChildCommand, SplitTransactionResult
-from ..persistence_ports import LedgerPersistenceConflictError
-from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
+from .full_catalogue_commit_harness import FullCatalogueCommitHarness
+from .personal_manual_row_support import personal_outgoing_manual_row
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -85,13 +82,8 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+    return registration_access_context(
+        registration, profile_id=profile_id, action=AccessAction.SUBMIT, frontend=frontend
     )
 
 
@@ -109,33 +101,7 @@ def _result(*, child_transaction_ids: tuple[str, ...] = ("c" * 64, "d" * 64)) ->
 
 
 def _parent_transaction() -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="split-operation-parent",
-        booked_date=date(2026, 5, 2),
-        value_date=None,
-        amount=Decimal("100.00"),
-        currency="EUR",
-        counterparty="Vendor SL",
-        description="materials",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            provider_name="test",
-        ),
-        raw_fields={"source": "test"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.PERSONAL,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-        },
-    )
+    return personal_outgoing_manual_row("split-operation-parent", amount=Decimal("100.00"), description="materials")
 
 
 def _child_transaction(parent: Transaction, child: SplitChildCommand, *, index: int) -> Transaction:
@@ -240,137 +206,28 @@ def test_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     result = _result()
-    operation._require_result_bound(result)
+    operation.require_result_bound(result)
 
-    monkeypatch.setattr(operation, "_MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
+    monkeypatch.setattr(operation, "MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
 
     with pytest.raises(TransactionValidationError, match="registered projection bound"):
-        operation._require_result_bound(result)
+        operation.require_result_bound(result)
 
 
 @pytest.mark.asyncio
 async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    in_commit = False
     parent = _parent_transaction()
     catalogue = TransactionCatalogue.model_validate({parent.transaction_id: parent})
-    revision_calls: list[object] = []
-    guarded_writes: list[str] = []
     split_calls: list[dict[str, object]] = []
-    authority = cast(PinnedAuthorityOperation, object())
-
-    class TransactionRepository:
-        bucket_id = str(_PROFILE)
-
-        def exists(self) -> bool:
-            return True
-
-        def load(self) -> TransactionCatalogue:
-            return catalogue
-
-        def load_for_date_range(self, _start: date, _end: date) -> TransactionCatalogue:
-            return catalogue
-
-        def load_by_ids(self, _transaction_ids: object) -> TransactionCatalogue:
-            return catalogue
-
-        def partition_by_date_range(self, _start: date, _end: date) -> object:
-            raise AssertionError("split should use the full revisioned catalogue")
-
-        def save(self, _catalogue: TransactionCatalogue) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def save_with_secure_object_writes(
-            self,
-            _catalogue: TransactionCatalogue,
-            _extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def replace_if_current_with_secure_object_writes(
-            self,
-            _current: Transaction,
-            _replacement: Transaction,
-            _extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            raise AssertionError("split must use its full-catalogue revision guard")
-
-        def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
-            assert in_commit
-            revision_calls.append(catalogue)
-            return catalogue, "revision-one"
-
-        def save_if_revision_with_secure_object_writes(
-            self,
-            _new_catalogue: TransactionCatalogue,
-            *,
-            expected_revision_id: str,
-            extra_writes: tuple[SecureObjectWrite, ...],
-        ) -> None:
-            assert in_commit
-            assert extra_writes == ()
-            guarded_writes.append(expected_revision_id)
-
-    repository = TransactionRepository()
-    ports = LedgerActionPorts(
-        operation=authority,
-        transaction_repository=cast(Any, repository),
-        bucket_event_repository=cast(Any, object()),
-        invoice_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        attachment_store=cast(Any, object()),
-        usage_ratio_profile=cast(Any, object()),
-        usage_ratio_profile_loader=cast(Any, object()),
-        work_unit_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        calculation_repository=cast(Any, SimpleNamespace(bucket_id=str(_PROFILE))),
-        purchase_invoice_evidence_records=(),
-    )
-
-    class Cancellation:
-        @asynccontextmanager
-        async def irreversible_section(self):
-            nonlocal in_commit
-            in_commit = True
-            try:
-                yield
-            finally:
-                in_commit = False
-
-    class Events:
-        def __init__(self) -> None:
-            self.effects: list[OperationEffect] = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
+    harness = FullCatalogueCommitHarness(profile_id=_PROFILE, catalogue=catalogue, verb="split", result_ref="d" * 64)
 
     action_results: list[SplitTransactionResult] = []
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def canonical_split(**kwargs: object) -> SplitTransactionResult:
-        assert in_commit
-        split_ports = cast(LedgerActionPorts, kwargs["ports"])
-        pinned = cast(RevisionGuardedTransactionCatalogueCoCommitWriterProtocol, split_ports.transaction_repository)
-        assert pinned is not repository
-        pinned_catalogue, pinned_revision = pinned.load_revisioned()
-        assert pinned_catalogue is catalogue
-        assert pinned_revision == "revision-one"
-        with pytest.raises(LedgerPersistenceConflictError):
-            pinned.save(catalogue)
-        pinned.save_if_revision_with_secure_object_writes(
-            catalogue,
-            expected_revision_id=pinned_revision,
-            extra_writes=(),
-        )
+        harness.exercise_pinned_commit(cast(LedgerActionPorts, kwargs["ports"]))
         split_calls.append(kwargs)
         commands = cast(tuple[SplitChildCommand, ...], kwargs["children"])
         child_transactions = tuple(
@@ -421,19 +278,10 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
 
     monkeypatch.setattr(operation, "split_transaction", canonical_split)
 
-    events = Events()
-    operands = Operands()
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=authority,
-        cancellation=Cancellation(),
-        events=events,
-        operands=operands,
-    )
-    executor = operation.LedgerSplitExecutor(lambda *, bucket_id, operation: ports)
+    events = harness.events
+    operands = harness.operands
+    context = harness.context(operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID)
+    executor = operation.LedgerSplitExecutor(lambda *, bucket_id, operation: harness.ports)
     payload = operation.LedgerSplitRequest(
         profile_id=_PROFILE,
         transaction_id=parent.transaction_id[:12],
@@ -448,11 +296,11 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
         payload=payload,
     )
 
-    result_ref = await executor.execute(request, cast(OperationExecutorContext, context))
+    result_ref = await executor.execute(request, context)
 
     assert result_ref == "d" * 64
-    assert revision_calls == [catalogue]
-    assert guarded_writes == ["revision-one"]
+    assert harness.revision_calls == [catalogue]
+    assert harness.guarded_writes == ["revision-one"]
     assert len(split_calls) == 1
     assert split_calls[0]["transaction_id"] == parent.transaction_id
     assert split_calls[0]["actor"] == str(_PROFILE)
@@ -484,9 +332,9 @@ def test_result_projector_requires_matching_success_receipt() -> None:
         result_ref="a" * 64,
     )
 
-    assert operation._project_operation_result(result, receipt) == result.result
+    assert operation.project_operation_result(result, receipt) == result.result
     with pytest.raises(ValueError):
-        operation._project_operation_result(
+        operation.project_operation_result(
             result,
             receipt.model_copy(update={"effect": OperationEffect.NONE}),
         )

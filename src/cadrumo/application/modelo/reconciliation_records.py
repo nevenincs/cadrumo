@@ -30,8 +30,9 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
@@ -40,6 +41,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
 if TYPE_CHECKING:
@@ -68,8 +70,8 @@ class ModeloReconciliationDiffKind(StrEnum):
     period, tax id). ``total`` — a filed-amount disagreement between the
     receipt total and the canonical computed result casilla. ``casilla`` — a
     per-casilla value disagreement between the persisted computed revision and
-    a filed declaración, emitted for modelos enrolled in
-    :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
+    a filed declaración, emitted for modelos enrolled under
+    :data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE`
     (:func:`application.modelo.reconcile_casilla.detect_casilla_divergences`).
     """
 
@@ -95,7 +97,7 @@ class ModeloReconciliationDiff(BaseModel):
     :class:`~application.modelo.reconcile_casilla.CasillaDivergenceKind`).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     field_name: str = Field(min_length=1)
     work_unit_value: str = ""
@@ -146,7 +148,7 @@ class ModeloReconciliationAdvisory(BaseModel):
     silent false green), not that a value diverged.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
@@ -176,9 +178,14 @@ class ModeloReconciliationRecord(BaseModel):
     ``source_ref`` is the evidence reference as supplied: an operator filesystem
     path, or the secure-storage handle on the bytes path. It is stored here at
     full length; only the bucket-event copy is shortened to fit the payload cap.
+    ``source_pdf_sha256`` is the digest of the exact PDF bytes that were parsed
+    and compared, so a path that later names other bytes cannot be mistaken
+    for this evidence. It is absent on records written before it was carried
+    and on comparisons against a captured register observation, which have no
+    source PDF.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_event_id: Hex64Str
     bucket_id: BucketId
@@ -187,6 +194,7 @@ class ModeloReconciliationRecord(BaseModel):
     registry_snapshot_ref: RegistrySnapshotRef
     source_kind: ModeloReconciliationEvidenceKind
     source_ref: str = ""
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
@@ -219,7 +227,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     registry — see :class:`ModeloReconciliationRecord`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     event_id: Hex64Str
     bucket_id: BucketId
@@ -227,6 +235,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     registry_snapshot_ref: RegistrySnapshotRef | None = None
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
@@ -279,7 +288,10 @@ def modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
     try:
         factory = _BOUND_MODELO_RECONCILIATION_PERSISTENCE_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("modelo reconciliation persistence has not been composed") from error
+        raise InternalInvariantError(
+            "modelo reconciliation persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("reconciliation_persistence.composed"),
+        ) from error
     return factory()
 
 
@@ -327,6 +339,7 @@ def list_modelo_reconciliations(
             work_unit_id=record.work_unit_id,
             source_kind=record.source_kind,
             source_path=record.source_ref,
+            source_pdf_sha256=record.source_pdf_sha256,
             verdict=record.verdict,
             diff_count=len(record.diffs),
             advisory_count=len(record.advisories),

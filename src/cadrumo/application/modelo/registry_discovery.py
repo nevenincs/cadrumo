@@ -29,6 +29,7 @@ from ...domain.calculations.registry.query_reports import (
     ModeloSupportMatrixReport,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from .registry_input_refusals import filing_year_scope_verdict
 
 
 def _with_service[DiscoveryResult](
@@ -39,7 +40,7 @@ def _with_service[DiscoveryResult](
     return callback(PinnedRegistryQueryService(operation))
 
 
-def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
+def _refuse_unscoped_as_of(*, modelo: str, as_of: date | None, scoped_form: str) -> None:
     """Refuse an as_of argument on an unscoped discovery query, naming the scoped form.
 
     The unscoped path resolves the latest revision by period and cannot gate a
@@ -53,6 +54,7 @@ def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
             f"as_of is only honoured by the filing-year-scoped registry query; the unscoped "
             f"query resolves the latest revision by period and cannot apply a historical "
             f"boundary. Re-run {scoped_form} with an explicit filing year to honour as_of.",
+            precondition_verdict=filing_year_scope_verdict(modelo),
         )
 
 
@@ -79,8 +81,15 @@ def declared_modelo_period_tokens(
 
 
 def registry_modelo_codes(*, operation: PinnedAuthorityOperation) -> tuple[str, ...]:
-    """Return registry-backed modelo codes in authority order."""
-    return _with_service(operation, lambda service: tuple(row.code for row in service.list_modelos().modelos))
+    """Return registry-backed modelo codes in code order.
+
+    Read from the modelo directories' identities alone. The list report also
+    resolves every modelo's localized title, which a caller asking only for
+    codes would pay for with a scan of each modelo's locale shard.
+    """
+    return tuple(
+        sorted(operation.modelo_directory(modelo_id).modelo.id for modelo_id in operation.modelo_ids()),
+    )
 
 
 def registry_support_matrix(*, operation: PinnedAuthorityOperation) -> ModeloSupportMatrixReport:
@@ -113,7 +122,7 @@ def registry_describe_modelo(
     operation: PinnedAuthorityOperation,
 ) -> ModeloDescribeReport:
     """Return the registry modelo description report."""
-    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_describe_modelo_for_scope")
+    _refuse_unscoped_as_of(modelo=modelo, as_of=as_of, scoped_form="registry_describe_modelo_for_scope")
     return _with_service(operation, lambda service: service.describe_modelo(modelo, period=period, as_of=as_of))
 
 
@@ -167,7 +176,7 @@ def registry_casillas(
     operation: PinnedAuthorityOperation,
 ) -> ModeloCasillasReport:
     """Return the registry casilla report."""
-    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casillas_for_scope")
+    _refuse_unscoped_as_of(modelo=modelo, as_of=as_of, scoped_form="registry_casillas_for_scope")
     return _with_service(
         operation,
         lambda service: service.casillas(
@@ -241,7 +250,7 @@ def registry_casilla(
     operation: PinnedAuthorityOperation,
 ) -> ModeloCasillaDetailReport:
     """Return the single-casilla semantic detail report."""
-    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casilla_for_registry_scope")
+    _refuse_unscoped_as_of(modelo=modelo, as_of=as_of, scoped_form="registry_casilla_for_registry_scope")
     return _with_service(
         operation,
         lambda service: service.casilla(modelo, casilla, period=period, as_of=as_of),
@@ -278,7 +287,7 @@ def registry_bindings(
     operation: PinnedAuthorityOperation,
 ) -> ModeloBindingsReport:
     """Return the registry bindings report for a modelo and optional period."""
-    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_bindings_for_year")
+    _refuse_unscoped_as_of(modelo=modelo, as_of=as_of, scoped_form="registry_bindings_for_year")
     return _with_service(operation, lambda service: service.bindings(modelo, period=period, as_of=as_of))
 
 
@@ -315,6 +324,26 @@ def registry_bindings_for_scope(
     )
 
 
+def registry_bindings_for_registry_scope(
+    modelo: str,
+    *,
+    filing_year: int,
+    period: str,
+    as_of: date | None = None,
+    operation: PinnedAuthorityOperation,
+) -> ModeloBindingsReport:
+    """Return bindings for an explicit filing-year registry scope."""
+    return _with_service(
+        operation,
+        lambda service: service.bindings_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        ),
+    )
+
+
 def registry_formulas(
     modelo: str,
     *,
@@ -323,7 +352,7 @@ def registry_formulas(
     operation: PinnedAuthorityOperation,
 ) -> ModeloFormulasReport:
     """Return the registry formulas report."""
-    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_formulas_for_scope")
+    _refuse_unscoped_as_of(modelo=modelo, as_of=as_of, scoped_form="registry_formulas_for_scope")
     return _with_service(operation, lambda service: service.formulas(modelo, period=period, as_of=as_of))
 
 
@@ -369,6 +398,7 @@ def registry_formulas_for_registry_scope(
 __all__ = [
     "declared_modelo_period_tokens",
     "registry_bindings",
+    "registry_bindings_for_registry_scope",
     "registry_bindings_for_scope",
     "registry_bindings_for_year",
     "registry_casilla",

@@ -52,8 +52,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -63,8 +64,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import create_user_profile_record
+from .observation_seeding_support import save_stamped_observation
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -75,7 +76,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.foreign_assets import ForeignAssetIngestObservation
 from ....application.calculations.foreign_asset_redeclaration import modelo_720_evidence_observation
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -102,9 +103,10 @@ from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -143,41 +145,18 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 def _secure_backend(tmp_path: Path, *, register_assets: bool) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="activities.description", value="Foreign asset holder"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    # The filing-grade readiness gate refuses a profile whose
-                    # tax territory was never declared, and refuses it BEFORE
-                    # the producer runs -- so without this the module measured
-                    # a profile refusal rather than the join it exists to
-                    # observe. Declared common-regime: the foral territories
-                    # are explicitly unsupported, and a Modelo 720 filer under
-                    # one of them is a different product question than the
-                    # producer-to-projection shape under test here.
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    # The IVA block below is likewise a readiness precondition
-                    # rather than a fact this measurement turns on. It became
-                    # mandatory after this module was written, so the profile
-                    # here predates it and the gate refused before the producer
-                    # ran. Declared as an ordinary general-regime filer in no
-                    # special regime, which is the population a plain foreign
-                    # asset holder belongs to.
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(
-                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                        value=False,
-                    ),
+                facts=persona_facts_beneath(
+                    (
+                        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                        UserProfileFact(path="activities.description", value="Foreign asset holder"),
+                    )
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         if register_assets:
@@ -297,33 +276,20 @@ def _calculate_through_the_mesh(
     # held in the year would rightly refuse the calculation without its valuation.
     with _secure_backend(tmp_path, register_assets=bool(observations)):
         observation_repository = CalculationObservationRepository()
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                registry_grounded_modelo_observation(
-                    modelo=Modelo("720").value,
-                    filing_year=_YEAR_N,
-                    period=_PERIOD,
-                    casilla_values={
-                        _CUENTAS_VALORACION: _CUENTAS_N,
-                        _VALORES_VALORACION: _VALORES_N,
-                        _INMUEBLES_VALORACION: _INMUEBLES_N,
-                    },
-                ),
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(
-                    registry_grounded_modelo_observation(
-                        modelo=Modelo("720").value,
-                        filing_year=_YEAR_N,
-                        period=_PERIOD,
-                        casilla_values={
-                            _CUENTAS_VALORACION: _CUENTAS_N,
-                            _VALORES_VALORACION: _VALORES_N,
-                            _INMUEBLES_VALORACION: _INMUEBLES_N,
-                        },
-                    )
-                ),
-            )
+        save_stamped_observation(
+            observation_repository,
+            registry_grounded_modelo_observation(
+                modelo=Modelo("720").value,
+                filing_year=_YEAR_N,
+                period=_PERIOD,
+                casilla_values={
+                    _CUENTAS_VALORACION: _CUENTAS_N,
+                    _VALORES_VALORACION: _VALORES_N,
+                    _INMUEBLES_VALORACION: _INMUEBLES_N,
+                },
+            ),
+            source_kind="app_filing",
+            captured_at=_CLOCK_N,
         )
 
         snapshot = published_authority_operation().snapshot(

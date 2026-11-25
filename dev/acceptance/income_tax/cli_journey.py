@@ -13,12 +13,14 @@ import hashlib
 import json
 import secrets
 from collections.abc import Sequence
+from contextlib import AbstractContextManager, ExitStack
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final, cast
 
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli, InstalledCliError, authority_generation
+from dev.acceptance.iva.filing_year import require_journey_year
 
 from .scenario import (
     BRIEF_REVISION,
@@ -33,7 +35,52 @@ from .scenario import (
     build_scenario,
 )
 
-_CLIENT_NIF: Final[str] = "A58818501"
+_CLIENT_NIF: Final[str] = "B00000281"
+_RENTAL_ACTIVITY_CLASS: Final[str] = "arrendamiento_inmueble_urbano_actividad"
+
+
+def imputation_criterion_args(year: int, criterion: str = "cobros_y_pagos") -> tuple[str, ...]:
+    """The profile options that declare the activity-income imputation criterion for ``year``.
+
+    RIRPF art. 7.2 opens the cobros y pagos criterion to a direct-estimation taxpayer who keeps no Codigo
+    de Comercio accounting, so the three answers travel together. Without a declared criterion a
+    withholding credit cannot be placed in an ejercicio and the annual calculation refuses it.
+    """
+    return (
+        "--irpf-activity-income-imputation-criterion",
+        criterion,
+        "--irpf-activity-income-imputation-year",
+        str(year),
+        "--no-irpf-codigo-comercio-accounting",
+    )
+
+
+def _expected_annual_values(annual: AnnualOracle) -> dict[str, str]:
+    return {
+        "0171": _money(annual.activity_income),
+        "0218": _money(annual.deductible_expenses),
+        "0220": _money(annual.deductible_expenses),
+        "0224": _money(annual.activity_net_income),
+        # LIRPF art. 99.1: the invoices' withholding is a payment on account of the activity.
+        "0599": _money(annual.activity_withholding),
+        "0604": _money(annual.m130_payments),
+        # The profile declares no other income class, so every other credit is a proven zero and the total
+        # of the payments on account is the activity credit plus the fractional payments.
+        "0609": _money(annual.activity_withholding + annual.m130_payments),
+    }
+
+
+def _require_oracle_agreement(expected: dict[str, str], actual: dict[str, str]) -> None:
+    # An unresolved figure is not a wrong one. The activity chain may stay unresolved when a source it reads is
+    # not ready (the 2025 inventory activity ledger), and that outcome is reported by verification below; a
+    # resolved figure, and every credit, must equal the oracle.
+    chain = {"0171", "0218", "0220", "0224"}
+    unresolved = {casilla for casilla, value in actual.items() if value == "<unresolved>"}
+    if unresolved - chain:
+        raise JourneyError(f"Modelo 100 credits unresolved: {sorted(unresolved - chain)}")
+    mismatched = {casilla for casilla, value in actual.items() if value != expected[casilla]} - unresolved
+    if mismatched:
+        raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
 
 
 def _observe_annual_calculation_values(
@@ -44,16 +91,12 @@ def _observe_annual_calculation_values(
     if not isinstance(values, dict):
         raise JourneyError("Modelo 100 returned no casilla map")
     annual = annual_oracle or build_scenario(year).annual_oracle
-    expected = {
-        "0171": _money(annual.activity_income),
-        "0218": _money(annual.deductible_expenses),
-        "0220": _money(annual.deductible_expenses),
-        "0224": _money(annual.activity_net_income),
-        "0604": _money(annual.m130_payments),
+    expected = _expected_annual_values(annual)
+    # A casilla the calculation left unresolved is absent from the map: name it instead of reading it as a number.
+    actual = {
+        casilla: _money(Decimal(str(values[casilla]))) if casilla in values else "<unresolved>" for casilla in expected
     }
-    actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
-    if actual != expected:
-        raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
+    _require_oracle_agreement(expected, actual)
     return actual
 
 
@@ -145,6 +188,29 @@ class CliControlsEvidence:
         return dict[str, object](asdict(self))
 
 
+def attest_no_withholding(cli: InstalledCli, *, year: int, income_class: str) -> None:
+    """Attest through the public command that no payer withheld on one income class of the ejercicio.
+
+    The profile declares an activity without an IAE epigraph, so it cannot prove that no urban rental is
+    carried on as an activity. The credit of casilla 0598 for that class is then a proven zero only on the
+    taxpayer's own attestation, never a silent zero.
+    """
+    cli.run(
+        (
+            "app",
+            "ledger",
+            "retencion-soportada",
+            "attest-absence",
+            "--ejercicio",
+            str(year),
+            "--income-class",
+            income_class,
+            "--note",
+            "Synthetic note: no payer withheld on this income.",
+        )
+    )
+
+
 def command_result(document: dict[str, Any]) -> dict[str, Any]:
     """Require the object payload returned by an installed CLI command."""
     result = document.get("result")
@@ -180,83 +246,10 @@ def ingest_income_fixture(
     invoice_ids: list[str] = []
     issued_pairs: list[LinkedLedgerPair] = []
     for issued in income_items:
-        income_tx = command_result(
-            cli.run(
-                (
-                    "app",
-                    "ledger",
-                    "add",
-                    "--date",
-                    issued.transaction_date.isoformat(),
-                    "--amount",
-                    _money(issued.net_receipt),
-                    "--direction",
-                    "INCOMING",
-                    "--description",
-                    f"Synthetic income {issued.period}",
-                    "--classification",
-                    "BUSINESS",
-                    "--taxable-base",
-                    _money(issued.taxable_base),
-                    "--iva-rate",
-                    str(issued.iva_rate),
-                    "--iva-amount",
-                    _money(issued.iva),
-                    "--iva-category",
-                    "domestic_general",
-                    "--irpf-category",
-                    "actividad_economica",
-                    "--source-jurisdiction",
-                    "ES",
-                    "--idempotency-key",
-                    issued.transaction_id,
-                )
-            )
-        )
-        income_invoice = command_result(
-            cli.run(
-                (
-                    "app",
-                    "ledger",
-                    "invoice",
-                    "add",
-                    "--kind",
-                    "issued",
-                    "--counterparty-name",
-                    "Synthetic Client SL",
-                    "--counterparty-nif",
-                    _CLIENT_NIF,
-                    "--invoice-number",
-                    issued.invoice_id.upper(),
-                    "--invoice-date",
-                    issued.invoice_date.isoformat(),
-                    "--taxable-base",
-                    _money(issued.taxable_base),
-                    "--iva-rate",
-                    "21",
-                    "--country-code",
-                    "ES",
-                    "--retention-rate",
-                    str(issued.withholding_rate),
-                    "--retention-amount",
-                    _money(issued.withholding),
-                    "--iva-category",
-                    "domestic_general",
-                )
-            )
-        )
-        income_tx_id = str(income_tx["transaction_id"])
-        income_invoice_id = str(income_invoice["invoice_id"])
-        cli.run(("app", "ledger", "link", income_tx_id, "--invoice-id", income_invoice_id))
-        transaction_ids.append(income_tx_id)
-        invoice_ids.append(income_invoice_id)
-        issued_pairs.append(
-            LinkedLedgerPair(
-                fixture_invoice_id=issued.invoice_id,
-                transaction_id=income_tx_id,
-                invoice_id=income_invoice_id,
-            )
-        )
+        pair = _ingest_issued_invoice(cli, issued)
+        transaction_ids.append(pair.transaction_id)
+        invoice_ids.append(pair.invoice_id)
+        issued_pairs.append(pair)
 
     for expense in expense_items:
         expense_tx = command_result(
@@ -332,6 +325,83 @@ def ingest_income_fixture(
     )
 
 
+def _ingest_issued_invoice(cli: InstalledCli, issued: IssuedInvoice) -> LinkedLedgerPair:
+    """Capture and link one issued invoice through the installed CLI in command order."""
+    income_tx = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                issued.transaction_date.isoformat(),
+                "--amount",
+                _money(issued.net_receipt),
+                "--direction",
+                "INCOMING",
+                "--description",
+                f"Synthetic income {issued.period}",
+                "--classification",
+                "BUSINESS",
+                "--taxable-base",
+                _money(issued.taxable_base),
+                "--iva-rate",
+                str(issued.iva_rate),
+                "--iva-amount",
+                _money(issued.iva),
+                "--iva-category",
+                "domestic_general",
+                "--irpf-category",
+                "actividad_economica",
+                "--source-jurisdiction",
+                "ES",
+                "--idempotency-key",
+                issued.transaction_id,
+            )
+        )
+    )
+    income_invoice = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "invoice",
+                "add",
+                "--kind",
+                "issued",
+                "--counterparty-name",
+                "Synthetic Client SL",
+                "--counterparty-nif",
+                _CLIENT_NIF,
+                "--invoice-number",
+                issued.invoice_id.upper(),
+                "--invoice-date",
+                issued.invoice_date.isoformat(),
+                "--taxable-base",
+                _money(issued.taxable_base),
+                "--iva-rate",
+                "21",
+                "--country-code",
+                "ES",
+                "--retention-rate",
+                str(issued.withholding_rate),
+                "--retention-amount",
+                _money(issued.withholding),
+                "--iva-category",
+                "domestic_general",
+            )
+        )
+    )
+    income_tx_id = str(income_tx["transaction_id"])
+    income_invoice_id = str(income_invoice["invoice_id"])
+    cli.run(("app", "ledger", "link", income_tx_id, "--invoice-id", income_invoice_id))
+    return LinkedLedgerPair(
+        fixture_invoice_id=issued.invoice_id,
+        transaction_id=income_tx_id,
+        invoice_id=income_invoice_id,
+    )
+
+
 def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
     return {
         "01": _money(oracle.cumulative_income),
@@ -344,6 +414,12 @@ def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
         "13": _money(oracle.low_income_reduction),
         "19": _money(oracle.payment),
     }
+
+
+def _m130_revision_id(cli: InstalledCli, *, year: int, period: str) -> str:
+    """The Modelo 130 revision the installed authority authors for ``year`` and ``period``."""
+    journey_year = require_journey_year(authority_root=cli.authority_root, year=year, coordinates=(("130", period),))
+    return journey_year.revision("130", period)
 
 
 def create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
@@ -362,7 +438,7 @@ def create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
                 "--period",
                 period,
                 "--revision",
-                "2019-y-siguientes",
+                _m130_revision_id(cli, year=year, period=period),
                 "--by",
                 "income-acceptance",
             )
@@ -475,10 +551,6 @@ def calculate_m100(
             "0165=declarante",
             "--casilla",
             "0166=A05",
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
-            "--binding",
-            "renta-certificado-trabajo-retenciones=0",
             "--by",
             "income-acceptance",
         ),
@@ -563,7 +635,8 @@ def _control_cli(*, executable: Path, authority_root: Path, storage_root: Path, 
         authority_root=authority_root,
         passphrase=secrets.token_urlsafe(32),
     )
-    cli.create_profile(year=year)
+    cli.create_profile(year=year, extra_args=imputation_criterion_args(year))
+    attest_no_withholding(cli, year=year, income_class=_RENTAL_ACTIVITY_CLASS)
     return cli
 
 
@@ -897,18 +970,44 @@ def run_cli_controls(
 
 
 def run_cli_journey(
-    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+    *,
+    executable: Path,
+    authority_root: Path,
+    storage_root: Path,
+    output_dir: Path,
+    year: int,
+    runtime_scope: AbstractContextManager[object] | None = None,
 ) -> CliJourneyEvidence:
-    """Execute the installed CLI-only path in a fresh secure store."""
+    """Execute the installed CLI-only path in a fresh secure store.
+
+    ``runtime_scope`` serves the store with the installed runtime for the journey's lifetime. It is entered
+    after the store is shown to be fresh, because a serving runtime writes its own log into the store root.
+    """
     if storage_root.exists() and any(storage_root.iterdir()):
         raise JourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
+    with ExitStack() as resources:
+        if runtime_scope is not None:
+            resources.enter_context(runtime_scope)
+        return _run_cli_journey_served(
+            executable=executable,
+            authority_root=authority_root,
+            storage_root=storage_root,
+            output_dir=output_dir,
+            year=year,
+        )
+
+
+def _run_cli_journey_served(
+    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+) -> CliJourneyEvidence:
     generation = authority_generation(authority_root)
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
-    cli.create_profile(year=year)
+    cli.create_profile(year=year, extra_args=imputation_criterion_args(year))
+    attest_no_withholding(cli, year=year, income_class=_RENTAL_ACTIVITY_CLASS)
     ingested = ingest_income_fixture(cli, year=year)
     # A new child process reads the store after all ingestion; no in-memory
     # object crosses this boundary.

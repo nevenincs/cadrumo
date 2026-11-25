@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel, ValidationError
 
+from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
 from ..compiler.fact_loader import load_governed_fact_file, load_governed_facts
 
@@ -101,3 +106,65 @@ def test_load_governed_facts_refuses_duplicate_semantic_identity(tmp_path: Path)
 
 def test_load_governed_facts_allows_an_absent_directory(tmp_path: Path) -> None:
     assert load_governed_facts(tmp_path / "absent") == ()
+
+
+def test_a_copied_fact_file_is_validated_once_and_shared_immutably(tmp_path: Path) -> None:
+    """Every staged candidate copies the facts tree, so one content answers every copy, and no copy can alter it."""
+    text = _scalar_fact_toml("fact.shared")
+    (tmp_path / "bundle").mkdir()
+    (tmp_path / "candidate").mkdir()
+    bundled = load_governed_fact_file(_write(tmp_path / "bundle" / "0001-shared.toml", text))
+    candidate = _write(tmp_path / "candidate" / "0001-shared.toml", text)
+    copied = load_governed_fact_file(candidate)
+
+    assert copied is bundled, "identical bytes must answer from the one validated fact"
+    with pytest.raises(ValidationError):
+        _assign(copied, "fact_id", "fact.tampered")
+    assert _mutable_containers(copied) == [], "a shared fact must be deep-immutable"
+    fresh = GovernedFact.model_validate(freeze_toml(read_toml(candidate, error_factory=RegistryLoadError))["fact"])
+    assert load_governed_fact_file(candidate) == fresh, "a hit must still equal a fresh validation of the bytes"
+    assert fresh.fact_id == "fact.shared"
+
+
+def _assign(model: BaseModel, name: str, value: object) -> None:
+    setattr(model, name, value)
+
+
+def _mutable_containers(value: object, where: str = "fact") -> list[str]:
+    """Return where a list, dict, set or bytearray is reachable from ``value``."""
+    if isinstance(value, BaseModel):
+        return [
+            found
+            for name in type(value).model_fields
+            for found in _mutable_containers(getattr(value, name), f"{where}.{name}")
+        ]
+    if isinstance(value, (list, dict, set, bytearray)):
+        return [where]
+    if isinstance(value, (tuple, frozenset)):
+        return [found for item in value for found in _mutable_containers(item, where)]
+    if isinstance(value, Mapping):
+        return [found for item in value.values() for found in _mutable_containers(item, where)]
+    return []
+
+
+def test_a_stat_preserving_rewrite_of_a_fact_file_is_validated_afresh(tmp_path: Path) -> None:
+    path = _write(tmp_path / "0001-iva-general-rate.toml", _scalar_fact_toml())
+    original = load_governed_fact_file(path)
+    before = path.stat()
+
+    _write(path, _scalar_fact_toml().replace('value = "0.21"', 'value = "0.22"'))
+    os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+    assert (path.stat().st_size, path.stat().st_mtime_ns) == (before.st_size, before.st_mtime_ns)
+
+    revised = load_governed_fact_file(path)
+    assert revised != original
+    assert "0.22" in revised.model_dump_json()
+
+
+def test_a_refused_copy_names_its_own_path(tmp_path: Path) -> None:
+    text = _scalar_fact_toml().replace('unit = "ratio"', 'unit = "ratio"\nunexpected = true')
+    for directory in ("first", "second"):
+        (tmp_path / directory).mkdir()
+        path = _write(tmp_path / directory / "0001-iva-rate.toml", text)
+        with pytest.raises(RegistryLoadError, match=f"{directory}.+invalid governed fact"):
+            load_governed_fact_file(path)

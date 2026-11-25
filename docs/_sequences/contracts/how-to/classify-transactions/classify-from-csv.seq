@@ -7,6 +7,6 @@ aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 @step Apply the prepared classification CSV to the quarter's rows.
 aeat app ledger classify --file fixtures/classifications-2026-1t.csv
 @step Confirm the expense row is now classified as business.
-@result aeat --format json app ledger view e3eeac5e
+@result aeat --format json app ledger view 1703f840
 @expect result.transaction.business_classification == "BUSINESS"
 @expect result.transaction.category_id == "material_oficina"

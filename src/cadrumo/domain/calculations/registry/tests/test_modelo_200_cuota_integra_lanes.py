@@ -24,7 +24,7 @@ bounds) rather than recomputing the registry tranche.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -40,7 +40,21 @@ from ..applicability_modelo202 import (
     derive_modelo_202_modality,
     resolve_modelo_202_art_40_3_incn_threshold,
 )
-from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from .modelo_200_casilla_ids import (
+    M200_BIN_APLICADA_CASILLA,
+    M200_BONIFICACIONES_CASILLA,
+    M200_CORRECCIONES_AUMENTO_CASILLA,
+    M200_CORRECCIONES_DISMINUCION_CASILLA,
+    M200_CUOTA_INTEGRA_CASILLA,
+    M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA,
+    M200_CUOTA_LIQUIDA_POSITIVA_CASILLA,
+    M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA,
+    M200_RESERVA_CAPITALIZACION_CASILLA,
+    M200_RESULTADO_CONTABLE_CASILLA,
+)
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -48,80 +62,60 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
 # art. 101 ERD 24 % -- for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+# The accounting period ending the day before DT 44ª first applies, and the one it first governs.
+_PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timedelta(days=1)
+_PERIOD_END_FIRST_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
-_INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
-    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
-)
-_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00417",
-    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
-)
-_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00418",
-    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
-)
-_M200_RESERVA_CAPITALIZACION_CASILLA: CasillaId = validated_casilla_id(
-    "01032",
-    surface="_M200_RESERVA_CAPITALIZACION_CASILLA",
-)
-_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA_CASILLA")
-_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:01033",
-    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
-)
-_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
-_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:01766",
-    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
-)
-_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:01784",
-    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
-)
-_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_TIPO_GRAVAMEN_CASILLA")
+# Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
+_COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("DP200001:00017", surface="_COOPERATIVA_PROTEGIDA")
+_REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("DP200001:00001", surface="_REGIMEN_LEY_49_2002")
 _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="_M200_CUOTA_EJERCICIO_CASILLA",
 )
 
 
-def _snapshot():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+def _snapshot(exercise: int = _DT44_FIRST_TRANSITIONAL_EXERCISE):
+    return published_snapshot("200", filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _cuota_for(
+def _result_for(
     *,
     base: Decimal,
     form: str,
     new_entity: Decimal,
     incn: Decimal,
-    filing_period: date = date(2024, 12, 31),
-) -> Decimal:
-    result = calculate_registry_snapshot(
-        _snapshot(),
+    filing_period: date = _PERIOD_END_BEFORE_DT44,
+    marked: tuple[CasillaId, ...] = (),
+) -> RegistryCalculationResult:
+    """Run the exercise the period closes with the revision that governs that exercise."""
+    snapshot = _snapshot(filing_period.year)
+    return calculate_registry_snapshot(
+        snapshot,
         inputs={
-            # 00552 is computed: max(00550 - 01032 - 00547, 0); 00550 is
+            # 00552 is computed: 00550 - 01032 - 00547; 00550 is
             # computed: 00501 + DP200013:00417 - DP200013:00418. Supply the
             # leaf operator-input casillas (00501 resultado contable + zero
             # corrections + zero reserva + zero BIN aplicada) so the chain
             # computes 00552 = base.
-            _M200_RESULTADO_CONTABLE_CASILLA: base,
-            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+            M200_RESULTADO_CONTABLE_CASILLA: base,
+            M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+            M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+            M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+            M200_BIN_APLICADA_CASILLA: Decimal("0"),
+            M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+            M200_BONIFICACIONES_CASILLA: Decimal("0"),
+            M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+            M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+            **dict.fromkeys(marked, Decimal("1")),
         },
         enum_binding_values={_FORM_BINDING: form},
         binding_values={
             _NEW_ENTITY_BINDING: new_entity,
-            _INCN_BINDING: incn,
+            **turnover_binding_values(snapshot, incn),
             _ESTADO_PCT_BINDING: Decimal("100"),
             # BIN-pendiente fresh-filer baseline: previous_filing binding
             # for casilla 00670 resolves to zero with no prior filing.
@@ -130,12 +124,29 @@ def _cuota_for(
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": filing_period},
     )
-    return result.values[_M200_CUOTA_INTEGRA_CASILLA]
+
+
+def _cuota_for(
+    *,
+    base: Decimal,
+    form: str,
+    new_entity: Decimal,
+    incn: Decimal,
+    filing_period: date = _PERIOD_END_BEFORE_DT44,
+    marked: tuple[CasillaId, ...] = (),
+) -> Decimal:
+    return _result_for(
+        base=base, form=form, new_entity=new_entity, incn=incn, filing_period=filing_period, marked=marked
+    ).values[M200_CUOTA_INTEGRA_CASILLA]
 
 
 # ---------------------------------------------------------------------
@@ -169,41 +180,43 @@ def test_general_entity_cuota_matches_aeat_manual_worked_example_page_401() -> N
     )
 
 
-def test_cooperativa_takes_the_lis_art_29_protected_rate() -> None:
-    """A cooperativa fiscalmente protegida is taxed at the LIS Art. 29 20% rate.
+def test_cooperativa_protegida_cuota_is_left_to_its_cooperative_split() -> None:
+    """A cooperativa fiscalmente protegida states 20 in 00558 but no single-rate cuota.
 
-    LIS Art. 29.2 (BOE-A-2014-12328) sets the rate for cooperativas
-    fiscalmente protegidas at 20% (and the general activities of these
-    cooperativas remain at 25% — out of scope here). The dispatch must
-    route a cooperativa profile to the protected-rate bracket; the
-    expected cuota for a 1.000.000 base is 200.000, derived from the
-    BOE-published LIS Art. 29.2 rate the registry encodes.
+    Its cuota íntegra is "[00562] = [00560] + [00210] - [00480] + [00408] -
+    [01037] - [00561]", built from the resultados cooperativos and
+    extracooperativos (manual práctico de Sociedades 2024, L26990), which the
+    registry does not author; the 20 of 00558 is stated "a los únicos efectos de
+    cumplimentar la casilla [00558]" (L14752-14755). So 00562 has no value
+    under a typed reason instead of 1.000.000 x 20 %.
     """
-    cuota = _cuota_for(
+    result = _result_for(
         base=Decimal("1000000"),
         form="cooperativa",
         new_entity=Decimal("0"),
         incn=Decimal("10000000"),
+        marked=(_COOPERATIVA_PROTEGIDA,),
     )
-    assert cuota == Decimal("200000.00"), (
-        "cuota íntegra at the LIS Art. 29.2 cooperativa protected 20% rate must equal 200.000 for a 1.000.000 base"
-    )
+    assert result.values[_TIPO_GRAVAMEN_CASILLA] == Decimal("20")
+    assert M200_CUOTA_INTEGRA_CASILLA not in result.values
+    assert {
+        outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == M200_CUOTA_INTEGRA_CASILLA
+    } == {RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED}
 
 
 def test_non_profit_takes_the_ley_49_2002_special_regime_rate() -> None:
-    """An entidad sin fines lucrativos is taxed at the Ley 49/2002 10% special rate.
+    """An entity under the Ley 49/2002 régimen (casilla 00001) is taxed at 10%.
 
-    LIS Art. 29.4 (BOE-A-2014-12328) plus the Ley 49/2002 régimen
-    fiscal especial sets the rate for entidades sin fines lucrativos
-    parcialmente exentas at 10%. The dispatch must route a non-profit
-    profile to that bracket; for a 1.000.000 base the cuota is 100.000
-    per the BOE-published 10% rate the registry encodes.
+    "Entidades a las que sea de aplicación el régimen fiscal establecido en la
+    Ley 49/2002 10 por 100" (manual práctico de Sociedades 2024, L14724); for a
+    1.000.000 base the cuota is 100.000.
     """
     cuota = _cuota_for(
         base=Decimal("1000000"),
         form="sin_fines_lucrativos",
         new_entity=Decimal("0"),
         incn=Decimal("10000000"),
+        marked=(_REGIMEN_LEY_49_2002,),
     )
     assert cuota == Decimal("100000.00")
 
@@ -228,7 +241,7 @@ def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
     rate"), not a recomputation of the tranche arithmetic.
     """
     base = Decimal("1000000")
-    filing_period_2025 = date(2025, 12, 31)
+    filing_period_2025 = _PERIOD_END_FIRST_DT44
     general = _cuota_for(
         base=base,
         form="sl",
@@ -277,7 +290,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=date(2024, 12, 31),
+        filing_period=_PERIOD_END_BEFORE_DT44,
     )
     assert pyme_2024 == Decimal("11500.00"), (
         "cuota at the 50.000 € tranche for 2024 must equal the Ley 31/2022 "
@@ -289,7 +302,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=date(2025, 12, 31),
+        filing_period=_PERIOD_END_FIRST_DT44,
     )
     assert pyme_2025 == Decimal("10500.00"), (
         "cuota at the 50.000 € tranche boundary for 2025 must equal the "
@@ -343,9 +356,9 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
 
     LIS Art. 29 par. 4 (BOE-A-2014-12328) sets a 15% rate for entities
     in their first two profit-making periods, regardless of sub-form
-    (a sociedad limitada, a cooperativa, or a non-profit alike). The
-    override layers on top of the sub-form lane via the if_then_else
-    predicate over ``new_entity_first_two_profit_periods``.
+    (a sociedad limitada or a sociedad anónima alike). The override
+    layers on top of the sub-form lane via the if_then_else predicate
+    over ``new_entity_first_two_profit_periods``.
 
     For a 1.000.000 base the override cuota is 150.000 — the AEAT
     published 15% rate applied to the post-nivelación base. Asserting
@@ -358,9 +371,9 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
         new_entity=Decimal("1"),
         incn=Decimal("10000000"),
     )
-    coop_cuota = _cuota_for(
+    sa_cuota = _cuota_for(
         base=Decimal("1000000"),
-        form="cooperativa",
+        form="sa",
         new_entity=Decimal("1"),
         incn=Decimal("10000000"),
     )
@@ -368,8 +381,8 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
         "new-entity override cuota must equal LIS Art. 29 par. 4 15% "
         "applied to the post-nivelación base (1.000.000 x 15% = 150.000)"
     )
-    assert sl_cuota == coop_cuota, (
-        "the new-entity override must bypass the sub-form dispatch — an SL and a cooperativa both reach the 15% rate"
+    assert sl_cuota == sa_cuota, (
+        "the new-entity override must bypass the sub-form dispatch — an SL and an SA both reach the 15% rate"
     )
 
 
@@ -400,11 +413,12 @@ def test_new_entity_override_takes_precedence_over_micro_empresa_lane() -> None:
 
 def _legal_entity_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=incn,
+        regimen_entidades_navieras_tonelaje=False,
     )
 
 
@@ -417,7 +431,9 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
     fraccionado según la modalidad regulada en el artículo 40.3 LIS").
     Art. 40.2 is not offered for such a profile.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")), effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(
+        _legal_entity_profile(Decimal("7000000")), effective_date=_PERIOD_END_FIRST_DT44
+    )
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert "ley-27-2014:art-40-3" in verdict.legal_refs
     assert verdict.threshold_fact is not None
@@ -428,10 +444,10 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
 
 def test_modelo_202_threshold_resolver_retains_statutory_provenance() -> None:
     """The applicability comparison uses the temporal scalar fact, not a static default."""
-    threshold = resolve_modelo_202_art_40_3_incn_threshold(effective_date=date(2025, 12, 31))
+    threshold = resolve_modelo_202_art_40_3_incn_threshold(effective_date=_PERIOD_END_FIRST_DT44)
 
     assert threshold.fact_id == "lis-art-40-3-incn-threshold"
-    assert threshold.effective_date == date(2025, 12, 31)
+    assert threshold.effective_date == _PERIOD_END_FIRST_DT44
     assert threshold.payload.value == Decimal("6000000")
     assert "ley-27-2014:art-40-3" in threshold.legal_refs
 
@@ -446,9 +462,9 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
     wording: Art. 40.3 mandates only when INCN "ha superado" the
     threshold — equality alone does not exceed it.
     """
-    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=date(2025, 12, 31))
+    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=_PERIOD_END_FIRST_DT44)
     at_threshold = derive_modelo_202_modality(
-        _legal_entity_profile(Decimal("6000000")), effective_date=date(2025, 12, 31)
+        _legal_entity_profile(Decimal("6000000")), effective_date=_PERIOD_END_FIRST_DT44
     )
     assert below.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert at_threshold.modality is Modelo202Modality.ART_40_2_OPTIONAL
@@ -463,7 +479,7 @@ def test_modelo_202_modality_is_incomplete_when_incn_undeclared() -> None:
     not known. The operator must declare the prior-12-months INCN
     first.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(None), effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(_legal_entity_profile(None), effective_date=_PERIOD_END_FIRST_DT44)
     assert verdict.modality is Modelo202Modality.INCOMPLETE
     # The verdict still carries the modality legal_refs so the operator
     # sees what they are being asked to ground their answer against.
@@ -479,18 +495,57 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
     Modelo 202 modality question.
     """
     natural_person = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("9000000"),
+        regimen_entidades_navieras_tonelaje=False,
     )
-    verdict = derive_modelo_202_modality(natural_person, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(natural_person, effective_date=_PERIOD_END_FIRST_DT44)
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
 
 # ---------------------------------------------------------------------
 # Regression: tributacion_estado_porcentaje binding path
 # ---------------------------------------------------------------------
+
+
+def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
+    """Run the SL cuota chain from an 80.000 base; ``None`` leaves the estado percentage binding unsupplied."""
+    snapshot = _snapshot(_PERIOD_END_BEFORE_DT44.year)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
+            M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+            M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+            M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+            M200_BIN_APLICADA_CASILLA: Decimal("0"),
+            M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+            M200_BONIFICACIONES_CASILLA: Decimal("0"),
+            M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+            M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+        },
+        enum_binding_values={_FORM_BINDING: "sl"},
+        binding_values={
+            _NEW_ENTITY_BINDING: Decimal("0"),
+            **turnover_binding_values(snapshot, Decimal("10000000")),
+            **({} if estado_percentage is None else {_ESTADO_PCT_BINDING: estado_percentage}),
+            # BIN-pendiente fresh-filer baseline.
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values={
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
+        },
+        date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
+    )
 
 
 def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_supplied() -> None:
@@ -512,35 +567,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     at the general 25 % rate with zero deductions, so the test does not
     bypass the formula-owned cuota líquida casilla.
     """
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs={
-            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
-            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
-        },
-        enum_binding_values={_FORM_BINDING: "sl"},
-        binding_values={
-            _NEW_ENTITY_BINDING: Decimal("0"),
-            _INCN_BINDING: Decimal("10000000"),
-            _ESTADO_PCT_BINDING: Decimal("100"),
-            # BIN-pendiente fresh-filer baseline.
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
-        },
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_with_estado_percentage(Decimal("100"))
     cuota_ejercicio = result.values[_M200_CUOTA_EJERCICIO_CASILLA]
     assert cuota_ejercicio == Decimal("20000.00"), (
         "DP200014B:00599 must equal 20.000 when tributacion_estado_porcentaje = 100 "
@@ -560,32 +587,4 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
     from ..errors import RegistryValidationError
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        calculate_registry_snapshot(
-            _snapshot(),
-            inputs={
-                _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
-                _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-                _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-                _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-                _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-                _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-                _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-                _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-                _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
-            },
-            enum_binding_values={_FORM_BINDING: "sl"},
-            binding_values={
-                _NEW_ENTITY_BINDING: Decimal("0"),
-                _INCN_BINDING: Decimal("10000000"),
-                # _ESTADO_PCT_BINDING intentionally absent
-                # BIN-pendiente fresh-filer baseline (separate gate).
-                "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            },
-            relation_values={
-                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
-            },
-            date_context={"filing_period": date(2024, 12, 31)},
-        )
+        _calculate_with_estado_percentage(None)

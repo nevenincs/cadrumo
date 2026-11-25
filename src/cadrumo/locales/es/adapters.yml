@@ -2,14 +2,14 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: La AEAT rechazó emitir una nueva solicitud push
-          de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente
+        pending_petition_blocked: La AEAT rechazó enviar una nueva notificación de
+          Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente
           en el servidor.
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator ya tiene una sesión activa; llama a close()
-          o reauthenticate() antes de autenticar de nuevo.
+        already_active: AeatAuthenticator ya tiene una sesión activa; llama a AeatAuthenticator.close()
+          antes de autenticar de nuevo.
         assertion_failed: La autenticación AEAT no produjo una aserción de inicio
           de sesión válida.
         capture_requires_active_session: Guardar la sesión del navegador requiere
@@ -17,7 +17,7 @@ adapters:
         capture_requires_certificate: Guardar la sesión del navegador requiere una
           sesión activa con certificado y metadatos del recurso protegido.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
-        no_active_context: No hay contexto de navegador activo; llama a authenticate()
+        no_active_context: No hay contexto de navegador activo; llama a AeatAuthenticator.authenticate()
           primero.
         no_context_capture_storage: No hay contexto de navegador activo; no se puede
           capturar el estado de almacenamiento.
@@ -28,8 +28,8 @@ adapters:
         session_stale: La sesión AEAT ha caducado; el plazo de inactividad ha expirado.
     clave_movil:
       errors:
-        already_active: Cl@ve Móvil ya tiene una sesión activa; llama a close() antes
-          de autenticarte de nuevo.
+        already_active: Cl@ve Móvil ya tiene una sesión activa; llama a ClaveMovilAuthProvider.close()
+          antes de autenticarte de nuevo.
         approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
           en el tiempo configurado.
         desktop_unavailable: 'No hay un escritorio interactivo disponible. No se ha
@@ -45,24 +45,23 @@ adapters:
         session_expired: La sesión de Cl@ve Móvil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Móvil no coincide; los datos de sesión pueden estar corruptos.
-        verify_requires_active_context: Cl@ve Móvil verify() requiere un contexto
-          de navegador activo; llama primero a authenticate().
+        verify_requires_active_context: Cl@ve Móvil ClaveMovilAuthProvider.verify()
+          requiere un contexto de navegador activo; llama primero a ClaveMovilAuthProvider.authenticate().
   browser:
     errors:
-      not_provisioned: El navegador que abre la automatización de la AEAT no está
-        instalado en este equipo. Descarga el navegador y vuelve a intentarlo.
+      not_available: El navegador no está instalado, así que esto no se puede ejecutar.
   google:
     calc_sheets:
       errors:
         api_call_failed: La llamada a Google {action} ha fallado.
         api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
         api_target_not_found: El destino de Google {action} no se encontró.
-        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
-          de Google no puede acceder a la API.
+        googleapiclient_not_importable: '`googleapiclient` no se puede importar; el
+          adaptador de Google no puede acceder a la API.'
     installation_client:
       errors:
         client_metadata_invalid: El cliente de Google incluido en esta instalación
-          no es válido. Reinstala la aplicación para restaurarlo.
+          no es válido.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -71,13 +70,13 @@ adapters:
         consent_declined: Se rechazó el consentimiento de Google, así que no se ha
           iniciado sesión ni se ha guardado nada. Vuelve a ejecutar `cadrumo-runtime
           config google login` y aprueba la solicitud.
-        endpoint_unreachable: El endpoint OAuth de Google no es accesible.
+        endpoint_unreachable: El punto de conexión OAuth de Google no está disponible.
         id_token_missing: Google no devolvió un id_token; el consentimiento OAuth
           no incluyó los ámbitos openid+email.
         id_token_module_not_importable: El módulo id_token de google-auth no se puede
           importar.
         id_token_verification_failed: La comprobación del id_token de Google ha fallado.
-        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un
+        loopback_bind_failed: El receptor OAuth de bucle local no pudo asignar un
           puerto.
         non_interactive: 'Google OAuth rechazado: el flujo interactivo de consentimiento
           en el navegador necesita un terminal interactivo, pero este comando se ejecutó
@@ -115,13 +114,13 @@ adapters:
         tax_id_unresolved: No se pudo resolver el identificador fiscal de la declaración
           a partir del texto del PDF.
         template_not_detected: No se pudo detectar automáticamente la plantilla de
-          {path}; indica --modelo y --año para forzarla.
-        year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+          {path}; indica --modelo y --year para forzarla.
+        year_conflict: --year {year} entra en conflicto con el año detectado {detected}.
     financial:
       providers:
-        pdf_n26:
+        pdf_statement:
           errors:
-            parse_failed: No se pudo analizar el extracto PDF de N26. La ruta de origen
+            parse_failed: No se pudo analizar el extracto en PDF. La ruta de origen
               se ha ocultado en los diagnósticos.
     justificante:
       errors:
@@ -164,13 +163,12 @@ adapters:
             falló la comprobación de integridad.
           create_namespace_no_id: Google Drive no devolvió un id al crear la carpeta
             de espacio de nombres.
-          create_vault_folder_no_id: Google Drive no devolvió un id al crear la carpeta
-            vault.
+          create_vault_folder_no_id: Google Drive no devolvió ningún identificador
+            al crear la carpeta de Cadrumo.
           folder_not_owned: La carpeta de Drive {folder_name} no está marcada como
             propiedad de esta app; se rechaza la escritura para proteger tus datos.
-          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
-            pertenece al producto anterior y no se puede usar; usa la carpeta vault
-            de Cadrumo.
+          former_vault_folder: La carpeta de Google Drive {vault_folder_name} pertenece
+            al producto anterior y no se puede usar; usa la carpeta de Cadrumo.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             se puede importar; ejecuta `uv sync` y reinténtalo.
           media_non_bytes: La descarga de medios de Google Drive devolvió {payload_type}
@@ -192,8 +190,8 @@ adapters:
             objeto; no se puede confiar en sus metadatos.
           vault_entry_not_folder: La raíz configurada de Drive contiene {vault_folder_name},
             pero esa entrada no es una carpeta.
-          vault_folder_name_blank: El nombre de carpeta vault de Google Drive no puede
-            estar vacío.
+          vault_folder_name_blank: El nombre de la carpeta de Cadrumo en Google Drive
+            no puede estar vacío.
           write_non_dict_response: La respuesta de escritura de Google Drive para
             {action} tuvo una forma inesperada.
       local:
@@ -207,26 +205,25 @@ adapters:
             estar vacío.
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
-            ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
-            o habilite LongPathsEnabled (véase `aeat config check`).'
+            ruta de Windows. Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o
+            habilite LongPathsEnabled (véase `aeat config storage check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
             contiene caracteres de ruta prohibidos.
           namespace_not_found: No se encontró el espacio de nombres local {namespace}.
-          object_delete_permission: El almacenamiento local no pudo borrar el payload
-            del objeto.
+          object_delete_permission: El almacenamiento local no pudo eliminar el objeto.
           object_not_found: No se encontró el objeto local {object_key_hmac} en el
             espacio {namespace}.
-          payload_commit_failed: El almacenamiento local no pudo confirmar atomicamente
-            el payload del objeto.
-          payload_read_permission: El almacenamiento local no pudo leer el payload
+          payload_commit_failed: El almacenamiento local no pudo guardar el contenido
+            del objeto mediante una sustitución atómica.
+          payload_read_permission: El almacenamiento local no pudo leer el contenido
             del objeto.
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
-          payload_write_permission: El almacenamiento local no pudo escribir el payload
+            Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config storage check`).'
+          payload_write_permission: El almacenamiento local no pudo escribir el contenido
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
             mal formado.
@@ -236,8 +233,8 @@ adapters:
             del objeto.
           sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
+            Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config storage check`).'
           written_at_invalid: 'El campo written_at del sidecar local falta, no se
             puede interpretar o no indica zona horaria: {actual_value}.'
   persistence:
@@ -254,7 +251,6 @@ adapters:
             el extranjero del modelo 720.
       inventory:
         errors:
-          inventory_ledger_absent: Ese registro de inventario no existe.
           inventory_ledger_already_exists: Ese registro de inventario ya existe.
           inventory_ledger_not_found: No se encontró el registro de inventario solicitado.
           load_inventory_ledger_failed: No se pudo cargar el registro de inventario
@@ -284,7 +280,7 @@ adapters:
       justificante_column_missing: La respuesta de declaraciones de AEAT no contiene
         la columna de justificante; la estructura de la tabla puede haber cambiado.
       landing_off_policy: Se rechazó la lectura de la AEAT porque la página en la
-        que aterrizó está fuera de los hosts permitidos de esta superficie o nombra
+        que aterrizó está fuera de los dominios permitidos de esta superficie o nombra
         una acción de escritura.
       landing_off_read_pages: Se rechazó la lectura de la AEAT porque aterrizó en
         una página que este lector no consulta; este lector nunca llega a una página

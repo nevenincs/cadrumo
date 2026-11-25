@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.payloads import (
     ConfigProfileValidateResult,
     ConfigProfileViewResult,
@@ -32,7 +33,6 @@ from ....core.i18n.render import normalise_supported_language, tr
 from ....core.json_contract import Notice
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import ProfileSetupState
-from ..common import activate_subcommand_output_language
 
 _VIEW_TIMEOUT_SECONDS = 60.0
 

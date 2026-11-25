@@ -3,44 +3,52 @@
 Both sides run for real: the command line through the cached Click runner and
 the tool through the adapter's wire boundary, against the same published
 authority. A question is one command line and one set of tool arguments; the
-tool's `report` must equal the command line's `result`, and a refusal must carry
-the same words.
+tool's `report`, with every page it serves joined, must equal the command
+line's `result` as the tool serves it, and a refusal must carry the same words.
+The tool serves a long list a page at a time and a casilla or formula row as a
+summary; what that leaves out is read with the `casilla` question, which is
+compared whole.
 """
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 from urllib.parse import urlsplit
 
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.work_create_policy import ceded_autonomic_modelo_locale_key
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FIRST_PORTAL = next(iter(PORTAL_REGISTRY.values())).portal.value
-_SCOPE = ["--year", "2025", "--period", "1T"]
-_SCOPE_ARGS = {"filing_year": 2025, "period": "1T"}
+_YEAR = filing_year_envelope().horizon
+_YEAR_TEXT = str(_YEAR)
+_AS_OF = date(_YEAR, 6, 30).isoformat()
+_SCOPE = ["--year", _YEAR_TEXT, "--period", "1T"]
+_SCOPE_ARGS = {"filing_year": _YEAR, "period": "1T"}
 
 # (label, command line, tool arguments)
 _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
     ("modelos", ["app", "modelo", "list"], {"query": "modelos"}),
-    ("modelos-year", ["app", "modelo", "list", "--year", "2025"], {"query": "modelos", "filing_year": 2025}),
+    ("modelos-year", ["app", "modelo", "list", "--year", _YEAR_TEXT], {"query": "modelos", "filing_year": _YEAR}),
     ("modelos-domain", ["app", "modelo", "list", "--domain", "iva"], {"query": "modelos", "domain": "iva"}),
     (
         "modelos-domain-year",
-        ["app", "modelo", "list", "--domain", "irpf", "--year", "2025"],
-        {"query": "modelos", "domain": "irpf", "filing_year": 2025},
+        ["app", "modelo", "list", "--domain", "irpf", "--year", _YEAR_TEXT],
+        {"query": "modelos", "domain": "irpf", "filing_year": _YEAR},
     ),
     ("support", ["app", "modelo", "support-matrix"], {"query": "support"}),
     (
@@ -50,8 +58,8 @@ _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
     ),
     (
         "describe-scoped-as-of",
-        ["app", "modelo", "describe", "130", *_SCOPE, "--as-of", "2025-06-30"],
-        {"query": "describe", "modelo": "130", **_SCOPE_ARGS, "as_of": "2025-06-30"},
+        ["app", "modelo", "describe", "130", *_SCOPE, "--as-of", _AS_OF],
+        {"query": "describe", "modelo": "130", **_SCOPE_ARGS, "as_of": _AS_OF},
     ),
     (
         "describe-period-only",
@@ -140,6 +148,55 @@ _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
 )
 
 
+_ROWS_MEMBER = {
+    "modelos": "modelos",
+    "support": "entries",
+    "casillas": "rows",
+    "formulas": "rows",
+    "portals": "rows",
+}
+_SUMMARY_MEMBERS = {
+    "casillas": (
+        "casilla_id",
+        "number",
+        "label",
+        "input_kind",
+        "required",
+        "data_type",
+        "binding",
+        "formula",
+        "form_number",
+    ),
+    "formulas": (
+        "formula_id",
+        "target_casilla_id",
+        "input_casilla_ids",
+        "input_bindings",
+        "input_parameters",
+        "input_relations",
+    ),
+}
+
+
+def _as_served(query: str, printed: dict[str, Any]) -> dict[str, Any]:
+    """Return the command line's result as the tool serves its rows: a summary where a row can be long."""
+    if query == "support":
+        return {
+            **printed,
+            "entries": [
+                {
+                    **{member: value for member, value in entry.items() if member != "renames"},
+                    "rename_count": len(entry["renames"]),
+                }
+                for entry in printed["entries"]
+            ],
+        }
+    if query in _SUMMARY_MEMBERS:
+        members = _SUMMARY_MEMBERS[query]
+        return {**printed, "rows": [{member: row[member] for member in members} for row in printed["rows"]]}
+    return printed
+
+
 def _as_printed(value: object) -> object:
     """Trim a portal URL to scheme and host, as the command line's output redaction does.
 
@@ -171,6 +228,23 @@ async def _tool_reply(arguments: dict[str, Any]) -> dict[str, Any]:
         await adapter.close()
 
 
+async def _joined_report(arguments: dict[str, Any]) -> dict[str, Any]:
+    """Follow the tool's pages to the last and return its report with every row joined."""
+    reply = await _tool_reply(arguments)
+    assert reply["outcome"] == "published", reply
+    member = _ROWS_MEMBER.get(arguments["query"])
+    if member is None:
+        assert "paging" not in reply, arguments
+        return reply["report"]
+    report = reply["report"]
+    rows = list(report[member])
+    while reply["paging"]["next_cursor"] is not None:
+        reply = await _tool_reply(reply["paging"]["next_call"]["arguments"])
+        rows.extend(reply["report"][member])
+    assert len(rows) == reply["paging"]["total"]
+    return {**report, member: rows}
+
+
 def _command_line(args: list[str]) -> Any:
     if args[:2] == ["config", "auth"]:
         from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
@@ -186,10 +260,10 @@ async def test_tool_report_equals_the_command_line_result(
 ) -> None:
     invocation = _command_line(command_line)
     assert invocation.exit_code == 0, (label, invocation.output)
-    reply = await _tool_reply(arguments)
+    report = await _joined_report(arguments)
 
-    assert reply["outcome"] == "published", (label, reply)
-    assert _as_printed(reply["report"]) == require_schema_envelope(invocation.output), label
+    printed = require_schema_envelope(invocation.output)
+    assert _as_printed(report) == _as_served(arguments["query"], printed), label
 
 
 def test_every_filter_is_exercised_by_a_question() -> None:
@@ -235,16 +309,16 @@ async def test_a_ceded_autonomic_tax_is_redirected_by_both(query: str, modelo: s
     ("command_line", "arguments"),
     [
         (
-            ["app", "modelo", "describe", "130", "--year", "2025", "--period", "ZZ"],
-            {"query": "describe", "modelo": "130", "filing_year": 2025, "period": "ZZ"},
+            ["app", "modelo", "describe", "130", "--year", _YEAR_TEXT, "--period", "ZZ"],
+            {"query": "describe", "modelo": "130", "filing_year": _YEAR, "period": "ZZ"},
         ),
         (
-            ["app", "modelo", "casillas", "130", "--year", "2025", "--period", "2025"],
-            {"query": "casillas", "modelo": "130", "filing_year": 2025, "period": "2025"},
+            ["app", "modelo", "casillas", "130", "--year", _YEAR_TEXT, "--period", _YEAR_TEXT],
+            {"query": "casillas", "modelo": "130", "filing_year": _YEAR, "period": _YEAR_TEXT},
         ),
         (
-            ["app", "modelo", "formulas", "130", "--year", "2025", "--period", "QQ"],
-            {"query": "formulas", "modelo": "130", "filing_year": 2025, "period": "QQ"},
+            ["app", "modelo", "formulas", "130", "--year", _YEAR_TEXT, "--period", "QQ"],
+            {"query": "formulas", "modelo": "130", "filing_year": _YEAR, "period": "QQ"},
         ),
     ],
     ids=["describe", "casillas", "formulas"],
@@ -267,16 +341,16 @@ async def test_an_invalid_period_token_is_refused_by_both_with_the_declared_toke
     ("command_line", "arguments"),
     [
         (
-            ["app", "modelo", "describe", "130", "--year", "2025"],
-            {"query": "describe", "modelo": "130", "filing_year": 2025},
+            ["app", "modelo", "describe", "130", "--year", _YEAR_TEXT],
+            {"query": "describe", "modelo": "130", "filing_year": _YEAR},
         ),
         (
-            ["app", "modelo", "casilla", "130", "03", "--year", "2025"],
-            {"query": "casilla", "modelo": "130", "casilla": "03", "filing_year": 2025},
+            ["app", "modelo", "casilla", "130", "03", "--year", _YEAR_TEXT],
+            {"query": "casilla", "modelo": "130", "casilla": "03", "filing_year": _YEAR},
         ),
         (
-            ["app", "modelo", "describe", "130", "--period", "1T", "--as-of", "2025-06-30"],
-            {"query": "describe", "modelo": "130", "period": "1T", "as_of": "2025-06-30"},
+            ["app", "modelo", "describe", "130", "--period", "1T", "--as-of", _AS_OF],
+            {"query": "describe", "modelo": "130", "period": "1T", "as_of": _AS_OF},
         ),
     ],
     ids=["year-without-period", "casilla-year-without-period", "as-of-without-year"],

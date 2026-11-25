@@ -41,16 +41,12 @@ from typing import TYPE_CHECKING, Self
 from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.modelo_obligation_scope import (
-    OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS,
-)
-from ...domain.calculations.registry.modelo_obligation_scope import (
-    UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS,
+    OUT_OF_SCOPE_OBLIGATIONS,
+    UNMODELED_OBLIGATIONS,
 )
 from ...domain.deadlines.models import TaxpayerProfile
 
@@ -95,7 +91,7 @@ class CoverageAdviceReason(StrEnum):
 class AdvisedObligation(BaseModel):
     """One registry modelo the operator must investigate, with its reason."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     reason: CoverageAdviceReason
@@ -123,7 +119,7 @@ class ObligationCoverageReport(BaseModel):
             :data:`~domain.calculations.registry.modelo_obligation_scope.OUT_OF_SCOPE_OBLIGATIONS`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     surfaced: tuple[str, ...] = ()
     confidently_excluded: tuple[str, ...] = ()
@@ -183,6 +179,7 @@ def build_obligation_coverage(
     *,
     today: date,
     operation: PinnedAuthorityOperation | None = None,
+    undetermined_modelos: Iterable[str] = (),
 ) -> ObligationCoverageReport:
     """Reconcile surfaced obligations against the full registry modelo set.
 
@@ -206,6 +203,10 @@ def build_obligation_coverage(
             caller that already holds one passes it, so every modelo is
             judged against that generation without leasing it again per
             modelo; without one, the bundled authority is leased once.
+        undetermined_modelos: Modelos whose filing windows an unanswered
+            profile fact leaves undecided. One not surfaced is advised as
+            undetermined whatever its applicability rule says, because the
+            rule cannot tell whether a window is owed.
 
     Returns:
         The :class:`ObligationCoverageReport` partition.
@@ -214,8 +215,12 @@ def build_obligation_coverage(
 
     if operation is None:
         with bundled_indexed_authority().operation() as leased:
-            return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=leased)
-    return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=operation)
+            return _build_obligation_coverage(
+                profile, surfaced_modelos, today=today, operation=leased, undetermined_modelos=undetermined_modelos
+            )
+    return _build_obligation_coverage(
+        profile, surfaced_modelos, today=today, operation=operation, undetermined_modelos=undetermined_modelos
+    )
 
 
 def _build_obligation_coverage(
@@ -224,6 +229,7 @@ def _build_obligation_coverage(
     *,
     today: date,
     operation: PinnedAuthorityOperation,
+    undetermined_modelos: Iterable[str],
 ) -> ObligationCoverageReport:
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
@@ -231,9 +237,10 @@ def _build_obligation_coverage(
     from ..modelo.registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
+    undetermined_set = frozenset(undetermined_modelos)
     registry_codes = frozenset(registry_modelo_codes(operation=operation))
-    unmodeled_codes = {str(code) for code in _UNMODELED_OBLIGATIONS}
-    out_of_scope_codes = {str(code) for code in _OUT_OF_SCOPE_OBLIGATIONS}
+    unmodeled_codes = {str(code) for code in UNMODELED_OBLIGATIONS}
+    out_of_scope_codes = {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
     # The AEAT obligation universe is the registry directory plus every recognized
     # obligation the registry does not model — those advised as unmodeled and those
     # explicitly declared out of scope. Binding the reconciliation to the full union
@@ -258,7 +265,15 @@ def _build_obligation_coverage(
             # and no applicability rule exist, so it cannot be positively scoped.
             advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.REGISTRY_UNMODELED))
             continue
-        verdict = derive_modelo_applicability(profile, modelo, today=today, operation=operation).verdict
+        if modelo in undetermined_set:
+            advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED))
+            continue
+        verdict = derive_modelo_applicability(
+            profile,
+            modelo,
+            reference_date=date(today.year, 12, 31),
+            operation=operation,
+        ).verdict
         if verdict in _CONFIDENT_NEGATIVE_VERDICTS:
             confidently_excluded.append(modelo)
             continue

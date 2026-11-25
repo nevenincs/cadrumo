@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_06, _CASILLA_09, workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_fixtures import CASILLA_06, CASILLA_09, workflow_profile
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
@@ -51,8 +51,8 @@ def test_m123_advisory_fires_when_base_total_positive_but_retenciones_total_zero
     """Positive C06 with zero C09 surfaces a warning advisory."""
     predicate = _m123_advisory_predicate()
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("42000.00"),
-        _CASILLA_09: Decimal("0"),
+        CASILLA_06: Decimal("42000.00"),
+        CASILLA_09: Decimal("0"),
     }
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -68,8 +68,8 @@ def test_m123_advisory_silent_when_retenciones_total_present() -> None:
     """Positive C06 and positive C09 satisfy the implication."""
     predicate = _m123_advisory_predicate()
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("42000.00"),
-        _CASILLA_09: Decimal("7980.00"),
+        CASILLA_06: Decimal("42000.00"),
+        CASILLA_09: Decimal("7980.00"),
     }
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -80,7 +80,7 @@ def test_m123_advisory_silent_when_no_retenible_activity() -> None:
     """No base-total activity (zero or absent) holds trivially."""
     predicate = _m123_advisory_predicate()
 
-    explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_06: Decimal("0"), _CASILLA_09: Decimal("0")}
+    explicit_zero: dict[CasillaId, Decimal] = {CASILLA_06: Decimal("0"), CASILLA_09: Decimal("0")}
     absent: dict[CasillaId, Decimal] = {}
 
     assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == []

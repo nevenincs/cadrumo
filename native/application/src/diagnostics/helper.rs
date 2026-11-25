@@ -21,6 +21,10 @@ pub enum HelperOutcome {
     NonzeroExit,
     /// Successful native exit; its CLI envelope has not been decoded here.
     Completed,
+    /// The host was closing: it refused the helper, or ended it after the settle window
+    /// it gives a change. An expected shutdown outcome, not a failure; a change that was
+    /// ended never reported, so its effect is unknown to the host.
+    Interrupted,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]

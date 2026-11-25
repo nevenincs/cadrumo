@@ -45,7 +45,9 @@ cadrumo_cached_command(metadata_command native_metadata
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/<config>/build.json" "${CONTRACT_DIR}/<config>/build_metadata.h")
-cadrumo_identity_command(interpreter_identity interpreter)
+# The desktop targets, tests and lints included, need these resources too, so generating them
+# publishes the identity without opening the interpreter's build record.
+cadrumo_identity_command(interpreter_identity IDENTITY_ONLY interpreter)
 add_custom_target(native_metadata
   ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
@@ -57,6 +59,14 @@ add_custom_target(native_metadata
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 # The interpreter fingerprint covers the generated contract the hosts compile in.
 add_dependencies(native_metadata native_build_tools native_contract)
+# Only the hosts and the bridge, which the stage ships, open the interpreter's build record.
+cadrumo_build_step(step_comment native_interpreter_record GROUP contract
+  SUMMARY "open the interpreter hosts' build record before they compile")
+cadrumo_identity_command(interpreter_record interpreter)
+add_custom_target(native_interpreter_record
+  ${interpreter_record}
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+add_dependencies(native_interpreter_record native_metadata)
 
 # The root project resolved Rust and the MSVC/SDK versions at or above their floors.
 cmake_host_system_information(RESULT sdk_root QUERY WINDOWS_REGISTRY
@@ -81,13 +91,14 @@ endif()
 # Cargo targets in one target directory rebuilds ring and every crate above it. cc only tests whether
 # the variable is set.
 set(CADRUMO_RUST_ENV_VSTEL_MSBuildProjectFullPath "${PROJECT_BINARY_DIR}/ALL_BUILD.vcxproj")
-set(CADRUMO_RUST_ENV_RUSTFLAGS "-C target-feature=+crt-static")
+set(CADRUMO_RUST_ENV_RUSTFLAGS "-C target-feature=+crt-static ${CADRUMO_RUST_RELEASE_REMAP}")
 set(CADRUMO_RUST_ENV_CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER "${CMAKE_LINKER}")
 set(CADRUMO_RUST_ENV_LIB "${msvc_root}/lib/x64;${sdk_root}/Lib/${windows_sdk_version}/um/x64;${sdk_root}/Lib/${windows_sdk_version}/ucrt/x64")
 set(CADRUMO_RUST_ENV_INCLUDE "${msvc_root}/include;${sdk_root}/Include/${windows_sdk_version}/ucrt;${sdk_root}/Include/${windows_sdk_version}/shared;${sdk_root}/Include/${windows_sdk_version}/um;${sdk_root}/Include/${windows_sdk_version}/winrt")
 set("CADRUMO_RUST_ENV_CC_${CADRUMO_PIN_rust_target}" "${CMAKE_C_COMPILER}")
 set("CADRUMO_RUST_ENV_AR_${CADRUMO_PIN_rust_target}" "${CMAKE_AR}")
-cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
+cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+  --env "CADRUMO_CONTRACT_VECTORS_RS=${CONTRACT_DIR}/contract_vectors.rs")
 set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/cadrumo_platform.lib")
 set(platform_import "${platform_dir}/cadrumo_platform.dll.lib")
@@ -147,7 +158,7 @@ foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${entrypoint}")
   target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_ENTRYPOINT=\"${entrypoint}\">")
   if(entrypoint STREQUAL "cadrumo-agent-service")
-    target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_FIXED_MODULE=\"cadrumo_agent_service.main\">")
+    target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_FIXED_MODULE=\"cadrumo_agent_service.bootstrap\">")
   endif()
   list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
 endforeach()
@@ -217,7 +228,7 @@ foreach(target ${host_targets} platform_static_consumer)
   add_dependencies(${target} rust_platform_static)
 endforeach()
 foreach(target ${host_targets} cadrumo_python_bridge)
-  add_dependencies(${target} native_metadata)
+  add_dependencies(${target} native_metadata native_interpreter_record)
   # Selects the build type in the shared build_metadata.h and in the version resources (RC too).
   target_compile_definitions(${target} PRIVATE "CADRUMO_BUILD_DEBUG=$<CONFIG:Debug>")
 endforeach()
@@ -227,14 +238,19 @@ foreach(target platform_static_consumer platform_dll_consumer)
   target_compile_options(${target} PRIVATE /UNDEBUG)
 endforeach()
 if(BUILD_TESTING)
-  add_test(NAME platform.static COMMAND platform_static_consumer)
-  add_test(NAME platform.dll COMMAND platform_dll_consumer)
-  set_tests_properties(platform.dll PROPERTIES WORKING_DIRECTORY "${platform_dir}")
+  foreach(linkage static dll)
+    set(consumer_arguments --build "${PROJECT_BINARY_DIR}" --consumer "$<TARGET_FILE:platform_${linkage}_consumer>")
+    if(linkage STREQUAL "dll")
+      list(APPEND consumer_arguments --dll "${platform_dir}/cadrumo_platform.dll")
+    endif()
+    add_test(NAME platform.${linkage} COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" --
+      "${CADRUMO_DEV_PYTHON}" -B -m native.tests.platform_consumer ${consumer_arguments})
+    set_tests_properties(platform.${linkage} PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+  endforeach()
   add_test(NAME platform.rust COMMAND "${platform_dir}/platform-consumer.exe")
   # Replays the generated storage-root vectors and probes the live Known Folder.
   add_test(NAME platform.resolver
     COMMAND ${platform_cargo} test --locked --lib --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
       --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>")
   set_tests_properties(platform.resolver PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
-  set_tests_properties(platform.dll PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${platform_dir}")
 endif()

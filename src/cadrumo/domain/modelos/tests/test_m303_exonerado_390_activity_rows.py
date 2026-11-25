@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...filing_evidence import FilingEvidenceReference
 from ..calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
@@ -16,6 +18,13 @@ from ..calculation_revision_m303_evidence import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _reference() -> FilingEvidenceReference:

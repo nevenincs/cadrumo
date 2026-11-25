@@ -8,7 +8,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
@@ -30,14 +30,16 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_percepcion_observation_ports,
     build_retencion_observation_ports,
     build_withholding_observation_service,
 )
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ...domain.iva.schema import InvoiceKind
 
@@ -71,7 +73,7 @@ def seed_invoice_withholding_conformance_case(
 ) -> InvoiceWithholdingConformanceSeed:
     """Seed a real received professional invoice and all capture evidence."""
     bucket_id = str(profile_id)
-    seed_modelo_ready_profile_record(bucket_id, clock=now(), tax_id="12345678Z")
+    seed_modelo_ready_profile(bucket_id=bucket_id, at=now(), tax_id="12345678Z")
     with validating_governed_facts(operation):
         issued_on = date(_YEAR, 3, 31)
         paid_on = date(_YEAR, 4, 2)
@@ -94,7 +96,7 @@ def seed_invoice_withholding_conformance_case(
                 "invoice_number": "CONFORMANCE-WITHHOLDING-2025-001",
                 "issued_at": issued_on,
                 "counterparty_name": "Synthetic Professional",
-                "counterparty_tax_id": "11111111H",
+                "counterparty_tax_id": "00001500M",
                 "counterparty_country": "ES",
                 "base_total": subtotal,
                 "iva_total": line.iva_amount,
@@ -115,16 +117,7 @@ def seed_invoice_withholding_conformance_case(
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=subtotal,
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=subtotal,
             porcentaje_retencion=Decimal("19"),
         )

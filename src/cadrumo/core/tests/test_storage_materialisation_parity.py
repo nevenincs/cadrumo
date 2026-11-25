@@ -48,7 +48,7 @@ from ..storage_taxonomy import (
     StorageNodeKind,
     StorageScope,
 )
-from ..storage_taxonomy_locations import STORAGE_TAXONOMY
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
@@ -61,16 +61,17 @@ def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
 
 
 def _materialisable_members() -> tuple[StorageLocation, ...]:
-    """Root-scoped members that name a settings field, in declaration order.
+    """Root-scoped members that are materialised, in declaration order.
 
-    Members with no field are fixed layout the bucket lifecycle provisions per
-    bucket, so the root tree is not where they appear. Runtime-owned members are
-    created by the installed runtime, never by a client's materialisation.
+    Members that are not materialised are fixed layout the bucket lifecycle
+    provisions per bucket, so the root tree is not where they appear.
+    Runtime-owned members are created by the installed runtime, never by a
+    client's materialisation.
     """
     return tuple(
         location
         for location in STORAGE_TAXONOMY.values()
-        if location.scope is StorageScope.ROOT and location.settings_field is not None and not location.runtime_owned
+        if location.scope is StorageScope.ROOT and location.materialised and not location.runtime_owned
     )
 
 
@@ -78,20 +79,14 @@ def expected_directories(settings: Settings) -> dict[Path, str]:
     """Return each directory the declaration requires, mapped to its member name.
 
     A directory member contributes itself. A file member contributes its parent
-    and explicitly **not** its leaf. A member whose field resolves to ``None``
-    is an opt-in location the operator has not asked for and contributes
-    nothing.
+    and explicitly **not** its leaf.
 
     Derived from the declaration and compared against disk, never against the
     materialiser's own target list.
     """
     expected: dict[Path, str] = {}
     for location in _materialisable_members():
-        assert location.settings_field is not None
-        value = getattr(settings, location.settings_field, None)
-        if value is None:
-            continue
-        resolved = Path(value)
+        resolved = storage_path(location.category, settings=settings)
         target = resolved.parent if location.node_kind is StorageNodeKind.FILE else resolved
         expected[target] = location.category.value
     return expected
@@ -120,7 +115,7 @@ def materialised(tmp_path: Path) -> tuple[Path, Settings]:
     """Build the tree once under a private root and hand back the settings used."""
     root = tmp_path / "state"
     assert not root.exists(), "the fixture must start absent, or this proves nothing"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ensure_storage_tree()
         settings = load_settings()
     return root, settings
@@ -187,11 +182,7 @@ def test_a_file_members_leaf_is_never_created_as_a_directory(materialised: tuple
     exactly where the document must be written.
     """
     root, settings = materialised
-    file_members = [
-        location
-        for location in _materialisable_members()
-        if location.node_kind is StorageNodeKind.FILE and getattr(settings, location.settings_field or "", None)
-    ]
+    file_members = [location for location in _materialisable_members() if location.node_kind is StorageNodeKind.FILE]
     assert file_members, (
         "no file-valued root member resolved, so this assertion covers nothing. The taxonomy "
         "declares at least one (the usage-ratios document); if that changed, this gate needs "
@@ -199,8 +190,7 @@ def test_a_file_members_leaf_is_never_created_as_a_directory(materialised: tuple
     )
 
     for location in file_members:
-        assert location.settings_field is not None
-        leaf = Path(getattr(settings, location.settings_field))
+        leaf = storage_path(location.category, settings=settings)
         assert leaf.parent.is_dir(), f"{location.category.value}: the document's directory must exist under {root}"
         assert not leaf.is_dir(), (
             f"{location.category.value}: a directory was created at {leaf}, which is where the "
@@ -243,7 +233,7 @@ def test_parity_survives_a_second_call_and_preserves_what_was_written(
     sentinel = next(iter(sorted(expected))) / "sentinel.txt"
     sentinel.write_text("kept", encoding="utf-8")
 
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ensure_storage_tree()
 
     assert sentinel.read_text(encoding="utf-8") == "kept", (

@@ -70,9 +70,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now
+from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.justificante.errors import JustificanteVerificationError
 from ..calculations.observations_repository import ObservationSourceKind
 from .errors import (
@@ -150,7 +150,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     came from an authenticated live capture.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bucket_id: BucketId
@@ -187,7 +187,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
-    discard_reason: str = Field(default="", max_length=500)
+    discard_reason: str = Field(default="", max_length=512)
 
     @field_validator("modelo")
     @classmethod
@@ -392,7 +392,7 @@ class JustificanteCaptureSnapshotRepository:
 
 
 class _JustificanteCaptureRequest(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     filing_year: int
@@ -756,6 +756,10 @@ def _register_and_confirm_capture(
                 expediente_id=snapshot.expediente_id,
                 csv=snapshot.csv,
                 justificante_number=justificante.presentation_id,
+                # The receipt prints its own presentation timestamp as a
+                # peninsular wall clock; the chain entry needs that instant to
+                # say whether the declaration was presented inside the plazo.
+                presented_at=madrid_wall_clock_to_utc(justificante.presented_at),
             ),
             evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
             tax_id=expected_tax_id,

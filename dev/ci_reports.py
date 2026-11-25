@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 #
 # A test lane's result is human-readable text and nothing else, so CI can only
 # learn "the process exited non-zero" and has to scrape scrollback for what
-# actually failed. `VAULTSPEC_CI_REPORTS` names a directory to write a JUnit
+# actually failed. `CADRUMO_CI_REPORTS_DIR` names a directory to write a JUnit
 # XML report into; when it is UNSET - every local run, and any CI job that does
 # not opt in - nothing changes and no artifact is produced.
 #
@@ -32,15 +32,15 @@ if TYPE_CHECKING:
 # last-registered-first, so this conftest's configure runs BEFORE the plugin
 # reads the option - which is what makes setting it here take effect.
 #
-# The filename distinguishes lanes: `VAULTSPEC_CI_REPORT_NAME` when the caller
+# The filename distinguishes lanes: `CADRUMO_CI_REPORT_NAME` when the caller
 # names one, otherwise a short digest of the invocation, so two lanes in one
 # job do not overwrite each other's report. An explicit `--junitxml` on the
 # command line always wins.
-_CI_REPORTS_ENV = "VAULTSPEC_CI_REPORTS"
-_CI_REPORT_NAME_ENV = "VAULTSPEC_CI_REPORT_NAME"
+_CI_REPORTS_ENV = "CADRUMO_CI_REPORTS_DIR"
+_CI_REPORT_NAME_ENV = "CADRUMO_CI_REPORT_NAME"
 
 
-def _ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
+def ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
     """Return the JUnit path this run should write, or ``None`` to write none.
 
     Args:
@@ -67,7 +67,7 @@ def _enable_ci_report(config: pytest.Config) -> None:
     """Point the junitxml plugin at this run's report, when one is asked for."""
     if getattr(config.option, "xmlpath", None):
         return
-    path = _ci_report_path(list(config.invocation_params.args))
+    path = ci_report_path(list(config.invocation_params.args))
     if path is not None:
         config.option.xmlpath = path
 

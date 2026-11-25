@@ -13,7 +13,6 @@ from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     build_live_auth_preflight_report,
     build_operator_state_projection,
@@ -22,9 +21,6 @@ from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support
 )
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     test_operator_auth as run_operator_auth_test,
-)
-from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
@@ -36,19 +32,21 @@ from cadrumo.application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from cadrumo.application.auth.credentials import active_auth_projection_span, resolve_certificate_source_secret
-from cadrumo.application.auth.operator import (
-    login_operator_auth,
-    reset_operator_auth,
-)
+from cadrumo.application.auth.operator import login_operator_auth
 from cadrumo.application.auth.operator_probes import ProviderConfigurationProbe
 from cadrumo.application.auth.operator_results import (
     AuthLoginPreconditionError,
     AuthTestResult,
     LiveAuthPreflightReport,
 )
+from cadrumo.application.auth.operator_revocation import reset_operator_auth
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.state_projection_auth import ProjectionAuthReadiness
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import Settings, load_settings, override_settings
@@ -57,7 +55,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
@@ -245,7 +243,7 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
     _register_operator_profile()
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "no-active", cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path / "no-active", cadrumo_active_profile=None),
         pytest.raises(AuthConfigureNoActiveBucketError) as excinfo,
     ):
         configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -715,9 +713,8 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
     cert_path.write_bytes(b"not a pkcs12 bundle")
     base_settings = load_settings()
     explicit_settings = Settings(
-        cadrumo_local_storage_root=base_settings.cadrumo_local_storage_root,
+        cadrumo_storage_root=base_settings.cadrumo_storage_root,
         cadrumo_active_profile=base_settings.cadrumo_active_profile,
-        cadrumo_secret_store_dir=base_settings.cadrumo_secret_store_dir,
         cadrumo_secret_passphrase=base_settings.cadrumo_secret_passphrase,
         cadrumo_certificate_path=cert_path,
     )
@@ -790,14 +787,16 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     assert probe.probe_summary != ""
 
 
-def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
-    """An ``identity_alignment: mismatch`` must explain what mismatches.
+@pytest.mark.parametrize("setting", ["00001005Q", SecretStr("00001005Q")], ids=["plain", "secret"])
+def test_configure_clave_movil_identity_is_the_profile_tax_id_whatever_the_setting_says(
+    setting: str | SecretStr,
+) -> None:
+    """The Cl@ve identity is the profile's tax id, so a differing setting cannot misalign it.
 
-    A bare ``mismatch`` token tells the operator nothing. The result
-    must carry an ``identity_alignment_detail`` that names both compared
-    values — the Cl@ve DNI/NIE and the active profile tax id — plus an exact
-    typed no-recovery outcome because the application cannot choose which
-    identity the operator should change.
+    A session is always for the taxpayer the profile describes; the setting is
+    only a fallback for a profile that states no tax id. A setting naming
+    another identity therefore neither blocks the configuration nor changes
+    which identity the sign-in is bound to.
     """
 
     register_minimal_profile(
@@ -805,21 +804,14 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
         display_name=_PROFILE_LABEL,
         overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
-    with override_settings(cadrumo_clave_movil_dni_nie="00000001R"):
+    with override_settings(cadrumo_clave_movil_dni_nie=setting):
         result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    assert result.identity_alignment == "mismatch"
-    assert result.identity_alignment_detail != ""
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    assert "00000000T" in result.identity_alignment_detail
-    assert "00000001R" in result.identity_alignment_detail
-    verdict = result.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
-    assert verdict.action is None
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
-    assert verdict.evidence[0].values["identity_alignment"] == "mismatch"
+    assert result.identity_alignment == "matches"
+    assert result.identity_alignment_detail == ""
+    assert result.complete is True
+    assert result.incomplete_reason == ""
+    assert result.precondition_verdict is None
 
 
 def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
@@ -838,27 +830,6 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
     assert result.complete is True
     assert result.incomplete_reason == ""
     assert result.precondition_verdict is None
-
-
-def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None:
-    """Provider selection alone must not claim Cl@ve Móvil is operational."""
-
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides={"identity.tax_id": "12345678Z", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
-    )
-
-    with override_settings(cadrumo_clave_movil_dni_nie=None):
-        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-
-    assert result.identity_alignment == "clave_identity_missing"
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    verdict = result.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
-    assert verdict.evidence[0].values["identity_alignment"] == "clave_identity_missing"
 
 
 def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
@@ -907,24 +878,6 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
     assert result.complete is True
 
 
-def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
-    """A Cl@ve session for one taxpayer must never be persisted under another profile."""
-
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
-    )
-    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00000001R")):
-        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-
-    assert result.identity_alignment == "mismatch"
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    assert result.precondition_verdict is not None
-    assert result.precondition_verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
-
-
 def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_path: Path) -> None:
     """A provider-scoped reset clears only the target provider's session, lock, registration, and secret.
 
@@ -934,7 +887,7 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     Resetting the certificate provider must delete every certificate artefact
     and leave every Cl@ve Móvil artefact byte-for-byte in place.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "operator.p12"
         cert_path.write_bytes(b"placeholder cert")

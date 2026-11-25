@@ -1,7 +1,7 @@
 """The profile boundary refuses every malformed average-workforce instance.
 
 Each rule fails closed and names the path it refuses: the year is a whole
-calendar year from 2000 to 2100, the workforce is zero or more with at most two
+calendar year written with four digits, the workforce is zero or more with at most two
 decimal places and is never rounded, the state is observed or committed, every
 instance states all three subfields, and a year is declared by one instance.
 """
@@ -12,6 +12,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.plantilla_media import (
     PlantillaMediaState,
@@ -53,9 +54,18 @@ def test_well_formed_instances_are_admitted() -> None:
     assert _issues(*_instance(0), *_instance(1, year=2025, workforce=7, state="committed")) == set()
 
 
-@pytest.mark.parametrize("year", (1999, 2101, Decimal("2024.5"), True), ids=str)
-def test_a_year_outside_the_calendar_range_or_not_whole_is_refused(year: object) -> None:
+@pytest.mark.parametrize(
+    "year",
+    (FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1, 0, -2024, Decimal("2024.5"), True),
+    ids=str,
+)
+def test_a_year_not_written_with_four_digits_or_not_whole_is_refused(year: object) -> None:
     assert _issues(*_instance(0, year=year)) == {(f"{_ROOT}.0.year", NUMERIC_VALUE_ISSUE_CODE)}
+
+
+@pytest.mark.parametrize("year", (FOUR_DIGIT_YEAR_FIRST, 1999, 2101, FOUR_DIGIT_YEAR_LAST), ids=str)
+def test_a_year_is_not_capped_to_a_fixed_window_around_the_present(year: int) -> None:
+    assert _issues(*_instance(0, year=year)) == set()
 
 
 @pytest.mark.parametrize("workforce", (Decimal("-0.01"), "doce", False), ids=str)

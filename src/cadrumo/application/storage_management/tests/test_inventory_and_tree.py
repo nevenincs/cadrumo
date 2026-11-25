@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 class TestInventoryCoversTheDeclaration:
     def test_public_inventory_has_exactly_one_row_per_area(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             report = collect_storage_area_inventory()
 
         assert tuple(row.area for row in report.rows) == tuple(StorageArea)
@@ -43,7 +43,7 @@ class TestInventoryCoversTheDeclaration:
         }
 
     def test_public_inventory_measures_aggregate_bytes_without_internal_names(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(StorageCategory.LOGS)
             target.mkdir(parents=True, exist_ok=True)
             (target / "one.log").write_bytes(b"12345")
@@ -58,7 +58,7 @@ class TestInventoryCoversTheDeclaration:
 class TestTreeCheckReportsWithoutRepairing:
     def test_an_unmaterialised_tree_reports_the_root_and_stays_unrepaired(self, tmp_path) -> None:
         absent_root = tmp_path / "never-created"
-        with override_settings(cadrumo_local_storage_root=absent_root):
+        with override_settings(cadrumo_storage_root=absent_root):
             report = inspect_storage_tree()
 
         assert not report.healthy
@@ -66,7 +66,7 @@ class TestTreeCheckReportsWithoutRepairing:
         assert not absent_root.exists(), "check must never materialise what it reports missing"
 
     def test_a_materialised_tree_is_healthy(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             report = inspect_storage_tree()
 
@@ -74,7 +74,7 @@ class TestTreeCheckReportsWithoutRepairing:
         assert report.healthy, [issue.model_dump(mode="json") for issue in report.issues]
 
     def test_a_file_where_a_directory_belongs_is_named_with_its_category(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             target = storage_path(StorageCategory.LOGS)
             for entry in scan_directory(target):  # pragma: no cover - freshly materialised
@@ -90,7 +90,7 @@ class TestTreeCheckReportsWithoutRepairing:
         assert not report.healthy
 
     def test_a_directory_where_a_file_belongs_is_reported(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             target = storage_path(StorageCategory.USAGE_RATIOS)
             target.mkdir(parents=True, exist_ok=True)
@@ -102,7 +102,7 @@ class TestTreeCheckReportsWithoutRepairing:
         assert [issue.area for issue in offenders] == [StorageArea.EXPORTS]
 
     def test_a_file_valued_leaf_that_was_never_written_is_not_a_finding(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             assert not storage_path(StorageCategory.USAGE_RATIOS).exists()
             report = inspect_storage_tree()
@@ -125,7 +125,7 @@ class TestTreeCheckReportsWithoutRepairing:
         and the drift assertion would then be proving nothing; asserting the
         bits actually moved is what makes the finding evidence.
         """
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             baseline = inspect_storage_tree()
             assert baseline.healthy, [issue.model_dump(mode="json") for issue in baseline.issues]
@@ -150,7 +150,7 @@ class TestTreeCheckReportsWithoutRepairing:
 class TestMaterialisePreservesContent:
     def test_init_creates_the_declared_tree_and_reports_what_it_made(self, tmp_path) -> None:
         root = tmp_path / "fresh"
-        with override_settings(cadrumo_local_storage_root=root):
+        with override_settings(cadrumo_storage_root=root):
             report = materialise_storage_tree()
             verdict = inspect_storage_tree()
 
@@ -159,7 +159,7 @@ class TestMaterialisePreservesContent:
         assert verdict.healthy
 
     def test_init_is_idempotent_and_never_removes_existing_content(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             materialise_storage_tree()
             marker = storage_path(StorageCategory.LOGS) / "survivor.log"
             marker.write_bytes(b"survivor")
@@ -172,14 +172,14 @@ class TestMaterialisePreservesContent:
 
 class TestReportsAnswerForTheirCallers:
     def test_each_area_finds_its_own_row(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             report = collect_storage_area_inventory()
 
         for area in StorageArea:
             assert report.row_for(area).area is area
 
     def test_an_area_the_report_lacks_has_no_row(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             report = collect_storage_area_inventory()
         without_logs = report.model_copy(
             update={"rows": tuple(row for row in report.rows if row.area is not StorageArea.LOGS)}

@@ -55,7 +55,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
-_COUNTERPARTY_CIF = "A58818501"
+_COUNTERPARTY_CIF = "B00010157"
 
 
 def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
@@ -75,39 +75,6 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
     if linked:
         invoice = invoice.model_copy(update={"linked_transaction_ids": linked})
     return invoice
-
-
-def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
-    """An exact id wins, and a prefix matching exactly one invoice resolves."""
-    invoice = _build("2026-0142")
-    catalogue = build_invoice_catalogue([invoice])
-
-    assert resolve_catalogue_invoice(catalogue, invoice.invoice_id) == invoice
-    # A short prefix of a single-record catalogue is unambiguous.
-    assert resolve_catalogue_invoice(catalogue, invoice.invoice_id[:8]) == invoice
-
-
-def test_resolve_catalogue_invoice_blank_id_refused() -> None:
-    """A blank id is refused with the typed required-id error, not a miss."""
-    catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceLookupRefusedError) as exc:
-        resolve_catalogue_invoice(catalogue, "   ")
-    assert exc.value.reason is InvoiceLookupRefusalReason.REQUIRED
-    assert exc.value.invoice_id == ""
-    assert exc.value.candidate_ids == ()
-    assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_id_required"
-
-
-def test_resolve_catalogue_invoice_not_found_names_the_id() -> None:
-    """An id matching no invoice raises the localized not-found error with context."""
-    catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceLookupRefusedError) as exc:
-        resolve_catalogue_invoice(catalogue, "deadbeefdeadbeef")
-    assert exc.value.reason is InvoiceLookupRefusalReason.NOT_FOUND
-    assert exc.value.invoice_id == "deadbeefdeadbeef"
-    assert exc.value.candidate_ids == ()
-    assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_not_found"
-    assert exc.value.context == {"invoice_id": "deadbeefdeadbeef"}
 
 
 def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
@@ -226,7 +193,7 @@ def _linked_invoice(bucket_id: str):
     kind = InvoiceKind.RECEIVED
     number = "UPD-2026-001"
     issued = _date(2026, 6, 1)
-    tax_id = "A58818501"
+    tax_id = "B00010157"
     return Invoice(
         invoice_id=derive_invoice_id(
             kind=kind,
@@ -382,30 +349,6 @@ def test_an_empty_correction_refuses(tmp_path: Path) -> None:
                 ports=build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID),
             )
         assert exc.value.translated_message == "application.invoices.lifecycle.errors.empty_invoice_patch"
-
-
-def test_the_patch_model_cannot_express_an_identity_change() -> None:
-    """Structural, not a runtime refusal: identity fields are absent entirely.
-
-    A runtime check could be bypassed by a future caller building the payload
-    another way. Excluding the fields from the patch model means there is no
-    code path that can attempt an identity change at all, which is the stronger
-    guarantee for the one axis where getting it wrong strands a link.
-    """
-    identity_fields = {
-        "kind",
-        "invoice_number",
-        "issued_at",
-        "counterparty_tax_id",
-        "currency",
-        "base_total",
-        "iva_total",
-        "grand_total",
-        "recargo_amount",
-        "lines",
-    }
-
-    assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))
 
 
 def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> None:

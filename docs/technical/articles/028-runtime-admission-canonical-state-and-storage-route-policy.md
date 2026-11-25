@@ -4,22 +4,20 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-028` · **Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
+**Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
 
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers six application files (3,780 lines; 32,570 measured `o200k_base` proxy tokens): Ollama model-runtime lifecycle and memory admission; the canonical operator state projection and its auth/read ports; root storage write-policy decisions; and per-session workbench capture memoization. I read every assigned range across six bounded pages. Static review only; no app execution, runtime requests, storage writes, or model operations were performed. This review does not assess legal correctness or confirm external runtime behavior.
+This chunk covers five application files (2,422 lines): the canonical operator state projection and its auth/read ports; root storage write-policy decisions; and per-session workbench capture memoization. Static review only; no app execution, runtime requests, storage writes, or model operations were performed. The load admission and installed-state boundary is described from the sources it now lives in. This review does not assess legal correctness or confirm external runtime behavior.
 
-## Runtime lifecycle and resource boundaries
+## Load admission and installed state
 
-The runtime adapter distinguishes installed models on disk from resident models in memory, and preserves an unreadable inventory (`None`) separately from a measured-empty one. Short-timeout GET probes cover resident state and installed inventory; only unreachable results are cached, for a short configured interval, while successful reads remain live. Exact model matching treats an absent tag as `:latest`; a separate family match defines which related tags Cadrumo may consider reclaimable. Runtime probe and model identity rules (`src/cadrumo/application/provisioning_runtime.py`) Inventory projection (`src/cadrumo/application/provisioning_runtime.py`)
+Cadrumo does not admit a local model load. cadrumo-agent loads every local model and is the only judge of whether one fits the memory free; it refuses a load that does not fit with `model_does_not_fit`, and the agent service maps that refusal to `ModelRunRefusalCode.MODEL_DOES_NOT_FIT`, which the agent provider raises as `LLMContentionError`. That error is never retryable, because the condition decays when the load on the computer changes, not on a timer. Load refusal and mapping (`src/cadrumo/adapters/outbound/llm/providers/agent.py`) Error contract (`src/cadrumo/adapters/outbound/llm/errors.py`)
 
-Pull and load are explicit operations. Pull checks admission before sending bytes, parses the streaming response into typed progress, records the process-local latest attempt, and invalidates fitness verdicts after a successful fetch. Load refuses missing inventory or an absent installed model, admits against measured free capacity plus a configured margin, requests a bounded keep-alive, and re-reads residents to confirm success. Removal is limited to the configured Cadrumo-selected model families and reports freed bytes only after an inventory reread confirms removal. Unload has the same selected-model and resident guards and sends a zero-keep-alive request without a prompt. These boundaries avoid direct filesystem deletion of the runtime's third-party model store and avoid signaling peer processes. Load and pull paths (`src/cadrumo/application/provisioning_runtime.py`) Removal confirmation (`src/cadrumo/application/provisioning_runtime.py`) Unload guard (`src/cadrumo/application/provisioning_runtime.py`)
+Python asks the local AI server nothing. A role's installed state is the agent service's reading of the `installed` flag of the catalogue the agent serves, carried on the role's lane; an absent flag is unknown and is never rendered as not installed. The local AI program's presence and version come from the components role's read-only quick status, read with a bounded timeout. Model names come from the person's per-role selection in cadrumo-agent's catalogue, never from Cadrumo settings. Only the desktop provisions the program and models: the native component engine installs the program and pulls the models the person selected, and the runtime manager runs the server. Installed state from the agent service (`src/cadrumo_agent_service/adapters/served_catalog_models.py`) Program row (`src/cadrumo/entrypoints/local_reader_operation_composition.py`) Lane judgement (`src/cadrumo/application/local_reader.py`)
 
-Admission uses free memory in the binding arena, never total capacity. For a known accelerator it considers the best individual device; for a measured no-accelerator machine it uses free system memory. Unknown free capacity refuses by default, with a deliberate override that applies only to an unmeasurable state, not to a measured shortfall. On a shortfall, runtime resident data is used to estimate what Cadrumo might unload and what remains attributable to peers. A data-completeness gap deserves follow-up: resident byte fields are optional, `_attributed_resident_bytes` treats each missing size as zero, and the shortfall remainder is then labeled peer-process use. A readable resident list with unreadable sizes can therefore undercount Cadrumo's own footprint and misstate the cause. Require complete size measurements before making that attribution, or label the cause unverified. Admission and attribution (`src/cadrumo/application/provisioning_runtime.py`) Shortfall attribution (`src/cadrumo/application/provisioning_runtime.py`)
-
-Two caller invariants should be traced. First, `load_and_verify_model` samples residency, then sends a one-token `/generate` request when an installed model is not resident, without using the load-admission check or rereading residency afterward. The request may cold-load the model, and the result can retain the initial `resident=False` alongside `ready=True`; confirm whether verification is meant to cause a load and whether that should pass through admission. Readiness probe (`src/cadrumo/application/provisioning_runtime.py`) Second, the unload/remove allowlist is built from three fixed settings, while the local-reader role resolver also selects a supply-nature model dynamically. Confirm that dynamic role's selected model is intentionally excluded from unload/remove and contention attribution, or include it in the same ownership boundary. Selected model families (`src/cadrumo/application/provisioning_runtime.py`) Dynamic role selection (`src/cadrumo/application/local_reader.py`)
+The application layer reads memory only to report it. Installed and free system and device memory are measured and reported by `local-reader.report` and the workstation check, and never used to admit or refuse a role or a load: the native component engine owns the setup hardware floor, and cadrumo-agent admits every model load. Measured hardware profile (`src/cadrumo/application/provisioning.py`) Report (`src/cadrumo/application/local_reader_report.py`)
 
 ## Canonical state and readiness
 
@@ -39,10 +37,9 @@ Workbench memoization belongs to one authenticated session and keys the reusable
 
 ## Coverage appendix
 
-- provisioning_runtime.py (1,361 lines) (`src/cadrumo/application/provisioning_runtime.py`)
-- state_projection.py (1,493 lines) (`src/cadrumo/application/state_projection.py`)
+- state_projection.py (1,494 lines) (`src/cadrumo/application/state_projection.py`)
 - state_projection_auth.py (438 lines) (`src/cadrumo/application/state_projection_auth.py`)
 - state_projection_ports.py (86 lines) (`src/cadrumo/application/state_projection_ports.py`)
 - storage_write_policy.py (294 lines) (`src/cadrumo/application/storage_write_policy.py`)
-- workbench_capture_memory.py (108 lines) (`src/cadrumo/application/workbench_capture_memory.py`)
+- workbench_capture_memory.py (110 lines) (`src/cadrumo/application/workbench_capture_memory.py`)
 <!-- /preserved:article -->

@@ -28,3 +28,18 @@ required_text = ["modelo 303"]
 
 [revisions.2024-desde-09-y-3t.formulas.expression]
 parameter = "m303-dr303-166-transitional-rate-percent"
+
+# Box [18] carries only the transitional reducido recargo from 10/4T 2024.
+[[revisions.2024-desde-09-y-3t.formulas]]
+id = "modelo-303-dr303-18-transitorio-projection"
+target_casilla_id = "18"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.formulas.expression]
+casilla_id = "recargo.reducido.transitorio"

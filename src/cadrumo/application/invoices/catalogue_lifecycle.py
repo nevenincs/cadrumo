@@ -19,6 +19,14 @@ to one :class:`Invoice`. :func:`remove_catalogue_invoice` deletes one record,
 refusing an invoice that still carries ``linked_transaction_ids`` so the
 bidirectional link recorded on the transaction side is never silently orphaned
 into a one-sided inconsistency (``verify_link_consistency``).
+
+A sealed revision is guarded the way the ledger guards its contributors: the
+figures are frozen and verify, export and filing do not compare them again, so a
+write that would move what a sealed revision read is refused at the write. Those
+revisions stay exactly as filed. An edit that moves no fact the revision read
+passes, as does recording a later collection on an invoice whose devengo does not
+depend on it: LIVA art. 75.Uno does not date the cuota by the collection;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -26,17 +34,22 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.invoices.enums import InvoiceClass, PaymentStatus
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.invoices.enums import InvoiceClass, PaymentStatus, advance_payment_received_role
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice
 from ...domain.iva.schema import IvaCategory
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
+from ..aggregation.invoice_filing_fingerprint import invoice_row_fingerprint
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
-from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
+from .catalogue_selection import select_catalogue_invoice_id
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -63,22 +76,61 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     Returns:
         The resolved :class:`Invoice`.
     """
-    trimmed = invoice_id.strip()
-    if not trimmed:
-        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.REQUIRED, invoice_id=trimmed)
-    exact = catalogue.get(trimmed)
-    if exact is not None:
-        return exact
-    matches = tuple(invoice for invoice in catalogue.values() if invoice.invoice_id.startswith(trimmed))
-    if not matches:
-        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.NOT_FOUND, invoice_id=trimmed)
-    if len(matches) > 1:
-        raise InvoiceLookupRefusedError(
-            reason=InvoiceLookupRefusalReason.AMBIGUOUS,
-            invoice_id=trimmed,
-            candidate_ids=tuple(invoice.invoice_id for invoice in matches),
-        )
-    return next(iter(matches))
+    return catalogue.invoices[select_catalogue_invoice_id(catalogue.invoices.keys(), invoice_id)]
+
+
+def _sealed_citations(
+    invoice_id: str,
+    ports: CatalogueLifecyclePorts,
+) -> tuple[tuple[CalculationRevision, WorkUnit], ...]:
+    """Return the sealed revisions whose stored fingerprint read this invoice."""
+    return tuple(
+        (revision, work_unit)
+        for revision, work_unit in ports.sealed_revisions.sealed_revisions()
+        if revision.invoice_fingerprint is not None
+        and any(row.invoice_id == invoice_id for row in revision.invoice_fingerprint.rows)
+    )
+
+
+def _refuse_sealed_write(invoice_id: str, citation: tuple[CalculationRevision, WorkUnit]) -> None:
+    revision, work_unit = citation
+    raise InvoiceValidationError(
+        translated_message="application.invoices.lifecycle.errors.sealed_invoice_refused",
+        context={
+            "invoice_id": invoice_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "revision_state": revision.state.value,
+            "calculation_revision_id": revision.calculation_revision_id,
+        },
+    )
+
+
+def _as_a_sealed_revision_read_it(existing: Invoice, corrected: Invoice) -> Invoice:
+    """Leave out a collection recorded on an invoice whose devengo does not rest on it."""
+    advance = advance_payment_received_role()
+    if corrected.payment_status is existing.payment_status or advance in (
+        existing.operation_date_role,
+        corrected.operation_date_role,
+    ):
+        return corrected
+    return corrected.model_copy(update={"payment_status": existing.payment_status})
+
+
+def _require_sealed_revisions_undisturbed(
+    existing: Invoice,
+    corrected: Invoice,
+    ports: CatalogueLifecyclePorts,
+) -> None:
+    candidate = _as_a_sealed_revision_read_it(existing, corrected)
+    for citation in _sealed_citations(existing.invoice_id, ports):
+        snapshot = citation[0].invoice_fingerprint
+        version = 1 if snapshot is None else snapshot.field_set_version
+        if invoice_row_fingerprint(candidate, field_set_version=version) != invoice_row_fingerprint(
+            existing, field_set_version=version
+        ):
+            _refuse_sealed_write(existing.invoice_id, citation)
 
 
 def remove_catalogue_invoice(
@@ -93,14 +145,18 @@ def remove_catalogue_invoice(
     still carries ``linked_transaction_ids`` is refused: deleting it from the
     catalogue alone would leave the transaction side citing a vanished invoice
     — a one-sided link ``verify_link_consistency`` flags. The operator must
-    unlink first. The write rides the required application-owned mutation
-    capability; no parallel write path is introduced.
+    unlink first. A sealed revision that read the invoice refuses too: its figures
+    would stop matching the catalogue with nothing left to say so. The write rides
+    the required application-owned mutation capability; no parallel write path is
+    introduced.
     """
     resolved: list[Invoice] = []
 
     def _remove(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
         """Drop the resolved invoice, refusing one that still carries links."""
         invoice = resolve_catalogue_invoice(catalogue, invoice_id)
+        for citation in _sealed_citations(invoice.invoice_id, ports):
+            _refuse_sealed_write(invoice.invoice_id, citation)
         if invoice.linked_transaction_ids:
             linked = ", ".join(invoice.linked_transaction_ids)
             raise InvoiceValidationError(
@@ -144,6 +200,13 @@ class CatalogueInvoicePatch(BaseModel):
     An operator who genuinely must change an identity field removes the record
     and creates it again -- which the remove verb already guards, refusing to
     delete an invoice that still carries links.
+
+    ``declared_fx_rate`` is not a stored field: it is the exchange rate the
+    operator states for a foreign invoice, which replaces the record's whole
+    conversion stamp with an operator-declared one. It is what repairs an
+    invoice left unconverted because no rate was published for it. It cannot
+    be selected without a rate, since clearing a stamp would only hide the
+    euro value again.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -160,7 +223,44 @@ class CatalogueInvoicePatch(BaseModel):
     series: str | None = None
     invoice_class: InvoiceClass | None = None
     rectifies_invoice_number: str | None = None
+    # The four facts a factura rectificativa states. They are correctable like
+    # every other non-identity fact: the person records the document when it
+    # reaches them and completes it as they read it, which is the whole reason
+    # the record admits a rectificativa that states none of them. Setting one
+    # explicitly to ``None`` clears it, as it does for every other optional
+    # fact on this patch, so a cause entered in error can be withdrawn rather
+    # than only replaced.
+    # Carried as the stable registry tokens in text, not as projected tokens
+    # like ``invoice_class`` above. The corrected record is rebuilt through
+    # :class:`Invoice`, whose own deserialisation boundary projects each of
+    # these three through fact 0141 on the invoice's ``issued_at`` -- the date
+    # that actually governs them. Projecting here instead would have to guess
+    # an effective date and an authority the patch does not carry, and would
+    # date a historical invoice's vocabulary to today.
+    rectification_method: str | None = None
+    rectification_cause: str | None = None
+    rectification_direction: str | None = None
+    document_received_on: date | None = None
+    # The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    # art. 80.Tres leave the taxpayer, correctable on the same terms: a choice
+    # made in error is withdrawn by setting it back to ``None``, and the two
+    # election tokens travel as text for the dating reason above. The periods
+    # are typed, because a period is a year and a registry code and never a
+    # calendar string.
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
     payment_id: str | None = None
+    declared_fx_rate: Decimal | None = None
+
+    @model_validator(mode="after")
+    def _declared_rate_is_stated(self) -> CatalogueInvoicePatch:
+        if "declared_fx_rate" in self.model_fields_set and self.declared_fx_rate is None:
+            raise ValueError("declared_fx_rate must state a rate; a conversion stamp cannot be cleared")
+        return self
 
 
 class CatalogueInvoiceUpdateResult(BaseModel):
@@ -171,6 +271,67 @@ class CatalogueInvoiceUpdateResult(BaseModel):
     invoice: Invoice
     catalogue: InvoiceCatalogue
     bucket_event_ids: tuple[str, ...] = ()
+
+
+def _registered_refusal(error: ValidationError) -> InvoiceValidationError | None:
+    """The invoice refusal a validator raised, which the validation failure carries as its cause."""
+    for detail in error.errors(include_url=False):
+        raised = (detail.get("ctx") or {}).get("error")
+        for candidate in (raised, getattr(raised, "__cause__", None)):
+            if isinstance(candidate, InvoiceValidationError):
+                return candidate
+    return None
+
+
+def _admitted_correction(
+    existing: Invoice, patch: CatalogueInvoicePatch, ports: CatalogueLifecyclePorts, *, updated_at: datetime
+) -> Invoice:
+    """Patch ``existing`` and admit the corrected record, or raise the refusal a person reads.
+
+    A rule the corrected record breaks raises its registered refusal, with the
+    rule's code and words, rather than the validation failure that carries it.
+    """
+    changes = patch.model_dump(exclude_unset=True)
+    if not changes:
+        raise InvoiceValidationError(
+            translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
+            context={"invoice_id": existing.invoice_id},
+        )
+
+    declared_fx_rate = changes.pop("declared_fx_rate", None)
+    payload = existing.model_dump()
+    payload.update(changes)
+    if declared_fx_rate is not None:
+        from .catalogue_creation import declared_fx_conversion_fields
+
+        # The CORRECTED devengo date, not the stored one: a correction that
+        # states the operation date and the rate together is one statement, and
+        # stamping the rate against the date being replaced would date the
+        # operator's own attestation to a devengo they just said was wrong.
+        # ``issued_at`` is an identity field no patch can reach, so the fallback
+        # is always the stored one.
+        operation_date = patch.operation_date if "operation_date" in patch.model_fields_set else existing.operation_date
+        payload.update(
+            declared_fx_conversion_fields(
+                currency=existing.currency,
+                devengo_date=operation_date or existing.issued_at,
+                declared_fx_rate=declared_fx_rate,
+            )
+        )
+    # Carried explicitly, not by accident: the links are why this aggregate
+    # is the reconciliation authority, and an update that dropped them would
+    # sever a bidirectional binding the operator never asked to break.
+    payload["linked_transaction_ids"] = existing.linked_transaction_ids
+    payload["updated_at"] = updated_at
+    try:
+        corrected = Invoice.model_validate(payload, context=INVOICE_WRITE_ADMISSION)
+    except ValidationError as error:
+        refusal = _registered_refusal(error)
+        if refusal is None:
+            raise
+        raise refusal from error
+    _require_sealed_revisions_undisturbed(existing, corrected, ports)
+    return corrected
 
 
 def update_catalogue_invoice(
@@ -216,8 +377,8 @@ def update_catalogue_invoice(
 
     Raises:
         InvoiceNotFoundError: No invoice matches ``invoice_id``.
-        InvoiceValidationError: The patch is empty, or the corrected record
-            would violate an invoice invariant.
+        InvoiceValidationError: The patch is empty, the corrected record would
+            violate an invoice invariant, or it would move what a sealed revision read.
     """
     from .catalogue_creation import build_catalogue_invoice_event
 
@@ -235,21 +396,7 @@ def update_catalogue_invoice(
                 context={"invoice_id": existing.invoice_id},
             )
 
-        changes = patch.model_dump(exclude_unset=True)
-        if not changes:
-            raise InvoiceValidationError(
-                translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
-                context={"invoice_id": existing.invoice_id},
-            )
-
-        payload = existing.model_dump()
-        payload.update(changes)
-        # Carried explicitly, not by accident: the links are why this aggregate
-        # is the reconciliation authority, and an update that dropped them would
-        # sever a bidirectional binding the operator never asked to break.
-        payload["linked_transaction_ids"] = existing.linked_transaction_ids
-        payload["updated_at"] = commit_time
-        corrected = Invoice.model_validate(payload)
+        corrected = _admitted_correction(existing, patch, ports, updated_at=commit_time)
 
         written.clear()
         written.append(corrected)

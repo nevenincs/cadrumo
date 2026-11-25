@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ..authority import bundled_indexed_authority
+from .authored_editions import filing_year_envelope
 from .legal_inventory import legal_reference_ids
 from .legal_quotation import legal_quotation_is_grounded
 
@@ -26,7 +27,7 @@ def test_legal_reference_ids_enumerate_every_published_legal_declaration() -> No
 def test_legal_reference_ids_exclude_public_source_declarations() -> None:
     with bundled_indexed_authority().operation() as operation:
         identities = set(legal_reference_ids(operation))
-        snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+        snapshot = operation.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
 
     assert snapshot.sources, "the fixture snapshot names no public source to compare against"
     assert identities.isdisjoint(snapshot.sources)

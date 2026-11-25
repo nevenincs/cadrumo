@@ -25,10 +25,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.confirmation_gate import ConfirmationBlockReason
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....domain.iva.schema import InvoiceKind
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
-from ..invoice_confirmation import _with_direction_contradiction
+from ..invoice_confirmation import with_direction_contradiction
 from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,8 +36,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _draft(suggested: InvoiceKind | None) -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
-        customer_tax_id="B17283946",
+        supplier_tax_id="B00015016",
+        customer_tax_id="B00015024",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -56,7 +56,7 @@ def test_a_document_placing_the_filer_on_the_other_side_raises_the_contradiction
     The document settled ``received`` -- the filer's own identifier is printed
     inside the recipient's block -- and the operator is confirming it as issued.
     """
-    stamped = _with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED)
+    stamped = with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED)
 
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED in _kinds(stamped)
 
@@ -67,16 +67,23 @@ def test_the_contradiction_names_both_directions_so_the_operator_can_judge_it() 
     The operator has the document; they need to be told what the document was
     read as and what they asked for, in order to decide which is wrong.
     """
-    stamped = _with_direction_contradiction(_draft(InvoiceKind.ISSUED), kind=InvoiceKind.RECEIVED)
+    stamped = with_direction_contradiction(_draft(InvoiceKind.ISSUED), kind=InvoiceKind.RECEIVED)
 
-    detail = next(f.detail for f in stamped.discrepancies if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED)
-    assert InvoiceKind.ISSUED.value in detail
-    assert InvoiceKind.RECEIVED.value in detail
+    words = next(f.words for f in stamped.discrepancies if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED)
+    assert words is not None
+    assert words.wording is DraftFindingWording.DOCUMENT_ISSUED_CONFIRMED_RECEIVED
+    reversed_words = next(
+        f.words
+        for f in with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED).discrepancies
+        if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED
+    )
+    assert reversed_words is not None
+    assert reversed_words.wording is DraftFindingWording.DOCUMENT_RECEIVED_CONFIRMED_ISSUED
 
 
 def test_an_agreeing_document_raises_nothing() -> None:
     """The bound. Without it the check could be "always contradict"."""
-    stamped = _with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.RECEIVED)
+    stamped = with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.RECEIVED)
 
     assert stamped.discrepancies == ()
 
@@ -89,7 +96,7 @@ def test_a_document_that_settled_nothing_raises_nothing() -> None:
     of those as a contradiction would block the majority of the corpus on a
     question the document never answered.
     """
-    stamped = _with_direction_contradiction(_draft(None), kind=InvoiceKind.ISSUED)
+    stamped = with_direction_contradiction(_draft(None), kind=InvoiceKind.ISSUED)
 
     assert stamped.discrepancies == ()
 
@@ -101,12 +108,12 @@ def test_the_existing_findings_survive_the_stamp() -> None:
         update={
             "discrepancies": (
                 *base.discrepancies,
-                *_with_direction_contradiction(base, kind=InvoiceKind.ISSUED).discrepancies,
+                *with_direction_contradiction(base, kind=InvoiceKind.ISSUED).discrepancies,
             ),
         },
     )
 
-    stamped = _with_direction_contradiction(with_closure, kind=InvoiceKind.ISSUED)
+    stamped = with_direction_contradiction(with_closure, kind=InvoiceKind.ISSUED)
 
     assert len(stamped.discrepancies) == len(with_closure.discrepancies) + 1
 
@@ -117,7 +124,7 @@ def test_the_contradiction_becomes_a_resolvable_blocker_rather_than_a_refusal() 
     A refusal would leave an operator who is right, facing a document whose
     layout misleads the derivation, with no way through at all.
     """
-    stamped = _with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED)
+    stamped = with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED)
 
     blockers = confirmation_blockers(stamped)
 

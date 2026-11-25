@@ -6,6 +6,7 @@ import importlib
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import zipfile
@@ -20,7 +21,7 @@ from PIL import Image
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..build_stamp import BuildStamp, display_version
 from ..hashing import digest
@@ -46,60 +47,80 @@ def assemble_native(
     copy_function: Callable[[Path, Path], object] = shutil.copy2,
 ) -> dict[str, Any]:
     """Relocate PE modules and apply the reviewed Windows wheel loader patches."""
-    modules: dict[str, str] = {}
-    for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
-        target = native / source.name
-        copy_function(source, target)
-        if source.suffix.lower() == ".pyd":
-            modules[source.stem] = target.relative_to(root).as_posix()
-    relocation = {}
-    for source in sorted(packages.rglob("*")):
-        if source.suffix.lower() not in {".pyd", ".dll", ".exe"}:
-            continue
-        relative = source.relative_to(packages)
-        target = native / "packages" / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(source, target)
-        relocation[source.relative_to(root).as_posix()] = target.relative_to(root).as_posix()
-        if source.suffix.lower() == ".pyd":
-            parts = list(relative.parts)
-            parts[-1] = parts[-1].split(".")[0]
-            if parts[0] in {"win32", "pythonwin"}:
-                parts = parts[1:]
-            modules[".".join(parts)] = target.relative_to(root).as_posix()
-            if parts[0] == "win32comext":
-                modules[".".join(["win32com", *parts[1:]])] = target.relative_to(root).as_posix()
-    # These pywin32 extension DLLs export ordinary Python module initializers.
-    for name in ("pywintypes", "pythoncom"):
-        target = native / "packages/pywin32_system32" / f"{name}313.dll"
-        if target.is_file():
-            modules[name] = target.relative_to(root).as_posix()
-    paths = [packages.relative_to(root).as_posix()]
-    for pth in packages.glob("*.pth"):
-        if pth.name != "pywin32.pth":
-            raise ValueError(f"Unreviewed .pth file: {pth.name}")
-        for line in pth.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or line == "import pywin32_bootstrap":
-                continue
-            resolved = (packages / line).resolve()
-            if not resolved.is_relative_to(packages) or not resolved.is_dir():
-                raise ValueError(f"Invalid wheel path directive: {line}")
-            paths.append(resolved.relative_to(root).as_posix())
-        pth.unlink()
+    modules, relocation = _relocate_modules(python, packages, native, root, copy_function)
+    paths = _wheel_paths(packages, root)
+    patches = _patch_wheel_loaders(packages, native, root)
+    dll_dirs = _validated_dll_directories(native, root, root / contract["paths"]["llama_server"])
+    return {
+        "modules": modules,
+        "dll_directories": dll_dirs,
+        "python_paths": paths,
+        "relocation": relocation,
+        "patches": patches,
+    }
+
+
+def _validated_dll_directories(native: Path, root: Path, program: Path) -> list[str]:
+    # Entrypoint hosts run from the native directory: no bundled DLL there may shadow a host import.
+    _refuse_shadowed_host_imports(native)
+    loader_files = _native_loader_files(native, program)
+    imported_pyds = _imported_extensions(loader_files)
+    searched_files = [p for p in loader_files if p.suffix.lower() == ".dll" or p.name.casefold() in imported_pyds]
+    missing = imported_pyds - {p.name.casefold() for p in searched_files}
+    if missing:
+        raise ValueError(f"Missing transitive extension libraries: {sorted(missing)}")
+    dll_dirs = sorted({p.parent.relative_to(root).as_posix() for p in searched_files})
+    _refuse_ambiguous_dlls(searched_files)
+    return dll_dirs
+
+
+def _native_loader_files(native: Path, program: Path) -> list[Path]:
+    # The llama-server program runs as its own process and loads its libraries from beside it, so
+    # the interpreter's DLL search directories must not include them.
+    return [
+        path
+        for path in native.rglob("*")
+        if path.suffix.lower() in {".dll", ".pyd"} and not path.is_relative_to(program)
+    ]
+
+
+def _imported_extensions(loader_files: list[Path]) -> set[str]:
+    return {name for path in loader_files for name in pe_imports(path) if name.endswith(".pyd")}
+
+
+def _refuse_ambiguous_dlls(searched_files: list[Path]) -> None:
+    dll_names: dict[str, str] = {}
+    for dll in searched_files:
+        identity = dll.name.casefold()
+        hashed = digest(dll)
+        if identity in dll_names and dll_names[identity] != hashed:
+            raise ValueError(f"Ambiguous native dependency basename: {dll.name}")
+        dll_names[identity] = hashed
+
+
+def _refuse_shadowed_host_imports(native: Path) -> None:
+    bundled = {p.name.casefold() for p in native.glob("*.dll")}
+    for host in native.glob("*.exe"):
+        shadowed = pe_imports(host) & bundled
+        if shadowed:
+            raise ValueError(f"Bundled DLLs shadow {host.name} imports: {sorted(shadowed)}")
+
+
+def _patch_wheel_loaders(packages: Path, native: Path, root: Path) -> list[dict[str, str]]:
     # ctypesgen checks a file relative to bindings.py before loading it. Project
     # its one concrete DLL location; do not replace ctypes or global import policy.
     bindings = packages / "pypdfium2_raw/bindings.py"
-    patches = []
+    patches: list[dict[str, str]] = []
     if bindings.is_file():
         before = digest(bindings)
         source = bindings.read_text(encoding="utf-8")
-        old = "libpaths = ('./{prefix}{name}.{suffix}',),"
+        # ctypesgen has written this line with either quote style across pypdfium2 releases.
+        loader = re.compile(r"libpaths\s*=\s*\(\s*(['\"])\./\{prefix\}\{name\}\.\{suffix\}\1,?\s*\),")
         relative_dll = (native / "packages/pypdfium2_raw/pdfium.dll").relative_to(root).as_posix()
         new = f"libpaths = (str(pathlib.Path(sys.executable).parent / {relative_dll!r}),),"
-        if source.count(old) != 1:
+        if len(loader.findall(source)) != 1:
             raise ValueError("Unrecognized pypdfium2 ctypesgen loader")
-        bindings.write_text(source.replace(old, new), encoding="utf-8")
+        bindings.write_text(loader.sub(lambda _match: new, source, count=1), encoding="utf-8")
         patches.append(
             {
                 "file": bindings.relative_to(root).as_posix(),
@@ -150,33 +171,58 @@ def assemble_native(
                 "reason": "Use bundled COM extensions and user-root cache; exclude host Python registry paths",
             }
         )
-    # Entrypoint hosts run from the native directory: no bundled DLL there may shadow a host import.
-    bundled = {p.name.casefold() for p in native.glob("*.dll")}
-    for host in native.glob("*.exe"):
-        shadowed = pe_imports(host) & bundled
-        if shadowed:
-            raise ValueError(f"Bundled DLLs shadow {host.name} imports: {sorted(shadowed)}")
-    loader_files = [p for p in native.rglob("*") if p.suffix.lower() in {".dll", ".pyd"}]
-    imported_pyds = {name for p in loader_files for name in pe_imports(p) if name.endswith(".pyd")}
-    searched_files = [p for p in loader_files if p.suffix.lower() == ".dll" or p.name.casefold() in imported_pyds]
-    missing = imported_pyds - {p.name.casefold() for p in searched_files}
-    if missing:
-        raise ValueError(f"Missing transitive extension libraries: {sorted(missing)}")
-    dll_dirs = sorted({p.parent.relative_to(root).as_posix() for p in searched_files})
-    dll_names: dict[str, str] = {}
-    for dll in searched_files:
-        identity = dll.name.casefold()
-        hashed = digest(dll)
-        if identity in dll_names and dll_names[identity] != hashed:
-            raise ValueError(f"Ambiguous native dependency basename: {dll.name}")
-        dll_names[identity] = hashed
-    return {
-        "modules": modules,
-        "dll_directories": dll_dirs,
-        "python_paths": paths,
-        "relocation": relocation,
-        "patches": patches,
-    }
+    return patches
+
+
+def _wheel_paths(packages: Path, root: Path) -> list[str]:
+    paths = [packages.relative_to(root).as_posix()]
+    for pth in packages.glob("*.pth"):
+        if pth.name != "pywin32.pth":
+            raise ValueError(f"Unreviewed .pth file: {pth.name}")
+        for line in pth.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line == "import pywin32_bootstrap":
+                continue
+            resolved = (packages / line).resolve()
+            if not resolved.is_relative_to(packages) or not resolved.is_dir():
+                raise ValueError(f"Invalid wheel path directive: {line}")
+            paths.append(resolved.relative_to(root).as_posix())
+        pth.unlink()
+    return paths
+
+
+def _relocate_modules(
+    python: Path, packages: Path, native: Path, root: Path, copy_function: Callable[[Path, Path], object]
+) -> tuple[dict[str, str], dict[str, str]]:
+    modules: dict[str, str] = {}
+    for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
+        target = native / source.name
+        copy_function(source, target)
+        if source.suffix.lower() == ".pyd":
+            modules[source.stem] = target.relative_to(root).as_posix()
+    relocation: dict[str, str] = {}
+    for source in sorted(packages.rglob("*")):
+        if source.suffix.lower() not in {".pyd", ".dll", ".exe"}:
+            continue
+        relative = source.relative_to(packages)
+        target = native / "packages" / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(source, target)
+        relocation[source.relative_to(root).as_posix()] = target.relative_to(root).as_posix()
+        if source.suffix.lower() == ".pyd":
+            parts = list(relative.parts)
+            parts[-1] = parts[-1].split(".")[0]
+            if parts[0] in {"win32", "pythonwin"}:
+                parts = parts[1:]
+            modules[".".join(parts)] = target.relative_to(root).as_posix()
+            if parts[0] == "win32comext":
+                modules[".".join(["win32com", *parts[1:]])] = target.relative_to(root).as_posix()
+    # These pywin32 extension DLLs export ordinary Python module initializers.
+    for name in ("pywintypes", "pythoncom"):
+        target = native / "packages/pywin32_system32" / f"{name}313.dll"
+        if target.is_file():
+            modules[name] = target.relative_to(root).as_posix()
+    return modules, relocation
 
 
 def external_probe(destination: Path) -> list[str]:
@@ -203,6 +249,14 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
     sdk = destination / Path(contract["sdk"]["root"]).parts[0]
     # Reprovisioning rewrites only files whose bytes differ, so the headers and libraries the
     # native images compile against keep their timestamps and nothing recompiles needlessly.
+    expected = _extract_sdk_archive(archive, sdk)
+    for path in sorted(sdk.rglob("*"), reverse=True):
+        if path.is_file() and path.resolve() not in expected:
+            path.unlink()
+    return destination / str(contract["sdk"]["root"])
+
+
+def _extract_sdk_archive(archive: Path, sdk: Path) -> set[Path]:
     expected: set[Path] = set()
     with zipfile.ZipFile(archive) as package:
         for member in package.infolist():
@@ -217,10 +271,7 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
             if not target.is_file() or target.read_bytes() != content:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(content)
-    for path in sorted(sdk.rglob("*"), reverse=True):
-        if path.is_file() and path.resolve() not in expected:
-            path.unlink()
-    return destination / str(contract["sdk"]["root"])
+    return expected
 
 
 def resources(
@@ -233,29 +284,15 @@ def resources(
     *,
     shared: Path | None = None,
 ) -> None:
-    """Render the icon, one PE version resource per native executable and the process manifests.
+    """Render the icon and one PE version resource per native executable.
 
-    The version resources carry the build identity and go to ``destination``; the icon and
-    manifests carry none and go to ``shared`` (``destination`` when omitted).
+    The version resources carry the build identity and go to ``destination``; the icon
+    carries none and goes to ``shared`` (``destination`` when omitted), where
+    :func:`unstamped_resources` has written the application manifests.
     """
     shared = destination if shared is None else shared
     if not 0 <= stamp.build_sequence <= 65535:
         raise ValueError("Windows resource build sequence must be between 0 and 65535")
-    for image, source in APPLICATION_MANIFESTS.items():
-        authored = source.read_bytes()
-        for build_kind, publisher in (
-            ("release", product.windows_package_publisher),
-            ("development", product.windows_package_development_publisher),
-        ):
-            write_bytes(
-                shared / application_manifest_name(image, build_kind),
-                identity_manifest(
-                    authored,
-                    package_name=product.windows_package_name,
-                    publisher=publisher,
-                    application=product.windows_package_application,
-                ),
-            )
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
     publisher = _rc_string(metadata["publisher"])
     sys.path.insert(0, str(tools))
@@ -272,8 +309,27 @@ def resources(
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
-        resource = _version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
+        resource = version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
+
+
+def unstamped_resources(shared: Path, product: DistributionIdentity) -> None:
+    """Render each application image's manifest of both build kinds with the package identity claim."""
+    for image, source in APPLICATION_MANIFESTS.items():
+        authored = source.read_bytes()
+        for build_kind, publisher in (
+            ("release", product.windows_package_publisher),
+            ("development", product.windows_package_development_publisher),
+        ):
+            write_bytes(
+                shared / application_manifest_name(image, build_kind),
+                identity_manifest(
+                    authored,
+                    package_name=product.windows_package_name,
+                    publisher=publisher,
+                    application=product.windows_package_application,
+                ),
+            )
 
 
 def application_manifest_name(image: str, build_kind: str) -> str:
@@ -302,7 +358,7 @@ def _rc_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=True)[:-1] + '\\0"'
 
 
-def _version_resource(
+def version_resource(
     destination: Path, numeric: str, version: str, stamp: BuildStamp, publisher: str, description: str
 ) -> str:
     """Render one VERSIONINFO; the compiler's ``CADRUMO_BUILD_DEBUG`` selects the build type strings."""

@@ -23,11 +23,8 @@ from .capsule_record import (
     validate_staged_profile_record_database,
 )
 from .custody_hold_models import ProfileCustodyRetentionOverride
-from .custody_ports import (
-    ProfileCustodyEnvelopePort,
-    ProfileCustodySentinelPort,
-    verify_profile_custody_dek_against_sentinel,
-)
+from .custody_ports import verify_profile_custody_dek_against_sentinel
+from .custody_record_ports import ProfileCustodyEnvelopePort, ProfileCustodySentinelPort
 from .custody_repository import profile_custody_transaction_lock
 from .custody_service import ProfileCustodyTransactionService
 from .custody_transactions import (
@@ -159,7 +156,7 @@ class ProfileCapsuleLifecycle:
         )
         return self._profiles.load(identity)
 
-    def _replace_record_for_profile_command(
+    def replace_record_for_profile_command(
         self,
         *,
         profile_id: UUID,
@@ -169,7 +166,10 @@ class ProfileCapsuleLifecycle:
         expected_revision: int,
         expected_content_digest: str,
     ) -> UserProfileRecord:
-        """Private CAS collaboration for explicit ``ProfileRecordRepository`` commands."""
+        """Replace the profile record by compare-and-swap for an explicit ``ProfileRecordRepository`` command.
+
+        ``replacement`` is a :class:`UserProfileRecord`.
+        """
         if record_session.profile_id != profile_id:
             raise ValueError("profile lifecycle record session must bind the replacement UUID")
         with profile_custody_transaction_lock(self.root, profile_id):

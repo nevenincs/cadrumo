@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-29 13:43+0100\n"
 "PO-Revision-Date: 2026-07-19 09:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -102,18 +102,15 @@ msgstr "Confirmar la instalación"
 
 #: ../../download.md:37
 msgid ""
-"A version number confirms the install. Then run the full workstation "
-"check and add the optional extras you want (Google export, the live AEAT "
-"browser, OFX/QFX import) by following [Install Cadrumo](workstation-"
-"setup.md), which covers the dependency report, platform checks, and per-"
-"extra install commands."
+"A version number confirms the install. Then add the optional extras you "
+"want (Google export, the live AEAT browser, OFX/QFX import) by following "
+"[Install Cadrumo](workstation-setup.md), which covers the per-extra "
+"install commands."
 msgstr ""
-"Un número de versión confirma la instalación. Después ejecuta la "
-"comprobación completa de la estación de trabajo y añade los extras "
+"Un número de versión confirma la instalación. Después añade los extras "
 "opcionales que quieras (exportación a Google, el navegador en vivo de la "
 "AEAT, importación OFX/QFX) siguiendo [Instalar Cadrumo](workstation-"
-"setup.md), que cubre el informe de dependencias, las comprobaciones de la"
-" plataforma y los comandos de instalación de cada extra."
+"setup.md), que cubre los comandos de instalación de cada extra."
 
 #: ../../download.md:42
 msgid ""
@@ -228,7 +225,7 @@ msgstr "Paquete de Scoop"
 
 #: ../../download.md:93
 msgid "Scoop bucket"
-msgstr "Bucket de Scoop"
+msgstr "Repositorio de Scoop"
 
 #: ../../download.md:96
 msgid "Per-channel install paths:"

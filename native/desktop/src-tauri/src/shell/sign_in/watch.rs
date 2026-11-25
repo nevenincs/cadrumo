@@ -1,23 +1,20 @@
-//! The window's one sign-in observation, pushed by a long-lived `session watch` child.
+//! The window's one sign-in observation, read on the window's own runtime connection.
 //!
-//! The shell holds no runtime connection; the child holds one, for status only,
-//! and writes a line whenever what it observes changes. Nothing here reads on a
-//! timer. A sign-in, sign-out or profile creation from this window fences the
-//! observation: until the child has read again after it, no consumer acts on a
-//! status that may predate it.
+//! The shell connects to the runtime that serves its storage root, asks which
+//! profile is selected and whether its sign-in is stored, and reads again on
+//! every cue the runtime pushes. Nothing here reads on a timer. A sign-in,
+//! sign-out or profile creation from this window fences the observation:
+//! until a read after it, no consumer acts on a status that may predate it.
+//! Until the runtime serves the root, the observation says so, and the
+//! connection is tried again with a growing pause.
 
 use super::{
-    failure,
+    closing, failure,
     wire::{Presence, Refusal, SignInStatus},
 };
-use cadrumo_application::{
-    child::ChildConfiguration,
-    error::application::{ErrorCode, Result},
-};
-use serde::Deserialize;
+use cadrumo_application::error::application::{ErrorCode, Result};
 use std::{
-    io::{BufRead, BufReader, Read, Write},
-    process::{Child, ChildStdin, Stdio},
+    path::PathBuf,
     sync::{
         Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
@@ -28,21 +25,33 @@ use std::{
 };
 use tokio::sync::watch;
 
-/// Waits between restarts of a child that ended on its own: restarting, not observing.
-const RESTART: [Duration; 4] = [
+/// Waits between attempts to reach a runtime that is not serving the root yet.
+const RETRY: [Duration; 4] = [
+    Duration::from_millis(500),
     Duration::from_secs(1),
-    Duration::from_secs(5),
-    Duration::from_secs(15),
-    Duration::from_secs(60),
+    Duration::from_secs(3),
+    Duration::from_secs(10),
 ];
-/// The longest line the child writes, with room to spare.
-const LINE_LIMIT: u64 = 16 * 1024;
 
-/// One observation: the public status and the private identity of its profile.
+/// What the connection to this window's runtime is made from.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Native {
+    /// The storage root the runtime serves; its identity names the endpoint.
+    pub storage_root: PathBuf,
+    /// The installed product version the runtime must also be.
+    pub product_version: String,
+}
+
+/// One observation: the public status and the private identity of its profile,
+/// and the profiles on this computer when they were listed.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Observed {
+    /// This watch's publication generation, assigned at publish even when
+    /// the runtime's public values are unchanged. Zero before publication.
+    pub sequence: u64,
     pub status: SignInStatus,
     pub profile_id: Option<String>,
+    pub profiles: Option<super::wire::ProfileList>,
 }
 
 #[derive(Clone)]
@@ -58,12 +67,24 @@ struct Fence {
     stale_through: u64,
 }
 
+/// Why the observing loop should read again or stop.
+enum Wake {
+    /// A mutation of this window finished: read again even if nothing changed.
+    Forced,
+    /// The runtime cued a change.
+    Changed,
+    /// The connection ended.
+    Lost,
+    Stop,
+}
+
 struct Inner {
-    child: Result<ChildConfiguration>,
+    native: Result<Native>,
     snapshot: watch::Sender<Snapshot>,
     fence: Mutex<Fence>,
-    input: Mutex<Option<ChildStdin>>,
-    running: Mutex<Option<Child>>,
+    wakes: Mutex<Option<mpsc::Sender<Wake>>>,
+    connection: Mutex<Option<Arc<cadrumo_application::runtime_client::connection::Connection>>>,
+    opening: Mutex<Option<Arc<cadrumo_application::runtime_client::endpoint::OpenCancellation>>>,
     started: AtomicBool,
     closed: AtomicBool,
     stopping: Mutex<Option<mpsc::Sender<()>>>,
@@ -79,22 +100,23 @@ pub(super) struct Watch {
     inner: Arc<Inner>,
 }
 
-/// A mutation from this window in progress; dropping it asks the child to read again.
+/// A mutation from this window in progress; dropping it asks for a fresh read.
 pub(super) struct Mutation<'a>(&'a Watch);
 
 impl Watch {
-    pub(super) fn new(child: Result<ChildConfiguration>) -> Self {
+    pub(super) fn new(native: Result<Native>) -> Self {
         let (snapshot, _) = watch::channel(Snapshot {
             sequence: 0,
             value: None,
         });
         Self {
             inner: Arc::new(Inner {
-                child,
+                native,
                 snapshot,
                 fence: Mutex::new(Fence::default()),
-                input: Mutex::new(None),
-                running: Mutex::new(None),
+                wakes: Mutex::new(None),
+                connection: Mutex::new(None),
+                opening: Mutex::new(None),
                 started: AtomicBool::new(false),
                 closed: AtomicBool::new(false),
                 stopping: Mutex::new(None),
@@ -108,14 +130,14 @@ impl Watch {
         self.start();
         let mut receiver = self.inner.snapshot.subscribe();
         loop {
+            if self.inner.closed.load(Ordering::Acquire) {
+                return Err(closing());
+            }
             {
                 let fence = lock(&self.inner.fence);
-                if fence.mutations != 0 {
-                    return Err(failure(ErrorCode::SessionUnavailable)
-                        .with_reason("sign_in_mutation_in_progress"));
-                }
                 let snapshot = receiver.borrow_and_update();
-                if snapshot.sequence > fence.stale_through
+                if fence.mutations == 0
+                    && snapshot.sequence > fence.stale_through
                     && let Some(value) = &snapshot.value
                 {
                     return value.clone();
@@ -163,6 +185,7 @@ impl Watch {
     }
 
     fn start(&self) {
+        let mut worker_owner = lock(&self.inner.worker);
         if self.inner.closed.load(Ordering::Acquire)
             || self.inner.started.swap(true, Ordering::AcqRel)
         {
@@ -175,20 +198,36 @@ impl Watch {
             .name("sign-in-watch".into())
             .spawn(move || supervise(&inner, &stopping));
         match worker {
-            Ok(worker) => *lock(&self.inner.worker) = Some(worker),
+            Ok(worker) => *worker_owner = Some(worker),
             Err(_) => publish(&self.inner, Err(failure(ErrorCode::SpawnFailed))),
         }
     }
 
-    /// Ends the child and waits for the watch to settle. The child only reads
+    /// Ends the connection and waits for the watch to settle. It only reads
     /// status, so ending it at once loses nothing.
-    pub(super) fn close(&self) {
-        self.inner.closed.store(true, Ordering::Release);
-        lock(&self.inner.stopping).take();
-        lock(&self.inner.input).take();
-        if let Some(child) = lock(&self.inner.running).as_mut() {
-            let _ = child.kill();
+    pub(super) fn request_close(&self) {
+        {
+            let _fence = lock(&self.inner.fence);
+            self.inner.closed.store(true, Ordering::Release);
+            self.inner.snapshot.send_modify(|snapshot| {
+                snapshot.sequence += 1;
+                snapshot.value = None;
+            });
         }
+        lock(&self.inner.stopping).take();
+        if let Some(wakes) = lock(&self.inner.wakes).take() {
+            let _ = wakes.send(Wake::Stop);
+        }
+        if let Some(opening) = lock(&self.inner.opening).as_ref() {
+            opening.cancel();
+        }
+        if let Some(connection) = lock(&self.inner.connection).as_ref() {
+            connection.request_close();
+        }
+    }
+
+    pub(super) fn close(&self) {
+        self.request_close();
         let worker = lock(&self.inner.worker).take();
         if let Some(worker) = worker {
             let _ = worker.join();
@@ -205,31 +244,63 @@ impl Drop for Mutation<'_> {
             fence.stale_through = inner.snapshot.borrow().sequence;
         }
         // A forced read gives the next observation even when nothing changed.
-        if let Some(input) = lock(&inner.input).as_mut() {
-            let _ = input.write_all(b"\n").and_then(|()| input.flush());
+        if let Some(wakes) = lock(&inner.wakes).as_ref() {
+            let _ = wakes.send(Wake::Forced);
         }
     }
 }
 
 fn publish(inner: &Inner, value: Result<Observed>) {
+    let _fence = lock(&inner.fence);
+    if inner.closed.load(Ordering::Acquire) {
+        return;
+    }
     inner.snapshot.send_modify(|snapshot| {
         snapshot.sequence += 1;
-        snapshot.value = Some(value);
+        snapshot.value = Some(value.map(|mut observed| {
+            observed.sequence = snapshot.sequence;
+            observed
+        }));
     });
 }
 
-/// Runs the child for as long as the window lives, restarting one that ends on its own.
+/// The observation while the runtime cannot be reached or refuses: `code` is
+/// what the runtime's own clients report for the same state.
+fn refused(code: &str) -> Observed {
+    Observed {
+        sequence: 0,
+        status: SignInStatus {
+            supported: true,
+            state: Presence::Unknown,
+            active_profile: None,
+            runtime_available: code != "runtime_unavailable",
+            reconnecting: None,
+            refusal: Some(Refusal {
+                code: code.to_owned(),
+                retry_after_seconds: None,
+            }),
+        },
+        profile_id: None,
+        profiles: None,
+    }
+}
+
+/// Observes for as long as the window lives, trying again when the runtime is
+/// not there yet or the connection ends.
 fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
-    let mut restarts = 0usize;
+    let mut retries = 0usize;
     while !inner.closed.load(Ordering::Acquire) {
         match run(inner) {
-            Ok(()) if inner.closed.load(Ordering::Acquire) => return,
-            Ok(()) => publish(inner, Err(failure(ErrorCode::SessionUnavailable))),
+            Ok(true) => retries = 0,
+            Ok(false) => {}
             Err(error) => publish(inner, Err(error)),
         }
-        let delay = RESTART[restarts.min(RESTART.len() - 1)];
-        restarts += 1;
-        // Only closing ends this wait early; it is the bounded pause before a restart.
+        if inner.closed.load(Ordering::Acquire) {
+            return;
+        }
+        let delay = RETRY[retries.min(RETRY.len() - 1)];
+        retries += 1;
+        // Only closing ends this wait early; it is the bounded pause before a retry.
         if !matches!(
             stopping.recv_timeout(delay),
             Err(mpsc::RecvTimeoutError::Timeout)
@@ -239,217 +310,282 @@ fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
     }
 }
 
-fn run(inner: &Inner) -> Result<()> {
-    let mut command = inner.child.as_ref().map_err(Clone::clone)?.command();
-    command
-        .args(["session", "watch"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null());
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x0800_0000);
-    }
-    let mut child =
-        cadrumo_application::process::creation::run(|| command.spawn()).map_err(|error| {
-            failure(ErrorCode::SpawnFailed)
-                .with_reason("sign_in_watch_spawn")
-                .caused_by(error)
-        })?;
-    let output = child.stdout.take();
-    *lock(&inner.input) = child.stdin.take();
-    *lock(&inner.running) = Some(child);
+/// One connection's life: whether it was connected at all, so a retry after a
+/// served stretch starts its pauses over.
+fn run(inner: &Inner) -> Result<bool> {
+    use cadrumo_application::runtime_client::{
+        connection::Connection,
+        endpoint::{Endpoint, OpenCancellation},
+        events::Event,
+        handshake::Cohort,
+        timeout::TimeoutWait,
+    };
+    let waiting = TimeoutWait::new();
+
+    let native = inner.native.as_ref().map_err(Clone::clone)?;
+    let (wake, wakes) = mpsc::channel();
+    *lock(&inner.wakes) = Some(wake.clone());
     if inner.closed.load(Ordering::Acquire) {
-        lock(&inner.input).take();
+        return Ok(false);
     }
-    let read = output
-        .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_stdout_missing"))
-        .and_then(|output| follow(inner, output));
-    lock(&inner.input).take();
-    if let Some(mut child) = lock(&inner.running).take() {
-        // Its output ended, so it is ending; a child that wrote a line it should
-        // not have holds nothing this window needs either.
-        let _ = child.kill();
-        let _ = child.wait();
-    }
-    read
-}
-
-fn follow(inner: &Inner, output: std::process::ChildStdout) -> Result<()> {
-    let mut reader = BufReader::new(output);
-    loop {
-        let mut line = Vec::with_capacity(256);
-        let count = reader
-            .by_ref()
-            .take(LINE_LIMIT + 1)
-            .read_until(b'\n', &mut line)
-            .map_err(|error| {
-                failure(ErrorCode::ReadFailed)
-                    .with_reason("sign_in_watch_read")
-                    .caused_by(error)
-            })?;
-        if count == 0 {
-            return Ok(());
-        }
-        if line.last() != Some(&b'\n') {
-            return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_line"));
-        }
-        publish(inner, observed(&line));
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Line {
-    kind: String,
-    active_profile: Option<String>,
-    profile_id: Option<String>,
-    presence: Presence,
-    refusal: Option<String>,
-}
-
-fn observed(line: &[u8]) -> Result<Observed> {
-    let line: Line = serde_json::from_slice(line).map_err(|error| {
-        failure(ErrorCode::ReadFailed)
-            .with_reason("sign_in_watch_parse")
-            .caused_by(error)
-    })?;
-    if line.kind != "sign_in"
-        || line
-            .profile_id
-            .as_deref()
-            .is_some_and(|id| !crate::shell::agent_access::wire::is_uuid(id))
+    let cohort = Cohort {
+        product_version: native.product_version.clone(),
+        authority_generation: None,
+    };
+    let opening = Arc::new(
+        OpenCancellation::new().map_err(|cause| failure(ErrorCode::ReadFailed).caused_by(cause))?,
+    );
     {
-        return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_shape"));
+        let mut owner = lock(&inner.opening);
+        if inner.closed.load(Ordering::Acquire) {
+            return Ok(false);
+        }
+        *owner = Some(opening.clone());
     }
-    let status = match line.refusal {
-        None => SignInStatus {
-            supported: true,
-            state: line.presence,
-            active_profile: line.active_profile,
-            runtime_available: true,
-            refusal: None,
-        },
-        Some(code) => {
-            if code.is_empty()
-                || code.len() > 160
-                || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-            {
-                return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_refusal"));
-            }
-            SignInStatus {
-                supported: true,
-                state: Presence::Unknown,
-                active_profile: line.active_profile,
-                runtime_available: code != "runtime_unavailable",
-                refusal: Some(Refusal {
-                    code,
-                    retry_after_seconds: None,
-                }),
-            }
+    let connected = Endpoint::of(&native.storage_root).and_then(|endpoint| {
+        log::debug!("sign-in watch opening runtime connection");
+        Connection::open_cancellable(&endpoint, &cohort, waiting.deadline(), opening.clone())
+    });
+    lock(&inner.opening).take();
+    let connection = match connected {
+        Ok(connection) => Arc::new(connection),
+        Err(refusal) => {
+            publish(inner, Ok(refused(&unavailable_code(&refusal))));
+            return Ok(false);
         }
     };
+    {
+        let mut owner = lock(&inner.connection);
+        if inner.closed.load(Ordering::Acquire) {
+            connection.close();
+            return Ok(false);
+        }
+        *owner = Some(connection.clone());
+    }
+    let events = connection.subscribe();
+    log::debug!("sign-in watch runtime connection opened");
+    let forward = wake;
+    let forwarding = thread::Builder::new()
+        .name("sign-in-watch-events".into())
+        .spawn(move || {
+            for event in events {
+                let wake = match event {
+                    Event::SignInChanged => Wake::Changed,
+                    Event::Disconnected => Wake::Lost,
+                    _ => continue,
+                };
+                let lost = matches!(wake, Wake::Lost);
+                if forward.send(wake).is_err() || lost {
+                    return;
+                }
+            }
+        });
+    let result = match &forwarding {
+        Ok(_) => follow(inner, &connection, &wakes),
+        Err(_) => Err(failure(ErrorCode::SpawnFailed)),
+    };
+    lock(&inner.connection).take();
+    connection.close();
+    if let Ok(forwarding) = forwarding {
+        let _ = forwarding.join();
+    }
+    result.map(|()| true)
+}
+
+fn unavailable_code(refusal: &cadrumo_application::runtime_client::refusal::Refusal) -> String {
+    use cadrumo_application::runtime_client::refusal::Refusal;
+    match refusal {
+        // Not serving the root yet, gone, or unreachable: the runtime is unavailable.
+        Refusal::EndpointNotReady
+        | Refusal::ConnectionClosed
+        | Refusal::Unavailable
+        | Refusal::Io(_) => "runtime_unavailable".to_owned(),
+        other => other.code().to_owned(),
+    }
+}
+
+/// Reads the observation and publishes it on every cue, until the connection
+/// ends or the window closes.
+fn follow(
+    inner: &Inner,
+    connection: &cadrumo_application::runtime_client::connection::Connection,
+    wakes: &mpsc::Receiver<Wake>,
+) -> Result<()> {
+    loop {
+        if inner.closed.load(Ordering::Acquire) {
+            return Ok(());
+        }
+        match observe(connection) {
+            Ok(observed) => {
+                log::debug!("sign-in watch publishing observation");
+                publish(inner, Ok(observed));
+            }
+            Err(refusal) => {
+                publish(inner, Ok(refused(&unavailable_code(&refusal))));
+                return Ok(());
+            }
+        }
+        match wakes.recv() {
+            Ok(Wake::Forced | Wake::Changed) => {}
+            Ok(Wake::Lost) => {
+                publish(inner, Ok(refused("runtime_unavailable")));
+                return Ok(());
+            }
+            Ok(Wake::Stop) | Err(_) => return Ok(()),
+        }
+    }
+}
+
+/// The selected profile, its label and its stored sign-in, each asked of the
+/// runtime, which also cues this connection on every later change.
+fn observe(
+    connection: &cadrumo_application::runtime_client::connection::Connection,
+) -> std::result::Result<Observed, cadrumo_application::runtime_client::refusal::Refusal> {
+    let deadline = cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline();
+    log::debug!("sign-in watch reading active profile");
+    let active = connection.active_profile(true, deadline)?;
+    log::debug!("sign-in watch active profile read");
+    let Some(profile_id) = active.selected_profile_id else {
+        return Ok(Observed {
+            sequence: 0,
+            status: SignInStatus {
+                supported: true,
+                state: Presence::Absent,
+                active_profile: None,
+                runtime_available: true,
+                reconnecting: None,
+                refusal: None,
+            },
+            profile_id: None,
+            profiles: None,
+        });
+    };
+    log::debug!("sign-in watch reading login target");
+    let label = connection
+        .login_target(&profile_id, deadline)?
+        .map(|(_, label)| label);
+    log::debug!("sign-in watch login target read");
+    let status = connection.sign_in_status(&profile_id, true, deadline)?;
+    log::debug!("sign-in watch stored status read");
     Ok(Observed {
-        status,
-        profile_id: line.profile_id,
+        sequence: 0,
+        status: SignInStatus {
+            supported: true,
+            state: presence(&status.presence),
+            active_profile: label,
+            runtime_available: true,
+            reconnecting: None,
+            refusal: None,
+        },
+        profile_id: Some(profile_id),
+        profiles: None,
     })
+}
+
+fn presence(text: &str) -> Presence {
+    match text {
+        "present" => Presence::Present,
+        "absent" => Presence::Absent,
+        _ => Presence::Unknown,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn line(text: &str) -> Result<Observed> {
-        observed(format!("{text}\n").as_bytes())
+    #[test]
+    fn a_refusal_names_whether_the_runtime_is_there() {
+        let gone = refused("runtime_unavailable");
+        assert!(!gone.status.runtime_available);
+        assert_eq!(gone.status.state, Presence::Unknown);
+        assert_eq!(gone.status.refusal.unwrap().code, "runtime_unavailable");
+        let untrusted = refused("runtime_peer_untrusted");
+        assert!(untrusted.status.runtime_available && !untrusted.status.runtime_ready());
+        assert_eq!(presence("present"), Presence::Present);
+        assert_eq!(presence("absent"), Presence::Absent);
+        assert_eq!(presence("whatever"), Presence::Unknown);
     }
 
     #[test]
-    fn a_line_maps_onto_the_status_the_window_already_shows() {
-        let present = line(
-            r#"{"kind":"sign_in","active_profile":"Ana","profile_id":"12345678-1234-4234-8234-123456789abc","presence":"present","refusal":null}"#,
-        )
-        .unwrap();
-        assert_eq!(present.status.state, Presence::Present);
-        assert!(present.status.runtime_ready());
-        assert_eq!(
-            present.profile_id.as_deref(),
-            Some("12345678-1234-4234-8234-123456789abc")
-        );
-        let unavailable = line(
-            r#"{"kind":"sign_in","active_profile":"Ana","profile_id":null,"presence":"unknown","refusal":"runtime_unavailable"}"#,
-        )
-        .unwrap();
-        assert!(!unavailable.status.runtime_available);
-        assert_eq!(
-            unavailable.status.refusal.unwrap().code,
-            "runtime_unavailable"
-        );
-        let refused = line(
-            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"unknown","refusal":"peer_untrusted"}"#,
-        )
-        .unwrap();
-        assert!(refused.status.runtime_available && refused.status.refusal.is_some());
-        assert!(!refused.status.runtime_ready());
-        let uncertain = line(
-            r#"{"kind":"sign_in","active_profile":"Ana","profile_id":null,"presence":"unknown","refusal":null}"#,
-        )
-        .unwrap();
-        assert!(uncertain.status.runtime_available && !uncertain.status.runtime_ready());
-        let absent = line(
-            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null}"#,
-        )
-        .unwrap();
-        assert!(absent.status.runtime_ready());
-        for invalid in [
-            r#"{"kind":"other","active_profile":null,"profile_id":null,"presence":"absent","refusal":null}"#,
-            r#"{"kind":"sign_in","active_profile":null,"profile_id":"not-a-uuid","presence":"absent","refusal":null}"#,
-            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":"has space"}"#,
-            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null,"extra":1}"#,
+    fn transport_refusals_read_as_an_unavailable_runtime_and_others_keep_their_code() {
+        use cadrumo_application::runtime_client::refusal::Refusal;
+        for refusal in [
+            Refusal::EndpointNotReady,
+            Refusal::ConnectionClosed,
+            Refusal::Unavailable,
+            Refusal::Io(std::io::ErrorKind::Other.into()),
         ] {
-            assert_eq!(
-                line(invalid).unwrap_err().code,
-                ErrorCode::ReadFailed,
-                "{invalid}"
-            );
+            assert_eq!(unavailable_code(&refusal), "runtime_unavailable");
         }
+        assert_eq!(
+            unavailable_code(&Refusal::VersionMismatch),
+            "runtime_version_mismatch"
+        );
+        assert_eq!(
+            unavailable_code(&Refusal::denied("profile_locked")),
+            "profile_locked"
+        );
     }
 
     #[tokio::test]
     async fn a_mutation_fences_observations_until_one_arrives_after_it() {
         let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
-        // No child is started for this test: observations are published directly.
+        // No connection is made for this test: observations are published directly.
         watch.inner.started.store(true, Ordering::Release);
         let present = Observed {
+            sequence: 1,
             status: SignInStatus {
                 supported: true,
                 state: Presence::Present,
                 active_profile: Some("Ana".into()),
                 runtime_available: true,
+                reconnecting: None,
                 refusal: None,
             },
             profile_id: None,
+            profiles: None,
         };
         publish(&watch.inner, Ok(present.clone()));
         assert_eq!(watch.current().await.unwrap(), present);
         let mutation = watch.mutation();
-        let pending = watch.current().await.unwrap_err();
-        assert_eq!(pending.code, ErrorCode::SessionUnavailable);
-        assert_eq!(
-            pending.reason.as_deref(),
-            Some("sign_in_mutation_in_progress")
+        let overlapping = watch.mutation();
+        let current = watch.current();
+        tokio::pin!(current);
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
+        publish(&watch.inner, Ok(present.clone()));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
         );
         drop(mutation);
+        publish(&watch.inner, Ok(present.clone()));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
+        drop(overlapping);
         assert!(
             watch.latest().is_err(),
             "an observation from before the mutation is stale"
         );
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
         let changed = watch.changed();
         let mut absent = present.clone();
+        absent.sequence = 4;
         absent.status.state = Presence::Absent;
         let waiting = {
             let expected = absent.clone();
-            let current = watch.current();
             async move { assert_eq!(current.await.unwrap(), expected) }
         };
         let publishing = async {
@@ -459,5 +595,74 @@ mod tests {
         tokio::join!(waiting, publishing);
         changed.await;
         assert_eq!(watch.latest().unwrap(), absent);
+    }
+
+    #[test]
+    fn unchanged_runtime_values_still_advance_the_observation_generation() {
+        let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
+        let observed = refused("runtime_unavailable");
+        publish(&watch.inner, Ok(observed.clone()));
+        let before = watch.latest().unwrap();
+        publish(&watch.inner, Ok(observed));
+        let after = watch.latest().unwrap();
+        assert_eq!(before.status, after.status);
+        assert_eq!(before.profile_id, after.profile_id);
+        assert!(after.sequence > before.sequence);
+        assert_ne!(before, after, "a restore pinned before the update is stale");
+    }
+
+    #[tokio::test]
+    async fn a_mutation_wait_preserves_observer_failures_and_close_cancellation() {
+        for close in [false, true] {
+            let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
+            watch.inner.started.store(true, Ordering::Release);
+            let mutation = watch.mutation();
+            let current = watch.current();
+            tokio::pin!(current);
+            assert!(
+                tokio::time::timeout(Duration::from_millis(10), &mut current)
+                    .await
+                    .is_err()
+            );
+            if close {
+                watch.request_close();
+                let error = tokio::time::timeout(Duration::from_secs(1), &mut current)
+                    .await
+                    .unwrap()
+                    .unwrap_err();
+                assert_eq!(error.code, closing().code);
+                drop(mutation);
+            } else {
+                drop(mutation);
+                publish(&watch.inner, Err(failure(ErrorCode::ReadFailed)));
+                let error = tokio::time::timeout(Duration::from_secs(1), &mut current)
+                    .await
+                    .unwrap()
+                    .unwrap_err();
+                assert_eq!(error.code, ErrorCode::ReadFailed);
+            }
+        }
+    }
+
+    #[test]
+    fn a_watch_without_a_runtime_description_reports_that_and_stops_when_closed() {
+        let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
+        let mut receiver = watch.inner.snapshot.subscribe();
+        watch.start();
+        // The first attempt publishes the description's own failure.
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        while receiver.borrow_and_update().value.is_none() {
+            assert!(
+                std::time::Instant::now() < deadline,
+                "no observation was published"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(
+            watch.latest().unwrap_err().code,
+            ErrorCode::PackageUnavailable
+        );
+        watch.close();
+        assert!(lock(&watch.inner.worker).is_none());
     }
 }

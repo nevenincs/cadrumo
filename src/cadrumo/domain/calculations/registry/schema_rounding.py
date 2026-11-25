@@ -30,11 +30,22 @@ class RegistryRoundingCode(StrEnum):
       se redondeará en la unidad superior", so a 55,2 % ratio is a 56 %
       deduction right, not 55 %. Half-up would understate the deduction
       for every ratio whose fractional part is at or below one half.
+    * ``DECIMAL_2_TRUNCATED`` — two decimals, truncated (``ROUND_DOWN``,
+      toward zero), never half-up. Required wherever the governing
+      provision says the figure is "expresado con dos decimales sin
+      redondeo": LIRPF art. 63.2 and 74.2 for the tipo medio de gravamen
+      general estatal / autonómico, as the Manual práctico de Renta Parte 1
+      restates it ("se expresará con dos decimales sin redondeo"). A cuota
+      of 2.475 over a base of 26.800 is 9,23 %, not the half-up 9,24 %.
+      Truncation toward zero equals truncation downward only for a
+      non-negative result; every target enrolled here is a tipo medio
+      guarded by a positive base, so it is never negative.
     """
 
     MONEY_2 = "money-2"
     INTEGER = "integer"
     INTEGER_CEILING = "integer-ceiling"
+    DECIMAL_2_TRUNCATED = "decimal-2-truncated"
 
 
 def _coerce_rounding_code(value: object) -> object:

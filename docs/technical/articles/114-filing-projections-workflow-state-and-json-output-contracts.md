@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-114` · **Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
+**Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
 
 <!-- preserved:article -->
 ## Scope and method
@@ -31,9 +31,9 @@ Other reusable data contracts include defensive immutable mappings, best-effort 
 
 The Google-related modules are boundary helpers, not a Google Drive client. They escape Drive query literals, parse a Drive file ID from the reference forms that stored attachment records carry, and extract HTTP status and quota markers from structured errors. This supports callers in choosing retry behavior and in reading stored history, but these functions do not perform OAuth, establish a user's Drive authorization, or verify that a referenced object is accessible. Drive query escaping (`src/cadrumo/core/google_drive_query.py`) Drive reference parsing (`src/cadrumo/core/google_drive_reference.py`) Structured HTTP/quota extraction (`src/cadrumo/core/google_http_error.py`)
 
-Hardware capability types distinguish a measured lack of accelerator (`NONE`) from an unknown measurement (`UNKNOWN`) and expose free-memory tiering. The module documents that execution decisions should use measured bytes rather than treating a broad tier as a reservation; peer-process contention is separately represented from resident runtime use and unreadable measurements. This makes unknown resource state expressible without silently turning it into evidence of absence. Accelerator and contention states (`src/cadrumo/core/hardware.py`) Memory tier selection (`src/cadrumo/core/hardware.py`)
+The hardware module is a closed `AcceleratorKind` set that distinguishes a measured lack of accelerator (`NONE`) from an unknown measurement (`UNKNOWN`) and a measured NVIDIA CUDA device. It carries no memory figures and no load judgement: measured bytes live on the application's hardware profile, and whether a load fits is cadrumo-agent's answer when it loads the model. This makes unknown resource state expressible without silently turning it into evidence of absence. Accelerator kinds (`src/cadrumo/core/hardware.py`)
 
-The legacy workbook reader handles BIFF8/OLE2 `.xls` data. Since a typical reader exposes a formula cell's cached result without indicating that the cell contains a formula, this adapter walks BIFF records and marks formula coordinates with the same type marker used by the workbook policy. It validates record/worksheet structure and refuses formats it cannot represent. This preserves the caller's ability to reject spreadsheet formulas rather than trusting stale recalculated values. The coverage remains deliberately limited to the legacy format it parses. Legacy reader contract (`src/cadrumo/core/legacy_workbook.py`) Workbook and formula scan (`src/cadrumo/core/legacy_workbook.py`) Formula-cell marking (`src/cadrumo/core/legacy_workbook.py`)
+The XLS workbook reader handles BIFF8/OLE2 `.xls` data. Since a typical reader exposes a formula cell's cached result without indicating that the cell contains a formula, this adapter walks BIFF records and marks formula coordinates with the same type marker used by the workbook policy. It validates record/worksheet structure and refuses formats it cannot represent. This preserves the caller's ability to reject spreadsheet formulas rather than trusting stale recalculated values. The coverage remains deliberately limited to the legacy format it parses. Legacy reader contract (`src/cadrumo/core/xls_workbook.py`) Workbook and formula scan (`src/cadrumo/core/xls_workbook.py`) Formula-cell marking (`src/cadrumo/core/xls_workbook.py`)
 
 ## Security, provenance, and concurrency
 
@@ -60,7 +60,7 @@ The strongest local capabilities are precise typed filing destinations, validate
 - google_drive_query.py (`src/cadrumo/core/google_drive_query.py`) — lines 1–22
 - google_drive_reference.py (`src/cadrumo/core/google_drive_reference.py`) — lines 1–37
 - google_http_error.py (`src/cadrumo/core/google_http_error.py`) — lines 1–85
-- hardware.py (`src/cadrumo/core/hardware.py`) — lines 1–150
+- hardware.py (`src/cadrumo/core/hardware.py`) — lines 1–42
 - hashing.py (`src/cadrumo/core/hashing.py`) — lines 1–269
 - hex.py (`src/cadrumo/core/hex.py`) — lines 1–120
 - iban.py (`src/cadrumo/core/iban.py`) — lines 1–97
@@ -76,7 +76,7 @@ The strongest local capabilities are precise typed filing destinations, validate
 - json_shapes.py (`src/cadrumo/core/json_shapes.py`) — lines 1–64
 - keyed_digest.py (`src/cadrumo/core/keyed_digest.py`) — lines 1–81
 - ledger_sort.py (`src/cadrumo/core/ledger_sort.py`) — lines 1–84
-- legacy_workbook.py (`src/cadrumo/core/legacy_workbook.py`) — lines 1–212
+- xls_workbook.py (`src/cadrumo/core/xls_workbook.py`) — lines 1–212
 - link_safety.py (`src/cadrumo/core/link_safety.py`) — lines 1–35
 - lockfile_unlink.py (`src/cadrumo/core/lockfile_unlink.py`) — lines 1–100
 - locks.py (`src/cadrumo/core/locks.py`) — lines 1–311

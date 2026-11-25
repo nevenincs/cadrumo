@@ -22,11 +22,10 @@ from .persistence.financial_operand_custody import (
 from .persistence.journal import (
     OperationEphemeralRouting,
     OperationEventStream,
-    OperationInventoryLimit,
     OperationJournal,
     OperationLeaseRepository,
     OperationObservationReader,
-    OperationRecoveryInventoryPage,
+    OperationRecoveryInventoryDelta,
     OperationSecureReferenceStore,
 )
 from .projection_services import (
@@ -158,8 +157,13 @@ class OperationComposedServices:
     _response_clock: Callable[[], datetime]
     _shutdown: Callable[[], Awaitable[OperationDrainResult]]
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
-    _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
+    _inventory: Callable[[], Awaitable[OperationRecoveryInventoryDelta]]
     _ephemeral: OperationEphemeralRouting | None
+    _session_reads_end: Callable[[], None] | None = None
+
+    def discard_review_actor(self, operation_id: OperationId) -> None:
+        """Discard process-local review authority after terminal settlement or retirement."""
+        self._response_broker.discard(operation_id)
 
     def release_ephemeral_result(self, operation_id: OperationId) -> None:
         """Release the delivered public snapshot and any ephemeral operation behind it."""
@@ -173,12 +177,18 @@ class OperationComposedServices:
         if self._ephemeral is not None:
             self._ephemeral.forget_settled_ephemeral()
 
+    def end_session_reads(self) -> None:
+        """Drop what reads kept for reuse once a session ends, so none outlives a lock, sign-out or lapse."""
+        if self._session_reads_end is not None:
+            self._session_reads_end()
+
     async def shutdown(self) -> OperationDrainResult:
         """Close within the default bound and report remaining ownership."""
         try:
             return await self._shutdown()
         finally:
             self.result.forget_snapshot()
+            self.end_session_reads()
 
     async def drain(self, timeout: timedelta) -> OperationDrainResult:
         """Fence admissions and return unresolved ownership within one deadline."""
@@ -186,12 +196,11 @@ class OperationComposedServices:
             return await self._drain(timeout)
         finally:
             self.result.forget_snapshot()
+            self.end_session_reads()
 
-    async def recovery_inventory(
-        self, *, after: OperationId | None, limit: OperationInventoryLimit
-    ) -> OperationRecoveryInventoryPage:
-        """Read one bounded page of existing canonical journal identities."""
-        return await self._inventory(after, limit)
+    async def recovery_inventory(self) -> OperationRecoveryInventoryDelta:
+        """Name and classify every existing canonical journal record under one journal exclusion."""
+        return await self._inventory()
 
     async def response(
         self,
@@ -247,6 +256,8 @@ def compose_operation_services(
     typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     execution_authority: OperationExecutionAuthority | None = None,
     ephemeral: OperationEphemeralRouting | None = None,
+    session_reads_end: Callable[[], None] | None = None,
+    fixed_clock_instant: datetime | None = None,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services.
 
@@ -254,7 +265,9 @@ def compose_operation_services(
     definition that declares transient financial operands needs it. The
     supervisor refuses to construct when such a definition is present without
     it, so omitting it stays a refusal rather than a silently operand-less
-    supervisor.
+    supervisor. ``session_reads_end`` drops what reads keep for reuse; the
+    services call it when the host reports a session's end and when they
+    drain or shut down.
     """
     public_contracts = registry.public_contract_set
     authority_broker = OperationResponseAuthorityBroker()
@@ -275,6 +288,7 @@ def compose_operation_services(
         typed_financial_operand_custody=typed_financial_operand_custody,
         execution_authority=execution_authority,
         ephemeral=ephemeral,
+        fixed_clock_instant=fixed_clock_instant,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 
@@ -306,8 +320,8 @@ def compose_operation_services(
         authority_broker.close()
         return await supervisor.drain(timeout)
 
-    async def inventory(after: OperationId | None, limit: OperationInventoryLimit) -> OperationRecoveryInventoryPage:
-        return await journal.inventory_page(after=after, limit=limit)
+    async def inventory() -> OperationRecoveryInventoryDelta:
+        return await journal.inventory_delta(known=frozenset())
 
     return OperationComposedServices(
         public_contracts=public_contracts,
@@ -325,6 +339,7 @@ def compose_operation_services(
         _drain=drain,
         _inventory=inventory,
         _ephemeral=ephemeral,
+        _session_reads_end=session_reads_end,
     )
 
 

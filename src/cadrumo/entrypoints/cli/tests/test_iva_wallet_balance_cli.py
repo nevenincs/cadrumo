@@ -10,6 +10,7 @@ import typer
 
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import modelo_iva_wallet_commands as handler
 from .. import operation_modelo_iva_wallet_balance as bridge
@@ -22,7 +23,7 @@ _OPERATION_ID = "a" * 64
 
 
 def _read() -> bridge.ModeloIvaWalletBalanceRead:
-    projection = bridge.ModeloIvaWalletBalanceProjection(
+    projection = bridge.ModeloIvaWalletBalanceProjection.worded(
         profile_id=_PROFILE,
         as_of_year=2028,
         total_balance="300.00",
@@ -31,6 +32,7 @@ def _read() -> bridge.ModeloIvaWalletBalanceRead:
         lot_count=2,
         next_expiry_year=2029,
         unallocated_applied_amount="0.00",
+        language=OutputLanguage.EN,
     )
     completion = RegisteredOperationCompletion(
         operation_id=_OPERATION_ID,

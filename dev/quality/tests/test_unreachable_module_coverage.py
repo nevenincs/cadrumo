@@ -10,6 +10,7 @@ from dev.audit.unreachable_code import scan_unreachable_code
 from dev.audit.unreachable_models import ModuleFinding, ModuleReach, UnreachableCodeResult
 from dev.audit.unreachable_tree import EntryPoint, OutsideCorpus, ShippedTreeSpec
 
+from .. import unreachable_module_coverage as coverage
 from ..unreachable_module_coverage import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -52,7 +53,48 @@ def test_an_empty_live_set_is_green() -> None:
     verdict = evaluate(result)
 
     assert verdict.is_clean
-    assert verdict.report() == "unreachable-module coverage: no findings"
+    assert verdict.report() == "unreachable-module coverage: no findings (1 audited modules, 1 reachable at runtime)"
+
+
+def test_a_scan_error_is_unavailable_not_clean() -> None:
+    verdict = evaluate(UnreachableCodeResult.error("shipped tree could not be read"))
+
+    assert verdict.is_unavailable
+    assert not verdict.is_clean
+    assert "unavailable" in verdict.report()
+    assert "shipped tree could not be read" in verdict.report()
+
+
+def test_an_empty_audited_population_is_unavailable_not_clean() -> None:
+    verdict = evaluate(UnreachableCodeResult.clean(roots=("pkg.cli:main",), shipped_modules=0, reachable_modules=0))
+
+    assert verdict.is_unavailable
+    assert not verdict.is_clean
+    assert "no shipped module" in verdict.report()
+
+
+def test_a_population_nothing_reaches_is_unavailable_not_clean() -> None:
+    verdict = evaluate(UnreachableCodeResult.clean(roots=("pkg.cli:main",), shipped_modules=40, reachable_modules=0))
+
+    assert verdict.is_unavailable
+    assert "none of the 40 audited modules" in verdict.report()
+
+
+def test_the_gate_exits_distinctly_for_unavailable_findings_and_clean(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    results = {
+        "clean": UnreachableCodeResult.clean(roots=("r",), shipped_modules=5, reachable_modules=5),
+        "unavailable": UnreachableCodeResult.clean(roots=("r",), shipped_modules=5, reachable_modules=0),
+        "findings": _result(ModuleFinding("src/pkg/x.py", "pkg.x", ModuleReach.UNREACHABLE, 1, ())),
+    }
+    exits = {}
+    for name, result in results.items():
+        monkeypatch.setattr(coverage, "run_unreachable_code_scan", lambda _root, result=result: result)
+        exits[name] = coverage.main()
+    capsys.readouterr()
+
+    assert exits == {"clean": 0, "unavailable": 2, "findings": 1}
 
 
 def _write(root: Path, relative: str, text: str = "") -> None:

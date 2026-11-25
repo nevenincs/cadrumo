@@ -7,23 +7,32 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import Protocol
 
 from playwright.async_api import Route, async_playwright
 
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.config import override_settings
 from ......domain.calculations.registry.authority import bundled_indexed_authority
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations import DeclaracionesRegisterSession
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")
 _LISTITEM_RE = re.compile(r'class="[^"]*\bz-listitem\b')
+_EJERCICIO_OPTION_RE = re.compile(r'class="z-comboitem-text">(\d{4})</span>')
 
 
 def aeat_sede_fixture(stem: str) -> str:
     """Load one canonical synthetic Sede document."""
     return (_FIXTURE_ROOT / f"{stem}.html").read_text(encoding="utf-8")
+
+
+def fixture_offered_ejercicios(stem: str) -> tuple[int, ...]:
+    """Read the exercises a register document's ejercicio combobox offers, newest first."""
+    offered = _EJERCICIO_OPTION_RE.findall(aeat_sede_fixture(stem))
+    return tuple(sorted({int(text) for text in offered}, reverse=True))
 
 
 def declared_register_total(html: str) -> int | None:
@@ -37,9 +46,38 @@ def rendered_register_rows(html: str) -> int:
     return len(_LISTITEM_RE.findall(html))
 
 
+class _BulkFailure(Protocol):
+    @property
+    def error_type(self) -> str: ...
+
+    @property
+    def message(self) -> str: ...
+
+
+def truncation_failures_naming_their_cause[FailureT: _BulkFailure](failures: Sequence[FailureT]) -> list[FailureT]:
+    """Return the absorbed truncation refusals after checking each names rendered versus declared rows.
+
+    Both numbers are read straight out of the fixture's own markup rather than
+    from anything the parser computed, so the row is cross-checked against the
+    page it came from and neither number is hardcoded by callers.
+    """
+    truncation_failures = [failure for failure in failures if failure.error_type == "SedeParseError"]
+    assert truncation_failures, f"no truncation refusal was absorbed into a failure row: {failures}"
+    truncated_page = aeat_sede_fixture("declaraciones-register-form-paginated-synthetic")
+    declared_total = declared_register_total(truncated_page)
+    assert declared_total is not None
+    rendered_rows = rendered_register_rows(truncated_page)
+    assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
+    for failure in truncation_failures:
+        assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (
+            f"the failure row lost the rendered-versus-declared cause: {failure.message!r}"
+        )
+    return truncation_failures
+
+
 def offline_aeat_session() -> AeatSession:
     """Build a real certificate session carrying no persisted browser state."""
-    authenticated_at = datetime(2026, 8, 8, 9, 0, tzinfo=UTC)
+    authenticated_at = datetime(filing_year_envelope().horizon, 8, 8, 9, 0, tzinfo=UTC)
     return AeatSession(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + timedelta(hours=8),

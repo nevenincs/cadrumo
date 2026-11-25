@@ -6,12 +6,15 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
 from ..scalar_source_reconciliation import reconcile_scalar_export_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("390"))
 
 _OWNERS = {
     "iva.anual.repercutido.recargo.super-reducido": "iva.anual.repercutido.recargo.tipo-0-5.cuota",
@@ -53,7 +56,7 @@ def _with_owners(revision, owners):
     )
 
 
-@pytest.fixture(scope="module", params=["2022", "2023", "2024", "2025"])
+@pytest.fixture(scope="module", params=_EDITIONS[1:-1])
 def rate_pair(request):
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390")).revisions[request.param]
     replacements = {}

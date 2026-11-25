@@ -19,14 +19,14 @@ _EXPORT_FIELD_RE = r"^[A-Za-z0-9][A-Za-z0-9._:_-]*$"
 _ORACLE_ID_RE = r"^[a-z](?:[a-z0-9-]{0,126}[a-z0-9])?$"
 
 type ModeloId = Annotated[str, Field(pattern=_MODELO_RE)]
-type RegistryRevisionNodeId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type RegistryRevisionNodeId = Annotated[str, Field(min_length=1, max_length=256, pattern=_REF_RE)]
 type RevisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type FormulaId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ParameterId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type BindingId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type RelationId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
-type LegalRefId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
-type SourceRefId = Annotated[str, Field(min_length=1, max_length=160, pattern=_SOURCE_ID_RE)]
+type LegalRefId = Annotated[str, Field(min_length=1, max_length=256, pattern=_REF_RE)]
+type SourceRefId = Annotated[str, Field(min_length=1, max_length=256, pattern=_SOURCE_ID_RE)]
 type ExtractionProfileId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type CrossReferenceId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type WorkbookParityRefId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
@@ -38,8 +38,8 @@ type DependencyClassificationId = Annotated[str, Field(min_length=1, max_length=
 type ApplicabilityRuleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ExportLayoutId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type RecordId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
-type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_EXPORT_FIELD_RE)]
-type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type ExportFieldId = Annotated[str, Field(min_length=1, max_length=256, pattern=_EXPORT_FIELD_RE)]
+type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=256, pattern=_REF_RE)]
 type WorkbookOutputId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORACLE_ID_RE)]
 # A projection endpoint is named by the endpoint it projects -- its projection
@@ -47,8 +47,8 @@ type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORAC
 # predicate by its operator and subject. Both are longer than a hand-authored
 # ref and neither may carry an edition token, so they share the ref grammar at
 # the wider bound rather than the 128-character one.
-type ProjectionEndpointId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
-type VerificationPredicateId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type ProjectionEndpointId = Annotated[str, Field(min_length=1, max_length=256, pattern=_REF_RE)]
+type VerificationPredicateId = Annotated[str, Field(min_length=1, max_length=256, pattern=_REF_RE)]
 
 
 def is_registry_id(value: str) -> bool:

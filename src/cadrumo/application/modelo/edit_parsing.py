@@ -17,21 +17,20 @@ refusal never echoes the lexeme.
 
 from __future__ import annotations
 
-from typing import Annotated, Final
+from collections.abc import Mapping
 
-from pydantic import Field
-
-from ...core.external_constants import OutputLanguage
+from ...core.casilla_id import CasillaId
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.filing.schema import ModeloScalar
-from .edit_contract import EditModel
 from .edit_models import (
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
+    ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditParseRequestV1,
     ModeloEditParseResultV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
@@ -39,25 +38,10 @@ from .edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
-from .edit_number_parsing import read_edit_number_lexeme, read_typed_edit_number, validate_edit_number
+from .edit_number_parsing import read_entry_number, read_typed_edit_number, validate_edit_number
 from .edit_parse_errors import ModeloEditParseRefusedError
 from .edit_text_parsing import read_edit_boolean_lexeme, read_typed_edit_boolean, validate_edit_text_value
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, ModeloEditValueGrammarV1
-
-MAX_EDIT_LEXEME_LENGTH: Final[int] = 512
-"""The longest entry the parser reads; an editor stops the filer typing past it."""
-
-
-class ModeloEditParseRequestV1(EditModel):
-    """One typed lexeme for one address, in the locale the operator typed it in.
-
-    The lexeme is transient: it is excluded from every dump and from ``repr``,
-    so it can never reach a log, a notice or a persisted record.
-    """
-
-    address: ModeloEditValueAddressV1
-    entry_locale: OutputLanguage
-    lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
 
 
 def _outcome(
@@ -119,19 +103,39 @@ def modelo_edit_address_grammar(
     return None
 
 
+def entry_grammar(
+    address: ModeloEditValueAddressV1,
+    *,
+    baseline: ModeloEditBaselineV1,
+    correction_grammars: Mapping[CasillaId, ModeloEditValueGrammarV1] | None = None,
+) -> ModeloEditValueGrammarV1 | None:
+    """The grammar an entry typed for ``address`` is read against, or ``None`` when nothing may be typed there.
+
+    A correction reads against ``correction_grammars``; every other address
+    against the grammar ``baseline`` admitted for it.
+    """
+    if isinstance(address, ModeloEditCorrectionAddressV1):
+        return None if correction_grammars is None else correction_grammars.get(address.casilla_id)
+    return modelo_edit_address_grammar(baseline, address)
+
+
 def parse_modelo_edit_lexeme(
     request: ModeloEditParseRequestV1,
     *,
     baseline: ModeloEditBaselineV1,
     tax_id_format: SpanishTaxIdFormat | None,
+    correction_grammars: Mapping[CasillaId, ModeloEditValueGrammarV1] | None = None,
 ) -> ModeloEditParseResultV1:
     """Read one typed lexeme as its address's locale-free value, or refuse with a stable reason.
 
     ``tax_id_format`` is the governed Spanish tax-identifier format; ``None``
     refuses NIF addresses rather than validating them against nothing.
+    ``correction_grammars`` are the grammars a filed declaration's corrected
+    values are read against, by casilla; without them a correction entry is
+    refused as not writable.
     """
     address = request.address
-    grammar = modelo_edit_address_grammar(baseline, address)
+    grammar = entry_grammar(address, baseline=baseline, correction_grammars=correction_grammars)
     if grammar is None:
         return ModeloEditRefusedV1(
             refusal=ModeloEditParseRefusalV1(address=address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
@@ -143,8 +147,8 @@ def parse_modelo_edit_lexeme(
         if grammar.family is ModeloEditValueFamily.BOOLEAN:
             return _outcome(address, read_edit_boolean_lexeme(request.lexeme, request.entry_locale), normalisations)
         if grammar.family in {ModeloEditValueFamily.DECIMAL, ModeloEditValueFamily.INTEGER}:
-            number = read_edit_number_lexeme(request.lexeme, request.entry_locale, normalisations)
-            return _outcome(address, validate_edit_number(number, grammar), normalisations)
+            number = read_entry_number(request.lexeme, request.entry_locale, normalisations, grammar)
+            return _outcome(address, number, normalisations)
     except ModeloEditParseRefusedError as refused:
         return ModeloEditRefusedV1(
             refusal=ModeloEditParseRefusalV1(
@@ -158,7 +162,7 @@ def parse_modelo_edit_lexeme(
 
 
 __all__ = [
-    "ModeloEditParseRequestV1",
+    "entry_grammar",
     "modelo_edit_address_grammar",
     "parse_modelo_edit_lexeme",
     "validate_modelo_edit_value",

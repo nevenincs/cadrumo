@@ -10,12 +10,26 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..form_layout.coverage import coverage_rows
 from ..workbook_probe import probe_revision
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+def _supported_revisions(*modelos: str) -> list[tuple[str, str]]:
+    """Each modelo's authored revisions that reach calculation grade and cover the support floor or later."""
+    floor = filing_year_envelope().floor
+    return [
+        (modelo, str(revision.id))
+        for modelo in modelos
+        for revision in authored_revisions(modelo)
+        if (revision.valid_to is None or revision.valid_to.year >= floor)
+        and revision.authority_grade in {RegistryAuthorityGrade.CALCULATION, RegistryAuthorityGrade.FILING}
+    ]
 
 
 @pytest.fixture(scope="module")
@@ -25,16 +39,7 @@ def authority():
 
 @pytest.mark.parametrize(
     ("modelo", "revision"),
-    [
-        ("180", "2019-2022"),
-        ("180", "2023-y-siguientes"),
-        *(("190", revision) for revision in ("2022", "2023", "2024", "2025-y-siguientes")),
-        *(("193", revision) for revision in ("2022", "2023", "2024", "2025-y-siguientes")),
-        ("200", "2024"),
-        ("200", "2025-y-siguientes"),
-        *(("714", revision) for revision in ("2022", "2023", "2024", "2025")),
-        ("720", "2013-y-siguientes"),
-    ],
+    _supported_revisions("180", "190", "193", "200", "714", "720"),
 )
 def test_previously_unlabelled_dependencies_compile_real_revision(authority, modelo, revision):
     row = next(
@@ -79,7 +84,6 @@ def test_previously_unlabelled_dependencies_compile_real_revision(authority, mod
     (
         ("180", "modelo-180-115-base-anual"),
         ("190", "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"),
-        ("190", "modelo-190-111-ganancias-dinerario-importe-anual"),
         ("193", "modelo-193-perceptor-rows-base-total"),
         ("200", "modelo-200-profile-new-entity-flag"),
         ("714", "m714-m100-base-imponible-general"),
@@ -92,18 +96,14 @@ def test_authored_dependency_families_have_real_translations(language, modelo, b
     assert (label is not None and label) and label.strip() and label not in (key, binding)
 
 
-def test_labels_preserve_specific_eligibility_and_forestry_meaning():
+def test_labels_preserve_specific_eligibility_and_withholding_meaning():
     eligibility = lookup_translation(
         binding_locale_key("200", "modelo-200-profile-new-entity-flag", "label"), locale="es"
-    )
-    forestry = lookup_translation(
-        binding_locale_key("190", "modelo-190-111-ganancias-dinerario-importe-anual", "label"), locale="es"
     )
     withholding_total = lookup_translation(
         binding_locale_key("193", "modelo-193-perceptor-rows-retenciones-total", "label"), locale="es"
     )
     assert (eligibility is not None and eligibility) and "dos primeros períodos con beneficios" in eligibility
-    assert (forestry is not None and forestry) and "forestales" in forestry
     assert (
         withholding_total is not None and withholding_total
     ) and "retenciones e ingresos a cuenta" in withholding_total

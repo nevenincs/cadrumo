@@ -23,7 +23,12 @@ source_refs = ["aeat-dr-308-2011-july"]
 [revisions.2011-julio-2015.period_selector]
 year_from = 2011
 year_to = 2015
-periods = ["AD-HOC"]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
+
+# The edition starts on 2011-07-01, so 2011 keeps only the second half-year.
+[[revisions.2011-julio-2015.period_selector.period_overrides]]
+year = 2011
+periods = ["3T", "4T", "07", "08", "09", "10", "11", "12", "0A"]
 
 [[revisions.2011-julio-2015.casilla_overrides]]
 removed_fields = []
@@ -621,7 +626,11 @@ family = "filing_schedules"
 
 [revisions.2011-julio-2015.family_overrides.selector]
 revision = "2009-2011-junio"
-id = "modelo-308-ad-hoc"
+id = "modelo-308-devolucion"
+
+# aeat-dr-308-2011-july adds the months and 0A to the quarters.
+[revisions.2011-julio-2015.family_overrides.fields]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
 
 [revisions.2011-julio-2015.family_overrides.sequence_additions]
 legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]

@@ -11,12 +11,13 @@ from openpyxl import load_workbook
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.compiler.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
 
-from ..compiler.loader import load_catalogue_file
+from ..compiler.loader import load_catalogue_file, load_shared_catalogues
 from ..compiler.record_design import extract_record_design
 from ..maintenance_support import resolve_record_design_binary
 from ..pipeline import record_design_intermediate
@@ -30,24 +31,32 @@ from ..pipeline.record_design_intermediate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MODELO_303_DESIGNS = (
-    ("aeat-dr-303-2023", 2023, "2023"),
-    ("aeat-dr-303-2024-early", 2024, "2024-early"),
-    ("aeat-dr-303-2024-late", 2024, "2024-late"),
-    ("aeat-dr-303-2025", 2025, "2025"),
-    ("aeat-dr-303-2026", 2026, "2026"),
-)
-_MODELO_220_DESIGNS = (
-    ("aeat-dr-220-2023", 2023, "2023"),
-    ("aeat-dr-220-2024", 2024, "2024"),
-    ("aeat-dr-220-2025", 2025, "2025"),
-)
-_MODELO_390_DESIGNS = (
-    ("aeat-dr-390-2022", 2022, "2022"),
-    ("aeat-dr-390-2023", 2023, "2023"),
-    ("aeat-dr-390-2024", 2024, "2024"),
-    ("aeat-dr-390-2025", 2025, "2025"),
-)
+
+def _epoch_designs(modelo_id: str, *, supported_only: bool = True) -> tuple[tuple[str, int, str], ...]:
+    """Return ``(source id, first filing year, design epoch)`` for each epoch-stamped record design of one modelo.
+
+    With ``supported_only`` the designs that start before the support floor are left out.
+    """
+    sources = load_shared_catalogues(bundled_path("registry", "aeat")).sources
+    floor = filing_year_envelope().floor if supported_only else 0
+    designs = [
+        (str(source_id), source.applies_from.year, source.record_design_epoch)
+        for source_id, source in sources.items()
+        if str(source_id).startswith(f"aeat-dr-{modelo_id}-")
+        and source.kind == "record_design"
+        and source.applies_from is not None
+        and source.record_design_epoch is not None
+        and source.applies_from.year >= floor
+    ]
+    return tuple(sorted(designs, key=lambda design: (design[1], design[0])))
+
+
+_MODELO_303_DESIGNS = _epoch_designs("303")
+_MODELO_220_DESIGNS = _epoch_designs("220")
+_MODELO_390_DESIGNS = _epoch_designs("390")
+# The newest Modelo 200 design is the one the whole-workbook cases parse; the one before it is out of its window.
+_M200_SOURCE_REF, _M200_FILING_YEAR, _M200_EPOCH = _epoch_designs("200")[-1]
+_M200_PRIOR_SOURCE_REF, _M200_PRIOR_YEAR, _M200_PRIOR_EPOCH = _epoch_designs("200")[-2]
 
 
 #: Floors for the modelo 200 workbook parse this projection test equates against
@@ -59,134 +68,58 @@ _MINIMUM_FIXED_SHEETS = 50
 _MINIMUM_VARIABLE_ENVELOPES = 1
 
 
-def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
-    """Every parsed record and official total reaches the generator IR unchanged."""
-    source_root = bundled_path()
-    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    resolved = resolve_record_design_binary(
-        source_root,
-        catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
-    )
-    parsed_sheets = extract_record_design(resolved.path).accept_partial()
-
-    intermediate = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+def _intermediate_field_key(field) -> tuple[object, ...]:
+    return (
+        field.sheet,
+        field.record_identity,
+        field.source_row,
+        field.source_cell,
+        field.ordinal,
+        field.offset,
+        field.length,
+        field.aeat_type,
+        field.normalized_description,
+        field.validation,
+        field.content,
     )
 
-    assert intermediate.source.source_ref == resolved.source.id
-    assert intermediate.source.source_sha256 == resolved.source.sha256
-    assert intermediate.source.design_epoch == resolved.source.record_design_epoch
-    assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLS
-    fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
-    # Every claim below equates two tuples derived from this one parse, and the
-    # zip is strict only about a LENGTH MISMATCH: two empty tuples zip to zero
-    # iterations and skip the per-sheet body entirely. A parse that returned
-    # nothing would satisfy the whole 'complete total-preserving projection'
-    # claim this test is named for. Live: 77 sheets, 76 fixed and 1 envelope.
-    assert len(parsed_sheets) >= _MINIMUM_PARSED_SHEETS, (
-        f"the verified workbook parsed to {len(parsed_sheets)} sheet(s); the projection "
-        "equalities below compare empty tuples and the per-sheet loop never runs"
-    )
-    assert len(fixed_parser_sheets) >= _MINIMUM_FIXED_SHEETS, (
-        f"only {len(fixed_parser_sheets)} of {len(parsed_sheets)} sheet(s) are fixed; "
-        "the fixed branch carries the per-sheet total-preservation body"
-    )
-    assert len(intermediate.variable_envelopes) >= _MINIMUM_VARIABLE_ENVELOPES, (
-        f"the intermediate declares {len(intermediate.variable_envelopes)} variable "
-        "envelope(s); the envelope equality below is otherwise between two empty tuples"
-    )
-    assert tuple(sheet.sheet for sheet in intermediate.sheets) == tuple(sheet.name for sheet in fixed_parser_sheets)
-    assert tuple(envelope.sheet for envelope in intermediate.variable_envelopes) == tuple(
-        sheet.name for sheet in parsed_sheets if sheet.variable_envelope is not None
+
+def _parser_field_key(field, record_name: str) -> tuple[object, ...]:
+    return (
+        field.sheet,
+        record_name,
+        field.row,
+        f"A{field.row}",
+        field.ordinal,
+        field.offset,
+        field.length,
+        field.type_code,
+        field.description,
+        field.validation,
+        field.content,
     )
 
-    for parser_sheet, intermediate_sheet in zip(fixed_parser_sheets, intermediate.sheets, strict=True):
-        assert intermediate_sheet.sheet == parser_sheet.name
-        assert intermediate_sheet.record_identity == parser_sheet.name
-        assert intermediate_sheet.declared_total == parser_sheet.total_positions
-        assert intermediate_sheet.declared_total is not None
-        assert (
-            max(field.offset + field.length - 1 for field in parser_sheet.fields) == intermediate_sheet.declared_total
-        )
-        assert tuple(
-            (
-                field.sheet,
-                field.record_identity,
-                field.source_row,
-                field.source_cell,
-                field.ordinal,
-                field.offset,
-                field.length,
-                field.aeat_type,
-                field.normalized_description,
-                field.validation,
-                field.content,
-            )
-            for field in intermediate_sheet.fields
-        ) == tuple(
-            (
-                field.sheet,
-                parser_sheet.name,
-                field.row,
-                f"A{field.row}",
-                field.ordinal,
-                field.offset,
-                field.length,
-                field.type_code,
-                field.description,
-                field.validation,
-                field.content,
-            )
-            for field in parser_sheet.fields
-        )
 
-    envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
-    parser_envelope = next(sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet)
-    assert parser_envelope is not None
-    assert isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
-    assert isinstance(parser_envelope.closing, RecordDesignRelativeSuffixMarker)
-    assert envelope.sheet == "DP200000"
-    assert envelope.record_identity == "DP200000"
-    assert tuple(
-        (
-            field.sheet,
-            field.record_identity,
-            field.source_row,
-            field.source_cell,
-            field.ordinal,
-            field.offset,
-            field.length,
-            field.aeat_type,
-            field.normalized_description,
-            field.validation,
-            field.content,
-        )
-        for field in envelope.prefix_fields
-    ) == tuple(
-        (
-            field.sheet,
-            parser_envelope.name,
-            field.row,
-            f"A{field.row}",
-            field.ordinal,
-            field.offset,
-            field.length,
-            field.type_code,
-            field.description,
-            field.validation,
-            field.content,
-        )
-        for field in parser_envelope.prefix_fields
+def _assert_fixed_sheet_is_preserved(parser_sheet, intermediate_sheet) -> None:
+    assert intermediate_sheet.sheet == parser_sheet.name
+    assert intermediate_sheet.record_identity == parser_sheet.name
+    assert intermediate_sheet.declared_total == parser_sheet.total_positions
+    assert intermediate_sheet.declared_total is not None
+    assert max(field.offset + field.length - 1 for field in parser_sheet.fields) == intermediate_sheet.declared_total
+    assert tuple(_intermediate_field_key(field) for field in intermediate_sheet.fields) == tuple(
+        _parser_field_key(field, parser_sheet.name) for field in parser_sheet.fields
+    )
+
+
+def _assert_envelope_prefix_is_preserved(envelope, parser_envelope) -> None:
+    assert tuple(_intermediate_field_key(field) for field in envelope.prefix_fields) == tuple(
+        _parser_field_key(field, parser_envelope.name) for field in parser_envelope.prefix_fields
     )
     assert envelope.prefix_extent == 328
     assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
+
+
+def _assert_envelope_body_is_preserved(envelope, parser_envelope) -> None:
     assert (
         envelope.body_source_row,
         envelope.body_source_cell,
@@ -217,6 +150,9 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert envelope.body_normalized_description.startswith("Contenido del fichero")
     assert envelope.body_validation is None
     assert envelope.body_content is None
+
+
+def _assert_envelope_closing_is_preserved(envelope, parser_envelope) -> None:
     assert (
         envelope.closing.source_row,
         envelope.closing.source_cell,
@@ -246,7 +182,10 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert envelope.closing.aeat_type == "An"
     assert envelope.closing.normalized_description.startswith("Constante. </T")
     assert envelope.closing.validation is None
-    assert envelope.closing.content == '"</T200020250A0000>"'
+    assert envelope.closing.content == f'"</T2000{_M200_FILING_YEAR}0A0000>"'
+
+
+def _assert_envelope_total_is_preserved(envelope, parser_envelope) -> None:
     assert (
         envelope.total_source_row,
         envelope.total_source_cell,
@@ -265,6 +204,70 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     ) == ("A16", "total", "Variable")
 
 
+def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
+    """Every parsed record and official total reaches the generator IR unchanged."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
+    )
+    parsed_sheets = extract_record_design(resolved.path).accept_partial()
+
+    intermediate = load_record_design_intermediate(
+        source_root,
+        catalogues.sources,
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
+    )
+
+    assert intermediate.source.source_ref == resolved.source.id
+    assert intermediate.source.source_sha256 == resolved.source.sha256
+    assert intermediate.source.design_epoch == resolved.source.record_design_epoch
+    assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLS
+    fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
+    # Every claim below equates two tuples derived from this one parse, and the
+    # zip is strict only about a LENGTH MISMATCH: two empty tuples zip to zero
+    # iterations and skip the per-sheet body entirely. A parse that returned
+    # nothing would satisfy the whole 'complete total-preserving projection'
+    # claim this test is named for. Live: 77 sheets, 76 fixed and 1 envelope.
+    assert len(parsed_sheets) >= _MINIMUM_PARSED_SHEETS, (
+        f"the verified workbook parsed to {len(parsed_sheets)} sheet(s); the projection "
+        "equalities below compare empty tuples and the per-sheet loop never runs"
+    )
+    assert len(fixed_parser_sheets) >= _MINIMUM_FIXED_SHEETS, (
+        f"only {len(fixed_parser_sheets)} of {len(parsed_sheets)} sheet(s) are fixed; "
+        "the fixed branch carries the per-sheet total-preservation body"
+    )
+    assert len(intermediate.variable_envelopes) >= _MINIMUM_VARIABLE_ENVELOPES, (
+        f"the intermediate declares {len(intermediate.variable_envelopes)} variable "
+        "envelope(s); the envelope equality below is otherwise between two empty tuples"
+    )
+    assert tuple(sheet.sheet for sheet in intermediate.sheets) == tuple(sheet.name for sheet in fixed_parser_sheets)
+    assert tuple(envelope.sheet for envelope in intermediate.variable_envelopes) == tuple(
+        sheet.name for sheet in parsed_sheets if sheet.variable_envelope is not None
+    )
+
+    for parser_sheet, intermediate_sheet in zip(fixed_parser_sheets, intermediate.sheets, strict=True):
+        _assert_fixed_sheet_is_preserved(parser_sheet, intermediate_sheet)
+
+    envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
+    parser_envelope = next(sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet)
+    assert parser_envelope is not None
+    assert isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
+    assert isinstance(parser_envelope.closing, RecordDesignRelativeSuffixMarker)
+    assert envelope.sheet == "DP200000"
+    assert envelope.record_identity == "DP200000"
+    _assert_envelope_prefix_is_preserved(envelope, parser_envelope)
+    _assert_envelope_body_is_preserved(envelope, parser_envelope)
+    _assert_envelope_closing_is_preserved(envelope, parser_envelope)
+    _assert_envelope_total_is_preserved(envelope, parser_envelope)
+
+
 def _object_boundary(value: object) -> object:
     """Keep third-party spreadsheet values runtime-validated by callers."""
     return value
@@ -277,7 +280,7 @@ def _official_totals(path: Path) -> dict[str, int]:
     disenos in the pre-OOXML format, and taking the format from the AEAT
     filename would be wrong: this design's name embeds "xls" mid-string
     (``01-200-ejercicio-2025-10-9-mb-xls.xls``) and other designs carry the same
-    token while being genuine .xlsx. openpyxl refuses a legacy .xls outright, so
+    token while being genuine .xlsx. openpyxl refuses an .xls outright, so
     that branch reads through xlrd, which the record-design parser already uses
     for these binaries.
     """
@@ -323,16 +326,16 @@ def test_intermediate_recovers_every_official_total_colon_without_fixing_the_var
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
     official_totals = _official_totals(resolved.path)
 
@@ -373,7 +376,8 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
     )
 
     parser_envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
-    assert len(intermediate.sheets) == 6
+    # The workbook parse owns the sheet count: the IR keeps every fixed sheet and sets the envelope sheet apart.
+    assert len(intermediate.sheets) == len(parsed) - len(parser_envelopes)
     assert all(sheet.record_identity != "DP30300" for sheet in intermediate.sheets)
     assert len(parser_envelopes) == len(intermediate.variable_envelopes) == 1
     parser_envelope = parser_envelopes[0]
@@ -541,8 +545,18 @@ def test_intermediate_classifies_each_modelo_390_page_zero_as_a_variable_envelop
 @pytest.mark.parametrize(
     ("source_ref", "filing_year", "design_epoch", "message"),
     (
-        ("aeat-dr-200-2024", 2025, "2024", "does not apply to filing year 2025"),
-        ("aeat-dr-200-2025", 2025, "2024", "declares design epoch '2025', not requested '2024'"),
+        (
+            _M200_PRIOR_SOURCE_REF,
+            _M200_FILING_YEAR,
+            _M200_PRIOR_EPOCH,
+            f"does not apply to filing year {_M200_FILING_YEAR}",
+        ),
+        (
+            _M200_SOURCE_REF,
+            _M200_FILING_YEAR,
+            _M200_PRIOR_EPOCH,
+            f"declares design epoch '{_M200_EPOCH}', not requested '{_M200_PRIOR_EPOCH}'",
+        ),
     ),
 )
 def test_intermediate_refuses_an_inapplicable_or_wrong_epoch_source_before_parsing(
@@ -569,16 +583,16 @@ def test_intermediate_refuses_a_hash_drifting_source_before_parser_projection() 
     """A changed catalogue digest blocks the real workbook before parser output exists."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    source = catalogues.sources["aeat-dr-200-2025"]
+    source = catalogues.sources[_M200_SOURCE_REF]
     drifting_source = source.model_copy(update={"sha256": "0" * 64})
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
         load_record_design_intermediate(
             source_root,
             {str(drifting_source.id): drifting_source},
-            source_ref="aeat-dr-200-2025",
-            filing_year=2025,
-            design_epoch="2025",
+            source_ref=_M200_SOURCE_REF,
+            filing_year=_M200_FILING_YEAR,
+            design_epoch=_M200_EPOCH,
         )
 
 

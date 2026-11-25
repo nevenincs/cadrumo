@@ -14,11 +14,11 @@ from pydantic import BaseModel
 
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.windows import WindowsEndpoint
-
-from ..windows_process import WindowsOwnedProcess, WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 _MODULE = "cadrumo_runtime.adapters.tests.windows_inheritance_fixture"
 
@@ -135,7 +135,7 @@ def _startup_diagnostics(directory: Path, child: asyncio.subprocess.Process | Wi
         try:
             status = str(child.wait(timeout=0))
         except RefusalError as error:
-            if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is not RefusalCode.TIMEOUT:
                 raise
             status = "still_running"
         observations.append(f"direct_child_pid={child.pid}, exit={status}")

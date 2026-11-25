@@ -9,7 +9,7 @@ from typing import cast
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import CALENDAR_MONTH_MAX
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo
@@ -47,7 +47,7 @@ def _survivor_rank_by_position(eligible: Sequence[DescendantInfo], filing_year: 
 class RentaFamilyProfile(BaseModel):
     """Typed repeated family-member facts consumed by Modelo 100 bindings."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: ProfileSchemaVersion = Field(default=SUPPORTED_PROFILE_SCHEMA_VERSION)
     descendants: tuple[RentaDescendantProfile, ...] = ()
@@ -189,7 +189,8 @@ class RentaFamilyProfile(BaseModel):
         thresholds: MinimoDescendientesThresholds,
         cap_anual: Decimal,
         context: FamilyFactResolutionContext,
-    ) -> Decimal:
+        cotizaciones_limit_applies: bool = False,
+    ) -> Decimal | None:
         """Art. 81.2 guardería increment (casilla 0613), prorated and capped PER CHILD.
 
         The manual states the increment "puede alcanzar hasta 1.000 euros
@@ -236,13 +237,64 @@ class RentaFamilyProfile(BaseModel):
         filing year; this method performs no euro-figure lookup of its own
         (`aeat-registry-authority-flow`).
 
+        *cotizaciones_limit_applies* is the redaction of art. 81.2 in force until the
+        Ley 31/2022 reform, which also bounded each child's increment by the
+        mother's cotizaciones devengadas after that child's birth (Manual práctico de
+        Renta 2022, cap. 18, "Límites de la deducción", a)). The edition's binding picks
+        which fold it consumes; this method holds no year. The figure is the child's own stated
+        ``cotizaciones_ss_madre_euros``, applied to that child's prorated, spend-bound
+        amount before the sum. A child whose increment is positive and whose figure was
+        never stated leaves the whole result ``None`` (unresolved), never a zero and
+        never the unlimited amount; a child with no increment needs no figure.
+
         Returns ``Decimal("0")`` when no descendant qualifies, which is the
         legally correct zero rather than an under-declaration.
         """
+        total = Decimal("0")
+        for descendant, increment in self._guarderia_child_increments(
+            filing_year, thresholds=thresholds, cap_anual=cap_anual, context=context
+        ):
+            if cotizaciones_limit_applies and increment > 0:
+                if descendant.cotizaciones_ss_madre_euros is None:
+                    return None
+                increment = min(increment, descendant.cotizaciones_ss_madre_euros)
+            total += increment
+        return total
+
+    def guarderia_rows_lacking_cotizaciones(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        cap_anual: Decimal,
+        context: FamilyFactResolutionContext,
+    ) -> tuple[int, ...]:
+        """The positions of the descendant rows whose positive increment awaits a cotizaciones figure never stated.
+
+        The same children that leave :meth:`incremento_guarderia_0613` unresolved when
+        the cotizaciones limit applies, in the order the profile lists them.
+        """
+        lacking: list[int] = []
+        for descendant, increment in self._guarderia_child_increments(
+            filing_year, thresholds=thresholds, cap_anual=cap_anual, context=context
+        ):
+            if increment > 0 and descendant.cotizaciones_ss_madre_euros is None:
+                lacking.append(next(index for index, row in enumerate(self.descendientes) if row is descendant))
+        return tuple(lacking)
+
+    def _guarderia_child_increments(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        cap_anual: Decimal,
+        context: FamilyFactResolutionContext,
+    ) -> tuple[tuple[DescendantInfo, Decimal], ...]:
+        """Each qualifying child with its prorated, spend-bound increment, before any cotizaciones limit."""
         from ...core.money.rounding import round_to_cents
 
         available = self.dependencia_assimilation_available
-        total = Decimal("0")
+        increments: list[tuple[DescendantInfo, Decimal]] = []
         for descendant in self.descendientes:
             meses = descendant.guarderia_simultaneous_meses(
                 filing_year,
@@ -254,8 +306,8 @@ class RentaFamilyProfile(BaseModel):
                 continue
             prorated_cap = round_to_cents(cap_anual / Decimal(CALENDAR_MONTH_MAX) * Decimal(meses))
             spend = Decimal(descendant.guarderia_contributing_spend(filing_year, context=context))
-            total += min(prorated_cap, spend)
-        return total
+            increments.append((descendant, min(prorated_cap, spend)))
+        return tuple(increments)
 
     def meses_maternidad_por_descendiente(
         self,
@@ -414,8 +466,11 @@ class RentaFamilyProfile(BaseModel):
         only limb one would pass any test that checks the deceased's own amount.
 
         The two limbs read ``death_date`` through different predicates and the
-        difference is deliberate: :meth:`~DescendantInfo.died_in_period` for the
-        cuantía, :meth:`~DescendantInfo.died_before_devengo` for the ordering.
+        difference is deliberate:
+        :meth:`~cadrumo.domain.contribuyente.descendant_record.DescendantRecordBase.died_in_period`
+        for the cuantía,
+        :meth:`~cadrumo.domain.contribuyente.descendant_record.DescendantRecordBase.died_before_devengo`
+        for the ordering.
         See the ``death_date`` field documentation for why they are not one
         condition.
 
@@ -477,33 +532,3 @@ class RentaFamilyProfile(BaseModel):
                 second_filer_indicated=second_filer_indicated,
             )
         return total
-
-    # ------------------------------------------------------------------
-    # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción
-    # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
-    # ------------------------------------------------------------------
-
-    def madrid_nacimiento_adopcion_eligible_count(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> int:
-        """Count of descendants inside the Madrid nacimiento/adopción window who cohabit.
-
-        The raw (unweighted) eligible count; ``madrid_nacimiento_adopcion_weighted_count``
-        applies the per-descendant prorrateo the registry cuantía is multiplied by.
-        """
-        return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context))
-
-    def unidad_familiar_otros_miembros_base(self) -> Decimal:
-        """Base imponible of unidad-familiar members OTHER than the filer.
-
-        Framework primitive for the autonomic double income-limit gate (the
-        unidad-familiar 61.860 € límite). For a monoparental/single filer the
-        other members are the filer's cohabiting children, whose own base
-        imponible the profile does not hold and is treated as zero; the filer's
-        own base (casillas 0435 + 0460) is added by the registry formula. A
-        conyugal unit's spouse base is not persisted, so the derived-fact
-        injector supplies this term only for the determinable single-filer case
-        and the trigger stays advisory-only otherwise (fail-closed, no
-        over-claim).
-        """
-        return Decimal()

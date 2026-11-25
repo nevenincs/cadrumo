@@ -1,5 +1,6 @@
 # Annual publication of the días inhábiles calendar that fixes filing-deadline
-# extensions (Ley 39/2015 art. 30.5 and 30.6). Each year cites the Secretaría de
+# extensions (Ley 39/2015 art. 30.2, 30.5 and 31.3 for the national filing-close shift; art. 30.6 for
+# the territorial domiciliación cutoff). Each year cites the Secretaría de
 # Estado de Función Pública resolution for the Administración General del Estado,
 # the calendar that governs AEAT procedures.
 #
@@ -14,11 +15,55 @@ fact_id = "deadlines.holiday-calendar-publication"
 family = "event"
 
 [[fact.variants]]
+variant_id = "holiday-calendar-publication:2022"
+date_axis = "submission_date"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2022"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-dias-inhabiles-age-2022"
+required_text = ["2022-Calendario de días inhábiles"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2022-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2023"
+date_axis = "submission_date"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2023"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-dias-inhabiles-age-2023"
+required_text = ["2023 - Calendario de días inhábiles"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2023-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+[[fact.variants]]
 variant_id = "holiday-calendar-publication:2024"
 date_axis = "submission_date"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -40,7 +85,7 @@ variant_id = "holiday-calendar-publication:2025"
 date_axis = "submission_date"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -62,7 +107,7 @@ variant_id = "holiday-calendar-publication:2026"
 date_axis = "submission_date"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -76,5 +121,31 @@ event_code = "holiday_calendar_published"
 outputs = [
   { name = "boe_ref", value = "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo" },
   { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+# 2027: the Secretaría de Estado de Función Pública resolution is not yet published,
+# so the Dirección General de Trabajo relación de fiestas laborales is the source.
+# Every date listed there for all nineteen territories is inhábil nationally
+# (Ley 39/2015 art. 30.2) and the territory lists come from the same annex.
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2027"
+date_axis = "submission_date"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["Año 2027"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
   { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
 ]

@@ -31,6 +31,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_default_token,
@@ -38,14 +39,13 @@ from ...domain.calculations.registry.descendant_relacion_catalogue import (
     require_descendant_relacion,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.schema_base import DateAxis
 from ..workflow.errors import WorkflowInputMismatchError
 from .descendant_group import (
     DESCENDANT_PAGE_IDS,
     DESCENDANTS_COUNT_PAGE_ID,
     DESCENDANTS_GROUP_ID,
 )
+from .imputation_election import ELECTION_QUESTION_IDS
 from .models import WizardFlow, WizardQuestion
 
 WizardPersistMode = Literal["create", "edit"]
@@ -54,7 +54,7 @@ WizardPersistMode = Literal["create", "edit"]
 the create-vs-edit branch; it is never re-derived at runtime."""
 
 
-def _canonicalise(question: WizardQuestion, value: object) -> str:
+def canonicalise(question: WizardQuestion, value: object) -> str:
     """Render ``value`` as the canonical token used by the persistence layer."""
     if value is None:
         return ""
@@ -107,7 +107,7 @@ def serialise_answers(
             continue
         if only_question_ids is not None and question.id not in only_question_ids:
             continue
-        result[question.profile_key] = _canonicalise(question, value)
+        result[question.profile_key] = canonicalise(question, value)
     return result
 
 
@@ -124,7 +124,7 @@ def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> 
                 translated_message="application.wizard.errors.persist_patch_unknown_question_id",
                 context={"question_id": question_id},
             )
-        if question.profile_key is None:
+        if question.profile_key is None or question.id in ELECTION_QUESTION_IDS:
             continue
         validated = validate_widget_answer(question, raw)
         if not validated:
@@ -143,7 +143,7 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
     questions = _question_by_id(flow)
     typed: dict[str, object] = {}
     for question in questions.values():
-        canonical = _resolve_canonical(question, values)
+        canonical = resolve_canonical(question, values)
         if canonical is None:
             continue
         field_name = question.id.replace("-", "_")
@@ -151,7 +151,7 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
     return flow.answers_model.model_validate(typed)
 
 
-def _resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> str | None:
+def resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> str | None:
     """Resolve the canonical token to project for ``question``."""
     if question.profile_key is not None:
         candidate = values.get(question.profile_key)
@@ -199,36 +199,11 @@ def _instance_count(raw: str) -> int:
         return 0
 
 
-_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-grade-catalogue"
-
-
-def _accepted_disability_grades(*, operation: PinnedAuthorityOperation) -> frozenset[int]:
-    """Read the accepted disability-grade tokens from the governed catalogue."""
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_DISABILITY_BAND_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("descendant disability catalogue must resolve as a mapping fact")
-    entries = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-    try:
-        encoded = entries["accepted_grades"]
-    except KeyError as exc:
-        raise RegistryValidationError("descendant disability catalogue is missing accepted_grades") from exc
-    try:
-        return frozenset(int(token.strip()) for token in encoded.split(",") if token.strip())
-    except ValueError as exc:
-        raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
-
-
 def _discapacidad_grade(
     raw: str,
     *,
     operation: PinnedAuthorityOperation,
-) -> Literal[0, 33, 65] | None:
+) -> int | None:
     """Narrow a discapacidad answer token through the governed grade catalogue."""
     if not raw:
         return None
@@ -236,18 +211,7 @@ def _discapacidad_grade(
         grade = int(raw)
     except ValueError:
         return None
-    if grade not in _accepted_disability_grades(operation=operation):
-        return None
-    if grade == 0:
-        return 0
-    if grade == 33:
-        return 33
-    if grade == 65:
-        return 65
-    # The catalogue is the authority on which grades are accepted, and the
-    # projection carries only the three the descendant record declares; a
-    # fourth accepted token is a catalogue defect, not a projectable answer.
-    raise RegistryValidationError("descendant disability catalogue accepts an ungoverned grade")
+    return grade if grade in accepted_descendant_disability_grades(authority=operation) else None
 
 
 def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
@@ -395,6 +359,7 @@ def _descendant_from_row(row: Mapping[str, str], *, operation: PinnedAuthorityOp
         gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
         gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
+        apellidos_nombre=row.get("apellidos-nombre") or None,
     )
 
 
@@ -627,6 +592,7 @@ def _descendant_declaration_answers(
         ("prorrata-minimo", _optional_bool_answer(descendant.prorrata_minimo)),
         ("dependencia-economica", _optional_bool_answer(descendant.dependencia_economica)),
         ("nif", descendant.nif),
+        ("apellidos-nombre", descendant.apellidos_nombre),
     )
 
 

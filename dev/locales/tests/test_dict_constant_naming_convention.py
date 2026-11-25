@@ -50,10 +50,10 @@ import ast
 
 import pytest
 
-from .._ast_key_flows import _extract_locale_constant_keys
-from .._ast_key_naming import dict_constant_naming_violations_in_tree, find_dict_constant_naming_violations
-from .._ast_scanner import scan_source_tree
-from .._paths import SRC_DIR
+from ..ast_key_flows import extract_locale_constant_keys
+from ..ast_key_naming import dict_constant_naming_violations_in_tree, find_dict_constant_naming_violations
+from ..ast_scanner import scan_source_tree
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -133,7 +133,7 @@ def test_discovery_now_resolves_the_historical_shape_without_a_rename() -> None:
     """
     tree = ast.parse(_HISTORICAL_SHAPE)
 
-    keys = _extract_locale_constant_keys(tree)
+    keys = extract_locale_constant_keys(tree)
 
     assert {
         "flows.status.profiles.status.active",
@@ -209,7 +209,7 @@ def test_discovery_ignores_a_same_shaped_dict_that_never_reaches_the_translator(
         "    return _RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(source_casilla_id)\n",
     )
 
-    assert _extract_locale_constant_keys(tree) == set()
+    assert extract_locale_constant_keys(tree) == set()
 
 
 def test_rule_ignores_a_notice_code_routing_table() -> None:

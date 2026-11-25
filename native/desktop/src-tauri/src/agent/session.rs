@@ -10,9 +10,13 @@
 use super::{
     Refused,
     gateway::{self, Client},
+    records::{
+        AgentKind, AgentRecord, DocumentReference, Pending, PersonKind, PersonRecord, RanWith,
+        ReplyKind, ReplyRecord, Snapshot, ToolKindTag, ToolRecord, TurnRecord, Usage,
+    },
     sse,
-    stream::{Mapping, Step, StreamEvent},
-    supervisor::{Gateway, State, Supervisor},
+    stream::{Approval, Mapping, Questionnaire, Step, StreamEvent, failure_of, reach_of},
+    supervisor::{Supervisor, protocol::Gateway, protocol::State},
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -63,6 +67,13 @@ fn text<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
     value.get(key).and_then(Value::as_str)
 }
 
+/// A composed answer as the command serves it: the JSON document it
+/// serializes to, whose objects order their keys as every other answer the
+/// column reads does.
+fn answer(composed: &impl serde::Serialize) -> Result<Value, Refused> {
+    serde_json::to_value(composed).map_err(|_| refused("agent_host_failed"))
+}
+
 /// The selection a send names: a catalog lane, by provider and transport,
 /// and one of its models, as a run start takes them.
 #[derive(Deserialize)]
@@ -96,6 +107,14 @@ pub struct SendRequest {
     /// answers.
     #[serde(default)]
     pub skills: Vec<String>,
+    /// Accepts the model change the agent refused to make unasked, for this
+    /// one run of a continued conversation.
+    #[serde(default)]
+    pub acknowledge_selection_change: bool,
+    /// The conversation, by its first run's id, a new conversation starts from
+    /// the history of.
+    #[serde(default)]
+    pub carries_from: Option<String>,
 }
 
 /// The most skills one message may load.
@@ -165,22 +184,48 @@ pub fn admit_documents(query: &DocumentsQuery) -> Result<(Option<&str>, Option<&
     Ok((after, q))
 }
 
+pub fn admit_document_removal(conversation: &str, name: Option<&str>) -> Result<(), Refused> {
+    if !gateway::run_id(conversation)
+        || name.is_some_and(|name| !plain_name(name) || name.starts_with('.'))
+    {
+        return Err(refused("agent_invalid_request"));
+    }
+    Ok(())
+}
+
 /// One stored document as the column reads it: its name, size, time, digest
-/// and type, and nothing else the agent says of it.
+/// and type, and nothing else the agent says of it. The agent states each of
+/// them for every stored document; one without its type is not read as one.
 pub fn document_record(item: &Value) -> Result<Value, Refused> {
     let name = text(item, "name").filter(|name| plain_name(name));
     let sha256 = text(item, "sha256").filter(|sha| digest(sha));
     let size = item.get("size_bytes").and_then(Value::as_u64);
     let modified = text(item, "modified_at");
-    match (name, sha256, size, modified) {
-        (Some(name), Some(sha256), Some(size), Some(modified)) => Ok(json!({
+    let media_type = text(item, "media_type").filter(|media| !media.is_empty());
+    match (name, sha256, size, modified, media_type) {
+        (Some(name), Some(sha256), Some(size), Some(modified), Some(media_type)) => Ok(json!({
             "name": name,
             "size_bytes": size,
             "modified_at": modified,
             "sha256": sha256,
-            "media_type": text(item, "media_type"),
+            "media_type": media_type,
         })),
         _ => Err(refused("agent_gateway_unreadable")),
+    }
+}
+
+/// The agent's answer to a clarification, passed on as it states it once it
+/// reads as the answer for this very request: whether it was accepted and
+/// what became of the action it asked about.
+pub fn clarification_reply(reply: Value, target: &RequestRef) -> Result<Value, Refused> {
+    let answers_this = text(&reply, "run_id") == Some(target.reply_id.as_str())
+        && text(&reply, "request_id") == Some(target.request_id.as_str())
+        && reply.get("accepted").is_some_and(Value::is_boolean)
+        && text(&reply, "action_status").is_some();
+    if answers_this {
+        Ok(reply)
+    } else {
+        Err(refused("agent_gateway_unreadable"))
     }
 }
 
@@ -205,46 +250,44 @@ pub fn documents_page(page: &Value) -> Result<Value, Refused> {
 }
 
 /// The stored documents a user message names, as its history echoes them.
-fn echoed_documents(message: &Value) -> Value {
-    Value::Array(
-        message
-            .get("attachments")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(|item| {
-                let name = text(item, "name").filter(|name| plain_name(name))?;
-                Some(json!({
-                    "name": name,
-                    "sha256": text(item, "sha256").filter(|sha| digest(sha)),
-                    "media_type": text(item, "media_type"),
-                }))
+fn echoed_documents(message: &Value) -> Vec<DocumentReference> {
+    message
+        .get("attachments")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|item| {
+            let name = text(item, "name").filter(|name| plain_name(name))?;
+            Some(DocumentReference {
+                name: name.to_owned(),
+                sha256: text(item, "sha256")
+                    .filter(|sha| digest(sha))
+                    .map(str::to_owned),
+                media_type: text(item, "media_type").map(str::to_owned),
             })
-            .collect(),
-    )
+        })
+        .collect()
 }
 
 /// The skills a user message loaded, as its history echoes them: names of
 /// the skill grammar only.
-fn echoed_skills(message: &Value) -> Value {
-    Value::Array(
-        message
-            .get("skills")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .filter(|name| skill_name(name))
-            .map(|name| json!(name))
-            .collect(),
-    )
+fn echoed_skills(message: &Value) -> Vec<String> {
+    message
+        .get("skills")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .filter(|name| skill_name(name))
+        .map(str::to_owned)
+        .collect()
 }
 
 /// What a tool call's history says of it, as text to preview: its text
 /// blocks, the call's input and its result as the agent worded them, each cut
 /// to `DETAIL_LIMIT` characters, then the places it touched. Diffs and
 /// terminals are named by their path only.
-fn tool_details(call: &Value) -> Value {
+fn tool_details(call: &Value) -> Vec<String> {
     let blocks = call
         .get("content")
         .and_then(Value::as_array)
@@ -267,17 +310,15 @@ fn tool_details(call: &Value) -> Value {
                 None => path.to_owned(),
             })
         });
-    Value::Array(
-        blocks
-            .map(str::to_owned)
-            .chain(places)
-            .take(DETAIL_BLOCKS)
-            .map(|detail| match detail.char_indices().nth(DETAIL_LIMIT) {
-                Some((cut, _)) => json!(format!("{}…", &detail[..cut])),
-                None => json!(detail),
-            })
-            .collect(),
-    )
+    blocks
+        .map(str::to_owned)
+        .chain(places)
+        .take(DETAIL_BLOCKS)
+        .map(|detail| match detail.char_indices().nth(DETAIL_LIMIT) {
+            Some((cut, _)) => format!("{}…", &detail[..cut]),
+            None => detail,
+        })
+        .collect()
 }
 
 /// Which pending request of which reply an answer is for.
@@ -329,12 +370,18 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
             return Err(invalid());
         }
     }
-    if selection.effort.as_deref().is_some_and(|effort| {
-        !matches!(
-            effort,
-            "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
-        )
-    }) {
+    if selection
+        .effort
+        .as_deref()
+        .is_some_and(|effort| !gateway::effort(effort))
+    {
+        return Err(invalid());
+    }
+    if let Some(source) = &request.carries_from
+        && (!gateway::run_id(source)
+            || *source == request.conversation_id
+            || request.acknowledge_selection_change)
+    {
         return Err(invalid());
     }
     let mut named = HashSet::new();
@@ -362,13 +409,16 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
 /// The run start a send makes: its run, its message, its agent in the
 /// profile's workspace, the predecessor it continues, and for a
 /// conversation's first run the title the person gave it, else one from the
-/// message's first line.
+/// message's first line. A continued run carries the person's acknowledgement
+/// of a model change; a first run may carry the settled run whose history it
+/// starts from.
 pub fn start_body(
     run_id: &str,
     request: &SendRequest,
     workspace_root: &str,
     continues: Option<&str>,
     named: Option<&str>,
+    carries_from_run_id: Option<&str>,
 ) -> Value {
     let selection = &request.selection;
     let mut agent = json!({
@@ -392,8 +442,16 @@ pub fn start_body(
         body["skills"] = json!(request.skills);
     }
     match continues {
-        Some(predecessor) => body["continues_run_id"] = json!(predecessor),
+        Some(predecessor) => {
+            body["continues_run_id"] = json!(predecessor);
+            if request.acknowledge_selection_change {
+                body["acknowledge_selection_change"] = json!(true);
+            }
+        }
         None => {
+            if let Some(source) = carries_from_run_id {
+                body["carries_from_run_id"] = json!(source);
+            }
             let title: String = named
                 .or_else(|| {
                     request
@@ -412,6 +470,48 @@ pub fn start_body(
         }
     }
     body
+}
+
+/// What the agent says of the history a new conversation carried over, as the
+/// column reads it, or `None` where it states none or states it malformed.
+pub fn carry_facts(started: &Value) -> Option<Value> {
+    let carry = started.get("carry")?.as_object()?;
+    let source = carry.get("source_run_id")?.as_str()?;
+    let lane = match carry.get("source_lane")? {
+        Value::Null => Value::Null,
+        Value::String(lane)
+            if (1..=64).contains(&lane.chars().count()) && !lane.chars().any(char::is_control) =>
+        {
+            json!(lane)
+        }
+        _ => return None,
+    };
+    let limit = match carry.get("limit")? {
+        Value::Null => Value::Null,
+        Value::String(limit) if matches!(limit.as_str(), "receipts" | "cut") => json!(limit),
+        _ => return None,
+    };
+    let count = |name: &str| carry.get(name)?.as_u64();
+    gateway::run_id(source).then_some(())?;
+    Some(json!({
+        "source_run_id": source,
+        "source_lane": lane,
+        "carried_turns": count("carried_turns")?,
+        "omitted_turns": count("omitted_turns")?,
+        "carried_tokens": count("carried_tokens")?,
+        "omitted_tokens": count("omitted_tokens")?,
+        "limit": limit,
+    }))
+}
+
+/// The answer to a send: the reply it started, and the carry where the agent
+/// states a well-formed one.
+pub fn send_answer(run_id: &str, started: &Value) -> Value {
+    let mut answer = json!({ "reply_id": run_id });
+    if let Some(carry) = carry_facts(started) {
+        answer["carry"] = carry;
+    }
+    answer
 }
 
 /// A title the person gave a conversation: one line of 1 to `TITLE_LIMIT`
@@ -437,23 +537,21 @@ pub fn deletion_complete(answer: &Value) -> Result<(), Refused> {
 
 /// The questionnaires and approvals a run waits on, from its status and its
 /// history, which alone lists pending permissions.
-pub fn pending_of(run: &str, status: &Value, history: &Value) -> Value {
+pub fn pending_of(run: &str, status: &Value, history: &Value) -> Pending {
     let mut mapping = Mapping::new(run);
-    let questionnaires: Vec<Value> = status
+    let questionnaires: Vec<Questionnaire> = status
         .get("pending_clarification")
         .and_then(|pending| pending.get("request_id"))
         .and_then(Value::as_str)
         .map(str::to_owned)
         .and_then(|request| mapping.questionnaire(&request, status))
         .and_then(|event| match event {
-            StreamEvent::Questions { questionnaire, .. } => {
-                serde_json::to_value(questionnaire).ok()
-            }
+            StreamEvent::Questions { questionnaire, .. } => Some(questionnaire),
             _ => None,
         })
         .into_iter()
         .collect();
-    let approvals: Vec<Value> = history
+    let approvals: Vec<Approval> = history
         .get("state")
         .and_then(|state| state.get("pending_permissions"))
         .and_then(Value::as_array)
@@ -468,14 +566,18 @@ pub fn pending_of(run: &str, status: &Value, history: &Value) -> Value {
                 .frame(&frame.to_string())
                 .into_iter()
                 .find_map(|step| match step {
-                    Step::Emit(StreamEvent::Approval { approval, .. }) => {
-                        serde_json::to_value(approval).ok()
-                    }
+                    Step::Emit(event) => match *event {
+                        StreamEvent::Approval { approval, .. } => Some(approval),
+                        _ => None,
+                    },
                     _ => None,
                 })
         })
         .collect();
-    json!({ "questionnaires": questionnaires, "approvals": approvals })
+    Pending {
+        questionnaires,
+        approvals,
+    }
 }
 
 /// One run as the listing names it, with the run it continues.
@@ -578,9 +680,9 @@ pub fn seeded(previous: &[(String, String)], messages: &[(String, String)]) -> u
         .unwrap_or(0)
 }
 
-fn ran_with(status: &Value) -> Value {
+fn ran_with(status: &Value) -> Option<RanWith> {
     let (Some(agent), selection) = (status.get("agent"), status.get("selection")) else {
-        return Value::Null;
+        return None;
     };
     let field = |key: &str| {
         agent
@@ -592,23 +694,36 @@ fn ran_with(status: &Value) -> Value {
     };
     let transport = field("transport");
     if !transport.is_string() {
-        return Value::Null;
+        return None;
     }
-    json!({
-        "provider": field("provider"),
-        "transport": transport,
-        "provider_display_name": selection.and_then(|s| s.get("provider_display_name")).cloned().unwrap_or(Value::Null),
-        "model": field("model"),
-        "model_display_name": selection.and_then(|s| s.get("model_display_name")).cloned().unwrap_or(Value::Null),
-        "effort": field("effort"),
+    let shown = |key: &str| {
+        selection
+            .and_then(|selection| selection.get(key))
+            .cloned()
+            .unwrap_or(Value::Null)
+    };
+    Some(RanWith {
+        provider: field("provider"),
+        transport,
+        provider_display_name: shown("provider_display_name"),
+        model: field("model"),
+        model_display_name: shown("model_display_name"),
+        effort: field("effort"),
     })
+}
+
+/// The run a message was carried from, where the agent names one.
+fn carried_from(message: &Value) -> Option<String> {
+    text(message, "carried_from_run_id")
+        .filter(|run| !run.is_empty())
+        .map(str::to_owned)
 }
 
 /// A conversation's records, oldest first: per run, the person's messages,
 /// its tool calls, the agent's messages, and the run's own record. Each
 /// message is listed once: a continuing run's seed is left out. Messages are
 /// listed under the ids cadrumo-agent gives them.
-pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
+pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<TurnRecord> {
     let mut records = Vec::new();
     let mut previous: Vec<(String, String)> = Vec::new();
     for (run, status, history) in runs {
@@ -632,14 +747,15 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
         let skip = seeded(&previous, &transcript);
         let own = &messages[skip..];
         for message in own.iter().filter(|m| text(m, "role") == Some("user")) {
-            records.push(json!({
-                "kind": "person",
-                "id": text(message, "message_id"),
-                "reply_id": run,
-                "text": text(message, "content").unwrap_or_default(),
-                "sent_at": message.get("timestamp").cloned().unwrap_or(Value::Null),
-                "attachments": echoed_documents(message),
-                "skills": echoed_skills(message),
+            records.push(TurnRecord::Person(PersonRecord {
+                kind: PersonKind::Only,
+                id: text(message, "message_id").map(str::to_owned),
+                reply_id: run.clone(),
+                text: text(message, "content").unwrap_or_default().to_owned(),
+                sent_at: message.get("timestamp").cloned().unwrap_or(Value::Null),
+                attachments: echoed_documents(message),
+                skills: echoed_skills(message),
+                carried_from_run_id: carried_from(message),
             }));
         }
         for call in state
@@ -648,44 +764,54 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
             .into_iter()
             .flatten()
         {
-            records.push(json!({
-                "kind": "tool",
-                "reply_id": run,
-                "id": text(call, "tool_call_id"),
-                "title": text(call, "title"),
-                "tool_kind": text(call, "kind"),
-                "status": text(call, "status"),
-                "details": tool_details(call),
+            records.push(TurnRecord::Tool(ToolRecord {
+                kind: ToolKindTag::Only,
+                reply_id: run.clone(),
+                id: text(call, "tool_call_id").map(str::to_owned),
+                title: text(call, "title").map(str::to_owned),
+                tool_kind: text(call, "kind").map(str::to_owned),
+                status: text(call, "status").map(str::to_owned),
+                tool_server: text(call, "tool_server").map(str::to_owned),
+                tool_name: text(call, "tool_name").map(str::to_owned),
+                tool_reach: reach_of(text(call, "tool_reach")),
+                failure: failure_of(call.get("failure")),
+                details: tool_details(call),
             }));
         }
         for message in own.iter().filter(|m| text(m, "role") == Some("assistant")) {
-            records.push(json!({
-                "kind": "agent",
-                "id": text(message, "message_id"),
-                "reply_id": run,
-                "text": text(message, "content").unwrap_or_default(),
+            records.push(TurnRecord::Agent(AgentRecord {
+                kind: AgentKind::Only,
+                id: text(message, "message_id").map(str::to_owned),
+                reply_id: run.clone(),
+                text: text(message, "content").unwrap_or_default().to_owned(),
+                carried_from_run_id: carried_from(message),
             }));
         }
         let usage = history
             .get("usage")
             .and_then(|usage| usage.get("total"))
             .map(|total| {
-                json!({
-                    "input_tokens": total.get("input_tokens"),
-                    "output_tokens": total.get("output_tokens"),
-                })
-            })
-            .unwrap_or(Value::Null);
-        records.push(json!({
-            "kind": "reply",
-            "id": run,
-            "status": status.get("status").or_else(|| state.get("status")),
-            "provider_condition": status.get("provider_condition").cloned().unwrap_or(Value::Null),
-            "failure_reason": status.get("failure_reason").cloned().unwrap_or(Value::Null),
-            "queued_messages": status.get("queued_messages").cloned().unwrap_or(json!(0)),
-            "selection": ran_with(status),
-            "usage": usage,
-        }));
+                let count = |key: &str| total.get(key).cloned().unwrap_or(Value::Null);
+                Usage {
+                    input_tokens: count("input_tokens"),
+                    output_tokens: count("output_tokens"),
+                }
+            });
+        let copied = |key: &str| status.get(key).cloned().unwrap_or(Value::Null);
+        records.push(TurnRecord::Reply(Box::new(ReplyRecord {
+            kind: ReplyKind::Only,
+            id: run.clone(),
+            status: status
+                .get("status")
+                .or_else(|| state.get("status"))
+                .cloned()
+                .unwrap_or(Value::Null),
+            provider_condition: copied("provider_condition"),
+            failure_reason: copied("failure_reason"),
+            queued_messages: status.get("queued_messages").cloned().unwrap_or(json!(0)),
+            selection: ran_with(status),
+            usage,
+        })));
         previous = transcript;
     }
     records
@@ -1095,9 +1221,9 @@ impl Session {
     }
 
     pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
-        Ok(Value::Array(history_records(
+        answer(&history_records(
             &self.read_history(supervisor, conversation)?,
-        )))
+        ))
     }
 
     /// History and pending questions share the same reads of the newest run.
@@ -1109,8 +1235,11 @@ impl Session {
                 !text(status, "status").is_some_and(|status| SETTLED.contains(&status))
             })
             .map(|(id, status, history)| pending_of(id, status, history))
-            .unwrap_or_else(|| json!({ "questionnaires": [], "approvals": [] }));
-        Ok(json!({ "history": history_records(&runs), "pending": pending }))
+            .unwrap_or_default();
+        answer(&Snapshot {
+            history: history_records(&runs),
+            pending,
+        })
     }
 
     /// One page of the documents stored for one conversation: its own
@@ -1125,6 +1254,17 @@ impl Session {
         let page =
             Client::new(&gateway).attachments(&query.conversation_id, after, q, DOCUMENT_PAGE)?;
         documents_page(&page)
+    }
+
+    pub fn remove_documents(
+        &self,
+        supervisor: &Supervisor,
+        conversation: &str,
+        name: Option<&str>,
+    ) -> Result<(), Refused> {
+        admit_document_removal(conversation, name)?;
+        let gateway = Self::gateway(supervisor)?;
+        Client::new(&gateway).remove_attachments(conversation, name)
     }
 
     /// Starts the conversation's next run with the person's message. A
@@ -1143,14 +1283,38 @@ impl Session {
         }
         let client = Client::new(&gateway);
         let chain = self.chain(&client, &request.conversation_id)?;
+        let settled = |run: &Run| -> Result<(), Refused> {
+            let status = client.run_status(&run.id)?;
+            let current = text(&status, "status").unwrap_or(&run.status);
+            if SETTLED.contains(&current) {
+                Ok(())
+            } else {
+                Err(refused("agent_reply_in_progress"))
+            }
+        };
+        let mut carry_source = None;
         let (run_id, continues) = match chain.last() {
-            None => (request.conversation_id.clone(), None),
-            Some(last) => {
-                let status = client.run_status(&last.id)?;
-                let current = text(&status, "status").unwrap_or(&last.status);
-                if !SETTLED.contains(&current) {
-                    return Err(refused("agent_reply_in_progress"));
+            None => {
+                if request.acknowledge_selection_change {
+                    return Err(refused("agent_invalid_request"));
                 }
+                if let Some(source) = &request.carries_from {
+                    let last = match self.chain(&client, source) {
+                        Ok(source_chain) => source_chain.into_iter().next_back(),
+                        Err(error) if error.code == "agent_conversation_unknown" => None,
+                        Err(error) => return Err(error),
+                    }
+                    .ok_or_else(|| refused("agent_gateway_carry_source_not_found"))?;
+                    settled(&last)?;
+                    carry_source = Some(last.id);
+                }
+                (request.conversation_id.clone(), None)
+            }
+            Some(last) => {
+                if request.carries_from.is_some() {
+                    return Err(refused("agent_invalid_request"));
+                }
+                settled(last)?;
                 (mint_run_id()?, Some(last.id.clone()))
             }
         };
@@ -1164,6 +1328,7 @@ impl Session {
             &gateway.workspace_root,
             continues.as_deref(),
             named.as_deref(),
+            carry_source.as_deref(),
         ))?;
         if text(&started, "run_id") != Some(run_id.as_str()) {
             return Err(refused("agent_gateway_unreadable"));
@@ -1181,7 +1346,7 @@ impl Session {
                 .pumps
                 .push(pump_run(&gateway, &run_id, watch.channel.clone()));
         }
-        Ok(json!({ "reply_id": run_id }))
+        Ok(send_answer(&run_id, &started))
     }
 
     pub fn pending(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
@@ -1192,9 +1357,9 @@ impl Session {
             .last()
             .filter(Run::live)
         else {
-            return Ok(json!({ "questionnaires": [], "approvals": [] }));
+            return answer(&Pending::default());
         };
-        Ok(pending_of(
+        answer(&pending_of(
             &last.id,
             &client.run_status(&last.id)?,
             &client.history(&last.id)?,
@@ -1230,9 +1395,11 @@ impl Session {
             return Err(refused("agent_invalid_request"));
         }
         let body = clarification_body(answer)?;
-        Client::new(&gateway).clarification(&target.reply_id, &target.request_id, &body)?;
+        let reply =
+            Client::new(&gateway).clarification(&target.reply_id, &target.request_id, &body)?;
+        let reply = clarification_reply(reply, target)?;
         self.resolved(&target.reply_id, &target.request_id);
-        Ok(json!({}))
+        Ok(reply)
     }
 
     pub fn decide(
@@ -1369,7 +1536,7 @@ fn pump(
                 for step in steps {
                     match step {
                         Step::Emit(event) => {
-                            let _ = channel.send(event);
+                            let _ = channel.send(*event);
                         }
                         Step::ReadQuestionnaire(request) => {
                             let event = client
@@ -1407,7 +1574,7 @@ fn pump(
 fn emit(channel: &Channel<StreamEvent>, steps: Vec<Step>) {
     for step in steps {
         if let Step::Emit(event) = step {
-            let _ = channel.send(event);
+            let _ = channel.send(*event);
         }
     }
 }
@@ -1493,7 +1660,14 @@ mod tests {
 
     #[test]
     fn a_send_starts_its_run_as_the_gateway_takes_one() {
-        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None, None);
+        let first = start_body(
+            "r00ff",
+            &send(request()),
+            r"C:\agent\ws\main",
+            None,
+            None,
+            None,
+        );
         assert_eq!(
             first,
             json!({
@@ -1512,6 +1686,7 @@ mod tests {
             r"C:\ws",
             Some("r00ff"),
             Some("Renta"),
+            None,
         );
         assert_eq!(next["continues_run_id"], "r00ff");
         assert!(next.get("title").is_none());
@@ -1526,8 +1701,142 @@ mod tests {
             r"C:\ws",
             None,
             Some("Renta 2025"),
+            None,
         );
         assert_eq!(first["title"], "Renta 2025");
+    }
+
+    #[test]
+    fn an_acknowledgement_rides_only_a_continued_run_and_a_carry_only_a_first_one() {
+        let mut acknowledged = request();
+        acknowledged["acknowledge_selection_change"] = json!(true);
+        assert!(admit_send(&send(acknowledged.clone())).is_ok());
+        let continued = start_body(
+            "r0100",
+            &send(acknowledged.clone()),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            None,
+        );
+        assert_eq!(continued["acknowledge_selection_change"], true);
+        assert!(continued.get("carries_from_run_id").is_none());
+        // Never sent unasked, and never on a first run.
+        let unasked = start_body(
+            "r0100",
+            &send(request()),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            None,
+        );
+        assert!(unasked.get("acknowledge_selection_change").is_none());
+        let first = start_body("r00ff", &send(acknowledged), r"C:\ws", None, None, None);
+        assert!(first.get("acknowledge_selection_change").is_none());
+
+        let mut carrying = request();
+        carrying["carries_from"] = json!("r0abc");
+        assert!(admit_send(&send(carrying.clone())).is_ok());
+        let carried = start_body(
+            "r00ff",
+            &send(carrying.clone()),
+            r"C:\ws",
+            None,
+            None,
+            Some("r0abd"),
+        );
+        assert_eq!(carried["carries_from_run_id"], "r0abd");
+        assert_eq!(carried["title"], "¿Cuánto IVA declaré?");
+        assert!(carried.get("continues_run_id").is_none());
+        let continuing = start_body(
+            "r0100",
+            &send(carrying),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            Some("r0abd"),
+        );
+        assert!(continuing.get("carries_from_run_id").is_none());
+        assert!(
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
+                .get("carries_from_run_id")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_carry_source_must_be_another_conversation_and_exclude_an_acknowledgement() {
+        for source in [json!("../x"), json!(""), json!("r00ff"), json!("a b")] {
+            let mut bad = request();
+            bad["carries_from"] = source.clone();
+            assert_eq!(
+                admit_send(&send(bad)).unwrap_err().code,
+                "agent_invalid_request",
+                "{source}"
+            );
+        }
+        let mut both = request();
+        both["carries_from"] = json!("r0abc");
+        both["acknowledge_selection_change"] = json!(true);
+        assert_eq!(
+            admit_send(&send(both)).unwrap_err().code,
+            "agent_invalid_request"
+        );
+    }
+
+    #[test]
+    fn a_send_answer_carries_the_agents_carry_only_when_well_typed() {
+        let carry = json!({
+            "source_run_id": "r0abc", "source_lane": "claude", "carried_turns": 4,
+            "omitted_turns": 1, "carried_tokens": 9000, "omitted_tokens": 1200, "limit": "cut"
+        });
+        let started = json!({"run_id": "r00ff", "carry": carry});
+        assert_eq!(
+            send_answer("r00ff", &started),
+            json!({"reply_id": "r00ff", "carry": carry})
+        );
+        let mut open = carry.clone();
+        open["source_lane"] = Value::Null;
+        open["limit"] = Value::Null;
+        assert_eq!(send_answer("r00ff", &json!({"carry": open}))["carry"], open);
+        // Facts the agent did not state are not made up from its extra fields.
+        let mut extra = carry.clone();
+        extra["prose"] = json!("private words");
+        assert_eq!(
+            send_answer("r00ff", &json!({"carry": extra}))["carry"],
+            carry
+        );
+        let mut malformed = vec![json!(null), json!("carry"), json!({})];
+        for (field, value) in [
+            ("source_run_id", json!("../x")),
+            ("source_run_id", json!(7)),
+            ("source_lane", json!("")),
+            ("source_lane", json!("x".repeat(65))),
+            ("source_lane", json!(3)),
+            ("carried_turns", json!(-1)),
+            ("omitted_turns", json!(1.5)),
+            ("carried_tokens", json!("9000")),
+            ("omitted_tokens", Value::Null),
+            ("limit", json!("everything")),
+        ] {
+            let mut bad = carry.clone();
+            bad[field] = value;
+            malformed.push(bad);
+        }
+        let mut missing = carry.clone();
+        missing.as_object_mut().unwrap().remove("limit");
+        malformed.push(missing);
+        for bad in malformed {
+            assert_eq!(
+                send_answer("r00ff", &json!({"carry": bad})),
+                json!({"reply_id": "r00ff"}),
+                "{bad}"
+            );
+        }
+        assert_eq!(
+            send_answer("r00ff", &json!({"run_id": "r00ff"})),
+            json!({"reply_id": "r00ff"})
+        );
     }
 
     const SHA: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -1537,14 +1846,14 @@ mod tests {
         let mut named = request();
         named["attachments"] = json!([{"name": "factura.pdf", "sha256": SHA}]);
         assert!(admit_send(&send(named.clone())).is_ok());
-        let body = start_body("r00ff", &send(named), r"C:\ws", None, None);
+        let body = start_body("r00ff", &send(named), r"C:\ws", None, None, None);
         assert_eq!(
             body["attachments"],
             json!([{"name": "factura.pdf", "sha256": SHA}])
         );
         // A message naming none sends no field at all.
         assert!(
-            start_body("r00ff", &send(request()), r"C:\ws", None, None)
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
                 .get("attachments")
                 .is_none()
         );
@@ -1579,10 +1888,10 @@ mod tests {
         let mut named = request();
         named["skills"] = json!(["cadrumo-iva-303", "cadrumo-0"]);
         assert!(admit_send(&send(named.clone())).is_ok());
-        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"), None);
+        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"), None, None);
         assert_eq!(body["skills"], json!(["cadrumo-iva-303", "cadrumo-0"]));
         assert!(
-            start_body("r00ff", &send(request()), r"C:\ws", None, None)
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
                 .get("skills")
                 .is_none()
         );
@@ -1613,11 +1922,37 @@ mod tests {
     }
 
     #[test]
+    fn a_clarification_answer_is_the_agents_own_reply_for_that_request() {
+        let target = RequestRef {
+            reply_id: "run-1".into(),
+            request_id: "q1".into(),
+        };
+        let reply = json!({"api_version": "v1", "run_id": "run-1", "request_id": "q1",
+            "accepted": false, "applied": false, "action_status": "superseded",
+            "idempotency_key": null});
+        assert_eq!(clarification_reply(reply.clone(), &target).unwrap(), reply);
+        for bad in [
+            json!({}),
+            json!({"run_id": "run-2", "request_id": "q1", "accepted": true, "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q2", "accepted": true, "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q1", "accepted": "yes", "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q1", "accepted": true}),
+        ] {
+            assert_eq!(
+                clarification_reply(bad.clone(), &target).unwrap_err().code,
+                "agent_gateway_unreadable",
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
     fn a_document_page_reads_only_whole_documents() {
         let page = json!({"workspace_root": "C:\\private\\ws", "attachments": [
             {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
              "sha256": SHA, "media_type": "application/pdf"},
-            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA}],
+            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA,
+             "media_type": "application/octet-stream"}],
             "skipped": [{"name": "link", "reason": "link"}], "truncated": true, "next_after": "b"});
         // The workspace's path and what was skipped never reach the column.
         assert_eq!(
@@ -1626,7 +1961,7 @@ mod tests {
                 {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
                  "sha256": SHA, "media_type": "application/pdf"},
                 {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z",
-                 "sha256": SHA, "media_type": null}],
+                 "sha256": SHA, "media_type": "application/octet-stream"}],
                 "next_after": "b"})
         );
         assert_eq!(
@@ -1636,6 +1971,11 @@ mod tests {
         for bad in [
             json!({}),
             json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t"}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": ""}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": null}]}),
             json!({"attachments": [{"name": "a/b", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [{"name": "a", "size_bytes": -1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [], "next_after": "../x"}),
@@ -1673,6 +2013,30 @@ mod tests {
             query(None, Some(&"x".repeat(NAME_LIMIT + 1))),
         ] {
             assert!(admit_documents(&bad).is_err());
+        }
+    }
+
+    #[test]
+    fn document_removal_refuses_paths_and_unadmitted_conversation_ids() {
+        assert!(admit_document_removal("run-1", None).is_ok());
+        assert!(admit_document_removal("run-1", Some("factura ñ.pdf")).is_ok());
+        for name in [
+            "",
+            ".hidden",
+            "../a.pdf",
+            "C:\\a.pdf",
+            "a/b.pdf",
+            "a\nb.pdf",
+        ] {
+            assert_eq!(
+                admit_document_removal("run-1", Some(name))
+                    .unwrap_err()
+                    .code,
+                "agent_invalid_request"
+            );
+        }
+        for conversation in ["", "../run", "a/b"] {
+            assert!(admit_document_removal(conversation, None).is_err());
         }
     }
 
@@ -1884,7 +2248,7 @@ mod tests {
         let records =
             history_records(&[("c1".into(), status, first), ("c2".into(), failed, second)]);
         assert_eq!(
-            Value::Array(records),
+            serde_json::to_value(records).unwrap(),
             json!([
                 {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z",
                  "attachments": [], "skills": []},
@@ -1926,6 +2290,32 @@ mod tests {
     }
 
     #[test]
+    fn history_relays_a_tools_identity_and_failure_and_a_messages_carry() {
+        let history = json!({"state": {"status": "completed",
+            "messages": [
+                {"message_id": "u1", "role": "user", "content": "Hola", "timestamp": "2026-10-01T09:00:00Z",
+                 "carried_from_run_id": "run-0"},
+                {"message_id": "a1", "role": "assistant", "content": "Buenas", "carried_from_run_id": ""}],
+            "tool_calls": [{"tool_call_id": "t1", "title": "web_search", "kind": "fetch", "status": "failed",
+                "tool_server": "cadrumo_agent_tools", "tool_name": "web_search", "tool_reach": "online",
+                "failure": {"code": "unreachable", "message": "No connection."}, "content": []}]},
+            "usage": null});
+        let status = json!({"status": "completed", "queued_messages": 0, "agent": null});
+        let records =
+            serde_json::to_value(history_records(&[("c1".into(), status, history)])).unwrap();
+        assert_eq!(records[0]["carried_from_run_id"], "run-0");
+        assert_eq!(records[0]["sent_at"], "2026-10-01T09:00:00Z");
+        assert_eq!(
+            records[1],
+            json!({"kind": "tool", "reply_id": "c1", "id": "t1", "title": "web_search", "tool_kind": "fetch",
+                   "status": "failed", "tool_server": "cadrumo_agent_tools", "tool_name": "web_search",
+                   "tool_reach": "online", "failure": {"code": "unreachable", "message": "No connection."},
+                   "details": []})
+        );
+        assert!(records[2].get("carried_from_run_id").is_none());
+    }
+
+    #[test]
     fn pending_requests_come_from_status_and_history_together() {
         let status = json!({"run_id": "run-1", "pending_clarification": {
             "type": "clarification_request", "request_id": "clar-1",
@@ -1936,7 +2326,7 @@ mod tests {
              "options": [{"option_id": "ok", "name": "Allow", "kind": "allow_once"}]}
         ]}});
         assert_eq!(
-            pending_of("run-1", &status, &history),
+            serde_json::to_value(pending_of("run-1", &status, &history)).unwrap(),
             json!({
                 "questionnaires": [{"request_id": "clar-1", "reply_id": "run-1", "questions": [
                     {"id": "q", "prompt": "¿Año?", "kind": "text", "options": null, "required": true}
@@ -1958,3 +2348,7 @@ mod tests {
         assert_ne!(id, mint_run_id().unwrap());
     }
 }
+
+#[cfg(test)]
+#[path = "session_composition_tests.rs"]
+mod composition_tests;

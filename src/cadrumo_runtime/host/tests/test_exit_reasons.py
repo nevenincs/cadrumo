@@ -19,12 +19,13 @@ import pytest
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.tests.log_records import delivered_records
+from cadrumo.tests.process_support import fixture_environment, native_python
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ExitReason, RefusalCode
 from cadrumo_client.contracts.login import LoginInventory
 
-from ...adapters.tests.process_support import fixture_environment, native_python
-from .. import profile_connections
+from .. import login_inventory_reading, profile_connections
 from ..arguments import parse_runtime_arguments
 from ..main import run
 from ..profile_connections import RuntimeProfileConnections
@@ -151,7 +152,10 @@ def test_login_witness_loss_logs_only_counts_and_measured_spans_without_changing
     current = LoginInventory((unknown, stale), complete=complete)
     profiles._logins[peer.login_id] = peer
     instants = iter((10.0, 10.25, 10.5, 10.875, 11.0))
-    monkeypatch.setattr(profile_connections, "time", SimpleNamespace(monotonic=lambda: next(instants)))
+    clock = SimpleNamespace(monotonic=lambda: next(instants))
+    # The inventory reading measures the spans; the owner reads the same clock for its sweep.
+    monkeypatch.setattr(login_inventory_reading, "time", clock)
+    monkeypatch.setattr(profile_connections, "time", clock)
 
     with diagnostic_process("runtime"), caplog.at_level(logging.WARNING, logger=profile_connections.__name__):
         remaining = profiles._login_contexts()
@@ -160,7 +164,7 @@ def test_login_witness_loss_logs_only_counts_and_measured_spans_without_changing
     assert remaining[0] is unknown and remaining[1] is stale and remaining[2] is peer
     assert stop.is_set() and not profiles._private_work_available()
     assert stop.reason is (earlier or ExitReason.LOGIN_WITNESS_LOSS)
-    records = [record for record in caplog.records if record.name == profile_connections.__name__]
+    records = delivered_records(caplog, profile_connections.__name__)
     assert len(records) == 1
     record = records[0]
     assert record.getMessage() == "no eligible login witness remains; stopping the runtime"

@@ -22,7 +22,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSA
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -34,6 +34,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.repository import transaction_index_object_key
+from cadrumo.tests.log_records import delivered_records
 
 from .published_authority_support import published_authority_operation
 
@@ -113,7 +114,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
             {"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace},
         )
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation.source_mesh"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation.source_resolution_operations"):
         resolution = _resolver(transaction_repository=transaction_repository, objects=objects).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
@@ -129,7 +130,10 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     assert resolution.source_transaction_ids == ()
     assert [diagnostic.reason for diagnostic in merged.diagnostics] == ["storage_degraded"]
     assert merged.diagnostics[0].source_kind == BindingSourceKind.LEDGER_IVA_AGGREGATION.value
-    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
+    assert any(
+        "source mesh resolver storage degradation" in record.message
+        for record in delivered_records(caplog, "cadrumo.application.aggregation.source_resolution_operations")
+    )
 
 
 def test_transaction_catalogue_refuses_new_legacy_drift_fixture(runtime_profile: TestRuntimeProfile) -> None:

@@ -14,7 +14,7 @@ from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Protocol, override
 from uuid import UUID
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -88,12 +88,10 @@ from ..application.auth.sync_readiness import build_auth_sync_readiness
 from ..application.auth.sync_requirement_text import sync_requirement_reason
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
-from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
+from ..application.live.errors import LiveApplicationError, LiveApplicationInputError, raise_if_aeat_session_ended
 from ..application.live.expedientes_ports import ExpedientesDeclaration
-from ..application.live.filed_data_capture import capture_report_path
+from ..application.live.filed_capture_accumulator import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
-from ..application.live.filed_history_events import FiledHistoryEventSink
-from ..application.live.filed_history_operation import FiledHistoryOperationRequest
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persistiva_compensation_history_observations_strict,
@@ -129,7 +127,6 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import SessionWriteReporter, active_verified_session, ensure_live_authenticated_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
@@ -139,10 +136,9 @@ from ..core.identity.tax_id import tax_id_identity_token
 from ..core.modelo import Modelo
 from ..core.period import Period
 from ..core.storage_taxonomy import StorageCategory
-from ..core.storage_taxonomy_locations import storage_location
-from ..core.time.clock import now
+from ..core.storage_taxonomy_locations import storage_path
+from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationPeriodState,
@@ -153,11 +149,9 @@ from ..domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 
-_WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
-
 
 def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    """Probe configured provider readiness in the exact profile worker before remote work."""
+    """Check the configured provider credentials in the exact profile worker before remote work."""
     from .auth_read_composition import compose_auth_read_ports
 
     ports = compose_auth_read_ports(profile_id)
@@ -188,6 +182,7 @@ class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
         try:
             captured = await fetch_notifications_query(session, settings=settings)
         except SedeError as exc:
+            raise_if_aeat_session_ended(exc)
             if isinstance(exc, SedeParseError):
                 failure_kind = "parse"
             elif isinstance(exc, SedeNavigationError):
@@ -342,23 +337,52 @@ def compose_filed_observation_persistence_ports(
     )
 
 
+class FiledDataPortFactory(Protocol):
+    """Build the register transport filed captures read, from one composition's AEAT access."""
+
+    def __call__(
+        self,
+        *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> FiledDataCapturePort:
+        """Return the transport bound to this composition's AEAT access."""
+        ...
+
+
 def build_filed_data_capture_port(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> FiledDataCapturePort:
-    """Build the AEAT Sede transport that reads filed declarations.
-
-    This is the only place the live composition constructs that transport, so a
-    recorded in-memory port can stand in for AEAT while every capture,
-    finalization and reconciliation step downstream stays real.
-    """
+    """Build the AEAT Sede transport that reads filed declarations."""
     return SedeFiledDataCapturePort(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class FiledRegisterSource:
+    """The register single and bulk filed captures read, and the check run before reading it.
+
+    The pair travels together: the provider credential check exists for the
+    transport that authenticates against the AEAT Sede, so a register that needs
+    no authentication carries a check of its own.
+    """
+
+    port_factory: FiledDataPortFactory
+    provider_preflight: Callable[[UUID, PinnedAuthorityOperation], None]
+
+
+AEAT_SEDE_FILED_REGISTER = FiledRegisterSource(
+    port_factory=build_filed_data_capture_port,
+    provider_preflight=preflight_filed_history_provider,
+)
+"""The AEAT Sede, read after the profile's provider credentials are checked."""
 
 
 def compose_live_state(
@@ -367,8 +391,13 @@ def compose_live_state(
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
     operation: PinnedAuthorityOperation,
+    filed_data_port_factory: FiledDataPortFactory = build_filed_data_capture_port,
 ) -> LiveStateComposition:
     """Compose the shared live-state port and filed-observation ports once.
+
+    ``filed_data_port_factory`` builds the register transport from this
+    composition's AEAT access; the AEAT Sede transport unless a composition
+    group binds the register its operation reads.
 
     Core types:
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
@@ -377,7 +406,11 @@ def compose_live_state(
     resolved_bucket_id = (bucket_id or require_active_bucket_id()).strip()
     if not resolved_bucket_id:
         raise LiveApplicationError(translated_message="application.workflow.errors.no_active_profile_bucket")
-    resolved_root = Path(output_root) if output_root is not None else settings.cadrumo_live_state_dir / _WALLET_DIRNAME
+    resolved_root = (
+        Path(output_root)
+        if output_root is not None
+        else storage_path(StorageCategory.LIVE_STATE_IVA_WALLET, settings=settings)
+    )
     secure_objects = objects or secure_object_repository_for_bucket(resolved_bucket_id)
     filed_ports = compose_filed_observation_persistence_ports(
         bucket_id=resolved_bucket_id,
@@ -388,7 +421,7 @@ def compose_live_state(
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
-    filed_data_port = build_filed_data_capture_port(
+    filed_data_port = filed_data_port_factory(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
@@ -510,7 +543,7 @@ class AppIvaRemoteStatePort:
         decisions = IvaWalletDecisionRepository(objects=self._objects).list_decisions()
         carry_forward = build_iva_compensation_carry_forward_report(
             states,
-            as_of_year=as_of_year or now().year,
+            as_of_year=as_of_year or today_madrid().year,
             operation=self._authority_operation,
         )
         return IvaCompensationHistoryReport(
@@ -662,7 +695,7 @@ class AppIvaRemoteStatePort:
             taxpayer_nif=taxpayer_nif,
             settings=settings,
         )
-        root = output_root or settings.cadrumo_live_state_dir / _WALLET_DIRNAME
+        root = output_root or storage_path(StorageCategory.LIVE_STATE_IVA_WALLET, settings=settings)
         if effect_guard is not None:
             async with effect_guard():
                 return persist_and_reconcile_iva_compensation_wallet(
@@ -776,48 +809,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
-async def pull_filed_history_with_shared_composition(
-    payload: FiledHistoryOperationRequest,
-    profile: TaxpayerProfile | None,
-    repository: SyncRunRecordRepositoryProtocol | None,
-    events: FiledHistoryEventSink | None,
-    ports: FiledObservationPersistencePorts,
-    filed_data_port: FiledDataCapturePort,
-    iva_remote_state_port: IvaRemoteStatePort,
-    notifications_ports: NotificationsPorts,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    browser_session_factory: BrowserSessionFactoryPort,
-    operator_scope_ports: OperatorScopePorts,
-    effect_guard: FiledEffectGuard,
-    on_session_write: SessionWriteReporter,
-):
-    """Invoke the filed-history service with the explicitly composed bundle.
-
-    Core types:
-    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
-    """
-    from ..application.live.filed_history_pull import pull_filed_history
-
-    return await pull_filed_history(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        browser_session_factory=browser_session_factory,
-        operator_scope_ports=operator_scope_ports,
-        filed_data_port=filed_data_port,
-        iva_remote_state_port=iva_remote_state_port,
-        notifications_ports=notifications_ports,
-        ports=ports,
-        output_root=payload.output_root,
-        profile=profile,
-        today=payload.today,
-        limit=payload.limit,
-        dry_run=payload.dry_run,
-        sync_run_repository=repository,
-        events=events,
-        effect_guard=effect_guard,
-        on_session_write=on_session_write,
-    )
-
-
 def taxpayer_ref(value: str | None) -> str:
     """Return a redacted taxpayer identity reference."""
     token = tax_id_identity_token(value) if value is not None else ""
@@ -896,7 +887,10 @@ def _decimal(value: object) -> str | None:
 
 
 __all__ = [
+    "AEAT_SEDE_FILED_REGISTER",
     "AppIvaRemoteStatePort",
+    "FiledDataPortFactory",
+    "FiledRegisterSource",
     "LiveStateComposition",
     "carry_forward_lot_row",
     "compose_filed_observation_persistence_ports",
@@ -904,7 +898,6 @@ __all__ = [
     "compose_notification_document_service",
     "compose_notifications_ports",
     "persist_and_reconcile_iva_compensation_wallet",
-    "pull_filed_history_with_shared_composition",
     "taxpayer_ref",
 ]
 
@@ -928,6 +921,7 @@ async def _capture_one_iva_history_declaration(
                 timeout=capture_timeout,
             )
         except (TimeoutError, CadrumoError, OSError) as exc:
+            raise_if_aeat_session_ended(exc)
             failures.append(
                 f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
                 f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
@@ -943,6 +937,7 @@ async def _capture_one_iva_history_declaration(
         except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
             raise
         except (TimeoutError, CadrumoError, OSError) as exc:
+            raise_if_aeat_session_ended(exc)
             failures.append(
                 f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
                 f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"

@@ -5,14 +5,18 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 
+from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS, LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.storage_environment import STORAGE_ROOT, normalize_storage_path
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
+from ...providers.domain.catalog import validate_loopback_http_base_url
+from ...providers.domain.record import LocalEngine
 from ..launch_environment import (
     ADVERTISED_VARIABLES,
     AGENT_LOG_LEVEL_VARIABLE,
@@ -22,6 +26,10 @@ from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     GATEWAY_SLOTS,
     HOSTED_ROOT_VARIABLE,
+    LLAMACPP_BASE_URL_VARIABLE,
+    LOCAL_ENGINE_VARIABLE,
+    NO_LOCAL_ENGINE,
+    OLLAMA_BASE_URL_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
     TOOL_SERVER_ARGUMENTS_VARIABLE,
@@ -65,17 +73,29 @@ def _write_package_manifest(root: Path, *, packages: str, executable: str) -> No
     )
 
 
+def _launch_environment(
+    tmp_path: Path, *, python: Path | None, received: Mapping[str, str], sys_platform: str
+) -> dict[str, str]:
+    return agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received=received,
+        local_engine=LocalEngine.LLAMACPP,
+        sys_platform=sys_platform,
+    )
+
+
 @pytest.mark.parametrize(
     ("platform", "name"), [("win32", "cadrumo_external_bin_dirs"), ("linux", "CADRUMO_EXTERNAL_BIN_DIRS")]
 )
 def test_declared_provider_binary_directories_reach_the_native_agent_host(
     tmp_path: Path, platform: str, name: str
 ) -> None:
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
+    environment = _launch_environment(
+        tmp_path,
         python=None,
         received={name: str(tmp_path), "CODEX_HOME": "private-account", "API_KEY": "private-key"},
         sys_platform=platform,
@@ -85,13 +105,16 @@ def test_declared_provider_binary_directories_reach_the_native_agent_host(
     assert "API_KEY" not in environment
 
 
-@pytest.mark.parametrize(
+_PACKAGED_NODE_LAYOUTS = pytest.mark.parametrize(
     ("platform", "python_name", "packages_relative", "node_relative", "separator"),
     [
         ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
         ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
     ],
 )
+
+
+@_PACKAGED_NODE_LAYOUTS
 def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     tmp_path: Path,
     platform: str,
@@ -110,14 +133,8 @@ def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     node.touch()
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     expected_directories = separator.join((str(node.parent), str(tmp_path / "codex"), str(tmp_path / "claude")))
@@ -132,13 +149,7 @@ def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == expected_directories
 
 
-@pytest.mark.parametrize(
-    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
-    [
-        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
-        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
-    ],
-)
+@_PACKAGED_NODE_LAYOUTS
 def test_missing_packaged_node_keeps_declared_provider_directories_without_phantom_entries(
     tmp_path: Path,
     platform: str,
@@ -154,27 +165,15 @@ def test_missing_packaged_node_keeps_declared_provider_directories_without_phant
     _write_package_manifest(python.parent, packages=packages_relative, executable=python_name)
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
     assert str(packages.parent.joinpath(*node_relative[:-1])) not in environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE]
 
 
-@pytest.mark.parametrize(
-    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
-    [
-        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
-        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
-    ],
-)
+@_PACKAGED_NODE_LAYOUTS
 @pytest.mark.parametrize("manifest_state", ["missing", "malformed"])
 def test_missing_or_malformed_package_manifest_never_injects_node_directory(
     tmp_path: Path,
@@ -198,14 +197,8 @@ def test_missing_or_malformed_package_manifest_never_injects_node_directory(
         manifest_path.write_text("{", encoding="utf-8")
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
@@ -230,14 +223,8 @@ def test_manifest_package_path_cannot_escape_the_python_root(
     node.touch()
     provider_bins = str(tmp_path / "codex")
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
@@ -276,6 +263,7 @@ def test_only_allow_listed_system_values_the_pinned_root_and_the_hosted_root_rea
         aeat=tmp_path / "aeat.exe",
         python=tmp_path / "python.exe",
         received=_RECEIVED,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="win32",
     )
     assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
@@ -302,6 +290,7 @@ def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
         aeat=tmp_path / "aeat",
         python=tmp_path / "python",
         received=received,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="linux",
     )
     assert environment["HOME"] == "/home/person"
@@ -338,6 +327,7 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         aeat=aeat,
         python=python,
         received=received,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
         profile_id=UUID("6e4a0f5c-9b8d-4c7e-8f2a-1b0c9d8e7f6a"),
     )
@@ -345,14 +335,14 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         AGENT_LOG_LEVEL_VARIABLE
     }
     assert {HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE} == AGENT_SLOTS
-    assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
+    assert AGENT_SLOTS | {"CADRUMO_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
     assert set(environment) >= GATEWAY_SLOTS
     assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
     assert not _RETIRED_INSTRUCTION_VARIABLES & set(environment)
     assert _RETIRED_RELAY_VARIABLE not in environment
     assert not (set(_RETIRED_PROGRAM_VARIABLES) | {_RETIRED_RELAY_VARIABLE}) & GATEWAY_SLOTS
     # The agent forwards the runtime's own root to what it starts, never the root the runtime itself received.
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(normalize_storage_path(tmp_path / "storage"))
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(normalize_storage_path(tmp_path / "storage"))
     assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
     assert environment[GATEWAY_PORT_VARIABLE] == environment[WORKER_PORT_VARIABLE] == "0"
 
@@ -369,6 +359,7 @@ def test_the_advertised_programs_tool_server_and_forwarded_names_are_plain_absol
         aeat=bin_directory / "aeat",
         python=bin_directory / "python",
         received={"PATH": "x"},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
     )
     assert environment[PROGRAM_AEAT_VARIABLE] == str(bin_directory / "aeat")
@@ -403,6 +394,7 @@ def test_a_program_the_runtime_cannot_name_is_left_out_not_advertised_empty(tmp_
         aeat=None,
         python=None,
         received={"PATH": "x"},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="linux",
     )
     assert PROGRAM_AEAT_VARIABLE not in environment
@@ -425,6 +417,7 @@ def test_the_search_path_reaches_the_agent_as_received(tmp_path: Path, platform:
         aeat=programs / "aeat.exe",
         python=programs / "python.exe",
         received={"PATH": search_path},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
     )
     assert environment["PATH"] == search_path
@@ -439,5 +432,54 @@ def test_agent_diagnostic_capture_level(tmp_path: Path, override: str | None, ex
         aeat=None,
         python=None,
         received={} if override is None else {AGENT_LOG_LEVEL_VARIABLE: override},
+        local_engine=LocalEngine.LLAMACPP,
     )
     assert environment[AGENT_LOG_LEVEL_VARIABLE] == expected
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux"])
+def test_the_agent_reaches_the_supervised_local_ai_server_and_no_inherited_one(tmp_path: Path, platform: str) -> None:
+    environment = _launch_environment(
+        tmp_path,
+        python=None,
+        received={
+            OLLAMA_BASE_URL_VARIABLE: "http://127.0.0.1:1",
+            LLAMACPP_BASE_URL_VARIABLE: "http://127.0.0.1:2",
+            "OLLAMA_HOST": "192.0.2.1:1",
+        },
+        sys_platform=platform,
+    )
+    assert environment[OLLAMA_BASE_URL_VARIABLE] == f"http://{LOCAL_AI_SERVER_ADDRESS}"
+    assert environment[LLAMACPP_BASE_URL_VARIABLE] == f"http://{LLAMA_SERVER_ADDRESS}"
+    assert LLAMA_SERVER_ADDRESS != LOCAL_AI_SERVER_ADDRESS
+    for variable in (OLLAMA_BASE_URL_VARIABLE, LLAMACPP_BASE_URL_VARIABLE):
+        assert validate_loopback_http_base_url(environment[variable]) == environment[variable]
+    assert "OLLAMA_HOST" not in environment
+
+
+@pytest.mark.parametrize("engine", list(LocalEngine))
+def test_the_profiles_engine_reaches_the_agent_and_no_inherited_one(tmp_path: Path, engine: LocalEngine) -> None:
+    other = next(held for held in LocalEngine if held is not engine)
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "relay",
+        aeat=None,
+        python=None,
+        received={LOCAL_ENGINE_VARIABLE: other.value},
+        local_engine=engine,
+    )
+    assert environment[LOCAL_ENGINE_VARIABLE] == engine.value
+
+
+def test_an_unreadable_engine_record_names_no_engine_and_no_inherited_one(tmp_path: Path) -> None:
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "relay",
+        aeat=None,
+        python=None,
+        received={LOCAL_ENGINE_VARIABLE: LocalEngine.OLLAMA.value},
+        local_engine=None,
+    )
+    assert environment[LOCAL_ENGINE_VARIABLE] == NO_LOCAL_ENGINE

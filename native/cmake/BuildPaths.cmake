@@ -28,7 +28,7 @@ function(cadrumo_require_physical_build_member path description)
       file(REAL_PATH "${current}" physical)
       set(normalized_current "${current}")
       cmake_path(ABSOLUTE_PATH normalized_current NORMALIZE OUTPUT_VARIABLE normalized_current)
-      if(CMAKE_HOST_WIN32)
+      if(CMAKE_HOST_WIN32 OR CMAKE_HOST_APPLE)
         string(TOLOWER "${physical}" physical)
         string(TOLOWER "${normalized_current}" normalized_current)
       endif()
@@ -42,10 +42,12 @@ endfunction()
 # Build output ownership. Helpers consume build-paths.json.
 set(CADRUMO_BUILD_DIRECTORIES
   GENERATED generated
+  TIMINGS timings
   TEMPORARY temporary
   RUNTIME inputs/runtime
   PYTHON_SDK inputs/python-sdk
   TOOLS inputs/build-tools
+  LLAMA_SERVER inputs/llama-server
   PRODUCT product
   AGENT inputs/agent
   BIN bin
@@ -64,6 +66,7 @@ set(CADRUMO_BUILD_DIRECTORIES
   DESKTOP_CARGO cargo/desktop
   DESKTOP_TESTING desktop/testing
   DESKTOP_RESULTS desktop/test-results
+  WINDOW_FIXTURES fixtures/window
   USER_DOCS_BUILD user-docs/build
   USER_DOCS_WORK user-docs/work
   USER_DOCS_STAGE user-docs/stage
@@ -74,20 +77,38 @@ set(CADRUMO_BUILD_DIRECTORIES
 set(build_paths "{\"paths\":{}}")
 string(JSON build_paths SET "${build_paths}" source "\"${CMAKE_SOURCE_DIR}\"")
 set(CADRUMO_BUILD_DIRECTORY_KEYS)
+set(build_directory_members)
 while(CADRUMO_BUILD_DIRECTORIES)
   list(POP_FRONT CADRUMO_BUILD_DIRECTORIES key relative)
+  if(NOT key MATCHES "^[A-Z][A-Z0-9_]*$"
+      OR NOT relative MATCHES "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*$")
+    message(FATAL_ERROR "Build output names require uppercase keys and lowercase kebab-case path segments: ${key} ${relative}")
+  endif()
+  if(key IN_LIST CADRUMO_BUILD_DIRECTORY_KEYS)
+    message(FATAL_ERROR "Duplicate build output key: ${key}")
+  endif()
+  if(relative IN_LIST build_directory_members)
+    message(FATAL_ERROR "Duplicate build output directory: ${relative}")
+  endif()
+  foreach(member IN LISTS build_directory_members)
+    if(relative MATCHES "^${member}/" OR member MATCHES "^${relative}/")
+      message(FATAL_ERROR "Overlapping build output directories: ${member} and ${relative}")
+    endif()
+  endforeach()
   list(APPEND CADRUMO_BUILD_DIRECTORY_KEYS "${key}")
+  list(APPEND build_directory_members "${relative}")
   set(CADRUMO_PATH_${key} "${CMAKE_BINARY_DIR}/${relative}")
   cadrumo_require_physical_build_member("${CADRUMO_PATH_${key}}" "CMake output directory")
   string(TOLOWER "${key}" name)
   string(JSON build_paths SET "${build_paths}" paths "${name}" "\"${relative}\"")
 endwhile()
 set(cleanup_groups [=[{
+  "timings": ["timings"],
   "stage": ["stage", "verification", "testing", "temporary"],
   "packages": ["packages"],
-  "dependencies": ["runtime", "python_sdk", "tools", "product", "agent"],
+  "dependencies": ["runtime", "python_sdk", "llama_server", "tools", "product", "agent"],
   "native": ["bin", "lib", "symbols", "cargo"],
-  "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
+  "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results", "window_fixtures"],
   "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]
 }]=])
 string(JSON build_paths SET "${build_paths}" cleanup "${cleanup_groups}")

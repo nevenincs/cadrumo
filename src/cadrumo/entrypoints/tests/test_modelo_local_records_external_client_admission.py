@@ -49,14 +49,20 @@ from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.casilla_id import validated_casilla_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
@@ -81,12 +87,12 @@ _PERIOD = Period.from_year_and_code(
     modelo_operation_test_support.MODELO_FILING_YEAR, modelo_operation_test_support.MODELO_PERIOD
 )
 _CASILLA = validated_casilla_id("19")
-_STORED_AT = datetime(2026, 4, 1, 9, 30, tzinfo=UTC)
 _OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"}
 
 _M145_CREATE = M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID
 _M145_VALIDATE = M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID
-_M145_YEAR = 2026
+_M145_YEAR = filing_year_envelope().horizon
+_STORED_AT = datetime(_M145_YEAR, 4, 1, 9, 30, tzinfo=UTC)
 _M145_PERIOD = M145CommunicationPeriod.COMMUNICATION
 _WORKER = {
     "perceptor.nif": "12345678Z",
@@ -111,7 +117,7 @@ class _SessionHost:
 
 
 def _run(
-    driver: conformance._ExecutionDriver, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> tuple[OperationSubmission, OperationObservationSuccessV1]:
     submitted, observed = asyncio.run(
         driver.run(
@@ -193,14 +199,14 @@ def _stored_layers(profile_id: UUID) -> ObservationLayers:
 
 
 def _observation_result(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     submitted: OperationSubmission,
     observed: OperationObservationSuccessV1,
 ) -> ModeloLocalObservationMutationProjection:
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert observed.projection.effect is OperationEffect.UPDATED
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=_OBSERVATION,
@@ -362,14 +368,14 @@ def _draft_request(
 
 
 def _m145_result(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     definition_id: str,
     submitted: OperationSubmission,
     observed: OperationObservationSuccessV1,
 ) -> M145CommunicationOperationResult:
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -11,17 +12,12 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..application_environment import (
-    ApplicationEnvironment,
-    LaunchRefusedError,
-    compile_section,
-    load,
-    load_for_build,
-    reference_define,
-    reference_select,
-)
+from ..application_environment import load, load_for_build
+from ..environment_compile import compile_section
+from ..environment_models import ApplicationEnvironment
+from ..environment_reference import LaunchRefusedError, reference_define, reference_select
 from ..generate import generate
 from ..layout import load_layout
 from .google_identity import PUBLISHER_CLIENT_JSON
@@ -154,7 +150,7 @@ def test_vectors_cover_the_closed_environment_and_the_kdf_child_on_both_families
 
 _AGENT = "cadrumo-agent"
 _AGENT_SLOTS = {
-    "CADRUMO_LOCAL_STORAGE_ROOT",
+    "CADRUMO_STORAGE_ROOT",
     "CADRUMO_AGENT_HOSTED_ROOT",
     "CADRUMO_AGENT_PORT",
     "CADRUMO_AGENT_WORKER_PORT",
@@ -252,7 +248,13 @@ def test_browser_handoff_executable_is_scoped_to_gui_auth_and_dropped_from_provi
         for vector in _DECLARATION.launch_vectors
         if vector["profile"] == "agent-auth" and variable in vector["ambient"]
     ]
-    assert len(auth_vectors) == 2
+    assert len(auth_vectors) == 4
+    browser_code = [vector for vector in auth_vectors if "browser-code" in vector["arguments"]]
+    assert {vector["platform"] for vector in browser_code} == {"windows", "posix"}
+    assert all(
+        vector["environment"]["CADRUMO_AGENT_HOSTED_ROOT"] == vector["ambient"]["CADRUMO_AGENT_HOSTED_ROOT"]
+        for vector in browser_code
+    )
     for vector in auth_vectors:
         assert vector["environment"].get(variable) == vector["ambient"][variable]
 
@@ -381,12 +383,16 @@ def test_the_replay_detects_a_planted_disagreement() -> None:
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_the_contract_carries_the_target_familys_vectors(tmp_path: Path, target: str) -> None:
+def test_the_target_familys_vectors_are_test_inputs_the_packaged_contract_never_carries(
+    tmp_path: Path, target: str
+) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
     family = "windows" if target.startswith("windows") else "posix"
     expected = [vector["name"] for vector in _DECLARATION.launch_vectors if vector["platform"] == family]
-    assert [vector["name"] for vector in section["vectors"]] == expected
+    assert "vectors" not in section
+    packaged = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    assert "LAUNCH_VECTORS" not in packaged and "LaunchVector" not in packaged
+    replayed = (tmp_path / "contract_vectors.rs").read_text(encoding="utf-8")
+    assert re.findall(r'LaunchVector \{ name: "([^"]+)"', replayed) == expected
     assert section == compile_section(load_for_build(REPO_ROOT), load_layout(target))
-    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
-    assert generated.count("    LaunchVector { name: ") == len(expected)

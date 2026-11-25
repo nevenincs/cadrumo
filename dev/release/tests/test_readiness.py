@@ -283,7 +283,7 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
     # Ensure a real, distinguishable mtime ordering regardless of filesystem
     # timestamp resolution.
     os.utime(older_manifest, (1000, 1000))
-    os.utime(newer_manifest, (2000, 2000))
+    os.utime(newer_manifest, (3000, 3000))
 
     check = readiness.check_latest_packaging_smoke_evidence(root)
 
@@ -582,7 +582,7 @@ def test_main_cli_json_contract_blocks_without_distribution_evidence(tmp_path: P
 
 def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
     """Sanity check against the ACTUAL repository: version surfaces agree today."""
-    root = readiness._repo_root()
+    root = readiness.readiness_repo_root()
     assert (root / "pyproject.toml").is_file()
     assert (root / ".release-please-manifest.json").is_file()
 

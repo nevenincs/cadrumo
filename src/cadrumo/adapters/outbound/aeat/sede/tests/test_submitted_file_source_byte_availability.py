@@ -23,6 +23,7 @@ from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_base import RegistrySourceKind
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_observations import (
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
@@ -31,18 +32,21 @@ from ..declarations_observations import (
 )
 from ..errors import SedeParseError
 from ..schema import FiledDeclaracionArtefact
-from ._declarations_support import (
-    _DECLARATIONS_LISTING_URL,
-    _SUBMITTED_FILE_100_2023_0A,
-    _filed_observation,
-    _submitted_file_payload,
+from .declarations_support import (
+    DECLARATIONS_LISTING_URL,
+    SUBMITTED_FILE_100_2023_0A,
+    filed_observation,
+    specimen_exercise,
+    submitted_file_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 _FIXED_WIDTH_CONTEXTS = pytest.mark.parametrize(
     ("modelo", "ejercicio", "period_code"),
-    [("111", 2025, "1T"), ("130", 2026, "1T")],
+    [("111", _YEAR, "1T"), ("130", _YEAR, "1T")],
 )
 
 
@@ -62,11 +66,11 @@ def _declaration(modelo: str, ejercicio: int, period_code: str, expediente_id: s
 def _artefact(body: bytes) -> FiledDeclaracionArtefact:
     return FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        source_url=AnyHttpUrl(DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2026, 5, 5, 6, 9, 7, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 5, 6, 9, 7, tzinfo=UTC),
     )
 
 
@@ -118,7 +122,7 @@ def test_record_design_citations_survive_into_registry_observations(
     assert cited_casillas
 
     registry_observation = registry_observation_from_filed_declaration(
-        _filed_observation(
+        filed_observation(
             modelo=modelo,
             ejercicio=ejercicio,
             period=period_code,
@@ -135,7 +139,7 @@ def test_record_design_citations_survive_into_registry_observations(
 
 
 def test_header_read_refuses_a_layout_citing_an_uncatalogued_source(operation: PinnedAuthorityOperation) -> None:
-    published = operation.snapshot("111", filing_year=2025, period="1T")
+    published = operation.snapshot("111", filing_year=_YEAR, period="1T")
     record_design_id = _record_design_ids(published)[0]
     snapshot = _without_source(published, record_design_id)
 
@@ -144,7 +148,7 @@ def test_header_read_refuses_a_layout_citing_an_uncatalogued_source(operation: P
 
 
 def test_header_read_still_yields_nothing_for_an_unparseable_fichero(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("111", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("111", filing_year=_YEAR, period="1T")
 
     assert (
         observed_header_facts_from_submitted_file(snapshot=snapshot, body=b"not a fichero", operation=operation) == ()
@@ -152,15 +156,16 @@ def test_header_read_still_yields_nothing_for_an_unparseable_fichero(operation: 
 
 
 def test_xml_dictionary_classified_without_bytes_refuses_the_read(operation: PinnedAuthorityOperation) -> None:
-    published = operation.snapshot("100", filing_year=2023, period="0A")
+    ejercicio = specimen_exercise(SUBMITTED_FILE_100_2023_0A)
+    published = operation.snapshot("100", filing_year=ejercicio, period="0A")
     dictionary_id = str(resolve_export_layout(published).layout.dictionary_source_ref)
     snapshot = _with_source_kind(published, dictionary_id, RegistrySourceKind.RECORD_DESIGN)
-    body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+    body = submitted_file_payload(SUBMITTED_FILE_100_2023_0A)
 
     with pytest.raises(SedeParseError) as refusal:
         observed_casillas_from_submitted_file(
             snapshot=snapshot,
-            declaration=_declaration("100", 2023, "0A", "202310010000001A"),
+            declaration=_declaration("100", ejercicio, "0A", f"{ejercicio}10010000001A"),
             body=body,
             artefact=_artefact(body),
             operation=operation,
@@ -170,7 +175,7 @@ def test_xml_dictionary_classified_without_bytes_refuses_the_read(operation: Pin
 
 
 def test_embedded_source_missing_from_the_generation_fails_loudly(operation: PinnedAuthorityOperation) -> None:
-    published = operation.snapshot("111", filing_year=2025, period="1T")
+    published = operation.snapshot("111", filing_year=_YEAR, period="1T")
     record_design_id = _record_design_ids(published)[0]
     snapshot = _with_source_kind(published, record_design_id, RegistrySourceKind.DICTIONARY)
 

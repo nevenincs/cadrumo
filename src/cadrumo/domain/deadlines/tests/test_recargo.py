@@ -9,6 +9,7 @@ completo de retraso"), so the schedule is keyed on completed months.
 
 from __future__ import annotations
 
+import calendar
 import inspect
 from datetime import date
 from decimal import Decimal
@@ -18,8 +19,9 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import DeadlineValidationError
-from ..models import Recovery
+from ..models import RecargoBand, Recovery
 from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -30,6 +32,8 @@ from ..recargo import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_recargo_bands_load_from_published_authority_in_order(operation: PinnedAuthorityOperation) -> None:
@@ -119,10 +123,10 @@ def test_completed_months_counts_only_whole_months() -> None:
     Deadline 2026-04-20: at 2026-05-19 zero completed months (1 day short of
     the May-20 anniversary); at 2026-05-20 exactly one completed month.
     """
-    closes = date(2026, 4, 20)
-    assert completed_months_late(closes, date(2026, 5, 19)) == 0
-    assert completed_months_late(closes, date(2026, 5, 20)) == 1
-    assert completed_months_late(closes, date(2026, 6, 20)) == 2
+    closes = date(_YEAR, 4, 20)
+    assert completed_months_late(closes, date(_YEAR, 5, 19)) == 0
+    assert completed_months_late(closes, date(_YEAR, 5, 20)) == 1
+    assert completed_months_late(closes, date(_YEAR, 6, 20)) == 2
     assert completed_months_late(closes, closes) == 0
 
 
@@ -130,16 +134,17 @@ def test_build_recovery_uses_completed_months_not_day_bracket(operation: PinnedA
     """A filing ~1 completed month late carries 2%, not a coarse bracket midpoint.
 
     Deadline 2026-04-20, presented 2026-06-19 → 1 completed month (the June-20
-    anniversary is not yet reached) → 2% per Art. 27.2. The pre-fix day-bracket
-    table returned 3% for this case; the completed-month computation is exact.
+    anniversary is not yet reached) → 2% per Art. 27.2. The completed-month
+    computation is exact.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2026, 6, 19),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 6, 19),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.still_filable is True
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
     assert recovery.recargo_band.interest_applies is False
@@ -161,13 +166,14 @@ def test_load_recargo_bands_exposes_no_raw_path_override() -> None:
 
 def test_twelve_month_anniversary_is_same_day_next_year() -> None:
     """The twelve-month term is the same day-of-month twelve months later."""
-    assert twelve_month_anniversary(date(2026, 4, 20)) == date(2027, 4, 20)
-    assert twelve_month_anniversary(date(2026, 1, 30)) == date(2027, 1, 30)
+    assert twelve_month_anniversary(date(_YEAR, 4, 20)) == date(_YEAR + 1, 4, 20)
+    assert twelve_month_anniversary(date(_YEAR, 1, 30)) == date(_YEAR + 1, 1, 30)
 
 
 def test_twelve_month_anniversary_clamps_leap_day() -> None:
     """A 29 February close clamps to 28 February in a non-leap target year."""
-    assert twelve_month_anniversary(date(2024, 2, 29)) == date(2025, 2, 28)
+    leap_year = next(year for year in filing_year_envelope().years if calendar.isleap(year))
+    assert twelve_month_anniversary(date(leap_year, 2, 29)) == date(leap_year + 1, 2, 28)
 
 
 def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
@@ -178,10 +184,10 @@ def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
     término de los 12 meses". So the anniversary is not yet the tail; the day
     after is.
     """
-    closes = date(2026, 4, 20)
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 19)) is False
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 20)) is False
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 21)) is True
+    closes = date(_YEAR, 4, 20)
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 19)) is False
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 20)) is False
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 21)) is True
 
 
 def test_exact_twelve_month_anniversary_stays_in_graduated_band(
@@ -189,20 +195,18 @@ def test_exact_twelve_month_anniversary_stays_in_graduated_band(
 ) -> None:
     """The exact twelve-month anniversary resolves to 13% graduated, NOT the 15% tail.
 
-    Regression for the cross-domain-continuity audit finding
-    ``articulo-27-exact-twelve-month-boundary``: the demonstrated runtime case
-    (plazo 2026-04-20, presented 2027-04-20 — exactly twelve months later) wrongly
-    resolved to the 15% + intereses tail. Per Art. 27.2 LGT the anniversary is the
-    ``término`` of the twelve-month period and still belongs to the graduated
-    1%-per-completed-month band: 12 completed months → 1% + 12% = 13%, no interest.
+    Per Art. 27.2 LGT the anniversary is the ``término`` of the twelve-month period
+    and still belongs to the graduated 1%-per-completed-month band: 12 completed
+    months → 1% + 12% = 13%, no interest.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2027, 4, 20),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR + 1, 4, 20),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.recargo_band.id == "completed_months_12"
     assert recovery.recargo_band.surcharge_pct == Decimal("13.00")
     assert recovery.recargo_band.interest_applies is False
@@ -219,12 +223,13 @@ def test_day_after_twelve_month_anniversary_enters_interest_tail(
     still reports only twelve completed months.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2027, 4, 21),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR + 1, 4, 21),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
     assert recovery.recargo_band.interest_applies is True
@@ -235,24 +240,20 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
 ) -> None:
     """The grounding has exactly one home, so two copies cannot disagree.
 
-    ``Recovery`` used to mirror ``recargo_band.legal_ref`` onto a top-level
-    ``legal_ref`` with no equality invariant, so a payload could be built whose
-    top-level reference contradicted its nested one and both survived
-    ``model_dump()``. A renderer reading whichever slot it happened to know
-    about would then cite a different provision than the band it displays.
-
-    Removing the mirror makes the contradiction unconstructible rather than
-    merely discouraged: ``Recovery`` is ``extra="forbid"``, so supplying the
-    retired field is refused outright.
+    ``Recovery`` carries no top-level ``legal_ref`` beside ``recargo_band.legal_ref``.
+    A renderer reading whichever slot it knows about would otherwise cite a different
+    provision than the band it displays. ``Recovery`` is ``extra="forbid"``, so
+    supplying a top-level ``legal_ref`` is refused outright.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2026, 5, 21),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 5, 21),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
 
+    assert recovery is not None
     # The grounding is still reachable, and from one place only.
     assert "ley-58-2003" in recovery.recargo_band.legal_ref
     assert not hasattr(recovery, "legal_ref")
@@ -263,3 +264,40 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
             recargo_band=recovery.recargo_band,
             legal_ref="not-canonical",
         )
+
+
+def test_fixed_refund_has_no_recovery_and_never_loads_bands(
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_load(*, operation: PinnedAuthorityOperation) -> tuple[RecargoBand, ...]:
+        raise AssertionError("fixed refund must not load surcharge bands")
+
+    monkeypatch.setattr("cadrumo.domain.deadlines.recargo.load_recargo_bands", unexpected_load)
+    assert (
+        build_recovery_for_overdue(
+            closes_on=date(_YEAR, 9, 30),
+            reference_today=date(_YEAR, 11, 1),
+            modelo="360",
+            period=Period.from_year_and_code(_YEAR - 1, "0A"),
+            operation=operation,
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(("modelo", "period_code"), (("303", "1T"), ("210", "EVENT-1")))
+def test_variable_disposition_still_has_conditional_recovery(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    period_code: str,
+) -> None:
+    recovery = build_recovery_for_overdue(
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 5, 20),
+        modelo=modelo,
+        period=Period.from_year_and_code(_YEAR, period_code),
+        operation=operation,
+    )
+    assert recovery is not None
+    assert recovery.recargo_band.surcharge_pct == Decimal("2.00")

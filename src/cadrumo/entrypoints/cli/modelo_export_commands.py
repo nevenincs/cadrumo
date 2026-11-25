@@ -6,19 +6,20 @@ import typer
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ...application.modelo.export import ModeloExportResult
+from ...application.modelo.export_contracts import ModeloExportResult
 from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.work_export_contracts import ModeloExportRequest
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_cli_support import (
+from .common import emit_envelope
+from .modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
 )
-from .common import emit_envelope
-from .modelo_results import ModeloExportPayload
+from .modelo_query_results import ModeloExportPayload
+from .modelo_rendering import recorded_note_notices
 from .operation_modelo_export import run_modelo_export
 from .operation_modelo_verification import select_modelo_work_revision_for_cli
 
@@ -51,6 +52,32 @@ def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _trabajo_limitation_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.trabajo_deduction_not_computed",
+        message=tr("application.modelo.findings.trabajo_deduction_not_computed"),
+        context={
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
+def _cutoff_unverified_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.domiciliation_cutoff_unverified",
+        message=tr("tui.modelo.export.result.warning.cutoff_unverified"),
+        context={
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
 def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -65,16 +92,23 @@ def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     )
 
 
-def _export_notices(result: ModeloExportResult) -> list[Notice]:
+def export_notices(result: ModeloExportResult) -> list[Notice]:
+    """Build the notices attached to a modelo export result."""
     notices = [_local_export_evidence_notice(result)]
     if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
         notices.append(_development_software_identity_notice(result))
+    if result.domiciliation_cutoff_unverified:
+        notices.append(_cutoff_unverified_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
+    if result.trabajo_deductions_not_computed:
+        notices.append(_trabajo_limitation_notice(result))
+    notices.extend(recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[0])
     return notices
 
 
-def _export_text_lines(result: ModeloExportResult) -> list[str]:
+def export_text_lines(result: ModeloExportResult) -> list[str]:
+    """Build the tab-separated text lines reporting a modelo export result."""
     return [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",
@@ -91,6 +125,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
         f"evidence_status\t{result.local_evidence_status}",
         f"software_identity_grade\t{result.software_identity_grade or 'none'}",
         f"evidence_notice\t{result.official_evidence_message}",
+        *recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[1],
     ]
 
 
@@ -123,7 +158,9 @@ def modelo_export_verb(
         revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         selector=parse_revision_selector(operator_input.select),
-        default_for="export",
+        # The declaration's current calculation, as the window and the table export it, so a calculation not yet
+        # checked is refused by the export itself as not sealed; --select names another revision.
+        default_for=None,
     )
     target_revision_id = selected_revision.calculation_revision_id
     completed = run_modelo_export(
@@ -150,8 +187,8 @@ def modelo_export_verb(
         ctx,
         command="modelo.export",
         result=export_result,
-        lines=_export_text_lines(result),
-        notices=_export_notices(result),
+        lines=export_text_lines(result),
+        notices=export_notices(result),
     )
 
 

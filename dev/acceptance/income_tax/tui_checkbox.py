@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from textual.widgets import Checkbox
 
 
-async def _tick(pilot: Pilot[Any], box: Checkbox) -> bool:
+async def tui_checkbox_tick(pilot: Pilot[Any], box: Checkbox) -> bool:
     """Tick a checkbox as a filer does, with the space bar on it, and say whether it is ticked."""
     box.focus()
     await pilot.press("space")

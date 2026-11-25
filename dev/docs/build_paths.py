@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 DOCS_BUILD_ROOT_ENV = "CADRUMO_DOCS_BUILD_ROOT"
 DEFAULT_DOCS_BUILD_ROOT = Path("build") / "docs"
@@ -26,8 +26,9 @@ def docs_build_root(
     configured = environment.get(DOCS_BUILD_ROOT_ENV, "").strip()
     if not configured:
         return (REPO_ROOT if repo_root is None else repo_root).resolve() / DEFAULT_DOCS_BUILD_ROOT
-    storage_root = configured_storage_root(environ=environment, repository_root=repo_root)
-    return resolve_storage_path(configured, root=storage_root)
+    if Path(configured).is_absolute():
+        return resolve_storage_path(configured, root=Path(configured))
+    return resolve_storage_path(configured, root=configured_storage_root(environ=environment))
 
 
 def docs_html_root(

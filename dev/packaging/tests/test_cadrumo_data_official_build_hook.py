@@ -12,10 +12,10 @@ from typing import Generic, TypeVar
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
-from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from ..distribution_limits import PYPI_FILE_CAP_BYTES
 from ..hashing import sha256_path
 from ..lane_verification_core import run_checked
 

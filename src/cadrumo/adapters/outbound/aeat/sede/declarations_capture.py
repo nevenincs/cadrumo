@@ -6,20 +6,28 @@ Core types:
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from .....application.live.expedientes_ports import ExpedientesDeclaration
+from .....application.live.filed_observation_persistence import filed_observation_filing_kind
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from .....domain.calculations.registry.observation_fold import complementaria_only_casilla_ids
 from .....domain.calculations.registry.relations import relation_source_requirements, source_presence_gaps
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .._playwright import BrowserContext, Locator, Page, Playwright
-from ._declarations_fetch import (
+from .....domain.modelos.filing_kind_evidence import (
+    ComplementariaOnlySourceOutcome,
+    SubmittedFileFilingKindMarker,
+    complementaria_only_source_outcome,
+)
+from ..playwright import BrowserContext, Locator, Page, Playwright
+from .declarations_fetch import (
     capture_row_pdf_artefact,
     capture_submitted_file_artefact,
     listing_url_for,
@@ -27,19 +35,20 @@ from ._declarations_fetch import (
 )
 from .declarations_observations import (
     FiledDeclaracionArtefactSink,
-    _declaration_pdf_extraction_profile_provisional,
-    _observed_casillas_from_declaration_pdf,
-    _read_guard_policy_from_snapshot,
-    _register_row_artefact,
-    _registry_snapshot_for_declaration,
-    _store_artefact,
-    _submitted_file_coverage_for_casillas,
-    _submitted_file_layout_refusal,
-    _with_derived_303_compensation_available_observation,
+    declaration_pdf_extraction_profile_provisional,
+    observed_casillas_from_declaration_pdf,
     observed_casillas_from_submitted_file,
+    observed_filing_kind_marker_from_submitted_file,
     observed_header_facts_from_submitted_file,
+    read_guard_policy_from_snapshot,
+    register_row_artefact,
+    registry_snapshot_for_declaration,
+    store_artefact,
+    submitted_file_coverage_for_casillas,
+    submitted_file_layout_refusal,
+    with_derived_303_compensation_available_observation,
 )
-from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError
+from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 if TYPE_CHECKING:
@@ -79,7 +88,7 @@ async def _capture_declaration_copy_if_available(
         kind="declaration_pdf",
         read_policy=read_policy,
     )
-    stored_declaration_pdf = _store_artefact(
+    stored_declaration_pdf = store_artefact(
         artefact_sink,
         observation_key=observation_key,
         artefact=declaration_pdf,
@@ -104,12 +113,14 @@ async def _capture_submitted_file_if_available(
     tuple[FiledDeclaracionArtefact, ...],
     tuple[ObservedCasillaValue, ...],
     tuple[ObservedHeaderFact, ...],
+    SubmittedFileFilingKindMarker | None,
     dict[str, float],
 ]:
     """Capture and interpret the optional submitted file, recording soft refusals."""
     artefacts: tuple[FiledDeclaracionArtefact, ...] = ()
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
     extraction_coverage: dict[str, float] = {}
     if (
         declaration.archive_link_text is not None and declaration.archive_link_text
@@ -126,7 +137,7 @@ async def _capture_submitted_file_if_available(
         except (JustificanteFetchError, SedeNavigationError) as exc:
             metadata["submitted_file_capture_error"] = str(exc)
         else:
-            submitted_artefact = _store_artefact(
+            submitted_artefact = store_artefact(
                 artefact_sink,
                 observation_key=observation_key,
                 artefact=submitted_artefact,
@@ -142,14 +153,14 @@ async def _capture_submitted_file_if_available(
                     operation=operation,
                 )
                 try:
-                    extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
+                    extraction_coverage["submitted_file"] = submitted_file_coverage_for_casillas(
                         snapshot=snapshot,
                         body=submitted_body,
                         casillas=casillas,
                         operation=operation,
                     )
                 except RegistryValidationError as exc:
-                    raise _submitted_file_layout_refusal(
+                    raise submitted_file_layout_refusal(
                         snapshot=snapshot,
                         declaration=declaration,
                         artefact=submitted_artefact,
@@ -160,9 +171,14 @@ async def _capture_submitted_file_if_available(
                     body=submitted_body,
                     operation=operation,
                 )
+                filing_kind_marker = observed_filing_kind_marker_from_submitted_file(
+                    snapshot=snapshot,
+                    body=submitted_body,
+                    operation=operation,
+                )
             except (RegistryValidationError, SedeParseError) as exc:
                 _record_submitted_file_extraction_error(metadata, exc)
-    return artefacts, casillas, headers, extraction_coverage
+    return artefacts, casillas, headers, filing_kind_marker, extraction_coverage
 
 
 def _resolve_captured_casillas(
@@ -176,13 +192,13 @@ def _resolve_captured_casillas(
 ) -> tuple[tuple[ObservedCasillaValue, ...], dict[str, float]]:
     """Choose submitted-file observations, PDF fallback, or refuse no source."""
     if not casillas and declaration_pdf_body is not None:
-        casillas = _observed_casillas_from_declaration_pdf(
+        casillas = observed_casillas_from_declaration_pdf(
             snapshot=snapshot,
             declaration=declaration,
             body=declaration_pdf_body,
         )
         extraction_coverage["declaration_pdf"] = 1.0
-        if _declaration_pdf_extraction_profile_provisional(snapshot):
+        if declaration_pdf_extraction_profile_provisional(snapshot):
             metadata["declaration_pdf_extraction_profile_provisional"] = "true"
     elif (
         not casillas
@@ -207,8 +223,8 @@ async def capture_filed_declaration_observation_from_row(
     artefact_sink: FiledDeclaracionArtefactSink | None,
 ) -> FiledDeclaracionObservation:
     authenticated_identity = (session.identity_nif or "").strip()
-    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration, operation=operation)
-    read_policy = _read_guard_policy_from_snapshot(snapshot)
+    snapshot = registry_snapshot or registry_snapshot_for_declaration(declaration, operation=operation)
+    read_policy = read_guard_policy_from_snapshot(snapshot)
     filing_period = declaration.period
     observation_key = (declaration.modelo, declaration.ejercicio, filing_period, declaration.expediente_id)
     from pydantic import AnyHttpUrl
@@ -220,9 +236,9 @@ async def capture_filed_declaration_observation_from_row(
             ejercicio=declaration.ejercicio,
         ),
     )
-    register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
+    register_row, register_row_body = register_row_artefact(declaration, source_url=listing_url)
     artefacts: list[FiledDeclaracionArtefact] = [
-        _store_artefact(artefact_sink, observation_key=observation_key, artefact=register_row, body=register_row_body),
+        store_artefact(artefact_sink, observation_key=observation_key, artefact=register_row, body=register_row_body),
     ]
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
@@ -238,7 +254,7 @@ async def capture_filed_declaration_observation_from_row(
         read_policy=read_policy,
     )
     artefacts.append(
-        _store_artefact(artefact_sink, observation_key=observation_key, artefact=justificante, body=justificante_body),
+        store_artefact(artefact_sink, observation_key=observation_key, artefact=justificante, body=justificante_body),
     )
 
     declaration_copy_artefacts, declaration_pdf_body = await _capture_declaration_copy_if_available(
@@ -250,7 +266,13 @@ async def capture_filed_declaration_observation_from_row(
         artefact_sink=artefact_sink,
     )
     artefacts.extend(declaration_copy_artefacts)
-    submitted_artefacts, casillas, headers, extraction_coverage = await _capture_submitted_file_if_available(
+    (
+        submitted_artefacts,
+        casillas,
+        headers,
+        filing_kind_marker,
+        extraction_coverage,
+    ) = await _capture_submitted_file_if_available(
         context=context,
         page=page,
         row_locator=row_locator,
@@ -283,6 +305,7 @@ async def capture_filed_declaration_observation_from_row(
         artefacts=tuple(artefacts),
         casillas=casillas,
         headers=headers,
+        filing_kind_marker=filing_kind_marker,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -325,14 +348,14 @@ async def capture_previous_filing_observations(
         ):
             source_period = requirement.periods[0]
             rows = await register.walk(modelo=requirement.source_modelo, ejercicio=requirement.filing_year)
-            declaration = _select_authoritative_declaration(
+            declaration = declarations_capture_select_authoritative_declaration(
                 tuple(row for row in rows if row.period.registry_token == source_period),
                 modelo=requirement.source_modelo,
                 ejercicio=requirement.filing_year,
                 period_token=source_period,
                 context="previous-filing requirement",
             )
-            observation = _with_derived_303_compensation_available_observation(
+            observation = with_derived_303_compensation_available_observation(
                 await register.capture_observation(declaration, artefact_sink=artefact_sink),
                 operation=operation,
             )
@@ -392,19 +415,27 @@ async def capture_relation_source_observations(
     ) as register:
         for (modelo, source_year, source_period), source_casilla_ids in sorted(required_source_casilla_ids.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
-            declaration = _select_authoritative_declaration(
+            declaration = declarations_capture_select_authoritative_declaration(
                 tuple(row for row in rows if row.period.registry_token == source_period),
                 modelo=modelo,
                 ejercicio=source_year,
                 period_token=source_period,
                 context="relation source requirement",
             )
-            observation = _with_derived_303_compensation_available_observation(
+            observation = with_derived_303_compensation_available_observation(
                 await register.capture_observation(declaration, artefact_sink=artefact_sink),
                 operation=operation,
             )
-            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(source_casilla_ids.difference(observed_casillas))
+            missing, contradicted = relation_source_gaps(
+                observation,
+                source_casilla_ids,
+                operation=operation,
+            )
+            if contradicted:
+                raise SedeParseError(
+                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
+                    f"is an original declaration carrying nonzero complementaria-only casillas {contradicted!r}",
+                )
             if missing:
                 raise SedeParseError(
                     f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
@@ -414,7 +445,53 @@ async def capture_relation_source_observations(
     return tuple(observations)
 
 
-def _select_authoritative_declaration(
+def relation_source_gaps(
+    observation: FiledDeclaracionObservation,
+    source_casilla_ids: set[CasillaId],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[CasillaId], list[CasillaId]]:
+    """Return the missing and the contradicted source casillas of one captured filing.
+
+    A casilla the captured filing does not carry counts as present when the
+    shared complementaria-only predicate proves it zero: the filing's
+    submitted-file marker says original and the filing's own revision declares
+    the casilla complementaria-only. A non-numeric or unreadable value takes no
+    part in that proof and is left as observed.
+    """
+    values: dict[CasillaId, Decimal | None] = {}
+    for casilla in observation.casillas:
+        try:
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError):
+            values[casilla.casilla_id] = None
+    complementaria_only: frozenset[CasillaId]
+    try:
+        revision = operation.revision(observation.modelo, observation.registry_snapshot_ref.revision_id)
+    except RegistrySnapshotError:
+        complementaria_only = frozenset[CasillaId]()
+    else:
+        complementaria_only = complementaria_only_casilla_ids(revision)
+    filing_kind = filed_observation_filing_kind(observation)
+    missing: list[CasillaId] = []
+    contradicted: list[CasillaId] = []
+    for casilla_id in sorted(source_casilla_ids):
+        if casilla_id in values and values[casilla_id] is None:
+            continue
+        outcome = complementaria_only_source_outcome(
+            casilla_id,
+            observed_value=values.get(casilla_id),
+            filing_kind=filing_kind,
+            complementaria_only_casilla_ids=complementaria_only,
+        )
+        if outcome is ComplementariaOnlySourceOutcome.UNRESOLVED:
+            missing.append(casilla_id)
+        elif outcome is ComplementariaOnlySourceOutcome.CONTRADICTED:
+            contradicted.append(casilla_id)
+    return missing, contradicted
+
+
+def declarations_capture_select_authoritative_declaration(
     declarations: tuple[ExpedientesDeclaration, ...],
     *,
     modelo: str,

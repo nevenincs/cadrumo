@@ -22,7 +22,7 @@ from .. import session_store
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_state import ClaveMovilPageState, classify_clave_movil_page
 from ..provider_selection import select_provider
-from .test_auth_provider_real_lifecycle import _active_provider, _seed_clave_state, _settings
+from .test_auth_provider_real_lifecycle import active_provider, auth_provider_real_lifecycle_settings, seed_clave_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -35,7 +35,7 @@ async def test_external_submit_and_skipped_challenge_reach_protected_resource(tm
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             provider = ClaveMovilAuthProvider(
-                _settings(tmp_path, AuthProviderKind.CLAVE_MOVIL),
+                auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_MOVIL),
                 browser_session_factory=real_browser_factory(boundary=boundary, profile_name="recovery"),
             )
             external = Settings.external_constants()
@@ -45,7 +45,7 @@ async def test_external_submit_and_skipped_challenge_reach_protected_resource(tm
                     boundary.configure("clave-movil-representation-external-submit")
                     session = await provider.authenticate_for_target(target_url=target)
                 else:
-                    _seed_clave_state(AuthProviderKind.CLAVE_MOVIL, bucket_id=bucket_id)
+                    seed_clave_state(AuthProviderKind.CLAVE_MOVIL, bucket_id=bucket_id)
                     session = await provider.authenticate()
                     boundary.configure("clave-movil-representation-external-submit")
                 assertion = await provider.verify_for_target(session, target_url=target)
@@ -62,7 +62,7 @@ async def test_resume_recaptures_cookies_rotated_by_live_probe(tmp_path: Path, k
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-permanente-success")
-            provider, session = await _active_provider(kind, boundary=boundary, tmp_path=tmp_path, bucket_id=bucket_id)
+            provider, session = await active_provider(kind, boundary=boundary, tmp_path=tmp_path, bucket_id=bucket_id)
             try:
                 assert session.storage_state_path is not None
                 persisted = session_store.load(session.storage_state_path)
@@ -75,7 +75,7 @@ async def test_resume_recaptures_cookies_rotated_by_live_probe(tmp_path: Path, k
                 await provider.close()
             successor = select_provider(
                 kind,
-                settings=_settings(tmp_path, kind),
+                settings=auth_provider_real_lifecycle_settings(tmp_path, kind),
                 browser_session_factory=real_browser_factory(boundary=boundary, profile_name="successor"),
             )
             try:

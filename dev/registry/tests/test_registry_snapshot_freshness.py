@@ -6,13 +6,14 @@ import pytest
 
 from cadrumo.application.filing.runtime import RegistrySchemaAccessor, schema_provider_from_authority
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "130"
-_PERIOD = Period(filing_year=2024, code="1T")
+_PERIOD = Period(filing_year=filing_year_envelope().horizon, code="1T")
 
 
 def _schema_provider(period: Period) -> RegistrySchemaAccessor:
@@ -25,6 +26,7 @@ def _schema_provider(period: Period) -> RegistrySchemaAccessor:
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     """Repeated filing resolution serves the pinned entry without growing the cache.
 
@@ -37,14 +39,15 @@ def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     authority = compiled_bundled_authority()
 
     first = _schema_provider(_PERIOD).get_snapshot(_MODELO)
-    cache_size = len(authority._snapshots)
+    cache_size = len(authority.snapshots)
     warm = _schema_provider(_PERIOD).get_snapshot(_MODELO)
 
     assert warm == first
     assert warm is first
-    assert len(authority._snapshots) == cache_size
+    assert len(authority.snapshots) == cache_size
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_law_determined_resolution_is_preserved() -> None:
     """Resolution stays driven by ``(modelo, filing_year, period)``.
 
@@ -54,7 +57,7 @@ def test_law_determined_resolution_is_preserved() -> None:
     """
     authority = compiled_bundled_authority()
 
-    for filing_year in (2023, 2024):
+    for filing_year in filing_year_envelope().years:
         period = Period(filing_year=filing_year, code="1T")
         resolved = _schema_provider(period).get_snapshot(_MODELO)
         expected = authority.snapshot(_MODELO, filing_year=filing_year, period="1T")

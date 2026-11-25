@@ -24,6 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -46,6 +47,8 @@ from ..iva_ledger import (
     aggregate_iva_ledger_observations,
 )
 from .ledger_transaction_support import iva_transaction
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -286,7 +289,7 @@ def test_the_observation_contract_the_gate_front_runs_still_refuses(*, operation
             exemption_article=IvaExemptionArticle("art_20_other"),
             rate_kind=IvaRateKind("exempt"),
             applied_rate=Decimal("0"),
-            flow_direction=received_flow_direction(),
+            flow_direction=received_flow_direction(effective_date=_ON_DATE),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("0.00"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

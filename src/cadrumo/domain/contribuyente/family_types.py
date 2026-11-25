@@ -19,9 +19,10 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
+from ..calculations.registry.form_codes import exceeds_form_bound
 from .errors import ProfileValidationError
 
 
@@ -94,7 +95,7 @@ class MinimoDescendientesThresholds(BaseModel):
         ``renta-{year}-minimo-descendientes-declaracion-propia-rentas-limite-{year}``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rentas_anuales_limite: NonNegativeDecimal
     declaracion_propia_rentas_limite: NonNegativeDecimal
@@ -116,7 +117,7 @@ class GuarderiaMonthSpend(BaseModel):
     upper boundary is not this application's to determine.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     month: CalendarMonth
     amount_euros: NonNegativeInt
@@ -133,7 +134,7 @@ class _RentaPersonProfileBase(BaseModel):
     duplicate without altering any field constraint.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: SubjectTaxId | None = None
     display_name: str | None = None
@@ -166,4 +167,12 @@ class RentaDescendantProfile(_RentaPersonProfileBase):
 class RentaAscendantProfile(_RentaPersonProfileBase):
     """One ascendant row from the official Modelo 100 family section."""
 
-    cohabiting_descendant_count: int | None = Field(default=None, ge=0, le=10)
+    cohabiting_descendant_count: int | None = Field(default=None, ge=0)
+
+    @field_validator("cohabiting_descendant_count")
+    @classmethod
+    @pydantic_validation_boundary
+    def _count_fits_the_declared_bound(cls, count: int | None) -> int | None:
+        if count is not None and exceeds_form_bound(count, "m100.ascendant_cohabiting_descendants_max"):
+            raise ValueError("cohabiting descendant count is past the declared bound")
+        return count

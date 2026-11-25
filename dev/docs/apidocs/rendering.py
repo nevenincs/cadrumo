@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 import re
 from dataclasses import dataclass
 from typing import Annotated, Any, TypeAliasType, get_args, get_origin
+
+from pydantic import BaseModel
 
 _PYDANTIC_ALLOW_INF_NAN_URL = (
     "https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AllowInfNan"
@@ -72,6 +75,10 @@ def _annotated_parts(annotation: object) -> tuple[object, str] | None:
     if start < 0 or text[:start].rsplit(".", 1)[-1] != "Annotated" or not text.endswith("]"):
         return None
 
+    return _split_annotated_text(text, start)
+
+
+def _split_annotated_text(text: str, start: int) -> tuple[object, str] | None:
     parts: list[str] = []
     depth = 0
     quote: str | None = None
@@ -80,12 +87,7 @@ def _annotated_parts(annotation: object) -> tuple[object, str] | None:
     for index in range(start + 1, len(text) - 1):
         character = text[index]
         if quote is not None:
-            if escaped:
-                escaped = False
-            elif character == "\\":
-                escaped = True
-            elif character == quote:
-                quote = None
+            quote, escaped = _advance_quote(character, quote, escaped)
             continue
         if character in "'\"":
             quote = character
@@ -100,6 +102,14 @@ def _annotated_parts(annotation: object) -> tuple[object, str] | None:
     if len(parts) < 2 or not parts[0]:
         return None
     return parts[0], ", ".join(parts[1:])
+
+
+def _advance_quote(character: str, quote: str, escaped: bool) -> tuple[str | None, bool]:
+    if escaped:
+        return quote, False
+    if character == "\\":
+        return quote, True
+    return (None if character == quote else quote), False
 
 
 def _base_reference(base: object) -> str | None:
@@ -145,26 +155,30 @@ def attribute_type_components(annotation: object) -> tuple[str, str | None] | No
     """
     parts = _annotated_parts(annotation)
     if parts is not None:
-        base, metadata = parts
-        if "pattern=" not in metadata and "AllowInfNan(" not in metadata:
-            return None
-        if isinstance(base, str):
-            base_text = base.strip().strip("'\"")
-        elif isinstance(base, type):
-            base_text = _annotation_text(base) or ""
-            if base.__module__ == "builtins":
-                base_text = base.__qualname__
-        else:
-            base_text = _annotation_text(base) or ""
-        if re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", base_text) is None:
-            return None
-        return base_text, metadata
+        return _attribute_annotated_components(parts)
 
     if external_type_url(annotation) is not None:
         text = _annotation_text(annotation)
         if text is not None and re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", text):
             return text, None
     return None
+
+
+def _attribute_annotated_components(parts: tuple[object, str]) -> tuple[str, str] | None:
+    base, metadata = parts
+    if "pattern=" not in metadata and "AllowInfNan(" not in metadata:
+        return None
+    if isinstance(base, str):
+        base_text = base.strip().strip("'\"")
+    elif isinstance(base, type):
+        base_text = _annotation_text(base) or ""
+        if base.__module__ == "builtins":
+            base_text = base.__qualname__
+    else:
+        base_text = _annotation_text(base) or ""
+    if re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", base_text) is None:
+        return None
+    return base_text, metadata
 
 
 def format_type_hint(annotation: Any, config: Any = None) -> str | None:
@@ -191,3 +205,30 @@ def format_type_hint(annotation: Any, config: Any = None) -> str | None:
         return None
     label = text.rsplit(".", 1)[-1]
     return f"`{label} <{url}>`_"
+
+
+def complete_deferred_model(value: object) -> bool:
+    """Build a Pydantic model whose ``defer_build`` schema is still pending.
+
+    A deferred model exposes only the generic ``(**data)`` constructor until its
+    schema is built, so introspecting it earlier documents no fields. Returns
+    whether this call completed a model; any other value is left untouched and
+    an unresolvable annotation propagates to the caller. ``BaseModel`` itself
+    is left alone: it never reports complete, has no schema of its own, and
+    autodoc imports it from every module that subclasses it before it skips
+    imported members.
+    """
+    if (
+        not (isinstance(value, type) and issubclass(value, BaseModel))
+        or value is BaseModel
+        or value.__pydantic_complete__
+    ):
+        return False
+    value.model_rebuild(raise_errors=True)
+    return True
+
+
+def constructor_signature(model: type[BaseModel]) -> inspect.Signature:
+    """Return a model's real constructor signature, building a deferred schema first."""
+    complete_deferred_model(model)
+    return inspect.signature(model)

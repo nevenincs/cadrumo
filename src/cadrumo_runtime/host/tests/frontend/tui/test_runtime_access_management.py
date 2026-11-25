@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from threading import Event
 from typing import cast, override
 from uuid import UUID, uuid4
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
@@ -24,7 +22,9 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -35,11 +35,13 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....frontend.tui.runtime_access_management import RecoveryClientOpener, RuntimeAccessManagementScreen
+from ....frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from ....frontend.tui.runtime_recovery_client import RecoveryClientOpener
 from ....frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -239,12 +241,6 @@ def _session(profile_id: UUID, session_id: UUID) -> PublicAccessSession:
     )
 
 
-async def _until(pilot: Pilot[None], condition: Callable[[], bool]) -> None:
-    async with asyncio.timeout(6):
-        while not condition():
-            await pilot.pause(0.02)
-
-
 async def _assert_resume_replay_fenced(screen: RuntimeAccessManagementScreen, recovery: _RuntimeClient) -> None:
     """A disabled button alone cannot fence a programmatic retry."""
     assert screen.query_one("#runtime-access-resume", Button).disabled
@@ -277,26 +273,34 @@ async def test_inventory_denial_and_current_lock_keep_distinct_runtime_actions()
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(
-            pilot, lambda: str(client.session_id) in str(screen.query_one("#runtime-access-sessions", Static).content)
+        await settle_until(
+            pilot,
+            lambda: str(client.session_id) in str(screen.query_one("#runtime-access-sessions", Static).content),
+            "str(client.session_id) in str(screen.query_one('#runtime-access-ses...",
+            workers=False,
         )
         assert not screen.query_one("#runtime-access-view-automation", Button).disabled
         assert not screen.query("#runtime-access-revoke-session")
         target = uuid4()
         screen.query_one("#runtime-access-target", Input).value = str(target)
         screen.query_one("#runtime-access-deny-key", Button).press()
-        await _until(pilot, lambda: bool(client.denials) and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: bool(client.denials) and not screen._busy,
+            "bool(client.denials) and not screen._busy",
+            workers=False,
+        )
         assert client.denials == [(AutomationDenialKind.KEY, target)]
         screen.query_one("#runtime-access-deny-all", Button).press()
-        await _until(pilot, lambda: len(client.denials) == 2)
+        await settle_until(pilot, lambda: len(client.denials) == 2, "len(client.denials) == 2", workers=False)
         assert client.denials[-1] == (AutomationDenialKind.ALL, None)
         screen.query_one("#runtime-access-lock-current", Button).press()
-        await _until(pilot, lambda: client.locked)
+        await settle_until(pilot, lambda: client.locked, "client.locked", workers=False)
         assert not screen.query_one("#runtime-access-sessions", Static).content
         assert screen.query_one("#runtime-access-deny-key", Button).disabled
         assert not screen.query_one("#runtime-access-resume", Button).disabled
@@ -309,7 +313,7 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
     client = _RuntimeClient(uuid4(), admitted=True)
     created: list[RuntimeAutomationRequesterScreen] = []
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     async def open_requester(_profile_id: UUID) -> FrontendClient:
@@ -336,16 +340,31 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery, requester_factory=factory)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await _until(pilot, lambda: screen._admin_available and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: screen._admin_available and not screen._busy,
+            "screen._admin_available and not screen._busy",
+            workers=False,
+        )
         screen.query_one("#runtime-access-create-automation", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen))
-        await pilot.pause()
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen),
+            "isinstance(app.screen, RuntimeAutomationRequesterScreen)",
+            workers=False,
+        )
+        await settle(pilot, workers=False)
         requester = app.screen
         assert isinstance(requester, RuntimeAutomationRequesterScreen)
         assert created == [requester]
         assert requester._reviewer_client is client and requester._client is None
         requester.action_close()
-        await _until(pilot, lambda: app.screen is screen and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: app.screen is screen and not screen._busy,
+            "app.screen is screen and not screen._busy",
+            workers=False,
+        )
         assert screen._admin_available and not client.closed
         assert not screen.query_one("#runtime-access-create-automation", Button).disabled
 
@@ -354,7 +373,7 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
 async def test_api_human_refusal_fences_create_even_for_programmatic_button_event() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     def factory(_reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
@@ -363,11 +382,16 @@ async def test_api_human_refusal_fences_create_even_for_programmatic_button_even
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery, requester_factory=factory)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await _until(pilot, lambda: not screen._busy and not screen._admin_available)
+        await settle_until(
+            pilot,
+            lambda: not screen._busy and not screen._admin_available,
+            "not screen._busy and not screen._admin_available",
+            workers=False,
+        )
         button = screen.query_one("#runtime-access-create-automation", Button)
         assert button.disabled
         screen.on_button_pressed(Button.Pressed(button))
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert app.screen is screen and not screen._access_lost
         assert not screen.query_one("#runtime-access-lock-current", Button).disabled
 
@@ -387,12 +411,17 @@ async def test_session_detail_keeps_parent_grant_key_and_action_scope_visible() 
     )
     client.inventory = (session,)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(140, 48)) as pilot:
-        await _until(pilot, lambda: screen._admin_available and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: screen._admin_available and not screen._busy,
+            "screen._admin_available and not screen._busy",
+            workers=False,
+        )
         shown = str(screen.query_one("#runtime-access-sessions", Static).content)
         for identity in (
             session.session_id,
@@ -421,14 +450,24 @@ async def test_denial_receipt_distinguishes_denied_access_from_pending_native_cl
 
     client = PendingCleanupClient(uuid4(), admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(140, 48)) as pilot:
-        await _until(pilot, lambda: screen._admin_available and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: screen._admin_available and not screen._busy,
+            "screen._admin_available and not screen._busy",
+            workers=False,
+        )
         screen.query_one("#runtime-access-deny-all", Button).press()
-        await _until(pilot, lambda: bool(client.denials) and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: bool(client.denials) and not screen._busy,
+            "bool(client.denials) and not screen._busy",
+            workers=False,
+        )
         assert str(screen.query_one("#runtime-access-status", Static).content) == tr(
             "tui.runtime_access.denial_acknowledgement",
             access_denied=tr("flows.confirm.yes"),
@@ -436,7 +475,9 @@ async def test_denial_receipt_distinguishes_denied_access_from_pending_native_cl
         )
         session_id = client.session_id
         screen.query_one("#runtime-access-lock-current", Button).press()
-        await _until(pilot, lambda: client.locked and not screen._busy)
+        await settle_until(
+            pilot, lambda: client.locked and not screen._busy, "client.locked and not screen._busy", workers=False
+        )
         assert str(screen.query_one("#runtime-access-status", Static).content) == tr(
             "tui.runtime_access.sessions_locked", session_ids=str(session_id)
         )
@@ -447,14 +488,14 @@ async def test_profile_lock_uses_distinct_durable_denial_door() -> None:
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-lock-profile", Button).press()
-        await _until(pilot, lambda: bool(client.denials))
+        await settle_until(pilot, lambda: bool(client.denials), "bool(client.denials)", workers=False)
         assert client.denials == [(AutomationDenialKind.PROFILE_LOCK, None)]
         assert not client.locked
         assert screen.query_one("#runtime-access-lock-current", Button).disabled
@@ -468,7 +509,7 @@ async def test_recovery_owns_fresh_client_and_waits_for_native_proof_to_settle()
     recovery.release_proof.clear()
     opened = 0
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal opened
         opened += 1
         return recovery
@@ -477,19 +518,21 @@ async def test_recovery_owns_fresh_client_and_waits_for_native_proof_to_settle()
     proof_input = "private-test-proof"
     grant_id = uuid4()
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         password = screen.query_one("#runtime-access-password", Input)
         assert password.password
         password.value = proof_input
         screen.query_one("#runtime-access-grants", Input).value = str(grant_id)
         screen.query_one("#runtime-access-resume", Button).press()
-        await _until(pilot, recovery.proof_started.is_set)
+        await settle_until(pilot, recovery.proof_started.is_set, "recovery.proof_started.is_set", workers=False)
         assert password.value == ""
         assert screen.query_one("#runtime-access-close", Button).disabled
         screen.action_close()
         assert screen.is_mounted
         recovery.release_proof.set()
-        await _until(pilot, lambda: recovery.closed and not screen._busy)
+        await settle_until(
+            pilot, lambda: recovery.closed and not screen._busy, "recovery.closed and not screen._busy", workers=False
+        )
         assert opened == 1
         assert recovery.proof_seen == proof_input.encode()
         assert recovery.grants_seen == frozenset({grant_id})
@@ -504,19 +547,19 @@ async def test_invalid_grant_selection_wipes_password_before_opening_connection(
     client = _RuntimeClient(profile_id, admitted=True)
     opened = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal opened
         opened = True
         raise AssertionError("invalid selection cannot open recovery")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         password = screen.query_one("#runtime-access-password", Input)
         password.value = "private-test-proof"
         screen.query_one("#runtime-access-grants", Input).value = f"{uuid4()},"
         screen.query_one("#runtime-access-resume", Button).press()
-        await _until(pilot, lambda: password.value == "")
+        await settle_until(pilot, lambda: password.value == "", "password.value == ''", workers=False)
         assert not opened
         assert "private-test-proof" not in str(screen.query_one("#runtime-access-status", Static).content)
 
@@ -528,17 +571,17 @@ async def test_cancelled_recovery_retains_proof_and_connection_until_native_call
     recovery = _RuntimeClient(profile_id, admitted=False)
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "bounded-private-proof"
         task = asyncio.create_task(screen._perform("resume"))
-        await _until(pilot, recovery.proof_started.is_set)
+        await settle_until(pilot, recovery.proof_started.is_set, "recovery.proof_started.is_set", workers=False)
         task.cancel()
-        await pilot.pause(0.05)
+        await settle(pilot, workers=False)
         assert not task.done()
         assert not recovery.closed
         assert recovery.proof_buffer == bytearray(b"bounded-private-proof")
@@ -557,12 +600,12 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
     profile_id = uuid4()
     client = _RefusingInventoryClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: screen._access_lost)
+        await settle_until(pilot, lambda: screen._access_lost, "screen._access_lost", workers=False)
         assert not screen.query_one("#runtime-access-sessions", Static).content
         assert screen.query_one("#runtime-access-lock-current", Button).disabled
         assert screen.query_one("#runtime-access-lock-profile", Button).disabled
@@ -574,12 +617,17 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
 async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy and not screen._admin_available)
+        await settle_until(
+            pilot,
+            lambda: not screen._busy and not screen._admin_available,
+            "not screen._busy and not screen._admin_available",
+            workers=False,
+        )
         assert not screen._access_lost
         assert not screen.query_one("#runtime-access-lock-current", Button).disabled
         for suffix in (
@@ -594,7 +642,7 @@ async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() 
             assert screen.query_one(f"#runtime-access-{suffix}", Button).disabled
         assert not screen.query_one("#runtime-access-sessions", Static).content
         screen.query_one("#runtime-access-lock-current", Button).press()
-        await _until(pilot, lambda: client.locked)
+        await settle_until(pilot, lambda: client.locked, "client.locked", workers=False)
         assert screen._access_lost
         assert not client.closed
 
@@ -608,16 +656,19 @@ async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() 
 async def test_later_authority_or_transport_loss_clears_previously_rendered_private_rows(failure: Exception) -> None:
     client = _ExpiringInventoryClient(uuid4(), failure=failure)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(
-            pilot, lambda: str(client.session_id) in str(screen.query_one("#runtime-access-sessions", Static).content)
+        await settle_until(
+            pilot,
+            lambda: str(client.session_id) in str(screen.query_one("#runtime-access-sessions", Static).content),
+            "str(client.session_id) in str(screen.query_one('#runtime-access-ses...",
+            workers=False,
         )
         screen.query_one("#runtime-access-refresh", Button).press()
-        await _until(pilot, lambda: screen._access_lost)
+        await settle_until(pilot, lambda: screen._access_lost, "screen._access_lost", workers=False)
         assert not screen.query_one("#runtime-access-sessions", Static).content
         assert screen.query_one("#runtime-access-lock-current", Button).disabled
         assert screen.query_one("#runtime-access-deny-key", Button).disabled
@@ -629,16 +680,16 @@ async def test_foreign_recovery_client_is_closed_without_receiving_proof() -> No
     client = _RuntimeClient(uuid4(), admitted=True)
     foreign = _RuntimeClient(uuid4(), admitted=False)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return foreign
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         password = screen.query_one("#runtime-access-password", Input)
         password.value = "private-test-proof"
         screen.query_one("#runtime-access-resume", Button).press()
-        await _until(pilot, lambda: foreign.closed)
+        await settle_until(pilot, lambda: foreign.closed, "foreign.closed", workers=False)
         assert foreign.proof_seen is None
         assert password.value == ""
         assert not client.closed
@@ -653,15 +704,20 @@ async def test_selected_session_revoke_preserves_current_access_unless_cascade_r
     child_id = uuid4()
     client.selected_cascade = (selected_id, child_id)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-target", Input).value = str(selected_id)
         screen.query_one("#runtime-access-lock-selected", Button).press()
-        await _until(pilot, lambda: len(client.selected_targets) == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: len(client.selected_targets) == 1 and not screen._busy,
+            "len(client.selected_targets) == 1 and not screen._busy",
+            workers=False,
+        )
         assert client.selected_targets == [selected_id]
         assert client.selected_cascade == (selected_id, child_id)
         assert client.session_id == own_session_id
@@ -670,7 +726,7 @@ async def test_selected_session_revoke_preserves_current_access_unless_cascade_r
         client.selected_cascade = (selected_id, own_session_id)
         screen.query_one("#runtime-access-target", Input).value = str(selected_id)
         screen.query_one("#runtime-access-lock-selected", Button).press()
-        await _until(pilot, lambda: screen._access_lost)
+        await settle_until(pilot, lambda: screen._access_lost, "screen._access_lost", workers=False)
         assert client.selected_targets == [selected_id, selected_id]
         assert screen.query_one("#runtime-access-lock-selected", Button).disabled
         assert not screen.query_one("#runtime-access-close", Button).disabled
@@ -683,27 +739,22 @@ async def test_real_unmount_drains_recovery_and_wipes_proof_without_closing_borr
     recovery.release_proof.clear()
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "unmount-private-proof"
         screen.query_one("#runtime-access-resume", Button).press()
-        await _until(pilot, recovery.proof_started.is_set)
+        await settle_until(pilot, recovery.proof_started.is_set, "recovery.proof_started.is_set", workers=False)
         pilot.app.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not recovery.closed
         assert not client.closed
         recovery.release_proof.set()
 
-        def settled() -> bool:
-            return recovery.closed
-
-        async with asyncio.timeout(6):
-            while not settled():
-                await asyncio.sleep(0.01)
+        await settle_until(pilot, lambda: recovery.closed, "the recovery client to close", workers=False)
         assert recovery.proof_buffer is not None and not any(recovery.proof_buffer)
         assert not client.closed
 
@@ -715,29 +766,24 @@ async def test_unmount_during_recovery_open_closes_late_client_without_deliverin
     opening = asyncio.Event()
     release = asyncio.Event()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         opening.set()
         await release.wait()
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         password = screen.query_one("#runtime-access-password", Input)
         password.value = "late-private-proof"
         screen.query_one("#runtime-access-resume", Button).press()
-        await asyncio.wait_for(opening.wait(), 2)
+        await asyncio.wait_for(opening.wait(), SETTLE_TIMEOUT_SECONDS)
         pilot.app.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not recovery.closed
         release.set()
 
-        def settled() -> bool:
-            return recovery.closed
-
-        async with asyncio.timeout(6):
-            while not settled():
-                await asyncio.sleep(0.01)
+        await settle_until(pilot, lambda: recovery.closed, "the recovery client to close", workers=False)
         assert recovery.proof_seen is None
         assert password.value == ""
         assert not client.closed
@@ -752,12 +798,12 @@ async def test_recovery_refusal_keeps_primary_and_retryable_close_owner() -> Non
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         password = bytearray(b"private-refused-proof")
         with pytest.raises(FrontendRefusedError) as caught:
             await screen._recover_owned(password, frozenset())
@@ -780,12 +826,12 @@ async def test_successful_recovery_failed_close_is_retried_on_unmount() -> None:
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-successful-proof"
         await screen._perform("resume")
         assert recovery.proof_seen == b"private-successful-proof"
@@ -829,12 +875,12 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         else frozenset(),
     )
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-receipt-proof"
         screen.query_one("#runtime-access-grants", Input).value = str(selected_grant)
         await screen._perform("resume")
@@ -856,7 +902,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
 @pytest.mark.parametrize(
     "failure",
     [
-        RefusalError(RefusalCode.DEADLINE_EXCEEDED),
+        RefusalError(RefusalCode.TIMEOUT),
         FrontendRefusedError(RefusalCode.CONNECTION_CLOSED.value),
         OSError("private-dispatch-error-canary"),
     ],
@@ -867,12 +913,12 @@ async def test_dispatched_recovery_transport_failure_is_unknown_and_fences_repla
     recovery.proof_failure = failure
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-dispatch-proof"
         await screen._perform("resume")
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
@@ -892,16 +938,16 @@ async def test_recovery_pre_dispatch_failure_and_domain_refusal_allow_fresh_proo
     recovered = _RuntimeClient(client.profile_id, admitted=False)
     openings = 0
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal openings
         openings += 1
         if openings == 1:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return refused if openings == 2 else recovered
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         for proof in ("private-before-dispatch-proof", "private-domain-refused-proof"):
             screen.query_one("#runtime-access-password", Input).value = proof
             await screen._perform("resume")
@@ -929,16 +975,16 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
     recovery.wipe_in_port = False
     recovery.release_close.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-blocked-close-proof"
         recovering = asyncio.create_task(screen._perform("resume"))
         try:
-            await _until(pilot, recovery.close_started.is_set)
+            await settle_until(pilot, recovery.close_started.is_set, "recovery.close_started.is_set", workers=False)
             assert recovery.proof_buffer is not None and not any(recovery.proof_buffer)
             assert screen._resume_receipt is not None
             assert not recovering.done() and not recovery.closed
@@ -969,15 +1015,15 @@ async def test_cancelled_failed_recovery_preserves_body_and_retries_close_on_unm
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-cancelled-proof"
         task = asyncio.create_task(screen._perform("resume"))
-        await _until(pilot, recovery.proof_started.is_set)
+        await settle_until(pilot, recovery.proof_started.is_set, "recovery.proof_started.is_set", workers=False)
         task.cancel()
         task.cancel()
         assert not task.done()
@@ -1007,21 +1053,21 @@ async def test_unmount_drains_failed_recovery_then_retries_owned_close() -> None
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await _until(pilot, lambda: not screen._busy)
+        await settle_until(pilot, lambda: not screen._busy, "not screen._busy", workers=False)
         screen.query_one("#runtime-access-password", Input).value = "private-unmounted-proof"
         screen.query_one("#runtime-access-resume", Button).press()
-        await _until(pilot, recovery.proof_started.is_set)
+        await settle_until(pilot, recovery.proof_started.is_set, "recovery.proof_started.is_set", workers=False)
         pilot.app.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not recovery.closed
         assert recovery.close_calls == 0
         recovery.release_proof.set()
-        await _until(pilot, lambda: recovery.closed)
+        await settle_until(pilot, lambda: recovery.closed, "recovery.closed", workers=False)
         assert recovery.proof_buffer is not None and not any(recovery.proof_buffer)
     assert recovery.close_calls == 2
     assert client.close_calls == 0

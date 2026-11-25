@@ -32,15 +32,14 @@ from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
-    LazyBinding,
     LiteralValue,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+    translation_key,
 )
-from cadrumo_client.commands.shared_contracts import translation_key as _key
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
@@ -49,6 +48,7 @@ from cadrumo_client.contracts.command_ports import (
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .lazy_bindings import lazy_handler
 
 if TYPE_CHECKING:
     pass
@@ -69,6 +69,7 @@ _TOGGLE = ValueContract(
 _ENTITY_TYPE_CHOICES: tuple[str, ...] = ()
 _LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
+_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICES: tuple[str, ...] = ()
 _IRPF_SPECIAL_REGIME_CHOICES: tuple[str, ...] = ()
 _FISCAL_RESIDENCY_CHOICES: tuple[str, ...] = ()
 # This public wire vocabulary is shown by the import-pure command graph.  The
@@ -88,6 +89,7 @@ _SITUACION_FAMILIAR_METAVAR: Final = (
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_archive_cli": ".archive_commands",
+    "_ascendiente": ".ascendiente",
     "archive_reconcile": ".archive_reconcile",
     "_bucket_history": ".profile_history_commands",
     "_capabilities_cli": ".capability_commands",
@@ -102,10 +104,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_profile_repeatable_row": ".profile_row_commands",
     "restore_cli": ".restore_cli",
 }
-
-
-def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
@@ -133,7 +131,7 @@ def _option(
         declarations,
         value,
         ParameterDefault.required() if required else ParameterDefault.value(default),
-        _key(help_key),
+        translation_key(help_key),
         is_flag=flag,
         flag_value=True if flag else None,
         multiple=multiple,
@@ -158,7 +156,7 @@ def _argument(name: str, value: ValueContract, help_key: str, *, required: bool 
         name,
         value,
         ParameterDefault.required() if required else ParameterDefault.value(None),
-        _key(help_key),
+        translation_key(help_key),
     )
 
 
@@ -168,7 +166,7 @@ def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
         parent,
         token,
         CommandNodeKind.GROUP,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(no_args_is_help=True),
         (),
@@ -200,12 +198,12 @@ def _leaf(
         parent,
         token,
         CommandNodeKind.LEAF,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        _handler(module, handler),
+        lazy_handler(_HANDLER_MODULES, module, handler),
         _schema(
             schema_module,
             schema_name,
@@ -235,14 +233,14 @@ def _plantilla_media_leaf(
         "config_profile_plantilla_media",
         token,
         CommandNodeKind.LEAF,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        _handler("_plantilla_media", handler),
+        lazy_handler(_HANDLER_MODULES, "_plantilla_media", handler),
         _schema(
-            ".._config_plantilla_media_payloads",
+            "..config_plantilla_media_payloads",
             "ConfigProfilePlantillaMediaResult",
             f"config.profile.plantilla_media.{token}",
         ),
@@ -261,8 +259,8 @@ _WIZARD = "....application.wizard.results"
 _WIZARD_CONFIRM_FIELDS = frozenset(
     {
         "new-entity-first-two-profit-periods",
-        "ley-49-2002-option-declared",
-        "ley-49-2002-renunciation-declared",
+        "pago-fraccionado-art-40-3-elected",
+        "irpf-codigo-comercio-accounting",
         "iva-roi-enrolled",
         "iva-oss-enrolled",
         "iva-group-member-enrolled",
@@ -279,6 +277,7 @@ _WIZARD_CONFIRM_FIELDS = frozenset(
         "spouse-eu-eea-resident",
         "family-descendants-eu-eea-deduction",
         "family-minor-children-in-unit",
+        "family-convive-con-otro-progenitor",
         "has-employees",
         "pays-professionals-with-retencion",
         "art109-activity-income-withholding-ge-70pct",
@@ -314,10 +313,7 @@ _WIZARD_FIELDS = (
     "activity-start-date",
     "incn-prior-12-months",
     "new-entity-first-two-profit-periods",
-    "ley-49-2002-option-declared",
-    "ley-49-2002-option-date",
-    "ley-49-2002-renunciation-declared",
-    "ley-49-2002-renunciation-date",
+    "pago-fraccionado-art-40-3-elected",
     "iva-regime",
     "iva-m303-regime-composition",
     "iva-roi-enrolled",
@@ -351,6 +347,7 @@ _WIZARD_FIELDS = (
     "spouse-eu-eea-country",
     "family-descendants-eu-eea-deduction",
     "family-minor-children-in-unit",
+    "family-convive-con-otro-progenitor",
     "has-employees",
     "pays-professionals-with-retencion",
     "art109-activity-income-withholding-ge-70pct",
@@ -359,14 +356,9 @@ _WIZARD_FIELDS = (
     "modelo-111-no-retenciones-periods",
     "modelo-115-no-relevant-payment-periods",
     "irpf-estimation-regime",
-    "objective-estimation-modulos-iae-epigraph",
-    "objective-estimation-modulos-module-1-units",
-    "objective-estimation-modulos-module-2-units",
-    "objective-estimation-modulos-module-3-units",
-    "objective-estimation-modulos-module-4-units",
-    "objective-estimation-modulos-module-5-units",
-    "objective-estimation-modulos-module-6-units",
-    "objective-estimation-modulos-module-7-units",
+    "irpf-activity-income-imputation-criterion",
+    "irpf-activity-income-imputation-year",
+    "irpf-codigo-comercio-accounting",
     "irpf-special-regime",
     "irpf-special-regime-start-date",
     "does-intracomunitario",
@@ -377,7 +369,6 @@ _WIZARD_FIELDS = (
     "premio-loteria-gravamen-especial-trimestres",
     "llm-vision",
     "google-export",
-    "notes",
 )
 
 
@@ -390,6 +381,9 @@ _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
     "entity-type": ValueContract(DeferredTarget("builtins", "str"), choices=_ENTITY_TYPE_CHOICES),
     "legal-entity-form": ValueContract(DeferredTarget("builtins", "str"), choices=_LEGAL_ENTITY_FORM_CHOICES),
     "irpf-estimation-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_ESTIMATION_REGIME_CHOICES),
+    "irpf-activity-income-imputation-criterion": ValueContract(
+        DeferredTarget("builtins", "str"), choices=_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICES
+    ),
     "irpf-special-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_SPECIAL_REGIME_CHOICES),
     "fiscal-residency": ValueContract(DeferredTarget("builtins", "str"), choices=_FISCAL_RESIDENCY_CHOICES),
 }
@@ -418,8 +412,6 @@ def _wizard_option(field_key: str) -> OptionSpec:
         )
     if field_key in _WIZARD_CHECKBOX_FIELDS:
         return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key, default=(), multiple=True)
-    if field_key == "taxpayer-marital-status":
-        return replace(_option(name, (f"--{field_key}",), TEXT_VALUE, help_key), metavar="<1|2|3|4|5>")
     if field_key == "situacion-familiar":
         return replace(
             _option(name, (f"--{field_key}",), TEXT_VALUE, help_key),
@@ -475,17 +467,26 @@ _WIZARD_CREATE_PARAMETERS = (
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
 )
+_NONE_OPTION = _option(
+    "none",
+    ("--none",),
+    FLAG_VALUE,
+    "cli.config.profile.household.none_flag_help",
+    default=False,
+    flag=True,
+)
 PROFILE_COMMAND_SPECS = (
     _group("config_profile", "config", "profile", "cli.config.profile.help"),
     _group("config_profile_archive", "config_profile", "archive", "cli.config.profile.archive.help"),
     _group("config_profile_capabilities", "config_profile", "capabilities", "cli.config.profile.capabilities.help"),
+    _group("config_profile_ascendiente", "config_profile", "ascendiente", "cli.config.profile.ascendiente.help"),
     _group("config_profile_censo", "config_profile", "censo", "cli.config.profile.censo.help"),
     CommandSpec(
         "config_profile_descendiente",
         "config_profile",
         "descendiente",
         CommandNodeKind.GROUP,
-        _key("cli.config.profile.descendiente.help"),
+        translation_key("cli.config.profile.descendiente.help"),
         None,
         InvocationSpec(
             invoke_without_command=True,
@@ -494,9 +495,9 @@ PROFILE_COMMAND_SPECS = (
         ),
         (_LANGUAGE,),
         ENCRYPTED_READ,
-        _handler("_descendiente", "descendiente_door"),
+        lazy_handler(_HANDLER_MODULES, "_descendiente", "descendiente_door"),
         _schema(
-            ".._config_descendiente_payloads",
+            "..config_descendiente_payloads",
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
@@ -812,13 +813,88 @@ PROFILE_COMMAND_SPECS = (
         ),
     ),
     _leaf(
+        "config_profile_ascendiente_add",
+        "config_profile_ascendiente",
+        "add",
+        "cli.config.profile.ascendiente.add_help",
+        "_ascendiente",
+        "ascendiente_add",
+        "..config_ascendiente_payloads",
+        "ConfigProfileAscendienteAddResult",
+        ENCRYPTED_WRITE,
+        (
+            _option(
+                "ascendiente",
+                ("--ascendiente",),
+                TEXT_VALUE,
+                "cli.config.profile.ascendiente.add_flag_help",
+                multiple=True,
+            ),
+            _NONE_OPTION,
+            _LANGUAGE,
+        ),
+    ),
+    _leaf(
+        "config_profile_ascendiente_edit",
+        "config_profile_ascendiente",
+        "edit",
+        "cli.config.profile.ascendiente.edit_help",
+        "_ascendiente",
+        "ascendiente_edit",
+        "..config_ascendiente_payloads",
+        "ConfigProfileAscendienteEditResult",
+        ENCRYPTED_WRITE,
+        (
+            _argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.ascendiente.edit_index_help"),
+            _option(
+                "ascendiente",
+                ("--ascendiente",),
+                TEXT_VALUE,
+                "cli.config.profile.ascendiente.edit_flag_help",
+                multiple=True,
+            ),
+            _option(
+                "clear",
+                ("--clear",),
+                TEXT_VALUE,
+                "cli.config.profile.ascendiente.edit_clear_help",
+                multiple=True,
+            ),
+            _LANGUAGE,
+        ),
+    ),
+    _leaf(
+        "config_profile_ascendiente_list",
+        "config_profile_ascendiente",
+        "list",
+        "cli.config.profile.ascendiente.list_help",
+        "_ascendiente",
+        "ascendiente_list",
+        "..config_ascendiente_payloads",
+        "ConfigProfileAscendienteListResult",
+        ENCRYPTED_READ,
+        (_LANGUAGE,),
+    ),
+    _leaf(
+        "config_profile_ascendiente_remove",
+        "config_profile_ascendiente",
+        "remove",
+        "cli.config.profile.ascendiente.remove_help",
+        "_ascendiente",
+        "ascendiente_remove",
+        "..config_ascendiente_payloads",
+        "ConfigProfileAscendienteRemoveResult",
+        ENCRYPTED_DESTRUCTIVE,
+        (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.ascendiente.remove_index_help"), _LANGUAGE),
+    ),
+    _leaf(
         "config_profile_descendiente_add",
         "config_profile_descendiente",
         "add",
         "cli.config.profile.descendiente.add_help",
         "_descendiente",
         "descendiente_add",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteAddResult",
         ENCRYPTED_WRITE,
         (
@@ -827,9 +903,9 @@ PROFILE_COMMAND_SPECS = (
                 ("--descendiente",),
                 TEXT_VALUE,
                 "cli.config.profile.descendiente.add_flag_help",
-                required=True,
                 multiple=True,
             ),
+            _NONE_OPTION,
             _LANGUAGE,
         ),
     ),
@@ -840,7 +916,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.list_help",
         "_descendiente",
         "descendiente_list",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteListResult",
         ENCRYPTED_READ,
         (_LANGUAGE,),
@@ -852,7 +928,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.remove_help",
         "_descendiente",
         "descendiente_remove",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),

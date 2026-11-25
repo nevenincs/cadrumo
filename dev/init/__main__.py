@@ -8,14 +8,14 @@ Initialization and its internal phase selectors::
     python -m dev.init check    # just setup-check
 
 The recipes are argument-free, so the two modifiers are environment variables
-as well as flags: ``VAULTSPEC_INIT_JSON=1`` for the NDJSON event stream and
-``VAULTSPEC_INIT_FORCE=1`` to ignore the stamp.
+as well as flags: ``CADRUMO_INIT_JSON=1`` for the NDJSON event stream and
+``CADRUMO_INIT_FORCE=1`` to ignore the stamp.
 
-Why `setup` is fail-fast, when the fleet's `-all` aggregates are not
---------------------------------------------------------------------
+Why `setup` is fail-fast, when aggregates are not
+-------------------------------------------------
 
-The fleet rule is that an ``-all`` aggregate runs every step and exits with the
-first non-zero status, because those aggregates chain INDEPENDENT INSPECTORS: a
+An aggregate such as ``check-code`` runs every step and exits with the first
+non-zero status, because it chains INDEPENDENT INSPECTORS: a
 type error does not stop the markdown linter from having something true to say,
 and a developer wants the whole list in one pass.
 
@@ -46,8 +46,8 @@ import os
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT as _DEV_REPO_ROOT
 from dev.exit_codes import INIT_HOST_TOOL_MISSING, INIT_STALE, OK
+from dev.paths import REPO_ROOT
 
 from . import plan
 from .contract import (
@@ -126,10 +126,9 @@ def _repo_root() -> Path:
     """Return the worktree root.
 
     Returns:
-        The directory two levels above this file, which is the repository root
-        for ``dev/init/__main__.py`` in every repository in the fleet.
+        The directory two levels above this file, which is the repository root.
     """
-    return _DEV_REPO_ROOT
+    return REPO_ROOT
 
 
 def _truthy(name: str) -> bool:

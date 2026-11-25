@@ -30,7 +30,6 @@ from pydantic import BaseModel, Field
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from .m145_communication_period import M145CommunicationPeriod
@@ -88,7 +87,7 @@ class M145CommunicationServiceContract(BaseModel):
 def build_m145_communication_service_contract(
     *,
     period_token: M145CommunicationPeriod,
-    filing_year: int | None = None,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
@@ -100,20 +99,17 @@ def build_m145_communication_service_contract(
     export, or transition any communication, so the revision is read
     structurally rather than through a filing-grade snapshot.
     """
-    selected_filing_year = today_madrid().year if filing_year is None else filing_year
     requested_token = M145CommunicationPeriod(period_token).value
     revision = operation.revision_for_context(
         Modelo("145").value,
-        filing_year=selected_filing_year,
+        filing_year=filing_year,
         period=requested_token,
     )
-    declared_tokens = tuple(
-        period.lower() for period in revision.period_selector.periods_for_year(selected_filing_year)
-    )
+    declared_tokens = tuple(period.lower() for period in revision.period_selector.periods_for_year(filing_year))
     if requested_token not in declared_tokens:
         raise ValueError(
             f"Modelo 145 revision {revision.id!r} does not declare communication period {requested_token!r} "
-            f"for {selected_filing_year}; declared {declared_tokens!r}"
+            f"for {filing_year}; declared {declared_tokens!r}"
         )
     declared_surfaces = frozenset(str(link.surface) for link in revision.application_links)
     forbidden = tuple(sorted(declared_surfaces & _FORBIDDEN_SURFACES))

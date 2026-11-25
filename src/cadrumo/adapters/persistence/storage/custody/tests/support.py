@@ -6,8 +6,8 @@ from contextlib import ExitStack
 from pathlib import Path
 from uuid import UUID
 
-from .._capsule_data import replace_capsule_file
 from ..capsule import recognize_current_profile_capsule
+from ..capsule_data import replace_capsule_file
 from ..capsule_records import PROFILE_CUSTODY_LABEL_FILENAME, PROFILE_CUSTODY_LABEL_MAX_BYTES
 from ..errors import ProfileCustodyRecordError
 from ..filesystem_primitives import anchor_directory
@@ -51,7 +51,7 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
     from ..capsule_records import ProfileCustodyCapsuleLabel
     from ..label_head_repository import ProfileLabelHeadRepository
 
-    resolved_root = root if root is not None else load_settings().cadrumo_local_storage_root
+    resolved_root = root if root is not None else load_settings().cadrumo_storage_root
     if resolved_root is None:
         raise RuntimeError("forging a capsule label requires a configured local storage root")
 

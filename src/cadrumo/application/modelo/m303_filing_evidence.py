@@ -7,9 +7,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
@@ -33,15 +33,28 @@ _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
 
 
+def m303_filing_evidence_modelo() -> str:
+    """Return the one modelo whose filing instance carries the Modelo 303 filing evidence.
+
+    The registry's role routing names it, so a caller that must refuse the
+    evidence on any other work asks here instead of holding the code itself.
+    """
+    return form_for_role("iva.periodic")
+
+
 def m303_filing_evidence_failure(
     scenario_code: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
+    *,
+    action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Return the declared failure for one Modelo 303 filing-evidence scenario.
 
     The scenario identity resolves its own condition and recovery from the
     declared catalogue, so this producer supplies only the observed facts and
-    never an action or a rendered explanation of its own.
+    the values of the declared action's arguments, never an action or a
+    rendered explanation of its own.
     """
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_EVIDENCE_SUBJECT_LEAF_KEY,
@@ -49,6 +62,8 @@ def m303_filing_evidence_failure(
         evidence_id=f"{_EVIDENCE_SCENARIO_PREFIX}.{scenario_code}.observation",
         evidence_values=evidence_values,
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=action_argument_values,
+        missing_action_arguments=missing_action_arguments,
     )
 
 
@@ -71,7 +86,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != m303_filing_evidence_modelo():
         if evidence is not None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
@@ -252,4 +267,8 @@ def _validate_m303_exonerado_applicable_values(
         )
 
 
-__all__ = ["m303_filing_evidence_failure", "validate_m303_filing_instance_evidence_for_revision"]
+__all__ = [
+    "m303_filing_evidence_failure",
+    "m303_filing_evidence_modelo",
+    "validate_m303_filing_instance_evidence_for_revision",
+]

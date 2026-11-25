@@ -8,8 +8,7 @@ from typing import Literal, override
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
@@ -35,7 +34,7 @@ from .workbook_parity_types import (
 _WorkbookExtension = Literal[".xlsx", ".xls"]
 _ConvertedExtension = Literal[".xlsx"]
 WorkbookExtension = _WorkbookExtension
-if _XLSX_EXTENSION != ".xlsx" or _XLS_EXTENSION != ".xls":  # pragma: no cover - pinning invariant
+if XLSX_EXTENSION != ".xlsx" or XLS_EXTENSION != ".xls":  # pragma: no cover - pinning invariant
     raise ValueError(
         "the workbook-extension Literal aliases above are pinned to the central extension constants; "
         "a constant moved and the aliases no longer describe it",

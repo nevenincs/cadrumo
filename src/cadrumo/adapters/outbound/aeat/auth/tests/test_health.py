@@ -36,7 +36,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.us
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60
 _CRITICAL_DAYS = 14
-_NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
+# Certificates are loaded against the wall clock, so the evaluation instant is relative to it.
+_NOW = datetime.now(UTC).replace(microsecond=0)
 
 
 def _build_pkcs12(

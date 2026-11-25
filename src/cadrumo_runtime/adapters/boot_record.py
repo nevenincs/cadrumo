@@ -35,7 +35,6 @@ from cadrumo.core.exact_integer import EXACT_INTEGER
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from cadrumo.core.logging import get_logger
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from cadrumo.core.storage_environment import StorageMode, storage_mode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix import posix_owner_uid
 
@@ -136,14 +135,13 @@ def read_runtime_boot_record(*, storage_root: Path) -> RuntimeBootRecord | Runti
         return RuntimeBootRecordUnavailable.UNREADABLE
 
 
-def runtime_package_directory(interpreter: Path, *, mode: StorageMode) -> str | None:
+def runtime_package_directory(interpreter: Path) -> str | None:
     """Return the versioned native package root that holds ``interpreter``.
 
-    A source checkout has none. An installed tree has one only when the
-    interpreter's directory carries the native package manifest; a wheel
-    installation into an ordinary Python environment is not a versioned package.
+    There is one only when the interpreter's directory carries the native
+    package manifest; an interpreter in an ordinary Python environment has none.
     """
-    if mode is StorageMode.DEVELOPMENT or not interpreter.is_absolute():
+    if not interpreter.is_absolute():
         return None
     root = interpreter.parent
     return str(root) if root.joinpath(*_PACKAGE_MANIFEST).is_file() else None
@@ -157,7 +155,7 @@ def current_runtime_boot_record(*, boot_id: UUID, version: str, admission: Runti
         pid=pid,
         process_created=_process_created(pid),
         version=version,
-        package_directory=runtime_package_directory(Path(sys.executable), mode=storage_mode().mode),
+        package_directory=runtime_package_directory(Path(sys.executable)),
         admission=admission,
     )
 

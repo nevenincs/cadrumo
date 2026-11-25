@@ -7,6 +7,8 @@ human session may receive, on any frontend:
 
 - ``modelo.work.form`` reads the editor form, admitting the edit baseline the
   session's parses and applies are judged against;
+- ``modelo.work.filing_state`` reads only what exporting and recording the
+  filing rest on, from the same form and builders, admitting no baseline;
 - ``modelo.work.casilla_help`` assembles one casilla's help;
 - ``modelo.edit.renew`` renews a baseline when only its lifetime changed;
 - ``modelo.edit.preflight`` checks staged intents without applying them;
@@ -19,19 +21,21 @@ None of them writes taxpayer data; each settles with no effect.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable, Mapping
+from contextvars import copy_context
+from dataclasses import dataclass
+from time import perf_counter
 from types import MappingProxyType
-from typing import Annotated, Final, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
@@ -39,22 +43,29 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..operations.access_port import OperationAccessResolver
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    operation_disclosures,
+)
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     OperationBaselinePolicy,
     OperationReplayPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -63,26 +74,78 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner
+from .carry_family_selection import prior_carry_binding_ids
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
+from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
-from .edit_models import ModeloEditPreflightEvaluatedV1, ModeloEditRefusedV1, ModeloEditSubmissionV1
+from .edit_carry_withdrawal import calculation_refusing_carry_bindings
+from .edit_models import (
+    ModeloEditAdmissionResultV1,
+    ModeloEditAdmittedV1,
+    ModeloEditCorrectionAddressV1,
+    ModeloEditNormalisation,
+    ModeloEditParsedValueV1,
+    ModeloEditParseRefusalV1,
+    ModeloEditParseResultV1,
+    ModeloEditPreflightEvaluatedV1,
+    ModeloEditRefusedV1,
+    ModeloEditSubmissionV1,
+    ModeloEditValueAddressV1,
+)
 from .edit_operation_requests import ModeloEditPreflightRequestV2
+from .edit_parsing import entry_grammar, parse_modelo_edit_lexeme
 from .edit_preflight import preflight_modelo_edit
-from .edit_refusal_projection import ModeloEditRefusalProjectionStore
+from .edit_prerequisite_wording import read_prerequisite_words
+from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
+from .edit_review_wording import (
+    ModeloEditReviewFindingV1,
+    edit_refusal_door,
+    edit_refusal_words,
+    entry_read_back,
+    grammar_data_type,
+    operator_entries_unknown,
+    review_findings,
+)
 from .edit_transient_operand import modelo_edit_financial_operand
+from .edit_value_grammar import ModeloEditValueGrammarV1
+from .work_amend_correction import correction_value_grammars
+from .work_form_rebase import ModeloFormRebaseEntryV1, rebase_report
+from .work_form_scalar_values import comparable_entry
+from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
+from .workbench_form_read_memo import (
+    WorkbenchFormReadKey,
+    admission_identity,
+    changed_key_parts,
+    with_fresh_admission,
+)
+from .workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    ModeloWorkFilingStateProjectionV1,
+    project_modelo_work_filing_state,
+    project_modelo_workbench_form,
+)
+from .workbench_projection_memory import FormProjectionContext
 from .workbench_read import (
+    ModeloWorkbenchReadPorts,
     ModeloWorkbenchReadPortsFactory,
+    admit_workbench_form_edit,
     modelo_edit_prerequisite_source_boxes,
     read_modelo_casilla_help,
+    read_modelo_workbench_filing_state,
     read_modelo_workbench_form,
 )
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 MODELO_WORK_FORM_OPERATION_DEFINITION_ID = "modelo.work.form"
+MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID = "modelo.work.filing_state"
 MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID = "modelo.work.casilla_help"
 MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID = "modelo.edit.renew"
 MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID = "modelo.edit.preflight"
@@ -105,6 +168,14 @@ class ModeloWorkbenchFormRequest(CredentialFreeOperationRequest):
     output_language: OutputLanguage
 
 
+class ModeloWorkFilingStateRequest(CredentialFreeOperationRequest):
+    """Exact profile, one declaration and the language its filing state is read in."""
+
+    profile_id: UUID
+    work_unit_id: WorkUnitId
+    output_language: OutputLanguage
+
+
 class ModeloCasillaHelpRequest(CredentialFreeOperationRequest):
     """One casilla of the revision and calculation the workbench form showed."""
 
@@ -117,10 +188,14 @@ class ModeloCasillaHelpRequest(CredentialFreeOperationRequest):
 
 
 class ModeloEditRenewRequest(CredentialFreeOperationRequest):
-    """The baseline an edit session holds, to renew before review or submission."""
+    """The baseline an edit session holds, to renew before review or submission.
+
+    ``output_language`` is the language a refusal is said in.
+    """
 
     profile_id: UUID
     baseline: ModeloEditApplyBaselineV1
+    output_language: OutputLanguage
 
 
 class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
@@ -132,6 +207,9 @@ class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
     baseline_id: ModeloEditBaselineId
     calculation_revision_id: CalculationRevisionId | None
     registry_revision_id: _BoundedText
+    #: The language the prerequisite is said in; ``None`` asks for the prerequisite only, for a frontend that
+    #: words it from the form it already holds.
+    output_language: OutputLanguage | None = None
 
 
 # -- results ------------------------------------------------------------------
@@ -158,6 +236,8 @@ class ModeloEditRenewalProjectionV1(BaseModel):
     work_unit_id: str
     renewed_baseline: ModeloEditApplyBaselineV1 | None
     refusal: ModeloEditRefusedV1 | None
+    #: Why the renewal was refused, in the language the request named; ``None`` when it was renewed.
+    refusal_words: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -172,8 +252,67 @@ class ModeloEditRenewalProjectionV1(BaseModel):
         return self
 
 
+class ModeloEditTypedEntryV1(BaseModel):
+    """One entry as the filer typed it, read through its address's grammar; never the text itself.
+
+    A read entry carries the value in the form an edit intent takes it, with
+    what reading it normalised, and reads it back in the entry's language; an
+    entry that cannot be read carries why, also in words.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    address: ModeloEditValueAddressV1
+    value: ModeloEditWireScalar = None
+    normalisations: tuple[ModeloEditNormalisation, ...] = ()
+    refusal: ModeloEditParseRefusalV1 | None = None
+    #: The value the entry will be read as, written as its box shows it, in the entry's language.
+    value_text: str | None = None
+    #: Why the entry cannot be read, as one sentence in the entry's language.
+    refusal_words: str | None = None
+    #: The value as two entries of it compare, the form a box's ``own_value`` takes: an entry whose
+    #: comparable value is the box's own value changes nothing. ``None`` for an entry that cannot be read.
+    comparable_value: ModeloEditWireScalar = None
+
+    @classmethod
+    def from_outcome(
+        cls, outcome: ModeloEditParseResultV1, *, grammar: ModeloEditValueGrammarV1 | None, language: OutputLanguage
+    ) -> ModeloEditTypedEntryV1:
+        """Mirror one parse outcome onto the wire, said in ``language``."""
+        if isinstance(outcome, ModeloEditParsedValueV1):
+            if grammar is None:
+                raise TypeError("a read entry was read through its address's grammar")
+            return cls(
+                address=outcome.address,
+                value=wire_scalar_value(outcome.value),
+                normalisations=outcome.normalisations,
+                comparable_value=comparable_entry(outcome.value),
+                value_text=entry_read_back(
+                    outcome.value, data_type=grammar_data_type(grammar, outcome.address), language=language
+                ),
+            )
+        refusal = outcome.refusal
+        if not isinstance(refusal, ModeloEditParseRefusalV1):
+            raise TypeError("an entry is refused only by its address's grammar")
+        return cls(address=refusal.address, refusal=refusal, refusal_words=edit_refusal_words(refusal, language))
+
+
 class ModeloEditPreflightProjectionV1(BaseModel):
-    """What checking the staged intents found, naming the address of every finding."""
+    """What checking the staged intents found, naming the address of every finding.
+
+    ``parsed`` reads each entry the submission carried as the filer typed it,
+    through its address's grammar: the value it is, with what reading it
+    normalised, or why it cannot be read. It is empty when nothing was typed
+    and when the submission was refused before anything could be read.
+
+    ``findings`` are the check's findings the review lists, in the request's
+    language, and ``refusal_words`` says why the whole check was refused;
+    ``operator_entries_unknown`` says whether the filer's earlier entries could
+    not be read, which the review says in its own sentence. ``rebase`` says
+    what became of each change the submission held, on the declaration as a
+    fresh read of its form shows it; it carries nothing derived from a value,
+    and is empty when the preflight was refused.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -181,6 +320,15 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     profile_id: UUID
     work_unit_id: str
     outcome: Annotated[ModeloEditPreflightEvaluatedV1 | ModeloEditRefusedV1, Field(discriminator="outcome")]
+    parsed: tuple[ModeloEditTypedEntryV1, ...] = ()
+    findings: tuple[ModeloEditReviewFindingV1, ...] = ()
+    operator_entries_unknown: bool = False
+    refusal_words: str | None = None
+    #: The way out of the refusal, as the refused Apply would serve it: the action with its words and the
+    #: operations it submits, or the closed outcome with its sentence; ``None`` when it was not refused or
+    #: offers neither.
+    refusal_door: PreconditionVerdictSnapshot | None = None
+    rebase: tuple[ModeloFormRebaseEntryV1, ...] = ()
 
 
 class ModeloEditApplyPrerequisiteV1(BaseModel):
@@ -191,6 +339,9 @@ class ModeloEditApplyPrerequisiteV1(BaseModel):
     casilla_id: CasillaId
     calculation_revision_id: str | None
     source_boxes: tuple[CasillaId, ...]
+    #: The prerequisite said in the language asked for, one sentence per line; ``None`` when none was asked
+    #: for or the form no longer shows the box.
+    words: str | None = None
 
 
 class ModeloEditApplyPrerequisiteProjectionV1(BaseModel):
@@ -205,6 +356,39 @@ class ModeloEditApplyPrerequisiteProjectionV1(BaseModel):
 
 
 # -- executors ----------------------------------------------------------------
+
+
+_log = get_logger(__name__)
+
+
+def _elapsed_ms(since: float) -> int:
+    return round((perf_counter() - since) * 1000)
+
+
+def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormReadKey, spent: dict[str, int]) -> None:
+    """Say whether a form read was served from the session memo, which key parts moved, and where it spent its time.
+
+    Only the parts' names and durations are logged, never their values.
+    """
+    if kept is None:
+        outcome, changed = "empty", ""
+    else:
+        parts = changed_key_parts(kept, key)
+        outcome, changed = ("miss", ",".join(parts)) if parts else ("hit", "")
+    diagnostic_event(
+        _log,
+        "workbench_form_memo_read",
+        fields={"outcome": outcome, "changed_key_parts": changed, **spent},
+        level=logging.INFO,
+    )
+
+
+_REFRESH_START_QUIET_SECONDS: Final = 1.5
+"""How long requests must stay quiet, beyond the worker's own quiet window, before a form refresh starts."""
+
+
+class _RefreshAbandonedError(CadrumoError):
+    """A background form refresh stopped: its session ended, requests stayed busy, or a write overtook it."""
 
 
 def _bucket_id(profile_id: UUID) -> str:
@@ -238,14 +422,184 @@ def _require_subject(request_definition_id: str, subject_ref: str, definition_id
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+@dataclass(frozen=True, slots=True)
+class _FormRead:
+    """One declaration's form read for one request: served from the session memo, built afresh, or refreshed."""
+
+    ports_factory: ModeloWorkbenchReadPortsFactory
+    contracts: OperationContractsProvider
+    payload: ModeloWorkbenchFormRequest
+    operation: PinnedAuthorityOperation
+    held: WorkbenchCaptureMemory | None
+
+    def keyed(
+        self,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        contracts: OperationPublicContractSetV1,
+        epoch_of: Callable[[], str],
+        spent: dict[str, int],
+    ) -> tuple[WorkbenchFormReadKey, ModeloEditAdmissionResultV1]:
+        """Admit the edit baseline afresh and name everything the form is read from."""
+        payload, operation = self.payload, self.operation
+        # The epoch is read before anything it covers, so a write during the read only moves it on.
+        began = perf_counter()
+        epoch = epoch_of()
+        spent["epoch_ms"] = _elapsed_ms(began)
+        began = perf_counter()
+        admission = admit_workbench_form_edit(
+            payload.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=contracts,
+        )
+        spent["admission_ms"] = _elapsed_ms(began)
+        key = WorkbenchFormReadKey(
+            profile_id=payload.profile_id,
+            work_unit_id=payload.work_unit_id,
+            store_epoch=epoch,
+            logical_generation=operation.generation.logical_generation,
+            contract_set_digest=contracts.contract_set_digest,
+            language=payload.output_language,
+            as_of=today_madrid(),
+            admission=admission_identity(admission),
+        )
+        return key, admission
+
+    def read(self) -> ModeloWorkbenchFormProjectionV1:
+        """Serve the form, from the session memo when nothing it is read from changed."""
+        bucket_id = _bucket_id(self.payload.profile_id)
+        ports = self.ports_factory(bucket_id, self.operation)
+        contracts = self.contracts()
+        epoch_of = ports.store_epoch
+        held = self.held
+        if held is None or epoch_of is None:
+            return self.fresh(bucket_id, ports, contracts, None)
+        spent: dict[str, int] = {}
+        key, admission = self.keyed(bucket_id, ports, contracts, epoch_of, spent)
+        kept = held.form_read.kept_key()
+        served = held.form_read.reuse(key, lambda: self.fresh(bucket_id, ports, contracts, admission, spent))
+        _log_form_memo_read(kept, key, spent)
+        # The refresh runs in this read's context, so it reads the same profile's settings and storage.
+        context = copy_context()
+        held.keep_form_refresh(lambda: context.run(self.refresh, held))
+        return with_fresh_admission(served, admission)
+
+    def refresh(self, memo: WorkbenchCaptureMemory) -> None:
+        """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile.
+
+        It defers to the requests being served before it starts and between
+        reading and projecting the form, unless a read is already waiting for
+        it, and stops as soon as a write moves the epoch it was keyed on.
+        """
+        spent: dict[str, int] = {}
+        began = perf_counter()
+        try:
+            with validating_governed_facts(self.operation):
+                kept = self._refreshed(memo, spent)
+        except _RefreshAbandonedError:
+            kept = False
+        except Exception as error:
+            # The read that returns to the form builds it itself and reports any failure.
+            diagnostic_event(_log, "workbench_form_memo_refresh_failed", fields=diagnostic_error_fields(error))
+            return
+        if kept is None:
+            return
+        spent["refresh_ms"] = _elapsed_ms(began)
+        diagnostic_event(
+            _log, "workbench_form_memo_refresh", fields={"refresh_kept": kept, **spent}, level=logging.INFO
+        )
+
+    def _refreshed(self, memo: WorkbenchCaptureMemory, spent: dict[str, int]) -> bool | None:
+        """Build and keep the form; ``None`` when the refresh never started."""
+        # The frontend's own reads after an export follow it within a second or two; they go first.
+        if not memo.yield_to_requests(unless=lambda: False, quiet_for=_REFRESH_START_QUIET_SECONDS):
+            return None
+        bucket_id = _bucket_id(self.payload.profile_id)
+        ports = self.ports_factory(bucket_id, self.operation)
+        epoch_of = ports.store_epoch
+        if epoch_of is None:
+            return None
+        contracts = self.contracts()
+        key, admission = self.keyed(bucket_id, ports, contracts, epoch_of, spent)
+
+        def going_on() -> bool:
+            unblocked = memo.yield_to_requests(unless=memo.form_read.refresh_joined)
+            return unblocked and epoch_of() == key.store_epoch
+
+        return memo.form_read.refresh(
+            key,
+            lambda: self.fresh(bucket_id, ports, contracts, admission, spent, going_on),
+            current=lambda: epoch_of() == key.store_epoch,
+        )
+
+    def fresh(
+        self,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        contracts: OperationPublicContractSetV1,
+        admission: ModeloEditAdmissionResultV1 | None,
+        spent: dict[str, int] | None = None,
+        going_on: Callable[[], bool] | None = None,
+    ) -> ModeloWorkbenchFormProjectionV1:
+        """Read and project the form afresh; ``going_on`` may stop a refresh between the two."""
+        payload = self.payload
+        began = perf_counter()
+        form = read_modelo_workbench_form(
+            payload.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=self.operation,
+            operation_contracts=contracts,
+            language=payload.output_language,
+            admission=admission,
+        )
+        if spent is not None:
+            spent["form_ms"] = _elapsed_ms(began)
+        if going_on is not None and not going_on():
+            raise _RefreshAbandonedError
+        began = perf_counter()
+        projected = project_modelo_workbench_form(
+            payload.profile_id,
+            payload.work_unit_id,
+            form,
+            memory=self.held.form_projection if self.held is not None else None,
+            context=self._projection_context(form.admission),
+            spent=spent,
+        )
+        if spent is not None:
+            spent["projection_ms"] = _elapsed_ms(began)
+        return projected
+
+    def _projection_context(self, admission: ModeloEditAdmissionResultV1) -> FormProjectionContext | None:
+        if not isinstance(admission, ModeloEditAdmittedV1):
+            return None
+        baseline = admission.baseline
+        return FormProjectionContext(
+            profile_id=self.payload.profile_id,
+            work_unit_id=self.payload.work_unit_id,
+            work_unit_record_digest=baseline.work_unit_record_digest,
+            calculation_head_digest=baseline.calculation_head_digest,
+            calculation_revision_id=baseline.current_calculation_revision_id,
+            logical_generation=self.operation.generation.logical_generation,
+            language=self.payload.output_language,
+        )
+
+
 class ModeloWorkbenchFormExecutor:
     """Read one declaration's form and admit its edit baseline."""
 
     def __init__(
-        self, *, ports_factory: ModeloWorkbenchReadPortsFactory, contracts: OperationContractsProvider
+        self,
+        *,
+        ports_factory: ModeloWorkbenchReadPortsFactory,
+        contracts: OperationContractsProvider,
+        capture_memory: WorkbenchCaptureMemoryOwner | None = None,
     ) -> None:
         self._ports_factory = ports_factory
         self._contracts = contracts
+        self._capture_memory = capture_memory
 
     async def execute(
         self, request: OperationRequest[ModeloWorkbenchFormRequest], context: OperationExecutorContext
@@ -255,22 +609,57 @@ class ModeloWorkbenchFormExecutor:
         _require_subject(
             request.definition_id, request.subject_ref, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, payload.work_unit_id
         )
+        owner = self._capture_memory
+        form_read = _FormRead(
+            ports_factory=self._ports_factory,
+            contracts=self._contracts,
+            payload=payload,
+            operation=context.authority_operation,
+            held=owner.for_profile(str(payload.profile_id)) if owner is not None else None,
+        )
+        return await _read(
+            context,
+            phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            task_name="modelo-work-form-read",
+            read=form_read.read,
+        )
+
+
+class ModeloWorkFilingStateExecutor:
+    """Read what exporting and recording one declaration's filing rest on."""
+
+    def __init__(self, *, ports_factory: ModeloWorkbenchReadPortsFactory) -> None:
+        self._ports_factory = ports_factory
+
+    async def execute(
+        self, request: OperationRequest[ModeloWorkFilingStateRequest], context: OperationExecutorContext
+    ) -> str:
+        """Read the filing state under the pinned authority and project it for the exact profile."""
+        payload = request.payload
+        _require_subject(
+            request.definition_id,
+            request.subject_ref,
+            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            payload.work_unit_id,
+        )
         operation = context.authority_operation
 
-        def read() -> ModeloWorkbenchFormProjectionV1:
+        def read() -> ModeloWorkFilingStateProjectionV1:
             bucket_id = _bucket_id(payload.profile_id)
-            form = read_modelo_workbench_form(
+            state = read_modelo_workbench_filing_state(
                 payload.work_unit_id,
                 bucket_id=bucket_id,
                 ports=self._ports_factory(bucket_id, operation),
                 operation=operation,
-                operation_contracts=self._contracts(),
                 language=payload.output_language,
             )
-            return project_modelo_workbench_form(payload.profile_id, payload.work_unit_id, form)
+            return project_modelo_work_filing_state(payload.profile_id, payload.work_unit_id, state)
 
         return await _read(
-            context, phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID, task_name="modelo-work-form-read", read=read
+            context,
+            phase=MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            task_name="modelo-work-filing-state-read",
+            read=read,
         )
 
 
@@ -350,6 +739,8 @@ class ModeloEditRenewExecutor:
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 operation=operation,
                 operation_contracts=self._contracts(),
+                observation_repository=ports.observations,
+                filing_catalogue=None if ports.filings is None else ports.filings.load(),
             )
             return ModeloEditRenewalProjectionV1(
                 result_version=1,
@@ -361,6 +752,11 @@ class ModeloEditRenewExecutor:
                     else None
                 ),
                 refusal=renewal if isinstance(renewal, ModeloEditRefusedV1) else None,
+                refusal_words=(
+                    edit_refusal_words(renewal.refusal, payload.output_language)
+                    if isinstance(renewal, ModeloEditRefusedV1)
+                    else None
+                ),
             )
 
         return await _read(
@@ -368,11 +764,28 @@ class ModeloEditRenewExecutor:
         )
 
 
+def _correction_grammars(
+    submission: ModeloEditSubmissionV1, operation: PinnedAuthorityOperation
+) -> Mapping[CasillaId, ModeloEditValueGrammarV1] | None:
+    """The correction grammars of the baseline's revision, read only when an entry is typed for a correction."""
+    if not any(isinstance(lexeme.address, ModeloEditCorrectionAddressV1) for lexeme in submission.lexemes):
+        return None
+    baseline = submission.baseline
+    return correction_value_grammars(
+        modelo_form_snapshot(
+            operation, baseline.modelo, baseline.filing_year, baseline.period, baseline.law_selected_revision_id
+        )
+    )
+
+
 class ModeloEditPreflightExecutor:
     """Check staged intents against the declaration without applying them."""
 
-    def __init__(self, *, ports_factory: ModeloWorkbenchReadPortsFactory) -> None:
+    def __init__(
+        self, *, ports_factory: ModeloWorkbenchReadPortsFactory, contracts: OperationContractsProvider
+    ) -> None:
         self._ports_factory = ports_factory
+        self._contracts = contracts
 
     async def execute(
         self, request: OperationRequest[ModeloEditPreflightRequestV2], context: OperationExecutorContext
@@ -393,14 +806,55 @@ class ModeloEditPreflightExecutor:
             if baseline.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             ports = self._ports_factory(bucket_id, operation)
+            tax_id_format = runtime_tax_id_format(authority=operation)
             outcome = preflight_modelo_edit(
                 submission,
                 work_catalogue=ports.work_units.load(),
                 calculation_catalogue=ports.calculations.load(operation=operation),
-                tax_id_format=runtime_tax_id_format(authority=operation),
+                tax_id_format=tax_id_format,
+                prior_carry_bindings=prior_carry_binding_ids(operation, submission),
+                carry_bindings=calculation_refusing_carry_bindings(
+                    operation.revision_for_context(
+                        str(baseline.modelo),
+                        filing_year=baseline.filing_year,
+                        period=baseline.period.registry_token,
+                        revision_id=baseline.law_selected_revision_id,
+                    )
+                ),
             )
+            corrections = _correction_grammars(submission, operation)
+            parsed = (
+                ()
+                if isinstance(outcome, ModeloEditRefusedV1)
+                else tuple(
+                    ModeloEditTypedEntryV1.from_outcome(
+                        parse_modelo_edit_lexeme(
+                            lexeme, baseline=baseline, tax_id_format=tax_id_format, correction_grammars=corrections
+                        ),
+                        grammar=entry_grammar(lexeme.address, baseline=baseline, correction_grammars=corrections),
+                        language=lexeme.entry_locale,
+                    )
+                    for lexeme in submission.lexemes
+                )
+            )
+            language = payload.output_language
+            refused = outcome.refusal if isinstance(outcome, ModeloEditRefusedV1) else None
+            found = () if isinstance(outcome, ModeloEditRefusedV1) else outcome.findings
             return ModeloEditPreflightProjectionV1(
-                result_version=1, profile_id=payload.profile_id, work_unit_id=baseline.work_unit_id, outcome=outcome
+                result_version=1,
+                profile_id=payload.profile_id,
+                work_unit_id=baseline.work_unit_id,
+                outcome=outcome,
+                parsed=parsed,
+                findings=review_findings(found, language),
+                operator_entries_unknown=operator_entries_unknown(found),
+                refusal_words=None if refused is None else edit_refusal_words(refused, language),
+                refusal_door=None if refused is None else edit_refusal_door(refused, language),
+                # Only a preflight that evaluated the submission against its baseline judges held changes:
+                # a refused one, a stale baseline above all, is about to be replaced by a fresh read.
+                rebase=()
+                if refused is not None
+                else self._rebase(submission, bucket_id=bucket_id, ports=ports, operation=operation, language=language),
             )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
@@ -414,6 +868,28 @@ class ModeloEditPreflightExecutor:
             finally:
                 del submission
 
+    def _rebase(
+        self,
+        submission: ModeloEditSubmissionV1,
+        *,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        operation: PinnedAuthorityOperation,
+        language: OutputLanguage,
+    ) -> tuple[ModeloFormRebaseEntryV1, ...]:
+        """Judge each held change against the declaration as a fresh read of its form shows it."""
+        if not submission.held:
+            return ()
+        current = read_modelo_workbench_form(
+            submission.baseline.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=self._contracts(),
+            language=language,
+        )
+        return rebase_report(submission.held, current.load.form)
+
 
 class ModeloEditApplyPrerequisiteExecutor:
     """Hand out, once, the prerequisite a refused Apply named in this worker."""
@@ -423,6 +899,42 @@ class ModeloEditApplyPrerequisiteExecutor:
     ) -> None:
         self._ports_factory = ports_factory
         self._store = store
+
+    def _named(
+        self,
+        prerequisite: ModeloEditCalculationPrerequisiteV1,
+        payload: ModeloEditApplyPrerequisiteRequest,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+    ) -> ModeloEditApplyPrerequisiteV1:
+        ports = self._ports_factory(bucket_id, operation)
+        boxes = modelo_edit_prerequisite_source_boxes(
+            prerequisite,
+            bucket_id=bucket_id,
+            registry_revision_id=payload.registry_revision_id,
+            ports=ports,
+            operation=operation,
+        )
+        language = payload.output_language
+        words = (
+            None
+            if language is None
+            else read_prerequisite_words(
+                payload.work_unit_id,
+                prerequisite.casilla_id,
+                boxes,
+                bucket_id=bucket_id,
+                ports=ports,
+                operation=operation,
+                language=language,
+            )
+        )
+        return ModeloEditApplyPrerequisiteV1(
+            casilla_id=prerequisite.casilla_id,
+            calculation_revision_id=prerequisite.calculation_revision_id,
+            source_boxes=boxes,
+            words=words,
+        )
 
     async def execute(
         self, request: OperationRequest[ModeloEditApplyPrerequisiteRequest], context: OperationExecutorContext
@@ -445,21 +957,7 @@ class ModeloEditApplyPrerequisiteExecutor:
                 baseline_id=payload.baseline_id,
                 calculation_revision_id=payload.calculation_revision_id,
             )
-            named = (
-                None
-                if prerequisite is None
-                else ModeloEditApplyPrerequisiteV1(
-                    casilla_id=prerequisite.casilla_id,
-                    calculation_revision_id=prerequisite.calculation_revision_id,
-                    source_boxes=modelo_edit_prerequisite_source_boxes(
-                        prerequisite,
-                        bucket_id=bucket_id,
-                        registry_revision_id=payload.registry_revision_id,
-                        ports=self._ports_factory(bucket_id, operation),
-                        operation=operation,
-                    ),
-                )
-            )
+            named = None if prerequisite is None else self._named(prerequisite, payload, bucket_id, operation)
             return ModeloEditApplyPrerequisiteProjectionV1(
                 result_version=1, profile_id=payload.profile_id, work_unit_id=payload.work_unit_id, prerequisite=named
             )
@@ -476,12 +974,16 @@ class ModeloEditApplyPrerequisiteExecutor:
 
 
 _READ_CAPABILITIES = RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-#: Four of the reads name their declaration directly; the renewal names it inside the baseline it renews.
+#: Five of the reads name their declaration directly; the renewal names it inside the baseline it renews.
 _WORK_UNIT_SUBJECT = OperationSubjectReferenceV1.payload_field("work_unit_id")
 #: Each read's public request and result models, in registration order.
 _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = MappingProxyType(
     {
         MODELO_WORK_FORM_OPERATION_DEFINITION_ID: (ModeloWorkbenchFormRequest, ModeloWorkbenchFormProjectionV1),
+        MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID: (
+            ModeloWorkFilingStateRequest,
+            ModeloWorkFilingStateProjectionV1,
+        ),
         MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID: (ModeloCasillaHelpRequest, ModeloCasillaHelpProjectionV1),
         MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID: (ModeloEditRenewRequest, ModeloEditRenewalProjectionV1),
         MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID: (ModeloEditPreflightRequestV2, ModeloEditPreflightProjectionV1),
@@ -524,8 +1026,9 @@ def build_modelo_workbench_operation_definitions(
     ports_factory: ModeloWorkbenchReadPortsFactory,
     contracts: OperationContractsProvider,
     prerequisites: ModeloEditRefusalProjectionStore,
+    capture_memory: WorkbenchCaptureMemoryOwner | None = None,
 ) -> tuple[OperationDefinition, ...]:
-    """Bind the workbench's five worker reads to the profile repositories and this registry's contracts."""
+    """Bind the workbench's six worker reads to the profile repositories and this registry's contracts."""
     return (
         _definition(
             MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
@@ -533,7 +1036,17 @@ def build_modelo_workbench_operation_definitions(
             _WORK_UNIT_SUBJECT,
             ModeloWorkbenchFormProjectionV1,
             ModeloWorkbenchFormExecutor,
-            lambda: ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=contracts),
+            lambda: ModeloWorkbenchFormExecutor(
+                ports_factory=ports_factory, contracts=contracts, capture_memory=capture_memory
+            ),
+        ),
+        _definition(
+            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            ModeloWorkFilingStateRequest,
+            _WORK_UNIT_SUBJECT,
+            ModeloWorkFilingStateProjectionV1,
+            ModeloWorkFilingStateExecutor,
+            lambda: ModeloWorkFilingStateExecutor(ports_factory=ports_factory),
         ),
         _definition(
             MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
@@ -557,7 +1070,7 @@ def build_modelo_workbench_operation_definitions(
             _WORK_UNIT_SUBJECT,
             ModeloEditPreflightProjectionV1,
             ModeloEditPreflightExecutor,
-            lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory),
+            lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory, contracts=contracts),
         ),
         _definition(
             MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
@@ -595,7 +1108,13 @@ def build_modelo_workbench_operation_registrations(
 def _addressed_work_unit(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str:
     """The declaration a workbench request addresses, refusing a request for another profile."""
     payload = request.payload
-    if isinstance(payload, ModeloWorkbenchFormRequest | ModeloCasillaHelpRequest | ModeloEditApplyPrerequisiteRequest):
+    if isinstance(
+        payload,
+        ModeloWorkbenchFormRequest
+        | ModeloWorkFilingStateRequest
+        | ModeloCasillaHelpRequest
+        | ModeloEditApplyPrerequisiteRequest,
+    ):
         profile_id, work_unit_id = payload.profile_id, payload.work_unit_id
     elif isinstance(payload, ModeloEditRenewRequest):
         if payload.baseline.bucket_id != str(context.profile_id):
@@ -624,27 +1143,12 @@ def compose_modelo_workbench_access(ports_factory: ActiveWorkLifecyclePortsFacto
         if unit.bucket_id != str(context.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         periods = frozenset({unit.period})
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                DisclosurePermission(
-                    destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-                )
-                for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-            )
+        disclosures = operation_disclosures(
+            context,
+            observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+            result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+            result_schema_id=None,
+        )
         return ResolvedOperationAccess(
             request=OperationAccessRequest(
                 profile_id=context.profile_id,
@@ -658,18 +1162,7 @@ def compose_modelo_workbench_access(ports_factory: ActiveWorkLifecyclePortsFacto
             policy=OperationAccessPolicy(
                 definition_id=request.definition_id,
                 definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.COMMIT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                    }
-                ),
+                actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
                 disclosures=disclosures,
                 periods=periods,
                 allow_period_independent=False,
@@ -689,6 +1182,7 @@ __all__ = [
     "MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID",
     "MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID",
     "MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FORM_OPERATION_DEFINITION_ID",
     "ModeloCasillaHelpProjectionV1",
     "ModeloCasillaHelpRequest",
@@ -698,6 +1192,8 @@ __all__ = [
     "ModeloEditPreflightProjectionV1",
     "ModeloEditRenewRequest",
     "ModeloEditRenewalProjectionV1",
+    "ModeloEditTypedEntryV1",
+    "ModeloWorkFilingStateRequest",
     "ModeloWorkbenchFormRequest",
     "OperationContractsProvider",
     "build_modelo_workbench_operation_definitions",

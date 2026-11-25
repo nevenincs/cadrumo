@@ -16,8 +16,10 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 from ..secure_store_write_path import (
     OPAQUE_RECORD_VERBS,
     SecureStoreWritePathError,
+    StoreUsage,
     collect_store_usage,
     evaluate,
+    verdict_for_usage,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -107,6 +109,15 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             id="lazy-method-accessor",
         ),
         pytest.param(
+            "class Holder:\n"
+            "    @property\n"
+            "    def _drafts(self) -> ExampleRepository:\n"
+            "        return ExampleRepository()\n"
+            "    def go(self):\n"
+            "        self._drafts.save(1)\n",
+            id="lazy-property-accessor",
+        ),
+        pytest.param(
             "class ExampleRepositoryProtocol:\n"
             "    pass\n"
             "def go(repo: ExampleRepositoryProtocol) -> None:\n"
@@ -145,6 +156,48 @@ def test_mutation_is_recognised_by_token_not_by_prefix(tmp_path: Path, method: s
         },
     )
     assert evaluate((source,), _declaration(tmp_path, "")) == ()
+
+
+def test_an_uncalled_method_is_not_a_repository_receiver(tmp_path: Path) -> None:
+    source = _tree(
+        tmp_path,
+        {
+            "store.py": _REPOSITORY,
+            "reader.py": "def show():\n    return ExampleRepository().load()\n",
+            "writer.py": (
+                "class Holder:\n"
+                "    def _drafts(self) -> ExampleRepository:\n"
+                "        return ExampleRepository()\n"
+                "    def go(self):\n"
+                "        self._drafts.save(1)\n"
+            ),
+        },
+    )
+    problems = evaluate((source,), _declaration(tmp_path, ""))
+    assert len(problems) == 1
+    assert "ExampleRepository" in problems[0]
+
+
+def test_a_sibling_property_write_is_not_credited_to_another_store(tmp_path: Path) -> None:
+    other = _REPOSITORY.replace("ExampleRepository", "OtherRepository")
+    adapters = (
+        "class ExampleAdapter:\n"
+        "    @property\n"
+        "    def _repository(self) -> ExampleRepository:\n"
+        "        return ExampleRepository()\n"
+        "    def read(self):\n"
+        "        return self._repository.load()\n"
+        "class OtherAdapter:\n"
+        "    @property\n"
+        "    def _repository(self) -> OtherRepository:\n"
+        "        return OtherRepository()\n"
+        "    def write(self):\n"
+        "        self._repository.save(1)\n"
+    )
+    source = _tree(tmp_path, {"store.py": _REPOSITORY, "other.py": other, "adapters.py": adapters})
+    problems = evaluate((source,), _declaration(tmp_path, ""))
+    assert len(problems) == 1
+    assert "ExampleRepository" in problems[0]
 
 
 def test_a_sibling_adapter_write_is_not_credited_to_another_store(tmp_path: Path) -> None:
@@ -329,20 +382,26 @@ def test_the_opaque_record_verbs_are_the_service_client_s_own() -> None:
     assert all(callable(getattr(InstalledServiceClient, verb, None)) for verb in OPAQUE_RECORD_VERBS)
 
 
-def test_the_shipped_tree_reports_its_stores() -> None:
+@pytest.fixture(scope="module")
+def shipped_store_usage() -> tuple[StoreUsage, ...]:
+    """Parse the shipped tree once; both live gates read the same immutable usage."""
+    return collect_store_usage()
+
+
+def test_the_shipped_tree_reports_its_stores(shipped_store_usage: tuple[StoreUsage, ...]) -> None:
     """The live scan finds repositories at all, so a silent pass cannot be vacuous."""
-    usage = collect_store_usage()
+    usage = shipped_store_usage
     assert len(usage) >= 20
     assert any(store.written_by for store in usage)
     assert any(store.read_by for store in usage)
     assert any(store.owner.startswith("cadrumo_agent_service/") for store in usage)
 
 
-def test_the_shipped_tree_agrees_with_its_declaration() -> None:
+def test_the_shipped_tree_agrees_with_its_declaration(shipped_store_usage: tuple[StoreUsage, ...]) -> None:
     """The live gate, run where CI can see it.
 
     Without this the module is a command nobody invokes: the synthetic cases
     above prove the detector works on trees that do not ship, and a store wired
     for reading with no writer would still reach a release unremarked.
     """
-    assert evaluate() == ()
+    assert verdict_for_usage(shipped_store_usage) == ()

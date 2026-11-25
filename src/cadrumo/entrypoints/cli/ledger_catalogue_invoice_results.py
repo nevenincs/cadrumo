@@ -19,6 +19,7 @@ graph-declared command identifiers are ``ledger.invoice.<verb>``.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Self
 
 from pydantic import Field, NonNegativeInt, model_validator
@@ -109,6 +110,8 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     base_total_eur: NonNegativeDecimal | None = None
     iva_total_eur: NonNegativeDecimal | None = None
     grand_total_eur: NonNegativeDecimal | None = None
+    # The cash the invoice settles for: the total less the retención withheld at source.
+    settlement_amount: Decimal
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -188,6 +191,18 @@ class CatalogueInvoiceRemovePayload(CatalogueInvoiceRecordPayload):
     """
 
 
+class CatalogueInvoiceDocumentAttachPayload(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice attach-document``.
+
+    Names the invoice, the content address of the document now held as its
+    source, and whether that document was already recorded for it.
+    """
+
+    invoice_id: Hex64Str
+    attachment_id: Hex64Str
+    already_linked: bool
+
+
 class CatalogueInvoiceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice list``.
 
@@ -234,6 +249,7 @@ class CatalogueInvoiceImportResult(OutputSchema):
 __all__ = [
     "BulkInvoiceImportRowFailurePayload",
     "CatalogueInvoiceCreatePayload",
+    "CatalogueInvoiceDocumentAttachPayload",
     "CatalogueInvoiceImportResult",
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",

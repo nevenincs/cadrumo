@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -25,7 +26,7 @@ from ...application.overview.read_payload import (
     OverviewPrepareRead,
     OverviewStatusRead,
 )
-from ...application.overview.read_projection import OverviewNoticeSnapshot
+from ...application.overview.read_projection import OverviewCalendarSurveySnapshot, OverviewNoticeSnapshot
 from ...application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
@@ -34,8 +35,11 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.period import Period, PeriodError
 from ...core.time.clock import today_madrid
-from ._date_parsing import _parse_iso_date
-from ._overview_rendering import (
+from .common import attach_cli_policy_verdict, bad, emit_envelope, resolve_notice_action
+from .date_parsing import parse_iso_date
+from .operation_overview import OverviewReadCompletion, read_overview
+from .operation_overview_pipeline import read_overview_pipeline
+from .overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
     overview_calendar_output,
@@ -46,17 +50,8 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
-from .common import (
-    activate_subcommand_output_language,
-    attach_cli_policy_verdict,
-    bad,
-    emit_envelope,
-    resolve_notice_action,
-)
-from .operation_overview import OverviewReadCompletion, read_overview
-from .operation_overview_pipeline import read_overview_pipeline
 from .overview_results import OverviewCalendarResult, OverviewDraftPayload, OverviewStatusResult
-from .period_parsing import _canonical_period
+from .period_parsing import period_parsing_canonical_period
 
 
 def _request(kind: OverviewReadKind, **fields: object) -> OverviewReadRequest:
@@ -86,7 +81,7 @@ def _notice(snapshot: OverviewNoticeSnapshot) -> Notice:
     )
 
 
-def _emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) -> T:
+def emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) -> T:
     """Keep the successful worker receipt if local rendering or output fails."""
     try:
         return render()
@@ -105,18 +100,17 @@ def _emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) ->
         ) from None
 
 
-def _incomplete_refusal(
-    completed: OverviewReadCompletion, requirements: tuple[str, ...], *, undeclared: bool, warning_count: int
-) -> CliRefusedBoundaryError:
-    """Retain known operation identity while refusing an incomplete profile."""
+def _undeclared_refusal(completed: OverviewReadCompletion, requirements: tuple[str, ...]) -> CliRefusedBoundaryError:
+    """Retain known operation identity while refusing a profile that declares no taxpayer model.
+
+    Only an undeclared model refuses. An unanswered fact leaves the obligations
+    it decides in the coverage report's undetermined state, which the calendar,
+    agenda and backlog render beside the rows that are positively applicable.
+    """
     receipt = completed.completion
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
-            translated_message=(
-                "cli.overview.refused_undeclared_taxpayer_model"
-                if undeclared
-                else "cli.overview.refused_incomplete_profile"
-            ),
+            translated_message="cli.overview.refused_undeclared_taxpayer_model",
             context={
                 "requirements": ", ".join(requirements),
                 "operation_id": str(receipt.operation_id),
@@ -126,7 +120,7 @@ def _incomplete_refusal(
         ),
         verdict=cli_exception_no_recovery_verdict(
             CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
-            facts={"missing_selector_count" if undeclared else "warning_count": warning_count},
+            facts={"missing_selector_count": len(requirements)},
         ),
     )
 
@@ -189,14 +183,13 @@ def overview_status(
         notices.extend(_notice(item) for item in payload.notices)
         emit_envelope(ctx, command="overview.status", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_calendar(
     ctx: typer.Context,
     from_date: str,
     to_date: str,
-    allow_incomplete: bool = False,
     show_suppressed: bool = False,
     all_profiles: bool = False,
     output_language: OutputLanguage | None = None,
@@ -205,9 +198,8 @@ def overview_calendar(
     activate_subcommand_output_language(ctx, output_language)
     query = _request(
         OverviewReadKind.CALENDAR,
-        from_date=_parse_iso_date(from_date, label="--from"),
-        to_date=_parse_iso_date(to_date, label="--to"),
-        allow_incomplete=allow_incomplete,
+        from_date=parse_iso_date(from_date, label="--from"),
+        to_date=parse_iso_date(to_date, label="--to"),
         show_suppressed=show_suppressed,
         all_profiles=all_profiles,
     )
@@ -219,39 +211,30 @@ def overview_calendar(
             raise ValueError("overview calendar projection has the wrong kind")
         if payload.calendar is not None:
             calendar = payload.calendar.to_calendar()
-            if not calendar.taxpayer_model_declared or (calendar.warnings and not allow_incomplete):
-                raise _incomplete_refusal(
-                    completed,
-                    payload.refusal_requirements,
-                    undeclared=not calendar.taxpayer_model_declared,
-                    warning_count=len(calendar.warnings)
-                    if calendar.taxpayer_model_declared
-                    else len(payload.refusal_requirements),
-                )
+            if not calendar.taxpayer_model_declared:
+                raise _undeclared_refusal(completed, payload.refusal_requirements)
             typed, lines, notices = overview_calendar_output(
                 calendar,
                 calendar.range,
+                support=payload.calendar.support,
                 evidence_notices=tuple(_notice(row) for row in payload.notices),
                 deemed_served_legal_ref=payload.deemed_served_legal_ref,
             )
         else:
-            typed, lines, notices = _overview_calendar_survey_output(completed, payload, allow_incomplete)
+            typed, lines, notices = _overview_calendar_survey_output(payload)
         emit_envelope(ctx, command="overview.calendar", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
-def overview_agenda(
-    ctx: typer.Context, as_of: str | None = None, horizon_days: int = 14, allow_incomplete: bool = False
-) -> None:
+def overview_agenda(ctx: typer.Context, as_of: str | None = None, horizon_days: int = 14) -> None:
     """Render canonical next-due cohorts captured in the worker."""
     if horizon_days <= 0:
         raise bad(tr("cli.overview.agenda.errors.invalid_horizon"))
     query = _request(
         OverviewReadKind.AGENDA,
-        as_of=_parse_iso_date(as_of, label="--date") if (as_of is not None and as_of) else today_madrid(),
+        as_of=parse_iso_date(as_of, label="--date") if (as_of is not None and as_of) else today_madrid(),
         horizon_days=horizon_days,
-        allow_incomplete=allow_incomplete,
     )
     completed = read_overview(ctx, request=query)
 
@@ -260,33 +243,25 @@ def overview_agenda(
         if not isinstance(payload, OverviewAgendaRead):
             raise ValueError("overview agenda projection has the wrong kind")
         agenda = payload.agenda.to_agenda()
-        if (not agenda.taxpayer_model_declared or agenda.warnings) and not allow_incomplete:
-            raise _incomplete_refusal(
-                completed,
-                payload.refusal_requirements,
-                undeclared=not agenda.taxpayer_model_declared,
-                warning_count=len(agenda.warnings)
-                if agenda.taxpayer_model_declared
-                else len(payload.refusal_requirements),
-            )
+        if not agenda.taxpayer_model_declared:
+            raise _undeclared_refusal(completed, payload.refusal_requirements)
         typed, lines, notices = overview_agenda_output(agenda)
         emit_envelope(ctx, command="overview.agenda", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_backlog(
     ctx: typer.Context,
     from_date: str | None = None,
     to_date: str | None = None,
-    allow_incomplete: bool = False,
 ) -> None:
     """Render canonical past-due rows captured in the worker."""
-    fields: dict[str, object] = {"allow_incomplete": allow_incomplete}
+    fields: dict[str, object] = {}
     if from_date is not None:
-        fields["from_date"] = _parse_iso_date(from_date, label="--from")
+        fields["from_date"] = parse_iso_date(from_date, label="--from")
     if to_date is not None:
-        fields["to_date"] = _parse_iso_date(to_date, label="--to")
+        fields["to_date"] = parse_iso_date(to_date, label="--to")
     completed = read_overview(ctx, request=_request(OverviewReadKind.BACKLOG, **fields))
 
     def render() -> None:
@@ -294,20 +269,13 @@ def overview_backlog(
         if not isinstance(payload, OverviewBacklogRead):
             raise ValueError("overview backlog projection has the wrong kind")
         backlog = payload.backlog.to_backlog()
-        if not backlog.taxpayer_model_declared or (backlog.warnings and not allow_incomplete):
-            raise _incomplete_refusal(
-                completed,
-                payload.refusal_requirements,
-                undeclared=not backlog.taxpayer_model_declared,
-                warning_count=len(backlog.warnings)
-                if backlog.taxpayer_model_declared
-                else len(payload.refusal_requirements),
-            )
+        if not backlog.taxpayer_model_declared:
+            raise _undeclared_refusal(completed, payload.refusal_requirements)
         notice = _notice(payload.notices[0]) if payload.notices else None
         typed, lines, notices = overview_backlog_output(backlog, work_units_notice=notice)
         emit_envelope(ctx, command="overview.backlog", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_explain(ctx: typer.Context, modelo: str, year: int | None = None) -> None:
@@ -330,12 +298,12 @@ def overview_explain(ctx: typer.Context, modelo: str, year: int | None = None) -
             notices=tuple(_notice(row) for row in payload.notices),
         )
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_prepare(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     """Render the canonical exact-period preparation checklist."""
-    canonical = _canonical_period(period, year=year)
+    canonical = period_parsing_canonical_period(period, year=year)
     completed = read_overview(
         ctx,
         request=_request(OverviewReadKind.PREPARE, modelo=modelo, period=PublicPeriod.from_period(canonical)),
@@ -348,14 +316,14 @@ def overview_prepare(ctx: typer.Context, modelo: str, year: int, period: str) ->
         typed, lines, notices = overview_prepare_output(payload.preparation.to_walkthrough())
         emit_envelope(ctx, command="overview.prepare", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_pipeline(ctx: typer.Context, year: int, period: str) -> None:
     """Render one authenticated profile worker's pipeline-health snapshot."""
     from .ledger_results import LedgerStatusResult
 
-    canonical_period = _canonical_period(period, year=year)
+    canonical_period = period_parsing_canonical_period(period, year=year)
     completed = read_overview_pipeline(
         ctx, period=canonical_period, output_language=OutputLanguage(current_output_language())
     )
@@ -389,18 +357,7 @@ __all__ = [
 ]
 
 
-def _overview_calendar_survey_output(
-    completed: OverviewReadCompletion, payload: OverviewCalendarRead, allow_incomplete: bool
-) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
-    """Render locked and active profiles with the existing incomplete-calendar refusals."""
-    survey = payload.survey
-    if survey is None:
-        raise ValueError("overview calendar survey is missing")
-    lines = [
-        f"from\t{survey.from_date.isoformat()}",
-        f"to\t{survey.to_date.isoformat()}",
-        f"profiles\t{int(survey.active_calendar is not None)}",
-    ]
+def _append_survey_profiles(lines: list[str], survey: OverviewCalendarSurveySnapshot) -> None:
     for pointer in survey.locked:
         lines.extend(
             (
@@ -411,6 +368,21 @@ def _overview_calendar_survey_output(
     lines.extend(
         f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}" for pointer in survey.setup_incomplete
     )
+
+
+def _overview_calendar_survey_output(
+    payload: OverviewCalendarRead,
+) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
+    """Render locked profiles and the active profile's calendar, undetermined obligations included."""
+    survey = payload.survey
+    if survey is None:
+        raise ValueError("overview calendar survey is missing")
+    lines = [
+        f"from\t{survey.from_date.isoformat()}",
+        f"to\t{survey.to_date.isoformat()}",
+        f"profiles\t{int(survey.active_calendar is not None)}",
+    ]
+    _append_survey_profiles(lines, survey)
     profiles: list[dict[str, object]] = []
     notices: list[Notice] = []
     if (
@@ -419,17 +391,11 @@ def _overview_calendar_survey_output(
         and (survey.active_label is not None and survey.active_label)
     ):
         calendar = survey.active_calendar.to_calendar()
-        if calendar.warnings and not allow_incomplete:
-            raise _incomplete_refusal(
-                completed,
-                payload.refusal_requirements,
-                undeclared=False,
-                warning_count=len(calendar.warnings),
-            )
         profile, profile_lines, profile_notices = overview_calendar_profile_output(
             bucket_id=survey.active_profile_id,
             label=survey.active_label,
             cal=calendar,
+            support=survey.active_calendar.support,
             deemed_served_legal_ref=payload.deemed_served_legal_ref,
         )
         profiles.append(profile)

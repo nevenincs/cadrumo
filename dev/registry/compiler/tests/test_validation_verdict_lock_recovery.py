@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from ..validation_verdict_cache import (
-    _LOCK_STALE_SECONDS,
+    LOCK_STALE_SECONDS,
     VERDICT_CACHE_DIR_ENV,
     record_validated,
     verdict_cache_dir,
@@ -86,7 +86,7 @@ def test_a_live_peer_is_waited_out_then_passed_rather_than_stolen(store: Path) -
 def test_a_lock_older_than_any_validation_is_broken_even_when_its_stamp_reads_alive(store: Path) -> None:
     """Pids are recycled, so an old lock whose stamp reads alive is not evidence of a holder."""
     ancient = _lock(store, "wanted", str(os.getpid()))
-    aged = time.time() - (_LOCK_STALE_SECONDS + 60.0)
+    aged = time.time() - (LOCK_STALE_SECONDS + 60.0)
     os.utime(ancient, (aged, aged))
 
     with verdict_validation_lock("wanted", wait_seconds=0.5):

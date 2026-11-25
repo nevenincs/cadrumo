@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#calendar-obligations'
 date: '2026-09-21'
-modified: '2026-09-24'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2e5d4f3680f2d2ef1e00154e87f7a91724ee1c708046f19da15862dbae204d5'
+body_hash: 'sha256:7cbddb8864fae75efc31bc43d44c3446d8207adaaff713c2be843ca559a61bb7'
 related:
   - '[[2026-09-21-calendar-obligations-audit]]'
   - '[[2026-09-21-calendar-obligations-ledger]]'
@@ -16,7 +16,6 @@ related:
   - '[[2026-09-23-calendar-obligations-ledger]]'
   - '[[2026-09-23-calendar-obligations-payer-fact-declaration-state-adr]]'
   - '[[2026-09-23-calendar-obligations-payer-fact-declaration-state-reference]]'
-  - '[[2026-09-23-calendar-obligations-plan]]'
   - '[[2026-09-24-calendar-obligations-obligation-evidence-domain-grounding-research]]'
 ---
 
@@ -43,7 +42,6 @@ Auto-generated index of all documents tagged with `#calendar-obligations`.
 ### plan
 
 - `2026-09-21-calendar-obligations-plan` - `calendar-obligations` plan
-- `2026-09-23-calendar-obligations-plan` - `calendar-obligations` plan
 
 ### reference
 

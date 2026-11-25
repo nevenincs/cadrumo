@@ -10,8 +10,8 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
-from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _raw_transaction, _transaction
+from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
+from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction, raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -20,7 +20,7 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Income direction does not require the deductible-expense category key."""
-    income = _transaction(
+    income = preflight_transaction(
         "row-income",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1500.00"),
@@ -31,8 +31,11 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income,)),
         operation=operation,
     )
@@ -46,7 +49,7 @@ def test_preflight_still_flags_missing_category_on_expense_transaction(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Expense direction still requires the deductible-expense category key."""
-    expense = _transaction(
+    expense = preflight_transaction(
         "row-expense",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("121.00"),
@@ -54,9 +57,66 @@ def test_preflight_still_flags_missing_category_on_expense_transaction(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((expense,)),
+        operation=operation,
+    )
+
+    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
+
+
+def test_preflight_does_not_flag_missing_category_on_rental_expense_linked_to_a_property_with_a_concept(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A rental expense is routed by its property and concept, so it takes no deductible-expense category."""
+    rental_expense = preflight_transaction(
+        "row-rental-expense",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("135.00"),
+        category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+        irpf_category="capital_inmobiliario",
+        inmueble_ref="0",
+        gasto_capital_inmobiliario="comunidad",
+    )
+
+    report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((rental_expense,)),
+        operation=operation,
+    )
+
+    assert LedgerPreflightIssueReason.MISSING_CATEGORY not in {issue.reason for issue in report.issues}
+
+
+def test_preflight_flags_missing_category_on_an_expense_linked_to_a_property_without_a_concept(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A property link without the expense concept routes nowhere, so the category is still required."""
+    unrouted = preflight_transaction(
+        "row-unrouted",
+        direction=TransactionDirection.OUTGOING,
+        category_id=None,
+        inmueble_ref="0",
+    )
+
+    report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((unrouted,)),
         operation=operation,
     )
 
@@ -69,7 +129,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
     """Purchase-evidence income is an expense refund, so it needs a category."""
     refund = Transaction.model_validate(
         {
-            "raw": _raw_transaction("row-refund", amount=Decimal("45.00")),
+            "raw": raw_transaction("row-refund", amount=Decimal("45.00")),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
@@ -88,8 +148,11 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((refund,)),
         operation=operation,
     )

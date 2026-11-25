@@ -38,8 +38,10 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...cli_exception_preconditions import nested_terminal_precondition_verdict
+from ...operator_actions.preconditions import PROFILE_FIELD_EDIT_ACTION_ID
 from ..enums import ReviewSeverity
-from ..errors import ReviewSourceLoadError
+from ..errors import ReviewDraftsUnattributedError, ReviewSourceLoadError
 from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
 from .draft_review_test_support import draft_review_ports
@@ -50,7 +52,7 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 _REVIEW_MISSING_CASILLA: CasillaId = validated_casilla_id("04", surface="_REVIEW_MISSING_CASILLA")
 _REVIEW_INFO_CASILLA: CasillaId = validated_casilla_id("05", surface="_REVIEW_INFO_CASILLA")
-_PROFILE_ID = "23232323-2323-4232-8232-232323232323"
+PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 _OTHER_PROFILE_ID = "44444444-4444-4444-8444-444444444444"
 _ACTIVE_PROFILE_ID = "45454545-4545-4454-8454-454545454545"
 _CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
@@ -59,14 +61,9 @@ _CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 # ── shared helpers ────────────────────────────────────────────────
 
 
-def _build_settings(tmp_path: Path) -> Settings:
-    """Build a Settings instance with every disk root anchored at tmp_path."""
-    return Settings(
-        cadrumo_financial_txs_dir=tmp_path / "transactions",
-        cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_attachments_dir=tmp_path / "attachments",
-        cadrumo_drafts_dir=tmp_path / "probe-drafts",
-    )
+def build_settings(tmp_path: Path) -> Settings:
+    """Build a Settings instance whose storage root is tmp_path."""
+    return Settings(cadrumo_storage_root=tmp_path)
 
 
 def _summary(text: str = "demo") -> tr:
@@ -92,7 +89,7 @@ def _draft_items(
     draft: ModeloDraft,
     *,
     operation: PinnedAuthorityOperation,
-    bucket_id: str = _PROFILE_ID,
+    bucket_id: str = PROFILE_ID,
 ) -> tuple[FindingReviewItem, ...]:
     """Project one draft through an inward fake port bundle."""
     return drafts_pending(
@@ -104,11 +101,11 @@ def _draft_items(
 
 
 def test_adapters_return_empty_when_source_missing(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     ports = draft_review_ports()
     assert transactions_pending(ports=ports) == ()
     assert invoices_pending(ports=ports) == ()
-    assert drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports, operation=operation) == ()
+    assert drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation) == ()
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -279,7 +276,7 @@ def _invoice(
             "invoice_number": invoice_number,
             "issued_at": date(2026, 4, 1),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),
@@ -366,7 +363,7 @@ def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path:
 # ── drafts adapter ────────────────────────────────────────────────
 
 
-def _draft(
+def adapters_draft(
     *,
     modelo: str = "130",
     period: Period = _PERIOD,
@@ -408,21 +405,71 @@ def test_drafts_pending_load_failure_context_omits_raw_storage_error(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     ports = draft_review_ports(draft_error=ValueError("not-json"))
     with pytest.raises(ReviewSourceLoadError) as exc_info:
-        drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports, operation=operation)
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
 
     assert exc_info.value.translated_message == "review.adapters.errors.drafts_load_failed"
     assert exc_info.value.context == {"error_type": "ValueError"}
     assert "not-json" not in str(exc_info.value)
 
 
+def test_drafts_pending_profile_load_failure_raises_without_raw_error(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(),), profile_error=OSError("disk-secret"))
+    with pytest.raises(ReviewSourceLoadError) as exc_info:
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
+
+    assert exc_info.value.translated_message == "review.adapters.errors.profile_load_failed"
+    assert exc_info.value.context == {"error_type": "OSError"}
+    assert "disk-secret" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_without_tax_id_refuses_with_the_profile_fact_door(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(status=ModeloDraftStatus.BORRADOR),), profile_values={})
+    with pytest.raises(ReviewDraftsUnattributedError) as exc_info:
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
+
+    assert exc_info.value.context == {"draft_count": 1}
+    verdict = nested_terminal_precondition_verdict(exc_info.value)
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == PROFILE_FIELD_EDIT_ACTION_ID
+    assert verdict.evidence[0].values["missing_fields"] == "identity.tax_id"
+    assert "00000000T" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_without_tax_id_and_no_drafts_is_empty(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(), profile_values={})
+    assert drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation) == ()
+
+
+def test_drafts_pending_profile_with_tax_id_lists_matching_drafts(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(status=ModeloDraftStatus.BORRADOR),))
+    assert len(drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)) == 1
+
+
 def test_drafts_pending_emits_one_finding_per_finding(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     findings = (
         ModeloValidationFinding(
             casilla_id=_REVIEW_FINDING_CASILLA,
@@ -443,7 +490,7 @@ def test_drafts_pending_emits_one_finding_per_finding(
             message=_summary("info"),
         ),
     )
-    draft = _draft(findings=findings)
+    draft = adapters_draft(findings=findings)
     items = _draft_items(settings, draft, operation=operation)
     assert len(items) == 3
     severities = {item.severity for item in items}
@@ -458,8 +505,8 @@ def test_drafts_pending_emits_placeholder_for_draft_status(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
-    settings = _build_settings(tmp_path)
-    items = _draft_items(settings, _draft(status=ModeloDraftStatus.BORRADOR), operation=operation)
+    settings = build_settings(tmp_path)
+    items = _draft_items(settings, adapters_draft(status=ModeloDraftStatus.BORRADOR), operation=operation)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -471,8 +518,8 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    settings = _build_settings(tmp_path)
-    items = _draft_items(settings, _draft(status=ModeloDraftStatus.VALIDADO), operation=operation)
+    settings = build_settings(tmp_path)
+    items = _draft_items(settings, adapters_draft(status=ModeloDraftStatus.VALIDADO), operation=operation)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -483,8 +530,8 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
-    settings = _build_settings(tmp_path)
-    draft = _draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
+    settings = build_settings(tmp_path)
+    draft = adapters_draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
     items = _draft_items(settings, draft, operation=operation)
     assert len(items) == 1
     assert items[0].source is None
@@ -499,15 +546,17 @@ def test_drafts_pending_skips_ready_drafts_with_no_findings(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    settings = _build_settings(tmp_path)
-    assert _draft_items(settings, _draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR), operation=operation) == ()
+    settings = build_settings(tmp_path)
+    assert (
+        _draft_items(settings, adapters_draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR), operation=operation) == ()
+    )
 
 
 def test_drafts_pending_dedups_identical_finding_triples(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     finding = ModeloValidationFinding(
         casilla_id=_REVIEW_FINDING_CASILLA,
         severity=BaseSeverity.ERROR,
@@ -515,5 +564,5 @@ def test_drafts_pending_dedups_identical_finding_triples(
         message=_summary("dup"),
     )
     # Same finding repeated twice — dedup should collapse to one.
-    items = _draft_items(settings, _draft(findings=(finding, finding)), operation=operation)
+    items = _draft_items(settings, adapters_draft(findings=(finding, finding)), operation=operation)
     assert len(items) == 1

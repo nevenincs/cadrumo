@@ -10,7 +10,7 @@ related:
   - "[[2026-09-03-duplication-burndown-honest-clone-closure-research]]"
 ---
 
-# `duplication-burndown` adr: `Two-axis honest clone closure` | (**status:** `proposed`)
+# `duplication-burndown` adr: `Two-axis honest clone closure` | (**status:** `accepted`)
 
 ## Problem Statement
 

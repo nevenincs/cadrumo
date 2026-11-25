@@ -29,6 +29,7 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.own_accounts import (
     OwnAccountDesignation,
     OwnAccountHolding,
@@ -50,10 +51,18 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .own_account_ports import OwnAccountRepositoryFactory, OwnAccountRepositoryProtocol
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID = "ledger.own_account"
+LEDGER_OWN_ACCOUNT_IBAN_MAX = 64
+"""The longest account number an own account takes."""
+LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX = 16
+"""The longest SWIFT/BIC an own account takes."""
+LEDGER_OWN_ACCOUNT_LABEL_MAX = 128
+"""The longest label an own account takes."""
+LEDGER_OWN_ACCOUNT_CURRENCY_MAX = 16
+"""The longest currency text an own account takes; which currencies exist is the served list's."""
 
 OwnAccountAction = Literal["add", "list", "show", "update", "close", "remove", "designate", "undesignate"]
 
@@ -87,15 +96,15 @@ class LedgerOwnAccountRequest(BaseModel):
     profile_id: UUID
     action: OwnAccountAction
     own_account_id: OwnAccountId | None = None
-    label: str | None = Field(default=None, min_length=1, max_length=80)
+    label: str | None = Field(default=None, min_length=1, max_length=LEDGER_OWN_ACCOUNT_LABEL_MAX)
     holding: OwnAccountHolding | None = None
-    iban: str | None = Field(default=None, max_length=64)
-    swift_bic: str | None = Field(default=None, max_length=16)
-    bank_name: str | None = Field(default=None, max_length=70)
-    bank_address: str | None = Field(default=None, max_length=35)
-    bank_city: str | None = Field(default=None, max_length=30)
-    bank_country_code: str | None = Field(default=None, max_length=2)
-    currency: str | None = Field(default=None, max_length=3)
+    iban: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_IBAN_MAX)
+    swift_bic: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX)
+    bank_name: str | None = Field(default=None, max_length=128)
+    bank_address: str | None = Field(default=None, max_length=64)
+    bank_city: str | None = Field(default=None, max_length=32)
+    bank_country_code: CountryCodeAlpha2 | None = None
+    currency: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_CURRENCY_MAX)
     opened_on: date | None = None
     closed_on: date | None = None
     role: OwnAccountRole | None = None
@@ -107,18 +116,26 @@ class LedgerOwnAccountRequest(BaseModel):
         needs_id = self.action in {"show", "update", "close", "remove", "designate"}
         if needs_id != (self.own_account_id is not None):
             raise ValueError(f"own account action {self.action!r} {'requires' if needs_id else 'takes no'} account id")
-        if details and self.action not in {"add", "update"}:
-            raise ValueError(f"own account action {self.action!r} takes no account details")
-        if self.action == "add" and (self.label is None or self.holding is None or self.iban is None):
-            raise ValueError("adding an own account requires its label, holding and IBAN")
-        if self.action == "update" and not details:
-            raise ValueError("updating an own account requires at least one detail")
+        _validate_account_details(self, details)
         if (self.action == "close") != (self.closed_on is not None):
             raise ValueError("closed_on is given exactly when closing an own account")
-        designating = self.action in {"designate", "undesignate"}
-        if designating != (self.role is not None) or (self.modelo is not None and not designating):
-            raise ValueError("role and modelo are given only to designate or undesignate")
+        _validate_account_designation(self)
         return self
+
+
+def _validate_account_details(request: LedgerOwnAccountRequest, details: list[str]) -> None:
+    if details and request.action not in {"add", "update"}:
+        raise ValueError(f"own account action {request.action!r} takes no account details")
+    if request.action == "add" and (request.label is None or request.holding is None or request.iban is None):
+        raise ValueError("adding an own account requires its label, holding and IBAN")
+    if request.action == "update" and not details:
+        raise ValueError("updating an own account requires at least one detail")
+
+
+def _validate_account_designation(request: LedgerOwnAccountRequest) -> None:
+    designating = request.action in {"designate", "undesignate"}
+    if designating != (request.role is not None) or (request.modelo is not None and not designating):
+        raise ValueError("role and modelo are given only to designate or undesignate")
 
 
 class OwnAccountProjection(BaseModel):
@@ -134,7 +151,7 @@ class OwnAccountProjection(BaseModel):
     sepa_marca: str = Field(min_length=1, max_length=1)
     has_swift_bic: bool
     has_bank_block: bool
-    currency: str = Field(min_length=3, max_length=3)
+    currency: str = Field(min_length=1, max_length=LEDGER_OWN_ACCOUNT_CURRENCY_MAX)
     opened_on: date | None = None
     closed_on: date | None = None
 
@@ -147,7 +164,7 @@ class OwnAccountProjection(BaseModel):
             holding=account.holding,
             masked_iban=account.masked_iban,
             country_code=account.country_code,
-            sepa_marca=account.sepa_marca.value,
+            sepa_marca=account.sepa_marca.code,
             has_swift_bic=bool(account.swift_bic),
             has_bank_block=bool(account.bank_name),
             currency=account.currency,
@@ -347,15 +364,16 @@ class LedgerOwnAccountExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID)
-        return await await_cancellation_complete(
-            _publish_own_account_action(
-                context,
-                payload=payload,
-                bucket_id=str(payload.profile_id),
-                repository_factory=self._repository_factory,
-            ),
-            task_name="ledger-own-account",
-        )
+        with validating_governed_facts(context.authority_operation):
+            return await await_cancellation_complete(
+                _publish_own_account_action(
+                    context,
+                    payload=payload,
+                    bucket_id=str(payload.profile_id),
+                    repository_factory=self._repository_factory,
+                ),
+                task_name="ledger-own-account",
+            )
 
 
 def build_ledger_own_account_definition(repository_factory: OwnAccountRepositoryFactory) -> OperationDefinition:
@@ -377,13 +395,13 @@ def resolve_ledger_own_account_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile scope, and COMMIT for mutations."""
-    if request.definition_id != LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerOwnAccountRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
+        request_type=LedgerOwnAccountRequest,
+        commits=lambda payload: payload.action not in _READ_ACTIONS,
+    )
 
 
 def build_ledger_own_account_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

@@ -1,0 +1,450 @@
+"""The registered page read shows a stored document's page, or refuses it by a typed code.
+
+Each case runs the production definition through the real registry,
+supervisor, journal and encrypted operand store, with the production
+composition of evidence catalogue, attachment custody, renderer and
+e-invoice reader, against
+documents stored in a real encrypted profile. A success is read back as a
+frontend reads it; a refusal is read from the operation's receipt.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import base64
+import hashlib
+from collections.abc import Iterator
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from io import BytesIO
+from pathlib import Path
+from uuid import UUID
+
+import pytest
+from PIL import Image
+from pydantic import BaseModel
+
+from ...adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
+from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
+from ...adapters.inbound.pdf.page_image import PageImageRenderer
+from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+from ...application.ledger.evidence_page_contracts import (
+    EVIDENCE_PAGE_IMAGE_URL_PREFIX,
+    EVIDENCE_STRUCTURED_TITLE_KEYS,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+    EvidencePageMediaType,
+    EvidencePageRenderer,
+    EvidenceStructuredValueKind,
+    LedgerEvidencePageProjection,
+    LedgerEvidencePageRequest,
+)
+from ...application.ledger.evidence_page_errors import (
+    LedgerEvidencePageDigestMismatchError,
+    LedgerEvidencePageNotFoundError,
+    LedgerEvidencePageOutOfRangeError,
+    LedgerEvidencePageTooLargeError,
+    LedgerEvidencePageUnsupportedMediaError,
+)
+from ...application.ledger.evidence_page_operation import (
+    build_ledger_evidence_page_definition,
+    build_ledger_evidence_page_registration,
+)
+from ...application.operations.frontend_requests import (
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+)
+from ...application.operations.models import OperationRequest, OperationTerminalReceipt
+from ...application.operations.public_scalar import PublicDecimal
+from ...application.operations.registry import OperationRegistry
+from ...core.errors.error_codes import get_registered_error_code
+from ...core.errors.hierarchy import CadrumoError
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.attachments.enums import AttachmentKind, AttachmentSource
+from ...domain.attachments.models import Attachment
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
+from ..evidence_page_operation_composition import build_ledger_evidence_page_operation_ports
+from .dependency_operation_gating_support import supervisor_with_projections
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
+
+_PROFILE = UUID("3c1d5e7f-9a2b-4c4d-8e6f-1a2b3c4d5e6f")
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_FACTURAE = (
+    Path(__file__).resolve().parents[2]
+    / "application"
+    / "ledger"
+    / "tests"
+    / "_evidence_corpus"
+    / "facturae_32_series_and_parties_invoice.xml"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _Settled:
+    receipt: OperationTerminalReceipt
+    page: LedgerEvidencePageProjection | None
+
+
+@pytest.fixture
+def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=str(_PROFILE)) as runtime_profile:
+        yield runtime_profile
+
+
+@pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as pinned:
+        yield pinned
+
+
+def _photo(size: tuple[int, int]) -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", size, (200, 120, 40)).save(buffer, format="JPEG")
+    return buffer.getvalue()
+
+
+def _evidence(tmp_path: Path, name: str, data: bytes) -> PurchaseInvoiceEvidence:
+    """Add a real evidence record from a file the person picked in a folder of their own."""
+    folder = tmp_path / "alba-private-folder"
+    folder.mkdir(exist_ok=True)
+    source = folder / name
+    source.write_bytes(data)
+    bucket_id = str(_PROFILE)
+    return (
+        PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=bucket_id))
+        .add(bucket_id=bucket_id, source_path=source)
+        .record
+    )
+
+
+def _attachment(profile: TestRuntimeProfile, data: bytes, *, mime_type: str, source_reference: str) -> str:
+    store = AttachmentStore(objects=profile.repository)
+    attachment_id = store.put_bytes(data)
+    store.write_manifest(
+        Attachment(
+            attachment_id=attachment_id,
+            kind=AttachmentKind.RECEIPT_IMAGE,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference=source_reference,
+            sha256=hashlib.sha256(data).hexdigest(),
+            mime_type=mime_type,
+            bytes_size=len(data),
+            captured_at=datetime(_YEAR, 10, 24, 9, 0, tzinfo=UTC),
+            bucket_id=str(_PROFILE),
+            captured_by="operator",
+            source_command="aeat app ledger attach",
+        )
+    )
+    return attachment_id
+
+
+def _settle(
+    tmp_path: Path,
+    profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
+    request: LedgerEvidencePageRequest,
+    *,
+    renderer: EvidencePageRenderer | None = None,
+) -> _Settled:
+    definition = build_ledger_evidence_page_definition(build_ledger_evidence_page_operation_ports(renderer=renderer))
+    registration = build_ledger_evidence_page_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    supervisor, projections = supervisor_with_projections(
+        tmp_path=tmp_path,
+        profile_objects=profile.repository,
+        authority_operation=operation,
+        registry=registry,
+    )
+
+    async def settle() -> _Settled:
+        operation_id = await supervisor.submit(
+            OperationRequest[BaseModel](
+                definition_id=LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+                subject_ref=profile_operation_subject(str(_PROFILE)),
+                payload=request,
+            ),
+            operation_id="4" * 64,
+        )
+        terminal = await run_to_settlement(supervisor, operation_id)
+        receipt = terminal.terminal_receipt
+        assert receipt is not None
+        if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+            return _Settled(receipt=receipt, page=None)
+        schema = registration.contract.result_schema
+        assert schema is not None
+        resolved = await projections.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=operation_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=registration.contract.definition_contract_digest,
+                result_schema=schema,
+            ),
+            LedgerEvidencePageProjection,
+        )
+        assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
+        page = resolved.projection
+        assert isinstance(page, LedgerEvidencePageProjection)
+        return _Settled(receipt=receipt, page=page)
+
+    return asyncio.run(settle())
+
+
+def _image(page: LedgerEvidencePageProjection) -> Image.Image:
+    assert page.structured_invoice is None
+    assert page.image_data_url is not None
+    assert page.image_data_url.startswith(EVIDENCE_PAGE_IMAGE_URL_PREFIX)
+    png = base64.b64decode(page.image_data_url.removeprefix(EVIDENCE_PAGE_IMAGE_URL_PREFIX), validate=True)
+    assert png.startswith(_PNG_SIGNATURE)
+    image = Image.open(BytesIO(png), formats=("PNG",))
+    image.load()
+    return image
+
+
+def _assert_refused(settled: _Settled, error: type[CadrumoError]) -> None:
+    assert settled.receipt.condition is OperationTerminalCondition.REFUSED
+    assert settled.receipt.effect is OperationEffect.NONE
+    assert settled.receipt.refusal_ref == get_registered_error_code(error).code
+
+
+def test_a_pdf_evidence_page_is_drawn_with_its_file_name_and_no_folder(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    pdf = multi_page_text_pdf_bytes(("Factura 1 de 2",), ("Factura 2 de 2",))
+    record = _evidence(tmp_path, "factura-luz.pdf", pdf)
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, evidence_id=record.evidence_id, page=2, max_width=640),
+    )
+
+    assert settled.receipt.condition is OperationTerminalCondition.SUCCEEDED
+    assert settled.receipt.effect is OperationEffect.NONE
+    page = settled.page
+    assert page is not None
+    assert (page.evidence_id, page.attachment_id) == (record.evidence_id, record.attachment_id)
+    assert page.media_type is EvidencePageMediaType.PDF
+    assert (page.page, page.page_count, page.width) == (2, 2, 640)
+    assert page.source_sha256 == hashlib.sha256(pdf).hexdigest()
+    assert page.file_name == "factura-luz.pdf"
+    assert _image(page).size == (page.width, page.height)
+    assert "alba-private-folder" not in page.model_dump_json()
+
+
+def test_a_jpeg_attachment_is_scaled_down_to_the_asked_width(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    photo = _photo((2400, 1200))
+    attachment_id = _attachment(
+        profile, photo, mime_type="image/jpeg", source_reference=str(tmp_path / "alba-private-folder" / "ticket.jpg")
+    )
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id, max_width=800),
+    )
+
+    page = settled.page
+    assert page is not None
+    assert page.media_type is EvidencePageMediaType.JPEG
+    assert (page.page, page.page_count, page.width, page.height) == (1, 1, 800, 400)
+    assert page.source_sha256 == attachment_id
+    assert page.file_name == "ticket.jpg"
+    assert _image(page).size == (800, 400)
+    assert "alba-private-folder" not in page.model_dump_json()
+
+
+def test_a_record_whose_digest_its_stored_bytes_do_not_match_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    record = _evidence(tmp_path, "factura.pdf", multi_page_text_pdf_bytes(("Factura",)))
+    ports = build_ledger_evidence_ports(bucket_id=str(_PROFILE))
+    ports.evidence_repository.save(
+        bucket_id=str(_PROFILE), records=(record.model_copy(update={"source_sha256": "0" * 64}),)
+    )
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, evidence_id=record.evidence_id),
+    )
+
+    _assert_refused(settled, LedgerEvidencePageDigestMismatchError)
+
+
+def test_a_facturae_e_invoice_is_shown_as_the_facts_its_record_states(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    xml = _FACTURAE.read_bytes()
+    record = translate_parsed_einvoice(parse_einvoice_document(xml))
+    attachment_id = _attachment(
+        profile, xml, mime_type="text/xml", source_reference=str(tmp_path / "alba-private-folder" / "factura.xml")
+    )
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    assert settled.receipt.condition is OperationTerminalCondition.SUCCEEDED
+    assert settled.receipt.effect is OperationEffect.NONE
+    page = settled.page
+    assert page is not None
+    assert page.media_type is EvidencePageMediaType.XML
+    assert (page.page, page.page_count) == (1, 1)
+    assert (page.width, page.height, page.image_data_url) == (None, None, None)
+    assert page.source_sha256 == attachment_id
+    assert page.file_name == "factura.xml"
+    shown = page.structured_invoice
+    assert shown is not None
+    assert shown.title_key == EVIDENCE_STRUCTURED_TITLE_KEYS[record.shape]
+    facts = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.facts}
+    assert record.invoice_number is not None
+    assert record.supplier_tax_id is not None
+    assert record.grand_total is not None
+    assert facts["invoice_number"].text == record.invoice_number
+    assert facts["supplier_tax_id"].text == record.supplier_tax_id
+    assert facts["grand_total"].number == PublicDecimal(decimal=str(record.grand_total))
+    assert len(shown.lines) == len(record.lines)
+    first_line = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.lines[0].facts}
+    assert first_line["description"].text == record.lines[0].description
+    released = page.model_dump_json()
+    assert "alba-private-folder" not in released
+    assert "<" not in released
+
+
+def test_the_e_invoice_facts_are_typed_so_the_frontend_formats_them_for_the_person(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    """A date, an amount, a rate and a quantity each say what they are, and none is served as formatted text."""
+    xml = _FACTURAE.read_bytes()
+    record = translate_parsed_einvoice(parse_einvoice_document(xml))
+    attachment_id = _attachment(profile, xml, mime_type="text/xml", source_reference="factura.xml")
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    shown = settled.page.structured_invoice if settled.page is not None else None
+    assert shown is not None
+    facts = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.facts}
+    assert record.invoice_date is not None
+    assert facts["invoice_date"].value_kind is EvidenceStructuredValueKind.DATE
+    assert facts["invoice_date"].iso_date == date.fromisoformat(record.invoice_date)
+    assert facts["invoice_date"].text is None
+    for amount in ("taxable_base", "grand_total"):
+        assert facts[amount].value_kind is EvidenceStructuredValueKind.AMOUNT, amount
+        assert facts[amount].number is not None, amount
+    assert facts["invoice_number"].value_kind is EvidenceStructuredValueKind.TEXT
+    line = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.lines[0].facts}
+    assert line["quantity"].value_kind is EvidenceStructuredValueKind.QUANTITY
+    assert line["unit_price"].value_kind is EvidenceStructuredValueKind.AMOUNT
+    assert line["taxable_base"].value_kind is EvidenceStructuredValueKind.AMOUNT
+    assert line["iva_rate"].value_kind is EvidenceStructuredValueKind.RATE_PERCENT
+    assert line["iva_rate"].number == PublicDecimal(decimal=str(record.lines[0].iva_rate))
+
+
+def test_xml_that_is_no_e_invoice_is_refused_as_a_type_the_read_cannot_show(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    attachment_id = _attachment(
+        profile, b"<Invoice>synthetic</Invoice>", mime_type="application/xml", source_reference="invoice.xml"
+    )
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    _assert_refused(settled, LedgerEvidencePageUnsupportedMediaError)
+
+
+def test_an_e_invoice_has_no_second_page(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    attachment_id = _attachment(
+        profile, _FACTURAE.read_bytes(), mime_type="application/xml", source_reference="factura.xml"
+    )
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id, page=2),
+    )
+
+    _assert_refused(settled, LedgerEvidencePageOutOfRangeError)
+
+
+def test_a_document_of_a_type_the_read_cannot_show_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    attachment_id = _attachment(profile, b"Factura 1", mime_type="text/plain", source_reference="factura.txt")
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    _assert_refused(settled, LedgerEvidencePageUnsupportedMediaError)
+
+
+def test_a_document_above_the_byte_bound_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    photo = _photo((600, 400))
+    attachment_id = _attachment(profile, photo, mime_type="image/jpeg", source_reference="ticket.jpg")
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id),
+        renderer=PageImageRenderer(max_source_bytes=len(photo) - 1),
+    )
+
+    _assert_refused(settled, LedgerEvidencePageTooLargeError)
+
+
+def test_a_page_beyond_the_document_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    record = _evidence(tmp_path, "factura.pdf", multi_page_text_pdf_bytes(("Factura",), ("Anexo",)))
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, evidence_id=record.evidence_id, page=3),
+    )
+
+    _assert_refused(settled, LedgerEvidencePageOutOfRangeError)
+
+
+def test_an_evidence_record_the_profile_does_not_hold_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, evidence_id="ev-missing")
+    )
+
+    _assert_refused(settled, LedgerEvidencePageNotFoundError)
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [{}, {"evidence_id": "ev-1", "attachment_id": "a" * 64}],
+    ids=["neither", "both"],
+)
+def test_a_request_names_exactly_one_document(fields: dict[str, str]) -> None:
+    with pytest.raises(ValueError, match="exactly one"):
+        LedgerEvidencePageRequest(profile_id=_PROFILE, **fields)

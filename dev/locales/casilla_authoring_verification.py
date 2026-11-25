@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
-    CasillaEvolutionKind,
 )
+from dev.registry.compiler.cross_revision_divergence import covered_fields
 
 from .casilla_catalogue_models import (
     Coordinate,
@@ -27,7 +27,7 @@ from .casilla_text_policy import (
 from .manager import LocaleManager
 
 
-def _add_declared_casilla_label_link(
+def add_declared_casilla_label_link(
     self: ModeloCasillaCatalogue,
     evolution: CasillaContinuidadEvolutionDefinition,
     occurrences: Mapping[str, int],
@@ -35,10 +35,7 @@ def _add_declared_casilla_label_link(
     links: dict[str | None, set[str | None]],
 ) -> None:
     """Add declared casilla label link."""
-    if evolution.evolution_kind not in (
-        CasillaEvolutionKind.LABEL_EVOLVED,
-        CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED,
-    ) or not (evolution.legal_refs and evolution.source_refs):
+    if "label" not in covered_fields(evolution.evolution_kind) or not (evolution.legal_refs and evolution.source_refs):
         return
     start = occurrences.get(str(evolution.from_revision))
     end = occurrences.get(str(evolution.to_revision))
@@ -52,7 +49,7 @@ def _add_declared_casilla_label_link(
     links[right].add(left)
 
 
-def _apply_authored_casilla_locale(manager: LocaleManager, locale: str, values: Mapping[str, str | None]) -> None:
+def apply_authored_casilla_locale(manager: LocaleManager, locale: str, values: Mapping[str, str | None]) -> None:
     """Apply authored casilla locale."""
     settings = {key: text for key, text in values.items() if text is not None}
     removals = sorted(key for key, text in values.items() if text is None)
@@ -62,7 +59,7 @@ def _apply_authored_casilla_locale(manager: LocaleManager, locale: str, values: 
         manager.remove_locale_values(locale, removals)
 
 
-def _record_authored_casilla_change(
+def record_authored_casilla_change(
     self: ModeloCasillaCatalogue,
     proof: ModeloCasillaCatalogue,
     before: Mapping[Coordinate, str | None],
@@ -84,7 +81,7 @@ def _record_authored_casilla_change(
     changed[locale] += 1
 
 
-def _record_introduced_casilla_segment_drift(
+def record_introduced_casilla_segment_drift(
     self: ModeloCasillaCatalogue,
     proof: ModeloCasillaCatalogue,
     locale: str,
@@ -99,7 +96,7 @@ def _record_introduced_casilla_segment_drift(
             introduced_drift.append((locale, segment, renderings))
 
 
-def _refuse_unknown_authored_casilla_keys(
+def refuse_unknown_authored_casilla_keys(
     self: ModeloCasillaCatalogue, manifest: Mapping[str, Mapping[str, str | None]]
 ) -> None:
     """Refuse unknown authored casilla keys."""

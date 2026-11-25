@@ -2,22 +2,15 @@ desktop:
   agent:
     add_files: Afegeix fitxers
     aeat_setup_check: Comprovar la configuració i continuar
-    aeat_setup_help: Desa aquí les dades d'autenticació i tanca l'editor per tornar
-      a la conversa. Les credencials no s'envien al xat.
     aeat_setup_resume_message: He acabat amb els ajustos de l'AEAT. Comprova la configuració
       desada, ajuda'm amb els requisits pendents i continua la nostra tasca quan estigui
       llesta.
-    aeat_setup_return: Tornar a la conversa
-    aeat_setup_title: Configurar l'accés a l'AEAT
     agent_replied: L'agent ha respost
-    approval_allow_always: Permet-ho
+    already_new: Ja ets en una conversa nova
     approval_allow_once: Permet-ho un cop
-    approval_allow_server_session: Permet totes les eines de {server} durant aquesta
-      sessió
     approval_allow_session: Permet-ho durant aquesta sessió
     approval_attachment: 'Adjunt: {target}'
     approval_operation: 'Operació: {target}'
-    approval_reject_always: No ho permetis
     approval_reject_once: No ho permetis
     approval_review_title: Revisa això abans que Cadrumo ho faci
     approval_tool_title: L'agent et demana permís
@@ -26,6 +19,33 @@ desktop:
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})
     attach_filter: Documents
+    attachment_grant_document: '{name} a {model}'
+    attachment_grant_images: Imatges de pàgines a {model}
+    attachment_grant_revoke: Revoca
+    attachment_grants_title: Permisos recordats
+    attachment_open_profile: Obre el perfil
+    attachment_refusal:
+      acknowledgement_missing: No has permès aquesta lectura.
+      cloud_upload_not_permitted: Aquesta instal·lació no permet que els documents
+        surtin d'aquest ordinador, i cap ajust del teu perfil no ho canvia.
+      document_removed: El fitxer s'ha eliminat.
+      file_changed_during_read: El fitxer ha canviat. Torna a afegir-lo per llegir
+        la versió nova.
+      gestor_mode: El mode gestor mai envia documents fora d'aquest ordinador.
+      grant_revoked: Aquest permís ja s'ha revocat.
+      not_signed_in: Inicia la sessió per respondre.
+      profile_not_eligible: El teu perfil no permet que els documents surtin d'aquest
+        ordinador. Ho controla l'ajust «Lectura de documents fora de l'equip» del
+        teu perfil.
+      profile_unreadable: No s'ha pogut llegir l'ajust «Lectura de documents fora
+        de l'equip» del teu perfil, així que no s'ha enviat res. Torna-ho a provar
+        d'aquí a un moment.
+      reference_unknown: L'agent ja no espera aquest fitxer.
+      service_failed: No s'ha pogut registrar el permís, així que no s'ha enviat res.
+    attachment_refused: Aquest fitxer no s'ha enviat. {reason}
+    attachment_refused_group: Aquests fitxers no s'han enviat. {reason}
+    attachment_refused_named: '{name} no s''ha enviat. {reason}'
+    attachment_refused_title: Fitxers sense enviar
     attachments: Fitxers per al missatge següent
     attachments_refused: 'No acceptats: {count}'
     attachments_uploading: 'S''estan pujant: {count}'
@@ -35,14 +55,38 @@ desktop:
     can_write: escriure fitxers
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
+    carried_from: Portat de {title}
+    carried_from_unknown: Portat d'una conversa anterior
+    carried_omitted: Es van ometre {omitted} torns més antics.
+    carried_omitted_one: Es va ometre {omitted} torn més antic.
+    carried_turns: Aquesta conversa va començar amb {carried} torns de l'anterior.
+    carried_turns_one: Aquesta conversa va començar amb {carried} torn de l'anterior.
+    carry_back: Torna a aquella conversa
+    carry_pending: El teu proper missatge comença una conversa nova que porta els
+      torns més recents de «{title}».
+    carry_pending_untitled: El teu proper missatge comença una conversa nova que porta
+      els torns més recents de l'anterior.
+    carry_source_not_settled: La resposta de la conversa anterior encara no ha acabat.
+      Espera que acabi i torna a enviar.
+    carry_source_unavailable: No es pot portar la conversa anterior. Torna a enviar
+      per començar la conversa nova sense ella.
+    catalog_unavailable: No s'ha pogut llegir la llista de proveïdors de l'agent.
+    choose_another_model: Tria un altre model
     choose_model: Tria un model
-    choose_provider: Tria un proveïdor
+    choose_to_start: Tria un proveïdor i un model per començar.
     close_documents: Tanca els documents
-    collapse_members: Amaga els fitxers de {name}
     condition_budget_exhausted: Pressupost esgotat
     condition_credits_exhausted: Sense crèdits
     condition_invalid_request: El proveïdor ha rebutjat la petició
+    condition_model_does_not_fit: El model no cap en els recursos que aquest ordinador
+      pot donar-li. Tria un model més petit o un altre proveïdor.
+    condition_model_unavailable: Aquest model no està disponible en aquest proveïdor.
+      Tria un altre model de la llista.
+    condition_model_unavailable_named: '{model} no està disponible a {provider} ({connection}).
+      Tria un altre model de la llista.'
     condition_network_unreachable: No es pot contactar amb el proveïdor
+    condition_no_answer: El model no ha donat cap resposta utilitzable per a aquest
+      document. Prova un altre model (instruct) o torna-ho a provar.
     condition_provider_overloaded: El proveïdor està sobrecarregat
     condition_throttled: Has arribat al límit d'ús del proveïdor. Consulta el teu
       compte del proveïdor o tria'n un altre.
@@ -50,13 +94,22 @@ desktop:
     condition_usage_exhausted: Has arribat al límit d'ús del proveïdor. Consulta el
       teu compte del proveïdor o tria'n un altre.
     consent_allow: Envia-ho a {provider}
+    consent_allow_remember: Permet i recorda
+    consent_allow_session: Permet durant aquesta sessió
     consent_decline: No ho enviïs
+    consent_document_text: El text llegit de {name}
     consent_items: Què s'enviaria
     consent_lead: Per respondre, {model} necessita el contingut següent. Si l'envies,
       surt d'aquest ordinador i va a {provider}.
     consent_note: No s'envia res fins que triïs. Si no l'envies, es queda en aquest
       ordinador.
+    consent_page_images: Imatges de les pàgines de {name}
+    consent_page_images_warning: Les imatges mostren tot el que hi ha a la pàgina
+      i surten d'aquest ordinador. Si les permets per més endavant, cobreixen qualsevol
+      document que llegeixi aquest model.
+    consent_recall: El que ja s'ha enviat no es pot recuperar.
     consent_title: Vols enviar això a {provider}?
+    continue_in_new_conversation: Continua en una conversa nova
     conversation_deleting: Aquesta conversa s'està eliminant, així que no admet fitxers.
     conversation_id_taken: Aquesta conversa no pot desar fitxers. Comença una conversa
       nova per adjuntar-los.
@@ -66,11 +119,14 @@ desktop:
     delete_confirm_bare: Vols suprimir «{title}»? No es pot desfer.
     delete_incomplete: L’eliminació encara no ha acabat. Cadrumo continuarà la neteja
       quan es reiniciï el servei de l’agent.
+    document_remove_failed: No s’ha pogut confirmar l’eliminació del fitxer. Actualitza
+      la llista abans de tornar-ho a provar.
+    document_selected: Seleccionat per al missatge següent
+    document_selection_limit: Un missatge pot mencionar com a màxim {count} fitxers.
     documents: Documents
     documents_attached: 'En aquesta conversa: {count}'
     documents_empty: Encara no hi ha documents en aquesta conversa
-    documents_failed: 'Amb error: {count}'
-    documents_review: 'Per revisar: {count}'
+    download_models: Baixa models
     drop_accepts: 'S''accepten: {types}'
     drop_hint: Mantén premuda la tecla {key} per deixar anar
     drop_release: Deixa anar per afegir els fitxers
@@ -78,25 +134,39 @@ desktop:
     drop_release_single: Deixa anar per afegir 1 fitxer
     drop_title: Afegeix a aquesta conversa
     effort: Esforç
+    effort_catalog_default: 'predeterminat del catàleg: {effort}'
     effort_default: Per defecte
     effort_high: Alt
     effort_low: Baix
     effort_max: Màxim
     effort_medium: Mitjà
+    effort_provider_default: Predeterminat del proveïdor
     effort_ultra: Ultra
     effort_xhigh: Molt alt
-    expand_members: Mostra els fitxers de {name}
+    engine_door_local_ai_setup: Repara la IA local
+    engine_not_running: El motor d'IA local no s'està executant.
+    engine_reason_answer_unreadable: Ha respost, però no com s'esperava.
+    engine_reason_no_answer_in_time: No ha respost a temps.
+    engine_reason_not_reachable: No s'hi pot accedir des d'aquest ordinador.
     files_summary: 'Fitxers: {count} · {size}'
     hide: Amaga l'agent
     history: Historial
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
+    lane_fixed_refused: Aquesta conversa continua amb el proveïdor amb què va començar.
+      Per fer-ne servir un altre, tria'l i continua en una conversa nova.
     lane_no_catalog: No s’han pogut carregar els models. Torna-ho a provar.
+    lane_no_installed_model: Encara no hi ha cap model baixat. Baixa'n un als ajustos.
     lane_not_admitted: No està disponible en aquest ordinador. Tria'n un altre.
     lane_not_configured: Configura aquest proveïdor als ajustos.
+    lane_not_observed: Encara no s'ha comprovat. El podràs triar quan l'agent estigui
+      a punt.
     lane_notice: Les converses d'aquesta versió no estan xifrades.
     lane_signed_out: Inicia la sessió en aquest proveïdor des dels ajustos.
     lane_unreachable: No es pot connectar. Revisa aquest proveïdor als ajustos.
+    lane_unreadable_refused: No es pot llegir el proveïdor amb què va funcionar aquesta
+      conversa. Torna a enviar el teu missatge per continuar en una conversa nova
+      que porti aquesta.
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
     mention_empty: Cap document desat no coincideix
@@ -107,13 +177,58 @@ desktop:
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
+    model_does_not_fit_memory: Aquest model no s'ha pogut carregar amb {context} tokens
+      de context a la memòria lliure d'aquest ordinador ara mateix. Tria un model
+      més petit, o tanca alguns programes i torna-ho a provar.
+    model_does_not_fit_refused: Aquest model no cap en els recursos que aquest ordinador
+      pot donar-li ara mateix. Tria un model més petit o canvia on s'executen els
+      models als ajustos de la IA local.
+    model_does_not_fit_shortfall: Aquest model necessita uns {needed} tokens de context
+      per a aquesta conversa, més dels {context} que pot contenir. Tria un altre model,
+      o un altre proveïdor per a aquesta conversa.
+    model_matrix_availability: Disponibilitat
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Esborra la cerca
+    model_matrix_count: '{count} models mostrats'
+    model_matrix_count_one: 1 model mostrat
+    model_matrix_filter_all: Tots
+    model_matrix_filter_off: Desactivats
+    model_matrix_filter_on: Activats
+    model_matrix_filter_ready: A punt
+    model_matrix_filter_setup: Per configurar
+    model_matrix_label: Models i esforços
+    model_matrix_lane_models: '{count} models'
+    model_matrix_lane_models_one: 1 model
+    model_matrix_none_on: No hi ha cap proveïdor activat. Activa'n un a Proveïdors
+      d'IA.
+    model_matrix_off_hidden: '{count} proveïdors estan desactivats'
+    model_matrix_off_hidden_one: 1 proveïdor està desactivat
+    model_matrix_search_empty: Cap model coincideix amb la teva cerca.
+    model_matrix_search_label: Cerca models
+    model_matrix_show: Mostra
+    model_matrix_state: Estat
+    model_not_installed: '{name} (sense baixar)'
+    model_not_installed_refused: El model triat no és en aquest ordinador. Baixa'l
+      o tria'n un altre.
+    model_not_offered_refused: El teu compte no ofereix aquest model. Tria'n un altre
+      de la llista.
+    model_with_effort: '{model} ({effort})'
     model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
       tal com l'escriu el proveïdor.
     more_files: +{count} més
+    movement_dismiss: Descarta
+    movement_shared: En enviar-lo, el comparteixes amb {provider}, que el llegeix
+      fora d'aquest ordinador.
+    movement_staged: '{name} conté aquest moviment tal com el registra el Llibre:
+      les dates, l''import, la contrapart, la descripció, la classificació i l''estat
+      de revisió. No s''envia res fins que no premis Envia.'
+    movement_storing: S'està afegint el moviment a la conversa…
+    movement_unavailable: L'agent encara no pot rebre un moviment aquí.
+    movement_unreadable: No s'ha pogut llegir el moviment del Llibre.
     new_conversation: Conversa nova
-    no_models: No hi ha models per triar
+    no_installed_model: Encara no hi ha cap model d'IA baixat. Baixa'n un per començar.
     no_provider: Configura un proveïdor d'IA per començar.
-    provider: Proveïdor
+    platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
     questions_answer: Respon
     questions_clear: Esborra aquesta resposta
     questions_control: Escriu cada resposta en una sola línia.
@@ -136,9 +251,14 @@ desktop:
     reference_refused: Un document que has esmentat no es pot compartir amb l'agent.
     references_unavailable: Els documents desats d'aquesta conversa no estan disponibles
       ara.
+    refresh_documents: Actualitza
     refused: No acceptat
     remove_all: Treu-ho tot
     remove_document: Treu {name}
+    remove_document_confirm: Vols eliminar «{name}» d’aquesta conversa? Els missatges
+      que el mencionen ja no el podran llegir.
+    remove_documents_confirm: Vols eliminar els {count} documents desats d’aquesta
+      conversa? Aquesta acció no es pot desfer.
     remove_file: Treu {name}
     rename: Canvia el nom
     rename_label: Nom de la conversa
@@ -153,12 +273,20 @@ desktop:
     resize: Canvia la mida de l'agent
     restore: Restaura
     retry: Torna-ho a provar
-    role_context: Context
-    role_information: Informació
-    role_label: Fes-lo servir com a
-    role_ledger: Dades del llibre
     row_documents: 'Documents: {count}'
     search_history: Cerca converses
+    search_placeholder: Cerca
+    selection_change_asked: Aquest missatge canvia el model de {previous} a {requested}.
+    selection_change_confirm: Canvia i envia
+    selection_change_keep: Mantén el model
+    selection_change_omitted: S'ometen {omitted} missatges anteriors.
+    selection_change_omitted_one: S'omet {omitted} missatge anterior.
+    selection_change_refused: Canviar el model necessita la teva confirmació. Torna
+      a enviar el missatge.
+    selection_change_retained: El model nou rep {retained} missatges d'aquesta conversa
+      (uns {tokens} tokens).
+    selection_change_retained_one: El model nou rep {retained} missatge d'aquesta
+      conversa (uns {tokens} tokens).
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
@@ -177,6 +305,7 @@ desktop:
     service_signed_out: Inicia la sessió per parlar amb l'agent.
     service_starting: S'està iniciant l'agent…
     service_stopped: L'agent no està en marxa.
+    service_timeout: L’agent ha superat el temps d’espera i s’ha aturat.
     set_up_providers: Configura els proveïdors d'IA
     settings: Configuració de l'agent
     settings_label: 'Model: {current}'
@@ -214,19 +343,98 @@ desktop:
     slash_label: Habilitats i ordres
     slash_loading: S'estan llegint les habilitats de l'agent…
     slash_skills: Habilitats
-    status_extracting: S'està llegint
-    status_failed: Amb error
-    status_needs_review: Per revisar
     status_ready: A punt
-    status_skipped: Omès
-    status_uploading: S'està pujant
     stop: Atura
     stopped: Aturat
     thinking: Raonament
     thoughts: El que va pensar l'agent
+    tool:
+      cadrumo:
+        authority:
+          description: 'Consulta dades fiscals de referència publicades: models, caselles,
+            fórmules i portals.'
+          label: Consultar dades fiscals
+        control:
+          description: Inicia, reprèn, cancel·la o deixa anar una operació.
+          label: Controlar una operació
+        corpus_search:
+          description: Cerca als textos legals del BOE i l'AEAT inclosos i a la terminologia
+            fiscal.
+          label: Cercar a la legislació
+        describe:
+          description: Llegeix què fa una operació i què necessita.
+          label: Descriure una operació
+        execute:
+          description: Envia una operació al teu perfil. Pot canviar les teves dades.
+          label: Executar una operació
+        observe:
+          description: Comprova com va una operació enviada.
+          label: Seguir una operació
+        respond:
+          description: Aplica o rebutja una revisió que espera una resposta.
+          label: Respondre a una revisió
+        result:
+          description: Llegeix el resultat d'una operació acabada.
+          label: Llegir un resultat
+        result_page:
+          description: Llegeix una pàgina del resultat d'una operació acabada.
+          label: Llegir una pàgina de resultat
+        review:
+          description: Llegeix una revisió que espera la teva resposta.
+          label: Llegir una revisió
+        search:
+          description: Cerca les operacions que l'agent pot executar al teu perfil.
+          label: Cercar operacions
+        status:
+          description: Comprova en quin perfil has autoritzat que treballi l'agent
+            i si l'aplicació està disponible.
+          label: Comprovar la sessió
+        views:
+          description: Cerca les vistes d'aquesta finestra que pot obrir un enllaç
+            i comprova enllaços.
+          label: Cercar vistes
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Llista els documents adjunts a la conversa.
+          label: Llistar els adjunts
+        load_skill:
+          description: Carrega les instruccions d'una habilitat perquè l'agent les
+            segueixi.
+          label: Carregar una habilitat
+        read_attachment:
+          description: Llegeix un document que vas adjuntar a la conversa.
+          label: Llegir un adjunt
+        read_conversation_history:
+          description: Llegeix parts anteriors d'aquesta conversa.
+          label: Llegir aquesta conversa
+        read_file:
+          description: Llegeix un fitxer de l'espai de treball de l'agent.
+          label: Llegir un fitxer
+        read_web_source:
+          description: Obre una pàgina web i la llegeix.
+          label: Llegir una pàgina web
+        resolve_output_path:
+          description: Determina on es desarà un fitxer que generi l'agent.
+          label: Triar on desar
+        run_program:
+          description: Executa un programa en aquest ordinador.
+          label: Executar un programa
+        run_subagent:
+          description: Encarrega una part de la tasca a un agent auxiliar.
+          label: Iniciar un agent auxiliar
+        search_previous_conversations:
+          description: Cerca a les teves converses anteriors amb l'agent.
+          label: Cercar converses anteriors
+        web_search:
+          description: Cerca a internet.
+          label: Cercar a internet
+        write_file:
+          description: Crea o modifica un fitxer a l'espai de treball de l'agent.
+          label: Escriure un fitxer
     tool_details: Detalls de la crida
     tool_done: Fet
     tool_failed: Amb error
+    tool_generic: Eina {name}
     tool_kind_delete: Elimina
     tool_kind_edit: Edita
     tool_kind_execute: Executa
@@ -238,7 +446,12 @@ desktop:
     tool_kind_switch_mode: Canvia de mode
     tool_kind_think: Pensa
     tool_pending: Pendent
+    tool_reach:
+      local_read: Llegeix dades d'aquest ordinador
+      local_write: Canvia dades d'aquest ordinador
+      online: Fa servir internet
     tool_running: En curs
+    tool_unnamed: Una eina
     transcript: Conversa
     transcript_empty: Encara no hi ha missatges
     unavailable: Encara no està disponible
@@ -247,10 +460,12 @@ desktop:
     upload_name_refused: El seu nom no es pot desar; canvia'l i torna-ho a provar
     upload_quota_exceeded: L'emmagatzematge d'aquesta conversa és ple
     upload_too_large: Massa gran per a aquesta conversa
+    upload_too_large_limit: 'Massa gran: el màxim és {limit}'
     upload_unreadable: No s'ha pogut llegir
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
     usage: 'Tokens utilitzats: {input} enviats, {output} rebuts'
+    use_document: Utilitza {name} al missatge següent
     waiting_on_you: Esperant la teva resposta
     welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
       rebuts, factures i extractes bancaris amb +.
@@ -263,6 +478,8 @@ desktop:
   providers:
     add_key: Afegeix una clau API
     address: 'Adreça: {url}'
+    agent_starting: L'agent s'està iniciant. Podràs canviar aquests ajustos quan estigui
+      a punt.
     base_url_default: Deixa-la buida per fer servir {url}.
     base_url_label: Adreça del servidor
     base_url_required: Introdueix l’adreça que t’ha facilitat el proveïdor.
@@ -270,21 +487,98 @@ desktop:
     change_failed: No s’ha pogut desar. Actualitza i torna-ho a provar.
     connection_api: Clau API
     connection_app: Aplicació instal·lada
+    connection_local: En aquest ordinador
+    console_command_label: 'Executa aquesta ordre en un terminal:'
     detail_app_missing: Instal·la l'aplicació de {provider} i després inicia la sessió.
-    detail_off: 'Desactivat: l''agent no l''ofereix ni el fa servir.'
-    detail_off_kept: 'Desactivat: l''agent no l''ofereix ni el fa servir. La seva
-      clau API es conserva per quan l''activis.'
     detail_sign_in: Inicia la sessió amb el teu compte de {provider}.
-    group_intro: Tria un proveïdor per configurar-lo.
     icon_credits: Crèdits de les icones
     key_label: Clau d'API de {provider}
     key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
+    lane_details: Detalls de {provider} ({connection})
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
+    local_engine_change_failed: No s’ha desat el teu canvi. Torna-ho a provar.
+    local_engine_changing: Desant…
+    local_engine_lead: El programa que executa els models en aquest ordinador. La
+      llista de models és la mateixa amb qualsevol dels dos.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Inclòs. No cal instal·lar res.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Es baixa i es configura quan el tries.
+    local_engine_restarts: Canviar el motor o on s’executen els models reinicia l’assistent.
+    local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no està inclòs en aquesta instal·lació. Tria
+      Ollama.
+    local_model_absent: Sense baixar
+    local_model_add: Afegeix
+    local_model_add_label: Afegeix un model pel nom
+    local_model_download: Baixa
+    local_model_installed: Baixat
+    local_model_licence: 'Llicència: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
+    local_model_licence_unknown: 'Llicència: no indicada'
+    local_model_remove: Treu
+    local_model_remove_failed: Cadrumo no ha pogut treure el model. Torna-ho a provar.
+    local_model_size: 'Mida de la baixada: {size}'
+    local_models_failed: No s'ha pogut llegir la teva llista de models. Torna-ho a
+      provar.
+    local_models_lead: Els models amb què la IA local pot llegir els teus documents.
+      L'agent recomana els primers; afegeix qualsevol altre model pel nom amb què
+      el coneix la IA local. Baixa un model per fer-lo servir.
+    local_models_loading: S'està llegint la teva llista de models…
+    local_models_none: L'agent encara no ofereix models per a aquesta connexió.
+    local_models_refused_catalog_unavailable: No s'ha pogut llegir la llista de proveïdors
+      de l'agent. Torna-ho a provar.
+    local_models_refused_committed_readback_failed: El canvi s'ha desat, però no s'ha
+      pogut tornar a llegir. Torna a obrir això per comprovar-ho.
+    local_models_refused_full: La llista és plena. Treu-ne abans un model.
+    local_models_refused_invalid_name: Aquest no és un nom de model que la IA local
+      pugui fer servir.
+    local_models_refused_revision_conflict: La teva llista ha canviat en un altre
+      lloc. S'ha tornat a llegir, així que torna-ho a provar.
+    local_models_refused_unknown: No s'ha pogut canviar la teva llista. Torna-ho a
+      provar.
+    local_models_reset: Restableix la llista
+    local_models_title: Models en aquest ordinador
+    local_models_unreadable: La teva llista de models desada no es pot llegir. Restableix-la
+      per tornar a començar amb els models recomanats.
+    local_placement_auto: Automàtic
+    local_placement_auto_detail: Fa servir la targeta gràfica quan hi cap el model.
+    local_placement_cpu_only: Només processador
+    local_placement_cpu_only_detail: Més lent. Fa servir només la memòria d’aquest
+      ordinador.
+    local_placement_title: On s’executen els models
+    next_step:
+      close_other_sign_in: Tanca l'altre inici de sessió i torna-ho a provar.
+      console_sign_in: Inicia la sessió des d'un terminal.
+      install_cli: Instal·la l'aplicació del proveïdor i torna-ho a provar.
+      move_profile_outside_git: Mou la carpeta del perfil fora del projecte de Git
+        i torna-ho a provar.
+      retry: Torna-ho a provar d'aquí a un moment.
+      update_app: Actualitza aquesta aplicació a l'última versió i torna-ho a provar.
+    reads_off_host: La teva conversa surt d’aquest ordinador cap al proveïdor.
+    reads_on_host: La teva conversa es queda en aquest ordinador.
+    reason_add_key: Afegeix una clau API de {provider} per fer-lo servir.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
+    reason_key_saved: 'Es comprova el primer cop que es fa servir: envia un missatge
+      o executa una tasca amb ell.'
+    reason_local_ready: Funciona en aquest ordinador. Tria'l a l'agent per fer-lo
+      servir.
+    reason_not_checked: Encara no s'ha comprovat. Es comprova el primer cop que es
+      fa servir.
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
+    reason_signed_in: Sessió iniciada amb l'aplicació de {provider}. Tria'l a l'agent
+      per fer-lo servir.
+    reason_turned_off: L'agent no l'ofereix ni el fa servir. Activa'l amb l'interruptor
+      per tornar-lo a fer servir.
     refresh: Torna-ho a provar
+    refused_agent_starting: L'agent s'està iniciant, així que encara no s'ha desat.
+      Torna-ho a provar d'aquí a un moment.
     refused_base_url_rejected: Revisa l’adreça del servidor i torna-ho a provar.
+    refused_busy: Encara hi ha un altre canvi als teus proveïdors en curs. Torna-ho
+      a provar d'aquí a un moment.
     refused_invalid_key_format: Això no sembla una clau d'aquest proveïdor.
+    refused_model_list_full: La llista de models és plena. Treu un model abans d'afegir-ne
+      un altre.
     refused_not_signed_in: Inicia la sessió per canviar aquesta configuració.
     refused_person_act_required: Només tu pots canviar aquesta configuració, des d'aquesta
       finestra.
@@ -292,29 +586,112 @@ desktop:
     refused_revision_conflict: Aquesta configuració ha canviat mentrestant. Es mostra
       la darrera; torna-ho a provar.
     refused_runtime_unavailable: Reinicia Cadrumo i torna-ho a provar.
+    refused_service_failed: No s'ha pogut completar el canvi.
+    refused_timed_out: Cadrumo no ha rebut resposta a temps. Actualitza per veure
+      si el canvi s'ha fet.
     remove_key: Elimina la clau API
     replace_key: Substitueix la clau API
     save: Desa
+    save_retry: Torna-ho a provar
     saved_unread: Desat, però no se n'ha pogut llegir l'estat. Torna-ho a provar.
     saving: S'està desant…
-    search_empty: No hi ha proveïdors que coincideixin. Prova una altra cerca.
-    search_label: Cerca proveïdors
-    search_placeholder: Cerca proveïdors
     sign_in_action: Inicia la sessió
+    sign_in_agent_still_running: L'agent encara no s'ha aturat, així que no s'ha pogut
+      iniciar la sessió a {provider}. Torna-ho a provar d'aquí a un moment.
+    sign_in_agent_stopping: Cadrumo està aturant l'agent per iniciar la sessió a {provider}.
+      L'inici de sessió continuarà sol quan s'hagi aturat.
     sign_in_busy: Un altre inici de sessió de {provider} encara s'està acabant. Espera
       un moment i torna-ho a provar.
     sign_in_cancel: Cancel·la l'inici de sessió
     sign_in_cancel_failed: El Cadrumo encara no ha pogut cancel·lar l'inici de sessió.
       Mantén aquest diàleg obert mentre ho comprova.
     sign_in_cancelled: S'ha cancel·lat l'inici de sessió.
+    sign_in_cause:
+      agent_stop_failed: No s'ha pogut aturar l'agent per acabar l'inici de sessió.
+      agent_tree_running: L'agent encara s'estava executant, així que no s'ha pogut
+        iniciar la sessió.
+      browser_not_offered: Claude no ha ofert cap pàgina d'inici de sessió a temps.
+      browser_relay_unavailable: No s'ha pogut passar la pàgina d'inici de sessió
+        al navegador.
+      cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió s'hagi tancat
+        correctament.
+      cli_exited_early: L'aplicació del proveïdor s'ha aturat abans d'acabar l'inici
+        de sessió.
+      cli_not_found: L'aplicació del proveïdor no està instal·lada o no s'ha trobat.
+      cli_protocol_mismatch: L'aplicació del proveïdor ha respost d'una manera que
+        aquesta versió no entén.
+      cli_reported_error: L'aplicació del proveïdor ha indicat un error durant l'inici
+        de sessió.
+      cli_start_failed: No s'ha pogut iniciar l'aplicació del proveïdor.
+      helper_ended_without_result: L'inici de sessió ha acabat sense resultat.
+      helper_exit_nonzero: L'inici de sessió ha acabat amb un error.
+      helper_output_invalid: L'inici de sessió ha donat una resposta que no s'ha pogut
+        llegir.
+      helper_start_failed: No s'ha pogut començar l'inici de sessió.
+      home_in_git_project: La carpeta del perfil és dins d'un projecte de Git i l'aplicació
+        del proveïdor no hi inicia la sessió.
+      home_unavailable: No s'ha pogut usar la carpeta reservada per a l'inici de sessió
+        d'aquest proveïdor.
+      host_disconnected: S'ha perdut el contacte amb l'inici de sessió mentre s'executava.
+      host_input_invalid: L'inici de sessió ha rebut una entrada que no ha pogut usar.
+      internal_error: L'inici de sessió ha tingut un error intern.
+      lane_not_signable: No es pot iniciar la sessió en aquest proveïdor des d'aquí.
+      login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest
+        perfil.
+      login_not_completed: L'inici de sessió no s'ha completat.
+      logout_agent_unavailable: No s'ha pogut iniciar l'agent que tanca la sessió
+        dels proveïdors.
+      logout_not_completed: L'aplicació del proveïdor no ha tancat la sessió, o el
+        proveïdor encara té la sessió iniciada.
+      logout_timed_out: Tancar la sessió ha trigat massa i s'ha aturat.
+      prepare_failed: No s'ha pogut preparar l'inici de sessió.
+      previous_cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió
+        anterior es tanqués correctament.
+      probe_cleanup_unconfirmed: No s'ha pogut confirmar que la comprovació de l'inici
+        de sessió del proveïdor s'hagi tancat correctament.
+      probe_output_unreadable: La comprovació de l'inici de sessió del proveïdor ha
+        donat una resposta que no s'ha pogut llegir.
+      probe_start_failed: No s'ha pogut començar la comprovació de l'inici de sessió
+        del proveïdor.
+      probe_timed_out: La comprovació de l'inici de sessió del proveïdor ha trigat
+        massa.
+      profile_missing: No s'ha trobat el perfil d'aquest inici de sessió.
+      profile_signed_out: El teu perfil ha tancat la sessió durant l'inici de sessió.
+      settings_change_failed: No s'ha pogut desar la configuració del proveïdor.
+      settings_refused: La configuració del proveïdor ha rebutjat el canvi.
+      sign_in_in_progress: Ja hi havia un altre inici de sessió en curs per a aquest
+        proveïdor.
+      sign_in_owner_held: Una altra finestra estava iniciant la sessió en aquest proveïdor.
+      status_context_unavailable: No hi havia cap perfil obert amb què comprovar l'inici
+        de sessió.
+      status_not_confirmed: L'inici de sessió ha acabat, però no s'ha pogut confirmar
+        que hagis iniciat la sessió.
+      status_read_failed: No s'ha pogut llegir si has iniciat la sessió.
+      status_unreadable: No s'ha pogut llegir la resposta sobre si has iniciat la
+        sessió.
+      timed_out: L'inici de sessió ha trigat massa.
+      unsupported_method: L'aplicació del proveïdor no admet aquesta manera d'iniciar
+        la sessió.
+    sign_in_checking: S'està comprovant l'inici de sessió…
     sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
+    sign_in_code_checking: Comprovant el codi d’autorització…
+    sign_in_code_label: Codi d’autorització
+    sign_in_code_prompt: Introdueix el codi d’autorització que apareix a la pàgina
+      del proveïdor.
+    sign_in_code_submit: Envia el codi
+    sign_in_code_time_limited: 'Escriu el codi tan aviat com el tinguis: {provider}
+      només l''espera poca estona. Si s''acaba el temps, pots tornar a començar.'
+    sign_in_code_unfinished: L'inici de sessió de {provider} ha acabat sense completar-se
+      mentre esperava el codi; potser s'ha acabat el temps per escriure'l. Torna a
+      començar per rebre un codi nou.
     sign_in_done: Fet
     sign_in_failure: No s'ha pogut completar l'inici de sessió. Torna-ho a provar
       més tard.
     sign_in_host_disconnected: El Cadrumo ha perdut el contacte amb aquest inici de
       sessió i l'ha cancel·lat. Torna'l a iniciar per continuar.
     sign_in_invalid_request: Tanca aquesta finestra i torna a iniciar la sessió.
+    sign_in_log_ref: 'Referència de diagnòstic a cadrumo.log:'
     sign_in_open_failed: El Cadrumo no ha pogut obrir la pàgina d'inici de sessió
       del proveïdor.
     sign_in_profile_required: Inicia la sessió al Cadrumo per continuar iniciant-la
@@ -342,13 +719,40 @@ desktop:
     sign_in_waiting: Acaba d'iniciar la sessió a la pàgina del proveïdor i torna aquí.
     sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar
       d'iniciar la sessió.
+    sign_out_action: Tanca la sessió
+    sign_out_label: Tanca la sessió de {provider}
     status_not_checked: Sense comprovar
     status_off: Desactivat
+    status_off_kept: Desactivat · clau desada
     status_ready: A punt
-    status_saved: Desat
+    status_saved: Clau desada
     status_setup_needed: Sense configurar
     status_sign_in_needed: Sense sessió iniciada
-    summary: '{connection}: {status}'
+    status_signed_in: Sessió iniciada
+    status_starting: Esperant l'agent
+    status_unconfirmed: Inici de sessió sense confirmar
+    task_kind_classification: Classificació
+    task_kind_classification_description: Assignar a un document o un registre una
+      etiqueta d'un conjunt tancat.
+    task_kind_extraction: Extracció
+    task_kind_extraction_description: Llegir els camps estructurats d'un document.
+    task_model_change: Canvia
+    task_model_change_label: Canvia amb què s'executa {task}
+    task_model_model: Model per a {task}
+    task_model_reading_chosen: 'Model de lectura: {model}'
+    task_model_reading_default: 'Model de lectura: {model}, el predeterminat fins
+      que en triïs un'
+    task_model_reading_none: Model de lectura, quan en configuris un
+    task_model_refused: No s'ha pogut canviar amb què s'executa aquesta tasca. Torna-ho
+      a provar.
+    task_model_saved: Desat.
+    task_model_stored_unoffered: '{model} a {lane}, que ja no s''ofereix'
+    task_model_use_reading: Fes servir el model de lectura
+    task_models_intro: Tria amb quin model s'executa cada tipus de tasca. Una tasca
+      que no configuris fa servir el model amb què es llegeixen els documents.
+    task_models_runs_with: S'executa amb
+    task_models_task: Tasca
+    task_models_title: Models per tasca
     title: Proveïdors d'IA
     use_in_agent: Fes servir {provider} ({connection}) a l'agent
   rail:

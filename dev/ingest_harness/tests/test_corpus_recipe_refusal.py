@@ -13,9 +13,9 @@ import sys
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from .._key import INGEST_CORPUS_ROOT_ENV
+from ..key import INGEST_CORPUS_ROOT_ENV
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

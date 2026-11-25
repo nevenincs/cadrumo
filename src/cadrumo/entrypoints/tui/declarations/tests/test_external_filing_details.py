@@ -10,7 +10,7 @@ from textual.widgets import Button, DataTable, Static
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from .....application.modelo.declarations_list import declaration_list_rows
 from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
-from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.modelo.work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
@@ -20,6 +20,7 @@ from .....core.i18n.render import tr
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import DeclarationsWorkspaceController
 from ..external_details import ExternalFilingDetailsScreen
 from ..models import DeclarationsWorkspaceWiringV1
@@ -27,6 +28,51 @@ from ..overview import DeclarationsOverviewScreen
 from .portfolio_fixtures import portfolio_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _assert_external_details_modal(app, external, size):
+    modal = app.screen
+    assert isinstance(modal, ExternalFilingDetailsScreen)
+    assert app.focused is modal.query_one("#external-filing-close", Button)
+    text = "\n".join(str(widget.render()) for widget in modal.query(Static))
+    for key in ("confirmed", "no_refile", "unavailable"):
+        assert tr("workspace.declarations.list.aeat_unlinked.help." + key) in text
+    assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
+    assert external.calendar is not None and external.calendar.aeat_reference_id is not None
+    assert external.calendar.aeat_submitted_at is not None
+    assert str(external.calendar.aeat_submitted_at.year) in text and "15" in text
+    assert external.calendar.aeat_reference_id not in text
+    detail = modal.query_one("#external-filing-technical", Static)
+    assert not detail.display
+    assert "tui." not in text
+    assert geometry_band(app, size[0]) == []
+    return detail
+
+
+def _assert_local_row_keeps_its_own_amount(local, external, table, private_amount):
+    assert local.key != external.key
+    assert local.declaration is not None and local.declaration.summary is not None
+    assert local.declaration.summary.result == private_amount
+    local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
+    assert tr("workspace.declarations.list.state.local_draft") in local_text
+
+
+def _workspace_with_private_303_amount(workspace, private_amount):
+    declarations = tuple(
+        declaration.model_copy(
+            update={
+                "summary": DeclarationSummary(
+                    state=DeclarationSummaryState.CALCULATED,
+                    result=private_amount,
+                )
+            }
+        )
+        if declaration.modelo == "303"
+        else declaration
+        for declaration in workspace.declarations
+    )
+    workspace = workspace.model_copy(update={"declarations": declarations})
+    return workspace
 
 
 @pytest.mark.asyncio
@@ -43,20 +89,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
         value=Decimal("7900"),
         direction=ModeloFormResultDirection.TO_PAY,
     )
-    declarations = tuple(
-        declaration.model_copy(
-            update={
-                "summary": DeclarationSummary(
-                    state=DeclarationSummaryState.CALCULATED,
-                    result=private_amount,
-                )
-            }
-        )
-        if declaration.modelo == "303"
-        else declaration
-        for declaration in workspace.declarations
-    )
-    workspace = workspace.model_copy(update={"declarations": declarations})
+    workspace = _workspace_with_private_303_amount(workspace, private_amount)
     calls: list[DeclarationsWorkspaceDeclarationRefV1] = []
     with override_settings(cadrumo_output_language=locale.value):
         controller = DeclarationsWorkspaceController(
@@ -73,40 +106,26 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#declarations-list", DataTable)
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
             local = next(row for row in screen.rows if row.declaration is not None and row.modelo == "303")
-            assert local.key != external.key
-            assert local.declaration is not None and local.declaration.summary is not None
-            assert local.declaration.summary.result == private_amount
-            local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
-            assert tr("tui.declarations.list.state.local_draft") in local_text
+            _assert_local_row_keeps_its_own_amount(local, external, table, private_amount)
             table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == external.key))
             table.focus()
             await pilot.press("enter")
-            await pilot.pause()
-            modal = app.screen
-            assert isinstance(modal, ExternalFilingDetailsScreen)
-            assert app.focused is modal.query_one("#external-filing-close", Button)
-            text = "\n".join(str(widget.render()) for widget in modal.query(Static))
-            for key in ("confirmed", "no_refile", "unavailable"):
-                assert tr("tui.declarations.list.aeat_unlinked.help." + key) in text
-            assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
-            assert "2025" in text and "15" in text
-            assert external.calendar is not None and external.calendar.aeat_reference_id is not None
-            assert external.calendar.aeat_reference_id not in text
-            detail = modal.query_one("#external-filing-technical", Static)
-            assert not detail.display
-            assert "tui." not in text
-            assert geometry_band(app, size[0]) == []
+            await settle(pilot)
+            detail = _assert_external_details_modal(app, external, size)
             await pilot.press("t")
+            await settle(pilot)
             assert detail.display
+            assert external.calendar is not None
             assert str(detail.render()) == external.calendar.aeat_reference_id
             await pilot.press("t")
+            await settle(pilot)
             assert not detail.display
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and app.focused is table
             assert table.ordered_rows[table.cursor_row].key.value == external.key
             assert calls == []
@@ -119,7 +138,7 @@ async def test_mounted_external_details_reword_preserves_row_disclosure_and_focu
     with override_settings(cadrumo_output_language="en"):
         modal = ExternalFilingDetailsScreen(row)
         async with ScreenHostApp(modal).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             modal.action_technical()
             detail = modal.query_one("#external-filing-technical", Static)
             summary = modal.query_one("#external-filing-summary", Static)
@@ -129,13 +148,13 @@ async def test_mounted_external_details_reword_preserves_row_disclosure_and_focu
             focused = modal.focused
             with override_settings(cadrumo_output_language="es"):
                 await modal.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 assert modal.row is row
                 assert modal.query_one("#external-filing-summary", Static) is summary
                 assert modal.query_one("#external-filing-technical", Static) is detail
                 assert detail.display and detail.content == reference
                 assert modal.focused is focused
                 assert str(modal.query_one("#external-filing-close", Button).label) == tr(
-                    "tui.modelo.workbench.key.close", locale="es"
+                    "workspace.modelo.key.close", locale="es"
                 )
                 assert modal.is_mounted

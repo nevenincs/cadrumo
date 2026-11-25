@@ -1,0 +1,21 @@
+# The two Modelo 345 pairs the ejercicio-2023 design adds to the 2022 anexo;
+# every other pair is inherited from the 2022 edition. Line locators are to
+# 02-345-ejercicio-2023-y-siguientes.pdf.extracted.md (design) and to the 2023
+# dictionary 07-100-diccionario-declaracion-individual-ejercicio-2023.
+
+# Design :677; dictionary :752 (0499 RGAPEI names autonomos from this edition).
+[[revisions."2023".prevision_social_placements]]
+id = "a-03"
+clave = "A"
+subclave = "03"
+casilla_id = "0499"
+design_citation = { source_ref = "aeat-dr-345-2023", required_text = ["aportaciones a los planes de pensiones de empleo simplificados de trabajadores por cuenta propia o autónomos"] }
+casilla_citation = { source_ref = "aeat-dr-100-2023-dictionary", required_text = ["[0499][Aportaciones de trabajadores por cuenta propia o autónomos, empresarios individuales o profesionales]"] }
+
+# Design :640. The manual reduces PEPP contributions on the same terms as pension
+# plans but names no casilla for them; 0465 fits only by analogy.
+[[revisions."2023".prevision_social_placements]]
+id = "m"
+clave = "M"
+refusal = "indirect_match"
+design_citation = { source_ref = "aeat-dr-345-2023", required_text = ["Aportaciones de los ahorradores a productos paneuropeos de pensiones individuales (PEPP)"] }

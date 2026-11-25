@@ -45,9 +45,14 @@ flows:
       clear: Esborra
       completed_refresh_unavailable: L'operació s'ha completat, però la vista actualitzada
         no està disponible. Torna a Inici per actualitzar-la.
+      conflict: El perfil ha canviat mentre l’editaves. El teu canvi no s’ha desat.
+        Revisa el perfil actual i torna a obrir el camp; prem F5 si necessites tornar-lo
+        a carregar.
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
       no_change: No ha calgut fer cap canvi.
+      refresh_failed: No s’ha pogut carregar el perfil actual. Prem F5 per tornar-ho
+        a provar abans d’editar.
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
@@ -66,9 +71,20 @@ flows:
     field_unavailable: Camp de perfil no disponible
     help:
       about: 'Sobre aquest ajust:'
-      what: 'Què és:'
-      where: 'On trobar-ho:'
-      why: 'Per què es demana:'
+    household:
+      close: Tanca
+      full: Aquest grup és ple, així que no es poden afegir més persones.
+      read_again: Torna a llegir
+      read_failed: No s'ha pogut llegir la teva família. Torna-la a llegir per provar-ho
+        de nou.
+      reading: Llegint la teva família…
+      state_none_declared: Has indicat que no n'hi ha cap.
+      state_not_served: El teu perfil no ofereix aquest grup.
+      state_unknown: No hi ha res registrat per a aquest grup. Això no és el mateix
+        que cap.
+      title: Família
+      unknown_outcome: Pot ser que el canvi s'hagi desat, o no. Torna a llegir la
+        teva família abans de canviar res més.
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
@@ -162,10 +178,12 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Baixa de béns de l'activitat
           afiliado_cotizacion: Quotes d'afiliats
           atribucion_member: Membre d'atribució de rendes
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT
+          capital_mobiliario_position: Interessos i dividends de l'estalvi
           collectible_invoice: Factures emeses
           design_constant: Constant del disseny
           foreign_asset: Actiu estranger
@@ -189,10 +207,14 @@ flows:
           manual_input: Entrada manual
           payable_invoice: Factura rebuda
           previous_filing: Declaració anterior
+          prevision_social_contribution: Aportacions a previsió social
           profile: Perfil
+          prorrata_register_activity: Activitats del registre de prorrata
           prorrata_regularizacion: Regularització de prorrata
           purchase_invoice_evidence: Evidència de factura de compra
           relation_prefill: Declaració relacionada
+          renta_inmueble: Immoble arrendat
+          retencion_soportada: Retencions suportades
           retenciones_aggregation: Totals de retencions
           withholding: Registre de retenció
           withholding296: Perceptor de retenció (model 296)

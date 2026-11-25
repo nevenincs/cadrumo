@@ -11,14 +11,12 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.aggregation import BindingTypedEnumKind
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.calculations.registry.entity_type import resolve_entity_vocabulary
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.rental_reduction import resolve_rental_reduction_art232_tier_catalogue
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -75,10 +73,6 @@ def _validate_enum_kind(
         _validate_ccaa_enum(binding, raw, operation=operation, effective_date=effective_date)
     elif kind is BindingTypedEnumKind.LEGAL_ENTITY_FORM:
         _validate_legal_entity_form_enum(binding, raw, operation=operation, effective_date=effective_date)
-    elif kind is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
-        _validate_rental_reduction_enum(binding, raw, operation=operation, effective_date=effective_date)
-    elif kind is BindingTypedEnumKind.ESTIMACION_DIRECTA_MODALIDAD:
-        _validate_estimation_modality_enum(binding, raw)
     else:
         raise ModeloBindingValueContractUnsupportedError()
 
@@ -127,32 +121,6 @@ def _validate_legal_entity_form_enum(
         raise ModeloBindingValueInvalidError()
 
 
-def _validate_rental_reduction_enum(
-    binding: BindingDefinition,
-    raw: str,
-    *,
-    operation: PinnedAuthorityOperation,
-    effective_date: date | None,
-) -> None:
-    selected_date = _require_enum_date(binding, effective_date)
-    try:
-        catalogue = resolve_rental_reduction_art232_tier_catalogue(effective_date=selected_date, authority=operation)
-    except (RegistrySnapshotError, RegistryValidationError):
-        raise ModeloBindingValueContractUnsupportedError() from None
-    if str(catalogue.require(raw)) != raw:
-        raise ModeloBindingValueInvalidError()
-
-
-def _validate_estimation_modality_enum(binding: BindingDefinition, raw: str) -> None:
-    if binding.value.channel not in {BindingValueChannel.BOOLEAN, BindingValueChannel.DECIMAL}:
-        raise ModeloBindingValueContractUnsupportedError()
-    encoded = boolean_binding_encoded_values(binding)
-    if not encoded:
-        raise ModeloBindingValueContractUnsupportedError()
-    if raw not in {row.encoded_value for row in encoded}:
-        raise ModeloBindingValueInvalidError()
-
-
 def validate_typed_binding_value(
     binding: BindingDefinition,
     raw: str,
@@ -188,7 +156,7 @@ def resolve_typed_bindings(
 ) -> ModeloBindingsResolveTypedProjection:
     """Build the typed preview from the retained authority operation."""
     period = payload.period.to_period()
-    snapshot = operation.snapshot(
+    snapshot = operation.reading_snapshot(
         payload.modelo, filing_year=period.filing_year, period=period.registry_token, on=payload.as_of
     )
     declarations = revision_bindings_by_id(snapshot.revision)

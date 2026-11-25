@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
@@ -41,7 +41,7 @@ def test_the_two_reduced_rates_resolve_distinctly_on_one_date() -> None:
     Both rates sit on the reducido tier on this date. A tier-keyed lookup
     returns one answer for both; this must return two.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         ordinary = recargo_rate_record_for_applied_rate(
             Decimal("0.10"), _COLLISION_DATE, operation=_authority_operation_for_test
         )
@@ -57,7 +57,7 @@ def test_the_two_reduced_rates_resolve_distinctly_on_one_date() -> None:
 
 def test_recargo_lookup_retains_the_matched_authority_provenance() -> None:
     """The public rate projection has the exact applied-rate fact evidence."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = resolve_recargo_rate_for_applied_rate(
             Decimal("0.05"), _COLLISION_DATE, operation=_authority_operation_for_test
         )
@@ -82,7 +82,7 @@ def test_recargo_lookup_retains_the_matched_authority_provenance() -> None:
 
 def test_the_quarter_four_step_moves_both_transitional_pairings() -> None:
     """RDL 4/2024 raised the food rates on 1 October 2024, recargos with them."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         for applied_rate, expected in (("0.075", "0.01"), ("0.02", "0.0026")):
             record = recargo_rate_record_for_applied_rate(Decimal(applied_rate), _STEP_DATE, operation=operation)
             assert record is not None
@@ -92,7 +92,7 @@ def test_the_quarter_four_step_moves_both_transitional_pairings() -> None:
 
 def test_a_zero_rated_pairing_is_a_rate_of_zero_not_an_absent_one() -> None:
     """Art. 72's zero recargo remains a grounded record, rather than absence."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         record = recargo_rate_record_for_applied_rate(Decimal("0.00"), _COLLISION_DATE, operation=operation)
         assert record is not None
         assert record.recargo_rate == Decimal("0")
@@ -113,7 +113,7 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
     why: str,
 ) -> None:
     """No nearest-match fallback: an unmodelled pairing must refuse to guess."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             recargo_rate_record_for_applied_rate(applied_rate, on_date, operation=_authority_operation_for_test) is None
         ), why
@@ -121,7 +121,7 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
 
 def test_published_pairings_are_grounded_and_supported_windows_resolve() -> None:
     """Historical facts retain grounding; supported windows use the runtime resolver."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
         assert fact.variants, "the published pairing catalogue must not be empty"
         support = operation.supported_filing_years()

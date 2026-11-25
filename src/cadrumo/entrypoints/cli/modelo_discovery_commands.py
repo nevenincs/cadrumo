@@ -27,29 +27,33 @@ from ...application.reference_catalogue import (
     ReferenceQueryError,
     refuse_ceded_autonomic_modelo,
 )
-from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
+from ...application.state_projection_models import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.period import Period
+from ...core.presentation_marks import flag_mark
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.errors import (
+    EjercicioOrdenNotYetPublishedError,
+    NoRevisionForPeriodError,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from . import _modelo_discovery_rendering as discovery_rendering
-from ._date_parsing import _parse_iso_date
-from ._modelo_behavior_support import bare_period_error, resolve_year_period
-from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
-from ._modelo_rendering import binding_encoded_option_lines
+from . import modelo_discovery_rendering
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .date_parsing import parse_iso_date
+from .modelo_behavior_support import bare_period_error, resolve_year_period
 from .modelo_bindings_results import (
-    BindingEncodedOptionPayload,
     BindingListRowPayload,
     BindingPreviewRowPayload,
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
 )
-from .modelo_results import ModeloRequiresResult
+from .modelo_cli_support import bad_parameter_from_error, parse_binding_override
+from .modelo_query_results import ModeloRequiresResult
 from .operation_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,
@@ -78,7 +82,7 @@ deps = _DiscoveryDeps(
 def _as_of(raw: str | None) -> date | None:
     if raw is None:
         return None
-    return _parse_iso_date(raw, label="--as-of")
+    return parse_iso_date(raw, label="--as-of")
 
 
 def _command_error(error: ReferenceQueryError) -> Exception:
@@ -166,10 +170,24 @@ def describe_modelo(
 ) -> None:
     """Describe the registry revision selected for one modelo."""
     operation = authority_operation(ctx)
+    as_of_date = _as_of(as_of)
     try:
-        result = catalogue.describe_modelo(modelo, year=year, period=period, as_of=_as_of(as_of), operation=operation)
+        result = catalogue.describe_modelo(modelo, year=year, period=period, as_of=as_of_date, operation=operation)
     except ReferenceQueryError as error:
         raise _command_error(error) from error
+    except NoRevisionForPeriodError as exc:
+        # The token composed with the year is declared; what is missing is an edition on this date.
+        if as_of_date is not None and not isinstance(exc, EjercicioOrdenNotYetPublishedError):
+            raise CliRefusedBoundaryError(
+                translated_message="cli.app.modelo.describe.no_edition_covers_date",
+                context={
+                    "modelo": modelo,
+                    "year": exc.filing_year,
+                    "period": exc.period,
+                    "date": as_of_date.isoformat(),
+                },
+            ) from exc
+        raise deps.bad_parameter_from_error(exc) from exc
     except (ValueError, RegistrySnapshotError, RegistryValidationError) as exc:
         message = str(exc)
         if period is not None and "period" in message.lower():
@@ -220,7 +238,7 @@ def casillas(
         ),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
-    lines = discovery_rendering.casillas_lines(result, explain=explain)
+    lines = modelo_discovery_rendering.casillas_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
@@ -289,31 +307,31 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         filing_year=checklist.filing_year,
         period=checklist.period,
         required_manual=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.required_manual
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.required_manual
         ],
         optional_manual=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.optional_manual
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.optional_manual
         ],
         detail_row_fields=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.detail_row_fields
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.detail_row_fields
         ],
         ledger_derivable=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable
         ],
         profile_derivable=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable
         ],
         previous_filing=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.previous_filing
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.previous_filing
         ],
         relation_prefill=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill
         ],
         live_observation=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.live_observation
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.live_observation
         ],
         unbucketed_sources=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources
         ],
         unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
         unresolved_profile_keys=list(checklist.unresolved_profile_keys),
@@ -325,38 +343,38 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         f"revision\t{checklist.revision_id}",
         f"filing_year\t{checklist.filing_year}",
         f"period\t{checklist.period}",
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_required",
             ),
             checklist.required_manual,
         ),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_optional",
             ),
             checklist.optional_manual,
         ),
-        *discovery_rendering.data_inventory_section_lines("detail_row_fields", checklist.detail_row_fields),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines("detail_row_fields", checklist.detail_row_fields),
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_ledger",
             ),
             checklist.ledger_derivable,
         ),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_profile",
             ),
             checklist.profile_derivable,
         ),
-        *discovery_rendering.data_inventory_section_lines("previous_filing", checklist.previous_filing),
-        *discovery_rendering.data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
-        *discovery_rendering.data_inventory_section_lines("live_observation", checklist.live_observation),
-        *discovery_rendering.data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
+        *modelo_discovery_rendering.data_inventory_section_lines("previous_filing", checklist.previous_filing),
+        *modelo_discovery_rendering.data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
+        *modelo_discovery_rendering.data_inventory_section_lines("live_observation", checklist.live_observation),
+        *modelo_discovery_rendering.data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
     ]
-    notices = discovery_rendering.requires_notices(checklist, operation=operation)
-    lines.extend(discovery_rendering.notice_text_lines(notices))
+    notices = modelo_discovery_rendering.requires_notices(checklist, operation=operation)
+    lines.extend(modelo_discovery_rendering.notice_text_lines(notices))
     emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
@@ -398,7 +416,7 @@ def bindings_list(
     for row in projection.bindings:
         _append_binding_list_row(row, merged_rows, text_rows)
     if missing:
-        text_rows.extend(discovery_rendering.binding_relation_guidance_lines(projection.bindings))
+        text_rows.extend(modelo_discovery_rendering.binding_relation_guidance_lines(projection.bindings))
     result = ModeloBindingsListResult(
         authority_generation=projection.authority_generation,
         modelo_filter=modelo,
@@ -418,8 +436,8 @@ def bindings_list(
         f"binding_count\t{len(merged_rows)}",
         "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
     ]
-    notices = discovery_rendering.bindings_list_scope_notices(modelo=modelo, year=year, period=period)
-    lines.extend(discovery_rendering.notice_text_lines(notices))
+    notices = modelo_discovery_rendering.bindings_list_scope_notices(modelo=modelo, year=year, period=period)
+    lines.extend(modelo_discovery_rendering.notice_text_lines(notices))
     lines.extend(text_rows)
     emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
 
@@ -502,7 +520,7 @@ def formulas(
         ),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
-    lines = discovery_rendering.formula_lines(result, explain=explain)
+    lines = modelo_discovery_rendering.formula_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
@@ -516,11 +534,11 @@ def support_matrix(ctx: typer.Context) -> None:
     for entry in result.entries:
         lines.append(
             f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
-            f"{discovery_rendering.mark(entry.calc_grade):>4}  "
-            f"{discovery_rendering.mark(entry.has_completeness_manifest):>8}  "
-            f"{discovery_rendering.mark(entry.has_fixed_width_export):>3}  "
-            f"{discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  "
-            f"{discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
+            f"{flag_mark(entry.calc_grade):>4}  "
+            f"{flag_mark(entry.has_completeness_manifest):>8}  "
+            f"{flag_mark(entry.has_fixed_width_export):>3}  "
+            f"{flag_mark(entry.has_xml_dictionary_export):>3}  "
+            f"{flag_mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
     emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
 
@@ -528,11 +546,8 @@ def support_matrix(ctx: typer.Context) -> None:
 def _append_binding_list_row(
     row: ModeloBindingRowV1, merged_rows: list[BindingListRowPayload], text_rows: list[str]
 ) -> None:
-    """Append one grounded row and its encoded-option text in registry order."""
+    """Append one grounded row in registry order."""
     readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
-    encoded_options = tuple(
-        BindingEncodedOptionPayload.model_validate(item.model_dump()) for item in row.encoded_options
-    )
     merged_rows.append(
         BindingListRowPayload(
             modelo=row.modelo,
@@ -548,7 +563,6 @@ def _append_binding_list_row(
             legal_refs=row.legal_refs,
             source_refs=row.source_refs,
             relation_inputs=row.relation_inputs,
-            encoded_options=encoded_options,
         )
     )
     text_rows.append(
@@ -556,7 +570,6 @@ def _append_binding_list_row(
         f"{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
         f"{row.borrador_capable}"
     )
-    text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
 
 
 def _translate_unknown_binding_modelo(
@@ -636,16 +649,13 @@ def _binding_preview_rows(report: ModeloBindingsResolveProjection) -> list[Bindi
             legal_refs=row.legal_refs,
             source_refs=row.source_refs,
             relation_inputs=row.relation_inputs,
-            encoded_options=tuple(
-                BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
-            ),
         )
         for row in report.bindings
     ]
 
 
 def _append_binding_preview_text(row: ModeloBindingRowV1, lines: list[str]) -> None:
-    """Append the established readiness, override, and encoded-option rows."""
+    """Append the established readiness and override rows."""
     readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
     lines.append(
         "\t".join(
@@ -655,11 +665,5 @@ def _append_binding_preview_text(row: ModeloBindingRowV1, lines: list[str]) -> N
                 readiness,
                 row.override or "-",
             )
-        )
-    )
-    lines.extend(
-        binding_encoded_option_lines(
-            row.binding_id,
-            tuple(BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options),
         )
     )

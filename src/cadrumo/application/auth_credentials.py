@@ -7,13 +7,13 @@ from pathlib import Path
 from pydantic import BaseModel, SecretStr
 
 from ..core.config import Settings
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.models import STRICT_FROZEN_CONFIG
 
 
 class ActiveCertificateCredentials(BaseModel):
     """The exact certificate identity and secret selected for one auth attempt."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     certificate_path: Path | None = None
     password: SecretStr | None = None

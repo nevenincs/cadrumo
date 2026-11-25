@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -15,10 +16,11 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -37,7 +39,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import work_addressing
 from ..external_import_actions import build_external_filing_record
@@ -47,9 +49,9 @@ from ..revision_selection_operation import (
     ModeloWorkRevisionExecutor,
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
-    _filed_external_without_report,
     build_modelo_work_revision_definition,
     build_modelo_work_revision_registration,
+    revision_selection_operation_filed_external_without_report,
 )
 from ..verification_repository_ports import VerificationRepositoryBundle
 
@@ -59,11 +61,13 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION_ID = "a" * 64
 _REPORT_ID = "b" * 64
+_YEAR = filing_year_envelope().horizon
+_CAPTURE_REVISION = str(revision_serving_period("303", _YEAR, "2T").id)
 
 
 @pytest.mark.parametrize(
     "coordinates",
-    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": 2026, "code": "1T"}}],
+    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": _YEAR, "code": "1T"}}],
 )
 def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: dict[str, object]) -> None:
     with pytest.raises(ValidationError, match=r"period\.filing_year does not replace year"):
@@ -75,7 +79,7 @@ def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: di
     [
         {"work_unit_id": "a" * 64},
         {"calculation_revision_id": "b" * 64},
-        {"modelo": "130", "year": 2026, "period": {"filing_year": 2026, "code": "1T"}},
+        {"modelo": "130", "year": _YEAR, "period": {"filing_year": _YEAR, "code": "1T"}},
     ],
 )
 def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordinates: dict[str, object]) -> None:
@@ -83,15 +87,15 @@ def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordina
 
 
 def _unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+            bucket_id=str(_PROFILE), modelo="303", filing_year=_YEAR, period=period, revision_id="test-revision"
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id="test-revision",
         name="First-quarter return",
@@ -113,10 +117,12 @@ def _projection() -> ModeloWorkRevisionProjection:
     )
 
 
-def test_external_import_revision_requires_matching_confirmed_filing_receipt() -> None:
+def test_external_import_revision_requires_matching_confirmed_filing_receipt(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A report-free verified revision is accepted only with its own AEAT receipt."""
     unit = _unit()
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     revision_id = derive_calculation_revision_id(
         work_unit_id=unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -158,6 +164,7 @@ def test_external_import_revision_requires_matching_confirmed_filing_receipt() -
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
         evidence_reference_id="TEST-CSV-RECEIPT",
         declaration_kind=FilingDeclarationKind.ORIGINAL,
+        operation=operation,
     )
 
     class FilingRepository:
@@ -171,15 +178,15 @@ def test_external_import_revision_requires_matching_confirmed_filing_receipt() -
 
     repository = FilingRepository(ModeloRecordCatalogue(records={filing_id: record}))
     bundle = cast(VerificationRepositoryBundle, cast(object, SimpleNamespace(filing=repository)))
-    assert _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+    assert revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
 
     repository.catalogue = ModeloRecordCatalogue()
-    assert not _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+    assert not revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
 
     repository.catalogue = ModeloRecordCatalogue(records={filing_id: record})
     repository.bucket_id = str(_OTHER_PROFILE)
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+        revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
@@ -288,7 +295,12 @@ def test_each_fresh_boundary_derives_period_from_selected_persisted_unit(
             calculation_loads.append(operation)
             return CalculationRevisionCatalogue()
 
-    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is authority_operation
         return cast(
@@ -362,7 +374,12 @@ def test_revision_selection_is_admitted_on_the_external_client_frontend_without_
         def load(self) -> WorkUnitCatalogue:
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
-    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is authority_operation
         return cast(
@@ -402,7 +419,12 @@ def test_revision_selection_is_admitted_on_the_external_client_frontend_without_
 def test_fresh_submission_without_authority_pin_refuses_before_repository_creation() -> None:
     bundle_calls = 0
 
-    def bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal bundle_calls
         bundle_calls += 1
         raise AssertionError("a live revision resolution must be pinned before private repository access")
@@ -437,7 +459,12 @@ def test_fresh_submission_without_authority_pin_refuses_before_repository_creati
 def test_revision_request_identity_refuses_before_missing_pin_and_shape() -> None:
     bundle_calls = 0
 
-    def bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal bundle_calls
         bundle_calls += 1
         raise AssertionError("profile admission must finish before repository creation")
@@ -498,23 +525,23 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     *,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(_PROFILE),
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2026-y-siguientes",
+            revision_id=_CAPTURE_REVISION,
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_CAPTURE_REVISION,
         name="First-quarter return",
-        created_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
-        updated_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
+        created_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
+        updated_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
         state=WorkUnitState.BORRADOR,
         current_calculation_revision_id=_REVISION_ID,
     )
@@ -638,7 +665,9 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     )
 
     result_ref = asyncio.run(
-        ModeloWorkRevisionExecutor(lambda _profile_id, *, operation: bundle).execute(request, context)
+        ModeloWorkRevisionExecutor(lambda _profile_id, *, operation, mutation_writer=None: bundle).execute(
+            request, context
+        )
     )
 
     assert result_ref == _REPORT_ID
@@ -656,5 +685,10 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     assert events.effects == [OperationEffect.NONE]
 
 
-def _unavailable_bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+def _unavailable_bundle(
+    _profile_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> VerificationRepositoryBundle:
     raise AssertionError("historical result access must not reopen private repositories")

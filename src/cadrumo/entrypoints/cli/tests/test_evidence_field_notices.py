@@ -32,7 +32,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from .._evidence_field_notices import (
+from ..evidence_field_notices import (
     DEGRADED_GROUNDING_OUTCOMES,
     field_degradation_notices,
     label_reading_fallback_notices,
@@ -58,7 +58,7 @@ def _ambiguous() -> FieldProvenance:
         field="supplier_tax_id",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.AMBIGUOUS,
-        candidates=(FieldAmbiguityCandidate(value="A82645177"), FieldAmbiguityCandidate(value="B17283946")),
+        candidates=(FieldAmbiguityCandidate(value="A00010017"), FieldAmbiguityCandidate(value="B00015024")),
     )
 
 
@@ -100,7 +100,7 @@ def _uncorroborated_anchor() -> FieldProvenance:
         field="supplier_tax_id",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.UNANCHORED,
-        anchor="B12345674",
+        anchor="B00015016",
         note="one identifier verified but nothing on the document establishes it as the counterparty's",
     )
 
@@ -264,8 +264,8 @@ def test_a_located_anchor_is_never_reported_as_absent_from_the_document() -> Non
 
     # The printed form and the reason both reach the operator: the message can
     # only say the form is not the problem, so the reason is the whole content.
-    assert "B12345674" in located.message
-    assert _context(located)["anchor"] == "B12345674"
+    assert "B00015016" in located.message
+    assert _context(located)["anchor"] == "B00015016"
     assert _context(located)["detail"] == _uncorroborated_anchor().note
     assert _uncorroborated_anchor().note in located.message
 
@@ -405,8 +405,8 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(
     """
     resolution = resolve_counterparty_identity(
         field="supplier_tax_id",
-        candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
-        taxpayer_tax_id="A82645177",
+        candidates=(IdentityCandidate(value="B00015016", anchor="B-12345674", role_evidence=""),),
+        taxpayer_tax_id="A00010017",
         origin=FieldOrigin.TEXT_LAYER,
         operation=authority_operation,
     )
@@ -431,8 +431,8 @@ def test_each_notice_names_what_was_seen() -> None:
     assert "1.234,56" in contradicted.message
 
     ambiguous = field_degradation_notices([_ambiguous()])[0]
-    assert "A82645177" in ambiguous.message
-    assert "B17283946" in ambiguous.message
+    assert "A00010017" in ambiguous.message
+    assert "B00015024" in ambiguous.message
     assert _context(ambiguous)["candidate_count"] == "2"
 
 
@@ -495,7 +495,11 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
 # --- a label reading that stood without its model fill -----------------------
 
 
-def _fallback(cause: LabelReadingFallbackCause, *, failed_condition_id: str | None = None) -> LabelReadingFallback:
+def _fallback(
+    cause: LabelReadingFallbackCause,
+    *,
+    failed_condition_id: str | None = None,
+) -> LabelReadingFallback:
     return LabelReadingFallback(
         cause=cause,
         unread_fields=("currency", "supplier_name"),
@@ -511,7 +515,7 @@ def test_a_draft_whose_model_fill_ran_or_was_never_needed_raises_no_label_readin
 def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_fields() -> None:
     fallback = _fallback(
         LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
-        failed_condition_id="provisioning.load_headroom.measurable",
+        failed_condition_id="llm.agent.model_run_completed",
     )
 
     (notice,) = label_reading_fallback_notices(fallback)
@@ -523,7 +527,7 @@ def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_
         "unread_fields": "currency, supplier_name",
         "unread_field_count": "2",
         "reader_error_type": "ReaderFailureForTest",
-        "failed_condition_id": "provisioning.load_headroom.measurable",
+        "failed_condition_id": "llm.agent.model_run_completed",
     }
     assert "currency, supplier_name" in notice.message
     assert "enough free memory" in notice.message
@@ -541,30 +545,10 @@ def test_an_unavailable_reader_fill_is_a_warning_naming_the_failure_and_the_unre
         "unread_field_count": "2",
         "reader_error_type": "ReaderFailureForTest",
     }
-    assert "ReaderFailureForTest" in notice.message
+    # The exception's name stays in the typed context; the sentence is plain words.
+    assert "ReaderFailureForTest" not in notice.message
     assert "currency, supplier_name" in notice.message
-
-
-def test_a_busy_refused_fill_is_a_warning_naming_the_occupancy_and_the_unread_fields() -> None:
-    fallback = _fallback(
-        LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
-        failed_condition_id="llm.local_inference.slot_available",
-    )
-
-    (notice,) = label_reading_fallback_notices(fallback)
-
-    assert notice.severity is NoticeSeverity.WARNING
-    assert notice.code == "ledger.evidence.label_reading.busy_refused"
-    assert _context(notice) == {
-        "reason": "inference_slot_busy",
-        "unread_fields": "currency, supplier_name",
-        "unread_field_count": "2",
-        "reader_error_type": "ReaderFailureForTest",
-        "failed_condition_id": "llm.local_inference.slot_available",
-    }
-    assert "currency, supplier_name" in notice.message
-    assert "headroom" not in notice.message
-    assert derive_status([notice]).value == "warning"
+    assert "set it up" not in notice.message.lower()
 
 
 def test_each_cause_asks_for_its_own_remedy_under_its_own_code() -> None:

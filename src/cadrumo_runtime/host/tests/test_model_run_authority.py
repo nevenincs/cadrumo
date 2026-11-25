@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -22,7 +22,10 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import (
+    ProfileWorkerCustody,
+    ProfileWorkerCustodySection,
+)
 from cadrumo.application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -38,11 +41,7 @@ from cadrumo.application.operations.models import (
 )
 from cadrumo.application.operations.operation_definition import build_single_phase_definition
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
@@ -50,7 +49,8 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.model_runs import (
@@ -62,19 +62,27 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusal,
     ModelRunRefusalCode,
     ModelRunServed,
+    ModelRunTaskKind,
     decode_model_run_body,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DEFINITION = "ledger.evidence.extract"
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1")
+_LANE = ModelRunLane(
+    provider_id="example",
+    transport="cli",
+    model="example-model-1",
+    reads_off_host=True,
+)
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT})
 
 
@@ -99,10 +107,9 @@ class _CustodyWitness(ProfileWorkerCustody):
         return self.session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    def section(self, session_id: UUID) -> ProfileWorkerCustodySection:
         self.require(session_id)
-        yield
+        return ProfileWorkerCustodySection(lambda: None)
 
     @override
     def live_sessions(self) -> tuple[UUID, ...]:
@@ -115,19 +122,23 @@ class _AnsweringLease(WorkerAuthorizationLease):
     def __init__(
         self,
         *,
-        answers: list[tuple[WorkerAuthorityRequest, str, ModelRunHeader | None, bytes]],
+        answers: list[tuple[WorkerAuthorityRequest, str | None, ModelRunHeader | None, bytes]],
         outcome: tuple[ModelRunOutcome, bytes],
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
     ) -> None:
-        super().__init__(identity=identity, root=root, parent_pid=parent_pid, request=request)
+        super().__init__(connections=connections, request=request)
         self._answers, self._outcome, self._fence = answers, outcome, request
 
     @override
     def model_run(
-        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self,
+        role: str,
+        header: ModelRunHeader | None,
+        body: bytearray,
+        *,
+        answer_seconds: float,
+        task_kind: ModelRunTaskKind | None = None,
     ) -> tuple[ModelRunOutcome, bytearray]:
         self._answers.append((self._fence, role, header, bytes(body)))
         outcome, text = self._outcome
@@ -137,8 +148,14 @@ class _AnsweringLease(WorkerAuthorizationLease):
 class _ClientWitness(WorkerAuthorizationClient):
     def __init__(self, identity: ProfileWorkerIdentity, root: Path) -> None:
         super().__init__(identity=identity, root=root, parent_pid=os.getpid())
-        self.answers: list[tuple[WorkerAuthorityRequest, str, ModelRunHeader | None, bytes]] = []
+        self.answers: list[tuple[WorkerAuthorityRequest, str | None, ModelRunHeader | None, bytes]] = []
         self.outcome: tuple[ModelRunOutcome, bytes] = (ModelRunOutcome(lane=_LANE), b"")
+
+    @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
 
     @override
     @asynccontextmanager
@@ -146,9 +163,7 @@ class _ClientWitness(WorkerAuthorizationClient):
         yield _AnsweringLease(
             answers=self.answers,
             outcome=self.outcome,
-            identity=self.identity,
-            root=self.root,
-            parent_pid=self.parent_pid,
+            connections=self.connections,
             request=request,
         )
 
@@ -237,8 +252,10 @@ def _harness(definition_id: str, authority_operation: PinnedAuthorityOperation, 
     operation = OperationIdentity(
         operation_id=new_operation_id(), definition_id=definition_id, subject_ref=request.subject_ref
     )
-    authority.bind(
-        operation.operation_id, WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request)
+    asyncio.run(
+        authority.bind(
+            operation.operation_id, WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request)
+        )
     )
     return _Harness(authority, client, operation)
 
@@ -247,7 +264,7 @@ async def _submitted(harness: _Harness) -> None:
     # The invocation's provenance is captured at submission, as the host does,
     # before its execution asks for any model run under START.
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
 
 
 async def _lookup(harness: _Harness, role: str) -> ModelRunLane | ModelRunRefusal:

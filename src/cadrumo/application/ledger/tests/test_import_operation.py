@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -12,14 +13,19 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.execution_actor import OperationExecutionCaller
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.registry import OperationFrontendProjection
+from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...tests.operation_host_fakes import RecordingEvents, executor_context
 from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
@@ -30,9 +36,11 @@ from ..import_operation import (
     LedgerImportExecutor,
     LedgerImportOperationPorts,
     LedgerImportRequest,
+    project_ledger_import_result,
 )
 from ..import_ports import LedgerImportPorts
 from ..models import (
+    LedgerImportDiagnosticReport,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
@@ -57,18 +65,6 @@ def test_import_request_refuses_a_path_the_runtime_would_place_itself(
         LedgerImportRequest(
             profile_id=_PROFILE, files=(statement,), provider=LedgerProviderID.CSV, verify_source=verify_source
         )
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Cancellation:
@@ -147,6 +143,27 @@ def _parsed_rows(count: int, digest: str) -> tuple[SimpleNamespace, ...]:
     return (SimpleNamespace(raw=SimpleNamespace(provenance=SimpleNamespace(source_sha256=digest))),) * count
 
 
+class _StoringOperands:
+    """Secure-operand port that keeps every stored execution result for inspection."""
+
+    def __init__(self, stored: list[LedgerImportExecutionResult]) -> None:
+        self._stored = stored
+
+    async def put(self, result: LedgerImportExecutionResult, *, written_at):
+        del written_at
+        self._stored.append(result)
+        return "secure-result-reference"
+
+
+def _install_import_pipeline(monkeypatch: pytest.MonkeyPatch, *, prepare, persist) -> None:
+    """Pin the active profile and substitute the staging and persistence seams of the import executor."""
+    from .. import import_operation as operation_module
+
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
+    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+
+
 def test_import_request_rejects_more_than_the_registered_file_limit() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
@@ -160,13 +177,11 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
     monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
 ) -> None:
     """Row limits are applied during staging, before any source reaches persistence."""
-    from .. import import_operation as operation_module
-
     counts = {"first.csv": MAX_LEDGER_IMPORT_ROWS - 1, "over.csv": 2, "later.csv": 1}
     prepared_paths: list[str] = []
     persisted_paths: list[str] = []
     cancellation = _Cancellation()
-    events = _Events()
+    events = RecordingEvents()
     stored: list[LedgerImportExecutionResult] = []
     repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
@@ -176,7 +191,8 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         name = command.path.name
         prepared_paths.append(name)
         return SimpleNamespace(
-            command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(counts[name], "a" * 64))
+            command=command,
+            source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(counts[name], "a" * 64)),
         )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
@@ -187,24 +203,14 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         persisted_paths.append(name)
         return _source_result(bucket_id=str(_PROFILE), rows=counts[name])
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del written_at
-            stored.append(result)
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
-        events=events,
-        operands=_Operands(),
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
         cancellation=cancellation,
+        events=events,
+        operands=_StoringOperands(stored),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -236,8 +242,6 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
     monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
 ) -> None:
     """Apply imports only the bytes a preview reported; a changed file is refused, never written."""
-    from .. import import_operation as operation_module
-
     digests = {"kept.csv": "b" * 64, "changed.csv": "c" * 64}
     persisted_paths: list[str] = []
     stored: list[LedgerImportExecutionResult] = []
@@ -247,7 +251,7 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         del ports, own_accounts
         return SimpleNamespace(
             command=command,
-            source=SimpleNamespace(parsed_rows=_parsed_rows(2, digests[command.path.name])),
+            source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(2, digests[command.path.name])),
         )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
@@ -255,24 +259,14 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         persisted_paths.append(staged.command.path.name)
         return _source_result(bucket_id=str(_PROFILE), rows=2)
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del written_at
-            stored.append(result)
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
-        events=_Events(),
-        operands=_Operands(),
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
         cancellation=_Cancellation(),
+        events=RecordingEvents(),
+        operands=_StoringOperands(stored),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -328,15 +322,15 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     recorded: str,
 ) -> None:
     """The import request carries no label, so the staged command names the session or the profile."""
-    from .. import import_operation as operation_module
-
     actors: list[str] = []
     repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
     def prepare(command, *, ports, own_accounts):
         del ports, own_accounts
         actors.append(command.actor)
-        return SimpleNamespace(command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(1, "a" * 64)))
+        return SimpleNamespace(
+            command=command, source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(1, "a" * 64))
+        )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
         del staged, transaction_repository, bucket_event_repository, currency_normalizer
@@ -346,23 +340,14 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
         assert frontend is not None and identity.definition_id == LEDGER_IMPORT_OPERATION_DEFINITION_ID
         return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
 
-    class _Operands:
-        async def put(self, result: LedgerImportExecutionResult, *, written_at):
-            del result, written_at
-            return "secure-result-reference"
-
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
-    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
-    context = SimpleNamespace(
-        identity=SimpleNamespace(
-            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-        ),
-        authority_operation=operation,
-        events=_Events(),
-        operands=_Operands(),
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
         cancellation=_Cancellation(),
+        events=RecordingEvents(),
+        operands=_StoringOperands([]),
     )
     request = OperationRequest(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -378,3 +363,98 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     assert asyncio.run(executor.execute(request, context)) == "secure-result-reference"
 
     assert actors == [recorded, recorded]
+
+
+def _stored_duplicate(transaction_id: str) -> LedgerImportDiagnosticReport:
+    """The canonical record of one row the ledger already holds, as the import writes it per row."""
+    return LedgerImportDiagnosticReport(
+        kind="duplicate",
+        severity="info",
+        message="transactions.import.message_082074",
+        affected_transaction_ids=(transaction_id,),
+    )
+
+
+def _imported_once(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, *, rows: int, stored: int):
+    """Preview one statement of ``rows`` rows of which ``stored`` are already in the ledger, and project it."""
+    repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
+    results: list[LedgerImportExecutionResult] = []
+
+    def prepare(command, *, ports, own_accounts):
+        del ports, own_accounts
+        return SimpleNamespace(
+            command=command, source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(rows, "a" * 64))
+        )
+
+    def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
+        del staged, transaction_repository, bucket_event_repository, currency_normalizer
+        return LedgerSourceImportResult(
+            rows=rows,
+            imported=rows - stored,
+            skipped=stored,
+            likely_duplicates=0,
+            dry_run=True,
+            verify=False,
+            bucket_id=str(_PROFILE),
+            validations=(LedgerSourceValidationReport(valid=True),),
+            sources=(LedgerSourceVerificationReport(requested=False),),
+            diagnostics=tuple(_stored_duplicate(f"tx-{index}") for index in range(stored)),
+        )
+
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
+    subject = profile_operation_subject(str(_PROFILE))
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
+        cancellation=_Cancellation(),
+        events=RecordingEvents(),
+        operands=_StoringOperands(results),
+    )
+    request = OperationRequest(
+        definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=subject,
+        payload=LedgerImportRequest(
+            profile_id=_PROFILE, files=(_SOURCES / "statement.csv",), provider=LedgerProviderID.CSV, dry_run=True
+        ),
+    )
+    asyncio.run(LedgerImportExecutor(_PortsFactory(operation, repository)).execute(request, context))
+    receipt = OperationTerminalReceipt(
+        identity=OperationIdentity(
+            operation_id="a" * 64, definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID, subject_ref=subject
+        ),
+        revision=1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        settled_at=datetime(2026, 11, 8, 12, 0, tzinfo=UTC),
+        result_ref="secure-result-reference",
+    )
+    return project_ledger_import_result(results[0], receipt)
+
+
+def test_a_preview_whose_every_row_is_stored_names_that_once(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    """DISCRIMINATING: 39 stored rows are one notice that every row is stored, not 39 notices that some are."""
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=39)
+
+    assert projected.skipped == 39
+    assert [(item.kind, item.message, item.affected_transaction_ids) for item in projected.diagnostics] == [
+        ("duplicate", "transactions.import.all_rows_already_in_ledger", ()),
+    ]
+
+
+def test_a_preview_with_some_rows_stored_names_that_once(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=3)
+
+    assert [item.message for item in projected.diagnostics] == ["transactions.import.some_rows_already_in_ledger"]
+
+
+def test_a_preview_with_no_row_stored_names_none(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=0)
+
+    assert projected.diagnostics == ()

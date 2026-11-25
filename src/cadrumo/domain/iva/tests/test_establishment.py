@@ -21,13 +21,18 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
 from ..schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,14 +58,20 @@ class TestTheResolverNeverInventsASpanishScope:
         mainland would place every Canarian and Ceutan party inside a territory
         their operations are not subject to.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            assert territorial_scope_for_country(printed, operation=_authority_operation_for_test) is None
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            assert (
+                territorial_scope_for_country(printed, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
     @pytest.mark.parametrize("printed", [None, "", "   ", "E", "DEU", "D1", "12", "??"])
     def test_absent_or_malformed_evidence_resolves_to_nothing(self, printed: str | None) -> None:
         """Unreadable evidence is a normal outcome of reading, not an error."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            assert territorial_scope_for_country(printed, operation=_authority_operation_for_test) is None
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            assert (
+                territorial_scope_for_country(printed, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
     def test_no_input_whatsoever_produces_a_spanish_scope(self) -> None:
         """The property stated over the whole reachable input space, not a sample.
@@ -69,14 +80,15 @@ class TestTheResolverNeverInventsASpanishScope:
         shape the reader can hand over. A single assertion over the union is what
         makes this a property rather than a list of cases that happen to pass.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             probes: list[str | None] = [None, "", "  ", "E", "DEU", "D1", "??", "ZZ", "US", "CH", "JP", "GB"]
             member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
             probes += [member.value for member in member_states]
             probes += [member.value.upper() for member in member_states]
 
             resolved = {
-                territorial_scope_for_country(probe, operation=_authority_operation_for_test) for probe in probes
+                territorial_scope_for_country(probe, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                for probe in probes
             }
 
             assert resolved & SPANISH_SCOPES == set()
@@ -88,7 +100,7 @@ class TestTheResolverNeverInventsASpanishScope:
         contain, and the test would keep passing while the real Spanish code
         resolved straight through the EU branch.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
             assert SPAIN_COUNTRY_CODE in {member.value.upper() for member in member_states}
 
@@ -98,28 +110,33 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
 
     @pytest.mark.parametrize("printed", ["DE", "de", " fr ", "IT", "XI"])
     def test_another_member_state_resolves_to_the_eu_scope(self, printed: str) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("eu_member")
 
     @pytest.mark.parametrize("printed", ["US", "CH", "JP", "GB"])
     def test_a_well_formed_non_member_resolves_to_the_third_country_scope(self, printed: str) -> None:
         """Not domestic, and not silently absent either: outside is a real answer."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("third_country")
 
     def test_every_member_state_except_spain_resolves_to_the_eu_scope(self) -> None:
         """Derived from the catalogue, so a State joining or leaving is covered."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
             for member in member_states:
                 code = member.value.upper()
                 expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope.from_registry("eu_member")
 
-                assert territorial_scope_for_country(code, operation=_authority_operation_for_test) == expected, code
+                assert (
+                    territorial_scope_for_country(
+                        code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+                    )
+                    == expected
+                ), code
 
     def test_the_eu_branch_is_not_reachable_by_accident(self) -> None:
         """A country outside the Member State catalogue must not fall into the member scope.
@@ -135,10 +152,10 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
         country outside the EU. A real third country is what the branch has to
         be discriminated against.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
-                "NO", operation=_authority_operation_for_test
+                "NO", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("third_country")
             assert territorial_scope_for_country(
-                "BR", operation=_authority_operation_for_test
+                "BR", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("third_country")

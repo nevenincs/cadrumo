@@ -22,16 +22,26 @@ from cadrumo.domain.calculations.registry.schema_governance import (
     REVISION_REVIEW_DATE_CEILING,
     REVISION_REVIEW_DATE_FLOOR,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.loader_directory_mode_support import load_revision as _shared_load_revision
-from dev.registry.conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
+from dev.registry.conformance.loader_directory_mode_support import (
+    STANDARD_REVISION_EXERCISE,
+    load_revision,
+    standard_revision_preamble_text,
+    write_modelo,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
-_CASILLA_FRAGMENT = """
-[[revisions."2025".casillas]]
+_YEAR = STANDARD_REVISION_EXERCISE
+_REVISION_ID = str(_YEAR)
+#: The signoff date every fixture stamp carries, written from the derived year; the
+#: second is the date a rewrite moves it to, and sits at the support floor.
+_REVIEWED_ON = date(_YEAR, 7, 27)
+_REWRITTEN_REVIEWED_ON = date(filing_year_envelope().floor, 1, 31)
+_CASILLA_FRAGMENT = f"""
+[[revisions."{_REVISION_ID}".casillas]]
 id = "0001"
 number = "1"
 section = ["liquidacion"]
@@ -39,11 +49,11 @@ legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip()
 
-_FULL_STAMP = """
+_FULL_STAMP = f"""
 engineered_by = "registry schema campaign"
 review_status = "operator_reviewed"
 reviewed_by = "operator"
-reviewed_at = 2026-07-27
+reviewed_at = {_REVIEWED_ON.isoformat()}
 """.lstrip()
 
 
@@ -53,17 +63,17 @@ def _write_modelo(
     manifest_extra: str = "",
     fragment_extra: str = "",
 ) -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
-        manifest_extra=manifest_extra,
+        manifest_text=standard_revision_preamble_text() + manifest_extra,
         fragment_extra=fragment_extra,
     )
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _revision_manifest(modelo_dir: Path) -> Path:
@@ -87,7 +97,7 @@ def test_declared_stamp_roundtrips_through_the_real_loader(tmp_path: Path) -> No
     assert revision.engineered_by == "registry schema campaign"
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert revision.reviewed_by == "operator"
-    assert revision.reviewed_at == date(2026, 7, 27)
+    assert revision.reviewed_at == _REVIEWED_ON
 
 
 def test_mutating_the_persisted_stamp_moves_every_loaded_field(tmp_path: Path) -> None:
@@ -103,7 +113,7 @@ def test_mutating_the_persisted_stamp_moves_every_loaded_field(tmp_path: Path) -
     assert before.engineered_by == "registry schema campaign"
     assert before.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert before.reviewed_by == "operator"
-    assert before.reviewed_at == date(2026, 7, 27)
+    assert before.reviewed_at == _REVIEWED_ON
 
     manifest = _revision_manifest(modelo_dir)
     manifest.write_text(
@@ -111,7 +121,7 @@ def test_mutating_the_persisted_stamp_moves_every_loaded_field(tmp_path: Path) -
         .replace('engineered_by = "registry schema campaign"', 'engineered_by = "a different campaign"')
         .replace('review_status = "operator_reviewed"', 'review_status = "agent_reviewed"')
         .replace('reviewed_by = "operator"', 'reviewed_by = "agent-review"')
-        .replace("reviewed_at = 2026-07-27", "reviewed_at = 2019-01-31"),
+        .replace(f"reviewed_at = {_REVIEWED_ON.isoformat()}", f"reviewed_at = {_REWRITTEN_REVIEWED_ON.isoformat()}"),
         encoding="utf-8",
     )
     after = _load_revision(modelo_dir)
@@ -121,7 +131,7 @@ def test_mutating_the_persisted_stamp_moves_every_loaded_field(tmp_path: Path) -
     assert after.reviewed_by != before.reviewed_by
     assert after.reviewed_at != before.reviewed_at
     assert after.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
-    assert after.reviewed_at == date(2019, 1, 31)
+    assert after.reviewed_at == _REWRITTEN_REVIEWED_ON
 
 
 def test_deleting_the_reviewer_from_a_reviewed_stamp_turns_a_load_into_a_refusal(tmp_path: Path) -> None:
@@ -144,7 +154,7 @@ def test_deleting_the_reviewer_from_a_reviewed_stamp_turns_a_load_into_a_refusal
     [
         pytest.param('review_status = "operator_reviewed"\n', id="no-companions"),
         pytest.param('review_status = "agent_reviewed"\nreviewed_by = "agent-review"\n', id="no-date"),
-        pytest.param('review_status = "agent_reviewed"\nreviewed_at = 2026-07-27\n', id="no-reviewer"),
+        pytest.param(f'review_status = "agent_reviewed"\nreviewed_at = {_REVIEWED_ON.isoformat()}\n', id="no-reviewer"),
     ],
 )
 def test_reviewed_status_without_its_companions_is_refused(tmp_path: Path, stamp: str) -> None:
@@ -157,7 +167,9 @@ def test_reviewed_status_without_its_companions_is_refused(tmp_path: Path, stamp
     "stamp",
     [
         pytest.param('reviewed_by = "operator"\n', id="implicit-pending"),
-        pytest.param('review_status = "pending_review"\nreviewed_at = 2026-07-27\n', id="explicit-pending"),
+        pytest.param(
+            f'review_status = "pending_review"\nreviewed_at = {_REVIEWED_ON.isoformat()}\n', id="explicit-pending"
+        ),
     ],
 )
 def test_pending_status_carrying_reviewer_fields_is_refused(tmp_path: Path, stamp: str) -> None:
@@ -173,15 +185,15 @@ def test_pending_status_carrying_reviewer_fields_is_refused(tmp_path: Path, stam
         pytest.param('engineered_by = "   "\n', id="engineered-by-spaces"),
         pytest.param('engineered_by = "\\t"\n', id="engineered-by-tab"),
         pytest.param(
-            'review_status = "operator_reviewed"\nreviewed_by = ""\nreviewed_at = 2026-07-27\n',
+            f'review_status = "operator_reviewed"\nreviewed_by = ""\nreviewed_at = {_REVIEWED_ON.isoformat()}\n',
             id="reviewed-by-empty",
         ),
         pytest.param(
-            'review_status = "operator_reviewed"\nreviewed_by = "   "\nreviewed_at = 2026-07-27\n',
+            f'review_status = "operator_reviewed"\nreviewed_by = "   "\nreviewed_at = {_REVIEWED_ON.isoformat()}\n',
             id="reviewed-by-spaces",
         ),
         pytest.param(
-            'review_status = "operator_reviewed"\nreviewed_by = "\\t"\nreviewed_at = 2026-07-27\n',
+            f'review_status = "operator_reviewed"\nreviewed_by = "\\t"\nreviewed_at = {_REVIEWED_ON.isoformat()}\n',
             id="reviewed-by-tab",
         ),
     ],
@@ -203,7 +215,9 @@ def test_the_blank_refusal_is_about_emptiness_not_the_whitespace_character(tmp_p
     Without this pairing the refusal above could be passing because the loader
     rejects whitespace in an attribution at all rather than an empty claim.
     """
-    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "  operator  "\nreviewed_at = 2026-07-27\n'
+    stamp = (
+        f'review_status = "operator_reviewed"\nreviewed_by = "  operator  "\nreviewed_at = {_REVIEWED_ON.isoformat()}\n'
+    )
 
     revision = _load_revision(_write_modelo(tmp_path, manifest_extra=stamp))
 
@@ -212,7 +226,10 @@ def test_the_blank_refusal_is_about_emptiness_not_the_whitespace_character(tmp_p
 
 def test_reviewed_at_beyond_the_signoff_horizon_is_refused(tmp_path: Path) -> None:
     """A sentinel date cannot denote a signoff any auditor could check."""
-    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 3999-12-31\n'
+    stamp = (
+        'review_status = "operator_reviewed"\nreviewed_by = "operator"\n'
+        f"reviewed_at = {REVISION_REVIEW_DATE_CEILING.isoformat()}\n"
+    )
 
     with pytest.raises(RegistryLoadError, match="signoff horizon"):
         load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
@@ -232,7 +249,7 @@ def test_a_date_below_the_signoff_horizon_still_loads(tmp_path: Path) -> None:
 
 
 def test_reviewed_at_before_the_signoff_floor_is_refused(tmp_path: Path) -> None:
-    """A sentinel date from before the year 2000 cannot denote a signoff anyone can verify."""
+    """The Unix epoch is a sentinel, not a signoff anyone can verify."""
     stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 1970-01-01\n'
 
     with pytest.raises(RegistryLoadError, match="signoff floor"):
@@ -268,7 +285,7 @@ def test_misspelled_governance_key_is_refused(tmp_path: Path) -> None:
 @pytest.mark.parametrize("field_name", sorted(REVISION_GOVERNANCE_FIELDS))
 def test_governance_field_declared_in_a_section_fragment_is_refused(tmp_path: Path, field_name: str) -> None:
     """A stamp hidden among the fragments would be invisible to a reviewer."""
-    literal = "2026-07-27" if field_name == "reviewed_at" else '"operator_reviewed"'
+    literal = _REVIEWED_ON.isoformat() if field_name == "reviewed_at" else '"operator_reviewed"'
     fragment_extra = f'\n[revisions."{_REVISION_ID}"]\n{field_name} = {literal}\n'
 
     with pytest.raises(RegistryLoadError, match=re.escape("revision.toml")):
@@ -281,7 +298,9 @@ def test_the_fragment_refusal_is_about_placement_not_content(tmp_path: Path) -> 
     Without this pairing the refusal test above could be passing because the
     stamp text is malformed rather than misplaced.
     """
-    stamp_body = 'review_status = "agent_reviewed"\nreviewed_by = "agent-review"\nreviewed_at = 2026-07-27\n'
+    stamp_body = (
+        f'review_status = "agent_reviewed"\nreviewed_by = "agent-review"\nreviewed_at = {_REVIEWED_ON.isoformat()}\n'
+    )
 
     accepted = _load_revision(_write_modelo(tmp_path / "manifest-home", manifest_extra=stamp_body))
     assert accepted.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED

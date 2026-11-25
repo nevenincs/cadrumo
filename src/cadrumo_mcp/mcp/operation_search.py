@@ -77,18 +77,30 @@ def _schema_text(schema: JsonValue) -> tuple[tuple[str, ...], tuple[str, ...]]:
             continue
         if not isinstance(node, dict):
             continue
-        for key, value in node.items():
-            if key == "description" and isinstance(value, str):
-                prose.append(value)
-            elif key == "properties" and isinstance(value, dict):
-                vocabulary.extend(_split_identifier(name) for name in value)
-                pending.extend(value.values())
-            elif key in {"enum", "const"}:
-                values = value if isinstance(value, list) else [value]
-                vocabulary.extend(_split_identifier(item) for item in values if isinstance(item, str))
-            else:
-                pending.append(value)
+        _schema_node_text(node, prose, vocabulary, pending)
     return tuple(prose), tuple(vocabulary)
+
+
+def _schema_node_text(
+    node: dict[str, JsonValue], prose: list[str], vocabulary: list[str], pending: list[JsonValue]
+) -> None:
+    """Collect this schema node's words and enqueue its children in field order."""
+    for key, value in node.items():
+        if key == "description" and isinstance(value, str):
+            prose.append(value)
+        elif key == "properties" and isinstance(value, dict):
+            vocabulary.extend(_split_identifier(name) for name in value)
+            pending.extend(value.values())
+        elif key in {"enum", "const"}:
+            vocabulary.extend(_literal_vocabulary(value))
+        else:
+            pending.append(value)
+
+
+def _literal_vocabulary(value: JsonValue) -> tuple[str, ...]:
+    """Split only string literals from a schema enum or const value."""
+    values = value if isinstance(value, list) else [value]
+    return tuple(_split_identifier(item) for item in values if isinstance(item, str))
 
 
 def _split_identifier(value: str) -> str:

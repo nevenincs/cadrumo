@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from decimal import Decimal
 from typing import override
 
 import pytest
@@ -17,9 +16,11 @@ from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConf
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filing_actions import ModeloFilingResult, file_modelo_revision
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -31,11 +32,10 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     T3,
@@ -74,17 +74,26 @@ class _ReportRevisionChangedBeforeCommit(VerificationReportCatalogueRepository):
 class _CalculationRevisionChangedBeforeCommit(CalculationRevisionCatalogueRepository):
     """Advance the current encrypted calculation row before its guarded batch."""
 
+    #: ``save`` builds its own write unit through this hook, so the concurrent
+    #: save it injects must build an ordinary unit rather than race again.
+    _concurrent_save_running = False
+
     @override
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
+    ) -> SecureObjectWriteUnit:
         """Keep the old row but change its persistence revision after the read."""
-        write = super().to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
-        self.save(self.load())
-        return write
+        unit = super().to_secure_object_write_unit(catalogue, expected_revision_id=expected_revision_id)
+        if not self._concurrent_save_running:
+            self._concurrent_save_running = True
+            try:
+                self.save(self.load())
+            finally:
+                self._concurrent_save_running = False
+        return unit
 
 
 class _WorkUnitRevisionChangedBeforeCommit(WorkUnitCatalogueRepository):
@@ -113,6 +122,7 @@ class _FilingRevisionChangedBeforeCommit(ModeloRecordCatalogueRepository):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Keep the old row but change its persistence revision before commit."""
         self.save(self.load())
@@ -120,6 +130,7 @@ class _FilingRevisionChangedBeforeCommit(ModeloRecordCatalogueRepository):
             catalogue,
             extra_writes,
             expected_revision_id=expected_revision_id,
+            assertions=assertions,
         )
 
 
@@ -142,13 +153,13 @@ def _verified_target(repos: Repos):
         calculation_repository=calculations,
         bucket_event_repository=events,
     ) as ports:
-        draft = calculate_modelo_revision(
+        draft = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         draft.calculation_revision_id,
         revision=draft,
@@ -242,38 +253,18 @@ def test_filing_requires_exact_grant_and_reports_actual_noop(repos: Repos) -> No
     assert retained_unit.current_filing_record_id == published.record.filing_record_id
 
 
-@pytest.mark.parametrize("changed_witness", ["second_grant", "retimed_grant"])
-def test_filing_refuses_a_grant_without_unique_current_verification_witness(
-    repos: Repos,
-    changed_witness: str,
-) -> None:
-    """An old or ambiguous granting report cannot authorize a fresh filing."""
+def test_filing_refuses_a_grant_retimed_away_from_the_revision_lock(repos: Repos) -> None:
+    """A grant whose run no longer matches the instant the revision was locked cannot authorize a filing."""
     _work_units, calculations, filings, reports, _events = repos
     work_unit, draft, report_id = _verified_target(repos)
     catalogue = reports.load()
     grant = catalogue.get(report_id)
     assert grant is not None
-    if changed_witness == "second_grant":
-        second = VerificationReport.model_validate(
-            {
-                **grant.model_dump(mode="python"),
-                "verified_by": "operator-B",
-                "verification_report_id": derive_verification_report_id(
-                    calculation_revision_id=grant.calculation_revision_id,
-                    completeness_status=grant.completeness_status,
-                    findings=grant.findings,
-                    verified_by="operator-B",
-                ),
-            },
-            strict=True,
-        )
-        reports.save(upsert_verification_report(catalogue, second))
-    else:
-        retimed = VerificationReport.model_validate(
-            {**grant.model_dump(mode="python"), "run_at": T3},
-            strict=True,
-        )
-        reports.save(upsert_verification_report(catalogue, retimed))
+    retimed = VerificationReport.model_validate(
+        {**grant.model_dump(mode="python"), "run_at": T3},
+        strict=True,
+    )
+    reports.save(upsert_verification_report(catalogue, retimed))
 
     with pytest.raises(VerificationReportNotFoundError):
         _file(repos, work_unit, draft, report_id)
@@ -283,6 +274,40 @@ def test_filing_refuses_a_grant_without_unique_current_verification_witness(
     assert all(
         record.calculation_revision_id != draft.calculation_revision_id for record in filings.load().records.values()
     )
+
+
+def test_a_stray_grant_that_does_not_match_the_lock_neither_authorizes_nor_blocks_filing(repos: Repos) -> None:
+    """Another actor's grant beside the lock's own, as a lost lock write once left it, is not a witness.
+
+    Filing on the stray grant is refused; filing on the grant the revision's
+    lock names goes ahead, so the declaration is not left unfileable.
+    """
+    _work_units, _calculations, _filings, reports, _events = repos
+    work_unit, draft, report_id = _verified_target(repos)
+    catalogue = reports.load()
+    grant = catalogue.get(report_id)
+    assert grant is not None
+    stray = VerificationReport.model_validate(
+        {
+            **grant.model_dump(mode="python"),
+            "verified_by": "operator-B",
+            "verification_report_id": derive_verification_report_id(
+                calculation_revision_id=grant.calculation_revision_id,
+                completeness_status=grant.completeness_status,
+                findings=grant.findings,
+                verified_by="operator-B",
+            ),
+        },
+        strict=True,
+    )
+    reports.save(VerificationReportCatalogue(reports={**catalogue.reports, stray.verification_report_id: stray}))
+
+    with pytest.raises(VerificationReportNotFoundError):
+        _file(repos, work_unit, draft, stray.verification_report_id)
+    published = _file(repos, work_unit, draft, report_id)
+
+    assert published.published is True
+    assert published.record.calculation_revision_id == draft.calculation_revision_id
 
 
 @pytest.mark.parametrize("race", ["report", "calculation", "work_unit", "filing"])

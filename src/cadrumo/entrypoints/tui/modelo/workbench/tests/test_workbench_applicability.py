@@ -12,32 +12,28 @@ from __future__ import annotations
 
 import pytest
 from rich.text import Text
-from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_next_step import ModeloFormNextAction
+from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......core.period import Period
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
-from ..header import ChipLevel, attention_chips
-from ..navigator import NavigatorState, checked_boxes, inapplicable_pages, navigator_rows, presented_form
+from ..header import attention_chips
+from ..navigator import NavigatorState, checked_boxes, navigator_rows, presented_form
 from ..page_items import workbench_pages
-from ..progress import NextAction, workbench_progress
 from ..screen import ModeloWorkbenchScreen
-from ..wording import does_not_apply_text
 from .sectioned_form import LAST_QUARTER_PAGE, sectioned_form
-from .workbench_fixture import FakeActions, FakeReader
+from .workbench_fixture import FakeActions, FakeReader, served_progress
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _NOT_THIS_QUARTER = "Does not apply this quarter"
 _LOCALES = ("es", "en", "ca", "hu")
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _rows(*, last_quarter_applies: bool | None, current: int = 0) -> tuple[Text, ...]:
@@ -49,8 +45,7 @@ def _rows(*, last_quarter_applies: bool | None, current: int = 0) -> tuple[Text,
         checked=checked_boxes(form),
         width=60,
         show_attention=True,
-        inapplicable=inapplicable_pages(form),
-        not_applying=does_not_apply_text(form.period),
+        not_applying=does_not_apply_words(form.period),
     )
     return tuple(row.prompt for row in rows)
 
@@ -87,14 +82,14 @@ def test_what_a_page_that_does_not_apply_holds_is_never_to_do_in_the_header_or_t
     undecided = sectioned_form(last_quarter_applies=None)
 
     chips = {chip.level: chip.count for chip in attention_chips(set_aside, recorded=False)}
-    progress = workbench_progress(set_aside, staged=0, verified=False, filed=False)
+    progress = served_progress(set_aside, staged=0, verified=False, filed=False)
     undecided_chips = {chip.level: chip.count for chip in attention_chips(undecided, recorded=False)}
-    undecided_progress = workbench_progress(undecided, staged=0, verified=False, filed=False)
+    undecided_progress = served_progress(undecided, staged=0, verified=False, filed=False)
 
-    assert chips == {ChipLevel.CONFIRM: 4}
-    assert (progress.next_action, progress.count) == (NextAction.CONFIRM, 4)
-    assert undecided_chips == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 5}
-    assert (undecided_progress.next_action, undecided_progress.count) == (NextAction.FILL, 1)
+    assert chips == {ModeloFormAttention.CONFIRM: 4}
+    assert (progress.next_action, progress.count) == (ModeloFormNextAction.CONFIRM, 4)
+    assert undecided_chips == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 5}
+    assert (undecided_progress.next_action, undecided_progress.count) == (ModeloFormNextAction.FILL, 1)
 
 
 def test_a_heading_the_layout_prints_twice_is_listed_once_with_both_parts_counted() -> None:
@@ -112,10 +107,10 @@ def test_a_heading_the_layout_prints_twice_is_listed_once_with_both_parts_counte
 def test_the_words_for_a_page_that_does_not_apply_name_the_period_in_every_language(language: str) -> None:
     periods = [Period.from_year_and_code(2026, code) for code in ("1T", "01", "0A")]
     with override_settings(cadrumo_output_language="en"):
-        english = [does_not_apply_text(period) for period in periods]
+        english = [does_not_apply_words(period) for period in periods]
     with override_settings(cadrumo_output_language=language):
-        words = [does_not_apply_text(period) for period in periods]
-        fallback = tr("tui.modelo.workbench.applicability.period")
+        words = [does_not_apply_words(period) for period in periods]
+        fallback = tr("workspace.modelo.applicability.period")
 
     assert len(set(words)) == len(words), "a quarter, a month and a year are each named"
     assert all(text and not text.startswith("tui.") for text in (*words, fallback))
@@ -139,15 +134,15 @@ async def test_the_workbench_says_a_page_does_not_apply_and_never_lands_on_it(wi
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             landed = screen.query_one(CasillaList).highlighted
             chips = str(screen.query_one("#wb-chips", Static).render())
             navigator = _navigator(screen) if width >= 110 else []
             await pilot.press("n", "n", "n")
-            await _settle(pilot)
+            await settle(pilot)
             after_next = screen.query_one(CasillaList).highlighted
             await pilot.press("left_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             title = str(screen.query_one("#wb-page", Static).render())
             crumb = str(screen.query_one("#wb-crumb", Static).render())
             on_page = screen.pages_shown[1].id
@@ -172,13 +167,13 @@ async def test_choosing_a_heading_printed_twice_goes_to_its_first_part() -> None
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             navigator = screen.query_one("#wb-sections", OptionList)
             index = next(position for position, row in enumerate(_navigator(screen)) if "Resultado" in row)
             navigator.focus()
             navigator.highlighted = index
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             cursor = screen.query_one(CasillaList).highlighted
             app.exit(None)
 

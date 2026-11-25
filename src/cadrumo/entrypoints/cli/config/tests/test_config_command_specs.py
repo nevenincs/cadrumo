@@ -13,7 +13,7 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
 
-from ..._root_command_specs import ROOT_COMMAND_SPECS
+from ...root_command_specs import ROOT_COMMAND_SPECS
 from ..command_specs import CONFIG_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -137,7 +137,6 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
     inside an authority operation; the parser must only carry the string.
     """
     from typer._click.core import Context
-    from typer._click.types import StringParamType
 
     from ...tests.cli_runner import cadrumo_click_command
 
@@ -152,53 +151,4 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
         command = child
     parameter = next(parameter for parameter in command.params if parameter.name == "fiscal_residency")
 
-    assert isinstance(parameter.type, StringParamType)
-    assert parameter.type.convert(token, parameter, context) == token
-
-
-@pytest.mark.parametrize(
-    ("token", "parameters", "identity"),
-    [
-        ("load", ("model", "role"), "config.provision.load"),
-        ("setup", ("yes",), "config.provision.setup"),
-    ],
-)
-def test_provision_load_and_setup_extend_the_provision_cluster(
-    token: str, parameters: tuple[str, ...], identity: str
-) -> None:
-    from .._provision_command_specs import CONFIG_PROVISION_COMMAND_SPECS
-
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
-    (node,) = (node for node in graph.nodes() if node.path == ("aeat", "config", "provision", token))
-    spec = node.spec
-
-    assert spec in CONFIG_PROVISION_COMMAND_SPECS
-    assert spec.parent_key == "config_provision"
-    assert tuple(parameter.name for parameter in spec.parameters) == parameters
-    # Both submit a registered operation in the signed-in profile's session, so
-    # they declare installation storage beside the network they write through.
-    assert spec.policy.capabilities == frozenset({"local-storage", "network"})
-    assert spec.policy.side_effects == frozenset({"network", "local-state"})
-    assert spec.policy.performance == "external-io"
-    assert not spec.policy.destructive
-    assert spec.result_schema.identity == identity
-    assert not any(path[:3] == ("aeat", "config", "llm") for path in (n.path for n in graph.nodes()))
-
-
-def test_setup_answers_its_review_only_with_an_explicit_yes_flag() -> None:
-    from typer._click.core import Context
-
-    from ...tests.cli_runner import cadrumo_click_command
-
-    command: Any = cadrumo_click_command()
-    context = Context(command)
-    for name in ("config", "provision", "setup"):
-        child = command.get_command(context, name)
-        assert child is not None, name
-        context = Context(child, parent=context, info_name=name)
-        command = child
-    yes = next(parameter for parameter in command.params if parameter.name == "yes")
-
-    assert yes.is_flag
-    assert yes.default is False
-    assert yes.opts == ["--yes"]
+    assert parameter.process_value(context, token) == token

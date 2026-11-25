@@ -1,14 +1,18 @@
-"""Registered encrypted ledger check under whole-profile read authority."""
+"""Registered encrypted ledger check under whole-profile read authority.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.invoices.service import LinkInconsistency
@@ -27,7 +31,11 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .check_query import LedgerCheckV1, read_ledger_check
 from .preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 LEDGER_CHECK_OPERATION_DEFINITION_ID = "ledger.check"
 
@@ -115,7 +123,12 @@ class LedgerCheckProjection(BaseModel):
 
 
 class LedgerCheckExecutor:
-    """Read both catalogues and preflight inside retained profile custody."""
+    """Read both catalogues and preflight inside retained profile custody.
+
+    The check is the explicit full re-validation path: it reads the transaction
+    catalogue once, with every admission check re-run on every row, including
+    the id re-derivation an ordinary read skips.
+    """
 
     def __init__(self, ports: LedgerActionPortsFactory) -> None:
         """Retain the explicit profile-bound ledger port factory."""
@@ -139,19 +152,39 @@ class LedgerCheckExecutor:
                 or ports.operation is not operation
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            reader = ports.fully_validated_transaction_reader
+            if reader is None:
+                raise InternalInvariantError("ledger check requires the fully validating transaction catalogue read")
+            if reader.bucket_id != bucket_id:
+                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             check = read_ledger_check(
                 bucket_id=bucket_id,
-                transactions=ports.transaction_repository.load(),
+                transactions=reader.load_fully_validated(),
                 ports=InvoiceCatalogueReadPorts(
                     invoice_reader=ports.invoice_repository,
                     transaction_reader=ports.transaction_repository,
                 ),
+                profile_record=_bucket_profile_record(bucket_id, operation=operation),
                 operation=operation,
                 period=payload.period.to_period() if payload.period is not None else None,
             )
             return LedgerCheckProjection.from_check(check, profile_id=payload.profile_id, period=payload.period)
 
         return await capture_read_result(context, read, task_name="ledger-check")
+
+
+def _bucket_profile_record(bucket_id: str, *, operation: PinnedAuthorityOperation) -> UserProfileRecord | None:
+    """Decrypt the bucket's own profile record, or return ``None`` when it has none."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
 
 
 def build_ledger_check_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
@@ -171,11 +204,9 @@ def resolve_ledger_check_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require independent all-period authority because links remain global."""
-    if request.definition_id != LEDGER_CHECK_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerCheckRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_CHECK_OPERATION_DEFINITION_ID, request_type=LedgerCheckRequest
+    )
 
 
 def build_ledger_check_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

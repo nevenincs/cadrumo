@@ -17,6 +17,7 @@ from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.operations import OperationEffect
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -31,11 +32,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     require_live_executor_identity,
 )
-from .live_operation_registration import (
-    build_live_operation_definition,
-    require_live_read_receipt,
-    resolve_whole_profile_read_access,
-)
+from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
 from .notification_ports import NotificationsPorts, NotificationTypeValue
 from .notifications import NotificationsService, PersistedNotificationsSnapshot
 
@@ -441,8 +438,8 @@ def resolve_notifications_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile disclosure for list summaries."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=NOTIFICATIONS_LIST_DEFINITION_ID, payload_type=NotificationsListRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=NOTIFICATIONS_LIST_DEFINITION_ID, request_type=NotificationsListRequest
     )
 
 
@@ -450,8 +447,8 @@ def resolve_notifications_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile access to full notification rows."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID, payload_type=NotificationsShowRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID, request_type=NotificationsShowRequest
     )
 
 
@@ -459,8 +456,8 @@ def resolve_notifications_latest_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile disclosure for latest snapshot facts."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID, payload_type=NotificationsLatestRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID, request_type=NotificationsLatestRequest
     )
 
 

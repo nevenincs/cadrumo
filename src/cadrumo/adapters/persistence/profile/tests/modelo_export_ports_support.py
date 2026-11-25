@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
@@ -57,6 +58,7 @@ from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueReposit
 from cadrumo.domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
+from ..actividad_asset import ActividadAssetHistoryRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 
 _EMPTY_EXPORT_BUCKET_ID = "ephemeral"
@@ -92,6 +94,7 @@ def _compose_modelo_export_ports(
 ) -> ModeloExportPorts:
     """Compose every concrete export and draft-review authority over one store."""
     return ModeloExportPorts(
+        activity_assets=ActividadAssetHistoryRepository(bucket_id=bucket_id, objects=objects),
         calculation=CalculationRevisionCatalogueRepository(
             bucket_id=bucket_id,
             objects=objects,
@@ -114,10 +117,12 @@ def _compose_modelo_export_ports(
         m360_solicitud=Modelo360SolicitudRepository(bucket_id=bucket_id, objects=objects),
         own_accounts=OwnAccountRepository(bucket_id=bucket_id, objects=objects),
         transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+        invoices=InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects),
         draft_review_ports=_draft_review_ports_for_test(bucket_id=bucket_id, objects=objects),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
         product_software_identity=development_mock_software_identity(),
     )
 

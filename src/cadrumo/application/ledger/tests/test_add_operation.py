@@ -26,19 +26,25 @@ from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....application.operations.registry import OperationRegistry
 from ....application.prorrata_register.ports import (
     ProrrataRegisterServiceRepositoryProtocol,
 )
 from ....application.review.filter import LedgerReviewStatus
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .. import add_operation
 from ..own_account_ports import OwnAccountRepositoryProtocol
+from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,45 +68,17 @@ def _request() -> LedgerAddRequest:
 
 
 def _transaction() -> LedgerTransactionProjection:
-    return LedgerTransactionProjection.model_validate(
-        {
-            "transaction_id": _TRANSACTION_ID,
-            "date": "2026-04-15",
-            "booked_date": "2026-04-15",
-            "value_date": None,
-            "amount": "10",
-            "currency": "EUR",
-            "direction": "OUTGOING",
-            "counterparty": "",
-            "description": "Office materials",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": None,
-            "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
-            "iva_category": "domestic_general",
-            "counterparty_country": None,
-            "counterparty_identification_state": "de",
-            "irpf_category": None,
-            "m210_income_classification": None,
-            "usage_ratio_id": None,
-            "prorrata_reference": None,
-            "purchase_invoice_evidence_id": None,
-            "invoice_id": None,
-            "attachment_ids": (),
-            "notes": "",
-            "lifecycle_state": "ACTIVE",
-            "classified_by": "auto",
-            "classified_at": None,
-            "classification_reason": "",
-            "classification_confidence": None,
-            "source_jurisdiction": None,
-            "value_in_eur": None,
-            "fx_rate": None,
-            "created_at": "2026-04-15T09:30:00+00:00",
-            "modified_at": "2026-04-15T09:30:00+00:00",
-        },
+    return ledger_transaction_projection(
+        transaction_id=_TRANSACTION_ID,
+        amount="10",
+        direction="OUTGOING",
+        counterparty="",
+        description="Office materials",
+        business_classification="NOT_YET_PROCESSED",
+        business_pct=None,
+        iva_category="domestic_general",
+        counterparty_identification_state="de",
+        classified_by="auto",
     )
 
 

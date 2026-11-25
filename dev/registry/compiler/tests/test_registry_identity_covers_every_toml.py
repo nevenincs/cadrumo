@@ -20,7 +20,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..authority import _compile_validated_authority_uncached
+from ..authority import compile_validated_authority_uncached
 from ..identity import compute_walked_tree_digest
 from ..loader_fingerprints import collect_registry_tree_fingerprints
 from ..validation_verdict_cache import validation_verdict_scope
@@ -143,7 +143,7 @@ def test_every_file_the_compiler_opens_under_the_registry_root_is_fingerprinted(
 
     sys.addaudithook(record_open)
     try:
-        _compile_validated_authority_uncached(registry, Path(bundled_path()), verdicts=None)
+        compile_validated_authority_uncached(registry, Path(bundled_path()), verdicts=None)
     finally:
         recording[0] = False
     fingerprinted = {Path(row[0]).resolve() for row in collect_registry_tree_fingerprints(registry, use_cache=False)}

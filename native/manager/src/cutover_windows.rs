@@ -46,6 +46,34 @@ pub fn nonce() -> io::Result<String> {
 /// Enumeration is not authority; PID, parent PID and an executable basename alone
 /// never authorize a stop. Called after successor exit to close the pre-report race.
 pub fn children(parent: u32) -> io::Result<Vec<u32>> {
+    let mut found = Vec::new();
+    each_process(|pid, of| {
+        if of == parent {
+            found.push(pid);
+        }
+        true
+    })?;
+    Ok(found)
+}
+
+/// The PID that started `pid`, as the process list records it, or `None` when `pid`
+/// is not listed. Evidence only: the caller holds `pid` before the snapshot and holds
+/// the returned PID after it, then compares creation times, because the recorded
+/// parent may have ended and its PID been reused.
+pub fn parent(pid: u32) -> io::Result<Option<u32>> {
+    let mut found = None;
+    each_process(|listed, of| {
+        if listed == pid {
+            found = Some(of);
+        }
+        found.is_none()
+    })?;
+    Ok(found)
+}
+
+/// Visits each listed process with its PID and recorded parent PID until `visit`
+/// returns false.
+fn each_process(mut visit: impl FnMut(u32, u32) -> bool) -> io::Result<()> {
     // SAFETY: a read-only, noninheritable process-list snapshot, with no module/heap access.
     let raw = unsafe { CreateToolhelp32Snapshot(2, 0) };
     if raw as isize == -1 {
@@ -56,20 +84,19 @@ pub fn children(parent: u32) -> io::Result<Vec<u32>> {
     // SAFETY: unused PROCESSENTRY32W members are zero; dwSize advertises the ABI size.
     let mut entry: ProcessEntry = unsafe { mem::zeroed() };
     entry.size = mem::size_of::<ProcessEntry>() as u32;
-    let mut found = Vec::new();
     // SAFETY: the owned snapshot and writable ABI-sized record live through enumeration.
     let mut present = unsafe { Process32FirstW(snapshot.as_raw_handle(), &mut entry) };
     for _ in 0..65536 {
         if present == 0 {
             let error = io::Error::last_os_error();
             return if error.raw_os_error() == Some(18) {
-                Ok(found)
+                Ok(())
             } else {
                 Err(error)
             };
         }
-        if entry.parent == parent {
-            found.push(entry.pid);
+        if !visit(entry.pid, entry.parent) {
+            return Ok(());
         }
         // SAFETY: the snapshot and the same writable record remain owned and alive.
         present = unsafe { Process32NextW(snapshot.as_raw_handle(), &mut entry) };

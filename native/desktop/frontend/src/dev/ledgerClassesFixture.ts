@@ -1,0 +1,115 @@
+// What each admitted ledger definition may do to the profile's records, as
+// the host classes it: a read declares no effect that changes records, a
+// write may change them, and a review may change them after the person
+// answers it. The browser cannot read the host's manifest, so the two lists
+// below copy its write and review families; a unit test compares them with
+// the shipped manifest and the host's admitted list, definition by
+// definition. Every other admitted definition is a read.
+
+import type { LedgerDefinitionId } from "../shell/ledger";
+
+export const LEDGER_WRITES: readonly string[] = [
+  "ledger.actividad-asset.claim",
+  "ledger.actividad-asset.correct",
+  "ledger.actividad-asset.create",
+  "ledger.actividad-asset.describe",
+  "ledger.actividad-asset.dispose",
+  "ledger.add",
+  "ledger.allocate",
+  "ledger.archive",
+  "ledger.attach",
+  "ledger.bienes_inversion.declare",
+  "ledger.classify.bulk",
+  "ledger.classify.iva-derive",
+  "ledger.classify.job.apply",
+  "ledger.classify.job.authorise",
+  "ledger.classify.job.cancel",
+  "ledger.classify.job.dismiss",
+  "ledger.classify.job.enqueue",
+  "ledger.classify.job.retry",
+  "ledger.classify.job.revoke-consent",
+  "ledger.classify.job.run",
+  "ledger.classify.single",
+  "ledger.counterparty",
+  "ledger.detach",
+  "ledger.evidence.add",
+  "ledger.evidence.batch",
+  "ledger.evidence.confirm",
+  "ledger.evidence.extract",
+  "ledger.evidence.remove",
+  "ledger.evidence.update",
+  "ledger.evidence.verify",
+  "ledger.exclude",
+  "ledger.export",
+  "ledger.import",
+  "ledger.inventory.closing-authority.record",
+  "ledger.inventory.closing-value.record",
+  "ledger.inventory.correct",
+  "ledger.inventory.create",
+  "ledger.inventory.describe",
+  "ledger.inventory.evidence.add",
+  "ledger.inventory.movement.add",
+  "ledger.inventory.movement.claim",
+  "ledger.inventory.movement.correct",
+  "ledger.inventory.movement.reverse",
+  "ledger.inventory.restore",
+  "ledger.inventory.retire",
+  "ledger.inventory.valuation.preview",
+  "ledger.invoice.add",
+  "ledger.invoice.attach_document",
+  "ledger.invoice.import",
+  "ledger.invoice.remove",
+  "ledger.invoice.update",
+  "ledger.invoice.wizard",
+  "ledger.link",
+  "ledger.merge",
+  "ledger.operaciones_vinculadas.state_none",
+  "ledger.operaciones_vinculadas.state_operation",
+  "ledger.operaciones_vinculadas.state_turnover",
+  "ledger.operaciones_vinculadas.withdraw_none",
+  "ledger.operaciones_vinculadas.withdraw_operation",
+  "ledger.operaciones_vinculadas.withdraw_turnover",
+  "ledger.own_account",
+  "ledger.participation.rebuild",
+  "ledger.prevision_social.record",
+  "ledger.prevision_social.remove",
+  "ledger.prorrata.declare_gross",
+  "ledger.prorrata.declare_sector",
+  "ledger.prorrata.elect_especial",
+  "ledger.prorrata.elect_general",
+  "ledger.prorrata.remove_gross",
+  "ledger.prorrata.revoke_especial",
+  "ledger.prorrata.seed",
+  "ledger.prorrata.seed_sector",
+  "ledger.prorrata.settle_sector",
+  "ledger.purchase_evidence.release",
+  "ledger.ratios.set",
+  "ledger.ratios.unset",
+  "ledger.remove",
+  "ledger.reset",
+  "ledger.restore",
+  "ledger.retencion_soportada.attest_absence",
+  "ledger.retencion_soportada.record",
+  "ledger.retencion_soportada.remove",
+  "ledger.retencion_soportada.withdraw_absence",
+  "ledger.rule.add",
+  "ledger.rule.apply",
+  "ledger.rule.remove",
+  "ledger.split.manual",
+  "ledger.stash",
+  "ledger.unlink",
+  "ledger.update",
+  "ledger.update.batch",
+];
+
+export const LEDGER_REVIEWS: readonly string[] = [
+  "ledger.classify.review",
+  "ledger.split.review",
+];
+
+export type LedgerClass = "read" | "write" | "review";
+
+export function ledgerClassOf(definition: LedgerDefinitionId): LedgerClass {
+  if (LEDGER_REVIEWS.includes(definition)) return "review";
+  return LEDGER_WRITES.includes(definition) ? "write" : "read";
+}

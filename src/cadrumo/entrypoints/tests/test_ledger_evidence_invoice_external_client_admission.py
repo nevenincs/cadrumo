@@ -27,11 +27,11 @@ from ...application.ledger.evidence_mutation_operation import (
 from ...application.ledger.invoice_evidence_extract_operation import LedgerEvidenceExtractProjection
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..adapter_composition import build_ledger_evidence_ports
+from ...tests.pdf_fixtures import text_pdf_bytes
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from . import registered_executor_case_support as conformance
 from .invoice_evidence_operation_test_support import prepare_invoice_evidence_conformance_case
 
@@ -48,7 +48,7 @@ _FRONTENDS = pytest.mark.parametrize(
     [(_EXTERNAL_CLIENT, _AUTOMATION_LABEL), (_CLI, _PERSON_LABEL), (_TUI, _PERSON_LABEL)],
     ids=["external_client", "cli", "tui"],
 )
-_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+_SYNTHETIC_INVOICE_PDF = text_pdf_bytes(("synthetic purchase invoice",))
 
 
 def _session_host(definition_id: str, frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
@@ -82,7 +82,7 @@ def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_o
         source_directory = tmp_path / "typed-by-the-person"
         source_directory.mkdir()
         source = source_directory / "synthetic-purchase-invoice.pdf"
-        source.write_bytes(_MINIMAL_PDF)
+        source.write_bytes(_SYNTHETIC_INVOICE_PDF)
         service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=str(profile_id)))
         added = service.add(bucket_id=str(profile_id), source_path=source).record
         request = LedgerEvidenceUpdateRequest(
@@ -101,7 +101,7 @@ def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_o
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -139,7 +139,7 @@ def test_a_typed_invoice_entry_records_who_made_it(
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        preparation = conformance._prepare_family_case(
+        preparation = conformance.prepare_family_case(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         assert preparation is not None
@@ -150,7 +150,7 @@ def test_a_typed_invoice_entry_records_who_made_it(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        outcome = conformance._resolve_result_projection(
+        outcome = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -172,7 +172,7 @@ def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
     """The same stored document is read on this machine, and the whole reading is sealed for every caller."""
     definition_id = "ledger.evidence.extract"
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime",
             cleanup=conformance.OperationRuntimeCloseWitness(),
@@ -192,7 +192,7 @@ def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,

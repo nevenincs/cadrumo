@@ -291,6 +291,23 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
         drop_eligible=True,
         scoped=True,
     ),
+    # One entry per credit casilla: the casilla is the member's identity, and
+    # each edition asserts that its credit reconciliation applies.
+    KeyedFamilySpec(
+        section="credit_reconciliation",
+        identity="casilla_id",
+        storage_identity="casilla_id",
+        drop_eligible=True,
+        scoped=True,
+    ),
+    # One row per Modelo 345 clave, subclave and same-plan answer, declared at
+    # the earliest edition whose texts hold and inherited until an official
+    # design or casilla text changes it.
+    KeyedFamilySpec(
+        section="prevision_social_placements",
+        identity="id",
+        drop_eligible=True,
+    ),
     # A generated declaration of the edition's own printed form, pinned to
     # that edition's source digest: a predecessor's layout describes other
     # casillas and never carries forward.

@@ -1,0 +1,1487 @@
+// The scenario ledger's documents and links, held to the registered
+// contracts of `ledger.evidence.*`, `ledger.link`, `ledger.attach`,
+// `ledger.detach` and `ledger.check`. A reading is a reviewable draft keyed
+// by its evidence record, or by its attachment where it has none; its
+// review digest is the digest of the reading itself, so a reading that
+// changes refuses a confirmation bound to the old one. A read off this
+// computer is offered while the deployment and the profile permit one; it
+// needs a stored record, the provider and the acknowledgement of that one
+// call, is refused with the consent gate's sentence once they no longer
+// permit it, and is recorded as a dispatch. Results are the flat public
+// projections, naming files by name only. The `documents` shape adds the
+// documents, attachments and pairs the Documents and Matching sections
+// exercise. Without the local AI, readings stand on what the labels print and
+// name its setup, a scan refuses with the reader probe's verdict, and the
+// readers are not ready. Everything it answers is synthetic.
+
+import type {
+  AttachmentReviewItem,
+  LabelReadingFallbackProjectionV1,
+} from "../shell/ledgerDocumentContract";
+import type {
+  ConfirmationBlockerProjectionV1,
+  InvoiceDraftProjectionV1,
+} from "../shell/ledgerDocumentReviewContract";
+import type {
+  InvoiceKind,
+  OutputLanguage,
+} from "../shell/ledgerInvoiceContract";
+import type { JsonObject, JsonValue } from "../shell/ledger";
+import {
+  readableFile,
+  type FixtureEvidence,
+  type FixtureLedger,
+  type FixtureMovement,
+} from "./fixtures/ledger";
+import {
+  DOCUMENT_PAGE,
+  STRUCTURED_SAMPLE_NAMES,
+  STRUCTURED_WITH_LINES,
+  STRUCTURED_WITHOUT_LINES,
+  structuredSampleId,
+} from "./fixtures/documentPage";
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
+import {
+  ATTACHMENTS,
+  DOCUMENTS,
+  INVOICES,
+  MOVEMENTS,
+  agreeing,
+  catalogueInvoice,
+  decimal,
+  EMPTY_DRAFT,
+  fallbackReading,
+  read,
+  storedFile,
+  ticketPage,
+  type SeedBlocker,
+  type Spec,
+} from "./ledgerEvidenceSeed";
+import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
+import { probedDocument } from "./ledgerFileFixture";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
+
+declare global {
+  interface Window {
+    /** Controls for what the scenario's documents cannot get from a
+     * person. */
+    __scenarioDocuments?: {
+      /** Reads the named document again with a different result, as a
+       * changed reader would. */
+      changeReading(fileName: string): void;
+      /** Changes the named document's bytes, as editing it on disk
+       * would. */
+      changeSource(fileName: string): void;
+      /** Makes drawing a page of the named document refuse with the
+       * page read's `reason`, such as `TOO_LARGE`; `null` lifts it. */
+      refusePage(fileName: string, reason: string | null): void;
+      /** Closes off-host reads, as the deployment or the profile turning
+       * them off would: reviews stop offering one and a read sent anyway
+       * is refused by the consent gate. */
+      closeOffHost(): void;
+    };
+  }
+}
+
+type Tools = {
+  profileId: string;
+  events: () => string[];
+  hex64: (text: string) => string;
+  now: () => string;
+  /** The file behind a token the page was given for documents. */
+  fileOf: (token: JsonValue | undefined) => { name: string };
+  /** The readiness issues of a period, as the preflight finds them. */
+  issuesFor: (
+    period: JsonValue,
+  ) => { transaction_id: string; reason: string; detail: string }[];
+  /** Whether to add the documents, attachments and pairs to match. */
+  seed: boolean;
+  /** Whether the local AI is missing on this computer. */
+  readerMissing: boolean;
+  /** Whether the local AI is there but no model is picked to read with. */
+  noReadingModel: boolean;
+  /** Whether the profile states no fiscal-address postcode. */
+  missingPostcode: boolean;
+  /** The language the backend words a reason in. */
+  language: string;
+};
+
+type Reading = {
+  draft: InvoiceDraftProjectionV1;
+  blockers: ConfirmationBlockerProjectionV1[];
+  fallback: LabelReadingFallbackProjectionV1 | null;
+  extractor: string;
+  drafted_at: string;
+  confirmed: boolean;
+  /** How often the reader read it differently since the page loaded. */
+  version: number;
+};
+
+const CANONICAL = /^(0|[1-9]\d*)(\.\d+)?$/;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const HEX64 = /^[0-9a-f]{64}$/;
+const invalid = (): never => {
+  throw new InvoiceRequestInvalid();
+};
+const text = (value: JsonValue | undefined): string | null =>
+  typeof value === "string" ? value : null;
+const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
+
+/** A label reading that stood without the model fill the local AI gives. */
+const withoutReader = (unread: string[]): LabelReadingFallbackProjectionV1 =>
+  fallbackReading({
+    cause: "reader_unavailable",
+    unread_fields: unread,
+    reader_error_type: "InvoiceDraftReaderUnavailableError",
+  });
+
+type ServedLanguage = keyof typeof servedWords.reading_model.refusal;
+
+const isServedLanguage = (language: string): language is ServedLanguage =>
+  language in servedWords.reading_model.refusal;
+
+/** The language `byLanguage` serves a sentence in: the one asked for, else
+ * English. */
+const servedLanguage = (
+  byLanguage: Record<string, string>,
+  asked: string,
+): OutputLanguage =>
+  byLanguage[asked] && isServedLanguage(asked) ? asked : "en";
+
+/** What the backend serves for a role with no picked reading model: the
+ * refusal's sentence and the step that leads to the choice, in `language`. */
+const noReadingModel = (language: string) => {
+  const sentences: Record<string, string> = servedWords.reading_model.refusal;
+  const steps: Record<string, string> = servedWords.reading_model.step;
+  const served = servedLanguage(sentences, language);
+  return {
+    words: sentences[served]!,
+    language: served,
+    step: { kind: "choose_reading_model" as const, words: steps[served]! },
+  };
+};
+
+/** The step the backend serves where a reading role has no picked model, in
+ * `language`: what a statement only the local AI reads is refused with. */
+export const readingModelStep = (language: string) =>
+  noReadingModel(language).step;
+
+/** A label reading that stood because no model is picked to fill the rest. */
+const withoutModel = (
+  unread: string[],
+  language: string,
+): LabelReadingFallbackProjectionV1 => {
+  const served = noReadingModel(language);
+  return fallbackReading({
+    cause: "reader_unavailable",
+    unread_fields: unread,
+    reader_error_type: "InvoiceDraftReaderUnavailableError",
+    failed_condition_id: "llm.agent.model_run_completed",
+    refusal_code: "no_selection",
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  });
+};
+
+/** The registered refusal of a read that needed a model no one has picked. */
+const noModelRefusal = (language: string) => {
+  const served = noReadingModel(language);
+  return new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_READER", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_READER",
+    message_key: "errors.refused.refused_llm_no_model_selected",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  });
+};
+
+/** What the backend serves for a profile that states no fiscal-address
+ * postcode: the sentence, the step to state it and the profile path it names,
+ * in `language`. */
+const missingPostcode = (language: string) => {
+  const sentences: Record<string, string> =
+    servedWords.confirm_precondition.refusal;
+  const steps: Record<string, string> = servedWords.confirm_precondition.step;
+  const paths: Record<string, string> = servedWords.confirm_precondition.path;
+  const served = servedLanguage(sentences, language);
+  return {
+    words: sentences[served]!,
+    language: served,
+    step: {
+      kind: "open_profile_field" as const,
+      path: paths[served]!,
+      words: steps[served]!,
+    },
+  };
+};
+
+/** The registered refusal of a confirmation for a profile that states no
+ * fiscal-address postcode. */
+const missingPostcodeRefusal = (language: string) => {
+  const served = missingPostcode(language);
+  return new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_INPUT", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_INPUT",
+    message_key:
+      "errors.refused.refused_ledger_evidence_filer_postcode_missing",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  });
+};
+
+/** The registered refusal of a read that needed the missing local AI. */
+const readerRefusal = () =>
+  new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_READER", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_READER",
+    message_key: "errors.refused.refused_ledger_evidence_reader_unavailable",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+  });
+
+/** The consent gate's refusal of a read off this computer that the
+ * deployment or the profile does not permit, with the sentence it serves. */
+const consentRefusal = (language: string) => {
+  const byLanguage: Record<string, string> =
+    servedWords.off_host_consent.mint_refused;
+  const served = byLanguage[language] ? language : "en";
+  return new InvoiceStopped("REFUSED_LLM_CONSENT", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LLM_CONSENT",
+    message_key: "llm.evidence.consent.mint_refused",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: byLanguage[served]!,
+    refusal_words_language: served,
+  });
+};
+
+/** A value of any shape in one comparable text, keys sorted. */
+function stable(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object")
+    return `{${Object.keys(value)
+      .filter((key) => (value as Record<string, unknown>)[key] !== undefined)
+      .sort()
+      .map(
+        (key) =>
+          `${JSON.stringify(key)}:${stable((value as Record<string, unknown>)[key])}`,
+      )
+      .join(",")}}`;
+  return JSON.stringify(value ?? null);
+}
+
+type Controls = NonNullable<Window["__scenarioDocuments"]>;
+/** Every ledger the page made; the controls reach the one it uses. */
+const made = new Set<Controls>();
+
+/** The document whose confirmation reports a withheld figure the record lacks. */
+const RETENTION_READ_FILE = "factura-domestika-lettering.pdf";
+
+export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
+  const { profileId, events, hex64, now } = tools;
+  const readings = new Map<string, Reading>();
+  const attachments: AttachmentReviewItem[] = [];
+  /** The page read's refusal, by file name, a document is held to. */
+  const pageRefusals = new Map<string, string>();
+  /** Whether the deployment and the profile permit a read off this
+   * computer. */
+  let offHostOpen = true;
+  const dispatches: {
+    profile_bucket_id: string;
+    evidence_content_address: string;
+    provider: string;
+    model: string;
+    surface: string;
+    recorded_at: string;
+  }[] = [];
+  const artefacts: {
+    evidence_reference: string;
+    provenance_stamp: string;
+    transport: string | null;
+    drafted_at: string;
+  }[] = [];
+  const keyed = new Map<string, string>();
+  const blockerId = (blocker: SeedBlocker) =>
+    hex64(
+      stable({
+        detail: "",
+        field: blocker.field ?? "",
+        reason: blocker.reason,
+        words: {
+          params: Object.entries(blocker.params).sort(([a], [b]) =>
+            a.localeCompare(b),
+          ),
+          wording: blocker.wording,
+        },
+      }),
+    ).slice(0, 16);
+
+  // What was in the ledger before the page loaded is settled: its
+  // documents are confirmed or kept as evidence, and have no reading.
+  const settled = new Set(ledger.evidence.map((record) => record.evidence_id));
+
+  /** The sentence the backend serves for a confirmation block, in the
+   * window's language, or English where none is recorded. */
+  const blockWords = (reason: ConfirmationBlockerProjectionV1["reason"]) => {
+    const byLanguage: Record<string, string> =
+      servedWords.confirmation_block[reason];
+    const language = servedLanguage(byLanguage, tools.language);
+    return { words: byLanguage[language]!, language };
+  };
+
+  /** The sentence the backend serves explaining a finding, its values
+   * filled in, in the window's language or English where none is recorded. */
+  const findingWords = (blocker: SeedBlocker) => {
+    const byLanguage: Record<string, string> = (
+      servedWords.draft_finding as Record<string, Record<string, string>>
+    )[blocker.wording]!;
+    const language = servedLanguage(byLanguage, tools.language);
+    const words = byLanguage[language]!.replace(
+      /\{(\w+)\}/g,
+      (placeholder, name: string) => blocker.params[name] ?? placeholder,
+    );
+    return { words, language };
+  };
+
+  function specReading(spec: Spec): Reading {
+    return {
+      draft: {
+        ...EMPTY_DRAFT,
+        supplier_name: spec.kind === "issued" ? null : spec.party,
+        supplier_tax_id: spec.kind === "issued" ? null : spec.taxId,
+        customer_name: spec.kind === "issued" ? spec.party : null,
+        customer_tax_id: spec.kind === "issued" ? spec.taxId : null,
+        supplier_country_code: spec.kind === "issued" ? null : "ES",
+        invoice_number: spec.number,
+        invoice_date: spec.date,
+        taxable_base: decimal(spec.base),
+        iva_rate: decimal(spec.rate),
+        iva_amount: decimal(spec.iva),
+        grand_total: decimal(spec.total),
+        currency: "EUR",
+        suggested_kind: spec.kind,
+        provenance: spec.provenance,
+        discrepancies: [],
+        raw_text_length: 1200 + spec.name.length,
+        lines: [],
+      },
+      blockers: (spec.blockers ?? []).map(
+        ({ wording, params, ...blocker }) => ({
+          blocker_id: blockerId({ wording, params, ...blocker }),
+          detail: "",
+          reason_words: blockWords(blocker.reason).words,
+          reason_words_language: blockWords(blocker.reason).language,
+          words: {
+            wording,
+            params: Object.entries(params).sort(([a], [b]) =>
+              a.localeCompare(b),
+            ),
+          },
+          detail_words: findingWords({ wording, params, ...blocker }).words,
+          detail_words_language: findingWords({ wording, params, ...blocker })
+            .language,
+          ...blocker,
+        }),
+      ),
+      fallback: null,
+      extractor: spec.media === "image" ? "vision:local" : "text_layer",
+      drafted_at: now(),
+      confirmed: false,
+      version: 0,
+    };
+  }
+
+  /** The reading of a document added in this run, from what its name
+   * says: an image the reader was too busy for leaves fields unread. */
+  function nameReading(record: FixtureEvidence): Reading {
+    const name = fileName(record.source_path);
+    const party = name
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/^(factura|ticket|recibo)-/i, "")
+      .split(/[-_]/)
+      .filter((word) => /^[a-z]+$/i.test(word))
+      .slice(0, 2)
+      .map((word) => word[0]!.toUpperCase() + word.slice(1))
+      .join(" ");
+    const image = record.media_kind === "image";
+    return {
+      draft: {
+        ...EMPTY_DRAFT,
+        supplier_name: party || null,
+        invoice_number: image
+          ? null
+          : name.replace(/\.[a-z0-9]+$/i, "").toUpperCase(),
+        invoice_date: image ? null : fixtureDay(10, 20),
+        taxable_base: image ? null : decimal("50.00"),
+        iva_rate: image ? null : decimal("21"),
+        iva_amount: image ? null : decimal("10.50"),
+        grand_total: image ? null : decimal("60.50"),
+        currency: image ? null : "EUR",
+        suggested_kind: null,
+        provenance: image
+          ? [read("supplier_name", "text_rules", "unanchored")]
+          : agreeing("text_layer", [
+              "supplier_name",
+              "invoice_number",
+              "invoice_date",
+              "taxable_base",
+              "iva_rate",
+              "iva_amount",
+              "grand_total",
+              "currency",
+            ]),
+        discrepancies: [],
+        raw_text_length: image ? 0 : 900,
+        lines: [],
+      },
+      blockers: [],
+      fallback: image
+        ? fallbackReading({
+            cause: "load_headroom_refused",
+            unread_fields: ["invoice_number", "grand_total", "invoice_date"],
+            reader_error_type: "LLMContentionError",
+          })
+        : tools.readerMissing
+          ? withoutReader(["retencion_rate", "retencion_amount"])
+          : tools.noReadingModel
+            ? withoutModel(
+                ["retencion_rate", "retencion_amount"],
+                tools.language,
+              )
+            : null,
+      extractor: image ? "text_rules" : "text_layer",
+      drafted_at: now(),
+      confirmed: false,
+      version: 0,
+    };
+  }
+
+  if (tools.seed) seed();
+
+  function seed() {
+    const template = ledger.movements.find(
+      (movement) =>
+        movement.transaction.lifecycle_state === "ACTIVE" &&
+        movement.transaction.business_classification === "BUSINESS" &&
+        movement.transaction.direction === "OUTGOING" &&
+        movement.transaction.currency === "EUR",
+    );
+    if (!template) return;
+    const ids = new Map<string, string>();
+    for (const pairing of MOVEMENTS) {
+      const movement = structuredClone(template) as FixtureMovement;
+      const id = hex64(`documents:${pairing.key}`);
+      ids.set(pairing.key, id);
+      Object.assign(movement, {
+        group_label: null,
+        import_batch_id: null,
+        issue: null,
+        sealed: false,
+        llm_rejected: false,
+        idempotency_key: null,
+      });
+      Object.assign(movement.transaction, {
+        transaction_id: id,
+        date: pairing.date,
+        booked_date: pairing.date,
+        value_date: pairing.date,
+        amount: pairing.amount,
+        direction: pairing.direction,
+        counterparty: pairing.counterparty,
+        description: pairing.description,
+        business_classification: "BUSINESS",
+        invoice_id: null,
+        purchase_invoice_evidence_id: null,
+        attachment_ids: [],
+        created_at: `${pairing.date}T09:00:00Z`,
+        modified_at: `${pairing.date}T09:00:00Z`,
+      });
+      ledger.movements.push(movement);
+    }
+    for (const seeded of INVOICES)
+      ledger.invoices.push(
+        catalogueInvoice(hex64, {
+          ...seeded,
+          country: "ES",
+          currency: "EUR",
+          linked: seeded.lists.map((key) => ids.get(key)!),
+        }),
+      );
+    for (const pairing of MOVEMENTS) {
+      if (!pairing.cites) continue;
+      const movement = ledger.movements.find(
+        (found) => found.transaction.transaction_id === ids.get(pairing.key),
+      )!;
+      const invoice = ledger.invoices.find(
+        (found) => found.invoice_number === pairing.cites,
+      );
+      movement.transaction.invoice_id =
+        invoice?.invoice_id ?? hex64(`invoice:${pairing.cites}`);
+    }
+    for (const spec of DOCUMENTS) {
+      const sha = hex64(`document-bytes:${spec.name}`);
+      const record: FixtureEvidence = {
+        evidence_id: hex64(`evidence:${spec.name}`).slice(0, 16),
+        bucket_id: profileId,
+        source_sha256: sha,
+        attachment_id: sha,
+        media_kind: spec.media,
+        supplier: null,
+        invoice_number: null,
+        invoice_date: null,
+        taxable_base: null,
+        iva_rate: null,
+        iva_amount: null,
+        notes: "",
+        created_at: fixtureInstant(10, 20, "10:00:00Z"),
+        updated_at: fixtureInstant(10, 20, "10:00:00Z"),
+        ...storedFile(spec, fixtureInstant(10, 20, "10:00:00Z")),
+        source_path: spec.name,
+      };
+      ledger.evidence.push(record);
+      const reading = specReading(spec);
+      // A page with text is read by its labels alone; the withholding the
+      // text model would have filled is left unread.
+      if (tools.readerMissing && spec.media === "pdf")
+        reading.fallback = withoutReader([
+          "retencion_rate",
+          "retencion_amount",
+        ]);
+      else if (tools.noReadingModel && spec.media === "pdf")
+        reading.fallback = withoutModel(
+          ["retencion_rate", "retencion_amount"],
+          tools.language,
+        );
+      readings.set(record.evidence_id, reading);
+    }
+    ATTACHMENTS.forEach((attachment, at) => {
+      const sha = hex64(`attachment:${at}`);
+      attachments.push({
+        ...attachment,
+        attachment_id: sha,
+        sha256: sha,
+        linked_invoice_ids:
+          at === 1
+            ? [
+                ledger.invoices.find(
+                  (found) => found.invoice_number === "GT-2026-0917",
+                )!.invoice_id,
+              ]
+            : [],
+      });
+    });
+    const sent = ledger.evidence[0];
+    if (sent) {
+      dispatches.push({
+        profile_bucket_id: profileId,
+        evidence_content_address: sent.source_sha256,
+        provider: "AGENT",
+        model: "assistant-reader",
+        surface: "runtime:ledger.evidence.extract",
+        recorded_at: fixtureInstant(10, 11, "09:12:00Z"),
+      });
+      artefacts.push({
+        evidence_reference: sent.evidence_id,
+        provenance_stamp: "llm:assistant-reader",
+        transport: "https",
+        drafted_at: fixtureInstant(10, 11, "09:12:04Z"),
+      });
+    }
+  }
+
+  const recordOf = (id: JsonValue | undefined) => {
+    const wanted = text(id);
+    if (!wanted || wanted.length > 64) invalid();
+    return ledger.evidence.find((record) => record.evidence_id === wanted);
+  };
+  const projected = (record: FixtureEvidence): JsonObject => ({
+    ...(record as unknown as JsonObject),
+    source_path: fileName(record.source_path),
+  });
+  const notFound = (): never => {
+    throw new InvoiceStopped("ERROR_EVIDENCE_NOT_FOUND", {});
+  };
+
+  /** The reading of `reference`, made where the document is new. */
+  function readingOf(reference: string): Reading | null {
+    const held = readings.get(reference);
+    if (held) return held;
+    const record = ledger.evidence.find(
+      (found) => found.evidence_id === reference,
+    );
+    if (record && !settled.has(record.evidence_id)) {
+      const made = nameReading(record);
+      readings.set(reference, made);
+      return made;
+    }
+    return null;
+  }
+  /** The reading as the reader gives it now. */
+  const current = (reading: Reading): InvoiceDraftProjectionV1 =>
+    reading.version === 0
+      ? reading.draft
+      : {
+          ...reading.draft,
+          raw_text_length:
+            (reading.draft.raw_text_length ?? 0) + reading.version,
+        };
+  const digestOf = (reading: Reading) => hex64(stable(current(reading)));
+
+  // Every new document has a reading to review.
+  const pending = () => {
+    for (const record of ledger.evidence) readingOf(record.evidence_id);
+    return [...readings.entries()].filter(([, reading]) => !reading.confirmed);
+  };
+
+  function list(): JsonObject {
+    return {
+      profile_id: profileId,
+      count: ledger.evidence.length,
+      rows: ledger.evidence.map(projected),
+    };
+  }
+  function view(request: JsonObject): JsonObject {
+    const record = recordOf(request.evidence_id);
+    return {
+      result_version: 2,
+      profile_id: profileId,
+      outcome: record
+        ? { kind: "success", record: projected(record) }
+        : { kind: "refused", evidence_record_present: false },
+    };
+  }
+  /** What a picked file is before it is added, as the add's probe finds it. */
+  const probe = (request: JsonObject): JsonObject => ({
+    profile_id: profileId,
+    ...probedDocument(tools.fileOf(request.source_path).name),
+  });
+
+  function add(request: JsonObject): JsonObject {
+    const file = tools.fileOf(request.source_path);
+    const key = text(request.idempotency_key);
+    const kind = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const facts = {
+      supplier: text(request.supplier),
+      invoice_number: text(request.invoice_number),
+      invoice_date: text(request.invoice_date),
+      taxable_base: text(request.taxable_base),
+      iva_rate: text(request.iva_rate),
+      iva_amount: text(request.iva_amount),
+      notes: text(request.notes) ?? "",
+    };
+    for (const field of ["taxable_base", "iva_rate", "iva_amount"] as const)
+      if (facts[field] !== null && !CANONICAL.test(facts[field]!)) invalid();
+    if (facts.invoice_date !== null && !DATE.test(facts.invoice_date))
+      invalid();
+    const sha = hex64(`document-bytes:${file.name}`);
+    if (key !== null) {
+      const prior = keyed.get(key);
+      const record = prior
+        ? ledger.evidence.find((found) => found.evidence_id === prior)
+        : undefined;
+      if (record) {
+        const same =
+          record.source_sha256 === sha &&
+          (Object.keys(facts) as (keyof typeof facts)[]).every(
+            (field) => (record[field] ?? null) === facts[field],
+          );
+        if (!same)
+          throw new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_INPUT", {});
+        return {
+          profile_id: profileId,
+          record: projected(record),
+          bucket_event_ids: [],
+        };
+      }
+    }
+    const at = now();
+    const record: FixtureEvidence = {
+      evidence_id: (key !== null
+        ? hex64(`evidence-key:${key}`)
+        : hex64(`evidence:${file.name}:${at}`)
+      ).slice(0, 16),
+      bucket_id: profileId,
+      source_sha256: sha,
+      attachment_id: sha,
+      media_kind: kind === "pdf" || kind === "xml" ? "pdf" : "image",
+      ...facts,
+      created_at: at,
+      updated_at: at,
+      ...readableFile(kind === "pdf" || kind === "xml" ? "pdf" : "image", at),
+      source_path: file.name,
+    };
+    ledger.evidence.push(record);
+    if (key !== null) keyed.set(key, record.evidence_id);
+    return {
+      profile_id: profileId,
+      record: projected(record),
+      bucket_event_ids: events(),
+    };
+  }
+  const UPDATE_FIELDS = [
+    "supplier",
+    "invoice_number",
+    "invoice_date",
+    "taxable_base",
+    "iva_rate",
+    "iva_amount",
+    "notes",
+  ];
+  function update(request: JsonObject): JsonObject {
+    const record = recordOf(request.evidence_id) ?? notFound();
+    const patch = request.patch;
+    const fields = request.patch_fields;
+    if (
+      !patch ||
+      typeof patch !== "object" ||
+      Array.isArray(patch) ||
+      !Array.isArray(fields) ||
+      fields.some((field) => !UPDATE_FIELDS.includes(field as string))
+    )
+      invalid();
+    const values = patch as JsonObject;
+    for (const [field, value] of Object.entries(values))
+      if (value !== null && !(fields as string[]).includes(field)) invalid();
+    for (const field of fields as string[]) {
+      const value = values[field] ?? null;
+      if (value !== null && typeof value !== "string") invalid();
+      if (
+        ["taxable_base", "iva_rate", "iva_amount"].includes(field) &&
+        value !== null &&
+        (!CANONICAL.test(value as string) ||
+          /\.\d*0$/.test(value as string) ||
+          (field === "iva_rate" && Number(value) > 100))
+      )
+        invalid();
+      if (
+        field === "invoice_date" &&
+        value !== null &&
+        !DATE.test(value as string)
+      )
+        invalid();
+    }
+    for (const field of fields as string[])
+      (record as unknown as Record<string, unknown>)[field] =
+        field === "notes"
+          ? ((values[field] as string | null) ?? "")
+          : (values[field] ?? null);
+    record.updated_at = now();
+    return {
+      profile_id: profileId,
+      record: projected(record),
+      bucket_event_ids: events(),
+    };
+  }
+  function remove(request: JsonObject): JsonObject {
+    const record = recordOf(request.evidence_id) ?? notFound();
+    if (
+      ledger.movements.some(
+        (movement) =>
+          movement.transaction.purchase_invoice_evidence_id ===
+          record.evidence_id,
+      )
+    )
+      throw new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_IN_USE", {});
+    ledger.evidence = ledger.evidence.filter((found) => found !== record);
+    readings.delete(record.evidence_id);
+    return {
+      profile_id: profileId,
+      record: projected(record),
+      bucket_event_ids: events(),
+    };
+  }
+
+  function reviewRow(reference: string, reading: Reading): JsonObject {
+    return {
+      evidence_reference: reference,
+      extractor: reading.extractor,
+      drafted_at: reading.drafted_at,
+      blocking_count: reading.blockers.length,
+      reasons: reading.blockers.map((blocker) => blocker.reason),
+      ...(reading.blockers.length > 0
+        ? {
+            reason_words: reading.blockers.map(
+              (blocker) => blockWords(blocker.reason).words,
+            ),
+            reason_words_language: blockWords(reading.blockers[0]!.reason)
+              .language,
+          }
+        : {}),
+      advisory_count: 0,
+      advisories: [],
+    };
+  }
+  function reviewList(request: JsonObject): JsonObject {
+    const rows = pending()
+      .filter(
+        ([, reading]) =>
+          (request.blocking_only !== true || reading.blockers.length > 0) &&
+          (!request.reason ||
+            reading.blockers.some(
+              (blocker) => blocker.reason === request.reason,
+            )),
+      )
+      .map(([reference, reading]) => reviewRow(reference, reading))
+      .sort((left, right) =>
+        String(right.drafted_at).localeCompare(String(left.drafted_at)),
+      );
+    // A profile without the postcode says so once for the queue, as the
+    // backend does whenever a reading waits.
+    const served = missingPostcode(tools.language);
+    return {
+      profile_id: profileId,
+      filters: [],
+      rows,
+      confirm_precondition:
+        tools.missingPostcode && rows.length > 0
+          ? {
+              condition: "ledger.filer.postcode_valid",
+              words: served.words,
+              words_language: served.language,
+              next_step: served.step,
+            }
+          : null,
+    };
+  }
+  function reviewView(request: JsonObject): JsonObject {
+    const reference = text(request.evidence_reference);
+    if (!reference || reference.length > 64) invalid();
+    const reading = readingOf(reference!);
+    if (!reading || reading.confirmed) notFound();
+    return {
+      profile_id: profileId,
+      evidence_reference: reference,
+      extractor: reading!.extractor,
+      drafted_at: reading!.drafted_at,
+      draft: current(reading!) as unknown as JsonObject,
+      label_reading_fallback: reading!.fallback as unknown as JsonValue,
+      blockers: reading!.blockers as unknown as JsonValue,
+      party_attribution_advisory: null,
+      country_vocabulary_advisory: null,
+      // What the reading suggests is the one statement of direction here: no
+      // import stated one.
+      direction: reading!.draft.suggested_kind
+        ? {
+            declared_kind: null,
+            suggested_kind: reading!.draft.suggested_kind,
+            preselected_kind: reading!.draft.suggested_kind,
+            disagree: false,
+          }
+        : null,
+      counterparty_nif_iva_prefix_country: null,
+      off_host_read_offered: offHostOpen,
+    };
+  }
+
+  /** The source a request names: one record or one attachment, never
+   * both. */
+  function sourceOf(request: JsonObject): {
+    reference: string;
+    sha: string;
+    record: FixtureEvidence | null;
+  } {
+    const evidence = text(request.evidence_id);
+    const attachment = text(request.attachment_id);
+    if ((evidence === null) === (attachment === null)) invalid();
+    if (evidence !== null) {
+      const record = recordOf(evidence) ?? notFound();
+      return {
+        reference: record.evidence_id,
+        sha: record.source_sha256,
+        record,
+      };
+    }
+    const found =
+      attachments.find((item) => item.attachment_id === attachment) ??
+      notFound();
+    return { reference: found.attachment_id, sha: found.sha256, record: null };
+  }
+
+  function extract(request: JsonObject): JsonObject {
+    const provider = request.off_host_provider ?? null;
+    const acknowledged = request.acknowledge_off_host === true;
+    if (provider === null && acknowledged) invalid();
+    if (
+      provider !== null &&
+      (provider !== "AGENT" || !acknowledged || !request.evidence_id)
+    )
+      invalid();
+    const source = sourceOf(request);
+    if (provider !== null && !offHostOpen) throw consentRefusal(tools.language);
+    // A scan has no text for the labels: it cannot be read here at all.
+    if (
+      tools.readerMissing &&
+      provider === null &&
+      source.record?.media_kind === "image"
+    )
+      throw readerRefusal();
+    if (
+      tools.noReadingModel &&
+      provider === null &&
+      source.record?.media_kind === "image"
+    )
+      throw noModelRefusal(tools.language);
+    let reading = readingOf(source.reference);
+    if (!reading) {
+      // An attachment read for the first time.
+      reading = {
+        ...nameReading({
+          evidence_id: source.reference,
+          bucket_id: profileId,
+          source_sha256: source.sha,
+          attachment_id: source.sha,
+          media_kind: "pdf",
+          supplier: null,
+          invoice_number: null,
+          invoice_date: null,
+          taxable_base: null,
+          iva_rate: null,
+          iva_amount: null,
+          notes: "",
+          created_at: now(),
+          updated_at: now(),
+          ...readableFile("pdf", now()),
+          source_path: "factura-adjunta.pdf",
+        }),
+      };
+      readings.set(source.reference, reading);
+    }
+    reading.confirmed = false;
+    reading.drafted_at = now();
+    if (provider !== null) {
+      dispatches.push({
+        profile_bucket_id: profileId,
+        evidence_content_address: source.sha,
+        provider: "AGENT",
+        model: "assistant-reader",
+        surface: "runtime:ledger.evidence.extract",
+        recorded_at: reading.drafted_at,
+      });
+      artefacts.push({
+        evidence_reference: source.reference,
+        provenance_stamp: "llm:assistant-reader",
+        transport: "https",
+        drafted_at: reading.drafted_at,
+      });
+    }
+    return {
+      profile_id: profileId,
+      ...(source.record
+        ? { evidence_id: source.reference }
+        : { attachment_id: source.reference }),
+      source_sha256: source.sha,
+      draft_review_sha256: digestOf(reading),
+      off_host_provider: provider,
+      consent_audit_effect: provider === null ? "none" : "updated",
+      draft: current(reading) as unknown as JsonObject,
+      label_reading_fallback: reading.fallback as unknown as JsonValue,
+    };
+  }
+
+  function confirm(request: JsonObject): JsonObject {
+    const source = sourceOf(request);
+    const kind = request.kind;
+    const country = text(request.counterparty_country) ?? invalid();
+    if (kind !== "issued" && kind !== "received") invalid();
+    if (!/^[A-Z]{2}$/.test(country)) invalid();
+    for (const field of [
+      "expected_source_sha256",
+      "expected_draft_review_sha256",
+    ])
+      if (!HEX64.test(text(request[field]) ?? "")) invalid();
+    for (const field of [
+      "taxable_base",
+      "iva_rate",
+      "iva_amount",
+      "retention_rate",
+      "retention_amount",
+      "recargo_amount",
+    ]) {
+      const value = request[field];
+      if (
+        value !== undefined &&
+        value !== null &&
+        !CANONICAL.test(String(value))
+      )
+        invalid();
+    }
+    const reading = readingOf(source.reference);
+    if (!reading || reading.confirmed) notFound();
+    if (tools.missingPostcode) throw missingPostcodeRefusal(tools.language);
+    if (request.expected_source_sha256 !== source.sha)
+      throw new InvoiceStopped("ERROR_VALIDATION", {});
+    if (request.expected_draft_review_sha256 !== digestOf(reading!))
+      throw new InvoiceStopped("ERROR_VALIDATION", {});
+    const resolutions = Array.isArray(request.resolutions)
+      ? (request.resolutions as JsonObject[])
+      : [];
+    for (const resolution of resolutions) {
+      const action = resolution.action;
+      const value = text(resolution.value);
+      const note = text(resolution.note) ?? "";
+      if (
+        !reading!.blockers.some(
+          (blocker) => blocker.blocker_id === resolution.blocker_id,
+        ) ||
+        (action === "attest" && (value !== null || !note.trim())) ||
+        (action !== "attest" &&
+          action !== "choose_candidate" &&
+          action !== "supply_value") ||
+        (action !== "attest" && !value?.trim())
+      )
+        invalid();
+    }
+    if (
+      reading!.blockers.some(
+        (blocker) =>
+          !resolutions.some((found) => found.blocker_id === blocker.blocker_id),
+      )
+    )
+      throw new InvoiceStopped(
+        "REFUSED_LEDGER_EVIDENCE_CONFIRMATION_BLOCKED",
+        {},
+      );
+    const draft = current(reading!);
+    const party =
+      text(request.counterparty_name) ??
+      (kind === "issued" ? draft.customer_name : draft.supplier_name) ??
+      null;
+    const taxField = kind === "issued" ? "customer_tax_id" : "supplier_tax_id";
+    const resolvedTaxId = resolutions.find(
+      (found) =>
+        found.action !== "attest" &&
+        reading!.blockers.some(
+          (blocker) =>
+            blocker.blocker_id === found.blocker_id &&
+            blocker.field === taxField,
+        ),
+    )?.value;
+    const taxId =
+      text(request.counterparty_tax_id) ??
+      text(resolvedTaxId) ??
+      draft[taxField] ??
+      null;
+    const number = text(request.invoice_number) ?? draft.invoice_number ?? null;
+    const issued = text(request.invoice_date) ?? draft.invoice_date ?? null;
+    const currency = text(request.currency) ?? draft.currency ?? null;
+    const base =
+      text(request.taxable_base) ?? draft.taxable_base?.decimal ?? null;
+    const iva = text(request.iva_amount) ?? draft.iva_amount?.decimal ?? null;
+    if (!party || !number || !issued || !currency || !base || !iva)
+      throw new InvoiceStopped("ERROR_VALIDATION", {});
+    const existing = ledger.invoices.find(
+      (invoice) => invoice.source_sha256 === source.sha,
+    );
+    const invoice =
+      existing ??
+      catalogueInvoice(hex64, {
+        number,
+        kind: kind as InvoiceKind,
+        issued,
+        party,
+        taxId,
+        country,
+        base,
+        iva,
+        currency,
+        linked: [],
+        sourceName: source.record ? fileName(source.record.source_path) : null,
+        sourceSha: source.sha,
+      });
+    if (!existing) ledger.invoices.push(invoice);
+    reading!.confirmed = true;
+    return {
+      profile_id: profileId,
+      ...(source.record
+        ? { evidence_id: source.reference }
+        : { attachment_id: source.reference }),
+      source_sha256: source.sha,
+      reviewed_draft_sha256: digestOf(reading!),
+      confirmation: {
+        invoice: invoice as unknown as JsonObject,
+        draft: draft as unknown as JsonObject,
+        created: !existing,
+        total_discrepancy: null,
+        // The reading withheld a figure the freshly confirmed record does not hold.
+        retention_discrepancy:
+          source.record && source.record.source_path === RETENTION_READ_FILE
+            ? { read_amount: { decimal: "9.00" }, recorded_amount: null }
+            : null,
+        confirmation_id: hex64(`confirmation:${source.reference}`),
+        confirmed_provenance: [],
+        establishment: null,
+        label_reading_fallback: null,
+      },
+    };
+  }
+
+  function attachmentQueue(): JsonObject {
+    return {
+      profile_id: profileId,
+      count: attachments.length,
+      rows: attachments as unknown as JsonValue,
+    };
+  }
+  function attachmentView(request: JsonObject): JsonObject {
+    const id = text(request.attachment_id);
+    if (!id || !HEX64.test(id)) invalid();
+    const item =
+      attachments.find((found) => found.attachment_id === id) ?? notFound();
+    return { profile_id: profileId, item: item as unknown as JsonObject };
+  }
+  /** One page of a stored document, drawn: an invented ticket prints what
+   * its reading read, and every other page is the same invented picture. A
+   * PDF has two pages and an image one. An XML document is a structured
+   * e-invoice and is shown as its facts, as one page; any other document
+   * cannot be drawn. */
+  function page(request: JsonObject): JsonObject {
+    const evidenceId = text(request.evidence_id);
+    const attachmentId = text(request.attachment_id);
+    const number = typeof request.page === "number" ? request.page : NaN;
+    const width =
+      typeof request.max_width === "number" ? request.max_width : NaN;
+    if (
+      (evidenceId === null) === (attachmentId === null) ||
+      !Number.isInteger(number) ||
+      number < 1 ||
+      !Number.isInteger(width) ||
+      width < 64 ||
+      width > 4096
+    )
+      invalid();
+    const refused = (reason: string): never => {
+      throw new InvoiceStopped(`REFUSED_LEDGER_EVIDENCE_PAGE_${reason}`, {});
+    };
+    const structuredSamples = () =>
+      Object.values(STRUCTURED_SAMPLE_NAMES).map((name) => ({
+        name,
+        id: structuredSampleId(name),
+      }));
+    const isXml = (found: { media: string; name: string | null }) =>
+      found.media === "application/xml" ||
+      (found.name?.toLowerCase().endsWith(".xml") ?? false);
+    let facts: { id: string; sha: string; name: string | null; media: string };
+    if (evidenceId !== null) {
+      const record = recordOf(evidenceId) ?? refused("NOT_FOUND");
+      facts = {
+        id: record.attachment_id,
+        sha: record.source_sha256,
+        name: fileName(record.source_path),
+        media: record.media_kind === "pdf" ? "application/pdf" : "image/jpeg",
+      };
+    } else {
+      if (!HEX64.test(attachmentId!)) invalid();
+      const sample = structuredSamples().find(
+        (found) => found.id === attachmentId,
+      );
+      const item = sample
+        ? undefined
+        : (attachments.find((found) => found.attachment_id === attachmentId) ??
+          refused("NOT_FOUND"));
+      facts = sample
+        ? {
+            id: sample.id,
+            sha: sample.id,
+            name: sample.name,
+            media: "application/xml",
+          }
+        : {
+            id: item!.attachment_id,
+            sha: item!.sha256,
+            name: null,
+            media: item!.mime_type,
+          };
+    }
+    const held = facts.name === null ? undefined : pageRefusals.get(facts.name);
+    if (held) refused(held);
+    if (number > 1 && isXml(facts)) refused("OUT_OF_RANGE");
+    if (isXml(facts)) {
+      return {
+        profile_id: profileId,
+        evidence_id: evidenceId,
+        attachment_id: facts.id,
+        media_type: "application/xml",
+        page: number,
+        page_count: 1,
+        width: null,
+        height: null,
+        source_sha256: facts.sha,
+        file_name: facts.name,
+        image_data_url: null,
+        structured_invoice: (facts.name === STRUCTURED_SAMPLE_NAMES.withoutLines
+          ? STRUCTURED_WITHOUT_LINES
+          : STRUCTURED_WITH_LINES) as unknown as JsonObject,
+      };
+    }
+    const count =
+      facts.media === "application/pdf"
+        ? 2
+        : facts.media === "image/jpeg" || facts.media === "image/png"
+          ? 1
+          : refused("UNSUPPORTED_MEDIA");
+    if (number > count) refused("OUT_OF_RANGE");
+    const ticket = DOCUMENTS.find(
+      (spec) => spec.name === facts.name && spec.media === "image",
+    );
+    const drawn = ticket ? ticketPage(ticket) : DOCUMENT_PAGE;
+    return {
+      profile_id: profileId,
+      evidence_id: evidenceId,
+      attachment_id: facts.id,
+      media_type: facts.media,
+      page: number,
+      page_count: count,
+      width: drawn.width,
+      height: drawn.height,
+      source_sha256: facts.sha,
+      file_name: facts.name,
+      image_data_url: drawn.image_data_url,
+    };
+  }
+  function consentList(): JsonObject {
+    return {
+      profile_id: profileId,
+      survey: {
+        consented_dispatches: dispatches,
+        cloud_derived_artefacts: artefacts,
+        transmitted_bytes_are_unrecallable: true,
+      },
+    };
+  }
+  // ---- Links -------------------------------------------------------------------
+
+  function movementOf(id: JsonValue | undefined): FixtureMovement {
+    const prefix = text(id)?.toLowerCase();
+    if (!prefix || prefix.length > 64) invalid();
+    const found = ledger.movements.filter((movement) =>
+      movement.transaction.transaction_id.startsWith(prefix!),
+    );
+    if (found.length !== 1)
+      throw new InvoiceStopped("ERROR_TRANSACTION_VALIDATION", {});
+    return found[0]!;
+  }
+  function link(request: JsonObject): JsonObject {
+    const movement = movementOf(request.transaction_id);
+    const invoiceId = text(request.invoice_id);
+    if (!invoiceId || invoiceId.length > 64) invalid();
+    const invoice = ledger.invoices.find(
+      (found) => found.invoice_id === invoiceId,
+    );
+    if (!invoice)
+      throw new InvoiceStopped("REFUSED_LEDGER_LINK_VALIDATION", {
+        profile_id: profileId,
+        transaction_id: request.transaction_id as string,
+        invoice_id: invoiceId,
+        outcome: "refused",
+        projection: null,
+        reason: "missing_invoice",
+      });
+    const id = movement.transaction.transaction_id;
+    movement.transaction.invoice_id = invoice.invoice_id;
+    movement.transaction.modified_at = now();
+    if (!invoice.linked_transaction_ids.includes(id)) {
+      const linked = {
+        ...invoice,
+        linked_transaction_ids: [...invoice.linked_transaction_ids, id],
+      };
+      ledger.invoices = ledger.invoices.map((found) =>
+        found === invoice ? linked : found,
+      );
+    }
+    return {
+      profile_id: profileId,
+      transaction_id: request.transaction_id as string,
+      invoice_id: invoice.invoice_id,
+      outcome: "linked",
+      projection: {
+        profile_id: profileId,
+        operation: "link",
+        bucket_id: profileId,
+        transaction_id: id,
+        invoice_id: invoice.invoice_id,
+        actor: "operator",
+        bucket_event_ids: events(),
+        review_status:
+          movement.transaction.business_classification === "NOT_YET_PROCESSED"
+            ? "pending"
+            : "reviewed",
+        transaction: { ...movement.transaction } as unknown as JsonObject,
+      },
+      reason: null,
+    };
+  }
+  const knownAttachment = (id: string) =>
+    ledger.evidence.some((record) => record.attachment_id === id) ||
+    attachments.some((item) => item.attachment_id === id) ||
+    ledger.movements.some((movement) =>
+      movement.transaction.attachment_ids.includes(id),
+    );
+  function attach(request: JsonObject, detach: boolean): JsonObject {
+    const movement = movementOf(request.transaction_id);
+    const ids = request.attachment_ids ?? [];
+    if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string"))
+      invalid();
+    const evidence = detach ? null : text(request.purchase_invoice_evidence_id);
+    if (detach && (ids as string[]).length === 0) invalid();
+    if (!detach && evidence === null && (ids as string[]).length === 0)
+      invalid();
+    if (evidence !== null && !recordOf(evidence))
+      throw new InvoiceStopped("ERROR_EVIDENCE_NOT_FOUND", {});
+    if (!detach && (ids as string[]).some((id) => !knownAttachment(id)))
+      throw new InvoiceStopped("ERROR_ATTACHMENT_NOT_FOUND", {});
+    const t = movement.transaction;
+    if (detach)
+      t.attachment_ids = t.attachment_ids.filter(
+        (id) => !(ids as string[]).includes(id),
+      );
+    else {
+      if (evidence !== null) t.purchase_invoice_evidence_id = evidence;
+      t.attachment_ids = [
+        ...t.attachment_ids,
+        ...(ids as string[]).filter((id) => !t.attachment_ids.includes(id)),
+      ];
+    }
+    t.modified_at = now();
+    const operation = detach ? "ledger.detach" : "ledger.attach";
+    return {
+      outcome: "updated",
+      profile_id: profileId,
+      operation_id: operation,
+      result: {
+        profile_id: profileId,
+        operation_id: operation,
+        transaction: { ...t } as unknown as JsonObject,
+        review_status:
+          t.business_classification === "NOT_YET_PROCESSED"
+            ? "pending"
+            : "reviewed",
+        bucket_event_ids: events(),
+        stale_finalized_revisions: [],
+      },
+      validation_messages: [],
+    };
+  }
+  function check(request: JsonObject): JsonObject {
+    const period = request.period ?? null;
+    const issues = period === null ? [] : tools.issuesFor(period);
+    const byInvoice = new Map(
+      ledger.invoices.map((invoice) => [invoice.invoice_id, invoice]),
+    );
+    const byMovement = new Map(
+      ledger.movements.map((movement) => [
+        movement.transaction.transaction_id,
+        movement,
+      ]),
+    );
+    const inconsistencies: JsonObject[] = [];
+    for (const invoice of ledger.invoices)
+      for (const id of invoice.linked_transaction_ids)
+        if (byMovement.get(id)?.transaction.invoice_id !== invoice.invoice_id)
+          inconsistencies.push({
+            invoice_id: invoice.invoice_id,
+            transaction_id: id,
+            direction: "invoice-only",
+          });
+    for (const movement of ledger.movements) {
+      const cited = movement.transaction.invoice_id;
+      if (
+        cited !== null &&
+        !byInvoice
+          .get(cited)
+          ?.linked_transaction_ids.includes(movement.transaction.transaction_id)
+      )
+        inconsistencies.push({
+          invoice_id: cited,
+          transaction_id: movement.transaction.transaction_id,
+          direction: "transaction-only",
+        });
+    }
+    inconsistencies.sort((left, right) =>
+      `${left.invoice_id}${left.transaction_id}`.localeCompare(
+        `${right.invoice_id}${right.transaction_id}`,
+      ),
+    );
+    return {
+      profile_id: profileId,
+      period,
+      bucket_id: profileId,
+      periods: [],
+      checked_transaction_count: ledger.movements.length,
+      issues: issues as unknown as JsonValue,
+      link_inconsistencies: inconsistencies,
+      ready: issues.length === 0 && inconsistencies.length === 0,
+    };
+  }
+
+  const byName = (name: string) =>
+    ledger.evidence.find((record) => fileName(record.source_path) === name);
+  made.add({
+    changeReading(name: string) {
+      const record = byName(name);
+      const reading = record && readingOf(record.evidence_id);
+      if (reading) reading.version += 1;
+    },
+    changeSource(name: string) {
+      const record = byName(name);
+      if (record) {
+        const sha = hex64(`document-bytes:${name}:changed`);
+        record.source_sha256 = sha;
+        record.attachment_id = sha;
+      }
+    },
+    refusePage(name: string, reason: string | null) {
+      if (reason === null) pageRefusals.delete(name);
+      else pageRefusals.set(name, reason);
+    },
+    closeOffHost() {
+      offHostOpen = false;
+    },
+  });
+  window.__scenarioDocuments = {
+    changeReading: (name) => made.forEach((one) => one.changeReading(name)),
+    changeSource: (name) => made.forEach((one) => one.changeSource(name)),
+    refusePage: (name, reason) =>
+      made.forEach((one) => one.refusePage(name, reason)),
+    closeOffHost: () => made.forEach((one) => one.closeOffHost()),
+  };
+  return {
+    reads: {
+      "ledger.evidence.list": list,
+      "ledger.evidence.view": view,
+      "ledger.evidence.review.list": reviewList,
+      "ledger.evidence.review.view": reviewView,
+      "ledger.evidence.attachment_queue": attachmentQueue,
+      "ledger.evidence.attachment_view": attachmentView,
+      "ledger.evidence.page": page,
+      "ledger.evidence.probe": probe,
+      "ledger.evidence.consent.list": consentList,
+      "ledger.check": check,
+    } satisfies Record<string, (request: JsonObject) => JsonObject>,
+    writes: {
+      "ledger.evidence.add": add,
+      "ledger.evidence.update": update,
+      "ledger.evidence.remove": remove,
+      "ledger.evidence.extract": extract,
+      "ledger.evidence.confirm": confirm,
+      "ledger.link": link,
+      "ledger.attach": (request: JsonObject) => attach(request, false),
+      "ledger.detach": (request: JsonObject) => attach(request, true),
+    } satisfies Record<string, (request: JsonObject) => JsonObject>,
+  };
+}

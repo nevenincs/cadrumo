@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-10-03'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a62f66b2773bfa58873ea61ecf4671831cb2833b017162cfcb58fb1e0b569153'
+body_hash: 'sha256:108920404165c35084dd19f854fdd2e30d36ae467368c5df1fabf638a77591bc'
 related:
   - '[[2026-09-09-registry-edition-authoring-adr]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
   - '[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]'
-  - '[[2026-09-09-registry-edition-authoring-ledger]]'
-  - '[[2026-09-09-registry-edition-authoring-plan]]'
   - '[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]'
   - '[[2026-09-13-registry-edition-authoring-completion-controls-audit]]'
   - '[[2026-09-14-registry-edition-authoring-continuity-enrollment-review-audit]]'
@@ -58,14 +56,6 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-15-registry-edition-authoring-governance-wording-audit` - Registry authoring governance review
 - `2026-09-15-registry-edition-authoring-storage-only-ancestry-final-review-audit` - `registry-edition-authoring` audit: `Storage-only ancestry final review`
 - `2026-09-15-registry-edition-authoring-tooling-cleanup-review-audit` - `registry-edition-authoring` audit: `registry tooling cleanup review`
-
-### exec
-
-- `2026-09-09-registry-edition-authoring-ledger` - `registry-edition-authoring` ledger
-
-### plan
-
-- `2026-09-09-registry-edition-authoring-plan` - `registry-edition-authoring` plan
 
 ### reference
 

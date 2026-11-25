@@ -6,7 +6,7 @@ ClassVars sourced from their registry
 :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`, not
 hardcoded literals. This drives the real ``JustificanteRepository.save`` (an
 AUDIT-class consumer) against a genuine encrypted bucket and reads the raw
-:class:`SecureObjectRow` back, asserting the persisted classification and
+``secure_objects`` row back, asserting the persisted classification and
 schema_version equal exactly what ``JUSTIFICANTE_METADATA_NAMESPACE`` declares —
 so a re-hardcoded divergent metadata literal would surface here (or be refused
 outright by the substrate write policy).
@@ -26,8 +26,8 @@ from .....core.period import Period
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
-from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..justificante import JustificanteRepository
 
@@ -59,7 +59,7 @@ def test_justificante_row_carries_registry_declared_metadata(tmp_path: Path) -> 
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == JUSTIFICANTE_METADATA_NAMESPACE.namespace
             ]
 

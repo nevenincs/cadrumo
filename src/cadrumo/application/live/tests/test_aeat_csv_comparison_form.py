@@ -35,6 +35,7 @@ from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -83,6 +84,7 @@ class _PriorObservation:
     casillas: tuple[FiledObservedCasillaProtocol, ...]
     headers: tuple[ObservedHeaderFact, ...]
     registry_snapshot_ref: RegistrySnapshotRef
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
 
 
 def _prior_303_observation(

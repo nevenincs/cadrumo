@@ -10,14 +10,17 @@ whose constraint could change what the box means. So the registry must derive th
 in every edition, not leave one edition asking the operator for a figure it already
 resolves.
 
-Two neighbouring box families deliberately do NOT follow that shape, and this module
-pins the distinction so a later sweep does not "fix" them:
+Boxes [03], [06] and [09], the cuotas of the régimen general rate rows, are derived
+in every edition as well. The 2022 design leaves their paired `Tipo %` box a free
+field and later designs pin it to a constant, but the design adds the three cuotas
+into [27] in every edition, and the rows' bases [01], [04] and [07] already come
+from the ledger at the row's rate in every edition. A cuota left to the operator
+beside a derived base breaks the printed total, so the row's cuota is the cuota
+carrier of the same population.
 
-- Boxes [03], [06] and [09] are the cuotas of the régimen general rate rows. Their
-  meaning comes from the paired `Tipo %` box, which the 2022 design leaves a free
-  three-integer-two-decimal field and every later design pins to a constant. Only
-  once the rate is pinned does row one mean super-reducido, row two reducido and row
-  three general, so only then may the registry project a rate-specific carrier.
+One neighbouring box deliberately does NOT follow that shape, and this module
+pins the distinction so a later sweep does not "fix" it:
+
 - Box [18] is the recargo de equivalencia cuota, whose paired `Tipo % [17]` is a free
   wire field in 2022, while LIVA art. 161.3 fixes the super-reduced population's
   recargo. That population remains ledger-bound. The field is an enumeration of
@@ -47,12 +50,20 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
+    M303_SUPPORTED_EDITION_IDS,
+    m303_record_design_source,
+)
 from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
-from ._modelo_303_registry_support import _M303_RECORD_DESIGN_SOURCE_BY_REVISION
+from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,25 +71,36 @@ pytestmark = [
     pytest.mark.usefixtures("governed_fact_scope"),
 ]
 
-_REVISIONS = tuple(_M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+_REVISIONS = M303_SUPPORTED_EDITION_IDS
+# The edition covering the support floor leaves the recargo tier free; the edition after it enumerates the tiers.
+_FLOOR_REVISION = str(revision_covering("303", filing_year_envelope().floor).id)
+_SECOND_REVISION = _REVISIONS[_REVISIONS.index(_FLOOR_REVISION) + 1]
+#: A filing coordinate that selects each edition by its annual period: its first exercise and "4T".
+_ANNUAL_COORDINATES = [
+    (revision.valid_from.year, str(revision.id))
+    for revision in authored_revisions("303")
+    if str(revision.id) in _REVISIONS and "4T" in revision.period_selector.periods_for_year(revision.valid_from.year)
+]
 
 #: The boxes this module requires every edition to derive, and the carrier or
 #: binding each one restates.
 _DERIVED_BOXES = {
+    "03": ("computed", "modelo-303-dr303-03-projection"),
+    "06": ("computed", "modelo-303-dr303-06-projection"),
+    "09": ("computed", "modelo-303-dr303-09-projection"),
     "11": ("computed", "modelo-303-dr303-11-projection"),
     "13": ("computed", "modelo-303-dr303-13-projection"),
-    "120": ("bound", "modelo-303-casilla-120-no-sujetas-localizacion-base"),
     "122": ("bound", "modelo-303-casilla-122-inversion-sujeto-pasivo-base"),
 }
-#: The rate-row cuotas whose meaning depends on the paired Tipo % constraint.
-_RATE_ROW_BOXES = ("03", "06", "09")
-_RATE_FIELD_BY_BOX = {"03": "02", "06": "05", "09": "08"}
-#: A free rate field states only its own width; a pinned one names a constant.
-_FREE_RATE_FIELD = "3 enteros y 2 decimales"
+#: The rate-row cuotas and the base box of the same row.
+_BASE_BOX_BY_RATE_ROW_CUOTA = {"03": "01", "06": "04", "09": "07"}
 #: The wording each derived box keeps in every design. Its printed POSITION moves as
 #: later designs insert rows before it, which is a layout fact, not a change of
 #: meaning; the width, the type and this wording are what must not move.
 _BOX_CONCEPT = {
+    "03": "Regimen General - IVA Devengado - Régimen general - Cuota",
+    "06": "Regimen General - IVA Devengado - Régimen general - Cuota",
+    "09": "Regimen General - IVA Devengado - Régimen general - Cuota",
     "11": "Adquisiciones intracomunitarias de bienes y servicios - Cuota",
     "13": "inversión del sujeto pasivo (excepto. adq. intracom) - Cuota",
     "120": "no sujetas por reglas de localización",
@@ -91,7 +113,7 @@ def _revision(revision_id: str) -> ModeloRevision:
 
 
 def _design_text(revision_id: str) -> str:
-    source = compiled_bundled_authority().catalogues.sources[_M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
+    source = compiled_bundled_authority().catalogues.sources[m303_record_design_source(revision_id)]
     return (bundled_path() / f"{source.corpus_path}.extracted.md").read_text(encoding="utf-8")
 
 
@@ -129,39 +151,64 @@ def test_every_design_prints_a_derived_box_with_one_unchanging_shape(box: str) -
     assert len(shapes) == 1, f"[{box}] changes width or type across designs: {sorted(shapes)}"
 
 
-def test_the_rate_row_cuotas_are_derived_only_where_the_design_pins_their_rate() -> None:
-    """The kept divergence: a free Tipo % field cannot carry a rate-specific carrier."""
+def test_the_rate_row_cuotas_are_derived_wherever_their_row_base_is() -> None:
+    """The cuota of a rate row is derived in every edition that derives the row's base."""
     for revision_id in _REVISIONS:
+        total_row = _design_row(revision_id, "27")
+        for box in _BASE_BOX_BY_RATE_ROW_CUOTA:
+            assert f"[{box}]" in total_row, f"{revision_id}: [27] no longer adds [{box}]"
         revision = _revision(revision_id)
-        for box in _RATE_ROW_BOXES:
-            rate_row = _design_row(revision_id, _RATE_FIELD_BY_BOX[box])
-            pinned = "Constante" in rate_row
-            assert (_FREE_RATE_FIELD in rate_row) != pinned, (
-                f"{revision_id}: [{_RATE_FIELD_BY_BOX[box]}] is neither a free field nor a constant"
+        for box, base_box in _BASE_BOX_BY_RATE_ROW_CUOTA.items():
+            base_kind, _source = _derived_state(revision, base_box)
+            assert base_kind == "computed", f"{revision_id}: [{base_box}] is {base_kind}"
+            assert _derived_state(revision, box) == _DERIVED_BOXES[box], (
+                f"{revision_id}: [{box}] is {_derived_state(revision, box)} while [{base_box}] is derived"
             )
-            kind, _source = _derived_state(revision, box)
-            assert (kind == "computed") == pinned, (
-                f"{revision_id}: [{box}] is {kind} while its rate field "
-                f"{'pins a constant' if pinned else 'is a free field'}"
-            )
+
+
+def _bound_leaves(revision: ModeloRevision, formula_id: str) -> tuple[str, ...]:
+    """The input kind of every casilla one formula reads."""
+    (formula,) = (formula for formula in revision.formulas if str(formula.id) == formula_id)
+    pending = [formula.expression]
+    kinds: list[str] = []
+    while pending:
+        node = pending.pop()
+        pending.extend(node.args)
+        if node.casilla_id is not None:
+            kinds.append(_derived_state(revision, str(node.casilla_id))[0])
+    return tuple(kinds)
 
 
 def test_box_18_follows_design_constraints_and_the_2022_statutory_population() -> None:
-    """Free wire syntax does not erase the population defined by LIVA art. 161.3."""
-    observed = {revision_id: _derived_state(_revision(revision_id), "18")[0] for revision_id in _REVISIONS}
+    """Free wire syntax does not erase the population defined by LIVA art. 161.3.
+
+    The design's [17] decides [18]: the floor edition's free field keeps the
+    statutory super-reducido population on one binding; a design that enumerates
+    the 0, 0,5 and 0,62 tiers, or that pins the transitional tier by its Nota 9,
+    makes [18] the sum of ledger-bound working figures, one per tier; a design that
+    fixes the Tipo at the constant "00000" leaves no recargo cuota to derive.
+    """
     enumerated = {
         revision_id for revision_id in _REVISIONS if '"00000", "00050", "00062"' in _design_row(revision_id, "17")
     }
     assert enumerated, "no design enumerates the recargo tiers; the premise of this test is gone"
     for revision_id in _REVISIONS:
-        expected = "bound" if revision_id == "2022" or revision_id in enumerated else "manual"
-        assert observed[revision_id] == expected, (
-            f"{revision_id}: [18] is {observed[revision_id]} while its design "
-            f"{'enumerates' if revision_id in enumerated else 'does not enumerate'} the tiers"
-        )
+        tipo = _design_row(revision_id, "17")
+        kind, source = _derived_state(_revision(revision_id), "18")
+        if revision_id == _FLOOR_REVISION:
+            assert kind == "bound", f"{revision_id}: [18] is {kind} while LIVA art. 161.3 fixes its population"
+        elif revision_id in enumerated or "Nota 9" in tipo:
+            assert kind == "computed", f"{revision_id}: [18] is {kind} while its design pins the recargo tiers"
+            assert source is not None
+            leaves = _bound_leaves(_revision(revision_id), source)
+            assert leaves, f"{revision_id}: [18] reads no working figure"
+            assert set(leaves) == {"bound"}, f"{revision_id}: [18] reads {leaves}, not only ledger-bound figures"
+        else:
+            assert 'Constante "00000"' in tipo, f"{revision_id}: [17] is printed as {tipo!r}, which no branch reads"
+            assert kind == "manual", f"{revision_id}: [18] is {kind} while its design fixes the Tipo at 0"
 
 
-@pytest.mark.parametrize(("filing_year", "revision_id"), [(2022, "2022"), (2023, "2023"), (2025, "2025")])
+@pytest.mark.parametrize(("filing_year", "revision_id"), _ANNUAL_COORDINATES)
 def test_the_derived_boxes_carry_the_same_value_in_every_year(filing_year: int, revision_id: str) -> None:
     """One ledger-free input set computes one value for each derived box, every year."""
     authority = compiled_bundled_authority()
@@ -207,7 +254,7 @@ def test_dropping_box_11_from_the_baseline_reds_the_gate_in_every_edition(tmp_pa
     scratch_root = scratch_registry_tree(tmp_path, "303")
     mutate_declaration(
         scratch_root / "modelos" / "303",
-        revision_id="2022",
+        revision_id=_FLOOR_REVISION,
         section="casillas",
         member='id = "11"',
         find='input_kind = "computed"\nformula = "modelo-303-dr303-11-projection"\n',
@@ -225,23 +272,23 @@ def test_reintroducing_the_per_year_override_reds_the_cross_edition_gate(tmp_pat
     modelo_dir = scratch_root / "modelos" / "303"
     mutate_declaration(
         modelo_dir,
-        revision_id="2022",
+        revision_id=_FLOOR_REVISION,
         section="casillas",
         member='id = "11"',
         find='input_kind = "computed"\nformula = "modelo-303-dr303-11-projection"\n',
         replace="",
     )
-    manifest = modelo_dir / "revisions" / "2023" / "revision.toml"
+    manifest = modelo_dir / "revisions" / _SECOND_REVISION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8")
-        + "\n[[revisions.2023.casilla_overrides]]\n"
-        + 'selector = { revision = "2022", id = "11" }\n'
+        + f"\n[[revisions.{_SECOND_REVISION}.casilla_overrides]]\n"
+        + f'selector = {{ revision = "{_FLOOR_REVISION}", id = "11" }}\n'
         + 'fields = { formula = "modelo-303-dr303-11-projection", input_kind = "computed" }\n'
         + "removed_fields = []\n",
         encoding="utf-8",
     )
 
     kinds = _m303_kinds(scratch_root, "11")
-    assert kinds["2022"] == "manual", kinds
-    assert kinds["2023"] == "computed", kinds
+    assert kinds[_FLOOR_REVISION] == "manual", kinds
+    assert kinds[_SECOND_REVISION] == "computed", kinds
     assert len(set(kinds.values())) > 1, "the mutation did not split the editions"

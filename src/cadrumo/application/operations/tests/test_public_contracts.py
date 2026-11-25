@@ -21,7 +21,6 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from .. import frontend_projection, frontend_requests
-from .._model_contract import require_strict_frozen_operation_model_graph
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -67,6 +66,7 @@ from ..frontend_requests import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
+from ..model_contract import require_strict_frozen_operation_model_graph
 from ..models import OperationRequest
 from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..owner import OperationExecutorContext
@@ -168,7 +168,7 @@ def _projection_contract_set(
     ).public_contract_set
 
 
-def _projection(
+def projection(
     *,
     contract_set: OperationPublicContractSetV1 | None = None,
     started_at: datetime = _NOW,
@@ -282,10 +282,10 @@ def test_observation_success_requires_one_exact_projection_page_anchor() -> None
         restart_cursor=None,
     )
 
-    assert OperationObservationSuccessV1(projection=_projection(), event_page=page).event_page == page
+    assert OperationObservationSuccessV1(projection=projection(), event_page=page).event_page == page
     with pytest.raises(ValidationError, match="share one anchor"):
         OperationObservationSuccessV1(
-            projection=_projection(anchor_cursor=1),
+            projection=projection(anchor_cursor=1),
             event_page=page,
         )
 
@@ -310,7 +310,7 @@ def test_observation_success_refuses_event_rows_newer_than_its_projection() -> N
     )
 
     with pytest.raises(ValidationError, match="event row revision"):
-        OperationObservationSuccessV1(projection=_projection(anchor_cursor=1), event_page=page)
+        OperationObservationSuccessV1(projection=projection(anchor_cursor=1), event_page=page)
 
 
 def test_public_projection_refuses_terminal_pending_interaction_and_axis_drift() -> None:
@@ -324,20 +324,20 @@ def test_public_projection_refuses_terminal_pending_interaction_and_axis_drift()
     )
 
     with pytest.raises(ValidationError, match="cannot carry a pending interaction"):
-        _projection(
+        projection(
             lifecycle=OperationLifecycle.TERMINAL,
             terminal_condition=OperationTerminalCondition.FAILED,
             pending_interaction=pending,
         )
     with pytest.raises(ValidationError, match="terminal lifecycle"):
-        _projection(terminal_condition=OperationTerminalCondition.FAILED)
+        projection(terminal_condition=OperationTerminalCondition.FAILED)
     with pytest.raises(ValidationError, match="cancellation does not match"):
-        _projection(cancellation=OperationCancellation.COOPERATIVE)
+        projection(cancellation=OperationCancellation.COOPERATIVE)
 
 
 def test_public_projection_refuses_progress_phase_and_pending_interaction_drift() -> None:
     with pytest.raises(ValidationError, match="progress phase"):
-        _projection(
+        projection(
             anchor_cursor=1,
             progress=OperationPublicProgressV1(
                 completed=1,
@@ -361,18 +361,18 @@ def test_public_projection_refuses_progress_phase_and_pending_interaction_drift(
         expires_at=None,
     )
     with pytest.raises(ValidationError, match="current operation revision"):
-        _projection(
+        projection(
             contract_set=declared_input_contracts,
             lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
             pending_interaction=current_input.model_copy(update={"revision": 3}),
         )
     with pytest.raises(ValidationError, match="declared by the definition contract"):
-        _projection(
+        projection(
             lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
             pending_interaction=current_input,
         )
     with pytest.raises(ValidationError, match="waiting-for-interaction lifecycle"):
-        _projection(
+        projection(
             contract_set=declared_input_contracts,
             pending_interaction=current_input,
         )
@@ -388,19 +388,19 @@ def test_public_projection_refuses_progress_phase_and_pending_interaction_drift(
 )
 def test_public_projection_refuses_deadline_and_timeline_drift(changes: _TimelineChanges) -> None:
     with pytest.raises(ValidationError, match=r"start|deadline"):
-        _projection(**changes)
+        projection(**changes)
 
 
 def test_public_projection_refuses_cancellation_fact_drift() -> None:
     with pytest.raises(ValidationError, match="request or acknowledgement"):
-        _projection(
+        projection(
             cancellation_requested=True,
             cleanup_deadline_at=_NOW + timedelta(seconds=1),
         )
     with pytest.raises(ValidationError, match="requires its declared request fact"):
-        _projection(lifecycle=OperationLifecycle.CANCELLATION_REQUESTED)
+        projection(lifecycle=OperationLifecycle.CANCELLATION_REQUESTED)
     with pytest.raises(ValidationError, match="requires cancellation acknowledgement"):
-        _projection(
+        projection(
             lifecycle=OperationLifecycle.TERMINAL,
             terminal_condition=OperationTerminalCondition.CANCELLED,
         )
@@ -409,16 +409,16 @@ def test_public_projection_refuses_cancellation_fact_drift() -> None:
 def test_public_projection_refuses_cancellation_availability_drift() -> None:
     cancellable_contracts = _projection_contract_set(cancellation=OperationCancellation.COOPERATIVE)
 
-    assert _projection(contract_set=cancellable_contracts, cancellable_now=True).cancellable_now
+    assert projection(contract_set=cancellable_contracts, cancellable_now=True).cancellable_now
     with pytest.raises(ValidationError, match="currently available after it is requested"):
-        _projection(
+        projection(
             contract_set=cancellable_contracts,
             cancellable_now=True,
             cancellation_requested=True,
             cleanup_deadline_at=_NOW + timedelta(seconds=1),
         )
     with pytest.raises(ValidationError, match="while settlement is underway"):
-        _projection(
+        projection(
             contract_set=cancellable_contracts,
             lifecycle=OperationLifecycle.SETTLING,
             cancellable_now=True,

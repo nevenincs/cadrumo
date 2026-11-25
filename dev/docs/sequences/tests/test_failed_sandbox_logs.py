@@ -2,15 +2,46 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
 
-from ..checks import _with_notes
+from cadrumo.core.logging import default_log_file_path, flush_logging
+from cadrumo.tests.env_scope import derived_storage_settings
+from dev.paths import TEMP_ROOT
+
+from ..checks import with_notes
 from ..errors import SequenceExecutionError
-from ..runner import _logs_retained_on_failure
+from ..runner import logs_retained_on_failure, retained_logs_root
+from ..sandbox import isolated_diagnostic_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
+
+def test_failure_retention_uses_worktree_scratch_instead_of_product_storage(tmp_path: Path) -> None:
+    with derived_storage_settings(tmp_path / "operator-storage"):
+        retained = retained_logs_root()
+
+    assert retained == TEMP_ROOT / "failed-sandboxes"
+    assert not (tmp_path / "operator-storage").exists()
+
+
+def test_each_sandbox_rebinds_logging_to_its_canonical_storage_root(tmp_path: Path) -> None:
+    paths: list[Path] = []
+    for name in ("first", "second"):
+        with derived_storage_settings(tmp_path / name), isolated_diagnostic_log():
+            path = default_log_file_path()
+            logging.getLogger("cadrumo.docs.sequence").warning("sequence-log-%s", name)
+            assert flush_logging()
+            paths.append(path)
+
+    assert paths[0].is_relative_to(tmp_path / "first")
+    assert paths[1].is_relative_to(tmp_path / "second")
+    assert "sequence-log-first" in paths[0].read_text(encoding="utf-8")
+    assert "sequence-log-second" not in paths[0].read_text(encoding="utf-8")
+    assert "sequence-log-second" in paths[1].read_text(encoding="utf-8")
+    assert "sequence-log-first" not in paths[1].read_text(encoding="utf-8")
 
 
 def _sandbox(root: Path) -> Path:
@@ -26,7 +57,7 @@ def test_a_failing_sandbox_keeps_every_log_directory_and_names_where(tmp_path: P
 
     with (
         pytest.raises(SequenceExecutionError) as failed,
-        _logs_retained_on_failure(sandbox, retained, "how-to/page"),
+        logs_retained_on_failure(sandbox, retained, "how-to/page"),
     ):
         raise SequenceExecutionError("sequence", "frame exited 2")
 
@@ -35,14 +66,14 @@ def test_a_failing_sandbox_keeps_every_log_directory_and_names_where(tmp_path: P
     assert (kept / "storage" / "logs" / "pid-1" / "cadrumo.log").read_text(encoding="utf-8") == (
         "profile_worker_task_failed\n"
     )
-    assert _with_notes(failed.value).endswith(f"\n  sandbox logs retained at {kept}")
+    assert with_notes(failed.value).endswith(f"\n  sandbox logs retained at {kept}")
 
 
 def test_a_passing_sandbox_keeps_nothing(tmp_path: Path) -> None:
     sandbox = _sandbox(tmp_path / "sandbox")
     retained = tmp_path / "retained"
 
-    with _logs_retained_on_failure(sandbox, retained, "how-to/page"):
+    with logs_retained_on_failure(sandbox, retained, "how-to/page"):
         pass
 
     assert not retained.exists()

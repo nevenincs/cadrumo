@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from pydantic import TypeAdapter
 
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_scalars import CalendarDate, DecimalValue, validate_registry_text_scalar
@@ -57,14 +56,7 @@ def _validate_decimal_value(
         raise ModeloBindingValueInvalidError()
     if len(decimal_parts.digits) > 128 or len(format(number, "f")) > 128:
         raise ModeloBindingValueInvalidError()
-    _validate_encoded_decimal(binding, raw)
     _validate_decimal_constraints(number, targets)
-
-
-def _validate_encoded_decimal(binding: BindingDefinition, raw: str) -> None:
-    encoded = boolean_binding_encoded_values(binding)
-    if encoded and raw not in {row.encoded_value for row in encoded}:
-        raise ModeloBindingValueInvalidError()
 
 
 def _validate_decimal_constraints(number: Decimal, targets: tuple[CasillaDefinition, ...]) -> None:
@@ -85,9 +77,7 @@ def _validate_integer_value(raw: str, targets: tuple[CasillaDefinition, ...]) ->
 
 
 def _validate_boolean_value(binding: BindingDefinition, raw: str) -> None:
-    encoded = boolean_binding_encoded_values(binding)
-    allowed = {row.encoded_value for row in encoded} if encoded else {"true", "false"}
-    if raw not in allowed:
+    if raw not in {"true", "false"}:
         raise ModeloBindingValueInvalidError()
 
 

@@ -21,9 +21,9 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
 from .participation_read import TransactionParticipationIndexRepositoryFactory, get_transaction_participation
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .tracking_projection import LedgerParticipationProjection as LedgerParticipationEntryProjection
 
 LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID = "ledger.participation"
@@ -72,7 +72,7 @@ class LedgerParticipationExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
+            selected, _catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
             participation_repository = self._participation(bucket_id=bucket_id)
             if participation_repository.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -123,8 +123,9 @@ def resolve_ledger_participation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Protect finalized participation across all declaration periods."""
-    if request.definition_id != LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerParticipationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,
+        request_type=LedgerParticipationRequest,
+    )

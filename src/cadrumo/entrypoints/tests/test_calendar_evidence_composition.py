@@ -31,10 +31,12 @@ from ...application.overview.evidence import (
 from ...application.overview.home import HomeAvailability, HomeZoneState
 from ...application.overview.tests.calendar_test_support import profile
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.period import Period
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ...domain.deadlines.models import ObligationStatus
 from ...tests.aeat_literal_fixtures import (
     SEDE_ROOT_URL_FIXTURE,
@@ -43,11 +45,13 @@ from ..calendar_evidence_composition import compose_calendar_aeat_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_PRESENTED_AT = datetime(2025, 4, 14, 11, 22, 33, tzinfo=UTC)
-_CAPTURED_AT = datetime(2025, 4, 16, 9, 8, 7, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+
+_PRESENTED_AT = datetime(_YEAR, 4, 14, 11, 22, 33, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 16, 9, 8, 7, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _RAW_MARKER = "calendar-private-register-payload-678921"
-_EXPEDIENTE = "3032025Q1ABCDEFGH12345678"
+_EXPEDIENTE = f"303{_YEAR}Q1ABCDEFGH12345678"
 
 
 def _store_observation(
@@ -58,11 +62,11 @@ def _store_observation(
     wrong_revision: bool = False,
     captured_at: tuple[datetime, ...] = (_CAPTURED_AT,),
 ) -> FiledDeclaracionObservation:
-    store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+    store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
     body = _RAW_MARKER.encode("utf-8")
     artefacts = tuple(
         store.persist_artefact(
-            ("303", 2025, Period.from_year_and_code(2025, period), expediente),
+            ("303", _YEAR, Period.from_year_and_code(_YEAR, period), expediente),
             FiledDeclaracionArtefact(
                 kind="register_row",
                 source_url=TypeAdapter(AnyHttpUrl).validate_python(SEDE_ROOT_URL_FIXTURE),
@@ -75,14 +79,14 @@ def _store_observation(
         )
         for capture in captured_at
     )
-    snapshot = operation.snapshot("303", filing_year=2025, period=period, grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period=period, grade=RegistryAuthorityGrade.CALCULATION)
     coordinate = snapshot.snapshot_ref
     if wrong_revision:
-        coordinate = coordinate.model_copy(update={"revision_id": "2023"})
+        coordinate = coordinate.model_copy(update={"revision_id": str(authored_revisions("303")[0].id)})
     observation = FiledDeclaracionObservation(
         modelo="303",
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, period),
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
         expediente_id=expediente,
         status="ALTA",
         presented_at=_PRESENTED_AT,
@@ -109,9 +113,9 @@ def _calendar_row(
     )
     calendar = build_overview_calendar(
         persona,
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         operation=operation,
-        today=date(2025, 4, 30),
+        today=date(_YEAR, 4, 30),
         filing_evidence=projected.evidence,
     )
     return next(row for row in calendar.entries if row.modelo == "303" and row.period == _PERIOD)
@@ -172,9 +176,9 @@ def test_an_unconfirmed_coordinate_does_not_erase_a_healthy_encrypted_neighbour(
     with isolated_runtime_profile(tmp_path=tmp_path):
         healthy = _store_observation(operation)
         unconfirmed = _store_observation(
-            operation, expediente="3032025Q2ABCDEFGH12345678", period="2T", wrong_revision=True
+            operation, expediente=f"303{_YEAR}Q2ABCDEFGH12345678", period="2T", wrong_revision=True
         )
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert len(store.list_observations()) == 2
         read = compose_calendar_aeat_reader(operation)
         outcome = read()
@@ -195,7 +199,7 @@ def test_an_empty_encrypted_history_is_never_captured_and_a_locked_read_is_unava
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert store.list_observations() == ()
         read = compose_calendar_aeat_reader(operation)
         outcome = read()
@@ -224,7 +228,7 @@ def test_a_later_successful_empty_read_preserves_confirmed_metadata_as_stale(
                 observation.modelo, observation.ejercicio, observation.period, observation.expediente_id
             ),
         )
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert store.list_observations() == ()
         outcome = read()
         assert outcome.state.availability is HomeAvailability.STALE
@@ -240,12 +244,12 @@ def test_a_later_successful_empty_read_preserves_confirmed_metadata_as_stale(
 def test_observed_at_is_the_latest_actual_artefact_capture_across_observations(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    later_capture = datetime(2025, 7, 18, 16, 15, 14, tzinfo=UTC)
+    later_capture = datetime(_YEAR, 7, 18, 16, 15, 14, tzinfo=UTC)
     with isolated_runtime_profile(tmp_path=tmp_path):
         first = _store_observation(operation, captured_at=(_CAPTURED_AT, later_capture))
         second = _store_observation(
             operation,
-            expediente="3032025Q2ABCDEFGH12345678",
+            expediente=f"303{_YEAR}Q2ABCDEFGH12345678",
             period="2T",
             captured_at=(_PRESENTED_AT,),
         )

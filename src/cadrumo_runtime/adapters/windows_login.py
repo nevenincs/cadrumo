@@ -126,6 +126,23 @@ def capture_windows_login(process_handle: int, *, expected_owner: str) -> Window
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
 
 
+def _observe_non_desktop_login(binding: WindowsLoginBinding, credential_facilities: Availability) -> OsLoginContext:
+    """Recheck the same native logon before reporting non-desktop eligibility."""
+    logon = read_windows_logon(binding.authentication_id)
+    valid = (
+        _native_login_binding(binding.authentication_id, logon) == binding
+        and read_windows_logon(binding.authentication_id) == logon
+    )
+    return OsLoginContext(
+        login_id=binding.login_id,
+        os_owner_id=binding.os_owner_id,
+        active=valid,
+        lock_state=_native_lock_state(logon) if valid else OsLockState.UNKNOWN,
+        unattended=LoginEligibility.ELIGIBLE if valid else LoginEligibility.INELIGIBLE,
+        credential_facilities=credential_facilities,
+    )
+
+
 def observe_windows_login(binding: WindowsLoginBinding, *, credential_facilities: Availability) -> OsLoginContext:
     """Revalidate logon existence and WTS generation on each authority observation.
 
@@ -138,19 +155,7 @@ def observe_windows_login(binding: WindowsLoginBinding, *, credential_facilities
 
     try:
         if not binding.desktop_bound:
-            logon = read_windows_logon(binding.authentication_id)
-            valid = (
-                _native_login_binding(binding.authentication_id, logon) == binding
-                and read_windows_logon(binding.authentication_id) == logon
-            )
-            return OsLoginContext(
-                login_id=binding.login_id,
-                os_owner_id=binding.os_owner_id,
-                active=valid,
-                lock_state=_native_lock_state(logon) if valid else OsLockState.UNKNOWN,
-                unattended=LoginEligibility.ELIGIBLE if valid else LoginEligibility.INELIGIBLE,
-                credential_facilities=credential_facilities,
-            )
+            return _observe_non_desktop_login(binding, credential_facilities)
         witness = current_windows_desktop_logon()
         logon = read_windows_logon(binding.authentication_id)
         _require_logon_time(logon)

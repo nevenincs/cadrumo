@@ -1,0 +1,539 @@
+"""Acquire the pinned llama-server release archive and stage its program into the package.
+
+The package ships the upstream ``llama-server`` program and never builds it. One
+archive per build target is pinned by release tag, size and SHA-256 in
+``native/llamacpp-pins.json``. :func:`acquire_llama_server` is the build action
+that fetches it into the build tree, refuses bytes that differ from the pin,
+keeps the program files it needs and writes a receipt naming them. It also
+fetches llama.cpp's own MIT licence, pinned beside the archives because not
+every release archive carries it, and keeps it as ``LICENSE`` among the
+archive's notices.
+:func:`stage_llama_server` copies those files into the package during assembly,
+after proving again that the receipt, the files and the committed pin agree,
+including that the notices hold exactly the pinned licence.
+
+The program is a small launcher plus shared libraries beside it. What is kept is
+the launcher, every library it needs transitively inside the archive, and the
+compute backends that ggml opens by scanning its own directory on ELF and PE
+builds. The archive's other programs and their libraries stay behind. Library
+links are kept as copies under the name a loader asks for, because an installed
+package holds no links.
+
+On Linux the program must run on the package's glibc floor. An archive whose
+files need a newer glibc is refused here, before anything is staged.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import shutil
+from collections import deque
+from collections.abc import Callable, Mapping
+from pathlib import Path, PurePosixPath
+from typing import Final
+
+import httpx
+from pydantic import BaseModel, Field, PositiveInt, ValidationError
+
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from dev.env.llamacpp_pins import LicensePin, ServerArchivePin, ServerPins, load_server_pins
+
+from ..runtime_wheelhouse_contract import target_platform
+from .hashing import digest
+from .llama_server_archive import resolve_link, unpack_tar, unpack_zip
+from .llama_server_errors import ArchiveMismatchError, GlibcFloorError, LlamaServerError, UnresolvedImportError
+from .platforms.elf import read_elf_requirements
+from .platforms.macos_macho import inspect_macho
+from .platforms.pe import imports as pe_imports
+
+RECEIPT_NAME: Final = "llama-server.json"
+"""The receipt, beside the program and licence directories of the acquired tree."""
+PROGRAM_DIRECTORY: Final = "program"
+LICENSE_DIRECTORY: Final = "licenses"
+ARCHIVE_DIRECTORY: Final = "archives"
+"""The verified archive stays here between builds, like the CPython archive."""
+LICENSE_NAME: Final = "LICENSE"
+"""llama.cpp's pinned MIT licence among the notices, staged at ``docs/licenses/llama.cpp/LICENSE``."""
+_EXTRACTION_DIRECTORY: Final = "extraction"
+_RECEIPT_SCHEMA: Final = 2
+_MAX_REDIRECTS: Final = 3
+_TIMEOUT_S: Final = 120.0
+_REDIRECTS: Final = frozenset({301, 302, 303, 307, 308})
+#: Backends ggml loads by scanning its own directory rather than by linking them.
+_BACKEND: Final = re.compile(r"(?:lib)?ggml-[a-z0-9_.-]+\.(?:dll|so|dylib)")
+_LICENSE: Final = re.compile(r"LICEN[CS]E(?:[-._].*)?", re.IGNORECASE)
+_MACHO_MAGIC: Final = frozenset({b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe"})
+_ELF_MAGIC: Final = b"\x7fELF"
+
+#: Libraries the operating system provides to every process, by case-folded name. The program may import these
+#: without carrying them; the list is the set a Windows 10 or later installation always holds.
+SYSTEM_LIBRARIES: Final = frozenset(
+    {
+        "advapi32.dll",
+        "bcrypt.dll",
+        "crypt32.dll",
+        "dbghelp.dll",
+        "gdi32.dll",
+        "iphlpapi.dll",
+        "kernel32.dll",
+        "ntdll.dll",
+        "ole32.dll",
+        "oleaut32.dll",
+        "psapi.dll",
+        "secur32.dll",
+        "shell32.dll",
+        "shlwapi.dll",
+        "ucrtbase.dll",
+        "user32.dll",
+        "userenv.dll",
+        "version.dll",
+        "ws2_32.dll",
+    }
+)
+#: Forwarders to the operating system's universal C runtime and other API sets.
+SYSTEM_PREFIXES: Final = ("api-ms-win-", "ext-ms-win-")
+#: The Vulkan loader belongs to the graphics driver, not to Cadrumo or the operating system image, and a machine
+#: without it is a machine without Vulkan. Only the Vulkan backend library may import it: ggml skips a backend
+#: whose library fails to load, so an absent loader costs that backend and leaves the CPU backends running.
+DRIVER_LIBRARIES: Final[Mapping[str, frozenset[str]]] = {"vulkan-1.dll": frozenset({"ggml-vulkan.dll"})}
+
+type PinnedDownload = ServerArchivePin | LicensePin
+type Fetch = Callable[[PinnedDownload, tuple[str, ...]], bytes]
+
+
+class LlamaServerReceipt(BaseModel):
+    """What one acquisition proved: the pin it matched and the files it kept, by SHA-256."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: int = Field(alias="schema")
+    target: str
+    tag: str
+    backend: str
+    url: str
+    archive_bytes: PositiveInt
+    archive_sha256: str
+    executable: str
+    files: dict[str, str]
+    licenses: dict[str, str]
+    host_libraries: list[str]
+    """Libraries the kept files import that the archive does not hold; the host must supply them."""
+
+
+def pin_for_target(pins: ServerPins, target: str) -> ServerArchivePin:
+    """Return the archive pinned for ``target``, refusing a target the pins do not cover."""
+    for pin in pins.archives:
+        if pin.target == target:
+            return pin
+    raise ArchiveMismatchError(f"no llama-server archive is pinned for {target}")
+
+
+def _named(pin: PinnedDownload) -> str:
+    return (
+        f"the llama-server archive for {pin.target}" if isinstance(pin, ServerArchivePin) else "the llama.cpp licence"
+    )
+
+
+def verify_download(content: bytes, pin: PinnedDownload) -> None:
+    """Refuse downloaded bytes whose size or SHA-256 differs from the pin."""
+    actual = hashlib.sha256(content).hexdigest()
+    if len(content) != pin.download_bytes or actual != pin.sha256:
+        raise ArchiveMismatchError(
+            f"{_named(pin)} does not match its pin: "
+            f"expected {pin.download_bytes} bytes with SHA-256 {pin.sha256}, "
+            f"got {len(content)} bytes with SHA-256 {actual}"
+        )
+
+
+def _admit_origin(url: httpx.URL, hosts: frozenset[str]) -> None:
+    if url.scheme != "https" or url.host not in hosts or url.port not in {None, 443} or url.userinfo:
+        raise ArchiveMismatchError(f"the llama-server download leaves the pinned HTTPS hosts at {url.host}")
+
+
+def fetch_pinned(pin: PinnedDownload, hosts: tuple[str, ...]) -> bytes:
+    """Download a pinned archive or licence over HTTPS from the pinned hosts, never beyond the pinned size."""
+    allowed = frozenset(hosts)
+    current = httpx.URL(pin.url)
+    redirects = 0
+    try:
+        while True:
+            _admit_origin(current, allowed)
+            with httpx.stream(
+                "GET",
+                current,
+                timeout=_TIMEOUT_S,
+                follow_redirects=False,
+                trust_env=False,
+                headers={"Accept-Encoding": "identity"},
+            ) as response:
+                if response.status_code in _REDIRECTS:
+                    location = response.headers.get("location")
+                    if not location or redirects == _MAX_REDIRECTS:
+                        raise ArchiveMismatchError("the llama-server download redirect is missing or too long")
+                    current = current.join(location)
+                    redirects += 1
+                    continue
+                response.raise_for_status()
+                parts: list[bytes] = []
+                received = 0
+                for chunk in response.iter_bytes():
+                    received += len(chunk)
+                    if received > pin.download_bytes:
+                        raise ArchiveMismatchError(f"{_named(pin)} exceeds its pinned {pin.download_bytes} bytes")
+                    parts.append(chunk)
+                return b"".join(parts)
+    except httpx.HTTPError as error:
+        raise LlamaServerError(f"{_named(pin)} could not be fetched: {error}") from error
+
+
+def _kind(path: Path) -> str:
+    with path.open("rb") as stream:
+        magic = stream.read(4)
+    if magic.startswith(b"MZ"):
+        return "pe"
+    if magic == _ELF_MAGIC:
+        return "elf"
+    if magic in _MACHO_MAGIC:
+        return "macho"
+    return "data"
+
+
+def _needs(path: Path, name: str) -> tuple[list[str], list[str]]:
+    """Return the in-bundle names and the other names the image ``name`` asks the loader for."""
+    kind = _kind(path)
+    try:
+        if kind == "pe":
+            return sorted(pe_imports(path)), []
+        if kind == "elf":
+            return list(read_elf_requirements(path).needed), []
+        if kind == "macho":
+            bundled: list[str] = []
+            system: list[str] = []
+            for dependency in inspect_macho(path).dependencies:
+                (bundled if dependency.startswith("@") else system).append(dependency)
+            return [PurePosixPath(item).name for item in bundled], system
+    except ValueError as error:
+        raise ArchiveMismatchError(f"{name} in the llama-server archive cannot be read as an image: {error}") from error
+    raise ArchiveMismatchError(f"{name} in the llama-server archive is not a program image")
+
+
+def _select(scratch: Path, links: Mapping[str, str], executable: str) -> tuple[dict[str, str], tuple[str, ...]]:
+    """Choose the program files: the launcher, its library closure and the ELF/PE backends beside it."""
+    regular = {path.name for path in scratch.iterdir() if path.is_file()}
+    by_fold = {name.casefold(): name for name in (*regular, *links)}
+    if executable not in regular:
+        raise ArchiveMismatchError(f"the llama-server archive holds no regular file {executable!r}")
+    kind = _kind(scratch / executable)
+    roots = [executable]
+    if kind != "macho":
+        roots += sorted(name for name in regular if _BACKEND.fullmatch(name.casefold()))
+    selected: dict[str, str] = {}
+    host: set[str] = set()
+    queue = deque(roots)
+    while queue:
+        name = queue.popleft()
+        if name in selected:
+            continue
+        source = resolve_link(name, links, scratch)
+        selected[name] = source
+        bundled, system = _needs(scratch / source, name)
+        host.update(system)
+        queue.extend(_bundled_dependencies(name, bundled, by_fold, host, strict=kind == "macho"))
+    return selected, tuple(sorted(host))
+
+
+def _bundled_dependencies(
+    name: str, bundled: list[str], by_fold: Mapping[str, str], host: set[str], *, strict: bool
+) -> list[str]:
+    """Return the archive files ``name`` needs; one the archive lacks is the host's, or a refusal if ``strict``."""
+    found: list[str] = []
+    for dependency in bundled:
+        present = by_fold.get(dependency.casefold())
+        if present is not None:
+            found.append(present)
+        elif strict:
+            raise ArchiveMismatchError(f"{name} needs {dependency}, which the archive does not hold")
+        else:
+            host.add(dependency)
+    return found
+
+
+def _require_glibc_floor(scratch: Path, selected: Mapping[str, str], pin: ServerArchivePin) -> None:
+    platform = target_platform(pin.target)
+    if platform.sys_platform != "linux":
+        return
+    floor = tuple(int(part) for part in platform.floor.removeprefix("glibc-").split("."))
+    above: dict[str, tuple[int, ...]] = {}
+    for name, source in sorted(selected.items()):
+        path = scratch / source
+        if _kind(path) != "elf":
+            continue
+        needed = read_elf_requirements(path).glibc
+        if needed is not None and needed > floor:
+            above[name] = needed
+    if not above:
+        return
+    highest = max(above.values())
+    worst = sorted(above.items(), key=lambda item: (item[1], item[0]), reverse=True)
+    listed = ", ".join(f"{name} (glibc {'.'.join(map(str, version))})" for name, version in worst[:4])
+    raise GlibcFloorError(
+        f"the pinned llama-server archive for {pin.target} is built for a newer glibc than this package supports: "
+        f"its files need glibc {'.'.join(map(str, highest))} and the {pin.target} floor is "
+        f"glibc {'.'.join(map(str, floor))}; offending files: {listed}"
+        f"{'' if len(above) <= 4 else f' and {len(above) - 4} more'}. "
+        "Nothing is staged. Pin a Linux build made against the floor, or raise the floor by decision."
+    )
+
+
+def _discard_derived(destination: Path) -> None:
+    for name in (PROGRAM_DIRECTORY, LICENSE_DIRECTORY, _EXTRACTION_DIRECTORY):
+        path = destination / name
+        if path.is_symlink() or path.is_junction():
+            raise ArchiveMismatchError(f"derived llama-server state must not be a link: {path}")
+        if path.is_dir():
+            shutil.rmtree(path)
+    (destination / RECEIPT_NAME).unlink(missing_ok=True)
+
+
+def _cached(archive: Path, pin: PinnedDownload) -> bool:
+    if archive.is_symlink() or archive.is_junction() or not archive.is_file():
+        return False
+    try:
+        verify_download(archive.read_bytes(), pin)
+    except ArchiveMismatchError:
+        return False
+    return True
+
+
+def _obtain(destination: Path, pins: ServerPins, pin: PinnedDownload, fetch: Fetch) -> bytes:
+    """Return the verified bytes, kept in the build tree and fetched only when absent or damaged."""
+    name = pin.url.rsplit("/", 1)[1] if isinstance(pin, ServerArchivePin) else f"llama.cpp-{pins.tag}-{LICENSE_NAME}"
+    directory = destination / ARCHIVE_DIRECTORY
+    archive = directory / name
+    if _cached(archive, pin):
+        return archive.read_bytes()
+    directory.mkdir(parents=True, exist_ok=True)
+    archive.unlink(missing_ok=True)
+    content = fetch(pin, pins.hosts)
+    verify_download(content, pin)
+    partial = archive.with_name(archive.name + ".partial")
+    partial.write_bytes(content)
+    partial.replace(archive)
+    return content
+
+
+def _tree_digests(root: Path) -> dict[str, str]:
+    return {path.name: digest(path) for path in sorted(root.iterdir()) if path.is_file()} if root.is_dir() else {}
+
+
+def acquire_llama_server(
+    destination: Path, target: str, *, pins: ServerPins | None = None, fetch: Fetch = fetch_pinned
+) -> Path:
+    """Fetch, verify and unpack the llama-server archive pinned for ``target`` into ``destination``.
+
+    Raises:
+        ArchiveMismatchError: The bytes differ from the pin, or the archive is unsafe or incomplete.
+        GlibcFloorError: A Linux archive needs a newer glibc than the package floor.
+    """
+    pins = load_server_pins() if pins is None else pins
+    pin = pin_for_target(pins, target)
+    destination = destination.resolve()
+    destination.mkdir(parents=True, exist_ok=True)
+    content = _obtain(destination, pins, pin, fetch)
+    notice = _obtain(destination, pins, pins.license, fetch)
+    _discard_derived(destination)
+    scratch = destination / _EXTRACTION_DIRECTORY
+    scratch.mkdir()
+    base = PurePosixPath(pin.executable).parent
+    links = unpack_tar(content, base, scratch) if pin.format == "tar.gz" else unpack_zip(content, base, scratch)
+    for link in links:
+        resolve_link(link, links, scratch)
+    executable = PurePosixPath(pin.executable).name
+    selected, host = _select(scratch, links, executable)
+    _require_glibc_floor(scratch, selected, pin)
+    licenses = sorted(
+        path.name for path in scratch.iterdir() if path.is_file() and _LICENSE.fullmatch(path.name) is not None
+    )
+    program, notices = destination / PROGRAM_DIRECTORY, destination / LICENSE_DIRECTORY
+    program.mkdir()
+    notices.mkdir()
+    for name, source in sorted(selected.items()):
+        shutil.copy2(scratch / source, program / name)
+    for name in licenses:
+        shutil.copy2(scratch / name, notices / name)
+    _keep_pinned_license(notices, notice, pin)
+    receipt = LlamaServerReceipt.model_validate(
+        {
+            "schema": _RECEIPT_SCHEMA,
+            "target": target,
+            "tag": pins.tag,
+            "backend": pin.backend,
+            "url": pin.url,
+            "archive_bytes": pin.download_bytes,
+            "archive_sha256": pin.sha256,
+            "executable": executable,
+            "files": _tree_digests(program),
+            "licenses": _tree_digests(notices),
+            "host_libraries": list(host),
+        }
+    )
+    (destination / RECEIPT_NAME).write_text(
+        json.dumps(receipt.model_dump(by_alias=True), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    shutil.rmtree(scratch)
+    return destination
+
+
+def _keep_pinned_license(notices: Path, notice: bytes, pin: ServerArchivePin) -> None:
+    """Write the pinned licence as ``LICENSE``, refusing an archive whose own ``LICENSE`` says something else."""
+    kept = notices / LICENSE_NAME
+    if kept.exists() and kept.read_bytes() != notice:
+        raise ArchiveMismatchError(
+            f"the llama-server archive for {pin.target} carries a {LICENSE_NAME} that differs from the pinned licence"
+        )
+    kept.write_bytes(notice)
+
+
+def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None) -> LlamaServerReceipt:
+    """Prove an acquired tree is exactly what its receipt names and what the committed pin pins for ``target``.
+
+    Raises:
+        ArchiveMismatchError: The receipt is missing or unreadable, names another archive than the pin,
+            or the files differ from it.
+    """
+    pins = load_server_pins() if pins is None else pins
+    pin = pin_for_target(pins, target)
+    path = source / RECEIPT_NAME
+    try:
+        receipt = LlamaServerReceipt.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError, ValidationError) as error:
+        raise ArchiveMismatchError(
+            f"the llama-server receipt is missing or unreadable at {path}; build the llama_server step"
+        ) from error
+    _require_receipt_pin(receipt, pins, pin, target)
+    for directory, expected in ((PROGRAM_DIRECTORY, receipt.files), (LICENSE_DIRECTORY, receipt.licenses)):
+        _require_tree(source, directory, expected)
+    if receipt.licenses.get(LICENSE_NAME) != pins.license.sha256:
+        raise ArchiveMismatchError(
+            f"the acquired llama-server notices do not hold the pinned llama.cpp {LICENSE_NAME}; "
+            "build the llama_server step again"
+        )
+    return receipt
+
+
+def _require_tree(source: Path, directory: str, expected: Mapping[str, str]) -> None:
+    root = source / directory
+    if root.is_symlink() or any(item.is_symlink() for item in root.rglob("*")):
+        raise ArchiveMismatchError(f"the acquired llama-server holds a link under {directory}")
+    if _tree_digests(root) != expected or len(list(root.rglob("*"))) != len(expected):
+        raise ArchiveMismatchError(
+            f"the acquired llama-server {directory} differ from the receipt; build the llama_server step again"
+        )
+
+
+def _require_receipt_pin(receipt: LlamaServerReceipt, pins: ServerPins, pin: ServerArchivePin, target: str) -> None:
+    pinned = (
+        target,
+        pins.tag,
+        pin.backend,
+        pin.url,
+        pin.download_bytes,
+        pin.sha256,
+        PurePosixPath(pin.executable).name,
+    )
+    recorded = (
+        receipt.target,
+        receipt.tag,
+        receipt.backend,
+        receipt.url,
+        receipt.archive_bytes,
+        receipt.archive_sha256,
+        receipt.executable,
+    )
+    if receipt.schema_version != _RECEIPT_SCHEMA or recorded != pinned:
+        raise ArchiveMismatchError(
+            f"the acquired llama-server is not the archive pinned for {target}; build the llama_server step again"
+        )
+    if receipt.executable not in receipt.files:
+        raise ArchiveMismatchError("the llama-server receipt names no program file for its executable")
+
+
+def _provided_by_system(image: Path, name: str) -> bool:
+    """Whether the operating system, or the graphics driver for the Vulkan backend alone, provides ``name``."""
+    return (
+        name in SYSTEM_LIBRARIES
+        or name.startswith(SYSTEM_PREFIXES)
+        or image.name.casefold() in DRIVER_LIBRARIES.get(name, frozenset())
+    )
+
+
+def require_resolved_imports(program: Path) -> tuple[str, ...]:
+    """Prove every library each PE image in ``program`` imports is the system's, the driver's or in ``program``.
+
+    Returns the sorted case-folded names of the system and driver libraries the images import.
+
+    Raises:
+        UnresolvedImportError: An image imports a library that none of those provides, or the Vulkan loader
+            from an image other than the Vulkan backend.
+    """
+    present = {path.name.casefold() for path in program.iterdir() if path.is_file()}
+    system: set[str] = set()
+    unresolved: list[str] = []
+    for path in sorted(program.iterdir()):
+        if not path.is_file() or _kind(path) != "pe":
+            continue
+        for name in sorted(pe_imports(path) - present):
+            if _provided_by_system(path, name):
+                system.add(name)
+            else:
+                unresolved.append(f"{path.name} imports {name}")
+    if unresolved:
+        raise UnresolvedImportError(
+            f"the staged llama-server program in {program.name} imports libraries that neither the operating "
+            f"system nor the program directory provides: {'; '.join(unresolved[:6])}"
+            f"{'' if len(unresolved) <= 6 else f' and {len(unresolved) - 6} more'}"
+        )
+    return tuple(sorted(system))
+
+
+def stage_llama_server(
+    source: Path,
+    root: Path,
+    layout: Mapping[str, str],
+    target: str,
+    *,
+    copy_function: Callable[[Path, Path], object] = shutil.copy2,
+    pins: ServerPins | None = None,
+    redistributable: Mapping[str, Path] | None = None,
+) -> LlamaServerReceipt:
+    """Copy the verified program files into the package's ``llama_server`` directory and its licences beside the others.
+
+    ``layout`` is the package layout's ``paths``. The program directory must not exist yet in ``root``.
+    ``redistributable`` maps the runtime libraries a Windows package carries beside the program to their
+    verified files. Every PE image staged must then resolve its imports.
+    """
+    receipt = verify_acquired(source, target, pins=pins)
+    program = root / layout["llama_server"]
+    notices = root / layout["docs"] / "licenses" / "llama.cpp"
+    for destination in (program, notices):
+        if destination.exists():
+            raise FileExistsError(f"the llama-server destination already exists: {destination}")
+        destination.mkdir(parents=True)
+    for name in receipt.files:
+        copy_function(source / PROGRAM_DIRECTORY / name, program / name)
+    for name, library in sorted((redistributable or {}).items()):
+        if (program / name).exists():
+            raise FileExistsError(f"the llama-server archive already holds the redistributable {name}")
+        copy_function(library, program / name)
+    require_resolved_imports(program)
+    for name in receipt.licenses:
+        copy_function(source / LICENSE_DIRECTORY / name, notices / name)
+    return receipt
+
+
+def read_receipt(source: Path) -> dict[str, object]:
+    """Return the acquisition receipt as the package manifest records it."""
+    receipt = LlamaServerReceipt.model_validate(json.loads((source / RECEIPT_NAME).read_text(encoding="utf-8")))
+    return dict(receipt.model_dump(by_alias=True))

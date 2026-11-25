@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from types import UnionType
-from typing import Annotated, TypeAliasType, Union, cast, get_args, get_origin
+from typing import Annotated, TypeAliasType, Union, get_args, get_origin
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import profile_operation_subject
+from ...core.type_guards import is_object_mapping
 from .models import OperationReference
 
 type OperationSubjectPayloadField = Annotated[
@@ -163,8 +164,8 @@ def _payload_value(payload: BaseModel | Mapping[str, object], path: tuple[str, .
 def _field_value(holder: object, name: str) -> object:
     if isinstance(holder, BaseModel):
         return getattr(holder, name, None)
-    if isinstance(holder, Mapping):
-        return cast("Mapping[str, object]", holder).get(name)
+    if is_object_mapping(holder):
+        return holder.get(name)
     raise ValueError("operation payload does not carry its declared subject field")
 
 

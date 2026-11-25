@@ -3,6 +3,9 @@ use crate::*;
 use std::ffi::{OsStr, OsString};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// A relocation variable the contract no longer declares; every environment ignores it.
+pub(crate) const RETIRED_TEMPORARY_OVERRIDE: &str = "CADRUMO_TEMP_DIR";
+
 pub(crate) struct Scratch(pub PathBuf);
 
 impl Scratch {
@@ -49,17 +52,10 @@ pub(crate) fn operator_environment(
 }
 
 #[test]
-fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
+fn defined_pins_normalize_the_absolute_root_and_place_the_temporary_member_beneath_it() {
     let scratch = Scratch::new("normalized");
     let root = scratch.0.join("unused").join("..").join("datos con ñ");
-    let environment = operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            OsString::from("unused-temp/../scratch"),
-        )],
-        &root,
-    )
-    .unwrap();
+    let environment = operator_environment(Vec::new(), &root).unwrap();
     let expected_root = scratch.0.join("datos con ñ");
     assert_eq!(
         value(&environment, ROOT_VARIABLE),
@@ -68,15 +64,14 @@ fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),
-            expected_root.join("scratch").as_os_str()
+            expected_root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
     assert!(!scratch.0.join("unused").exists());
-    assert!(!expected_root.join("unused-temp").exists());
 }
 
 #[test]
-fn temporary_override_expands_the_current_user_and_strict_children_keep_inherited_pins() {
+fn a_temporary_override_is_ignored_and_strict_children_keep_inherited_pins() {
     let scratch = Scratch::new("home");
     let root = scratch.0.join("root");
     let rule = INSTALLED_DEFAULTS
@@ -88,7 +83,10 @@ fn temporary_override_expands_the_current_user_and_strict_children_keep_inherite
             OsString::from(rule.home_variable),
             scratch.0.as_os_str().to_owned(),
         ),
-        (OsString::from(TEMPORARY_ENV), OsString::from("~/scratch")),
+        (
+            OsString::from(RETIRED_TEMPORARY_OVERRIDE),
+            OsString::from("~/scratch"),
+        ),
     ];
     let inherited = scratch.0.join("authority con ñ");
     ambient.extend(
@@ -106,14 +104,21 @@ fn temporary_override_expands_the_current_user_and_strict_children_keep_inherite
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&operator, name),
-            scratch.0.join("scratch").as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
         assert_eq!(
             value(&strict, name),
-            root.join(storage::relative_components(TEMPORARY_DEFAULT))
-                .as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
+    for environment in [&operator, &strict] {
+        assert!(
+            !environment
+                .iter()
+                .any(|(name, _)| name == RETIRED_TEMPORARY_OVERRIDE)
+        );
+    }
+    assert!(!scratch.0.join("scratch").exists());
 }
 
 fn empty_buffer() -> Buffer {
@@ -265,70 +270,72 @@ pub(crate) fn invalid_unicode() -> OsString {
 }
 
 #[test]
-fn invalid_temporary_override_refuses_without_effects_or_lossy_replacement() {
+fn a_temporary_override_that_is_not_unicode_changes_neither_image_environment() {
     let scratch = Scratch::new("invalid-temp");
     let root = scratch.0.join("root");
-    let invalid = vec![(OsString::from(TEMPORARY_ENV), invalid_unicode())];
-    assert!(matches!(
-        operator_environment(invalid.clone(), &root),
-        Err(launch::DefineError::Failed(_))
-    ));
-    assert!(!root.exists());
+    let invalid = vec![(
+        OsString::from(RETIRED_TEMPORARY_OVERRIDE),
+        invalid_unicode(),
+    )];
+    let operator = operator_environment(invalid.clone(), &root).unwrap();
     let strict = child_environment(invalid, &root).unwrap();
-    assert!(!strict.iter().any(|(name, _)| name == TEMPORARY_ENV));
+    for environment in [&operator, &strict] {
+        assert!(
+            !environment
+                .iter()
+                .any(|(name, _)| name == RETIRED_TEMPORARY_OVERRIDE)
+        );
+        assert_eq!(
+            value(environment, PINNED_ENV[1]),
+            root.join(TEMPORARY_MEMBER).as_os_str()
+        );
+    }
 }
 
 #[test]
 fn native_bootstrap_does_not_ignore_an_invalid_selected_root_override() {
-    let lookup = |name: &str| (name == ROOT_VARIABLE).then(invalid_unicode);
-    for mode in [storage::Mode::Installed, storage::Mode::Development] {
-        let refusal = storage::resolve_root(mode, &lookup, None, None, BUILD_CHANNEL).unwrap_err();
-        assert_eq!(refusal.code, ROOT_REFUSAL_INVALID_PATH_INPUT);
-    }
-
     let scratch = Scratch::new("effective-root");
-    let root = scratch.0.join("selected");
-    let selected = |name: &str| {
-        if name == ROOT_VARIABLE {
-            Some(root.as_os_str().to_owned())
-        } else if name == DEVELOPMENT_ROOT_VARIABLE {
-            Some(invalid_unicode())
-        } else {
-            None
-        }
+    let lookup = |name: &str| (name == ROOT_VARIABLE).then(invalid_unicode);
+    let refusal = storage::resolve_root(&lookup, Some(&scratch.0), BUILD_CHANNEL).unwrap_err();
+    assert_eq!(refusal.code, ROOT_REFUSAL_INVALID_PATH_INPUT);
+}
+
+fn installed_default_rule() -> &'static InstalledDefault {
+    INSTALLED_DEFAULTS
+        .iter()
+        .find(|rule| rule.platform == env::consts::OS)
+        .unwrap()
+}
+
+/// The environment answer that makes `base` the installed base. A platform whose host
+/// asks the shell for its base folder receives `base` as the injected known folder and
+/// reads no variable.
+fn installed_base_variable(base: &Path, name: &str) -> Option<OsString> {
+    (cfg!(unix) && name == installed_default_rule().candidates[0].variable)
+        .then(|| base.as_os_str().to_owned())
+}
+
+/// The installed default root the contract declares beneath the installed base `base`.
+fn installed_default_root(base: &Path) -> PathBuf {
+    let subpath: PathBuf = installed_default_rule().candidates[0]
+        .subpath
+        .iter()
+        .collect();
+    base.join(subpath)
+        .join(storage::channel_directory(BUILD_CHANNEL))
+}
+
+#[test]
+fn an_image_honours_no_storage_variable_but_the_root_variable() {
+    let scratch = Scratch::new("ignored-variable");
+    // A variable the contract does not declare never selects or refuses a root.
+    let foreign = |name: &str| {
+        (name != ROOT_VARIABLE && name.starts_with(NAMESPACE_PREFIX)).then(invalid_unicode)
     };
-    assert!(
-        storage::resolve_root(
-            storage::Mode::Development,
-            &selected,
-            None,
-            None,
-            BUILD_CHANNEL
-        )
-        .is_ok()
-    );
-    let lower = |name: &str| (name == DEVELOPMENT_ROOT_VARIABLE).then(invalid_unicode);
-    if let Err(refused) = storage::resolve_root(
-        storage::Mode::Installed,
-        &lower,
-        None,
-        Some(&scratch.0),
-        BUILD_CHANNEL,
-    ) {
-        assert_eq!(refused.code, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE);
-    }
-    assert_eq!(
-        storage::resolve_root(
-            storage::Mode::Development,
-            &lower,
-            None,
-            None,
-            BUILD_CHANNEL
-        )
-        .unwrap_err()
-        .code,
-        ROOT_REFUSAL_INVALID_PATH_INPUT
-    );
+    let based = |name: &str| foreign(name).or_else(|| installed_base_variable(&scratch.0, name));
+    let installed = storage::resolve_root(&based, Some(&scratch.0), BUILD_CHANNEL).unwrap();
+    assert_eq!(installed.root, installed_default_root(&scratch.0));
+    assert_eq!(installed.source, storage::RootSource::InstalledDefault);
 }
 
 #[test]
@@ -359,8 +366,7 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
             .0
             .join(vector.components.iter().collect::<PathBuf>());
         let lookup = |name: &str| (name == ROOT_VARIABLE).then(|| original.as_os_str().to_owned());
-        let actual =
-            storage::resolve_root(storage::Mode::Installed, &lookup, None, None, BUILD_CHANNEL);
+        let actual = storage::resolve_root(&lookup, None, BUILD_CHANNEL);
         match (actual, vector.expected_components, vector.refusal) {
             (Ok(resolved), Some(parts), None) => assert_eq!(
                 resolved.root,
@@ -373,36 +379,6 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
         }
         assert!(!scratch.0.join("selected").exists());
         assert!(!scratch.0.join("missing").exists());
-    }
-}
-
-#[test]
-fn member_overrides_reproduce_every_generated_member_vector() {
-    let host = if cfg!(windows) { "windows" } else { "posix" };
-    let vectors: Vec<_> = STORAGE_MEMBER_VECTORS
-        .iter()
-        .filter(|vector| vector.platform == host)
-        .collect();
-    assert!(
-        vectors.len() >= 3,
-        "the contract carries this platform's member vectors"
-    );
-    for vector in vectors {
-        let scratch = Scratch::new("member");
-        let root = scratch.0.join("root");
-        let lookup = |name: &str| (name == vector.variable).then(|| OsString::from(vector.value));
-        let outcome = storage::member_path(&root, vector.variable, "default", &lookup);
-        match (outcome, vector.expected_components, vector.refusal) {
-            (Ok(path), Some(parts), None) => assert_eq!(
-                path,
-                root.join(parts.iter().collect::<PathBuf>()),
-                "{}",
-                vector.name
-            ),
-            (Err(refused), None, Some(code)) => assert_eq!(refused.code, code, "{}", vector.name),
-            outcome => panic!("{}: {outcome:?}", vector.name),
-        }
-        assert!(!root.exists(), "{}", vector.name);
     }
 }
 
@@ -427,9 +403,7 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
     let scratch = Scratch::new("resolved-pin");
     let raw = scratch.0.join("unused/../selected");
     let lookup = |name: &str| (name == ROOT_VARIABLE).then(|| raw.as_os_str().to_owned());
-    let resolved =
-        storage::resolve_root(storage::Mode::Installed, &lookup, None, None, BUILD_CHANNEL)
-            .unwrap();
+    let resolved = storage::resolve_root(&lookup, None, BUILD_CHANNEL).unwrap();
     assert_eq!(resolved.root, scratch.0.join("selected"));
     assert!(!resolved.root.exists() && !scratch.0.join("unused").exists());
     let environment = child_environment(Vec::new(), &resolved.root).unwrap();
@@ -441,32 +415,59 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
 }
 
 #[test]
-fn mode_detection_refuses_relative_executable_input() {
-    assert!(storage::detect_mode(Path::new(EXECUTABLE)).is_err());
-    assert!(storage::detect_mode(&Path::new(NATIVE).join(ENTRYPOINT_FILES[0])).is_err());
+fn package_location_refuses_relative_executable_input() {
+    assert!(storage::Package::locate(Path::new(EXECUTABLE)).is_err());
+    assert!(storage::Package::locate(&Path::new(NATIVE).join(ENTRYPOINT_FILES[0])).is_err());
+}
+
+/// Write a staged package, with or without its manifest, under `package`.
+fn package_fixture(package: &Path, manifest: bool) {
+    fs::create_dir_all(package).unwrap();
+    if manifest {
+        let path = package.join(storage::relative_components(PACKAGE_MANIFEST));
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, b"{}").unwrap();
+    }
 }
 
 #[test]
-fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
-    let scratch = Scratch::new("absolute-member");
-    let root = scratch.0.join("root");
-    let temporary = scratch.0.join("unused-member/../temporary con ñ");
-    let environment = operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            temporary.as_os_str().to_owned(),
-        )],
-        &root,
-    )
-    .unwrap();
-    assert_eq!(value(&environment, ROOT_VARIABLE), root.as_os_str());
-    for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
-        assert_eq!(
-            value(&environment, name),
-            scratch.0.join("temporary con ñ").as_os_str()
-        );
+fn every_configuration_stores_at_the_root_its_environment_selects() {
+    let scratch = Scratch::new("staged-packages");
+    let pinned = scratch.0.join("pinned");
+    let base = scratch.0.join("local-app-data");
+    let none = |name: &str| installed_base_variable(&base, name);
+    let pin = |name: &str| (name == ROOT_VARIABLE).then(|| pinned.as_os_str().to_owned());
+    let relative = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from("relative"));
+    // A Debug and a Release package resolve identically: the build never selects a root.
+    for configuration in ["Debug", "Release"] {
+        let package = scratch.0.join("stage").join(configuration).join("app");
+        package_fixture(&package, true);
+        let entrypoint = package.join(NATIVE).join(ENTRYPOINT_FILES[0]);
+        let located = storage::Package::installed(&entrypoint).unwrap();
+        assert_eq!(located.root, package, "{configuration}");
+        let resolved = storage::resolve_root(&none, Some(&base), BUILD_CHANNEL).unwrap();
+        assert_eq!(resolved.root, installed_default_root(&base));
+        assert_eq!(resolved.source, storage::RootSource::InstalledDefault);
+        // An absolute operator root wins; a relative one is refused.
+        let resolved = storage::resolve_storage_root_with(&pin).unwrap();
+        assert_eq!(resolved.root, pinned, "{configuration}");
+        assert_eq!(resolved.source, storage::RootSource::Override);
+        let refused = storage::resolve_storage_root_with(&relative).unwrap_err();
+        assert_eq!(refused.code, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED);
     }
-    assert!(!scratch.0.join("unused-member").exists());
+}
+
+#[test]
+fn an_image_without_a_package_manifest_is_not_installed() {
+    let scratch = Scratch::new("unpackaged");
+    let package = scratch.0.join("app");
+    package_fixture(&package, false);
+    let entrypoint = package.join(NATIVE).join(ENTRYPOINT_FILES[0]);
+    let refused = storage::Package::installed(&entrypoint).unwrap_err();
+    assert!(refused.contains(PACKAGE_MANIFEST), "{refused}");
+    let located = storage::Package::locate(&entrypoint).unwrap();
+    assert_eq!(located.root, package);
+    assert!(!located.packaged);
 }
 
 #[test]
@@ -485,21 +486,23 @@ fn defined_directory_refusal_reports_a_failure_and_keeps_the_existing_file() {
     assert_eq!(fs::read(file).unwrap(), b"preserved");
 }
 
+/// An operator setting the `aeat` image admits; its spelling carries a letter whose Unicode
+/// case mapping differs from ASCII.
+#[cfg(windows)]
+const OPERATOR_SETTING: &str = "CADRUMO_LOG_LEVEL";
+
 #[cfg(windows)]
 #[test]
 fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
     let scratch = Scratch::new("unicode-case");
     let root = scratch.0.join("root");
-    let temporary_name = TEMPORARY_ENV.to_lowercase().replace('i', "ı");
-    assert_eq!(temporary_name.to_uppercase(), TEMPORARY_ENV);
+    let operator_name = OPERATOR_SETTING.to_lowercase().replace('i', "ı");
+    assert_eq!(operator_name.to_uppercase(), OPERATOR_SETTING);
     let inherited_name = HOST_INHERITED_ENV[0].to_lowercase().replace('i', "ı");
     assert_eq!(inherited_name.to_uppercase(), HOST_INHERITED_ENV[0]);
     let authority = scratch.0.join("authority");
     let ambient = vec![
-        (
-            OsString::from(temporary_name),
-            OsString::from("worker-temp"),
-        ),
+        (OsString::from(operator_name), OsString::from("DEBUG")),
         (
             OsString::from(inherited_name),
             authority.as_os_str().to_owned(),
@@ -507,13 +510,13 @@ fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
     ];
     assert!(storage::authority_override_present(ambient.clone()));
     let environment = operator_environment(ambient.clone(), &root).unwrap();
-    assert_eq!(value(&environment, TEMPORARY_ENV), "worker-temp");
+    assert_eq!(value(&environment, OPERATOR_SETTING), "DEBUG");
     let strict = child_environment(ambient, &root).unwrap();
     assert_eq!(value(&strict, HOST_INHERITED_ENV[0]), authority.as_os_str());
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),
-            root.join("worker-temp").as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
 }
@@ -616,6 +619,8 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
         let auth_hosted_root = [
             "windows-agent-auth-admits-browser-connect-in-its-profile",
             "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-admits-browser-code-connect-in-its-profile",
+            "posix-agent-auth-admits-browser-code-connect-in-its-profile",
             "windows-agent-auth-keeps-the-legacy-login-invocation",
         ]
         .contains(&vector.name)
@@ -623,6 +628,8 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
         let auth_browser_executable = [
             "windows-agent-auth-admits-browser-connect-in-its-profile",
             "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-admits-browser-code-connect-in-its-profile",
+            "posix-agent-auth-admits-browser-code-connect-in-its-profile",
         ]
         .contains(&vector.name)
         .then(|| {

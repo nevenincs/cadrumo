@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from threading import BoundedSemaphore, Event, RLock
+from typing import cast
 from uuid import uuid4
 
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
@@ -56,6 +57,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     Request,
     SessionRequest,
@@ -67,9 +70,10 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
-from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
+from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceAdmissionStatusQuery, ServiceConnect
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import ViewAttachRequest, ViewConnect
 from cadrumo_client.transport.frame_io import read_document, write_document, write_profile_status, write_session_event
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import TransportCleanup, close_transport_after_failure
@@ -80,6 +84,7 @@ _LOGGER = get_logger(__name__)
 
 type _ProfileConnectionRequest = (
     ProfileLogin
+    | ProfileLoginStatusQuery
     | ProfileDeletePrepare
     | ProfileDelete
     | PasswordResetPrepare
@@ -97,9 +102,11 @@ type _ProfileConnectionRequest = (
     | InstallationActRequest
     | ServiceConnect
     | ServiceAdmission
+    | ServiceAdmissionStatusQuery
     | ExtensionRecordRequest
     | ModelRunFetchRequest
     | ModelRunCompleteRequest
+    | ViewAttachRequest
 )
 
 
@@ -209,31 +216,47 @@ class RuntimeConnectionHandling:
         finally:
             self._finish_connection(channel_owner, context, cleanup_deferred)
 
+    def _flush_connection_events(self, channel: ByteChannel, context: ConnectionContext) -> None:
+        """Write queued events and acknowledge each exact successful frame."""
+        if self.profiles is not None:
+            for event in self.profiles.take_events(context):
+                write_session_event(channel, event, deadline=time.monotonic() + 5)
+                self.profiles.event_flushed(context, event)
+
+    def _wait_connection_input(self, channel: ByteChannel, queued: NativeWake) -> bool | None:
+        """Treat an EOF between requests as a completed lifetime."""
+        try:
+            return channel.wait_readable(queued, self._stopping)
+        except RefusalError as error:
+            if error.reason is not RefusalCode.CONNECTION_CLOSED:
+                raise
+            diagnostic_event(_LOGGER, "runtime_connection_closed", level=logging.DEBUG)
+            return None
+
     def _serve_connection_requests(self, channel: ByteChannel, context: ConnectionContext, queued: NativeWake) -> None:
         """Serve the admitted request sequence until the peer or host closes it.
 
         Between requests the thread blocks on the channel, the connection's
         queued events and the runtime stop together; nothing wakes it on a timer.
         """
+        first = True
         while not self.stop.is_set():
             # Cleared before taking, so an event queued meanwhile still ends the wait.
             queued.clear()
-            if self.profiles is not None:
-                for event in self.profiles.take_events(context):
-                    write_session_event(channel, event, deadline=time.monotonic() + 5)
-                    self.profiles.event_flushed(context, event)
-            try:
-                ready = channel.wait_readable(queued, self._stopping)
-            except RefusalError as error:
-                if error.reason is not RefusalCode.CONNECTION_CLOSED:
-                    raise
-                # Between requests an EOF is a completed client lifetime, not
-                # refused admission. Framing/dispatch failures still propagate.
-                diagnostic_event(_LOGGER, "runtime_connection_closed", level=logging.DEBUG)
+            self._flush_connection_events(channel, context)
+            ready = self._wait_connection_input(channel, queued)
+            if ready is None:
                 return
             if not ready:
                 continue
             request = read_document(channel, Request, deadline=time.monotonic() + 5).root
+            if isinstance(request, ViewConnect):
+                # Only a fresh connection becomes a view connection, and it carries nothing else after.
+                if not first or self.profiles is None:
+                    raise RefusalError(RefusalCode.INVALID_FRAME, check="view_connect_not_first")
+                self.profiles.view_connect(context, channel, request)
+                return
+            first = False
             status = self._dispatch_profile_request(channel, context, request)
             if self.profiles is not None:
                 # What the request changed may move a lease's deadline or end one.
@@ -249,6 +272,7 @@ class RuntimeConnectionHandling:
         self, channel: ByteChannel, context: ConnectionContext, request: _ProfileConnectionRequest
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
@@ -269,35 +293,62 @@ class RuntimeConnectionHandling:
                 connection_id=context.connection_id,
                 code=RefusalCode.UNAVAILABLE,
             )
+        if isinstance(request, ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery):
+            return self.profiles.service(context, channel, request)
         if isinstance(request, ProfileDeletePrepare | ProfileDelete):
             self.profiles.bootstrap_delete(context, channel, request)
             return None
-        if isinstance(request, ServiceConnect | ServiceAdmission):
-            return self.profiles.service(context, channel, request)
+        if self._dispatch_owned_request(channel, context, request):
+            return None
+        if isinstance(
+            request,
+            ProfileLogin
+            | ProfileLoginStatusQuery
+            | SessionRequest
+            | ProfileDisclosurePageRequest
+            | SignInStatusRequest
+            | ActiveProfileRequest
+            | LoginTargetRequest
+            | AttendanceAsk
+            | AttendanceDecide,
+        ):
+            return self.profiles.handle(context, channel, request)
+        self.profiles.installation(context, channel, cast("InstallationActRequest", request))
+        return None
+
+    def _dispatch_owned_request(
+        self, channel: ByteChannel, context: ConnectionContext, request: _ProfileConnectionRequest
+    ) -> bool:
+        """Dispatch request families that own their own replies."""
+        if self.profiles is None:
+            return False
+        if isinstance(request, ViewAttachRequest):
+            self.profiles.view_attach(context, channel, request)
+            return True
         if isinstance(request, ExtensionRecordRequest):
             self.profiles.extension_record(context, channel, request)
-            return None
+            return True
         if isinstance(request, ModelRunFetchRequest):
             self.profiles.model_run_fetch(context, channel, request)
-            return None
+            return True
         if isinstance(request, ModelRunCompleteRequest):
             self.profiles.model_run_complete(context, channel, request)
-            return None
+            return True
         if isinstance(request, PasswordResetPrepare | PasswordReset):
             self.profiles.bootstrap(context, channel, request)
-            return None
+            return True
         if isinstance(
             request,
             AutomationDeny | ProfileRecoveryPrepare | ProfileResume | SessionInventory,
         ):
             self.profiles.manage_access(context, channel, request)
-            return None
+            return True
         if isinstance(
             request,
             EnrollmentPrepare | EnrollmentSubmit | EnrollmentInspect | EnrollmentPoll | EnrollmentReconcile,
         ):
             self.profiles.enrollment(context, channel, request)
-            return None
+            return True
         if isinstance(
             request,
             OperationSubmit
@@ -313,21 +364,8 @@ class RuntimeConnectionHandling:
             | OperationSecret,
         ):
             self.profiles.operation(context, channel, request)
-            return None
-        if isinstance(
-            request,
-            ProfileLogin
-            | SessionRequest
-            | ProfileDisclosurePageRequest
-            | SignInStatusRequest
-            | ActiveProfileRequest
-            | LoginTargetRequest
-            | AttendanceAsk
-            | AttendanceDecide,
-        ):
-            return self.profiles.handle(context, channel, request)
-        self.profiles.installation(context, channel, request)
-        return None
+            return True
+        return False
 
     def _finish_connection(
         self,

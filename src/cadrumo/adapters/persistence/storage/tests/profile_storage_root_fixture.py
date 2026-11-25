@@ -75,7 +75,7 @@ def bucket_session_storage_fixture(
     bucket_id: str,
     *,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
 ) -> Callable[..., Iterator[None]]:
     """Build an isolation fixture that also holds an active bucket session.
 

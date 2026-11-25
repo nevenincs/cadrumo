@@ -22,7 +22,11 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
-from cadrumo.adapters.persistence.profile.tests.test_ledger_payment_withholding import _YEAR, _payroll_payment, _request
+from cadrumo.adapters.persistence.profile.tests.test_ledger_payment_withholding import (
+    YEAR,
+    ledger_payment_withholding_request,
+    payroll_payment,
+)
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_retencion import (
@@ -54,6 +58,7 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from .....domain.iva.schema import InvoiceKind
 
@@ -68,16 +73,16 @@ _MONTHLY_111_FILERS = pytest.mark.parametrize(
 
 
 def _stored(
-    objects: SecureObjectRepository, modelo: str, quarter: str, *, year: int = _YEAR
+    objects: SecureObjectRepository, modelo: str, quarter: str, *, year: int = YEAR
 ) -> tuple[RetencionObservation, ...]:
     return RetencionObservationRepositoryAdapter(objects=objects).load_observations(
         modelo, Period.from_year_and_code(year, quarter)
     )
 
 
-def _received_professional_invoice() -> Invoice:
+def received_professional_invoice() -> Invoice:
     subtotal = Decimal("500.00")
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Synthetic professional service",
@@ -91,9 +96,9 @@ def _received_professional_invoice() -> Invoice:
         {
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "MONTHLY-PRO-001",
-            "issued_at": date(_YEAR, 3, 31),
+            "issued_at": date(YEAR, 3, 31),
             "counterparty_name": "Synthetic Recipient SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": subtotal,
             "iva_total": line.iva_amount,
@@ -108,21 +113,21 @@ def _received_professional_invoice() -> Invoice:
     )
 
 
-def _professional_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
-    paid_on = date(_YEAR, 4, 2)
+def professional_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
+    paid_on = date(YEAR, 4, 2)
     return InvoiceWithholdingEvidenceRequest(
         invoice_id=invoice.invoice_id,
         income_kind=WithholdingIncomeKind.PROFESSIONAL,
         scheme=RetencionScheme("actividades_profesionales"),
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id=f"professional-payment-{_YEAR}-04",
+        payment_event_id=f"professional-payment-{YEAR}-04",
         payment_occurred_on=paid_on,
-        allocation_id=f"professional-allocation-{_YEAR}-04",
+        allocation_id=f"professional-allocation-{YEAR}-04",
         allocated_base=Decimal("500.00"),
         allocated_withholding=Decimal("95.00"),
         allocated_settlement=Decimal("500.00"),
-        idempotency_key=f"professional-capture-{_YEAR}-04",
+        idempotency_key=f"professional-capture-{YEAR}-04",
         modelo_190_detail=WithholdingObservation(
             source_id=invoice.invoice_id,
             perceptor_tax_id=invoice.counterparty_tax_id or "",
@@ -131,16 +136,7 @@ def _professional_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=Decimal("500.00"),
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("500.00"),
             porcentaje_retencion=Decimal("19"),
         ),
@@ -148,7 +144,7 @@ def _professional_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest
 
 
 def _assert_quarter_refused(
-    error: WithholdingFilingCadenceError, *, modelo: str, quarter: str, scheduled: str, year: int = _YEAR
+    error: WithholdingFilingCadenceError, *, modelo: str, quarter: str, scheduled: str, year: int = YEAR
 ) -> None:
     assert error.refusal_code == "withholding_quarterly_window_not_scheduled"
     assert error.context == {
@@ -167,15 +163,15 @@ def _assert_quarter_refused(
 def test_invoice_capture_refuses_a_monthly_111_filer_and_writes_nothing(
     tmp_path: Path, facts: tuple[UserProfileFact, ...]
 ) -> None:
-    invoice = _received_professional_invoice()
+    invoice = received_professional_invoice()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingFilingCadenceError) as raised:
             build_invoice_withholding_capture(
                 invoice,
                 catalogue_revision_id="a" * 64,
-                request=_professional_request(invoice),
-                applicable_year=_YEAR,
-                cadence=published_filer_cadence(_YEAR, facts=facts),
+                request=professional_request(invoice),
+                applicable_year=YEAR,
+                cadence=published_filer_cadence(YEAR, facts=facts),
             )
         stored = _stored(profile.repository, "111", "2T")
 
@@ -187,15 +183,15 @@ def test_invoice_capture_refuses_a_monthly_111_filer_and_writes_nothing(
 def test_ledger_payroll_capture_refuses_a_monthly_111_filer_and_writes_nothing(
     tmp_path: Path, facts: tuple[UserProfileFact, ...]
 ) -> None:
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingFilingCadenceError) as raised:
             build_ledger_payment_withholding_capture(
                 transaction,
                 catalogue_revision_id="a" * 64,
-                request=_request(transaction),
-                applicable_year=_YEAR,
-                cadence=published_filer_cadence(_YEAR, facts=facts),
+                request=ledger_payment_withholding_request(transaction),
+                applicable_year=YEAR,
+                cadence=published_filer_cadence(YEAR, facts=facts),
             )
         stored = _stored(profile.repository, "111", "2T")
 
@@ -203,7 +199,7 @@ def test_ledger_payroll_capture_refuses_a_monthly_111_filer_and_writes_nothing(
     assert stored == ()
 
 
-def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_covers(tmp_path: Path) -> None:
+def test_ledger_capital_capture_refuses_a_large_company_whose_123_is_monthly(tmp_path: Path) -> None:
     transaction = capital_payment()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingFilingCadenceError) as raised:
@@ -216,7 +212,7 @@ def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_cov
             )
         stored = _stored(profile.repository, "123", "2T", year=CAPITAL_YEAR)
 
-    _assert_quarter_refused(raised.value, modelo="123", quarter="2T", scheduled="", year=CAPITAL_YEAR)
+    _assert_quarter_refused(raised.value, modelo="123", quarter="2T", scheduled=_MONTHS, year=CAPITAL_YEAR)
     assert stored == ()
 
 
@@ -225,7 +221,7 @@ def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_cov
     [
         ("111", LARGE_COMPANY_FACTS, _MONTHS),
         ("111", PUBLIC_ADMINISTRATION_FACTS, _MONTHS),
-        ("123", LARGE_COMPANY_FACTS, ""),
+        ("123", LARGE_COMPANY_FACTS, _MONTHS),
     ],
     ids=["111-large-company", "111-public-administration", "123-large-company"],
 )
@@ -237,9 +233,9 @@ def test_the_producer_refuses_a_command_built_for_another_cadence_and_writes_not
 ) -> None:
     """The producer is the only mutation path, so it re-checks the schedule it is given."""
     if modelo == "111":
-        year = _YEAR
-        transaction = _payroll_payment()
-        request = _request(transaction)
+        year = YEAR
+        transaction = payroll_payment()
+        request = ledger_payment_withholding_request(transaction)
     else:
         year = CAPITAL_YEAR
         transaction = capital_payment()
@@ -269,13 +265,13 @@ def test_the_producer_refuses_a_command_built_for_another_cadence_and_writes_not
 
 def test_a_redeme_filer_still_captures_quarterly_as_the_calendar_shows(tmp_path: Path) -> None:
     """REDEME changes IVA cadence only; the withholding schedules keep this filer quarterly."""
-    transaction = _payroll_payment()
-    cadence = published_filer_cadence(_YEAR, facts=REDEME_FACTS)
+    transaction = payroll_payment()
+    cadence = published_filer_cadence(YEAR, facts=REDEME_FACTS)
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
         cadence=cadence,
     )
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -283,19 +279,19 @@ def test_a_redeme_filer_still_captures_quarterly_as_the_calendar_shows(tmp_path:
         stored = _stored(profile.repository, "111", "2T")
 
     assert result is not None
-    assert result.scope.period == Period.from_year_and_code(_YEAR, "2T")
+    assert result.scope.period == Period.from_year_and_code(YEAR, "2T")
     assert len(stored) == 1
 
 
 def test_a_cadence_for_another_year_is_refused_before_any_command() -> None:
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     with pytest.raises(LedgerPaymentWithholdingEvidenceError) as raised:
         build_ledger_payment_withholding_capture(
             transaction,
             catalogue_revision_id="a" * 64,
-            request=_request(transaction),
-            applicable_year=_YEAR,
-            cadence=quarterly_filer_cadence(_YEAR + 1),
+            request=ledger_payment_withholding_request(transaction),
+            applicable_year=YEAR,
+            cadence=quarterly_filer_cadence(YEAR + 1),
         )
 
     assert raised.value.refusal_code == "filer_cadence_year_mismatch"

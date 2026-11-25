@@ -11,11 +11,12 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets.select import InvalidSelectValueError
 
+from .....application.ledger import actions_import
 from .....application.ledger.actions_import import LedgerProviderID
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
-from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
@@ -25,6 +26,7 @@ from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import BucketTransactionRef
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
+from ...tests.settling import settle, settle_until
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController
 from ..import_flow import LedgerImportScreen, import_outcome_lines
@@ -37,7 +39,14 @@ from ..models import (
 )
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .workspace_fixtures import ledger_context, ledger_focused_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import (
+    ClassificationDoor,
+    ledger_classify_action,
+    ledger_context,
+    ledger_focused_context,
+    ledger_projection,
+    ledger_review_action,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,18 +58,7 @@ _FLOW_COPY = {
 }
 
 
-class _ClassificationDoor:
-    def __init__(self) -> None:
-        self.calls: list[LedgerClassificationSubmissionV1] = []
-
-    async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
-        self.calls.append(submission)
-        return ManualLedgerTransactionResult.model_construct(
-            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
-        )
-
-
-class _ImportDoor:
+class ImportDoor:
     """Records every preview and apply, answering with fixed synthetic counts."""
 
     def __init__(self) -> None:
@@ -87,7 +85,7 @@ class _ImportDoor:
         return self._outcome(request, dry_run=False)
 
 
-class _SlowClassificationDoor(_ClassificationDoor):
+class _SlowClassificationDoor(ClassificationDoor):
     def __init__(self) -> None:
         super().__init__()
         self.started = asyncio.Event()
@@ -103,7 +101,7 @@ class _SlowClassificationDoor(_ClassificationDoor):
         )
 
 
-class _SlowImportDoor(_ImportDoor):
+class _SlowImportDoor(ImportDoor):
     def __init__(self) -> None:
         super().__init__()
         self.started = asyncio.Event()
@@ -117,7 +115,7 @@ class _SlowImportDoor(_ImportDoor):
         return self._outcome(request, dry_run=False)
 
 
-class _RefusingImportDoor(_ImportDoor):
+class _RefusingImportDoor(ImportDoor):
     """Refuses to apply with the application's own typed, translated error."""
 
     @override
@@ -129,7 +127,7 @@ class _RefusingImportDoor(_ImportDoor):
         )
 
 
-def _import_controller(door: _ImportDoor | None) -> LedgerWorkspaceController:
+def _import_controller(door: ImportDoor | None) -> LedgerWorkspaceController:
     return LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
@@ -137,28 +135,22 @@ def _import_controller(door: _ImportDoor | None) -> LedgerWorkspaceController:
     )
 
 
-async def _preview(pilot: Pilot[None], screen: LedgerImportScreen, path: Path) -> None:
+async def ledger_flows_preview(pilot: Pilot[None], screen: LedgerImportScreen, path: Path) -> None:
     screen.query_one("#ledger-import-path", Input).value = str(path)
     screen.query_one("#ledger-import-preview-button", Button).press()
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
-def _classify_action() -> ActionReference:
-    return ActionReference(action_id=lookup_action("operator.ledger.classify").action_id)
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
 async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_authorized() -> None:
     projection = ledger_projection()
-    door = _ClassificationDoor()
+    door = ClassificationDoor()
     controller = LedgerWorkspaceController(
         ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=door,
         ),
     )
@@ -168,7 +160,7 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#ledger-classifications", DataTable)
         assert tuple(row.key.value for row in table.ordered_rows) == (
             "BUSINESS",
@@ -186,27 +178,28 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
         await pilot.press("enter", "enter", "enter")
         assert not door.calls
 
-    success_door = _ClassificationDoor()
+    success_door = ClassificationDoor()
     success_controller = LedgerWorkspaceController(
         ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=success_door,
         ),
     )
     success_screen = LedgerClassificationScreen(success_controller)
     success_app = ScreenHostApp[None](success_screen)
     async with success_app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        await pilot.press("enter", "enter", "enter")
-        await pilot.pause()
+        await settle(pilot)
+        for _ in range(3):
+            await pilot.press("enter")
+            await settle(pilot)
         assert success_screen.flow_state is LedgerFlowState.SUCCEEDED
         assert len(success_door.calls) == 1
         with pytest.raises(AttributeError):
             success_screen.flow_state = LedgerFlowState.EDITING  # type: ignore[misc]
-    assert success_door.calls[0].action == _classify_action()
+    assert success_door.calls[0].action == ledger_classify_action()
     assert success_door.calls[0].transaction_id == projection.entries[0].transaction_id
     assert success_door.calls[0].patch.business_classification is BusinessClassification.BUSINESS
 
@@ -215,7 +208,7 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
 async def test_import_previews_first_then_applies_exactly_the_previewed_request(tmp_path: Path) -> None:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    door = _ImportDoor()
+    door = ImportDoor()
     controller = _import_controller(door)
     screen = cast(
         "LedgerImportScreen",
@@ -224,9 +217,9 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
     app = ScreenHostApp[None](screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             cast("Select[str]", screen.query_one("#ledger-import-provider", Select)).value = LedgerProviderID.CSV.value
-            await _preview(pilot, screen, statement)
+            await ledger_flows_preview(pilot, screen, statement)
             assert screen.flow_state is LedgerFlowState.CONFIRMING
             assert door.previews == [
                 LedgerImportRequestV1(
@@ -242,14 +235,13 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
             # The form is frozen once previewed, so what is applied is what was shown.
             assert screen.query_one("#ledger-import-path", Input).disabled
             screen.query_one("#ledger-import-confirm", Button).press()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             # Applying binds to exactly the files the preview read; this door reported none.
             assert door.applied == [door.previews[0].model_copy(update={"previewed_sources": ()})]
             assert "Imported: 2" in str(screen.query_one("#ledger-import-preview", Static).render())
             screen.query_one("#ledger-import-confirm", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert len(door.applied) == 1
 
 
@@ -257,12 +249,12 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
 async def test_import_cancel_after_preview_writes_nothing(tmp_path: Path) -> None:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    door = _ImportDoor()
+    door = ImportDoor()
     screen = LedgerImportScreen(_import_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 60)) as pilot:
-        await pilot.pause()
-        await _preview(pilot, screen, statement)
+        await settle(pilot)
+        await ledger_flows_preview(pilot, screen, statement)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         await pilot.press("escape")
         assert screen.flow_state is LedgerFlowState.CANCELLED
@@ -272,13 +264,13 @@ async def test_import_cancel_after_preview_writes_nothing(tmp_path: Path) -> Non
 
 @pytest.mark.asyncio
 async def test_import_refuses_an_absent_path_and_an_invoice_book_without_country(tmp_path: Path) -> None:
-    door = _ImportDoor()
+    door = ImportDoor()
     screen = LedgerImportScreen(_import_controller(door))
     app = ScreenHostApp[None](screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
-            await _preview(pilot, screen, tmp_path / "absent.csv")
+            await settle(pilot)
+            await ledger_flows_preview(pilot, screen, tmp_path / "absent.csv")
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "Nothing exists at" in str(screen.query_one("#ledger-refusal", Static).render())
             book = tmp_path / "received.csv"
@@ -286,14 +278,14 @@ async def test_import_refuses_an_absent_path_and_an_invoice_book_without_country
             cast(
                 "Select[str]", screen.query_one("#ledger-import-kind", Select)
             ).value = LedgerImportSourceKind.INVOICES_RECEIVED.value
-            await pilot.pause()
+            await settle(pilot)
             assert not screen.query_one("#ledger-import-provider", Select).display
             screen.query_one("#ledger-import-country", Input).value = ""
-            await _preview(pilot, screen, book)
+            await ledger_flows_preview(pilot, screen, book)
             assert "two letters" in str(screen.query_one("#ledger-refusal", Static).render())
             assert not door.previews
             screen.query_one("#ledger-import-country", Input).value = "es"
-            await _preview(pilot, screen, book)
+            await ledger_flows_preview(pilot, screen, book)
             assert door.previews[-1].country == "ES"
             assert door.previews[-1].source_kind is LedgerImportSourceKind.INVOICES_RECEIVED
 
@@ -324,24 +316,26 @@ async def test_escape_is_refused_while_classification_submission_is_in_flight() 
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=door,
         ),
     )
     screen = LedgerClassificationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        await pilot.press("enter", "enter")
-        await asyncio.wait_for(door.started.wait(), timeout=1)
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle_until(pilot, door.started.is_set, "the classification write to start", workers=False)
         assert screen.flow_state is LedgerFlowState.SUBMITTING
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert not screen.back_requested
         assert screen.is_mounted
         assert str(screen.query_one("#ledger-flow-status", Static).render())
         door.release.set()
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
         assert not screen.back_requested
 
@@ -354,17 +348,17 @@ async def test_escape_is_refused_while_import_submission_is_in_flight(tmp_path: 
     screen = LedgerImportScreen(_import_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 60)) as pilot:
-        await pilot.pause()
-        await _preview(pilot, screen, statement)
+        await settle(pilot)
+        await ledger_flows_preview(pilot, screen, statement)
         screen.query_one("#ledger-import-confirm", Button).press()
-        await asyncio.wait_for(door.started.wait(), timeout=1)
+        await settle_until(pilot, door.started.is_set, "the import to start applying", workers=False)
         assert screen.flow_state is LedgerFlowState.SUBMITTING
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert not screen.back_requested
         assert screen.is_mounted
         door.release.set()
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
         assert len(door.applied) == 1
 
@@ -378,11 +372,10 @@ async def test_import_refusal_is_the_application_message_in_the_operator_languag
         screen = LedgerImportScreen(_import_controller(door))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
-            await _preview(pilot, screen, statement)
+            await settle(pilot)
+            await ledger_flows_preview(pilot, screen, statement)
             screen.query_one("#ledger-import-confirm", Button).press()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.FAILED
             rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
             assert "The import could not be completed." in rendered
@@ -395,7 +388,7 @@ def test_import_area_is_refused_without_its_door() -> None:
     refusal = _import_controller(None).refusal_for(LedgerWorkspaceArea.IMPORT)
     assert refusal is not None
     assert refusal.reason_key == "tui.ledger.refusal.submission_unavailable"
-    assert _import_controller(_ImportDoor()).refusal_for(LedgerWorkspaceArea.IMPORT) is None
+    assert _import_controller(ImportDoor()).refusal_for(LedgerWorkspaceArea.IMPORT) is None
 
 
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
@@ -409,13 +402,13 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
 
 def test_controller_refuses_off_projection_classification() -> None:
     projection = ledger_projection()
-    door = _ClassificationDoor()
+    door = ClassificationDoor()
     controller = LedgerWorkspaceController(
         ledger_context(),
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=door,
         ),
     )
@@ -441,16 +434,16 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
-            import_door=_ImportDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
+            import_door=ImportDoor(),
         ),
     )
     with override_settings(cadrumo_output_language=locale.value):
         classification = LedgerClassificationScreen(controller)
         classification_app = ScreenHostApp[None](classification)
         async with classification_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = "\n".join(str(widget.render()) for widget in classification.query(Static))
             assert _FLOW_COPY[locale][0] in rendered
             assert "tui.ledger." not in rendered
@@ -460,7 +453,7 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
         import_screen = LedgerImportScreen(controller)
         import_app = ScreenHostApp[None](import_screen)
         async with import_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = "\n".join(str(widget.render()) for widget in import_screen.query(Static))
             assert _FLOW_COPY[locale][1] in rendered
             assert "tui.ledger." not in rendered
@@ -478,14 +471,14 @@ async def test_classification_flow_has_exact_focus_and_real_compositor_geometry(
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
         ),
     )
     screen = LedgerClassificationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table_id = "ledger-classifications"
         assert app.focused is screen.query_one(f"#{table_id}", DataTable)
         assert tuple(widget.id for widget in screen.focus_chain) == (
@@ -515,10 +508,10 @@ async def test_classification_flow_has_exact_focus_and_real_compositor_geometry(
 
 @pytest.mark.asyncio
 async def test_import_flow_starts_at_the_path_and_keeps_one_scroll_owner() -> None:
-    screen = LedgerImportScreen(_import_controller(_ImportDoor()))
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is screen.query_one("#ledger-import-path", Input)
         chain = tuple(widget.id for widget in screen.focus_chain)
         assert chain[0] == "ledger-navigation"
@@ -529,6 +522,27 @@ async def test_import_flow_starts_at_the_path_and_keeps_one_scroll_owner() -> No
             widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar
         )
         assert all(owner.id == "ledger-page" for owner in owners)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ofx_installed", [True, False])
+async def test_import_flow_offers_ofx_only_where_its_parser_is_installed(
+    monkeypatch: pytest.MonkeyPatch, ofx_installed: bool
+) -> None:
+    monkeypatch.setattr(actions_import, "optional_extra_available", lambda extra: ofx_installed or extra.extra != "ofx")
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        provider = screen.query_one("#ledger-import-provider", Select)
+        provider.value = LedgerProviderID.CSV.value
+        if ofx_installed:
+            provider.value = LedgerProviderID.OFX.value
+            assert provider.value == LedgerProviderID.OFX.value
+        else:
+            with pytest.raises(InvalidSelectValueError):
+                provider.value = LedgerProviderID.OFX.value
+            assert provider.value == LedgerProviderID.CSV.value
 
 
 def test_flow_modules_reach_writers_only_through_injected_doors() -> None:
@@ -580,17 +594,22 @@ async def test_browse_mounts_a_tree_at_the_typed_folder_and_a_choice_fills_the_p
 
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    screen = LedgerImportScreen(_import_controller(_ImportDoor()))
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
     async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert not screen.query("#ledger-import-tree")
         screen.query_one("#ledger-import-path", Input).value = str(tmp_path)
         screen.query_one("#ledger-import-browse", Button).press()
-        await pilot.pause()
+        # The tree is mounted by a worker that first resolves the folder on a
+        # thread, and then keeps its loader worker for as long as it is shown,
+        # so the wait is for the tree itself rather than for workers to finish.
+        await settle_until(
+            pilot, lambda: bool(screen.query("#ledger-import-tree")), "the browse tree to mount", workers=False
+        )
         tree = screen.query_one("#ledger-import-tree", DirectoryTree)
         assert Path(tree.path) == tmp_path
         screen.post_message(DirectoryTree.FileSelected(tree.root, statement))
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert screen.query_one("#ledger-import-path", Input).value == str(statement)
 
 
@@ -614,30 +633,31 @@ async def test_refresh_after_a_write_runs_off_the_loop_and_coalesces_repeated_ba
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             refresh=slow_refresh,
         ),
     )
     screen = LedgerClassificationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
-            await pilot.press("enter", "enter")
-            await pilot.pause()
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen.refreshing
             assert not screen.back_requested
             assert "Updating" in str(screen.query_one("#ledger-flow-status", Static).render())
             # The loop still answers keys while the read is out; a second Back joins the first.
             await pilot.press("escape", "down")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen.refreshing
             release.set()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert not screen.refreshing
             assert screen.back_requested
             assert calls == [1]

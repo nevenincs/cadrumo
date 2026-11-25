@@ -14,22 +14,23 @@ identity audit:
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    interleave_write_after_first_singleton_select,
+    isolated_runtime_profile,
+    secure_object_select_log,
+)
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import WorkUnitPersistenceError
 from cadrumo.domain.modelos.work_unit import (
@@ -38,6 +39,8 @@ from cadrumo.domain.modelos.work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,38 +51,9 @@ _BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 _WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
 _WORK_UNIT_OBJECT_KEY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.require_default_object_key()
 _WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_version
-_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 10, 30, 0, tzinfo=UTC)
-_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 35, 0, tzinfo=UTC)
-_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 40, 0, tzinfo=UTC)
-
-
-def _is_secure_object_select(statement: str) -> bool:
-    """Return whether one cursor statement reads the encrypted singleton table."""
-    normalized = " ".join(statement.split()).upper()
-    return normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} "
-
-
-@contextmanager
-def _secure_object_select_log(engine: Engine) -> Generator[list[str]]:
-    """Observe live encrypted-SQL singleton reads without replacing a repository."""
-    selects: list[str] = []
-
-    def _record(
-        _conn: object,
-        _cursor: object,
-        statement: str,
-        _parameters: object,
-        _context: object,
-        _executemany: bool,
-    ) -> None:
-        if _is_secure_object_select(statement):
-            selects.append(statement)
-
-    event.listen(engine, "before_cursor_execute", _record)
-    try:
-        yield selects
-    finally:
-        event.remove(engine, "before_cursor_execute", _record)
+_WORK_UNIT_TIMESTAMP = datetime(FILING_YEAR, 5, 28, 10, 30, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 10, 35, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 10, 40, 0, tzinfo=UTC)
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -96,9 +70,9 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
 
     bucket_id = "b" * 32
     modelo = ModeloCode("303")
-    filing_year = 2025
+    filing_year = FILING_YEAR
     period = Period.from_year_and_code(filing_year, "1T")
-    revision_id = "2025-y-siguientes"
+    revision_id = open_ended_revision("303").id
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
@@ -145,23 +119,23 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded == original
     loaded_unit = loaded.work_units[work_unit.work_unit_id]
     dumped_unit = loaded_unit.model_dump(mode="json")
-    assert dumped_unit["filing_year"] == 2025
-    assert dumped_unit["period"] == {"filing_year": 2025, "code": "1T"}
-    assert "2025Q1" not in loaded_unit.model_dump_json()
+    assert dumped_unit["filing_year"] == FILING_YEAR
+    assert dumped_unit["period"] == {"filing_year": FILING_YEAR, "code": "1T"}
+    assert f"{FILING_YEAR}Q1" not in loaded_unit.model_dump_json()
     from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
-    assert b"2025Q1" not in database_bytes
-    assert b"2025-1T" not in database_bytes
+    assert f"{FILING_YEAR}Q1".encode() not in database_bytes
+    assert f"{FILING_YEAR}-1T".encode() not in database_bytes
     # Per-field witnesses: ModeloCode preservation, year/period
     # round-trip, state enum identity, content-addressed work_unit_id,
     # and the discard metadata triple (which were the test's main
     # anti-tautology guard: every defaultable field carries a real
     # non-default value).
     assert loaded_unit.modelo == "303"
-    assert loaded_unit.filing_year == 2025
-    assert loaded_unit.period == Period.from_year_and_code(2025, "1T")
-    assert loaded_unit.revision_id == "2025-y-siguientes"
+    assert loaded_unit.filing_year == FILING_YEAR
+    assert loaded_unit.period == Period.from_year_and_code(FILING_YEAR, "1T")
+    assert loaded_unit.revision_id == open_ended_revision("303").id
     assert loaded_unit.state is WorkUnitState.DESCARTADO
     assert loaded_unit.work_unit_id == work_unit.work_unit_id
     # Discard metadata survives the cycle; a regression that dropped any
@@ -193,40 +167,13 @@ def test_load_revisioned_returns_one_enveloped_secure_object_record_across_an_in
         assert expected_record is not None
 
         writer = WorkUnitCatalogueRepository(objects=profile.repository)
-        selects: list[str] = []
-        fired = False
-        writing = False
-
-        def _interleave_after_singleton_select(
-            _conn: object,
-            _cursor: object,
-            statement: str,
-            _parameters: object,
-            _context: object,
-            _executemany: bool,
-        ) -> None:
-            nonlocal fired, writing
-            if not _is_secure_object_select(statement) or writing:
-                return
-            selects.append(statement)
-            if fired:
-                return
-            fired = True
-            writing = True
-            try:
-                writer.save(second)
-            finally:
-                writing = False
-
-        engine = profile.repository.engine
-        event.listen(engine, "after_cursor_execute", _interleave_after_singleton_select)
-        try:
+        with interleave_write_after_first_singleton_select(
+            profile.repository.engine, lambda: writer.save(second)
+        ) as interleave:
             observed, revision_id = repository.load_revisioned()
-        finally:
-            event.remove(engine, "after_cursor_execute", _interleave_after_singleton_select)
 
-    assert fired
-    assert len(selects) == 1
+    assert interleave.fired
+    assert len(interleave.selects) == 1
     assert observed == first
     assert revision_id == expected_record.revision_id
 
@@ -237,7 +184,7 @@ def test_load_revisioned_observes_an_absent_enveloped_singleton_with_one_select(
     """The absent enveloped singleton outcome also uses exactly one encrypted-SQL read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        with _secure_object_select_log(profile.repository.engine) as selects:
+        with secure_object_select_log(profile.repository.engine) as selects:
             observed, revision_id = repository.load_revisioned()
 
     assert len(selects) == 1
@@ -304,18 +251,21 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
             WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
-def test_work_unit_catalogue_wrong_inner_classification_is_localized(
+def _load_error_for_envelope(
     tmp_path: Path,
-) -> None:
-    """A corrupted envelope classification raises a translated persistence error."""
-
+    *,
+    schema_version: int,
+    written_at: datetime,
+    envelope_classification: SensitivityClass,
+) -> WorkUnitPersistenceError:
+    """Store an inner envelope the loader must refuse and return the persistence error it raises."""
     from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[WorkUnitCatalogue](
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
-            classification=SensitivityClass.AUDIT,
+            schema_version=schema_version,
+            written_at=written_at,
+            classification=envelope_classification,
             payload=WorkUnitCatalogue(),
         )
         profile.repository.save(
@@ -329,9 +279,23 @@ def test_work_unit_catalogue_wrong_inner_classification_is_localized(
 
         with pytest.raises(WorkUnitPersistenceError) as raised:
             WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+    return raised.value
 
-    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
-    assert raised.value.context == {
+
+def test_work_unit_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    raised = _load_error_for_envelope(
+        tmp_path,
+        schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+        written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
+        envelope_classification=SensitivityClass.AUDIT,
+    )
+
+    assert raised.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.context == {
         "reason": "classification_mismatch",
         "expected_classification": "financial",
         "actual_classification": "audit",
@@ -343,30 +307,16 @@ def test_work_unit_catalogue_unsupported_inner_version_is_localized(
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
-
     stored_schema_version = _WORK_UNIT_CATALOGUE_VERSION + 1
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        envelope = Envelope[WorkUnitCatalogue](
-            schema_version=stored_schema_version,
-            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
-            classification=SensitivityClass.FINANCIAL,
-            payload=WorkUnitCatalogue(),
-        )
-        profile.repository.save(
-            namespace=_WORK_UNIT_NAMESPACE,
-            object_key=_WORK_UNIT_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+    raised = _load_error_for_envelope(
+        tmp_path,
+        schema_version=stored_schema_version,
+        written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
+        envelope_classification=SensitivityClass.FINANCIAL,
+    )
 
-        with pytest.raises(WorkUnitPersistenceError) as raised:
-            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
-
-    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
-    assert raised.value.context == {
+    assert raised.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.context == {
         "reason": "unsupported_envelope_version",
         "stored_schema_version": stored_schema_version,
         "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,

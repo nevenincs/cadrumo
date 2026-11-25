@@ -40,11 +40,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period, PeriodKind, registry_period_kind
 from cadrumo.core.time.clock import today_madrid
@@ -59,16 +58,9 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _result
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -94,68 +86,18 @@ _M130_CALCULATE_OPTIONS = (
 
 
 def _natural_person_facts() -> dict[str, str]:
-    """The application readiness baseline with the natural-person operator's identity."""
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
+    """The canonical natural-person taxpayer, with the colegio-concertado attestation."""
+    return persona_fact_strings()
+
+
+_OPERATIONS = frozenset(
+    {
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
     }
-    facts.update(
-        {
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "design",
-        }
-    )
-    return facts
-
-
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the Modelo 130 work lifecycle the calculate route submits."""
-    operation_ids = frozenset(
-        {
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+)
 
 
 def _seed_m130_income(bucket_id: str, *, filing_year: int, source_key: str) -> None:
@@ -228,7 +170,7 @@ def _m130_session(
 
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
         invoke_cli=invoke_cli,
     ) as session:
@@ -242,7 +184,7 @@ def _create_m130_work_unit(session: NativeApiCliSession[None], *, filing_year: i
         "--revision", _revision_id(filing_year, period),
     )  # fmt: skip
     assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-    work_unit_id = _result(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str) and work_unit_id, created.output
     return work_unit_id
 
@@ -265,12 +207,14 @@ def _calculate_m130(session: NativeApiCliSession[None], work_unit_id: str, *, ou
 
 
 def _closes_on(filing_year: int, period_token: str) -> date:
-    window = resolve_filing_window(
+    resolution = resolve_filing_window(
         "130",
         filing_year,
         Period.from_year_and_code(filing_year, period_token),
     )
+    window = None if resolution is None else resolution.dated_window
     assert window is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
+    assert window.closes_on is not None, f"the M130 {period_token} {filing_year} window must carry a close date"
     return window.closes_on
 
 
@@ -335,7 +279,7 @@ def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context
     observed_after = today_madrid()
 
     envelope = json.loads(result.output)
-    inner = _result(result.output)
+    inner = unwrap_schema_envelope(result.output)
     notices = unwrap_envelope_notices(result.output)
 
     # JSON status is no longer a bare success: a warning notice rode the spine.
@@ -397,7 +341,7 @@ def test_calculate_in_time_period_carries_no_unassessed_preview_notice(
         result = _calculate_m130(session, work_unit_id)
     observed_after = today_madrid()
 
-    inner = _result(result.output)
+    inner = unwrap_schema_envelope(result.output)
     notices = unwrap_envelope_notices(result.output)
 
     assert [notice for notice in notices if notice["code"] == _UNASSESSED_PREVIEW_NOTICE_CODE] == [], (

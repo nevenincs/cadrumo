@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_output
 from .hashing import digest
@@ -34,11 +34,64 @@ DEPENDENCY_INPUTS = {
     # disabled: gtk-sys 0.18/v3_24 stays inside GTK 3.24; no portal backend is
     # enabled. All 13 locked native sys-crates retain their versions, checksums
     # and dependency edges. Direct sha2 was already enabled by the application.
+    # The application crate's provisioning dependencies (rustls with ring, webpki-roots,
+    # flate2 with zlib-rs, ruzstd, tar, toml, zeroize, sha2 0.11) are pure Rust or
+    # statically linked: the Linux-target graph gains no sys-crate, and the platform crate
+    # reaches only libc there. The locked GTK/WebKit sys-crates and rfd's GTK3-only backend
+    # are unchanged (rfd 0.16.1; no ashpd). A direct `log` dependency was added
+    # to the desktop crate; it is pure Rust and does not alter native providers.
+    # The diagnostics test-support feature is empty and is selected only by tests;
+    # the distributed desktop still selects only application/platform. Desktop `log`
+    # is pure Rust. The refreshed lock and manifest digests bind both changes; neither
+    # adds a native dependency or distributed feature, so provider evidence remains valid.
     # This is source/feature evidence, not new artifact or minimum-host proof.
-    "native/desktop/src-tauri/Cargo.lock": "93da058f516427967517548bb5723702561dc179cab69bc7e1783ef452bfa25e",
-    "native/desktop/src-tauri/Cargo.toml": "14897d45bfc2491a33ab784a68c3ec2d943c50ef2e14c83d3d9245c1d8b100cb",
-    "native/application/Cargo.toml": "2e2f7aa92cad3b936326559ab24da93fba049d0dffda75abc5f7025b410eecf0",
-    "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
+    # The desktop now links the interpreter host on every unix target, Linux included. That
+    # crate adds only the locked launch-guard and platform path dependencies and a C
+    # build-dependency that compiles the posix host into the binary; the lock is unchanged
+    # and no sys-crate, provider feature or Linux native library is added. The host's
+    # dlopen use needs only the C library, which the packaged image already requires.
+    # A Linux build of the linked binary remains unproven by this fence.
+    # The manager dependency added under cfg(target_os = "macos") is absent from
+    # Linux's production/build graph. Native Linux `cargo tree --locked --offline
+    # --target <triple> -e normal,build,features` is unchanged for both enrolled
+    # Linux architectures from the previously bound desktop manifest, including
+    # native provider features.
+    # Reviewed against manifest 3b7aac40d8 and lock 32fd3a4072 with cargo tree
+    # --locked --offline --target <triple> -e normal,build,features for both
+    # x86_64-unknown-linux-gnu and aarch64-unknown-linux-gnu. The only added
+    # resolved Linux feature is tokio/signal: tokio 1.54.1 already enables all
+    # its Unix dependency features through process (libc, mio/net, mio/os-ext,
+    # mio/os-poll, signal-hook-registry). No package or native provider feature
+    # changes. Non-root lock records are identical; the root only adds macOS
+    # objc2 dependencies. This refresh admits source drift, not new imported
+    # symbol or minimum-host proof; the native artifact restrictions still apply.
+    # Later source-level review of the manifest and lock diffs: the macOS AppKit
+    # dependencies (objc2, objc2-app-kit, objc2-foundation) sit under macOS-target tables
+    # and an optional platform feature, so they are absent from the Linux graph. The
+    # platform test-support feature is empty and the desktop selects it only as a
+    # dev-dependency. The unix-target tokio "signal" feature adds no package and, per the
+    # note above, tokio's process feature already enables its Unix signal dependencies.
+    # This is declaration-level evidence; a Linux cargo tree was not rerun for it.
+    # The optional native-automation feature adds the WebDriver plugin and its
+    # separate GLib/GIO graph to the lock. Locked offline default normal/build
+    # trees were checked for both Linux architectures: GTK/GDK 0.18, GLib/GIO
+    # 0.18, WebKit2GTK 2.0.2 and soup3 0.5 remain the distributed providers.
+    # This admits only the default distributed graph. The automation host's
+    # extra prerequisites and Linux artifact/minimum-host proof remain separate.
+    # The desktop crate later gained schemars 1.2.3 (derive, std) as a dev-dependency only, so
+    # the host's tests can derive the agent snapshot's schema; the lock adds schemars_derive
+    # 1.2.3 and serde_derive_internals 0.30.0, both proc-macro build-time crates of that test
+    # graph. Locked offline `cargo tree --target <triple> -e normal,build,features` is
+    # identical before and after for both x86_64- and aarch64-unknown-linux-gnu: no package,
+    # feature or native provider enters the distributed Linux graph. Source/feature evidence
+    # only, as above; Linux artifact and minimum-host proof remain separate.
+    "native/desktop/src-tauri/Cargo.lock": "af3ee99249af90a202106ec481979c3a92b8a505f519b67960b26c3866dc904b",
+    "native/desktop/src-tauri/Cargo.toml": "e5fd5ff6c7407545cb41f353adc6cff231af43423309f18f7dab713a8cfe85ce",
+    # The application manifest later gained only a [[test]] target (service_diagnostics,
+    # required-features diagnostics-test-support, an existing feature): no dependency,
+    # feature or Linux graph change. Declaration-level evidence.
+    "native/application/Cargo.toml": "34f891cada42022f7f530ee9d1611fa799ab7893d181668f313b484abac7da8a",
+    "native/platform/Cargo.toml": "7b47f615156cee781579b50b3d2ad66a3996a431ad84830ecd9150845ada6c12",
 }
 
 
@@ -151,16 +204,30 @@ def stage(root: Path, layout: dict[str, Any]) -> None:
         path.write_text(json.dumps(declaration(layout), indent=2) + "\n", encoding="utf-8")
 
 
+def _validate_desktop_manifest(path: Path, layout: dict[str, object], target: str, files: dict[str, str]) -> None:
+    if layout["platform"] != target:
+        raise ValueError("Linux desktop prerequisite target differs from payload")
+    if not path.is_file() or path.is_symlink() or digest(path) != files.get(MANIFEST):
+        raise ValueError("Linux desktop prerequisite manifest is missing or modified")
+    if json.loads(path.read_text(encoding="utf-8")) != json.loads(json.dumps(declaration(layout))):
+        raise ValueError("Linux desktop prerequisite manifest differs from canonical policy")
+
+
+def _declares_desktop(layout: dict[str, object], target: str, files: dict[str, str]) -> bool:
+    canonical = next(item for item in application_images(load_layout(target)) if item.desktop)
+    desktop = canonical.package_path in files or any(
+        item.desktop and item.package_path in files for item in application_images(layout)
+    )
+    return desktop
+
+
 def validate_payload(root: Path, manifest: dict[str, Any]) -> bool:
     """Check the metadata bytes and exact image association against the canonical policy."""
     layout = manifest["layout"]
     if not manifest["build"]["target"].startswith("linux-"):
         return False
     image = desktop_path(layout)
-    canonical = next(item for item in application_images(load_layout(manifest["build"]["target"])) if item.desktop)
-    desktop = canonical.package_path in manifest["files"] or any(
-        item.desktop and item.package_path in manifest["files"] for item in application_images(layout)
-    )
+    desktop = _declares_desktop(layout, manifest["build"]["target"], manifest["files"])
     if desktop and image is None:
         raise ValueError("Linux desktop payload lacks its canonical runtime policy")
     path = root / MANIFEST
@@ -168,12 +235,7 @@ def validate_payload(root: Path, manifest: dict[str, Any]) -> bool:
         if path.exists() or MANIFEST in manifest["files"]:
             raise ValueError("Runtime-only payload contains desktop prerequisite metadata")
         return False
-    if layout["platform"] != manifest["build"]["target"]:
-        raise ValueError("Linux desktop prerequisite target differs from payload")
-    if not path.is_file() or path.is_symlink() or digest(path) != manifest["files"].get(MANIFEST):
-        raise ValueError("Linux desktop prerequisite manifest is missing or modified")
-    if json.loads(path.read_text(encoding="utf-8")) != json.loads(json.dumps(declaration(layout))):
-        raise ValueError("Linux desktop prerequisite manifest differs from canonical policy")
+    _validate_desktop_manifest(path, layout, manifest["build"]["target"], manifest["files"])
     return True
 
 
@@ -181,7 +243,7 @@ def package_requirements(package_format: Literal["deb", "rpm"]) -> tuple[str, ..
     """Project explicit provider alternatives with the same bound on every branch."""
     if package_format not in {"deb", "rpm"}:
         raise ValueError("Unsupported Linux dependency format")
-    clauses = []
+    clauses: list[str] = []
     for requirement in REQUIREMENTS:
         if package_format == "deb":
             suffix = f" (>= {requirement.minimum})" if (requirement.minimum is not None and requirement.minimum) else ""
@@ -214,7 +276,7 @@ def main() -> None:
     arguments = parser.parse_args()
     manifest = json.loads((arguments.payload / "data/package-manifest.json").read_text(encoding="utf-8"))
     included = validate_payload(arguments.payload, manifest)
-    lines = []
+    lines: list[str] = []
     for package_format in ("deb", "rpm"):
         value = ", ".join(package_requirements(package_format)) if included else ""
         lines.append(f"set(CADRUMO_LINUX_{package_format.upper()}_DESKTOP_DEPENDS [=[{value}]=])")

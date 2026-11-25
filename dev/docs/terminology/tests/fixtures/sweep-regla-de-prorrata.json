@@ -100,7 +100,7 @@
       "score": 0.872954
     },
     {
-      "path": "dev/docs/preprocess/_golden_queries.py",
+      "path": "dev/docs/preprocess/golden_queries.py",
       "line_start": 85,
       "line_end": 119,
       "score": 0.843825

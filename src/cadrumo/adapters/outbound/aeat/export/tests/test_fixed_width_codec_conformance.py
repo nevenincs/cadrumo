@@ -35,20 +35,27 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft, registry_schema_version
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.errors import ModeloExportError
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
+from ......core.field_origin import FieldOrigin
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_CENTURY_START = _YEAR // 100 * 100
+_REVISION_ID = revision_covering("200", _YEAR).id
 
 
 def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
     """Build the minimal public producer snapshot required by the renderer."""
     amendment = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )
@@ -65,7 +72,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
             full_name="Ana Prueba",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,
@@ -80,24 +87,24 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
 
 
 def _draft() -> ModeloDraft:
-    stamped = datetime(2026, 8, 10, tzinfo=UTC)
+    stamped = datetime(_YEAR, 8, 10, tzinfo=UTC)
     return ModeloDraft(
         draft_id="canonical-codec-proof",
         modelo="200",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=RegistrySnapshotRef(
             modelo="200",
-            revision_id="2025",
-            modelo_year=2026,
+            revision_id=_REVISION_ID,
+            modelo_year=_YEAR,
             period="1T",
         ),
         status=ModeloDraftStatus.APROBADO,
         values=(),
         created_at=stamped,
         updated_at=stamped,
-        schema_version=registry_schema_version(modelo="200", revision_id="2025"),
+        schema_version=registry_schema_version(modelo="200", revision_id=_REVISION_ID),
     )
 
 
@@ -228,9 +235,19 @@ def _adapter_bytes(record: ExportRecordDefinition, values: Mapping[CasillaId, st
 @pytest.mark.parametrize(
     ("values", "expected"),
     (
-        ({"01": "7", "02": "2.005", "03": "1.25", "04": "true", "05": "", "06": "2026"}, b"A000700020100125X026"),
-        ({"01": "0", "02": "-12.34", "03": "0", "04": "false", "05": "1", "06": "2000"}, b"A0000N0123400000 100"),
-        ({"01": "0", "02": "0", "03": "0", "04": "", "05": "0", "06": "1999"}, b"A000000000000000 099"),
+        # The final-two-digits policy: a current year, the first year of its century and the year before it.
+        (
+            {"01": "7", "02": "2.005", "03": "1.25", "04": "true", "05": "", "06": str(_YEAR)},
+            b"A000700020100125X0" + str(_YEAR)[-2:].encode(),
+        ),
+        (
+            {"01": "0", "02": "-12.34", "03": "0", "04": "false", "05": "1", "06": str(_CENTURY_START)},
+            b"A0000N0123400000 1" + b"00",
+        ),
+        (
+            {"01": "0", "02": "0", "03": "0", "04": "", "05": "0", "06": str(_CENTURY_START - 1)},
+            b"A000000000000000 0" + b"99",
+        ),
     ),
 )
 def test_application_and_adapter_emit_identical_exact_bytes(
@@ -310,7 +327,7 @@ def test_application_and_adapter_refuse_the_same_invalid_values(field_id: Casill
         "03": "1.25",
         "04": "true",
         "05": "1",
-        "06": "2026",
+        "06": str(_YEAR),
     }
     values[field_id] = invalid
 
@@ -328,7 +345,7 @@ def test_unsigned_negative_is_refused_by_both_active_renderers() -> None:
         "03": "1.25",
         "04": "true",
         "05": "1",
-        "06": "2026",
+        "06": str(_YEAR),
     }
 
     with pytest.raises(FilingExportValidationError):
@@ -353,7 +370,7 @@ def test_absent_optional_numeric_renders_alike_in_both_active_renderers(omitted:
         "03": "1.25",
         "04": "true",
         "05": "1",
-        "06": "2026",
+        "06": str(_YEAR),
     }
     del values["01"]
     values.update(omitted)
@@ -376,7 +393,7 @@ def test_absent_required_numeric_is_refused_by_both_active_renderers() -> None:
         "03": "1.25",
         "04": "true",
         "05": "1",
-        "06": "2026",
+        "06": str(_YEAR),
     }
 
     with pytest.raises(FilingExportValidationError):

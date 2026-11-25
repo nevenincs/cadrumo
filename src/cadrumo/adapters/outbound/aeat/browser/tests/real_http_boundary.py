@@ -17,11 +17,12 @@ from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from email.utils import formatdate
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Final, cast, override
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -55,6 +56,10 @@ _REPRESENTATION_URL: Final[str] = f"{_DOMAINS.www6}{_CLAVE_MOVIL.dialogo_represe
 _PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{PRE303.presentation_service_path}"
 _PERMANENTE_IDP_URL: Final[str] = f"https://se-pasarela.{urlsplit(_DOMAINS.clave).netloc}/idp/login"
 _DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_CENSAL_PATH: Final[str] = EXTERNAL.aeat.sede_paths.censal_datos
+_CHURN_EPOCH: Final[float] = (datetime.now(UTC) + timedelta(days=365 * 70)).timestamp()
+#: The synthetic taxpayer the stood-in Sede shows as signed in, unless a test signs in someone else.
+SIGNED_IN_NIF: Final[str] = "12345678Z"
 #: Registrable domains whose hosts the tunnel stands in for; any other host is refused.
 _STOOD_IN_DOMAINS: Final[tuple[str, ...]] = (_DOMAINS.host_suffix, urlsplit(_DOMAINS.clave).netloc)
 
@@ -175,6 +180,11 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         if self.path == "/clave-success":
             self.send_header("Set-Cookie", "AEAT_SESSION=real-boundary; Path=/; Secure; SameSite=Lax")
+        if self.path == "/signed-out-churn":
+            # AEAT slides a signed-out balancer cookie's expiry forward on every response.
+            boundary = cast("_BoundaryServer", self.server).boundary
+            expires = formatdate(_CHURN_EPOCH + 60 * boundary.next_churn(), usegmt=True)
+            self.send_header("Set-Cookie", f"AEAT_BALANCER=node-1; Path=/; Secure; Expires={expires}")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -193,6 +203,13 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
             html = (
                 "<p>No ha sido posible generar una nueva petición de autenticación con Cl@ve Móvil. "
                 "Rechace la petición pendiente en la APP Cl@ve.</p>"
+            )
+        elif self.path == "/clave-movil-waiting":
+            # AEAT's push waiting page: it shows the verification code and only
+            # leaves when the phone approves, which this scenario never does.
+            html = (
+                "<main><p>Confirme la petición en la APP Cl@ve Móvil.</p>"
+                '<p>Código de verificación <span id="spanCodigoVerificacion">K7Q2</span></p></main>'
             )
         elif self.path == "/clave-movil-selector-representation":
             html = (
@@ -233,8 +250,21 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
             """
         elif self.path == "/clave-permanente-invalid":
             html = f"<p>{_CLAVE_PERMANENTE.invalid_credentials_marker}</p>"
+        elif self.path == "/censal-consulta":
+            html = _censal_consulta_html(boundary.signed_in_nif)
+        elif self.path == "/censal-consulta-represented" and boundary.represented_nif is not None:
+            html = _censal_consulta_html(boundary.represented_nif)
+        elif self.path == "/signed-out-churn":
+            # The page's own script, as AEAT's pages keep their own local state.
+            html = "<html><body><script>localStorage.setItem('visit', String(Date.now()))</script></body></html>"
         else:
-            html = "<html><title>real-auth-boundary</title></html>"
+            # Every other page carries Mis Expedientes' heading, which names the signed-in person.
+            html = (
+                "<html><title>real-auth-boundary</title><body><ul><li>"
+                "<strong>Persona consultada:</strong> "
+                f"<span><span>{boundary.signed_in_nif} - CONTRIBUYENTE SINTETICO</span></span>"
+                "</li></ul></body></html>"
+            )
         return html.encode("utf-8")
 
     @override
@@ -242,12 +272,33 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
         del format, args
 
 
+def _censal_consulta_html(nif: str) -> str:
+    """The censal consulta landing, as AEAT renders its identity table to the signed-in taxpayer."""
+    return f"""
+    <html><body><h1>Consulta de Datos Identificativos y Censales</h1>
+    <table class="celdasConBorde" title="Datos Identificativos del Contribuyente">
+      <tr><td><b>NIF</b></td><td>{nif}</td></tr>
+      <tr><td><b>Apellidos y Nombre</b></td><td>CONTRIBUYENTE SINTETICO</td></tr>
+    </table></body></html>
+    """
+
+
 class LocalHttpBoundary:
-    """Serve real HTTP responses while Playwright retains the requested AEAT URL."""
+    """Serve real HTTP responses while Playwright retains the requested AEAT URL.
+
+    The censal consulta and Mis Expedientes show :attr:`signed_in_nif` as the
+    signed-in person, whatever the scenario, so a test signs in someone else by
+    setting it. Setting :attr:`represented_nif` signs that person in as a
+    representative of another taxpayer: a consulta asked for that taxpayer as
+    ``nifRepresentado`` then shows the taxpayer's data.
+    """
 
     def __init__(self) -> None:
         self.scenario = "success"
+        self.signed_in_nif = SIGNED_IN_NIF
+        self.represented_nif: str | None = None
         self.response_html: str | None = None
+        self._churn = 0
         self.navigation_count = 0
         self.requested_urls: list[str] = []
         self.request_started = threading.Event()
@@ -306,6 +357,12 @@ class LocalHttpBoundary:
             self.requested_urls.append(requested_url)
             return self._local_path_for_request(requested_url)
 
+    def next_churn(self) -> int:
+        """Count one more signed-out response, so each slides its cookie's expiry further."""
+        with self._record_lock:
+            self._churn += 1
+            return self._churn
+
     def _retry_path(self) -> str | None:
         scenario = self.scenario
         if scenario == "first-failure-then-success":
@@ -342,6 +399,12 @@ class LocalHttpBoundary:
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
             )
+        if scenario == "clave-movil-approval-never-arrives":
+            return (
+                "/clave-movil-selector-pending"
+                if _CLAVE_MOVIL.selector_access_path_marker in requested_url
+                else "/clave-movil-waiting"
+            )
         if scenario not in {
             "clave-movil-representation",
             "clave-movil-representation-missing",
@@ -376,8 +439,30 @@ class LocalHttpBoundary:
             )
         return None
 
+    def _censal_path(self, requested_url: str) -> str | None:
+        requested = urlsplit(requested_url)
+        if requested.path != _CENSAL_PATH:
+            return None
+        if self.represented_nif is not None and parse_qs(requested.query).get("nifRepresentado") == [
+            self.represented_nif
+        ]:
+            return "/censal-consulta-represented"
+        return "/censal-consulta"
+
+    def _signed_out_churn_path(self, requested_url: str) -> str | None:
+        """Serve a signed-out Sede: pages load, and the protected Cl@ve landing a verification probes fails."""
+        if self.scenario != "signed-out-churn":
+            return None
+        return "/failure" if requested_url == _DEFAULT_CLAVE_TARGET_URL else "/signed-out-churn"
+
     def _local_path_for_request(self, requested_url: str) -> str:
-        for resolver in (self._retry_or_failure_path, self._clave_movil_path, self._clave_permanente_path):
+        for resolver in (
+            self._censal_path,
+            self._signed_out_churn_path,
+            self._retry_or_failure_path,
+            self._clave_movil_path,
+            self._clave_permanente_path,
+        ):
             local_path = resolver(requested_url)
             if local_path is not None:
                 return local_path
@@ -395,8 +480,9 @@ class LocalHttpBoundary:
             return
         await route.fulfill(response=response)
 
-    async def wait_until_blocked(self) -> None:
-        started = await asyncio.to_thread(self.request_started.wait, 10)
+    async def wait_until_blocked(self, *, timeout_seconds: float = 10.0) -> None:
+        """Wait for the request, within the caller's navigation budget."""
+        started = await asyncio.to_thread(self.request_started.wait, timeout_seconds)
         if not started:
             raise AssertionError("real HTTP boundary did not observe the blocking navigation")
 
@@ -488,6 +574,9 @@ async def open_real_browser_session(
     settings, so a redirect hop the route never sees is still served locally;
     the route's own loopback fetches bypass it.
 
+    The launch guard locates the browser by the completion markers of its
+    builds in the shared browser cache.
+
     The browser always launches headless. The routed pages are read by the
     test, never by a person, and a provider that asks for a visible window (a
     fresh Cl@ve Movil login, so the operator can scan its QR) would otherwise
@@ -527,6 +616,7 @@ async def open_real_browser_session(
 
 
 __all__ = [
+    "SIGNED_IN_NIF",
     "LocalHttpBoundary",
     "RoutedStealthEvasion",
     "open_real_browser_session",

@@ -1,0 +1,172 @@
+"""Which withholding modelo receives what, as the registry declares it.
+
+The periodic self-assessments, the form each income kind settles through and the
+periodic form each annual summary draws on are form data, so the
+``withholding-modelo-routing`` fact declares them. Code keeps only what it means by
+an income kind and which kinds a given kind of evidence can prove.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final
+
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.modelo import Modelo
+from ...domain.calculations.registry.form_codes import FormCodes, form_codes_in_scope, resolve_form_codes
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
+from .withholding_recognition import WithholdingIncomeKind
+
+_ROUTING_FACT: Final = "withholding-modelo-routing"
+
+LEDGER_PAID_INCOME_KINDS: Final[frozenset[WithholdingIncomeKind]] = frozenset(
+    {WithholdingIncomeKind.WORK, WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL, WithholdingIncomeKind.PRIZE},
+)
+"""The income kinds the paying ledger transaction proves."""
+
+INVOICE_EVIDENCED_INCOME_KINDS: Final[frozenset[WithholdingIncomeKind]] = frozenset(
+    {WithholdingIncomeKind.WORK, WithholdingIncomeKind.PROFESSIONAL, WithholdingIncomeKind.URBAN_RENT},
+)
+"""The income kinds a received invoice proves; capital income is evidenced by its payment."""
+
+
+@dataclass(frozen=True, slots=True)
+class AnnualWithholdingComposition:
+    """How one annual modelo composes its per-perceptor-clave source.
+
+    ``periodic_percepciones`` names the periodic modelo whose active projections
+    replace the annual window; ``None`` reads the modelo's own window.
+    ``capital_disclosure_retenciones`` names the periodic retencion modelo whose
+    captured capital allocations materialise disclosure phases next to that window;
+    ``None`` adds no phase rows.
+    """
+
+    periodic_percepciones: Modelo | None = None
+    capital_disclosure_retenciones: Modelo | None = None
+
+    @property
+    def periodic_source(self) -> Modelo | None:
+        """Return the periodic modelo whose quarterly windows this composition reads, if any."""
+        return self.periodic_percepciones or self.capital_disclosure_retenciones
+
+
+def _routing(authority: GovernedFactSource | None = None) -> FormCodes:
+    return resolve_form_codes(_ROUTING_FACT, authority=authority)
+
+
+def periodic_withholding_modelos(*, authority: GovernedFactSource | None = None) -> tuple[str, ...]:
+    """Return the periodic withholding modelos captured withholding is placed in."""
+    return _routing(authority).ordered_codes("periodic.modelos")
+
+
+def periodic_withholding_modelos_in_scope() -> tuple[str, ...]:
+    """Return the periodic modelos for a model validator; a client outside every scope has none to check."""
+    routing = form_codes_in_scope(_ROUTING_FACT)
+    return () if routing is None else routing.ordered_codes("periodic.modelos")
+
+
+def modelo_for_income_kind(income_kind: WithholdingIncomeKind) -> str | None:
+    """Return the periodic modelo ``income_kind`` settles through, or ``None`` when no route is declared."""
+    return _routing().under("income_kind").get(income_kind.value)
+
+
+def _modelos_for(kinds: frozenset[WithholdingIncomeKind]) -> frozenset[str]:
+    routes = _routing().under("income_kind")
+    return frozenset(routes[kind.value] for kind in kinds)
+
+
+def ledger_payment_modelos() -> frozenset[str]:
+    """Return the periodic modelos a ledger payment can evidence."""
+    return _modelos_for(LEDGER_PAID_INCOME_KINDS)
+
+
+def invoice_evidence_modelos() -> frozenset[str]:
+    """Return the periodic modelos a received invoice can evidence."""
+    return _modelos_for(INVOICE_EVIDENCED_INCOME_KINDS)
+
+
+def require_invoice_evidence_modelo(value: str) -> str:
+    """Return ``value`` unless the scope's routing says a received invoice cannot evidence it.
+
+    The wire models validate with this, and a client reading a result holds no authority.
+    """
+    if form_codes_in_scope(_ROUTING_FACT) is not None and value not in invoice_evidence_modelos():
+        raise ValueError(f"a received invoice evidences no withholding on modelo {value!r}")
+    return value
+
+
+def refuses_ledger_payment_evidence(modelo: str) -> bool:
+    """Report whether the scope's routing says a ledger payment cannot evidence ``modelo``.
+
+    A model validator reads this; a client outside every scope has nothing to decide.
+    """
+    return form_codes_in_scope(_ROUTING_FACT) is not None and modelo not in ledger_payment_modelos()
+
+
+def annual_withholding_composition(modelo: str) -> AnnualWithholdingComposition:
+    """Return how annual ``modelo`` composes its source; a modelo no route names reads its own window."""
+    routing = _routing()
+    percepciones = routing.under("annual.periodic_percepciones").get(modelo)
+    disclosure = routing.under("annual.capital_disclosure_retenciones").get(modelo)
+    return AnnualWithholdingComposition(
+        periodic_percepciones=Modelo(percepciones) if percepciones is not None else None,
+        capital_disclosure_retenciones=Modelo(disclosure) if disclosure is not None else None,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class WithholdingTotalRoute:
+    """The two boxes through which an annual summary's withholding total is compared.
+
+    ``summary_casilla_id`` is the summary's own total of retenciones e ingresos a
+    cuenta, and ``periodic_casilla_id`` the box of each ``periodic_modelo`` return
+    that totals the same withholding for its period.
+    """
+
+    summary_casilla_id: CasillaId
+    periodic_modelo: Modelo
+    periodic_casilla_id: CasillaId
+
+
+def withholding_total_route(modelo: str) -> WithholdingTotalRoute | None:
+    """Return how ``modelo``'s withholding total meets its periodic returns, or ``None`` when no route is declared.
+
+    A summary that declares a total also names the periodic modelo it restates,
+    and that modelo declares its own total box; either missing is a registry
+    defect, refused rather than read as nothing to compare.
+    """
+    routing = _routing()
+    summary = routing.under("annual.retenciones_total").get(modelo)
+    if summary is None:
+        return None
+    periodic = routing.under("annual.periodic_percepciones").get(modelo) or routing.code(
+        f"annual.source_observations.{modelo}"
+    )
+    return WithholdingTotalRoute(
+        summary_casilla_id=validated_casilla_id(summary),
+        periodic_modelo=Modelo(periodic),
+        periodic_casilla_id=validated_casilla_id(routing.code(f"periodic.retenciones_total.{periodic}")),
+    )
+
+
+def annual_source_observations_modelo(modelo: str) -> str | None:
+    """Return the periodic modelo whose annual observations ``modelo`` restates, if it declares one."""
+    return _routing().under("annual.source_observations").get(modelo)
+
+
+__all__ = [
+    "INVOICE_EVIDENCED_INCOME_KINDS",
+    "LEDGER_PAID_INCOME_KINDS",
+    "AnnualWithholdingComposition",
+    "WithholdingTotalRoute",
+    "annual_source_observations_modelo",
+    "annual_withholding_composition",
+    "invoice_evidence_modelos",
+    "ledger_payment_modelos",
+    "modelo_for_income_kind",
+    "periodic_withholding_modelos",
+    "periodic_withholding_modelos_in_scope",
+    "refuses_ledger_payment_evidence",
+    "require_invoice_evidence_modelo",
+    "withholding_total_route",
+]

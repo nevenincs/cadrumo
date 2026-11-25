@@ -5,13 +5,20 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final, cast
 
+from pydantic import BaseModel
+
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.field_absence import later_absent_when_empty, later_absent_when_none
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 
 from .semantic_map import SemanticMap
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
+LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
 """Shape of the projection ``normalised_loader_semantics`` attests.
 
 Every committed manifest's ``loader_semantic_sha256`` is a digest of this
@@ -62,6 +69,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "part",
         "required_with",
         "requirement",
+        "party_name",
     },
 )
 
@@ -102,12 +110,14 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "id",
         "format",
         "dictionary_source_ref",
+        "input_dictionary_source_ref",
         "source_refs",
         "legal_refs",
         "records",
         "filing_envelope",
         "auxiliary_envelope_header",
         "dictionary_path_overrides",
+        "dictionary_row_targets",
         "aux_idioma",
     },
 )
@@ -119,6 +129,8 @@ _RECORD_KEYS: Final[frozenset[str]] = frozenset(
         "record_type",
         "order",
         "encoding",
+        "alphanumeric_text",
+        "alphanumeric_text_source_ref",
         "line_ending",
         "required",
         "repeat",
@@ -159,6 +171,11 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "value_policy",
         "allowed_values",
         "minimum_year",
+        "presence_marker",
+        "absent_fill",
+        "scheme_period_part",
+        "scheme_period_type",
+        "party_name",
         "legal_refs",
         "source_refs",
     },
@@ -177,6 +194,11 @@ _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "design_type",
     "literal_fact",
     "minimum_year",
+    "presence_marker",
+    "absent_fill",
+    "scheme_period_part",
+    "scheme_period_type",
+    "party_name",
 )
 
 
@@ -184,6 +206,11 @@ _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "req
 
 
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
+
+
+_DICTIONARY_ROW_TARGET_KEYS: Final[frozenset[str]] = frozenset(
+    {"field_id", "casilla_id", "dictionary_source_ref", "dictionary_line", "xsd_source_ref", "xsd_element"},
+)
 
 
 def semantic_map_digest(semantic_map: SemanticMap) -> str:
@@ -194,7 +221,7 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
     normalised_entries = [_normalise_semantic_map_entry(entry) for entry in entries]
     normalised_entries.sort(key=_semantic_entry_sort_key)
     records = _as_object_list(payload["records"], subject="semantic-map records")
-    normalised_records = [_normalise_semantic_map_record(record) for record in records]
+    normalised_records = [normalise_semantic_map_record(record) for record in records]
     normalised_records.sort(key=_semantic_record_sort_key)
     variable_envelopes = _as_object_list(payload["variable_envelopes"], subject="semantic-map variable envelopes")
     normalised_variable_envelopes = [_normalise_variable_envelope_contract(envelope) for envelope in variable_envelopes]
@@ -222,7 +249,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     lookup or fallback surface. Exact-key checks are deliberate: an added loader
     schema field refuses until this projection and its version are reviewed.
     """
-    payload = loaded_layout.model_dump(mode="json")
+    payload = _with_later_absent_keys(loaded_layout.model_dump(mode="json"), ExportLayoutDefinition)
     _require_exact_keys(payload, _LAYOUT_KEYS, subject="loader export layout")
     records = [_normalise_loader_record(item) for item in _as_object_list(payload["records"], subject="loader records")]
     records.sort(key=_loader_record_sort_key)
@@ -232,7 +259,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     ]
     overrides.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary override field_id"))
     projected: dict[str, object] = {
-        "loader_semantic_schema_version": _LOADER_SEMANTIC_SCHEMA_VERSION,
+        "loader_semantic_schema_version": LOADER_SEMANTIC_SCHEMA_VERSION,
         "id": payload["id"],
         "format": payload["format"],
         "dictionary_source_ref": payload["dictionary_source_ref"],
@@ -245,6 +272,15 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     }
     # Projected only when declared, so a layout without the member attests
     # byte-identical semantics to the projection that preceded it.
+    row_targets = [
+        _normalise_dictionary_row_target(item)
+        for item in _as_object_list(payload["dictionary_row_targets"], subject="loader dictionary row targets")
+    ]
+    if row_targets:
+        row_targets.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary row target field_id"))
+        projected["dictionary_row_targets"] = row_targets
+    if payload["input_dictionary_source_ref"] is not None:
+        projected["input_dictionary_source_ref"] = payload["input_dictionary_source_ref"]
     if payload["auxiliary_envelope_header"] is not None:
         projected["auxiliary_envelope_header"] = payload["auxiliary_envelope_header"]
     return projected
@@ -269,10 +305,11 @@ def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, 
     return tuple(sorted(drift))
 
 
-def _omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+def omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+    """Drop field keys that are present only when declared and are None or already left out."""
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
-        if field[key] is None:
-            del field[key]
+        if field.get(key) is None:
+            field.pop(key, None)
     return field
 
 
@@ -304,6 +341,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         **({"part": payload["part"]} if payload["part"] is not None else {}),
         **({"required_with": payload["required_with"]} if payload["required_with"] is not None else {}),
         **({"requirement": payload["requirement"]} if payload["requirement"] is not None else {}),
+        **({"party_name": payload["party_name"]} if payload["party_name"] is not None else {}),
     }
 
 
@@ -390,7 +428,8 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
     )
 
 
-def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+def normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+    """Validate and normalise a semantic map record, including its optional discriminator."""
     _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
     discriminator = payload["discriminator"]
     normalised_discriminator: dict[str, object] | None = None
@@ -448,7 +487,21 @@ def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, 
     )
 
 
-def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]:
+def _with_later_absent_keys(payload: Mapping[str, object], model: type[BaseModel]) -> Mapping[str, object]:
+    """Read a later field the dump leaves out while it holds nothing as its declared empty value."""
+    absent: dict[str, object] = {}
+    for name, model_field in model.model_fields.items():
+        if name in payload:
+            continue
+        if model_field.exclude_if is later_absent_when_none:
+            absent[name] = None
+        elif model_field.exclude_if is later_absent_when_empty:
+            absent[name] = []
+    return {**payload, **absent} if absent else payload
+
+
+def _normalise_loader_record(raw: Mapping[str, object]) -> dict[str, object]:
+    payload = _with_later_absent_keys(raw, ExportRecordDefinition)
     _require_exact_keys(payload, _RECORD_KEYS, subject="loader export record")
     fields = [
         _normalise_loader_field(item) for item in _as_object_list(payload["fields"], subject="loader record fields")
@@ -465,7 +518,7 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
             "length": discriminator_payload["length"],
             "requires": discriminator_payload["requires"],
         }
-    return {
+    normalised: dict[str, object] = {
         "id": payload["id"],
         "record_type": payload["record_type"],
         "order": payload["order"],
@@ -479,9 +532,16 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
         "requires_positive_casilla_id": payload["requires_positive_casilla_id"],
         "fields": fields,
     }
+    # A record whose design states no text rule projects as it did before the
+    # rule existed, so only a tree that declares one attests a new digest.
+    if payload["alphanumeric_text"] is not None:
+        normalised["alphanumeric_text"] = payload["alphanumeric_text"]
+        normalised["alphanumeric_text_source_ref"] = payload["alphanumeric_text_source_ref"]
+    return normalised
 
 
-def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
+def _normalise_loader_field(raw: Mapping[str, object]) -> dict[str, object]:
+    payload = _with_later_absent_keys(raw, ExportFieldDefinition)
     _require_exact_keys(payload, _FIELD_KEYS, subject="loader export field")
     normalised: dict[str, object] = {
         "id": payload["id"],
@@ -509,7 +569,7 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
     }
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
         normalised[key] = payload[key]
-    return _omit_undeclared_field_keys(normalised)
+    return omit_undeclared_field_keys(normalised)
 
 
 #: Projected arrays whose members carry a stable identity, keyed by the member
@@ -518,6 +578,7 @@ _IDENTIFIED_PROJECTION_ARRAYS: Final[Mapping[str, str]] = {
     "records": "id",
     "fields": "id",
     "dictionary_path_overrides": "field_id",
+    "dictionary_row_targets": "field_id",
 }
 
 
@@ -621,6 +682,11 @@ def _normalise_dictionary_override(payload: Mapping[str, object]) -> dict[str, o
         "path": payload["path"],
         "reason": payload["reason"],
     }
+
+
+def _normalise_dictionary_row_target(payload: Mapping[str, object]) -> dict[str, object]:
+    _require_exact_keys(payload, _DICTIONARY_ROW_TARGET_KEYS, subject="loader dictionary row target")
+    return {key: payload[key] for key in sorted(_DICTIONARY_ROW_TARGET_KEYS)}
 
 
 def _require_exact_keys(payload: Mapping[str, object], expected: frozenset[str], *, subject: str) -> None:

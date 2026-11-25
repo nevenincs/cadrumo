@@ -9,14 +9,14 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.auth.operator_probes import (
-    _active_profile_path_values,
+    active_profile_path_values,
     live_auth_identity_state,
     probe_clave_credentials,
 )
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
-from ._operator_probe_fakes import fake_operator_probe_ports
+from ...tests.operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -26,7 +26,7 @@ _LOCKED_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_
 def test_the_profile_read_is_declined_when_no_session_is_bound() -> None:
     """The guarantee itself: no session means no read is attempted."""
 
-    assert _active_profile_path_values(operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS) == {}
+    assert active_profile_path_values(operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS) == {}
 
 
 def test_the_credential_probe_reports_nothing_from_an_unread_profile() -> None:

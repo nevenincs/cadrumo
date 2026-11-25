@@ -34,7 +34,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from ..build_scratch_reclaim import VAR_SCRATCH_FAMILIES, ScratchFamily, matching_family
 
@@ -88,6 +88,9 @@ _BODY_STANDIN: Final[str] = "BODY"
 #: is a deliberate act, and the wrong place to put a new build-scratch family.
 _NOT_VAR_SCRATCH: Final[frozenset[str]] = frozenset(
     {
+        # A checkout-root machine-managed cache the build storage admits a
+        # shared wheel cache below; it is compared against, never minted.
+        ".cache",
         ".git",
         ".github",
         ".gitignore",

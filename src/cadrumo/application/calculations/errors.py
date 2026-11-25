@@ -122,6 +122,17 @@ class BindingPrefillTypeError(CoreValidationError):
     """
 
 
+class PriorFilingPageQualifiedConflictError(CoreError):
+    """Raised when a stored earlier Modelo 200 return names one PyG box twice with different values.
+
+    A row written under an earlier authority keys a cuenta de pérdidas y
+    ganancias line by its bare number; a row can also carry the page-qualified id
+    that replaced it. When both are present and disagree, no single figure for the
+    box can be read, so the carry refuses rather than choose one. The context names
+    the return and the box, never the values.
+    """
+
+
 class ObservationKeyError(CoreValidationError):
     """Raised when an observation key component fails its repository contract.
 

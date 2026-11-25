@@ -65,9 +65,9 @@ def native(monkeypatch: pytest.MonkeyPatch) -> Iterator[_NativeFixture]:
     monkeypatch.setattr(linux_login, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(linux_logind_native, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(linux_logind_bus, "sys", SimpleNamespace(platform="linux"))
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", lambda: implementation)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_logind_native, "_ensure_pidfd_alive", lambda _: None)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", lambda: implementation)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_logind_native, "ensure_pidfd_alive", lambda _: None)
     yield implementation
 
 
@@ -123,7 +123,7 @@ def test_boot_change_invalidates_login_without_sampling_a_new_boot_session(
     native: _NativeFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     binding = capture_linux_login(17, expected_owner="1000")
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: UUID("22222222-2222-4222-8222-222222222222"))
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: UUID("22222222-2222-4222-8222-222222222222"))
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert not result.active and result.lock_state is OsLockState.UNKNOWN
     assert result.unattended is LoginEligibility.INELIGIBLE
@@ -165,7 +165,7 @@ def test_capture_requires_live_pidfd_before_and_after_snapshot(
         if calls == 2:
             raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(linux_logind_native, "_ensure_pidfd_alive", died_after_snapshot)
+    monkeypatch.setattr(linux_logind_native, "ensure_pidfd_alive", died_after_snapshot)
     with pytest.raises(RefusalError):
         capture_linux_login(17, expected_owner="1000")
     assert calls == 2 and native.peer_calls == [17, 17]
@@ -263,7 +263,7 @@ def _properties() -> list[tuple[bytes, bytes, object]]:
 @pytest.mark.unit
 def test_atomic_native_property_cursor_produces_only_supported_typed_evidence() -> None:
     library = _MessageFixture(_properties_events(_properties()))
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, library))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, library))
     assert bus.read_session_record(ctypes.c_void_p(17)).desktop() == _SESSION
     assert not library.events
 
@@ -284,14 +284,14 @@ def test_native_property_cursor_refuses_missing_duplicate_or_mistyped_evidence(d
         properties.append(properties[0])
     else:
         properties[2] = (b"TimestampMonotonic", b"u", 500_000)
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, _MessageFixture(_properties_events(properties))))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, _MessageFixture(_properties_events(properties))))
     with pytest.raises(RefusalError):
         bus.read_session_record(ctypes.c_void_p(17)).desktop()
 
 
 @pytest.mark.unit
 def test_expired_aggregate_deadline_refuses_without_a_native_wait(monkeypatch: pytest.MonkeyPatch) -> None:
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, object()))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, object()))
     monkeypatch.setattr(linux_login.time, "monotonic", lambda: bus.deadline)
     with pytest.raises(RefusalError):
         bus.remaining_usec()
@@ -327,7 +327,7 @@ def test_pidfd_native_session_allocation_is_freed_on_success_and_all_errors(defe
         session_result=-errno.ENODATA if defect == "session_error" else 0,
         owner_result=-errno.ESRCH if defect == "owner_error" else 0,
     )
-    native = linux_logind_native._NativeLogin.__new__(linux_logind_native._NativeLogin)
+    native = linux_logind_native.NativeLogin.__new__(linux_logind_native.NativeLogin)
     native.library = cast(ctypes.CDLL, library)
     native.libc = cast(ctypes.CDLL, library)
     if defect == "none":
@@ -379,7 +379,7 @@ class _CallFixture:
 @pytest.mark.parametrize("fail_at", [None, "new", "flags", "append", "call", "sender", "consumer"])
 def test_native_call_is_nonprompting_bounded_and_releases_all_message_handles(fail_at: str | None) -> None:
     library = _CallFixture(fail_at=fail_at, sender=b":1.8" if fail_at == "sender" else b":1.7")
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, library))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, library))
 
     def invoke() -> None:
         with bus.call(b":1.7", b"/session", b"org.freedesktop.DBus.Properties", b"GetAll", b"interface") as reply:
@@ -402,7 +402,7 @@ def test_native_call_is_nonprompting_bounded_and_releases_all_message_handles(fa
 @pytest.mark.unit
 def test_bus_daemon_lookup_cannot_accept_another_service_sender() -> None:
     library = _CallFixture(sender=b":1.7")
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, library))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, library))
     with (
         pytest.raises(RefusalError),
         bus.call(
@@ -506,7 +506,7 @@ def test_native_bus_startup_verifies_fixed_root_peer_bounds_handshake_and_closes
         "socket",
         SimpleNamespace(socket=lambda *_: connection, AF_UNIX=1, SOCK_STREAM=1, SOL_SOCKET=1, SO_PEERCRED=17),
     )
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, library))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, library))
     if defect is None:
         with bus:
             assert bus.remaining_usec() == 750_000
@@ -525,7 +525,7 @@ def test_native_bus_startup_verifies_fixed_root_peer_bounds_handshake_and_closes
 @pytest.mark.integration
 def test_native_current_process_capture_requires_an_actual_supported_desktop() -> None:
     try:
-        native = linux_logind_native._NativeLogin()
+        native = linux_logind_native.NativeLogin()
     except (RefusalError, OSError, AttributeError):
         pytest.skip("native libsystemd PIDFD symbols are unavailable")
     with _current_peer_pidfd() as pidfd:
@@ -572,7 +572,7 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -
 
 
 def _native_gnome_prerequisite(
-    native: linux_logind_native._NativeLogin,
+    native: linux_logind_native.NativeLogin,
     *,
     session_id: str,
     uid: int,
@@ -587,7 +587,7 @@ def _native_gnome_prerequisite(
         require_gnome_login_producer(uid)
         path = gnome_user_bus_path(uid)
         socket_identity = path.lstat()
-        with linux_logind_bus._SessionBus(native.library, path=path, peer_uid=uid) as bus:
+        with linux_logind_bus.SessionBus(native.library, path=path, peer_uid=uid) as bus:
             observed = sample_gnome_lock(
                 bus, uid=uid, session_id=session_id, peer_session=native.peer_session, expected=expected
             )
@@ -604,7 +604,7 @@ def _native_gnome_prerequisite(
     return None
 
 
-def _require_native_desktop(native: linux_logind_native._NativeLogin, pidfd: int) -> None:
+def _require_native_desktop(native: linux_logind_native.NativeLogin, pidfd: int) -> None:
     """Classify test prerequisites independently of the production property parser."""
     session = ctypes.c_void_p()
     try:
@@ -643,7 +643,7 @@ def _require_native_desktop(native: linux_logind_native._NativeLogin, pidfd: int
 @pytest.mark.skipif(sys.platform != "linux", reason="requires native Linux PIDFD login APIs")
 def test_native_peer_without_a_logind_session_refuses_and_keeps_borrowed_pidfd_open() -> None:
     try:
-        native = linux_logind_native._NativeLogin()
+        native = linux_logind_native.NativeLogin()
     except (RefusalError, OSError, AttributeError):
         pytest.skip("native libsystemd PIDFD symbols are unavailable")
     with _current_peer_pidfd() as pidfd:
@@ -665,7 +665,7 @@ def test_native_peer_without_a_logind_session_refuses_and_keeps_borrowed_pidfd_o
         assert refused.value.reason is RefusalCode.UNAVAILABLE
         assert not os.get_inheritable(pidfd)
         os.fstat(pidfd)
-        linux_logind_native._ensure_pidfd_alive(pidfd)
+        linux_logind_native.ensure_pidfd_alive(pidfd)
 
 
 @contextmanager
@@ -701,14 +701,14 @@ def _current_peer_pidfd() -> Generator[int]:
 @pytest.mark.skipif(sys.platform != "linux", reason="requires native Linux fixed system bus")
 def test_native_fixed_system_bus_handshake_and_nonexistent_session_refuse() -> None:
     try:
-        native = linux_logind_native._NativeLogin()
+        native = linux_logind_native.NativeLogin()
     except (RefusalError, OSError, AttributeError):
         pytest.skip("required native libsystemd API symbols are unavailable")
     try:
         os.stat("/run/dbus/system_bus_socket")
     except FileNotFoundError:
         pytest.skip("native fixed system bus socket is absent")
-    with linux_logind_bus._SessionBus(native.library) as bus:
+    with linux_logind_bus.SessionBus(native.library) as bus:
         # This independently exercises real startup and the bus-daemon C call.
         # The synthetic requested name is guaranteed to be a valid bus name.
         with bus.call(
@@ -746,14 +746,14 @@ class _InventoryPort:
         self.closed = False
         self.owner = b":1.7"
         self.root_uid = 0
-        self.table: tuple[linux_login_models._SessionReference, ...] = (
-            linux_login_models._SessionReference("c42", 1000, b"/org/freedesktop/login1/session/c42"),
+        self.table: tuple[linux_login_models.SessionReference, ...] = (
+            linux_login_models.SessionReference("c42", 1000, b"/org/freedesktop/login1/session/c42"),
         )
-        self.tables: deque[tuple[linux_login_models._SessionReference, ...]] = deque()
+        self.tables: deque[tuple[linux_login_models.SessionReference, ...]] = deque()
         self.records = {
-            "c42": linux_login_models._SessionRecord("c42", 1000, 500_000, "user", "wayland", "online", False)
+            "c42": linux_login_models.SessionRecord("c42", 1000, 500_000, "user", "wayland", "online", False)
         }
-        self.later: dict[str, linux_login_models._SessionRecord] = {}
+        self.later: dict[str, linux_login_models.SessionRecord] = {}
         self.calls: list[str] = []
         self.producer = "c42"
         self.locked = False
@@ -790,12 +790,12 @@ class _InventoryPort:
     def require_end(self, _reply: ctypes.c_void_p) -> None:
         pass
 
-    def sessions(self, _owner: bytes) -> tuple[linux_login_models._SessionReference, ...]:
+    def sessions(self, _owner: bytes) -> tuple[linux_login_models.SessionReference, ...]:
         return self.tables.popleft() if self.tables else self.table
 
     def session_record(
         self, _owner: bytes, session_id: str, *, expected_path: bytes
-    ) -> linux_login_models._SessionRecord:
+    ) -> linux_login_models.SessionRecord:
         assert expected_path.endswith(session_id.encode())
         self.calls.append(session_id)
         if self.failure:
@@ -814,8 +814,8 @@ def inventory_port(monkeypatch: pytest.MonkeyPatch) -> _InventoryPort:
     monkeypatch.setattr(linux_login, "posix_owner_uid", lambda: 1000)
     monkeypatch.setattr(linux_login, "time", SimpleNamespace(monotonic=lambda: port.clock))
     monkeypatch.setattr(linux_logind_bus, "time", SimpleNamespace(monotonic=lambda: port.clock))
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", lambda: SimpleNamespace(library=object()))
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", lambda: SimpleNamespace(library=object()))
 
     def open_bus(_library: object, *, deadline: float) -> _InventoryPort:
         port.deadline = deadline
@@ -834,8 +834,8 @@ def inventory_port(monkeypatch: pytest.MonkeyPatch) -> _InventoryPort:
             GnomeLockState(_BOOT, 1, port.locked, port.locked, "unlock-dialog" if port.locked else "user"),
         )
 
-    monkeypatch.setattr(linux_logind_bus, "_SessionBus", open_bus)
-    monkeypatch.setattr(linux_login, "_gnome_observation", sample)
+    monkeypatch.setattr(linux_logind_bus, "SessionBus", open_bus)
+    monkeypatch.setattr(linux_login, "gnome_observation", sample)
     return port
 
 
@@ -928,7 +928,7 @@ def test_owner_inventory_uncertain_native_rows_or_incarnations_never_prove_absen
         port.expire = True
     else:
         boots = iter((_BOOT, UUID("22222222-2222-4222-8222-222222222222")))
-        monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: next(boots))
+        monkeypatch.setattr(linux_logind_native, "boot_id", lambda: next(boots))
     result = linux_login.linux_login_inventory(expected_owner="1000")
     assert not result.complete and not result.logins
     assert result.eligibility is LoginEligibility.UNKNOWN and port.closed
@@ -937,7 +937,7 @@ def test_owner_inventory_uncertain_native_rows_or_incarnations_never_prove_absen
 @pytest.mark.unit
 def test_owner_inventory_does_not_assign_one_shell_producer_to_another_desktop(inventory_port: _InventoryPort) -> None:
     port = inventory_port
-    port.table += (linux_login_models._SessionReference("c43", 1000, b"/org/freedesktop/login1/session/c43"),)
+    port.table += (linux_login_models.SessionReference("c43", 1000, b"/org/freedesktop/login1/session/c43"),)
     port.records["c43"] = replace(port.records["c42"], session_id="c43", created_monotonic_usec=600_000)
     result = linux_login.linux_login_inventory(expected_owner="1000")
     assert not result.complete and result.eligibility is LoginEligibility.ELIGIBLE
@@ -982,15 +982,15 @@ def test_native_owner_table_cursor_is_bounded_exact_and_rejects_ambiguous_rows(d
     elif defect == "count":
         rows = tuple(
             (f"c{index}".encode(), 1000, f"/org/freedesktop/login1/session/c{index}".encode())
-            for index in range(linux_logind_bus._SESSION_LIMIT + 1)
+            for index in range(linux_logind_bus.SESSION_LIMIT + 1)
         )
     events = _session_table_events(rows)
     if defect == "signature":
         events[1] = ("enter", b"r", b"ssuso")
     library = _MessageFixture(events)
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, library))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, library))
     if defect is None:
-        assert bus.read_sessions(ctypes.c_void_p(17)) == (linux_login_models._SessionReference("c42", 1000, row[2]),)
+        assert bus.read_sessions(ctypes.c_void_p(17)) == (linux_login_models.SessionReference("c42", 1000, row[2]),)
         assert not library.events
     else:
         with pytest.raises(RefusalError):
@@ -1004,7 +1004,7 @@ def test_native_property_parser_keeps_noninteractive_facts_separate_from_desktop
     index, value = {"manager": (3, b"manager"), "tty": (4, b"tty"), "closing": (5, b"closing")}[kind]
     name, signature, _ = values[index]
     values[index] = (name, signature, value)
-    bus = linux_logind_bus._SessionBus(cast(ctypes.CDLL, _MessageFixture(_properties_events(values))))
+    bus = linux_logind_bus.SessionBus(cast(ctypes.CDLL, _MessageFixture(_properties_events(values))))
     record = bus.read_session_record(ctypes.c_void_p(17))
     assert record.known_ineligible and record.session_id == "c42" and record.uid == 1000
     if kind != "closing":

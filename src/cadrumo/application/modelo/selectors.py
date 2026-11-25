@@ -28,8 +28,11 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.models import PreconditionVerdict
 from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .lifecycle_view_refusal_doors import unit_calculate_verdict, unit_revisions_verdict, unit_verify_verdict
+from .refusal_door_verdicts import operator_choice_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -60,10 +63,19 @@ class ModeloCalculationRevisionSelectorStateError(ModeloPreconditionErrorMixin, 
 class ModeloCalculationRevisionSelectorAmbiguousError(ModeloCalculationRevisionSelectorError):
     """Raised when a default revision selector would have to guess."""
 
-    def __init__(self, candidates: tuple[ModeloCalculationRevisionCandidate, ...]) -> None:
+    def __init__(
+        self,
+        candidates: tuple[ModeloCalculationRevisionCandidate, ...],
+        *,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         """Initialize the error with the ambiguous candidate revisions."""
         self.candidates = candidates
-        super().__init__("calculation revision selector is ambiguous; choose an explicit selector or revision id")
+        super().__init__(
+            "calculation revision selector is ambiguous; choose an explicit selector or revision id",
+            translated_message="errors.refused.modelo_calculation_revision_selector_ambiguous",
+            precondition_verdict=precondition_verdict,
+        )
 
 
 class ModeloCalculationRevisionCandidate(BaseModel):
@@ -148,6 +160,7 @@ def select_modelo_calculation_revision(
             raise ModeloCalculationRevisionSelectorNotFoundError(
                 translated_message="errors.error.modelo_calculation_revision_selector_not_found",
                 context={"selection": "explicit", "calculation_revision_id_present": False},
+                precondition_verdict=operator_choice_verdict("revision_selector_explicit_id_required"),
             )
         revision = _explicit_revision_for_work_unit(
             work_unit=work_unit,
@@ -164,15 +177,12 @@ def select_modelo_calculation_revision(
     if calculation_revision_id is not None:
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
+            precondition_verdict=operator_choice_verdict("revision_selector_id_with_selector"),
         )
 
     selected = {
-        ModeloCalculationRevisionSelector.CURRENT: lambda: _revision_by_pointer(
-            work_unit,
-            work_unit.current_calculation_revision_id,
-            catalogue=catalogue,
-            pointer_name="current_calculation_revision_id",
-            operation=operation,
+        ModeloCalculationRevisionSelector.CURRENT: lambda: _current_revision(
+            work_unit, catalogue=catalogue, operation=operation
         ),
         ModeloCalculationRevisionSelector.LATEST_DRAFT: lambda: _latest_revision_with_state(
             revisions,
@@ -322,6 +332,7 @@ def _current_exportable_revision(
     if current_revision.state is CalculationRevisionState.BORRADOR:
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
+            precondition_verdict=unit_verify_verdict("revision_selector_draft", work_unit.work_unit_id),
         )
     return None
 
@@ -351,10 +362,37 @@ def _verified_exportable_fallback(
     if len(verified) > 1:
         raise ModeloCalculationRevisionSelectorAmbiguousError(
             tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
+            precondition_verdict=operator_choice_verdict("revision_selector_ambiguous"),
         )
+    raise _exportable_revision_absent(work_unit)
+
+
+def require_work_unit_holds_a_calculation(work_unit: WorkUnit) -> None:
+    """Refuse a lifecycle step on a work unit with no current calculation; the door is calculating it.
+
+    A calculation withdrawn from the work unit stays stored for audit, but it is
+    no longer the declaration's, so neither verification nor filing reads it.
+    """
+    if work_unit.current_calculation_revision_id is not None:
+        return
     raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_pointer_not_found",
+        context={
+            "selection": "pointer",
+            "pointer_name": "current_calculation_revision_id",
+            "work_unit_id": work_unit.work_unit_id,
+            "modelo": str(work_unit.modelo),
+        },
+        precondition_verdict=unit_calculate_verdict("current_calculation_absent", work_unit.work_unit_id),
+    )
+
+
+def _exportable_revision_absent(work_unit: WorkUnit) -> ModeloCalculationRevisionSelectorNotFoundError:
+    """The refusal of an export with no revision to export: verify the declaration first."""
+    return ModeloCalculationRevisionSelectorNotFoundError(
         translated_message="errors.error.modelo_calculation_revision_selector_not_found",
         context={"selection": "exportable", "exportable_revision_present": False},
+        precondition_verdict=unit_verify_verdict("revision_selector_exportable_absent", work_unit.work_unit_id),
     )
 
 
@@ -371,6 +409,9 @@ def select_exportable_revision(
     1. current filed pointer, when it points to a current filed revision;
     2. current calculation pointer, when it is verified-complete;
     3. one unambiguous verified-complete revision, only when no current draft conflicts.
+
+    A work unit with no current calculation exports nothing: a calculation
+    withdrawn from it stays stored but is no longer the declaration's.
     """
     catalogue = (
         calculation_catalogue if calculation_catalogue is not None else calculation_repository.load(operation=operation)
@@ -397,6 +438,8 @@ def select_exportable_revision(
     current_selection = _current_exportable_revision(work_unit, current_revision, operation=operation)
     if current_selection is not None:
         return current_selection
+    # A withdrawn calculation stays stored but is no longer the declaration's; the door is calculating it again.
+    require_work_unit_holds_a_calculation(work_unit)
     return _verified_exportable_fallback(
         work_unit,
         catalogue=catalogue,
@@ -428,13 +471,32 @@ def _explicit_revision_for_work_unit(
         raise ModeloCalculationRevisionSelectorNotFoundError(
             translated_message="errors.error.modelo_calculation_revision_selector_not_found",
             context={"calculation_revision_id": calculation_revision_id},
+            precondition_verdict=unit_revisions_verdict("revision_selector_explicit_absent", work_unit.work_unit_id),
         )
     if revision.work_unit_id != work_unit.work_unit_id:
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
+            precondition_verdict=operator_choice_verdict("revision_selector_other_unit"),
         )
     require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
+
+
+def _current_revision(
+    work_unit: WorkUnit,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    """The work unit's current calculation; with none, the door is calculating it, as verify and file refuse."""
+    require_work_unit_holds_a_calculation(work_unit)
+    return _revision_by_pointer(
+        work_unit,
+        work_unit.current_calculation_revision_id,
+        catalogue=catalogue,
+        pointer_name="current_calculation_revision_id",
+        operation=operation,
+    )
 
 
 def _revision_by_pointer(
@@ -460,6 +522,7 @@ def _revision_by_pointer(
                 "work_unit_id": work_unit.work_unit_id,
                 "modelo": str(work_unit.modelo),
             },
+            precondition_verdict=unit_revisions_verdict("revision_selector_pointer", work_unit.work_unit_id),
         )
     return revision
 
@@ -491,6 +554,9 @@ def _latest_revision_with_state(
         raise ModeloCalculationRevisionSelectorNotFoundError(
             translated_message="errors.error.modelo_calculation_revision_selector_not_found",
             context={"selection": "state", "revision_state": state.value},
+            precondition_verdict=unit_revisions_verdict(
+                "revision_selector_state_absent", revisions[0].work_unit_id if revisions else None
+            ),
         )
     return max(candidates, key=lambda revision: (revision.created_at, revision.calculation_revision_id))
 
@@ -504,6 +570,7 @@ __all__ = [
     "ModeloCalculationRevisionSelectorError",
     "ModeloCalculationRevisionSelectorNotFoundError",
     "ModeloCalculationRevisionSelectorStateError",
+    "require_work_unit_holds_a_calculation",
     "resolve_modelo_calculation_revision_pick",
     "select_current_verified_revision",
     "select_exportable_revision",

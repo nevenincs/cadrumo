@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.transactions.enums import BusinessClassification
-from ..actions_classification import _parse_bulk_classify_rows
+from ..actions_classification import parse_bulk_classify_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,7 +22,7 @@ _TX_EXTRA = "be3084a875bf6b05e423ec89db70bde7a6fce07201293a5b3a950101b0ae3049"
 
 
 def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows() -> None:
-    parsed_rows, failures = _parse_bulk_classify_rows(
+    parsed_rows, failures = parse_bulk_classify_rows(
         "\n".join(
             (
                 "transaction_id,classification",
@@ -41,11 +41,16 @@ def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows() -> No
     (failure,) = failures
     assert failure.row_index == 1
     assert failure.transaction_id == _TX_INVALID
-    assert "NOT_A_CLASSIFICATION" in failure.reason
+    # The reason names the column and what it takes. It does not echo the cell
+    # back, and it carries none of Pydantic's own reporting.
+    assert failure.reason.startswith("classification: ")
+    assert "BUSINESS" in failure.reason and "PERSONAL" in failure.reason
+    assert "NOT_A_CLASSIFICATION" not in failure.reason
+    assert "pydantic" not in failure.reason.lower()
 
 
 def test_parse_loop_reports_malformed_row_without_dropping_later_rows() -> None:
-    parsed_rows, failures = _parse_bulk_classify_rows(
+    parsed_rows, failures = parse_bulk_classify_rows(
         "\n".join(
             (
                 "transaction_id,classification",

@@ -9,13 +9,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import xml.etree.ElementTree as ET
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
-
-_UTF_8: Final[str] = "utf-8"
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -25,15 +22,17 @@ if not (__package__ is not None and __package__):
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT
+from cadrumo.core.storage_environment import STORAGE_ROOT, storage_root_override
+from dev.paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root
 
 from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root
 from .cli_reference import generate_cli_reference
-from .download_matrix import descriptor_path as _download_descriptor_path
-from .download_matrix import inject_download_matrix
+from .download_matrix import descriptor_path, inject_download_matrix
+from .output_cleanup import remove_noncanonical_build_entries, remove_orphan_pages
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from .sitemap import write_deployment_sitemap
 
 if TYPE_CHECKING:
     from .pagefind_index import InjectCallback
@@ -142,7 +141,7 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
     docs_root = repo_root / "docs"
     docs_api = docs_root / "api"
     selection = _DocTargetSelection(targets=[], source_modules=[])
-    download_descriptor_rel = _download_descriptor_path(repo_root).relative_to(repo_root)
+    download_descriptor_rel = descriptor_path(repo_root).relative_to(repo_root)
     download_page = docs_root / "download.md"
 
     for rel_path in paths:
@@ -274,7 +273,7 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
 
 
 @contextlib.contextmanager
-def _full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
+def full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
     """Yield the source tree a full build reads, a private copy when ``isolated``.
 
     A build writes its generated sources -- the CLI reference, glossary, casilla
@@ -286,7 +285,7 @@ def _full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
     if not isolated:
         yield docs_root
         return
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-", dir=prepare_temporary_directory()) as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-", dir=prepare_temp_root()) as tmp:
         source_root = Path(tmp) / "docs"
         _copy_docs_source(docs_root, source_root)
         yield source_root
@@ -303,120 +302,25 @@ def ensure_isolated_storage_root() -> None:
     refusal must not red a docs build on a machine that carries retired
     ``aeat`` state. Callers that deliberately pin a storage root keep it.
     """
-    scratch = prepare_temporary_directory() / "cadrumo-docs-build-storage"
-    os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
-    Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
-    ensure_private_diagnostic_log()
+    scratch = prepare_temp_root() / "cadrumo-docs-build-storage"
+    if not os.environ.get(STORAGE_ROOT.variable, "").strip():
+        os.environ[STORAGE_ROOT.variable] = str(scratch)
+    root = resolved_storage_root_pin()
+    root.mkdir(parents=True, exist_ok=True)
 
 
-def ensure_private_diagnostic_log() -> None:
-    """Re-point diagnostic file logging at a per-PROCESS scratch directory.
+def resolved_storage_root_pin() -> Path:
+    """Replace this process's root pin with the absolute root it names, and return it.
 
-    The storage-root pin above lands too late to move the diagnostic log on its
-    own: importing the application already resolved the rotating file handler
-    against the workstation's real log directory, and
-    :func:`~cadrumo.core.logging.configure_logging` is latched, so nothing
-    rebinds it. The docs engine therefore writes into the operator's shared
-    ``cadrumo.log`` — and that is not merely untidy, it is the source of a
-    non-deterministic diagnostic block in captured CLI output.
-
-    ``RotatingFileHandler`` rolls the log over by RENAMING it. On Windows a
-    rename fails with ``PermissionError`` (WinError 32) while any other process
-    holds the file open, and every concurrent ``aeat`` command, pytest worker,
-    and docs build on the box holds exactly that one shared file. The stdlib
-    reports the failed emit by printing its own ``--- Logging error ---`` block
-    — traceback, walked call stack, and ``repr`` of the record arguments — to
-    whatever ``sys.stderr`` is at that instant. Inside a sequence frame that is
-    Click's per-invocation capture buffer, so the block is recorded as CLI
-    output. It carries the runner's own stack frame (``check_sequences`` versus
-    ``refresh_sequences``) and object memory addresses, so no golden written by
-    one verb can ever match the other's run.
-
-    A directory keyed by PID removes the contention rather than masking its
-    symptom: nothing outside this process writes the file, so the rollover
-    rename always succeeds and there is no block to normalise.
+    The product honours only an absolute root and refuses any other spelling, so
+    every path this module derives from the pin starts from the resolved root.
     """
-    from cadrumo.core.config import reset_settings_cache
-    from cadrumo.core.logging import configure_logging
-
-    from .logging_rebind import allow_logging_reconfiguration
-
-    private_log_dir = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "logs" / f"pid-{os.getpid()}"
-    if os.environ.get("CADRUMO_LOG_DIR") == str(private_log_dir):
-        return
-    private_log_dir.mkdir(parents=True, exist_ok=True)
-    os.environ["CADRUMO_LOG_DIR"] = str(private_log_dir)
-    # The settings snapshot the latched configuration was derived from is
-    # cached; without dropping it the reconfigure below re-reads the OLD log
-    # directory and rebinds to the very file this function exists to leave.
-    reset_settings_cache()
-    allow_logging_reconfiguration()
-    configure_logging()
+    root = storage_root_override(os.environ[STORAGE_ROOT.variable])
+    os.environ[STORAGE_ROOT.variable] = str(root)
+    return root
 
 
-#: Builder-owned pages with no corresponding source document.
-_ORPHAN_SPECIAL_PAGES = {"genindex.html", "search.html", "404.html", "py-modindex.html"}
-
-#: Asset and infrastructure directories that carry no docname-addressed pages.
-_ORPHAN_SKIP_DIRS = {"_static", "_sources", "_images", "_downloads", "_sphinx_design_static", "pagefind"}
-
-#: Per-language site roots living beside the English root inside the same HTML
-#: tree. Their pages are docname-addressed against the SAME ``docs/`` sources,
-#: one directory level down, so the sweep below would resolve ``es/index.html``
-#: to a ``docs/es/index.md`` that never existed and delete every page of every
-#: localized root. Derived from :class:`OutputLanguage` rather than imported
-#: from the module that names the deploy root set, because that module imports
-#: this one.
-_ORPHAN_SKIP_SITE_ROOTS = frozenset(member.value for member in OutputLanguage)
-
-
-def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> int:
-    """Delete built pages whose source document no longer exists.
-
-    Furo bakes the theme's variables and templates into every page at build
-    time, so a page whose source was removed or renamed keeps rendering its
-    build-era design indefinitely and leaks stale results into the search
-    index (the docs-brand audit found 2208 such orphans rendering a retired
-    theme). Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
-    including the generated ``api/``, ``cli/``, and ``_generated/`` sources,
-    which are written to disk before Sphinx reads the tree — and ``_modules``
-    viewcode pages map back to ``src/`` modules.
-
-    A per-language site root nested in the same tree is exempt: its pages carry
-    the same docnames one directory down, so resolving them against ``docs/``
-    finds nothing and an apex build would empty every localized root beside it.
-
-    Returns:
-        The number of orphaned pages removed.
-    """
-    if not html_root.exists():
-        return 0
-    removed = 0
-    for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        removed += int(_remove_orphan_page(page, html_root, docs_root, repo_root))
-    if removed:
-        print(f"Removed {removed} orphaned page(s) whose source no longer exists.", flush=True)
-    return removed
-
-
-def remove_noncanonical_build_entries(build_root: Path) -> None:
-    """Remove stale entries beside the canonical HTML and doctree trees."""
-    if not build_root.exists():
-        return
-    allowed = {(build_root / "html").resolve(), (build_root / "doctrees").resolve()}
-    for entry in scan_directory(build_root):
-        resolved = entry.resolve()
-        if resolved in allowed:
-            continue
-        if build_root.resolve() not in resolved.parents:
-            raise SystemExit(f"Refusing to remove docs build entry outside the configured build root: {entry}")
-        if entry.is_dir():
-            shutil.rmtree(entry)
-        else:
-            entry.unlink()
-
-
-def _targets_for_docs_root(
+def targets_for_docs_root(
     original_docs_root: Path,
     copied_docs_root: Path,
     targets: list[Path],
@@ -444,7 +348,7 @@ def _targets_for_docs_root(
     return mapped
 
 
-def _generated_api_stub_names(repo_root: Path) -> frozenset[str]:
+def generated_api_stub_names(repo_root: Path) -> frozenset[str]:
     """Return the filenames of every stub a full-scope build generates."""
     manager = ApiStubManager.for_repository(repo_root, docs_api=repo_root / "docs" / "api")
     return frozenset(stub_filename(name) for name, _ in manager.discover_modules())
@@ -645,78 +549,6 @@ def resolve_record_injector(
 
 
 #: Sitemaps.org urlset namespace for the deployment sitemap.
-_SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
-
-#: Top-level built pages that carry no canonical human content (Sphinx
-#: builder-owned orphans); excluded from the deployment sitemap.
-_SITEMAP_EXCLUDED_PAGES = frozenset({"search.html", "genindex.html", "py-modindex.html", "404.html"})
-
-#: Top-level directories of generated / infrastructure surfaces that never
-#: belong in the human sitemap (API autodoc, viewcode, assets, sources).
-_SITEMAP_EXCLUDED_ROOTS = frozenset({"api", "_modules", "_static", "_sources"})
-
-
-def _sitemap_page_url(base_url: str, rel_posix: str) -> str:
-    """Map a built page's relative path to its canonical deployment URL.
-
-    ``index.html`` pages canonicalise to their directory root (the site root
-    for the top-level index), matching how the served site addresses them; any
-    other page keeps its ``.html`` path.
-    """
-    if rel_posix == "index.html":
-        suffix = ""
-    elif rel_posix.endswith("/index.html"):
-        suffix = rel_posix[: -len("index.html")]
-    else:
-        suffix = rel_posix
-    return f"{base_url}/{suffix}"
-
-
-def _sitemap_urls(html_root: Path, base_url: str) -> list[str]:
-    """Return the deterministic canonical human-page URL set for the sitemap."""
-    urls: set[str] = set()
-    for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        rel = page.relative_to(html_root)
-        parts = rel.parts
-        if parts[0] in _SITEMAP_EXCLUDED_ROOTS:
-            continue
-        if len(parts) == 1 and rel.name in _SITEMAP_EXCLUDED_PAGES:
-            continue
-        urls.add(_sitemap_page_url(base_url, rel.as_posix()))
-    return sorted(urls)
-
-
-def write_deployment_sitemap(html_root: Path, base_url: str) -> Path:
-    """Write a deterministic, canonical-human-page ``sitemap.xml`` for deployment.
-
-    Walks the built HTML tree, filters to canonical human pages (excluding the
-    generated ``api``/``_modules`` trees, the ``_static``/``_sources`` asset
-    roots, and the builder-owned ``search``/``genindex``/``py-modindex``/``404``
-    orphans), canonicalises ``index.html`` pages to their directory roots,
-    sorts the URLs lexicographically, and emits the sitemaps.org urlset with no
-    ``lastmod`` stamps. Stdlib-only and side-effect-deterministic so the deploy
-    validator's exact canonical-root and canonical-prefix checks hold.
-
-    Args:
-        html_root: The built Sphinx HTML output directory.
-        base_url: The canonical docs base URL (trailing slash tolerated).
-
-    Returns:
-        The path to the written ``sitemap.xml``.
-    """
-    base = base_url.rstrip("/")
-    ET.register_namespace("", _SITEMAP_NS)
-    urlset = ET.Element(f"{{{_SITEMAP_NS}}}urlset")
-    for url in _sitemap_urls(html_root, base):
-        entry = ET.SubElement(urlset, f"{{{_SITEMAP_NS}}}url")
-        ET.SubElement(entry, f"{{{_SITEMAP_NS}}}loc").text = url
-    tree = ET.ElementTree(urlset)
-    ET.indent(tree)
-    sitemap_path = html_root / "sitemap.xml"
-    tree.write(sitemap_path, encoding=_UTF_8, xml_declaration=True)
-    return sitemap_path
-
-
 def build_docs(
     repo_root: Path,
     plan: DocBuildPlan,
@@ -793,18 +625,19 @@ def build_docs(
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
-        html_root = html_output_root
-        base_url = os.environ.get(DOCS_BASE_URL_ENV)
-        if (base_url is not None and base_url) and flavor == "web":
-            sitemap_path = write_deployment_sitemap(html_root, base_url)
-            print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
-        if pagefind_index_mode(os.environ) == "none":
-            # A root of a multi-root site: the one index is built over every
-            # root after they are all built, so indexing here would write an
-            # index the served site does not use.
-            print("Search index skipped: this root is indexed with the rest of the site.", flush=True)
-        else:
-            compile_search_index(html_root, repo_root)
+        _finish_full_build(html_output_root, repo_root, flavor)
+
+
+def _finish_full_build(html_root: Path, repo_root: Path, flavor: str) -> None:
+    base_url = os.environ.get(DOCS_BASE_URL_ENV)
+    if base_url is not None and base_url != "" and flavor == "web":
+        sitemap_path = write_deployment_sitemap(html_root, base_url)
+        print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
+    if pagefind_index_mode(os.environ) == "none":
+        # Multi-root sites build one index after every root is complete.
+        print("Search index skipped: this root is indexed with the rest of the site.", flush=True)
+    else:
+        compile_search_index(html_root, repo_root)
 
 
 def compile_search_index(
@@ -893,11 +726,11 @@ def update_rag_index(repo_root: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for documentation builds."""
-    args = _docs_build_arguments(argv)
+    args = docs_build_arguments(argv)
     repo_root = _repo_root()
     output_root = _docs_output_root(args)
     scope = _docs_language_scope(args)
-    flavor = _docs_flavor(args)
+    flavor = docs_flavor(args)
     plan = _docs_invocation_plan(repo_root, args)
     if not plan.full_build_required and not plan.targets:
         print("No documentation targets resolved from the given paths.", flush=True)
@@ -1033,26 +866,6 @@ def _preview_directory_pages(docs_root: Path, candidate: Path, requested: str) -
     return pages
 
 
-def _remove_orphan_page(page: Path, html_root: Path, docs_root: Path, repo_root: Path) -> bool:
-    rel = page.relative_to(html_root)
-    if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
-        return False
-    if rel.parts[0] in _ORPHAN_SKIP_SITE_ROOTS and len(rel.parts) > 1:
-        return False
-    docname = rel.with_suffix("")
-    if rel.parts[0] == "_modules":
-        if rel.as_posix() == "_modules/index.html":
-            return False
-        module_path = Path(*docname.parts[1:])
-        candidates = [repo_root / "src" / Path(f"{module_path}.py")]
-    else:
-        candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
-    if any(candidate.is_file() for candidate in candidates):
-        return False
-    page.unlink()
-    return True
-
-
 def _build_full_docs(
     repo_root: Path,
     docs_root: Path,
@@ -1065,7 +878,7 @@ def _build_full_docs(
     if output_root is None:
         remove_noncanonical_build_entries(html_output_root.parent)
     html_output_root.mkdir(parents=True, exist_ok=True)
-    with _full_build_source(docs_root, isolated=isolated_source) as source_root:
+    with full_build_source(docs_root, isolated=isolated_source) as source_root:
         result = subprocess.run(
             [*command, str(source_root), str(html_output_root)],
             cwd=repo_root,
@@ -1102,9 +915,9 @@ def _build_changed_docs(
     repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
 ) -> subprocess.CompletedProcess[bytes] | None:
     generated_api_stubs = (
-        _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
+        generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temporary_directory()) as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temp_root()) as tmp:
         temp_root = Path(tmp)
         temp_docs_root = temp_root / "docs-source"
         _copy_docs_source(docs_root, temp_docs_root)
@@ -1112,7 +925,7 @@ def _build_changed_docs(
             generate_cli_reference(temp_docs_root)
         if plan.download_matrix_required:
             inject_download_matrix(temp_docs_root)
-        temp_targets = _targets_for_docs_root(
+        temp_targets = targets_for_docs_root(
             docs_root,
             temp_docs_root,
             plan.targets,
@@ -1127,7 +940,7 @@ def _build_changed_docs(
     return result
 
 
-def _docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
+def docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths",
@@ -1253,7 +1066,7 @@ def docs_build_flavor(env: Mapping[str, str]) -> str:
     return raw
 
 
-def _docs_flavor(args: argparse.Namespace) -> str:
+def docs_flavor(args: argparse.Namespace) -> str:
     # Precedence: explicit --flavor flag, then the CADRUMO_DOCS_FLAVOR env, then web.
     if args.flavor is not None:
         os.environ[DOCS_FLAVOR_ENV] = args.flavor

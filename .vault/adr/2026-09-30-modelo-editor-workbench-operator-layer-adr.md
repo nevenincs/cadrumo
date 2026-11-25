@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:31174af6eccf04c64612ba82e154a9970e2589e1f2b593db7190bd1ced01c9fe'
+body_hash: 'sha256:57fbb2679285431a1b172f09422edade7424217683d10035ee1191eedc7dc6f6'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-09-30-modelo-editor-workbench-edit-interaction-research]]"
@@ -123,6 +123,17 @@ own reasons. Binding overrides stay writable for manual-input bindings and becom
 the carry sources the precedence ladder already classifies; every other source kind stays
 read-only, with its override policy shown as undecided, until a grounded decision classifies it.
 
+Amendment 2026-10-31, accepted by the user on 2026-10-31. The desktop chooses a box's editor from
+this projected grammar, read from the `permitted_surface` of the baseline admitted with the form
+(`native/desktop/frontend/src/components/modelo/form/session.ts:367`, `:559`). A box with no
+writable entry, an `unavailable` channel or no admitted baseline gets no editor. The grammar
+chooses the control and its hints and is never a check of the window's own: the window sends the
+raw lexeme and its language to `modelo.edit.preflight`, and the answer drives the field
+(`session.ts:254`). The window does not normalise a lexeme or convert a ratio in this path. A
+ratio box whose unit is undeclared gets a plain decimal editor
+(`native/desktop/frontend/src/components/modelo/form/entryField.ts:22`, `:77`), and no text there
+says the unit is undeclared.
+
 ## Rationale
 
 Only a persisted operator layer lets the executor distinguish "the operator typed this" from
@@ -148,3 +159,7 @@ persistence boundary and needs no migration of stored data.
   That is visible to the operator as a decision not yet made, not as a silent lock.
 - Date and year casillas stay read-only in the editor until the engine gains a channel for them,
   with the reason shown on the row.
+
+## Amendment 2026-11-14: the CLI replays the head by default
+
+Authorized by PRIME's ruling of 2026-11-14 00:35 (CLI column blocker), which settles the later decision the consequences above left open. `modelo work calculate` and the work wizard now use the window's default. A calculation whose command carries no caller inputs replays the current head's caller context, so a statement recorded through attest-prior-carries, attest-prior-value, set-value or attest-work-income survives recalculation. A command that carries inputs, or that passes `--inputs-only`, keeps the explicit full-specification semantics. Its result names every recorded statement of the replaced head that it did not use, so dropping one is never silent. The request contract is unchanged: a replaying calculation still carries no inputs, and layering request inputs over the head remains the edit executor's job.

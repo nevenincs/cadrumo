@@ -25,7 +25,7 @@ from ....domain.buckets.event import (
 )
 from ....domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ....domain.transactions.models import TransactionCatalogue
-from ..actions_common import _commit_with_guarded_events
+from ..actions_common import commit_with_guarded_events
 from ..persistence_ports import LedgerPersistenceConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -134,7 +134,7 @@ def test_a_co_committed_event_is_persisted() -> None:
     events = _EventRepository()
     transactions = _TransactionRepository(events)
 
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=events,
         events=(_event("co-committed"),),
         commit=lambda write: transactions.save_with_secure_object_writes(
@@ -151,7 +151,7 @@ def test_a_concurrent_event_is_not_discarded_by_the_co_commit() -> None:
     events = _EventRepository()
     transactions = _TransactionRepository(events, interloper=True)
 
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=events,
         events=(_event("co-committed"),),
         commit=lambda write: transactions.save_with_secure_object_writes(

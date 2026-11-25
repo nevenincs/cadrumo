@@ -7,6 +7,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import bound_profile_client
 
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
@@ -23,27 +24,22 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.payment_election import PaymentElection
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ._modelo_cli_support import (
+from .app_quickfile_results import QuickfileResultPayload, quickfile_stage_message
+from .common import emit_envelope, resolve_cli_precondition_action
+from .modelo_behavior_support import resolve_year_period
+from .modelo_cli_support import (
     calculation_overrides,
     parse_work_calculate_wire_specs,
-    unsupported_local_work_period_refusal,
 )
-from ._modelo_rendering import verification_report_notices
-from .app_quickfile_results import QuickfileResultPayload, quickfile_stage_message
-from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
+from .modelo_rendering import verification_report_notices
 from .operation_quickfile import run_quickfile
 
 
 def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
-    try:
-        return Period.from_year_and_code(year, period.strip())
-    except PeriodError as exc:
-        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
-            raise refusal from exc
-        raise typer.BadParameter(str(exc)) from exc
+    return resolve_year_period(year, period, modelo=modelo)
 
 
 def _optional_profile_id(raw: str | None) -> UUID | None:
@@ -83,7 +79,7 @@ def _quickfile_request(
         row=row,
     )
     ordinary_m303_evidence = None
-    if modelo == "303" and joint_return_elected is not None:
+    if joint_return_elected is not None:
         ordinary_m303_evidence = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
             joint_return_elected=joint_return_elected,
             m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
@@ -201,7 +197,7 @@ def _quickfile_lines(result: QuickfileProjection, *, output_path_display: str) -
 def _quickfile_notices(result: QuickfileProjection) -> list[Notice]:
     """Render safe stage notices and canonical verification finding notices."""
     notices = [
-        _stage_notice(stage)
+        stage_notice(stage)
         for stage in result.stages
         if stage.status not in (QuickfileStageStatus.OK, QuickfileStageStatus.SKIPPED)
     ]
@@ -210,7 +206,7 @@ def _quickfile_notices(result: QuickfileProjection) -> list[Notice]:
     return notices
 
 
-def _stage_notice(stage: QuickfileStageSnapshot) -> Notice:
+def stage_notice(stage: QuickfileStageSnapshot) -> Notice:
     """Project a closed stage result without transporting exception prose/context."""
     stage_name, status = stage.stage.value, stage.status.value
     code = f"quickfile.stage.{stage_name}"

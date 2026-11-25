@@ -14,20 +14,20 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     as_toml_array,
 )
 
-from . import casilla_identity as _casilla_identity
-from ._toml_helpers import as_toml_table as _as_toml_table
+from . import casilla_identity
 from .loader_fields import (
-    _EDITION_ORDEN_FIELD,
-    _EDITION_SOURCE_DEFAULT_FIELD,
-    _INHERITED_SECTION,
-    _ROW_CONSTRAINTS_FIELD,
-    _ROW_LEGAL_FIELD,
-    _ROW_SOURCE_ADDITIONS_FIELD,
-    _ROW_SOURCE_FIELD,
+    EDITION_ORDEN_FIELD,
+    EDITION_SOURCE_DEFAULT_FIELD,
+    INHERITED_SECTION,
+    ROW_CONSTRAINTS_FIELD,
+    ROW_LEGAL_FIELD,
+    ROW_SOURCE_ADDITIONS_FIELD,
+    ROW_SOURCE_FIELD,
 )
+from .toml_helpers import as_toml_table
 
 
-def _apply_edition_reference_defaults(context: str, table: Mapping[str, object]) -> Mapping[str, object]:
+def apply_edition_reference_defaults(context: str, table: Mapping[str, object]) -> Mapping[str, object]:
     """Fill the edition's declared reference defaults into the casilla rows that state none.
 
     Three families, each defaulted from its own manifest key: ``casillas``
@@ -74,8 +74,8 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
             are not a non-empty array of reference ids, or states additions in
             an edition declaring no ``casilla_source_refs`` for them to extend.
     """
-    source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD)) or ()
-    orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD)) or ()
+    source_default = as_toml_array(table.get(EDITION_SOURCE_DEFAULT_FIELD)) or ()
+    orden_default = as_toml_array(table.get(EDITION_ORDEN_FIELD)) or ()
     filled = _default_casilla_section(context, table, source_default, orden_default)
     filled.update(_default_keyed_family_sections(context, table))
     return {**table, **filled} if filled else table
@@ -88,14 +88,14 @@ def _default_casilla_section(
     orden_default: tuple[object, ...],
 ) -> dict[str, object]:
     filled: dict[str, object] = {}
-    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+    rows = as_toml_array(table.get(INHERITED_SECTION, ()))
     if rows is not None and rows:
         defaulted = tuple(
             default_row_references(context, row, source_default=source_default, orden_default=orden_default)
             for row in rows
         )
         if any(new is not old for new, old in zip(defaulted, rows, strict=True)):
-            filled[_INHERITED_SECTION] = defaulted
+            filled[INHERITED_SECTION] = defaulted
     return filled
 
 
@@ -132,11 +132,11 @@ def _default_family_row_references(
     existence, not a binding's record position -- so a family row's
     ``legal_refs`` stays exactly as authored.
     """
-    table = _as_toml_table(row)
+    table = as_toml_table(row)
     if table is None:
         return row
     filled = _defaulted_references(
-        f"{context} {_casilla_identity._row_id(table)!r}",
+        f"{context} {casilla_identity.casilla_identity_row_id(table)!r}",
         table,
         source_default=source_default,
         orden_default=(),
@@ -156,18 +156,18 @@ def default_row_references(
 
     ``row`` is frozen TOML: an array is a tuple, and a list is not read as one.
     """
-    table = _as_toml_table(row)
+    table = as_toml_table(row)
     if table is None:
         return row
-    subject = f"{context}: casilla {_casilla_identity._row_id(table)!r}"
+    subject = f"{context}: casilla {casilla_identity.casilla_identity_row_id(table)!r}"
     filled = _defaulted_references(subject, table, source_default=source_default, orden_default=orden_default)
-    constraints = _as_toml_table(table.get(_ROW_CONSTRAINTS_FIELD))
+    constraints = as_toml_table(table.get(ROW_CONSTRAINTS_FIELD))
     if constraints is not None:
         filled_constraints = _defaulted_references(
             f"{subject} constraints", constraints, source_default=source_default, orden_default=orden_default
         )
         if filled_constraints is not constraints:
-            filled = {**filled, _ROW_CONSTRAINTS_FIELD: filled_constraints}
+            filled = {**filled, ROW_CONSTRAINTS_FIELD: filled_constraints}
     return row if filled is table else filled
 
 
@@ -177,19 +177,19 @@ def _defaulted_references(
     *,
     source_default: tuple[object, ...],
     orden_default: tuple[object, ...],
-    default_field: str = _EDITION_SOURCE_DEFAULT_FIELD,
+    default_field: str = EDITION_SOURCE_DEFAULT_FIELD,
 ) -> Mapping[str, object]:
     """Return one row or constraints table with its references resolved, or ``table`` itself when nothing changes."""
     updates: dict[str, object] = {}
-    if _ROW_SOURCE_ADDITIONS_FIELD in table:
-        updates[_ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default, default_field)
-    elif source_default and _ROW_SOURCE_FIELD not in table:
-        updates[_ROW_SOURCE_FIELD] = source_default
-    if orden_default and _ROW_LEGAL_FIELD not in table:
-        updates[_ROW_LEGAL_FIELD] = orden_default
+    if ROW_SOURCE_ADDITIONS_FIELD in table:
+        updates[ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default, default_field)
+    elif source_default and ROW_SOURCE_FIELD not in table:
+        updates[ROW_SOURCE_FIELD] = source_default
+    if orden_default and ROW_LEGAL_FIELD not in table:
+        updates[ROW_LEGAL_FIELD] = orden_default
     if not updates:
         return table
-    kept = {key: value for key, value in table.items() if key != _ROW_SOURCE_ADDITIONS_FIELD}
+    kept = {key: value for key, value in table.items() if key != ROW_SOURCE_ADDITIONS_FIELD}
     return {**kept, **updates}
 
 
@@ -197,28 +197,28 @@ def _extended_source_default(
     subject: str,
     table: Mapping[str, object],
     source_default: tuple[object, ...],
-    default_field: str = _EDITION_SOURCE_DEFAULT_FIELD,
+    default_field: str = EDITION_SOURCE_DEFAULT_FIELD,
 ) -> tuple[object, ...]:
     """Return the edition default followed by the table's additions, each reference once, the default first.
 
     A default holding anything but reference ids is concatenated unchanged and
     left to typed construction, which refuses it with the field's own error.
     """
-    if _ROW_SOURCE_FIELD in table:
+    if ROW_SOURCE_FIELD in table:
         raise RegistryLoadError(
-            f"{subject} states both {_ROW_SOURCE_FIELD} and {_ROW_SOURCE_ADDITIONS_FIELD}; {_ROW_SOURCE_FIELD} "
-            f"replaces the edition's {default_field} whole while {_ROW_SOURCE_ADDITIONS_FIELD} "
+            f"{subject} states both {ROW_SOURCE_FIELD} and {ROW_SOURCE_ADDITIONS_FIELD}; {ROW_SOURCE_FIELD} "
+            f"replaces the edition's {default_field} whole while {ROW_SOURCE_ADDITIONS_FIELD} "
             "extends it, so state one of them",
         )
     if not source_default:
         raise RegistryLoadError(
-            f"{subject} states {_ROW_SOURCE_ADDITIONS_FIELD}, but the edition declares no "
-            f"{default_field} for them to extend; state {_ROW_SOURCE_FIELD} instead",
+            f"{subject} states {ROW_SOURCE_ADDITIONS_FIELD}, but the edition declares no "
+            f"{default_field} for them to extend; state {ROW_SOURCE_FIELD} instead",
         )
-    additions = as_toml_array(table.get(_ROW_SOURCE_ADDITIONS_FIELD))
+    additions = as_toml_array(table.get(ROW_SOURCE_ADDITIONS_FIELD))
     if not (additions is not None and additions) or not all(isinstance(item, str) for item in additions):
         raise RegistryLoadError(
-            f"{subject} {_ROW_SOURCE_ADDITIONS_FIELD} must be a non-empty array of source reference ids; "
+            f"{subject} {ROW_SOURCE_ADDITIONS_FIELD} must be a non-empty array of source reference ids; "
             "omit the key to take the edition default alone",
         )
     if not all(isinstance(item, str) for item in source_default):

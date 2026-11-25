@@ -16,6 +16,8 @@ from ...application.modelo.history_operation import (
     ModeloWorkHistoryProjection,
     ModeloWorkHistoryRequest,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.operations import OperationEffect
 from ...domain.modelos.work_unit import WorkUnit
 
@@ -25,7 +27,11 @@ def read_modelo_work_history(ctx: typer.Context, *, unit: WorkUnit) -> WorkUnitH
     client = require_profile_client(ctx, expected_profile_id=UUID(unit.bucket_id))
     completed = run_registered_operation(
         client,
-        ModeloWorkHistoryRequest(profile_id=client.profile_id, work_unit_id=unit.work_unit_id),
+        ModeloWorkHistoryRequest(
+            profile_id=client.profile_id,
+            work_unit_id=unit.work_unit_id,
+            output_language=OutputLanguage(output_language()),
+        ),
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         subject_ref=unit.work_unit_id,
         result_type=ModeloWorkHistoryProjection,

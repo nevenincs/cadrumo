@@ -71,10 +71,11 @@ impl Startup {
 
     pub fn check_cancelled(&self) -> Result<()> {
         if self.cancelled.load(Ordering::Acquire) {
-            Err(ApplicationError::new(
-                ErrorCode::SessionUnavailable,
-                Operation::Launch,
-            ))
+            // A quit before the manager stage is the host closing, not a launch fault.
+            Err(
+                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Launch)
+                    .with_reason(cadrumo_application::shutdown::HOST_CLOSING),
+            )
         } else {
             Ok(())
         }
@@ -122,7 +123,8 @@ fn startup_begin<R: tauri::Runtime>(app: tauri::AppHandle<R>, state: State<'_, A
     *task = Some(tauri::async_runtime::spawn_blocking(move || {
         let outcome = tauri::async_runtime::block_on(async {
             startup.check_cancelled()?;
-            crate::startup_logging::configure(&parent, &startup.diagnostics);
+            // A refusal is already on the diagnostics and in the startup record.
+            let _ = crate::startup_logging::configure(&parent, &startup.diagnostics);
             startup
                 .diagnostics
                 .host_event(EventKind::StageStarted, HostStage::Environment);
@@ -245,9 +247,8 @@ mod tests {
             app.try_state::<Arc<crate::manager::ManagerStart>>()
                 .is_none()
         );
-        assert_eq!(
-            startup.check_cancelled().unwrap_err().code,
-            ErrorCode::SessionUnavailable
-        );
+        let refusal = startup.check_cancelled().unwrap_err();
+        assert_eq!(refusal.code, ErrorCode::SessionUnavailable);
+        assert!(cadrumo_application::shutdown::is_host_closing(&refusal));
     }
 }

@@ -14,11 +14,12 @@ connection: ``foreign_keys=ON`` (cascade enforcement) and a
 immediately with "database is locked").
 
 Disposal is an internal seam of the engine lifecycle owner: the bucket
-session (``BucketSession.close``) disposes via :func:`dispose_engine_handle`
-and :func:`dispose_engines_for_bucket`, the bucket-destruction path uses
-:func:`dispose_engines_for_bucket` to release file handles before removing
-a bucket directory, and test-harness teardown uses :func:`dispose_engine`.
-Production code outside those owners must not dispose engines directly.
+session detaches its engines when it seals (:func:`detach_bucket_engines`)
+and disposes them afterwards (:func:`dispose_detached_bucket_engines`), the
+bucket-destruction path uses :func:`dispose_engines_for_bucket` to release
+file handles before removing a bucket directory, and test-harness teardown
+uses :func:`dispose_engine`. Production code outside those owners must not
+dispose engines directly.
 """
 
 from __future__ import annotations
@@ -26,21 +27,27 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from threading import Lock
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.url import URL, make_url
-from sqlalchemy.pool import ConnectionPoolEntry
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.pool import ConnectionPoolEntry, QueuePool
 
-from .....core.config import Settings, classify_storage_route, load_settings
 from .....core.config_state_root import FORMER_PRODUCT_DATABASE_FILENAME
 from .....core.config_support import StorageRouteKind
+from .....core.diagnostic_log import diagnostic_phase
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
 from ..errors import StorageError
+from ..master_key.bucket_session import KEY_RELEASE_PHASE_EVENT
 from ..storage_path_definitions import BUCKETS_DIRNAME
+
+if TYPE_CHECKING:
+    from .....core.config import Settings
 
 _log = get_logger(__name__)
 # Cache key axes: ("bucket", <resolved storage root>, <bucket id>) for
@@ -48,6 +55,10 @@ _log = get_logger(__name__)
 # root-fallback routes.
 _EngineCacheKey = tuple[str, str, str]
 _engines: dict[_EngineCacheKey, Engine] = {}
+# Engines evicted from the cache whose pools are not yet disposed, by bucket id.
+# A detached engine is never handed out again, and whichever disposal drains
+# its bucket first closes it, exactly once.
+_detached: dict[str, list[Engine]] = {}
 _lock = Lock()
 
 # A writer that finds the bucket DB locked by a concurrent connection waits up to
@@ -57,12 +68,38 @@ _lock = Lock()
 _SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
+def _wal_bytes(engine: Engine) -> int | None:
+    """Return the size of the engine's SQLite ``-wal`` sidecar, or ``None`` when it has none on disk."""
+    database = engine.url.database
+    if not engine.dialect.name.startswith("sqlite") or database is None or database in {"", ":memory:"}:
+        return None
+    try:
+        return Path(database + "-wal").stat().st_size
+    except OSError:
+        return None
+
+
+def _dispose(engine: Engine) -> None:
+    """Dispose ``engine``, recording how long closing its pooled connections took.
+
+    Closing the last connection to a WAL database checkpoints the sidecar into
+    the main file and deletes it, so the record carries the sidecar size first.
+    """
+    fields: dict[str, int | None] = {"wal_bytes": _wal_bytes(engine)}
+    pool = engine.pool
+    if isinstance(pool, QueuePool):
+        fields["item_count"] = pool.checkedin()
+        fields["checked_out_count"] = pool.checkedout()
+    with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "engine_pool_dispose", fields=fields):
+        engine.dispose()
+
+
 def _route_marker(url: str) -> str:
     """Return a stable non-reversible marker for a configured database route."""
     return sha256_hex(url.encode(UTF_8_ENCODING))[:16]
 
 
-def _normalize_sqlite_url(url: str) -> str:
+def normalize_sqlite_url(url: str) -> str:
     """Anchor relative SQLite database files to the application data root.
 
     Args:
@@ -128,7 +165,7 @@ def _ensure_sqlite_parent(url: str) -> None:
     Args:
         url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
     """
-    parsed = make_url(_normalize_sqlite_url(url))
+    parsed = make_url(normalize_sqlite_url(url))
     database = parsed.database
     if (database is not None and database) and database != ":memory:":
         parent = Path(database).parent
@@ -220,7 +257,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
             translated_message="errors.storage.engine.empty_database_url",
         )
     try:
-        normalized_url = _normalize_sqlite_url(url)
+        normalized_url = normalize_sqlite_url(url)
         _refuse_former_product_database_target(normalized_url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
@@ -245,9 +282,11 @@ def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
     spelled; explicit database URLs and the root-fallback database keep the
     URL itself as the key (the settings-driven direct path).
     """
+    from .....core.config import classify_storage_route
+
     route = classify_storage_route(settings)
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and (route.bucket_id is not None and route.bucket_id):
-        root = str(settings.cadrumo_local_storage_root.expanduser().resolve())
+        root = str(settings.cadrumo_storage_root.expanduser().resolve())
         return ("bucket", root, route.bucket_id)
     return ("url", "", settings.cadrumo_database_url)
 
@@ -257,10 +296,10 @@ def get_engine(settings: Settings | None = None) -> Engine:
 
     Bucket-routed settings cache the engine under (storage root, bucket id);
     explicit-URL and root-fallback settings cache under the database URL.
-    On first access, materialises every ORM table declared on
-    :class:`~adapters.persistence.storage.sql.orm.Base.metadata`
+    On first access, materialises every table declared on
+    :data:`~adapters.persistence.storage.sql.tables.metadata`
     against the new engine. The codebase is forward-only: there is no
-    migration history; the schema is whatever the current ORM defines.
+    migration history; the schema is whatever the current tables define.
 
     Args:
         settings: Optional :class:`~core.config.Settings` override.
@@ -271,6 +310,8 @@ def get_engine(settings: Settings | None = None) -> Engine:
         The cached :class:`~sqlalchemy.engine.Engine` for the resolved
         route, creating it on first access.
     """
+    from .....core.config import load_settings
+
     resolved = settings or load_settings()
     key = _engine_cache_key(resolved)
     with _lock:
@@ -278,9 +319,9 @@ def get_engine(settings: Settings | None = None) -> Engine:
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
-        from .orm import Base
+        from .tables import metadata
 
-        Base.metadata.create_all(engine)
+        metadata.create_all(engine)
         _engines[key] = engine
         return engine
 
@@ -288,52 +329,82 @@ def get_engine(settings: Settings | None = None) -> Engine:
 def dispose_engine(settings: Settings | None = None) -> None:
     """Dispose and forget the cached engine for the given settings.
 
-    Internal lifecycle seam: invoked by the session owner
-    (``BucketSession.close`` via the handle/bucket-scoped variants below)
-    and by test-harness teardown. Production code must not call it —
-    engine disposal is owned by the bucket-session lifecycle.
+    Test-harness teardown seam. Production code must not call it: engine
+    disposal is owned by the bucket-session lifecycle and the bucket-scoped
+    variants below.
 
     Args:
         settings: Optional :class:`~core.config.Settings` override.
-            When ``None``, every cached engine is disposed.
+            When ``None``, every cached and every detached engine is disposed.
     """
     with _lock:
         if settings is None:
-            for engine in _engines.values():
-                engine.dispose()
+            for engine in (*_engines.values(), *(engine for engines in _detached.values() for engine in engines)):
+                _dispose(engine)
             _engines.clear()
+            _detached.clear()
             return
         engine = _engines.pop(_engine_cache_key(settings), None)
         if engine is not None:
-            engine.dispose()
+            _dispose(engine)
+
+
+def detach_bucket_engines(bucket_id: str, handle: Engine | None = None) -> None:
+    """Evict ``handle`` and every cached engine bound to ``bucket_id``, leaving their pools open.
+
+    The cache never hands a detached engine out again, so the next storage
+    access for the bucket opens a fresh one. Closing the detached pools is
+    left to :func:`dispose_detached_bucket_engines`, because closing the last
+    connection to a WAL database checkpoints and fsyncs it: a caller holding
+    a lock that other work waits on can release it first.
+
+    Args:
+        bucket_id: The bucket whose cached engines are evicted.
+        handle: An engine registered on a session for this bucket, evicted by
+            identity whatever route key cached it.
+    """
+    with _lock:
+        evicted: list[Engine] = []
+        if handle is not None:
+            for key, cached in tuple(_engines.items()):
+                if cached is handle:
+                    del _engines[key]
+            evicted.append(handle)
+        for key in tuple(key for key in _engines if key[0] == "bucket" and key[2] == bucket_id):
+            engine = _engines.pop(key)
+            if engine is not handle:
+                evicted.append(engine)
+        if evicted:
+            _detached.setdefault(bucket_id, []).extend(evicted)
+
+
+def dispose_detached_bucket_engines(bucket_id: str) -> None:
+    """Close the pools of every engine detached for ``bucket_id`` and not yet disposed.
+
+    The engines are taken under the cache lock and disposed outside it, so a
+    slow checkpoint does not hold up engine lookups for other buckets.
+    """
+    with _lock:
+        engines = _detached.pop(bucket_id, [])
+    failure: SQLAlchemyError | None = None
+    for engine in engines:
+        # One pool failing to close must not leave the others' file handles open.
+        try:
+            _dispose(engine)
+        except SQLAlchemyError as exc:
+            failure = failure or exc
+    if failure is not None:
+        raise failure
 
 
 def dispose_engines_for_bucket(bucket_id: str) -> None:
-    """Dispose and forget every cached engine bound to ``bucket_id``.
+    """Dispose and forget every engine bound to ``bucket_id``, cached or detached.
 
-    The bucket-scoped disposal seam: the session owner
-    (``BucketSession.close``) sweeps its bucket's engines on close/switch,
-    and the bucket-destruction path releases the bucket's SQLite file
-    handles before removing the bucket directory (an open handle blocks
-    the rename on Windows). Engines cached for other buckets and for
-    explicit database URLs are untouched.
+    The bucket-destruction path releases the bucket's SQLite file handles
+    before removing the bucket directory (an open handle blocks the rename on
+    Windows), including engines a sealed session detached and has not yet
+    disposed. Engines cached for other buckets and for explicit database URLs
+    are untouched.
     """
-    with _lock:
-        keys = tuple(key for key in _engines if key[0] == "bucket" and key[2] == bucket_id)
-        for key in keys:
-            _engines.pop(key).dispose()
-
-
-def dispose_engine_handle(engine: Engine) -> None:
-    """Dispose ``engine`` and evict it from the cache by identity.
-
-    Session-owner seam for engine handles registered on a
-    ``BucketSession`` at first storage access: disposal targets exactly
-    the registered engine, regardless of which route key cached it.
-    """
-    with _lock:
-        for key, cached in _engines.items():
-            if cached is engine:
-                del _engines[key]
-                break
-    engine.dispose()
+    detach_bucket_engines(bucket_id)
+    dispose_detached_bucket_engines(bucket_id)

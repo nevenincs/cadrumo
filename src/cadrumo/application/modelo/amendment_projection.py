@@ -8,11 +8,8 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-)
-from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, FilingOrigin
 from .filing_projection import ModeloFilingRecordSnapshot
 
 
@@ -25,7 +22,7 @@ class ModeloWorkAmendPublicResultV2(BaseModel):
     record: ModeloFilingRecordSnapshot
     source_filing_record_id: FilingRecordId
     amended_from_filing_record_id: FilingRecordId
-    amendment_kind: CalculationRevisionAmendmentKind
+    amendment_kind: FilingDeclarationKind
     corrected_casilla_count: NonNegativeInt
     m303_rectificativa_motive: M303RectificativaMotive | None = None
     handoff_required: Literal[True] = True

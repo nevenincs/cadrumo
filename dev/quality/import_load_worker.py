@@ -16,6 +16,8 @@ import hashlib
 import importlib
 import json
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
@@ -46,40 +48,26 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
     docs_targets = load_all_target_sets(_DOCS_TARGET_METADATA, repository=repository)
     failures: list[dict[str, object]] = []
     for core_target in core_targets:
-        try:
+        with _capture_failure(failures, core_target):
             importlib.import_module(core_target)
-        except BaseException as exc:  # import-time SystemExit is also a broken load surface
-            failures.append(_failure(core_target, exc))
     for mcp_target in mcp_targets:
-        try:
+        with _capture_failure(failures, mcp_target):
             importlib.import_module(mcp_target)
-        except BaseException as exc:
-            failures.append(_failure(mcp_target, exc))
     for dev_target in dev_targets:
-        try:
+        with _capture_failure(failures, dev_target):
             importlib.import_module(dev_target)
-        except BaseException as exc:
-            failures.append(_failure(dev_target, exc))
     for docs_target in docs_targets:
-        try:
+        with _capture_failure(failures, docs_target):
             importlib.import_module(docs_target)
-        except BaseException as exc:
-            failures.append(_failure(docs_target, exc))
     for service_target in service_targets:
-        try:
+        with _capture_failure(failures, service_target):
             importlib.import_module(service_target)
-        except BaseException as exc:
-            failures.append(_failure(service_target, exc))
     for client_target in client_targets:
-        try:
+        with _capture_failure(failures, client_target):
             importlib.import_module(client_target)
-        except BaseException as exc:
-            failures.append(_failure(client_target, exc))
     for runtime_target in runtime_targets:
-        try:
+        with _capture_failure(failures, runtime_target):
             importlib.import_module(runtime_target)
-        except BaseException as exc:
-            failures.append(_failure(runtime_target, exc))
     targets = tuple(
         sorted(
             {
@@ -99,6 +87,14 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
         "schema_version": _SCHEMA_VERSION,
         "target_digest": hashlib.sha256("\n".join(targets).encode(_ENCODING)).hexdigest(),
     }
+
+
+@contextmanager
+def _capture_failure(failures: list[dict[str, object]], target: str) -> Generator[None]:
+    try:
+        yield
+    except BaseException as exc:  # import-time SystemExit is also a broken load surface
+        failures.append(_failure(target, exc))
 
 
 def _failure(target: str, exc: BaseException) -> dict[str, object]:

@@ -21,7 +21,6 @@ at this boundary can catch it.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -32,7 +31,7 @@ from pydantic import AnyHttpUrl
 
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.tests.published_authority import published_snapshot
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -43,43 +42,19 @@ from ..errors import SedeValidationError
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from .observation_store_support import declaration_pdf_artefact, filed_declaration_observation
 from .wallet_observation_inventory import list_iva_wallet_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_EJERCICIO = newest_authored_edition("100")
+_WALLET_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "d0ab4fce-5ade-4781-9880-7a851f2bf2e1"  # was 'sede-row-identity'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
-
-
-def _artefact(body: bytes) -> FiledDeclaracionArtefact:
-    return FiledDeclaracionArtefact(
-        kind="declaration_pdf",
-        source_url=AnyHttpUrl(f"{_COTEJO_DOCUMENT_URL}?CSV=TUD4V9XAUV7QJ8QV"),
-        content_type="application/pdf",
-        byte_count=len(body),
-        sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-    )
-
-
-def _observation(expediente_id: str, artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
-        modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
-        expediente_id=expediente_id,
-        status="PRESENTADA",
-        presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
-        authenticated_identity="12345678Z",
-        artefacts=(artefact,),
-        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
-    )
 
 
 def _wallet(target_year: int, captured_at: datetime) -> IvaCompensationWalletObservation:
@@ -109,12 +84,12 @@ def _rows(engine, namespace: str) -> list[tuple[object, bytes, bytes]]:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
+    from .....persistence.storage.sql.tables import secure_objects_table
 
     with session_scope(engine) as session:
         found = []
-        for row in session.execute(select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)).scalars():
+        for row in session.execute(select(secure_objects_table).where(secure_objects_table.c.namespace == namespace)):
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             found.append((row.id, aad, decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)))
         return found
@@ -128,11 +103,11 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
     stored bytes are a digest and a raw-bytes WHERE clause is not a narrower
     query but a different one.
     """
-    from sqlalchemy import select
+    from sqlalchemy import update
 
     from .....persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
-    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
+    from .....persistence.storage.sql.tables import secure_objects_table
 
     rows = _rows(engine, namespace)
     donor = next(plaintext for _, _, plaintext in rows if donor_marker in plaintext.decode("utf-8"))
@@ -140,17 +115,20 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
     victim_aad = next(aad for row_id, aad, _ in rows if row_id == victim_id)
 
     with session_scope(engine) as session:
-        victim = session.execute(select(SecureObjectRow).where(SecureObjectRow.id == victim_id)).scalar_one()
-        victim.payload = encrypt_secure_object_payload(donor, associated_data=victim_aad)
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == victim_id)
+            .values(payload=encrypt_secure_object_payload(donor, associated_data=victim_aad)),
+        )
 
 
 def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp_path: Path) -> None:
     """The targeted lookup refuses instead of answering with the other declaration."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        path_a = store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        path_a = store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -171,9 +149,9 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_enumeration(tmp_p
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -194,14 +172,18 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        path_a = store.persist_iva_wallet_observation(_wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC)))
-        store.persist_iva_wallet_observation(_wallet(2025, datetime(2025, 4, 1, 9, 0, tzinfo=UTC)))
+        path_a = store.persist_iva_wallet_observation(
+            _wallet(_WALLET_YEAR, datetime(_WALLET_YEAR, 4, 1, 9, 0, tzinfo=UTC))
+        )
+        store.persist_iva_wallet_observation(
+            _wallet(_WALLET_YEAR - 1, datetime(_WALLET_YEAR - 1, 4, 1, 9, 0, tzinfo=UTC))
+        )
 
         _substitute(
             profile.repository._engine,
             AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace,
-            victim_marker='"target_year":2026',
-            donor_marker='"target_year":2025',
+            victim_marker=f'"target_year":{_WALLET_YEAR}',
+            donor_marker=f'"target_year":{_WALLET_YEAR - 1}',
         )
 
         with pytest.raises(SedeValidationError):
@@ -220,9 +202,9 @@ def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        store.persist_observation(_observation("202310013522456T", artefact))
-        store.persist_observation(_observation("202410013522999B", artefact))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202310013522456T"))
+        store.persist_observation(filed_declaration_observation(artefact, expediente_id="202410013522999B"))
 
         _substitute(
             profile.repository._engine,
@@ -249,9 +231,9 @@ def test_an_untampered_store_still_loads_and_lists(tmp_path: Path) -> None:
     """The binding must not turn every legitimate read into a refusal."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        artefact = _artefact(b"%PDF-1.7 A")
-        observation = _observation("202310013522456T", artefact)
-        wallet = _wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC))
+        artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
+        observation = filed_declaration_observation(artefact, expediente_id="202310013522456T")
+        wallet = _wallet(_WALLET_YEAR, datetime(_WALLET_YEAR, 4, 1, 9, 0, tzinfo=UTC))
 
         path = store.persist_observation(observation)
         wallet_path = store.persist_iva_wallet_observation(wallet)
@@ -275,10 +257,10 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body_a = b"%PDF-1.7 body A"
         body_b = b"%PDF-1.7 body B, a different filing entirely"
-        key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
-        ref_a = store.persist_artefact(key, _artefact(body_a), body_a).storage_ref
+        key = ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T")
+        ref_a = store.persist_artefact(key, declaration_pdf_artefact(body_a), body_a).storage_ref
         assert ref_a is not None
-        store.persist_artefact(key, _artefact(body_b), body_b)
+        store.persist_artefact(key, declaration_pdf_artefact(body_b), body_b)
 
         _substitute(
             profile.repository._engine,
@@ -309,8 +291,8 @@ def test_an_untampered_artefact_still_loads(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body = b"%PDF-1.7 body A"
-        key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
-        ref = store.persist_artefact(key, _artefact(body), body).storage_ref
+        key = ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T")
+        ref = store.persist_artefact(key, declaration_pdf_artefact(body), body).storage_ref
         assert ref is not None
 
         assert store.load_artefact(ref) == body

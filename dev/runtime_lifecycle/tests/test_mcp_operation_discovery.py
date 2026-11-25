@@ -26,11 +26,11 @@ from cadrumo.application.operations.registry import OperationPublicDefinitionDes
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_PATCH_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 from .attended_mcp_support import attended_status, holding_person
 
@@ -49,7 +49,7 @@ _UNREGISTERED = "auth.synthetic-unregistered"
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return production_operation_registry()
 
 
 def _adapter() -> RuntimeMcpAdapter:
@@ -72,7 +72,7 @@ async def _ranked(adapter: RuntimeMcpAdapter, args: dict[str, Any]) -> dict[str,
     """Search by query as an agent does: a search that ran out of time resumes from the contracts it read."""
     for _attempt in range(10):
         reply = await adapter.call("search", args)
-        if reply.get("code") != "runtime_deadline_exceeded":
+        if reply.get("code") != "runtime_timeout":
             return reply
     return reply
 
@@ -84,6 +84,7 @@ async def _discover(adapter: RuntimeMcpAdapter) -> dict[str, dict[str, Any]]:
         "family": await adapter.call("search", {"family": "auth", "limit": 200}),
         "read": await adapter.call("describe", {"definition_id": _READ}),
         "patch": await adapter.call("describe", {"definition_id": _PATCH}),
+        "patch_page": await adapter.call("describe", {"definition_id": _PATCH, "vocabulary_limit": 2}),
         "unregistered": await adapter.call("describe", {"definition_id": _UNREGISTERED}),
     }
 
@@ -148,5 +149,14 @@ async def test_under_a_session_the_runtime_answers_with_the_registrys_descriptio
     assert len(listed) < len([item for item in scope.operations if item.startswith("auth.")])
     for name, definition_id in (("read", _READ), ("patch", _PATCH)):
         assert _described(under[name]) == _registry().describe_public_definition(definition_id)
-    assert under["patch"]["payload_vocabulary"]["questions"]
+    assert under["patch"]["payload_vocabulary"] == {
+        "path": "values[].question_id",
+        "saved_answers_source": {"definition_id": "user-profile.view", "page_kind": "questions"},
+        "next_cursor": 0,
+    }
+    assert _described(under["patch_page"]) == _registry().describe_public_definition(_PATCH)
+    vocabulary_page = under["patch_page"]["payload_vocabulary"]
+    assert 0 < len(vocabulary_page["questions"]) <= 2
+    assert vocabulary_page["saved_answers_source"] == under["patch"]["payload_vocabulary"]["saved_answers_source"]
+    assert vocabulary_page["total"] >= len(vocabulary_page["questions"])
     assert under["unregistered"] == {"outcome": "refused", "code": "operation_denied"}

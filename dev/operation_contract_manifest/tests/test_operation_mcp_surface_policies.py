@@ -35,20 +35,21 @@ from cadrumo.application.operations.access_resolution import (
     with_commit_action,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
-from dev.operation_contract_manifest.tests.test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
+from dev.operation_contract_manifest.tests.test_operation_frontend_parity import PROBE_PROFILE, probe_requests
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
     ALLOWED_OPERATION_ACCESS,
     TEST_CLIENT_INSTANCE_ID,
@@ -104,8 +105,8 @@ def _schema_resolutions(
 ) -> list[ResolvedOperationAccess]:
     """Every access the resolver produces for a request built from the registered schema alone."""
     resolutions = (
-        _resolve_submission(registry, request, profile_id=_PROBE_PROFILE, operation=operation)
-        for request in _probe_requests(definition_id)
+        _resolve_submission(registry, request, profile_id=PROBE_PROFILE, operation=operation)
+        for request in probe_requests(definition_id)
     )
     return [resolved for resolved in resolutions if resolved is not None]
 
@@ -153,7 +154,7 @@ def test_the_real_resolver_of_every_read_only_local_operation_holds_no_commit_an
         return
 
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             _driver,
             registry,

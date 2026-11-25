@@ -1,0 +1,28 @@
+# The Facturae TaxTypeCodeType member a reader acts on. The schema names the tax by this code on
+# every Tax element, withheld or not, and only the IRPF member decides anything in Cadrumo: it
+# marks which withheld tax is the retención. The schema states no date and only the 3.2.2 schema
+# is bundled, so the variant declares no lower bound of its own.
+[fact]
+fact_id = "facturae-tax-type-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "facturae-tax-type-codes:3-2-2"
+date_axis = "invoice_date"
+source_refs = ["facturae-3-2-2-schema"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "facturae-3-2-2-schema"
+required_text = [
+  '<xs:simpleType name="TaxTypeCodeType">',
+  '<xs:enumeration value="04">',
+  "IRPF: Impuesto sobre la Renta de las personas físicas",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "irpf", value = "04" },
+]

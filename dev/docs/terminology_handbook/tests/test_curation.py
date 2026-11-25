@@ -18,9 +18,8 @@ from typing import Final
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from .._enrolment import EnrolmentCandidate, collect_enrolment_candidates
-from .._scaffold import ScaffoldAction, scaffold_handbook
 from ..curation import (
     CurationError,
     audit_handbook,
@@ -30,12 +29,14 @@ from ..curation import (
     set_language_field,
     set_term,
 )
+from ..enrolment import EnrolmentCandidate, collect_enrolment_candidates
 from ..enums import ConceptDomain, TermStatus
 from ..loader import load_terminology_handbook
+from ..scaffold import ScaffoldAction, scaffold_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TODAY = date(2026, 6, 10)
+_TODAY = date(filing_year_envelope().horizon, 6, 10)
 
 _PRORRATA = """
 [concept]

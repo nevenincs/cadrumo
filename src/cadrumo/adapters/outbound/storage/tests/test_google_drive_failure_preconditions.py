@@ -11,15 +11,9 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
-from .. import _google_drive as drive_module
-from .. import _google_drive_metadata as drive_metadata_module
-from .._google_drive import GoogleDriveProvider
-from .._google_drive_metadata import (
-    DriveStoragePreconditionCondition,
-    _parse_drive_modified_time,
-    _parse_drive_size,
-    drive_storage_content_hash,
-)
+from .....tests.terminal_precondition_ast import call_name, fact_expressions
+from .. import google_drive, google_drive_metadata
+from .. import google_drive_requests as drive_requests_module
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -29,6 +23,13 @@ from ..errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
+)
+from ..google_drive import GoogleDriveProvider
+from ..google_drive_metadata import (
+    DriveStoragePreconditionCondition,
+    drive_storage_content_hash,
+    parse_drive_modified_time,
+    parse_drive_size,
 )
 from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
@@ -51,42 +52,42 @@ def _contract(
 
 
 _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
-    "_translate_http_error:OutboundStoragePermissionError:drive request failed": _contract(
+    "translate_http_error:OutboundStoragePermissionError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_AUTHORIZED,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "authorization_sufficient",
     ),
-    "_translate_http_error:OutboundStorageNotFoundError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageNotFoundError:drive request failed": _contract(
         DriveStoragePreconditionCondition.TARGET_PRESENT,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
         "status",
         "target_present",
     ),
-    "_translate_http_error:OutboundStorageConflictError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageConflictError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
         "status",
         "conflict_detected",
     ),
-    "_translate_http_error:OutboundStorageQuotaError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageQuotaError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "quota_available",
     ),
-    "_translate_http_error:OutboundStorageUnavailableError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageUnavailableError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_AVAILABLE,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "available",
     ),
-    "_translate_http_error:OutboundStorageNetworkError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageNetworkError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
         NoRecoveryOutcome.SAFETY,
         "operation",
@@ -136,7 +137,7 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "operation",
         "object_present",
     ),
-    "get:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": _contract(
+    "_download_drive_payload:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": _contract(
         DriveStoragePreconditionCondition.MEDIA_PAYLOAD_BYTES,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
@@ -155,37 +156,37 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "component",
         "client_available",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
@@ -205,32 +206,32 @@ def _literal(value: str | bool) -> str:
 
 
 _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
-    "_translate_http_error:OutboundStoragePermissionError:drive request failed": (
+    "translate_http_error:OutboundStoragePermissionError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("authorization_sufficient", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageNotFoundError:drive request failed": (
+    "translate_http_error:OutboundStorageNotFoundError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("target_present", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageConflictError:drive request failed": (
+    "translate_http_error:OutboundStorageConflictError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("conflict_detected", _literal(True)),
     ),
-    "_translate_http_error:OutboundStorageQuotaError:drive request failed": (
+    "translate_http_error:OutboundStorageQuotaError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("quota_available", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageUnavailableError:drive request failed": (
+    "translate_http_error:OutboundStorageUnavailableError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("available", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageNetworkError:drive request failed": (
+    "translate_http_error:OutboundStorageNetworkError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("transport_available", _literal(False)),
@@ -264,7 +265,7 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("operation", _literal("get")),
         ("object_present", _literal(False)),
     ),
-    "get:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": (
+    "_download_drive_payload:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": (
         ("operation", _literal("files.get_media")),
         ("payload_bytes", _literal(False)),
         ("payload_type", "type(payload).__name__"),
@@ -277,27 +278,27 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("component", _literal("media_upload")),
         ("client_available", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
@@ -316,14 +317,6 @@ _EXTERNAL_ERROR_TYPES = {
     "OutboundStorageNetworkError",
     "OutboundStorageIntegrityError",
 }
-
-
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
 
 
 def _carrier_message(call: ast.Call) -> str:
@@ -346,7 +339,7 @@ def _carrier_message(call: ast.Call) -> str:
 
 def _external_precondition(call: ast.Call) -> ast.Call:
     value = next((keyword.value for keyword in call.keywords if keyword.arg == "precondition_verdict"), None)
-    assert isinstance(value, ast.Call) and _call_name(value.func) == "drive_external_verdict"
+    assert isinstance(value, ast.Call) and call_name(value.func) == "drive_external_verdict"
     return value
 
 
@@ -374,19 +367,9 @@ def _fact_keys_from_precondition(call: ast.Call) -> frozenset[str]:
     return frozenset(keys)
 
 
-def _fact_expressions_from_precondition(call: ast.Call) -> tuple[tuple[str, str], ...]:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == "facts"), None)
-    assert isinstance(value, ast.Dict)
-    expressions: list[tuple[str, str]] = []
-    for key, fact_value in zip(value.keys, value.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        expressions.append((key.value, ast.unparse(fact_value)))
-    return tuple(expressions)
-
-
 def _external_failure_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
-    for module in (drive_module, drive_metadata_module):
+    for module in (google_drive, google_drive_metadata, drive_requests_module):
         tree = ast.parse(inspect.getsource(module))
 
         class Visitor(ast.NodeVisitor):
@@ -408,7 +391,7 @@ def _external_failure_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_type = _call_name(node.func)
+                error_type = call_name(node.func)
                 if error_type in _EXTERNAL_ERROR_TYPES:
                     key = f"{self.owner}:{error_type}:{_carrier_message(node)}"
                     assert key not in carriers, f"duplicate Drive failure carrier {key}"
@@ -470,9 +453,11 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
         assert _condition_from_precondition(precondition) is expected.condition, key
         assert _outcome_from_precondition(precondition) is expected.outcome, key
         assert _fact_keys_from_precondition(precondition) == expected.fact_keys, key
-        assert _fact_expressions_from_precondition(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
+        assert fact_expressions(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
 
-    source = "\n".join(inspect.getsource(module) for module in (drive_module, drive_metadata_module))
+    source = "\n".join(
+        inspect.getsource(module) for module in (google_drive, google_drive_metadata, drive_requests_module)
+    )
     assert "PreconditionVerdict(" not in source
     assert "ConditionEvidence(" not in source
 
@@ -654,9 +639,9 @@ def test_malformed_drive_metadata_has_exact_safety_contracts(
 ) -> None:
     with pytest.raises(OutboundStorageIntegrityError) as raised:
         if case == "size":
-            _parse_drive_size("not-an-integer", provider_object_id="drive-file")
+            parse_drive_size("not-an-integer", provider_object_id="drive-file")
         elif case == "modified-time":
-            _parse_drive_modified_time("not-a-time", provider_object_id="drive-file")
+            parse_drive_modified_time("not-a-time", provider_object_id="drive-file")
         else:
             drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
 

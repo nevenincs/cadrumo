@@ -7,7 +7,7 @@ from uuid import UUID
 import pytest
 
 from ...application.workflow.profile_bucket_models import ProfileBucketPointer
-from ..overview_read_composition import _calendar_other_profiles
+from ..overview_read_composition import calendar_other_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -24,7 +24,7 @@ def test_calendar_locked_profiles_exclude_active_and_keep_label_order(include_ac
     if include_active:
         pointers[active] = ProfileBucketPointer(bucket_id=active, label="Active")
 
-    rows = _calendar_other_profiles(active, pointers)
+    rows = calendar_other_profiles(active, pointers)
 
     assert tuple((row.profile_id, row.label) for row in rows) == ((alpha, "Alpha"), (zulu, "Zulu"))
 
@@ -39,10 +39,10 @@ def test_calendar_locked_profiles_keep_source_order_for_equal_labels() -> None:
         second: ProfileBucketPointer(bucket_id=second, label="Shared label"),
     }
 
-    assert tuple(row.profile_id for row in _calendar_other_profiles(active, pointers)) == (first, second)
+    assert tuple(row.profile_id for row in calendar_other_profiles(active, pointers)) == (first, second)
 
 
 def test_calendar_locked_profiles_accept_no_other_profiles() -> None:
     active = str(UUID(int=1))
-    assert _calendar_other_profiles(active, {}) == ()
-    assert _calendar_other_profiles(active, {active: ProfileBucketPointer(bucket_id=active, label="Active")}) == ()
+    assert calendar_other_profiles(active, {}) == ()
+    assert calendar_other_profiles(active, {active: ProfileBucketPointer(bucket_id=active, label="Active")}) == ()

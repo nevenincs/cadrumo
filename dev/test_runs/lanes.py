@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass
 from typing import IO, TYPE_CHECKING
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .paths import allocate_run_directory, test_log_root
 
@@ -105,7 +105,7 @@ class _Tee:
         self._stream.flush()
 
 
-def _run_lane(lane: str, env: dict[str, str]) -> LaneResult:
+def run_lane(lane: str, env: dict[str, str]) -> LaneResult:
     """Run one lane and time it.
 
     Args:
@@ -192,7 +192,7 @@ def _run_all(
                 ),
                 flush=True,
             )
-        result = _run_lane(lane, env)
+        result = run_lane(lane, env)
         results.append(result)
         if json_events:
             print(
@@ -210,6 +210,11 @@ def _run_all(
                 flush=True,
             )
     return results
+
+
+def _first_failed_status(results: Sequence[LaneResult | SkippedLane]) -> int:
+    """Preserve the first executed lane's nonzero status, ignoring skipped lanes."""
+    return next((result.status for result in results if isinstance(result, LaneResult) and result.status != 0), 0)
 
 
 def run_lanes(
@@ -248,7 +253,7 @@ def run_lanes(
             lane_kinds=declared_kinds,
         )
         _summarise(results)
-        return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
+        return _first_failed_status(results)
 
     run_root = allocate_run_directory(repository or test_log_root(), family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
@@ -275,7 +280,7 @@ def run_lanes(
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 
-    return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
+    return _first_failed_status(results)
 
 
 def lane_command_parser() -> argparse.ArgumentParser:

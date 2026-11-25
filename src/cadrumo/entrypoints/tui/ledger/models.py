@@ -9,18 +9,22 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal, Protocol
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.classify_requests import LedgerClassifyPatch
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.ledger.invoice_draft_records import LabelReadingFallback
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from ....application.ledger.transaction_projection import LedgerTransactionProjection
+from ....application.ledger.update_contracts import LedgerUpdatePatch, LedgerUpdatePatchField
 from ....application.ledger.workspace import (
     LedgerAffectedDeclarationRefV1,
     LedgerInvoiceReconciliationRefV1,
@@ -37,9 +41,7 @@ from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.invoices.business_premises import SituacionInmueble
-from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
-from ....domain.transactions.models import Transaction
 from ....domain.transactions.own_accounts import OwnAccountId
 from ..destination_alias import closed_destination_ids
 
@@ -135,23 +137,6 @@ class LedgerEntryRowV1(BaseModel):
         return self
 
 
-class LedgerReviewRowV1(BaseModel):
-    """A reviewable transaction plus the canonical read action naming its door."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    transaction_id: TransactionId
-    review_status: str
-    action: ActionReference
-    source: LedgerWorkspaceEntryRefV1
-
-    @model_validator(mode="after")
-    def _mirror_source(self) -> LedgerReviewRowV1:
-        if self.transaction_id != self.source.transaction_id or self.review_status != self.source.review_status:
-            raise ValueError("Ledger review row must mirror its application projection source")
-        return self
-
-
 class LedgerFlowState(StrEnum):
     """Explicit state of a command-backed Ledger interaction."""
 
@@ -161,6 +146,11 @@ class LedgerFlowState(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+    @property
+    def is_settled(self) -> bool:
+        """Whether the flow has reached an end state, leaving only a fresh start."""
+        return self in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED, LedgerFlowState.CANCELLED}
 
 
 type LedgerClassificationPatchV1 = ManualLedgerTransactionPatch | LedgerClassifyPatch
@@ -204,10 +194,24 @@ class LedgerExclusionSubmissionV1(BaseModel):
     transaction_id: TransactionId
 
 
+class LedgerExclusionResultV1(BaseModel):
+    """Identity-only acknowledgement of a settled runtime exclusion.
+
+    The registered lifecycle operation returns display facts, not a domain
+    transaction, so a runtime door answers with the identity it settled.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
+
+
 class LedgerExclusionSubmitterV1(Protocol):
     """Injected application door that marks one entry reviewed and excluded."""
 
-    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+    async def __call__(
+        self, submission: LedgerExclusionSubmissionV1
+    ) -> ManualLedgerTransactionResult | LedgerExclusionResultV1:
         """Exclude one active entry through the canonical lifecycle writer."""
         ...
 
@@ -244,7 +248,7 @@ class LedgerImportRequestV1(BaseModel):
     path: Path
     source_kind: LedgerImportSourceKind
     provider: LedgerProviderID = LedgerProviderID.AUTO
-    country: str | None = Field(default=None, min_length=2, max_length=2)
+    country: CountryCodeAlpha2 | None = None
     own_account_id: OwnAccountId | None = None
     previewed_sources: tuple[LedgerImportSourceBindingV1, ...] | None = None
     """Set only to apply: exactly the files a preview read, each refused if its bytes changed since."""
@@ -307,11 +311,14 @@ class LedgerImportDoorV1(Protocol):
 
 
 class LedgerInvoiceClassChoice(StrEnum):
-    """The invoice classes an operator may state; the registry resolves each token."""
+    """The invoice classes an operator may state, spelled as the registry's tokens.
 
-    ORDINARIA = "ordinaria"
-    SIMPLIFICADA = "simplificada"
-    RECTIFICATIVA = "rectificativa"
+    The add path matches the token exactly, so a lowercase spelling is refused.
+    """
+
+    ORDINARIA = "ORDINARIA"
+    SIMPLIFICADA = "SIMPLIFICADA"
+    RECTIFICATIVA = "RECTIFICATIVA"
 
 
 class LedgerInvoiceLineEntryV1(BaseModel):
@@ -400,28 +407,41 @@ class LedgerInvoiceAddDoorV1(Protocol):
 class LedgerRecordDoorsV1(Protocol):
     """Injected application doors that read and edit canonical invoice and transaction records.
 
-    The bound implementation captures one profile and authority generation,
-    so navigating between records can never retarget a write.
+    Every value is the registered operation's public projection: the worker
+    keeps the domain records, and the screens receive only the facts it admits.
+    The bound implementation captures one profile and session, so navigating
+    between records can never retarget a write.
     """
 
-    async def invoices(self) -> tuple[Invoice, ...]:
-        """List the bucket's canonical invoices."""
+    async def invoices(self) -> tuple[CatalogueInvoiceSnapshot, ...]:
+        """List the profile's canonical invoices."""
         ...
 
-    async def invoice(self, invoice_id: str) -> Invoice:
+    async def invoice(self, invoice_id: str) -> CatalogueInvoiceSnapshot:
         """Resolve one canonical invoice by its full identity."""
         ...
 
-    async def update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
-        """Submit a baseline-guarded metadata patch through the shared writer."""
+    async def update_invoice(
+        self, baseline: CatalogueInvoiceSnapshot, patch: CatalogueInvoicePatch
+    ) -> CatalogueInvoiceSnapshot:
+        """Correct the invoice the operator saw, refusing it if it changed since."""
         ...
 
-    async def transaction(self, transaction_id: str) -> Transaction:
-        """Resolve one typed transaction."""
+    async def remove_invoice(self, baseline: CatalogueInvoiceSnapshot) -> CatalogueInvoiceSnapshot:
+        """Remove the invoice the operator saw, refusing it if it changed since."""
         ...
 
-    async def update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
-        """Apply a typed edit against the captured transaction baseline."""
+    async def transaction(self, transaction_id: str) -> LedgerTransactionProjection:
+        """Resolve one transaction by its identity."""
+        ...
+
+    async def update_transaction(
+        self,
+        baseline: LedgerTransactionProjection,
+        patch: LedgerUpdatePatch,
+        fields: tuple[LedgerUpdatePatchField, ...],
+    ) -> LedgerTransactionProjection:
+        """Apply the selected fields to the transaction the operator saw, refusing it if it changed since."""
         ...
 
 
@@ -446,15 +466,6 @@ class LedgerEvidenceRecordRowV1(BaseModel):
     invoice_number: str | None
     created_at: str
     status: LedgerEvidenceRecordStatus
-
-
-class LedgerReaderReadinessV1(BaseModel):
-    """Whether documents can be read on this machine, as the reader reports it."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    extraction_ready: bool
-    failed_condition_id: str | None = None
 
 
 class LedgerEvidenceDraftV1(BaseModel):
@@ -523,16 +534,16 @@ class LedgerEvidenceDoorV1(Protocol):
         """
         ...
 
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        """Measure the local document reader without starting or loading anything."""
-        ...
-
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         """Read one stored document on this machine; nothing is recorded."""
         ...
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Re-read the document and record it as an invoice through the sole writer."""
+        ...
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what the runtime serves of one stored document's first page; nothing is recorded."""
         ...
 
 
@@ -610,6 +621,7 @@ __all__ = [
     "LedgerEvidenceRecordRowV1",
     "LedgerEvidenceRecordStatus",
     "LedgerEvidenceRowV1",
+    "LedgerExclusionResultV1",
     "LedgerExclusionSubmissionV1",
     "LedgerExclusionSubmitterV1",
     "LedgerFlowState",
@@ -628,9 +640,7 @@ __all__ = [
     "LedgerLinkResultV1",
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",
-    "LedgerReaderReadinessV1",
     "LedgerRecordDoorsV1",
-    "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",
 ]

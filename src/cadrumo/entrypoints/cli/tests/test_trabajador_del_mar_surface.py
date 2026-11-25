@@ -31,6 +31,7 @@ would rely on, exercised against the same singletons the CLI uses.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -38,6 +39,8 @@ import pytest
 from ....application.calculations.maritime_exemption_service import resolve_maritime_exemption
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
@@ -46,6 +49,15 @@ from ....domain.renta.maritime_exemption import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_DEVENGO = latest_period_end()
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _rebeca_vessel_registry() -> str:
@@ -91,6 +103,8 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
             ),
             annual_salary=Decimal("36500"),
             qualifying_days=100,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
@@ -103,6 +117,8 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
                 vessel_registry=_rebeca_vessel_registry(),
             ),
             gross_navigation_income=Decimal("30000"),
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
@@ -118,6 +134,8 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
                 vessel_registry=_rebeca_vessel_registry(),
             ),
             gross_navigation_income=Decimal("30000"),
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         obs = result.observations[0]
         assert result.casilla_values[obs.casilla_id] == obs.value

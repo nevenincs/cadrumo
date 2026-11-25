@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import ast
 import inspect
-from collections import Counter
+import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -11,50 +12,71 @@ import rtoml
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlacementKind
 
 from ..analysis import m200_semantic_casilla_candidates as subject
 from ..analysis import m200_target_identity_worklist as identity_subject
-from ..analysis.m200_record_design_support import record_design_source
-from ..compiler.loader import load_catalogue_file, load_modelo_directory
+from ..analysis.m200_record_design_support import record_design_field_index, record_design_source
+from ..compiler.authority import compiled_bundled_authority
+from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
-from ..pipeline.semantic_map import load_semantic_map
+from ..pipeline.semantic_map import SemanticMapEntry, load_semantic_map_for_revision, semantic_anchor_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+# The earlier of the two editions the identity worklists cover; its cell ceiling below is that edition's.
+# The earliest edition whose worklist carries both orphan dispositions, so the
+# disposition checks below have one of each to classify; an edition declaring no
+# design-unprinted row has only working figures.
+_TARGET_REVISION = next(
+    worklist.revision
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists()
+    if {row.disposition for row in worklist.orphaned_declarations}
+    == {
+        identity_subject.M200OrphanDisposition.DECLARED_UNPLACED,
+        identity_subject.M200OrphanDisposition.DECLARED_WORKING_FIGURE,
+    }
+)
+_SHARED_OWNER_CELL_CEILING = 2717
+
+
 @pytest.fixture(scope="module")
 def target_identity_inputs():
-    source_root = bundled_path()
-    registry_root = bundled_path("registry", "aeat")
-    modelo = load_modelo_directory(registry_root / "modelos" / "200")
-    target = modelo.revisions["2024"]
-    catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
-    source_ref = record_design_source(target.source_refs, catalogues.sources)
-    epoch = catalogues.sources[source_ref].record_design_epoch
+    authority = compiled_bundled_authority()
+    target = authority.modelo("200").revisions[_TARGET_REVISION]
+    sources = authority.catalogues.sources
+    source_ref = record_design_source(target.source_refs, sources)
+    epoch = sources[source_ref].record_design_epoch
     assert epoch is not None
     return (
-        load_semantic_map(Path("dev/registry/mappings/modelo_200") / epoch),
+        load_semantic_map_for_revision(Path("dev/registry/mappings/modelo_200") / epoch, target.id),
         load_record_design_intermediate(
-            source_root,
-            catalogues.sources,
+            bundled_path(),
+            sources,
             source_ref=source_ref,
             filing_year=target.valid_from.year,
             design_epoch=epoch,
         ),
         {declaration.id: declaration for declaration in target.casillas},
-        frozenset(),
+        {placement.casilla_id: placement.kind for layout in target.form_layouts for placement in layout.placements},
+    )
+
+
+def _classify(target_map, target_design, declarations, placements):
+    return identity_subject.classify_m200_target_identities(
+        target_map,
+        target_design,
+        revision_id=_TARGET_REVISION,
+        target_declarations=declarations,
+        target_candidate_ids=frozenset(),
+        declared_placements=placements,
     )
 
 
 @pytest.fixture(scope="module")
 def target_identity_worklist(target_identity_inputs):
-    target_map, target_design, declarations, candidates = target_identity_inputs
-    return identity_subject.classify_m200_target_identities(
-        target_map,
-        target_design,
-        target_declarations=declarations,
-        target_candidate_ids=candidates,
-    )
+    return _classify(*target_identity_inputs)
 
 
 def _candidate() -> subject.M200CasillaCandidate:
@@ -95,41 +117,39 @@ def test_review_toml_is_deterministic_and_serializes_disposition() -> None:
     assert "legal_refs" not in rendered
 
 
-def test_cli_stdout_exports_the_complete_proposal_only_target_identity_worklist(
+def test_cli_stdout_exports_one_proposal_only_table_per_screened_revision(
     capsys,
     monkeypatch,
     target_identity_worklist,
 ) -> None:
     monkeypatch.setattr(
-        identity_subject, "load_bundled_m200_target_identity_worklist", lambda: target_identity_worklist
+        identity_subject, "load_bundled_m200_target_identity_worklists", lambda: (target_identity_worklist,)
     )
 
     assert identity_subject.main([]) == 0
     document = rtoml.loads(capsys.readouterr().out)
 
     assert document["authority_status"] == "proposal_only"
-    # The counts once carried a frozen corpus snapshot - 185, 2 and 15 - which
-    # went stale within an afternoon of being written when the modelo 200 2024
-    # declarations landed, and then reported a fall of four in one number and a
-    # rise of a hundred and fifty-two in another as one failed equality. What
-    # the assertion was for survives without the snapshot: the document must
-    # describe its own contents, and it must describe something.
+    (table,) = document["revision_worklist"]
+    assert table["revision"] == _TARGET_REVISION
     sections = {
         "map_owner_mismatches": "map_owner_mismatch",
         "orphaned_declarations": "orphaned_declaration",
         "printed_identity_diagnostics": "printed_identity_diagnostic",
+        "unnumbered_design_rows": "unnumbered_design_row",
+        "shared_owners": "shared_owner",
     }
-    assert set(document["counts"]) == set(sections)
+    assert set(table["counts"]) == {*sections, "shared_owner_cells"}
     for count_key, section_key in sections.items():
-        assert len(document[section_key]) == document["counts"][count_key]
-        assert document["counts"][count_key] > 0, f"{section_key} is empty, so the export proves nothing"
+        assert len(table.get(section_key, [])) == table["counts"][count_key]
+    assert sum(len(row["cells"]) for row in table.get("shared_owner", [])) == table["counts"]["shared_owner_cells"]
     assert "candidate" not in document
 
 
 def test_cli_rejects_retired_output_arguments_before_loading_worklist(monkeypatch) -> None:
     monkeypatch.setattr(
         identity_subject,
-        "load_bundled_m200_target_identity_worklist",
+        "load_bundled_m200_target_identity_worklists",
         lambda: pytest.fail("retired output arguments must fail during parsing"),
     )
 
@@ -197,8 +217,9 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         "spellings among the forbidden names are only visible in this set"
     )
     assert filesystem_writes.isdisjoint(called_attributes | called_bare)
-    assert not hasattr(identity_subject, "_write_review_output")
-    assert not hasattr(identity_subject, "_resolve_review_output_path")
+    for helper in ("write_review_output", "resolve_review_output_path"):
+        assert not hasattr(identity_subject, helper)
+        assert not hasattr(identity_subject, f"_{helper}")
 
 
 def _record_design_field(
@@ -222,7 +243,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
     # `_classify_sibling` does not read the sibling field or entry once the
     # current printed identity resolves, which the two `None`s below assert:
     # the classification below holds with no sibling evidence at all.
-    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+    disposition, reason, proposed_id, _kind = subject.classify_sibling(
         target_field,
         None,
         None,
@@ -238,7 +259,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
 def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     target_field = _record_design_field(normalized_description="Importe [01683]")
 
-    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+    disposition, reason, proposed_id, _kind = subject.classify_sibling(
         target_field,
         None,
         None,
@@ -251,88 +272,335 @@ def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     assert proposed_id == "01683"
 
 
-def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_orphan(target_identity_worklist) -> None:
-    worklist = target_identity_worklist
-    dispositions = Counter(row.disposition for row in worklist.map_owner_mismatches)
+def _printed_number(fields: Mapping[tuple[object, ...], RecordDesignIntermediateField], entry: SemanticMapEntry) -> str:
+    (number,) = re.findall(r"\[([0-9]+)\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    return str(number).lstrip("0")
 
-    assert worklist.map_owner_mismatches
-    assert set(dispositions) == {identity_subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL}
-    assert all(row.proposed_identity_origin == "declared" for row in worklist.map_owner_mismatches)
-    assert all(
-        row.printed_identity_state is identity_subject.M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
-        for row in worklist.map_owner_mismatches
-    )
-    # These two were the whole orphan set when this test was written and are now
-    # two of a hundred and fifty-four, because the 2024 declarations landed
-    # without map owners. They are kept as named members rather than as the set,
-    # so the anchor survives a population that grows.
-    orphans = {row.casilla_id for row in worklist.orphaned_declarations}
-    assert {"DP200014:SAL_RESERVA_DOTACION", "DP200014:bin-aplicada-maxima"} <= orphans
+
+def _casilla_entries(target_map):
+    return [entry for entry in target_map.entries if entry.kind is CasillaFieldKind.CASILLA]
+
+
+def _with_entry(target_map, original, replacement):
+    entries = tuple(replacement if entry is original else entry for entry in target_map.entries)
+    return target_map.model_copy(update={"entries": entries})
+
+
+def test_screen_covers_every_revision_that_carries_an_export_layout() -> None:
+    # The screen checks the identity of the boxes an export layout writes, so its
+    # scope is the revisions that carry a layout, whatever grade they declare.
+    worklists = identity_subject.load_bundled_m200_target_identity_worklists()
+    authority = compiled_bundled_authority()
+    with_layout = {
+        str(revision.id) for revision in authority.modelo("200").revisions.values() if revision.export_layouts
+    }
+
+    assert with_layout
+    assert with_layout <= {worklist.revision for worklist in worklists}
+    for worklist in worklists:
+        assert not worklist.map_owner_mismatches, worklist.revision
+        assert not worklist.printed_identity_diagnostics, worklist.revision
+        assert {row.disposition for row in worklist.orphaned_declarations} <= {
+            identity_subject.M200OrphanDisposition.DECLARED_UNPLACED,
+            identity_subject.M200OrphanDisposition.DECLARED_WORKING_FIGURE,
+        }, worklist.revision
+
+
+def test_target_identity_worklist_is_clean_and_dispositions_layout_declared_orphans(target_identity_worklist) -> None:
+    worklist = target_identity_worklist
+
+    assert worklist.revision == _TARGET_REVISION
+    assert not worklist.map_owner_mismatches
+    assert not worklist.printed_identity_diagnostics
+    by_id = {row.casilla_id: row.disposition for row in worklist.orphaned_declarations}
+    assert by_id["DP200014:SAL_RESERVA_DOTACION"] is identity_subject.M200OrphanDisposition.DECLARED_UNPLACED
+    assert by_id["DP200014:bin-aplicada-maxima"] is identity_subject.M200OrphanDisposition.DECLARED_WORKING_FIGURE
+
+
+def test_orphan_without_a_layout_declaration_stays_unmapped(target_identity_inputs) -> None:
+    target_map, target_design, declarations, _placements = target_identity_inputs
+
+    worklist = _classify(target_map, target_design, declarations, {})
+
     assert {row.disposition for row in worklist.orphaned_declarations} == {
         identity_subject.M200OrphanDisposition.UNMAPPED_DECLARATION
     }
 
 
-def test_target_identity_worklist_keeps_printed_diagnostics_separate_from_map_owner(target_identity_worklist) -> None:
-    worklist = target_identity_worklist
-
-    assert len(worklist.printed_identity_diagnostics) == 11
-    assert Counter(row.state for row in worklist.printed_identity_diagnostics) == {
-        identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY: 11,
-    }
-    assert {row.export_field_id for row in worklist.printed_identity_diagnostics}.isdisjoint(
-        row.export_field_id for row in worklist.map_owner_mismatches
+def test_planted_wrong_owner_is_reported(target_identity_inputs, target_identity_worklist) -> None:
+    target_map, target_design, declarations, placements = target_identity_inputs
+    entries = _casilla_entries(target_map)
+    victim = entries[0]
+    wrong_owner = next(
+        entry.casilla_id
+        for entry in entries
+        if entry.casilla_id is not None and entry.casilla_id.lstrip("0") != str(victim.casilla_id).lstrip("0")
     )
-    rendered = identity_subject.render_m200_target_identity_worklist_toml(worklist)
-    assert rendered == identity_subject.render_m200_target_identity_worklist_toml(worklist)
-    assert "proposed_target_identity_non_authoritative" in rendered
+    planted = _with_entry(target_map, victim, victim.model_copy(update={"casilla_id": wrong_owner}))
+
+    worklist = _classify(planted, target_design, declarations, placements)
+
+    conflicts = [
+        row
+        for row in worklist.printed_identity_diagnostics
+        if row.state is identity_subject.M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
+    ]
+    assert [row.export_field_id for row in conflicts] == [str(victim.export_field_id)]
+    assert conflicts[0].declared_map_owner == wrong_owner
+    assert len(worklist.printed_identity_diagnostics) == len(target_identity_worklist.printed_identity_diagnostics) + 1
+
+
+def test_shared_owner_ignores_the_printed_number_match_that_hides_it(target_identity_inputs) -> None:
+    """Teeth: two sheets printing one number with one owner pass every number check, and are still reported."""
+    target_map, target_design, declarations, placements = target_identity_inputs
+    fields = record_design_field_index(target_design)
+    numbers: dict[str, list[SemanticMapEntry]] = {}
+    for entry in _casilla_entries(target_map):
+        numbers.setdefault(_printed_number(fields, entry), []).append(entry)
+    worklist_before = _classify(target_map, target_design, declarations, placements)
+    reported = {row.casilla_id for row in worklist_before.shared_owners}
+    (left, right) = next(
+        pair
+        for pair in numbers.values()
+        if len(pair) == 2
+        and {str(pair[0].casilla_id), str(pair[1].casilla_id)}.isdisjoint(reported)
+        and pair[0].casilla_id != pair[1].casilla_id
+    )
+    merged = _with_entry(target_map, right, right.model_copy(update={"casilla_id": left.casilla_id}))
+
+    worklist = _classify(merged, target_design, declarations, placements)
+
+    assert not worklist.printed_identity_diagnostics
+    assert not worklist.map_owner_mismatches
+    (planted,) = [row for row in worklist.shared_owners if row.casilla_id not in reported]
+    assert planted.casilla_id == left.casilla_id
+    assert {cell.export_field_id for cell in planted.cells} == {str(left.export_field_id), str(right.export_field_id)}
+
+
+def test_declared_echo_of_another_sheet_is_not_a_shared_owner(target_identity_worklist) -> None:
+    reported = {row.casilla_id: {cell.sheet for cell in row.cells} for row in target_identity_worklist.shared_owners}
+    echoed = {casilla_id for _sheet, casilla_id in MODELO_200_ECHO_CELLS}
+
+    assert echoed
+    assert echoed.isdisjoint(reported)
+
+
+def test_shared_owner_debt_does_not_grow() -> None:
+    """Each cell here receives another concept's amount, so the count may only fall."""
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists():
+        cells = sum(len(row.cells) for row in worklist.shared_owners)
+        assert cells <= _SHARED_OWNER_CELL_CEILING, worklist.revision
+
+
+def test_padded_equivalent_owner_is_not_reported(target_identity_inputs, target_identity_worklist) -> None:
+    target_map, target_design, declarations, placements = target_identity_inputs
+    padded = next(
+        entry
+        for entry in _casilla_entries(target_map)
+        if str(entry.casilla_id).isdecimal() and str(entry.casilla_id).startswith("0")
+    )
+    stripped = padded.model_copy(update={"casilla_id": str(padded.casilla_id).lstrip("0")})
+    assert stripped.casilla_id not in declarations
+    unpadded = _with_entry(target_map, padded, stripped)
+
+    worklist = _classify(unpadded, target_design, declarations, placements)
+
+    assert worklist == target_identity_worklist
+
+
+def test_printed_identity_equal_after_padding_is_not_diagnosed_but_a_different_one_is() -> None:
+    four_digit = _record_design_field(normalized_description="Importe [1501]")
+    three_digit = _record_design_field(normalized_description="Importe [387]")
+
+    assert identity_subject.printed_target_number(four_digit) == "1501"
+    assert identity_subject.printed_target_number(three_digit) == "387"
+    matches = identity_subject.M200PrintedIdentityState.MATCHES_MAP_OWNER
+    assert identity_subject.printed_identity_state("1501", "01501", proposal=None) is matches
+    assert identity_subject.printed_identity_state("1501", "1501", proposal=None) is matches
+    assert identity_subject.printed_identity_state("387", "00387", proposal=None) is matches
+    assert (
+        identity_subject.printed_identity_state("1501", "01502", proposal=None)
+        is identity_subject.M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
+    )
+    assert (
+        identity_subject.printed_identity_state(None, "01501", proposal=None)
+        is identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY
+    )
+
+
+def test_target_identity_worklist_renders_deterministically(target_identity_worklist) -> None:
+    rendered = identity_subject.render_m200_target_identity_worklists_toml((target_identity_worklist,))
+
+    assert rendered == identity_subject.render_m200_target_identity_worklists_toml((target_identity_worklist,))
+    assert "declared_unplaced" in rendered
     assert "[[entries]]" not in rendered
 
 
 def test_target_identity_classifier_refuses_source_anchor_omission_noncasilla_owner_and_source_drift(
     target_identity_inputs,
 ) -> None:
-    target_map, target_design, declarations, candidates = target_identity_inputs
-    kwargs = {"target_declarations": declarations, "target_candidate_ids": candidates}
-    # Every variant below is a real, typed `SemanticMap`/`SemanticMapEntry`,
-    # perturbed through `model_copy` rather than duck-typed: the classifier's
-    # own checks are what must refuse the drift, not a stand-in object shaped
-    # only well enough to reach them. `model_copy` does not re-run the
-    # frozen model's validators, so the perturbed structure survives
-    # construction and reaches the classifier unresolved.
+    target_map, target_design, declarations, placements = target_identity_inputs
+
+    def classify(candidate):
+        return _classify(candidate, target_design, declarations, placements)
+
+    # Every variant is a real, typed map perturbed through `model_copy`, so the
+    # classifier's own checks are what must refuse the drift.
     omitted = target_map.model_copy(update={"entries": target_map.entries[1:]})
     with pytest.raises(ValueError, match="omits"):
-        identity_subject.classify_m200_target_identities(omitted, target_design, **kwargs)
+        classify(omitted)
 
-    first_casilla = next(entry for entry in target_map.entries if entry.kind is CasillaFieldKind.CASILLA)
+    first_casilla = _casilla_entries(target_map)[0]
     noncasilla_owner = first_casilla.model_copy(update={"kind": CasillaFieldKind.FILLER})
-    invalid_entries = tuple(noncasilla_owner if entry is first_casilla else entry for entry in target_map.entries)
-    invalid_map = target_map.model_copy(update={"entries": invalid_entries})
     with pytest.raises(ValueError, match="non-casilla"):
-        identity_subject.classify_m200_target_identities(invalid_map, target_design, **kwargs)
+        classify(_with_entry(target_map, first_casilla, noncasilla_owner))
 
     missing_owner = first_casilla.model_copy(update={"casilla_id": None})
-    missing_owner_entries = tuple(missing_owner if entry is first_casilla else entry for entry in target_map.entries)
-    missing_owner_map = target_map.model_copy(update={"entries": missing_owner_entries})
     with pytest.raises(ValueError, match="omits its owner"):
-        identity_subject.classify_m200_target_identities(missing_owner_map, target_design, **kwargs)
+        classify(_with_entry(target_map, first_casilla, missing_owner))
 
-    drifted = target_map.model_copy(update={"source_sha256": "0" * 64})
+    unknown_owner = first_casilla.model_copy(update={"casilla_id": "99999999"})
+    with pytest.raises(ValueError, match="ambiguous or missing"):
+        classify(_with_entry(target_map, first_casilla, unknown_owner))
+
     with pytest.raises(ValueError, match="source identity drifted"):
-        identity_subject.classify_m200_target_identities(drifted, target_design, **kwargs)
+        classify(target_map.model_copy(update={"source_sha256": "0" * 64}))
 
 
-def test_target_identity_classifier_refuses_ambiguous_or_wrong_segment_proposals() -> None:
+def test_target_identity_classifier_proposes_only_the_unique_segment_qualified_owner(target_identity_inputs) -> None:
+    target_map, _design, _declarations, _placements = target_identity_inputs
+    entry = _casilla_entries(target_map)[0].model_copy(update={"casilla_id": "588"})
     field = _record_design_field(normalized_description="Importe", record_identity="DP200018")
-    with pytest.raises(ValueError, match="ambiguous"):
-        identity_subject._classify_noncanonical_map_owner(
-            "588",
-            field=field,
-            known_ids=frozenset({"00588", "DP200018:00588"}),
+
+    disposition, proposed = identity_subject.classify_noncanonical_map_owner(
+        entry, target_map, field=field, known_ids=frozenset({"DP200018:00588", "DP200014B:00588"})
+    )
+    assert disposition is identity_subject.M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL
+    assert proposed == "DP200018:00588"
+
+    with pytest.raises(ValueError, match="ambiguous or missing"):
+        identity_subject.classify_noncanonical_map_owner(
+            entry, target_map, field=field, known_ids=frozenset({"DP200014B:00588"})
         )
-    with pytest.raises(ValueError, match="ambiguous"):
-        identity_subject._classify_noncanonical_map_owner(
-            "588",
-            field=field,
-            known_ids=frozenset({"DP200014B:00588"}),
-        )
+
+
+# The edition whose design prints rows with no box number; the registry's own
+# worklists name it, so no edition is spelled here.
+_UNNUMBERED_REVISION = next(
+    worklist.revision
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists()
+    if worklist.unnumbered_design_rows
+)
+
+
+@pytest.fixture(scope="module")
+def unnumbered_identity_inputs():
+    authority = compiled_bundled_authority()
+    target = authority.modelo("200").revisions[_UNNUMBERED_REVISION]
+    sources = authority.catalogues.sources
+    source_ref = record_design_source(target.source_refs, sources)
+    epoch = sources[source_ref].record_design_epoch
+    assert epoch is not None
+    placements = tuple(placement for layout in target.form_layouts for placement in layout.placements)
+    return (
+        load_semantic_map_for_revision(Path("dev/registry/mappings/modelo_200") / epoch, target.id),
+        load_record_design_intermediate(
+            bundled_path(),
+            sources,
+            source_ref=source_ref,
+            filing_year=target.valid_from.year,
+            design_epoch=epoch,
+        ),
+        {declaration.id: declaration for declaration in target.casillas},
+        {placement.casilla_id: placement.kind for placement in placements},
+        frozenset(
+            placement.casilla_id
+            for placement in placements
+            if placement.kind is FormPlacementKind.ON_FORM and placement.box_number is None
+        ),
+    )
+
+
+def _classify_unnumbered(target_map, target_design, declarations, placements, unnumbered_on_form_ids):
+    return identity_subject.classify_m200_target_identities(
+        target_map,
+        target_design,
+        revision_id=_UNNUMBERED_REVISION,
+        target_declarations=declarations,
+        target_candidate_ids=frozenset(),
+        declared_placements=placements,
+        unnumbered_on_form_ids=unnumbered_on_form_ids,
+    )
+
+
+def test_unnumbered_design_rows_are_admitted_only_by_their_segment_identity(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    fields = record_design_field_index(target_design)
+    unprinted = {
+        str(entry.export_field_id)
+        for entry in _casilla_entries(target_map)
+        if not re.search(r"\[[0-9]+\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    }
+
+    worklist = _classify_unnumbered(target_map, target_design, declarations, placements, unnumbered_on_form)
+
+    assert not worklist.printed_identity_diagnostics
+    assert {row.export_field_id for row in worklist.unnumbered_design_rows} == unprinted
+    assert {row.disposition for row in worklist.unnumbered_design_rows} == {
+        identity_subject.M200UnnumberedDesignRowDisposition.SEGMENT_IDENTITY_OF_UNNUMBERED_ROW
+    }
+    # Teeth: without the form's unnumbered placement every admitted row is a diagnostic again.
+    without_form = _classify_unnumbered(target_map, target_design, declarations, placements, frozenset())
+    assert not without_form.unnumbered_design_rows
+    assert {row.export_field_id for row in without_form.printed_identity_diagnostics} == unprinted
+
+
+def test_a_numbered_design_row_owned_by_a_segment_identity_stays_a_diagnostic(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    fields = record_design_field_index(target_design)
+    admitted = _classify_unnumbered(
+        target_map, target_design, declarations, placements, unnumbered_on_form
+    ).unnumbered_design_rows[0]
+    segment = admitted.declared_map_owner.partition(":")[0]
+    numbered = next(
+        entry
+        for entry in _casilla_entries(target_map)
+        if fields[semantic_anchor_key(entry.anchor)].record_identity == segment
+        and re.search(r"\[[0-9]+\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    )
+    planted = numbered.model_copy(update={"casilla_id": admitted.declared_map_owner})
+
+    worklist = _classify_unnumbered(
+        _with_entry(target_map, numbered, planted), target_design, declarations, placements, unnumbered_on_form
+    )
+
+    (diagnostic,) = [
+        row for row in worklist.printed_identity_diagnostics if row.export_field_id == str(numbered.export_field_id)
+    ]
+    assert diagnostic.declared_map_owner == admitted.declared_map_owner
+    assert str(numbered.export_field_id) not in {row.export_field_id for row in worklist.unnumbered_design_rows}
+
+
+def test_an_unnumbered_design_row_owned_by_a_numeric_casilla_stays_a_diagnostic(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    admitted = _classify_unnumbered(
+        target_map, target_design, declarations, placements, unnumbered_on_form
+    ).unnumbered_design_rows[0]
+    victim = next(entry for entry in target_map.entries if str(entry.export_field_id) == admitted.export_field_id)
+    numeric_owner = next(casilla_id for casilla_id in sorted(declarations) if str(casilla_id).isdecimal())
+    planted = victim.model_copy(update={"casilla_id": numeric_owner})
+
+    # The numeric owner is also offered as an unnumbered form placement, so only its grammar refuses it.
+    worklist = _classify_unnumbered(
+        _with_entry(target_map, victim, planted),
+        target_design,
+        declarations,
+        placements,
+        unnumbered_on_form | {numeric_owner},
+    )
+
+    (diagnostic,) = [
+        row for row in worklist.printed_identity_diagnostics if row.export_field_id == admitted.export_field_id
+    ]
+    assert diagnostic.declared_map_owner == numeric_owner
+    assert diagnostic.state is identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY

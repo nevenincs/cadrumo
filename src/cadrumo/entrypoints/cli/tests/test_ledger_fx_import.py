@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.models import TransactionCatalogue
-from ....tests.cli_envelope import unwrap_cli_result as _json_result
+from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.inventory import FIXTURES_DIR
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
@@ -52,7 +52,7 @@ def _stored_catalogue(bucket_id: str) -> TransactionCatalogue:
 def _ledger_rows() -> list[dict[str, Any]]:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return _json_result(listed)["rows"]
+    return unwrap_cli_result(listed)["rows"]
 
 
 def test_cli_import_converts_foreign_rows_to_eur() -> None:
@@ -125,7 +125,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
     # then and passes once the fields are declared.
     assert viewed.exit_code == 0, viewed.output
 
-    transaction = _json_result(viewed)["transaction"]
+    transaction = unwrap_cli_result(viewed)["transaction"]
     assert transaction["currency"] in {"GBP", "USD"}
     # The persisted FX provenance round-trips through the single-transaction
     # read surface, not only the list/export surfaces. The view payload renders
@@ -150,7 +150,7 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
 
     viewed = _invoke(["--format", "json", "app", "ledger", "view", target.transaction_id])
     assert viewed.exit_code == 0, viewed.output
-    transaction = _json_result(viewed)["transaction"]
+    transaction = unwrap_cli_result(viewed)["transaction"]
     assert transaction["currency"] == "EUR"
     assert transaction["value_in_eur"] is None
     assert transaction["fx_rate"] is None
@@ -192,7 +192,7 @@ def test_folder_import_aggregates_all_statement_files() -> None:
 
     result = _import_statement(_CORPUS, json_format=True)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
     # The four corpus CSVs (manifest.json / README.md are skipped by extension).
     assert payload["rows"] >= 500, payload
     assert payload["imported"] >= 500, payload
@@ -214,7 +214,7 @@ def test_review_filter_by_classification() -> None:
     assert _invoke(["app", "ledger", "classify", tx, "--classification", "BUSINESS"]).exit_code == 0
     after = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "classification=BUSINESS"])
     assert after.exit_code == 0, after.output
-    matched = _json_result(after)["rows"]
+    matched = unwrap_cli_result(after)["rows"]
     assert (
         any(r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", ""))) for r in matched)
         or len(matched) >= 1
@@ -239,7 +239,7 @@ def test_track_surfaces_import_provenance_for_imported_rows() -> None:
     assert "import_fingerprint" in tracked.output
     tracked_json = _invoke(["--format", "json", "app", "ledger", "track", tx])
     assert tracked_json.exit_code == 0, tracked_json.output
-    payload = _json_result(tracked_json)
+    payload = unwrap_cli_result(tracked_json)
     assert payload["source_filename"] == stored.raw.provenance.source_path.name
     assert payload["source_row_index"] == stored.raw.provenance.source_row_index
     assert "	-" not in tracked.output.split("import_fingerprint")[1]  # fingerprint not bare
@@ -255,7 +255,7 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
     for tx in (income, expense):
         classify_result = _invoke(["app", "ledger", "classify", tx, "--classification", "BUSINESS"])
         assert classify_result.exit_code == 0
-    report = _json_result(_invoke(["--format", "json", "app", "ledger", "status"]))
+    report = unwrap_cli_result(_invoke(["--format", "json", "app", "ledger", "status"]))
     assert report["business_income_total"] != "0.00"
     assert report["business_expense_total"] != "0.00"
     assert "business_net_total" in report
@@ -270,7 +270,7 @@ def test_review_filter_text_search() -> None:
     assert _import_statement(_CORPUS / "bbva-business-eur.csv").exit_code == 0
     res = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "text=ACME"])
     assert res.exit_code == 0, res.output
-    rows = _json_result(res)["rows"]
+    rows = unwrap_cli_result(res)["rows"]
     assert rows
     assert all("ACME" in r["description"] for r in rows)
 

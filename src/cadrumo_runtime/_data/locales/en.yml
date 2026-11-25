@@ -7,7 +7,7 @@ desktop:
     disclosures: Disclosures
     executable: Executable
     expires: Expires
-    failed: 'Access decision unavailable: {code}'
+    failed: The access decision couldn't be completed. Try again.
     network: Network access
     'no': 'No'
     none: None
@@ -17,3 +17,6 @@ desktop:
     process: Process
     title: External process requests access
     'yes': 'Yes'
+  signin:
+    refused:
+      timeout: Sign-in timed out. Check the account status before trying again.

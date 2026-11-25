@@ -17,7 +17,8 @@ from ..contracts.deadline_budget import remaining_budget
 from .posix import posix_owner_uid
 
 
-def _linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
+def linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
+    """Return the Linux peer process, user and group ids of a connected socket."""
     if sys.platform == "linux":
         return struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
     raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -37,7 +38,8 @@ def linux_peer_pidfd_socket_option() -> int:
     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
-def _linux_peer_pidfd(sock: socket.socket) -> int:
+def linux_peer_pidfd(sock: socket.socket) -> int:
+    """Return the kernel pidfd of a socket's peer, refusing when unavailable or invalid."""
     option = linux_peer_pidfd_socket_option()
     try:
         descriptor = sock.getsockopt(socket.SOL_SOCKET, option)
@@ -48,7 +50,8 @@ def _linux_peer_pidfd(sock: socket.socket) -> int:
     return descriptor
 
 
-def _require_live_linux_pidfd(descriptor: int) -> None:
+def require_live_linux_pidfd(descriptor: int) -> None:
+    """Refuse a peer pidfd that is already readable, meaning the peer process has exited."""
     if sys.platform == "linux":
         try:
             poller = select.poll()
@@ -77,16 +80,16 @@ def _linux_peer_image_path(sock: socket.socket, pid: int) -> str | None:
     kernel without peer pidfds, or a read that does not hold, reports none.
     """
     try:
-        descriptor = _linux_peer_pidfd(sock)
+        descriptor = linux_peer_pidfd(sock)
     except RefusalError:
         return None
     try:
-        _require_live_linux_pidfd(descriptor)
+        require_live_linux_pidfd(descriptor)
         if _linux_pidfd_process_id(descriptor) != pid:
             return None
         path = os.readlink(f"/proc/{pid}/exe")
         # Still alive after the read: the pid named this process throughout.
-        _require_live_linux_pidfd(descriptor)
+        require_live_linux_pidfd(descriptor)
     except (OSError, ValueError, RefusalError):
         return None
     finally:
@@ -94,32 +97,36 @@ def _linux_peer_image_path(sock: socket.socket, pid: int) -> str | None:
     return path or None
 
 
-def _peer(sock: socket.socket) -> Peer:
+def _darwin_peer_credentials(sock: socket.socket) -> tuple[int, int]:
+    payload = sock.getsockopt(0, 6, 32)
+    if len(payload) != 32:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    audit_uid, uid, _effective_gid, real_uid, _real_gid, pid, session_id, version = struct.unpack("=8I", payload)
+    reported_pid = struct.unpack("=i", sock.getsockopt(0, 2, 4))[0]
+    if (
+        uid != posix_owner_uid()
+        or real_uid != uid
+        or audit_uid != uid
+        or not 0 < pid <= 2_147_483_647
+        or pid != reported_pid
+        or not 0 < session_id < 0xFFFFFFFE
+        or version <= 0
+        or sock.getsockopt(0, 6, 32) != payload
+    ):
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return pid, uid
+
+
+def peer(sock: socket.socket) -> Peer:
+    """Return the verified same-user peer of a connected POSIX socket, refusing otherwise."""
     if sys.platform == "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
     try:
         if sys.platform.startswith("linux"):
-            pid, uid, _gid = _linux_peer_credentials(sock)
+            pid, uid, _gid = linux_peer_credentials(sock)
             image_path = _linux_peer_image_path(sock, pid) if pid > 0 else None
         elif sys.platform == "darwin":
-            payload = sock.getsockopt(0, 6, 32)
-            if len(payload) != 32:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            audit_uid, uid, _effective_gid, real_uid, _real_gid, pid, session_id, version = struct.unpack(
-                "=8I", payload
-            )
-            reported_pid = struct.unpack("=i", sock.getsockopt(0, 2, 4))[0]
-            if (
-                uid != posix_owner_uid()
-                or real_uid != uid
-                or audit_uid != uid
-                or not 0 < pid <= 2_147_483_647
-                or pid != reported_pid
-                or not 0 < session_id < 0xFFFFFFFE
-                or version <= 0
-                or sock.getsockopt(0, 6, 32) != payload
-            ):
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            pid, uid = _darwin_peer_credentials(sock)
             image_path = None
         else:
             raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -139,7 +146,7 @@ class PosixChannel:
         self._capture_guard = RLock()
         self._closed = False
         try:
-            self._peer = _peer(sock)
+            self._peer = peer(sock)
         except BaseException:
             sock.close()
             raise
@@ -165,15 +172,15 @@ class PosixChannel:
         with self._capture_guard:
             if self._closed or self._socket.fileno() < 0:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-            descriptor = _linux_peer_pidfd(self._socket)
+            descriptor = linux_peer_pidfd(self._socket)
             try:
                 if os.get_inheritable(descriptor):
                     raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-                _require_live_linux_pidfd(descriptor)
+                require_live_linux_pidfd(descriptor)
                 yield descriptor
                 if self._closed or self._socket.fileno() < 0:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                _require_live_linux_pidfd(descriptor)
+                require_live_linux_pidfd(descriptor)
             except OSError:
                 raise RefusalError(RefusalCode.UNAVAILABLE) from None
             finally:
@@ -213,7 +220,7 @@ class PosixChannel:
                 payload.extend(block)
             return bytes(payload)
         except TimeoutError:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         except OSError:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
 
@@ -225,7 +232,7 @@ class PosixChannel:
             self._set_deadline(deadline)
             self._socket.sendall(payload)
         except TimeoutError:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         except OSError:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
 

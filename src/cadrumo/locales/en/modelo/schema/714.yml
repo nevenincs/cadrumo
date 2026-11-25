@@ -2282,7 +2282,7 @@ modelo:
             title: Form 714 Wealth Tax liability
       field:
         official_name: Wealth Tax. Return
-        title: Modelo 714
+        title: Wealth Tax
       revision:
         '2021':
           casilla:

@@ -147,7 +147,7 @@ def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
         if not trimmed:
             return None
         return read_profile_output_language_hint(
-            storage_root=load_settings().cadrumo_local_storage_root,
+            storage_root=load_settings().cadrumo_storage_root,
             bucket_id=trimmed,
         )
     except Exception:
@@ -192,7 +192,7 @@ def mirror_profile_output_language_hint(bucket_id: str, language: OutputLanguage
         trimmed = bucket_id.strip()
         if not trimmed:
             return
-        storage_root = load_settings().cadrumo_local_storage_root
+        storage_root = load_settings().cadrumo_storage_root
         if language is None:
             clear_profile_output_language_hint(storage_root=storage_root, bucket_id=trimmed)
             return

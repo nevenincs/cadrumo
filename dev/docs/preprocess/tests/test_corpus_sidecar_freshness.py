@@ -63,9 +63,9 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.extract_corpus_sidecars import check_all as check_corpus_sidecars
 from dev.corpus.extract_corpus_sidecars import extract_all as extract_corpus_sidecars
+from dev.paths import REPO_ROOT, UTF_8
 
 from ..normatives_html import build_outputs
 from ..parts import part_stand_in_path

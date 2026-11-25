@@ -5,7 +5,9 @@ for command handlers that do not need a full :class:`SchemaEnvelope`.
 It returns :class:`RenderedCommandOutput`, chooses an :class:`OutputFormat`,
 and applies :func:`cadrumo.core.redaction.rules.redact_for_cli_output` or
 ``cadrumo.core.redaction.redact_structured_for_cli_output`` before text
-reaches stdout.
+reaches stdout. After redaction, text lines and JSON documents alike pass
+through :func:`cadrumo.core.terminal_encoding.encode_terminal_text`, so
+imported narratives cannot carry live terminal control sequences.
 
 Envelope-aware commands bypass this bare renderer in JSON mode through
 :func:`cadrumo.core.json_contract.emit_json_success`, but both paths consult
@@ -33,6 +35,7 @@ from pydantic import BaseModel, Field
 from .errors.hierarchy import CadrumoError
 from .models import STRICT_FROZEN_CONFIG
 from .redaction.rules import redact_for_cli_output, redact_structured_for_cli_output
+from .terminal_encoding import encode_terminal_text
 from .type_guards import is_object_collection, is_object_dict, is_object_set_or_frozenset
 
 
@@ -81,7 +84,8 @@ def render_command_output(
     JSON output normalises ``payload`` through :func:`jsonable_output_payload`
     and applies structured CLI redaction before serialization. Text output
     ignores ``payload`` and joins the supplied ``lines`` after applying
-    line-oriented CLI redaction.
+    line-oriented CLI redaction and then terminal-control encoding, which keeps
+    only newline and tab as deliberate separators.
 
     The helper does not write to stdout, translate messages, choose exit codes,
     or register JSON schemas. Callers supply localized text lines or typed
@@ -111,11 +115,15 @@ def render_command_output(
         )
         return RenderedCommandOutput(
             format=output_format,
-            text=json.dumps(redacted_payload, default=_json_default, ensure_ascii=False),
+            text=encode_terminal_text(
+                json.dumps(redacted_payload, default=_json_default, ensure_ascii=False),
+            ),
         )
     return RenderedCommandOutput(
         format=output_format,
-        text="\n".join(redact_for_cli_output(line, reveal_identifiers=reveal_identifiers) for line in lines),
+        text="\n".join(
+            encode_terminal_text(redact_for_cli_output(line, reveal_identifiers=reveal_identifiers)) for line in lines
+        ),
     )
 
 

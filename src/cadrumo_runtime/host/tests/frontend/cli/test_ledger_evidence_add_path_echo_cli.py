@@ -20,10 +20,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .ledger_ux_support import _invoke, _open_bucket_session
+from .ledger_ux_support import invoke, ledger_ux_bucket_session
 
-__all__ = ["_open_bucket_session"]
+__all__ = ["ledger_ux_bucket_session"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,11 +40,11 @@ def test_evidence_add_echoes_forward_slash_argv_path_verbatim(tmp_path: Path) ->
     """
     fixtures = tmp_path / "fixtures"
     fixtures.mkdir()
-    (fixtures / "factura.pdf").write_bytes(b"%PDF-1.4 argv-verbatim")
+    (fixtures / "factura.pdf").write_bytes(text_pdf_bytes(("argv-verbatim",)))
 
     argv_path = "fixtures/factura.pdf"  # forward slashes, exactly as an operator types
     with scoped_cwd(tmp_path):
-        added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
+        added = invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
 
     record = json.loads(added.output)["result"]

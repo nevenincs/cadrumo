@@ -20,24 +20,25 @@ from __future__ import annotations
 
 import contextlib
 import io
+import re
 
 import pytest
 
-from ..__main__ import _bucket, main
+from ..__main__ import main, main___bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_a_repository_root_file_is_labelled_as_such() -> None:
     """A bare filename has no directory to summarise under."""
-    assert _bucket("pyproject.toml") == "<repository root>"
+    assert main___bucket("pyproject.toml") == "<repository root>"
 
 
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
         ("src/cadrumo/domain/thing.py", "src/cadrumo"),
-        ("dev/identity/_tree_scan.py", "dev/identity"),
+        ("dev/identity/tree_scan.py", "dev/identity"),
         ("docs/guide/install.md", "docs/guide"),
     ],
 )
@@ -47,7 +48,7 @@ def test_the_managed_trees_are_summarised_two_levels_deep(path: str, expected: s
     ``src`` alone says nothing about where identity material clusters, which is
     the only reason the advisory summary is worth printing.
     """
-    assert _bucket(path) == expected
+    assert main___bucket(path) == expected
 
 
 @pytest.mark.parametrize("path", ["var/scratch/thing.json", "node_modules/pkg/file.js"])
@@ -57,7 +58,7 @@ def test_an_unmanaged_tree_is_summarised_at_its_root(path: str) -> None:
     Going deeper there would scatter one external tree across many buckets and
     bury the count that matters.
     """
-    assert _bucket(path) == path.split("/")[0]
+    assert main___bucket(path) == path.split("/")[0]
 
 
 @pytest.fixture(scope="module")
@@ -83,14 +84,14 @@ def canary_run() -> tuple[int, str]:
     return exit_code, stream.getvalue()
 
 
-def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_scope(
+def test_the_report_carries_every_section_and_its_exit_code_tracks_both_gates(
     canary_run: tuple[int, str],
 ) -> None:
     """Each section exists so a narrowing stays arguable; a missing one hides it.
 
     The exit code is asserted against what the report itself says rather than a
     pinned verdict, so this holds whether or not the tree currently carries a
-    blocking finding.
+    finding in either gate.
     """
     exit_code, out = canary_run
 
@@ -98,10 +99,15 @@ def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_
     assert "operator tier, untracked and ignored content:" in out
     assert "suppressed by path exclusion" in out
     assert "advisory, outside the blocking scope:" in out
+    assert "catalogue convention, tests and fixtures:" in out
 
     findings_line = next(line for line in out.splitlines() if line.startswith("blocking scope:"))
     blocking_findings = int(findings_line.split(",")[1].strip().split(" ")[0])
-    assert (exit_code == 0) == (blocking_findings == 0)
+    convention_line = next(line for line in out.splitlines() if line.startswith("catalogue convention,"))
+    counted = re.search(r"(\d+) findings in", convention_line)
+    assert counted is not None
+    convention_findings = int(counted.group(1))
+    assert (exit_code == 0) == (blocking_findings == 0 and convention_findings == 0)
 
 
 def test_every_path_exclusion_is_printed_with_a_reason(canary_run: tuple[int, str]) -> None:
@@ -109,7 +115,7 @@ def test_every_path_exclusion_is_printed_with_a_reason(canary_run: tuple[int, st
 
     The count alone would say how much was hidden but not why any of it was.
     """
-    from .._tree_scan import EXCLUDED_PATH_FRAGMENTS
+    from ..tree_scan import EXCLUDED_PATH_FRAGMENTS
 
     _, out = canary_run
 

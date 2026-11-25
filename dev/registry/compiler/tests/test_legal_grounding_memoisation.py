@@ -19,10 +19,11 @@ import pytest
 from cadrumo.core.hashing import blake2b_hex
 from dev.corpus.text import corpus_redaction_marks
 
+from .. import legal_grounding
+from ..corpus_provenance import corpus_content_digest, corpus_digest_pass
 from ..legal_grounding import (
-    _corpus_file_digest,
-    _corpus_redaction_mark_count,
-    _resolved_corpus_paths,
+    corpus_redaction_mark_count,
+    resolved_corpus_paths,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,63 +41,76 @@ def _document(tmp_path: Path, name: str, payload: bytes) -> Path:
     return path
 
 
-def _touch_forward(path: Path) -> None:
-    """Advance the file's mtime so a stat-keyed memo observes a new identity."""
-    stat = path.stat()
-    os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000))
+def _forge_stat_preserving_rewrite(path: Path, payload: bytes) -> None:
+    """Rewrite ``path`` at its original size and restore its mtime, as a forged stat identity would."""
+    original = path.stat()
+    assert len(payload) <= original.st_size
+    path.write_bytes(payload.ljust(original.st_size, b" "))
+    os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+    rewritten = path.stat()
+    assert (rewritten.st_size, rewritten.st_mtime_ns) == (original.st_size, original.st_mtime_ns)
 
 
-def test_a_file_cited_by_many_references_is_hashed_once(tmp_path: Path) -> None:
+def _count_reads(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    reads: list[Path] = []
+    original = Path.read_bytes
+
+    def counting_read_bytes(path: Path) -> bytes:
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counting_read_bytes)
+    return reads
+
+
+def test_a_file_cited_by_many_references_is_hashed_once_per_pass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     path = _document(tmp_path, "ley.html", b"<p>text</p>")
-    _corpus_file_digest.cache_clear()
-    stat = path.stat()
+    reads = _count_reads(monkeypatch)
 
-    digests = {_corpus_file_digest(str(path), stat.st_size, stat.st_mtime_ns) for _ in range(5)}
+    with corpus_digest_pass():
+        digests = {corpus_content_digest(path) for _ in range(5)}
 
-    assert digests == {blake2b_hex(path.read_bytes())}, "the memo must not change the fingerprint"
-    info = _corpus_file_digest.cache_info()
-    assert info.misses == 1, "one file must be hashed exactly once however many references cite it"
-    assert info.hits == 4
+    assert digests == {blake2b_hex(b"<p>text</p>")}, "the memo must not change the fingerprint"
+    assert reads.count(path) == 1, "one file must be hashed exactly once per pass however many references cite it"
 
 
-def test_an_edited_file_is_fingerprinted_afresh(tmp_path: Path) -> None:
+def test_a_new_pass_observes_a_stat_preserving_rewrite(tmp_path: Path) -> None:
     path = _document(tmp_path, "ley.html", b"<p>text</p>")
-    _corpus_file_digest.cache_clear()
-    original = _corpus_file_digest(*_fingerprint(path))
+    with corpus_digest_pass():
+        original = corpus_content_digest(path)
 
-    path.write_bytes(b"<p>revised text</p>")
-    _touch_forward(path)
+    _forge_stat_preserving_rewrite(path, b"<p>txet</p>")
 
-    assert _corpus_file_digest(*_fingerprint(path)) != original
-
-
-def _fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
-    return str(path), stat.st_size, stat.st_mtime_ns
+    with corpus_digest_pass():
+        assert corpus_content_digest(path) != original
+    assert corpus_content_digest(path) != original, "outside a pass the current bytes are hashed"
 
 
-def test_a_documents_redactions_are_counted_once_and_match_the_marks(tmp_path: Path) -> None:
+def test_a_documents_redactions_are_counted_once_and_match_the_marks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     path = _document(tmp_path, "ley.html", _REDACTION_DOCUMENT)
-    _corpus_redaction_mark_count.cache_clear()
+    legal_grounding.REDACTION_MARK_COUNTS.clear()
     expected = len(corpus_redaction_marks(path.read_text(encoding="utf-8", errors="replace")))
+    reads = _count_reads(monkeypatch)
 
-    counts = {_corpus_redaction_mark_count(*_fingerprint(path)) for _ in range(4)}
+    with corpus_digest_pass():
+        counts = {corpus_redaction_mark_count(path) for _ in range(4)}
 
     assert counts == {expected}, "the memo must not change the count the refusal reports"
-    info = _corpus_redaction_mark_count.cache_info()
-    assert info.misses == 1, "one document must be decoded exactly once"
-    assert info.hits == 3
+    assert reads.count(path) == 2, "one digest read and one decoding read, however many references ask"
 
 
-def test_an_edited_document_is_recounted(tmp_path: Path) -> None:
+def test_a_stat_preserving_rewrite_is_recounted(tmp_path: Path) -> None:
     path = _document(tmp_path, "ley.html", _REDACTION_DOCUMENT)
-    _corpus_redaction_mark_count.cache_clear()
-    before = _corpus_redaction_mark_count(*_fingerprint(path))
+    legal_grounding.REDACTION_MARK_COUNTS.clear()
+    before = corpus_redaction_mark_count(path)
 
-    path.write_bytes(b"<p>one consolidated text</p>")
-    _touch_forward(path)
+    _forge_stat_preserving_rewrite(path, b"<p>one consolidated text</p>")
 
-    after = _corpus_redaction_mark_count(*_fingerprint(path))
+    after = corpus_redaction_mark_count(path)
     assert before >= 2, "the fixture must start fused, or the invalidation proves nothing"
     assert after < 2
 
@@ -104,16 +118,16 @@ def test_an_edited_document_is_recounted(tmp_path: Path) -> None:
 def test_one_corpus_path_resolves_its_sidecars_once(tmp_path: Path) -> None:
     _document(tmp_path, "ley.html", b"<p>text</p>")
     root = tmp_path.resolve()
-    _resolved_corpus_paths.cache_clear()
+    resolved_corpus_paths.cache_clear()
 
-    results = {_resolved_corpus_paths(root, "corpus/normatives/html/ley.html") for _ in range(6)}
+    results = {resolved_corpus_paths(root, "corpus/normatives/html/ley.html") for _ in range(6)}
 
     (document, annotation, sidecar) = next(iter(results))
     assert len(results) == 1
     assert document.name == "ley.html"
     assert annotation.name == "ley.html.annotation.json"
     assert sidecar.name == "ley.html.extracted.json"
-    info = _resolved_corpus_paths.cache_info()
+    info = resolved_corpus_paths.cache_info()
     assert info.misses == 1, "one path must reach the filesystem resolver exactly once"
     assert info.hits == 5
 
@@ -122,10 +136,10 @@ def test_a_different_root_resolves_separately(tmp_path: Path) -> None:
     """The memo keys on the root too, so two roots cannot share one answer."""
     other = tmp_path / "other"
     other.mkdir()
-    _resolved_corpus_paths.cache_clear()
+    resolved_corpus_paths.cache_clear()
 
-    first = _resolved_corpus_paths(tmp_path.resolve(), "corpus/normatives/html/ley.html")
-    second = _resolved_corpus_paths(other.resolve(), "corpus/normatives/html/ley.html")
+    first = resolved_corpus_paths(tmp_path.resolve(), "corpus/normatives/html/ley.html")
+    second = resolved_corpus_paths(other.resolve(), "corpus/normatives/html/ley.html")
 
     assert first != second
-    assert _resolved_corpus_paths.cache_info().misses == 2
+    assert resolved_corpus_paths.cache_info().misses == 2

@@ -12,11 +12,13 @@ event payload.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...domain.buckets.event import BucketEventType
-from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ...domain.user_profile.errors import ProfileSchemaValidationError
+from ...domain.user_profile.setup_answers import EJERCICIO_STATED_PROFILE_PATHS, PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 if TYPE_CHECKING:
@@ -44,7 +46,8 @@ class ProfileFactWriteDoor(StrEnum):
     wizard: the command-line manager screens and the ``config profile`` verbs
     publish through this same writer, so their identities belong in the same
     closed set rather than in a second one beside it. Registered descendant
-    replacement uses :attr:`MANAGER_DESCENDANTS`. The registered operation records its
+    replacement uses :attr:`MANAGER_DESCENDANTS` and ascendant replacement
+    :attr:`MANAGER_ASCENDANTS`. The registered operation records its
     frontend separately from the fact writer's application policy.
     """
 
@@ -54,15 +57,89 @@ class ProfileFactWriteDoor(StrEnum):
     AUTH_CONFIGURE = "auth.configure"
     MANAGER_ROW = "manager.row"
     MANAGER_DESCENDANTS = "manager.descendants"
+    MANAGER_ASCENDANTS = "manager.ascendants"
     CLI_PLANTILLA_MEDIA = "cli.plantilla_media"
     MANAGER_PLANTILLA_MEDIA = "manager.plantilla_media"
+    MANAGER_IMPUTATION_ELECTION = "manager.imputation_election"
 
 
 def _effective(record: UserProfileRecord) -> dict[str, object]:
     """Project a record to its effective fact per path for change comparison."""
-    from .projections import record_to_effective_facts as _projector
+    from .projections import record_to_effective_facts
 
-    return dict(_projector(record))
+    return dict(record_to_effective_facts(record))
+
+
+def _windowed(record: UserProfileRecord) -> frozenset[tuple[str, date | None, date | None, str]]:
+    """Project a record to its dated facts, which the effective fact per path hides.
+
+    Only the latest window at a path is effective, so a change to an earlier
+    window leaves :func:`_effective` equal and would read as no change.
+    """
+    return frozenset(
+        (fact.path, fact.valid_from, fact.valid_to, repr(fact.value))
+        for fact in record.facts
+        if fact.valid_from is not None or fact.valid_to is not None
+    )
+
+
+def _facts_after(
+    current: tuple[UserProfileFact, ...], changes: tuple[UserProfileFact, ...]
+) -> tuple[UserProfileFact, ...]:
+    """Return ``current`` with ``changes`` applied: each change replaces the exact window it names.
+
+    A taxpayer's statements about different ejercicios share one path, so a
+    change never reaches past its own window: an undated change replaces only
+    the undated fact and every dated fact stands. A dated change with no value
+    removes its window; the removed fact is not kept as an empty one, because a
+    reader of that window would then see a value that is not there.
+    """
+    named = {(fact.path, fact.valid_from, fact.valid_to) for fact in changes}
+    kept = tuple(fact for fact in current if (fact.path, fact.valid_from, fact.valid_to) not in named)
+    stated = tuple(
+        fact for fact in changes if fact.value is not None or (fact.valid_from is None and fact.valid_to is None)
+    )
+    return (*kept, *stated)
+
+
+def _undated_changes_with_effect(
+    current: UserProfileRecord, changes: tuple[UserProfileFact, ...]
+) -> tuple[UserProfileFact, ...]:
+    """Drop an undated restatement of a dated path's value and refuse an undated change to it.
+
+    A later window supersedes an undated fact at its path, so an undated answer
+    there could never take effect: accepting it would report an edit nothing
+    reads, and letting it replace the path would erase the dated history. A path
+    only a dated fact can answer refuses an undated value even before it holds one.
+    """
+    from .projections import record_to_path_values
+
+    stored = record_to_path_values(current)
+    dated_paths = {fact.path for fact in current.facts if _is_dated(fact)}
+    kept: list[UserProfileFact] = []
+    for change in changes:
+        if _is_dated(change):
+            kept.append(change)
+            continue
+        if change.path in dated_paths and change.value is not None and stored.get(change.path) == _token(change):
+            continue
+        if change.path in dated_paths or change.path in EJERCICIO_STATED_PROFILE_PATHS:
+            raise ProfileSchemaValidationError(
+                f"profile field {change.path} is stated per ejercicio and this change names none",
+                context={"field": change.path},
+                translated_message="application.user_profile.errors.profile_field_needs_ejercicio",
+            )
+        kept.append(change)
+    return tuple(kept)
+
+
+def _is_dated(fact: UserProfileFact) -> bool:
+    return fact.valid_from is not None or fact.valid_to is not None
+
+
+def _token(fact: UserProfileFact) -> str:
+    """Render a fact value as the profile's canonical token, booleans in lowercase."""
+    return ("true" if fact.value else "false") if isinstance(fact.value, bool) else str(fact.value)
 
 
 def apply_profile_fact_changes(
@@ -81,6 +158,11 @@ def apply_profile_fact_changes(
     resulting sequence with one command event.  A ``value=None`` change is
     retained deliberately: it is the explicit current-record representation
     of clearing an answer.
+
+    A change that carries an effective window replaces only that window at its
+    path, so statements about other ejercicios survive; with ``value=None`` it
+    removes that window instead of retaining an empty one. An undated change
+    never touches a window, and one that a window would shadow is refused.
 
     This is not the only door onto profile facts -- registration opens the
     initial record and the cotejo censal adopts certificate values -- so what
@@ -110,13 +192,15 @@ def apply_profile_fact_changes(
     )
     current = expected_record if expected_record is not None else repository.load(profile_id)
     profile_context = repository.session.profile_decode_context
+    changes = _undated_changes_with_effect(current, changes)
     changed_paths = {fact.path for fact in changes}
-    next_facts = (*tuple(fact for fact in current.facts if fact.path not in changed_paths), *changes)
+    next_facts = _facts_after(tuple(current.facts), changes)
     reject_invalid_profile_facts(
         profile_id,
         next_facts,
         require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
         schema=profile_context.schema,
+        changed_paths=frozenset(changed_paths),
     )
     # A write that changes nothing is not a write. Publishing it anyway bumped
     # the revision and appended a profile.values.updated event, so the evidence
@@ -124,7 +208,8 @@ def apply_profile_fact_changes(
     # value identical to the stored one was told it had updated the record.
     # Effective facts are the comparison, not raw values, so an explicit clear
     # (value=None) still reads as a real change against a set path.
-    if _effective(current) == _effective(current.model_copy(update={"facts": next_facts})):
+    candidate = current.model_copy(update={"facts": next_facts})
+    if _effective(current) == _effective(candidate) and _windowed(current) == _windowed(candidate):
         return current
     published = repository.apply_fact_changes(
         profile_id,
@@ -177,14 +262,15 @@ def apply_manager_profile_field_mutation(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
-    if (
-        expected_revision is not None
-        and expected_content_digest is not None
-        and (current.record_revision != expected_revision or current.content_digest != expected_content_digest)
-    ):
-        from .capsule_record import ProfileRecordConflictError
+    if expected_revision is not None and expected_content_digest is not None:
+        from .edit_baseline import require_profile_edit_baseline
 
-        raise ProfileRecordConflictError("profile manager edit baseline is stale")
+        require_profile_edit_baseline(
+            current,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+            field_paths=(path,) if path in profile_decode_context.schema.field_paths else (),
+        )
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(UserProfileFact(path=path, value=value.strip() or None),),

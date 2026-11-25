@@ -16,24 +16,24 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.domain.invoices.enums import InvoiceClass
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
-_CORPUS = _EVIDENCE_CORPUS
+_CORPUS = EVIDENCE_CORPUS
 _OO = _CORPUS / "facturae_32_recargo_invoice.xml"
 _OR = _CORPUS / "facturae_32_series_and_parties_invoice.xml"
 
@@ -47,7 +47,7 @@ def _store(
 ) -> str:
     source = tmp_path / "invoice.xml"
     source.write_bytes(data)
-    return _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record.evidence_id
+    return make_svc(isolated_settings, secure_objects).add(bucket_id=BUCKET_ID, source_path=source).record.evidence_id
 
 
 def _resolutions(
@@ -57,10 +57,10 @@ def _resolutions(
     authority: InvoiceAuthorityFixture,
 ) -> tuple[FindingResolution, ...]:
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
     return tuple(
         FindingResolution(
@@ -88,12 +88,12 @@ def _confirm(
         tmp_path=tmp_path,
     )
     return confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
         resolutions=_resolutions(
             evidence_id=evidence_id,
             isolated_settings=isolated_settings,
@@ -184,21 +184,21 @@ def test_a_declared_ordinary_class_does_not_silently_take_the_corrective_inferen
         tmp_path=tmp_path,
     )
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED in {finding.kind for finding in draft.discrepancies}
     with pytest.raises(ValidationError, match="only applies to a factura rectificativa"):
         confirm_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_country="ES",
             evidence_id=evidence_id,
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
             resolutions=_resolutions(
                 evidence_id=evidence_id,
                 isolated_settings=isolated_settings,
@@ -262,20 +262,20 @@ def test_a_summary_declaration_is_reported_without_overwriting_the_operator_clas
         tmp_path=tmp_path,
     )
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED in {finding.kind for finding in draft.discrepancies}
     result = confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         resolutions=_resolutions(
             evidence_id=evidence_id,
             isolated_settings=isolated_settings,
@@ -304,10 +304,10 @@ def test_a_corrective_declaration_without_a_corrective_reference_is_contradicted
         tmp_path=tmp_path,
     )
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED in {finding.kind for finding in draft.discrepancies}

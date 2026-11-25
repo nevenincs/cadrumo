@@ -10,15 +10,21 @@ other end: the credit of earlier ejercicios the year's autoliquidaciones applied
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import AfterValidator, BaseModel, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import StandardPeriodCode
+from .binding_selector_utils import computed_money_binding_failures
 from .errors import RegistryValidationError
+from .form_codes import form_role_validator
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "M303_COMPENSATION_APLICADA_CASILLA",
@@ -27,12 +33,12 @@ __all__ = [
     "M303_COMPENSATION_PENDING_PRIOR_CASILLA",
     "M303_COMPENSATION_POSTERIOR_CASILLA",
     "M303_COMPENSATION_RESULTADO_CASILLA",
-    "M303_COMPENSATION_RESULTADO_FINAL_CASILLA",
     "M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA",
     "M390_COMPENSATION_LAST_PERIOD_CASILLA",
     "IvaCompensationAnnualPartition",
     "IvaCompensationAnnualPartitionProvider",
     "IvaCompensationAnnualPartitionValue",
+    "validate_iva_compensation_annual_partition_binding",
 ]
 
 
@@ -79,10 +85,6 @@ M303_COMPENSATION_PENDING_PRIOR_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
     surface="M303_COMPENSATION_PENDING_PRIOR_CASILLA",
 )
-M303_COMPENSATION_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id(
-    "71",
-    surface="M303_COMPENSATION_RESULTADO_FINAL_CASILLA",
-)
 M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
     surface="M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA",
@@ -99,7 +101,12 @@ _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
-_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = (
+    StandardPeriodCode.Q1.value,
+    StandardPeriodCode.Q2.value,
+    StandardPeriodCode.Q3.value,
+    StandardPeriodCode.Q4.value,
+)
 
 
 class IvaCompensationAnnualPartitionProvider(BaseModel):
@@ -111,7 +118,7 @@ class IvaCompensationAnnualPartitionProvider(BaseModel):
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
     )
 
-    source_modelo: Literal["303"]
+    source_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))]
     source_casilla_ids: tuple[CasillaId, ...]
     source_periods: tuple[str, ...]
     partition_output: IvaCompensationAnnualPartitionValue
@@ -133,6 +140,15 @@ class IvaCompensationAnnualPartitionProvider(BaseModel):
     def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS:
             raise RegistryValidationError(
-                "iva_compensation_annual_partition selector must declare source_periods ('1T', '2T', '3T', '4T')",
+                "iva_compensation_annual_partition selector must declare every quarter of the year as source_periods",
             )
         return value
+
+
+def validate_iva_compensation_annual_partition_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one annual-partition binding.
+
+    The provider model pins the source casillas and periods; what remains is the
+    value contract, which must be the monetary amount the FIFO partition yields.
+    """
+    return computed_money_binding_failures(binding, "iva-compensation-annual-partition")

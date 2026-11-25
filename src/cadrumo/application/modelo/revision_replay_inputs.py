@@ -9,7 +9,7 @@ recovered from the :class:`~domain.calculations.registry.schema.RegistrySnapshot
 only when the snapshot is still loadable. When a workflow
 :class:`TaxpayerProfile` is available, profile applicability can also synthesize
 explicit zeroes for relation slots whose source modelo is
-:class:`~domain.calculations.registry.applicability.ApplicabilityVerdict`
+:class:`~domain.calculations.registry.applicability_models.ApplicabilityVerdict`
 ``NOT_APPLICABLE``.
 
 This is not a recalculation path. It rehydrates the persisted replay surface the
@@ -29,14 +29,12 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.modelo import Modelo
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -59,6 +57,7 @@ from ...domain.modelos.row_models import (
     m349_nif_number_for_export,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -122,7 +121,7 @@ def revision_filing_replay_inputs(
         if projected is not None:
             detail_binding_inputs.update(projected)
     return {
-        **_informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
+        **informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
         **_casilla_replay_inputs(
             revision=revision,
             snapshot=snapshot,
@@ -137,6 +136,7 @@ def revision_filing_replay_inputs(
             snapshot=snapshot,
             workflow_profile=workflow_profile,
             existing_relation_ids=frozenset(revision.relation_overrides),
+            operation=operation,
         ),
         **dict(revision.relation_overrides),
     }
@@ -294,7 +294,7 @@ def revision_detail_record_binding_inputs(
     assessing completeness must also establish that ``detail_rows`` was
     explicitly recorded, rather than supplied by a missing-field default.
     """
-    if modelo != Modelo("349").value:
+    if modelo != form_for_role("iva.intracommunity_summary"):
         return None
     if binding_record == "operador":
         rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
@@ -308,14 +308,20 @@ def revision_detail_record_binding_inputs(
 def _m349_row_binding_value(
     row: Modelo349OperadorRow | Modelo349RectificacionRow,
     attr: str,
-) -> ModeloInputScalar:
+) -> ModeloInputScalar | None:
+    """Return the row's value for a binding, or ``None`` for a party name not yet declared."""
     if attr == "nif_comunitario":
         return m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
     value = getattr(row, attr)
+    if value is None and attr == "razon_social":
+        return None
     # The binding map names row attributes, so a mapped attribute that is not a
     # filing scalar is a registry or row defect rather than a replayable value.
     if not isinstance(value, str | int | Decimal | bool | date):
-        raise InternalInvariantError(f"Modelo 349 replay attribute {attr!r} is not a filing scalar")
+        raise InternalInvariantError(
+            f"Modelo 349 replay attribute {attr!r} is not a filing scalar",
+            precondition_verdict=internal_invariant_verdict("m349_replay.attribute_filing_scalar"),
+        )
     return value
 
 
@@ -325,7 +331,11 @@ def _m349_row_binding_replay_inputs(
 ) -> dict[BindingId, dict[str, ModeloInputScalar]]:
     replay_inputs: dict[BindingId, dict[str, ModeloInputScalar]] = {}
     for binding_id, attr in binding_attributes.items():
-        values = {str(index): _m349_row_binding_value(row, attr) for index, row in enumerate(rows, start=1)}
+        values = {
+            str(index): value
+            for index, row in enumerate(rows, start=1)
+            if (value := _m349_row_binding_value(row, attr)) is not None
+        }
         if values:
             replay_inputs[binding_id] = values
     return replay_inputs
@@ -354,7 +364,7 @@ def _m232_detail_row_replay_inputs(
     Money values are rendered through the canonical decimal string so the
     replayed scalar matches what every other numeric replay input carries.
     """
-    if str(work_unit.modelo) != Modelo("232").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.related_party_informative"):
         return {}
     rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo232VinculadaRow))
     if not rows:
@@ -372,7 +382,7 @@ def _snapshot_for_work_unit(
 ) -> RegistrySnapshot | None:
     """Return the law-determined registry snapshot for ``work_unit``, if loadable."""
     try:
-        return operation.snapshot(
+        return operation.reading_snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
@@ -381,7 +391,7 @@ def _snapshot_for_work_unit(
         return None
 
 
-def _informational_casilla_replay_inputs(
+def informational_casilla_replay_inputs(
     *,
     revision: CalculationRevision,
     snapshot: RegistrySnapshot | None,
@@ -391,6 +401,8 @@ def _informational_casilla_replay_inputs(
     Only numeric casillas are read from ``casilla_values``. Text and date
     values replay from their persisted inputs. A numeric placeholder for an
     absent text or date is omitted rather than becoming a filed ``0``.
+
+    ``revision`` is a :class:`CalculationRevision`; ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     if snapshot is None:
         return {}
@@ -410,6 +422,7 @@ def _not_applicable_relation_zero_inputs(
     snapshot: RegistrySnapshot | None,
     workflow_profile: TaxpayerProfile | None,
     existing_relation_ids: frozenset[RelationId],
+    operation: PinnedAuthorityOperation,
 ) -> dict[RelationId, str]:
     """Return explicit zeroes for profile-proven not-applicable relation slots.
 
@@ -433,6 +446,8 @@ def _not_applicable_relation_zero_inputs(
             workflow_profile=workflow_profile,
             active_relation_ids=active_relation_ids,
             existing_relation_ids=existing_relation_ids,
+            source_filing_year=snapshot.filing_year,
+            operation=operation,
         )
     }
     return dict(sorted(values.items()))
@@ -452,11 +467,18 @@ def _not_applicable_relation_zero_ids(
     workflow_profile: TaxpayerProfile,
     active_relation_ids: frozenset[RelationId],
     existing_relation_ids: frozenset[RelationId],
+    source_filing_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RelationId, ...]:
     if not conditional_on_economic_activity:
         return ()
     try:
-        applicability = derive_modelo_applicability(workflow_profile, source_modelo)
+        applicability = derive_modelo_applicability(
+            workflow_profile,
+            source_modelo,
+            reference_date=date(source_filing_year, 12, 31),
+            operation=operation,
+        )
     except (TypeError, ValueError):
         return ()
     if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:

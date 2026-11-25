@@ -144,13 +144,13 @@ class AutomationRequesterJourney:
         return submitted
 
     def _finish(self, receipt: AutomationReceiptProjection) -> AutomationReceiptProjection:
-        if receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if not receipt.stage.is_terminal:
             return receipt
         submitted = self._submitted
         if submitted is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         if receipt.stage is EnrollmentStage.COMPLETE and (
-            (receipt.key_id is not None) != (self._kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE})
+            (receipt.key_id is not None) != (self._kind is not None and self._kind.issues_a_key)
         ):
             raise self._uncertain(RefusalError(RefusalCode.INVALID_FRAME))
         try:
@@ -170,7 +170,7 @@ class AutomationRequesterJourney:
             raise self._uncertain(original) from original
         try:
             receipt = callback(submitted, timeout=self._remaining())
-            if receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+            if not receipt.stage.is_terminal:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             self._client.accept_reconciled_terminal(receipt)
             return self._finish(receipt)
@@ -199,7 +199,7 @@ class AutomationRequesterJourney:
             return self._recover(error)
         if observed is None:
             raise self._uncertain(RefusalError(RefusalCode.INVALID_FRAME))
-        if observed.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if observed.stage.is_terminal:
             return self._finish(observed)
         try:
             self._client.poll(timeout=self._wire_timeout())
@@ -211,19 +211,15 @@ class AutomationRequesterJourney:
                 final = self._client.inspect(timeout=self._wire_timeout())
             except (AutomationCustodyError, ProfileAccessRefusedError, RefusalError):
                 return self._recover(error)
-            if final is not None and final.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+            if final is not None and final.stage.is_terminal:
                 return self._finish(final)
             raise self._uncertain(error) from error
         return observed
 
     def wait_for_terminal(self) -> AutomationRequesterCompletion:
-        """Drive incremental steps within the original total budget."""
+        """Drive steps within the total budget; the runtime poll waits for delivery work."""
         while True:
             self.step()
             completion = self._terminal
             if completion is not None:
                 return completion
-            try:
-                time.sleep(min(0.05, self._remaining()))
-            except RefusalError as error:
-                raise self._uncertain(error) from error

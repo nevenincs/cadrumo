@@ -12,10 +12,10 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.errors.severity import BaseSeverity as _BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.filing_year import FilingYear
 from ...core.identity.profile import ProfileId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...domain.calculations.registry.ids import RevisionId
@@ -44,9 +44,9 @@ _IssueMessage = Annotated[str, ElidedProse(512)]
 class ProfileValidationIssue(BaseModel):
     """One validation finding raised against a profile snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    severity: _BaseSeverity
+    severity: BaseSeverity
     code: str = Field(min_length=1, max_length=64)
     path: str | None = None
     message: _IssueMessage
@@ -55,7 +55,7 @@ class ProfileValidationIssue(BaseModel):
 class ProfileValidationReport(BaseModel):
     """Aggregate validation report for a profile or a registration command."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     schema_version: int = Field(ge=1)
@@ -65,7 +65,7 @@ class ProfileValidationReport(BaseModel):
 class ProfilePreflightRequirement(BaseModel):
     """One required-but-missing profile selector for a modelo / revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     selector: str = Field(min_length=1, max_length=128)
     section_key: str = Field(min_length=1, max_length=64)
@@ -78,7 +78,7 @@ class ProfilePreflightRequirement(BaseModel):
 class ProfilePreflightReport(BaseModel):
     """Per-`(modelo, revision, filing_year, period)` profile readiness report."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)

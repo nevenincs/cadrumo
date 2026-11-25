@@ -7,7 +7,7 @@ import json
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -19,7 +19,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
 from .cli_runner import semantic_cli_output
 from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 

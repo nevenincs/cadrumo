@@ -7,21 +7,22 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.modelo.calculation_operation import (
+    build_modelo_work_calculate_definition,
+    build_modelo_work_calculate_registration,
+)
 from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
     ModeloCalculationOverride,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    build_modelo_work_calculate_definition,
-    build_modelo_work_calculate_registration,
-)
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.operation_modelo_calculation import run_modelo_work_calculation
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

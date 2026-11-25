@@ -1,7 +1,7 @@
 """M303 state attribution requires explicit canonical territory authority.
 
 Guards the explicit-authority projection:
-  1. ``_inject_derived_state_attribution_facts`` refuses absent territory,
+  1. ``inject_derived_state_attribution_facts`` refuses absent territory,
      maps explicit común to Decimal("100"), and explicit foral to Decimal("0").
   2. ``resolve_profile_sourced_bindings`` resolves a profile binding that feeds a
      ``bound`` numeric casilla (casilla 65 is ``ratio``), even though the binding id
@@ -15,42 +15,37 @@ territory fact must state it explicitly.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
-from ..profile_binding import (
-    ProfileBindingResolutionError,
-    _inject_derived_state_attribution_facts,
-    resolve_profile_sourced_bindings,
-)
+from ..edit_value_grammar import ModeloEditRatioUnit, ratio_unit
+from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_derived_facts import ProfileBindingResolutionError, inject_derived_state_attribution_facts
+from ..value_presentation import format_casilla_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease the governed territory vocabulary for each state-attribution test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _RATIO_KEY = "tax_residence.state_attribution_ratio"
 _SCOPE_KEY = "tax_residence.jurisdiction_scope"
 _BINDING_ID = "modelo-303-profile-state-attribution-ratio"
-_CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_ON_DATE = date(_YEAR, 1, 1)
+_CLOCK = datetime(_YEAR, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
 def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
@@ -58,18 +53,18 @@ def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
 
 
 def test_injector_common_regime_resolves_to_one_hundred(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "common_regime"}
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def test_injector_explicit_foral_resolves_to_zero(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "foral_unsupported"}
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("0")
 
 
@@ -78,7 +73,7 @@ def test_injector_refuses_legacy_ratio_as_authority_without_scope(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_RATIO_KEY: Decimal("50")}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
 
 
 def test_injector_overwrites_legacy_ratio_from_explicit_scope(
@@ -88,12 +83,12 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope(
         _SCOPE_KEY: "common_regime",
         _RATIO_KEY: Decimal("50"),
     }
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def _common_profile() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -104,12 +99,12 @@ def _common_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -119,14 +114,14 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
 
     result = resolve_profile_sourced_bindings(
         snapshot,
@@ -142,7 +137,7 @@ def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
 def test_m303_profile_resolution_refuses_missing_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
 
     with pytest.raises(ProfileBindingResolutionError, match="jurisdiction_scope"):
         resolve_profile_sourced_bindings(
@@ -157,7 +152,7 @@ def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """End-to-end at the resolver boundary: the bound-casilla profile binding resolves to 100."""
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
     result = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id="state-attribution-test",
@@ -168,3 +163,35 @@ def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
         "M303 state-attribution ratio must resolve to 100 for a común-territory profile; "
         f"got {result.binding_values.get(_BINDING_ID)!r} (binding excluded or defaulted to 0 = the B2 bug)"
     )
+
+
+def test_casilla_65_reads_as_a_percentage_in_every_supported_year() -> None:
+    """Box 65 is the State's share in percent (66 = 64 x 65 / 100), so a form can show 100 % rather than hide it.
+
+    A ratio whose bounds declare no unit is withheld from the form, since the
+    reader could take it a hundredfold wrong; that is how a común-territory
+    filer saw an empty box 65 beside a box 66 worked out from 100.
+    """
+    support = published_supported_filing_years()
+    assert support is not None
+    checked: set[str] = set()
+    for year in sorted(support.years):
+        for period in ("1T", "2T", "3T", "4T"):
+            try:
+                snapshot = published_snapshot("303", filing_year=year, period=period)
+            except FilingYearOutsideSupportEnvelopeError:
+                continue
+            (casilla,) = (item for item in snapshot.revision.casillas if item.id == "65")
+            maximum = None if casilla.constraints is None else casilla.constraints.max_value
+            unit = ratio_unit(casilla.data_type, maximum)
+            assert unit is ModeloEditRatioUnit.PERCENT, (year, period, snapshot.revision.id, maximum)
+            assert casilla.constraints is not None
+            assert casilla.constraints.min_value == Decimal(0)
+            checked.add(snapshot.revision.id)
+            assert (
+                format_casilla_value(
+                    Decimal("100"), data_type=casilla.data_type, language=OutputLanguage.ES, ratio_unit=unit
+                )
+                == "100\u00a0%"
+            )
+    assert len(checked) > 1

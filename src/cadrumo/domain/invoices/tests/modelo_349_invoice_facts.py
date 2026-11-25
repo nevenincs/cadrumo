@@ -14,12 +14,15 @@ from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.iva.schema import IvaCategory
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 
+_YEAR = filing_year_envelope().horizon
+
 M349_INVOICES: tuple[tuple[str, str, str, date, Decimal], ...] = (
-    ("F-2026-001", "DE", "DE123456789", date(2026, 1, 15), Decimal("1000.00")),
-    ("F-2026-002", "FR", "FR12345678901", date(2026, 2, 10), Decimal("2500.50")),
-    ("F-2026-003", "IT", "IT12345678901", date(2026, 3, 5), Decimal("740.25")),
+    ("F-2026-001", "DE", "DE123456789", date(_YEAR, 1, 15), Decimal("1000.00")),
+    ("F-2026-002", "FR", "FR12345678901", date(_YEAR, 2, 10), Decimal("2500.50")),
+    ("F-2026-003", "IT", "IT12345678901", date(_YEAR, 3, 5), Decimal("740.25")),
 )
 M349_EXPECTED_IMPORTE = Decimal("4240.75")
 M349_EXPECTED_OPERADORES = Decimal("3")

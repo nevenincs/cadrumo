@@ -20,7 +20,7 @@ from ....application.ledger.merge_operation import (
     LedgerMergeRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _profile_authentication_gate, command_lifecycle, ledger_lifecycle_cli
+from .. import command_lifecycle, ledger_lifecycle_cli, profile_authentication_gate
 from .. import operation_ledger_merge as bridge
 from ..command_specs import COMMAND_GRAPH
 from .command_runtime_support import build_command_subtree
@@ -116,8 +116,8 @@ def test_repeated_child_id_argv_reaches_the_strict_merge_request(monkeypatch: py
         ),
         submitted,
     )
-    monkeypatch.setattr(_profile_authentication_gate, "preflight_parsed_leaf", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(command_lifecycle, "_governed_fact_scope", lambda *_args: nullcontext())
+    monkeypatch.setattr(profile_authentication_gate, "preflight_parsed_leaf", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(command_lifecycle, "governed_fact_scope", lambda *_args: nullcontext())
     monkeypatch.setattr(ledger_lifecycle_cli, "emit_envelope", lambda *_args, **_kwargs: None)
     result = CliRunner().invoke(
         build_command_subtree(COMMAND_GRAPH, "app_ledger"),

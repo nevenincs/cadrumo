@@ -10,13 +10,14 @@ from cadrumo.domain.calculations.registry.export import (
     row_binding_casilla_ids_by_field,
 )
 from cadrumo.domain.calculations.registry.revision_context import build_revision_validation_context
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-y-siguientes"])
+@pytest.mark.parametrize("revision_id", [str(revision.id) for revision in authored_revisions("180")])
 def test_m180_repeated_binding_targets_are_exported_casillas(revision_id: str) -> None:
     """The same 27 source-backed recipient casillas remain visible after binding derivation."""
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "180"))
@@ -32,7 +33,7 @@ def test_m180_repeated_binding_targets_are_exported_casillas(revision_id: str) -
 def test_unresolved_row_binding_does_not_claim_an_exported_casilla() -> None:
     """An unrelated binding ID cannot provide extraction-profile coverage."""
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "180"))
-    revision = modelo.revisions["2019-2022"]
+    revision = modelo.revisions[str(authored_revisions("180")[0].id)]
     derived = derive_export_layouts_from_bindings(revision)[0]
     row_casillas = row_binding_casilla_ids_by_field(revision, derived)
     target = next(casilla for casilla in row_casillas.values() if str(casilla) == "perc.ejercicio-devengo")

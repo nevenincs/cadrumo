@@ -1,0 +1,817 @@
+"""Registry-native scenario verification for local calculation hardening."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date
+from decimal import Decimal
+from functools import lru_cache
+
+from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ..ids import LegalRefId, SourceRefId
+from .authored_editions import newest_authored_edition, revision_covering
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
+from .registry_tree import bundled_modelo_components
+from .scenarios import (
+    RegistryCalculationScenario,
+    RegistryScenarioExpectedOutput,
+)
+
+#: The newest Modelo 100 edition the registry authors, which every scenario here calculates.
+_EXERCISE = newest_authored_edition("100")
+_REVISION_ID = str(revision_covering("100", _EXERCISE).id)
+_FILING_PERIOD_END = date(_EXERCISE, 12, 31)
+
+
+def registry_scenarios_operand_refs(*values: object) -> tuple[str, ...]:
+    return tuple(str(value) for value in values)
+
+
+def operand_casilla_refs(*values: object) -> tuple[CasillaId, ...]:
+    return tuple(validated_casilla_id(value, surface="test_registry_scenarios.casilla") for value in values)
+
+
+def inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return validated_casilla_id_map(values, surface="test_registry_scenarios.inputs")
+
+
+#: Casilla 0171 ("Ingresos de explotación") is ``input_kind = "bound"`` on the
+#: M100 2025 revision, to ``renta-ledger-income-0171``. The archetype
+#: scenarios below supply it directly, which hand-types a value the engine
+#: produces by aggregating ledger substrate and resolving that binding — so the
+#: chain that populates it is stepped over here and nothing these scenarios
+#: assert speaks to it.
+#:
+#: That is the right trade for these fixtures: they exist to exercise the
+#: estimación-directa FORMULA chain and its downstream cuota path across several
+#: archetypes, and building ledger substrate for each would turn every one of
+#: them into an aggregation test. Declaring it keeps the boundary visible where
+#: a reader meets the scenario, rather than leaving them to infer end-to-end
+#: coverage the fixtures never claimed.
+_INGRESOS_EXPLOTACION: CasillaId = validated_casilla_id("0171", surface="_INGRESOS_EXPLOTACION")
+_HAND_TYPED_INGRESOS: dict[CasillaId, str] = {
+    _INGRESOS_EXPLOTACION: (
+        "archetype fixture exercising the estimacion-directa formula chain and the cuota path below it; "
+        "the ledger-income aggregation feeding this casilla is out of its scope and is covered separately"
+    ),
+}
+
+#: Casilla 0181 (activity acquisition cost) is ``input_kind = "bound"`` in
+#: the 2025 M100 revision, through the inventory source binding
+#: ``renta-inventory-activity-acquisition-cost-0181``.  These two
+#: formula-chain fixtures supply a literal acquisition cost instead of building
+#: inventory substrate and running that source resolver, so the value is
+#: deliberately hand-typed rather than chain-resolved.
+_ACTIVITY_ACQUISITION_COST: CasillaId = validated_casilla_id(
+    "0181",
+    surface="_ACTIVITY_ACQUISITION_COST",
+)
+_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY: dict[CasillaId, str] = {
+    **_HAND_TYPED_INGRESOS,
+    _ACTIVITY_ACQUISITION_COST: (
+        "archetype fixture exercises the estimacion-directa formula chain and its cuota path; "
+        "the inventory aggregation and binding resolver producing this acquisition cost are out of scope "
+        "and covered separately"
+    ),
+}
+
+
+_TYPED_INMUEBLE_RETENCIONES_0153 = (
+    "the scenario carries no let property, so the capital-inmobiliario withholding the property rows total is "
+    "typed here to exercise the urban-rental credit; the rows and their total are covered by the renta_inmueble "
+    "resolver and export tests"
+)
+_TYPED_ACTIVITY_RETENCIONES_0599 = (
+    "the scenario carries no ledger rows, so the activity retenciones the ledger binding aggregates are typed "
+    "here to exercise the cuota diferencial; the ledger aggregation and its grade cap are covered by their own "
+    "resolver and gate tests"
+)
+
+
+@lru_cache(maxsize=1)
+def _m100_newest_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
+    modelo, _catalogues = bundled_modelo_components("100")
+    revision = modelo.revisions[_REVISION_ID]
+    refs: dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]] = {
+        casilla.id: (
+            tuple(casilla.legal_refs),
+            tuple(casilla.source_refs),
+        )
+        for casilla in revision.casillas
+    }
+    refs.update(
+        {
+            formula.target_casilla_id: (
+                tuple(formula.legal_refs),
+                tuple(formula.source_refs),
+            )
+            for formula in revision.formulas
+        },
+    )
+    return refs
+
+
+def expected(
+    target: object,
+    *,
+    value: Decimal,
+    operand_refs: tuple[object, ...] = (),
+    operand_casilla_refs: tuple[CasillaId, ...] | None = None,
+    legal_refs: tuple[LegalRefId, ...] | None = None,
+    source_refs: tuple[SourceRefId, ...] | None = None,
+) -> RegistryScenarioExpectedOutput:
+    if operand_refs and operand_casilla_refs is None:
+        raise AssertionError("scenario expectations with operand_refs must declare operand_casilla_refs explicitly")
+    expected_operand_casilla_refs = () if operand_casilla_refs is None else operand_casilla_refs
+    target_casilla_id = validated_casilla_id(target, surface="test_registry_scenarios.casilla")
+    default_legal_refs, default_source_refs = _m100_newest_refs_by_target()[target_casilla_id]
+    return RegistryScenarioExpectedOutput(
+        target_casilla_id=target_casilla_id,
+        value=value,
+        operand_refs=registry_scenarios_operand_refs(*operand_refs),
+        operand_casilla_refs=expected_operand_casilla_refs,
+        legal_refs=default_legal_refs if legal_refs is None else legal_refs,
+        source_refs=default_source_refs if source_refs is None else source_refs,
+    )
+
+
+def estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScenario:
+    """B3 archetype: estimación objetiva (módulos)."""
+    return normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": f"modelo-100-{_EXERCISE}-estimacion-objetiva-modulos-archetype-passthrough",
+        },
+    )
+
+
+def tributacion_conjunta_family_joint_archetype_scenario() -> RegistryCalculationScenario:
+    """C1 archetype: tributación conjunta family-joint declaration."""
+    return normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": f"modelo-100-{_EXERCISE}-tributacion-conjunta-family-joint-archetype-passthrough",
+        },
+    )
+
+
+def minimo_familiar_descendientes_discapacidad_archetype_scenario() -> RegistryCalculationScenario:
+    """C2 archetype: family with descendants/discapacidad (mínimo familiar)."""
+    return normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": f"modelo-100-{_EXERCISE}-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
+        },
+    )
+
+
+def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{_EXERCISE}-employee-trabajo-estimacion-directa-normal-autonomo-payments",
+        modelo="100",
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
+        period="0A",
+        inputs=inputs(
+            {
+                "0171": Decimal("1000.00"),
+                "0172": Decimal("200.00"),
+                "0181": Decimal("300.00"),
+                "0219": Decimal("50.00"),
+                "0225": Decimal("10.00"),
+                "0236": Decimal("5.00"),
+                "0232": Decimal("1.00"),
+                "0233": Decimal("2.00"),
+                "0234": Decimal("3.00"),
+                "0237": Decimal("4.00"),
+                "0592": Decimal("1.00"),
+                "0593": Decimal("2.00"),
+                "0594": Decimal("3.00"),
+                # 0596, 0597 and 0603 are bound to their payer-record families,
+                # supplied through the binding channel below.
+                "0153": Decimal("6.00"),
+                "0599": Decimal("7.00"),
+                "0600": Decimal("8.00"),
+                "0601": Decimal("9.00"),
+                "0602": Decimal("10.00"),
+                "0605": Decimal("12.00"),
+                "0606": Decimal("13.00"),
+            },
+        ),
+        hand_typed_bound_casillas={
+            **_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
+            "0153": _TYPED_INMUEBLE_RETENCIONES_0153,
+            "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
+        },
+        binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            # 0596 takes the sum of the payee's work-payer certificates, the
+            # value the source mesh resolves, rather than a raw casilla input.
+            "renta-retencion-soportada-trabajo": Decimal("4.00"),
+            "renta-retencion-soportada-capital-mobiliario": Decimal("5.00"),
+            "renta-retencion-soportada-ganancia-patrimonial": Decimal("11.00"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero.
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+        },
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            "renta-modelo-130-pagos-fraccionados": Decimal("45.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("55.00"),
+        },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        expected_outputs=(
+            expected(
+                "0180",
+                value=Decimal("1200.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0171", "0172", "0173", "0174", "0175", "0176", "0177", "0178", "0179"
+                ),
+                operand_casilla_refs=operand_casilla_refs(
+                    "0171",
+                    "0172",
+                    "0173",
+                    "0174",
+                    "0175",
+                    "0176",
+                    "0177",
+                    "0178",
+                    "0179",
+                ),
+                legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-28", "orden-hac-277-2026:art-3"),
+            ),
+            expected(
+                "0224",
+                value=Decimal("850.00"),
+                # Active-branch operand provenance: with the es_normal
+                # binding = "1", the if_then_else evaluates the normal
+                # branch (0180 - 0220) and only that branch's operands
+                # contribute. The simplificada branch (0180 - 0223) is
+                # structurally declared but not exercised here.
+                operand_refs=registry_scenarios_operand_refs(
+                    "renta-profile-has-economic-activity",
+                    "renta-profile-estimacion-directa",
+                    "renta-modelo-100-estimacion-directa-es-normal",
+                    "0180",
+                    "0220",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0180", "0220"),
+                source_refs=(
+                    "aeat-dr-100-2025-dictionary",
+                    "aeat-dr-100-2025-xsd",
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form",
+                ),
+            ),
+            expected(
+                "0235",
+                value=Decimal("825.00"),
+                operand_refs=registry_scenarios_operand_refs("0231", "0232", "0233", "0234", "0237"),
+                operand_casilla_refs=operand_casilla_refs("0231", "0232", "0233", "0234", "0237"),
+            ),
+            expected(
+                "0604",
+                value=Decimal("100.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "renta-modelo-130-pagos-fraccionados",
+                    "renta-modelo-131-pagos-fraccionados",
+                ),
+                operand_casilla_refs=(),
+                legal_refs=(
+                    "ley-35-2006:art-99",
+                    "rd-439-2007:art-109",
+                    "rd-439-2007:art-110",
+                    "orden-eha-672-2007:art-1",
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                ),
+            ),
+            expected(
+                "0609",
+                value=Decimal("191.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0592",
+                    "0593",
+                    "0594",
+                    "0596",
+                    "0597",
+                    "0598",
+                    "0599",
+                    "0600",
+                    "0601",
+                    "0602",
+                    "0603",
+                    "0604",
+                    "0605",
+                    "0606",
+                ),
+                operand_casilla_refs=operand_casilla_refs(
+                    "0592",
+                    "0593",
+                    "0594",
+                    "0596",
+                    "0597",
+                    "0598",
+                    "0599",
+                    "0600",
+                    "0601",
+                    "0602",
+                    "0603",
+                    "0604",
+                    "0605",
+                    "0606",
+                ),
+            ),
+        ),
+    )
+
+
+def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{_EXERCISE}-estimacion-directa-simplificada-statutory-cap",
+        modelo="100",
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
+        period="0A",
+        inputs=inputs({"0171": Decimal("100000.00")}),
+        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS,
+        binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+        },
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
+        },
+        date_context={"filing_period": _FILING_PERIOD_END},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        expected_outputs=(
+            expected(
+                "0222",
+                value=Decimal("2000.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0180",
+                    "0218",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0180", "0218"),
+                legal_refs=("ley-35-2006:art-30", "rd-439-2007:art-30", "orden-hac-277-2026:art-3"),
+            ),
+            expected(
+                "0224",
+                value=Decimal("98000.00"),
+                # es_normal binding = "0" selects the simplificada
+                # branch (0180 - 0223); active-branch operand provenance.
+                operand_refs=registry_scenarios_operand_refs(
+                    "renta-profile-has-economic-activity",
+                    "renta-profile-estimacion-directa",
+                    "renta-modelo-100-estimacion-directa-es-normal",
+                    "0180",
+                    "0223",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0180", "0223"),
+            ),
+        ),
+    )
+
+
+def negative_simplified_base_scenario() -> RegistryCalculationScenario:
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{_EXERCISE}-estimacion-directa-simplificada-negative-base",
+        modelo="100",
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
+        period="0A",
+        inputs=inputs({"0171": Decimal("100.00"), "0181": Decimal("500.00")}),
+        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
+        binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+        },
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
+        },
+        date_context={"filing_period": _FILING_PERIOD_END},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        expected_outputs=(
+            expected(
+                "0222",
+                value=Decimal("0.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0180",
+                    "0218",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0180", "0218"),
+            ),
+            expected(
+                "0224",
+                value=Decimal("-400.00"),
+                # es_normal binding = "0" selects the simplificada branch.
+                operand_refs=registry_scenarios_operand_refs(
+                    "renta-profile-has-economic-activity",
+                    "renta-profile-estimacion-directa",
+                    "renta-modelo-100-estimacion-directa-es-normal",
+                    "0180",
+                    "0223",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0180", "0223"),
+            ),
+        ),
+    )
+
+
+def real_estate_capital_scenario() -> RegistryCalculationScenario:
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{_EXERCISE}-real-estate-rental-alquiler-inmobiliario-capital-rollup",
+        modelo="100",
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
+        period="0A",
+        inputs=inputs(
+            {
+                "0083": Decimal("6172.50"),
+                "0085": Decimal("365"),
+                "0153": Decimal("800.00"),
+            },
+        ),
+        hand_typed_bound_casillas={"0153": _TYPED_INMUEBLE_RETENCIONES_0153},
+        binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+            # The one property's art. 85 LIRPF imputed income, the total its Inmueble row
+            # carries in casilla 0089: 2 % of the 6.172,50 cadastral value for all 365 days.
+            "renta-inmueble-total-renta-imputada-0089": Decimal("123.45"),
+        },
+        enum_binding_values={
+            "renta-profile-tax-residence-ccaa": "madrid",
+        },
+        relation_values={
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
+        },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        expected_outputs=(
+            expected(
+                "0155",
+                value=Decimal("123.45"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "renta-inmueble-total-renta-imputada-0089",
+                ),
+                operand_casilla_refs=operand_casilla_refs(),
+                legal_refs=("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
+            ),
+            expected(
+                "0598",
+                value=Decimal("800.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0153",
+                    "renta-retencion-soportada-arrendamiento-actividad",
+                ),
+                operand_casilla_refs=operand_casilla_refs("0153"),
+                legal_refs=(
+                    "ley-35-2006:art-99",
+                    "ley-35-2006:art-22",
+                    "ley-35-2006:art-23",
+                    "ley-35-2006:art-24",
+                    "ley-35-2006:art-101",
+                    "rd-439-2007:art-100",
+                    "orden-hac-277-2026:art-3",
+                ),
+                source_refs=(
+                    "aeat-dr-100-2025-dictionary",
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form",
+                ),
+            ),
+        ),
+    )
+
+
+def final_settlement_scenario() -> RegistryCalculationScenario:
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{_EXERCISE}-final-settlement-ganancias-patrimoniales-ccaa-rollup",
+        modelo="100",
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
+        period="0A",
+        inputs=inputs(
+            {
+                # 0540 is now computed via the art.66 ahorro-base estatal
+                # escala (subtract of 0536/0538) and 0541 via the art.76
+                # ahorro-base autonomica escala (subtract of 0537/0539);
+                # neither can be supplied as an input.
+                "0588": Decimal("100.00"),
+                "0414": Decimal("200.00"),
+                "0589": Decimal("300.00"),
+                "0590": Decimal("400.00"),
+                "0591": Decimal("500.00"),
+                "0592": Decimal("10.00"),
+                "0593": Decimal("20.00"),
+                "0594": Decimal("30.00"),
+                # 0596, 0597 and 0603 are bound to their payer-record families,
+                # supplied through the binding channel below.
+                "0153": Decimal("60.00"),
+                "0599": Decimal("70.00"),
+                "0600": Decimal("80.00"),
+                "0601": Decimal("90.00"),
+                "0602": Decimal("100.00"),
+                "0605": Decimal("120.00"),
+                "0606": Decimal("130.00"),
+                # 0611 is computed from the maternity deduction the profile
+                # derives per descendant; it arrives through its binding below.
+                # 0613 is computed from the guardería increment the profile derives per
+                # descendant; it arrives through its binding below.
+                "0612": Decimal("10.00"),
+                "0623": Decimal("30.00"),
+                "0624": Decimal("40.00"),
+                "0636": Decimal("50.00"),
+                "0637": Decimal("60.00"),
+                "0248": Decimal("70.00"),
+                "0249": Decimal("80.00"),
+                "0660": Decimal("90.00"),
+                "0661": Decimal("100.00"),
+                "0662": Decimal("110.00"),
+                "0663": Decimal("120.00"),
+                "0664": Decimal("130.00"),
+                "0666": Decimal("140.00"),
+                "0669": Decimal("150.00"),
+            },
+        ),
+        hand_typed_bound_casillas={
+            "0153": _TYPED_INMUEBLE_RETENCIONES_0153,
+            "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
+        },
+        binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+            # The Madrid birth or adoption deducción (casilla 1039) reads these two; the filer has no eligible
+            # descendant and no other member of the unit.
+            "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("20.00"),
+            # 0596 takes the sum of the payee's work-payer certificates.
+            "renta-retencion-soportada-trabajo": Decimal("40.00"),
+            "renta-retencion-soportada-capital-mobiliario": Decimal("50.00"),
+            "renta-retencion-soportada-ganancia-patrimonial": Decimal("110.00"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            **dict.fromkeys(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, Decimal("100.00")),
+        },
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            "renta-modelo-130-pagos-fraccionados": Decimal("600.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("400.00"),
+        },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        expected_outputs=(
+            expected(
+                "0587",
+                value=Decimal("15000.00"),
+                operand_refs=registry_scenarios_operand_refs("0585", "0586"),
+                operand_casilla_refs=operand_casilla_refs("0585", "0586"),
+                legal_refs=("orden-hac-277-2026:art-3",),
+            ),
+            expected(
+                "0595",
+                value=Decimal("13500.00"),
+                operand_refs=registry_scenarios_operand_refs("0587", "0588", "0414", "0589", "0590", "0591"),
+                operand_casilla_refs=operand_casilla_refs("0587", "0588", "0414", "0589", "0590", "0591"),
+                legal_refs=("ley-35-2006:art-99", "orden-hac-277-2026:art-3"),
+            ),
+            expected(
+                "0609",
+                value=Decimal("1910.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0592",
+                    "0593",
+                    "0594",
+                    "0596",
+                    "0597",
+                    "0598",
+                    "0599",
+                    "0600",
+                    "0601",
+                    "0602",
+                    "0603",
+                    "0604",
+                    "0605",
+                    "0606",
+                ),
+                operand_casilla_refs=operand_casilla_refs(
+                    "0592",
+                    "0593",
+                    "0594",
+                    "0596",
+                    "0597",
+                    "0598",
+                    "0599",
+                    "0600",
+                    "0601",
+                    "0602",
+                    "0603",
+                    "0604",
+                    "0605",
+                    "0606",
+                ),
+                legal_refs=("ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"),
+            ),
+            expected(
+                "0610",
+                value=Decimal("11590.00"),
+                operand_refs=registry_scenarios_operand_refs("0595", "0609"),
+                operand_casilla_refs=operand_casilla_refs("0595", "0609"),
+                legal_refs=("ley-35-2006:art-99", "orden-hac-277-2026:art-3"),
+                source_refs=("aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
+            ),
+            expected(
+                "0670",
+                value=Decimal("11950.00"),
+                operand_refs=registry_scenarios_operand_refs(
+                    "0610",
+                    "0611",
+                    "0612",
+                    "0613",
+                    "0623",
+                    "0624",
+                    "0636",
+                    "0637",
+                    "0248",
+                    "0249",
+                    "0660",
+                    "0661",
+                    "0662",
+                    "0663",
+                    "0664",
+                    "0666",
+                    "0669",
+                ),
+                operand_casilla_refs=operand_casilla_refs(
+                    "0610",
+                    "0611",
+                    "0612",
+                    "0613",
+                    "0623",
+                    "0624",
+                    "0636",
+                    "0637",
+                    "0248",
+                    "0249",
+                    "0660",
+                    "0661",
+                    "0662",
+                    "0663",
+                    "0664",
+                    "0666",
+                    "0669",
+                ),
+                legal_refs=("orden-hac-277-2026:art-3",),
+                source_refs=("aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
+            ),
+        ),
+    )

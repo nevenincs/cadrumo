@@ -1,12 +1,13 @@
-//! Each scenario panics in a real child process; the parent reads the durable
-//! log the child configured. A control child that keeps a silent hook proves
-//! the assertions detect a missing record.
+//! Recoverable panics are drained to the log before the process ends. Aborting
+//! boundaries remain private even when the diagnostic writer has no time to run.
 use cadrumo_application::{
     diagnostics::{DiagnosticSource, Diagnostics, panic},
     error::application::Operation,
 };
 use serde_json::Value;
 use std::{env, fs, path::Path, process::Command, sync::Arc};
+
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 
 const SECRET: &str = "ES12345678Z-synthetic-private-payload";
 const CHILD: &str = "--panic-child";
@@ -22,7 +23,6 @@ fn main() {
         ("main", Ending::Unwound, "main"),
         ("thread", Ending::Exited, "panic-thread"),
         ("task", Ending::Exited, "main"),
-        ("callback", Ending::Aborted, "main"),
     ];
     for (scenario, ending, thread) in scenarios {
         let run = run(scenario, true);
@@ -49,20 +49,16 @@ fn main() {
         println!("panic_hook {scenario}: ok");
     }
 
-    // Without a configured file the record still leaves on standard error.
+    // Without a configured file the caught panic remains available in the ring.
     let unconfigured = run("unconfigured", true);
-    unconfigured.assert_ending(Ending::Unwound);
-    let line = unconfigured
-        .stderr
-        .lines()
-        .find(|line| line.contains("\"kind\":\"panic\""))
-        .expect("an unconfigured panic reaches standard error");
-    let record: Value = serde_json::from_str(line).unwrap();
-    assert_eq!(record["panic"]["line"], site("unconfigured"));
+    unconfigured.assert_ending(Ending::Exited);
     unconfigured.assert_private();
     println!("panic_hook unconfigured: ok");
 
-    // The defect the hook prevents: a silent hook and an aborting boundary.
+    let aborted = run("callback", true);
+    aborted.assert_ending(Ending::Aborted);
+    aborted.assert_private();
+    // File delivery cannot be guaranteed after an abort, even with the hook.
     let control = run("callback", false);
     control.assert_ending(Ending::Aborted);
     assert!(
@@ -84,7 +80,7 @@ fn site(scenario: &str) -> u32 {
 
 #[derive(Clone, Copy, Debug)]
 enum Ending {
-    /// The panic unwound out of `main`.
+    /// The panic was caught at the main boundary and drained before exit 101.
     Unwound,
     /// The child contained the panic and exited with `CONTAINED`.
     Exited,
@@ -168,8 +164,10 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
     }
     match scenario {
         "main" => {
-            failing().unwrap(); // site:main
-            unreachable!()
+            let caught = std::panic::catch_unwind(|| failing().unwrap()); // site:main
+            assert!(caught.is_err());
+            delivered(&diagnostics);
+            std::process::exit(101)
         }
         "thread" => {
             let joined = std::thread::Builder::new()
@@ -179,6 +177,7 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
                 .join();
             assert!(joined.is_err());
             diagnostics.contained_panic(None, Operation::Launch);
+            delivered(&diagnostics);
             std::process::exit(CONTAINED)
         }
         "task" => {
@@ -190,6 +189,7 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
             });
             assert!(joined.is_err_and(|error| error.is_panic()));
             diagnostics.contained_panic(None, Operation::Launch);
+            delivered(&diagnostics);
             std::process::exit(CONTAINED)
         }
         "callback" => {
@@ -197,8 +197,16 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
             unreachable!()
         }
         _ => {
-            failing().unwrap(); // site:unconfigured
-            unreachable!()
+            let caught = std::panic::catch_unwind(|| failing().unwrap()); // site:unconfigured
+            assert!(caught.is_err());
+            let snapshot = diagnostics.snapshot(0);
+            assert!(snapshot.events.iter().any(|event| {
+                event
+                    .panic
+                    .as_ref()
+                    .is_some_and(|fact| fact.line == Some(site("unconfigured")))
+            }));
+            std::process::exit(CONTAINED)
         }
     }
 }

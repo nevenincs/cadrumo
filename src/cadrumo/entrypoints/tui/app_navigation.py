@@ -3,29 +3,121 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final
 
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
+from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from .declarations.controller import calendar_address_focus_key
-from .home import HomeTarget, home_target_action_id, home_target_agenda_address, home_target_work_unit_id
-from .navigation import DestinationFactoryError, NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
+from .components.account_chrome import AccountActionV1
+from .declarations.controller import (
+    CALENDAR_FOCUS_KEY,
+    NEW_DECLARATION_FOCUS_KEY,
+    SEARCH_DECLARATIONS_FOCUS_KEY,
+    calendar_address_focus_key,
+)
+from .home import (
+    HomeLinkV1,
+    HomeTarget,
+    home_target_action_id,
+    home_target_agenda_address,
+    home_target_work_unit_id,
+)
+from .navigation import (
+    DestinationFactoryError,
+    NavigationContractError,
+    TuiDestinationIdV1,
+    TuiFocusIdentityV1,
+    TuiLeaveGuardV1,
+    TuiNavigationTargetV1,
+)
+from .refusal.intent import RefusalRouterV1
+from .refusal.panel import RefusalPanel
+from .refusal.routing import host_refusal_router
+from .refusal.served import ServedRefusalV1
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
     from .secret.passphrase import PassphraseScreen
 
 
+_HOME_LINK_ROUTES: Final[Mapping[HomeLinkV1, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
+    {
+        HomeLinkV1.DECLARATIONS: ("workbench.declarations", "navigation.declarations"),
+        HomeLinkV1.NEW_DECLARATION: ("workbench.declarations", NEW_DECLARATION_FOCUS_KEY),
+        HomeLinkV1.SEARCH_DECLARATIONS: ("workbench.declarations", SEARCH_DECLARATIONS_FOCUS_KEY),
+        HomeLinkV1.CALENDAR: ("workbench.declarations", CALENDAR_FOCUS_KEY),
+        HomeLinkV1.LEDGER: ("workbench.ledger", "navigation.ledger"),
+        HomeLinkV1.AEAT_SYNC: ("workbench.aeat_sync", "navigation.aeat_sync"),
+        HomeLinkV1.REFERENCE: ("workbench.reference", "navigation.reference"),
+    }
+)
+"""Where each workbench link on Home leads, with the focus its page opens on."""
+_HOME_ACCOUNT_LINK_ACTIONS: Final[Mapping[HomeLinkV1, AccountActionV1]] = MappingProxyType(
+    {HomeLinkV1.PROFILE: AccountActionV1.PROFILE, HomeLinkV1.SIGN_OUT: AccountActionV1.SIGN_OUT}
+)
+"""The account links, performed by the same doors as their keys and palette entries."""
+
+
 class RootNavigationMixin:
     """Own destination lifecycle, Home restoration, and expired-root teardown."""
 
+    def _home_link_states(self: CadrumoTuiApp) -> dict[HomeLinkV1, WorkbenchDestinationAdmissionState]:
+        """Say which of Home's links this session can open, from the catalogue Home was read with."""
+        catalogue = self._active_destination_catalogue
+        states = {
+            link: WorkbenchDestinationAdmissionState.UNAVAILABLE
+            if catalogue is None
+            else catalogue.resolve(destination).admission.state
+            for link, (destination, _focus) in _HOME_LINK_ROUTES.items()
+        }
+        account = (
+            WorkbenchDestinationAdmissionState.UNAVAILABLE
+            if self._account_factories is None
+            else WorkbenchDestinationAdmissionState.AVAILABLE
+        )
+        return states | dict.fromkeys(_HOME_ACCOUNT_LINK_ACTIONS, account)
+
+    def _open_home_link(self: CadrumoTuiApp, link: HomeLinkV1) -> None:
+        """Open one Home link through the door its keys and palette entry already use."""
+        action = _HOME_ACCOUNT_LINK_ACTIONS.get(link)
+        if action is not None:
+            self.run_account_action(action)
+            return
+        destination, semantic_key = _HOME_LINK_ROUTES[link]
+        self.navigate_to(
+            TuiNavigationTargetV1(
+                destination=destination,
+                focus=TuiFocusIdentityV1(destination=destination, semantic_key=semantic_key),
+            )
+        )
+
+    def _destination_refuses_leaving(self: CadrumoTuiApp) -> bool:
+        """Ask each screen above the root shell, topmost first, whether it may be removed now.
+
+        The first screen that refuses says why on screen, and the caller keeps
+        the destination as it is. Every path that pops, replaces or swaps the
+        destination, or ends the session at the operator's request, asks here.
+        """
+        return any(
+            isinstance(screen, TuiLeaveGuardV1) and screen.refuse_leaving()
+            for screen in reversed(self.screen_stack[1:])
+        )
+
     def navigate_to(self: CadrumoTuiApp, target: TuiNavigationTargetV1, /) -> None:
-        """Mount only the current admitted destination with its semantic focus."""
+        """Mount only the current admitted destination with its semantic focus.
+
+        Refused, with the reason on screen, while the destination shown holds
+        work it must not abandon.
+        """
+        if self._destination_refuses_leaving():
+            return
         catalogue = self.destination_catalogue
         if target.destination == "workbench.home":
             self._show_home(self._home_semantic_focus)
@@ -65,6 +157,15 @@ class RootNavigationMixin:
             return
         self._active_target = target
         self._replace_destination(screen, return_to_home=True)
+
+    async def refusal_router(self: CadrumoTuiApp, refusal: ServedRefusalV1, /) -> RefusalRouterV1:
+        """Route a refusal's ways out to the destinations this session admits."""
+        return await host_refusal_router(self, refusal)
+
+    def on_refusal_panel_action_chosen(self: CadrumoTuiApp, message: RefusalPanel.ActionChosen) -> None:
+        """Open the destination a chosen way out of a refusal leads to, with the arguments it was served."""
+        message.stop()
+        self.navigate_to(message.intent.navigation_target())
 
     def _home_row_target(self: CadrumoTuiApp, row: HomeTarget) -> TuiNavigationTargetV1 | None:
         """Translate one Home row into the admitted destination it belongs to."""
@@ -258,18 +359,34 @@ class RootNavigationMixin:
         operator on the empty root.
         """
         self._navigation_revision += 1
+        self._swap_revision = self._navigation_revision
         self.call_next(self._swap_destination, screen, return_to_home, self._navigation_revision)
 
     async def _swap_destination(
         self: CadrumoTuiApp, screen: Screen[None], return_to_home: bool, navigation_revision: int
     ) -> None:
-        """Pop every destination, then push the replacement once they are gone."""
-        if not self._navigation_is_current(navigation_revision):
-            return
-        while len(self.screen_stack) > 1:
-            await self.pop_screen()
-            if not self._navigation_is_current(navigation_revision):
+        """Pop every destination, then push the replacement once they are gone.
+
+        The destination is asked again here, at the moment of removal, because
+        a replacement can be requested before a write starts and land after
+        it: Home reads a whole generation off the loop while the operator can
+        still act on the page they are leaving. A refused swap drops the
+        replacement and leaves that page, and its write, where they are.
+
+        Account forms are withheld from the request until the old screens are
+        gone, and offered again before the replacement is pushed, so one
+        opened from then on sits above the new destination.
+        """
+        try:
+            if not self._navigation_is_current(navigation_revision) or self._destination_refuses_leaving():
                 return
+            while len(self.screen_stack) > 1:
+                await self.pop_screen()
+                if not self._navigation_is_current(navigation_revision):
+                    return
+        finally:
+            if self._swap_revision == navigation_revision:
+                self._swap_revision = None
         await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
         self.call_after_refresh(self._record_initial_screen_ready, screen)
 
@@ -278,7 +395,12 @@ class RootNavigationMixin:
         return navigation_revision == self._navigation_revision and self.is_running
 
     def _request_recompose(self: CadrumoTuiApp, outcome: AccountRecomposeRequiredV1) -> None:
-        """Sever every profile-bound capability before returning to bootstrap."""
+        """Sever every profile-bound capability before returning to bootstrap.
+
+        The destination is not asked whether it may be left: an expired, lost
+        or retired session, or a completed password change, already ended the
+        authority any write in flight was submitted under.
+        """
         if self._recomposition_pending:
             return
         self._recomposition_pending = True

@@ -6,9 +6,10 @@ import ast
 from collections.abc import Mapping
 
 from .import_check_models import Authority, Finding, SourceModule
-from .import_dynamic_aliases import dynamic_aliases
+from .import_dynamic_aliases import DYNAMIC_TARGET_KEYWORDS, DynamicLoaderKind, dynamic_aliases
+from .import_dynamic_strings import carries_interpreter_payload, string_payload_imports
 from .import_dynamic_targets import dynamic_target, metadata_target_set_targets
-from .import_module_syntax import is_first_party, qualified_name
+from .import_module_syntax import is_first_party, is_package
 from .import_record_provenance import RecordTargetProvenance
 from .import_static_checks import check_private
 from .import_target_evaluation import TargetEvaluationContext
@@ -20,46 +21,57 @@ def check_dynamic_imports(
     findings: list[Finding],
     record_provenance: RecordTargetProvenance,
 ) -> None:
-    """Resolve finite dynamic imports and report unsupported targets."""
+    """Resolve finite dynamic and interpreter-payload imports and report unsupported targets."""
     known = frozenset((*modules, *authority.root_packages))
     for module in modules.values():
-        import_module_names, importlib_names, raw_import_names = dynamic_aliases(module)
-        dynamic_calls: list[ast.Call] = []
-        is_raw_import = False
+        aliases = dynamic_aliases(module)
+        dynamic_calls: list[tuple[ast.Call, DynamicLoaderKind]] = []
+        payload_hosts: list[ast.AST] = []
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Call):
-                is_raw_import = _collect_dynamic_call(
-                    node, import_module_names, importlib_names, raw_import_names, dynamic_calls
-                )
-        if not dynamic_calls:
+                kind = aliases.loader_kind(node)
+                if kind is not None:
+                    dynamic_calls.append((node, kind))
+            if carries_interpreter_payload(node):
+                payload_hosts.append(node)
+        if not (dynamic_calls or payload_hosts):
             continue
         context = TargetEvaluationContext(module.tree, module.name)
-        for node in dynamic_calls:
-            _check_dynamic_call(
-                node, module, context, authority, modules, findings, known, is_raw_import, record_provenance
+        for host in payload_hosts:
+            _check_string_payloads(host, module, context, authority, modules, findings, known)
+        for node, kind in dynamic_calls:
+            _check_dynamic_call(node, kind, module, context, authority, modules, findings, known, record_provenance)
+
+
+def _check_string_payloads(
+    host: ast.AST,
+    module: SourceModule,
+    context: TargetEvaluationContext,
+    authority: Authority,
+    modules: Mapping[str, SourceModule],
+    findings: list[Finding],
+    known: frozenset[str],
+) -> None:
+    """Apply the import rules to every first-party module an interpreter payload names."""
+    for item in string_payload_imports(host, context):
+        if not is_first_party(item.target, authority.root_names):
+            continue
+        if item.target not in known:
+            findings.append(
+                Finding(
+                    "STATIC_TARGET_UNRESOLVED",
+                    f"first-party interpreter payload target {item.target!r} does not exist",
+                    module.path,
+                    item.lineno,
+                )
             )
-
-
-def _collect_dynamic_call(
-    node: ast.Call,
-    import_module_names: set[str],
-    importlib_names: set[str],
-    raw_import_names: set[str],
-    dynamic_calls: list[ast.Call],
-) -> bool:
-    """Collect dynamic call."""
-    qualified = qualified_name(node.func)
-    is_import_module = qualified in import_module_names or (
-        isinstance(node.func, ast.Attribute)
-        and node.func.attr == "import_module"
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id in importlib_names
-    )
-    is_raw_import = qualified in raw_import_names or qualified in {"__import__", "builtins.__import__"}
-    if not (is_import_module or is_raw_import):
-        return is_raw_import
-    dynamic_calls.append(node)
-    return is_raw_import
+            continue
+        for symbol in item.symbols or ("",):
+            child = f"{item.target}.{symbol}"
+            if symbol and is_package(item.target, modules, authority.root_names) and child in known:
+                check_private(module, child, symbol, modules, authority, findings, item.lineno)
+            else:
+                check_private(module, item.target, symbol, modules, authority, findings, item.lineno)
 
 
 def _check_dynamic_target(
@@ -71,13 +83,17 @@ def _check_dynamic_target(
     modules: Mapping[str, SourceModule],
     findings: list[Finding],
     known: frozenset[str],
-    is_raw_import: bool,
+    kind: DynamicLoaderKind,
     computed_projection: bool,
     exhaustive_census: bool,
     record_provenance: RecordTargetProvenance,
 ) -> None:
     """Check dynamic target."""
-    resolved = dynamic_target(module, target, node, context, record_provenance=record_provenance)
+    resolved = (
+        None
+        if kind == "run_module" and target.startswith(".")
+        else dynamic_target(module, target, node, context, record_provenance=record_provenance)
+    )
     if resolved is None or not resolved:
         findings.append(
             Finding(
@@ -88,7 +104,7 @@ def _check_dynamic_target(
             )
         )
         return
-    if is_raw_import:
+    if kind == "raw_import":
         if is_first_party(resolved, authority.root_names):
             findings.append(
                 Finding(
@@ -125,13 +141,13 @@ def _check_dynamic_target(
 
 def _check_dynamic_call(
     node: ast.Call,
+    kind: DynamicLoaderKind,
     module: SourceModule,
     context: TargetEvaluationContext,
     authority: Authority,
     modules: Mapping[str, SourceModule],
     findings: list[Finding],
     known: frozenset[str],
-    is_raw_import: bool,
     record_provenance: RecordTargetProvenance,
 ) -> None:
     """Check dynamic call."""
@@ -139,7 +155,7 @@ def _check_dynamic_call(
         node.args[0]
         if node.args
         else next(
-            (keyword.value for keyword in node.keywords if keyword.arg == "name"),
+            (keyword.value for keyword in node.keywords if keyword.arg == DYNAMIC_TARGET_KEYWORDS[kind]),
             None,
         )
     )
@@ -176,7 +192,7 @@ def _check_dynamic_call(
             modules,
             findings,
             known,
-            is_raw_import,
+            kind,
             computed_projection,
             exhaustive_census,
             record_provenance,

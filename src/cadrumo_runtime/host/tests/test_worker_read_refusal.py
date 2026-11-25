@@ -8,7 +8,10 @@ a subject can be made to vanish.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -25,30 +28,40 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.contracts.submission_payload import SubmissionPayloadDescriptor
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerContractRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObserveRequest,
     ProfileWorkerOperationRequest,
     ProfileWorkerProjectPageRequest,
     ProfileWorkerProjectRequest,
+    ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
+    ProfileWorkerSubmissionAbortRequest,
+    ProfileWorkerSubmissionBeginRequest,
 )
 
-from ..worker_operation_requests import _is_read, read_refusal
+from ...adapters.worker_transport import WorkerChannel
+from .. import worker_operation_requests
+from ..operation_host import ProfileWorkerOperationHost
+from ..worker_operation_requests import is_read, read_refusal
+from ..worker_submission_staging import WorkerSubmissionStaging
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -69,6 +82,73 @@ def _schema() -> OperationSchemaIdentityV1:
 
 
 _EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", ["contract", "observe", "abort"])
+@pytest.mark.parametrize("staged", [False, True])
+async def test_read_dispatch_does_not_schedule_custody_expiry_but_upload_changes_do(
+    monkeypatch: pytest.MonkeyPatch, action: str, staged: bool
+) -> None:
+    request = (
+        ProfileWorkerContractRequest(request_id=uuid4(), session_id=uuid4(), definition_id="synthetic.read")
+        if action == "contract"
+        else ProfileWorkerObserveRequest(
+            request_id=uuid4(),
+            session_id=uuid4(),
+            frontend=_EXTERNAL_CLIENT,
+            observation=OperationObservationRequestV1(operation_id=_OPERATION, after_cursor=0, page_limit=8),
+        )
+        if action == "observe"
+        else ProfileWorkerSubmissionAbortRequest(
+            request_id=uuid4(), session_id=uuid4(), connection_id=uuid4(), upload_id=uuid4()
+        )
+    )
+    changed, failed = asyncio.Event(), asyncio.Event()
+    uploads = WorkerSubmissionStaging()
+    if staged:
+        uploads.begin(
+            ProfileWorkerSubmissionBeginRequest(
+                request_id=uuid4(),
+                upload_id=uuid4(),
+                connection_id=uuid4(),
+                session_id=uuid4(),
+                frontend=_EXTERNAL_CLIENT,
+                definition_id="synthetic.read",
+                subject_ref="profile:exact",
+                descriptor=SubmissionPayloadDescriptor(byte_count=2, payload_digest=sha256_hex(b"{}")),
+            )
+        )
+    received = False
+    dispatched = False
+
+    async def receive(*_args: object) -> ProfileWorkerRequest:
+        nonlocal received
+        if received:
+            raise asyncio.CancelledError
+        received = True
+        return ProfileWorkerRequest(request)
+
+    async def dispatch(*_args: object) -> None:
+        nonlocal dispatched
+        dispatched = True
+
+    # Isolate scheduling from the operation's effects; request classification
+    # and the real dispatch loop determine whether the expiry task is woken.
+    monkeypatch.setattr(worker_operation_requests, "receive", receive)
+    monkeypatch.setattr(worker_operation_requests, "dispatch_request", dispatch)
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(asyncio.CancelledError):
+        await worker_operation_requests.operate(
+            cast(WorkerChannel, object()),
+            cast(ProfileWorkerOperationHost, object()),
+            failed,
+            uploads,
+            changed,
+            input_executor,
+        )
+    assert dispatched and not failed.is_set()
+    assert changed.is_set() is (staged or action == "abort")
+    uploads.close()
 
 
 def _manage(management: OperationManagementRequest) -> ProfileWorkerManageRequest:
@@ -111,7 +191,7 @@ def test_an_unregistered_fault_is_answered_with_the_generic_refusal_and_only_its
     assert isinstance(refusal, ProfileAccessRefusedError)
     assert refusal.reason is AccessDenialCode.OPERATION_UNAVAILABLE
     assert _PRIVATE_TEXT not in str(refusal)
-    logged = [record.getMessage() for record in caplog.records]
+    logged = [record.getMessage() for record in delivered_records(caplog, worker_operation_requests.__name__)]
     assert logged == [f"worker read stopped by an unexpected fault exception_type={fault_type.__name__}"]
 
 
@@ -179,10 +259,10 @@ def test_an_observation_a_projection_a_page_and_the_inspection_of_a_review_are_t
         ),
     )
 
-    assert [_is_read(request) for request in reads] == [True] * len(reads)
-    assert [_is_read(request) for request in acts] == [False] * len(acts)
+    assert [is_read(request) for request in reads] == [True] * len(reads)
+    assert [is_read(request) for request in acts] == [False] * len(acts)
     # A request read back from its wire document is classified as the one that was sent.
-    assert [_is_read(type(request).model_validate_json(request.model_dump_json())) for request in (*reads, *acts)] == [
+    assert [is_read(type(request).model_validate_json(request.model_dump_json())) for request in (*reads, *acts)] == [
         *([True] * len(reads)),
         *([False] * len(acts)),
     ]

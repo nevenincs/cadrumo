@@ -21,10 +21,11 @@ import pytest
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.own_accounts import (
     OwnAccountHolding,
     OwnAccountRegister,
@@ -39,7 +40,7 @@ from ...operations.access_resolution import (
     resolve_operation_access,
 )
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ..own_account_operation import (
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
@@ -51,7 +52,7 @@ from ..own_account_operation import (
 from ..own_account_ports import OwnAccountRepositoryProtocol
 from ..transaction_repository import bind_transaction_catalogue_repository_factory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a01")
 _DESTINATION = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a02")

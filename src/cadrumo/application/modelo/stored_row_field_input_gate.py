@@ -14,6 +14,7 @@ from ...domain.calculations.registry.casilla_membership import row_field_templat
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import StoredRowFieldScalarInputError
+from .refusal_door_verdicts import stored_defect_verdict
 
 
 def refuse_stored_row_field_scalar_inputs(
@@ -44,6 +45,7 @@ def refuse_stored_row_field_scalar_inputs(
     if stored:
         raise StoredRowFieldScalarInputError(
             translated_message="errors.refused.refused_modelo_stored_row_field_input",
+            precondition_verdict=stored_defect_verdict("stored_row_field_scalar"),
             context={
                 "casilla_ids": ",".join(stored),
                 "calculation_revision_id": revision.calculation_revision_id,

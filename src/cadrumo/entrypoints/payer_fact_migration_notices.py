@@ -1,11 +1,19 @@
 """Notices naming payer facts a profile schema migration cleared.
 
-A migration that drops a stored ``false`` must never read as a new obligation
+A migration that drops a stored default must never read as a new obligation
 appearing from nothing, so each cleared fact is named together with the exact
-flags that answer it, and the notice's typed action resolves to the profile
-edit verb that carries them. The notice is delivered once by the invocation
-that ran the migration, and again by explain and the calendar for as long as
-the fact stays unanswered.
+flags that answer it, and the typed action on the notice resolves to the
+profile edit verb that carries them. The notice is delivered once by the
+invocation that ran the migration, and again by explain and the calendar for
+as long as the fact stays unanswered.
+
+A yes/no fact is answered by one of two flags and a select by one flag and a
+value, so the two carry different wording: naming ``--no-fiscal-residency``
+would send the operator to a flag the command does not have.
+
+A migration also retires the year-keyed art. 23.2 reduction tier. That is no payer
+fact and has no flag: the notice asks the operator to record the leases, whose
+facts decide the tier, and stays until one is recorded.
 """
 
 from __future__ import annotations
@@ -17,26 +25,84 @@ from ..application.operator_actions.catalogue import next_action
 from ..application.user_profile.profile_schema_migration import drain_migration_cleared_paths
 from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
+from ..domain.user_profile.schema_migration import (
+    RETIRED_ASCENDANT_DISABILITY_KEY_GROUP,
+    RETIRED_ASCENDANT_DISABILITY_KEY_LEAF,
+    RETIRED_CLAVE_IDENTITY_PATH,
+    RETIRED_RENTAL_TIER_PATH,
+)
 
 if TYPE_CHECKING:
+    from ..application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ..application.wizard.models import WizardQuestion
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.user_profile.values import UserProfileRecord
 
 NOTICE_CODE = "config.profile.payer_fact_cleared"
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
+_CLEARED_BOOL_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared"
+_CLEARED_SELECT_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared_select"
+RENTAL_TIER_NOTICE_CODE = "config.profile.rental_tier_cleared"
+_RENTAL_TIER_ACTION_ID = "operator.profile.arrendamiento"
+_RENTAL_TIER_LOCALE_KEY = "cli.config.profile.notices.rental_tier_cleared"
+ASCENDANT_DISABILITY_KEY_NOTICE_CODE = "config.profile.ascendant_disability_key_cleared"
+_ASCENDANT_ACTION_ID = "operator.profile.ascendiente"
+_ASCENDANT_DISABILITY_KEY_LOCALE_KEY = "cli.config.profile.notices.ascendant_disability_key_cleared"
+_ASCENDANT_KEY_PREFIX = f"{RETIRED_ASCENDANT_DISABILITY_KEY_GROUP}."
+_ASCENDANT_KEY_SUFFIX = f".{RETIRED_ASCENDANT_DISABILITY_KEY_LEAF}"
 
 
-def _edit_flag_by_path(operation: PinnedAuthorityOperation) -> dict[str, str]:
-    """Map each setup-flow profile path to the question id its CLI flag carries."""
+def rental_tier_cleared_notice() -> Notice:
+    """Return the finding that asks the operator to record the leases a cleared tier stood for."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=RENTAL_TIER_NOTICE_CODE,
+        message=tr(_RENTAL_TIER_LOCALE_KEY),
+        action=next_action(_RENTAL_TIER_ACTION_ID),
+        context={"path": RETIRED_RENTAL_TIER_PATH},
+    )
+
+
+def ascendant_disability_key_cleared_notice(row: str) -> Notice:
+    """Return the finding that asks for the grade and both circumstances of an ascendant row whose key was cleared."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=ASCENDANT_DISABILITY_KEY_NOTICE_CODE,
+        message=tr(_ASCENDANT_DISABILITY_KEY_LOCALE_KEY, row=row),
+        action=next_action(_ASCENDANT_ACTION_ID),
+        context={"path": f"{_ASCENDANT_KEY_PREFIX}{row}{_ASCENDANT_KEY_SUFFIX}", "row": row},
+    )
+
+
+def _cleared_ascendant_key_row(path: str) -> str | None:
+    """The stored row number of a cleared ascendant disability key path, or ``None`` for any other path."""
+    if not (path.startswith(_ASCENDANT_KEY_PREFIX) and path.endswith(_ASCENDANT_KEY_SUFFIX)):
+        return None
+    row = path[len(_ASCENDANT_KEY_PREFIX) : -len(_ASCENDANT_KEY_SUFFIX)]
+    return row if row.isascii() and row.isdigit() else None
+
+
+def _edit_question_by_path(operation: PinnedAuthorityOperation) -> dict[str, WizardQuestion]:
+    """Map each setup-flow profile path to the question whose CLI flag answers it."""
     from ..application.wizard.catalogue import build_setup_flow
 
     flow = build_setup_flow(operation)
     return {
-        question.profile_key: question.id
+        question.profile_key: question
         for section in flow.sections
         for question in section.questions
         if question.profile_key is not None
     }
+
+
+def _cleared_fact_message(question: WizardQuestion, *, fact: str) -> str:
+    """Render the notice naming the flags that answer one cleared fact."""
+    from ..application.wizard.models import WizardWidget
+
+    flag = f"--{question.id}"
+    if question.widget is WizardWidget.CONFIRM:
+        return tr(_CLEARED_BOOL_LOCALE_KEY, fact=fact, yes_flag=flag, no_flag=f"--no-{question.id}")
+    return tr(_CLEARED_SELECT_LOCALE_KEY, fact=fact, flag=flag)
 
 
 def payer_fact_cleared_notices(
@@ -47,23 +113,32 @@ def payer_fact_cleared_notices(
     """Return one localized notice per cleared payer-fact path."""
     from ..domain.user_profile.labels import profile_field_label
 
-    flags = _edit_flag_by_path(operation)
+    questions = _edit_question_by_path(operation)
     schema = operation.profile_decode_context().schema
     notices: list[Notice] = []
     for path in sorted(set(paths)):
-        flag = flags[path]
+        if path == RETIRED_RENTAL_TIER_PATH:
+            notices.append(rental_tier_cleared_notice())
+            continue
+        if path == RETIRED_CLAVE_IDENTITY_PATH:
+            # The Cl@ve identity is the profile's tax identifier, so there is
+            # nothing to answer again.
+            continue
+        row = _cleared_ascendant_key_row(path)
+        if row is not None:
+            notices.append(ascendant_disability_key_cleared_notice(row))
+            continue
+        question = questions[path]
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=NOTICE_CODE,
-                message=tr(
-                    "cli.config.profile.notices.payer_fact_cleared",
+                message=_cleared_fact_message(
+                    question,
                     fact=profile_field_label(path.split(".", 1)[0], schema.field(path)),
-                    yes_flag=f"--{flag}",
-                    no_flag=f"--no-{flag}",
                 ),
                 action=next_action(_PROFILE_EDIT_ACTION_ID),
-                context={"path": path, "flag": f"--{flag}"},
+                context={"path": path, "flag": f"--{question.id}"},
             ),
         )
     return tuple(notices)
@@ -80,8 +155,16 @@ def drain_payer_fact_migration_notices() -> tuple[Notice, ...]:
         return payer_fact_cleared_notices(paths, operation=operation)
 
 
-def _gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozenset[str]:
-    """Return the modelos whose payer-fact gate reads the profile field at ``path``."""
+def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozenset[str]:
+    """Return the modelos whose payer-fact gate reads the profile field at ``path``.
+
+    A rule gates its modelo through the fact it requires and equally through
+    the fact an exclusion reads: the Art. 109 RIRPF coverage fact excludes
+    Modelo 130 rather than requiring it, and a cleared answer has to be asked
+    again on that modelo too. ``gating_payer_facts`` is the rule's own
+    enumeration of both, so this notice and the explain payload name the same
+    facts.
+    """
     from ..domain.calculations.registry.applicability import iter_modelo_applicability_rules
     from ..domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 
@@ -89,11 +172,51 @@ def _gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozens
     return frozenset(
         str(rule.modelo)
         for rule in iter_modelo_applicability_rules()
-        if rule.required_payer_fact is not None
-        and any(
-            schema.path_for_model_selector(key) == path for key in payer_fact_profile_keys(rule.required_payer_fact)
-        )
+        for fact in rule.gating_payer_facts
+        if any(schema.path_for_model_selector(key) == path for key in payer_fact_profile_keys(fact))
     )
+
+
+def _modelo_reads_rental_reduction(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether any edition of ``modelo`` declares the let-property reduction column the lease facts feed."""
+    from ..application.aggregation.renta_inmueble_source import RentaInmuebleRowField
+    from ..domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
+
+    if modelo not in operation.modelo_ids():
+        return False
+    return any(
+        provider.row_field == RentaInmuebleRowField.REDUCCION.value
+        for edition in operation.modelo_directory(modelo).revisions
+        for _binding, provider in renta_inmueble_columns(operation.revision(modelo, edition.id))
+    )
+
+
+def _modelo_reads_ascendant_rows(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether any edition of ``modelo`` declares a binding that reads the ascendant rows."""
+    from ..domain.calculations.registry.profile_bindings import ProfileProvider
+
+    if modelo not in operation.modelo_ids():
+        return False
+    return any(
+        isinstance(binding.provider, ProfileProvider)
+        and binding.provider.rows is not None
+        and binding.provider.rows.object_path == RETIRED_ASCENDANT_DISABILITY_KEY_GROUP
+        for edition in operation.modelo_directory(modelo).revisions
+        for binding in operation.revision(modelo, edition.id).bindings
+    )
+
+
+def _pending_ascendant_key_notices(
+    repository: ProfileRecordRepository,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+    modelo: str | None,
+) -> tuple[Notice, ...]:
+    if modelo is not None and not _modelo_reads_ascendant_rows(modelo, operation=operation):
+        return ()
+    rows = repository.ascendant_disability_rows_pending(record.profile_id)
+    return tuple(ascendant_disability_key_cleared_notice(row) for row in rows)
 
 
 def pending_payer_fact_notices(
@@ -119,13 +242,23 @@ def pending_payer_fact_notices(
     )
     paths = repository.pending_cleared_payer_fact_paths(record.profile_id)
     if modelo is not None:
-        paths = tuple(path for path in paths if modelo in _gated_modelos(path, operation=operation))
-    return payer_fact_cleared_notices(paths, operation=operation)
+        paths = tuple(path for path in paths if modelo in payer_fact_gated_modelos(path, operation=operation))
+    notices = payer_fact_cleared_notices(paths, operation=operation)
+    if repository.rental_tier_finding_pending(record.profile_id) and (
+        modelo is None or _modelo_reads_rental_reduction(modelo, operation=operation)
+    ):
+        notices = (*notices, rental_tier_cleared_notice())
+    return (*notices, *_pending_ascendant_key_notices(repository, record, operation=operation, modelo=modelo))
 
 
 __all__ = [
+    "ASCENDANT_DISABILITY_KEY_NOTICE_CODE",
     "NOTICE_CODE",
+    "RENTAL_TIER_NOTICE_CODE",
+    "ascendant_disability_key_cleared_notice",
     "drain_payer_fact_migration_notices",
     "payer_fact_cleared_notices",
+    "payer_fact_gated_modelos",
     "pending_payer_fact_notices",
+    "rental_tier_cleared_notice",
 ]

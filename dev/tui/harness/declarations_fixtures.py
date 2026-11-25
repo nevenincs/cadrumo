@@ -28,12 +28,16 @@ from cadrumo.entrypoints.tui.declarations.tests.portfolio_fixtures import portfo
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
+
+def _preferred_period() -> Period:
+    """Return the first quarter of the exercise before the published support horizon, the newest closed one."""
+    with bundled_indexed_authority().operation() as operation:
+        return Period.from_year_and_code(operation.supported_filing_years().horizon - 1, "1T")
 
 
 def _refuse_fixture_write(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
     raise ModeloLifecycleActionUnavailableError(
-        translated_message="tui.declarations.refusal.handoff",
+        translated_message="workspace.declarations.refusal.handoff",
         context={"modelo": modelo, "year": year, "period": period.registry_token},
     )
 
@@ -42,7 +46,7 @@ def build_grouped() -> App[None]:
     """Review the real grouped list over synthetic, explicitly separated facts."""
     workspace, calendar = portfolio_projection()
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
+        targets = declaration_targets(operation, profile=None)
     controller = DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         workspace,
@@ -61,15 +65,15 @@ def build_grouped() -> App[None]:
 def build_picker_modelo() -> App[DeclarationTarget | None]:
     """Review supported modelo names with the profile applicability shortcut."""
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
+        targets = declaration_targets(operation, profile=None)
     return ScreenHostApp(NewDeclarationPicker(targets, frozenset({"130", "303", "349"})))
 
 
 def build_picker_period() -> App[DeclarationTarget | None]:
     """Review the period step using only the published registry choices."""
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
-    picker = NewDeclarationPicker(targets, frozenset({"130"}), preferred=DeclarationTarget("130", _PERIOD))
+        targets = declaration_targets(operation, profile=None)
+    picker = NewDeclarationPicker(targets, frozenset({"130"}), preferred=DeclarationTarget("130", _preferred_period()))
     # A capture opens the production second step without pretending a choice
     # has been confirmed or submitting a write to storage.
     picker.modelo = "130"

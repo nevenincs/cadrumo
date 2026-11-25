@@ -27,19 +27,19 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ..atribucion_member import (
-    _decimal,
-    _invalid_value_refusals,
-    _missing_fields,
-    _optional_bool,
-    _SocioFacts,
+    SocioFacts,
+    decimal,
+    invalid_value_refusals,
+    missing_fields,
+    optional_bool,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_SCHEMA = published_profile_schema()
 
 
-def _socio(share_pct: object, *, index: int = 0) -> _SocioFacts:
-    return _SocioFacts(
+def _socio(share_pct: object, *, index: int = 0) -> SocioFacts:
+    return SocioFacts(
         index=index,
         values={
             "nif": "22222222B",
@@ -61,13 +61,13 @@ def test_an_out_of_range_share_is_refused_though_every_field_is_present() -> Non
     """
     socio = _socio(Decimal("999"))
 
-    assert _missing_fields(socio) == frozenset()
-    assert _invalid_value_refusals(socio, schema=_PROFILE_SCHEMA)
+    assert missing_fields(socio) == frozenset()
+    assert invalid_value_refusals(socio, schema=_PROFILE_SCHEMA)
 
 
 def test_a_malformed_share_is_refused_before_it_can_crash_a_calculation() -> None:
     """The loud one, moved from mid-calculation to the reader's own gate."""
-    assert _invalid_value_refusals(_socio("abc"), schema=_PROFILE_SCHEMA)
+    assert invalid_value_refusals(_socio("abc"), schema=_PROFILE_SCHEMA)
 
 
 @pytest.mark.parametrize("share_pct", [Decimal("0"), Decimal("100")])
@@ -78,17 +78,17 @@ def test_a_share_exactly_on_a_bound_stays_usable(share_pct: Decimal) -> None:
     guard that refuses them trades a silent wrong number for a silent
     missing member, which is no better.
     """
-    assert _invalid_value_refusals(_socio(share_pct), schema=_PROFILE_SCHEMA) == ()
+    assert invalid_value_refusals(_socio(share_pct), schema=_PROFILE_SCHEMA) == ()
 
 
 def test_a_valid_row_is_not_refused() -> None:
     """The control: without it, a rule that refused everything would pass."""
-    assert _invalid_value_refusals(_socio(Decimal("40")), schema=_PROFILE_SCHEMA) == ()
+    assert invalid_value_refusals(_socio(Decimal("40")), schema=_PROFILE_SCHEMA) == ()
 
 
 def test_the_refusal_names_the_field_and_the_range() -> None:
     """A diagnostic that does not say what is wrong cannot be acted on."""
-    refusals = _invalid_value_refusals(_socio(Decimal("999")), schema=_PROFILE_SCHEMA)
+    refusals = invalid_value_refusals(_socio(Decimal("999")), schema=_PROFILE_SCHEMA)
 
     assert any("share_pct" in refusal and "100" in refusal for refusal in refusals)
 
@@ -101,30 +101,30 @@ def test_a_malformed_string_raises_the_module_s_own_error() -> None:
     from `Decimal`. This is the input that reaches it in practice.
     """
     with pytest.raises(ValueError, match="Decimal-compatible"):
-        _decimal("abc")
+        decimal("abc")
 
 
 def test_a_well_formed_string_still_converts() -> None:
     """The guard must catch the parse failure without refusing valid text."""
-    assert _decimal(" 40 ") == Decimal("40")
+    assert decimal(" 40 ") == Decimal("40")
 
 
 @pytest.mark.parametrize("raw", ["sí", "Sí", "si", "S", "yes", "true", "1", "x", "X", "verdadero"])
 def test_a_recognised_affirmative_reads_as_a_member_at_year_end(raw: str) -> None:
-    assert _optional_bool(raw) is True
+    assert optional_bool(raw) is True
 
 
 @pytest.mark.parametrize("raw", ["no", "No", "n", "false", "0", "falso"])
 def test_a_recognised_negative_reads_as_not_a_member(raw: str) -> None:
-    assert _optional_bool(raw) is False
+    assert optional_bool(raw) is False
 
 
 @pytest.mark.parametrize("raw", [None, "", "   "])
 def test_an_absent_answer_stays_absent_rather_than_false(raw: str | None) -> None:
-    assert _optional_bool(raw) is None
+    assert optional_bool(raw) is None
 
 
 @pytest.mark.parametrize("raw", ["quizás", "2", "yes please"])
 def test_an_unrecognised_answer_is_refused_rather_than_read_as_false(raw: str) -> None:
     with pytest.raises(ValueError, match="recognised yes/no token"):
-        _optional_bool(raw)
+        optional_bool(raw)

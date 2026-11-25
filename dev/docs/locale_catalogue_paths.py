@@ -8,14 +8,14 @@ from pathlib import Path
 from .locale_mutation_contracts import DocumentationLocaleMutationError, ManifestUpdate
 
 
-def _source_pages(docs_root: Path) -> dict[str, Path]:
+def locale_catalogue_paths_source_pages(docs_root: Path) -> dict[str, Path]:
     """Return the authorized PO-to-source page mapping from the i18n owner."""
     from .i18n import user_scope_source_pages
 
     return {Path(page).with_suffix(".po").as_posix(): docs_root / page for page in user_scope_source_pages(docs_root)}
 
 
-def _resolve_update_paths(
+def resolve_update_paths(
     update: ManifestUpdate,
     *,
     locale_root: Path,
@@ -50,7 +50,7 @@ def _resolve_update_paths(
     return catalogue_path, source_path, pot_path
 
 
-def _sha256_path(path: Path) -> str:
+def sha256_path(path: Path) -> str:
     """Return a file's SHA-256 digest."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 

@@ -8,15 +8,16 @@ from pathlib import Path
 
 import pytest
 
-from ......core.config import Settings, override_settings
+from ......core.config import override_settings
+from ......tests.log_records import delivered_text
 from ...bucket.errors import BucketLockedError
+from ...tests.registered_bucket import publish_registration_capsule
 from ..active_session import (
     NoActiveBucketSessionError,
     activate_session,
     get_active_master_key,
 )
 from ..bucket_session import BucketSession
-from ._master_key_support import _publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -93,7 +94,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path / "state",
+            cadrumo_storage_root=tmp_path / "state",
             cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ),
         caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key.bucket_session"),
@@ -101,19 +102,11 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
         session.close()
 
     assert session.sealed is True
-    assert str(tmp_path) not in caplog.text
-
-
-def _settings_with_store(tmp_path: Path) -> Settings:
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "state",
-        cadrumo_secret_store_dir=tmp_path / "fallback-store",
-    ) as settings:
-        return settings
+    assert str(tmp_path) not in delivered_text(caplog)
 
 
 def _write_registered_bucket(root: Path, bucket_id: str) -> None:
     # Publication owns the bucket directory: it arrives by the capsule's
     # no-replace rename, never by provisioning it first. The plaintext manifest
     # this also wrote is retired, and nothing in production read it back.
-    _publish_registration_capsule(root, bucket_id)
+    publish_registration_capsule(root, bucket_id)

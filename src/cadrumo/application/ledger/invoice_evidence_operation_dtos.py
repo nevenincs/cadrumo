@@ -18,24 +18,22 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.country_code import CountryCodeAlpha2
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.external_constants import OutputLanguage
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.hex import Hex64Str
+from ...core.hex import Hex16Str, Hex64Str
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.iva.classification import IvaInvoiceClassificationCriteria
 from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
-from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
-from ..ledger.classification_assembly import (
-    ClassificationAssembly,
-    DeclaredFact,
-    DeclaredFacts,
-    IvaCategoryResolution,
-    MissingClassifierInput,
-)
+from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
+from ..ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts, MissingClassifierInput
+from ..ledger.classification_category_resolution import IvaCategoryResolution
 from ..ledger.confirm_establishment import ConfirmedEstablishment
+from ..ledger.confirmation_block_words import served_block_reason_words, served_finding_words
 from ..ledger.confirmation_gate import ConfirmationBlocker
 from ..ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
 from ..ledger.establishment_ladder import (
@@ -43,7 +41,8 @@ from ..ledger.establishment_ladder import (
     EstablishmentRung,
     RegistrationEstablishmentConflict,
 )
-from ..ledger.evidence_draft import PrintedTotalDiscrepancy
+from ..ledger.evidence_draft import PrintedTotalDiscrepancy, RetentionReadingDiscrepancy
+from ..ledger.finding_words_projection import FindingWordsProjectionV1, require_served_words
 from ..ledger.invoice_confirmation import InvoiceConfirmationResult
 from ..ledger.invoice_draft_records import (
     DraftDiscrepancyFinding,
@@ -55,16 +54,19 @@ from ..ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from ..ledger.reading_model_refusal import served_reading_model_refusal
 from ..ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
 )
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
+from ..operations.next_step import OperationNextStepV1
 from ..operations.public_scalar import PublicDecimal
 
 _BoundedText = Annotated[str, Field(max_length=16_384)]
 _ShortText = Annotated[str, Field(max_length=2_048)]
 _FieldName = Annotated[str, Field(min_length=1, max_length=128)]
 _RegistryToken = Annotated[str, Field(min_length=1, max_length=128)]
-_MemberStateToken = Annotated[str, Field(min_length=2, max_length=2)]
+_MemberStateToken = CountryCodeAlpha2
 _DeclaredValue = TypeVar("_DeclaredValue")
 
 
@@ -142,16 +144,29 @@ class DraftDiscrepancyProjectionV1(BaseModel):
     detail: _ShortText = ""
     expected: PublicDecimal | None = None
     observed: PublicDecimal | None = None
+    #: Which sentence explains the finding, the sentence a frontend shows and its language.
+    words: FindingWordsProjectionV1 | None = None
+    detail_words: _ShortText | None = None
+    detail_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> DraftDiscrepancyProjectionV1:
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
+        return self
 
     @classmethod
     def from_finding(cls, value: DraftDiscrepancyFinding) -> Self:
-        """Copy a finding while tagging its arithmetic values as decimals."""
+        """Copy a finding while tagging its arithmetic values as decimals, with its sentence served."""
+        words, language = served_finding_words(value.words)
         return cls(
             kind=value.kind,
             field=value.field,
             detail=value.detail,
             expected=_decimal(value.expected),
             observed=_decimal(value.observed),
+            words=FindingWordsProjectionV1.from_words(value.words),
+            detail_words=words,
+            detail_words_language=language,
         )
 
 
@@ -161,6 +176,10 @@ class LabelReadingFallbackProjectionV1(BaseModel):
     Kept beside a draft projection, never inside it: the fallback describes the
     reader, not the document, and a stored draft does not carry it, so folding
     it into the draft would change the digest a review is bound to.
+
+    A fill that did not run for want of a picked model also serves the
+    refusal's own sentence and the step that leads to the choice, worded when
+    the projection is built; the stored fallback keeps only the refusal's code.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -169,15 +188,33 @@ class LabelReadingFallbackProjectionV1(BaseModel):
     unread_fields: Annotated[tuple[_FieldName, ...], Field(min_length=1, max_length=128)]
     reader_error_type: Annotated[str, Field(min_length=1, max_length=2_048)]
     failed_condition_id: _ShortText | None = None
+    refusal_code: _ShortText | None = None
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+    next_step: OperationNextStepV1 | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> Self:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served refusal words name the language they are in")
+        if self.next_step is not None and self.refusal_words_language is None:
+            raise ValueError("a served step is worded in the language of the refusal's own words")
+        return self
 
     @classmethod
     def from_fallback(cls, value: LabelReadingFallback) -> Self:
-        """Copy the machine facts of one fallback; it holds no document text."""
+        """Copy the machine facts of one fallback, with the words its refusal serves; it holds no document text."""
+        served = served_reading_model_refusal(value.refusal_code)
+        words, language, step = (None, None, None) if served is None else served
         return cls(
             cause=value.cause,
             unread_fields=value.unread_fields,
             reader_error_type=value.reader_error_type,
             failed_condition_id=value.failed_condition_id,
+            refusal_code=value.refusal_code,
+            refusal_words=words,
+            refusal_words_language=language,
+            next_step=step,
         )
 
     def to_fallback(self) -> LabelReadingFallback:
@@ -187,6 +224,7 @@ class LabelReadingFallbackProjectionV1(BaseModel):
             unread_fields=self.unread_fields,
             reader_error_type=self.reader_error_type,
             failed_condition_id=self.failed_condition_id,
+            refusal_code=self.refusal_code,
         )
 
 
@@ -545,20 +583,41 @@ class ConfirmationBlockerProjectionV1(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    blocker_id: Annotated[str, Field(min_length=16, max_length=16)]
+    blocker_id: Hex16Str
     reason: ConfirmationBlockReason
     field: _FieldName | None = None
     detail: _ShortText = ""
     candidates: _Candidates = ()
+    #: The sentence a frontend shows for the reason and the language it is in.
+    reason_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    reason_words_language: OutputLanguage | None = None
+    #: Which sentence explains this blocker, the sentence a frontend shows and its language.
+    words: FindingWordsProjectionV1 | None = None
+    detail_words: _ShortText | None = None
+    detail_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> ConfirmationBlockerProjectionV1:
+        if (self.reason_words is None) != (self.reason_words_language is None):
+            raise ValueError("served words name the language they are in")
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
+        return self
 
     @classmethod
     def from_blocker(cls, value: ConfirmationBlocker) -> Self:
-        """Copy the blocking question and its candidate evidence."""
+        """Copy the blocking question and its candidate evidence, with the sentence served for its reason."""
+        words, language = served_block_reason_words(value.reason)
+        detail_words, detail_language = served_finding_words(value.words)
         return cls(
             blocker_id=value.blocker_id,
             reason=value.reason,
             field=value.field,
             detail=value.detail,
+            reason_words=words,
+            reason_words_language=language,
+            words=FindingWordsProjectionV1.from_words(value.words),
+            detail_words=detail_words,
+            detail_words_language=detail_language,
             candidates=tuple(FieldAmbiguityCandidateProjectionV1.from_candidate(row) for row in value.candidates),
         )
 
@@ -636,6 +695,27 @@ class PrintedTotalDiscrepancyProjectionV1(BaseModel):
         )
 
 
+class RetentionReadingDiscrepancyProjectionV1(BaseModel):
+    """Public account of a withheld figure the document reads and the record does not hold."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    read_rate: PublicDecimal | None = None
+    read_amount: PublicDecimal
+    recorded_rate: PublicDecimal | None = None
+    recorded_amount: PublicDecimal | None = None
+
+    @classmethod
+    def from_discrepancy(cls, value: RetentionReadingDiscrepancy) -> Self:
+        """Copy the reading and the record, without choosing between them."""
+        return cls(
+            read_rate=_decimal(value.read_rate),
+            read_amount=PublicDecimal(decimal=str(value.read_amount)),
+            recorded_rate=_decimal(value.recorded_rate),
+            recorded_amount=_decimal(value.recorded_amount),
+        )
+
+
 class InvoiceConfirmationProjectionV1(BaseModel):
     """Lossless public confirmation result with both draft and operator views."""
 
@@ -645,16 +725,18 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     draft: InvoiceDraftProjectionV1
     created: bool
     total_discrepancy: PrintedTotalDiscrepancyProjectionV1 | None = None
-    confirmation_id: Annotated[str, Field(min_length=16, max_length=16)] | None = None
+    retention_discrepancy: RetentionReadingDiscrepancyProjectionV1 | None = None
+    likely_duplicate_invoice_id: str | None = None
+    confirmation_id: Hex16Str | None = None
     confirmed_provenance: _ProvenanceRows = ()
     establishment: ConfirmedEstablishmentProjectionV1 | None = None
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
 
     @classmethod
-    def from_result(cls, result: InvoiceConfirmationResult) -> Self:
-        """Copy the canonical invoice, actual re-run draft and resolution facts."""
+    def from_result(cls, result: InvoiceConfirmationResult, *, documents: InvoiceDocumentIndex) -> Self:
+        """Copy the canonical invoice with its stored documents, actual re-run draft and resolution facts."""
         return cls(
-            invoice=CatalogueInvoiceSnapshot.from_invoice(result.invoice),
+            invoice=CatalogueInvoiceSnapshot.from_invoice(result.invoice, documents=documents),
             draft=InvoiceDraftProjectionV1.from_draft(result.draft),
             created=result.created,
             total_discrepancy=(
@@ -662,6 +744,12 @@ class InvoiceConfirmationProjectionV1(BaseModel):
                 if result.total_discrepancy is None
                 else PrintedTotalDiscrepancyProjectionV1.from_discrepancy(result.total_discrepancy)
             ),
+            retention_discrepancy=(
+                None
+                if result.retention_discrepancy is None
+                else RetentionReadingDiscrepancyProjectionV1.from_discrepancy(result.retention_discrepancy)
+            ),
+            likely_duplicate_invoice_id=result.likely_duplicate_invoice_id,
             confirmation_id=result.confirmation_id,
             confirmed_provenance=tuple(
                 FieldProvenanceProjectionV1.from_provenance(row) for row in result.confirmed_provenance

@@ -35,7 +35,7 @@ class-level corpus attributes:
     set this ``True``; providers with a confirmed corpus round-trip set
     it ``False``.
 
-The test suite in ``test_pdf_n26.py`` and the detection-invariant test
+The provider-contract tests in ``test_base.py`` and the detection-invariant test
 enforce these attributes at collection time so a newly enrolled provider
 cannot silently ship without the declaration.
 """
@@ -46,7 +46,8 @@ import csv
 import os
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections import Counter
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
@@ -55,12 +56,19 @@ from typing import ClassVar, Final, Literal
 
 from pydantic import BaseModel
 
+from .....application.ledger.invoice_label_vocabulary import MONTHS
+from .....application.operator_actions.models import PreconditionVerdict
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
-from .....core.decimal.grammar import DecimalSeparatorValue
+from .....core.decimal.grammar import (
+    DecimalSeparatorValue,
+    decimal_separator_proved_by,
+    european_thousands_reading_is_ambiguous,
+)
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
-from .....core.hashing import sha256_hex as _sha256_hex
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.hashing import sha256_hex
+from .....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
 from .....core.text_fold import fold_diacritics
@@ -72,7 +80,10 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 # (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
 # cap rejects oversized inputs (including XLSX zip-bomb payloads) before
 # they reach openpyxl / pdfplumber / the csv reader.
-_MAX_SOURCE_BYTES = 64 * 1024 * 1024
+MAX_SOURCE_BYTES = 64 * 1024 * 1024
+
+#: Refusal of a source the delimited-table reader cannot read; it names no content.
+UNREADABLE_TABLE_REFUSAL = "the file is not a readable delimited table"
 
 #: Allowed values for :attr:`FinancialProvider.verification_source`.
 CorpusVerificationSource = Literal[
@@ -179,15 +190,20 @@ class ProviderValidation(BaseModel):
             an installation instruction. Present only when a provider declined
             because its extra is not installed; the operator-facing recovery is
             resolved downstream from these facts, never rendered here.
+        reader_unavailable_verdict: Why the model this provider reads with
+            could not be asked. Present only when the provider declined because
+            its reader is unavailable, so the source was never looked at; the
+            verdict states why.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     is_valid: bool
     warnings: tuple[str, ...] = ()
     detected_encoding: str | None = None
     detected_dialect: str | None = None
     unavailable_optional_extra: Mapping[str, str | bool] | None = None
+    reader_unavailable_verdict: PreconditionVerdict | None = None
 
 
 #: One import stamps every row of a file with the same resolved source path, and
@@ -198,11 +214,12 @@ class ProviderValidation(BaseModel):
 #: taken without touching the filesystem, because a relative path names a
 #: different file once the process changes directory.
 def _resolved_source_path(path: Path) -> Path:
-    return _resolved_absolute_source_path(os.path.abspath(path))
+    return resolved_absolute_source_path(os.path.abspath(path))
 
 
 @lru_cache(maxsize=256)
-def _resolved_absolute_source_path(absolute_path: str) -> Path:
+def resolved_absolute_source_path(absolute_path: str) -> Path:
+    """Return the absolute source path in resolved form."""
     return Path(absolute_path).resolve()
 
 
@@ -228,13 +245,13 @@ def require_admissible_source(path: Path) -> Path:
             context={"path": str(resolved)},
         )
     size = resolved.stat().st_size
-    if size > _MAX_SOURCE_BYTES:
+    if size > MAX_SOURCE_BYTES:
         raise InvalidFinancialSourceError(
             translated_message="errors.financial.source_file_too_large",
             context={
                 "path": str(resolved),
                 "size_bytes": size,
-                "max_bytes": _MAX_SOURCE_BYTES,
+                "max_bytes": MAX_SOURCE_BYTES,
             },
         )
     return resolved
@@ -362,6 +379,18 @@ class FinancialProvider(ABC):
             document is ingestable and surfacing any warnings.
         """
 
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement as a whole names, as a canonical IBAN.
+
+        The account is a fact of the file, not of a row. A format that prints
+        none, names several, or carries it per row (OFX ``ACCTID``) answers
+        ``None``. The answer is read from the bytes whose digest is
+        ``source_sha256``; a file that no longer holds those bytes answers
+        ``None`` rather than the account of other content.
+        """
+        del path, source_sha256
+        return None
+
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read raw source bytes after enforcing adapter input safety guards.
 
@@ -376,7 +405,7 @@ class FinancialProvider(ABC):
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:
         """Return the lowercase SHA-256 digest of the source bytes."""
-        return _sha256_hex(source_bytes)
+        return sha256_hex(source_bytes)
 
     def build_provenance(
         self,
@@ -406,6 +435,18 @@ class FinancialProvider(ABC):
             ingested_at=now(),
             provider_name=self.name,
         )
+
+
+def canonical_valid_iban(text: str) -> str | None:
+    """Return ``text`` as a canonical IBAN when it is one, else ``None``.
+
+    A printed IBAN may be grouped by spaces or hyphens; only a value that has
+    the ISO 13616 shape and passes the mod-97 check is an IBAN.
+    """
+    canonical = normalise_iban(text)
+    if IBAN_SHAPE_RE.match(canonical) is None or iban_mod_97(canonical) != 1:
+        return None
+    return canonical
 
 
 def describe_dialect(dialect: type[csv.Dialect]) -> str:
@@ -440,6 +481,35 @@ def _expected_date_format_hint(*, day_first: bool) -> str:
     return "YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY"
 
 
+#: A day, a month name and a four-digit year: ``03 Mar 2026``, ``3-mar-2026``,
+#: ``14. März 2026``, ``14 de marzo de 2026``.
+_TEXT_MONTH_DATE_RE = re.compile(r"^(\d{1,2})\.?[\s./-]+(?:de\s+|d'\s*)?([^\W\d_]+)\.?[\s./-]+(?:de\s+)?(\d{4})$")
+
+
+def _text_month_date(raw: str) -> date | None:
+    """Read a date printed with its month as a name, or ``None`` when it is not one."""
+    match = _TEXT_MONTH_DATE_RE.match(raw.strip())
+    if match is None:
+        return None
+    month = MONTHS.get(fold_diacritics(match.group(2)).casefold())
+    if month is None:
+        return None
+    try:
+        return date(int(match.group(3)), month, int(match.group(1)))
+    except ValueError:
+        return None
+
+
+def _compact_numeric_date(raw: str) -> date | None:
+    """Read a leading YYYYMMDD token without changing the later convention fallback."""
+    if raw.isdigit() and len(raw) >= 8:
+        try:
+            return datetime.strptime(raw[:8], "%Y%m%d").date()
+        except ValueError:
+            pass
+    return None
+
+
 def parse_date_value(value: object, *, day_first: bool = True, label: str = "date") -> date:
     """Parse a bank-statement date or date-time into a ``date``."""
     if isinstance(value, datetime):
@@ -449,12 +519,13 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     original_raw = archive_cell_text(value)
     if not original_raw:
         raise FinancialValidationError("missing date value")
+    named_month = _text_month_date(original_raw)
+    if named_month is not None:
+        return named_month
     raw = original_raw.replace(".", "/")
-    if raw.isdigit() and len(raw) >= 8:
-        try:
-            return datetime.strptime(raw[:8], "%Y%m%d").date()
-        except ValueError:
-            pass
+    compact_date = _compact_numeric_date(raw)
+    if compact_date is not None:
+        return compact_date
     formats: Sequence[str]
     if day_first:
         formats = (
@@ -561,6 +632,83 @@ def parse_amount_value(
     return -amount if negative else amount
 
 
+#: Day, month and year groups of a printed numeric date.
+_NUMERIC_DATE_RE = re.compile(r"^\s*(\d{1,4})[./-](\d{1,2})[./-](\d{1,4})")
+
+#: Day numbers above this can only be a day, never a month.
+_LAST_MONTH = 12
+
+
+def infer_day_first(printed_dates: Iterable[str]) -> bool | None:
+    """Infer one statement's day order from its printed dates, or ``None`` on conflict.
+
+    No bank or layout supplies the convention; the statement's own dates do. A
+    first group above 12 can only be a day, and so can a second group above 12
+    read the other way. A statement printing both is not one convention, and
+    choosing either would misdate half its movements, so the caller refuses it.
+    With no evidence either way the European day-first reading applies; ISO
+    dates read the same under both.
+    """
+    day_first_votes = 0
+    month_first_votes = 0
+    for printed in printed_dates:
+        match = _NUMERIC_DATE_RE.match(printed)
+        if match is None or len(match.group(1)) == 4:
+            continue
+        first, second = int(match.group(1)), int(match.group(2))
+        if first > _LAST_MONTH:
+            day_first_votes += 1
+        elif second > _LAST_MONTH:
+            month_first_votes += 1
+    if day_first_votes and month_first_votes:
+        return None
+    return not month_first_votes
+
+
+def _decimal_vote(printed: str) -> DecimalSeparatorValue | None:
+    """Return which separator one printed amount proves is decimal, if any."""
+    body = "".join(char for char in printed if char.isdigit() or char in ",.")
+    return decimal_separator_proved_by(body)
+
+
+def infer_decimal_separator(printed_amounts: Iterable[str]) -> tuple[DecimalSeparatorValue | None, bool]:
+    """Infer one statement's decimal separator from its printed amounts.
+
+    Returns:
+        The separator most printed amounts prove, or ``None`` when no amount
+        proves either, and whether both conventions appeared.
+    """
+    votes: Counter[DecimalSeparatorValue] = Counter()
+    for printed in printed_amounts:
+        vote = _decimal_vote(printed)
+        if vote is not None:
+            votes[vote] += 1
+    if not votes:
+        return None, False
+    ranked = votes.most_common()
+    return ranked[0][0], len(ranked) > 1
+
+
+def parse_statement_amount(value: object, *, decimal_separator: DecimalSeparatorValue | None) -> Decimal:
+    """Parse one statement amount under the statement's inferred decimal separator.
+
+    A printed amount such as ``1.234`` reads as one thousand two hundred and
+    thirty-four or as one point two three four. When nothing on the statement
+    decides between them, the amount is refused rather than guessed.
+
+    Raises:
+        FinancialValidationError: The amount is unreadable, or its separator is
+            ambiguous and the statement does not decide it.
+    """
+    if decimal_separator is None and isinstance(value, str):
+        body = "".join(char for char in value if char.isdigit() or char in ",.")
+        if european_thousands_reading_is_ambiguous(body):
+            raise FinancialValidationError(
+                "amount reads as either a thousands group or a decimal and the statement does not decide which",
+            )
+    return parse_amount_value(value, decimal_separator=decimal_separator)
+
+
 def _already_numeric_amount(value: object) -> Decimal | None:
     """Return the value as a Decimal when it arrives already numeric.
 
@@ -586,18 +734,27 @@ def _already_numeric_amount(value: object) -> Decimal | None:
 # because no digit follows the ``E``.
 _EXPONENT_RE = re.compile(r"\d\s*[eE]\s*[+-]?\s*\d")
 
+#: A currency code or symbol printed before the sign or after a trailing sign.
+#: Only the characters that cannot belong to a signed amount are set aside, and
+#: only at the two ends, so an amount's own digits and markers are untouched.
+_OUTER_AMOUNT_NOISE_RE = re.compile(r"^[^\d()+\-.,]+|[^\d()+\-.,]+$")
+
 
 def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
     """Strip whitespace and sign markers from ``raw``; return ``(digits-and-separators, negative_flag)``.
 
     Three negativity conventions are recognised: leading minus
     (``-123.45``), trailing minus (``123.45-``), and accounting
-    parentheses (``(123.45)``). After the sign markers are
-    removed, only digits and ``,`` / ``.`` survive \u2014 anything else
-    (currency symbols, stray operators) is dropped before
+    parentheses (``(123.45)``). The typographic minus sign (U+2212) that
+    PDF text layers print is read as a minus, and a currency code or symbol
+    printed outside the sign (``EUR -123.45``, ``123.45- \u20ac``) is set aside
+    before the sign is read, so it cannot hide a negative amount. After the
+    sign markers are removed, only digits and ``,`` / ``.`` survive \u2014
+    anything else (currency symbols, stray operators) is dropped before
     separator inference.
     """
-    sanitized = raw.replace(" ", "").replace("\u202f", "")
+    sanitized = raw.replace(" ", "").replace("\u202f", "").replace("\u00a0", "").replace("\u2212", "-")
+    sanitized = _OUTER_AMOUNT_NOISE_RE.sub("", sanitized)
     negative = (
         sanitized.startswith("-") or sanitized.endswith("-") or (sanitized.startswith("(") and sanitized.endswith(")"))
     )
@@ -701,13 +858,17 @@ class ParsedLedgerRow(BaseModel):
             sign at the parse boundary.
         own_account_id: Always ``None`` from a provider: a statement row is
             bound to the taxpayer's own account by the import, not the parser.
+        operation_date: The LIVA art. 75 devengo date, only when the source has
+            a column that states exactly that. A bank's booking, value or
+            "fecha operacion" column dates the movement and never lands here.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     raw: RawTransaction
     direction: TransactionDirection
     own_account_id: None = None
+    operation_date: date | None = None
 
 
 def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:
@@ -736,8 +897,12 @@ def build_raw_transaction(
     counterparty: str | None,
     description: str,
     raw_fields: Mapping[str, str],
+    statement_reference: str | None,
 ) -> ParsedLedgerRow:
     """Create one :class:`ParsedLedgerRow` from a source-signed amount.
+
+    ``statement_reference`` is the reference the statement printed for the row,
+    or ``None`` when it printed none; a synthesized identifier never fills it.
 
     ``amount`` is the source-signed value as the parser read it. Its sign is
     consumed here to choose the
@@ -769,6 +934,7 @@ def build_raw_transaction(
             source_row_index=source_row_index,
         ),
         raw_fields=raw_fields,
+        statement_reference=statement_reference,
     )
     return ParsedLedgerRow(raw=raw, direction=direction)
 

@@ -53,6 +53,8 @@ expression = { op = "sum", args = [
             { key = "la_rioja", parameter = "renta-minimo-contribuyente-base" },
             { key = "madrid", parameter = "renta-minimo-contribuyente-base-madrid" },
             { key = "murcia", parameter = "renta-minimo-contribuyente-base" },
+            { key = "ceuta", parameter = "renta-minimo-contribuyente-base" },
+            { key = "melilla", parameter = "renta-minimo-contribuyente-base" },
         ] },
     ] },
     { op = "if_then_else", args = [
@@ -77,6 +79,8 @@ expression = { op = "sum", args = [
                     { key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-65-74" },
                     { key = "madrid", parameter = "renta-minimo-contribuyente-edad-65-74-madrid" },
                     { key = "murcia", parameter = "renta-minimo-contribuyente-edad-65-74" },
+                    { key = "ceuta", parameter = "renta-minimo-contribuyente-edad-65-74" },
+                    { key = "melilla", parameter = "renta-minimo-contribuyente-edad-65-74" },
                 ] },
             ] },
             { op = "if_then_else", args = [
@@ -100,6 +104,8 @@ expression = { op = "sum", args = [
                         { key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-75" },
                         { key = "madrid", parameter = "renta-minimo-contribuyente-edad-75-madrid" },
                         { key = "murcia", parameter = "renta-minimo-contribuyente-edad-75" },
+                        { key = "ceuta", parameter = "renta-minimo-contribuyente-edad-75" },
+                        { key = "melilla", parameter = "renta-minimo-contribuyente-edad-75" },
                     ] },
                 ] },
                 { literal = "0" },
@@ -171,73 +177,19 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18"]
 source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"]
 
+[revisions."2025".formulas.autonomic_deduccion]
+ccaa = "madrid"
+target_semantic_role = "irpf_deduccion_madrid_nacimiento_adopcion"
+eligibility = { kind = "descendant_entry_window_count", following_periods_fact = "madrid-birth-adoption-following-periods" }
+count_binding = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
+amount = "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
+income_limit = { kind = "base", base_semantic_roles = ["irpf_base_imponible_general", "irpf_base_imponible_ahorro"], unit = "unidad_familiar", individual_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual", joint_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta", unidad_familiar_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar", other_members_base_binding = "renta-profile-unidad-familiar-otros-miembros-base", legal_refs = ["madrid-dl-1-2010:art-18"] }
+prorrateo = "equal_parts"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18"]
+
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
 required_text = ["Por nacimiento o adopción de hijos", "721,70 euros por cada hijo nacido o adoptado"]
-# Ley 35/2006 art. 50.3 — ejercicio-2024-origin negative base liquidable
-# general compensation, this period.
-#
-# Cap (internal ceiling): the maximum compensable this period =
-#   min(1388 opening pending, max(0, 0435 − 0461 − 0468)).
-# Art. 50.3 compensates the negative base liquidable general against positive
-# base liquidable general; Art. 48's 25% base-imponible mechanism is distinct.
-[[revisions."2025".formulas]]
-id = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
-target_casilla_id = "base-liq-neg-general-2024-aplicada-maxima"
-expression = { op = "min", args = [
-    { casilla_id = "1388" },
-    { op = "max", args = [
-        { literal = "0" },
-        { op = "subtract", args = [
-            { op = "subtract", args = [
-                { casilla_id = "0435" },
-                { casilla_id = "0461" },
-            ] },
-            { casilla_id = "0468" },
-        ] },
-    ] },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
-
-[[revisions."2025".formulas.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
-
-# Casilla 0501 is the base-liquidable compensation used by the main
-# liquidable-base formula. The Anexo C applied amount (1389) is its source;
-# the carry never alters the separate Art. 48 base-imponible calculation.
-[[revisions."2025".formulas]]
-id = "renta-base-liquidable-negativa-general-compensacion-total"
-target_casilla_id = "0501"
-expression = { op = "sum", args = [{ casilla_id = "1389" }] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
-
-[[revisions."2025".formulas.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
-
-# Remainder rolled forward (casilla 1390) = opening pending (1388) minus the
-# amount applied this period (1389). Clamped non-negative: the declared
-# applied amount cannot exceed the stock (BLOCKING predicate), so the
-# subtraction is non-negative, and the clamp is defence-in-depth.
-[[revisions."2025".formulas]]
-id = "renta-base-liquidable-negativa-general-2024-pendiente-fin"
-target_casilla_id = "1390"
-expression = { op = "max", args = [
-    { literal = "0" },
-    { op = "subtract", args = [{ casilla_id = "1388" }, { casilla_id = "1389" }] },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
-
-[[revisions."2025".formulas.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
 [[revisions."2025".formulas]]
 id = "renta-eo-agraria-rendimiento-base-mejillon-batea"
 target_casilla_id = "0159"
@@ -249,30 +201,3 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
-[[revisions."2025".formulas]]
-id = "renta-maritime-exempt-income"
-target_casilla_id = "trabajo-mar-renta-exenta"
-expression = { op = "if_then_else", args = [
-    { binding = "renta-maritime-path-rebeca" },
-    { op = "multiply", args = [
-        { binding = "renta-maritime-gross-navigation-income" },
-        { parameter = "rebeca-maritime-exemption-fraction" },
-    ] },
-    { op = "min", args = [
-        { op = "multiply", args = [
-            { op = "divide", args = [
-                { binding = "renta-maritime-annual-salary" },
-                { literal = "365" },
-            ] },
-            { binding = "renta-maritime-qualifying-days" },
-        ] },
-        { parameter = "lirpf-art-7p-exemption-cap" },
-    ] },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
-source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]
-
-[[revisions."2025".formulas.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["límite máximo de 60.100 euros anuales", "Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]

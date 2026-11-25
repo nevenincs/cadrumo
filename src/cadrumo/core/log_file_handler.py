@@ -1,10 +1,23 @@
 """The diagnostic log file handler, which tells a following reader about each append.
 
-Writers serialize rotation and append through one OS file lock and close the
-log before releasing it. Retaining a handle between records prevents another
-Windows process from rotating the file and loses its next record. After each
-append the handler sets a session-local event named for the user and the log
-directory. The desktop's log view waits on that event instead of reading the
+Writers serialize rotation and append through one OS file lock on a sidecar.
+Each writer keeps its log and sidecar descriptors between records, because
+reopening them for every record cost a directory creation and two opens, each
+scanned on Windows. On Windows both are opened with delete sharing, so a
+retained handle never stops another process renaming the log during rotation.
+Under the lock a writer compares the files its descriptors hold with the ones
+the paths name now. It reopens after another writer rotated the log or the
+directory was replaced, so no record lands in a rotated backup and no writer
+locks an unlinked sidecar. Looking a path up for every record cost a scanned
+open on Windows, so there a writer remembers the name a lookup last confirmed
+for the open file and asks the open file for its current name instead. A
+rename, including rotation, or a deletion that unlinks the name at once
+changes that name. A deletion that waits for the last handle to close leaves
+the name in place but marks the file delete-pending, which the writer reads
+as no name. Only in those cases does the writer look the path up again. A
+forked child reopens both rather
+than share its parent's lock. After each append the handler sets a session-local event named
+for the user and the log directory. The desktop's log view waits on that event instead of reading the
 files on a timer. The event belongs to this user alone: it is created
 owner-only, and a name another account holds, or an object of another type,
 is refused, which leaves the reader observing the files on its interval.
@@ -17,8 +30,10 @@ import logging
 import ntpath
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from functools import cache
+from io import TextIOWrapper
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import override
@@ -33,6 +48,21 @@ _SE_KERNEL_OBJECT = 6
 _OWNER_SECURITY_INFORMATION = 0x00000001
 _ERROR_SUCCESS = 0
 
+_GENERIC_READ = 0x80000000
+_GENERIC_WRITE = 0x40000000
+_SHARE_READ_WRITE_DELETE = 0x00000007
+_OPEN_EXISTING = 3
+_OPEN_ALWAYS = 4
+_FILE_ATTRIBUTE_NORMAL = 0x00000080
+_SIDECAR_REOPEN_ATTEMPTS = 3
+_FILE_STANDARD_INFO = 1
+_FILE_NAME_INFO = 2
+# FILE_STANDARD_INFO: two LARGE_INTEGER sizes, the link count, then DeletePending and Directory.
+_FILE_STANDARD_INFO_BYTES = 24
+_DELETE_PENDING_OFFSET = 20
+# The name's length, then up to 1024 UTF-16 code units; a longer name is looked up by path.
+_FILE_NAME_INFO_BYTES = 4 + 2 * 1024
+
 
 def append_signal_name(directory: str, sid: str) -> str:
     r"""Name the event the user whose SID string is ``sid`` sets after an append in ``directory``.
@@ -43,10 +73,10 @@ def append_signal_name(directory: str, sid: str) -> str:
     """
     # Windows path rules on every platform: the signal only exists on Windows.
     text = ntpath.abspath(directory).removeprefix("\\\\?\\").replace("/", "\\").rstrip("\\")
-    return f"Local\\cadrumo-log-append-{sid}-{_fnv1a(text.encode('utf-8').lower()):016x}"
+    return f"Local\\cadrumo-log-append-{sid}-{fnv1a(text.encode('utf-8').lower()):016x}"
 
 
-def _fnv1a(data: bytes) -> int:
+def fnv1a(data: bytes) -> int:
     """64-bit FNV-1a, which the desktop's platform crate computes alike."""
     digest = _FNV_OFFSET
     for byte in data:
@@ -210,6 +240,118 @@ def announce_append(directory: str) -> None:
             return
 
 
+def _shared_open(path: str, flags: int) -> int:
+    """Open ``path`` like :func:`os.open`; on Windows also let other processes rename or delete it."""
+    if sys.platform == "win32":
+        import _winapi
+        import msvcrt
+
+        access = _GENERIC_READ | _GENERIC_WRITE if flags & os.O_RDWR else _GENERIC_WRITE
+        disposition = _OPEN_ALWAYS if flags & os.O_CREAT else _OPEN_EXISTING
+        handle = _winapi.CreateFile(path, access, _SHARE_READ_WRITE_DELETE, 0, disposition, _FILE_ATTRIBUTE_NORMAL, 0)
+        try:
+            # Without O_TEXT the descriptor is binary, and the handle was created non-inheritable.
+            return msvcrt.open_osfhandle(handle, flags & os.O_APPEND)
+        except BaseException:
+            _winapi.CloseHandle(handle)
+            raise
+    else:
+        return os.open(path, flags | os.O_CLOEXEC, 0o600)
+
+
+def _names_descriptor(path: str, descriptor: int) -> bool:
+    """Whether ``path`` still names the file open on ``descriptor``."""
+    try:
+        named = os.stat(path)
+    except FileNotFoundError:
+        return False
+    held = os.fstat(descriptor)
+    return (named.st_dev, named.st_ino) == (held.st_dev, held.st_ino)
+
+
+@cache
+def _file_name_query() -> Callable[[int], str | None] | None:
+    """Return what asks an open file for its current name, built once per process; ``None`` where none exists."""
+    if sys.platform == "win32":
+        try:
+            return _windows_file_name_query()
+        except Exception:
+            # Every record then looks its paths up, as it did before this query.
+            return None
+    return None
+
+
+if sys.platform == "win32":
+
+    def _windows_file_name_query() -> Callable[[int], str | None]:
+        # Imported here: only a process that writes the diagnostic log file needs them.
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        information = kernel32.GetFileInformationByHandleEx
+        information.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
+        information.restype = wintypes.BOOL
+
+        def file_name(descriptor: int) -> str | None:
+            handle = msvcrt.get_osfhandle(descriptor)
+            # A file deleted without POSIX semantics keeps its name until its last
+            # handle closes, so a pending deletion has to be read separately.
+            standard = ctypes.create_string_buffer(_FILE_STANDARD_INFO_BYTES)
+            if not information(handle, _FILE_STANDARD_INFO, standard, _FILE_STANDARD_INFO_BYTES):
+                return None
+            if standard.raw[_DELETE_PENDING_OFFSET]:
+                return None
+            # FILE_NAME_INFO: the name's length in bytes, then the name relative to its volume.
+            buffer = ctypes.create_string_buffer(_FILE_NAME_INFO_BYTES)
+            if not information(handle, _FILE_NAME_INFO, buffer, _FILE_NAME_INFO_BYTES):
+                return None
+            length = min(wintypes.DWORD.from_buffer(buffer).value, _FILE_NAME_INFO_BYTES - 4)
+            return ctypes.wstring_at(ctypes.addressof(buffer) + 4, length // 2)
+
+        return file_name
+
+
+def _file_name(descriptor: int) -> str | None:
+    """The current name of the file open on ``descriptor``; ``None`` if the OS cannot say or it is delete-pending."""
+    query = _file_name_query()
+    return None if query is None else query(descriptor)
+
+
+class _PathNames:
+    """Answer whether a path still names an open file, looking the path up only when the file's name changed.
+
+    The name an open file reports was confirmed to be where the path leads by
+    a lookup taken between two equal readings of it. While the file still
+    reports that name, the path leads to it. Rotation renames the file and a
+    POSIX deletion moves it out of its directory; either changes the name. A
+    deletion that waits for the last handle leaves the name but makes the file
+    delete-pending, which reads as no name. After any of these the next check
+    looks the path up again. Where the OS reports no name, every check looks
+    the path up. A directory on the path re-pointed elsewhere, as
+    by retargeting a junction, changes where the path leads without renaming
+    the file, and goes unseen until the file's name changes.
+    """
+
+    __slots__ = ("_name", "_path")
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+        self._name: str | None = None
+
+    def names(self, descriptor: int) -> bool:
+        """Whether the path still names the file open on ``descriptor``."""
+        before = _file_name(descriptor)
+        if before is not None and before == self._name:
+            return True
+        if not _names_descriptor(self._path, descriptor):
+            return False
+        # A rename racing the lookup leaves the two readings different, and nothing is remembered.
+        self._name = before if before is not None and _file_name(descriptor) == before else None
+        return True
+
+
 class AnnouncingRotatingFileHandler(RotatingFileHandler):
     """Coordinate process writers before rotation and announce completed appends."""
 
@@ -223,22 +365,107 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
         delay: bool = False,
         errors: str | None = None,
     ) -> None:
-        """Keep the standard handler configuration without retaining a file handle."""
-        # Always open under the process lock, including the first record.
+        """Keep the standard handler configuration and open nothing before the first record."""
+        from .locks import sidecar_lock_path
+
+        # The first open happens under the process lock, like every reopen.
         super().__init__(filename, mode, maxBytes, backupCount, encoding, delay=True, errors=errors)
+        self._lock_path = sidecar_lock_path(Path(self.baseFilename))
+        self._lock_descriptor: int | None = None
+        self._descriptor_owner = os.getpid()
+        self._lock_names = _PathNames(str(self._lock_path))
+        self._log_names = _PathNames(self.baseFilename)
+        self._formatted: tuple[logging.LogRecord, str] | None = None
+
+    @override
+    def _open(self) -> TextIOWrapper:
+        if sys.platform == "win32" and self.mode == "a":
+            return open(self.baseFilename, "a", encoding=self.encoding, errors=self.errors, opener=_shared_open)
+        return super()._open()
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
-        from .locks import exclusive_file_lock
-
+        self._formatted = None
         try:
-            with exclusive_file_lock(Path(self.baseFilename), timeout=5.0, retry_backoff=0.005, log_events=False):
-                try:
-                    super().emit(record)
-                finally:
-                    if self.stream is not None:
-                        self.stream.close()
-                        self.stream = None
+            with self._exclusive_append():
+                super().emit(record)
             announce_append(os.path.dirname(self.baseFilename))
         except Exception:
             self.handleError(record)
+        finally:
+            self._formatted = None
+
+    @override
+    def handleError(self, record: logging.LogRecord) -> None:
+        """Refuse failed output without the stdlib's raw-record stderr fallback."""
+        raise OSError("diagnostic file delivery failed") from None
+
+    @override
+    def format(self, record: logging.LogRecord) -> str:
+        # The rollover check formats the record to measure it, then the append
+        # formats it again; within one emit the second returns the first.
+        formatted = self._formatted
+        if formatted is not None and formatted[0] is record:
+            return formatted[1]
+        text = super().format(record)
+        self._formatted = (record, text)
+        return text
+
+    @override
+    def close(self) -> None:
+        self.acquire()
+        try:
+            self._close_lock_descriptor()
+        finally:
+            self.release()
+        super().close()
+
+    @contextmanager
+    def _exclusive_append(self) -> Generator[None]:
+        """Hold the writers' lock with the stream, if any, on the file the log path names now."""
+        from .locks import held_descriptor_lock
+
+        if self._descriptor_owner != os.getpid():
+            # Inherited across fork: the parent's lock description would admit both processes.
+            self._close_lock_descriptor()
+            self._close_stream()
+            self._descriptor_owner = os.getpid()
+        for _ in range(_SIDECAR_REOPEN_ATTEMPTS):
+            descriptor = self._lock_descriptor
+            if descriptor is None:
+                descriptor = self._lock_descriptor = self._open_lock_descriptor()
+            with held_descriptor_lock(descriptor, self._lock_path, timeout=5.0, retry_backoff=0.005, log_events=False):
+                if self._lock_names.names(descriptor):
+                    self._follow_rotation()
+                    yield
+                    return
+            self._close_lock_descriptor()
+        raise OSError(f"the log lock {self._lock_path} was replaced while it was being acquired")
+
+    def _open_lock_descriptor(self) -> int:
+        try:
+            return _shared_open(str(self._lock_path), os.O_RDWR | os.O_CREAT)
+        except FileNotFoundError:
+            # The log directory was removed since this writer last opened it.
+            self._lock_path.parent.mkdir(parents=True, exist_ok=True)
+            return _shared_open(str(self._lock_path), os.O_RDWR | os.O_CREAT)
+
+    def _follow_rotation(self) -> None:
+        """Reopen after another writer rotated the log; otherwise measure the shared file's end."""
+        if self.stream is None:
+            return
+        if self._log_names.names(self.stream.fileno()):
+            # Other writers appended since this stream last wrote; rollover measures the whole file.
+            self.stream.seek(0, os.SEEK_END)
+        else:
+            self._close_stream()
+
+    def _close_stream(self) -> None:
+        if self.stream is not None:
+            self.stream.close()
+            self.stream = None
+
+    def _close_lock_descriptor(self) -> None:
+        if self._lock_descriptor is not None:
+            os.close(self._lock_descriptor)
+            self._lock_descriptor = None

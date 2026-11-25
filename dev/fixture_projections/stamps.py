@@ -1,0 +1,378 @@
+"""Digest stamps: what a family's outputs were produced from, and whether that still holds.
+
+A stamp records, per input group, the digest of every input file's content as
+the repository records it (line endings normalised by ``.gitattributes``), the
+published authority's database digest, the family's declaration digest and the
+sha256 of every output. Status compares those records with the files as they
+stand now: modification times never enter.
+
+An observed group (the product source) is keyed by what the run read. When
+every process of the run was observed, the stamp records each file and
+directory listing those processes read, with the digest of the bytes they
+consumed, and the group's other files do not key the family. The locale
+catalogue is keyed by the keys the processes looked up in it, each with the
+digest of what it answered, so an edit to another sentence of a shared shard
+leaves the family fresh. When the
+observation is incomplete, the stamp records the whole group's digests, taken
+before the producer ran, and the reasons the observation fell short.
+
+A family whose outputs are committed in place keeps its stamp in the
+development cache, which is per-checkout, ignored and relocatable, because a
+source directory holds no ignored stamp beside its tracked outputs. A family
+whose outputs are generated keeps its stamp inside its output root, so removing
+the outputs removes the stamp with them.
+"""
+
+from __future__ import annotations
+
+import enum
+import hashlib
+import json
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Final
+
+from cadrumo.core.hashing import sha256_file
+
+from ..cache_root import dev_cache_dir
+from ..dependency_observation.catalogue_keys import CatalogueReader, catalogue_shards, split_identity
+from ..dependency_observation.observation import file_digest, listing_digest
+from ..source_tree import normalised_contents, repository_files
+from .location import WINDOW_INDEX, output_directory
+from .registry import FixtureFamily
+
+STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v3"
+STAMP_CACHE: Final[str] = "fixture-projections"
+AUTHORITY_GROUP: Final[str] = "authority"
+#: The stamp's record of how its observed groups were keyed.
+OBSERVATION: Final[str] = "observation"
+OBSERVED_MODE: Final[str] = "observed"
+CLOSURE_MODE: Final[str] = "closure"
+
+#: Per input group, each member's content digest.
+InputRecord = dict[str, dict[str, str]]
+
+
+class FixtureState(enum.StrEnum):
+    """Where a family's outputs stand against their inputs."""
+
+    FRESH = "fresh"
+    STALE = "stale"
+    UNSTAMPED = "unstamped"
+    MISSING = "missing"
+    CHECK_ONLY = "check-only"
+
+
+@dataclass(frozen=True, slots=True)
+class FamilyStatus:
+    """A family's state and, when it is not fresh, what made it so."""
+
+    name: str
+    state: FixtureState
+    reasons: tuple[str, ...] = ()
+
+
+class InputDigests:
+    """Content digests of repository files, each read at most once per instance."""
+
+    def __init__(self, root: Path) -> None:
+        """Read files below ``root``, the repository whose ignore and attribute rules apply."""
+        self._root = root
+        self._groups: dict[tuple[str, ...], dict[str, str]] = {}
+        #: Answers the keyed catalogue reads a stamp records, each catalogue read once per instance.
+        self.catalogues = CatalogueReader()
+
+    def group(self, paths: Sequence[str]) -> dict[str, str]:
+        """Return each repository file under ``paths`` with the digest of its normalised content.
+
+        Raises:
+            FileNotFoundError: When a path in ``paths`` does not exist.
+        """
+        key = tuple(paths)
+        cached = self._groups.get(key)
+        if cached is None:
+            files = repository_files(self._root, under=paths, must_exist=True)
+            cached = {
+                relative: hashlib.sha256(content).hexdigest()
+                for relative, content in normalised_contents(self._root, files)
+            }
+            self._groups[key] = cached
+        return cached
+
+
+@dataclass(frozen=True, slots=True)
+class ObservedReads:
+    """What a completely observed run read: checkout files and listings, each with its first-seen digest.
+
+    A path inside the checkout is given relative to it, in POSIX form; one outside it is absolute. ``keys`` are the
+    catalogue keys it looked up, each named by its catalogue's directory and the key (see ``catalogue_keys``).
+    """
+
+    files: Mapping[str, str]
+    listings: Mapping[str, str]
+    keys: Mapping[str, str] = field(default_factory=dict[str, str])
+
+
+def declaration_digest(family: FixtureFamily) -> str:
+    """Name the family's declaration, so a changed command, input or output set is a changed producer."""
+    return hashlib.sha256(json.dumps(asdict(family), sort_keys=True).encode()).hexdigest()
+
+
+def family_inputs(family: FixtureFamily, digests: InputDigests, authority: Mapping[str, str]) -> InputRecord:
+    """The digests of ``family``'s declared groups, by group, with the authority identity as its own group.
+
+    Observed groups are not among them: their key is the run's observation, or :func:`closure_inputs`.
+    """
+    record = {group.label: digests.group(group.paths) for group in family.inputs if not group.observed}
+    record[AUTHORITY_GROUP] = dict(authority)
+    return record
+
+
+def closure_inputs(family: FixtureFamily, digests: InputDigests) -> InputRecord:
+    """The whole-group digests of ``family``'s observed groups: their key when a run was not completely observed."""
+    return {group.label: digests.group(group.paths) for group in family.inputs if group.observed}
+
+
+def _observed_path(root: Path, member: str) -> Path:
+    path = Path(member)
+    return path if path.is_absolute() else root / member
+
+
+def input_digest(inputs: InputRecord) -> str:
+    """Fold every group's member digests into one digest."""
+    digest = hashlib.sha256()
+    for label in sorted(inputs):
+        for member, value in sorted(inputs[label].items()):
+            digest.update(f"{label}\0{member}\0{value}\n".encode())
+    return digest.hexdigest()
+
+
+def output_paths(family: FixtureFamily, root: Path) -> tuple[Path, ...]:
+    """Every file under the family's output root that its output patterns name, sorted.
+
+    The family's stamp and the window index beside the outputs are records of them, never outputs.
+    """
+    if family.output_root is None:
+        return ()
+    output_root = output_directory(family.output_root, root)
+    records = {output_root / _stamp_name(family), output_root / WINDOW_INDEX}
+    found = {
+        path
+        for pattern in family.outputs
+        for path in output_root.glob(pattern)
+        if path.is_file() and path not in records
+    }
+    return tuple(sorted(found))
+
+
+def output_digests(family: FixtureFamily, root: Path) -> dict[str, str]:
+    """The sha256 of every output, keyed by its path relative to the output root."""
+    if family.output_root is None:
+        return {}
+    output_root = output_directory(family.output_root, root)
+    return {path.relative_to(output_root).as_posix(): sha256_file(path) for path in output_paths(family, root)}
+
+
+def _stamp_name(family: FixtureFamily) -> str:
+    return f".{family.name}.fixture-stamp.json"
+
+
+def stamp_path(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> Path:
+    """Where ``family``'s stamp lives: the development cache when committed, else beside the outputs."""
+    if family.committed or family.output_root is None:
+        directory = cache_directory if cache_directory is not None else dev_cache_dir(STAMP_CACHE)
+        return directory / f"{family.name}.json"
+    return output_directory(family.output_root, root) / _stamp_name(family)
+
+
+def write_stamp(
+    family: FixtureFamily,
+    root: Path,
+    inputs: InputRecord,
+    *,
+    reads: ObservedReads | None = None,
+    closure: InputRecord | None = None,
+    reasons: Sequence[str] = (),
+    cache_directory: Path | None = None,
+) -> Path:
+    """Record that the family's outputs on disk now were produced from ``inputs`` and its observed groups' key.
+
+    That key is ``reads`` when the run was completely observed, else ``closure``, the whole observed groups'
+    digests taken before the run, with ``reasons`` naming what the observation could not see.
+
+    Raises:
+        ValueError: When neither key covers an observed group the family declares.
+    """
+    if reads is not None:
+        observation: dict[str, Any] = {
+            "mode": OBSERVED_MODE,
+            "files": dict(reads.files),
+            "listings": dict(reads.listings),
+            "keys": dict(reads.keys),
+        }
+    else:
+        groups = dict(closure or {})
+        missing = sorted(group.label for group in family.inputs if group.observed and group.label not in groups)
+        if missing:
+            raise ValueError(f"{family.name}: no key for the observed groups {', '.join(missing)}")
+        observation = {"mode": CLOSURE_MODE, "groups": groups, "reasons": list(reasons)}
+    document = {
+        "format": STAMP_FORMAT,
+        "family": family.name,
+        "producer_version": declaration_digest(family),
+        "input_digest": input_digest(inputs),
+        "inputs": inputs,
+        OBSERVATION: observation,
+        "outputs": output_digests(family, root),
+    }
+    path = stamp_path(family, root, cache_directory=cache_directory)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staged = path.with_name(path.name + ".partial")
+    staged.write_text(json.dumps(document, sort_keys=True, separators=(",", ":")), encoding="utf-8")
+    staged.replace(path)
+    return path
+
+
+def _changed_members(label: str, recorded: Mapping[str, str], current: Mapping[str, str]) -> list[str]:
+    changes = [
+        f"{label}: {member} changed"
+        for member in sorted(recorded.keys() & current.keys())
+        if recorded[member] != current[member]
+    ]
+    changes += [f"{label}: {member} added" for member in sorted(current.keys() - recorded.keys())]
+    changes += [f"{label}: {member} removed" for member in sorted(recorded.keys() - current.keys())]
+    return changes
+
+
+def _usable_stamp(family: FixtureFamily, path: Path) -> dict[str, Any] | FamilyStatus:
+    """The family's stamp document, or the unstamped status that explains why none is usable."""
+    try:
+        stamp = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("no stamp",))
+    except (OSError, ValueError) as exc:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, (f"unreadable stamp: {type(exc).__name__}",))
+    if not isinstance(stamp, dict) or stamp.get("format") != STAMP_FORMAT or stamp.get("family") != family.name:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("stamp of another format or family",))
+    return stamp
+
+
+def _observed_changes(
+    family: FixtureFamily, root: Path, observation: Mapping[str, Any], digests: InputDigests
+) -> list[str]:
+    """What changed in the key of the family's observed groups; an unreadable record is a change."""
+    mode = observation.get("mode")
+    if mode == OBSERVED_MODE:
+        files, listings, keys = observation.get("files"), observation.get("listings"), observation.get("keys")
+        if not isinstance(files, dict) or not isinstance(listings, dict) or not isinstance(keys, dict):
+            return ["observation: unreadable record"]
+        changes = [
+            f"observed: {member} changed"
+            for member, recorded in sorted(files.items())
+            if file_digest(_observed_path(root, member)) != recorded
+        ]
+        changes += [
+            f"observed: listing of {member} changed"
+            for member, recorded in sorted(listings.items())
+            if listing_digest(_observed_path(root, member)) != recorded
+        ]
+        for identity, recorded in sorted(keys.items()):
+            directory, key = split_identity(identity)
+            if digests.catalogues.entry_digest(_observed_path(root, directory), key) != recorded:
+                changes.append(f"observed: {key} in {directory} changed")
+        return changes
+    if mode == CLOSURE_MODE:
+        groups = observation.get("groups")
+        if not isinstance(groups, dict):
+            return ["observation: unreadable record"]
+        current = closure_inputs(family, digests)
+        group_changes: list[str] = []
+        for label in sorted(groups.keys() | current.keys()):
+            recorded = groups.get(label, {})
+            group_changes += _changed_members(
+                label, recorded if isinstance(recorded, dict) else {}, current.get(label, {})
+            )
+        return group_changes
+    return ["observation: unreadable record"]
+
+
+def family_status(
+    family: FixtureFamily,
+    root: Path,
+    inputs: InputRecord,
+    *,
+    digests: InputDigests | None = None,
+    cache_directory: Path | None = None,
+) -> FamilyStatus:
+    """Compare the family's stamp with ``inputs``, its observed key and the outputs on disk.
+
+    ``digests`` reads the observed groups whole when the stamp keyed them so; it defaults to the checkout's.
+    """
+    if family.producer is None:
+        return FamilyStatus(family.name, FixtureState.CHECK_ONLY)
+    path = stamp_path(family, root, cache_directory=cache_directory)
+    outputs = output_digests(family, root)
+    if not outputs:
+        return FamilyStatus(family.name, FixtureState.MISSING, ("no outputs",))
+    # Outputs with no usable stamp exist but are of unknown provenance: not
+    # missing, and not fresh until a seed produces or adopts them.
+    stamp = _usable_stamp(family, path)
+    if isinstance(stamp, FamilyStatus):
+        return stamp
+    reasons: list[str] = []
+    if stamp.get("producer_version") != declaration_digest(family):
+        reasons.append("declaration changed")
+    recorded_inputs = stamp.get("inputs", {})
+    for label in sorted(recorded_inputs.keys() | inputs.keys()):
+        reasons += _changed_members(label, recorded_inputs.get(label, {}), inputs.get(label, {}))
+    if not reasons:
+        # A family's declaration names its observed groups, so an unchanged declaration has the same ones.
+        observation = stamp.get(OBSERVATION)
+        if not isinstance(observation, dict):
+            reasons.append("observation: unreadable record")
+        else:
+            reasons += _observed_changes(family, root, observation, digests or InputDigests(root))
+    reasons += _changed_members("output", stamp.get("outputs", {}), outputs)
+    if reasons:
+        return FamilyStatus(family.name, FixtureState.STALE, tuple(reasons))
+    return FamilyStatus(family.name, FixtureState.FRESH)
+
+
+def stamp_mismatch(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> tuple[str, ...]:
+    """Why the family's stamp does not record its outputs as its declaration now produces them; none when it does.
+
+    A stamp that does is a consistent snapshot: the outputs were produced from the inputs it records, whatever has
+    changed since.
+    """
+    if family.producer is None:
+        return ()
+    stamp = _usable_stamp(family, stamp_path(family, root, cache_directory=cache_directory))
+    if isinstance(stamp, FamilyStatus):
+        return stamp.reasons
+    reasons = [] if stamp.get("producer_version") == declaration_digest(family) else ["declaration changed"]
+    recorded = stamp.get("outputs")
+    reasons += _changed_members("output", recorded if isinstance(recorded, dict) else {}, output_digests(family, root))
+    return tuple(reasons)
+
+
+def observed_files(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> tuple[Path, ...]:
+    """The files the family's stamp keys it on by observation, so a build depending on them reruns its seed.
+
+    A keyed catalogue is named by every shard file it has: an edit to one reruns the seed, which then finds the
+    family fresh unless a key it looked up answers otherwise.
+    """
+    if family.producer is None:
+        return ()
+    stamp = _usable_stamp(family, stamp_path(family, root, cache_directory=cache_directory))
+    if isinstance(stamp, FamilyStatus):
+        return ()
+    observation = stamp.get(OBSERVATION)
+    if not isinstance(observation, dict) or observation.get("mode") != OBSERVED_MODE:
+        return ()
+    files, keys = observation.get("files"), observation.get("keys")
+    if not isinstance(files, dict) or not isinstance(keys, dict):
+        return ()
+    catalogues = sorted({split_identity(identity)[0] for identity in keys})
+    shards = [shard for directory in catalogues for shard in catalogue_shards(_observed_path(root, directory))]
+    return (*(_observed_path(root, member) for member in files), *shards)

@@ -6,7 +6,7 @@ import json
 import threading
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast
+from typing import Self, cast, override
 from uuid import uuid4
 
 import pytest
@@ -16,7 +16,6 @@ from cadrumo.application.auth.credential_operations import AuthCredentialSaveRes
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language, register_language_resolver
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
@@ -24,6 +23,7 @@ from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import profile_output_language_precedence
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.profile.tests.test_aeat_auth_setup import (
     auth_setup_overview_projection,
@@ -116,12 +116,12 @@ async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and
     saved, result = await door.save(
         AuthProviderKind.CLAVE_PERMANENTE,
         ClaveMovilRoute.APP_REQUEST,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "12345678Z"},
+        {"identity.tax_id": "12345678Z"},
         "",
         secret,
     )
-    assert calls == [("identity.tax_id", 1), ("auth.dni_nie", 2)]
-    assert saved.record_revision == 3 and result.ready
+    assert calls == [("identity.tax_id", 1)]
+    assert saved.record_revision == 2 and result.ready
     assert json.loads(secrets[0]) == {"password": "private-password"}
     assert secret == bytes(len(secret))
     assert all("password" not in key for key in values)
@@ -169,7 +169,7 @@ async def test_held_auth_setup_reads_live_locale_on_open_and_after_save_preservi
     monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
     monkeypatch.setattr(aeat_auth_client, "read_sync_readiness", readiness)
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""),
         profile_output_language_precedence(),
     ):
         register_language_resolver()
@@ -218,7 +218,7 @@ def test_auth_overview_refuses_a_language_change_during_its_read(
         return current
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""),
         profile_output_language_precedence(),
     ):
         register_language_resolver()
@@ -232,3 +232,54 @@ def test_auth_overview_refuses_a_language_change_during_its_read(
             assert changed.value.reason is RefusalCode.UNAVAILABLE
         finally:
             register_language_resolver()
+
+
+@pytest.mark.asyncio
+async def test_saving_a_certificate_resolves_its_path_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Resolving the operator's certificate path reads the filesystem, so it never runs on the loop."""
+    client = cast("FrontendClient", type("Client", (), {"profile_id": uuid4(), "session_id": uuid4()})())
+    certificate = tmp_path / "certificate.p12"
+    resolution_threads: list[int] = []
+    configured: list[AuthConfigureOperationRequest] = []
+
+    class _RecordedPath(Path):
+        """A path whose resolution, the filesystem read, records the thread it ran on."""
+
+        @override
+        def resolve(self, strict: bool = False) -> Self:
+            resolution_threads.append(threading.get_ident())
+            return super().resolve(strict=strict)
+
+    def configure(_client: FrontendClient, request: AuthConfigureOperationRequest) -> AuthConfigurePublicResultV2:
+        configured.append(request)
+        return AuthConfigurePublicResultV2(
+            profile_id=client.profile_id,
+            provider=request.provider,
+            changed=True,
+            certificate_file_provided=True,
+            complete=False,
+            profile_tax_id_present=True,
+            provider_identity_present=True,
+            identity_alignment="matches",
+        )
+
+    async def readiness(_client: FrontendClient) -> AuthSyncReadiness:
+        return auth_setup_readiness_projection()
+
+    monkeypatch.setattr(aeat_auth_client, "Path", _RecordedPath)
+    monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
+    monkeypatch.setattr(aeat_auth_client, "read_sync_readiness", readiness)
+    door = AeatAuthClient(
+        client,
+        overview=lambda: auth_setup_overview_projection({}, 1),
+        persist=lambda *_args: pytest.fail("no profile fact changes"),
+        pin=lambda: None,
+    )
+
+    await door.save(AuthProviderKind.CERTIFICATE, ClaveMovilRoute.APP_REQUEST, {}, str(certificate), None)
+
+    assert resolution_threads
+    assert threading.get_ident() not in resolution_threads
+    assert [request.certificate_path for request in configured] == [certificate.resolve()]

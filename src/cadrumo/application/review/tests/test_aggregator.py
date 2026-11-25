@@ -9,7 +9,6 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -28,14 +27,13 @@ from ....domain.filing.schema import (
     registry_schema_version,
 )
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.schema import InvoiceKind
+from ....domain.invoices.tests.catalogue_support import consulting_invoice
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...filing.draft_review_ports import DraftReviewPorts
-from .._aggregator import ReviewQueue
+from ..aggregator import ReviewQueue
 from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .draft_review_test_support import draft_review_ports
 
@@ -57,12 +55,7 @@ def _schema_version(modelo: str = "130") -> str:
 
 
 def _build_settings(tmp_path: Path) -> Settings:
-    return Settings(
-        cadrumo_financial_txs_dir=tmp_path / "transactions",
-        cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_attachments_dir=tmp_path / "attachments",
-        cadrumo_drafts_dir=tmp_path / "probe-drafts",
-    )
+    return Settings(cadrumo_storage_root=tmp_path)
 
 
 def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
@@ -91,31 +84,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    line = InvoiceLine(
-        description="Consultoría",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
-        iva_amount=Decimal("21.00"),
-    )
-    invoice = Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-        },
-    )
+    invoice = consulting_invoice(payment_status=PaymentStatus.PENDING)
     invoice_catalogue = build_invoice_catalogue((invoice,))
 
     finding = ModeloValidationFinding(

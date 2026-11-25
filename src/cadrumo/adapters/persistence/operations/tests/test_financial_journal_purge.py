@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
+from .....application.operations.persistence.leases import operation_conflict_scope_reference
 from .....core.json_shapes import model_json_object
+from .....core.locks import exclusive_file_lock
 from ...storage.errors import RepositoryError
-from ..financial_journal_purge import FinancialEditJournalPurgeRefusedError
+from .. import journal as journal_module
+from ..financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from ..journal import OperationJournalRepository
-from .test_journal import _snapshot
+from ..journal_validation import OperationJournalRecord
+from .test_journal import claim_lease, journal_lease, journal_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SENTINEL = "93847562.19"
@@ -21,7 +27,7 @@ _SENTINEL = "93847562.19"
 def _write_legacy(
     tmp_path: Path, *, policy: str, schema: int | None = None, definition: str = "modelo.edit.apply"
 ) -> tuple[OperationJournalRepository, Path]:
-    snapshot = model_json_object(_snapshot(revision=0, sequence=1))
+    snapshot = model_json_object(journal_snapshot(revision=0, sequence=1))
     identity = snapshot["identity"]
     assert isinstance(identity, dict)
     identity["definition_id"] = definition
@@ -46,7 +52,7 @@ def _write_legacy(
     return OperationJournalRepository(storage_root=tmp_path), path
 
 
-@pytest.mark.parametrize("reader", ("load", "replay", "observation", "inventory"))
+@pytest.mark.parametrize("reader", ("load", "replay", "observation", "inventory", "full_inventory"))
 @pytest.mark.parametrize("policy", ("credential_free_journal", "secure_reference"))
 @pytest.mark.parametrize("definition", ("modelo.edit.apply", "modelo.edit.preflight"))
 def test_every_read_surface_purges_before_returning_any_operation_fact(
@@ -63,8 +69,10 @@ def test_every_read_surface_purges_before_returning_any_operation_fact(
             await repository.read_after("a" * 64, 0, limit=10)
         elif reader == "observation":
             await repository.read_observation("a" * 64, 0, limit=10)
-        else:
+        elif reader == "inventory":
             await repository.inventory_page(after=None, limit=10)
+        else:
+            await repository.inventory_delta(known=frozenset())
 
     asyncio.run(read())
     purged = path.read_bytes()
@@ -139,14 +147,65 @@ def test_successor_amount_free_request_is_unchanged(tmp_path: Path) -> None:
     assert path.read_bytes() == original
 
 
+def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A replacement derived from captured legacy bytes cannot restore an old revision."""
+    repository, path = _write_legacy(tmp_path, policy="credential_free_journal")
+    replacement = purge_legacy_financial_edit_journal(path.read_text(encoding="utf-8"), operation_id="a" * 64)
+    assert replacement is not None
+    initial = OperationJournalRecord.model_validate_json(replacement).snapshot
+    template = journal_snapshot(revision=1, sequence=2)
+    event = template.events[0].model_copy(update={"identity": initial.identity})
+    successor = initial.model_copy(
+        update={
+            "revision": template.revision,
+            "updated_at": template.updated_at,
+            "event_cursor": template.event_cursor,
+            "phase_code": template.phase_code,
+            "events": (event,),
+        }
+    )
+    lease = journal_lease().model_copy(
+        update={
+            "scope_ref": operation_conflict_scope_reference(
+                definition_id=initial.identity.definition_id, subject_ref=initial.identity.subject_ref
+            )
+        }
+    )
+    entered, release = threading.Event(), threading.Event()
+    original_purge = journal_module.purge_legacy_financial_edit_journal
+
+    def paused_purge(raw: str, *, operation_id: str) -> str | None:
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(10), "reader was not released"
+        return original_purge(raw, operation_id=operation_id)
+
+    monkeypatch.setattr(journal_module, "purge_legacy_financial_edit_journal", paused_purge)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(repository.load(initial.operation_id)))
+        try:
+            assert entered.wait(10), "reader never reached purge analysis"
+            with exclusive_file_lock(repository._repository.lock_target, timeout=0):
+                pass
+            claim_lease(tmp_path, lease)
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=lease))
+        finally:
+            release.set()
+        assert reading.result(timeout=10) in (initial, successor)
+    assert asyncio.run(repository.load(initial.operation_id)) == successor
+    assert _SENTINEL.encode() not in path.read_bytes()
+
+
 def test_purge_preserves_an_already_committed_terminal_outcome(tmp_path: Path) -> None:
     """Settled identity, effect and receipt remain authoritative after operand disposal."""
-    from .test_journal import _terminal_event
+    from .test_journal import terminal_event
 
     repository, path = _write_legacy(tmp_path, policy="credential_free_journal")
     document = json.loads(path.read_text(encoding="utf-8"))
     identity = document["snapshot"]["identity"]
-    terminal = model_json_object(_terminal_event())
+    terminal = model_json_object(terminal_event())
     terminal["identity"] = identity
     receipt = terminal["receipt"]
     assert isinstance(receipt, dict)

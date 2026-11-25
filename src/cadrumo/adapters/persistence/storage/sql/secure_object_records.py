@@ -7,13 +7,18 @@ policy can enforce the expected storage classification.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from .....core.classification.policies import SensitivityClass
 from .....core.identity.digest import ContentDigest
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
+
+_HASHED_KEY_BYTES = hashlib.sha256().digest_size
+"""The size of the keyed natural-identifier hash a secure object is stored under."""
 
 # Every digest-shaped column below is written by ``core.hashing.sha256_hex``
 # (directly, or via ``derive_revision_id``), so the canonical
@@ -25,7 +30,7 @@ from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 class SecureObjectRecord(BaseModel):
     """One decrypted sensitive object loaded from the SQL backend."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: bytes
@@ -39,23 +44,13 @@ class SecureObjectRecord(BaseModel):
 class SecureObjectMetadata(BaseModel):
     """Row-level metadata for one stored secure object, decryption-free."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
     written_at: datetime
     byte_length: NonNegativeInt
-
-
-class SecureObjectRevisionAssertion(BaseModel):
-    """Read-only source revision required by a derived-data write transaction."""
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    object_key: str = Field(min_length=1)
-    expected_revision_id: ContentDigest
 
 
 class SecureObjectDeletion(BaseModel):
@@ -68,24 +63,39 @@ class SecureObjectDeletion(BaseModel):
     recoverable only by decrypting each payload). The 32-byte digest passes
     straight through the ``HashedLookup`` column comparison without re-hashing,
     the same convention
-    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
+    :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`
     and
     :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.exists_by_raw_key`
     use.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
-    hashed_object_key: bytes = Field(min_length=32, max_length=32)
+    hashed_object_key: bytes = Field(min_length=_HASHED_KEY_BYTES, max_length=_HASHED_KEY_BYTES)
     expected_revision_id: ContentDigest | None = None
     """Optional opened-baseline guard for a record removed by an identity edit."""
 
 
-class SecureObjectUnreadable(BaseModel):
-    """One stored secure object that cannot be decrypted under the current master key."""
+class SecureObjectUnreadableKind(StrEnum):
+    """Why a stored secure object has no reader, as far as the scan can tell without decrypting it."""
 
-    model_config = _STRICT_FROZEN
+    OUTDATED_SCHEMA = "outdated_schema"
+    """The row was stored under an older schema version this build has no reader for; it was never opened."""
+
+    OTHER = "other"
+    """Any other refusal: classification, newer schema, lineage, decryption or upgrade failure."""
+
+
+class SecureObjectUnreadable(BaseModel):
+    """One stored secure object that cannot be decrypted under the current master key.
+
+    ``kind`` separates a row refused only because its storage schema is older
+    than any reader from every other refusal, so a consumer that tolerates the
+    former never tolerates a tampered or mismatched row.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     row_id: NonNegativeInt
@@ -94,6 +104,7 @@ class SecureObjectUnreadable(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     reason: str = Field(min_length=1)
+    kind: SecureObjectUnreadableKind = SecureObjectUnreadableKind.OTHER
 
 
 # Shared readable/unreadable outcome for namespace scans and targeted batch reads.
@@ -104,7 +115,7 @@ SecureObjectListItem = SecureObjectBatchLoadItem
 class SecureObjectRawRow(BaseModel):
     """One stored row surfaced without classification / version validation or decryption."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     row_id: NonNegativeInt
     namespace: str = Field(min_length=1)
@@ -127,7 +138,7 @@ class SecureObjectRawRow(BaseModel):
 class SecureObjectNamespaceIntegrity(BaseModel):
     """Per-namespace decryptability counts for the integrity diagnostic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     readable: NonNegativeInt
@@ -137,7 +148,7 @@ class SecureObjectNamespaceIntegrity(BaseModel):
 class SecureObjectDecryptabilityRow(BaseModel):
     """Row-level decryptability metadata without plaintext payload disclosure."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     row_id: NonNegativeInt

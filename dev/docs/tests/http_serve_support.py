@@ -1,0 +1,91 @@
+"""Shared ephemeral-port HTTP server for the browser-driven docs gates.
+
+Underscore-prefixed so it is never collected as a test module. Every gate that
+drives a real browser against a built docs tree needs the same throwaway
+static-file server; this is the one definition, consolidated from five
+byte-identical copies that had drifted apart only in name.
+"""
+
+from __future__ import annotations
+
+import http.server
+import socketserver
+import threading
+from collections.abc import Generator
+from contextlib import contextmanager
+from functools import partial
+from importlib import import_module
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from playwright.sync_api import Page
+
+
+_EMPTY_SCRIPT = "/* MathJax is not loaded by the docs browser gates. */"
+
+
+def serve_built_page_assets_locally(page: Page) -> None:
+    """Answer the built pages' one off-host asset, the MathJax CDN script, with an empty script.
+
+    A built docs page loads MathJax from Sphinx's default CDN address. No gate
+    renders math, and a test must not leave this machine, so the request is
+    fulfilled in the browser before it is sent. Any other off-host request still
+    reaches the browser's network stack, where the test network guard refuses it.
+    """
+    # Sphinx's extension modules expect its application package to be loaded first.
+    import_module("sphinx.application")
+    mathjax_url: str = import_module("sphinx.ext.mathjax").MATHJAX_URL
+    page.route(
+        mathjax_url,
+        lambda route: route.fulfill(status=200, content_type="application/javascript", body=_EMPTY_SCRIPT),
+    )
+
+
+class _ConcurrentHTTPServer(socketserver.ThreadingTCPServer):
+    """A static server that answers overlapping requests instead of queueing them.
+
+    Concurrency is load-bearing here, not a nicety. Pagefind's search worker
+    fetches its metadata, wasm, index chunks and result fragments in parallel,
+    and the browser holds several connections open to do it. A serial
+    ``TCPServer`` accepts one of them and leaves the rest in the listen backlog
+    until the in-flight response completes; the browser gives up on the queued
+    connections and the worker surfaces the failure as a bare ``Failed to
+    fetch``, which reads like a defect in the built index rather than in the
+    fixture serving it.
+
+    ``daemon_threads`` keeps a wedged request handler from outliving the test,
+    and ``block_on_close`` stays at its threading default so shutdown still
+    joins live handlers.
+
+    ``request_queue_size`` is raised above the socketserver default of 5. A
+    browser opening a burst of connections while the machine is saturated by
+    parallel test workers overflows a backlog that small, and Windows then
+    refuses the connection (``ECONNREFUSED``) from a server that is listening.
+    """
+
+    daemon_threads = True
+    allow_reuse_address = True
+    request_queue_size = 128
+
+
+@contextmanager
+def serve_directory(directory: Path) -> Generator[tuple[socketserver.TCPServer, int]]:
+    """Serve ``directory`` over HTTP on an ephemeral loopback port.
+
+    Yields the running server and the port it bound. The server always shuts
+    down cleanly on exit -- including on an exception inside the ``with``
+    block -- by stopping the serve loop, closing the listening socket, and
+    joining the serving thread, so no server thread or socket outlives a test.
+    """
+    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
+    httpd = _ConcurrentHTTPServer(("127.0.0.1", 0), handler)
+    port = httpd.server_address[1]
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield httpd, port
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=5)

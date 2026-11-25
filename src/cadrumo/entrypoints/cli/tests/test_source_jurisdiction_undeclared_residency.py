@@ -28,7 +28,7 @@ from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IrpfSpecialRegime
 
 from ....application.ledger.source_jurisdiction import OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
-from .._ledger_support import _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS, resolve_source_jurisdiction
+from ..ledger_support import SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS, resolve_source_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -119,7 +119,7 @@ def test_every_obligation_the_rule_can_raise_has_a_sentence_here() -> None:
     unworded = [
         outcome
         for outcome in OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
-        if outcome not in _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS
+        if outcome not in SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS
     ]
 
     assert not unworded, f"no refusal wording for: {[outcome.value for outcome in unworded]}"
@@ -127,7 +127,7 @@ def test_every_obligation_the_rule_can_raise_has_a_sentence_here() -> None:
 
 def test_no_wording_is_kept_for_an_outcome_that_does_not_oblige_one() -> None:
     """The other direction: a sentence nobody can reach is a sentence that misleads."""
-    assert frozenset(_SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS) == OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
+    assert frozenset(SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS) == OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
@@ -138,7 +138,7 @@ def test_each_refusal_is_worded_in_this_locale(locale: str) -> None:
 
     missing = [
         key
-        for key in _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS.values()
+        for key in SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS.values()
         if not str(add.get(key.rsplit(".", 1)[-1], "")).strip()
     ]
 

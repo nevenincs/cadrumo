@@ -1,6 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
-import { aeatSetupProfile } from "./aeatSetupLink";
+import { isCadrumoLink } from "../../shell/navigation/links";
 
 // The agent writes Markdown. This reads the part of it a reply uses (the
 // CommonMark blocks, GitHub's tables and strikethrough, and bare addresses)
@@ -240,7 +240,7 @@ function parseList(
 
 /** The addresses a reply may open: those the host opens outside the window. */
 const OPENABLE = /^(?:https:\/\/[^\s/?#@]+[^\s]*|mailto:[^\s]+)$/i;
-const BARE_URL = /https:\/\/[^\s<>"'`]+/y;
+const BARE_URL = /(?:https|cadrumo):\/\/[^\s<>"'`]+/y;
 const PUNCTUATION = /[\\!"#$%&'()*+,\-./:;<=>?@[\]^_`{|}~]/;
 
 /** A bare address without the punctuation that closes the sentence around
@@ -339,8 +339,9 @@ function Link({
   children: ReactNode;
 }) {
   // An address the host would refuse is not a door that does not open: its
-  // words stay, and the address is there to read.
-  if (!OPENABLE.test(url) && !aeatSetupProfile(url))
+  // words stay, and the address is there to read. A `cadrumo:` link is the
+  // window's own and always opens, or says why it cannot.
+  if (!OPENABLE.test(url) && !isCadrumoLink(url))
     return <span title={url}>{children}</span>;
   return (
     <a
@@ -430,7 +431,9 @@ function inline(text: string, onOpenLink: OpenLink | undefined): ReactNode[] {
       }
     }
     if (char === "<") {
-      const auto = /^<((?:https:\/\/|mailto:)[^\s<>]+)>/i.exec(text.slice(at));
+      const auto = /^<((?:https:\/\/|cadrumo:\/\/|mailto:)[^\s<>]+)>/i.exec(
+        text.slice(at),
+      );
       if (auto?.[1]) {
         push(
           <Link url={auto[1]} onOpenLink={onOpenLink}>
@@ -441,7 +444,7 @@ function inline(text: string, onOpenLink: OpenLink | undefined): ReactNode[] {
         continue;
       }
     }
-    if (char === "h" && !/[\p{L}\p{N}]/u.test(previous)) {
+    if ((char === "h" || char === "c") && !/[\p{L}\p{N}]/u.test(previous)) {
       BARE_URL.lastIndex = at;
       const bare = BARE_URL.exec(text);
       if (bare) {

@@ -3,12 +3,11 @@
 The fail-closed promise is a chain of two halves. The near half resolves
 what the profile expects and is covered by
 ``test_clave_credential_resolution``. The far half - comparing that
-expectation against the identity the bound session actually carries -
-had four production call sites and no test at all, so the expectation was
-proven POPULATED while nothing proved the comparison REFUSES.
+expectation against the identity the bound session actually carries - is
+what this module tests: a populated expectation proves nothing until the
+comparison is shown to refuse.
 
-That is the same shape as the defect the near half was written for: a
-populated-looking expectation that nothing compares makes the downstream
+A populated-looking expectation that nothing compares makes the downstream
 check pass silently rather than skip loudly.
 
 It matters most for the certificate provider. A certificate carries no
@@ -42,7 +41,7 @@ from ..session_types import AeatSession, CertificateSessionDetail, ClaveMovilSes
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
-    _assert_session_identity_matches_expected,
+    assert_session_identity_matches_expected,
     resolve_clave_credentials,
 )
 from .leased_profile_authority import leased_profile_decode_context
@@ -50,10 +49,10 @@ from .leased_profile_authority import leased_profile_decode_context
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TAX_ID = "12345678Z"
-_OTHER_TAX_ID = "00000001R"
+_OTHER_TAX_ID = "00001005Q"
 
 _LIVE_SESSION_RETURN_TYPES = ("AeatSession", "AuthenticatedAeatSessionResult")
-_GUARD = "_assert_session_identity_matches_expected"
+_GUARD = "assert_session_identity_matches_expected"
 
 
 def _clave_session(identity_nif: str) -> AeatSession:
@@ -91,7 +90,6 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
     """
     facts = ClaveAuthFacts(
         tax_id=_TAX_ID,
-        dni_nie=_TAX_ID,
         clave_movil_route=ClaveMovilRoute.QR,
     )
     with override_settings(
@@ -101,7 +99,7 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
         credentials = resolve_clave_credentials(kind, settings=settings, facts=facts)
     if credentials is None:
         return facts.tax_id or None
-    return sessions._assert_active_profile_identity_matches_provider(
+    return sessions.assert_active_profile_identity_matches_provider(
         credentials, profile_decode_context=leased_profile_decode_context()
     )
 
@@ -118,7 +116,7 @@ def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
     assert expected_identity == _TAX_ID
 
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_session_identity_matches_expected(_clave_session(_OTHER_TAX_ID).identity_nif, expected_identity)
+        assert_session_identity_matches_expected(_clave_session(_OTHER_TAX_ID).identity_nif, expected_identity)
 
 
 def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
@@ -134,7 +132,7 @@ def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
     assert expected_identity == _TAX_ID
 
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_session_identity_matches_expected(
+        assert_session_identity_matches_expected(
             _certificate_session(_OTHER_TAX_ID).identity_nif,
             expected_identity,
         )
@@ -150,8 +148,8 @@ def test_the_taxpayers_own_session_is_accepted() -> None:
 
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
-    _assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
-    _assert_session_identity_matches_expected(_certificate_session(_TAX_ID).identity_nif, expected_identity)
+    assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
+    assert_session_identity_matches_expected(_certificate_session(_TAX_ID).identity_nif, expected_identity)
 
 
 def test_the_comparison_normalises_before_it_refuses() -> None:
@@ -165,7 +163,7 @@ def test_the_comparison_normalises_before_it_refuses() -> None:
 
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
-    _assert_session_identity_matches_expected(
+    assert_session_identity_matches_expected(
         _clave_session(f"  {_TAX_ID.lower()}  ").identity_nif,
         expected_identity,
     )
@@ -187,16 +185,14 @@ def test_a_profile_without_a_fiscal_id_has_nothing_to_compare() -> None:
     """
 
     session_identity = _clave_session(_OTHER_TAX_ID).identity_nif
-    _assert_session_identity_matches_expected(session_identity, "")
-    _assert_session_identity_matches_expected(session_identity, None)
+    assert_session_identity_matches_expected(session_identity, "")
+    assert_session_identity_matches_expected(session_identity, None)
 
 
 def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
     """Behavioural cover alone would not notice a call site vanishing.
 
-    The original defect was not a wrong comparison but an absent one, and
-    every test above would stay green if the call sites were deleted. So
-    this asserts the wiring, and it asserts it per RETURN rather than per
+    This asserts the wiring, and it asserts it per RETURN rather than per
     function: a writer with four guarded returns that grows an unguarded
     fifth is the exact shape being defended against, and a
     does-this-function-mention-the-guard check would call that green.
@@ -279,14 +275,13 @@ def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
 class TestClaveIdentityIsComparedCanonically:
     """The Cl@ve ownership guard compares taxpayers, not strings.
 
-    ``profile_tax_id`` and ``dni_nie`` are unconstrained ``str`` fields, and the
-    guard compared them with a bare ``!=``. That was wrong in two opposite
-    directions at once: a case or check-digit mismatch could wrongly deny a
-    genuine match, and a spurious byte-for-byte match on malformed input could
-    wrongly grant one — a hazard the censal-autofill safety argument depends on
+    ``profile_tax_id`` and ``dni_nie`` are unconstrained ``str`` fields, so a
+    bare ``!=`` comparison is wrong in two opposite directions at once: a case
+    or check-digit mismatch could wrongly deny a genuine match, and a spurious
+    byte-for-byte match on malformed input could wrongly grant one — a hazard the censal-autofill safety argument depends on
     this guard closing.
 
-    Both sides now go through :func:`validate_runtime_spanish_tax_id`, the same
+    Both sides go through :func:`validate_runtime_spanish_tax_id`, the same
     authority the censal-read ownership guard uses for the same question.
     """
 
@@ -302,9 +297,9 @@ class TestClaveIdentityIsComparedCanonically:
         )
 
     def _assert_guard(self, *, profile_tax_id: str, dni_nie: str):
-        from ..sessions import _assert_active_profile_identity_matches_provider
+        from ..sessions import assert_active_profile_identity_matches_provider
 
-        return _assert_active_profile_identity_matches_provider(
+        return assert_active_profile_identity_matches_provider(
             self._credentials(profile_tax_id=profile_tax_id, dni_nie=dni_nie),
             profile_decode_context=leased_profile_decode_context(),
         )
@@ -314,11 +309,7 @@ class TestClaveIdentityIsComparedCanonically:
         ["12345678-Z", "12345678 Z", "12345678z", " 12345678Z ", "12345678.Z", "ES12345678Z"],
     )
     def test_punctuation_variants_of_one_identity_are_accepted(self, spelling: str) -> None:
-        """The false-REFUSE direction: one taxpayer written two ways is one taxpayer.
-
-        A bare ``!=`` locked a legitimate operator out of their own Cl@ve
-        session purely over formatting.
-        """
+        """The false-REFUSE direction: one taxpayer written two ways is one taxpayer."""
         assert self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie=spelling) == spelling
         assert self._assert_guard(profile_tax_id=spelling, dni_nie=self._CANONICAL) == self._CANONICAL
 
@@ -326,9 +317,8 @@ class TestClaveIdentityIsComparedCanonically:
     def test_equal_but_malformed_values_are_refused(self, malformed: str) -> None:
         """The false-CONFIRM direction, and the one that matters for safety.
 
-        Two equal non-empty junk values passed the bare ``!=`` and CONFIRMED
-        ownership that was never established. A value that is not a valid
-        identifier cannot be shown to belong to the profile at all.
+        A value that is not a valid identifier cannot be shown to belong to
+        the profile at all.
         """
         with pytest.raises(AuthProfileIdentityMismatchError):
             self._assert_guard(profile_tax_id=malformed, dni_nie=malformed)
@@ -336,7 +326,7 @@ class TestClaveIdentityIsComparedCanonically:
     def test_a_genuine_mismatch_is_still_refused(self) -> None:
         """Anti-tautology: normalisation must not make the guard permissive."""
         with pytest.raises(AuthProfileIdentityMismatchError):
-            self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie="00000001R")
+            self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie="00001005Q")
 
     def test_a_matching_canonical_pair_is_accepted(self) -> None:
         """Anti-tautology: the guard must not simply refuse everything."""
@@ -349,11 +339,11 @@ class TestClaveIdentityIsComparedCanonically:
         )
 
     def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
-        """The pre-existing empty-value contract is unchanged by the normalisation."""
-        from ..sessions import _assert_active_profile_identity_matches_provider
+        """An absent credential admits; a blank profile identity is refused."""
+        from ..sessions import assert_active_profile_identity_matches_provider
 
         assert (
-            _assert_active_profile_identity_matches_provider(
+            assert_active_profile_identity_matches_provider(
                 None, profile_decode_context=leased_profile_decode_context()
             )
             is None
@@ -365,10 +355,10 @@ class TestClaveIdentityIsComparedCanonically:
         """One authority for this question, not a second local normaliser.
 
         A hand-rolled strip-and-upper would pass the punctuation cases above
-        while silently re-admitting the malformed-pair hole, so the source is
-        pinned to the shared validator.
+        while silently admitting malformed pairs, so the source is pinned to the
+        shared validator.
         """
-        source = inspect.getsource(sessions._assert_active_profile_identity_matches_provider)
+        source = inspect.getsource(sessions.assert_active_profile_identity_matches_provider)
 
         assert "validate_runtime_spanish_tax_id" in source
         assert ".upper()" not in source, "a local normaliser would diverge from the canonical form"

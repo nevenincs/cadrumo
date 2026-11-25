@@ -3,15 +3,16 @@
 The prior-year generated negative base liquidable general (1391) is copied to
 the next filing's Anexo C opening balance (1388). Its current-year applied
 amount (1389) computes the Form 100 compensation line (0501), which the base
-liquidable general formula (0500) subtracts. Art. 50.3 supplies the four-year
+liquidable general sometida a gravamen (0505) subtracts from the base
+liquidable general (0500). Art. 50.3 supplies the four-year
 carry rule and requires compensation against positive base liquidable general.
 
 Art. 48 is separate: its 25-percent rule governs the base imponible general
 integration of gains and losses (0432/0433). It does not govern the 1391 →
 1388 → 1389 → 0501 carry, and 1389 must not alter 0435.
 
-The live differential asserts that applying an Anexo C amount reduces 0501 and
-0500 by that amount while leaving 0435 unchanged; it derives the expected
+The live differential asserts that applying an Anexo C amount raises 0501 and
+lowers 0505 by that amount while leaving 0435 and 0500 unchanged; it derives the expected
 relationship from the independently stated statutory base sequence, without
 reimplementing the registry formulas.
 """
@@ -24,19 +25,22 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -44,22 +48,24 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_PENDING_SAVINGS_BALANCES
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_work_lifecycle_ports
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .observation_seeding_support import save_stamped_observation
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
 _GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
 _SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
-_APLICADA_MAXIMA_FORMULA_ID = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
+_APLICADA_MAXIMA_FORMULA_ID = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
 _COMPENSACION_TOTAL_FORMULA_ID = "renta-base-liquidable-negativa-general-compensacion-total"
 _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 
@@ -74,88 +80,88 @@ _FILING_YEAR = 2025
 _PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")  # opening pending (bound from prior 1391)
 _APLICADO: CasillaId = validated_casilla_id("1389")  # Anexo C applied amount
 _PENDIENTE_FIN: CasillaId = validated_casilla_id("1390")  # remainder rolled forward = 1388 − 1389
-_APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-2024-aplicada-maxima")  # Art. 50.3 ceiling
+_APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-em1-aplicada-maxima")  # Art. 50.3 ceiling
 _BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435")
 _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500")
+_BASE_LIQUIDABLE_SOMETIDA: CasillaId = validated_casilla_id("0505")
 _PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = validated_casilla_id("1391")
+#: The prior return's remainders that open the three older Anexo C rows (1380, 1382, 1385).
+_PRIOR_OLDER_REMAINDERS: tuple[CasillaId, ...] = tuple(validated_casilla_id(box) for box in ("1384", "1387", "1390"))
 
-#: Trabajo income leaf (Retribuciones dinerarias, importe íntegro) — a manual
-#: input that produces a positive base liquidable general before the Art. 50.3 carry.
-_TRABAJO_INGRESO: CasillaId = validated_casilla_id("0003")
+_TAXPAYER_TAX_ID = "12345678Z"
 
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_taxpayer_unit_profile() -> None:
-    """Seed a single-taxpayer profile so the profile-sourced bindings resolve."""
-    record = _create_profile_record_for_test(
+def _seed_taxpayer_unit_profile(*, work_income: Decimal) -> None:
+    """Seed a single-taxpayer profile so the profile-sourced bindings resolve, with one payer certificate.
+
+    The certificate states the trabajo income (Retribuciones dinerarias, importe íntegro): it produces
+    a positive base liquidable general before the Art. 50.3 carry.
+    """
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                # A salaried taxpayer: the work income below is this unit's only income.
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            ),
+            without=("irpf.estimation_regime", "activities.", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
+    with bundled_indexed_authority().operation() as operation:
+        record_work_income(
+            operation=operation, taxpayer_tax_id=_TAXPAYER_TAX_ID, filing_year=_FILING_YEAR, gross=work_income
+        )
 
 
 def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record the prior-year (2024) generated negative general base (casilla 1391).
 
     The ``previous_filing`` carry binding resolves this into the current year's
-    opening pending (casilla 1388).
+    opening pending (casilla 1388). The prior return carries no older remainder.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=_FILING_YEAR - 1,
-                period=_PERIOD,
-                casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(
-                registry_grounded_modelo_observation(
-                    modelo=_MODELO,
-                    filing_year=_FILING_YEAR - 1,
-                    period=_PERIOD,
-                    casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-                )
-            ),
-        )
+    save_stamped_observation(
+        obs_repo,
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=_FILING_YEAR - 1,
+            period=_PERIOD,
+            casilla_values={
+                _PRIOR_NEGATIVE_BASE_CASILLA: saldo,
+                **dict.fromkeys(_PRIOR_OLDER_REMAINDERS, Decimal("0")),
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
     )
 
 
+_PRIOR_NEGATIVE_BASE_BINDINGS: tuple[BindingId, ...] = (
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-anterior",
+)
+
+
 def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
-    binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"}
+    binding_values = {
+        binding.id: Decimal("0")
+        for binding in snapshot.revision.bindings
+        if binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind not in {"retencion_soportada", "previous_filing"}
+    }
     relation_values = {
         binding.id: Decimal("0")
         for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -163,20 +169,24 @@ def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decima
     return binding_values, relation_values
 
 
-def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: CalculationObservationRepository):
-    """Run the REAL M100 ``calculate_modelo_revision`` for filing year 2025."""
-    snapshot = _snapshot()
-    from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
+def _calculate(
+    *,
+    casilla_inputs: dict[CasillaId, Decimal],
+    obs_repo: CalculationObservationRepository,
+    binding_overrides: dict[BindingId, Decimal] | None = None,
+):
+    """Run the bucket M100 calculation for filing year 2025.
 
+    The bucket resolves the prior-year carry from the observation store in
+    ``obs_repo``; the caller supplies the operator-owned zeros and any
+    ``binding_overrides``.
+    """
+    snapshot = _snapshot()
     with bundled_indexed_authority().operation() as operation:
-        carry = resolve_bindings_from_local_store(
-            snapshot,
-            repository=obs_repo,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-            operation=operation,
-        ).binding_values
         binding_values, relation_values = _zeroed_channels(snapshot)
-        binding_values.update(carry)
+        # The negative savings balances (art. 49.2), which this chain does not read, hold nothing pending.
+        binding_values.update(M100_NO_PENDING_SAVINGS_BALANCES)
+        binding_values.update(binding_overrides or {})
 
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
@@ -197,7 +207,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_198:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor=_BUCKET_ID,
                 casilla_inputs=casilla_inputs,
@@ -205,7 +215,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
                 relation_values=relation_values,
                 ports=_calculation_ports_198,
                 clock=_CLOCK,
-            )
+            ).revision
     return revision
 
 
@@ -236,11 +246,14 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
         opening_pending.legal_refs,
         compensation.legal_refs,
         casilla.legal_refs,
-        construct.legal_refs,
     ):
         assert _BASE_LIQUIDABLE_ART_50_REF in refs
         assert _GENERAL_BASE_ART_48_REF not in refs
         assert _SAVINGS_BASE_ART_49_REF not in refs
+    # The construct also holds the previous-return dependency, which carries the art. 49.2 negative
+    # savings balances as well, so it includes that member's citation; the general base itself cites art. 50.
+    assert _BASE_LIQUIDABLE_ART_50_REF in construct.legal_refs
+    assert _GENERAL_BASE_ART_48_REF not in construct.legal_refs
 
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
@@ -258,12 +271,12 @@ def test_opening_and_applied_base_liquidable_casillas_cite_art50(filing_year: in
 
 
 def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(tmp_path: Path) -> None:
-    """An Anexo C applied amount reduces 0501 and 0500, not the Art. 48 base.
+    """An Anexo C applied amount reduces 0505 through 0501, not 0500 or the Art. 48 base.
 
     Two real calculations share every input except the applied amount 1389:
-    the baseline applies zero and the compensated run applies A. Art. 50.3
-    makes 0501 the base-liquidation compensation, so 0501 and 0500 change by
-    A while 0435 remains the unchanged Art. 48 base-imponible result.
+    the baseline applies zero and the compensated run applies A. The design
+    applies 0501 "si la casilla [0500] es positiva", so 0500 is the base before
+    the compensation, 0505 drops by A and 0435 remains the Art. 48 result.
     """
     ingreso = Decimal("40000.00")
     prior_negative = Decimal("3000.00")
@@ -271,15 +284,15 @@ def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        _seed_taxpayer_unit_profile(work_income=ingreso)
         _seed_prior_negative_base(saldo=prior_negative, obs_repo=obs_repo)
 
         baseline = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
+            casilla_inputs={_APLICADO: Decimal("0")},
             obs_repo=obs_repo,
         )
         compensated = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: applied},
+            casilla_inputs={_APLICADO: applied},
             obs_repo=obs_repo,
         )
 
@@ -287,14 +300,17 @@ def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(
     assert _v(baseline, _PENDIENTE_INICIO) == prior_negative
     assert _v(compensated, _PENDIENTE_INICIO) == prior_negative
 
-    # Art. 50.3 consumption: 0501 and base liquidable general drop by the
-    # applied amount, while the Art. 48 base imponible general stays fixed.
+    # Art. 50.3 consumption: the base sometida a gravamen drops by the applied
+    # amount, while the base liquidable general before it and the Art. 48 base
+    # imponible general stay fixed.
     base_liq_drop = _v(baseline, _BASE_LIQUIDABLE_GENERAL) - _v(compensated, _BASE_LIQUIDABLE_GENERAL)
+    base_sometida_drop = _v(baseline, _BASE_LIQUIDABLE_SOMETIDA) - _v(compensated, _BASE_LIQUIDABLE_SOMETIDA)
     base_imp_drop = _v(baseline, _BASE_IMPONIBLE_GENERAL) - _v(compensated, _BASE_IMPONIBLE_GENERAL)
     assert _v(baseline, validated_casilla_id("0501")) == Decimal("0")
     assert _v(compensated, validated_casilla_id("0501")) == applied
     assert base_imp_drop == Decimal("0")
-    assert base_liq_drop == applied
+    assert base_liq_drop == Decimal("0")
+    assert base_sometida_drop == applied
 
     # Remainder rolls forward: 1390 = 1388 − 1389.
     assert _v(compensated, _PENDIENTE_FIN) == prior_negative - applied
@@ -315,11 +331,13 @@ def test_no_prior_negative_base_leaves_result_unchanged(tmp_path: Path) -> None:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
-        # No prior-year 1391 seeded → carry resolves to zero.
+        _seed_taxpayer_unit_profile(work_income=ingreso)
+        # No prior return is recorded, so each carry stays unresolved until the
+        # operator states every prior pending negative base was zero.
         result = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
+            casilla_inputs={_APLICADO: Decimal("0")},
             obs_repo=obs_repo,
+            binding_overrides=dict.fromkeys(_PRIOR_NEGATIVE_BASE_BINDINGS, Decimal("0")),
         )
 
     assert _v(result, _PENDIENTE_INICIO) == Decimal("0")

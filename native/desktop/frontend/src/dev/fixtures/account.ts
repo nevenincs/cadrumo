@@ -1,4 +1,4 @@
-import type { SignInRefusal, SignInStatus } from "../../ipc/contract";
+import type { SignInRefusal, SignInStatus } from "../../ipc/account";
 import { targetOf } from "../../shell/profiles";
 import {
   canSignIn,
@@ -35,6 +35,7 @@ export function accountFixture(
   const refusal = rest.refusal ?? status?.refusal ?? null;
   return {
     manager: null,
+    reconnecting: status?.reconnecting ?? null,
     recoveringServices: false,
     refusal,
     retrySeconds: 0,
@@ -45,6 +46,7 @@ export function accountFixture(
     startServices: async () => undefined,
     remaining: null,
     signOutFailure: null,
+    sessionEnded: () => false,
     createRefusal: null,
     createUnknown: null,
     creating: false,
@@ -60,6 +62,8 @@ export function accountFixture(
     choose: () => undefined,
     create: async () => false,
     submit: async () => undefined,
+    clearingSavedSignIn: false,
+    clearSavedSignIn: async () => false,
     signOut: async () => undefined,
     settle: () => undefined,
     recheck: async () => undefined,

@@ -15,10 +15,10 @@ from ..financial_operand_contract import (
 from .financial_operand_models import (
     FinancialOperandBaseline,
     FinancialOperandBatch,
-    _baseline,
-    _baseline_reference,
-    _no_receipt,
+    baseline,
+    baseline_reference,
     financial_operand_declaration,
+    no_receipt,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -44,10 +44,10 @@ def test_mismatched_concrete_model_cannot_borrow_a_registered_schema_identity() 
             operand_schema=wrong,
             baseline_type=FinancialOperandBaseline,
             baseline_schema=declaration.baseline_schema,
-            baseline_accessor=_baseline,
-            baseline_reference=_baseline_reference,
+            baseline_accessor=baseline,
+            baseline_reference=baseline_reference,
             lifetime=timedelta(minutes=5),
-            effect_receipt_resolver=_no_receipt,
+            effect_receipt_resolver=no_receipt,
         )
 
 
@@ -67,7 +67,7 @@ def test_exact_production_batch_including_all_intent_families_has_a_model_identi
     }
 
 
-@pytest.mark.parametrize("lifetime", [0.0, -1.0, 1801.0, float("inf"), float("nan")])
+@pytest.mark.parametrize("lifetime", [0.0, -1.0, 2049.0, float("inf"), float("nan")])
 def test_published_financial_lifetime_is_positive_finite_and_bounded(lifetime: float) -> None:
     declaration = financial_operand_declaration()
     with pytest.raises(ValidationError):

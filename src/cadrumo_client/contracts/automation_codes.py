@@ -24,6 +24,17 @@ class AutomationCustodyCode(StrEnum):
     REQUESTER_DISCONNECTED = "requester_disconnected"
 
 
+class AutomationReviewRefusal(StrEnum):
+    """Why a command refused to act on an automation review or denial target, in ``error.context.reason``."""
+
+    REVIEW_NOT_FOUND = "review_not_found"
+    """No request under review for this profile has the identity the person named."""
+    REVIEW_DIGEST_MISMATCH = "review_digest_mismatch"
+    """The digest the person supplied is not the current review's, so the review changed or was misread."""
+    TARGET_MISMATCH = "target_mismatch"
+    """A key or grant denial lacks its identifier, or an all-automation denial carries one."""
+
+
 class AutomationCustodyError(CadrumoError):
     """Safe failure code with no native error or secret-bearing input."""
 

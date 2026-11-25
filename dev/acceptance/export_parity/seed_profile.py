@@ -10,7 +10,7 @@ from .scenario import (
     YEARS,
 )
 from .seed_contracts import (
-    _PROFILE,
+    PROFILE,
 )
 from .seed_state import SeedState
 
@@ -31,7 +31,7 @@ class ProfileSeedStage(SeedState):
                 "config",
                 "profile",
                 "edit",
-                _PROFILE,
+                PROFILE,
                 "--quiet",
                 "--accept-defaults",
                 "--pays-professionals-with-retencion",

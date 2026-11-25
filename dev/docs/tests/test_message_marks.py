@@ -342,8 +342,8 @@ def test_a_chrome_string_is_markup_of_the_page_it_is_resolved_for(tmp_path: Path
     """The generator knows the page; the resolver below it cannot, so it is declared."""
     from cadrumo.core.external_constants import OutputLanguage
 
-    from .._locale_chrome import docs_chrome, markup_page
     from ..compile_slots import activate, deactivate
+    from ..locale_chrome import docs_chrome, markup_page
 
     _page(tmp_path, "cli/index", suffix=".rst")
     slots = activate(_LANGUAGES)

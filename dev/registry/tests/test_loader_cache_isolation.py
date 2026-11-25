@@ -48,8 +48,8 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 from ..compiler.loader import (
     clear_registry_tree_cache,
@@ -61,13 +61,9 @@ from ..compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints,
 )
 from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text as _standard_manifest_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_fragmented_modelo as _write_fragmented_modelo,
+    standard_manifest_text,
+    standard_revision_preamble_text,
+    write_fragmented_modelo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -307,7 +303,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
     Regression proof for a real defect: an earlier version of
-    ``_isolate_registry_caches`` (``dev/registry/conftest.py``) purged EVERY
+    ``isolate_registry_caches`` (``dev/registry/conftest.py``) purged EVERY
     ``cadrumo_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
@@ -359,7 +355,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "# Re-exports the real session-scoped autouse cache-isolation fixture so this\n"
         "# out-of-tree scratch package, invoked as its own pytest session, is governed\n"
         "# by the identical fixture a real xdist worker's own src/cadrumo test file loads.\n"
-        "from dev.registry.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
+        "from dev.registry.conftest import isolate_registry_caches as isolate_registry_caches\n",
         encoding="utf-8",
     )
     scratch_module_path = scratch_pkg / "test_touch_bundled_registry.py"
@@ -475,14 +471,15 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     is the only thing loaded inside the block. The real filesystem and the real
     write path are still exercised; only the directory is test-owned.
     """
+    year = int(standard_revision_preamble_text().split('"')[1])  # the exercise the shared preamble declares
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     legal_dir.mkdir(parents=True)
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
+        f"[supported_filing_years]\nfloor = {year}\nhorizon = {year}\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        f'dispositions = [{{ year = {year}, status = "unpublished", '
+        f'official_locator = "https://example.com/manuals", observed_at = {year}-09-10, '
         "acquisition_condition_key = "
         '"application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
@@ -490,10 +487,10 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     )
     modelos_dir = registry_root / "modelos"
     modelos_dir.mkdir()
-    _write_fragmented_modelo(
+    write_fragmented_modelo(
         modelos_dir / "999",
-        manifest_text=_standard_manifest_text("Synthetic disk-cache isolation test"),
-        revisions={"2025": _standard_revision_preamble_text()},
+        manifest_text=standard_manifest_text("Synthetic disk-cache isolation test"),
+        revisions={str(year): standard_revision_preamble_text()},
     )
     assert is_bundled_registry_root(registry_root.resolve()) is False
 
@@ -506,7 +503,7 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
         modelos, catalogues = load_registry_tree(registry_root)
         assert {modelo.id for modelo in modelos} == {"999"}
         assert catalogues.supported_filing_years is not None
-        assert catalogues.supported_filing_years.years == (2025,)
+        assert catalogues.supported_filing_years.years == (year,)
 
         after = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert after == set(), (

@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`dev.sanitizer._dynamic` and ``_structtree``.
+"""Unit tests for :mod:`dev.sanitizer.dynamic` and ``_structtree``.
 
 Each surface is exercised in isolation against a synthesised PDF
 that pins the surface in question. The tests assert presence
@@ -13,7 +13,7 @@ import io
 import pikepdf
 import pytest
 
-from .._dynamic import (
+from ..dynamic import (
     strip_acroform,
     strip_annotations,
     strip_attachments,
@@ -23,7 +23,7 @@ from .._dynamic import (
     strip_page_labels,
     strip_thumbnails,
 )
-from .._structtree import drop_struct_tree
+from ..structtree import drop_struct_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -133,7 +133,7 @@ class TestStripAcroform:
 
     def test_clears_field_values_in_place(self) -> None:
         pdf = _new_one_page_pdf()
-        field = pikepdf.Dictionary(T="taxpayer_nif", V="Y1234567X", DV="Y1234567X")
+        field = pikepdf.Dictionary(T="taxpayer_nif", V="Y0001500L", DV="Y0001500L")
         pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([field]))
         result, warnings = strip_acroform(pdf)
         assert result.surface == "acroform_field_value"

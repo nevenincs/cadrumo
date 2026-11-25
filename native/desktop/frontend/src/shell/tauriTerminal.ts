@@ -1,14 +1,22 @@
-import { Channel, invoke } from "@tauri-apps/api/core";
+import { Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   TerminalFrameTag,
-  type HostFailure,
-  type ShellToken,
   type TerminalWriteBody,
   type TerminalWriteHeaders,
-  type TerminalTarget,
-} from "../ipc/contract";
-import type { TerminalEvent, TerminalSession } from "./host";
-import type { HostCall } from "./hostCall";
+  type TerminalKind,
+} from "../ipc/terminalFrames";
+import type { HostFailure, ShellToken } from "../ipc/contract";
+import {
+  CONSOLE_ENVIRONMENT_EVENT,
+  parseConsoleEnvironmentChange,
+} from "./consoleEnvironment";
+import type {
+  ConsoleEnvironmentChange,
+  TerminalEvent,
+  TerminalSession,
+} from "./host";
+import { observedInvoke, type HostCall } from "./hostCall";
 
 // One channel per session carries tagged frames in order: a tag byte, then
 // the payload. Data frames are the only bytes acknowledgements count.
@@ -62,7 +70,7 @@ const pause = (ms: number) =>
 export async function openTauriTerminal(
   token: ShellToken,
   call: HostCall,
-  kind: TerminalTarget,
+  kind: TerminalKind,
   size: { cols: number; rows: number },
   listener: (event: TerminalEvent) => void,
 ): Promise<TerminalSession> {
@@ -166,7 +174,7 @@ export async function openTauriTerminal(
       delay = Math.min(RETRY_MAX_MS, delay * 2)
     ) {
       try {
-        await invoke("terminal_write", chunk, { headers });
+        await observedInvoke(token, "terminal_write", chunk, { headers });
         return;
       } catch (error) {
         if (!isQueueFull(error)) throw error;
@@ -199,4 +207,15 @@ export async function openTauriTerminal(
       await call("terminal_close", { session: id });
     },
   };
+}
+
+/** Subscribes to the host's console environment event. A malformed payload
+ * is refused and reaches no listener. */
+export function observeTauriConsoleEnvironment(
+  listener: (change: ConsoleEnvironmentChange) => void,
+): Promise<() => void> {
+  return listen<unknown>(CONSOLE_ENVIRONMENT_EVENT, (event) => {
+    const change = parseConsoleEnvironmentChange(event.payload);
+    if (change) listener(change);
+  });
 }

@@ -28,12 +28,16 @@ from __future__ import annotations
 import itertools
 import json
 import re
-from collections.abc import Iterator, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from ..compiler.authority import compiled_bundled_authority
 
 #: A field id is comparable across revisions only when it NAMES the slot. One
 #: spelling does - `modelo-390-page-01-declared-representante-...` carries no
@@ -107,7 +111,7 @@ class WireShapeTransition:
 
 def _revision_shapes(modelo_root: Path) -> dict[str, dict[str, tuple[WireShape, OfficialStatement]]]:
     shapes: dict[str, dict[str, tuple[WireShape, OfficialStatement]]] = {}
-    for manifest_path in sorted(modelo_root.glob("revisions/*/export/_generation.provenance.json")):
+    for manifest_path in modelo_root.glob("revisions/*/export/_generation.provenance.json"):
         revision = manifest_path.parts[-3]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         shapes[revision] = _revision_identity_shapes(manifest)
@@ -139,36 +143,70 @@ def _revision_identity_shapes(manifest: Any) -> dict[str, tuple[WireShape, Offic
     return by_identity
 
 
-def cross_revision_wire_shape_transitions(modelos_root: Path | None = None) -> Iterator[WireShapeTransition]:
+def adjacent_revision_pairs(modelo: ModeloDefinition, available: Collection[str]) -> tuple[tuple[str, str], ...]:
+    """Successive editions of one modelo, in validity order, among the revisions that ship a manifest.
+
+    Order comes from the registry's own revision ordering, never from folder names.
+    Revisions that could be in force together for one period are parallel variants of
+    one period, and revisions that open on the same day are parallel schema variants
+    even when their period vocabularies are disjoint (so they never coexist for one
+    period); neither is an edition succeeding another, so such a pair is not adjacent.
+    """
+    shipped = [revision for revision in ordered_revisions(modelo) if revision.id in available]
+    return tuple(
+        (str(earlier.id), str(later.id))
+        for earlier, later in itertools.pairwise(shipped)
+        if earlier.valid_from < later.valid_from and not revisions_coexist(earlier, later)
+    )
+
+
+def _pair_transitions(
+    modelo: str,
+    shapes: Mapping[str, Mapping[str, tuple[WireShape, OfficialStatement]]],
+    earlier: str,
+    later: str,
+) -> Iterator[WireShapeTransition]:
+    for identity, (earlier_shape, earlier_type) in shapes[earlier].items():
+        if identity not in shapes[later]:
+            continue
+        later_shape, later_type = shapes[later][identity]
+        if earlier_shape == later_shape:
+            continue
+        yield WireShapeTransition(
+            modelo=modelo,
+            casilla_id=identity,
+            earlier_revision=earlier,
+            later_revision=later,
+            earlier_shape=earlier_shape,
+            later_shape=later_shape,
+            earlier_official=earlier_type,
+            later_official=later_type,
+        )
+
+
+def cross_revision_wire_shape_transitions(
+    modelos_root: Path | None = None,
+    adjacency: Mapping[str, Collection[tuple[str, str]]] | None = None,
+) -> Iterator[WireShapeTransition]:
     """Yield every field identity whose wire shape moves between adjacent revisions.
 
-    The root is a parameter so the comparison can be proven against a planted
-    defect in an isolated tree. A detector shown to work only on the corpus it
-    reports clean has not been shown to work.
+    The root and the adjacency are parameters so the comparison can be proven against
+    a planted defect in an isolated tree. A detector shown to work only on the corpus
+    it reports clean has not been shown to work. Without an explicit adjacency, pairs
+    come from the compiled authority's revision ordering.
     """
     modelos_root = modelos_root if modelos_root is not None else bundled_path("registry", "aeat", "modelos")
+    authority = compiled_bundled_authority() if adjacency is None else None
     for modelo_root in sorted(modelos_root.iterdir()):
         if not modelo_root.is_dir():
             continue
         shapes = _revision_shapes(modelo_root)
-        revisions = sorted(shapes)
-        for earlier, later in itertools.pairwise(revisions):
-            for identity, (earlier_shape, earlier_type) in shapes[earlier].items():
-                if identity not in shapes[later]:
-                    continue
-                later_shape, later_type = shapes[later][identity]
-                if earlier_shape == later_shape:
-                    continue
-                yield WireShapeTransition(
-                    modelo=modelo_root.name,
-                    casilla_id=identity,
-                    earlier_revision=earlier,
-                    later_revision=later,
-                    earlier_shape=earlier_shape,
-                    later_shape=later_shape,
-                    earlier_official=earlier_type,
-                    later_official=later_type,
-                )
+        if authority is not None:
+            pairs = adjacent_revision_pairs(authority.modelo(modelo_root.name), shapes)
+        else:
+            pairs = tuple((adjacency or {}).get(modelo_root.name, ()))
+        for earlier, later in pairs:
+            yield from _pair_transitions(modelo_root.name, shapes, earlier, later)
 
 
 def screen_authority(_authority: object = None, _modelo_ids: Sequence[str] = ()) -> Sequence[WireShapeTransition]:

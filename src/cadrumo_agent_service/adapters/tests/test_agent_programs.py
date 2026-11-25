@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from threading import Event, Thread
+from uuid import uuid4
 
 import pytest
 
 from ...host.launcher_protocol import AgentLauncherRefusal
+from .. import agent_programs
 from ..agent_programs import (
     PACKAGE_AEAT_VARIABLE,
     PACKAGE_AGENT_VARIABLE,
@@ -19,6 +22,7 @@ from ..agent_programs import (
     hosted_python,
     hosted_relay,
     inside_virtual_environment,
+    profile_agent_root,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -115,3 +119,31 @@ def test_a_package_program_is_never_taken_for_a_virtual_environment_one(tmp_path
     python = _program(tmp_path / "package" / "python.exe")
     assert not inside_virtual_environment(python)
     assert hosted_python(received={PACKAGE_PYTHON_VARIABLE: str(python)}) == python
+
+
+def test_a_profile_agent_root_read_while_another_thread_makes_its_key_names_the_same_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profile = uuid4()
+    drawing, release = Event(), Event()
+    real_token_bytes = agent_programs.secrets.token_bytes
+
+    def slow_token_bytes(count: int) -> bytes:
+        # The first thread to make the key pauses while drawing it; any other draws at once.
+        if not drawing.is_set():
+            drawing.set()
+            assert release.wait(10)
+        return real_token_bytes(count)
+
+    monkeypatch.setattr(agent_programs.secrets, "token_bytes", slow_token_bytes)
+    first: list[Path] = []
+    maker = Thread(target=lambda: first.append(profile_agent_root(tmp_path, profile)))
+    maker.start()
+    assert drawing.wait(10)
+    try:
+        second = profile_agent_root(tmp_path, profile)
+    finally:
+        release.set()
+        maker.join(10)
+
+    assert first == [second]

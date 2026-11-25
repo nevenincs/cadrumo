@@ -26,15 +26,19 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.orden_applicability import validate_orden_aplicabilidad
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 # ---------------------------------------------------------------------------
@@ -53,9 +57,9 @@ _VALID_LEGAL_REF = LegalReference(
     corpus_ref="corpus/normatives/html/orden-test-0001.html#a1",
     document_id="BOE-A-2000-00001",
     permalink="https://www.boe.es/eli/es/o/2000/01/01/test-0001",
-    effective_from=date(2000, 1, 1),
+    effective_from=date(_YEAR - 26, 1, 1),
     review_status="operator_reviewed",
-    reviewed_at=date(2026, 7, 1),
+    reviewed_at=date(_YEAR, 7, 1),
     reviewed_by="codex test fixture",
     required_text=("Artículo 1",),
 )
@@ -115,9 +119,9 @@ def test_missing_orden_aplicabilidad_is_hard_failure() -> None:
     """Any revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
         revision_id="test-unstamped",
-        valid_from=date(2019, 1, 1),
-        valid_to=date(2019, 12, 31),
-        years=(2019,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
@@ -145,9 +149,9 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
     """
     revision = _make_revision(
         revision_id="test-stamped-valid",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # Must include the orden in legal_refs to pass check (iii).
         legal_refs=("orden-test-0001:art-1",),
@@ -170,7 +174,7 @@ _FORM_ORDER_EXERCISE = int(
 
 
 def _modelo_100_form_order_edition() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "100")
     return modelo, catalogues
 
@@ -277,9 +281,9 @@ def test_dangling_orden_aplicabilidad_entry_is_hard_failure() -> None:
     """
     revision = _make_revision(
         revision_id="test-dangling",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         legal_refs=("orden-test-0001:art-1", "orden-nonexistent-9999:art-1"),
         # This entry does not exist in _VALID_CATALOGUE:
@@ -307,9 +311,9 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
     """
     revision = _make_revision(
         revision_id="test-missing-from-legal-refs",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # orden-test-0001:art-1 is intentionally NOT in legal_refs (only the
         # non-orden legal ref is present), but IS in the catalogue — triggers
@@ -336,9 +340,9 @@ def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
     """An open-ended revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
         revision_id="test-open-ended-unstamped",
-        valid_from=date(2019, 1, 1),
+        valid_from=date(_YEAR, 1, 1),
         valid_to=None,  # open-ended
-        year_from=2019,
+        year_from=_YEAR,
         periods=("1T",),
         # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
@@ -361,7 +365,7 @@ def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
 
 def test_committed_registry_has_no_unstamped_revisions() -> None:
     """Every committed revision declares orden_aplicabilidad."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     offenders = sorted(
         f"{modelo.id}/{revision_id}"
         for modelo in modelos
@@ -383,7 +387,7 @@ def _every_committed_revision() -> list[tuple[str, str]]:
     all. Deriving the population gates on the PROPERTY instead of on a tally, so
     a new revision is covered the day it lands.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return sorted((str(modelo.id), revision_id) for modelo in modelos for revision_id in modelo.revisions)
 
 
@@ -393,7 +397,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
     in the legal catalogue with corpus_ref and is present in legal_refs — the three
     gate checks all pass, and the hard-failure list is empty.
     """
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)
     assert modelo is not None, f"Modelo {modelo_id!r} not found in committed registry"
     revision = modelo.revisions.get(revision_id)
@@ -430,7 +434,7 @@ def _every_open_ended_revision() -> list[tuple[str, str]]:
     membership question answer itself: a revision that closes leaves this gate
     automatically, and one that opens joins it.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return sorted(
         (str(modelo.id), revision_id)
         for modelo in modelos
@@ -445,7 +449,7 @@ def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: s
     revision has orden_aplicabilidad declared — the open-ended applicability claim
     is BOE-anchored per the connective gate.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)
     assert modelo is not None
     revision = modelo.revisions.get(revision_id)

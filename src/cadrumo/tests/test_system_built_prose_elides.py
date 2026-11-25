@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ..core.prose_elision import elided_prose
 from .inventory import production_ast_items
-from .test_advisory_message_constructibility import _PROSE_FIELDS, _prose_caps
+from .test_advisory_message_constructibility import PROSE_FIELDS, prose_caps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -111,7 +111,7 @@ def _capped_prose_fields() -> Mapping[tuple[str, str], _StaticField]:
     Walks the live package rather than a list, so a model added tomorrow is
     covered without anyone remembering to enrol it.
     """
-    caps = _prose_caps()
+    caps = prose_caps()
     eliding: set[tuple[str, str]] = set()
     for _path, tree in production_ast_items():
         if not isinstance(tree, ast.Module):
@@ -177,7 +177,7 @@ def _system_built() -> frozenset[tuple[str, str]]:
             if model_name is None:
                 continue
             for keyword in node.keywords:
-                if keyword.arg in _PROSE_FIELDS and _builds_from_an_fstring(keyword.value):
+                if keyword.arg in PROSE_FIELDS and _builds_from_an_fstring(keyword.value):
                     system_built.add((model_name, keyword.arg))
     return frozenset(system_built)
 

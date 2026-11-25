@@ -13,7 +13,7 @@ endif()
 get_filename_component(agent_source "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
 file(GLOB_RECURSE agent_source_inputs CONFIGURE_DEPENDS "${agent_source}/src/*")
 foreach(agent_file pyproject.toml uv.lock README.md LICENSE NOTICE .gitignore package.json package-lock.json .node-version
-    runtime/node.json)
+    runtime/node.json openapi.json)
   if(EXISTS "${agent_source}/${agent_file}")
     list(APPEND agent_source_inputs "${agent_source}/${agent_file}")
   endif()
@@ -21,7 +21,13 @@ endforeach()
 list(FILTER agent_source_inputs EXCLUDE REGEX "/(tests|testing|service_tests|capability_tests|acceptance|\\.pytest[^/]*|\\.git|\\.venv|__pycache__|dist|build|\\.tmp[^/]*)/|/src/cadrumo_agent/conftest\\.py$|\\.pyc$")
 set(agent_inputs ${agent_source_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_api_pin.py"
+  "${PROJECT_SOURCE_DIR}/src/cadrumo_agent_service/_data/agent_api/pin.json"
+  "${PROJECT_SOURCE_DIR}/src/cadrumo_agent_service/_data/agent_api/openapi.json"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_archive.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_inventory.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_validation.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/archive.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheel_selection.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"

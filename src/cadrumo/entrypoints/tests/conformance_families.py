@@ -9,59 +9,73 @@ from __future__ import annotations
 
 from .conformance_auth_apoderado_support import AUTH_APODERADO_CONFORMANCE_FAMILY
 from .conformance_auth_diagnostic_report_support import AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY
-from .conformance_dependency_support import DEPENDENCY_CONFORMANCE_FAMILY
 from .conformance_diagnostics_repair_support import DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY
 from .conformance_diagnostics_support import DIAGNOSTICS_CONFORMANCE_FAMILY
 from .conformance_family_contract import ConformanceFamily
 from .conformance_google_support import GOOGLE_CONFORMANCE_FAMILY
+from .conformance_inventory_support import INVENTORY_FACTS_CONFORMANCE_FAMILY
+from .conformance_invoice_document_attach_support import INVOICE_DOCUMENT_ATTACH_CONFORMANCE_FAMILY
 from .conformance_invoice_intake_support import INVOICE_INTAKE_CONFORMANCE_FAMILY
+from .conformance_ledger_classification_job_support import LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY
 from .conformance_ledger_classification_support import LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_automation_support import LEDGER_EVIDENCE_AUTOMATION_CONFORMANCE_FAMILY
+from .conformance_ledger_evidence_check_support import LEDGER_EVIDENCE_CHECK_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_ingestion_support import LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY
+from .conformance_ledger_evidence_page_support import LEDGER_EVIDENCE_PAGE_CONFORMANCE_FAMILY
 from .conformance_ledger_export_link_support import LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY
 from .conformance_ledger_history_support import LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY
+from .conformance_ledger_rule_remove_support import LEDGER_RULE_REMOVE_CONFORMANCE_FAMILY
 from .conformance_live_borrador_support import LIVE_BORRADOR_CONFORMANCE_FAMILY
-from .conformance_local_reader_support import LOCAL_READER_CONFORMANCE_FAMILY
 from .conformance_m036_support import M036_CONFORMANCE_FAMILY
 from .conformance_m145_support import M145_CONFORMANCE_FAMILY
+from .conformance_m232_related_party_support import M232_RELATED_PARTY_CONFORMANCE_FAMILY
 from .conformance_maritime_preview_support import MARITIME_PREVIEW_CONFORMANCE_FAMILY
 from .conformance_modelo_audit_support import MODELO_AUDIT_CONFORMANCE_FAMILY
 from .conformance_modelo_spreadsheet_support import MODELO_SPREADSHEET_CONFORMANCE_FAMILY
+from .conformance_prevision_social_support import PREVISION_SOCIAL_CONFORMANCE_FAMILY
 from .conformance_profile_archive_support import PROFILE_ARCHIVE_CONFORMANCE_FAMILY
 from .conformance_profile_custody_support import PROFILE_CUSTODY_CONFORMANCE_FAMILY
 from .conformance_profile_history_support import PROFILE_HISTORY_CONFORMANCE_FAMILY
 from .conformance_quickfile_support import QUICKFILE_CONFORMANCE_FAMILY
+from .conformance_retencion_soportada_absence_support import RETENCION_SOPORTADA_ABSENCE_CONFORMANCE_FAMILY
+from .conformance_retencion_soportada_support import RETENCION_SOPORTADA_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY
 from .conformance_saved_review_export_support import SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY
-from .conformance_workstation_check_support import WORKSTATION_CHECK_CONFORMANCE_FAMILY
 
 CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     AUTH_APODERADO_CONFORMANCE_FAMILY,
     AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY,
-    DEPENDENCY_CONFORMANCE_FAMILY,
     DIAGNOSTICS_CONFORMANCE_FAMILY,
     DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY,
     GOOGLE_CONFORMANCE_FAMILY,
+    INVOICE_DOCUMENT_ATTACH_CONFORMANCE_FAMILY,
     INVOICE_INTAKE_CONFORMANCE_FAMILY,
+    INVENTORY_FACTS_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,
+    LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_AUTOMATION_CONFORMANCE_FAMILY,
+    LEDGER_EVIDENCE_CHECK_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY,
+    LEDGER_EVIDENCE_PAGE_CONFORMANCE_FAMILY,
     LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY,
     LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY,
+    LEDGER_RULE_REMOVE_CONFORMANCE_FAMILY,
     LIVE_BORRADOR_CONFORMANCE_FAMILY,
-    LOCAL_READER_CONFORMANCE_FAMILY,
     M036_CONFORMANCE_FAMILY,
     M145_CONFORMANCE_FAMILY,
+    M232_RELATED_PARTY_CONFORMANCE_FAMILY,
     MARITIME_PREVIEW_CONFORMANCE_FAMILY,
     MODELO_AUDIT_CONFORMANCE_FAMILY,
     MODELO_SPREADSHEET_CONFORMANCE_FAMILY,
     PROFILE_ARCHIVE_CONFORMANCE_FAMILY,
     PROFILE_CUSTODY_CONFORMANCE_FAMILY,
     PROFILE_HISTORY_CONFORMANCE_FAMILY,
+    PREVISION_SOCIAL_CONFORMANCE_FAMILY,
     QUICKFILE_CONFORMANCE_FAMILY,
+    RETENCION_SOPORTADA_ABSENCE_CONFORMANCE_FAMILY,
+    RETENCION_SOPORTADA_CONFORMANCE_FAMILY,
     REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY,
     SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY,
-    WORKSTATION_CHECK_CONFORMANCE_FAMILY,
 )
 
 

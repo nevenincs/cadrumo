@@ -5,7 +5,6 @@ use cadrumo_application::{
     value::{RelativePath, Sha256Digest},
 };
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -17,7 +16,7 @@ const DELEGATE: &str = "docs/user/manifest.json";
 const DOCUMENT: &str = "docs/user/deep/index.html";
 
 fn digest(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256Digest::of(bytes).to_string()
 }
 
 struct Fixture {

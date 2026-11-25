@@ -25,6 +25,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...iva.schema import IvaCategory
@@ -39,6 +41,8 @@ from ..llm import (
 )
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -130,8 +134,8 @@ def test_response_rejects_business_pct_out_of_range() -> None:
 
 
 def test_iva_choices_cover_every_grounded_category(operation: PinnedAuthorityOperation) -> None:
-    choices = default_iva_category_choices(operation=operation)
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    choices = default_iva_category_choices(operation=operation, effective_date=_ON_DATE)
+    catalogue = resolve_iva_category_catalogue(authority=operation, effective_date=_ON_DATE)
     assert {choice.value for choice in choices} == set(catalogue.all_categories)
     # Every choice carries a non-empty hint resolved from the catalogue label.
     assert all(choice.hint for choice in choices)
@@ -139,7 +143,7 @@ def test_iva_choices_cover_every_grounded_category(operation: PinnedAuthorityOpe
 
 def test_saturation_spec_allow_list_matches_every_category(operation: PinnedAuthorityOperation) -> None:
     spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(authority=operation, effective_date=_ON_DATE)
     assert spec.allowed_iva_categories() == frozenset(catalogue.all_categories)
     # The default spec asks for no IVA category at all.
     assert default_prompt_spec().allowed_iva_categories() == frozenset()
@@ -207,7 +211,7 @@ def test_every_iva_category_carries_a_curated_hint(operation: PinnedAuthorityOpe
     """
     unhinted = sorted(
         choice.value.value
-        for choice in default_iva_category_choices(operation=operation)
+        for choice in default_iva_category_choices(operation=operation, effective_date=_ON_DATE)
         if choice.hint == choice.value.value.replace("_", " ")
     )
 

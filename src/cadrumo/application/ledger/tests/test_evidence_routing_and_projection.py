@@ -18,7 +18,7 @@ import pytest
 from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
-from ..invoice_draft_extraction import _refuse_an_unrecognised_xml_document
+from ..invoice_draft_extraction import refuse_an_unrecognised_xml_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +50,7 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     with pytest.raises(
         PurchaseInvoiceEvidenceInputError, match=re.escape("errors.refused.refused_ledger_evidence_input")
     ):
-        _refuse_an_unrecognised_xml_document(evidence)
+        refuse_an_unrecognised_xml_document(evidence)
 
 
 def test_a_recognised_structured_xml_is_not_caught_by_the_unrecognised_xml_refusal() -> None:
@@ -66,4 +66,4 @@ def test_a_recognised_structured_xml_is_not_caught_by_the_unrecognised_xml_refus
     )
 
     assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
-    _refuse_an_unrecognised_xml_document(evidence)
+    refuse_an_unrecognised_xml_document(evidence)

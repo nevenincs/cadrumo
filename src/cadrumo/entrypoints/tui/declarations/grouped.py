@@ -12,7 +12,15 @@ from textual.events import DescendantFocus
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, declaration_list_rows
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    applicable_modelos,
+    creation_targets,
+    declaration_list_rows,
+    existing_declaration,
+    preferred_creation_target,
+)
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
@@ -23,6 +31,8 @@ from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    NEW_DECLARATION_FOCUS_KEY,
+    SEARCH_DECLARATIONS_FOCUS_KEY,
     DeclarationsRouteRequested,
     DeclarationsWorkspaceController,
     DeclarationsWorkspaceScreen,
@@ -33,13 +43,15 @@ from .external_details import ExternalFilingDetailsScreen
 from .picker import NewDeclarationPicker
 from .portfolio_interactions import creation_notice, reveal_portfolio_row
 from .portfolio_rendering import (
+    RowAction,
     configure_portfolio_columns,
     populate_portfolio_groups,
     portfolio_key_guidance,
     portfolio_row_refusal,
     portfolio_source_lines,
+    row_action,
 )
-from .portfolio_rows import creation_targets, existing_declaration, preferred_creation_target, visible_portfolio_rows
+from .portfolio_rows import visible_portfolio_rows
 
 _FILTERS = ("all", "attention", "this_year", "recorded", "not_started")
 _SORTS = ("deadline", "modelo", "result", "state")
@@ -82,12 +94,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         yield localized(
-            Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False),
-            "tui.declarations.list.title",
+            Static(tr("workspace.declarations.list.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.list.title",
         )
         yield localized(
-            Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search"),
-            "tui.declarations.list.search.hint",
+            Input(placeholder=tr("workspace.declarations.list.search.hint"), id="declarations-search"),
+            "workspace.declarations.list.search.hint",
         )
         yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
         yield Static(id="declarations-keys", markup=False)
@@ -100,19 +112,20 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             yield Static(id="declarations-sources", markup=False)
             with Horizontal(id="declarations-links"):
                 yield localized(
-                    Button(tr("tui.declarations.list.key.new"), id="declarations-new"), "tui.declarations.list.key.new"
+                    Button(tr("workspace.declarations.list.key.new"), id="declarations-new"),
+                    "workspace.declarations.list.key.new",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.revisions"), id="declarations-revisions"),
-                    "tui.declarations.destination.revisions",
+                    Button(tr("workspace.declarations.destination.revisions"), id="declarations-revisions"),
+                    "workspace.declarations.destination.revisions",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.filing_history"), id="declarations-filings"),
-                    "tui.declarations.destination.filing_history",
+                    Button(tr("workspace.declarations.destination.filing_history"), id="declarations-filings"),
+                    "workspace.declarations.destination.filing_history",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.calendar"), id="declarations-calendar"),
-                    "tui.declarations.destination.calendar",
+                    Button(tr("workspace.declarations.destination.calendar"), id="declarations-calendar"),
+                    "workspace.declarations.destination.calendar",
                 )
 
     def on_mount(self) -> None:
@@ -131,12 +144,18 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             ).value not in {"available", "stale"}
         self._render_sources()
         self._restore_declaration_focus(None)
+        # Home's New and Search links land here and carry on into the act.
+        focus = self.controller.context.focus
+        if focus is not None and focus.semantic_key == NEW_DECLARATION_FOCUS_KEY:
+            self.call_after_refresh(self.action_new)
+        elif focus is not None and focus.semantic_key == SEARCH_DECLARATIONS_FOCUS_KEY:
+            self.call_after_refresh(self.action_search)
 
     @override
     async def refresh_language(self) -> None:
         """Reword the portfolio without changing its query, folds or selection."""
         await super().refresh_language()
-        self.query_one("#declarations-search", Input).placeholder = tr("tui.declarations.list.search.hint")
+        self.query_one("#declarations-search", Input).placeholder = tr("workspace.declarations.list.search.hint")
         self._populate()
         self._render_sources()
 
@@ -165,11 +184,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         populate_portfolio_groups(table, visible, self.folded, width, language, self.controller)
         table.absorb_surplus_width()
         self.query_one("#declarations-list-context", Static).update(
-            tr("tui.declarations.list.filter." + _FILTERS[self.filter_index])
+            tr("workspace.declarations.list.filter." + _FILTERS[self.filter_index])
             + " · "
-            + tr("tui.declarations.list.sort." + _SORTS[self.sort_index])
+            + tr("workspace.declarations.list.sort." + _SORTS[self.sort_index])
         )
-        self.query_one("#declarations-empty", Static).update("" if visible else tr("tui.declarations.list.empty"))
+        empty = f"{tr('workspace.declarations.list.empty')} {tr('tui.declarations.list.start_hint')}"
+        self.query_one("#declarations-empty", Static).update("" if visible else empty)
         index = next((i for i, row in enumerate(table.ordered_rows) if row.key.value == selected), None)
         if index is not None:
             table.move_cursor(row=index)
@@ -210,19 +230,25 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             self._populate()
 
     def _activate_row(self, row: DeclarationListRow) -> None:
-        """Open exactly the selected row or confirm its supported creation."""
-        if row.declaration is not None and row.state != "unreadable":
+        """Take the row's one Enter step, the one its hint names, or say why it has none."""
+        action = row_action(row, self.controller)
+        if action in {RowAction.OPEN, RowAction.OPEN_LOCAL_DRAFT} and row.declaration is not None:
             self._open(row.declaration)
-        elif row.state == "not_started" and row.period is not None and self.controller.work_create_handoff is not None:
+        elif action is RowAction.START and row.period is not None:
             target = DeclarationTarget(row.modelo, row.period)
             self.app.push_screen(
                 NewDeclarationPicker((target,), frozenset({row.modelo}), preferred=target, confirmation=True),
                 self._create_selected,
             )
-        elif row.state == "aeat_unlinked":
+        elif action is RowAction.EXTERNAL_DETAILS:
             self.app.push_screen(ExternalFilingDetailsScreen(row))
+        elif row.declaration is not None and row.state != "unreadable":
+            # Local work this session has no workspace to open it in.
+            self.refuse_handoff()
         else:
-            self.query_one("#declarations-refusal", Static).update(portfolio_row_refusal(row))
+            self.query_one("#declarations-refusal", Static).update(
+                portfolio_row_refusal(row, OutputLanguage(output_language()))
+            )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Fold a group, open admitted local work, or confirm starting a due return."""
@@ -265,7 +291,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         """Offer only registry-backed Modelo/period coordinates."""
         if self._creating or self.controller.work_create_handoff is None:
             return
-        applicable = frozenset(row.modelo for row in self.rows if row.state != "maybe")
+        applicable = applicable_modelos(self.rows)
         targets = creation_targets(self.rows, self.controller.creation_targets)
         preferred = preferred_creation_target(self.rows)
         self.app.push_screen(NewDeclarationPicker(targets, applicable, preferred=preferred), self._create_selected)
@@ -276,10 +302,10 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             if existing is not None:
                 self.app.push_screen(
                     ConfirmScreen(
-                        title=lambda: tr("tui.declarations.list.new.exists"),
+                        title=lambda: tr("workspace.declarations.list.new.exists"),
                         message=lambda: natural_address(target.modelo, target.period.filing_year, target.period),
-                        confirm_label=lambda: tr("tui.declarations.calendar.action.open"),
-                        cancel_label=lambda: tr("tui.modelo.workbench.editor.cancel"),
+                        confirm_label=lambda: tr("workspace.declarations.calendar.action.open"),
+                        cancel_label=lambda: tr("workspace.modelo.editor.cancel"),
                     ),
                     lambda confirmed: self._open(existing) if confirmed is True else None,
                 )
@@ -293,7 +319,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             self._creating = False
             return
         notice = self.query_one("#declarations-work-create-notice", Static)
-        notice.update(tr("tui.declarations.work_create.progress"))
+        notice.update(tr("workspace.declarations.work_create.progress"))
         try:
             result = await asyncio.to_thread(handoff, target.modelo, target.period.filing_year, target.period)
             # Obligations the new declaration brings with it are said whether or not it opens.

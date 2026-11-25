@@ -22,7 +22,7 @@ def tui_root_command(executable: str = sys.executable) -> list[str]:
     return [executable, "-I", "-m", TUI_ROOT_MODULE]
 
 
-async def _run_tui(command: list[str]) -> int:
+async def run_tui(command: list[str]) -> int:
     """Run the fixed TUI command through the audited async process boundary."""
     process = await asyncio.create_subprocess_exec(*command)
     return await process.wait()
@@ -30,7 +30,7 @@ async def _run_tui(command: list[str]) -> int:
 
 def launch_tui() -> None:
     """Start the independent TUI root and propagate its process status."""
-    raise typer.Exit(asyncio.run(_run_tui(tui_root_command())))
+    raise typer.Exit(asyncio.run(run_tui(tui_root_command())))
 
 
 __all__ = ["TUI_ROOT_MODULE", "launch_tui", "tui_root_command"]

@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ...modelo.export import ModeloExportCommand
+from ...modelo.export_contracts import ModeloExportCommand
 from ...modelo.m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from ..export import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-modelo_export = import_module("...modelo.export", package=__package__)
+export_preparation = import_module("...modelo.export_preparation", package=__package__)
 m303_filing_evidence = import_module("...modelo.m303_filing_evidence", package=__package__)
 
 #: The three Exonerado-390 evidence classes are defined here, not in
@@ -91,7 +91,7 @@ def test_canonical_profile_scope_mapper_is_required_by_calculation_and_export() 
     assert (
         m303_filing_evidence.m303_regimen_simplificado_scope_for_profile is m303_regimen_simplificado_scope_for_profile
     )
-    assert modelo_export.m303_regimen_simplificado_scope_for_profile is m303_regimen_simplificado_scope_for_profile
+    assert export_preparation.m303_regimen_simplificado_scope_for_profile is m303_regimen_simplificado_scope_for_profile
 
 
 def test_s56_exonerado_390_evidence_owner_is_unique_and_typed() -> None:

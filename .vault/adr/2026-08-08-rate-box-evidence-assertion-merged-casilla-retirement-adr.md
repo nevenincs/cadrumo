@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rate-box-evidence-assertion'
 date: '2026-08-08'
-modified: '2026-10-07'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8c6d01b0b3f287046f77017e5dff6ea961b0daf355209818e772c2e90129dfc'
+body_hash: 'sha256:768f9e8275fd229ad5eff39f824bed217b5f25940ec676932e06089feeb6ed75'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-adr]]"
   - '[[2026-08-07-rate-box-evidence-assertion-research]]'
@@ -159,4 +159,4 @@ cleared them.
 
 Explicitly approved by the user and accepted in `2026-10-07-broad-test-failure-repair-rate-box-controls-adr`. This ruling controls current implementation within its stated scope; the preceding text is preserved as decision history.
 
-The single-writer rule remains binding. For the source-grounded M390 2022–2025 correction, retire merged casillas from export ownership atomically with wiring rate-specific owners. Retain them unexported as coverage controls while the coverage mechanism consumes them, and exclude them from printed sums that consume their rate-specific siblings. This explicitly replaces the earlier rejection of internal controls and same-change deletion requirement for this scope. Deletion requires an equivalent tested coverage source and a completed consumer migration.
+The single-writer rule remains binding. For the source-grounded M390 correction across its annual epochs, retire merged casillas from export ownership atomically with wiring rate-specific owners. Retain them unexported as coverage controls while the coverage mechanism consumes them, and exclude them from printed sums that consume their rate-specific siblings. This explicitly replaces the earlier rejection of internal controls and same-change deletion requirement for this scope. Deletion requires an equivalent tested coverage source and a completed consumer migration.

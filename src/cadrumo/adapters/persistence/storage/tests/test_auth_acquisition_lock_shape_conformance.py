@@ -32,7 +32,7 @@ def _active_profile() -> Iterator[None]:
 
 def test_the_real_lock_file_matches_its_declared_shape(tmp_path: Path) -> None:
     root = tmp_path
-    settings = Settings(cadrumo_local_storage_root=root)
+    settings = Settings(cadrumo_storage_root=root)
 
     with acquire_auth_acquisition_lock(
         settings,

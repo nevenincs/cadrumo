@@ -11,7 +11,7 @@ off that def and takes its namespace from the
 
 This is a write-path proof, not a bare constant-equality assertion: it persists
 one diagnostic row through the exact symbols the page-flow save uses, then reads
-the raw :class:`SecureObjectRow` back from the encrypted SQL backend and asserts
+the raw ``secure_objects`` row back from the encrypted SQL backend and asserts
 the persisted namespace, classification, and schema_version equal exactly what
 the registry def declares. If any auth consumer ever re-hardcoded a divergent
 namespace, sensitivity, or version, the persisted row would disagree with the
@@ -28,14 +28,16 @@ import pytest
 from sqlalchemy import select
 
 from ......core import external_constants
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
-from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
+from .....persistence.storage.sql.tables import secure_objects_table
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil_support import mint_diagnostic_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000c0c0"
 
@@ -59,21 +61,21 @@ def test_persisted_diagnostic_row_carries_registry_declared_metadata(tmp_path: P
         payload = {
             "diagnostic_id": "diag-binding-proof",
             "reason": "namespace-binding-proof",
-            "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
+            "captured_at": datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
         }
         secure_object_repository_for_active_bucket().save(
             namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key=payload["diagnostic_id"],
             classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
             schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,
-            written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            written_at=datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC),
             payload=json.dumps(payload, sort_keys=True).encode(),
         )
 
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
             ]
 
@@ -94,11 +96,11 @@ def test_persisted_diagnostic_row_carries_registry_declared_metadata(tmp_path: P
 def test_rapid_diagnostic_captures_keep_distinct_encrypted_rows(tmp_path: Path) -> None:
     """One UTC capture instant cannot collapse distinct encrypted diagnostics."""
 
-    captured_at = datetime(2026, 8, 2, 9, 0, tzinfo=UTC)
+    captured_at = datetime(_YEAR, 8, 2, 9, 0, tzinfo=UTC)
     diagnostic_ids = tuple(mint_diagnostic_id(captured_at) for _ in range(8))
 
     assert len(set(diagnostic_ids)) == len(diagnostic_ids)
-    assert all(diagnostic_id.startswith("20260802T090000.000000Z-") for diagnostic_id in diagnostic_ids)
+    assert all(diagnostic_id.startswith(f"{_YEAR}0802T090000.000000Z-") for diagnostic_id in diagnostic_ids)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         for sequence, diagnostic_id in enumerate(diagnostic_ids):
@@ -119,7 +121,7 @@ def test_rapid_diagnostic_captures_keep_distinct_encrypted_rows(tmp_path: Path) 
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
             ]
 

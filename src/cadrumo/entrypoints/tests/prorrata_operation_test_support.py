@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Literal
@@ -15,18 +15,22 @@ from ...adapters.persistence.profile.tests.modelo_303_filed_disposition import m
 from ...application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.prorrata_register.operation_requests import (
+    PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID,
     PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
     PRORRATA_LIST_OPERATION_DEFINITION_ID,
+    PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
     PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_SEED_OPERATION_DEFINITION_ID,
     PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
+    ProrrataDeclareGrossRequest,
     ProrrataDeclareSectorRequest,
     ProrrataElectEspecialRequest,
     ProrrataElectGeneralRequest,
     ProrrataListRequest,
+    ProrrataRemoveGrossRequest,
     ProrrataRevokeEspecialRequest,
     ProrrataSeedRequest,
     ProrrataSeedSectorRequest,
@@ -36,6 +40,8 @@ from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFac
 from ...application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataFindingProjection,
+    ProrrataGrossDeclarationProjection,
+    ProrrataListedEntryProjection,
     ProrrataListProjection,
     ProrrataMutationProjection,
     ProrrataSectorDefinitionProjection,
@@ -56,6 +62,7 @@ from ...application.prorrata_register.tests.provisional_override import record_a
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.operations import OperationEffect
+from ...core.period import Period
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
@@ -75,12 +82,14 @@ from ...domain.calculations.registry.tests.provisional_catalogue import aeat_aut
 from ...domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
 )
 
 _CAPTURED_AT = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_GROSS_DECLARED_AT = datetime(2026, 4, 25, 9, 0, tzinfo=UTC)
 _SOURCE_KIND = "aeat_sede_justificante"
 _SEED_TARGET_YEAR = 2026
 _SEED_PRIOR_YEAR = _SEED_TARGET_YEAR - 1
@@ -102,6 +111,8 @@ _OPERATION_IDS: dict[
             "seed",
             "seed_sector",
             "settle_sector",
+            "declare_gross",
+            "remove_gross",
         ],
         str,
     ],
@@ -114,7 +125,10 @@ _OPERATION_IDS: dict[
     PRORRATA_SEED_OPERATION_DEFINITION_ID: ("seed", "ledger.prorrata.seed"),
     PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID: ("seed_sector", "ledger.prorrata.seed_sector"),
     PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID: ("settle_sector", "ledger.prorrata.settle_sector"),
+    PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID: ("declare_gross", "ledger.prorrata.declare_gross"),
+    PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID: ("remove_gross", "ledger.prorrata.remove_gross"),
 }
+_GROSS_OPERATION_IDS = frozenset({"declare_gross", "remove_gross"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,6 +145,34 @@ class ProrrataOperationConformanceCase:
     expected_entry: ProrrataRegisterEntry | None = None
     expected_sector_definition: SectorDefinition | None = None
     expected_seed: ProrrataPriorDefinitivaSeed | None = None
+    expected_declared_after: datetime | None = None
+
+    def declared_at(self, instant: datetime) -> ProrrataOperationConformanceCase:
+        """Bind the instant the executor stamped on the declaration it wrote.
+
+        ``expected_declared_after`` marks a case whose declaration the executor
+        stamps with its own clock. Every other field of the expected register
+        and projection stays exactly as prepared; only ``declared_at`` takes the
+        observed value.
+        """
+        projection = self.expected_projection
+        if not isinstance(projection, ProrrataMutationProjection) or projection.gross_declaration is None:
+            raise AssertionError("only a gross-declaration case carries an executor-stamped instant")
+        stamped = projection.gross_declaration.model_copy(update={"declared_at": instant})
+        register = self.expected_register.with_gross_declarations(
+            tuple(
+                row.model_copy(update={"declared_at": instant})
+                if (row.period.registry_token, row.sector_id) == (stamped.period, stamped.sector_id)
+                else row
+                for row in self.expected_register.gross_declarations
+            )
+        )
+        return replace(
+            self,
+            expected_register=register,
+            expected_projection=projection.model_copy(update={"gross_declaration": stamped}),
+            expected_declared_after=None,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,12 +257,29 @@ def _register_with_sector(register: ProrrataRegister, definition: SectorDefiniti
     )
 
 
+def _listed_entry(entry: ProrrataRegisterEntry) -> ProrrataListedEntryProjection:
+    settled = entry.definitive_percentage is not None
+    held = settled or entry.provisional_percentage is not None
+    named = held and not entry.interrupted and entry.regime.value in {"general", "especial"}
+    kind = "definitiva" if settled else "provisional"
+    sector = f":{entry.sector_id}" if entry.sector_id is not None else ""
+    return ProrrataListedEntryProjection(
+        **dict(ProrrataEntryProjection.from_entry(entry)),
+        reference_id=f"prorrata:{entry.ejercicio}:{kind}:{entry.regime.value}{sector}" if named else None,
+        reference_kind=kind if named else None,
+    )
+
+
 def _list_projection(profile_id: UUID, register: ProrrataRegister) -> ProrrataListProjection:
     return ProrrataListProjection(
         profile_id=profile_id,
-        entries=tuple(ProrrataEntryProjection.from_entry(entry) for entry in register.entries),
+        entries=tuple(_listed_entry(entry) for entry in register.entries),
         sectors=tuple(
             ProrrataSectorDefinitionProjection.from_definition(definition) for definition in register.sector_definitions
+        ),
+        gross_declarations=tuple(
+            ProrrataGrossDeclarationProjection.from_declaration(declaration)
+            for declaration in register.gross_declarations
         ),
         count=len(register.entries),
     )
@@ -236,8 +295,15 @@ def _mutation_projection(
     seed: ProrrataPriorDefinitivaSeed | None = None,
     findings: tuple[ProrrataSeedFinding, ...] = (),
     prior_ejercicio: int | None = None,
+    gross_declaration: ProrrataOperatorGrossDeclaration | None = None,
 ) -> ProrrataMutationProjection:
     operation_id = _OPERATION_IDS[definition_id][0]
+    if operation_id == "declare_sector":
+        count = len(register.sector_definitions)
+    elif operation_id in _GROSS_OPERATION_IDS:
+        count = len(register.gross_declarations)
+    else:
+        count = len(register.entries)
     return ProrrataMutationProjection(
         operation_id=operation_id,
         profile_id=profile_id,
@@ -251,7 +317,12 @@ def _mutation_projection(
         seed_source=ProrrataSeedSourceProjection.from_seed(seed) if seed is not None else None,
         findings=tuple(ProrrataFindingProjection.from_finding(finding) for finding in findings),
         prior_ejercicio=prior_ejercicio,
-        count=(len(register.sector_definitions) if operation_id == "declare_sector" else len(register.entries)),
+        gross_declaration=(
+            ProrrataGrossDeclarationProjection.from_declaration(gross_declaration)
+            if gross_declaration is not None
+            else None
+        ),
+        count=count,
     )
 
 
@@ -301,6 +372,8 @@ def _prepare_case(
     expected_seed: ProrrataPriorDefinitivaSeed | None = None
     findings = ()
     prior_ejercicio = None
+    expected_gross: ProrrataOperatorGrossDeclaration | None = None
+    declared_after: datetime | None = None
 
     if definition_id == PRORRATA_LIST_OPERATION_DEFINITION_ID:
         sector = _sector_definition()
@@ -494,11 +567,55 @@ def _prepare_case(
             con_derecho_volume=PublicDecimal(decimal=str(con_derecho)),
             sin_derecho_volume=PublicDecimal(decimal=str(sin_derecho)),
         )
+    elif definition_id == PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID:
+        declared_after = datetime.now(UTC)
+        expected_gross = ProrrataOperatorGrossDeclaration(
+            ejercicio=_SEED_TARGET_YEAR,
+            period=Period.from_year_and_code(_SEED_TARGET_YEAR, "1T"),
+            gross_cuota=Decimal("400.00"),
+            evidence_reference="operator-evidence:303-conformance-1T",
+            declared_at=declared_after,
+        )
+        register = register.with_gross_declarations((expected_gross,))
+        request = ProrrataDeclareGrossRequest(
+            profile_id=profile_id,
+            ejercicio=_SEED_TARGET_YEAR,
+            period="1T",
+            sector_id=None,
+            gross_cuota=PublicDecimal(decimal="400.00"),
+            evidence_reference="operator-evidence:303-conformance-1T",
+        )
+    elif definition_id == PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID:
+        expected_gross = ProrrataOperatorGrossDeclaration(
+            ejercicio=_SEED_TARGET_YEAR,
+            period=Period.from_year_and_code(_SEED_TARGET_YEAR, "2T"),
+            gross_cuota=Decimal("420.00"),
+            evidence_reference="operator-evidence:303-conformance-2T",
+            declared_at=_GROSS_DECLARED_AT,
+        )
+        retained = ProrrataOperatorGrossDeclaration(
+            ejercicio=_SEED_TARGET_YEAR,
+            period=Period.from_year_and_code(_SEED_TARGET_YEAR, "1T"),
+            gross_cuota=Decimal("400.00"),
+            evidence_reference="operator-evidence:303-conformance-1T",
+            declared_at=_GROSS_DECLARED_AT,
+        )
+        seeded = (retained, expected_gross)
+        service.rewrite_gross_declarations(lambda _current: seeded)
+        register = service.list_all().with_gross_declarations((retained,))
+        request = ProrrataRemoveGrossRequest(
+            profile_id=profile_id,
+            ejercicio=_SEED_TARGET_YEAR,
+            period="2T",
+            sector_id=None,
+        )
     else:
         raise ValueError(f"unsupported prorrata operation definition: {definition_id}")
 
     if definition_id == PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID:
         expected_count = len(register.sector_definitions)
+    elif operation_id in _GROSS_OPERATION_IDS:
+        expected_count = len(register.gross_declarations)
     else:
         expected_count = len(register.entries)
     projection = _mutation_projection(
@@ -510,6 +627,7 @@ def _prepare_case(
         seed=expected_seed,
         findings=findings,
         prior_ejercicio=prior_ejercicio,
+        gross_declaration=expected_gross,
     )
     return ProrrataOperationConformanceCase(
         definition_id=definition_id,
@@ -522,6 +640,7 @@ def _prepare_case(
         expected_entry=expected_entry,
         expected_sector_definition=expected_sector,
         expected_seed=expected_seed,
+        expected_declared_after=declared_after,
     )
 
 
@@ -553,8 +672,14 @@ def prepare_prorrata_whole_seed_refusal_case(
     operation: PinnedAuthorityOperation,
     observation_repository: CalculationObservationRepositoryProtocol | None = None,
     refusal_reason: Literal["regulated_override_standing", "seed_existing_blocked"],
+    contradicted_entry_settled: bool = True,
 ) -> ProrrataWholeSeedRefusalCase:
-    """Persist source and target facts that drive one exact whole-seed refusal."""
+    """Persist source and target facts that drive one exact whole-seed refusal.
+
+    The contradicted carried entry refuses a re-seed only once its year is
+    settled; ``contradicted_entry_settled=False`` stores the same contradiction
+    on an unsettled year, which a re-seed replaces instead.
+    """
     observations = observation_repository or CalculationObservationRepository(bucket_id=str(profile_id))
     with validating_governed_facts(operation):
         _save_prior_settlement_observation(
@@ -588,7 +713,18 @@ def prepare_prorrata_whole_seed_refusal_case(
             )
             if evaluation.seed is None or evaluation.blocked:
                 raise AssertionError("canonical conformance observation did not produce a whole-entity seed")
-            contradictory = evaluation.seed.entry.model_copy(update={"provisional_percentage": Decimal("42.00")})
+            settlement = (
+                {
+                    "definitive_percentage": Decimal("42"),
+                    "definitive_volume_con_derecho": Decimal("4200.00"),
+                    "definitive_volume_sin_derecho": Decimal("5800.00"),
+                }
+                if contradicted_entry_settled
+                else {}
+            )
+            contradictory = evaluation.seed.entry.model_copy(
+                update={"provisional_percentage": Decimal("42.00"), **settlement}
+            )
             register = service.declare(contradictory)
             expected_findings = cross_check_prorrata_entry_against_observations(
                 contradictory,

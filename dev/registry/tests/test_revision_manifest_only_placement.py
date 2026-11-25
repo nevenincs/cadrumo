@@ -37,15 +37,19 @@ from cadrumo.domain.calculations.registry.schema_base import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import load_revision as _shared_load_revision
 from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
+    STANDARD_REVISION_EXERCISE,
+    STANDARD_REVISION_ID,
+    load_revision,
+    standard_revision_preamble_text,
+    write_modelo,
 )
-from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_REVISION_ID = STANDARD_REVISION_ID
+#: The last day of the fixture edition, the date a closing revision would declare.
+_VALID_TO = f"{STANDARD_REVISION_EXERCISE}-12-31"
 _ORDEN_REF = "orden-hac-277-2026:art-3"
 _OTHER_ORDEN_REF = "orden-hfp-1000-2025:art-1"
 _LEGAL_REF = "ley-58-2003:art-29"
@@ -67,7 +71,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "dependency_classification_source_refs": '["aeat-manual"]',
     "construct_source_refs": '["aeat-manual"]',
     "parameter_source_refs": '["aeat-manual"]',
-    "valid_to": "2025-12-31",
+    "valid_to": _VALID_TO,
     "predecessor": '"2024"',
     "casilla_storage_baseline": '"2024"',
     "family_storage_baseline": '"2024"',
@@ -75,6 +79,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "casilla_removals": "[]",
     "casilla_positions": "[]",
     "cleared_families": "[]",
+    "family_disposition_removals": '["formulas"]',
     "scoped_families": "[]",
     "family_overrides": "[]",
     "family_removals": "[]",
@@ -83,7 +88,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "engineered_by": '"registry schema campaign"',
     "review_status": '"pending_review"',
     "reviewed_by": '"operator"',
-    "reviewed_at": "2026-07-27",
+    "reviewed_at": f"{STANDARD_REVISION_EXERCISE}-07-27",
     "reviewed_against": '"2024"',
     # An inline table, because this field is a Mapping of declarations rather
     # than a scalar: the refusal must fire on WHERE the field is declared, so the
@@ -117,7 +122,7 @@ def _revision_manifest_text(*, declare_legal_refs: bool = True, extra: str = "")
     its legal grounding is exactly the shape a fragment could have supplied it
     for, unchallenged.
     """
-    return _standard_revision_preamble_text(declare_legal_refs=declare_legal_refs) + extra
+    return standard_revision_preamble_text(declare_legal_refs=declare_legal_refs) + extra
 
 
 def _write_modelo(
@@ -126,7 +131,7 @@ def _write_modelo(
     manifest_text: str | None = None,
     fragment_extra: str = "",
 ) -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -136,7 +141,7 @@ def _write_modelo(
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _fragment_declaring(field_name: str, literal: str) -> str:
@@ -165,15 +170,15 @@ def test_the_refusal_is_about_placement_not_content(tmp_path: Path) -> None:
     """
     accepted = _load_revision(
         _write_modelo(
-            tmp_path / "manifest-home", manifest_text=_revision_manifest_text(extra="valid_to = 2025-12-31\n")
+            tmp_path / "manifest-home", manifest_text=_revision_manifest_text(extra=f"valid_to = {_VALID_TO}\n")
         ),
     )
     assert accepted.valid_to is not None
-    assert accepted.valid_to.isoformat() == "2025-12-31"
+    assert accepted.valid_to.isoformat() == _VALID_TO
 
     with pytest.raises(RegistryLoadError, match=re.escape("must be declared in the revision's revision.toml")):
         load_modelo_directory(
-            _write_modelo(tmp_path / "fragment-home", fragment_extra=_fragment_declaring("valid_to", "2025-12-31")),
+            _write_modelo(tmp_path / "fragment-home", fragment_extra=_fragment_declaring("valid_to", _VALID_TO)),
         )
 
 
@@ -255,6 +260,7 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
         "construct_source_refs",
         "dependency_classification_source_refs",
         "extraction_profile_source_refs",
+        "family_disposition_removals",
         "family_dispositions",
         "family_overrides",
         "family_positions",

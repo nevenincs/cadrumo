@@ -30,6 +30,8 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -40,22 +42,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...tests.operation_host_fakes import RecordingEvents
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _DUPLICATE_MESSAGE = "adapters.persistence.profile.bienes_inversion.errors.record_already_exists"
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Cancellation:
@@ -92,7 +84,7 @@ class _Context:
         )
         self._authority_operation = authority_operation
         self.authority_operation_reads = 0
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
 
@@ -175,17 +167,31 @@ def _existing_record(authority_operation: PinnedAuthorityOperation) -> BienInver
         )
 
 
+def test_declared_identifier_is_bounded_at_the_ledger_asset_link_length() -> None:
+    """The ledger's ``investment_asset_id`` allows 128 characters, so a longer identifier could never be linked."""
+    assert _request(identifier="i" * 128).payload.model_dump()["identifier"] == "i" * 128
+
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        _request(identifier="i" * 129)
+
+
 @pytest.mark.parametrize(
-    ("overrides", "expected_reason"),
+    ("overrides", "expected_reason", "expected_words_key"),
     [
-        ({"disposal_year": 2026}, "disposal_incomplete"),
-        ({"kind": "not-a-registered-kind"}, "validation"),
+        ({"disposal_year": 2026}, "disposal_incomplete", "application.bienes_inversion.served.disposal_regime_missing"),
+        (
+            {"disposal_regime": "sujeta_no_exenta"},
+            "disposal_incomplete",
+            "application.bienes_inversion.served.disposal_year_missing",
+        ),
+        ({"kind": "not-a-registered-kind"}, "validation", "application.bienes_inversion.served.validation"),
     ],
 )
 def test_known_declaration_refusal_has_no_repository_write(
     operation: PinnedAuthorityOperation,
     overrides: dict[str, object],
     expected_reason: str,
+    expected_words_key: str,
 ) -> None:
     repository = _Repository()
     factory = _RepositoryFactory(repository)
@@ -195,10 +201,11 @@ def test_known_declaration_refusal_has_no_repository_write(
         definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     )
 
-    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+    with override_settings(cadrumo_active_profile=str(_PROFILE), cadrumo_output_language="es"):
         result = asyncio.run(
             executor.execute(_request(**overrides), cast(OperationExecutorContext, context)),
         )
+        expected_words = tr(expected_words_key, locale="es")
 
     assert isinstance(result, OperationRefusalEvidence)
     assert result.refusal_code == BIENES_INVERSION_VALIDATION_REFUSAL_CODE
@@ -209,6 +216,8 @@ def test_known_declaration_refusal_has_no_repository_write(
     assert isinstance(context.operands.value, BienesInversionOperationExecutionResult)
     assert context.operands.value.refusal is not None
     assert context.operands.value.refusal.reason == expected_reason
+    assert context.operands.value.refusal.refusal_words == expected_words
+    assert context.operands.value.refusal.refusal_words_language is OutputLanguage.ES
 
 
 @pytest.mark.parametrize("mismatch", ["request_subject", "context_definition", "context_subject", "active_profile"])
@@ -265,9 +274,12 @@ def test_duplicate_from_repository_add_settles_as_none_without_write(
         definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     )
 
-    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+    with override_settings(cadrumo_active_profile=str(_PROFILE), cadrumo_output_language="en"):
         result = asyncio.run(
             executor.execute(_request(), cast(OperationExecutorContext, context)),
+        )
+        expected_words = tr(
+            "application.bienes_inversion.served.duplicate_identifier", locale="en", identifier="bien-1"
         )
 
     assert isinstance(result, OperationRefusalEvidence)
@@ -281,6 +293,8 @@ def test_duplicate_from_repository_add_settles_as_none_without_write(
     assert isinstance(context.operands.value, BienesInversionOperationExecutionResult)
     assert context.operands.value.refusal is not None
     assert context.operands.value.refusal.reason == "duplicate_identifier"
+    assert context.operands.value.refusal.refusal_words == expected_words
+    assert "bien-1" in expected_words
 
 
 def test_validation_error_after_repository_write_remains_unknown(

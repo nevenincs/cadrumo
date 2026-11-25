@@ -17,7 +17,7 @@ from .....core.secure_object_write import SecureObjectWrite
 from .....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.errors import SecureObjectRevisionConflictError
@@ -126,7 +126,7 @@ def test_admission_starts_after_both_cas_reads_and_event_preparation_and_ends_af
             bucket_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Synthetic supplier",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number="PREPARED-1",
             issued_at=date(2026, 5, 1),

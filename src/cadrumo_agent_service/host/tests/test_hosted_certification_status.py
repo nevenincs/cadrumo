@@ -11,7 +11,20 @@ import pytest
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service as service_module
+from ...providers.application.contracts import (
+    CliState,
+    ProviderCredentialSource,
+    ProviderReadiness,
+    ProviderSettingsMode,
+    ProviderSettingsRefusal,
+    ProviderSettingsRefusalCode,
+    ProviderSettingsStatus,
+    ProviderStatusEntry,
+)
+from ...providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from ...providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from ...providers.domain.catalog import ProviderAuthKind, ProviderConsumer, ProviderTransport
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..controller import AgentGenerations, AgentHostController, AgentHostState, AgentReady
 
@@ -36,24 +49,48 @@ def _ready() -> AgentReady:
     )
 
 
+# This credential-only fact is deliberately insufficient to prove hosted readiness.
+_CREDENTIAL_ENTRY = ProviderStatusEntry(
+    id="example_cli",
+    provider="example",
+    display_name="Example",
+    reads_off_host=True,
+    transport=ProviderTransport.CLI,
+    auth_kind=ProviderAuthKind.PROVIDER_SIGN_IN_ONLY,
+    consumers=(ProviderConsumer.ASSISTANT,),
+    mode=ProviderSettingsMode.PROVIDER_SIGN_IN,
+    credential_saved=False,
+    available=True,
+    source=ProviderCredentialSource.PROFILE,
+    readiness=ProviderReadiness.NOT_VERIFIED,
+    reason=None,
+    base_url=None,
+    default_base_url=None,
+    cli_state=CliState.INSTALLED_SIGNED_IN,
+    sign_out_available=False,
+    revision="0" * 64,
+)
+
+
+def _credential_providers() -> list[dict[str, Any]]:
+    """The one signed-in command-line lane every service here reads, as the status serves it."""
+    return ProviderSettingsStatus(providers=(_CREDENTIAL_ENTRY,), reads_pending=False).model_dump(mode="json")[
+        "providers"
+    ]
+
+
 def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
-    client = SimpleNamespace(lease=object())
+    client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=lambda _event: None,
     )
     # This credential-only fact is deliberately insufficient to prove hosted readiness.
-    credential_status = {
-        "development": False,
-        "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
-    }
-    monkeypatch.setattr(
-        service._providers,
-        "status",
-        lambda: SimpleNamespace(model_dump=lambda *, mode: credential_status),
-    )
+    credential_status = ProviderSettingsStatus(providers=(_CREDENTIAL_ENTRY,), reads_pending=False)
+    monkeypatch.setattr(service._providers, "status", lambda **_reads: credential_status)
     return service
 
 
@@ -95,10 +132,11 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
 
     assert catalog["api_version"] == "v1"
     assert result == {
-        "development": False,
-        "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
+        "providers": _credential_providers(),
+        "reads_pending": False,
         "sign_in_providers": [],
         "sign_in_methods": {},
+        "console_sign_in_command": CONSOLE_SIGN_IN_COMMAND,
         "hosted_certifications": [
             {
                 "provider": "example",
@@ -213,7 +251,7 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
     monkeypatch.setattr(
         service._providers,
         "status",
-        lambda: SimpleNamespace(model_dump=lambda *, mode: {"code": "catalog_unavailable"}),
+        lambda **_reads: ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE),
     )
     monkeypatch.setattr(
         service,
@@ -239,19 +277,7 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
 
     result = service.admin("status")
 
-    assert result == {
-        "code": "catalog_unavailable",
-        "sign_in_providers": [],
-        "sign_in_methods": {},
-        "hosted_certifications": [
-            {
-                "provider": "example",
-                "transport": "cli",
-                "execution_mode": "example-cli",
-                "status": "pending",
-            }
-        ],
-    }
+    assert result == {"code": "catalog_unavailable"}
 
 
 @pytest.mark.parametrize(

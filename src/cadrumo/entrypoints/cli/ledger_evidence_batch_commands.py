@@ -37,6 +37,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.output import precondition_action_lines
+
 from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
@@ -51,7 +53,6 @@ from .common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
-from .config.status_rendering import precondition_action_lines
 from .ledger_evidence_batch_results import EvidenceBatchResult
 
 if TYPE_CHECKING:
@@ -98,9 +99,9 @@ def evidence_batch(
     emit_envelope(
         ctx,
         command="ledger.evidence.batch",
-        result=_batch_payload(run, bucket_id=bucket_id, direction=kind),
-        lines=_batch_text_lines(run, bucket_id=bucket_id, direction=kind),
-        notices=_run_notices(run),
+        result=batch_payload(run, bucket_id=bucket_id, direction=kind),
+        lines=batch_text_lines(run, bucket_id=bucket_id, direction=kind),
+        notices=run_notices(run),
     )
     if run.any_failed:
         raise typer.Exit(code=1)
@@ -149,7 +150,7 @@ def _string_keyed_payload(value: object) -> dict[str, object]:
     return payload
 
 
-def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:
+def batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:
     """Project the run onto its wire schema from the run's own dump.
 
     Built by re-validating the engine's serialisation rather than by copying
@@ -219,7 +220,7 @@ def _item_notice(item: BatchItemResult) -> Notice:
     )
 
 
-def _run_notices(run: BatchRunResult) -> list[Notice]:
+def run_notices(run: BatchRunResult) -> list[Notice]:
     """Return the run-level notices, one per distinct outcome class.
 
     Refusal, deferral and pending review are three different things an operator
@@ -243,14 +244,14 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
         )
     pause = run.inference_pause
     if run.any_deferred and pause is not None:
+        action = resolve_cli_precondition_action(pause.precondition_verdict)
+        message = tr("cli.app.ledger.evidence.batch_work_deferred_message")
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.evidence.batch.work_deferred",
-                message=tr(
-                    "cli.app.ledger.evidence.batch_work_deferred_message",
-                ),
-                action=resolve_cli_precondition_action(pause.precondition_verdict),
+                message=message,
+                action=action,
                 context={
                     "paused": str(run.count_of("paused")),
                 },
@@ -348,7 +349,7 @@ def _refusal_lines(verdict: PreconditionVerdict | None) -> list[str]:
     return lines
 
 
-def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
+def batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
     """Return the closing text block: the tally, then every row needing attention.
 
     The per-item progress already streamed, so this does not repeat the clean
@@ -385,19 +386,22 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
     _append_batch_pause_lines(run, lines)
     lines.append(f"any_failed\t{run.any_failed}")
     lines.append(f"any_deferred\t{run.any_deferred}")
-    lines.extend(_notice_line(notice) for notice in _run_notices(run))
+    lines.extend(_notice_line(notice) for notice in run_notices(run))
     return lines
 
 
 def _append_batch_pause_lines(run: BatchRunResult, lines: list[str]) -> None:
-    """Append the existing paused facts and precondition actions after unresolved rows."""
+    """Append why the paused documents were not read, then what the pause's action allows.
+
+    Text says why the paused documents were not read, then the action its
+    verdict resolves to. The pause's raw facts stay in the JSON payload only.
+    """
     pause = run.inference_pause
-    if pause is not None:
-        lines.extend(
-            f"paused.facts.{key}\t{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
-            for key, value in sorted(pause.facts.items())
-        )
-        lines.extend(
-            f"paused.{line}"
-            for line in precondition_action_lines(resolve_cli_precondition_action(pause.precondition_verdict))
-        )
+    if pause is None:
+        return
+    verdict = pause.precondition_verdict
+    reason = tr("cli.app.ledger.evidence.batch_paused_local_ai_unavailable")
+    # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-PAUSE: tab-separated machine
+    # record (marker, localized reason).
+    lines.append(f"paused\t{reason}")
+    lines.extend(f"paused.{line}" for line in precondition_action_lines(resolve_cli_precondition_action(verdict)))

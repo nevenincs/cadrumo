@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -22,7 +22,7 @@ from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-# Every case gets its own storage root. The ``CADRUMO_LOCAL_STORAGE_ROOT`` the
+# Every case gets its own storage root. The ``CADRUMO_STORAGE_ROOT`` the
 # runner env carries is not enough: in-process settings are held per
 # active-profile pointer, so a case that registers or selects a profile would
 # otherwise write that selection into the worker's shared root.
@@ -33,11 +33,7 @@ def _env(tmp_path: Path) -> dict[str, str]:
     return {
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-        "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
-        "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-        "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-        "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
     }
 
 
@@ -72,7 +68,7 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     original roundtrip is the part that still has a subject -- a profile that
     exists is reported by the listing verb, under the label it was given.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     label = "operator"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

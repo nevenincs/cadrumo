@@ -68,6 +68,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -88,8 +89,9 @@ class _Request(CredentialFreeFinancialOperationRequest):
 class _FailureAfterGrantExecutor:
     """Hold one accepted operand, then raise the selected registered or ordinary failure."""
 
-    def __init__(self, *, registered_refusal: bool) -> None:
+    def __init__(self, *, registered_refusal: bool, effect: OperationEffect | None = None) -> None:
         self.registered_refusal = registered_refusal
+        self.effect = effect
         self.requirement: OperationTransientFinancialOperandRequirementV1 | None = None
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> None:
@@ -98,6 +100,8 @@ class _FailureAfterGrantExecutor:
         async with context.typed_financial_operand.consume(FinancialOperandBatch) as operand:
             try:
                 assert operand.values == (Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125"))
+                if self.effect is not None:
+                    await context.events.effect(self.effect)
                 if self.registered_refusal:
                     raise OperationSubjectBusyError()
                 raise RuntimeError("synthetic executor failure")
@@ -207,6 +211,21 @@ def _request() -> OperationRequest[BaseModel]:
     )
 
 
+async def _submit_bind_and_start(supervisor: OperationSupervisor, executor: _FailureAfterGrantExecutor) -> str:
+    """Submit an operation, bind its typed financial operands, record the requirement and start it."""
+    operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
+    await supervisor.bind_typed_financial_operand(
+        operation_id,
+        FinancialOperandBatch(
+            baseline=FinancialOperandBaseline(baseline_id="d" * 64),
+            values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
+        ),
+    )
+    executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
+    await supervisor.start(operation_id)
+    return operation_id
+
+
 @pytest.mark.parametrize("registered_refusal", (True, False), ids=("registered-refusal", "ordinary-failure"))
 def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: Path, registered_refusal: bool) -> None:
     """A terminal receipt stays absent while the real custody cleanup is unfinished."""
@@ -227,16 +246,7 @@ def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: 
             OperationPersistedSnapshot,
             OperationFinancialOperandCustodyCheckpointV1 | None,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             # Whichever comes first decides: the custody release, or a settlement that skipped it.
             released = asyncio.ensure_future(custody.release_persisted.wait())
             settled = asyncio.ensure_future(supervisor.settled(operation_id))
@@ -288,16 +298,7 @@ def test_failed_financial_operand_cleanup_does_not_publish_executor_failure_rece
         )
 
         async def run() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             with pytest.raises(OperationUnsettledError):
                 await supervisor.settled(operation_id)
             return await supervisor.inspect(operation_id)
@@ -332,19 +333,10 @@ def test_executor_failure_log_record_carries_the_raising_frame(
         )
 
         async def run() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             return await supervisor.settled(operation_id)
 
-        with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations._supervisor_execution"):
+        with caplog.at_level(logging.INFO, logger="cadrumo.application.operations.supervisor_execution"):
             terminal = asyncio.run(run())
 
     receipt = terminal.terminal_receipt
@@ -353,8 +345,8 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     assert correlation is not None
     records = [
         record
-        for record in caplog.records
-        if record.name == "cadrumo.application.operations._supervisor_execution"
+        for record in delivered_records(caplog)
+        if record.name == "cadrumo.application.operations.supervisor_execution"
         and f"operation={_OPERATION_ID}" in record.getMessage()
         and correlation in record.getMessage()
     ]
@@ -363,4 +355,72 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     # only where it was raised: this module's executor.
     assert records[0].exc_info is None
     message = records[0].getMessage()
-    assert f"raising_frame={__file__}:" in message and message.endswith(":execute")
+    raising = message.partition("raising_frame=")[2].partition(" application_frame=")[0]
+    path, line, function = raising.rsplit(":", 2)
+    assert Path(path).name == Path(__file__).name
+    assert line.isdecimal() and int(line) > 0
+    assert function == "execute"
+    if not registered_refusal:
+        assert message.partition(" application_frame=")[2] == raising
+    assert "synthetic executor failure" not in message
+
+
+_EXECUTION_LOGGER = "cadrumo.application.operations.supervisor_execution"
+_SETTLEMENT_LOGGER = "cadrumo.application.operations.settlement_snapshot"
+_TIMING_LOGGER = "cadrumo.application.operations.lifecycle_timing"
+
+
+@pytest.mark.parametrize(
+    ("registered_refusal", "effect", "condition", "execution_level", "settlement_level"),
+    [
+        (True, None, OperationTerminalCondition.REFUSED, logging.INFO, logging.INFO),
+        (True, OperationEffect.NONE, OperationTerminalCondition.REFUSED, logging.INFO, logging.INFO),
+        (True, OperationEffect.UNKNOWN, OperationTerminalCondition.REFUSED, logging.WARNING, logging.WARNING),
+        (False, None, OperationTerminalCondition.FAILED, logging.ERROR, logging.WARNING),
+    ],
+    ids=("refused-no-effect", "refused-effect-none", "refused-unknown-effect", "failed"),
+)
+def test_a_served_refusal_is_logged_by_its_settled_condition_and_effect(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    registered_refusal: bool,
+    effect: OperationEffect | None,
+    condition: OperationTerminalCondition,
+    execution_level: int,
+    settlement_level: int,
+) -> None:
+    """Each settlement site chooses its level from the typed condition and effect, not from the code."""
+    executor = _FailureAfterGrantExecutor(registered_refusal=registered_refusal, effect=effect)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        custody = _GatedReleaseCustodyRepository(root=tmp_path / "custody")
+        custody.allow_buffer_release.set()
+        supervisor = _supervisor(
+            executor=executor,
+            journal=OperationJournalRepository(storage_root=storage_root),
+            leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+            operands=operation_secure_reference_repository(objects=profile.repository),
+            custody=custody,
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            operation_id = await _submit_bind_and_start(supervisor, executor)
+            return await supervisor.settled(operation_id)
+
+        with caplog.at_level(logging.DEBUG):
+            terminal = asyncio.run(run())
+
+    receipt = terminal.terminal_receipt
+    assert receipt is not None
+    assert receipt.condition is condition
+    named = [record for record in delivered_records(caplog) if f"operation={_OPERATION_ID}" in record.getMessage()]
+    # The payload-free phase timings name the operation too; they are observations, never a settlement site.
+    timings = [record for record in named if record.name == _TIMING_LOGGER]
+    assert timings
+    assert {record.levelno for record in timings} == {logging.INFO}
+    records = [record for record in named if record.name != _TIMING_LOGGER]
+    levels = {record.name: record.levelno for record in records}
+    assert levels == {_EXECUTION_LOGGER: execution_level, _SETTLEMENT_LOGGER: settlement_level}
+    settled = [record for record in records if record.name == _SETTLEMENT_LOGGER]
+    assert len(settled) == 1
+    assert f"effect={receipt.effect.value}" in settled[0].getMessage()

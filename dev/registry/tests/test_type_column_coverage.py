@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (
@@ -30,12 +31,16 @@ from ..analysis.type_column_coverage import (
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "232"
-_BASE = "2016-2017"
-_DELTA = "2018-y-siguientes"
+_DELTA_REVISION = authored_revisions(_MODELO)[-1]
+_DELTA = str(_DELTA_REVISION.id)
+#: The delta states its predecessor, which is the generated base it inherits its layouts from.
+assert isinstance(_DELTA_REVISION.predecessor, DeclaredPredecessor)
+_BASE = str(_DELTA_REVISION.predecessor.revision_id)
 
 
 @pytest.fixture(scope="module")

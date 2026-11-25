@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -56,6 +56,7 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.codes import ModeloCode
@@ -66,10 +67,11 @@ from ..calculations.observations_repository import (
     ObservationSourceKind,
     member_observation_key,
 )
-from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
-from .action_errors import ModeloLocalObservationError
-from .revision_persistence import build_modelo_bucket_event
-from .work_addressing import ModeloWorkSelectorError
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import local_observation_refusal
+from .modelo_bucket_events import build_modelo_bucket_event
+from .registry_helpers import NUMERIC_CASILLA_DATA_TYPES
+from .work_address_errors import ModeloWorkSelectorError
 from .work_selection import ModeloWorkSelectionMode, ModeloWorkSelectorRequest, select_modelo_work_resolution
 
 if TYPE_CHECKING:
@@ -172,13 +174,14 @@ def record_operator_local_observation[CasillaKey](
     """
     captured_by, stated_reason = _required_audit_text(actor=actor, reason=reason)
     _require_period_year(filing_year=filing_year, period=period)
-    if modelo == "303":
-        raise ModeloLocalObservationError(
-            "Modelo 303 observations require canonical filed or official evidence with a result disposition",
+    if modelo == form_for_role("iva.periodic"):
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVABLE_MODELO,
+            message="Modelo 303 observations require canonical filed or official evidence with a result disposition",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         )
     revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
-    canonical_values = _canonical_casilla_values(revision=revision, casilla_values=casilla_values)
+    canonical_values = canonical_casilla_values(revision=revision, casilla_values=casilla_values)
     observations = _observation_rows(revision=revision, casilla_values=canonical_values)
     observation = RegistryModeloObservation(
         modelo=modelo,
@@ -186,7 +189,7 @@ def record_operator_local_observation[CasillaKey](
         period=period.registry_token,
         observations=observations,
     )
-    captured_at = clock or _utc_now()
+    captured_at = clock or now()
     key = member_observation_key(modelo, period, member_nif)
     repo = ports.observation_repository
     replaced = repo.load_observation_layers(modelo, period, member_nif=member_nif).effective
@@ -277,11 +280,12 @@ def clear_operator_local_observation(
     layers = repo.load_observation_layers(modelo, period, member_nif=member_nif)
     pending = layers.pending_local
     if pending is None or pending.override is None:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OVERRIDE,
             translated_message="application.modelo.errors.local_observation_override_missing",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         )
-    cleared_at = clock or _utc_now()
+    cleared_at = clock or now()
     event = _override_event(
         ports=ports,
         event_type=BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED,
@@ -319,12 +323,14 @@ def clear_operator_local_observation(
 def _required_audit_text(*, actor: str, reason: str) -> tuple[str, str]:
     stated_actor = actor.strip()
     if not stated_actor:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.AUDIT_TEXT,
             translated_message="application.modelo.errors.local_observation_actor_blank",
         )
     stated_reason = reason.strip()
     if not stated_reason:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.AUDIT_TEXT,
             translated_message="application.modelo.errors.local_observation_reason_blank",
         )
     return stated_actor, stated_reason
@@ -332,7 +338,8 @@ def _required_audit_text(*, actor: str, reason: str) -> tuple[str, str]:
 
 def _require_period_year(*, filing_year: int, period: Period) -> None:
     if period.filing_year != filing_year:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.COORDINATE,
             translated_message="application.modelo.errors.external_import_source_period_mismatch",
             context={"filing_year": filing_year, "period": period.registry_token},
         )
@@ -401,8 +408,9 @@ def _load_revision(
     try:
         return operation.revision_for_context(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
-        raise ModeloLocalObservationError(
-            (
+        raise local_observation_refusal(
+            FilingImportRefusalCause.REVISION_AVAILABILITY,
+            message=(
                 f"local observation cannot be recorded because the registry revision is missing for "
                 f"modelo={modelo!r} filing_year={filing_year} period={period.registry_token!r}"
             ),
@@ -413,7 +421,8 @@ def _load_revision(
 def _require_local_observation_values[CasillaKey](casilla_values: Mapping[CasillaKey, object]) -> None:
     """Require at least one operator value before touching registry state."""
     if not casilla_values:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVED_VALUES,
             translated_message="errors.error.error_modelos",
             context={"casilla_value_count": 0},
         )
@@ -447,12 +456,14 @@ def _raise_local_observation_input_errors(
 ) -> None:
     """Raise canonical boundary diagnostics in their original precedence."""
     if malformed:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVED_CASILLAS,
             translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(sorted(malformed)), "revision_id": revision.id},
         )
     if non_decimal:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVED_CASILLAS,
             translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(sorted(non_decimal)), "revision_id": revision.id},
         )
@@ -477,7 +488,8 @@ def _raise_unknown_local_observation_casillas(
             format_noncanonical_casilla_reference(casilla_id, targets)
             for casilla_id, targets in sorted(noncanonical.items())
         )
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVED_CASILLAS,
             translated_message="errors.error.error_modelos",
             context={
                 "casillas": ",".join(sorted(noncanonical)),
@@ -485,7 +497,8 @@ def _raise_unknown_local_observation_casillas(
                 "noncanonical_reference_targets": details,
             },
         )
-    raise ModeloLocalObservationError(
+    raise local_observation_refusal(
+        FilingImportRefusalCause.OBSERVED_CASILLAS,
         translated_message="errors.error.error_modelos",
         context={"casillas": ",".join(unknown), "revision_id": revision.id},
     )
@@ -502,18 +515,22 @@ def _raise_non_numeric_local_observation_casillas(
         casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in NUMERIC_CASILLA_DATA_TYPES
     )
     if non_numeric:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVED_CASILLAS,
             translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(non_numeric), "revision_id": revision.id},
         )
 
 
-def _canonical_casilla_values[CasillaKey](
+def canonical_casilla_values[CasillaKey](
     *,
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaKey, object],
 ) -> dict[CasillaId, Decimal]:
-    """Validate and return registry-canonical numeric local observation values."""
+    """Validate and return registry-canonical numeric local observation values.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     _require_local_observation_values(casilla_values)
     canonical, malformed, non_decimal = _canonicalize_local_observation_values(casilla_values)
     _raise_local_observation_input_errors(
@@ -546,7 +563,8 @@ def _observation_rows(
                 ),
             )
         except (RegistryValidationError, ValidationError, TypeError, ValueError) as exc:
-            raise ModeloLocalObservationError(
+            raise local_observation_refusal(
+                FilingImportRefusalCause.OBSERVED_CASILLAS,
                 translated_message="errors.error.error_modelos",
                 context={"casilla": casilla_id, "revision_id": revision.id},
             ) from exc

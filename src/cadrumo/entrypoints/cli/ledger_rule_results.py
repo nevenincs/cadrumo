@@ -31,7 +31,7 @@ from ...domain.transactions.classification_rule import (
     RulePriority,
 )
 from ...domain.transactions.enums import BusinessClassification
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 
 
 class ClassificationRulePayload(OutputSchema):
@@ -79,6 +79,10 @@ class RuleAddResult(ClassificationRulePayload):
     the same pattern/classification/category tuple is idempotent because the
     rule id is content-addressed.
     """
+
+
+class RuleRemoveResult(ClassificationRulePayload):
+    """JSON envelope for ``aeat app ledger rule remove``: the rule that was removed."""
 
 
 class RuleListResult(OutputSchema):

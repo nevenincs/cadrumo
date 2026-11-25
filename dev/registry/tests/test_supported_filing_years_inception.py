@@ -11,7 +11,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.modelo_inception import DeclaredInception
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ..conformance.registry_schema_support import committed_registry_tree
 from ..supported_filing_years import audit_supported_filing_years

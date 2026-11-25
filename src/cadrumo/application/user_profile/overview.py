@@ -11,11 +11,8 @@ rows and an object field's instances live under an index the schema never
 mentions, so the record decides how many there are while the schema
 decides what each holds; both are expanded here.
 
-That inversion is the point. The surface this replaces enumerated the
-*steps of a setup wizard*: a list of questions with a status glyph, which
-told the operator where they were in a process but never what their
-profile held. A profile is data, not a process, and the operator should
-be looking at the data.
+A profile is data, not a process, and the operator should be looking at
+the data.
 
 Completeness rides along as a count rather than a gate. Every field is
 editable at any time; ``missing_required`` names what filing will
@@ -38,7 +35,9 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from collections.abc import Set as AbstractSet
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -47,12 +46,11 @@ from ...core.auth_provider import ClaveMovilRoute
 from ...core.classification.policies import SensitivityClass
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.identity.profile import ProfileId
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...domain.user_profile.labels import (
     profile_choice_label,
-    profile_field_help,
     profile_field_label,
     profile_field_label_key,
     profile_section_summary,
@@ -62,20 +60,31 @@ from ...domain.user_profile.labels import (
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
-from ...domain.user_profile.schema import ProfileFieldType, derived_selector_for_path
+from ...domain.user_profile.schema import (
+    ENTITY_TYPE_FIELD_KEY,
+    ENTITY_TYPE_SECTION_KEY,
+    ProfileFieldCodeList,
+    ProfileFieldType,
+    derived_selector_for_path,
+)
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ...domain.user_profile.values import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState, section_field_key
+from ..wizard.models import WizardWidget
 from .completeness import (
     conditional_profile_missing_required,
     conditional_profile_required_paths,
     missing_required_field_paths,
+    pinned_registry_scope,
     profile_section_rows,
     profile_value_is_present,
+    schema_requirement_applies,
 )
+from .field_help import ProfileFieldEjercicioAnswer, profile_field_ejercicio_answers, profile_field_help
 from .projections import profile_schema_for_record, record_to_path_values
+from .row_parts import ProfileFieldPart, ProfileFieldPartsSpec, field_parts
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
 
     from ...domain.user_profile.schema import (
         ProfileDerivedSelectorDefinition,
@@ -84,7 +93,14 @@ if TYPE_CHECKING:
         ProfileSectionDefinition,
     )
     from ...domain.user_profile.values import UserProfileRecord
+    from ..wizard.models import WizardFlow
 
+
+_NO_FIELD_HELP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]]({})
+_NO_EJERCICIO_ANSWERS: Final[Mapping[str, ProfileFieldEjercicioAnswer]] = MappingProxyType[
+    str, ProfileFieldEjercicioAnswer
+]({})
+"""The help of a projection built without a setup flow: no field has any."""
 
 MASKED_PLACEHOLDER: Final[str] = "••••••••"
 """Rendered in place of a secret-classed value.
@@ -108,10 +124,10 @@ surface under a path no schema field declares still masks if it is named
 like a credential.
 
 They are not consulted for a field the schema HAS classified. Reading
-them over a declared field let authored prose override an explicit
-declaration, which is how ``auth.provider`` came to mask: its
-description mentions a password only to say that no password is stored
-there, and the heuristic could not tell the difference. A heuristic
+them over a declared field would let authored prose override an explicit
+declaration: a description that mentions a password only to say that no
+password is stored there would be masked, since the heuristic cannot tell
+the difference. A heuristic
 pointed at text this project writes is answerable to an editorial
 change nobody would review as a security change -- in both directions,
 since deleting a word would equally have unmasked a real credential.
@@ -129,12 +145,8 @@ addition and must NOT be promoted to the shared base, where it would
 match ``header_key``, ``producer_key`` and ``casilla_key`` tree-wide.
 
 The set composes :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS`
-rather than redeclaring terms beside it. It previously did not, and was
-missing eight base terms -- ``nif``, ``tax_id``, ``nie``, ``bearer``,
-``certificate``, ``cookie``, ``authorization``, ``pkcs12`` -- so an
-undeclared fact named like a NIF rendered in the clear on this surface
-while the logging and live-diagnostic predicates both redacted it. Only
-the additions above are declared here; a term that must never diverge
+rather than redeclaring terms beside it. Only the additions above are
+declared here; a term that must never diverge
 belongs in the base.
 """
 
@@ -147,10 +159,7 @@ An ``object`` or ``array`` field is written as indexed instances under its
 path -- ``censo.divergencia.{n}.{axis,artefact_value,source}``,
 ``renta_family.descendiente.{n}.*`` -- and never at the bare path itself.
 So the bare path is not a blank waiting to be filled in; it is not a slot
-at all, and a row offered for it can only ever be empty. The manager
-offered exactly that: one permanently blank ``censo.divergencia`` row,
-which counted against the profile's own progress line and accepted a typed
-value that no reader in the system ever looks at.
+at all, and a row offered for it can only ever be empty.
 
 Their instances are therefore discovered from the record. The leaf names
 are not declared anywhere -- the writing family chooses them -- which is
@@ -177,6 +186,49 @@ class ProfileFieldChoice(BaseModel):
     label: str
 
 
+_NO_CODE_LISTS: Final[Mapping[ProfileFieldCodeList, tuple[str, ...]]] = MappingProxyType[
+    ProfileFieldCodeList, tuple[str, ...]
+]({})
+_NO_WIZARD_CHOICES: Final[Mapping[str, tuple[ProfileFieldChoice, ...]]] = MappingProxyType[
+    str, tuple[ProfileFieldChoice, ...]
+]({})
+_PICK_ONE_WIDGETS: Final[frozenset[WizardWidget]] = frozenset({WizardWidget.SELECT, WizardWidget.TEXT})
+"""Wizard widgets whose choices are alternatives for one answer.
+
+A checkbox's choices are members of a comma-joined list, which is not an answer
+a field typed as a single string can be picked from.
+"""
+
+
+def profile_wizard_choice_sets(flow: WizardFlow | None) -> Mapping[str, tuple[ProfileFieldChoice, ...]]:
+    """Return, per profile path, the pick-one choices the setup wizard asks it with.
+
+    A field the schema declares as plain text can still have a closed answer
+    set that only the wizard knows: the Modelo 100 declaration type and the
+    disability grades are official codes whose words live in the wizard's
+    copy. Joining those choices onto the path serves the words the wizard asks
+    with from their one producer, so no surface keeps a vocabulary of its own.
+
+    Args:
+        flow: The setup flow built for the caller's pinned authority, so the
+            codes are the vocabulary the same generation validates. Without it
+            no path has wizard choices.
+
+    Returns:
+        One entry per path a pick-one question writes and offers choices for.
+    """
+    if flow is None:
+        return _NO_WIZARD_CHOICES
+    return {
+        question.profile_key: tuple(
+            ProfileFieldChoice(value=choice.value, label=tr(choice.label)) for choice in question.choices
+        )
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None and question.choices and question.widget in _PICK_ONE_WIDGETS
+    }
+
+
 def profile_field_choices(
     field: ProfileFieldDefinition,
     *,
@@ -186,12 +238,7 @@ def profile_field_choices(
 
     THE authority on "may this field be answered by picking rather than by
     typing", so the manager's edit dialog and the add-row form offer the same
-    editor for the same declaration instead of each deciding alone. They did
-    decide alone, and disagreed: the add-row form had always offered a boolean
-    as Yes/No, while the manager gave it a text box -- so the same field was a
-    two-item list on one surface and a guess-the-vocabulary prompt on the
-    other, and the manager stored whatever spelling of yes the operator
-    happened to reach for.
+    editor for the same declaration instead of each deciding alone.
 
     A BOOLEAN is a closed set of two, which is why it belongs here rather than
     in a checkbox: a page of mixed fields reads better with two named options
@@ -266,6 +313,8 @@ class ProfileFieldView(BaseModel):
     type" to a page that does not know the difference, and the operator finds
     out which one they got wrong only after the write door refuses.
     """
+    country_options: tuple[str, ...] = Field(default=())
+    """The country codes offered for a field typed as a code; any code of its shape stays allowed."""
     choices: tuple[ProfileFieldChoice, ...] = Field(default=())
     """The closed answer set, or empty for a field that is typed into.
 
@@ -276,12 +325,33 @@ class ProfileFieldView(BaseModel):
     declaration.
     """
     help: tuple[str, ...] | None = Field(default=None)
-    """What the field is, why it is asked and where to find it, or ``None``.
+    """The setup wizard's copy for this field, one paragraph per entry, or ``None``.
 
-    Present only for fields the catalogue explains in those three parts;
-    :attr:`about` explains every other field."""
+    Its prompt, its help text when it has one, and a ``label: description``
+    line for each choice that carries a description, exactly as
+    :func:`~cadrumo.application.user_profile.field_help.profile_field_help`
+    remaps them. ``None`` for a field no wizard question writes;
+    :attr:`about` explains that field instead."""
     about: str = Field(default="")
     """The schema's own description of the field, the explanation of last resort."""
+    ejercicio_answer: ProfileFieldEjercicioAnswer | None = Field(default=None)
+    """How a field stated per ejercicio is answered, or ``None`` for a field holding one value."""
+    references_section: str | None = Field(default=None)
+    """The repeatable section one of whose rows this field names, or ``None``.
+
+    Declared by the schema, so a generic editor offers the rows of that section
+    to pick from instead of asking for a row key.
+    """
+    parts: tuple[ProfileFieldPart, ...] | None = Field(default=None)
+    """The typed sub-rows of a packed field's stored text, or ``None``.
+
+    Served beside :attr:`value`, which stays the one stored text. ``None`` for a field that is
+    not packed and for a packed value that does not parse (then :attr:`parts_spec` is marked
+    invalid); an unstated packed field serves an empty list. The parts are read by the one
+    canonical parser, so a surface never parses the text.
+    """
+    parts_spec: ProfileFieldPartsSpec | None = Field(default=None)
+    """What a packed field's part is and its sub-fields in words, or ``None`` for a field that is not packed."""
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -318,6 +388,9 @@ def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
     Indexed repeatable paths retain their instance identity; the declared
     field is the section's final path component, as the overview writer uses.
     Unknown supplied views keep their original label rather than inventing one.
+    The help is the backend's served copy and is replaced when the overview is
+    read again; this function holds it rather than re-deriving it, because the
+    wizard flow it comes from exists only inside a leased authority operation.
     """
     section, separator, remainder = view.path.partition(".")
     if not separator:
@@ -337,7 +410,10 @@ def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
         )
     elif view.field_type is ProfileFieldType.ENUM:
         choices = _enum_field_choices(tuple(item.value for item in choices), path=f"{section}.{field_key}")
-    return view.model_copy(update={"label": label, "help": profile_field_help(section, field_key), "choices": choices})
+    served = field_parts(section, field_key, view.value, masked=view.masked)
+    return view.model_copy(
+        update={"label": label, "choices": choices, "parts": served.parts, "parts_spec": served.spec}
+    )
 
 
 class ProfileSectionView(BaseModel):
@@ -363,6 +439,10 @@ class ProfileSectionView(BaseModel):
         return len(self.fields)
 
 
+_PERSON_NAME_PATHS: Final = ("identity.name", "identity.surnames")
+_LEGAL_NAME_PATH: Final = "identity.legal_name"
+
+
 class ProfileOverview(BaseModel):
     """Everything the manager's landing page renders for one profile."""
 
@@ -377,6 +457,18 @@ class ProfileOverview(BaseModel):
     missing_required: tuple[str, ...] = Field(default=())
     notices: tuple[Notice, ...] = Field(default=())
     """Typed envelope advisories that apply to this profile projection."""
+
+    @property
+    def heading_name(self) -> str:
+        """The name the profile is headed with: the taxpayer's, else the profile's own.
+
+        A person is named by given name and surnames, an entity by its legal
+        name; a profile that states neither is headed with the name it was
+        created under, and only one with no name at all is left unnamed.
+        """
+        values = {field.path: field.value for section in self.sections for field in section.fields if not field.masked}
+        person = " ".join(value for path in _PERSON_NAME_PATHS if (value := (values.get(path) or "").strip()))
+        return person or (values.get(_LEGAL_NAME_PATH) or "").strip() or self.label.strip()
 
     @property
     def present_count(self) -> int:
@@ -403,6 +495,15 @@ class ProfileOverview(BaseModel):
         missing = frozenset(self.missing_required)
         return tuple(field for section in self.sections for field in section.fields if field.path in missing)
 
+    def requires_now(self, field: ProfileFieldView) -> bool:
+        """Whether setup requires ``field`` now: listed as missing, or required and answered.
+
+        A repeatable section's template row is marked required but owes nothing
+        until the operator adds a row, so only :attr:`missing_required` decides
+        what an unanswered field owes.
+        """
+        return field.path in self.missing_required or (field.required and field.present)
+
 
 def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
     """Decide whether a profile field's value must be masked before display.
@@ -420,18 +521,12 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     which is what "defence in depth" means here -- a net under the
     unclassified, not a second opinion on the classified.
 
-    That fall-through used to run for every non-``SECRET`` field, which
-    is the opposite of what this docstring promised and let a field's
-    own description decide its confidentiality. It masked
-    ``auth.provider`` -- a closed enum naming the authentication mode,
-    no more secret than a username -- because the description says a
-    password is *not* stored there, while no field in the schema
-    declared ``SECRET`` at all. Prose documenting the absence of a
-    credential is not evidence of one, and a declaration the schema
-    makes explicitly must not be silently overridden by wording.
+    Prose documenting the absence of a credential is not evidence of one,
+    and a declaration the schema makes explicitly must not be silently
+    overridden by wording.
 
     Args:
-        path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
+        path: Dotted schema path of the field, e.g. ``auth.numero_soporte``.
         label: Operator-facing description, or the path when none exists.
             Read only when ``sensitivity`` is ``None``.
         sensitivity: Declared :class:`SensitivityClass`, or ``None`` for a
@@ -456,9 +551,12 @@ def _field_view(
     section_key: str,
     field: ProfileFieldDefinition,
     values: Mapping[str, str],
+    help_lines: tuple[str, ...] | None = None,
     label_suffix: str = "",
     row_index: str | None = None,
     conditionally_required: frozenset[str] = frozenset(),
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> ProfileFieldView:
     """Pair one path with the field declaring it and whatever the record holds there.
 
@@ -480,6 +578,12 @@ def _field_view(
     raw = values.get(path)
     masked = mask_profile_field(path=path, label=field.description, sensitivity=field.sensitivity)
     present = profile_value_is_present(raw)
+    # The schema's own closed set wins; the wizard's words fill in only for a
+    # field the schema leaves as typed text.
+    choices = profile_field_choices(field, path=f"{section_key}.{field.key}") or wizard_choices.get(
+        f"{section_key}.{field.key}", ()
+    )
+    served = field_parts(section_key, field.key, raw, masked=masked)
     return ProfileFieldView(
         path=path,
         label=f"{profile_field_label(section_key, field) or tr('flows.manager.field_unavailable')}{label_suffix}",
@@ -488,33 +592,52 @@ def _field_view(
         # is set here".
         value=MASKED_PLACEHOLDER if (masked and present) else raw,
         masked=masked,
-        required=field.required or path in conditionally_required,
+        required=(field.required and schema_requirement_applies(path, values)) or path in conditionally_required,
         field_type=field.type,
-        choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
-        help=profile_field_help(section_key, field.key),
+        country_options=() if field.code_list is None else code_lists.get(field.code_list, ()),
+        choices=choices,
+        help=help_lines,
         about=field.description,
+        references_section=field.references_section,
+        parts=served.parts,
+        parts_spec=served.spec,
         row_index=row_index,
     )
+
+
+def _required_row_paths(
+    section: ProfileSectionDefinition,
+    row: str,
+    field: ProfileFieldDefinition,
+    conditionally_required: frozenset[str],
+) -> frozenset[str]:
+    """The row path to mark required, where the section's own field is required."""
+    if f"{section.key}.{field.key}" not in conditionally_required:
+        return frozenset[str]()
+    return frozenset({f"{section.key}.{row}.{field.key}" if row else f"{section.key}.{field.key}"})
 
 
 def _repeatable_section_views(
     section: ProfileSectionDefinition,
     values: Mapping[str, str],
     present: frozenset[str],
+    field_help: Mapping[str, tuple[str, ...]],
+    conditionally_required: frozenset[str] = frozenset(),
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> list[ProfileFieldView]:
     """Expand one repeatable section into a row group per instance it holds.
 
     A section with three socios yields three groups of the same declared
     fields, addressed at ``section.INDEX.field`` — which is both where the
     values live and where the completeness check already names its missing
-    entries, so the two now speak about the same rows.
+    entries, so the two speak about the same rows.
 
-    A section holding NO rows keeps the single unindexed group, which is
-    what the page has always shown. That is the honest answer to "you have
-    no socios": the fields a socio would carry, blank. Rendering nothing
-    would say the section does not exist, and rendering one blank group
-    beside three filled ones — the defect this replaces — says the taxpayer
-    has none while they have three.
+    A section holding NO rows keeps the single unindexed group. That is the
+    honest answer to "you have no socios": the fields a socio would carry,
+    blank. Rendering nothing would say the section does not exist, and
+    rendering one blank group beside three filled ones says the taxpayer has
+    none while they have three.
     """
     rows = tuple(profile_section_rows(section.key, present)) or ("",)
     return [
@@ -523,7 +646,16 @@ def _repeatable_section_views(
             section_key=section.key,
             field=field,
             values=values,
+            help_lines=field_help.get(f"{section.key}.{field.key}"),
+            # A requirement declared for a repeatable section's field holds for
+            # every row of it, the single blank row a section with no rows
+            # stands for included -- and that is the row the filer fills in.
+            # Reading only the indexed path left it unmarked, so the page
+            # offered no required entry while the filing gate demanded one.
+            conditionally_required=_required_row_paths(section, row, field, conditionally_required),
             row_index=row or None,
+            code_lists=code_lists,
+            wizard_choices=wizard_choices,
         )
         for row in rows
         for field in section.fields
@@ -690,20 +822,29 @@ def _section_field_views(
     values: Mapping[str, str],
     present: frozenset[str],
     schema: ProfileSchemaDefinition,
+    field_help: Mapping[str, tuple[str, ...]],
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
     conditionally_required: frozenset[str] = frozenset(),
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> list[ProfileFieldView]:
     """Every row one section contributes, expanding whatever repeats.
 
     A path the engine derives yields no row at all. The write door refuses it,
     so rendering it would offer the operator a box whose value the record then
     rejects -- the two-surfaces-disagreeing failure the write-door refusal
-    exists to prevent, reintroduced at the point of entry. The declarations
-    themselves are retired in a later change, at which point this filter
-    becomes vacuous rather than wrong.
+    exists to prevent, reintroduced at the point of entry.
     """
     if section.repeatable:
-        return _repeatable_section_views(section, values, present)
+        return _repeatable_section_views(
+            section,
+            values,
+            present,
+            field_help,
+            conditionally_required,
+            code_lists,
+            wizard_choices,
+        )
     views: list[ProfileFieldView] = []
     for field in section.fields:
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
@@ -717,10 +858,117 @@ def _section_field_views(
                 section_key=section.key,
                 field=field,
                 values=values,
+                help_lines=field_help.get(f"{section.key}.{field.key}"),
                 conditionally_required=conditionally_required,
+                code_lists=code_lists,
+                wizard_choices=wizard_choices,
             ),
         )
     return views
+
+
+def _declared_only(paths: Iterable[str], declared: AbstractSet[str]) -> tuple[str, ...]:
+    """Keep the paths whose field key the schema declares."""
+    return tuple(path for path in paths if section_field_key(path) in declared)
+
+
+def _required_field_paths(
+    record: UserProfileRecord,
+    resolved_schema: ProfileSchemaDefinition,
+    values: Mapping[str, str],
+) -> tuple[list[str], frozenset[str]]:
+    """Return the missing required paths and the conditionally required path set."""
+    # Row-aware, and it has to be: a repeatable section's rows live at
+    # ``section.INDEX.field``, so testing the unindexed path reported every
+    # such required field as missing on every profile forever - the
+    # completeness count an operator reads was permanently wrong. Stripping
+    # the index would not have fixed it either, because a section with no
+    # rows has no facts to strip; the rule that was missing is that an
+    # absent row demands nothing.
+    missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
+    # Cross-field requirements come from the same completeness contract the
+    # taxpayer projection enforces, so the manager never lists fewer required
+    # fields than a filing or the workbench will demand.
+    # The profile-status baseline for modelo work is READ from the gate that
+    # refuses on it rather than restated here. That gate is the authority on
+    # what filing-grade work needs, and while this surface held its own answer
+    # the header said every required detail was filled in and creating a
+    # declaration was refused for want of one of them. The import is local
+    # because the gate reads this package's own completeness and preflight
+    # contracts, so a module-level one would close a cycle.
+    from ..modelo.profile_readiness_gate import (
+        modelo_work_profile_baseline_missing_paths,
+        modelo_work_profile_baseline_paths,
+    )
+
+    # Only a path this schema declares: a baseline fact the resolved schema has
+    # no field for has no row to fill in either, and naming it would report a
+    # blank the page cannot show.
+    declared = {f"{section.key}.{field.key}" for section in resolved_schema.sections for field in section.fields}
+    # One pinned generation for the whole walk: the conditional rules and the
+    # baseline read the same governed entity-type and income-category
+    # vocabularies, and two scopes could judge them against two generations.
+    with pinned_registry_scope():
+        baseline_required = _declared_only(modelo_work_profile_baseline_paths(record), declared)
+        conditionally_required = frozenset((*conditional_profile_required_paths(values), *baseline_required))
+        missing_required.extend(
+            path for path in conditional_profile_missing_required(values) if path not in missing_required
+        )
+        # A baseline path is unindexed, so a blank fact already reported at its
+        # own row path is the same unfilled detail, not counted twice.
+        reported = {section_field_key(path) for path in missing_required}
+        missing_required.extend(
+            path
+            for path in _declared_only(modelo_work_profile_baseline_missing_paths(record), declared)
+            if section_field_key(path) not in reported
+        )
+    return missing_required, conditionally_required
+
+
+#: The notice served while the profile does not state the taxpayer entity type.
+ENTITY_TYPE_UNSTATED_NOTICE_CODE: Final = "profile.taxpayer_type.unstated"
+
+
+def _entity_type_applicability(
+    schema: ProfileSchemaDefinition, values: Mapping[str, str]
+) -> tuple[Callable[[ProfileFieldView], bool], bool]:
+    """Decide which rows concern the stated taxpayer entity type.
+
+    Returns the predicate a row passes when it concerns that type, and whether
+    the type is stated at all. A declaration naming no entity types concerns
+    every taxpayer. While the type is unstated nothing restricted to a type is
+    offered: offering every entity's declarations to a person is how a natural
+    person was asked for a Modelo 200 board secretary. A stored value is always
+    shown, whatever it is declared for, so no fact the profile holds is hidden.
+    """
+    path = f"{ENTITY_TYPE_SECTION_KEY}.{ENTITY_TYPE_FIELD_KEY}"
+    declared = frozenset(schema.field(path).enum_values) if path in schema.field_paths else frozenset[str]()
+    stated = values.get(path, "").strip()
+    entity_type = stated if stated in declared else None
+    concerns = {
+        f"{section.key}.{field.key}": frozenset(field.entity_types or section.entity_types)
+        for section in schema.sections
+        for field in section.fields
+    }
+
+    def applies(view: ProfileFieldView) -> bool:
+        types = concerns.get(section_field_key(view.path), frozenset[str]())
+        return not types or view.present or entity_type in types
+
+    return applies, entity_type is not None
+
+
+def _entity_type_unstated_notice(schema: ProfileSchemaDefinition) -> Notice:
+    """The prompt to state the taxpayer entity type, served while it is unstated."""
+    field = schema.field(f"{ENTITY_TYPE_SECTION_KEY}.{ENTITY_TYPE_FIELD_KEY}")
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=ENTITY_TYPE_UNSTATED_NOTICE_CODE,
+        message=tr(
+            "application.user_profile.notices.entity_type_unstated",
+            field=profile_field_label(ENTITY_TYPE_SECTION_KEY, field),
+        ),
+    )
 
 
 def build_profile_overview(
@@ -728,6 +976,9 @@ def build_profile_overview(
     *,
     label: str = "",
     schema: ProfileSchemaDefinition | None = None,
+    flow: WizardFlow | None = None,
+    code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    registry_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> ProfileOverview:
     """Project ``record`` into the manager's landing-page view.
 
@@ -750,6 +1001,15 @@ def build_profile_overview(
         record: The :class:`UserProfileRecord` whose values populate the view.
         label: Operator-facing display name from the committed capsule projection.
         schema: Optional schema override; the canonical schema when omitted.
+        flow: The setup flow built for the caller's pinned authority. Its
+            question copy becomes each field's help, so a surface shows the
+            words the wizard asks with. Without it no field carries help and
+            :attr:`ProfileFieldView.about` explains every field.
+        code_lists: The code lists the caller's pinned authority holds. Without
+            them a field declaring one is simply typed into.
+        registry_choices: The answers the caller's pinned authority serves for a
+            text field, by ``section.field``, with the words the registry prints
+            for each; they take the place of the wizard's for that field.
 
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
@@ -763,49 +1023,59 @@ def build_profile_overview(
     """
     resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
+    field_help = _NO_FIELD_HELP if flow is None else profile_field_help(flow)
+    wizard_choices = {**profile_wizard_choice_sets(flow), **registry_choices}
+    ejercicio_answers = _NO_EJERCICIO_ANSWERS if flow is None else profile_field_ejercicio_answers(flow, record.facts)
 
-    sections: list[ProfileSectionView] = []
-    # Row-aware, and it has to be: a repeatable section's rows live at
-    # ``section.INDEX.field``, so testing the unindexed path reported every
-    # such required field as missing on every profile forever - the
-    # completeness count an operator reads was permanently wrong. Stripping
-    # the index would not have fixed it either, because a section with no
-    # rows has no facts to strip; the rule that was missing is that an
-    # absent row demands nothing.
-    missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
-    # Cross-field requirements come from the same completeness contract the
-    # taxpayer projection enforces, so the manager never lists fewer required
-    # fields than a filing or the workbench will demand.
-    conditionally_required = frozenset(conditional_profile_required_paths(values))
-    missing_required.extend(
-        path for path in conditional_profile_missing_required(values) if path not in missing_required
-    )
+    missing_required, conditionally_required = _required_field_paths(record, resolved_schema, values)
     # The same presence rule the completeness check reads, so the rows this
     # renders and the rows it reports missing fields for are one set.
     present = frozenset(path for path, value in values.items() if profile_value_is_present(value))
+    applies, entity_type_stated = _entity_type_applicability(resolved_schema, values)
+    held_back = False
+    sections: list[ProfileSectionView] = []
     for section in resolved_schema.sections:
+        views = _section_field_views(
+            section,
+            values,
+            present,
+            resolved_schema,
+            field_help,
+            resolved_schema.derived_selectors,
+            conditionally_required,
+            code_lists,
+            wizard_choices,
+        )
+        fields = tuple(
+            view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
+            for view in views
+            if applies(view)
+        )
+        held_back = held_back or len(fields) < len(views)
+        if not fields:
+            continue
         sections.append(
             ProfileSectionView(
                 key=section.key,
                 title=profile_section_title(section),
                 summary=profile_section_summary(section),
                 repeatable=section.repeatable,
-                fields=tuple(
-                    _section_field_views(
-                        section,
-                        values,
-                        present,
-                        resolved_schema,
-                        resolved_schema.derived_selectors,
-                        conditionally_required,
-                    ),
-                ),
-            ),
+                fields=fields,
+            )
         )
+    # A requirement of a declaration the taxpayer's type is not concerned by is
+    # no requirement of this profile, and every reader refuses a missing path
+    # that names no row the overview carries.
+    shown = {view.path for section in sections for view in section.fields}
+    missing_required = [path for path in missing_required if path in shown]
 
     from .cotejo_apply import censo_divergence_notice
 
     divergence_notice = censo_divergence_notice(record)
+    notices = (
+        *(() if divergence_notice is None else (divergence_notice,)),
+        *((_entity_type_unstated_notice(resolved_schema),) if held_back and not entity_type_stated else ()),
+    )
     return ProfileOverview(
         profile_id=record.profile_id,
         record_revision=record.record_revision,
@@ -814,11 +1084,12 @@ def build_profile_overview(
         setup_state=record.setup_state,
         sections=tuple(sections),
         missing_required=tuple(missing_required),
-        notices=() if divergence_notice is None else (divergence_notice,),
+        notices=notices,
     )
 
 
 __all__ = [
+    "ENTITY_TYPE_UNSTATED_NOTICE_CODE",
     "MASKED_PLACEHOLDER",
     "ProfileFieldChoice",
     "ProfileFieldView",
@@ -827,5 +1098,6 @@ __all__ = [
     "build_profile_overview",
     "mask_profile_field",
     "profile_field_choices",
+    "profile_wizard_choice_sets",
     "resolve_profile_field_label_for_path",
 ]

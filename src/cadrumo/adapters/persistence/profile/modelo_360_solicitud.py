@@ -23,7 +23,7 @@ from ....application.filing.producer_snapshot_m360 import Modelo360SolicitudEntr
 from ....core.period import Period
 from ..storage.secure_object_namespaces import PROFILE_MODELO_360_SOLICITUD_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._secure_model_document import (
+from .secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,
 )

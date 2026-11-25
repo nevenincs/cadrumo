@@ -62,9 +62,10 @@ def _existing_request_transition(
     return EnrollmentTransition(receipt=enrollment_receipt(old), published=False)
 
 
-def _proposal_is_allowed(
+def proposal_is_allowed(
     proposal: EnrollmentProposal, facts: AdministrationFacts, requester: EnrollmentRequester
 ) -> bool:
+    """Return whether an enrollment proposal stays within the profile scope and is unexpired."""
     return (
         scope_is_subset(proposal.scope, facts.profile.scope)
         and proposal.expires_at > facts.context.now
@@ -101,7 +102,7 @@ class AutomationAdministrationService:
             existing = _existing_request_transition(state, request_id, proposal, requester)
             if existing is not None:
                 return existing
-            if not _proposal_is_allowed(proposal, facts, requester):
+            if not proposal_is_allowed(proposal, facts, requester):
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             record = EnrollmentRecord(
                 request_id=request_id,

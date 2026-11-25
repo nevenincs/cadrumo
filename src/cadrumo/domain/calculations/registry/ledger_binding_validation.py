@@ -14,6 +14,7 @@ scope gate, the fact gate, and the accumulating build-time adapter.
 from __future__ import annotations
 
 from collections.abc import Callable, Collection
+from datetime import date
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
@@ -22,15 +23,21 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
+from .binding_targets import bound_casilla_binding_ids
 from .errors import RegistryValidationError
+from .schema_input_kind import InputKind
 
 if TYPE_CHECKING:
-    from .schema import BindingDefinition
+    from .ids import BindingId
+    from .schema import BindingDefinition, ModeloRevision
+    from .schema_references import TemporalSupportEnvelope
 
 __all__ = [
     "LEDGER_AGGREGATION_OPS",
     "ledger_binding_build_diagnostics",
     "ledger_binding_selector",
+    "ledger_selector_vocabulary_date",
+    "ledger_target_casilla_failures",
     "require_ledger_aggregation_op",
     "require_ledger_fact",
     "require_ledger_target_casilla",
@@ -56,6 +63,26 @@ def ledger_binding_selector[ProviderT: BaseModel](
     return provider_member(binding, provider_model)
 
 
+def ledger_selector_vocabulary_date(revision: ModeloRevision, support: TemporalSupportEnvelope) -> date | None:
+    """Return the date a revision's ledger selector tokens are judged on, or ``None`` when it governs no supported date.
+
+    A binding takes effect with the revision that declares it, so its tokens must
+    be declared on the revision's own ``valid_from``. A revision that starts below
+    the support floor first governs a supported filing on the floor date, which is
+    then the earliest date its vocabulary can be read on; a revision that ends
+    before the floor, or starts after a hard ceiling, governs none.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
+    window = support.date_envelope()
+    start = max(revision.valid_from, window.floor)
+    if revision.valid_to is not None and revision.valid_to < start:
+        return None
+    if window.hard_ceiling is not None and start > window.hard_ceiling:
+        return None
+    return start
+
+
 def require_ledger_aggregation_op(binding: BindingDefinition) -> None:
     """Refuse a ledger binding whose effective operator its resolver cannot evaluate."""
     op = binding_aggregation_op(binding)
@@ -79,6 +106,57 @@ def require_ledger_target_casilla(
             f"binding {binding.id!r} target_casilla_id {target_casilla_id!r} "
             f"is outside the {scope} {sorted(supported)!r}",
         )
+
+
+def ledger_target_casilla_failures(
+    revision: ModeloRevision,
+    *,
+    source_kind: BindingSourceKind,
+    target_casilla_id: Callable[[BindingDefinition], CasillaId],
+    reciprocal: bool,
+) -> list[str]:
+    """Return the failures for family bindings aimed at a box the edition gives another owner.
+
+    A ledger total may only land on a bound casilla that the same family feeds. A
+    manual or computed box, or a box another family binds, is refused from the
+    edition's own declarations, so no box list is restated here. ``reciprocal``
+    further requires the target to name this exact binding; a family whose second
+    quantity shares its observation key with the first leaves it unset.
+
+    Args:
+        revision: :class:`ModeloRevision` owning the bindings and target casillas.
+        source_kind: Ledger aggregation family whose binding targets are checked.
+        target_casilla_id: Read the target casilla from one family binding.
+        reciprocal: Require the target casilla to name the same binding explicitly.
+    """
+    family = frozenset(binding.id for binding in revision.bindings if binding.source == source_kind)
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    failures: list[str] = []
+    for binding in revision.bindings:
+        if binding.source != source_kind:
+            continue
+        target = target_casilla_id(binding)
+        casilla = casillas.get(target)
+        if casilla is None:
+            failures.append(f"binding {binding.id!r} targets casilla {target!r}, which the edition does not declare")
+            continue
+        owners = bound_casilla_binding_ids(casilla)
+        if not _ledger_family_owns_casilla(casilla.input_kind, owners, family):
+            failures.append(
+                f"binding {binding.id!r} targets casilla {target!r}, which is {casilla.input_kind.value} "
+                f"and bound by {sorted(owners)!r} rather than by the {source_kind.value} family",
+            )
+        elif reciprocal and binding.id not in owners:
+            failures.append(
+                f"binding {binding.id!r} targets casilla {target!r}, which is bound by {sorted(owners)!r}",
+            )
+    return failures
+
+
+def _ledger_family_owns_casilla(
+    input_kind: InputKind, owners: tuple[BindingId, ...], family: frozenset[BindingId]
+) -> bool:
+    return input_kind is InputKind.BOUND and bool(owners) and family.issuperset(owners)
 
 
 def require_ledger_fact(binding: BindingDefinition, fact: str, supported: Collection[str]) -> None:

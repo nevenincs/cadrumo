@@ -10,17 +10,17 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
-from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_build_root
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 from dev.product_environment import clean_product_env
+from dev.tool_storage import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
 def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tmp_path: Path) -> None:
-    """Checkout tooling inherits the console root without selecting another runtime store."""
+    """Checkout tooling inherits the console's one storage root."""
     root = tmp_path / "console storage"
     workspace = root / "workspace"
     workspace.mkdir(parents=True)
@@ -30,8 +30,7 @@ def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tm
     environment["CARGO_HOME"] = str(tmp_path / "machine cargo")
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_STORAGE_ROOT": str(tmp_path / "different checkout storage"),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_AUTHORITY_ROOT": str(authority),
         }
     )
@@ -41,7 +40,7 @@ def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tm
         (
             "import json, os, sys",
             f"sys.path.insert(0, {str(REPO_ROOT)!r})",
-            "import dev._paths",
+            "import dev.paths",
             "from cadrumo.core.storage_environment import configured_storage_root",
             "print(json.dumps({'root': str(configured_storage_root()),",
             "'authority': os.environ['CADRUMO_AUTHORITY_ROOT'],",
@@ -68,7 +67,6 @@ def test_just_and_python_resolve_the_documentation_build_root(
     assert executable is not None, "the repository task runner is required"
     storage_root = tmp_path / "shared storage"
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
     override = str(tmp_path / member) if member == "absolute-docs" else member
     monkeypatch.setenv(DOCS_BUILD_ROOT_ENV, override)
     environment = dict(os.environ)

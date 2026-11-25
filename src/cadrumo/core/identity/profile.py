@@ -19,6 +19,8 @@ from uuid import UUID
 
 from pydantic import StringConstraints
 
+_PROFILE_UUID_VERSION = 4
+
 ProfileId = Annotated[
     str,
     StringConstraints(
@@ -58,7 +60,7 @@ def canonical_profile_bucket_id(profile_id: str | UUID) -> str:
         parsed = UUID(str(profile_id))
     except (ValueError, TypeError) as exc:
         raise ValueError("profile_id is not a canonical profile identity") from exc
-    if parsed.version != 4:
+    if parsed.version != _PROFILE_UUID_VERSION:
         raise ValueError("profile_id is not a canonical profile identity")
     return str(parsed)
 

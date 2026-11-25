@@ -22,6 +22,7 @@ from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
+from ...domain.calculations.registry.form_codes import require_form_width
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
@@ -129,6 +130,17 @@ def resolve_m210_payer_mode(
     return M210PayerMode.from_registry(value)
 
 
+def m210_payer_modes(
+    *,
+    effective_date: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[M210PayerMode, ...]:
+    """Return every payer mode the detail fact declares, in its declared order."""
+    _, _, declarations = _registry_m210_payer_mode_declarations(effective_date, operation=operation)
+    modes, _ = _payer_mode_membership(declarations)
+    return tuple(M210PayerMode.from_registry(mode) for mode in modes)
+
+
 def required_m210_payer_mode_for_code(
     code: object,
     *,
@@ -160,8 +172,10 @@ def _registry_m210_declarations(
             return _registry_m210_declarations(operation=indexed_operation)
     revision = _selected_m210_revision(operation, effective_date)
     code_catalogue, multiple_payer_codes = _m210_code_and_payer_sets(revision)
+    from ..calculations.registry.form_codes import resolve_form_codes
+
     required_mode = required_m210_payer_mode_for_code(
-        "35",
+        resolve_form_codes("form-row-codes", authority=operation).code("m210.payer_mode_reference_code"),
         effective_date=effective_date,
         operation=operation,
     )
@@ -211,7 +225,7 @@ class M210IncomeClassification(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    official_tipo_renta_code: str = Field(min_length=2, max_length=2)
+    official_tipo_renta_code: str = Field(min_length=1, max_length=16)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
     applicable_rate: UnitProportion
     # A registry-derived default rather than a model-level before-validator: a
@@ -259,9 +273,16 @@ class M210IncomeClassification(BaseModel):
             )
         return self
 
+    @field_validator("official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
+
 
 __all__ = [
     "M210IncomeClassification",
+    "m210_payer_modes",
     "required_m210_payer_mode_for_code",
     "resolve_m210_payer_mode",
 ]

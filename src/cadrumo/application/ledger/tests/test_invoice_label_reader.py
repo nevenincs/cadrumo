@@ -18,7 +18,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.config import Settings
-from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
@@ -33,7 +32,6 @@ from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
-    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     VisionImage,
@@ -53,7 +51,7 @@ from ..invoice_label_reader import (
     text_layer_reads_completely_by_labels,
 )
 from ..structured_invoice_ports import StructuredInvoiceRecord
-from ._evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
+from .evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,7 +59,7 @@ _FILER = "12345678Z"
 
 _SINGLE_RATE = """FACTURA
 Proveedor: Hardware Profesional Sur SL
-NIF: B92000090
+NIF: B00015099
 Numero de factura: A-0003
 Fecha de expedicion: 2026-03-27
 Destinatario: Javier Ortega Llorens NIF: 12345678Z
@@ -73,7 +71,7 @@ Total factura: 1452.00 EUR"""
 
 _TWO_RATE_TABLE = """FACTURA
 Emisor: Distribuciones Levante SL
-CIF: B92000017
+CIF: B00015065
 Cliente: Javier Ortega Llorens
 NIF: 12345678Z
 Número de factura: 2026/0117
@@ -85,7 +83,7 @@ Total factura: 1.485,00 €"""
 
 _RECARGO = """FACTURA
 Proveedor: Mayorista Textil del Turia SA
-CIF: A92000074
+CIF: A00010058
 Destinatario: Javier Ortega Llorens
 NIF: 12345678Z
 Nº factura: MT-26-0045
@@ -100,7 +98,7 @@ Laura Pérez Consultoría
 NIF: 00000000T
 CLIENTE
 Beta Logistica Mediterranea SL
-CIF: B92000025
+CIF: B00015073
 Factura nº F-2026-001
 Fecha de expedición: 03-02-2026
 Base imponible 1.500,00
@@ -112,7 +110,7 @@ Retención IRPF 15% (art. 95 RIRPF)."""
 
 _CATALAN = """FACTURA
 Proveïdor: Hotel Mirador Castelló SL
-NIF: B92000108
+NIF: B00015107
 Client: Javier Ortega Llorens
 NIF: 12345678Z
 Número de factura: HM-0931
@@ -125,7 +123,7 @@ _ENGLISH_REVERSE_CHARGE = """INVOICE
 Supplier: Nordwerk Software GmbH
 VAT ID: DE123456789
 Bill to: Hardware Profesional Sur SL
-VAT ID: ESB92000090
+VAT ID: ESB00015099
 Invoice No.: INV-2026-117
 Invoice date: March 3, 2026
 Net amount: 1250.00 EUR
@@ -133,7 +131,7 @@ VAT 0%: 0.00 EUR (reverse charge, Art. 196 Directive 2006/112/EC)
 Total: 1250.00 EUR"""
 
 _SIMPLIFIED = """Estación de Servicio Albufera SL
-NIF: B92000082
+NIF: B00015081
 FACTURA SIMPLIFICADA
 Nº: T-0042-2026
 Fecha: 14.02.2026
@@ -143,9 +141,9 @@ Total (IVA incluido) 72,60 €"""
 
 _RECTIFICATIVA = """FACTURA RECTIFICATIVA
 Emisor: Lucia Fernandez Ortega
-NIF: 45678912S
+NIF: 00001001N
 Cliente: Grupo Consultor Meridiano SL
-NIF: B01000017
+NIF: B00010132
 Numero de factura: R-2026/003
 Fecha de factura: 14/04/2026
 Base imponible: -400,00 EUR
@@ -199,7 +197,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
             "invoice_number": "A-0003",
             "invoice_date": "2026-03-27",
             "supplier_name": "Hardware Profesional Sur SL",
-            "supplier_tax_id": "B92000090",
+            "supplier_tax_id": "B00015099",
             "customer_name": "Javier Ortega Llorens",
             "customer_tax_id": "12345678Z",
             "taxable_base": Decimal("1200.00"),
@@ -215,7 +213,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         {
             "invoice_number": "2026/0117",
             "invoice_date": "2026-04-12",
-            "supplier_tax_id": "B92000017",
+            "supplier_tax_id": "B00015065",
             "customer_tax_id": "12345678Z",
             "taxable_base": Decimal("1250.00"),
             "iva_rate": None,
@@ -264,10 +262,10 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
     ),
     "english_reverse_charge": (
         _ENGLISH_REVERSE_CHARGE,
-        "B92000090",
+        "B00015099",
         {
             "supplier_tax_id": "DE123456789",
-            "customer_tax_id": "B92000090",
+            "customer_tax_id": "B00015099",
             "invoice_number": "INV-2026-117",
             "invoice_date": "2026-03-03",
             "taxable_base": Decimal("1250.00"),
@@ -278,7 +276,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
     ),
     "rectificativa": (
         _RECTIFICATIVA,
-        "45678912S",
+        "00001001N",
         {
             "taxable_base": Decimal("-400.00"),
             "iva_amount": Decimal("-84.00"),
@@ -336,7 +334,7 @@ def test_a_simplified_invoice_reads_its_issuer_identifier_but_not_a_letterhead_n
 ) -> None:
     reading = _read(_SIMPLIFIED, operation)
 
-    assert reading.draft.supplier_tax_id == "B92000082"
+    assert reading.draft.supplier_tax_id == "B00015081"
     assert reading.draft.customer_tax_id is None
     assert reading.draft.supplier_name is None
     assert reading.missing_required_fields == {"supplier_name"}
@@ -348,8 +346,8 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
         "FACTURA\n"
         "EMISOR DESTINATARIO / CLIENTE\n"
         "Suministros Iberia SA Lucia Fernandez Ortega\n"
-        "NIF: A22633036 Espana\n"
-        "NIF: 45678912S\n"
+        "NIF: A00010041 Espana\n"
+        "NIF: 00001001N\n"
         "Base imponible: 100,00 EUR\n"
         "IVA (21%): 21,00 EUR\n"
         "TOTAL FACTURA: 121,00 EUR"
@@ -363,12 +361,12 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
 
 
 def test_a_qualified_identifier_label_names_its_party(operation: PinnedAuthorityOperation) -> None:
-    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 45678912S\nTotal due: 10.00 EUR"
+    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 00001001N\nTotal due: 10.00 EUR"
 
     reading = _read(text, operation)
     envelopes = {envelope.field: envelope for envelope in reading.draft.provenance}
 
-    assert reading.draft.customer_tax_id == "45678912S"
+    assert reading.draft.customer_tax_id == "00001001N"
     assert reading.draft.supplier_tax_id is None
     assert envelopes["customer_tax_id"].role_evidence == "Customer VAT ID"
 
@@ -399,6 +397,21 @@ def test_a_cuota_that_is_not_the_rate_of_the_base_is_left_empty(operation: Pinne
     assert DraftDiscrepancyKind.RATE_INCONSISTENT in {finding.kind for finding in reading.draft.discrepancies}
 
 
+def test_a_printed_rate_its_amount_contradicts_is_a_finding_and_the_amount_stays(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    # 15 % of 1.500,00 is 225,00, not the 210,00 printed; 1.815,00 - 210,00 = 1.605,00 payable.
+    text = _RETENTION.replace("-225,00", "-210,00").replace("Total a pagar 1.590,00", "Total a pagar 1.605,00")
+
+    reading = _read(text, operation)
+
+    assert reading.draft.retencion_rate is None
+    assert reading.draft.retencion_amount == Decimal("210.00")
+    assert (DraftDiscrepancyKind.RATE_INCONSISTENT, "retencion_amount") in {
+        (finding.kind, finding.field) for finding in reading.draft.discrepancies
+    }
+
+
 def test_a_retention_the_amount_payable_contradicts_is_left_empty(operation: PinnedAuthorityOperation) -> None:
     text = _RETENTION.replace("Total a pagar 1.590,00", "Total a pagar 1.600,00")
 
@@ -412,7 +425,7 @@ def test_a_retention_the_amount_payable_contradicts_is_left_empty(operation: Pin
 
 
 def test_an_identifier_failing_its_control_character_is_not_read(operation: PinnedAuthorityOperation) -> None:
-    text = _SINGLE_RATE.replace("NIF: B92000090", "NIF: B92000091")
+    text = _SINGLE_RATE.replace("NIF: B00015099", "NIF: B92000091")
 
     reading = _read(text, operation)
 
@@ -501,7 +514,7 @@ def test_the_model_fills_only_what_the_rules_could_not_read(operation: PinnedAut
     reading = _read(_SIMPLIFIED, operation)
     model_draft = InvoiceDraft(
         supplier_name="Estación de Servicio Albufera SL",
-        supplier_tax_id="B92000090",
+        supplier_tax_id="B00015099",
         grand_total=Decimal("99.99"),
         provenance=(
             FieldProvenance(
@@ -527,7 +540,7 @@ def test_the_model_fills_only_what_the_rules_could_not_read(operation: PinnedAut
 
     assert merged.supplier_name == "Estación de Servicio Albufera SL"
     assert origins["supplier_name"] is FieldOrigin.TEXT_LAYER
-    assert merged.supplier_tax_id == "B92000082"
+    assert merged.supplier_tax_id == "B00015081"
     assert merged.grand_total == Decimal("72.60")
     assert origins["grand_total"] is FieldOrigin.TEXT_RULES
     assert merged.discrepancies == ()
@@ -547,7 +560,7 @@ def test_a_rule_closure_finding_yields_to_the_model_figures_it_cleared(operation
 
 
 type _TextReader = Callable[
-    [DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object],
+    [DocumentTranscription, Settings, EvidenceConsentProof | None, object],
     InvoiceDraft,
 ]
 
@@ -572,7 +585,6 @@ def _router_ports(pages: tuple[str, ...], *, read_text: _TextReader) -> InvoiceD
         _images: tuple[VisionImage, ...],
         _address: str,
         _settings: Settings,
-        _provider: LLMProvider | None,
         _consent: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
         raise AssertionError("the vision reader is not part of a text-layer case")
@@ -583,7 +595,7 @@ def _router_ports(pages: tuple[str, ...], *, read_text: _TextReader) -> InvoiceD
         text_layer_ports=text_layer_ports_for_pages(pages),
         parse_structured_invoice=structured_not_expected,
         read_text=read_text,
-        propose_supply_nature=lambda _transcription, _settings: None,
+        propose_supply_nature=lambda _transcription, _settings, _consent_token: None,
         rasterise_pdf=lambda _data: (),
         transcribe_vision=vision_not_expected,
         consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
@@ -624,7 +636,7 @@ def test_an_absent_model_leaves_the_partial_rule_reading_standing(operation: Pin
     draft = _extract(_router_ports((_SIMPLIFIED,), read_text=unavailable), operation)
 
     assert draft.supplier_name is None
-    assert draft.supplier_tax_id == "B92000082"
+    assert draft.supplier_tax_id == "B00015081"
     assert draft.grand_total == Decimal("72.60")
     # The empty field must read as a reading the machine could not finish, not
     # as a document that prints no supplier name.
@@ -646,19 +658,19 @@ def test_a_refused_model_load_leaves_the_partial_rule_reading_standing(operation
     def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
         raise InvoiceDraftReaderHeadroomRefusedError(
             refusal,
-            failed_condition_id="provisioning.load_capacity.available",
+            failed_condition_id="llm.agent.model_run_completed",
         )
 
     draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
 
     assert draft.supplier_name is None
-    assert draft.supplier_tax_id == "B92000082"
+    assert draft.supplier_tax_id == "B00015081"
     assert draft.grand_total == Decimal("72.60")
     assert draft.label_reading_fallback == LabelReadingFallback(
         cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("supplier_name",),
         reader_error_type="_HeadroomRefusalForTestError",
-        failed_condition_id="provisioning.load_capacity.available",
+        failed_condition_id="llm.agent.model_run_completed",
     )
 
 
@@ -670,48 +682,7 @@ def test_a_refused_model_load_still_refuses_when_the_rules_read_nothing(operatio
         raise InvoiceDraftReaderHeadroomRefusedError(refusal, failed_condition_id=None)
 
     with pytest.raises(_HeadroomRefusalForTestError) as raised:
-        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
-
-    assert raised.value is refusal
-
-
-class _BusyRefusalForTestError(Exception):
-    """Stands in for admission control's occupancy refusal, which this layer only carries and never raises."""
-
-
-def test_a_busy_refused_model_fill_leaves_the_partial_rule_reading_standing(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Another read holds the inference slot: the rules' reading stands, and the draft names occupancy, not memory."""
-    refusal = _BusyRefusalForTestError("every on-host inference slot is held")
-
-    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
-        raise InvoiceDraftReaderBusyRefusedError(refusal, failed_condition_id="llm.local_inference.slot_available")
-
-    draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
-
-    assert draft.supplier_name is None
-    assert draft.supplier_tax_id == "B92000082"
-    assert draft.grand_total == Decimal("72.60")
-    assert draft.label_reading_fallback == LabelReadingFallback(
-        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
-        unread_fields=("supplier_name",),
-        reader_error_type="_BusyRefusalForTestError",
-        failed_condition_id="llm.local_inference.slot_available",
-    )
-
-
-def test_a_busy_refused_model_read_still_refuses_when_the_rules_read_nothing(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """A required read refused for occupancy is unchanged: admission control's own refusal propagates."""
-    refusal = _BusyRefusalForTestError("every on-host inference slot is held")
-
-    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
-        raise InvoiceDraftReaderBusyRefusedError(refusal, failed_condition_id="llm.local_inference.slot_available")
-
-    with pytest.raises(_BusyRefusalForTestError) as raised:
-        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
+        _extract(_router_ports(("B1234567X B00015024 766,30",), read_text=refused), operation)
 
     assert raised.value is refusal
 
@@ -723,7 +694,7 @@ def test_an_absent_model_still_refuses_when_the_rules_read_nothing(operation: Pi
         raise InvoiceDraftReaderUnavailableError(ConnectionError("runtime stopped"))
 
     with pytest.raises(PurchaseInvoiceEvidenceReaderError):
-        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=unavailable), operation)
+        _extract(_router_ports(("B1234567X B00015024 766,30",), read_text=unavailable), operation)
 
 
 def test_an_incomplete_rule_reading_asks_the_model_for_the_rest(operation: PinnedAuthorityOperation) -> None:
@@ -812,7 +783,7 @@ def test_an_unrated_base_beside_rate_lines_is_the_total_they_must_sum_to(operati
 
 
 def test_a_heading_word_is_never_read_as_a_party_name(operation: PinnedAuthorityOperation) -> None:
-    text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B92000017"
+    text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B00015065"
 
     assert _read(text, operation).draft.supplier_name is None
 

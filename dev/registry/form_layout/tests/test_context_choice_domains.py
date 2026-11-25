@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.loader import load_modelo_directory
 
@@ -15,7 +16,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _source():
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions["2026-desde-02"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353")).revisions[
+        str(authored_revisions("353")[-1].id)
+    ]
     block = next(
         block
         for page in revision.form_layouts[0].pages

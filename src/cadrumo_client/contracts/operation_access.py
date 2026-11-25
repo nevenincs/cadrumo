@@ -27,6 +27,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .access_vocabulary import AccessAction
 from .projection_pages import ProjectionPage, ProjectionPageRequest
 from .submission_payload import (
+    MINIMUM_JSON_DOCUMENT_BYTES,
     SUBMISSION_PAYLOAD_MAX_BYTES,
     FinancialOperandInputDescriptor,
     SubmissionPayloadDescriptor,
@@ -65,7 +66,9 @@ class OperationSubmit(OperationTarget):
     action: Literal["operation_submit"] = "operation_submit"
     definition_id: OperationDefinitionId
     subject_ref: OperationReference
-    payload_json: str = Field(min_length=2, max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False)
+    payload_json: str = Field(
+        min_length=MINIMUM_JSON_DOCUMENT_BYTES, max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False
+    )
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
 
 
@@ -75,7 +78,9 @@ class OperationFinancialInput(OperationTarget):
     action: Literal["operation_financial_input"] = "operation_financial_input"
     definition_id: OperationDefinitionId
     subject_ref: OperationReference
-    payload_json: str = Field(min_length=2, max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False)
+    payload_json: str = Field(
+        min_length=MINIMUM_JSON_DOCUMENT_BYTES, max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False
+    )
     idempotency_key: Literal[None] = None
 
 

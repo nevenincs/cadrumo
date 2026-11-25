@@ -30,7 +30,11 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
-from .....core.errors.hierarchy import AuthError, InternalInvariantError, pydantic_validation_boundary
+from .....core.errors.hierarchy import (
+    AuthError,
+    InternalInvariantError,
+    pydantic_validation_boundary,
+)
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -258,6 +262,21 @@ def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     return _storage_state_sha256(storage_state)
 
 
+def durable_storage_state_sha256(path: Path) -> str | None:
+    """Return the storage-state digest held in durable custody, ignoring staged writes.
+
+    A publisher compares this value with the digest it was seeded from before it
+    overwrites the record, so a write staged by the current task never answers for
+    what another task has already published.
+    """
+    token = _DEFERRED_WRITES.set(None)
+    try:
+        persisted = load(path)
+    finally:
+        _DEFERRED_WRITES.reset(token)
+    return None if persisted is None else persisted.storage_state_sha256
+
+
 def _key(path: Path) -> str:
     return Path(path).as_posix()
 
@@ -309,6 +328,14 @@ class AeatSessionStoreAdapter:
         """Stage direct provider and application writes in the current context."""
         return defer_writes()
 
+    def storage_state_sha256(self, storage_state: Mapping[str, object]) -> str:
+        """Return the canonical digest of ``storage_state``."""
+        return storage_state_sha256(storage_state)
+
+    def durable_storage_state_sha256(self, path: Path) -> str | None:
+        """Return the durable digest at ``path``, ignoring staged writes."""
+        return durable_storage_state_sha256(path)
+
 
 def build_session_store() -> AeatSessionStoreAdapter:
     """Build the stateless concrete application-port adapter."""
@@ -321,6 +348,7 @@ __all__ = [
     "PersistedBrowserSession",
     "build_session_store",
     "delete",
+    "durable_storage_state_sha256",
     "exists",
     "load",
     "save",

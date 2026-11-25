@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 from cadrumo.application.operations.models import OperationDefinitionId, OperationReference
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,

@@ -17,19 +17,25 @@ from typing import Any
 import pytest
 from PIL import Image
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ... import runtime_wheel_selection
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import LockedWheel
 from .. import cmake_build, layout, provision
+from ..action_selection import action_toolchain
 from ..build_stamp import BuildStamp
 from ..build_timing import measure_build
-from ..cmake_build import action_toolchain
 from ..generate import generate
 from ..metadata import generate as generate_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
 
 
 @pytest.mark.parametrize("mutation", ["none", "source", "producer", "independent"])
@@ -109,11 +115,11 @@ def test_metadata_change_preserves_unaffected_icon(tmp_path: Path, monkeypatch: 
     png = io.BytesIO()
     Image.new("RGBA", (256, 256), "blue").save(png, format="PNG")
     monkeypatch.setitem(sys.modules, "resvg_py", SimpleNamespace(svg_to_bytes=lambda **kwargs: png.getvalue()))
-    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     baseline = _freeze_outputs(tmp_path)
-    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     assert _outputs(tmp_path) == baseline
-    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     after = _outputs(tmp_path)
     assert after["cadrumo.ico"] == baseline["cadrumo.ico"]
     assert after["interpreter.rc"][0] != baseline["interpreter.rc"][0]

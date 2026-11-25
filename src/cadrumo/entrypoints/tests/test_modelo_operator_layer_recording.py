@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
 
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.caller_context import caller_context_calculation_inputs, caller_context_of
@@ -71,8 +71,9 @@ def test_replaying_a_caller_context_reproduces_the_same_revision(tmp_path: Path)
         first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id,
             ports=work.ports,
-            casilla_inputs={_C06: Decimal("100.00")},
-            binding_values={carry: Decimal("12.50")},
+            # The layer records canonical decimal text, so the replay can only feed back the canonical form.
+            casilla_inputs={_C06: Decimal("100")},
+            binding_values={carry: Decimal("12.5")},
             record_operator_layer=True,
             clock=SEEDED_AT,
         ).revision

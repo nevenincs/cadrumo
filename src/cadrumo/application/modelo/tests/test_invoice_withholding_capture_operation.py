@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -19,9 +18,13 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....core.operations import OperationFrontendProjection
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...aggregation.invoice_retencion import (
     InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
@@ -48,7 +51,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection
+from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
@@ -61,7 +64,7 @@ from ..invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCaptureReport,
     ModeloInvoiceWithholdingCaptureRequest,
 )
-from ..invoice_withholding_capture_execution import ModeloInvoiceWithholdingCaptureExecutor, _PreparedCapture
+from ..invoice_withholding_capture_execution import ModeloInvoiceWithholdingCaptureExecutor, PreparedCapture
 from ..invoice_withholding_capture_operation import (
     build_modelo_invoice_withholding_capture_definition,
     build_modelo_invoice_withholding_capture_registration,
@@ -76,7 +79,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
 _OPERAND_REF = "e" * 64
-_PERIOD = PublicPeriod(filing_year=2024, code="1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 _SCOPE = WithholdingWindowScope(modelo="111", period=_PERIOD.to_period())
 _BASELINE = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="a" * 64)
 
@@ -200,12 +204,20 @@ def test_definition_and_access_are_confidential_exact_profile_and_period_scoped(
 
 
 def test_request_rejects_modelo_123_and_caller_authored_retencion_rows() -> None:
-    with pytest.raises(ValidationError):
+    with bundled_indexed_authority().operation(), pytest.raises(ValidationError):
         ModeloInvoiceWithholdingCaptureRequest.from_inputs(
             profile_id=_PROFILE,
             command=_command(modelo="123"),
             evidence=_evidence(),
         )
+
+
+def test_a_client_with_no_authority_parses_the_request_and_leaves_the_route_to_the_runtime() -> None:
+    assert ModeloInvoiceWithholdingCaptureRequest.from_inputs(
+        profile_id=_PROFILE,
+        command=_command(modelo="123"),
+        evidence=_evidence(),
+    )
 
 
 def test_request_typed_operands_round_trip_canonically() -> None:
@@ -227,7 +239,7 @@ def test_request_typed_operands_round_trip_canonically() -> None:
         ModeloInvoiceWithholdingCaptureRequest.model_validate(
             {
                 "profile_id": str(_PROFILE),
-                "command": {"modelo": "111", "period": {"filing_year": 2024, "code": "bad"}},
+                "command": {"modelo": "111", "period": {"filing_year": _YEAR, "code": "bad"}},
                 "evidence": payload.evidence.model_dump(mode="json"),
             }
         )
@@ -241,7 +253,7 @@ def test_request_typed_operands_round_trip_canonically() -> None:
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2024-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
     with pytest.raises(ValueError, match="caller-authored observations"):
         ModeloInvoiceWithholdingCaptureRequest.from_inputs(
@@ -259,21 +271,12 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
     with validating_governed_facts(authority_operation):
         detail = WithholdingObservation(
             source_id="invoice-source",
-            perceptor_tax_id="11111111H",
-            transaction_date=datetime(2024, 6, 1, tzinfo=UTC).date(),
+            perceptor_tax_id="00001500M",
+            transaction_date=date(_YEAR, 6, 1),
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=Decimal("1000"),
             retencion_practicada=Decimal("190"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("0"),
             financial_asset_origin="A" if with_financial_asset else None,
             financial_asset_acquisition_value=Decimal("100.25") if with_financial_asset else None,
@@ -287,24 +290,6 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
         assert set(type(public.modelo_190_detail).model_fields) == set(WithholdingObservation.model_fields)
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, value: str) -> None:
-        self.phases.append(value)
-
-    async def effect(self, value: OperationEffect) -> None:
-        self.effects.append(value)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self):
-        yield
-
-
 class _Operands:
     def __init__(self) -> None:
         self.values: list[BaseModel] = []
@@ -316,7 +301,7 @@ class _Operands:
 
 
 def _executor_context(
-    events: _Events, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
+    events: RecordingEvents, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -327,7 +312,7 @@ def _executor_context(
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority_operation,
-            cancellation=_Cancellation(),
+            cancellation=IrreversibleSectionGrant(),
             events=events,
             operands=operands,
         ),
@@ -340,19 +325,19 @@ class _WithholdingService(WithholdingWindowServiceFixture):
             RetencionObservation(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_object_id="b" * 64,
-                perceptor_nif="11111111H",
+                perceptor_nif="00001500M",
                 perceptor_name="Synthetic recipient",
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("100.00"),
                 retencion_amount=Decimal("15.00"),
-                accrued_on="2024-01-15",
+                accrued_on=date(_YEAR, 1, 15).isoformat(),
             ),
         )
 
         super().__init__(baseline=_BASELINE, generation=1, observations=observations, include_audit=False)
 
 
-def _prepared() -> _PreparedCapture:
+def _prepared() -> PreparedCapture:
     service = _WithholdingService()
     ports = SimpleNamespace(
         profile_id=str(_PROFILE),
@@ -361,7 +346,7 @@ def _prepared() -> _PreparedCapture:
         withholding_observation_service=service,
     )
     capture = SimpleNamespace(command=object(), scope=_SCOPE, catalogue_read_revision_id="b" * 64)
-    return _PreparedCapture(
+    return PreparedCapture(
         ports=cast(ModeloInvoiceWithholdingCapturePorts, cast(object, ports)),
         cadence=cast(WithholdingFilerCadence, object()),
         capture=cast(InvoiceWithholdingCapture, cast(object, capture)),
@@ -410,7 +395,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -479,7 +464,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
 def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -490,7 +475,7 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     )
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
-    def refuse_before_commit(*_args: object) -> _PreparedCapture:
+    def refuse_before_commit(*_args: object) -> PreparedCapture:
         raise InvoiceWithholdingEvidenceError("not_a_retenedor_liability")
 
     monkeypatch.setattr(executor, "_prepare", refuse_before_commit)
@@ -530,7 +515,7 @@ def test_invoice_retencion_defects_refuse_naming_every_defect_under_their_own_co
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every defect travels as a stable token under the defects code, never as a flattened generic reason."""
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
@@ -545,7 +530,7 @@ def test_invoice_retencion_defects_refuse_naming_every_defect_under_their_own_co
         InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
     )
 
-    def refuse_with_defects(*_args: object) -> _PreparedCapture:
+    def refuse_with_defects(*_args: object) -> PreparedCapture:
         raise InvoiceWithholdingDefectsError(defects)
 
     monkeypatch.setattr(executor, "_prepare", refuse_with_defects)
@@ -605,7 +590,7 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
     monkeypatch: pytest.MonkeyPatch,
     refusal_code: str,
 ) -> None:
-    events = _Events()
+    events = RecordingEvents()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))

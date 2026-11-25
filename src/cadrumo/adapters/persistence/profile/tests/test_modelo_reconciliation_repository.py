@@ -51,9 +51,6 @@ from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.repository import upsert_work_unit
-from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.errors import SecureObjectRevisionConflictError
@@ -65,7 +62,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
-from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
+from .reconciliation_persist_support import modelo_reconcile, persist_work_unit, reconcile_parsed_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
@@ -103,27 +100,14 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
         .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
         .revision.id
     )
-    work_unit_id = derive_work_unit_id(
+    return persist_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=typed_period,
+        period=period,
         revision_id=revision_id,
+        timestamp=_WORK_UNIT_TIMESTAMP,
     )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=_WORK_UNIT_TIMESTAMP,
-        updated_at=_WORK_UNIT_TIMESTAMP,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit_id
 
 
 def _registry_snapshot_ref_for_work_unit(work_unit_id: str) -> RegistrySnapshotRef:
@@ -172,6 +156,7 @@ def _fully_populated_record(
         registry_snapshot_ref=_registry_snapshot_ref_for_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref="/operator/evidence/modelo-100-2024-declaracion.pdf",
+        source_pdf_sha256="d" * 64,
         verdict=ModeloReconciliationVerdict.MISMATCHES,
         diffs=(
             ModeloReconciliationDiff(
@@ -231,6 +216,7 @@ def test_record_roundtrips_with_every_defaultable_field_populated_non_default() 
     assert len(loaded.advisories) == 1
     assert loaded.advisories[0].context == {"reason": "no_persisted_revision", "modelo": "100"}
     assert loaded.source_ref.endswith("modelo-100-2024-declaracion.pdf")
+    assert loaded.source_pdf_sha256 == "d" * 64
 
 
 def test_record_requires_the_canonical_registry_snapshot_reference() -> None:
@@ -280,6 +266,37 @@ def test_anti_tautology_stored_payload_with_a_deleted_field_refuses_on_load() ->
 
     with pytest.raises(ValidationError):
         repository.load(key)
+
+
+def test_a_record_stored_before_its_source_digest_was_carried_still_loads() -> None:
+    """A stored payload without ``source_pdf_sha256`` reads back with the digest absent.
+
+    Records persisted before the digest was carried hold no such key; they stay
+    readable under the same schema version instead of refusing, and report no
+    digest rather than inventing one.
+    """
+    work_unit_id = _seed_work_unit()
+    record = _fully_populated_record(work_unit_id=work_unit_id, bucket_event_id="c" * 64)
+    repository = ModeloReconciliationRecordRepository()
+    objects = repository.secure_object_repository
+    prepared = repository.to_secure_object_write(record)
+    envelope = json.loads(prepared.payload.decode("utf-8"))
+    assert envelope["payload"]["source_pdf_sha256"] == "d" * 64
+    del envelope["payload"]["source_pdf_sha256"]
+
+    objects.save(
+        namespace=MODELO_RECONCILIATION_RECORDS_NAMESPACE.namespace,
+        object_key=prepared.object_key,
+        classification=MODELO_RECONCILIATION_RECORDS_NAMESPACE.sensitivity,
+        schema_version=MODELO_RECONCILIATION_RECORDS_NAMESPACE.schema_version,
+        written_at=prepared.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+    loaded = repository.load(prepared.object_key)
+
+    assert loaded is not None
+    assert loaded.source_pdf_sha256 is None
+    assert loaded == record.model_copy(update={"source_pdf_sha256": None})
 
 
 def test_n_records_for_one_work_unit_persist_distinctly_and_all_read_back() -> None:

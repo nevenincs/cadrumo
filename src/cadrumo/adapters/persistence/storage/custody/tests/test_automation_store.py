@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import gzip
+import os
+from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -22,7 +24,9 @@ from pydantic import BaseModel, SecretBytes, ValidationError
 if TYPE_CHECKING:
     from _ctypes import _CArgObject
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copied_profile_world, sealed_profile_world
 from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
+from cadrumo.adapters.persistence.storage.custody import filesystem_primitives
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     api_key_verifier,
     canonical_record,
@@ -50,7 +54,6 @@ from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.adapters.persistence.storage.master_key.active_session import get_active_master_key
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyPort,
@@ -102,14 +105,18 @@ class Subject:
 @pytest.fixture
 def subject(tmp_path: Path) -> Iterator[Subject]:
     create, decode = profile_authority_contexts()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(
-            label="Automation test",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=create,
-            profile_decode_context=decode,
-        )
-        profile_id = UUID(outcome.profile_id)
+    world = sealed_profile_world(
+        "automation store subject",
+        lambda: (
+            register_profile_with_credentials(
+                label="Automation test",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=create,
+                profile_decode_context=decode,
+            ).profile_id
+        ),
+    )
+    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as (_, profile_id):
         password = load_committed_profile_password_material(profile_id)
         # The test-owned storage root is the ancestor of the buckets directory.
         root = password.capsule_path.parent.parent
@@ -195,6 +202,34 @@ def test_binding_substitution_refuses(subject: Subject, field: str, value: objec
     )
     with pytest.raises(AutomationCustodyError):
         substitute.unwrap(credential=subject.credential, now=NOW)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="the Windows anchor exists only on Windows")
+def test_an_authority_read_verifies_the_storage_ancestry_once_per_root_lock(
+    subject: Subject, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The lock and enrollment reads each take one root lock, whatever number of records they anchor.
+
+    Per root lock the ancestry is verified once, where the root is provisioned;
+    the lock and every anchor inside stand on that hold.
+    """
+    subject.publish()
+    opened: list[str] = []
+    open_component = filesystem_primitives.open_verified_component
+
+    def counting(current: str, access: int, **kwargs: Any) -> int:
+        opened.append(current)
+        return open_component(current, access, **kwargs)
+
+    monkeypatch.setattr(filesystem_primitives, "open_verified_component", counting)
+    ancestry = filesystem_primitives.windows_component_paths(subject.store.root)[:-1]
+
+    subject.store.profile_lock_state()
+    subject.store.enrollment_state()
+
+    below_root = [path for path in opened if path.startswith(str(subject.store.root) + os.sep)]
+    assert len(below_root) > 2 * 2
+    assert Counter(path for path in opened if path in ancestry) == dict.fromkeys(ancestry, 2)
 
 
 def test_incorrect_expired_revoked_and_suspended_authority(subject: Subject) -> None:
@@ -508,7 +543,7 @@ class WindowsCredentialApiDouble:
 def test_windows_secret_store_preserves_exact_binary_blob(monkeypatch: pytest.MonkeyPatch, size: int) -> None:
     api = WindowsCredentialApiDouble()
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
-    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    monkeypatch.setattr(windows_secret_store, "windows_credential_api", lambda: api)
     store = WindowsAutomationSecretStore()
     namespace, account = "cadrumo.automation.synthetic.v1", "random-synthetic-item"
     source = bytes(range(256)) * (size // 256) + bytes(range(size % 256))
@@ -528,7 +563,7 @@ def test_windows_secret_store_preserves_exact_binary_blob(monkeypatch: pytest.Mo
 def test_windows_secret_store_rejects_malformed_native_blob(monkeypatch: pytest.MonkeyPatch) -> None:
     api = WindowsCredentialApiDouble()
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
-    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    monkeypatch.setattr(windows_secret_store, "windows_credential_api", lambda: api)
     namespace, account = "cadrumo.automation.synthetic.v1", "malformed-synthetic-item"
     api.items[namespace + ":" + account] = bytes(2561)
 
@@ -556,6 +591,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
         CredReadW: FakeFunction
         CredWriteW: FakeFunction
         CredDeleteW: FakeFunction
+        CredEnumerateW: FakeFunction
         CredFree: FakeFunction
 
     api = FakeAdvapi32()
@@ -610,12 +646,13 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
     api.CredReadW = FakeFunction(cred_read)
     api.CredWriteW = FakeFunction(cred_write)
     api.CredDeleteW = FakeFunction(cred_delete)
+    api.CredEnumerateW = FakeFunction()
     api.CredFree = FakeFunction(cred_free)
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
     monkeypatch.setattr(windows_secret_store.ctypes, "WinDLL", lambda _name, **_kwargs: api, raising=False)
     monkeypatch.setattr(windows_secret_store.ctypes, "get_last_error", lambda: last_error["value"], raising=False)
 
-    manager = windows_secret_store._WindowsCredentialManager()
+    manager = windows_secret_store.WindowsCredentialManager()
     api.credential_type = manager._credential_type
     source = bytes(range(256)) * 10
     target, account = "cadrumo.automation.synthetic:" + str(uuid4()), "synthetic-account"

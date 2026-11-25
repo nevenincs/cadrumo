@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -19,7 +19,13 @@ from ...domain.calculations.registry.ids import BindingId
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar
-from .borrador_100 import Borrador100Snapshot, BorradorSourceUrl
+from .borrador_100 import (
+    Borrador100CaptureOutcome,
+    Borrador100RefusedSnapshot,
+    Borrador100Snapshot,
+    Borrador100SnapshotRefusalReason,
+    BorradorSourceUrl,
+)
 from .borrador_100_operation_ports import Borrador100ArtefactKind
 from .snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
 
@@ -65,7 +71,12 @@ class Borrador100ImportRequest(BaseModel):
 
 
 class Borrador100QuerySummary(BaseModel):
-    """Reviewed metadata without source URLs or printed evidence strings."""
+    """Reviewed metadata without source URLs or printed evidence strings.
+
+    ``binding_count`` counts the values kept under bindings;
+    ``printed_observation_count`` counts the printed boxes kept only for
+    comparison, so a draft holding only printed results is not empty.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     snapshot_id: SnapshotId
@@ -73,6 +84,7 @@ class Borrador100QuerySummary(BaseModel):
     period: PublicPeriod
     captured_at: datetime
     binding_count: Annotated[int, Field(ge=0)]
+    printed_observation_count: NonNegativeInt = 0
     state: SnapshotLifecycleState
 
     @model_validator(mode="after")
@@ -88,6 +100,26 @@ class Borrador100SnapshotSummary(Borrador100QuerySummary):
     """Complete existing human summary, including capture provenance."""
 
     source_url: BorradorSourceUrl
+
+
+class Borrador100RefusedSnapshotSummary(BaseModel):
+    """One stored snapshot a read refused: its identity, coordinate and reason, never its values."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    snapshot_id: SnapshotId
+    filing_year: FilingYear
+    period: PublicPeriod
+    captured_at: datetime
+    state: SnapshotLifecycleState
+    reason: Borrador100SnapshotRefusalReason
+
+    @model_validator(mode="after")
+    def _coordinate(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("refused borrador period differs from filing year")
+        if self.captured_at.tzinfo is None or self.captured_at.utcoffset() is None:
+            raise ValueError("borrador capture time requires an explicit timezone")
+        return self
 
 
 def _validate_bindings(values: tuple[PublicNamedScalar, ...], *, count: int) -> None:
@@ -147,13 +179,42 @@ def _validate_read_shape(
     rows: tuple[Borrador100QuerySummary, ...],
     snapshot: Borrador100QuerySummary | None,
     filing_year: int | None,
+    refused: tuple[Borrador100RefusedSnapshotSummary, ...],
 ) -> None:
+    _validate_refused_shape(kind, rows, refused, filing_year)
     if kind == "list":
         _require_list_shape(snapshot, filing_year)
     elif _has_incompatible_rows_or_view_selectors(kind, rows, snapshot, filing_year):
         raise ValueError("view/latest result has incompatible rows or selectors")
     elif _latest_result_disagrees(snapshot, filing_year, kind):
         raise ValueError("latest result differs from its active-year selector")
+
+
+def _validate_refused_shape(
+    kind: Borrador100ReadKind,
+    rows: tuple[Borrador100QuerySummary, ...],
+    refused: tuple[Borrador100RefusedSnapshotSummary, ...],
+    filing_year: int | None,
+) -> None:
+    refused_ids = tuple(item.snapshot_id for item in refused)
+    if refused_ids != tuple(sorted(set(refused_ids))):
+        raise ValueError("refused borrador snapshots must be sorted and unique")
+    if set(refused_ids) & {row.snapshot_id for row in rows}:
+        raise ValueError("a borrador snapshot cannot be both listed and refused")
+    _validate_refused_for_kind(kind, refused, filing_year)
+
+
+def _validate_refused_for_kind(
+    kind: Borrador100ReadKind,
+    refused: tuple[Borrador100RefusedSnapshotSummary, ...],
+    filing_year: int | None,
+) -> None:
+    if kind == "view" and refused:
+        raise ValueError("a view refuses its snapshot rather than listing it")
+    if kind == "latest" and any(
+        item.filing_year != filing_year or item.state is not SnapshotLifecycleState.ACTIVE for item in refused
+    ):
+        raise ValueError("latest refused snapshots differ from the active-year selector")
 
 
 def _require_list_shape(snapshot: Borrador100QuerySummary | None, filing_year: int | None) -> None:
@@ -185,7 +246,13 @@ def _latest_result_disagrees(
 
 
 class Borrador100ReadProjection(BaseModel):
-    """Full human read contract; absent latest snapshot is explicitly retained."""
+    """Full human read contract; absent latest snapshot is explicitly retained.
+
+    ``refused_snapshots`` lists each selected stored snapshot the pinned
+    authority refuses, so a refused snapshot never reads as an absent one.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which cannot be read or named.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -193,10 +260,12 @@ class Borrador100ReadProjection(BaseModel):
     rows: tuple[Borrador100SnapshotSummary, ...] = ()
     snapshot: Borrador100SnapshotDetail | None = None
     filing_year: FilingYear | None = None
+    refused_snapshots: tuple[Borrador100RefusedSnapshotSummary, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def _shape(self) -> Self:
-        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year)
+        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year, self.refused_snapshots)
         return self
 
 
@@ -209,15 +278,25 @@ class Borrador100QueryProjection(BaseModel):
     rows: tuple[Borrador100QuerySummary, ...] = ()
     snapshot: Borrador100QueryDetail | None = None
     filing_year: FilingYear | None = None
+    refused_snapshots: tuple[Borrador100RefusedSnapshotSummary, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def _shape(self) -> Self:
-        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year)
+        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year, self.refused_snapshots)
         return self
 
 
 class Borrador100ImportProjection(BaseModel):
-    """Complete human import facts and canonical parser warnings."""
+    """Complete human import facts and canonical parser warnings.
+
+    ``observed_casillas`` lists printed casillas kept only for comparison with
+    the local calculation: no borrador-admitted binding owns them and they are
+    never a calculation input. ``unowned_casillas`` lists printed casillas the
+    pinned revision does not declare; their values were read but not stored.
+    ``outcome`` says whether the document was stored or resolved to a snapshot
+    already stored for it, including a superseded or discarded one.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -227,7 +306,10 @@ class Borrador100ImportProjection(BaseModel):
     artefact_kind: Borrador100ArtefactKind
     source_pdf_sha256: ContentDigest
     blank_casillas: tuple[CasillaId, ...]
+    observed_casillas: tuple[CasillaId, ...] = ()
+    unowned_casillas: tuple[CasillaId, ...] = ()
     warnings: tuple[str, ...]
+    outcome: Borrador100CaptureOutcome
 
     @model_validator(mode="after")
     def _source_receipt(self) -> Self:
@@ -235,9 +317,28 @@ class Borrador100ImportProjection(BaseModel):
             raise ValueError("borrador capture differs from its source digest")
         if self.blank_casillas != tuple(sorted(set(self.blank_casillas))):
             raise ValueError("blank casillas must be sorted and unique")
+        if self.unowned_casillas != tuple(sorted(set(self.unowned_casillas))):
+            raise ValueError("unowned casillas must be sorted and unique")
+        if set(self.unowned_casillas) & set(self.blank_casillas):
+            raise ValueError("a casilla cannot be both blank and unowned")
+        if self.observed_casillas != tuple(sorted(set(self.observed_casillas))):
+            raise ValueError("observed casillas must be sorted and unique")
+        if set(self.observed_casillas) & set(self.unowned_casillas):
+            raise ValueError("a casilla cannot be both observed and unowned")
         if not Decimal("0") <= Decimal(self.extraction_coverage.decimal) <= Decimal("1"):
             raise ValueError("borrador coverage must be a unit fraction")
+        if _OUTCOME_STATES[self.outcome] is not self.snapshot.state:
+            raise ValueError("borrador import outcome differs from the snapshot state")
         return self
+
+
+_OUTCOME_STATES: dict[Borrador100CaptureOutcome, SnapshotLifecycleState] = {
+    Borrador100CaptureOutcome.CAPTURED: SnapshotLifecycleState.ACTIVE,
+    Borrador100CaptureOutcome.CAPTURED_SUPERSEDED: SnapshotLifecycleState.SUPERSEDED,
+    Borrador100CaptureOutcome.ALREADY_ACTIVE: SnapshotLifecycleState.ACTIVE,
+    Borrador100CaptureOutcome.RESOLVED_SUPERSEDED: SnapshotLifecycleState.SUPERSEDED,
+    Borrador100CaptureOutcome.RESOLVED_DISCARDED: SnapshotLifecycleState.DISCARDED,
+}
 
 
 class Borrador100ReadExecutionResult(BaseModel):
@@ -269,7 +370,30 @@ def summarize_borrador_100(snapshot: Borrador100Snapshot) -> Borrador100QuerySum
         period=PublicPeriod.from_period(snapshot.period),
         captured_at=snapshot.captured_at,
         binding_count=len(snapshot.binding_values),
+        printed_observation_count=len(snapshot.printed_observations),
         state=snapshot.state,
+    )
+
+
+def summarize_refused_borrador_100_snapshots(
+    refused: tuple[Borrador100RefusedSnapshot, ...],
+) -> tuple[Borrador100RefusedSnapshotSummary, ...]:
+    """Name each refused snapshot and its reason, in snapshot-id order, without any stored value."""
+    return tuple(
+        sorted(
+            (
+                Borrador100RefusedSnapshotSummary(
+                    snapshot_id=item.snapshot.snapshot_id,
+                    filing_year=item.snapshot.filing_year,
+                    period=PublicPeriod.from_period(item.snapshot.period),
+                    captured_at=item.snapshot.captured_at,
+                    state=item.snapshot.state,
+                    reason=item.reason,
+                )
+                for item in refused
+            ),
+            key=lambda summary: summary.snapshot_id,
+        )
     )
 
 
@@ -290,8 +414,10 @@ __all__ = [
     "Borrador100ReadKind",
     "Borrador100ReadProjection",
     "Borrador100ReadRequest",
+    "Borrador100RefusedSnapshotSummary",
     "Borrador100SnapshotDetail",
     "Borrador100SnapshotSummary",
     "summarize_borrador_100",
     "summarize_borrador_100_for_human",
+    "summarize_refused_borrador_100_snapshots",
 ]

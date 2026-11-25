@@ -10,6 +10,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, RetencionClave
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..errors import RegistryValidationError
@@ -23,6 +25,7 @@ from ..withholding_bindings import (
     resolve_withholding_binding_values,
     validate_withholding_binding_selector_shape,
 )
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +34,12 @@ _SOURCE_REFS = ("aeat-dr-193-2025",)
 _DEVENGO: WithholdingGrouping = "per_perceptor_clave_devengo"
 _PENDING_NIF = "999999999"
 _PENDING_NAME = "VALORES PENDIENTE DE ABONO"
-_HOLDER_NIF = "11111111H"
+_HOLDER_NIF = "00001500M"
+
+
+def _year(offset: int) -> int:
+    """Return the year ``offset`` years from the horizon, for the synthetic payments' own relative layout."""
+    return filing_year_envelope().horizon + offset
 
 
 def _row_binding(
@@ -117,10 +125,10 @@ def _distinct_nif_count() -> BindingDefinition:
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2025-y-siguientes",
-        localization_key="test.schema.revision.2025-y-siguientes.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(year_from=2025, periods=("0A",)),
+        id=f"{_year(0)}-y-siguientes",
+        localization_key=f"test.schema.revision.{_year(0)}-y-siguientes.label",
+        valid_from=date(_year(0), 1, 1),
+        period_selector=PeriodSelector(year_from=_year(0), periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         bindings=bindings,
@@ -149,19 +157,30 @@ def _observation(
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=amount,
         retencion_practicada=Decimal(withholding),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         pendiente_flag=pendiente_flag,
         accrual_year=accrual_year,
         base_retenciones=amount,
+    )
+
+
+def _ordinary_pending_and_settled_observations() -> tuple[WithholdingObservation, ...]:
+    return (
+        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(_year(0), 3, 1)),
+        _observation(
+            source_id="pending",
+            base="200.00",
+            withholding="38.00",
+            transaction_date=date(_year(0), 6, 30),
+            pendiente_flag="X",
+        ),
+        _observation(
+            source_id="settled",
+            base="300.00",
+            withholding="57.00",
+            transaction_date=date(_year(0), 9, 15),
+            accrual_year=_year(-1),
+        ),
     )
 
 
@@ -190,23 +209,7 @@ def test_ordinary_pending_and_settled_rows_for_one_perceptor_and_clave_stay_thre
     base = _row_binding("modelo-193-perceptor-row-base", "base_retenciones", BindingDataType.MONEY)
     count = _record_count()
     revision = _revision_with(nif, pendiente, devengo, base, count)
-    observations = (
-        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(2025, 3, 1)),
-        _observation(
-            source_id="pending",
-            base="200.00",
-            withholding="38.00",
-            transaction_date=date(2025, 6, 30),
-            pendiente_flag="X",
-        ),
-        _observation(
-            source_id="settled",
-            base="300.00",
-            withholding="57.00",
-            transaction_date=date(2025, 9, 15),
-            accrual_year=2024,
-        ),
-    )
+    observations = _ordinary_pending_and_settled_observations()
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
     scalar_values = resolve_withholding_binding_values(revision, observations)
@@ -220,7 +223,7 @@ def test_ordinary_pending_and_settled_rows_for_one_perceptor_and_clave_stay_thre
     assert records == {
         (None, None): Decimal("100.00"),
         ("X", None): Decimal("200.00"),
-        (None, 2024): Decimal("300.00"),
+        (None, _year(-1)): Decimal("300.00"),
     }
 
 
@@ -237,30 +240,14 @@ def test_the_clave_grouping_merges_the_same_phase_rows_into_one_record() -> None
     )
     count = _record_count(grouping="per_perceptor_clave")
     revision = _revision_with(nif, base, devengo, count)
-    observations = (
-        _observation(source_id="ordinary", base="100.00", withholding="19.00", transaction_date=date(2025, 3, 1)),
-        _observation(
-            source_id="pending",
-            base="200.00",
-            withholding="38.00",
-            transaction_date=date(2025, 6, 30),
-            pendiente_flag="X",
-        ),
-        _observation(
-            source_id="settled",
-            base="300.00",
-            withholding="57.00",
-            transaction_date=date(2025, 9, 15),
-            accrual_year=2024,
-        ),
-    )
+    observations = _ordinary_pending_and_settled_observations()
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
     scalar_values = resolve_withholding_binding_values(revision, observations)
 
     assert _row_indexes(row_values, nif.id) == {1}
     assert row_values[(base.id, 1)] == Decimal("600.00")
-    assert row_values[(devengo.id, 1)] == 2024
+    assert row_values[(devengo.id, 1)] == _year(-1)
     assert scalar_values[count.id] == Decimal("1")
 
 
@@ -270,8 +257,8 @@ def test_pending_rows_of_different_accrual_years_stay_separate() -> None:
     count = _record_count()
     revision = _revision_with(base, count)
     observations = (
-        _pending(source_id="pending-2025", base="200.00", withholding="38.00", recognized_on=date(2025, 12, 1)),
-        _pending(source_id="pending-2026", base="50.00", withholding="9.50", recognized_on=date(2026, 1, 2)),
+        _pending(source_id="pending-earlier", base="200.00", withholding="38.00", recognized_on=date(_year(0), 12, 1)),
+        _pending(source_id="pending-later", base="50.00", withholding="9.50", recognized_on=date(_year(1), 1, 2)),
     )
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
@@ -287,8 +274,8 @@ def test_rows_sharing_the_full_key_merge_into_one_record() -> None:
     count = _record_count()
     revision = _revision_with(base, retencion, count)
     observations = (
-        _pending(source_id="pending-a", base="200.00", withholding="38.00", recognized_on=date(2025, 5, 1)),
-        _pending(source_id="pending-b", base="50.00", withholding="9.50", recognized_on=date(2025, 11, 1)),
+        _pending(source_id="pending-a", base="200.00", withholding="38.00", recognized_on=date(_year(0), 5, 1)),
+        _pending(source_id="pending-b", base="50.00", withholding="9.50", recognized_on=date(_year(0), 11, 1)),
     )
 
     row_values = resolve_withholding_binding_row_values(revision, observations)
@@ -305,27 +292,27 @@ def test_declarant_totals_count_records_and_sum_the_emitted_rows() -> None:
     distinct_nif = _distinct_nif_count()
     revision = _revision_with(count, base_total, retencion_total, distinct_nif)
     observations = (
-        _observation(source_id="ordinary-1", base="100.00", withholding="19.00", transaction_date=date(2026, 2, 1)),
-        _observation(source_id="ordinary-2", base="40.00", withholding="7.60", transaction_date=date(2026, 8, 1)),
+        _observation(source_id="ordinary-1", base="100.00", withholding="19.00", transaction_date=date(_year(1), 2, 1)),
+        _observation(source_id="ordinary-2", base="40.00", withholding="7.60", transaction_date=date(_year(1), 8, 1)),
         _observation(
             source_id="settled",
             base="300.00",
             withholding="57.00",
-            transaction_date=date(2026, 3, 10),
-            accrual_year=2025,
+            transaction_date=date(_year(1), 3, 10),
+            accrual_year=_year(0),
         ),
         _observation(
             source_id="other-clave",
             base="10.00",
             withholding="1.90",
-            transaction_date=date(2026, 4, 1),
+            transaction_date=date(_year(1), 4, 1),
             clave="B",
         ),
     )
 
     values = resolve_withholding_binding_values(revision, observations)
 
-    # Records: holder/A/2026 (100 + 40), holder/A/devengo 2025, holder/B/2026.
+    # Records: holder/A/payment year (100 + 40), holder/A/prior devengo, holder/B/payment year.
     assert values[count.id] == Decimal("3")
     assert values[distinct_nif.id] == Decimal("1")
     assert values[count.id] != values[distinct_nif.id]
@@ -345,8 +332,8 @@ def test_declarant_totals_follow_the_selector_clave_scope() -> None:
     )
     revision = _revision_with(count)
     observations = (
-        _observation(source_id="a", base="1.00", withholding="0.19", transaction_date=date(2025, 1, 1)),
-        _observation(source_id="b", base="1.00", withholding="0.19", transaction_date=date(2025, 1, 1), clave="B"),
+        _observation(source_id="a", base="1.00", withholding="0.19", transaction_date=date(_year(0), 1, 1)),
+        _observation(source_id="b", base="1.00", withholding="0.19", transaction_date=date(_year(0), 1, 1), clave="B"),
     )
 
     assert resolve_withholding_binding_values(revision, observations) == {count.id: Decimal("1")}

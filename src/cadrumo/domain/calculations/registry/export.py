@@ -28,8 +28,8 @@ from .binding_selector_utils import (
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
 from .export_field_casilla import layout_fields_in_emission_order
-from .export_parse import xml_dictionary_entries
-from .fixed_width_codec import ExportJustification, ExportPadding
+from .export_xml_dictionary import xml_dictionary_entries
+from .fixed_width_codec import ExportJustification, ExportPadding, fixed_width_field_order
 from .ids import ExportFieldId
 from .schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, RegistryModel
@@ -174,12 +174,7 @@ def _derive_export_record(
     """Materialize one binding-record declaration or return it unchanged."""
     if record.binding_record is None:
         return record
-    derived = tuple(
-        sorted(
-            _export_fields_from_record_bindings(record, bindings),
-            key=lambda field: (field.offset, field.id),
-        ),
-    )
+    derived = fixed_width_field_order(_export_fields_from_record_bindings(record, bindings))
     base_fields = tuple(
         field
         for field in record.fields
@@ -188,7 +183,7 @@ def _derive_export_record(
     )
     # A fixed-width record reads in offset order; derived fields take the
     # positions of the base fields they replace rather than trailing them.
-    fields = tuple(sorted((*base_fields, *derived), key=lambda field: (field.offset, field.id)))
+    fields = fixed_width_field_order((*base_fields, *derived))
     return record.model_copy(update={"fields": fields})
 
 
@@ -292,6 +287,7 @@ def _canales_representacion_casillas_oficiales(
                     layout,
                     sources=sources,
                     source_payloads=source_payloads,
+                    casillas=revision.casillas,
                 )
                 if entry.casilla_id is not None
             )

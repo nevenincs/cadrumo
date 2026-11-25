@@ -16,12 +16,14 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from ._gate_support import catalogues_for_m130_gate_tests
+from ..conformance.registry_schema_support import committed_modelo
+from .gate_support import catalogues_for_m130_gate_tests
 from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -35,14 +37,14 @@ _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justific
 
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return modelo, catalogues_for_m130_gate_tests(catalogues)
 
 
 def _committed_profile(provisional: bool = False) -> ExtractionProfileDefinition:
     """Return the committed M130 declaracion_pdf profile, optionally overriding provisional flag."""
     modelo, _catalogues = _committed_130()
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile = next(p for p in revision.extraction_profiles if p.surface == "declaracion_pdf")
     return profile.model_copy(
         update={
@@ -98,7 +100,7 @@ def test_no_fixture_with_flag_validates(tmp_path: Path) -> None:
     empty_corpus_root = tmp_path / "justificantes"
     empty_corpus_root.mkdir()
 
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile = _committed_profile(provisional=True)
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
@@ -125,7 +127,7 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     # Place a minimal PDF-like fixture to satisfy the fixture check.
     (modelo_fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 specimen fixture")
 
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile = _committed_profile(provisional=False).model_copy(
         update={
             "corpus_round_trip_verified": True,
@@ -177,7 +179,7 @@ def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
     empty_corpus_root = tmp_path / "justificantes"
     empty_corpus_root.mkdir()
 
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile = _committed_profile(provisional=False)
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
@@ -223,7 +225,7 @@ def test_gate_silent_against_the_committed_synthetic_corpus_for_provisional_and_
     assert corpus_root.is_dir(), f"supplied corpus root {corpus_root} is not a directory"
 
     # Scenario B via production wiring: provisional flag opts out → no error
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile_provisional = _committed_profile(provisional=True)
     mutated = revision.model_copy(update={"extraction_profiles": (profile_provisional,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})

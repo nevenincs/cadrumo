@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "BackgroundTaskCue": {
+      "description": "A background job of the profile changed: read it again if the revision\nis newer than the one read last.",
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/BackgroundTaskFamily"
+        },
+        "job_id": {
+          "description": "The job, where the family has one per record.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile_id": {
+          "type": "string"
+        },
+        "revision": {
+          "description": "The job's stored revision, which rises with every change to it.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "family",
+        "profile_id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "BackgroundTaskFamily": {
+      "description": "The kinds of background job the window is cued about: a closed list,\nwhich another background operation joins by adding its family.",
+      "enum": [
+        "ledger_classification"
+      ],
+      "type": "string"
+    },
+    "BackgroundTaskRevision": {
+      "description": "One background job's stored revision.",
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/BackgroundTaskFamily"
+        },
+        "job_id": {
+          "description": "The job, where the family has one per record.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "family",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "BackgroundTaskRevisions": {
+      "description": "The background jobs of the signed-in profile, each at its stored\nrevision, as one read found them.",
+      "properties": {
+        "profile_id": {
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/BackgroundTaskRevision"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "profile_id",
+        "tasks"
+      ],
+      "type": "object"
+    }
+  },
+  "roots": [
+    "BackgroundTaskCue",
+    "BackgroundTaskRevisions"
+  ],
+  "x-cadrumo-port": {
+    "description": "The host's cues and the jobs' stored revisions for the signed-in profile.",
+    "methods": [
+      {
+        "command": "background_tasks_observe",
+        "description": "Calls `listener` with each cue the host sends, until the returned function unsubscribes. A change before subscribing is not cued: read the revisions after it.",
+        "kind": "channel",
+        "method": "observe",
+        "release": "background_tasks_unobserve",
+        "root": "BackgroundTaskCue"
+      },
+      {
+        "command": "background_tasks_revisions",
+        "description": "Every background job's stored revision, read now.",
+        "kind": "read",
+        "method": "revisions",
+        "root": "BackgroundTaskRevisions"
+      }
+    ],
+    "name": "BackgroundTasksPort"
+  }
+}

@@ -1,0 +1,608 @@
+"""The runtime host's view stream relay between a profile worker and the window.
+
+Each running ``live.sede.view`` has at most two legs here. The worker leg is a
+verified connection the host opens to the worker's view endpoint when a window
+first attaches; the worker opens it with ``view.bind``, naming its operation
+and submitting session. The window leg is a view connection admitted by a
+single-use attach token, bound to the exact session, profile, native peer,
+runtime boot and operation, and spent by its first presentation. One window
+leg is bound per operation; a later attach replaces it.
+
+Credit passes through: the host grants the worker only what the window has
+granted and not yet used, and forwards each image chunk as it reads it. An
+image arriving while the window has no credit is dropped as it is read, so
+the host buffers no image. Credit beyond two images on either leg, and any
+frame the view codec refuses, is a protocol violation.
+
+Person input the worker holds back waits in the worker leg for as long as
+the worker lives: its own reader paces the person, and a page busy for a
+while is not a failure. Only the leg's end, whether its peer went away, it
+broke the protocol or the host unbound it, ends that wait. Images keep
+reaching the window meanwhile under the credit the worker holds, because the
+worker's frames are read on their own thread; credit the window grants later
+reaches the worker behind the held input, in the order the window sent it.
+
+Transfer documents and transfer chunks pass through unchanged in both
+directions, each chunk checked for a well-formed header and never inside an
+image's chunk run; their credit is end to end, between the bytes' sender and
+receiver. A transfer frame for a window that is not attached is dropped. The
+window's ``view.close`` passes to the worker, which then publishes and ends
+the view; a window leg that drops without it, rather than being unbound by
+the host or replaced, is closed the same way, the host sending ``view.close``
+in its stead.
+
+The host unbinds at once, without waiting for the worker to settle: when the
+operation ends (the worker's ``view.closed``, whose acknowledgement is the
+host closing the worker leg), when the submitting session is retired or
+locked, when the person connection that asked for the token closes, on a
+violation, and when the runtime stops. Unbinding closes the window leg after
+``view.closed``, which tells the window why. A window cannot be told inside an
+image's chunk run, so the notice waits for the image being forwarded to
+finish; it is dropped, and the window sees only the close, when that image can
+no longer be completed or its forwarder stops making progress. Frames,
+documents and tokens are private and never logged; diagnostics carry only
+closed reason codes.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import hashlib
+import hmac
+import secrets
+import time
+from collections.abc import Callable
+from threading import Lock, RLock, Thread
+from uuid import UUID
+
+from cadrumo.application.operations.models import OperationId
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import (
+    VIEW_ATTACH_TOKEN_BYTES,
+    VIEW_ATTACH_TOKEN_SECONDS,
+    VIEW_CREDIT_MAX_IMAGES,
+    ViewClose,
+    ViewClosed,
+    ViewClosedReason,
+    ViewConnected,
+    ViewCredit,
+    ViewImage,
+    ViewState,
+    ViewWorkerBind,
+)
+from cadrumo_client.contracts.view_transfer import (
+    ViewConnectionDownstreamDocument,
+    ViewConnectionDownstreamFrame,
+    ViewConnectionUpstreamDocument,
+)
+from cadrumo_client.transport.frame_io import (
+    DOCUMENT_FRAME_KIND,
+    decode_document,
+    document_frame,
+    encode_frame,
+    read_frame_of_kinds,
+)
+from cadrumo_client.transport.view_stream import (
+    VIEW_CHUNK_FRAME_KIND,
+    write_view_document,
+)
+
+from ..adapters.worker_transport import WorkerChannel
+from .view_stream_frames import read_window_frame, validate_image_chunk, validate_worker_transfer
+from .view_stream_state import (
+    PendingViewAttach,
+    ViewAttachGrant,
+    ViewWindowLeg,
+    ViewWorkerLeg,
+    close_view_leg_quietly,
+)
+
+_LOGGER = get_logger(__name__)
+
+_FRAME_SECONDS = 5.0
+"""Each relayed frame and each leg handshake completes within this bound."""
+
+_HELD_WRITE_SECONDS = 0xFFFFFFFE / 1000
+"""A write to the worker waits up to the longest single native wait; liveness ends it first.
+
+The worker paces person input by not reading, so this is no bound on the
+person's use: the worker leg's end closes its channel, which cancels the
+write, and a worker that went away fails it.
+"""
+
+_CLOSING_SECONDS = 1.0
+"""The write of ``view.closed`` to a window being unbound; its close follows regardless."""
+
+_WRITER_PROGRESS_SECONDS = 2 * _FRAME_SECONDS
+"""How long a window's frame writer may hold it without finishing a frame before it is given up on.
+
+A forwarded image's chunk takes at most one read from the worker and one write
+to the window, each bounded by ``_FRAME_SECONDS``.
+"""
+
+_WORKER_KINDS = frozenset({DOCUMENT_FRAME_KIND, VIEW_CHUNK_FRAME_KIND})
+
+
+def _violation(check: str) -> RefusalError:
+    return RefusalError(RefusalCode.INVALID_FRAME, check=check)
+
+
+def _token_key(token: bytes) -> bytes:
+    return hashlib.sha256(token).digest()
+
+
+class ViewStreamRelay:
+    """Bind view legs to their exact operation and relay frames between them under credit."""
+
+    def __init__(
+        self,
+        *,
+        runtime_boot_id: UUID,
+        holds_session: Callable[[UUID, UUID], bool],
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        """``holds_session(connection_id, session_id)`` says whether a person connection still holds that session."""
+        self._boot = runtime_boot_id
+        self._holds_session = holds_session
+        self._clock = clock
+        self._guard = RLock()
+        self._workers: dict[OperationId, ViewWorkerLeg] = {}
+        self._pending: dict[bytes, PendingViewAttach] = {}
+        self._opening = Lock()
+        self._closed = False
+
+    @property
+    def opening(self) -> Lock:
+        """Serialize opening worker legs, so two attaches cannot both connect to one worker."""
+        return self._opening
+
+    def worker_bind(self, operation_id: OperationId) -> ViewWorkerBind | None:
+        """Return the bind of the worker leg serving this operation, if one is open."""
+        with self._guard:
+            worker = self._workers.get(operation_id)
+            return None if worker is None or worker.ended else worker.bind
+
+    def bind_worker(self, *, profile_id: UUID, bind: ViewWorkerBind, channel: WorkerChannel) -> None:
+        """Adopt an admitted worker leg and start relaying from it; its window has no credit yet."""
+        with self._guard:
+            if self._closed:
+                close_view_leg_quietly(channel)
+                raise RefusalError(RefusalCode.DRAINING)
+            if any(worker.profile_id == profile_id and not worker.ended for worker in self._workers.values()):
+                # A worker holds one view at a time; another bound leg of this profile is stale.
+                close_view_leg_quietly(channel)
+                raise ProfileAccessRefusedError(AccessDenialCode.SUBJECT_BUSY)
+            worker = ViewWorkerLeg(profile_id=profile_id, bind=bind, channel=channel)
+            self._workers[bind.operation_id] = worker
+        Thread(target=self._relay_worker, args=(worker,), name="view-worker-relay", daemon=True).start()
+
+    def issue(self, grant: ViewAttachGrant) -> str:
+        """Mint a single-use token for a worker leg the grant's session submitted; it lapses in ten seconds."""
+        with self._guard:
+            if self._closed:
+                raise RefusalError(RefusalCode.DRAINING)
+            worker = self._workers.get(grant.operation_id)
+            if (
+                worker is None
+                or worker.ended
+                or worker.profile_id != grant.profile_id
+                or worker.bind.session_id != grant.session_id
+            ):
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            self._expire_pending()
+            token = secrets.token_bytes(VIEW_ATTACH_TOKEN_BYTES)
+            self._pending[_token_key(token)] = PendingViewAttach(
+                token=token, grant=grant, expires_at=self._clock() + VIEW_ATTACH_TOKEN_SECONDS
+            )
+            return token.hex()
+
+    def _spend_attach(
+        self, presented: bytes, operation_id: OperationId, context: ConnectionContext, channel: ByteChannel
+    ) -> ViewAttachGrant:
+        pending = self._pending.pop(_token_key(presented), None)
+        if pending is None or not hmac.compare_digest(pending.token, presented):
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+        grant = pending.grant
+        if self._clock() >= pending.expires_at or grant.operation_id != operation_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+        if (
+            context.runtime_boot_id != self._boot
+            or grant.runtime_boot_id != self._boot
+            or context.peer != grant.peer
+            or channel.peer != grant.peer
+        ):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="view_connection_peer")
+        return grant
+
+    def admit(
+        self, *, attach_token: str, operation_id: OperationId, context: ConnectionContext, channel: ByteChannel
+    ) -> ViewWindowLeg:
+        """Spend a presented token and bind its view connection; every mismatch refuses it.
+
+        The token is removed on presentation whether or not it is accepted, so
+        it can never be presented twice.
+        """
+        presented = bytes.fromhex(attach_token)
+        with self._guard:
+            if self._closed:
+                raise RefusalError(RefusalCode.DRAINING)
+            grant = self._spend_attach(presented, operation_id, context, channel)
+        # Never ask the connection owner while holding this guard: it calls in here under its own.
+        if not self._holds_session(grant.person_connection_id, grant.session_id):
+            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+        with self._guard:
+            worker = self._workers.get(operation_id)
+            if self._closed or worker is None or worker.ended or worker.bind.session_id != grant.session_id:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            replaced = worker.window
+            leg = ViewWindowLeg(channel=channel, context=context, grant=grant)
+            worker.window = leg
+        if replaced is not None:
+            self._unbind_window(replaced, ViewClosedReason.REPLACED)
+        return leg
+
+    def serve_window(self, leg: ViewWindowLeg, request_id: UUID) -> None:
+        """Answer ``view_connected``, then relay the window's upstream documents until the leg unbinds."""
+        with leg.write_lock:
+            try:
+                with self._guard:
+                    worker = self._workers.get(leg.grant.operation_id)
+                    if worker is None or worker.window is not leg:
+                        return
+                    state = worker.last_state
+                leg.channel.write_all(
+                    document_frame(
+                        ViewConnected(
+                            request_id=request_id,
+                            runtime_boot_id=self._boot,
+                            connection_id=leg.context.connection_id,
+                            operation_id=leg.grant.operation_id,
+                        )
+                    ),
+                    deadline=time.monotonic() + _FRAME_SECONDS,
+                )
+                if state is not None:
+                    write_view_document(leg.channel, state, deadline=time.monotonic() + _FRAME_SECONDS)
+            except RefusalError:
+                self._end_window(leg)
+                return
+            with self._guard:
+                leg.ready = not leg.unbound
+        try:
+            self._relay_window(leg, worker)
+        finally:
+            self._close_dropped_window(leg, worker)
+            self._end_window(leg)
+
+    def unbind_sessions(self, session_ids: tuple[UUID, ...]) -> None:
+        """End every view a retired or locked session submitted, and spend its tokens."""
+        retired = set(session_ids)
+        if not retired:
+            return
+        with self._guard:
+            self._pending = {
+                key: pending for key, pending in self._pending.items() if pending.grant.session_id not in retired
+            }
+            ending = [worker for worker in self._workers.values() if worker.bind.session_id in retired]
+        for worker in ending:
+            self._end_worker(worker, ViewClosedReason.SESSION_RETIRED)
+
+    def unbind_unheld(self) -> None:
+        """End every view whose submitting session no person connection holds any longer."""
+        with self._guard:
+            attached = [
+                (worker, worker.window.grant.person_connection_id)
+                for worker in self._workers.values()
+                if worker.window is not None
+            ]
+        ending = [worker for worker, holder in attached if not self._holds_session(holder, worker.bind.session_id)]
+        for worker in ending:
+            self._end_worker(worker, ViewClosedReason.SESSION_RETIRED)
+
+    def unbind_profile(self, profile_id: UUID) -> None:
+        """End every view of a profile whose worker incarnation was retired."""
+        with self._guard:
+            ending = [worker for worker in self._workers.values() if worker.profile_id == profile_id]
+            self._pending = {
+                key: pending for key, pending in self._pending.items() if pending.grant.profile_id != profile_id
+            }
+        for worker in ending:
+            self._end_worker(worker, ViewClosedReason.OPERATION_ENDED)
+
+    def disconnect(self, connection_id: UUID) -> None:
+        """Unbind every window attached through this person connection, and spend its tokens."""
+        with self._guard:
+            self._pending = {
+                key: pending
+                for key, pending in self._pending.items()
+                if pending.grant.person_connection_id != connection_id
+            }
+            legs = [
+                worker.window
+                for worker in self._workers.values()
+                if worker.window is not None and worker.window.grant.person_connection_id == connection_id
+            ]
+        for leg in legs:
+            self._unbind_window(leg, ViewClosedReason.SESSION_RETIRED)
+
+    def close(self) -> None:
+        """End every view because the runtime stops, and refuse new legs."""
+        with self._guard:
+            self._closed = True
+            self._pending.clear()
+            ending = list(self._workers.values())
+        for worker in ending:
+            self._end_worker(worker, ViewClosedReason.RUNTIME_STOPPING)
+
+    def _expire_pending(self) -> None:
+        instant = self._clock()
+        self._pending = {key: pending for key, pending in self._pending.items() if pending.expires_at > instant}
+
+    def _end_worker(self, worker: ViewWorkerLeg, reason: ViewClosedReason) -> None:
+        """Unbind the window first, then close the worker leg, which ends the view in the worker."""
+        with self._guard:
+            if worker.ended:
+                return
+            worker.ended = True
+            window = worker.window
+            if self._workers.get(worker.bind.operation_id) is worker:
+                del self._workers[worker.bind.operation_id]
+            self._pending = {
+                key: pending
+                for key, pending in self._pending.items()
+                if pending.grant.operation_id != worker.bind.operation_id
+            }
+        if window is not None:
+            self._unbind_window(window, reason)
+        worker.stopping.set()
+        close_view_leg_quietly(worker.channel)
+        diagnostic_event(_LOGGER, "view_unbound", fields={"reason": reason.value}, level=10)
+
+    def _unbind_window(self, leg: ViewWindowLeg, reason: ViewClosedReason | None) -> None:
+        """Detach the window at once, tell it why between frames, and close it."""
+        with self._guard:
+            if leg.unbound:
+                return
+            leg.unbound = True
+            leg.ready = False
+            worker = self._workers.get(leg.grant.operation_id)
+            if worker is not None and worker.window is leg:
+                worker.window = None
+        leg.stopping.set()
+        if reason is not None:
+            self._tell_window(leg, reason)
+        close_view_leg_quietly(leg.channel)
+
+    def _tell_window(self, leg: ViewWindowLeg, reason: ViewClosedReason) -> None:
+        """Write ``view.closed`` once the window's writer is between frames, never inside an image's chunk run.
+
+        A forward in progress finishes its image first: the window refuses a
+        document between an image's chunks, so cutting the writer short would
+        make the notice a violation. The wait lasts while the writer keeps
+        finishing frames.
+        """
+        if not self._await_writer(leg):
+            return
+        try:
+            if leg.mid_image:
+                return
+            # The close follows whether or not the window still reads.
+            with contextlib.suppress(RefusalError):
+                write_view_document(
+                    leg.channel, ViewClosed(reason=reason), deadline=time.monotonic() + _CLOSING_SECONDS
+                )
+        finally:
+            leg.write_lock.release()
+
+    @staticmethod
+    def _await_writer(leg: ViewWindowLeg) -> bool:
+        """Take the window's writer lock, waiting while its holder finishes frames; false once it stalls."""
+        seen = leg.frames
+        while not leg.write_lock.acquire(timeout=_WRITER_PROGRESS_SECONDS):
+            if leg.frames == seen:
+                return False
+            seen = leg.frames
+        return True
+
+    def _end_window(self, leg: ViewWindowLeg) -> None:
+        self._unbind_window(leg, None)
+
+    def _window_credit(self, leg: ViewWindowLeg, worker: ViewWorkerLeg, item: ViewCredit) -> int | None:
+        with self._guard:
+            violated = leg.credit + item.images > VIEW_CREDIT_MAX_IMAGES
+            grant = 0
+            if not violated:
+                leg.credit += item.images
+                grant = max(0, leg.credit - worker.credit)
+                worker.credit += grant
+        if violated:
+            self._unbind_window(leg, ViewClosedReason.PROTOCOL_VIOLATION)
+            return None
+        return grant
+
+    def _next_window_item(self, leg: ViewWindowLeg) -> ViewConnectionUpstreamDocument | bytes | None:
+        try:
+            if not leg.channel.wait_readable(leg.stopping):
+                return None
+            item = read_window_frame(leg)
+        except RefusalError as error:
+            if error.reason is RefusalCode.INVALID_FRAME:
+                diagnostic_event(_LOGGER, "view_window_violation", fields={"check": error.check or "-"}, level=30)
+            return None
+        return item
+
+    def _relay_window(self, leg: ViewWindowLeg, worker: ViewWorkerLeg | None) -> None:
+        """Turn window credit into worker credit and forward input, uploads and close, refusing violations."""
+        if worker is None:
+            return
+        while not leg.unbound:
+            item = self._next_window_item(leg)
+            if item is None:
+                return
+            forwarded: ViewConnectionUpstreamDocument | bytes
+            if isinstance(item, ViewCredit):
+                grant = self._window_credit(leg, worker, item)
+                if grant is None:
+                    return
+                if grant == 0:
+                    continue
+                forwarded = ViewCredit(images=grant)
+            else:
+                if isinstance(item, ViewClose):
+                    with self._guard:
+                        leg.close_sent = True
+                forwarded = item
+            if not self._write_worker(worker, forwarded):
+                return
+
+    def _write_worker(self, worker: ViewWorkerLeg, item: ViewConnectionUpstreamDocument | bytes) -> bool:
+        """Write one document or upload chunk to the worker, waiting while it holds input back.
+
+        A failure ends the view; a worker that is alive but busy is not one.
+        """
+        frame = encode_frame(VIEW_CHUNK_FRAME_KIND, item) if isinstance(item, bytes) else document_frame(item)
+        try:
+            with worker.write_lock:
+                worker.channel.write_all(frame, deadline=time.monotonic() + _HELD_WRITE_SECONDS)
+        except RefusalError:
+            self._end_worker(worker, ViewClosedReason.FAILED)
+            return False
+        return True
+
+    def _close_dropped_window(self, leg: ViewWindowLeg, worker: ViewWorkerLeg | None) -> None:
+        """Close the view for a window leg that dropped on its own without sending ``view.close``.
+
+        A leg the host unbound or replaced, or whose worker already ended, is
+        not a close: those end, or keep, the view on their own terms.
+        """
+        if worker is None:
+            return
+        with self._guard:
+            dropped = not leg.unbound and not leg.close_sent and worker.window is leg and not worker.ended
+            if dropped:
+                leg.close_sent = True
+        if dropped:
+            self._write_worker(worker, ViewClose())
+
+    def _relay_worker(self, worker: ViewWorkerLeg) -> None:
+        """Forward the worker's documents and credited images; drop images the window has no credit for."""
+        reason = ViewClosedReason.OPERATION_ENDED
+        try:
+            while not worker.ended:
+                if not worker.channel.wait_readable(worker.stopping):
+                    return
+                kind, payload = read_frame_of_kinds(
+                    worker.channel, kinds=_WORKER_KINDS, deadline=time.monotonic() + _FRAME_SECONDS
+                )
+                if kind == VIEW_CHUNK_FRAME_KIND:
+                    validate_worker_transfer(payload)
+                    self._forward_frame(worker, encode_frame(VIEW_CHUNK_FRAME_KIND, payload))
+                    continue
+                document = decode_document(payload, ViewConnectionDownstreamFrame).root
+                if isinstance(document, ViewClosed):
+                    reason = document.reason
+                    return
+                if isinstance(document, ViewImage):
+                    self._relay_image(worker, document)
+                    continue
+                if isinstance(document, ViewState):
+                    with self._guard:
+                        worker.last_state = document
+                self._forward_document(worker, document)
+        except RefusalError as error:
+            if error.reason is RefusalCode.INVALID_FRAME:
+                reason = ViewClosedReason.PROTOCOL_VIOLATION
+                diagnostic_event(_LOGGER, "view_worker_violation", fields={"check": error.check or "-"}, level=30)
+        finally:
+            self._end_worker(worker, reason)
+
+    def _forward_document(self, worker: ViewWorkerLeg, document: ViewConnectionDownstreamDocument) -> None:
+        self._forward_frame(worker, document_frame(document))
+
+    def _forward_frame(self, worker: ViewWorkerLeg, frame: bytes) -> None:
+        """Pass one document or transfer chunk to an attached window; without one it is dropped."""
+        with self._guard:
+            leg = worker.window if worker.window is not None and worker.window.ready else None
+        if leg is None:
+            return
+        with leg.write_lock:
+            try:
+                leg.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
+            except RefusalError:
+                failed = True
+            else:
+                failed = False
+                leg.frames += 1
+        if failed:
+            self._end_window(leg)
+
+    def _forward_image_chunks(self, worker: ViewWorkerLeg, announcement: ViewImage, leg: ViewWindowLeg | None) -> None:
+        try:
+            leg = self._send_to_window(leg, document_frame(announcement))
+            if leg is not None:
+                leg.mid_image = True
+            expected = 0
+            while True:
+                kind, payload = read_frame_of_kinds(
+                    worker.channel, kinds=_WORKER_KINDS, deadline=time.monotonic() + _FRAME_SECONDS
+                )
+                if kind != VIEW_CHUNK_FRAME_KIND:
+                    raise _violation("view_image_interleaved")
+                header = validate_image_chunk(payload, announcement, expected)
+                leg = self._send_to_window(leg, encode_frame(VIEW_CHUNK_FRAME_KIND, payload))
+                if header.last:
+                    if leg is not None:
+                        leg.mid_image = False
+                    return
+                expected += 1
+        finally:
+            if leg is not None:
+                leg.write_lock.release()
+
+    def _relay_image(self, worker: ViewWorkerLeg, announcement: ViewImage) -> None:
+        """Pass one image through chunk by chunk, or read and drop it when the window has no credit."""
+        leg = self._take_image_credit(worker, announcement)
+        if leg is not None and not leg.write_lock.acquire(timeout=_FRAME_SECONDS):
+            leg = None
+        if leg is not None and leg.unbound:
+            # Unbound while this waited for the writer: the notice may already have gone, so no new image starts.
+            leg.write_lock.release()
+            leg = None
+        self._forward_image_chunks(worker, announcement, leg)
+
+    def _take_image_credit(self, worker: ViewWorkerLeg, announcement: ViewImage) -> ViewWindowLeg | None:
+        with self._guard:
+            if worker.credit == 0:
+                raise _violation("view_image_without_credit")
+            if worker.last_sequence is not None and announcement.sequence <= worker.last_sequence:
+                raise _violation("view_image_sequence")
+            worker.credit -= 1
+            worker.last_sequence = announcement.sequence
+            leg = worker.window if worker.window is not None and worker.window.ready else None
+            if leg is not None and leg.credit > 0:
+                leg.credit -= 1
+            else:
+                leg = None
+        return leg
+
+    def _send_to_window(self, leg: ViewWindowLeg | None, frame: bytes) -> ViewWindowLeg | None:
+        """Write one frame to a window whose writer lock is held; a failed window is let go.
+
+        An unbound window still receives the rest of its image: its notice
+        follows the image, and a closed channel is what fails the write.
+        """
+        if leg is None:
+            return None
+        try:
+            leg.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
+        except RefusalError:
+            leg.write_lock.release()
+            self._end_window(leg)
+            return None
+        leg.frames += 1
+        return leg

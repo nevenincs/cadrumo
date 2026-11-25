@@ -42,7 +42,7 @@ class BucketDeletionAssessment(BaseModel):
 
     bucket_id: BucketId
     exists: bool
-    label: str | None = Field(default=None, min_length=1, max_length=160)
+    label: str | None = Field(default=None, min_length=1, max_length=256)
     setup_state: ProfileSetupState | None = None
     fingerprint: BucketDeletionFingerprint | None = None
     retention: RetentionFloorAssessment | None = None

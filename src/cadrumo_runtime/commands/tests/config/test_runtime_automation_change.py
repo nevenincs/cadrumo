@@ -15,7 +15,7 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.secure_input import validate_secrets_payload
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
-from cadrumo_runtime.commands.runtime_automation_request import AutomationChangeInput, _matching_change_payload
+from cadrumo_runtime.commands.runtime_automation_request import AutomationChangeInput, matching_change_payload
 
 from .runtime_cli import invoke_runtime_cli
 
@@ -58,10 +58,10 @@ def test_protected_change_input_is_strict_and_kind_bound() -> None:
         parsed = _parse(proposal)
         assert parsed.proposal == proposal
         assert str(proposal.target_grant_id) not in repr(parsed)
-        assert _matching_change_payload(parsed, kind.value) == proposal
+        assert matching_change_payload(parsed, kind.value) == proposal
         wrong = EnrollmentKind.RENEW if kind is EnrollmentKind.ROTATE else EnrollmentKind.ROTATE
         with pytest.raises(CliRefusedBoundaryError):
-            _matching_change_payload(parsed, wrong.value)
+            matching_change_payload(parsed, wrong.value)
     with pytest.raises(CliRefusedBoundaryError):
         validate_secrets_payload(
             b'{"proposal":{"kind":"renew","kind":"rotate"}}',

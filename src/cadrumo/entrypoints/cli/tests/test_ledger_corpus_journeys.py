@@ -20,7 +20,7 @@ from ...tests.ledger_corpus_support import (
     invoke_corpus_cli,
     load_active_catalogue,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_seeded_backend
 
 
@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_split_then_merge_roundtrip(invoke_cli: Callable[..., Result]) -> None:
     from decimal import Decimal
 
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     parent = next(r for r in rows if "Subcontratacion desarrollo" in r["description"])
     tx = parent["transaction_id"]
     amount = abs(float(parent["amount"]))
@@ -85,7 +85,7 @@ def test_split_then_merge_roundtrip(invoke_cli: Callable[..., Result]) -> None:
     # Post-split post-state: parent transitions ACTIVE -> SPLIT (retained for
     # audit lineage), two ACTIVE children appear, and the children re-carry the
     # parent balance exactly (no value lost). Concrete post-state, not exit-code only.
-    rows_after = _list_rows()
+    rows_after = list_ledger_rows_via_cli()
     parent_after = next((r for r in rows_after if r["transaction_id"] == tx), None)
     assert parent_after is not None, "the SPLIT parent is retained for audit lineage"
     assert parent_after["lifecycle_state"] == "SPLIT"
@@ -98,7 +98,7 @@ def test_split_then_merge_roundtrip(invoke_cli: Callable[..., Result]) -> None:
 
 @pytest.mark.usefixtures("corpus_world")
 def test_archive_then_history(invoke_cli: Callable[..., Result]) -> None:
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
     archived = invoke_corpus_cli(
@@ -111,7 +111,7 @@ def test_archive_then_history(invoke_cli: Callable[..., Result]) -> None:
 
 @pytest.mark.usefixtures("bbva_world")
 def test_split_children_then_merge(invoke_cli: Callable[..., Result]) -> None:
-    parent = find_corpus_transaction(_list_rows(), "Subcontratacion desarrollo freelance Juan")
+    parent = find_corpus_transaction(list_ledger_rows_via_cli(), "Subcontratacion desarrollo freelance Juan")
     amount = abs(float(parent["amount"]))
     half = round(amount / 2, 2)
     other = round(amount - half, 2)
@@ -136,7 +136,7 @@ def test_split_children_then_merge(invoke_cli: Callable[..., Result]) -> None:
         invoke_cli=invoke_cli,
     )
     assert split.exit_code == 0, split.output
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     child_a_row = find_corpus_transaction(rows, "Subcontratacion parte A")
     child_b_row = find_corpus_transaction(rows, "Subcontratacion parte B")
     child_a = child_a_row["transaction_id"]
@@ -175,7 +175,7 @@ def test_split_children_then_merge(invoke_cli: Callable[..., Result]) -> None:
     # ARCHIVED (never back to ACTIVE), and a FRESH MERGED row — a new
     # content-addressed id carrying the parent's narrative — becomes ACTIVE,
     # re-carrying the rejoined balance.
-    rows_after_merge = _list_rows()
+    rows_after_merge = list_ledger_rows_via_cli()
     by_id = {r["transaction_id"]: r for r in rows_after_merge}
     assert by_id.get(child_a, {}).get("lifecycle_state") == "ARCHIVED", "merged child A must transition to ARCHIVED"
     assert by_id.get(child_b, {}).get("lifecycle_state") == "ARCHIVED", "merged child B must transition to ARCHIVED"
@@ -201,7 +201,7 @@ def test_split_children_then_merge(invoke_cli: Callable[..., Result]) -> None:
 
 @pytest.mark.usefixtures("bbva_world")
 def test_stash_remove_and_track(invoke_cli: Callable[..., Result]) -> None:
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     stash_row = find_corpus_transaction(rows, "Material oficina Papeleria Gomez")
     stashed = invoke_corpus_cli(
         ["app", "ledger", "stash", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
@@ -210,7 +210,9 @@ def test_stash_remove_and_track(invoke_cli: Callable[..., Result]) -> None:
     assert stashed.exit_code == 0, stashed.output
     # Post-stash post-state: the row remains listed but transitions to STASHED
     # (parked pending review — reversible, not removed from the catalogue).
-    stashed_row = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
+    stashed_row = next(
+        (r for r in list_ledger_rows_via_cli() if r["transaction_id"] == stash_row["transaction_id"]), None
+    )
     assert stashed_row is not None, "a stashed row stays in the catalogue (reversible state)"
     assert stashed_row["lifecycle_state"] == "STASHED"
 
@@ -224,7 +226,9 @@ def test_stash_remove_and_track(invoke_cli: Callable[..., Result]) -> None:
     tracked = invoke_corpus_cli(["app", "ledger", "track", stash_row["transaction_id"]], invoke_cli=invoke_cli)
     assert tracked.exit_code == 0, tracked.output
     assert "STASHED" in tracked.output, "track must report the row's STASHED lifecycle state"
-    after_track = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
+    after_track = next(
+        (r for r in list_ledger_rows_via_cli() if r["transaction_id"] == stash_row["transaction_id"]), None
+    )
     assert after_track is not None, "track is read-only; the row stays in the catalogue"
     assert after_track["lifecycle_state"] == "STASHED", (
         "track is a read-only lineage view and must not change lifecycle state"
@@ -237,7 +241,7 @@ def test_stash_remove_and_track(invoke_cli: Callable[..., Result]) -> None:
     )
     assert removed.exit_code == 0, removed.output
     # Post-remove: the removed row is absent from the default list.
-    assert remove_row["transaction_id"] not in {r["transaction_id"] for r in _list_rows()}, (
+    assert remove_row["transaction_id"] not in {r["transaction_id"] for r in list_ledger_rows_via_cli()}, (
         "a removed row must be absent from the default list"
     )
 
@@ -248,7 +252,7 @@ def test_edit_editable_facts_records_edit_lineage_chain(invoke_cli: Callable[...
     """Editing an id-affecting fact rewrites the row id and the new
     record carries an edit_lineage entry pointing back at the prior id.
     """
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     target = find_corpus_transaction(rows, "Material oficina Papeleria Gomez")
     old_id = target["transaction_id"]
 
@@ -272,7 +276,7 @@ def test_reclassify_retains_classification_event_chain(invoke_cli: Callable[...,
     """Reclassifying after review keeps the prior classification in the
     auditable bucket-event chain (the operator-facing classification history).
     """
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     target = find_corpus_transaction(rows, "Material oficina Papeleria Gomez")
     tx = target["transaction_id"]
 
@@ -327,7 +331,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
     from ....domain.modelos.codes import ModeloCode
     from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     tx = find_corpus_transaction(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -447,7 +451,7 @@ def test_split_mixed_invoice_into_business_and_personal_children(invoke_cli: Cal
     """
     from decimal import Decimal
 
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     parent = find_corpus_transaction(rows, "Material oficina Papeleria Gomez")
     parent_id = parent["transaction_id"]
     amount = Decimal(str(parent["amount"]))

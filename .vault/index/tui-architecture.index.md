@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-10-03'
+modified: '2026-10-22'
 body_schema: 'body-v2'
 body_hash: 'sha256:8ff0c4b583ef28155e675aea18b7887bf64f6591388dd78d4e3d37c427538fa6'
 related:

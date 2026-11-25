@@ -53,7 +53,7 @@ heading_key = "modelo.schema.345.form.page.modelo-345-declarante.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.345.form.section.general.heading"
+heading_key = "modelo.schema.345.form.page.modelo-345-declarante.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante-razon-social" },
     { kind = "field", id = "field-2", casilla_id = "numero-identificativo-declaracion" },
@@ -70,7 +70,7 @@ heading_key = "modelo.schema.345.form.page.modelo-345-declarado.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.345.form.section.general.heading"
+heading_key = "modelo.schema.345.form.page.modelo-345-declarado.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarado-nif" },
     { kind = "field", id = "field-2", casilla_id = "representante-legal-nif" },

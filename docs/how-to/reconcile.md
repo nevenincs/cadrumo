@@ -106,7 +106,7 @@ This check is local. It reads the PDF you supply and never contacts AEAT.
 
 Both routes report one of two verdicts:
 
-- **matches** - every compared field agrees with the local filing record.
+- **`matches`** - every compared field agrees with the local filing record.
 - **`mismatches`** - one or more fields differ. The report names each field and
   shows the local value next to the value found in the PDF.
 
@@ -138,7 +138,7 @@ value next to the value in the AEAT receipt.
 4. If the field is a `total`, AEAT printed a result that differs from your
    calculated one. Compare it with the figures you presented at the portal. If
    you presented different figures, correct them with the correction workflow.
-5. If the AEAT receipt itself appears wrong, contact your asesor or AEAT
+5. If the AEAT receipt itself appears wrong, contact your adviser or AEAT
    directly.
 
 ## If a box value looks wrong

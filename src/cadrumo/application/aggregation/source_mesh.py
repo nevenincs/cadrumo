@@ -24,26 +24,27 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
+from typing import Annotated, ClassVar, Final, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -61,8 +62,13 @@ from ...domain.modelos.calculation_revision import (
     empty_row_source_identities,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.source_disagreement import SourceDisagreementFact
 from ..modelo.work_profile import ModeloWorkProfile
+from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 
 RowBindingValue = str | Decimal | int | bool
 
@@ -91,6 +97,7 @@ class SourceMeshError(CoreValidationError):
     """
 
     def __init__(self, message_key: str) -> None:
+        """Create a localized source mesh validation error."""
         super().__init__(message_key, translated_message=message_key)
 
 
@@ -128,250 +135,6 @@ def _duplicate_row_binding_coordinate(_coordinate: object) -> SourceMeshError:
 
 def _duplicate_row_casilla_coordinate(_coordinate: object) -> SourceMeshError:
     return SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
-
-
-CalculationSourceDiagnosticReason = Literal[
-    "duplicate_binding_owner",
-    "duplicate_bound_casilla_owner",
-    "duplicate_relation_owner",
-    "source_issue",
-    "iva_selected_scope_evidence_failure",
-    "iva_compensation_annual_source_evidence_failure",
-    "unresolved_binding",
-    "storage_degraded",
-    "source_domain_not_ready",
-    "unhandled_binding_source",
-    # The binding's provider kind is registered with disposition ``deferred``:
-    # the declaration is legal and enrolled, but no executable route owns it yet.
-    # Distinct from "unhandled_binding_source", which is drift between the
-    # registration and the route table, not an authored deferral.
-    "deferred_binding_source",
-    "unresolved_derived_binding",
-    # An operator-supplied override whose key names nothing the active revision
-    # declares: no binding carries it, so the value is folded into a channel
-    # nothing ever reads. Distinct from "unresolved_binding", which says a
-    # binding the revision DOES declare received no value -- the inverse, and
-    # the reason the two must not be collapsed: there the gap is visible on the
-    # binding, here there is no binding to be visible on, so the override's
-    # disappearance is indistinguishable from the operator never having entered
-    # it. Retired relation ids are the concrete source: relations were absorbed
-    # into binding providers, the override channel is keyed by binding id now,
-    # and an override persisted under the pre-absorption vocabulary stops
-    # applying without a word. Advisory rather than blocking, because the
-    # figure it names may be genuinely obsolete -- but never silent, because an
-    # operator who entered a figure and sees it absent from the result is owed
-    # the reason.
-    "orphaned_override",
-    # The resolved provenance graph does not show the terminal origin the
-    # binding's declaration -- authored, or derived from its provider
-    # registration -- says the value must rest on: a class the declaration does
-    # not admit, no terminal node at all where one is required, more than one
-    # where the family carries a single fact, or a missing evidence fingerprint
-    # on a class that must carry one. Distinct from "unresolved_binding", which
-    # says no value arrived: here a value DID arrive, complete-looking, by a
-    # route nobody declared, which is the failure a complete total hides best.
-    "terminal_origin_mismatch",
-    "unrouted_observation",
-    # An independent QUANTITY consumed rows carry that no binding drawing that
-    # quantity reaches -- the retención suffered on the renta side, a base
-    # imponible or recargo on the IVA side. Distinct from "unrouted_observation"
-    # on the axis that matters to a reader: there, no binding consumes the row
-    # and every screen agrees it is unrouted; here the row IS consumed, so the
-    # row-keyed screens are silent by construction and their silence must not
-    # read as confirmation. Collapsing THOSE two would leave an operator unable
-    # to tell "this row reaches nothing" from "this row reaches a casilla but
-    # its withholding does not".
-    #
-    # Deliberately ONE member across every ledger family. Which family raised it
-    # is already on the diagnostic as source_kind (and binding_source derived
-    # from it), so a per-family member would carry nothing a consumer cannot
-    # already read while growing this Literal once per family -- the opposite
-    # gradient to the one the shared screen exists to produce. The consequence
-    # differs by family (a vanishing retención credit is a settlement error, a
-    # missing base imponible is a completeness error) and that belongs in the
-    # message, not in a routing key nothing routes on.
-    "unrouted_declarable_quantity",
-    # A fourth axis beside the one above, and OBSERVATION-INDEPENDENT unlike
-    # it: "unrouted_declarable_quantity" needs a real row whose fact is
-    # uncovered by a binding that DOES exist; this fires when no binding on
-    # the revision could EVER draw a present category's base, for any row of
-    # that category, before this taxpayer's own row is even considered. True
-    # or false from the registry alone. Advisory rather than blocking -- the
-    # affected categories are typically cuota-less by law, so no tax is lost,
-    # only the base itself has nowhere on this revision to land.
-    "structurally_unroutable_base_category",
-    # A row a binding DOES consume, but without the invoice substrate the
-    # binding's fact assumes: its contribution rests on bank cash (or is
-    # absent). Distinct from "unrouted_observation", which is a row no binding
-    # consumes at all.
-    "ungrounded_income_substrate",
-    # A row whose LINKED sales invoice could not be trusted, so it declares
-    # bank cash instead of the invoice base. Distinct from
-    # "ungrounded_income_substrate", where no invoice was linked at all: here
-    # the operator did the linking and the link itself is what needs repair.
-    "unusable_sales_invoice_evidence",
-    # An invoice folded into this period whose LIVA art. 75 devengo date was
-    # not recorded, so its issue date stood in for it. The figures are the best
-    # available, not a legal determination: an operation performed near a
-    # quarter boundary and invoiced in the next one is declared in the wrong
-    # period by exactly this substitution.
-    "devengo_date_proxy_attribution",
-    "oss_no_live_source",
-    # An annual withholding summary whose per-perceptor-clave detail store holds
-    # NO observation for the year. The bound percepciones count is still
-    # materialised as an explicit zero so the casilla gets its fact and the
-    # calculate/pull surfaces stay identical, but the zero is a claim the store
-    # cannot support: the filing obligation for these resúmenes anuales is
-    # triggered by SATISFYING the declared rentas, so a declaration with no
-    # type-2 record either omits percepciones that exist or is not owed at all.
-    # Kept a reason of its own rather than folded into "source_issue" because a
-    # verification gate has to route on it: this is the one absence that must
-    # never reach filing grade unattended, and a shared advisory reason cannot
-    # be told apart from the advisories that legitimately pass.
-    "withholding_detail_absent",
-    "missing_transaction_evidence",
-    "administrador_retencion_rate_mismatch",
-    # An ISSUED-side retención the ledger INFERRED from a cash shortfall whose
-    # figure is no statutory rate product. The shortfall may be a bank fee, a
-    # discount, or a disputed line rather than tax withheld, in which case the
-    # credit is an over-claim. Screened on the rate rather than on the inference
-    # marker so the correct domestic-B2B majority stays silent.
-    "inferred_retencion_rate_unmatched",
-    # The weaker sibling: the inferred figure DOES equal a statutory sectoral
-    # rate, but 1 % and 2 % are small enough that a bank fee or discount reaches
-    # them by accident. Kept a separate reason rather than a reworded message so
-    # an automated operator routes on the field; the two carry different
-    # epistemic weight and must not be collapsed.
-    "inferred_retencion_sectoral_rate_unconfirmed",
-    # An ISSUED-side retención the ledger INFERRED, kept OUT of the credit the
-    # declaration claims. Distinct from the two rate reasons above, which judge
-    # whether an inferred figure is plausible: this one reports that a figure was
-    # excluded whatever its rate, because the credit takes only the retención a
-    # linked invoice declares. The operator can convert each row by recording the
-    # retención on its invoice, so the amount is reported alongside the count.
-    "inferred_retencion_excluded_from_credit",
-    # An ISSUED-side retención that is UNKNOWN rather than absent: no substrate
-    # determines one, or the implied rate exceeded the maximum the registry
-    # supports and the figure was refused. Reporting it as a zero would assert a
-    # proven nothing-withheld, so it keeps a reason of its own.
-    "unresolved_retencion_substrate",
-    # The grade the issued-invoice retención credit carries. Which ejercicio
-    # credits a retención when the payment and the accrual fall in different
-    # years is not yet grounded, so the figure is advisory and no consumer may
-    # promote it to a filing-grade claim on its own.
-    "advisory_retencion_credit_grade",
-    # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
-    # because the record stated no operation type. Correct for an ordinary LIVA
-    # art. 25 exempt supply, but a supply following an exempt importation (art.
-    # 27.12) reports under clave "M" or "H", and the invoice carries no fact
-    # separating the two. Raised only when the bucket also holds an importation,
-    # so it cannot fire on a taxpayer for whom "E" is the only available clave.
-    "m349_clave_inferred_from_category",
-    # An invoice denominated in a foreign currency with no resolved euro rate,
-    # withheld from an informativa because its euro value is unknown. Excluding
-    # the AMOUNT is correct -- declaring the foreign face value as euro would
-    # misstate it. What this reason exists for is the OPERATION: it is real and
-    # declarable, only its euro figure is missing, so an informativa that simply
-    # omits it leaves the operator filing an incomplete return. Kept distinct
-    # from `unrouted_observation` because the remedy is different: that one
-    # needs a binding, this one needs a conversion rate on the record.
-    "unconverted_foreign_currency",
-    # A Modelo 347 filer carries a declaring role (art. 31's claves C/D/E
-    # population) whose clave depends on a transaction-level fact this
-    # invoice leaves UNDECLARED (tri-state ``None``, not ``False``): whether
-    # an acquisition is al margen de la actividad empresarial (clave D), or
-    # whether a payment is a subvención/auxilio/ayuda (clave E). Neither a
-    # silent ``False`` (under-declares the population the role exists to
-    # cover) nor a silent ``True`` (over-declares) is acceptable, so an
-    # undeclared fact surfaces here instead of picking a side.
-    "unclassified_declarant_role_fact",
-    # A declared figure that rests on a reading of the law the registry marks
-    # as unsettled for the filing period: a grouping or floor the bundled
-    # corpus does not decide, a category whose exclusion is arguable, or a
-    # total whose sign the rule does not settle. The figure follows the
-    # registry's reading and is declared, never dropped; this reason exists so
-    # the reading is disclosed rather than presented as settled. Distinct from
-    # "unclassified_declarant_role_fact", where the filer's record leaves a
-    # fact undeclared: here the record is complete and the law is the open
-    # question, so the remedy is a check against AEAT guidance, not an edit.
-    "unsettled_legal_reading",
-    # An invoice whose declared IVA treatment and whose counterparty contradict
-    # each other: an intra-community supply to a third country, or an export to
-    # a member state. Routing on the category alone would declare volume the
-    # taxpayer never supplied that way, so the line is withheld -- and this
-    # reason exists so the withholding is reported rather than silent. The
-    # bank-transaction path returns a typed gate issue for the same shape; the
-    # invoice projector returns observations, so it reports through here.
-    "invoice_category_counterparty_mismatch",
-    # A received reverse charge whose line carries no rated slot. The recipient
-    # owes the self-assessed cuota (LIVA art. 84.Uno.2), the supplier charges
-    # nothing, and the record states no rate to apply -- so the figure cannot be
-    # derived without asserting which rate the supply bore. Refusing to invent it
-    # is correct; refusing silently would file a quietly short return, which is
-    # what this reason prevents.
-    "invoice_reverse_charge_cuota_not_derivable",
-    # The recorded recargo departs from the rate art. 161 publishes for that
-    # slot. A cross-check beside the declared figure, never a replacement of it.
-    "invoice_recargo_departs_from_published_rate",
-    # One recorded recargo over lines at several IVA rates. The M303 recargo
-    # casillas are per rate and the invoice does not divide it, so the screen
-    # leaves it out of the ledger comparison and says so rather than passing it.
-    "invoice_recargo_not_attributable_to_a_tier",
-    "official_box_unpopulated",
-    "prior_payment_not_deducted",
-    "prior_payment_minoracion_not_captured",
-    "settlement_not_computed",
-    "prorrata_especial_obligatoria",
-    "prorrata_especial_check_unavailable",
-    "prorrata_volume_check_unavailable",
-    "prorrata_volume_declaration_missing",
-    "prorrata_volume_divergence",
-    "dt12_regime_window_closed",
-    "dt12_regime_window_unverified",
-    "dt12_parcial_rescate_guidance",
-    # A rate-keyed official box layer that accounts for LESS than the rate-blind
-    # total it breaks down. Not an unrouted quantity: the money IS routed, into
-    # the total, and the return declares it in full. What is missing is a rate
-    # for it, so no box may claim one -- which makes this the one advisory whose
-    # remedy is a ledger edit rather than a registry or resolver gap, and the one
-    # the export gate later refuses on.
-    "rate_boxes_underaccount_total",
-    # A casilla whose aggregation resolved to ZERO over a NON-EMPTY income set,
-    # because every contributing row was excluded by an activity narrowing the
-    # operator has no channel to satisfy. The exclusion itself is correct and is
-    # NOT what this reports -- admitting an undeclared row would route a
-    # non-agrarian filer's income into an agrarian box, the over-declaration
-    # error. What it reports is that the box is empty for a reason invisible from
-    # the box: income exists in the period and no activity is declared for it.
-    # Deliberately makes no claim ABOUT the income's activity, because nothing in
-    # the ledger establishes one -- that absence is the finding.
-    "aggregation_activity_undeclared",
-    # An operator-supplied casilla value that REPLACED a value the resolvers
-    # computed for the same casilla, where the two differ. Not an error: the
-    # operator wins by design, because the facts behind a regularizacion may
-    # live outside the ledger. What it discloses is that a derived figure was
-    # discarded, which nothing else on this path says out loud. Distinct from
-    # every unrouted reason: nothing here is missing from the return, one of two
-    # available figures was chosen over the other.
-    "operator_override_diverges_from_computed",
-    # A ledger expense row withheld from a Renta expense total because the
-    # activity-asset register declares that transaction as an asset's
-    # acquisition. The purchase price is the amortizable base, deducted through
-    # the register's amortization charge (RIS art. 3.2 under LIS art. 12.1),
-    # never a current expense -- so nothing is missing from the return and this
-    # is NOT a durable unrouted condition. It exists because the withholding is
-    # invisible from the casilla: an operator who recorded a real business
-    # purchase and sees it absent from the expense total is owed the reason, and
-    # the amount it names is exactly the one the register replaced.
-    "register_owned_capital_acquisition",
-    # A Modelo 193 payment-year record for income accrued in an earlier year,
-    # whose base and withholding amounts no official source settles: the
-    # withholding was declared in the accrual year's Modelo 123, and the record
-    # design is silent on what the later record repeats. The amounts are kept,
-    # so nothing is missing from the return; what is missing is the authority
-    # for them, which must not read as settled.
-    "m193_settled_row_amounts_unresolved_authority",
-]
 
 
 def _binding_source_for_token(value: object) -> BindingSourceKind | None:
@@ -412,106 +175,6 @@ def _infer_binding_source(payload: object) -> object:
     return data
 
 
-class CallerOverrideDisposition(StrEnum):
-    """Whether the calculate path permits a caller override of a source's value.
-
-    The override disposition axis of the caller-override precedence ladder.
-
-    Members:
-        LOCK: Deterministic bucket-owned resolvers (ledger aggregations,
-            invoice families, inventory projection, and other complete source
-            authorities). A caller override is REJECTED so the persisted
-            revision faithfully reflects the sources it aggregates.
-        CARRY: Carry-style sources (previous_filing, relation_prefill, the
-            IVA-compensation annual partition, and prorrata regularizacion).
-            A caller override of an
-            automatically-carried prior value is legitimate and must reach the
-            engine, so these are EXCLUDED from the post-merge caller-override
-            guard.
-    """
-
-    LOCK = "lock"
-    CARRY = "carry"
-
-
-class CallerOverridePrecedenceTier(NamedTuple):
-    """One ordered tier of the calculate-path caller-override precedence ladder.
-
-    Carries the tier name, the source kinds it owns, and the override disposition
-    the guard applies to them. The ordered ladder is the single declaration the
-    caller-override guard sets are derived from — :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER`
-    replaces the hand-listed lock / carry frozensets, and a conformance test binds
-    the policy's derived sets to it so the two cannot silently diverge.
-    """
-
-    name: str
-    source_kinds: frozenset[BindingSourceKind]
-    disposition: CallerOverrideDisposition
-
-
-#: The calculate-path caller-override precedence ladder as ordered tier data,
-#: lowest-precedence tier first. The
-#: guard's lock and carry source sets are the unions of the LOCK- and
-#: CARRY-disposition tiers (see :func:`precedence_ladder_sources`). This encodes
-#: the override DISPOSITION axis only; the merge OVERLAY order (profile < mesh
-#: backend < borrador < caller, later tier wins) is enforced separately by
-#: :func:`merge_source_resolutions`.
-CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
-    CallerOverridePrecedenceTier(
-        name="deterministic_lock",
-        source_kinds=frozenset(
-            {
-                BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-                BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-                BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-                BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-                BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
-                BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                BindingSourceKind.COLLECTIBLE_INVOICE,
-                BindingSourceKind.PAYABLE_INVOICE,
-                BindingSourceKind.M347_THIRD_PARTY_OPERATION,
-                BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
-                BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
-                BindingSourceKind.INVENTORY,
-            },
-        ),
-        disposition=CallerOverrideDisposition.LOCK,
-    ),
-    CallerOverridePrecedenceTier(
-        name="carry_forward",
-        source_kinds=frozenset(
-            {
-                BindingSourceKind.PREVIOUS_FILING,
-                BindingSourceKind.RELATION_PREFILL,
-                BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
-                BindingSourceKind.PRORRATA_REGULARIZACION,
-            },
-        ),
-        disposition=CallerOverrideDisposition.CARRY,
-    ),
-)
-
-
-def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozenset[BindingSourceKind]:
-    """Union of the source kinds carried by every ladder tier of ``disposition``.
-
-    The single derivation the caller-override policy sets read, so a source kind's
-    lock-vs-carry disposition is declared once in
-    :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER` rather than hand-listed per set.
-
-    Returns:
-        The :class:`BindingSourceKind` members carried by every ladder tier
-        whose disposition matches *disposition*.
-    """
-    return frozenset(
-        kind
-        for tier in CALLER_OVERRIDE_PRECEDENCE_LADDER
-        if tier.disposition is disposition
-        for kind in tier.source_kinds
-    )
-
-
 class CompositeSourceResolverId(StrEnum):
     """Closed identities owned only by source-resolution composition."""
 
@@ -540,7 +203,7 @@ class CalculationSourceContext(BaseModel):
     caller has supplied none.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     # Normal calculate routes carry the exact selected work unit.  Legacy
@@ -552,12 +215,30 @@ class CalculationSourceContext(BaseModel):
     filing_year: FilingYear
     period: Period
     revision: ModeloRevision
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    # What the operator entered directly, for a resolver whose table the operator
+    # may share. Transient: a resolver reads it, nothing persists it from here.
+    caller_binding_values: dict[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    caller_enum_binding_values: dict[BindingId, str] = Field(default_factory=dict, exclude=True, repr=False)
+    # The boxes the operator typed, for a resolver whose boxes the filer may also
+    # fill and whose finding the typed figure settles. Transient, like the above.
+    caller_casilla_ids: frozenset[CasillaId] = Field(default_factory=frozenset, exclude=True, repr=False)
+    # Per income family without a calculator, the digest of its ledger rows when the
+    # operator entered its figures by hand; replayed from the operator layer, transient.
+    income_family_entry_digests: dict[str, str] = Field(default_factory=dict, exclude=True, repr=False)
+    caller_row_attestations: tuple[RowCarryAttestation, ...] = Field(default=(), exclude=True, repr=False)
+    """The operator's per-row statements of a carry no source holds, for the resolver owning those rows."""
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
     profile: InstanceOf[ModeloWorkProfile] | None = None
     operation: InstanceOf[PinnedAuthorityOperation] | None = Field(default=None, exclude=True, repr=False)
     """Caller-owned generation lease; transient and excluded from serialization."""
+
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 #: Cap on a diagnostic's operator-facing message.
@@ -591,13 +272,21 @@ DIAGNOSTIC_REMEDY_MAX_LENGTH: Final[int] = 512
 class CalculationSourceDiagnostic(BaseModel):
     """Diagnostic emitted while resolving source-backed calculation values."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     reason: CalculationSourceDiagnosticReason
     source_kind: str = Field(min_length=1, max_length=64)
     binding_source: BindingSourceKind | None = None
     """Canonical binding source when ``source_kind`` names one; ``None`` for advisory categories."""
     message: _DiagnosticMessage
+    message_language: OutputLanguage | None = None
+    """The language ``message`` is operator prose in, when its resolver worded it for the filer.
+
+    ``None`` where the message is a technical account: a binding or resolver
+    named by its identifier, a sanitized marker, or prose a reader in another
+    language could not read. A frontend that draws the message beside the
+    catalogue's own sentence draws it only in this language.
+    """
     remedy: str | None = Field(default=None, min_length=1, max_length=DIAGNOSTIC_REMEDY_MAX_LENGTH)
     """What the operator should DO about it, carried apart from what happened.
 
@@ -613,6 +302,10 @@ class CalculationSourceDiagnostic(BaseModel):
     where the advisory discloses a state with no action attached to it."""
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    fact: CalculationNoteFact | None = None
+    """What this diagnostic says about its own subject, in catalogue words; ``None`` when its reason says it all."""
+    element_names: tuple[tuple[str, str], ...] = ()
+    """The current name of each element ``fact`` speaks of, read for showing and never persisted."""
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     relation_ids: tuple[RelationId, ...] = ()
@@ -683,6 +376,10 @@ class CalculationSourceDiagnostic(BaseModel):
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None
+    value_outcome: BindingValueOutcome | None = None
+    """The resolver's stated outcome for a capped value; set only on ``advisory_binding_value``."""
+    disagreement: SourceDisagreementFact | None = None
+    """Every source's value for one figure and which one the calculation used, when two sources disagree."""
 
     @model_validator(mode="before")
     @classmethod
@@ -746,7 +443,7 @@ def out_of_window_summary_source_diagnostic(
 class CalculationSourceProvenance(BaseModel):
     """One primary or contributing node in a resolver-owned provenance graph."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     resolver_id: str = Field(min_length=1, max_length=128)
     resolved_binding_source: BindingSourceKind
@@ -831,7 +528,7 @@ class BorradorSourceProvenance(BaseModel):
     ``borrador:{id}:binding:{bid}`` provenance ``source_ref`` strings.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bindings_sourced: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -939,8 +636,39 @@ class CalculationSourceResolution(BaseModel):
     # not a binding channel.  It remains separate so a later persistence layer
     # cannot reconstruct it from scalar values or provenance strings.
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
+    profile_read_fingerprint: ProfileReadFingerprint | None = Field(default=None, exclude=True, repr=False)
+    """The profile facts this resolution read, with a digest of each; stated only by the profile resolver.
+
+    The calculation persists it on the revision so verification and export can
+    tell whether a fact the casillas rest on was edited afterwards. Merging
+    resolutions does not carry it: the calculation reads it from the profile tier.
+    """
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
+    value_outcomes: Mapping[BindingId, BindingValueOutcome] = Field(default_factory=dict)
+    """What the resolver states about the rows each binding value rests on, where it can say.
+
+    Only the resolver that read the rows can tell a zero from a window with
+    nothing to sum apart from a zero whose rows carried the quantity, so it says
+    which applies here and no consumer infers it from the amount. A binding with
+    no entry has no stated outcome, which a capped value reads as withholding.
+    A proven zero is refused for a binding whose value is not zero.
+    """
+    payment_year_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    """Each declared-only retención binding's figure with its rows placed on the payer's payment date.
+
+    Stated only for an accrual ejercicio, where a receipt can be imputed to one
+    year and paid in another. A payer certifies the retención in the year it
+    pays, so a payer-side cross-check compares with this figure, not with the
+    value. It is never a binding value and never reaches a casilla.
+    """
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    """Each declared-only retención binding's figure as the year's last pago fraccionado would credit it.
+
+    The year's rows are restated by their payment dates and tipo de actividad,
+    so a cross-check against that filed pago fraccionado compares like with
+    like. It is never a binding value and never reaches a casilla.
+    """
 
     @field_validator("owned_sources", mode="before")
     @classmethod
@@ -1268,6 +996,29 @@ class CalculationSourceResolution(BaseModel):
                 raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_source_identity_mismatch")
         return self
 
+    @field_validator("value_outcomes")
+    @classmethod
+    @pydantic_validation_boundary
+    def _freeze_value_outcomes(
+        cls, value: Mapping[BindingId, BindingValueOutcome]
+    ) -> Mapping[BindingId, BindingValueOutcome]:
+        return MappingProxyType(dict(value))
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _proven_zero_is_zero(self) -> CalculationSourceResolution:
+        """Refuse a proven zero stated for a binding whose resolved value is not zero."""
+        contradicted = sorted(
+            binding_id
+            for binding_id, outcome in self.value_outcomes.items()
+            if outcome is BindingValueOutcome.PROVEN_ZERO
+            and binding_id in self.binding_values
+            and self.binding_values[binding_id] != 0
+        )
+        if contradicted:
+            raise SourceMeshError("aggregation.source_mesh.errors.proven_zero_value_not_zero")
+        return self
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
@@ -1276,6 +1027,12 @@ class CalculationSourceResolution(BaseModel):
         _require_contributor_provenance_parents(self.provenance, primary_refs)
         _validate_provenance_resolver_ids(self.provenance, self.resolver_id)
         return self
+
+    @field_serializer("value_outcomes")
+    def _serialize_value_outcomes(
+        self, value: Mapping[BindingId, BindingValueOutcome]
+    ) -> dict[BindingId, BindingValueOutcome]:
+        return dict(value)
 
     @field_serializer("binding_values")
     def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
@@ -1356,23 +1113,3 @@ class ModeloSourceResolver(Protocol):
         binding values, provenance, and any source diagnostics.
         """
         ...
-
-
-__all__ = [
-    "CALLER_OVERRIDE_PRECEDENCE_LADDER",
-    "BorradorSourceProvenance",
-    "CalculationSourceContext",
-    "CalculationSourceDiagnostic",
-    "CalculationSourceDiagnosticReason",
-    "CalculationSourceProvenance",
-    "CalculationSourceResolution",
-    "CallerOverrideDisposition",
-    "CallerOverridePrecedenceTier",
-    "ModeloSourceResolver",
-    "RowBindingKey",
-    "RowBindingValue",
-    "RowSourceIdentity",
-    "out_of_window_summary_message",
-    "out_of_window_summary_source_diagnostic",
-    "precedence_ladder_sources",
-]

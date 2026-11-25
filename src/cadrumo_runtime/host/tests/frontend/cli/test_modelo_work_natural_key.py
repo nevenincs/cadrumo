@@ -13,21 +13,25 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import capture_m111_invoice_withholding
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import SCENARIO_FILING_YEAR, capture_m111_invoice_withholding
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+
+#: The year the shared withholding capture records its Modelo 111 percepción in.
+_M111_YEAR = str(SCENARIO_FILING_YEAR)
 
 
 def _invoke(args: list[str]):
@@ -54,6 +58,9 @@ def _create_profile() -> None:
             "tax_residence.jurisdiction_scope": "common_regime",
             # Modelo 111 readiness asks whether the filer is a colegio concertado.
             "withholding.colegio_concertado": "false",
+            # Modelo 111 applies only to a payer of income subject to retención, and these
+            # suites capture the retención the operator withheld from a professional's invoice.
+            "withholding.pays_professionals_with_retencion": "true",
         },
         log_in=False,
     )
@@ -63,7 +70,7 @@ def _create_first_year_activity_profile() -> None:
     register_cli_profile(
         label="operator",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Daniel",
             "identity.surnames": "Persona",
@@ -71,13 +78,6 @@ def _create_first_year_activity_profile() -> None:
             "censo.activity_start_date": "2025-01-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
@@ -94,7 +94,7 @@ def _create_autonoma_activity_profile(exercise: int) -> None:
     register_cli_profile(
         label="autonoma",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Ana",
             "identity.surnames": "Persona",
@@ -102,13 +102,6 @@ def _create_autonoma_activity_profile(exercise: int) -> None:
             "censo.activity_start_date": f"{exercise}-01-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
@@ -124,23 +117,25 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     capture_m111_invoice_withholding()
 
     status = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "status",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert status.exit_code == 0, status.output
     status_notice = next(
-        notice for notice in _notices(status.output) if notice["code"] == "modelo.work.status.next_action"
+        notice
+        for notice in unwrap_envelope_notices(status.output)
+        if notice["code"] == "modelo.work.status.next_action"
     )
     assert status_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.calculate",
@@ -153,28 +148,28 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
-    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
+    assert unwrap_schema_envelope(calculated.output)["work_unit_id"] == work_unit_id
 
     verified = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
-    assert _payload(verified.output)["granted_verificado_completo"] is True
+    assert unwrap_schema_envelope(verified.output)["calculation_revision_id"] == calculation_revision_id
+    assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is True
     # A granted verification has no recovery action or speculative next-step
     # notice: export requires additional material input that this verifier does
     # not own.
     assert _envelope_status(verified.output) == "warning", verified.output
-    granted_notices = _notices(verified.output)
+    granted_notices = unwrap_envelope_notices(verified.output)
     assert [notice["code"] for notice in granted_notices] == ["config.login.session_not_persisted"], verified.output
     assert granted_notices[0]["action"] is None
 
@@ -183,12 +178,12 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "export",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
             "--output", str(out),
         ],
     )  # fmt: skip
     assert exported.exit_code == 0, exported.output
-    payload = _payload(exported.output)
+    payload = unwrap_schema_envelope(exported.output)
     assert payload["work_unit_id"] == work_unit_id
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert out.exists()
@@ -211,7 +206,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -220,38 +215,42 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     first = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
-    assert _payload(first.output)["granted_verificado_completo"] is True, first.output
-    report_id = _payload(first.output)["verification_report_id"]
+    assert unwrap_schema_envelope(first.output)["granted_verificado_completo"] is True, first.output
+    report_id = unwrap_schema_envelope(first.output)["verification_report_id"]
     # The first verify grants and carries no idempotent-no-op notice.
-    assert "modelo.work.verify.idempotent_noop" not in [n["code"] for n in _notices(first.output)], first.output
+    assert "modelo.work.verify.idempotent_noop" not in [n["code"] for n in unwrap_envelope_notices(first.output)], (
+        first.output
+    )
 
     # Work-addressed re-verify (natural key): collapses to the existing report.
     work_addressed = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert work_addressed.exit_code == 0, work_addressed.output
-    assert _payload(work_addressed.output)["verification_report_id"] == report_id, work_addressed.output
-    assert _payload(work_addressed.output)["calculation_revision_id"] == calculation_revision_id, work_addressed.output
+    assert unwrap_schema_envelope(work_addressed.output)["verification_report_id"] == report_id, work_addressed.output
+    assert unwrap_schema_envelope(work_addressed.output)["calculation_revision_id"] == calculation_revision_id, (
+        work_addressed.output
+    )
     work_addressed_noop = next(
-        n for n in _notices(work_addressed.output) if n["code"] == "modelo.work.verify.idempotent_noop"
+        n for n in unwrap_envelope_notices(work_addressed.output) if n["code"] == "modelo.work.verify.idempotent_noop"
     )
     assert work_addressed_noop["severity"] == "info", work_addressed.output
     assert work_addressed_noop["context"]["verification_report_id"] == report_id, work_addressed.output
@@ -264,10 +263,12 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert revision_addressed.exit_code == 0, revision_addressed.output
-    assert _payload(revision_addressed.output)["verification_report_id"] == report_id, revision_addressed.output
-    assert "modelo.work.verify.idempotent_noop" in [n["code"] for n in _notices(revision_addressed.output)], (
+    assert unwrap_schema_envelope(revision_addressed.output)["verification_report_id"] == report_id, (
         revision_addressed.output
     )
+    assert "modelo.work.verify.idempotent_noop" in [
+        n["code"] for n in unwrap_envelope_notices(revision_addressed.output)
+    ], revision_addressed.output
 
 
 def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state() -> None:
@@ -287,7 +288,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
 
     # Casilla 02 (gastos) is bucket-bound (aggregated from deductible ledger
     # rows) and cannot be supplied via --casilla; with no expense seeded it
@@ -302,8 +303,8 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
-    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
+    assert unwrap_schema_envelope(calculated.output)["work_unit_id"] == work_unit_id
 
     verified = _invoke(
         [
@@ -313,15 +314,24 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert verified.exit_code == 1, verified.output
-    payload = _payload(verified.output)
+    payload = unwrap_schema_envelope(verified.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
+    # The quarter reads the previous ejercicio's Renta (RIRPF art. 110.3), which
+    # this profile has neither observed nor started, so the door creates it.
     finding_action = payload["findings"][0]["action"]
-    assert finding_action["action"] is None
-    assert finding_action["conditionality"] == "not_applicable"
+    source = finding_action["evidence"][0]["values"]
+    assert (source["source_modelo"], source["period"]) == ("100", "0A")
+    assert finding_action["action"]["action_id"] == "operator.modelo.work.create"
+    assert {binding["argument_name"]: binding["value"] for binding in finding_action["argument_bindings"]} == {
+        "modelo": "100",
+        "period": "0A",
+        "year": source["year"],
+    }
+    assert finding_action["conditionality"] == "immediate"
     assert finding_action["missing_argument_names"] == []
-    assert finding_action["no_recovery_outcome"] == "operator_decision"
+    assert finding_action["no_recovery_outcome"] is None
     assert "next_action" not in payload["findings"][0]
 
     # The shared-spine contract: a verify carrying a blocking finding must NOT
@@ -331,7 +341,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     # (NoticeSeverity has no ERROR member; a non-granted verify must read a
     # non-success status).
     assert _envelope_status(verified.output) == "warning", verified.output
-    notices = _notices(verified.output)
+    notices = unwrap_envelope_notices(verified.output)
     assert notices, verified.output
     blocking = next(
         notice for notice in notices if notice["code"] == "modelo.work.verify.finding.cross_period_dependency_unclean"
@@ -351,10 +361,11 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
 def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_state(exercise: int) -> None:
     """The reported first-quarter blank-state ledger flow stays on the public CLI path.
 
-    The expected casillas come from the acceptance evidence, not from
-    reimplementing the Modelo 130 formulas in the test: ledger income 3000,
-    deductible expense 600, and first-year activity blank prior state produce
-    the accepted 1T draft values 01=3000, 02=600, 03=2400, 19=380.
+    The expected casillas are worked by hand from the rule, not read from a run.
+    The profile is under estimacion directa simplificada, so casilla 02 is the
+    ledger expense plus the RIRPF art. 30.2.4a provision (5 % of the positive
+    rendimiento previo, 7 % in 2023, at most 2.000 EUR a year). The first year
+    of activity has no prior-year income, so casilla 13 is the 100 EUR reduction.
     """
 
     _create_autonoma_activity_profile(exercise)
@@ -389,11 +400,71 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     assert calculated.exit_code == 0, calculated.output
     assert "validate_construct_closure() missing" not in calculated.output
     assert "Traceback" not in calculated.output
-    casillas = _payload(calculated.output)["casilla_values"]
+    casillas = unwrap_schema_envelope(calculated.output)["casilla_values"]
+    # RIRPF art. 30.2.4a, by hand: rendimiento previo = 3000 - 600 = 2400.
+    #   2023 (7 %): provision 2400 x 7 % = 168; 02 = 600 + 168 = 768; 03 = 3000 - 768 = 2232;
+    #               04 = 2232 x 20 % = 446.40; 19 = 446.40 - 100 = 346.40.
+    #   other years (5 %): provision 2400 x 5 % = 120; 02 = 600 + 120 = 720; 03 = 3000 - 720 = 2280;
+    #               04 = 2280 x 20 % = 456; 19 = 456 - 100 = 356.
+    expected_02, expected_03, expected_19 = (
+        ("768.00", "2232.00", "346.40") if exercise == 2023 else ("720.00", "2280.00", "356.00")
+    )
     assert Decimal(casillas["01"]) == Decimal("3000.00")
-    assert Decimal(casillas["02"]) == Decimal("600.00")
-    assert Decimal(casillas["03"]) == Decimal("2400.00")
-    assert Decimal(casillas["19"]) == Decimal("380.00")
+    assert Decimal(casillas["02"]) == Decimal(expected_02)
+    assert Decimal(casillas["03"]) == Decimal(expected_03)
+    assert Decimal(casillas["19"]) == Decimal(expected_19)
+
+
+def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_filed(tmp_path: Path) -> None:
+    """Accrual is the legal rule but a cash election in an earlier return binds three years, so absence picks neither.
+
+    RIRPF art. 7.2.1 makes the election a statement in the return, which a fresh
+    profile cannot see. The draft may be calculated, but the boxes it could not
+    work out name the missing fact and keep it from every filing step.
+    """
+    _create_first_year_activity_profile()
+    seed_m130_income_transaction(
+        amount=Decimal("4000.00"),
+        filing_year=2025,
+        source_key="undeclared-criterion",
+        criterion_declared=False,
+    )
+    period = ["--modelo", "130", "--year", "2025", "--period", "1T"]
+    assert _invoke(["--format", "json", "app", "modelo", "work", "create", *period]).exit_code == 0
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", *period,
+            "--binding", "irpf.previous_year_economic_activity_net_income=0",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+
+    assert calculated.exit_code == 0, calculated.output
+    blockers = [
+        notice["context"]
+        for notice in unwrap_envelope_notices(calculated.output)
+        if notice["context"] is not None and notice["context"].get("level") == "blocks"
+    ]
+    income_blocker = next(context for context in blockers if context.get("box") == "01")
+    assert income_blocker["reason"] == "unresolved_binding"
+    assert "irpf.activity_income_imputation_criterion" in income_blocker["detail"]
+
+    verified = _invoke(["--format", "json", "app", "modelo", "work", "verify", *period])
+    assert verified.exit_code != 0, verified.output
+    assert "REFUSED_MODELO_CALCULATION_BLOCKED" in verified.output
+    assert "unresolved_binding" in verified.output
+
+    out = tmp_path / "modelo-130.txt"
+    exported = _invoke(["--format", "json", "app", "modelo", "export", *period, "--output", str(out)])
+    assert exported.exit_code != 0, exported.output
+    assert not out.exists()
+
+    filed = _invoke(
+        ["--format", "json", "app", "modelo", "work", "file", *period, "--select", "current", "--by", "Daniel"],
+    )
+    assert filed.exit_code != 0, filed.output
 
 
 def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
@@ -424,7 +495,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     verified = _invoke(
         [
@@ -434,7 +505,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    verify_payload = _payload(verified.output)
+    verify_payload = unwrap_schema_envelope(verified.output)
     assert verify_payload["calculation_revision_id"] == calculation_revision_id
     assert verify_payload["granted_verificado_completo"] is True
 
@@ -449,7 +520,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert filed.exit_code == 0, filed.output
-    file_payload = _payload(filed.output)
+    file_payload = unwrap_schema_envelope(filed.output)
     assert file_payload["calculation_revision_id"] == calculation_revision_id
     assert file_payload["aeat_accepted"] is False
 
@@ -482,7 +553,7 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_adjacent_work_reads_resolve_visible_targets() -> None:
@@ -493,46 +564,48 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     capture_m111_invoice_withholding()
 
     calculated = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     shown_revision = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "revision",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
             "--select", "current",
         ],
     )  # fmt: skip
     assert shown_revision.exit_code == 0, shown_revision.output
-    assert _payload(shown_revision.output)["calculation_revision_id"] == calculation_revision_id
+    assert unwrap_schema_envelope(shown_revision.output)["calculation_revision_id"] == calculation_revision_id
 
     history = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "history",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert history.exit_code == 0, history.output
-    assert _payload(history.output)["work_unit_id"] == work_unit_id
-    assert _payload(history.output)["event_count"] >= 2
+    assert unwrap_schema_envelope(history.output)["work_unit_id"] == work_unit_id
+    assert unwrap_schema_envelope(history.output)["event_count"] >= 2
     history_notice = next(
-        notice for notice in _notices(history.output) if notice["code"] == "modelo.work.history.next_action"
+        notice
+        for notice in unwrap_envelope_notices(history.output)
+        if notice["code"] == "modelo.work.history.next_action"
     )
     assert history_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.status",

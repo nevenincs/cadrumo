@@ -18,7 +18,7 @@ from cadrumo.application.operations.access_resolution import (
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from cadrumo.application.user_profile.operations import (
@@ -46,6 +46,7 @@ from cadrumo.application.user_profile.view_operation import (
 )
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.capabilities import ServiceCapability
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -326,7 +327,7 @@ _FIELD_PATHS = (
     # The fact writer trims the path, so a padded one stores the same capability.
     f"  {ServiceCapability.CLOUD_EVIDENCE_UPLOAD.schema_path}	",
     "preferences.output_language",
-    "identity.notes",
+    "identity.legal_name",
 )
 _FRONTENDS = tuple(OperationFrontendProjection)
 
@@ -378,7 +379,7 @@ def test_every_frontend_resolves_the_same_access_for_a_field_change(
 
 _KNOWN_CAPABILITY_QUESTIONS = ("llm-vision", "google-export")
 """The capability questions the setup catalogue asks today, named here independently of it."""
-_OTHER_QUESTION = "notes"
+_OTHER_QUESTION = "legal-name"
 
 
 def _patch(*answers: tuple[str, str], colegio_concertado: bool | None = None) -> OperationRequest[BaseModel]:
@@ -417,13 +418,13 @@ def test_the_setup_catalogue_asks_the_known_capability_questions(operation: Pinn
     assert {questions[question_id] for question_id in _KNOWN_CAPABILITY_QUESTIONS} <= {
         item.schema_path for item in ServiceCapability
     }
-    assert questions[_OTHER_QUESTION] == "identity.notes"
+    assert questions[_OTHER_QUESTION] == "identity.legal_name"
 
 
 _PATCHES = (
     *(((question_id, value),) for question_id in _KNOWN_CAPABILITY_QUESTIONS for value in ("true", "false", "")),
-    ((_OTHER_QUESTION, "synthetic note"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
-    ((_OTHER_QUESTION, "synthetic note"),),
+    ((_OTHER_QUESTION, "synthetic name"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
+    ((_OTHER_QUESTION, "synthetic name"),),
     (),
 )
 

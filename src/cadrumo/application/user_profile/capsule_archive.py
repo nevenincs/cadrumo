@@ -52,7 +52,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
-from ...core.time.clock import now as _now
+from ...core.time.clock import now as clock_now
 from ...core.type_guards import is_str_keyed_dict
 from .capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 from .custody_ports import (
@@ -212,7 +212,7 @@ def export_profile_capsule_archive(
         bucket_id=str(profile_id),
         manifest_digest=sha256_hex(payload),
         archive_schema_version=archive_schema_version,
-        created_at=(now or _now()).astimezone(UTC),
+        created_at=(now or clock_now()).astimezone(UTC),
     )
 
     def publish() -> None:

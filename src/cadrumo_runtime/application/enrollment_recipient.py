@@ -26,7 +26,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentRequester,
 )
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentCredentialBinding
@@ -115,13 +115,13 @@ class VolatileEnrollmentRecipient:
         self.enrollment_request_id = enrollment_request_id
         self.review_digest = review_digest
         self.offer_expires_at = offer_expires_at
-        self._offer_deadline = time.monotonic() + max(0.0, (offer_expires_at - now()).total_seconds())
+        self._offer_deadline = time.monotonic() + max(0.0, (offer_expires_at - wall_now()).total_seconds())
         self._condition = Condition()
         self._pending: _Pending | None = None
         self._closed = False
 
     def _offer_remaining(self) -> float:
-        return min(self._offer_deadline - time.monotonic(), (self.offer_expires_at - now()).total_seconds())
+        return min(self._offer_deadline - time.monotonic(), (self.offer_expires_at - wall_now()).total_seconds())
 
     def _binding(self, record: EnrollmentRecord) -> EnrollmentCredentialBinding:
         if (
@@ -134,7 +134,7 @@ class VolatileEnrollmentRecipient:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         if not secrets.compare_digest(enrollment_review_digest(record), self.review_digest):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        if self._offer_remaining() <= 0 or record.expires_at <= now():
+        if self._offer_remaining() <= 0 or record.expires_at <= wall_now():
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return EnrollmentCredentialBinding(
             profile_binding=record.binding,
@@ -154,7 +154,7 @@ class VolatileEnrollmentRecipient:
         remaining = min(
             _PRODUCER_MAX_SECONDS,
             self._offer_remaining(),
-            (record.expires_at - now()).total_seconds(),
+            (record.expires_at - wall_now()).total_seconds(),
         )
         if remaining <= 0:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
@@ -189,7 +189,7 @@ class VolatileEnrollmentRecipient:
             left = min(
                 pending.deadline - time.monotonic(),
                 self._offer_remaining(),
-                (record.expires_at - now()).total_seconds(),
+                (record.expires_at - wall_now()).total_seconds(),
             )
             if left <= 0:
                 self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
@@ -282,7 +282,11 @@ class VolatileEnrollmentRecipient:
         return pending
 
     def _require_completion_deadline(self, pending: _Pending) -> None:
-        if pending.deadline <= time.monotonic() or self._offer_remaining() <= 0 or pending.record_expires_at <= now():
+        if (
+            pending.deadline <= time.monotonic()
+            or self._offer_remaining() <= 0
+            or pending.record_expires_at <= wall_now()
+        ):
             self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 

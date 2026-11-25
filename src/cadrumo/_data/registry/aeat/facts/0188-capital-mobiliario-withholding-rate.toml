@@ -1,0 +1,34 @@
+[fact]
+fact_id = "capital-mobiliario-withholding-rate"
+family = "scalar"
+
+[fact.standing_rate]
+
+# RIRPF art. 90.1 applies the rate to the base of retention that art. 93.1 fixes
+# as the full consideration. LIRPF art. 101.4 states the same 19 per cent. The
+# bundled consolidated texts record no amendment of either apartado after 2019, so
+# one floor-reaching variant covers every supported year.
+[[fact.variants]]
+variant_id = "capital-mobiliario-withholding-rate:general"
+date_axis = "filing_period"
+legal_refs = ["rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["boe-rirpf-category-profile-authority", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+  "aplicar a la base de retención el porcentaje del 19 por ciento",
+  "la contraprestación íntegra exigible o satisfecha",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["sobre los rendimientos del capital mobiliario será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"

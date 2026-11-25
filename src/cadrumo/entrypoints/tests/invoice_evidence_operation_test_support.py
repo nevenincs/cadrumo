@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
+from ...application.invoices.catalogue_read_projection import InvoiceDocumentIndex
 from ...application.ledger.confirmation_record import load_confirmation_records, re_stamped_provenance
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_draft import printed_total_discrepancy
@@ -33,12 +34,8 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
 )
-from ...application.ledger.invoice_evidence_readiness_operation import (
-    LedgerEvidenceReaderReadinessProjection,
-    LedgerEvidenceReaderReadinessRequest,
-)
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from ...application.local_reader import read_local_reader_status
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -61,23 +58,11 @@ def prepare_invoice_evidence_conformance_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> InvoiceEvidenceConformanceCase:
     """Register a bundled synthetic XML in actual encrypted attachment custody."""
-    if definition_id == "ledger.evidence.reader-readiness":
-        return InvoiceEvidenceConformanceCase(
-            request=LedgerEvidenceReaderReadinessRequest(profile_id=profile_id),
-            expected_read=LedgerEvidenceReaderReadinessProjection.from_status(
-                profile_id=profile_id, status=read_local_reader_status()
-            ),
-        )
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),
+        persona_facts_beneath(
+            (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),),
+            without=("identity.",),
         ),
     )
     ports = build_invoice_evidence_operation_ports(bucket_id=str(profile_id))
@@ -175,7 +160,11 @@ def assert_invoice_evidence_confirmation_persisted(
         total_discrepancy=printed_total_discrepancy(draft=prepared.preparation.draft, invoice=stored),
         establishment=prepared.preparation.establishment,
     )
-    assert result.confirmation == InvoiceConfirmationProjectionV1.from_result(canonical)
+    documents = InvoiceDocumentIndex.read(ports.invoice_confirmation_ports.attachment_store)
+    assert tuple(document.attachment_id for document in result.confirmation.invoice.documents) == (
+        prepared.preparation.attachment_id,
+    )
+    assert result.confirmation == InvoiceConfirmationProjectionV1.from_result(canonical, documents=documents)
 
 
 __all__ = [

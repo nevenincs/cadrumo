@@ -5,8 +5,8 @@ import pytest
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 
-from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..config.profile_command_specs import PROFILE_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

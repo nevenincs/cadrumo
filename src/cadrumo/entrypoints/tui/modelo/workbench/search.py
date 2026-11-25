@@ -113,7 +113,13 @@ def search_entries(
                     description=description,
                     page=page.heading.text,
                     value=stated_value_text(item, language) or "",
-                    origin=origin_text(field, recorded=recorded, aeat_imported=aeat_imported, language=language),
+                    origin=origin_text(
+                        field,
+                        recorded=recorded,
+                        aeat_imported=aeat_imported,
+                        language=language,
+                        calculated=item.calculated,
+                    ),
                 )
             )
     return tuple(entries)
@@ -258,9 +264,7 @@ class WorkbenchSearchPanel(Vertical):
         self._mode = mode
         self._entries = entries
         self._hits = ()
-        prompt = (
-            "tui.modelo.workbench.search.prompt" if mode is SearchMode.SEARCH else "tui.modelo.workbench.go_to.prompt"
-        )
+        prompt = "tui.modelo.search.prompt" if mode is SearchMode.SEARCH else "tui.modelo.go_to.prompt"
         self.query_one("#wb-search-prompt", Static).update(tr(prompt))
         self.query_one("#wb-search-status", Static).update("")
         self.query_one("#wb-search-results", OptionList).clear_options()
@@ -282,9 +286,9 @@ class WorkbenchSearchPanel(Vertical):
         if not query.strip():
             status.update("")
         elif self._hits:
-            status.update(tr("tui.modelo.workbench.search.count", count=len(self._hits)))
+            status.update(tr("workspace.modelo.search.count", count=len(self._hits)))
         else:
-            status.update(tr("tui.modelo.workbench.search.empty", query=query.strip()))
+            status.update(tr("workspace.modelo.search.empty", query=query.strip()))
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Search again as the filer types."""
@@ -298,7 +302,7 @@ class WorkbenchSearchPanel(Vertical):
             found = find_box(self._entries, event.value)
             if found is None:
                 self.query_one("#wb-search-status", Static).update(
-                    tr("tui.modelo.workbench.go_to.missing", box=event.value.strip())
+                    tr("workspace.modelo.go_to.missing", box=event.value.strip())
                 )
                 return
             self.post_message(self.Chosen(found.key))

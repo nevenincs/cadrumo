@@ -40,13 +40,19 @@ from cadrumo.application.ledger.tests.manual_transaction_support import create_m
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.core.time.clock import now
 from cadrumo.domain.buckets.event import BucketEvent
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
@@ -157,12 +163,19 @@ def test_no_request_of_the_opened_operations_carries_a_path_bytes_or_a_confirmat
     """Every member is an identifier, typed text or a typed amount; none stands for a file or the person's consent."""
     registry = production_operation_registry()
     expected: dict[str, set[str]] = {
-        "ledger.archive": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.stash": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.restore": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.exclude": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.attach": {"profile_id", "transaction_id", "purchase_invoice_evidence_id", "attachment_ids", "actor"},
-        "ledger.detach": {"profile_id", "transaction_id", "attachment_ids", "actor"},
+        "ledger.archive": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.stash": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.restore": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.exclude": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.attach": {
+            "profile_id",
+            "transaction_id",
+            "purchase_invoice_evidence_id",
+            "attachment_ids",
+            "actor",
+            "output_language",
+        },
+        "ledger.detach": {"profile_id", "transaction_id", "attachment_ids", "actor", "output_language"},
         "ledger.split.manual": {"profile_id", "transaction_id", "children", "reason", "actor"},
     }
 
@@ -222,7 +235,7 @@ def test_the_real_resolvers_refuse_a_row_of_another_profile_on_every_frontend(
 
 
 def _run[ResultT: BaseModel](
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
@@ -236,7 +249,7 @@ def _run[ResultT: BaseModel](
     )
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, definition_id
     assert observed.projection.effect is OperationEffect.UPDATED, definition_id
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,
@@ -426,7 +439,7 @@ def test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_b
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=str(profile_id),
-                booked_date=date(2025, 1, 21),
+                booked_date=date(filing_year_envelope().horizon, 1, 21),
                 amount=Decimal("20.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="synthetic row to split",

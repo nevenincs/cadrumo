@@ -32,16 +32,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError as _CadrumoError
-from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import ThresholdComparison
 from ..calculations.registry.schema_formula import DatedValue, ParameterDefinition
 
 
-class BienesInversionParameterResolutionError(_CadrumoError):
+class BienesInversionParameterResolutionError(CadrumoError):
     """Raised when a revision cannot supply the whole art-107/109 figure set.
 
     Refusing here rather than substituting a default is the point: an incomplete
@@ -79,7 +78,7 @@ class BienesInversionParameterProvenance(BaseModel):
         resolved_on: The filing-period date the values were selected for.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo_id: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
@@ -121,7 +120,7 @@ class BienesInversionRegularizacionParameters(BaseModel):
         provenance: The declaration these values came from.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     ventana_anos_mueble: int = Field(gt=0)
     ventana_anos_inmueble: int = Field(gt=0)

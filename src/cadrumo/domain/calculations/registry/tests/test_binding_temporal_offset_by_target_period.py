@@ -25,6 +25,7 @@ from ..binding_temporal import (
 )
 from ..errors import RegistryValidationError
 from ..relation_prefill_bindings import RelationPrefillProvider
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -135,7 +136,7 @@ def test_an_absolute_source_year_is_unspellable_in_a_provider_temporal() -> None
                     "kind": "filing_year_offset_by_target_period",
                     "offsets": dict(_M202_OFFSETS),
                     "source_periods": ["0A"],
-                    "year": 2024,
+                    "year": filing_year_envelope().horizon,
                 },
             },
         )
@@ -144,8 +145,13 @@ def test_an_absolute_source_year_is_unspellable_in_a_provider_temporal() -> None
 @pytest.mark.parametrize(
     "temporal",
     [
-        {"kind": "filing_year_offset", "years": -1, "source_periods": ["0A"], "year_from": 2019},
-        {"kind": "same_filing_year_periods", "source_periods": ["0A"], "year": 2024},
+        {
+            "kind": "filing_year_offset",
+            "years": -1,
+            "source_periods": ["0A"],
+            "year_from": filing_year_envelope().floor,
+        },
+        {"kind": "same_filing_year_periods", "source_periods": ["0A"], "year": filing_year_envelope().horizon},
     ],
 )
 def test_no_temporal_member_admits_an_absolute_year_field(temporal: dict[str, object]) -> None:

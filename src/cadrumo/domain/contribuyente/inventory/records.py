@@ -17,19 +17,21 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
-from ....core.errors.hierarchy import CadrumoError as _CadrumoError
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ....core.money.rounding import round_to_cents as _quantize
+from ....core.identity.transaction_ids import TransactionId
+from ....core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ....core.money.rounding import round_to_cents
 from ....core.percentage import Percentage
+from ....core.time.utc import UtcInstant
 from ....core.unit_proportion import UnitProportion
+from ...buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...filing_evidence import FilingEvidenceReference
 from .closing_authority_records import InventoryClosingAuthorityRecord
 from .closing_foundations import (
@@ -38,8 +40,10 @@ from .closing_foundations import (
     require_inventory_cents,
 )
 
+RECARGO_WITH_DEDUCTIBLE_IVA_KEY = "application.inventory.service.errors.recargo_with_deductible_iva"
 
-class AmortizacionLedgerError(_CadrumoError):
+
+class AmortizacionLedgerError(CadrumoError):
     """Raised when an amortizacion ledger operation is invalid."""
 
 
@@ -87,6 +91,11 @@ class MovementKind(StrEnum):
     COGS = "cogs"
     COUNT = "count"
 
+    @property
+    def adds_costed_stock(self) -> bool:
+        """Whether the movement brings stock in at an acquisition cost, as opening stock or a purchase."""
+        return self in {MovementKind.OPENING, MovementKind.PURCHASE}
+
 
 class InventoryAcquisitionEvidenceKind(StrEnum):
     """Closed evidence authorities admitted for inventory acquisition facts."""
@@ -115,7 +124,7 @@ class InventoryAttributableCostKind(StrEnum):
 class InventoryAcquisitionEvidence(BaseModel):
     """Nominal evidence reference plus its immutable content digest."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     reference: FilingEvidenceReference
     evidence_kind: InventoryAcquisitionEvidenceKind
@@ -125,7 +134,7 @@ class InventoryAcquisitionEvidence(BaseModel):
 class InventoryAttributableCostComponent(BaseModel):
     """One evidenced cost directly attributable to an inventory purchase."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     component_id: str = Field(min_length=1, max_length=128)
     kind: InventoryAttributableCostKind
@@ -164,13 +173,13 @@ class InventoryAttributableCostComponent(BaseModel):
     @property
     def recoverable_iva(self) -> Decimal:
         """Return IVA excluded from inventory acquisition cost."""
-        return _quantize(self.iva_amount * self.deductible_iva_ratio)
+        return round_to_cents(self.iva_amount * self.deductible_iva_ratio)
 
 
 class InventoryAcquisitionCompleteness(BaseModel):
     """Evidence-backed attestations that all three cost reviews occurred."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     consideration_evidence: FilingEvidenceReference
     attributable_cost_review_evidence: FilingEvidenceReference
@@ -180,7 +189,7 @@ class InventoryAcquisitionCompleteness(BaseModel):
 class InventoryAcquisitionCost(BaseModel):
     """Complete, evidenced acquisition-cost decomposition for one purchase."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
     consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
@@ -189,6 +198,7 @@ class InventoryAcquisitionCost(BaseModel):
     evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
     completeness: InventoryAcquisitionCompleteness
     directly_attributable_cost_total: Decimal = Field(ge=MONEY_ZERO)
+    consideration_recargo_amount: Decimal = Field(default=MONEY_ZERO, ge=MONEY_ZERO)
     nonrecoverable_iva_included: Decimal = Field(ge=MONEY_ZERO)
     recoverable_iva_excluded: Decimal = Field(ge=MONEY_ZERO)
     total_acquisition_cost: Decimal = Field(ge=MONEY_ZERO)
@@ -196,6 +206,7 @@ class InventoryAcquisitionCost(BaseModel):
     @field_validator(
         "consideration_excluding_iva",
         "consideration_iva_amount",
+        "consideration_recargo_amount",
         "directly_attributable_cost_total",
         "nonrecoverable_iva_included",
         "recoverable_iva_excluded",
@@ -263,26 +274,157 @@ def _validate_acquisition_evidence_roles(
         raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
 
 
-def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisitionCost) -> None:
-    attributable = sum((item.taxable_base for item in acquisition.attributable_cost_components), MONEY_ZERO)
-    recoverable = _quantize(
-        acquisition.consideration_iva_amount * acquisition.consideration_deductible_iva_ratio,
-    ) + sum((item.recoverable_iva for item in acquisition.attributable_cost_components), MONEY_ZERO)
-    total_iva = acquisition.consideration_iva_amount + sum(
-        (item.iva_amount for item in acquisition.attributable_cost_components),
+class InventoryAcquisitionTotals(NamedTuple):
+    """What a purchase's components add up to."""
+
+    directly_attributable_cost_total: Decimal
+    recoverable_iva_excluded: Decimal
+    nonrecoverable_iva_included: Decimal
+    total_acquisition_cost: Decimal
+
+
+def refuse_deductible_recargo(
+    *, consideration_recargo_amount: Decimal, consideration_deductible_iva_ratio: Decimal
+) -> None:
+    """Refuse a purchase that both bears recargo de equivalencia and deducts its IVA.
+
+    The recargo is charged only to a minorista in the regime, who may deduct no IVA
+    soportado on the goods of that activity (LIVA art. 154.Dos), so the two facts
+    cannot both hold.
+    """
+    if consideration_recargo_amount != MONEY_ZERO and consideration_deductible_iva_ratio != MONEY_ZERO:
+        raise InventoryLedgerError(
+            "a purchase bearing recargo de equivalencia deducts no IVA",
+            context={"legal_basis": "LIVA art. 154.Dos"},
+            translated_message=RECARGO_WITH_DEDUCTIBLE_IVA_KEY,
+        )
+
+
+def derive_inventory_acquisition_totals(
+    *,
+    consideration_excluding_iva: Decimal,
+    consideration_iva_amount: Decimal,
+    consideration_recargo_amount: Decimal,
+    consideration_deductible_iva_ratio: Decimal,
+    attributable_cost_components: tuple[InventoryAttributableCostComponent, ...],
+) -> InventoryAcquisitionTotals:
+    """Add up one purchase: cost holds the price, attributable costs and the indirect taxes that cannot be recovered.
+
+    Recargo de equivalencia is never recoverable (LIVA arts. 154 to 163 give it no
+    deduction or refund), so it always joins the non-recoverable part of the cost
+    (PGC norma de registro y valoración 10ª.1).
+    """
+    refuse_deductible_recargo(
+        consideration_recargo_amount=consideration_recargo_amount,
+        consideration_deductible_iva_ratio=consideration_deductible_iva_ratio,
+    )
+    attributable = sum((item.taxable_base for item in attributable_cost_components), MONEY_ZERO)
+    recoverable = round_to_cents(
+        consideration_iva_amount * consideration_deductible_iva_ratio,
+    ) + sum((item.recoverable_iva for item in attributable_cost_components), MONEY_ZERO)
+    total_iva = consideration_iva_amount + sum(
+        (item.iva_amount for item in attributable_cost_components),
         MONEY_ZERO,
     )
-    nonrecoverable = total_iva - recoverable
-    total = acquisition.consideration_excluding_iva + attributable + nonrecoverable
-    expected = {
-        "directly_attributable_cost_total": _quantize(attributable),
-        "recoverable_iva_excluded": _quantize(recoverable),
-        "nonrecoverable_iva_included": _quantize(nonrecoverable),
-        "total_acquisition_cost": _quantize(total),
-    }
-    for field_name, expected_value in expected.items():
+    nonrecoverable = total_iva - recoverable + consideration_recargo_amount
+    total = consideration_excluding_iva + attributable + nonrecoverable
+    return InventoryAcquisitionTotals(
+        directly_attributable_cost_total=round_to_cents(attributable),
+        recoverable_iva_excluded=round_to_cents(recoverable),
+        nonrecoverable_iva_included=round_to_cents(nonrecoverable),
+        total_acquisition_cost=round_to_cents(total),
+    )
+
+
+def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisitionCost) -> None:
+    totals = derive_inventory_acquisition_totals(
+        consideration_excluding_iva=acquisition.consideration_excluding_iva,
+        consideration_iva_amount=acquisition.consideration_iva_amount,
+        consideration_recargo_amount=acquisition.consideration_recargo_amount,
+        consideration_deductible_iva_ratio=acquisition.consideration_deductible_iva_ratio,
+        attributable_cost_components=acquisition.attributable_cost_components,
+    )
+    for field_name, expected_value in totals._asdict().items():
         if getattr(acquisition, field_name) != expected_value:
             raise InventoryValidationError(f"{field_name} does not match the acquisition decomposition")
+
+
+class InventoryAcquisitionFacts(BaseModel):
+    """A purchase as an operator states it; :meth:`to_cost` adds up the totals left out."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
+    consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
+    consideration_deductible_iva_ratio: Decimal = Field(ge=MONEY_ZERO, le=ONE)
+    attributable_cost_components: tuple[InventoryAttributableCostComponent, ...]
+    evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
+    completeness: InventoryAcquisitionCompleteness
+    consideration_recargo_amount: Decimal = Field(default=MONEY_ZERO, ge=MONEY_ZERO)
+    directly_attributable_cost_total: Decimal | None = None
+    nonrecoverable_iva_included: Decimal | None = None
+    recoverable_iva_excluded: Decimal | None = None
+    total_acquisition_cost: Decimal | None = None
+
+    def to_cost(self) -> InventoryAcquisitionCost:
+        """Build the complete cost; a stated total stays stated, so the cost's validators can refuse it."""
+        totals = derive_inventory_acquisition_totals(
+            consideration_excluding_iva=self.consideration_excluding_iva,
+            consideration_iva_amount=self.consideration_iva_amount,
+            consideration_recargo_amount=self.consideration_recargo_amount,
+            consideration_deductible_iva_ratio=self.consideration_deductible_iva_ratio,
+            attributable_cost_components=self.attributable_cost_components,
+        )
+        return InventoryAcquisitionCost(
+            consideration_excluding_iva=self.consideration_excluding_iva,
+            consideration_iva_amount=self.consideration_iva_amount,
+            consideration_recargo_amount=self.consideration_recargo_amount,
+            consideration_deductible_iva_ratio=self.consideration_deductible_iva_ratio,
+            attributable_cost_components=self.attributable_cost_components,
+            evidence=self.evidence,
+            completeness=self.completeness,
+            directly_attributable_cost_total=(
+                totals.directly_attributable_cost_total
+                if self.directly_attributable_cost_total is None
+                else self.directly_attributable_cost_total
+            ),
+            nonrecoverable_iva_included=(
+                totals.nonrecoverable_iva_included
+                if self.nonrecoverable_iva_included is None
+                else self.nonrecoverable_iva_included
+            ),
+            recoverable_iva_excluded=(
+                totals.recoverable_iva_excluded
+                if self.recoverable_iva_excluded is None
+                else self.recoverable_iva_excluded
+            ),
+            total_acquisition_cost=(
+                totals.total_acquisition_cost if self.total_acquisition_cost is None else self.total_acquisition_cost
+            ),
+        )
+
+
+def load_inventory_acquisition_cost(text: str) -> InventoryAcquisitionCost:
+    """Read a purchase-cost JSON document: totals it states are checked, totals it omits are derived."""
+    return InventoryAcquisitionFacts.model_validate_json(text).to_cost()
+
+
+class PurchaseLedgerRow(StrEnum):
+    """What a purchase movement states about the ledger transaction that books it.
+
+    A blank is never read as "not in the ledger": ``UNSTATED`` is its own state,
+    distinct from the operator's explicit ``NONE``.
+
+    Attributes:
+        UNSTATED: Nothing is stated yet.
+        CLAIMED: The movement claims the named ledger transaction, which is then
+            withheld from every Modelo 100 ledger expense destination.
+        NONE: The operator states that no ledger transaction books this purchase.
+    """
+
+    UNSTATED = "unstated"
+    CLAIMED = "claimed"
+    NONE = "none"
 
 
 class ValuationMethod(StrEnum):
@@ -310,10 +452,13 @@ class MovementRecord(BaseModel):
             ``taxable_base * iva_rate / 100``.
         deductible_iva_ratio: Fraction of input IVA the contribuyente
             may deduct (0-1).
+        ledger_row: What the purchase states about its ledger transaction; a
+            claim fact, outside every valuation and fingerprint.
+        claimed_transaction_id: The ledger transaction a ``CLAIMED`` purchase books.
         schema_version: Forward-compatible schema version. ``"3"``.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     movement_id: str = Field(min_length=1)
     movement_date: date
@@ -326,6 +471,8 @@ class MovementRecord(BaseModel):
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: UnitProportion = Decimal("1.00")
     acquisition_cost: InventoryAcquisitionCost | None = None
+    ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED
+    claimed_transaction_id: TransactionId | None = None
     schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @field_validator("iva_rate", mode="before")
@@ -384,6 +531,8 @@ class MovementRecord(BaseModel):
         quantity: Decimal,
         acquisition_cost: InventoryAcquisitionCost,
         sku: str = "default",
+        ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED,
+        claimed_transaction_id: TransactionId | None = None,
     ) -> MovementRecord:
         """Project one complete acquisition into its canonical purchase movement."""
         consideration = acquisition_cost.consideration_excluding_iva
@@ -400,6 +549,8 @@ class MovementRecord(BaseModel):
             iva_amount=iva_amount,
             deductible_iva_ratio=acquisition_cost.consideration_deductible_iva_ratio,
             acquisition_cost=acquisition_cost,
+            ledger_row=ledger_row,
+            claimed_transaction_id=claimed_transaction_id,
         )
 
     @property
@@ -449,24 +600,24 @@ class MovementRecord(BaseModel):
         _validate_movement_taxable_amount(self)
         _validate_purchase_movement_acquisition(self)
         _validate_non_purchase_movement_acquisition(self)
+        _validate_movement_ledger_row(self)
         return self
 
 
 def _require_movement_cost(movement: MovementRecord) -> None:
-    needs_cost = movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
-    if needs_cost and movement.unit_cost is None and movement.taxable_base is None:
+    if movement.kind.adds_costed_stock and movement.unit_cost is None and movement.taxable_base is None:
         raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
 
 
 def _validate_movement_taxable_amount(movement: MovementRecord) -> None:
     if movement.taxable_base is not None:
-        computed_iva = _quantize(movement.taxable_base * movement.iva_rate / HUNDRED)
+        computed_iva = round_to_cents(movement.taxable_base * movement.iva_rate / HUNDRED)
         if movement.iva_amount is not None and movement.iva_amount != computed_iva:
             raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
     if (
         movement.unit_cost is not None
         and movement.taxable_base is not None
-        and _quantize(movement.quantity * movement.unit_cost) != movement.taxable_base
+        and round_to_cents(movement.quantity * movement.unit_cost) != movement.taxable_base
     ):
         raise InventoryValidationError("taxable_base must equal quantity * unit_cost")
 
@@ -477,11 +628,11 @@ def _validate_purchase_movement_acquisition(movement: MovementRecord) -> None:
     acquisition_cost = movement.acquisition_cost
     if acquisition_cost is None:
         raise InventoryValidationError("purchase movements require complete acquisition_cost")
-    if acquisition_cost.consideration_excluding_iva != _quantize(movement.value):
+    if acquisition_cost.consideration_excluding_iva != round_to_cents(movement.value):
         raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
     expected_iva = movement.iva_amount
     if expected_iva is None:
-        expected_iva = _quantize(movement.value * movement.iva_rate / HUNDRED)
+        expected_iva = round_to_cents(movement.value * movement.iva_rate / HUNDRED)
     if acquisition_cost.consideration_iva_amount != expected_iva:
         raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
     if acquisition_cost.consideration_deductible_iva_ratio != movement.deductible_iva_ratio:
@@ -491,6 +642,33 @@ def _validate_purchase_movement_acquisition(movement: MovementRecord) -> None:
 def _validate_non_purchase_movement_acquisition(movement: MovementRecord) -> None:
     if movement.kind is not MovementKind.PURCHASE and movement.acquisition_cost is not None:
         raise InventoryValidationError("acquisition_cost is permitted only for purchase movements")
+
+
+def _validate_movement_ledger_row(movement: MovementRecord) -> None:
+    if movement.kind is not MovementKind.PURCHASE and movement.ledger_row is not PurchaseLedgerRow.UNSTATED:
+        raise InventoryValidationError("only a purchase movement states its ledger transaction")
+    if (movement.ledger_row is PurchaseLedgerRow.CLAIMED) != (movement.claimed_transaction_id is not None):
+        raise InventoryValidationError("a claimed purchase names exactly its claimed ledger transaction")
+
+
+def movement_identity_payload(movement: MovementRecord) -> dict[str, object]:
+    """Dump a movement for a request identity, leaving out each additive fact while it is absent.
+
+    A movement recorded before those facts existed keeps the identity it was recorded under.
+    """
+    payload: dict[str, object] = dict(movement.model_dump(mode="json"))
+    if movement.ledger_row is PurchaseLedgerRow.UNSTATED:
+        del payload["ledger_row"]
+    if movement.claimed_transaction_id is None:
+        del payload["claimed_transaction_id"]
+    acquisition = payload.get("acquisition_cost")
+    if (
+        isinstance(acquisition, dict)
+        and movement.acquisition_cost is not None
+        and movement.acquisition_cost.consideration_recargo_amount == MONEY_ZERO
+    ):
+        del acquisition["consideration_recargo_amount"]
+    return payload
 
 
 class StockLayer(BaseModel):
@@ -505,7 +683,7 @@ class StockLayer(BaseModel):
             stock and weighted-average pools).
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     sku: str = Field(default="default", min_length=1)
     quantity: Decimal = Field(gt=Decimal("0"))
@@ -513,13 +691,125 @@ class StockLayer(BaseModel):
     source_movement_id: str = Field(min_length=1)
 
 
-InventoryYear = Annotated[int, Field(ge=1900)]
-"""The calendar year an inventory ledger or movement covers.
+class InventoryHistoryKind(StrEnum):
+    """What one retained inventory history entry did to its ledger."""
 
-Deliberately NOT the filing-year window. An inventory record may reach back
-further than the registry has authored revisions for, so it carries its own
-floor and no ceiling.
-"""
+    DESCRIBED = "described"
+    OPENING_CORRECTED = "opening_corrected"
+    MOVEMENT_CORRECTED = "movement_corrected"
+    MOVEMENT_REVERSED = "movement_reversed"
+    RETIRED = "retired"
+    RESTORED = "restored"
+    LEDGER_ROW_STATED = "ledger_row_stated"
+
+
+class InventoryCorrectionReason(StrEnum):
+    """Why a stock or opening fact was rectified."""
+
+    KEYING_ERROR = "keying_error"
+    SOURCE_DOCUMENT_CORRECTED = "source_document_corrected"
+    DUPLICATE_ENTRY = "duplicate_entry"
+    OPERATION_DID_NOT_OCCUR = "operation_did_not_occur"
+
+
+class InventoryRetirementReason(StrEnum):
+    """Why an inventory left the active register."""
+
+    CREATED_IN_ERROR = "created_in_error"
+    ACTIVITY_CEASED = "activity_ceased"
+    NO_STOCK_HELD = "no_stock_held"
+
+
+class InventoryLedgerDescriptor(BaseModel):
+    """Descriptive facts of an inventory; they never enter its valuation or fingerprints."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    label: str = Field(min_length=1, max_length=128)
+    description: str | None = Field(default=None, min_length=1, max_length=1024)
+
+    @field_validator("label", "description")
+    @classmethod
+    @pydantic_validation_boundary
+    def _text_is_trimmed(cls, value: str | None) -> str | None:
+        if value is not None and value != value.strip():
+            raise InventoryValidationError("inventory descriptor text must be trimmed")
+        return value
+
+
+class InventoryLedgerRowChange(BaseModel):
+    """The ledger-transaction statement one purchase carried before a claim change replaced it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    movement_id: str = Field(min_length=1)
+    prior_ledger_row: PurchaseLedgerRow
+    prior_claimed_transaction_id: TransactionId | None = None
+
+
+class InventoryLedgerHistoryEntry(BaseModel):
+    """One retained change to a ledger, carrying the prior fact it displaced.
+
+    Attributes:
+        correction_id: Caller-chosen identity; repeating it with the same request
+            is an exact replay.
+        kind: :class:`InventoryHistoryKind`.
+        recorded_at: When the change was recorded.
+        actor: Who recorded it.
+        request_fingerprint: Identity of the request, excluding actor and time.
+        correction_reason: Why a stock or opening fact was rectified.
+        retirement_reason: Why the inventory left the active register.
+        superseded_movement: The movement taken out of the effective set.
+        replacement_movement_id: The movement that replaced it, absent on a reversal.
+        prior_opening_stock: The opening value the correction displaced.
+        prior_valuation_method: The valuation method the correction displaced.
+        prior_descriptor: The descriptor the change displaced, absent on the first.
+        ledger_row_change: The purchase whose ledger-transaction statement changed, and
+            the statement it displaced.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    correction_id: str = Field(min_length=1, max_length=64)
+    kind: InventoryHistoryKind
+    recorded_at: UtcInstant
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
+    request_fingerprint: ContentDigest
+    correction_reason: InventoryCorrectionReason | None = None
+    retirement_reason: InventoryRetirementReason | None = None
+    superseded_movement: MovementRecord | None = None
+    replacement_movement_id: str | None = Field(default=None, min_length=1)
+    prior_opening_stock: Decimal | None = Field(default=None, ge=Decimal("0"))
+    prior_valuation_method: ValuationMethod | None = None
+    prior_descriptor: InventoryLedgerDescriptor | None = None
+    ledger_row_change: InventoryLedgerRowChange | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _facts_match_kind(self) -> InventoryLedgerHistoryEntry:
+        """Hold each kind to exactly the facts it displaces."""
+        kind = self.kind
+        rectifies = kind in {
+            InventoryHistoryKind.OPENING_CORRECTED,
+            InventoryHistoryKind.MOVEMENT_CORRECTED,
+            InventoryHistoryKind.MOVEMENT_REVERSED,
+        }
+        supersedes = kind in {InventoryHistoryKind.MOVEMENT_CORRECTED, InventoryHistoryKind.MOVEMENT_REVERSED}
+        is_opening = kind is InventoryHistoryKind.OPENING_CORRECTED
+        # Each pair is (the kind displaces this fact, the entry carries it).
+        displaced = (
+            (rectifies, self.correction_reason is not None),
+            (kind is InventoryHistoryKind.RETIRED, self.retirement_reason is not None),
+            (supersedes, self.superseded_movement is not None),
+            (kind is InventoryHistoryKind.MOVEMENT_CORRECTED, self.replacement_movement_id is not None),
+            (is_opening, self.prior_opening_stock is not None),
+            (is_opening, self.prior_valuation_method is not None),
+            (kind is InventoryHistoryKind.LEDGER_ROW_STATED, self.ledger_row_change is not None),
+        )
+        stray_descriptor = self.prior_descriptor is not None and kind is not InventoryHistoryKind.DESCRIBED
+        if stray_descriptor or any(expected != carried for expected, carried in displaced):
+            raise InventoryValidationError("inventory history entry facts do not match its kind")
+        return self
 
 
 class InventoryLedger(BaseModel):
@@ -537,18 +827,67 @@ class InventoryLedger(BaseModel):
         closing_authority_record: Required nullable persisted authority bundle;
             ``None`` states that no operator authority decision is recorded.
         schema_version: Forward-compatible schema version. ``"3"``.
+        descriptor: Current descriptive facts; absent until described.
+        history: Append-only record of every change, retaining what it displaced.
+            ``period_movements`` stays the effective set, so every valuation and
+            projection reads corrected facts without filtering.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: InventoryYear
+    year: FourDigitYear
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     opening_layers: tuple[StockLayer, ...] = ()
     period_movements: tuple[MovementRecord, ...] = ()
     closing_authority_record: InventoryClosingAuthorityRecord | None
     schema_version: str = INVENTORY_SCHEMA_VERSION
+    descriptor: InventoryLedgerDescriptor | None = None
+    history: tuple[InventoryLedgerHistoryEntry, ...] = ()
+
+    @property
+    def is_retired(self) -> bool:
+        """Whether the latest retirement or restoration left it out of the active register."""
+        return self.retirement_reason is not None
+
+    @property
+    def retirement_reason(self) -> InventoryRetirementReason | None:
+        """The reason of the standing retirement, absent while active."""
+        for entry in reversed(self.history):
+            if entry.kind is InventoryHistoryKind.RETIRED:
+                return entry.retirement_reason
+            if entry.kind is InventoryHistoryKind.RESTORED:
+                return None
+        return None
+
+    @property
+    def has_economic_facts(self) -> bool:
+        """Whether any effective movement or a nonzero opening value states a tax fact."""
+        return bool(self.period_movements) or self.opening_stock != MONEY_ZERO
+
+    @property
+    def leaves_year_unresolved(self) -> bool:
+        """Whether this retired book's facts stop its year's Anexo D from being resolved.
+
+        Retirement is not proof that the stock never existed, so the facts are neither
+        declared nor dropped.
+        """
+        return self.is_retired and self.has_economic_facts
+
+    @property
+    def known_movement_ids(self) -> frozenset[str]:
+        """Every movement identity ever used here; a superseded one is never reissued."""
+        return frozenset(
+            (
+                *(movement.movement_id for movement in self.period_movements),
+                *(
+                    entry.superseded_movement.movement_id
+                    for entry in self.history
+                    if entry.superseded_movement is not None
+                ),
+            )
+        )
 
     @field_validator("actividad_id")
     @classmethod
@@ -571,13 +910,13 @@ class InventoryLedger(BaseModel):
     @pydantic_validation_boundary
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
-        from ._anexo_d_records import resolve_inventory_authoritative_closing
+        from .anexo_d_records import resolve_inventory_authoritative_closing
         from .valuation import layers_value
 
-        movement_ids = tuple(movement.movement_id for movement in self.period_movements)
-        if len(set(movement_ids)) != len(movement_ids):
-            raise InventoryValidationError("inventory ledger movement_id values must be unique")
-        if self.opening_layers and _quantize(layers_value(self.opening_layers)) != _quantize(self.opening_stock):
+        self._validate_movement_history()
+        if self.opening_layers and round_to_cents(layers_value(self.opening_layers)) != round_to_cents(
+            self.opening_stock
+        ):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:
             record = self.closing_authority_record
@@ -590,6 +929,19 @@ class InventoryLedger(BaseModel):
                 prior_closing_link=record.prior_closing_link,
             )
         return self
+
+    def _validate_movement_history(self) -> None:
+        movement_ids = tuple(movement.movement_id for movement in self.period_movements)
+        if len(set(movement_ids)) != len(movement_ids):
+            raise InventoryValidationError("inventory ledger movement_id values must be unique")
+        correction_ids = tuple(entry.correction_id for entry in self.history)
+        superseded_ids = tuple(
+            entry.superseded_movement.movement_id for entry in self.history if entry.superseded_movement is not None
+        )
+        if len(set(correction_ids)) != len(correction_ids) or len(set(superseded_ids)) != len(superseded_ids):
+            raise InventoryValidationError("inventory history identities must be unique")
+        if set(superseded_ids) & set(movement_ids):
+            raise InventoryValidationError("a superseded inventory movement cannot stay effective")
 
 
 class InventoryLedgerDocument(BaseModel):
@@ -610,7 +962,7 @@ class InventoryLedgerDocument(BaseModel):
             ``(actividad_id, year)`` pair.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str = INVENTORY_SCHEMA_VERSION
     ledgers: tuple[InventoryLedger, ...] = ()
@@ -682,7 +1034,7 @@ class InventoryValuationResult(BaseModel):
             the period.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     closing_layers: tuple[StockLayer, ...]
     closing_value: Decimal

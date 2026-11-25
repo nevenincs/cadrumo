@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import errno
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -13,13 +14,13 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import macos_process as native
-from ..macos_process import _BsdProcessInfo, decode_macos_process_info
+from ..macos_process import BsdProcessInfo, decode_macos_process_info
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def _record() -> _BsdProcessInfo:
-    value = _BsdProcessInfo()
+def _record() -> BsdProcessInfo:
+    value = BsdProcessInfo()
     value.pid, value.parent_pid, value.group_id = 123, 100, 123
     value.uid = value.real_uid = value.saved_uid = 501
     value.status = 2
@@ -27,7 +28,7 @@ def _record() -> _BsdProcessInfo:
     return value
 
 
-def _payload(record: _BsdProcessInfo) -> bytes:
+def _payload(record: BsdProcessInfo) -> bytes:
     return ctypes.string_at(ctypes.byref(record), ctypes.sizeof(record))
 
 
@@ -71,13 +72,13 @@ class _NativeQuery:
     argtypes: tuple[object, ...] = ()
     restype: object = None
 
-    def __init__(self, *, count: int, error_number: int, record: _BsdProcessInfo) -> None:
+    def __init__(self, *, count: int, error_number: int, record: BsdProcessInfo) -> None:
         self.count = count
         self.error_number = error_number
         self.record = record
 
     def __call__(self, pid: int, flavor: int, argument: int, buffer: ctypes.c_void_p, size: int) -> int:
-        assert pid == 123 and flavor == 3 and argument == 0 and size == ctypes.sizeof(_BsdProcessInfo)
+        assert pid == 123 and flavor == 3 and argument == 0 and size == ctypes.sizeof(BsdProcessInfo)
         ctypes.memmove(buffer, ctypes.byref(self.record), size)
         ctypes.set_errno(self.error_number)
         return self.count
@@ -149,7 +150,7 @@ class _WatchNativePort:
             raise self.close_failure
 
     def install(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        query = _NativeQuery(count=ctypes.sizeof(_BsdProcessInfo), error_number=0, record=_record())
+        query = _NativeQuery(count=ctypes.sizeof(BsdProcessInfo), error_number=0, record=_record())
         system = SimpleNamespace(kqueue=_NativeWatchCall(17), kevent=_NativeWatchCall(0))
 
         def load(name: str, *, use_errno: bool) -> _NativeLibrary | SimpleNamespace:
@@ -278,3 +279,29 @@ def test_constructor_close_failure_preserves_existing_canonical_cleanup_owners(
     asyncio.run(retained.retry_cleanup())
     assert earlier.calls == 2
     assert port.close_calls == [17]
+
+
+def _arguments_record(count: int, path: bytes, *arguments: bytes) -> bytes:
+    return count.to_bytes(4, sys.byteorder) + path + b"\0\0\0\0" + b"".join(item + b"\0" for item in arguments)
+
+
+def test_kernel_argument_record_yields_the_arguments_after_the_program_name() -> None:
+    record = _arguments_record(3, b"/Applications/Cadrumo", b"cadrumo", b"--role", b"runtime") + b"PATH=/bin\0"
+    assert native.decode_macos_process_arguments(record) == ("--role", "runtime")
+    assert native.decode_macos_process_arguments(_arguments_record(1, b"/bin/x", b"x")) == ()
+
+
+@pytest.mark.parametrize(
+    "record",
+    [
+        b"",
+        b"\1\0",
+        _arguments_record(0, b"/bin/x", b"x"),
+        _arguments_record(3, b"/bin/x", b"x", b"--role"),
+        (2).to_bytes(4, sys.byteorder) + b"\0",
+    ],
+)
+def test_a_short_or_malformed_kernel_argument_record_refuses(record: bytes) -> None:
+    with pytest.raises(RefusalError) as caught:
+        native.decode_macos_process_arguments(record)
+    assert caught.value.reason is RefusalCode.PEER_UNTRUSTED

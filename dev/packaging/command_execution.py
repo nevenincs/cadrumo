@@ -162,6 +162,36 @@ def _descriptor(stream: object, original: object, name: str) -> int:
     raise RuntimeError(f"this process has no {name} for a child to inherit")
 
 
+def _output_descriptors(windows: bool, inherit_output: bool) -> tuple[int | None, int | None]:
+    # A console child never opens a window of its own on the person's screen.
+    # Without a console it inherits no standard streams implicitly, so the
+    # ones it shares are handed to it by descriptor.
+    stdout: int | None = asyncio.subprocess.PIPE
+    stderr: int | None = asyncio.subprocess.PIPE
+    if inherit_output:
+        if windows:
+            stdout = _descriptor(sys.stdout, sys.__stdout__, "stdout")
+            stderr = _descriptor(sys.stderr, sys.__stderr__, "stderr")
+        else:
+            stdout, stderr = None, None
+    return stdout, stderr
+
+
+async def _notify_spawn(
+    process: asyncio.subprocess.Process,
+    communication: asyncio.Task[tuple[bytes, bytes]],
+    on_spawn: Callable[[int], None] | None,
+) -> None:
+    if on_spawn is not None:
+        try:
+            on_spawn(process.pid)
+        except BaseException:
+            await _terminate_tree(process)
+            communication.cancel()
+            await asyncio.gather(communication, return_exceptions=True)
+            raise
+
+
 async def _run_process(
     command: tuple[str, ...],
     *,
@@ -176,17 +206,7 @@ async def _run_process(
 ) -> tuple[int, str, str]:
     """Execute one explicit argv with bounded capture and optional input."""
     windows = sys.platform == "win32"
-    # A console child never opens a window of its own on the person's screen.
-    # Without a console it inherits no standard streams implicitly, so the
-    # ones it shares are handed to it by descriptor.
-    stdout: int | None = asyncio.subprocess.PIPE
-    stderr: int | None = asyncio.subprocess.PIPE
-    if inherit_output:
-        if windows:
-            stdout = _descriptor(sys.stdout, sys.__stdout__, "stdout")
-            stderr = _descriptor(sys.stderr, sys.__stderr__, "stderr")
-        else:
-            stdout, stderr = None, None
+    stdout, stderr = _output_descriptors(windows, inherit_output)
     process = await asyncio.create_subprocess_exec(
         *command,
         cwd=str(cwd),
@@ -200,14 +220,7 @@ async def _run_process(
     encoded_input = None if input_text is None else input_text.encode(UTF_8_ENCODING)
     communication = asyncio.create_task(process.communicate(encoded_input))
     try:
-        if on_spawn is not None:
-            try:
-                on_spawn(process.pid)
-            except BaseException:
-                await _terminate_tree(process)
-                communication.cancel()
-                await asyncio.gather(communication, return_exceptions=True)
-                raise
+        await _notify_spawn(process, communication, on_spawn)
         stdout_bytes, stderr_bytes = await asyncio.wait_for(asyncio.shield(communication), timeout_seconds)
     except TimeoutError as exc:
         await _terminate_tree(process)

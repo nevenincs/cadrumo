@@ -8,9 +8,9 @@ import pytest
 
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 from ..cli import app
 from ..manager import LocaleManager
+from ..status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

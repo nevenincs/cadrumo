@@ -6,7 +6,7 @@ from enum import Enum, auto
 type LocaleNode = str | dict[str, "LocaleNode"] | None
 
 
-_MODELO_SCHEMA_PREFIX = "modelo.schema."
+MODELO_SCHEMA_PREFIX = "modelo.schema."
 """The one key family whose catalogues accept an explicitly absent value.
 
 Declared here rather than beside its other reader because the scaffold decides
@@ -16,7 +16,7 @@ would let the writer and the reader disagree about the same key.
 """
 
 
-class _MissingLocaleLeaf(Enum):
+class MissingLocaleLeaf(Enum):
     """Single-member sentinel for a key absent from the catalogue.
 
     An ``object()`` sentinel forces the resolver's return type to widen to
@@ -27,4 +27,4 @@ class _MissingLocaleLeaf(Enum):
     TOKEN = auto()
 
 
-_MISSING_LOCALE_LEAF = _MissingLocaleLeaf.TOKEN
+MISSING_LOCALE_LEAF = MissingLocaleLeaf.TOKEN

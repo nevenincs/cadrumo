@@ -16,6 +16,11 @@ from ..macos_login import MacosLoginBinding, MacosSessionObservation, decode_mac
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
+@pytest.fixture(autouse=True)
+def _unknown_console_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(macos_login, "observe_console_lock", lambda _owner, _session: OsLockState.UNKNOWN)
+
+
 def test_kernel_audit_token_preserves_exact_session_and_process_incarnation() -> None:
     value = decode_macos_peer_audit_token(
         struct.pack("=8I", 501, 501, 20, 501, 20, 123, 100022, 7), expected_owner="501"
@@ -81,7 +86,7 @@ def test_known_audit_flags_do_not_grant_lock_or_unattended_authority(
     flags: int,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    value = macos_login._session_observation(100022, 0, 100022, flags)
+    value = macos_login.session_observation(100022, 0, 100022, flags)
     assert value == MacosSessionObservation(100022, flags)
     monkeypatch.setattr(macos_login, "observe_macos_session", lambda _session_id: value)
     context = MacosLoginBinding("501", 100022).observe(credential_facilities=Availability.AVAILABLE)
@@ -95,6 +100,36 @@ def test_audit_record_unknown_flags_error_and_changed_session_still_refuse(
     status: int, observed: int, flags: int
 ) -> None:
     with pytest.raises(RefusalError) as caught:
-        macos_login._session_observation(42, status, observed, flags)
+        macos_login.session_observation(42, status, observed, flags)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
-    assert macos_login._session_observation(42, -60500, 0, 0) is None
+    assert macos_login.session_observation(42, -60500, 0, 0) is None
+
+
+@pytest.mark.parametrize("lock_state", [OsLockState.LOCKED, OsLockState.UNLOCKED])
+def test_active_session_propagates_console_lock_state(lock_state: OsLockState, monkeypatch: pytest.MonkeyPatch) -> None:
+    observed: list[tuple[str, int]] = []
+
+    def console(owner: str, session_id: int) -> OsLockState:
+        observed.append((owner, session_id))
+        return lock_state
+
+    monkeypatch.setattr(
+        macos_login, "observe_macos_session", lambda session_id: MacosSessionObservation(session_id, 0x10)
+    )
+    monkeypatch.setattr(macos_login, "observe_console_lock", console)
+    context = MacosLoginBinding("501", 100022).observe(credential_facilities=Availability.AVAILABLE)
+    assert observed == [("501", 100022)]
+    assert context.active and context.lock_state is lock_state
+    assert context.unlocked is (lock_state is OsLockState.UNLOCKED)
+    assert context.unattended is LoginEligibility.UNKNOWN
+
+
+def test_inactive_session_never_observes_console(monkeypatch: pytest.MonkeyPatch) -> None:
+    def unexpected(_owner: str, _session_id: int) -> OsLockState:
+        pytest.fail("inactive session must not observe console")
+
+    monkeypatch.setattr(macos_login, "observe_macos_session", lambda session_id: MacosSessionObservation(session_id, 0))
+    monkeypatch.setattr(macos_login, "observe_console_lock", unexpected)
+    context = MacosLoginBinding("501", 100022).observe(credential_facilities=Availability.AVAILABLE)
+    assert not context.active and context.lock_state is OsLockState.UNKNOWN
+    assert context.unattended is LoginEligibility.UNKNOWN

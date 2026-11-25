@@ -75,6 +75,32 @@ def test_inline_markup_keeps_the_whitespace_around_it() -> None:
     assert source == "Its aeat command-line interface (CLI) reads."
 
 
+def test_inline_language_markup_contributes_its_text_without_its_tags() -> None:
+    """Native and compiled descriptions read the procedure name identically."""
+    from ..compile_slots import CompileSlots, Rendering, plain_text
+
+    opening = nodes.raw("", '<span lang="es">', format="html")
+    closing = nodes.raw("", "</span>", format="html")
+    paragraph = _paragraph(
+        nodes.Text("The official name is “"),
+        opening,
+        nodes.Text("Modelo 036. Censo de empresarios"),
+        closing,
+        nodes.Text("”. It describes the census."),
+    )
+    document = _document(_title("Modelo 036"), paragraph)
+    source = description_source(document, titles={"Modelo 036"})
+    slots = CompileSlots(("en",))
+    mark = slots.reserve(Rendering.MESSAGE)
+    rendered = (
+        'The official name is “<span lang="es">Modelo 036. Censo de empresarios</span>”. It describes the census.'
+    )
+    slots.supply(mark, [rendered], [plain_text(rendered)])
+    assert description_content(source, length=70) == description_content(slots.plain_resolved(mark, 0), length=70)
+    assert source == "The official name is “Modelo 036. Censo de empresarios”. It describes the census."
+    assert tuple(paragraph.findall(nodes.raw)) == (opening, closing)
+
+
 def test_an_aside_a_comment_and_a_literal_block_describe_nothing() -> None:
     """An admonition is an aside, a comment is not read, and a block is recorded output."""
     note = nodes.note()

@@ -94,13 +94,13 @@ def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal() -
         assert dict(findings[0].message_facts) == {"predicate_id": _predicate_id(year)}, year
 
 
-def test_vivienda_advisory_fires_when_acquisition_date_is_after_the_transitional_cutoff() -> None:
+def test_vivienda_advisory_fires_when_acquisition_date_is_after_the_transitional_timeout() -> None:
     """A claimed deducción with an acquisition date on/after 01-01-2013 fires the advisory."""
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-        after_cutoff = date(_TRANSITIONAL_CUTOFF.year + 2, 6, 15)
-        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: after_cutoff.strftime("%d/%m/%Y")}
+        after_timeout = date(_TRANSITIONAL_CUTOFF.year + 2, 6, 15)
+        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: after_timeout.strftime("%d/%m/%Y")}
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
 
@@ -109,7 +109,7 @@ def test_vivienda_advisory_fires_when_acquisition_date_is_after_the_transitional
         assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, year
 
 
-def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff() -> None:
+def test_vivienda_advisory_fires_when_acquisition_date_on_timeout() -> None:
     """The cutoff is exclusive: an acquisition dated exactly 01-01-2013 is NOT eligible."""
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
@@ -120,7 +120,7 @@ def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff() -> None:
         assert len(findings) == 1, year
 
 
-def test_vivienda_advisory_silent_for_grounded_acquisition_before_the_transitional_cutoff() -> None:
+def test_vivienda_advisory_silent_for_grounded_acquisition_before_the_transitional_timeout() -> None:
     """A claimed deducción with a pre-01-01-2013 acquisition date holds — no advisory."""
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
@@ -128,14 +128,16 @@ def test_vivienda_advisory_silent_for_grounded_acquisition_before_the_transition
 
         earlier = date(_TRANSITIONAL_CUTOFF.year - 3, 3, 10)
         last_eligible_day = _TRANSITIONAL_CUTOFF - timedelta(days=1)
-        for before_cutoff in (
+        for before_timeout in (
             earlier.strftime("%d/%m/%Y"),
             earlier.isoformat(),
             last_eligible_day.strftime("%d/%m/%Y"),
         ):
-            text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: before_cutoff}
+            text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: before_timeout}
             findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
-            assert findings == [], f"{year}: acquisition {before_cutoff!r} before the cutoff must not fire the advisory"
+            assert findings == [], (
+                f"{year}: acquisition {before_timeout!r} before the cutoff must not fire the advisory"
+            )
 
 
 def test_vivienda_advisory_silent_for_construction_transitional_case() -> None:

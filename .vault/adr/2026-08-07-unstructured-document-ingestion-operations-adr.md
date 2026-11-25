@@ -3,19 +3,17 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-09-08'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6ec31253a77dcf0a4685519a12488b2def7b29f42c8b36db6815d0dbd9e1796'
+body_hash: 'sha256:f7ab47b38e1c1269138ae5e96db32b20f6a6b5c1e8cdc6500953e7c94870184b'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
-  - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
-  - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
+  - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
 ---
-
 # `unstructured-document-ingestion` adr: `Operational surface: batch ingestion, the human review process, the consent lifecycle, and deinstallation` | (**status:** `proposed`)
 
 ## Problem Statement
@@ -26,9 +24,9 @@ operator's ruling is that together they are still a fragment: the feature is
 an epic whose remaining tentacles — batch ingestion, the human review gate
 and process, consent withdrawal, secure-storage blob integration, ledger
 integration end to end, the CLI-only boundary, conformance honesty and
-deinstallation — must be designed, not deferred. Two of those were until now
-explicitly out of scope somewhere in the corpus (batch in the package-split
-ADR's "scale verbs", withdrawal nowhere at all), and an epic that leaves the
+deinstallation — must be designed, not deferred. Two of those were
+unaddressed elsewhere in the corpus (batch among the scale verbs, withdrawal
+nowhere at all), and an epic that leaves the
 operational surface undesigned repeats the session's measured defect class:
 capability with a ceiling above it, correct and unreachable.
 
@@ -43,16 +41,16 @@ why they are one record and not amendments scattered across two.
 
 ## Considerations
 
-- **The idempotency prerequisite is decided.** Package-split D13: evidence
-  `add` gains a caller-supplied idempotency key with a full-field no-op
+- **The idempotency prerequisite is decided.** Evidence
+  `add` takes a caller-supplied idempotency key with a full-field no-op
   match; the blob layer is already content-addressed. Batch re-run safety
   builds on that, not beside it.
 - **The transcription cache makes resume cheap.** Pipeline S1's encrypted
   cache means a re-run re-reads no bytes and re-transcribes nothing already
   transcribed; batch resumability is mostly already-designed substrate.
-- **Admission control is per-load, but a batch is many loads.** Provisioning
-  D3 refuses an unsafe load; a batch must respect that refusal without
-  dying, and must pace rather than fan out — the concurrency bound (default
+- **Admission control is per-load, but a batch is many loads.** cadrumo-agent
+  refuses a load that does not fit (provisioning D3); a batch must respect that
+  refusal without dying, and must pace rather than fan out — the concurrency bound (default
   one) is the pacing mechanism.
 - **Consent is per-invocation and non-sticky by D8a**, which shapes
   withdrawal: there is no standing grant whose revocation stops future
@@ -132,15 +130,15 @@ each load-bearing:
   plus a summary; exit status reflects "any item failed", not "first item
   failed".
 - **Idempotent re-run by construction.** Each item derives its idempotency
-  key from content address plus declared direction, riding package-split
-  D13: a re-run over the same directory re-ingests nothing, re-transcribes
+  key from content address plus declared direction, riding the evidence
+  idempotency key: a re-run over the same directory re-ingests nothing, re-transcribes
   nothing cached, and reports each such item as a no-op row. Resume after a
   crash is therefore re-run, with no journal format to invent; the
   completed-item record IS the store's idempotent state.
 - **Ordering is deterministic** (sorted by content address) so two re-runs
   report identically; nothing depends on filesystem enumeration order.
-- **Contention and rate limits are batch-wide.** Inference-bearing items
-  pass the provisioning admission check; a standing contention refusal
+- **Refusals and rate limits are batch-wide.** Inference-bearing items
+  meet cadrumo-agent's load admission; a standing `MODEL_DOES_NOT_FIT` refusal
   pauses the inference lane and completes every non-inference item rather
   than failing the batch. The cloud engine route, where consented, applies
   its provider rate limits across the run with the shared backoff policy,
@@ -187,7 +185,7 @@ recording and permitting are one code path, and a dispatch that cannot
 append refuses rather than transmitting unrecorded. **Eligibility** is a
 per-profile standing bar (default off, gestor-locked off): while off, the
 consent gate is never even offered, so "withdraw" for the future is one
-profile setting, verifiable in `aeat config check`. **Withdrawal** of the
+profile setting. **Withdrawal** of the
 past is handled honestly: a withdrawal verb lists every consent-ledger entry
 for the profile, states plainly that transmitted bytes cannot be recalled by
 this product, marks cloud-derived artefacts (drafts, classifications whose
@@ -268,7 +266,7 @@ fixture.
 
 **Coupling.** Consumes: pipeline D1 through D9 and D8a, provisioning D3, D5
 (deinstallation mechanics live there; this record only binds their
-user-facing guarantees), package-split D13, the canonical-invoice writer,
+user-facing guarantees), the evidence idempotency key, the canonical-invoice writer,
 and the ledger evidence contract. Changes none of them.
 
 **Deliberately out of scope, named.** Bulk or rules-based auto-confirmation;

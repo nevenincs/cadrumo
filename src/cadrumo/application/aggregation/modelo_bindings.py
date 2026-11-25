@@ -22,133 +22,121 @@ aggregation can attach purchase-invoice evidence to transaction rows before
 producing the shared :class:`~.source_mesh.CalculationSourceResolution`.
 
 Declarable observations that no registry binding consumes are reported as
-source diagnostics rather than silently blanking the filed calculation.
+source diagnostics rather than silently blanking the filed calculation;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...core.tipos_actividad import TipoActividad
-from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.binding_temporal import NonCalculation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     LedgerIrnrIncomeProvider,
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
 )
-from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
-from ...domain.calculations.registry.ledger_impatriado_bindings import (
-    resolve_ledger_impatriado_income_aggregation_binding_values,
-    unsupported_ledger_impatriado_income_observations,
-)
-from ...domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
-    LedgerIvaProvider,
-    invoice_ledger_screen_binding_ids,
-    structurally_unroutable_iva_base_categories,
-    unrouted_ledger_iva_quantities,
-    unsupported_ledger_iva_observations,
-)
-from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
-    LedgerRentaGastosPagoFraccionadoProvider,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-)
 from ...domain.calculations.registry.ledger_renta_income_bindings import (
     LedgerRentaIncomeProvider,
+    RentaIncomeObservationProtocol,
     UngroundedRentaIncome,
     WithholdingDerivationPartition,
+    declared_withholding_binding_ids,
     ledger_renta_withholding_derivation_partition,
+    ledger_renta_withholding_value_outcomes,
+    renta_income_target_casilla,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unrouted_ledger_renta_income_quantities,
     unsupported_ledger_renta_income_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.iva.schema import IvaCategory
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
-from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
-from ...domain.renta.actividad_asset.claims import effective_claims
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.renta.retencion_soportada_applicability import (
+    RetencionSoportadaApplicability,
+    arrendamiento_actividad_applicability,
+)
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from ..actividad_asset.ports import ActivityAssetHistoryRepository
-from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
-from ._modelo_bindings_invoice_iva import (
-    category_counterparty_mismatch_diagnostics,
-    missing_invoice_deduction_authority_diagnostics,
-    out_of_window_summary_diagnostics,
-    recargo_rate_mismatch_diagnostics,
-    recargo_unattributable_diagnostics,
-    reverse_charge_underivable_diagnostics,
+from ...domain.transactions.tipo_actividad_partitions import (
+    agrarian_instalment_activity_codes,
+    tipo_actividad_code_set,
 )
-from ._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
-from ._modelo_bindings_support import (
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
+from ..invoices.catalogue_reads_ports import (
+    InvoiceCatalogueReadPersistenceError,
+    InvoiceCatalogueReadPorts,
+)
+from .activity_applicability import ActivityLedgerApplicability, activity_ledger_applicability
+from .errors import AggregationValidationError
+from .income_family_not_computed import income_family_not_computed_diagnostics
+from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
+from .modelo_bindings_actividad_assets import (
+    ActivityAssetDisposalExcess,
+    activity_asset_disposal_excess,
+    activity_asset_disposal_excess_m131_findings,
+)
+from .modelo_bindings_invoice_iva import (
+    out_of_window_summary_diagnostics,
+)
+from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
 )
-from ._retencion_rate_advisory import (
-    inferred_actividad_retencion_rate_advisory_observations,
+from .renta_imputation import (
+    ActivityImputationCriterion,
+    ImputationCriteria,
+    ImputationFilingHistory,
+    ImputationUnresolved,
+    accruing_invoices,
+    declared_imputation_criteria,
+    imputation_blocking_diagnostics,
+    ledger_sum_outcome,
 )
-from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
-from .errors import AggregationValidationError
-from .impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
-from .invoice_devengo import (
-    devengo_proxy_attribution_diagnostics,
-)
-from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
-from .iva_ledger import (
-    IvaLedgerAggregationIssue,
-    IvaLedgerAggregationIssueReason,
-    IvaLedgerProrrataApportionment,
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
-from .modelo_bindings_actividad_assets import (
-    LedgerRentaExpenseTreatment,
-    activity_asset_expense_observations,
-    amortization_labelled_expense_categories,
-    classify_ledger_expenses_against_asset_register,
-    register_owned_acquisition_diagnostics,
-)
-from .renta_gasto_ledger import (
-    RentaGastoLedgerAggregationIssueReason,
-    RentaGastoObservation,
-    aggregate_renta_gasto_ledger_from_repositories,
+from .renta_income_diagnostics import (
+    accrued_withholding_unpaid_diagnostics,
+    fitted_diagnostic_id_list,
+    paid_after_cut_off_diagnostics,
+    part_payment_diagnostics,
+    rectification_diagnostics,
+    rectificativa_netting_diagnostics,
+    rental_activity_component_diagnostics,
+    unusable_sales_invoice_diagnostics,
 )
 from .renta_income_ledger import (
+    RentaIncomeLedgerAggregation,
+    RentalActivityScreen,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    instalment_basis_observations,
+    payment_dated_renta_m100_income_observations,
 )
-from .renta_income_ledger import (
-    fitted_diagnostic_id_list as _fitted_id_list,
+from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
+from .retencion_rate_advisory import (
+    inferred_actividad_retencion_rate_advisory_observations,
 )
-from .renta_income_ledger import (
-    unusable_sales_invoice_diagnostics as _unusable_sales_invoice_diagnostics,
-)
+from .retencion_soportada_source import declared_activity_epigraphs
 from .source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     CalculationSourceContext,
@@ -160,96 +148,26 @@ from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
     source_context_operation,
     source_issue_diagnostics,
+    source_provenance_for,
     storage_degradation_resolution,
+    unresolved_binding_diagnostics,
 )
-from .source_resolution_operations import (
-    source_diagnostics_for as _diagnostics_for,
-)
-from .source_resolution_operations import (
-    source_provenance_for as _provenance_for,
-)
-
-_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
-    {
-        IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-        IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
-    },
-)
-
-_IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
-    {
-        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
-        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT,
-        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE,
-        IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
-        IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
-        IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
-        IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
-        IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
-        IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
-        IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
-        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
-        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
-        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
-        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-    }
-)
-
-
-def _selected_scope_iva_evidence_diagnostics(
-    issues: Sequence[IvaLedgerAggregationIssue],
-    *,
-    resolver_id: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return sanitized durable markers for selected-scope IVA evidence failures."""
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="iva_selected_scope_evidence_failure",
-            source_kind="ledger_iva_aggregation",
-            resolver_id=resolver_id,
-            source_ref=f"transaction:{issue.transaction_id}",
-            message=f"selected-scope IVA evidence failure: {issue.reason.value}",
-        )
-        for issue in issues
-        if issue.reason in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
-    )
-
-
-def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
-    """Return the sorted distinct IVA categories carrying an undrawn quantity.
-
-    The screen detects per fact AND per selector, so a fact can be drawn for some
-    categories and undrawn for others -- Modelo 390 draws ``base_amount_sum`` for
-    the domestic tiers while import and the two reverse-charge categories carry it
-    undrawn. Reporting only the fact would tell an operator that base is missing
-    without saying where, which is the reading that makes a partially-closed gap
-    look wholly open (or, once the domestic half landed, wholly closed).
-
-    Naming the categories is what makes the residue attributable: it states which
-    set is still open, so a later reader can tell a genuine remainder from a
-    regression.
-    """
-    categories = sorted({observation.category.value for observation in observations})
-    return "[" + ", ".join(categories) + "]"
-
+from .undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 
 _M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
+_M100_RENTAL_ACTIVITY_SELECTOR = "modelo-100:selector-m036-arrendadores-inmuebles"
 
 
-def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
-    providers = tuple(
-        binding.provider
-        for binding in context.revision.bindings
-        if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == context.modelo
+def _agrarian_quarter_target_casilla(context: CalculationSourceContext) -> CasillaId | None:
+    """Return the box a revision declares for its agrarian activities' quarter, when it splits them out."""
+    return next(
+        (
+            binding.provider.target_casilla_id
+            for binding in context.revision.bindings
+            if isinstance(binding.provider, LedgerRentaIncomeProvider) and binding.provider.agrarian_quarter
+        ),
+        None,
     )
-    targets = {provider.target_casilla_id for provider in providers}
-    if len(targets) != 1:
-        raise RegistryError(
-            "selected revision must declare exactly one renta-income aggregation target",
-            context={"modelo": context.modelo, "target_count": len(targets)},
-        )
-    return next(iter(targets))
 
 
 def _irnr_handoff_bound_inputs(
@@ -291,23 +209,9 @@ def _irnr_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
     return next(iter(targets))
 
 
-def _renta_gasto_target_casilla(context: CalculationSourceContext) -> CasillaId:
-    providers = tuple(
-        binding.provider
-        for binding in context.revision.bindings
-        if isinstance(binding.provider, LedgerRentaGastosPagoFraccionadoProvider)
-        and str(binding.provider.modelo) == context.modelo
-    )
-    targets = {provider.target_casilla_id for provider in providers}
-    if len(targets) != 1:
-        raise RegistryError(
-            "selected revision must declare exactly one renta-gasto aggregation target",
-            context={"modelo": context.modelo, "target_count": len(targets)},
-        )
-    return next(iter(targets))
+def modelo_bindings_activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    """Build a predicate matching transactions with an activity IRPF category."""
 
-
-def _activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
     def matcher(transaction: Transaction) -> bool:
         return has_activity_irpf_category(
             transaction.irpf_category,
@@ -318,7 +222,9 @@ def _activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[
     return matcher
 
 
-def _employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+def modelo_bindings_employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    """Build a predicate matching transactions with an employment IRPF category."""
+
     def matcher(transaction: Transaction) -> bool:
         return has_employment_irpf_category(
             transaction.irpf_category,
@@ -329,250 +235,39 @@ def _employment_category_matcher(operation: PinnedAuthorityOperation) -> Callabl
     return matcher
 
 
-class LedgerIvaAggregationSourceResolver:
-    """Resolve ``ledger_iva_aggregation`` bindings from the transaction ledger.
-
-    Owns :attr:`BindingSourceKind.LEDGER_IVA_AGGREGATION`, projects IVA
-    observations through :func:`~._iva_ledger.aggregate_iva_ledger_observations_from_repositories`,
-    and returns a :class:`~.source_mesh.CalculationSourceResolution` with
-    source issues, unrouted-observation diagnostics, and transaction provenance.
-    """
-
-    resolver_id: ClassVar[str] = "ledger_iva_aggregation"
-    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
-
-    def __init__(
-        self,
-        *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol,
-        invoice_catalogue_read_ports: InvoiceCatalogueReadPorts,
-        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-        investment_asset_register: BienesInversionIvaRegister | None = None,
-        investment_asset_profile_id: str | None = None,
-    ) -> None:
-        """Bind repositories used to resolve IVA ledger sources."""
-        self._transaction_repository = transaction_repository
-        self._invoice_catalogue_read_ports = invoice_catalogue_read_ports
-        self._prorrata_register_repository = prorrata_register_repository
-        self._investment_asset_register = investment_asset_register
-        self._investment_asset_profile_id = investment_asset_profile_id
-
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Resolve IVA ledger observations for one calculation context."""
-        if not revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-
-        aggregation_period = aggregation_period_for_modelo(
-            filing_year=context.filing_year,
-            code=context.period.registry_token,
+def _rental_activity_screen(
+    context: CalculationSourceContext, period: Period, operation: PinnedAuthorityOperation
+) -> RentalActivityScreen:
+    """Read which tipos de actividad are rentals, and whether the profile declares one for the ejercicio."""
+    return RentalActivityScreen(
+        codes=tipo_actividad_code_set(
+            _M100_RENTAL_ACTIVITY_SELECTOR, effective_date=period.end_date, authority=operation
+        ),
+        declared=arrendamiento_actividad_applicability(
+            declared_activity_epigraphs(context), effective_date=period.end_date, authority=operation
         )
-        with source_context_operation(context) as operation:
-            try:
-                aggregation = aggregate_iva_ledger_observations_from_repositories(
-                    bucket_id=context.bucket_id,
-                    period=aggregation_period,
-                    transaction_repository=self._transaction_repository,
-                    prorrata_register_repository=self._prorrata_register_repository,
-                    investment_asset_register=self._investment_asset_register,
-                    investment_asset_profile_id=self._investment_asset_profile_id,
-                    operation=operation,
-                )
-            except STORAGE_DEGRADATION_ERRORS as exc:
-                return storage_degradation_resolution(
-                    resolver_id=self.resolver_id,
-                    owned_sources=self.owned_sources,
-                    source_kinds=self.owned_sources,
-                    error=exc,
-                )
-            transaction_ids = {observation.ledger_id for observation in aggregation.observations}
-            transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
-            binding_values = resolve_iva_ledger_binding_values(
-                context.revision,
-                aggregation.observations,
-                prorrata_apportionment=aggregation.prorrata_apportionment,
-                operation=operation,
-            )
-            screened_bindings = invoice_ledger_screen_binding_ids(
-                context.revision,
-                modelo=context.modelo,
-            )
-            silence_report = raise_if_invoice_iva_would_be_silent(
-                context=context,
-                period=aggregation_period,
-                operation=operation,
-                transaction_binding_values=binding_values,
-                ledger_observations=aggregation.observations,
-                ports=self._invoice_catalogue_read_ports,
-                prorrata_apportionment=aggregation.prorrata_apportionment,
-                screened_bindings=screened_bindings,
-            )
-        # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
-        # the calculate path: a declarable IVA observation whose category/rate/flow
-        # triple no ``ledger_iva_aggregation`` binding selects would otherwise be
-        # silently dropped. Surface it (calculate still succeeds) so the operator
-        # sees the unrouted IVA rather than filing an under-declared form
-        # (no-silent-under-declaration). The category/rate/flow axes are the
-        # observation's own provenance — no legal_ref is fabricated.
-        unconsumed = unsupported_ledger_iva_observations(context.revision, aggregation.observations)
-        # Second, distinct screen, on the axis the one above cannot see. That one
-        # keys on the ROW, and every IVA row carries three independent quantities
-        # -- base, cuota, recargo -- so a row consumed for its cuota reads as
-        # routed while its base imponible reaches no binding at all. Modelo 390
-        # is the live instance: it draws cuota and recargo and declares no base
-        # binding, so without this the annual return's missing base boxes are
-        # silent with the row screen clean.
-        unrouted_quantities = unrouted_ledger_iva_quantities(context.revision, aggregation.observations)
-        # Fourth, structural axis, observation-INDEPENDENT unlike the two above:
-        # it asks whether the revision's bindings could EVER route a category's
-        # base, not whether a particular row's base was reached. Scoped to
-        # categories this taxpayer's ledger actually carries this period, so it
-        # reads as taxpayer-relevant rather than a blanket registry dump, and to
-        # Modelo 303 only pending Modelo 390 coordination (#80). Advisory, never
-        # blocking: several of these categories are cuota-less BY LAW, so no tax
-        # is lost -- only the base itself has nowhere on this revision to land.
-        unroutable_categories = _present_unroutable_iva_categories(context, aggregation.observations)
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=binding_values,
-            source_transaction_ids=tuple(sorted(transaction_ids)),
-            diagnostics=out_of_window_summary_diagnostics(
-                aggregation.out_of_window_summary,
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + devengo_proxy_attribution_diagnostics(
-                silence_report.compared,
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + reverse_charge_underivable_diagnostics(
-                silence_report.reverse_charge_underivable,
-                resolver_id=self.resolver_id,
-            )
-            + missing_invoice_deduction_authority_diagnostics(
-                silence_report.deduction_authority_missing,
-                resolver_id=self.resolver_id,
-            )
-            + category_counterparty_mismatch_diagnostics(
-                silence_report.category_counterparty_mismatches,
-                resolver_id=self.resolver_id,
-            )
-            + recargo_rate_mismatch_diagnostics(
-                silence_report.recargo_rate_divergences,
-                resolver_id=self.resolver_id,
-            )
-            + recargo_unattributable_diagnostics(
-                silence_report.recargo_unattributable,
-                resolver_id=self.resolver_id,
-            )
-            + source_issue_diagnostics(
-                tuple(
-                    issue
-                    for issue in aggregation.issues
-                    if issue.reason not in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
-                ),
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-                suppressed_reasons=_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS,
-                held_back_reasons=frozenset(
-                    {
-                        IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
-                        IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
-                    }
-                ),
-                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
-            )
-            + _selected_scope_iva_evidence_diagnostics(
-                aggregation.issues,
-                resolver_id=self.resolver_id,
-            )
-            + _diagnostics_for(
-                unconsumed,
-                reason="unrouted_observation",
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-                message=lambda observation: (
-                    f"declarable IVA observation {observation.ledger_id!r} "
-                    f"(category={observation.category.value!r}, rate_kind={observation.rate_kind.value!r}, "
-                    f"flow_direction={observation.flow_direction.value!r}) is not consumed by any "
-                    f"ledger_iva_aggregation binding on revision {context.revision.id!r}; "
-                    "its base/cuota is not declared on this calculation"
-                ),
-            )
-            + _diagnostics_for(
-                unrouted_quantities,
-                reason="unrouted_declarable_quantity",
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-                message=lambda quantity: (
-                    f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
-                    f"{quantity.fact!r} in categories "
-                    f"{_residue_categories(quantity.observations)}, which no ledger_iva_aggregation "
-                    f"binding on revision {context.revision.id!r} draws for those categories; that "
-                    f"amount is not declared on this calculation. The rows themselves ARE consumed "
-                    f"for their other quantities, so no other screen reports them"
-                ),
-            )
-            + _diagnostics_for(
-                unroutable_categories,
-                reason="structurally_unroutable_base_category",
-                source_kind="ledger_iva_aggregation",
-                resolver_id=self.resolver_id,
-                message=lambda category: (
-                    f"IVA category {category.value!r} appears on this period's ledger, and no "
-                    f"ledger_iva_aggregation binding on revision {context.revision.id!r} could ever draw "
-                    "its taxable base, for any row of that category -- not merely for the rows seen this "
-                    "period. Cuota is legitimately zero or already declared elsewhere for this category, "
-                    "so no tax is lost, but the base amount itself is not represented in this filing"
-                ),
-            ),
-            provenance=(
-                _provenance_for(
-                    aggregation.observations,
-                    lambda observation: CalculationSourceProvenance(
-                        resolver_id=self.resolver_id,
-                        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        contributor_source_kind="ledger_iva_aggregation",
-                        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        lineage_role=CalculationSourceLineageRole.PRIMARY,
-                        source_ref=f"transaction:{observation.ledger_id}",
-                        parent_source_ref=None,
-                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                    ),
-                )
-                + _provenance_for(
-                    aggregation.prorrata_references,
-                    lambda reference: CalculationSourceProvenance(
-                        resolver_id=self.resolver_id,
-                        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        contributor_source_kind="ledger_iva_aggregation",
-                        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        lineage_role=CalculationSourceLineageRole.PRIMARY,
-                        source_ref=f"prorrata:{reference.transaction_id}",
-                        parent_source_ref=None,
-                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                    ),
-                )
-                + _iva_prorrata_apportionment_provenance(
-                    context.revision,
-                    aggregation_period,
-                    aggregation.prorrata_apportionment,
-                )
-            ),
-        )
+        is RetencionSoportadaApplicability.DECLARED,
+    )
 
 
-def _present_unroutable_iva_categories(
-    context: CalculationSourceContext, observations: Iterable[IvaLedgerObservation]
-) -> tuple[IvaCategory, ...]:
-    if context.modelo != Modelo("303").value:
+def _rental_tag_missing_diagnostics(
+    context: CalculationSourceContext, aggregation: RentaIncomeLedgerAggregation, *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Withhold the activity credit while a rental year holds withholding-bearing rows with no tipo de actividad."""
+    untagged = aggregation.rental_tag_missing
+    if not untagged:
         return ()
-    present_categories = {observation.category for observation in observations}
-    return tuple(
-        category
-        for category in structurally_unroutable_iva_base_categories(context.revision)
-        if category in present_categories
+    return unresolved_binding_diagnostics(
+        revision=context.revision,
+        source_kind="ledger_renta_income_aggregation",
+        binding_ids=tuple(sorted(declared_withholding_binding_ids(context.revision))),
+        resolver_id=resolver_id,
+        message=(
+            f"ejercicio {context.filing_year} includes a rental activity, and {len(untagged)} receipt(s) bearing "
+            "a retencion record no tipo de actividad, so whether their withholding is the activity's or the "
+            "rental's is unknown; set tipo_actividad on each (A01 for the rental): "
+            + fitted_diagnostic_id_list(sorted(untagged), budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH // 2)
+        )[:DIAGNOSTIC_MESSAGE_MAX_LENGTH],
     )
 
 
@@ -591,9 +286,15 @@ class LedgerRentaIncomeAggregationSourceResolver:
         self,
         *,
         ports: InvoiceCatalogueReadPorts,
+        activity_asset_history_repository: ActivityAssetHistoryRepository,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
+        imputation_filings: Callable[[CalculationSourceContext], ImputationFilingHistory] | None = None,
     ) -> None:
-        """Bind invoice-catalogue ports used by the Renta income resolver."""
+        """Bind the catalogue ports and the register, whose bajas can add income to Modelos 130 and 131."""
         self._ports = ports
+        self._imputation_filings = imputation_filings
+        self._activity_asset_history_repository = activity_asset_history_repository
+        self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta activity-income observations for one context."""
@@ -610,51 +311,78 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # takes the quarter alone into casilla 05 and, unlike the other two,
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
-        target_casilla_id = _renta_income_target_casilla(context)
+        target_casilla_id = renta_income_target_casilla(context.revision, modelo=context.modelo)
+        criteria = declared_imputation_criteria(
+            context.profile.record if context.profile is not None else None,
+            self._imputation_filings(context) if self._imputation_filings is not None else None,
+        )
+        payment_year_values: dict[BindingId, Decimal] = {}
+        instalment_basis_values: dict[BindingId, Decimal] = {}
+        income_family_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
-            activity_category_matcher = _activity_category_matcher(operation)
-            employment_category_matcher = _employment_category_matcher(operation)
+            activity_category_matcher = modelo_bindings_activity_category_matcher(operation)
+            employment_category_matcher = modelo_bindings_employment_category_matcher(operation)
             try:
-                if context.modelo == Modelo("100").value:
-                    aggregation = aggregate_renta_m100_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
+                if context.modelo == form_for_role("renta.annual"):
+                    rental = _rental_activity_screen(context, aggregation_period, operation)
+                    aggregation = self._aggregate_annual(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        criteria,
+                        rental=rental,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
+                    )
+                    payment_year_values = self._payment_year_withholding(
+                        context,
+                        aggregation_period,
+                        criteria,
+                        rental=rental,
                         target_casilla_id=target_casilla_id,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
                     )
-                elif context.modelo == Modelo("131").value:
-                    agrarian_activity_codes = frozenset(
-                        TipoActividad(code)
-                        for code in tipo_actividad_code_set(
-                            _M131_AGRARIAN_ACTIVITY_SELECTOR,
-                            effective_date=aggregation_period.end_date,
-                            authority=operation,
-                        )
+                    instalment_basis_values = self._instalment_basis_withholding(context, aggregation)
+                    income_family_diagnostics = income_family_not_computed_diagnostics(
+                        context,
+                        self._ports.transaction_reader.partition_by_date_range(
+                            aggregation_period.start_date, aggregation_period.end_date
+                        ).in_window.values(),
+                        authority=operation,
+                        resolver_id=self.resolver_id,
                     )
-                    aggregation = aggregate_renta_m131_agrario_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
-                        target_casilla_id=target_casilla_id,
-                        agrarian_activity_codes=agrarian_activity_codes,
+                elif context.modelo == form_for_role("renta.objective_instalment"):
+                    aggregation = self._aggregate_objective_instalment(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        operation=operation,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
                     )
                 else:
-                    aggregation = aggregate_renta_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
-                        target_casilla_id=target_casilla_id,
+                    aggregation = self._aggregate_quarter(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        criteria,
+                        operation=operation,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
                     )
+                disposal_excess = (
+                    ()
+                    if context.modelo == form_for_role("renta.annual")
+                    else activity_asset_disposal_excess(
+                        self._activity_asset_history_repository.load(),
+                        context=context,
+                        period=aggregation_period,
+                        transactions=self._transaction_repository,
+                        operation=operation,
+                    )
+                )
             except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
                 return storage_degradation_resolution(
                     resolver_id=self.resolver_id,
@@ -662,9 +390,190 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
+        applicability = activity_ledger_applicability(context, self.owned_sources)
+        resolution = self._assemble_resolution(
+            context, aggregation, profile_decode_context, disposal_excess, criteria, applicability
+        )
+        return resolution.model_copy(
+            update={
+                "diagnostics": (*resolution.diagnostics, *income_family_diagnostics),
+                "inapplicable_binding_ids": applicability.inapplicable_binding_ids,
+                "payment_year_binding_values": payment_year_values,
+                "instalment_basis_binding_values": instalment_basis_values,
+            }
+        )
+
+    def _aggregate_annual(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        criteria: ImputationCriteria,
+        *,
+        rental: RentalActivityScreen,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the Modelo 100 activity income over the full ejercicio."""
+        return aggregate_renta_m100_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            criteria=criteria,
+            rental=rental,
+        )
+
+    def _aggregate_objective_instalment(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        *,
+        operation: PinnedAuthorityOperation,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the Modelo 131 quarter, narrowed to the agrarian activity set."""
+        agrarian_activity_codes = frozenset(
+            TipoActividad(code)
+            for code in tipo_actividad_code_set(
+                _M131_AGRARIAN_ACTIVITY_SELECTOR,
+                effective_date=period.end_date,
+                authority=operation,
+            )
+        )
+        return aggregate_renta_m131_agrario_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            agrarian_activity_codes=agrarian_activity_codes,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            operation=operation,
+        )
+
+    def _aggregate_quarter(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        criteria: ImputationCriteria,
+        *,
+        operation: PinnedAuthorityOperation,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the cumulative-quarter income, adding the agrarian rows its own box takes."""
+        agrarian_target = _agrarian_quarter_target_casilla(context)
+        agrarian_codes = frozenset[TipoActividad]()
+        if agrarian_target is not None:
+            agrarian_codes = agrarian_instalment_activity_codes(
+                effective_date=period.end_date,
+                authority=operation,
+            )
+        aggregation = aggregate_renta_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            criteria=criteria,
+            excluded_activity_codes=agrarian_codes,
+        )
+        if agrarian_target is None:
+            return aggregation
+        agrarian = aggregate_renta_m131_agrario_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=agrarian_target,
+            agrarian_activity_codes=agrarian_codes,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            operation=operation,
+            criteria=criteria,
+        )
+        return aggregation.model_copy(
+            update={
+                "observations": (*aggregation.observations, *agrarian.observations),
+                "issues": (*aggregation.issues, *agrarian.issues),
+            }
+        )
+
+    def _instalment_basis_withholding(
+        self, context: CalculationSourceContext, aggregation: RentaIncomeLedgerAggregation
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding as the year's last pago fraccionado would credit it."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids:
+            return {}
+        restated = instalment_basis_observations(
+            aggregation.observations,
+            self._ports.transaction_reader.load(),
+            cut_off=context.period.end_date,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, restated)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
+
+    def _payment_year_withholding(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        criteria: ImputationCriteria,
+        *,
+        rental: RentalActivityScreen,
+        target_casilla_id: CasillaId,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding's figure by payment year, when accrual can move a receipt."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids or criteria.usable(context.filing_year) is not ActivityImputationCriterion.DEVENGO:
+            return {}
+        paid = payment_dated_renta_m100_income_observations(
+            bucket_id=context.bucket_id,
+            period=period,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            rental=rental,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, paid)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
+
+    def _assemble_resolution(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        profile_decode_context: ProfileDecodeContext,
+        disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+        criteria: ImputationCriteria,
+        applicability: ActivityLedgerApplicability,
+    ) -> CalculationSourceResolution:
+        declared_excess = _declared_disposal_excess(context, disposal_excess)
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
-            aggregation.observations,
+            (
+                *aggregation.observations,
+                *declared_excess,
+                *aggregation.accrued_unpaid,
+                *aggregation.rectificativa_corrections,
+            ),
+        )
+        unresolved_rows = tuple(
+            issue
+            for issue in aggregation.issues
+            if issue.reason is RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
         )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # income whose target_casilla_id matches no ledger_renta_income_aggregation
@@ -690,36 +599,12 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # its figure out. An excluded row and a row that suffered nothing both
         # contribute nothing, so the difference has to travel beside the value.
         derivation = ledger_renta_withholding_derivation_partition(context.revision, aggregation.observations)
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=binding_values,
-            bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
-            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
-            diagnostics=out_of_window_summary_diagnostics(
-                aggregation.out_of_window_summary,
-                source_kind="ledger_renta_income_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + source_issue_diagnostics(
-                aggregation.issues,
-                source_kind="ledger_renta_income_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_renta_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"declarable renta income observation (target_casilla_id="
-                        f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
-                        f"is not consumed by any ledger_renta_income_aggregation binding on revision "
-                        f"{context.revision.id!r}; its income is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
-            )
+        bound_inputs = _m130_retenciones_backend_inputs(context, binding_values)
+        source_transaction_ids = sorted_ids(aggregation.observations, lambda observation: observation.transaction_id)
+        diagnostics = (
+            self._ledger_screening_diagnostics(context, aggregation, criteria, applicability)
+            + self._imputation_diagnostics(context, aggregation, criteria, binding_values, unresolved_rows)
+            + _unrouted_observation_diagnostics(context, unrouted, resolver_id=self.resolver_id)
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_declarable_quantity",
@@ -734,9 +619,122 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
                 for quantity in unrouted_quantities
             )
-            + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
+            + self._advisory_diagnostics(
+                context,
+                aggregation,
+                profile_decode_context,
+                disposal_excess,
+                ungrounded=ungrounded,
+                derivation=derivation,
+            )
+        )
+        value_outcomes = _resolved_income_value_outcomes(
+            context, aggregation, binding_values, invoices=self._ports.invoice_reader.load(), criteria=criteria
+        )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            bound_inputs_by_casilla_id=bound_inputs,
+            source_transaction_ids=source_transaction_ids,
+            diagnostics=diagnostics,
+            value_outcomes=value_outcomes,
+            provenance=self._income_provenance(declared_excess, aggregation),
+        )
+
+    def _ledger_screening_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        criteria: ImputationCriteria,
+        applicability: ActivityLedgerApplicability,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the window, issue, unpaid-withholding, part-payment and late-payment findings."""
+        return (
+            out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=self.resolver_id,
+                suppressed_reasons=frozenset({RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED})
+                | applicability.not_activity_row_reasons,
+            )
+            + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
+            + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + paid_after_cut_off_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + rental_activity_component_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + _rental_tag_missing_diagnostics(context, aggregation, resolver_id=self.resolver_id)
+            + rectificativa_netting_diagnostics(aggregation.rectificativa_corrections, resolver_id=self.resolver_id)
+            + rectification_diagnostics(
+                self._ports.transaction_reader.load(),
+                self._ports.invoice_reader.load(),
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                criteria=criteria,
+                resolver_id=self.resolver_id,
+            )
+        )
+
+    def _imputation_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        criteria: ImputationCriteria,
+        binding_values: Mapping[BindingId, Decimal],
+        unresolved_rows: tuple[RentaIncomeLedgerAggregationIssue, ...],
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report what blocks the imputation election, except for the objective-estimation modelo."""
+        if context.modelo == form_for_role("renta.objective_instalment"):
+            return ()
+        return imputation_blocking_diagnostics(
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=self.resolver_id,
+            revision=context.revision,
+            binding_ids=binding_values,
+            criteria=criteria,
+            year=context.filing_year,
+            activity_present=bool(
+                aggregation.observations
+                or unresolved_rows
+                or accruing_invoices(
+                    self._ports.invoice_reader.load().values(),
+                    kind=InvoiceKind.ISSUED,
+                    bucket_id=context.bucket_id,
+                    start=date(context.filing_year, 1, 1),
+                    end=context.period.end_date,
+                    criteria=criteria,
+                )
+            ),
+            unresolved_details=(
+                *(issue.detail for issue in unresolved_rows),
+                *(
+                    f"{ImputationUnresolved.EUR_VALUE_UNKNOWN.value}: issued invoice {number} accrues with no "
+                    "EUR value; stamp its rate"
+                    for number in aggregation.accrued_without_eur_value
+                ),
+                *aggregation.rectificativa_refused,
+            ),
+        )
+
+    def _advisory_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        profile_decode_context: ProfileDecodeContext,
+        disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+        *,
+        ungrounded: UngroundedRentaIncome,
+        derivation: WithholdingDerivationPartition,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the grounding, derivation, invoice, rate, silence and disposal advisories."""
+        return (
+            _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _withholding_derivation_diagnostics(derivation, resolver_id=self.resolver_id)
-            + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
@@ -754,8 +752,36 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation,
                 context.revision,
                 resolver_id=self.resolver_id,
-            ),
-            provenance=_provenance_for(
+            )
+            + (
+                activity_asset_disposal_excess_m131_findings(disposal_excess, resolver_id=self.resolver_id)
+                if context.modelo == form_for_role("renta.objective_instalment")
+                else ()
+            )
+        )
+
+    def _income_provenance(
+        self,
+        declared_excess: tuple[ActivityAssetDisposalExcess, ...],
+        aggregation: RentaIncomeLedgerAggregation,
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        """Trace the disposal excess, the unpaid accrued invoices and each income row to their source."""
+        return (
+            _disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
+            + tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                    contributor_source_kind="ledger_renta_income_aggregation",
+                    contributor_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=accrued.transaction_id,
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                )
+                for accrued in (*aggregation.accrued_unpaid, *aggregation.rectificativa_corrections)
+            )
+            + source_provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -767,8 +793,101 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     parent_source_ref=None,
                     terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
+            )
+        )
+
+
+def _unrouted_observation_diagnostics(
+    context: CalculationSourceContext,
+    unrouted: Sequence[RentaIncomeObservationProtocol],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name each income observation that no income binding consumes."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unrouted_observation",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"declarable renta income observation (target_casilla_id="
+                f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
+                f"is not consumed by any ledger_renta_income_aggregation binding on revision "
+                f"{context.revision.id!r}; its income is not declared on this calculation"
             ),
         )
+        for observation in unrouted
+    )
+
+
+def _declared_disposal_excess(
+    context: CalculationSourceContext,
+    disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+) -> tuple[ActivityAssetDisposalExcess, ...]:
+    """Keep the disposal excess a direct-estimation calculation declares as income."""
+    if context.modelo != form_for_role("renta.direct_instalment"):
+        return ()
+    return tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
+
+
+def _resolved_income_value_outcomes(
+    context: CalculationSourceContext,
+    aggregation: RentaIncomeLedgerAggregation,
+    binding_values: Mapping[BindingId, Decimal],
+    *,
+    invoices: InvoiceCatalogue,
+    criteria: ImputationCriteria,
+) -> dict[BindingId, BindingValueOutcome]:
+    """State what each resolved income-source value rests on, withholding and income alike.
+
+    An issued invoice accruing in the window with its money banked outside it
+    leaves no row here, so it counts against a zero as a row would; for a
+    withholding binding only an invoice stating a retencion does.
+    """
+    with source_context_operation(context):
+        accruing = accruing_invoices(
+            invoices.values(),
+            kind=InvoiceKind.ISSUED,
+            bucket_id=context.bucket_id,
+            start=date(aggregation.period.filing_year, 1, 1),
+            end=aggregation.period.end_date,
+            criteria=criteria,
+        )
+    withholding = ledger_renta_withholding_value_outcomes(context.revision, aggregation.observations)
+    bearing_invoice = any(invoice.retention_amount for invoice in accruing)
+    outcomes: dict[BindingId, BindingValueOutcome] = {}
+    for binding_id, value in binding_values.items():
+        stated = withholding.get(binding_id)
+        if stated is None:
+            outcomes[binding_id] = ledger_sum_outcome(
+                value,
+                rows_present=bool(aggregation.observations or aggregation.accrued_unpaid),
+                accruing_invoice_present=bool(accruing),
+            )
+        else:
+            outcomes[binding_id] = BindingValueOutcome.FROM_BEARING_ROWS if bearing_invoice else stated
+    return outcomes
+
+
+def _disposal_excess_provenance(
+    declared_excess: tuple[ActivityAssetDisposalExcess, ...],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Name the register disposals whose excess the income binding drew on."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=resolver_id,
+            resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            contributor_source_kind="activity_asset_disposal_excess",
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=row.source_ref,
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+        )
+        for row in declared_excess
+    )
 
 
 def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
@@ -799,18 +918,15 @@ INFERRED_RETENCION_EXCLUDED_SOURCE_KIND = "inferred_actividad_retencion_excluded
 UNRESOLVED_RETENCION_SOURCE_KIND = "unresolved_actividad_retencion"
 """Source kind for the retención rows whose figure is unknown rather than zero."""
 
-ADVISORY_RETENCION_CREDIT_SOURCE_KIND = "advisory_actividad_retencion_credit"
-"""Source kind for the grade the issued-invoice retención credit carries."""
-
 
 def _withholding_derivation_diagnostics(
     derivation: WithholdingDerivationPartition,
     *,
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Report what the declared-only retención credit left out, and its grade.
+    """Report what the declared-only retención credit left out.
 
-    Three findings, each about a distinct state the resolved value cannot carry.
+    Two findings, each about a distinct state the resolved value cannot carry.
 
     An INFERRED row holds a figure reconstructed from invoice gross minus cash
     received. It is excluded on purpose, and it is also recoverable: the operator
@@ -823,11 +939,9 @@ def _withholding_derivation_diagnostics(
     Reporting it as zero would assert a proven nothing-withheld, which is exactly
     the collapse ``no-silent-under-declaration`` forbids.
 
-    The GRADE finding travels with every non-zero credit. Which year credits a
-    retención when the payment and the accrual fall in different ejercicios is
-    not yet grounded against the LIRPF, the RIRPF and a DGT consulta, so the
-    figure is advisory: an operator may read it, and no consumer may promote it
-    to a filing-grade claim.
+    How far the credit itself reaches is not this resolver's statement: a
+    binding that reads it declares its own grade cap, and the canonical
+    resolution step reports a capped value for every resolver together.
 
     Returns an empty tuple when the revision declares no declared-only retención
     binding and the rows carried nothing, which is how a revision without the
@@ -871,21 +985,6 @@ def _withholding_derivation_diagnostics(
                     "Record the invoice base and the retención for each transaction, then recalculate; "
                     "until then the credit is incomplete by an unknown amount."
                 ),
-            ),
-        )
-    if derivation.declared_total > Decimal("0"):
-        findings.append(
-            CalculationSourceDiagnostic(
-                reason="advisory_retencion_credit_grade",
-                resolver_id=resolver_id,
-                source_kind=ADVISORY_RETENCION_CREDIT_SOURCE_KIND,
-                message=(
-                    f"the issued-invoice retención credit of {derivation.declared_total} EUR is ADVISORY: "
-                    f"which ejercicio credits a retención when the payment and the accrual fall in "
-                    f"different years is not yet grounded, so the figure must not be filed as a "
-                    f"filing-grade claim without checking it against the payer's certificate"
-                ),
-                remedy="Check the figure against the payer's certificate for the ejercicio before filing.",
             ),
         )
     return tuple(findings)
@@ -946,7 +1045,7 @@ def _ungrounded_income_diagnostics(
             reason="ungrounded_income_substrate",
             source_kind="ledger_renta_income_aggregation",
             resolver_id=resolver_id,
-            message=preamble + _fitted_id_list(sampled, budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(preamble)),
+            message=preamble + fitted_diagnostic_id_list(sampled, budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(preamble)),
         ),
     )
 
@@ -956,229 +1055,13 @@ def _m130_retenciones_backend_inputs(
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
     """Redirect the selected registry binding route to its declared endpoint."""
-    route = resolve_m130_retenciones_route(authority=context.operation)
+    route = resolve_m130_retenciones_route(effective_date=context.period.end_date, authority=context.operation)
     if context.modelo != route.modelo_id:
         return {}
     value = binding_values.get(route.binding_id)
     if value is None:
         return {}
     return {route.output_casilla: value}
-
-
-_IMPATRIADO_REGISTRY_FACT_ID = "impatriado-income-ledger-registry-mapping"
-_IMPATRIADO_REGISTRY_SOURCE_KIND = "ledger_impatriado_income_aggregation"
-
-
-def _resolve_impatriado_registry_declarations(
-    context: CalculationSourceContext,
-    *,
-    operation: PinnedAuthorityOperation | None = None,
-) -> tuple[str, CasillaId, frozenset[str], frozenset[str]] | None:
-    """Resolve the selected filing context's impatriado ledger declarations.
-
-    A missing, stale, or malformed mapping is an unavailable source declaration.
-    Returning ``None`` makes the caller return an empty source resolution rather
-    than silently selecting a Python default.
-    """
-    if operation is None:
-        with source_context_operation(context) as indexed_operation:
-            return _resolve_impatriado_registry_declarations(context, operation=indexed_operation)
-    try:
-        resolved = operation.resolve_governed_fact(
-            MappingFactQuery(
-                fact_id=_IMPATRIADO_REGISTRY_FACT_ID,
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=context.period.end_date,
-                filing_year=context.filing_year,
-                period=context.period.registry_token,
-            ),
-        )
-    except (RegistryError, PeriodError, TypeError, ValueError):
-        return None
-    if not isinstance(resolved, ResolvedMappingFact):
-        return None
-
-    entries = _impatriado_mapping_entries(resolved)
-    if entries is None:
-        return None
-    declaration_values = _impatriado_declaration_values(entries, context)
-    if declaration_values is None:
-        return None
-    modelo, target_value, jurisdiction_value, category_value = declaration_values
-    target_casilla_id = _impatriado_target_casilla(target_value)
-    if target_casilla_id is None:
-        return None
-    source_jurisdictions = _impatriado_csv_tokens(jurisdiction_value, uppercase=True)
-    eligible_income_categories = _impatriado_csv_tokens(category_value)
-    if source_jurisdictions is None or eligible_income_categories is None:
-        return None
-    if not _impatriado_jurisdictions_are_canonical(source_jurisdictions):
-        return None
-    return modelo, target_casilla_id, source_jurisdictions, eligible_income_categories
-
-
-def _impatriado_mapping_entries(resolved: ResolvedMappingFact) -> dict[str, str] | None:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            return None
-        key = entry.key.strip()
-        if not key or key in entries:
-            return None
-        value = entry.value.strip()
-        if not value:
-            return None
-        entries[key] = value
-    return entries
-
-
-def _impatriado_declaration_values(
-    entries: Mapping[str, str], context: CalculationSourceContext
-) -> tuple[str, str, str, str] | None:
-    modelo = entries.get("applicability.modelos")
-    source_kind = entries.get("binding.source_kind")
-    target_value = entries.get("target.casilla_id")
-    jurisdiction_value = entries.get("source.jurisdictions")
-    category_value = entries.get("eligible.income_categories")
-    if (
-        modelo is None
-        or source_kind is None
-        or target_value is None
-        or jurisdiction_value is None
-        or category_value is None
-        or modelo != context.modelo
-        or source_kind != _IMPATRIADO_REGISTRY_SOURCE_KIND
-    ):
-        return None
-    return modelo, target_value, jurisdiction_value, category_value
-
-
-def _impatriado_target_casilla(value: str) -> CasillaId | None:
-    try:
-        return validated_casilla_id(value, surface="impatriado registry target.casilla_id")
-    except (TypeError, ValueError):
-        return None
-
-
-def _impatriado_csv_tokens(value: str, *, uppercase: bool = False) -> frozenset[str] | None:
-    raw_tokens = value.split(",")
-    if not raw_tokens or any(not token.strip() for token in raw_tokens):
-        return None
-    normalized = tuple(token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens)
-    if len(set(normalized)) != len(normalized):
-        return None
-    if any(not _impatriado_token_is_valid(token) for token in normalized):
-        return None
-    return frozenset(normalized)
-
-
-def _impatriado_token_is_valid(token: str) -> bool:
-    return bool(token) and all(char.isalnum() or char in "_-." for char in token)
-
-
-def _impatriado_jurisdictions_are_canonical(jurisdictions: frozenset[str]) -> bool:
-    return all(len(value) == 2 and value.isalpha() and value == value.upper() for value in jurisdictions)
-
-
-class LedgerImpatriadoIncomeAggregationSourceResolver:
-    """Resolve ``ledger_impatriado_income_aggregation`` Modelo 151 base bindings.
-
-    Owns :attr:`BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION`. Modelo
-    151 (régimen especial de impatriados, Ley Beckham) folds only Spanish-source
-    (``source_jurisdiction == "ES"``) income into
-    ``impatriado.base-liquidable-general`` over the full ejercicio; every
-    foreign-source or jurisdiction-unresolved row is segregated by the classifier
-    into a typed ``BECKHAM_FOREIGN_SOURCE_SEGREGATED`` issue and surfaced as a
-    non-blocking source diagnostic rather than silently admitted or silently
-    dropped (art. 93.2 LIRPF / art. 25.1.f TRLIRNR).
-    """
-
-    resolver_id: ClassVar[str] = "ledger_impatriado_income_aggregation"
-    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
-
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
-        self._transaction_repository = transaction_repository
-
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not revision_has_binding_source(context.revision, "ledger_impatriado_income_aggregation"):
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-
-        aggregation_period = aggregation_period_for_modelo(
-            filing_year=context.filing_year,
-            code=context.period.registry_token,
-        )
-        declarations = _resolve_impatriado_registry_declarations(context)
-        if declarations is None:
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-        modelo, target_casilla_id, source_jurisdictions, eligible_income_categories = declarations
-        try:
-            aggregation = aggregate_impatriado_income_ledger_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                modelo=modelo,
-                target_casilla_id=target_casilla_id,
-                source_jurisdictions=source_jurisdictions,
-                eligible_income_categories=eligible_income_categories,
-                transaction_repository=self._transaction_repository,
-            )
-        except STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
-        binding_values = resolve_ledger_impatriado_income_aggregation_binding_values(
-            context.revision,
-            aggregation.observations,
-        )
-        # Fail-closed advisory: a non-zero ES-source income whose target casilla
-        # matches no ledger_impatriado_income_aggregation binding would otherwise
-        # be silently dropped from the base (no-silent-under-declaration).
-        unrouted = unsupported_ledger_impatriado_income_observations(context.revision, aggregation.observations)
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=binding_values,
-            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
-            diagnostics=out_of_window_summary_diagnostics(
-                aggregation.out_of_window_summary,
-                source_kind="ledger_impatriado_income_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + source_issue_diagnostics(
-                aggregation.issues,
-                source_kind="ledger_impatriado_income_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_impatriado_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"declarable impatriado ES-source income observation (target_casilla_id="
-                        f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
-                        f"is not consumed by any ledger_impatriado_income_aggregation binding on revision "
-                        f"{context.revision.id!r}; its income is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
-            ),
-            provenance=_provenance_for(
-                aggregation.observations,
-                lambda observation: CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-                    contributor_source_kind="ledger_impatriado_income_aggregation",
-                    contributor_binding_source=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"transaction:{observation.transaction_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                ),
-            ),
-        )
 
 
 class LedgerIrnrIncomeAggregationSourceResolver:
@@ -1195,9 +1078,11 @@ class LedgerIrnrIncomeAggregationSourceResolver:
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
+        """Bind the transaction repository for this source."""
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve IRNR income for the calculation context."""
         if context.m210_gross_income_source_mode is not M210GrossIncomeSourceMode.LEDGER:
             # The registry declares the optional M210 source unconditionally so
             # its selector remains validated.  Manual mode deliberately elects
@@ -1286,7 +1171,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=_provenance_for(
+            provenance=source_provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -1324,213 +1209,6 @@ def _irnr_annual_agrupacion_renta_rows(
     )
 
 
-class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
-    """Source mesh resolver for repository-backed M130 deductible-expense (gasto) bindings.
-
-    Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION`. This is the
-    OUTGOING sibling of :class:`LedgerRentaIncomeAggregationSourceResolver`: it
-    folds deductible business expenses into Modelo 130 casilla 02 over the same
-    cumulative year-to-date quarterly window and emits an unrouted-observation
-    diagnostic for declarable gastos no binding consumes.
-    """
-
-    resolver_id: ClassVar[str] = "ledger_renta_gastos_pago_fraccionado_aggregation"
-    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (
-        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-    )
-
-    def __init__(
-        self,
-        *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol,
-        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-        activity_asset_history_repository: ActivityAssetHistoryRepository,
-    ) -> None:
-        """Bind repositories used to resolve Renta expense sources."""
-        self._transaction_repository = transaction_repository
-        self._prorrata_register_repository = prorrata_register_repository
-        self._activity_asset_history_repository = activity_asset_history_repository
-
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Resolve Renta expense observations for one calculation context."""
-        if not revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-
-        aggregation_period = aggregation_period_for_modelo(
-            filing_year=context.filing_year,
-            code=context.period.registry_token,
-        )
-        target_casilla_id = _renta_gasto_target_casilla(context)
-        try:
-            aggregation = aggregate_renta_gasto_ledger_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                modelo=context.modelo,
-                target_casilla_id=target_casilla_id,
-                accept_activity_marker=context.modelo == Modelo("130").value,
-                transaction_repository=self._transaction_repository,
-                profile_record=context.profile.record if context.profile is not None else None,
-                prorrata_register_repository=self._prorrata_register_repository,
-                operation=context.operation,
-            )
-        except STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
-        asset_history = self._activity_asset_history_repository.load()
-        register_owned = classify_ledger_expenses_against_asset_register(
-            asset_history.revisions,
-            asset_history.claims,
-            _m130_asset_register_treatments(
-                aggregation.observations,
-                assets=asset_history.revisions,
-                charges_the_filing_year=any(
-                    claim.tax_year == aggregation_period.filing_year for claim in effective_claims(asset_history.claims)
-                ),
-                filing_year=aggregation_period.filing_year,
-            ),
-        )
-        withheld_transaction_ids = {acquisition.transaction_id for acquisition in register_owned}
-        ledger_observations = tuple(
-            observation
-            for observation in aggregation.observations
-            if observation.transaction_id not in withheld_transaction_ids
-        )
-        asset_observations = activity_asset_expense_observations(
-            asset_history.claims,
-            modelo="130",
-            period=aggregation_period,
-        )
-        all_observations = (*ledger_observations, *asset_observations)
-        # Fail-closed advisory parity with the income screen: a non-zero
-        # declarable gasto whose target_casilla_id matches no
-        # ledger_renta_gastos_pago_fraccionado_aggregation binding would otherwise be silently
-        # dropped (no-silent-under-declaration). Calculate still succeeds; the
-        # operator sees the unrouted expense instead of an under-declared form.
-        unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(context.revision, all_observations)
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
-                context.revision,
-                all_observations,
-            ),
-            source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
-            diagnostics=out_of_window_summary_diagnostics(
-                aggregation.out_of_window_summary,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + source_issue_diagnostics(
-                aggregation.issues,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-                held_back_reasons=frozenset(
-                    {
-                        RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
-                        RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-                    }
-                ),
-                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
-            )
-            + register_owned_acquisition_diagnostics(
-                register_owned,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"declarable renta gasto observation (target_casilla_id="
-                        f"{observation.target_casilla_id!r}, deductible_amount={observation.deductible_amount}) "
-                        f"is not consumed by any ledger_renta_gastos_pago_fraccionado_aggregation binding on revision "
-                        f"{context.revision.id!r}; its deductible expense is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
-            ),
-            provenance=_provenance_for(
-                ledger_observations,
-                lambda observation: CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-                    contributor_source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                    contributor_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"transaction:{observation.transaction_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                ),
-            )
-            + tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-                    contributor_source_kind="activity_asset_claim",
-                    contributor_binding_source=None,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"activity-asset-claim:{observation.claim_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                )
-                for observation in asset_observations
-            ),
-        )
-
-
-def _m130_asset_register_treatments(
-    observations: Sequence[RentaGastoObservation],
-    *,
-    assets: tuple[ActivityAssetRevision, ...],
-    charges_the_filing_year: bool,
-    filing_year: int,
-) -> tuple[LedgerRentaExpenseTreatment, ...]:
-    """Weigh the quarterly gasto rows the activity-asset register has a say over.
-
-    Every quarterly gasto shares one target casilla, so a row's category is the
-    only thing that can label it a depreciation treatment. The governed routing
-    that answers that question is resolved once for the filing year -- the
-    first-slice route is declared per annual Modelo 100 revision, so it does not
-    vary inside a year -- and only when the register charges that year, which is
-    the only circumstance in which a second depreciation treatment can compete.
-    A bucket with no registered asset leaves the quarterly path untouched.
-
-    Returns:
-        One treatment per gasto row the register owns or could collide with.
-    """
-    if not assets:
-        return ()
-    acquisition_ids = {asset.acquisition.observed_transaction_id for asset in assets}
-    candidates = (
-        tuple(observations)
-        if charges_the_filing_year
-        else tuple(observation for observation in observations if observation.transaction_id in acquisition_ids)
-    )
-    if not candidates:
-        return ()
-    labelled = (
-        amortization_labelled_expense_categories(effective_date=date(filing_year, 12, 31))
-        if charges_the_filing_year
-        else frozenset[str]()
-    )
-    return tuple(
-        LedgerRentaExpenseTreatment(
-            transaction_id=observation.transaction_id,
-            category=observation.category_id,
-            tax_year=observation.filing_date.year,
-            deductible_amount=observation.deductible_amount,
-            amortization_labelled=observation.category_id in labelled,
-        )
-        for observation in candidates
-    )
-
-
 def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
     """Translate a canonical ``StandardPeriodCode`` token to a core period.
 
@@ -1554,80 +1232,3 @@ def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
             context={"filing_year": str(filing_year), "period": code},
         )
     return resolved
-
-
-def _iva_prorrata_apportionment_provenance(
-    revision: ModeloRevision,
-    period: Period,
-    apportionment: IvaLedgerProrrataApportionment | None,
-) -> tuple[CalculationSourceProvenance, ...]:
-    if apportionment is None:
-        return ()
-    casillas = _iva_deducible_cuota_casillas(revision)
-    return (
-        CalculationSourceProvenance(
-            resolver_id=LedgerIvaAggregationSourceResolver.resolver_id,
-            resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-            contributor_source_kind="ledger_iva_aggregation",
-            contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-            lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
-            parent_source_ref=None,
-            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-            legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
-            source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
-        ),
-    )
-
-
-def _iva_prorrata_apportionment_source_ref(
-    period: Period,
-    apportionment: IvaLedgerProrrataApportionment,
-) -> str:
-    source_ref = (
-        f"prorrata-apportionment:{period.filing_year}:{apportionment.regime.value}:"
-        f"percentage:{apportionment.percentage}:provenance:{apportionment.provenance.value}"
-    )
-    if apportionment.source_observation_ref is not None:
-        source_ref = f"{source_ref}:source-observation:{apportionment.source_observation_ref}"
-    return source_ref
-
-
-def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
-    ledger_iva_amount_bindings = {
-        binding.id
-        for binding in revision.bindings
-        if isinstance(binding.provider, LedgerIvaProvider) and binding.provider.fact == LedgerIvaFact.IVA_AMOUNT_SUM
-    }
-    return tuple(
-        casilla
-        for casilla in revision.casillas
-        if "deducible" in casilla.section
-        and any(binding_id in ledger_iva_amount_bindings for binding_id in bound_casilla_binding_ids(casilla))
-    )
-
-
-#: The ONE canonical retenciones aggregation dispatch: every retenciones modelo
-#: mapped to its validated per-perceptor aggregator. This single table is shared by
-#: BOTH the live calculate mesh (:meth:`RetencionesAggregationSourceResolver.resolve`)
-#: and the per-modelo aggregation service (:func:`~.service.aggregate_per_modelo`,
-#: the CLI ``aggregate`` / pull surface), so the two paths cannot drift
-#: (``aeat-calculation-aggregation``).
-#:
-#: The calculate path is scoped to the modelos whose registry declares a
-#: ``retenciones_aggregation`` binding (111/115/180/193 today) by the resolver's
-#: binding-guard (:func:`revision_has_binding_source`), NOT by membership of this
-#: table — so the scoping tracks the registry, not a hand-maintained sub-list.
-#: Modelo 115 uses the quarterly URBAN_RENTAL aggregate for casillas 01/02; modelos
-#: 180/193 use the annual aggregate for the distinct-NIF perceptor count (their
-#: monetary totals remain on relation-prefill). Modelos 123 and 190 declare no
-#: ``retenciones_aggregation`` binding, so they never resolve on the calculate path;
-#: they are pull/service-only here. Modelo 190's calculate-path count is
-#: "percepciones", a distinct perceptor/clave/subclave figure handled by
-#: :class:`~.withholding_source.WithholdingSourceResolver`.
-__all__ = [
-    "LedgerIvaAggregationSourceResolver",
-    "LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
-    "LedgerRentaIncomeAggregationSourceResolver",
-    "aggregation_period_for_modelo",
-]

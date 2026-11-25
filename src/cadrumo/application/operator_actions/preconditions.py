@@ -124,6 +124,51 @@ def profile_setup_incomplete_verdict(*, modelo: str, missing_required_field_coun
     )
 
 
+PROFILE_REQUIRED_FACTS_DECLARED_CONDITION = "profile.required_facts.declared"
+"""Failed-condition identity: modelo work needs profile facts the profile does not yet hold."""
+
+PROFILE_REQUIRED_FACTS_EVIDENCE = "profile.required_facts.missing"
+"""Evidence identity for the observation of which profile facts are absent."""
+
+PROFILE_FIELD_EDIT_ACTION_ID = "operator.profile.edit"
+"""The catalogue action that asks the profile questions."""
+
+
+def profile_required_facts_missing_verdict(*, modelo: str | None, field_paths: tuple[str, ...]) -> PreconditionVerdict:
+    """Build the profile-questions outcome for modelo work refused by absent profile facts.
+
+    ``field_paths`` are the canonical ``section.field`` addresses of the absent
+    facts, in the order the refusal names them; the same spelling is what every
+    profile surface and the setup declaration name. The edit command walks the
+    profile's questions and writes exactly what the operator answers, so the
+    command edits the active profile when no name is given. ``modelo`` is ``None``
+    where the refusal belongs to the profile rather than to one modelo.
+    """
+    if not field_paths:
+        raise ValueError("a missing-profile-facts verdict names at least one field")
+    # The edit command answers for the active profile when no name is given.
+    binding = ActionArgumentBinding(argument_name="profile_name", status=ActionArgumentStatus.MISSING)
+    return PreconditionVerdict(
+        failed_condition_id=PROFILE_REQUIRED_FACTS_DECLARED_CONDITION,
+        evidence=(
+            ConditionEvidence(
+                condition_id=PROFILE_REQUIRED_FACTS_DECLARED_CONDITION,
+                evidence_id=PROFILE_REQUIRED_FACTS_EVIDENCE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                values={
+                    **({"modelo": modelo} if modelo is not None else {}),
+                    "missing_field_count": len(field_paths),
+                    "missing_fields": ", ".join(field_paths),
+                },
+            ),
+        ),
+        action=ActionReference(action_id=PROFILE_FIELD_EDIT_ACTION_ID),
+        argument_bindings=(binding,),
+        missing_argument_names=("profile_name",),
+        conditionality=conditionality_for_binding(binding),
+    )
+
+
 def corrupt_active_profile_pointer_verdict(*, path: str) -> PreconditionVerdict:
     """Build the repair outcome for a core-observed corrupt active-profile pointer."""
     return active_profile_pointer_repair_verdict(
@@ -139,11 +184,15 @@ def corrupt_active_profile_pointer_verdict(*, path: str) -> PreconditionVerdict:
 
 
 __all__ = [
+    "PROFILE_FIELD_EDIT_ACTION_ID",
+    "PROFILE_REQUIRED_FACTS_DECLARED_CONDITION",
+    "PROFILE_REQUIRED_FACTS_EVIDENCE",
     "PROFILE_SETUP_DECLARED_COMPLETE_CONDITION",
     "PROFILE_SETUP_STATE_EVIDENCE",
     "active_profile_pointer_repair_verdict",
     "conditionality_for_binding",
     "corrupt_active_profile_pointer_verdict",
     "no_action_precondition_verdict",
+    "profile_required_facts_missing_verdict",
     "profile_setup_incomplete_verdict",
 ]

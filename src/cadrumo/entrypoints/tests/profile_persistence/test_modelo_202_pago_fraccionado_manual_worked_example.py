@@ -92,13 +92,14 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.filing.draft_construction import build_draft, filing_period_date
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -111,10 +112,9 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -224,30 +224,22 @@ def _seed_sociedad_m_profile(exercise: int) -> None:
     (clave 03) is the applicable one - matching the manual's scenario, which
     never mentions the art. 40.3 obligation.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
-            UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
-            UserProfileFact(path="identity.tax_id", value="B87654323"),
-            UserProfileFact(path="activities.description", value="actividad economica"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=_INCN_BELOW_THRESHOLD),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
+                UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
+                UserProfileFact(path="identity.tax_id", value="B00015057"),
+                UserProfileFact(path="activities.description", value="actividad economica"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=_INCN_BELOW_THRESHOLD),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_profile_instant(exercise),
         updated_at=_profile_instant(exercise),
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

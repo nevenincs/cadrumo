@@ -46,8 +46,10 @@ from .invoice_draft_records import InvoiceDraft
 __all__ = [
     "CounterpartyDraftSide",
     "PrintedTotalDiscrepancy",
+    "RetentionReadingDiscrepancy",
     "counterparty_draft_side",
     "printed_total_discrepancy",
+    "retention_reading_discrepancy",
 ]
 
 
@@ -214,6 +216,38 @@ class PrintedTotalDiscrepancy(BaseModel):
     printed_total: Decimal
     recorded_total: Decimal
     difference: Decimal
+
+
+class RetentionReadingDiscrepancy(BaseModel):
+    """A withheld figure the document reads and the invoice on record does not hold.
+
+    Reported, never applied: an invoice confirmed before retention was read stays as
+    it is until the operator corrects it, and this says what they would be correcting.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    read_rate: Decimal | None
+    read_amount: Decimal
+    recorded_rate: Decimal | None
+    recorded_amount: Decimal | None
+
+
+def retention_reading_discrepancy(*, draft: InvoiceDraft, invoice: Invoice) -> RetentionReadingDiscrepancy | None:
+    """Return what the document reads as withheld when the record says otherwise.
+
+    Only a positive reading compares: a document stating nothing withheld gives no
+    figure to put beside the record, whatever the record holds.
+    """
+    read = draft.retencion_amount
+    if read is None or read <= 0 or read == invoice.retention_amount:
+        return None
+    return RetentionReadingDiscrepancy(
+        read_rate=draft.retencion_rate,
+        read_amount=read,
+        recorded_rate=invoice.retention_rate,
+        recorded_amount=invoice.retention_amount,
+    )
 
 
 def printed_total_discrepancy(*, draft: InvoiceDraft, invoice: Invoice) -> PrintedTotalDiscrepancy | None:

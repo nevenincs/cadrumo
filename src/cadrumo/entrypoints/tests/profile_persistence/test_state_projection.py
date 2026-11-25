@@ -30,6 +30,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -41,7 +42,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.application.auth.operator import inspect_operator_auth
 from cadrumo.application.auth.operator import test_operator_auth as probe_operator_auth
@@ -54,10 +55,8 @@ from cadrumo.application.modelo.work_lifecycle import (
     discard_work_unit,
 )
 from cadrumo.application.overview.status_report import build_overview_status_report
-from cadrumo.application.state_projection import (
-    ModeloReadinessRequest,
-    build_operator_state_projection,
-)
+from cadrumo.application.state_projection import build_operator_state_projection
+from cadrumo.application.state_projection_models import ModeloReadinessRequest
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
@@ -65,18 +64,21 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import projected_exercise
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
+from cadrumo.tests.log_records import delivered_records
 
-from ....adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....application.tests.operator_probe_fakes import fake_operator_probe_ports
+from ....application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
-from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -122,7 +124,7 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
     with ExitStack() as stack:
         stack.enter_context(
             override_settings(
-                cadrumo_local_storage_root=tmp_path,
+                cadrumo_storage_root=tmp_path,
                 cadrumo_active_profile=None,
                 cadrumo_secret_passphrase=SecretStr(_OPERATOR_CREDENTIAL_INPUT),
             ),
@@ -150,13 +152,14 @@ def state_projection_dependencies() -> tuple[InMemoryCertificateSecretBackendFac
             workspace=adapter,
             profile=adapter,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader_for=InvoiceCatalogueRepository,
         ),
     )
 
 
 def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
     """Create one current capsule, then bind its authenticated live session."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
 
     global _ACTIVE_PROFILE_ID, _PROFILE_SPAN_OPEN
 
@@ -184,7 +187,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
-    storage_root = load_settings().cadrumo_local_storage_root
+    storage_root = load_settings().cadrumo_storage_root
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
     instant = datetime.now(UTC)
@@ -508,6 +511,42 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
 
+def test_modelo_100_readiness_of_a_projected_year_reports_the_registry_ready(state_projection_dependencies) -> None:
+    """A year no edition authors is read at the grade it reaches, so the registry axis is not refused."""
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
+    _register_active_profile()
+    year = projected_exercise("100")
+    period = Period.from_year_and_code(year, "0A")
+
+    with bundled_indexed_authority().operation() as operation:
+        assert operation.reachable_authority_grade("100", filing_year=year, period="0A") is (
+            RegistryAuthorityGrade.CALCULATION
+        )
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="100",
+                    revision_id=active_registry_revision_id(
+                        modelo="100", filing_year=year, period="0A", operation=operation
+                    ),
+                    filing_year=year,
+                    period=period,
+                ),
+            ),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.filing_year == year
+    assert readiness.registry_ready is True
+    assert readiness.registry_refusal == ""
+    assert readiness.registry_refusal_cause is None
+
+
 def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projection_dependencies) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile(overrides={"censo.activity_start_date": "2026-05-01"})
@@ -558,11 +597,14 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile(
         overrides={
-            "identity.tax_id": "E12345674",
+            "identity.tax_id": "E00015008",
             "taxpayer_type.entity_type": "attribution_entity",
             "taxpayer_type.irpf_income_categories": "",
             "irpf.estimation_regime": "",
             "iva.does_intracomunitario": "true",
+            # Stated, not defaulted: the 50,000 EUR threshold selects the
+            # Modelo 349 cadence, so an unstated answer leaves the profile unready.
+            "iva.intracommunity_operations_exceed_50000_eur": "false",
         },
     )
 
@@ -675,7 +717,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
     assert "ledger_iva_aggregation" not in {binding.source for binding in readiness.missing_bindings}
 
 
-def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
+def test_modelo_369_extended_period_readiness_fails_closed_for_non_span_ledger_period(
     state_projection_dependencies,
 ) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
@@ -688,12 +730,12 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
             read_ports=read_ports,
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
-                    modelo="309",
+                    modelo="369",
                     revision_id=active_registry_revision_id(
-                        modelo="309", filing_year=2026, period="AD-HOC", operation=operation
+                        modelo="369", filing_year=2026, period="EXT-1T", operation=operation
                     ),
                     filing_year=2026,
-                    period=Period.from_year_and_code(2026, "AD-HOC"),
+                    period=Period.from_year_and_code(2026, "EXT-1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -706,7 +748,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == Period.from_year_and_code(2026, "AD-HOC")
+    assert readiness.ledger_period == Period.from_year_and_code(2026, "EXT-1T")
     assert readiness.ledger_checked_transaction_count == 0
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["unsupported_period"]
 
@@ -813,7 +855,7 @@ def test_projection_profile_read_refuses_explicit_database_route(
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_active_profile=profile_id,
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
         ),
@@ -899,7 +941,7 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
         )
 
     assert projection.auth.available is False
-    assert any("unknown provider" in record.getMessage() for record in caplog.records)
+    assert any("unknown provider" in record.getMessage() for record in delivered_records(caplog))
     assert sensitive_provider not in caplog.text
 
 

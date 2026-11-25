@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
 from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
+from .....application.ledger.llm_classification_ports import LLMSplitApplyResult
+from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
@@ -24,45 +20,68 @@ from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
-    _seed_received_invoice,
+    BUCKET,
+    NOW,
+    seed_parent,
+    seed_received_invoice,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .llm_evidence_split_support import repositories as repositories
-from .llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
-)
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
 
 
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence split test reaches an unused reader port."""
-    raise AssertionError("the no-evidence split path must not use this reader port")
+def _suggest_two_line_split(repository: TransactionCatalogueRepository, tx_id: str):
+    """Ask the split proposer for its two-line answer on ``tx_id``."""
+    with bundled_indexed_authority().operation() as operation:
+        return suggest_evidence_split(
+            bucket_id=BUCKET,
+            transaction_id=tx_id,
+            operation=operation,
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
+            transaction_repository=repository,
+            read_evidence=False,
+            settings=load_settings(),
+            ports=NO_EVIDENCE_LLM_PORTS,
+        )
 
 
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
+def _apply_split(
+    suggestion,
+    repository: TransactionCatalogueRepository,
+    events: BucketEventHistoryRepository,
+    objects: SecureObjectRepository,
+):
+    with ledger_ports_for_test(
+        bucket_id=BUCKET,
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        return apply_evidence_split(
+            suggestion,
+            bucket_id=BUCKET,
+            source_command="aeat app ledger split --llm --apply",
+            ports=ports,
+            occurred_at=NOW,
+        )
 
 
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
+def _suggest_and_apply_two_line_split(
+    repository: TransactionCatalogueRepository,
+    events: BucketEventHistoryRepository,
+    objects: SecureObjectRepository,
+):
+    """Seed an invoice-backed parent, suggest the two-line split and apply it; return the evidence id, parent id and result."""
+    evidence_id = seed_received_invoice(objects)
+    tx_id = seed_parent(repository, evidence_id=evidence_id)
 
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
+    suggestion = _suggest_two_line_split(repository, tx_id)
+    result = _apply_split(suggestion, repository, events, objects)
+    return evidence_id, tx_id, result
 
 
 def test_apply_splits_parent_and_classifies_children(
@@ -72,32 +91,10 @@ def test_apply_splits_parent_and_classifies_children(
 ) -> None:
     repository, events, _objects = repositories
     gross = Decimal("121.00")
-    tx_id = _seed_parent(repository, amount=gross)
+    tx_id = seed_parent(repository, amount=gross)
 
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=_LLM_PORTS,
-        )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=_objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
-        result = apply_evidence_split(
-            suggestion,
-            bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
-            ports=ports,
-            occurred_at=_NOW,
-        )
+    suggestion = _suggest_two_line_split(repository, tx_id)
+    result = _apply_split(suggestion, repository, events, _objects)
 
     assert isinstance(result, LLMSplitApplyResult)
     assert result.classified_child_count == 2
@@ -129,33 +126,7 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
-    evidence_id = _seed_received_invoice(objects)
-    tx_id = _seed_parent(repository, evidence_id=evidence_id)
-
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=_LLM_PORTS,
-        )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
-        result = apply_evidence_split(
-            suggestion,
-            bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
-            ports=ports,
-            occurred_at=_NOW,
-        )
+    evidence_id, _tx_id, result = _suggest_and_apply_two_line_split(repository, events, objects)
 
     catalogue = repository.load()
     for child_id in result.child_transaction_ids:
@@ -170,32 +141,10 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("242.00"))
+    tx_id = seed_parent(repository, amount=Decimal("242.00"))
 
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=_LLM_PORTS,
-        )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=_objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
-        result = apply_evidence_split(
-            suggestion,
-            bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
-            ports=ports,
-            occurred_at=_NOW,
-        )
+    suggestion = _suggest_two_line_split(repository, tx_id)
+    result = _apply_split(suggestion, repository, events, _objects)
 
     catalogue = repository.load()
     children = []
@@ -217,33 +166,7 @@ def test_split_children_retain_lineage_and_evidence_provenance(
     # evidence provenance for every child in one transaction: no child is left
     # split-but-unclassified or lineage-less.
     repository, events, objects = repositories
-    evidence_id = _seed_received_invoice(objects)
-    tx_id = _seed_parent(repository, evidence_id=evidence_id)
-
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=_LLM_PORTS,
-        )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
-        result = apply_evidence_split(
-            suggestion,
-            bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
-            ports=ports,
-            occurred_at=_NOW,
-        )
+    evidence_id, tx_id, result = _suggest_and_apply_two_line_split(repository, events, objects)
 
     catalogue = repository.load()
     parent = catalogue.get(tx_id)
@@ -274,25 +197,15 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     # single save never runs, the parent stays ACTIVE, no child is persisted, and
     # the event history is unchanged.
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, evidence_id="nonexistent-evidence-record")
+    tx_id = seed_parent(repository, evidence_id="nonexistent-evidence-record")
     events_before = dict(events.load().events)
 
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
-            transaction_repository=repository,
-            read_evidence=False,
-            settings=load_settings(),
-            ports=_LLM_PORTS,
-        )
+    suggestion = _suggest_two_line_split(repository, tx_id)
 
     with (
         pytest.raises(TransactionValidationError),
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
@@ -300,10 +213,10 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     ):
         apply_evidence_split(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
     catalogue = repository.load()
@@ -324,7 +237,7 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
     # its siblings, lineage, and the result still name the stale id. The atomic
     # writer must refuse before persisting anything.
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     children = (
         SplitChildCommand(amount=Decimal("72.60"), description="child a"),
         SplitChildCommand(amount=Decimal("48.40"), description="child b"),
@@ -340,14 +253,14 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
     with (
         pytest.raises(TransactionValidationError, match="transaction id"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
         ) as ports,
     ):
         split_transaction_with_classified_children(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
             children=children,
             child_classifications=classifications,
@@ -355,7 +268,7 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
             actor="operator",
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
     catalogue = repository.load()

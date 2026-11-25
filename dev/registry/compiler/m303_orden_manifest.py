@@ -13,6 +13,7 @@ from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import (
@@ -25,17 +26,17 @@ from cadrumo.domain.calculations.registry.m303_orden_projection_models import (
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ._m303_orden_legal import compile_annual_orden_legal_references
-from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
-from ._m303_orden_source import (
-    extract_m303_annual_orden_source,
-    validate_m303_annual_orden_lorca_projection,
-)
 from .m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
 )
+from .m303_orden_legal import compile_annual_orden_legal_references
+from .m303_orden_projection_compiler import compile_m303_annual_orden_projection, require_single_page_edition
 from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from .m303_orden_source import (
+    extract_m303_annual_orden_source,
+    validate_m303_annual_orden_lorca_projection,
+)
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloDefinition
@@ -67,7 +68,7 @@ def generate_manifest_with_censuses(
     shipped = load_m303_annual_orden_censuses(registry_root, sources=sources) if registry_root is not None else None
     ejercicios = _annual_orden_years_from_sources(sources) if supported_filing_years is None else supported_filing_years
     for ejercicio in ejercicios:
-        source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
+        source = single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
         census = None if shipped is None else shipped.get(source.id)
         if census is None or census.ejercicio != ejercicio:
             census = extract_m303_annual_orden_source(
@@ -111,7 +112,16 @@ def _generated_source_from_census(
         activity_table_count=len(census.activities),
         module_row_count=sum(len(activity.modules) for activity in census.activities),
         module_distribution=tuple(
-            sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
+            sum(len(activity.modules) == size for activity in census.activities)
+            for size in range(
+                1,
+                int(
+                    resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1)).code(
+                        "m303.orden.modules_per_activity"
+                    )
+                )
+                + 1,
+            )
         ),
         agricultural_index_row_count=len(census.agricultural_indexes),
         agricultural_ingreso_a_cuenta_row_count=len(census.agricultural_ingresos_a_cuenta),
@@ -121,6 +131,24 @@ def _generated_source_from_census(
         difficult_justification_pct=census.difficult_justification.percentage,
         lorca_reduction_pct=(None if census.lorca_reduction is None else census.lorca_reduction.percentage),
     )
+
+
+def _require_projections_match_manifest(
+    projections: Sequence[M303AnnualOrdenProjection],
+    manifest: M303AnnualOrdenGeneratedManifest,
+) -> None:
+    """Refuse a compiled projection whose row counts differ from its pinned manifest row."""
+    by_source = {source.source_ref: source for source in manifest.sources}
+    for projection in projections:
+        source = by_source[projection.source_ref]
+        if (
+            len(projection.activities) != source.activity_table_count
+            or len(projection.non_agricultural_ingresos_a_cuenta) != source.non_agricultural_ingreso_a_cuenta_row_count
+        ):
+            raise RegistryLoadError(
+                f"annual Orden projection {projection.ejercicio}/{projection.registry_revision_id} "
+                "row counts disagree with its generated manifest",
+            )
 
 
 def render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
@@ -262,6 +290,7 @@ def load_m303_annual_orden_authority(
                 table_legal_refs=table_legal_refs,
             )
         )
+    _require_projections_match_manifest(projections, manifest)
     return M303AnnualOrdenCompilation(authority=M303AnnualOrdenAuthority(projections=tuple(projections)), legal=legal)
 
 
@@ -316,6 +345,12 @@ def _annual_orden_projections_for_source(
                 f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
             )
         record_design_source = _annual_orden_record_design_source(revision.source_refs, sources=sources)
+        require_single_page_edition(
+            ejercicio=census.ejercicio,
+            source_ref=census.source_ref,
+            registry_revision_id=revision.id,
+            record_design_epoch=record_design_source.record_design_epoch,
+        )
         projections.append(
             compile_m303_annual_orden_projection(
                 census=census,
@@ -382,11 +417,12 @@ def _annual_orden_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
     return str(path), stat.st_size, stat.st_mtime_ns, digest
 
 
-def _single_annual_orden_source_for_year(
+def single_annual_orden_source_for_year(
     sources: Mapping[SourceRefId, SourceReference],
     *,
     ejercicio: int,
 ) -> SourceReference:
+    """Return the single annual Orden source applicable to the ejercicio, refusing otherwise."""
     filing_start = date(ejercicio, 1, 1)
     filing_end = date(ejercicio, 12, 31)
     candidates = tuple(
@@ -453,7 +489,16 @@ def _validate_generated_source_activity_counts(
     census: M303AnnualOrdenSourceCensus,
 ) -> None:
     actual_distribution = tuple(
-        sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
+        sum(len(activity.modules) == size for activity in census.activities)
+        for size in range(
+            1,
+            int(
+                resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1)).code(
+                    "m303.orden.modules_per_activity"
+                )
+            )
+            + 1,
+        )
     )
     if generated.activity_table_count != len(census.activities):
         raise RegistryValidationError("annual Orden generated source activity count no longer matches the BOE HTML")

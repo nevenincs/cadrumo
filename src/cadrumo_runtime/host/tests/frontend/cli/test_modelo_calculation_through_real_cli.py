@@ -38,11 +38,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -87,27 +88,19 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=create_context,
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Oracle Test Operator"),
-            UserProfileFact(path="identity.surnames", value="Calculation"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            # Spanish enum value: autónomo en estimación directa.
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories",
-                value="actividad_economica",
-            ),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Oracle Test Operator"),
+                UserProfileFact(path="identity.surnames", value="Calculation"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                # Spanish enum value: autónomo en estimación directa.
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            )
         ),
     )
     seed_test_profile_record(
@@ -128,36 +121,29 @@ def _seed_legal_entity_profile(
     Written directly to bypass ``config profile create``.
     """
 
-    facts: list[UserProfileFact] = [
-        UserProfileFact(path="identity.name", value="Oracle IS Operator"),
-        UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(
-            path="taxpayer_type.incn_prior_12_months",
-            value=incn_prior_12_months,
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.name", value="Oracle IS Operator"),
+            UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
+            UserProfileFact(
+                path="taxpayer_type.incn_prior_12_months",
+                value=incn_prior_12_months,
+            ),
+            UserProfileFact(
+                path="taxpayer_type.new_entity_first_two_profit_periods",
+                value=new_entity,
+            ),
+            UserProfileFact(path="activities.description", value="economic activity"),
         ),
-        UserProfileFact(
-            path="taxpayer_type.new_entity_first_two_profit_periods",
-            value=new_entity,
-        ),
-        UserProfileFact(path="activities.description", value="economic activity"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    ]
+        persona_id="sociedad-limitada",
+    )
     create_context, _ = profile_authority_contexts()
     record = create_user_profile_record(
         context=create_context,
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=tuple(facts),
+        facts=facts,
     )
     seed_test_profile_record(
         record,
@@ -227,19 +213,21 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             # 00552 (base imponible) is now computed from the resultado
             # contable chain from the M200 base-determination contract:
             #   00550 = 00501 + DP200013:00417 - DP200013:00418
-            #   00552 = max(00550 - 01032 - DP200014:00547, 0)
+            #   00552 = max(00550 - DP200014:01032 - DP200014:00547, 0)
             # Supplying 00501 = 100000 and zero corrections / reserva / BIN
             # aplicada produces 00552 = 100000 exactly. Then
             # 01330 = 00552 + 01033 - 01034 = 100000 with 01033 = 01034 = 0.
             "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
-            "--casilla", "01032=0.00",
+            "--casilla", "DP200014:01032=0.00",
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            # The rate reads the preceding período's turnover, a carry of its Modelo 200.
+            "--binding", "modelo-200-incn-periodo-impositivo-anterior=500000",
             # Estado-share porcentaje for IS cuota; 100 means full estado share
             # (no foral/territorial adjustment) which is the common-regime case
             # this oracle fixture covers.
@@ -251,12 +239,14 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     # casilla DP200014:00562 is the cuota-integra output casilla.
     cuota = payload["casilla_values"]["DP200014:00562"]
     # Oracle: 50.000,00 x 21 % + 50.000,00 x 22 % = 10.500,00 + 11.000,00 = 21.500,00 EUR
@@ -326,7 +316,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     cuota = payload["casilla_values"]["03"]
     # Oracle: 18 % x 10.000,00 = 1.800,00 EUR (LIS Art. 40.2)
     assert Decimal(cuota) == Decimal("1800.00"), (
@@ -408,7 +398,7 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     casilla_07 = payload["casilla_values"]["07"]
     # Oracle: 20 % x (12.000 - 4.000) = 1.600,00 EUR (IRPF Art. 99,
     # RD 439/2007 Art. 110, AEAT DR 130 Instrucciones Casilla 07)
@@ -463,7 +453,7 @@ def test_modelo_303_calculate_surface_is_reachable(
     # reachable non-traceback response.  We assert no Python traceback.
     assert "Traceback" not in result.output
     if result.exit_code == 0:
-        payload = _payload(result.output)
+        payload = unwrap_schema_envelope(result.output)
         assert "casilla_values" in payload, result.output
         # iva.resultado is the regulatory net IVA output casilla.
         assert "iva.resultado" in payload["casilla_values"], (
@@ -606,20 +596,24 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
-            "--casilla", "01032=0.00",
+            "--casilla", "DP200014:01032=0.00",
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            # The rate reads the preceding período's turnover, a carry of its Modelo 200.
+            "--binding", "modelo-200-incn-periodo-impositivo-anterior=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert "casilla_values" in payload, result.output

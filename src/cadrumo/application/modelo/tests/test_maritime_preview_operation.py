@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import NoReturn, cast
@@ -16,15 +15,19 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.config import override_settings
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.errors.hierarchy import CadrumoError
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.renta.errors import RentaDateRequiredError
 from ....domain.renta.maritime_exemption import MaritimeExemptionInactiveError, MaritimeWorkerFacts
 from ...calculations.maritime_exemption_service import resolve_maritime_exemption
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..maritime_preview import ModeloMaritimeExemptionPreview, preview_maritime_exemption_for_active_profile
 from ..maritime_preview_operation import (
@@ -40,27 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000ab")
 
 
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-
-    async def phase(self, _phase: str) -> None:
-        pass
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Operands:
-    def __init__(self) -> None:
-        self.rows: list[BaseModel] = []
-
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-        assert written_at.tzinfo is not None
-        self.rows.append(operand)
-        return "f" * 64
-
-
 def _unavailable(*_args: object, **_kwargs: object) -> NoReturn:
     pytest.fail("refused maritime request must not construct or invoke a service")
 
@@ -74,7 +56,10 @@ def _request(payload: ModeloMaritimePreviewRequest) -> OperationRequest[BaseMode
 
 
 def _context(
-    request: OperationRequest[BaseModel], operation: PinnedAuthorityOperation, events: _Events, operands: _Operands
+    request: OperationRequest[BaseModel],
+    operation: PinnedAuthorityOperation,
+    events: RecordingEvents,
+    operands: RecordingOperands,
 ) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
@@ -158,7 +143,7 @@ def test_maritime_wire_inputs_reuse_the_original_canonical_euro_grammar(value: s
 def test_maritime_worker_preserves_canonical_observations_original_facts_and_warning(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, pathway: str
 ) -> None:
-    events, operands = _Events(), _Operands()
+    events, operands = RecordingEvents(), RecordingOperands("f" * 64)
     facts = MaritimeWorkerFacts(
         worker_class="trabajador_del_mar" if pathway != "none" else None,
         vessel_flag="foreign" if pathway == "art7p" else None,
@@ -168,13 +153,18 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
     monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
 
     def preview(
-        *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         return preview_maritime_exemption_for_active_profile(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
             operation=authority_operation,
+            filing_year=filing_year or filing_year_envelope().horizon,
         )
 
     canonical = preview(annual_salary=Decimal("36500"), qualifying_days=100, gross_navigation_income=Decimal("30000"))
@@ -196,7 +186,7 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
             )
         )
     assert events.effects == [OperationEffect.NONE]
-    result = operands.rows[0]
+    result = operands.stored[0]
     assert isinstance(result, ModeloMaritimePreviewProjection)
     assert result.profile_id == _PROFILE and result.worker_class == facts.worker_class
     assert result.retmar_registered == facts.retmar_registered
@@ -219,10 +209,24 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
         assert result.retmar_warning is None
 
 
+def test_rebeca_profile_without_a_filing_year_refuses_instead_of_using_the_run_date(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+    monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
+    with pytest.raises(RentaDateRequiredError):
+        preview_maritime_exemption_for_active_profile(
+            annual_salary=None,
+            qualifying_days=None,
+            gross_navigation_income=Decimal("30000"),
+            operation=authority_operation,
+        )
+
+
 def test_foreign_active_profile_refuses_before_private_fact_read(authority_operation: PinnedAuthorityOperation) -> None:
     definition = build_modelo_maritime_preview_definition(_unavailable)
     request = _request(ModeloMaritimePreviewRequest(profile_id=_PROFILE))
-    events, operands = _Events(), _Operands()
+    events, operands = RecordingEvents(), RecordingOperands("f" * 64)
     with override_settings(cadrumo_active_profile=str(uuid4())), pytest.raises(ProfileAccessRefusedError) as refused:
         asyncio.run(
             definition.executor_factory.create().execute(
@@ -230,16 +234,20 @@ def test_foreign_active_profile_refuses_before_private_fact_read(authority_opera
             )
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
-    assert not operands.rows
+    assert not operands.stored
 
 
 def test_canonical_da41_refusal_is_unchanged_and_never_publishes_result(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    events, operands = _Events(), _Operands()
+    events, operands = RecordingEvents(), RecordingOperands("f" * 64)
 
     def preview(
-        *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", tuna_fleet=True, pending_eu_clearance=True),
@@ -262,4 +270,30 @@ def test_canonical_da41_refusal_is_unchanged_and_never_publishes_result(
             )
         )
     assert refused.value.context == {"binding_id": "da41-tuna-fleet-inactive", "legal_ref": "ley-35-2006:da-41"}
-    assert events.effects == [OperationEffect.NONE] and not operands.rows
+    assert events.effects == [OperationEffect.NONE] and not operands.stored
+
+
+@pytest.mark.parametrize(("filing_year", "admitted"), [(2024, True), (2023, False)])
+def test_a_preview_reads_the_days_of_the_year_asked_about(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    filing_year: int,
+    admitted: bool,
+) -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign")
+    monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
+
+    def preview() -> ModeloMaritimeExemptionPreview:
+        return preview_maritime_exemption_for_active_profile(
+            annual_salary=Decimal("36600"),
+            qualifying_days=366,
+            gross_navigation_income=Decimal("30000"),
+            operation=authority_operation,
+            filing_year=filing_year,
+        )
+
+    if admitted:
+        assert preview().result is not None
+    else:
+        with pytest.raises(CadrumoError):
+            preview()

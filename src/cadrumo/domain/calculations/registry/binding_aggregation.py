@@ -22,36 +22,36 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
 
-#: Binding ``source`` kinds whose aggregation defaults to ``rows`` (one detail
-#: row per observation) when the binding declares no explicit op. Every other
-#: source family folds to a scalar and defaults to ``sum``.
-_ROWS_DEFAULT_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
-    source for source in ROW_SET_GROUPING_FOR_BINDING_SOURCE if source is not BindingSourceKind.WITHHOLDING
-)
-
 
 def default_binding_aggregation_op(source: str) -> BindingAggregationOp:
-    """Return the per-family default :class:`~core.aggregation.BindingAggregationOp` for a ``source``.
+    """Return the default :class:`~core.aggregation.BindingAggregationOp` for a ``source``.
 
-    Detail-record families (related-party, foreign-asset, atribución, refund)
-    default to :attr:`~core.aggregation.BindingAggregationOp.ROWS`; every
-    other source family defaults to
-    :attr:`~core.aggregation.BindingAggregationOp.SUM`. The ``source``
-    value is interpreted through :class:`~core.aggregation.BindingSourceKind`
-    before applying the row-set default table.
+    The default is derived from the kind's registration, the one authority for
+    which operations the kind permits (see
+    :attr:`~.binding_provider_registration.BindingProviderRegistration.default_aggregation_op`):
+    a kind that permits a single operation takes it, so a copy-only kind
+    defaults to ``copy`` rather than a ``sum`` it cannot run.
+
+    Raises:
+        RegistryValidationError: ``source`` is not a registered provider kind.
+            There is no fallback default for an unknown kind.
     """
+    from .binding_provider_registration import registration_for
+
     try:
         source_kind = BindingSourceKind(source)
-    except ValueError:
-        return BindingAggregationOp.SUM
-    if source_kind in _ROWS_DEFAULT_SOURCE_KINDS:
-        return BindingAggregationOp.ROWS
-    return BindingAggregationOp.SUM
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding provider kind {source!r} has no registration",
+            context={"kind": source},
+        ) from exc
+    return registration_for(source_kind).default_aggregation_op
 
 
 def binding_aggregation_op(binding: BindingDefinition) -> BindingAggregationOp:
@@ -61,7 +61,7 @@ def binding_aggregation_op(binding: BindingDefinition) -> BindingAggregationOp:
     :class:`~domain.calculations.registry.schema.BindingDefinition` carries an
     explicit :class:`~core.aggregation.BindingAggregation`, its typed ``op``
     is returned. When ``aggregation`` is ``None``, the declared per-family
-    default for the binding's ``source`` is applied in this one place.
+    default derived from the binding's registered ``source`` is applied in this one place.
     """
     if binding.aggregation is not None:
         return binding.aggregation.op

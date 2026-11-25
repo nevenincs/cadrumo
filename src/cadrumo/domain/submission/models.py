@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from .errors import SubmissionValidationError
@@ -145,7 +145,7 @@ class SubmissionAttempt(BaseModel):
             written for this attempt.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     attempt_id: SubmissionAttemptId
     started_at: UtcInstant
@@ -220,7 +220,7 @@ class ModeloPresentado(BaseModel):
             records in chronological order.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     submission_id: SubmissionId
     draft_id: str = Field(min_length=1)

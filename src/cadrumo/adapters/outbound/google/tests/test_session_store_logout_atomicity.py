@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....persistence.storage.errors import StorageValidationError
 from ....persistence.storage.sql.secure_object_records import SecureObjectDeletion
@@ -35,10 +36,11 @@ from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from . import session_records as google_session_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "80cc197a-74fe-4984-93cd-471aa29411ef"  # was 'google-logout-atomicity'
 _PROFILE = _BUCKET_ID
-_ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
+_ISSUED_AT = datetime(_YEAR, 5, 26, 9, 0, 0, tzinfo=UTC)
 #: A namespace no registry declares. Every write and deletion path validates
 #: its namespace against the registry, so this is the one rejection reachable
 #: through the real repository without patching anything.
@@ -98,14 +100,14 @@ def test_a_rejected_batch_removes_neither_row(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository(_PROFILE)
+        repository = session_store.repository(_PROFILE)
         digest = secure_object_key_digest(_PROFILE)
 
         with pytest.raises(StorageValidationError):
             repository.apply_batch(
                 writes=(),
                 deletions=(
-                    SecureObjectDeletion(namespace=session_store._NAMESPACE_TOKEN, hashed_object_key=digest),
+                    SecureObjectDeletion(namespace=session_store.NAMESPACE_TOKEN, hashed_object_key=digest),
                     SecureObjectDeletion(namespace=_UNREGISTERED_NAMESPACE, hashed_object_key=digest),
                 ),
             )
@@ -125,9 +127,9 @@ def test_the_sequential_deletes_it_replaced_would_have_removed_the_first(tmp_pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository(_PROFILE)
+        repository = session_store.repository(_PROFILE)
 
-        removed_first = repository.delete(session_store._NAMESPACE_TOKEN, _PROFILE)
+        removed_first = repository.delete(session_store.NAMESPACE_TOKEN, _PROFILE)
         with pytest.raises(StorageValidationError):
             repository.delete(_UNREGISTERED_NAMESPACE, _PROFILE)
 

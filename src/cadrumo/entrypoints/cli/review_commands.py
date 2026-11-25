@@ -7,6 +7,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.enums import ReviewState
 from ...application.review.read_contracts import (
@@ -16,12 +18,12 @@ from ...application.review.read_contracts import (
 from ...application.review.read_projections import (
     ReviewQueueRowProjection,
 )
-from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
-from .common import activate_subcommand_output_language, active_bucket_id_or_refuse, bad, emit_envelope
+from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .operation_review import run_review_queue, run_review_view
 from .review_results import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
@@ -54,7 +56,7 @@ def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:
     )
 
 
-def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
+def resolve_confidence_threshold(value: str | None) -> Decimal | None:
     """Validate and lift the ``--confidence-below`` option to a Decimal.
 
     ``classification_confidence`` is a share of one, so a threshold outside
@@ -66,25 +68,15 @@ def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
     """
     if value is None:
         return None
-    threshold = coerce_decimal_strict(value)
-    if not is_unit_proportion(threshold):
+    threshold = try_parse_canonical_decimal(value)
+    if threshold is None or not is_unit_proportion(threshold):
         raise bad(
             tr(
                 "cli.review.errors.invalid_confidence",
-                value=str(value),
+                value=value,
             ),
         )
     return threshold
-
-
-def parse_review_state(value: str) -> ReviewState:
-    """Parse a review-state token case-insensitively."""
-    normalized = value.casefold()
-    try:
-        return next(state for state in ReviewState if state.value.casefold() == normalized)
-    except StopIteration as error:
-        choices = ", ".join(state.value for state in ReviewState)
-        raise typer.BadParameter(f"expected one of: {choices}") from error
 
 
 def review_queue(
@@ -93,13 +85,13 @@ def review_queue(
     source_kinds: list[str],
     state: ReviewState,
     modelo: str | None = None,
-    confidence_below: float | None = None,
+    confidence_below: str | None = None,
     explain: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List read-only review queue rows."""
     activate_subcommand_output_language(ctx, output_language)
-    threshold = _resolve_confidence_threshold(confidence_below)
+    threshold = resolve_confidence_threshold(confidence_below)
     request = ReviewQueueReadRequest(
         profile_id=UUID(active_bucket_id_or_refuse()),
         kinds=tuple(kinds),
@@ -117,7 +109,7 @@ def review_queue(
         ctx,
         command="review.queue",
         result=typed_result,
-        lines=_queue_lines(projection.rows, explain=explain),
+        lines=queue_lines(projection.rows, explain=explain),
     )
 
 
@@ -150,7 +142,7 @@ def review_view(
     emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
-def _queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = False) -> list[str]:
+def queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = False) -> list[str]:
     """Render the review queue as tab-separated text.
 
     When ``explain`` is True, the
@@ -182,4 +174,4 @@ def _queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = 
     return lines
 
 
-__all__ = ["parse_review_state", "review_queue", "review_view"]
+__all__ = ["review_queue", "review_view"]

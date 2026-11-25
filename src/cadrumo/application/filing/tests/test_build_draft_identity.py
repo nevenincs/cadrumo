@@ -35,7 +35,9 @@ from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runti
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
@@ -51,11 +53,12 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
 )
 # The reused-printed-number invariant is about a printed number that two
-# casillas share, not about any one modelo. Modelo 200's 2025 filing-grade
-# revision has several genuine cross-page reuses. The pair itself is re-sourced
-# from that revision below rather than transcribed, so the test cannot outlive
-# the reuse it describes.
-_REUSED_NUMBER_MODELO = "200"
+# casillas share, not about any one modelo. Modelo 193's 2025 filing-grade
+# revision has genuine reuses (Modelo 200's 2025 edition, which this test used,
+# is calculation grade and refuses a filing snapshot). The pair itself is
+# re-sourced from that revision below rather than transcribed, so the test
+# cannot outlive the reuse it describes.
+_REUSED_NUMBER_MODELO = "193"
 _REUSED_NUMBER_FILING_YEAR = 2025
 _REUSED_NUMBER_PERIOD_CODE = "0A"
 
@@ -107,7 +110,8 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: Pinned
         profile=_profile(),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_PAGOS_PREVIOS_CASILLA: Decimal("250"),
             _M130_RETENCIONES_CASILLA: Decimal("100"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
@@ -306,4 +310,3 @@ def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:
 
     assert filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
     assert filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)
-    assert filing_period_date(Period.from_year_and_code(2025, "AD-HOC")) == date(2025, 12, 31)

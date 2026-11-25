@@ -220,3 +220,34 @@ export function buildPath(name) {
   if (!target) throw new Error(`Invalid CMake output directory: ${name}`);
   return target;
 }
+
+/** Admit a physical destination under a declared output of the selected build. */
+export function requireBuildOutput(
+  output,
+  binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR,
+  repositoryRoot = repository,
+) {
+  if (
+    typeof output !== "string" ||
+    !isAbsolute(output) ||
+    output.split(/[\\/]/).includes("..")
+  )
+    throw new Error(
+      "Desktop output must be an absolute path without traversal.",
+    );
+  const paths = readBuildPaths(binaryDir, repositoryRoot);
+  const selected = resolve(output);
+  const root = Object.values(paths).find((candidate) => {
+    const member = relative(candidate, selected);
+    return (
+      !member ||
+      (member !== ".." && !member.startsWith(`..${sep}`) && !isAbsolute(member))
+    );
+  });
+  if (!root)
+    throw new Error(
+      `Desktop output is outside declared CMake outputs: ${output}`,
+    );
+  if (!samePath(selected, root)) linkedMember(selected, root);
+  return selected;
+}

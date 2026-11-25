@@ -1,0 +1,96 @@
+# Modelo 347 claves de operación by record design. Each variant cites the
+# design that governed its ejercicios and the text that defines every letter,
+# so the vocabulary is read from the design and not carried over from a later
+# one. The 2008-2009 design prints no clave definitions, so no variant starts
+# before the 2010 design. The letters are the same in all three designs; the
+# wording of D and E, and the floors, differ and live in
+# m347-clave-threshold-buckets.
+[fact]
+fact_id = "m347-operation-clave-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m347-operation-clave-vocabulary:2010-01-01"
+date_axis = "filing_period"
+valid_from = 2010-01-01
+valid_to = 2010-12-31
+legal_refs = ["rd-1065-2007:art-33"]
+source_refs = ["aeat-dr-347-2010"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2010"
+required_text = [
+    "CLAVE OPERACIÓN",
+    "A Adquisiciones de bienes y servicios superiores a 3.005,06",
+    "B Entregas de bienes y prestaciones de servicios superiores",
+    "C Cobros por cuenta de terceros superiores a 300,51 euros",
+    "D Adquisiciones de bienes o servicios al margen de",
+    "E Subvenciones, auxilios y ayudas satisfechos por las",
+    "F Ventas agencia viaje",
+    "G Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.347.operation_claves", value = "A,B,C,D,E,F,G" },
+]
+
+[[fact.variants]]
+variant_id = "m347-operation-clave-vocabulary:2011-01-01"
+date_axis = "filing_period"
+valid_from = 2011-01-01
+valid_to = 2024-12-31
+legal_refs = ["rd-1065-2007:art-33"]
+source_refs = ["aeat-dr-347-2011"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2011"
+required_text = [
+    "CLAVE OPERACIÓN",
+    "A Adquisiciones de bienes y servicios superiores a 3.005,06",
+    "B Entregas de bienes y prestaciones de servicios superiores",
+    "C Cobros por cuenta de terceros superiores a 300,51 euros",
+    "D Adquisiciones de bienes o servicios al margen de",
+    "E Subvenciones, auxilios y ayudas satisfechos por las",
+    "F Ventas agencia viaje",
+    "G Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.347.operation_claves", value = "A,B,C,D,E,F,G" },
+]
+
+[[fact.variants]]
+variant_id = "m347-operation-clave-vocabulary:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["rd-1065-2007:art-33", "orden-hac-1431-2025:art-1"]
+source_refs = ["aeat-dr-347-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = [
+    "CLAVE OPERACIÓN",
+    "A Adquisiciones de bienes y servicios superiores a 3.005,06",
+    "B Entregas de bienes y prestaciones de servicios superiores",
+    "C Cobros por cuenta de terceros superiores a 300,51 euros",
+    "D Adquisiciones de bienes o servicios al margen de",
+    "E Subvenciones, auxilios y ayudas satisfechos por las",
+    "F Ventas agencia viaje",
+    "G Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.347.operation_claves", value = "A,B,C,D,E,F,G" },
+]

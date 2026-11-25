@@ -31,19 +31,24 @@ from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_OUTPUT_BYTES,
     ModelRunBody,
     ModelRunLane,
-    ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
 )
 
 from ..providers.application.model_runs import BackgroundRunGateway
+from ..providers.domain.catalog import BackgroundOption, EffortLevel
 
 _LOGGER = get_logger(__name__)
 
 HOST_ADMISSION_HEADER: Final = "X-Host-Token"
 EXCHANGE_SECONDS: Final = 10.0
 """How long one exchange that does not wait for the model may take."""
+RUN_START_SECONDS: Final = 90.0
+"""How long a run start may take: on a lane whose models run on this computer the agent loads the model first.
+
+The agent bounds that load at 60 s, so the start is given that and a margin.
+"""
 REPLY_WAIT_MAX_SECONDS: Final = 300
 """The longest wait one reply read may ask the agent for."""
 SETTLE_MARGIN_SECONDS: Final = 10
@@ -51,7 +56,6 @@ SETTLE_MARGIN_SECONDS: Final = 10
 BACKGROUND_MIN_DEADLINE_SECONDS: Final = 5
 BACKGROUND_MAX_DEADLINE_SECONDS: Final = 3600
 _RESPONSE_MAX_BYTES: Final = 8 * 1024 * 1024
-_CATALOG_MAX_BYTES: Final = 256 * 1024
 
 _EXTENSIONS: Final[Mapping[str, str]] = {
     "image/png": ".png",
@@ -66,10 +70,37 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "background_request_invalid": ModelRunRefusalCode.RUN_FAILED,
     "background_lane_unsupported": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "input_not_supported": ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
+    "unknown_provider": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "provider_not_executable": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "provider_not_selectable": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "provider_unavailable": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "unknown_model": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+    "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
+    "background_option_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+    "effort_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+    "effort_value_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
 }
-"""The agent's admission refusals, in the closed set a tax worker reads."""
+"""The agent's admission refusals, in the closed set a tax worker reads.
+
+``model_required`` is absent: a background request names its model, so the
+agent cannot answer one with it. An effort the lane or its model does not take
+is an option the run should not have named.
+"""
+
+_START_UNAVAILABLE: Final = 503
+"""The status the agent starts no run with while it is busy, draining or not ready; its detail carries no code."""
 
 _OUTPUT_LIMIT_EXCEEDED: Final = "output_limit_exceeded"
+
+_PROVIDER_CONDITIONS: Final[Mapping[str, ModelRunRefusalCode]] = {
+    "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
+    "no_answer": ModelRunRefusalCode.OUTPUT_INVALID,
+}
+"""The provider conditions a failed run's reply names that a tax worker reads as their own refusal.
+
+Every other condition is a failed run.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +119,7 @@ class _Reply(BaseModel):
     background_request: bool
     reply: str | None = None
     failure_reason: str | None = None
+    provider_condition: str | None = None
     provider: str | None = None
     transport: str | None = None
     model: str | None = None
@@ -120,50 +152,34 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         self._run_ids = run_ids
 
     @override
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        """Read what a background request on ``lane`` may carry from the agent's live catalog."""
-        endpoint = self._endpoint()
-        if endpoint is None or not self._bearer:
-            return None
-        path = "/v1/provider-catalog?" + urlencode({"workspace_root": str(endpoint.workspace_root)})
-        try:
-            status, payload = self._exchange(endpoint, "GET", path, limit=_CATALOG_MAX_BYTES)
-            if status != 200:
-                return None
-            document = json.loads(payload)
-        except (_GatewayUnreachableError, ValueError):
-            return None
-        records = document.get("providers") if isinstance(document, dict) else None
-        if not isinstance(records, list):
-            return None
-        for record in records:
-            if not isinstance(record, dict):
-                continue
-            if (record.get("provider_id"), record.get("transport")) != (lane.provider_id, lane.transport):
-                continue
-            support = record.get("background_requests")
-            if not isinstance(support, dict):
-                return None
-            images, pdfs = support.get("accepts_images"), support.get("accepts_pdfs")
-            if not isinstance(images, bool) or not isinstance(pdfs, bool):
-                return None
-            accepted = ((ModelRunMediaKind.IMAGE, images), (ModelRunMediaKind.PDF, pdfs))
-            return tuple(kind for kind, taken in accepted if taken)
-        return None
+    def run(
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
+    ) -> ModelRunOutput | ModelRunRefusal:
+        """Upload the attachments, start the request, wait for its reply, then delete what it left.
 
-    @override
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
-        """Upload the attachments, start the request, wait for its reply, then delete what it left."""
+        ``options`` are the run options the lane honours. A reply option
+        ``body`` names and the lane does not honour is left out rather than
+        sent: the agent refuses a request naming one, and each reply option
+        only tunes a reply the caller validates anyway. ``effort`` goes in the
+        request's ``agent.effort``, as a foreground run names it, and only when
+        ``options`` holds ``effort``; otherwise the run is refused
+        ``option_not_supported`` before anything is sent, because a run at
+        another effort is not the run that was asked for.
+        """
+        if effort is not None and BackgroundOption.EFFORT not in options:
+            return ModelRunRefusal(code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED)
         endpoint = self._endpoint()
         if endpoint is None or not self._bearer or not self._host_token:
             return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
-        files: list[tuple[str, str, bytes]] = []
-        for index, attachment in enumerate(body.attachments, start=1):
-            extension = _EXTENSIONS.get(attachment.media_type)
-            if extension is None:
-                return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
-            data = base64.b64decode(attachment.base64_data, validate=True)
-            files.append((f"input-{index}{extension}", hashlib.sha256(data).hexdigest(), data))
+        files = _run_files(body)
+        if isinstance(files, ModelRunRefusal):
+            return files
         run_id = self._run_ids()
         uploaded = False
         started = False
@@ -174,7 +190,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 if refusal is not None:
                     return refusal
             bounded = min(max(deadline_seconds, BACKGROUND_MIN_DEADLINE_SECONDS), BACKGROUND_MAX_DEADLINE_SECONDS)
-            refusal = self._start(endpoint, run_id, lane, body, files, bounded)
+            refusal = self._start(endpoint, run_id, lane, body, files, bounded, options, effort)
             if refusal is not None:
                 return refusal
             started = True
@@ -212,7 +228,11 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         body: ModelRunBody,
         files: list[tuple[str, str, bytes]],
         deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunRefusal | None:
+        bound = {} if body.max_output_tokens is None else {"max_output_tokens": body.max_output_tokens}
+        named_effort = {} if effort is None else {"effort": effort}
         request: dict[str, object] = {
             "run_id": run_id,
             "message": body.prompt,
@@ -220,12 +240,14 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 "provider": lane.provider_id,
                 "transport": lane.transport,
                 "model": lane.model,
+                **named_effort,
                 "workspace_root": str(endpoint.workspace_root),
             },
             "background": {
                 "system": body.system or "",
-                "max_output_tokens": body.max_output_tokens,
+                **bound,
                 "deadline_seconds": deadline_seconds,
+                **_reply_options(body, options),
             },
         }
         if files:
@@ -237,12 +259,12 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             body=json.dumps(request).encode("utf-8"),
             headers={"Content-Type": "application/json", HOST_ADMISSION_HEADER: self._host_token.decode("ascii")},
             limit=_RESPONSE_MAX_BYTES,
+            timeout=RUN_START_SECONDS,
         )
         if status in {200, 201}:
             return None
-        code = _refusal_code(payload)
-        _LOGGER.warning("agent background request refused status=%s code=%s", status, code)
-        return ModelRunRefusal(code=_REFUSALS.get(code or "", ModelRunRefusalCode.RUN_FAILED))
+        _LOGGER.warning("agent background request refused status=%s code=%s", status, _refusal_code(payload))
+        return ModelRunRefusal(code=start_refusal(status, payload))
 
     def _settle(
         self, endpoint: BackgroundRunEndpoint, run_id: str, lane: ModelRunLane, deadline: float
@@ -250,7 +272,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         while True:
             remaining = deadline - monotonic()
             if remaining <= 0:
-                return ModelRunRefusal(code=ModelRunRefusalCode.DEADLINE_EXCEEDED)
+                return ModelRunRefusal(code=ModelRunRefusalCode.TIMEOUT)
             wait = min(REPLY_WAIT_MAX_SECONDS, math.ceil(remaining))
             status, payload = self._exchange(
                 endpoint,
@@ -261,12 +283,9 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             )
             if status != 200:
                 return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
-            try:
-                reply = _Reply.model_validate_json(payload)
-            except ValidationError:
-                return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
-            if reply.settled:
-                return _outcome(reply, lane)
+            outcome = settled_reply_outcome(payload, lane)
+            if outcome is not None:
+                return outcome
 
     def _clean_up(self, endpoint: BackgroundRunEndpoint, run_id: str, *, run: bool, attachments: bool) -> None:
         """Delete the run and its files now; the agent sweeps whatever a failed delete leaves."""
@@ -316,6 +335,43 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             connection.close()
 
 
+def _reply_options(body: ModelRunBody, options: tuple[BackgroundOption, ...]) -> dict[str, object]:
+    """Return the reply options ``body`` names that the lane honours, keyed as the ``background`` member names them.
+
+    Effort is not a reply option: it travels in the request's ``agent`` member.
+    """
+    named: dict[BackgroundOption, object] = {
+        BackgroundOption.TEMPERATURE: body.temperature,
+        BackgroundOption.CONTEXT_TOKENS: body.context_tokens,
+        BackgroundOption.RESPONSE_SCHEMA: body.response_schema,
+    }
+    return {option.value: named[option] for option in options if named.get(option) is not None}
+
+
+def _run_files(body: ModelRunBody) -> list[tuple[str, str, bytes]] | ModelRunRefusal:
+    """Prepare supported attachment payloads before creating a run."""
+    files: list[tuple[str, str, bytes]] = []
+    for index, attachment in enumerate(body.attachments, start=1):
+        extension = _EXTENSIONS.get(attachment.media_type)
+        if extension is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
+        data = base64.b64decode(attachment.base64_data, validate=True)
+        files.append((f"input-{index}{extension}", hashlib.sha256(data).hexdigest(), data))
+    return files
+
+
+def start_refusal(status: int, payload: bytes) -> ModelRunRefusalCode:
+    """Return the closed refusal a run start the agent answered with ``status`` and ``payload`` reads as.
+
+    A coded refusal maps through :data:`_REFUSALS`. A ``503`` means the agent
+    could not take a run now, whatever its detail says. Anything else is a
+    failed run.
+    """
+    if status == _START_UNAVAILABLE:
+        return ModelRunRefusalCode.SERVICE_UNAVAILABLE
+    return _REFUSALS.get(_refusal_code(payload) or "", ModelRunRefusalCode.RUN_FAILED)
+
+
 def _refusal_code(payload: bytes) -> str | None:
     try:
         document = json.loads(payload)
@@ -326,11 +382,34 @@ def _refusal_code(payload: bytes) -> str | None:
     return code if isinstance(code, str) else None
 
 
+def settled_reply_outcome(payload: bytes, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal | None:
+    """Return what a run's reply read reads as, or ``None`` while the run has not settled.
+
+    A reply outside the agent's contract is a failed run. A failed run whose
+    ``provider_condition`` maps through :data:`_PROVIDER_CONDITIONS` reads as
+    that refusal, so a model the agent could not fit mid-turn reads as the same
+    refusal as one it could not fit at run start.
+    """
+    try:
+        reply = _Reply.model_validate_json(payload)
+    except ValidationError:
+        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+    return _outcome(reply, lane) if reply.settled else None
+
+
+def _failed_outcome(reply: _Reply) -> ModelRunRefusal:
+    """Translate a settled failure using the provider condition precedence."""
+    condition = _PROVIDER_CONDITIONS.get(reply.provider_condition or "")
+    if condition is not None:
+        return ModelRunRefusal(code=condition)
+    if reply.failure_reason is not None and reply.failure_reason.startswith(_OUTPUT_LIMIT_EXCEEDED):
+        return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
+    return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+
+
 def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal:
     if reply.status != "completed":
-        if reply.failure_reason is not None and reply.failure_reason.startswith(_OUTPUT_LIMIT_EXCEEDED):
-            return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
-        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+        return _failed_outcome(reply)
     if not reply.background_request or reply.reply is None:
         return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
     if len(reply.reply.encode("utf-8")) > MODEL_RUN_MAX_OUTPUT_BYTES:
@@ -347,4 +426,4 @@ def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefu
         return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
 
 
-__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns"]
+__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns", "settled_reply_outcome", "start_refusal"]

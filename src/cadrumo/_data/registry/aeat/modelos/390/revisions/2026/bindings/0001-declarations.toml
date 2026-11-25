@@ -1,0 +1,10 @@
+# Page-1 mark new on the ejercicio-2026 form and design: whether the sujeto
+# pasivo has the right to deduct the pago a cuenta of entregas de gasolinas,
+# gasoleos y biocarburantes after the ultimacion of a deposito distinto del
+# aduanero (modelo 319). aeat-dr-390-2026 places it at position 133, one
+# character, "1" Si and "2" No.
+[[revisions."2026".bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-con-derecho-a-deducir-pago-a-cuenta-de-entregas-de-gasolinas-gasoleos-y-biocarburantes"
+provider = { kind = "manual_input", record = "page_1", field = "sujeto-pasivo-con-derecho-a-deducir-pago-a-cuenta-de-entregas-de-gasolinas-gasoleos-y-biocarburantes", offset = 133, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hac-27-2026:art-tercero", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]

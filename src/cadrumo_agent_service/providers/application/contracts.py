@@ -10,16 +10,27 @@ key.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, computed_field, model_validator
 
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
-from ..domain.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
+from ..domain.catalog import (
+    EffortLevel,
+    LaneId,
+    ProviderAuthKind,
+    ProviderConsumer,
+    ProviderId,
+    ProviderTransport,
+    TaskKindId,
+)
+from ..domain.record import LocalEngine, LocalPlacement, ModelId
 
 ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 """A status revision: the stored row's opaque revision, or all zeros when no record exists."""
@@ -44,7 +55,6 @@ class ProviderCredentialSource(StrEnum):
     """Where the credential a consumer would use comes from."""
 
     PROFILE = "profile"
-    ENVIRONMENT = "environment"
     NONE = "none"
 
 
@@ -85,15 +95,121 @@ class CliState(StrEnum):
     UNKNOWN = "unknown"
 
 
+HelperCause = Literal[
+    "profile_missing",
+    "unsupported_method",
+    "host_input_invalid",
+    "host_disconnected",
+    "login_already_running",
+    "timed_out",
+    "home_in_git_project",
+    "home_unavailable",
+    "cli_not_found",
+    "browser_relay_unavailable",
+    "browser_not_offered",
+    "cli_start_failed",
+    "cli_exited_early",
+    "cli_protocol_mismatch",
+    "cli_reported_error",
+    "login_not_completed",
+    "cleanup_unconfirmed",
+    "internal_error",
+]
+"""The helper's closed words for why a terminal event is not a success."""
+
+ServiceCause = Literal[
+    "helper_start_failed",
+    "helper_output_invalid",
+    "helper_ended_without_result",
+    "helper_exit_nonzero",
+    "agent_stop_failed",
+    "status_not_confirmed",
+    "lane_not_signable",
+    "profile_signed_out",
+    "sign_in_in_progress",
+    "sign_in_owner_held",
+    "agent_tree_running",
+    "settings_refused",
+    "settings_change_failed",
+    "prepare_failed",
+    "previous_cleanup_unconfirmed",
+    "logout_agent_unavailable",
+    "logout_timed_out",
+    "logout_not_completed",
+]
+"""The closed words the service adds when it, not the helper, settles or refuses an attempt."""
+
+
+class CliStateCause(StrEnum):
+    """Why a cli lane's state is not established or not signed in; one closed word, never provider output."""
+
+    CLI_NOT_FOUND = "cli_not_found"
+    HOME_IN_GIT_PROJECT = "home_in_git_project"
+    HOME_UNAVAILABLE = "home_unavailable"
+    PROBE_START_FAILED = "probe_start_failed"
+    PROBE_TIMED_OUT = "probe_timed_out"
+    PROBE_OUTPUT_UNREADABLE = "probe_output_unreadable"
+    PROBE_CLEANUP_UNCONFIRMED = "probe_cleanup_unconfirmed"
+    STATUS_READ_FAILED = "status_read_failed"
+    """The service could not read the agent's status: a nonzero exit, a refused runner or an operating-system error."""
+    STATUS_UNREADABLE = "status_unreadable"
+    """The agent's status answer was not valid JSON of the declared schema."""
+    STATUS_CONTEXT_UNAVAILABLE = "status_context_unavailable"
+    """No live profile authority could back a status read."""
+
+
+class NextStep(StrEnum):
+    """What a person can do about a sign-in that did not complete; one closed word."""
+
+    RETRY = "retry"
+    INSTALL_CLI = "install_cli"
+    MOVE_PROFILE_OUTSIDE_GIT = "move_profile_outside_git"
+    CLOSE_OTHER_SIGN_IN = "close_other_sign_in"
+    CONSOLE_SIGN_IN = "console_sign_in"
+    UPDATE_APP = "update_app"
+
+
+SignInMethod = Literal["browser", "device", "browser-code"]
+"""The attended sign-in routes a person can select for a provider."""
+
+SignInEvent = Literal[
+    "starting", "started", "browser_action", "authorization_code_required", "succeeded", "cancelled", "failed"
+]
+"""A service-owned sign-in attempt's current transient event."""
+
+SignInReason = Literal[
+    "invalid_request",
+    "host_disconnected",
+    "timeout",
+    "busy",
+    "provider_unavailable",
+    "provider_error",
+    "unsupported_flow",
+    "cleanup_failed",
+    "profile_required",
+]
+"""The helper's closed protocol reasons for a terminal event."""
+
+
+@dataclass(frozen=True, slots=True)
+class CliObservation:
+    """One cli lane's observed state with the cause when it is not signed in or not established."""
+
+    state: CliState
+    cause: CliStateCause | None = None
+
+
 class ProviderStatusEntry(OutputSchema):
     """Masked status of one provider."""
 
-    id: ProviderId
+    id: LaneId
     """The lane id every change addresses."""
     provider: ProviderId
     """The provider identity the lane reaches; frontends key icons by it."""
     transport: ProviderTransport
     display_name: str
+    reads_off_host: bool
+    """Whether this lane's conversation data leaves this computer, as the agent declares it."""
     auth_kind: ProviderAuthKind
     consumers: tuple[ProviderConsumer, ...]
     mode: ProviderSettingsMode
@@ -108,15 +224,73 @@ class ProviderStatusEntry(OutputSchema):
     default_base_url: str | None
     cli_state: CliState | None
     """Whether a cli lane's program is installed and signed in; ``None`` for an api lane."""
+    cli_state_cause: CliStateCause | None = None
+    """Why a cli lane is not established or not signed in, when the probe says; never provider output."""
+    next_step: NextStep | None = None
+    """What the person can do about ``cli_state_cause``; ``None`` when no step is declared for it."""
+    sign_out_available: bool
+    """Whether the window may offer a sign-out: a signed-in cli lane whose agent declares a logout for it."""
     revision: ProviderSettingsRevision
 
 
 class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
 
-    development: bool
-    """Whether this is a development build, where an unset key may come from the environment."""
     providers: tuple[ProviderStatusEntry, ...] = Field(min_length=1)
+    reads_pending: bool
+    """Whether something this answer could not yet serve is still under way: the agent's start, the sign-in
+    methods before the agent named them, or a command-line lane's login reading. ``False`` once all have
+    settled, a failed read or start included; while ``True`` a later read serves what they keep."""
+
+
+class ProviderSettingsAnswer(OutputSchema):
+    """The provider-settings read as the window receives it: every provider and the sign-in routes on offer."""
+
+    providers: tuple[ProviderStatusEntry, ...]
+    sign_in_providers: tuple[str, ...] = ()
+    """Canonical providers the agent declares usable from the GUI sign-in flow; empty means none."""
+    sign_in_methods: dict[str, tuple[SignInMethod, ...]] = Field(default_factory=dict)
+    """GUI sign-in methods supported per canonical provider slug."""
+    console_sign_in_command: str | None = None
+    """The console command that signs a provider in by hand, with a ``{provider}`` slot; absent when not served."""
+    reads_pending: bool
+    """Whether something this answer could not yet serve is still under way: the agent's start, the sign-in
+    methods before the agent named them, or a command-line lane's login reading. ``False`` once all have
+    settled, a failed read or start included; while ``True`` a later read serves what they keep."""
+
+
+class ProviderSignInSnapshot(OutputSchema):
+    """Transient progress for a person-started provider sign-in attempt; never carries a secret."""
+
+    attempt_id: str
+    provider: str
+    """The lane id, such as ``codex_cli``."""
+    event: SignInEvent
+    reason: SignInReason | None = None
+    cause: HelperCause | ServiceCause | None = None
+    """Why the attempt did not succeed, on a failed or cancelled attempt."""
+    next_step: NextStep | None = None
+    """What to do about ``cause``."""
+    status_cause: CliStateCause | None = None
+    """Why the status read after the attempt did not establish a sign-in."""
+    log_ref: str | None = None
+    """The id the failure was logged under; it names the entry and carries nothing else."""
+    url: str | None = None
+    """Present only while the person can open the provider's sign-in page."""
+    user_code: str | None = None
+    """Device-flow code; shown only while this attempt is active."""
+
+
+class ServiceRefusalCode(StrEnum):
+    """Closed codes the service refuses a provider-settings or sign-in request with before any read or change runs."""
+
+    BUSY = "busy"
+    """Another attempt, a start or a recovery holds the request; it may be asked again."""
+    INVALID_REQUEST = "invalid_request"
+    SERVICE_FAILED = "service_failed"
+    SIGNED_OUT = "signed_out"
+    SIGN_IN_UNAVAILABLE = "sign_in_unavailable"
+    SERVICE_STOPPING = "service_stopping"
 
 
 class ProviderSettingsRefusalCode(StrEnum):
@@ -134,13 +308,15 @@ class ProviderSettingsRefusalCode(StrEnum):
     """No runtime took the request, so nothing was read or changed; produced at the frontend, never by the service."""
     PERSON_ACT_REQUIRED = "person_act_required"
     """Produced at dispatch for a frontend that may not change credentials, never by the service."""
+    MODEL_LIST_FULL = "model_list_full"
+    """The local model list already holds as many added models as it keeps."""
     UNKNOWN = "unknown"
 
 
 class ProviderSettingsRefusal(BaseModel):
     """A typed refusal carrying no secret and no storage detail."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: ProviderSettingsRefusalCode
 
@@ -148,7 +324,7 @@ class ProviderSettingsRefusal(BaseModel):
 class ProviderSettingsActionAccepted(BaseModel):
     """A committed action, with the provider's status read back after commit."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entry: ProviderStatusEntry
 
@@ -156,8 +332,135 @@ class ProviderSettingsActionAccepted(BaseModel):
 type ProviderSettingsActionResult = ProviderSettingsActionAccepted | ProviderSettingsRefusal
 
 
+class LocalModelListEntry(OutputSchema):
+    """One lane and one of its models: a model added to a local lane's list, or the model read with."""
+
+    lane: LaneId
+    """The catalogue lane id the model is listed on."""
+    model: ModelId
+
+
+class TaskModelEntry(OutputSchema):
+    """The lane, model and effort the person set for one task kind.
+
+    ``task_kind`` is the agent's id for the kind, from its served catalogue.
+    ``effort`` is ``None`` when the person set none, and the run then names
+    no effort. A kind with no entry runs on the model documents are read with.
+    """
+
+    task_kind: TaskKindId
+    lane: LaneId
+    model: ModelId
+    effort: EffortLevel | None
+
+
+class ReadingSource(StrEnum):
+    """Where the model documents are read with comes from."""
+
+    CHOSEN = "chosen"
+    """The person's stored choice, which is still installed and listed."""
+    DEFAULT = "default"
+    """No usable stored choice: the first installed model the catalogue's order offers. Never stored."""
+    NONE = "none"
+    """No stored choice is usable and no model is installed to stand in: documents are not read."""
+
+
+class LocalModelListStatus(OutputSchema):
+    """The models the person added to local lanes' lists, in the order added, with the record's guard.
+
+    A lane's recommended models are the catalogue's and are not listed here.
+    ``reading`` is the lane and model documents are read with now, and
+    ``reading_source`` says where it comes from: the person's stored choice
+    (``chosen``), the default that stands in when no stored choice is usable
+    (``default``, never written to the record), or ``none``, when ``reading``
+    is ``None``. Every reading of a document uses this same selection.
+    ``local_lanes`` are the catalogue's
+    local lane ids, whose models a picker offers from their lists; none when
+    the catalogue cannot be read. ``tasks`` are the settings the person
+    stored per task kind, in the order stored; a kind without one runs on
+    ``reading``. ``unreadable`` means a stored list
+    record cannot be read. Then no model is listed or selected, because
+    nothing is known, and ``revision`` guards the reset that removes the
+    record. Every state carries a revision, so an unreadable record always
+    has a reset route.
+    """
+
+    unreadable: bool
+    models: tuple[LocalModelListEntry, ...]
+    reading: LocalModelListEntry | None
+    reading_source: ReadingSource
+    tasks: tuple[TaskModelEntry, ...]
+    local_lanes: tuple[LaneId, ...]
+    revision: ProviderSettingsRevision
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _models_follow_readability(self) -> Self:
+        if self.unreadable and (self.models or self.reading is not None or self.tasks):
+            raise ValueError("an unreadable record lists and selects no model")
+        if (self.reading is None) != (self.reading_source is ReadingSource.NONE):
+            raise ValueError("a reading has a source, and no reading has none")
+        return self
+
+
+type LocalModelListResult = LocalModelListStatus | ProviderSettingsRefusal
+
+
+class LocalEngineChoices(OutputSchema):
+    """The tokens a person may choose for the local engine setting, each in the order its enum declares them."""
+
+    engine: tuple[LocalEngine, ...]
+    placement: tuple[LocalPlacement, ...]
+
+
+class LocalEngineStatus(OutputSchema):
+    """The local engine setting: the engine that runs models on this computer and where it runs them.
+
+    It is kept in the model list record, so ``revision`` is that record's
+    guard and a change to either sends it back. An absent record, or one
+    holding no choice, reads as the default engine and placement with
+    ``chosen`` false; ``chosen`` is true only for a setting the person stored,
+    which the default never overrules. ``unreadable`` means the stored record
+    cannot be read: then no engine or placement is known and none is
+    assumed, and ``revision`` guards the reset that removes the record.
+    ``choices`` is the closed list a frontend renders its pickers from. It
+    is computed from the enums every request is validated against, so a
+    frontend never holds a copy and a status cannot carry a different list.
+    """
+
+    unreadable: bool
+    chosen: bool
+    engine: LocalEngine | None
+    placement: LocalPlacement | None
+    revision: ProviderSettingsRevision
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _setting_follows_readability(self) -> Self:
+        if self.unreadable != (self.engine is None) or self.unreadable != (self.placement is None):
+            raise ValueError("an unreadable record names no engine or placement, and a readable one names both")
+        if self.unreadable and self.chosen:
+            raise ValueError("an unreadable record holds no choice")
+        return self
+
+    @computed_field
+    @property
+    def choices(self) -> LocalEngineChoices:
+        """The engines and placements that can be chosen, in declared order."""
+        return LocalEngineChoices(engine=tuple(LocalEngine), placement=tuple(LocalPlacement))
+
+
+type LocalEngineResult = LocalEngineStatus | ProviderSettingsRefusal
+
+
 __all__ = [
     "CliState",
+    "LocalEngineChoices",
+    "LocalEngineResult",
+    "LocalEngineStatus",
+    "LocalModelListEntry",
+    "LocalModelListResult",
+    "LocalModelListStatus",
     "ProviderCredentialSource",
     "ProviderReadiness",
     "ProviderSettingsActionAccepted",
@@ -169,5 +472,8 @@ __all__ = [
     "ProviderSettingsStatus",
     "ProviderStatusEntry",
     "ProviderStatusReason",
+    "ReadingSource",
+    "ServiceRefusalCode",
+    "TaskModelEntry",
     "is_provider_settings_revision",
 ]

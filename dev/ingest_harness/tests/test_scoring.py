@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from .._key import CorpusKey, IngestCorpusDocument
-from .._result import HarnessRefusalError
-from .._scoring import FieldVerdict, score_emission
+from ..key import CorpusKey, IngestCorpusDocument
+from ..result import HarnessRefusalError
+from ..scoring import FieldVerdict, score_emission
 
 pytestmark = [pytest.mark.integration, pytest.mark.private_ingest_corpus, pytest.mark.hex_core]
 

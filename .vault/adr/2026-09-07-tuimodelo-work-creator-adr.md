@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:95eb67e77393eadb822b9a6d3316cb7f549a21e3e03f160692421886d85ae3ee'
+body_hash: 'sha256:084d95b2bc144fe44a91a82d90cc1e42562bc269e26aae5a97827515adddb545'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -183,7 +183,7 @@ it, so the repository never contains both an open door and a test asserting it i
 ## Rationale
 
 The chosen option wins on the question it starts from. An operator does not think "create a
-modelo 303 work unit for 2026-2T"; they think "it is April, what do I owe". Period-first
+modelo 303 work unit for a given year and 2T"; they think "it is April, what do I owe". Period-first
 creation answers that directly, and in doing so it filters out the two largest sources of
 downstream refusal — undefined modelos and unresolvable revisions — before the operator
 commits to anything. The bare form defers exactly those refusals to after the choice, which

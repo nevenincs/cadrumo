@@ -8,23 +8,29 @@
 
 import type {
   AboutInfo,
-  ContextMenuItem,
   DesktopEnvironment,
   DesktopLanguage,
+} from "../ipc/environment";
+import type {
   DesktopSetup,
+  SetupCheckMode,
+  SetupItemId,
+  SetupRemoval,
+  SetupStartOptions,
+} from "../ipc/componentSetup";
+import type {
   LogBatch,
+  WindowAction,
+  WindowPresentation,
+} from "../ipc/contract";
+import type {
   ManagerStatus,
   ManagerSignal,
   SignInStatus,
   SignInSignal,
   SignInResult,
   SignOutResult,
-  SetupCheckMode,
-  SetupItemId,
-  WindowAction,
-  WindowPresentation,
-  TerminalTarget,
-} from "../ipc/contract";
+} from "../ipc/account";
 import type { ProfileAccounts } from "./profiles";
 import type { AgentAccess } from "./agentAccess";
 import type { AgentSession } from "./agentSession";
@@ -68,6 +74,11 @@ export type TerminalEvent =
   | { type: "exited"; code: number | null }
   | { type: "failed"; message: string };
 
+/** The host now starts the console with another environment: the signed-in
+ * profile's, after a sign-in, a sign-out or a change of profile. Only an
+ * opaque revision reaches the window, never the environment itself. */
+export type ConsoleEnvironmentChange = { revision: string };
+
 export type TerminalSession = {
   write(bytes: Uint8Array): Promise<void>;
   resize(cols: number, rows: number): Promise<void>;
@@ -87,13 +98,11 @@ export type Setup = {
   check(mode: SetupCheckMode): Promise<DesktopSetup>;
   /** A full check of `items`, or of every item when null. */
   verify(items: SetupItemId[] | null): Promise<DesktopSetup>;
-  /** Plans setup of `items`, or of every item not ready when null. Resume
-   * after an interruption is a new start with `resume`: the unchanged plan
-   * the person approved before needs no second approval. */
-  start(
-    items: SetupItemId[] | null,
-    options?: { model?: string | null; resume?: boolean },
-  ): Promise<DesktopSetup>;
+  /** Plans setup of one `item`, beside any other item's setup. Resume after
+   * an interruption is a new start with `resume`: the unchanged plan the
+   * person approved before needs no second approval. `reinstall` installs
+   * the local AI's downloaded program afresh. */
+  start(item: SetupItemId, options?: SetupStartOptions): Promise<DesktopSetup>;
   /** Answers the plan whose `plan_digest` the review showed. */
   answer(
     operationId: string,
@@ -101,6 +110,12 @@ export type Setup = {
     decision: "apply" | "reject",
   ): Promise<DesktopSetup>;
   cancel(operationId: string): Promise<DesktopSetup>;
+  /** Removes the local model `model`, which no role may still select: the
+   * roles that name it are cleared first. */
+  removeModel(model: string): Promise<DesktopSetup>;
+  /** Removes the browser, or the local AI or its program alone, from this
+   * computer. */
+  remove(removal: SetupRemoval): Promise<DesktopSetup>;
   /** Opens Google's own sign-in page for the profile. */
   signInGoogle(): Promise<DesktopSetup>;
   /** Removes the profile's stored Google sign-in. */
@@ -113,19 +128,29 @@ export type Setup = {
 export interface Host {
   readonly censo?: import("./profileCenso").CensoPort;
   readonly userProfile?: import("./userProfile").UserProfilePort;
+  readonly profileCompanions?: import("./profileHousehold").ProfileCompanionPort;
+  readonly borrador?: import("./borrador").BorradorPort;
+  readonly aeatSync?: import("./aeatSync").AeatSyncPort;
+  readonly aeatSyncResults?: import("./aeatSyncResults").AeatSyncResultsPort;
+  readonly aeatSyncRun?: import("./aeatSyncRun").AeatSyncRunPort;
+  readonly aeatSyncPrepare?: import("./aeatSyncPrepare").AeatSyncPreparePort;
   readonly attendance?: Attendance;
   /** Absent in a browser: native window behavior is never simulated as real. */
   readonly window?: {
     action(action: WindowAction): Promise<void>;
     observe(listener: (state: WindowPresentation) => void): Promise<() => void>;
+    /** Asks the page before a close the system raised; the page answers
+     * with "close_now" or "keep_open". */
+    guardClose?(asked: () => void): Promise<() => void>;
   };
   /** False when no desktop host exists (browser preview). */
   readonly available: boolean;
-  /** Whether menus are drawn by the operating system. */
-  readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   /** What this installation is, where the host reads it from the package. */
   about?(): Promise<AboutInfo>;
+  /** How many changes the previous close of this window ended before they
+   * reported, once: their outcome is unknown. Zero after a settled close. */
+  previousClose?(): Promise<number>;
   readonly language?: {
     read(): Promise<DesktopLanguage>;
     set(language: string): Promise<DesktopLanguage>;
@@ -149,11 +174,22 @@ export interface Host {
    * has selected where none is named. */
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;
+  /** Explicit password-proved sign-out of exactly the named profile. */
+  signOutWithPassword(
+    password: Uint8Array,
+    profile: string,
+  ): Promise<SignOutResult>;
   openTerminal(
-    kind: TerminalTarget,
+    kind: TerminalKind,
     size: { cols: number; rows: number },
     listener: (event: TerminalEvent) => void,
   ): Promise<TerminalSession>;
+  /** Calls `listener` on each change of the console's environment, until
+   * the returned function unsubscribes. Without it the window never starts
+   * the console again for one. */
+  observeConsoleEnvironment?(
+    listener: (change: ConsoleEnvironmentChange) => void,
+  ): Promise<() => void>;
   subscribeLogs(listener: (batch: LogBatch) => void): Promise<() => void>;
   readClipboard(): Promise<string>;
   writeClipboard(text: string): Promise<void>;
@@ -162,12 +198,6 @@ export interface Host {
   /** Copies a log selection with the larger bounded log-transfer limit. */
   copyLogs?(text: string): Promise<void>;
   revealLogs?(): Promise<void>;
-  /** Resolves to the chosen item id, or null when dismissed. Omit `at` for a
-   * pointer-opened menu so the host places it at the cursor. */
-  showMenu(
-    items: ContextMenuItem[],
-    at?: { x: number; y: number },
-  ): Promise<string | null>;
   openExternal(url: string): Promise<void>;
   /** The profiles on this computer, to choose from and to add to, where
    * this host offers them. Without them the shell signs in to the one
@@ -176,6 +206,23 @@ export interface Host {
   /** Read-only views of the signed-in profile, where this host offers any.
    * Without them the shell shows no way into a view. */
   readonly views?: ProfileViews;
+  /** The signed-in profile's ledger: its registered operations, the files
+   * the person picks for them and the reviews they pause for, where this
+   * host offers them. Without it the shell shows no Ledger page. */
+  readonly ledger?: import("./ledger").LedgerPort;
+  /** Cues that a background job of the signed-in profile changed, and the
+   * jobs' stored revisions, where this host sends them. Without it the
+   * shell shows no background tasks. */
+  readonly backgroundTasks?: import("./backgroundTasksContract").BackgroundTasksPort;
+  /** The signed-in profile's declarations: the list, each one's form and
+   * help, its registered modelo operations and the files they read and
+   * write, where this host offers them. Without it the shell shows no
+   * Declarations page. */
+  readonly modelo?: import("./modelo").ModeloPort;
+  /** The Sede in a browser page of the profile's own worker, streamed to the
+   * window as images, where this host offers it. Without it the shell shows
+   * no Browser page. */
+  readonly sedeView?: import("./sedeView").SedeViewPort;
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;
@@ -206,7 +253,6 @@ export function browserHost(location: Location): Host {
   const unavailable = () => Promise.reject(new HostUnavailable());
   return {
     available: false,
-    nativeMenus: false,
     environment() {
       const docs = new URLSearchParams(location.search).get("docs");
       if (!docs) return unavailable();
@@ -231,6 +277,7 @@ export function browserHost(location: Location): Host {
     signInStatus: unavailable,
     signIn: unavailable,
     signOut: unavailable,
+    signOutWithPassword: unavailable,
     subscribeLogs: unavailable,
     readClipboard: () =>
       navigator.clipboard?.readText
@@ -240,7 +287,6 @@ export function browserHost(location: Location): Host {
       navigator.clipboard?.writeText
         ? navigator.clipboard.writeText(text)
         : unavailable(),
-    showMenu: unavailable,
     openExternal: unavailable,
   };
 }

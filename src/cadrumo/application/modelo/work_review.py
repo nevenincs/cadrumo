@@ -15,6 +15,7 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
@@ -54,6 +55,7 @@ from .row_source_fingerprint import ModeloRowSourceFingerprint
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from .calculation_note_gate import SourceDisagreementResolutions
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -220,6 +222,8 @@ class ModeloWorkReview(BaseModel):
     calculation_revision_id: CalculationRevisionId | None
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
+    #: The digest of the source movements the last check read, ``None`` when it recorded none.
+    verification_sources_digest: Hex64Str | None = None
     progress: ModeloWorkProgress
     casillas: tuple[ModeloWorkReviewCasilla, ...]
     findings: tuple[ModeloVerificationFinding, ...]
@@ -256,7 +260,7 @@ def build_modelo_work_review_casillas(
     Returns:
         One :class:`ModeloWorkReviewCasilla` per casilla the snapshot declares.
     """
-    from ._work_review_assembly import assemble_modelo_work_review_casillas
+    from .work_review_assembly import assemble_modelo_work_review_casillas
 
     return assemble_modelo_work_review_casillas(
         snapshot=snapshot,
@@ -277,9 +281,15 @@ def build_modelo_work_review(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    resolutions: SourceDisagreementResolutions | None = None,
 ) -> ModeloWorkReview:
-    """Assemble a work review, optionally using this assembly's fresh calculation read."""
-    from ._work_review_assembly import assemble_modelo_work_review
+    """Assemble a work review, optionally using this assembly's fresh calculation read.
+
+    ``resolutions`` are the accepted source disagreements the check honours;
+    without them none is honoured, so every disagreement note is a blocker.
+    """
+    from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+    from .work_review_assembly import assemble_modelo_work_review
 
     return assemble_modelo_work_review(
         bucket_id,
@@ -291,6 +301,7 @@ def build_modelo_work_review(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         calculation_catalogue=calculation_catalogue,
+        resolutions=NO_SOURCE_DISAGREEMENT_RESOLUTIONS if resolutions is None else resolutions,
     )
 
 

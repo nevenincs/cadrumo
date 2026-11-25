@@ -13,7 +13,7 @@ external evidence. A successful transition sets the target revision to
 ``PRESENTADO``, creates a ``VIGENTE``
 :class:`ModeloRecord` with ``aeat_accepted=False``, and
 delegates cross-period carry projection to
-:func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`,
+:func:`~cadrumo.application.modelo.filing_revision_persistence.persist_filed_revision`,
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
@@ -21,7 +21,7 @@ See Also:
         Separate AEAT-attested import path that creates
         :class:`ExternalEvidence` baselines; this local
         filing action deliberately does not.
-    :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo.filing_revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
     :func:`~cadrumo.application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
@@ -43,18 +43,21 @@ from typing import TYPE_CHECKING
 
 from ...core.config import Settings
 from ...core.diagnostic_log import diagnostic_timing_event
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.logging import get_logger
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import MADRID_TZ
+from ...core.time.clock import now as clock_utc_now
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
@@ -63,28 +66,36 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
 from ...domain.modelos.verification_report import VerificationReportCatalogue
-from ...domain.modelos.work_unit import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..workflow.engine import WorkflowEngine
-from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
-from ._required_binding_gate import (
-    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
-)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloPreconditionErrorMixin,
     WorkUnitNotFoundError,
 )
+from .assumed_value_gate import (
+    ModeloAssumedValueStage,
+    require_assumed_values_confirmed,
+    unconfirmed_assumed_fields,
+)
 from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import credit_resolutions_for_work
 from .filing_action_ports import FilingActionPorts
-from .iva_wallet_gate import (
-    require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
+from .filing_revision_persistence import (
+    persist_filed_revision,
+    require_approved_verification_report,
+    require_filing_instance_evidence_for_work_unit,
 )
+from .iva_wallet_gate import (
+    require_persisted_iva_compensation_decision_matches_revision,
+)
+from .ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     filing_ordering_instants,
@@ -96,22 +107,25 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
+from .m390_prorrata_apartado_gate import (
+    Modelo390ProrrataApartadoStage,
+    require_modelo_390_prorrata_apartado_rendered,
+)
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .prior_domiciliation import resolveprior_domiciliation_election
-from .result_disposition_resolution import resolve_modelo_result_disposition
-from .revision_persistence import (
-    persist_filed_revision,
-    require_approved_verification_report,
-    require_filing_instance_evidence_for_work_unit,
+from .required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved,
 )
+from .result_disposition_resolution import resolve_modelo_result_disposition
+from .selectors import require_work_unit_holds_a_calculation
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
-from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
-from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .workflow_gate import build_revision_workflow_engine, run_revision_workflow_gate
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
+    from ..calculations.observations_repository import PriorDomiciliationElectionProjection
     from .work_profile import ModeloWorkProfile
 
 _LOGGER = get_logger(__name__)
@@ -128,10 +142,28 @@ class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError
 
 @dataclass(frozen=True, slots=True)
 class ModeloFilingResult:
-    """The filed record and whether this call published a new transition."""
+    """The filed record, whether this call published, and the filing's timeliness.
+
+    ``filing_timeliness`` answers the question the record's
+    :class:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind` cannot:
+    an ``ORIGINAL`` declaration filed after its plazo voluntario closed is late,
+    and a late presentation carries a Ley 58/2003 consequence whose regime
+    depends on the declaration. It is the posture the record kept from its own
+    filing time, normalised so a caller always reads a value; a record that kept
+    none reads as
+    :attr:`~cadrumo.core.filing_timeliness.FilingTimeliness.UNKNOWN` rather than
+    being judged again against today's deadlines. No regime, eligibility,
+    amount or interest is asserted.
+    """
 
     record: ModeloRecord
     published: bool
+    filing_timeliness: FilingTimeliness
+
+
+def _kept_filing_timeliness(record: ModeloRecord) -> FilingTimeliness:
+    """Report the posture the record kept, with no posture reading as unknown."""
+    return record.filing_timeliness or FilingTimeliness.UNKNOWN
 
 
 def _existing_vigente_filing_record(
@@ -152,143 +184,23 @@ def _existing_vigente_filing_record(
     return None
 
 
-def file_modelo_revision(
+def _load_filing_context(
     calculation_revision_id: CalculationRevisionId,
-    *,
-    approved_verification_report_id: VerificationReportId,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    operator_scope_ports: OperatorScopePorts,
     ports: FilingActionPorts,
-    actor: str,
-    workflow_profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
-    notes: str | None = None,
-    refund_election: RefundElection = RefundElection.COMPENSAR,
-    payment_election: PaymentElection = PaymentElection.INGRESO,
-    prior_domiciliation_election: object = PriorDomiciliationElection.KEEP,
-    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
-    workflow_engine: WorkflowEngine | None = None,
-    workflow_runs_dir: Path | None = None,
-    settings: Settings | None = None,
-    clock: datetime | None = None,
-    profile: ModeloWorkProfile | None = None,
-) -> ModeloFilingResult:
-    """Mark a verified-complete revision as the current internal filed answer.
-
-    This is the application service behind ``aeat app modelo work file``. It is
-    a local state transition, not an AEAT presentation: the resulting
-    :class:`ModeloRecord` has ``aeat_accepted=False`` and no
-    external evidence.
-
-    Preconditions and state changes:
-
-    1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
-    2. Recheck profile readiness, persisted Modelo 303 IVA-wallet decision
-       compatibility, and cross-period clean state.
-    3. Run the :class:`WorkflowEngine` gate for the
-       revision's modelo and period.
-    4. Resolve the Modelo 303 result disposition from
-       :class:`RefundElection`, :class:`PaymentElection`, and
-       :class:`TaxpayerProfile`.
-    5. If a prior current filing exists, mark its
-       :class:`ModeloRecord` as ``SUPERSEDIDO`` and its
-       prior :class:`CalculationRevision` as
-       ``PRESENTADO_SUPERSEDIDO``.
-    6. Create the new filing record with status ``VIGENTE`` and transition the
-       target calculation revision from ``VERIFICADO_COMPLETO`` to
-       ``PRESENTADO``.
-    7. Advance the work unit's ``filed_calculation_revision_id`` and
-       ``current_filing_record_id`` pointers, emit ``MODELO_FILED``/
-       ``MODELO_FILED_SUPERSEDED`` bucket events, and persist any local
-       ``app_filing`` carry observation.
-
-    Args:
-        calculation_revision_id: The id of the verified-complete revision
-            to file.
-        approved_verification_report_id: Exact granting report reviewed for
-            this revision; rechecked in the filing transaction.
-        certificate_secret_backend_factory: Factory for the encrypted
-            certificate-secret capability used by workflow authentication.
-        operator_scope_ports: Operator-scope capabilities used by workflow
-            authentication.
-        actor: Operator identifier recorded in the filing record and audit
-            trail.
-        workflow_profile: The :class:`TaxpayerProfile`
-            used to evaluate :class:`WorkflowEngine`
-            gate conditions and cross-period clean-state applicability.
-        notes: Optional operator-supplied filing notes.
-        refund_election: The operator's per-filing Modelo 303 negative-result
-            disposition election. Defaults to ``COMPENSAR`` (carry the credit
-            forward). ``DEVOLVER`` requests the credit back as a refund and is
-            honoured only when the period is a lawful refund period (the year's
-            last filing period for a non-REDEME taxpayer; every period for REDEME).
-            An out-of-window ``DEVOLVER`` is refused.
-        payment_election: The operator's positive-result settlement election.
-            ``INGRESO`` is the default, ``DOMICILIACION`` is available only for
-            Modelo 303, and ``CUENTA_CORRIENTE`` remains explicitly refused
-            until its AEAT capability is grounded.
-        prior_domiciliation_election: Whether to preserve the prior direct debit
-            or request its cancellation/modification. The latter is accepted
-            only for an M303 rectificativa with the official baseline-U proof.
-        ports: Complete application-owned filing capability bundle. It supplies
-            the work-unit, calculation, filing, verification, observation,
-            IVA-wallet, bucket-event, and workflow-run authorities for the
-            active profile bucket.
-        operation: Caller-owned generation-pinned indexed authority operation.
-        cross_period_expected_member_sets: Optional expected grupo member
-            rosters used by the cross-period clean-state proof.
-        workflow_engine: Optional workflow engine override for the preflight
-            gate.
-        workflow_runs_dir: Optional workflow runs directory override.
-        settings: Optional settings override.
-        clock: Optional UTC timestamp override.
-        profile: The work profile the calling command already loaded for the
-            revision's bucket. When omitted, this entry loads it once; every
-            profile read below uses that record.
-
-    Returns:
-        The current local filing record and an actual-publication witness.
-
-    Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not in
-            ``VERIFICADO_COMPLETO`` state.
-        WorkUnitNotFoundError: When the revision's parent work
-            unit cannot be loaded.
-        ModeloLifecycleClockPrecedesError: When ``clock`` precedes the
-            revision's or work unit's ``created_at``, the superseded record's
-            ``filed_at`` or its revision's ``created_at``; refused before
-            anything is persisted.
-
-    See Also:
-        :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
-            Performs the repository writes once all gates pass.
-        :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
-            Creates official-evidence baselines for imported filings; use that
-            path when a :class:`ExternalEvidence` reference
-            must be carried.
-        :func:`~cadrumo.application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
-            Saves the non-official ``app_filing`` observation used by later
-            ``previous_filing`` calculations.
-        :func:`~cadrumo.application.modelo.export.export_modelo_revision`:
-            Sibling local finish line that writes the fichero-BOE artefact
-            without requiring this internal file marker.
-    """
+    profile: ModeloWorkProfile | None,
+) -> tuple[
+    CalculationRevisionCatalogue,
+    CalculationRevision,
+    WorkUnitCatalogue,
+    WorkUnit,
+    ModeloRecordCatalogue,
+    str,
+    ModeloWorkProfile | None,
+]:
     wu_repo = ports.work_unit_repository
     cr_repo = ports.calculation_repository
     fr_repo = ports.filing_repository
-    obs_repo = ports.observation_repository
-    bv_repo = ports.bucket_event_repository
-    if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
-        from .action_errors import ModeloPriorDomiciliationElectionRefusedError
-
-        raise ModeloPriorDomiciliationElectionRefusedError(
-            translated_message="errors.refused.refused_modeloprior_domiciliation_election",
-            context={"received_type": type(prior_domiciliation_election).__name__},
-        )
-    run_repo = ports.workflow_run_repository
-
     _filing_phase("load_begin")
     revisions = cr_repo.load(operation=operation)
     _filing_phase("load_end")
@@ -316,6 +228,7 @@ def file_modelo_revision(
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
     )
+    require_work_unit_holds_a_calculation(work_unit)
     # Before the idempotent re-file no-op: a revision verified before evidence
     # was captured, or one carrying a Modelo 193 settled prior-accrual row,
     # must not be returned as the filed answer.
@@ -324,7 +237,32 @@ def file_modelo_revision(
         retencion_ports=ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.FILE,
     )
-    require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
+    require_modelo_193_settled_row_amount_authority(
+        work_unit, target, stage=Modelo193SettledRowStage.FILE, operation=operation
+    )
+    # Before the idempotent re-file no-op too: a verified revision whose assumed value was never
+    # confirmed must not be recorded as filed, nor returned as the filed answer.
+    if target.state not in FILED_REVISION_STATES:
+        require_assumed_values_confirmed(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                verification_repository=ports.verification_repository,
+                credit_resolutions=ports.credit_resolution_reader,
+                operation=operation,
+                calculation_catalogue=revisions,
+            ),
+            stage=ModeloAssumedValueStage.FILE,
+        )
+    require_modelo_390_prorrata_apartado_rendered(
+        work_unit,
+        registry_revision_id=target.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        operation=operation,
+        stage=Modelo390ProrrataApartadoStage.FILE,
+    )
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile
 
@@ -338,11 +276,26 @@ def file_modelo_revision(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies_to_profile(
             taxpayer_profile_for_work(profile),
         ),
         operation=operation,
     )
+    return revisions, target, work_units, work_unit, filing_baseline, filing_baseline_revision_id, profile
+
+
+def _require_filing_state(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    filing_baseline: ModeloRecordCatalogue,
+    calculation_revision_id: CalculationRevisionId,
+    approved_verification_report_id: VerificationReportId,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    ports: FilingActionPorts,
+    operation: PinnedAuthorityOperation,
+) -> ModeloFilingResult | None:
+    fr_repo = ports.filing_repository
+    obs_repo = ports.observation_repository
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.
         # A retry of a completed single-subject file returns the existing VIGENTE
@@ -372,7 +325,11 @@ def file_modelo_revision(
                 observation_repository=obs_repo,
                 operation=operation,
             )
-            return ModeloFilingResult(record=existing, published=False)
+            return ModeloFilingResult(
+                record=existing,
+                published=False,
+                filing_timeliness=_kept_filing_timeliness(existing),
+            )
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -384,6 +341,66 @@ def file_modelo_revision(
             ),
         )
 
+    return None
+
+
+def _run_filing_workflow(
+    workflow_engine: WorkflowEngine | None,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    actor: str,
+    now: datetime,
+    settings: Settings | None,
+    ports: FilingActionPorts,
+    operation: PinnedAuthorityOperation,
+    workflow_runs_dir: Path | None,
+) -> None:
+    _filing_phase("workflow_begin")
+    gate_engine = workflow_engine or build_revision_workflow_engine(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
+        revision=target,
+        work_unit=work_unit,
+        profile=workflow_profile,
+        actor=actor.strip(),
+        clock=now,
+        settings=settings,
+        draft_review_ports=ports.draft_review_ports,
+        workflow_gate_ports=ports.workflow_gate_ports,
+        operation=operation,
+    )
+    run_revision_workflow_gate(
+        engine=gate_engine,
+        profile=workflow_profile,
+        work_unit=work_unit,
+        # The filing plazo is a Europe/Madrid civil boundary, the same date the
+        # receipt's kept posture is judged on; the UTC date reports the previous
+        # Spanish day for up to two hours every night.
+        today=now.astimezone(MADRID_TZ).date(),
+        runs_dir=workflow_runs_dir,
+        run_repository=ports.workflow_run_repository,
+        operation=operation,
+    )
+
+    _filing_phase("workflow_end")
+
+
+def _check_filing_preconditions(
+    ports: FilingActionPorts,
+    operation: PinnedAuthorityOperation,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    approved_verification_report_id: VerificationReportId,
+    clock: datetime | None,
+    revisions: CalculationRevisionCatalogue,
+    filing_baseline: ModeloRecordCatalogue,
+    workflow_profile: TaxpayerProfile,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    profile: ModeloWorkProfile | None,
+) -> datetime:
     reports = ports.verification_repository.load(operation=operation)
     require_approved_verification_report(
         target=target,
@@ -392,7 +409,7 @@ def file_modelo_revision(
         operation=operation,
     )
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     _require_filing_clock_ordered(
         now,
         target=target,
@@ -416,46 +433,150 @@ def file_modelo_revision(
     )
 
     _filing_phase("preconditions_end")
-    _filing_phase("workflow_begin")
-    gate_engine = workflow_engine or _build_revision_workflow_engine(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_scope_ports=operator_scope_ports,
-        revision=target,
-        work_unit=work_unit,
-        profile=workflow_profile,
-        actor=actor.strip(),
-        clock=now,
-        settings=settings,
-        draft_review_ports=ports.draft_review_ports,
-        workflow_gate_ports=ports.workflow_gate_ports,
-        operation=operation,
-    )
-    _run_revision_workflow_gate(
-        engine=gate_engine,
-        profile=workflow_profile,
-        work_unit=work_unit,
-        today=now.date(),
-        runs_dir=workflow_runs_dir,
-        run_repository=run_repo,
-    )
+    return now
 
-    _filing_phase("workflow_end")
+
+def _require_prior_election(prior_domiciliation_election: object) -> PriorDomiciliationElection:
+    if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
+        from .declaration_refusal_failures import prior_domiciliation_refusal
+        from .declaration_refusal_profiles import DeclarationRefusalCause
+
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_TYPE,
+            translated_message="errors.refused.refused_modeloprior_domiciliation_election",
+            context={"received_type": type(prior_domiciliation_election).__name__},
+        )
+
+    return prior_domiciliation_election
+
+
+def file_modelo_revision(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    approved_verification_report_id: VerificationReportId,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
+    ports: FilingActionPorts,
+    actor: str,
+    workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+    notes: str | None = None,
+    refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
+    prior_domiciliation_election: object = PriorDomiciliationElection.KEEP,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    workflow_engine: WorkflowEngine | None = None,
+    workflow_runs_dir: Path | None = None,
+    settings: Settings | None = None,
+    clock: datetime | None = None,
+    profile: ModeloWorkProfile | None = None,
+) -> ModeloFilingResult:
+    """File a verified revision as the current local answer, without submitting to AEAT.
+
+    Recheck the approved report, profile and cross-period evidence and derive the
+    filing disposition, then run the pinned workflow before atomically
+    persisting the revision, record, observations and lifecycle event. The
+    disposition is derived first because an election the period does not allow
+    is refused before the workflow writes anything. A retry
+    of an already-filed revision returns its existing record only after the same
+    report and prior-domiciliation checks. A clock preceding retained evidence is
+    refused before a write. The returned witness says whether this call published.
+
+    Takes ``workflow_profile`` as a :class:`TaxpayerProfile`.
+    """
+    prior_domiciliation_election = _require_prior_election(prior_domiciliation_election)
+    revisions, target, work_units, work_unit, filing_baseline, filing_baseline_revision_id, profile = (
+        _load_filing_context(calculation_revision_id, ports, operation, profile)
+    )
+    existing = _require_filing_state(
+        target,
+        work_unit,
+        filing_baseline,
+        calculation_revision_id,
+        approved_verification_report_id,
+        prior_domiciliation_election,
+        ports,
+        operation,
+    )
+    if existing is not None:
+        return existing
+
+    now = _check_filing_preconditions(
+        ports,
+        operation,
+        target,
+        work_unit,
+        approved_verification_report_id,
+        clock,
+        revisions,
+        filing_baseline,
+        workflow_profile,
+        cross_period_expected_member_sets,
+        profile,
+    )
     result_disposition = _filed_revision_result_disposition(
         work_unit=work_unit,
         target=target,
         workflow_profile=workflow_profile,
         refund_election=refund_election,
         payment_election=payment_election,
+        operation=operation,
     )
     prior_domiciliation_provenance = resolveprior_domiciliation_election(
         election=prior_domiciliation_election,
         work_unit=work_unit,
         revision=target,
-        filing_repository=fr_repo,
-        observation_repository=obs_repo,
+        filing_repository=ports.filing_repository,
+        observation_repository=ports.observation_repository,
         operation=operation,
     )
+    _run_filing_workflow(
+        workflow_engine,
+        certificate_secret_backend_factory,
+        operator_scope_ports,
+        target,
+        work_unit,
+        workflow_profile,
+        actor,
+        now,
+        settings,
+        ports,
+        operation,
+        workflow_runs_dir,
+    )
+    return _persist_filing_result(
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        result_disposition=result_disposition,
+        prior_domiciliation_provenance=prior_domiciliation_provenance,
+        ports=ports,
+        operation=operation,
+        approved_verification_report_id=approved_verification_report_id,
+        filing_baseline_revision_id=filing_baseline_revision_id,
+        work_units=work_units,
+        notes=notes,
+        actor=actor,
+        now=now,
+    )
 
+
+def _persist_filing_result(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    result_disposition: ResultDisposition | None,
+    prior_domiciliation_provenance: PriorDomiciliationElectionProjection,
+    ports: FilingActionPorts,
+    operation: PinnedAuthorityOperation,
+    approved_verification_report_id: VerificationReportId,
+    filing_baseline_revision_id: str,
+    work_units: WorkUnitCatalogue,
+    notes: str | None,
+    actor: str,
+    now: datetime,
+) -> ModeloFilingResult:
     _filing_phase("persistence_begin")
     record = persist_filed_revision(
         target=target,
@@ -466,12 +587,12 @@ def file_modelo_revision(
         notes=notes,
         actor=actor,
         now=now,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
+        calculation_repository=ports.calculation_repository,
+        filing_repository=ports.filing_repository,
         verification_repository=ports.verification_repository,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
-        calculation_observation_repository=obs_repo,
+        work_unit_repository=ports.work_unit_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        calculation_observation_repository=ports.observation_repository,
         participation_index_repository=ports.participation_index_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
         operation=operation,
@@ -482,7 +603,11 @@ def file_modelo_revision(
         justificante_repository=ports.justificante_repository,
     )
     _filing_phase("persistence_end")
-    return ModeloFilingResult(record=record, published=True)
+    return ModeloFilingResult(
+        record=record,
+        published=True,
+        filing_timeliness=_kept_filing_timeliness(record),
+    )
 
 
 def _filed_revision_result_disposition(
@@ -492,6 +617,7 @@ def _filed_revision_result_disposition(
     workflow_profile: TaxpayerProfile,
     refund_election: RefundElection,
     payment_election: PaymentElection,
+    operation: PinnedAuthorityOperation,
 ) -> ResultDisposition | None:
     """Resolve once at the filing boundary for both export and carry evidence."""
     return resolve_modelo_result_disposition(
@@ -501,6 +627,7 @@ def _filed_revision_result_disposition(
         period=work_unit.period,
         refund_election=refund_election,
         payment_election=payment_election,
+        operation=operation,
     )
 
 
@@ -556,17 +683,23 @@ def _require_filing_preconditions(
         error_type=ModeloFilingEvidenceMissingError,
         operation=operation,
     )
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
         profile=profile,
     )
-    _require_persisted_required_bindings_resolved(
-        work_unit=work_unit, revision=target, action="file", operation=operation
+    require_persisted_revision_required_bindings_resolved(
+        work_unit=work_unit, revision=target, action="file", operation=operation, profile=checked_profile
     )
-    require_work_unit_calculation_unblocked(work_unit=work_unit, revision=target, action="file", operation=operation)
-    iva_compensation_decision = _require_iva_compensation_revision_match(
+    require_work_unit_calculation_unblocked(
+        work_unit=work_unit,
+        revision=target,
+        action="file",
+        operation=operation,
+        resolutions=credit_resolutions_for_work(ports.credit_resolution_reader, work_unit),
+    )
+    iva_compensation_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         target,
         repository=ports.iva_compensation_decision_repository,
@@ -602,6 +735,7 @@ def _require_filing_preconditions(
         target_revision=target,
         subject_leaf_key="modelo.work.file",
         operation=operation,
+        work_unit_repository=ports.work_unit_repository,
     )
 
 

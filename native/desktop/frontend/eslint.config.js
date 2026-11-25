@@ -2,7 +2,16 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import hooks from "eslint-plugin-react-hooks";
 import globals from "globals";
+import { readFileSync } from "node:fs";
 import designSystem from "./dev/eslint/design-system.mjs";
+import { moduleBound } from "./scripts/generated-module-bound.mjs";
+
+// The repository's module bound, as the Modelo generator wrote it from its one
+// definition; a missing or malformed file stops the lint, never defaulting.
+const boundFile = new URL("./src/shell/moduleBound.json", import.meta.url);
+const MODULE_LINE_BOUND = moduleBound(
+  JSON.parse(readFileSync(boundFile, "utf8")).physicalLines,
+);
 
 // Import boundaries. One rule holds one list per file, so each group of files
 // below gets the whole list that applies to it.
@@ -62,6 +71,9 @@ const primitives = ["src/components/ui/**"];
 // The Tauri adapter, the entry that selects it and the contract's types.
 const adapter = [
   "src/shell/tauriHost.ts",
+  "src/shell/tauriLedger.ts",
+  "src/shell/tauriModelo.ts",
+  "src/shell/tauriSedeView.ts",
   "src/shell/tauriStartup.ts",
   "src/shell/tauriTerminal.ts",
   "src/shell/hostCall.ts",
@@ -78,6 +90,19 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {
+    // Editing feedback for the repository's module-size gate: every physical
+    // line counts, blank lines and comments included. Only whole modules are
+    // bounded. No limit applies to a single function, component or hook, and
+    // whether any callable policy should exist is undecided.
+    files: ["**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: MODULE_LINE_BOUND, skipBlankLines: false, skipComments: false },
+      ],
+    },
+  },
+  {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { "react-hooks": hooks, "design-system": designSystem },
     rules: {
@@ -91,6 +116,18 @@ export default tseslint.config(
           selector: "ExportAllDeclaration, ExportNamedDeclaration[source]",
           message:
             "Import from the defining module instead of adding re-exports.",
+        },
+        {
+          // A press whose failure is dropped shows nothing: the person cannot
+          // tell it failed, or why, or what to do next.
+          selector: [
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression[body.type='Identifier'][body.name='undefined']",
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression[body.type='Literal'][body.value=null]",
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression > BlockStatement.body[body.length=0]",
+            "JSXAttribute[name.name=/^on[A-Z]/] CatchClause > BlockStatement.body[body.length=0]",
+          ].join(", "),
+          message:
+            "An event handler must not drop a failure: show its cause and next step in the view.",
         },
       ],
     },

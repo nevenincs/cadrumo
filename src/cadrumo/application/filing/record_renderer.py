@@ -1,4 +1,4 @@
-"""Canonical fixed-width filing record renderer."""
+"""Canonical fixed-width filing record renderer for a :class:`ModeloRevision` layout."""
 
 from __future__ import annotations
 
@@ -9,24 +9,39 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.export import export_fields_overlap
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.retenciones_bindings import (
     RetencionesAggregationFact,
     RetencionesAggregationProvider,
 )
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
+    FilingExportRequiredRecordAbsentError,
+    FilingExportUnrepresentableCharacterError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
+from ...domain.modelos.perceptor_clave_scope import (
+    PerceptorClaveScope,
+    governs_perceptor_records,
+    resolve_perceptor_clave_scope,
+)
 from .export_parity import did_page_suppressed
+from .export_ratio_scale import casilla_values_as_designed
+from .export_refusal_doors import ExportRefusalReason, export_input_decision
+from .m347_declarado_row_scope import require_m347_declarado_casillas_have_one_row
+from .party_name_slots import require_declared_party_names
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_field_renderer import format_field, render_record
@@ -53,13 +68,18 @@ def render_layout_records(
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     occurrences: list[RenderedRecordOccurrence] = []
+    designed_values = casilla_values_as_designed(casilla_values, revision=registry_snapshot.revision)
     source_digests = {ref: source.sha256 for ref, source in registry_snapshot.sources.items()}
+    clave_scope = (
+        resolve_perceptor_clave_scope(period=draft.period) if governs_perceptor_records(draft.modelo) else None
+    )
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(
             record,
             draft=draft,
             headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
+            revision=registry_snapshot.revision,
         ):
             continue
         rows = _render_rows_for_record(
@@ -71,7 +91,15 @@ def render_layout_records(
             projection_plan=projection_plan,
         )
         if record.required and not rows:
-            raise FilingExportValidationError(f"required export record {record.id!r} has no applicable occurrence")
+            raise FilingExportRequiredRecordAbsentError(
+                export_record_id=record.id,
+                precondition_verdict=export_input_decision(ExportRefusalReason.REQUIRED_RECORD_ABSENT),
+            )
+        require_m347_declarado_casillas_have_one_row(
+            record,
+            rows=tuple(row for row, _context in rows),
+            casilla_values=casilla_values,
+        )
         for row, context in rows:
             _guard_record_export(record, casilla_values=casilla_values)
             occurrences.append(
@@ -83,12 +111,14 @@ def render_layout_records(
                         draft=draft,
                         headers=headers,
                         producer_snapshot=producer_snapshot,
-                        casilla_values=casilla_values,
+                        casilla_values=designed_values,
                         binding_values=binding_values,
                         row=row,
                         render_context=context,
                         projection_values=projection_values,
                         source_digests=source_digests,
+                        clave_scope=clave_scope,
+                        revision=registry_snapshot.revision,
                     ),
                 )
             )
@@ -145,16 +175,9 @@ def _require_m180_row_casillas(
     do not describe M190's clave-dependent fields, so this guard stays scoped.
     Binding targets and requiredness come from the same pinned revision.
     """
-    if registry_snapshot.modelo.id != Modelo("180") or record.repeat != "binding_rows":
+    if registry_snapshot.modelo.id != form_for_role("withholding.lease_annual") or record.repeat != "binding_rows":
         return
-    required_casilla_ids = frozenset(casilla.id for casilla in registry_snapshot.revision.casillas if casilla.required)
-    required_binding_ids = frozenset(
-        binding.id
-        for binding in registry_snapshot.revision.bindings
-        if isinstance(binding.provider, RetencionesAggregationProvider)
-        and binding.provider.fact is RetencionesAggregationFact.ROW_FIELD
-        and binding.provider.target_casilla_id in required_casilla_ids
-    )
+    required_binding_ids = _required_m180_bindings(registry_snapshot)
     binding_fields = _record_binding_fields(record)
     for row_index in sorted({row.row_index for row in rows if row.row_index is not None}):
         _require_populated_row_bindings(
@@ -163,6 +186,18 @@ def _require_m180_row_casillas(
             row_index=row_index,
             registry_required_binding_ids=required_binding_ids,
         )
+
+
+def _required_m180_bindings(registry_snapshot: RegistrySnapshot) -> frozenset[BindingId]:
+    required_casilla_ids = frozenset(casilla.id for casilla in registry_snapshot.revision.casillas if casilla.required)
+    required_binding_ids = frozenset(
+        binding.id
+        for binding in registry_snapshot.revision.bindings
+        if isinstance(binding.provider, RetencionesAggregationProvider)
+        and binding.provider.fact is RetencionesAggregationFact.ROW_FIELD
+        and binding.provider.target_casilla_id in required_casilla_ids
+    )
+    return required_binding_ids
 
 
 def _render_record_bytes(
@@ -177,19 +212,29 @@ def _render_record_bytes(
     render_context: FilingRecordRenderContext,
     projection_values: dict[ProjectionAddress, object],
     source_digests: Mapping[str, str],
+    clave_scope: PerceptorClaveScope | None,
+    revision: ModeloRevision,
 ) -> bytes:
-    text = render_record(
-        record,
-        draft=draft,
-        producer_values=headers,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row=row,
-        render_context=render_context,
-        projection_values=projection_values,
-        source_digests=source_digests,
+    require_declared_party_names(
+        record, modelo=str(draft.modelo), revision=revision, binding_values=binding_values, row=row
     )
+    try:
+        text = render_record(
+            record,
+            draft=draft,
+            producer_values=headers,
+            producer_snapshot=producer_snapshot,
+            casilla_values=casilla_values,
+            binding_values=binding_values,
+            row=row,
+            render_context=render_context,
+            projection_values=projection_values,
+            source_digests=source_digests,
+            clave_scope=clave_scope,
+        )
+    except (FilingExportValueOverflowError, FilingExportUnrepresentableCharacterError) as exc:
+        # The slot knows its field; only the record knows which design record it is.
+        raise exc.in_record(record.record_type) from exc
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
     return f"{text}{line_ending}".encode(record.encoding)
 
@@ -313,7 +358,10 @@ def _require_populated_row_bindings(
     )
     if missing:
         raise FilingExportValidationError(
-            f"binding-row {row_index} omits required export field(s): {', '.join(sorted(map(str, missing)))}"
+            f"binding-row {row_index} omits required export field(s): {', '.join(sorted(map(str, missing)))}",
+            translated_message="application.filing.export.errors.record_binding_row_omits_fields",
+            context={"row": row_index, "fields": ", ".join(sorted(map(str, missing)))},
+            precondition_verdict=export_input_decision(ExportRefusalReason.REQUIRED_BINDING_OMITTED),
         )
 
 
@@ -347,21 +395,29 @@ def _duplicate_projection_addresses(addresses: tuple[object, ...]) -> tuple[obje
 def _raise_duplicate_projection_addresses(addresses: tuple[object, ...], *, message: str) -> None:
     duplicates = _duplicate_projection_addresses(addresses)
     if duplicates:
-        raise FilingExportValidationError(f"{message}: {duplicates!r}")
+        raise FilingExportDesignIntegrityError(
+            f"{message}: {duplicates!r}",
+            translated_message="errors.integrity.filing_export_projection_address_duplicate",
+            context={"addresses": ", ".join(map(str, duplicates))},
+        )
 
 
 def _expected_projection_fields(
     contexts: tuple[FilingRecordRenderContext, ...],
-) -> dict[ProjectionAddress, ExportFieldDefinition]:
-    expected_fields: dict[ProjectionAddress, ExportFieldDefinition] = {}
+) -> dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]]:
+    expected_fields: dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]] = {}
     for context in contexts:
         for field in context.record.fields:
             if field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:
                 continue
             address = (context.record.id, context.occurrence, field.projection_ref)
             if address in expected_fields:
-                raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
-            expected_fields[address] = field
+                raise FilingExportDesignIntegrityError(
+                    f"filing layout admits duplicate projection address {address!r}",
+                    translated_message="errors.integrity.filing_export_layout_projection_address_duplicate",
+                    context={"address": str(address)},
+                )
+            expected_fields[address] = (context.record, field)
     return expected_fields
 
 
@@ -372,17 +428,22 @@ def _require_exact_projection_addresses(
     if actual != expected:
         missing = tuple(sorted(repr(address) for address in expected - actual))
         extraneous = tuple(sorted(repr(address) for address in actual - expected))
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"filing projection plan is not an exact layout bijection; missing={missing!r}, extraneous={extraneous!r}",
+            translated_message="errors.integrity.filing_export_projection_plan_not_bijection",
+            context={"missing": ", ".join(map(str, missing)), "extraneous": ", ".join(map(str, extraneous))},
         )
 
 
 def _validate_projection_values(
-    expected_fields: dict[ProjectionAddress, ExportFieldDefinition],
+    expected_fields: dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]],
     values: dict[ProjectionAddress, object],
 ) -> None:
-    for address, field in expected_fields.items():
-        format_field(field, values[address])
+    for address, (record, field) in expected_fields.items():
+        try:
+            format_field(field, values[address], record=record)
+        except (FilingExportValueOverflowError, FilingExportUnrepresentableCharacterError) as exc:
+            raise exc.in_record(record.record_type) from exc
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
@@ -439,6 +500,9 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     if amount <= 0:
         raise FilingExportValidationError(
             f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla_id!r}",
+            translated_message="application.filing.export.errors.record_requires_positive_casilla",
+            context={"record_id": record.id, "casilla": str(record.requires_positive_casilla_id)},
+            precondition_verdict=export_input_decision(ExportRefusalReason.POSITIVE_CASILLA_REQUIRED),
         )
 
 

@@ -15,16 +15,18 @@ from pathlib import Path
 
 import pytest
 
+from ......application.modelo.work_form_field_vocabulary import ModeloFormTextDisclosure
 from ......application.modelo.work_form_models import (
     ModeloFormRepeatingBlock,
     ModeloFormSection,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......domain.user_profile.values import UserProfileFact
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
+from ....tests.settling import settle_until
 from ..casilla_list_models import CasillaListHeading
 from ..factory import InstalledModeloWorkbench
 from ..navigator import NavigatorState, looks_like_identifier, navigator_rows, presented_form
@@ -35,7 +37,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ADDRESSES = [
     pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="renta"),
-    pytest.param({"modelo": "349", "filing_year": 2026, "period_code": "1T"}, id="intra-community"),
+    pytest.param(
+        {
+            "modelo": "349",
+            "filing_year": 2026,
+            "period_code": "1T",
+            "extra_facts": (UserProfileFact(path="iva.does_intracomunitario", value=True),),
+        },
+        id="intra-community",
+    ),
 ]
 _NAVIGATOR_WIDTH = 400
 
@@ -129,10 +139,7 @@ async def test_the_mounted_workbench_shows_the_translated_headings(workbench: In
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 48)) as pilot:
-            for _ in range(200):
-                await pilot.pause()
-                if screen.form is not None:
-                    break
+            await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
             shown = {
                 (page.id, section.id): section.heading.text for page in screen.pages_shown for section in page.sections
             }

@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.errors import OperationSubjectBusyError
 from cadrumo.application.operations.models import OperationId, OperationRequest, new_operation_id
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
@@ -55,7 +55,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
 )
-from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
@@ -65,7 +65,8 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityReques
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -199,6 +200,12 @@ class _RuntimePolicyClient(WorkerAuthorizationClient):
         self._callers = {caller.session.session_id: caller for caller in callers}
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         caller = self._callers[request.session_id]
@@ -215,9 +222,7 @@ class _RuntimePolicyClient(WorkerAuthorizationClient):
         )
         if isinstance(decision, AccessDenied):
             raise ProfileAccessRefusedError(decision.code)
-        yield WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        yield WorkerAuthorizationLease(connections=self.connections, request=request)
 
 
 def test_a_refused_committing_submission_stores_nothing_and_leaves_its_subject_free(
@@ -278,7 +283,7 @@ def test_a_refused_committing_submission_stores_nothing_and_leaves_its_subject_f
 
         async def submit(caller: _Caller) -> OperationId:
             operation_id = new_operation_id()
-            authority.bind(
+            await authority.bind(
                 operation_id,
                 WorkerOperationBinding(caller.session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, request),
             )

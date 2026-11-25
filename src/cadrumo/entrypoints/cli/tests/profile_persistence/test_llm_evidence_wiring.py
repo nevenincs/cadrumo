@@ -21,12 +21,13 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from cadrumo.application.ledger.llm_classification import resolve_llm_evidence, suggest_llm_classification
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.application.ledger.llm_classification import suggest_llm_classification
+from cadrumo.application.ledger.llm_evidence import resolve_llm_evidence
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
 from cadrumo.entrypoints.ledger_llm_composition import compose_ledger_llm
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
@@ -217,7 +218,7 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     transaction row, the documented baseline ``--llm`` input. This locks the
     "no evidence = no upload = no consent needed" invariant.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         txn = _transaction(evidence_id=None)
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((txn,)))

@@ -17,7 +17,6 @@ from dev.registry.pipeline.record_design_intermediate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SOURCE_REF = "aeat-dr-369-2021"
 _SOURCE_SHA256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
 _SOURCE_PATH = bundled_path(
     "corpus",
@@ -31,8 +30,18 @@ _SOURCE_PATH = bundled_path(
 
 def test_official_369_wrapper_keeps_relative_positions_and_absent_total_length() -> None:
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    ((source_ref, source),) = (
+        (source_id, candidate)
+        for source_id, candidate in catalogues.sources.items()
+        if str(source_id).startswith("aeat-dr-369-") and candidate.kind == "record_design"
+    )
+    assert source.applies_from is not None and source.record_design_epoch is not None
     intermediate = load_record_design_intermediate(
-        bundled_path(), catalogues.sources, source_ref=_SOURCE_REF, filing_year=2021, design_epoch="2021"
+        bundled_path(),
+        catalogues.sources,
+        source_ref=str(source_ref),
+        filing_year=source.applies_from.year,
+        design_epoch=source.record_design_epoch,
     )
 
     assert intermediate.source.source_sha256 == _SOURCE_SHA256

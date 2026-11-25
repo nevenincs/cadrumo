@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance import installed_cli as installed_cli_module
+from dev.acceptance.income_tax.cli_journey import imputation_criterion_args
 from dev.acceptance.installed_cli import InstalledCli, decode_cli_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -54,7 +56,7 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     monkeypatch.setattr(installed_cli_module.subprocess, "run", fake_run)
     cli = InstalledCli(executable, storage_root=storage_root, authority_root=authority_root, passphrase=passphrase)
 
-    cli.create_profile(year=2025)
+    cli.create_profile(year=filing_year_envelope().horizon)
 
     assert len(observed) == 2
     (first_argv, first), (second_argv, second) = observed
@@ -67,7 +69,7 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     assert json.loads(str(second["input"])) == {"profile_passphrase": passphrase}
     environment = first["env"]
     assert isinstance(environment, dict)
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root.resolve())
     assert "CADRUMO_UNRELATED" not in environment
     assert "PYTHONPATH" not in environment
@@ -117,3 +119,15 @@ def test_installed_cli_records_a_non_json_refusal_without_retaining_its_diagnost
             "app ledger list", 2, "non_json_failure", (), error_code="acceptance.installed_cli.non_json_failure"
         )
     ]
+
+
+def test_the_journey_declares_the_cash_criterion_for_its_year_without_commercial_accounting() -> None:
+    """RIRPF art. 7.2: the cobros y pagos election needs a direct-estimation filer with no Codigo de Comercio books."""
+    year = filing_year_envelope().horizon
+    assert imputation_criterion_args(year) == (
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        str(year),
+        "--no-irpf-codigo-comercio-accounting",
+    )

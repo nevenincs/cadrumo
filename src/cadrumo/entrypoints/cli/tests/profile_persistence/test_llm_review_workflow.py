@@ -18,15 +18,11 @@ from typing import override
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.llm_suggestion_support import classification_suggestion
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
-from cadrumo.application.ledger.llm_classification import (
-    apply_evidence_split,
-    apply_llm_classification,
-    saturate_llm_classification,
-    suggest_evidence_split,
-)
+from cadrumo.application.ledger.llm_classification import apply_llm_classification, saturate_llm_classification
 from cadrumo.application.ledger.llm_classification_ports import (
     LLMClassificationPorts,
     LLMClassificationSuggestion,
@@ -35,6 +31,7 @@ from cadrumo.application.ledger.llm_classification_ports import (
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
 )
+from cadrumo.application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from cadrumo.application.ledger.llm_review_workflow import (
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
@@ -46,7 +43,6 @@ from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -57,16 +53,12 @@ from cadrumo.entrypoints.ledger_llm_composition import compose_ledger_llm
 
 from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    single_line_proposal as _single_line_proposal,
-)
-from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
+    single_line_proposal,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .....adapters.persistence.profile.tests.llm_saturation_support import (
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
+    saturating_subprocess_classifier,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -128,17 +120,6 @@ def _seed_parent(repository: TransactionCatalogueRepository) -> str:
     )
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
-
-
-def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
-    return LLMClassificationSuggestion(
-        transaction_id=tx_id,
-        provenance="llm:claude:test-model",
-        classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.from_registry("material_oficina"),
-        confidence=Decimal("0.9"),
-        reason="looks like office supplies",
-    )
 
 
 def _events_of(events: BucketEventHistoryRepository, event_type: BucketEventType) -> tuple[BucketEvent, ...]:
@@ -215,7 +196,7 @@ def test_apply_composes_classification_primitive_with_derived_source_command(
 
     with _workflow_ports(repository, events) as (ports, _, _):
         result = execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             decision=LlmReviewDecision.APPLY,
             bucket_id=_BUCKET,
@@ -243,7 +224,7 @@ def test_reject_composes_reject_primitive_and_mutates_nothing(
 
     with _workflow_ports(repository, events) as (ports, _, _):
         execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,
@@ -276,7 +257,7 @@ def _saturated_suggestion(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general"), operation=operation),
+        classifier=saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general"), operation=operation),
         transaction_repository=repository,
         settings=settings,
         ports=llm_ports,
@@ -298,7 +279,7 @@ def _split_suggestion(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        proposer=_split_subprocess_proposer(response=proposal, operation=operation),
+        proposer=split_subprocess_proposer(response=proposal, operation=operation),
         transaction_repository=repository,
         read_evidence=False,
         settings=settings,
@@ -358,7 +339,7 @@ def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -399,7 +380,7 @@ def test_split_llm_origin_stamps_its_own_distinct_source_command(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -439,7 +420,7 @@ def test_no_split_verdict_refuses_a_split_decision(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_single_line_proposal(),
+                proposal=single_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -468,7 +449,7 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
     ) -> tuple[dict[str, object], str]:
         tx_id = _seed_parent(repository)
         result = apply_llm_classification(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             bucket_id=repository.bucket_id,
             source_command=origin.source_command,
             transaction_repository=repository,
@@ -487,7 +468,7 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         tx_id = _seed_parent(repository)
         with _workflow_ports(repository, events) as (ports, _, _):
             result = execute_reviewed_decision(
-                _classification_suggestion(tx_id),
+                classification_suggestion(tx_id),
                 origin=origin,
                 decision=LlmReviewDecision.APPLY,
                 bucket_id=repository.bucket_id,
@@ -529,7 +510,7 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(
                 suggestion = _split_suggestion(
                     repository,
                     tx_id,
-                    proposal=_two_line_proposal(),
+                    proposal=two_line_proposal(),
                     ledger_ports=ports,
                     llm_ports=llm_ports,
                     settings=settings,
@@ -588,7 +569,7 @@ def test_reviewed_apply_refuses_stale_row_without_overwriting_newer_persistence(
     with _workflow_ports(repository, events) as (ports, llm_ports, settings):
         suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion
         if review_kind == "classification":
-            suggestion = _classification_suggestion(tx_id)
+            suggestion = classification_suggestion(tx_id)
             origin = LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY
             decision = LlmReviewDecision.APPLY
         elif review_kind == "saturated":
@@ -601,7 +582,7 @@ def test_reviewed_apply_refuses_stale_row_without_overwriting_newer_persistence(
             suggestion = _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -640,7 +621,7 @@ def test_review_rejection_audits_fresh_current_row_without_replaying_reviewed_fi
     repository.save(TransactionCatalogue.from_transactions([newer]))
     with _workflow_ports(repository, events) as (ports, _, _):
         result = execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,
@@ -684,7 +665,7 @@ def test_review_rejection_refuses_actual_catalogue_revision_race_without_partial
         pytest.raises(LedgerPersistenceConflictError),
     ):
         execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,

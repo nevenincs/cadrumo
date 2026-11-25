@@ -29,18 +29,10 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -58,15 +50,13 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -205,22 +195,6 @@ class PhaseGatedProcessExecutor:
         return None
 
 
-def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.COOPERATIVE,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK, OperationOwnedResource.PROCESS}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
-
-
 def _definition(executor: PhaseGatedProcessExecutor) -> OperationDefinition:
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
@@ -234,20 +208,12 @@ def _definition(executor: PhaseGatedProcessExecutor) -> OperationDefinition:
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=supervisor_capabilities(
+            cancellation=OperationCancellation.COOPERATIVE,
+            owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK, OperationOwnedResource.PROCESS}),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
+        ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-    )
-
-
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
     )
 
 
@@ -303,7 +269,7 @@ def test_cancellation_at_each_declared_phase_reaps_the_child_and_frees_the_scope
 ) -> None:
     """A stop at any declared phase settles only after real cleanup and reaping."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )

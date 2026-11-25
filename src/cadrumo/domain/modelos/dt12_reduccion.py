@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
+from ...core.filing_year import is_four_digit_year
 from ...core.money.rounding import round_to_cents
 from .errors import PensionReduccionError
 from .modelo_fact_context import ModeloFactResolutionContext
@@ -32,6 +33,11 @@ _DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR_FACT_ID = "lirpf-dt12-transitional-co
 _DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR_FACT_ID = "lirpf-dt12-transitional-contingency-last-year"
 _DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS_FACT_ID = "lirpf-dt12-transitional-window-following-years"
 _DT12_CLIFF_LAST_YEAR_FACT_ID = "lirpf-dt12-cliff-last-year"
+
+_FOUR_DIGIT_YEAR_LOCALE_KEYS = {
+    "contingencia_year": "errors.refused.pension_reduccion_contingencia_year_not_four_digits",
+    "rescate_year": "errors.refused.pension_reduccion_rescate_year_not_four_digits",
+}
 
 
 def compute_dt12_reduccion_plan_pensiones(
@@ -56,16 +62,19 @@ def compute_dt12_reduccion_plan_pensiones(
     if aportaciones_totales <= Decimal(0):
         raise PensionReduccionError(
             f"aportaciones_totales must be positive; got {aportaciones_totales}",
+            translated_message="errors.refused.pension_reduccion_total_contributions_not_positive",
             context={"field": "aportaciones_totales", "value": str(aportaciones_totales)},
         )
     if gross_rescate < Decimal(0):
         raise PensionReduccionError(
             f"gross_rescate must be non-negative; got {gross_rescate}",
+            translated_message="errors.refused.pension_reduccion_rescate_negative",
             context={"field": "gross_rescate", "value": str(gross_rescate)},
         )
     if aportaciones_pre_2007 < Decimal(0):
         raise PensionReduccionError(
             f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}",
+            translated_message="errors.refused.pension_reduccion_early_contributions_negative",
             context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
         )
     if aportaciones_pre_2007 > aportaciones_totales:
@@ -73,6 +82,7 @@ def compute_dt12_reduccion_plan_pensiones(
             "aportaciones_pre_2007 must not exceed aportaciones_totales "
             f"(DT 12ª apartado 2: the pre-2007 part is a subset of total contributions); "
             f"got pre_2007={aportaciones_pre_2007}, totales={aportaciones_totales}",
+            translated_message="errors.refused.pension_reduccion_early_contributions_exceed_total",
             context={
                 "field": "aportaciones_pre_2007",
                 "value": str(aportaciones_pre_2007),
@@ -155,9 +165,10 @@ def dt12_regime_window_eligibility(
         PensionReduccionError: When either year is not a plausible calendar year.
     """
     for field_name, value in (("contingencia_year", contingencia_year), ("rescate_year", rescate_year)):
-        if value < 1900 or value > 2200:
+        if not is_four_digit_year(value):
             raise PensionReduccionError(
-                f"{field_name} must be a plausible calendar year (1900–2200); got {value}",
+                f"{field_name} must be written with four digits; got {value}",
+                translated_message=_FOUR_DIGIT_YEAR_LOCALE_KEYS[field_name],
                 context={"field": field_name, "value": str(value)},
             )
 

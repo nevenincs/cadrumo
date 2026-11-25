@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#iva-franquicia-2026-scope'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:3f3001ee47a9a31cbf82ede46d837314ec6fbfed978b038adb4e92b8bb255a3f'
+modified: '2026-11-04'
+body_hash: 'sha256:61bbdae4a7ed7c3dbd0505756882a42b7668270fd09d64c4ab98abb18c32447b'
 related:
   - "[[2026-07-01-iva-franquicia-2026-scope-research]]"
 ---
@@ -15,7 +15,7 @@ related:
 
 Directiva (UE) 2020/285 establishes an EU small-business VAT exemption (régimen de
 franquicia) letting qualifying small enterprises not charge output IVA below a
-turnover threshold. Issue #350 asked whether and how to model it for the 2026
+turnover threshold. Issue #350 asked whether and how to model it for the current
 campaign. The question is whether to ship an active `franquicia` régimen now.
 
 ## Considerations

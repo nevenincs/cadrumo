@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import cast
 from uuid import UUID
@@ -12,27 +13,30 @@ from pydantic import BaseModel
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_REFUSED_VALIDATION,
     ActivityAssetAuthorityProvenance,
     ActivityAssetInspectRequest,
     ActivityAssetOperationPortsFactory,
+    ActivityAssetRefusal,
 )
 from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
-from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
+from cadrumo.application.actividad_asset.activity_asset_read_models import project_reason_facts
 from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
 from cadrumo.application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )
+from cadrumo.application.actividad_asset.result_requirements import ActivityAssetInspectionRevision
 from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -42,6 +46,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -57,6 +62,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
+from .door_session_support import terminal_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -64,7 +70,6 @@ _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
 _AUTHORITY = ActivityAssetAuthorityProvenance(logical_generation="b" * 64, reader_incarnation="c" * 64)
-_NOW = datetime(2026, 9, 29, tzinfo=UTC)
 
 
 class _Client:
@@ -75,23 +80,20 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass(kw_only=True)
 class _Controller:
     operation_id = _OPERATION_ID
+    observation: OperationObservationSuccessV1
+    result: ActivityAssetInspectProjection
+    client: _Client
+    expire_after_result: bool
+    deadline: float | None = None
+    started: bool = False
+    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: ActivityAssetInspectProjection,
-        client: _Client,
-        expire_after_result: bool,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.client = client
-        self.expire_after_result = expire_after_result
-        self.started = False
-        self.result_reads: list[tuple[type[BaseModel], int, bool]] = []
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         self.started = True
@@ -131,6 +133,7 @@ def _revision() -> ActivityAssetRevision:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("100.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="runtime TUI fixture",
         ),
         in_service_date=date(2025, 1, 1),
@@ -147,55 +150,21 @@ def _revision() -> ActivityAssetRevision:
     )
 
 
-def _inspect_contract():
+def _observation(
+    *,
+    effect: OperationEffect = OperationEffect.NONE,
+    refusal_code: str | None = None,
+) -> OperationObservationSuccessV1:
     factory = cast(ActivityAssetOperationPortsFactory, cast(object, lambda **_kwargs: None))
     definition = build_activity_asset_inspect_definition(factory)
     registration = build_activity_asset_inspect_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    return registry.lookup_public_contract(ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID), registry.public_contract_set
-
-
-def _observation(*, effect: OperationEffect = OperationEffect.NONE) -> OperationObservationSuccessV1:
-    contract, contract_set = _inspect_contract()
-    state = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
-        definition_id=ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-        revision=1,
-        anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=OperationTerminalCondition.SUCCEEDED,
+    return terminal_observation(
+        registry,
+        ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+        condition=OperationTerminalCondition.SUCCEEDED if refusal_code is None else OperationTerminalCondition.REFUSED,
         effect=effect,
-        phase_code=None,
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref="f" * 64,
-        refusal_ref=None,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    return OperationObservationSuccessV1(
-        projection=state,
-        event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
-            anchor_cursor=0,
-            requested_cursor=0,
-            status=OperationReplayStatus.CAUGHT_UP,
-            events=(),
-            next_cursor=0,
-            restart_cursor=None,
-        ),
+        refusal_ref=refusal_code,
     )
 
 
@@ -221,6 +190,7 @@ def _install_runtime(
     result: ActivityAssetInspectProjection,
     expire_after_result: bool = False,
     effect: OperationEffect = OperationEffect.NONE,
+    refusal_code: str | None = None,
 ) -> tuple[list[dict[str, object]], _Controller]:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
@@ -241,7 +211,7 @@ def _install_runtime(
 
     monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     controller = _Controller(
-        observation=_observation(effect=effect),
+        observation=_observation(effect=effect, refusal_code=refusal_code),
         result=result,
         client=client,
         expire_after_result=expire_after_result,
@@ -320,3 +290,43 @@ def test_activity_asset_tui_door_fails_closed_when_its_retained_session_changes(
         actions.inspect(revision.asset_id)
 
     assert submissions == []
+
+
+@pytest.mark.parametrize("language", ["en", "es", "ca", "hu"])
+def test_activity_asset_tui_door_rebuilds_a_refusal_with_its_specific_key_and_facts(
+    monkeypatch: pytest.MonkeyPatch,
+    language: str,
+) -> None:
+    key = "ledger.actividad_asset.errors.profile_modality_mismatch"
+    refusal = ActivityAssetRefusal(
+        code=ACTIVITY_ASSET_REFUSED_VALIDATION,
+        reason_key=key,
+        reason_facts=project_reason_facts({"elected": "normal", "declared": "simplified"}),
+    )
+    refused = ActivityAssetInspectProjection(
+        profile_id=_PROFILE_ID,
+        authority=_AUTHORITY,
+        outcome="refused",
+        refusal=refusal,
+    )
+    client = _Client()
+    submissions, _controller = _install_runtime(
+        monkeypatch,
+        client=client,
+        result=refused,
+        refusal_code=ACTIVITY_ASSET_REFUSED_VALIDATION,
+    )
+    actions = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(ActividadAssetValidationError) as raised:
+        actions.inspect("runtime-tui-asset")
+
+    assert submissions
+    assert raised.value.translated_message == key
+    assert raised.value.context is not None
+    assert raised.value.context["elected"] == "normal"
+    assert raised.value.context["declared"] == "simplified"
+    assert raised.value.context["refusal_code"] == ACTIVITY_ASSET_REFUSED_VALIDATION
+    shown = resolve_error_message(raised.value, locale=language)
+    assert shown == tr(key, locale=language, elected="normal", declared="simplified")
+    assert "{" not in shown

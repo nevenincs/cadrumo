@@ -27,7 +27,8 @@ from .export_fragment_provenance import (
 from .joined_record_design import JoinedRecordDesignField
 
 
-def _require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
+def require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
+    """Require an official numeric field's parsed byte length to equal the declared length."""
     actual_length = joined_field.parser_field.length
     if actual_length != expected_length:
         raise RegistryValidationError(
@@ -36,7 +37,7 @@ def _require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_l
         )
 
 
-def _schema_field(
+def schema_field(
     joined_field: JoinedRecordDesignField,
     *,
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"],
@@ -53,9 +54,10 @@ def _schema_field(
     allowed_values: tuple[str, ...] | None = None,
     minimum_year: int | None = None,
 ) -> ExportFieldDerivation:
+    """Build an export schema field from a joined design field with its type and layout."""
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
-    required, required_for = _combined_requirement(joined_field, design_required=required)
+    required, required_for = combined_requirement(joined_field, design_required=required)
     return ExportFieldDerivation(
         export_record_id=export_record_id,
         parser_field=parser_field,
@@ -87,6 +89,8 @@ def _schema_field(
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
                 "minimum_year": minimum_year,
+                "presence_marker": presence_marker(joined_field),
+                "party_name": None if semantic_entry.party_name is None else semantic_entry.party_name.composition,
                 "legal_refs": semantic_entry.legal_refs,
                 "source_refs": semantic_entry.source_refs,
             },
@@ -96,7 +100,21 @@ def _schema_field(
     )
 
 
-def _combined_requirement(
+def presence_marker(joined_field: JoinedRecordDesignField) -> str | None:
+    """Read the constant of a producer- or marker-fed slot whose printed contents are a blank or that constant."""
+    fed_by_fact = joined_field.semantic_entry.kind.value in {"header", "computed"}
+    if not fed_by_fact or joined_field.parser_field.content is None:
+        return None
+    match = _BLANK_OR_CONSTANT_CONTENT.fullmatch(joined_field.parser_field.content.strip())
+    if match is None:
+        return None
+    constant = match.group("constant")
+    if not isinstance(constant, str):
+        raise RegistryValidationError("the design regex must capture its constant as text")
+    return constant
+
+
+def combined_requirement(
     joined_field: JoinedRecordDesignField,
     *,
     design_required: bool,
@@ -109,7 +127,7 @@ def _combined_requirement(
     and one disagreeing with a qualified design wording is refused as a
     conflict between authorities rather than resolved by preference.
     """
-    design_required_for = _qualified_requirement(joined_field.parser_field.validation)
+    design_required_for = qualified_requirement(joined_field.parser_field.validation)
     reviewed = joined_field.semantic_entry.requirement
     if reviewed is None:
         return design_required, design_required_for
@@ -133,6 +151,8 @@ def _combined_requirement(
 #: ser: C ... D ... G ... I ... N ... V ..."), so the cell states a requirement
 #: and points at its value list. Read as a qualifier, it shipped the one field
 #: every 303 filing must carry as not required.
+#: A slot whose whole printed content is a blank or one constant, as DR369 prints its Complementaria.
+_BLANK_OR_CONSTANT_CONTENT: Final = re.compile(r'\[blanco \| constante "(?P<constant>[A-Z])"\]')
 _UNCONDITIONAL_REQUIREMENTS: Final[frozenset[str]] = frozenset({"obligatorio", "obligatorio pi"})
 
 
@@ -163,7 +183,7 @@ def _design_type(aeat_type: str, data_type: str) -> Literal["N", "Num"] | None:
     return "N" if code == "N" else "Num"
 
 
-def _qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:
+def qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:
     """Return the taxpayer legal form a qualified requirement names, or ``None``.
 
     Accents are set aside because the designs spell the same qualifier both
@@ -179,7 +199,7 @@ def _qualified_requirement(validation: str | None) -> Literal["natural_person"] 
     return _QUALIFIED_REQUIREMENTS.get(ascii_only.casefold())
 
 
-def _is_required(validation: str | None) -> bool:
+def is_required(validation: str | None) -> bool:
     """Read whether the design states this field's requirement unconditionally.
 
     A cell is one of three things and only two are answerable here. A SILENT
@@ -213,7 +233,7 @@ def _is_required(validation: str | None) -> bool:
 _ADMITTED_BLANK: Final = re.compile(r"\bblancos?\b", re.IGNORECASE)
 
 
-def _is_required_admitting_blank_text(validation: str | None, content: str | None) -> bool:
+def is_required_admitting_blank_text(validation: str | None, content: str | None) -> bool:
     """Read whether a text field whose blank means absence has no blank representation.
 
     A layout field's ``required`` is narrower than AEAT's ``obligatorio``: it
@@ -233,4 +253,4 @@ def _is_required_admitting_blank_text(validation: str | None, content: str | Non
     print the page indicator exactly so. A header-producer field still states
     its value explicitly.
     """
-    return _is_required(validation) and not (content is not None and _ADMITTED_BLANK.search(content))
+    return is_required(validation) and not (content is not None and _ADMITTED_BLANK.search(content))

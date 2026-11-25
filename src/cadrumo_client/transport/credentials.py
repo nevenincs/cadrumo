@@ -12,15 +12,15 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.paths import effective_storage_root
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 
 from ..contracts.access_vocabulary import AccessScope
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import deadline_after, remaining_budget
-from ..contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from .frontend_client import FrontendClient
 from .installation import read_runtime_installation
 from .installed_client import open_installed_client
@@ -38,7 +38,7 @@ class _CredentialClientCleanup:
         await asyncio.to_thread(self.client.close)
 
 
-def _authenticate_reference(
+def authenticate_reference(
     client: FrontendClient,
     *,
     root: Path,
@@ -79,7 +79,7 @@ async def open_installed_credential_client(
     profile_id: UUID,
     credential_reference: UUID,
     frontend: OperationFrontendProjection,
-    timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS,
+    timeout: float = DEFAULT_TIMEOUT_POLICY.timeout_seconds,
     secrets_store: AutomationSecretStore | None = None,
     on_connected: Callable[[FrontendClient], None] | None = None,
     scope: AccessScope | None = None,
@@ -105,7 +105,7 @@ async def open_installed_credential_client(
             on_connected(client)
         await await_cancellation_complete(
             asyncio.to_thread(
-                _authenticate_reference,
+                authenticate_reference,
                 client,
                 root=root,
                 credential_reference=credential_reference,

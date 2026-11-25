@@ -1,0 +1,21 @@
+# Box [18] keeps its rung. The transitional reducido recargo ended with the RDL 4/2024
+# window, and the 2025 design fixes the rung's Tipo as "00000", so the box carries no
+# computed cuota; the 4 % recargo had already moved to [170] from the third quarter of 2024.
+# Both predecessors that print the same periods record the boundary here.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "dr303-18-2023-2025-legal-refs-evolved"
+continuidad_id = "dr303-18"
+from_revision = "2023"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-dr-303-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "dr303-18-2024-desde-09-y-3t-2025-legal-refs-evolved"
+continuidad_id = "dr303-18"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]

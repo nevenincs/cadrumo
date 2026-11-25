@@ -28,9 +28,10 @@ from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import resolve_modelo_obligation_scope
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.authority_state import source_root_for
@@ -40,21 +41,23 @@ from ...maintenance_support import (
     load_bundled_external_oracle_inventory,
     revision_selection_coordinates,
 )
+from ..annual_population import (
+    AnnualCasillaPopulationComparison,
+    compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
+)
 from ..errors import RegistryApplicationInputError
 from ..external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
 )
 from ..profile import (
-    AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     RevisionConformanceRow,
     build_registry_conformance_profile,
-    compare_annual_casilla_population,
-    compare_annual_casilla_population_for_revision,
 )
 from ..registry_classification_coherence import build_classification_coherence_audit
-from ._conformance_profile_fixtures import degraded_profile, validated_profile
+from .conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -71,7 +74,9 @@ _MINIMUM_COMPOSED_REVISIONS = 60
 _GROUNDED_MODELO = "303"
 _MULTI_REVISION_MODELO = "100"
 
-# Independent census captured from the bundled year-specific AEAT dictionaries.
+# Independent census captured from the bundled AEAT dictionaries, keyed by the
+# SHA-256 of the dictionary artefact it counts, so it names the artefact and never
+# a year the registry resolves.
 # This anchor is a fact about the AEAT ARTEFACT, so it is pinned as a number: a
 # change here means the bundled corpus moved and is worth failing on.
 #
@@ -81,13 +86,15 @@ _MULTI_REVISION_MODELO = "100"
 # detected nothing in between. What it was standing in for is asserted below as
 # a property instead.
 _M100_DICTIONARY_CASILLA_COUNTS = {
-    2020: 1531,
-    2021: 1693,
-    2022: 1852,
-    2023: 1929,
-    2024: 2072,
-    2025: 2215,
+    "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f": 1531,
+    "2aaf5c7fe7df35458dc50c0b9fe1925853b2778a26f493baee524a926ae6d817": 1693,
+    "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc": 1853,
+    "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024": 1930,
+    "0e190a5b1fe95047785832797ff15d5070441e37d49e4062d20ca95b65e37884": 2072,
+    "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b": 2215,
 }
+_FILING_YEAR = filing_year_envelope().horizon
+_NEWEST_M100_YEAR = newest_authored_edition("100")
 
 
 @pytest.fixture(scope="module")
@@ -222,7 +229,7 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
         update={
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
             "reviewed_by": "operator",
-            "reviewed_at": date(2026, 7, 27),
+            "reviewed_at": date(_FILING_YEAR, 7, 27),
             "engineered_by": "conformance-cli",
         },
     )
@@ -235,7 +242,7 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
     assert mutated_row.governance.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert mutated_row.governance.is_reviewed is True
     assert mutated_row.governance.reviewed_by == "operator"
-    assert mutated_row.governance.reviewed_at == date(2026, 7, 27)
+    assert mutated_row.governance.reviewed_at == date(_FILING_YEAR, 7, 27)
     assert mutated_row.governance.reviewed_against is None
     assert mutated_row.governance.engineered_by == "conformance-cli"
     assert mutated.reviewed_revision_count == 1
@@ -519,10 +526,7 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
         _assert_annual_casilla_comparison(registry_authority, filing_year)
 
 
-def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAuthority, filing_year: int) -> None:
-    snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
-    comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
-
+def _assert_annual_comparison_header(comparison: AnnualCasillaPopulationComparison, filing_year: int) -> None:
     assert isinstance(comparison, AnnualCasillaPopulationComparison)
     assert comparison.modelo == "100"
     assert comparison.filing_year == filing_year
@@ -534,11 +538,8 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
     assert comparison.printed_form_source_refs == (f"boe-modelo-100-{filing_year}-form",)
     assert comparison.xsd_source_refs == (f"aeat-dr-100-{filing_year}-xsd",)
 
-    dictionary_layout = next(
-        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
-    )
-    assert len(comparison.layout_comparisons) == len(snapshot.revision.export_layouts)
-    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+
+def _assert_dictionary_layout_comparison_scope(layout_comparison, filing_year: int, snapshot) -> None:
     assert layout_comparison.layout_format == ExportLayoutFormat.XML_DICTIONARY.value
     assert layout_comparison.identity_measurement == "measured"
     assert layout_comparison.printed_form_membership == "unsupported"
@@ -546,7 +547,8 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
     assert layout_comparison.dictionary_source_ref == f"aeat-dr-100-{filing_year}-dictionary"
     assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
     assert "data_type" in layout_comparison.unmeasured_attributes
-    assert layout_comparison.dictionary_casilla_count == _M100_DICTIONARY_CASILLA_COUNTS[filing_year]
+    dictionary_digest = snapshot.sources[layout_comparison.dictionary_source_ref].sha256
+    assert layout_comparison.dictionary_casilla_count == _M100_DICTIONARY_CASILLA_COUNTS[dictionary_digest]
 
     # Every casilla AEAT declares for this year is declared by the registry.
     assert layout_comparison.extra_casilla_ids == ()
@@ -569,12 +571,17 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
         f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary does not contain"
     )
 
+
+def _assert_comparison_matches_the_parsed_dictionary(
+    snapshot, dictionary_layout, comparison, layout_comparison
+) -> None:
     entries = xml_dictionary_entries(
         dictionary_layout,
         sources=snapshot.sources,
         source_payloads={
             str(source.id): (bundled_path() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
+        casillas=snapshot.revision.casillas,
     )
     dictionary_ids = {str(entry.casilla_id) for entry in entries if entry.casilla_id is not None}
     registry_ids = {str(casilla.id) for casilla in snapshot.revision.casillas if not casilla.internal_only}
@@ -586,11 +593,25 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
     assert comparison.extra_casilla_ids == layout_comparison.extra_casilla_ids
 
 
+def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAuthority, filing_year: int) -> None:
+    snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
+    comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
+    _assert_annual_comparison_header(comparison, filing_year)
+
+    dictionary_layout = next(
+        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
+    )
+    assert len(comparison.layout_comparisons) == len(snapshot.revision.export_layouts)
+    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+    _assert_dictionary_layout_comparison_scope(layout_comparison, filing_year, snapshot)
+    _assert_comparison_matches_the_parsed_dictionary(snapshot, dictionary_layout, comparison, layout_comparison)
+
+
 def test_annual_casilla_comparison_retains_unmeasured_when_source_root_is_unavailable(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """A declared layout without its parser source is not reported as a clean result."""
-    snapshot = registry_authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = registry_authority.snapshot("100", filing_year=_NEWEST_M100_YEAR, period="0A")
 
     comparison = compare_annual_casilla_population(snapshot)
     dictionary_layout = next(
@@ -615,13 +636,13 @@ def test_annual_casilla_comparison_accepts_typed_inspection_without_snapshot(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """Static annual schema evidence does not cross the filing snapshot gate."""
-    inspection = registry_authority.inspect_revision("100", filing_year=2025, period="0A")
+    inspection = registry_authority.inspect_revision("100", filing_year=_NEWEST_M100_YEAR, period="0A")
     revision = registry_authority.modelo("100").revisions[inspection.revision_id]
 
     comparison = compare_annual_casilla_population_for_revision(
         modelo=inspection.modelo_id,
         revision=revision,
-        filing_year=2025,
+        filing_year=_NEWEST_M100_YEAR,
         period="0A",
         sources=inspection.sources,
         source_root=source_root_for(registry_authority),

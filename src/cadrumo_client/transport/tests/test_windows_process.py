@@ -1,0 +1,665 @@
+"""Real creation-time Job containment, nested descendants and abrupt owner loss."""
+
+from __future__ import annotations
+
+import asyncio
+import ctypes
+import json
+import logging
+import math
+import os
+import queue
+import re
+import sys
+import threading
+import time
+from pathlib import Path
+
+import pytest
+from pydantic import BaseModel, ConfigDict, ValidationError
+
+from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
+from cadrumo.tests.log_records import delivered_records
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+
+from ...contracts.contracts import RefusalCode, RefusalError
+from .. import windows_process
+from ..windows_process import WindowsProcessScope
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_outbound_adapter,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native creation-time Windows Job assignment"),
+]
+
+_FIXTURE = "cadrumo_client.transport.tests.job_fixture"
+_LOGGER_NAME = "cadrumo_client.transport.windows_process"
+
+
+def test_churn_watchdog_resets_on_progress_and_expires_when_progress_stops() -> None:
+    from .job_fixture import ProgressWatchdog
+
+    observed: queue.Queue[float] = queue.Queue()
+    expired = threading.Event()
+    now = 0.0
+
+    def clock() -> float:
+        if threading.current_thread().name == "churn-progress-watchdog":
+            observed.put(now)
+        return now
+
+    watchdog = ProgressWatchdog(timeout=60, clock=clock, expired=expired.set)
+    with watchdog:
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 0
+        with watchdog._condition:
+            now = 59.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 59
+        assert not expired.is_set()
+        watchdog.progress()
+        # The progress notification may wake the watcher before or after the
+        # next clock advance; wait for it before testing the new deadline.
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 59
+        with watchdog._condition:
+            now = 118.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 118
+        assert not expired.is_set()
+        with watchdog._condition:
+            now = 119.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 119
+        assert expired.wait(PROCESS_HANG_GUARD_SECONDS)
+
+
+@pytest.mark.asyncio
+async def test_pid_enumeration_and_cleanup_survive_real_process_churn(tmp_path: Path) -> None:
+    record = tmp_path / "pid-churn.json"
+    process = await launch_fixture(_FIXTURE, "pid-churn", str(record))
+    try:
+        output, errors = await asyncio.wait_for(process.communicate(), timeout=PROCESS_HANG_GUARD_SECONDS)
+        assert process.returncode == 0, (process.returncode, output, errors)
+        facts = json.loads(record.read_text())
+        assert facts["launched"] == 48
+        assert facts["queries"] > 0
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+
+class _ProcessFacts(BaseModel):
+    parent: int
+    child: int
+    breakaway_refused: bool
+
+
+async def _record(path: Path) -> _ProcessFacts:
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        try:
+            return _ProcessFacts.model_validate_json(path.read_text())
+        except (FileNotFoundError, ValidationError):
+            await asyncio.sleep(0.02)
+    pytest.fail("synthetic child did not publish process facts within the deadline")
+
+
+def test_crash_status_exit_is_reported_as_the_unsigned_native_code(tmp_path: Path) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=("-c", "import ctypes; ctypes.windll.kernel32.ExitProcess(0xC0000005)"),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+        )
+        assert process.wait(timeout=5) == 0xC0000005
+    finally:
+        scope.terminate()
+
+
+def test_normal_exit_and_environment_are_preserved(tmp_path: Path) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=("-c", "import os,sys; sys.exit(23 if os.environ.get('SYNTHETIC_VALUE') == 'present' else 99)"),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"], "SYNTHETIC_VALUE": "present"},
+        )
+        assert process.wait(timeout=5) == 23
+    finally:
+        scope.terminate()
+    with pytest.raises(RefusalError) as caught:
+        scope.launch(executable=native_python(), arguments=(), directory=tmp_path, environment={})
+    assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
+
+
+def test_exit_waiter_survives_the_original_handles_closing(tmp_path: Path) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=("-c", "import time; time.sleep(0.1); raise SystemExit(23)"),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+        )
+        waiter = process.retain_waiter()
+        try:
+            process.close()
+            assert waiter.wait(timeout=10) == 23
+            assert waiter.wait(timeout=None) == 23
+        finally:
+            waiter.close()
+    finally:
+        scope.terminate()
+
+
+def test_a_refused_creation_names_the_failed_call_and_its_win32_error(tmp_path: Path) -> None:
+    assert sys.platform == "win32"
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    error_mode = kernel.GetThreadErrorMode
+    error_mode.argtypes = ()
+    error_mode.restype = ctypes.c_ulong
+    previous_error_mode = error_mode()
+    not_an_image = tmp_path / "synthetic.exe"
+    not_an_image.write_bytes(b"synthetic, not a Windows image")
+    scope = WindowsProcessScope()
+    try:
+        with pytest.raises(RefusalError) as caught:
+            scope.launch(
+                executable=not_an_image,
+                arguments=(),
+                directory=tmp_path,
+                environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+            )
+    finally:
+        scope.terminate()
+    assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
+    # Windows picks which image-format error it reports; a captured one is never zero.
+    assert re.fullmatch(r"create_process_winerror_[1-9][0-9]*", caught.value.check or "")
+    assert str(tmp_path) not in str(caught.value)
+    assert error_mode() == previous_error_mode
+
+
+def test_launch_does_not_inherit_ambient_inheritable_handles(tmp_path: Path) -> None:
+    import pywintypes
+    import win32api
+    import win32event
+
+    attributes = pywintypes.SECURITY_ATTRIBUTES()
+    attributes.bInheritHandle = True
+    canary = win32event.CreateEvent(attributes, True, False, None)
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=(
+                "-c",
+                "import ctypes,sys; from ctypes import wintypes; k=ctypes.WinDLL('kernel32'); "
+                "k.SetEvent.argtypes=(wintypes.HANDLE,); k.SetEvent.restype=wintypes.BOOL; "
+                "sys.exit(1 if k.SetEvent(int(sys.argv[1])) else 0)",
+                str(int(canary)),
+            ),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+        )
+        assert process.wait(timeout=5) == 0
+        assert win32event.WaitForSingleObject(canary, 0) == win32event.WAIT_TIMEOUT
+    finally:
+        scope.terminate()
+        win32api.CloseHandle(canary)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["tree", "exited"])
+async def test_close_terminates_grandchild_even_when_direct_child_exited(tmp_path: Path, mode: str) -> None:
+    import win32api
+    import win32event
+
+    scope = WindowsProcessScope()
+    handles: list[int] = []
+    try:
+        record_path = tmp_path / "process-facts.json"
+        process = scope.launch(
+            executable=native_python(),
+            arguments=fixture_arguments(_FIXTURE, mode, str(record_path)),
+            directory=tmp_path,
+            environment=fixture_environment(),
+        )
+        facts = await _record(record_path)
+        assert facts.parent == process.pid
+        assert facts.breakaway_refused is True
+        child_handle = win32api.OpenProcess(0x100000, False, facts.child)
+        handles.append(child_handle)
+        assert win32event.WaitForSingleObject(child_handle, 0) == win32event.WAIT_TIMEOUT
+        if mode == "exited":
+            assert process.wait(timeout=2) == 0
+        await scope.close()
+        assert win32event.WaitForSingleObject(child_handle, 1000) == win32event.WAIT_OBJECT_0
+    finally:
+        scope.terminate()
+        for handle in handles:
+            win32api.CloseHandle(handle)
+
+
+def test_terminate_returns_only_after_every_member_process_object_is_signaled(tmp_path: Path) -> None:
+    """The Job's active count reaches zero before its members are signaled, so it alone cannot end termination."""
+    import win32api
+    import win32event
+
+    scope = WindowsProcessScope()
+    handles: list[int] = []
+    try:
+        for _ in range(4):
+            scope.launch(
+                executable=native_python(),
+                arguments=("-c", "import time; time.sleep(30)"),
+                directory=tmp_path,
+                environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+            )
+        members = scope.active_process_ids()
+        assert len(members) >= 4
+        handles.extend(win32api.OpenProcess(0x100000, False, pid) for pid in members)
+        assert all(win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT for handle in handles)
+        scope.terminate()
+        # A zero wait: termination returned, so every member has stopped, not merely left the count.
+        assert all(win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_OBJECT_0 for handle in handles)
+    finally:
+        scope.terminate()
+        for handle in handles:
+            win32api.CloseHandle(handle)
+
+
+async def _assert_owner_death_ends_members(owner: asyncio.subprocess.Process, handles: list[int]) -> None:
+    import win32event
+
+    owner.kill()
+    await asyncio.wait_for(owner.wait(), timeout=5)
+    for handle in handles:
+        assert win32event.WaitForSingleObject(handle, 2000) == win32event.WAIT_OBJECT_0
+
+
+async def _reap_owner(owner: asyncio.subprocess.Process, handles: list[int]) -> None:
+    import win32api
+
+    if owner.returncode is None:
+        owner.kill()
+    _output, errors = await asyncio.wait_for(owner.communicate(), timeout=5)
+    for handle in handles:
+        win32api.CloseHandle(handle)
+    assert not errors, errors.decode(errors="replace")
+
+
+@pytest.mark.asyncio
+async def test_abrupt_owner_death_closes_job_without_graceful_callbacks(tmp_path: Path) -> None:
+    import win32api
+    import win32event
+
+    record_path = tmp_path / "process-facts.json"
+    owner = await launch_fixture(_FIXTURE, "owner", str(record_path))
+    handles: list[int] = []
+    try:
+        assert owner.stdout is not None
+        assert (await asyncio.wait_for(owner.stdout.readline(), timeout=5)).strip() == b"ready"
+        facts = await _record(record_path)
+        assert facts.breakaway_refused is True
+        for pid in (facts.parent, facts.child):
+            handle = win32api.OpenProcess(0x100000, False, pid)
+            handles.append(handle)
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        await _assert_owner_death_ends_members(owner, handles)
+    finally:
+        await _reap_owner(owner, handles)
+
+
+@pytest.mark.asyncio
+async def test_actual_chromium_descendants_end_on_abrupt_owner_death(tmp_path: Path) -> None:
+    import win32api
+    import win32event
+    from playwright.async_api import async_playwright
+
+    async with async_playwright() as playwright:
+        if not Path(playwright.chromium.executable_path).is_file():
+            pytest.skip("native Chromium is not installed; no browser containment evidence")
+    record = tmp_path / "browser-ready.txt"
+    owner = await launch_fixture(_FIXTURE, "browser-owner", str(record))
+    handles: list[int] = []
+    try:
+        assert owner.stdout is not None
+        assert (await asyncio.wait_for(owner.stdout.readline(), timeout=5)).strip() == b"ready"
+        deadline = time.monotonic() + 8
+        while not record.exists() and time.monotonic() < deadline:
+            await asyncio.sleep(0.05)
+        assert record.read_text() == "browser-ready"
+        assert owner.stdin is not None
+        owner.stdin.write(b"members\n")
+        await owner.stdin.drain()
+        members = json.loads(await asyncio.wait_for(owner.stdout.readline(), timeout=2))
+        assert isinstance(members, list) and len(members) >= 4
+        for pid in members:
+            assert isinstance(pid, int) and pid > 0
+            handle = win32api.OpenProcess(0x100000, False, pid)
+            handles.append(handle)
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        await _assert_owner_death_ends_members(owner, handles)
+    finally:
+        await _reap_owner(owner, handles)
+
+
+class _UnpublishedLaunchFacts(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    owner_pid: int
+    owner_created: str
+    child_pid: int
+    child_created: str
+    job_handle: int
+    published_children: int
+    barrier_deadline: float
+
+
+class _LaunchOwnerLossCleanup:
+    """Keep the original subprocess and exact native objects through failed assertions."""
+
+    def __init__(self, process: asyncio.subprocess.Process) -> None:
+        self.process = process
+        self.owner_handle: int | None = None
+        self.child_handle: int | None = None
+        self.job_handle: int | None = None
+        self.member_handles: dict[int, int] = {}
+        self.collected = False
+
+    def release_job_observation(self) -> None:
+        import win32api
+
+        if self.job_handle is not None:
+            win32api.CloseHandle(self.job_handle)
+            self.job_handle = None
+
+    async def close(self) -> None:
+        import win32api
+        import win32event
+        import win32job
+
+        failures: list[BaseException] = []
+        if self.owner_handle is not None:
+            try:
+                if win32event.WaitForSingleObject(self.owner_handle, 0) == win32event.WAIT_TIMEOUT:
+                    win32api.TerminateProcess(self.owner_handle, 124)
+            except BaseException as error:
+                failures.append(error)
+        if self.job_handle is not None:
+            try:
+                win32job.TerminateJobObject(self.job_handle, 124)
+                deadline = time.monotonic() + 2
+                while win32job.QueryInformationJobObject(self.job_handle, win32job.JobObjectBasicAccountingInformation)[
+                    "ActiveProcesses"
+                ]:
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError("owned launch job did not settle")
+                    await asyncio.sleep(0.02)
+                self.release_job_observation()
+            except BaseException as error:
+                failures.append(error)
+        if not self.collected:
+            try:
+                if self.process.returncode is None:
+                    self.process.kill()
+                await asyncio.wait_for(self.process.communicate(), timeout=5)
+            except BaseException as error:
+                failures.append(error)
+            else:
+                self.collected = True
+        for name in ("owner_handle", "child_handle"):
+            handle = getattr(self, name)
+            if handle is not None:
+                try:
+                    if win32event.WaitForSingleObject(handle, 5000) != win32event.WAIT_OBJECT_0:
+                        raise RuntimeError("owned launch process did not settle")
+                    win32api.CloseHandle(handle)
+                except BaseException as error:
+                    failures.append(error)
+                else:
+                    setattr(self, name, None)
+        for pid, handle in tuple(self.member_handles.items()):
+            try:
+                if win32event.WaitForSingleObject(handle, 5000) != win32event.WAIT_OBJECT_0:
+                    raise RuntimeError("owned launch member did not settle")
+                win32api.CloseHandle(handle)
+            except BaseException as error:
+                failures.append(error)
+            else:
+                del self.member_handles[pid]
+        if failures:
+            raise BaseExceptionGroup("native launch fixture resources remain owned", failures)
+
+
+async def _read_unpublished_launch_facts(owner: _LaunchOwnerLossCleanup, record: Path) -> _UnpublishedLaunchFacts:
+    assert owner.process.stdout is not None
+    ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=5)
+    assert ready.strip() == b"native-created-unpublished"
+    encoded = record.read_bytes()
+    assert 0 < len(encoded) <= 4096
+    facts = _UnpublishedLaunchFacts.model_validate_json(encoded)
+    assert facts.owner_pid == owner.process.pid
+    assert facts.child_pid > 0 and facts.child_pid != facts.owner_pid
+    assert facts.job_handle > 0 and facts.published_children == 0
+    assert math.isfinite(facts.barrier_deadline)
+    return facts
+
+
+def _hold_owner_child_and_job(owner: _LaunchOwnerLossCleanup, facts: _UnpublishedLaunchFacts) -> None:
+    import win32api
+    import win32con
+    import win32event
+    import win32job
+    import win32process
+
+    owner.owner_handle = win32api.OpenProcess(
+        win32con.SYNCHRONIZE
+        | win32con.PROCESS_QUERY_INFORMATION
+        | win32con.PROCESS_TERMINATE
+        | win32con.PROCESS_DUP_HANDLE,
+        False,
+        facts.owner_pid,
+    )
+    owner.child_handle = win32api.OpenProcess(
+        win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, facts.child_pid
+    )
+    assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32event.WaitForSingleObject(owner.child_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
+    assert win32process.GetProcessTimes(owner.child_handle)["CreationTime"].isoformat() == facts.child_created
+    owner.job_handle = win32api.DuplicateHandle(
+        owner.owner_handle,
+        facts.job_handle,
+        win32api.GetCurrentProcess(),
+        win32job.JOB_OBJECT_QUERY | win32job.JOB_OBJECT_TERMINATE,
+        False,
+        0,
+    )
+    assert win32job.IsProcessInJob(owner.child_handle, owner.job_handle)
+
+
+def _hold_job_members(
+    owner: _LaunchOwnerLossCleanup, facts: _UnpublishedLaunchFacts
+) -> tuple[tuple[int, ...], dict[int, str]]:
+    import win32api
+    import win32con
+    import win32event
+    import win32job
+    import win32process
+
+    assert owner.job_handle is not None and owner.child_handle is not None
+    observed = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)
+    assert isinstance(observed, tuple) and 0 < len(observed) <= 4096
+    members: list[int] = []
+    for pid in observed:
+        assert type(pid) is int and pid > 0
+        members.append(pid)
+    assert len(set(members)) == len(members)
+    assert facts.child_pid in members and facts.owner_pid not in members
+    creations = {facts.child_pid: facts.child_created}
+    for pid in members:
+        if pid == facts.child_pid:
+            handle = owner.child_handle
+        else:
+            handle = win32api.OpenProcess(win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION, False, pid)
+            owner.member_handles[pid] = handle
+            created = win32process.GetProcessTimes(handle)["CreationTime"].isoformat()
+            assert isinstance(created, str)
+            creations[pid] = created
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32job.IsProcessInJob(handle, owner.job_handle)
+    return tuple(members), creations
+
+
+def _reobserve_job_members(
+    owner: _LaunchOwnerLossCleanup,
+    facts: _UnpublishedLaunchFacts,
+    members: tuple[int, ...],
+    creations: dict[int, str],
+) -> None:
+    import win32event
+    import win32job
+    import win32process
+
+    assert owner.owner_handle is not None and owner.child_handle is not None and owner.job_handle is not None
+    assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32process.GetProcessTimes(owner.owner_handle)["CreationTime"].isoformat() == facts.owner_created
+    assert set(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == set(
+        members
+    )
+    for pid in members:
+        handle = owner.child_handle if pid == facts.child_pid else owner.member_handles[pid]
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == creations[pid]
+        assert win32job.IsProcessInJob(handle, owner.job_handle)
+    limits = win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectExtendedLimitInformation)
+    assert limits["BasicLimitInformation"]["LimitFlags"] == win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    assert sorted(win32job.QueryInformationJobObject(owner.job_handle, win32job.JobObjectBasicProcessIdList)) == sorted(
+        members
+    )
+
+
+@pytest.mark.asyncio
+async def test_owner_loss_after_native_creation_before_process_publication(tmp_path: Path) -> None:
+    """The kernel-contained child dies while its launch has not returned an owner."""
+    import win32api
+    import win32event
+
+    record = tmp_path / "unpublished-native-launch.json"
+    owner = _LaunchOwnerLossCleanup(await launch_fixture(_FIXTURE, "launch-owner-loss", str(record)))
+    primary: BaseException | None = None
+    try:
+        facts = await _read_unpublished_launch_facts(owner, record)
+        _hold_owner_child_and_job(owner, facts)
+        members, creations = _hold_job_members(owner, facts)
+        _reobserve_job_members(owner, facts, members, creations)
+        # A controller-held Job would keep the child alive after its owner dies.
+        assert owner.owner_handle is not None and owner.child_handle is not None
+        owner.release_job_observation()
+        assert owner.job_handle is None
+        assert win32event.WaitForSingleObject(owner.child_handle, 0) == win32event.WAIT_TIMEOUT
+        for handle in owner.member_handles.values():
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32event.WaitForSingleObject(owner.owner_handle, 0) == win32event.WAIT_TIMEOUT
+        assert facts.barrier_deadline - time.monotonic() >= 5
+        win32api.TerminateProcess(owner.owner_handle, 23)
+        assert time.monotonic() < facts.barrier_deadline
+        assert win32event.WaitForSingleObject(owner.owner_handle, 5000) == win32event.WAIT_OBJECT_0
+        assert win32event.WaitForSingleObject(owner.child_handle, 5000) == win32event.WAIT_OBJECT_0
+        for handle in owner.member_handles.values():
+            assert win32event.WaitForSingleObject(handle, 5000) == win32event.WAIT_OBJECT_0
+        await asyncio.wait_for(owner.process.wait(), timeout=5)
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        await close_async_resources(owner, task_name="native-launch-owner-loss-cleanup", primary_error=primary)
+
+
+def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogRecord]:
+    return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == name]
+
+
+def _sleeping_child(scope: WindowsProcessScope, tmp_path: Path, code: str) -> WindowsOwnedProcess:
+    return scope.launch(
+        executable=native_python(),
+        arguments=("-c", code),
+        directory=tmp_path,
+        environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+    )
+
+
+def test_termination_reports_when_the_job_emptied_and_the_status_the_child_exited_with(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(30)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            scope.terminate(timeout=5)
+    finally:
+        scope.terminate()
+
+    (terminated,) = _events(caplog, "windows_job_termination_observed")
+    (child,) = _events(caplog, "windows_job_child_exit_observed")
+    assert terminated.levelno == logging.DEBUG
+    assert terminated.__dict__["outcome"] == "completed"
+    assert terminated.__dict__["timeout_seconds"] == 5
+    emptied, signalled = terminated.__dict__["job_empty_seconds"], terminated.__dict__["members_signalled_seconds"]
+    assert 0 <= emptied <= signalled <= terminated.__dict__["elapsed_seconds"] < 5
+    # The Job is ended with status 1, which is how a contained worker that was killed reads afterwards.
+    assert child.__dict__["child_process_id"] == process.pid
+    assert child.__dict__["exit_code"] == 1
+    assert child.__dict__["outcome"] == "exited"
+
+
+def test_a_child_that_outlives_its_bound_is_watched_until_it_exits_and_the_total_time_is_reported(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(0.5); raise SystemExit(23)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            started = time.monotonic()
+            watcher = windows_process.watch_windows_late_exit([process], started=started, seconds=30)
+            assert watcher is not None and watcher.daemon
+            watcher.join(timeout=30)
+            assert not watcher.is_alive()
+        # The watcher holds its own handle: the scope's child stays waitable afterwards.
+        assert process.wait(timeout=5) == 23
+    finally:
+        scope.terminate()
+
+    (late,) = _events(caplog, "windows_job_child_exit_observed_late")
+    assert late.__dict__["child_process_id"] == process.pid
+    assert late.__dict__["exit_code"] == 23
+    assert late.__dict__["outcome"] == "exited"
+    assert late.__dict__["timeout_seconds"] == 30
+    assert 0.4 <= late.__dict__["elapsed_seconds"] <= time.monotonic() - started + 0.1
+
+
+def test_the_late_watch_gives_up_at_its_bound_and_reports_the_child_still_running(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(30)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            watcher = windows_process.watch_windows_late_exit([process], started=time.monotonic(), seconds=0.3)
+            assert watcher is not None
+            watcher.join(timeout=10)
+            assert not watcher.is_alive()
+    finally:
+        scope.terminate()
+
+    (late,) = _events(caplog, "windows_job_child_exit_observed_late")
+    assert late.levelno == logging.WARNING
+    assert late.__dict__["exit_code"] is None
+    assert late.__dict__["outcome"] == "observation_expired"

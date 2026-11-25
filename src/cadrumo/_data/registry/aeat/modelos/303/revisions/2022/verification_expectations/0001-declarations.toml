@@ -47,12 +47,18 @@ reconcile_when_present_casilla_ids = [
     "11",
     "13",
     "01",
+    "03",
     "04",
+    "06",
     "07",
+    "09",
     "iva.cuota-devengada.super-reducido",
     "iva.cuota-devengada.reducido",
     "iva.cuota-devengada.general",
     "iva.autoconsumo.promotor.base.por-tipo",
+    "12",
+    "14",
+    "15",
 ]
 tolerance = "0.01"
 rounding = "money-2"
@@ -73,3 +79,36 @@ min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-modelo-303-procedure"]
+
+# Casilla [26] is the cuota of the modification of recargo de equivalencia
+# bases and cuotas: it prints only when an earlier recargo base is modified
+# (LIVA arts. 80 and 161), so it is reconciled when present and never
+# counted towards coverage.
+[[revisions."2022".verification_expectations]]
+id = "modelo-303-recargo-modification-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["26"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+
+# The record design lays out [10] (adquisiciones intracomunitarias de bienes y
+# servicios, base imponible) and [59] (información adicional, entregas
+# intracomunitarias de bienes y servicios) with the same meaning in every
+# edition from 2022. The Modelo 349 record design reports the same kinds of
+# operation by clave de operación (position 133): A and I for acquisitions of
+# goods and services, E and S among deliveries and services rendered. Each
+# later edition cites its own record design for the expectation.
+[[revisions."2022".verification_expectations]]
+id = "modelo-303-m349-reconciliation"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["10", "59"]
+tolerance = "1.00"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-15", "orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-303-2022", "aeat-dr-349-2020-current", "aeat-modelo-303-procedure"]

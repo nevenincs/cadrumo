@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Attendance, AttendanceCandidate } from "../shell/host";
 import { failureCode } from "../errors";
+import { formatTime } from "../shared/dateFormats";
+import { labelled, listed } from "../shell/compose";
 import { useStrings } from "../shell/strings";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 
@@ -9,9 +11,11 @@ import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 export function AttendanceRequests({
   attendance,
   profile,
+  locale,
 }: {
   attendance?: Attendance;
   profile: string | null;
+  locale: string;
 }) {
   const t = useStrings();
   const [state, setState] = useState<{
@@ -101,11 +105,12 @@ export function AttendanceRequests({
   if (!candidates.length) return null;
   const words = (items: unknown[]) =>
     items.length
-      ? items
-          .map((item) =>
+      ? listed(
+          t,
+          items.map((item) =>
             typeof item === "string" ? item : JSON.stringify(item),
-          )
-          .join(", ")
+          ),
+        )
       : t("desktop.attendance.none");
   return (
     <aside
@@ -117,12 +122,34 @@ export function AttendanceRequests({
         .map((candidate) => {
           const scope = candidate.scope;
           const description = [
-            `${t("desktop.attendance.process")}: ${candidate.process_id ?? t("desktop.attendance.none")}`,
-            `${t("desktop.attendance.executable")}: ${candidate.image_path ?? t("desktop.attendance.none")}`,
-            `${t("desktop.attendance.expires")}: ${candidate.expires_at}`,
-            `${t("desktop.attendance.operations")}: ${words(scope.operations)}`,
-            `${t("desktop.attendance.actions")}: ${words(scope.actions)}`,
-            `${t("desktop.attendance.periods")}: ${scope.periods === null ? t("desktop.attendance.all_periods") : words(scope.periods)}`,
+            labelled(
+              t,
+              t("desktop.attendance.process"),
+              candidate.process_id ?? t("desktop.attendance.none"),
+            ),
+            labelled(
+              t,
+              t("desktop.attendance.executable"),
+              candidate.image_path ?? t("desktop.attendance.none"),
+            ),
+            labelled(
+              t,
+              t("desktop.attendance.expires"),
+              formatTime(locale, candidate.expires_at),
+            ),
+            labelled(
+              t,
+              t("desktop.attendance.operations"),
+              words(scope.operations),
+            ),
+            labelled(t, t("desktop.attendance.actions"), words(scope.actions)),
+            labelled(
+              t,
+              t("desktop.attendance.periods"),
+              scope.periods === null
+                ? t("desktop.attendance.all_periods")
+                : words(scope.periods),
+            ),
             ...(
               [
                 "network",
@@ -137,9 +164,17 @@ export function AttendanceRequests({
                 delegation: scope.allow_delegation,
                 period_independent: scope.allow_period_independent,
               }[label];
-              return `${t(`desktop.attendance.${label}`)}: ${t(field ? "desktop.attendance.yes" : "desktop.attendance.no")}`;
+              return labelled(
+                t,
+                t(`desktop.attendance.${label}`),
+                t(field ? "desktop.attendance.yes" : "desktop.attendance.no"),
+              );
             }),
-            `${t("desktop.attendance.disclosures")}: ${words([...scope.disclosures, ...scope.disclosure_categories])}`,
+            labelled(
+              t,
+              t("desktop.attendance.disclosures"),
+              words([...scope.disclosures, ...scope.disclosure_categories]),
+            ),
           ].join("\n");
           return (
             <ApprovalPrompt
@@ -159,11 +194,7 @@ export function AttendanceRequests({
             />
           );
         })}
-      {state.failure && (
-        <p role="alert">
-          {t("desktop.attendance.failed", { code: state.failure })}
-        </p>
-      )}
+      {state.failure && <p role="alert">{t("desktop.attendance.failed")}</p>}
     </aside>
   );
 }

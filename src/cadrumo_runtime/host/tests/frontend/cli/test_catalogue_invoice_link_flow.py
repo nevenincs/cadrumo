@@ -42,7 +42,9 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
+from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.tests.cli_text_output_support import line_value
@@ -62,7 +64,10 @@ _LINK_RUNTIME_OPERATIONS = _RUNTIME_OPERATIONS | {LEDGER_LINK_OPERATION_DEFINITI
 # A valid Spanish CIF for the received-invoice counterparty; the rich Invoice
 # aggregate validates the tax-id control digit, so an arbitrary token would be
 # refused at construction.
-_RECEIVED_COUNTERPARTY_CIF = "A58818501"
+_RECEIVED_COUNTERPARTY_CIF = "B00010157"
+# The movement and the received invoice it pays share one day of a supported exercise.
+_PAID_ON = date(filing_year_envelope().horizon, 3, 10)
+_INTRA_COMMUNITY_ISSUED_ON = date(_PAID_ON.year, 2, 10)
 
 
 def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> Result:
@@ -73,7 +78,7 @@ def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> R
 def _add_outgoing_transaction(session: NativeApiCliSession[None]) -> str:
     result = session.invoke_password(
         "app", "ledger", "add",
-        "--date", "2026-03-10", "--amount", "121.00",
+        "--date", _PAID_ON.isoformat(), "--amount", "121.00",
         "--direction", "OUTGOING", "--description", f"Supplier {_RECEIVED_COUNTERPARTY_CIF}",
         output_format="text",
     )  # fmt: skip
@@ -87,8 +92,8 @@ def _create_catalogue_invoice(session: NativeApiCliSession[None]) -> str:
         "--kind", "received",
         "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
         "--counterparty-name", "Papeleria Sol SL",
-        "--invoice-number", "2026-0142",
-        "--invoice-date", "2026-03-10",
+        "--invoice-number", f"{_PAID_ON.year}-0142",
+        "--invoice-date", _PAID_ON.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "100.00", "--iva-rate", "21",
         output_format="text",
@@ -178,8 +183,8 @@ def test_link_refuses_cross_bucket_catalogue_invoice(
                 counterparty_name="Foreign SL",
                 counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
                 counterparty_country="ES",
-                invoice_number="2026-9999",
-                issued_at=date(2026, 3, 10),
+                invoice_number=f"{_PAID_ON.year}-9999",
+                issued_at=_PAID_ON,
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -205,6 +210,109 @@ def test_link_refuses_cross_bucket_catalogue_invoice(
         assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_link_accepts_the_invoice_prefix_that_match_prints(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """``invoice match`` prints twelve-character ids; ``link`` resolves them to the one invoice."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        invoice_id = _create_catalogue_invoice(session)
+
+        linked = _invoke_open_profile(
+            session, "app", "ledger", "link", transaction_id[:12], "--invoice-id", invoice_id[:12]
+        )
+
+        assert linked.exit_code == 0, linked.output
+        assert line_value(linked.output, "invoice_id") == invoice_id
+        stored = _stored_invoice(session.profile_id, authority_operation, invoice_id)
+        assert stored is not None, "catalogue invoice missing after link"
+        assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_link_refuses_an_ambiguous_invoice_prefix_naming_the_candidates(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """A prefix that two invoices carry links nothing and lists both full ids."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        with bundled_indexed_authority().operation():
+            planted = [
+                build_catalogue_invoice(
+                    bucket_id=str(session.profile_id),
+                    kind=InvoiceKind.RECEIVED,
+                    counterparty_name="Papeleria Sol SL",
+                    counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
+                    counterparty_country="ES",
+                    invoice_number=f"{_PAID_ON.year}-{number:04d}",
+                    issued_at=_PAID_ON,
+                    taxable_base=Decimal("100.00"),
+                    iva_rate=Decimal("21"),
+                    currency="EUR",
+                    rate_provider=recorded_ecb_rate_provider(),
+                )
+                for number in range(1, 18)
+            ]
+        # Seventeen content-addressed hex ids cannot all begin with a different digit.
+        by_first_digit: dict[str, list[str]] = {}
+        for invoice in planted:
+            by_first_digit.setdefault(invoice.invoice_id[0], []).append(invoice.invoice_id)
+        prefix, candidates = next((digit, ids) for digit, ids in by_first_digit.items() if len(ids) > 1)
+        with password_profile_session(session.profile_id, authority_operation):
+            _write_raw_catalogue(build_invoice_catalogue(planted))
+
+        linked = session.invoke_password(
+            "app", "ledger", "link", transaction_id, "--invoice-id", prefix, output_format="text"
+        )
+
+        assert linked.exit_code != 0, linked.output
+        assert all(candidate in linked.output for candidate in candidates), linked.output
+        with password_profile_session(session.profile_id, authority_operation):
+            reloaded = _load_raw_catalogue()
+        assert all(row.linked_transaction_ids == () for row in reloaded.invoices.values())
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_link_refuses_a_blank_invoice_id_as_usage_naming_the_option(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli, blank: str
+) -> None:
+    """An empty or blank ``--invoice-id`` is a usage refusal, not a crash, and links nothing."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        invoice_id = _create_catalogue_invoice(session)
+
+        refused = _invoke_open_profile(session, "app", "ledger", "link", transaction_id, "--invoice-id", blank)
+
+        assert refused.exit_code == 2, refused.output
+        assert "'--invoice-id'" in refused.output, refused.output
+        stored = _stored_invoice(session.profile_id, authority_operation, invoice_id)
+        assert stored is not None
+        assert stored.linked_transaction_ids == ()
+
+
 def _stored_invoice(profile_id: UUID, authority_operation: PinnedAuthorityOperation, invoice_id: str) -> Invoice | None:
     return catalogue_after_password_login(profile_id, authority_operation).invoices.get(invoice_id)
 
@@ -217,7 +325,7 @@ def _write_raw_catalogue(catalogue: InvoiceCatalogue) -> None:
     """
     envelope = Envelope[InvoiceCatalogue](
         schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
-        written_at=datetime(2026, 3, 10, 12, 0, tzinfo=UTC),
+        written_at=datetime(1980, 1, 1, 12, 0, tzinfo=UTC),
         classification=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
         payload=catalogue,
     )
@@ -269,8 +377,8 @@ def test_catalogue_create_stamps_intra_community_category(
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",
-            "--invoice-number", "EU-2026-001",
-            "--invoice-date", "2026-02-10",
+            "--invoice-number", f"EU-{_INTRA_COMMUNITY_ISSUED_ON.year}-001",
+            "--invoice-date", _INTRA_COMMUNITY_ISSUED_ON.isoformat(),
             "--taxable-base", "2000.00", "--iva-rate", "0",
             "--country-code", "DE", "--operation-type", "E",
             output_format="text",
@@ -309,8 +417,8 @@ def test_catalogue_create_stamps_service_operation_type(
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",
-            "--invoice-number", "EU-2026-002",
-            "--invoice-date", "2026-02-10",
+            "--invoice-number", f"EU-{_INTRA_COMMUNITY_ISSUED_ON.year}-002",
+            "--invoice-date", _INTRA_COMMUNITY_ISSUED_ON.isoformat(),
             "--taxable-base", "2000.00", "--iva-rate", "0",
             "--country-code", "DE", "--operation-type", "S",
             output_format="text",

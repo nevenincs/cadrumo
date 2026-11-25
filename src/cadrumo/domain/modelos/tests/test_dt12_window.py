@@ -125,12 +125,12 @@ class TestDt12WindowInputGuards:
     def test_implausible_year_raises(self) -> None:
         cases = (
             (0, 2024),
-            (1899, 2024),
-            (2201, 2024),
+            (999, 2024),
+            (10000, 2024),
             (-1, 2024),
             (2024, 0),
-            (2024, 1899),
-            (2024, 2201),
+            (2024, 999),
+            (2024, 10000),
             (2024, -1),
         )
         for contingencia_year, rescate_year in cases:

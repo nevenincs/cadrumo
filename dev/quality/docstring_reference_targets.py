@@ -55,7 +55,7 @@ _SOURCE_ROOTS: tuple[Path, ...] = tuple(_REPO_ROOT / package for package in SOUR
 #: may legitimately reference. A gate in `src` naming its counterpart in
 #: `dev/tests` is citing something real; reporting it would be an artefact of
 #: where this screen happens to look.
-_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING,)
+SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING,)
 
 #: Sphinx roles that name a code object. ``:ref:`` and ``:doc:`` name document
 #: anchors instead and are not this screen's business.
@@ -93,8 +93,7 @@ def _module_symbols(tree: ast.Module) -> set[str]:
 
     Instance attributes count. An ``:attr:`accepted_period_tokens``` reference
     names something assigned as ``self.accepted_period_tokens`` in ``__init__``
-    and nowhere else, so a collector that only saw module-level bindings
-    reported a live attribute as naming nothing.
+    and nowhere else.
 
     Function PARAMETERS are deliberately not collected. They would swell the
     known set with every argument name in the tree and start suppressing real
@@ -124,9 +123,7 @@ def _imported_names(tree: ast.Module) -> set[str]:
 
     The source package matters as much as the symbol. ``from
     cryptography.hazmat.primitives import hashes`` makes ``cryptography`` a
-    name this tree demonstrably knows, and a screen that recorded only
-    ``hashes`` reported ``:mod:`cryptography``` as naming nothing while
-    twenty-two modules imported from it.
+    name this tree knows.
     """
     names: set[str] = set()
     for node in ast.walk(tree):
@@ -204,10 +201,8 @@ def _attribute_docstrings(node: ast.AST) -> Iterator[str]:
     """Yield the docstring that follows each assignment in a statement body.
 
     ``ast.get_docstring`` reaches a module, class and function docstring and
-    nothing else, so the bare string beneath an assignment -- the form this
-    codebase uses to document a constant -- was never scanned at all. A planted
-    reference sat in one without the screen noticing, which is what proving a
-    gate end-to-end is for.
+    nothing else. The bare string beneath an assignment, the form this codebase
+    uses to document a constant, is yielded as well.
     """
     body = getattr(node, "body", None)
     if not isinstance(body, list):
@@ -243,8 +238,15 @@ def _subscript_names(target: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(names))
 
 
-def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...]:
-    """Report each cross-reference naming something no package under ``roots`` defines."""
+def dangling_references(
+    roots: tuple[Path, ...], *, siblings: tuple[Path, ...] | None = None
+) -> tuple[DanglingReference, ...]:
+    """Report each cross-reference naming something no package under ``roots`` defines.
+
+    ``siblings`` are the unscanned trees whose module names a docstring may cite;
+    ``None`` selects the repository's own development tree. A caller that screens
+    a self-contained tree passes ``()`` and is not charged a walk of ``dev/``.
+    """
     defined: set[str] = set()
     imported: set[str] = set()
     modules: set[str] = set()
@@ -258,7 +260,7 @@ def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...
         imported |= root_imported
         modules |= root_modules
     owned = frozenset(root.name for root in roots)
-    for sibling in _SIBLING_TREES:
+    for sibling in SIBLING_TREES if siblings is None else siblings:
         if sibling.exists():
             # MODULE names only. Pulling in every symbol these trees define
             # would let a shipped docstring resolve against a dev-only function
@@ -280,13 +282,18 @@ def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...
     return tuple(findings)
 
 
-def main(argv: list[str] | None = None, *, roots: tuple[Path, ...] = _SOURCE_ROOTS) -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    roots: tuple[Path, ...] = _SOURCE_ROOTS,
+    siblings: tuple[Path, ...] | None = None,
+) -> int:
     """Print one greppable row per dangling reference and enforce live zero."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--limit", type=int, default=0, help="show at most this many rows")
     args = parser.parse_args(argv)
 
-    findings = dangling_references(roots)
+    findings = dangling_references(roots, siblings=siblings)
     rows = findings[: args.limit] if args.limit else findings
     for finding in rows:
         sys.stdout.write(f"dangling target={finding.target} module={finding.module}\n")
@@ -316,8 +323,7 @@ def _collect_dangling_reference(
     """Collect dangling reference.
 
     A dotted target is first-party when its first segment is one of the
-    scanned packages. Matching only ``cadrumo.`` let a reference to a
-    ``cadrumo_client`` or ``cadrumo_runtime`` symbol pass as third-party.
+    scanned packages.
     """
     target = _REWRAP.sub("", raw).lstrip("~.").split("(")[0].strip()
     if not target:

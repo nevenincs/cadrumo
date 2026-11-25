@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority_location import bundled_auth
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
-from ..compiler.validate_bindings import informational_binding_ids, unreferenced_binding_advisories
+from ..compiler.validate_bindings import informational_binding_ids
 from ..compiler.validate_export_field_placement import (
     binding_export_spans,
     export_record_placement_advisories,
@@ -37,6 +37,13 @@ from ..pipeline.generated_tree_dispositions import (
     disposition_ledger_from_path,
     record_drift_dispositions,
 )
+from .edition_minimality_lanes import delta_minimality_reasons, edition_assessment_reasons
+from .registry_target_classification import (
+    classify_inapplicable_target,
+    classify_projected_target,
+    declared_revision_filing_years,
+    tree_bearing_revisions,
+)
 
 if TYPE_CHECKING:
     from .generated_tree_state import GeneratedTreeState
@@ -54,6 +61,8 @@ _TARGET_STATE_NAMES: Final[tuple[str, ...]] = (
     "stale",
     "drifted",
     "never-committed",
+    "not-applicable",
+    "projected",
     "unreadable",
 )
 
@@ -117,22 +126,12 @@ class RegistryStatus:
     authority_recorded_digest: str | None
     authority_candidate_digest: str | None
     loadable: bool
-    unreferenced_bindings: tuple[tuple[str, int], ...]
-    """Per-modelo count of bindings no typed consumer names.
-
-    An advisory axis, not a lifecycle failure: the authored corpus still
-    carries such rows, and the compiler deliberately reports rather than
-    refuses them. Surfacing the count per modelo is what keeps the residue
-    measurable instead of invisible -- an advisory nothing prints is
-    indistinguishable from an advisory nothing raises.
-    """
     informational_bindings: tuple[tuple[str, int], ...]
     """Per-modelo count of bindings declaring a non-calculation disposition.
 
-    The dispositioned counterpart of :attr:`unreferenced_bindings`: a row the
-    author classed as informational leaves the advisory and arrives here, so the
-    disposition is a move between two reported lines rather than a way to make a
-    binding stop being counted at all.
+    An unreferenced binding is a registry refusal, so a row without a typed
+    consumer is either dispositioned here or keeps the registry from validating;
+    the disposition is visible rather than a way to stop a binding being counted.
     """
     details: tuple[str, ...]
     export_placement: ExportPlacementCensus = ExportPlacementCensus()
@@ -142,6 +141,14 @@ class RegistryStatus:
     fabricate a census it did not take; the default reads as "walked nothing",
     which its own denominators make visible.
     """
+    delta_minimality_reasons: tuple[str, ...] = ()
+    """Why the casilla delta screen fails, empty when it held.
+
+    Defaulted like the placement census: a caller assembling a status for one
+    other axis need not run the screen, and the collector always does.
+    """
+    edition_assessment_reasons: tuple[str, ...] = ()
+    """Why the all-family assessment fails, empty when every modelo tree is minimal."""
     target_census_failed: bool = False
     """Whether the generated-target census refused to produce an answer.
 
@@ -354,8 +361,17 @@ def project_target_states(
     declared_floor: Callable[[], int],
     revision_filing_years: Callable[[str, str], tuple[int, ...]],
     excluded_count: int,
+    not_applicable: Iterable[tuple[str, str, str]] = (),
+    projected: Iterable[tuple[str, str, str]] = (),
 ) -> ProjectedTargets:
     """Bucket each classified target, moving a drift its ledger row explains to ``explained``.
+
+    ``not_applicable`` carries the targets the registry itself places outside any
+    generated tree (see :func:`classify_inapplicable_target`); they are reported
+    in their own bucket and never count toward ``unreadable``. ``projected``
+    carries the targets with no record design of their own whose layout the
+    registry serves from the nearest authored edition (see
+    :func:`classify_projected_target`); they are not gaps either.
 
     A target whose row is not honoured stays in its drifting bucket and the
     refusal is named in its detail and in the report details. ``declared_floor``
@@ -366,6 +382,8 @@ def project_target_states(
         "stale": [],
         "drifted": [],
         "never-committed": [],
+        "not-applicable": list(not_applicable),
+        "projected": list(projected),
         "unreadable": list(excluded),
     }
     counts: Counter[str] = Counter()
@@ -385,6 +403,8 @@ def project_target_states(
         if explanation_detail is not None:
             details.append(explanation_detail)
     counts["unreadable"] = excluded_count
+    counts["not-applicable"] = len(grouped["not-applicable"])
+    counts["projected"] = len(grouped["projected"])
     return ProjectedTargets(
         counts=tuple((state, counts[state]) for state in _TARGET_STATE_NAMES),
         findings=tuple((state, tuple(findings)) for state, findings in grouped.items()),
@@ -435,24 +455,28 @@ def collect_registry_status(
     resolved_source_root = source_root or bundled_path()
     resolved_descriptor = authority_descriptor or bundled_authority_descriptor_path()
     details: list[str] = []
-    authority, valid = _collect_registry_validity(resolved_registry_root, resolved_source_root, details)
-    oracles = _collect_oracle_status(resolved_registry_root, details)
-    target_census_failed, targets, target_findings = _collect_target_axis(
+    authority, valid = collect_registry_validity(resolved_registry_root, resolved_source_root, details)
+    oracles = collect_oracle_status(resolved_registry_root, details)
+    target_census_failed, targets, target_findings = collect_target_axis(
         authority,
         resolved_registry_root,
         disposition_ledger,
         details,
         resolved_source_root,
     )
-    authority_status, recorded_digest, candidate_digest = _collect_authority_currency(
+    authority_status, recorded_digest, candidate_digest = collect_authority_currency(
         resolved_descriptor,
         resolved_registry_root,
         resolved_source_root,
         details,
     )
     loadable = _runtime_authority_loadable(resolved_descriptor, details)
-    unreferenced_bindings, informational_bindings = _record_binding_counts(authority, details)
+    informational_bindings = _record_informational_bindings(authority, details)
     export_placement = _record_export_placement(authority, details)
+    minimality = delta_minimality_reasons(authority)
+    assessment = edition_assessment_reasons(resolved_registry_root)
+    details.extend(f"DELTA-MINIMALITY: {reason}" for reason in minimality)
+    details.extend(f"EDITION-ASSESSMENT: {reason}" for reason in assessment)
 
     return RegistryStatus(
         valid=valid,
@@ -464,14 +488,15 @@ def collect_registry_status(
         authority_recorded_digest=recorded_digest,
         authority_candidate_digest=candidate_digest,
         loadable=loadable,
-        unreferenced_bindings=unreferenced_bindings,
         informational_bindings=informational_bindings,
         details=tuple(details),
         export_placement=export_placement,
+        delta_minimality_reasons=minimality,
+        edition_assessment_reasons=assessment,
     )
 
 
-def _collect_registry_validity(
+def collect_registry_validity(
     registry_root: Path,
     source_root: Path,
     details: list[str],
@@ -484,7 +509,7 @@ def _collect_registry_validity(
         return None, False
 
 
-def _collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
+def collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
     """Audit source oracles independently from the registry validity axis."""
     try:
         oracle_report = audit_registry_oracles(registry_root, environment=OracleEnvironment.PRODUCTION)
@@ -497,7 +522,7 @@ def _collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
         return False
 
 
-def _collect_target_axis(
+def collect_target_axis(
     authority: ValidatedRegistryAuthority | None,
     registry_root: Path,
     disposition_ledger: Path | None,
@@ -510,11 +535,18 @@ def _collect_target_axis(
         findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
         return True, Counter({"unreadable": 1}), findings
     try:
-        states, excluded, excluded_count, inventory_failed = _generated_target_inventory(
-            authority, details, registry_root=registry_root, source_root=source_root
+        states, excluded, not_applicable, projected_targets, excluded_count, inventory_failed = (
+            _generated_target_inventory(authority, details, registry_root=registry_root, source_root=source_root)
         )
         projected = _project_generated_targets(
-            authority, registry_root, disposition_ledger, states, excluded, excluded_count
+            authority,
+            registry_root,
+            disposition_ledger,
+            states,
+            excluded,
+            excluded_count,
+            not_applicable,
+            projected_targets,
         )
         details.extend(projected.details)
         return inventory_failed, Counter(dict(projected.counts)), projected.findings
@@ -530,12 +562,26 @@ def _generated_target_inventory(
     *,
     registry_root: Path,
     source_root: Path,
-) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], int, bool]:
-    """Measure each modelo separately so one render failure cannot hide the rest."""
+) -> tuple[
+    list[GeneratedTreeState],
+    list[tuple[str, str, str]],
+    list[tuple[str, str, str]],
+    list[tuple[str, str, str]],
+    int,
+    bool,
+]:
+    """Measure each modelo separately so one render failure cannot hide the rest.
+
+    Returns the classified states, the targets that could not be rendered although
+    a tree is expected, the targets the registry places outside any generated tree,
+    how many unrendered targets there are, and whether a modelo census crashed.
+    """
     from .generated_tree_state import generated_state_inventory
 
     states: list[GeneratedTreeState] = []
     excluded: list[tuple[str, str, str]] = []
+    not_applicable: list[tuple[str, str, str]] = []
+    projected: list[tuple[str, str, str]] = []
     unrenderable: list[str] = []
     for modelo in authority.modelos:
         try:
@@ -547,15 +593,58 @@ def _generated_target_inventory(
             details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")
             continue
         states.extend(modelo_states)
-        excluded.extend(modelo_excluded)
+        for modelo_id, revision_id, error in modelo_excluded:
+            bucket, row = _place_excluded_target(
+                authority, modelo, modelo_id, revision_id, error, registry_root=registry_root
+            )
+            {"not_applicable": not_applicable, "projected": projected, "excluded": excluded}[bucket].append(row)
     if unrenderable:
         joined = ", ".join(unrenderable)
         details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
     expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
-    excluded_count = max(0, expected_target_count - len(states))
+    excluded_count = max(0, expected_target_count - len(states) - len(not_applicable) - len(projected))
+    if not_applicable:
+        details.append(
+            f"TARGETS: {len(not_applicable)} target(s) have no generated tree to reproduce by registry declaration"
+        )
     if excluded_count:
         details.append(f"TARGETS: {excluded_count} target(s) were excluded by the generated-state owner")
-    return states, excluded, excluded_count, bool(unrenderable)
+    if projected:
+        details.append(f"TARGETS: {len(projected)} target(s) are projected from the nearest authored edition")
+    return states, excluded, not_applicable, projected, excluded_count, bool(unrenderable)
+
+
+def _place_excluded_target(
+    authority: ValidatedRegistryAuthority,
+    modelo: ModeloDefinition,
+    modelo_id: str,
+    revision_id: str,
+    error: str,
+    *,
+    registry_root: Path,
+) -> tuple[str, tuple[str, str, str]]:
+    """Decide where one target the generated-state owner excluded belongs.
+
+    Returns the bucket name (``not_applicable``, ``projected`` or ``excluded``) and its row.
+    """
+    floor = declared_supported_filing_years_floor(registry_root=registry_root)
+    has_tree = (registry_root / "modelos" / modelo_id / "revisions" / revision_id / "export").is_dir()
+    reason = classify_inapplicable_target(
+        modelo, revision_id, authority.catalogues.sources, floor=floor, has_committed_tree=has_tree
+    )
+    if reason is not None:
+        return "not_applicable", (modelo_id, revision_id, reason)
+    projection = classify_projected_target(
+        modelo,
+        revision_id,
+        authority.catalogues.sources,
+        tree_revisions=tree_bearing_revisions(registry_root, modelo),
+        support=authority.catalogues.require_supported_filing_years(),
+        render_refusal=error,
+    )
+    if projection is None:
+        return "excluded", (modelo_id, revision_id, error)
+    return "projected", (modelo_id, revision_id, projection)
 
 
 def _project_generated_targets(
@@ -565,6 +654,8 @@ def _project_generated_targets(
     states: list[GeneratedTreeState],
     excluded: list[tuple[str, str, str]],
     excluded_count: int,
+    not_applicable: list[tuple[str, str, str]],
+    projected: list[tuple[str, str, str]],
 ) -> ProjectedTargets:
     """Project classified states using the live floor, years, and disposition evidence."""
     return project_target_states(
@@ -572,16 +663,16 @@ def _project_generated_targets(
         excluded,
         dispositions=_explaining_dispositions(disposition_ledger),
         declared_floor=lambda: declared_supported_filing_years_floor(registry_root=registry_root),
-        revision_filing_years=lambda modelo_id, revision_id: next(
-            tuple(revision.period_selector.years)
-            for candidate_id, revision in authority.modelo(modelo_id).revisions.items()
-            if str(candidate_id) == revision_id
+        revision_filing_years=lambda modelo_id, revision_id: declared_revision_filing_years(
+            authority.modelo(modelo_id), revision_id
         ),
         excluded_count=excluded_count,
+        not_applicable=not_applicable,
+        projected=projected,
     )
 
 
-def _collect_authority_currency(
+def collect_authority_currency(
     descriptor: Path,
     registry_root: Path,
     source_root: Path,
@@ -609,16 +700,11 @@ def _runtime_authority_loadable(descriptor: Path, details: list[str]) -> bool:
         return False
 
 
-def _record_binding_counts(
+def _record_informational_bindings(
     authority: ValidatedRegistryAuthority | None,
     details: list[str],
-) -> tuple[tuple[tuple[str, int], ...], tuple[tuple[str, int], ...]]:
-    """Collect and describe both compiler-owned binding populations."""
-    unreferenced = _unreferenced_binding_counts(authority)
-    if unreferenced:
-        total = sum(count for _, count in unreferenced)
-        modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced)
-        details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
+) -> tuple[tuple[str, int], ...]:
+    """Collect and describe the bindings that declare a non-calculation disposition."""
     informational = _informational_binding_counts(authority)
     if informational:
         total = sum(count for _, count in informational)
@@ -626,7 +712,7 @@ def _record_binding_counts(
         details.append(
             f"INFORMATIONAL-BINDINGS: {total} binding(s) declaring a non-calculation disposition ({modelos})"
         )
-    return unreferenced, informational
+    return informational
 
 
 def _record_export_placement(
@@ -709,37 +795,10 @@ def export_placement_census(modelos: Iterable[ModeloDefinition]) -> ExportPlacem
     )
 
 
-def _unreferenced_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
-    """Count, per modelo, the bindings the compiler's advisory names.
-
-    Read through the same :func:`unreferenced_binding_advisories` the compiler
-    owns rather than recounted here, so the report and the validator can never
-    disagree about what counts as unreferenced. Returns nothing when the
-    registry failed validity: an unloadable authority has no bindings to speak
-    about, which is not the same as having none unreferenced.
-    """
-    if authority is None:
-        return ()
-    counts: list[tuple[str, int]] = []
-    for modelo in authority.modelos:
-        advisories = tuple(
-            advisory
-            for revision_id, revision in modelo.revisions.items()
-            for advisory in unreferenced_binding_advisories(
-                prefix=f"modelo {modelo.id} revision {revision_id}",
-                revision=revision,
-            )
-        )
-        if advisories:
-            counts.append((str(modelo.id), len(advisories)))
-    return tuple(sorted(counts))
-
-
 def _informational_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
     """Count, per modelo, the bindings that declare a non-calculation disposition.
 
-    Read through the compiler-owned :func:`informational_binding_ids` for the
-    same reason the unreferenced count reads through its advisory: the report
+    Read through the compiler-owned :func:`informational_binding_ids`: the report
     must not hold a second opinion about what the disposition means.
     """
     if authority is None:
@@ -766,7 +825,7 @@ def _export_placement_lane(census: ExportPlacementCensus) -> str:
     return "partial" if census.gaps else "passed"
 
 
-def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
+def registry_status_payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
     """Build the stable status envelope from independently projected report sections."""
     target_counts = dict(status.targets)
     lanes = _status_lanes(status, target_counts)
@@ -780,7 +839,6 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
         "targets": target_counts,
         "target_findings": _target_overview(status.target_findings),
         "authority": _authority_payload(status),
-        "unreferenced_bindings": _binding_payload(status.unreferenced_bindings),
         "informational_bindings": _binding_payload(status.informational_bindings),
         "export_placement": _export_placement_payload(status.export_placement),
         "details": list(status.details),
@@ -794,8 +852,9 @@ def _status_lanes(status: RegistryStatus, target_counts: dict[str, int]) -> dict
     return {
         **_authority_lanes(status),
         **_target_lanes(status, target_counts, blocking_targets),
-        "binding_reference_coverage": _coverage_lane(bool(status.unreferenced_bindings)),
         "export_placement_coverage": _export_placement_lane(status.export_placement),
+        "delta_minimality": _reasons_lane(status.delta_minimality_reasons),
+        "edition_delta_assessment": _reasons_lane(status.edition_assessment_reasons),
     }
 
 
@@ -826,6 +885,11 @@ def _target_lanes(
 def _target_currentness(census_failed: bool, blocking_targets: int) -> str:
     """Fail currentness when the census failed or found blocking target states."""
     return "failed" if census_failed or blocking_targets else "passed"
+
+
+def _reasons_lane(reasons: tuple[str, ...]) -> str:
+    """Fail a minimality lane on any reason it was given."""
+    return "failed" if reasons else "passed"
 
 
 def _coverage_lane(has_findings: bool) -> str:
@@ -905,6 +969,8 @@ def _target_state_overview(
     }
     if state == "unreadable":
         result["reason_counts"] = _unreadable_reason_counts(findings)
+    if state in {"not-applicable", "projected"}:
+        result["reason_counts"] = dict(sorted(Counter(detail.partition(":")[0] for _, _, detail in findings).items()))
     return result
 
 
@@ -987,7 +1053,7 @@ def _export_placement_payload(census: ExportPlacementCensus) -> dict[str, object
     }
 
 
-def _render_export_placement(census: ExportPlacementCensus) -> None:
+def render_export_placement(census: ExportPlacementCensus) -> None:
     """Print the placement census beside the name of the population it counted."""
     print(
         f"export_placement({EXPORT_PLACEMENT_POPULATION}): overlaps={census.overlaps} "
@@ -1009,7 +1075,7 @@ def main(argv: list[str] | None = None) -> int:
         source_root=args.source_root,
         authority_descriptor=args.authority_descriptor,
     )
-    payload = _payload(status, blocking=args.check)
+    payload = registry_status_payload(status, blocking=args.check)
     if args.json:
         _print_json_status(status, payload)
     else:
@@ -1037,7 +1103,7 @@ def _print_text_status(status: RegistryStatus) -> None:
     print(f"TARGETS\t{target_values or 'unreadable=1'}")
     print(f"AUTHORITY\t{status.authority}")
     print(f"LOADABLE\t{'pass' if status.loadable else 'fail'}")
-    _render_export_placement(status.export_placement)
+    render_export_placement(status.export_placement)
     for detail in status.details:
         print(f"DETAIL\t{detail}")
 

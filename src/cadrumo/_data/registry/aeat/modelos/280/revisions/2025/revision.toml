@@ -88,6 +88,7 @@ NOT CLAIMED -- authority grade is unchanged at applicability; opening a span pro
 nothing."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2022-2024"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -350,14 +351,3 @@ selector = {revision = "2022-2024", id = "modelo-280-deadline"}
 sequence_additions = {source_refs = ["aeat-modelo-280-procedure"]}
 sequence_order = {source_refs = [1, 0]}
 
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2024", id = "modelo-280-2022-0a"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2024", id = "modelo-280-2023-0a"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2024", id = "modelo-280-2024-0a"}

@@ -9,7 +9,7 @@ keeps the guard on the real resolver with an inward empty-port fake.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 
 import pytest
@@ -17,16 +17,25 @@ import pytest
 from ....core.aggregation import AggregationCaptureKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from .._preconditions import AggregationPreconditionCondition
-from ..errors import AggregationValidationError
+from ..errors import RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _M180_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M180_RETENCIONES_LEGAL_REFS = (
@@ -104,7 +113,7 @@ def _m180_retenciones_revision() -> ModeloRevision:
 
 def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
     with (
-        pytest.raises(AggregationValidationError) as exc_info,
+        pytest.raises(RetencionesWindowEmptyError) as exc_info,
     ):
         RetencionesAggregationSourceResolver(
             ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
@@ -118,16 +127,47 @@ def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
             ),
         )
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
-    assert exc_info.value.context == {
-        "modelo": "180",
-        "filing_year": "2024",
-        "period": "0A",
-        "source_kind": "retenciones_aggregation",
-    }
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["modelo"] == "180"
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value
     assert verdict.action is None
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values["modelo"] == "180"
+
+
+def _m180_context(revision: ModeloRevision) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id="operator",
+        modelo="180",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "0A"),
+        revision=revision,
+    )
+
+
+def test_the_pre_calculation_check_refuses_the_window_resolve_refuses_with_the_same_words() -> None:
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
+    context = _m180_context(_m180_retenciones_revision())
+
+    refusal = resolver.empty_window_refusal(context)
+    with pytest.raises(RetencionesWindowEmptyError) as raised:
+        resolver.resolve(context)
+
+    assert refusal is not None
+    assert refusal.translated_message == raised.value.translated_message
+    assert refusal.context == raised.value.context
+
+
+def test_the_pre_calculation_check_refuses_nothing_when_the_revision_reads_no_retenciones_store() -> None:
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
+    context = _m180_context(_m180_retenciones_revision().model_copy(update={"bindings": ()}))
+
+    assert resolver.empty_window_refusal(context) is None
+    assert not resolver.resolve(context).binding_values

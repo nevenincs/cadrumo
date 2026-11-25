@@ -36,17 +36,18 @@ from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, NonNegati
 from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex16Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ...domain.submission.models import ModeloDraftStatus
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
-from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason
 from .engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
+from .identity import period_identity_segment
 
 _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS = frozenset(
     {
@@ -79,6 +80,11 @@ class WorkflowStage(StrEnum):
     RUNNING_PREFLIGHT = "RUNNING_PREFLIGHT"
     DONE = "DONE"
     ABORTED = "ABORTED"
+
+    @property
+    def is_terminal(self) -> bool:
+        """Whether the run has ended, completed or refused."""
+        return self in {WorkflowStage.DONE, WorkflowStage.ABORTED}
 
 
 class WorkflowPurpose(StrEnum):
@@ -117,12 +123,12 @@ class WorkflowSiteHealthFacts(BaseModel):
     facts needed by renderers and operators.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     alert_code: str = Field(
         pattern=r"^workflow\.site\.[a-z][a-z0-9_]*$",
-        min_length=3,
-        max_length=96,
+        min_length=1,
+        max_length=128,
     )
     state: SiteHealthState
     observed_at: AwareDatetime
@@ -161,7 +167,7 @@ class SiteHealthAlert(BaseModel):
     to the enclosing :class:`WorkflowResult`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     stage: WorkflowStage
     status: WorkflowSiteHealthFacts
@@ -176,7 +182,7 @@ class WorkflowDeadlineRecoveryFacts(BaseModel):
     only registry identities and evaluated recargo facts.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     still_filable: bool
     recargo_band_id: str = Field(min_length=1, max_length=64)
@@ -208,7 +214,7 @@ class WorkflowObligationFacts(BaseModel):
     and typed overdue facts needed by resume and rendering consumers.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Modelo
     period: Period
@@ -279,7 +285,7 @@ class WorkflowDiagnosticSkipReason(StrEnum):
 class _WorkflowStepDetail(BaseModel):
     """Frozen base for one closed, locale-neutral workflow detail shape."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
@@ -583,7 +589,7 @@ def _reject_prose_precondition_evidence(verdict: PreconditionVerdict) -> None:
 class WorkflowStep(BaseModel):
     """A single step in a :class:`WorkflowResult`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     stage: WorkflowStage
     started_at: datetime
@@ -614,9 +620,9 @@ class WorkflowStep(BaseModel):
 class WorkflowResult(BaseModel):
     """The full result of one :meth:`WorkflowEngine.run_for_period` invocation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    run_id: str = Field(min_length=16, max_length=16)
+    run_id: Hex16Str
     started_at: datetime
     ended_at: datetime
     final_stage: WorkflowStage
@@ -634,7 +640,7 @@ class WorkflowResult(BaseModel):
     def _check_terminal_consistency(self) -> WorkflowResult:
         if self.ended_at < self.started_at:
             raise ValueError("ended_at precedes started_at")
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+        if not self.final_stage.is_terminal:
             raise ValueError(f"final_stage must be DONE or ABORTED; got {self.final_stage.value}")
         if self.final_stage is WorkflowStage.DONE:
             if self.aborted_reason is not None:

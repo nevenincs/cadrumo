@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m202-first-period-attestation'
 date: '2026-06-19'
-modified: '2026-10-03'
-body_hash: 'sha256:f2e072f4291faa753995dc906ce9dab3102bc60e3c2b49523befb2c61339a510'
+modified: '2026-11-12'
+body_hash: 'sha256:ed7f93e9d8c26355106c9eacc90d5eeaa4d78bb9bc0a6eee4f82aaff7ec62475'
 related:
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
@@ -201,3 +201,11 @@ to render.
   `ART_40_3_MANDATORY`, `INCOMPLETE`, or unknown modality, and the suppression is
   stamped with a distinct typed provenance facet plus a non-blocking advisory.
   (Promote only after this ADR holds across a full execution cycle.)
+
+## Amendment 2026-11-12: the second year's first instalment
+
+Authorized by the acceptance of `2026-11-11-modelo-202-obligation-adr` on 2026-11-11, which confirmed lane ruling (b): this reconciliation is applied in the same change as the Modelo 202 obligation facts.
+
+The qualification test in the Implementation section, "that date's year is on or after the target filing year", is replaced. A Modelo 202 requirement now qualifies when its source is the Impuesto sobre Sociedades instalment, the derived modality is `ART_40_2_OPTIONAL`, an `activity_start_date` is recorded, and every earlier period that the instalment's art. 40.2 base binding (`modelo-202-cuota-base-ejercicio-anterior`) reads, by its declared per-instalment offsets, ended before that date. No year comparison is made in code; the source period comes from the binding.
+
+Under LIS art. 40.2 the base is the cuota of the last periodo impositivo whose declaration deadline had passed on the first day of the payment window. On 1 April of the second IS year the first year's Modelo 200 deadline has not passed, so the second year's 1P has no base either. The binding encodes this with a 1P offset of two filing years. The rule therefore scopes out every instalment of the first IS year and the 1P of the second; the 2P and 3P of the second year stay in scope. The same derivation drives the calculation-side relation fold, where an instalment without a base is scoped out only when no filing of it is stored, so a filed value is never overridden. The fail-closed cases, the distinct facet and the advisory are unchanged.

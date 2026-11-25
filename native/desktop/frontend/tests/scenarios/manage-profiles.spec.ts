@@ -9,6 +9,10 @@ async function manage(page: Page, scenario = "signed-in") {
     await signin
       .getByRole("button", { name: label("desktop.signin.dismiss") })
       .click();
+  return openManagement(page);
+}
+
+async function openManagement(page: Page) {
   await page.locator(".profile-trigger").click();
   await page
     .getByRole("menuitem", { name: label("desktop.account.manage.title") })
@@ -117,11 +121,80 @@ test("an unreadable profile inventory offers no deletion targets", async ({
   await expect(manager.getByRole("alert")).toContainText(
     label("desktop.signin.profiles_unread"),
   );
+  await expect(
+    manager.getByText(label("desktop.signin.profiles_unread"), { exact: true }),
+  ).toHaveCount(1);
   await expect(manager.getByRole("listitem")).toHaveCount(0);
   await expect(
     manager.getByRole("button", { name: label("desktop.profile.refresh") }),
   ).toBeVisible();
 });
+
+for (const name of [
+  "A profile with a long name ".repeat(6).slice(0, 160).trim(),
+  "A".repeat(160),
+])
+  for (const viewport of [
+    { width: 360, height: 640 },
+    { width: 640, height: 450 },
+  ])
+    test(`long profile names stay within management and confirmation at ${viewport.width}x${viewport.height} (${name.includes(" ") ? "words" : "unbroken"})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/scenarios.html?scenario=first-run&latency=0&bar=off");
+      const create = page.locator(".create-profile");
+      await create
+        .getByLabel(label("desktop.account.create.name"), { exact: true })
+        .fill(name);
+      await create
+        .getByLabel(label("desktop.signin.password"), { exact: true })
+        .fill("correct horse");
+      await create
+        .getByLabel(label("desktop.account.create.confirm"), { exact: true })
+        .fill("correct horse");
+      await create
+        .getByRole("button", { name: label("desktop.account.create.submit") })
+        .click();
+      await expect(create).toHaveCount(0);
+      const manager = await openManagement(page);
+      const contained = async () => {
+        const dialog = page.getByRole("dialog");
+        expect(
+          await dialog.evaluate((element) => {
+            const box = element.getBoundingClientRect();
+            return {
+              withinWindow: box.left >= 0 && box.right <= innerWidth,
+              horizontalOverflow: element.scrollWidth > element.clientWidth,
+              controlsWithinDialog: Array.from(
+                element.querySelectorAll("button, input"),
+              )
+                .filter((control) => control.getClientRects().length > 0)
+                .every((control) => {
+                  const at = control.getBoundingClientRect();
+                  return at.left >= box.left && at.right <= box.right;
+                }),
+            };
+          }),
+        ).toEqual({
+          withinWindow: true,
+          horizontalOverflow: false,
+          controlsWithinDialog: true,
+        });
+      };
+      await expect(manager.getByText(name, { exact: true })).toBeVisible();
+      await contained();
+      await manager.getByRole("listitem").getByRole("button").click();
+      await expect(page.getByRole("textbox")).toBeFocused();
+      await contained();
+      await expect(page.getByRole("checkbox")).not.toBeChecked();
+      await expect(
+        page.getByRole("button", {
+          name: label("desktop.account.manage.delete"),
+          exact: true,
+        }),
+      ).toBeDisabled();
+    });
 
 for (const locale of ["es", "ca", "hu"]) {
   test(`deletion confirmation is translated in ${locale}`, async ({ page }) => {

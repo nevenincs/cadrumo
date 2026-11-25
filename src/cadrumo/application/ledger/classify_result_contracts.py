@@ -27,7 +27,9 @@ LedgerClassifyValidationMessages = Annotated[
     tuple[_ValidationMessage, ...], Field(max_length=LEDGER_CLASSIFY_MAX_VALIDATION_MESSAGES)
 ]
 
-LedgerClassifyValidationKind = Literal["none", "input", "m210_incoming_only", "m210_required_options"]
+LedgerClassifyValidationKind = Literal[
+    "none", "input", "m210_incoming_only", "m210_required_options", "needs_withholding_category"
+]
 
 
 def _classified_result_is_complete(result: LedgerClassifyOperationResult) -> None:
@@ -40,11 +42,30 @@ def _classified_result_is_complete(result: LedgerClassifyOperationResult) -> Non
         raise ValueError("classified result requires its transaction and review status")
 
 
+def _carries_ledger_link(result: LedgerClassifyOperationResult) -> bool:
+    return (
+        result.arrendamiento_ref is not None
+        or result.inmueble_ref is not None
+        or result.gasto_capital_inmobiliario is not None
+        or result.posicion_ref is not None
+        or result.concepto_capital_mobiliario is not None
+    )
+
+
+def _carries_iva_classification(result: LedgerClassifyOperationResult) -> bool:
+    return (
+        result.deduction_fact_kind is not None
+        or result.investment_asset_id is not None
+        or result.iva_vehicle_use is not None
+        or result.exemption_article is not None
+    )
+
+
 def _validation_result_is_closed(result: LedgerClassifyOperationResult) -> None:
     if (
         result.transaction is not None
-        or result.deduction_fact_kind is not None
-        or result.investment_asset_id is not None
+        or _carries_iva_classification(result)
+        or _carries_ledger_link(result)
         or result.review_status is not None
         or result.bucket_event_ids
         or result.validation_kind == "none"
@@ -63,6 +84,13 @@ class LedgerClassifyOperationResult(BaseModel):
     transaction: LedgerTransactionProjection | None = None
     deduction_fact_kind: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
+    iva_vehicle_use: LedgerClassifyShortText | None = None
+    exemption_article: LedgerClassifyShortText | None = None
+    arrendamiento_ref: LedgerClassifyShortText | None = None
+    inmueble_ref: LedgerClassifyShortText | None = None
+    gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
+    posicion_ref: LedgerClassifyShortText | None = None
+    concepto_capital_mobiliario: LedgerClassifyShortText | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_CLASSIFY_EVENT_IDS)] = ()
     validation_kind: LedgerClassifyValidationKind = "none"

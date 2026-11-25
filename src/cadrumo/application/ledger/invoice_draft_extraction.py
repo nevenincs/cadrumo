@@ -1,4 +1,4 @@
-"""On-host routing of one stored evidence reference to a typed invoice draft.
+"""Routing of one stored evidence reference to a typed invoice draft.
 
 Holds the reading layer that decides which reader a given document is handed
 to, and the three readers' wiring. It never persists an
@@ -21,33 +21,34 @@ stored MIME type:
   :func:`~application.ledger.invoice_label_reader.read_invoice_fields_by_labels`.
   When those rules read every required field no model runs; otherwise the
   fields they could not read come from
-  :func:`~llm.extract_invoice_fields_from_text`. An unreachable model, or a
-  fill admission control refuses for lack of headroom or because another read
-  holds every on-host inference slot, leaves the rule reading standing, and the
-  draft records why so the operator is told. Either way the draft is grounded
+  :class:`~llm.evidence_draft_text.TextInvoiceFieldExtractor`. An unreachable model, or a
+  fill the agent refuses to load for lack of memory, leaves the rule reading
+  standing, and the draft records why so the operator is told. Either way the draft is grounded
   against that same transcription by
   :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`. The
   transcription is produced by a DIFFERENT reader than the one that proposes
   values, which is what makes the anchor check an external check rather than a
   model confirming itself.
 - A **scan-only PDF or image** has nothing to transcribe, so it falls back to the
-  on-host LOCAL vision reader (:mod:`~llm.evidence_draft_vision`) -- the same
-  rasterise-then-read-with-Ollama transport
-  :class:`~llm.vision_classifier.LocalVisionLLMClassifier` already uses for
-  classification, gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` and never a
-  cloud call.
+  vision reader (:mod:`~llm.evidence_draft_vision`): a PDF is rasterised to page
+  images on this computer, and the images go to the model the agent service
+  derives for the vision transcription role, the same route
+  :class:`~llm.vision_classifier.VisionLLMClassifier` uses for classification.
+  Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION`.
 
 The escalation is one-directional and the asymmetry is deliberate. A document
 with no text layer genuinely needs a reader that works on pixels, so it escalates.
 A readable document whose semantic reader is absent or unreachable is an
 ENVIRONMENT failure, so it REFUSES in the operator's face rather than silently
 running a heavier engine they did not ask for -- see
-:func:`_refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
+:func:`refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
 reading likewise gets a typed, instructive refusal, never a silent empty draft.
 
-Everything here runs on-host and in-memory only. The evidence bytes, the
-transcription and the draft never touch disk and are never sent to a cloud
-provider. This module performs no filesystem write.
+Everything here runs in memory. The evidence bytes, the transcription and the
+draft never touch disk, and this module performs no filesystem write. Whether
+the model-bearing stages read off-host is the selected lane's typed flag; a lane
+that does is refused at the client's dispatch point without the consent token
+this module threads through, bound to these bytes.
 
 :func:`extract_invoice_draft_from_evidence` is the CLI-facing
 wiring layer: it resolves an already-stored ``purchase_invoice_evidence`` record
@@ -75,7 +76,7 @@ See Also:
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
     :mod:`~llm.evidence_draft_vision`
-        On-host vision fallback for scan-only PDFs and image attachments.
+        Vision fallback for scan-only PDFs and image attachments.
 """
 
 from __future__ import annotations
@@ -83,28 +84,27 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NoReturn
 
 from ...core.capabilities import ServiceCapability
-from ...core.config import Settings
-from ...core.config import load_settings as _load_settings
-from ...core.config_support import LLMProvider
+from ...core.config import Settings, load_settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.field_origin import FieldOrigin
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
-from ...core.model_catalogue import ModelRole
-from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
-from ..local_reader import probe_local_reader
+from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
-from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
+from .evidence_errors import (
+    EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceReaderError,
+)
 from .evidence_input import EvidenceInput
 from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
-    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
@@ -120,6 +120,8 @@ from .invoice_draft_records import (
 )
 from .invoice_label_reader import LabelReading, merge_label_reading_with_model_draft, read_invoice_fields_by_labels
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .reading_model_refusal import model_run_refusal_code, reader_refusal_locale_key, reader_refusal_next_step
+from .withheld_tax_findings import withheld_tax_findings
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -180,7 +182,6 @@ def extract_invoice_draft_from_evidence(
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     settings: Settings | None = None,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     ports: InvoiceDraftExtractionPorts,
     operation: PinnedAuthorityOperation,
@@ -199,9 +200,9 @@ def extract_invoice_draft_from_evidence(
     and routes them to the reader the document's shape selects. Exactly one of *evidence_id* /
     *attachment_id* must be supplied.
 
-    Nothing is written to disk and nothing leaves the host: the resolved
-    bytes and the extracted text stay in process memory for the duration of
-    this call (``sensitive-financial-data-secure-storage-only``).
+    Nothing is written to disk: the resolved bytes and the extracted text stay
+    in process memory for the duration of this call
+    (``sensitive-financial-data-secure-storage-only``).
 
     Args:
         bucket_id: Active ledger bucket the evidence or attachment belongs to.
@@ -209,14 +210,11 @@ def extract_invoice_draft_from_evidence(
         attachment_id: A linked attachment id, or ``None``.
         settings: Resolved ``Settings``. When ``None``, ``load_settings()`` is
             used so test overrides via ``override_settings()`` are honoured.
-        off_host_provider: Provider to route the MODEL-BEARING stages at, or
-            ``None`` for the on-host default. Widening this signature does not
-            widen the boundary: the refusal lives below this function, at the
-            client's single dispatch point, so a caller naming a cloud provider
-            without a token is refused there rather than trusted here.
         consent_token: Per-invocation off-host consent proof, minted through
-            :func:`~llm.mint_evidence_consent_token`. ``None`` is correct for
-            every on-host read.
+            :func:`~llm.mint_evidence_consent_token` and bound to these bytes.
+            ``None`` is correct when the selected lanes stay on this computer;
+            a lane that reads off-host refuses without it at the client's
+            dispatch point.
         operation: Caller-owned pinned authority operation used to resolve the
             invoice extraction authority values.
             The lease must remain open for the complete extraction operation.
@@ -236,9 +234,8 @@ def extract_invoice_draft_from_evidence(
             resolves outside the bytes-bearing evidence-record id space (a
             catalogue-invoice id carries fiscal totals, not a document), when the
             resolved evidence's media type is unsupported, or when a scan-only
-            PDF / image falls back to the on-host vision reader and that reader
-            is disabled for the profile or the local Ollama runtime is
-            unreachable.
+            PDF / image falls back to the vision reader and that reader is
+            disabled for the profile or cannot be run.
     """
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
@@ -249,7 +246,7 @@ def extract_invoice_draft_from_evidence(
             ),
         )
 
-    resolved_settings = settings or _load_settings()
+    resolved_settings = settings or load_settings()
     # Resolved HERE, once, and handed down. The filer's own identifier is a
     # PROFILE fact, never read off the invoice, and both consumers of it live at
     # the far end of the reading chain: the counterparty role resolution excludes
@@ -286,7 +283,7 @@ def extract_invoice_draft_from_evidence(
             # partial one; fall through so a document whose embedded payload is
             # broken can still be read by the text or vision path.
             pass
-    _refuse_an_unrecognised_xml_document(evidence_input)
+    refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         # The `try` wraps ONLY the transcription, and that scoping is the whole
         # asymmetry rather than a formatting choice. A failure to transcribe is a
@@ -306,11 +303,10 @@ def extract_invoice_draft_from_evidence(
         except PurchaseInvoiceEvidenceInputError:
             transcription = None
         if transcription is not None:
-            return _read_transcription_semantically(
+            return read_transcription_semantically(
                 evidence_input,
                 transcription,
                 settings=resolved_settings,
-                off_host_provider=off_host_provider,
                 consent_token=consent_token,
                 taxpayer_tax_id=filer_tax_id,
                 authority_period=authority_period,
@@ -321,7 +317,6 @@ def extract_invoice_draft_from_evidence(
     return _extract_invoice_fields_via_vision(
         evidence_input,
         settings=resolved_settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=filer_tax_id,
         authority_period=authority_period,
@@ -331,7 +326,9 @@ def extract_invoice_draft_from_evidence(
     )
 
 
-def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
+def refuse_a_text_read_with_no_reader(
+    exc: Exception, *, precondition_verdict: PreconditionVerdict | None = None
+) -> NoReturn:
     """Refuse a text-native document the semantic reader could not be run for.
 
     Deliberately a refusal rather than a fallback, and the distinction is a
@@ -348,33 +345,57 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
 
     The refusal carries only application-observed machine facts. Recovery is
     resolved later from the canonical action catalogue; this boundary neither
-    invents a command nor copies dependency-owned presentation prose.
+    invents a command nor copies dependency-owned presentation prose. When the
+    agent already stated why the reader cannot run, its verdict is the
+    refusal and reaches the operator unchanged.
 
     Args:
         exc: The provider or dependency failure that prevented the read.
+        precondition_verdict: The agent's refusal, when it gave one.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: Always.
     """
-    _refuse_with_unavailable_reader(exc, availability_fact="semantic_reader_available")
+    _refuse_with_unavailable_reader(
+        exc, availability_fact="semantic_reader_available", precondition_verdict=precondition_verdict
+    )
 
 
-def _refuse_with_unavailable_reader(exc: Exception, *, availability_fact: str) -> NoReturn:
+def _refuse_with_reader_verdict(verdict: PreconditionVerdict, *, cause: Exception) -> NoReturn:
+    """Refuse with the agent's verdict, carried by exactly one refusal.
+
+    The reader already refuses with that verdict and hands the refusal up as
+    the unavailable reader's cause. It is re-raised unchanged rather than
+    wrapped in a second refusal: an operation's error detail keeps a verdict
+    only when one registered error in the chain carries it, so two carriers of
+    the same verdict would settle with none.
+    """
+    if isinstance(cause, PurchaseInvoiceEvidenceReaderError) and cause.terminal_precondition_verdict == verdict:
+        raise cause
+    refusal_code = model_run_refusal_code(verdict)
+    raise PurchaseInvoiceEvidenceReaderError(
+        translated_message=reader_refusal_locale_key(refusal_code),
+        precondition_verdict=verdict,
+        next_step=reader_refusal_next_step(refusal_code),
+    ) from cause
+
+
+def _refuse_with_unavailable_reader(
+    exc: Exception,
+    *,
+    availability_fact: str,
+    precondition_verdict: PreconditionVerdict | None = None,
+) -> NoReturn:
     """Preserve a reader refusal as typed facts, without presentation prose."""
-    if isinstance(exc, MissingOptionalExtraError):
-        facts: dict[str, str | bool] = {
-            "extra": exc.extra.extra,
-            "import_name": exc.extra.import_name,
-            "importable": False,
-        }
-    else:
-        facts = {
-            availability_fact: False,
-            "reader_error_type": exc.__class__.__name__,
-        }
+    if precondition_verdict is not None:
+        _refuse_with_reader_verdict(precondition_verdict, cause=exc)
+    facts: dict[str, str | bool] = {
+        availability_fact: False,
+        "reader_error_type": exc.__class__.__name__,
+    }
     raise PurchaseInvoiceEvidenceReaderError(
         context=facts,
-        translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+        translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
             facts=facts,
@@ -411,6 +432,7 @@ def _proposed_supply_nature(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
+    consent_token: EvidenceConsentProof | None,
     ports: InvoiceDraftExtractionPorts,
 ) -> SupplyNature | None:
     """Return a model's proposal about goods-or-services, or ``None``.
@@ -423,47 +445,58 @@ def _proposed_supply_nature(
     make an optional convenience able to lose a document, so every failure --
     an absent extra, an unreachable provider, a reply that did not survive
     containment -- yields no proposal and leaves the operator asked exactly as
-    they were.
+    they were. A reader that could not be asked is logged with the condition
+    its verdict names.
+
+    ``consent_token`` is the proof the read already carries. The proposal reads
+    the same document, so a lane that reads off-host needs it as much as the
+    extraction does; without it that lane refuses and no proposal is made.
     """
     try:
-        proposal = ports.propose_supply_nature(transcription, settings)
+        proposal = ports.propose_supply_nature(transcription, settings, consent_token)
     except Exception:
         proposal = None
-    if proposal is None:
-        get_logger(__name__).info("supply-nature proposal unavailable; the operator is asked as before")
-    return proposal
+    nature = None if proposal is None else proposal.nature
+    if nature is None:
+        unavailable = None if proposal is None else proposal.reader_unavailable
+        get_logger(__name__).info(
+            "supply-nature proposal unavailable (reader condition %s); the operator is asked as before",
+            None if unavailable is None else unavailable.failed_condition_id,
+        )
+    return nature
 
 
 def _label_read_after_reader_unavailable(
     labels: LabelReading | None,
     error: InvoiceDraftReaderUnavailableError,
 ) -> tuple[InvoiceDraft, LabelReadingFallback]:
-    """Keep a partial label result, but refuse when no field has an anchor."""
+    """Keep a partial label result, but refuse when no field has an anchor.
+
+    The partial result stays a success. When the reader probe said why the
+    model could not run, the fallback records that condition.
+    """
+    verdict = error.precondition_verdict
     if labels is None or not labels.read_fields:
-        _refuse_a_text_read_with_no_reader(error.cause)
+        refuse_a_text_read_with_no_reader(error.cause, precondition_verdict=verdict)
     return labels.draft, _label_reading_fallback(
         labels,
         cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
         reader_error=error.cause,
-        failed_condition_id=None,
+        failed_condition_id=None if verdict is None else verdict.failed_condition_id,
+        refusal_code=model_run_refusal_code(verdict),
     )
 
 
-def _label_read_after_admission_refusal(
+def _label_read_after_load_refusal(
     labels: LabelReading | None,
-    error: InvoiceDraftReaderHeadroomRefusedError | InvoiceDraftReaderBusyRefusedError,
+    error: InvoiceDraftReaderHeadroomRefusedError,
 ) -> tuple[InvoiceDraft, LabelReadingFallback]:
-    """Retain partial rule facts, or preserve admission control's own refusal."""
+    """Retain partial rule facts, or preserve the agent's own load refusal."""
     if labels is None or not labels.read_fields:
         raise error.cause from None
-    cause = (
-        LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
-        if isinstance(error, InvoiceDraftReaderHeadroomRefusedError)
-        else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
-    )
     return labels.draft, _label_reading_fallback(
         labels,
-        cause=cause,
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         reader_error=error.cause,
         failed_condition_id=error.failed_condition_id,
     )
@@ -473,7 +506,6 @@ def _read_transcription_fields(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None,
     consent_token: EvidenceConsentProof | None,
     authority_values: object,
     operation: PinnedAuthorityOperation,
@@ -488,21 +520,20 @@ def _read_transcription_fields(
     if labels is not None and labels.complete:
         return labels.draft, None
     try:
-        model_read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
+        model_read = ports.read_text(transcription, settings, consent_token, authority_values)
     except InvoiceDraftReaderUnavailableError as exc:
         return _label_read_after_reader_unavailable(labels, exc)
-    except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
-        return _label_read_after_admission_refusal(labels, exc)
+    except InvoiceDraftReaderHeadroomRefusedError as exc:
+        return _label_read_after_load_refusal(labels, exc)
     read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
     return read, None
 
 
-def _read_transcription_semantically(
+def read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     propose_supply_nature: bool = False,
@@ -543,8 +574,6 @@ def _read_transcription_semantically(
             swallowed into a vision run.
         settings: Resolved settings, passed down rather than reloaded so the
             caller's overrides govern the model this stage resolves.
-        off_host_provider: Provider to route the SEMANTIC stage at, or ``None``
-            for the on-host default.
         consent_token: Per-invocation off-host consent proof, or ``None``.
         taxpayer_tax_id: The filer's own identifier, resolved once at the public
             entry from the active profile. Handed down rather than looked up
@@ -569,7 +598,7 @@ def _read_transcription_semantically(
     Raises:
         PurchaseInvoiceEvidenceInputError: When the semantic reader cannot be
             run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
-            :func:`_refuse_a_text_read_with_no_reader`.
+            :func:`refuse_a_text_read_with_no_reader`.
         Exception: Admission control's own headroom or occupancy refusal,
             unchanged, when the model read is the whole read rather than a fill
             over a partial label reading.
@@ -588,7 +617,6 @@ def _read_transcription_semantically(
     read, fallback = _read_transcription_fields(
         transcription,
         settings=settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         authority_values=authority_values,
         operation=operation,
@@ -604,7 +632,7 @@ def _read_transcription_semantically(
             # reaches a second model changes what the verb costs and what
             # leaves the host.
             "proposed_supply_nature": (
-                _proposed_supply_nature(transcription, settings=settings, ports=ports)
+                _proposed_supply_nature(transcription, settings=settings, consent_token=consent_token, ports=ports)
                 if propose_supply_nature
                 else None
             ),
@@ -626,6 +654,7 @@ def _label_reading_fallback(
     cause: LabelReadingFallbackCause,
     reader_error: Exception,
     failed_condition_id: str | None,
+    refusal_code: str | None = None,
 ) -> LabelReadingFallback:
     """Record that a partial label reading stands because its model fill did not run.
 
@@ -644,10 +673,11 @@ def _label_reading_fallback(
         unread_fields=unread_fields,
         reader_error_type=type(reader_error).__name__,
         failed_condition_id=failed_condition_id,
+        refusal_code=refusal_code,
     )
 
 
-def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
+def refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     """Refuse an XML document whose syntax no structured reader recognises.
 
     XML must never reach the text-layer or vision fallbacks. Those exist for
@@ -660,7 +690,7 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     Before that a structured document could not be ingested at all, so the
     fallback chain was never handed one. Admitting the extension without closing
     the chain would route every unrecognised XML -- a SII or VERI*FACTU record,
-    a TicketBAI record, any XML at all -- to the on-host vision model, whose
+    a TicketBAI record, any XML at all -- to the vision model, whose
     capability is ON by default.
 
     The refusal names the syntaxes that ARE read, so an operator holding a
@@ -711,6 +741,7 @@ def _extract_invoice_fields_from_structured_record(
     from .grounding_anchor import (
         country_code_value,
         resolved_country_code,
+        sole_stated_iva_rate,
         stated_country_code,
         structured_provenance,
     )
@@ -766,6 +797,11 @@ def _extract_invoice_fields_from_structured_record(
         rectifies_invoice_number=parsed.rectifies_invoice_number,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
+        # The invoice-level rate exists only where one rate describes the whole
+        # invoice. A record charging several carries them in ``iva_breakdown``
+        # and leaves this unset: any single value here would be a rate part of
+        # the base was never charged at.
+        iva_rate=sole_stated_iva_rate(parsed.iva_breakdown),
         iva_amount=parsed.iva_amount,
         grand_total=parsed.grand_total,
         currency=parsed.currency,
@@ -776,6 +812,7 @@ def _extract_invoice_fields_from_structured_record(
         # parser that recovers a suplido the draft drops leaves the check
         # computing a total short by exactly it -- which is the shape this
         # mapping exists to close rather than to reproduce one field along.
+        retencion_rate=parsed.retencion_rate,
         retencion_amount=parsed.retencion_amount,
         suplidos_amount=parsed.suplidos_amount,
         iva_category=parsed.iva_category,
@@ -819,6 +856,7 @@ def _extract_invoice_fields_from_structured_record(
         update={
             "discrepancies": (
                 *deterministic_findings(draft, legends=legends, operation=operation),
+                *withheld_tax_findings(parsed),
                 *facturae_invoice_class_findings(
                     declared=parsed.invoice_classification,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,
@@ -832,7 +870,6 @@ def _extract_invoice_fields_via_vision(
     evidence: EvidenceInput,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     authority_period: Period,
@@ -840,13 +877,13 @@ def _extract_invoice_fields_via_vision(
     legends: tuple[RegimeLegend, ...],
     ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
-    """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
+    """Rasterise/encode *evidence*, TRANSCRIBE it with the vision role's model, then read it.
 
     Two stages, not one, and the split is what earns this path its grounding.
     The vision model produces a :class:`DocumentTranscription` and interprets
     nothing; the same semantic reader and the same anchor check the text lane
     uses then run over that text
-    (:func:`_read_transcription_semantically`). Because the transcription is
+    (:func:`read_transcription_semantically`). Because the transcription is
     produced by a different call than the one that proposes values, the anchor
     check is an external check here exactly as it is on the text lane -- which
     it structurally could not be while one call went image-to-fields and the
@@ -855,11 +892,10 @@ def _extract_invoice_fields_via_vision(
 
     Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
-    empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
-    PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`~application.local_reader.probe_local_reader`). An absent
-    ``llm`` extra is reported separately as typed dependency facts, so a
-    dependency gap is never mistaken for a daemon-reachability problem.
+    empty draft. A reader the agent service refuses -- no selection for the
+    role, a model not installed, a lane that does not take images -- reaches the
+    operator with the refusal's own typed verdict; no other lane or model is
+    tried. An unrasterisable PDF refuses as an unavailable reader.
     """
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         facts = {"llm_vision_enabled": False}
@@ -894,33 +930,21 @@ def _extract_invoice_fields_via_vision(
         # is deliberate rather than thorough: on a scan-only document the pixels
         # ARE the evidence, so a consent that covered only the semantic stage
         # would take an operator's acknowledgement and then leave the read
-        # entirely on-host -- an acknowledgement that changes nothing, which is
-        # worse than not asking.
-        transcription = ports.transcribe_vision(
-            images, evidence.content_sha256, settings, off_host_provider, consent_token
-        )
+        # without the consent it was given -- an acknowledgement that changes
+        # nothing, which is worse than not asking.
+        transcription = ports.transcribe_vision(images, evidence.content_sha256, settings, consent_token)
     except InvoiceDraftReaderUnavailableError as exc:
-        # Ordered ahead of the runtime-failure branch deliberately. A missing
-        # `llm` extra is a dependency problem, not a reachability problem: the
-        # branch below probes runtime reachability, which is a different failed
-        # condition and must not replace the dependency identity.
         cause = exc.cause
-        if isinstance(cause, MissingOptionalExtraError):
-            _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
-        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings)
-        if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceReaderError(
-                translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
-                precondition_verdict=status.precondition_verdict,
-            ) from cause
+        verdict = exc.precondition_verdict
+        if verdict is not None:
+            _refuse_with_reader_verdict(verdict, cause=cause)
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,
-            "vision_reader_probe_available": True,
             "vision_reader_error_type": cause.__class__.__name__,
         }
         raise PurchaseInvoiceEvidenceReaderError(
             context=facts,
-            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
                 facts=facts,
@@ -930,13 +954,12 @@ def _extract_invoice_fields_via_vision(
     # OUTSIDE the try, deliberately, and for the same reason the text lane's
     # semantic read sits outside its transcription try: a failure here is a
     # statement about the semantic READER, and converting it into "vision
-    # reading failed" would send the operator to restart a daemon that read the
+    # reading failed" would send the operator to fix a reader that read the
     # page perfectly well.
-    return _read_transcription_semantically(
+    return read_transcription_semantically(
         evidence,
         transcription,
         settings=settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=taxpayer_tax_id,
         authority_period=authority_period,

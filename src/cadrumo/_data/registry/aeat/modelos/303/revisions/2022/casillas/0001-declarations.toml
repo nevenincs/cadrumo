@@ -26,13 +26,19 @@ semantic_role = "dr303_25"
 continuidad_id = "dr303-25"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseño prints this box as "Modificaciones bases y cuotas del recargo
+# de equivalencia - Cuota [26]" (aeat-dr-303-2022, campo 50), which campo 51
+# adds to the total cuota devengada [27]. Its base, [25], stays the operator's
+# like the ordinary recargo bases.
 [[revisions.2022.casillas]]
 id = "26"
 number = "26"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_26"
 continuidad_id = "dr303-26"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-26-projection"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints box [27] as "Total cuota devengada ( [03] +
 # [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] + [26]) [27]"
@@ -370,12 +376,13 @@ semantic_role = "dr303_59"
 continuidad_id = "dr303-59"
 input_kind = "bound"
 binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-# Casilla 59 reports the base imponible of exempt intra-community supplies
-# (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
-# (exenciones en las entregas de bienes destinados a otro Estado miembro), not
-# the repercusión/deducción articles 88/92 — an exempt entrega carries no cuota
-# repercutida nor deducible, so this is an informativa base-only box.
-legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 59 reports the base imponible of the exempt intra-community supplies
+# of goods (LIVA art. 25) and of the intra-community supplies of services, the
+# services located in another Member State by LIVA art. 69.Uno.1 (Modelo 303
+# instructions, Informacion adicional, box 59). Neither leg carries a cuota
+# repercutida or deducible, so the repercusión/deducción articles 88/92 do not
+# apply and this is an informativa base-only box.
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "60"
@@ -396,17 +403,25 @@ legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71",
 # The 2022 diseno de registro prints this box at position 46, length 17, as
 # "Operaciones no sujetas por reglas de localizacion (excepto las incluidas en la
 # casilla 123) [120]" (aeat-dr-303-2022) -- the same position, width and concept
-# every later design prints, which only prefixes its apartado name. The ledger
-# already classifies the acquisitions it reports, so the box is derived here
-# rather than left as a figure the operator restates.
+# every later design prints, which only prefixes its apartado name.
+#
+# The box is entered by the operator, not bound. The Modelo 303 instructions
+# (Informacion adicional, box 120) fill it with distance sales not subject under
+# LIVA art. 68.Cuatro outside the Union scheme, distance sales of imported goods
+# outside the Import scheme, not-subject services other than the intra-community
+# services of box 59 and the one-stop-shop services of box 123, goods installed or
+# assembled in another Member State, and any other supply not subject by the
+# place-of-supply rules. No ledger category isolates that population: the
+# intra-community services belong in box 59, and the generic not-subject
+# categories also carry LIVA art. 7 operations and one-stop-shop operations,
+# which the box excludes. Binding either would declare operations the box does
+# not hold.
 [[revisions.2022.casillas]]
 id = "120"
 number = "120"
 section = ["iva", "resultado"]
 semantic_role = "dr303_120"
 continuidad_id = "dr303-120"
-input_kind = "bound"
-binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
 legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints this box at position 63, length 17, as
@@ -509,6 +524,7 @@ section = ["iva", "resultado"]
 data_type = "ratio"
 semantic_role = "dr303_65"
 continuidad_id = "dr303-65"
+constraints = { min_value = "0", max_value = "100" }
 input_kind = "bound"
 binding = "modelo-303-profile-state-attribution-ratio"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -554,10 +570,10 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 # which the 2023 revision keys as its own divergence.
 [[revisions.2022.casillas]]
 id = "71"
-continuidad_id = "dr303-71"
+continuidad_id = "iva-resultado-final"
 number = "71"
 section = ["iva", "resultado"]
-semantic_role = "dr303_71"
+semantic_role = "iva_resultado_final"
 input_kind = "computed"
 formula = "modelo-303-iva-resultado-final"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2100,6 +2116,8 @@ number = "03"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_03"
 continuidad_id = "dr303-03"
+input_kind = "computed"
+formula = "modelo-303-dr303-03-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2128,6 +2146,8 @@ number = "06"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_06"
 continuidad_id = "dr303-06"
+input_kind = "computed"
+formula = "modelo-303-dr303-06-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2156,6 +2176,8 @@ number = "09"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_09"
 continuidad_id = "dr303-09"
+input_kind = "computed"
+formula = "modelo-303-dr303-09-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2184,12 +2206,20 @@ input_kind = "computed"
 formula = "modelo-303-dr303-11-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box as "Otras operaciones con
+# inversion del sujeto pasivo (excepto. adq. intracom) - Base imponible [12]"
+# (aeat-dr-303-2022, campo 36), the base of the same operations box [13]
+# states the cuota of, and every later design prints it the same way. The
+# base is resolved from the rows the cuota carrier reads, so the record states
+# both figures of one population rather than a cuota without its base.
 [[revisions.2022.casillas]]
 id = "12"
 number = "12"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_12"
 continuidad_id = "dr303-12"
+input_kind = "computed"
+formula = "modelo-303-dr303-12-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints this box as "Otras operaciones con
@@ -2209,21 +2239,34 @@ input_kind = "computed"
 formula = "modelo-303-dr303-13-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseño de registro prints this box as "Liquidación (3) - Regimen
+# General - IVA Devengado - Modificación bases y cuotas - Base imponible [14]"
+# (aeat-dr-303-2022, campo 38), and every later design prints it the same way.
+# It states ONE figure made of two contributions the record keeps apart: the
+# modification the facturas rectificativas of the period make, and the
+# modification the person states for what the catalogue holds no document for
+# (the régimen de viajeros refunds the instructions name among them).
 [[revisions.2022.casillas]]
 id = "14"
 number = "14"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_14"
 continuidad_id = "dr303-14"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-14-projection"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The cuota half of the same box pair (aeat-dr-303-2022, campo 39), which
+# campo 51 adds to the total cuota devengada [27].
 [[revisions.2022.casillas]]
 id = "15"
 number = "15"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_15"
 continuidad_id = "dr303-15"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-15-projection"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "16"
@@ -2238,6 +2281,8 @@ id = "17"
 number = "17"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+# The design prints [17] as "Tipo %", a percentage in a five-digit field with two decimals.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "dr303_17"
 continuidad_id = "dr303-17"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2306,6 +2351,24 @@ continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Base-imponible parity casilla for official box 12, mirroring the cuota
+# parity casilla iva.autorepercutido.interior.devengado (box 13). Feeds box 12
+# via a projection formula only -- never the resultado, which is
+# cuota-denominated.
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.interior.devengado.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campos 36 y 37, distingue base [12] y cuota [13] de otras operaciones con inversion del sujeto pasivo. Esta fila es la entrada de agregacion que la formula proyecta en [12]; no constituye una segunda casilla impresa."
+number = "iva.autorepercutido.interior.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+semantic_role = "iva_base_autorepercutida_interior_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the domestic reverse-charge devengado box pair (12/13); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-interior-devengado"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-devengado-base"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autoconsumo.promotor.base"
@@ -2442,3 +2505,103 @@ input_kind = "computed"
 formula = "modelo-303-iva-cuota-devengada-general"
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 export_exemption_reason = "feeds_addressed_casilla"
+
+# Base-imponible carrier for official box [14]. The 2022 diseño prints the row
+# as "Liquidación (3) - Regimen General - IVA Devengado - Modificación bases y
+# cuotas - Base imponible [14]" (aeat-dr-303-2022, campo 38) and no box of its
+# own for the invoice-sourced half, so this row is the aggregation entry the
+# projection formula adds into [14].
+[[revisions.2022.casillas]]
+id = "iva.modificacion-bases-cuotas.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 38, imprime la modificacion de bases imponibles [14] y el campo 39 su cuota [15]. Esta fila es la entrada de agregacion que la formula proyecta en [14]; no constituye una segunda casilla impresa."
+number = "iva.modificacion-bases-cuotas.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_base_modificacion_bases_cuotas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible carrier for the modificación de bases y cuotas box pair (14/15); the box holds every rate's modification without a rate or category split."
+continuidad_id = "iva-base-modificacion-bases-cuotas"
+input_kind = "bound"
+binding = "modelo-303-iva-modificacion-bases-cuotas-base"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Cuota carrier for official box [15], the same population's cuota
+# (aeat-dr-303-2022, campo 39).
+[[revisions.2022.casillas]]
+id = "iva.modificacion-bases-cuotas"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 39, imprime la cuota de la modificacion de bases y cuotas [15], que el campo 51 suma en el total de cuota devengada [27]. Esta fila es la entrada de agregacion que la formula proyecta en [15]; no constituye una segunda casilla impresa."
+number = "iva.modificacion-bases-cuotas"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_modificacion_bases_cuotas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole cuota carrier for the modificación de bases y cuotas box pair (14/15); the box holds every rate's modification without a rate or category split."
+continuidad_id = "iva-cuota-modificacion-bases-cuotas"
+input_kind = "bound"
+binding = "modelo-303-iva-modificacion-bases-cuotas-cuota"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The operator's own contribution to box [14]. The instructions name
+# modifications the catalogue holds no document for, the régimen de viajeros
+# refunds among them, so the box keeps a typed half beside the invoice-sourced
+# one. It is its own named casilla rather than a typed value on [14] because a
+# box is bound or typed and cannot be both, and because the two contributions
+# must never describe the same document.
+[[revisions.2022.casillas]]
+id = "iva.modificacion-bases-cuotas.operador.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 38, imprime una sola casilla [14] para la modificacion de bases imponibles. Esta fila es la parte que escribe la persona, que la formula suma con la parte procedente de las facturas; no constituye una segunda casilla impresa."
+number = "iva.modificacion-bases-cuotas.operador.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_base_modificacion_bases_cuotas_operador"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole operator contribution to the modificación de bases box [14]; the box prints one figure and the record keeps the typed half apart from the invoice-sourced half."
+continuidad_id = "iva-base-modificacion-bases-cuotas-operador"
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The operator's own contribution to box [15], the cuota half of the same
+# typed modification.
+[[revisions.2022.casillas]]
+id = "iva.modificacion-bases-cuotas.operador"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 39, imprime una sola casilla [15] para la cuota de la modificacion. Esta fila es la parte que escribe la persona, que la formula suma con la parte procedente de las facturas; no constituye una segunda casilla impresa."
+number = "iva.modificacion-bases-cuotas.operador"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_modificacion_bases_cuotas_operador"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole operator contribution to the modificación de cuotas box [15]; the box prints one figure and the record keeps the typed half apart from the invoice-sourced half."
+continuidad_id = "iva-cuota-modificacion-bases-cuotas-operador"
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Cuota carrier for official box [26], the recargo de equivalencia the
+# modification moves (aeat-dr-303-2022, campo 50).
+[[revisions.2022.casillas]]
+id = "iva.modificacion-recargo"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 50, imprime la cuota de la modificacion del recargo de equivalencia [26], que el campo 51 suma en el total de cuota devengada [27]. Esta fila es la entrada de agregacion que la formula proyecta en [26]; no constituye una segunda casilla impresa."
+number = "iva.modificacion-recargo"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_modificacion_recargo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole cuota carrier for the modificación del recargo de equivalencia box [26]; the box holds every rate's modification without a rate split."
+continuidad_id = "iva-cuota-modificacion-recargo"
+input_kind = "bound"
+binding = "modelo-303-iva-modificacion-recargo-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The operator's own contribution to box [26], for a recargo modification the
+# catalogue holds no document for.
+[[revisions.2022.casillas]]
+id = "iva.modificacion-recargo.operador"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campo 50, imprime una sola casilla [26] para la cuota de la modificacion del recargo. Esta fila es la parte que escribe la persona, que la formula suma con la parte procedente de las facturas; no constituye una segunda casilla impresa."
+number = "iva.modificacion-recargo.operador"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_modificacion_recargo_operador"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole operator contribution to the modificación del recargo box [26]; the box prints one figure and the record keeps the typed half apart from the invoice-sourced half."
+continuidad_id = "iva-cuota-modificacion-recargo-operador"
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

@@ -11,14 +11,20 @@ from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import RegistrySnapshot
-from ._cross_dependency_calculation_support import (
-    _M200_CUOTA_DIFERENCIAL_CASILLA,
-    _M202_CUOTA_BASE_CASILLA,
-    _casilla_inputs,
-    _observations_from_requirements,
+from .authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_before_first_declaring,
+    revision_covering,
+)
+from .cross_dependency_calculation_support import (
+    M200_CUOTA_DIFERENCIAL_CASILLA,
+    M202_CUOTA_BASE_CASILLA,
+    casilla_inputs,
+    observations_from_requirements,
     source_editions_calculate,
 )
-from .authored_editions import authored_revisions
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -35,9 +41,10 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     period: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("202", 2026, period)
+    year = filing_year_envelope().horizon
+    snapshot = registry_snapshot("202", year, period)
     revision = snapshot.revision
-    assert revision.id == "2025-y-siguientes"
+    assert revision.id == revision_covering("202", year).id
     # The casilla POPULATION is not the subject here and is no longer pinned by
     # tally: it counted 50 when written and the revision declares 61 now, so the
     # constant only ever recorded a moment. What must hold is that every casilla
@@ -47,7 +54,7 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     formula_targets = {formula.target_casilla_id for formula in revision.formulas}
     assert formula_targets == {"03", "13", "16", "18", "22", "25", "26", "32", "34", "38", "39", "63", "66"}
 
-    inputs = _casilla_inputs(
+    inputs = casilla_inputs(
         {
             "01": Decimal("10000"),
             "02": Decimal("0"),
@@ -90,10 +97,10 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": date(2026, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values={
             "modelo-202-pagos-fraccionados-anteriores": Decimal("3000"),
-            "modelo-202-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
+            "modelo-202-cuota-base-ejercicio-anterior": inputs[M202_CUOTA_BASE_CASILLA],
         },
     )
     assert {str(casilla_id) for casilla_id in inputs} <= declared_ids
@@ -106,31 +113,22 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     assert entries["34"].operand_refs == ("32", "33")
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "expected_revision"),
-    [
-        (2022, "2019-2022"),
-        (2023, "2023-2024"),
-        (2024, "2023-2024"),
-        (2025, "2025-y-siguientes"),
-        (2026, "2025-y-siguientes"),
-    ],
-)
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years)
 def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     filing_year: int,
-    expected_revision: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
+    expected = revision_covering("202", filing_year)
     snapshot = registry_snapshot("202", filing_year, "1P")
-    assert snapshot.revision.id == expected_revision
-    # Not a tally. The correcciones block 61..66 plus casilla 67 are what the 2025
-    # diseno ADDS over the earlier spans, so asserting the selected revision
-    # carries them exactly when it is the 2025 span proves the selection landed on
-    # the right CONTENT. A casilla count never did: it read 43 and 50 when written
-    # and the revisions declare 54 and 61 now.
+    assert snapshot.revision.id == expected.id
+    # Not a tally. The correcciones block 61..66 plus casilla 67 are what the newest
+    # diseno ADDS over the earlier spans, so asserting the selected revision carries
+    # them exactly when it is not older than the first revision declaring casilla 67
+    # proves the selection landed on the right CONTENT. A casilla count never did.
     declared_ids = {str(casilla.id) for casilla in snapshot.revision.casillas}
     correcciones_block = {"61", "62", "63", "64", "65", "66", "67"}
-    if expected_revision == "2025-y-siguientes":
+    last_without_correcciones = revision_before_first_declaring("202", "67")
+    if expected.valid_from > last_without_correcciones.valid_from:
         assert correcciones_block <= declared_ids
     else:
         assert correcciones_block.isdisjoint(declared_ids)
@@ -142,11 +140,12 @@ def test_modelo_202_revision_selection_refuses_years_below_the_supported_floor(
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     below_floor = supported_years.floor - 1
-    # The 2019-2022 revision still authors this year; the refusal is the floor's.
-    assert published_authored_revision("202", year=below_floor).id == "2019-2022"
+    # An older revision still authors this year; the refusal is the floor's.
+    covering = revision_covering("202", below_floor)
+    assert published_authored_revision("202", year=below_floor).id == covering.id
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         registry_snapshot("202", below_floor, "1P")
-    assert "2019-2022" in excinfo.value.covering_revision_ids
+    assert str(covering.id) in excinfo.value.covering_revision_ids
 
 
 def test_modelo_202_pre_b2_revision_total_correcciones_aumentos_excludes_complementario_column(
@@ -184,7 +183,7 @@ def _assert_pre_b2_correcciones_shape(
     assert "67" not in casilla_ids
     assert {"61", "62", "63", "64", "65", "66"}.isdisjoint(casilla_ids)
 
-    inputs = _casilla_inputs(
+    inputs = casilla_inputs(
         {
             "05": Decimal("2000"),
             "07": Decimal("500"),
@@ -227,9 +226,12 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     snapshot = registry_snapshot("200", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period="0A")}
+    instalment_ids = {
+        period: (f"modelo-200-pago-fraccionado-{ordinal}-40-2", f"modelo-200-pago-fraccionado-{ordinal}-40-3")
+        for period, ordinal in (("1P", "primero"), ("2P", "segundo"), ("3P", "tercero"))
+    }
     assert relation_ids == {
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
+        *(binding_id for pair in instalment_ids.values() for binding_id in pair),
         "modelo-200-bin-pendiente-ejercicios-anteriores",
         "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores",
         "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
@@ -241,13 +243,10 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert classifications["200"].treatment == "factual_evidence"
 
     requirements = relation_source_requirements(revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    instalment_amounts = {"1P": Decimal("1200"), "2P": Decimal("1500"), "3P": Decimal("1800")}
+    observations = observations_from_requirements(
         requirements,
-        lambda _requirement, period_index: (
-            Decimal("1200"),
-            Decimal("1500"),
-            Decimal("1800"),
-        )[period_index],
+        lambda requirement, period_index: instalment_amounts.get(requirement.periods[period_index], Decimal("1200")),
         target_modelo="200",
         fallback_revision=revision,
     )
@@ -261,7 +260,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert set(relation_values) == relation_ids
 
     diferencial_formula = next(
-        formula for formula in revision.formulas if formula.target_casilla_id == _M200_CUOTA_DIFERENCIAL_CASILLA
+        formula for formula in revision.formulas if formula.target_casilla_id == M200_CUOTA_DIFERENCIAL_CASILLA
     )
     assert diferencial_formula.id == "modelo-200-cuota-diferencial"
     assert diferencial_formula.expression.op == "subtract"
@@ -269,12 +268,12 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
 
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=_casilla_inputs(
+        inputs=casilla_inputs(
             {
                 "DP200012:00501": Decimal("48000"),
                 "DP200013:00417": Decimal("0"),
                 "DP200013:00418": Decimal("0"),
-                "01032": Decimal("0"),
+                "DP200014:01032": Decimal("0"),
                 "DP200014:00547": Decimal("0"),
                 "DP200014:01033": Decimal("0"),
                 "DP200014:01034": Decimal("0"),
@@ -283,7 +282,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            **turnover_binding_values(snapshot, Decimal("10000000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         date_context={"filing_period": date(filing_year, 12, 31)},
@@ -295,15 +294,10 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     diferencial_entry = entries["DP200014B:00611"]
     assert diferencial_entry.formula_id == "modelo-200-cuota-diferencial"
     assert diferencial_entry.op == "subtract"
-    assert set(diferencial_entry.operand_refs) == {
-        "DP200014B:00599",
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    }
-    assert diferencial_entry.operand_refs == (
-        "DP200014B:00599",
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    )
-    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-pagos-fraccionados-anuales"]
-    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-pagos-fraccionados-anuales-40-2"]
+    instalment_casillas = {"1P": "DP200014B:00601", "2P": "DP200014B:00603", "3P": "DP200014B:00605"}
+    assert diferencial_entry.operand_refs == ("DP200014B:00599", *instalment_casillas.values())
+    for position, (period, casilla_id) in enumerate(instalment_casillas.items(), start=1):
+        cuota_40_2, base_40_3 = (relation_values[binding_id] for binding_id in instalment_ids[period])
+        assert entries[casilla_id].operand_refs == instalment_ids[period]
+        assert result.values[casilla_id] == cuota_40_2 + base_40_3
+        assert diferencial_entry.operand_values[position] == result.values[casilla_id]

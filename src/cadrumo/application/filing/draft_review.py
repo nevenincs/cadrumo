@@ -46,10 +46,11 @@ from ...domain.filing.protocols import CasillaSchemaProvider
 from ...domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ...domain.filing.validator import ModeloValidator, derive_validation_status
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from .draft_refusal_doors import draft_approval_decision_verdict, draft_registry_alignment_verdict
 from .draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 
 
@@ -184,7 +185,7 @@ def compute_current_approval_basis(
 
     The basis hashes the draft identity and validation surface, the persisted
     :class:`TransactionCatalogue`, the persisted
-    :class:`~domain.invoices.models.InvoiceCatalogue` (a calculation source
+    :class:`~domain.invoices.catalogue.InvoiceCatalogue` (a calculation source
     resolved through the source mesh), the bucket's prior filed observations (the
     ``previous_filing`` carry and relation fold-in source), the bucket's taxpayer
     profile facts that scope relation resolution, the supplied or bundled
@@ -244,8 +245,8 @@ def compute_current_approval_basis(
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),
-        transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
-        invoice_catalogue_fingerprint=_invoice_catalogue_fingerprint(invoices),
+        transaction_catalogue_fingerprint=transaction_catalogue_fingerprint(catalogue),
+        invoice_catalogue_fingerprint=invoice_catalogue_fingerprint(invoices),
         prior_filing_observations_fingerprint=prior_observations_fingerprint,
         profile_activity_fingerprint=profile_fingerprint,
         category_profiles_fingerprint=_category_profiles_fingerprint(profiles),
@@ -404,11 +405,13 @@ def approve_draft(
     if not normalized_approver:
         raise ModeloDraftError(
             translated_message="application.filing.review.errors.approved_by_blank",
+            precondition_verdict=draft_approval_decision_verdict("approver_stated"),
         )
 
     if derive_validation_status(draft.findings) is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         raise ModeloDraftError(
             translated_message="application.filing.review.errors.draft_not_ready",
+            precondition_verdict=draft_approval_decision_verdict("draft_ready"),
         )
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
@@ -646,6 +649,7 @@ def _require_registry_review_alignment(
             "finding_count": len(codes),
             "codes": codes,
         },
+        precondition_verdict=draft_registry_alignment_verdict("registry_review_alignment"),
     )
 
 
@@ -655,10 +659,10 @@ def _load_prior_filing_observations_fingerprint(
     operation: PinnedAuthorityOperation,
 ) -> str:
     """Digest all persisted prior-filing observations supplied by the application port."""
-    return _prior_filing_observations_fingerprint(repository.iter_records(), operation=operation)
+    return prior_filing_observations_fingerprint(repository.iter_records(), operation=operation)
 
 
-def _prior_filing_observations_fingerprint(
+def prior_filing_observations_fingerprint(
     payloads: Iterable[_StoredPriorObservation],
     *,
     operation: PinnedAuthorityOperation,
@@ -713,10 +717,10 @@ def _load_profile_activity_fingerprint(
 ) -> str:
     """Digest the canonical taxpayer-profile projection supplied by the port."""
     path_values = repository.load_path_values(bucket_id=bucket_id)
-    return _profile_activity_fingerprint(path_values)
+    return profile_activity_fingerprint(path_values)
 
 
-def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
+def profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
     """Order-independent digest of the wizard-free taxpayer-profile projection.
 
     Hashes the canonical ``path -> value`` projection (every profile fact rendered
@@ -753,7 +757,11 @@ def _draft_review_fingerprint(draft: ModeloDraft) -> str:
     return content_hash_hex(payload)
 
 
-def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
+def transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
+    """Fingerprint the transaction catalogue by hashing its normalized transactions by id.
+
+    ``catalogue`` is a :class:`TransactionCatalogue`.
+    """
     payload = [
         _normalize_transaction(transaction)
         for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
@@ -761,14 +769,16 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
     return content_hash_hex(payload)
 
 
-def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
+def invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     """Order-independent digest of the bucket's invoice catalogue.
 
     Each :class:`~domain.invoices.models.Invoice` is a frozen record with no
     volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
     by ``invoice_id``) captures the full calculation-relevant content and changes
     whenever any invoice is added, removed, or edited. An empty catalogue yields a
-    stable empty-list digest. Mirrors :func:`_transaction_catalogue_fingerprint`.
+    stable empty-list digest. Mirrors :func:`transaction_catalogue_fingerprint`.
+
+    ``catalogue`` is a :class:`InvoiceCatalogue`.
     """
     payload = [
         invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)

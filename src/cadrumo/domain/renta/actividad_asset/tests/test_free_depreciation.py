@@ -42,7 +42,7 @@ from ..schedule import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _election(unit_value: Decimal = Decimal("300.00")) -> ActivityAssetAmortizationElection:
+def _election() -> ActivityAssetAmortizationElection:
     return ActivityAssetAmortizationElection(
         regime=DirectEstimationRegime.SIMPLIFIED,
         method=AmortizationMethod.LOW_VALUE_FREE,
@@ -50,7 +50,6 @@ def _election(unit_value: Decimal = Decimal("300.00")) -> ActivityAssetAmortizat
         low_value=LowValueElection(
             election_reference="operator-election-1",
             new_material_evidence_reference="invoice-confirms-new-material-item",
-            unit_acquisition_value=unit_value,
         ),
     )
 
@@ -59,6 +58,7 @@ def _revision(
     asset_id: str = "low-value-tool",
     *,
     basis: Decimal = Decimal("300.00"),
+    non_deductible_iva: Decimal = Decimal("0"),
     election: ActivityAssetAmortizationElection | None = None,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
@@ -74,6 +74,7 @@ def _revision(
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=basis,
+            non_deductible_iva=non_deductible_iva,
             prior_allocation_provenance="reviewed business allocation",
         ),
         in_service_date=date(2025, 1, 1),
@@ -125,7 +126,7 @@ def _claim(
     cap: Decimal = Decimal("500.00"),
     supersedes_claim_id: str | None = None,
 ) -> AmortizationClaim:
-    revision = _revision(asset_id, basis=amount, election=_election(unit_value=amount))
+    revision = _revision(asset_id, basis=amount, election=_election())
     schedule = _schedule(revision, requested=amount, cap=cap)
     return AmortizationClaim.from_schedule(
         schedule,
@@ -150,18 +151,45 @@ def test_explicit_election_preserves_evidence_and_forecast_does_not_consume_annu
 
 def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
     revision = _revision()
-    over_threshold = _revision(election=_election(unit_value=Decimal("300.01")))
-    with pytest.raises(ActividadAssetUnsupportedError, match="unit acquisition value"):
-        _schedule(over_threshold)
-    with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
+    with pytest.raises(ActividadAssetValidationError, match="free_amount_exceeds_remaining_basis"):
         _schedule(revision, requested=Decimal("300.01"))
-    with pytest.raises(ActividadAssetIncompleteError, match="elected amount"):
+    with pytest.raises(ActividadAssetIncompleteError, match="free_amount_required"):
         _schedule(revision, requested=None)
-    with pytest.raises(ActividadAssetUnsupportedError, match="annual cap"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="free_amount_exceeds_annual_cap"):
         _schedule(revision, cap=Decimal("500.00"), claimed_by_taxpayer=Decimal("200.01"))
     late = revision.model_copy(update={"in_service_date": date(2024, 1, 1)})
-    with pytest.raises(ActividadAssetUnsupportedError, match="placed in service"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="low_value_requires_entry_year"):
         _schedule(late)
+    used = revision.model_copy(update={"acquired_condition": AcquiredCondition.USED})
+    with pytest.raises(ActividadAssetUnsupportedError, match="low_value_requires_entry_year"):
+        _schedule(used)
+
+
+def test_unit_value_is_price_plus_non_deductible_iva_against_the_300_euro_threshold() -> None:
+    exactly_300 = _revision(basis=Decimal("300.00"), election=_election())
+    assert _schedule(exactly_300).amount == Decimal("300.00")
+
+    one_cent_over = _revision(basis=Decimal("300.01"), election=_election())
+    with pytest.raises(ActividadAssetUnsupportedError, match="low_value_threshold_exceeded"):
+        _schedule(one_cent_over, requested=Decimal("300.01"))
+
+    # 280.00 price plus 25.00 non-deductible IVA is 305.00, above the threshold.
+    price_plus_iva = _revision(
+        basis=Decimal("280.00"),
+        non_deductible_iva=Decimal("25.00"),
+        election=_election(),
+    )
+    assert price_plus_iva.basis.acquisition_cost() == Decimal("305.00")
+    with pytest.raises(ActividadAssetUnsupportedError, match="low_value_threshold_exceeded"):
+        _schedule(price_plus_iva, requested=Decimal("305.00"))
+
+    # 250.00 price plus 25.00 non-deductible IVA is 275.00, within the threshold.
+    within = _revision(
+        basis=Decimal("250.00"),
+        non_deductible_iva=Decimal("25.00"),
+        election=_election(),
+    )
+    assert _schedule(within, requested=Decimal("275.00")).amount == Decimal("275.00")
 
 
 def test_effective_claims_enforce_exact_cap_without_request_order_or_retry_consumption() -> None:
@@ -177,7 +205,7 @@ def test_effective_claims_enforce_exact_cap_without_request_order_or_retry_consu
     assert sum(
         (claim.amount for claim in effective_free_depreciation_claims(exact_cap.claims, tax_year=2025)), Decimal("0")
     ) == Decimal("500.00")
-    with pytest.raises(ActividadAssetClaimConflictError, match="annual cap"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="free_claims_exceed_annual_cap"):
         record_claim(exact_cap.claims, excess)
 
 
@@ -212,6 +240,7 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
         method=AmortizationMethod.LINEAR,
         election_fingerprint=linear_revision.amortization.fingerprint,
         annual_rate=Decimal("0.10"),
+        maximum_period_ends_on=date(2035, 1, 1),
         authority_generation="irpf-2025-published-test",
         source_reference="modelo-100:2025:linear",
     )
@@ -226,7 +255,7 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
 
     assert charge.method is AmortizationMethod.LINEAR
     assert charge.amount == Decimal("30.00")
-    with pytest.raises(ActividadAssetValidationError, match="only a free-depreciation method"):
+    with pytest.raises(ActividadAssetValidationError, match="free_amount_not_accepted"):
         schedule_charge(
             linear_revision,
             linear,
@@ -244,5 +273,5 @@ def test_requested_free_amount_text_follows_the_canonical_decimal_grammar() -> N
     assert parse_requested_free_amount("-1") == Decimal("-1")
     assert parse_requested_free_amount("0.125") == Decimal("0.125")
     for raw in ("", "NaN", "Infinity", "1e3", "+5", "1_000", "1.234", "1,5"):
-        with pytest.raises(ActividadAssetValidationError, match="decimal euro amount"):
+        with pytest.raises(ActividadAssetValidationError, match="free_amount_not_decimal"):
             parse_requested_free_amount(raw)

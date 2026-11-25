@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-07-12'
-modified: '2026-10-21'
-body_hash: 'sha256:bd52f50f806d14b9c0f48f9f7b771b58cb8a14505160155337a9bfe83734fe45'
+modified: '2026-11-04'
+body_hash: 'sha256:831d8114d9fbcf436b6b64d14bc639766e978a99b03557c399e71abcfae94856'
 related: []
 ---
 
@@ -15,8 +15,8 @@ related: []
 Campaign-close honesty review, mandated by the campaign-close-honesty-review
 rule, over the Cadrumo marketing-frontend campaign: the `frontend/` landing
 page (Figma-derived, responsive, en/es/ca localization, legal page, animated
-404), the static-site deploy surface (the retired module,
-`infra/docs-static-site.yaml`, justfile targets), the docs rebrand and the new
+404), the static-site deploy surface (the retired module and
+justfile targets), the docs rebrand and the new
 agent-connection how-to, and the live delivery at `cadrumo.neve.md`. The
 review ran in fresh context via an independent read-only reviewer over the
 campaign commit range (`4e588a493d`..`2c31ea7cb5`); the coordinator then
@@ -51,11 +51,10 @@ The retired module writes to the shared docs bucket with
 invalidation parsing are untested, while the sibling docs publisher is
 tested. A guard regression would silently destroy the deployed docs.
 
-### honesty-review | medium | "No access logging" legal claim is true at HEAD but unprovable from the template
+### honesty-review | medium | "No access logging" legal claim is true at HEAD but unprovable from the repository
 
-The CloudFormation template configures no CloudFront or S3 logging, so the
-claim is consistent, but account-level toggles outside infra-as-code could
-falsify it. Requires a pre-publish operator re-verification note.
+No CloudFront or S3 logging was configured, so the claim is consistent, but
+account-level toggles could falsify it. Requires a pre-publish operator re-verification note.
 
 ### honesty-review | medium | Shipped interactive features lack behavioral tests
 

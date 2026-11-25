@@ -26,6 +26,18 @@ reviewed_at = 2026-08-26
 family_storage_baseline = "2023-2025"
 scoped_families = ["export_layouts", "workbook_parity_refs"]
 
+[revisions."2026-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]
+
 [revisions."2026-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
 legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
@@ -55,11 +67,6 @@ source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
 reason = "Modelo 165 is an informative certification declaration. Its 2026 design identifies declared fields but no rate, threshold, aggregation, or other calculated amount; creating a formula would manufacture tax computation the source does not prescribe."
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
-
-[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
-reason = "A live cross-reference records an AEAT surface Cadrumo reads at runtime. Modelo 165 declares no such adapter, host, method, or read-only operation, so this revision has no live surface to describe."
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure"]
 
 [revisions."2026-y-siguientes".family_dispositions.parameters]
 reason = "Parameters hold regulatory values consumed by formulas. Because this informative revision declares no formula, it has no rate, threshold, coefficient, or other parameter consumer to ground."

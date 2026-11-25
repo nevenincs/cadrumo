@@ -1,6 +1,5 @@
-use crate::conformance_tests::Scratch;
-use crate::conformance_tests::operator_environment;
-use crate::storage::{Mode, child_environment, resolve_root_vector};
+use crate::conformance_tests::{RETIRED_TEMPORARY_OVERRIDE, Scratch, operator_environment};
+use crate::storage::{Package, child_environment, resolve_root_vector};
 use crate::*;
 use std::ffi::OsString;
 use std::os::unix::fs::{PermissionsExt, symlink};
@@ -24,17 +23,7 @@ fn generated_target_root_vectors() {
                 .find(|(key, _)| *key == name)
                 .map(|(_, value)| OsString::from(*value))
         };
-        let mode = match vector.mode {
-            "installed" => Mode::Installed,
-            "development" => Mode::Development,
-            _ => panic!("Unknown mode"),
-        };
-        let checkout = if vector.invalid_checkout {
-            Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
-        } else {
-            vector.checkout.map(PathBuf::from)
-        };
-        let actual = resolve_root_vector(mode, &lookup, checkout.as_deref(), None, vector.channel);
+        let actual = resolve_root_vector(&lookup, None, vector.channel);
         match (actual, vector.expected_root, vector.refusal) {
             (Ok(root), Some(expected), None) => {
                 assert_eq!(root.root, Path::new(expected), "{}", vector.name)
@@ -76,7 +65,7 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
     let received = vec![
         (OsString::from("PYTHONPATH"), OsString::from("hostile")),
         (
-            OsString::from(TEMPORARY_ENV),
+            OsString::from(RETIRED_TEMPORARY_OVERRIDE),
             OsString::from("operator-temp"),
         ),
     ];
@@ -88,7 +77,7 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
     assert!(
         !strict
             .iter()
-            .any(|(key, _)| key == "PYTHONPATH" || key == TEMPORARY_ENV)
+            .any(|(key, _)| key == "PYTHONPATH" || key == RETIRED_TEMPORARY_OVERRIDE)
     );
     assert!(
         strict
@@ -96,7 +85,11 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
             .any(|(key, value)| key == ROOT_VARIABLE && value == root.as_os_str())
     );
     let operator = operator_environment(received, &root).unwrap();
-    assert!(operator.iter().any(|(key, _)| key == TEMPORARY_ENV));
+    assert!(
+        !operator
+            .iter()
+            .any(|(key, _)| key == RETIRED_TEMPORARY_OVERRIDE)
+    );
     symlink(&root, scratch.join("link")).unwrap();
     assert!(child_environment(Vec::new(), &scratch.join("link/child")).is_err());
     fs::remove_dir_all(scratch).unwrap();
@@ -132,30 +125,31 @@ fn package_root_entrypoint_mapping_and_case_match_the_generated_projection() {
 }
 
 #[test]
-fn installed_and_checkout_evidence_come_from_absolute_executable_ancestors() {
-    let scratch = Scratch::new("mode");
+fn package_evidence_comes_from_absolute_executable_ancestors() {
+    let scratch = Scratch::new("package");
     let package = scratch.0.join("package");
-    let manifest = package.join(storage::relative_components(MODE_PACKAGE_MANIFEST));
+    let manifest = package.join(storage::relative_components(PACKAGE_MANIFEST));
     fs::create_dir_all(manifest.parent().unwrap()).unwrap();
     fs::write(manifest, b"{}").unwrap();
-    let installed = storage::detect_mode(&package.join(EXECUTABLE)).unwrap();
-    assert_eq!(installed.mode, Mode::Installed);
-    assert_eq!(installed.package, package);
+    let installed = Package::installed(&package.join(EXECUTABLE)).unwrap();
+    assert_eq!(installed.root, package);
     let installed_entrypoint =
-        storage::detect_mode(&package.join(NATIVE).join(ENTRYPOINT_FILES[0])).unwrap();
-    assert_eq!(installed_entrypoint.mode, Mode::Installed);
-    assert_eq!(installed_entrypoint.package, package);
-    fs::write(scratch.0.join(MODE_CHECKOUT_MARKER), b"[project]\n").unwrap();
-    let checkout = storage::detect_mode(&scratch.0.join("build").join(EXECUTABLE)).unwrap();
-    assert_eq!(checkout.mode, Mode::Development);
-    assert_eq!(checkout.checkout.as_deref(), Some(scratch.0.as_path()));
+        Package::installed(&package.join(NATIVE).join(ENTRYPOINT_FILES[0])).unwrap();
+    assert_eq!(installed_entrypoint.root, package);
+    let unpackaged = scratch.0.join("build").join(EXECUTABLE);
+    assert!(!Package::locate(&unpackaged).unwrap().packaged);
+    assert!(
+        Package::installed(&unpackaged)
+            .unwrap_err()
+            .contains(PACKAGE_MANIFEST)
+    );
 }
 
 #[test]
 fn lower_case_posix_names_do_not_override_declared_paths_or_authority() {
     let scratch = Scratch::new("case");
     let root = scratch.0.join("root");
-    let lower_temporary = TEMPORARY_ENV.to_lowercase();
+    let lower_temporary = RETIRED_TEMPORARY_OVERRIDE.to_lowercase();
     let lower_pin = HOST_INHERITED_ENV[0].to_lowercase();
     let ambient = vec![
         (OsString::from(&lower_temporary), OsString::from("other")),
@@ -178,11 +172,7 @@ fn lower_case_posix_names_do_not_override_declared_paths_or_authority() {
     assert!(!environment.iter().any(|(key, _)| key == "LD_PRELOAD"));
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert!(environment.iter().any(|(key, value)| {
-            key == *name
-                && value
-                    == root
-                        .join(storage::relative_components(TEMPORARY_DEFAULT))
-                        .as_os_str()
+            key == *name && value == root.join(TEMPORARY_MEMBER).as_os_str()
         }));
     }
 }
@@ -205,36 +195,20 @@ fn normalization_does_not_hide_symlinks_before_parent_components() {
     let root = scratch.0.join("root");
     fs::create_dir(&root).unwrap();
     symlink(&destination, root.join("link")).unwrap();
-    assert!(
-        operator_environment(
-            vec![(
-                OsString::from(TEMPORARY_ENV),
-                OsString::from("link/../temporary"),
-            )],
-            &root,
-        )
-        .is_err()
-    );
-    assert!(!root.join("temporary").exists());
+    // The temporary member is declared beneath the root, so a link there is refused.
+    symlink(&destination, root.join(TEMPORARY_MEMBER)).unwrap();
+    assert!(operator_environment(Vec::new(), &root).is_err());
 }
 
 #[test]
 fn nested_new_storage_and_temporary_directories_are_private() {
     let scratch = Scratch::new("permissions");
     let root = scratch.0.join("new-parent/state");
-    operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            OsString::from("nested/scratch"),
-        )],
-        &root,
-    )
-    .unwrap();
+    operator_environment(Vec::new(), &root).unwrap();
     for path in [
         scratch.0.join("new-parent"),
         root.clone(),
-        root.join("nested"),
-        root.join("nested/scratch"),
+        root.join(TEMPORARY_MEMBER),
     ] {
         assert_eq!(
             fs::metadata(path).unwrap().permissions().mode() & 0o777,

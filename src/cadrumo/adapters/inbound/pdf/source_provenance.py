@@ -12,9 +12,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ....core.hashing import sha256_file as _core_sha256_file
+from ....core.hashing import sha256_file as hashing_core_sha256_file
 from ....domain.justificante.errors import PdfModeloImportError
-from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
+from .redaction import INPUT_PDF_SOURCE_LABEL
 
 _logger = logging.getLogger(__name__)
 _SOURCE_REFERENCE_ROOT = Path(".secure-source")
@@ -30,16 +30,16 @@ def sha256_file(path: Path) -> str:
     source filenames through diagnostics.
     """
     try:
-        return _core_sha256_file(path)
+        return hashing_core_sha256_file(path)
     except OSError as exc:
         _logger.debug(
             "sha256_file: source=%s failure=%s",
-            _INPUT_PDF_SOURCE_LABEL,
+            INPUT_PDF_SOURCE_LABEL,
             type(exc).__name__,
         )
         raise PdfModeloImportError(
-            f"PDF file could not be hashed: {_INPUT_PDF_SOURCE_LABEL}",
-            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            f"PDF file could not be hashed: {INPUT_PDF_SOURCE_LABEL}",
+            context={"path": INPUT_PDF_SOURCE_LABEL},
             translated_message="adapters.inbound.pdf.errors.hash_failed",
         ) from None
 

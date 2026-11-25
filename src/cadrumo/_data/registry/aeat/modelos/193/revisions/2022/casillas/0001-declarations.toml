@@ -419,6 +419,9 @@ number = "165-168"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
 data_type = "ratio"
+# The design prints positions 165-168 as "% Retención", generally "19 por 100", in two integer and
+# two decimal digits.
+constraints = { min_value = "0", max_value = "100", source_refs = ["boe-modelo-193-2011-form"] }
 semantic_role = "payee_porcentaje_retencion"
 # Design positions 165-168: the retention percentage applied (generally 19, with the design's per-clave rates).
 required = true

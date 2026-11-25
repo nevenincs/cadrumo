@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.source_byte_availability import source
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import synthetic_legal_identity
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority_publication import _project_evidence, _project_source_evidence, require_evidence_closure
+from ..authority_publication import project_evidence, project_source_evidence, require_evidence_closure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -29,7 +29,7 @@ def compiled() -> ValidatedRegistryAuthority:
 
 @pytest.fixture(scope="module")
 def projection(compiled: ValidatedRegistryAuthority) -> AuthorityEvidenceProjection:
-    return _project_evidence(compiled.catalogues.legal, compiled.catalogues.sources, source_root=bundled_path())
+    return project_evidence(compiled.catalogues.legal, compiled.catalogues.sources, source_root=bundled_path())
 
 
 def _artifact(compiled: ValidatedRegistryAuthority, evidence: AuthorityEvidenceProjection) -> AuthorityArtifact:
@@ -75,7 +75,7 @@ def test_evidence_closure_accepts_the_publisher_projection_and_rejects_drift(
     record_design = next(source for source in sources.values() if source.kind is RegistrySourceKind.RECORD_DESIGN)
     extra_record_design = AuthorityEvidenceProjection(
         legal=projection.legal,
-        sources=(*projection.sources, _project_source_evidence(record_design, source_root=bundled_path())),
+        sources=(*projection.sources, project_source_evidence(record_design, source_root=bundled_path())),
     )
     with pytest.raises(ValueError, match="runtime source catalogue"):
         require_evidence_closure(_artifact(compiled, extra_record_design))

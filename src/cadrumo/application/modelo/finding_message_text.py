@@ -19,7 +19,7 @@ token before someone decides how it reads.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -31,16 +31,25 @@ from ...core.i18n.render import tr
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from .value_presentation import format_casilla_value
 
+#: What a producer states for a list of periods that is empty.
+NO_PERIODS_FACT: Final = "none"
+PERIOD_LIST_SEPARATOR: Final = "|"
+BOX_LIST_SEPARATOR: Final = ","
+
 
 class FindingFactKind(StrEnum):
     """How one finding fact is written into its sentence."""
 
     #: A filing period's registry token, written as the period's name without its year.
     PERIOD = "period"
+    #: Several period tokens joined by ``|``, each written as its name, or :data:`NO_PERIODS_FACT` for none.
+    PERIODS = "periods"
     #: A calendar date in ISO form, written in the language's order.
     DATE = "date"
     #: A casilla id, written as its printed box number or the words the form gives it.
     BOX = "box"
+    #: Several casilla ids joined by ``,``, each written as its box.
+    BOXES = "boxes"
     #: The printed number of the finding's own box, written as the form prints it.
     BOX_NUMBER = "box_number"
     #: A modelo number, kept as its three digits.
@@ -55,6 +64,8 @@ class FindingFactKind(StrEnum):
     COUNT = "count"
     #: An official code the filer reads on AEAT's own forms, such as a country or income type code.
     OFFICIAL_CODE = "official_code"
+    #: A number the filer reads printed on one of their own documents, such as an invoice number, kept as written.
+    DOCUMENT_NUMBER = "document_number"
     #: An identifier with no meaning to the filer; kept for technical details, never in the sentence.
     TECHNICAL = "technical"
 
@@ -66,15 +77,21 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "period_code": FindingFactKind.PERIOD,
         "source_period": FindingFactKind.PERIOD,
         "target_period": FindingFactKind.PERIOD,
+        "checked_periods": FindingFactKind.PERIODS,
+        "unchecked_periods": FindingFactKind.PERIODS,
         # Dates.
         "activity_start_date": FindingFactKind.DATE,
         "transaction_date": FindingFactKind.DATE,
         # Boxes, by casilla id or printed number.
         "casilla_id": FindingFactKind.BOX,
+        "open_casilla_id": FindingFactKind.BOX,
         "box": FindingFactKind.BOX,
         "ingreso_id": FindingFactKind.BOX,
         "reduccion_id": FindingFactKind.BOX,
         "rnt_id": FindingFactKind.BOX,
+        "floor_box": FindingFactKind.BOX,
+        "contribution_casilla_id": FindingFactKind.BOX,
+        "boxes": FindingFactKind.BOXES,
         "casilla_number": FindingFactKind.BOX_NUMBER,
         # Modelos and years.
         "modelo": FindingFactKind.MODELO,
@@ -86,6 +103,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "filing_year": FindingFactKind.YEAR,
         "source_filing_year": FindingFactKind.YEAR,
         "target_filing_year": FindingFactKind.YEAR,
+        "authored_filing_year": FindingFactKind.YEAR,
+        "prior_filing_year": FindingFactKind.YEAR,
         # Amounts of euros.
         "casilla_value": FindingFactKind.MONEY,
         "computed_value": FindingFactKind.MONEY,
@@ -96,6 +115,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "ingreso_value": FindingFactKind.MONEY,
         "m303_total": FindingFactKind.MONEY,
         "m349_total": FindingFactKind.MONEY,
+        "summary_total": FindingFactKind.MONEY,
+        "periodic_total": FindingFactKind.MONEY,
         "prior_value_eur": FindingFactKind.MONEY,
         "printed_sum": FindingFactKind.MONEY,
         "redeclaration_increase_threshold_eur": FindingFactKind.MONEY,
@@ -103,34 +124,74 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "rnt_value": FindingFactKind.MONEY,
         "sublimit": FindingFactKind.MONEY,
         "total_base": FindingFactKind.MONEY,
+        "base_amount": FindingFactKind.MONEY,
+        "expected_cuota": FindingFactKind.MONEY,
+        "recorded_cuota": FindingFactKind.MONEY,
+        "limit": FindingFactKind.MONEY,
+        "stated": FindingFactKind.MONEY,
+        "held_turnover": FindingFactKind.MONEY,
+        "stated_turnover": FindingFactKind.MONEY,
+        "pending_total": FindingFactKind.MONEY,
+        "capacity": FindingFactKind.MONEY,
+        "floor_value": FindingFactKind.MONEY,
+        "limited_total": FindingFactKind.MONEY,
+        "after_limited": FindingFactKind.MONEY,
+        "stored_value": FindingFactKind.MONEY,
+        "invoice_sourced_value": FindingFactKind.MONEY,
+        "typed_value": FindingFactKind.MONEY,
+        "modification_base_value": FindingFactKind.MONEY,
+        "recargo_value": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
         "transaction_amount": FindingFactKind.NUMBER,
         "threshold": FindingFactKind.NUMBER,
+        "iva_rate_percent": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
+        "percentage": FindingFactKind.NUMBER,
+        # A prior-period figure the filer stated.
+        "value": FindingFactKind.NUMBER,
         # Counts.
         "own_missing_count": FindingFactKind.COUNT,
         "sibling_missing_count": FindingFactKind.COUNT,
         "changed_count": FindingFactKind.COUNT,
         "added_count": FindingFactKind.COUNT,
+        "claims_added": FindingFactKind.COUNT,
+        "claims_removed": FindingFactKind.COUNT,
         "contradicting_invoice_count": FindingFactKind.COUNT,
         "contradicting_ledger_row_count": FindingFactKind.COUNT,
+        "declared_perceptors": FindingFactKind.COUNT,
+        "disposals_changed": FindingFactKind.COUNT,
         "removed_count": FindingFactKind.COUNT,
+        "rows_changed": FindingFactKind.COUNT,
+        "rows_current": FindingFactKind.COUNT,
+        "rows": FindingFactKind.COUNT,
+        "rows_recorded": FindingFactKind.COUNT,
+        "registered_activity_rows": FindingFactKind.COUNT,
+        "schedules_changed": FindingFactKind.COUNT,
         "settled_prior_accrual_rows": FindingFactKind.COUNT,
         "source_issue_count": FindingFactKind.COUNT,
         "source_modelo_count": FindingFactKind.COUNT,
         "source_ref_count": FindingFactKind.COUNT,
+        "summary_perceptors": FindingFactKind.COUNT,
         "unidentified_source_count": FindingFactKind.COUNT,
         # Official codes printed on AEAT's forms.
         "country_code": FindingFactKind.OFFICIAL_CODE,
         "transaction_currency": FindingFactKind.OFFICIAL_CODE,
         "tipo_renta_code": FindingFactKind.OFFICIAL_CODE,
+        "entered": FindingFactKind.OFFICIAL_CODE,
+        "expected": FindingFactKind.OFFICIAL_CODE,
+        # Numbers printed on the filer's own documents.
+        "invoice_number": FindingFactKind.DOCUMENT_NUMBER,
+        # The filer's own sector names in their prorrata register, kept as written.
+        "sector_ids": FindingFactKind.DOCUMENT_NUMBER,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
         "membership_available": FindingFactKind.TECHNICAL,
         "attestation_profile_path": FindingFactKind.TECHNICAL,
         "attested_periods": FindingFactKind.TECHNICAL,
         "binding_id": FindingFactKind.TECHNICAL,
+        "profile_path": FindingFactKind.TECHNICAL,
+        "reason": FindingFactKind.TECHNICAL,
         "blocker_codes": FindingFactKind.TECHNICAL,
         "condition_id": FindingFactKind.TECHNICAL,
         "declared_grade": FindingFactKind.TECHNICAL,
@@ -139,6 +200,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "error_type": FindingFactKind.TECHNICAL,
         "fact_id": FindingFactKind.TECHNICAL,
         "group_code": FindingFactKind.TECHNICAL,
+        "invoice_id": FindingFactKind.TECHNICAL,
         "iva_category_code": FindingFactKind.TECHNICAL,
         "mismatch_kind": FindingFactKind.TECHNICAL,
         "origin_code": FindingFactKind.TECHNICAL,
@@ -154,6 +216,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "source_modelos": FindingFactKind.TECHNICAL,
         "source_ref": FindingFactKind.TECHNICAL,
         "source_ref_ids": FindingFactKind.TECHNICAL,
+        "target_cells": FindingFactKind.TECHNICAL,
         "transaction_id": FindingFactKind.TECHNICAL,
         "transaction_ids": FindingFactKind.TECHNICAL,
         "transaction_count": FindingFactKind.TECHNICAL,
@@ -198,10 +261,14 @@ _UNKNOWN_DATE_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.date_unk
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
 _UNKNOWN_MODELO_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.modelo_unknown"
 _ABSENT_VALUE_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.value_absent"
-_BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
-_MODELO_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{3}")
-_YEAR: Final[re.Pattern[str]] = re.compile(r"\d{4}")
+_BOX_NUMBER_SHAPE: Final = r"\d{1,4}[A-Z]?"
+_MODELO_ID_SHAPE: Final = r"\d{3}"
+_YEAR_SHAPE: Final = r"\d{4}"
+_BOX_NUMBER: Final[re.Pattern[str]] = re.compile(_BOX_NUMBER_SHAPE)
+_MODELO_NUMBER: Final[re.Pattern[str]] = re.compile(_MODELO_ID_SHAPE)
+_YEAR: Final[re.Pattern[str]] = re.compile(_YEAR_SHAPE)
 _MONEY_PLACES: Final[Decimal] = Decimal("0.01")
+_MONEY_EXPONENT: Final = -2
 
 type FindingFactValue = str | int | bool | Decimal
 
@@ -224,6 +291,13 @@ def _period(value: FindingFactValue, language: OutputLanguage) -> str:
     return _in_words(_PERIOD_LOCALE_KEYS.get(str(value), _OTHER_PERIOD_LOCALE_KEY), language)
 
 
+def _periods(value: FindingFactValue, language: OutputLanguage) -> str:
+    text = str(value)
+    if text == NO_PERIODS_FACT:
+        return _in_words(_ABSENT_VALUE_LOCALE_KEY, language)
+    return ", ".join(_period(token, language) for token in text.split(PERIOD_LIST_SEPARATOR))
+
+
 def _date(value: FindingFactValue, language: OutputLanguage) -> str:
     try:
         day = date.fromisoformat(str(value))
@@ -242,12 +316,16 @@ def _box(value: FindingFactValue, box_words: Mapping[str, str], language: Output
     return _in_words(_UNNUMBERED_BOX_LOCALE_KEY, language)
 
 
+def _boxes(value: FindingFactValue, box_words: Mapping[str, str], language: OutputLanguage) -> str:
+    return ", ".join(_box(token, box_words, language) for token in str(value).split(BOX_LIST_SEPARATOR))
+
+
 def _figure_text(value: FindingFactValue, kind: FindingFactKind, language: OutputLanguage) -> str:
     figure = _figure(value)
     if figure is None:
         return _in_words(_ABSENT_VALUE_LOCALE_KEY, language)
     exponent = figure.as_tuple().exponent
-    if kind is FindingFactKind.MONEY and isinstance(exponent, int) and exponent > -2:
+    if kind is FindingFactKind.MONEY and isinstance(exponent, int) and exponent > _MONEY_EXPONENT:
         figure = figure.quantize(_MONEY_PLACES)
     data_type = "integer" if kind is FindingFactKind.COUNT else "decimal"
     return format_casilla_value(figure, data_type=data_type, language=language)
@@ -256,6 +334,37 @@ def _figure_text(value: FindingFactValue, kind: FindingFactKind, language: Outpu
 def _plain(value: FindingFactValue, pattern: re.Pattern[str], fallback_key: str, language: OutputLanguage) -> str:
     text = str(value)
     return text if pattern.fullmatch(text) else _in_words(fallback_key, language)
+
+
+def _modelo_number(value: FindingFactValue, language: OutputLanguage) -> str:
+    return _plain(value, _MODELO_NUMBER, _UNKNOWN_MODELO_LOCALE_KEY, language)
+
+
+def _year(value: FindingFactValue, language: OutputLanguage) -> str:
+    return _plain(value, _YEAR, _ABSENT_VALUE_LOCALE_KEY, language)
+
+
+def _official_code(value: FindingFactValue, language: OutputLanguage) -> str:
+    return str(value)
+
+
+def _document_number(value: FindingFactValue, language: OutputLanguage) -> str:
+    return str(value)
+
+
+# The kinds written from their value and the output language alone; the box kinds
+# also read the form's box words, and every remaining kind is a figure.
+_VALUE_WRITERS: Final[Mapping[FindingFactKind, Callable[[FindingFactValue, OutputLanguage], str]]] = MappingProxyType(
+    {
+        FindingFactKind.PERIOD: _period,
+        FindingFactKind.PERIODS: _periods,
+        FindingFactKind.DATE: _date,
+        FindingFactKind.MODELO: _modelo_number,
+        FindingFactKind.YEAR: _year,
+        FindingFactKind.OFFICIAL_CODE: _official_code,
+        FindingFactKind.DOCUMENT_NUMBER: _document_number,
+    }
+)
 
 
 def fact_text(
@@ -275,21 +384,29 @@ def fact_text(
     """
     if kind is FindingFactKind.TECHNICAL:
         return None
-    if kind is FindingFactKind.PERIOD:
-        return _period(value, language)
-    if kind is FindingFactKind.DATE:
-        return _date(value, language)
     if kind is FindingFactKind.BOX:
         return _box(value, box_words, language)
+    if kind is FindingFactKind.BOXES:
+        return _boxes(value, box_words, language)
     if kind is FindingFactKind.BOX_NUMBER:
         return own_box or _box(value, {}, language)
-    if kind is FindingFactKind.MODELO:
-        return _plain(value, _MODELO_NUMBER, _UNKNOWN_MODELO_LOCALE_KEY, language)
-    if kind is FindingFactKind.YEAR:
-        return _plain(value, _YEAR, _ABSENT_VALUE_LOCALE_KEY, language)
-    if kind is FindingFactKind.OFFICIAL_CODE:
-        return str(value)
-    return _figure_text(value, kind, language)
+    writer = _VALUE_WRITERS.get(kind)
+    return writer(value, language) if writer is not None else _figure_text(value, kind, language)
+
+
+BELOW_FILING_GRADE_NOTICE_LOCALE_KEY: Final = "application.modelo.findings.checked_below_filing_grade"
+"""Says a check ran against an edition below filing grade, served after the finding's own sentence."""
+
+
+def with_below_filing_grade_notice(message: str, finding: ModeloVerificationFinding, *, locale: str | None) -> str:
+    """Serve ``message`` followed by the below-filing-grade notice when the finding was checked below it.
+
+    A finding checked at filing grade keeps its sentence unchanged. ``locale``
+    ``None`` renders in the configured output language.
+    """
+    if finding.below_filing_grade is None:
+        return message
+    return f"{message} {tr(BELOW_FILING_GRADE_NOTICE_LOCALE_KEY, locale=locale)}"
 
 
 def finding_message_text(
@@ -302,7 +419,8 @@ def finding_message_text(
 
     ``box_words`` names boxes by casilla id as the form shows them; a box it
     does not name reads as its printed number when its id is one, and
-    otherwise as a box without a number, never as its id.
+    otherwise as a box without a number, never as its id. A finding checked
+    against an edition below filing grade is followed by the words that say so.
     """
     words = box_words or {}
     own_box = None if finding.casilla_id is None else words.get(finding.casilla_id)
@@ -317,7 +435,19 @@ def finding_message_text(
         )
         if text is not None:
             facts[name] = text
-    return tr(finding.message_locale_key, locale=language.value, **facts)
+    return with_below_filing_grade_notice(
+        tr(finding.message_locale_key, locale=language.value, **facts), finding, locale=language.value
+    )
 
 
-__all__ = ["FINDING_FACT_KINDS", "FindingFactKind", "fact_text", "finding_message_text"]
+__all__ = [
+    "BELOW_FILING_GRADE_NOTICE_LOCALE_KEY",
+    "BOX_LIST_SEPARATOR",
+    "FINDING_FACT_KINDS",
+    "NO_PERIODS_FACT",
+    "PERIOD_LIST_SEPARATOR",
+    "FindingFactKind",
+    "fact_text",
+    "finding_message_text",
+    "with_below_filing_grade_notice",
+]

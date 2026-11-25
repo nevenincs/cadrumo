@@ -99,6 +99,6 @@ def test_core_identifier_modules_expose_no_authoring_source_hooks() -> None:
     import cadrumo.core.tax_domain as tax_domain_module
 
     for module in (modelo_module, tax_domain_module):
-        assert not hasattr(module, "_FACT_PATH")
-        assert not hasattr(module, "_fact_declarations")
-        assert not hasattr(module, "_catalogue_codes")
+        for hook in ("FACT_PATH", "fact_declarations", "catalogue_codes"):
+            assert not hasattr(module, hook)
+            assert not hasattr(module, f"_{hook}")

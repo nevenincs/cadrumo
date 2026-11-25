@@ -2,20 +2,74 @@
 
 from __future__ import annotations
 
-import ast
-import importlib.util
+import hashlib
+import json
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from functools import lru_cache
 from pathlib import Path
+from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.tests.run_artifact import run_artifact
+from dev.cache_root import dev_cache_dir
 from dev.first_party_source import FIRST_PARTY_ROOTS
+from dev.paths import REPO_ROOT
+
+from .type_aliases import public_type_aliases, type_alias_declarations
 
 
 class ApiDocsError(RuntimeError):
     """Raised on API documentation stub management errors."""
+
+
+#: The most recent rendering per configured root set, with the content
+#: fingerprint it was rendered for, least recently used first. One entry per root
+#: set, so a rendering of a small synthetic tree never evicts the repository's.
+_EXPECTED_STUB_CONTENTS: dict[tuple[Path, ...], tuple[str, dict[str, str]]] = {}
+_RETAINED_RENDERINGS = 4
+
+#: The rendering of the checkout's own sources is shared between processes:
+#: every pytest worker, every later run and the documentation build read one
+#: published rendering per content fingerprint instead of each rendering ~1,800
+#: stubs again.
+_PUBLISHED_KIND: Final = "api-stubs"
+_PUBLISHED_FILE: Final = "stubs.json"
+_PUBLISHED_RETAINED: Final = 4
+
+
+def _python_source_fingerprint(src_parent: Path) -> str:
+    """Name the exact bytes of every Python source under ``src_parent``.
+
+    Content rather than stat metadata, because a rewrite inside one timestamp
+    tick keeps size and modification time and must still change the key.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(scan_directory(src_parent, pattern="*.py", recursive=True)):
+        digest.update(path.relative_to(src_parent).as_posix().encode(_UTF_8))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def published_stubs(root: Path, key: str) -> dict[str, str] | None:
+    """Return the rendering published under ``root`` for ``key``, or None when it is not that one."""
+    try:
+        document = json.loads((root / _PUBLISHED_FILE).read_text(encoding=_UTF_8))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(document, dict) or document.get("key") != key:
+        return None
+    stubs = document.get("stubs")
+    if not isinstance(stubs, dict) or not stubs:
+        return None
+    validated: dict[str, str] = {}
+    for name, content in stubs.items():
+        if not isinstance(name, str) or not isinstance(content, str):
+            return None
+        validated[name] = content
+    return validated
 
 
 @dataclass(frozen=True)
@@ -94,510 +148,21 @@ _UTF_8: str = UTF_8_ENCODING
 
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
-_TYPE_ALIAS_FACTORIES = frozenset(
-    {
-        "Annotated",
-        "AsyncIterator",
-        "Awaitable",
-        "Callable",
-        "Collection",
-        "Iterable",
-        "Iterator",
-        "Literal",
-        "Mapping",
-        "MutableMapping",
-        "NewType",
-        "Protocol",
-        "Sequence",
-        "TypeAliasType",
-    }
-)
-_TYPE_ALIAS_FACTORY_MODULES: dict[str, frozenset[str]] = {
-    "typing": _TYPE_ALIAS_FACTORIES,
-    "typing_extensions": _TYPE_ALIAS_FACTORIES,
-    "collections.abc": frozenset(
-        {
-            "AsyncIterator",
-            "Awaitable",
-            "Callable",
-            "Collection",
-            "Iterable",
-            "Iterator",
-            "Mapping",
-            "MutableMapping",
-            "Sequence",
-        }
-    ),
-}
-_TYPE_ALIAS_CALL_FACTORIES: dict[str, frozenset[str]] = {
-    "typing": frozenset({"NewType", "TypeAliasType"}),
-    "typing_extensions": frozenset({"NewType", "TypeAliasType"}),
-}
-_BUILTIN_GENERIC_FACTORIES = frozenset({"dict", "frozenset", "list", "set", "tuple", "type"})
-_BUILTIN_TYPE_EXPRESSIONS = frozenset(
-    {
-        "bool",
-        "bytearray",
-        "bytes",
-        "complex",
-        "dict",
-        "float",
-        "frozenset",
-        "int",
-        "list",
-        "memoryview",
-        "object",
-        "set",
-        "str",
-        "tuple",
-        "type",
-    }
-)
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would
 # consequently index the defining object (and its fields) again from every
 # importing module.  Exclude only those imported names at the consumer stub;
 # the defining-module stub remains their sole object owner.
-_NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
+NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
     "cadrumo.application.config_reset_repository": ("JournalRepositoryBase",),
     "cadrumo.application.aggregation.impatriado_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation.irnr_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation.renta_gasto_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation.renta_income_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.aggregation.renta_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.operator_actions.models": ("PreconditionOutcomeInvariant",),
+    "cadrumo.application.operator_actions.models": ("PreconditionAlternativeAction", "PreconditionOutcomeInvariant"),
     "cadrumo.application.user_profile.bundle_export_operation": ("JournalRepositoryBase",),
-    "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),
+    "cadrumo.core.json_contract": ("PreconditionAlternativeAction", "PreconditionOutcomeInvariant"),
 }
-
-
-def _type_alias_expression(
-    value: ast.expr,
-    path: Path | None = None,
-    seen: frozenset[tuple[Path, str]] = frozenset(),
-) -> bool:
-    """Return whether *value* is a source expression that defines a type alias."""
-    if isinstance(value, ast.Subscript):
-        return _type_expression_factory(value.value, path, _TYPE_ALIAS_FACTORY_MODULES, seen)
-    if isinstance(value, ast.BinOp):
-        return (
-            isinstance(value.op, ast.BitOr)
-            and _union_operand_is_type(value.left, path, seen)
-            and _union_operand_is_type(value.right, path, seen)
-        )
-    if isinstance(value, ast.Call):
-        return _type_expression_factory(
-            value.func,
-            path,
-            _TYPE_ALIAS_CALL_FACTORIES,
-            seen,
-            allow_source_type_factory=False,
-        )
-    return False
-
-
-def _dotted_expression(value: ast.expr) -> tuple[str, ...] | None:
-    """Return the dotted components of a name or attribute expression."""
-    parts: list[str] = []
-    while isinstance(value, ast.Attribute):
-        parts.append(value.attr)
-        value = value.value
-    if not isinstance(value, ast.Name):
-        return None
-    return (value.id, *reversed(parts))
-
-
-@lru_cache(maxsize=4096)
-def _module_import_context(
-    path: Path,
-    modified_ns: int,
-    size: int,
-) -> tuple[tuple[tuple[str, str, str | None, bool], ...], frozenset[str]]:
-    """Cache direct imports and shadowed names from one source module."""
-    del modified_ns, size  # The stat values participate in the cache key.
-    try:
-        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-    except (OSError, SyntaxError, UnicodeDecodeError):
-        return (), frozenset[str]()
-
-    imports: list[tuple[str, str, str | None, bool]] = []
-    shadowed: set[str] = set()
-
-    def add_target_names(target: ast.expr) -> None:
-        if isinstance(target, ast.Name):
-            shadowed.add(target.id)
-        elif isinstance(target, (ast.Tuple, ast.List)):
-            for item in target.elts:
-                add_target_names(item)
-
-    for statement in tree.body:
-        if isinstance(statement, ast.Import):
-            for alias in statement.names:
-                local_name = alias.asname or alias.name.split(".", maxsplit=1)[0]
-                module_name = alias.name if alias.asname is not None else alias.name.split(".", maxsplit=1)[0]
-                imports.append((local_name, module_name, None, alias.asname is not None))
-        elif isinstance(statement, ast.ImportFrom):
-            source_root = _source_root(path)
-            package = _module_name(source_root, path) if source_root is not None else ""
-            package = package if path.name == "__init__.py" else package.rpartition(".")[0]
-            if statement.module is None:
-                module_name = package
-            else:
-                try:
-                    module_name = importlib.util.resolve_name(f"{'.' * statement.level}{statement.module}", package)
-                except ImportError:
-                    continue
-            for alias in statement.names:
-                if alias.name != "*":
-                    imports.append((alias.asname or alias.name, module_name, alias.name, True))
-        elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            shadowed.add(statement.name)
-        elif isinstance(statement, ast.Assign | ast.AnnAssign) and (
-            isinstance(statement, ast.Assign) or statement.value is not None
-        ):
-            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
-            for target in targets:
-                add_target_names(target)
-        elif isinstance(statement, (ast.For, ast.AsyncFor)):
-            add_target_names(statement.target)
-        elif isinstance(statement, (ast.With, ast.AsyncWith)):
-            for item in statement.items:
-                if item.optional_vars is not None:
-                    add_target_names(item.optional_vars)
-
-    return tuple(imports), frozenset(shadowed)
-
-
-def _source_import_binding(path: Path, name: str) -> tuple[str, str, str | None, bool] | None:
-    """Resolve an unshadowed top-level name to its import statement."""
-    try:
-        stat = path.stat()
-    except OSError:
-        return None
-    imports, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
-    if name in shadowed:
-        return None
-    matches = {binding for binding in imports if binding[0] == name}
-    return next(iter(matches)) if len(matches) == 1 else None
-
-
-def _is_type_checking_guard(test: ast.expr, path: Path) -> bool:
-    """Return whether *test* names an unshadowed canonical TYPE_CHECKING import."""
-    if isinstance(test, ast.Name):
-        binding = _source_import_binding(path, test.id)
-        return binding is not None and binding[1:3] in {
-            ("typing", "TYPE_CHECKING"),
-            ("typing_extensions", "TYPE_CHECKING"),
-        }
-
-    parts = _dotted_expression(test)
-    if parts is None or len(parts) != 2 or parts[1] != "TYPE_CHECKING":
-        return False
-    binding = _source_import_binding(path, parts[0])
-    return binding is not None and binding[1] in {"typing", "typing_extensions"} and binding[2] is None
-
-
-def _type_expression_factory(
-    factory: ast.expr,
-    path: Path | None,
-    canonical_modules: dict[str, frozenset[str]],
-    seen: frozenset[tuple[Path, str]],
-    *,
-    allow_source_type_factory: bool = True,
-) -> bool:
-    """Accept only canonical or source-resolved generic type factories."""
-    if path is None:
-        return False
-    if isinstance(factory, ast.Name):
-        name = factory.id
-        if allow_source_type_factory and name in _BUILTIN_GENERIC_FACTORIES:
-            try:
-                stat = path.stat()
-            except OSError:
-                return False
-            _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
-            if name not in shadowed:
-                return True
-        binding = _source_import_binding(path, name)
-        if binding is not None:
-            _, module_name, imported_name, _ = binding
-            if imported_name is not None and imported_name in canonical_modules.get(module_name, ()):
-                return True
-        if not allow_source_type_factory:
-            return False
-        return _module_symbol_is_type(path, name, seen)
-
-    parts = _dotted_expression(factory)
-    if parts is None:
-        return False
-    binding = _source_import_binding(path, parts[0])
-    if binding is None:
-        return False
-    _, module_name, imported_name, has_alias = binding
-    if imported_name is not None:
-        return False
-    qualified = ".".join((module_name, *parts[1:])) if has_alias else ".".join(parts)
-    for owner, names in canonical_modules.items():
-        prefix = f"{owner}."
-        if qualified.startswith(prefix) and qualified[len(prefix) :] in names:
-            return True
-    return False
-
-
-def _source_name_is_shadowed(path: Path, name: str) -> bool:
-    """Return whether a top-level declaration shadows an imported or builtin name."""
-    try:
-        stat = path.stat()
-    except OSError:
-        return False
-    _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
-    return name in shadowed
-
-
-def _union_operand_is_type(
-    value: ast.expr,
-    path: Path | None,
-    seen: frozenset[tuple[Path, str]] = frozenset(),
-) -> bool:
-    """Recognize operands of PEP 604 type unions without treating value unions as types."""
-    if isinstance(value, ast.Constant):
-        return value.value is None
-    if isinstance(value, ast.Name):
-        is_source_type = path is not None and _module_symbol_is_type(path, value.id, seen)
-        is_unshadowed_builtin = value.id in _BUILTIN_TYPE_EXPRESSIONS and (
-            path is None or not _source_name_is_shadowed(path, value.id)
-        )
-        return is_source_type or is_unshadowed_builtin
-    if isinstance(value, ast.Subscript):
-        return _type_alias_expression(value, path, seen) or _union_operand_is_type(value.value, path, seen)
-    if isinstance(value, ast.BinOp):
-        return _type_alias_expression(value, path, seen)
-    return False
-
-
-def _source_root(path: Path) -> Path | None:
-    """Find the ``src/<package>`` root containing *path*, including fixtures."""
-    return next((parent for parent in path.parents if parent.parent.name == "src"), None)
-
-
-def _module_name(source_root: Path, path: Path) -> str:
-    """Return the importable module name for a Python source path."""
-    relative = path.relative_to(source_root).with_suffix("")
-    parts = relative.parts[:-1] if relative.name == "__init__" else relative.parts
-    return ".".join((source_root.name, *parts))
-
-
-def _module_source_path(source_root: Path, module_name: str) -> Path | None:
-    """Resolve a module inside the source cohort containing *source_root*."""
-    module_path = source_root.parent.joinpath(*module_name.split("."))
-    source_path = module_path.with_suffix(".py")
-    package_path = module_path / "__init__.py"
-    if source_path.is_file():
-        return source_path
-    if package_path.is_file():
-        return package_path
-    return None
-
-
-def _module_symbol_is_type(path: Path, symbol: str, seen: frozenset[tuple[Path, str]] = frozenset()) -> bool:
-    """Follow an imported symbol to confirm it is a class or source type alias."""
-    key = (path.resolve(), symbol)
-    if key in seen:
-        return False
-    seen = seen | {key}
-    try:
-        source = path.read_text(encoding=_UTF_8)
-        tree = ast.parse(source, filename=str(path))
-    except (OSError, SyntaxError, UnicodeDecodeError):
-        return False
-
-    for statement in reversed(tree.body):
-        if not _statement_binds_name(statement, symbol):
-            continue
-        if isinstance(statement, ast.ClassDef):
-            return True
-        if isinstance(statement, ast.TypeAlias):
-            return True
-        if isinstance(statement, ast.AnnAssign):
-            return isinstance(statement.annotation, ast.Name) and statement.annotation.id == "TypeAlias"
-        if isinstance(statement, ast.Assign):
-            if _type_alias_expression(statement.value, path, seen):
-                return True
-            if isinstance(statement.value, ast.Name):
-                return _module_symbol_is_type(path, statement.value.id, seen)
-            return False
-        if isinstance(statement, (ast.ImportFrom, ast.Import)):
-            return _imported_symbol_is_type(path, tree, symbol, seen, statement)
-        return False
-    return _imported_symbol_is_type(path, tree, symbol, seen)
-
-
-def _target_binds_name(target: ast.expr, symbol: str) -> bool:
-    """Return whether an assignment target binds *symbol*."""
-    if isinstance(target, ast.Name):
-        return target.id == symbol
-    if isinstance(target, (ast.Tuple, ast.List)):
-        return any(_target_binds_name(item, symbol) for item in target.elts)
-    return False
-
-
-def _statement_binds_name(statement: ast.stmt, symbol: str) -> bool:
-    """Return whether a module-level statement binds *symbol*."""
-    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-        return statement.name == symbol
-    if isinstance(statement, ast.TypeAlias):
-        return statement.name.id == symbol
-    if isinstance(statement, ast.Assign):
-        return any(_target_binds_name(target, symbol) for target in statement.targets)
-    if isinstance(statement, ast.AnnAssign):
-        return statement.value is not None and _target_binds_name(statement.target, symbol)
-    if isinstance(statement, (ast.For, ast.AsyncFor)):
-        return _target_binds_name(statement.target, symbol)
-    if isinstance(statement, (ast.With, ast.AsyncWith)):
-        return any(
-            item.optional_vars is not None and _target_binds_name(item.optional_vars, symbol)
-            for item in statement.items
-        )
-    if isinstance(statement, ast.Import):
-        return any((alias.asname or alias.name.split(".", maxsplit=1)[0]) == symbol for alias in statement.names)
-    if isinstance(statement, ast.ImportFrom):
-        return any((alias.asname or alias.name) == symbol for alias in statement.names)
-    return False
-
-
-def _imported_symbol_is_type(
-    path: Path,
-    tree: ast.Module,
-    symbol: str,
-    seen: frozenset[tuple[Path, str]] = frozenset(),
-    binding_statement: ast.stmt | None = None,
-) -> bool:
-    """Return whether a module imports *symbol* from a class or alias owner."""
-    source_root = _source_root(path)
-    if source_root is None:
-        return False
-    module_name = _module_name(source_root, path)
-    package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
-    statements = (binding_statement,) if binding_statement is not None else tuple(tree.body)
-    for statement in statements:
-        if not isinstance(statement, ast.ImportFrom):
-            continue
-        for imported in statement.names:
-            local_name = imported.asname or imported.name
-            if local_name != symbol:
-                continue
-            try:
-                imported_module = f"{'.' * statement.level}{statement.module or ''}"
-                module_name = importlib.util.resolve_name(imported_module, package)
-            except ImportError:
-                continue
-            imported_path = _module_source_path(source_root, module_name)
-            if imported_path is not None and _module_symbol_is_type(imported_path, imported.name, seen):
-                return True
-    return False
-
-
-def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
-    """Return public top-level type alias declarations from *path*."""
-    source = path.read_text(encoding=_UTF_8)
-    tree = ast.parse(source, filename=str(path))
-    aliases: dict[str, str] = {}
-
-    def target_names(target: ast.expr) -> set[str]:
-        if isinstance(target, ast.Name):
-            return {target.id}
-        if isinstance(target, (ast.Tuple, ast.List)):
-            return {name for item in target.elts for name in target_names(item)}
-        return set()
-
-    def bound_names(statement: ast.stmt) -> set[str]:
-        if isinstance(statement, ast.TypeAlias):
-            return {statement.name.id}
-        if isinstance(statement, ast.Assign | ast.AugAssign | ast.Delete):
-            targets = statement.targets if isinstance(statement, ast.Assign | ast.Delete) else (statement.target,)
-            return {name for target in targets for name in target_names(target)}
-        if isinstance(statement, ast.AnnAssign) and statement.value is not None:
-            return target_names(statement.target)
-        if isinstance(statement, ast.Import):
-            return {alias.asname or alias.name.split(".", maxsplit=1)[0] for alias in statement.names}
-        if isinstance(statement, ast.ImportFrom):
-            return {alias.asname or alias.name for alias in statement.names if alias.name != "*"}
-        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            return {statement.name}
-        if isinstance(statement, (ast.For, ast.AsyncFor)):
-            return target_names(statement.target)
-        if isinstance(statement, (ast.With, ast.AsyncWith)):
-            return {
-                target
-                for item in statement.items
-                if item.optional_vars is not None
-                for target in target_names(item.optional_vars)
-            }
-        return set()
-
-    def collect_statement(statement: ast.stmt) -> None:
-        for name in bound_names(statement):
-            aliases.pop(name, None)
-
-        if isinstance(statement, ast.TypeAlias):
-            if not statement.name.id.startswith("_"):
-                declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
-                aliases[statement.name.id] = declaration
-            return
-
-        if (
-            isinstance(statement, ast.AnnAssign)
-            and statement.value is not None
-            and isinstance(statement.target, ast.Name)
-            and isinstance(statement.annotation, ast.Name)
-            and statement.annotation.id == "TypeAlias"
-            and not statement.target.id.startswith("_")
-        ):
-            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
-            aliases[statement.target.id] = declaration
-            return
-
-        if not isinstance(statement, ast.Assign):
-            return
-
-        targets = tuple(target.id for target in statement.targets if isinstance(target, ast.Name))
-        public_targets = tuple(name for name in targets if not name.startswith("_"))
-        if not public_targets:
-            return
-
-        value = statement.value
-        is_type_expression = _type_alias_expression(value, path)
-        is_referenced_type_alias = isinstance(value, ast.Name) and _module_symbol_is_type(path, value.id)
-        if is_type_expression or is_referenced_type_alias:
-            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
-            aliases.update((name, declaration) for name in public_targets)
-
-    for statement in tree.body:
-        if isinstance(statement, ast.If) and _is_type_checking_guard(statement.test, path):
-            for guarded_statement in statement.body:
-                collect_statement(guarded_statement)
-            continue
-        collect_statement(statement)
-
-    return tuple(sorted(aliases.items()))
-
-
-def _public_type_aliases(module_name: str, source_path: Path) -> list[str]:
-    """Render type-alias targets and source declarations from their owner module."""
-    lines: list[str] = []
-    for alias, declaration in _type_alias_declarations(source_path):
-        lines.extend(
-            (
-                f".. py:type:: {alias}",
-                f"   :module: {module_name}",
-                "",
-                "   Declared in source::",
-                "",
-                *(f"      {line}" for line in declaration.splitlines()),
-                "",
-            )
-        )
-    return lines
 
 
 def _public_function_aliases(module_name: str) -> list[str]:
@@ -858,7 +423,7 @@ class ApiStubManager:
         """
         title = f"{pkg_name} package"
         source_path = self._source_path(pkg_name)
-        excluded_members = [alias for alias, _ in _type_alias_declarations(source_path)]
+        excluded_members = [alias for alias, _ in type_alias_declarations(source_path)]
         lines: list[str] = [
             self._heading(title),
             "",
@@ -870,7 +435,7 @@ class ApiStubManager:
         if excluded_members:
             lines.append(f"   :exclude-members: {','.join(excluded_members)}")
         lines.append("")
-        lines.extend(_public_type_aliases(pkg_name, source_path))
+        lines.extend(public_type_aliases(pkg_name, source_path))
         lines.extend(_public_function_aliases(pkg_name))
 
         if sub_packages:
@@ -912,14 +477,14 @@ class ApiStubManager:
         ]
         excluded_members = sorted(
             {
-                *_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
-                *(alias for alias, _ in _type_alias_declarations(source_path)),
+                *NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
+                *(alias for alias, _ in type_alias_declarations(source_path)),
             }
         )
         if excluded_members:
             lines.append(f"   :exclude-members: {','.join(excluded_members)}")
         lines.append("")
-        lines.extend(_public_type_aliases(mod_name, source_path))
+        lines.extend(public_type_aliases(mod_name, source_path))
         lines.extend(_public_function_aliases(mod_name))
         return "\n".join(lines)
 
@@ -943,7 +508,63 @@ class ApiStubManager:
         Returns:
             Mapping of ``some_package.some.module.rst`` filenames to generated RST.
         """
-        modules = self.discover_modules() if all_modules is None else all_modules
+        if all_modules is not None:
+            return self._render_stub_contents(all_modules)
+        # Every stub is a pure function of the Python sources under the shared
+        # ``src/`` parent (type resolution follows imports across sibling roots),
+        # so one rendering serves every caller that sees the same bytes.
+        fingerprint = _python_source_fingerprint(self.source_roots[0].parent)
+        known = _EXPECTED_STUB_CONTENTS.pop(self.source_roots, None)
+        current = known is not None and known[0] == fingerprint
+        cached = known[1] if known is not None and current else self._published_or_rendered(fingerprint)
+        while len(_EXPECTED_STUB_CONTENTS) >= _RETAINED_RENDERINGS:
+            del _EXPECTED_STUB_CONTENTS[next(iter(_EXPECTED_STUB_CONTENTS))]
+        _EXPECTED_STUB_CONTENTS[self.source_roots] = (fingerprint, cached)
+        return dict(cached)
+
+    def _published_or_rendered(self, fingerprint: str) -> dict[str, str]:
+        """Render the stubs, reading the shared rendering when the roots are the checkout's own.
+
+        A tree outside the checkout (a test's synthetic package) is rendered in
+        this process and never published, so it cannot crowd out the
+        checkout's renderings.
+        """
+        repository = REPO_ROOT.resolve()
+        roots = tuple(root.resolve() for root in self.source_roots)
+        if not all(root.is_relative_to(repository) for root in roots):
+            return self._render_stub_contents(self.discover_modules())
+        key = hashlib.sha256(
+            json.dumps(
+                {
+                    "schema": "cadrumo-api-stubs/v1",
+                    "python": list(sys.version_info[:2]),
+                    "roots": [root.relative_to(repository).as_posix() for root in roots],
+                    "sources": fingerprint,
+                    "renderer": _python_source_fingerprint(Path(__file__).parent),
+                },
+                sort_keys=True,
+            ).encode(_UTF_8)
+        ).hexdigest()[:32]
+
+        def publish(destination: Path) -> None:
+            rendering = self._render_stub_contents(self.discover_modules())
+            payload = json.dumps({"key": key, "stubs": rendering}, ensure_ascii=False)
+            (destination / _PUBLISHED_FILE).write_text(payload, encoding=_UTF_8, newline="\n")
+
+        artifact = run_artifact(
+            _PUBLISHED_KIND,
+            key,
+            publish=publish,
+            verify=lambda root: published_stubs(root, key) is not None,
+            cache_root=dev_cache_dir("run-artifacts"),
+            retain=_PUBLISHED_RETAINED,
+        )
+        published = published_stubs(artifact.root, key)
+        if published is None:
+            raise ApiDocsError(f"the shared API stub rendering at {artifact.root} no longer verifies")
+        return published
+
+    def _render_stub_contents(self, modules: list[tuple[str, bool]]) -> dict[str, str]:
         expected: dict[str, str] = {}
         for name, is_pkg in modules:
             if is_pkg:

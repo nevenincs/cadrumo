@@ -23,44 +23,52 @@ from typing import Any, override
 
 import pytest
 from textual.app import App, ComposeResult
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import absent_value_text
-from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import (
-    ModeloFormAeatData,
+from ......application.modelo.work_form_declaration_facts import ModeloFormAeatData
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
-    ModeloFormFieldBlock,
     ModeloFormOrigin,
     ModeloFormValueSource,
-    ModeloWorkForm,
     address_key,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
+from ......application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloFormFieldBlock,
+    ModeloFormSourceGroupKind,
+    ModeloFormSourceState,
+    ModeloWorkForm,
+    revised_field,
+)
+from ......application.modelo.work_form_source_groups import reading_text, source_group_kind, source_groups
+from ......application.modelo.work_form_wording import (
+    aeat_imported_on,
+    date_text,
+    no_earlier_filing,
+    origin_explanation,
+    origin_words,
+)
 from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
+    ModeloWorkReviewCasilla,
 )
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.filing.schema import ModeloValueKind
-from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -75,41 +83,22 @@ from ..casilla_list_values import (
     stated_value_text,
     value_text,
 )
-from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorOutcome, read_only_reason
+from ..editor import CasillaEditorPanel, CasillaEditorScreen, read_only_reason
 from ..editor_explanations import where_from_text
 from ..grid import CasillaListRecords
 from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
 from ..search import search_entries
-from ..sources import (
-    SOURCE_GROUP_MARKS,
-    SourceGroupKind,
-    SourceState,
-    group_prompt,
-    group_words,
-    reading_text,
-    source_group_kind,
-    source_groups,
-)
-from ..vocabulary import (
-    FORM_SET_MARK,
-    ORIGIN_MARKS,
-    aeat_imported_on,
-    no_earlier_filing,
-    origin_explanation,
-    origin_glyph,
-    origin_text,
-    origin_words,
-)
-from ..wording import date_text
-from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
+from ..sources import SOURCE_GROUP_MARKS, group_prompt, group_words
+from ..vocabulary import FORM_SET_MARK, ORIGIN_MARKS, origin_glyph, origin_text
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, registry_form_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
-_EMPTY_KEY = "tui.modelo.workbench.origin.optional_empty"
-_HELD_ZERO_KEY = "tui.modelo.workbench.origin_held_zero.optional_empty"
-_FORM_SET_KEY = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
+_EMPTY_KEY = "workspace.modelo.origin.optional_empty"
+_HELD_ZERO_KEY = "workspace.modelo.origin_held_zero.optional_empty"
+_FORM_SET_KEY = "workspace.modelo.origin_source.imported.fixed_by_design"
 _ZERO = "0.00\u00a0€"
 _IMPORTED_AT = datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
 
@@ -152,20 +141,17 @@ def _from_aeat() -> ModeloFormField:
 
 def _unreachable_entry() -> ModeloFormField:
     """A binding input the filer's entries feed but that no entry can reach here, holding nothing."""
-    return form_field(
-        "900",
-        "Unnamed box",
-        ModeloFormOrigin.OPTIONAL_EMPTY,
-        bindings=(fed_by("m.manual", BindingSourceKind.MANUAL_INPUT),),
-    ).model_copy(
-        update={
-            "box": None,
-            "editability": ModeloFormEditability.NOT_WRITABLE,
-            "not_writable_reason": "absent_from_admission",
-            "source": ModeloFormValueSource(
-                family=SourceFamily.YOUR_ENTRIES, source_kind=BindingSourceKind.MANUAL_INPUT
-            ),
-        }
+    return revised_field(
+        form_field(
+            "900",
+            "Unnamed box",
+            ModeloFormOrigin.OPTIONAL_EMPTY,
+            bindings=(fed_by("m.manual", BindingSourceKind.MANUAL_INPUT),),
+        ),
+        box=None,
+        editability=ModeloFormEditability.NOT_WRITABLE,
+        not_writable_reason="absent_from_admission",
+        source=ModeloFormValueSource(family=SourceFamily.YOUR_ENTRIES, source_kind=BindingSourceKind.MANUAL_INPUT),
     )
 
 
@@ -191,11 +177,6 @@ def _with_fields(form: ModeloWorkForm, replacements: dict[str, ModeloFormField])
     return form.model_copy(update={"pages": pages})
 
 
-async def _settle(pilot: Pilot[EditorOutcome | None]) -> None:
-    for _ in range(3):
-        await pilot.pause()
-
-
 def _text(screen: CasillaEditorScreen, widget_id: str) -> str:
     return str(screen.query_one(widget_id, Static).render())
 
@@ -213,7 +194,7 @@ class _RowHarness(App[None]):
 async def _rows(*fields: ModeloFormField) -> list[str]:
     app = _RowHarness(tuple(CasillaListEntry(field) for field in fields))
     async with app.run_test(size=(140, 10)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         widget = app.query_one(CasillaList)
         return [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -264,7 +245,7 @@ async def test_every_surface_shows_a_held_zero_and_no_figure_for_an_empty_box() 
                 CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN)
             )
             async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-                await _settle(pilot)
+                await settle(pilot)
                 panels[field.box] = _text(panel, "#editor-now-text")
     assert panels["152"] == f"{_ZERO} · ○ Optional, left at 0"
     assert panels["150"] == "○ Optional, empty"
@@ -279,7 +260,7 @@ def test_a_value_the_form_sets_draws_the_same_mark_on_its_row_and_in_the_sources
     with override_settings(cadrumo_output_language="en"):
         words = origin_words(field)
     kind = source_group_kind(field)
-    assert kind is SourceGroupKind.SET_BY_FORM
+    assert kind is ModeloFormSourceGroupKind.SET_BY_FORM
     assert origin_glyph(field) == SOURCE_GROUP_MARKS[kind].glyph == FORM_SET_MARK.glyph
     assert origin_glyph(field) != ORIGIN_MARKS[ModeloFormOrigin.IMPORTED].glyph
     assert words == lookup_translation(_FORM_SET_KEY, locale="en")
@@ -295,8 +276,8 @@ def test_a_value_the_form_sets_draws_the_same_mark_on_its_row_and_in_the_sources
     information = form_field("99", "Reference", ModeloFormOrigin.INFORMATIONAL, Decimal("5.00")).model_copy(
         update={"editability": ModeloFormEditability.INFORMATIONAL}
     )
-    assert source_group_kind(information) is SourceGroupKind.INFORMATION
-    assert SOURCE_GROUP_MARKS[SourceGroupKind.INFORMATION].glyph == origin_glyph(information)
+    assert source_group_kind(information) is ModeloFormSourceGroupKind.INFORMATION
+    assert SOURCE_GROUP_MARKS[ModeloFormSourceGroupKind.INFORMATION].glyph == origin_glyph(information)
 
 
 # ── a source the filer cannot use is not named ───────────────────────────
@@ -316,12 +297,12 @@ async def test_a_box_no_entry_can_reach_names_no_source_and_says_it_is_empty_onc
             CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason)
         )
         async with ScreenHostApp(panel).run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             now = _text(panel, "#editor-now-text")
             has_where = bool(panel.query("#editor-where"))
     assert not has_where
     assert now == "○ Optional, empty"
-    assert tr("tui.modelo.workbench.origin_source.imported.your_entries") not in now
+    assert tr("workspace.modelo.origin_source.imported.your_entries") not in now
 
 
 # ── AEAT data names the day it was imported ──────────────────────────────
@@ -342,8 +323,8 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
     field = _from_aeat()
     with override_settings(cadrumo_output_language=language.value):
         written = date_text(imported, language)
-        dated = tr("tui.modelo.workbench.origin_source.aeat_imported_on", date=written)
-        undated = tr("tui.modelo.workbench.origin_source.imported.aeat_draft")
+        dated = tr("workspace.modelo.origin_source.aeat_imported_on", date=written)
+        undated = tr("workspace.modelo.origin_source.imported.aeat_draft")
         assert written in dated
         # The help band's words and search.
         assert origin_text(field, aeat_imported=imported, language=language).endswith(dated)
@@ -355,12 +336,12 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
         )
         assert hit.origin.endswith(dated)
         # The sources map's group heading, closed and open.
-        group = next(item for item in source_groups(form) if item.kind is SourceGroupKind.AEAT_DATA)
+        group = next(item for item in source_groups(form) if item.kind is ModeloFormSourceGroupKind.AEAT_DATA)
         assert group.imported_on == imported
-        heading = tr("tui.modelo.workbench.sources.group.aeat_data_imported_on", date=written)
+        heading = tr("workspace.modelo.sources.group.aeat_data_imported_on", date=written)
         assert written in heading
         assert str(group_prompt(group, expanded=True)).startswith(f"▿ {SOURCE_GROUP_MARKS[group.kind].glyph} {heading}")
-        assert group_words(SourceGroupKind.AEAT_DATA).endswith(tr("tui.modelo.workbench.sources.group.aeat_data"))
+        assert group_words(ModeloFormSourceGroupKind.AEAT_DATA).endswith(tr("workspace.modelo.sources.group.aeat_data"))
         # The panel's "Now" line and where the value comes from.
         panel = CasillaEditorScreen(
             CasillaEditorPanel(
@@ -372,7 +353,7 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
             )
         )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             now = _text(panel, "#editor-now-text")
             where = _text(panel, "#editor-where-text")
     assert now.endswith(dated)
@@ -392,7 +373,7 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
             CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, affects="[07]")
         )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             affects = panel.query_one("#editor-affects").region
             entry = panel.query_one("#editor-entry").region
         filed = CasillaEditorScreen(
@@ -405,9 +386,9 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
             )
         )
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             can_change = _text(filed, "#editor-can-change-text")
-        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
+        correction = tr("workspace.modelo.editor.can_change.recorded")
     assert affects.bottom <= entry.y
     assert can_change == correction
 
@@ -478,9 +459,9 @@ def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(languag
     named = _carried(filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2026, "1T")),))
     form = _with_fields(synthetic_form(), {"01": none.model_copy(update={"box": "01"})})
     with override_settings(cadrumo_output_language=language.value):
-        words = tr("tui.modelo.workbench.origin_source.imported.earlier_filings_none")
-        explanation = tr("tui.modelo.workbench.help.origin_no_earlier_declaration")
-        generic = tr("tui.modelo.workbench.origin_source.imported.earlier_filings")
+        words = tr("workspace.modelo.origin_source.imported.earlier_filings_none")
+        explanation = tr("workspace.modelo.help.origin_no_earlier_declaration")
+        generic = tr("workspace.modelo.origin_source.imported.earlier_filings")
         assert no_earlier_filing(none) and not no_earlier_filing(named)
         # The row, help band and panel words say there is none, never "from an earlier declaration".
         assert origin_words(none) == words != generic
@@ -494,16 +475,16 @@ def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(languag
         assert "130" in origin_words(named)
         assert origin_explanation(named) is None
         # The sources map: the group says there is none, and its source found nothing although it resolved.
-        group = next(item for item in source_groups(form) if item.kind is SourceGroupKind.EARLIER_DECLARATIONS)
+        group = next(
+            item for item in source_groups(form) if item.kind is ModeloFormSourceGroupKind.EARLIER_DECLARATIONS
+        )
         assert group.none_to_carry
         heading = str(group_prompt(group, expanded=True))
-        assert tr("tui.modelo.workbench.sources.group.earlier_declarations_none") in heading
-        assert tr("tui.modelo.workbench.sources.group.earlier_declarations") not in heading
+        assert tr("workspace.modelo.sources.group.earlier_declarations_none") in heading
+        assert tr("workspace.modelo.sources.group.earlier_declarations") not in heading
         (reading,) = group.readings
-        assert reading.state is SourceState.NONE_FOUND
-        assert reading_text(reading) == tr(
-            "tui.modelo.workbench.sources.none_found", source=tr(reading.policy.label_key)
-        )
+        assert reading.state is ModeloFormSourceState.NONE_FOUND
+        assert reading_text(reading) == tr("workspace.modelo.sources.none_found", source=tr(reading.policy.label_key))
 
 
 def test_the_real_first_quarter_130_carries_from_no_earlier_declaration(operation: PinnedAuthorityOperation) -> None:
@@ -530,42 +511,29 @@ def _real_form(
     findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
     """A real form built from the published authority, every rate casilla holding ``figure`` when one is given."""
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    rates = {str(casilla.id) for casilla in snapshot.revision.casillas if str(casilla.data_type) == "ratio"}
-    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
-    if figure is not None:
-        rows = tuple(
+
+    def hold_rates(
+        snapshot: RegistrySnapshot, rows: tuple[ModeloWorkReviewCasilla, ...]
+    ) -> tuple[ModeloWorkReviewCasilla, ...]:
+        if figure is None:
+            return rows
+        rates = {str(casilla.id) for casilla in snapshot.revision.casillas if str(casilla.data_type) == "ratio"}
+        return tuple(
             row.model_copy(update={"value": figure, "realised_kind": ModeloValueKind.LITERAL})
             if str(row.casilla_id) in rates
             else row
             for row in rows
         )
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000458",
+
+    return registry_form_of(
+        operation,
         modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000458",
         work_unit_id="d" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=rows,
         findings=findings,
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
+        hold=hold_rates,
     )
 
 
@@ -627,22 +595,18 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
     # The screen starts three pages on, away from the table, so landing there is the finding's doing.
     assert min(3, len(pages) - 1) != target
     with override_settings(cadrumo_output_language="en"):
-        heading = tr("tui.modelo.workbench.repeating", count=0)
-        unknown = tr("tui.modelo.workbench.grid.records_unknown")
+        heading = tr("workspace.modelo.repeating", count=0)
+        unknown = tr("workspace.modelo.grid.records_unknown")
         screen = ModeloWorkbenchScreen(FakeReader(form=form))
         async with ScreenHostApp(screen).run_test(size=(120, 36)) as pilot:
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
             await pilot.press("]", "]", "]")
-            for _ in range(2):
-                await pilot.pause()
+            await settle(pilot)
             await pilot.press("i")
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             await pilot.press("enter")
-            for _ in range(4):
-                await pilot.pause()
+            await settle(pilot)
             shown = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
             listed = casilla_list.items
     # The list now shows the page holding the table whose column the finding names, and the table is in view.
@@ -676,4 +640,4 @@ def test_a_calculated_rate_box_reads_its_rows_grounded_rate_and_one_with_no_grou
     )
     assert ungrounded.field.grounded_rate is None and ungrounded.row_base_empty is True
     assert ungrounded_text == "·"
-    assert ungrounded_note == tr("tui.modelo.workbench.rate.not_grounded", locale="en")
+    assert ungrounded_note == tr("workspace.modelo.rate.not_grounded", locale="en")

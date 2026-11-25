@@ -10,21 +10,24 @@ Core types:
 
 from __future__ import annotations
 
-from enum import StrEnum
-from typing import Annotated, Final, Literal
+from datetime import date
+from typing import Annotated, Final, Literal, Self
 
-from pydantic import BaseModel, StringConstraints, ValidationError, model_validator
+from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationError, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
+from ...core.field_origin import FieldOrigin
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_election import PaymentElection
 from ...core.period import Period, StandardPeriodCode
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
+from ...core.text_bounds import FILING_TEXT_CAPACITY
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
@@ -33,10 +36,10 @@ from ...domain.bienes_inversion.register import (
 from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
+from ...domain.calculations.registry.form_codes import form_fit_validator, form_for_role, form_width_validator
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
@@ -50,6 +53,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoFilingEvidence,
 )
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
@@ -58,13 +62,26 @@ from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )
-from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
+from ..operator_actions.preconditions import profile_required_facts_missing_verdict
+from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 from .producer_snapshot_m200 import Modelo200ProfileFacts
+from .producer_snapshot_m210 import Modelo210ProfileFacts
+from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
+from .producer_snapshot_m390 import M390FilingFacts
+from .producer_snapshot_m840 import Modelo840ProfileFacts
 
-_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
-_CnaeCode = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=FILING_TEXT_CAPACITY)]
+_AeatReceiptNumber = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_width_validator("aeat.receipt_digits")),
+]
+_CnaeCode = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_width_validator("cnae.digits")),
+]
 _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
     {
         StandardPeriodCode.Q1,
@@ -87,8 +104,36 @@ _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
 )
 
 
-class FilingProducerSnapshotError(CadrumoError):
-    """Raised when filing facts cannot form a complete producer snapshot."""
+class FilingProducerSnapshotError(TerminalPreconditionErrorMixin[object], CadrumoError):
+    """Raised when filing facts cannot form a complete producer snapshot.
+
+    The refusal always carries the verdict that says whose fault it is: the
+    profile edit or the operator decision that supplies a missing fact, or the
+    terminal outcome of a guard only a caller or design fault reaches.
+    """
+
+
+#: Served words of a snapshot guard that no filer action reaches.
+_SNAPSHOT_DESIGN_FAULT_MESSAGE: Final = "errors.integrity.canonical_filing_producer_snapshot"
+
+
+def _snapshot_design_fault(message: str, *, reason: str) -> FilingProducerSnapshotError:
+    """Refuse a snapshot guard only a caller or design fault reaches, as a terminal refusal.
+
+    The export refuses a missing account, a missing solicitud and the other
+    facts a filer supplies before it builds the snapshot, so a guard here that
+    still fires means the export assembled inconsistent inputs.
+    """
+    return FilingProducerSnapshotError(
+        message,
+        translated_message=_SNAPSHOT_DESIGN_FAULT_MESSAGE,
+        context={"reason": reason},
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"error_type": "FilingProducerSnapshotError", "reason": reason},
+            outcome=NoRecoveryOutcome.TERMINAL,
+        ),
+    )
 
 
 def assert_m303_regularisation_result_matches_bienes_register(
@@ -164,7 +209,7 @@ class TaxpayerIdentityFacts(BaseModel):
     that exact fact, and an absent fact remains absent.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     legal_name: _NonBlankName | None
     given_name: _NonBlankName | None
@@ -200,7 +245,7 @@ class DeclarationContactFacts(BaseModel):
     a defect.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     phone: _NonBlankName | None = None
     full_name: _NonBlankName | None = None
@@ -217,10 +262,39 @@ class Modelo111ProfileFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     colegio_concertado: bool | None
+    colegio_concertado_origin: FieldOrigin | None = None
+    """How the colegio concertado answer was reached, once there is one.
+
+    :attr:`core.field_origin.FieldOrigin.OPERATOR` is the declarant's own
+    attestation. :attr:`core.field_origin.FieldOrigin.DERIVED` is a no the
+    profile never answered and never had to: the header's conditions are
+    positively absent, so the mark follows deterministically and the field
+    emits blank. Only a no can be derived -- nothing concludes an attestation
+    on the declarant's behalf -- and an unanswered fact carries no origin at
+    all, which is what the snapshot check refuses on.
+    """
+
+    @model_validator(mode="after")
+    def _derived_answers_are_only_a_no(self) -> Self:
+        if self.colegio_concertado is None:
+            if self.colegio_concertado_origin is not None:
+                raise ValueError("an unanswered colegio concertado has no origin")
+            return self
+        if self.colegio_concertado_origin is None:
+            raise ValueError("an answered colegio concertado records how it was reached")
+        if self.colegio_concertado and self.colegio_concertado_origin is FieldOrigin.DERIVED:
+            raise ValueError("a colegio concertado attestation is never derived")
+        return self
 
 
-_GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=7)]
-_ForalTerritory = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+_GrupoNumber = Annotated[
+    str, StringConstraints(min_length=1, max_length=16), AfterValidator(form_fit_validator("m222.numero_grupo_max"))
+]
+_ForalTerritory = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=16),
+    AfterValidator(form_fit_validator("m222.dominant_territory_max")),
+]
 
 
 class Modelo222ProfileFacts(BaseModel):
@@ -275,8 +349,18 @@ class Modelo222ProfileFacts(BaseModel):
     numero_referencia_sociedades_variacion: str | None = None
 
 
-_M353GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=10)]
+_M353GrupoNumber = Annotated[
+    str, StringConstraints(min_length=1, max_length=16), AfterValidator(form_fit_validator("m353.numero_grupo_max"))
+]
 _SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
+#: Modelo 202 designs 2019 and 2023, page 01 position 126: "0" No consta, "1" Cooperativa, "2" Otras entidades.
+_M202CooperativaOMultiplesTipos = Annotated[str, StringConstraints(pattern=r"^[012]$")]
+#: Modelo 202 page 01 turnover band (2025 design position 147, 2019 and 2023 position 132): "0" to "3".
+_M202ImporteNetoTramo = Annotated[str, StringConstraints(pattern=r"^[0-3]$")]
+#: Modelo 202 "Liquidación de modalidad A ó B" (2025 design Nota 11, 2023 design Nota 4).
+_M202ModalidadLiquidacion = Annotated[str, StringConstraints(pattern=r"^[AB]$")]
+#: Modelo 202 foral territory (2025 design Nota 9, 2019 and 2023 designs Nota 2); the blank is no value.
+_M202NormativaForal = Annotated[str, StringConstraints(pattern=r"^[1-4]$")]
 _XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
 
 
@@ -313,469 +397,6 @@ class Modelo353ProfileFacts(BaseModel):
     grupo_normativa_foral: _XOrBlankMark | None = None
 
 
-_M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]
-_M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=2)]
-_FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
-_DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
-
-
-class Modelo296PerceptorRow(BaseModel):
-    """One Modelo 296 perceptor: the payee, the renta and the retencion practicada.
-
-    The Tipo 2 record is emitted once per payee, so this row is the unit AEAT repeats.
-    Members are ``M296PerceptorField``'s values verbatim and are generated from that enum,
-    which keeps the projection reference and the row that answers it in lock-step: a field
-    the reference can name is a field this row has.
-
-    Every member is optional and rendered as text. The record design's own per-field width,
-    padding, justification and data type are what shape the bytes, and they live in the
-    published layout; duplicating them as constraints here would be a second copy of the
-    design that is free to disagree with it.
-
-    These are operator-supplied filing detail rows held by the typed producer snapshot.
-    The projection plan reads them by render occurrence. No automatic feed from a ledger
-    or withholding observation store is enrolled, so this row does not certify that its
-    supplied figures agree with ledger evidence.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    apellidos_y_nombre_razon_social_o_deno: str | None = None
-    base_retenciones_e_ingresos_a_cuenta: str | None = None
-    ciudad: str | None = None
-    clave: str | None = None
-    clave_de_mercado: str | None = None
-    codigo: str | None = None
-    codigo_bic_del_perceptor_mediador: str | None = None
-    codigo_cuenta_valores: str | None = None
-    codigo_emisor: str | None = None
-    codigo_lei_del_perceptor: str | None = None
-    codigo_pais: str | None = None
-    decimal: str | None = None
-    decimal_numerico_parte_decimal: str | None = None
-    decimal_numerico_parte_decimal_2: str | None = None
-    decimal_numerico_parte_decimal_3: str | None = None
-    declarante: str | None = None
-    direccion_del_perceptor: str | None = None
-    ejercicio: str | None = None
-    ejercicio_devengo: str | None = None
-    entero: str | None = None
-    entero_numerico_parte_entera: str | None = None
-    entero_numerico_parte_entera_2: str | None = None
-    entero_numerico_parte_entera_3: str | None = None
-    f_j: str | None = None
-    fecha_de_devengo: str | None = None
-    fecha_de_inicio_del_prestamo: str | None = None
-    fecha_de_nacimiento: str | None = None
-    fecha_de_vencimiento_del_prestamo: str | None = None
-    identificador_de_registro_o_numero_de: str | None = None
-    ingresos_a_cuenta_repercutidos: str | None = None
-    naturaleza: str | None = None
-    nif_del_declarante: str | None = None
-    nif_del_pagador_anterior: str | None = None
-    nif_del_perceptor: str | None = None
-    nif_del_representante_legal: str | None = None
-    nif_en_el_pais_de_residencia_fiscal: str | None = None
-    pais_o_territorio_de_residencia_fiscal: str | None = None
-    parte_decimal_del_importe_de_las_reten: str | None = None
-    parte_entera_del_importe_de_las_retenc: str | None = None
-    pendiente: str | None = None
-    perceptor_mediador: str | None = None
-    procedimiento_especial_de_retenciones: str | None = None
-    subclave: str | None = None
-    tipo_codigo: str | None = None
-
-
-class Modelo296PerceptorInteresesRow(BaseModel):
-    """One Modelo 296 perceptor of the intereses hoja.
-
-    Members are ``M296PerceptorInteresesField``'s values verbatim and are generated from that
-    enum, so a field the projection reference can name is a field this row has. Every member
-    is optional and rendered as text: the per-field width, padding, justification and data
-    type belong to the published layout, and a second copy of them here would be free to
-    disagree with the design.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    apellidos_y_nombre_razon_social_o_deno: str | None = None
-    ejercicio: str | None = None
-    f_j: str | None = None
-    identificador_de_registro_o_numero_de: str | None = None
-    nif_del_declarante: str | None = None
-    nif_del_perceptor: str | None = None
-    nif_del_representante_legal: str | None = None
-    retenciones_e_ingresos_a_cuenta_ingres: str | None = None
-
-
-class Modelo296AnexoPagoRow(BaseModel):
-    """One Modelo 296 pago a contribuyente.
-
-    Members are ``M296AnexoPagoField``'s values verbatim and are generated from that
-    enum, so a field the projection reference can name is a field this row has. Every member
-    is optional and rendered as text: the per-field width, padding, justification and data
-    type belong to the published layout, and a second copy of them here would be free to
-    disagree with the design.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    apellidos_y_nombre_razon_social_o_deno: str | None = None
-    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
-    ciudad: str | None = None
-    clave_de_personalidad_del_contribuyent: str | None = None
-    codigo_isin: str | None = None
-    codigo_lei_del_contribuyente: str | None = None
-    codigo_pais: str | None = None
-    direccion_del_contribuyente: str | None = None
-    ejercicio: str | None = None
-    f_j: str | None = None
-    fecha_de_devengo: str | None = None
-    fecha_de_nacimiento_del_contribuyente: str | None = None
-    identificador_de_registro_o_numero_de: str | None = None
-    importe_del_pago_al_contribuyente: str | None = None
-    nif_del_contribuyente: str | None = None
-    nif_del_declarante: str | None = None
-    nif_del_perceptor: str | None = None
-    nif_del_representante_legal: str | None = None
-    nif_en_el_pais_de_residencia_fiscal_de: str | None = None
-    numero_de_justificante_del_modelo_210: str | None = None
-    pais_o_territorio_de_residencia_fiscal: str | None = None
-    porcentaje_de_retencion: str | None = None
-    retenciones: str | None = None
-
-
-class Modelo296AnexoCertificadoRow(BaseModel):
-    """One Modelo 296 certificado de pago.
-
-    Members are ``M296AnexoCertificadoField``'s values verbatim and are generated from that
-    enum, so a field the projection reference can name is a field this row has. Every member
-    is optional and rendered as text: the per-field width, padding, justification and data
-    type belong to the published layout, and a second copy of them here would be free to
-    disagree with the design.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    apellidos_y_nombre_razon_social_o_deno: str | None = None
-    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
-    codigo_cuenta_valores_del_certificado: str | None = None
-    codigo_isin_del_certificado: str | None = None
-    codigo_lei_del_titular_registral: str | None = None
-    decimal: str | None = None
-    decimal_2: str | None = None
-    decimal_3: str | None = None
-    ejercicio: str | None = None
-    entero: str | None = None
-    entero_2: str | None = None
-    entero_3: str | None = None
-    f_j: str | None = None
-    fecha_de_pago: str | None = None
-    fecha_de_presentacion_del_modelo_210: str | None = None
-    identificador_de_registro_o_numero_de: str | None = None
-    nif_del_declarante: str | None = None
-    nif_del_perceptor: str | None = None
-    nif_del_representante_legal: str | None = None
-    numero_de_justificante_del_modelo_210: str | None = None
-    parte_decimal_del_numero_de_titulos: str | None = None
-    parte_decimal_del_numero_de_titulos_2: str | None = None
-    parte_entera_del_numero_de_titulos: str | None = None
-    parte_entera_del_numero_de_titulos_2: str | None = None
-    titular_registral_de_la_cuenta_de_valo: str | None = None
-
-
-class Modelo296ProfileFacts(BaseModel):
-    """Declarant identity the Modelo 296 tipo-1 record declares.
-
-    Modelo 296 is the IRNR annual summary of retenciones e ingresos a cuenta on rentas
-    obtained by non-residents without permanent establishment (TRLIRNR art. 24, Orden
-    EHA/3290/2008 art. 6). Its first record identifies who is declaring, for which
-    ejercicio, and how many perceptores the file carries.
-
-    All twelve ``m296.dec.*`` keys were declared in the vocabulary and produced by nothing,
-    so every one of them rendered blank: the ejercicio at offset 5, the declarante NIF at
-    offset 9 and the razon social at offset 18 among them. A 296 emitted that way names
-    nobody.
-
-    Field names are the AEAT key tails verbatim, including two the source design truncated:
-    ``apellidos_y_nombre`` is *persona con quien relacionarse* (design ordinal 7, the
-    49-byte contact block AEAT splits into a 9-byte telefono and a 40-byte name), and ``n``
-    is ``N.I.F. DEL REPRESENTANTE LEGAL.`` (design ordinal 16, offset 391) -- the slug
-    stopped at the first period in the label. Renaming either would change a published
-    layout, so the name stays and the meaning is recorded here.
-
-    ``ejercicio`` restates a year the draft already knows. The structurally better home is
-    a ``draft`` field carrying ``ExportDraftAttribute.FILING_YEAR``, which cannot disagree
-    with the draft; that is a layout change and is not made here. Until it is, a snapshot
-    builder must populate this from the draft's own filing year rather than from an
-    independently entered value.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    #: Ejercicio -- design offset 5, length 4, four-digit year.
-    ejercicio: _FourDigitYear
-    #: NIF del declarante -- design offset 9, length 9.
-    nif_del_declarante: _NonBlankName
-    #: Apellidos y nombre o razon social del declarante -- design offset 18, length 40.
-    apellidos_y_nombre_o_razon_social_del: _NonBlankName
-    #: Tipo de soporte -- design offset 58, length 1, alfabetico.
-    tipo_de_soporte: _M296SupportType | None = None
-    #: Persona con quien relacionarse, telefono -- design offset 59, length 9.
-    telefono: _DigitString9 | None = None
-    #: Persona con quien relacionarse, apellidos y nombre -- design offset 68, length 40.
-    apellidos_y_nombre: _NonBlankName | None = None
-    #: Numero identificativo de la declaracion -- design offset 108, length 13.
-    numero_identificativo_de_la_declaracio: _AeatReceiptNumber | None = None
-    #: Declaracion complementaria o sustitutiva -- design offset 121, length 2.
-    declaracion_complementaria_o_sustituti: _M296AmendmentMark | None = None
-    #: Numero identificativo de la declaracion anterior -- design offset 123, length 13.
-    numero_identificativo_de_la_declaracio_2: _AeatReceiptNumber | None = None
-    #: Numero total de perceptores -- design offset 136, length 9.
-    #:
-    #: An operator-supplied count that the perceptor rows themselves determine. It is
-    #: optional here deliberately: once the perceptor record repeats its rows, the count is
-    #: derived from them, and a value stated here that disagrees with the rows is a defect
-    #: rather than a fact.
-    numero_total_de_perceptores: _DigitString9 | None = None
-    #: N.I.F. del representante legal -- design offset 391, length 9. See the class note on
-    #: why the key tail is ``n``.
-    n: _NonBlankName | None = None
-    #: Sello electronico -- design offset 488, length 13.
-    sello_electronico: str | None = None
-    #: One entry per payee. Empty emits no perceptor record at all, which is what AEAT
-    #: expects of a declaration with nothing to report; whether that absence is admissible
-    #: is the record's own required flag, checked by the renderer.
-    perceptor_rows: tuple[Modelo296PerceptorRow, ...] = ()
-    #: One entry per perceptor of the intereses hoja. Empty emits no row of this record at all.
-    perceptor_intereses_rows: tuple[Modelo296PerceptorInteresesRow, ...] = ()
-    #: One entry per pago a contribuyente. Empty emits no row of this record at all.
-    anexo_pago_rows: tuple[Modelo296AnexoPagoRow, ...] = ()
-    #: One entry per certificado de pago. Empty emits no row of this record at all.
-    anexo_certificado_rows: tuple[Modelo296AnexoCertificadoRow, ...] = ()
-
-
-class Modelo210ContribuyenteFactSet(BaseModel):
-    """Modelo 210 contribuyente facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    birth_city: str | None = None
-    birth_country_code: str | None = None
-    birth_date: str | None = None
-    foreign_address_city: str | None = None
-    foreign_address_complement: str | None = None
-    foreign_address_country_code: str | None = None
-    foreign_address_email: str | None = None
-    foreign_address_fax: str | None = None
-    foreign_address_mobile_phone: str | None = None
-    foreign_address_phone: str | None = None
-    foreign_address_postal_code: str | None = None
-    foreign_address_region: str | None = None
-    foreign_address_street: str | None = None
-    foreign_tax_id: str | None = None
-    full_name: str | None = None
-    person_type: str | None = None
-    tax_id: str | None = None
-    tax_residence_country_code: str | None = None
-
-
-class Modelo210DeclaracionFactSet(BaseModel):
-    """Modelo 210 declaracion facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    tipo: str | None = None
-
-
-class Modelo210DeclaranteFactSet(BaseModel):
-    """Modelo 210 declarante facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    capacity_contribuyente: str | None = None
-    capacity_depositario: str | None = None
-    capacity_gestor: str | None = None
-    capacity_pagador: str | None = None
-    capacity_representante: str | None = None
-    capacity_retenedor: str | None = None
-    full_name: str | None = None
-    tax_id: str | None = None
-
-
-class Modelo210DevengoFactSet(BaseModel):
-    """Modelo 210 devengo facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    agrupacion: str | None = None
-    fecha_devengo: str | None = None
-
-
-class Modelo210DevolucionFactSet(BaseModel):
-    """Modelo 210 devolucion facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    cuenta_resto_banco: str | None = None
-    cuenta_resto_ciudad: str | None = None
-    cuenta_resto_codigo_pais: str | None = None
-    cuenta_resto_direccion_banco: str | None = None
-    cuenta_resto_numero_cuenta: str | None = None
-    cuenta_resto_swift_bic: str | None = None
-    cuenta_sepa_iban: str | None = None
-    cuenta_sepa_swift_bic: str | None = None
-    cuenta_titular_full_name: str | None = None
-    cuenta_titular_tax_id: str | None = None
-    renuncia_a_favor_del_tesoro: str | None = None
-
-
-class Modelo210GananciaInmobiliariaFactSet(BaseModel):
-    """Modelo 210 ganancia inmobiliaria facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    conyuge_full_name: str | None = None
-    conyuge_tax_id: str | None = None
-    cuota_participacion_contribuyente: str | None = None
-    cuota_participacion_conyuge: str | None = None
-    fecha_adquisicion: str | None = None
-    fecha_mejora: str | None = None
-    justificante_modelo_211: str | None = None
-    titularidad: str | None = None
-
-
-class Modelo210IngresoFactSet(BaseModel):
-    """Modelo 210 ingreso facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    cuenta_resto_banco: str | None = None
-    cuenta_resto_ciudad: str | None = None
-    cuenta_resto_codigo_pais: str | None = None
-    cuenta_resto_direccion_banco: str | None = None
-    cuenta_resto_numero_cuenta: str | None = None
-    cuenta_resto_swift_bic: str | None = None
-    cuenta_sepa_iban: str | None = None
-    cuenta_sepa_swift_bic: str | None = None
-    cuenta_titular_full_name: str | None = None
-    cuenta_titular_tax_id: str | None = None
-    forma_pago: str | None = None
-
-
-class Modelo210InmuebleFactSet(BaseModel):
-    """Modelo 210 inmueble facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    referencia_catastral: str | None = None
-    situacion_bloque: str | None = None
-    situacion_calificador_numero: str | None = None
-    situacion_codigo_ine_municipio: str | None = None
-    situacion_codigo_postal: str | None = None
-    situacion_codigo_provincia: str | None = None
-    situacion_datos_complementarios: str | None = None
-    situacion_escalera: str | None = None
-    situacion_localidad: str | None = None
-    situacion_nombre_via: str | None = None
-    situacion_numero_casa: str | None = None
-    situacion_planta: str | None = None
-    situacion_portal: str | None = None
-    situacion_puerta: str | None = None
-    situacion_tipo_numeracion: str | None = None
-    situacion_tipo_via: str | None = None
-
-
-class Modelo210PagadorFactSet(BaseModel):
-    """Modelo 210 pagador facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    full_name: str | None = None
-    person_type: str | None = None
-    tax_id: str | None = None
-
-
-class Modelo210RentaFactSet(BaseModel):
-    """Modelo 210 renta facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    clave_divisa: str | None = None
-
-
-class Modelo210RepresentanteFactSet(BaseModel):
-    """Modelo 210 representante facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    appointment_kind: str | None = None
-    domicilio_bloque: str | None = None
-    domicilio_calificador_numero: str | None = None
-    domicilio_codigo_ine_municipio: str | None = None
-    domicilio_codigo_postal: str | None = None
-    domicilio_codigo_provincia: str | None = None
-    domicilio_datos_complementarios: str | None = None
-    domicilio_escalera: str | None = None
-    domicilio_localidad: str | None = None
-    domicilio_nombre_via: str | None = None
-    domicilio_numero_casa: str | None = None
-    domicilio_planta: str | None = None
-    domicilio_portal: str | None = None
-    domicilio_puerta: str | None = None
-    domicilio_tipo_numeracion: str | None = None
-    domicilio_tipo_via: str | None = None
-    fax: str | None = None
-    full_name: str | None = None
-    mobile_phone: str | None = None
-    person_type: str | None = None
-    phone: str | None = None
-    tax_id: str | None = None
-
-
-class Modelo210SinIngresoNiDevolucionFactSet(BaseModel):
-    """Modelo 210 sin ingreso ni devolucion facts, flat members named from the AEAT component vocabulary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    cuota_cero: str | None = None
-
-
-class Modelo210ProfileFacts(BaseModel):
-    """The party, property and settlement facts modelo 210's export layout cites.
-
-    Modelo 210 is the non-resident income tax return. Its layout cites 102 ``irnr.*``
-    producer keys across twelve scopes; every one of them resolved to nothing, so the
-    contribuyente, the representante, the inmueble and the refund account all rendered
-    blank on a filed return.
-
-    Each scope declares its own flat members rather than sharing one address or account
-    model. AEAT reuses one address grammar but not one address shape: modelo 210 identifies
-    the municipio by INE code where modelo 360 writes its name, so a shared type would assert
-    two shapes are interchangeable when they are not.
-
-    Every field is optional and absent stays absent: AEAT writes an alphanumeric header
-    field with no content to blancos, so an unsupplied scope is a legal filing rather than
-    a defect. Which scopes a given filing must carry is the caller's decision, not this
-    type's.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    contribuyente: Modelo210ContribuyenteFactSet | None = None
-    declaracion: Modelo210DeclaracionFactSet | None = None
-    declarante: Modelo210DeclaranteFactSet | None = None
-    devengo: Modelo210DevengoFactSet | None = None
-    devolucion: Modelo210DevolucionFactSet | None = None
-    ganancia_inmobiliaria: Modelo210GananciaInmobiliariaFactSet | None = None
-    ingreso: Modelo210IngresoFactSet | None = None
-    inmueble: Modelo210InmuebleFactSet | None = None
-    pagador: Modelo210PagadorFactSet | None = None
-    renta: Modelo210RentaFactSet | None = None
-    representante: Modelo210RepresentanteFactSet | None = None
-    sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFactSet | None = None
-
-
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
 
@@ -790,34 +411,14 @@ class Modelo202ActivityFacts(BaseModel):
     cnae: _CnaeCode
 
 
-class M202UnsupportedProducerId(StrEnum):
-    """M202 producer facts that are not yet admitted to the typed substrate."""
-
-    PRINCIPAL_CNAE = "m202.principal_cnae"
-    OFFICIAL_OFFSET_122 = "m202.official_offset_122"
-    OFFICIAL_OFFSET_123 = "m202.official_offset_123"
-    OFFICIAL_OFFSET_124 = "m202.official_offset_124"
-    OFFICIAL_OFFSET_125 = "m202.official_offset_125"
-    OFFICIAL_OFFSET_126 = "m202.official_offset_126"
-    OFFICIAL_OFFSET_127 = "m202.official_offset_127"
-    OFFICIAL_OFFSET_128 = "m202.official_offset_128"
-    OFFICIAL_OFFSET_129 = "m202.official_offset_129"
-    OFFICIAL_OFFSET_130 = "m202.official_offset_130"
-    OFFICIAL_OFFSET_131 = "m202.official_offset_131"
-    OFFICIAL_OFFSET_132 = "m202.official_offset_132"
-    OFFICIAL_OFFSET_147 = "m202.official_offset_147"
-
-
-M202_UNSUPPORTED_PRODUCER_IDS: tuple[M202UnsupportedProducerId, ...] = tuple(M202UnsupportedProducerId)
-
-
 class Modelo202ProducerProfile(BaseModel):
     """M202 producer view referencing the canonical taxpayer profile owner.
 
-    The régimen marks and the principal CNAE below are what modelo 202's export layout
-    cites as header producers. Before they existed the eighteen ``m202.*`` keys were
-    declared in the vocabulary and resolved by nothing, so each one rendered blank on a
-    filed pago fraccionado.
+    The principal CNAE, the datos adicionales marks, the tipo de gravamen and the
+    turnover band below are what modelo 202's page 01 cites as header producers.
+    The export resolves them from the profile facts the selected edition's layout
+    cites and refuses with the profile door before building this view when one
+    it needs is unstated, so a value here is a stated or derived answer.
 
     ``principal_cnae`` is DECLARED, never inferred from ``activities``:
     :class:`Modelo202ActivityFacts` is documented as "one repeatable M202 activity fact,
@@ -825,9 +426,9 @@ class Modelo202ProducerProfile(BaseModel):
     the substrate deliberately does not carry. AEAT asks which activity is principal, so
     the operator answers it.
 
-    Every mark is optional and absent stays absent -- AEAT leaves a régimen mark blank when
-    the régimen does not apply, and a mark that does not apply is genuinely absent rather
-    than unknown.
+    Each "X o blanco" mark is a boolean: ``True`` writes the X and ``False`` the blank
+    the design gives a mark that does not apply. ``None`` is a mark the selected
+    edition does not cite.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -835,28 +436,27 @@ class Modelo202ProducerProfile(BaseModel):
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
     principal_cnae: _CnaeCode | None = None
-    regimen_ley_49_2002_sin_fines_lucrativos: str | None = None
-    regimen_ley_11_2009_socimi: str | None = None
-    regimen_entidades_navieras_tonelaje: str | None = None
-    regimen_articulo_101_lis_reducida_dimension: str | None = None
-    regimen_entidad_capital_riesgo: str | None = None
-    cifra_negocios_doce_meses_umbral: str | None = None
-    cifra_negocios_periodo_anterior_bajo_umbral: str | None = None
-    cooperativa_o_multiples_tipos: str | None = None
-    cooperativa_fiscalmente_protegida: str | None = None
-    multiples_tipos_impositivos: str | None = None
+    regimen_ley_49_2002_sin_fines_lucrativos: bool | None = None
+    regimen_ley_11_2009_socimi: bool | None = None
+    regimen_entidades_navieras_tonelaje: bool | None = None
+    regimen_articulo_101_lis_reducida_dimension: bool | None = None
+    regimen_entidad_capital_riesgo: bool | None = None
+    cifra_negocios_doce_meses_umbral: bool | None = None
+    cifra_negocios_periodo_anterior_bajo_umbral: bool | None = None
+    cooperativa_o_multiples_tipos: _M202CooperativaOMultiplesTipos | None = None
+    cooperativa_fiscalmente_protegida: bool | None = None
+    multiples_tipos_impositivos: bool | None = None
     tipo_gravamen_impuesto_sociedades: str | None = None
-    importe_neto_cifra_negocios_tramo: str | None = None
-    marca_instrumental: str | None = None
-    discriminante_declaracion_negativa: str | None = None
-    normativa_territorio_foral: str | None = None
+    importe_neto_cifra_negocios_tramo: _M202ImporteNetoTramo | None = None
+    marca_instrumental: bool | None = None
+    #: "A" the LIS art. 40.2 modality, "B" the art. 40.3 one (2025 design Nota 11).
+    modalidad_liquidacion: _M202ModalidadLiquidacion | None = None
+    #: "1" Navarra, "2" Guipúzcoa, "3" Vizcaya, "4" Álava (2025 design Nota 9); ``None``
+    #: writes the design's blank, which is the answer for a contribuyente under the
+    #: common normativa.
+    normativa_territorio_foral: _M202NormativaForal | None = None
     comunicacion_datos_adicionales: str | None = None
     numero_referencia_sociedades: str | None = None
-
-    @property
-    def unsupported_producer_ids(self) -> tuple[M202UnsupportedProducerId, ...]:
-        """Return the exact immutable M202 producer-gap inventory."""
-        return M202_UNSUPPORTED_PRODUCER_IDS
 
 
 class FilingElectionFacts(BaseModel):
@@ -973,34 +573,31 @@ class AmendmentEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: CalculationRevisionAmendmentKind
+    kind: FilingDeclarationKind
     m303_rectificativa_motive: M303RectificativaMotive | None
     original_aeat_receipt: _AeatReceiptNumber
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _motive_belongs_only_to_rectificativa(self) -> AmendmentEvidence:
-        if (
-            self.m303_rectificativa_motive is not None
-            and self.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
-        ):
+        if self.m303_rectificativa_motive is not None and self.kind is not FilingDeclarationKind.RECTIFICATIVA:
             raise ValueError("M303 rectificativa motive is valid only for rectificativa evidence")
         return self
 
     @property
     def is_complementaria(self) -> bool:
         """True when this evidence records a complementaria amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
+        return self.kind is FilingDeclarationKind.COMPLEMENTARIA
 
     @property
     def is_sustitutiva(self) -> bool:
         """True when this evidence records a sustitutiva amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.SUSTITUTIVA
+        return self.kind is FilingDeclarationKind.SUSTITUTIVA
 
     @property
     def is_rectificativa(self) -> bool:
         """True when this evidence records a rectificativa amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        return self.kind is FilingDeclarationKind.RECTIFICATIVA
 
 
 class RefundAccountSelection(BaseModel):
@@ -1032,6 +629,7 @@ type FilingModelProfileFacts = (
     | Modelo296ProfileFacts
     | Modelo353ProfileFacts
     | Modelo360ProfileFacts
+    | Modelo840ProfileFacts
     | ModeloIVAProfile
 )
 
@@ -1055,7 +653,12 @@ class FilingProducerSnapshot(BaseModel):
     amendment_evidence: AmendmentEvidence | None
     selected_account: SelectedFilingAccount | None
     m303_filing_facts: M303FilingFacts | None
-    m390_filing_facts: _M390FilingFacts | None = None
+    m390_filing_facts: M390FilingFacts | None = None
+    #: The first day of the período impositivo in progress, resolved from the
+    #: entity's stated facts, for a period with no calendar span of its own (a
+    #: pago fraccionado). ``None`` for a period with a span, whose own start is
+    #: the draft's.
+    periodo_impositivo_start: date | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -1071,12 +674,12 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
 
 
 def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo != Modelo("303") and snapshot.m303_filing_facts is not None:
+    if snapshot.modelo != form_for_role("iva.periodic") and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
-    if snapshot.modelo != Modelo("390") and snapshot.m390_filing_facts is not None:
+    if snapshot.modelo != form_for_role("iva.annual_summary") and snapshot.m390_filing_facts is not None:
         raise ValueError("M390FilingFacts are valid only for modelo 390")
     if (
-        snapshot.modelo != Modelo("303")
+        snapshot.modelo != form_for_role("iva.periodic")
         and snapshot.amendment_evidence is not None
         and snapshot.amendment_evidence.m303_rectificativa_motive is not None
     ):
@@ -1084,29 +687,32 @@ def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> No
 
 
 def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo == Modelo("111"):
+    if snapshot.modelo == form_for_role("withholding.work_periodic"):
         _validate_modelo_111_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("200"):
+    if snapshot.modelo == form_for_role("sociedades.annual"):
         _validate_modelo_200_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("202"):
+    if snapshot.modelo == form_for_role("sociedades.instalment"):
         _validate_modelo_202_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("222"):
+    if snapshot.modelo == form_for_role("sociedades.group_instalment"):
         _validate_modelo_222_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("303"):
+    if snapshot.modelo == form_for_role("iva.periodic"):
         _validate_modelo_303_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("296"):
+    if snapshot.modelo == form_for_role("irnr.withholding_annual"):
         _validate_modelo_296_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("353"):
+    if snapshot.modelo == form_for_role("iva.group_periodic"):
         _validate_modelo_353_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("360"):
+    if snapshot.modelo == form_for_role("iva.foreign_refund"):
         _validate_modelo_360_snapshot(snapshot)
+        return
+    if snapshot.modelo == form_for_role("iae.census_declaration"):
+        _validate_modelo_840_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
 
@@ -1123,6 +729,12 @@ def _validate_modelo_200_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """
     if not isinstance(snapshot.model_profile, Modelo200ProfileFacts):
         raise ValueError("modelo 200 requires Modelo200ProfileFacts")
+
+
+def _validate_modelo_840_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 840's Anexo lists the stored premises; a general profile carries none of them."""
+    if not isinstance(snapshot.model_profile, Modelo840ProfileFacts):
+        raise ValueError("modelo 840 requires Modelo840ProfileFacts")
 
 
 def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -1159,21 +771,27 @@ def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
         raise ValueError("modelo 222 requires Modelo222ProfileFacts")
 
 
+_COLEGIO_CONCERTADO_PATH: Final = "withholding.colegio_concertado"
+
+
 def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
         raise ValueError("modelo 111 requires Modelo111ProfileFacts")
     if snapshot.model_profile.colegio_concertado is None:
-        raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
+        raise FilingProducerSnapshotError(
+            "Modelo 111 colegio_concertado must be explicitly declared",
+            translated_message="application.filing.export.errors.m111_colegio_concertado_undeclared",
+            context={"reason": "m111_colegio_concertado_undeclared", "profile_path": _COLEGIO_CONCERTADO_PATH},
+            precondition_verdict=profile_required_facts_missing_verdict(
+                modelo=str(snapshot.modelo),
+                field_paths=(_COLEGIO_CONCERTADO_PATH,),
+            ),
+        )
 
 
 def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
         raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-    missing_ids = tuple(item.value for item in snapshot.model_profile.unsupported_producer_ids)
-    raise FilingProducerSnapshotError(
-        f"Modelo 202 producer snapshot is incomplete: {', '.join(missing_ids)}",
-        context={"missing_fact_ids": missing_ids, "reason": "m202_producer_facts_unsupported"},
-    )
 
 
 def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -1202,10 +820,7 @@ def _validate_general_modelo_snapshot(snapshot: FilingProducerSnapshot) -> None:
 def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> None:
     disposition = snapshot.elections.result_disposition
     if disposition is ResultDisposition.DOMICILIACION:
-        if snapshot.elections.payment is not PaymentElection.DOMICILIACION:
-            raise ValueError("domiciliacion disposition requires the matching payment election")
-        if not isinstance(snapshot.selected_account, ChargeAccountSelection):
-            raise ValueError("domiciliacion disposition requires a selected charge account")
+        _validate_domiciliacion_selection(snapshot)
     elif snapshot.elections.payment is PaymentElection.DOMICILIACION:
         raise ValueError("domiciliacion payment election requires the matching result disposition")
     elif disposition is not None and result_disposition_is_refund(disposition):
@@ -1217,6 +832,13 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
         raise ValueError("a result disposition without an account must not retain one")
 
 
+def _validate_domiciliacion_selection(snapshot: FilingProducerSnapshot) -> None:
+    if snapshot.elections.payment is not PaymentElection.DOMICILIACION:
+        raise ValueError("domiciliacion disposition requires the matching payment election")
+    if not isinstance(snapshot.selected_account, ChargeAccountSelection):
+        raise ValueError("domiciliacion disposition requires a selected charge account")
+
+
 def _account_page_carries_refund_account(snapshot: FilingProducerSnapshot) -> bool:
     """Whether the record design carries the refund account whatever the disposition says.
 
@@ -1224,14 +846,14 @@ def _account_page_carries_refund_account(snapshot: FilingProducerSnapshot) -> bo
     modelo 360 always does: a solicitud de devolución has no result casilla to derive a
     refund disposition from, yet DR360 campos 113-117 are its obligatorio datos bancarios.
     """
-    return _m303_nota_three_shape(snapshot) or snapshot.modelo == Modelo("360")
+    return _m303_nota_three_shape(snapshot) or snapshot.modelo == form_for_role("iva.foreign_refund")
 
 
 def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
     """Whether Modelo 303 Nota 3 may carry the refund account on the account page."""
     amendment = snapshot.amendment_evidence
     return (
-        snapshot.modelo == Modelo("303")
+        snapshot.modelo == form_for_role("iva.periodic")
         and amendment is not None
         and amendment.is_rectificativa
         and snapshot.elections.prior_domiciliation is PriorDomiciliationElection.KEEP
@@ -1271,6 +893,7 @@ def build_filing_producer_snapshot(
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
     account_page_refund_account: bool = False,
+    periodo_impositivo_start: date | None = None,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
@@ -1300,9 +923,12 @@ def build_filing_producer_snapshot(
             m303_filing_facts=m303_filing_facts,
             m390_filing_facts=None,
             declaration_contact=declaration_contact or DeclarationContactFacts(),
+            periodo_impositivo_start=periodo_impositivo_start,
         )
     except ValueError as exc:
-        raise _registered_snapshot_refusal(exc) or FilingProducerSnapshotError(str(exc)) from exc
+        raise _registered_snapshot_refusal(exc) or _snapshot_design_fault(
+            str(exc), reason="snapshot_inconsistent"
+        ) from exc
 
 
 def _select_filing_account(
@@ -1314,23 +940,24 @@ def _select_filing_account(
 ) -> SelectedFilingAccount | None:
     if elections.result_disposition is ResultDisposition.DOMICILIACION:
         if charge_account is None:
-            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
+            raise _snapshot_design_fault("domiciliacion requires a charge account", reason="charge_account_absent")
         return ChargeAccountSelection(role="charge", account=charge_account)
     if elections.result_disposition is not None and result_disposition_is_refund(elections.result_disposition):
         if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("refund disposition requires a refund account")
+            raise _snapshot_design_fault("refund disposition requires a refund account", reason="refund_account_absent")
         return RefundAccountSelection(role="refund", account=refund_account)
     if account_page_refund_account:
         # Modelo 303 Nota 3 and modelo 360: the account page carries the refund
         # account even though the disposition itself is not a refund.
         if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("the account page requires a refund account")
+            raise _snapshot_design_fault(
+                "the account page requires a refund account", reason="account_page_refund_account_absent"
+            )
         return RefundAccountSelection(role="refund", account=refund_account)
     return None
 
 
 __all__ = [
-    "M202_UNSUPPORTED_PRODUCER_IDS",
     "AmendmentEvidence",
     "ChargeAccountSelection",
     "FilingElectionFacts",
@@ -1338,7 +965,6 @@ __all__ = [
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
     "GeneralFilingProfileFacts",
-    "M202UnsupportedProducerId",
     "M303FilingFacts",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",

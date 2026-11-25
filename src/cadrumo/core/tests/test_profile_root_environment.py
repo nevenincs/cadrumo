@@ -19,7 +19,7 @@ _PROFILE_B = "3b1d7c2f-6e5a-4f4b-8c9d-8e7f6a5b4c3d"
 
 
 def test_the_folder_is_the_profiles_bucket_the_storage_layer_resolves(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
     database = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, _PROFILE_A, settings=settings)
 
     folder = profile_root(tmp_path, _PROFILE_A)
@@ -56,6 +56,6 @@ def test_a_child_is_told_its_own_profiles_folder_and_never_a_received_one(
 def test_the_variable_selects_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(PROFILE_ROOT_VARIABLE, str(profile_root(tmp_path, _PROFILE_A)))
 
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     assert not (settings.cadrumo_active_profile or "").strip()

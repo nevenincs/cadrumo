@@ -1,0 +1,446 @@
+---
+tags:
+  - '#exec'
+  - '#profile-field-remap'
+date: '2026-10-27'
+modified: '2026-11-02'
+body_schema: 'body-v2'
+body_hash: 'sha256:87f2a9ea5e1c88389592dd855a5bf7d8cd41b06e834f9c5a390f4fa3ab86219a'
+related:
+  - "[[2026-10-27-profile-field-remap-plan]]"
+---
+
+# `profile-field-remap` ledger
+
+## Changes
+
+- `S06` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S06` `verify:` `vaultspec-core vault check all -f desktop-shell` -> `pass`
+- `S05` `A` `src/cadrumo/application/aggregation/tests/usage_ratio_support.py`
+- `S05` `M` `src/cadrumo/application/aggregation/_renta_business_eligibility.py`
+- `S05` `M` `src/cadrumo/application/aggregation/_shared_issue_reasons.py`
+- `S05` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S05` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S05` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S05` `M` `src/cadrumo/application/aggregation/ledger_membership.py`
+- `S05` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S05` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_currency_conversion_pipeline_parity.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_shared_issue_reasons.py`
+- `S05` `verify:` `pytest aggregation renta ledger M130 resolver parity reasons preflight-home-office tests (128)` -> `pass`
+- `S05` `verify:` `pytest aggregation modelo ledger persistence-profile domain-renta usage_ratios profile_persistence (8921)` -> `fail`
+- `S05` `verify:` `ruff check src/cadrumo/application src/cadrumo/domain/renta` -> `pass`
+- `S05` `verify:` `ruff format --check src/cadrumo/application src/cadrumo/domain/renta` -> `pass`
+- `S05` `verify:` `lint-imports --config .importlinter` -> `pass`
+- `S05` `by:` `vaultspec-standard-executor`
+- `S01` `M` `dev/acceptance/profile/cli_journey.py`
+- `S01` `M` `dev/acceptance/profile/installed_tui_child.py`
+- `S01` `M` `dev/acceptance/profile/scenario.py`
+- `S01` `M` `dev/acceptance/profile/tests/test_cli_journey.py`
+- `S01` `M` `dev/acceptance/profile/tests/test_scenario.py`
+- `S01` `M` `dev/acceptance/profile/tests/test_tui_journey.py`
+- `S01` `M` `dev/acceptance/profile/tui_journey.py`
+- `S01` `M` `dev/locales/fstring_registry.py`
+- `S01` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S01` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S01` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S01` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S01` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S01` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S01` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S01` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S01` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S01` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S01` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json`
+- `S01` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S01` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S01` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S01` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S01` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S01` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-active-profile.json`
+- `S01` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S01` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml`
+- `S01` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S01` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/profile_record_boundary_support.py`
+- `S01` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh_profile_live.py`
+- `S01` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S01` `M` `src/cadrumo/application/modelo/tests/test_profile_binding.py`
+- `S01` `M` `src/cadrumo/application/modelo/tests/test_verification_substance_advisory.py`
+- `S01` `M` `src/cadrumo/application/overview/tests/calendar_test_support.py`
+- `S01` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S01` `M` `src/cadrumo/application/overview/tests/test_calendar_legal_entity.py`
+- `S01` `M` `src/cadrumo/application/user_profile/projections.py`
+- `S01` `M` `src/cadrumo/application/user_profile/tests/test_profile_key_schema_required_parity.py`
+- `S01` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S01` `M` `src/cadrumo/application/user_profile/tests/test_projections.py`
+- `S01` `M` `src/cadrumo/application/wizard/_format_hints.py`
+- `S01` `M` `src/cadrumo/application/wizard/catalogue.py`
+- `S01` `M` `src/cadrumo/application/wizard/commands.py`
+- `S01` `M` `src/cadrumo/application/wizard/tests/test_setup_answer_field_parity.py`
+- `S01` `M` `src/cadrumo/application/wizard/tests/test_setup_runtime.py`
+- `S01` `M` `src/cadrumo/application/wizard/tests/test_taxpayer_axes_roundtrip.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/entity_type.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_profile_grounding.py`
+- `S01` `M` `src/cadrumo/domain/contribuyente/entity_type.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/profiles.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_corporate_tax_profile_facts.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_engine.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_engine_refusal_contract.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_models.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_objective_estimation_profile_facts.py`
+- `S01` `M` `src/cadrumo/domain/deadlines/tests/test_profile_projection_without_wizard.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/labels.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/setup_answers.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/tests/test_censo_schema_fields.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/tests/test_schema.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/tests/test_values.py`
+- `S01` `M` `src/cadrumo/domain/user_profile/values.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_create_wizard.py`
+- `S01` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S01` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S01` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S01` `M` `src/cadrumo/locales/en/profile.yml`
+- `S01` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S01` `M` `src/cadrumo/locales/es/profile.yml`
+- `S01` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S01` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S01` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_edit_verb.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_readiness_surfaces.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_machine_secret_channels_subprocess.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_create_choice_help.py`
+- `S01` `A` `src/cadrumo/application/user_profile/tests/test_retired_profile_field_paths.py`
+- `S01` `verify:` `ruff check and ruff format --check on the 53 touched Python files` -> `pass`
+- `S01` `verify:` `just check-data-format` -> `pass`
+- `S01` `verify:` `lint-imports --config .importlinter --no-cache (30 kept, 0 broken)` -> `pass`
+- `S01` `verify:` `python -m dev.desktop_profile_fixture --check` -> `pass`
+- `S01` `verify:` `python -m dev.docs.sequences check --page how-to/profile-setup` -> `pass`
+- `S01` `verify:` `pytest touched areas (3128 tests; the 5 failures are caplog logging tests)` -> `fail`
+- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S01` `verify:` `just check-types` -> `fail`
+- `S01` `verify:` `just check-style and just check-format (whole repository)` -> `fail`
+- `S01` `by:` `vaultspec-standard-executor`
+- `S02` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml`
+- `S02` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S02` `M` `src/cadrumo/application/ledger/ratios_contracts.py`
+- `S02` `M` `src/cadrumo/application/ledger/ratios_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/test_ratios.py`
+- `S02` `M` `src/cadrumo/application/overview/calendar.py`
+- `S02` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S02` `M` `src/cadrumo/application/overview/tests/test_read_calendar_item_projection.py`
+- `S02` `M` `src/cadrumo/application/user_profile/tests/test_projections.py`
+- `S02` `M` `src/cadrumo/application/wizard/tests/test_taxpayer_axes_roundtrip.py`
+- `S02` `M` `src/cadrumo/application/workflow/tests/test_models.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/setup_profile_bindings.py`
+- `S02` `M` `src/cadrumo/domain/categories/proportionality.py`
+- `S02` `M` `src/cadrumo/domain/categories/registry.py`
+- `S02` `M` `src/cadrumo/domain/categories/tests/test_proportionality.py`
+- `S02` `M` `src/cadrumo/domain/categories/tests/test_registry.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/engine.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/profiles.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/tests/test_corporate_tax_profile_facts.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/tests/test_models.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/tests/test_schedule_invariants.py`
+- `S02` `M` `src/cadrumo/domain/deadlines/tests/test_taxpayer_model.py`
+- `S02` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S02` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S02` `M` `src/cadrumo/domain/renta/tests/test_usage_ratio_requires_operator_input.py`
+- `S02` `M` `src/cadrumo/domain/usage_ratios/model.py`
+- `S02` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_commands.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_results.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_register_fixtures.py`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `M` `src/cadrumo/locales/es/common.yml`
+- `S02` `M` `src/cadrumo/locales/ca/common.yml`
+- `S02` `M` `src/cadrumo/locales/hu/common.yml`
+- `S02` `M` `dev/locales/desktop_chrome.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_incn_new_entity_paths.py`
+- `S02` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S02` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S02` `verify:` `pytest deadline model, overview, workflow, projections, wizard roundtrip, ratios, categories, renta, usage_ratios, cli payloads, tui ledger, runtime categorisation, persistence (1042 passed)` -> `pass`
+- `S02` `verify:` `pytest runtime CLI test_profile_incn_new_entity_paths with every lane (7 passed)` -> `pass`
+- `S02` `verify:` `ruff check and format --check on touched python` -> `pass`
+- `S02` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S02` `verify:` `dev.quality.types (15 diagnostics, all in files not touched by S02)` -> `fail`
+- `S02` `verify:` `cmake --target desktop-frontend-check (tsc, eslint, node tests pass; prettier flags src/dev/fixtures/userProfile.json, not touched)` -> `fail`
+- `S02` `verify:` `dev.operation_contract_manifest.generate (manifest regenerated)` -> `pass`
+- `S02` `by:` `vaultspec-standard-executor`
+- `S03` `M` `dev/desktop_profile_fixture.py`
+- `S03` `M` `dev/tui/harness/profile_fixtures.py`
+- `S03` `M` `dev/tui/harness/surfaces.py`
+- `S03` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S03` `A` `src/cadrumo/application/user_profile/field_help.py`
+- `S03` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S03` `A` `src/cadrumo/application/user_profile/tests/test_field_help.py`
+- `S03` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S03` `M` `src/cadrumo/domain/user_profile/labels.py`
+- `S03` `M` `src/cadrumo/domain/user_profile/tests/test_labels.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/profile/edit_screens.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_field_help_text.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_onboarding.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S03` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S03` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S03` `M` `src/cadrumo/locales/en/flows.yml`
+- `S03` `M` `src/cadrumo/locales/en/profile.yml`
+- `S03` `M` `src/cadrumo/locales/es/flows.yml`
+- `S03` `M` `src/cadrumo/locales/es/profile.yml`
+- `S03` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S03` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S03` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_runtime_overview.py`
+- `S03` `verify:` `uv run --no-sync pytest src/cadrumo/application/user_profile/tests/test_field_help.py src/cadrumo/entrypoints/tui/profile/tests/test_field_help_text.py` -> `pass`
+- `S03` `verify:` `python -m dev.desktop_profile_fixture --check` -> `pass`
+- `S04` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S04` `M` `src/cadrumo/application/ledger/ratios_contracts.py`
+- `S04` `M` `src/cadrumo/application/ledger/ratios_operation.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/operation_ledger_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_results.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_commands.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_ratios_verbs.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_register_fixtures.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_registers.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_outcome_assertions.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `M` `docs/technical/articles/060-ledger-contracts-attribution-readiness-and-ratios.md`
+- `S04` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S04` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S04` `A` `native/desktop/frontend/src/dev/fixtures/ledgerRatios.ts`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S04` `verify:` `pytest ledger ratios, CLI ratio verbs with every lane, TUI ledger, runtime categorisation (927 passed)` -> `pass`
+- `S04` `verify:` `pytest test_registered_executor_conformance -k ledger.ratios.eligible (1 passed before the module stopped importing under the sede view work)` -> `pass`
+- `S04` `verify:` `ruff check and format --check on touched python` -> `pass`
+- `S04` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S04` `verify:` `dev.quality.types (3 diagnostics, all in application/auth/sessions.py which S04 did not touch)` -> `fail`
+- `S04` `verify:` `cmake --target desktop-frontend-test ledger-setup.spec (17 passed)` -> `pass`
+- `S04` `verify:` `cmake --target desktop-frontend-check` -> `pass`
+- `S04` `verify:` `dev.operation_contract_manifest.generate (manifest regenerated)` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
+- `S11` `M` `docs/technical/articles/153-usage-ratios-and-user-profile-domain.md`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_actions_update_validation.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_renta_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S11` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/usage_ratio_support.py`
+- `S11` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S11` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S11` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S11` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S11` `M` `src/cadrumo/application/ledger/tests/test_ratios_censo_override.py`
+- `S11` `M` `src/cadrumo/domain/categories/proportionality.py`
+- `S11` `M` `src/cadrumo/domain/categories/registry.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_citation_edition_window.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_profile.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_provision_window_bounds_citations.py`
+- `S11` `A` `src/cadrumo/domain/categories/tests/test_iva_mixed_use.py`
+- `S11` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S11` `M` `src/cadrumo/domain/renta/tests/test_region_deductibility_selection.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/__init__.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/model.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `A` `.vault/adr/2026-10-27-profile-field-remap-iva-usage-share-adr.md`
+- `S11` `verify:` `uv run --no-sync ruff check + ruff format --check (26 touched Python files)` -> `pass`
+- `S11` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept, 0 broken)` -> `pass`
+- `S11` `verify:` `just check-types` -> `pass`
+- `S11` `verify:` `uv run --no-sync pytest aggregation, ledger, categories, renta, usage_ratios, persistence profile, user_profile, dev/locales (7376 passed; 11 failed, none in S11 code: async log dispatch caplog x6, other writers' locale and schema hunks x5)` -> `pass`
+- `S11` `by:` `implementation-engineer-high`
+- `S12` `M` `dev/ci/tests/test_domain_usage_ratios_service.py`
+- `S12` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-mixed-use.seq`
+- `S12` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-ratios-manage.seq`
+- `S12` `M` `docs/_sequences/how-to/classify-transactions/classify-mixed-use.json`
+- `S12` `M` `docs/_sequences/how-to/classify-transactions/classify-ratios-manage.json`
+- `S12` `M` `docs/explanation/from-records-to-figures.md`
+- `S12` `M` `docs/how-to/classify-transactions.md`
+- `S12` `M` `src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-95.html`
+- `S12` `M` `src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-95.html.extracted.json`
+- `S12` `M` `src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-95.html.extracted.md`
+- `S12` `M` `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`
+- `S12` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S12` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_actions_update_validation.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_preflight_home_office.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_renta_ledger.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_usage_ratios_censo_refuse_load.py`
+- `S12` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S12` `M` `src/cadrumo/application/aggregation/_renta_business_eligibility.py`
+- `S12` `M` `src/cadrumo/application/aggregation/_shared_issue_reasons.py`
+- `S12` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S12` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S12` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S12` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S12` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S12` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S12` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S12` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S12` `M` `src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`
+- `S12` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S12` `M` `src/cadrumo/application/ledger/tests/test_ratios.py`
+- `S12` `M` `src/cadrumo/domain/categories/proportionality.py`
+- `S12` `M` `src/cadrumo/domain/categories/proportionality_catalogue.py`
+- `S12` `M` `src/cadrumo/domain/categories/registry.py`
+- `S12` `M` `src/cadrumo/domain/categories/tests/test_iva_mixed_use.py`
+- `S12` `M` `src/cadrumo/domain/categories/tests/test_registry.py`
+- `S12` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S12` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S12` `M` `src/cadrumo/domain/renta/tests/test_usage_ratio_requires_operator_input.py`
+- `S12` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_actions_create_usage_ratio.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/test_runtime_attached_repositories_part1.py`
+- `S12` `M` `src/cadrumo/locales/es/common.yml`
+- `S12` `M` `src/cadrumo/locales/en/common.yml`
+- `S12` `M` `src/cadrumo/locales/ca/common.yml`
+- `S12` `M` `src/cadrumo/locales/hu/common.yml`
+- `S12` `M` `.vault/adr/2026-10-27-profile-field-remap-iva-usage-share-adr.md`
+- `S12` `verify:` `pytest domain/categories domain/renta domain/usage_ratios application/aggregation application/ledger application/modelo adapters/persistence/profile/tests dev/ci usage-ratio service 8237 tests` -> `pass`
+- `S12` `verify:` `pytest touched entrypoint profile-persistence and runtime-attached tests 23 tests` -> `pass`
+- `S12` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S12` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S12` `verify:` `pytest dev/locales` -> `fail`
+- `S12` `by:` `implementation-engineer-high`
+- `S12` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S12` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S12` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S12` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S12` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S12` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S12` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-revision-by-id.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S12` `M` `docs/_sequences/how-to/filing-spine/filing-spine-visible-target.json`
+- `S12` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S12` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S12` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S12` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S12` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S12` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S12` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S12` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S12` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S12` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S12` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S12` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S12` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S12` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S12` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S12` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S12` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S12` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S12` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S12` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S12` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete-report.json`
+- `S12` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S12` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S12` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.json`
+- `S12` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S12` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S12` `verify:` `python -m dev.docs.sequences refresh over 23 affected pages; masked diff shows only authority-derived ids changed` -> `pass`
+- `S12` `verify:` `python -m dev.docs.sequences check --page how-to/classify-transactions` -> `pass`
+- `S07` `A` `src/cadrumo/application/ledger/entry_options_operation.py`
+- `S07` `A` `src/cadrumo/entrypoints/cli/entry_options_commands.py`
+- `S07` `A` `src/cadrumo/application/ledger/tests/test_entry_options.py`
+- `S07` `A` `dev/locales/desktop_entry_option_keys.py`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/suggestions/SuggestionsProvider.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/suggestions/ledgerSuggestions.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S07` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S07` `verify:` `test_entry_options.py` -> `pass`
+- `S07` `verify:` `desktop-frontend-check` -> `pass`
+- `S07` `verify:` `desktop-host-unit-test shell::ledger` -> `pass`
+- `S13` `verify:` `locator-check: shell/ledgerServedVocabulary.ts:86-101; commit 7398d803a4` -> `pass`
+- `S13` `by:` `plan-closure`
+- `S09` `verify:` `locator-check: invoiceModel.ts builds InvoicePreviewLine; shell/ledger.ts:178` -> `pass`
+- `S09` `by:` `plan-closure`
+
+## Notes
+
+- `S05` Covering run: 7 failures not caused by S05 -- 6 caplog log-capture assertions in modules that do not load the changed code `(test_source_mesh,` `test_binding_readiness` x2, `test_state_projection,` `test_transactions_repository,` `test_modelo_source_mesh_ledger_integration)` and `test_atribucion_member_required_set,` which tracks the S01 schema edit. check-types: 4 ty diagnostics, all in `src/cadrumo_runtime/adapters/tests/test_profile_worker_startup.py` (concurrent runtime work). `import_gate:` 30 contracts kept, 0 hard findings, 0 load failures; verdict unavailable because the shared tree changed during the run.
+- `S01` S01 pytest: 3123 passed, 5 failed; every failure asserts on caplog records and receives none through `cadrumo.core.logging.get_logger` (logging commits 963734c748 to cb7d317b6d), independent of profile fields.
+- `S01` S01 just check-types: 4 ty diagnostics, all in `src/cadrumo_runtime/adapters/tests/test_profile_worker_startup.py;` none in a touched file.
+- `S01` S01 just check-import-boundaries: exit 7 with zero hard findings, 30 contracts kept and zero load failures; the refusal is a concurrent-writer census mismatch while the gate ran.
+- `S01` S01 just check-style and just check-format: whole-repository failures only in another session's AEAT view-stream files; both passed earlier in this run and pass on the touched files.
+- `S01` S01 schema version stays 7: facts stored at a removed path are refused as `unknown_field` and a clear stays admissible, so no migration is written.
+- `S02` dev.quality.types reports 15 diagnostics, all in files S02 did not touch `(cadrumo_runtime` worker tests, tui profile `edit_screens,` `user_profile` overview).
+- `S02` desktop-frontend-check fails only at its last step: prettier flags src/dev/fixtures/userProfile.json, a file S02 did not touch; tsc, eslint and node tests pass.
+- `S02` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.
+- `S04` dev.quality.types reports 3 diagnostics, all in src/cadrumo/application/auth/sessions.py, a file S04 did not touch.
+- `S04` `test_registered_executor_conformance` no longer imports because `application/live/sede_view_operation` imports `close_live_view_session,` which application/live/session.py does not define yet; the ledger.ratios.eligible case passed before that.
+- `S04` The category note cleanup in `src/cadrumo/locales/*/common.yml` is not committed with S04: those files also hold another session's uncommitted hunks.
+- `S04` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.
+- `S11` 11 suite failures attributed outside S11: caplog tests vs the asynchronous log dispatch of 6cbfacbc8b; dict-constant naming in tui ledger files; atribucion sample row vs S01 schema; desktop.browser locale keys of the uncommitted sede-browser hunks
+- `S12` dev/locales: 2 failures outside S12 scope (other sessions' desktop.browser prose-name keys and tui ledger dict-constant naming); the BUSINESS-vehicle 100 per cent IVA for a stated listed use is not implemented, no datum records it
+- `S07` Spending-category, IVA and IRPF lists moved to S13; no ISO 4217 list exists in the registry, so currency serves the existing recogniser list

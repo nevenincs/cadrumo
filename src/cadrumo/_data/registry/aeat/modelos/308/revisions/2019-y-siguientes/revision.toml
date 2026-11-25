@@ -12,7 +12,19 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 orden_aplicabilidad = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 family_storage_baseline = "2016-2018"
-scoped_families = ["workbook_parity_refs", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations"]
+
+[revisions."2019-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
+
+[revisions."2019-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 
 [revisions.2019-y-siguientes.predecessor.none]
 reason = "No legal predecessor is declared: naming 2016-2018 would claim that the 2019 design continues the 2016 one, a separate continuity decision. The payload is stored against 2016-2018 through casilla_storage_baseline and family_storage_baseline: the two header casillas and the shared filing schedule, construct and application links carry only this edition's differences as overrides, and what this edition states itself (its liquidation and identification casillas, the export layout and its application link, the live cross-references and the record-design parity anchor) is not declared by the 2016-2018 edition. Storage reuse makes no continuity claim."
@@ -21,10 +33,10 @@ source_refs = ["aeat-dr-308-2019"]
 
 [revisions.2019-y-siguientes.period_selector]
 year_from = 2019
-periods = ["AD-HOC"]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
 
 [revisions.2019-y-siguientes.family_dispositions.applicability]
-reason = "Modelo 308 is filed AD-HOC, one declaration per settlement period as the intra-community operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state. The applicability family has no periodic condition to declare."
+reason = "Modelo 308 is a solicitud de devolucion a taxpayer files only for a period in which it made the operations the refund covers, so the filing condition is the operation itself, not a taxpayer-condition profile state. The filing_schedules entries declare the periods its design admits for each tipo de tributacion. The applicability family has no profile condition to declare."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -34,7 +46,7 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
 [revisions.2019-y-siguientes.family_dispositions.deadline_windows]
-reason = "Modelo 308's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries. Empty by the period shape, not by omission."
+reason = "Modelo 308's presentation windows apply only to a taxpayer who made the refundable operations in the period, and no profile state identifies that taxpayer, so a window declared here would put the modelo on every calendar. Empty until an applicability condition can scope it, not by omission."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -44,7 +56,7 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
 [revisions.2019-y-siguientes.family_dispositions.extraction_profiles]
-reason = "An extraction profile names an AEAT artefact this application ingests and the parser that reads it. The application's pull surface for modelo 308 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 308 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "An extraction profile names an AEAT artefact this application ingests and the parser that reads it. The application's pull surface for modelo 308 is the operator-entered declaration, not a periodic declaracion PDF replay, and no inbound parser for a 308 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -851,7 +863,12 @@ family = "filing_schedules"
 
 [revisions.2019-y-siguientes.family_overrides.selector]
 revision = "2016-2018"
-id = "modelo-308-ad-hoc"
+id = "modelo-308-devolucion"
+
+# aeat-dr-308-2019 admits the months again, for the tipo de tributacion that
+# settles monthly.
+[revisions.2019-y-siguientes.family_overrides.fields]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
 
 [revisions.2019-y-siguientes.family_overrides.sequence_additions]
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
@@ -969,3 +986,16 @@ id = "papel-nif"
 [revisions.2019-y-siguientes.casilla_removals.selector]
 revision = "2016-2018"
 id = "papel-apellidos"
+
+[[revisions.2019-y-siguientes.family_overrides]]
+family = "verification_expectations"
+
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-reconcile-when-present"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-308-2019"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+source_refs = [1, 0]

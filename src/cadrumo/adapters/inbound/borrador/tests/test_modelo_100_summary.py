@@ -5,21 +5,36 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
-from ..errors import BorradorParseError
-from ..parser import parse_borrador
+from ..errors import BorradorParseError, BorradorRefusalReason
+from ..extractors.modelo_100_summary import Modelo100ObservedExtractor
+from ..parser import parse_borrador as parser_parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+
+PRINTED_EXERCISE = filing_year_envelope().horizon
+"""The exercise the synthetic artefacts print and the tests read them for."""
+
+_SUPPORT = TemporalSupportEnvelope(floor=filing_year_envelope().floor, horizon=filing_year_envelope().horizon)
+"""A synthetic envelope: these tests read one artefact, not the published span."""
+
+
+parse_borrador = partial(parser_parse_borrador, filing_year=PRINTED_EXERCISE, supported_filing_years=_SUPPORT)
 
 
 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA = validated_casilla_id(
@@ -49,7 +64,7 @@ _OBSERVED_VALUES: dict[CasillaId, str] = {
 }
 
 
-def _render_borrador_pdf_bytes(
+def render_borrador_pdf_bytes(
     *,
     artefact_kind: str = "BORRADOR",
     csv: str | None = None,
@@ -69,7 +84,7 @@ def _render_borrador_pdf_bytes(
     page.drawString(50, y, "AGENCIA TRIBUTARIA")
     y -= 18
     page.drawString(50, y, "Declaracion IRPF - Modelo 100")
-    page.drawRightString(width - 50, y, "Ejercicio: 2025")
+    page.drawRightString(width - 50, y, f"Ejercicio: {PRINTED_EXERCISE}")
     y -= 18
     page.drawString(50, y, "NIF: 00000000T")
     y -= 18
@@ -91,7 +106,7 @@ def _render_borrador_pdf_bytes(
 
 def _write_borrador_pdf(tmp_path: Path, payload: bytes, *, artefact_kind: str = "BORRADOR") -> Path:
     """Write pre-rendered borrador PDF bytes into a per-test ``tmp_path`` file."""
-    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
+    path = tmp_path / f"modelo_100_{PRINTED_EXERCISE}_{artefact_kind.lower()}.pdf"
     path.write_bytes(payload)
     return path
 
@@ -103,7 +118,7 @@ def _generate_pdf(
     csv: str | None = None,
     casilla_values: Mapping[CasillaId, str] | None = None,
 ) -> Path:
-    payload = _render_borrador_pdf_bytes(
+    payload = render_borrador_pdf_bytes(
         artefact_kind=artefact_kind,
         csv=csv,
         casilla_values=casilla_values,
@@ -121,10 +136,10 @@ def default_borrador_pdf_bytes() -> bytes:
     per-test filesystem isolation intact (the rename tests still mutate only
     their own copy) while paying the Canvas-construction cost a single time.
     """
-    return _render_borrador_pdf_bytes(artefact_kind="BORRADOR", csv=None, casilla_values=None)
+    return render_borrador_pdf_bytes(artefact_kind="BORRADOR", csv=None, casilla_values=None)
 
 
-def _profile(
+def modelo_100_summary_profile(
     *,
     target_casilla_ids: tuple[CasillaId, ...] = (
         _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
@@ -233,7 +248,7 @@ class TestObservedValues:
         pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         filing: InboundBorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
-        assert filing.ejercicio == "2025"
+        assert filing.ejercicio == str(PRINTED_EXERCISE)
         assert filing.tax_id == "00000000T"
         extracted = {value.casilla_id: value.printed_value for value in filing.values}
         assert extracted == {casilla_id: Decimal(raw) for casilla_id, raw in _OBSERVED_VALUES.items()}
@@ -255,7 +270,7 @@ class TestObservedValues:
         with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.borrador.parser"):
             parse_borrador(sensitive_pdf)
 
-        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
         assert "12345678Z-renta-borrador.pdf" not in rendered_logs
         assert "source=<input-pdf>" in rendered_logs
 
@@ -265,7 +280,7 @@ class TestObservedValues:
         default_borrador_pdf_bytes: bytes,
     ) -> None:
         pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
-        profile = _profile()
+        profile = modelo_100_summary_profile()
 
         filing = parse_borrador(
             pdf,
@@ -282,7 +297,7 @@ class TestObservedValues:
 
     def test_registry_profile_fails_below_required_coverage(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
-        profile = _profile()
+        profile = modelo_100_summary_profile()
 
         with pytest.raises(BorradorParseError, match="coverage below minimum"):
             parse_borrador(
@@ -334,6 +349,34 @@ class TestSparseExtraction:
         assert {value.casilla_id for value in filing.values} == set(sparse)
 
 
+class TestSingleTextRead:
+    """The path route reads page text once and agrees with the bytes route."""
+
+    def test_detection_and_extraction_share_one_read(
+        self,
+        tmp_path: Path,
+        default_borrador_pdf_bytes: bytes,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from .. import parser as borrador_parser
+
+        real_extract = borrador_parser.extract_pages_text
+        reads: list[Path] = []
+
+        def counting_extract(pdf_path: Path) -> tuple[str, ...]:
+            reads.append(pdf_path)
+            return real_extract(pdf_path)
+
+        monkeypatch.setattr(borrador_parser, "extract_pages_text", counting_extract)
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
+
+        from_path = parse_borrador(pdf)
+
+        assert len(reads) == 1
+        from_bytes = parse_borrador(default_borrador_pdf_bytes)
+        assert from_path.model_dump(exclude={"parsed_at"}) == from_bytes.model_dump(exclude={"parsed_at"})
+
+
 class TestOverrides:
     """Verify the explicit ``artefact_kind_override`` entry-point arg."""
 
@@ -353,7 +396,7 @@ class TestBorradorParseErrorAttributes:
     def test_coverage_failure_populates_missing_and_coverage(self, tmp_path: Path) -> None:
         # PDF has only 0550; profile requires 0550 + 0700 with full coverage.
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
-        profile = _profile(
+        profile = modelo_100_summary_profile(
             target_casilla_ids=(
                 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
                 _PAGOS_FRACCIONADOS_CASILLA,
@@ -373,7 +416,7 @@ class TestBorradorParseErrorAttributes:
     def test_coverage_failure_missing_sorted_tuple(self, tmp_path: Path) -> None:
         # Profile requires three casillas; PDF only has 0550 — both absent IDs surface sorted.
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "100.00"})
-        profile = _profile(
+        profile = modelo_100_summary_profile(
             target_casilla_ids=(
                 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
                 _CUOTA_INTEGRA_TOTAL_CASILLA,
@@ -409,3 +452,64 @@ class TestBorradorParseErrorAttributes:
         assert err.malformed == (_PAGOS_FRACCIONADOS_CASILLA,)
         assert err.ambiguous == (_CUOTA_INTEGRA_TOTAL_CASILLA,)
         assert err.coverage == Decimal("0.5")
+
+
+_DIGEST = "a" * 64
+
+
+def _extract_text(*lines: str) -> InboundBorradorObservation:
+    return Modelo100ObservedExtractor().extract_pages(
+        ("\n".join(lines),),
+        ArtefactKind.BORRADOR,
+        source_pdf_sha256=_DIGEST,
+    )
+
+
+_HEADER = (f"Ejercicio: {PRINTED_EXERCISE}", "NIF: 00000000T", "BORRADOR")
+
+
+class TestSecondDeclarantAndConflictingRows:
+    """A borrador is refused when its figures cannot be one taxpayer's single reading."""
+
+    @pytest.mark.parametrize(
+        "marker",
+        [
+            "NIF cónyuge: 00001500M",
+            "NIF del cónyuge 00001500M",
+            "Cónyuge NIF: 00001500M",
+            "Segundo declarante - NIF 00001500M",
+            "Tributación conjunta: Sí",
+            "Declaración conjunta",
+        ],
+    )
+    def test_a_joint_marker_is_refused_with_a_typed_reason(self, marker: str) -> None:
+        with pytest.raises(BorradorParseError) as refused:
+            _extract_text(*_HEADER, marker, "0596 Retenciones del trabajo 7.000,00")
+
+        assert refused.value.reason is BorradorRefusalReason.JOINT_DECLARATION
+
+    def test_an_individual_borrador_that_declines_joint_filing_is_not_refused(self) -> None:
+        observation = _extract_text(*_HEADER, "Tributación conjunta: No", "0596 Retenciones del trabajo 3.500,00")
+
+        assert {value.casilla_id: value.printed_value for value in observation.values} == {"0596": Decimal("3500.00")}
+
+    def test_a_casilla_printed_twice_with_different_values_is_refused(self) -> None:
+        with pytest.raises(BorradorParseError) as refused:
+            _extract_text(
+                *_HEADER,
+                "0596 Retenciones del trabajo 3.500,00",
+                "0596 Retenciones del trabajo 3.500,01",
+            )
+
+        assert refused.value.reason is BorradorRefusalReason.CONFLICTING_DUPLICATE_ROW
+        assert refused.value.ambiguous == ("0596",)
+
+    def test_a_casilla_printed_twice_with_the_same_value_keeps_the_advisory_warning(self) -> None:
+        observation = _extract_text(
+            *_HEADER,
+            "0596 Retenciones del trabajo 3.500,00",
+            "0596 Retenciones del trabajo 3.500,00",
+        )
+
+        assert [value.printed_value for value in observation.values] == [Decimal("3500.00")]
+        assert observation.warnings == ("casilla 0596: duplicate printed value ignored",)

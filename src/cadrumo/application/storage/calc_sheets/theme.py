@@ -26,6 +26,7 @@ WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
 FORM_FONT_FAMILY: Final[str] = "Arial"
 FORM_SHOW_GRIDLINES: Final[bool] = False
 WORKBOOK_FONT_SIZE: Final[int] = 11
+_COLOUR_CHANNEL_SIZE = 255.0
 
 STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "middle"
 """Vertical alignment applied to every role-styled range.
@@ -118,9 +119,9 @@ def hex_to_rgb_floats(value: str) -> dict[str, float]:
         A mapping with ``red`` / ``green`` / ``blue`` keys, each a 0..1 float.
     """
     cleaned = value.lstrip("#")
-    red = int(cleaned[0:2], 16) / 255.0
-    green = int(cleaned[2:4], 16) / 255.0
-    blue = int(cleaned[4:6], 16) / 255.0
+    red = int(cleaned[0:2], 16) / _COLOUR_CHANNEL_SIZE
+    green = int(cleaned[2:4], 16) / _COLOUR_CHANNEL_SIZE
+    blue = int(cleaned[4:6], 16) / _COLOUR_CHANNEL_SIZE
     return {"red": red, "green": green, "blue": blue}
 
 

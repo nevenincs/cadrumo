@@ -9,27 +9,29 @@ from typing import Final
 import pytest
 from typer.testing import CliRunner
 
-from dev._paths import REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from dev.paths import REPO_ROOT
 
 from ..checklist import CHECKLIST
-from ..cli import _default_manager, app
+from ..cli import app, default_manager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _THROWAWAY_MODELO_ID = "986"
-_THROWAWAY_REVISION_ID = "2026-y-siguientes"
+_YEAR = filing_year_envelope().horizon
+_THROWAWAY_REVISION_ID = f"{_YEAR}-y-siguientes"
 
 
 def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
     """The no-override CLI path resolves the bundled Cadrumo registry."""
-    manager = _default_manager()
+    manager = default_manager()
 
     assert manager.registry_modelos_root.is_dir()
     assert manager.registry_modelos_root == (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos")
 
 
 #: Escape sequences Rich writes around the refusal it renders.
-_ANSI: Final = re.compile(r"\[[0-9;]*m")
+_ANSI: Final = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:
@@ -40,9 +42,9 @@ def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:
         "--registry-modelos-root",
         str(tmp_path),
         "--valid-from",
-        "2026-01-01",
+        f"{_YEAR}-01-01",
         "--year-from",
-        "2026",
+        str(_YEAR),
         "--period",
         "0A",
         *extra,

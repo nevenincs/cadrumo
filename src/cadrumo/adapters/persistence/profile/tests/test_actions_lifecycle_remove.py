@@ -24,16 +24,10 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    create_manual_row as _create_manual_row,
-)
-from .ledger_action_persistence_support import (
+    BUCKET_ID,
+    create_manual_row,
     purchase_invoice,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,12 +36,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_emits_events(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
     invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -55,7 +49,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -77,7 +71,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     removed = remove_manual_transaction(
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
@@ -97,7 +91,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     # relative order is the content-addressed event_id tie-break
     # (bucket_event_order_key), not a meaningful contract — only membership
     # among the two same-instant events is.
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = event_repository.load().for_bucket(BUCKET_ID)
     assert events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
     assert {event.event_type for event in events[1:]} == {
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
@@ -115,7 +109,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
 
 
 def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository, created = _create_manual_row(
+    transaction_repository, event_repository, created = create_manual_row(
         secure_objects,
         description="dry run row",
         idempotency_key="remove-dry-run",
@@ -124,7 +118,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     report = remove_manual_transaction(
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -136,7 +130,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     assert report.dry_run is True
     assert report.removed is False
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
-    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -155,7 +149,7 @@ def _attachment(store: AttachmentStore, index: int) -> str:
             mime_type="application/pdf",
             bytes_size=len(body),
             captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             captured_by="operator-A",
             source_command="aeat app ledger attach",
         ),
@@ -178,7 +172,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     The count and the per-attachment events carry the same information without
     a slot whose width grows with the data.
     """
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     store = AttachmentStore(objects=secure_objects)
     attachment_ids = tuple(_attachment(store, index) for index in range(8))
 
@@ -187,7 +181,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     assert len(",".join(sorted(attachment_ids))) > 500
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -195,7 +189,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -212,7 +206,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     removed = remove_manual_transaction(
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="duplicate import",
@@ -226,7 +220,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     # The removal summary and the per-attachment detach events share the same
     # removal instant, so their relative order is the content-addressed
     # event_id tie-break (bucket_event_order_key), not a positional contract.
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = event_repository.load().for_bucket(BUCKET_ID)
     removal = next(event for event in events if event.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED)
     assert removal.payload["cascade_count"] == "8"
     # No payload slot may carry the joined list, whatever it is named.

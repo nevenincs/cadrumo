@@ -64,8 +64,6 @@ from cadrumo.domain.calculations.registry.ids import (
     BindingId,
     CrossReferenceId,
     LegalRefId,
-    ModeloId,
-    RevisionId,
     SourceRefId,
     WorkbookParityRefId,
 )
@@ -78,8 +76,9 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from dev.registry.compiler.schema_family_coverage import (
@@ -93,53 +92,9 @@ from ..maintenance_support import (
     declared_revision_selection_date,
     revision_selection_coordinates,
 )
+from .coverage_facts import RegistryCoverageFacts, coverage_facts
 
 CoverageGateStatus = Literal["satisfied", "gap"]
-
-
-@dataclass(frozen=True, slots=True)
-class RegistryCoverageFacts:
-    """Immutable evidence collections for one admitted filing coordinate."""
-
-    modelo: ModeloId
-    revision: RevisionId
-    filing_year: int
-    period: str
-    legal: tuple[LegalRefId, ...]
-    sources: Mapping[SourceRefId, SourceReference]
-    workbook_parity_refs: tuple[WorkbookParityReference, ...]
-    live_cross_references: tuple[LiveCrossReferenceDecision, ...]
-
-
-def coverage_facts(
-    authority: ValidatedRegistryAuthority,
-    modelo_id: str,
-    *,
-    filing_year: int,
-    period: str,
-    on: date | None = None,
-    revision_id: RevisionId | None = None,
-    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-) -> RegistryCoverageFacts:
-    """Project immutable evidence from the same admitted snapshot consumers read."""
-    snapshot = authority.snapshot(
-        modelo_id,
-        filing_year=filing_year,
-        period=period,
-        on=on,
-        revision_id=revision_id,
-        grade=grade,
-    )
-    return RegistryCoverageFacts(
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-        legal=tuple(snapshot.legal),
-        sources=snapshot.sources,
-        workbook_parity_refs=tuple(snapshot.workbook_parity_refs.values()),
-        live_cross_references=tuple(snapshot.live_cross_references.values()),
-    )
 
 
 class CoverageAuthorityScope(StrEnum):
@@ -539,10 +494,8 @@ def _inspect_declared_revision(
 
     A revision whose validity starts or ends INSIDE a filing year shares that
     year with its neighbour, and where both declare the same period token the
-    undated question genuinely has two right answers. Modelo 308 is the live
-    case: its January-to-June and July-to-December eras both declare AD-HOC, and
-    refusing an undated 2011 request is the ADJUDICATED behaviour, asserted by
-    that modelo's own selector regression -- not a defect for an audit to report.
+    undated question genuinely has two right answers. Refusing that undated
+    request is the adjudicated behaviour, not a defect for an audit to report.
 
     An audit's real question is narrower than the one it asks, being "does THIS
     revision cover this coordinate", so it re-asks with a date the revision
@@ -584,7 +537,7 @@ def _model_law_coverage_for_coordinate(
             f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
             f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
         )
-    proof = _snapshot_filing_review_proof(
+    proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
@@ -724,7 +677,7 @@ def _construct_evidence_ledger_for_revision(
         coordinates=coordinates,
     )
     inspection = inspections[0]
-    proof = _snapshot_filing_review_proof(
+    proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
@@ -1236,7 +1189,7 @@ def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
 
 
-def _snapshot_filing_review_proof(
+def snapshot_filing_review_proof(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     authority: ValidatedRegistryAuthority,

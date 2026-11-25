@@ -31,9 +31,11 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
-from cadrumo.core import logging as _logging_mod
+from cadrumo.core import logging as core_logging_mod
 from cadrumo.core.config import override_settings
-from cadrumo.core.logging import configure_logging, register_first_party_logger
+from cadrumo.core.logging import configure_logging, flush_logging, register_first_party_logger
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -63,26 +65,33 @@ class _RequestOptions:
 @pytest.fixture
 def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """Configure the real logging stack against a temp log directory."""
-    log_dir = tmp_path / "containment-logs"
-    original_configured = _logging_mod._configured
-    monkeypatch.setattr(_logging_mod, "_FIRST_PARTY_LOGGER_ROOTS", set(_logging_mod._FIRST_PARTY_LOGGER_ROOTS))
+    storage_root = tmp_path / "containment-storage"
+    log_dir = storage_root / "logs"
+    original_configured = core_logging_mod.configured
+    monkeypatch.setattr(core_logging_mod, "FIRST_PARTY_LOGGER_ROOTS", set(core_logging_mod.FIRST_PARTY_LOGGER_ROOTS))
     try:
-        _logging_mod._configured = False
+        core_logging_mod.configured = False
         with override_settings(
-            cadrumo_log_dir=log_dir,
+            cadrumo_storage_root=storage_root,
             cadrumo_log_root_level="DEBUG",
             cadrumo_log_file_level="DEBUG",
         ):
             configure_logging()
+            # Configuration runs on the dispatch thread; drain it before records or the latch depend on it.
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
             yield log_dir / "cadrumo.log"
     finally:
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+        core_logging_mod.configured = False
+        try:
+            configure_logging()
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
+        finally:
+            core_logging_mod.configured = original_configured or True
 
 
 def _written_log_text(log_file: Path) -> str:
-    """Flush every handler and return what actually reached the disk."""
+    """Drain the asynchronous dispatch, flush every handler and return what actually reached the disk."""
+    assert flush_logging(timeout=HANG_GUARD_SECONDS)
     for handler in logging.getLogger().handlers:
         handler.flush()
     if not log_file.exists():
@@ -119,8 +128,8 @@ def test_third_party_warnings_still_reach_the_log_file(log_file: Path) -> None:
 
 
 def test_first_party_image_payload_is_redacted_but_the_record_survives(log_file: Path) -> None:
-    """The local on-host route: our own module logs a request carrying images."""
-    logging.getLogger("cadrumo.adapters.outbound.llm.providers.local").debug(
+    """The on-host route: our own module logs a request carrying images."""
+    logging.getLogger("cadrumo.adapters.outbound.llm.providers.agent").debug(
         "ollama vision request %s",
         {"model": "probe-vision", "images": [_JPEG_PAYLOAD]},
     )
@@ -147,15 +156,16 @@ def test_first_party_data_uri_and_raw_bytes_payloads_are_contained(log_file: Pat
 def test_ordinary_first_party_debug_diagnostics_are_untouched(log_file: Path, namespace: str) -> None:
     """Positive control: containment must not cost us our own DEBUG channel."""
     register_first_party_logger(namespace)
+    revision = open_ended_revision("303").id
     logging.getLogger(f"{namespace}.application.probe").debug(
         "resolved revision %s for period %s across %d casillas",
-        "2026-303-v2",
+        revision,
         "1T",
         47,
     )
 
     written = _written_log_text(log_file)
-    assert "resolved revision 2026-303-v2 for period 1T across 47 casillas" in written
+    assert f"resolved revision {revision} for period 1T across 47 casillas" in written
     assert "<redacted:payload>" not in written, "ordinary diagnostics must not be redacted"
 
 

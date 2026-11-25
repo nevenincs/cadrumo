@@ -5,12 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 
-from ....core.time.clock import today_madrid
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
+from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _MODELO_RENDERING_FACT_ID = "modelo-rendering-tax-notice-catalogue"
+
+_MODELO_RENDERING_FACT = StringMappingFact(
+    fact_id=_MODELO_RENDERING_FACT_ID,
+    date_axis=DateAxis.FILING_PERIOD,
+    policy=StringMappingPolicy(subject="Modelo rendering catalogue", value_whitespace=MappingValueWhitespace.PRESERVE),
+)
 
 
 def modelo_rendering_declarations(
@@ -18,18 +23,12 @@ def modelo_rendering_declarations(
     *,
     authority: GovernedFactSource | None = None,
 ) -> Mapping[str, str]:
-    """Resolve the selected Modelo rendering mapping from registry authority."""
-    selected_authority = require_governed_fact_authority(authority, subject="Modelo rendering catalogue")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_MODELO_RENDERING_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise TypeError("Modelo rendering declarations must resolve as a mapping fact")
-    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    """Resolve the Modelo rendering mapping from registry authority.
+
+    A dated call reads that date's edition; without a date the read takes the
+    editions inside the support envelope, never the run date.
+    """
+    return _MODELO_RENDERING_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
 
 
 def modelo_rendering_value(

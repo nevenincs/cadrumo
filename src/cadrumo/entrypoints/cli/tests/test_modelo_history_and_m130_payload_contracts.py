@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
-from ..modelo_results import M130AccumulatedPayload, ModeloHistoryResult, ModeloLifecycleEventPayload
+from ..modelo_query_results import M130AccumulatedPayload, ModeloHistoryResult, ModeloLifecycleEventPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -126,7 +126,7 @@ def test_history_event_preserves_actor_at_persisted_boundary() -> None:
     [
         {"modelo": ""},
         {"year": -1},
-        {"year": 1900},
+        {"year": 999},
         {"count": -1},
         {"period": ""},
     ],

@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ..installed_wheel_binding import _launcher_stub_projection, installed_python_for_cli
+from ..installed_wheel_binding import installed_python_for_cli, launcher_stub_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,7 +95,7 @@ def test_two_genuine_launchers_project_equal(launchers: tuple[bytes, bytes]) -> 
     """The failure this fixes: a correct install reported as stub drift."""
     first, second = launchers
 
-    assert _launcher_stub_projection(first) == _launcher_stub_projection(second)
+    assert launcher_stub_projection(first) == launcher_stub_projection(second)
 
 
 @pytest.mark.windows_only
@@ -111,7 +111,7 @@ def test_a_byte_changed_outside_the_elision_still_breaks_the_projection(
     tampered = bytearray(first)
     tampered[_DOS_STUB_OFFSET] ^= 0xFF
 
-    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+    assert launcher_stub_projection(bytes(tampered)) != launcher_stub_projection(first)
 
 
 @pytest.mark.windows_only
@@ -123,7 +123,7 @@ def test_a_non_script_uv_resource_change_still_breaks_the_projection(launchers: 
     tampered = bytearray(first)
     tampered[offset] ^= 0xFF
 
-    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+    assert launcher_stub_projection(bytes(tampered)) != launcher_stub_projection(first)
 
 
 @pytest.mark.windows_only
@@ -132,7 +132,7 @@ def test_pe_code_changes_still_break_the_projection(launchers: tuple[bytes, byte
     tampered = bytearray(first)
     tampered[_section_raw_offset(first, b".text")] ^= 0xFF
 
-    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+    assert launcher_stub_projection(bytes(tampered)) != launcher_stub_projection(first)
 
 
 @pytest.mark.windows_only
@@ -142,7 +142,7 @@ def test_pe_header_changes_still_break_the_projection(launchers: tuple[bytes, by
     tampered = bytearray(first)
     tampered[signature + 4] ^= 0xFF
 
-    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+    assert launcher_stub_projection(bytes(tampered)) != launcher_stub_projection(first)
 
 
 def test_a_launcher_that_is_not_a_portable_executable_is_refused() -> None:
@@ -152,4 +152,4 @@ def test_a_launcher_that_is_not_a_portable_executable_is_refused() -> None:
     the branch a truncated or substituted file would take.
     """
     with pytest.raises(RuntimeError, match="not a portable executable"):
-        _launcher_stub_projection(b"MZ" + b"\0" * 0x3C + struct.pack("<I", 0x40) + b"\0" * 0x40)
+        launcher_stub_projection(b"MZ" + b"\0" * 0x3C + struct.pack("<I", 0x40) + b"\0" * 0x40)

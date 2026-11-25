@@ -18,7 +18,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..workflow_python_selection import declared_python_selection, uv_python_env
 

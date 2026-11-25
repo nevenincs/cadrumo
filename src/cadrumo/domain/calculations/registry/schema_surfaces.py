@@ -15,9 +15,10 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.identity.continuidad import ContinuidadId
-from ._schema_export_exemption import ExportExemptionReasonValue
 from .casilla_lineage import CasillaLineageOriginField
+from .credit_reconciliation import WithholdingSideField
 from .errors import RegistryValidationError
+from .field_absence import later_absent_when_none
 from .ids import (
     BindingId,
     ExportFieldId,
@@ -26,7 +27,7 @@ from .ids import (
     RevisionId,
     SourceRefId,
 )
-from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .modelo_localization import render_rotating_year, require_modelo_localization, resolve_modelo_localization
 from .schema_base import (
     CasillaDataType,
     CasillaDataTypeField,
@@ -34,9 +35,11 @@ from .schema_base import (
     CasillaSignConstraintField,
     LegalRefs,
     RegistryModel,
+    SourceCitation,
     SourceRefs,
     coerce_enum_member,
 )
+from .schema_export_exemption import ExportExemptionReasonValue
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
 
@@ -47,6 +50,7 @@ __all__ = [
     "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
+    "ComplementariaOnlyDeclaration",
     "validate_family_identity_uniqueness",
 ]
 
@@ -313,6 +317,31 @@ def _validate_projection_only(
         raise RegistryValidationError(f"projection-only casilla {casilla_id!r} must not declare formula")
 
 
+class ComplementariaOnlyDeclaration(RegistryModel):
+    """The official text stating that only a complementaria fills a casilla.
+
+    A casilla carrying this declaration holds the result of earlier
+    autoliquidaciones of the same ejercicio and period, which an original
+    declaration does not have. Its absence from an observed original therefore
+    reads as zero by law, while its absence from a complementaria, or from a
+    filing of unknown kind, stays unresolved. The citations quote the
+    instruction that says so, so the property is grounded where it is declared.
+    """
+
+    source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _citations_name_declared_sources(self) -> ComplementariaOnlyDeclaration:
+        undeclared = sorted({citation.source_ref for citation in self.source_citations} - set(self.source_refs))
+        if undeclared:
+            raise RegistryValidationError(
+                f"complementaria_only citations name sources not listed in source_refs: {undeclared!r}",
+            )
+        return self
+
+
 class CasillaDefinition(RegistryModel):
     """A single AEAT casilla within a modelo revision.
 
@@ -415,6 +444,27 @@ class CasillaDefinition(RegistryModel):
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: SemanticRoleCardinalityField = SemanticRoleCardinality.SHARED
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
+    withholding_side: WithholdingSideField | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Whose withholding the casilla records: suffered by the declarant, or practised on others. "
+            "A role shared by payer-side returns and the perceptor's own returns cannot tell the two apart; "
+            "undeclared is never read as suffered."
+        ),
+    )
+    rotating_year_offset: int | None = Field(
+        default=None,
+        exclude_if=later_absent_when_none,
+        description=(
+            "For a box whose caption names a year counted from the ejercicio, so "
+            "each edition's design prints it with the year moved on, how many "
+            "years before the ejercicio that year lies: 0 names the ejercicio "
+            "itself and a negative offset a later year. The label's {year} "
+            "placeholder renders the ejercicio minus this offset. Unset for a "
+            "caption that names no rotating year."
+        ),
+    )
     aliases: tuple[CasillaAlias, ...] = ()
     internal_only: bool = Field(
         default=False,
@@ -429,17 +479,31 @@ class CasillaDefinition(RegistryModel):
             "real regulatory authority."
         ),
     )
+    complementaria_only: ComplementariaOnlyDeclaration | None = Field(
+        default=None,
+        description=(
+            "Declares that only an autoliquidación complementaria fills this casilla, "
+            "quoting the instruction that says so. A relation fold reads the casilla "
+            "as zero when it is absent from an observed filing whose kind is an "
+            "admitted original, and keeps it unresolved for any other kind. Only an "
+            "operator-entered money casilla can carry it."
+        ),
+    )
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    def get_label(self, locale: str) -> str:
-        """Resolve one label scalar through the canonical shared catalogues."""
-        return require_modelo_localization(self.localization_keys, locale=locale)
+    def get_label(self, locale: str, *, ejercicio: int | None = None) -> str:
+        """Resolve one label scalar, naming a rotating slot's year for ``ejercicio`` when given."""
+        label = require_modelo_localization(self.localization_keys, locale=locale)
+        return render_rotating_year(label, offset=self.rotating_year_offset, ejercicio=ejercicio)
 
-    def get_help(self, locale: str) -> str | None:
+    def get_help(self, locale: str, *, ejercicio: int | None = None) -> str | None:
         """Resolve optional help through the same identity and fallback chain."""
         help_keys = tuple(f"{key.removesuffix('.label')}.help" for key in self.localization_keys)
-        return resolve_modelo_localization(help_keys, locale=locale)
+        help_text = resolve_modelo_localization(help_keys, locale=locale)
+        if help_text is None:
+            return None
+        return render_rotating_year(help_text, offset=self.rotating_year_offset, ejercicio=ejercicio)
 
     @property
     def label(self) -> str:
@@ -461,7 +525,28 @@ class CasillaDefinition(RegistryModel):
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
         self._validate_lineage_origin()
+        self._validate_complementaria_only()
         return self
+
+    def _validate_complementaria_only(self) -> None:
+        """Admit the complementaria-only declaration on a manual money casilla only.
+
+        The declaration lets an absent value read as zero, so it must sit on a
+        casilla whose value a filer enters from earlier autoliquidaciones: a
+        computed, bound or app-internal casilla has another source for its value,
+        and a non-money casilla has no zero to prove.
+        """
+        if self.complementaria_only is None:
+            return
+        if self.input_kind is not InputKind.MANUAL or self.internal_only:
+            raise RegistryValidationError(
+                f"complementaria_only casilla {self.id!r} must be an operator-entered casilla, "
+                f"not input_kind {self.input_kind.value!r}",
+            )
+        if self.data_type is not CasillaDataType.MONEY:
+            raise RegistryValidationError(
+                f"complementaria_only casilla {self.id!r} must be a money casilla, not {self.data_type.value!r}",
+            )
 
     def _validate_export_exposure(self) -> None:
         """Hold internal_only, export_refs and the exemption reason coherent.
@@ -600,20 +685,6 @@ def _validate_manifest_casilla_ids(casillas: tuple[CalculationCompletenessCasill
         )
 
 
-def _validate_manifest_record_design_metadata(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
-    """Reject duplicate reviewed segment/number metadata in a manifest."""
-    metadata_pairs = Counter(casilla.record_design_metadata() for casilla in casillas)
-    duplicates = sorted(pair for pair, count in metadata_pairs.items() if count > 1)
-    if duplicates:
-        rendered = ", ".join(
-            f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
-            for segmento, number in duplicates
-        )
-        raise RegistryValidationError(
-            f"calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
-        )
-
-
 def _validate_manifest_grounding(source_ref: SourceRefId, source_refs: SourceRefs) -> None:
     """Require the manifest's derivation source to be among its evidence refs."""
     if source_ref not in source_refs:
@@ -674,7 +745,6 @@ class CalculationCompletenessManifest(RegistryModel):
     def _validate_manifest(self) -> CalculationCompletenessManifest:
         _validate_manifest_population(self.casillas)
         _validate_manifest_casilla_ids(self.casillas)
-        _validate_manifest_record_design_metadata(self.casillas)
         _validate_manifest_grounding(self.source_ref, self.source_refs)
         _validate_manifest_extraction_state(self.manual_extraction, self.manual_extraction_reason)
         return self

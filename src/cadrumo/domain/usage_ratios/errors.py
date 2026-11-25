@@ -30,7 +30,7 @@ class UsageRatioPersistenceError(UsageRatioError):
     """Raised when the usage-ratio profile cannot be read or written.
 
     Surfaced by :func:`adapters.persistence.profile.usage_ratios.load_usage_ratios` and
-    :func:`adapters.persistence.profile.usage_ratios.save_usage_ratios` for OS-level I/O
+    :func:`adapters.persistence.profile.usage_ratios.save_usage_ratios_with_secure_object_writes` for OS-level I/O
     failures and for envelope payloads that fail strict validation.
     """
 

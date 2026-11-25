@@ -16,9 +16,9 @@ from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
 
 from ..installed_google_review_tui import (
     GoogleReviewTuiAcceptanceError,
-    _until,
     google_document_id,
     read_public_disclosure,
+    until,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -93,7 +93,7 @@ def test_refusal_or_timeout_captures_public_failure_without_publication(tmp_path
     async def run() -> None:
         async with app.run_test() as pilot:
             with pytest.raises(GoogleReviewTuiAcceptanceError):
-                await _until(
+                await until(
                     pilot,
                     lambda: False,
                     deadline=0,

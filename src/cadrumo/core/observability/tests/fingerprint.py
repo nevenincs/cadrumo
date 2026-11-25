@@ -1,10 +1,9 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by :func:`run_context` to stamp a recorded :class:`RunTrace` with the
-configuration, application-state, and certificate identity observed at the
-time of the run.
+Identifies the configuration, application-state, and certificate identity
+observed at the time of a run, for determinism comparisons.
 
-``db_sha256`` fingerprints :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
+``db_sha256`` fingerprints :attr:`~cadrumo.core.config.Settings.cadrumo_storage_root`
 — the single canonical application data root every persisted category
 (encrypted state, caches, durable generated outputs) derives from, per
 :class:`~cadrumo.core.config.Settings` and
@@ -167,13 +166,10 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
     members that are not. So "exclude everything under ``cache/``" or "exclude
     everything with a time-to-live" are both wrong, and wrong invisibly.
 
-    The value is still read from ``settings`` itself — the same instance whose
-    :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
-    :func:`compute_data_root_sha256` hashes — so an operator override of any
-    one of these directories (a redirected LLM cache, say) is still excluded
-    correctly regardless of where it actually resolves. A field that resolves
-    to ``None`` is an opt-in location the operator never asked for; there is no
-    directory to exclude.
+    Each exclusion resolves through the same ``settings`` instance whose
+    :attr:`~cadrumo.core.config.Settings.cadrumo_storage_root`
+    :func:`compute_data_root_sha256` hashes, so relocating the root moves the
+    hashed tree and its excluded subtrees together.
 
     What stays *in* matters as much as what comes out. Core state — the
     encrypted profile and bucket database, the filing artefacts, the financial
@@ -193,8 +189,6 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
             or location.fingerprint_participation is not FingerprintParticipation.EXCLUDED
         ):
             continue
-        if location.settings_field is not None and getattr(settings, location.settings_field, None) is None:
-            continue
         resolved.add(storage_path(category, settings=settings).resolve())
     return frozenset(resolved)
 
@@ -202,11 +196,9 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
 def compute_data_root_sha256(settings: Settings) -> str:
     """Compute :func:`compute_db_sha256` over the canonical application data root.
 
-    Hashes ``settings.cadrumo_local_storage_root`` — the single root every
+    Hashes ``settings.cadrumo_storage_root`` — the single root every
     persisted category (encrypted state, caches, durable generated
-    outputs) derives from in both a source checkout
-    (``REPO_ROOT/var/storage``) and an installed distribution (the
-    platform user-data directory) — excluding the regenerable caches and
+    outputs) resolves beneath — excluding the regenerable caches and
     observability's own output via :func:`data_root_cache_exclusions`.
 
     A data root that does not exist yet (a pristine install with no
@@ -226,10 +218,10 @@ def compute_data_root_sha256(settings: Settings) -> str:
     Returns:
         SHA-256 hex digest of the curated application data root.
     """
-    root = settings.cadrumo_local_storage_root
+    root = settings.cadrumo_storage_root
     if not root.exists():
         _log.debug(
-            "observability fingerprint: cadrumo_local_storage_root %s does not exist yet "
+            "observability fingerprint: cadrumo_storage_root %s does not exist yet "
             "(no profile/state created); hashing as an empty tree",
             root,
         )
@@ -241,7 +233,7 @@ def read_cert_fingerprint() -> str:
 
     The empty string is the canonical "no certificate bound" sentinel —
     most CLI paths run without a cert (lookups and planning) and
-    must still produce a valid :class:`RunTrace`.
+    must still produce a valid fingerprint.
 
     Reading the certificate without unlocking it is intentional: the
     observability layer never asks the operator for a passphrase, so

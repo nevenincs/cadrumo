@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -38,6 +39,7 @@ from cadrumo.domain.user_profile.values import (
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
+from .prior_savings_remainders import prior_savings_remainder_bindings, prior_savings_remainder_boxes
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -71,39 +73,20 @@ def _natural_person_record(
         context=operation.profile_create_context(),
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Sofia"),
-            UserProfileFact(path="identity.surnames", value="Scratch"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="professional services"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Sofia"),
+                UserProfileFact(path="identity.surnames", value="Scratch"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="professional services"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            )
         ),
     )
 
 
-def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
-    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
-
-    The assertion drives the real CLI command, persists into the real encrypted
-    observation store, and then reads through the real previous-filing resolver.
-    Expected values are the operator's literal zero observation and the registry
-    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
-    sum of prior M100 casillas 0224/1479/1553/1577.
-    """
-
+def _record_local_prior_observation() -> None:
+    """The CLI records the operator's literal zero observation without creating any filing record."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -123,6 +106,12 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
             "--by",
             "sofia-local",
             "--set",
+            "1384=0",
+            "--set",
+            "1387=0",
+            "--set",
+            "1390=0",
+            "--set",
             "1391=0",
             "--set",
             "0224=0",
@@ -132,6 +121,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
             "1553=0",
             "--set",
             "1577=0",
+            # The savings carries (LIRPF art. 49) the next return opens from this one are stated, never read as zero.
+            *(argument for box in prior_savings_remainder_boxes() for argument in ("--set", f"{box}=0")),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -152,10 +143,14 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     assert payload["aeat_accepted"] is False
     assert payload["casilla_values"] == {
         "0224": "0",
+        "1384": "0",
+        "1387": "0",
+        "1390": "0",
         "1391": "0",
         "1479": "0",
         "1553": "0",
         "1577": "0",
+        **dict.fromkeys(prior_savings_remainder_boxes(), "0"),
     }
     notices = unwrap_envelope_notices(result.output)
     # The operator was admitted with the password for this command alone, which it says.
@@ -164,6 +159,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         "config.login.session_not_persisted",
     ]
 
+
+def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
@@ -182,7 +179,14 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=operation,
         )
-        assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
+        for binding_id in (
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-anterior",
+            *prior_savings_remainder_bindings(),
+        ):
+            assert m100_prefill.binding_values[binding_id] == Decimal("0")
 
         m130_snapshot = published_snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(
@@ -193,7 +197,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         )
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 
-    _seed_natural_person_profile(runtime_profile)
+
+def _assert_m130_calculation_consumes_the_observation() -> None:
     created = invoke_cached_cli(
         [
             "--format",
@@ -240,6 +245,24 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     previous_income = calculated_payload["binding_overrides"]["irpf.previous_year_economic_activity_net_income"]
     assert Decimal(previous_income) == Decimal("0")
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
+
+
+def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
+    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
+
+    The assertion drives the real CLI command, persists into the real encrypted
+    observation store, and then reads through the real previous-filing resolver.
+    Expected values are the operator's literal zero observation and the registry
+    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
+    sum of prior M100 casillas 0224/1479/1553/1577.
+    """
+
+    _record_local_prior_observation()
+    _assert_prior_filing_prefills(runtime_profile, operation)
+    _seed_natural_person_profile(runtime_profile)
+    _assert_m130_calculation_consumes_the_observation()
 
 
 def _observe_local(*arguments: str) -> dict[str, Any]:

@@ -11,10 +11,10 @@ and to restore the canonical read it was projected from.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+import json
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Protocol, cast
 from uuid import UUID
@@ -25,7 +25,8 @@ from pydantic import BaseModel, ValidationError
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.action_errors import ModeloEditBaselineStaleError
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
@@ -33,25 +34,46 @@ from ...application.modelo.edit_baseline_projection import ModeloEditApplyBaseli
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditAdmittedV1,
+    ModeloEditApplyRequestV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditCorrectionAddressV1,
+    ModeloEditHeldChangeV1,
+    ModeloEditHeldKind,
+    ModeloEditParseReason,
+    ModeloEditParseRequestV1,
+    ModeloEditPermittedSurfaceEntryV1,
     ModeloEditPreflightEvaluatedV1,
+    ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operation_requests import ModeloEditPreflightRequestV2
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
+from ...application.modelo.edit_parse_text import parse_refusal_text
+from ...application.modelo.edit_preflight import VALUE_REFUSED_PREFIX
 from ...application.modelo.edit_refusal_projection import (
     ModeloEditCalculationPrerequisiteV1,
     ModeloEditRefusalProjectionStore,
 )
+from ...application.modelo.edit_review_wording import STATED_BY_THE_REVIEW
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
+from ...application.modelo.value_presentation import format_casilla_value
+from ...application.modelo.work_amend_contracts import ModeloWorkAmendOverride
+from ...application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ...application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change
+from ...application.modelo.work_form_scalar_values import comparable_entry
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
     MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
     MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
     ModeloCasillaHelpExecutor,
     ModeloCasillaHelpProjectionV1,
@@ -66,25 +88,134 @@ from ...application.modelo.workbench_operations import (
     ModeloEditRenewRequest,
     ModeloWorkbenchFormExecutor,
     ModeloWorkbenchFormRequest,
+    ModeloWorkFilingStateExecutor,
+    ModeloWorkFilingStateRequest,
 )
-from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1, restore_modelo_workbench_form
+from ...application.modelo.workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    ModeloWorkFilingStateProjectionV1,
+    PublicModeloFormField,
+    PublicModeloWorkForm,
+    project_modelo_workbench_form,
+    restore_modelo_workbench_form,
+)
+from ...application.modelo.workbench_projection_memory import (
+    FormProjectionContext,
+    FormProjectionPair,
+    form_projection_identity,
+)
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
+from ...application.operations.financial_operand_contract import (
+    OperationFinancialOperandRefusalCode,
+    OperationFinancialOperandRefusedError,
+)
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from ...application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import validated_casilla_id
+from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
+from ...core.i18n.render import tr
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_selected_for
 from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ..adapter_composition import build_calculation_action_ports
-from ..operation_composition import build_production_operation_registry
+from ..adapter_composition_work_ports import build_calculation_action_ports
+from ..operation_composition_inputs import build_modelo_workbench_read_ports
+from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
+from .modelo_filing_state_support import filing_state_of_form
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
+_ANNUAL = "0A"
+
+
+def test_steady_form_reuses_only_the_validated_subtree_and_admits_a_fresh_baseline(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        owner = WorkbenchCaptureMemoryOwner()
+        contracts = production_operation_registry().public_contract_set
+        executor = ModeloWorkbenchFormExecutor(
+            ports_factory=_ports_factory(work), contracts=lambda: contracts, capture_memory=owner
+        )
+        request = ModeloWorkbenchFormRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+        )
+
+        def read() -> ModeloWorkbenchFormProjectionV1:
+            result, _context = _run(
+                work, executor, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, request, ModeloWorkbenchFormProjectionV1
+            )
+            return result
+
+        read()  # The first strict restoration may finish deferred canonical schemas.
+        first, second = read(), read()
+        _assert_steady_pair_has_fresh_admission(first, second)
+        _assert_poisoned_pair_is_cleared(work, second)
+        owner.close()
+        third = read()
+        assert third.form == second.form
+        assert third.form is not second.form, "a new authenticated session must rebuild the graph"
+        applied = work.apply(scalar=(_SET_06,))
+        assert applied.refusal is None
+        fourth = read()
+        assert fourth.form is not third.form
+        assert fourth.calculation_revision_id != third.calculation_revision_id
+        owner.close()
+
+
+def _assert_steady_pair_has_fresh_admission(
+    first: ModeloWorkbenchFormProjectionV1, second: ModeloWorkbenchFormProjectionV1
+) -> None:
+    assert first.form == second.form
+    assert form_projection_identity(first.form, type(first.form)) is not None, "public eligibility"
+    assert form_projection_identity(restore_modelo_workbench_form(first).load, type(first.form)) is not None, (
+        "inverse eligibility"
+    )
+    assert first.form is second.form, "an exact steady form must not reconstruct its validated graph"
+    assert first.admitted_baseline is not None and second.admitted_baseline is not None
+    assert first.admitted_baseline.baseline_id != second.admitted_baseline.baseline_id
+    assert restore_modelo_workbench_form(first).load == restore_modelo_workbench_form(second).load
+
+
+def _assert_poisoned_pair_is_cleared(work: SeededOperatorWork, projection: ModeloWorkbenchFormProjectionV1) -> None:
+    canonical = restore_modelo_workbench_form(projection)
+    baseline = projection.admitted_baseline
+    assert baseline is not None
+    coordinates = FormProjectionContext(
+        _profile_id(work),
+        work.work_unit_id,
+        baseline.work_unit_record_digest,
+        baseline.calculation_head_digest,
+        baseline.current_calculation_revision_id,
+        work.operation.generation.logical_generation,
+        OutputLanguage.EN,
+    )
+    poisoned = WorkbenchCaptureMemoryOwner().for_profile(str(_profile_id(work))).form_projection
+    identity = form_projection_identity(canonical.load, type(projection.form))
+    assert identity is not None
+    wrong = FormProjectionPair(
+        projection.form, canonical.load.model_copy(update={"verified": not canonical.load.verified})
+    )
+    poisoned.reuse((coordinates, identity), lambda: wrong)
+    with pytest.raises(ValueError, match="changed canonical meaning"):
+        project_modelo_workbench_form(
+            _profile_id(work), work.work_unit_id, canonical, memory=poisoned, context=coordinates
+        )
+    recovered = project_modelo_workbench_form(
+        _profile_id(work), work.work_unit_id, canonical, memory=poisoned, context=coordinates
+    )
+    assert recovered == projection, "the failed read clears its pair; the next read validates normally"
+    poisoned.close()
+
 
 _SET_06 = ModeloScalarEditIntentV1(
     address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("06")),
@@ -101,41 +232,13 @@ class _OperationLoadRepository(Protocol):
     def load(self, *, operation: PinnedAuthorityOperation | None = None) -> Any: ...
 
 
-@dataclass(slots=True)
-class _Events:
-    phases: list[str] = field(default_factory=list)
-    effects: list[OperationEffect] = field(default_factory=list)
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
-
-
-class _Cancellation:
-    @asynccontextmanager
-    async def irreversible_section(self) -> AsyncGenerator[None]:
-        yield
-
-
-@dataclass(slots=True)
-class _Operands:
-    results: list[BaseModel] = field(default_factory=list)
-
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-        del written_at
-        self.results.append(operand)
-        return content_hash_hex({"operand": len(self.results)})
-
-
 @dataclass(frozen=True, slots=True)
 class _Context:
     identity: OperationIdentity
     authority_operation: PinnedAuthorityOperation
-    events: _Events = field(default_factory=_Events)
-    cancellation: _Cancellation = field(default_factory=_Cancellation)
-    operands: _Operands = field(default_factory=_Operands)
+    events: RecordedEvents = field(default_factory=RecordedEvents)
+    cancellation: UninterruptedCancellation = field(default_factory=UninterruptedCancellation)
+    operands: RecordedOperands = field(default_factory=RecordedOperands)
     typed_financial_operand: BoundTypedFinancialOperandAccess = field(
         default_factory=lambda: BoundTypedFinancialOperandAccess(broker=None, declaration=None, requirement=None)
     )
@@ -147,8 +250,14 @@ def _run[ResultT: BaseModel](
     definition_id: str,
     payload: BaseModel,
     result_type: type[ResultT],
+    *,
+    input_json: str | None = None,
 ) -> tuple[ResultT, _Context]:
-    """Run one executor as the worker does, and prove its result survives its public JSON form."""
+    """Run one executor as the worker does, and prove its result survives its public JSON form.
+
+    ``input_json`` is the operator input exactly as a frontend sends it, when
+    it carries what no dump repeats, such as entries as the filer typed them.
+    """
     context = _Context(
         identity=OperationIdentity(
             operation_id=content_hash_hex({"read": definition_id}),
@@ -166,7 +275,7 @@ def _run[ResultT: BaseModel](
                 definition_id=definition_id,
                 profile_id=UUID(work.work_unit.bucket_id),
                 subject_ref=work.work_unit_id,
-                input_json=payload.model_dump_json(),
+                input_json=payload.model_dump_json() if input_json is None else input_json,
             )
             try:
                 assert prepared.operand is not None
@@ -247,6 +356,8 @@ def _workbench_read_ports(
         calculations=ports.calculation_repository,
         verifications=verifications,
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
+        observations=ports.observation_repository,
     )
 
 
@@ -268,7 +379,7 @@ def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
         observations = _OperationLoadObservations()
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         executor = ModeloWorkbenchFormExecutor(
             ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
             contracts=lambda: contracts,
@@ -345,7 +456,7 @@ def test_an_uncalculated_form_keeps_one_encrypted_catalogue_read(
                 work.work_unit.bucket_id, work.operation, observations=observations, monkeypatch=monkeypatch
             ),
             operation=work.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
             language=OutputLanguage.EN,
         )
 
@@ -377,7 +488,7 @@ def test_the_form_keeps_its_final_encrypted_parent_validation(tmp_path: Path, mo
                 bucket_id=work.work_unit.bucket_id,
                 ports=ports,
                 operation=work.operation,
-                operation_contracts=build_production_operation_registry().public_contract_set,
+                operation_contracts=production_operation_registry().public_contract_set,
                 language=OutputLanguage.EN,
             )
 
@@ -421,7 +532,7 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with seeded_operator_work(tmp_path) as work:
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         observations = _OperationLoadObservations()
         executor = ModeloEditRenewExecutor(
             ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
@@ -430,7 +541,9 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
         expired = work.admit(issued_at=datetime.now(UTC) - timedelta(minutes=10))
         assert isinstance(expired, ModeloEditAdmittedV1)
         request = ModeloEditRenewRequest(
-            profile_id=_profile_id(work), baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline)
+            profile_id=_profile_id(work),
+            baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline),
+            output_language=OutputLanguage.EN,
         )
         renewed, _ = _run(
             work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
@@ -447,6 +560,9 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     assert renewed.renewed_baseline.expires_at > datetime.now(UTC)
     assert moved.renewed_baseline is None and moved.refusal is not None
     assert isinstance(moved.refusal.refusal, ModeloEditStaleBaselineRefusalV1)
+    # The refusal is said in the language the request named, in its registered family's message.
+    assert renewed.refusal_words is None
+    assert moved.refusal_words == resolve_error_message(ModeloEditBaselineStaleError(), locale=OutputLanguage.EN.value)
 
 
 def test_preflight_names_the_address_of_its_findings_without_applying(
@@ -462,13 +578,16 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
             baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, scalar_intents=(_SET_06,)
         )
         executor = ModeloEditPreflightExecutor(
-            ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch)
+            ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
+            contracts=lambda: production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
             executor,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
             ModeloEditPreflightProjectionV1,
         )
         after = work.require_head()
@@ -477,6 +596,128 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
     assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
     assert all(finding.address in {None, _SET_06.address} for finding in projection.outcome.findings)
     assert after.calculation_revision_id == before.calculation_revision_id
+    listed = [finding for finding in projection.outcome.findings if finding.code not in STATED_BY_THE_REVIEW]
+    assert [finding.code for finding in projection.findings] == [finding.code for finding in listed]
+    for worded in projection.findings:
+        if not worded.code.startswith(VALUE_REFUSED_PREFIX):
+            assert worded.words == tr(f"workspace.modelo.review.finding.{worded.code}", locale=OutputLanguage.EN.value)
+    assert projection.refusal_words is None
+
+
+def _typed_input(submission: ModeloEditSubmissionV1, typed: tuple[str, ...]) -> str:
+    """The operator input a frontend sends: the submission, with each entry's text as the filer typed it."""
+    document = json.loads(
+        ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+        ).model_dump_json()
+    )
+    for entry, text in zip(document["submission"]["lexemes"], typed, strict=True):
+        entry["lexeme"] = text
+    return json.dumps(document)
+
+
+def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Spanish amount reads as its value, nonsense and a box nobody may write are refused, nothing applied."""
+    with seeded_operator_work(tmp_path) as work:
+        before = work.recalculate()
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        writable = {
+            entry.casilla_id
+            for entry in admission.baseline.permitted_surface
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
+        }
+        revision = work.operation.revision_for_context("130", filing_year=_YEAR, period="1T")
+        closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
+        entries = (
+            ModeloEditParseRequestV1(address=_SET_06.address, entry_locale=OutputLanguage.ES, lexeme=""),
+            ModeloEditParseRequestV1(
+                address=ModeloEditScalarAddressV1(casilla_id=closed), entry_locale=OutputLanguage.ES, lexeme=""
+            ),
+        )
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
+        )
+        executor = ModeloEditPreflightExecutor(
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
+            contracts=lambda: production_operation_registry().public_contract_set,
+        )
+        projection, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission, ("1.234,56", "7")),
+        )
+        nonsense, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(
+                    submission.model_copy(update={"lexemes": entries[:1]})
+                ),
+                output_language=OutputLanguage.EN,
+            ),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission.model_copy(update={"lexemes": entries[:1]}), ("doce",)),
+        )
+        after = work.require_head()
+
+    assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
+    amount, closed_box = projection.parsed
+    assert (amount.address, amount.value, amount.refusal) == (_SET_06.address, "1234.56", None)
+    assert closed_box.refusal is not None
+    assert closed_box.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
+    (word,) = nonsense.parsed
+    assert word.value is None and word.refusal is not None and word.refusal.address == _SET_06.address
+    # Each entry is read back, or refused, in the language it was typed in.
+    six = next(
+        entry
+        for entry in admission.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == _SET_06.address.casilla_id
+    )
+    assert amount.value_text == format_casilla_value(
+        Decimal("1234.56"), data_type=six.grammar.data_type, language=OutputLanguage.ES
+    )
+    assert amount.refusal_words is None
+    # The entry compares as a figure, the form a box's own value takes, so "1.234,560" would compare equal too.
+    assert amount.comparable_value == comparable_entry(Decimal("1234.560")) == "1234.56"
+    assert closed_box.comparable_value is None
+    assert closed_box.refusal_words == parse_refusal_text(closed_box.refusal, OutputLanguage.ES)
+    assert word.refusal_words == parse_refusal_text(word.refusal, OutputLanguage.ES)
+    # What the filer typed never comes back, only the value it is read as, and nothing was applied.
+    read_back = {"parsed": {"__all__": {"value_text"}}}
+    assert "1.234,56" not in projection.model_dump_json(exclude=read_back) and "doce" not in nonsense.model_dump_json()
+    assert after.calculation_revision_id == before.calculation_revision_id
+
+
+def test_an_apply_carrying_entries_as_typed_is_refused_before_it_is_admitted(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline,
+            mutation_family=ModeloEditMutationFamily.CALCULATE,
+            lexemes=(ModeloEditParseRequestV1(address=_SET_06.address, entry_locale=OutputLanguage.ES, lexeme=""),),
+        )
+        with pytest.raises(OperationFinancialOperandRefusedError) as refused:
+            prepare_modelo_edit_operand(
+                definition_id="modelo.edit.apply",
+                profile_id=UUID(work.work_unit.bucket_id),
+                subject_ref=work.work_unit_id,
+                input_json=_typed_input(submission, ("100",)),
+            )
+        with pytest.raises(ValidationError):
+            ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
+
+    assert refused.value.reason is OperationFinancialOperandRefusalCode.ENTRY_AS_TYPED
 
 
 def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path: Path) -> None:
@@ -515,6 +756,14 @@ def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path:
             request,
             ModeloEditApplyPrerequisiteProjectionV1,
         )
+        store.retain(prerequisite)
+        worded, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
+            request.model_copy(update={"output_language": OutputLanguage.ES}),
+            ModeloEditApplyPrerequisiteProjectionV1,
+        )
         store.retain(replace(prerequisite, operation_id="e" * 64))
         other_baseline, _ = _run(
             work,
@@ -527,5 +776,305 @@ def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path:
     assert first.prerequisite is not None
     assert first.prerequisite.casilla_id == "06"
     assert first.prerequisite.calculation_revision_id == head.calculation_revision_id
+    assert first.prerequisite.words is None
+    assert worded.prerequisite is not None and worded.prerequisite.words is not None
+    assert worded.prerequisite.words.splitlines()[0] in {
+        tr("workspace.modelo.apply_prerequisite.what", locale="es"),
+        tr("workspace.modelo.apply_prerequisite.earlier", locale="es"),
+    }
     assert second.prerequisite is None
     assert other_baseline.prerequisite is None
+
+
+def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A corrected figure reads for a box no edit may write, through the correction grammar, and nothing is applied."""
+    with seeded_operator_work(tmp_path) as work:
+        before = work.recalculate()
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        writable = {
+            entry.casilla_id
+            for entry in admission.baseline.permitted_surface
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
+        }
+        revision = work.operation.revision_for_context("130", filing_year=_YEAR, period="1T")
+        closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
+        entries = (
+            ModeloEditParseRequestV1(
+                address=ModeloEditCorrectionAddressV1(casilla_id=closed), entry_locale=OutputLanguage.ES, lexeme=""
+            ),
+            ModeloEditParseRequestV1(
+                address=ModeloEditCorrectionAddressV1(casilla_id=validated_casilla_id("06")),
+                entry_locale=OutputLanguage.ES,
+                lexeme="",
+            ),
+        )
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
+        )
+        executor = ModeloEditPreflightExecutor(
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
+            contracts=lambda: production_operation_registry().public_contract_set,
+        )
+        projection, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission, ("1.234,567", "1,1234567")),
+        )
+        after = work.require_head()
+
+    assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
+    corrected, too_fine = projection.parsed
+    assert (corrected.address, corrected.value, corrected.refusal) == (entries[0].address, "1234.567", None)
+    ModeloWorkAmendOverride(casilla_id=closed, value="1234.567")
+    assert too_fine.refusal is not None
+    assert too_fine.refusal.reason is ModeloEditParseReason.TOO_MANY_DECIMALS
+    assert "1.234,567" not in projection.model_dump_json(exclude={"parsed": {"__all__": {"value_text"}}})
+    assert after.calculation_revision_id == before.calculation_revision_id
+
+
+def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A held change on a box that moved reads as changed, one on a box the form no longer has as dropped.
+
+    The held changes travel inside the preflight's transient submission only: the journaled request has no
+    place for them, and the result says what became of each without the box's state digest.
+    """
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        contracts = production_operation_registry().public_contract_set
+        observations = _OperationLoadObservations()
+        ports_factory = _ports_factory(work, observations=observations, monkeypatch=monkeypatch)
+        read, _ = _run(
+            work,
+            ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=lambda: contracts),
+            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            ModeloWorkbenchFormRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+            ),
+            ModeloWorkbenchFormProjectionV1,
+        )
+        form = restore_modelo_workbench_form(read).load.form
+        box = next(
+            field
+            for field in form.fields()
+            if field.address == ModeloFormCasillaAddressV1(casilla_id=_SET_06.address.casilla_id)
+        )
+        assert box.takes_typed_value
+        mine = held_change(box, ModeloEditHeldKind.SET)
+        gone = ModeloEditHeldChangeV1(
+            address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("999")),
+            kind=ModeloEditHeldKind.SET,
+            held_state=box.state_digest,
+        )
+        assert read.admitted_baseline is not None
+        baseline = read.admitted_baseline.to_baseline()
+        submission = ModeloEditSubmissionV1(
+            baseline=baseline, mutation_family=baseline.mutation_family, held=(mine, gone)
+        )
+        payload = ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+        )
+        executor = ModeloEditPreflightExecutor(ports_factory=ports_factory, contracts=lambda: contracts)
+        unmoved, _ = _run(
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1
+        )
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work.work_unit_id,
+            ports=work.ports,
+            clock=SEEDED_AT,
+            casilla_inputs={_SET_06.address.casilla_id: Decimal("100")},
+        )
+        stale, _ = _run(
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1
+        )
+        # Read again, the declaration admits a fresh baseline; the changes held from the first read go with it.
+        reread, _ = _run(
+            work,
+            ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=lambda: contracts),
+            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            ModeloWorkbenchFormRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+            ),
+            ModeloWorkbenchFormProjectionV1,
+        )
+        assert reread.admitted_baseline is not None
+        renewed = reread.admitted_baseline.to_baseline()
+        fresh = ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(
+                ModeloEditSubmissionV1(baseline=renewed, mutation_family=renewed.mutation_family, held=(mine, gone))
+            ),
+            output_language=OutputLanguage.EN,
+        )
+        moved, _ = _run(
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, fresh, ModeloEditPreflightProjectionV1
+        )
+
+    assert isinstance(unmoved.outcome, ModeloEditPreflightEvaluatedV1)
+    assert [(entry.address, entry.outcome) for entry in unmoved.rebase] == [
+        (mine.address, ModeloFormRebaseOutcome.KEPT),
+        (gone.address, ModeloFormRebaseOutcome.DROPPED),
+    ]
+    # A preflight the stale baseline refuses judges nothing: the form it would judge against is about to change.
+    assert isinstance(stale.outcome, ModeloEditRefusedV1)
+    assert isinstance(stale.outcome.refusal, ModeloEditStaleBaselineRefusalV1)
+    assert stale.rebase == ()
+    assert isinstance(moved.outcome, ModeloEditPreflightEvaluatedV1)
+    assert [(entry.address, entry.outcome) for entry in moved.rebase] == [
+        (mine.address, ModeloFormRebaseOutcome.CHANGED),
+        (gone.address, ModeloFormRebaseOutcome.DROPPED),
+    ]
+    # The digest stays in the transient submission: neither the journaled requests nor the result carry it.
+    assert "held" not in ModeloEditPreflightRequestV2.model_fields
+    assert "staged" not in ModeloEditRenewRequest.model_fields
+    for result in (unmoved, stale, moved):
+        assert box.state_digest not in result.model_dump_json()
+    with pytest.raises(ValidationError):
+        ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
+
+
+#: The carry a first-quarter Modelo 130 reads from the previous ejercicio's Modelo 100.
+_PRIOR_YEAR_NET_INCOME = "irpf.previous_year_economic_activity_net_income"
+
+
+def _offered_intents(surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...]) -> tuple[ModeloEditBindingIntentKind, ...]:
+    (entry,) = (
+        entry
+        for entry in surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and entry.binding_id == _PRIOR_YEAR_NET_INCOME
+    )
+    return tuple(entry.allowed_intents)
+
+
+def test_the_form_read_offers_the_statement_of_a_carry_whose_earlier_filing_nothing_is_held_for(tmp_path: Path) -> None:
+    floor = filing_year_envelope().floor
+    with seeded_operator_work(tmp_path, modelo="130", filing_year=floor, period_code="1T") as work:
+        read = read_modelo_workbench_form(
+            work.work_unit_id,
+            bucket_id=work.work_unit.bucket_id,
+            ports=build_modelo_workbench_read_ports(work.work_unit.bucket_id, work.operation),
+            operation=work.operation,
+            operation_contracts=production_operation_registry().public_contract_set,
+            language=OutputLanguage.EN,
+        )
+
+    assert isinstance(read.admission, ModeloEditAdmittedV1)
+    offered = _offered_intents(read.admission.baseline.permitted_surface)
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in offered
+    assert ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE in offered
+
+
+def test_a_renewed_baseline_keeps_offering_the_statement_while_nothing_is_held(tmp_path: Path) -> None:
+    floor = filing_year_envelope().floor
+    with seeded_operator_work(tmp_path, modelo="130", filing_year=floor, period_code="1T") as work:
+        contracts = production_operation_registry().public_contract_set
+        executor = ModeloEditRenewExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts)
+        expired = work.admit(issued_at=datetime.now(UTC) - timedelta(minutes=10))
+        assert isinstance(expired, ModeloEditAdmittedV1)
+        renewed, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+            ModeloEditRenewRequest(
+                profile_id=_profile_id(work),
+                baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline),
+                output_language=OutputLanguage.EN,
+            ),
+            ModeloEditRenewalProjectionV1,
+        )
+
+    assert renewed.renewed_baseline is not None
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in _offered_intents(
+        renewed.renewed_baseline.to_baseline().permitted_surface
+    )
+
+
+def _form_and_filing_state(
+    work: SeededOperatorWork,
+) -> tuple[ModeloWorkbenchFormProjectionV1, ModeloWorkFilingStateProjectionV1]:
+    """Run the form read and the filing-state read of the same stored state as registered operations."""
+    contracts = production_operation_registry().public_contract_set
+    form, _ = _run(
+        work,
+        ModeloWorkbenchFormExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts),
+        MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+        ModeloWorkbenchFormRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+        ),
+        ModeloWorkbenchFormProjectionV1,
+    )
+    state, _ = _run(
+        work,
+        ModeloWorkFilingStateExecutor(ports_factory=build_modelo_workbench_read_ports),
+        MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+        ModeloWorkFilingStateRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+        ),
+        ModeloWorkFilingStateProjectionV1,
+    )
+    return form, state
+
+
+def test_the_filing_state_of_an_uncalculated_declaration_offers_the_form_reads_next_step(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        form, state = _form_and_filing_state(work)
+
+    assert form.admitted_baseline is not None
+    assert state.calculation_revision_id is None
+    assert not state.filed and state.edit_closure is None and not state.rules_incomplete
+    assert state.next_step is not None and state.next_step.action is form.form.journey.next_step.action
+    assert state == filing_state_of_form(form)
+
+
+_APPLICABILITY_ONLY_MODELO = "345"
+"""A modelo whose newest edition the registry holds at applicability grade only, so nothing can be worked out."""
+
+
+def test_the_filing_state_withholds_the_next_step_where_the_rules_stop_short_of_calculation(tmp_path: Path) -> None:
+    grade = revision_selected_for(_APPLICABILITY_ONLY_MODELO, _YEAR, _ANNUAL).effective_authority_grade
+    assert grade is RegistryAuthorityGrade.APPLICABILITY, "the revision reaches calculation, so this proves nothing"
+    with seeded_operator_work(
+        tmp_path, modelo=_APPLICABILITY_ONLY_MODELO, filing_year=_YEAR, period_code=_ANNUAL
+    ) as work:
+        form, state = _form_and_filing_state(work)
+
+    assert form.rules_incomplete and form.next_step is None
+    assert state.rules_incomplete and state.next_step is None
+    assert state == filing_state_of_form(form)
+
+
+def test_the_filing_state_read_states_the_form_reads_filing_fields_and_admits_no_edit(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        form, state = _form_and_filing_state(work)
+
+    assert form.admitted_baseline is not None
+    assert state.calculation_revision_id is not None
+    assert state.next_step is not None and state.journey == form.form.journey
+    assert state == filing_state_of_form(form)
+    with pytest.raises(ValidationError, match="granting verification report requires its calculation"):
+        ModeloWorkFilingStateProjectionV1.model_validate_json(
+            state.model_copy(
+                update={"calculation_revision_id": None, "verification_report_id": "0" * 64}
+            ).model_dump_json()
+        )
+
+
+def test_the_filing_state_result_carries_no_form_box_and_no_edit_baseline() -> None:
+    whole_form = {PublicModeloWorkForm.__name__, PublicModeloFormField.__name__, ModeloEditApplyBaselineV1.__name__}
+    form_models = set(ModeloWorkbenchFormProjectionV1.model_json_schema()["$defs"])
+    state_models = set(ModeloWorkFilingStateProjectionV1.model_json_schema()["$defs"])
+
+    assert whole_form <= form_models
+    assert not whole_form & state_models

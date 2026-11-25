@@ -14,7 +14,7 @@ populated exactly as import populates them) and pushes it through the real
 production classification function for every pipeline that gates on
 ``is_non_eur_without_conversion``:
 
-- ``_renta_ledger._classify_renta_transaction`` (M100 first-slice expense) --
+- ``renta_ledger_classification.classify_renta_transaction`` (M100 first-slice expense) --
   PARTIALLY correct until this module's own coverage gap was found and
   closed. ``gross_amount`` always read ``effective_eur_amount`` correctly, but
   the ``taxable_base``/``iva_amount`` fallback (``_taxable_base_for`` /
@@ -34,15 +34,15 @@ production classification function for every pipeline that gates on
   ``invoice.base_total_eur``/``invoice.iva_total_eur`` properties that already
   exist on ``Invoice`` for exactly this purpose (and are used correctly in
   ``invoice_retencion.py``). Both are fixed here.
-- ``_iva_transaction._substrate_admission_issue`` (IVA ledger) -- already
+- ``iva_transaction.substrate_admission_issue`` (IVA ledger) -- already
   correct, refuses a converted row outright because its tax substrate
   (``taxable_base``/``iva_amount``) stays native-currency; this is a
   defensible POLICY, not the bug, and this module does not weaken it.
-- ``_renta_income_ledger._classify_income_transaction`` (M130 casilla 01) --
+- ``renta_income_classification.classify_income_transaction`` (M130 casilla 01) --
   fixed here.
-- ``_renta_gasto_ledger._classify_gasto_transaction`` (M130 casilla 02) --
+- ``renta_gasto_ledger.classify_gasto_transaction`` (M130 casilla 02) --
   fixed here.
-- ``_impatriado_income_ledger._classify_impatriado_income_transaction``
+- ``impatriado_income_ledger.classify_impatriado_income_transaction``
   (impatriado base) -- fixed here.
 
 A wider sweep of ``application/`` for the same SHAPE -- any native-currency
@@ -50,12 +50,12 @@ read for a EUR-denominated purpose, not just these five sites -- found two
 more, on the Invoice/InvoiceLine side rather than Transaction:
 
 - ``modelo_bindings.py`` (M303 general IVA screen,
-  ``_screened_invoice_line_observations`` and its dispatch tree) built every
+  ``screened_invoice_line_observations`` and its dispatch tree) built every
   ``IvaLedgerObservation`` straight from ``line.subtotal``/``line.iva_amount``
   -- native to ``invoice.currency`` -- with NO currency check anywhere in the
   file. Fixed here (see
   ``test_modelo_bindings_iva_screen_converts_invoice_line_amounts``).
-- ``_oss_ioss.py`` (M369 OSS/IOSS, ``_candidate_for_invoice_line``) had the
+- ``_oss_ioss.py`` (M369 OSS/IOSS, ``candidate_for_invoice_line``) had the
   identical defect. OSS/IOSS is cross-border EU B2C by definition, where
   invoicing in the destination Member State's own currency is the ORDINARY
   case, making this the highest-probability trigger of the whole class. Fixed
@@ -100,10 +100,13 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
@@ -111,17 +114,23 @@ from ....domain.renta.ledger_expenses import RentaDeductibilityContext, RentaDed
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._iva_transaction import _substrate_admission_issue
-from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
+from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssue,
-    _classify_impatriado_income_transaction,
+    classify_impatriado_income_transaction,
 )
 from ..iva_ledger import IvaLedgerAggregationIssueReason
-from ..oss_ioss import _candidate_for_invoice_line
-from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
-from ..renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
+from ..iva_transaction import substrate_admission_issue
+from ..modelo_bindings_invoice_iva import screened_invoice_line_observations
+from ..oss_ioss_resolver import candidate_for_invoice_line
+from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, classify_gasto_transaction
+from ..renta_income_classification import classify_income_transaction
+from ..renta_income_models import RentaIncomeLedgerAggregationIssue
+from ..renta_ledger import RentaCategoryDeductionRules
+from ..renta_ledger_classification import classify_renta_transaction
+from ..renta_ledger_models import RentaLedgerAggregationIssue
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -133,7 +142,7 @@ def _pinned_operation() -> PinnedAuthorityOperation:
     return scoped
 
 
-_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
 
 # USD converted at 0.90: fx_rate/value_in_eur populated exactly as
 # CurrencyNormalizationService populates them at import (see test_fx_conversion.py).
@@ -145,8 +154,8 @@ _CONVERTED_EUR = Decimal("900.00")
 def _raw(*, direction_label: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"row-parity-{direction_label}",
-        booked_date=date(2025, 2, 10),
-        value_date=date(2025, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
         amount=_NATIVE_AMOUNT,
         currency="USD",
         counterparty="US Client Inc",
@@ -180,7 +189,7 @@ def _converted_transaction(
         "fx_rate": _FX_RATE,
         "value_in_eur": _CONVERTED_EUR,
         "rate_source": "ecb_reference",
-        "rate_date": "2025-02-10",
+        "rate_date": date(_YEAR, 2, 10).isoformat(),
     }
     if category_id is not None:
         payload["category_id"] = category_id
@@ -199,15 +208,15 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount(operation: PinnedA
         direction=TransactionDirection.OUTGOING,
         category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=InvoiceCatalogue(),
         bucket_id="parity-bucket",
-        resolved_period=Period.from_year_and_code(2025, "0A"),
-        resolved_profile_year=2025,
+        resolved_period=Period.from_year_and_code(_YEAR, "0A"),
+        resolved_profile_year=_YEAR,
         profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
-        context=RentaDeductibilityContext(profile_year=2025),
+        context=RentaDeductibilityContext(profile_year=_YEAR),
         activity_key="activity-1",
     )
     assert isinstance(result, RentaDeductibleExpenseObservation), result
@@ -232,15 +241,15 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted(
         category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
         taxable_base=Decimal("826.45"),
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=InvoiceCatalogue(),
         bucket_id="parity-bucket",
-        resolved_period=Period.from_year_and_code(2025, "0A"),
-        resolved_profile_year=2025,
+        resolved_period=Period.from_year_and_code(_YEAR, "0A"),
+        resolved_profile_year=_YEAR,
         profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
-        context=RentaDeductibilityContext(profile_year=2025),
+        context=RentaDeductibilityContext(profile_year=_YEAR),
         activity_key="activity-1",
     )
     assert isinstance(result, RentaDeductibleExpenseObservation), result
@@ -290,16 +299,16 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
             "bucket_id": "parity-bucket",
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "INV-USD-PARITY-1",
-            "issued_at": date(2025, 2, 10),
+            "issued_at": date(_YEAR, 2, 10),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total_native,
             "iva_total": iva_total_native,
             "grand_total": Decimal("1210.00"),
             "currency": "USD",
             "fx_rate": _FX_RATE,
-            "fx_rate_date": date(2025, 2, 10),
+            "fx_rate_date": date(_YEAR, 2, 10),
             "fx_rate_source": "ecb_reference",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
@@ -310,15 +319,15 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
     tx = Transaction.model_validate(
         {**tx_provisional.model_dump(mode="python"), "purchase_invoice_evidence_id": invoice.invoice_id},
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=invoices,
         bucket_id="parity-bucket",
-        resolved_period=Period.from_year_and_code(2025, "0A"),
-        resolved_profile_year=2025,
+        resolved_period=Period.from_year_and_code(_YEAR, "0A"),
+        resolved_profile_year=_YEAR,
         profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
-        context=RentaDeductibilityContext(profile_year=2025),
+        context=RentaDeductibilityContext(profile_year=_YEAR),
         activity_key="activity-1",
     )
     assert not isinstance(result, RentaLedgerAggregationIssue), result
@@ -342,7 +351,7 @@ def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate(
         taxable_base=Decimal("826.45"),
         iva_amount=Decimal("173.55"),
     )
-    issue = _substrate_admission_issue(tx)
+    issue = substrate_admission_issue(tx)
     assert issue is not None
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE
 
@@ -353,12 +362,13 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
         direction=TransactionDirection.INCOMING,
         irpf_category="actividad_economica",
     )
-    result = _classify_income_transaction(
+    result = classify_income_transaction(
         tx,
         invoices=InvoiceCatalogue(),
+        receipts_by_invoice=None,
         bucket_id="parity-bucket",
-        cumulative_start=date(2025, 1, 1),
-        cumulative_end=date(2025, 3, 31),
+        cumulative_start=date(_YEAR, 1, 1),
+        cumulative_end=date(_YEAR, 3, 31),
         target_casilla_id=validated_casilla_id("01", surface="currency parity income target"),
         activity_category_matcher=lambda _transaction: True,
         employment_category_matcher=lambda _transaction: False,
@@ -369,20 +379,28 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
     assert result.gross_amount != _NATIVE_AMOUNT
 
 
-def test_renta_gasto_ledger_reads_converted_eur_substrate() -> None:
+def test_renta_gasto_ledger_reads_converted_eur_substrate(operation: PinnedAuthorityOperation) -> None:
     """FIXED: deductible_amount derives from the EUR-converted substrate."""
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("826.45"),
         iva_amount=Decimal("173.55"),
         irpf_category="actividad_economica",
+        category_id="material_oficina",
     )
-    result = _classify_gasto_transaction(
+    result = classify_gasto_transaction(
         tx,
-        cumulative_start=date(2025, 1, 1),
-        cumulative_end=date(2025, 3, 31),
+        bucket_id="parity-bucket",
+        cumulative_start=date(_YEAR, 1, 1),
+        cumulative_end=date(_YEAR, 3, 31),
         target_casilla_id=validated_casilla_id("02", surface="currency parity gasto target"),
         accept_activity_marker=True,
+        rules=RentaCategoryDeductionRules(
+            profile_year=_YEAR,
+            profiles=resolve_category_profiles(2025, operation=operation),
+            region_overrides={},
+            context=RentaDeductibilityContext(profile_year=_YEAR),
+        ),
     )
     assert not isinstance(result, RentaGastoLedgerAggregationIssue), result
     assert result is not None
@@ -397,10 +415,10 @@ def test_impatriado_income_ledger_reads_converted_eur_amount() -> None:
         direction=TransactionDirection.INCOMING,
         irpf_category="actividad_economica",
     )
-    result = _classify_impatriado_income_transaction(
+    result = classify_impatriado_income_transaction(
         tx,
-        window_start=date(2025, 1, 1),
-        window_end=date(2025, 12, 31),
+        window_start=date(_YEAR, 1, 1),
+        window_end=date(_YEAR, 12, 31),
         target_casilla_id=validated_casilla_id("01", surface="currency parity impatriado target"),
         source_jurisdictions=frozenset({"ES"}),
         eligible_income_categories=frozenset({"actividad_economica"}),
@@ -436,7 +454,7 @@ def _converted_usd_invoice(
             "bucket_id": "parity-bucket",
             "kind": kind,
             "invoice_number": "INV-LINE-EUR-PARITY-1",
-            "issued_at": date(2025, 2, 10),
+            "issued_at": date(_YEAR, 2, 10),
             "counterparty_name": "Counterparty",
             "counterparty_tax_id": counterparty_tax_id,
             "counterparty_country": counterparty_country,
@@ -445,7 +463,7 @@ def _converted_usd_invoice(
             "grand_total": base_total + iva_total,
             "currency": "USD",
             "fx_rate": _FX_RATE,
-            "fx_rate_date": date(2025, 2, 10),
+            "fx_rate_date": date(_YEAR, 2, 10),
             "fx_rate_source": "ecb_reference",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
@@ -469,13 +487,13 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     invoice, _line = _converted_usd_invoice(
         kind=InvoiceKind.ISSUED,
         counterparty_country="ES",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         base_total=base_total_native,
         iva_total=iva_total_native,
     )
-    observations = _screened_invoice_line_observations(
+    observations = screened_invoice_line_observations(
         invoice,
-        devengo_date=date(2025, 2, 10),
+        devengo_date=date(_YEAR, 2, 10),
         deduction_authority=None,
         operation=_pinned_operation(),
     )
@@ -486,12 +504,37 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     assert observation.base_amount != base_total_native
 
 
+class _OneQuote:
+    """A rate authority that publishes one day; the provider's own parsing has its own tests."""
+
+    rate_source_id = "ecb_reference"
+
+    def __init__(self, day: date, rate: Decimal) -> None:
+        self._day = day
+        self._rate = rate
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        del currency
+        if rate_date != self._day:
+            return EurRateLookup(
+                status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source=self.rate_source_id
+            )
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=self.rate_source_id,
+            rate=self._rate,
+            observation_date=rate_date,
+        )
+
+
 def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
-    """FIXED: an OSS/IOSS candidate is EUR, not the invoice's native magnitude.
+    """An OSS/IOSS candidate is EUR at the period-close ECB rate, not native and not the invoice's stamp.
 
     OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
-    destination Member State's own currency is the ORDINARY case -- the
-    highest-probability trigger of the whole native-read defect class.
+    destination Member State's own currency is the ORDINARY case. 1 EUR = 1.25
+    USD on the period's last day makes 1000.00 USD 800.00 EUR and 210.00 USD
+    168.00 EUR, whatever the invoice was stamped with.
     """
     base_total_native = Decimal("1000.00")
     iva_total_native = Decimal("210.00")
@@ -505,8 +548,12 @@ def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
         oss_transaction_kind=TransactionKind("oss_union_services"),
         oss_rate_kind=IvaRateKind("general"),
     )
-    candidate = _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=date(2025, 2, 10))
+    close = date(_YEAR, 3, 31)
+    with bind_exchange_rate_provider_factory(lambda: _OneQuote(close, Decimal("0.8"))):
+        candidate = candidate_for_invoice_line(
+            invoice, line, line_index=1, devengo_date=date(_YEAR, 2, 10), period_last_day=close
+        )
     assert candidate is not None
-    assert candidate.base_amount == base_total_native * _FX_RATE
-    assert candidate.iva_amount == iva_total_native * _FX_RATE
-    assert candidate.base_amount != base_total_native
+    assert candidate.base_amount == Decimal("800.00")
+    assert candidate.iva_amount == Decimal("168.00")
+    assert candidate.base_amount != base_total_native * _FX_RATE

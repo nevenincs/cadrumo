@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#sociedades-manual-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c35ff269c185cabece8570b405f05e223123856667a9d3c3c60cbaa11e034160'
+body_hash: 'sha256:eac65e372a6b59f7b6932a0619dbb333dee7d3aa31603651c16beacd6b4933e9'
 related:
   - "[[2026-09-10-sociedades-manual-coverage-temporal-coverage-research]]"
 ---
@@ -36,14 +36,14 @@ Documentary availability currently depends on whichever manual directories happe
 - The existing supported-year catalogue, registry authority, source-reference schema, and snapshot selector are stable parent boundaries.
 - Only official AEAT material can satisfy an annual-manual requirement.
 - An unpublished disposition retains an official archive locator and observation date; it is not a permanent exemption.
-- No 2026 manual source, checksum, corpus directory, or extracted text exists until AEAT publishes it.
+- A manual source, checksum, corpus directory, or extracted text for a supported year whose manual AEAT has not yet published does not exist until AEAT publishes it.
 - The contract must not widen Modelo 200 selectors or remove existing refusal paths.
 
 ## Implementation
 
 Introduce a typed Sociedades annual-manual coverage catalogue beside the canonical filing-year declaration. Each supported year names either an enrolled annual manual source whose applicability interval contains that year and whose corpus manifest exists, or an explicit unpublished disposition with official locator, observation date, and acquisition condition.
 
-Enroll the available 2022 and 2023 manuals through the existing acquisition and extraction pipeline; retain and validate 2024 and 2025; declare 2026 unpublished. Build validation derives its denominator from the canonical catalogue, rejects missing published material and off-interval annual source use, and requires evidence for every unpublished disposition. The operator manual surfaces project availability rather than silently omitting a year. Modelo 200 authority remains selected independently by its own annual revisions.
+Enroll each published annual manual that is not yet in the corpus through the existing acquisition and extraction pipeline; retain and validate the manuals already enrolled; declare each supported year whose manual is not yet issued unpublished. Build validation derives its denominator from the canonical catalogue, rejects missing published material and off-interval annual source use, and requires evidence for every unpublished disposition. The operator manual surfaces project availability rather than silently omitting a year. Modelo 200 authority remains selected independently by its own annual revisions.
 
 ## Rationale
 
@@ -52,7 +52,7 @@ The chosen option is the only one that gives every declared product year an audi
 ## Consequences
 
 - Published years become locally evidenced; expected publication absence becomes explicit and re-checkable.
-- 2022 and 2023 need acquisition, extraction, provenance capture, enrolment, and focused coverage tests.
-- 2026 remains non-substitutable until AEAT publication.
+- Each published manual not yet enrolled needs acquisition, extraction, provenance capture, enrolment, and focused coverage tests.
+- An unpublished annual manual remains non-substitutable until AEAT publication.
 - Existing cross-year Modelo 200 manual references must be narrowed or explicitly disposed.
-- This decision does not make Modelo 200 calculation or filing available for 2022, 2023, or 2026.
+- This decision does not make Modelo 200 calculation or filing available for any supported year merely because its annual manual is enrolled or unpublished.

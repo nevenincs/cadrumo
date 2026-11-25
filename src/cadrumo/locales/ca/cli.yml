@@ -13,7 +13,7 @@ cli:
           a un model o per a tots.
         group_help: Configura els teus comptes bancaris propis i designa'ls per a
           càrrecs i devolucions de models.
-        holding_help: Si n'ets titular únic (titular) o cotitular (cotitular).
+        holding_help: Si n'ets titular únic (`titular`) o cotitular (`cotitular`).
         label_help: El teu nom per al compte.
         list_help: Llista els teus comptes propis, emmascarats, amb les seves designacions.
         modelo_help: Model de tres xifres al qual s'aplica la designació; tots si
@@ -22,26 +22,40 @@ cli:
         opened_on_help: Data d'obertura del compte (AAAA-MM-DD).
         remove_help: Elimina un compte propi que cap moviment utilitza ni cap designació
           esmenta.
-        role_help: 'La funció: charge (domiciliació) o refund (devolució).'
+        role_help: 'La funció: `charge` (domiciliació) o `refund` (devolució).'
         show_help: Mostra un compte propi, emmascarat, i les designacions que l'esmenten.
         undesignate_help: Elimina la designació d'una funció, per a un model o per
           a tots.
         update_help: Canvia les dades indicades d'un compte propi; un IBAN o bloc
           bancari nou només arriba pel canal secret.
       actividad_asset:
+        acquisition_candidates_help: Llista els pagaments del llibre que un element
+          podria citar com a adquisició.
         claim_help: Registra una previsió com a amortització; repetir-la de manera
           idèntica retorna el registre existent.
         correct_help: Afegeix una revisió que substitueix la revisió vigent de l'actiu
           (JSON).
         create_help: Crea un actiu a partir de la seva primera revisió immutable (JSON).
-        filing_handoff_help: Mostra les amortitzacions registrades projectades al
-          Model 100 i, de manera acumulada, al Model 130.
+        describe_help: Registra el nom, el número de sèrie i les dades de registre
+          d'un element; cap càlcul canvia.
+        disposal_calculate_help: 'Calcula localment les xifres d''una baixa: la que
+          indiquen les opcions o, si no, la registrada.'
+        dispose_help: Registra la baixa d'un element i substitueix en la mateixa escriptura
+          les dotacions posteriors al seu últim dia de servei.
+        filing_handoff_help: Mostra els càrrecs registrats projectats al Model 100
+          i la meritació projectada al Model 130.
         forecast_help: Calcula, sense registrar-la, l'amortització que admet l'elecció
           de la revisió per a un interval.
+        form_options_help: Mostra els mètodes i grups de taula que el registre admet
+          per a un tipus d'element i exercici.
         group_help: 'Registre d''actius d''activitats econòmiques de l''IRPF: revisions
           immutables, previsions d''amortització i amortitzacions registrades (LIS
           art. 12).'
         inspect_help: Mostra la cadena completa de revisions d'un actiu.
+        list_help: Llista els elements del registre amb base, acumulat, pendent i
+          avisos.
+        plan_help: Mostra el pla d'amortització d'un element, any per any.
+        timeline_help: Mostra l'historial d'un element en ordre.
       bienes_inversion:
         acquisition_year_help: Any d'adquisició del bé.
         art108_help: Si el bé té la consideració de bé d'inversió segons LIVA art.
@@ -71,18 +85,36 @@ cli:
           Indica-ho per preguntar què respondrà l'escala per a aquest document, que
           és l'única manera de veure una discrepància amb el que vas confirmar abans
           que una confirmació la rebutgi.
+        filing_name_help: Indica el nom amb què es declara una contrapart a les declaracions
+          informatives, en les parts que anomenen els dissenys de registre. S'indica
+          una sola vegada, per a totes les exportacions posteriors.
         group_help: Confirma el que se sap d'una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
           contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
           no per on estigui establerta.'
+        no_second_surname_help: Indica que la persona física té un sol cognom. Un
+          segon cognom que falta mai no s'interpreta com a absència.
+        nombre_help: El nom complet d'una persona física.
         note_help: En què es basa la resposta, amb les teves paraules. Es registra,
           mai no es consulta.
+        party_kind_help: Si la contrapart és persona física o entitat; decideix quines
+          parts indiques.
+        primer_apellido_help: El primer cognom d'una persona física, tal com el coneixes.
+        razon_social_help: La raó social o denominació completa d'una entitat, mai
+          un nom comercial.
+        rendering_help: Una forma més curta que indiques per a un camp més estret,
+          com AMPLADA=TEXT. Repeteix-ho una vegada per amplada; un nom mai no s'escurça
+          sense que ho indiquis.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
+        segundo_apellido_help: El segon cognom d'una persona física. Omet-lo només
+          juntament amb --no-second-surname.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         view_help: Mostra què respondria l'escala d'identificació d'IVA per a aquesta
           contrapart amb el que s'ha confirmat fins ara.
+        withdraw_filing_name_help: Retira només el nom de declaració indicat per a
+          una contrapart. Tota la resta que has indicat sobre ella es conserva.
         withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
           que la resposta anterior era incorrecta.
       evidence:
@@ -107,6 +139,8 @@ cli:
           cada fila indica el motiu. En confirmar un document es torna a llegir, de
           manera que aquests camps s''emplenen llavors si el motiu ja s''ha resolt,
           o pots emplenar-los tu.'
+        batch_paused_local_ai_unavailable: El model que has triat no ha pogut llegir
+          els documents en pausa. Comprova que estigui disponible.
         batch_pending_review_message: Alguns esborranys contenen una incidència que
           has de resoldre tu abans de crear una factura. Estan retinguts, no fallits.
         batch_progress_message: 'processat %{source}: %{status}'
@@ -142,9 +176,9 @@ cli:
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
         confirm_currency_help: Codi de moneda ISO-4217.
         confirm_expected_draft_review_sha256_help: Empremta de revisió de l'esborrany
-          exacte que has revisat, retornada per extract.
+          exacte que has revisat, retornada per `aeat app ledger evidence extract`.
         confirm_expected_source_sha256_help: SHA-256 del justificant retornat per
-          extract; verifica que els bytes no han canviat.
+          `aeat app ledger evidence extract`; verifica que els bytes no han canviat.
         confirm_help: Torna a extreure el justificant en local i confirma'l com a
           factura real del catàleg.
         confirm_invoice_class_help: Indica la classe de factura quan el document no
@@ -174,11 +208,12 @@ cli:
         confirm_rectifies_help: Número de la factura que rectifica aquesta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 l'exigeix juntament amb la seva pròpia sèrie,
           i es llegeix del document quan aquest l'indica.
-        confirm_resolve_help: 'Respon a una incidència bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
-          Per a choose, indica la lectura pel seu valor o pel resum que va mostrar
-          review. Repeteix un cop per incidència; no hi ha opció massiva.'
+        confirm_resolve_help: 'Respon a una incidència bloquejant: <finding-id>=`<choose|supply|attest>`:<valor-o-motiu>.
+          Per a `choose`, indica la lectura pel seu valor o pel resum que va mostrar
+          `review`. Repeteix un cop per incidència; no hi ha opció massiva.'
         confirm_retention_amount_help: Import de retenció d'IRPF de la factura.
-        confirm_retention_rate_help: Percentatge de retenció d'IRPF de la factura.
+        confirm_retention_rate_help: 'Retenció d''IRPF de la factura com a fracció:
+          0.15 per al 15 %.'
         confirm_review_contradicted_regime_message: Aquest document es contradiu a
           si mateix sobre com tributa. El detall següent anomena què discrepava amb
           què.
@@ -219,9 +254,6 @@ cli:
           del document, que un identificador d''adjunt no aporta.'
         extract_off_host_provider_help: Envia aquest document a un model allotjat
           en lloc de llegir-lo en aquest equip.
-        extract_off_host_provider_is_local: --off-host-provider local és el valor
-          per defecte i no envia res fora de l'equip. Omet l'opció o indica un proveïdor
-          allotjat.
         extract_off_host_unclassified: 'Es rebutja aquesta lectura fora de l''equip:
           el control de consentiment ha retornat {outcome}, per al qual aquesta ordre
           no té text. Una resposta no reconeguda es tracta com un rebuig perquè les
@@ -261,25 +293,32 @@ cli:
         invoice_number_help: Número de factura del proveïdor
         iva_amount_help: Import d'IVA de la factura
         iva_rate_help: Tipus d'IVA aplicat com a percentatge, per exemple 21
-        label_reading_busy_refused: 'El lector automàtic no s''ha executat perquè
-          una altra lectura ja feia servir aquest equip. Els {count} camps que les
-          etiquetes no cobrien encara no s''han llegit i queden buits: {fields}. El
-          document s''ha llegit només a partir de les etiquetes; torna a extreure
-          quan acabi l''altra lectura, o emplena tu aquests camps.'
         label_reading_headroom_refused: 'El lector automàtic no s''ha executat perquè
           aquest equip no té prou memòria lliure. Els {count} camps que les etiquetes
           no cobrien encara no s''han llegit i queden buits: {fields}. El document
-          s''ha llegit només a partir de les etiquetes; allibera memòria i torna a
-          extreure, o emplena tu aquests camps.'
-        label_reading_reader_unavailable: 'El lector automàtic no s''ha pogut iniciar
-          ({error_type}). Els {count} camps que les etiquetes no cobrien encara no
-          s''han llegit i queden buits: {fields}. El document s''ha llegit només a
-          partir de les etiquetes; torna a extreure més tard, o emplena tu aquests
-          camps.'
+          s''ha llegit només a partir de les etiquetes; emplena tu aquests camps.'
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
+        page_help: Dibuixa una pàgina d'un document desat com a imatge PNG i l'escriu
+          a --output.
+        page_max_width_help: Amplada màxima de la imatge, en píxels.
+        page_number_help: Pàgina que es dibuixa, comptant des de l'1.
+        page_output_failed: No s'ha pogut escriure la imatge de la pàgina a {path}.
+        page_output_help: Fitxer PNG on s'escriu la pàgina.
+        page_structured_invoice: Aquest document és una factura electrònica estructurada
+          i no té cap pàgina per dibuixar; obre'l a la finestra per llegir-ne les
+          dades.
         pull_actor_help: El teu nom o etiqueta.
         pull_id_help: Identificador de transacció dels teus registres.
+        release_disposition_help: 'Què passa amb el justificant: `detach` el desvincula,
+          `keep_as_document` en conserva el document al moviment com un més.'
+        release_expected_evidence_id_help: L'identificador del justificant de compra
+          que vincula el moviment, tal com el mostra `aeat app ledger view`.
+        release_expected_modified_at_help: El modified_at del moviment, tal com el
+          mostra `aeat app ledger view`; si el moviment ha canviat des d'aleshores,
+          es rebutja.
+        release_help: Desvincula el justificant de factura de compra d'un moviment,
+          o conserva'n el document al moviment com un més
         remove_help: Elimina un justificant de factura de compra
         review:
           advised_pending_message: Alguns documents pendents porten avisos. No bloquegen
@@ -321,14 +360,17 @@ cli:
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
           resolve_action: Acció de resolució desconeguda.
-          resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
-            Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
+          resolve_shape: Cada --resolve és <finding-id>=`<choose|supply|attest>`:<valor-o-motiu>.
+            Un `choose` indica la lectura pel seu valor o pel resum que va mostrar
+            `review`.
           view_help: Mostra tots els camps revisables d'un esborrany pendent, juntament
             amb les seves incidències bloquejants.
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
         update_help: Actualitza les dades d'un justificant de factura de compra
+        verify_help: Comprova si es pot llegir el fitxer desat d'un justificant de
+          factura de compra i desa'n el resultat
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
@@ -342,23 +384,77 @@ cli:
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           registre d'existències.
+        claim_transaction_mismatch: Indica l'identificador de 64 caràcters de la transacció
+          del llibre amb `--ledger-row claimed`, i només aleshores.
+        claimed_transaction_id_help: Transacció del llibre que registra la compra;
+          indica-la amb `claimed` i només aleshores.
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
+        closing_value_file_help: Fitxer JSON amb les dades del valor de tancament.
+        closing_value_file_invalid: El fitxer del valor de tancament no és vàlid per
+          a aquest inventari.
+        closing_value_record_help: 'Registra un valor de tancament a partir de dades
+          senzilles: el valor, el mètode i els documents.'
+        correct_help: Corregeix el valor inicial o el mètode de valoració, conservant
+          els valors que substitueixen.
+        corrected_opening_stock_help: Valor inicial corregit en euros.
+        corrected_valuation_method_help: Mètode de valoració corregit.
+        correction_id_help: Identitat que tries per a aquest canvi; repetir-la amb
+          la mateixa sol·licitud no canvia res.
+        correction_reason_help: Per què es corregeix la dada.
         create_help: Crea un registre d'existències per a una activitat i exercici
+        describe_help: Canvia el nom i la descripció de l'inventari; la valoració
+          no es mou.
+        description_help: Descripció de l'inventari.
+        evidence_add_help: Desa un document de compra en aquest perfil i mostra la
+          identitat amb què la compra l'anomena.
+        evidence_source_help: 'El document de compra que vols desar: PDF, imatge o
+          XML.'
         group_help: Registres d'existències per activitat, moviments i valoració
+        inspect_help: Mostra un inventari amb els seus moviments vigents i el seu
+          historial conservat.
+        label_help: Nom de l'inventari.
+        ledger_row_help: 'El que indiques de la compra respecte al llibre: `claimed`
+          (anomena una transacció), `none` (cap transacció del llibre la registra)
+          o `unstated`.'
         list_help: Llista els registres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al registre
           d'existències
+        movement_claim_candidates_help: 'Llista les transaccions del llibre que una
+          compra pot reclamar: aquelles la base, l''IVA i el recàrrec de les quals
+          coincideixen amb els de la compra al cèntim.'
+        movement_claim_help: Indica quina transacció del llibre registra una compra,
+          indica que cap ho fa o esborra la indicació; una transacció reclamada deixa
+          les caselles de despesa del llibre.
+        movement_correct_help: Substitueix un moviment per un altre de corregit; l'original
+          es queda a l'historial.
         movement_date_help: Data del moviment (AAAA-MM-DD)
         movement_group_help: Gestiona els moviments del registre d'existències
         movement_id_help: Identificador del moviment dins del registre d'existències
-        movement_kind_help: Tipus de moviment (opening, purchase, cogs o count)
+        movement_kind_help: Tipus de moviment (`opening`, `purchase`, `cogs` o `count`)
+        movement_reverse_help: Treu un moviment de l'inventari; es queda a l'historial.
         opening_stock_help: Valor inicial d'existències
+        options_help: Mostra els valors que ofereix un formulari d'inventari, cadascun
+          amb el seu nom.
         quantity_help: Quantitat del moviment, positiva o negativa
+        refusal_activity_conflict: Ja existeix un registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
+        refusal_activity_not_found: No existeix cap registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
+        refusal_duplicate_movement_id: El registre d'inventari ja conté el moviment
+          %{movement_id}. Executa `aeat app ledger inventory list` per veure els moviments
+          registrats.
+        restore_help: Torna un inventari retirat al registre actiu.
+        retire_help: Treu l'inventari del registre actiu conservant totes les seves
+          dades.
+        retirement_reason_help: Per què l'inventari surt del registre actiu.
+        target_movement_id_help: Moviment que es corregeix o s'anul·la.
         taxable_base_help: Base imposable associada al moviment
         unit_cost_help: Cost unitari en moviments de compra
         valuation_group_help: Calcula i previsualitza la valoració d'existències
-        valuation_method_help: Mètode de valoració (fifo o pmp)
+        valuation_method_help: Mètode de valoració (`fifo` o `pmp`)
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
       invoice:
@@ -366,12 +462,44 @@ cli:
         arrendamiento_local_negocio_help: Marca que la factura emesa per l'arrendador
           correspon al lloguer d'un local de negoci. Fes servir les opcions de situació
           i referència cadastral per registrar les dades de l'immoble.
+        art_80_tres_obligations_attested_help: 'Declara que es van fer la comunicació
+          i la remissió de l''art. 24 RIVA per a una modificació de l''art. 80.Tres,
+          o indica amb --no-art-80-tres-obligations-attested que no es van fer. Deixa-ho
+          sense indicar mentre no ho sàpigues: la modificació queda retinguda i mai
+          s''admet només amb el document.'
+        attach_document_help: Desa el document d'una factura (el PDF o la factura
+          electrònica) amb ella.
+        attach_document_source_help: Ruta del fitxer del document.
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
+        document_received_on_help: Data en què vas rebre la factura rectificativa
+          (ISO AAAA-MM-DD). Només s'aplica a una factura rebuda i no pot ser anterior
+          a la data d'expedició.
+        duplicate_help: Respon quina factura desada pot ser ja un document, sense
+          escriure res.
+        duplicate_invalid: El tipus de factura i les dades del document han de tenir
+          la forma esperada.
+        duplicate_kind_help: 'Sentit de la factura: `issued` o `received`.'
+        elected_year_without_period: L'exercici %{year} no identifica per si sol cap
+          declaració-liquidació. Indica també el token de període que li correspon
+          (0A, 1T-4T, 01-12), o deixa'ls tots dos sense indicar.
         euro_rate_unavailable_message: No s'ha trobat cap tipus de canvi a euros per
           a {currency} el {date}, així que la factura s'ha registrat sense valor en
           euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
+          Indica el tipus amb app ledger invoice update --fx-rate.
+        exercised_deduction_period_help: Token de període d'aquesta declaració-liquidació
+          (0A, 1T-4T, 01-12). Indica'l juntament amb l'exercici; una cadena de calendari
+          combinada es rebutja.
+        exercised_deduction_year_help: Exercici de la declaració-liquidació en què
+          es va exercir la deducció original (AAAA). L'art. 24.2.b.3 RIVA porta allà
+          una minoració de l'art. 80.Tres; indica'l juntament amb el token de període.
+        fx_rate_help: 'Tipus de canvi d''una factura en moneda estrangera: el valor
+          en euros d''una unitat de la seva moneda en el moment de la meritació, que
+          és la data d''operació si la indiques i, si no, la data de la factura, per
+          exemple 0.9250 (LIVA art. 79.Once: el tipus del Banc d''Espanya vigent en
+          el moment de la meritació o l''últim del BCE). Substitueix el tipus publicat
+          i es registra com a declarat per tu. Es rebutja en una factura en EUR.'
         group_help: Registres de factures de negoci (emeses o rebudes)
         import_all_refused: 'importació massiva de factures fallida: totes les files
           van ser rebutjades; no es va crear cap factura'
@@ -382,16 +510,37 @@ cli:
           s'ignora a les files que indiquen el seu. Declara aquest país per a TOTES
           aquestes files, així que un llibre que barregi contraparts nacionals i estrangeres
           necessita la columna.
-        import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
+        import_file_help: Ruta a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
-          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). Un
-          retencion_rate només s'accepta juntament amb el seu retencion_amount.
+          iva_rate/iva_category/operation_type/invoice_class/series/rectifies_invoice_number/rectification_method/rectification_cause/rectification_direction/document_received_on/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          Un retencion_rate només s'accepta al costat del seu retencion_amount. Un
+          fx_rate és el valor en euros d'una unitat de la moneda de la fila i es rebutja
+          en una fila en EUR. Un iva_category ha de ser una categoria que el registre
+          declari per a la data de la factura; un operation_type és la clau del model
+          349, i una fila que només indiqui la clau pren la categoria que aquesta
+          declara. Les columnes de rectificació només s'apliquen a una fila rectificativa,
+          que també necessita la seva pròpia sèrie i el número que rectifica.
         import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
         import_unmapped_columns: 'columnes no importades perquè cap camp de factura
           hi va coincidir: {columns}'
         invoice_class_help: Classe de factura. Una rectificativa exigeix a més --rectifies-invoice-number
           indicant la factura que corregeix.
         invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
+        issuer_increase_election_help: 'Quina via tries per a un augment emès fonamentat
+          en un motiu de l''art. 80 LIVA o en un error fundado de derecho (art. 89.Cinco):
+          incluir_en_el_periodo per declarar la diferència en el període en què s''efectua
+          la rectificació, autoliquidacion_rectificativa per presentar una autoliquidació
+          rectificativa amb recàrrec i interessos.'
+        issuer_minoracion_election_help: 'Quina via tries per a una minoració emesa
+          (art. 89.Cinco LIVA): procedimiento_120_3_lgt per al procediment de l''art.
+          120.3 LGT, regularizacion_en_autoliquidacion per regularitzar-la en una
+          declaració-liquidació, cosa que a més t''obliga a reintegrar el destinatari.'
+        issuer_minoracion_regularisation_period_help: Token de període d'aquesta declaració-liquidació
+          (0A, 1T-4T, 01-12). Indica'l juntament amb l'exercici; una cadena de calendari
+          combinada es rebutja.
+        issuer_minoracion_regularisation_year_help: Exercici de la declaració-liquidació
+          en què regularitzes la minoració emesa (AAAA). Indica'l juntament amb el
+          token de període; l'art. 89.Cinco LIVA admet fins a un any.
         iva_category_help: Tractament d'IVA de l'operació. Necessari perquè un càlcul
           de renda la pugui fonamentar.
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
@@ -400,6 +549,19 @@ cli:
           per cada --line. Per a l'entrada estructurada substitueix els camps escalars
           --taxable-base i --iva-rate.
         list_help: Llista les factures del catàleg de conciliació.
+        match_help: Respon quin moviment salda quina factura i les opcions per vincular
+          a mà, sense vincular res.
+        match_invalid: Un vincle preparat ha d'indicar l'id d'un moviment i el d'una
+          factura com MOVIMENT:FACTURA, tots dos complets.
+        match_invoice_help: 'Id complet d''una factura: pondera només aquesta factura
+          i llista els moviments oberts propers al seu dia d''emissió.'
+        match_judge_help: Vincle repetible que es compara abans de fer-lo permanent,
+          com MOVIMENT:FACTURA; cadascun torna amb allò que no coincideix entre els
+          seus dos costats.
+        match_staged_help: Vincle preparat i sense desar, repetible, com MOVIMENT:FACTURA;
+          cap dels dos s'ofereix a una altra cosa.
+        match_transaction_help: 'Id complet d''un moviment: retorna només el seu suggeriment
+          i llista les factures a les quals es pot vincular.'
         operation_date_help: Data en que es va fer el lliurament o la prestació (AAAA-MM-DD).
           Es la data de meritació de l'art. 75 LIVA que determina en quin període
           es declara la quota; sense aquesta s'utilitza la data de factura.
@@ -408,8 +570,39 @@ cli:
           A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
           adquirits, R transferències de béns en consigna, D devolucions de béns en
           consigna, C substitucions del destinatari en consigna'
+        preview_help: 'Previsualitza un esborrany de factura: les xifres, les troballes
+          i el veredicte que assoliria l''operació d''alta, sense desar res. El NIF
+          de la contrapart (`counterparty_nif`) i les línies de l''esborrany (`lines`,
+          una matriu JSON d''objectes de línia amb `key`, `description`, `quantity`,
+          `unit_price`, `iva_rate`, `subtotal` i `iva_amount` opcionals; una xifra
+          omesa queda desconeguda; usa-la en lloc de --taxable-base) arriben com un
+          objecte JSON per --secrets-stdin o --secrets-fd.'
+        preview_operation_date_role_help: Funció desada de la data d'operació de la
+          factura que repeteix una correcció.
+        preview_printed_total_help: El total imprès al document, que es compara amb
+          el total calculat.
+        preview_stored_grand_total_help: Total desat de la factura que repeteix una
+          correcció, del qual surt el que queda per pagar.
+        preview_stored_invoice_id_help: Id de la factura desada que repeteix una correcció;
+          amb ell, el veredicte cobreix només les dades indicades.
         recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
           161). Va inclòs en el total de la factura, a diferència d'una retenció.
+        recipient_increase_period_help: Token de període d'aquesta declaració-liquidació
+          (0A, 1T-4T, 01-12). Indica'l juntament amb l'exercici; una cadena de calendari
+          combinada es rebutja.
+        recipient_increase_year_help: Exercici de la declaració-liquidació en què
+          declares un augment rebut (AAAA). Indica'l juntament amb el token de període;
+          l'art. 114.Dos.1 LIVA admet el període de recepció o un de posterior dins
+          de quatre anys.
+        rectification_cause_help: Per què la rectificativa modifica la base i la quota,
+          amb una de les causes que el registre declara per a la data de la factura
+          (els apartats de l'art. 80 de la LIVA, error_fundado_de_derecho o otra_modificacion).
+        rectification_direction_help: Si la rectificació minora (minoracion) o augmenta
+          (aumento) la base i la quota originals. Els totals continuen sent positius;
+          aquesta dada indica el sentit.
+        rectification_method_help: 'Com expressa els seus imports la factura rectificativa
+          (RD 1619/2012 art. 15.5): diferencia si són la rectificació mateixa, sustitucion
+          si són els imports tal com queden després d''ella.'
         rectifies_help: Número de la factura que corregeix aquesta rectificativa.
         referencia_catastral_help: Referència cadastral de l'immoble. És pertinent
           per a les situacions 1 i 2; no la indiquis per a les situacions 3 o 4.
@@ -436,23 +629,142 @@ cli:
           amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+      operaciones_vinculadas:
+        amount_help: Contraprestació a valor de mercat en euros, amb dos decimals
+          com a màxim; per a uns valors, el seu valor d'adquisició.
+        cifra_negocios_help: Xifra de negocis de l'exercici en euros, amb dos decimals
+          com a màxim.
+        counterparty_country_help: Codi de país de dues lletres de la contrapart,
+          per exemple ES.
+        counterparty_name_help: Nom o raó social de la contrapart.
+        counterparty_tax_id_help: Identificador fiscal de la persona o entitat vinculada,
+          també estranger. Obligatori en els dos tipus de persona vinculada.
+        description_help: Què va ser l'operació amb el paradís fiscal. Només per a
+          tax_haven_operation.
+        direction_help: I si vas cobrar la contraprestació, P si la vas pagar.
+        ejercicio_help: Exercici al qual pertanyen els registres.
+        exclusion_help: 'Supòsit de l''art. 2.2 que exclou l''operació: consolidation_group,
+          aie_or_registered_ute o public_offer.'
+        expected_guard_revision_help: Revisió de control que va mostrar la llista
+          per a l'any; si la indiques, la declaració es rebutja si l'any ha canviat
+          des d'aleshores.
+        expected_revision_help: Revisió que va mostrar la llista per al registre que
+          retires.
+        group_help: Declara, llista i retira els teus registres del model 232 d'operacions
+          vinculades i amb paradisos fiscals.
+        invalid_input: 'Hi ha un valor no vàlid: revisa l''exercici, els imports,
+          l''identificador de l''operació i la revisió.'
+        kind_help: 'Tipus d''operació: related_party, intangibles_reduction, tax_haven_operation
+          o tax_haven_holding.'
+        list_help: Llista el que vas declarar per a un exercici, amb la revisió de
+          cada registre i el que decideixen sobre el model 232.
+        metodo_valoracion_help: Codi del mètode de valoració (taula B del disseny
+          del model 232).
+        note_help: Per què l'any no va tenir aquestes operacions. Obligatori.
+        operation_id_help: Identificador de l'operació (operation_id) que va mostrar
+          la llista.
+        parent_name_help: Nom de l'entitat dominant. Només per a intangibles_reduction,
+          juntament amb --parent-tax-id.
+        parent_tax_id_help: Identificador fiscal de l'entitat dominant. Només per
+          a intangibles_reduction, juntament amb --parent-name.
+        participation_help: Percentatge de l'emissor que tens. Només per a tax_haven_holding.
+        source_help: 'D''on surt la xifra: annual_accounts, corporation_tax_return,
+          declaraciones_iva o operator_estimate.'
+        source_reference_help: Referència del document o declaració d'on vas treure
+          la xifra.
+        specific_help: L'operació és una operació específica (art. 2.1.b de l'Ordre
+          HFP/816/2017).
+        state_none_help: Declara que un exercici no va tenir operacions vinculades
+          ni amb paradisos fiscals.
+        state_operation_help: Declara una operació vinculada o amb un paradís fiscal
+          d'un exercici. És la teva pròpia declaració.
+        state_turnover_help: Declara la xifra de negocis d'un exercici i d'on la vas
+          treure.
+        tipo_operacion_help: Codi del tipus d'operació (taula C del disseny del model
+          232).
+        tipo_vinculacion_help: Codi del tipus de vinculació (taula A del disseny del
+          model 232).
+        withdraw_none_help: Retira la declaració que no hi va haver operacions, protegida
+          per la revisió que va mostrar la llista.
+        withdraw_operation_help: Retira una operació declarada, protegida per la revisió
+          que va mostrar la llista.
+        withdraw_turnover_help: Retira la xifra de negocis declarada, protegida per
+          la revisió que va mostrar la llista.
+      prevision_social:
+        amount_help: Import de l'aportació en euros que indica el certificat, per
+          exemple 1500.00.
+        beneficiary_help: 'Destinació de l''aportació: el teu sistema (`taxpayer`),
+          el del teu cònjuge (`spouse`) o el d''una persona amb discapacitat (`disabled_person`).
+          De moment només es calculen les aportacions al teu sistema.'
+        certificate_file_help: Fitxer del certificat (PDF o imatge) que es desa xifrat
+          al teu emmagatzematge; el seu SHA-256 passa a ser la prova del registre.
+        clave_help: Clau del model 345 que indica el certificat, de l'A a la M.
+        ejercicio_help: Exercici (`ejercicio`) en què es va pagar l'aportació.
+        employer_same_plan_help: Si el teu ocupador també va fer contribucions al
+          mateix pla (`yes` o `no`). És obligatori per a una clau i subclau la casella
+          de les quals en depèn.
+        evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
+          o una comprovació davant de --certificate-file. Un registre en necessita
+          un dels dos.
+        group_help: Registra les aportacions que indiquen els teus certificats d'aportacions
+          a sistemes de previsió social.
+        invalid_input: 'Un valor no és vàlid: comprova l''exercici, les referències
+          de l''emissor i del pla, la revisió i l''empremta del certificat.'
+        issuer_name_help: Raó social de l'emissor.
+        issuer_ref_help: Referència de l'emissor (issuer_ref) que mostra la llista.
+        issuer_tax_id_help: NIF de la gestora, la mutualitat o l'asseguradora que
+          va emetre el certificat.
+        list_help: Llista els registres d'aportacions desats d'un exercici sense cap
+          NIF, amb la casella a la qual arriba cadascun.
+        plan_name_help: Nom del pla.
+        plan_nif_help: NIF del pla o del fons, quan en té un de propi.
+        plan_ref_help: Referència del pla (plan_ref) que mostra la llista, per a un
+          registre que indica un NIF de pla.
+        record_expected_revision_help: Revisió que va mostrar la llista, per corregir
+          un registre desat. Omet-la en un primer registre.
+        record_help: Registra l'aportació que indica un certificat per a un pla, clau
+          i subclau en un exercici, o corregeix la desada amb --expected-revision.
+        remove_expected_revision_help: Revisió que va mostrar la llista per al registre
+          que vols eliminar.
+        remove_help: Elimina un registre d'aportacions amb la revisió que va mostrar
+          la llista.
+        subclave_help: Subclau del model 345 que indica el certificat, per a una clau
+          que en porti.
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).
         con_derecho_volume_help: Volum anual d'operacions amb dret a deducció del
           sector (LIVA art. 104, amb les exclusions de l'art. 104.Tres ja aplicades).
+        declare_gross_help: Declara les quotes suportades deduïbles brutes abans de
+          la prorrata d'una liquidació anterior que vas introduir a mà, perquè la
+          regularització anual (LIVA art. 105.Cuatro) les pugui fer servir quan el
+          llibre no tingui quotes d'aquest període.
         declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101):
           la teva partició de l''art. 9.1.c, mai inferida dels teus registres.'
         ejercicio_help: Exercici (any) que cobreix l'elecció.
-        elect_especial_help: 'Tria prorrata especial per a un exercici (LIVA art.
-          103.Dos.1): la deducció per input s''enruta amb --input-classification a
-          cada apunt dels teus registres.'
+        elect_especial_help: 'Tria la prorrata especial per a un exercici (LIVA art.
+          103.Dos.1): assigna la deducció de cada apunt dels teus registres mitjançant
+          --input-classification.'
         elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104):
           un únic percentatge de deducció s''aplica a cada quota deduïble.'
         evidence_reference_help: Referència de l'evidència de l'opció o revocació
           de la prorrata especial del període actual.
         general_percentage_help: Percentatge de deducció provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No hi ha cap base bruta declarada per a aquesta liquidació de
+          {ejercicio}, així que no hi ha res a eliminar.
+        gross_amount_help: Quotes suportades deduïbles brutes abans de la prorrata,
+          en euros amb dos decimals com a màxim.
+        gross_duplicate: Ja hi ha una base bruta declarada per a aquesta liquidació
+          de {ejercicio}. No s'ha desat res; fes servir --replace per substituir-la.
+        gross_ejercicio_help: Exercici de la liquidació.
+        gross_evidence_help: Referència al teu propi document que justifica l'import.
+        gross_period_help: Període de liquidació del Model 303 anterior a la liquidació
+          final de l'exercici (un trimestre com 1T o un mes com 03).
+        gross_replace_help: Substitueix la base bruta ja declarada per al mateix període
+          i sector.
+        gross_sector_unknown: El sector {sector_id} no és un sector diferenciat declarat.
+          No s'ha desat res; declara abans el sector amb declare-sector.
         group_help: 'Registre de prorrata d''IVA entre exercicis: tria el règim (general
           / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 /
           106).'
@@ -479,6 +791,8 @@ cli:
           o inicio_actividad.
         reference_required: L'origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
           requereix --reference.
+        remove_gross_help: Elimina les quotes suportades deduïbles brutes que vas
+          declarar per a una liquidació anterior.
         revoke_especial_help: Revoca la prorrata especial per a un exercici després
           d'un estat especial de l'exercici anterior (LIVA art. 103.Dos.1).
         sector_help: Identificador del sector diferenciat que cobreix aquesta entrada;
@@ -490,16 +804,24 @@ cli:
         seed_ejercicio_help: Exercici (any) el percentatge provisional del qual s'arrossega
           o es liquida.
         seed_help: Arrossega a l'exercici la prorrata provisional a partir del percentatge
-          definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
-          segellada de la liquidació del Model 303 anterior.
+          definitiu de l'any anterior (LIVA art. 105.Uno), llegit del Model 390 anterior
+          desat o, si n'estàs exonerat, del Model 303 de l'últim període de l'any
+          anterior.
         seed_local_authority: El percentatge provisional s'ha arrossegat localment
-          des de la teva observació desada de la liquidació {modelo} {filing_year}
-          {period} (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a
-          aquest exercici.
+          des de la teva observació desada de la liquidació {modelo} {period} {filing_year}
+          (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a aquest exercici.
+        seed_operator_stated: El percentatge provisional és la teva pròpia declaració
+          de la prorrata definitiva del {filing_year}, en lloc del Model {modelo}
+          del {filing_year}, que no està desat (LIVA art. 105.Uno). No és una xifra
+          llegida d'una declaració.
+        seed_percentage_help: El percentatge definitiu de prorrata de l'any anterior
+          (0-100), tal com el declares. Només s'utilitza si no està desat ni el Model
+          390 anterior ni el Model 303 de l'últim període de l'any anterior; si una
+          declaració desada indica una altra xifra, es rebutja.
         seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
-          provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno.
-          No s'ha escrit res; substitueix aquesta declaració de manera expressa abans
-          d'arrossegar.
+          provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno
+          LIVA. No s'ha escrit res; substitueix aquesta declaració de manera expressa
+          abans d'arrossegar.
         seed_sector_help: Arrossega la prorrata provisional d'un sector diferenciat
           a partir del definitiu de l'any anterior d'aquest mateix sector inscrit
           al registre (LIVA arts. 101.Uno / 105.Uno).
@@ -535,6 +857,59 @@ cli:
         validate_help: Valida les proporcions contra categories admeses i límits
         year_help: Exercici els perfils de categoria del qual aporten les ràtios legals.
           Per defecte, l'any en curs.
+      retencion_soportada:
+        absence_invalid_input: 'Hi ha un valor no vàlid: revisa l''exercici, la nota
+          (500 caràcters com a màxim) i la revisió.'
+        absence_note_help: Per què cap pagador no va practicar retenció sobre aquesta
+          classe de renda. Obligatori.
+        attest_absence_expected_revision_help: Revisió de la declaració retirada que
+          substitueixes. Omet-la en una primera declaració.
+        attest_absence_help: Declara que cap pagador no va practicar retenció sobre
+          una classe de renda en un exercici. És la teva pròpia declaració, no un
+          certificat del pagador.
+        certificate_file_help: Fitxer del certificat (PDF o imatge) que es desa xifrat
+          al teu emmagatzematge; el seu SHA-256 passa a ser l'evidència del registre.
+        ejercicio_help: Exercici (any) al qual s'imputa la renda.
+        evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
+          o comprovació davant de --certificate-file. Un payer_certificate necessita
+          una de les dues coses.
+        gastos_deducibles_help: Despeses deduïbles que indica el pagador segons l'article
+          19.2 a), b) i c). Obligatòria per a `trabajo`; escriu 0 si no n'indica cap.
+        group_help: Registra les retencions que et certifiquen els teus pagadors.
+        importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
+          retenció.
+        income_class_help: Classe de renda sobre la qual el pagador va retenir, per
+          exemple `trabajo`.
+        ingreso_a_cuenta_help: Ingrés a compte que va fer el pagador per renda en
+          espècie. Compta íntegre com a crèdit.
+        ingreso_a_cuenta_repercutido_help: Part de l'ingrés a compte que el pagador
+          et va repercutir. No pot superar l'ingrés a compte.
+        invalid_input: 'Un valor no és vàlid: revisa la referència del pagador, la
+          revisió i l''empremta del certificat.'
+        list_absences_help: Llista les teves declaracions d'absència de retenció d'un
+          exercici, vigents i retirades, amb la revisió en què consta cadascuna.
+        list_help: Llista els registres de pagadors d'un exercici sense cap NIF.
+        origin_help: 'Qui declara les xifres: payer_certificate o operator_declaration.'
+        payer_name_help: Raó social del pagador.
+        payer_ref_help: Referència del pagador (payer_ref) que mostra el llistat.
+        payer_tax_id_help: NIF del pagador que va practicar la retenció.
+        record_expected_revision_help: Revisió que ha mostrat el llistat, per substituir
+          un registre desat. Omet-la en el primer registre.
+        record_help: Registra o substitueix les xifres que declara el certificat d'un
+          pagador per a un exercici i una classe de renda.
+        reducciones_aplicables_help: Reduccions que va aplicar el pagador segons els
+          articles 18.2 i 18.3, tal com les indica el certificat. Obligatòria per
+          a `trabajo`; escriu 0 si no n'indica cap.
+        remove_expected_revision_help: Revisió que ha mostrat el llistat per al registre
+          que vols eliminar.
+        remove_help: Elimina un registre de pagador, protegit per la revisió que ha
+          mostrat el llistat.
+        retencion_help: Retenció que va practicar el pagador, en euros amb com a màxim
+          dos decimals.
+        valoracion_especie_help: Valoració del pagament en espècie.
+        withdraw_absence_expected_revision_help: Revisió amb què es va desar la declaració.
+        withdraw_absence_help: Retira una declaració d'absència, protegida per la
+          revisió amb què es va desar.
       rule:
         actor_help: El teu identificador, que es registra com a origen de la regla.
         add_help: Afegeix una regla de classificació que classifica automàticament
@@ -549,8 +924,8 @@ cli:
           %{matched}, omeses: %{skipped}, sense_coincidència: %{no_match}'
         category_id_help: Categoria de despesa opcional a aplicar.
         classification_help: Classificació objectiu per a les transaccions coincidents.
-        description_pattern_help: Patró regex comparat (sense distinció de majúscules)
-          amb la descripció de la transacció.
+        description_pattern_help: Patró d'expressió regular comparat (sense distinció
+          de majúscules) amb la descripció de la transacció.
         empty_pattern: Una regla necessita un --description-pattern no buit (una paraula
           o frase, p. ex. "software") per coincidir amb les descripcions de les transaccions.
         group_help: Gestiona i aplica regles de classificació dels teus registres.
@@ -558,13 +933,38 @@ cli:
         list_header: "prioritat\tclassificació\tpatró\trule_id"
         list_help: Llista les regles de classificació emmagatzemades ordenades per
           prioritat.
+        pattern_overrun: El patró no ha pogut acabar de cercar a les descripcions
+          d'aquest llibre dins del seu límit de temps, així que no s'ha desat. Simplifica'l,
+          per exemple evitant repeticions dins de repeticions.
         priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
           100).
+        remove_created_at_help: Data de creació de la regla tal com apareix al llistat
+          (ISO 8601 amb desfasament); la regla només s'elimina si encara la té.
+        remove_created_at_invalid: --created-at ha de ser una data i hora ISO 8601
+          amb desfasament, tal com consta al llistat de la regla.
+        remove_help: Elimina una regla de classificació desada, per exemple una el
+          patró de la qual no es pot cercar.
+        remove_not_found: Cap regla desada té l'id %{rule_id}. No s'ha canviat res.
+        remove_rule_id_help: Id complet de la regla que vols eliminar, tal com el
+          mostra la sortida JSON de `rule list`.
+        remove_stale: La regla desada %{rule_id} es va tornar a desar el %{created_at},
+          que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
+          de regles i comprova-la.
+        trial_help: Prova un patró sense desar amb el motor de regles i indica quins
+          dels moviments indicats troba, sense desar res. El patró arriba com el camp
+          description_pattern d'un objecte JSON per --secrets-stdin o --secrets-fd,
+          o en una petició sense eco.
+        trial_pattern_prompt: 'Patró que provar: '
+        trial_transaction_id_help: Identificador repetible d'un moviment on provar
+          el patró.
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
         app_help: Snapshots d'esborrany del model 100
         filing_year_help: Exercici fiscal (p. ex. 2024)
+        import_casilla_owner_ambiguous: 'Més d''un enllaç de les definicions del model
+          podria recollir aquestes caselles impreses, així que no s''ha importat res:
+          %{casillas}.'
         import_coverage_absent: L'analitzador no ha retornat cobertura d'extracció
           per al perfil de les definicions del model; no s'ha importat res.
         import_ejercicio_mismatch: L'exercici imprès al PDF no coincideix amb l'exercici
@@ -576,14 +976,24 @@ cli:
           model 100)
         import_period_invalid: El codi de període no és vàlid per a aquest exercici
           fiscal.
+        import_profile_tax_id_unusable: El teu perfil no té un NIF vàlid, així que
+          no es pot confirmar el titular del PDF; registra primer el teu NIF. No s'ha
+          importat res.
         import_profile_unresolved: Les definicions del model no declaren un únic perfil
           d'extracció d'esborrany per a aquest exercici i període.
+        import_tax_id_mismatch: El NIF imprès al PDF no coincideix amb el d'aquest
+          perfil; no s'ha importat res.
+        import_tax_id_unreadable: El PDF no porta un NIF vàlid, així que no es pot
+          confirmar el seu titular; no s'ha importat res.
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
         list_help: Llistar snapshots persistits de l'esborrany del model 100
         modelo_100_help: Ordres de snapshots de l'esborrany del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
-        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
-          all'
+        snapshot_schema_outdated: Hi ha %{count} captura(es) d'esborrany desada(es)
+          en aquest perfil amb un format anterior que Cadrumo ja no llegeix. Si tornes
+          a importar el document, es crea una captura actual.
+        state_help: 'Filtre d''estat del snapshot: `active`, `superseded`, `discarded`
+          o `all`'
         view_help: Mostrar un snapshot de l'esborrany del model 100
       expediente_help: Identificador d'expedient AEAT
       expedientes:
@@ -625,9 +1035,8 @@ cli:
           que no s''hagi presentat res.'
         pull_dry_run_help: Mostra que capturaria aquesta descarrega massiva sense
           escriure res. Nomes en mode massiu.
-        pull_dry_run_single_mode_error: --dry-run nomes es valid per a una descarrega
-          massiva amb --from-year/--to-year; la descarrega d'un sol model no admet
-          simulació.
+        pull_dry_run_single_mode_error: --dry-run només és vàlid per a una baixada
+          massiva amb --from-year/--to-year; la baixada d'un sol model no admet simulació.
         pull_help: Descarrega dades de declaracions presentades a l'AEAT des de la
           teva sessió autenticada de l'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -648,6 +1057,7 @@ cli:
             operator_timeout: temps d'aprovació esgotat
             pending_clave_request: petició Cl@ve pendent
             qr_required: aprovació QR requerida
+            session_ended: sessió d'AEAT tancada
             unknown: desconegut
             wrong_identity: identitat incorrecta
         app_help: Descàrrega de la cartera de compensació d'IVA de l'AEAT (només lectura;
@@ -726,24 +1136,24 @@ cli:
       to_year_help: Últim exercici de presentació
       verify:
         app_help: Registre de només lectura de les comprovacions de NIF
-        expected_help: Resultat esperat opcional (valid, invalid o unknown)
-        expected_values_error: '--expected ha de ser un de: valid, invalid, unknown.'
+        expected_help: Resultat esperat opcional (`valid`, `invalid` o `unknown`)
+        expected_values_error: '--expected ha de ser un de: `valid`, `invalid`, `unknown`.'
         latest_help: Mostra l'observació més recent per superfície i NIF
         latest_nif_help: NIF que vols consultar
-        latest_surface_help: 'Tipus de comprovació: nif_iva o tgvi'
+        latest_surface_help: 'Tipus de comprovació: `nif_iva` o `tgvi`'
         list_help: Llista les observacions de comprovació desades
         nif_help: Filtra per un NIF
         nif_iva_arg_help: Valor NIF-IVA (p. ex. ESB12345678)
         nif_iva_help: Comprova un NIF-IVA intracomunitari a AEAT IXVI i desa l'observació
         observation_id_help: Id d'observació (o prefix no ambigu)
-        surface_help: 'Filtra per superfície: nif_iva o tgvi'
+        surface_help: 'Filtra per superfície: `nif_iva` o `tgvi`'
         tgvi_arg_help: NIF/NIE espanyol que vols comprovar
         tgvi_help: Comprova l'alta ROI/VIES d'un NIF a GROI i desa l'observació
         view_help: Mostra una observació de comprovació desada
       year_help: Exercici de presentació
     modelo:
       aggregate:
-        calculation_rows_absent: 'Model {modelo} {filing_year} {period}: no hi ha
+        calculation_rows_absent: 'Model {modelo} {period} {filing_year}: no hi ha
           files emmagatzemades de les dades {source_family} que llegeix el seu càlcul,
           de manera que aquest informe és buit perquè falten les dades, no perquè
           l''import sigui zero.'
@@ -777,10 +1187,15 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
-        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+        received_invoice_finding: 'Model {modelo} {period} {filing_year}: {invoice_count}
+          factura(es) rebuda(es) declaren una retenció que aquest període no pot declarar
+          ({reason}), de manera que el seu càlcul queda retingut. Calcula el model
+          per veure cada factura i corregeix-la.'
+        received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
-          o d''exigibilitat. Una assignació per ordre; l''scheme és un fet legal sobre
-          l''activitat del perceptor i mai s''infereix de la factura.'
+          o d''exigibilitat. Una assignació per ordre; el valor del camp `scheme`
+          és un fet legal sobre l''activitat del perceptor i mai s''infereix de la
+          factura.'
       aggregate_help: Agrega les xifres d'un model i un període. Les observacions
         de contrapartida i de béns a l'estranger es passen com a opcions JSON. Els
         models de retencions llegeixen les files ja desades per al període, després
@@ -791,8 +1206,8 @@ cli:
       audit:
         bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix
           inequívoc).
-        check_help: Reverificar un paquet d'evidència recalculant els digests dels
-          registres.
+        check_help: Torna a verificar el paquet d'evidència recalculant els resums
+          criptogràfics dels registres.
         export_help: Generar un fitxer ZIP determinista del paquet d'evidència (manifest.json
           s'escriu l'últim).
         force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
@@ -817,8 +1232,11 @@ cli:
         period_help: 'Codi de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
+          aportacion_prevision_social: certificat d'aportacions a sistemes de previsió
+            social
           borrador_aeat: esborrany de l’AEAT
           compensacion_iva_anual: compensació anual de l'IVA
           constante_diseno: Constant del disseny de registre
@@ -840,6 +1258,7 @@ cli:
           regularizacion_bienes_inversion: regularització de béns d’inversió
           regularizacion_prorrata: regularització de prorrata
           retencion: retenció
+          retencion_soportada: retenció suportada d'un pagador
           withholding296_perceptor: perceptor de la declaració de retencions
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
           fes servir --relation %{relation_id}=VALUE"
@@ -853,7 +1272,7 @@ cli:
           coneguts per a {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La llista d'orígens no està acotada per %{missing_filters};
           pot incloure ids d'orígens d'una versió del model oficial que no coincideix
-          amb la declaració usada per work calculate.
+          amb la declaració que empra el càlcul.
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
         casilla_help: Id de casella o número imprès de casella que cal descriure (p.
@@ -865,8 +1284,8 @@ cli:
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
         help: Llistar totes les caselles definides per a la revisió d'un model específic.
-        input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
-          computed, informational, projection_only)
+        input_kind_help: Filtrar les caselles per tipus d'entrada (`manual`, `bound`,
+          `computed`, `informational`, `projection_only`)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         number_help: Filtrar caselles pel número imprès o id canònic (p. ex. 0596).
         period_help: 'Codi de període per triar la versió del model oficial: 0A anual,
@@ -912,6 +1331,10 @@ cli:
         label_tax_domain: Àmbit fiscal
         label_title: Títol
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        no_edition_covers_date: Cap edició del model %{modelo} cobreix l'exercici
+          %{year} i el període %{period} en la data %{date}. El token de període és
+          vàlid; tria una data --as-of dins de la vigència i del termini de presentació
+          d'aquest període, o treu --as-of.
         period_error: 'Error a les definicions dels models: %{message}'
         period_help: 'Codi de període per triar la versió del model oficial: 0A anual,
           1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
@@ -939,11 +1362,11 @@ cli:
           opció es rebutja un fitxer d'exportació existent per no destruir una exportació
           anterior.
         revision_help: Identificador del càlcul desat a exportar; per defecte, el
-          càlcul més recent de la declaració que estigui comprovat i complet o registrat
-          com a presentat.
+          càlcul actual de la declaració, que ha d'estar comprovat i complet o registrat
+          com a presentat. Fes servir --select per indicar-ne un altre.
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       filing_record:
-        app_help: Inspeccionar els filing records interns registrats
+        app_help: Inspeccionar els registres interns de presentació
         bucket_id_help: Filtrar per perfil
         evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
@@ -954,20 +1377,20 @@ cli:
           revisió del càlcul desat.
         export_missing: El càlcul històric seleccionat ja no es conserva; l'exportació
           no pot usar el càlcul actual.
-        filing_record_id_help: Identificador estable d'un filing record
+        filing_record_id_help: Identificador estable d'un registre de presentació
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
         import_declared_kind_help: Tipus de declaració que l'AEAT registra per a aquesta
-          presentació (original, complementaria, sustitutiva, rectificativa); obligatori
-          quan l'AEAT ja té una declaració confirmada del període
+          presentació (`original`, `complementaria`, `sustitutiva`, `rectificativa`);
+          obligatori quan l'AEAT ja té una declaració confirmada del període
         import_file_help: Camí a un manifest de caselles CSV o XLSX exportat des de
           la font de la declaració externa
         import_help: Desa una declaració presentada fora de Cadrumo com a registre
           de presentació base, amb evidència oficial importada de l'AEAT
         import_set_required: --set és obligatori almenys una vegada per a una importació.
-        include_superseded_help: Incloure els filing records superats (exclosos per
-          defecte)
-        list_help: Llistar els filing records registrats
+        include_superseded_help: Incloure els registres de presentació superats (exclosos
+          per defecte)
+        list_help: Llistar els registres de presentació
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
         observe_local_clear_help: Elimina la teva substitució perquè es torni a fer
           servir l'observació oficial de l'AEAT
@@ -1015,7 +1438,7 @@ cli:
             pendent.'
           receipt_totals_only: 'Model {modelo} {period} {filing_year}: la confirmació
             es basa en els imports del justificant, no en la igualtat casella a casella.'
-        view_help: Mostrar un filing record per id
+        view_help: Mostrar un registre de presentació per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
@@ -1100,17 +1523,17 @@ cli:
           \ M303 anteriors si l'últim M303 no va deixar compensació pendent.\n\n \
           \ --amount X   Traspàs: el contribuent ha presentat M303 anteriors amb una\
           \ altra eina o directament a l'AEAT. X és la compensació pendent de períodes\
-          \ posteriors de l'última declaració presentada.\n\nEl cas automàtic first_period_zero\
-          \ és independent de l'ordre seed: durant el càlcul i la conciliació es prova\
-          \ amb les condicions d'inici d'activitat i del registre que és el primer\
-          \ període IVA; aleshores la casella AEAT 110 és zero segons LIVA art. 99.5\
-          \ (Llei 37/1992) i no bloqueja."
+          \ posteriors de l'última declaració presentada.\n\nEl cas automàtic `first_period_zero`\
+          \ és independent de l'ordre `seed`: durant el càlcul i la conciliació es\
+          \ prova amb les condicions d'inici d'activitat i del registre que és el\
+          \ primer període IVA; aleshores la casella AEAT 110 és zero segons LIVA\
+          \ art. 99.5 (Llei 37/1992) i no bloqueja."
         seed_invalid_amount: 'L''import inicial d''IVA no és vàlid: %{amount}.'
         seed_period_help: 'Període de la presentació del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
       list:
-        domain_help: Filtra el catàleg de models per família tributària (p. ex. iva,
-          irpf, is)
+        domain_help: Filtra el catàleg de models per família tributària (p. ex. `iva`,
+          `irpf`, `is`)
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       m036:
@@ -1154,13 +1577,13 @@ cli:
         mark_locally_completed_help: Marca un registre local de comunicació del Modelo
           145 com a completat localment.
         note_help: Nota opcional teva.
-        period_help: 'Token del període de la comunicació: comunicacion o variacion.'
+        period_help: 'Token del període de la comunicació: `comunicacion` o `variacion`.'
         validate_help: Valida un registre local de comunicació al pagador del Modelo
           145.
         year_help: Any de la comunicació.
       m360:
         declare_help: 'Declara o substitueix la sol·licitud d''un exercici. Passa
-          el document com a JSON al camp "solicitud" de --secrets-stdin o --secrets-fd:
+          el document com a JSON al camp `solicitud` de --secrets-stdin o --secrets-fd:
           les dades i own_account_id (un compte propi del sol·licitant amb SWIFT-BIC)
           o representante_account.'
         filing_year_help: Exercici de la sol·licitud (p. ex., 2025).
@@ -1171,7 +1594,9 @@ cli:
         binding_help: Valor addicional per a l'origen d'una casella del Modelo 100,
           com a KEY=VALUE. Repeteix l'opció per indicar-ne diversos. Els orígens de
           retencions valen zero si no s'indiquen.
-        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (p. ex. 0003=1150
+          per a retribucions dineràries del treball). Només s'accepten caselles d'entrada;
+          una casella calculada es rebutja. Repeteix l'opció per indicar-ne diverses.
         ccaa_help: Clau de la comunitat autònoma de residència fiscal per a l'escala
           autonòmica del Modelo 100 (p. ex. cataluna, comunidad-valenciana). Ha de
           coincidir amb un valor de les definicions dels models.
@@ -1198,8 +1623,9 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull descarrega
-          un justificant o una declaració presentada; import compara un PDF local;
+        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: aeat app
+          modelo reconcile pull descarrega un justificant o una declaració presentada;
+          aeat app modelo reconcile import compara un PDF local; aeat app modelo reconcile
           list mostra les comparacions anteriors.'
         calculation_revision_help: ID de revisió de càlcul desada que es compararà.
           Per defecte, presentada o verificada, després la darrera desada.
@@ -1215,9 +1641,9 @@ cli:
           de 64 caràcters).
         export_work_unit_scope: Exporta totes les diferències de conciliació desades
           de la declaració seleccionada.
-        file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
-          tots els models) o declaration (PDF de declaració presentada, conciliació
-          a nivell de casella, només models habilitats). Per defecte justificante.'
+        file_kind_help: 'Tipus de document d''evidència: `justificante` (rebut AEAT,
+          tots els models) o `declaration` (PDF de declaració presentada, conciliació
+          a nivell de casella, només models habilitats). Per defecte `justificante`.'
         file_path_help: Camí al PDF local de justificant o declaració amb el qual
           conciliar.
         import_help: Concilia una declaració amb un PDF local de justificant o de
@@ -1228,8 +1654,9 @@ cli:
           (SHA-256 o un prefix inequívoc).
         pull_help: Descarrega evidència de l’AEAT i compara-la amb el càlcul local
           desat (només lectura a l’AEAT).
-        source_help: 'Evidència a comparar: justificante comprova identitat i imports
-          vinculats; declaration compara les caselles presentades amb el càlcul desat.'
+        source_help: 'Evidència a comparar: `justificante` comprova identitat i imports
+          vinculats; `declaration` compara les caselles presentades amb el càlcul
+          desat.'
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       requires:
         help: 'Mostra la llista de dades necessàries per a un model i un període:
@@ -1256,10 +1683,10 @@ cli:
           l'esdeveniment d'exportació subjacent.
         bucket_id_help: Id del bucket sobre el qual opera el paquet de revisió (per
           defecte el perfil actiu).
-        build_help: Assembla un paquet de revisió compartible i verificable per checksum
-          (esborrany fichero-BOE, origen del càlcul desat i justificants dels teus
-          registres inclosos) per lliurar a l'assessor. Només local; mai contacta
-          amb l'AEAT.
+        build_help: Assembla un paquet de revisió compartible i verificable mitjançant
+          sumes de verificació (esborrany fichero-BOE, origen del càlcul desat i justificants
+          dels teus registres inclosos) per lliurar a l'assessor. Només local; mai
+          contacta amb l'AEAT.
         counter_sign_help: Contrasigna un paquet de revisió ja signat pel declarant
           en nom de l'assessor fiscal que el rep i escriu el sobre del rebut a --output.
           Només local; mai contacta amb l'AEAT.
@@ -1347,8 +1774,8 @@ cli:
         signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
         valid_for_days_help: Finestra de validesa opcional en dies; omet-la per a
           un paquet que mai caduqui.
-        verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
-          integritat; no certifica qui l'ha construït). Només local; mai contacta
+        verify_help: Verifica el manifest de sumes de verificació d'un paquet de revisió
+          (només integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
         verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat
           d''un paquet de revisió: la signatura original del declarant i la contrasignatura
@@ -1367,7 +1794,7 @@ cli:
             tret que s'indiqui --replace
         export_help: Exporta el càlcul d'un model i període, tal com el fixen les
           definicions dels models, a un llibre .xlsx local amb fórmules actives (la
-          contrapartida fora de línia de push)
+          contrapartida fora de línia de `push`)
         modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
         period_help: Codi de període (p. ex. 1T, 2T, 0A)
         publish:
@@ -1384,8 +1811,8 @@ cli:
           a la carpeta del perfil.
         push:
           capability_disabled: L'exportació a Google està desactivada per a aquest
-            perfil; activa-la amb 'aeat config profile capabilities set google_export
-            on'.
+            perfil; activa-la amb `aeat config profile capabilities set google_export
+            on`.
           dry_run_help: Previsualitza el que aquesta exportació esborraria i reescriuria
             al llibre, sense escriure res
           prefill_relations_help: Preomple els valors de relacions entre revisions
@@ -1413,12 +1840,21 @@ cli:
           d'un informe de comprovació
         view_help: Mostrar un informe de comprovació per id
       work:
+        accept_disagreement_help: Accepta l'import que un càlcul va utilitzar en una
+          discrepància entre les seves fonts, amb l'identificador que anomena la comprovació,
+          i indica el teu motiu. La xifra en si no canvia, i l'acceptació caduca tan
+          bon punt qualsevol font doni un altre import.
+        accept_disagreement_reason_required: Indica amb --reason per què acceptes
+          aquest import.
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         actor_too_long: L'etiqueta --by ha de tenir com a màxim {limit} caràcters;
           se n'han rebut {length}. Identifica l'actor de l'esdeveniment d'auditoria
           que registra aquesta ordre, així que indica un nom curt per a tu.
         allow_not_applicable_help: Crea la declaració encara que el model no s'apliqui
           al tipus de contribuent del perfil actiu.
+        amend_binding_help: Valor d'una font de casella que la correcció declara quan
+          la presentació no el va registrar, amb sintaxi BINDING_ID=VALUE (repetible);
+          una rectificació rebutjada indica els que necessita.
         amend_help: Construir una correcció d'una declaració presentada fora de Cadrumo.
           Requereix un registre de presentació amb evidència de l'AEAT importada
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
@@ -1435,10 +1871,10 @@ cli:
         amend_wizard_help: 'Guia la correcció d''una declaració ja presentada en llenguatge
           senzill: quines caselles van canviar, els valors corregits i el tipus de
           declaració, i la registra'
-        amend_wizard_kind_help: complementària afegeix a la quota prèviament declarada;
-          sustitutiva substitueix completament la declaració anterior; rectificativa
-          és el mecanisme unificat de correcció per als models l'ordre dels quals
-          ho implementa (p. ex. Model 303 des de l'exercici 2023).
+        amend_wizard_kind_help: '`complementaria` afegeix a la quota prèviament declarada;
+          `sustitutiva` substitueix completament la declaració anterior; `rectificativa`
+          és el mecanisme unificat de correcció per als models l''ordre dels quals
+          ho implementa (p. ex. Model 303 des de l''exercici 2023).'
         amend_wizard_kind_prompt: Tipus de rectificació (%{choices})
         amend_wizard_m303_rectificativa_motive_prompt: Motiu de la rectificativa del
           model 303 (%{choices})
@@ -1451,16 +1887,20 @@ cli:
           d'auditoria)
         amend_wizard_reason_required: Cal un motiu per al registre d'auditoria de
           la correcció.
-        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{year}
-          %{period}, valors actuals:\n%{summary}\nQuins números de casella van canviar?
-          (separats per comes o espais, en blanc per a cap)'
+        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{period}
+          %{year}, valors actuals:
+
+          %{summary}
+
+          Quins números de casella van canviar? (separats per comes o espais, en blanc
+          per a cap)'
         amend_wizard_unknown_casilla: La casella %{token} no forma part de la declaració
-          %{modelo} %{year} %{period} registrada com a presentada; tria una de les
+          %{modelo} %{period} %{year} registrada com a presentada; tria una de les
           caselles llistades.
         amend_wizard_value_prompt: Valor corregit per a la casella %{number} (%{label}),
           actualment %{previous_value}
-        amendment_kind_help: Classe legal de la modificació (complementària, substitutiva
-          o rectificativa)
+        amendment_kind_help: Classe legal de la modificació (`complementaria`, `sustitutiva`
+          o `rectificativa`)
         amendment_reason_help: Motiu lliure de la correcció (es conserva al registre
           d'auditoria)
         app_help: Gestionar el cicle de vida de les declaracions d'un model
@@ -1469,6 +1909,48 @@ cli:
           del Model 303 de l'últim període de l'any (codi de període 12 o 4T), i imprimeix
           el seu identificador i SHA-256 per a `work calculate`. Els altres períodes
           no ho pregunten.
+        attest_no_amount_help: Indica que un import que s'arrossega d'una declaració
+          anterior és nul. Mostra la comprovació del canvi; amb --yes el registra
+          com un 0 que has declarat, diferent d'una xifra escrita.
+        attest_prior_carries_amount_effect: declarat com a %{amount}
+        attest_prior_carries_amount_help: Dona un import per a un import arrossegat
+          en lloc de res pendent, com <casella>=<import> amb la casella que alimenta
+          aquest import i un import positiu com 1234.56; repeteix-ho per a més imports.
+          La casella ha de pertànyer a una família indicada amb --family. Els altres
+          imports oberts de la família es declaren com a res pendent
+        attest_prior_carries_confirm: Encara no s'ha declarat res. Executa `aeat app
+          modelo work attest-prior-carries %{work_unit_id}%{selection} --yes` per
+          declarar-ho.
+        attest_prior_carries_family_help: Declara aquesta família d'exercicis anteriors
+          com a res pendent; repeteix-ho per indicar totes les famílies obertes. Una
+          sola declaració les ha de cobrir totes
+        attest_prior_carries_help: 'Indica que no et queda cap import pendent d''exercicis
+          anteriors en una declaració (les bases liquidables generals negatives i
+          els saldos negatius de la base de l''estalvi dels quatre exercicis anteriors
+          en un Modelo 100). Mostra la declaració i la comprovació del canvi; amb
+          --yes registra cada import com un 0 que has declarat, diferent d''una xifra
+          escrita. Una declaració cobreix totes les famílies obertes: indica cadascuna
+          amb --family (repetible), o cap quan només n''hi ha una d''oberta. Per donar
+          l''import d''un, usa --amount; els altres imports oberts de la seva família
+          queden declarats sense res pendent.'
+        attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
+        attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
+          anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat
+          en un altre lloc. Mostra el valor i la comprovació del canvi; amb --yes
+          registra la xifra com a declarada per tu per a aquella declaració, diferent
+          d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè
+          llavors se segueix aquella declaració.
+        attest_work_income_confirm: Encara no s'ha declarat res. Executa `aeat app
+          modelo work attest-work-income %{work_unit_id} --yes` per declarar-ho.
+        attest_work_income_help: Indica que les caselles de rendiments del treball
+          que cap certificat del pagador omple (contribucions empresarials a plans
+          de pensions i mutualitats de previsió social, a assegurances de dependència,
+          aportacions al patrimoni protegit i aportacions per decisió teva) són buides,
+          per a cada casella per a la qual el formulari d'una declaració basada en
+          un registre de pagador ofereix la declaració. Mostra la declaració i la
+          comprovació del canvi; amb --yes registra cada casella com un 0 que has
+          declarat, diferent d'una xifra que has escrit.
+        attest_work_income_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
@@ -1477,16 +1959,18 @@ cli:
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
           ser un import decimal; s''ha rebut: {value}. Utilitza el punt com a separador
           decimal i sense separador de milers, p. ex. 1234.56.'
+        binding_option_help: Valor d'entrada d'una casella amb sintaxi KEY=VALUE (repetible);
+          executa `aeat app modelo bindings list --missing` per veure els valors que
+          necessita el càlcul.
         borrador_help: Id del snapshot de l'esborrany del Model 100 (complet o prefix
           no ambigu). Els seus valors només emplenen les caselles l'origen de les
           quals està marcat com a aeat_prefilled a les definicions dels models; els
           valors que indiques amb --binding sempre tenen prioritat.
         bucket_id_help: Perfil al qual pertany la declaració
-        calculate_help: Desar un nou càlcul en esborrany per a la declaració. Aquesta
-          ordre calcula només a partir dels valors que se li indiquen. Els valors
-          introduïts abans a la interfície de pantalla completa (aeat app tui) no
-          es conserven tret que es tornin a indicar aquí; la interfície de pantalla
-          completa sí que els conserva.
+        calculate_help: Desar un nou càlcul en esborrany per a la declaració. Sense
+          valors, recalcula des del càlcul actual i conserva tots els valors i indicacions
+          que hi vas registrar. Amb valors, o amb --inputs-only, calcula només a partir
+          d'ells i enumera cada valor o indicació registrats que no va fer servir.
         calculate_reused_sealed: 'Aquestes dades coincideixen amb el càlcul %{revision_id}
           (estat: %{state}). No s’ha creat cap esborrany nou. Selecciona aquest càlcul
           desat pel seu identificador de revisió o canvia les dades.'
@@ -1533,35 +2017,63 @@ cli:
         create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions
           patrimonials i actes jurídics documentats) no està suportat per crear declaracions
           en aquest CLI. Fonament legal: Ley 28/1990 i competència autonòmica ITPyAJD;
-          presenta''l davant la Hacienda / CCAA competent.'
+          presenta''l davant la Hisenda / CCAA competent.'
         create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions
           de vehicles usats) no està suportat per crear declaracions en aquest CLI.
           Fonament legal: Ley 28/1990 i competència autonòmica ITPyAJD; presenta l''autoliquidació
-          davant la Hacienda / CCAA competent.'
+          davant la Hisenda / CCAA competent.'
         create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no està
           suportat per crear declaracions en aquest CLI. Fonament legal: Ley 29/1987
           LISyD i Art. 67 RISD; termini ordinari de 6 mesos des de la defunció. Presenta''l
-          davant la Hacienda autonòmica competent.'
+          davant la Hisenda autonòmica competent.'
         create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que
           acompanya el Model 650) no està suportat per crear declaracions en aquest
-          CLI. Fonament legal: Ley 29/1987 LISyD; presenta''l davant la Hacienda autonòmica
+          CLI. Fonament legal: Ley 29/1987 LISyD; presenta''l davant la Hisenda autonòmica
           competent.'
         dependencies_help: Mostra dependències d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentació objectiu
         dependencies_period_requires_modelo: L'opció --period requereix --modelo.
+        disagreement_expected_revision_help: Revisió en què es desa l'acceptació,
+          tal com la mostra `work disagreements`; obligatòria
+        disagreement_finding_id_help: L'identificador de 16 caràcters que la comprovació
+          o el càlcul anomena per a la discrepància
+        disagreement_invalid_input: L'identificador ha de tenir 16 caràcters hexadecimals
+          en minúscula, el motiu fins a 512 caràcters i l'actor fins a 128.
+        disagreement_reason_help: Per què acceptes l'import utilitzat; obligatori,
+          fins a 512 caràcters
+        disagreements_help: Llista les discrepàncies que vas acceptar per a una declaració,
+          vigents i retirades, amb la revisió en què es desa cadascuna.
         discard_help: Marcar una declaració com a descartada (el canvi d'estat queda
           al registre d'auditoria)
         discard_requires_yes: El descart és una transició d'estat auditable. Torna
-          a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
+          a executar `aeat app modelo work discard %{work_unit_id} --yes` per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
-        document_format_help: 'Format de document de l''informe de càlcul: csv, o
-          pdf per al resum del càlcul signat (requereix el complement opcional pdf).'
+        document_format_help: 'Format de document de l''informe de càlcul: `csv`,
+          o `pdf` per al resum del càlcul signat (requereix el complement opcional
+          `pdf`).'
         document_only_help: Comprova només el document, sense obrir el magatzem del
           perfil actiu; sense --trusted-key, un resultat vàlid queda sense clau ancorada.
+        entry_binding_help: Dada de la declaració, pel seu identificador (consulta
+          `aeat app modelo bindings list`).
+        entry_binding_unknown: '%{binding} no és un identificador de dada.'
+        entry_casilla_help: Casella de la declaració, pel seu identificador del registre
+          (consulta `aeat app modelo casillas`).
+        entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
+        entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_row_help: Fila a la qual es refereix la declaració, per la identitat
+          de fila d'origen que mostra el càlcul (per exemple `inmueble:1`). Només
+          per a dades que es declaren per fila.
+        entry_value_help: El valor, escrit com en la teva llengua de sortida (per
+          exemple 1.234,56 en català o 1,234.56 en anglès).
+        entry_yes_help: Confirma el canvi i registra'l a la declaració
         file:
           verification_report_ambiguous: Hi ha més d’un informe de verificació favorable
             per a aquesta revisió. Resol el conflicte de verificació abans de registrar
             la presentació.
+        file_extemporanea: 'AVÍS: aquesta presentació es registra fora del termini
+          voluntari. La conseqüència d''una presentació extemporània depèn de la declaració
+          (Art. 27 o Art. 198 de la Llei 58/2003); aquesta aplicació no en determina
+          cap.'
         file_help: Registrar com a presentat un càlcul desat i comprovat. NO envia
           res a l'AEAT
         file_idempotent_noop: 'Res a fer: el càlcul desat %{calculation_revision_id}
@@ -1569,6 +2081,14 @@ cli:
           existent sense canvis.'
         file_internal_disambiguation: Aquesta presentació és només interna i no s'envia
           a l'AEAT.
+        filing_evidence_option_other_modelo: 'El model %{modelo} no admet cap d''aquestes
+          opcions: %{options}. Són exclusives del model %{applies_to}. Treu-les i
+          torna a calcular; no s''ha calculat res.'
+        form_help: 'Mostra els registres repetits desats del formulari d''una declaració,
+          com ara una fila per immoble arrendat, tal com els mostra l''àrea de treball:
+          una línia per valor amb el bloc, el número de fila del registre, la casella
+          i el valor. Un bloc els registres del qual no es poden llegir s''indica
+          com a desconegut, mai com a buit.'
         formula_operation_calculation: càlcul
         formula_operation_clamp: límit
         formula_operation_conditional: condicional
@@ -1596,6 +2116,10 @@ cli:
           {candidates}'
         include_discarded_help: Incloure les declaracions descartades en el llistat
           (excloses per defecte)
+        inputs_only_help: Calcula només a partir dels valors que indiques en aquesta
+          ordre, encara que no n'indiquis cap. Sense aquesta opció, una ordre sense
+          valors recalcula des del càlcul actual i conserva tots els valors i indicacions
+          que vas registrar.
         invalid_binding_key: 'La clau --binding no és un identificador vàlid d''origen
           d''una casella (BindingId: alfanumèric en minúscules més separadors . _
           : -, màx. 128 caràcters)'
@@ -1604,7 +2128,7 @@ cli:
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
         invalid_relation_key: La clau --relation no és un RelationId vàlid. Usa un
-          id de relation en minúscules amb guions o punts.
+          id de relació en minúscules amb guions o punts.
         invalid_revision_selector: 'El selector de revisió {value} no és vàlid. Valors
           permesos: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser un resum SHA-256 hexadecimal
@@ -1661,7 +2185,7 @@ cli:
           en aquesta ordre; KEY és un id de relació de les definicions dels models,
           no una clau de --binding. Executa %{discover} per llistar la guia de relacions
           i els altres valors que encara necessita el càlcul.'
-        missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados
+        missing_relation_guidance_m200_m202: '%{base} Aporta els pagaments fraccionats
           del Model 202 al Model 200 amb --relation RELATION_ID=VALUE, no amb --binding.
           DP200014B:00611 resta dos canals de relació M202 mútuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados
           per a 40.3 casella [34] i modelo-200-2024-rel-202-pagos-fraccionados-40-2
@@ -1671,7 +2195,7 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la declaració
         name_required: Proporciona --name.
-        notes_help: Notes opcionals associades al filing record
+        notes_help: Notes opcionals associades al registre de presentació
         observations_help: Mostrar observacions de càlcul tipades per casella i l'origen
           de cada valor.
         observed_at_help: Quan vau confirmar l'atestació, com a instant ISO 8601 amb
@@ -1680,11 +2204,13 @@ cli:
         output_help: Camí on escriure l'informe de càlcul; el seu directori pare ha
           d'existir.
         output_language_help: Idioma de sortida per als missatges renderitzats.
-        override_help: Valor d'entrada d'una casella amb sintaxi KEY=VALUE (repetible);
-          executa `aeat app modelo bindings list --missing` per veure els valors que
-          necessita el càlcul.
+        override_help: Indica tu el valor d'una dada d'una declaració, per sobre del
+          que aporta la seva font o en lloc d'una font que no ha aportat res, com
+          una declaració anterior que no tens desada. Mostra el valor i la comprovació
+          del canvi; amb --yes el registra i conserva tots els altres valors que has
+          introduït.
         payment_election_help: 'Tria com es paga un resultat positiu del Model 303:
-          ingras ordinari o domiciliació.'
+          ingrés ordinari o domiciliació.'
         period_help: 'Codi de període de la declaració: 0A anual, 1T-4T trimestres,
           01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
@@ -1693,8 +2219,8 @@ cli:
           a --period. Tokens vàlids: %{tokens}.'
         period_token_unrecognised: '--period ''%{token}'' no és un token de període
           reconegut. --year i --period es componen per separat: passa --year %{year}
-          per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
-          trimestre o MM per a un mes) a --period.'
+          per a l''exercici fiscal i un token de període (0A per anual, 1T, 2T, 3T
+          o 4T per a un trimestre, o 01 o 12 per a un mes) a --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
         plazo_vencido_sin_previsualizacion_warning: 'AVÍS: termini voluntari vençut
           (Art. 27 LGT). Aquesta aplicació no determina cap deute per recàrrec ni
@@ -1732,20 +2258,23 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Dies naturals treballats
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
           quan s'aplica l'Art. 7.p).
+        preview_maritime_exemption_year_help: Exercici que vols previsualitzar; fixa
+          els dies, el límit i la fracció. Per defecte, el d'avui.
         prior_domiciliation_election_help: Manté o sol·licita la baixa/modificació
           de la domiciliació prèvia del Model 303; la baixa/modificació exigeix una
           rectificativa sobre una presentació prèvia de tipus U avalada per evidència
           de l'AEAT importada.
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         refund_election_help: Tria si un resultat negatiu elegible del Model 303 es
-          compensa o se sollicita com a devolució.
+          compensa o se sol·licita com a devolució.
         relation_help: Valor d'una relació de les definicions dels models amb sintaxi
           KEY=VALUE (repetible). KEY és un id de relació, no una clau de --binding;
           fes-lo servir per a entrades que venen d'un altre període o d'un altre model.
           Executa aeat app modelo bindings list --missing per veure la guia de relacions
-          d'aquesta declaració. Per als pagos fraccionados M202 del Model 200, usa
-          els canals de relació mútuament exclusius 40.3 casella [34] i 40.2 casella
-          [03], posant 0 a la modalitat no usada quan introdueixis valors manuals.
+          d'aquesta declaració. Per als pagaments fraccionats M202 del Model 200,
+          fes servir els canals de relació mútuament exclusius 40.3 casella [34] i
+          40.2 casella [03], posant 0 a la modalitat no usada quan introdueixis valors
+          manuals.
         rename_help: Actualitzar el nom de visualització d'una declaració
         report:
           development_software_identity: El fitxer de presentació d'aquest model portaria
@@ -1791,15 +2320,15 @@ cli:
         rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-*
           han de ser imports decimals; s''ha rebut: {value}. Utilitza el punt com
           a separador decimal i sense separador de milers, p. ex. 1234.56.'
-        rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total
-          (tot el capital de cop) o parcial (cobraments esglaonats). Classifica el
-          cobrament i en deixa constància de l''origen; no canvia l''import: la reducció
-          del 40% s''aplica a la part pre-2007 del que es percep. En parcial, cada
-          cobrament comparteix la mateixa finestra de l''apartat 4.'
+        rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): `total`
+          (tot el capital de cop) o `parcial` (cobraments esglaonats). Classifica
+          el cobrament i en deixa constància de l''origen; no canvia l''import: la
+          reducció del 40% s''aplica a la part pre-2007 del que es percep. En `parcial`,
+          cada cobrament comparteix la mateixa finestra de l''apartat 4.'
         rescate_year_help: Any en que es percep la prestació del rescat (per defecte
           l'any de la declaració). Es compara amb la finestra de l'apartat 4 DT 12a
           LIRPF mesurada des de --contingència-year.
-        result_summary_header: resum del resultat Model %{modelo} %{year} %{period}
+        result_summary_header: resum del resultat Model %{modelo} %{period} %{year}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
@@ -1818,18 +2347,22 @@ cli:
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revision_verbose_help: Mostrar la traça completa de la fórmula per casella
-          (op, formula_id, referències i valors dels operands).
+          (`op`, formula_id, referències i valors dels operands).
         revisions_help: Llistar els càlculs desats, opcionalment filtrats per declaració
+        revoke_disagreement_help: Retira l'acceptació d'una discrepància amb el seu
+          identificador, protegida per la revisió desada que mostra `work disagreements`.
+        revoke_disagreement_revision_required: Indica amb --expected-revision la revisió
+          desada de l'acceptació; `work disagreements` la mostra.
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184), ''vinculada'' (operació vinculada M232) o ''operador'' (operador
-          intracomunitari M349). Repetir per afegir més files. Posa entre cometes
+          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
+          M349) o ''rectificacion''. Repetir per afegir més files. Posa entre cometes
           l''argument complet de --row; mantén entre cometes els noms legals amb espais.
-          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000
+          clave=D''. Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: 'El camp --row {token} s''ha d''escriure com CLAU=VALOR.
           És una entrada clau-valor: posa el nom del camp de la fila a l''esquerra
@@ -1841,8 +2374,8 @@ cli:
         run_details_help: Mostra les dades tipades del pas terminal d'una execució
           persistent.
         run_help: Mostra una execució persistent del flux pel seu identificador.
-        run_id_help: Identificador estable de 16 caràcters obtingut de model work
-          runs.
+        run_id_help: Identificador estable de 16 caràcters obtingut de aeat app modelo
+          work runs.
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
@@ -1874,11 +2407,25 @@ cli:
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
+        set_value_help: Escriu un valor en una casella que omples tu en una declaració,
+          tal com la pren el seu formulari. Mostra el valor tal com el llegeix la
+          casella i la comprovació del canvi; amb --yes el registra i conserva tots
+          els altres valors que has introduït.
         state_label_borrador: Esborrany
         state_label_descartado: Descartat
         state_label_presentado: Registrada com a presentada
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Comprovada i completa
+        statement_not_carried: 'No utilitzat: %{words}, %{target}: %{value}'
+        statement_not_carried_whole: 'No utilitzat: %{words}'
+        statement_not_carried_without_value: 'No utilitzat: %{words}, %{target}'
+        statement_target_box: casella %{box} (%{label})
+        statements_not_carried: 'Valors o indicacions registrats al càlcul %{revision_id}
+          que aquest càlcul no va fer servir: %{count}. Aquell càlcul els continua
+          conservant; torna a calcular sense indicar valors per mantenir-los.'
+        statements_not_carried_incomplete: El càlcul %{revision_id} no va registrar
+          quins valors vas escriure, de manera que la llista pot ometre'n algun. Aquell
+          càlcul continua conservant tots els valors.
         status_calculate_summary: Aquesta declaració activa es pot calcular.
         status_discarded_summary: Aquesta declaració està descartada, de manera que
           el càlcul no està disponible.
@@ -1891,8 +2438,8 @@ cli:
         verify_idempotent_noop: 'Operació idempotent sense efecte: el càlcul desat
           %{calculation_revision_id} ja està comprovat; s''ha retornat l''informe
           de comprovació existent sense canvis.'
-        verify_selector_help: Selector de revisió esborrany (current, latest-draft
-          o explícit).
+        verify_selector_help: Selector de revisió esborrany (`current`, `latest-draft`
+          o `explicit`).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la declaració
           i calcula
         wizard_prompt: Casella %{number} (%{label})
@@ -1932,6 +2479,7 @@ cli:
     still_missing: Encara falta {field}.
   common:
     errors:
+      blank_value: El valor no pot estar buit ni en blanc.
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
         ISO 8601 (AAAA-MM-DD).'
       parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'
@@ -1952,7 +2500,8 @@ cli:
     auth:
       apoderado:
         check_help: Verificar contra l'AEAT (no disponible; les lectures en viu estan
-          segellades). Fes servir 'status' per a la lectura sense connexió.
+          segellades). Fes servir 'cadrumo-runtime config auth apoderado status' per
+          a la lectura sense connexió.
         clear_help: Retirar la configuració d'apoderat
         configure:
           no_console_hint: 'La configuració interactiva de l''apoderament requereix
@@ -2040,7 +2589,7 @@ cli:
         desades. Torna a executar l'ordre amb --yes per confirmar.
       reset_yes_help: Confirmar el restabliment destructiu de l'autenticació
       route_help: 'Via d''aprovació de Cl@ve Móvil: app_request (per defecte, funciona
-        sense navegador visible) o qr (obre un navegador visible). Requereix --provider
+        sense navegador visible) o `qr` (obre un navegador visible). Requereix --provider
         clave_movil.'
       status_help: Mostrar l'estat d'autenticació configurat
       status_summary_configured: L'autenticació està configurada però encara no hi
@@ -2051,18 +2600,6 @@ cli:
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''cadrumo-runtime config auth --help'' per veure els identificadors vàlids.'
-    check:
-      available: disponible
-      capability_label: Capacitat
-      dependency_label: Dependència
-      help: Comprova la disponibilitat de les dependències externes i les capacitats
-        de servei del perfil actiu, amb la solució per a cada problema.
-      issue_label: problema
-      missing: absent
-      preflight_label: Comprovació prèvia
-      profile_label: perfil
-      setup_unavailable: No s'ha pogut comprovar la preparació perquè el servei en
-        segon pla de Cadrumo no ha respost.
     collab:
       help: Gestiona els destinataris de confiança per a la col.laboració amb paquets
         de revisió.
@@ -2163,7 +2700,7 @@ cli:
         secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
           màxima permesa.
       profile_auth_method_help: 'Mètode d''autenticació del canal protegit de secrets
-        del perfil: password o api-key.'
+        del perfil: `password` o `api-key`.'
       profile_credential_ref_help: Autentica un perfil del servei local amb un UUID
         de credencial de l'emmagatzematge natiu protegit (requereix --profile-auth-method
         api-key).
@@ -2203,9 +2740,9 @@ cli:
         la sessió.
     google:
       detail:
-        sync_push_limit_requires_dry_run: La sincronització push de Google no pot
-          usar --límit llevat que --dry-run estigui activat, perquè una execució real
-          acotada crearia un manifest remot parcial.
+        sync_push_limit_requires_dry_run: La sincronització de dades cap a Google
+          només admet --limit amb --dry-run, perquè una execució real limitada crearia
+          un manifest remot parcial.
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
@@ -2230,13 +2767,13 @@ cli:
         validation: 'Les dades proporcionades per a Google no han superat la validació:
           {detail}'
       export_capability_disabled: L'exportació a Google està desactivada per a aquest
-        perfil; activa-la amb 'aeat config profile capabilities set google_export
-        on'.
+        perfil; activa-la amb `aeat config profile capabilities set google_export
+        on`.
       folder:
         help: Mostra la carpeta de Google Drive creada per al perfil actiu
         organize_help: Organitza la carpeta del perfil dins de Cadrumo
         view_help: Mostra la carpeta de Google Drive creada per al perfil actiu.
-      help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
+      help: Gestionar la integració OAuth d'escriptori de Google per a Drive i Sheets
       login_help: Executar el flux de consentiment OAuth
       logout_help: Esborrar el token de refresc i les metadades
       probe_help: Comprova l'accés a la carpeta de Google Drive del perfil
@@ -2248,7 +2785,7 @@ cli:
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     login:
-      help: Autentica un perfil i inicia una sessió reprenible
+      help: Autentica un perfil i inicia una sessió reprenable
       name_help: UUID o etiqueta exacta del perfil; omet-lo per usar el perfil seleccionat
       notices:
         already_authenticated: Aquest perfil ja té la sessió iniciada; s'ha reprès
@@ -2285,6 +2822,8 @@ cli:
     logout:
       help: Tanca la sessió d’aquest perfil a totes les sessions d’usuari d’aquest
         dispositiu. Les sessions de l’AEAT continuen actives.
+      name_help: UUID o nom exacte del perfil del qual vols tancar la sessió; omet-lo
+        per fer servir el perfil seleccionat.
       notices:
         already_logged_out: No hi ha cap perfil seleccionat; no hi ha cap sessió per
           tancar.
@@ -2358,27 +2897,74 @@ cli:
           export_target_exists: Ja hi ha un fitxer al camí de destinació i una còpia
             de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
             el fitxer existent; no s'ha llegit cap perfil.
+      arrendamiento:
+        add_help: Afegeix un arrendament amb dades --value FET=VALOR; l'immoble que
+          anomena ha d'existir.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'un arrendament i esborra les que indiquis; les altres
+          es mantenen.
+        end_fecha_help: Últim dia de l'arrendament (AAAA-MM-DD).
+        end_help: Indica l'últim dia d'un arrendament.
+        help: Registra els arrendaments dels teus immobles.
+        list_help: Llista els arrendaments desats amb la seva clau de fila.
+        remove_help: Elimina un arrendament.
+        row_help: Clau de fila de l'arrendament, la que mostra `list`.
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
+      ascendiente:
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<cognoms
+          i nom>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre de descendents
+          amb qui conviu l'ascendent>][,CONVIVENCIA_MITAD_PERIODO=true|false][,RENTAS=<rendes
+          anuals excloses les exemptes, en euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=true|false][,INCAPACIDAD_JUDICIAL=true|false].
+          Repetible; NACIMIENTO és obligatori a cada fila.
+        add_help: Afegeix un o més ascendents al perfil actiu, o declara amb --none
+          que no n'hi ha cap.
+        edit_clear_help: Una clau la dada declarada de la qual vols treure de l'ascendent,
+          com FALLECIMIENTO. Repetible; NACIMIENTO no es pot treure.
+        edit_empty: Indica almenys una dada per canviar amb --ascendiente CLAU=VALOR
+          o per treure amb --clear CLAU.
+        edit_flag_help: 'Parells CLAU=VALOR que se substitueixen, amb les claus de
+          l''ordre `add`: NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES,
+          CONVIVENCIA_MITAD_PERIODO, RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA
+          i INCAPACIDAD_JUDICIAL. Repetible; cada clau com a màxim una vegada.'
+        edit_help: Canvia les dades declarades d'un ascendent del perfil actiu per
+          índex (base 0); les dades que no indiquis es queden com estan.
+        edit_index_help: Índex (base 0) de l'ascendent que vols canviar, tal com el
+          mostra `list`.
+        help: Declara els ascendents del contribuent per a la secció de família del
+          model 100.
+        index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
+        invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
+          CLAU=VALOR amb les claus NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO,
+          CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO, RENTAS, DECLARACION_PROPIA, DISCAPACIDAD,
+          DISCAPACIDAD_ASISTENCIA i INCAPACIDAD_JUDICIAL, cadascuna com a màxim una
+          vegada i amb valor; el context de l'error indica la clau quan es pot identificar.
+        list_help: Llista els ascendents declarats al perfil actiu i si el perfil
+          declara que no n'hi ha cap.
+        remove_help: Elimina un ascendent per índex (base 0) del perfil actiu.
+        remove_index_help: Índex (base 0) de l'ascendent que vols eliminar.
       automation:
         approve:
-          digest_help: Empremta exacta de revisió mostrada per inspect.
+          digest_help: Empremta exacta de revisió mostrada per cadrumo-runtime config
+            profile automation inspect.
           help: Aprovar la sol·licitud exacta revisada tornant a introduir la contrasenya
             del perfil.
           request_help: UUID de la sol·licitud revisada.
         change:
           help: Sol·licita la rotació, renovació o canvi de permisos d'una autorització
             API existent.
-          kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
+          kind_help: 'Canvi d''autorització: `rotate`, `renew` o `change_scope`.'
         create:
           help: Emet una clau API a partir d'una proposta completa proporcionada mitjançant
             --secrets-stdin o --secrets-fd. La clau arriba a l'emmagatzematge protegit
             després de la teva aprovació per separat.
         decline:
-          digest_help: Empremta exacta de revisió mostrada per inspect.
+          digest_help: Empremta exacta de revisió mostrada per cadrumo-runtime config
+            profile automation inspect.
           help: Rebutjar la sol·licitud exacta revisada.
           request_help: UUID de la sol·licitud revisada.
         deny:
           help: Revoca una clau, una concessió o tot l'accés automatitzat.
-          kind_help: 'Tipus de revocació: key, grant o all.'
+          kind_help: 'Tipus de revocació: `key`, `grant` o `all`.'
           target_help: UUID de la clau o concessió que es revocarà.
           target_mismatch: La revocació d'una clau o concessió requereix el seu UUID;
             all no admet cap destinació.
@@ -2425,7 +3011,7 @@ cli:
         no_active_profile: No hi ha cap perfil actiu; inicia la sessió en un amb 'aeat
           config login <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
-        state_help: Si activar (on) o desactivar (off) la capacitat.
+        state_help: Si activar (`on`) o desactivar (`off`) la capacitat.
         state_label: estat
         view_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
@@ -2451,8 +3037,8 @@ cli:
           valors diferents dels que has declarat: {axes}. La teva resposta es manté;
           resol cada discrepància tu mateix.'
         pull_help: Previsualitza la identitat i el domicili de les dades censals de
-          l'AEAT, o revisa i aplica una proposta exacta mitjançant l'operació canònica
-          reanudable.
+          l’AEAT, o revisa i aplica una proposta exacta mitjançant l’operació canònica
+          reprenable.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.'
         pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
           censal, de manera que la incorporació al cens compta com a verificada.
@@ -2467,14 +3053,14 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Consulta 'config profile
-        status' per veure què falta.
+        pogut preparar els avisos amb els passos següents. Inicia la sessió abans
+        de comprovar què falta al perfil.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
-        cap sessió oberta. Inicia la sessió amb l'ordre 'config login {profile}' per
-        desbloquejar-ne les dades abans de continuar.
+        cap sessió oberta. Inicia la sessió per desbloquejar-ne les dades abans de
+        continuar.
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
@@ -2488,7 +3074,7 @@ cli:
         restablir una contrasenya oblidada i també pots afegir-lo més tard. [y/N] '
       create_recovery_skipped: La recuperació no està configurada. Sense ella no es
         pot restablir una contrasenya oblidada; activa-la quan vulguis amb l'ordre
-        'config profile recovery enable'.
+        `cadrumo-runtime config profile recovery enable`.
       delete:
         expected_digest_help: Exigeix l’empremta del contingut de la revisió prèvia.
         expected_profile_id_help: Exigeix la identitat del perfil de la revisió prèvia.
@@ -2500,16 +3086,16 @@ cli:
             amb --yes per eliminar.'
         yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repetible. Executa `aeat config profile descendiente` sense subcomandament
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,COTIZACIONES_SS_MADRE=N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<cognoms
+          i nom>]. Repetible. Executa `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
-        ambiguous_relacion_advisory: descendent %{indices} declara meses_madre_trabajo
-          sota la relació no indicada. El manual concedeix el minim pero exclou la
-          deducció per maternitat de l'art. 81.1 per a un net o altre descendent per
-          consanguinitat diferent d'un fill, o un menor sota guarda i custodia judicial
-          -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirma
-          que aquest descendent es un fill, o indica la relació real amb RELACION=.
+        ambiguous_relacion_advisory: El descendent %{indices} declara mesos de treball
+          matern amb la relació predeterminada. El registre no distingeix un fill
+          d'un net o un altre descendent per consanguinitat que no sigui fill. Aquests
+          darrers no donen dret a la deducció per maternitat de l'article 81.1, tot
+          i que pot correspondre el mínim per descendents. Confirma el parentiu abans
+          d'aplicar la deducció.
         guarderia_spend_shapes_conflict: Per a un descendent, declara GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, però no tots dos.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
@@ -2547,13 +3133,34 @@ cli:
         s'inspecciona
       history_event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment
         (repetible)
-      history_help: Mostrar l'historial d'esdeveniments només-append d'un perfil
+      history_help: Mostrar l'historial d'esdeveniments d'un perfil (només s'hi afegeix)
       history_object_id_help: Filtrar l'historial a esdeveniments sobre un object_id
         concret (coincidència exacta)
       history_since_help: Filtrar l'historial a esdeveniments en o després d'aquesta
         marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
+      household:
+        none_conflicts_with_rows: '%{none} no es pot combinar amb %{flag}.'
+        none_flag_help: Declara que el contribuent no en té cap, en lloc d'afegir
+          files. És una resposta, no una dada desconeguda. Es rebutja al costat d'una
+          fila i mentre hi hagi files desades.
+        none_with_stored_rows: El perfil ja conté aquest grup familiar (%{rows} fila/es
+          desades, recompte declarat %{stated_count}). Elimina primer les files amb
+          l'ordre `remove`.
+        rows_or_none_required: Indica almenys una fila %{flag}, o %{none} per declarar
+          que no n'hi ha cap.
+      inmueble:
+        add_help: Afegeix un immoble amb dades --value FET=VALOR; es desa només si
+          les dades són coherents.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'un immoble i esborra les que indiquis; les altres
+          es mantenen.
+        help: Registra els immobles que arrendes.
+        list_help: Llista els immobles desats amb la seva clau de fila.
+        remove_help: Elimina un immoble; es rebutja mentre un arrendament el nomeni.
+        row_help: Clau de fila de l'immoble, la que mostra `list`.
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       list:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
           de perfils (estat: {outcome}). Torna a executar l''ordre; si persisteix,
@@ -2570,14 +3177,29 @@ cli:
         committed_view_unavailable: El canvi del perfil s'ha desat, però la vista
           actualitzada no està disponible. Torna a consultar el perfil abans de fer
           cap altre canvi.
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
-        <NIF>` first.
+      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create
+        NAME --tax-id <NIF>` primer.
       notices:
+        ascendant_disability_key_cleared: 'El teu perfil desava una clau de discapacitat
+          per a l''ascendent {row}. Aquesta dada ja no existeix: la clau es deriva
+          del grau de discapacitat, de si l''ascendent necessita ajuda de terceres
+          persones o té mobilitat reduïda i de si un jutge n''ha declarat la incapacitat.
+          Indica aquestes tres dades amb «aeat config profile ascendiente edit {row}»
+          per tornar a calcular el mínim per ascendents.'
         payer_fact_cleared: '{fact}: aquest perfil desava un «no» que l''assistent
           de configuració va escriure per defecte, de manera que no es distingia d''una
           pregunta sense resposta i s''ha esborrat. Les obligacions que en depenen
           queden sense determinar fins que responguis amb l''opció {yes_flag} o {no_flag}
           de l''ordre d''edició del perfil.'
+        payer_fact_cleared_select: '{fact}: aquest perfil desava el valor que l’assistent
+          de configuració va escriure per defecte, de manera que no es distingia d’una
+          pregunta sense resposta i s’ha esborrat. Les obligacions que en depenen
+          queden sense determinar fins que responguis amb l’opció {flag} de l’ordre
+          d’edició del perfil.'
+        rental_tier_cleared: 'El teu perfil desava el tram de reducció de l''art.
+          23.2 per al lloguer. Aquesta dada ja no existeix: el tram es dedueix de
+          les dades de cada contracte. Registra els teus arrendaments amb «aeat config
+          profile arrendamiento add» per tornar a calcular la reducció.'
       plantilla_media:
         average_workforce_help: Plantilla mitjana total de l'any, en equivalents a
           jornada completa i amb dos decimals com a màxim.
@@ -2591,9 +3213,21 @@ cli:
         remove_year_help: Any natural que es retira.
         set_help: Declarar o substituir la plantilla mitjana d'un any natural al perfil
           actiu.
-        state_help: observed per a un any tancat; committed per a un any encara no
-          tancat, que s'haurà de regularitzar si no es compleix.
+        state_help: '`observed` per a un any tancat; `committed` per a un any encara
+          no tancat, que s''haurà de regularitzar si no es compleix.'
         year_help: Any natural al qual correspon la mitjana.
+      posicion:
+        add_help: Afegeix una posició amb dades --value FET=VALOR; es desa només si
+          les dades són coherents.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'una posició i esborra les que indiquis; les altres
+          es mantenen.
+        help: Registra els teus comptes bancaris, dipòsits a termini i comptes de
+          valors.
+        list_help: Llista les posicions desades amb la seva clau de fila.
+        remove_help: Elimina una posició.
+        row_help: Clau de fila de la posició, la que mostra `list`.
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       recovery:
         channel_absent: Un codi de recuperació només es pot mostrar en un terminal.
           En un host sense terminal, indica --recovery-handoff-fd i --recovery-verification-fd;
@@ -2615,7 +3249,8 @@ cli:
           demostrar-ne la contrasenya; el codi es mostra una sola vegada i s'ha d'escriure
           de tornada.
         enabled_notice: La recuperació està configurada. Si oblides la contrasenya,
-          executa l'ordre 'config passphrase reset NOM' amb aquest codi.
+          executa l'ordre `cadrumo-runtime config passphrase reset NOM` amb aquest
+          codi.
         handoff_fd_help: Escriu el codi de recuperació d'un sol ús com un objecte
           JSON secret acotat en aquest descriptor heretat d'escriptura.
         handoff_too_large: El lliurament de recuperació ha superat el límit de 8192
@@ -2643,12 +3278,13 @@ cli:
       row:
         invalid_row: '''%{row}'' no és una clau de fila vàlida; fes servir un enter
           no negatiu o base.'
-        row_help: Clau estable de la fila mostrada per profile view; fes servir base
-          per a la fila sense índex.
+        row_help: Clau estable de la fila mostrada per `aeat config profile view`;
+          fes servir `base` per a la fila sense índex.
         section_help: Clau de la secció repetible del perfil.
       sandbox:
-        active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
-          real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
+        active_indicator_info: Estàs operant dins de l'entorn de proves %{label},
+          no en un perfil real; totes les ordres s'executen contra aquest bucket aïllat
+          i descartable.
       sessions:
         help: Enumera les sessions actuals d'aquest perfil a l'entorn local.
       show:
@@ -2663,108 +3299,18 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
-    provision:
-      approval_needed: Això necessita la teva aprovació. Torna a executar l'ordre
-        amb --yes per aprovar el pla anterior.
-      approve_prompt: Vols baixar i preparar això ara?
-      browser:
-        help: Prepara el navegador que Cadrumo fa servir per al web de l'Agència Tributària.
-          Mostra el pla i et pregunta abans.
-      complete: Cadrumo està preparat.
-      fix: 'Per solucionar-ho, executa: %{command}'
-      hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
-      help: 'Prepara i comprova el que Cadrumo necessita en aquest ordinador: el navegador
-        per al web de l''Agència Tributària i la IA local, amb el seu programa i els
-        seus models. Cada ordre s''executa al teu perfil amb la sessió iniciada.'
-      incomplete: Alguns components encara no estan a punt.
-      load:
-        help: Carrega els models a la memòria perquè la primera lectura no esperi,
-          el de cada rol tret que --role o --model ho limitin. Es nega abans de carregar
-          si falta memòria.
-        model_help: Nom del model que cal carregar. Ja ha d'estar baixat. Per defecte,
-          el model triat per al rol.
-      outcome:
-        cancelled: Has cancel·lat la preparació.
-        completed: La preparació ha acabat.
-        interrupted: La preparació es va interrompre abans d'acabar. Torna a executar
-          l'ordre per continuar.
-        not_enough_space: No hi ha prou espai lliure al disc, així que no s'ha baixat
-          res.
-        nothing_to_do: Tot ja està preparat.
-        plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha
-          baixat res. Torna a executar l'ordre per veure el pla nou.
-        rejected: No s'ha baixat res.
-      plan:
-        destination: '  Es desa a %{path}'
-        entry: '%{name}: %{size} des de %{hosts}'
-        heading: 'Cadrumo prepararà:'
-        installs_program: '  Això instal·la un programa en aquest ordinador. El seu
-          instal·lador et pot demanar permís.'
-        part: '    %{name}: %{size}'
-        shared: '  Fa servir la mateixa baixada que %{name}.'
-        size_unknown: mida encara desconeguda
-        total: 'Baixada total: %{size}.'
-        total_unknown: 'Baixada total: com a mínim %{size}. Algunes mides només es
-          coneixen quan comença la baixada.'
-      probe:
-        help: 'Comprova a fons cada component: contacta amb els servidors de baixada,
-          obre el navegador i prova cada model. No baixa res.'
-      progress: '%{name}: %{step}'
-      progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
-      pull:
-        help: 'Prepara la IA local: instal·la el seu programa si falta i després baixa
-          el model de cada rol. Mostra el pla i et pregunta abans; l''instal·lador
-          del programa també et pot demanar permís.'
-        model_help: Nom d'un model del catàleg que cal fer servir en lloc del que
-          tria Cadrumo.
-      remove:
-        help: Esborra d'aquest ordinador un model que va triar Cadrumo i indica l'espai
-          alliberat.
-        model_help: Nom del model que cal esborrar. Només es poden esborrar models
-          que va triar Cadrumo.
-      report:
-        help: Indica la memòria d'aquest ordinador, el model triat per a cada rol
-          i si es pot carregar ara.
-      role_help: Rol del model sobre el qual actuar (transcripció d'imatges, extracció
-        de text, mapatge de taules, proposta de naturalesa de l'operació). Per defecte,
-        tots els rols.
-      setup:
-        help: Prepara tots els components que encara no estan a punt. Mostra què es
-          baixarà, quant ocupa i on es desa, i et pregunta abans de baixar res.
-      size:
-        gigabytes: '%{value} GB'
-        megabytes: '%{value} MB'
-      start:
-        help: Inicia el programa d'IA local instal·lat quan no respon. No fa res si
-          ja respon.
-      status:
-        help: Mostra si cada component està a punt, a partir del que aquest ordinador
-          ja té. És ràpid i no baixa res.
-      step:
-        cleanup: endreçant
-        download: baixant
-        install: instal·lant
-        plan: planificant
-        preflight: comprovant la connexió
-        verify: comprovant que funciona
-      verify:
-        help: Comprova a fons un component, o tots si no n'indiques cap. No baixa
-          res.
-        item_help: 'Component que cal comprovar: browser o local_ai. Per defecte,
-          tots.'
-      yes_help: Aprova el pla que mostra l'ordre, sense preguntar.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar i reparar configuració local, definicions dels models, perfil,
-        autenticació i logs
+        autenticació i registres
       integrity:
         objects_help: Comprova la integritat dels objectes segurs.
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
       integrity_help: Comprovar la integritat dels objectes segurs i de les definicions
         dels models.
-      logs_help: Mostrar la ruta del fitxer de logs i les línies recents
-      logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
+      logs_help: Mostrar la ruta del fitxer de registre i les línies recents
+      logs_lines_help: Nombre de línies recents del fitxer de registre a mostrar
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
@@ -2788,8 +3334,6 @@ cli:
         amb --yes per confirmar o passa --dry-run per veure què s'esborraria.
       reset_progress_yes_help: Confirmar l'esborrat del progrés desat d'una ordre
         interrompuda
-      setup_status_hint: La preparació es mostra amb l'ordre d'estat de sota un cop
-        hagis iniciat la sessió.
       yes_help: Confirmar la reparació.
     reset:
       help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils
@@ -2816,12 +3360,12 @@ cli:
         concertat per a la capçalera del Model 111.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executa sense interacció usant només els valors dels flags indicats,
-        sense preguntar res. Un flag sense valor no s'escriu en lloc de provocar un
-        error, de manera que un perfil nou queda amb la configuració incompleta; `aeat
-        config profile complete-setup` indica les dades que encara li falten. Suficient
-        per si sol; combina amb --accept-defaults per omplir la resta amb els valors
-        per defecte.
+      quiet_help: Executa sense interacció usant només els valors de les opcions indicades,
+        sense preguntar res. Una opció sense valor no s'escriu en lloc de provocar
+        un error, de manera que un perfil nou queda amb la configuració incompleta;
+        `aeat config profile complete-setup` indica les dades que encara li falten.
+        Suficient per si sol; combina amb --accept-defaults per omplir la resta amb
+        els valors per defecte.
     sign_in_status:
       help: Comprova si has iniciat sessió sense reprendre-la ni prolongar-la.
     status:
@@ -2913,8 +3457,8 @@ cli:
           populated: amb dades
           unresolved: sense resoldre
       view:
-        area_argument_help: L'àrea d'emmagatzematge a consultar (state, logs, cache
-          o exports).
+        area_argument_help: L'àrea d'emmagatzematge a consultar (`state`, `logs`,
+          `cache` o `exports`).
         area_help: Mostra amb detall una ubicació d'emmagatzematge declarada.
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
@@ -2973,7 +3517,7 @@ cli:
       finding_label: '-'
       finding_optional: opcional
       finding_required: obligatori
-      logs_label: Logs
+      logs_label: Registres
       overall_label: Estat
       profile_label: Perfil
       python_label: Python
@@ -3031,8 +3575,15 @@ cli:
         models: omesa.'
       registry_unavailable: Les definicions dels models no estan disponibles.
       secure_objects_empty: L'emmagatzematge d'objectes segurs està buit.
+      secure_objects_probe_failed: No s'ha pogut comprovar la integritat dels objectes
+        segurs en %{failed} espai(s) de noms. Això no vol dir que estiguin buits ni
+        sans.
+      secure_objects_probe_failed_detail: 'sense comprovar: %{namespaces}'
       secure_objects_readable: '%{readable} espai(s) de noms d''objectes segurs llegibles:
         %{namespaces}.'
+      secure_objects_unavailable: No s'ha pogut comprovar la integritat dels objectes
+        segurs perquè no s'ha pogut llegir l'emmagatzematge xifrat. Això no vol dir
+        que estigui buit ni sa.
       secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
         fila(es) llegible(s)'
       state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
@@ -3051,6 +3602,7 @@ cli:
     missing_option: Falta l'opció
     missing_parameter: Falta el paràmetre
     not_valid_integer: no és un enter vàlid.
+    not_valid_number: no és un nombre vàlid.
     panel:
       arguments: Arguments
       commands: Ordres
@@ -3059,6 +3611,7 @@ cli:
     path_not_found: la ruta '{path}' no existeix o no és un fitxer llegible.
     try_for_help: Prova [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
+    value_not_accepted: no és un valor acceptat.
   ledger:
     account:
       errors:
@@ -3073,9 +3626,15 @@ cli:
         iban: 'IBAN: '
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Sense canvis: el registre ja tenia aquests valors.'
+    actividad_asset:
+      plan_minimum: Amortització mínima
+      plan_minimum_incomplete: incompleta
     add:
       account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Data en què l'ingrés o la despesa es merita a la Renda segons
+        l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD). No canvia el període de l'IVA.
+        Si l'omets no es desa cap data.
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
@@ -3112,6 +3671,9 @@ cli:
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Les teves notes, desades amb el moviment
+      operation_date_help: Data de la meritació de l'IVA segons l'art. 75 LIVA, que
+        tria el període de l'IVA (AAAA-MM-DD). En una bestreta, la data del cobrament.
+        Si l'omets es fa servir la data bancària i se t'avisa.
       prorrata_reference_help: Referència de prorrata d'IVA
       prorrata_sector_help: Identificador del sector diferenciat (arts. 9.1.c i 101
         LIVA) al qual pertany aquest input; ha de coincidir amb un sector ja declarat.
@@ -3144,7 +3706,7 @@ cli:
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
-        no facis servir ledger allocate per a una fila totalment BUSINESS.
+        no facis servir `ledger allocate` per a una fila totalment BUSINESS.
       help: Registrar proporcionalitat professional/personal per a un moviment dels
         teus registres
       id_help: Id del moviment a assignar
@@ -3159,7 +3721,7 @@ cli:
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
       finalized_revision_stale: El justificant es va desar al moviment dels teus registres,
-        però el Modelo %{modelo} %{filing_year} %{period} es va comprovar abans que
+        però el Modelo %{modelo} %{period} %{filing_year} es va comprovar abans que
         existís i conserva el conjunt de justificants anterior.
       help: Adjunta un justificant existent a un moviment dels teus registres.
       id_help: Id del moviment al qual adjuntar el justificant
@@ -3177,8 +3739,14 @@ cli:
       irpf_id_column: irpf-category (passa aquest valor exacte)
       irpf_purpose_activity_income_withholding: retenció d'activitat professional
         cobrada o pagada neta
+      irpf_purpose_capital_gain: guany o pèrdua patrimonial (encara no calculada)
+      irpf_purpose_capital_mobiliario_yield: rendiments del capital mobiliari (interessos,
+        dividends)
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
+      irpf_purpose_prize_payment_withholding: premi de concurs o rifa que vas pagar
+        amb retenció (premis del model 111)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
+      irpf_purpose_rental_property_income: ingressos i despeses de lloguer d'un immoble
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
         {rent_category}. Servei professional net: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3197,13 +3765,18 @@ cli:
         afectada no és fiable.'
       period_help: 'Període de declaració opcional com a codi de període AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (mesos). Combina''l amb --year per coincidir
-        amb ledger status.'
+        amb aeat app ledger status.'
       year_help: Any de declaració per a --period (p. ex. 2024).
     classify:
-      apply_help: 'Desa el suggeriment de l''LLM amb origen llm: en lloc de només
-        previsualitzar-lo.'
-      auto_split_help: Llegeix la factura adjunta i, quan és multicomponent, la divideix
-        en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).
+      apply_help: Desa el suggeriment de l'LLM amb origen `llm:` en lloc de només
+        previsualitzar-lo.
+      arrendamiento_help: Clau de fila de l'arrendament desat al qual pertany aquesta
+        fila d'ingrés; consulta els arrendaments amb «aeat config profile arrendamiento
+        list». Un text en blanc treu el vincle. Una fila vinculada porta la categoria
+        de renda capital_inmobiliario.
+      auto_split_help: Llegeix la factura adjunta i, quan conté diversos components,
+        la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix
+        --read-evidence).
       auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió
         de divisió es llegeix de la factura.'
       auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply
@@ -3220,6 +3793,10 @@ cli:
         privada; treu --business-pct o passa --classification MIXED.
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --file.
+      concepto_capital_mobiliario_help: Què és la fila dins de la seva posició d'estalvi,
+        un dels conceptes que declara el registre; un valor desconegut es rebutja
+        amb els admesos. Necessita una posició vinculada (--posicion). Un text en
+        blanc el treu.
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
         p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
         fes servir --counterparty-identification-state.
@@ -3232,29 +3809,46 @@ cli:
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
         derivar: {note} Indica --taxable-base, --iva-rate i --iva-amount a mà per
         a aquesta categoria.'
+      exemption_article_help: L'exempció de l'art. 20.Uno LIVA en què encaixa una
+        fila `domestic_exempt`, com a token del vocabulari d'articles d'exempció que
+        el registre declara per a la data de la fila. Decideix si la fila compta en
+        el volum de la prorrata com a operació sense dret a deducció.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Fitxer CSV no trobat: %{path}'
+      gasto_inmobiliario_help: Classe de despesa de l'immoble, una de les que declara
+        el registre; un valor desconegut es rebutja amb les admeses. Necessita un
+        immoble vinculat (--inmueble). Un text en blanc el treu.
       help: Classificar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
+      inmueble_help: Clau de fila de l'immoble desat al qual pertany aquesta fila
+        de despesa; consulta els immobles amb «aeat config profile inmueble list».
+        No juntament amb --arrendamiento. Un text en blanc treu el vincle. Una fila
+        vinculada porta la categoria de renda capital_inmobiliario.
       investment_asset_id_help: Identitat del registre de béns d'inversió contra la
         qual es dedueix aquesta adquisició, tal com consta en aquest registre. Obligatòria
         amb un tipus de deducció d'inversió i rebutjada en qualsevol altre.
       irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
         cobrades en net fan servir actividad_economica; els lloguers pagats en net
         fan servir arrendamiento_local o arrendamiento_vivienda_afecto. Royalties
-        i els ingressos de la SGAE són capital mobiliario segons l'art. 25.4 LIRPF
-        quan el contribuent no és l'autor, i activitat econòmica segons l'art. 27
-        LIRPF quan sí que ho és i exerceix l'activitat. Consulta el catàleg de categories
-        dels teus registres per veure tots els identificadors.
+        i els ingressos de la SGAE són rendiments del capital mobiliari segons l'art.
+        25.4 LIRPF quan el contribuent no és l'autor, i activitat econòmica segons
+        l'art. 27 LIRPF quan sí que ho és i exerceix l'activitat. Consulta el catàleg
+        de categories dels teus registres per veure tots els identificadors.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject)
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      iva_vehicle_use_help: 'Per a què s''usa el vehicle de la fila, quan l''art.
+        95.Tres.2.ª LIVA l''aparta de la presumpció del 50 per 100: un dels sis usos
+        presumits al 100 per 100 (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) o `outside_presumed_classes` si aquesta regla no anomena el
+        vehicle.'
       llm_classified_by_label: classificat-per
       llm_confidence_label: confiança
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la via
@@ -3292,6 +3886,9 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
+      posicion_help: Clau de fila de la posició d'estalvi desada a la qual pertany
+        aquesta fila. No juntament amb --arrendamiento ni --inmueble. Un text en blanc
+        treu el vincle. Una fila vinculada porta la categoria de renda capital_mobiliario.
       read_evidence_help: Llegeix en local l'evidència adjunta de la transacció i
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
@@ -3299,10 +3896,14 @@ cli:
       reason_empty: Rebutjat. --reason ha de registrar per què classifiques aquesta
         transacció. Indica un motiu no buit, o omet --reason.
       reason_help: Motiu en text lliure que es registra com a notes del moviment i
-        com a motiu de la decisió de classificació (visible a ledger view), o amb
-        una decisió --reject.
-      reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
-        un suggeriment rebutjat, apply un d''acceptat.'
+        com a motiu de la decisió de classificació (visible a `aeat app ledger view`),
+        o amb una decisió `--reject`.
+      recargo_amount_help: Recàrrec d'equivalència repercutit en aquest moviment (art.
+        161 LIVA). En una compra només s'admet si el règim d'IVA del perfil és el
+        recàrrec d'equivalència; amb la base i la quota d'IVA ha de sumar l'import
+        del moviment
+      reject_apply_exclusive: '--reject no es pot combinar amb --apply: `reject` registra
+        un suggeriment rebutjat, `apply` un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment
         d'auditoria, sense classificar la fila (no es pot combinar amb --apply).
       saturate_help: 'Satura amb IA: selecciona també la categoria d''IVA i deriva
@@ -3317,17 +3918,21 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
-      vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
-        factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
-        el model configurat.
     counterparty:
       errors:
         nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
           ''--scope'' per a on està establerta la contrapart, ''--identification-state''
           per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
           fets independents i qualsevol d''ells es pot indicar per separat.'
+        rendering_malformed: '''{rendering}'' no és una forma abreujada. Escriu-la
+          com AMPLADA=TEXT, amb l''amplada del camp en caràcters i el text que vols
+          declarar-hi.'
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
           per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
+      lines:
+        filing_name_stated: '{identifier}: nom de declaració indicat'
+        filing_name_unchanged: '{identifier}: el nom de declaració ja estava indicat'
+        filing_name_withdrawn: '{identifier}: nom de declaració retirat'
       notices:
         already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}''
           com a ''{answered}''; aquesta crida no ha creat cap confirmació nova i es
@@ -3336,17 +3941,31 @@ cli:
           establert a {confirmed}, però el justificant que has aportat situa la mateixa
           part a {evidenced}. Cadrumo no fixarà cap territori per a aquesta contrapart
           fins que se''n retiri un dels dos.'
+        filing_name_already_stated: '''{identifier}'' ja té aquest nom de declaració,
+          indicat per ''{asserted_by}''; aquesta crida no ha canviat res i es manté
+          la indicació original.'
+        filing_name_kind_contradicts_identifier_form: Has indicat el nom de declaració
+          per a {declared}, però la forma d'aquest identificador fiscal espanyol és
+          la de {observed}. El nom es desa tal com l'has indicat i no s'ha canviat
+          res; comprova quina de les dues coses és correcta.
+        no_filing_name_to_withdraw: No hi havia cap nom de declaració indicat per
+          a '{identifier}', de manera que no s'ha retirat res i el magatzem ja es
+          troba en l'estat sol·licitat.
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
           que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+      party_kinds:
+        entity: una entitat
+        natural_person: una persona física
     detach:
       actor_help: Actor registrat en l'esdeveniment de cicle de vida.
       attachment_help: Id de l'adjunt que se separa; repetible.
       help: Separa adjunts d'un moviment dels teus registres sense esborrar-ne els
         bytes.
       id_help: Id del moviment (o un prefix inequívoc).
+    entry_options_help: Mostra els valors que ofereix un formulari d'entrada del llibre.
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al
@@ -3362,6 +3981,8 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconegut. Classes
+        admeses: {accepted}.'
       unknown_category: --category-id {category!r} no reconegut. Indica un identificador
         de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
         de família. Consulta el catàleg de categories dels teus registres per veure
@@ -3396,10 +4017,16 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
+      file_reader_unavailable: 'Extracte no llegit: el model que has triat no està
+        disponible ara mateix per llegir {file}. Torna-ho a provar quan estigui disponible.'
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
         importat.'
       file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
         propi diferent del que has triat.'
+      file_refused_format_not_installed: 'Extracte no llegit: {file} és en un format
+        el lector del qual no forma part d''aquesta instal·lació.'
+      file_refused_statement_account_missing: 'Extracte rebutjat i omès: {file} no
+        indica cap compte vàlid per registrar com a teu.'
       help: Importar extractes bancaris o altres fitxers comptables als teus registres
       likely_duplicates: '{count} fila(es) importada(es) coincideixen en data i import
         amb un altre moviment ja present als teus registres o anterior en aquest fitxer,
@@ -3421,12 +4048,18 @@ cli:
       verify_help: Comprovar els apunts després de la importació
       verify_source_help: Fitxer original usat per comprovar les files importades.
       year_help: Any del filtre --period (p. ex. 2024).
+    known_values:
+      help: Llista els noms, les descripcions i les referències que ja fan servir
+        els teus registres, primer els més recents.
+      kind_help: Només aquest tipus de valor; repeteix-lo per a diversos. Sense això,
+        tots els tipus.
     labels:
+      accrual_date: Data de meritació a la Renda
       active: Actives
       amount: Import
       archived: Arxivades
       attachment_ids: Adjunts
-      bucket: Bucket
+      bucket: Contenidor
       business_classification: Classificació
       business_pct: Percentatge de negoci
       category_id: Categoria
@@ -3461,6 +4094,7 @@ cli:
       'no': 'No'
       notes: Notes
       notice: Avís
+      operation_date: Data de l'operació
       output: Sortida
       parent_id: id_pare
       pending: Pendents de revisió
@@ -3479,6 +4113,7 @@ cli:
       source: Origen
       split_group_id: id_grup_divisió
       stashed: Apartades
+      statement_reference: Referència de l'extracte
       taxable_base: Base imposable
       usage_ratio_id: Id de proporció d'ús
       valid: Vàlid
@@ -3492,6 +4127,8 @@ cli:
         cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
         invoice_not_found: No s'ha trobat l'id de factura al catàleg de factures del
           perfil actiu.
+        transaction_takes_no_invoice: Només es pot vincular una factura a un moviment
+          actiu d'entrada o sortida de diners.
       help: Vincula un moviment dels teus registres amb una factura del catàleg de
         conciliació en una sola operació atòmica. Rebutja enllaços entre buckets.
         Només local; mai contacta amb l'AEAT.
@@ -3517,9 +4154,9 @@ cli:
         pendent).
       limit_help: 'Nombre màxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
-      sort_by_help: Ordena les files llistades per aquest camp (date, amount, description,
-        created_at, modified_at, ...).
-      sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
+      sort_by_help: Ordena les files llistades per aquest camp (`date`, `amount`,
+        `description`, `created_at`, `modified_at`, ...).
+      sort_order_help: 'Ordre: `asc` (ascendent) o `desc` (descendent).'
       ungrouped_label: (sense grup)
     llm_diagnostics:
       bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
@@ -3570,9 +4207,10 @@ cli:
       id_help: Id del moviment a restaurar a actiu
       yes_help: Confirma la restauració del moviment a actiu
     review:
-      filter_help: Filtrar files per status, period (un testimoni AEAT simple, p.
-        ex. period=1T) amb year (p. ex. year=2026), issue, import, classification,
-        text, direction o account (l'id d'un compte bancari propi, p. ex. account=acc-01)
+      filter_help: Filtrar files per estat (`status`), període (`period`, un testimoni
+        AEAT simple, p. ex. `period=1T`) i any (`year=2026`), incidència (`issue`),
+        importació (`import`), classificació (`classification`), text, direcció (`direction`)
+        o compte (`account`, l'id d'un compte bancari propi, p. ex. `account=acc-01`)
       header: SESSIÓ DE REVISIÓ DELS TEUS REGISTRES
       help: Revisió interactiva i validació d'apunts dels teus registres
       no_rows: No hi ha apunts dels teus registres pendents de revisió
@@ -3600,6 +4238,20 @@ cli:
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
       yes_help: Confirma la divisió de la transacció
+    split_check_help: Respon sobre parts de divisió sense desar tal com les acceptaria
+      qui les escriu, sense escriure res.
+    split_check_id_help: Id complet del moviment que es divideix.
+    split_check_invalid: Cada part ha de ser un objecte JSON amb la forma esperada,
+      per a un id de moviment complet.
+    staged_check_category_help: Categoria de despesa repetible que es contrasta amb
+      una classificació.
+    staged_check_help: Respon al treball preparat del llibre com l'acceptarien els
+      escriptors, sense desar res. Les files preparades (`rows`, una matriu JSON d'objectes
+      amb `transaction_id`, `cells` i, opcionals, `evidence_staged` i `m210_staged`)
+      i els moviments nous (`drafts`, una matriu JSON d'objectes amb `key` i `fields`)
+      arriben com un objecte JSON per --secrets-stdin o --secrets-fd.
+    staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
+      amb la forma esperada.
     stash:
       help: Apartar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a apartar
@@ -3610,9 +4262,28 @@ cli:
     track:
       help: Mostrar l'historial d'esdeveniments d'un moviment dels teus registres
       transaction_id_help: Id del moviment a inspeccionar
+    unlink:
+      actor_help: La teva etiqueta, registrada als esdeveniments del bucket.
+      errors:
+        finalized_calculation_reference: Un càlcul finalitzat cita aquest moviment,
+          i el vincle forma part del que va segellar. Reobre o esmena primer el càlcul
+          finalitzat.
+        invoice_changed: Els vincles de la factura han canviat des que la vas obrir.
+          Reobre la factura per veure els seus vincles actuals.
+        link_not_found: Ni el moviment ni la factura es citen mútuament. Reobre el
+          moviment per veure el seu vincle actual.
+        transaction_changed: El moviment ha canviat des que el vas obrir. Reobre el
+          moviment per veure el seu vincle actual.
+      help: Treu el vincle d'un moviment amb una factura; l'historial conserva tots
+        dos
+      id_help: Id del moviment (SHA-256 o prefix inequívoc).
+      invoice_id_help: Id de factura (o prefix inequívoc) que es desvincularà de la
+        transacció.
     update:
       account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Nova data en què l'ingrés o la despesa es merita a la Renda
+        segons l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217
@@ -3627,6 +4298,8 @@ cli:
       iva_amount_help: Nou import d'IVA
       iva_rate_help: Nou tipus d'IVA com a decimal
       notes_help: Les teves notes noves
+      operation_date_help: Nova data de la meritació de l'IVA segons l'art. 75 LIVA
+        (AAAA-MM-DD). En una bestreta, la data del cobrament.
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
     view:
@@ -3724,9 +4397,9 @@ cli:
         heading: Configuració i diagnòstic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticació, registres)
           persisteix entre sessions.
-        paragraph_storage_isolation: Per aïllar l'estat, defineix CADRUMO_LOCAL_STORAGE_ROOT
-          i CADRUMO_SECRET_STORE_DIR. Passa secrets de perfil amb --profile-secrets-stdin
-          o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
+        paragraph_storage_isolation: Per aïllar l'estat, defineix CADRUMO_STORAGE_ROOT.
+          Passa secrets de perfil amb --profile-secrets-stdin o --profile-secrets-fd,
+          i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
         profile_archive: Fes una còpia del perfil en un fitxer segellat, o restaura'n
           una.
         profile_delete: Elimina un perfil emmagatzemat localment.
@@ -3809,8 +4482,6 @@ cli:
       no_active_profile_message: No hi ha cap perfil actiu.
   overview:
     agenda:
-      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
-        incompletes.
       date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
         avui.
       errors:
@@ -3821,8 +4492,6 @@ cli:
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
-        incompletes.
       from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
         d'avui.
       help: Llista les obligacions vençudes que encara no has registrat com a presentades.
@@ -3833,18 +4502,27 @@ cli:
       all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc
         de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del
         perfil.
-      allow_incomplete_help: Generar el calendari encara que les dades del perfil
-        siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
       show_suppressed_help: Mostra també les entrades suprimides (no aplicables) al
         calendari.
+      support:
+        above_ceiling: Aquest període és posterior a %{ceiling}, l'últim exercici
+          admès. No està admès, cosa que no vol dir que no tinguis res a presentar.
+        below_floor: Aquest període és anterior a %{floor}, el primer exercici admès.
+          No està admès, cosa que no vol dir que no tinguis res a presentar.
+        partial: Part d'aquest període queda fora dels exercicis admesos; aquests
+          anys no mostren obligacions perquè no estan admesos, no perquè no tinguis
+          res a presentar.
+        projected: Els exercicis posteriors a %{horizon} encara no tenen formulari
+          propi publicat; els seus terminis s'estimen a partir del més recent i pots
+          calcular-los, però no presentar-los.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: No s'ha pogut carregar l'evidència
       de presentació local del calendari; el calendari es deriva del calendari de
-      terminis i pot sobrenotificar una obligació com a encara pendent.
+      terminis i pot indicar erròniament que una obligació continua pendent.
     calendar_local_live_events_unavailable: L'evidència local d'esdeveniments en viu
       no està disponible per a aquesta fila del calendari.
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
@@ -3905,12 +4583,8 @@ cli:
       period_help: 'Període de declaració com a token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
-    refused_incomplete_profile: 'El perfil actiu no ha respost dades de les quals
-      depèn aquesta projecció: %{requirements}. Completa-les amb ''aeat config profile
-      edit'', o fes servir --allow-incomplete per consultar el resultat provisional.'
     refused_undeclared_taxpayer_model: 'El perfil actiu no declara un model de contribuent,
-      de manera que no es poden derivar les obligacions de presentació. Indica: %{requirements}.
-      O torna a executar amb --allow-incomplete per consultar el resultat provisional.'
+      de manera que no es poden derivar les obligacions de presentació. Indica: %{requirements}.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; és
@@ -3967,31 +4641,95 @@ cli:
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
     warning:
+      administracion_publica_unset: Al teu perfil encara no consta si ets una Administració
+        pública amb un pressupost anual que supera el llindar que fa mensuals les
+        autoliquidacions de retencions.
+      aeat_evidence_conflict: Els registres de l'AEAT no coincideixen sobre una declaració
+        presentada
       applicability_evidence_disagreement: La teva resposta al perfil i les teves
         factures registrades no coincideixen sobre si aquestes obligacions s'apliquen;
         les files continuen visibles fins que corregeixis una de les dues.
       art109_activity_income_withholding_ge_70pct_unset: Al teu perfil encara no consta
         si almenys el 70% dels ingressos de la teva activitat empresarial o professional
         estan subjectes a retenció.
+      bienes_extranjero_unset: Al teu perfil encara no consta si els teus béns i drets
+        situats a l’estranger superen el llindar de declaració.
+      censo_enrolment_unverified: No s'ha verificat l'alta al cens
+      criterio_caja_unset: Al teu perfil encara no consta si t’has acollit al règim
+        especial del criteri de caixa de l’IVA.
+      deadline_windows_unavailable: El registre no té terminis per a una part d'aquest
+        interval, així que no se sap res de les obligacions que hi cauen. Revisa l'estat
+        del resum; una llista buida aquí no vol dir que no venci res.
+      deposito_hidrocarburos_unset: Al teu perfil encara no consta si tens dret a
+        deduir el pagament a compte de l’IVA per la sortida d’hidrocarburs d’un dipòsit
+        fiscal.
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
+      explain_deadline_windows_unavailable: El registre no té terminis per al model
+        %{modelo} i l'any %{year}, així que no es pot indicar ni el calendari ni si
+        vas tard. Que aquí falti l'avís de presentació fora de termini no vol dir
+        que estiguis dins del termini.
+      gran_empresa_unset: Al teu perfil encara no consta si el teu volum d’operacions
+        de l’any natural anterior va superar el llindar de gran empresa, cosa que
+        decideix si presentes amb periodicitat mensual o trimestral.
+      grupo_entidades_dependiente_unset: Al teu perfil encara no consta si ets entitat
+        dependent d’un grup d’entitats de l’IVA.
+      grupo_entidades_dominante_unset: Al teu perfil encara no consta si ets l’entitat
+        dominant d’un grup d’entitats de l’IVA.
       has_employees_unset: Al teu perfil encara no consta si tens empleats.
+      intracomunitario_umbral_unset: Al teu perfil encara no consta si les teves operacions
+        intracomunitàries superen el llindar que fa mensual la declaració recapitulativa.
       intracomunitario_unset: Al teu perfil encara no consta si compres o vens béns
         o serveis entre països de la UE.
       iva_regime_unset: Al teu perfil encara no consta quin règim d’IVA s’aplica a
         la teva activitat.
-      m303_simplificado_forfait_unavailable: El Model 303 aplica, però el motor de
-        càlcul forfait del règim simplificat encara no està disponible; revisa les
-        caselles del règim simplificat abans de presentar.
+      justificante_unverified: No s'ha verificat el justificant de l'AEAT d'una declaració
+        presentada
+      m303_composicion_unset: Al teu perfil encara no consta si al Model 303 tributes
+        només en el règim general, només en el simplificat o en tots dos.
+      m303_simplificado_forfait_unavailable: El Model 303 és aplicable, però encara
+        no està disponible el càlcul per mòduls de la quota del règim simplificat
+        de l’IVA; revisa les caselles del règim simplificat abans de presentar.
+      monedas_virtuales_extranjero_unset: Al teu perfil encara no consta si les teves
+        monedes virtuals situades a l’estranger superen el llindar de declaració.
+      oss_unset: Al teu perfil encara no consta si estàs donat d’alta al règim de
+        finestreta única (OSS/IOSS).
+      pago_fraccionado_art_40_3_unset: Al teu perfil encara no consta si l'entitat
+        va exercir a la seva declaració censal l'opció de l'article 40.3 de la LIS
+        (pagament fraccionat sobre la base imposable dels 3, 9 o 11 primers mesos).
+        Per sota del llindar d'aquest article, d'aquesta opció depèn si cada pagament
+        fraccionat del Model 202 dona lloc a ingrés i, per tant, si l'has de presentar.
+      patrimonio_umbral_unset: Al teu perfil encara no consta si la teva quota de
+        l'Impost sobre el Patrimoni resulta a ingressar o si els teus béns i drets
+        superen 2.000.000 euros.
+      premio_loteria_trimestres_unset: Al teu perfil encara no consta en quins trimestres
+        vas cobrar un premi de loteria subjecte al gravamen especial sense retenció.
+      premio_loteria_unset: Al teu perfil encara no consta si has cobrat un premi
+        de loteria subjecte al gravamen especial sense retenció.
+      redeme_unset: Al teu perfil encara no consta si estàs inscrit al Registre de
+        Devolució Mensual de l’IVA (REDEME).
+      residencia_fiscal_unset: Al teu perfil encara no consta si tens la residència
+        habitual a Espanya, cosa que decideix si tributes per l’IRPF o per l’IRNR.
       retencion_arrendamientos_unset: Al teu perfil encara no consta si pagues lloguers
         i hi practiques retencions.
       retencion_capital_unset: Al teu perfil encara no consta si pagues rendiments
         del capital subjectes a retenció.
+      retencion_no_residentes_unset: Al teu perfil encara no consta si pagues a no
+        residents sense establiment permanent rendes subjectes a retenció de l'IRNR.
       retencion_profesionales_unset: Al teu perfil encara no consta si pagues honoraris
         a professionals i hi practiques retencions.
+      sii_unset: Al teu perfil encara no consta si portes els llibres registre de
+        l’IVA a través del Subministrament Immediat d’Informació (SII).
+      sii_voluntario_unset: Al teu perfil encara no consta si has optat per portar
+        els llibres registre de l’IVA a través del Subministrament Immediat d’Informació
+        (SII).
       terceros_threshold_unset: Al teu perfil encara no consta si les operacions amb
         algun client o proveïdor superen el llindar anual de declaració del Model
         347.
+      territorio_iva_unset: Al teu perfil encara no consta en quin territori tributes
+        per l’IVA (comú o foral).
+      tipo_entidad_unset: Al teu perfil encara no consta quin tipus de contribuent
+        ets.
     year_help: Any de declaració per a --period (p. ex. 2024).
   review:
     app_help: 'La teva cua de revisió: classifica moviments dels teus registres, justificants
@@ -4020,16 +4758,16 @@ cli:
       kind_help: Filtrar per tipus d'origen
       modelo_help: Filtrar per model
       source_kind_help: Filtrar per tipus d'origen
-      state_help: Filtrar estat (pending o all)
+      state_help: Filtrar estat (`pending` o `all`)
     show:
       explain_help: Inclou les referències legals que fonamenten aquesta troballa
         a la sortida de text. La càrrega JSON sempre les inclou.
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: 'Treball fiscal: els teus registres (ledger), model, lectures en
-      viu de l''AEAT, resum (overview), definicions dels models (registry), revisió
-      (review) i diagnòstics d''execució.'
+    app_app_help: 'Treball fiscal: els teus registres (`ledger`), model, lectures
+      en viu de l''AEAT, resum (`overview`), definicions dels models (`registry`),
+      revisió (`review`) i diagnòstics d''execució.'
     app_help: Accedir als comandos de nivell d'aplicació.
     app_help_help: Mostra l'ajuda dels comandos de l'aplicació.
     app_tui_help: Obre l'aplicació a pantalla completa sobre els teus registres locals.
@@ -4037,7 +4775,7 @@ cli:
     detail_help: Habilita la sortida detallada.
     errors:
       did_you_mean_command: Volies dir '%{command}'?
-    format_help: 'Format de sortida: text, json.'
+    format_help: 'Format de sortida: `text`, `json`.'
     help_help: Mostra l'ajuda.
     landing:
       context_heading: Context actual
@@ -4083,7 +4821,7 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-    language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
+    language_help: Idioma de la sortida i del text d'ajuda (`en`, `es`, `ca`, `hu`).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
     verbose_help: Habilita la sortida detallada.

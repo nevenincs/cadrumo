@@ -1,28 +1,29 @@
-"""Roundtrip tests for the `period_code` data_type and `PeriodCode` alias.
+"""Roundtrip tests for the `period_code` data_type.
 
 The `period_code` variant on `CasillaDefinition.data_type` plus the
-`PeriodCode` `Annotated` alias on the schema module form the
+`validate_period_code` validator on the schema module form the
 canonical filing-period validation surface for the registry
 boundary. Period tokens span six concrete forms documented in the
 schema-hardening fiscal-period inventory: quarterly (`1T`-`4T`),
 IS-instalment (`1P`-`4P`), annual (`0A`), monthly (`01`-`12`),
-OSS-quarter (`EXT-1T`-`EXT-4T`), and ad-hoc (`AD-HOC`,
-`EVENT-N`).
+OSS-quarter (`EXT-1T`-`EXT-4T`), and event (`EVENT-N`).
 """
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BeforeValidator, TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import PeriodCode, _validate_period_code
+from ..schema_scalars import validate_period_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_PERIOD_ADAPTER: TypeAdapter[str] = TypeAdapter(PeriodCode)
+_PERIOD_ADAPTER: TypeAdapter[str] = TypeAdapter(Annotated[str, BeforeValidator(validate_period_code)])
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -40,7 +41,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 
 
 class TestPeriodCodeAccepts:
-    """`PeriodCode` accepts every documented period-token form."""
+    """The period_code validator accepts every documented period-token form."""
 
     def test_valid_tokens_accepted(self) -> None:
         cases = (
@@ -69,7 +70,6 @@ class TestPeriodCodeAccepts:
             "EXT-2T",
             "EXT-3T",
             "EXT-4T",
-            "AD-HOC",
             "EVENT-1",
             "EVENT-42",
             "EVENT-9999",
@@ -80,7 +80,7 @@ class TestPeriodCodeAccepts:
 
 
 class TestPeriodCodeRejects:
-    """`PeriodCode` rejects malformed and unsupported period tokens."""
+    """The period_code validator rejects malformed and unsupported period tokens."""
 
     def test_invalid_inputs_rejected_through_adapter(self) -> None:
         cases: tuple[object, ...] = (
@@ -97,12 +97,8 @@ class TestPeriodCodeRejects:
             "Q1",  # wrong letter
             "FY2024",  # year-style
             "EVENT-",  # event needs number
-            "AD HOC",  # space variant rejected
-            "^AD-HOC$",  # the raw regex literal must NOT pass — a previous
-            # bug compared values against this string instead
-            # of regex-matching against the AD-HOC pattern;
-            # this anti-tautology guard pins the fix and would
-            # accept the literal back if the regression returns
+            "AD-HOC",  # not an AEAT period code
+            r"^EVENT-\d+$",  # the raw regex literal must not pass as a token
             1,
         )
 
@@ -115,7 +111,7 @@ class TestPeriodCodeRejects:
         # registered refusal is the cause of the ValueError Pydantic reads.
         for raw in ("", 1):
             with pytest.raises(ValueError) as refusal:
-                _validate_period_code(raw)
+                validate_period_code(raw)
             assert isinstance(refusal.value.__cause__, RegistryValidationError)
 
 

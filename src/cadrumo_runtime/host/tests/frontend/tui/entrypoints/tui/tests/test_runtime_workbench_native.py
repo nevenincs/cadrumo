@@ -9,6 +9,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
+from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -16,7 +17,7 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import ValidationError
+from pydantic import SecretBytes, ValidationError
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, Select, Static
 
@@ -24,6 +25,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
+    AdministrationSubject,
     administration_subject,
     changed,
 )
@@ -32,7 +34,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
@@ -43,16 +45,13 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationAvailability, WorkbenchGenerationV1
-from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-    WorkbenchGenerationOperationRequest,
-)
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
 from cadrumo.application.workbench_generation_projection import (
     WorkbenchGenerationOperationProjection,
     project_workbench_generation,
@@ -64,6 +63,7 @@ from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -72,7 +72,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootPresentationV1
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
 from cadrumo.entrypoints.tui.home import HomeScreen
@@ -81,15 +81,18 @@ from cadrumo.entrypoints.tui.modelo.workbench.factory import InstalledModeloWork
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello, RefusalError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -122,6 +125,7 @@ from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -130,28 +134,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-workbench-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _submit_and_settle(
@@ -324,6 +306,487 @@ def test_in_process_secure_generation_captures_the_seeded_profile(
     assert declarations.creation_targets
 
 
+@dataclass(frozen=True)
+class _WorkbenchClients:
+    """Four verified native connections and their frontend clients, one per credential."""
+
+    human_raw: VerifiedConnection
+    api_raw: VerifiedConnection
+    second_raw: VerifiedConnection
+    mcp_raw: VerifiedConnection
+    human: FrontendClient
+    api: FrontendClient
+    second: FrontendClient
+    external_client: FrontendClient
+
+
+def _enrol_workbench_scope(
+    subject: AdministrationSubject, *, operation: PinnedAuthorityOperation
+) -> tuple[str, str, SecretBytes]:
+    """Enrol a scoped key whose grants cover only the generation and verification operations."""
+    requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
+    subject.owner.requesting = requester
+    subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
+        requester=requester, secrets_store=subject.client_native
+    )
+    calculation_revision_id = seeded_modelo_calculation_revision(subject.store.binding.profile_id, operation=operation)
+    calculation = CalculationRevisionCatalogueRepository().load().get(calculation_revision_id)
+    assert calculation is not None
+    work_unit = WorkUnitCatalogueRepository().load().get(calculation.work_unit_id)
+    assert work_unit is not None
+    operation_ids = frozenset(
+        {WORKBENCH_GENERATION_OPERATION_DEFINITION_ID, MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID}
+    )
+    registry = build_production_operation_registry()
+    disclosures = {
+        DisclosurePermission(
+            destination_id=requester.client_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    }
+    for definition_id in operation_ids:
+        result_schema = registry.lookup_public_contract(definition_id).result_schema
+        assert result_schema is not None
+        categories = (
+            (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
+            if definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+            else (DisclosureCategory.TAX_VALUES,)
+        )
+        disclosures.update(
+            DisclosurePermission(
+                destination_id=requester.client_id,
+                projection_id=result_schema.schema_id,
+                category=category,
+            )
+            for category in categories
+        )
+    scope = changed(
+        subject.proposal.scope,
+        operations=operation_ids,
+        actions=frozenset(
+            {
+                AccessAction.SUBMIT,
+                AccessAction.START,
+                AccessAction.RESUME,
+                AccessAction.COMMIT,
+                AccessAction.OBSERVE,
+                AccessAction.RESULT,
+            }
+        ),
+        disclosures=frozenset(disclosures),
+        periods=frozenset({work_unit.period}),
+        allow_period_independent=True,
+    )
+    facts = subject.owner.current
+    assert facts.session is not None
+    subject.owner.current = changed(
+        facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
+    )
+    subject.proposal = changed(subject.proposal, scope=scope)
+    enrollment_request = uuid4()
+    subject.service.request(enrollment_request, subject.proposal)
+    subject.approve(enrollment_request)
+    record = subject.store.enrollment_state().requests[0]
+    possession = subject.owner.delivery.endpoint.possession(record)
+    assert possession is not None
+    close_active_bucket_session()
+    return calculation_revision_id, work_unit.work_unit_id, possession
+
+
+def _open_workbench_clients(
+    endpoint: WindowsEndpoint, cleanup: ExitStack, profile_id: UUID, possession: SecretBytes
+) -> _WorkbenchClients:
+    """Log two people in by password and two keys in by possession."""
+    human_raw, api_raw, second_raw, mcp_raw = (
+        connect_installed(endpoint),
+        connect_installed(endpoint),
+        connect_installed(endpoint),
+        connect_installed(endpoint),
+    )
+    human = FrontendClient(human_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+    api = FrontendClient(api_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+    second = FrontendClient(second_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+    external_client = FrontendClient(
+        mcp_raw, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+    )
+    cleanup.callback(human.close)
+    cleanup.callback(api.close)
+    cleanup.callback(second.close)
+    cleanup.callback(external_client.close)
+    password = bytearray(PROFILE_INPUT.encode())
+    human.login_password(password)
+    assert not any(password)
+    key = bytearray(possession.get_secret_value())
+    api.login_api_key(key)
+    assert not any(key)
+    second_password = bytearray(PROFILE_INPUT.encode())
+    second.login_password(second_password)
+    assert not any(second_password)
+    mcp_key = bytearray(possession.get_secret_value())
+    external_client.login_api_key(mcp_key)
+    assert not any(mcp_key)
+    return _WorkbenchClients(human_raw, api_raw, second_raw, mcp_raw, human, api, second, external_client)
+
+
+def _submit_request(session_id: UUID, profile_id: UUID) -> OperationSubmit:
+    """A generation submission for ``profile_id`` under ``session_id``."""
+    return OperationSubmit(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=session_id,
+        definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload_json=WorkbenchGenerationOperationRequest(
+            profile_id=profile_id, output_language=OutputLanguage.ES
+        ).model_dump_json(),
+    )
+
+
+def _assert_submission_refusals(clients: _WorkbenchClients, profile_id: UUID) -> None:
+    """A foreign profile and a key session are both refused before any operation exists."""
+    wrong = clients.human_raw.operation(
+        _submit_request(clients.human.session_id, uuid4()), deadline=time.monotonic() + 5
+    )
+    assert isinstance(wrong, AccessRefusal)
+    assert wrong.code is AccessDenialCode.PROFILE_MISMATCH
+
+    api_denied = clients.api_raw.operation(
+        _submit_request(clients.api.session_id, profile_id), deadline=time.monotonic() + 5
+    )
+    assert isinstance(api_denied, AccessRefusal)
+    assert api_denied.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+
+
+def _assert_generation_waits_out_a_busy_profile(clients: _WorkbenchClients, profile_id: UUID) -> None:
+    """A generation asked for while another session's holds the profile waits for it, then reads its own.
+
+    The window and the terminal beside it are two sessions of one person; the
+    one that asks second is not refused because the first is still generating.
+    """
+    deadline = time.monotonic() + 60
+    held = clients.human_raw.operation(_submit_request(clients.human.session_id, profile_id), deadline=deadline)
+    assert isinstance(held, OperationSubmitted)
+    busy = clients.second_raw.operation(_submit_request(clients.second.session_id, profile_id), deadline=deadline)
+    assert isinstance(busy, AccessRefusal)
+    assert busy.code is AccessDenialCode.SUBJECT_BUSY
+    assert busy.holder_operation_id == held.receipt.operation_id
+    with ThreadPoolExecutor(max_workers=1) as reader:
+        waiting = reader.submit(read_workbench_generation, clients.second, output_language=OutputLanguage.ES)
+        # A refusal would have ended the read by now; it waits on the holder instead.
+        time.sleep(2)
+        assert not waiting.done()
+        started = clients.human_raw.operation(
+            OperationControl(
+                action="operation_start",
+                request_id=uuid4(),
+                profile_id=profile_id,
+                session_id=clients.human.session_id,
+                operation_id=held.receipt.operation_id,
+            ),
+            deadline=deadline,
+        )
+        assert isinstance(started, OperationAcknowledged)
+        generation = waiting.result(timeout=90)
+    assert isinstance(generation, WorkbenchGenerationV1)
+    assert generation.home.projection is not None
+    assert generation.home.projection.account.profile_label == "Enrollment tests"
+
+
+def _assert_result_access(
+    clients: _WorkbenchClients, profile_id: UUID
+) -> tuple[OperationResultPage, OperationSchemaIdentityV1, ContentDigest]:
+    """Only the owning person observes and pages the settled result; other sessions are refused."""
+    human, human_raw = clients.human, clients.human_raw
+    operation_id, revision, digest, schema = _submit_and_settle(human, profile_id)
+    result = OperationResultProjectionRequestV1(
+        operation_id=operation_id,
+        terminal_revision=revision,
+        definition_contract_digest=digest,
+        result_schema=schema,
+    )
+    owner_page = OperationResultPage(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=human.session_id,
+        result=result,
+        page=ProjectionPageRequest(),
+    )
+    original = human_raw.operation(owner_page, deadline=time.monotonic() + 5)
+    assert isinstance(original, OperationPage)
+    assert original.operation_id == operation_id
+    document = human.read_result_document(result, timeout=30)
+    decoded = OperationResultProjectionSuccessV1[WorkbenchGenerationOperationProjection].model_validate_json(
+        canonical_json_bytes(document)
+    )
+    assert restore_workbench_generation(decoded.projection).contract_version == 1
+    fresh_observe = OperationObserve(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=clients.second.session_id,
+        observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32),
+    )
+    fresh_observed = clients.second_raw.operation(fresh_observe, deadline=time.monotonic() + 5)
+    assert isinstance(fresh_observed, OperationObserved)
+    assert isinstance(fresh_observed.observation, OperationObservationSuccessV1)
+    assert fresh_observed.observation.projection.revision == revision
+    assert fresh_observed.observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    mcp_observed = clients.mcp_raw.operation(
+        changed(fresh_observe, request_id=uuid4(), session_id=clients.external_client.session_id),
+        deadline=time.monotonic() + 5,
+    )
+    # The generation is read under a person's session, and a key
+    # session is not one on any frontend.
+    assert isinstance(mcp_observed, AccessRefusal)
+    assert mcp_observed.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    other = clients.second_raw.operation(
+        changed(owner_page, request_id=uuid4(), session_id=clients.second.session_id),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(other, AccessRefusal)
+    assert other.code is AccessDenialCode.OPERATION_DENIED
+    api_result = clients.api_raw.operation(
+        OperationResultPage(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=clients.api.session_id,
+            result=result,
+            page=ProjectionPageRequest(),
+        ),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(api_result, AccessRefusal)
+    assert api_result.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    return owner_page, schema, digest
+
+
+def _assert_native_generation(
+    human: FrontendClient,
+    profile_id: UUID,
+    work_unit_id: str,
+    schema: OperationSchemaIdentityV1,
+    digest: ContentDigest,
+) -> None:
+    """The generation read over the person's session restores, round-trips and fits the page bound."""
+    generation = read_workbench_generation(human, output_language=OutputLanguage.ES, timeout=60)
+    assert generation.contract_version == 1
+    assert generation.home.projection is not None
+    assert generation.home.projection.account.profile_label == "Enrollment tests"
+    assert generation.home.projection.account.expires_at is not None
+    assert generation.ledger_admission.destination == "workbench.ledger"
+    assert generation.declarations_admission.destination == "workbench.declarations"
+    assert generation.aeat_sync_admission.destination == "workbench.aeat_sync"
+    native_declarations = generation.declarations.projection
+    assert native_declarations is not None
+    assert native_declarations.bucket_id == str(profile_id)
+    assert any(row.work_unit_id == work_unit_id for row in native_declarations.declarations)
+
+    generation_projection = project_workbench_generation(profile_id, generation)
+    generation_wire = canonical_json_bytes(generation_projection.model_dump(mode="json"))
+    generation_roundtrip = WorkbenchGenerationOperationProjection.model_validate_json(generation_wire)
+    restored_generation = restore_workbench_generation(generation_roundtrip)
+    assert project_workbench_generation(profile_id, restored_generation) == generation_projection
+    generation_document = OperationResultProjectionSuccessV1[WorkbenchGenerationOperationProjection](
+        result_schema=schema,
+        definition_contract_digest=digest,
+        projection=generation_projection,
+    )
+    generation_document_bytes = canonical_json_bytes(generation_document.model_dump(mode="json"))
+    assert len(generation_document_bytes) <= PROJECTION_DOCUMENT_MAX_BYTES
+    logging.getLogger(__name__).info("native workbench generation: %d canonical bytes", len(generation_document_bytes))
+
+
+async def _reject_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+    raise AssertionError("workbench capture must not open profile recovery")
+
+
+def _workbench_root(client: FrontendClient) -> RuntimeWorkbenchRoot:
+    return RuntimeWorkbenchRoot(
+        client,
+        profile_label="Enrollment tests",
+        output_language=OutputLanguage.ES,
+        open_recovery_client=_reject_recovery,
+        operation_registry=build_production_operation_registry,
+    )
+
+
+def _assert_presented_root(reader: ThreadPoolExecutor, binding: RootBindingV1, profile_id: UUID) -> None:
+    """The loaded root presents one exact-profile catalogue whose profile screen matches the account factory."""
+    presented = reader.submit(binding.refresh_home).result(timeout=5)
+    assert isinstance(presented, RootPresentationV1)
+    assert presented.destination_catalogue is binding.destination_catalogue
+    assert presented.workbench_search_service is binding.workbench_search_service
+    assert presented.account_factories is binding.account_factories
+    assert presented.home.account.profile_label == "Enrollment tests"
+    route = presented.destination_catalogue.resolve("workbench.profile")
+    assert route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE
+    screen = presented.destination_catalogue.create_screen(
+        TuiNavigationTargetV1(
+            destination="workbench.profile",
+            focus=TuiFocusIdentityV1(destination="workbench.profile", semantic_key="profile.overview"),
+        )
+    )
+    assert isinstance(screen, ProfileManagerScreen)
+    assert screen.overview.profile_id == str(profile_id)
+    account_screen = presented.account_factories.profile(TuiScreenContextV1(destination="workbench.profile"))
+    assert account_screen.overview.content_digest == screen.overview.content_digest
+
+
+def _open_installed_workbench(
+    binding: RootBindingV1, work_unit_id: str
+) -> tuple[DeclarationsOverviewScreen, InstalledModeloWorkbench]:
+    """Open the declarations screen and the Modelo workspace for the seeded work unit."""
+    declarations_screen = binding.destination_catalogue.create_screen(
+        TuiNavigationTargetV1(
+            destination="workbench.declarations",
+            focus=TuiFocusIdentityV1(
+                destination="workbench.declarations",
+                semantic_key="declarations.work",
+                restore_token=work_unit_id,
+            ),
+        )
+    )
+    assert isinstance(declarations_screen, DeclarationsOverviewScreen)
+    declaration = next(
+        item for item in declarations_screen.controller.projection.declarations if item.work_unit_id == work_unit_id
+    )
+    workspace_screen = declarations_screen.controller.modelo_workspace_factory
+    assert workspace_screen is not None
+    opened_workspace = workspace_screen(declaration)
+    assert isinstance(opened_workspace, ModeloWorkbenchScreen)
+    workbench = opened_workspace._reader
+    assert isinstance(workbench, InstalledModeloWorkbench)
+    return declarations_screen, workbench
+
+
+def _assert_workspace_verification(
+    reader: ThreadPoolExecutor,
+    workbench: InstalledModeloWorkbench,
+    declarations_screen: DeclarationsOverviewScreen,
+    human: FrontendClient,
+    profile_id: UUID,
+    work_unit_id: str,
+    calculation_revision_id: str,
+) -> None:
+    """Load, verify through the installed door, then refresh the capture and re-read the workspace."""
+    # The form, its edit baseline and the facts the actions need are read by
+    # the worker's registered operation over this human session.
+    loaded = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
+    assert loaded.form.work_unit_id == work_unit_id
+    assert loaded.form.calculation_revision_id == calculation_revision_id
+    assert workbench.edit_refusal() is None
+    card_box = loaded.form.result_addresses[0] if loaded.form.result_addresses else None
+    if card_box is not None:
+        # Highlight prefetch and opening the editor can request
+        # the same help concurrently. All must settle through
+        # the real runtime without competing for its lease.
+        cards = [reader.submit(workbench.help_card, card_box, OutputLanguage.ES) for _ in range(3)]
+        assert all(card.result(timeout=90).casilla_id == card_box for card in cards)
+    actions = workbench._door()
+    assert isinstance(actions, ModeloWorkspaceLifecycleDoor)
+    assert actions.work_unit_id == work_unit_id
+    assert actions.calculation_revision_id == calculation_revision_id
+    assert actions.verification_report_id is None
+    assert actions.asks_modelo_390 is False
+    assert callable(actions.refresh_after_success)
+
+    _, terminal, verification = asyncio.run(_verify_from_installed_workspace(actions, human, profile_id, work_unit_id))
+    assert terminal.effect is OperationEffect.UPDATED
+    assert verification.verification_report_id
+    assert verification.calculation_revision_id == calculation_revision_id
+    assert verification.verification.report.verification_report_id == (verification.verification_report_id)
+    assert verification.verification.report.calculation_revision_id == calculation_revision_id
+    assert verification.verification.published
+    refresh = actions.refresh_after_success
+    assert callable(refresh)
+
+    captured = reader.submit(refresh).result(timeout=90)
+    assert isinstance(captured, WorkbenchGenerationV1)
+    assert declarations_screen.controller.refresh_from_capture()
+    reread = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
+    assert reread.form.calculation_revision_id == calculation_revision_id
+    refreshed_actions = workbench._door()
+    assert refreshed_actions.calculation_revision_id == calculation_revision_id
+    assert refreshed_actions.verification_report_id == verification.verification_report_id
+
+
+def _assert_headless_root_session(binding: RootBindingV1) -> None:
+    """The precomposed root publishes its account session and exits cleanly."""
+
+    async def inspect_root(pilot: Pilot[object]) -> None:
+        app = _require_runtime_app(pilot.app)
+        await settle_until(
+            pilot,
+            lambda: app.account_session is not None,
+            "the account session to be published",
+            workers=False,
+        )
+        session = app.account_session
+        assert session is not None
+        assert session.profile_label == "Enrollment tests"
+        assert (
+            app.destination_catalogue.resolve("workbench.profile").admission.state
+            is WorkbenchDestinationAdmissionState.AVAILABLE
+        )
+        assert not hasattr(app, "services")
+        app.exit()
+
+    assert (
+        asyncio.run(
+            run_precomposed_runtime_root_session(load_root=lambda: binding, headless=True, auto_pilot=inspect_root)
+        )
+        is None
+    )
+
+
+def _assert_lock_retires_sessions(
+    clients: _WorkbenchClients, root: RuntimeWorkbenchRoot, owner_page: OperationResultPage
+) -> None:
+    """Locking the person retires their session; another person's session stays refused for the page."""
+    original_session = clients.human.session_id
+    locked = clients.human.lock()
+    assert original_session in locked.session_ids
+    with ThreadPoolExecutor(max_workers=1) as reader, pytest.raises(AccountSessionExpiredError):
+        reader.submit(root.load).result(timeout=5)
+    retired = clients.human_raw.operation(changed(owner_page, request_id=uuid4()), deadline=time.monotonic() + 5)
+    assert isinstance(retired, AccessRefusal)
+    repeated_other = clients.second_raw.operation(
+        changed(owner_page, request_id=uuid4(), session_id=clients.second.session_id),
+        deadline=time.monotonic() + 5,
+    )
+    assert isinstance(repeated_other, AccessRefusal)
+    assert repeated_other.code is AccessDenialCode.OPERATION_DENIED
+
+
+def _assert_workbench_flow(
+    clients: _WorkbenchClients,
+    profile_id: UUID,
+    work_unit_id: str,
+    calculation_revision_id: str,
+) -> None:
+    """Run the ordered phases that read, verify and finally lock the workbench."""
+    _assert_submission_refusals(clients, profile_id)
+    owner_page, schema, digest = _assert_result_access(clients, profile_id)
+    _assert_generation_waits_out_a_busy_profile(clients, profile_id)
+    _assert_native_generation(clients.human, profile_id, work_unit_id, schema, digest)
+
+    root = _workbench_root(clients.human)
+    api_root = _workbench_root(clients.api)
+    with ThreadPoolExecutor(max_workers=3) as reader:
+        binding = reader.submit(root.load).result(timeout=90)
+        _assert_presented_root(reader, binding, profile_id)
+        declarations_screen, workbench = _open_installed_workbench(binding, work_unit_id)
+        _assert_workspace_verification(
+            reader, workbench, declarations_screen, clients.human, profile_id, work_unit_id, calculation_revision_id
+        )
+        with pytest.raises(FrontendRefusedError) as api_root_denied:
+            reader.submit(api_root.load).result(timeout=90)
+        assert api_root_denied.value.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
+
+    _assert_headless_root_session(binding)
+    _assert_lock_retires_sessions(clients, root, owner_page)
+
+
 def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -336,77 +799,8 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
     with administration_subject(
         tmp_path, os_owner_id=owner_id(), installation_id=installation_identity.installation_id
     ) as subject:
-        requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
-        subject.owner.requesting = requester
-        subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
-            requester=requester, secrets_store=subject.client_native
-        )
-        calculation_revision_id = seeded_modelo_calculation_revision(
-            subject.store.binding.profile_id, operation=operation
-        )
-        calculation = CalculationRevisionCatalogueRepository().load().get(calculation_revision_id)
-        assert calculation is not None
-        work_unit = WorkUnitCatalogueRepository().load().get(calculation.work_unit_id)
-        assert work_unit is not None
-        work_unit_id = work_unit.work_unit_id
+        calculation_revision_id, work_unit_id, possession = _enrol_workbench_scope(subject, operation=operation)
         profile_id = subject.store.binding.profile_id
-        operation_ids = frozenset(
-            {WORKBENCH_GENERATION_OPERATION_DEFINITION_ID, MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID}
-        )
-        registry = build_production_operation_registry()
-        disclosures = {
-            DisclosurePermission(
-                destination_id=requester.client_id,
-                projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                category=DisclosureCategory.OPERATION_METADATA,
-            )
-        }
-        for definition_id in operation_ids:
-            result_schema = registry.lookup_public_contract(definition_id).result_schema
-            assert result_schema is not None
-            categories = (
-                (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-                if definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
-                else (DisclosureCategory.TAX_VALUES,)
-            )
-            disclosures.update(
-                DisclosurePermission(
-                    destination_id=requester.client_id,
-                    projection_id=result_schema.schema_id,
-                    category=category,
-                )
-                for category in categories
-            )
-        scope = changed(
-            subject.proposal.scope,
-            operations=operation_ids,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                }
-            ),
-            disclosures=frozenset(disclosures),
-            periods=frozenset({work_unit.period}),
-            allow_period_independent=True,
-        )
-        facts = subject.owner.current
-        assert facts.session is not None
-        subject.owner.current = changed(
-            facts, profile=changed(facts.profile, scope=scope), session=changed(facts.session, scope=scope)
-        )
-        subject.proposal = changed(subject.proposal, scope=scope)
-        enrollment_request = uuid4()
-        subject.service.request(enrollment_request, subject.proposal)
-        subject.approve(enrollment_request)
-        record = subject.store.enrollment_state().requests[0]
-        possession = subject.owner.delivery.endpoint.possession(record)
-        assert possession is not None
-        close_active_bucket_session()
 
         stop, boot = Event(), uuid4()
         profiles = RuntimeProfileConnections(
@@ -414,7 +808,7 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-workbench-native-login"),
             secret_store=lambda: subject.native,
         )
         # The installed runtime validates the operation graph before listening.
@@ -427,307 +821,8 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
-                    human_raw, api_raw, second_raw, mcp_raw = (
-                        _connect(endpoint),
-                        _connect(endpoint),
-                        _connect(endpoint),
-                        _connect(endpoint),
-                    )
-                    human = FrontendClient(human_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
-                    api = FrontendClient(api_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
-                    second = FrontendClient(second_raw, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
-                    external_client = FrontendClient(
-                        mcp_raw, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
-                    )
-                    cleanup.callback(human.close)
-                    cleanup.callback(api.close)
-                    cleanup.callback(second.close)
-                    cleanup.callback(external_client.close)
-                    password = bytearray(PROFILE_INPUT.encode())
-                    human.login_password(password)
-                    assert not any(password)
-                    key = bytearray(possession.get_secret_value())
-                    api.login_api_key(key)
-                    assert not any(key)
-                    second_password = bytearray(PROFILE_INPUT.encode())
-                    second.login_password(second_password)
-                    assert not any(second_password)
-                    mcp_key = bytearray(possession.get_secret_value())
-                    external_client.login_api_key(mcp_key)
-                    assert not any(mcp_key)
-
-                    foreign = uuid4()
-                    wrong = human_raw.operation(
-                        OperationSubmit(
-                            request_id=uuid4(),
-                            profile_id=foreign,
-                            session_id=human.session_id,
-                            definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-                            subject_ref=profile_operation_subject(str(foreign)),
-                            payload_json=WorkbenchGenerationOperationRequest(
-                                profile_id=foreign, output_language=OutputLanguage.ES
-                            ).model_dump_json(),
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(wrong, AccessRefusal)
-                    assert wrong.code is AccessDenialCode.PROFILE_MISMATCH
-
-                    api_denied = api_raw.operation(
-                        OperationSubmit(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=api.session_id,
-                            definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-                            subject_ref=profile_operation_subject(str(profile_id)),
-                            payload_json=WorkbenchGenerationOperationRequest(
-                                profile_id=profile_id, output_language=OutputLanguage.ES
-                            ).model_dump_json(),
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(api_denied, AccessRefusal)
-                    assert api_denied.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-
-                    operation_id, revision, digest, schema = _submit_and_settle(human, profile_id)
-                    result = OperationResultProjectionRequestV1(
-                        operation_id=operation_id,
-                        terminal_revision=revision,
-                        definition_contract_digest=digest,
-                        result_schema=schema,
-                    )
-                    owner_page = OperationResultPage(
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=human.session_id,
-                        result=result,
-                        page=ProjectionPageRequest(),
-                    )
-                    original = human_raw.operation(owner_page, deadline=time.monotonic() + 5)
-                    assert isinstance(original, OperationPage)
-                    assert original.operation_id == operation_id
-                    document = human.read_result_document(result, timeout=30)
-                    decoded = OperationResultProjectionSuccessV1[
-                        WorkbenchGenerationOperationProjection
-                    ].model_validate_json(canonical_json_bytes(document))
-                    assert restore_workbench_generation(decoded.projection).contract_version == 1
-                    fresh_observe = OperationObserve(
-                        request_id=uuid4(),
-                        profile_id=profile_id,
-                        session_id=second.session_id,
-                        observation=OperationObservationRequestV1(
-                            operation_id=operation_id, after_cursor=0, page_limit=32
-                        ),
-                    )
-                    fresh_observed = second_raw.operation(fresh_observe, deadline=time.monotonic() + 5)
-                    assert isinstance(fresh_observed, OperationObserved)
-                    assert isinstance(fresh_observed.observation, OperationObservationSuccessV1)
-                    assert fresh_observed.observation.projection.revision == revision
-                    assert (
-                        fresh_observed.observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    )
-                    mcp_observed = mcp_raw.operation(
-                        changed(fresh_observe, request_id=uuid4(), session_id=external_client.session_id),
-                        deadline=time.monotonic() + 5,
-                    )
-                    # The generation is read under a person's session, and a key
-                    # session is not one on any frontend.
-                    assert isinstance(mcp_observed, AccessRefusal)
-                    assert mcp_observed.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-                    other = second_raw.operation(
-                        changed(owner_page, request_id=uuid4(), session_id=second.session_id),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(other, AccessRefusal)
-                    assert other.code is AccessDenialCode.OPERATION_DENIED
-                    api_result = api_raw.operation(
-                        OperationResultPage(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=api.session_id,
-                            result=result,
-                            page=ProjectionPageRequest(),
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(api_result, AccessRefusal)
-                    assert api_result.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-                    generation = read_workbench_generation(human, output_language=OutputLanguage.ES, timeout=60)
-                    assert generation.contract_version == 1
-                    assert generation.home.projection is not None
-                    assert generation.home.projection.account.profile_label == "Enrollment tests"
-                    assert generation.home.projection.account.expires_at is not None
-                    assert generation.ledger_admission.destination == "workbench.ledger"
-                    assert generation.declarations_admission.destination == "workbench.declarations"
-                    assert generation.aeat_sync_admission.destination == "workbench.aeat_sync"
-                    native_declarations = generation.declarations.projection
-                    assert native_declarations is not None
-                    assert native_declarations.bucket_id == str(profile_id)
-                    assert any(row.work_unit_id == work_unit_id for row in native_declarations.declarations)
-
-                    generation_projection = project_workbench_generation(profile_id, generation)
-                    generation_wire = canonical_json_bytes(generation_projection.model_dump(mode="json"))
-                    generation_roundtrip = WorkbenchGenerationOperationProjection.model_validate_json(generation_wire)
-                    restored_generation = restore_workbench_generation(generation_roundtrip)
-                    assert project_workbench_generation(profile_id, restored_generation) == generation_projection
-                    generation_document = OperationResultProjectionSuccessV1[WorkbenchGenerationOperationProjection](
-                        result_schema=schema,
-                        definition_contract_digest=digest,
-                        projection=generation_projection,
-                    )
-                    generation_document_bytes = canonical_json_bytes(generation_document.model_dump(mode="json"))
-                    assert len(generation_document_bytes) <= PROJECTION_DOCUMENT_MAX_BYTES
-                    logging.getLogger(__name__).info(
-                        "native workbench generation: %d canonical bytes", len(generation_document_bytes)
-                    )
-
-                    async def reject_recovery() -> FrontendClient:
-                        raise AssertionError("workbench capture must not open profile recovery")
-
-                    root = RuntimeWorkbenchRoot(
-                        human,
-                        profile_label="Enrollment tests",
-                        output_language=OutputLanguage.ES,
-                        open_recovery_client=reject_recovery,
-                        operation_registry=build_production_operation_registry,
-                    )
-                    api_root = RuntimeWorkbenchRoot(
-                        api,
-                        profile_label="Enrollment tests",
-                        output_language=OutputLanguage.ES,
-                        open_recovery_client=reject_recovery,
-                        operation_registry=build_production_operation_registry,
-                    )
-                    with ThreadPoolExecutor(max_workers=3) as reader:
-                        binding = reader.submit(root.load).result(timeout=90)
-                        presented = reader.submit(binding.refresh_home).result(timeout=5)
-                        assert isinstance(presented, RootPresentationV1)
-                        assert presented.destination_catalogue is binding.destination_catalogue
-                        assert presented.workbench_search_service is binding.workbench_search_service
-                        assert presented.account_factories is binding.account_factories
-                        assert presented.home.account.profile_label == "Enrollment tests"
-                        route = presented.destination_catalogue.resolve("workbench.profile")
-                        assert route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE
-                        screen = presented.destination_catalogue.create_screen(
-                            TuiNavigationTargetV1(
-                                destination="workbench.profile",
-                                focus=TuiFocusIdentityV1(
-                                    destination="workbench.profile", semantic_key="profile.overview"
-                                ),
-                            )
-                        )
-                        assert isinstance(screen, ProfileManagerScreen)
-                        assert screen.overview.profile_id == str(profile_id)
-                        account_screen = presented.account_factories.profile(
-                            TuiScreenContextV1(destination="workbench.profile")
-                        )
-                        assert account_screen.overview.content_digest == screen.overview.content_digest
-                        declarations_screen = presented.destination_catalogue.create_screen(
-                            TuiNavigationTargetV1(
-                                destination="workbench.declarations",
-                                focus=TuiFocusIdentityV1(
-                                    destination="workbench.declarations",
-                                    semantic_key="declarations.work",
-                                    restore_token=work_unit_id,
-                                ),
-                            )
-                        )
-                        assert isinstance(declarations_screen, DeclarationsOverviewScreen)
-                        declaration = next(
-                            item
-                            for item in declarations_screen.controller.projection.declarations
-                            if item.work_unit_id == work_unit_id
-                        )
-                        workspace_screen = declarations_screen.controller.modelo_workspace_factory
-                        assert workspace_screen is not None
-                        opened_workspace = workspace_screen(declaration)
-                        assert isinstance(opened_workspace, ModeloWorkbenchScreen)
-                        workbench = opened_workspace._reader
-                        assert isinstance(workbench, InstalledModeloWorkbench)
-                        # The form, its edit baseline and the facts the actions need are read by
-                        # the worker's registered operation over this human session.
-                        loaded = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
-                        assert loaded.form.work_unit_id == work_unit_id
-                        assert loaded.form.calculation_revision_id == calculation_revision_id
-                        assert workbench.edit_refusal() is None
-                        card_box = loaded.form.result_addresses[0] if loaded.form.result_addresses else None
-                        if card_box is not None:
-                            # Highlight prefetch and opening the editor can request
-                            # the same help concurrently. All must settle through
-                            # the real runtime without competing for its lease.
-                            cards = [reader.submit(workbench.help_card, card_box, OutputLanguage.ES) for _ in range(3)]
-                            assert all(card.result(timeout=90).casilla_id == card_box for card in cards)
-                        actions = workbench._door()
-                        assert isinstance(actions, ModeloWorkspaceLifecycleDoor)
-                        assert actions.work_unit_id == work_unit_id
-                        assert actions.calculation_revision_id == calculation_revision_id
-                        assert actions.verification_report_id is None
-                        assert actions.asks_modelo_390 is False
-                        assert callable(actions.refresh_after_success)
-
-                        _, terminal, verification = asyncio.run(
-                            _verify_from_installed_workspace(actions, human, profile_id, work_unit_id)
-                        )
-                        assert terminal.effect is OperationEffect.UPDATED
-                        assert verification.verification_report_id
-                        assert verification.calculation_revision_id == calculation_revision_id
-                        assert verification.verification.report.verification_report_id == (
-                            verification.verification_report_id
-                        )
-                        assert verification.verification.report.calculation_revision_id == calculation_revision_id
-                        assert verification.verification.published
-                        refresh = actions.refresh_after_success
-                        assert callable(refresh)
-
-                        captured = reader.submit(refresh).result(timeout=90)
-                        assert isinstance(captured, WorkbenchGenerationV1)
-                        assert declarations_screen.controller.refresh_from_capture()
-                        reread = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
-                        assert reread.form.calculation_revision_id == calculation_revision_id
-                        refreshed_actions = workbench._door()
-                        assert refreshed_actions.calculation_revision_id == calculation_revision_id
-                        assert refreshed_actions.verification_report_id == verification.verification_report_id
-                        with pytest.raises(FrontendRefusedError) as api_root_denied:
-                            reader.submit(api_root.load).result(timeout=90)
-                        assert api_root_denied.value.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
-
-                    async def inspect_root(pilot: Pilot[object]) -> None:
-                        app = _require_runtime_app(pilot.app)
-                        async with asyncio.timeout(90):
-                            while app.account_session is None:
-                                await pilot.pause(0.05)
-                        assert app.account_session.profile_label == "Enrollment tests"
-                        assert (
-                            app.destination_catalogue.resolve("workbench.profile").admission.state
-                            is WorkbenchDestinationAdmissionState.AVAILABLE
-                        )
-                        assert not hasattr(app, "services")
-                        app.exit()
-
-                    assert (
-                        asyncio.run(
-                            run_precomposed_runtime_root_session(
-                                load_root=lambda: binding, headless=True, auto_pilot=inspect_root
-                            )
-                        )
-                        is None
-                    )
-
-                    original_session = human.session_id
-                    locked = human.lock()
-                    assert original_session in locked.session_ids
-                    with ThreadPoolExecutor(max_workers=1) as reader, pytest.raises(AccountSessionExpiredError):
-                        reader.submit(root.load).result(timeout=5)
-                    retired = human_raw.operation(
-                        changed(owner_page, request_id=uuid4()), deadline=time.monotonic() + 5
-                    )
-                    assert isinstance(retired, AccessRefusal)
-                    repeated_other = second_raw.operation(
-                        changed(owner_page, request_id=uuid4(), session_id=second.session_id),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(repeated_other, AccessRefusal)
-                    assert repeated_other.code is AccessDenialCode.OPERATION_DENIED
+                    clients = _open_workbench_clients(endpoint, cleanup, profile_id, possession)
+                    _assert_workbench_flow(clients, profile_id, work_unit_id, calculation_revision_id)
             finally:
                 primary = sys.exception()
                 stop.set()
@@ -813,7 +908,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-workbench-native-login"),
             secret_store=lambda: subject.native,
         )
         # The installed runtime validates the operation graph before listening.
@@ -840,25 +935,32 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             assert current_active_bucket_session() is None
             if isinstance(app, CadrumoTuiApp):
                 root_app = _require_runtime_app(pilot.app)
+
+                def session_published() -> bool:
+                    assert root_app._home_refresh_refusal_code is None, (
+                        f"root_refusal={root_app._home_refresh_refusal_code}, reads={reads!r}"
+                    )
+                    return root_app.account_session is not None
+
                 try:
-                    async with asyncio.timeout(90):
-                        while root_app.account_session is None:
-                            assert root_app._home_refresh_refusal_code is None, (
-                                f"root_refusal={root_app._home_refresh_refusal_code}, reads={reads!r}"
-                            )
-                            await pilot.pause(0.05)
-                except TimeoutError as error:
+                    await settle_until(pilot, session_published, "the account session to be published", workers=False)
+                except AssertionError as error:
                     error.add_note(f"Initial root reads: {reads!r}")
                     raise
-                assert root_app.account_session.profile_label == "Enrollment tests"
+                published = root_app.account_session
+                assert published is not None
+                assert published.profile_label == "Enrollment tests"
                 assert (
                     root_app.destination_catalogue.resolve("workbench.profile").admission.state
                     is WorkbenchDestinationAdmissionState.AVAILABLE
                 )
                 assert not hasattr(root_app, "services")
-                async with asyncio.timeout(30):
-                    while not isinstance(root_app.screen, ProfileManagerScreen):
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: isinstance(root_app.screen, ProfileManagerScreen),
+                    "the profile manager to open",
+                    workers=False,
+                )
                 assert not any(read["phase"] == "generation" for read in reads)
                 await launched_session(kind=SessionKind.HUMAN)
                 if "root-change-user" not in stages:
@@ -866,33 +968,43 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                     root_app.run_account_action(AccountActionV1.CHANGE_USER)
                 else:
                     root_app.screen.dismiss()
-                    async with asyncio.timeout(90):
-                        while not isinstance(root_app.screen, HomeScreen):
-                            await pilot.pause(0.05)
+                    await settle_until(
+                        pilot, lambda: isinstance(root_app.screen, HomeScreen), "the home screen to open", workers=False
+                    )
                     assert any(read["phase"] == "generation" and read["state"] == "completed" for read in reads)
                     stages.append("root-close")
                     root_app.exit()
                 return
             if isinstance(app, RuntimeRestrictedSessionApp):
-                async with asyncio.timeout(30):
-                    while str(profile_id) not in str(app.query_one("#restricted-profile", Static).render()):
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
+                    "the restricted session to show the profile",
+                    workers=False,
+                )
                 assert not hasattr(app, "services")
                 await launched_session(kind=SessionKind.API_KEY)
                 stages.append("restricted-change-user")
-                await pilot.click("#restricted-change-user")
+                change_user = app.query_one("#restricted-change-user", Button)
+                change_user.scroll_visible(animate=False)
+                assert await click_when_laid_out(pilot, change_user)
                 return
 
             screen = pilot.app.screen
             assert isinstance(screen, RuntimeLoginScreen)
             submit = screen.query_one("#runtime-login-submit", Button)
-            async with asyncio.timeout(90):
-                while (
-                    (screen._resume_preselected is not None and screen._worker is None)
-                    or (screen._worker is not None and not screen._worker.is_finished)
-                    or submit.disabled
-                ):
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: (
+                    not (
+                        (screen._resume_preselected is not None and screen._worker is None)
+                        or (screen._worker is not None and not screen._worker.is_finished)
+                        or submit.disabled
+                    )
+                ),
+                "the sign-in screen to finish loading and enable submit",
+                workers=False,
+            )
             method = (
                 RuntimeLoginMethod.API_KEY
                 if "root-change-user" in stages and "restricted-change-user" not in stages
@@ -901,24 +1013,23 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             stages.append(f"login-{method.value}")
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = method
-            await pilot.pause()
+            await settle(pilot, workers=False)
             credential = screen.query_one("#runtime-login-credential", Input)
             assert credential.password
             credential.value = (
                 possession.get_secret_value().decode("utf-8") if method is RuntimeLoginMethod.API_KEY else PROFILE_INPUT
             )
             submit.scroll_visible(animate=False)
-            await pilot.pause()
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, submit)
             assert credential.value == ""
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     observer = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(observer.close)
                     observer_password = bytearray(PROFILE_INPUT.encode())

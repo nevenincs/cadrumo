@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from typing import Final, cast
+from typing import Final, cast, override
 
 from pydantic import ValidationError
 from textual.widgets import Button, DataTable, Input, Select, Static
@@ -13,16 +13,17 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
-from .controller import LedgerWorkspaceScreen
+from ..operations.outcome import OperationOutcomeUnknownError
 from .evidence_draft import draft_lines
+from .evidence_page import page_lines
 from .models import (
     LedgerEvidenceConfirmationV1,
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
-    LedgerReaderReadinessV1,
 )
 from .workspace_presentation import door_refusal_text
+from .workspace_screen import LedgerWorkspaceScreen
 
 _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
     LedgerEvidenceRecordStatus.AWAITING: "tui.ledger.evidence.record_status.awaiting",
@@ -40,21 +41,41 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
     _records: tuple[LedgerEvidenceRecordRowV1, ...] | None
     draft: LedgerEvidenceDraftV1 | None
     reading: bool
+    add_awaits_reread: bool
+    """Whether an addition ended with an unknown outcome, so Add waits for the records to be read again."""
+    records_loads: int
+    """How many record loads this body has started; each load is tagged with its number."""
+    add_reread_after: int
+    """The last load started before the unknown addition; only a later load can release Add."""
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A read, an addition or a confirmation is out through a door."""
+        return self.reading
 
     def _show_records(self) -> None:
         """Read the records off the event loop; listing them decrypts the whole evidence catalogue."""
         self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.loading"))
-        self.run_worker(self._load_records(), group="ledger-evidence-records", exclusive=True)
+        self.records_loads += 1
+        self.run_worker(self._load_records(self.records_loads), group="ledger-evidence-records", exclusive=True)
 
-    async def _load_records(self) -> None:
+    async def _load_records(self, load: int) -> None:
         try:
             loaded = await asyncio.to_thread(self.controller.evidence_records)
         except AccountSessionExpiredError as error:
             self._handle_expired_session(error)
+        except CadrumoError as error:
+            # Said where the records would be, so an unknown addition's message above stays visible.
+            self.query_one("#ledger-evidence-record-detail", Static).update(door_refusal_text(error))
+            if self.add_awaits_reread and load > self.add_reread_after:
+                # The records that would show whether the addition landed were not read; Add reads them again.
+                self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.refresh_failed_unknown"))
+                self.query_one("#ledger-evidence-add", Button).disabled = False
         else:
-            self._render_records(loaded)
+            self._render_records(loaded, load)
 
-    def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None) -> None:
+    def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None, load: int) -> None:
         records = cast("DataTable[str]", self.query_one("#ledger-evidence-records", DataTable))
         records.clear()
         self._records = loaded
@@ -69,37 +90,16 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             )
         if not (self._records is not None and self._records):
             self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.records_empty"))
-
-    async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
-        """Ask the reader off the event loop: the probe looks for executables and calls the runtime."""
-        return await asyncio.to_thread(self.controller.reader_readiness)
-
-    async def _measure_reader(self) -> None:
-        try:
-            readiness = await self._read_readiness()
-        except AccountSessionExpiredError as error:
-            self._handle_expired_session(error)
-        else:
-            self._show_reader(readiness)
-
-    def _show_reader(self, readiness: LedgerReaderReadinessV1 | None) -> None:
-        line = self.query_one("#ledger-evidence-reader", Static)
-        if readiness is None:
-            line.update("")
-        elif readiness.extraction_ready:
-            line.update(tr("tui.ledger.evidence.reader_ready"))
-        else:
-            line.update(
-                tr(
-                    "tui.ledger.evidence.reader_not_ready",
-                    condition=readiness.failed_condition_id or "-",
-                )
-            )
+        if self.add_awaits_reread and load > self.add_reread_after:
+            # Read after the addition whose outcome was unknown, the records now show whether it landed.
+            self.add_awaits_reread = False
+            self.query_one("#ledger-evidence-add", Button).disabled = False
 
     def _select_record(self, evidence_id: str) -> None:
         record = next(item for item in self._records or () if item.evidence_id == evidence_id)
         if evidence_id != self.selected_record_id:
             self._clear_review()
+            self.query_one("#ledger-evidence-page", Static).update("")
         self.selected_record_id = evidence_id
         self.query_one("#ledger-evidence-record-detail", Static).update(
             tr(
@@ -111,6 +111,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             )
         )
         self.query_one("#ledger-evidence-extract", Button).disabled = False
+        self.query_one("#ledger-evidence-view", Button).disabled = False
         self.query_one("#ledger-evidence-confirm", Button).disabled = self._reviewed_evidence_id != evidence_id
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -120,6 +121,8 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 self._add()
             case "ledger-evidence-extract" if self.selected_record_id is not None:
                 self._start(self._extract(self.selected_record_id), tr("tui.ledger.evidence.reading"))
+            case "ledger-evidence-view" if self.selected_record_id is not None:
+                self._start(self._view(self.selected_record_id), tr("tui.ledger.evidence.page.loading"))
             case "ledger-evidence-confirm" if self.selected_record_id is not None:
                 if (
                     self._reviewed_evidence_id != self.selected_record_id
@@ -167,6 +170,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         self._clear_review()
         self._records = None
         self.selected_record_id = None
+        self.query_one("#ledger-evidence-page", Static).update("")
         self.query_one("#ledger-evidence-records", DataTable).clear()
         self.query_one("#ledger-evidence-record-detail", Static).update("")
         self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
@@ -185,19 +189,48 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         else:
             status.update(tr("tui.ledger.evidence.read_done"))
             if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
-                self.draft = draft
-                self._reviewed_evidence_id = evidence_id
-                self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
-                self.query_one("#ledger-evidence-confirm", Button).disabled = False
-                if draft.suggested_kind is not None:
-                    self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
-                counterparty = self.query_one("#ledger-evidence-counterparty", Input)
-                if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
-                    counterparty.value = draft.supplier_name
+                self._show_extracted_draft(evidence_id, draft)
         finally:
             self.reading = False
 
+    async def _view(self, evidence_id: str) -> None:
+        status = self.query_one("#ledger-flow-status", Static)
+        self.query_one("#ledger-evidence-page", Static).update("")
+        try:
+            page = await self.controller.view_evidence_page(evidence_id)
+        except AccountSessionExpiredError as error:
+            status.update(tr("tui.ledger.evidence.page.failed"))
+            self._handle_expired_session(error)
+        except (CadrumoError, ValidationError) as error:
+            status.update(tr("tui.ledger.evidence.page.failed"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+        else:
+            status.update("")
+            if self.selected_record_id == evidence_id and page.evidence_id == evidence_id:
+                self.query_one("#ledger-evidence-page", Static).update("\n".join(page_lines(page)))
+        finally:
+            self.reading = False
+
+    def _show_extracted_draft(self, evidence_id: str, draft: LedgerEvidenceDraftV1) -> None:
+        self.draft = draft
+        self._reviewed_evidence_id = evidence_id
+        self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
+        self.query_one("#ledger-evidence-confirm", Button).disabled = False
+        if draft.suggested_kind is not None:
+            self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
+        counterparty = self.query_one("#ledger-evidence-counterparty", Input)
+        if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
+            counterparty.value = draft.supplier_name
+
     async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
+        # Cleared on every exit, a review withdrawn before this ran included: a body
+        # left in flight refuses Back, the account keys and quitting.
+        try:
+            await self._submit_confirmation(confirmation)
+        finally:
+            self.reading = False
+
+    async def _submit_confirmation(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
         if (
             self._reviewed_evidence_id != confirmation.evidence_id
             or self.draft is None
@@ -210,12 +243,12 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             confirmed = await self.controller.confirm_evidence(confirmation)
         except AccountSessionExpiredError as error:
             self.reading = False
-            status.update(tr("tui.ledger.evidence.confirm_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.confirm_failed"))
             self._handle_expired_session(error)
             return
         except (CadrumoError, ValidationError) as error:
             self.reading = False
-            status.update(tr("tui.ledger.evidence.confirm_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.confirm_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             return
         self.reading = False
@@ -234,31 +267,55 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         self.refresh_then(lambda: self._after_reread(message))
 
     def _add(self) -> None:
+        if self.add_awaits_reread:
+            # Offered only after the records failed to load: read them again rather than add over them.
+            self._reread_after_unknown_add()
+            return
         raw = self.query_one("#ledger-evidence-path", Input).value.strip()
         notice = self.query_one("#ledger-refusal", Static)
         if not raw:
             notice.update(tr("tui.ledger.import.path_required"))
             return
+        if self.reading or self.refreshing:
+            return
         notice.update("")
         self.query_one("#ledger-evidence-add", Button).disabled = True
-        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.evidence.adding"))
-        self.run_worker(self._submit_add(raw), exclusive=True)
+        self._start(self._submit_add(raw), tr("tui.ledger.evidence.adding"))
 
     async def _submit_add(self, source_path: str) -> None:
         status = self.query_one("#ledger-flow-status", Static)
         try:
             record = await self.controller.add_evidence(source_path)
         except AccountSessionExpiredError as error:
-            status.update(tr("tui.ledger.evidence.add_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.add_failed"))
             self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
-            status.update(tr("tui.ledger.evidence.add_failed"))
+            outcome = self.failed_write_status(error, "tui.ledger.evidence.add_failed")
+            status.update(outcome)
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The document may already be added: Add returns only once the records are read again.
+                self.reading = False
+                self.add_awaits_reread = True
+                self.add_reread_after = self.records_loads
+                self.reread_then(lambda _returned: self._after_reread(outcome))
+                return
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
             added = tr("tui.ledger.evidence.added", file=record.file_name)
             self.refresh_then(lambda: self._after_reread(added))
+        finally:
+            self.reading = False
         self.query_one("#ledger-evidence-add", Button).disabled = False
+
+    def _reread_after_unknown_add(self) -> None:
+        """Read the workspace and the records again; Add returns once records read from now on show."""
+        if self.reading:
+            return
+        self.query_one("#ledger-evidence-add", Button).disabled = True
+        # Blanked so the line the re-read leaves, or the unknown outcome, is what shows.
+        self.query_one("#ledger-flow-status", Static).update("")
+        self.reread_then(lambda _returned: self._after_reread(tr("tui.ledger.flow.outcome_unknown")))
 
     def _after_reread(self, added: str) -> None:
         """Show the re-read area counts beside the document just added."""

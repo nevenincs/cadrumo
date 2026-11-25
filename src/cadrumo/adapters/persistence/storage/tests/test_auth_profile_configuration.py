@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from .....application.auth.credentials import resolve_active_provider_kind
-from .....application.auth.operator import configure_operator_auth, reset_operator_auth
+from .....application.auth.operator import configure_operator_auth
+from .....application.auth.operator_revocation import reset_operator_auth
 from .....application.user_profile.capsule_record import ProfileRecordConflictError
 from .....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository

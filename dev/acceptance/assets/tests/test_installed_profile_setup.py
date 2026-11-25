@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.acceptance.assets.installed_profile_setup import _run_command
+from dev.acceptance.assets.installed_profile_setup import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -18,7 +18,7 @@ def test_cli_command_closes_secret_pipe_and_keeps_it_out_of_the_receipt(tmp_path
     """The scripted CLI channel receives EOF while receipts retain only hashes."""
     secret = f"assets-{secrets.token_urlsafe(24)}"
 
-    receipt = _run_command(
+    receipt = run_command(
         command="profile_create",
         executable=Path(sys.executable),
         launcher_prefix=("-m", "dev.acceptance.assets.tests.installed_profile_setup_fixture"),

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field
 
 from ..core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..core.type_guards import is_str_keyed_dict
 from .operations.public_scalar import PublicDecimal
 
 if TYPE_CHECKING:
@@ -28,7 +29,9 @@ class TimingSnapshot(BaseModel):
 
 def public_timing_values(value: BaseModel, *, exclude: set[str] | None = None) -> dict[str, object]:
     """Copy only the decimal representation; preserve every other service fact."""
-    values = cast("dict[str, object]", value.model_dump(exclude=exclude))
+    values = value.model_dump(exclude=exclude)
+    if not is_str_keyed_dict(values):
+        raise TypeError("diagnostic timing serialization must have string keys")
     mean = values["mean_duration_ms"]
     if isinstance(mean, Decimal):
         values["mean_duration_ms"] = PublicDecimal(decimal=str(mean))
@@ -40,7 +43,9 @@ def native_timing_values(
 ) -> dict[str, object]:
     """Restore the shared public scalar without calculating timing metrics."""
     excluded = exclude | {"mean_duration_ms"} if exclude is not None else {"mean_duration_ms"}
-    values = cast("dict[str, object]", value.model_dump(exclude=excluded))
+    values = value.model_dump(exclude=excluded)
+    if not is_str_keyed_dict(values):
+        raise TypeError("diagnostic timing serialization must have string keys")
     mean = value.mean_duration_ms
     values["mean_duration_ms"] = Decimal(mean.decimal) if mean is not None else None
     return values

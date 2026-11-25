@@ -1,0 +1,1247 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "./ledgerMovementCheckContract";
+// How staged changes become ledger operations. Which operation takes each value
+// and what a row's staged state would refuse are the backend's answer to
+// `ledger.staged.check`, which every plan is made from; what is left here is the
+// order of the work, what staged actions must not meet, and cutting the bulk
+// into parts the host will carry. A movement whose staged fields are all
+// properties a batch edit writes is saved through `ledger.update.batch`, whose
+// preview answers for every row before anything is written.
+
+import type {
+  LedgerUpdateWindowRequest,
+  LedgerAddWindowRequest,
+  LedgerBatchUpdatePreviewWindowRequest,
+  LedgerBulkClassifyWindowRequest,
+  LedgerClassifyField,
+  LedgerClassifyWindowRequest,
+  LedgerPropertySetField,
+} from "./ledgerMovementContract";
+import { BATCH_ROW_LIMIT } from "./ledgerMovementContract";
+import type {
+  LedgerStagedBlocker,
+  LedgerWriteRoute,
+} from "./ledgerMovementCheckContract";
+import type { JsonObject, LedgerDefinitionId } from "./ledger";
+import type { OutputLanguage } from "./ledgerClassificationContract";
+import {
+  LEDGER_BULK_CLASSIFY_COLUMNS,
+  LEDGER_UPDATE_FIELDS,
+  type LedgerUpdateField,
+} from "./ledgerContract";
+import { takesBusinessShare } from "./ledgerClassifications";
+import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
+import { canonicalDecimal } from "./ledgerGrammar";
+import type { StagedCheck } from "./ledgerStagedCheck";
+import {
+  actionRows,
+  effectiveFacts,
+  STAGE_FIELDS,
+  type Draft,
+  type MovementFacts,
+  type StagedAction,
+  type StagedActionKind,
+  type StagedContent,
+} from "./ledgerStage";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
+
+const DECIMAL_FIELDS: ReadonlySet<StageFieldName> = new Set([
+  "amount",
+  "business_pct",
+  "taxable_base",
+  "iva_rate",
+  "iva_amount",
+]);
+const STRUCTURAL: ReadonlySet<StagedActionKind> = new Set([
+  "archive",
+  "stash",
+  "restore",
+  "exclude",
+  "split",
+  "merge",
+  "remove",
+]);
+/** Actions that write a movement's classification figures themselves. */
+const CLASSIFYING: ReadonlySet<StagedActionKind> = new Set([
+  "iva_derive",
+  "allocate",
+]);
+
+export type PlanField = StageFieldName | "m210_income_classification";
+
+/** The sentences the backend served for a blocker it names: why the staged
+ * work cannot be sent, what puts it right, and the language they are in. */
+export type ServedBlockerWords = {
+  words: string;
+  fixWords: string;
+  wordsLanguage: string;
+};
+
+/** Why a row, a new movement or an action is held back from the apply. */
+export type PlanBlocker =
+  | { kind: "gone" }
+  | { kind: "not_active"; lifecycle: string }
+  | { kind: "sealed" }
+  /** Whether a finalized declaration seals it was not read: it is never
+   * planned as savable on a guess. */
+  | { kind: "sealed_unread" }
+  | ({ kind: "cannot_clear"; fields: PlanField[] } & ServedBlockerWords)
+  | ({ kind: "needs_classification"; fields: PlanField[] } & ServedBlockerWords)
+  | ({ kind: "mixed_needs_share" } & ServedBlockerWords)
+  | ({ kind: "share_needs_mixed" } & ServedBlockerWords)
+  | ({
+      kind: "transfer_with_tax";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  | { kind: "action_and_edits"; action: string }
+  | { kind: "exclude_and_classification"; action: string }
+  | { kind: "suggestion_and_edits"; action: string }
+  /** A staged rules apply names the movement a model approval answers for:
+   * either would change what the other expects to find. */
+  | { kind: "suggestion_and_rules"; action: string; rules: string[] }
+  /** A Mixed approval names no business share: it is never saved so. */
+  | { kind: "suggestion_needs_share"; action: string }
+  | { kind: "actions_conflict"; actions: string[] }
+  | { kind: "too_large" }
+  | ({
+      kind: "draft_incomplete";
+      fields: DraftFieldName[];
+    } & ServedBlockerWords)
+  /** The amount was typed with a sign, and a movement's direction already
+   * carries which way the money went. */
+  | ({
+      kind: "amount_signed";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The declared base and IVA stand above the cash, which only a declared
+   * withholding category accepts. */
+  | ({
+      kind: "needs_withholding_category";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The IVA derivation writes base, rate and IVA, which the movement also
+   * has staged. */
+  | ({
+      kind: "derive_and_figures";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The derivation names another category than the movement will have. */
+  | ({
+      kind: "derive_category_differs";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The derivation needs a business classification the movement lacks. */
+  | ({
+      kind: "derive_needs_business";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords);
+
+/** What the review says about a row's work without holding it back. */
+export type PlanNote =
+  | { kind: "sends_current_classification"; classification: string }
+  | { kind: "sends_current_share"; share: string }
+  | { kind: "new_identity"; fields: StageFieldName[] };
+
+/** One movement's staged work. */
+export type PlanEntry = {
+  transactionId: string;
+  fields: StageFieldName[];
+  routes: Partial<Record<StageFieldName, LedgerWriteRoute>>;
+  clears: StageFieldName[];
+  actions: string[];
+  blockers: PlanBlocker[];
+  notes: PlanNote[];
+};
+export type DraftEntry = { key: string; blockers: PlanBlocker[] };
+
+export type BulkColumn = (typeof LEDGER_BULK_CLASSIFY_COLUMNS)[number];
+/** One row of a bulk part, by CSV column. */
+export type BulkRow = {
+  transactionId: string;
+  /** The staged fields this row saves. */
+  fields: StageFieldName[];
+  cells: Partial<Record<BulkColumn, string>>;
+};
+export type SuggestionAction = Extract<StagedAction, { kind: "suggestion" }>;
+/** One movement of a batch edit, as the request names it. */
+export type BatchRequestRow =
+  LedgerBatchUpdatePreviewWindowRequest["rows"][number];
+/** The property values one movement takes, or held, as a batch edit carries
+ * them. */
+export type PropertySet = BatchRequestRow["properties"];
+/** One movement of a batch part: the staged fields it saves. */
+export type BatchRow = { transactionId: string; fields: StageFieldName[] };
+export type PlanStep =
+  | {
+      kind: "bulk";
+      part: number;
+      parts: number;
+      rows: BulkRow[];
+      request: LedgerBulkClassifyWindowRequest;
+    }
+  | {
+      kind: "batch";
+      part: number;
+      parts: number;
+      rows: BatchRow[];
+      request: LedgerBatchUpdatePreviewWindowRequest;
+      /** The digest the preview of exactly this request answered, which the
+       * write is sent with; null until the review has previewed it. */
+      reviewedPlanDigest: string | null;
+    }
+  | {
+      kind: "classify";
+      transactionId: string;
+      fields: StageFieldName[];
+      m210Action: string | null;
+      request: LedgerClassifyWindowRequest;
+    }
+  | {
+      kind: "update";
+      transactionId: string;
+      fields: StageFieldName[];
+      newIdentity: boolean;
+      request: LedgerUpdateWindowRequest;
+    }
+  | { kind: "add"; draftKey: string; request: LedgerAddWindowRequest }
+  | {
+      kind: "action";
+      action: StagedAction;
+      definition: LedgerDefinitionId;
+      request: JsonObject;
+    }
+  | { kind: "answer"; action: SuggestionAction };
+
+/** What the review says the apply will do, in counts the page words. */
+export type PlanSummary = {
+  /** Movements saved together, and in how many parts. */
+  together: number;
+  parts: number;
+  singleClassifications: number;
+  corrections: number;
+  newMovements: number;
+  actions: Partial<Record<StagedActionKind, number>>;
+  /** Writes that each load and save the whole ledger. */
+  oneAtATime: number;
+  /** About how long the one-at-a-time writes take. */
+  seconds: number;
+  /** Rows, new movements and actions held back. */
+  held: number;
+  /** Held-back work by why, to group "297 need a classification". */
+  blockers: Partial<Record<PlanBlocker["kind"], number>>;
+};
+
+export type LedgerPlan = {
+  entries: PlanEntry[];
+  drafts: DraftEntry[];
+  steps: PlanStep[];
+  held: { rows: string[]; drafts: string[]; actions: string[] };
+  summary: PlanSummary;
+  /** The sentence for a business share no percentage reads, as the check
+   * served it; null where it served none. */
+  shareRefusal: StagedCheck["shareRefusal"];
+};
+
+export type PlanContext = {
+  /** The stored rows, as read at the apply. */
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
+  /** The backend's answer for exactly this content. */
+  check: StagedCheck;
+  /** Rows a finalized declaration cites: their facts are sealed. */
+  sealed?: ReadonlySet<string>;
+  /** Rows whose sealed state was not read: held back, neither sealed nor
+   * savable, until a read answers for them. */
+  unread?: ReadonlySet<string>;
+  outputLanguage?: OutputLanguage;
+  /** The host's payload bound; tests use a smaller one. */
+  payloadLimit?: number;
+};
+
+/** About how long one write that loads and saves the whole ledger takes. */
+export const SINGLE_WRITE_SECONDS = 3;
+
+/** The size the host measures a payload by, in UTF-8 bytes of compact
+ * JSON: never fewer than its characters, and within the line bound. */
+export function payloadSize(payload: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(payload)).length;
+}
+
+const wire = (field: StageFieldName, value: string) =>
+  DECIMAL_FIELDS.has(field) ? (canonicalDecimal(value) ?? value) : value;
+
+// ---- Batch edits -------------------------------------------------------------
+
+// Every property a batch edit writes, in the order the person reads them. The
+// record is keyed by the contract's own field type, so a property the contract
+// adds or drops fails to compile here.
+const PROPERTY_FIELDS: Record<LedgerPropertySetField, true> = {
+  business_classification: true,
+  business_pct: true,
+  category_id: true,
+  usage_ratio_id: true,
+  iva_category: true,
+  iva_rate: true,
+  irpf_category: true,
+  deduction_fact_kind: true,
+  exemption_article: true,
+  counterparty: true,
+  notes: true,
+  group_label: true,
+};
+export const PROPERTY_SET_FIELDS = Object.keys(
+  PROPERTY_FIELDS,
+) as LedgerPropertySetField[];
+
+/** Whether a field is a property a batch edit writes that the page also
+ * stages. */
+export const isPropertyField = (
+  field: string,
+): field is LedgerPropertySetField & StageFieldName =>
+  field in PROPERTY_FIELDS &&
+  (STAGE_FIELDS as readonly string[]).includes(field);
+
+/** A batch edit's digest as long as the write sends it, for measuring a part
+ * before its preview has answered. */
+const DIGEST_ROOM = "0".repeat(64);
+
+/** A property's value as a batch edit carries it: decimals in their
+ * canonical spelling, an empty text as nothing. */
+export function propertyValue(
+  field: LedgerPropertySetField,
+  value: string | null | undefined,
+): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  return isPropertyField(field) ? wire(field, value) : value;
+}
+
+/** One movement's row of a batch edit: its id, the `modified_at` the page
+ * read and the value of each property named, a value to set or null to
+ * clear it. */
+export function batchRequestRow(
+  transactionId: string,
+  expectedModifiedAt: string,
+  values: Partial<Record<LedgerPropertySetField, string | null>>,
+): BatchRequestRow {
+  return {
+    transaction_id: transactionId,
+    expected_modified_at: expectedModifiedAt,
+    properties: propertySet(values),
+  };
+}
+
+/** A property set naming the properties `values` holds, each in the spelling
+ * a batch edit carries; a property it does not name is null, as the contract
+ * requires. */
+export function propertySet(
+  values: Partial<Record<LedgerPropertySetField, string | null>>,
+): PropertySet {
+  const fields = PROPERTY_SET_FIELDS.filter((field) => field in values);
+  const properties = Object.fromEntries(
+    PROPERTY_SET_FIELDS.map((field) => [
+      field,
+      fields.includes(field) ? propertyValue(field, values[field]) : null,
+    ]),
+  ) as Omit<PropertySet, "fields">;
+  return { fields, ...properties };
+}
+
+export function batchRequest(
+  rows: readonly BatchRequestRow[],
+  outputLanguage?: OutputLanguage,
+): LedgerBatchUpdatePreviewWindowRequest {
+  return {
+    rows: [...rows],
+    ...(outputLanguage ? { output_language: outputLanguage } : {}),
+  };
+}
+
+/** Cuts batch rows into parts that each fit the payload bound, with the
+ * digest the write adds, and the contract's row bound, in order. A row that
+ * does not fit even alone is returned apart. */
+export function splitBatch<Row extends { request: BatchRequestRow }>(
+  rows: readonly Row[],
+  limit = RELAY_PAYLOAD_LIMIT,
+  outputLanguage?: OutputLanguage,
+): { parts: Row[][]; tooLarge: Row[] } {
+  const parts: Row[][] = [];
+  const tooLarge: Row[] = [];
+  const fits = (from: number, to: number) =>
+    to - from <= BATCH_ROW_LIMIT &&
+    payloadSize({
+      ...batchRequest(
+        rows.slice(from, to).map((row) => row.request),
+        outputLanguage,
+      ),
+      reviewed_plan_digest: DIGEST_ROOM,
+    }) <= limit;
+  // A part only grows by adding rows, so the longest run that fits is found
+  // by halving rather than by measuring every prefix.
+  let start = 0;
+  while (start < rows.length) {
+    if (!fits(start, start + 1)) {
+      tooLarge.push(...rows.slice(start, start + 1));
+      start += 1;
+      continue;
+    }
+    let fitting = start + 1;
+    let over = rows.length + 1;
+    if (fits(start, rows.length)) fitting = rows.length;
+    while (over - fitting > 1 && fitting < rows.length) {
+      const middle = Math.floor((fitting + over) / 2);
+      if (fits(start, middle)) fitting = middle;
+      else over = middle;
+    }
+    parts.push(rows.slice(start, fitting));
+    start = fitting;
+  }
+  return { parts, tooLarge };
+}
+
+/** The batch row of one movement's staged work, or null where something is
+ * staged on it that a batch edit does not carry: that work goes the other
+ * ways, whole. */
+function batchRow(
+  entry: PlanEntry,
+  row: LedgerTransactionReviewProjection,
+  content: StagedContent,
+  m210: boolean,
+): { row: BatchRow; request: BatchRequestRow } | null {
+  if (!entry.fields.length || m210) return null;
+  if (!entry.fields.every((field) => isPropertyField(field))) return null;
+  const changes = content.rows[entry.transactionId] ?? {};
+  const values: Partial<Record<LedgerPropertySetField, string | null>> = {};
+  for (const field of entry.fields) {
+    const change = changes[field]!;
+    values[field as LedgerPropertySetField] =
+      change.kind === "set" ? change.value : null;
+  }
+  return {
+    row: { transactionId: entry.transactionId, fields: entry.fields },
+    request: batchRequestRow(
+      entry.transactionId,
+      row.transaction.modified_at,
+      values,
+    ),
+  };
+}
+
+// ---- Bulk CSV ----------------------------------------------------------------
+
+const BULK_COLUMN: Partial<Record<StageFieldName, BulkColumn>> = {
+  business_classification: "classification",
+  business_pct: "business_pct",
+  category_id: "category_id",
+  usage_ratio_id: "usage_ratio_id",
+  taxable_base: "taxable_base",
+  iva_rate: "iva_rate",
+  iva_amount: "iva_amount",
+  iva_category: "iva_category",
+  irpf_category: "irpf_category",
+  notes: "notes",
+};
+
+const csvCell = (text: string) =>
+  /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+
+/** The CSV `ledger.classify.bulk` reads: the two required columns and the
+ * optional ones a row uses, in the contract's order. A blank cell leaves the
+ * stored value as it is. */
+export function bulkCsv(rows: readonly BulkRow[]): string {
+  const columns = LEDGER_BULK_CLASSIFY_COLUMNS.filter(
+    (column) =>
+      column === "transaction_id" ||
+      column === "classification" ||
+      rows.some((row) => row.cells[column] !== undefined),
+  );
+  const lines = rows.map((row) =>
+    columns.map((column) => csvCell(row.cells[column] ?? "")).join(","),
+  );
+  return [columns.join(","), ...lines].map((line) => `${line}\n`).join("");
+}
+
+export function bulkRequest(
+  rows: readonly BulkRow[],
+  outputLanguage?: OutputLanguage,
+): LedgerBulkClassifyWindowRequest {
+  return {
+    csv_text: bulkCsv(rows),
+    ...(outputLanguage ? { output_language: outputLanguage } : {}),
+  };
+}
+
+/** Cuts bulk rows into parts that each fit the payload bound, in order. A
+ * row that does not fit even alone is returned apart. */
+export function splitBulk(
+  rows: readonly BulkRow[],
+  limit = RELAY_PAYLOAD_LIMIT,
+  outputLanguage?: OutputLanguage,
+): { parts: BulkRow[][]; tooLarge: BulkRow[] } {
+  const parts: BulkRow[][] = [];
+  const tooLarge: BulkRow[] = [];
+  const fits = (from: number, to: number) =>
+    payloadSize(bulkRequest(rows.slice(from, to), outputLanguage)) <= limit;
+  // A part only grows by adding rows, so the longest run that fits is found
+  // by halving rather than by measuring every prefix.
+  let start = 0;
+  while (start < rows.length) {
+    if (!fits(start, start + 1)) {
+      tooLarge.push(...rows.slice(start, start + 1));
+      start += 1;
+      continue;
+    }
+    let fitting = start + 1;
+    let over = rows.length + 1;
+    if (fits(start, rows.length)) fitting = rows.length;
+    while (over - fitting > 1 && fitting < rows.length) {
+      const middle = Math.floor((fitting + over) / 2);
+      if (fits(start, middle)) fitting = middle;
+      else over = middle;
+    }
+    parts.push(rows.slice(start, fitting));
+    start = fitting;
+  }
+  return { parts, tooLarge };
+}
+
+// ---- Planning ------------------------------------------------------------------
+
+const ACTION_RANK: Record<StagedActionKind, number> = {
+  // An unlink is sent with the movement as the person saw it, so it goes
+  // before any other action that would change the movement.
+  unlink: -1,
+  suggestion: 0,
+  m210: 0,
+  iva_derive: 0,
+  allocate: 0,
+  rule_apply: 0,
+  link: 1,
+  attach: 1,
+  attach_file: 1,
+  detach: 1,
+  archive: 2,
+  stash: 2,
+  restore: 2,
+  exclude: 2,
+  split: 3,
+  merge: 3,
+  remove: 4,
+};
+
+function actionStep(action: StagedAction): PlanStep | null {
+  switch (action.kind) {
+    case "archive":
+    case "stash":
+    case "restore":
+    case "exclude":
+      return {
+        kind: "action",
+        action,
+        definition: `ledger.${action.kind}`,
+        request: {
+          transaction_id: action.transactionId,
+          reason: action.reason,
+        },
+      };
+    case "link":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.link",
+        request: {
+          transaction_id: action.transactionId,
+          invoice_id: action.invoiceId,
+        },
+      };
+    case "unlink":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.unlink",
+        request: {
+          transaction_id: action.transactionId,
+          invoice_id: action.invoiceId,
+          expected_modified_at: action.expectedModifiedAt,
+          expected_invoice_linked_transaction_ids:
+            action.expectedLinkedTransactionIds,
+        },
+      };
+    case "attach_file":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.evidence.add",
+        request: {
+          source_path: action.file,
+          idempotency_key: action.idempotencyKey,
+        },
+      };
+    case "attach":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.attach",
+        request: {
+          transaction_id: action.transactionId,
+          purchase_invoice_evidence_id: action.evidenceId,
+          attachment_ids: action.attachmentIds,
+        },
+      };
+    case "detach":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.detach",
+        request: {
+          transaction_id: action.transactionId,
+          attachment_ids: action.attachmentIds,
+        },
+      };
+    case "split":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.split.manual",
+        request: {
+          transaction_id: action.transactionId,
+          children: action.children.map((child) => ({
+            amount: canonicalDecimal(child.amount) ?? child.amount,
+            description: child.description,
+          })),
+          reason: action.reason,
+        },
+      };
+    case "merge":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.merge",
+        request: { child_ids: action.childIds, reason: action.reason },
+      };
+    case "remove":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.remove",
+        request: {
+          transaction_id: action.transactionId,
+          reason: action.reason,
+          dry_run: false,
+        },
+      };
+    case "suggestion":
+      return { kind: "answer", action };
+    case "m210":
+      // Sent inside the row's single classification.
+      return null;
+    case "iva_derive":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.classify.iva-derive",
+        request: {
+          transaction_id: action.transactionId,
+          iva_category: action.ivaCategory,
+        },
+      };
+    case "allocate":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.allocate",
+        request: {
+          transaction_id: action.transactionId,
+          business_pct:
+            canonicalDecimal(action.businessPct) ?? action.businessPct,
+          category_id: action.categoryId,
+          usage_ratio_id: action.usageRatioId,
+          prorrata_reference: action.prorrataReference,
+        },
+      };
+    case "rule_apply":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.rule.apply",
+        request: { reaffirm: action.reaffirm, dry_run: false },
+      };
+  }
+}
+
+/** Whether a staged rule apply meets a staged classification or a staged
+ * model approval on a movement its dry run named: the rules and the person
+ * would both decide it, so it is held back until one of them is dropped. */
+export function ruleApplyClashes(
+  action: Extract<StagedAction, { kind: "rule_apply" }>,
+  content: StagedContent,
+  check: StagedCheck,
+): boolean {
+  return action.transactionIds.some(
+    (id) =>
+      (check.rows.get(id)?.classifying_fields.length ?? 0) > 0 ||
+      content.actions.some(
+        (other) => other.kind === "suggestion" && other.transactionId === id,
+      ),
+  );
+}
+
+/** A blocker the backend names, in the plan's terms, with its sentences.
+ * Some carry no fields. */
+function heldBy(blocker: LedgerStagedBlocker) {
+  const served: ServedBlockerWords = {
+    words: blocker.words,
+    fixWords: blocker.fix_words,
+    wordsLanguage: blocker.words_language,
+  };
+  return blocker.kind === "mixed_needs_share" ||
+    blocker.kind === "share_needs_mixed"
+    ? { kind: blocker.kind, ...served }
+    : { kind: blocker.kind, fields: blocker.fields, ...served };
+}
+
+/** The checks one movement's staged work must pass. */
+function checkRow(
+  id: string,
+  row: LedgerTransactionReviewProjection | undefined,
+  content: StagedContent,
+  actions: StagedAction[],
+  context: PlanContext,
+): PlanEntry {
+  const changes = content.rows[id] ?? {};
+  const fields = STAGE_FIELDS.filter((field) => changes[field] !== undefined);
+  const entry: PlanEntry = {
+    transactionId: id,
+    fields,
+    routes: {},
+    clears: fields.filter((field) => changes[field]?.kind === "clear"),
+    actions: actions.map((action) => action.id),
+    blockers: [],
+    notes: [],
+  };
+  const answer = context.check.rows.get(id);
+  if (!row || !answer?.found) {
+    entry.blockers.push({ kind: "gone" });
+    return entry;
+  }
+  const m210 = actions.find((action) => action.kind === "m210");
+  const edits = fields.length > 0 || m210 !== undefined;
+  const classifyingEdits = answer.classifying_fields.length > 0;
+  for (const route of answer.routes)
+    if (route.route) entry.routes[route.field as StageFieldName] = route.route;
+  for (const blocker of answer.blockers)
+    entry.blockers.push(heldBy(blocker) as PlanBlocker);
+  for (const note of answer.notes)
+    entry.notes.push(
+      note.kind === "new_identity"
+        ? { kind: "new_identity", fields: note.fields as StageFieldName[] }
+        : note.kind === "sends_current_share"
+          ? { kind: "sends_current_share", share: note.value! }
+          : {
+              kind: "sends_current_classification",
+              classification: note.value!,
+            },
+    );
+
+  const structural = actions.filter((action) => STRUCTURAL.has(action.kind));
+  const classifying = actions.filter((action) => CLASSIFYING.has(action.kind));
+  const files = actions.filter((action) => action.kind === "attach_file");
+  const suggestions = actions.filter((action) => action.kind === "suggestion");
+  const links = actions.filter(
+    (action) => action.kind === "link" || action.kind === "unlink",
+  );
+  const unlink = actions.find((action) => action.kind === "unlink");
+  if (
+    !answer.takes_changes &&
+    (edits || suggestions.length || classifying.length || files.length)
+  )
+    entry.blockers.push({
+      kind: "not_active",
+      lifecycle: row.transaction.lifecycle_state,
+    });
+  const sealable =
+    edits ||
+    structural.length > 0 ||
+    suggestions.length > 0 ||
+    classifying.length > 0 ||
+    files.length > 0;
+  if (context.sealed?.has(id) && sealable)
+    entry.blockers.push({ kind: "sealed" });
+  else if (context.unread?.has(id) && sealable)
+    entry.blockers.push({ kind: "sealed_unread" });
+  const first = structural[0];
+  if (first && edits) {
+    entry.blockers.push(
+      first.kind === "exclude" && (classifyingEdits || m210 !== undefined)
+        ? { kind: "exclude_and_classification", action: first.id }
+        : { kind: "action_and_edits", action: first.id },
+    );
+  }
+  // An unlink is sent with the movement's modification time as the person
+  // saw it, which an edit saved first would change.
+  if (unlink && edits)
+    entry.blockers.push({ kind: "action_and_edits", action: unlink.id });
+  // A derivation is judged by the backend (see the served blockers); an
+  // allocation still cannot share a movement with other classifying edits.
+  const allocation = classifying.find((action) => action.kind === "allocate");
+  if (allocation && (classifyingEdits || m210))
+    entry.blockers.push({ kind: "action_and_edits", action: allocation.id });
+  // A model approval commits against the movement exactly as it was when
+  // the model was asked, so nothing else may change it first.
+  const suggestion = suggestions[0];
+  if (suggestion && edits)
+    entry.blockers.push({
+      kind: "suggestion_and_edits",
+      action: suggestion.id,
+    });
+  const rules = content.actions.filter(
+    (action) =>
+      action.kind === "rule_apply" && action.transactionIds.includes(id),
+  );
+  if (suggestion && rules.length)
+    entry.blockers.push({
+      kind: "suggestion_and_rules",
+      action: suggestion.id,
+      rules: rules.map((action) => action.id),
+    });
+  for (const found of suggestions) {
+    if (found.kind !== "suggestion" || found.decision !== "apply") continue;
+    const writes = found.writes ?? [];
+    const mixed = writes.some(
+      (write) =>
+        write.field === "business_classification" &&
+        write.value !== null &&
+        takesBusinessShare(write.value) === true,
+    );
+    const share = writes.some(
+      (write) => write.field === "business_pct" && write.value !== null,
+    );
+    if (mixed && !share)
+      entry.blockers.push({ kind: "suggestion_needs_share", action: found.id });
+  }
+  const clashing = [
+    ...(structural.length > 1 || (structural.length && suggestions.length)
+      ? [...structural, ...suggestions]
+      : []),
+    ...(suggestions.length > 1 ? suggestions : []),
+    ...(classifying.length &&
+    (classifying.length > 1 || suggestions.length || structural.length)
+      ? [...classifying, ...suggestions, ...structural]
+      : []),
+    ...(links.length > 1 ? links : []),
+    ...(unlink && suggestions.length ? [unlink, ...suggestions] : []),
+  ];
+  if (clashing.length)
+    entry.blockers.push({
+      kind: "actions_conflict",
+      actions: [...new Set(clashing.map((action) => action.id))],
+    });
+  return entry;
+}
+
+const DRAFT_DECIMALS: ReadonlySet<DraftFieldName> = new Set([
+  "amount",
+  "business_pct",
+  "taxable_base",
+  "iva_rate",
+  "iva_amount",
+  "recargo_amount",
+]);
+function checkDraft(draft: Draft, check: StagedCheck): DraftEntry {
+  return {
+    key: draft.key,
+    blockers: (check.drafts.get(draft.key)?.blockers ?? []).map(
+      (blocker) => heldBy(blocker) as PlanBlocker,
+    ),
+  };
+}
+
+function addRequest(draft: Draft): LedgerAddWindowRequest {
+  const values: Partial<Record<DraftFieldName, string>> = {};
+  for (const [field, text] of Object.entries(draft.fields) as [
+    DraftFieldName,
+    string,
+  ][])
+    values[field] = DRAFT_DECIMALS.has(field)
+      ? (canonicalDecimal(text) ?? text)
+      : text;
+  // The staged check holds back a draft with a missing or unknown value of
+  // these, and the form offers only the contract's own classifications.
+  const { business_classification, direction, ...rest } = values;
+  return {
+    ...rest,
+    ...(business_classification !== undefined && {
+      business_classification:
+        business_classification as LedgerAddWindowRequest["business_classification"],
+    }),
+    booked_date: values.booked_date!,
+    amount: values.amount!,
+    direction: direction as LedgerAddWindowRequest["direction"],
+    description: values.description!,
+    idempotency_key: draft.idempotencyKey,
+  };
+}
+
+function bulkRow(
+  entry: PlanEntry,
+  facts: MovementFacts,
+  content: StagedContent,
+  takesShare: boolean,
+): BulkRow | null {
+  const fields = entry.fields.filter((field) => entry.routes[field] === "bulk");
+  if (!fields.length) return null;
+  const changes = content.rows[entry.transactionId] ?? {};
+  // Every row names its classification, changed or not, and a mixed row
+  // its share with it.
+  const cells: Partial<Record<BulkColumn, string>> = {
+    transaction_id: entry.transactionId,
+    classification: facts.business_classification!,
+  };
+  if (takesShare && facts.business_pct)
+    cells.business_pct = wire("business_pct", facts.business_pct);
+  // A clear on a bulk row has no cell: a blank cell means unchanged. The
+  // clears that travel here are those the classification write performs on
+  // its own (the backend routes only those to the bulk), so the row names
+  // them in `fields` for the review and its CSV carries none.
+  for (const field of fields) {
+    const change = changes[field];
+    const column = BULK_COLUMN[field];
+    if (change?.kind === "set" && column)
+      cells[column] = wire(field, change.value);
+  }
+  return { transactionId: entry.transactionId, fields, cells };
+}
+
+function classifyStep(
+  entry: PlanEntry,
+  facts: MovementFacts,
+  content: StagedContent,
+  m210: Extract<StagedAction, { kind: "m210" }> | undefined,
+  takesShare: boolean,
+): Extract<PlanStep, { kind: "classify" }> | null {
+  const fields = entry.fields.filter(
+    (field) => entry.routes[field] === "classify",
+  );
+  if (!fields.length && !m210) return null;
+  const changes = content.rows[entry.transactionId] ?? {};
+  const patch: LedgerClassifyWindowRequest["patch"] = {
+    business_classification: facts.business_classification!,
+  };
+  const selected = new Set<LedgerClassifyField>(["business_classification"]);
+  if (takesShare && facts.business_pct) {
+    patch.business_pct = wire("business_pct", facts.business_pct);
+    selected.add("business_pct");
+  }
+  for (const field of fields) {
+    const change = changes[field]!;
+    const name = field as Exclude<
+      LedgerClassifyField,
+      "m210_income_classification"
+    >;
+    patch[name] = change.kind === "set" ? wire(field, change.value) : null;
+    selected.add(name);
+  }
+  if (m210) selected.add("m210_income_classification");
+  return {
+    kind: "classify",
+    transactionId: entry.transactionId,
+    fields,
+    m210Action: m210?.id ?? null,
+    request: {
+      transaction_id: entry.transactionId,
+      patch,
+      // The contract takes the mask in sorted order only.
+      patch_fields: [...selected].sort(),
+      ...(m210 ? { m210: m210.options } : {}),
+    },
+  };
+}
+
+function updateStep(
+  entry: PlanEntry,
+  content: StagedContent,
+): Extract<PlanStep, { kind: "update" }> | null {
+  const fields = entry.fields.filter(
+    (field) => entry.routes[field] === "update",
+  );
+  if (!fields.length) return null;
+  const changes = content.rows[entry.transactionId] ?? {};
+  const patch: LedgerUpdateWindowRequest["patch"] = {};
+  const mask: LedgerUpdateField[] = [];
+  for (const name of LEDGER_UPDATE_FIELDS) {
+    const change = changes[name];
+    if (!change || !fields.includes(name)) continue;
+    patch[name] = change.kind === "set" ? wire(name, change.value) : null;
+    mask.push(name);
+  }
+  return {
+    kind: "update",
+    transactionId: entry.transactionId,
+    fields,
+    newIdentity: entry.notes.some((note) => note.kind === "new_identity"),
+    request: { transaction_id: entry.transactionId, patch, patch_fields: mask },
+  };
+}
+
+/** Plans an apply of everything staged against the rows read at the
+ * apply. */
+export function planApply(
+  content: StagedContent,
+  context: PlanContext,
+): LedgerPlan {
+  const limit = context.payloadLimit ?? RELAY_PAYLOAD_LIMIT;
+  const actionsByRow = new Map<string, StagedAction[]>();
+  for (const action of content.actions)
+    for (const id of actionRows(action))
+      actionsByRow.set(id, [...(actionsByRow.get(id) ?? []), action]);
+  const ids = [
+    ...new Set([...Object.keys(content.rows), ...actionsByRow.keys()]),
+  ];
+  // The read's order, then whatever it no longer shows.
+  const order = new Map([...context.rows.keys()].map((id, at) => [id, at]));
+  const place = (id: string) => order.get(id) ?? order.size;
+  ids.sort((a, b) => place(a) - place(b));
+
+  const entries = ids.map((id) =>
+    checkRow(
+      id,
+      context.rows.get(id),
+      content,
+      actionsByRow.get(id) ?? [],
+      context,
+    ),
+  );
+  const drafts = content.drafts.map((draft) =>
+    checkDraft(draft, context.check),
+  );
+  const takesShare = (id: string) =>
+    context.check.rows.get(id)?.takes_share ?? false;
+  const factsOf = (entry: PlanEntry) =>
+    effectiveFacts(
+      context.rows.get(entry.transactionId)!,
+      content.rows[entry.transactionId],
+    );
+
+  const m210Of = (id: string) =>
+    (actionsByRow.get(id) ?? []).some((action) => action.kind === "m210");
+  // A movement whose staged work a batch edit carries whole goes there, and
+  // no other way.
+  const batchCandidates = entries
+    .filter((entry) => !entry.blockers.length)
+    .map((entry) =>
+      batchRow(
+        entry,
+        context.rows.get(entry.transactionId)!,
+        content,
+        m210Of(entry.transactionId),
+      ),
+    )
+    .filter((found) => found !== null);
+  const batched = new Set(
+    batchCandidates.map((found) => found.row.transactionId),
+  );
+  const batchSplit = splitBatch(batchCandidates, limit, context.outputLanguage);
+  for (const found of batchSplit.tooLarge)
+    entries
+      .find((entry) => entry.transactionId === found.row.transactionId)!
+      .blockers.push({ kind: "too_large" });
+
+  const candidates = entries
+    .filter(
+      (entry) => !entry.blockers.length && !batched.has(entry.transactionId),
+    )
+    .map((entry) =>
+      bulkRow(entry, factsOf(entry), content, takesShare(entry.transactionId)),
+    )
+    .filter((row): row is BulkRow => row !== null);
+  const split = splitBulk(candidates, limit, context.outputLanguage);
+  for (const row of split.tooLarge)
+    entries
+      .find((entry) => entry.transactionId === row.transactionId)!
+      .blockers.push({ kind: "too_large" });
+
+  const ready = entries.filter(
+    (entry) => !entry.blockers.length && !batched.has(entry.transactionId),
+  );
+  const classifies: Extract<PlanStep, { kind: "classify" }>[] = [];
+  const updates: Extract<PlanStep, { kind: "update" }>[] = [];
+  for (const entry of ready) {
+    const facts = factsOf(entry);
+    const m210 = (actionsByRow.get(entry.transactionId) ?? []).find(
+      (action): action is Extract<StagedAction, { kind: "m210" }> =>
+        action.kind === "m210",
+    );
+    const single = classifyStep(
+      entry,
+      facts,
+      content,
+      m210,
+      takesShare(entry.transactionId),
+    );
+    const update = updateStep(entry, content);
+    const oversized = [single, update].some(
+      (step) => step !== null && payloadSize(step.request) > limit,
+    );
+    if (oversized) entry.blockers.push({ kind: "too_large" });
+    if (single && !oversized) classifies.push(single);
+    if (update && !oversized) updates.push(update);
+  }
+  const blockedRows = new Set(
+    entries
+      .filter((entry) => entry.blockers.length)
+      .map((e) => e.transactionId),
+  );
+  const keepStep = (step: { transactionId: string }) =>
+    !blockedRows.has(step.transactionId);
+
+  const adds: PlanStep[] = [];
+  for (const draft of content.drafts) {
+    const checked = drafts.find((entry) => entry.key === draft.key)!;
+    if (checked.blockers.length) continue;
+    const request = addRequest(draft);
+    if (payloadSize(request) > limit)
+      checked.blockers.push({ kind: "too_large" });
+    else adds.push({ kind: "add", draftKey: draft.key, request });
+  }
+
+  const actionSteps: PlanStep[] = [];
+  const heldActions: string[] = [];
+  const ranked = [...content.actions].sort(
+    (a, b) => ACTION_RANK[a.kind] - ACTION_RANK[b.kind],
+  );
+  for (const action of ranked) {
+    if (
+      actionRows(action).some((id) => blockedRows.has(id)) ||
+      (action.kind === "rule_apply" &&
+        ruleApplyClashes(action, content, context.check))
+    ) {
+      heldActions.push(action.id);
+      continue;
+    }
+    const step = actionStep(action);
+    if (!step) continue;
+    if (step.kind === "action" && payloadSize(step.request) > limit) {
+      heldActions.push(action.id);
+      continue;
+    }
+    actionSteps.push(step);
+  }
+
+  // A row held back after the cut leaves its part smaller, never larger.
+  const parts = split.parts
+    .map((part) => part.filter((row) => !blockedRows.has(row.transactionId)))
+    .filter((part) => part.length > 0);
+  const bulkSteps: PlanStep[] = parts.map((rows, at) => ({
+    kind: "bulk",
+    part: at + 1,
+    parts: parts.length,
+    rows,
+    request: bulkRequest(rows, context.outputLanguage),
+  }));
+  const batchParts = batchSplit.parts
+    .map((part) =>
+      part.filter((found) => !blockedRows.has(found.row.transactionId)),
+    )
+    .filter((part) => part.length > 0);
+  const batchSteps: PlanStep[] = batchParts.map((part, at) => ({
+    kind: "batch",
+    part: at + 1,
+    parts: batchParts.length,
+    rows: part.map((found) => found.row),
+    request: batchRequest(
+      part.map((found) => found.request),
+      context.outputLanguage,
+    ),
+    reviewedPlanDigest: null,
+  }));
+  const steps = [
+    ...batchSteps,
+    ...bulkSteps,
+    ...classifies.filter(keepStep),
+    ...updates.filter(keepStep),
+    ...adds,
+    ...actionSteps,
+  ];
+  const held = {
+    rows: [...blockedRows],
+    drafts: drafts.filter((d) => d.blockers.length).map((d) => d.key),
+    actions: heldActions,
+  };
+  return {
+    entries,
+    drafts,
+    steps,
+    held,
+    summary: summarize(steps, entries, drafts, held),
+    shareRefusal: context.check.shareRefusal,
+  };
+}
+
+function summarize(
+  steps: PlanStep[],
+  entries: PlanEntry[],
+  drafts: DraftEntry[],
+  held: LedgerPlan["held"],
+): PlanSummary {
+  const count = (kind: PlanStep["kind"]) =>
+    steps.filter((step) => step.kind === kind).length;
+  const actions: Partial<Record<StagedActionKind, number>> = {};
+  for (const step of steps)
+    if (step.kind === "action" || step.kind === "answer")
+      actions[step.action.kind] = (actions[step.action.kind] ?? 0) + 1;
+  const blockers: Partial<Record<PlanBlocker["kind"], number>> = {};
+  for (const blocked of [...entries, ...drafts])
+    for (const kind of new Set(blocked.blockers.map((found) => found.kind)))
+      blockers[kind] = (blockers[kind] ?? 0) + 1;
+  const oneAtATime =
+    count("classify") +
+    count("update") +
+    count("add") +
+    count("action") +
+    count("answer");
+  return {
+    together: steps.reduce(
+      (total, step) =>
+        total +
+        (step.kind === "bulk" || step.kind === "batch" ? step.rows.length : 0),
+      0,
+    ),
+    parts: count("bulk") + count("batch"),
+    singleClassifications: count("classify"),
+    corrections: count("update"),
+    newMovements: count("add"),
+    actions,
+    oneAtATime,
+    seconds: oneAtATime * SINGLE_WRITE_SECONDS,
+    held: held.rows.length + held.drafts.length + held.actions.length,
+    blockers,
+  };
+}
+
+/** The plan with each batch part bound to the digest its preview answered,
+ * in the order of the plan's batch parts. A part without one stays unbound
+ * and is never written. */
+export function withReviewedDigests(
+  plan: LedgerPlan,
+  digests: readonly (string | null)[],
+): LedgerPlan {
+  let at = 0;
+  return {
+    ...plan,
+    steps: plan.steps.map((step) =>
+      step.kind === "batch"
+        ? { ...step, reviewedPlanDigest: digests[at++] ?? null }
+        : step,
+    ),
+  };
+}
+
+/** The batch parts' preview requests, in the plan's order. */
+export const batchRequests = (
+  plan: LedgerPlan | null,
+): LedgerBatchUpdatePreviewWindowRequest[] =>
+  plan
+    ? plan.steps.flatMap((step) =>
+        step.kind === "batch" ? [step.request] : [],
+      )
+    : [];

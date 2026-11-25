@@ -50,6 +50,7 @@ from __future__ import annotations
 import os
 import shutil
 import stat
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -111,7 +112,8 @@ RELEASE_SOURCE_SNAPSHOT_FAMILY: Final[ScratchFamily] = ScratchFamily(
 )
 """Bracket the clean source snapshot a release parent hands to its child builder.
 
-The snapshot and its child staging output live under the admitted build root.
+The snapshot and its child staging output live under the owning checkout's
+temporary root until the completed artifacts are promoted into ``build/``.
 The parent PID alone cannot prove the child has stopped using this tree, so a
 sweep reports it as spared even when that PID is gone or its mtime is old.
 After reviewing the report, an operator removes abandoned snapshots manually.
@@ -124,7 +126,7 @@ COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
 )
 """Bracket the extracted source snapshot ``uv build`` packages the cohort from.
 
-Some thirty-nine thousand files, snapshotted beside the cohort output and
+Some thirty-nine thousand files, snapshotted under the checkout's temporary root and
 removed in a ``finally`` block -- which is the coverage this module exists
 because of.
 """
@@ -151,6 +153,19 @@ written beside that tree rather than into it. Removed in a ``finally`` block on
 every path the probe returns from, and left behind by every path it does not.
 """
 
+SHARED_COHORT_WORK_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".shared-cohort-",
+    suffix=".work",
+    auto_reclaim_on_dead_owner=False,
+    operator_age_reclaim=False,
+)
+"""Bracket one shared-cohort build under the development cache.
+
+The parent can die while a build subprocess still uses its snapshot; neither
+the parent's PID nor an elapsed time proves that subprocess has stopped.
+Completed builds remove their own work, and abandoned builds require review.
+"""
+
 VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     RELEASE_STAGING_FAMILY,
@@ -158,6 +173,7 @@ VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
     COMMAND_SPEC_BYTECODE_FAMILY,
+    SHARED_COHORT_WORK_FAMILY,
 )
 """Every family this sweep will consider. Anything not matching one is spared.
 
@@ -272,7 +288,7 @@ def matching_family(name: str) -> ScratchFamily | None:
     return None
 
 
-def _owning_pid(name: str, family: ScratchFamily) -> int | None:
+def owning_pid(name: str, family: ScratchFamily) -> int | None:
     """Return the process identifier ``name`` carries, or ``None`` if it carries none.
 
     ``None`` is the answer that leaves the mtime ceiling as the only rule, and
@@ -336,7 +352,7 @@ def _is_reclaimable(
         return False
     if not family.auto_reclaim_on_dead_owner:
         return False
-    pid = _owning_pid(candidate.name, family)
+    pid = owning_pid(candidate.name, family)
     return pid is not None and not process_is_live(pid)
 
 
@@ -385,6 +401,19 @@ def remove_scratch(candidate: Path) -> bool:
     except OSError:
         return not candidate.exists()
     return True
+
+
+def remove_source_snapshot(directory: Path, *, primary_error: BaseException | None = None) -> None:
+    """Remove a source snapshot or disclose its retained path without hiding a build failure."""
+    if remove_tree(directory):
+        return
+    message = f"source snapshot remains after cleanup: {directory}"
+    if primary_error is not None:
+        primary_error.add_note(message)
+        if isinstance(primary_error, SystemExit):
+            print(message, file=sys.stderr)
+        return
+    raise OSError(message)
 
 
 def reclaimable_scratch(
@@ -662,11 +691,13 @@ __all__ = [
     "RELEASE_COHORT_INTEGRATION_FAMILY",
     "RELEASE_SOURCE_SNAPSHOT_FAMILY",
     "RELEASE_STAGING_FAMILY",
+    "SHARED_COHORT_WORK_FAMILY",
     "VAR_SCRATCH_FAMILIES",
     "ScratchFamily",
     "matching_family",
     "reclaimable_scratch",
     "remove_scratch",
+    "remove_source_snapshot",
     "remove_tree",
     "report_build_scratch",
     "report_var_scratch",

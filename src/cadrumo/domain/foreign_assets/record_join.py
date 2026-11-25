@@ -91,7 +91,7 @@ class Modelo720Record(BaseModel):
     @property
     def source_row_identity(self) -> str:
         """The record key: the lot's source identity and the declarant condition."""
-        return f"{self.row.observation.source_id}#{self.declaration.condition.value}"
+        return f"{self.row.observation.source_id}#{self.declaration.condition.code}"
 
 
 def _register_disagreement(row: Modelo720ValuedRow, asset: ForeignAssetRegisterEntry, filing_year: int) -> str:
@@ -179,7 +179,7 @@ def join_modelo_720_records(
             )
         records.extend(
             Modelo720Record(row=row, asset=asset, declaration=declaration)
-            for declaration in sorted(declared, key=lambda entry: entry.condition.value)
+            for declaration in sorted(declared, key=lambda entry: entry.condition.code)
         )
     return tuple(records)
 

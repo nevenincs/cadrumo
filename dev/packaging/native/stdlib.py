@@ -16,11 +16,24 @@ from pathlib import Path
 BYTECODE_WORKERS = 12
 """Threads publishing package bytecode; the work is mostly reading, hashing and linking files."""
 
+UNCHECKED_HASH_FLAGS = 0b01
+"""PEP 552 hash-based bytecode without the source-check bit.
+
+The installed image is immutable and its inventory is verified as a whole, so
+the loader need not read and hash each source to admit its cache. Sources still
+ship beside the caches; only the per-import freshness probe is dropped.
+"""
+
 
 def bytecode(source: bytes, name: str, *, prefix: str = "python.zip") -> bytes:
-    """Compile checked-hash bytecode with a portable package-relative filename."""
+    """Compile unchecked-hash bytecode with a portable package-relative filename."""
     code = compile(source, f"{prefix}/{name}", "exec", dont_inherit=True, optimize=0)
-    return importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(source) + marshal.dumps(code)
+    return (
+        importlib.util.MAGIC_NUMBER
+        + struct.pack("<I", UNCHECKED_HASH_FLAGS)
+        + importlib.util.source_hash(source)
+        + marshal.dumps(code)
+    )
 
 
 def compiler_identity() -> str:
@@ -37,6 +50,22 @@ def require_bytecode_compiler(version: str) -> None:
     required = tuple(map(int, version.split(".")))
     if required[:2] != sys.version_info[:2] or sys.version_info[:3] < required:
         raise ValueError("Bytecode assembly requires compatible development Python at least as new as the runtime")
+
+
+def _reusable_bytecode(old: Path | None, expected: str | None, content: bytes) -> bytes | None:
+    if (
+        old is not None
+        and expected is not None
+        and old.is_file()
+        and not any(path.is_symlink() or path.is_junction() for path in (old, *old.parents))
+    ):
+        cached = old.read_bytes()
+        header = (
+            importlib.util.MAGIC_NUMBER + struct.pack("<I", UNCHECKED_HASH_FLAGS) + importlib.util.source_hash(content)
+        )
+        if cached[:16] == header and hashlib.sha256(cached).hexdigest() == expected:
+            return cached
+    return None
 
 
 def compile_packages_bytecode(
@@ -63,20 +92,13 @@ def compile_packages_bytecode(
         relative = destination.relative_to(source)
         old = None if previous is None else previous / relative
         expected = (previous_files or {}).get(f"{prefix}/{relative.as_posix()}")
-        if (
-            old is not None
-            and expected is not None
-            and old.is_file()
-            and not any(path.is_symlink() or path.is_junction() for path in (old, *old.parents))
-        ):
-            cached = old.read_bytes()
-            header = importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(content)
-            if cached[:16] == header and hashlib.sha256(cached).hexdigest() == expected:
-                try:
-                    os.link(old, destination)
-                except OSError:
-                    destination.write_bytes(cached)
-                return
+        cached = _reusable_bytecode(old, expected, content)
+        if cached is not None and old is not None:
+            try:
+                os.link(old, destination)
+            except OSError:
+                destination.write_bytes(cached)
+            return
         destination.write_bytes(bytecode(content, file.relative_to(source).as_posix(), prefix=prefix))
 
     # Each file's cache is decided and written on its own, and most of the work

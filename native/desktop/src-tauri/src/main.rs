@@ -3,6 +3,7 @@
 mod agent;
 mod app;
 mod auth_browser;
+mod close_outcome;
 mod docs;
 mod environment;
 mod launch;
@@ -11,8 +12,13 @@ mod manager;
 mod role;
 mod shell;
 mod startup;
+#[cfg(target_os = "macos")]
+mod startup_alert;
 mod startup_logging;
+mod startup_outcome;
 mod terminal;
+#[cfg(test)]
+mod window_fixtures;
 
 use cadrumo_application::{
     child::ChildConfiguration,
@@ -32,20 +38,34 @@ use std::{
 const CLI_ENTRYPOINT: &str = include_str!("python/cli.py");
 
 fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
-    let arguments = std::env::args_os().skip(1).collect();
-    let mode = launch::select(arguments, launch::desktop_available());
+    let arguments: Vec<OsString> = std::env::args_os().skip(1).collect();
+    // A launch with no arguments asks for a window; when it gets the CLI instead,
+    // the refused desktop is the reason it records.
+    let desktop = launch::desktop_available();
+    let available = desktop.is_ok();
+    let refused_window = desktop.err().filter(|_| arguments.is_empty());
+    let mode = launch::select(arguments, available);
     diagnostics.event(EventKind::HostStarted, None, None);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
-    // The GUI claims the per-user instance before any per-user state opens.
+    let parent = environment::Parent::current()?;
+    // The GUI claims the per-user instance before any per-user state opens. A launch
+    // that ends here has no log of its own, so its outcome is recorded durably first.
     let _instance = match &mode {
-        Ok(mode) => match shell::single_instance::admit(mode)? {
-            shell::single_instance::Admission::Activated => {
-                diagnostics.host_outcome(HostStage::Admission, HostOutcome::AlreadyRunning);
-                return Ok(0);
+        Ok(mode) => {
+            let admission = shell::single_instance::admit(mode);
+            if let Some((outcome, reason)) = startup_outcome::of_admission(&admission) {
+                startup_outcome::conclude(&parent, outcome, HostStage::Admission, reason);
             }
-            shell::single_instance::Admission::Primary(primary) => Some(primary),
-            shell::single_instance::Admission::Headless => None,
-        },
+            match admission? {
+                shell::single_instance::Admission::Activated
+                | shell::single_instance::Admission::OpenInOtherSession => {
+                    diagnostics.host_outcome(HostStage::Admission, HostOutcome::AlreadyRunning);
+                    return Ok(0);
+                }
+                shell::single_instance::Admission::Primary(primary) => Some(primary),
+                shell::single_instance::Admission::Headless => None,
+            }
+        }
         Err(_) => None,
     };
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
@@ -57,11 +77,19 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .ok_or_else(launch_error)?
             .to_owned(),
     };
-    let parent = environment::Parent::current()?;
     // Before the window exists, so a panic in any webview callback has a durable sink.
-    startup_logging::configure(&parent, &diagnostics);
+    if let Err(error) = startup_logging::configure(&parent, &diagnostics)
+        && matches!(mode, Ok(launch::Mode::Gui))
+    {
+        // The startup page names the failure, but with no log it would leave no trace.
+        let _ = startup_outcome::record(
+            &parent,
+            startup_outcome::Outcome::Refused,
+            HostStage::Package,
+            Some(error.code),
+        );
+    }
     if matches!(mode, Ok(launch::Mode::Gui)) {
-        #[cfg(windows)]
         contain_application()?;
         return app::run(root, parent, diagnostics);
     }
@@ -84,7 +112,7 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             tauri::async_runtime::block_on(check_health(&launch, hold_seconds))
         }
         launch::Mode::Cli(arguments) => {
-            diagnostics.event(EventKind::HeadlessSelected, None, None);
+            diagnostics.event(EventKind::HeadlessSelected, None, refused_window);
             let configuration = headless(&launch, parent.working_directory)?;
             let mut forwarded: Vec<OsString> =
                 vec!["-u".into(), "-c".into(), CLI_ENTRYPOINT.into()];
@@ -114,6 +142,19 @@ fn contain_application() -> Result<()> {
         })?;
     let _ = APPLICATION.set(job);
     Ok(())
+}
+
+/// One process scope for everything the window starts: session holders, the
+/// agent service, short calls and browser checks are created into it and end
+/// with the window however it ends. A descendant that leaves its process group,
+/// and a terminal shell, which starts a session of its own, are outside it.
+#[cfg(unix)]
+fn contain_application() -> Result<()> {
+    cadrumo_platform::process_scope::contain_current()
+        .map(|_| ())
+        .map_err(|cause| {
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Launch).caused_by(cause)
+        })
 }
 
 async fn check_health(launch: &environment::Launch, hold_seconds: u64) -> Result<i32> {
@@ -184,6 +225,10 @@ fn launch_error() -> ApplicationError {
 }
 
 fn main() {
+    // Before any role or window creates a process: an unusable program image must fail
+    // its creation, not raise a dialog nobody answers. Roles inherit the mode.
+    #[cfg(windows)]
+    cadrumo_platform::error_mode::suppress_dialogs_for_process();
     // A role is its own process of this binary; it shares nothing with the desktop below.
     if let Some(code) = role::dispatch() {
         std::process::exit(code);
@@ -216,6 +261,8 @@ fn main() {
         }
     };
     diagnostics.host_stopped(code);
+    // process::exit skips Drop, including the diagnostic writer's drain.
+    let _ = diagnostics.flush_logs(std::time::Duration::from_millis(250));
     std::process::exit(code);
 }
 

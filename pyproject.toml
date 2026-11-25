@@ -66,6 +66,9 @@ dependencies = [
   "defusedxml>=0.7.1,<1",
   # HTTP client
   "httpx>=0.28.1,<1",
+  # The agent service validates the provider catalog it relays against the
+  # agent's pinned published schema (JSON Schema 2020-12).
+  "jsonschema>=4.26,<5",
   # OS-keychain abstraction for the master-key provider (Windows
   # Credential Manager, macOS Keychain, Linux Secret Service via
   # libsecret). Pure-Python, gracefully degrades when no usable backend
@@ -95,10 +98,8 @@ dependencies = [
   # pdfplumber or pikepdf change dropping Pillow would surface as a runtime
   # failure on the first page rendered, misdiagnosed as a broken PDF by the
   # rasteriser's own error wrapping. Declaring it turns that into a resolution
-  # failure instead. The `llm` extra declares it too; that declaration is
-  # correct but not load-bearing, because the two PDF packages keep Pillow in
-  # the base closure regardless.
-  "pillow>=12,<13",
+  # failure instead.
+  "pillow>=13,<14",
   # Data validation & models
   "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
@@ -126,8 +127,12 @@ dependencies = [
   "snowballstemmer>=2.2,<4",
   # Persistence
   "sqlalchemy>=2.1.4,<3",
-  # CLI
-  "typer>=0.27.3,<1",
+  # CLI. Suggestions and error rendering import Typer's vendored Click
+  # (``typer._click``), a private layout Typer reorganises between minor
+  # releases (0.29 removed ``typer._click.types`` and ``click_type``), and an
+  # installed wheel resolves this range rather than uv.lock. Raise the ceiling
+  # only together with the lock, after the installed-CLI journeys pass on it.
+  "typer>=0.29,<0.30",
   # IANA timezone data for Europe/Madrid, including Windows and minimal
   # Linux containers whose operating system carries no zoneinfo database.
   "tzdata>=2026.2",
@@ -140,10 +145,10 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:main"
+aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:console_main"
 cadrumo-mcp = "cadrumo_mcp.mcp.main:main"
 cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
-cadrumo-agent-service = "cadrumo_agent_service.main:main"
+cadrumo-agent-service = "cadrumo_agent_service.bootstrap:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -158,8 +163,7 @@ workbook-windows = [
 # Each extra maps to an operator-facing capability/feature. All are lazily
 # imported, so `pip install cadrumo` (no extras) builds and runs the core CLI; the
 # feature refuses with an install hint when its extra is absent (graceful
-# degradation). `cadrumo config check` reports
-# which extras are importable.
+# degradation).
 #
 # Google Drive + Sheets export (the `google_export` capability). OAuth Desktop
 # flow: loopback IP + PKCE via
@@ -186,34 +190,6 @@ browser = [
 ofx = [
   "ofxtools>=1.1,<2",
 ]
-# Local-inference document reading (the opt-in `cadrumo.adapters.outbound.llm`
-# subpackage).
-# Gates the probabilistic reading path: rasterising a scan-only invoice
-# on-host and handing it to a local model runtime. Deliberately narrow, and
-# the narrowness is the honest result rather than an oversight -- the local
-# runtime is reached over HTTP on the already-declared `httpx`, page rendering
-# runs on the already-declared `pypdfium2`, and the one direct third-party
-# reliance the path adds beyond the core closure is Pillow, via `to_pil()`.
-# The path carries no model weights, no GPU runtime and no inference library
-# today. The extra exists so that stays a CHECKABLE property: a transformers-
-# or vLLM-served model would land HERE rather than in [project.dependencies],
-# which is the boundary this extra is for.
-#
-# Pillow is ALSO a direct base dependency above. Both declarations are
-# deliberate: the base entry closes the undeclared-direct-reliance defect,
-# this one declares what the inference path needs on its own terms.
-llm = [
-  "pillow>=12,<13",
-  # NVML bindings, read-only. The local-inference contention check needs FREE
-  # VRAM, not total: a 16 GB card shared with a resident service and a desktop
-  # is not 16 GB of headroom, and a load admitted against the total is the
-  # overflow this check exists to prevent. NVML gives per-device total AND free
-  # figures; a whole-device `nvidia-smi` shell-out gives neither reliably nor
-  # without a subprocess. Absent, the accelerator reads `unknown` and acting
-  # fails closed -- so this extra widens what can be admitted, never what can
-  # be refused.
-  "nvidia-ml-py>=13,<14",
-]
 # The calculation-summary PDF destination (`aeat app modelo work report
 # --document-format pdf`). ReportLab (BSD) lays out the pages; the tagging,
 # attachment and metadata pass runs on the already-declared `pikepdf`, and
@@ -230,10 +206,9 @@ pdf = [
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
 # `snowballstemmer` stemmed column) and the structured citation lookup run on
-# every install. The runtime embedding stack the extra once gated (model2vec,
-# huggingface-hub, numpy) was retired, so the product ships no semantic runtime
-# and reaches no model host; semantic search is a dev-side precompile step whose
-# laundered output ships with the documentation.
+# every install. The product ships no semantic runtime and reaches no model host;
+# semantic search is a dev-side precompile step whose laundered output ships with
+# the documentation.
 
 # Convenience aggregate: every capability-gated integration at once. The corpus
 # companions need no entry here because every command-bearing install requires
@@ -242,7 +217,6 @@ all = [
   "cadrumo[google]",
   "cadrumo[browser]",
   "cadrumo[ofx]",
-  "cadrumo[llm]",
   "cadrumo[pdf]",
 ]
 
@@ -437,9 +411,8 @@ exclude = [
   "**/*.lock",
   "src/cadrumo/_data/registry/authority/authority-candidate-*",
   "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
-  # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
-  # wheel's compressed weight and serve only the always-on registry integrity
-  # hash chain at runtime.
+  # Corpus source binaries (the AEAT/BOE manuals and workbooks) serve only the
+  # always-on registry integrity hash chain at runtime.
   # They ship in the three manuals, official, and normatives data companion
   # distributions (installed as mandatory base dependencies)
   # under a mirrored `cadrumo_data/_data/corpus` tree; the corpus locator resolves
@@ -458,12 +431,14 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.zip",
 ]
 # `py.typed` marks the package PEP 561 typed so consumers read the inline
-# types; `external_constants.toml` carries the curated leaf constants.
+# types; `external_constants.toml` carries the curated leaf constants and
+# `navigation.toml` the navigation register every link and palette reads.
 include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo/_data/local_runtime/**",
   "src/cadrumo_client/py.typed",
+  "src/cadrumo_client/contracts/navigation.toml",
   "src/cadrumo_runtime/py.typed",
   "src/cadrumo_runtime/_data/**",
   "src/cadrumo_mcp/py.typed",
@@ -546,10 +521,9 @@ dev = [
   # enumerate the source tree in-process. Git is not a declared dependency, so
   # no dev tool may shell out to it to learn which files exist.
   "pathspec>=1.1,<2",
-  # The capability-gated optional integrations (now in
-  # [project.optional-dependencies]) are pulled into the dev/test/CI
-  # environment here so the full test suite — which imports every adapter —
-  # installs unchanged. Production `pip install cadrumo` stays lean without them.
+  # The capability-gated optional integrations in [project.optional-dependencies]
+  # are pulled into the dev/test/CI environment here so the full test suite —
+  # which imports every adapter — installs unchanged. Production `pip install cadrumo` stays lean without them.
   "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
@@ -557,12 +531,6 @@ dev = [
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=1.13.0,<2",
   "ofxtools>=1.1,<2",
-  # The `llm` extra's exclusive requirement, and therefore the module the
-  # extra's probe resolves against. Without it here the probe reads ABSENT in
-  # the dev environment, every `require_optional_extra(LLM_EXTRA)` guard fires,
-  # and the inference test suite refuses instead of running. A pure-Python
-  # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
-  "nvidia-ml-py>=13,<14",
   "prek>=0.5.5",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
@@ -575,7 +543,7 @@ dev = [
   # Reproducible light-theme CLI GIFs for the repository README. Ceiling: the
   # runtime declaration's major line above; regenerate the GIFs after a Pillow
   # update, since rendered bytes can change between releases.
-  "pillow>=12.3,<13",
+  "pillow>=13.0,<14",
   # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
   # exclusive requirement: without it here the extra's probe reads ABSENT in
   # the dev environment and the calculation-summary suite refuses instead of
@@ -595,8 +563,8 @@ dev = [
   # 0.1.55 is the first version that understands the `body_hash` frontmatter
   # fingerprint; older versions drop unknown frontmatter keys on rewrite, so a
   # mixed-version corpus silently loses the stamp on exactly the documents
-  # being edited (nevenincs/vaultspec-core#299). Operator directive: the
-  # tooling tracks latest.
+  # being edited (nevenincs/vaultspec-core#299). The bound is a floor so the
+  # tooling tracks the latest release.
   "vaultspec-core>=0.3.7",
   "vaultspec-rag[mcp]>=0.3.8",
   # Sphinx documentation pipeline — `just docs-build` builds HTML + Markdown from
@@ -647,7 +615,7 @@ dev = [
   "types-pywin32>=312.0.0.20261006",
   "google-api-python-client-stubs>=1.36",
   "pyrefly>=1.3.1",
-  # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
+  # Semgrep is invoked through `uvx --from semgrep==1.182.1 semgrep` instead of the
   # persistent dev group: the Windows Python package install does not expose a
   # working console command, while uvx resolves the supported standalone tool.
   "radon>=6.0.1",
@@ -677,7 +645,14 @@ extend-exclude = [
   ".vault",
   ".vaultspec",
   ".agents",
+  # npm owns these strict-JSON manifests and lockfiles. Ruff formats an
+  # explicitly named file as Python regardless of extension, which rewrites
+  # JSON with trailing commas and breaks every JSON parser (the audit gate
+  # included). `force-exclude` makes the exclusion apply to named paths too.
+  "package.json",
+  "package-lock.json",
 ]
+force-exclude = true
 
 [tool.ruff.lint]
 select = [
@@ -693,30 +668,28 @@ select = [
   "SIM",  # flake8-simplify
   "TID251",  # flake8-tidy-imports banned-api; enforces the table below
   "RUF",  # ruff-specific rules
+  "PLE2502",  # bidirectional-unicode: Trojan Source reordering controls in source
+  "PLE251",  # invalid-character-*: literal BS, SUB, ESC, NUL and zero-width space in source
   "D",  # pydocstyle (Google-style docstring conventions)
 ]
 ignore = [
-  # `Translatable as tr` is the canonical i18n alias across the codebase (45 of
-  # the 47 N813 sites). The alias is the readable call form at every message
-  # site; renaming it would churn the entire localized surface for no gain.
+  # `Translatable as tr` is the canonical i18n alias across the codebase. The
+  # alias is the readable call form at every message site; renaming it would churn the entire localized surface for no gain.
   "N813",
   # Mutable class defaults on pydantic models are safe: pydantic deep-copies
   # field defaults per instance, so `list[str] = []` on a model attribute does
-  # not exhibit the shared-state bug RUF012 warns about. Verified against the
-  # 29 flagged files: all but four subclass `OutputSchema(BaseModel)`. The four
+  # not exhibit the shared-state bug RUF012 warns about. Of the flagged files, all
+  # but four subclass `OutputSchema(BaseModel)`. The four
   # genuine non-pydantic sites (docutils `option_spec`, Textual `BINDINGS`) are
   # fixed with explicit `ClassVar` annotations rather than covered by this entry.
   "RUF012",
 ]
 
-# RUF001/2/3 stay ARMED. A previous project-wide ignore justified itself on
-# Spanish source fidelity -- accented glyphs and inverted punctuation from
-# quoted BOE/AEAT text. That premise does not hold: ruff does not treat
-# `a e i o u n` or the inverted marks as confusable, and zero of the ~298
-# findings were Spanish letters. What the rule actually catches here is
-# deliberate typography (below) plus the genuinely dangerous class it exists
-# for -- fullwidth digits and Latin letters, which this project MUST keep
-# detectable because it parses AEAT numerics.
+# RUF001/2/3 stay ARMED. Ruff does not treat `a e i o u n` or the inverted marks
+# as confusable, so Spanish accents and punctuation are not what they flag. What
+# the rule actually catches here is deliberate typography (below) plus the
+# genuinely dangerous class it exists for -- fullwidth digits and Latin letters,
+# which this project MUST keep detectable because it parses AEAT numerics.
 #
 # These five are prose typography the project uses on purpose in docstrings,
 # comments, and rendered strings. Naming them individually keeps the fullwidth
@@ -740,22 +713,19 @@ convention = "google"
 # ── Audience scoping ────────────────────────────────────────────────────────
 # These entries scope a rule OUT OF A SURFACE IT WAS NEVER WRITTEN FOR. They
 # are not deferred debt and carry no backlog: on the surfaces below the rule
-# reports a property that is correct by design. Each is measured, not assumed.
+# reports a property that is correct by design.
 #
-# S101 (assert): pytest's entire assertion model IS the bare `assert`. 73,929 of
-# the 74,220 S101 sites are test modules. Scoping to the test surface rather
-# than ignoring project-wide is deliberate and STRENGTHENS the gate: it leaves
-# S101 armed over production, where 262 real asserts remain visible as a
-# genuine backlog (an assert standing in for a load-bearing runtime invariant
+# S101 (assert): pytest's entire assertion model IS the bare `assert`. Scoping to
+# the test surface rather than ignoring project-wide is deliberate and STRENGTHENS
+# the gate: it leaves S101 armed over production, where real asserts remain
+# visible as a genuine backlog (an assert standing in for a load-bearing runtime invariant
 # is silently removed by `python -O` and belongs in an explicit `raise`).
 #
 # D (pydocstyle): tests are excluded from autodoc and interrogate, so a
-# docstring on a test function has no reader. 13,257 of the 13,369 D findings
-# are test modules; the 93 production sites stay armed.
+# docstring on a test function has no reader. Production sites stay armed.
 #
 # T20 (print): `print()` is the canonical output surface of the contributor
-# tooling under `dev/`. All 580 dev-tooling T20 sites are that. Production
-# code has zero and stays armed.
+# tooling under `dev/`. Production code stays armed.
 "src/cadrumo/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["S101", "T20", "D"]
 "src/cadrumo/**/conftest.py" = ["S101", "D"]
@@ -884,13 +854,6 @@ convention = "google"
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
 "dev/release/readiness.py" = ["S603"]
-# The local model runtime host adapter starts `<located ollama> serve` and runs
-# one closed-table package-manager install (`winget`/`brew`). argv[0] is an
-# absolute path the application located on PATH or in the platform's standard
-# install directory; every other element is a literal. No operator text,
-# environment value or file content reaches the argument list.
-"src/cadrumo/adapters/outbound/browser_runtime/installer.py" = ["S603"]
-"src/cadrumo/adapters/outbound/model_runtime/process_control.py" = ["S603"]
 # The forge environment inventory carries the identical contract: `gh` resolved
 # via `shutil.which` or an explicit test-stub path, then a fixed three-element
 # argv whose only interpolations are the repository slug and an environment
@@ -917,9 +880,9 @@ convention = "google"
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.
-"dev/env/_install.py" = ["S603"]
-"dev/env/_venv.py" = ["S603", "S607"]
-"dev/env/_workstation.py" = ["S603", "S607"]
+"dev/env/install.py" = ["S603"]
+"dev/env/venv.py" = ["S603", "S607"]
+"dev/env/workstation.py" = ["S603", "S607"]
 "dev/test_runs/lanes.py" = ["S603", "S607"]
 "dev/release/preview.py" = ["S603", "S607"]
 "dev/ci/python_runtime_sweep.py" = ["S603", "S607"]
@@ -952,10 +915,10 @@ convention = "google"
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
 "src/cadrumo/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
 # The packaging gate invokes only the trusted `uv` build driver from PATH.
-"dev/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+"dev/packaging/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
 # Same rationale: the content-boundary gate builds the project's own wheel with
 # the trusted `uv` build driver (partial path resolved from PATH by design).
-"dev/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
+"dev/packaging/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
@@ -1043,17 +1006,17 @@ convention = "google"
 # own worker module and integer descriptor handles the supervisor just opened.
 # Nothing user-, environment-, or file-supplied reaches it; Ruff cannot infer
 # that the argv is literal.
-"src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py" = ["S603"]
+"src/cadrumo/adapters/persistence/storage/custody/kdf_process.py" = ["S603"]
+# The pattern search child's argv is the interpreter prefix and this package's own
+# worker module; the patterns and texts travel on its stdin, never its command line.
+"src/cadrumo/core/pattern_search.py" = ["S603"]
+# The manual sign-in door starts the bundled agent image with fixed arguments;
+# the provider name is checked against a closed list first and no shell is used.
+"src/cadrumo_agent_service/adapters/provider_login.py" = ["S603"]
 "src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/festivos.py" = ["S105"]
 "src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
-# Spawns a fresh interpreter to make the `llm` extra's probe module genuinely
-# unresolvable before any product module loads; the absent state cannot be
-# reached in-process because the dev environment installs the extra's
-# requirements so the rest of the suite runs. Argv is this repo's own literal.
-"src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
-"src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
 # with literal short / weak / sentinel passphrases as assertion inputs.
 "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S106"]
@@ -1108,9 +1071,9 @@ indent-style = "space"
 [tool.ty.environment]
 python-version = "3.13"
 # Pinned, not inherited. An unset target platform makes every checker assume the
-# HOST, so the same tree reports zero diagnostics on Windows and 49 on Linux and
+# HOST, so the same tree reports different diagnostics on Windows than on Linux and
 # macOS -- the gate's verdict becomes a function of the runner, the same defect
-# class as the `pyrightconfig.json` that used to win discovery and the phantom
+# class as a `pyrightconfig.json` winning discovery and the phantom
 # `reportMissingImports` cascade `--pythonpath` closes. `linux` is the baseline
 # because it is what the CI fleet runs; `dev/quality/types.py` overrides this
 # per run and sweeps EVERY supported platform, so a Windows-only branch is
@@ -1124,8 +1087,8 @@ all = "error"
 [tool.ty.analysis]
 # Hand-written stubs under `stubs/` cover packages without `py.typed` and
 # without `types-*` distributions on PyPI: `pypdfium2`, `playwright_stealth`,
-# and `snowballstemmer`. Other previously-listed unresolved imports (playwright,
-# typer, rich, bs4) now ship `py.typed` themselves, and
+# and `snowballstemmer`. Playwright, typer, rich and bs4 ship `py.typed`
+# themselves, and
 # `google-api-python-client-stubs` (a dev dep) covers the googleapiclient
 # surface. The empty list is the mandate: every unresolved import is a hard
 # failure, so a new one is fixed with a stub, not an allowance.
@@ -1154,7 +1117,7 @@ ignore_missing_imports = true
 # implementations are deliberate: ty is the canonical checker across all of
 # `src` but is still pre-1.0, so a mature second opinion over the strict
 # strict domain/application and relocated contract subset catches what a young checker misses. pyrefly is
-# a native binary, so unlike the pyright it replaces it drags in no JavaScript
+# a native binary, so unlike pyright it drags in no JavaScript
 # runtime — the packaging lanes need nothing installed to run it.
 #
 # `search_path` also declares the stub policy, the same rationale as
@@ -1181,19 +1144,17 @@ project_includes = [
     "src/cadrumo_runtime/application",
     "src/cadrumo_runtime/contracts",
 ]
-# Tests are excluded from this checker, not overlooked. pyright reported zero
-# diagnostics across the test tree, so excluding it loses no signal that was
-# previously enforced, while pyrefly's stricter inference finds ~24 fixture
-# typing issues there that would have to be triaged before the checker could
-# gate anything. Production code in the same subset IS checked, and that is
-# where the swap immediately paid for itself.
+# Tests are excluded from this checker, not overlooked. Pyrefly's stricter
+# inference finds fixture typing issues there that would have to be triaged
+# before the checker could gate anything. Production code in the same subset IS
+# checked.
 project_excludes = ["**/.[!/.]*", "**/tests/**"]
 
 # ── basedpyright ────────────────────────────────────────────────────────────
 # A third, independent strict checker over the same production boundary as
 # pyrefly. Tests stay outside this gate; ty remains the all-``src`` authority.
 [tool.basedpyright]
-# ``core`` joined this gate once it reached zero. The sequence is deliberate and
+# A tree is admitted only once it reaches zero. The sequence is deliberate and
 # is the only honest one available: burn a tree down, THEN admit it permanently.
 # aeat-quality-gates bans baselines and ratchets, so a tree is never admitted
 # with errors outstanding and never carries a per-tree exemption.
@@ -1224,11 +1185,7 @@ reportUnnecessaryTypeIgnoreComment = "error"
 # its premise -- that an annotation is enforced at run time -- is false in
 # Python, while `no-silent-under-declaration` and
 # `sensitive-financial-data-secure-storage-only` REQUIRE validation at exactly
-# the boundaries it flags. All 42 sites were audited individually before this
-# was set: 10 were genuinely dead and were REMOVED in code (a py.typed
-# dependency or the language grammar already guaranteed the type, or earlier
-# control flow did), and 2 were dispatch over a closed union, rewritten as
-# `match` + `assert_never`. The 27 that remain guard something Python does not
+# the boundaries it flags. Those sites guard something Python does not
 # enforce: `__post_init__` checks on plain dataclasses, SQLAlchemy
 # `process_bind_param` values, an untyped third-party return, a network
 # response body, and the public redaction entry points. Satisfying the rule at
@@ -1245,7 +1202,7 @@ testpaths = [
   "src/cadrumo_mcp",
   "src/cadrumo_agent_service",
 ]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 python_files = ["test_*.py"]
 # `-ra` replaces the per-lane `-rsf`: pytest's default `-r` value is `fE`, so
 # a bare `-rs` REPLACES it and the short-summary `FAILED path::test` lines
@@ -1261,22 +1218,18 @@ python_files = ["test_*.py"]
 # `--capture=sys` avoids pytest's fd-level dup2 capture, which dies silently
 # under Git Bash / MinTTY on this project's primary platform.
 # Plain assertions preserve failures without rendering expensive comparison diffs.
-addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
+addopts = "-p dev.test_runs.logging -n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
 # Correctness tests run to completion independently of host speed. Callers
 # can explicitly request a pytest-timeout deadline when investigating a hang.
 # `--max-worker-restart=0` keeps a crashed worker terminal and visible rather
 # than silently retrying its test.
 # Drop a test's `tmp_path` as soon as that test PASSES; keep it when it fails.
-# Measured on this box: `pytest-of-hello` reached 39.1 GB across 101 retained
-# session directories, 85% of it a dozen packaging-lane runs at up to 4.4 GB and
-# 100k files each -- the real-wheel smoke tests build wheels and pip venvs into
+# The real-wheel smoke tests build wheels and pip venvs into
 # `tmp_path`, which is inherent to what they verify, not waste to remove.
 # `tmp_path_retention_count` does NOT bound this: pytest gates the numbered-dir
 # rotation behind `_pytest.pathlib.LOCK_TIMEOUT`, which is 72 HOURS and is a
 # module constant with no ini setting, so the retained population is bounded by
-# three days of accrual rather than by the count. An isolated A/B on
-# `test_three_wheel_cohort_installs_only_aeat_human_script` measured 1200.4 MB
-# retained under the default `all` against 0.0 MB under `failed`.
+# three days of accrual rather than by the count.
 # Failing tests keep their directories, which is where triage actually looks;
 # module- and session-scoped `tmp_path_factory.mktemp` directories are NOT
 # covered by this and still clear only at a green session's end.
@@ -1296,12 +1249,13 @@ markers = [
   "docs: documentation build, stubs, and docstring structure verification",
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
   "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the `test-ci-perf` recipe, which only a dispatch-triggered release run reaches, so a quiet machine makes the advisory wall numbers meaningful too. Named by selection rather than by workflow file: the workflow set has churned once already, and the previous wording here outlived the lane it named.",
-  "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the npm-installed Hunspell dictionaries, for locale orthography; a real PowerShell, which a POSIX host has only if `pwsh` was installed; a stock OpenSSL, for the calculation summary signature recipe). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal` and `just test-calculation-summary-pdf`.",
+  "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the pinned Hunspell dictionaries that `just setup` installs from their integrity-locked npm tarballs, for the full locale orthography pass; a real PowerShell, which a POSIX host has only if `pwsh` was installed; a stock OpenSSL, for the calculation summary signature recipe; the lock-selected runtime wheels an installed-oracle cohort build acquires, which the test network guard refuses to fetch, so the recipe warms the runtime wheel cache from uv.lock by exact version and SHA-256 before the tests run). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal`, `just test-calculation-summary-pdf` and `just test-installed-oracles`.",
   "native_package: positive assertion-scope marker for tests whose subject is an application executable staged by the CMake native package build. It is not a capability holdout. CMake's opt-in `test-native-live` CTest lane selects these tests; ordinary source and CTest lanes exclude them.",
   "os_keychain: tests whose assertion subject is the OS credential store itself (that a profile login custodies a session key there, and that a later process resumes the record by unwrapping its DEK under that key). Carried ALONGSIDE an execution marker, like `external_tool`. The capability is a property of the LOGON SESSION, not of the dependency set: a headless CI runner and an agent's SSH network logon reach a real backend that then refuses every credential call, so no keychain-custodied session key can exist there at all. Every lane excludes this marker; `just test-os-keychain` enrols it, and it is meaningful only in an interactive desktop session. Cases provable WITHOUT custody stay in the default lanes. A case belongs under this marker when it cannot reach its subject without a minted acceleration receipt, because `resume_profile_session` leaves the login PROCESS-SCOPED when the keychain is unavailable and mints no receipt at all. Apply the marker at the narrowest scope whose assertion actually requires custody.",
   "windows_only: tests whose assertion subject exists only on Windows -- today the two console-launcher stubs (`aeat.exe`, `cadrumo-mcp.exe`) that a Windows install materialises and no POSIX install has at all. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the OPERATING SYSTEM, not of the dependency set: on Linux or macOS there is no stub to project, so the subject of the assertion does not exist and no amount of installed tooling conjures it. Every lane excludes this marker; `just test-windows` enrols it, and it is meaningful only on a Windows checkout. Cases provable WITHOUT a launcher stub stay in the default lanes.",
   "resident_service: tests that query the resident vaultspec-rag search service over HTTP and assert on what it returns (golden-query retrieval, the live terminology sweep). Carried ALONGSIDE an execution marker, like `external_tool` and `os_keychain`. The precondition is a property of a RUNNING LOCAL SERVICE and the health of its index, not of the dependency set. The service is a separate development product rather than a Cadrumo runtime dependency. Every ordinary lane excludes this marker; `just test-resident-service` refreshes the index and enrols the tests serially, while the root conftest supplies their isolated pytest singleton scope. A degraded index remains a test failure rather than a reason to skip.",
   "private_ingest_corpus: tests that score the ingestion harness against the read-only ingestion measurement corpus, operator data held outside the checkout and located only through `CADRUMO_INGEST_CORPUS_ROOT`, which has no default path. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the HOST'S DATA, not of the dependency set: nothing installs the corpus and no CI runner holds it. Every lane excludes this marker; `just test-ingest-corpus` enrols it, and its tests FAIL rather than skip when the variable is unset, names no corpus, or the corpus key is not the pinned one. Apply the marker at the narrowest scope that reads the corpus; cases provable without it stay in the default lanes.",
+  "google_publisher_client: tests that read the packaged installation client resource, the source tree's ignored `src/cadrumo/_data/google/oauth_client.json`, staged from the publisher's Google Desktop OAuth client provisioned only through the build environment (`CADRUMO_GOOGLE_OAUTH_CLIENT_JSON` in the process environment or `env/.env`). Packaging builds are not under this marker: they receive a synthetic client. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the HOST'S SECRETS, not of the dependency set: the client is never committed and no CI runner or ordinary dev checkout holds it. Every lane excludes this marker; `just test-google-publisher-client` stages the client and enrols it, and its tests FAIL rather than skip when no client is configured. Apply the marker at the narrowest scope that needs the client; cases provable with a synthetic client stay in the default lanes.",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
@@ -1416,11 +1370,7 @@ ignore_decorators = [
 # Textual dispatches message and event handlers by NAME, not by call site:
 # posting `LedgerEntrySelected` invokes `on_ledger_entry_selected` through the
 # framework's message pump, so the method has no caller any static analysis can
-# see. Treating those as dead is not hypothetical here -- a working Ledger
-# entry-to-classification path (handler, controller method, production
-# submitter, installed wiring and both its tests) was removed in one 130-line
-# commit because the convention-dispatched edge was invisible, and the
-# resulting gap was then documented as a deliberate design constraint. The
+# see. Treating them as dead code would remove live entry points. The
 # same shape covers Textual's `on_mount` / `on_key` lifecycle hooks and the
 # `action_*` methods bound from key tables.
 ignore_names = [
@@ -1459,14 +1409,6 @@ ignore_names = [
   "win32security",
   "win32ts",
 ]
-# The NVML binding's distribution name and its import name differ, so the
-# mapping is stated rather than guessed: deptry's fallback would be
-# `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an
-# undeclared dependency (DEP001) while the declaration itself reads as unused
-# (DEP002) — one mapping closes both. Verified against the published wheel
-# rather than asserted from memory: `nvidia_ml_py-13.610.43-py3-none-any.whl`
-# ships a top-level `pynvml.py`.
-"nvidia-ml-py" = ["pynvml"]
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras
 # (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
@@ -1475,22 +1417,11 @@ ignore_names = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-# `pillow`: the one dependency here whose declaration is deliberately NOT
-# backed by an import statement. The page rasteriser reaches Pillow from inside
-# pypdfium2's `to_pil()` and then calls `save()` on the result, so the reliance
-# is real while no module under `src/cadrumo/` writes `import PIL` — the exact
-# asymmetry that let Pillow arrive as an incidental transitive of pdfplumber and
-# pikepdf. Deptry sees only the absent import and reads both declarations (base
-# and the `llm` extra) as unused. Suppressed here rather than resolved by
-# deleting a declaration: the declaration is the fix, and
-# `dev/packaging/tests/test_inference_imports_are_declared.py` asserts it
-# directly for this reason.
 DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
   "cadrumo-data-normatives",
-  "pillow",
   "python-dotenv",
   # Typer imports Rich for runtime help/error rendering. The application
   # intentionally reaches it through Typer's public rich_utils boundary rather

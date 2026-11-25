@@ -9,17 +9,20 @@ from decimal import Decimal
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from cadrumo.application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
 from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
+from cadrumo.application.user_profile.field_help import ProfileFieldEjercicioAnswer
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
+    ProfilePatchOperationProjection,
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,
@@ -33,10 +36,11 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, tr
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
@@ -61,7 +65,9 @@ from cadrumo_client.transport.profile_mutations import (
 from ..aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .aeat_auth_client import AeatAuthClient
 from .auth_configuration_client import configure_profile_authentication
+from .household_client import HouseholdClient
 from .overview_client import read_profile_overview
+from .record_groups_client import RecordGroupsClient
 
 type _MutationRunner = Callable[[FrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
 type _OverviewReader = Callable[[FrontendClient, str, OutputLanguage], ProfileOverview]
@@ -215,6 +221,22 @@ class ProfileManagerClientComposition:
                 value=value,
             ),
             ProfileMutationOperationProjection,
+        )
+
+    def _ejercicio_answer(
+        self, answer: ProfileFieldEjercicioAnswer, value: str, ejercicio: str, revision: int, digest: str
+    ) -> ProfileOverview:
+        return self._mutate(
+            ProfilePatchOperationRequest(
+                profile_id=self.profile_id,
+                expected_revision=revision,
+                expected_content_digest=digest,
+                values=(
+                    ProfilePatchValue(question_id=answer.question_id, value=value),
+                    ProfilePatchValue(question_id=answer.year_question_id, value=ejercicio),
+                ),
+            ),
+            ProfilePatchOperationProjection,
         )
 
     def _auth_field(self, path: str, value: str, revision: int, digest: str) -> ProfileViewCollection:
@@ -420,10 +442,11 @@ class ProfileManagerClientComposition:
             )
         screen.disabled = True
         try:
+            # Settings read the active-profile pointer from disk, so they are read on the worker thread too.
             handoff, _ = await asyncio.to_thread(
-                compose_runtime_aeat_sync_handoff,
-                self.client,
-                output_root=load_settings().cadrumo_filed_declarations_dir,
+                lambda: compose_runtime_aeat_sync_handoff(
+                    self.client, output_root=storage_path(StorageCategory.FILED_DECLARATIONS)
+                )
             )
             self._pin()
             if handoff is None:
@@ -444,7 +467,8 @@ class ProfileManagerClientComposition:
         if screen is None:
             return
         if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-            screen.notify(outcome.error_explanation or tr("tui.aeat_sync.operation.failed"), severity="error")
+            sentence = None if outcome.refusal is None else outcome.refusal.sentence
+            screen.notify(sentence or tr("tui.aeat_sync.operation.failed"), severity="error")
             return
         try:
             updated = await asyncio.to_thread(self._overview)
@@ -461,6 +485,7 @@ class ProfileManagerClientComposition:
         screen = ProfileManagerScreen(
             overview,
             persist=self._field,
+            persist_ejercicio=self._ejercicio_answer,
             add_row=self._add_row,
             update_row=self._update_row,
             remove_row=self._remove_row,
@@ -471,6 +496,12 @@ class ProfileManagerClientComposition:
             launch_source=self._launch_source,
             aeat_auth_setup=self.auth_setup(),
             refresh_overview_language=self._refresh_overview_language,
+            household=self.household(),
+            record_groups=RecordGroupsClient(
+                self.client,
+                profile_label=self.profile_label,
+                language=lambda: OutputLanguage(output_language()),
+            ),
         )
         self.screen = screen
         return screen
@@ -478,6 +509,15 @@ class ProfileManagerClientComposition:
     def _refresh_overview_language(self) -> ProfileOverview:
         self.output_language = OutputLanguage(output_language())
         return self._overview()
+
+    def household(self) -> HouseholdClient:
+        """The household doors of this exact profile session, read in the host's current locale."""
+        return HouseholdClient(
+            self.client,
+            language=lambda: OutputLanguage(output_language()),
+            pin=self._pin,
+            mutation_runner=self._mutation_runner,
+        )
 
     def auth_setup(self) -> AeatAuthClient:
         """Expose the same exact-profile authentication editor beside both sync surfaces."""

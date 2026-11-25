@@ -55,14 +55,16 @@ from ..secure_object_namespaces import (
     SECURE_OBJECT_CATALOGUE_KEY,
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
-    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
-    TEST_SESSION_LIFECYCLE_NAMESPACE,
-    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
-    StorageHierarchyRegistry,
 )
+from ..secure_object_probe_namespaces import (
+    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+    TEST_SESSION_LIFECYCLE_NAMESPACE,
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+)
+from ..storage_hierarchy_registry import StorageHierarchyRegistry
 from ..storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
@@ -90,10 +92,14 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "calculation_observations",
     "retencion_observations",
     "withholding_observations",
+    "retencion_soportada_records",
+    "modelo_232_related_party_records",
+    "prevision_social_contribution_records",
     "withholding_workflow",
     "iva_wallet_reconciliation_decisions",
     "iva_wallet_reconciliation_decision_events",
     "modelo_reconciliation_records",
+    "modelo_credit_resolutions",
     "modelo_edit_receipt",
     "sync_run_records",
     "iva_compensation_history",
@@ -104,6 +110,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "ledger_confirmation_record",
     "ledger_confirmed_counterparty_facts",
     "ledger_classification_rules",
+    "ledger_classification_jobs",
     "ledger_own_accounts",
     "live_borrador_100_snapshot",
     "live_m036_declaration",
@@ -126,6 +133,9 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "google_oauth_metadata",
     "google_drive_config",
     "provider_settings",
+    "model_role_selections",
+    "attachment_disclosure_grants",
+    "attachment_release_ledger",
     "llm_cache",
     "llm_usage",
     "llm_run_telemetry",
@@ -148,6 +158,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "modelo_verification_report_catalogue",
     "modelo_filing_record_catalogue",
     "modelo_calculation_revision_catalogue",
+    "modelo_calculation_rendering_snapshot",
     "transaction_participation_index",
 )
 
@@ -200,6 +211,38 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     assert declaration.namespace == "cadrumo.application.modelo.m036_declaration"
     assert declaration.sensitivity is SensitivityClass.IDENTITY
     assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
+
+
+def test_secure_object_registry_names_the_credit_resolution_namespace() -> None:
+    """An operator's acceptance of a disputed figure restates its amounts, so it is FINANCIAL and profile-local."""
+    from ..secure_object_namespaces import MODELO_CREDIT_RESOLUTION_NAMESPACE
+
+    resolution = lookup_namespace_definition("modelo_credit_resolutions")
+
+    assert resolution == MODELO_CREDIT_RESOLUTION_NAMESPACE
+    assert resolution.namespace == "cadrumo.modelo.credit_resolution.records"
+    assert resolution.owner == "cadrumo.application.modelo"
+    assert resolution.sensitivity is SensitivityClass.FINANCIAL
+    assert resolution.schema_version == 1
+    assert resolution.object_key_grammar == "credit-resolution:{modelo}:{filing_year}:{period}:{finding_key}"
+    assert resolution.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert resolution.custody_disposition is StorageCustodyDisposition.STRUCTURED_CUSTODY
+
+
+def test_secure_object_registry_names_the_classification_job_namespace() -> None:
+    """A classification job names movements and holds typed proposals: FINANCIAL, bucket-local, full custody only."""
+    from ..secure_object_namespaces import LEDGER_CLASSIFICATION_JOBS_NAMESPACE
+
+    jobs = lookup_namespace_definition("ledger_classification_jobs")
+
+    assert jobs == LEDGER_CLASSIFICATION_JOBS_NAMESPACE
+    assert jobs.namespace == "cadrumo.application.ledger.classification_jobs"
+    assert jobs.owner == "cadrumo.application.ledger"
+    assert jobs.sensitivity is SensitivityClass.FINANCIAL
+    assert jobs.schema_version == 1
+    assert jobs.object_key_grammar == "classification-job:{bucket_id}:{job_id}"
+    assert jobs.scope is StorageNamespaceScope.BUCKET_LOCAL
+    assert jobs.custody_disposition is StorageCustodyDisposition.FULL_CUSTODY_ONLY
 
 
 def test_secure_object_registry_names_m145_communication_record_namespace() -> None:
@@ -591,8 +634,21 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
     } <= registered_keys
 
 
-_LOCAL_ONLY_NAMESPACE_KEYS = frozenset({"provider_settings", "google_oauth_token", "google_oauth_metadata"})
-"""Production namespaces that must never reach a remote mirror: provider keys and each profile's Google sign-in."""
+_LOCAL_ONLY_NAMESPACE_KEYS = frozenset(
+    {
+        "provider_settings",
+        "model_role_selections",
+        "attachment_disclosure_grants",
+        "attachment_release_ledger",
+        "google_oauth_token",
+        "google_oauth_metadata",
+    }
+)
+"""Production namespaces that must never reach a remote mirror.
+
+Provider keys, the per-role model choice that names models on this machine, and
+each profile's Google sign-in.
+"""
 
 
 def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
@@ -631,6 +687,20 @@ def test_provider_credentials_are_never_mirrored_or_carried() -> None:
     assert provider_settings.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
     for profile in StorageCustodyProfile:
         assert provider_settings not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_model_role_selections_are_a_namespace_of_their_own_with_the_provider_records_custody() -> None:
+    """The per-role choice is kept apart from the provider records but is never mirrored or carried either."""
+    provider_settings = lookup_namespace_definition("provider_settings")
+    selections = lookup_namespace_definition("model_role_selections")
+
+    assert selections.namespace != provider_settings.namespace
+    assert selections.sensitivity is provider_settings.sensitivity
+    assert selections.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert selections.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+    assert selections.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+    for profile in StorageCustodyProfile:
+        assert selections not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
 
 
 def test_a_profiles_google_sign_in_stays_in_its_profile_folder() -> None:

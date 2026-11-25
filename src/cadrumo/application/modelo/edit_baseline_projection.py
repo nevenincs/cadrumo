@@ -14,7 +14,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.codes import ModeloCode, ModeloCodeText
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
     MAX_MODELO_EDIT_SURFACE_ENTRIES,
@@ -30,7 +30,7 @@ class ModeloEditApplyBaselineV1(BaseModel):
     Every field of ModeloEditBaselineV1 except ``modelo`` already crosses an
     operation payload safely: Hex64Str, bounded Annotated str, Period and the
     permitted-surface union are all plain Pydantic shapes with no custom core
-    schema. Only ``modelo: ModeloCode`` does - it is a str subclass that
+    schema. Only the domain ``ModeloCode`` does - it is a str subclass that
     customises its Pydantic core schema, which the operations payload-graph
     gate refuses inside a registered request payload - so only that one field
     is mirrored here. ``to_baseline`` re-validates it through the real type.
@@ -40,7 +40,7 @@ class ModeloEditApplyBaselineV1(BaseModel):
 
     compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
-    modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^\d{3}$")]
+    modelo: ModeloCodeText
     filing_year: FilingYear
     period_filing_year: FilingYear
     period_code: Annotated[str, Field(min_length=1, max_length=16)]

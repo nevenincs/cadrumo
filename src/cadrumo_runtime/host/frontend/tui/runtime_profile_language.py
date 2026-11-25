@@ -28,7 +28,7 @@ class RuntimeProfileLanguage:
         self._profile_id = profile_id
         self._language = language
         self._language_guard = Lock()
-        self._language_epoch = 0
+        self._language_epoch: int = 0
         self._latest_profile: ProfileOverview | None = None
 
     def _adopt_language_profile(self, profile: ProfileOverview, epoch: int) -> None:

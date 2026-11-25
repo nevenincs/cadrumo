@@ -15,8 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.hashing import canonical_json_bytes
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
@@ -36,10 +35,13 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt, requ
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
+    LEDGER_EVIDENCE_LABEL_MAX,
+    LEDGER_EVIDENCE_TEXT_MAX,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceResult,
@@ -49,7 +51,7 @@ from .evidence import (
 )
 from .evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID = "ledger.evidence.update"
 LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID = "ledger.evidence.remove"
@@ -58,9 +60,10 @@ LEDGER_EVIDENCE_REMOVE_PHASE = LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID
 
 _MAX_RESULT_BYTES = 60 * 1024
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
-_EvidenceText = Annotated[str, Field(max_length=16_384)]
+_EvidenceText = Annotated[str, Field(max_length=LEDGER_EVIDENCE_TEXT_MAX)]
+_EvidenceLabel = Annotated[str, Field(max_length=LEDGER_EVIDENCE_LABEL_MAX)]
 _InvoiceDate = Annotated[str, Field(max_length=64)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _EvidenceEventId = Annotated[str, Field(min_length=1, max_length=64)]
 _EvidenceEventIds = Annotated[tuple[_EvidenceEventId, ...], Field(min_length=1, max_length=1)]
 _OptionalEvidenceEventIds = Annotated[tuple[_EvidenceEventId, ...], Field(max_length=1)]
@@ -74,7 +77,7 @@ LedgerEvidenceUpdateField = Literal[
     "notes",
 ]
 _UpdateField = LedgerEvidenceUpdateField
-_UpdateFields = Annotated[tuple[_UpdateField, ...], Field(max_length=7)]
+_UpdateFields = Annotated[tuple[_UpdateField, ...], Field(max_length=16)]
 _UPDATE_FIELDS = frozenset(
     {"supplier", "invoice_number", "invoice_date", "taxable_base", "iva_rate", "iva_amount", "notes"}
 )
@@ -88,8 +91,8 @@ class LedgerEvidenceUpdatePatch(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    supplier: Annotated[str, Field(max_length=1_024)] | None = None
-    invoice_number: Annotated[str, Field(max_length=1_024)] | None = None
+    supplier: _EvidenceLabel | None = None
+    invoice_number: _EvidenceLabel | None = None
     invoice_date: _InvoiceDate | None = None
     taxable_base: _DecimalText | None = None
     iva_rate: _DecimalText | None = None
@@ -503,8 +506,7 @@ def _require_mutation_result(
 
 def _preflight_result_size(result: BaseModel) -> None:
     """Keep the encrypted worker result comfortably below its public transport cap."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES - 128)
 
 
 def _require_successful_mutation_receipt(
@@ -613,22 +615,24 @@ def resolve_ledger_evidence_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence update."""
-    if request.definition_id != LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceUpdateRequest,
+    )
 
 
 def resolve_ledger_evidence_remove_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence removal."""
-    if request.definition_id != LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceRemoveRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceRemoveRequest,
+    )
 
 
 def build_ledger_evidence_update_registration(

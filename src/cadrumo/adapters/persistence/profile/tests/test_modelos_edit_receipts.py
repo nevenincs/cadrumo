@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from .....application.modelo.edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -86,9 +86,9 @@ def test_receipt_load_refuses_a_tampered_calculation_revision_id(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = ModeloEditReceiptRepository(objects=profile.repository)
         repository.save(original)
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == repository.namespace,
-            SecureObjectRow.object_key == original.receipt_id,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == repository.namespace,
+            secure_objects_table.c.object_key == original.receipt_id,
         )
 
         def corrupt_calculation_revision_id(envelope: dict[str, object]) -> None:

@@ -2,15 +2,29 @@
 
 from __future__ import annotations
 
+import html
+import re
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from functools import cache
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dev.docs.legal_reference_models import LegalProvisionRecord
 
 from .signal_contracts import DocumentationEchoDictionaries
-from .signal_document_prose import embedded_document_language_prose, visible_document_prose
+from .signal_document_prose import (
+    embedded_document_language_prose,
+    legal_citation_language_prose,
+    legal_citation_link_language_prose,
+    visible_document_prose,
+)
 from .signal_documentation_counts import docs_extraction_finding, documentation_counts
 from .signal_documentation_templates import inventory_documentation_manifest
 from .signal_echo_classification import load_platform_identity_terms
+from .signal_legal_verbatim import verified_legal_wording_prose
+from .signal_tokens import filtered_translation_text
 
 
 def observed_documentation_catalogue_files(
@@ -21,6 +35,24 @@ def observed_documentation_catalogue_files(
         (locale, catalogue) for (catalogue, _message_id), states in catalogue_messages.items() for locale in states
     }
     return catalogue_files
+
+
+def catalogue_in_localization_scope(catalogue: str, docs_root: Path, pages: set[str]) -> bool:
+    """Keep authored or orphan user catalogues, excluding English-only sources.
+
+    Existing sources follow the canonical page selector, including generated
+    files outside excluded directories. Missing sources remain orphan candidates
+    unless their whole top-level tree is outside the translation authority.
+    """
+    from dev.docs.i18n import is_localized_documentation_tree
+
+    relative = Path(catalogue)
+    if not is_localized_documentation_tree(relative):
+        return False
+    possible_sources = tuple(relative.with_suffix(suffix) for suffix in (".md", ".rst"))
+    return any(path.as_posix() in pages for path in possible_sources) or not any(
+        (docs_root / path).is_file() for path in possible_sources
+    )
 
 
 def inventory_generated_document_sources(
@@ -39,8 +71,17 @@ def inventory_generated_document_sources(
         if path.is_file() and path.suffix in {".md", ".rst"}
     )
     counts["docs_generated_english_only_pages"] = len(generated_pages)
+
+    @cache
+    def records_for_audit() -> Mapping[str, LegalProvisionRecord]:
+        from dev.docs.legal_catalogue import read_legal_provisions
+
+        return {record.legal_id: record for record in read_legal_provisions(repository)}
+
     for path in generated_pages:
-        inventory_generated_document_file(path, repository, counts, findings, spelling_values)
+        inventory_generated_document_file(
+            path, repository, counts, findings, spelling_values, records_for_audit=records_for_audit
+        )
 
 
 def inventory_documentation_catalogue_files(
@@ -125,9 +166,6 @@ def documentation_source_inventory(
         catalogue_obsolete: dict[tuple[str, str], set[str]] = {}
     if catalogue_translations is None:
         catalogue_translations: dict[tuple[str, str], Mapping[str, tuple[str, ...]]] = {}
-    for (locale, _catalogue), identities in catalogue_obsolete.items():
-        counts["docs_catalogue_messages_obsolete"] += len(identities)
-        counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
     catalogue_files = observed_documentation_catalogue_files(catalogue_files, catalogue_messages)
     docs_root = repository / "docs"
     try:
@@ -136,6 +174,16 @@ def documentation_source_inventory(
         counts["docs_extraction_failures"] += 1
         findings.append(docs_extraction_finding(docs_root, exc))
         return documentation_counts(counts), findings
+    scope_pages = set(pages)
+    catalogue_files = {
+        (locale, catalogue)
+        for locale, catalogue in catalogue_files
+        if catalogue_in_localization_scope(catalogue, docs_root, scope_pages)
+    }
+    for (locale, catalogue), identities in catalogue_obsolete.items():
+        if catalogue_in_localization_scope(catalogue, docs_root, scope_pages):
+            counts["docs_catalogue_messages_obsolete"] += len(identities)
+            counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
     counts["docs_source_pages"] = len(pages)
     if not pages:
         counts["docs_extraction_failures"] += 1
@@ -187,10 +235,15 @@ def inventory_generated_document_file(
     counts: Counter[str],
     findings: list[dict[str, object]],
     spelling_values: dict[str, dict[str, str]] | None,
+    *,
+    records_for_audit: Callable[[], Mapping[str, LegalProvisionRecord]] | None = None,
 ) -> None:
     """Inventory generated document file."""
     try:
         prose = visible_document_prose(path)
+        links = legal_citation_link_language_prose(path, prose)
+        citations = legal_citation_language_prose(path, prose) + links
+        wording = verified_legal_wording_prose(path, repository, records_for_audit)
     except Exception as exc:  # Parsing is part of the measured docs surface.
         counts["docs_generated_source_failures"] += 1
         findings.append(
@@ -206,11 +259,67 @@ def inventory_generated_document_file(
         )
         return
     counts["docs_generated_spellchecked_pages"] += 1
-    embedded = embedded_document_language_prose(path)
+    citation_lines = {line for line, _language, _text in citations}
+    prose = tuple((line, text) for line, text in prose if line not in citation_lines)
+    embedded = (
+        tuple(
+            (line, language, wording.get(line, text))
+            for line, language, text in embedded_document_language_prose(path)
+            if line not in wording or wording[line]
+        )
+        + _legal_note_untagged_prose(path)
+        + citations
+    )
     counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
     if spelling_values is not None:
-        relative = path.relative_to(repository).as_posix()
-        for line, text in prose:
-            spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
-        for line, language, text in embedded:
-            spelling_values.setdefault(language, {})[f"parallel:{relative}:line[{line}]:lang[{language}]"] = text
+        _enroll_generated_document_prose(path, repository, prose, embedded, links, spelling_values)
+
+
+def _enroll_generated_document_prose(
+    path: Path,
+    repository: Path,
+    prose: tuple[tuple[int, str], ...],
+    embedded: tuple[tuple[int, str, str], ...],
+    links: tuple[tuple[int, str, str], ...],
+    spelling_values: dict[str, dict[str, str]],
+) -> None:
+    """Enroll ordinary and language-owned generated prose under their source lines."""
+    relative = path.relative_to(repository).as_posix()
+    link_chrome_lines = {line for line, language, _text in links if language == "en"}
+    for line, text in prose:
+        spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
+    for line, language, text in embedded:
+        suffix = ":legal-link-chrome" if language == "en" and line in link_chrome_lines else ""
+        key = f"parallel:{relative}:line[{line}]:lang[{language}]{suffix}"
+        spelling_values.setdefault(language, {})[key] = text
+
+
+_LEGAL_NOTE_BODY = re.compile(
+    r"<!--cadrumo-legal-note-->(?P<body>.*?)</p></dd>",
+    re.DOTALL,
+)
+_LEGAL_NOTE_LANGUAGE_SPAN = re.compile(
+    r'<span\b[^>]*\blang\s*=\s*["\'][A-Za-z]{2}(?:-[^"\']*)?["\'][^>]*>.*?</span>',
+    re.DOTALL | re.IGNORECASE,
+)
+_HTML_TAG = re.compile(r"</?[^>]+>")
+
+
+def _legal_note_untagged_prose(path: Path) -> tuple[tuple[int, str, str], ...]:
+    """Keep untagged mixed-note text in the English spelling inventory.
+
+    The exact Spanish quote spans are separately read by
+    :func:`embedded_document_language_prose`. The generated legal-note raw
+    block is invisible to the RST prose parser, so inventory its remaining
+    text explicitly instead of exempting the whole note.
+    """
+    source = path.read_text(encoding="utf-8")
+    found: list[tuple[int, str, str]] = []
+    for match in _LEGAL_NOTE_BODY.finditer(source):
+        untagged = _LEGAL_NOTE_LANGUAGE_SPAN.sub(" ", match.group("body"))
+        visible = _HTML_TAG.sub(" ", untagged)
+        text = filtered_translation_text(html.unescape(visible))[0].strip()
+        if text:
+            line = source.count("\n", 0, match.start()) + 1
+            found.append((line, "en", text))
+    return tuple(found)

@@ -56,7 +56,7 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_agent_service.host.launch_environment import system_environment
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 from ..unread_inputs import report_unread
@@ -261,9 +261,21 @@ def test_browser_handoff_names_match_the_external_agent_protocol() -> None:
     This reads declaration constants in the agent's interpreter, without
     constructing Settings, starting a login attempt or opening a browser.
     """
-    checkout = Path(os.environ["CADRUMO_DEV_AGENT_CHECKOUT"])
+    variable = "CADRUMO_DEV_AGENT_CHECKOUT"
+    named = os.environ.get(variable, "").strip()
+    if not named:
+        pytest.fail(
+            f"{variable} is not set: name the absolute path of a cadrumo-agent checkout synced with `uv sync`",
+            pytrace=False,
+        )
+    checkout = Path(named)
     interpreter = checkout / ".venv" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
-    assert checkout.is_absolute() and interpreter.is_file(), "name a synced external agent checkout"
+    if not (checkout.is_absolute() and interpreter.is_file()):
+        pytest.fail(
+            f"{variable}={named} is not a synced cadrumo-agent checkout: name an absolute path whose "
+            f"{interpreter.relative_to(checkout).as_posix()} exists after `uv sync`",
+            pytrace=False,
+        )
     source = """
 import json
 from cadrumo_agent.cli._auth_browser import AUTH_BROWSER_PORT_ENV, AUTH_BROWSER_NONCE_ENV
@@ -327,7 +339,7 @@ def test_a_spelling_planted_in_each_language_is_refused(tmp_path: Path, language
 @pytest.mark.parametrize("language", sorted(_PLANTED_DEFECTS))
 def test_the_same_sources_without_the_prefix_are_accepted(tmp_path: Path, language: str) -> None:
     relative, template = _PLANTED_DEFECTS[language]
-    _plant(tmp_path, relative, template.replace("<name>", "CADRUMO_LOCAL_STORAGE_ROOT"))
+    _plant(tmp_path, relative, template.replace("<name>", "CADRUMO_STORAGE_ROOT"))
 
     scan = _scan(tmp_path)
 
@@ -464,7 +476,7 @@ def test_a_file_that_cannot_be_read_is_reported_not_taken_for_clean(tmp_path: Pa
 def test_an_allowance_whose_file_is_gone_or_no_longer_spells_the_prefix_is_stale(tmp_path: Path) -> None:
     kept, cleaned, *gone = sorted(_ALLOWED_FILES)
     _plant(tmp_path, kept, f'NAME = "{_name("PORT")}"\n')
-    _plant(tmp_path, cleaned, 'NAME = "CADRUMO_LOCAL_STORAGE_ROOT"\n')
+    _plant(tmp_path, cleaned, 'NAME = "CADRUMO_STORAGE_ROOT"\n')
 
     scan = _scan(tmp_path)
 

@@ -6,7 +6,6 @@ Core types:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Iterable
 from decimal import Decimal
 
@@ -26,17 +25,22 @@ from ....application.aggregation.withholding_observation_service import (
     WithholdingWindowBaseline,
     WithholdingWindowScope,
     WithholdingWindowState,
+    withholding_canonical_json,
 )
 from ....core.aggregation import AggregationCaptureKind
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ....core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    SecureObjectRevisionAssertion,
+    SecureObjectWrite,
+)
 from ....core.time.clock import now
 from ..storage.envelope.contract import parameterized_envelope_type
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from ..storage.secure_object_namespaces import WITHHOLDING_WORKFLOW_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
+from ..storage.sql.secure_object_records import SecureObjectDeletion
 from ..storage.sql.secure_objects import SecureObjectRepository
 from .percepciones_observations import PercepcionObservationRepositoryAdapter
 from .retencion_observations import RetencionObservationRepositoryAdapter
@@ -150,7 +154,7 @@ class WithholdingObservationWorkflowAdapter:
             entry = expected.get(token)
             if entry is None or entry.retencion != retencion or entry.percepcion != percepcion:
                 raise WithholdingObservationMutationError("projection_integrity_failure")
-        if _entries_digest(head.entries) != head.projection_digest:
+        if entries_digest(head.entries) != head.projection_digest:
             raise WithholdingObservationMutationError("projection_integrity_failure")
 
     def idempotency_replay(self, scope: WithholdingWindowScope, key: str) -> WithholdingIdempotencyReplay | None:
@@ -211,7 +215,7 @@ class WithholdingObservationWorkflowAdapter:
         ):
             raise WithholdingObservationMutationError("unknown_superseded_generation")
         generation = predecessor.generation + 1
-        digest = _entries_digest(successor)
+        digest = entries_digest(successor)
         generation_id = sha256_hex(
             f"{predecessor.baseline.generation_id}:{envelope.command_digest}:{digest}".encode(UTF_8_ENCODING),
         )
@@ -449,16 +453,13 @@ class WithholdingObservationWorkflowAdapter:
         )
 
 
-def _entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
+def entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
+    """Digest the withholding projection entries in canonical identity order."""
     values = sorted(
         (entry.model_dump(mode="json") for entry in entries),
-        key=lambda value: _canonical_json(value["identity"]),
+        key=lambda value: withholding_canonical_json(value["identity"]),
     )
-    return sha256_hex(_canonical_json(values).encode(UTF_8_ENCODING))
-
-
-def _canonical_json(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return sha256_hex(withholding_canonical_json(values).encode(UTF_8_ENCODING))
 
 
 def _digest(value: str) -> str:

@@ -34,9 +34,9 @@ from __future__ import annotations
 
 import contextvars
 import functools
+import json
 import threading
 from datetime import UTC, datetime, timedelta, timezone
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -49,17 +49,22 @@ from cadrumo.adapters.persistence.profile.recipient_replay_guard import (
 )
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import (
     RecipientEncryptionAdapter,
-    _recipient_encryption_key_object_key,
+    recipient_encryption_key_object_key,
 )
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
+from cadrumo.adapters.persistence.profile.tests.review_package_bytes_support import (
+    build_package_bytes,
+    review_package_revision,
+    review_package_work_unit,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE,
+)
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.recipient_encryption import (
+    RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
     RecipientEncryptedPackage,
     RecipientEncryptionKeypair,
 )
@@ -77,97 +82,18 @@ from cadrumo.application.modelo.review_package_recipient_registry import (
     public_key_hex_from_raw_bytes,
 )
 from cadrumo.application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
-_BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_recipient_encryption")
-_CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_recipient_encryption")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-RECIPIENT-ENCRYPTION-TEST"
 _CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 
 
-def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-    )
-    return WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-        name="303-2026-2T",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-    )
-
-
-def _revision(work_unit: WorkUnit) -> CalculationRevision:
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        binding_overrides={},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        source_transaction_ids=(),
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=work_unit.modelo,
-            revision_id=work_unit.revision_id,
-            modelo_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        observations=(
-            CasillaObservation(
-                casilla_id=_CUOTA_CASILLA,
-                value=Decimal("21.00"),
-                legal_refs=("ley-37-1992:art-99",),
-                source_refs=("test-review-package-recipient-encryption",),
-            ),
-        ),
-        ledger_filing_evidence=None,
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        filed_at=None,
-        filed_by=None,
-        superseded_at=None,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-
-
 _build_package_bytes = functools.partial(
     build_package_bytes,
-    work_unit_factory=_work_unit,
-    revision_factory=_revision,
+    work_unit_factory=review_package_work_unit,
+    revision_factory=review_package_revision,
     draft_bytes=_DRAFT_BYTES,
 )
 
@@ -443,13 +369,11 @@ def test_decrypt_refuses_a_package_presented_exactly_at_its_expiry(tmp_path: Pat
         )
 
 
-def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext(tmp_path: Path) -> None:
-    """The expiry refusal fires even when the ciphertext is also tampered.
+def test_authentication_precedes_the_expiry_judgement(tmp_path: Path) -> None:
+    """A tampered envelope is refused as unauthenticated even when it is also past its deadline.
 
-    Anti-tautology proof for the ordering claim in the docstring: if the
-    expiry check were skipped or performed after decryption, tampering the
-    ciphertext would surface as ``RecipientDecryptionError`` instead of the
-    more specific ``RecipientPackageExpiredError``.
+    The deadline is only trustworthy once AEAD has authenticated it, so an
+    unauthenticated envelope never reaches the expiry branch.
     """
     package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-l")
     recipient_private_key = X25519PrivateKey.generate()
@@ -467,11 +391,122 @@ def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext
     tampered_ciphertext = envelope.ciphertext[:-1] + bytes([envelope.ciphertext[-1] ^ 0xFF])
     tampered_and_expired = envelope.model_copy(update={"ciphertext": tampered_ciphertext})
 
-    with pytest.raises(RecipientPackageExpiredError):
+    with pytest.raises(RecipientDecryptionError) as exc_info:
         decrypt_review_package_for_recipient(
             tampered_and_expired,
             recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=2),
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+    assert not isinstance(exc_info.value, RecipientPackageExpiredError)
+
+
+def _edited_envelope_json(envelope: RecipientEncryptedPackage, **edits: object) -> RecipientEncryptedPackage:
+    """Return ``envelope`` after an intermediary rewrites outer JSON fields, parsed as the import path does."""
+    wire = json.loads(envelope.model_dump_json())
+    wire.update(edits)
+    return RecipientEncryptedPackage.model_validate_json(json.dumps(wire))
+
+
+@pytest.mark.parametrize(
+    "edits",
+    (
+        pytest.param({"valid_until": (_NOW + timedelta(days=30)).isoformat()}, id="extended-valid-until"),
+        pytest.param({"valid_until": None}, id="removed-valid-until"),
+        pytest.param({"issued_at": (_NOW - timedelta(hours=1)).isoformat()}, id="issued-at"),
+        pytest.param({"envelope_nonce_hex": "ab" * 32}, id="replay-nonce"),
+        pytest.param({"review_only": False}, id="review-only"),
+    ),
+)
+def test_decrypt_refuses_an_independently_edited_outer_policy_field(tmp_path: Path, edits: dict[str, object]) -> None:
+    """Every outer lifecycle, replay and disposition field is bound to the ciphertext."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-outer")
+    recipient_private_key = X25519PrivateKey.generate()
+    recipient_private_key_hex = recipient_private_key.private_bytes_raw().hex()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        review_only=True,
+        valid_for=timedelta(days=1),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    authentic = decrypt_review_package_for_recipient(
+        _edited_envelope_json(envelope),
+        recipient_private_key_hex=recipient_private_key_hex,
+        now=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    assert authentic.package_bytes == package_bytes
+
+    edited = _edited_envelope_json(envelope, **edits)
+    assert edited != envelope
+
+    with pytest.raises(RecipientDecryptionError) as exc_info:
+        decrypt_review_package_for_recipient(
+            edited,
+            recipient_private_key_hex=recipient_private_key_hex,
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+    assert not isinstance(exc_info.value, RecipientPackageExpiredError)
+
+
+def test_identical_ciphertext_under_a_fresh_nonce_cannot_evade_the_replay_guard(tmp_path: Path) -> None:
+    """A consumed package re-presented with a fresh outer nonce never yields a new replay identity."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-renonce")
+    recipient_private_key = X25519PrivateKey.generate()
+    recipient_private_key_hex = recipient_private_key.private_bytes_raw().hex()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    renonced = _edited_envelope_json(envelope, envelope_nonce_hex="cd" * 32)
+    assert renonced.ciphertext == envelope.ciphertext
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="5b0a3f62-8f0e-4c3e-9d7a-2f6c1e4b9a10") as profile:
+        guard = RecipientReplayGuardRepository(objects=profile.repository)
+        decrypt_review_package_for_recipient(
+            envelope,
+            recipient_private_key_hex=recipient_private_key_hex,
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+        guard.mark_consumed(envelope.envelope_nonce_hex, consumed_at=_NOW)
+
+        with pytest.raises(RecipientDecryptionError):
+            decrypt_review_package_for_recipient(
+                renonced,
+                recipient_private_key_hex=recipient_private_key_hex,
+                now=_NOW,
+                recipient_encryption=_CRYPTO_CAPABILITY,
+            )
+        assert [record.nonce_hex for record in guard.load().records] == [envelope.envelope_nonce_hex]
+
+
+@pytest.mark.parametrize("version", (0, 1, 3))
+def test_envelope_refuses_an_unsupported_version_exactly(tmp_path: Path, version: int) -> None:
+    """Only the current envelope version parses, and the adapter refuses any other that bypasses parsing."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-version")
+    recipient_private_key = X25519PrivateKey.generate()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    assert envelope.envelope_version == RECIPIENT_ENCRYPTION_ENVELOPE_VERSION
+
+    with pytest.raises(ValidationError, match="envelope_version"):
+        _edited_envelope_json(envelope, envelope_version=version)
+
+    with pytest.raises(RecipientDecryptionError, match="unsupported envelope version"):
+        decrypt_review_package_for_recipient(
+            envelope.model_copy(update={"envelope_version": version}),
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            now=_NOW,
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
@@ -728,8 +763,11 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
-            ).scalar_one()
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace
+                    == MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace
+                ),
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
         assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
@@ -758,13 +796,13 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=target_bucket_id) as profile:
-        object_key = _recipient_encryption_key_object_key(target_bucket_id)
+        object_key = recipient_encryption_key_object_key(target_bucket_id)
         misplaced_payload = misplaced.model_dump_json().encode("utf-8")
         profile.repository.save(
-            namespace=_ENCRYPTION_KEY_NAMESPACE.namespace,
+            namespace=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
             object_key=object_key,
-            classification=_ENCRYPTION_KEY_NAMESPACE.sensitivity,
-            schema_version=_ENCRYPTION_KEY_NAMESPACE.schema_version,
+            classification=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+            schema_version=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.schema_version,
             written_at=_NOW,
             payload=misplaced_payload,
             write_provenance="test.review_package_recipient_encryption.foreign_payload",
@@ -777,10 +815,10 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
             )
 
         unchanged = profile.repository.load(
-            _ENCRYPTION_KEY_NAMESPACE.namespace,
+            MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
             object_key,
-            expected_class=_ENCRYPTION_KEY_NAMESPACE.sensitivity,
-            max_supported_version=_ENCRYPTION_KEY_NAMESPACE.schema_version,
+            expected_class=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+            max_supported_version=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.schema_version,
         )
         assert unchanged is not None
         assert unchanged.payload == misplaced_payload
@@ -834,8 +872,11 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
         with session_scope(profile.repository._engine) as session:
             persisted_count = session.execute(
                 select(func.count())
-                .select_from(SecureObjectRow)
-                .where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
+                .select_from(secure_objects_table)
+                .where(
+                    secure_objects_table.c.namespace
+                    == MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace
+                ),
             ).scalar_one()
         assert persisted_count == 1
 

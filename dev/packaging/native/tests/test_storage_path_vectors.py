@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.errors.hierarchy import CoreValidationError
-from cadrumo.core.storage_environment import STORAGE_ROOT, StorageMode, StorageModeEvidence, storage_root_for
+from cadrumo.core.storage_environment import STORAGE_ROOT, storage_root_for
 from cadrumo.tests.audited_process import run_audited_process
 
 from ..storage_vectors import StoragePathVector, storage_path_vectors
@@ -32,12 +32,10 @@ def test_host_resolver_replays_original_and_normalized_link_fixtures(tmp_path: P
     environment = {STORAGE_ROOT.variable: str(tmp_path.joinpath(*vector.components))}
     if vector.refusal is None:
         assert vector.expected_components is not None
-        assert storage_root_for(environment, StorageModeEvidence(StorageMode.INSTALLED, None)) == tmp_path.joinpath(
-            *vector.expected_components
-        )
+        assert storage_root_for(environment) == tmp_path.joinpath(*vector.expected_components)
     else:
         with pytest.raises(CoreValidationError) as error:
-            storage_root_for(environment, StorageModeEvidence(StorageMode.INSTALLED, None))
+            storage_root_for(environment)
         assert error.value.context is not None
         assert error.value.context["storage_root_refusal"] == vector.refusal
     assert not (tmp_path / "selected").exists() and not (tmp_path / "missing").exists()

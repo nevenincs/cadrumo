@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.time.utc import UtcInstant
 
 
 class RefusalCode(StrEnum):
@@ -28,9 +29,20 @@ class RefusalCode(StrEnum):
     ROOT_MISMATCH = "runtime_root_mismatch"
     INVALID_FRAME = "runtime_invalid_frame"
     CONNECTION_CLOSED = "runtime_connection_closed"
-    DEADLINE_EXCEEDED = "runtime_deadline_exceeded"
+    TIMEOUT = "runtime_timeout"
     DRAINING = "runtime_draining"
     CONTAINMENT_UNAVAILABLE = "runtime_containment_unavailable"
+
+
+SENT_ACT_UNKNOWN_OUTCOME_REFUSALS: frozenset[RefusalCode] = frozenset(
+    {RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED}
+)
+"""The refusals that arise only after an act was sent, so what it did is not known."""
+
+ACCEPT_REFUSALS_THAT_KEEP_LISTENING: frozenset[RefusalCode] = frozenset(
+    {RefusalCode.TIMEOUT, RefusalCode.PEER_UNTRUSTED, RefusalCode.CONNECTION_CLOSED}
+)
+"""The ordinary per-peer refusals of one accepted connection, after which a listener accepts the next one."""
 
 
 class RefusalError(CadrumoError):
@@ -164,6 +176,10 @@ def refusal_exit_reason(code: RefusalCode) -> ExitReason:
 type AuthorityGeneration = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 
 
+RUNTIME_PROTOCOL_VERSION: Final = 4
+"""The one wire protocol version this client speaks."""
+
+
 def authority_generation_differs(observed: str | None, expected: str | None) -> bool:
     """Compare published authority generations without asserting either side has one."""
     return observed is not None and expected is not None and observed != expected
@@ -175,7 +191,9 @@ class ClientHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["client_hello"] = "client_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    protocol_version: Annotated[int, Field(strict=True, ge=RUNTIME_PROTOCOL_VERSION, le=RUNTIME_PROTOCOL_VERSION)] = (
+        RUNTIME_PROTOCOL_VERSION
+    )
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     authority_generation: AuthorityGeneration | None = None
@@ -190,13 +208,18 @@ class ServerHello(BaseModel):
     """Readiness of an OS-authenticated runtime; the boot ID is not a bearer."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"fixed_clock_instant"})
 
     kind: Literal["server_hello"] = "server_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    protocol_version: Annotated[int, Field(strict=True, ge=RUNTIME_PROTOCOL_VERSION, le=RUNTIME_PROTOCOL_VERSION)] = (
+        RUNTIME_PROTOCOL_VERSION
+    )
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     boot_id: UUID
     authority_generation: AuthorityGeneration | None = None
+    fixed_clock_instant: UtcInstant | None = None
+    """The test-host fixed clock this runtime admitted at its start; absent when it runs on wall time."""
 
 
 class Peer(BaseModel):
@@ -206,7 +229,7 @@ class Peer(BaseModel):
 
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     process_id: Annotated[int, Field(gt=0)] | None
-    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None = None
+    image_path: Annotated[str, Field(min_length=1, max_length=32768)] | None = None
     """The peer's program, read from the process the transport retains; ``None`` where none is read."""
 
     @override

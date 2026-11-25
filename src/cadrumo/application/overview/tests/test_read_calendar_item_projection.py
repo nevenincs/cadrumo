@@ -8,9 +8,9 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+from ....domain.deadlines.effective_close import effective_filing_deadline
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ..calendar import _calendar_entry_from_obligation
+from ..calendar import calendar_entry_from_obligation
 from ..calendar_models import (
     OverviewAeatEvidenceConcern,
     OverviewAeatSubmissionState,
@@ -39,34 +39,35 @@ def test_register_concerns_round_trip_and_keep_the_filing_open() -> None:
     assert not restored.aeat_filed
 
 
-def test_a_resident_s_holiday_territory_survives_the_snapshot_round_trip(
+def test_a_regional_holiday_close_survives_the_snapshot_round_trip(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     closes_on = date(2025, 9, 11)
+    effective = effective_filing_deadline(closes_on, modelo="303", operation=authority_operation)
     obligation = ModeloDeadline(
         modelo="303",
         period=Period.from_year_and_code(2025, "3T"),
         opens_on=closes_on.replace(day=1),
         closes_on=closes_on,
+        adjusted_closes_on=effective.closes_on,
+        holiday_coverage=effective.holiday_coverage,
+        shift_reason=effective.shift_reason,
+        shift_jurisdictions=effective.jurisdictions,
+        shift_holiday_refs=effective.holiday_refs,
         payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        applies_because="synthetic resident obligation",
         boe_references=(),
         recovery=None,
     )
-    territory = resolve_calendar_ccaa_catalogue(effective_date=closes_on, authority=authority_operation).require(
-        "ES-CT"
-    )
-    entry = _calendar_entry_from_obligation(
+    entry = calendar_entry_from_obligation(
         obligation,
-        holiday_territory=territory,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 8, 1),
         due_soon_days=14,
         operation=authority_operation,
     )
-    assert entry.holiday_territory is not None
+    assert entry.adjusted_closes_on == closes_on
 
     snapshot = OverviewCalendarEntrySnapshot.from_entry(entry)
     restored = OverviewCalendarEntrySnapshot.model_validate_json(snapshot.model_dump_json(), strict=True).to_entry()

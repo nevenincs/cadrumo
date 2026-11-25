@@ -60,7 +60,6 @@ def test_scoop_scripts_route_cache_evidence_and_container_storage(script: Path) 
     assert "Initialize-CadrumoScoopStorageEnvironment -RepositoryRoot $RepoRoot" in source
     assert "$EvidenceDir = Resolve-CadrumoStoragePath -Value $EvidenceDir -RepositoryRoot $RepoRoot" in source
     assert '"-e", "CADRUMO_STORAGE_ROOT=C:\\evidence\\storage"' in source
-    assert '"-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\\evidence\\storage"' in source
     assert _STORAGE_PATHS.is_file()
 
 
@@ -88,11 +87,10 @@ foreach ($path in $paths) {{
 
 
 def test_shared_powershell_storage_paths_support_relative_and_absolute_overrides(tmp_path: Path) -> None:
-    """The script mirror preserves root precedence and per-category override semantics."""
+    """The script keeps the one root variable and per-category override semantics."""
     interpreter = _interpreter()
     if interpreter is None:
         source = _STORAGE_PATHS.read_text(encoding="utf-8")
-        assert "$env:CADRUMO_LOCAL_STORAGE_ROOT" in source
         assert "$env:CADRUMO_STORAGE_ROOT" in source
         assert "function Get-CadrumoStorageRoot" in source
         assert "function Initialize-CadrumoScoopStorageEnvironment" in source
@@ -107,8 +105,7 @@ def test_shared_powershell_storage_paths_support_relative_and_absolute_overrides
     repository = str(checkout).replace("'", "''")
     absolute = str(absolute_cache).replace("'", "''")
     driver = f"""
-$env:CADRUMO_STORAGE_ROOT = 'shared-storage'
-$env:CADRUMO_LOCAL_STORAGE_ROOT = '{str(local_root).replace("'", "''")}'
+$env:CADRUMO_STORAGE_ROOT = '{str(local_root).replace("'", "''")}'
 $env:{cache_variable} = 'development/cache/scoop-override'
 . '{helper}'
 $repository = '{repository}'
@@ -127,7 +124,6 @@ $absoluteArguments = @{{
     RepositoryRoot = $repository
 }}
 $absoluteCache = Get-CadrumoStorageDirectory @absoluteArguments
-$env:CADRUMO_LOCAL_STORAGE_ROOT = ''
 $env:CADRUMO_STORAGE_ROOT = ''
 $defaultRoot = Get-CadrumoStorageRoot -RepositoryRoot $repository
 Write-Output "ROOT=$root"

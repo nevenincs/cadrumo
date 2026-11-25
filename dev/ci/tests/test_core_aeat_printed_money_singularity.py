@@ -168,7 +168,7 @@ def test_every_grammar_reads_the_same_thousands_separators(separator: str) -> No
     assert is_aeat_printed_money(printed), f"anchored grammar rejects {printed!r}"
     match = re.fullmatch(SPANISH_AMOUNT_GROUP, printed)
     assert match is not None and match.group(1) == printed, f"capture group rejects {printed!r}"
-    found = iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
+    found = iva_compensation_wallet_parsing.SPANISH_AMOUNT_RE.findall(printed)
     assert found == [printed], f"wallet aggregate finder read {found!r} out of {printed!r}"
 
 
@@ -189,7 +189,7 @@ def test_no_grammar_treats_column_whitespace_as_a_thousands_separator(separator:
 
     assert not is_aeat_printed_money(printed)
     assert re.fullmatch(SPANISH_AMOUNT_GROUP, printed) is None
-    assert printed not in iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
+    assert printed not in iva_compensation_wallet_parsing.SPANISH_AMOUNT_RE.findall(printed)
 
 
 @pytest.mark.parametrize(

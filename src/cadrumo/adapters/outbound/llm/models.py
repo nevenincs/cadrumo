@@ -14,14 +14,16 @@ from datetime import datetime
 from decimal import Decimal
 from functools import wraps
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
+
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from ....core.config_support import LLMProvider, RetiredLLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.image_media_type import ImageMediaType
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from .consent import EvidenceConsentToken
@@ -162,6 +164,21 @@ class LLMRequest(BaseModel):
         description=(
             "The job this request does. The agent service selects the lane and model for it, "
             "so a request dispatched to the agent must name one."
+        ),
+    )
+    task_kind: ModelRunTaskKind | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "The kind of task this request does. The agent service runs it on the model the person set "
+            "for that kind, else on the model documents are read with; ``None`` names no kind."
+        ),
+    )
+    response_schema: dict[str, JsonValue] | None = Field(
+        default=None,
+        description=(
+            "A JSON Schema object the lane constrains the reply to. The reader still extracts and "
+            "validates the reply; the schema only keeps a model from answering in another shape."
         ),
     )
     expects_json: bool = Field(

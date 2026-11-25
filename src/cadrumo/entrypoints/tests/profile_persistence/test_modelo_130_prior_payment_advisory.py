@@ -40,22 +40,18 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -73,14 +69,12 @@ from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -117,7 +111,6 @@ _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
 _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 # The prior 1T pago fraccionado the casilla-05 carry deducts at 2T.
 _PRIOR_1T_CASILLA_07 = Decimal("200")
@@ -133,8 +126,6 @@ _PRIOR_1T_CASILLA_07 = Decimal("200")
 # casilla 01 folds from seeded income transactions.
 _MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_RETENCIONES_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -149,39 +140,8 @@ _INCOME_DATE = date(2026, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) wi
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile(profile.repository)
+        seed_ready_profile(bucket_id=_BUCKET, at=_T0)
         yield profile.repository
-
-
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    """Persist the M130 natural-person profile required by the work-unit gate."""
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
@@ -191,45 +151,26 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
     a fresh bucket the engine raises if that prior-year value is absent. This is
     upstream substrate, not the casilla under test.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=_PRIOR_YEAR,
-                        period="0A",
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -259,7 +200,7 @@ def _seed_prior_1t_m130_filing(
         # The 1T saldo-negativo-fin-periodo (= 0 for a positive 1T result) is
         # the anchor the casilla-15 carry binding reads at 2T; a complete
         # prior filing carries it so the 2T calculate resolves the carry.
-        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+        validated_casilla_id("19"): Decimal("0"),
     }
     if minoracion is not None:
         casillas[_M130_HOME_DEDUCTION_CASILLA] = minoracion
@@ -274,14 +215,7 @@ def _seed_prior_1t_m130_filing(
             casilla_values=casillas,
         ),
     )
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            observation,
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(observation),
-        )
-    )
+    save_stamped_observation(obs_repo, observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
     return observation
 
 

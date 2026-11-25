@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`dev.sanitizer._records`.
+"""Unit tests for :mod:`dev.sanitizer.records`.
 
 The tests focus on three load-bearing contracts:
 
@@ -23,7 +23,7 @@ from pydantic import SecretStr, ValidationError
 
 from cadrumo.core.identity.documents import IdentityError
 
-from .._records import (
+from ..records import (
     AddressReplacement,
     ArbitraryReplacement,
     CsvReplacement,
@@ -35,21 +35,21 @@ from .._records import (
     NifReplacement,
     NrcReplacement,
     Replacement,
+    ReplacementBase,
     SanitizationResult,
     SanitizationWarning,
     ScrubbedSurface,
     TokenMap,
-    _ReplacementBase,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 
 _SHA = "0" * 64
-_REAL_NIE_CANARY = "Y1234567X"
-_REAL_NIF_CANARY = "99999999R"
+_REAL_NIE_CANARY = "Y0001500L"
+_REAL_NIF_CANARY = "00001506B"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
-_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NIF = "12345678Z"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
@@ -244,10 +244,10 @@ def test_every_replacement_subclass_is_reached_by_the_case_tables() -> None:
     (``AddressReplacement``, ``ArbitraryReplacement``) has no subclass-specific
     rejection to demonstrate, so it is not required to carry a reject case. The
     converse is permitted rather than required: a case that exercises a
-    ``_ReplacementBase`` constraint on a subclass that adds none is still a real
+    ``ReplacementBase`` constraint on a subclass that adds none is still a real
     rejection, which is why only the validator-without-case direction fails.
     """
-    subclasses = tuple(_ReplacementBase.__subclasses__())
+    subclasses = tuple(ReplacementBase.__subclasses__())
     assert len(subclasses) >= 9, (
         f"only {len(subclasses)} Replacement subclass(es) were discovered; the coverage "
         "assertions below quantify over this population, so a truncated one proves nothing"
@@ -365,7 +365,7 @@ class TestReplacementShape:
             surface="content_stream",
             surface_index=(2, 17),
             real_sha256=_SHA,
-            synthetic="Y0000001S",
+            synthetic="Y0001006P",
             encoding="literal",
         )
         assert record.surface == "content_stream"

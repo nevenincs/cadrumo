@@ -1,0 +1,337 @@
+import { expect, test, type Page } from "@playwright/test";
+import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
+import { label } from "../support/strings";
+
+// What a lane's card says of itself stays true to what the host served: a
+// settled standing is not unsaid by an answer that is still being completed,
+// a signed-in lane offers only to sign out, and a key lane without a key does
+// not read as on.
+
+const open = (target: Page) =>
+  target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=en");
+
+const settings = (target: Page) =>
+  target.locator(".pane-agent").getByRole("region", {
+    name: label("desktop.providers.title"),
+  });
+
+const lane = (target: Page, id: string) =>
+  settings(target).locator(`[data-lane="${id}"]`);
+
+const settingsButton = (target: Page) =>
+  target.locator(".pane-agent").getByRole("button", {
+    name: label("desktop.agent.settings"),
+  });
+
+async function openSettings(target: Page) {
+  await settingsButton(target).click();
+  await expect(settings(target)).toBeVisible();
+  await settings(target)
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
+    .evaluateAll((nodes) =>
+      nodes.forEach((node) => (node as HTMLElement).click()),
+    );
+}
+
+// The made-up lane whose provider declares a logout, so a signed-in one can
+// be signed out.
+const SIGN_OUT_LANE = FIXTURE_SETTINGS_LANES.find(
+  (declared) => declared.id === "antigravity_cli",
+)!;
+const KEY_LANE = FIXTURE_SETTINGS_LANES.find(
+  (declared) => declared.auth_kind === "api_key",
+)!;
+
+const SIGNED_IN = {
+  cli_state: "installed_signed_in",
+  readiness: "not_verified",
+} as const;
+const UNREAD = { cli_state: "unknown", readiness: "not_verified" } as const;
+
+test("a settled connected status is not unsaid while a later answer is still being completed", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.offerSignIn(["antigravity"]);
+      controls.setMethods(["browser"]);
+      controls.leaveLaneUnconfirmed(id, state);
+      // Every status the card shows, in order, from here on.
+      const seen: string[] = [];
+      (window as unknown as { __seen: string[] }).__seen = seen;
+      new MutationObserver(() => {
+        const mark = document.querySelector(
+          `[data-lane="${id}"] [data-slot="provider-status"]`,
+        );
+        const status = mark?.getAttribute("data-status");
+        if (status && seen[seen.length - 1] !== status) seen.push(status);
+      }).observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+      });
+    },
+    [SIGN_OUT_LANE.id, SIGNED_IN] as const,
+  );
+  await openSettings(target);
+  await expect(
+    lane(target, SIGN_OUT_LANE.id).locator("[data-slot=provider-status]"),
+  ).toHaveAttribute("data-status", "signed_in");
+
+  // The settings are read again; the service answers while its apps are still
+  // being read (nothing settled yet), then completes.
+  await settingsButton(target).click();
+  await target.evaluate(
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.leaveLaneUnconfirmed(id, state);
+      controls.pendSignInReads(1);
+      controls.deferNextStatus();
+    },
+    [SIGN_OUT_LANE.id, UNREAD] as const,
+  );
+  await settingsButton(target).click();
+  await expect(settings(target)).toBeVisible();
+  const resolvedReads = () =>
+    target.evaluate(
+      () =>
+        (window.__scenarioHostCalls ?? []).filter(
+          (call) => call === "providerStatusResolved",
+        ).length,
+    );
+  const before = await resolvedReads();
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.completeStatus(),
+  );
+  // The pending answer has been served; only now does the app report again.
+  await expect.poll(resolvedReads).toBe(before + 1);
+  // The app reports again, and the service cues the window that its reads
+  // behind the pending answer have ended.
+  await target.evaluate(
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.leaveLaneUnconfirmed(id, state);
+      controls.settleReads();
+    },
+    [SIGN_OUT_LANE.id, SIGNED_IN] as const,
+  );
+  await expect.poll(resolvedReads).toBe(before + 2);
+  await expect(
+    lane(target, SIGN_OUT_LANE.id).locator("[data-slot=provider-status]"),
+  ).toHaveAttribute("data-status", "signed_in");
+  const seen = await target.evaluate(
+    () => (window as unknown as { __seen: string[] }).__seen,
+  );
+  expect(seen).toEqual(["signed_in"]);
+});
+
+test("a lane that was turned on and signed out in the host shows the change at once", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.leaveLaneUnconfirmed(id, state);
+    },
+    [SIGN_OUT_LANE.id, SIGNED_IN] as const,
+  );
+  await openSettings(target);
+  const card = lane(target, SIGN_OUT_LANE.id);
+  await expect(card.locator("[data-slot=provider-status]")).toHaveAttribute(
+    "data-status",
+    "signed_in",
+  );
+  await card
+    .getByRole("button", {
+      name: label("desktop.providers.sign_out_label", {
+        provider: SIGN_OUT_LANE.display_name,
+      }),
+    })
+    .click();
+  await expect(card.locator("[data-slot=provider-status]")).toHaveAttribute(
+    "data-status",
+    "sign_in_needed",
+  );
+});
+
+test("a signed-in lane offers only to sign out, and a signed-out one only to sign in", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.offerSignIn(["antigravity"]);
+      controls.setMethods(["browser"]);
+      controls.leaveLaneUnconfirmed(id, state);
+    },
+    [SIGN_OUT_LANE.id, SIGNED_IN] as const,
+  );
+  await openSettings(target);
+  const card = lane(target, SIGN_OUT_LANE.id);
+  await expect(
+    card.getByRole("button", {
+      name: label("desktop.providers.sign_out_label", {
+        provider: SIGN_OUT_LANE.display_name,
+      }),
+    }),
+  ).toBeVisible();
+  await expect(
+    card.getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    }),
+  ).toHaveCount(0);
+
+  await card
+    .getByRole("button", {
+      name: label("desktop.providers.sign_out_label", {
+        provider: SIGN_OUT_LANE.display_name,
+      }),
+    })
+    .click();
+  await expect(
+    card.getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    }),
+  ).toBeVisible();
+  await expect(
+    card.getByRole("button", {
+      name: label("desktop.providers.sign_out_label", {
+        provider: SIGN_OUT_LANE.display_name,
+      }),
+    }),
+  ).toHaveCount(0);
+});
+
+test("a key save refused while the agent starts keeps the form and what was typed, says why, and saves on retry", async ({
+  page: target,
+}) => {
+  const key = "FAKE-KEY-not-a-real-key-0000";
+  await open(target);
+  await openSettings(target);
+  const card = lane(target, KEY_LANE.id);
+  await card
+    .getByRole("button", { name: label("desktop.providers.add_key") })
+    .click();
+  const field = card.getByLabel(new RegExp(`^${KEY_LANE.display_name} `));
+  await field.fill(key);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.rejectNextSave("busy", {
+      cause: "agent_tree_running",
+      log_ref: "0a1b2c3d4e5f",
+    }),
+  );
+  await card
+    .getByRole("button", { name: label("desktop.providers.save") })
+    .click();
+  const alert = card.getByRole("alert");
+  await expect(alert).toContainText(
+    label("desktop.providers.refused_agent_starting"),
+  );
+  // The sign-in's own wording of the cause is not said for a key save.
+  await expect(alert).not.toContainText(
+    label("desktop.providers.sign_in_cause.agent_tree_running"),
+  );
+  await expect(alert).toContainText("0a1b2c3d4e5f");
+  // The form stays open with the key as typed, and offers to try again.
+  await expect(field).toHaveValue(key);
+  const retry = card.getByRole("button", {
+    name: label("desktop.providers.save_retry"),
+  });
+  await expect(retry).toBeEnabled();
+  await expect(card.locator("[data-slot=provider-status]")).toHaveAttribute(
+    "data-status",
+    "setup_needed",
+  );
+
+  await retry.click();
+  await expect(card.locator("[data-slot=provider-status]")).toHaveAttribute(
+    "data-status",
+    "saved",
+  );
+  await expect(field).toHaveCount(0);
+  await expect(card.getByRole("alert")).toHaveCount(0);
+  const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
+  expect(
+    calls.filter((call) => call === `providerSet ${KEY_LANE.id}`),
+  ).toHaveLength(2);
+});
+
+test("a key lane's switch follows its stored setting, and its status says it needs a key until one is saved", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  const card = lane(target, KEY_LANE.id);
+  const status = card.locator("[data-slot=provider-status]");
+  const toggle = card.getByRole("switch");
+  // Nothing stored turns it off, so it is on, and says why it cannot run.
+  await expect(toggle).toBeChecked();
+  await expect(toggle).toBeEnabled();
+  await expect(status).toHaveAttribute("data-status", "setup_needed");
+  await expect(status).toHaveAttribute("data-reason", "add_key");
+  await expect(card.locator("[data-slot=lane-reason]")).toHaveText(
+    label("desktop.providers.reason_add_key", {
+      provider: KEY_LANE.display_name,
+    }),
+  );
+  await card
+    .getByRole("button", { name: label("desktop.providers.add_key") })
+    .click();
+  await card
+    .getByLabel(new RegExp(`^${KEY_LANE.display_name} `))
+    .fill("FAKE-KEY-not-a-real-key-0000");
+  await card
+    .getByRole("button", { name: label("desktop.providers.save") })
+    .click();
+  // A saved key is not ready: the service checks it on its first use.
+  await expect(status).toHaveAttribute("data-status", "saved");
+  await expect(status).toHaveText(label("desktop.providers.status_saved"));
+  await expect(card.locator("[data-slot=lane-reason]")).toHaveText(
+    label("desktop.providers.reason_key_saved"),
+  );
+  await expect(toggle).toBeChecked();
+});
+
+test("an installed-app connection that is not set up asks for the provider's own sign-in, never for a key", async ({
+  page: target,
+}) => {
+  // As the agent derives it, a provider's key goes to its API lane, so its
+  // app lane signs in; an app lane that takes a key also names its endpoint.
+  const appLanes = FIXTURE_SETTINGS_LANES.filter(
+    (declared) => declared.transport === "cli",
+  );
+  for (const declared of appLanes)
+    expect(
+      ["provider_sign_in_only", "api_key_with_base_url"],
+      declared.id,
+    ).toContain(declared.auth_kind);
+  const signInLanes = appLanes.filter(
+    (declared) => declared.auth_kind === "provider_sign_in_only",
+  );
+  expect(signInLanes.map((declared) => declared.id)).toContain("kimi_cli");
+
+  await open(target);
+  await openSettings(target);
+  for (const declared of signInLanes) {
+    const card = lane(target, declared.id);
+    const status = card.locator("[data-slot=provider-status]");
+    await expect(status, declared.id).toHaveAttribute(
+      "data-status",
+      "sign_in_needed",
+    );
+    await expect(status, declared.id).toHaveAttribute("data-reason", "sign_in");
+    await expect(card.locator("[data-slot=lane-reason]")).toHaveText(
+      label("desktop.providers.detail_sign_in", {
+        provider: declared.display_name,
+      }),
+    );
+    await expect(
+      card.getByRole("button", { name: label("desktop.providers.add_key") }),
+    ).toHaveCount(0);
+    await expect(card.locator("input[type=password]")).toHaveCount(0);
+  }
+});

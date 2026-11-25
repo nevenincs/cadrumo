@@ -4,8 +4,12 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { fromPointer } from "../shell/pointer";
+import type { MenuAnchor } from "./ContextMenu";
 
 export type RailItem = {
+  dockPane?: string;
   id: string;
   icon: IconName;
   label: string;
@@ -21,15 +25,21 @@ export type RailItem = {
   hint?: string;
   /** A pin where a count would be, never drawn together with one. Hollow:
    * what the item counts is not known, or could not be read. Filled: the
-   * surface it opens has something still to do, or, pulsing, is busy
-   * with it. Its `hint` says which. */
+   * surface it opens has something still to do. A spinning wheel: it is
+   * busy with it. Its `hint` says which. */
   pin?: "unknown" | "failed" | "attention" | "busy";
   /** Why the item cannot be used now. It stays in place and says so,
    * and a press does nothing. */
   heldBy?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
-  onClick: () => void;
+  /** The item opens a menu of choices rather than doing one thing. */
+  menu?: boolean;
+  /** Given the button's edge, where a menu the item opens is anchored. */
+  onClick: (at: MenuAnchor) => void;
+  /** Asks for the item's own menu, at the pointer or by the menu key at the
+   * button's edge. */
+  onMenu?: (at: MenuAnchor) => void;
 };
 
 const BADGE_LIMIT = 99;
@@ -37,7 +47,7 @@ const BADGE_LIMIT = 99;
 function RailButton({ item }: { item: RailItem }) {
   return (
     <>
-      {item.divided && <Separator className="my-1 w-5" />}
+      {item.divided && <Separator className="my-1 w-5 rail-compact:my-0.5" />}
       <Toolbar.Button asChild>
         <IconButton
           label={item.label}
@@ -48,24 +58,83 @@ function RailButton({ item }: { item: RailItem }) {
           aria-pressed={item.pressed}
           aria-disabled={item.heldBy ? true : undefined}
           aria-expanded={item.expanded}
-          aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
+          aria-haspopup={
+            item.menu
+              ? "menu"
+              : item.expanded === undefined
+                ? undefined
+                : "dialog"
+          }
           // A locale-independent handle for drivers outside the shell.
           data-rail={item.id}
-          onClick={item.heldBy ? undefined : item.onClick}
+          draggable={!item.heldBy && item.dockPane !== undefined}
+          onDragStart={
+            item.dockPane
+              ? (event) => {
+                  event.dataTransfer.setData(
+                    "application/x-cadrumo-pane",
+                    item.dockPane ?? "",
+                  );
+                  event.dataTransfer.effectAllowed = "move";
+                }
+              : undefined
+          }
+          onClick={
+            item.heldBy
+              ? undefined
+              : (event) => {
+                  const button = event.currentTarget.getBoundingClientRect();
+                  item.onClick({
+                    x: button.right,
+                    y: button.top,
+                    height: button.height,
+                  });
+                }
+          }
+          onContextMenu={
+            item.onMenu
+              ? (event) => {
+                  event.preventDefault();
+                  const button = event.currentTarget.getBoundingClientRect();
+                  item.onMenu?.(
+                    fromPointer(event.nativeEvent)
+                      ? { x: event.clientX, y: event.clientY }
+                      : {
+                          x: button.right,
+                          y: button.top,
+                          height: button.height,
+                        },
+                  );
+                }
+              : undefined
+          }
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button
           // whose surface is open is marked the same way.
-          className="relative before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-expanded:bg-selected aria-expanded:text-accent-foreground aria-expanded:before:opacity-100 aria-pressed:before:opacity-100"
+          className="relative rail-compact:size-control-md before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-expanded:bg-selected aria-expanded:text-accent-foreground aria-expanded:before:opacity-100 aria-pressed:before:opacity-100"
         >
           <Icon name={item.icon} size="lg" />
           {item.badge ? (
             <Badge
               variant="count"
               aria-hidden="true"
-              className="absolute -top-0.5 -right-0.5"
+              // Past the limit the mark is "99+", which the accessible name
+              // (it carries the exact count) cannot contain; drawn as
+              // generated content it is not text the name must match.
+              data-capped={
+                item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : undefined
+              }
+              className="absolute -top-0.5 -right-0.5 data-capped:after:content-[attr(data-capped)]"
             >
-              {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
+              {item.badge > BADGE_LIMIT ? null : item.badge}
             </Badge>
+          ) : item.pin === "busy" ? (
+            // Turning in the corner where a count would be, on the rail's
+            // own colour so it reads over the icon's edge.
+            <Spinner
+              data-pin="busy"
+              className="absolute -top-0.5 -right-0.5 size-icon-xs rounded-full bg-chrome text-brand"
+            />
           ) : item.pin ? (
             // Hollow, as a session's dot is once there is nothing running:
             // not a zero, an absence of an answer. It is centred where a
@@ -76,10 +145,9 @@ function RailButton({ item }: { item: RailItem }) {
               aria-hidden="true"
               className={cn(
                 "absolute top-0.5 right-0.5 size-2 rounded-full",
-                item.pin === "attention" || item.pin === "busy"
+                item.pin === "attention"
                   ? "bg-muted-foreground"
                   : "ring-1 ring-inset",
-                item.pin === "busy" && "motion-safe:animate-pulse",
                 item.pin === "failed"
                   ? "ring-destructive"
                   : item.pin === "unknown" && "ring-faint",
@@ -95,8 +163,10 @@ function RailButton({ item }: { item: RailItem }) {
 /**
  * The icon rail: a vertical toolbar. It is one tab stop; the arrow keys,
  * Home and End move within it. Every item is named by its tooltip, which
- * also shows its shortcut. In a window too short for all of it the rail
- * scrolls inside itself: it never makes the window taller.
+ * also shows its shortcut. In a window under 48rem high the buttons close
+ * up (no gaps, tighter dividers, the least size a button keeps) so that all
+ * of them, Settings and the panel toggle included, stay inside it; only a window too short even then makes
+ * the rail scroll inside itself: it never makes the window taller.
  */
 export function Rail({
   label,
@@ -109,21 +179,21 @@ export function Rail({
 }) {
   return (
     <nav
-      className="rail min-h-0 w-rail overflow-y-auto border-r bg-chrome [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="rail min-h-0 w-rail overflow-y-auto bg-chrome [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label={label}
     >
       <Toolbar.Root
         orientation="vertical"
         // The side padding, not centring, places the buttons: the chosen
         // item's bar then sits exactly on the rail's outer edge.
-        className="flex min-h-full flex-col items-start justify-between gap-1 px-1.5 py-2"
+        className="flex min-h-full flex-col items-start justify-between gap-1 px-1.5 py-2 rail-compact:gap-0 rail-compact:py-1"
       >
-        <div className="rail-group flex flex-col items-center gap-1">
+        <div className="rail-group flex flex-col items-center gap-1 rail-compact:gap-0">
           {top.map((item) => (
             <RailButton key={item.id} item={item} />
           ))}
         </div>
-        <div className="rail-group flex flex-col items-center gap-1">
+        <div className="rail-group flex flex-col items-center gap-1 rail-compact:gap-0">
           {bottom.map((item) => (
             <RailButton key={item.id} item={item} />
           ))}

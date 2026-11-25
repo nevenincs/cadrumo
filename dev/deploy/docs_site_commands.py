@@ -7,16 +7,16 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 
-def _repo_root() -> Path:
+def docs_site_commands_repo_root() -> Path:
     """Return the repository root."""
     return REPO_ROOT
 
 
-def _command_label(command: Sequence[str]) -> str:
+def command_label(command: Sequence[str]) -> str:
     """Return a readable command without invoking a shell."""
     return subprocess.list2cmdline(list(command))
 
@@ -28,7 +28,7 @@ def _run(
     env: dict[str, str] | None = None,
 ) -> CommandResult:
     """Run one local command and stop on its real exit status."""
-    print(f"+ {_command_label(command)}", flush=True)
+    print(f"+ {command_label(command)}", flush=True)
     # Callers build fixed command vectors; externally supplied values are validated.
     completed = run_command(
         list(command),

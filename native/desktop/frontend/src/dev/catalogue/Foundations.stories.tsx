@@ -226,6 +226,9 @@ export const Shape: Story = {
         <div className="rounded-xl bg-card px-4 py-3 text-sm shadow-overlay">
           overlay: dialogs, popovers, menus
         </div>
+        <div className="rounded-md bg-card px-4 py-3 text-sm shadow-docked">
+          docked: a tray at the foot of its area
+        </div>
       </Specimen>
     </div>
   ),

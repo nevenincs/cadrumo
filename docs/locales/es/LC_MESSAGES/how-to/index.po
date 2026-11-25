@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-11-09 22:19+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -273,12 +273,10 @@ msgid "Classify with an LLM"
 msgstr "Clasificar con un LLM"
 
 #: ../../how-to/index.md:159
-msgid ""
-"Set up the local reader, preview and apply suggestions, and classify from"
-" an attached invoice."
+msgid "Preview and apply suggestions, and classify from an attached invoice."
 msgstr ""
-"Configura el lector local, previsualiza y aplica sugerencias, y clasifica"
-" a partir de una factura adjunta."
+"Previsualiza y aplica sugerencias, y clasifica a partir de una factura "
+"adjunta."
 
 #: ../../how-to/index.md:163
 msgid "Attach invoices and receipts to transactions"
@@ -367,7 +365,9 @@ msgid "Modelo 036"
 msgstr "Modelo 036"
 
 #: ../../how-to/index.md:218
-msgid "Record an alta, modificación, or baja you filed at AEAT's sede."
+msgid ""
+"Record a registration, amendment, or deregistration you filed at AEAT's "
+"online portal."
 msgstr ""
 "Registra un alta, una modificación o una baja que hayas presentado en la "
 "sede de la AEAT."
@@ -503,24 +503,35 @@ msgstr ""
 "manteniendo intacto el límite de seguridad."
 
 #: ../../how-to/index.md:312
+msgid "Sign in to an AI provider by hand"
+msgstr "Iniciar sesión en un proveedor de IA a mano"
+
+#: ../../how-to/index.md:316
+msgid ""
+"Sign in from a console when the in-app sign-in under Settings > AI "
+"providers fails."
+msgstr ""
+"Inicia sesión desde una consola cuando falla el inicio de sesión de la "
+"aplicación en Ajustes > Proveedores de IA."
+
+#: ../../how-to/index.md:319
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../how-to/index.md:316
+#: ../../how-to/index.md:323
 msgid "Fix active-profile, storage, tax-rules, and authentication problems."
 msgstr ""
 "Corrige problemas de perfil activo, almacenamiento, reglas fiscales y "
 "autenticación."
 
-#: ../../how-to/index.md:319
+#: ../../how-to/index.md:326
 msgid "How to publish a validated runtime authority"
 msgstr "Cómo publicar una autoridad de ejecución validada"
 
-#: ../../how-to/index.md:323
+#: ../../how-to/index.md:330
 msgid ""
 "Publish and check the signed tax rules that Cadrumo reads, as a release "
 "maintainer."
 msgstr ""
 "Publica y comprueba las reglas fiscales firmadas que lee Cadrumo, como "
 "responsable de publicación."
-

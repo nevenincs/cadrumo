@@ -30,7 +30,7 @@ def _source_reference(payload: bytes) -> SourceReference:
         corpus_path="corpus/test/source.txt",
         sha256=hashlib.sha256(payload).hexdigest(),
         bytes=len(payload),
-        retrieved_at=date(2026, 9, 14),
+        retrieved_at=date(1980, 1, 1),
         source_url="https://sede.agenciatributaria.gob.es/test/source.txt",
         review_status="pending_review",
     )

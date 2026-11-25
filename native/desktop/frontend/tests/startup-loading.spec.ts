@@ -207,6 +207,52 @@ for (const screen of [
   });
 }
 
+// WebKit suspends animation frames while a window is hidden or covered, as a
+// window launched in the background behind others can be.
+async function withoutFrames(page: Page, hidden: boolean) {
+  await page.addInitScript((initiallyHidden) => {
+    let visibility = initiallyHidden ? "hidden" : "visible";
+    Object.defineProperty(Document.prototype, "visibilityState", {
+      get: () => visibility,
+    });
+    window.requestAnimationFrame = () => 0;
+    Object.assign(window, {
+      __hide: () => {
+        visibility = "hidden";
+        document.dispatchEvent(new Event("visibilitychange"));
+      },
+    });
+  }, hidden);
+}
+
+test("a window hidden while loading begins assembly without a frame", async ({
+  page,
+}) => {
+  await withoutFrames(page, true);
+  await open(page);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as StartupWindow).__startupTest.calls[0],
+    ),
+  ).toBe("startup_begin");
+});
+
+test("a window covered before its first frame begins assembly", async ({
+  page,
+}) => {
+  await withoutFrames(page, false);
+  await page.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () =>
+      setTimeout(() => (window as unknown as { __hide(): void }).__hide(), 300),
+    );
+  });
+  await open(page);
+  const calls = await page.evaluate(
+    () => (window as unknown as StartupWindow).__startupTest.calls,
+  );
+  expect(calls.filter((call) => call === "startup_begin")).toHaveLength(1);
+});
+
 test("reduced motion keeps a static loading indicator", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);

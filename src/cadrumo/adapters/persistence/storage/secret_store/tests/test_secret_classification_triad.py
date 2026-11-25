@@ -216,10 +216,10 @@ def test_the_index_row_holds_the_same_closed_set_as_the_record(classification: S
     index row is constructed on the write path too, and a closed set enforced
     only at read would let a future writer persist the mismatch.
     """
-    from ..store import _SecretIndexEntry
+    from ..store import SecretIndexEntry
 
     with pytest.raises((StorageValidationError, ValidationError)):
-        _SecretIndexEntry(
+        SecretIndexEntry(
             digest_hex="a" * 64,
             blob_sha256_plaintext_hex="b" * 64,
             classification=classification,

@@ -1,5 +1,5 @@
-//! AppKit adapter for the real manager lifetime owner. No entry point calls this
-//! module yet: native installation, cutover and interactive acceptance are gates.
+//! AppKit adapter for the real manager lifetime owner. Version cutover is not
+//! composed here: no versioned Darwin installation exists to hand over to.
 #![allow(unsafe_code)]
 
 use super::State;
@@ -15,9 +15,10 @@ use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2::{DefinedClass, MainThreadOnly, define_class, msg_send, sel};
 use objc2_app_kit::{
-    NSApplication, NSApplicationDelegate, NSApplicationTerminateReply, NSEventTrackingRunLoopMode,
-    NSModalPanelRunLoopMode, NSWorkspace, NSWorkspaceSessionDidBecomeActiveNotification,
-    NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceWillPowerOffNotification,
+    NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate,
+    NSApplicationTerminateReply, NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode, NSWorkspace,
+    NSWorkspaceSessionDidBecomeActiveNotification, NSWorkspaceSessionDidResignActiveNotification,
+    NSWorkspaceWillPowerOffNotification,
 };
 use objc2_foundation::{
     MainThreadMarker, NSDefaultRunLoopMode, NSNotification, NSObject, NSObjectProtocol, NSRunLoop,
@@ -37,7 +38,6 @@ const END_SESSION: u8 = 1;
 const ACTIVITY_CHANGED: u8 = 2;
 
 /// Custody is supplied by native admission, never manufactured by the event loop.
-/// This host cannot enroll upgrades until a real native coordinator is integrated.
 #[must_use = "a live manager host owns supervisor and native session custody"]
 pub struct Host {
     background: Background,
@@ -93,6 +93,9 @@ impl Host {
         if self
             .ipc
             .poll(|_, request| {
+                if matches!(request, ipc::Request::Status { .. }) {
+                    return ipc::status(background.status());
+                }
                 ipc::respond(request, || {
                     if ending {
                         return Err(io::ErrorKind::WouldBlock.into());
@@ -109,6 +112,23 @@ impl Host {
             self.state.failed = true;
             self.session_end();
         }
+    }
+
+    /// Settle custody after the event loop returned: end the session and keep polling
+    /// until the supervisor is gone or `bound` passes. Answers whether it settled; the
+    /// session lock is released only after this returns.
+    pub fn settle(mut self, bound: Duration) -> bool {
+        self.state.failed = true;
+        self.session_end();
+        let deadline = std::time::Instant::now() + bound;
+        while !self.background.session_end_settled() {
+            if std::time::Instant::now() >= deadline {
+                return false;
+            }
+            let _ = self.background.poll();
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        true
     }
 
     fn can_finish(&self) -> bool {
@@ -174,6 +194,8 @@ impl Host {
             },
         );
         let application = NSApplication::sharedApplication(mtm);
+        // A status-item process: no Dock icon and no main menu.
+        application.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
         let center = NSWorkspace::sharedWorkspace().notificationCenter();
         // SAFETY: Each selector has the documented single NSNotification argument.
         // Observer contains only atomic state and may receive notifications on any

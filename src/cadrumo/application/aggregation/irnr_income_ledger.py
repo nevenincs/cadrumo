@@ -17,35 +17,38 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.render import tr as render_tr
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.irnr import M210PayerMode
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.calculations.registry.irnr_ledger_bindings import ledger_irnr_income_source_jurisdictions
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from . import _shared_issue_reasons
-from ._grouping import fold_casilla_observations
-from ._models import CasillaAggregation, LedgerAggregationResultBase
+from . import shared_issue_reasons
 from .errors import AggregationPeriodError, AggregationValidationError
+from .grouping import fold_casilla_observations
+from .models import CasillaAggregation, LedgerAggregationResultBase
 
 
 class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a row did not reach the M210 gross-income fact."""
 
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
     FOREIGN_SOURCE_OUT_OF_SCOPE = "foreign_source_out_of_scope"
     SOURCE_JURISDICTION_UNRESOLVED = "source_jurisdiction_unresolved"
@@ -63,7 +66,7 @@ class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
 class IrnrIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while resolving the M210 ledger projection."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     reason: IrnrIncomeLedgerAggregationIssueReason
@@ -74,11 +77,11 @@ class IrnrIncomeLedgerAggregationIssue(BaseModel):
 class IrnrIncomeObservation(BaseModel):
     """One selected, ES-source, explicitly M210-classified income observation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId
-    official_tipo_renta_code: str = Field(min_length=2, max_length=2)
+    official_tipo_renta_code: str = Field(min_length=1, max_length=16)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
     applicable_rate: UnitProportion
     payer_mode: M210PayerMode
@@ -87,12 +90,24 @@ class IrnrIncomeObservation(BaseModel):
     filing_date: date
     source_jurisdiction: CountryCodeAlpha2
 
+    @field_validator("official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
+
 
 class IrnrIncomeLedgerAggregation(LedgerAggregationResultBase[IrnrIncomeObservation, IrnrIncomeLedgerAggregationIssue]):
     """Selected-code M210 observations for one filing period."""
 
-    selected_official_tipo_renta_code: str = Field(min_length=2, max_length=2)
+    selected_official_tipo_renta_code: str = Field(min_length=1, max_length=16)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+
+    @field_validator("selected_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 def _resolve_irnr_registry_revision(

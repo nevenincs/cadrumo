@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..errors import SequenceParseError
 from ..parser import (
     RESULT_PAYLOAD_EXEMPT,
@@ -27,11 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _VERIFY = "Verify the calculation before exporting."
 # The worked example, minus its ``:seed:`` (seed inlining is exercised in
 # ``test_seeds.py``).
-_WORKED_EXAMPLE = """\
-aeat app modelo create 303 --year 2026 --period 1T
+_YEAR = str(filing_year_envelope().horizon)
+_WORKED_EXAMPLE = f"""\
+aeat app modelo create 303 --year {_YEAR} --period 1T
 @capture work_unit_id result.work_unit_id
-aeat app modelo calculate {work_unit_id}
-@result aeat app modelo verify {work_unit_id}
+aeat app modelo calculate {{work_unit_id}}
+@result aeat app modelo verify {{work_unit_id}}
 @expect result.status == "verified_complete"
 """
 
@@ -61,7 +64,7 @@ def test_worked_example_parses_into_typed_frames() -> None:
     create, calculate, result = sequence.frames
 
     assert create.kind is FrameKind.COMMAND
-    assert create.argv == ("aeat", "app", "modelo", "create", "303", "--year", "2026", "--period", "1T")
+    assert create.argv == ("aeat", "app", "modelo", "create", "303", "--year", _YEAR, "--period", "1T")
     assert create.captures == (CaptureBinding(name="work_unit_id", json_path="result.work_unit_id"),)
     assert create.placeholder_names == ()
 
@@ -210,7 +213,7 @@ def test_bracket_quoted_object_key_path_parses() -> None:
             id="invalid_placeholder_shape",
         ),
         pytest.param(
-            # M1: an unterminated ``{work_unit_id`` would otherwise survive as a
+            # An unterminated ``{work_unit_id`` would otherwise survive as a
             # literal argv token with no problem raised.
             "aeat app modelo create 303\n"
             "@capture work_unit_id result.work_unit_id\n"
@@ -244,7 +247,7 @@ def test_refuses(body: str, expected_substring: str) -> None:
             id="result_without_expect",
         ),
         pytest.param(
-            # M3: exit_code is an integer exit status.
+            # exit_code is an integer exit status.
             '@result aeat app modelo verify\n@expect exit_code == "nope"\n',
             "exit_code",
             "integer literal",
@@ -258,7 +261,7 @@ def test_refuses(body: str, expected_substring: str) -> None:
             id="bool_exit_code_expect",
         ),
         pytest.param(
-            # L1: the diagnostic points at the offending @capture line (line 4),
+            # The diagnostic points at the offending @capture line (line 4),
             # not the frame's command line.
             "aeat app modelo create 303\n"
             "@capture work_unit_id result.work_unit_id\n"
@@ -356,12 +359,10 @@ _EXIT_ONLY_BODY = "@result aeat app modelo work list\n@expect exit_code == 0\n"
 def test_enrolled_sequence_with_an_exit_only_result_frame_is_refused() -> None:
     """The editorial payload contract REFUSES at the enrolled-directive boundary.
 
-    The contract used to live only in the predicate below, whose sole caller was a
-    test module reading a committed baseline; when that baseline was deleted the
-    contract stopped being enforced anywhere and nothing announced it. It is now a
-    refusal the ``cli-sequence`` directive cannot decline. A synthetic sequence
-    built by a unit test is not documentation, so ``parse_sequence`` itself stays
-    permissive — which is why this is asserted on the refusal, not on the parse.
+    The payload contract is a refusal the ``cli-sequence`` directive cannot
+    decline. A synthetic sequence built by a unit test is not documentation, so
+    ``parse_sequence`` itself stays permissive — which is why this is asserted on
+    the refusal, not on the parse.
     """
     sequence = _parse(_EXIT_ONLY_BODY)
     assert result_frame_asserts_result_payload(sequence) is False
@@ -432,11 +433,8 @@ def test_independent_faults_accumulate_in_one_pass() -> None:
     assert len(problems) >= 3
 
 
-# --- Review findings M1-M3, L1-L2 -------------------------------------------
-
-
 def test_over_long_sequence_id_accumulates_not_raw_validation_error() -> None:
-    # M2: a 121-char kebab id passes the pattern but exceeds SequenceId's cap;
+    # A 121-char kebab id passes the pattern but exceeds SequenceId's cap;
     # it must surface as an accumulating SequenceParseError, not a raw pydantic
     # ValidationError, and co-accumulate with a second fault.
     long_id = "a" * 121
@@ -464,13 +462,13 @@ def test_int_exit_code_expect_is_accepted() -> None:
 
 
 def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
-    # L2: the parser must not duplicate the schema patterns; they are derived
+    # The parser must not duplicate the schema patterns; they are derived
     # from the single StringConstraints declaration and cannot drift.
     from typing import get_args
 
     from pydantic import StringConstraints
 
-    from ..parser import _IDENTIFIER_RE, _JSON_PATH_RE, _SEQUENCE_ID_RE
+    from ..parser import IDENTIFIER_RE, JSON_PATH_RE, SEQUENCE_ID_RE
     from ..schema import Identifier, JsonPath, SequenceId
 
     def _pattern(alias: object) -> str:
@@ -478,9 +476,9 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
         assert isinstance(pattern, str)
         return pattern
 
-    assert _SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
-    assert _IDENTIFIER_RE.pattern == _pattern(Identifier)
-    assert _JSON_PATH_RE.pattern == _pattern(JsonPath)
+    assert SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
+    assert IDENTIFIER_RE.pattern == _pattern(Identifier)
+    assert JSON_PATH_RE.pattern == _pattern(JsonPath)
 
 
 # --- @step frame descriptions ------------------------------------------------
@@ -668,9 +666,8 @@ def test_static_frame_carries_its_blocked_reason() -> None:
 def test_static_frame_without_a_blocked_reason_is_refused() -> None:
     """A bare @static marker is refused: the reason is what makes it auditable.
 
-    This is the regression that let a documented dead end hide — an unexercised
-    static frame and a deliberately-blocked one wore the same marker, so nobody
-    could tell which was which.
+    An unexercised static frame and a deliberately-blocked one would otherwise
+    wear the same marker, so nobody could tell which was which.
     """
     problems = _problems("@static aeat config profile list", verify=None)
     assert any("must state why it is not executed" in problem and "@blocked" in problem for problem in problems)

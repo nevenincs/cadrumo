@@ -13,14 +13,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ..ledger_results import (
+from ..ledger_interchange_results import (
     LedgerImportDiagnosticPayload,
     LedgerImportPayload,
     LedgerImportSourcePayload,
     LedgerImportTransactionRefPayload,
     LedgerImportValidationPayload,
-    LedgerStatusResult,
 )
+from ..ledger_results import LedgerStatusResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

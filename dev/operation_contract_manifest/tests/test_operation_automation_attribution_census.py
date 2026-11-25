@@ -28,8 +28,8 @@ from typing import Annotated, TypeAliasType, get_args, get_origin
 import pytest
 from pydantic import BaseModel
 
-from dev._paths import REPO_ROOT
 from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -136,6 +136,7 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
             "ledger.remove",
             "ledger.reset",
             "ledger.update",
+            "ledger.update.batch",
         )
     },
     "ledger.archive": _Proof(_ACTOR, _ROW_MUTATION, _LIFECYCLE_TEST),
@@ -158,6 +159,7 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
         _ACTOR, _ACTOR_LABELS, "test_operator_iva_derivation_records_the_session_label_for_an_automation"
     ),
     "ledger.link": _Proof(_ACTOR, _ACTOR_LABELS, "test_ledger_link_records_the_session_label_for_an_automation"),
+    "ledger.unlink": _Proof(_ACTOR, _ACTOR_LABELS, "test_ledger_unlink_records_the_session_label_for_an_automation"),
     "ledger.counterparty": _Proof(
         frozenset({"asserted_by"}),
         _ACTOR_LABELS,

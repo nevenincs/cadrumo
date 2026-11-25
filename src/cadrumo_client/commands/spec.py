@@ -5,14 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Literal, cast
 
-from cadrumo_client.commands._parameter_validation import (
+from cadrumo_client.commands.parameter_validation import (
     require_identifier,
     require_token,
     validate_machine_secret_contract,
     validate_parameter_declarations,
     validate_profile_secret_contract,
 )
-from cadrumo_client.commands._policy_validation import (
+from cadrumo_client.commands.parameters import ParameterSpec
+from cadrumo_client.commands.policy_validation import (
     expanded_capabilities,
     validate_policy_destructive,
     validate_policy_effect_capabilities,
@@ -23,20 +24,19 @@ from cadrumo_client.commands._policy_validation import (
     validate_policy_types,
     validate_policy_write_route,
 )
-from cadrumo_client.commands._structure_validation import (
+from cadrumo_client.commands.secret_contracts import MachineSecretSpec, ProfileSecretSpec, RecoveryHandoffSpec
+from cadrumo_client.commands.shared_contracts import (
+    LazyBinding,
+    ResultSchemaSpec,
+    TranslationKey,
+)
+from cadrumo_client.commands.structure_validation import (
     validate_callback_parameters,
     validate_command_identity,
     validate_command_spec,
     validate_leaf_execution,
     validate_recovery_handoff_contract,
     validate_terminal_execution,
-)
-from cadrumo_client.commands.parameters import ParameterSpec
-from cadrumo_client.commands.secret_contracts import MachineSecretSpec, ProfileSecretSpec, RecoveryHandoffSpec
-from cadrumo_client.commands.shared_contracts import (
-    LazyBinding,
-    ResultSchemaSpec,
-    TranslationKey,
 )
 from cadrumo_client.contracts.command_ports import (
     Capability,

@@ -9,8 +9,8 @@ have broken page rendering with no resolution-time signal at all -- the failure
 would surface at runtime, on the first page rendered, wearing the rasteriser's
 own "could not rasterise PDF pages" wrapper.
 
-That specific hole is closed: Pillow is now declared in the base dependencies
-AND in the ``llm`` extra. This gate exists so the CLASS stays closed. The next
+That specific hole is closed: Pillow is now declared in the base dependencies.
+This gate exists so the CLASS stays closed. The next
 incidental transitive to be relied on directly will not announce itself, and
 nothing about an import statement reveals whether the package behind it was
 promised or inherited.
@@ -40,8 +40,6 @@ it would have made the gate an assertion about its own table.
 
 from __future__ import annotations
 
-import ast
-from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
 
@@ -49,9 +47,10 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from .._distribution_names import normalise_distribution_name
+from ..distribution_names import normalise_distribution_name
+from .import_names_support import top_level_imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -90,21 +89,6 @@ def _declared_distributions() -> set[str]:
     return declared
 
 
-def _top_level_imports(path: Path) -> Iterator[str]:
-    """Yield the top-level module name of every absolute import in ``path``.
-
-    Relative imports are skipped: they address this project, which is not a
-    declarable dependency of itself.
-    """
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                yield alias.name.split(".")[0]
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
-            yield node.module.split(".")[0]
-
-
 def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     """Map each third-party import name to the repo-relative files importing it."""
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
@@ -114,7 +98,7 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
         if "tests" in relative.parts or path.name == "conftest.py":
             # Not shipped by either build target, so not a shipped reliance.
             continue
-        for name in _top_level_imports(path):
+        for name in top_level_imports(path):
             if name in stdlib_and_local:
                 continue
             found.setdefault(name, []).append(path.relative_to(_REPO_ROOT).as_posix())
@@ -203,5 +187,5 @@ def test_a_development_group_entry_is_not_a_declaration() -> None:
         "rely on a package the wheel does not require"
     )
     assert "anthropic" not in declared, "the retired tax provider must remain development-only"
-    assert "nvidia-ml-py" in declared, "the reader stopped seeing optional-dependencies extras"
+    assert "reportlab" in declared, "the reader stopped seeing optional-dependencies extras"
     assert "pydantic" in declared, "the reader stopped seeing [project] dependencies"

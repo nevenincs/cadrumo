@@ -23,15 +23,16 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.modelos.row_models import Modelo232VinculadaRow, ModeloDetailRow
-from .._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..action_errors import AmendmentDetailRowsRequiredError
-from ..amendment_actions import _require_amendment_detail_rows
+from ..amendment_actions import require_amendment_detail_rows
+from ..calculation_modelo_adjustments import detail_row_declaration_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _EFFECTIVE_DATE = date(_FILING_YEAR, 12, 31)
 
 # Parametrization is fixed at collection, so the row-bearing membership is
@@ -87,13 +88,13 @@ def _counterparty() -> Modelo232VinculadaRow:
 def test_a_row_bearing_modelo_refuses_an_amendment_that_omits_its_rows(modelo: str) -> None:
     """Silence is not a nil declaration; the two amendment kinds read it apart."""
     with pytest.raises(AmendmentDetailRowsRequiredError):
-        _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None)
+        require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None)
 
 
 @pytest.mark.parametrize("modelo", _DETAIL_ROW_DECLARATION_MODELOS)
 def test_an_explicitly_empty_set_is_an_answer_and_is_accepted(modelo: str) -> None:
     """Declaring that the period had no counterparts is a statement, not silence."""
-    assert _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=[]) == ()
+    assert require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=[]) == ()
 
 
 @pytest.mark.parametrize("modelo", ["303", "130", "210"])
@@ -105,13 +106,13 @@ def test_a_modelo_whose_rows_are_not_the_declaration_needs_no_answer(modelo: str
     return rather than a nil declaration. Requiring rows there would refuse a
     perfectly complete amendment.
     """
-    assert _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None) == ()
+    assert require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None) == ()
 
 
 def test_supplied_rows_are_carried_through_unchanged() -> None:
     """The guard resolves, it does not filter."""
     row = _counterparty()
-    assert _require_amendment_detail_rows(modelo="232", filing_year=_FILING_YEAR, supplied=[row]) == (row,)
+    assert require_amendment_detail_rows(modelo="232", filing_year=_FILING_YEAR, supplied=[row]) == (row,)
 
 
 def test_detail_rows_move_the_revision_content_address() -> None:

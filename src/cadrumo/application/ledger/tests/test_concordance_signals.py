@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from ....domain.iva.regime_legend import resolve_regime_legends
 from ....domain.iva.schema import IvaTerritorialScope
-from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
+from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -82,7 +82,7 @@ def _walk(
     would assert against the DEFAULT population, passing while measuring
     nothing it names.
     """
-    return _printed_evidence(
+    return printed_evidence(
         tax_identifier=tax_identifier,
         country_code=country_code,
         postal_code=postal_code,

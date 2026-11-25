@@ -29,6 +29,7 @@ from ...domain.user_profile.plantilla_media import (
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .capsule_record import ProfileRecordConflictError
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from .profile_read_recorder import profile_facts_under
 from .profile_record_repository import ProfileRecordRepository
 from .projections import in_window_order
 
@@ -76,9 +77,8 @@ def _mutation(before: UserProfileRecord, published: UserProfileRecord) -> Planti
 def _effective_values(record: UserProfileRecord) -> dict[str, object]:
     """Return each plantilla-media path's effective typed value; a clear is ``None``."""
     effective: dict[str, object] = {}
-    for fact in in_window_order(record.facts):
-        if fact.path.startswith(f"{PLANTILLA_MEDIA_PATH}."):
-            effective[fact.path] = fact.value
+    for fact in in_window_order(profile_facts_under(record.facts, f"{PLANTILLA_MEDIA_PATH}.")):
+        effective[fact.path] = fact.value
     return effective
 
 

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-10-03'
+modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:c145ae674e1addd4fa0152ee9351bb6a612673891ceb467c7939fdddb34979c5'
+body_hash: 'sha256:ca80859a5802158ad92eb79a65552d3ee524b1078f5759e81882808d1cd83b2f'
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
@@ -117,6 +117,10 @@ related:
   - '[[2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p19-s109-m296-registry-refusal-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit]]'
+  - '[[2026-11-06-source-casilla-integration-profile-node-consumed-facts-adr]]'
+  - '[[2026-11-06-source-casilla-integration-profile-node-fingerprint-reference]]'
+  - '[[2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr]]'
+  - '[[2026-11-14-source-casilla-integration-plan]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -133,6 +137,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr` - `source-casilla-integration` adr: `m390 2021 source owner deferral` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-m721-structured-message-source-owner-deferral-adr` - `source-casilla-integration` adr: `m721 structured-message source owner deferral` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr` - `source-casilla-integration` adr: `modelo 840 source and repeated row owner deferral` | (**status:** `accepted`)
+- `2026-11-06-source-casilla-integration-profile-node-consumed-facts-adr` - `source-casilla-integration` adr: `Profile provenance node content is the consumed facts` | (**status:** `proposed`)
+- `2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr` - `source-casilla-integration` adr: `Modelo 840 profile facts and the premises repeat layout` | (**status:** `accepted`)
 
 ### audit
 
@@ -223,6 +229,14 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit` - `source-casilla-integration` audit: `w05 p19 s108 m296 grounding review`
 - `2026-08-25-source-casilla-integration-w05-p19-s109-m296-registry-refusal-review-audit` - `source-casilla-integration` audit: `W05 P19 S109 Modelo 296 registry refusal review`
 - `2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P19 S110 Modelo 296 refusal lifecycle review`
+
+### plan
+
+- `2026-11-14-source-casilla-integration-plan` - `source-casilla-integration` plan
+
+### reference
+
+- `2026-11-06-source-casilla-integration-profile-node-fingerprint-reference` - `source-casilla-integration` reference: `Profile provenance node fingerprint`
 
 ### research
 

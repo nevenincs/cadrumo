@@ -31,7 +31,6 @@ general deducible cuota  = (10.50 + 10.50 + 10.50) * 60% = 18.90 (all inputs fla
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from datetime import date as _esp_date
 from decimal import Decimal
@@ -39,20 +38,19 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.iva_ledger import (
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
-from cadrumo.application.calculations.prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
+from cadrumo.application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from cadrumo.application.calculations.prorrata_especial_advisory import build_prorrata_especial_mandatory_advisory
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -63,13 +61,6 @@ from cadrumo.domain.prorrata_register.register import ProrrataRegister, Prorrata
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across each art. 106 aggregation chain."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
@@ -183,6 +174,7 @@ def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthor
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
@@ -258,6 +250,7 @@ def test_each_art106_regla_isolated(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,

@@ -6,13 +6,19 @@ use cadrumo_application::{
     component::Cancellation,
     diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    installation::{DiscoveryContract, RegistrationHints, Selection},
+    installation::Selection,
+};
+// The catalogue manager dispatch is Windows-only; its pure parts are tested everywhere.
+#[cfg(any(windows, test))]
+use cadrumo_application::{
+    installation::{DiscoveryContract, RegistrationHints},
     process::status::{ProcessPhase, ProcessRole},
 };
 use serde::{Deserialize, Serialize};
+#[cfg(any(windows, test))]
+use std::process::Stdio;
 use std::{
     path::{Path, PathBuf},
-    process::Stdio,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -20,30 +26,52 @@ use std::{
     time::Duration,
 };
 use tauri::State;
+#[cfg(any(windows, test))]
 use tokio::io::AsyncReadExt;
 
 mod observation;
 pub use observation::{ManagerState, ManagerStatus};
 
-const DISPATCH: &str = include_str!("python/manager_dispatch.py");
-const DEADLINE: Duration = Duration::from_secs(60);
+/// The desktop's supervision host on this platform.
+#[cfg(windows)]
+type DesktopHost = cadrumo_manager::desktop_host::DesktopHost;
+/// The desktop's supervision host on this platform.
+#[cfg(target_os = "macos")]
+type DesktopHost = cadrumo_manager::macos::desktop_host::DesktopHost;
 
-async fn wait_for_readiness(ready: impl std::future::Future<Output = Result<()>>) -> Result<()> {
-    #[cfg(windows)]
-    let bound =
-        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling;
-    #[cfg(not(windows))]
-    let bound = Duration::from_secs(90);
-    tokio::time::timeout(bound, ready)
+#[cfg(any(windows, test))]
+const DISPATCH: &str = include_str!("python/manager_dispatch.py");
+const STARTUP_TIMEOUT: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
+
+async fn wait_for_readiness(
+    ready: impl std::future::Future<Output = Result<()>>,
+    startup_timeout: Duration,
+) -> Result<()> {
+    tokio::time::timeout(startup_timeout, ready)
         .await
-        .map_err(|_| failure(ErrorCode::TimedOut))?
+        .map_err(|_| failure(ErrorCode::TimedOut).with_reason("runtime_timeout"))?
+}
+
+/// A requested stop ends the wait as an unavailable session; only an elapsed
+/// deadline is a timeout, and the stop wins when both are ready.
+async fn wait_for_readiness_or_stop(
+    ready: impl std::future::Future<Output = Result<()>>,
+    stopped: impl std::future::Future<Output = ()>,
+    startup_timeout: Duration,
+) -> Result<()> {
+    tokio::select! {
+        biased;
+        () = stopped => Err(failure(ErrorCode::SessionUnavailable)),
+        result = wait_for_readiness(ready, startup_timeout) => result,
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StartOutcome {
     Dispatched,
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "macos")))]
     Unsupported,
 }
 
@@ -75,8 +103,8 @@ pub struct ManagerStart {
     /// on it instead of polling the host.
     supervision: Arc<tokio::sync::watch::Sender<u64>>,
     observation: observation::Observer,
-    #[cfg(windows)]
-    host: Mutex<Option<cadrumo_manager::desktop_host::DesktopHost>>,
+    #[cfg(any(windows, target_os = "macos"))]
+    host: Mutex<Option<DesktopHost>>,
 }
 
 impl ManagerStart {
@@ -96,8 +124,8 @@ impl ManagerStart {
             spawn_fence: Arc::new(Mutex::new(())),
             closing: tokio::sync::Notify::new(),
             supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
-            observation: observation::Observer::new(cfg!(windows)),
-            #[cfg(windows)]
+            observation: observation::Observer::new(cfg!(any(windows, target_os = "macos"))),
+            #[cfg(any(windows, target_os = "macos"))]
             host: Mutex::new(None),
         }
     }
@@ -123,40 +151,62 @@ impl ManagerStart {
         self: &Arc<Self>,
         sign_in: &Arc<crate::shell::sign_in::SignIn>,
     ) -> Result<()> {
-        wait_for_readiness(async {
-            if self.start_existing().await? != StartOutcome::Dispatched {
-                return Err(failure(ErrorCode::ManagerUnavailable));
-            }
-            let mut supervision = self.supervision_changes();
-            loop {
-                // Subscribed before reading, so a change meanwhile still wakes.
-                supervision.borrow_and_update();
-                let observed = sign_in.observation_changed();
-                if !self.supervision_status()? {
-                    supervision
-                        .changed()
-                        .await
-                        .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
-                    continue;
+        let closing = self.closing.notified();
+        tokio::pin!(closing);
+        closing.as_mut().enable();
+        let result = wait_for_readiness_or_stop(
+            async {
+                if self.start_existing().await? != StartOutcome::Dispatched {
+                    return Err(failure(ErrorCode::ManagerUnavailable));
                 }
-                let status = sign_in.read_status().await?;
-                if status.runtime_ready() && self.supervision_status()? {
-                    self.diagnostics
-                        .host_outcome(HostStage::Manager, HostOutcome::Ready);
-                    return Ok(());
-                }
-                if status.runtime_available && status.refusal.is_some() {
-                    return Err(failure(ErrorCode::ReadFailed));
-                }
-                tokio::select! {
-                    changed = supervision.changed() => {
-                        changed.map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                let mut supervision = self.supervision_changes();
+                loop {
+                    if self.closed.load(Ordering::Acquire) {
+                        return Err(failure(ErrorCode::SessionUnavailable));
                     }
-                    () = observed => {}
+                    // Subscribed before reading, so a change meanwhile still wakes.
+                    supervision.borrow_and_update();
+                    let observed = sign_in.observation_changed();
+                    if !self.supervision_status()? {
+                        log::debug!("startup awaiting supervision");
+                        supervision
+                            .changed()
+                            .await
+                            .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                        continue;
+                    }
+                    log::debug!("startup reading sign-in status");
+                    let status = sign_in.read_status().await?;
+                    log::debug!("startup sign-in status read");
+                    if status.runtime_ready() && self.supervision_status()? {
+                        self.diagnostics
+                            .host_outcome(HostStage::Manager, HostOutcome::Ready);
+                        return Ok(());
+                    }
+                    if status.runtime_available && status.refusal.is_some() {
+                        return Err(failure(ErrorCode::ReadFailed));
+                    }
+                    tokio::select! {
+                        changed = supervision.changed() => {
+                            changed.map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                        }
+                        () = observed => {}
+                    }
                 }
-            }
-        })
-        .await
+            },
+            closing,
+            STARTUP_TIMEOUT,
+        )
+        .await;
+        if result
+            .as_ref()
+            .is_err_and(|error| error.reason.as_deref() == Some("runtime_timeout"))
+        {
+            self.close_checked()
+                .await
+                .map_err(|error| error.with_reason("runtime_timeout"))?;
+        }
+        result
     }
 
     /// An explicit scope never shares a different caller's installation decision.
@@ -249,14 +299,14 @@ impl ManagerStart {
             Ok(StartOutcome::Dispatched) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Dispatched),
-            #[cfg(not(windows))]
+            #[cfg(not(any(windows, target_os = "macos")))]
             Ok(StartOutcome::Unsupported) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Unavailable),
             Err(_) => {}
         }
         match &outcome {
-            #[cfg(not(windows))]
+            #[cfg(not(any(windows, target_os = "macos")))]
             Ok(StartOutcome::Unsupported) => {
                 if let Err(error) = self.observation.set_state(ManagerState::Unsupported) {
                     self.observation.observation_failed(error);
@@ -318,7 +368,7 @@ impl ManagerStart {
 
     /// Wait for this host's actual supervisor worker and owned runtime settlement.
     pub async fn stop_owned(&self) -> Result<()> {
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         {
             let host = self
                 .host
@@ -341,16 +391,14 @@ impl ManagerStart {
     }
 
     pub fn supervision_status(&self) -> Result<bool> {
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         {
             let host = self.host.lock().map_err(|_| {
                 let error = failure(ErrorCode::LockPoisoned);
                 self.observation.observation_failed(error.clone());
                 error
             })?;
-            let status = host
-                .as_ref()
-                .map(cadrumo_manager::desktop_host::DesktopHost::status);
+            let status = host.as_ref().map(DesktopHost::status);
             if status.is_none() {
                 let previous = self
                     .observation
@@ -376,7 +424,7 @@ impl ManagerStart {
                 .inspect_err(|error| self.observation.observation_failed(error.clone()))?;
             Ok(status == Some(cadrumo_manager::ipc::Outcome::Running))
         }
-        #[cfg(not(windows))]
+        #[cfg(not(any(windows, target_os = "macos")))]
         Ok(false)
     }
 
@@ -417,11 +465,11 @@ impl ManagerStart {
     }
 
     async fn dispatch(&self, _retry: bool, _provision: bool) -> Result<StartOutcome> {
-        #[cfg(not(windows))]
+        #[cfg(not(any(windows, target_os = "macos")))]
         {
             return Ok(StartOutcome::Unsupported);
         }
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         {
             let package_root = self
                 .package_root
@@ -430,6 +478,7 @@ impl ManagerStart {
                 .as_ref()
                 .map_err(|reason| failure(ErrorCode::ManagerUnavailable).with_reason(reason))?
                 .clone();
+            #[cfg(windows)]
             let default_root =
                 cadrumo_manager::supervision::environment::ManagedLocations::for_host(
                     &std::env::current_exe()
@@ -445,7 +494,7 @@ impl ManagerStart {
                     .lock()
                     .map_err(|_| failure(ErrorCode::Panic))?
                     .as_ref()
-                    .is_some_and(cadrumo_manager::desktop_host::DesktopHost::finished);
+                    .is_some_and(DesktopHost::finished);
                 if finished {
                     // A failed worker has already drained its owned runtime. Retain
                     // its failure evidence, then allow an explicit retry to re-admit.
@@ -457,9 +506,14 @@ impl ManagerStart {
                 }
             }
             // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
+            #[cfg(windows)]
             let manager = self
                 .activate_installed(default_root, package_root.clone(), _retry)
                 .await?;
+            // The installed manager starts at login on its own; the desktop never starts
+            // it, and reaches it only at an exact image of its own package.
+            #[cfg(target_os = "macos")]
+            let manager = None;
             let mut host = self.host.lock().map_err(|_| failure(ErrorCode::Panic))?;
             if let Some(host) = host.as_ref() {
                 if _retry {
@@ -467,7 +521,7 @@ impl ManagerStart {
                         .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
                 }
             } else {
-                let started = cadrumo_manager::desktop_host::DesktopHost::start(
+                let started = DesktopHost::start(
                     &package_root,
                     &self.storage_root,
                     manager,
@@ -487,6 +541,7 @@ impl ManagerStart {
         }
     }
 
+    #[cfg(any(windows, test))]
     async fn activate_installed(
         &self,
         default_root: bool,
@@ -533,17 +588,19 @@ impl ManagerStart {
             .await
     }
 
+    #[cfg(any(windows, test))]
     async fn dispatch_target(&self, target: Selection, retry: bool) -> Result<StartOutcome> {
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
         let outcome = self
-            .run_dispatch(self.dispatch_command(&target, retry), DEADLINE)
+            .run_dispatch(self.dispatch_command(&target, retry), STARTUP_TIMEOUT)
             .await;
         drop(target);
         outcome
     }
 
+    #[cfg(any(windows, test))]
     fn dispatch_command(&self, target: &Selection, retry: bool) -> tokio::process::Command {
         let mut command = tokio::process::Command::from(self.child.command());
         command
@@ -585,11 +642,13 @@ impl ManagerStart {
         Ok(target)
     }
 
+    #[cfg(any(windows, test))]
     async fn run_dispatch(
         &self,
         mut command: tokio::process::Command,
-        deadline: Duration,
+        startup_timeout: Duration,
     ) -> Result<StartOutcome> {
+        let timeout_deadline = tokio::time::Instant::now() + startup_timeout;
         let closing = self.closing.notified();
         tokio::pin!(closing);
         closing.as_mut().enable();
@@ -614,7 +673,7 @@ impl ManagerStart {
             ProcessRole::ManagerDispatch,
         );
         let mut recorded_exit = false;
-        let read = tokio::time::timeout(deadline, async {
+        let read = tokio::time::timeout_at(timeout_deadline, async {
             let mut stdout = child
                 .stdout
                 .take()
@@ -647,7 +706,7 @@ impl ManagerStart {
             other => {
                 let error = match other {
                     Ok(Err(error)) => error,
-                    _ => failure(ErrorCode::TimedOut),
+                    _ => failure(ErrorCode::TimedOut).with_reason("runtime_timeout"),
                 };
                 self.diagnostics.failure_for(id, error.clone());
                 let cleanup: Result<()> = async {
@@ -744,6 +803,7 @@ fn install_package(
     Err(installation_failure(ErrorCode::UnsupportedPlatform))
 }
 
+#[cfg(any(windows, test))]
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct DispatchReply {
@@ -751,6 +811,7 @@ struct DispatchReply {
     os_code: Option<i32>,
 }
 
+#[cfg(any(windows, test))]
 fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
     let reply: DispatchReply =
         serde_json::from_slice(bytes).map_err(|_| failure(ErrorCode::ManagerDispatchFailed))?;
@@ -764,6 +825,7 @@ fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
     })
 }
 
+#[cfg(any(windows, test))]
 fn target(package_root: &Path, cancellation: &Cancellation) -> Result<Selection> {
     let contract: DiscoveryContract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
@@ -783,6 +845,7 @@ fn target(package_root: &Path, cancellation: &Cancellation) -> Result<Selection>
     target_from(package_root, &contract, &registered, cancellation)
 }
 
+#[cfg(any(windows, test))]
 fn target_from(
     package_root: &Path,
     contract: &DiscoveryContract,
@@ -800,30 +863,30 @@ fn target_from(
         })
 }
 
-/// Why this image supervises no package: only the installed image of the selected
+/// Why this image supervises no package: only the packaged image of the selected
 /// package, serving that package's own resolved storage root, supervises.
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "macos"))]
 fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
-    use cadrumo_platform::storage::{self, Mode};
+    use cadrumo_platform::storage;
     if storage::authority_override_present(std::env::vars_os()) {
         return Err(failure(ErrorCode::EnvironmentFailed));
     }
     let executable = std::env::current_exe()
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
-    let evidence =
-        storage::detect_mode(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
-    if evidence.mode != Mode::Installed {
+    let package =
+        storage::Package::locate(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    if !package.packaged {
         return Ok(Some("image_not_installed"));
     }
-    let actual_package = std::fs::canonicalize(&evidence.package)
+    let actual_package = std::fs::canonicalize(&package.root)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     let selected_package = std::fs::canonicalize(&launch.package_root)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     if actual_package != selected_package {
         return Ok(Some("image_outside_selected_package"));
     }
-    let resolved = storage::resolve_storage_root(&evidence)
-        .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    let resolved =
+        storage::resolve_storage_root().map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
     let own_root = std::fs::canonicalize(&resolved.root)
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
         == std::fs::canonicalize(&launch.working_directory)
@@ -831,7 +894,7 @@ fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
     Ok((!own_root).then_some("storage_root_not_package_root"))
 }
 
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os = "macos")))]
 fn unmanaged(_: &Launch) -> Result<Option<&'static str>> {
     Ok(Some("unsupported_platform"))
 }

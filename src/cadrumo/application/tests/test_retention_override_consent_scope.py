@@ -18,7 +18,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from ..config_reset import _retention_decision_from_record
+from ..config_reset import retention_decision_from_record
 from ..config_reset_models import ConfigResetRetentionDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,7 +59,7 @@ def _approved_for(records: int) -> ConfigResetRetentionDecision:
 
 def test_the_override_survives_an_unchanged_retained_set() -> None:
     """The ordinary resume: same records, same consent."""
-    decision = _retention_decision_from_record(_assessment(records=2), _approved_for(2))
+    decision = retention_decision_from_record(_assessment(records=2), _approved_for(2))
 
     assert decision.override_approved is True
     assert decision.override_reason == _REASON
@@ -67,7 +67,7 @@ def test_the_override_survives_an_unchanged_retained_set() -> None:
 
 def test_the_override_survives_a_shrunken_retained_set() -> None:
     """Fewer records than authorised is still inside the operator's decision."""
-    decision = _retention_decision_from_record(_assessment(records=1), _approved_for(2))
+    decision = retention_decision_from_record(_assessment(records=1), _approved_for(2))
 
     assert decision.override_approved is True
 
@@ -78,7 +78,7 @@ def test_the_override_drops_when_the_retained_set_grew() -> None:
     Dropping the approval is what makes the reset pause unresolved rather than
     destroy filings the operator was never shown.
     """
-    decision = _retention_decision_from_record(_assessment(records=5), _approved_for(2))
+    decision = retention_decision_from_record(_assessment(records=5), _approved_for(2))
 
     assert decision.override_approved is False
     assert decision.override_reason is None

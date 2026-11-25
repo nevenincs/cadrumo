@@ -36,22 +36,25 @@ from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
 from ....domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
     derive_modelo_applicability,
     derive_tax_route,
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from .calendar_test_support import profile as _autonomo
+from .calendar_test_support import profile as calendar_autonomo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -67,10 +70,11 @@ def _landlord() -> TaxpayerProfile:
     """A pure landlord: rendimientos del capital inmobiliario only."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -78,10 +82,11 @@ def _salaried_only() -> TaxpayerProfile:
     """A salaried-only taxpayer: rendimientos del trabajo only."""
 
     return TaxpayerProfile(
-        tax_id="Y2345678Z",
+        tax_id="Y0001501C",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -89,10 +94,11 @@ def _pensioner() -> TaxpayerProfile:
     """A pensioner: pensión only (a rendimiento del trabajo)."""
 
     return TaxpayerProfile(
-        tax_id="Z3456789D",
+        tax_id="Z0001502N",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("pension")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -100,17 +106,18 @@ def _sociedad_limitada() -> TaxpayerProfile:
     """A sociedad limitada: an Impuesto sobre Sociedades contribuyente."""
 
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
 def _undeclared() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="C5678901I", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="C0001503B", iva_regime=IVARegime("GENERAL"))
 
 
 def _iva_block_without_sii() -> ModeloIVAProfile:
@@ -123,7 +130,23 @@ def _iva_block_without_sii() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        roi_enrolled=False,
+        oss_enrolled=False,
+        sii_enrolled=False,
+        group_member_enrolled=False,
+        group_dominant_entity_enrolled=False,
+        intracommunity_operations_exceed_50000_eur=False,
     )
+
+
+_OUTSIDE_SII_ENROLLMENT = ModeloEnrollment(large_company=False)
+"""The censo half of the answer Modelo 347's SII exclusion reads.
+
+RIVA art. 71.3.1 makes the volumen de operaciones one of the triggers that
+puts a taxpayer on the mandatory SII, so a profile declared outside the SII
+has to state it: unanswered, the derived fact stays undeclared and the
+exclusion cannot be settled either way.
+"""
 
 
 def _attribution_entity() -> TaxpayerProfile:
@@ -134,9 +157,10 @@ def _attribution_entity() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -164,20 +188,20 @@ def test_core_personas_route_to_expected_modelo_verdicts() -> None:
         ("pensioner-m303", _pensioner, "303", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("pensioner-m200", _pensioner, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("pensioner-m202", _pensioner, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
-        ("autonomo-m100", _autonomo, "100", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m130", _autonomo, "130", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m303", _autonomo, "303", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m200", _autonomo, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
-        ("autonomo-m202", _autonomo, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m100", calendar_autonomo, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m130", calendar_autonomo, "130", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m303", calendar_autonomo, "303", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m200", calendar_autonomo, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m202", calendar_autonomo, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m100", _sociedad_limitada, "100", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m130", _sociedad_limitada, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m200", _sociedad_limitada, "200", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.INCOMPLETE, False, "cifra de negocios"),
         ("sl-m303", _sociedad_limitada, "303", ApplicabilityVerdict.APPLICABLE, True, None),
     )
 
     for case_id, profile_factory, modelo, expected_verdict, expected_applicable, reason_fragment in cases:
-        result = derive_modelo_applicability(profile_factory(), modelo)
+        result = derive_modelo_applicability(profile_factory(), modelo, reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
         if expected_applicable:
@@ -195,7 +219,7 @@ def test_undeclared_profile_is_not_declared() -> None:
     """The taxpayer-model declared check is False for an undeclared profile."""
 
     assert taxpayer_model_is_declared(_undeclared()) is False
-    assert taxpayer_model_is_declared(_autonomo()) is True
+    assert taxpayer_model_is_declared(calendar_autonomo()) is True
     assert taxpayer_model_is_declared(_sociedad_limitada()) is True
 
 
@@ -206,7 +230,7 @@ def test_undeclared_profile_yields_incomplete_for_every_modelo() -> None:
 
     profile = _undeclared()
     for modelo in ("100", "130", "303", "200", "202"):
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
         assert result.applicable is False
         assert "tipo de contribuyente" in result.reason
@@ -225,12 +249,12 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
     to guess rather than defaulting to autónomo."""
 
     profile = TaxpayerProfile(
-        tax_id="D6789012I",
+        tax_id="D0001500H",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
     )
     assert taxpayer_model_is_declared(profile) is False
-    result = derive_modelo_applicability(profile, "130")
+    result = derive_modelo_applicability(profile, "130", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
@@ -259,7 +283,9 @@ def test_modelo_without_seed_rule_is_incomplete(authority_operation: PinnedAutho
     than a confident guess.
     """
 
-    result = derive_modelo_applicability(_autonomo(), _an_unruled_modelo(authority_operation))
+    result = derive_modelo_applicability(
+        calendar_autonomo(), _an_unruled_modelo(authority_operation), reference_date=latest_period_end()
+    )
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
@@ -278,7 +304,9 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operat
     profile = _landlord()
     assert taxpayer_model_is_declared(profile) is True
 
-    result = derive_modelo_applicability(profile, _an_unruled_modelo(authority_operation))
+    result = derive_modelo_applicability(
+        profile, _an_unruled_modelo(authority_operation), reference_date=latest_period_end()
+    )
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
     # The un-ruled rationale must NOT tell a declared operator to
@@ -293,8 +321,8 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operat
 def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
     """The two INCOMPLETE causes carry structurally distinct prose."""
 
-    unruled = derive_modelo_applicability(_autonomo(), "232")
-    undeclared = derive_modelo_applicability(_undeclared(), "100")
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232", reference_date=latest_period_end())
+    undeclared = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
     assert unruled.reason != undeclared.reason
 
 
@@ -304,7 +332,7 @@ def test_undeclared_profile_still_uses_undeclared_reason() -> None:
     itself is incomplete. The rationale is prose only: the remedy command
     travels as a typed recovery precondition, never inside the reason."""
 
-    result = derive_modelo_applicability(_undeclared(), "100")
+    result = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "tipo de contribuyente" in result.reason
     assert "config profile edit" not in result.reason
@@ -320,13 +348,13 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
     undeclared rationale, not the un-ruled one."""
 
     profile = TaxpayerProfile(
-        tax_id="F6789012I",
+        tax_id="F0001500H",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
     )
-    result = derive_modelo_applicability(profile, "130")
+    result = derive_modelo_applicability(profile, "130", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == derive_modelo_applicability(_undeclared(), "100").reason
+    assert result.reason == derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end()).reason
     # Same failed condition, but the entity type IS declared: the fact that
     # distinguishes this case from a fully undeclared profile survives.
     assert result.failure == RegistryFailureClassification(
@@ -349,7 +377,7 @@ def test_attribution_entity_cuota_modelos_are_pass_through() -> None:
 
     profile = _attribution_entity()
     for modelo in ("100", "130", "200", "202"):
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH, modelo
         # A pass-through verdict is not an applicable obligation.
         assert result.applicable is False, modelo
@@ -360,7 +388,7 @@ def test_attribution_entity_pass_through_reason_is_honest() -> None:
     own and the income is taxed in the members' returns — not a generic
     'modelo does not apply' line."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "200")
+    result = derive_modelo_applicability(_attribution_entity(), "200", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
     assert "atribución de rentas" in result.reason
     assert "cada miembro" in result.reason
@@ -374,7 +402,7 @@ def test_attribution_entity_owes_modelo_184() -> None:
     the attribution entity's OWN obligation — applicable, not a
     pass-through (corporate-entity contract §2)."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "184")
+    result = derive_modelo_applicability(_attribution_entity(), "184", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.applicable is True
     assert result.legal_refs
@@ -384,7 +412,7 @@ def test_non_attribution_entities_do_not_owe_modelo_184() -> None:
     """Modelo 184 is the attribution entity's own obligation only."""
 
     for case_id, profile_factory in (("natural-person", _landlord), ("legal-entity", _sociedad_limitada)):
-        result = derive_modelo_applicability(profile_factory(), "184")
+        result = derive_modelo_applicability(profile_factory(), "184", reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, case_id
         assert result.applicable is False, case_id
 
@@ -393,7 +421,7 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
     """The Modelo 100 pass-through rationale for an attribution entity
     must not mislabel it a persona física or an entidad jurídica."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "100")
+    result = derive_modelo_applicability(_attribution_entity(), "100", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
     assert "persona física" not in result.reason
     assert "entidad jurídica" not in result.reason
@@ -406,7 +434,7 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
 
 _TAX_ROUTE_CASES: tuple[tuple[str, _ProfileFactory, TaxRoute], ...] = (
     ("landlord-irpf", _landlord, TaxRoute.IRPF),
-    ("autonomo-irpf", _autonomo, TaxRoute.IRPF),
+    ("autonomo-irpf", calendar_autonomo, TaxRoute.IRPF),
     ("legal-entity-is", _sociedad_limitada, TaxRoute.IMPUESTO_SOCIEDADES),
     ("attribution-pass-through", _attribution_entity, TaxRoute.ATTRIBUTION_PASS_THROUGH),
     ("undeclared", _undeclared, TaxRoute.INCOMPLETE),
@@ -443,11 +471,12 @@ def _autonomo_objetiva() -> TaxpayerProfile:
     """An autónomo en estimación objetiva (módulos)."""
 
     return TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -455,11 +484,16 @@ def _autonomo_simplificada() -> TaxpayerProfile:
     """An autónomo en estimación directa simplificada."""
 
     return TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_simplificada"),
         iva_regime=IVARegime("GENERAL"),
+        # RIRPF arts. 109.2 to 109.4 is a three-state fact: this autónomo states that the
+        # 70 per cent coverage exception does not hold, which is what leaves the
+        # pago fraccionado due. Unanswered, Modelo 130 is INCOMPLETE, not due.
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -467,17 +501,20 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     """M130/M131 stay mutually exclusive by estimation regime and taxpayer route."""
 
     default_directa_profile = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
     modulos_general_profile = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
     assert default_directa_profile.irpf_estimation_regime is None
     assert modulos_general_profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
@@ -485,8 +522,8 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     cases = (
         ("objetiva-m130", _autonomo_objetiva(), "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("objetiva-m131", _autonomo_objetiva(), "131", ApplicabilityVerdict.APPLICABLE, True),
-        ("directa-normal-m130", _autonomo(), "130", ApplicabilityVerdict.APPLICABLE, True),
-        ("directa-normal-m131", _autonomo(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("directa-normal-m130", calendar_autonomo(), "130", ApplicabilityVerdict.APPLICABLE, True),
+        ("directa-normal-m131", calendar_autonomo(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("directa-simplificada-m130", _autonomo_simplificada(), "130", ApplicabilityVerdict.APPLICABLE, True),
         ("directa-simplificada-m131", _autonomo_simplificada(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("default-directa-m130", default_directa_profile, "130", ApplicabilityVerdict.APPLICABLE, True),
@@ -500,7 +537,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     )
 
     for case_id, profile, modelo, expected_verdict, expected_applicable in cases:
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
 
@@ -511,7 +548,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
 
 
 _MODELO_390_CASES: tuple[tuple[str, _ProfileFactory, ApplicabilityVerdict, bool], ...] = (
-    ("autonomo", _autonomo, ApplicabilityVerdict.APPLICABLE, True),
+    ("autonomo", calendar_autonomo, ApplicabilityVerdict.APPLICABLE, True),
     ("legal-entity", _sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
     ("attribution-entity", _attribution_entity, ApplicabilityVerdict.APPLICABLE, True),
     ("landlord", _landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
@@ -522,7 +559,7 @@ def test_modelo_390_follows_iva_subject_activity_gate() -> None:
     """Modelo 390 follows the annual IVA-summary gate for each core persona."""
 
     for case_id, profile_factory, expected_verdict, expected_applicable in _MODELO_390_CASES:
-        result = derive_modelo_applicability(profile_factory(), "390")
+        result = derive_modelo_applicability(profile_factory(), "390", reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
 
@@ -531,9 +568,9 @@ def test_modelo_390_tracks_modelo_303_verdict() -> None:
     """Modelo 390 is the annual companion to Modelo 303: the two carry
     the same applicability gate for every core persona."""
 
-    for profile in (_landlord(), _salaried_only(), _autonomo(), _sociedad_limitada(), _attribution_entity()):
-        m303 = derive_modelo_applicability(profile, "303")
-        m390 = derive_modelo_applicability(profile, "390")
+    for profile in (_landlord(), _salaried_only(), calendar_autonomo(), _sociedad_limitada(), _attribution_entity()):
+        m303 = derive_modelo_applicability(profile, "303", reference_date=latest_period_end())
+        m390 = derive_modelo_applicability(profile, "390", reference_date=latest_period_end())
         assert m303.verdict is m390.verdict, profile.tax_id
 
 
@@ -555,7 +592,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         "ley-35-2006:art-101",
     )
     autonomo_pays_salaries = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -563,7 +600,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         has_employees=True,
     )
     autonomo_pays_rent = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -571,30 +608,31 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         pays_rent_with_retencion=True,
     )
     autonomo_above_347_threshold = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         third_party_transactions_above_347_threshold=True,
         iva=_iva_block_without_sii(),
+        enrollment=_OUTSIDE_SII_ENROLLMENT,
     )
     legal_entity_pays_professionals = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         pays_professionals_with_retencion=True,
     )
     legal_entity_pays_capital_income = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         pays_capital_income_with_retencion=True,
     )
     legal_entity_intracommunity = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -610,19 +648,32 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
     )
 
     for case_id, profile, modelo, expected_legal_refs in cases:
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, case_id
         assert result.applicable is True, case_id
         if expected_legal_refs is not None:
             assert result.legal_refs == expected_legal_refs, case_id
 
 
-def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
-    """When the taxpayer does not positively declare paying withheld
-    income, Modelo 111 is INCOMPLETE — the boolean has no tri-state, so
-    the engine refuses to guess a NOT_APPLICABLE it cannot justify."""
+_UNANSWERED_PAYER_FACTS: dict[str, None] = {
+    "has_employees": None,
+    "pays_professionals_with_retencion": None,
+    "pays_rent_with_retencion": None,
+    "does_intracomunitario": None,
+}
 
-    result = derive_modelo_applicability(_autonomo(), "111")
+
+def _autonomo_unanswered_payer_facts() -> TaxpayerProfile:
+    """The shared autónomo with the four payer questions left unanswered."""
+
+    return calendar_autonomo().model_copy(update=_UNANSWERED_PAYER_FACTS)
+
+
+def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
+    """When the taxpayer has not answered whether they pay withheld
+    income, Modelo 111 is INCOMPLETE: an unanswered question is not a no."""
+
+    result = derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "111", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "depende de un hecho que el perfil no expresa con certeza" in result.reason
     # The undetermined rationale must not tell a declared operator to
@@ -638,7 +689,7 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     the same withholding-payer fact and carry the same verdict."""
 
     paying = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -646,10 +697,18 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
         has_employees=True,
     )
     attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
-    assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(attribution_paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
-    assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(paying, "190", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(attribution_paying, "190", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(
+        _autonomo_unanswered_payer_facts(), "190", reference_date=latest_period_end()
+    ).verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(_attribution_entity(), "190", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.INCOMPLETE
+    )
 
 
 def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> None:
@@ -657,10 +716,53 @@ def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> 
 
     # The shared autónomo answers the Modelo 347 question with a declared "no";
     # this case needs it unanswered.
-    undeclared = _autonomo().model_copy(update={"third_party_transactions_above_347_threshold": None})
+    undeclared = _autonomo_unanswered_payer_facts().model_copy(
+        update={"third_party_transactions_above_347_threshold": None},
+    )
     for modelo in ("115", "123", "349", "347"):
-        result = derive_modelo_applicability(undeclared, modelo)
+        result = derive_modelo_applicability(undeclared, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
+
+
+def test_a_stated_no_to_each_payer_question_makes_its_modelos_not_applicable() -> None:
+    """A declared no is an answer: 111/190 (withholding on pay), 115/180 (rent) and 349 (intra-EU)
+    are NOT_APPLICABLE when the profile states the matching fact is false."""
+
+    stated_no = calendar_autonomo()
+    for modelo in ("111", "190", "115", "349"):
+        result = derive_modelo_applicability(stated_no, modelo, reference_date=latest_period_end())
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
+
+
+def test_one_stated_no_does_not_settle_a_withholding_fact_with_an_unanswered_half() -> None:
+    """111 reads employees and professionals together: a no to one and silence on the other stays open,
+    and a yes to either decides it."""
+
+    base = _autonomo_unanswered_payer_facts()
+    half_answered = base.model_copy(update={"has_employees": False})
+    assert (
+        derive_modelo_applicability(half_answered, "111", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
+    professionals = half_answered.model_copy(update={"pays_professionals_with_retencion": True})
+    assert (
+        derive_modelo_applicability(professionals, "111", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+
+
+def test_a_stated_yes_to_each_payer_question_makes_its_modelos_applicable() -> None:
+    """Each fact's yes still decides its modelo, whatever the other answers say."""
+
+    for modelo, fact in (
+        ("115", "pays_rent_with_retencion"),
+        ("349", "does_intracomunitario"),
+        ("111", "has_employees"),
+    ):
+        result = derive_modelo_applicability(
+            calendar_autonomo().model_copy(update={fact: True}), modelo, reference_date=latest_period_end()
+        )
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
 
 def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
@@ -668,14 +770,22 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
     payer fact, same verdict."""
 
     paying = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         pays_rent_with_retencion=True,
     )
-    assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(paying, "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(_sociedad_limitada(), "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.INCOMPLETE
+    )
+    stated_no = _sociedad_limitada().model_copy(update={"pays_rent_with_retencion": False})
+    assert derive_modelo_applicability(stated_no, "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None:
@@ -686,13 +796,20 @@ def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None
         ("180", {"pays_rent_with_retencion": True}),
         ("123", {"pays_capital_income_with_retencion": True}),
         ("349", {"does_intracomunitario": True}),
-        ("347", {"third_party_transactions_above_347_threshold": True, "iva": _iva_block_without_sii()}),
+        (
+            "347",
+            {
+                "third_party_transactions_above_347_threshold": True,
+                "iva": _iva_block_without_sii(),
+                "enrollment": _OUTSIDE_SII_ENROLLMENT,
+            },
+        ),
     )
 
     for modelo, payer_fact_update in cases:
         profile = _attribution_entity().model_copy(update=payer_fact_update)
 
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
 
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
@@ -701,7 +818,7 @@ def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_m
     """Undeclared payer/trade facts stay INCOMPLETE for attribution entities."""
 
     for modelo in ("115", "180", "123", "349", "347"):
-        result = derive_modelo_applicability(_attribution_entity(), modelo)
+        result = derive_modelo_applicability(_attribution_entity(), modelo, reference_date=latest_period_end())
 
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
@@ -710,9 +827,9 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
     """The payer-fact INCOMPLETE rationale is structurally distinct from
     both the undeclared-taxpayer and the un-ruled-modelo rationales."""
 
-    undetermined = derive_modelo_applicability(_autonomo(), "111")
-    undeclared = derive_modelo_applicability(_undeclared(), "100")
-    unruled = derive_modelo_applicability(_autonomo(), "232")
+    undetermined = derive_modelo_applicability(calendar_autonomo(), "111", reference_date=latest_period_end())
+    undeclared = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232", reference_date=latest_period_end())
 
     assert undetermined.reason != undeclared.reason
     assert undetermined.reason != unruled.reason
@@ -737,11 +854,11 @@ def test_seed_legal_refs_resolve_against_the_registry(authority_operation: Pinne
     seed_refs: set[str] = set()
     for profile, modelo in (
         (_undeclared(), "100"),
-        (_autonomo(), "111"),
-        (_autonomo(), "232"),
+        (calendar_autonomo(), "111"),
+        (calendar_autonomo(), "232"),
         (_attribution_entity(), "200"),
     ):
-        seed_refs.update(derive_modelo_applicability(profile, modelo).legal_refs)
+        seed_refs.update(derive_modelo_applicability(profile, modelo, reference_date=latest_period_end()).legal_refs)
     for rule in iter_modelo_applicability_rules():
         seed_refs.update(rule.legal_refs)
     assert seed_refs, "seed table carries no legal_refs"

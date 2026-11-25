@@ -69,7 +69,7 @@ async def test_the_lapse_sweep_takes_the_journal_lock_only_for_a_recorded_operat
     host = ProfileWorkerOperationHost(
         cast(ProfileWorkerCustody, object()), authorization=cast(WorkerAuthorizationClient, object())
     )
-    host._services = cast(
+    host.services = cast(
         OperationComposedServices, cast(object, SimpleNamespace(submission=SimpleNamespace(supervisor=supervisor)))
     )
     acquisitions: list[Path] = []
@@ -104,12 +104,12 @@ async def test_the_lapse_sweep_takes_the_journal_lock_only_for_a_recorded_operat
         # Positive control: a recorded operation is swept, through the journal, and then dropped.
         monkeypatch.undo()
         recorded = await admitted(RECORDED_DEFINITION_ID)
-        assert host._unsettled == {recorded}
+        assert host.unsettled == {recorded}
         monkeypatch.setattr(journal_module, "exclusive_file_lock", counted_lock)
         monkeypatch.setattr(lease_module, "exclusive_file_lock", counted_lock)
-        host._lapse_checked_at = None
+        host.lapse_checked_at = None
         await host._settle_lapsed_operations()
         assert acquisitions
-        assert host._unsettled == set()
+        assert host.unsettled == set()
     finally:
         await supervisor.shutdown()

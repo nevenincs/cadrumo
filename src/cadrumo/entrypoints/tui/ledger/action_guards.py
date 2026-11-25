@@ -20,7 +20,7 @@ from ..action_target import require_action_target
 
 #: Injected action attribute -> the command key it must resolve to, and the
 #: refusal wording the surface already used for it.
-_REQUIRED_TARGETS: Final[tuple[tuple[str, str, str], ...]] = (
+REQUIRED_TARGETS: Final[tuple[tuple[str, str, str], ...]] = (
     ("review_action", "ledger.review", "injected Ledger review action does not resolve to the canonical review query"),
     (
         "classify_action",
@@ -64,7 +64,7 @@ def require_canonical_ledger_actions(
         "evidence_action": evidence_action,
         "link_action": link_action,
     }
-    for attribute, command_key, refusal in _REQUIRED_TARGETS:
+    for attribute, command_key, refusal in REQUIRED_TARGETS:
         action = supplied[attribute]
         if action is None:
             continue

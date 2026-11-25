@@ -26,6 +26,18 @@ reviewed_at = 2026-08-19
 family_storage_baseline = "2024-desde-09-y-3t"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+[revisions."2025".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-orden-hac-1347-2024-iva-authority", "boe-modelo-303-2008-form"]
+
+[revisions."2025".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-orden-hac-1347-2024-iva-authority", "boe-modelo-303-2008-form"]
+
 [revisions."2025".period_selector]
 year_from = 2025
 year_to = 2025
@@ -35,11 +47,6 @@ year_to = 2025
 # and the PP field of the design admits 1T-4T and 01-12. The annual settlement is
 # modelo 390, which carries the 0A period; 303 never files at 0A itself.
 periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-
-[revisions."2025".family_dispositions.applicability]
-reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
 
 [[revisions."2025".lineage_attestations]]
 family = "casillas"
@@ -61,7 +68,7 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
 [[revisions."2025".lineage_attestations]]
 family = "casillas"
-continuidad_id = "dr303-71"
+continuidad_id = "iva-resultado-final"
 from_revision = "2024-desde-09-y-3t"
 to_revision = "2025"
 origin = "seeded"
@@ -155,6 +162,14 @@ selector = {revision = "2024-desde-09-y-3t", id = "m303-dr303-166-transitional-r
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0], values = [0, 1]}
 sequence_order = {source_refs = [1, 0]}
+
+# The 5 % and 7,5 % transitional reducido recargo ended with the RDL 4/2024 window
+# ("vigencia hasta el 31 de diciembre de 2024"). The 2025 design (aeat-dr-303-2025) fixes
+# the rung [16]/[17]/[18] Tipo as the constant "00000", so no recargo cuota is declared there.
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024-desde-09-y-3t", id = "18" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = ["input_kind", "formula"]
 
 [[revisions."2025".family_overrides]]
 family = "parameters"
@@ -1376,13 +1391,6 @@ sequence_order = {source_refs = [2, 0, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "bindings"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-casilla-120-no-sujetas-localizacion-base"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [2, 0, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "bindings"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"}
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
@@ -1447,6 +1455,13 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2025".family_overrides]]
 family = "bindings"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autorepercutido-interior-devengado-base"}
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
@@ -1624,18 +1639,24 @@ family = "completeness_manifest"
 selector = {revision = "2024-desde-09-y-3t", id = "aeat-dr-303-2024-late"}
 replacement_id = "aeat-dr-303-2025"
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
-sequence_removals = {source_refs = [0]}
+sequence_removals = {casillas = [129], source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 25, 26, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41], source_refs = [2, 0, 1]}
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autoliquidacion"}
 sequence_additions = {deadline_windows = ["modelo-303-2025-01-mensual", "modelo-303-2025-02-mensual", "modelo-303-2025-03-mensual", "modelo-303-2025-04-mensual", "modelo-303-2025-05-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-07-mensual", "modelo-303-2025-08-mensual", "modelo-303-2025-09-mensual", "modelo-303-2025-10-mensual", "modelo-303-2025-11-mensual", "modelo-303-2025-12-mensual", "modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t"], source_refs = ["aeat-dr-303-2025", "aeat-calendario-contribuyente-2026", "boe-orden-hac-1347-2024-iva-authority"], workbook_parity_refs = ["modelo-303-dr"]}
-sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], legal_refs = [43], source_refs = [4, 7], workbook_parity_refs = [0]}
-sequence_order = {source_refs = [0, 1, 2, 6, 3, 4, 7, 5, 8]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], formulas = [40], legal_refs = [43, 44], source_refs = [5, 8], workbook_parity_refs = [0]}
+sequence_order = {source_refs = [0, 1, 2, 7, 3, 4, 5, 8, 6, 9]}
 [[revisions."2025".family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-reconcile-when-present"}
 fields = {externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-m349-reconciliation"}
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
@@ -1703,3 +1724,66 @@ selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr-late"}
 [[revisions."2025".family_removals]]
 family = "constructs"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-printed-disclosure-arithmetic-2024-desde-09-y-3t"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = { revision = "2024-desde-09-y-3t", id = "modelo-303-recargo-equivalencia-reducido-transitorio-cuota" }
+
+[[revisions."2025".family_removals]]
+family = "formulas"
+selector = { revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-18-transitorio-projection" }
+
+[[revisions."2025".casilla_removals]]
+selector = { revision = "2024-desde-09-y-3t", id = "recargo.reducido.transitorio" }
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024-desde-09-y-3t", id = "166" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2024-late"] } }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024-desde-09-y-3t", id = "169" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2024-late"] } }
+removed_fields = []
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-modificacion-bases-cuotas-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-modificacion-bases-cuotas-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-14-projection"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-15-projection"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-modificacion-recargo-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-26-projection"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}

@@ -2,22 +2,15 @@ desktop:
   agent:
     add_files: Añadir archivos
     aeat_setup_check: Comprobar la configuración y continuar
-    aeat_setup_help: Guarda aquí los datos de autenticación y cierra el editor para
-      volver a la conversación. Las credenciales no se envían al chat.
     aeat_setup_resume_message: He terminado con los ajustes de la AEAT. Comprueba
       la configuración guardada, ayúdame con los requisitos pendientes y continúa
       nuestra tarea cuando esté lista.
-    aeat_setup_return: Volver a la conversación
-    aeat_setup_title: Configurar el acceso a la AEAT
     agent_replied: El agente respondió
-    approval_allow_always: Permitir
+    already_new: Ya estás en una conversación nueva
     approval_allow_once: Permitir una vez
-    approval_allow_server_session: Permitir todas las herramientas de {server} durante
-      esta sesión
     approval_allow_session: Permitir durante esta sesión
     approval_attachment: 'Adjunto: {target}'
     approval_operation: 'Operación: {target}'
-    approval_reject_always: No permitir
     approval_reject_once: No permitir
     approval_review_title: Revisa esto antes de que Cadrumo lo haga
     approval_tool_title: El agente te pide permiso
@@ -26,6 +19,34 @@ desktop:
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})
     attach_filter: Documentos
+    attachment_grant_document: '{name} a {model}'
+    attachment_grant_images: Imágenes de páginas a {model}
+    attachment_grant_revoke: Revocar
+    attachment_grants_title: Permisos recordados
+    attachment_open_profile: Abrir el perfil
+    attachment_refusal:
+      acknowledgement_missing: No has permitido esta lectura.
+      cloud_upload_not_permitted: Esta instalación no permite que los documentos salgan
+        de este ordenador, y ningún ajuste de tu perfil lo cambia.
+      document_removed: El archivo se ha eliminado.
+      file_changed_during_read: El archivo ha cambiado. Vuelve a añadirlo para leer
+        la nueva versión.
+      gestor_mode: El modo gestor nunca envía documentos fuera de este ordenador.
+      grant_revoked: Ese permiso ya se ha revocado.
+      not_signed_in: Inicia sesión para responder.
+      profile_not_eligible: Tu perfil no permite que los documentos salgan de este
+        ordenador. Lo controla el ajuste «Lectura de documentos fuera del equipo»
+        de tu perfil.
+      profile_unreadable: No se ha podido leer el ajuste «Lectura de documentos fuera
+        del equipo» de tu perfil, así que no se ha enviado nada. Inténtalo de nuevo
+        en un momento.
+      reference_unknown: El agente ya no está esperando este archivo.
+      service_failed: No se ha podido registrar el permiso, así que no se ha enviado
+        nada.
+    attachment_refused: Este archivo no se ha enviado. {reason}
+    attachment_refused_group: Estos archivos no se han enviado. {reason}
+    attachment_refused_named: '{name} no se ha enviado. {reason}'
+    attachment_refused_title: Archivos sin enviar
     attachments: Archivos para el próximo mensaje
     attachments_refused: 'No aceptados: {count}'
     attachments_uploading: 'Subiendo: {count}'
@@ -35,14 +56,38 @@ desktop:
     can_write: escribir archivos
     cancel: Cancelar
     capabilities: 'Puede: {list}'
+    carried_from: Traído de {title}
+    carried_from_unknown: Traído de una conversación anterior
+    carried_omitted: Se omitieron {omitted} turnos más antiguos.
+    carried_omitted_one: Se omitió {omitted} turno más antiguo.
+    carried_turns: Esta conversación empezó con {carried} turnos de la anterior.
+    carried_turns_one: Esta conversación empezó con {carried} turno de la anterior.
+    carry_back: Vuelve a esa conversación
+    carry_pending: Tu próximo mensaje empieza una conversación nueva que lleva los
+      turnos más recientes de «{title}».
+    carry_pending_untitled: Tu próximo mensaje empieza una conversación nueva que
+      lleva los turnos más recientes de la anterior.
+    carry_source_not_settled: La respuesta de la conversación anterior aún no ha terminado.
+      Espera a que termine y vuelve a enviar.
+    carry_source_unavailable: No se puede llevar la conversación anterior. Vuelve
+      a enviar para empezar la nueva conversación sin ella.
+    catalog_unavailable: No se ha podido leer la lista de proveedores del agente.
+    choose_another_model: Elige otro modelo
     choose_model: Elige un modelo
-    choose_provider: Elige un proveedor
+    choose_to_start: Elige un proveedor y un modelo para empezar.
     close_documents: Cerrar los documentos
-    collapse_members: Ocultar los archivos de {name}
     condition_budget_exhausted: Presupuesto agotado
     condition_credits_exhausted: Sin créditos
     condition_invalid_request: El proveedor rechazó la petición
+    condition_model_does_not_fit: El modelo no cabe en lo que este ordenador puede
+      darle. Elige un modelo más pequeño u otro proveedor.
+    condition_model_unavailable: Este modelo no está disponible en este proveedor.
+      Elige otro modelo de la lista.
+    condition_model_unavailable_named: '{model} no está disponible en {provider} ({connection}).
+      Elige otro modelo de la lista.'
     condition_network_unreachable: No se puede contactar con el proveedor
+    condition_no_answer: El modelo no dio una respuesta utilizable para este documento.
+      Prueba con otro modelo (instruct) o inténtalo de nuevo.
     condition_provider_overloaded: El proveedor está sobrecargado
     condition_throttled: Has alcanzado el límite de uso del proveedor. Consulta tu
       cuenta del proveedor o elige otro.
@@ -50,13 +95,22 @@ desktop:
     condition_usage_exhausted: Has alcanzado el límite de uso del proveedor. Consulta
       tu cuenta del proveedor o elige otro.
     consent_allow: Enviar a {provider}
+    consent_allow_remember: Permite y recuerda
+    consent_allow_session: Permite durante esta sesión
     consent_decline: No enviar
+    consent_document_text: El texto leído de {name}
     consent_items: Lo que se enviaría
     consent_lead: Para responder, {model} necesita el contenido de abajo. Si lo envías,
       sale de este ordenador y va a {provider}.
     consent_note: No se envía nada hasta que elijas. Si no lo envías, se queda en
       este ordenador.
+    consent_page_images: Imágenes de las páginas de {name}
+    consent_page_images_warning: Las imágenes muestran todo lo que hay en la página
+      y salen de este ordenador. Si las permites para más adelante, cubren cualquier
+      documento que lea este modelo.
+    consent_recall: Lo que ya se ha enviado no se puede recuperar.
     consent_title: ¿Enviar esto a {provider}?
+    continue_in_new_conversation: Continúa en una conversación nueva
     conversation_deleting: Esta conversación se está eliminando, así que no admite
       archivos.
     conversation_id_taken: Esta conversación no puede guardar archivos. Empieza una
@@ -66,11 +120,14 @@ desktop:
     delete_confirm_bare: ¿Eliminar «{title}»? No se puede deshacer.
     delete_incomplete: La eliminación aún no ha terminado. Cadrumo continuará la limpieza
       cuando se reinicie el servicio del agente.
+    document_remove_failed: No se pudo confirmar la eliminación del archivo. Actualiza
+      la lista antes de intentarlo de nuevo.
+    document_selected: Seleccionado para el próximo mensaje
+    document_selection_limit: Un mensaje puede mencionar como máximo {count} archivos.
     documents: Documentos
     documents_attached: 'En esta conversación: {count}'
     documents_empty: Todavía no hay documentos en esta conversación
-    documents_failed: 'Con error: {count}'
-    documents_review: 'Por revisar: {count}'
+    download_models: Descargar modelos
     drop_accepts: 'Se aceptan: {types}'
     drop_hint: Mantén pulsada la tecla {key} para soltar
     drop_release: Suelta para añadir los archivos
@@ -78,25 +135,39 @@ desktop:
     drop_release_single: Suelta para añadir 1 archivo
     drop_title: Añadir a esta conversación
     effort: Esfuerzo
+    effort_catalog_default: 'predeterminado del catálogo: {effort}'
     effort_default: Por defecto
     effort_high: Alto
     effort_low: Bajo
     effort_max: Máximo
     effort_medium: Medio
+    effort_provider_default: Predeterminado del proveedor
     effort_ultra: Ultra
     effort_xhigh: Muy alto
-    expand_members: Mostrar los archivos de {name}
+    engine_door_local_ai_setup: Reparar la IA local
+    engine_not_running: El motor de IA local no está en marcha.
+    engine_reason_answer_unreadable: Ha respondido, pero no como se esperaba.
+    engine_reason_no_answer_in_time: No ha respondido a tiempo.
+    engine_reason_not_reachable: No se puede acceder a él en este ordenador.
     files_summary: 'Archivos: {count} · {size}'
     hide: Ocultar el agente
     history: Historial
     history_empty: Todavía no hay conversaciones
     history_no_match: Ninguna conversación coincide con «{query}».
+    lane_fixed_refused: Esta conversación sigue con el proveedor con el que empezó.
+      Para usar otro, elígelo y continúa en una conversación nueva.
     lane_no_catalog: No se han podido cargar los modelos. Vuelve a intentarlo.
+    lane_no_installed_model: Todavía no hay ningún modelo descargado. Descarga uno
+      en los ajustes.
     lane_not_admitted: No está disponible en este equipo. Elige otro.
     lane_not_configured: Configura este proveedor en los ajustes.
+    lane_not_observed: Aún sin comprobar. Podrás elegirlo cuando el agente esté listo.
     lane_notice: Las conversaciones de esta versión no están cifradas.
     lane_signed_out: Inicia sesión en este proveedor desde los ajustes.
     lane_unreachable: No se puede conectar. Revisa este proveedor en los ajustes.
+    lane_unreadable_refused: No se puede leer el proveedor con el que funcionó esta
+      conversación. Vuelve a enviar tu mensaje para continuar en una conversación
+      nueva que lleve esta.
     members_multiple: '{count} archivos'
     members_single: 1 archivo
     mention_empty: Ningún documento guardado coincide
@@ -107,13 +178,58 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_does_not_fit_memory: Este modelo no se ha podido cargar con {context} tokens
+      de contexto en la memoria libre de este ordenador ahora mismo. Elige un modelo
+      más pequeño, o cierra algunos programas y vuelve a intentarlo.
+    model_does_not_fit_refused: Este modelo no cabe en lo que este ordenador puede
+      darle ahora mismo. Elige un modelo más pequeño o cambia dónde se ejecutan los
+      modelos en los ajustes de la IA local.
+    model_does_not_fit_shortfall: Este modelo necesita unos {needed} tokens de contexto
+      para esta conversación, más de los {context} que puede contener. Elige otro
+      modelo, u otro proveedor para esta conversación.
+    model_matrix_availability: Disponibilidad
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Borrar la búsqueda
+    model_matrix_count: '{count} modelos mostrados'
+    model_matrix_count_one: 1 modelo mostrado
+    model_matrix_filter_all: Todos
+    model_matrix_filter_off: Desactivados
+    model_matrix_filter_on: Activados
+    model_matrix_filter_ready: Listos
+    model_matrix_filter_setup: Por configurar
+    model_matrix_label: Modelos y esfuerzos
+    model_matrix_lane_models: '{count} modelos'
+    model_matrix_lane_models_one: 1 modelo
+    model_matrix_none_on: No hay ningún proveedor activado. Activa uno en Proveedores
+      de IA.
+    model_matrix_off_hidden: '{count} proveedores están desactivados'
+    model_matrix_off_hidden_one: 1 proveedor está desactivado
+    model_matrix_search_empty: Ningún modelo coincide con tu búsqueda.
+    model_matrix_search_label: Buscar modelos
+    model_matrix_show: Mostrar
+    model_matrix_state: Estado
+    model_not_installed: '{name} (sin descargar)'
+    model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
+      o elige otro modelo.
+    model_not_offered_refused: Tu cuenta no ofrece este modelo. Elige otro de la lista.
+    model_with_effort: '{model} ({effort})'
     model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
       tal como lo escribe el proveedor.
     more_files: +{count} más
+    movement_dismiss: Descartar
+    movement_shared: Al enviarlo, lo compartes con {provider}, que lo lee fuera de
+      este equipo.
+    movement_staged: '{name} contiene este movimiento tal como lo registra el Libro:
+      sus fechas, importe, contraparte, descripción, clasificación y estado de revisión.
+      No se envía nada hasta que pulses Enviar.'
+    movement_storing: Añadiendo el movimiento a la conversación…
+    movement_unavailable: El agente aún no puede recibir un movimiento aquí.
+    movement_unreadable: No se ha podido leer el movimiento del Libro.
     new_conversation: Nueva conversación
-    no_models: No hay modelos para elegir
+    no_installed_model: Todavía no hay ningún modelo de IA descargado. Descarga uno
+      para empezar.
     no_provider: Configura un proveedor de IA para empezar.
-    provider: Proveedor
+    platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
     questions_answer: Responder
     questions_clear: Borrar esta respuesta
     questions_control: Escribe cada respuesta en una sola línea.
@@ -137,9 +253,14 @@ desktop:
       agente.
     references_unavailable: Los documentos guardados de esta conversación no están
       disponibles ahora.
+    refresh_documents: Actualizar
     refused: No aceptado
     remove_all: Quitar todo
     remove_document: Quitar {name}
+    remove_document_confirm: ¿Eliminar «{name}» de esta conversación? Los mensajes
+      que lo mencionan ya no podrán leerlo.
+    remove_documents_confirm: ¿Eliminar los {count} documentos guardados de esta conversación?
+      Esta acción no se puede deshacer.
     remove_file: Quitar {name}
     rename: Cambiar nombre
     rename_label: Nombre de la conversación
@@ -154,12 +275,20 @@ desktop:
     resize: Cambiar el tamaño del agente
     restore: Restaurar
     retry: Vuelve a intentarlo
-    role_context: Contexto
-    role_information: Información
-    role_label: Usar como
-    role_ledger: Datos del libro
     row_documents: 'Documentos: {count}'
     search_history: Buscar conversaciones
+    search_placeholder: Buscar
+    selection_change_asked: Este mensaje cambia el modelo de {previous} a {requested}.
+    selection_change_confirm: Cambia y envía
+    selection_change_keep: Mantén el modelo
+    selection_change_omitted: Se omiten {omitted} mensajes anteriores.
+    selection_change_omitted_one: Se omite {omitted} mensaje anterior.
+    selection_change_refused: Cambiar el modelo necesita tu confirmación. Vuelve a
+      enviar el mensaje.
+    selection_change_retained: El modelo nuevo recibe {retained} mensajes de esta
+      conversación (unos {tokens} tokens).
+    selection_change_retained_one: El modelo nuevo recibe {retained} mensaje de esta
+      conversación (unos {tokens} tokens).
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
@@ -178,6 +307,7 @@ desktop:
     service_signed_out: Inicia sesión para hablar con el agente.
     service_starting: Iniciando el agente…
     service_stopped: El agente no está en marcha.
+    service_timeout: El agente ha agotado el tiempo de espera y se ha detenido.
     set_up_providers: Configurar proveedores de IA
     settings: Ajustes del agente
     settings_label: 'Modelo: {current}'
@@ -215,19 +345,98 @@ desktop:
     slash_label: Habilidades y comandos
     slash_loading: Leyendo las habilidades del agente…
     slash_skills: Habilidades
-    status_extracting: Leyendo
-    status_failed: Con error
-    status_needs_review: Por revisar
     status_ready: Listo
-    status_skipped: Omitido
-    status_uploading: Subiendo
     stop: Detener
     stopped: Detenido
     thinking: Razonamiento
     thoughts: Lo que pensó el agente
+    tool:
+      cadrumo:
+        authority:
+          description: 'Consulta datos fiscales de referencia publicados: modelos,
+            casillas, fórmulas y portales.'
+          label: Consultar datos fiscales
+        control:
+          description: Inicia, reanuda, cancela o suelta una operación.
+          label: Controlar una operación
+        corpus_search:
+          description: Busca en los textos legales del BOE y la AEAT incluidos y en
+            la terminología fiscal.
+          label: Buscar en la legislación
+        describe:
+          description: Lee qué hace una operación y qué necesita.
+          label: Describir una operación
+        execute:
+          description: Envía una operación en tu perfil. Puede cambiar tus datos.
+          label: Ejecutar una operación
+        observe:
+          description: Comprueba cómo va una operación enviada.
+          label: Seguir una operación
+        respond:
+          description: Aplica o rechaza una revisión que espera una respuesta.
+          label: Responder a una revisión
+        result:
+          description: Lee el resultado de una operación terminada.
+          label: Leer un resultado
+        result_page:
+          description: Lee una página del resultado de una operación terminada.
+          label: Leer una página de resultado
+        review:
+          description: Lee una revisión que espera tu respuesta.
+          label: Leer una revisión
+        search:
+          description: Busca las operaciones que el agente puede ejecutar en tu perfil.
+          label: Buscar operaciones
+        status:
+          description: Comprueba en qué perfil has autorizado trabajar al agente y
+            si la aplicación está disponible.
+          label: Comprobar la sesión
+        views:
+          description: Busca las vistas de esta ventana que puede abrir un enlace
+            y comprueba enlaces.
+          label: Buscar vistas
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Lista los documentos adjuntos a la conversación.
+          label: Listar los adjuntos
+        load_skill:
+          description: Carga las instrucciones de una habilidad para que el agente
+            las siga.
+          label: Cargar una habilidad
+        read_attachment:
+          description: Lee un documento que adjuntaste a la conversación.
+          label: Leer un adjunto
+        read_conversation_history:
+          description: Lee partes anteriores de esta conversación.
+          label: Leer esta conversación
+        read_file:
+          description: Lee un archivo del espacio de trabajo del agente.
+          label: Leer un archivo
+        read_web_source:
+          description: Abre una página web y la lee.
+          label: Leer una página web
+        resolve_output_path:
+          description: Determina dónde se guardará un archivo que genere el agente.
+          label: Elegir dónde guardar
+        run_program:
+          description: Ejecuta un programa en este ordenador.
+          label: Ejecutar un programa
+        run_subagent:
+          description: Encarga una parte de la tarea a un agente auxiliar.
+          label: Iniciar un agente auxiliar
+        search_previous_conversations:
+          description: Busca en tus conversaciones anteriores con el agente.
+          label: Buscar conversaciones anteriores
+        web_search:
+          description: Busca en internet.
+          label: Buscar en internet
+        write_file:
+          description: Crea o modifica un archivo en el espacio de trabajo del agente.
+          label: Escribir un archivo
     tool_details: Detalles de la llamada
     tool_done: Hecho
     tool_failed: Con error
+    tool_generic: Herramienta {name}
     tool_kind_delete: Elimina
     tool_kind_edit: Edita
     tool_kind_execute: Ejecuta
@@ -239,7 +448,12 @@ desktop:
     tool_kind_switch_mode: Cambia de modo
     tool_kind_think: Piensa
     tool_pending: Pendiente
+    tool_reach:
+      local_read: Lee datos de este ordenador
+      local_write: Cambia datos de este ordenador
+      online: Usa internet
     tool_running: En curso
+    tool_unnamed: Una herramienta
     transcript: Conversación
     transcript_empty: Aún no hay mensajes
     unavailable: Aún no está disponible
@@ -248,10 +462,12 @@ desktop:
     upload_name_refused: Su nombre no se puede guardar; cámbialo y vuelve a intentarlo
     upload_quota_exceeded: El almacenamiento de esta conversación está lleno
     upload_too_large: Demasiado grande para esta conversación
+    upload_too_large_limit: 'Demasiado grande: el máximo es {limit}'
     upload_unreadable: No se ha podido leer
     uploading: Subiendo
     uploading_name: Subiendo {name}
     usage: 'Tokens usados: {input} enviados, {output} recibidos'
+    use_document: Usar {name} en el próximo mensaje
     waiting_on_you: Esperando tu respuesta
     welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
       recibos, facturas y extractos bancarios con +.
@@ -264,6 +480,8 @@ desktop:
   providers:
     add_key: Añadir clave API
     address: 'Dirección: {url}'
+    agent_starting: El agente se está iniciando. Podrás cambiar estos ajustes cuando
+      esté listo.
     base_url_default: Déjala vacía para usar {url}.
     base_url_label: Dirección del servidor
     base_url_required: Introduce la dirección que te ha facilitado el proveedor.
@@ -271,21 +489,95 @@ desktop:
     change_failed: No se ha podido guardar. Actualiza y vuelve a intentarlo.
     connection_api: Clave API
     connection_app: Aplicación instalada
+    connection_local: En este ordenador
+    console_command_label: 'Ejecuta este comando en una terminal:'
     detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
-    detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
-    detail_off_kept: 'Desactivado: el agente no lo ofrece ni lo usa. Su clave API
-      se conserva para cuando lo actives.'
     detail_sign_in: Inicia sesión con tu cuenta de {provider}.
-    group_intro: Elige un proveedor para configurarlo.
     icon_credits: Créditos de los iconos
     key_label: Clave de API de {provider}
     key_note: Se guarda cifrada en este equipo y no se vuelve a mostrar.
+    lane_details: Detalles de {provider} ({connection})
     load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
+    local_engine_change_failed: No se ha guardado tu cambio. Vuelve a intentarlo.
+    local_engine_changing: Guardando…
+    local_engine_lead: El programa que ejecuta los modelos en este ordenador. La lista
+      de modelos es la misma con cualquiera de los dos.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Incluido. No hay nada que instalar.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Se descarga y se configura cuando lo eliges.
+    local_engine_restarts: Cambiar el motor o dónde se ejecutan los modelos reinicia
+      el asistente.
+    local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no está incluido en esta instalación. Elige
+      Ollama.
+    local_model_absent: Sin descargar
+    local_model_add: Añadir
+    local_model_add_label: Añadir un modelo por su nombre
+    local_model_download: Descargar
+    local_model_installed: Descargado
+    local_model_licence: 'Licencia: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
+    local_model_licence_unknown: 'Licencia: no indicada'
+    local_model_remove: Quitar
+    local_model_remove_failed: Cadrumo no ha podido quitar el modelo. Vuelve a intentarlo.
+    local_model_size: 'Tamaño de descarga: {size}'
+    local_models_failed: No se ha podido leer tu lista de modelos. Vuelve a intentarlo.
+    local_models_lead: Los modelos con los que la IA local puede leer tus documentos.
+      El agente recomienda los primeros; añade cualquier otro modelo por el nombre
+      con el que lo conoce la IA local. Descarga un modelo para usarlo.
+    local_models_loading: Leyendo tu lista de modelos…
+    local_models_none: El agente aún no ofrece modelos para esta conexión.
+    local_models_refused_catalog_unavailable: No se ha podido leer la lista de proveedores
+      del agente. Vuelve a intentarlo.
+    local_models_refused_committed_readback_failed: Tu cambio se ha guardado, pero
+      no se ha podido volver a leer. Abre esto de nuevo para comprobarlo.
+    local_models_refused_full: La lista está llena. Quita antes un modelo.
+    local_models_refused_invalid_name: Ese no es un nombre de modelo que la IA local
+      pueda usar.
+    local_models_refused_revision_conflict: Tu lista ha cambiado en otro sitio. Se
+      ha vuelto a leer, así que inténtalo otra vez.
+    local_models_refused_unknown: No se ha podido cambiar tu lista. Vuelve a intentarlo.
+    local_models_reset: Restablecer la lista
+    local_models_title: Modelos en este ordenador
+    local_models_unreadable: Tu lista de modelos guardada no se puede leer. Restablécela
+      para empezar de nuevo con los modelos recomendados.
+    local_placement_auto: Automático
+    local_placement_auto_detail: Usa la tarjeta gráfica cuando el modelo cabe.
+    local_placement_cpu_only: Solo procesador
+    local_placement_cpu_only_detail: Más lento. Usa solo la memoria de este ordenador.
+    local_placement_title: Dónde se ejecutan los modelos
+    next_step:
+      close_other_sign_in: Cierra el otro inicio de sesión y vuelve a intentarlo.
+      console_sign_in: Inicia sesión desde una terminal.
+      install_cli: Instala la aplicación del proveedor y vuelve a intentarlo.
+      move_profile_outside_git: Mueve la carpeta del perfil fuera del proyecto de
+        Git y vuelve a intentarlo.
+      retry: Vuelve a intentarlo en un momento.
+      update_app: Actualiza esta aplicación a la última versión y vuelve a intentarlo.
+    reads_off_host: Tu conversación sale de este ordenador hacia el proveedor.
+    reads_on_host: Tu conversación se queda en este ordenador.
+    reason_add_key: Añade una clave API de {provider} para usarlo.
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
+    reason_key_saved: 'Se comprueba la primera vez que se usa: envía un mensaje o
+      ejecuta una tarea con él.'
+    reason_local_ready: Funciona en este ordenador. Elígelo en el agente para usarlo.
+    reason_not_checked: Todavía no se ha comprobado. Se comprueba la primera vez que
+      se usa.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
+    reason_signed_in: Sesión iniciada con la aplicación de {provider}. Elígelo en
+      el agente para usarlo.
+    reason_turned_off: El agente no lo ofrece ni lo usa. Actívalo con el interruptor
+      para volver a usarlo.
     refresh: Volver a intentar
+    refused_agent_starting: El agente se está iniciando, así que todavía no se ha
+      guardado. Vuelve a intentarlo en un momento.
     refused_base_url_rejected: Revisa la dirección del servidor y vuelve a intentarlo.
+    refused_busy: Todavía hay otro cambio en tus proveedores en curso. Vuelve a intentarlo
+      en un momento.
     refused_invalid_key_format: Eso no parece una clave de este proveedor.
+    refused_model_list_full: La lista de modelos está llena. Quita un modelo antes
+      de añadir otro.
     refused_not_signed_in: Inicia sesión para cambiar estos ajustes.
     refused_person_act_required: Solo tú puedes cambiar estos ajustes, desde esta
       ventana.
@@ -293,29 +585,110 @@ desktop:
     refused_revision_conflict: Estos ajustes han cambiado mientras tanto. Se muestran
       los últimos; vuelve a intentarlo.
     refused_runtime_unavailable: Reinicia Cadrumo y vuelve a intentarlo.
+    refused_service_failed: No se ha podido completar el cambio.
+    refused_timed_out: Cadrumo no ha recibido respuesta a tiempo. Actualiza para ver
+      si el cambio se ha hecho.
     remove_key: Quitar clave API
     replace_key: Sustituir clave API
     save: Guardar
+    save_retry: Volver a intentarlo
     saved_unread: Guardado, pero no se ha podido leer su estado. Vuelve a intentarlo.
     saving: Guardando…
-    search_empty: No hay proveedores que coincidan. Prueba otra búsqueda.
-    search_label: Buscar proveedores
-    search_placeholder: Buscar proveedores
     sign_in_action: Iniciar sesión
+    sign_in_agent_still_running: El agente aún no se ha detenido, así que no se ha
+      podido iniciar sesión en {provider}. Vuelve a intentarlo dentro de un momento.
+    sign_in_agent_stopping: Cadrumo está deteniendo el agente para iniciar sesión
+      en {provider}. El inicio de sesión seguirá solo en cuanto se haya detenido.
     sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
       un momento y vuelve a intentarlo.
     sign_in_cancel: Cancelar el inicio de sesión
     sign_in_cancel_failed: Cadrumo aún no ha podido cancelar el inicio de sesión.
       Mantén este cuadro abierto mientras lo comprueba.
     sign_in_cancelled: Se canceló el inicio de sesión.
+    sign_in_cause:
+      agent_stop_failed: No se pudo detener el agente para terminar el inicio de sesión.
+      agent_tree_running: El agente seguía en marcha, así que no se pudo iniciar la
+        sesión.
+      browser_not_offered: Claude no ha ofrecido una página de inicio de sesión a
+        tiempo.
+      browser_relay_unavailable: No se pudo pasar la página de inicio de sesión al
+        navegador.
+      cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión se cerrara
+        correctamente.
+      cli_exited_early: La aplicación del proveedor se detuvo antes de terminar el
+        inicio de sesión.
+      cli_not_found: La aplicación del proveedor no está instalada o no se encontró.
+      cli_protocol_mismatch: La aplicación del proveedor respondió de una forma que
+        esta versión no entiende.
+      cli_reported_error: La aplicación del proveedor indicó un error durante el inicio
+        de sesión.
+      cli_start_failed: No se pudo iniciar la aplicación del proveedor.
+      helper_ended_without_result: El inicio de sesión terminó sin resultado.
+      helper_exit_nonzero: El inicio de sesión terminó con un error.
+      helper_output_invalid: El inicio de sesión dio una respuesta que no se pudo
+        leer.
+      helper_start_failed: No se pudo empezar el inicio de sesión.
+      home_in_git_project: La carpeta del perfil está dentro de un proyecto de Git
+        y la aplicación del proveedor no inicia sesión ahí.
+      home_unavailable: No se pudo usar la carpeta reservada para el inicio de sesión
+        de este proveedor.
+      host_disconnected: Se perdió el contacto con el inicio de sesión mientras se
+        ejecutaba.
+      host_input_invalid: Se dio al inicio de sesión una entrada que no pudo usar.
+      internal_error: El inicio de sesión tuvo un error interno.
+      lane_not_signable: No se puede iniciar sesión en este proveedor desde aquí.
+      login_already_running: Ya hay otro inicio de sesión en curso para este perfil.
+      login_not_completed: El inicio de sesión no se completó.
+      logout_agent_unavailable: No se ha podido iniciar el agente que cierra la sesión
+        de los proveedores.
+      logout_not_completed: La aplicación del proveedor no ha cerrado la sesión, o
+        el proveedor sigue con la sesión iniciada.
+      logout_timed_out: Cerrar la sesión ha tardado demasiado y se ha detenido.
+      prepare_failed: No se pudo preparar el inicio de sesión.
+      previous_cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión anterior
+        se cerrara correctamente.
+      probe_cleanup_unconfirmed: No se pudo confirmar que la comprobación del inicio
+        de sesión del proveedor se cerrara correctamente.
+      probe_output_unreadable: La comprobación del inicio de sesión del proveedor
+        dio una respuesta que no se pudo leer.
+      probe_start_failed: No se pudo empezar la comprobación del inicio de sesión
+        del proveedor.
+      probe_timed_out: La comprobación del inicio de sesión del proveedor tardó demasiado.
+      profile_missing: No se encontró el perfil de este inicio de sesión.
+      profile_signed_out: Tu perfil cerró la sesión durante el inicio de sesión.
+      settings_change_failed: No se pudo guardar la configuración del proveedor.
+      settings_refused: La configuración del proveedor rechazó el cambio.
+      sign_in_in_progress: Ya había otro inicio de sesión en curso para este proveedor.
+      sign_in_owner_held: Otra ventana estaba iniciando sesión en este proveedor.
+      status_context_unavailable: No había ningún perfil abierto con el que comprobar
+        el inicio de sesión.
+      status_not_confirmed: El inicio de sesión terminó, pero no se pudo confirmar
+        que hayas iniciado sesión.
+      status_read_failed: No se pudo leer si has iniciado sesión.
+      status_unreadable: No se pudo leer la respuesta sobre si has iniciado sesión.
+      timed_out: El inicio de sesión tardó demasiado.
+      unsupported_method: La aplicación del proveedor no admite esta forma de iniciar
+        sesión.
+    sign_in_checking: Comprobando el inicio de sesión…
     sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
+    sign_in_code_checking: Comprobando el código de autorización…
+    sign_in_code_label: Código de autorización
+    sign_in_code_prompt: Introduce el código de autorización que aparece en la página
+      del proveedor.
+    sign_in_code_submit: Enviar código
+    sign_in_code_time_limited: 'Escribe el código en cuanto lo tengas: {provider}
+      solo lo espera durante poco tiempo. Si se acaba, puedes volver a empezar.'
+    sign_in_code_unfinished: El inicio de sesión de {provider} terminó sin completarse
+      mientras esperaba el código; puede que se acabara el tiempo para escribirlo.
+      Vuelve a empezar para recibir un código nuevo.
     sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.
     sign_in_host_disconnected: Cadrumo ha perdido el contacto con este inicio de sesión
       y lo ha cancelado. Inícialo de nuevo para continuar.
     sign_in_invalid_request: Cierra esta ventana y vuelve a iniciar sesión.
+    sign_in_log_ref: 'Referencia de diagnóstico en cadrumo.log:'
     sign_in_open_failed: Cadrumo no pudo abrir la página de inicio de sesión del proveedor.
     sign_in_profile_required: Inicia sesión en Cadrumo para continuar el inicio de
       sesión con {provider}.
@@ -342,13 +715,40 @@ desktop:
       aquí.
     sign_in_waiting_device: Escribe este código en la página del proveedor para terminar
       de iniciar sesión.
+    sign_out_action: Cerrar sesión
+    sign_out_label: Cerrar sesión en {provider}
     status_not_checked: Sin comprobar
     status_off: Desactivado
+    status_off_kept: Desactivado · clave guardada
     status_ready: Listo
-    status_saved: Guardado
+    status_saved: Clave guardada
     status_setup_needed: Sin configurar
     status_sign_in_needed: Sin sesión iniciada
-    summary: '{connection}: {status}'
+    status_signed_in: Sesión iniciada
+    status_starting: Esperando al agente
+    status_unconfirmed: Inicio de sesión sin confirmar
+    task_kind_classification: Clasificación
+    task_kind_classification_description: Asignar a un documento o un registro una
+      etiqueta de un conjunto cerrado.
+    task_kind_extraction: Extracción
+    task_kind_extraction_description: Leer los campos estructurados de un documento.
+    task_model_change: Cambiar
+    task_model_change_label: Cambiar con qué se ejecuta {task}
+    task_model_model: Modelo para {task}
+    task_model_reading_chosen: 'Modelo de lectura: {model}'
+    task_model_reading_default: 'Modelo de lectura: {model}, el predeterminado hasta
+      que elijas uno'
+    task_model_reading_none: Modelo de lectura, cuando configures uno
+    task_model_refused: No se ha podido cambiar con qué se ejecuta esta tarea. Vuelve
+      a intentarlo.
+    task_model_saved: Guardado.
+    task_model_stored_unoffered: '{model} en {lane}, que ya no se ofrece'
+    task_model_use_reading: Usar el modelo de lectura
+    task_models_intro: Elige con qué modelo se ejecuta cada tipo de tarea. Una tarea
+      que no configures usa el modelo con el que se leen los documentos.
+    task_models_runs_with: Se ejecuta con
+    task_models_task: Tarea
+    task_models_title: Modelos por tarea
     title: Proveedores de IA
     use_in_agent: Usar {provider} ({connection}) en el agente
   rail:
